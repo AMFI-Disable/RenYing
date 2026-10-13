@@ -9,11 +9,11 @@
 
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
 [![Technology: HTML5 Canvas](https://img.shields.io/badge/Technology-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](https://html.spec.whatwg.org)
-[![Network: WebSocket](https://img.shields.io/badge/Network-Realtime%20WebSocket-success.svg?style=flat-square)](#-architecture-and-technical-anatomy)
+[![Network: WebSocket](https://img.shields.io/badge/Network-Realtime%20WebSocket-success.svg?style=flat-square)](#architecture-and-technical-anatomy)
 [![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/luffyxing55/Luffx/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
-[![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#-privacy-and-security-first)
-[![Pricing: Free & Open-Source](https://img.shields.io/badge/Pricing-100%25%20Free%20%26%20Open%20Source-success.svg?style=flat-square)](#-overview-and-core-value)
+[![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#privacy-and-security-first)
+[![Pricing: Free & Open-Source](https://img.shields.io/badge/Pricing-100%25%20Free%20%26%20Open%20Source-success.svg?style=flat-square)](#overview-and-core-value)
 
 </div>
 
@@ -28,24 +28,24 @@
 
 ## 🧭 Table Of Contents
 
-- [Overview And Core Value](#-overview-and-core-value)
-- [Key Features](#-key-features)
-- [Game Controls And Mechanics](#-game-controls-and-mechanics)
-- [Quick Start And Running The Server](#-quick-start-and-running-the-server)
-- [Architecture And Technical Anatomy](#-architecture-and-technical-anatomy)
-- [Privacy And Security First](#-privacy-and-security-first)
-- [Educational And Fair-Play Disclaimer](#-educational-and-fair-play-disclaimer)
-- [License And Legal Attribution](#-license-and-legal-attribution)
+- [Overview And Core Value](#overview-and-core-value)
+- [Key Features](#key-features)
+- [Game Controls And Mechanics](#game-controls-and-mechanics)
+- [Quick Start And Running The Server](#quick-start-and-running-the-server)
+- [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
+- [Privacy And Security First](#privacy-and-security-first)
+- [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
+- [License And Legal Attribution](#license-and-legal-attribution)
 
 ---
 
-## ⚡ Overview And Core Value
+## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
 **RenYing (刃影)** is a high-speed ink-wash martial arts action duel game. Engineered with standard HTML5 Canvas graphics and a zero-external-dependency Python WebSocket server, it delivers instantaneous combat responses, expressive martial arts animation, and seamless online and offline gameplay.
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features <a id="key-features"></a>
 
 - **Ink-Wash Visual Style**: Fluid brushstroke effects, dynamic particle trails, and responsive hit-pause visual feedback.
 - **Real-Time Multiplayer Combat**: Room code matchmaking, quick matchmaking queue, and competitive ladder divisions.
@@ -56,7 +56,7 @@
 
 ---
 
-## 🎮 Game Controls And Mechanics
+## 🎮 Game Controls And Mechanics <a id="game-controls-and-mechanics"></a>
 
 ### Default Keyboard Controls
 
@@ -74,7 +74,7 @@
 
 ---
 
-## 📦 Quick Start And Running The Server
+## 📦 Quick Start And Running The Server <a id="quick-start-and-running-the-server"></a>
 
 ### 1. Launch Multiplayer Server
 
@@ -104,7 +104,7 @@ Double-click or open `renying-offline.html` directly in any web browser without 
 
 ---
 
-## 🏗 Architecture And Technical Anatomy
+## 🏗 Architecture And Technical Anatomy <a id="architecture-and-technical-anatomy"></a>
 
 ```mermaid
 flowchart LR
@@ -119,7 +119,7 @@ flowchart LR
 
 ---
 
-## 🛡 Privacy And Security First
+## 🛡 Privacy And Security First <a id="privacy-and-security-first"></a>
 
 - **Zero Telemetry**: No third-party analytics, external trackers, or diagnostic telemetry.
 - **Local-First Data**: All matchmaking history, ladder statistics, and replay files remain strictly on your host machine.
@@ -127,7 +127,7 @@ flowchart LR
 
 ---
 
-## ⚖ Educational And Fair-Play Disclaimer
+## ⚖ Educational And Fair-Play Disclaimer <a id="educational-and-fair-play-disclaimer"></a>
 
 > [!CAUTION]
 > **IMPORTANT NOTICE & DISCLAIMER**:
@@ -137,6 +137,6 @@ flowchart LR
 
 ---
 
-## 📄 License And Legal Attribution
+## 📄 License And Legal Attribution <a id="license-and-legal-attribution"></a>
 
 Licensed under the [MIT License](license). Copyright (c) 2026 AMFI-Disable.

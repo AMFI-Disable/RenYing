@@ -9,11 +9,11 @@
 
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
 [![Technology: HTML5 Canvas](https://img.shields.io/badge/Technology-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](https://html.spec.whatwg.org)
-[![Network: WebSocket](https://img.shields.io/badge/Network-Realtime%20WebSocket-success.svg?style=flat-square)](#-architecture-and-technical-anatomy)
+[![Network: WebSocket](https://img.shields.io/badge/Network-Realtime%20WebSocket-success.svg?style=flat-square)](#architecture-and-technical-anatomy)
 [![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/luffyxing55/Luffx/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
-[![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#-privacy-and-security-first)
-[![Pricing: Free & Open-Source](https://img.shields.io/badge/Pricing-100%25%20Free%20%26%20Open%20Source-success.svg?style=flat-square)](#-overview-and-core-value)
+[![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#privacy-and-security-first)
+[![Pricing: Free & Open-Source](https://img.shields.io/badge/Pricing-100%25%20Free%20%26%20Open%20Source-success.svg?style=flat-square)](#overview-and-core-value)
 
 </div>
 
@@ -28,24 +28,24 @@
 
 ## 🧭 Table Of Contents
 
-- [Overview And Core Value](#-overview-and-core-value)
-- [Key Features](#-key-features)
-- [Game Controls And Mechanics](#-game-controls-and-mechanics)
-- [Quick Start And Running The Server](#-quick-start-and-running-the-server)
-- [Architecture And Technical Anatomy](#-architecture-and-technical-anatomy)
-- [Privacy And Security First](#-privacy-and-security-first)
-- [Educational And Fair-Play Disclaimer](#-educational-and-fair-play-disclaimer)
-- [License And Legal Attribution](#-license-and-legal-attribution)
+- [Overview And Core Value](#overview-and-core-value)
+- [Key Features](#key-features)
+- [Game Controls And Mechanics](#game-controls-and-mechanics)
+- [Quick Start And Running The Server](#quick-start-and-running-the-server)
+- [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
+- [Privacy And Security First](#privacy-and-security-first)
+- [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
+- [License And Legal Attribution](#license-and-legal-attribution)
 
 ---
 
-## ⚡ Overview And Core Value
+## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
 **刃影 (RenYing)** 是一款快节奏水墨风格的武侠格斗对战游戏。游戏采用纯原生 HTML5 Canvas 渲染与零外部依赖的 Python WebSocket 服务端架构，带来极速打击响应、写意水墨招式与无缝联机体验。
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features <a id="key-features"></a>
 
 - **写意水墨美术风格**：流畅的笔墨拖尾粒子、顿挫有力的打击定格、纯正武侠意境。
 - **实时多人联机对战**：支持 4 位房间码开房邀请、快速匹配与六段位排位天梯（砺锋、出鞘、破竹、惊鸿、踏月、刃影）。
@@ -56,7 +56,7 @@
 
 ---
 
-## 🎮 Game Controls And Mechanics
+## 🎮 Game Controls And Mechanics <a id="game-controls-and-mechanics"></a>
 
 ### 默认键盘按键映射
 
@@ -74,7 +74,7 @@
 
 ---
 
-## 📦 Quick Start And Running The Server
+## 📦 Quick Start And Running The Server <a id="quick-start-and-running-the-server"></a>
 
 ### 1. 启动联机服务器
 
@@ -104,7 +104,7 @@ http://localhost:8765
 
 ---
 
-## 🏗 Architecture And Technical Anatomy
+## 🏗 Architecture And Technical Anatomy <a id="architecture-and-technical-anatomy"></a>
 
 ```mermaid
 flowchart LR
@@ -119,7 +119,7 @@ flowchart LR
 
 ---
 
-## 🛡 Privacy And Security First
+## 🛡 Privacy And Security First <a id="privacy-and-security-first"></a>
 
 - **零数据追踪**：无任何第三方统计脚本或分析 SDK，纯净无广告。
 - **本地优先运行**：所有战绩数据、天梯积分与本地回放均保存在本地设备。
@@ -127,7 +127,7 @@ flowchart LR
 
 ---
 
-## ⚖ Educational And Fair-Play Disclaimer
+## ⚖ Educational And Fair-Play Disclaimer <a id="educational-and-fair-play-disclaimer"></a>
 
 > [!CAUTION]
 > **免责声明与公平竞技声明**：
@@ -137,6 +137,6 @@ flowchart LR
 
 ---
 
-## 📄 License And Legal Attribution
+## 📄 License And Legal Attribution <a id="license-and-legal-attribution"></a>
 
 本项目采用 [MIT License](license) 开源协议。Copyright (c) 2026 AMFI-Disable.

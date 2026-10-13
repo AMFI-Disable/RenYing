@@ -3,7 +3,7 @@ name: Bug Report
 about: Create a report to help us improve the application
 title: "[BUG] "
 labels: bug
-assignees: AMFI-Disable
+assignees: ''
 ---
 
 ## Description Of The Defect
