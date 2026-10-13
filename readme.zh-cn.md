@@ -7,11 +7,11 @@
 **高性能水墨风武侠格斗对战游戏**  
 *基于 HTML5 Canvas、WebRTC P2P 免服务器直连与轻量 Python WebSocket 服务器的实时武侠格斗游戏。*
 
-[![在线畅玩: GitHub Pages](https://img.shields.io/badge/在线畅玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://luffyxing55.github.io/Luffx/)
+[![在线畅玩: GitHub Pages](https://img.shields.io/badge/在线畅玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
 [![Technology: HTML5 Canvas](https://img.shields.io/badge/Technology-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](https://html.spec.whatwg.org)
 [![Multiplayer: WebRTC P2P](https://img.shields.io/badge/Multiplayer-WebRTC%20P2P%20%2F%20WebSocket-blue.svg?style=flat-square)](#architecture-and-technical-anatomy)
-[![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/luffyxing55/Luffx/releases)
+[![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/AMFI-Disable/RenYing/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
 [![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#privacy-and-security-first)
 [![Pricing: Free & Open-Source](https://img.shields.io/badge/Pricing-100%25%20Free%20%26%20Open%20Source-success.svg?style=flat-square)](#overview-and-core-value)
@@ -80,7 +80,7 @@
 
 无需安装任何软件或启动后台：
 
-1. 两位玩家均打开 **[https://luffyxing55.github.io/Luffx/](https://luffyxing55.github.io/Luffx/)**。
+1. 两位玩家均打开 **[https://amfi-disable.github.io/RenYing/](https://amfi-disable.github.io/RenYing/)**。
 2. 玩家 1 点击 **联机对战** $\rightarrow$ **建房** $\rightarrow$ 获得 4 位房间码（例如 `K7PQ`）。
 3. 玩家 2 在 **加入** 栏输入该房间码 $\rightarrow$ 点击 **加入**。
 4. 双方浏览器直接建立 WebRTC P2P 数据连接，立即开始选人对决！

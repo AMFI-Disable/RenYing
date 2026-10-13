@@ -12,6 +12,7 @@ All notable changes, features, and architectural capabilities of this project ar
 - WebRTC Peer-to-Peer serverless multiplayer support for GitHub Pages deployment.
 - Real-time WebSocket matchmaking server with rooms, ladder ranking, and community hub.
 - Standalone offline edition and character skin assets.
+- Official workspace repository migration to AMFI-Disable/RenYing.
 
 ---
 
