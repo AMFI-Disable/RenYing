@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Codebase & Syntax Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set Up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate Python Server Syntax
+        run: |
+          python3 -m py_compile server.py
+          echo "server.py syntax valid."
+
+      - name: Validate YAML Files
+        run: |
+          ruby -ryaml -e '
+            Dir.glob(".github/**/*.{yml,yaml}").each do |f|
+              YAML.safe_load(File.read(f))
+              puts "Validated: #{f}"
+            end
+          '
+
+      - name: Verify Lowercase Filenames
+        run: |
+          if git ls-files | grep '[A-Z]'; then
+            echo "Error: uppercase tracked files found"
+            exit 1
+          fi
+          echo "All tracked files are lowercase."
+
+      - name: Verify Core Game Entrypoints
+        run: |
+          test -f renying.html
+          test -f renying-offline.html
+          echo "All HTML entrypoints verified."
+
+      - name: Verify Commit Message Conventions
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python3 -c '
+          import subprocess, re, os
+          pattern = re.compile(r"^[a-z]+: [a-z0-9]+ [a-z0-9]+ [a-z0-9]+$")
+          base_sha = os.environ.get("BASE_SHA", "")
+
+          if base_sha and not re.match(r"^0+$", base_sha):
+              rev_range = f"{base_sha}..HEAD"
+          else:
+              rev_range = "HEAD~1..HEAD"
+
+          try:
+              commits = subprocess.check_output(["git", "log", rev_range, "--format=%H %s"]).decode().strip().split("\n")
+          except Exception:
+              commits = subprocess.check_output(["git", "log", "-1", "--format=%H %s"]).decode().strip().split("\n")
+
+          commits = [c for c in commits if c.strip()]
+          for c in commits:
+              sha, msg = c.split(" ", 1)
+              if msg.startswith("Merge "):
+                  continue
+              if not pattern.match(msg):
+                  raise SystemExit(f"Invalid commit message {sha[:7]}: {msg}")
+          print(f"Validated {len(commits)} commit messages.")
+          '
