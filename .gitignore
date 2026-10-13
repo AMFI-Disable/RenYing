@@ -1,0 +1,66 @@
+# ==============================================================================
+# SECTION 1: WORKING & PRESERVED FILES (Explicit Whitelists)
+# ==============================================================================
+# Whitelist active project sources, configuration definitions, and docs.
+!sources/
+!src/
+!assets/
+!readme*.md
+!changelog.md
+!license
+!.gitignore
+!.github/
+!.markdownlint.json
+!renying.html
+!server.py
+!renying-offline.html
+
+# ==============================================================================
+# SECTION 2: HIDDEN & IGNORED ARTIFACTS
+# ==============================================================================
+# 2.1 macOS System & Volume Metadata
+.DS_Store
+.DS_Store?
+.ds_store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+Icon?
+Thumbs.db
+
+# 2.2 IDEs, Editors & User Workspace State
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.xcuserdatad/
+xcuserdata/
+*.xcuserstate
+
+# 2.3 Build Products, Caches & Output Directories
+build/
+dist/
+DerivedData/
+.build/
+*.pyc
+__pycache__/
+*.egg-info/
+node_modules/
+*.zip
+*.tar.gz
+
+# 2.4 Secrets, Environment Profiles & Diagnostics
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.log
+scratch/
+tmp/
+.local/
+data/
+logs/
