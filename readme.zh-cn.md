@@ -5,11 +5,12 @@
 <img src="assets/skin-qingfengxing.png" width="240" alt="刃影艺术图" />
 
 **高性能水墨风武侠格斗对战游戏**  
-*基于 HTML5 Canvas 与零依赖轻量 Python WebSocket 服务器的实时武侠动作游戏。*
+*基于 HTML5 Canvas、WebRTC P2P 免服务器直连与轻量 Python WebSocket 服务器的实时武侠格斗游戏。*
 
+[![在线畅玩: GitHub Pages](https://img.shields.io/badge/在线畅玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://luffyxing55.github.io/Luffx/)
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
 [![Technology: HTML5 Canvas](https://img.shields.io/badge/Technology-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](https://html.spec.whatwg.org)
-[![Network: WebSocket](https://img.shields.io/badge/Network-Realtime%20WebSocket-success.svg?style=flat-square)](#architecture-and-technical-anatomy)
+[![Multiplayer: WebRTC P2P](https://img.shields.io/badge/Multiplayer-WebRTC%20P2P%20%2F%20WebSocket-blue.svg?style=flat-square)](#architecture-and-technical-anatomy)
 [![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/luffyxing55/Luffx/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
 [![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#privacy-and-security-first)
@@ -31,7 +32,7 @@
 - [Overview And Core Value](#overview-and-core-value)
 - [Key Features](#key-features)
 - [Game Controls And Mechanics](#game-controls-and-mechanics)
-- [Quick Start And Running The Server](#quick-start-and-running-the-server)
+- [How To Play And Multiplayer Modes](#how-to-play-and-multiplayer-modes)
 - [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
 - [Privacy And Security First](#privacy-and-security-first)
 - [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
@@ -41,18 +42,17 @@
 
 ## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
-**刃影 (RenYing)** 是一款快节奏水墨风格的武侠格斗对战游戏。游戏采用纯原生 HTML5 Canvas 渲染与零外部依赖的 Python WebSocket 服务端架构，带来极速打击响应、写意水墨招式与无缝联机体验。
+**刃影 (RenYing)** 是一款快节奏水墨风格的武侠格斗对战游戏。专门针对校园及多端对战场景设计，支持通过 GitHub Pages 进行免服务器的浏览器对浏览器 WebRTC 直连联机（$0 成本、无网络中转延迟），同时也完整保留了本地局域网 Python WebSocket 服务器模式。
 
 ---
 
 ## 🚀 Key Features <a id="key-features"></a>
 
+- **GitHub Pages 即开即玩**：无需安装任何环境，不需克隆代码，任意浏览器点开网页即可开始。
+- **免服务器 WebRTC P2P 联机**：两位玩家通过 4 位房间码直接建立浏览器间 UDP 通道，零中转延迟。
 - **写意水墨美术风格**：流畅的笔墨拖尾粒子、顿挫有力的打击定格、纯正武侠意境。
-- **实时多人联机对战**：支持 4 位房间码开房邀请、快速匹配与六段位排位天梯（砺锋、出鞘、破竹、惊鸿、踏月、刃影）。
-- **零依赖单文件服务器**：仅使用 Python 3 标准库构建的高性能 WebSocket 与 HTTP 联机服务器。
-- **纯本地离线单机版**：提供离线单文件版（`renying-offline.html`），音频全内置，随时随地即开即玩。
-- **断线保护与重连机制**：对战及选人掉线时保留房间 60 秒，重连即可继续对决。
-- **成长系统与内置社区**：集成墨锭货币、问剑阁抽卡、碎片合成、任务系统、战斗回放与社区聊天。
+- **自建 Python 独立服务器**：零依赖单文件 `server.py`，支持天梯排位、录像存储与内置社区。
+- **纯本地单机离线模式**：提供单文件离线版（`renying-offline.html`），音频全内置，随时随地畅玩。
 
 ---
 
@@ -74,11 +74,20 @@
 
 ---
 
-## 📦 Quick Start And Running The Server <a id="quick-start-and-running-the-server"></a>
+## 📦 How To Play And Multiplayer Modes <a id="how-to-play-and-multiplayer-modes"></a>
 
-### 1. 启动联机服务器
+### 模式一：WebRTC P2P 在线直连（推荐校园开黑，0 成本零延迟）
 
-直接使用系统自带的 Python 3 运行服务端程序（无需额外安装任何第三方依赖库）：
+无需安装任何软件或启动后台：
+
+1. 两位玩家均打开 **[https://luffyxing55.github.io/Luffx/](https://luffyxing55.github.io/Luffx/)**。
+2. 玩家 1 点击 **联机对战** $\rightarrow$ **建房** $\rightarrow$ 获得 4 位房间码（例如 `K7PQ`）。
+3. 玩家 2 在 **加入** 栏输入该房间码 $\rightarrow$ 点击 **加入**。
+4. 双方浏览器直接建立 WebRTC P2P 数据连接，立即开始选人对决！
+
+### 模式二：本地局域网服务器（经典模式）
+
+如果希望使用官方 `server.py` 在局域网内建服：
 
 ```bash
 # 启动默认 8765 端口服务
@@ -88,42 +97,39 @@ python3 server.py
 python3 server.py 9000
 ```
 
-### 2. 浏览器打开游戏
+同一 Wi-Fi 下的同学直接访问 `http://<你的电脑局域网IP>:8765` 即可连入。
 
-在现代浏览器中直接访问：
+### 模式三：单机离线游玩
 
-```text
-http://localhost:8765
-```
-
-局域网联机时，好友可通过控制台输出的局域网 IP 地址访问加入房间。
-
-### 3. 单机离线游玩
-
-无需运行服务器，直接使用浏览器双击打开 `renying-offline.html` 即可畅玩单机及双人本地模式。
+双击打开 `renying-offline.html`，无需任何网络即可进行单人闯关、人机对战与木人桩练习。
 
 ---
 
 ## 🏗 Architecture And Technical Anatomy <a id="architecture-and-technical-anatomy"></a>
 
 ```mermaid
-flowchart LR
-    A["renying.html (客户端)"] <-->|"WebSocket (JSON 帧)"| B["server.py (服务端)"]
-    B <-->|"SQLite 数据库"| C["data/renying.db"]
-    D["renying-offline.html"] -->|"本地浏览器渲染"| E["自包含离线包"]
+flowchart TD
+    subgraph 模式一：免服务器 P2P
+        P1["玩家 1 (GitHub Pages)"] <-->|"WebRTC DataChannel (直连 UDP)"| P2["玩家 2 (GitHub Pages)"]
+    end
+    subgraph 模式二：自建中心服务器
+        C1["客户端 1"] <-->|"WebSocket JSON"| S["server.py (Python)"]
+        C2["客户端 2"] <-->|"WebSocket JSON"| S
+        S <-->|"SQLite"| DB["data/renying.db"]
+    end
 ```
 
-- **客户端架构**：纯原生 JavaScript 与 HTML5 Canvas 2D，确保极致流畅的渲染与低输入延迟。
-- **网络通信**：标准 RFC 6455 帧解析与心跳检测，毫秒级状态同步。
-- **数据持久化**：SQLite 3 数据库（`data/renying.db`），密码加盐哈希存储，确保数据安全。
+- **客户端引擎**：纯原生 JavaScript + HTML5 Canvas 2D，极致低输入延迟。
+- **P2P 通信**：基于 WebRTC DataChannels 与 PeerJS 握手协议，自动穿透局域网 NAT。
+- **数据存储**：本地 LocalStorage 与可选 SQLite 3 服务端数据库。
 
 ---
 
 ## 🛡 Privacy And Security First <a id="privacy-and-security-first"></a>
 
 - **零数据追踪**：无任何第三方统计脚本或分析 SDK，纯净无广告。
-- **本地优先运行**：所有战绩数据、天梯积分与本地回放均保存在本地设备。
-- **密码安全加盐**：所有账户密码均经过加盐哈希处理，杜绝明文风险。
+- **点对点隐私保障**：P2P 模式下所有操作指令直接在两位玩家浏览器之间传输，不经过任何第三方服务器。
+- **本地优先**：所有战绩和配置仅保存在本地设备。
 
 ---
 

@@ -5,11 +5,12 @@
 <img src="assets/skin-qingfengxing.png" width="240" alt="RenYing Artwork" />
 
 **High-Performance Ink-Wash Martial Arts Action Duel Game**  
-*Fluid real-time martial arts fighting game powered by HTML5 Canvas and lightweight Python WebSocket networking.*
+*Fluid real-time martial arts fighting game powered by HTML5 Canvas, serverless WebRTC P2P multiplayer, and lightweight Python WebSocket networking.*
 
+[![Play Online: GitHub Pages](https://img.shields.io/badge/Play%20Online-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://luffyxing55.github.io/Luffx/)
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
 [![Technology: HTML5 Canvas](https://img.shields.io/badge/Technology-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](https://html.spec.whatwg.org)
-[![Network: WebSocket](https://img.shields.io/badge/Network-Realtime%20WebSocket-success.svg?style=flat-square)](#architecture-and-technical-anatomy)
+[![Multiplayer: WebRTC P2P](https://img.shields.io/badge/Multiplayer-WebRTC%20P2P%20%2F%20WebSocket-blue.svg?style=flat-square)](#architecture-and-technical-anatomy)
 [![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/luffyxing55/Luffx/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
 [![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#privacy-and-security-first)
@@ -31,7 +32,7 @@
 - [Overview And Core Value](#overview-and-core-value)
 - [Key Features](#key-features)
 - [Game Controls And Mechanics](#game-controls-and-mechanics)
-- [Quick Start And Running The Server](#quick-start-and-running-the-server)
+- [How To Play And Multiplayer Modes](#how-to-play-and-multiplayer-modes)
 - [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
 - [Privacy And Security First](#privacy-and-security-first)
 - [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
@@ -41,18 +42,17 @@
 
 ## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
-**RenYing (刃影)** is a high-speed ink-wash martial arts action duel game. Engineered with standard HTML5 Canvas graphics and a zero-external-dependency Python WebSocket server, it delivers instantaneous combat responses, expressive martial arts animation, and seamless online and offline gameplay.
+**RenYing (刃影)** is a high-speed ink-wash martial arts action duel game. Designed for immediate play in school or at home, it offers both serverless browser-to-browser WebRTC Peer-to-Peer multiplayer on GitHub Pages and a standalone zero-dependency Python WebSocket server for local networks.
 
 ---
 
 ## 🚀 Key Features <a id="key-features"></a>
 
-- **Ink-Wash Visual Style**: Fluid brushstroke effects, dynamic particle trails, and responsive hit-pause visual feedback.
-- **Real-Time Multiplayer Combat**: Room code matchmaking, quick matchmaking queue, and competitive ladder divisions.
-- **Zero-Dependency Server**: Standalone Python 3 WebSocket and HTTP server using standard libraries only.
-- **Offline Standalone Client**: Complete offline edition (`renying-offline.html`) with embedded audio and character roster.
-- **Reconnection Resilience**: Graceful 60-second connection recovery preserves active duel rooms during temporary disconnects.
-- **Integrated Community & Hub**: In-game player chat, combat replays, character encyclopedia, and custom skins.
+- **Instant Online Play on GitHub Pages**: Open in any browser without installation, clone, or server hosting.
+- **Serverless WebRTC P2P Multiplayer**: Direct peer-to-peer UDP networking between two players with 4-letter room codes and ultra-low input lag.
+- **Ink-Wash Visual Style**: Fluid brushstroke particle trails, hit-stop impacts, and traditional Chinese martial arts aesthetic.
+- **Optional Dedicated Python Server**: Zero-dependency `server.py` supporting ladder ranking, match replays, and community hub.
+- **Pure Offline Standalone Edition**: Complete client (`renying-offline.html`) with embedded audio for single-player and training mode.
 
 ---
 
@@ -74,11 +74,20 @@
 
 ---
 
-## 📦 Quick Start And Running The Server <a id="quick-start-and-running-the-server"></a>
+## 📦 How To Play And Multiplayer Modes <a id="how-to-play-and-multiplayer-modes"></a>
 
-### 1. Launch Multiplayer Server
+### Option 1: Instant WebRTC P2P (Recommended For School - $0 Budget)
 
-Run the bundled Python server directly with standard Python 3 (no third-party packages required):
+No software installation or Python server required:
+
+1. Both players visit **[https://luffyxing55.github.io/Luffx/](https://luffyxing55.github.io/Luffx/)** on their devices.
+2. Player 1 navigates to **联机对战** $\rightarrow$ clicks **建房** $\rightarrow$ shares the generated 4-digit room code (e.g., `K7PQ`).
+3. Player 2 enters the code into the **加入** box $\rightarrow$ clicks **加入**.
+4. Both browsers connect directly via WebRTC DataChannels with zero intermediate server lag.
+
+### Option 2: Local Dedicated Server (LAN Mode)
+
+To host your own private server on your local Wi-Fi or LAN:
 
 ```bash
 # Start server on default port 8765
@@ -88,17 +97,9 @@ python3 server.py
 python3 server.py 9000
 ```
 
-### 2. Connect In Browser
+Open `http://localhost:8765` in your browser. Classmates on the same Wi-Fi can connect directly via `http://<your-lan-ip>:8765`.
 
-Open your preferred modern web browser and navigate to:
-
-```text
-http://localhost:8765
-```
-
-For players on the same local network, connect using the host machine's local IP address (displayed in the server launch log).
-
-### 3. Pure Offline Play
+### Option 3: Standalone Offline Play
 
 Double-click or open `renying-offline.html` directly in any web browser without running a server or requiring an active internet connection.
 
@@ -107,23 +108,29 @@ Double-click or open `renying-offline.html` directly in any web browser without 
 ## 🏗 Architecture And Technical Anatomy <a id="architecture-and-technical-anatomy"></a>
 
 ```mermaid
-flowchart LR
-    A["renying.html (Client)"] <-->|"WebSocket (JSON Frames)"| B["server.py (Server)"]
-    B <-->|"SQLite Database"| C["data/renying.db"]
-    D["renying-offline.html"] -->|"Local Browser Engine"| E["Self-Contained Client"]
+flowchart TD
+    subgraph Mode 1: Serverless P2P
+        P1["Player 1 Browser (GitHub Pages)"] <-->|"WebRTC DataChannel (Direct UDP)"| P2["Player 2 Browser (GitHub Pages)"]
+    end
+    subgraph Mode 2: Dedicated Server
+        C1["Client 1"] <-->|"WebSocket JSON"| S["server.py (Python)"]
+        C2["Client 2"] <-->|"WebSocket JSON"| S
+        S <-->|"SQLite"| DB["data/renying.db"]
+    end
 ```
 
 - **Client Runtime**: Pure vanilla JavaScript utilizing HTML5 Canvas 2D context for ultra-low rendering latency.
-- **Networking Stack**: Raw WebSocket implementation with RFC 6455 framing and keep-alive ping cycles.
-- **Persistence**: SQLite 3 database (`data/renying.db`) storing user accounts with PBKDF2/SHA-256 salted hashes, match replays, and ranking ladders.
+- **P2P Networking**: WebRTC DataChannels with PeerJS handshake and Google STUN NAT traversal.
+- **Server Networking**: Raw WebSocket implementation with RFC 6455 framing and keep-alive ping cycles.
+- **Persistence**: Local storage and optional SQLite 3 database (`data/renying.db`) storing user accounts with PBKDF2/SHA-256 salted hashes.
 
 ---
 
 ## 🛡 Privacy And Security First <a id="privacy-and-security-first"></a>
 
 - **Zero Telemetry**: No third-party analytics, external trackers, or diagnostic telemetry.
+- **Peer-to-Peer Privacy**: In WebRTC P2P mode, game inputs travel directly between player browsers without passing through any server.
 - **Local-First Data**: All matchmaking history, ladder statistics, and replay files remain strictly on your host machine.
-- **Salted Cryptography**: User passwords never persist in plain text; all credentials use cryptographically secure salted hashes.
 
 ---
 
