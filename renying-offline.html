@@ -1910,7 +1910,12 @@ function monHitPlayer(m, dmg, kb, stun, launch, root) {
   if (A.invul > 0 || A.escInvul || A.hp <= 0 || FOREST.over || FOREST.hurtT < FOREST.prot) return;   // 挨打后短暂保护（越往后越短）
   dmg *= m.dk || 1;
   const dir = A.x >= m.x ? 1 : -1;
-  const blocking = (A.state === 'block' || A.state === 'blockstun') && A.face === -dir && !launch;
+  const holdingBlock = !!(A.ctrl && A.ctrl.held && A.ctrl.held.down);
+  const wasBlocking = ((A.state === 'block' || A.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(A.state)));
+  if (wasBlocking && !launch) {
+    A.face = -dir;
+  }
+  const blocking = wasBlocking && A.face === -dir && !launch;
   hitFX(A.x, A.y - 60, blocking ? 0.5 : 0.9, m.T.eye, dir);
   if (blocking) { A.state = 'blockstun'; A.t = 0; A.stun = 0.12; A.vx = dir * 160; FOREST.hurtT = 0.3; SFX.block(); return; }
   A.hp = Math.max(0, A.hp - dmg); FOREST.hurtT = 0; A.flash = 0.1; A.sinceHit = 0;
@@ -2375,7 +2380,7 @@ function neutral(f, foe) {
     if (c.consume('light')) return startAttack(f, 'l1');
     if (c.consume('heavy')) return startAttack(f, 'hv');
     if (c.consume('jump')) return doJump(f, dir);
-    if (c.held.down) { f.state = 'block'; f.face = foe.x >= f.x ? 1 : -1; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return; }   // 格挡时可以慢慢挪步
+    if (c.held.down) { f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return; }   // 格挡时可以慢慢挪步
     if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
     if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
     const sp = dir === f.face ? wk(f) : wk(f) * 0.78;
@@ -2403,7 +2408,7 @@ function attackUpdate(f, foe) {
   const m = f.move, c = f.ctrl, t = f.t;
   const act0 = m.su, act1 = m.su + m.ac;
   // 格挡更灵活：出招前段、或打完判定之后的收招，按住 S 都能立刻转成格挡
-  if (c.held.down && f.onGround() && M.phase === 'fight' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = foe.x >= f.x ? 1 : -1; return; }
+  if (c.held.down && f.onGround() && M.phase === 'fight' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
   if (t >= act0 && !f.lunged) {
     f.lunged = true;
     if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线飞向对手（要有墨水）
@@ -2439,7 +2444,10 @@ function attackUpdate(f, foe) {
       if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = foe.x >= f.x ? 1 : -1; return doJump(f, f.face); }
     }
   }
-  if (t >= act1 + m.rc) toNeutral(f);
+  if (t >= act1 + m.rc) {
+    toNeutral(f);
+    if (c.held.down && f.onGround()) { f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; }
+  }
 }
 function endSpecial(f) { f.invul = 0; toNeutral(f); }
 function specialUpdate(f, foe) {
@@ -2556,6 +2564,7 @@ function updateProjs() {
     // 斩弹：对手的刀砍中飞行道具就把它打散
     if (!p.unbreakable && foe.state === 'attack' && foe.move && foe.t >= foe.move.su && foe.t < foe.move.su + foe.move.ac && overlap(hitbox(foe, foe.move.box), box)) {
       p.dead = true; blockFX(p.x, p.y, foe.face); SFX.block();
+      foe.meter = Math.min(100, foe.meter + 1.5);
       addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb: foe.look.slash }); continue;
     }
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
@@ -2708,9 +2717,38 @@ function updateFighter(f, foe) {
     case 'hitstun':
       if (f.t >= f.stun) { f.comboHits = 0; toNeutral(f); }
       break;
-    case 'blockstun': if (f.t >= f.stun) { f.state = 'block'; if (!f.ctrl.held.down) toNeutral(f); } break;
+    case 'blockstun':
+      if (f.ctrl && f.ctrl.held && f.ctrl.held.down && Math.abs(foe.x - f.x) > 6) {
+        f.face = foe.x >= f.x ? 1 : -1;
+      }
+      if (f.t >= f.stun) {
+        if (!f.ctrl.held.down) {
+          toNeutral(f);
+          const c = f.ctrl;
+          if (c && M.phase === 'fight') {
+            const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
+            if (f.meter >= 100 && c.consume('special')) { startSpecial(f); break; }
+            if (f.skillCD <= 0 && c.consume('skill')) { startSkill(f, foe); break; }
+            if (f.skill2CD <= 0 && c.consume('skill2')) { startSkill(f, foe, 2); break; }
+            if (c.consume('light')) { startAttack(f, 'l1'); break; }
+            if (c.consume('heavy')) { startAttack(f, 'hv'); break; }
+            if (c.consume('jump')) { doJump(f, dir); break; }
+          }
+        } else {
+          f.state = 'block';
+        }
+      }
+      break;
     case 'knockdown': if (f.t >= 0.6 && f.hp > 0 && M.phase !== 'end') { f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0; } break;
-    case 'getup': if (f.t >= 0.3) toNeutral(f); break;
+    case 'getup':
+      if (f.t >= 0.3) {
+        if (f.ctrl && f.ctrl.held && f.ctrl.held.down) {
+          f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face;
+        } else {
+          toNeutral(f);
+        }
+      }
+      break;
     case 'special': specialUpdate(f, foe); break;
     case 'charge': chargeUpdate(f, foe); break;
     case 'skill': SKILLS[f.skill].update(f, foe); break;
@@ -2754,7 +2792,11 @@ function onLand(f) {
   }
   if (f.state === 'held') return;
   f.jumps = 0; f.airDash = 1;
-  if (f.state === 'air' || (f.state === 'attack' && f.move.air)) { toNeutral(f); dust(f.x, 0, 4); SFX.land(); }
+  if (f.state === 'air' || (f.state === 'attack' && f.move.air)) {
+    toNeutral(f);
+    if (f.ctrl && f.ctrl.held && f.ctrl.held.down) { f.state = 'block'; f.face = Math.abs(foeOf(f).x - f.x) > 6 ? (foeOf(f).x >= f.x ? 1 : -1) : f.face; }
+    dust(f.x, 0, 4); SFX.land();
+  }
   else if (f.state === 'dash') { /* 地面冲刺结束会自己转状态 */ }
 }
 
@@ -2788,8 +2830,15 @@ function tryHit(f, foe, m) {
 const predicted = [];
 function predictHit(att, def, m, pt) {
   if (att.idx !== localIdx() || m.isProj) return;
-  const blocking = (def.state === 'block' || def.state === 'blockstun') && def.onGround() && !m.unblockable && Math.sign((m.srcX !== undefined ? m.srcX : att.x) - def.x) === def.face;
-  hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, blk: blocking, f: m.dir || att.face, nc: true });
+  const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
+  const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
+  const sx = m.srcX !== undefined ? m.srcX : att.x, fx = m.dir || att.face;
+  if (wasBlocking && !m.unblockable) {
+    const atkDir = Math.sign(sx - def.x) || -fx || def.face;
+    def.face = atkDir;
+  }
+  const blocking = wasBlocking && !m.unblockable;
+  hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, blk: blocking, f: fx, nc: true });
   predicted.push(performance.now());
 }
 function applyHit(att, def, m, pt) {
@@ -2798,8 +2847,13 @@ function applyHit(att, def, m, pt) {
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
   // 月镜：格开近身攻击并反斩（飞行道具和大招无效）
   if (def.state === 'skill' && def.parryT > 0 && !m.isProj && !m.ult) { parry(def, att, pt); def.skill2CD = 0; return; }
-  const wasBlocking = (def.state === 'block' || def.state === 'blockstun') && def.onGround();
-  const blocking = wasBlocking && !m.unblockable && Math.sign(sx - def.x) === def.face;
+  const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
+  const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
+  if (wasBlocking && !m.unblockable) {
+    const atkDir = Math.sign(sx - def.x) || -fx || def.face;
+    def.face = atkDir;
+  }
+  const blocking = wasBlocking && !m.unblockable;
   const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking, f: fx };
   const mm = att.ch.meterMul || 1;
   if (blocking) {
@@ -3152,7 +3206,9 @@ function updateAim() {
 function faceDir(f, foe) {
   const h = f.ctrl && f.ctrl.held, a = h && h.aim;
   const on = a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl));   // 对手的设置由对手那边决定
-  return on ? a : (foe.x >= f.x ? 1 : -1);
+  if (on) return a;
+  const dx = foe.x - f.x;
+  return Math.abs(dx) > 3 ? (dx > 0 ? 1 : -1) : f.face;
 }
 function simTick(real) {
   if (ROLL.on && M.mode === 'net') return rollTick(real);

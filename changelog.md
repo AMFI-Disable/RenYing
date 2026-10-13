@@ -14,6 +14,14 @@ All notable changes, features, and architectural capabilities of this project ar
 - Standalone offline edition and character skin assets.
 - Official workspace repository migration to AMFI-Disable/RenYing.
 
+### Improved
+
+- Auto-facing mechanics when blocking against cross-ups, aerial dives, and back-attacks.
+- Guard input buffering during neutral, walking, landing, and wake-up states.
+- Reversal counter-attack buffering out of blockstun and wake-up getup.
+- Opponent tracking stability with cross-up deadzone to eliminate rapid sprite jittering.
+- Projectile deflection reward system granting meter gain on successful weapon parries.
+
 ---
 
 ## [1.0.0] - Production Release (Inaugural Release)
