@@ -22,6 +22,10 @@ All notable changes, features, and architectural capabilities of this project ar
 - Opponent tracking stability with cross-up deadzone to eliminate rapid sprite jittering.
 - Projectile deflection reward system granting meter gain on successful weapon parries.
 
+### Changed
+
+- Updated developer and creator attribution to Luffy & Opus 5.5 across all game clients, UI screens, server, and documentation.
+
 ---
 
 ## [1.0.0] - Production Release (Inaugural Release)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 刃影 联机服务器（只用 Python 自带的库）
+Created by Luffy & Opus 5.5
 
 它做这些事：
   1. 把游戏网页 renying.html 发给打开网址的人

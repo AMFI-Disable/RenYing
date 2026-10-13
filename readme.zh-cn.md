@@ -5,7 +5,7 @@
 <img src="assets/skin-qingfengxing.png" width="240" alt="刃影艺术图" />
 
 **高性能水墨风武侠格斗对战游戏**  
-*基于 HTML5 Canvas、WebRTC P2P 免服务器直连与轻量 Python WebSocket 服务器的实时武侠格斗游戏。*
+*由 Luffy & Opus 5.5 倾力创作。基于 HTML5 Canvas、WebRTC P2P 免服务器直连与轻量 Python WebSocket 服务器的实时武侠格斗游戏。*
 
 [![在线畅玩: GitHub Pages](https://img.shields.io/badge/在线畅玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
@@ -42,7 +42,7 @@
 
 ## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
-**刃影 (RenYing)** 是一款快节奏水墨风格的武侠格斗对战游戏。专门针对校园及多端对战场景设计，支持通过 GitHub Pages 进行免服务器的浏览器对浏览器 WebRTC 直连联机（$0 成本、无网络中转延迟），同时也完整保留了本地局域网 Python WebSocket 服务器模式。
+**刃影 (RenYing)** 是一款由 **Luffy & Opus 5.5** 共同创作的快节奏水墨风格武侠格斗对战游戏。专门针对校园及多端对战场景设计，支持通过 GitHub Pages 进行免服务器的浏览器对浏览器 WebRTC 直连联机（$0 成本、无网络中转延迟），同时也完整保留了本地局域网 Python WebSocket 服务器模式。
 
 ---
 
@@ -145,4 +145,4 @@ flowchart TD
 
 ## 📄 License And Legal Attribution <a id="license-and-legal-attribution"></a>
 
-本项目采用 [MIT License](license) 开源协议。Copyright (c) 2026 AMFI-Disable.
+由 **Luffy & Opus 5.5** 倾力创作。本项目采用 [MIT License](license) 开源协议。Copyright (c) 2026 AMFI-Disable, Luffy & Opus 5.5.
