@@ -26,6 +26,17 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Improved
 
+- Character-specific skeletal animation poses: 22 bespoke joint poses across all 9 fighters for skills, ultimate charges, flurry attacks, and finishers.
+- Mechanic-driven 克制 (Counter / Matchup Advantage) system without flat stat debuffs:
+  - Ground tremors and shockwaves naturally bypass airborne and flying fighters (Yan Ling, Liu Yun).
+  - Qing Feng's Gale dash slices through and purges Mo Yu's Ink Traps on contact.
+  - Ling Shuang's Spin deflects incoming non-unbreakable projectiles.
+  - Tie Shan's Hyper Armor absorbs incoming kinetic impacts, restoring skill cooldowns and meter when struck by rapid multi-hit attacks.
+  - Ling Shuang spear tip sweetspot system: +25% bonus damage and heavy launch at max reach (>155px), reduced to 38% damage inside (<72px).
+  - Yue Hua's Mirror parry counter applies an escape lock, guaranteeing punish execution against mashing.
+- Hero damage profile and escape balance spectrum (easy to escape vs hard to escape):
+  - Individualized escape cooldowns (`escCD` from 7.0s for heavy armor to 9.5s for fragile assassins).
+  - Multi-hit combos (e.g., Lei Ming's 10-hit chain) leave clear escape gaps between punches, while high-commitment punish skills enforce tight escape windows.
 - Auto-facing mechanics when blocking against cross-ups, aerial dives, and back-attacks.
 - Guard input buffering during neutral, walking, landing, and wake-up states.
 - Reversal counter-attack buffering out of blockstun and wake-up getup.
