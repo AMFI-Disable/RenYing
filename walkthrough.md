@@ -214,6 +214,8 @@ flowchart LR
 | **依赖内嵌优化** | `cf3effb` | `perf: bundle peerjs dependency` | PeerJS 核心内嵌打包，解耦外部不可靠 CDN，提升弱网稳定性 |
 | **文档与归档** | `44b9761` | `docs: update network changelog` | 完善网络双模切换指南与更新日志文档 |
 | **英雄差异与克制** | `0eb1367` | `feat: diversify hero mechanics` | 22 个专属骨骼动画姿态，纯机制克制逻辑，伤害与挣脱平衡谱系 |
+| **铁山大招跃空操控** | `0279504` | `feat: steerable avalanche leap` | 铁山大招跃空滞空横向转向与下砸俯冲操控，火星尾迹与 AI 跟踪 |
+| **创作者署名更新** | `已交付` | `docs: update creator attribution` | 创作者名单更新为 Even, Luffy, and Opus 5.5（涵盖 UI、引擎、服务与文档） |
 
 ```bash
 # 全局自动化质量验证汇总 (全部通过)

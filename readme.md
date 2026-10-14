@@ -5,7 +5,7 @@
 <img src="assets/skin-qingfengxing.png" width="240" alt="RenYing Artwork" />
 
 **High-Performance Ink-Wash Martial Arts Action Duel Game**  
-*Created by Luffy & Opus 5.5. Fluid real-time martial arts fighting game powered by HTML5 Canvas, serverless WebRTC P2P multiplayer, and lightweight Python WebSocket networking.*
+*Created by Even, Luffy, and Opus 5.5. Fluid real-time martial arts fighting game powered by HTML5 Canvas, serverless WebRTC P2P multiplayer, and lightweight Python WebSocket networking.*
 
 [![Play Online: GitHub Pages](https://img.shields.io/badge/Play%20Online-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
@@ -43,7 +43,7 @@
 
 ## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
-**RenYing (刃影)** is a high-speed ink-wash martial arts action duel game created by **Luffy & Opus 5.5**. Designed for immediate play in school or at home, it offers both serverless browser-to-browser WebRTC Peer-to-Peer multiplayer on GitHub Pages and a standalone zero-dependency Python WebSocket server for local networks.
+**RenYing (刃影)** is a high-speed ink-wash martial arts action duel game created by **Even, Luffy, and Opus 5.5**. Designed for immediate play in school or at home, it offers both serverless browser-to-browser WebRTC Peer-to-Peer multiplayer on GitHub Pages and a standalone zero-dependency Python WebSocket server for local networks.
 
 ---
 
@@ -179,4 +179,4 @@ CI runs `python3 tools/build.py --check` and fails if the generated pages are ou
 
 ## 📄 License And Legal Attribution <a id="license-and-legal-attribution"></a>
 
-Created by **Luffy & Opus 5.5**. Licensed under the [MIT License](license). Copyright (c) 2026 AMFI-Disable, Luffy & Opus 5.5.
+Created by **Even, Luffy, and Opus 5.5**. Licensed under the [MIT License](license). Copyright (c) 2026 AMFI-Disable, Even, Luffy, and Opus 5.5.

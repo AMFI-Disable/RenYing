@@ -53,7 +53,7 @@ All notable changes, features, and architectural capabilities of this project ar
 - Static hosting (GitHub Pages) automatically defaults to P2P direct connect, preventing unintended fallbacks to local `server.py`.
 - The online screen on GitHub Pages leads with direct rooms; the server address field moved into an optional section that reveals quick match and ranked play when filled.
 - `server.py` serves `index.html`, `assets/music/`, and other whitelisted assets.
-- Updated developer and creator attribution to Luffy & Opus 5.5 across all game clients, UI screens, server, and documentation.
+- Updated developer and creator attribution to Even, Luffy, and Opus 5.5 across all game clients, UI screens, server, and documentation.
 
 ### Fixed
 

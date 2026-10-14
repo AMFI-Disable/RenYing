@@ -4028,7 +4028,7 @@ function drawCredit() {
   const lift = (1 - clamp(t / 0.5, 0, 1)) * 12;
   ctx.font = `700 ${s2}px ${BODY_FONT}`;
   ctx.shadowColor = 'rgba(120,230,255,0.45)'; ctx.shadowBlur = 24; ctx.fillStyle = '#f4ecd8';
-  ctx.fillText('Luffy & Opus 5.5', cx, cy + s2 * 0.3 + lift);
+  ctx.fillText('Even, Luffy, and Opus 5.5', cx, cy + s2 * 0.3 + lift);
   ctx.restore();
 }
 function drawAnnounce() {
@@ -6127,7 +6127,7 @@ renderAcc();
 function netStatus(t) { $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
 if (!SERVED) $id('onlineLine').textContent = '';
-$id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Luffy & Opus 5.5`;
+$id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
 // 离线：全部皮肤可用，装备记在本机；离线版隐藏需要服务器的功能
 if (!SERVED) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 if (OFFLINE_BUILD) {
