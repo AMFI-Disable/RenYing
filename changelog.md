@@ -35,8 +35,10 @@ All notable changes, features, and architectural capabilities of this project ar
 ### Changed
 
 - `index.html` is now the single online edition for GitHub Pages and `server.py`; `renying.html` redirects to it.
-- Background music moved out of the online page into `assets/music/`, shrinking `index.html` from 6.5 MB to 1.5 MB.
-- PeerJS loads only when a direct room is created or joined.
+- Background music moved out of the online page into `assets/music/`, shrinking `index.html` from 6.5 MB to 1.6 MB.
+- PeerJS (`assets/peerjs.min.js`) bundled directly into `index.html` to eliminate external script downloads and latency on slow networks.
+- WebRTC P2P connection timeouts extended to 45 seconds with staged status messages for high-latency networks.
+- Static hosting (GitHub Pages) automatically defaults to P2P direct connect, preventing unintended fallbacks to local `server.py`.
 - The online screen on GitHub Pages leads with direct rooms; the server address field moved into an optional section that reveals quick match and ranked play when filled.
 - `server.py` serves `index.html`, `assets/music/`, and other whitelisted assets.
 - Updated developer and creator attribution to Luffy & Opus 5.5 across all game clients, UI screens, server, and documentation.
