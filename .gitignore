@@ -5,6 +5,7 @@
 !sources/
 !src/
 !assets/
+!tools/
 !readme*.md
 !changelog.md
 !license

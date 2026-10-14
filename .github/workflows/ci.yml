@@ -27,8 +27,8 @@ jobs:
 
       - name: Validate Python Server Syntax
         run: |
-          python3 -m py_compile server.py
-          echo "server.py syntax valid."
+          python3 -m py_compile server.py tools/build.py
+          echo "server.py and tools/build.py syntax valid."
 
       - name: Validate YAML Files
         run: |
@@ -49,9 +49,13 @@ jobs:
 
       - name: Verify Core Game Entrypoints
         run: |
+          test -f index.html
           test -f renying.html
           test -f renying-offline.html
           echo "All HTML entrypoints verified."
+
+      - name: Verify Generated Pages Are Up To Date
+        run: python3 tools/build.py --check
 
       - name: Verify Commit Message Conventions
         env:

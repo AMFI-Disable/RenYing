@@ -34,6 +34,7 @@
 - [Game Controls And Mechanics](#game-controls-and-mechanics)
 - [How To Play And Multiplayer Modes](#how-to-play-and-multiplayer-modes)
 - [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
+- [Project Structure And Building](#project-structure-and-building)
 - [Privacy And Security First](#privacy-and-security-first)
 - [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
 - [License And Legal Attribution](#license-and-legal-attribution)
@@ -58,17 +59,19 @@
 
 ## 🎮 Game Controls And Mechanics <a id="game-controls-and-mechanics"></a>
 
-### 默认键盘按键映射
+### 默认键盘和鼠标操作
 
-| 操作说明 | 玩家 1 (默认) | 玩家 2 (本地双人小键盘) |
-| :--- | :--- | :--- |
-| **左右移动** | `A` / `D` | `左方向键` / `右方向键` |
-| **跳跃** | `W` | `上方向键` |
-| **蹲伏 / 下落** | `S` | `下方向键` |
-| **轻击** | `J` | `数字小键盘 1` |
-| **重击** | `K` | `数字小键盘 2` |
-| **闪避 / 疾冲** | `L` | `数字小键盘 3` |
-| **绝技 / 爆气** | `U` / `I` | `数字小键盘 4` / `数字小键盘 5` |
+| 操作 | 按键 |
+| :--- | :--- |
+| **左右移动** | `A` / `D` |
+| **跳跃 / 二段跳** | `W` 或 `空格` |
+| **防御** | 按住 `S` |
+| **攻击（五段连击）** | 鼠标左键 |
+| **蓄力斩** | 按住鼠标左键再松开 |
+| **远程招式** | 按住左键再点右键（或 `R`） |
+| **腾空闪** | 鼠标右键（或 `左 Shift`） |
+| **技能 / 大招** | `Q` / `E`（大招需要气满） |
+| **暂停 / 静音** | `P` / `M`（单人模式） |
 
 *(注：在移动设备或平板触控屏上，游戏将自动启用虚拟摇杆与触控按键)。*
 
@@ -83,11 +86,13 @@
 1. 两位玩家均打开 **[https://amfi-disable.github.io/RenYing/](https://amfi-disable.github.io/RenYing/)**。
 2. 玩家 1 点击 **联机对战** $\rightarrow$ **建房** $\rightarrow$ 获得 4 位房间码（例如 `K7PQ`）。
 3. 玩家 2 在 **加入** 栏输入该房间码 $\rightarrow$ 点击 **加入**。
-4. 双方浏览器直接建立 WebRTC P2P 数据连接，立即开始选人对决！
+4. 双方浏览器直接建立 WebRTC 数据连接，PeerJS 只负责让两边找到对方，然后立即开始选人对决！
+
+部分管得严的网络（某些校园 Wi-Fi 或防火墙）会拦截点对点连接。如果加入一直超时，换个网络或改用模式二。
 
 ### 模式二：本地局域网服务器（经典模式）
 
-如果希望使用官方 `server.py` 在局域网内建服：
+在仓库根目录运行服务器。它会提供游戏网页（`index.html`）、音乐和资源，并支持快速匹配、排位赛、账号和断线重连：
 
 ```bash
 # 启动默认 8765 端口服务
@@ -97,11 +102,11 @@ python3 server.py
 python3 server.py 9000
 ```
 
-同一 Wi-Fi 下的同学直接访问 `http://<你的电脑局域网IP>:8765` 即可连入。
+同一 Wi-Fi 下的同学直接访问 `http://<你的电脑局域网IP>:8765` 即可连入。如果你的服务器有 `https://` 网址（比如通过隧道），GitHub Pages 上的玩家也可以在 **使用联机服务器（可选）** 里填上它来连入；浏览器不允许 HTTPS 网页连接 `http://` 的服务器。
 
 ### 模式三：单机离线游玩
 
-双击打开 `renying-offline.html`，无需任何网络即可进行单人闯关、人机对战与木人桩练习。
+双击打开 `renying-offline.html`，无需任何网络即可进行单人闯关、人机对战与木人桩练习。音乐和青锋行小游戏都打包在这一个文件里。
 
 ---
 
@@ -120,8 +125,36 @@ flowchart TD
 ```
 
 - **客户端引擎**：纯原生 JavaScript + HTML5 Canvas 2D，极致低输入延迟。
-- **P2P 通信**：基于 WebRTC DataChannels 与 PeerJS 握手协议，自动穿透局域网 NAT。
+- **回滚联机**：两边用同一个随机种子各自完整计算对战，每帧只交换按键；对方按键晚到时回到那一帧重算，并定期校验状态。
+- **P2P 通信**：基于 WebRTC DataChannels 与 PeerJS 握手协议，自动穿透局域网 NAT（`src/net-p2p.js`）。
 - **数据存储**：本地 LocalStorage 与可选 SQLite 3 服务端数据库。
+
+---
+
+## 🧱 Project Structure And Building <a id="project-structure-and-building"></a>
+
+只改源文件，不要直接改生成的网页：
+
+| 路径 | 用途 |
+| :--- | :--- |
+| `src/page.html` | 网页结构，带打包标记 |
+| `src/style.css` | 全部样式 |
+| `src/game.js` | 游戏引擎、菜单、回滚联机和服务器联机 |
+| `src/net-p2p.js` | 免服务器 WebRTC 直连 |
+| `assets/music/` | 背景音乐（`.mp3`） |
+| `assets/qingfengxing.html` | 青锋行小游戏 |
+| `tools/build.py` | 生成下面三个网页（只用 Python 自带的库） |
+| `index.html` | 生成的联网版（GitHub Pages 和 `server.py` 都用它） |
+| `renying-offline.html` | 生成的单文件离线版 |
+| `renying.html` | 生成的旧网址跳转页 |
+
+改了 `src/` 或 `assets/` 里的东西之后，重新生成，并把生成的网页和源文件一起提交：
+
+```bash
+python3 tools/build.py
+```
+
+CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就会失败。
 
 ---
 

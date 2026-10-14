@@ -40,7 +40,9 @@ from urllib.parse import unquote
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
 HERE = os.path.dirname(os.path.abspath(__file__))
-GAME = os.path.join(HERE, "renying.html")
+GAME = os.path.join(HERE, "index.html")
+ASSETS = os.path.join(HERE, "assets")
+ASSET_TYPES = {".js": "text/javascript; charset=utf-8", ".mp3": "audio/mpeg", ".png": "image/png"}
 TUNNEL_LOG = os.path.join(HERE, "logs", "tunnel.log")
 URL_FILE = os.path.join(os.path.expanduser("~"), "Desktop", "刃影网址.txt")
 DB_PATH = os.path.join(HERE, "data", "renying.db")
@@ -1105,8 +1107,15 @@ def handle_match_msg(peer, msg):
 # ======================= HTTP =======================
 def http_reply(conn, status, ctype, body, cache="no-store"):
     conn.sendall(
-        (f"HTTP/1.1 {status}\r\nContent-Type: {ctype}\r\nContent-Length: {len(body)}\r\n"
-         f"Cache-Control: {cache}\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n").encode() + body
+        (f"HTTP/1.1 {status}\r\n"
+         f"Content-Type: {ctype}\r\n"
+         f"Content-Length: {len(body)}\r\n"
+         f"Access-Control-Allow-Origin: *\r\n"
+         f"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+         f"Access-Control-Allow-Headers: Authorization, Content-Type\r\n"
+         f"Cache-Control: {cache}\r\n"
+         f"X-Content-Type-Options: nosniff\r\n"
+         f"Connection: close\r\n\r\n").encode() + body
     )
 
 
@@ -1136,6 +1145,10 @@ def handle(conn, addr):
             if ":" in line:
                 k, v = line.split(":", 1)
                 headers[k.strip().lower()] = v.strip()
+
+        if method == "OPTIONS":
+            http_reply(conn, "204 No Content", "text/plain", b"")
+            return
 
         if path.startswith("/api/"):
             body = {}
@@ -1178,18 +1191,25 @@ def handle(conn, addr):
                 with open(GAME, "rb") as f:
                     http_reply(conn, "200 OK", "text/html; charset=utf-8", f.read())
             except FileNotFoundError:
-                http_reply(conn, "404 Not Found", "text/plain; charset=utf-8", "找不到 renying.html".encode())
-        elif re.fullmatch(r"/music/[a-z]+\.mp3", path):
-            # 背景音乐：只提供 music 文件夹里“小写字母.mp3”的文件，浏览器缓存一天
-            try:
-                with open(os.path.join(HERE, "music", path[7:]), "rb") as f:
-                    http_reply(conn, "200 OK", "audio/mpeg", f.read(), "public, max-age=86400")
-            except FileNotFoundError:
-                http_reply(conn, "404 Not Found", "text/plain; charset=utf-8", b"no music")
+                http_reply(conn, "404 Not Found", "text/plain; charset=utf-8", "找不到 index.html，先运行 python3 tools/build.py".encode())
+        elif re.fullmatch(r"/(assets/)?music/[a-z]+\.mp3|/assets/[a-z0-9-]+(\.min)?\.(js|png)", path):
+            # 静态资源：只提供 assets 里“小写字母、数字、横线”命名的 js / png / mp3（旧网址 /music/x.mp3 也能用），浏览器缓存一天
+            rel = path[len("/assets/"):] if path.startswith("/assets/") else path[1:]
+            files = [os.path.join(ASSETS, *rel.split("/"))]
+            if rel.startswith("music/"):
+                files.append(os.path.join(HERE, *rel.split("/")))   # 以前的版本把音乐放在 server.py 旁边的 music 文件夹
+            for fp in files:
+                if os.path.isfile(fp):
+                    with open(fp, "rb") as f:
+                        http_reply(conn, "200 OK", ASSET_TYPES[os.path.splitext(rel)[1]], f.read(), "public, max-age=86400")
+                    break
+            else:
+                http_reply(conn, "404 Not Found", "text/plain; charset=utf-8", b"not found")
         elif path == "/health":
             with rooms_lock:
                 playing = sum(1 for r in rooms.values() if len(r["slots"]) == 2)
-                body = json.dumps({"ok": True, "rooms": len(rooms), "playing": playing, "waiting": len(queue),
+                online = playing * 2 + len(queue)
+                body = json.dumps({"ok": True, "online": online, "rooms": len(rooms), "playing": playing, "waiting": len(queue),
                                    "lan": f"http://{lan_ip()}:{PORT}"}).encode()
             http_reply(conn, "200 OK", "application/json", body)
         else:
@@ -1233,7 +1253,11 @@ def main():
     srv.listen(64)
     threading.Thread(target=watch_tunnel_url, daemon=True).start()
     threading.Thread(target=reaper, daemon=True).start()
-    log(f"刃影服务器已启动，端口 {PORT}，局域网地址 http://{lan_ip()}:{PORT}")
+    lip = lan_ip()
+    log(f"刃影联机服务器已启动 (端口 {PORT})")
+    log(f"  ➜ 本机访问:       http://localhost:{PORT}")
+    log(f"  ➜ 同局域网/Wi-Fi: http://{lip}:{PORT}")
+    log(f"（提示：同一 Wi-Fi 或热点下的同学打开上述网址即可直接联机，无需外网！）")
     try:
         while True:
             conn, addr = srv.accept()

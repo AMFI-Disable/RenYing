@@ -34,6 +34,7 @@
 - [Game Controls And Mechanics](#game-controls-and-mechanics)
 - [How To Play And Multiplayer Modes](#how-to-play-and-multiplayer-modes)
 - [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
+- [Project Structure And Building](#project-structure-and-building)
 - [Privacy And Security First](#privacy-and-security-first)
 - [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
 - [License And Legal Attribution](#license-and-legal-attribution)
@@ -58,17 +59,19 @@
 
 ## 🎮 Game Controls And Mechanics <a id="game-controls-and-mechanics"></a>
 
-### Default Keyboard Controls
+### Default Keyboard And Mouse Controls
 
-| Action | Player 1 (Left) | Player 2 (Local / Numpad) |
-| :--- | :--- | :--- |
-| **Move Left / Right** | `A` / `D` | `Left Arrow` / `Right Arrow` |
-| **Jump** | `W` | `Up Arrow` |
-| **Crouch / Drop** | `S` | `Down Arrow` |
-| **Light Attack** | `J` | `Numpad 1` |
-| **Heavy Attack** | `K` | `Numpad 2` |
-| **Dash / Dodge** | `L` | `Numpad 3` |
-| **Special / Burst** | `U` / `I` | `Numpad 4` / `Numpad 5` |
+| Action | Input |
+| :--- | :--- |
+| **Move Left / Right** | `A` / `D` |
+| **Jump / Double Jump** | `W` or `Space` |
+| **Block** | Hold `S` |
+| **Attack (5-Hit Combo)** | Left mouse button |
+| **Charged Slash** | Hold and release the left mouse button |
+| **Ranged Move** | Hold the left mouse button, then right-click (or `R`) |
+| **Aerial Escape** | Right-click (or `Left Shift`) |
+| **Skill / Ultimate** | `Q` / `E` (ultimate needs a full meter) |
+| **Pause / Mute** | `P` / `M` (single-player) |
 
 *(Note: Custom touch controls and virtual joysticks activate automatically on mobile and tablet devices).*
 
@@ -81,13 +84,15 @@
 No software installation or Python server required:
 
 1. Both players visit **[https://amfi-disable.github.io/RenYing/](https://amfi-disable.github.io/RenYing/)** on their devices.
-2. Player 1 navigates to **联机对战** $\rightarrow$ clicks **建房** $\rightarrow$ shares the generated 4-digit room code (e.g., `K7PQ`).
+2. Player 1 navigates to **联机对战** $\rightarrow$ clicks **建房** $\rightarrow$ shares the generated 4-character room code (e.g., `K7PQ`).
 3. Player 2 enters the code into the **加入** box $\rightarrow$ clicks **加入**.
-4. Both browsers connect directly via WebRTC DataChannels with zero intermediate server lag.
+4. Both browsers connect directly via WebRTC DataChannels; PeerJS is only used to find each other.
+
+Some strict networks (certain campus Wi-Fi or firewalls) block direct peer-to-peer traffic. If joining times out, switch networks or use Option 2.
 
 ### Option 2: Local Dedicated Server (LAN Mode)
 
-To host your own private server on your local Wi-Fi or LAN:
+Run the server from the repository root. It serves the game (`index.html`), music, and assets, and adds quick match, ranked ladder, accounts, and reconnect:
 
 ```bash
 # Start server on default port 8765
@@ -97,11 +102,11 @@ python3 server.py
 python3 server.py 9000
 ```
 
-Open `http://localhost:8765` in your browser. Classmates on the same Wi-Fi can connect directly via `http://<your-lan-ip>:8765`.
+Open `http://localhost:8765` in your browser. Classmates on the same Wi-Fi can connect directly via `http://<your-lan-ip>:8765`. If your server has an `https://` address (for example through a tunnel), players on GitHub Pages can also enter it under **使用联机服务器（可选）**; browsers block plain `http://` servers from HTTPS pages.
 
 ### Option 3: Standalone Offline Play
 
-Double-click or open `renying-offline.html` directly in any web browser without running a server or requiring an active internet connection.
+Double-click or open `renying-offline.html` directly in any web browser without running a server or requiring an active internet connection. Music and the Qingfengxing mini-game are bundled into this single file.
 
 ---
 
@@ -120,9 +125,37 @@ flowchart TD
 ```
 
 - **Client Runtime**: Pure vanilla JavaScript utilizing HTML5 Canvas 2D context for ultra-low rendering latency.
-- **P2P Networking**: WebRTC DataChannels with PeerJS handshake and Google STUN NAT traversal.
+- **Rollback Netcode**: Both sides simulate the match deterministically and exchange only inputs; late inputs are corrected by rewinding and re-simulating, with periodic state checksums.
+- **P2P Networking**: WebRTC DataChannels with PeerJS handshake and Google STUN NAT traversal (`src/net-p2p.js`).
 - **Server Networking**: Raw WebSocket implementation with RFC 6455 framing and keep-alive ping cycles.
 - **Persistence**: Local storage and optional SQLite 3 database (`data/renying.db`) storing user accounts with PBKDF2/SHA-256 salted hashes.
+
+---
+
+## 🧱 Project Structure And Building <a id="project-structure-and-building"></a>
+
+Edit the sources, never the generated pages:
+
+| Path | Purpose |
+| :--- | :--- |
+| `src/page.html` | Page markup with build markers |
+| `src/style.css` | All styles |
+| `src/game.js` | Game engine, menus, rollback netcode, and server networking |
+| `src/net-p2p.js` | Serverless WebRTC direct connection |
+| `assets/music/` | Background music (`.mp3`) |
+| `assets/qingfengxing.html` | Qingfengxing mini-game |
+| `tools/build.py` | Generates the pages below (Python standard library only) |
+| `index.html` | Generated online edition (GitHub Pages and `server.py`) |
+| `renying-offline.html` | Generated single-file offline edition |
+| `renying.html` | Generated redirect for the old address |
+
+After changing anything in `src/` or `assets/`, rebuild and commit the generated pages together with the sources:
+
+```bash
+python3 tools/build.py
+```
+
+CI runs `python3 tools/build.py --check` and fails if the generated pages are out of date.
 
 ---
 
