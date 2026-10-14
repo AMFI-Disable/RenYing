@@ -139,7 +139,7 @@ sequenceDiagram
 | :--- | :--- | :--- | :--- | :--- |
 | **青锋** | 均衡剑客 / 居合 | `qf_charge` (深纳刀蓄力) -> `qf_thrust` (极速居合冲刺) | `qf_charge` -> `qf_thrust` (沉步拔刀剑气) | 蓄力 `qf_charge`，冲刺 `qf_thrust`，六连剑气乱斩 `l3a`/`hva`，终结 `a2a` 下劈就地重创 |
 | **绯影** | 暗杀刺客 / 极速 | `fy_seal` (结印) -> `fy_xslash` (猩红双刃十字绞杀) | `fy_seal` -> `fy_crouch` (散落手里剑) | 蓄力 `fy_seal`，冲刺 `fy_crouch` (贴地暗影瞬步)，九道残影乱斩分身 + 烟雾，终结 `fy_xslash` 暴击 |
-| **铁山** | 重甲巨剑 / 霸体 | `ts_lift` (双手托举重刃) -> `ts_slam` (泰山压顶怒砸) | `ts_shoulder` (沉肩铁壁冲撞) | 蓄力 `ts_lift`，起跳擎天，下砸 `ts_slam` 砸碎地面石块飞溅 |
+| **铁山** | 重甲巨剑 / 霸体 | `ts_lift` (双手托举重刃) -> `ts_slam` (泰山压顶怒砸) | `ts_shoulder` (沉肩铁壁冲撞) | 蓄力 `ts_lift`，起跳擎天，滞空期间全自由操控空中落点（亦可按 S 加速下砸），下砸 `ts_slam` 砸碎地面石块飞溅 |
 | **凌霜** | 长枪 / 控场刺击 | `ls_stance` (龙枪回马后撤) -> `ls_thrust` (龙枪破空突刺) | `ls_stance` -> `ls_plant` (长枪旋舞风车护盾) | 蓄力 `ls_stance`，时空冻结挥洒枪影 `ls_thrust`，冲击后长枪驻地 `ls_plant` |
 | **流云** | 远程御风 / 三段跳 | `ly_fanswipe` (舒袖展扇御风) -> `idle` | `ly_fanswipe` (风遁移形) | 蓄力 `ly_fanswipe`，释放双重龙卷时切换 `ly_hover` 优雅悬浮控风 |
 | **雷鸣** | 迅猛拳师 / 贴身连击 | `lm_boxer` (拳师格斗势) -> `lm_jab` (雷光贴地直拳) | `lm_kick` (撼地重踏破防) | 蓄力 `lm_boxer`，引天雷 `lm_kick` 破空冲天拳，召落三道天雷 |

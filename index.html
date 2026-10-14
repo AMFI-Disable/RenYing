@@ -1171,10 +1171,31 @@ const COUNTER = { dmg: 12, kb: [420, -700], stun: 0.6, hs: 0.16, launch: true, b
 const ULTS = {
   crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 2.5, fin: 14, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落，就地了断。若突刺落空，门户大开。' },
   shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 2.1, fin: 12, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字。一旦扑空，任人宰割。' },
-  avalanche: { name: '山崩', desc: '举巨刃蓄势，一跃擎天，而后如泰山压顶砸落（28 伤害，不可格挡），地裂石飞。滞空不落者，可避其锋。',
-    begin(f, foe) { f.sp = 'leap'; f.vy = -1050; f.y = -1; f.vx = 0; f.spPose = 'ts_lift'; f.invul = 0.3; SFX.heavy(); },
+  avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（28 伤害，不可格挡），地裂石飞。滞空不落者，可避其直击。',
+    begin(f, foe) {
+      f.sp = 'leap'; f.vy = -1050; f.y = -1;
+      const c = f.ctrl, dir = (c && c.held && c.held.right ? 1 : 0) - (c && c.held && c.held.left ? 1 : 0);
+      f.vx = dir * 360;
+      f.spPose = 'ts_lift'; f.invul = 0.3; SFX.heavy();
+    },
     update(f, foe) {
       if (f.sp === 'leap') {
+        const c = f.ctrl;
+        if (c && c.held) {
+          const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
+          if (dir !== 0) {
+            f.vx = damp(f.vx, dir * 520, 10, STEP);
+            f.face = dir;
+          } else {
+            f.vx = damp(f.vx, 0, 7, STEP);
+          }
+          if (c.held.down && f.t > 0.18 && f.vy > -300) {
+            f.vy += 1400 * STEP;
+          }
+        }
+        if (Math.random() < 0.35) {
+          addP({ type: 'spark', x: f.x - f.face * 18, y: f.y - 65, vx: -f.face * rand(60, 160), vy: rand(-40, 40), life: 0.22, max: 0.22, rgb: '255,200,120', w: 2 });
+        }
         f.vy += GRAV * STEP;
         if (f.t > 0.15 && f.y >= 0) {
           f.sp = 'slam'; f.t = 0; f.vx = 0; f.spPose = 'ts_slam'; f.snap = true;
@@ -2370,6 +2391,10 @@ class AICtrl extends Ctrl {
     // 往后退却快撞墙了：跳过对手头顶
     if (this.dir === -to && ((this.dir < 0 && me.x < WALL + 130) || (this.dir > 0 && me.x > STAGE_W - WALL - 130))) {
       this.dir = to; if (me.onGround() && !this.queue.length) this.plan([['jump', 0], ['jump', 0.25]]);
+    }
+    if (me.state === 'special' && me.ch.ult === 'avalanche') {
+      this.dir = Math.abs(me.x - foe.x) > 40 ? to : 0;
+      if (Math.abs(me.x - foe.x) < 80 && me.t > 0.2) this.holdDown = 0.3;
     }
     this.held.down = this.holdDown > 0;
     this.held.jump = !!(me.ch.fly && clock < (this.flyUntil || 0));

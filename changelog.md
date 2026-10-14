@@ -26,6 +26,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Improved
 
+- Tie Shan's Avalanche (山崩) ultimate is now fully steerable during the airborne leap, allowing horizontal directional steering (A/D / arrows) and fast-plunge slam acceleration (S / down), with spark trails and intelligent AI airborne tracking.
 - Character-specific skeletal animation poses: 22 bespoke joint poses across all 9 fighters for skills, ultimate charges, flurry attacks, and finishers.
 - Mechanic-driven 克制 (Counter / Matchup Advantage) system without flat stat debuffs:
   - Ground tremors and shockwaves naturally bypass airborne and flying fighters (Yan Ling, Liu Yun).
