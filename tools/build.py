@@ -69,6 +69,7 @@ def page(offline):
         "<!--@music-->\n": ("<script>window.MUSIC_DATA = " + json.dumps(music_data()) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
             "<script>window.RENYING_BUILD = " + json.dumps(build) + ";</script>\n"
+            "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
             "<script>\n" + read(SRC, "game.js") + "</script>\n"
             "<script>\n" + read(SRC, "net-p2p.js") + "</script>\n"
         ),

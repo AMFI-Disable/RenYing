@@ -51,8 +51,12 @@ function p2pLoad() {
   if (P2P.loading) return P2P.loading;
   const add = src => new Promise(ok => {
     const s = document.createElement('script');
+    let done = false;
+    const finish = val => { if (!done) { done = true; ok(val); } };
     s.src = src; s.async = true;
-    s.onload = () => ok(typeof Peer !== 'undefined'); s.onerror = () => ok(false);
+    s.onload = () => finish(typeof Peer !== 'undefined');
+    s.onerror = () => finish(false);
+    setTimeout(() => finish(typeof Peer !== 'undefined'), 4000);
     document.head.appendChild(s);
   });
   P2P.loading = add(P2P.lib)
@@ -134,20 +138,26 @@ function p2pHost(sess) {
   try { peer = P2P.peer = new Peer(P2P.prefix + code.toLowerCase(), p2pOptions()); }
   catch (e) { netStatus(p2pErrorText(e)); return; }
   const live = () => sess === P2P.sess && peer === P2P.peer;
-  let sigTimer = setTimeout(() => {
+  let t1 = setTimeout(() => {
     if (live() && !P2P.opened) {
-      netStatus('正在连接公网信令服务器生成房间码…（网络响应中，请稍候）');
+      netStatus('正在连接公网信令服务器生成房间码…（网络较慢时请稍候，无需本地服务）');
     }
-  }, 4000);
+  }, 2500);
+  let t2 = setTimeout(() => {
+    if (live() && !P2P.opened) {
+      netStatus('正在穿透公网网络节点分配房间码，请稍候…');
+    }
+  }, 9000);
   clearTimeout(P2P.timer);
   P2P.timer = setTimeout(() => {
     if (live() && !P2P.opened) {
-      netStatus('连接公网信令服务器超时，请检查网络或刷新页面重试');
+      netStatus('连接公网信令服务器超时，请检查网络后重新点击【建房】重试');
       p2pClose();
     }
-  }, 18000);
+  }, 45000);
   peer.on('open', () => {
-    clearTimeout(sigTimer);
+    clearTimeout(t1);
+    clearTimeout(t2);
     clearTimeout(P2P.timer);
     if (!live()) return;
     P2P.opened = true;
@@ -216,17 +226,23 @@ function p2pJoin(sess, code) {
   catch (e) { netStatus(p2pErrorText(e)); return; }
   const live = () => sess === P2P.sess && peer === P2P.peer;
   const fail = text => { if (!live()) return; netStatus(text); p2pClose(); };
-  let sigTimer = setTimeout(() => {
+  let t1 = setTimeout(() => {
     if (live() && !NET.open) {
-      netStatus(`正在连接信令服务器寻找房间 ${code}…（请稍候）`);
+      netStatus(`正在连接信令服务器寻找房间 ${code}…（网络较慢时请稍候）`);
     }
-  }, 4000);
+  }, 2500);
+  let t2 = setTimeout(() => {
+    if (live() && !NET.open) {
+      netStatus(`正在与房主建立点对点直连隧道（STUN 节点穿透中）…`);
+    }
+  }, 9000);
   clearTimeout(P2P.timer);
   P2P.timer = setTimeout(() => {
-    if (live() && !NET.open) fail(`连接超时：确认房间码 ${code} 没错且房主还在等。若持续失败，可能是网络防火墙拦截了点对点传输`);
-  }, 18000);
+    if (live() && !NET.open) fail(`连接超时：确认房间码 ${code} 没错且房主还在等候。若网络较慢可稍后再试一次`);
+  }, 45000);
   peer.on('open', () => {
-    clearTimeout(sigTimer);
+    clearTimeout(t1);
+    clearTimeout(t2);
     if (!live()) return;
     const conn = P2P.conn = peer.connect(P2P.prefix + code.toLowerCase(), { reliable: true, serialization: 'json' });
     p2pWire(conn, sess, 'client', () => {
@@ -240,7 +256,8 @@ function p2pJoin(sess, code) {
     });
   });
   peer.on('error', err => {
-    clearTimeout(sigTimer);
+    clearTimeout(t1);
+    clearTimeout(t2);
     clearTimeout(P2P.timer);
     if (!live()) return;
     if (NET.open && err.type !== 'peer-unavailable') return;

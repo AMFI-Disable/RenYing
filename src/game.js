@@ -816,7 +816,7 @@ function netReset() {
 }
 let savedNetMode = null;
 try { savedNetMode = localStorage.getItem('renying-net-mode'); } catch (e) {}
-let currentNetMode = SERVED ? (savedNetMode || 'server') : ((savedNetMode === 'server' && $id('srvIn') && $id('srvIn').value.trim()) ? 'server' : 'p2p');
+let currentNetMode = SERVED ? (savedNetMode || 'server') : 'p2p';
 
 function serverBase() {
   let v = ($id('srvIn') && $id('srvIn').value || '').trim().replace(/\/+$/, '');
@@ -852,6 +852,10 @@ function netConnect(asHost, code, match, resume, ranked) {
     return;
   }
   if (match || ranked) {
+    if (!SERVED) {
+      netStatus('GitHub Pages 网页版无需服务器！请直接使用上方的【建房】分享给好友，或输入房间码【加入】。');
+      return;
+    }
     if (currentNetMode !== 'server') {
       setNetMode('server');
       netStatus(match ? '快速匹配需要服务器，已自动切换为局域网/本地服务器模式' : '排位赛需要服务器，已自动切换为局域网/本地服务器模式');
@@ -6026,7 +6030,9 @@ try { $id('srvIn').value = localStorage.getItem('renying-srv') || ''; } catch (e
 $id('srvIn').addEventListener('change', () => { try { localStorage.setItem('renying-srv', $id('srvIn').value.trim()); } catch (e) {} });
 function setNetMode(mode) {
   currentNetMode = mode;
-  try { localStorage.setItem('renying-net-mode', mode); } catch (e) {}
+  if (SERVED) {
+    try { localStorage.setItem('renying-net-mode', mode); } catch (e) {}
+  }
   const isServer = mode === 'server';
   if ($id('netModeServerBtn')) $id('netModeServerBtn').classList.toggle('sel', isServer);
   if ($id('netModeP2PBtn')) $id('netModeP2PBtn').classList.toggle('sel', !isServer);
