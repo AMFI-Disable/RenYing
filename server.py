@@ -10,7 +10,7 @@ Created by Luffy & Opus 5.5
   4. 转发：同一个房间两个人之间的对战数据、聊天、表情（WebSocket）
   5. 断线重连：对战或选人时掉线，房间会保留 60 秒，回来可以接着打
   6. 账号和排行榜：注册登录（密码加盐哈希保存）
-       双方都登录的对战计入“正式”战绩；对手是游客的，计入“非正式”战绩
+       双方都登录的对战计入“正式”战绩；对手是游客的，计入“切磋”战绩
   7. 社区聊天：所有人都能看，登录的人才能发言；有防刷屏限制，管理员可以删帖、禁言
   10. 背景音乐：music 文件夹里的 mp3
   8. 成长系统：墨锭（货币）、问剑阁（抽角色）、碎片合成、每日和每周任务、每周限免角色
@@ -180,7 +180,7 @@ with db_lock:
     CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, user_id INTEGER, name TEXT, text TEXT, at REAL);
     CREATE TABLE IF NOT EXISTS profiles (user_id INTEGER PRIMARY KEY, data TEXT, rating REAL DEFAULT 1100, placed INTEGER DEFAULT 0);
     """)
-    # 旧版数据库升级：加上非正式战绩
+    # 旧版数据库升级：加上切磋战绩
     for col in ("cwins", "closses", "muted"):
         try:
             db.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER DEFAULT 0")
@@ -221,15 +221,15 @@ def user_by_token(token):
 def api_register(body):
     name, pw = str(body.get("name", "")).strip(), str(body.get("pass", ""))
     if not NAME_RE.match(name):
-        return 400, {"err": "昵称要 2 到 12 个字，只能用中文、字母、数字和下划线"}
+        return 400, {"err": "昵称限 2 到 12 个字：中文、字母、数字、下划线皆可"}
     if len(pw) < 6 or len(pw) > 64:
-        return 400, {"err": "密码要 6 到 64 位"}
+        return 400, {"err": "密码须 6 到 64 位"}
     salt = secrets.token_bytes(16)
     with db_lock:
         try:
             cur = db.execute("INSERT INTO users (name, pw, salt, created) VALUES (?,?,?,?)", (name, hash_pw(pw, salt), salt, time.time()))
         except sqlite3.IntegrityError:
-            return 409, {"err": "这个昵称已经有人用了"}
+            return 409, {"err": "这个昵称已经有人用了，换一个吧"}
         token = new_session(cur.lastrowid)
     log(f"新玩家注册：{name}")
     return 200, {"token": token, "name": name, "wins": 0, "losses": 0, "cwins": 0, "closses": 0}
@@ -240,7 +240,7 @@ def api_login(body):
     key = name.lower()
     fails, until = login_fails.get(key, (0, 0))
     if time.time() < until:
-        return 429, {"err": f"密码错太多次了，{int(until - time.time()) + 1} 秒后再试"}
+        return 429, {"err": f"密码错得太多，请 {int(until - time.time()) + 1} 秒后再试"}
     with db_lock:
         row = db.execute(f"SELECT {USER_COLS}, pw, salt FROM users WHERE name = ?", (name,)).fetchone()
         ok = row is not None and hmac.compare_digest(hash_pw(pw, row[7]), row[6])
@@ -249,7 +249,7 @@ def api_login(body):
     if not ok:
         fails += 1
         login_fails[key] = (fails, time.time() + 60 if fails >= 5 else 0)
-        return 401, {"err": "昵称或密码不对"}
+        return 401, {"err": "昵称或密码不对，请重新输入"}
     login_fails.pop(key, None)
     return 200, {"token": token, **user_json(row)}
 
@@ -292,12 +292,12 @@ CPU_DAILY_CAP = 10                                               # 打电脑每�
 NET_REWARD, RANK_REWARD, FIRST_WIN = (60, 30), (80, 40), 150     # （赢, 输）；每天第一胜额外奖励
 PLACEMENT = 5
 TIERS = [("砺锋", 850), ("出鞘", 1000), ("破竹", 1150), ("惊鸿", 1300), ("踏月", 1450), ("刃影", 1600)]
-DAILY_POOL = [("play3", "打 3 局对战（任意模式）", "games", 3, 120), ("win1", "赢 1 局对战", "wins", 1, 100),
-              ("net1", "打 1 局联机对战", "netgames", 1, 120), ("combo10", "打出一次 10 连击", "maxcombo", 10, 100),
-              ("train300", "在木人桩累计造成 300 伤害", "traindmg", 300, 80), ("ult2", "放出 2 次大招", "ults", 2, 100),
-              ("hard1", "赢 1 局困难电脑", "hardwins", 1, 150)]
-WEEKLY = [("wwin10", "本周赢 10 局", "wins", 10, 400), ("wrank5", "本周打 5 场排位赛", "rankgames", 5, 300),
-          ("wdays5", "本周有 5 天领过每日任务奖励", "dailydays", 5, 300)]
+DAILY_POOL = [("play3", "试剑 3 局（任意模式）", "games", 3, 120), ("win1", "赢下 1 局对战", "wins", 1, 100),
+              ("net1", "与真人联机对战 1 局", "netgames", 1, 120), ("combo10", "一鼓作气打出 10 连击", "maxcombo", 10, 100),
+              ("train300", "在木人桩上累计打出 300 伤害", "traindmg", 300, 80), ("ult2", "使出 2 次大招", "ults", 2, 100),
+              ("hard1", "赢下 1 局劲敌电脑", "hardwins", 1, 150)]
+WEEKLY = [("wwin10", "本周赢下 10 局", "wins", 10, 400), ("wrank5", "本周闯 5 场排位赛", "rankgames", 5, 300),
+          ("wdays5", "本周有 5 天领到每日任务奖励", "dailydays", 5, 300)]
 MAX_STATS = {"maxcombo"}
 # 皮肤：每个角色一款稀有、一款传说，只改外观
 SKINS = {"qf_qfx": ("qingfeng", "legend"), "qf_frost": ("qingfeng", "rare"), "qf_gold": ("qingfeng", "legend"), "fy_jade": ("feiying", "rare"), "fy_blood": ("feiying", "legend"),
@@ -326,7 +326,7 @@ def rotation():
 
 def tier_of(r, placed):
     if placed < PLACEMENT:
-        return {"tier": None, "label": f"定级赛 {placed}/{PLACEMENT}", "placed": placed, "idx": -1}
+        return {"tier": None, "label": f"定级赛 第 {placed}/{PLACEMENT} 场", "placed": placed, "idx": -1}
     if r >= TIERS[-1][1]:
         return {"tier": TIERS[-1][0], "div": "", "pts": int(r - TIERS[-1][1]), "label": f"{TIERS[-1][0]} · {int(r)}", "idx": 5, "rating": int(r), "placed": placed}
     idx = max([i for i, (_, lo) in enumerate(TIERS) if r >= lo] or [0])
@@ -395,7 +395,7 @@ def with_prof(token, fn):
     """登录用户读写成长数据的通用流程"""
     u = user_by_token(token)
     if not u:
-        return 401, {"err": "请先登录"}
+        return 401, {"err": "请先登录后再操作"}
     with db_lock:
         d, rating, placed = load_prof(u[0])
         res = fn(d)
@@ -417,9 +417,9 @@ def api_welfare(body, token):
     c = str(body.get("char", ""))
     def fn(d):
         if d["welfare"]:
-            return 400, {"err": "新手福利已经领过了"}
+            return 400, {"err": "新手福利已经领过了，每人只有一次"}
         if c not in ALL_CHARS or c in d["owned"]:
-            return 400, {"err": "选一个你还没有的角色"}
+            return 400, {"err": "请选一个你还没有的角色"}
         d["owned"].append(c); d["welfare"] = 1; d["frags"].pop(c, None)
         return {"got": c}
     return with_prof(token, fn)
@@ -471,7 +471,7 @@ def api_gacha(body, token):
     cost = TEN_COST if ten else DRAW_COST
     def fn(d):
         if d["ink"] < cost:
-            return 400, {"err": f"墨锭不够，需要 {cost}"}
+            return 400, {"err": f"囊中墨锭不够，需要 {cost}"}
         d["ink"] -= cost
         return {"results": [draw_one(d, sysrand) for _ in range(10 if ten else 1)]}
     return with_prof(token, fn)
@@ -513,7 +513,7 @@ def api_skingacha(body, token):
     cost = SKIN_TEN if ten else SKIN_COST
     def fn(d):
         if d["ink"] < cost:
-            return 400, {"err": f"墨锭不够，需要 {cost}"}
+            return 400, {"err": f"囊中墨锭不够，需要 {cost}"}
         d["ink"] -= cost
         return {"results": [skin_one(d, sysrand) for _ in range(10 if ten else 1)]}
     return with_prof(token, fn)
@@ -525,7 +525,7 @@ def api_equip(body, token):
         if c not in ALL_CHARS:
             return 400, {"err": "没有这个角色"}
         if k and (k not in d["skins"] or SKINS.get(k, ("",))[0] != c):
-            return 400, {"err": "你还没有这款皮肤"}
+            return 400, {"err": "你还没有这款皮肤，不能装备"}
         if k:
             d["equip"][c] = k
         else:
@@ -538,10 +538,10 @@ def api_craft(body, token):
     c = str(body.get("char", ""))
     def fn(d):
         if c not in RARITY or c in d["owned"]:
-            return 400, {"err": "不能合成这个角色"}
+            return 400, {"err": "这个角色不能合成（已经拥有，或本就不能合）"}
         need = CRAFT[RARITY[c]]
         if d["frags"].get(c, 0) < need:
-            return 400, {"err": f"碎片不够，需要 {need} 个"}
+            return 400, {"err": f"碎片不够，合成需要 {need} 个"}
         d["frags"].pop(c); d["owned"].append(c)
         return {"got": c}
     return with_prof(token, fn)
@@ -553,9 +553,9 @@ def api_claim(body, token):
         dd = next((x for x in DAILY_POOL if x[0] == tid and tid in d["daily"]["ids"]), None)
         per, x = (d["daily"], dd) if dd else (d["weekly"], next((x for x in WEEKLY if x[0] == tid), None))
         if not x or x[0] in per["claimed"]:
-            return 400, {"err": "不能领取"}
+            return 400, {"err": "这个任务现在不能领取"}
         if per["p"].get(x[2], 0) < x[3]:
-            return 400, {"err": "任务还没完成"}
+            return 400, {"err": "任务还没完成，先去做了再来"}
         per["claimed"].append(x[0]); d["ink"] += x[4]
         if dd and not d["daily"]["counted"]:
             d["daily"]["counted"] = True
@@ -614,13 +614,13 @@ def api_redeem(body, token):
     def fn(d):
         r = REDEEM_CODES.get(code)
         if not r:
-            return 400, {"err": "兑换码不对"}
+            return 400, {"err": "兑换码不对，请核对后再试"}
         used = d.setdefault("redeemed", [])
         if code in used:
-            return 400, {"err": "这个兑换码你已经用过了"}
+            return 400, {"err": "这个兑换码你已经用过了，不能重复领"}
         k = r.get("skin")
         if k and k in d["skins"]:
-            return 400, {"err": "你已经有这款皮肤了"}
+            return 400, {"err": "你已经有这款皮肤了，无需再兑"}
         used.append(code)
         if r.get("ink"):
             d["ink"] += r["ink"]
@@ -712,20 +712,20 @@ def api_posts(query):
 def api_post(body, token):
     u = user_by_token(token or str(body.get("token", ""))[:100])
     if not u:
-        return 401, {"err": "登录后才能发言"}
+        return 401, {"err": "登录后才能发言（游客只能旁观）"}
     text = re.sub(r"[\x00-\x1f\x7f]", " ", str(body.get("text", ""))).strip()[:200]
     if not text:
-        return 400, {"err": "不能发空消息"}
+        return 400, {"err": "不能发空消息，写点什么吧"}
     with db_lock:
         muted = db.execute("SELECT muted FROM users WHERE id = ?", (u[0],)).fetchone()
     if muted and muted[0]:
-        return 400, {"err": "你已经被管理员禁言了"}
+        return 400, {"err": "你已被管理员禁言"}
     now = time.time()
     times = [t for t in post_times.get(u[0], []) if now - t < 60]
     if times and now - times[-1] < 2:
-        return 429, {"err": "发得太快了，歇两秒"}
+        return 429, {"err": "发得太快了，歇两秒再发"}
     if len(times) >= 15:
-        return 429, {"err": "一分钟最多发 15 条"}
+        return 429, {"err": "一分钟最多发 15 条，慢些说"}
     post_times[u[0]] = times + [now]
     with db_lock:
         cur = db.execute("INSERT INTO posts (user_id, name, text, at) VALUES (?,?,?,?)", (u[0], u[1], text, now))
@@ -737,7 +737,7 @@ def api_post(body, token):
 
 
 def record_result(win_user, lose_user, forfeit=False, peers=(), rk=False):
-    """记录一场对战。双方都登录算正式战绩；只有一方登录算他的非正式战绩；都没登录不记。rk=排位赛"""
+    """记录一场对战。双方都登录算正式战绩；只有一方登录算他的切磋战绩；都没登录不记。rk=排位赛"""
     if not win_user and not lose_user:
         return
     if win_user and lose_user and win_user[0] == lose_user[0]:
@@ -760,7 +760,7 @@ def record_result(win_user, lose_user, forfeit=False, peers=(), rk=False):
         rows = {r[0]: r for r in db.execute(f"SELECT {USER_COLS} FROM users WHERE id IN ({','.join('?' * len(ids))})", ids)}
     wn = win_user[1] if win_user else "游客"
     ln = lose_user[1] if lose_user else "游客"
-    log(f"{'排位赛' if rk else '正式' if ranked else '非正式'}战绩：{wn} 胜 {ln}{'（对手离开）' if forfeit else ''}")
+    log(f"{'排位赛' if rk else '正式' if ranked else '切磋'}战绩：{wn} 胜 {ln}{'（对手离开）' if forfeit else ''}")
     for p in peers:
         if p and p.user and p.user[0] in rows:
             won = bool(win_user and p.user[0] == win_user[0])
@@ -1191,7 +1191,7 @@ def handle(conn, addr):
                 with open(GAME, "rb") as f:
                     http_reply(conn, "200 OK", "text/html; charset=utf-8", f.read())
             except FileNotFoundError:
-                http_reply(conn, "404 Not Found", "text/plain; charset=utf-8", "找不到 index.html，先运行 python3 tools/build.py".encode())
+                http_reply(conn, "404 Not Found", "text/plain; charset=utf-8", "找不到 index.html：请在项目目录先运行 python3 tools/build.py 生成页面".encode())
         elif re.fullmatch(r"/(assets/)?music/[a-z]+\.mp3|/assets/[a-z0-9-]+(\.min)?\.(js|png)", path):
             # 静态资源：只提供 assets 里“小写字母、数字、横线”命名的 js / png / mp3（旧网址 /music/x.mp3 也能用），浏览器缓存一天
             rel = path[len("/assets/"):] if path.startswith("/assets/") else path[1:]
@@ -1233,10 +1233,10 @@ def watch_tunnel_url():
             if urls and urls[-1] != last:
                 last = urls[-1]
                 with open(URL_FILE, "w", encoding="utf-8") as f:
-                    f.write(f"刃影 当前游戏网址（发给同学）：\n{last}\n\n"
-                            f"和这台电脑在同一个 Wi-Fi 的同学，用这个地址更流畅：\nhttp://{lan_ip()}:{PORT}\n\n"
-                            "电脑重启后网址会变，以这个文件为准。\n")
-                log(f"当前游戏网址：{last}")
+                    f.write(f"刃影 · 当前游戏网址（发给同学）：\n{last}\n\n"
+                            f"连同一个 Wi-Fi 的同学，走局域网这条路更流畅：\nhttp://{lan_ip()}:{PORT}\n\n"
+                            "电脑重启后网址会变，一切以本文件为准。\n")
+                log(f"当前游戏网址已更新：{last}")
         except OSError:
             pass
         time.sleep(5)
@@ -1248,7 +1248,7 @@ def main():
     try:
         srv.bind(("127.0.0.1" if os.environ.get("RENYING_LOCAL_ONLY") else "0.0.0.0", PORT))
     except OSError:
-        print(f"端口 {PORT} 被占用了：可能服务器已经在运行。")
+        print(f"端口 {PORT} 已被占用：服务器可能已经在运行了。")
         sys.exit(1)
     srv.listen(64)
     threading.Thread(target=watch_tunnel_url, daemon=True).start()
@@ -1257,7 +1257,7 @@ def main():
     log(f"刃影联机服务器已启动 (端口 {PORT})")
     log(f"  ➜ 本机访问:       http://localhost:{PORT}")
     log(f"  ➜ 同局域网/Wi-Fi: http://{lip}:{PORT}")
-    log(f"（提示：同一 Wi-Fi 或热点下的同学打开上述网址即可直接联机，无需外网！）")
+    log(f"（提示：同一 Wi-Fi 或热点下的同学打开上面任意一条网址，即可直接联机，无需外网！）")
     try:
         while True:
             conn, addr = srv.accept()

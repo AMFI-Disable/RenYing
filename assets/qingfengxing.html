@@ -236,16 +236,16 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   <div id="title" class="screen">
     <div class="tname"><span>青</span><span>锋</span><span>行</span><i class="seal"><b>暮</b><b>山</b><b>试</b><b>剑</b></i></div>
     <div class="tbody">
-      <p>暮色四合，山门告急。黑风寨夜袭青云剑宗，师兄弟尽数下山未归，试剑坪上只剩你一人一剑。</p>
-      <p>守住十波来敌。每升一境可择一道机缘，每波间隙可入剑庐锻剑。</p>
+      <p>暮色四合，山门告急。黑风寨夜袭青云剑宗，师兄弟尽数下山未归，偌大试剑坪上，只剩你一人一剑。</p>
+      <p>守住十波来敌。每破一境，可择一道机缘；每歇一波，可入剑庐锻剑。</p>
       <div class="btns"><button class="btn pri" id="btnStart" type="button" disabled>入山</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
       <div class="loading" id="loading">山色渐起……</div>
       <div class="best" id="best"></div>
       <div class="keys">
         <kbd>W A S D</kbd><span>移动</span><kbd>鼠标</kbd><span>转动视角</span>
         <kbd>左键 / J</kbd><span>轻剑四连</span><kbd>右键 / K</kbd><span>重剑·旋风斩</span>
-        <kbd>空格 / L</kbd><span>闪避（贴刃触发踏雪）</span><kbd>Shift</kbd><span>疾行</span>
-        <kbd>Q</kbd><span>剑气纵横</span><kbd>E</kbd><span>回风落雁（二境领悟）</span>
+        <kbd>空格 / L</kbd><span>闪避（贴刃即踏雪）</span><kbd>Shift</kbd><span>疾行</span>
+        <kbd>Q</kbd><span>剑气纵横</span><kbd>E</kbd><span>回风落雁（二境方悟）</span>
         <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定目标</span>
         <kbd>← →</kbd><span>键盘转视角</span><kbd>P · M</kbd><span>暂停 · 静音</span>
       </div>
@@ -253,7 +253,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   </div>
 
   <div id="levelup" class="screen veil" hidden>
-    <h2>破境<small id="luSub">择一道机缘</small></h2>
+    <h2>破境<small id="luSub">机缘一道，择之</small></h2>
     <div class="cards" id="cards"></div>
     <div class="note">按 1 / 2 / 3 或点击卷轴</div>
   </div>
@@ -1637,10 +1637,10 @@ function tryDodge() {
   Pl.dodgeYaw = Pl.moveMag > .3 ? Pl.moveYaw : Pl.yaw + PI; Pl.yawT = Pl.moveMag > .3 ? Pl.moveYaw : Pl.yaw; Snd.dodge(); FX.dust(Pl.pos, 5, .5); return true;
 }
 function trySkill(i) {
-  const s = SKILLS[i]; if (Pl.lv < s.lv) { UI.toast(`${cnNum(s.lv)}境方可领悟「${s.name}」`); return; }
+  const s = SKILLS[i]; if (Pl.lv < s.lv) { UI.toast(`未至${cnNum(s.lv)}境，难悟「${s.name}」`); return; }
   if (Pl.cds[i] > 0) return;
   if (i === 3) { if (Pl.rage < 100) { UI.toast('剑意未满'); return; } Pl.rage = 0; }
-  else if (Pl.mp < s.mp) { UI.toast('内力不足'); return; }
+  else if (Pl.mp < s.mp) { UI.toast('内力不继'); return; }
   Pl.mp -= s.mp; Pl.cds[i] = s.cd * Pl.cdr; Pl.cdMax = Pl.cdMax || [1, 1, 1, 1]; Pl.cdMax[i] = Pl.cds[i]; Pl.combatT = 3; Pl.st = 0; Pl.tick = 0; Pl.fired = false; Pl.hitSet.clear(); Snd.skill();
   const tg = pickTarget(Pl.yaw, 22, 1.2); if (tg && i !== 1) Pl.yawT = Pl.yaw = Math.atan2(tg.pos.x - Pl.pos.x, tg.pos.z - Pl.pos.z);
   if (i === 0) Pl.state = 'castQ'; else if (i === 1) Pl.state = 'whirl'; else if (i === 2) Pl.state = 'castR'; else { Pl.state = 'ult'; Pl.iframe = 3.2; G.enemyTS = .12; G.slowT = 2.7; UI.banner('万剑归宗', '', 'gold'); Snd.gong(); }
@@ -1710,7 +1710,7 @@ function updatePlayer(dt) {
   const alive = Pl.state !== 'dead' && Pl.state !== 'ult';
   if (alive) {
     if (Input.hit('KeyC')) usePotion();
-    if (Input.hit('Tab')) { if (Pl.lock) Pl.lock = null; else { Pl.lock = pickTarget(Cam.yaw, 30, 1.0) || nearestEnemy(Pl.pos.x, Pl.pos.z, 30); if (!Pl.lock) UI.toast('无可锁定之敌'); } }
+    if (Input.hit('Tab')) { if (Pl.lock) Pl.lock = null; else { Pl.lock = pickTarget(Cam.yaw, 30, 1.0) || nearestEnemy(Pl.pos.x, Pl.pos.z, 30); if (!Pl.lock) UI.toast('四下无敌可锁'); } }
     if (Pl.lock && Pl.lock.state === 'dead') Pl.lock = nearestEnemy(Pl.pos.x, Pl.pos.z, 22);
     const interruptible = Pl.state === 'free' || Pl.state === 'attack' || Pl.state === 'castQ' || Pl.state === 'castR';
     if (wantDodge && interruptible && Pl.state !== 'dodge') tryDodge();
@@ -2146,21 +2146,21 @@ function gainXp(v) {
   while (Pl.xp >= Pl.xpNeed) {
     Pl.xp -= Pl.xpNeed; Pl.lv++; recalc(); healPlayer(Pl.maxHp * .15); Pl.mp = Pl.maxMp; Pl.pending++; FX.pillar(Pl.pos, 0x62cdb9, 8); FX.ring(Pl.pos, .5, 7, 0x62cdb9, .7); Snd.level(); GFX.flashAt(Pl.pos, 0x9ff0e0, 5);
     FX.num({ x: Pl.pos.x, y: 2.5, z: Pl.pos.z }, `${cnNum(Pl.lv)}境`, 'word', 1.4);
-    const un = SKILLS.find(s => s.lv === Pl.lv); if (un) UI.toast(`领悟剑技「${un.name}」`, 3.5);
+    const un = SKILLS.find(s => s.lv === Pl.lv); if (un) UI.toast(`悟得剑技「${un.name}」`, 3.5);
   }
 }
 
 /* ---- 机缘 ---- */
 const PERKS = [
-  { id: 'atk', n: '锋锐', r: 1, max: 6, d: '攻击提高 15%。' }, { id: 'aspd', n: '疾风', r: 1, max: 5, d: '出剑速度提高 10%。' }, { id: 'crit', n: '洞察', r: 1, max: 5, d: '暴击几率提高 8%。' },
-  { id: 'critd', n: '破军', r: 2, max: 4, d: '暴击伤害提高 35%。' }, { id: 'hp', n: '金钟', r: 1, max: 6, d: '生命上限 +30，并回复等量生命。' }, { id: 'leech', n: '汲魂', r: 2, max: 3, d: '造成伤害的 2.5% 化为生命。' },
-  { id: 'mspd', n: '凌波', r: 1, max: 4, d: '移动速度 +8%，闪避消耗的体力减少。' }, { id: 'mp', n: '归元', r: 1, max: 4, d: '内力上限 +20，内力回复加快 50%。' },
-  { id: 'wave', n: '剑气外放', r: 2, max: 3, d: '轻剑第四式「跃斩」落地时放出一道剑气，每重多一道。' }, { id: 'thunder', n: '惊雷', r: 3, max: 3, d: '暴击时有几率引下落雷，波及周围敌人。' },
-  { id: 'frost', n: '寒魄', r: 2, max: 3, d: '剑上附寒气，命中使敌迟缓；对迟缓之敌伤害 +15%。' }, { id: 'burn', n: '焚心', r: 2, max: 3, d: '命中点燃敌人，三息内持续灼烧。' },
-  { id: 'split', n: '分光', r: 2, max: 2, d: '「剑气纵横」多放出两道剑气。' },
-  { id: 'cdr', n: '剑心通明', r: 2, max: 3, d: '剑技调息时间缩短 13%。' }, { id: 'shield', n: '护体真气', r: 3, max: 3, d: '每隔一阵凝成一层真气罩，抵挡一次伤害。' },
-  { id: 'snow', n: '踏雪', r: 3, max: 2, d: '贴刃闪避触发「踏雪」后，数息内伤害 +40%。' }, { id: 'wolf', n: '贪狼', r: 1, max: 3, d: '每斩一敌，回复 4 点内力与 2% 生命。' },
-  { id: 'gold', n: '聚宝', r: 1, max: 3, d: '铜钱收获 +30%，拾取范围扩大。' },
+  { id: 'atk', n: '锋锐', r: 1, max: 6, d: '剑锋加锐，攻击提高 15%。' }, { id: 'aspd', n: '疾风', r: 1, max: 5, d: '剑走疾风，出剑速度提高 10%。' }, { id: 'crit', n: '洞察', r: 1, max: 5, d: '目察破绽，暴击几率提高 8%。' },
+  { id: 'critd', n: '破军', r: 2, max: 4, d: '一击破军，暴击伤害提高 35%。' }, { id: 'hp', n: '金钟', r: 1, max: 6, d: '身如金钟，生命上限 +30，并回复等量生命。' }, { id: 'leech', n: '汲魂', r: 2, max: 3, d: '剑饮敌血，造成伤害的 2.5% 化为生命。' },
+  { id: 'mspd', n: '凌波', r: 1, max: 4, d: '踏波而行，移动速度 +8%，闪避更省体力。' }, { id: 'mp', n: '归元', r: 1, max: 4, d: '气归丹田，内力上限 +20，回复加快 50%。' },
+  { id: 'wave', n: '剑气外放', r: 2, max: 3, d: '轻剑第四式「跃斩」落地，荡出一道剑气，每重多一道。' }, { id: 'thunder', n: '惊雷', r: 3, max: 3, d: '暴击时或有落雷应声而下，殃及周围敌人。' },
+  { id: 'frost', n: '寒魄', r: 2, max: 3, d: '剑附寒魄，中者迟缓；对迟缓之敌伤害 +15%。' }, { id: 'burn', n: '焚心', r: 2, max: 3, d: '命中即燃，三息之内灼烧不止。' },
+  { id: 'split', n: '分光', r: 2, max: 2, d: '「剑气纵横」多荡出两道剑气。' },
+  { id: 'cdr', n: '剑心通明', r: 2, max: 3, d: '心念一动，剑技调息缩短 13%。' }, { id: 'shield', n: '护体真气', r: 3, max: 3, d: '真气自凝成罩，每隔一阵可挡一次伤害。' },
+  { id: 'snow', n: '踏雪', r: 3, max: 2, d: '贴刃闪避成「踏雪」，数息之内伤害 +40%。' }, { id: 'wolf', n: '贪狼', r: 1, max: 3, d: '每斩一敌，回 4 点内力、2% 生命。' },
+  { id: 'gold', n: '聚宝', r: 1, max: 3, d: '财气自聚，铜钱收获 +30%，拾取范围更广。' },
 ];
 function offerPerks() {
   const pool = PERKS.filter(p => pk(p.id) < p.max && (!p.lv || Pl.lv >= p.lv)), out = [];
@@ -2169,10 +2169,10 @@ function offerPerks() {
 }
 function takePerk(p) { Pl.perks[p.id] = pk(p.id) + 1; const hp0 = Pl.maxHp; recalc(); if (p.id === 'hp') Pl.hp = Math.min(Pl.maxHp, Pl.hp + 30); if (p.id === 'mp') Pl.mp = Pl.maxMp; if (p.id === 'shield') { Pl.shield = 1; } Snd.ui(); }
 const SHOP = [
-  { id: 'sword', n: () => '锻剑 · ' + cnNum(Pl.swordLv + 1) + '重', cost: () => Math.round(55 * Math.pow(1.5, Pl.swordLv)), max: () => Pl.swordLv >= 9, d: () => { const nt = SWORD_TIERS[Math.min(4, Math.floor((Pl.swordLv + 1) / 2))]; return '攻击 +13%。' + (nt !== swordTier() ? `剑身蜕变为「${nt.name}」。` : `当前：${swordTier().name}`); }, buy: () => { Pl.swordLv++; recalc(); setSwordTier(); Snd.forge(); } },
-  { id: 'body', n: () => '淬体', cost: () => Math.round(45 * Math.pow(1.38, Pl.bodyLv)), max: () => Pl.bodyLv >= 10, d: () => '生命上限 +28，并回复三成生命。', buy: () => { Pl.bodyLv++; recalc(); healPlayer(Pl.maxHp * .3 + 28); Snd.ui(); } },
-  { id: 'qi', n: () => '养气', cost: () => Math.round(45 * Math.pow(1.38, Pl.qiLv)), max: () => Pl.qiLv >= 8, d: () => '内力上限 +22，回复加快。', buy: () => { Pl.qiLv++; recalc(); Pl.mp = Pl.maxMp; Snd.ui(); } },
-  { id: 'pot', n: () => `回春丹（${Pl.pots}/5）`, cost: () => 35, max: () => Pl.pots >= 5, d: () => '服下回复 45% 生命。', buy: () => { Pl.pots++; Snd.ui(); } },
+  { id: 'sword', n: () => '锻剑 · ' + cnNum(Pl.swordLv + 1) + '重', cost: () => Math.round(55 * Math.pow(1.5, Pl.swordLv)), max: () => Pl.swordLv >= 9, d: () => { const nt = SWORD_TIERS[Math.min(4, Math.floor((Pl.swordLv + 1) / 2))]; return '攻击 +13%。' + (nt !== swordTier() ? `剑身一振，蜕作「${nt.name}」。` : `手中仍是「${swordTier().name}」`); }, buy: () => { Pl.swordLv++; recalc(); setSwordTier(); Snd.forge(); } },
+  { id: 'body', n: () => '淬体', cost: () => Math.round(45 * Math.pow(1.38, Pl.bodyLv)), max: () => Pl.bodyLv >= 10, d: () => '筋强骨壮，生命上限 +28，并回复三成生命。', buy: () => { Pl.bodyLv++; recalc(); healPlayer(Pl.maxHp * .3 + 28); Snd.ui(); } },
+  { id: 'qi', n: () => '养气', cost: () => Math.round(45 * Math.pow(1.38, Pl.qiLv)), max: () => Pl.qiLv >= 8, d: () => '吐纳养气，内力上限 +22，回复更快。', buy: () => { Pl.qiLv++; recalc(); Pl.mp = Pl.maxMp; Snd.ui(); } },
+  { id: 'pot', n: () => `回春丹（${Pl.pots}/5）`, cost: () => 35, max: () => Pl.pots >= 5, d: () => '一丸入喉，回复 45% 生命。', buy: () => { Pl.pots++; Snd.ui(); } },
 ];
 
 /* === 80-ui.js === */
@@ -2213,13 +2213,13 @@ const UI = {
   },
   perkList(el) { const html = PERKS.filter(p => pk(p.id)).map(p => `<span>${p.n}${pk(p.id) > 1 ? ' ' + cnNum(pk(p.id)) + '重' : ''}</span>`).join(''); $(el).innerHTML = html || '<span>尚无机缘</span>'; },
   showLevelUp() {
-    const perks = offerPerks(), host = $('cards'); host.innerHTML = ''; $('luSub').textContent = `已入${cnNum(Pl.lv - Pl.pending + 1)}境 · 择一道机缘`;
+    const perks = offerPerks(), host = $('cards'); host.innerHTML = ''; $('luSub').textContent = `已入${cnNum(Pl.lv - Pl.pending + 1)}境 · 机缘一道，择之`;
     perks.forEach((p, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'card r' + p.r; b.id = 'card' + i; b.innerHTML = `<span class="rs">${['', '凡', '珍', '绝'][p.r]}</span><span class="ct">机缘</span><span class="cn">${p.n}</span><span class="cdsc">${p.d}</span><span class="cs"><span>${pk(p.id) ? '已修 ' + cnNum(pk(p.id)) + ' 重' : '初悟'} / ${cnNum(p.max)}</span><span class="ck">${i + 1}</span></span>`; b.onclick = () => Game.pickPerk(p); host.appendChild(b); });
     this.perks = perks; $('levelup').hidden = false;
   },
   showShop() {
     const host = $('shopGrid'); host.innerHTML = ''; $('shopGold').textContent = Math.floor(Pl.gold);
-    SHOP.forEach((it, i) => { const b = document.createElement('button'), mx = it.max(), cost = it.cost(); b.type = 'button'; b.className = 'item'; b.id = 'shop' + i; b.disabled = mx || Pl.gold < cost; b.innerHTML = `<span class="in">${it.n()}</span><span class="ip">${mx ? '已臻极' : cost + ' 钱'}</span><span class="id">${it.d()}</span>`; b.onclick = () => { if (Pl.gold >= cost && !it.max()) { Pl.gold -= cost; it.buy(); UI.showShop(); } }; host.appendChild(b); });
+    SHOP.forEach((it, i) => { const b = document.createElement('button'), mx = it.max(), cost = it.cost(); b.type = 'button'; b.className = 'item'; b.id = 'shop' + i; b.disabled = mx || Pl.gold < cost; b.innerHTML = `<span class="in">${it.n()}</span><span class="ip">${mx ? '已臻极致' : cost + ' 文'}</span><span class="id">${it.d()}</span>`; b.onclick = () => { if (Pl.gold >= cost && !it.max()) { Pl.gold -= cost; it.buy(); UI.showShop(); } }; host.appendChild(b); });
     $('shop').hidden = false;
   },
 };
@@ -2247,7 +2247,7 @@ function resetGame() {
 function unlock() { if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock(); }
 function hideAll() { for (const id of ['title', 'levelup', 'shop', 'pause', 'over']) $(id).hidden = true; }
 const Game = {
-  start() { Snd.init(); resetGame(); hideAll(); $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; G.inter = 2.6; canvas.focus(); UI.banner('青锋行', '暮山试剑', ''); UI.toast('敌自四面而来，守住试剑坪', 4); },
+  start() { Snd.init(); resetGame(); hideAll(); $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; G.inter = 2.6; canvas.focus(); UI.banner('青锋行', '暮山试剑', ''); UI.toast('四面来敌，守住试剑坪', 4); },
   pause() { if (G.state !== 'playing') return; G.state = 'paused'; UI.perkList('pausePerks'); $('pause').hidden = false; unlock(); },
   resume() { if (G.state !== 'paused') return; $('pause').hidden = true; G.state = 'playing'; canvas.focus(); },
   levelUp() { G.state = 'levelup'; unlock(); UI.showLevelUp(); },
@@ -2256,13 +2256,13 @@ const Game = {
   closeShop() { if (G.state !== 'shop') return; $('shop').hidden = true; G.state = 'playing'; canvas.focus(); },
   onDeath() { G.deathT = 0; Snd.gong(); },
   over(win) {
-    G.state = 'over'; unlock(); saveBest(); $('overT').firstChild.textContent = win ? '山门无恙' : '剑折人亡'; $('overS').textContent = win ? '十波尽退，暮色归于寂静' : `止步第${cnNum(G.wave)}波`;
+    G.state = 'over'; unlock(); saveBest(); $('overT').firstChild.textContent = win ? '山门无恙' : '剑折人亡'; $('overS').textContent = win ? '十波尽退，暮色重归寂静' : `剑锋折于第${cnNum(G.wave)}波`;
     const mm = Math.floor(G.playT / 60), ss = Math.floor(G.playT % 60);
     $('overStats').innerHTML = `<div><b>${cnNum(G.wave)}</b>波次</div><div><b>${cnNum(Pl.lv)}</b>境界</div><div><b>${G.kills}</b>斩敌</div><div><b>${G.maxCombo}</b>最高连击</div><div><b>${mm}:${('0' + ss).slice(-2)}</b>历时</div><div><b>${Math.round(G.dmgDone)}</b>总伤害</div><div><b>${swordTier().name[0]}${swordTier().name[1]}</b>佩剑</div><div><b>${Math.floor(Pl.gold)}</b>余钱</div>`;
     UI.perkList('overPerks'); $('btnEndless').hidden = !win; $('over').hidden = false;
   },
   victory() { UI.banner('山门无恙', '', 'gold'); Snd.level(); Game.over(true); },
-  endless() { if (G.state !== 'over') return; $('over').hidden = true; G.endless = true; G.state = 'playing'; G.inter = 12; canvas.focus(); UI.toast('无尽试炼：敌势一波强过一波', 4); },
+  endless() { if (G.state !== 'over') return; $('over').hidden = true; G.endless = true; G.state = 'playing'; G.inter = 12; canvas.focus(); UI.toast('无尽试炼：一波更比一波凶', 4); },
 };
 Input.onLock = locked => { if (!locked && G.state === 'playing') Game.pause(); };
 
@@ -2302,7 +2302,7 @@ function frame(now) {
   FX.updateNums(G.state === 'playing' ? rdt : 0, GFX.camera, root.clientWidth, root.clientHeight);
   if (!window.__norender) GFX.render(); Input.endFrame();
   // 自适应画质
-  fN++; fT += rdt; if (fT >= 1) { const fps = fN / fT; fN = 0; fT = 0; if (G.state === 'playing' && fps < 38) { if (++slowAcc >= 3 && GFX.quality > 0) { GFX.quality--; applyQuality(); slowAcc = 0; UI.toast('已自动调低画质，可在暂停菜单更改', 3); } } else slowAcc = 0; }
+  fN++; fT += rdt; if (fT >= 1) { const fps = fN / fT; fN = 0; fT = 0; if (G.state === 'playing' && fps < 38) { if (++slowAcc >= 3 && GFX.quality > 0) { GFX.quality--; applyQuality(); slowAcc = 0; UI.toast('画面已自动调低，可在暂停菜单更改', 3); } } else slowAcc = 0; }
 }
 
 function bindUI() {

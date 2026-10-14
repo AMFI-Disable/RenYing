@@ -21,10 +21,10 @@
     <button class="mcard left" id="mSingle" data-go="single"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
     <button class="mcard right" id="mNet" data-go="netp"><span class="mk">联机对战</span><span class="ms">上擂台，和同学一决高下</span></button>
     <div class="msmall">
-      <button id="mQfx" class="qfxbtn" title="守住第三、六、十波可以领刃影奖励">青锋行</button><button data-go="gacha">问剑阁</button><button data-go="tasks">任务</button><button data-go="replays">回放</button><button data-go="codex">角色图鉴</button><button data-go="tutorial">新手教学</button><button data-go="community">社区</button><button data-go="settings">设置</button><button data-go="help">说明</button>
+      <button id="mQfx" class="qfxbtn" title="守住第三、六、十波，可领刃影奖励">青锋行</button><button data-go="gacha">问剑阁</button><button data-go="tasks">任务</button><button data-go="replays">回放</button><button data-go="codex">角色图鉴</button><button data-go="tutorial">新手教学</button><button data-go="community">社区</button><button data-go="settings">设置</button><button data-go="help">说明</button>
     </div>
     <p class="ver" id="verLine"></p>
-    <p class="touch">这个游戏需要键盘和鼠标，请在电脑上打开。</p>
+    <p class="touch">这游戏得用键盘和鼠标，请在电脑上打开。</p>
   </div>
 
   <div id="single" class="scr">
@@ -32,13 +32,13 @@
       <h2 id="singleT">单人练习</h2>
       <div data-sec="cpu">
         <h3 class="spt">对战电脑</h3>
-        <div class="seg" id="levels"><button data-lv="easy">简单</button><button data-lv="normal" class="sel">普通</button><button data-lv="hard">困难</button><button data-lv="adaptive">个性化</button><button data-lv="impossible">不可能</button></div>
+        <div class="seg" id="levels"><button data-lv="easy">入门</button><button data-lv="normal" class="sel">寻常</button><button data-lv="hard">劲敌</button><button data-lv="adaptive">宿敌</button><button data-lv="impossible">绝顶</button></div>
         <p class="netnote" id="adaptLine"></p>
         <button class="go" id="goBtn">开战</button>
       </div>
       <div data-sec="stage">
         <h3 class="spt">闯关模式</h3>
-        <p class="sub" style="margin:0 0 10px">六章，每章五关：前四关打妖物，第五关挑战守关高手。通关才能解锁下一关，剩的血越多，星越多。</p>
+        <p class="sub" style="margin:0 0 10px">六章，每章五关：前四关斩妖物，第五关会守关高手。通关方能解锁下一关——余血越多，得星越多。</p>
       </div>
       <div data-sec="stage train"><p class="netnote" style="margin:4px 0 8px">选择角色</p><div class="trpick" id="trPick"></div></div>
       <div data-sec="stage">
@@ -49,7 +49,7 @@
       </div>
       <div data-sec="train">
         <h3 class="spt">木人桩练习</h3>
-        <p class="sub" style="margin:0 0 10px">对着稻草人随便打，练连招。</p>
+        <p class="sub" style="margin:0 0 10px">对着稻草人随意出招，练熟连招。</p>
       </div>
       <div data-sec="train"><button class="go small" id="trainBtn">开始练习</button></div>
       <div class="row"><button class="ghost" data-back>返回</button></div>
@@ -61,7 +61,7 @@
       <h2>联机对战</h2>
       <div id="netPanel" class="net">
         <div class="net-mode-bar" style="display:flex;gap:10px;justify-content:center;margin-bottom:14px;">
-          <button id="netModeP2PBtn" class="ghost small sel" style="border-radius:20px;padding:5px 15px;font-size:13px" type="button">WebRTC 免服务器直连 (公网开黑)</button>
+          <button id="netModeP2PBtn" class="ghost small sel" style="border-radius:20px;padding:5px 15px;font-size:13px" type="button">WebRTC 免服务器直连（公网开黑）</button>
           <button id="netModeServerBtn" class="ghost small" style="border-radius:20px;padding:5px 15px;font-size:13px" type="button">局域网 / 本地服务器</button>
         </div>
 
@@ -120,19 +120,19 @@
           <dt>跳跃</dt><dd><kbd>W</kbd> 或 <kbd>空格</kbd>，可二段跳；燕翎在空中按住可以飞</dd>
           <dt>防御</dt><dd><kbd>S</kbd> 按住</dd>
           <dt>攻击</dt><dd>鼠标左键，连点五段</dd>
-          <dt>蓄力斩</dt><dd>按住左键蓄力，松开释放；蓄力时可以慢慢走</dd>
-          <dt>远程招式</dt><dd>按住左键再点右键（或 <kbd>R</kbd>），每个角色不同</dd>
+          <dt>蓄力斩</dt><dd>按住左键蓄力，松开便出；蓄力时能缓步挪动</dd>
+          <dt>远程招式</dt><dd>按住左键再点右键（或 <kbd>R</kbd>），各家不同</dd>
           <dt>腾空闪</dt><dd>点一下鼠标右键（或 <kbd>左 Shift</kbd>），任何状态都能用</dd>
           <dt>朝向</dt><dd>最后按的是 <kbd>A</kbd> 就朝左，是 <kbd>D</kbd> 就朝右；按住防御时自动面向对手（设置里可以改成一直自动面向对手）</dd>
-          <dt>技能</dt><dd><kbd>Q</kbd>，每个角色不同</dd>
+          <dt>技能</dt><dd><kbd>Q</kbd>，各家不同</dd>
           <dt>大招</dt><dd><kbd>E</kbd>，气满时</dd>
-          <dt>木人桩</dt><dd>练习时按 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 切换：站着 / 一直防御 / 会腾空闪 / 固定不动</dd>
+          <dt>木人桩</dt><dd>练习时按 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 切换：任打不还手 / 一味死守 / 被连便闪 / 钉在原地</dd>
         </dl></div>
       </div>
       <p class="tips touchonly"><b>手机操作</b>：左边摇杆移动（往下推防御，往上推跳）。右边按键：<b>攻击</b>（点是普攻，按住蓄力、松开出蓄力斩）、<b>跳</b>、<b>远程</b>、<b>技能</b>、<b>闪</b>（腾空闪）、<b>大招</b>（气满时发光）。左上角暂停。</p>
-      <p class="tips">开打前双方先各禁用一个角色，再轮流选人，一共 9 个角色。在选人界面双击角色卡可以直接确认。<br>
-      <b>腾空闪</b>：被连击、被挑飞、倒地都能用，立刻解除受制状态并向上闪起，落地或你自己出手之前对手打不到你，冷却 9 秒。被大招锁住时不能用。<br>
-      <b>蓄力斩</b>：蓄满时角色会闪一下，松开是满蓄力的破月斩，能打穿防御。蓄力斩会把对手直接打倒，倒地期间打不到。<br><b>远程招式</b>（按住左键再点右键）：都会把对手短暂打飞，打中后可以接着连。<br>
+      <p class="tips">开打前双方先各禁用一个角色，再轮流选人，一共 9 个角色。在选人界面双击角色卡即可确认。<br>
+      <b>腾空闪</b>：被连击、被挑飞、倒地都能用，立刻解除受制并向上闪起；落地或出手之前，对手碰不到你。冷却 9 秒，被大招锁住时用不出。<br>
+      <b>蓄力斩</b>：蓄满时角色会闪一下，松开便是满蓄力的一斩，能打穿防御。蓄力斩会把对手直接打倒，倒地期间打不到。<br><b>远程招式</b>（按住左键再点右键）：都会把对手短暂打飞，打中后可以接着连。<br>
       连招示例：五段连击的最后一下把对手打飞，马上跳起追上去，空中连点两下左键（第二下是下砸）；远程招式也会把对手短暂打飞，可以接着连。<br>
       触控板两指点按就是右键。单人练习时按 P 暂停，M 静音。</p>
       <div class="row"><button class="ghost" data-back>返回</button></div>
@@ -158,7 +158,7 @@
     <div class="panel narrowp setp">
       <h2>设置</h2>
       <div class="setlist" id="setList"></div>
-      <p class="netnote">设置保存在这台电脑的浏览器里。画面卡的话，先把“画质”调低或者关掉“背景虚化”。</p>
+      <p class="netnote">设置只存在这台电脑的浏览器里。画面发卡的话，先把“画质”调低，或关掉“背景虚化”。</p>
       <div class="row"><button class="go small" id="setDone">完成</button></div>
     </div>
   </div>
@@ -207,7 +207,7 @@
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
-      <p class="netnote" style="margin-top:18px">昵称会公开显示在排行榜上，别用真名。密码不要和你在别处用的一样。</p>
+      <p class="netnote" style="margin-top:18px">昵称会公开显示在排行榜上，别用真名。密码也别与别处相同。</p>
     </div>
   </div>
 
@@ -224,7 +224,7 @@
   <div id="welfare" class="scr">
     <div class="panel">
       <h2>新手福利</h2>
-      <p class="sub">每个人一开始都有青锋。再从下面选一个角色，免费送给你，永久拥有。</p>
+      <p class="sub">人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。</p>
       <div class="wgrid" id="wGrid"></div>
       <button class="go" id="wGo" disabled>就选这个</button>
       <p class="netnote" id="wMsg"></p>
@@ -255,7 +255,7 @@
         </div>
       </div>
       <div class="tlist" id="rpList"></div>
-      <p class="tips" style="margin-top:10px">自动保存最近 10 场对战（对战电脑和联机），存在这台设备的浏览器里。看回放时可以暂停、慢放和快进，支持导出与导入分享。</p>
+      <p class="tips" style="margin-top:10px">自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。</p>
     </div>
   </div>
 
@@ -273,16 +273,16 @@
       <h3 class="spt">每周任务 <span class="tsub">每周一刷新</span></h3><div class="tlist" id="tWeekly"></div>
       <h3 class="spt">兑换码</h3>
       <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入兑换码" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
-      <h3 class="spt">墨锭怎么来</h3>
-      <p class="tips" style="margin:0">联机对战：赢 60，输 30。排位赛：赢 80，输 40。打电脑（每天前 10 局）：简单 10 / 5，普通 20 / 10，困难 40 / 20。每天第一次赢（联机或普通以上电脑）额外 150。新手教学 300。新账号送 500。<br>角色祈愿 60 一次、十连 540；皮肤祈愿 30 一次、十连 270。</p>
+      <h3 class="spt">墨锭从哪来</h3>
+      <p class="tips" style="margin:0">联机对战：赢 60，输 30。排位赛：赢 80，输 40。打电脑（每天前 10 局）：入门 10 / 5，寻常 20 / 10，劲敌 40 / 20。每天第一次赢（联机或寻常以上电脑）额外 150。新手教学 300。新账号送 500。<br>角色祈愿 60 一次、十连 540；皮肤祈愿 30 一次、十连 270。</p>
       <p class="netnote" id="tMsg"></p>
     </div>
   </div>
 
   <div id="tutask" class="scr">
     <div class="panel narrowp">
-      <h2>第一次来？</h2>
-      <p class="sub">花两分钟学一下基本操作。登录的玩家完成后还能拿到 300 墨锭。</p>
+      <h2>初来乍到？</h2>
+      <p class="sub">两分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。</p>
       <div class="row"><button class="go" id="tutYes">开始教学</button><button class="ghost" id="tutNo">以后再说</button></div>
     </div>
   </div>
@@ -299,7 +299,7 @@
   <div id="tutdone" class="scr">
     <div class="panel narrowp">
       <h2>教学完成</h2>
-      <p class="sub" id="tutReward">基本操作都会了，去和电脑或同学过几招吧。</p>
+      <p class="sub" id="tutReward">该会的都会了。去找电脑或是同学，过几招吧。</p>
       <div class="row"><button class="go" id="tutMenu">返回菜单</button><button class="ghost" id="tutStay">继续练习</button></div>
     </div>
   </div>

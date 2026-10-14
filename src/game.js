@@ -131,51 +131,51 @@ const SP_SLASH = { ult: true, noScale: true, dmg: 2.5, kb: [0, 0], stun: .3, hs:
 // stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率
 // skill 是 Q 技能，ult 是 E 大招，passive 是被动。beats/weakTo 只是给玩家看的克制关系说明。
 const CHARS = [
-  { id: 'qingfeng', name: '青锋', role: '均衡剑客', diff: 1, escCD: 8.5, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
-    passiveName: '剑意', passiveDesc: '攒大招的速度快 10%。',
+  { id: 'qingfeng', name: '青锋', role: '游龙剑客', diff: 1, escCD: 8.5, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
+    passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 8%。',
     stat: { hp: 102, walk: 1, speed: 1, dmg: 0.95, reach: 1, swing: 1, jump: 1 }, meterMul: 1.08, hitFeel: 1,
     look: { body: '#e9eef6', shade: '#9aa6bd', outline: '#070914', outlineA: 1, scarf: '#46d3ea', slash: '120,230,255', blade: '#effcff', head: 'topknot', weapon: 'sword' },
     ai: { range: [70, 170] }, beats: ['moyu'], weakTo: ['yuehua'] },
-  { id: 'feiying', name: '绯影', role: '刺客', diff: 2, escCD: 9.5, skill: 'blink', skill2: 'kunai', ult: 'shadows', passive: 'swift',
-    passiveName: '身轻', passiveDesc: '移动和出招都最快，但生命值最低，受击脱锁惩罚更久。',
+  { id: 'feiying', name: '绯影', role: '暗影刺客', diff: 2, escCD: 9.5, skill: 'blink', skill2: 'kunai', ult: 'shadows', passive: 'swift',
+    passiveName: '身轻', passiveDesc: '身法最快、出手最疾，气血却最薄；一旦受制，腾空闪的冷却也最久。',
     stat: { hp: 92, walk: 1.16, speed: 0.84, dmg: 1.05, reach: 0.92, swing: 0.8, jump: 1.08 }, hitFeel: 0.8,
     moveMods: { l1: { dmgAbs: 5 }, l2: { dmgAbs: 6 }, l3: { dmgAbs: 6 }, l4: { dmgAbs: 7 }, l5: { dmgAbs: 9 } },
     look: { body: '#2d2336', shade: '#1b1422', outline: '#ff4a5f', outlineA: .85, scarf: '#ff3b52', slash: '255,95,115', blade: '#ffe6ea', head: 'hood', weapon: 'dual' },
     ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
-  { id: 'tieshan', name: '铁山', role: '重甲', diff: 1, escCD: 7, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
-    passiveName: '霸体', passiveDesc: '重斩和蓄力斩出手时带霸体（伤减 40%）。受击被连时腾空闪冷却更短 (7s)。',
+  { id: 'tieshan', name: '铁山', role: '玄铁重甲', diff: 1, escCD: 7, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
+    passiveName: '霸体', passiveDesc: '重斩与蓄力斩自带霸体，所受伤害减 40%。铁骨铮铮，腾空闪冷却最短（7 秒）。',
     stat: { hp: 103, walk: 0.78, speed: 1.22, dmg: 1.08, reach: 1.1, swing: 1.18, jump: 0.9 }, size: 1.12, hitFeel: 1.55,
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
-  { id: 'lingshuang', name: '凌霜', role: '长枪', diff: 2, escCD: 8.5, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
-    passiveName: '枪尖', passiveDesc: '枪尖（最远端）命中伤害 +25% 并大幅挑空；贴身过近时伤害减至三分之一。枪旋可弹开轻型飞行道具。',
+  { id: 'lingshuang', name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.5, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
+    passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 25%，一挑冲天；贴身则力有不逮，只余三分之一。枪旋可拨开轻巧暗器。',
     stat: { hp: 97, walk: 0.98, speed: 1.05, dmg: 0.98, reach: 1.36, swing: 1.08, jump: 1 }, hitFeel: 1.15,
     look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
     ai: { range: [115, 205] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
-  { id: 'liuyun', name: '流云', role: '远程', diff: 2, escCD: 9, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
-    passiveName: '御风', passiveDesc: '三段跳与风遁机动强，龙卷对浮空目标具高升力；但地面硬直逃脱窗口适中。',
+  { id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 9, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
+    passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起，专把浮空之敌卷上九霄。地面受制时，脱身只算平常。',
     stat: { hp: 118, walk: 1.12, speed: 0.88, dmg: 1.17, reach: 0.98, swing: 0.95, jump: 1.05 }, jumps: 3, hitFeel: 0.9,
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [200, 380] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
-  { id: 'leiming', name: '雷鸣', role: '拳师', diff: 1, escCD: 8, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
-    passiveName: '连环', passiveDesc: '出拳极快十连拳，衰减仅 0.04；但每拳硬直短，对手极易在连击缝隙腾空闪脱逃。',
+  { id: 'leiming', name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
+    passiveName: '连环', passiveDesc: '十连快拳如骤雨，伤害衰减仅 0.04；只是收势太短，拳与拳之间留有空隙，对手常能借此腾空闪走脱。',
     stat: { hp: 120, walk: 1.18, speed: 0.68, dmg: 0.88, reach: 0.8, swing: 0.62, jump: 1 }, scaling: 0.04, hitFeel: 0.8,
     moveMods: { l1: { dmgAbs: 3 }, l2: { dmgAbs: 3 }, l3: { dmgAbs: 3 }, l4: { dmgAbs: 3 }, l5: { dmgAbs: 3, kb: [110, 0], launch: false, lunge: 120, next: { light: 'l6', heavy: 'hv' } }, l6: { dmgAbs: 3 }, l7: { dmgAbs: 3 }, l8: { dmgAbs: 3 }, l9: { dmgAbs: 3 }, l10: { dmgAbs: 3 } },
     look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
     ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
-  { id: 'moyu', name: '墨羽', role: '陷阱', diff: 3, escCD: 9, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
-    passiveName: '笔锋', passiveDesc: '墨阵定身 1.2 秒（期间锁死走位），可引爆打出连环硬直；需消耗保命腾空闪破除定身。',
+  { id: 'moyu', name: '墨羽', role: '泼墨画师', diff: 3, escCD: 9, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
+    passiveName: '笔锋', passiveDesc: '墨阵一落，踩中者寸步难行 1.2 秒；可随时引爆，连起一串硬直。被困者唯有耗掉腾空闪，方能破阵脱身。',
     stat: { hp: 88, walk: 0.95, speed: 1.02, dmg: 1.06, reach: 1.12, swing: 1.05, jump: 1 }, hitFeel: 1.1,
     moveMods: { l1: { dmgAbs: 4 }, l2: { dmgAbs: 4 }, l3: { dmgAbs: 4 }, l4: { dmgAbs: 4 }, l5: { dmgAbs: 4 }, cs1: { reachMul: 1.4 }, cs2: { reachMul: 1.4 } }, inkShot: true,
     look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
     ai: { range: [150, 300] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
-  { id: 'yuehua', name: '月华', role: '反击', diff: 3, escCD: 8.5, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
-    passiveName: '月华', passiveDesc: '月镜格挡成功后反击具有霸道锁定，不可被腾空闪受身；脱战缓慢回血。',
+  { id: 'yuehua', name: '月华', role: '月镜宗师', diff: 3, escCD: 8.5, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
+    passiveName: '月华', passiveDesc: '月镜格开一击，反斩已然锁定——腾空闪也救不得。脱战之后，月华缓缓浸润，伤势自愈。',
     stat: { hp: 87, walk: 1, speed: 0.88, dmg: 0.93, reach: 1, swing: 0.85, jump: 1 }, hitFeel: 0.8,
     look: { body: '#f4eefc', shade: '#b3a6c9', outline: '#15102a', outlineA: 1, scarf: '#c9b6ff', slash: '215,195,255', blade: '#f6f0ff', head: 'moon', weapon: 'moonblade' },
     ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
-  { id: 'yanling', name: '燕翎', role: '飞行', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
-    passiveName: '御空', passiveDesc: '御空滞空避开地面冲击；地面受击易脱逃，空中抓连击具有强追击能力。',
+  { id: 'yanling', name: '燕翎', role: '御空飞燕', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
+    passiveName: '御空', passiveDesc: '一飞冲天，地面冲击尽落空处；立足未稳时易被打散，一旦在空中抓住对手，便如鹰隼攫兔。',
     stat: { hp: 88, walk: 1.12, speed: 0.84, dmg: 1.14, reach: 1, swing: 0.85, jump: 1.05 }, fly: 1.2, hitFeel: 0.9,
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
@@ -204,7 +204,7 @@ const HEAVY_MOVES = ['hv', 'cs1', 'cs2'];
 // ======================= 技能（Q） =======================
 // 每个技能：cd 冷却，start 开始时，update 每一帧，pose 用哪个姿势，ai 电脑什么时候用
 const SKILLS = {
-  gale: { name: '疾风斩', cd: 5, pass: true, nofric: true, desc: '向前居合突进并穿过对手，途中命中造成硬直；若穿过墨阵可直接将墨阵斩破。',
+  gale: { name: '疾风斩', cd: 5, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过之处，对手僵在原地。途中若遇墨阵，一刀两断。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
@@ -223,7 +223,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 140 && d < 330 },
-  blink: { name: '影遁', cd: 11, pass: true, desc: '结印化作暗影瞬移至对手身后发动双刃十字绞杀（3 伤害）；1.5 秒内下一次攻击伤害 +50%。',
+  blink: { name: '影遁', cd: 11, pass: true, desc: '结印入影，悄然现身对手背后，双刃交错成十字绞杀（3 伤害）。此后 1.5 秒内，下一击威力暴涨 50%。',
     start() {},
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.14) {
@@ -242,7 +242,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 36] : ['fy_xslash', 40],
     ai: (me, foe, d) => d > 170 },
-  quake: { name: '震地', cd: 8, desc: '双手举重刀怒砸地面，向两侧放出贴地地裂冲击波，掀飞地面对手。起手带霸体。空中目标不受地裂影响。',
+  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂贴地向两侧炸开，把站在地上的人掀上半空。起手带霸体，打断不得；唯腾空者不受地裂所侵。',
     start(f) { f.armorT = 0.26; f.armorHits = 99; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.22) {
@@ -255,7 +255,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
     ai: (me, foe, d) => d < 400 && foe.onGround() },
-  backthrust: { name: '回马枪', cd: 6, desc: '后撤步拉开距离，随即龙枪反身突刺。枪尖命中挑飞且枪旋冷却减半。',
+  backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪直取咽喉。枪尖挑中，人随枪起；枪旋余劲随之回转。',
     start(f) { f.vx = -f.face * 540; f.vy = -420; f.y = Math.min(f.y, -1); },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.24) { f.skPh = 1; f.t = 0; f.vx = f.face * 180; f.hitDone = false; SFX.heavy(); }
@@ -263,7 +263,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
     ai: (me, foe, d) => d < 110 },
-  windblade: { name: '风刃', cd: 1.3, air: true, desc: '灵动挥扇祭出风刃，击退近身并远程压制。可击散对手飞羽与轻镖。',
+  windblade: { name: '风刃', cd: 1.3, air: true, desc: '挥扇生风，一刃飞出。近可逼退，远可压制，连飞羽轻镖也一并吹散。',
     start() {},
     update(f) {
       if (f.skPh === 0 && f.t >= 0.03) {
@@ -277,7 +277,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
     ai: () => true },
-  thunderfist: { name: '雷闪', cd: 4, nofric: true, pass: true, desc: '雷光化身贴地雷闪直拳冲刺，穿透对手并造成 6 伤害与 0.5 秒僵直。冲刺带 1 次霸体。',
+  thunderfist: { name: '雷闪', cd: 4, nofric: true, pass: true, desc: '身化雷光，贴地疾冲，一拳贯穿而过（6 伤害，0.5 秒僵直）。冲刺途中，自带 1 次霸体。',
     start(f) { f.armorT = 0.5; f.armorHits = 1; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; f.t = 0; f.vx = f.face * 1500; f.hitDone = false; SFX.dash(); SFX.thunder(); }
@@ -290,7 +290,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 110 && d < 360 },
-  inktrap: { name: '墨阵', cd: 6, desc: '提笔挥墨在前方地面绘制墨池法阵，踩入者定身 1.2 秒无法位移，可按 Q 随时提前引爆。',
+  inktrap: { name: '墨阵', cd: 6, desc: '提笔泼墨，在前方地上画出一池墨阵。踏入者被墨缠住，1.2 秒寸步难移；再按 Q 可随时引爆。',
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.2) {
@@ -302,7 +302,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
     ai: (me, foe, d) => d > 90 && d < 330 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
-  dive: { name: '俯冲', cd: 3.5, air: true, desc: '化身猎鹰斜向极速俯冲突袭，命中造成硬直；空中命中立刻刷新技能冷却。',
+  dive: { name: '俯冲', cd: 3.5, air: true, desc: '如猎鹰收翼，斜斜俯冲而下。一经命中，对手顿时僵住；若自空中出手得手，此技立时可再用。',
     start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -720; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.2) { f.skPh = 1; f.t = 0; }
@@ -317,21 +317,21 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['jump', 20] : f.skPh === 1 ? ['yl_dive', 50] : ['getup', 16],
     ai: (me, foe, d) => d > 110 && d < 360 },
   // ---------- 右键招式 ----------
-  swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀横扫出一道高速剑气波，中距离击退打飞，克制慢速抛物道具。',
+  swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道凛冽剑气。中距离一击打飞，慢悠悠的抛物暗器更不在话下。',
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 820, w: 60, h: 70, life: 0.42, dmg: 8, kb: [150, -460], stun: 0.45, hs: 0.07, launch: true }); }
       if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
-  kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身瞬甩三枚散落黑铁手里剑，扇面扩散，打断前摇。',
+  kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身一甩，三枚黑铁手里剑呈扇面激射而出，快得足以截断对手的起手。',
     start() {},
     update(f) {
       if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; SFX.slice(); for (const a of [-0.13, 0, 0.13]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1100 * Math.cos(a), vy: 1100 * Math.sin(a), w: 26, h: 14, life: 0.6, dmg: 3, kb: [100, -380], stun: 0.3, hs: 0.03, launch: true }); }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-  ironwall: { name: '铁壁冲', cd: 5, nofric: true, desc: '沉肩带绝对霸体向前蛮横冲撞，撞飞对手。受击可吸收物理打击转化怒气。',
+  ironwall: { name: '铁壁冲', cd: 5, nofric: true, desc: '沉肩如山，硬碰硬地撞将过去，把人撞得倒飞。迎面而来的拳脚尽数吞下，化作满腔怒气。',
     start(f) { f.armorT = 0.45; f.armorHits = 99; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.15) { f.skPh = 1; f.t = 0; f.vx = f.face * 700; f.hitDone = false; SFX.dash(); }
@@ -339,7 +339,7 @@ const SKILLS = {
       if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 230 },
-  spin: { name: '枪旋', cd: 6, nofric: true, desc: '飞速旋转长枪化作风车护盾移动，可弹开迎面而来的常规飞行道具，最后段重度击飞。',
+  spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，人随枪走。迎面而来的寻常暗器尽被拨开，末了一记重重扫飞。',
     start(f) { f.vx = 0; f.spinN = 0; },
     update(f, foe) {
       const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
@@ -362,7 +362,7 @@ const SKILLS = {
       if (f.t >= 2) toNeutral(f);
     },
     pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-  windstep: { name: '风遁', cd: 4, air: true, nofric: true, pass: true, desc: '御风凌空后翻撤步，无敌撤出险境并强化下一发风刃为双生风刃。',
+  windstep: { name: '风遁', cd: 4, air: true, nofric: true, pass: true, desc: '御风后翻，撤出重围，身形飘忽无从捉摸；下一发风刃亦得风势相助，一分为二。',
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0) { f.skPh = 1; f.invul = Math.max(f.invul, 0.15); f.twinT = 0.8; SFX.dash(); }
@@ -371,28 +371,28 @@ const SKILLS = {
       if (f.t >= 0.24) toNeutral(f);
     },
     pose: () => ['ly_hover', 40], ai: (m, o, d) => d < 150 },
-  stomp: { name: '雷踏', cd: 3.5, desc: '战靴下砸引爆前方的雷暴光柱将对手震向高空。起手下砸势大力沉。',
+  stomp: { name: '雷踏', cd: 3.5, desc: '一脚踏落，前方轰然炸起雷柱，把对手震上高空。这一踏势大力沉，收招也慢。',
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; dust(f.x, 0, 10); SFX.thud(); spawnProj(f, { kind: 'bolt', x: clamp(f.x + f.face * 130, WALL, STAGE_W - WALL), y: -160, vx: 0, w: 64, h: 320, life: 0.35, delay: 0.15, dmg: 7, kb: [80, -480], stun: 0.45, hs: 0.08, launch: true, unbreakable: true, small: true }); }
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 220 },
-  inksplash: { name: '泼墨', cd: 6, desc: '大写意提笔甩出墨团抛物落击，打中造成打飞硬直。',
+  inksplash: { name: '泼墨', cd: 6, desc: '提笔大写意，甩出一团浓墨凌空抛落。墨团着身，人便翻飞出去。',
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 540, vy: -440, g: 1500, lob: true, w: 34, h: 34, life: 1.4, dmg: 4, kb: [120, -460], stun: 0.45, hs: 0.06, launch: true }); }
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 150 && d < 420 },
-  moonring: { name: '月轮', cd: 3.5, desc: '甩出旋转飞回的双重月刃飞轮，可从背后折返破除正面防御。',
+  moonring: { name: '月轮', cd: 3.5, desc: '双月刃脱手旋出，去而复返；自背后折回的一记，专破死守正面的架势。',
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'moonring', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 720, w: 44, h: 44, life: 1.6, dmg: 5, kb: [140, -440], stun: 0.4, launch: true, hs: 0.05, pierce: true, rehit: 0.3, maxHits: 2, boomer: true, turn: 0.38 }); }
       if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['yh_mirror', 28] : ['l2a', 50], ai: (m, o, d) => d > 120 && d < 400 },
-  darts: { name: '翎羽', cd: 2.5, air: true, desc: '展翅射出两道破空寒光翎羽，全屏射程，空中释放向下贯穿。',
+  darts: { name: '翎羽', cd: 2.5, air: true, desc: '振翅激射两道寒光翎羽，贯空而至，射程无界；若自空中放出，便自上而下贯穿。',
     start() {},
     update(f) {
       if (f.skPh === 0 && f.t >= 0.08) {
@@ -403,7 +403,7 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['yl_wings', 30] : ['a1a', 60], ai: (m, o, d) => d > 120 },
-  mirror: { name: '月镜', cd: 7, nofric: true, desc: '持月轮成镜护胸 0.45 秒，受到近战攻击立刻格开并发动绝罚反斩（无法腾空闪逃脱）。架空露出破绽。',
+  mirror: { name: '月镜', cd: 7, nofric: true, desc: '举月轮如镜护胸，凝立 0.45 秒。近身来犯者被格开，随之而来的反斩无从闪避；只是镜空之时，胸前洞开。',
     start(f) { f.parryT = 0.45; },
     update(f, foe) {
       if (f.skPh === 0) { const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0); f.vx = damp(f.vx, dir * wk(f), 14, STEP); } else f.vx = damp(f.vx, 0, 10, STEP);
@@ -422,9 +422,9 @@ const COUNTER = { dmg: 12, kb: [420, -700], stun: 0.6, hs: 0.16, launch: true, b
 // ======================= 大招（E） =======================
 // flurry 类型沿用“冲刺后乱斩”的流程，其它类型用 begin / update 自己写
 const ULTS = {
-  crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 2.5, fin: 14, land: true, desc: '起手纳刀居合突刺，斩中后化作六道残月剑气连续绞杀，落地下劈将对手就地重创。冲刺落空会露出破绽。' },
-  shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 2.1, fin: 12, desc: '结印暗影贴地瞬步突袭，命中后分化九道猩红暗影残像绝杀，终结双刃十字斩。冲刺落空会露出破绽。' },
-  avalanche: { name: '山崩', desc: '巨刃蓄力擎天高跃，泰山压顶怒砸地面（28 伤害，不可格挡），激起地裂与漫天乱石。滞空可规避直击。',
+  crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 2.5, fin: 14, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落，就地了断。若突刺落空，门户大开。' },
+  shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 2.1, fin: 12, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字。一旦扑空，任人宰割。' },
+  avalanche: { name: '山崩', desc: '举巨刃蓄势，一跃擎天，而后如泰山压顶砸落（28 伤害，不可格挡），地裂石飞。滞空不落者，可避其锋。',
     begin(f, foe) { f.sp = 'leap'; f.vy = -1050; f.y = -1; f.vx = 0; f.spPose = 'ts_lift'; f.invul = 0.3; SFX.heavy(); },
     update(f, foe) {
       if (f.sp === 'leap') {
@@ -443,7 +443,7 @@ const ULTS = {
         }
       } else if (f.sp === 'slam' && f.t >= 0.5) endSpecial(f);
     } },
-  phoenix: { name: '百鸟朝凤', desc: '原地向前连刺八枪，射程很远，最后一枪把对手挑飞。可以格挡。',
+  phoenix: { name: '百鸟朝凤', desc: '原地凝枪，向前连刺八道枪影，一枪远过一枪，末枪一挑把人送上半空。此招可挡。',
     begin(f) { f.sp = 'thrusts'; f.spN = 0; f.spPose = 'ls_stance'; f.invul = 0.2; },
     update(f, foe) {
       const n = Math.floor(f.t / 0.09);
@@ -457,7 +457,7 @@ const ULTS = {
       }
       if (f.t >= 0.95) endSpecial(f);
     } },
-  timestop: { name: '刹那', desc: '长枪驻地凝神入定，时空冻结，周身挥洒漫天枪影后化为一线寒芒极速贯穿。离得越远伤害越高（12 到 22）。',
+  timestop: { name: '刹那', desc: '长枪拄地，凝神入定，天地为之一滞。漫天枪影泼洒开来，终归于一线寒芒，极速贯穿。距离越远，其势越盛（12 到 22）。',
     begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; superFreeze = 0.9; superOwner = f; f.spX = f.x; f.hitDone = false; SFX.superOn(); },
     update(f, foe) {
       if (f.sp === 'stop' && f.t >= 0.45) {
@@ -477,7 +477,7 @@ const ULTS = {
       }
       if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
     } },
-  tornado: { name: '龙卷', desc: '舒袖展扇御风而起，祭出两道接天龙卷风席卷全场，每下 2 伤害，终段强力浮空击飞。',
+  tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 2 伤害），末段猛然掀起，把人卷上半空。',
     begin(f) { f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0; SFX.superOn(); },
     update(f) {
       if (f.spN < 2 && f.t >= f.spN * 0.45) {
@@ -488,7 +488,7 @@ const ULTS = {
       }
       if (f.t >= 0.85) endSpecial(f);
     } },
-  thunder: { name: '雷霆万钧', desc: '拳破长空引动九天神雷，三道天雷追踪对手轰击直落（每道 9 伤害，破防击飞）。持续走位可避开雷印。',
+  thunder: { name: '雷霆万钧', desc: '一拳击破长空，引落九天神雷。三道天雷循着对手踪迹直劈而下（每道 9 伤害，破防击飞）——脚下不停，方能躲开雷印。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'lm_kick'; f.invul = 0.2; SFX.superOn(); },
     update(f, foe) {
       const times = [0.02, 0.38, 0.74];
@@ -499,7 +499,7 @@ const ULTS = {
       }
       if (f.t >= 1.2) endSpecial(f);
     } },
-  inkdragon: { name: '墨龙', desc: '泼墨成龙！饱蘸浓墨凌空挥毫，唤出巨大墨龙横扫全场（20 伤害），不可格挡但可起跳规避。',
+  inkdragon: { name: '墨龙', desc: '饱蘸浓墨，凌空一挥——墨即成龙！巨墨龙横扫全场（20 伤害）。此招不可挡，唯有跃起避其锋芒。',
     begin(f) {
       f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
     },
@@ -510,7 +510,7 @@ const ULTS = {
       }
       if (f.t >= 0.5) endSpecial(f);
     } },
-  featherstorm: { name: '万羽', desc: '展翼翱翔九霄，召唤漫天破甲翎羽暴风雨般倾泻而下（14 枚，每枚 2.2 伤害），压制全场。',
+  featherstorm: { name: '万羽', desc: '展翼直上九霄，唤来漫天破甲翎羽，如暴雨倾泻（14 枚，每枚 2.2 伤害），压得全场抬不起头。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'yl_wings'; f.invul = 0.2; SFX.superOn(); },
     update(f, foe) {
       const n = Math.floor(f.t / 0.07);
@@ -521,7 +521,7 @@ const ULTS = {
       }
       if (f.t >= 1.1) endSpecial(f);
     } },
-  moonflow: { name: '月华如水', desc: '双手结月印盘坐入定，月华凝露恢复 18 点生命，并绽放月芒光晕震退并击飞周身对手。',
+  moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 18 点生命；月芒自周身绽开，将贴近之敌震退击飞。',
     begin(f) { f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + 18); f.hitDone = false;
       ring(f.x, f.y - 60, 260, f.look.slash, 0.5); ring(f.x, f.y - 60, 180, '255,255,255', 0.4); addP({ type: 'text', text: '+18', x: f.x, y: f.y - 130, life: 0.9, max: 0.9, rgb: '180,255,200' }); },
     update(f, foe) {
@@ -901,12 +901,12 @@ function netConnect(asHost, code, match, resume, ranked) {
   }
   if (match || ranked) {
     if (!SERVED) {
-      netStatus('GitHub Pages 网页版无需服务器！请直接使用上方的【建房】分享给好友，或输入房间码【加入】。');
+      netStatus('GitHub Pages 网页版无需服务器！点上方【建房】，把房间码发给好友；或输入房间码【加入】。');
       return;
     }
     if (currentNetMode !== 'server') {
       setNetMode('server');
-      netStatus(match ? '快速匹配需要服务器，已自动切换为局域网/本地服务器模式' : '排位赛需要服务器，已自动切换为局域网/本地服务器模式');
+      netStatus(match ? '快速匹配需用服务器，已自动切到局域网/本地服务器模式' : '排位赛需用服务器，已自动切到局域网/本地服务器模式');
     }
     return netConnectWS(asHost, code, match, resume, ranked);
   }
@@ -919,7 +919,7 @@ function netConnectWS(asHost, code, match, resume, ranked) {
   netReset();
   if (!resume) NET.isRanked = false;
   const base = resume ? resume.base : serverBase();
-  if (!base) { netStatus('先填服务器网址'); return; }
+  if (!base) { netStatus('请先填入服务器网址'); return; }
   NET.asHost = asHost; NET.matching = !!match; NET.leaving = false; NET.base = base;
   if (resume) NET.hold = true;
   if (!resume) { $id('roomCode').textContent = ''; netStatus(match ? '正在寻找对手…' : asHost ? '正在建房…' : `正在加入房间 ${code}…`); }
@@ -935,7 +935,7 @@ function netConnectWS(asHost, code, match, resume, ranked) {
   setTimeout(() => {   // 8 秒还没连上就放弃
     if (NET.ws === ws && ws.readyState === 0) { NET.ws = null; ws.onclose = null; try { ws.close(); } catch (e) {} ws.onerror(); }
   }, 8000);
-  ws.onerror = () => { if (!NET.reconnT0) netStatus('连不上服务器：请确认房主电脑终端已运行 python3 server.py（或在上方输入房主 IP:8765）'); };
+  ws.onerror = () => { if (!NET.reconnT0) netStatus('连不上服务器：请确认房主终端已运行 python3 server.py（或在上方填入房主的 IP:8765）'); };
   ws.onclose = () => {
     if (ws !== NET.ws) return;
     NET.ws = null;
@@ -951,7 +951,7 @@ function startReconnect() {
   netOverlay('网络断了，正在重连…');
   clearTimeout(reconnTimer);
   reconnTimer = setTimeout(() => {
-    if (performance.now() - NET.reconnT0 > 60000) { stopReconnect(); clearResume(); toMenu(); selectMode('net'); netStatus('网络断开太久，没能回到对战'); return; }
+    if (performance.now() - NET.reconnT0 > 60000) { stopReconnect(); clearResume(); toMenu(); selectMode('net'); netStatus('断线太久，回不去那场对战了'); return; }
     if (!NET.ws) netConnect(false, null, false, { base: NET.base, code: NET.code, rt: NET.rt });
   }, 2000);
 }
@@ -972,8 +972,8 @@ function applyResync(rs) {
     setChars(rs.ch[0], rs.ch[1]); setupNetMatch();
     applySnapshot(rs.s, true);
     BP = null; creditT = 0;
-    if (rs.end && M.koWinner >= 0) showEnd(M.koWinner); else { showScreen(null); say('回到对战', 0.8, 'go'); }
-  } else { toMenu(); selectMode('net'); netStatus('对手已经回到菜单了'); }
+    if (rs.end && M.koWinner >= 0) showEnd(M.koWinner); else { showScreen(null); say('重归战局', 0.8, 'go'); }
+  } else { toMenu(); selectMode('net'); netStatus('对手已退回菜单'); }
 }
 function onSys(m) {
   if (m.sys === 'oldver') {   // 这个网页是旧版本：自动刷新成新版本
@@ -982,9 +982,9 @@ function onSys(m) {
     return;
   }
   if (m.sys === 'queue') { if (m.ranked) rankUI(true); else matchUI(true, m.n); return; }
-  if (m.sys === 'needlogin') { netStatus('排位赛要先登录'); netReset(); return; }
+  if (m.sys === 'needlogin') { netStatus('排位赛需先登录'); netReset(); return; }
   if (m.sys === 'room') { NET.code = m.code; NET.rt = m.rt; saveResume(); }
-  if (m.sys === 'room' && m.resumed) { NET.role = m.role; NET.awaitSync = true; netOverlay('已重连，正在同步…'); return; }
+  if (m.sys === 'room' && m.resumed) { NET.role = m.role; NET.awaitSync = true; netOverlay('已重连，正在同步战局…'); return; }
   if (m.sys === 'ready' && m.resumed) { NET.names = m.names || {}; NET.open = true; return; }
   if (m.sys === 'away') {
     NET.hold = true; NET.awayUntil = performance.now() + m.t * 1000;
@@ -993,18 +993,18 @@ function onSys(m) {
   if (m.sys === 'back') {
     send({ rs: resyncPayload() });
     NET.hold = false; NET.awayUntil = 0; netOverlay('');
-    say('对手回来了', 0.8, 'go');
+    say('对手已回座', 0.8, 'go');
     return;
   }
   if (m.sys === 'noresume') {
     stopReconnect(); clearResume(); netReset();
     if (M.mode === 'net' || bpMode === 'net') { toMenu(); selectMode('net'); }
-    netStatus('刚才那场对战已经结束了');
+    netStatus('方才那场对战已经结束了');
     return;
   }
   if (m.sys === 'room' && m.matched) {
     NET.role = m.role; NET.matching = false; matchUI(false); rankUI(false); NET.isRanked = !!m.ranked;
-    netStatus(m.ranked ? '找到排位对手了！' : '找到对手了！'); SFX.chargeFull();
+    netStatus(m.ranked ? '排位对手已找到！' : '对手已找到！'); SFX.chargeFull();
     return;
   }
   if (m.sys === 'room') {
@@ -1012,15 +1012,15 @@ function onSys(m) {
     if (m.role === 'host') {
       $id('roomCode').textContent = m.code;
       if ($id('copyCodeBtn')) $id('copyCodeBtn').classList.remove('hidden');
-      netStatus('房间建好了，把上面的房间码告诉朋友，等他加入…');
+      netStatus('房间已建好。把上面的房间码发给朋友，静候他入局…');
     }
-    else netStatus('加入成功，马上开始选人…');
+    else netStatus('入局成功，即刻选人…');
   } else if (m.sys === 'ready') { NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true; onNetOpen(); }
   else if (m.sys === 'result') {
     if (m.me) setAcc(m.me);
-    const kind = m.ranked ? '排行榜' : '非正式战绩', pm = m.won ? '+1 胜' : '+1 负', pr = m.prog || {};
+    const kind = m.ranked ? '排行榜' : '切磋战绩', pm = m.won ? '+1 胜' : '+1 负', pr = m.prog || {};
     if (pr.profile) applyProfile(pr.profile);
-    let t = m.forfeit ? (m.won ? `对手中途离开，你赢下这场（${kind} ${pm}）` : `中途离开算输（${kind} ${pm}）`) : `${kind} ${pm}`;
+    let t = m.forfeit ? (m.won ? `对手中途离席，这场算你赢（${kind} ${pm}）` : `中途离席，判负（${kind} ${pm}）`) : `${kind} ${pm}`;
     if (m.rk && pr.rank) {
       const up = pr.promo ? (pr.before && pr.before.idx < 0 ? ' · 定级完成！' : ' · 晋级！') : '';
       t = `排位赛 ${pr.delta >= 0 ? '+' : ''}${pr.delta} 分 · ${pr.rank.label}${up}`;
@@ -1030,10 +1030,10 @@ function onSys(m) {
     $id('endRank').textContent = t; NET.lastResult = t;
   }
   else if (m.sys === 'left') { clearResume(); netLost(); }
-  else if (m.sys === 'nf') { netStatus(NET.matching ? '服务器还不支持快速匹配，请房主用 update 更新 server.py' : '找不到这个房间，检查一下房间码'); netReset(); }
-  else if (m.sys === 'full') { netStatus('这个房间已经有两个人了'); netReset(); }
-  else if (m.sys === 'version') { netStatus(`你的游戏版本和房主不一样（房主是 ${m.need}），刷新网页再试`); netReset(); }
-  else if (m.sys === 'busy') { netStatus('服务器房间太多了，过一会儿再试'); netReset(); }
+  else if (m.sys === 'nf') { netStatus(NET.matching ? '这台服务器尚不支持快速匹配，请房主更新 server.py' : '找不到这个房间，请核对房间码'); netReset(); }
+  else if (m.sys === 'full') { netStatus('这间房已经满员'); netReset(); }
+  else if (m.sys === 'version') { netStatus(`你的版本与房主不同（房主是 ${m.need}），刷新网页再试`); netReset(); }
+  else if (m.sys === 'busy') { netStatus('服务器房间已满，稍后再试'); netReset(); }
 }
 function send(o) {
   if (NET.ws && NET.ws.readyState === 1) { try { NET.ws.send(JSON.stringify(o)); } catch (e) {} }
@@ -1044,7 +1044,7 @@ function onNetOpen() {
   send({ pskin: PROF.equip || {} });
   initAudio();
   if (NET.role === 'host') bpStart('net');
-  else netStatus('已连接，马上开始选人…');
+  else netStatus('已连接，即刻选人…');
 }
 function netLost() {
   const was = M.mode === 'net' || bpMode === 'net';
@@ -1052,7 +1052,7 @@ function netLost() {
   netReset();
   if (was) { toMenu(); selectMode('net'); }
   $id('roomCode').textContent = '';
-  netStatus(NET.lastResult && /中途离开/.test(NET.lastResult) ? NET.lastResult : '对方离开了房间，可以重新建房或加入');
+  netStatus(NET.lastResult && /中途离开/.test(NET.lastResult) ? NET.lastResult : '对方已离开房间，可重新建房或加入');
   NET.lastResult = '';
 }
 // 状态快照：房主每帧发一次
@@ -1168,7 +1168,7 @@ const LEVELS = {
   easy:   { think: [0.35, 0.7],  block: 0.15, aggr: 0.4,  combo: 1 },
   normal: { think: [0.18, 0.42], block: 0.4,  aggr: 0.58, combo: 3 },
   hard:   { think: [0.08, 0.22], block: 0.72, aggr: 0.75, combo: 4 },
-  impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true },   // 不可能：几乎零反应时间、必挡、被连必逃
+  impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true },   // 绝顶：几乎零反应时间、必挡、被连必逃
 };
 // 个性化电脑：以困难为基础，按你对它的输赢自动调强弱；禁你胜率最高的角色，用你最常用的角色
 const ADAPT = { s: 1, use: {}, win: {} };
@@ -1179,7 +1179,7 @@ function adaptLevel() {
   const k = clamp(ADAPT.s, 0.55, 1.45);
   LEVELS.adaptive = { think: [0.08 / k, 0.22 / k], block: Math.min(0.95, 0.72 * k), aggr: Math.min(0.95, 0.75 * k), combo: k > 1.1 ? 5 : 4 };
   const el = document.getElementById('adaptLine');
-  if (el) { const fav = adaptFav(); el.textContent = `个性化电脑：当前强度 ${Math.round(k * 100)}%${fav.best >= 0 ? `，会禁你的${CHARS[fav.best].name}` : ''}${fav.most >= 0 ? `，爱用你的${CHARS[fav.most].name}` : ''}`; }
+  if (el) { const fav = adaptFav(); el.textContent = `宿敌：如今强度 ${Math.round(k * 100)}%${fav.best >= 0 ? `，必禁你的${CHARS[fav.best].name}` : ''}${fav.most >= 0 ? `，惯用你的${CHARS[fav.most].name}` : ''}`; }
 }
 function adaptFav() {   // 你最常用的角色、胜率最高的角色（至少打过 3 场）
   let most = -1, best = -1, mu = 0, bw = -1;
@@ -1190,7 +1190,7 @@ function adaptFav() {   // 你最常用的角色、胜率最高的角色（至�
   });
   return { most, best: best >= 0 ? best : most };
 }
-function adaptRecord(won) {   // 每场打完：记录你用的角色和输赢；个性化电脑按输赢调强弱
+function adaptRecord(won) {   // 每场打完：记录你用的角色和输赢；宿敌按输赢调强弱
   const me = [A, B][localIdx()];
   ADAPT.use[me.ch.id] = (ADAPT.use[me.ch.id] || 0) + 1;
   if (won) ADAPT.win[me.ch.id] = (ADAPT.win[me.ch.id] || 0) + 1;
@@ -1234,11 +1234,11 @@ function trySecondQ(f, foe) {
 // ======================= 闯关模式：六章，每章前四关打妖物，第五关挑战守关高手 =======================
 const FOREST = { on: false, mons: [], shots: [], spawnT: 0, kills: {}, total: 0, t: 0, hurtT: 0 };
 const MON_TYPES = {
-  blade: { name: '刀鬼', kind: '近战', hp: 30, spd: 150, w: 24, h: 104, eye: '255,70,60' },
-  archer: { name: '弓妖', kind: '远程', hp: 22, spd: 120, w: 20, h: 100, eye: '120,255,140' },
-  binder: { name: '缚灵', kind: '控制', hp: 26, spd: 90, w: 24, h: 96, eye: '200,120,255', float: true },
-  caster: { name: '咒师', kind: '法术', hp: 24, spd: 100, w: 22, h: 108, eye: '255,170,60' },
-  owl: { name: '夜枭', kind: '飞行', hp: 18, spd: 220, w: 30, h: 40, eye: '255,230,90', fly: true },
+  blade: { name: '刀鬼', kind: '近身', hp: 30, spd: 150, w: 24, h: 104, eye: '255,70,60' },
+  archer: { name: '弓妖', kind: '远射', hp: 22, spd: 120, w: 20, h: 100, eye: '120,255,140' },
+  binder: { name: '缚灵', kind: '缠缚', hp: 26, spd: 90, w: 24, h: 96, eye: '200,120,255', float: true },
+  caster: { name: '咒师', kind: '术法', hp: 24, spd: 100, w: 22, h: 108, eye: '255,170,60' },
+  owl: { name: '夜枭', kind: '飞空', hp: 18, spd: 220, w: 30, h: 40, eye: '255,230,90', fly: true },
 };
 const MON_KEYS = Object.keys(MON_TYPES);
 // 妖物的强度：按难度值线性增长（闯关时第几个妖物关决定难度值）
@@ -1256,7 +1256,7 @@ const CHAPTERS = [
   { name: '月宫', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuehua', lv: 'hard' },
   { name: '墨渊', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'moyu', lv: 'impossible' },
 ];
-const LV_NAME = { easy: '简单', normal: '普通', hard: '困难', impossible: '不可能' };
+const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶' };
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 // 一关的内容：妖物关每一波出哪些妖物是固定的（每次打都一样）
 function stageInfo(c, l) {
@@ -1317,16 +1317,16 @@ function forestNextWave() {
 }
 function forestDie() {
   const F = FOREST; if (F.over) return;
-  F.over = true; F.overT = 2; F.result = { win: false, stars: 0, info: `倒在了第 ${F.wave} / ${STAGE.waves.length} 波，击退 ${F.total} 只妖物` };
+  F.over = true; F.overT = 2; F.result = { win: false, stars: 0, info: `折在第 ${F.wave} / ${STAGE.waves.length} 波，共击退 ${F.total} 只妖物` };
   A.hp = 0; A.state = 'launched'; A.t = 0; A.vy = -520; A.vx = -A.face * 200; A.y = Math.min(A.y, -1); A.invul = 99;
-  say('败北', 1.4, 'big'); slowmo = 1;
+  say('力竭', 1.4, 'big'); slowmo = 1;
 }
 function stageClear() {
   const F = FOREST; if (F.over) return;
   const r = A.hp / A.maxHp, stars = r >= 0.6 ? 3 : r >= 0.3 ? 2 : 1;
   F.over = true; F.overT = 1.8; A.invul = 99;
-  F.result = { win: true, stars, info: `剩余生命 ${Math.round(r * 100)}%，击退 ${F.total} 只妖物<br><span style="font-size:13px">剩 60% 以上三星，30% 以上两星</span>` };
-  say('通关', 1.4, 'big'); SFX.gong();
+  F.result = { win: true, stars, info: `残存生命 ${Math.round(r * 100)}%，共击退 ${F.total} 只妖物<br><span style="font-size:13px">余 60% 以上三星，30% 以上两星</span>` };
+  say('破关', 1.4, 'big'); SFX.gong();
 }
 // 一关打完：记录星数，显示结算
 function stageShowEnd(win, stars, info) {
@@ -1334,9 +1334,9 @@ function stageShowEnd(win, stars, info) {
   if (win && (STAGE_STARS[S.id] || 0) < stars) { STAGE_STARS[S.id] = stars; try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {} }
   playSting(win ? 'victory' : 'defeat');
   const nx = nextStage(S);
-  $id('feWave').textContent = `${S.id} ${win ? '通关' : '失败'}`;
+  $id('feWave').textContent = `${S.id} ${win ? '破关' : '折戟'}`;
   $id('feStars').textContent = win ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '';
-  $id('feInfo').innerHTML = info + (win && !nx ? '<br><b style="color:#e9c46a">全部关卡都通关了！</b>' : '');
+  $id('feInfo').innerHTML = info + (win && !nx ? '<br><b style="color:#e9c46a">六章三十关，尽数踏破！</b>' : '');
   $id('feNext').style.display = win && nx ? '' : 'none';
   paused = true; showScreen('forestEnd');
 }
@@ -1509,7 +1509,7 @@ function drawForestHUD() {
   const S = STAGE, F = FOREST; if (!S || S.boss) return;
   const fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + 70, w = fs * 11;
   const left = F.toSpawn.length + F.mons.filter(m => m.hp > 0).length;
-  const rows = [[`第 ${Math.max(1, F.wave)} / ${S.waves.length} 波`, F.breakT > 0 ? '休息' : `剩余 ${left}`], ['击退', F.total]];
+  const rows = [[`第 ${Math.max(1, F.wave)} / ${S.waves.length} 波`, F.breakT > 0 ? '喘息' : `尚余 ${left}`], ['击退', F.total]];
   ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
   ctx.fillStyle = 'rgba(8,8,20,0.55)'; ctx.fillRect(x - w - 12, y - 10, w + 24, (rows.length + 1) * fs * 1.7 + 10);
   ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(`关卡 ${S.id} · ${S.C.name}`, x - w, y);
@@ -1525,8 +1525,8 @@ $id('feNext').addEventListener('click', () => { const nx = nextStage(STAGE); if 
 $id('feAgain').addEventListener('click', () => { paused = false; showScreen(null); startStage(STAGE.c, STAGE.l); });
 $id('feMenu').addEventListener('click', () => { paused = false; backToStages(); });
 
-// 木人桩：不还手。stand 站着挨打，block 一直防御，escape 被连击时会腾空闪
-const DUMMY_MODES = { stand: '站着挨打', block: '一直防御', escape: '会腾空闪', fixed: '固定不动' };
+// 木人桩：不还手。stand 任打不还手，block 一味死守，escape 被连便闪
+const DUMMY_MODES = { stand: '任打不还手', block: '一味死守', escape: '被连便闪', fixed: '钉在原地' };
 class DummyCtrl extends Ctrl {
   constructor(mode) { super(); this.mode = DUMMY_MODES[mode] ? mode : 'stand'; }
   think(me) {
@@ -1551,7 +1551,7 @@ class AICtrl extends Ctrl {
     const L = this.L, d = Math.abs(foe.x - me.x), to = Math.sign(foe.x - me.x) || 1;
     const ch = me.ch, [rMin, rMax] = ch.ai.range, S = SKILLS[ch.skill];
     if ((me.state === 'launched' || me.state === 'knockdown' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < L.block * 0.018) this.press('dash');
-    if (L.god && (me.state === 'hitstun' || me.state === 'launched') && me.comboHits >= 2 && me.breakCD <= 0) this.press('dash');   // 不可能：被连两下就闪
+    if (L.god && (me.state === 'hitstun' || me.state === 'launched') && me.comboHits >= 2 && me.breakCD <= 0) this.press('dash');   // 绝顶：被连两下就闪
     while (this.queue.length && this.queue[0].at <= clock) {
       const a = this.queue.shift().a;
       if (a === 'chargeStart') { this.held.atk = true; this.atkT = clock - CHARGE_START; }
@@ -1690,7 +1690,7 @@ function startMatch(mode, level, chars) {
 }
 function startRound() {
   A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
-  if ((M.mode === 'cpu' || M.mode === 'replay') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 不可能：多 35% 血
+  if ((M.mode === 'cpu' || M.mode === 'replay') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.introFX = M.round === 1 && M.mode !== 'demo';
   M.phase = 'intro'; M.t = 0; M.timer = ROUND_TIME; M.koWinner = -1; M.flags = {};
@@ -1718,7 +1718,7 @@ function updateMatch() {
   if (M.phase === 'intro') {
     if (M.introFX && M.t > 0.2) { M.introFX = false; for (const f of [A, B]) if (!f.hidden && !f.dummy) skinIntroFX(f); }
     const go = M.mode === 'demo' || M.mode === 'train' ? 0.3 : 1.25 + (M.round === 1 ? CREDIT : 0);
-    if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开始', 0.7, 'go', 'heavy'); }
+    if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
     if (M.mode !== 'demo' && M.mode !== 'train') M.timer = Math.max(0, M.timer - STEP);
@@ -2732,7 +2732,7 @@ function openQfx() {
   fr.src = EXT.url; $id('extGame').classList.remove('hidden'); EXT.on = true;
   try { if (AC) AC.suspend(); } catch (e) {}
   fr.onload = () => { try { fr.focus(); fr.contentWindow.focus(); } catch (e) {} };
-  if (SERVED) setTimeout(() => extToast('守住第三、六、十波，可以在刃影领墨锭和专属皮肤「青锋行」', 6), 800);
+  if (SERVED) setTimeout(() => extToast('守住第三、六、十波，可在刃影领墨锭与专属皮肤「青锋行」', 6), 800);
 }
 function closeQfx() {
   EXT.on = false; $id('extFrame').src = 'about:blank'; $id('extGame').classList.add('hidden');
@@ -2744,7 +2744,7 @@ $id('extBack').addEventListener('click', closeQfx);
 // ======================= 对战回放 =======================
 // 对战的逻辑完全由“开场状态 + 每一帧双方的操作”决定，所以只记操作，回放时重新算一遍
 const RP_KEY = 'renying-replays', RP_MAX = 10;
-const RP_LV = { easy: '简单', normal: '普通', hard: '困难', impossible: '不可能', adaptive: '个性化' };
+const RP_LV = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', adaptive: '宿敌' };
 function ctrlKey(c) { return JSON.stringify([inBits(c.held), c.atkT, c.buf]); }
 function recBegin(kind) {
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], post: ['', ''], last: [-1, -1],
@@ -2803,7 +2803,7 @@ function rpSub(m) {
 function renderReplays() {
   const list = rpList();
   $id('rpList').innerHTML = list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
-    : '<p class="netnote">还没有回放。打完一场对战电脑或联机后，这里会自动保存。</p>';
+    : '<p class="netnote">还没有回放。打完一场人机或联机对战，这里会自动保存。</p>';
 }
 $id('rpList').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -3816,11 +3816,11 @@ function drawTrainStats(cx, top, bh) {
   const dps = TRAIN.hits.reduce((a, h) => a + h[1], 0) / 5;
   const x = W - Math.max(24, W * 0.04), y = top + bh + 80, fs = Math.max(13, Math.round(H * 0.019));
   const lines = [
-    ['木人状态', DUMMY_MODES[dummyMode], '#e9c46a'],
-    ['本次连击', cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '-', cu.t > 0 ? '#ffb088' : '#efe8d8'],
+    ['木人桩', DUMMY_MODES[dummyMode], '#e9c46a'],
+    ['当前连击', cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '-', cu.t > 0 ? '#ffb088' : '#efe8d8'],
     ['最高连击', `${TRAIN.best} 段 · ${Math.round(TRAIN.bestDmg)} 伤`, '#ffd166'],
-    ['总计伤害', `${Math.round(TRAIN.total)}`, '#efe8d8'],
-    ['每秒伤害 (DPS)', dps.toFixed(1), '#8ff0ff']
+    ['累计伤害', `${Math.round(TRAIN.total)}`, '#efe8d8'],
+    ['每秒伤害（DPS）', dps.toFixed(1), '#8ff0ff']
   ];
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
   const pw = fs * 17;
@@ -3838,7 +3838,7 @@ function drawTrainStats(cx, top, bh) {
     ctx.textAlign = 'right'; ctx.fillStyle = col || '#efe8d8'; ctx.fillText(v, x, startY + i * fs * 1.75);
   });
   ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(239,232,216,0.45)';
-  ctx.fillText(TOUCH ? '左上角可以切换木人' : '按 1 2 3 4 切换木人', x, startY + lines.length * fs * 1.75);
+  ctx.fillText(TOUCH ? '左上角切换木人' : '按 1 2 3 4 切换木人', x, startY + lines.length * fs * 1.75);
   ctx.restore();
 }
 function keyHint(i, k) {
@@ -4439,11 +4439,11 @@ const KEY_ACTIONS = [
   ['left', '向左移动'],
   ['right', '向右移动'],
   ['jump', '跳跃 / 二段跳'],
-  ['down', '下蹲防守'],
-  ['dash', '快速冲刺'],
-  ['special', '绝技 (满气)'],
-  ['skill', '门派绝学 (Q)'],
-  ['skill2', '特殊突进 (R)']
+  ['down', '沉身格挡'],
+  ['dash', '疾步冲刺'],
+  ['special', '绝技（气满）'],
+  ['skill', '门派绝学（Q）'],
+  ['skill2', '特殊突进（R）']
 ];
 let rebindingKey = null;
 function handleKeyRebind(e) {
@@ -4477,12 +4477,12 @@ function buildSettings() {
           <div class="keyitem">
             <span>${name}</span>
             <button class="ghost keybind-btn ${rebindingKey === act ? 'active' : ''}" data-act="${act}">
-              ${rebindingKey === act ? '请按按键...' : keyLabel(custom1PKeys[act])}
+              ${rebindingKey === act ? '请按新键…' : keyLabel(custom1PKeys[act])}
             </button>
           </div>
         `).join('')}
       </div>
-      <p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标提示：左键轻击/蓄力，右键腾空闪，左键+右键特殊技</p>
+      <p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标提示：左键轻击与蓄力，右键腾空闪，左键加右键使特殊技</p>
     </div>
   `;
   $id('setList').innerHTML = baseHtml + keyHtml;
@@ -4553,10 +4553,10 @@ const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 2
 // 图鉴里的简短说明（数值 / 一句话）
 const SHORT = {
   疾风斩: ['6', '突进穿身'], 影遁: ['3', '瞬移身后 · 下一击 ×1.5'], 震地: ['9', '双向地波 · 掀飞'], 回马枪: ['9', '后跃回刺 · 挑飞'],
-  风刃: ['7', '直线风刃 · 几乎无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
+  风刃: ['7', '直线风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
   剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 风遁: ['—', '快速后撤 · 短暂无敌'],
   雷踏: ['7', '前方雷柱'], 泼墨: ['4', '抛物墨团'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
-  残月: ['29', '突进乱斩'], 千影: ['31', '九影乱斩'], 山崩: ['28', '砸地 · 碎石飞溅'], 刹那: ['12–22', '时停 · 突进'], 百鸟朝凤: ['—', '连刺'],
+  残月: ['29', '突进乱斩'], 千影: ['31', '九影乱斩'], 山崩: ['28', '砸地 · 碎石飞溅'], 刹那: ['12–22', '时停 · 突进'], 百鸟朝凤: ['—', '原地八连刺'],
   龙卷: ['≤32', '两道龙卷'], 雷霆万钧: ['9×3', '天雷追落 · 可躲'], 墨龙: ['20', '墨龙横扫 · 可跳过'], 月华如水: ['+18', '回血 · 月光 10'], 万羽: ['≤31', '羽刃天降'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快的移速和出手', tieshan: '重斩与蓄力不被打断', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
@@ -4671,7 +4671,7 @@ $id('cxSkins').addEventListener('click', async e => {
   }
   if (b.classList.contains('lock') || !ACC.token) {   // 没拥有或没登录：只预览
     cxPrev = b.dataset.sk; renderCodex(); SFX.slice();
-    if (b.classList.contains('lock')) toast('还没有这款皮肤，正在预览'); else if (!ACC.token) toast('登录后才能装备皮肤，正在预览');
+    if (b.classList.contains('lock')) toast('还没有这款皮肤，先给你看看'); else if (!ACC.token) toast('登录之后才能装备皮肤，先给你看看');
     return;
   }
   cxPrev = null;
@@ -4705,15 +4705,15 @@ function openCommunity() {
   if (!$id('comEmo').innerHTML) $id('comEmo').innerHTML = EMOTES.map(e => `<button data-e="${e.id}" title="${e.name}" aria-label="${e.name}">${e.svg}</button>`).join('');
   const can = !!ACC.name;
   $id('comIn').disabled = !can; $id('comSend').disabled = !can;
-  $id('comIn').placeholder = can ? '说点什么…（回车发送）' : '登录后才能发言';
-  $id('comHint').textContent = !SERVED ? '社区需要从服务器网址打开游戏才能用' : can ? '请文明发言。' : '游客只能看，登录后才能发言（右上角登录）';
+  $id('comIn').placeholder = can ? '说点什么…（回车送出）' : '登录之后，方可发言';
+  $id('comHint').textContent = !SERVED ? '社区需从服务器网址进入游戏才能使用' : can ? '以武会友，还请口下留情。' : '游客只能旁观；登录之后便可发言（右上角登录）';
   comLast = 0; comPoll(true);
   clearInterval(comTimer);
   comTimer = setInterval(() => { if ($id('community').classList.contains('on')) comPoll(false); else clearInterval(comTimer); }, 3000);
 }
 async function comSend(text) {
   text = text.trim(); if (!text || !ACC.name) return;
-  try { const j = await api('/api/post', { text, token: ACC.token }); if (j.post) comRender([j.post], true); $id('comIn').value = ''; $id('comHint').textContent = '请文明发言。'; }
+  try { const j = await api('/api/post', { text, token: ACC.token }); if (j.post) comRender([j.post], true); $id('comIn').value = ''; $id('comHint').textContent = '以武会友，还请口下留情。'; }
   catch (e) { $id('comHint').textContent = e.message; }
 }
 $id('comSend').addEventListener('click', () => comSend($id('comIn').value));
@@ -5026,7 +5026,7 @@ function openWelfare() {
 $id('wGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; wSel = +b.dataset.i; for (const x of $id('wGrid').children) x.classList.toggle('sel', x === b); $id('wGo').disabled = false; });
 $id('wGo').addEventListener('click', async () => {
   if (wSel < 0) return;
-  try { const j = await api('/api/welfare', { char: CHARS[wSel].id }); applyProfile(j.profile); toast(`获得角色：${CHARS[wSel].name}`); backToMenu(); }
+  try { const j = await api('/api/welfare', { char: CHARS[wSel].id }); applyProfile(j.profile); toast(`新得角色：${CHARS[wSel].name}`); backToMenu(); }
   catch (e) { $id('wMsg').textContent = e.message; }
 });
 // ---------- 问剑阁 ----------
@@ -5037,17 +5037,17 @@ function renderGacha() {
   for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
   for (const b of $id('gTabs').children) b.classList.toggle('sel', b.dataset.g === gTab);
   const R = PROF.rates;
-  if (!R) { $id('gInfo').textContent = SERVED ? '加载中…' : '问剑阁需要从服务器网址打开游戏'; return; }
+  if (!R) { $id('gInfo').textContent = SERVED ? '加载中…' : '问剑阁需从服务器网址进入游戏'; return; }
   const sk = gTab === 'skin', rs = R.skin;
   $id('gOne').textContent = `抽一次 · ${sk ? rs.cost : R.cost}`; $id('gTen').textContent = `十连 · ${sk ? rs.ten : R.ten}`;
   $id('gOne').disabled = $id('gTen').disabled = PROF.guest || gBusy;
-  $id('gInfo').textContent = PROF.guest ? '登录后才能抽奖' : sk
-    ? `再抽 ${Math.max(1, rs.pity + 1 - PROF.spity)} 次内必出一款新皮肤。只会出你已拥有角色的皮肤，皮肤只改外观。`
-    : `再抽 ${Math.max(1, R.pity + 1 - PROF.pity)} 次内必出一个你没有的角色。稀有度越高，特效越华丽、技能越复杂（有进阶技巧），但强度相近。`;
+  $id('gInfo').textContent = PROF.guest ? '登录之后，方可抽剑' : sk
+    ? `再抽 ${Math.max(1, rs.pity + 1 - PROF.spity)} 次内必出一款新皮肤。只出你已拥有角色的皮肤——皮肤只改外观，不添战力。`
+    : `再抽 ${Math.max(1, R.pity + 1 - PROF.pity)} 次内必出一个你没有的角色。稀有度越高，特效越华丽、招式越繁复（另带进阶技巧），但强度相近。`;
   const names = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join('、');
   $id('gRateBox').innerHTML = sk
-    ? `传说皮肤 ${rarPct(rs.rate.legend)}　稀有皮肤 ${rarPct(rs.rate.rare)}（都只出你已拥有角色的）　角色碎片 1 到 3 个 ${rarPct(1 - rs.rate.legend - rs.rate.rare)}（角色都有了就换成 ${R.fragInk} 墨锭）<br>连续 ${rs.pity} 次没出皮肤，下一次必出一款你没有的皮肤。重复的皮肤换成 ${rs.dup} 墨锭。`
-    : `完整角色：传说 ${rarPct(R.full.legend)}（${names(R.pool.legend)}），稀有 ${rarPct(R.full.rare)}（${names(R.pool.rare)}），普通 ${rarPct(R.full.common)}（${names(R.pool.common)}）<br>角色碎片：传说 ${rarPct(R.frag.legend)}，稀有 ${rarPct(R.frag.rare)}，普通 ${rarPct(R.frag.common)}，每次 1 到 3 个<br>合成需要碎片：普通 ${R.craft.common}，稀有 ${R.craft.rare}，传说 ${R.craft.legend}。连续 ${R.pity} 次没出角色，下一次必出一个你没有的角色。<br>抽到已有的角色换成 ${R.dup} 墨锭；已有角色的碎片每个换成 ${R.fragInk} 墨锭。`;
+    ? `传说皮肤 ${rarPct(rs.rate.legend)}　稀有皮肤 ${rarPct(rs.rate.rare)}——都只出你已拥有角色的皮肤　角色碎片 1 到 3 个 ${rarPct(1 - rs.rate.legend - rs.rate.rare)}（角色齐了便折算成 ${R.fragInk} 墨锭）<br>连抽 ${rs.pity} 次未见皮肤，下一次必出一款你尚未拥有的皮肤。重复的皮肤折算 ${rs.dup} 墨锭。`
+    : `完整角色：传说 ${rarPct(R.full.legend)}（${names(R.pool.legend)}），稀有 ${rarPct(R.full.rare)}（${names(R.pool.rare)}），普通 ${rarPct(R.full.common)}（${names(R.pool.common)}）<br>角色碎片：传说 ${rarPct(R.frag.legend)}，稀有 ${rarPct(R.frag.rare)}，普通 ${rarPct(R.frag.common)}，每次 1 到 3 个<br>合成所需碎片：普通 ${R.craft.common}，稀有 ${R.craft.rare}，传说 ${R.craft.legend}。连抽 ${R.pity} 次未见角色，下一次必出一个你尚未拥有的角色。<br>抽到已有的角色折算 ${R.dup} 墨锭；已有角色的碎片，每个折算 ${R.fragInk} 墨锭。`;
   const rot = PROF.rotation || [];
   $id('gRoster').innerHTML = CHARS.map((c, i) => {
     const own = PROF.owned.includes(c.id), rar = CHAR_RARITY[c.id], need = rar === 'starter' ? 0 : R.craft[rar], have = (PROF.frags || {})[c.id] || 0;
@@ -5072,7 +5072,7 @@ async function doGacha(n) {
     $id('gRes').innerHTML = j.results.map((r, k) => gCard(r, r.type !== 'frag' && r.type !== 'ink' && !r.dup).replace('VAR', (k * 0.14) + 's')).join('');
     const best = j.results.find(r => (r.type === 'char' || r.type === 'skin') && r.new);
     if (j.results.some(r => r.rarity === 'legend' && (r.type === 'char' || r.type === 'skin') && !r.dup)) playSting('legendary', true);
-    setTimeout(() => { if (best) { SFX.gong(); toast(best.type === 'skin' ? `获得皮肤：${SKINS[best.skin].name}` : `获得角色：${CHARS[CHAR_IDX[best.char]].name}`); } else SFX.slice(); }, j.results.length * 140);
+    setTimeout(() => { if (best) { SFX.gong(); toast(best.type === 'skin' ? `新得皮肤：${SKINS[best.skin].name}` : `新得角色：${CHARS[CHAR_IDX[best.char]].name}`); } else SFX.slice(); }, j.results.length * 140);
     applyProfile(j.profile);
   } catch (e) { $id('gMsg').textContent = e.message; }
   gBusy = false; renderGacha();
@@ -5102,7 +5102,7 @@ function renderTasks() {
     const goBtn = (!t.claimed && t.prog < t.target) ? `<button class="ghost task-go" data-go="${dest}" style="margin-left:6px;padding:3px 8px;font-size:12px;">前往</button>` : '';
     return `<div class="trow"><span>${t.name}</span><div class="bar"><i style="width:${Math.min(100, t.prog / t.target * 100)}%"></i></div><span class="rw">+${t.reward}</span><div style="display:flex;align-items:center;"><button data-t="${t.id}" ${t.claimed || t.prog < t.target || PROF.guest ? 'disabled' : ''}>${t.claimed ? '已领取' : t.prog >= t.target ? '领取' : `${Math.floor(t.prog)}/${t.target}`}</button>${goBtn}</div></div>`;
   };
-  $id('tDaily').innerHTML = PROF.guest ? '<p class="netnote">登录后才能做任务</p>' : (PROF.daily || []).map(row).join('');
+  $id('tDaily').innerHTML = PROF.guest ? '<p class="netnote">登录之后，方可领任务</p>' : (PROF.daily || []).map(row).join('');
   $id('tWeekly').innerHTML = PROF.guest ? '' : (PROF.weekly || []).map(row).join('');
   const canClaimAny = !PROF.guest && [...(PROF.daily || []), ...(PROF.weekly || [])].some(t => !t.claimed && t.prog >= t.target);
   if ($id('claimAllBtn')) $id('claimAllBtn').disabled = !canClaimAny;
@@ -5143,8 +5143,8 @@ if ($id('claimAllBtn')) {
 }
 async function redeemCode() {
   const code = $id('rdCode').value.trim(); if (!code) return;
-  if (!SERVED) { $id('tMsg').textContent = '兑换码要在 renying.site 上用'; return; }
-  if (PROF.guest || !ACC.token) { $id('tMsg').textContent = '登录后才能兑换'; return; }
+  if (!SERVED) { $id('tMsg').textContent = '兑换码请在 renying.site 上使用'; return; }
+  if (PROF.guest || !ACC.token) { $id('tMsg').textContent = '登录之后，方可兑换'; return; }
   const bt = $id('rdBtn'); bt.disabled = true;
   try {
     const j = await api('/api/redeem', { code }); applyProfile(j.profile); SFX.chargeFull();
@@ -5157,19 +5157,19 @@ $id('rdBtn').addEventListener('click', redeemCode);
 $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode(); });
 // ---------- 排位 ----------
 function renderRankLine() {
-  $id('rankLine').textContent = !SERVED ? '' : !ACC.name ? '排位赛要先登录' : PROF.rank ? `你的段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
+  $id('rankLine').textContent = !SERVED ? '' : !ACC.name ? '排位赛需先登录' : PROF.rank ? `你的段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
 }
 function rankUI(on) { const b = $id('rankBtn'); b.classList.toggle('searching', !!on); b.textContent = on ? '排位中… 点击取消' : '排位赛'; }
 $id('rankBtn').addEventListener('click', () => {
   initAudio();
-  if (!ACC.name) { netStatus('排位赛要先登录（右上角）'); return; }
+  if (!ACC.name) { netStatus('排位赛需先登录（右上角）'); return; }
   if ($id('rankBtn').classList.contains('searching') || NET.matching) { netReset(); netStatus('已取消排位'); return; }
   netConnect(false, null, true, null, true); rankUI(true);
 });
 function reportProgress(w) {
   if (!SERVED || !ACC.token || !window.fetch) return;
   if (M.mode === 'cpu') api('/api/progress', { mode: 'cpu', level: M.level, won: w === 0, maxcombo: MSTAT.maxcombo, ults: MSTAT.ults })
-    .then(j => { applyProfile(j.profile); if (j.gain) $id('endRank').textContent = `+${j.gain} 墨锭${PROF.daily.some(t => !t.claimed && t.prog >= t.target) ? ' · 有任务可以领奖了' : ''}`; }).catch(() => {});
+    .then(j => { applyProfile(j.profile); if (j.gain) $id('endRank').textContent = `+${j.gain} 墨锭${PROF.daily.some(t => !t.claimed && t.prog >= t.target) ? ' · 有任务可领奖了' : ''}`; }).catch(() => {});
   else if (M.mode === 'net') api('/api/progress', { mode: 'net', maxcombo: MSTAT.maxcombo, ults: MSTAT.ults }).then(j => applyProfile(j.profile)).catch(() => {});
 }
 
@@ -5178,16 +5178,16 @@ function reportProgress(w) {
 let TUT = null;
 function stunA() { A.state = 'hitstun'; A.t = 0; A.stun = 3; A.vx = 0; A.flash = 0.1; A.comboHits = 3; }
 const TUT_STEPS = [
-  { t: '移动', d: '用 A 和 D 左右走一走。', ok: () => Math.abs(A.x - TUT.x0) > 260 },
-  { t: '跳跃', d: '按 W 或空格跳起来，在空中再按一次，就是二段跳。', ok: () => A.jumps >= 2 },
-  { t: '五段连击', d: '走到稻草人旁边，连续点鼠标左键，打满五段。最后一下会把它打飞。', ok: () => TUT.hit.l5 },
-  { t: '蓄力斩', d: '按住鼠标左键不放，等角色闪一下、听到“叮”，再松开。蓄满的破月斩能打穿防御。', ok: () => TUT.hit.cs2 },
-  { t: '空中连击', d: '跳起来，在空中点左键攻击，再点一下是下砸。把对手打飞后，就用它跳起来追击。', ok: () => A.state === 'attack' && /^a[12]$/.test(A.moveName) },
-  { t: '远程招式', d: '按住鼠标左键，再点一下右键（或按 R）。每个角色都不一样，青锋的是剑气。', ok: () => A.skill2CD > 0 },
-  { t: '技能', d: '按 Q 放技能。青锋的疾风斩会穿过对手。', ok: () => A.skillCD > 0 },
-  { t: '防御', d: '稻草人会朝你放风刃。按住 S 挡住两次（要面朝它）。', ok: () => TUT.blocks >= 2, setup: () => { TUT.shotT = 0.6; } },
-  { t: '腾空闪', d: '你被打中动不了了！点一下鼠标右键（或按左 Shift），闪出去。', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
-  { t: '大招', d: '气已经帮你攒满了。按 E 放大招！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
+  { t: '移动', d: '按 A、D 左右走两步。', ok: () => Math.abs(A.x - TUT.x0) > 260 },
+  { t: '跳跃', d: '按 W 或空格起跳，身在半空再按一次，便是二段跳。', ok: () => A.jumps >= 2 },
+  { t: '五段连击', d: '贴到稻草人身边，连点左键打满五段；末了一记，会把它掀飞出去。', ok: () => TUT.hit.l5 },
+  { t: '蓄力斩', d: '按住左键不放，待寒光一闪、听得一声“叮”，再松手。蓄满的一斩，连防御也能劈开。', ok: () => TUT.hit.cs2 },
+  { t: '空中连击', d: '跃起后在空中点左键，再点一下便是下砸。把对手打飞之后，就靠这一手追上去。', ok: () => A.state === 'attack' && /^a[12]$/.test(A.moveName) },
+  { t: '远程招式', d: '按住左键，再点右键（或按 R）。各家招式不同，青锋使的是剑气。', ok: () => A.skill2CD > 0 },
+  { t: '技能', d: '按 Q 施展技能。青锋的疾风斩，能径直穿过对手。', ok: () => A.skillCD > 0 },
+  { t: '防御', d: '稻草人会朝你放风刃，按住 S 挡下两次——记得面朝着它。', ok: () => TUT.blocks >= 2, setup: () => { TUT.shotT = 0.6; } },
+  { t: '腾空闪', d: '你被击中，动不了了！点一下右键（或按左 Shift），腾空闪出去。', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
+  { t: '大招', d: '气已为你蓄满——按 E，放手一搏！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
 ];
 function startTutorial() {
   try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
@@ -5198,9 +5198,9 @@ function startTutorial() {
   tutNext();
   $id('tutBox').classList.remove('hidden');
 }
-const TUT_TOUCH = ['用左边的摇杆左右走一走。', '把摇杆往上推，或者点「跳」；在空中再点一次，就是二段跳。', '走到稻草人旁边，连续点「攻击」，打满五段。',
-  '按住「攻击」不放，等角色闪一下、听到“叮”，再松开。', '点「跳」跳起来，在空中点「攻击」，再点一下是下砸。', '点「远程」放出远程招式。青锋的是剑气。',
-  '点「技能」放技能。青锋的疾风斩会穿过对手。', '稻草人会朝你放风刃。把摇杆往下推防御，挡住两次（要面朝它）。', '你被打中动不了了！点「闪」腾空闪出去。', '气已经帮你攒满了，点发光的「大招」！'];
+const TUT_TOUCH = ['拨左边的摇杆，左右走两步。', '摇杆往上推，或点「跳」；身在半空再点一次，便是二段跳。', '贴近稻草人，连点「攻击」打满五段。',
+  '按住「攻击」不放，待寒光一闪、听得一声“叮”，再松手。', '点「跳」跃起，在空中点「攻击」，再点一下便是下砸。', '点「远程」放出远程招式，青锋使的是剑气。',
+  '点「技能」施展技能。青锋的疾风斩，能径直穿过对手。', '稻草人会朝你放风刃，摇杆下推格挡，挡下两次——记得面朝着它。', '你被击中，动不了了！点「闪」腾空闪出去。', '气已为你蓄满，点那发亮的「大招」！'];
 function tutNext() {
   TUT.step++; TUT.wait = 0; TUT.hit = {}; TUT.x0 = A.x;
   const st = TUT_STEPS[TUT.step];
@@ -5236,10 +5236,10 @@ async function tutFinish() {
   try { localStorage.setItem('renying-tut-done', '1'); } catch (e) {}
   updateTutBtn();
   $id('tutBox').classList.add('hidden');
-  let msg = '基本操作都会了，去和电脑或同学过几招吧。';
+  let msg = '该会的都会了。去找电脑或是同学，过几招吧。';
   if (SERVED && ACC.token && window.fetch) {
-    try { const j = await api('/api/tutorial', {}); applyProfile(j.profile); if (j.gain) msg += `<br>奖励 <b style="color:#e9c46a">${j.gain} 墨锭</b>，可以去问剑阁抽角色了！`; } catch (e) {}
-  } else if (SERVED) msg += '<br>登录后再完成一次教学，可以领 300 墨锭。';
+    try { const j = await api('/api/tutorial', {}); applyProfile(j.profile); if (j.gain) msg += `<br>奖励 <b style="color:#e9c46a">${j.gain} 墨锭</b>，去问剑阁试试手气吧！`; } catch (e) {}
+  } else if (SERVED) msg += '<br>登录之后再走一遍教学，可领 300 墨锭。';
   $id('tutReward').innerHTML = msg;
   TUT = null; paused = true; showScreen('tutdone'); SFX.gong();
 }
@@ -5443,7 +5443,7 @@ function rollResume(p) {
   ROLL.remLast = p.ru; ROLL.lastRemH = p.lh;
   if (p.skins) NET.peerSkins = p.skins;
   BP = null; creditT = 0; applySkins(); acc = 0;
-  if (p.ended && M.koWinner >= 0) showEnd(M.koWinner); else { showScreen(null); say('回到对战', 0.8, 'go'); }
+  if (p.ended && M.koWinner >= 0) showEnd(M.koWinner); else { showScreen(null); say('重归战局', 0.8, 'go'); }
   rollSend();
 }
 
@@ -5919,7 +5919,7 @@ function bpTick(dt) {
   if (BP.t <= 0) { const v = CHARS.map((c, i) => i).filter(bpValid); bpApply(bpSel >= 0 && bpValid(bpSel) && side === bpMySide() ? bpSel : v[Math.random() * v.length | 0]); }
 }
 function bpDetailHTML(i) {
-  if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上查看技能和克制关系。</p>';
+  if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式与克制关系。</p>';
   const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult], nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join('、');
   return `<img src="${PORTRAITS[i] || ''}" alt="">
     <div><h3 style="color:rgb(${c.look.slash})">${c.name}</h3>
@@ -6048,7 +6048,7 @@ function renderAcc() {
   bar.innerHTML = ACC.name
     ? `<span class="who">${escapeHTML(ACC.name)}</span>${PROF.rank && !PROF.guest ? `<span class="rk">${PROF.rank.label}</span>` : ''}<span class="ink">墨锭 ${PROF.guest ? 0 : PROF.ink}</span><button class="ghost" id="lbBtn">排行榜</button><button class="ghost" id="logoutBtn">退出</button>`
     : `<button class="ghost" id="lbBtn">排行榜</button><button class="ghost" id="accOpen">登录 / 注册</button>`;
-  $id('accHint').textContent = ACC.name ? '对手是游客时，胜负记为“非正式战绩”' : '登录后，联机对战的胜负才会计入排行榜';
+  $id('accHint').textContent = ACC.name ? '对手是游客时，胜负只记作“切磋战绩”' : '登录后，联机对战的胜负才会计入排行榜';
 }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 $id('accBar').addEventListener('click', async e => {
@@ -6059,7 +6059,7 @@ $id('accBar').addEventListener('click', async e => {
 });
 async function doAcc(kind) {
   const name = $id('accName').value.trim(), pass = $id('accPass').value;
-  if (!name || !pass) { $id('accMsg').textContent = '昵称和密码都要填'; return; }
+  if (!name || !pass) { $id('accMsg').textContent = '昵称与密码都得填'; return; }
   $id('accMsg').textContent = kind === 'login' ? '登录中…' : '注册中…';
   try {
     setAcc(await api('/api/' + kind, { name, pass }));
@@ -6087,8 +6087,8 @@ async function openLeaderboard() {
   try {
     const j = await api('/api/leaderboard');
     if (j.me) setAcc(j.me);
-    $id('lbSub').textContent = j.list.length ? `共 ${j.players} 位玩家注册。正式：双方都登录；非正式：对手是游客` : '还没有人打过联机，快去赢下第一场！';
-    $id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th><th class="n">非正式</th></tr>' + j.list.map((r, i) => {
+    $id('lbSub').textContent = j.list.length ? `已注册玩家 ${j.players} 位。正式：双方皆登录；切磋：对手为游客` : '还没有人打过联机——去赢下第一场吧！';
+    $id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th><th class="n">切磋</th></tr>' + j.list.map((r, i) => {
       const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';
       return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td><td class="n" style="color:var(--dim)">${r.cwins} 胜 ${r.closses} 负</td></tr>`;
     }).join('') : '';
@@ -6112,7 +6112,7 @@ if (OFFLINE_BUILD) {
   const tb = document.createElement('button'); tb.textContent = '木人桩'; tb.dataset.go = 'train';
   tb.addEventListener('click', () => menuGo('train'));
   const cx = document.querySelector('#menu [data-go="codex"]'); cx.parentNode.insertBefore(tb, cx);
-  const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '花两分钟学一下基本操作，再去挑战电脑和闯关。';
+  const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
 }
 try { $id('srvIn').value = localStorage.getItem('renying-srv') || ''; } catch (e) {}
 $id('srvIn').addEventListener('change', () => { try { localStorage.setItem('renying-srv', $id('srvIn').value.trim()); } catch (e) {} });
@@ -6152,7 +6152,7 @@ if (SERVED && $id('serverStatusText')) {
 if ($id('srvConnectBtn')) {
   $id('srvConnectBtn').addEventListener('click', () => {
     const base = serverBase();
-    if (!base) { netStatus('请先输入服务器 IP/网址'); return; }
+    if (!base) { netStatus('请先填入服务器 IP 或网址'); return; }
     const httpUrl = base.replace(/^ws:\/\//i, 'http://').replace(/^wss:\/\//i, 'https://') + '/health';
     netStatus(`正在测试连接 ${base}…`);
     const btn = $id('srvConnectBtn');
@@ -6182,12 +6182,12 @@ function copyRoomInvite() {
   if (!code) return;
   const isWeb = /^https?:$/.test(location.protocol);
   const link = isWeb ? (location.origin + location.pathname + '?room=' + code) : '';
-  const text = link ? `【刃影 3D 对决】房间码：${code}\n点击链接直连加入：${link}` : code;
+  const text = link ? `【刃影 · 月下一决】房间码：${code}\n点此链接直接入局：${link}` : code;
   const doFeedback = (ok) => {
     const btn = $id('copyCodeBtn');
     if (btn) {
       const orig = btn.dataset.orig || (btn.dataset.orig = btn.textContent);
-      btn.textContent = ok ? '已复制房间码与链接！' : '复制失败，请手动记录';
+      btn.textContent = ok ? '已复制房间码与链接！' : '复制失败，请手动记下';
       btn.style.color = ok ? 'var(--jade)' : 'var(--cinnabar)';
       btn.style.borderColor = ok ? 'var(--jade)' : 'var(--cinnabar)';
       setTimeout(() => {
@@ -6196,7 +6196,7 @@ function copyRoomInvite() {
         btn.style.borderColor = '';
       }, 1800);
     }
-    netStatus(ok ? '已复制！把 4 位房间码或链接发给同学，等他加入即可对战' : '复制失败，房间码为：' + code);
+    netStatus(ok ? '已复制！把 4 位房间码或链接发给同学，静候他入局' : '复制失败，房间码为：' + code);
   };
   const fallbackCopy = (txt) => {
     try {
