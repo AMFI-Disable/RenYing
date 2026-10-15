@@ -7719,11 +7719,6 @@ async function redeemCode(rawCode) {
   const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
   if (!code) return;
   const up = code.toUpperCase();
-  if (['DEV', 'DEVALL', 'RENYINGDEV', 'UNLOCKALL', 'EVEN', 'ALL'].includes(up)) {
-    triggerStealthDevUnlock();
-    if ($id('rdCode')) $id('rdCode').value = '';
-    return;
-  }
   if (['LOCK', 'DEVLOCK', 'RELOCK'].includes(up)) {
     DEV_SESSION_UNLOCKED = false;
     try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
@@ -9013,26 +9008,6 @@ function triggerStealthDevUnlock(silent) {
   if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
   if (typeof renderTrainPick === 'function') renderTrainPick();
 }
-
-let accDevKeyBuf = '';
-window.addEventListener('keydown', e => {
-  if (!$id('acc') || !$id('acc').classList.contains('on')) return;
-  if (e.key && e.key.length === 1) {
-    accDevKeyBuf = (accDevKeyBuf + e.key.toLowerCase()).slice(-3);
-    if (accDevKeyBuf === 'dev') {
-      accDevKeyBuf = '';
-      triggerStealthDevUnlock();
-    }
-  }
-});
-function checkStealthDevInput(el) {
-  if (el && el.value && el.value.trim().toLowerCase() === 'dev') {
-    el.value = '';
-    triggerStealthDevUnlock();
-  }
-}
-if ($id('accName')) $id('accName').addEventListener('input', () => checkStealthDevInput($id('accName')));
-if ($id('accPass')) $id('accPass').addEventListener('input', () => checkStealthDevInput($id('accPass')));
 
 if ($id('exportAccBtn')) {
   $id('exportAccBtn').addEventListener('click', () => {
