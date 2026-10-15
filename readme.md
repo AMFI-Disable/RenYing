@@ -79,7 +79,7 @@
 
 ## 📦 How To Play And Multiplayer Modes <a id="how-to-play-and-multiplayer-modes"></a>
 
-### Option 1: Direct WebRTC (best for school — no budget needed)
+### Option 1: Direct WebRTC (Best For School — No Budget Needed)
 
 Nothing to install and no server to run:
 
