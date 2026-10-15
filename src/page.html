@@ -243,9 +243,11 @@
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
-      <div style="margin-top:12px;display:flex;justify-content:center;gap:10px">
+      <div style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+        <button class="ghost small" id="exportAccBtn" style="font-size:12px;padding:3px 10px" title="将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件">💾 导出当前存档</button>
+        <button class="ghost small" id="exportAllBtn" style="font-size:12px;padding:3px 10px" title="将本机所有账号与数据打包备份">📦 备份所有账号</button>
         <button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px">☁️ 云存档设置</button>
-        <button class="ghost small" id="toggleImportBoxBtn" style="font-size:12px;padding:3px 10px;color:var(--gold)">📜 老站数据继承</button>
+        <button class="ghost small" id="toggleImportBoxBtn" style="font-size:12px;padding:3px 10px;color:var(--gold)">📜 数据继承与导入</button>
       </div>
       <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
         <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云存档配置</b>（跨设备同步同一账号）</p>
@@ -267,16 +269,9 @@
             📂 上传导出文件 (.json)
             <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
           </label>
-          <span id="importFileStatus" style="font-size:12px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持 renying-export.json</span>
+          <span id="importFileStatus" style="font-size:12px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持任一 renying-account 或 export.json</span>
         </div>
         <p id="importMsg" class="netstatus" style="margin:6px 0 0;font-size:12px" role="status"></p>
-      </div>
-      <div style="margin-top:14px;border-top:1px dashed var(--faint);padding-top:10px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="accRdCode" maxlength="32" placeholder="开发者兑换码（输入 DEV 可全解锁）" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;padding:6px 10px;font-size:12px;background:rgba(0,0,0,0.3);color:var(--ink);border:1px solid var(--faint);border-radius:6px">
-          <button class="ghost small" id="accRdBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">兑换</button>
-        </div>
-        <p class="netnote" style="margin:4px 0 0;font-size:12px">开发者特权仅在当前窗口会话临时生效，不会污染真实云端存档。关闭或新建窗口后自动恢复锁定。</p>
       </div>
       <p class="netnote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
     </div>
@@ -343,7 +338,7 @@
       <h3 class="spt">每日挑战 <span class="tsub">每天 0 点刷新</span></h3><div class="tlist" id="tDaily"></div>
       <h3 class="spt">每周任务 <span class="tsub">每周一刷新</span></h3><div class="tlist" id="tWeekly"></div>
       <h3 class="spt">兑换码</h3>
-      <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入兑换码（如 DEV 激活会话全解锁）" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
+      <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入礼包兑换码" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
       <h3 class="spt">墨锭从哪来</h3>
       <p class="tips" style="margin:0">联机对战：赢 60，输 30。排位赛：赢 80，输 40。打电脑（每天前 10 局）：入门 10 / 5，寻常 20 / 10，劲敌 40 / 20。每天第一次赢（联机或寻常以上电脑）额外 150。新手教学 300。新账号送 500。<br>角色祈愿 60 一次、十连 540；皮肤祈愿 30 一次、十连 270。</p>
       <p class="netnote" id="tMsg"></p>

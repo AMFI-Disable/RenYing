@@ -259,6 +259,163 @@
     if (typeof fn === 'function') authListeners.push(fn);
   }
 
+  // 触发浏览器原生文件下载
+  function triggerDownload(filename, text) {
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }
+
+  // 导出当前账号存档 (.json)
+  function exportCurrentAccount(prof) {
+    const u = getUser();
+    let activeProf = prof;
+    if (!activeProf) {
+      try {
+        activeProf = JSON.parse(localStorage.getItem('renying-cloud-cache') || '{}');
+      } catch (e) {
+        activeProf = {};
+      }
+    }
+    const name = (u && u.name) || activeProf.name || '大侠';
+    const payload = {
+      app: 'renying',
+      format: 'single-account',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      account: {
+        uid: (u && u.uid) || ('local_' + Date.now()),
+        name: name
+      },
+      profile: {
+        name: name,
+        ink: Math.max(0, Math.floor(activeProf.ink || 0)),
+        owned: Array.isArray(activeProf.owned) ? Array.from(new Set(activeProf.owned)) : ['qingfeng'],
+        frags: activeProf.frags || {},
+        pity: Math.max(0, Math.floor(activeProf.pity || 0)),
+        spity: Math.max(0, Math.floor(activeProf.spity || 0)),
+        skins: Array.isArray(activeProf.skins) ? Array.from(new Set(activeProf.skins)) : [],
+        equip: activeProf.equip || {},
+        netWins: Math.max(0, Math.floor(activeProf.netWins || 0)),
+        netLosses: Math.max(0, Math.floor(activeProf.netLosses || 0)),
+        online10Unlocked: !!activeProf.online10Unlocked,
+        stageStars: activeProf.stageStars || {},
+        qfx: Math.max(0, Math.floor(activeProf.qfx || 0)),
+        rating: activeProf.rating || 1100,
+        placed: activeProf.placed || 0
+      }
+    };
+    const safeName = String(name).replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g, '_') || 'player';
+    triggerDownload(`renying-account-${safeName}.json`, JSON.stringify(payload, null, 2));
+    return payload;
+  }
+
+  // 打包导出当前浏览器所有本地账号存档 (.json)
+  function exportAllAccounts() {
+    let mockUsers = {};
+    try {
+      mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
+    } catch (e) {}
+    const accounts = [];
+    for (const [name, u] of Object.entries(mockUsers)) {
+      let prof = null;
+      try {
+        const profRaw = localStorage.getItem('renying-prof-' + u.uid);
+        if (profRaw) prof = JSON.parse(profRaw);
+      } catch (e) {}
+      accounts.push({ account: u, profile: prof });
+    }
+    const payload = {
+      app: 'renying',
+      format: 'all-accounts-backup',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      count: accounts.length,
+      accounts: accounts
+    };
+    triggerDownload('renying-all-accounts-backup.json', JSON.stringify(payload, null, 2));
+    return payload;
+  }
+
+  // 导入账号数据（支持单个存档、全备份、老站导出文件）
+  function importAccountData(data) {
+    if (!data || typeof data !== 'object') throw new Error('无效的存档文件数据');
+
+    // 格式 1: 单账号导出格式
+    if (data.format === 'single-account' && data.profile) {
+      const p = data.profile;
+      const u = data.account || { uid: 'local_' + Date.now(), name: p.name || '大侠' };
+      const name = p.name || u.name || '大侠';
+      const uid = u.uid || ('local_' + Date.now());
+
+      // 写入本地账号库
+      let mockUsers = {};
+      try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
+      mockUsers[name] = { uid, name, pw: btoa('123456'), created: Date.now() };
+      localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+      localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
+      localStorage.setItem('renying-prof-' + uid, JSON.stringify(p));
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(p));
+
+      currentUser = { uid, displayName: name };
+      saveProfile(p, true);
+      return { success: true, count: 1, profile: p, name };
+    }
+
+    // 格式 2: 全部账号备份格式
+    if (data.format === 'all-accounts-backup' && Array.isArray(data.accounts)) {
+      let mockUsers = {};
+      try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
+      let lastProf = null, lastName = '';
+      for (const item of data.accounts) {
+        if (!item || !item.account) continue;
+        const name = item.account.name;
+        const uid = item.account.uid || ('local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
+        mockUsers[name] = { ...item.account, uid, name };
+        if (item.profile) {
+          localStorage.setItem('renying-prof-' + uid, JSON.stringify(item.profile));
+          lastProf = item.profile;
+          lastName = name;
+        }
+      }
+      localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+      if (lastProf && lastName) {
+        const uid = mockUsers[lastName].uid;
+        localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: lastName }));
+        localStorage.setItem('renying-cloud-cache', JSON.stringify(lastProf));
+        currentUser = { uid, displayName: lastName };
+        saveProfile(lastProf, true);
+      }
+      return { success: true, count: data.accounts.length, profile: lastProf, name: lastName };
+    }
+
+    // 格式 3: 裸 Profile 格式 (具有 ink 和 owned)
+    if (Array.isArray(data.owned)) {
+      const name = data.name || '大侠';
+      const uid = 'local_' + Date.now();
+      let mockUsers = {};
+      try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
+      mockUsers[name] = { uid, name, pw: btoa('123456'), created: Date.now() };
+      localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+      localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
+      localStorage.setItem('renying-prof-' + uid, JSON.stringify(data));
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
+      currentUser = { uid, displayName: name };
+      saveProfile(data, true);
+      return { success: true, count: 1, profile: data, name };
+    }
+
+    throw new Error('未识别的文件格式');
+  }
+
   // 初始化
   if (typeof window !== 'undefined') {
     window.CloudSave = {
@@ -272,7 +429,10 @@
       getUser,
       loadProfile,
       saveProfile,
-      onAuthChange
+      onAuthChange,
+      exportCurrentAccount,
+      exportAllAccounts,
+      importAccountData
     };
 
     // 页面加载完成后尝试初始化

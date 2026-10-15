@@ -31,8 +31,27 @@ All notable changes, features, and architectural capabilities of this project ar
 - Headless audit tools, all runnable against a locally started server: `tools/ui-audit.mjs` (screenshots and measures every panel for clipping, off-screen elements, containers overflowed by children, and sub-12px text), `tools/hud-audit.mjs` (instruments canvas `fillText` and drives a real match through fighting, low health, guard break, full meter, combo, overtime and KO, plus training and campaign, flagging any label under 12px), `tools/touch-audit.mjs` (emulates phone and tablet, then drives the virtual stick and thumb pad with synthetic touches), and `tools/net-test.mjs` (drives two browsers through the LAN and WebRTC multiplayer paths, plus a host error-handler test).
 - CI now runs the panel, HUD and touch audits and a LAN multiplayer regression test after starting the local server. The WebRTC check is kept as a local-only test because it depends on the public PeerJS signalling server.
 - The full 进阶技巧 (advanced technique) text for the six heroes that have one is now shown to players — in a wide codex tile and as an 进阶 row in the ban/pick dossier — instead of only the four-character stub.
+- **Legacy Account Data Migration & Import Tools**:
+  - Added standalone utilities `tools/export_data.py` and `tools/import_data.py` to export users, profiles, matches, and posts from existing SQLite databases into `renying-export.json` and restore them into local storage or server databases.
+  - Implemented client-side JSON profile migration modal and server-side first-time registration activation gateway in `server.py`, seamlessly restoring legacy player accounts, Elo ratings, match histories, and hero progression.
+- **Authentic Move Inspector & Combat Demonstration Overhaul**:
+  - Created bespoke move sequences and hit details (`HERO_MOVE_SEQS` and `HERO_HIT_DETAILS`) across all 9 heroes for all 7 move archetypes (Light Combos, Heavy Charged Slashes, Aerial Attacks, Q Skills, R Special Techniques, E Ultimates, and Right-Click Escapes), completely replacing generic attack animations with 100% authentic character movesets.
+  - Enhanced Puppet animation engine with real projectile ballistics, spin physics, impact explosions, reactive training dummy physics with tilt, vertical velocity, gravity acceleration, ground-slam shockwave launches, and floating brush-bordered status badges (`⚡ 触电麻痹`, `💥 撼地重震`, `居合斩穴`, `⚡ 封脉定身`, `深墨禁锢`).
+  - Added concurrent multi-window move previews (`.card-mini-win` canvas) for every move card in the Codex, powered by a throttled centralized director loop (`startCodexCardsDirector`) eliminating long sequential carousel waits.
+  - Added Codex main stage fast-switching tab bar (`#cxDemoTabs`) and 0.5x slow-motion toggle (`#cxDemoSpd`) for detailed frame inspection.
+  - Added panoramic move preview dock (`#bpMoveDeck`) integrated into the Ban/Pick character selection screen, providing real-time move previews and hit properties without obscuring hero selection cards.
+- **100% Serverless GitHub Pages Architecture & In-Browser Account Export/Import**:
+  - Implemented pure client-side account management, persistent `localStorage` storage, and direct Google Cloud Firestore synchronization via `src/cloud.js`.
+  - Added in-browser JSON account export and backup: `CloudSave.exportCurrentAccount` (downloads `renying-account-[username].json`) and `CloudSave.exportAllAccounts` (downloads `renying-all-accounts-backup.json`).
+  - Added multi-format account restoration in `CloudSave.importAccountData` supporting individual JSON exports, full multi-account backups, and legacy database dump files.
+  - Made WebRTC P2P direct peer connection the default multiplayer mode, eliminating reliance on a centralized Python server.
+- **Stealth Developer Unlock Easter Egg**:
+  - Completely purged all visible developer unlock inputs, buttons, pills, badges, and textual hints from the website.
+  - Implemented stealth detection on the Login screen (`#acc`): typing "DEV" (case-insensitive) either in blank spaces or within text inputs triggers immediate full-roster unlock accompanied only by a subtle audio chime (`SFX.chargeFull()`), with zero website notices or textual exposure.
+- **WebSocket Protocol Verification Suite**:
+  - Added headless protocol test suite `tools/protocol-test.mjs` verifying WebSocket rate-limiting bypass prevention, system message injection blocking, and forfeit loss handling on disconnect.
 
-### Improved
+### Changed
 
 - **Hero Skill Overhaul & Differentiated Control Profiles (Stun, Launch & Spatial Dynamics)**:
   - Thoroughly rebalanced and enhanced all 18 hero skills (Q skills and Right-click skills across all 9 heroes) with differentiated crowd-control, stun durations, hitboxes, and tactical properties:
@@ -96,9 +115,6 @@ All notable changes, features, and architectural capabilities of this project ar
 - Reversal counter-attack buffering out of blockstun and wake-up getup.
 - Opponent tracking stability with cross-up deadzone to eliminate rapid sprite jittering.
 - Projectile deflection reward system granting meter gain on successful weapon parries.
-
-### Changed
-
 - `index.html` is now the single online edition for GitHub Pages and `server.py`; `renying.html` redirects to it.
 - Background music moved out of the online page into `assets/music/`, shrinking `index.html` from 6.5 MB to 1.6 MB.
 - PeerJS (`assets/peerjs.min.js`) bundled directly into `index.html` to eliminate external script downloads and latency on slow networks.
@@ -107,9 +123,16 @@ All notable changes, features, and architectural capabilities of this project ar
 - The online screen on GitHub Pages leads with direct rooms; the server address field moved into an optional section that reveals quick match and ranked play when filled.
 - `server.py` serves `index.html`, `assets/music/`, and other whitelisted assets.
 - Updated developer and creator attribution to Even, Luffy, and Opus 5.5 across all game clients, UI screens, server, and documentation.
+- Rewrote repository documentation (`readme.md`) in plain, natural human English while preserving all URLs, badges, anchors, code fences, and policy requirements.
+- Updated master engineering walkthrough (`walkthrough.md`) with comprehensive documentation of legacy account migration and authentic move inspector architecture.
 
 ### Fixed
 
+- **Hero Selection & Ban/Pick Screen (BP Grid) Recovery**:
+  - Restored missing `renderBP()` function and associated click/double-click/hover event listeners in `src/game.js`, fixing the critical `ReferenceError: renderBP is not defined` bug that previously prevented the 9-hero selection cards from populating `#bpGrid`.
+  - Re-established real-time coordination between hero card selection, confirmation button enablement, and the panoramic move preview deck (`#bpMoveDeck`).
+- **Serverless Feature Unblocking**:
+  - Removed server-dependency gates from Gacha (问剑阁), quest rewards claiming (任务一键领取), Codex skin equipping, Welfare character selection (新手福利), and Tutorial rewards, providing 100% feature availability on GitHub Pages without `server.py`.
 - Creating a direct room on GitHub Pages crashed before showing the room code.
 - Players joining a direct room were assigned an unknown role, so character select never appeared on their side.
 - Late events from an old direct connection could close a newly created room.
@@ -143,3 +166,4 @@ Inaugural release of Ren Ying (刃影), an ink-wash martial arts action duel gam
 ### Security
 
 - Enforced local-first execution, salted password hashing, and clean zero-telemetry architecture.
+
