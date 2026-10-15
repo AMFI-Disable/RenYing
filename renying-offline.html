@@ -5894,8 +5894,8 @@ $id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') s
 $id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
 
 // ======================= 角色图鉴 =======================
-let cxIdx = 0;
-demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)));
+let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
+demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)), () => cxActiveMove === 'full' ? null : cxActiveMove);
 function statRows(c) {
   const m = CHAR_MOVES[CHAR_IDX[c.id]];
   const st = c.stat;
