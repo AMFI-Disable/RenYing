@@ -371,9 +371,13 @@
   .bpdetail .meta { color: var(--dim); display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
   .bpdetail dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; }
   .bpdetail dt { color: #e9c46a; white-space: nowrap; }
-  .bpdetail dd { margin: 0; }
   .bpdetail .ctr { margin-top: 6px; color: var(--dim); }
   .bpdetail .ctr b { color: var(--ink); font-weight: 600; }
+  .bp-skin-bar { display: flex; align-items: center; gap: 5px; margin: 4px 0 6px; flex-wrap: wrap; }
+  .bp-skin-btn { font: 12px var(--body); padding: 2px 7px; border-radius: 5px; cursor: pointer; background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid var(--faint); transition: all .15s; }
+  .bp-skin-btn:hover { border-color: rgba(233,196,106,.5); }
+  .bp-skin-btn.sel { border-color: #e9c46a; background: rgba(233,196,106,.18); font-weight: 600; }
+  .bp-skin-btn.lock { opacity: .45; cursor: default; }
   .bpbot > * { min-width: 0; }
   .bpmovedeck { border: 1px solid rgba(233,196,106,.3); border-radius: 12px; padding: 10px 14px; background: rgba(12,14,24,.88); display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow: hidden; text-align: left; }
   .deckhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; width: 100%; }

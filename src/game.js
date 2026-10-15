@@ -5420,13 +5420,21 @@ const HERO_FULL_DEMO = {
 
 let cxPrev = null;   // 正在预览的皮肤（null = 用自己装备的）
 function renderCodex() {
-  const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult], col = `rgb(${c.look.slash})`;
+  const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult];
   const skin = cxPrev !== null ? cxPrev : mySkin(c.id);
+  const L = skinLook(cxIdx, skin);
+  const col = `rgb(${L.slash})`;
   $id('cxTabs').innerHTML = CHARS.map((x, i) => `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`} ">${x.name}</button>`).join('');
   const cv2 = $id('cxCard'), g = cv2.getContext && cv2.getContext('2d');
   if (g) { g.clearRect(0, 0, 600, 800); g.drawImage(makeCardArt(cxIdx, 600, 800, skin), 0, 0); }
+  if (cv2) {
+    cv2.style.boxShadow = `0 16px 48px ${col.replace('rgb', 'rgba').replace(')', ',0.35)')}`;
+    cv2.style.borderColor = col;
+  }
   const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || PROF.owned.includes(c.id), free = (PROF.rotation || []).includes(c.id);
-  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills"><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
+  const skMeta = skin && SKINS[skin];
+  const skPill = skMeta ? `<span class="pill" style="color:${col};border-color:${col}">皮肤 · ${skMeta.name}</span>` : '';
+  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   $id('cxSkinT').textContent = cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤';
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
@@ -5456,6 +5464,7 @@ function renderCodex() {
     tile('vs', '克制关系', '', `克 ${nm(c.beats)}<br>怕 ${nm(c.weakTo)}`, '', !ADV_SHORT[c.id]),
   ].join('');
   for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic]}</svg>`;
+  if ($id('cxBento')) $id('cxBento').style.setProperty('--cx-accent', col);
   startCodexCardsDirector();
 }
 
@@ -5978,8 +5987,30 @@ async function loadProfile() {
 }
 function applyProfile(p) {
   if (!p) return;
-  if (p.guest) Object.assign(PROF, { guest: true, ink: 0, owned: p.owned, frags: {}, pity: 0, welfare: 1, rank: null, daily: [], weekly: [], skins: [], equip: {}, spity: 0, rotation: p.rotation, rates: p.rates });
-  else Object.assign(PROF, p, { guest: false });
+  if (p.guest) {
+    const owned = Array.isArray(p.owned) ? p.owned : (PROF.owned || ['qingfeng']);
+    const skins = Array.isArray(p.skins) ? p.skins : (PROF.skins || []);
+    const equip = p.equip || PROF.equip || {};
+    const ink = p.ink !== undefined ? p.ink : (PROF.ink || 0);
+    Object.assign(PROF, {
+      guest: true,
+      ink: ink,
+      owned: owned,
+      frags: p.frags || PROF.frags || {},
+      pity: p.pity || PROF.pity || 0,
+      welfare: 1,
+      rank: null,
+      daily: [],
+      weekly: [],
+      skins: skins,
+      equip: equip,
+      spity: p.spity || PROF.spity || 0,
+      rotation: p.rotation || PROF.rotation,
+      rates: p.rates || PROF.rates
+    });
+  } else {
+    Object.assign(PROF, p, { guest: false });
+  }
   PROF.loaded = true;
   renderAcc(); updateTutBtn();
   if (!PROF.guest && typeof qfxClaim === 'function' && qfxBest() > (PROF.qfx || 0)) setTimeout(() => qfxClaim(qfxBest()), 0);
@@ -7276,18 +7307,33 @@ function bpTick(dt) {
 function bpDetailHTML(i) {
   if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式与克制关系。</p>';
   const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult];
+  const curSkin = mySkin(c.id);
+  const L = skinLook(i, curSkin);
+  const col = `rgb(${L.slash})`;
+  const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   const nm = ids => (ids || []).map(id => (CHARS[CHAR_IDX[id]] ? CHARS[CHAR_IDX[id]].name : id)).filter(Boolean).join('、') || '无';
-  return `<img src="${PORTRAITS[i] || ''}" alt="">
-    <div><h3 style="color:rgb(${c.look.slash})">${c.name}</h3>
+
+  const skinBtns = `<button class="bp-skin-btn ${curSkin ? '' : 'sel'}" data-sk="" data-i="${i}">默认</button>` +
+    skList.map(([k, v]) => {
+      const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+      return `<button class="bp-skin-btn ${curSkin === k ? 'sel' : ''}${has ? '' : ' lock'}" data-sk="${k}" data-i="${i}" style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : ' (未解锁)'}</button>`;
+    }).join('');
+
+  return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
+    <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
+    <div class="bp-skin-bar">
+      <span style="font-size:12px;color:var(--dim)">装配皮肤:</span>
+      ${skinBtns}
+    </div>
     <div class="meta"><span>${c.role}</span><span>上手难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${c.stat.hp}</span></div>
     <dl><dt>被动 ${c.passiveName}</dt><dd>${c.passiveDesc}</dd>
     <dt>技能 ${S.name}</dt><dd>${S.desc}（冷却 ${S.cd} 秒）</dd>
     <dt>大招 ${U.name}</dt><dd>${U.desc}</dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
     <p class="ctr">克制 <b>${nm(c.beats)}</b>　怕 <b>${nm(c.weakTo)}</b></p></div>`;
 }
-function buildDetails() {
+function buildDetails(force) {
   const box = document.getElementById('bpDetail');
-  if (box.dataset.built === String(PORTRAITS.length)) return;
+  if (!force && box.dataset.built === String(PORTRAITS.length)) return;
   box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
   box.dataset.built = String(PORTRAITS.length);
 }
@@ -7296,6 +7342,9 @@ function updateBPDeck(i) {
   const idx = i >= 0 ? i : (bpSel >= 0 ? bpSel : 0);
   const ch = CHARS[idx];
   if (!ch) return;
+  const curSkin = mySkin(ch.id);
+  const L = skinLook(idx, curSkin);
+  const col = `rgb(${L.slash})`;
   const tabs = [
     { k: 'light', lab: '普攻连击' },
     { k: 'charge', lab: '蓄力重斩' },
@@ -7310,7 +7359,7 @@ function updateBPDeck(i) {
   const hit = (HERO_HIT_DETAILS[ch.id] && HERO_HIT_DETAILS[ch.id][bpDeckMove]) || { name: '', badge: '', badgeCls: 'badge-buff', dmg: '', desc: '' };
   const nameEl = $id('bpdHitName');
   if (nameEl) {
-    nameEl.innerHTML = `<span style="color:rgb(${ch.look.slash})">${hit.name}</span>${hit.dmg ? ` <span style="font-size:12px;color:var(--gold);font-weight:600">· 伤害 ${hit.dmg}</span>` : ''}`;
+    nameEl.innerHTML = `<span style="color:${col}">${hit.name}</span>${hit.dmg ? ` <span style="font-size:12px;color:var(--gold);font-weight:600">· 伤害 ${hit.dmg}</span>` : ''}`;
   }
   const badgeEl = $id('bpdHitBadge');
   if (badgeEl) {
@@ -7337,7 +7386,49 @@ if (bpDeckTabsEl) {
     SFX.slice();
   });
 }
-demoLoop($id('bpDeckCanvas'), () => (bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0)), () => $id('bp') && $id('bp').classList.contains('on'), null, () => bpDeckMove);
+demoLoop($id('bpDeckCanvas'), () => (bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0)), () => $id('bp') && $id('bp').classList.contains('on'), () => mySkin(CHARS[(bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0))].id), () => bpDeckMove);
+
+const bpDetailEl = $id('bpDetail');
+if (bpDetailEl) {
+  bpDetailEl.addEventListener('click', e => {
+    const b = e.target.closest('.bp-skin-btn');
+    if (!b) return;
+    const idx = +b.dataset.i;
+    const sk = b.dataset.sk || '';
+    const ch = CHARS[idx];
+    if (!ch) return;
+    const has = !sk || (PROF.skins || []).includes(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+    if (!has) {
+      SFX.slice();
+      toast('尚未解锁该皮肤');
+      return;
+    }
+    PROF.equip = PROF.equip || {};
+    if (sk) PROF.equip[ch.id] = sk;
+    else delete PROF.equip[ch.id];
+    try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (err) {}
+    if (window.CloudSave) CloudSave.saveProfile(PROF);
+    PORTRAITS.length = 0;
+    ensurePortraits();
+    applyProfile(PROF);
+    buildDetails(true);
+    setDetail(idx);
+    updateBPDeck(idx);
+    renderBP();
+    if (M.mode === 'net' || bpMode === 'net') {
+      send({ pskin: PROF.equip || {} });
+    }
+    const cv = $id('bpDeckCanvas');
+    if (cv && cv._pup) {
+      cv._pup = new Puppet(idx, sk);
+      if (HERO_MOVE_SEQS[ch.id] && HERO_MOVE_SEQS[ch.id][bpDeckMove]) {
+        cv._pup.playSeq(HERO_MOVE_SEQS[ch.id][bpDeckMove], null, true);
+      }
+    }
+    SFX.slice();
+    toast(sk ? `已装配「${SKINS[sk].name}」` : '已换回原本装束');
+  });
+}
 
 function setDetail(i) {
   buildDetails();
@@ -7460,6 +7551,36 @@ function renderAcc() {
   $id('accHint').textContent = u && u.name
     ? `当前登录：【${u.name}】· 英雄与成就自动持久化保存`
     : '单账号云端存储：登录后，英雄解锁、墨锭与成就自动同步到云端';
+
+  // 开发者专享：全量备份功能仅向 Dev 账号开放
+  const actionBtns = $id('accActionBtns');
+  if (actionBtns) {
+    const isDev = (u && u.name && u.name.toLowerCase() === 'dev') || (u && u.isDevMaster);
+    let expAll = $id('exportAllBtn');
+    if (isDev) {
+      if (!expAll) {
+        expAll = document.createElement('button');
+        expAll.id = 'exportAllBtn';
+        expAll.className = 'ghost small';
+        expAll.style.cssText = 'font-size:12px;padding:3px 10px;color:var(--gold)';
+        expAll.title = '将本机所有账号与数据打包备份';
+        expAll.textContent = '📦 备份所有账号';
+        expAll.addEventListener('click', () => {
+          if (window.CloudSave) {
+            try {
+              CloudSave.exportAllAccounts();
+              toast('已成功打包备份本机所有账号');
+            } catch (err) {
+              alert(err.message);
+            }
+          }
+        });
+        actionBtns.appendChild(expAll);
+      }
+    } else {
+      if (expAll) expAll.remove();
+    }
+  }
 }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
@@ -7503,14 +7624,6 @@ if ($id('exportAccBtn')) {
     }
   });
 }
-if ($id('exportAllBtn')) {
-  $id('exportAllBtn').addEventListener('click', () => {
-    if (window.CloudSave) {
-      CloudSave.exportAllAccounts();
-      toast('已成功打包备份本机所有账号');
-    }
-  });
-}
 
 $id('accBar').addEventListener('click', async e => {
   const id = e.target.id;
@@ -7522,9 +7635,6 @@ $id('accBar').addEventListener('click', async e => {
     if ($id('fbCfgIn') && cfg && cfg.projectId) $id('fbCfgIn').value = JSON.stringify(cfg, null, 2);
     menuCam.tz = 1.35;
     showScreen('acc');
-    if (typeof populateLegacyDropdown === 'function') {
-      populateLegacyDropdown(currentLegacyList, (u && u.name) || ACC.name || '');
-    }
     setTimeout(() => $id('accName').focus(), 50);
   } else if (id === 'lbBtn') {
     openLeaderboard();
@@ -7550,6 +7660,9 @@ async function doAcc(kind) {
       ACC.name = res.name;
       ACC.token = res.uid;
       PROF.guest = false;
+      if (res.isDevMaster || (res.name && res.name.toLowerCase() === 'dev')) {
+        triggerStealthDevUnlock(true);
+      }
       const loaded = await CloudSave.loadProfile();
       if (loaded) {
         applyProfile(loaded);
@@ -7603,22 +7716,55 @@ if ($id('fbCfgClearBtn')) {
 // ======================= 老站数据继承与导入 =======================
 const LEGACY_USERS = [{"id": 1, "name": "Luffy", "wins": 8, "losses": 8, "rating": 1035, "placed": 11, "ink": 1358, "owned": ["qingfeng", "yanling", "leiming", "tieshan"], "frags": {"yuehua": 12, "liuyun": 13, "lingshuang": 12, "moyu": 13, "feiying": 13}, "pity": 1, "spity": 1, "skins": ["ly_dusk", "yl_phoenix", "lm_violet", "qf_gold", "ts_obsidian", "ts_bronze"], "equip": {"yanling": "yl_phoenix", "qingfeng": "qf_gold"}}, {"id": 2, "name": "设计失败的草履虫", "wins": 11, "losses": 11, "rating": 1152, "placed": 17, "ink": 478, "owned": ["qingfeng", "leiming", "tieshan", "liuyun", "lingshuang"], "frags": {"yuehua": 15, "feiying": 22, "yanling": 15, "moyu": 15}, "pity": 1, "spity": 5, "skins": ["qf_gold", "lm_sun"], "equip": {"qingfeng": "qf_gold", "leiming": "lm_sun"}}, {"id": 3, "name": "tct33x7", "wins": 1, "losses": 1, "rating": 1103, "placed": 2, "ink": 650, "owned": ["qingfeng", "lingshuang", "leiming", "liuyun"], "frags": {"moyu": 4, "tieshan": 10, "yanling": 1}, "pity": 9, "spity": 0, "skins": [], "equip": {}}, {"id": 4, "name": "明媚的地球", "wins": 9, "losses": 4, "rating": 1093, "placed": 8, "ink": 44, "owned": ["qingfeng", "lingshuang", "liuyun", "feiying", "yuehua", "leiming", "tieshan", "yanling", "moyu"], "frags": {}, "pity": 0, "spity": 0, "skins": ["lm_violet", "ly_dusk", "yh_sakura", "lm_sun", "ly_sky", "fy_jade", "ts_obsidian", "ts_bronze", "my_cinnabar", "ls_plum"], "equip": {"leiming": "lm_sun", "tieshan": "ts_obsidian", "moyu": "my_cinnabar", "feiying": "fy_jade", "liuyun": "ly_sky"}}, {"id": 5, "name": "张涵", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 92, "owned": ["qingfeng", "lingshuang", "feiying", "yanling", "leiming", "tieshan"], "frags": {"liuyun": 24, "yuehua": 12, "moyu": 10}, "pity": 9, "spity": 1, "skins": ["ls_plum", "yl_phoenix", "qf_frost", "lm_sun", "fy_jade"], "equip": {"qingfeng": "qf_frost", "lingshuang": "ls_plum", "yanling": "yl_phoenix"}}, {"id": 6, "name": "Luffy_iMac", "wins": 1, "losses": 2, "rating": 1135, "placed": 1, "ink": 790, "owned": ["qingfeng", "lingshuang"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 7, "name": "cxt", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 50, "owned": ["qingfeng"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 8, "name": "cxy", "wins": 2, "losses": 1, "rating": 1134, "placed": 1, "ink": 300, "owned": ["qingfeng", "liuyun"], "frags": {"tieshan": 13, "lingshuang": 6, "leiming": 9, "yanling": 13, "yuehua": 7, "feiying": 9, "moyu": 6}, "pity": 0, "spity": 8, "skins": ["ly_dusk", "ly_sky", "qf_gold"], "equip": {"liuyun": "ly_sky", "qingfeng": "qf_gold"}}, {"id": 9, "name": "MoYu", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 690, "owned": ["qingfeng", "moyu"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 10, "name": "越来越挤的大巴", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 210, "owned": ["qingfeng", "moyu", "feiying"], "frags": {"leiming": 2, "liuyun": 7, "tieshan": 2, "lingshuang": 1}, "pity": 1, "spity": 0, "skins": [], "equip": {}}, {"id": 11, "name": "hanz", "wins": 1, "losses": 2, "rating": 1068, "placed": 3, "ink": 192, "owned": ["qingfeng", "lingshuang", "tieshan"], "frags": {"yuehua": 3, "leiming": 5, "liuyun": 4, "moyu": 5, "yanling": 3}, "pity": 9, "spity": 7, "skins": ["qf_frost"], "equip": {"qingfeng": "qf_frost"}}, {"id": 12, "name": "zmjjkk", "wins": 1, "losses": 2, "rating": 1100, "placed": 0, "ink": 770, "owned": ["qingfeng", "leiming"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 13, "name": "wqfnkjrnbjv", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 36, "owned": ["qingfeng", "moyu", "liuyun"], "frags": {"leiming": 8, "feiying": 1, "tieshan": 1, "yuehua": 2, "yanling": 1}, "pity": 2, "spity": 0, "skins": [], "equip": {}}, {"id": 14, "name": "Ger1m0", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 560, "owned": ["qingfeng", "lingshuang"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 15, "name": "AAAAAAAA风铃批发", "wins": 1, "losses": 0, "rating": 1127, "placed": 1, "ink": 280, "owned": ["qingfeng", "moyu"], "frags": {"liuyun": 4, "leiming": 9, "yuehua": 1, "feiying": 4, "tieshan": 1}, "pity": 3, "spity": 8, "skins": ["qf_frost"], "equip": {"qingfeng": "qf_frost"}}, {"id": 16, "name": "Hilbert", "wins": 7, "losses": 34, "rating": 963, "placed": 39, "ink": 344, "owned": ["qingfeng", "liuyun", "feiying", "yanling", "leiming", "tieshan", "moyu", "lingshuang", "yuehua"], "frags": {}, "pity": 11, "spity": 0, "skins": ["qf_gold", "lm_violet", "ly_dusk", "yl_raven", "fy_jade", "fy_blood", "qf_frost", "my_cinnabar", "ly_sky", "ts_obsidian", "yl_phoenix", "ts_bronze"], "equip": {"qingfeng": "qf_gold", "feiying": "fy_blood", "liuyun": "ly_dusk", "leiming": "lm_violet", "yanling": "yl_raven", "tieshan": "ts_obsidian", "moyu": "my_cinnabar"}}, {"id": 17, "name": "CJ", "wins": 7, "losses": 5, "rating": 1113, "placed": 12, "ink": 86, "owned": ["qingfeng", "feiying", "moyu", "lingshuang", "tieshan", "leiming"], "frags": {"yuehua": 13, "liuyun": 16, "yanling": 18}, "pity": 10, "spity": 15, "skins": ["qf_frost", "lm_sun"], "equip": {}}, {"id": 18, "name": "神明", "wins": 35, "losses": 13, "rating": 1204, "placed": 46, "ink": 28, "owned": ["qingfeng", "yanling", "tieshan", "liuyun", "feiying", "lingshuang", "leiming"], "frags": {"yuehua": 38, "moyu": 39}, "pity": 11, "spity": 1, "skins": ["qf_gold", "qf_frost", "yl_raven", "yl_phoenix", "ly_dusk", "ts_bronze", "lm_sun"], "equip": {"qingfeng": "qf_gold", "yanling": "yl_raven", "liuyun": "ly_dusk", "tieshan": "ts_bronze", "leiming": "lm_sun"}}, {"id": 19, "name": "duyiuiavuda", "wins": 0, "losses": 1, "rating": 1071, "placed": 1, "ink": 770, "owned": ["qingfeng", "feiying"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 20, "name": "青霜", "wins": 1, "losses": 0, "rating": 1142, "placed": 1, "ink": 1125, "owned": ["qingfeng", "moyu"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 21, "name": "111111", "wins": 0, "losses": 1, "rating": 1054, "placed": 1, "ink": 540, "owned": ["qingfeng", "lingshuang"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}];
 
-let currentLegacyList = LEGACY_USERS;
+let currentLegacyList = [];
 
 function populateLegacyDropdown(list, selectedName) {
-  const sel = $id('legacyAccSelect');
-  if (!sel) return;
-  currentLegacyList = list || LEGACY_USERS;
+  const container = $id('importSelectArea');
+  if (!container) return;
+  currentLegacyList = list || [];
+  if (!currentLegacyList.length) {
+    container.classList.add('hidden');
+    container.innerHTML = '';
+    return;
+  }
+  container.classList.remove('hidden');
   const target = (selectedName || (ACC.name || (window.CloudSave && CloudSave.getUser() ? CloudSave.getUser().name : ''))).toLowerCase();
-  sel.innerHTML = '<option value="">-- 选择老站账号（' + currentLegacyList.length + '位大侠） --</option>' +
-    currentLegacyList.map(a => {
-      const ownCount = (a.owned || []).length;
-      const skinCount = (a.skins || []).length;
-      const ink = a.ink || 0;
-      const matchText = (a.wins || 0) + '胜' + (a.losses || 0) + '负';
-      const isSel = (target && target === a.name.toLowerCase()) ? ' selected' : '';
-      return `<option value="${escapeHTML(a.name)}"${isSel}>${escapeHTML(a.name)} (${ink}墨锭 · ${ownCount}英雄 · ${skinCount}皮肤 · ${matchText})</option>`;
-    }).join('');
+  container.innerHTML = `
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <select id="legacyAccSelect" style="flex:1;min-width:0;padding:5px 8px;font-size:12px;background:rgba(0,0,0,0.5);color:var(--ink);border:1px solid var(--faint);border-radius:5px">
+        <option value="">-- 选择导入包中的账号（共 ${currentLegacyList.length} 位） --</option>
+        ${currentLegacyList.map(a => {
+          const ownCount = (a.owned || []).length;
+          const skinCount = (a.skins || []).length;
+          const ink = a.ink || 0;
+          const matchText = (a.wins || 0) + '胜' + (a.losses || 0) + '负';
+          const isSel = (target && target === a.name.toLowerCase()) ? ' selected' : '';
+          return `<option value="${escapeHTML(a.name)}"${isSel}>${escapeHTML(a.name)} (${ink}墨锭 · ${ownCount}英雄 · ${skinCount}皮肤 · ${matchText})</option>`;
+        }).join('')}
+      </select>
+      <button class="go small" id="claimLegacyBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">导入此账号</button>
+    </div>
+  `;
+  const claimBtn = $id('claimLegacyBtn');
+  if (claimBtn) {
+    claimBtn.addEventListener('click', () => {
+      const sel = $id('legacyAccSelect');
+      const val = sel ? sel.value : '';
+      if (!val) {
+        if ($id('importMsg')) {
+          $id('importMsg').style.color = '#ff6b6b';
+          $id('importMsg').textContent = '请先在下拉菜单中选择一个账号';
+        }
+        return;
+      }
+      const found = currentLegacyList.find(a => a.name === val);
+      if (!found) {
+        if ($id('importMsg')) $id('importMsg').textContent = '未找到该账号信息';
+        return;
+      }
+      claimLegacyAccount(found);
+    });
+  }
 }
 
 function claimLegacyAccount(accData) {
@@ -7687,27 +7833,7 @@ function claimLegacyAccount(accData) {
 if ($id('toggleImportBoxBtn')) {
   $id('toggleImportBoxBtn').addEventListener('click', () => {
     $id('importBox').classList.toggle('hidden');
-    $id('toggleImportBoxBtn').textContent = $id('importBox').classList.contains('hidden') ? '📜 老站数据继承' : '收起继承设置';
-  });
-}
-
-if ($id('claimLegacyBtn')) {
-  $id('claimLegacyBtn').addEventListener('click', () => {
-    const sel = $id('legacyAccSelect');
-    const val = sel ? sel.value : '';
-    if (!val) {
-      if ($id('importMsg')) {
-        $id('importMsg').style.color = '#ff6b6b';
-        $id('importMsg').textContent = '请先在下拉菜单中选择一个老站账号';
-      }
-      return;
-    }
-    const found = currentLegacyList.find(a => a.name === val);
-    if (!found) {
-      if ($id('importMsg')) $id('importMsg').textContent = '未找到该账号信息';
-      return;
-    }
-    claimLegacyAccount(found);
+    $id('toggleImportBoxBtn').textContent = $id('importBox').classList.contains('hidden') ? '📜 存档导入与继承' : '收起导入设置';
   });
 }
 

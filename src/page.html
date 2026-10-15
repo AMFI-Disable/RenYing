@@ -243,11 +243,10 @@
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
-      <div style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+      <div id="accActionBtns" style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
         <button class="ghost small" id="exportAccBtn" style="font-size:12px;padding:3px 10px" title="将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件">💾 导出当前存档</button>
-        <button class="ghost small" id="exportAllBtn" style="font-size:12px;padding:3px 10px" title="将本机所有账号与数据打包备份">📦 备份所有账号</button>
         <button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px">☁️ 云存档设置</button>
-        <button class="ghost small" id="toggleImportBoxBtn" style="font-size:12px;padding:3px 10px;color:var(--gold)">📜 数据继承与导入</button>
+        <button class="ghost small" id="toggleImportBoxBtn" style="font-size:12px;padding:3px 10px;color:var(--gold)">📜 存档导入与继承</button>
       </div>
       <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
         <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云存档配置</b>（跨设备同步同一账号）</p>
@@ -256,21 +255,16 @@
         <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
       </div>
       <div id="importBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(233,196,106,.3);border-radius:8px;background:rgba(20,24,35,.75);text-align:left">
-        <p style="margin:0 0 6px;font-size:13px;color:var(--gold)"><b>老站数据继承 / 导入存档</b></p>
-        <p class="netnote" style="margin:0 0 8px;font-size:12px;line-height:1.4">旧版 renying.site 的玩家档案（英雄、墨锭、皮肤、碎片、战绩）可直接一键继承，或选择导出的 JSON 文件导入：</p>
-        <div style="display:flex;gap:6px;margin-bottom:8px">
-          <select id="legacyAccSelect" style="flex:1;min-width:0;padding:5px 8px;font-size:12px;background:rgba(0,0,0,0.5);color:var(--ink);border:1px solid var(--faint);border-radius:5px">
-            <option value="">-- 选择老站账号（20位大侠） --</option>
-          </select>
-          <button class="go small" id="claimLegacyBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">一键继承</button>
-        </div>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--gold)"><b>存档导入与继承</b></p>
+        <p class="netnote" style="margin:0 0 8px;font-size:12px;line-height:1.4">支持上传你导出的存档文件 (.json) 恢复英雄、皮肤、墨锭与战绩：</p>
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
           <label class="ghost small" style="cursor:pointer;font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
             📂 上传导出文件 (.json)
             <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
           </label>
-          <span id="importFileStatus" style="font-size:12px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持任一 renying-account 或 export.json</span>
+          <span id="importFileStatus" style="font-size:12px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持任一 renying-account 备份文件</span>
         </div>
+        <div id="importSelectArea" class="hidden" style="margin-top:8px"></div>
         <p id="importMsg" class="netstatus" style="margin:6px 0 0;font-size:12px" role="status"></p>
       </div>
       <p class="netnote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
