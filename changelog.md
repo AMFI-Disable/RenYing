@@ -31,6 +31,22 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Improved
 
+- **Hero Max HP Archetype Rebalance**:
+  - Significantly buffed Tie Shan (`tieshan`) from 103 to 140 Max HP, with increased walk speed (0.84) and attack damage (1.12), firmly establishing his role as the premier heavy-armor tank.
+  - Rebalanced the entire character roster's HP based on weight class and agility: Lei Ming (118), Qing Feng (105), Ling Shuang (100), Liu Yun (92), Yan Ling (90), Mo Yu (90), Fei Ying (88), and Yue Hua (88).
+  - Updated Codex stat progress bar scale ceiling to 150 HP for clean UI representation.
+- **Tie Shan's Avalanche (山崩) Ult Recharged & Stun**:
+  - Direct hits with Tie Shan's Avalanche slam now instantly refund 50% Ult meter, refresh both skill cooldowns (Quake and Iron Wall), and inflict a 1.3-second heavy concussion stun on the opponent.
+- **Unique Ultimate Specialties for All 9 Heroes**:
+  - **Qing Feng (残月)**: Final strike refreshes all skill and dash cooldowns and refunds +20% Ult meter (`剑气归元`).
+  - **Fei Ying (千影)**: Final strike refreshes all skill and dash cooldowns and spawns two decoy clones enveloped in smoke screens (`影遁无形`).
+  - **Tie Shan (山崩)**: Direct hit inflicts 1.3s stun, refunds 50% Ult meter, and resets all skill cooldowns (`怒意回涌`).
+  - **Ling Shuang (刹那)**: Direct spear hit refreshes all skill cooldowns and inflicts a 4.0s frost chill slow reducing enemy movement speed by 40% (`寒芒贯日 · 冰冻减速`).
+  - **Liu Yun (龙卷)**: Casting refreshes all skill cooldowns and resets jump count to 0, granting immediate aerial mobility (`扶摇万里 · 风遁重置`).
+  - **Lei Ming (雷霆万钧)**: Casting refreshes all skill cooldowns and refunds +30% Ult meter directly (`雷帝灌顶 · 拳劲重置`).
+  - **Mo Yu (墨龙)**: Casting refills ink meter to 100%, refreshes all skill cooldowns, and places a tracking ink trap beneath the opponent's feet (`笔意长存 · 墨韵回满`).
+  - **Yan Ling (万羽)**: Casting refreshes all skill cooldowns and restores full flight stamina (`凌霄破虚 · 俯冲重置`).
+  - **Yue Hua (月华如水)**: Heals 22 HP, refreshes all skill cooldowns, and grants 4 seconds of super armor with 3 hits absorption (`太阴化生 · 月魄霸体`).
 - Tie Shan's Avalanche (山崩) ultimate is now fully steerable during the airborne leap, allowing horizontal directional steering (A/D / arrows) and fast-plunge slam acceleration (S / down), with spark trails and intelligent AI airborne tracking.
 - Character-specific skeletal animation poses: 22 bespoke joint poses across all 9 fighters for skills, ultimate charges, flurry attacks, and finishers.
 - Mechanic-driven 克制 (Counter / Matchup Advantage) system without flat stat debuffs:
