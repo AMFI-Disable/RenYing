@@ -601,7 +601,14 @@
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
-      <p class="netnote" style="margin-top:18px">昵称会公开显示在排行榜上，别用真名。密码也别与别处相同。</p>
+      <div style="margin-top:12px;text-align:center"><button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px">☁️ 云存档设置 (Firebase)</button></div>
+      <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
+        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>Firebase 云存储配置</b>（跨设备单账号持久化）</p>
+        <p class="netnote" style="margin:0 0 6px">可直接粘贴 Firebase Web 配置 JSON（包含 projectId, apiKey 等）：</p>
+        <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:11px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
+        <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
+      </div>
+      <p class="netnote" style="margin-top:14px">登录或注册后，英雄解锁、墨锭余额与成就数据将持久化保存。</p>
     </div>
   </div>
 
@@ -744,6 +751,293 @@
     isUnifiedPlanSupported:${this.isUnifiedPlanSupported()}`}constructor(){this.isIOS="undefined"!=typeof navigator&&["iPad","iPhone","iPod"].includes(navigator.platform),this.supportedBrowsers=["firefox","chrome","safari"],this.minFirefoxVersion=59,this.minChromeVersion=72,this.minSafariVersion=605}},ew=e=>!e||/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/.test(e),eE=()=>Math.random().toString(36).slice(2),eD={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:["turn:eu-0.turn.peerjs.com:3478","turn:us-0.turn.peerjs.com:3478"],username:"peerjs",credential:"peerjsp"}],sdpSemantics:"unified-plan"},ex=new class extends n{noop(){}blobToArrayBuffer(e,t){let n=new FileReader;return n.onload=function(e){e.target&&t(e.target.result)},n.readAsArrayBuffer(e),n}binaryStringToArrayBuffer(e){let t=new Uint8Array(e.length);for(let n=0;n<e.length;n++)t[n]=255&e.charCodeAt(n);return t.buffer}isSecure(){return"https:"===location.protocol}constructor(...e){super(...e),this.CLOUD_HOST="0.peerjs.com",this.CLOUD_PORT=443,this.chunkedBrowsers={Chrome:1,chrome:1},this.defaultConfig=eD,this.browser=eP.getBrowser(),this.browserVersion=eP.getVersion(),this.pack=o,this.unpack=i,this.supports=function(){let e;let t={browser:eP.isBrowserSupported(),webRTC:eP.isWebRTCSupported(),audioVideo:!1,data:!1,binaryBlob:!1,reliable:!1};if(!t.webRTC)return t;try{let n;e=new RTCPeerConnection(eD),t.audioVideo=!0;try{n=e.createDataChannel("_PEERJSTEST",{ordered:!0}),t.data=!0,t.reliable=!!n.ordered;try{n.binaryType="blob",t.binaryBlob=!eP.isIOS}catch(e){}}catch(e){}finally{n&&n.close()}}catch(e){}finally{e&&e.close()}return t}(),this.validateId=ew,this.randomToken=eE}};(_=P||(P={}))[_.Disabled=0]="Disabled",_[_.Errors=1]="Errors",_[_.Warnings=2]="Warnings",_[_.All=3]="All";var eI=new class{get logLevel(){return this._logLevel}set logLevel(e){this._logLevel=e}log(...e){this._logLevel>=3&&this._print(3,...e)}warn(...e){this._logLevel>=2&&this._print(2,...e)}error(...e){this._logLevel>=1&&this._print(1,...e)}setLogFunction(e){this._print=e}_print(e,...t){let n=["PeerJS: ",...t];for(let e in n)n[e]instanceof Error&&(n[e]="("+n[e].name+") "+n[e].message);e>=3?console.log(...n):e>=2?console.warn("WARNING",...n):e>=1&&console.error("ERROR",...n)}constructor(){this._logLevel=0}},eM={},eO=Object.prototype.hasOwnProperty,ej="~";function eL(){}function eA(e,t,n){this.fn=e,this.context=t,this.once=n||!1}function eB(e,t,n,r,i){if("function"!=typeof n)throw TypeError("The listener must be a function");var o=new eA(n,r||e,i),s=ej?ej+t:t;return e._events[s]?e._events[s].fn?e._events[s]=[e._events[s],o]:e._events[s].push(o):(e._events[s]=o,e._eventsCount++),e}function eF(e,t){0==--e._eventsCount?e._events=new eL:delete e._events[t]}function eU(){this._events=new eL,this._eventsCount=0}Object.create&&(eL.prototype=Object.create(null),new eL().__proto__||(ej=!1)),eU.prototype.eventNames=function(){var e,t,n=[];if(0===this._eventsCount)return n;for(t in e=this._events)eO.call(e,t)&&n.push(ej?t.slice(1):t);return Object.getOwnPropertySymbols?n.concat(Object.getOwnPropertySymbols(e)):n},eU.prototype.listeners=function(e){var t=ej?ej+e:e,n=this._events[t];if(!n)return[];if(n.fn)return[n.fn];for(var r=0,i=n.length,o=Array(i);r<i;r++)o[r]=n[r].fn;return o},eU.prototype.listenerCount=function(e){var t=ej?ej+e:e,n=this._events[t];return n?n.fn?1:n.length:0},eU.prototype.emit=function(e,t,n,r,i,o){var s=ej?ej+e:e;if(!this._events[s])return!1;var a,c,l=this._events[s],p=arguments.length;if(l.fn){switch(l.once&&this.removeListener(e,l.fn,void 0,!0),p){case 1:return l.fn.call(l.context),!0;case 2:return l.fn.call(l.context,t),!0;case 3:return l.fn.call(l.context,t,n),!0;case 4:return l.fn.call(l.context,t,n,r),!0;case 5:return l.fn.call(l.context,t,n,r,i),!0;case 6:return l.fn.call(l.context,t,n,r,i,o),!0}for(c=1,a=Array(p-1);c<p;c++)a[c-1]=arguments[c];l.fn.apply(l.context,a)}else{var d,h=l.length;for(c=0;c<h;c++)switch(l[c].once&&this.removeListener(e,l[c].fn,void 0,!0),p){case 1:l[c].fn.call(l[c].context);break;case 2:l[c].fn.call(l[c].context,t);break;case 3:l[c].fn.call(l[c].context,t,n);break;case 4:l[c].fn.call(l[c].context,t,n,r);break;default:if(!a)for(d=1,a=Array(p-1);d<p;d++)a[d-1]=arguments[d];l[c].fn.apply(l[c].context,a)}}return!0},eU.prototype.on=function(e,t,n){return eB(this,e,t,n,!1)},eU.prototype.once=function(e,t,n){return eB(this,e,t,n,!0)},eU.prototype.removeListener=function(e,t,n,r){var i=ej?ej+e:e;if(!this._events[i])return this;if(!t)return eF(this,i),this;var o=this._events[i];if(o.fn)o.fn!==t||r&&!o.once||n&&o.context!==n||eF(this,i);else{for(var s=0,a=[],c=o.length;s<c;s++)(o[s].fn!==t||r&&!o[s].once||n&&o[s].context!==n)&&a.push(o[s]);a.length?this._events[i]=1===a.length?a[0]:a:eF(this,i)}return this},eU.prototype.removeAllListeners=function(e){var t;return e?(t=ej?ej+e:e,this._events[t]&&eF(this,t)):(this._events=new eL,this._eventsCount=0),this},eU.prototype.off=eU.prototype.removeListener,eU.prototype.addListener=eU.prototype.on,eU.prefixed=ej,eU.EventEmitter=eU,eM=eU,(C=w||(w={})).Data="data",C.Media="media",(b=E||(E={})).BrowserIncompatible="browser-incompatible",b.Disconnected="disconnected",b.InvalidID="invalid-id",b.InvalidKey="invalid-key",b.Network="network",b.PeerUnavailable="peer-unavailable",b.SslUnavailable="ssl-unavailable",b.ServerError="server-error",b.SocketError="socket-error",b.SocketClosed="socket-closed",b.UnavailableID="unavailable-id",b.WebRTC="webrtc",(v=D||(D={})).NegotiationFailed="negotiation-failed",v.ConnectionClosed="connection-closed",(k=x||(x={})).NotOpenYet="not-open-yet",k.MessageToBig="message-too-big",(T=I||(I={})).Binary="binary",T.BinaryUTF8="binary-utf8",T.JSON="json",T.None="raw",(S=M||(M={})).Message="message",S.Disconnected="disconnected",S.Error="error",S.Close="close",(R=O||(O={})).Heartbeat="HEARTBEAT",R.Candidate="CANDIDATE",R.Offer="OFFER",R.Answer="ANSWER",R.Open="OPEN",R.Error="ERROR",R.IdTaken="ID-TAKEN",R.InvalidKey="INVALID-KEY",R.Leave="LEAVE",R.Expire="EXPIRE";var ez={};ez=JSON.parse('{"name":"peerjs","version":"1.5.4","keywords":["peerjs","webrtc","p2p","rtc"],"description":"PeerJS client","homepage":"https://peerjs.com","bugs":{"url":"https://github.com/peers/peerjs/issues"},"repository":{"type":"git","url":"https://github.com/peers/peerjs"},"license":"MIT","contributors":["Michelle Bu <michelle@michellebu.com>","afrokick <devbyru@gmail.com>","ericz <really.ez@gmail.com>","Jairo <kidandcat@gmail.com>","Jonas Gloning <34194370+jonasgloning@users.noreply.github.com>","Jairo Caro-Accino Viciana <jairo@galax.be>","Carlos Caballero <carlos.caballero.gonzalez@gmail.com>","hc <hheennrryy@gmail.com>","Muhammad Asif <capripio@gmail.com>","PrashoonB <prashoonbhattacharjee@gmail.com>","Harsh Bardhan Mishra <47351025+HarshCasper@users.noreply.github.com>","akotynski <aleksanderkotbury@gmail.com>","lmb <i@lmb.io>","Jairooo <jairocaro@msn.com>","Moritz Stückler <moritz.stueckler@gmail.com>","Simon <crydotsnakegithub@gmail.com>","Denis Lukov <denismassters@gmail.com>","Philipp Hancke <fippo@andyet.net>","Hans Oksendahl <hansoksendahl@gmail.com>","Jess <jessachandler@gmail.com>","khankuan <khankuan@gmail.com>","DUODVK <kurmanov.work@gmail.com>","XiZhao <kwang1imsa@gmail.com>","Matthias Lohr <matthias@lohr.me>","=frank tree <=frnktrb@googlemail.com>","Andre Eckardt <aeckardt@outlook.com>","Chris Cowan <agentme49@gmail.com>","Alex Chuev <alex@chuev.com>","alxnull <alxnull@e.mail.de>","Yemel Jardi <angel.jardi@gmail.com>","Ben Parnell <benjaminparnell.94@gmail.com>","Benny Lichtner <bennlich@gmail.com>","fresheneesz <bitetrudpublic@gmail.com>","bob.barstead@exaptive.com <bob.barstead@exaptive.com>","chandika <chandika@gmail.com>","emersion <contact@emersion.fr>","Christopher Van <cvan@users.noreply.github.com>","eddieherm <edhermoso@gmail.com>","Eduardo Pinho <enet4mikeenet@gmail.com>","Evandro Zanatta <ezanatta@tray.net.br>","Gardner Bickford <gardner@users.noreply.github.com>","Gian Luca <gianluca.cecchi@cynny.com>","PatrickJS <github@gdi2290.com>","jonnyf <github@jonathanfoss.co.uk>","Hizkia Felix <hizkifw@gmail.com>","Hristo Oskov <hristo.oskov@gmail.com>","Isaac Madwed <i.madwed@gmail.com>","Ilya Konanykhin <ilya.konanykhin@gmail.com>","jasonbarry <jasbarry@me.com>","Jonathan Burke <jonathan.burke.1311@googlemail.com>","Josh Hamit <josh.hamit@gmail.com>","Jordan Austin <jrax86@gmail.com>","Joel Wetzell <jwetzell@yahoo.com>","xizhao <kevin.wang@cloudera.com>","Alberto Torres <kungfoobar@gmail.com>","Jonathan Mayol <mayoljonathan@gmail.com>","Jefferson Felix <me@jsfelix.dev>","Rolf Erik Lekang <me@rolflekang.com>","Kevin Mai-Husan Chia <mhchia@users.noreply.github.com>","Pepijn de Vos <pepijndevos@gmail.com>","JooYoung <qkdlql@naver.com>","Tobias Speicher <rootcommander@gmail.com>","Steve Blaurock <sblaurock@gmail.com>","Kyrylo Shegeda <shegeda@ualberta.ca>","Diwank Singh Tomer <singh@diwank.name>","Sören Balko <Soeren.Balko@gmail.com>","Arpit Solanki <solankiarpit1997@gmail.com>","Yuki Ito <yuki@gnnk.net>","Artur Zayats <zag2art@gmail.com>"],"funding":{"type":"opencollective","url":"https://opencollective.com/peer"},"collective":{"type":"opencollective","url":"https://opencollective.com/peer"},"files":["dist/*"],"sideEffects":["lib/global.ts","lib/supports.ts"],"main":"dist/bundler.cjs","module":"dist/bundler.mjs","browser-minified":"dist/peerjs.min.js","browser-unminified":"dist/peerjs.js","browser-minified-msgpack":"dist/serializer.msgpack.mjs","types":"dist/types.d.ts","engines":{"node":">= 14"},"targets":{"types":{"source":"lib/exports.ts"},"main":{"source":"lib/exports.ts","sourceMap":{"inlineSources":true}},"module":{"source":"lib/exports.ts","includeNodeModules":["eventemitter3"],"sourceMap":{"inlineSources":true}},"browser-minified":{"context":"browser","outputFormat":"global","optimize":true,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 80, safari >= 15"},"source":"lib/global.ts"},"browser-unminified":{"context":"browser","outputFormat":"global","optimize":false,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 80, safari >= 15"},"source":"lib/global.ts"},"browser-minified-msgpack":{"context":"browser","outputFormat":"esmodule","isLibrary":true,"optimize":true,"engines":{"browsers":"chrome >= 83, edge >= 83, firefox >= 102, safari >= 15"},"source":"lib/dataconnection/StreamConnection/MsgPack.ts"}},"scripts":{"contributors":"git-authors-cli --print=false && prettier --write package.json && git add package.json package-lock.json && git commit -m \\"chore(contributors): update and sort contributors list\\"","check":"tsc --noEmit && tsc -p e2e/tsconfig.json --noEmit","watch":"parcel watch","build":"rm -rf dist && parcel build","prepublishOnly":"npm run build","test":"jest","test:watch":"jest --watch","coverage":"jest --coverage --collectCoverageFrom=\\"./lib/**\\"","format":"prettier --write .","format:check":"prettier --check .","semantic-release":"semantic-release","e2e":"wdio run e2e/wdio.local.conf.ts","e2e:bstack":"wdio run e2e/wdio.bstack.conf.ts"},"devDependencies":{"@parcel/config-default":"^2.9.3","@parcel/packager-ts":"^2.9.3","@parcel/transformer-typescript-tsc":"^2.9.3","@parcel/transformer-typescript-types":"^2.9.3","@semantic-release/changelog":"^6.0.1","@semantic-release/git":"^10.0.1","@swc/core":"^1.3.27","@swc/jest":"^0.2.24","@types/jasmine":"^4.3.4","@wdio/browserstack-service":"^8.11.2","@wdio/cli":"^8.11.2","@wdio/globals":"^8.11.2","@wdio/jasmine-framework":"^8.11.2","@wdio/local-runner":"^8.11.2","@wdio/spec-reporter":"^8.11.2","@wdio/types":"^8.10.4","http-server":"^14.1.1","jest":"^29.3.1","jest-environment-jsdom":"^29.3.1","mock-socket":"^9.0.0","parcel":"^2.9.3","prettier":"^3.0.0","semantic-release":"^21.0.0","ts-node":"^10.9.1","typescript":"^5.0.0","wdio-geckodriver-service":"^5.0.1"},"dependencies":{"@msgpack/msgpack":"^2.8.0","eventemitter3":"^4.0.7","peerjs-js-binarypack":"^2.1.0","webrtc-adapter":"^9.0.0"},"alias":{"process":false,"buffer":false}}');class eN extends eM.EventEmitter{start(e,t){this._id=e;let n=`${this._baseUrl}&id=${e}&token=${t}`;!this._socket&&this._disconnected&&(this._socket=new WebSocket(n+"&version="+ez.version),this._disconnected=!1,this._socket.onmessage=e=>{let t;try{t=JSON.parse(e.data),eI.log("Server message received:",t)}catch(t){eI.log("Invalid server message",e.data);return}this.emit(M.Message,t)},this._socket.onclose=e=>{this._disconnected||(eI.log("Socket closed.",e),this._cleanup(),this._disconnected=!0,this.emit(M.Disconnected))},this._socket.onopen=()=>{this._disconnected||(this._sendQueuedMessages(),eI.log("Socket open"),this._scheduleHeartbeat())})}_scheduleHeartbeat(){this._wsPingTimer=setTimeout(()=>{this._sendHeartbeat()},this.pingInterval)}_sendHeartbeat(){if(!this._wsOpen()){eI.log("Cannot send heartbeat, because socket closed");return}let e=JSON.stringify({type:O.Heartbeat});this._socket.send(e),this._scheduleHeartbeat()}_wsOpen(){return!!this._socket&&1===this._socket.readyState}_sendQueuedMessages(){let e=[...this._messagesQueue];for(let t of(this._messagesQueue=[],e))this.send(t)}send(e){if(this._disconnected)return;if(!this._id){this._messagesQueue.push(e);return}if(!e.type){this.emit(M.Error,"Invalid message");return}if(!this._wsOpen())return;let t=JSON.stringify(e);this._socket.send(t)}close(){this._disconnected||(this._cleanup(),this._disconnected=!0)}_cleanup(){this._socket&&(this._socket.onopen=this._socket.onmessage=this._socket.onclose=null,this._socket.close(),this._socket=void 0),clearTimeout(this._wsPingTimer)}constructor(e,t,n,r,i,o=5e3){super(),this.pingInterval=o,this._disconnected=!0,this._messagesQueue=[],this._baseUrl=(e?"wss://":"ws://")+t+":"+n+r+"peerjs?key="+i}}class e${startConnection(e){let t=this._startPeerConnection();if(this.connection.peerConnection=t,this.connection.type===w.Media&&e._stream&&this._addTracksToConnection(e._stream,t),e.originator){let n=this.connection,r={ordered:!!e.reliable},i=t.createDataChannel(n.label,r);n._initializeDataChannel(i),this._makeOffer()}else this.handleSDP("OFFER",e.sdp)}_startPeerConnection(){eI.log("Creating RTCPeerConnection.");let e=new RTCPeerConnection(this.connection.provider.options.config);return this._setupListeners(e),e}_setupListeners(e){let t=this.connection.peer,n=this.connection.connectionId,r=this.connection.type,i=this.connection.provider;eI.log("Listening for ICE candidates."),e.onicecandidate=e=>{e.candidate&&e.candidate.candidate&&(eI.log(`Received ICE candidates for ${t}:`,e.candidate),i.socket.send({type:O.Candidate,payload:{candidate:e.candidate,type:r,connectionId:n},dst:t}))},e.oniceconnectionstatechange=()=>{switch(e.iceConnectionState){case"failed":eI.log("iceConnectionState is failed, closing connections to "+t),this.connection.emitError(D.NegotiationFailed,"Negotiation of connection to "+t+" failed."),this.connection.close();break;case"closed":eI.log("iceConnectionState is closed, closing connections to "+t),this.connection.emitError(D.ConnectionClosed,"Connection to "+t+" closed."),this.connection.close();break;case"disconnected":eI.log("iceConnectionState changed to disconnected on the connection with "+t);break;case"completed":e.onicecandidate=()=>{}}this.connection.emit("iceStateChanged",e.iceConnectionState)},eI.log("Listening for data channel"),e.ondatachannel=e=>{eI.log("Received data channel");let r=e.channel;i.getConnection(t,n)._initializeDataChannel(r)},eI.log("Listening for remote stream"),e.ontrack=e=>{eI.log("Received remote stream");let r=e.streams[0],o=i.getConnection(t,n);o.type===w.Media&&this._addStreamToMediaConnection(r,o)}}cleanup(){eI.log("Cleaning up PeerConnection to "+this.connection.peer);let e=this.connection.peerConnection;if(!e)return;this.connection.peerConnection=null,e.onicecandidate=e.oniceconnectionstatechange=e.ondatachannel=e.ontrack=()=>{};let t="closed"!==e.signalingState,n=!1,r=this.connection.dataChannel;r&&(n=!!r.readyState&&"closed"!==r.readyState),(t||n)&&e.close()}async _makeOffer(){let e=this.connection.peerConnection,t=this.connection.provider;try{let n=await e.createOffer(this.connection.options.constraints);eI.log("Created offer."),this.connection.options.sdpTransform&&"function"==typeof this.connection.options.sdpTransform&&(n.sdp=this.connection.options.sdpTransform(n.sdp)||n.sdp);try{await e.setLocalDescription(n),eI.log("Set localDescription:",n,`for:${this.connection.peer}`);let r={sdp:n,type:this.connection.type,connectionId:this.connection.connectionId,metadata:this.connection.metadata};if(this.connection.type===w.Data){let e=this.connection;r={...r,label:e.label,reliable:e.reliable,serialization:e.serialization}}t.socket.send({type:O.Offer,payload:r,dst:this.connection.peer})}catch(e){"OperationError: Failed to set local offer sdp: Called in wrong state: kHaveRemoteOffer"!=e&&(t.emitError(E.WebRTC,e),eI.log("Failed to setLocalDescription, ",e))}}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to createOffer, ",e)}}async _makeAnswer(){let e=this.connection.peerConnection,t=this.connection.provider;try{let n=await e.createAnswer();eI.log("Created answer."),this.connection.options.sdpTransform&&"function"==typeof this.connection.options.sdpTransform&&(n.sdp=this.connection.options.sdpTransform(n.sdp)||n.sdp);try{await e.setLocalDescription(n),eI.log("Set localDescription:",n,`for:${this.connection.peer}`),t.socket.send({type:O.Answer,payload:{sdp:n,type:this.connection.type,connectionId:this.connection.connectionId},dst:this.connection.peer})}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to setLocalDescription, ",e)}}catch(e){t.emitError(E.WebRTC,e),eI.log("Failed to create answer, ",e)}}async handleSDP(e,t){t=new RTCSessionDescription(t);let n=this.connection.peerConnection,r=this.connection.provider;eI.log("Setting remote description",t);try{await n.setRemoteDescription(t),eI.log(`Set remoteDescription:${e} for:${this.connection.peer}`),"OFFER"===e&&await this._makeAnswer()}catch(e){r.emitError(E.WebRTC,e),eI.log("Failed to setRemoteDescription, ",e)}}async handleCandidate(e){eI.log("handleCandidate:",e);try{await this.connection.peerConnection.addIceCandidate(e),eI.log(`Added ICE candidate for:${this.connection.peer}`)}catch(e){this.connection.provider.emitError(E.WebRTC,e),eI.log("Failed to handleCandidate, ",e)}}_addTracksToConnection(e,t){if(eI.log(`add tracks from stream ${e.id} to peer connection`),!t.addTrack)return eI.error("Your browser does't support RTCPeerConnection#addTrack. Ignored.");e.getTracks().forEach(n=>{t.addTrack(n,e)})}_addStreamToMediaConnection(e,t){eI.log(`add stream ${e.id} to media connection ${t.connectionId}`),t.addStream(e)}constructor(e){this.connection=e}}class eJ extends eM.EventEmitter{emitError(e,t){eI.error("Error:",t),this.emit("error",new eV(`${e}`,t))}}class eV extends Error{constructor(e,t){"string"==typeof t?super(t):(super(),Object.assign(this,t)),this.type=e}}class eG extends eJ{get open(){return this._open}constructor(e,t,n){super(),this.peer=e,this.provider=t,this.options=n,this._open=!1,this.metadata=n.metadata}}class eW extends eG{get type(){return w.Media}get localStream(){return this._localStream}get remoteStream(){return this._remoteStream}_initializeDataChannel(e){this.dataChannel=e,this.dataChannel.onopen=()=>{eI.log(`DC#${this.connectionId} dc connection success`),this.emit("willCloseOnRemote")},this.dataChannel.onclose=()=>{eI.log(`DC#${this.connectionId} dc closed for:`,this.peer),this.close()}}addStream(e){eI.log("Receiving stream",e),this._remoteStream=e,super.emit("stream",e)}handleMessage(e){let t=e.type,n=e.payload;switch(e.type){case O.Answer:this._negotiator.handleSDP(t,n.sdp),this._open=!0;break;case O.Candidate:this._negotiator.handleCandidate(n.candidate);break;default:eI.warn(`Unrecognized message type:${t} from peer:${this.peer}`)}}answer(e,t={}){if(this._localStream){eI.warn("Local stream already exists on this MediaConnection. Are you answering a call twice?");return}for(let n of(this._localStream=e,t&&t.sdpTransform&&(this.options.sdpTransform=t.sdpTransform),this._negotiator.startConnection({...this.options._payload,_stream:e}),this.provider._getMessages(this.connectionId)))this.handleMessage(n);this._open=!0}close(){this._negotiator&&(this._negotiator.cleanup(),this._negotiator=null),this._localStream=null,this._remoteStream=null,this.provider&&(this.provider._removeConnection(this),this.provider=null),this.options&&this.options._stream&&(this.options._stream=null),this.open&&(this._open=!1,super.emit("close"))}constructor(e,t,n){super(e,t,n),this._localStream=this.options._stream,this.connectionId=this.options.connectionId||eW.ID_PREFIX+ex.randomToken(),this._negotiator=new e$(this),this._localStream&&this._negotiator.startConnection({_stream:this._localStream,originator:!0})}}eW.ID_PREFIX="mc_";class eH{_buildRequest(e){let t=this._options.secure?"https":"http",{host:n,port:r,path:i,key:o}=this._options,s=new URL(`${t}://${n}:${r}${i}${o}/${e}`);return s.searchParams.set("ts",`${Date.now()}${Math.random()}`),s.searchParams.set("version",ez.version),fetch(s.href,{referrerPolicy:this._options.referrerPolicy})}async retrieveId(){try{let e=await this._buildRequest("id");if(200!==e.status)throw Error(`Error. Status:${e.status}`);return e.text()}catch(t){eI.error("Error retrieving ID",t);let e="";throw"/"===this._options.path&&this._options.host!==ex.CLOUD_HOST&&(e=" If you passed in a `path` to your self-hosted PeerServer, you'll also need to pass in that same path when creating a new Peer."),Error("Could not get an ID from the server."+e)}}async listAllPeers(){try{let e=await this._buildRequest("peers");if(200!==e.status){if(401===e.status){let e="";throw e=this._options.host===ex.CLOUD_HOST?"It looks like you're using the cloud server. You can email team@peerjs.com to enable peer listing for your API key.":"You need to enable `allow_discovery` on your self-hosted PeerServer to use this feature.",Error("It doesn't look like you have permission to list peers IDs. "+e)}throw Error(`Error. Status:${e.status}`)}return e.json()}catch(e){throw eI.error("Error retrieving list peers",e),Error("Could not get list peers from the server."+e)}}constructor(e){this._options=e}}class eY extends eG{get type(){return w.Data}_initializeDataChannel(e){this.dataChannel=e,this.dataChannel.onopen=()=>{eI.log(`DC#${this.connectionId} dc connection success`),this._open=!0,this.emit("open")},this.dataChannel.onmessage=e=>{eI.log(`DC#${this.connectionId} dc onmessage:`,e.data)},this.dataChannel.onclose=()=>{eI.log(`DC#${this.connectionId} dc closed for:`,this.peer),this.close()}}close(e){if(e?.flush){this.send({__peerData:{type:"close"}});return}this._negotiator&&(this._negotiator.cleanup(),this._negotiator=null),this.provider&&(this.provider._removeConnection(this),this.provider=null),this.dataChannel&&(this.dataChannel.onopen=null,this.dataChannel.onmessage=null,this.dataChannel.onclose=null,this.dataChannel=null),this.open&&(this._open=!1,super.emit("close"))}send(e,t=!1){if(!this.open){this.emitError(x.NotOpenYet,"Connection is not open. You should listen for the `open` event before sending messages.");return}return this._send(e,t)}async handleMessage(e){let t=e.payload;switch(e.type){case O.Answer:await this._negotiator.handleSDP(e.type,t.sdp);break;case O.Candidate:await this._negotiator.handleCandidate(t.candidate);break;default:eI.warn("Unrecognized message type:",e.type,"from peer:",this.peer)}}constructor(e,t,n){super(e,t,n),this.connectionId=this.options.connectionId||eY.ID_PREFIX+eE(),this.label=this.options.label||this.connectionId,this.reliable=!!this.options.reliable,this._negotiator=new e$(this),this._negotiator.startConnection(this.options._payload||{originator:!0,reliable:this.reliable})}}eY.ID_PREFIX="dc_",eY.MAX_BUFFERED_AMOUNT=8388608;class eK extends eY{get bufferSize(){return this._bufferSize}_initializeDataChannel(e){super._initializeDataChannel(e),this.dataChannel.binaryType="arraybuffer",this.dataChannel.addEventListener("message",e=>this._handleDataMessage(e))}_bufferedSend(e){(this._buffering||!this._trySend(e))&&(this._buffer.push(e),this._bufferSize=this._buffer.length)}_trySend(e){if(!this.open)return!1;if(this.dataChannel.bufferedAmount>eY.MAX_BUFFERED_AMOUNT)return this._buffering=!0,setTimeout(()=>{this._buffering=!1,this._tryBuffer()},50),!1;try{this.dataChannel.send(e)}catch(e){return eI.error(`DC#:${this.connectionId} Error when sending:`,e),this._buffering=!0,this.close(),!1}return!0}_tryBuffer(){if(!this.open||0===this._buffer.length)return;let e=this._buffer[0];this._trySend(e)&&(this._buffer.shift(),this._bufferSize=this._buffer.length,this._tryBuffer())}close(e){if(e?.flush){this.send({__peerData:{type:"close"}});return}this._buffer=[],this._bufferSize=0,super.close()}constructor(...e){super(...e),this._buffer=[],this._bufferSize=0,this._buffering=!1}}class eX extends eK{close(e){super.close(e),this._chunkedData={}}_handleDataMessage({data:e}){let t=i(e),n=t.__peerData;if(n){if("close"===n.type){this.close();return}this._handleChunk(t);return}this.emit("data",t)}_handleChunk(e){let t=e.__peerData,n=this._chunkedData[t]||{data:[],count:0,total:e.total};if(n.data[e.n]=new Uint8Array(e.data),n.count++,this._chunkedData[t]=n,n.total===n.count){delete this._chunkedData[t];let e=function(e){let t=0;for(let n of e)t+=n.byteLength;let n=new Uint8Array(t),r=0;for(let t of e)n.set(t,r),r+=t.byteLength;return n}(n.data);this._handleDataMessage({data:e})}}_send(e,t){let n=o(e);if(n instanceof Promise)return this._send_blob(n);if(!t&&n.byteLength>this.chunker.chunkedMTU){this._sendChunks(n);return}this._bufferedSend(n)}async _send_blob(e){let t=await e;if(t.byteLength>this.chunker.chunkedMTU){this._sendChunks(t);return}this._bufferedSend(t)}_sendChunks(e){let t=this.chunker.chunk(e);for(let e of(eI.log(`DC#${this.connectionId} Try to send ${t.length} chunks...`),t))this.send(e,!0)}constructor(e,t,r){super(e,t,r),this.chunker=new n,this.serialization=I.Binary,this._chunkedData={}}}class eq extends eK{_handleDataMessage({data:e}){super.emit("data",e)}_send(e,t){this._bufferedSend(e)}constructor(...e){super(...e),this.serialization=I.None}}class eQ extends eK{_handleDataMessage({data:e}){let t=this.parse(this.decoder.decode(e)),n=t.__peerData;if(n&&"close"===n.type){this.close();return}this.emit("data",t)}_send(e,t){let n=this.encoder.encode(this.stringify(e));if(n.byteLength>=ex.chunkedMTU){this.emitError(x.MessageToBig,"Message too big for JSON channel");return}this._bufferedSend(n)}constructor(...e){super(...e),this.serialization=I.JSON,this.encoder=new TextEncoder,this.decoder=new TextDecoder,this.stringify=JSON.stringify,this.parse=JSON.parse}}class eZ extends eJ{get id(){return this._id}get options(){return this._options}get open(){return this._open}get socket(){return this._socket}get connections(){let e=Object.create(null);for(let[t,n]of this._connections)e[t]=n;return e}get destroyed(){return this._destroyed}get disconnected(){return this._disconnected}_createServerConnection(){let e=new eN(this._options.secure,this._options.host,this._options.port,this._options.path,this._options.key,this._options.pingInterval);return e.on(M.Message,e=>{this._handleMessage(e)}),e.on(M.Error,e=>{this._abort(E.SocketError,e)}),e.on(M.Disconnected,()=>{this.disconnected||(this.emitError(E.Network,"Lost connection to server."),this.disconnect())}),e.on(M.Close,()=>{this.disconnected||this._abort(E.SocketClosed,"Underlying socket is already closed.")}),e}_initialize(e){this._id=e,this.socket.start(e,this._options.token)}_handleMessage(e){let t=e.type,n=e.payload,r=e.src;switch(t){case O.Open:this._lastServerId=this.id,this._open=!0,this.emit("open",this.id);break;case O.Error:this._abort(E.ServerError,n.msg);break;case O.IdTaken:this._abort(E.UnavailableID,`ID "${this.id}" is taken`);break;case O.InvalidKey:this._abort(E.InvalidKey,`API KEY "${this._options.key}" is invalid`);break;case O.Leave:eI.log(`Received leave message from ${r}`),this._cleanupPeer(r),this._connections.delete(r);break;case O.Expire:this.emitError(E.PeerUnavailable,`Could not connect to peer ${r}`);break;case O.Offer:{let e=n.connectionId,t=this.getConnection(r,e);if(t&&(t.close(),eI.warn(`Offer received for existing Connection ID:${e}`)),n.type===w.Media){let i=new eW(r,this,{connectionId:e,_payload:n,metadata:n.metadata});t=i,this._addConnection(r,t),this.emit("call",i)}else if(n.type===w.Data){let i=new this._serializers[n.serialization](r,this,{connectionId:e,_payload:n,metadata:n.metadata,label:n.label,serialization:n.serialization,reliable:n.reliable});t=i,this._addConnection(r,t),this.emit("connection",i)}else{eI.warn(`Received malformed connection type:${n.type}`);return}for(let n of this._getMessages(e))t.handleMessage(n);break}default:{if(!n){eI.warn(`You received a malformed message from ${r} of type ${t}`);return}let i=n.connectionId,o=this.getConnection(r,i);o&&o.peerConnection?o.handleMessage(e):i?this._storeMessage(i,e):eI.warn("You received an unrecognized message:",e)}}}_storeMessage(e,t){this._lostMessages.has(e)||this._lostMessages.set(e,[]),this._lostMessages.get(e).push(t)}_getMessages(e){let t=this._lostMessages.get(e);return t?(this._lostMessages.delete(e),t):[]}connect(e,t={}){if(t={serialization:"default",...t},this.disconnected){eI.warn("You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect, or call reconnect on this peer if you believe its ID to still be available."),this.emitError(E.Disconnected,"Cannot connect to new Peer after disconnecting from server.");return}let n=new this._serializers[t.serialization](e,this,t);return this._addConnection(e,n),n}call(e,t,n={}){if(this.disconnected){eI.warn("You cannot connect to a new Peer because you called .disconnect() on this Peer and ended your connection with the server. You can create a new Peer to reconnect."),this.emitError(E.Disconnected,"Cannot connect to new Peer after disconnecting from server.");return}if(!t){eI.error("To call a peer, you must provide a stream from your browser's `getUserMedia`.");return}let r=new eW(e,this,{...n,_stream:t});return this._addConnection(e,r),r}_addConnection(e,t){eI.log(`add connection ${t.type}:${t.connectionId} to peerId:${e}`),this._connections.has(e)||this._connections.set(e,[]),this._connections.get(e).push(t)}_removeConnection(e){let t=this._connections.get(e.peer);if(t){let n=t.indexOf(e);-1!==n&&t.splice(n,1)}this._lostMessages.delete(e.connectionId)}getConnection(e,t){let n=this._connections.get(e);if(!n)return null;for(let e of n)if(e.connectionId===t)return e;return null}_delayedAbort(e,t){setTimeout(()=>{this._abort(e,t)},0)}_abort(e,t){eI.error("Aborting!"),this.emitError(e,t),this._lastServerId?this.disconnect():this.destroy()}destroy(){this.destroyed||(eI.log(`Destroy peer with ID:${this.id}`),this.disconnect(),this._cleanup(),this._destroyed=!0,this.emit("close"))}_cleanup(){for(let e of this._connections.keys())this._cleanupPeer(e),this._connections.delete(e);this.socket.removeAllListeners()}_cleanupPeer(e){let t=this._connections.get(e);if(t)for(let e of t)e.close()}disconnect(){if(this.disconnected)return;let e=this.id;eI.log(`Disconnect peer with ID:${e}`),this._disconnected=!0,this._open=!1,this.socket.close(),this._lastServerId=e,this._id=null,this.emit("disconnected",e)}reconnect(){if(this.disconnected&&!this.destroyed)eI.log(`Attempting reconnection to server with ID ${this._lastServerId}`),this._disconnected=!1,this._initialize(this._lastServerId);else if(this.destroyed)throw Error("This peer cannot reconnect to the server. It has already been destroyed.");else if(this.disconnected||this.open)throw Error(`Peer ${this.id} cannot reconnect because it is not disconnected from the server!`);else eI.error("In a hurry? We're still trying to make the initial connection!")}listAllPeers(e=e=>{}){this._api.listAllPeers().then(t=>e(t)).catch(e=>this._abort(E.ServerError,e))}constructor(e,t){let n;if(super(),this._serializers={raw:eq,json:eQ,binary:eX,"binary-utf8":eX,default:eX},this._id=null,this._lastServerId=null,this._destroyed=!1,this._disconnected=!1,this._open=!1,this._connections=new Map,this._lostMessages=new Map,e&&e.constructor==Object?t=e:e&&(n=e.toString()),t={debug:0,host:ex.CLOUD_HOST,port:ex.CLOUD_PORT,path:"/",key:eZ.DEFAULT_KEY,token:ex.randomToken(),config:ex.defaultConfig,referrerPolicy:"strict-origin-when-cross-origin",serializers:{},...t},this._options=t,this._serializers={...this._serializers,...this.options.serializers},"/"===this._options.host&&(this._options.host=window.location.hostname),this._options.path&&("/"!==this._options.path[0]&&(this._options.path="/"+this._options.path),"/"!==this._options.path[this._options.path.length-1]&&(this._options.path+="/")),void 0===this._options.secure&&this._options.host!==ex.CLOUD_HOST?this._options.secure=ex.isSecure():this._options.host==ex.CLOUD_HOST&&(this._options.secure=!0),this._options.logFunction&&eI.setLogFunction(this._options.logFunction),eI.logLevel=this._options.debug||0,this._api=new eH(t),this._socket=this._createServerConnection(),!ex.supports.audioVideo&&!ex.supports.data){this._delayedAbort(E.BrowserIncompatible,"The current browser does not support WebRTC");return}if(n&&!ex.validateId(n)){this._delayedAbort(E.InvalidID,`ID "${n}" is invalid`);return}n?this._initialize(n):this._api.retrieveId().then(e=>this._initialize(e)).catch(e=>this._abort(E.ServerError,e))}}eZ.DEFAULT_KEY="peerjs",window.peerjs={Peer:eZ,util:ex},window.Peer=eZ})();
 //# sourceMappingURL=peerjs.min.js.map
 
+</script>
+<script>
+// 刃影 云端单账号存储与同步模块 (Google Firebase Auth + Cloud Firestore)
+// 提供云端账号注册、登录、自动同步以及断网本地降级机制
+
+(function() {
+  'use strict';
+
+  // 默认配置（可通过 window.FIREBASE_CONFIG 覆盖，或在游戏内通过 localStorage 配置）
+  const DEFAULT_CONFIG = {
+    apiKey: '',
+    authDomain: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: ''
+  };
+
+  let fbApp = null;
+  let fbAuth = null;
+  let fbDb = null;
+  let currentUser = null;
+  let authListeners = [];
+  let saveTimer = null;
+
+  function getConfig() {
+    if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId) {
+      return window.FIREBASE_CONFIG;
+    }
+    try {
+      const saved = localStorage.getItem('renying-firebase-config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.projectId) return parsed;
+      }
+    } catch (e) {}
+    return DEFAULT_CONFIG;
+  }
+
+  function setConfig(cfg) {
+    try {
+      if (cfg && cfg.projectId) {
+        localStorage.setItem('renying-firebase-config', JSON.stringify(cfg));
+      } else {
+        localStorage.removeItem('renying-firebase-config');
+      }
+    } catch (e) {}
+    fbApp = fbAuth = fbDb = null;
+    init();
+  }
+
+  function hasValidConfig() {
+    const cfg = getConfig();
+    return !!(cfg && cfg.projectId && cfg.apiKey);
+  }
+
+  function toEmail(nameOrEmail) {
+    const s = String(nameOrEmail).trim();
+    if (s.includes('@')) return s;
+    // 中文或特殊字符通过 base64 / safe encode 转换成标准邮箱格式
+    let encoded = '';
+    try {
+      encoded = btoa(encodeURIComponent(s)).replace(/=/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    } catch (e) {
+      encoded = 'u_' + Date.now();
+    }
+    return `ry_${encoded}@renying.game`;
+  }
+
+  function init() {
+    const cfg = getConfig();
+    if (window.firebase && cfg.projectId && cfg.apiKey) {
+      try {
+        if (!firebase.apps || !firebase.apps.length) {
+          fbApp = firebase.initializeApp(cfg);
+        } else {
+          fbApp = firebase.app();
+        }
+        fbAuth = firebase.auth();
+        fbDb = firebase.firestore();
+
+        fbAuth.onAuthStateChanged(user => {
+          currentUser = user;
+          authListeners.forEach(fn => {
+            try { fn(user); } catch (err) { console.warn('Auth listener error:', err); }
+          });
+        });
+      } catch (err) {
+        console.warn('Firebase init error, fallback to local storage:', err);
+        fbApp = fbAuth = fbDb = null;
+      }
+    }
+  }
+
+  // 账号注册
+  async function register(username, password) {
+    const name = String(username).trim();
+    if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
+    if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
+
+    if (hasValidConfig() && fbAuth && fbDb) {
+      const email = toEmail(name);
+      const cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+      currentUser = cred.user;
+      if (currentUser.updateProfile) {
+        try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
+      }
+      return {
+        uid: currentUser.uid,
+        name: name,
+        email: email,
+        isCloud: true
+      };
+    }
+
+    // 本地降级模拟
+    const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
+    if (mockUsers[name]) throw new Error('该昵称已在本机注册');
+    const uid = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    mockUsers[name] = { uid, name, pw: btoa(password), created: Date.now() };
+    localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+    localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
+    currentUser = { uid, displayName: name };
+    return { uid, name, isCloud: false };
+  }
+
+  // 账号登录
+  async function login(username, password) {
+    const name = String(username).trim();
+    if (!name) throw new Error('请输入昵称或邮箱');
+    if (!password) throw new Error('请输入密码');
+
+    if (hasValidConfig() && fbAuth) {
+      const email = toEmail(name);
+      const cred = await fbAuth.signInWithEmailAndPassword(email, password);
+      currentUser = cred.user;
+      return {
+        uid: currentUser.uid,
+        name: currentUser.displayName || name,
+        email: email,
+        isCloud: true
+      };
+    }
+
+    // 本地降级模拟
+    const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
+    const u = mockUsers[name];
+    if (!u || u.pw !== btoa(password)) throw new Error('昵称或密码不对');
+    localStorage.setItem('renying-local-current', JSON.stringify({ uid: u.uid, name: u.name }));
+    currentUser = { uid: u.uid, displayName: u.name };
+    return { uid: u.uid, name: u.name, isCloud: false };
+  }
+
+  // 退出登录
+  async function logout() {
+    if (fbAuth && currentUser) {
+      try { await fbAuth.signOut(); } catch (e) {}
+    }
+    currentUser = null;
+    try { localStorage.removeItem('renying-local-current'); } catch (e) {}
+  }
+
+  // 获取当前用户
+  function getUser() {
+    if (currentUser) {
+      return {
+        uid: currentUser.uid,
+        name: currentUser.displayName || currentUser.email || '大侠',
+        isCloud: hasValidConfig() && !!fbDb
+      };
+    }
+    try {
+      const local = JSON.parse(localStorage.getItem('renying-local-current') || 'null');
+      if (local && local.uid) {
+        currentUser = { uid: local.uid, displayName: local.name };
+        return { ...local, isCloud: false };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // 加载云端档案
+  async function loadProfile() {
+    const u = getUser();
+    if (!u) return null;
+
+    if (hasValidConfig() && fbDb && currentUser && !currentUser.uid.startsWith('local_')) {
+      try {
+        const snap = await fbDb.collection('users').doc(currentUser.uid).get();
+        if (snap.exists) {
+          const data = snap.data();
+          // 本地缓存备份
+          try { localStorage.setItem('renying-cloud-cache', JSON.stringify(data)); } catch (e) {}
+          return data;
+        }
+      } catch (err) {
+        console.warn('Load cloud profile error, reading local cache:', err);
+      }
+    }
+
+    // 读取本地镜像缓存
+    try {
+      const cached = localStorage.getItem('renying-cloud-cache');
+      if (cached) return JSON.parse(cached);
+      const localProf = localStorage.getItem('renying-prof-' + u.uid);
+      if (localProf) return JSON.parse(localProf);
+    } catch (e) {}
+    return null;
+  }
+
+  // 保存云端档案（支持防抖节流）
+  function saveProfile(prof, immediate) {
+    const u = getUser();
+    if (!u) return;
+
+    const dataToSave = {
+      name: u.name || prof.name || '大侠',
+      ink: Math.max(0, Math.floor(prof.ink || 0)),
+      owned: Array.isArray(prof.owned) ? Array.from(new Set(prof.owned)) : ['qingfeng'],
+      frags: prof.frags || {},
+      pity: Math.max(0, Math.floor(prof.pity || 0)),
+      spity: Math.max(0, Math.floor(prof.spity || 0)),
+      skins: Array.isArray(prof.skins) ? prof.skins : [],
+      equip: prof.equip || {},
+      netWins: Math.max(0, Math.floor(prof.netWins || 0)),
+      netLosses: Math.max(0, Math.floor(prof.netLosses || 0)),
+      online10Unlocked: !!prof.online10Unlocked,
+      stageStars: prof.stageStars || {},
+      qfx: Math.max(0, Math.floor(prof.qfx || 0)),
+      updatedAt: Date.now()
+    };
+
+    // 立即写入本地镜像
+    try {
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
+      localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(dataToSave));
+    } catch (e) {}
+
+    if (!hasValidConfig() || !fbDb || !currentUser || currentUser.uid.startsWith('local_')) {
+      return;
+    }
+
+    const doSync = async () => {
+      try {
+        await fbDb.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true });
+      } catch (err) {
+        console.warn('Sync profile to Firestore failed:', err);
+      }
+    };
+
+    if (immediate) {
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+      doSync();
+    } else {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(doSync, 1500);
+    }
+  }
+
+  function onAuthChange(fn) {
+    if (typeof fn === 'function') authListeners.push(fn);
+  }
+
+  // 初始化
+  if (typeof window !== 'undefined') {
+    window.CloudSave = {
+      init,
+      getConfig,
+      setConfig,
+      hasValidConfig,
+      register,
+      login,
+      logout,
+      getUser,
+      loadProfile,
+      saveProfile,
+      onAuthChange
+    };
+
+    // 页面加载完成后尝试初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  }
+})();
 </script>
 <script>
 'use strict';
@@ -2100,7 +2394,14 @@ function stageClear() {
 // 一关打完：记录星数，显示结算
 function stageShowEnd(win, stars, info) {
   const S = STAGE;
-  if (win && (STAGE_STARS[S.id] || 0) < stars) { STAGE_STARS[S.id] = stars; try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {} }
+  if (win && (STAGE_STARS[S.id] || 0) < stars) {
+    const starDiff = stars - (STAGE_STARS[S.id] || 0);
+    STAGE_STARS[S.id] = stars;
+    PROF.ink = (PROF.ink || 0) + starDiff * 30;
+    PROF.stageStars = STAGE_STARS;
+    if (window.CloudSave) CloudSave.saveProfile(PROF);
+    try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {}
+  }
   playSting(win ? 'victory' : 'defeat');
   const nx = nextStage(S);
   $id('feWave').textContent = `${S.id} ${win ? '破关' : '折戟'}`;
@@ -5497,6 +5798,44 @@ $id('comEmo').addEventListener('click', e => { const b = e.target.closest('butto
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
 const CHAR_RARITY = { qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
+const DEFAULT_RATES = {
+  full: { legend: 0.015, rare: 0.035, common: 0.07 },
+  frag: { legend: 0.1584, rare: 0.2816, common: 0.44 },
+  pool: { common: ['tieshan', 'leiming'], rare: ['feiying', 'liuyun', 'lingshuang'], legend: ['moyu', 'yuehua', 'yanling'] },
+  craft: { common: 20, rare: 30, legend: 40 },
+  cost: 60,
+  ten: 540,
+  pity: 20,
+  dup: 90,
+  fragInk: 6,
+  skin: {
+    rate: { legend: 0.03, rare: 0.12 },
+    cost: 30,
+    ten: 270,
+    pity: 15,
+    dup: 20
+  }
+};
+function getWeeklyRotation() {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  const weekKey = `${d.getUTCFullYear()}-W${weekNo}`;
+  const nonStarters = CHARS.map(c => c.id).filter(id => id !== 'qingfeng');
+  let seed = 0;
+  for (let i = 0; i < weekKey.length; i++) seed = (seed * 31 + weekKey.charCodeAt(i)) >>> 0;
+  const list = [...nonStarters];
+  const result = [];
+  for (let i = 0; i < 3 && list.length; i++) {
+    seed = (seed * 9301 + 49297) % 233280;
+    const idx = Math.floor((seed / 233280) * list.length);
+    result.push(list.splice(idx, 1)[0]);
+  }
+  return result;
+}
 const SKINS = {
   qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#e6efff', shade: '#8ea4cc', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'circlet', gem: '#bfefff', back: 'snowflake', wfx: 'frost', trail: 'snow' } },
   qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff3d2', shade: '#c9a45a', scarf: '#ffb62e', slash: '255,196,90', blade: '#fff3cf' }, deco: { head: 'crown', back: 'sundisk', cape: '#d99a2b', wfx: 'flame', trail: 'ember', aura: 'ember' } },
@@ -5744,13 +6083,33 @@ function paintSceneCard(CW, CH, T, t, u) {
     drawShape(T.wx, (1.6 + hash(i + 7) * 2.6) * u, T.wxC, 0.4 + hash(i + 9) * 0.5); ctx.restore();
   }
 }
-const PROF = { loaded: false, guest: true, ink: 0, owned: ['qingfeng'], frags: {}, pity: 0, welfare: 1, tutorial: 0, rank: null, rotation: [], rates: null, daily: [], weekly: [], skins: [], equip: {}, spity: 0 };
+const PROF = {
+  loaded: false,
+  guest: true,
+  ink: 500,
+  owned: ['qingfeng'],
+  frags: {},
+  pity: 0,
+  welfare: 1,
+  tutorial: 0,
+  rank: null,
+  rotation: getWeeklyRotation(),
+  rates: DEFAULT_RATES,
+  daily: [],
+  weekly: [],
+  skins: [],
+  equip: {},
+  spity: 0,
+  netWins: 0,
+  netLosses: 0,
+  online10Unlocked: false
+};
 const MSTAT = { maxcombo: 0, ults: 0 };
 function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), 2600); }
-// 能用的角色：已拥有 + 本周限免。没连服务器（离线打开）时全部能用
+// 能用的角色：已拥有 + 本周限免。单机离线版全部能用；在线网页版严格按解锁状态与限免判断
 function availList() {
-  if (!SERVED) return CHARS.map((c, i) => i);
-  const ok = new Set([...PROF.owned, ...(PROF.rotation || [])]);
+  if (OFFLINE_BUILD) return CHARS.map((c, i) => i);
+  const ok = new Set([...(PROF.owned || ['qingfeng']), ...(PROF.rotation || [])]);
   return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 }
 function skinLook(ci, skin) {
@@ -5837,16 +6196,135 @@ function gCard(r, big) {
   else tag = r.ink ? `碎片 ×${r.n} → +${r.ink} 墨锭` : `碎片 ×${r.n}（${r.have}/${r.need}）`;
   return `<div class="gcard${r.type === 'frag' ? ' frag' : ''}${big ? ' big' : ''}" style="--rc:${rc};animation-delay:VAR"><img src="${img}" alt=""><div class="gn" style="color:rgb(${c.look.slash})">${name}</div><div class="gt">${tag}</div></div>`;
 }
+function clientDrawOne(sk) {
+  const R = PROF.rates || DEFAULT_RATES;
+  if (sk) {
+    const rs = R.skin;
+    const mine = Object.keys(SKINS).filter(k => (PROF.owned || []).includes(SKINS[k].char));
+    const unowned = mine.filter(k => !(PROF.skins || []).includes(k));
+    let pick = null;
+    if ((PROF.spity || 0) >= rs.pity && unowned.length) {
+      const leg = unowned.filter(k => SKINS[k].rarity === 'legend');
+      pick = leg.length && Math.random() < 0.2 ? leg[Math.floor(Math.random() * leg.length)] : unowned[Math.floor(Math.random() * unowned.length)];
+    } else {
+      const r = Math.random();
+      const rar = r < rs.rate.legend ? 'legend' : r < rs.rate.legend + rs.rate.rare ? 'rare' : null;
+      const pool = rar ? mine.filter(k => SKINS[k].rarity === rar) : [];
+      if (pool.length) pick = pool[Math.floor(Math.random() * pool.length)];
+    }
+    if (pick) {
+      PROF.spity = 0;
+      if ((PROF.skins || []).includes(pick)) {
+        PROF.ink = (PROF.ink || 0) + rs.dup;
+        return { type: 'skin', skin: pick, char: SKINS[pick].char, rarity: SKINS[pick].rarity, dup: true, ink: rs.dup };
+      }
+      PROF.skins = PROF.skins || [];
+      PROF.skins.push(pick);
+      return { type: 'skin', skin: pick, char: SKINS[pick].char, rarity: SKINS[pick].rarity, new: true };
+    }
+    PROF.spity = (PROF.spity || 0) + 1;
+    const need = CHARS.map(c => c.id).filter(id => !(PROF.owned || []).includes(id));
+    if (!need.length) {
+      PROF.ink = (PROF.ink || 0) + R.fragInk;
+      return { type: 'ink', ink: R.fragInk };
+    }
+    const c = need[Math.floor(Math.random() * need.length)];
+    const amt = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
+    PROF.frags = PROF.frags || {};
+    PROF.frags[c] = (PROF.frags[c] || 0) + amt;
+    return { type: 'frag', char: c, rarity: CHAR_RARITY[c], n: amt, have: PROF.frags[c], need: R.craft[CHAR_RARITY[c]] };
+  }
+
+  // 角色祈愿
+  const pool = R.pool;
+  const unownedChars = CHARS.map(c => c.id).filter(id => !(PROF.owned || []).includes(id));
+  const fullR = Math.random();
+  const forced = (PROF.pity || 0) >= R.pity && unownedChars.length > 0;
+  const fullHit = forced || fullR < (R.full.legend + R.full.rare + R.full.common);
+
+  if (fullHit) {
+    let full = '';
+    if (forced) {
+      full = unownedChars[Math.floor(Math.random() * unownedChars.length)];
+    } else {
+      const rar = fullR < R.full.legend ? 'legend' : fullR < (R.full.legend + R.full.rare) ? 'rare' : 'common';
+      const p = pool[rar];
+      full = p[Math.floor(Math.random() * p.length)];
+    }
+    PROF.pity = 0;
+    if ((PROF.owned || []).includes(full)) {
+      PROF.ink = (PROF.ink || 0) + R.dup;
+      return { type: 'char', char: full, rarity: CHAR_RARITY[full], dup: true, ink: R.dup };
+    }
+    PROF.owned = PROF.owned || [];
+    PROF.owned.push(full);
+    const leftFrags = (PROF.frags && PROF.frags[full]) || 0;
+    if (PROF.frags) delete PROF.frags[full];
+    const refundInk = leftFrags * R.fragInk;
+    PROF.ink = (PROF.ink || 0) + refundInk;
+    return { type: 'char', char: full, rarity: CHAR_RARITY[full], new: true, pity: forced, ink: refundInk };
+  }
+
+  // 碎片掉落
+  PROF.pity = (PROF.pity || 0) + 1;
+  const fragR = Math.random();
+  const rar = fragR < 0.18 ? 'legend' : fragR < 0.5 ? 'rare' : 'common';
+  const p = pool[rar];
+  const c = p[Math.floor(Math.random() * p.length)];
+  const n = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
+
+  if ((PROF.owned || []).includes(c)) {
+    const ink = n * R.fragInk;
+    PROF.ink = (PROF.ink || 0) + ink;
+    return { type: 'frag', char: c, rarity: rar, n, ink };
+  }
+  PROF.frags = PROF.frags || {};
+  PROF.frags[c] = (PROF.frags[c] || 0) + n;
+  return { type: 'frag', char: c, rarity: rar, n, have: PROF.frags[c], need: R.craft[rar] };
+}
+
+function clientGacha(n, sk) {
+  const R = PROF.rates || DEFAULT_RATES;
+  const cost = sk ? (n === 10 ? R.skin.ten : R.skin.cost) : (n === 10 ? R.ten : R.cost);
+  if ((PROF.ink || 0) < cost) throw new Error(`囊中墨锭不够，需要 ${cost}`);
+  PROF.ink -= cost;
+  const results = [];
+  for (let i = 0; i < n; i++) results.push(clientDrawOne(sk));
+  if (window.CloudSave) CloudSave.saveProfile(PROF);
+  return { results, profile: PROF };
+}
+
+function clientCraft(charId) {
+  const R = PROF.rates || DEFAULT_RATES;
+  const rar = CHAR_RARITY[charId];
+  if (!rar || rar === 'starter' || (PROF.owned || []).includes(charId)) {
+    throw new Error('这个角色不能合成（已经拥有，或本就不能合）');
+  }
+  const need = R.craft[rar];
+  const have = (PROF.frags && PROF.frags[charId]) || 0;
+  if (have < need) throw new Error(`碎片不够，合成需要 ${need} 个（当前 ${have} 个）`);
+  delete PROF.frags[charId];
+  PROF.owned = PROF.owned || [];
+  PROF.owned.push(charId);
+  if (window.CloudSave) CloudSave.saveProfile(PROF);
+  return { got: charId, profile: PROF };
+}
+
 async function doGacha(n) {
   if (gBusy || PROF.guest) return;
   gBusy = true; renderGacha(); $id('gMsg').textContent = '';
   try {
-    const j = await api(gTab === 'skin' ? '/api/skingacha' : '/api/gacha', { n });
+    let j;
+    if (SERVED && window.fetch) {
+      j = await api(gTab === 'skin' ? '/api/skingacha' : '/api/gacha', { n });
+    } else {
+      j = clientGacha(n, gTab === 'skin');
+    }
     $id('gRes').innerHTML = j.results.map((r, k) => gCard(r, r.type !== 'frag' && r.type !== 'ink' && !r.dup).replace('VAR', (k * 0.14) + 's')).join('');
     const best = j.results.find(r => (r.type === 'char' || r.type === 'skin') && r.new);
     if (j.results.some(r => r.rarity === 'legend' && (r.type === 'char' || r.type === 'skin') && !r.dup)) playSting('legendary', true);
     setTimeout(() => { if (best) { SFX.gong(); toast(best.type === 'skin' ? `新得皮肤：${SKINS[best.skin].name}` : `新得角色：${CHARS[CHAR_IDX[best.char]].name}`); } else SFX.slice(); }, j.results.length * 140);
-    applyProfile(j.profile);
+    applyProfile(j.profile || PROF);
   } catch (e) { $id('gMsg').textContent = e.message; }
   gBusy = false; renderGacha();
 }
@@ -5856,8 +6334,15 @@ $id('gRates').addEventListener('click', () => $id('gRateBox').classList.toggle('
 $id('gTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { gTab = b.dataset.g; $id('gRes').innerHTML = ''; renderGacha(); } });
 $id('gRoster').addEventListener('click', async e => {
   const b = e.target.closest('button[data-craft]'); if (!b) return;
-  try { const j = await api('/api/craft', { char: b.dataset.craft }); applyProfile(j.profile); SFX.gong(); toast(`合成成功：${CHARS[CHAR_IDX[b.dataset.craft]].name}`); }
-  catch (err) { $id('gMsg').textContent = err.message; }
+  try {
+    let j;
+    if (SERVED && window.fetch) {
+      j = await api('/api/craft', { char: b.dataset.craft });
+    } else {
+      j = clientCraft(b.dataset.craft);
+    }
+    applyProfile(j.profile || PROF); SFX.gong(); toast(`合成成功：${CHARS[CHAR_IDX[b.dataset.craft]].name}`);
+  } catch (err) { $id('gMsg').textContent = err.message; }
 });
 // ---------- 任务 ----------
 function taskDest(name) {
@@ -5940,10 +6425,52 @@ $id('rankBtn').addEventListener('click', () => {
   netConnect(false, null, true, null, true); rankUI(true);
 });
 function reportProgress(w) {
-  if (!SERVED || !ACC.token || !window.fetch) return;
-  if (M.mode === 'cpu') api('/api/progress', { mode: 'cpu', level: M.level, won: w === 0, maxcombo: MSTAT.maxcombo, ults: MSTAT.ults })
-    .then(j => { applyProfile(j.profile); if (j.gain) $id('endRank').textContent = `+${j.gain} 墨锭${PROF.daily.some(t => !t.claimed && t.prog >= t.target) ? ' · 有任务可领奖了' : ''}`; }).catch(() => {});
-  else if (M.mode === 'net') api('/api/progress', { mode: 'net', maxcombo: MSTAT.maxcombo, ults: MSTAT.ults }).then(j => applyProfile(j.profile)).catch(() => {});
+  if (SERVED && ACC.token && window.fetch) {
+    if (M.mode === 'cpu') api('/api/progress', { mode: 'cpu', level: M.level, won: w === 0, maxcombo: MSTAT.maxcombo, ults: MSTAT.ults })
+      .then(j => { applyProfile(j.profile); if (j.gain) $id('endRank').textContent = `+${j.gain} 墨锭${PROF.daily.some(t => !t.claimed && t.prog >= t.target) ? ' · 有任务可领奖了' : ''}`; }).catch(() => {});
+    else if (M.mode === 'net') api('/api/progress', { mode: 'net', maxcombo: MSTAT.maxcombo, ults: MSTAT.ults }).then(j => applyProfile(j.profile)).catch(() => {});
+    return;
+  }
+  // GitHub 站与离线模式本地结算与云端持久化
+  if (M.mode === 'net') {
+    const won = w === localIdx();
+    const gain = won ? 60 : 30;
+    PROF.ink = (PROF.ink || 0) + gain;
+    if (won) {
+      PROF.netWins = (PROF.netWins || 0) + 1;
+      // 联机十胜：累计赢得 10 场联机对战，额外解锁一位基础英雄（铁山 或 雷鸣）
+      if (PROF.netWins >= 10 && !PROF.online10Unlocked) {
+        let unlockId = '';
+        if (!(PROF.owned || []).includes('tieshan')) unlockId = 'tieshan';
+        else if (!(PROF.owned || []).includes('leiming')) unlockId = 'leiming';
+        if (unlockId) {
+          PROF.owned = PROF.owned || ['qingfeng'];
+          if (!PROF.owned.includes(unlockId)) PROF.owned.push(unlockId);
+          PROF.online10Unlocked = true;
+          const uName = CHARS[CHAR_IDX[unlockId]].name;
+          setTimeout(() => {
+            SFX.gong();
+            toast(`【十胜功成】达成联机十胜，破境解锁基础角色：${uName}！`);
+          }, 800);
+        }
+      }
+    } else {
+      PROF.netLosses = (PROF.netLosses || 0) + 1;
+    }
+    $id('endRank').textContent = `+${gain} 墨锭 · 联机${won ? '胜' : '负'}（累计 ${PROF.netWins || 0} 胜）`;
+    if (window.CloudSave) CloudSave.saveProfile(PROF);
+    applyProfile(PROF);
+  } else if (M.mode === 'cpu') {
+    const won = w === 0;
+    if (won) {
+      const rewardMap = { easy: 10, normal: 20, hard: 40, adaptive: 40, impossible: 60 };
+      const gain = rewardMap[M.level] || 20;
+      PROF.ink = (PROF.ink || 0) + gain;
+      $id('endRank').textContent = `+${gain} 墨锭`;
+      if (window.CloudSave) CloudSave.saveProfile(PROF);
+      applyProfile(PROF);
+    }
+  }
 }
 
 // ======================= 新手教学 =======================
@@ -6731,7 +7258,7 @@ function renderBP() {
   document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
     const banned = BP.bans.includes(i), pickedBy = BP.picks.indexOf(i);
     const can = myTurn && bpValid(i);
-    const myAv = BP.avail && BP.avail[my], lock = SERVED && myAv && !myAv.includes(i), free = SERVED && !PROF.owned.includes(c.id) && (PROF.rotation || []).includes(c.id);
+    const myAv = BP.avail && BP.avail[my], lock = !OFFLINE_BUILD && myAv && !myAv.includes(i), free = !OFFLINE_BUILD && !(PROF.owned || []).includes(c.id) && (PROF.rotation || []).includes(c.id);
     const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
     return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" ${can ? '' : 'aria-disabled="true"'}>
       ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
@@ -6817,32 +7344,107 @@ function setAcc(j) {
 }
 function renderAcc() {
   const bar = $id('accBar');
-  if (!SERVED) { bar.classList.add('hidden'); return; }
-  bar.innerHTML = ACC.name
-    ? `<span class="who">${escapeHTML(ACC.name)}</span>${PROF.rank && !PROF.guest ? `<span class="rk">${PROF.rank.label}</span>` : ''}<span class="ink">墨锭 ${PROF.guest ? 0 : PROF.ink}</span><button class="ghost" id="lbBtn">排行榜</button><button class="ghost" id="logoutBtn">退出</button>`
-    : `<button class="ghost" id="lbBtn">排行榜</button><button class="ghost" id="accOpen">登录 / 注册</button>`;
-  $id('accHint').textContent = ACC.name ? '对手是游客时，胜负只记作“切磋战绩”' : '登录后，联机对战的胜负才会计入排行榜';
+  if (OFFLINE_BUILD) { bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  const u = (window.CloudSave && CloudSave.getUser()) || (ACC.name ? ACC : null);
+  const isCloud = window.CloudSave && CloudSave.hasValidConfig();
+  const cloudBadge = isCloud
+    ? '<span class="rk" style="background:rgba(70,211,234,.18);color:#46d3ea">云端已连</span>'
+    : '<span class="rk" style="background:rgba(233,196,106,.15);color:#e9c46a">本地单号</span>';
+  bar.innerHTML = u && u.name
+    ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号/云设置</button><button class="ghost" id="logoutBtn">退出</button>`
+    : `<button class="ghost" id="accOpen">登录 / 注册</button>`;
+  $id('accHint').textContent = u && u.name
+    ? `当前登录：【${u.name}】· 英雄与成就自动持久化保存`
+    : '单账号云端存储：登录后，英雄解锁、墨锭与成就自动同步到云端';
 }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 $id('accBar').addEventListener('click', async e => {
   const id = e.target.id;
-  if (id === 'accOpen') { $id('accMsg').textContent = ''; menuCam.tz = 1.35; showScreen('acc'); setTimeout(() => $id('accName').focus(), 50); }
-  else if (id === 'lbBtn') openLeaderboard();
-  else if (id === 'logoutBtn') { try { await api('/api/logout', { token: ACC.token }); } catch (err) {} setAcc(null); }
+  if (id === 'accOpen') {
+    $id('accMsg').textContent = '';
+    const u = window.CloudSave && CloudSave.getUser();
+    if (u && u.name) $id('accName').value = u.name;
+    const cfg = window.CloudSave && CloudSave.getConfig();
+    if ($id('fbCfgIn') && cfg && cfg.projectId) $id('fbCfgIn').value = JSON.stringify(cfg, null, 2);
+    menuCam.tz = 1.35;
+    showScreen('acc');
+    setTimeout(() => $id('accName').focus(), 50);
+  } else if (id === 'lbBtn') {
+    openLeaderboard();
+  } else if (id === 'logoutBtn') {
+    if (SERVED && window.fetch) {
+      try { await api('/api/logout', { token: ACC.token }); } catch (err) {}
+    }
+    if (window.CloudSave) await CloudSave.logout();
+    setAcc(null);
+    PROF.guest = true;
+    toast('已退出账号');
+    renderAcc();
+  }
 });
 async function doAcc(kind) {
   const name = $id('accName').value.trim(), pass = $id('accPass').value;
   if (!name || !pass) { $id('accMsg').textContent = '昵称与密码都得填'; return; }
   $id('accMsg').textContent = kind === 'login' ? '登录中…' : '注册中…';
   try {
-    setAcc(await api('/api/' + kind, { name, pass }));
-    $id('accPass').value = ''; backToMenu();
-  } catch (err) { $id('accMsg').textContent = err.message; }
+    if (SERVED && window.fetch) {
+      setAcc(await api('/api/' + kind, { name, pass }));
+    } else if (window.CloudSave) {
+      const res = await (kind === 'login' ? CloudSave.login(name, pass) : CloudSave.register(name, pass));
+      ACC.name = res.name;
+      ACC.token = res.uid;
+      PROF.guest = false;
+      const loaded = await CloudSave.loadProfile();
+      if (loaded) {
+        applyProfile(loaded);
+      } else {
+        CloudSave.saveProfile(PROF, true);
+      }
+      renderAcc();
+    }
+    $id('accPass').value = '';
+    backToMenu();
+    toast(kind === 'login' ? `欢迎归来，${name}！已载入存档` : `注册成功！大侠 ${name}，已开启专属存档`);
+  } catch (err) {
+    $id('accMsg').textContent = err.message;
+  }
 }
 $id('loginBtn').addEventListener('click', () => doAcc('login'));
 $id('regBtn').addEventListener('click', () => doAcc('register'));
 $id('accPass').addEventListener('keydown', e => { if (e.key === 'Enter') doAcc('login'); });
 $id('accBack').addEventListener('click', backToMenu);
+
+if ($id('toggleCloudCfgBtn')) {
+  $id('toggleCloudCfgBtn').addEventListener('click', () => {
+    $id('cloudCfgBox').classList.toggle('hidden');
+  });
+}
+if ($id('fbCfgSaveBtn')) {
+  $id('fbCfgSaveBtn').addEventListener('click', () => {
+    try {
+      const val = $id('fbCfgIn').value.trim();
+      const parsed = JSON.parse(val);
+      if (!parsed.projectId || !parsed.apiKey) throw new Error('配置需包含 projectId 和 apiKey');
+      if (window.CloudSave) CloudSave.setConfig(parsed);
+      toast('Firebase 云端配置已保存！正在连线…');
+      $id('cloudCfgBox').classList.add('hidden');
+      renderAcc();
+    } catch (e) {
+      alert('配置格式错误：' + e.message);
+    }
+  });
+}
+if ($id('fbCfgClearBtn')) {
+  $id('fbCfgClearBtn').addEventListener('click', () => {
+    if (window.CloudSave) CloudSave.setConfig(null);
+    if ($id('fbCfgIn')) $id('fbCfgIn').value = '';
+    toast('已恢复为本地独立单账号模式');
+    $id('cloudCfgBox').classList.add('hidden');
+    renderAcc();
+  });
+}
+
 let lbKind = 'rank';
 $id('lbTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { lbKind = b.dataset.k; openLeaderboard(); } });
 async function openLeaderboard() {
@@ -6871,13 +7473,29 @@ $id('lbBack').addEventListener('click', backToMenu);
 adaptLoad();
 if (SERVED && window.fetch && !ACC.token) loadProfile();
 if (SERVED && ACC.token && window.fetch) api('/api/me').then(setAcc).catch(err => { if (/失效/.test(err.message)) setAcc(null); else renderAcc(); });
+
+// 检查云端/本地已有登录并载入存档
+if (window.CloudSave) {
+  const cu = CloudSave.getUser();
+  if (cu && cu.name) {
+    ACC.name = cu.name;
+    ACC.token = cu.uid;
+    PROF.guest = false;
+    CloudSave.loadProfile().then(p => {
+      if (p) applyProfile(p);
+      else CloudSave.saveProfile(PROF, true);
+      renderAcc();
+    }).catch(() => {});
+  }
+}
+
 renderAcc();
 function netStatus(t) { $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
 if (!SERVED) $id('onlineLine').textContent = '';
 $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
-// 离线：全部皮肤可用，装备记在本机；离线版隐藏需要服务器的功能
-if (!SERVED) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
+// 离线单文件版：全部皮肤可用，装备记在本机；在线版拥有完整成长与解锁
+if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 if (OFFLINE_BUILD) {
   $id('mSingle').innerHTML = '<span class="mk">对战电脑</span><span class="ms">和电脑过招，难度可选</span>';
   $id('mNet').innerHTML = '<span class="mk">闯关模式</span><span class="ms">六章三十关，一关一关打上去</span>';

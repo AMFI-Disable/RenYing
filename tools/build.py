@@ -69,9 +69,15 @@ def page(offline):
         "<!--@music-->\n": ("<script>window.MUSIC_DATA = " + json.dumps(music_data()) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
             "<script>window.RENYING_BUILD = " + json.dumps(build) + ";</script>\n"
-            "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
-            "<script>\n" + read(SRC, "game.js") + "</script>\n"
-            "<script>\n" + read(SRC, "net-p2p.js") + "</script>\n"
+            + ("" if offline else (
+                '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>\n'
+                '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>\n'
+                '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>\n'
+            ))
+            + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
+            + "<script>\n" + read(SRC, "cloud.js") + "</script>\n"
+            + "<script>\n" + read(SRC, "game.js") + "</script>\n"
+            + "<script>\n" + read(SRC, "net-p2p.js") + "</script>\n"
         ),
         "<!--@qfx-->\n": '<script id="qfxData" type="application/octet-stream">'
                          + base64.b64encode(read(ASSETS, "qingfengxing.html", mode="rb")).decode() + "</script>\n",
@@ -97,7 +103,7 @@ def check_js():
     if not node:
         return True
     ok = True
-    for name in ("game.js", "net-p2p.js"):
+    for name in ("cloud.js", "game.js", "net-p2p.js"):
         r = subprocess.run([node, "--check", os.path.join(SRC, name)], capture_output=True, text=True)
         if r.returncode:
             print(f"src/{name} 语法错误：\n{r.stderr}")

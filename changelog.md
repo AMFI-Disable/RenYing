@@ -11,6 +11,10 @@ All notable changes, features, and architectural capabilities of this project ar
 - Initial codebase setup for Ren Ying (刃影) martial arts duel game.
 - WebRTC Peer-to-Peer serverless multiplayer support for GitHub Pages deployment.
 - Real-time WebSocket matchmaking server with rooms, ladder ranking, and community hub.
+- Character unlocking progression on GitHub Pages: Qing Feng as the starter hero, 10 online P2P match wins to unlock a basic hero (Tie Shan or Lei Ming), and deterministic weekly free hero rotation.
+- In-game currency (墨锭 / Ink) economy with client-side 问剑阁 (Wen Jian Pavilion) gacha summoning and fragment crafting on GitHub Pages.
+- Cloud save and single-account synchronization using Google Firebase Auth and Cloud Firestore, with seamless offline local storage fallback.
+- Production-grade Cloud Firestore security rules (`firestore.rules`) enforcing user-isolated document access and schema validation.
 - Standalone offline edition and character skin assets.
 - Official workspace repository migration to AMFI-Disable/RenYing.
 - Single source tree (`src/`, `assets/`) with `tools/build.py` generating the online and offline pages, plus a `--check` mode used by CI.

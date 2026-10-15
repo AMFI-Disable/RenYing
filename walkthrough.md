@@ -13,7 +13,8 @@ flowchart TD
     A --> C["第二阶段：全页面交互升级、视听打击感与训练系统"]
     A --> D["第三阶段：单一源码流水线与 WebRTC P2P 免服公网联机"]
     A --> E["第四阶段：九大英雄专属动作、机制克制与挣脱平衡"]
-    A --> F["工程里程碑验证与全文件交付矩阵"]
+    A --> F["第五阶段：英雄解锁进阶体系与 Firebase 云端存档"]
+    A --> G["工程里程碑验证与全文件交付矩阵"]
 ```
 
 ---
@@ -203,6 +204,33 @@ flowchart LR
 
 ---
 
+## ☁️ 第五阶段：英雄解锁进阶体系与 Firebase 云端存档
+*(来源归档：`431ce09c-1f20-4368-a8fb-b0bbef6a157c/walkthrough.md`)*
+
+为了兼顾 GitHub Pages 纯静态免维护的轻量架构与单账号跨端存档、渐进式角色解锁体验，构建了基于 Google Firebase 的无服务器云端存档与进阶解锁体系：
+
+### 1. 角色解锁与阶梯进阶规则
+- **青锋初始与每周轮换**：
+  - 新建存档或首次进入 GitHub Pages 在线版，默认仅解锁初始英雄 **青锋（Qing Feng）**。
+  - 每周一 00:00 自动基于确定性时间戳周期轮换一名非初始英雄为 **每周限免（周免）**，玩家可无门槛体验。
+  - 独立单文件离线版（`renying-offline.html`）保持全部英雄完全开放，满足单机即开即玩的离线场景。
+- **10 场联机胜利解锁基础英雄**：
+  - 玩家通过 WebRTC P2P 点对点联机击败真人对手累计达 10 场后，系统自动触发专属庆贺金石音效与弹窗，免费解锁一名基础英雄（铁山或雷鸣）。
+- **墨锭经济与问剑阁招募**：
+  - 初始赠送 **500 墨锭**。
+  - 闯关星级首次通关赠送 **30 墨锭/星**；P2P 联机对战胜者获 **60 墨锭**、败者获 **30 墨锭**；单人练习赛亦可获得 **10~40 墨锭**。
+  - 纯前端实现 **问剑阁（抽卡与合成）**：消耗墨锭可直接抽取整卡或英雄碎片，集齐 30 碎片可在藏剑录中合成永久解锁任意英雄。
+
+### 2. Google Firebase 纯前端 Serverless 云端存档
+- **零服务器免维护架构**：
+  - 在 [`src/cloud.js`](file:///Users/even/Desktop/Projects/Games/RenYing/src/cloud.js) 中集成 Firebase Auth 与 Cloud Firestore，玩家输入 Firebase 凭据即可直连 Google Cloud 后端，无需搭建或运维任何中间层服务。
+  - 严格支持 **离线缓存降级**：即便未配置云端或网络断开，自动安全读写本地 `localStorage('renying-profile')` 与 `localStorage('renying-cloud-cache')`，联网后自动按时间戳防冲突双向合并同步。
+- **专职子代理与生产级安全规则**：
+  - 经由专职子代理 `firestore-rules-author` 编写并校验了生产级安全规则 [`firestore.rules`](file:///Users/even/Desktop/Projects/Games/RenYing/firestore.rules)。
+  - 根目录集合 `users/{userId}` 严格限制只有登录用户本人（`request.auth.uid == userId`）可读写自己的存档文档，严格校验全部 13 项字段类型与边界范围，从协议底层杜绝越权篡改。
+
+---
+
 ## 📊 工程里程碑验证与全文件交付矩阵
 
 | 历史阶段 | 核心提交 SHA | 规范提交口令 | 核心产物与验证状态 |
@@ -215,7 +243,8 @@ flowchart LR
 | **文档与归档** | `44b9761` | `docs: update network changelog` | 完善网络双模切换指南与更新日志文档 |
 | **英雄差异与克制** | `0eb1367` | `feat: diversify hero mechanics` | 22 个专属骨骼动画姿态，纯机制克制逻辑，伤害与挣脱平衡谱系 |
 | **铁山大招跃空操控** | `0279504` | `feat: steerable avalanche leap` | 铁山大招跃空滞空横向转向与下砸俯冲操控，火星尾迹与 AI 跟踪 |
-| **创作者署名更新** | `已交付` | `docs: update creator attribution` | 创作者名单更新为 Even, Luffy, and Opus 5.5（涵盖 UI、引擎、服务与文档） |
+| **创作者署名更新** | `c21dbec` | `docs: update creator attribution` | 创作者名单更新为 Even, Luffy, and Opus 5.5（涵盖 UI、引擎、服务与文档） |
+| **英雄解锁与云存档** | `待提交` | `feat: unlock heroes cloud` | 青锋初始/10胜解锁/问剑阁墨锭经济，Firebase Auth + Firestore 单账号多端云存档 |
 
 ```bash
 # 全局自动化质量验证汇总 (全部通过)

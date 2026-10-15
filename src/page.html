@@ -207,7 +207,14 @@
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
-      <p class="netnote" style="margin-top:18px">昵称会公开显示在排行榜上，别用真名。密码也别与别处相同。</p>
+      <div style="margin-top:12px;text-align:center"><button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px">☁️ 云存档设置 (Firebase)</button></div>
+      <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
+        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>Firebase 云存储配置</b>（跨设备单账号持久化）</p>
+        <p class="netnote" style="margin:0 0 6px">可直接粘贴 Firebase Web 配置 JSON（包含 projectId, apiKey 等）：</p>
+        <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:11px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
+        <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
+      </div>
+      <p class="netnote" style="margin-top:14px">登录或注册后，英雄解锁、墨锭余额与成就数据将持久化保存。</p>
     </div>
   </div>
 

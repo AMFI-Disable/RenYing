@@ -1352,7 +1352,14 @@ function stageClear() {
 // 一关打完：记录星数，显示结算
 function stageShowEnd(win, stars, info) {
   const S = STAGE;
-  if (win && (STAGE_STARS[S.id] || 0) < stars) { STAGE_STARS[S.id] = stars; try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {} }
+  if (win && (STAGE_STARS[S.id] || 0) < stars) {
+    const starDiff = stars - (STAGE_STARS[S.id] || 0);
+    STAGE_STARS[S.id] = stars;
+    PROF.ink = (PROF.ink || 0) + starDiff * 30;
+    PROF.stageStars = STAGE_STARS;
+    if (window.CloudSave) CloudSave.saveProfile(PROF);
+    try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {}
+  }
   playSting(win ? 'victory' : 'defeat');
   const nx = nextStage(S);
   $id('feWave').textContent = `${S.id} ${win ? '破关' : '折戟'}`;
@@ -4749,6 +4756,44 @@ $id('comEmo').addEventListener('click', e => { const b = e.target.closest('butto
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
 const CHAR_RARITY = { qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
+const DEFAULT_RATES = {
+  full: { legend: 0.015, rare: 0.035, common: 0.07 },
+  frag: { legend: 0.1584, rare: 0.2816, common: 0.44 },
+  pool: { common: ['tieshan', 'leiming'], rare: ['feiying', 'liuyun', 'lingshuang'], legend: ['moyu', 'yuehua', 'yanling'] },
+  craft: { common: 20, rare: 30, legend: 40 },
+  cost: 60,
+  ten: 540,
+  pity: 20,
+  dup: 90,
+  fragInk: 6,
+  skin: {
+    rate: { legend: 0.03, rare: 0.12 },
+    cost: 30,
+    ten: 270,
+    pity: 15,
+    dup: 20
+  }
+};
+function getWeeklyRotation() {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  const weekKey = `${d.getUTCFullYear()}-W${weekNo}`;
+  const nonStarters = CHARS.map(c => c.id).filter(id => id !== 'qingfeng');
+  let seed = 0;
+  for (let i = 0; i < weekKey.length; i++) seed = (seed * 31 + weekKey.charCodeAt(i)) >>> 0;
+  const list = [...nonStarters];
+  const result = [];
+  for (let i = 0; i < 3 && list.length; i++) {
+    seed = (seed * 9301 + 49297) % 233280;
+    const idx = Math.floor((seed / 233280) * list.length);
+    result.push(list.splice(idx, 1)[0]);
+  }
+  return result;
+}
 const SKINS = {
   qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#e6efff', shade: '#8ea4cc', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'circlet', gem: '#bfefff', back: 'snowflake', wfx: 'frost', trail: 'snow' } },
   qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff3d2', shade: '#c9a45a', scarf: '#ffb62e', slash: '255,196,90', blade: '#fff3cf' }, deco: { head: 'crown', back: 'sundisk', cape: '#d99a2b', wfx: 'flame', trail: 'ember', aura: 'ember' } },
@@ -4996,13 +5041,33 @@ function paintSceneCard(CW, CH, T, t, u) {
     drawShape(T.wx, (1.6 + hash(i + 7) * 2.6) * u, T.wxC, 0.4 + hash(i + 9) * 0.5); ctx.restore();
   }
 }
-const PROF = { loaded: false, guest: true, ink: 0, owned: ['qingfeng'], frags: {}, pity: 0, welfare: 1, tutorial: 0, rank: null, rotation: [], rates: null, daily: [], weekly: [], skins: [], equip: {}, spity: 0 };
+const PROF = {
+  loaded: false,
+  guest: true,
+  ink: 500,
+  owned: ['qingfeng'],
+  frags: {},
+  pity: 0,
+  welfare: 1,
+  tutorial: 0,
+  rank: null,
+  rotation: getWeeklyRotation(),
+  rates: DEFAULT_RATES,
+  daily: [],
+  weekly: [],
+  skins: [],
+  equip: {},
+  spity: 0,
+  netWins: 0,
+  netLosses: 0,
+  online10Unlocked: false
+};
 const MSTAT = { maxcombo: 0, ults: 0 };
 function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), 2600); }
-// 能用的角色：已拥有 + 本周限免。没连服务器（离线打开）时全部能用
+// 能用的角色：已拥有 + 本周限免。单机离线版全部能用；在线网页版严格按解锁状态与限免判断
 function availList() {
-  if (!SERVED) return CHARS.map((c, i) => i);
-  const ok = new Set([...PROF.owned, ...(PROF.rotation || [])]);
+  if (OFFLINE_BUILD) return CHARS.map((c, i) => i);
+  const ok = new Set([...(PROF.owned || ['qingfeng']), ...(PROF.rotation || [])]);
   return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 }
 function skinLook(ci, skin) {
@@ -5089,16 +5154,135 @@ function gCard(r, big) {
   else tag = r.ink ? `碎片 ×${r.n} → +${r.ink} 墨锭` : `碎片 ×${r.n}（${r.have}/${r.need}）`;
   return `<div class="gcard${r.type === 'frag' ? ' frag' : ''}${big ? ' big' : ''}" style="--rc:${rc};animation-delay:VAR"><img src="${img}" alt=""><div class="gn" style="color:rgb(${c.look.slash})">${name}</div><div class="gt">${tag}</div></div>`;
 }
+function clientDrawOne(sk) {
+  const R = PROF.rates || DEFAULT_RATES;
+  if (sk) {
+    const rs = R.skin;
+    const mine = Object.keys(SKINS).filter(k => (PROF.owned || []).includes(SKINS[k].char));
+    const unowned = mine.filter(k => !(PROF.skins || []).includes(k));
+    let pick = null;
+    if ((PROF.spity || 0) >= rs.pity && unowned.length) {
+      const leg = unowned.filter(k => SKINS[k].rarity === 'legend');
+      pick = leg.length && Math.random() < 0.2 ? leg[Math.floor(Math.random() * leg.length)] : unowned[Math.floor(Math.random() * unowned.length)];
+    } else {
+      const r = Math.random();
+      const rar = r < rs.rate.legend ? 'legend' : r < rs.rate.legend + rs.rate.rare ? 'rare' : null;
+      const pool = rar ? mine.filter(k => SKINS[k].rarity === rar) : [];
+      if (pool.length) pick = pool[Math.floor(Math.random() * pool.length)];
+    }
+    if (pick) {
+      PROF.spity = 0;
+      if ((PROF.skins || []).includes(pick)) {
+        PROF.ink = (PROF.ink || 0) + rs.dup;
+        return { type: 'skin', skin: pick, char: SKINS[pick].char, rarity: SKINS[pick].rarity, dup: true, ink: rs.dup };
+      }
+      PROF.skins = PROF.skins || [];
+      PROF.skins.push(pick);
+      return { type: 'skin', skin: pick, char: SKINS[pick].char, rarity: SKINS[pick].rarity, new: true };
+    }
+    PROF.spity = (PROF.spity || 0) + 1;
+    const need = CHARS.map(c => c.id).filter(id => !(PROF.owned || []).includes(id));
+    if (!need.length) {
+      PROF.ink = (PROF.ink || 0) + R.fragInk;
+      return { type: 'ink', ink: R.fragInk };
+    }
+    const c = need[Math.floor(Math.random() * need.length)];
+    const amt = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
+    PROF.frags = PROF.frags || {};
+    PROF.frags[c] = (PROF.frags[c] || 0) + amt;
+    return { type: 'frag', char: c, rarity: CHAR_RARITY[c], n: amt, have: PROF.frags[c], need: R.craft[CHAR_RARITY[c]] };
+  }
+
+  // 角色祈愿
+  const pool = R.pool;
+  const unownedChars = CHARS.map(c => c.id).filter(id => !(PROF.owned || []).includes(id));
+  const fullR = Math.random();
+  const forced = (PROF.pity || 0) >= R.pity && unownedChars.length > 0;
+  const fullHit = forced || fullR < (R.full.legend + R.full.rare + R.full.common);
+
+  if (fullHit) {
+    let full = '';
+    if (forced) {
+      full = unownedChars[Math.floor(Math.random() * unownedChars.length)];
+    } else {
+      const rar = fullR < R.full.legend ? 'legend' : fullR < (R.full.legend + R.full.rare) ? 'rare' : 'common';
+      const p = pool[rar];
+      full = p[Math.floor(Math.random() * p.length)];
+    }
+    PROF.pity = 0;
+    if ((PROF.owned || []).includes(full)) {
+      PROF.ink = (PROF.ink || 0) + R.dup;
+      return { type: 'char', char: full, rarity: CHAR_RARITY[full], dup: true, ink: R.dup };
+    }
+    PROF.owned = PROF.owned || [];
+    PROF.owned.push(full);
+    const leftFrags = (PROF.frags && PROF.frags[full]) || 0;
+    if (PROF.frags) delete PROF.frags[full];
+    const refundInk = leftFrags * R.fragInk;
+    PROF.ink = (PROF.ink || 0) + refundInk;
+    return { type: 'char', char: full, rarity: CHAR_RARITY[full], new: true, pity: forced, ink: refundInk };
+  }
+
+  // 碎片掉落
+  PROF.pity = (PROF.pity || 0) + 1;
+  const fragR = Math.random();
+  const rar = fragR < 0.18 ? 'legend' : fragR < 0.5 ? 'rare' : 'common';
+  const p = pool[rar];
+  const c = p[Math.floor(Math.random() * p.length)];
+  const n = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
+
+  if ((PROF.owned || []).includes(c)) {
+    const ink = n * R.fragInk;
+    PROF.ink = (PROF.ink || 0) + ink;
+    return { type: 'frag', char: c, rarity: rar, n, ink };
+  }
+  PROF.frags = PROF.frags || {};
+  PROF.frags[c] = (PROF.frags[c] || 0) + n;
+  return { type: 'frag', char: c, rarity: rar, n, have: PROF.frags[c], need: R.craft[rar] };
+}
+
+function clientGacha(n, sk) {
+  const R = PROF.rates || DEFAULT_RATES;
+  const cost = sk ? (n === 10 ? R.skin.ten : R.skin.cost) : (n === 10 ? R.ten : R.cost);
+  if ((PROF.ink || 0) < cost) throw new Error(`囊中墨锭不够，需要 ${cost}`);
+  PROF.ink -= cost;
+  const results = [];
+  for (let i = 0; i < n; i++) results.push(clientDrawOne(sk));
+  if (window.CloudSave) CloudSave.saveProfile(PROF);
+  return { results, profile: PROF };
+}
+
+function clientCraft(charId) {
+  const R = PROF.rates || DEFAULT_RATES;
+  const rar = CHAR_RARITY[charId];
+  if (!rar || rar === 'starter' || (PROF.owned || []).includes(charId)) {
+    throw new Error('这个角色不能合成（已经拥有，或本就不能合）');
+  }
+  const need = R.craft[rar];
+  const have = (PROF.frags && PROF.frags[charId]) || 0;
+  if (have < need) throw new Error(`碎片不够，合成需要 ${need} 个（当前 ${have} 个）`);
+  delete PROF.frags[charId];
+  PROF.owned = PROF.owned || [];
+  PROF.owned.push(charId);
+  if (window.CloudSave) CloudSave.saveProfile(PROF);
+  return { got: charId, profile: PROF };
+}
+
 async function doGacha(n) {
   if (gBusy || PROF.guest) return;
   gBusy = true; renderGacha(); $id('gMsg').textContent = '';
   try {
-    const j = await api(gTab === 'skin' ? '/api/skingacha' : '/api/gacha', { n });
+    let j;
+    if (SERVED && window.fetch) {
+      j = await api(gTab === 'skin' ? '/api/skingacha' : '/api/gacha', { n });
+    } else {
+      j = clientGacha(n, gTab === 'skin');
+    }
     $id('gRes').innerHTML = j.results.map((r, k) => gCard(r, r.type !== 'frag' && r.type !== 'ink' && !r.dup).replace('VAR', (k * 0.14) + 's')).join('');
     const best = j.results.find(r => (r.type === 'char' || r.type === 'skin') && r.new);
     if (j.results.some(r => r.rarity === 'legend' && (r.type === 'char' || r.type === 'skin') && !r.dup)) playSting('legendary', true);
     setTimeout(() => { if (best) { SFX.gong(); toast(best.type === 'skin' ? `新得皮肤：${SKINS[best.skin].name}` : `新得角色：${CHARS[CHAR_IDX[best.char]].name}`); } else SFX.slice(); }, j.results.length * 140);
-    applyProfile(j.profile);
+    applyProfile(j.profile || PROF);
   } catch (e) { $id('gMsg').textContent = e.message; }
   gBusy = false; renderGacha();
 }
@@ -5108,8 +5292,15 @@ $id('gRates').addEventListener('click', () => $id('gRateBox').classList.toggle('
 $id('gTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { gTab = b.dataset.g; $id('gRes').innerHTML = ''; renderGacha(); } });
 $id('gRoster').addEventListener('click', async e => {
   const b = e.target.closest('button[data-craft]'); if (!b) return;
-  try { const j = await api('/api/craft', { char: b.dataset.craft }); applyProfile(j.profile); SFX.gong(); toast(`合成成功：${CHARS[CHAR_IDX[b.dataset.craft]].name}`); }
-  catch (err) { $id('gMsg').textContent = err.message; }
+  try {
+    let j;
+    if (SERVED && window.fetch) {
+      j = await api('/api/craft', { char: b.dataset.craft });
+    } else {
+      j = clientCraft(b.dataset.craft);
+    }
+    applyProfile(j.profile || PROF); SFX.gong(); toast(`合成成功：${CHARS[CHAR_IDX[b.dataset.craft]].name}`);
+  } catch (err) { $id('gMsg').textContent = err.message; }
 });
 // ---------- 任务 ----------
 function taskDest(name) {
@@ -5192,10 +5383,52 @@ $id('rankBtn').addEventListener('click', () => {
   netConnect(false, null, true, null, true); rankUI(true);
 });
 function reportProgress(w) {
-  if (!SERVED || !ACC.token || !window.fetch) return;
-  if (M.mode === 'cpu') api('/api/progress', { mode: 'cpu', level: M.level, won: w === 0, maxcombo: MSTAT.maxcombo, ults: MSTAT.ults })
-    .then(j => { applyProfile(j.profile); if (j.gain) $id('endRank').textContent = `+${j.gain} 墨锭${PROF.daily.some(t => !t.claimed && t.prog >= t.target) ? ' · 有任务可领奖了' : ''}`; }).catch(() => {});
-  else if (M.mode === 'net') api('/api/progress', { mode: 'net', maxcombo: MSTAT.maxcombo, ults: MSTAT.ults }).then(j => applyProfile(j.profile)).catch(() => {});
+  if (SERVED && ACC.token && window.fetch) {
+    if (M.mode === 'cpu') api('/api/progress', { mode: 'cpu', level: M.level, won: w === 0, maxcombo: MSTAT.maxcombo, ults: MSTAT.ults })
+      .then(j => { applyProfile(j.profile); if (j.gain) $id('endRank').textContent = `+${j.gain} 墨锭${PROF.daily.some(t => !t.claimed && t.prog >= t.target) ? ' · 有任务可领奖了' : ''}`; }).catch(() => {});
+    else if (M.mode === 'net') api('/api/progress', { mode: 'net', maxcombo: MSTAT.maxcombo, ults: MSTAT.ults }).then(j => applyProfile(j.profile)).catch(() => {});
+    return;
+  }
+  // GitHub 站与离线模式本地结算与云端持久化
+  if (M.mode === 'net') {
+    const won = w === localIdx();
+    const gain = won ? 60 : 30;
+    PROF.ink = (PROF.ink || 0) + gain;
+    if (won) {
+      PROF.netWins = (PROF.netWins || 0) + 1;
+      // 联机十胜：累计赢得 10 场联机对战，额外解锁一位基础英雄（铁山 或 雷鸣）
+      if (PROF.netWins >= 10 && !PROF.online10Unlocked) {
+        let unlockId = '';
+        if (!(PROF.owned || []).includes('tieshan')) unlockId = 'tieshan';
+        else if (!(PROF.owned || []).includes('leiming')) unlockId = 'leiming';
+        if (unlockId) {
+          PROF.owned = PROF.owned || ['qingfeng'];
+          if (!PROF.owned.includes(unlockId)) PROF.owned.push(unlockId);
+          PROF.online10Unlocked = true;
+          const uName = CHARS[CHAR_IDX[unlockId]].name;
+          setTimeout(() => {
+            SFX.gong();
+            toast(`【十胜功成】达成联机十胜，破境解锁基础角色：${uName}！`);
+          }, 800);
+        }
+      }
+    } else {
+      PROF.netLosses = (PROF.netLosses || 0) + 1;
+    }
+    $id('endRank').textContent = `+${gain} 墨锭 · 联机${won ? '胜' : '负'}（累计 ${PROF.netWins || 0} 胜）`;
+    if (window.CloudSave) CloudSave.saveProfile(PROF);
+    applyProfile(PROF);
+  } else if (M.mode === 'cpu') {
+    const won = w === 0;
+    if (won) {
+      const rewardMap = { easy: 10, normal: 20, hard: 40, adaptive: 40, impossible: 60 };
+      const gain = rewardMap[M.level] || 20;
+      PROF.ink = (PROF.ink || 0) + gain;
+      $id('endRank').textContent = `+${gain} 墨锭`;
+      if (window.CloudSave) CloudSave.saveProfile(PROF);
+      applyProfile(PROF);
+    }
+  }
 }
 
 // ======================= 新手教学 =======================
@@ -5983,7 +6216,7 @@ function renderBP() {
   document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
     const banned = BP.bans.includes(i), pickedBy = BP.picks.indexOf(i);
     const can = myTurn && bpValid(i);
-    const myAv = BP.avail && BP.avail[my], lock = SERVED && myAv && !myAv.includes(i), free = SERVED && !PROF.owned.includes(c.id) && (PROF.rotation || []).includes(c.id);
+    const myAv = BP.avail && BP.avail[my], lock = !OFFLINE_BUILD && myAv && !myAv.includes(i), free = !OFFLINE_BUILD && !(PROF.owned || []).includes(c.id) && (PROF.rotation || []).includes(c.id);
     const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
     return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" ${can ? '' : 'aria-disabled="true"'}>
       ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
@@ -6069,32 +6302,107 @@ function setAcc(j) {
 }
 function renderAcc() {
   const bar = $id('accBar');
-  if (!SERVED) { bar.classList.add('hidden'); return; }
-  bar.innerHTML = ACC.name
-    ? `<span class="who">${escapeHTML(ACC.name)}</span>${PROF.rank && !PROF.guest ? `<span class="rk">${PROF.rank.label}</span>` : ''}<span class="ink">墨锭 ${PROF.guest ? 0 : PROF.ink}</span><button class="ghost" id="lbBtn">排行榜</button><button class="ghost" id="logoutBtn">退出</button>`
-    : `<button class="ghost" id="lbBtn">排行榜</button><button class="ghost" id="accOpen">登录 / 注册</button>`;
-  $id('accHint').textContent = ACC.name ? '对手是游客时，胜负只记作“切磋战绩”' : '登录后，联机对战的胜负才会计入排行榜';
+  if (OFFLINE_BUILD) { bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  const u = (window.CloudSave && CloudSave.getUser()) || (ACC.name ? ACC : null);
+  const isCloud = window.CloudSave && CloudSave.hasValidConfig();
+  const cloudBadge = isCloud
+    ? '<span class="rk" style="background:rgba(70,211,234,.18);color:#46d3ea">云端已连</span>'
+    : '<span class="rk" style="background:rgba(233,196,106,.15);color:#e9c46a">本地单号</span>';
+  bar.innerHTML = u && u.name
+    ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号/云设置</button><button class="ghost" id="logoutBtn">退出</button>`
+    : `<button class="ghost" id="accOpen">登录 / 注册</button>`;
+  $id('accHint').textContent = u && u.name
+    ? `当前登录：【${u.name}】· 英雄与成就自动持久化保存`
+    : '单账号云端存储：登录后，英雄解锁、墨锭与成就自动同步到云端';
 }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 $id('accBar').addEventListener('click', async e => {
   const id = e.target.id;
-  if (id === 'accOpen') { $id('accMsg').textContent = ''; menuCam.tz = 1.35; showScreen('acc'); setTimeout(() => $id('accName').focus(), 50); }
-  else if (id === 'lbBtn') openLeaderboard();
-  else if (id === 'logoutBtn') { try { await api('/api/logout', { token: ACC.token }); } catch (err) {} setAcc(null); }
+  if (id === 'accOpen') {
+    $id('accMsg').textContent = '';
+    const u = window.CloudSave && CloudSave.getUser();
+    if (u && u.name) $id('accName').value = u.name;
+    const cfg = window.CloudSave && CloudSave.getConfig();
+    if ($id('fbCfgIn') && cfg && cfg.projectId) $id('fbCfgIn').value = JSON.stringify(cfg, null, 2);
+    menuCam.tz = 1.35;
+    showScreen('acc');
+    setTimeout(() => $id('accName').focus(), 50);
+  } else if (id === 'lbBtn') {
+    openLeaderboard();
+  } else if (id === 'logoutBtn') {
+    if (SERVED && window.fetch) {
+      try { await api('/api/logout', { token: ACC.token }); } catch (err) {}
+    }
+    if (window.CloudSave) await CloudSave.logout();
+    setAcc(null);
+    PROF.guest = true;
+    toast('已退出账号');
+    renderAcc();
+  }
 });
 async function doAcc(kind) {
   const name = $id('accName').value.trim(), pass = $id('accPass').value;
   if (!name || !pass) { $id('accMsg').textContent = '昵称与密码都得填'; return; }
   $id('accMsg').textContent = kind === 'login' ? '登录中…' : '注册中…';
   try {
-    setAcc(await api('/api/' + kind, { name, pass }));
-    $id('accPass').value = ''; backToMenu();
-  } catch (err) { $id('accMsg').textContent = err.message; }
+    if (SERVED && window.fetch) {
+      setAcc(await api('/api/' + kind, { name, pass }));
+    } else if (window.CloudSave) {
+      const res = await (kind === 'login' ? CloudSave.login(name, pass) : CloudSave.register(name, pass));
+      ACC.name = res.name;
+      ACC.token = res.uid;
+      PROF.guest = false;
+      const loaded = await CloudSave.loadProfile();
+      if (loaded) {
+        applyProfile(loaded);
+      } else {
+        CloudSave.saveProfile(PROF, true);
+      }
+      renderAcc();
+    }
+    $id('accPass').value = '';
+    backToMenu();
+    toast(kind === 'login' ? `欢迎归来，${name}！已载入存档` : `注册成功！大侠 ${name}，已开启专属存档`);
+  } catch (err) {
+    $id('accMsg').textContent = err.message;
+  }
 }
 $id('loginBtn').addEventListener('click', () => doAcc('login'));
 $id('regBtn').addEventListener('click', () => doAcc('register'));
 $id('accPass').addEventListener('keydown', e => { if (e.key === 'Enter') doAcc('login'); });
 $id('accBack').addEventListener('click', backToMenu);
+
+if ($id('toggleCloudCfgBtn')) {
+  $id('toggleCloudCfgBtn').addEventListener('click', () => {
+    $id('cloudCfgBox').classList.toggle('hidden');
+  });
+}
+if ($id('fbCfgSaveBtn')) {
+  $id('fbCfgSaveBtn').addEventListener('click', () => {
+    try {
+      const val = $id('fbCfgIn').value.trim();
+      const parsed = JSON.parse(val);
+      if (!parsed.projectId || !parsed.apiKey) throw new Error('配置需包含 projectId 和 apiKey');
+      if (window.CloudSave) CloudSave.setConfig(parsed);
+      toast('Firebase 云端配置已保存！正在连线…');
+      $id('cloudCfgBox').classList.add('hidden');
+      renderAcc();
+    } catch (e) {
+      alert('配置格式错误：' + e.message);
+    }
+  });
+}
+if ($id('fbCfgClearBtn')) {
+  $id('fbCfgClearBtn').addEventListener('click', () => {
+    if (window.CloudSave) CloudSave.setConfig(null);
+    if ($id('fbCfgIn')) $id('fbCfgIn').value = '';
+    toast('已恢复为本地独立单账号模式');
+    $id('cloudCfgBox').classList.add('hidden');
+    renderAcc();
+  });
+}
+
 let lbKind = 'rank';
 $id('lbTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { lbKind = b.dataset.k; openLeaderboard(); } });
 async function openLeaderboard() {
@@ -6123,13 +6431,29 @@ $id('lbBack').addEventListener('click', backToMenu);
 adaptLoad();
 if (SERVED && window.fetch && !ACC.token) loadProfile();
 if (SERVED && ACC.token && window.fetch) api('/api/me').then(setAcc).catch(err => { if (/失效/.test(err.message)) setAcc(null); else renderAcc(); });
+
+// 检查云端/本地已有登录并载入存档
+if (window.CloudSave) {
+  const cu = CloudSave.getUser();
+  if (cu && cu.name) {
+    ACC.name = cu.name;
+    ACC.token = cu.uid;
+    PROF.guest = false;
+    CloudSave.loadProfile().then(p => {
+      if (p) applyProfile(p);
+      else CloudSave.saveProfile(PROF, true);
+      renderAcc();
+    }).catch(() => {});
+  }
+}
+
 renderAcc();
 function netStatus(t) { $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
 if (!SERVED) $id('onlineLine').textContent = '';
 $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
-// 离线：全部皮肤可用，装备记在本机；离线版隐藏需要服务器的功能
-if (!SERVED) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
+// 离线单文件版：全部皮肤可用，装备记在本机；在线版拥有完整成长与解锁
+if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 if (OFFLINE_BUILD) {
   $id('mSingle').innerHTML = '<span class="mk">对战电脑</span><span class="ms">和电脑过招，难度可选</span>';
   $id('mNet').innerHTML = '<span class="mk">闯关模式</span><span class="ms">六章三十关，一关一关打上去</span>';
