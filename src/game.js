@@ -7300,6 +7300,7 @@ function bpTick(dt) {
   if (!BP || BP.step >= 4 || !document.getElementById('bp').classList.contains('on') || NET.hold) return;
   BP.t = Math.max(0, BP.t - dt);
   document.getElementById('bpTime').textContent = `${Math.ceil(BP.t)} 秒`;
+  document.getElementById('bpTime').classList.toggle('urgent', BP.t <= 8);
   if (!bpAuth()) return;
   const side = BP_STEPS[BP.step][0];
   if (bpMode === 'cpu' && side === 1) { bpCpuT -= dt; if (bpCpuT <= 0) bpApply(bpCpuChoice()); return; }
@@ -7443,7 +7444,8 @@ function renderBP() {
   const my = bpMySide(), done = BP.step >= 4;
   const [side, type] = done ? [-1, ''] : BP_STEPS[BP.step];
   const myTurn = !done && side === my;
-  document.getElementById('bpStep').textContent = (bpMode === 'net' && NET.isRanked ? '排位赛 · ' : '') + (done ? '准备开战' : `${bpSideName(side)}${type === 'ban' ? '禁用' : '选择'}一个角色`);
+  document.getElementById('bpStep').innerHTML = (bpMode === 'net' && NET.isRanked ? '排位赛 · ' : '') + (done ? '准备开战' : `${bpSideName(side)}${type === 'ban' ? '禁用' : '选择'}一个角色`)
+    + (done ? '' : `<span class="bpcount">第 ${BP.step + 1} / ${BP_STEPS.length} 步</span>`);
   document.getElementById('bpStep').style.color = myTurn ? '#e9c46a' : 'var(--ink)';
   document.getElementById('bpTime').textContent = done ? '' : `${Math.ceil(BP.t)} 秒`;
   for (const sd of [0, 1]) {

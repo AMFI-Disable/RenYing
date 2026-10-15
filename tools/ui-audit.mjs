@@ -56,7 +56,7 @@ const PANELS = [
   ['help', `openScreen('help')`], ['codex', `openScreen('codex')`], ['settings', `openScreen('settings')`],
   ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
   ['welfare', `openWelfare()`], ['gacha', `openScreen('gacha')`], ['replays', `openScreen('replays')`],
-  ['tasks', `openScreen('tasks')`], ['bp', `__bpDemo()`], ['pause', `showScreen('pause')`],
+  ['tasks', `openScreen('tasks')`], ['bp', `PROF.owned = CHARS.map(c => c.id); bpStart('cpu'); bpCpuT = 9999; bpApply(3); bpApply(6); bpCpuT = 9999; bpSel = 4; renderBP(); showScreen('bp');`], ['pause', `showScreen('pause')`],
   ['end', `__endDemo()`], ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`],
   ['tutdone', `__tutdoneDemo()`],
 ];
@@ -102,6 +102,29 @@ const PROBE = `(() => {
     const hasText = el.children.length === 0 && (el.textContent||'').trim().length > 0;
     if (hasText) { const fs = parseFloat(cs.fontSize);
       if (fs < 12) out.tiny.push({ el:key, fs, text:(el.textContent||'').trim().slice(0,22) }); }
+  }
+  if (scr.id === 'bp') {   // composition checks for the draft screen
+    const contentH = box => { const r = box.getBoundingClientRect(); let m = 0;
+      for (const e of box.querySelectorAll('*')) {
+        if (e.children.length) continue;           // leaves only: a stretched grid child reports the box height
+        const b = e.getBoundingClientRect().bottom - r.top; if (b > m) m = b; }
+      return Math.round(m); };
+    const band = sel => { const e = document.querySelector(sel); if (!e) return null; const h = e.getBoundingClientRect().height;
+      return { box: Math.round(h), content: contentH(e), ratio: h ? +(contentH(e) / h).toFixed(2) : null }; };
+    const cards = [...document.querySelectorAll('.bpcard')], rows = new Map();
+    for (const c of cards) { const t = Math.round(c.getBoundingClientRect().top); if (!rows.has(t)) rows.set(t, []); rows.get(t).push(c); }
+    const rowList = [...rows.values()], cols = rowList[0] ? rowList[0].length : 0, last = rowList[rowList.length - 1] || [];
+    const gr = document.querySelector('.bpgrid').getBoundingClientRect(), lr = last.map(c => c.getBoundingClientRect());
+    const leftGap = lr.length ? Math.min(...lr.map(r => r.left)) - gr.left : 0;
+    const rightGap = lr.length ? gr.right - Math.max(...lr.map(r => r.right)) : 0;
+    const go = document.getElementById('bpGo').getBoundingClientRect();
+    const bpw = document.querySelector('.bpw').getBoundingClientRect();
+    out.bp = { cards: cards.length, perRow: cols, rows: rowList.length, partialLastRow: cards.length % cols !== 0,
+      lastRowCentered: Math.abs(leftGap - rightGap) <= 14, gaps: [Math.round(leftGap), Math.round(rightGap)],
+      dossier: band('.bpdetail'), deck: band('#bpMoveDeck'),
+      goVisible: go.bottom <= innerHeight && go.top >= 0, goTop: Math.round(go.top),
+      fillRatio: +(scr.scrollHeight / innerHeight).toFixed(2),
+      gridSpan: Math.round(gr.width), panelContent: Math.round(bpw.width - 40) };
   }
   out.tiny = out.tiny.slice(0,10); out.probs = out.probs.slice(0,25); out.scrollX = out.scrollX.slice(0,8);
   return out; })()`;
@@ -192,11 +215,28 @@ for (const a of audit) {
   for (const p of a.probs) console.log(`     [${p.kind}] ${p.el} ${p.sw?`sw${p.sw}/cw${p.cw}`:''}${p.right?` L${p.left}/R${p.right}`:''} "${p.text}"`);
   for (const t of a.tiny) if (t.fs < 11.5) console.log(`     [font ${t.fs}px] ${t.el} "${t.text}"`);
   for (const x of (a.scrollX || [])) console.log(`     note: ${x.el} scrolls horizontally (${x.sw}>${x.cw}) "${x.text}"`);
+  if (a.bp) { const b = a.bp;
+    console.log(`     composition: ${b.cards} cards, ${b.rows} row(s) of ${b.perRow}${b.partialLastRow ? ` (last row centred=${b.lastRowCentered}, gaps ${b.gaps})` : ' (no orphan row)'}`
+      + ` | dossier ${b.dossier.content}/${b.dossier.box}px (${b.dossier.ratio}) | deck ${b.deck.content}/${b.deck.box}px (${b.deck.ratio})`
+      + ` | button y=${b.goTop} visible=${b.goVisible} | fill ${b.fillRatio} | grid ${b.gridSpan}/${b.panelContent}px`); }
 }
 const STRICT = !!process.env.RENYING_STRICT;
+// Composition gate: asserted at desktop sizes, where the draft must fit one screen and look deliberate.
+const compProblems = [];
+for (const a of audit) {
+  if (!a || !a.bp || a.vw < 1200 || a.vh < 820) continue;
+  const b = a.bp;
+  if (a.needsScroll) compProblems.push(`draft needs scrolling (${a.panelScroll}px of content in ${a.panelClient}px)`);
+  if (b.partialLastRow && !b.lastRowCentered) compProblems.push(`hero grid leaves an orphan row piled to the left (gaps ${b.gaps})`);
+  for (const [n, v] of [['dossier', b.dossier], ['move deck', b.deck]]) if (v.ratio < 0.6) compProblems.push(`${n} panel is mostly empty (${v.content}px of content in a ${v.box}px box)`);
+  if (!b.goVisible) compProblems.push(`confirm button is below the fold (y=${b.goTop})`);
+  if (b.fillRatio < 0.85) compProblems.push(`draft fills only ${Math.round(b.fillRatio * 100)}% of the screen`);
+  if (b.gridSpan < b.panelContent * 0.95) compProblems.push(`hero grid is narrower than the panel (${b.gridSpan} of ${b.panelContent}px)`);
+}
 const defects = audit.filter(a => a && !a.error && (a.probs.length || a.tiny.length));
 const scrollers = audit.filter(a => a && a.needsScroll);
 ws.close(); chrome.kill();
+if (compProblems.length) { console.log('\nFAIL (composition):'); for (const c of compProblems) console.log('  - ' + c); process.exit(1); }
 if (defects.length) { console.log(`\nFAIL: ${defects.length} panel(s) with clipped/off-screen/small text: ${defects.map(d => d.panel).join(', ')}`); process.exit(1); }
 if (STRICT && scrollers.length) { console.log(`\nFAIL (strict): ${scrollers.length} panel(s) need scrolling: ${scrollers.map(d => d.panel).join(', ')}`); process.exit(1); }
 console.log(`\nPASS: ${audit.length} panels, no clipping, no sub-12px text${STRICT ? ', none need scrolling' : ''}.`);
