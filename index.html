@@ -11,7 +11,7 @@
 <style>
   :root {
     --bg: #0a0b1c; --ink: #efe8d8; --dim: rgba(239, 232, 216, 0.62); --faint: rgba(239, 232, 216, 0.16);
-    --p1: #46d3ea; --p2: #ff4a5f; --seal: #b8392e;
+    --p1: #46d3ea; --p2: #ff4a5f; --seal: #b8392e; --gold: #e9c46a;
     --title: "Ma Shan Zheng", "STKaiti", "KaiTi", "Kaiti SC", serif;
     --body: "Noto Serif SC", "Songti SC", "SimSun", serif;
     box-sizing: border-box;
@@ -109,7 +109,7 @@
   .cxtabs { display: flex; flex-wrap: wrap; gap: 8px; }
   .cxtabs button { font-family: var(--title); font-size: 22px; padding: 4px 16px; border-radius: 8px; cursor: pointer; color: var(--dim); background: rgba(255,255,255,.04); border: 1px solid var(--faint); }
   .cxtabs button.sel { color: #14121f; background: var(--ink); }
-  .bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 110px; gap: 12px; grid-auto-flow: dense; text-align: left; }
+  .bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: minmax(110px, auto); gap: 12px; grid-auto-flow: dense; text-align: left; }
   .tile { border-radius: 22px; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.07); padding: 16px 18px; overflow: hidden; position: relative; min-width: 0; }
   .t-art { grid-column: 1 / span 2; grid-row: 1 / span 3; padding: 0; background: #0b0a1a; display: flex; align-items: center; justify-content: center; }
   .t-art canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -118,8 +118,14 @@
   .t-name .pills { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
   .pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--dim); white-space: nowrap; }
   .t-skin { grid-column: 5 / span 2; grid-row: 1; }
-  .t-demo { grid-column: 3 / span 2; grid-row: 2 / span 2; padding: 0; }
+  .t-demo { grid-column: 3 / span 2; grid-row: 2 / span 2; padding: 0; position: relative; }
   .t-demo canvas { width: 100%; height: 100%; display: block; }
+  .demo-ctrls { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; z-index: 5; pointer-events: auto; }
+  .demo-tabs { display: flex; gap: 3px; overflow-x: auto; max-width: calc(100% - 88px); }
+  .demo-tabs button { background: rgba(10,12,24,.85); border: 1px solid var(--faint); color: var(--dim); font-size: 12px; padding: 3px 7px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+  .demo-tabs button:hover { color: var(--ink); border-color: rgba(233,196,106,.4); }
+  .demo-tabs button.sel { background: var(--gold); color: #0c0b16; font-weight: 700; border-color: var(--gold); }
+  .demo-spd { background: rgba(10,12,24,.85); border: 1px solid var(--faint); color: var(--gold); font-size: 12px; padding: 3px 8px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
   .t-stats { grid-column: 5 / span 2; grid-row: 2 / span 2; }
   .th { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .ic { width: 22px; height: 22px; flex: none; opacity: .9; } .ic svg { width: 100%; height: 100%; display: block; }
@@ -129,8 +135,14 @@
   .cd { position: absolute; right: 14px; top: 14px; font-size: 12px; color: var(--dim); }
   .t-m { grid-column: span 1; }
   .t-m.wide { grid-column: span 2; }
+  .t-has-demo { cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
+  .t-has-demo:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.4); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
+  .t-has-demo.active-demo { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,196,106,.5), 0 8px 24px rgba(0,0,0,.45); background: rgba(233,196,106,.08); }
+  .card-mini-win { width: 100%; height: 76px; border-radius: 8px; overflow: hidden; background: #070814; border: 1px solid rgba(255,255,255,.08); margin: 6px 0 8px; position: relative; }
+  .card-mini-win canvas { width: 100%; height: 100%; display: block; }
+  .mini-tag { position: absolute; right: 5px; top: 4px; font-size: 12px; padding: 1px 5px; border-radius: 3px; background: rgba(0,0,0,.65); color: var(--gold); pointer-events: none; border: 1px solid rgba(233,196,106,.3); }
   @media (max-width: 1100px) {
-    .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 120px; }
+    .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(120px, auto); }
     .t-art { grid-column: 1 / span 2; grid-row: auto / span 4; }
     .t-name, .t-skin, .t-demo, .t-stats { grid-column: span 2; grid-row: auto; }
     .t-demo, .t-stats { grid-row: auto / span 2; }
@@ -359,7 +371,7 @@
   .bpcard .tag { position: absolute; top: 8px; right: 8px; font-family: var(--title); font-size: 18px; color: #fbeee0; background: var(--seal); padding: 2px 7px; border-radius: 4px; transform: rotate(6deg); }
   .bpcard .tag.p { background: #2b6f86; }
   .bpcard:focus-visible { outline: 2px solid var(--p1); outline-offset: 2px; }
-  .bpbot { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end; }
+  .bpbot { display: grid; grid-template-columns: minmax(260px, 320px) 1fr auto; gap: 14px; align-items: stretch; }
   .bpdetail { border: 1px solid var(--faint); border-radius: 12px; padding: 10px 14px; background: rgba(0,0,0,.25); display: grid; font-size: 13px; line-height: 1.6; }
   .bpd { grid-area: 1 / 1; visibility: hidden; display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-content: start; }
   .bpd.show { visibility: visible; }
@@ -371,9 +383,32 @@
   .bpdetail dd { margin: 0; }
   .bpdetail .ctr { margin-top: 6px; color: var(--dim); }
   .bpdetail .ctr b { color: var(--ink); font-weight: 600; }
-  .bpact { display: grid; gap: 10px; justify-items: center; }
+  .bpmovedeck { border: 1px solid rgba(233,196,106,.3); border-radius: 12px; padding: 10px 14px; background: rgba(12,14,24,.88); display: flex; flex-direction: column; gap: 8px; min-width: 0; text-align: left; }
+  .deckhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .decktitle { font-family: var(--title); font-size: 16px; color: var(--gold); letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+  .decktabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; }
+  .decktabs button { background: rgba(255,255,255,.06); border: 1px solid var(--faint); color: var(--dim); font-size: 12px; padding: 3px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; transition: all .15s; }
+  .decktabs button:hover { border-color: rgba(233,196,106,.5); color: var(--ink); }
+  .decktabs button.sel { background: var(--gold); color: #0c0b16; font-weight: 700; border-color: var(--gold); }
+  .deckstage { display: grid; grid-template-columns: 200px 1fr; gap: 12px; align-items: center; min-height: 94px; }
+  .deckcvwrap { width: 200px; height: 98px; border-radius: 8px; overflow: hidden; background: #080914; border: 1px solid rgba(255,255,255,.08); flex: none; position: relative; }
+  .deckcvwrap canvas { width: 100%; height: 100%; display: block; }
+  .deckinfo { text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }
+  .dhitname { font-size: 15px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .dhitbadge { display: flex; gap: 6px; flex-wrap: wrap; }
+  .dhitbadge span { font-size: 12px; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+  .badge-stun { background: rgba(255,107,107,.2); color: #ff6b6b; border: 1px solid rgba(255,107,107,.4); }
+  .badge-buff { background: rgba(70,211,234,.2); color: #46d3ea; border: 1px solid rgba(70,211,234,.4); }
+  .badge-break { background: rgba(233,196,106,.2); color: #e9c46a; border: 1px solid rgba(233,196,106,.4); }
+  .dhitdesc { font-size: 12px; color: var(--dim); line-height: 1.45; }
+  .bpact { display: grid; gap: 10px; justify-items: center; align-content: center; }
   .bpact .go { margin: 0; font-size: clamp(20px, 1.9vw, 24px); width: min(320px, 100%); white-space: nowrap; }
-  @media (max-width: 760px) { .bpd { grid-template-columns: 64px 1fr; } .bpdetail img { width: 64px; height: 78px; } .bpgrid { grid-template-columns: repeat(2, 1fr); } .bpbot { grid-template-columns: 1fr; } .bph { grid-template-columns: 1fr; } .bps.right { flex-direction: row; text-align: left; } .bps.right .slots { flex-direction: row; } }
+  @media (max-width: 1000px) {
+    .bpbot { grid-template-columns: 1fr; }
+    .deckstage { grid-template-columns: 1fr; }
+    .deckcvwrap { width: 100%; height: 110px; }
+  }
+  @media (max-width: 760px) { .bpd { grid-template-columns: 64px 1fr; } .bpdetail img { width: 64px; height: 78px; } .bpgrid { grid-template-columns: repeat(2, 1fr); } .bph { grid-template-columns: 1fr; } .bps.right { flex-direction: row; text-align: left; } .bps.right .slots { flex-direction: row; } }
   #menu.leaving .mcard, #menu.leaving .msmall, #menu.leaving .mtitle { opacity: 0; transition: opacity .3s; }
   .touch { display: none; color: #ffb4a6; font-size: 14px; margin-top: 16px; }
 
@@ -544,7 +579,21 @@
         <div class="tile t-art"><canvas id="cxCard" width="600" height="800"></canvas></div>
         <div class="tile t-name" id="cxName"></div>
         <div class="tile t-skin"><div class="th"><span class="ic" data-ic="skin"></span><span class="tl" id="cxSkinT">皮肤</span></div><div class="cxskins" id="cxSkins"></div></div>
-        <div class="tile t-demo"><canvas id="cxDemo"></canvas></div>
+        <div class="tile t-demo">
+          <canvas id="cxDemo"></canvas>
+          <div class="demo-ctrls">
+            <div class="demo-tabs" id="cxDemoTabs">
+              <button class="sel" data-m="all">全套连贯</button>
+              <button data-m="light">普攻</button>
+              <button data-m="charge">蓄力</button>
+              <button data-m="air">空中</button>
+              <button data-m="skill">Q技能</button>
+              <button data-m="ranged">R特殊</button>
+              <button data-m="ult">E奥义</button>
+            </div>
+            <button class="ghost small demo-spd" id="cxDemoSpd">正常 1.0x</button>
+          </div>
+        </div>
         <div class="tile t-stats"><div class="th"><span class="ic" data-ic="stats"></span><span class="tl">属性</span></div><div class="cxstats" id="cxStats"></div></div>
         <div id="cxMoves" style="display:contents"></div>
       </div>
@@ -580,6 +629,28 @@
       <div class="bpgrid" id="bpGrid"></div>
       <div class="bpbot">
         <div class="bpdetail" id="bpDetail"></div>
+        <div class="bpmovedeck" id="bpMoveDeck">
+          <div class="deckhead">
+            <span class="decktitle">⚔️ 招式打击速览</span>
+            <div class="decktabs" id="bpDeckTabs">
+              <button class="sel" data-m="light">普攻连击</button>
+              <button data-m="charge">蓄力重斩</button>
+              <button data-m="skill">Q 门派技</button>
+              <button data-m="ranged">R 特殊技</button>
+              <button data-m="ult">E 终极奥义</button>
+            </div>
+          </div>
+          <div class="deckstage">
+            <div class="deckcvwrap">
+              <canvas id="bpDeckCanvas"></canvas>
+            </div>
+            <div class="deckinfo" id="bpDeckInfo">
+              <div class="dhitname" id="bpdHitName">普攻五段</div>
+              <div class="dhitbadge" id="bpdHitBadge"><span class="badge-break">末段击飞</span></div>
+              <div class="dhitdesc" id="bpdHitDesc">轻刃连削，终末强力扫飞对手浮空。</div>
+            </div>
+          </div>
+        </div>
         <div class="bpact"><button class="go" id="bpGo" disabled>确认</button><button class="ghost" id="bpQuit">返回菜单</button></div>
       </div>
       <div class="bpchat hidden" id="bpChat">
@@ -624,11 +695,11 @@
           <button class="go small" id="claimLegacyBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">一键继承</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
-          <label class="ghost small" style="cursor:pointer;font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
+          <label class="ghost small" style="cursor:pointer;font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
             📂 上传导出文件 (.json)
             <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
           </label>
-          <span id="importFileStatus" style="font-size:11px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持 renying-export.json</span>
+          <span id="importFileStatus" style="font-size:12px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持 renying-export.json</span>
         </div>
         <p id="importMsg" class="netstatus" style="margin:6px 0 0;font-size:12px" role="status"></p>
       </div>
@@ -5175,7 +5246,7 @@ function drawHUD() {
     else if (gRatio < 0.6) gCol = '#f39c12';
     ctx.fillStyle = gCol;
     ctx.fillRect(i === 0 ? gx : gx + gw - gw * gRatio, gy, gw * gRatio, gh);
-    ctx.font = `${Math.round(gh * 1.8)}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'left' : 'right';
+    ctx.font = `${Math.max(12, Math.round(gh * 1.8))}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'left' : 'right';
     ctx.fillStyle = gRatio < 0.3 ? '#ff7a8a' : 'rgba(239,232,216,0.65)';
     if (gRatio <= 0.02) ctx.fillText('💥 崩防', i === 0 ? gx + gw + 4 : gx - 4, gy + gh / 2);
     else if (gRatio < 0.95 || f.state === 'block' || f.state === 'blockstun') ctx.fillText(`势 ${Math.round(curG)}`, i === 0 ? gx + gw + 4 : gx - 4, gy + gh / 2);
@@ -5270,12 +5341,12 @@ function drawHUD() {
   ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
   if (M.ot && M.mode !== 'train') ctx.fillStyle = '#ff6a5a';
   ctx.fillText(M.mode === 'train' ? '∞' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
-  if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.round(bh * 0.32)}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top + bh * 1.2); ctx.restore(); }
+  if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); ctx.restore(); }
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
 }
 function drawStats() {
   if (M.mode === 'demo') return;
-  const fs = Math.max(11, Math.round(H * 0.016)), x = 14, y = H - 12;
+  const fs = Math.max(12, Math.round(H * 0.016)), x = 14, y = H - 12;
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
   ctx.fillStyle = 'rgba(239,232,216,0.55)';
   let t = `帧率 ${FPS}`;

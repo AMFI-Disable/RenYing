@@ -2,6 +2,8 @@
 // Node built-ins only (global fetch + WebSocket). Attaches via the browser-level CDP
 // WebSocket (the /json HTTP endpoint is unreachable in this sandbox).
 import { spawn } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { mkdirSync, writeFileSync, readFileSync, openSync, readFileSync as readF } from 'node:fs';
 
 import { existsSync } from 'node:fs';
@@ -14,7 +16,7 @@ const CHROME = process.env.RENYING_CHROME || [
 if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/path/to/chrome'); process.exit(1); }
 const URL = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
 const PORT = +(process.env.CDP_PORT || 9345);
-const OUT = process.argv[2] || 'ui-shots';
+const OUT = process.argv[2] || join(tmpdir(), 'renying-ui-audit');
 const VW = +(process.argv[3] || 1440);
 const VH = +(process.argv[4] || 900);
 const ONLY = process.argv[5] ? process.argv[5].split(',') : null;
@@ -68,7 +70,7 @@ const PROBE = `(() => {
   if (!scr) return { panel: '(none)', error: 'no .scr.on' };
   const W = innerWidth, H = innerHeight;
   const out = { panel: scr.id, vw: W, vh: H, panelScroll: scr.scrollHeight, panelClient: scr.clientHeight,
-                needsScroll: scr.scrollHeight > scr.clientHeight + 2, probs: [], tiny: [] };
+                needsScroll: scr.scrollHeight > scr.clientHeight + 2, probs: [], tiny: [], scrollX: [] };
   const seen = new Set();
   for (const el of scr.querySelectorAll('*')) {
     const cs = getComputedStyle(el);
@@ -76,9 +78,13 @@ const PROBE = `(() => {
     const r = el.getBoundingClientRect();
     if (r.width < 1 && r.height < 1) continue;
     const key = desc(el);
-    if (el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0 && cs.overflowX !== 'visible') {
+    const overX = el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0;
+    if (overX && cs.overflowX === 'hidden') {
       if (!seen.has('x'+key)) { seen.add('x'+key); out.probs.push({ kind:'clipX', el:key, sw:el.scrollWidth, cw:el.clientWidth,
         text:(el.textContent||'').trim().slice(0,26) }); } }
+    else if (overX && (cs.overflowX === 'auto' || cs.overflowX === 'scroll')) {
+      if (!seen.has('s'+key)) { seen.add('s'+key); out.scrollX.push({ el:key, sw:el.scrollWidth, cw:el.clientWidth,
+        text:(el.textContent||'').trim().slice(0,24).replace(/\s+/g,' ') }); } }
     if (r.right > W + 1 || r.left < -1) {
       if (!seen.has('o'+key)) { seen.add('o'+key); out.probs.push({ kind:'offscreenX', el:key,
         left:Math.round(r.left), right:Math.round(r.right), text:(el.textContent||'').trim().slice(0,26) }); } }
@@ -93,7 +99,7 @@ const PROBE = `(() => {
     if (hasText) { const fs = parseFloat(cs.fontSize);
       if (fs < 12) out.tiny.push({ el:key, fs, text:(el.textContent||'').trim().slice(0,22) }); }
   }
-  out.tiny = out.tiny.slice(0,10); out.probs = out.probs.slice(0,25);
+  out.tiny = out.tiny.slice(0,10); out.probs = out.probs.slice(0,25); out.scrollX = out.scrollX.slice(0,8);
   return out; })()`;
 
 class CDP {
@@ -179,6 +185,7 @@ for (const a of audit) {
   console.log(`${a.panel.padEnd(11)} ${flags.length ? flags.join(' | ') : 'ok'}`);
   for (const p of a.probs) console.log(`     [${p.kind}] ${p.el} ${p.sw?`sw${p.sw}/cw${p.cw}`:''}${p.right?` L${p.left}/R${p.right}`:''} "${p.text}"`);
   for (const t of a.tiny) if (t.fs < 11.5) console.log(`     [font ${t.fs}px] ${t.el} "${t.text}"`);
+  for (const x of (a.scrollX || [])) console.log(`     note: ${x.el} scrolls horizontally (${x.sw}>${x.cw}) "${x.text}"`);
 }
 const STRICT = !!process.env.RENYING_STRICT;
 const defects = audit.filter(a => a && !a.error && (a.probs.length || a.tiny.length));

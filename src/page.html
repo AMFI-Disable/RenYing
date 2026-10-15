@@ -147,7 +147,21 @@
         <div class="tile t-art"><canvas id="cxCard" width="600" height="800"></canvas></div>
         <div class="tile t-name" id="cxName"></div>
         <div class="tile t-skin"><div class="th"><span class="ic" data-ic="skin"></span><span class="tl" id="cxSkinT">皮肤</span></div><div class="cxskins" id="cxSkins"></div></div>
-        <div class="tile t-demo"><canvas id="cxDemo"></canvas></div>
+        <div class="tile t-demo">
+          <canvas id="cxDemo"></canvas>
+          <div class="demo-ctrls">
+            <div class="demo-tabs" id="cxDemoTabs">
+              <button class="sel" data-m="all">全套连贯</button>
+              <button data-m="light">普攻</button>
+              <button data-m="charge">蓄力</button>
+              <button data-m="air">空中</button>
+              <button data-m="skill">Q技能</button>
+              <button data-m="ranged">R特殊</button>
+              <button data-m="ult">E奥义</button>
+            </div>
+            <button class="ghost small demo-spd" id="cxDemoSpd">正常 1.0x</button>
+          </div>
+        </div>
         <div class="tile t-stats"><div class="th"><span class="ic" data-ic="stats"></span><span class="tl">属性</span></div><div class="cxstats" id="cxStats"></div></div>
         <div id="cxMoves" style="display:contents"></div>
       </div>
@@ -183,6 +197,28 @@
       <div class="bpgrid" id="bpGrid"></div>
       <div class="bpbot">
         <div class="bpdetail" id="bpDetail"></div>
+        <div class="bpmovedeck" id="bpMoveDeck">
+          <div class="deckhead">
+            <span class="decktitle">⚔️ 招式打击速览</span>
+            <div class="decktabs" id="bpDeckTabs">
+              <button class="sel" data-m="light">普攻连击</button>
+              <button data-m="charge">蓄力重斩</button>
+              <button data-m="skill">Q 门派技</button>
+              <button data-m="ranged">R 特殊技</button>
+              <button data-m="ult">E 终极奥义</button>
+            </div>
+          </div>
+          <div class="deckstage">
+            <div class="deckcvwrap">
+              <canvas id="bpDeckCanvas"></canvas>
+            </div>
+            <div class="deckinfo" id="bpDeckInfo">
+              <div class="dhitname" id="bpdHitName">普攻五段</div>
+              <div class="dhitbadge" id="bpdHitBadge"><span class="badge-break">末段击飞</span></div>
+              <div class="dhitdesc" id="bpdHitDesc">轻刃连削，终末强力扫飞对手浮空。</div>
+            </div>
+          </div>
+        </div>
         <div class="bpact"><button class="go" id="bpGo" disabled>确认</button><button class="ghost" id="bpQuit">返回菜单</button></div>
       </div>
       <div class="bpchat hidden" id="bpChat">
@@ -227,11 +263,11 @@
           <button class="go small" id="claimLegacyBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">一键继承</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
-          <label class="ghost small" style="cursor:pointer;font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
+          <label class="ghost small" style="cursor:pointer;font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
             📂 上传导出文件 (.json)
             <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
           </label>
-          <span id="importFileStatus" style="font-size:11px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持 renying-export.json</span>
+          <span id="importFileStatus" style="font-size:12px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持 renying-export.json</span>
         </div>
         <p id="importMsg" class="netstatus" style="margin:6px 0 0;font-size:12px" role="status"></p>
       </div>

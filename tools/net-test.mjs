@@ -7,6 +7,8 @@
 //             and report uncaught exceptions + the status line it produced
 // Usage: node renying-mp.mjs <mode|all> [outdir]
 import { spawn } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { mkdirSync, writeFileSync, readFileSync, openSync } from 'node:fs';
 
 import { existsSync } from 'node:fs';
@@ -19,7 +21,7 @@ const CHROME = process.env.RENYING_CHROME || [
 if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/path/to/chrome'); process.exit(1); }
 const PORT = +(process.env.RENYING_CDP_PORT || 9355);
 const GAME = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
-const OUT = process.argv[3] || 'mp-results';
+const OUT = process.argv[3] || join(tmpdir(), 'renying-net-test');
 const MODE = process.argv[2] || 'all';
 let TOKEN = '';
 try { TOKEN = readFileSync(process.env.RENYING_TOKEN_FILE || '/tmp/renying-token.txt', 'utf8').trim(); } catch {}

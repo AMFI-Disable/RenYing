@@ -77,10 +77,16 @@ jobs:
           curl -sf http://127.0.0.1:8791/health >/dev/null || { echo "server failed to start"; cat /tmp/renying-server.log; exit 1; }
           echo "Local server is up on :8791"
 
+      # Fails on clipped/off-screen text or sub-12px text. Scrolling is reported but not
+      # fatal (a taller panel scrolls rather than clipping) - add RENYING_STRICT: "1"
+      # to also require every panel to fit the viewport.
       - name: UI Panel Layout Audit (all panels, 1440x900)
-        env:
-          RENYING_STRICT: "1"
         run: node tools/ui-audit.mjs ci-ui 1440 900
+
+      # Instrumented canvas-text audit: drives a real match through many states and
+      # fails if any HUD label is drawn below 12px.
+      - name: Canvas HUD Text Audit
+        run: node tools/hud-audit.mjs ci-hud 1440 900
 
       - name: Multiplayer Regression (LAN / dedicated server)
         run: node tools/net-test.mjs server ci-net

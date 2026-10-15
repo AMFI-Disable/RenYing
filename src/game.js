@@ -4100,7 +4100,7 @@ function drawHUD() {
     else if (gRatio < 0.6) gCol = '#f39c12';
     ctx.fillStyle = gCol;
     ctx.fillRect(i === 0 ? gx : gx + gw - gw * gRatio, gy, gw * gRatio, gh);
-    ctx.font = `${Math.round(gh * 1.8)}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'left' : 'right';
+    ctx.font = `${Math.max(12, Math.round(gh * 1.8))}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'left' : 'right';
     ctx.fillStyle = gRatio < 0.3 ? '#ff7a8a' : 'rgba(239,232,216,0.65)';
     if (gRatio <= 0.02) ctx.fillText('💥 崩防', i === 0 ? gx + gw + 4 : gx - 4, gy + gh / 2);
     else if (gRatio < 0.95 || f.state === 'block' || f.state === 'blockstun') ctx.fillText(`势 ${Math.round(curG)}`, i === 0 ? gx + gw + 4 : gx - 4, gy + gh / 2);
@@ -4195,12 +4195,12 @@ function drawHUD() {
   ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
   if (M.ot && M.mode !== 'train') ctx.fillStyle = '#ff6a5a';
   ctx.fillText(M.mode === 'train' ? '∞' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
-  if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.round(bh * 0.32)}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top + bh * 1.2); ctx.restore(); }
+  if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); ctx.restore(); }
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
 }
 function drawStats() {
   if (M.mode === 'demo') return;
-  const fs = Math.max(11, Math.round(H * 0.016)), x = 14, y = H - 12;
+  const fs = Math.max(12, Math.round(H * 0.016)), x = 14, y = H - 12;
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
   ctx.fillStyle = 'rgba(239,232,216,0.55)';
   let t = `帧率 ${FPS}`;
