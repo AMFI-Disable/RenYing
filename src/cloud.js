@@ -119,6 +119,20 @@
     localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
     localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
     currentUser = { uid, displayName: name };
+
+    try {
+      const guestRaw = localStorage.getItem('renying-guest-profile');
+      if (guestRaw) {
+        const guestProf = JSON.parse(guestRaw);
+        if (guestProf) {
+          guestProf.name = name;
+          localStorage.setItem('renying-prof-' + uid, JSON.stringify(guestProf));
+          localStorage.setItem('renying-cloud-cache', JSON.stringify(guestProf));
+          localStorage.removeItem('renying-guest-profile');
+        }
+      }
+    } catch (e) {}
+
     return { uid, name, isCloud: false };
   }
 
@@ -180,7 +194,13 @@
   // 加载云端档案
   async function loadProfile() {
     const u = getUser();
-    if (!u) return null;
+    if (!u) {
+      try {
+        const guest = localStorage.getItem('renying-guest-profile');
+        if (guest) return JSON.parse(guest);
+      } catch (e) {}
+      return null;
+    }
 
     if (hasValidConfig() && fbDb && currentUser && !currentUser.uid.startsWith('local_')) {
       try {
@@ -209,10 +229,8 @@
   // 保存云端档案（支持防抖节流）
   function saveProfile(prof, immediate) {
     const u = getUser();
-    if (!u) return;
-
     const dataToSave = {
-      name: u.name || prof.name || '大侠',
+      name: (u && u.name) || prof.name || '大侠',
       ink: Math.max(0, Math.floor(prof.ink || 0)),
       owned: Array.isArray(prof.owned) ? Array.from(new Set(prof.owned)) : ['qingfeng'],
       frags: prof.frags || {},
@@ -227,6 +245,14 @@
       qfx: Math.max(0, Math.floor(prof.qfx || 0)),
       updatedAt: Date.now()
     };
+
+    if (!u) {
+      try {
+        localStorage.setItem('renying-guest-profile', JSON.stringify(dataToSave));
+        localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
+      } catch (e) {}
+      return;
+    }
 
     // 立即写入本地镜像
     try {

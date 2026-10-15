@@ -121,7 +121,8 @@
   .t-demo { grid-column: 3 / span 2; grid-row: 2 / span 2; padding: 0; position: relative; }
   .t-demo canvas { width: 100%; height: 100%; display: block; }
   .demo-ctrls { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; z-index: 5; pointer-events: auto; }
-  .demo-tabs { display: flex; gap: 3px; overflow-x: auto; max-width: calc(100% - 88px); }
+  .demo-tabs { display: flex; gap: 3px; overflow-x: auto; max-width: calc(100% - 88px); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .demo-tabs::-webkit-scrollbar { display: none; }
   .demo-tabs button { background: rgba(10,12,24,.85); border: 1px solid var(--faint); color: var(--dim); font-size: 12px; padding: 3px 7px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
   .demo-tabs button:hover { color: var(--ink); border-color: rgba(233,196,106,.4); }
   .demo-tabs button.sel { background: var(--gold); color: #0c0b16; font-weight: 700; border-color: var(--gold); }
@@ -233,7 +234,8 @@
     .menuscr .ver { font-size: 12px; bottom: 1%; }
     .panel { padding: 14px 16px; } h2 { font-size: 26px; margin: 4px 0 8px; } .spt { font-size: 20px; margin: 10px 0 6px; }
     .bpgrid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; } .bpcard .nm { font-size: 17px; }
-    .bento { grid-auto-rows: 110px; } .accbar { transform: scale(.85); transform-origin: top right; }
+    .bento { grid-auto-rows: minmax(110px, auto); } .accbar { transform: scale(.85); transform-origin: top right; }
+    .tile.t-stats, .tile.t-m { height: auto; min-height: 110px; }
   }
   .toast { position: fixed; left: 50%; top: 20px; transform: translateX(-50%) translateY(-20px); z-index: 40; padding: 10px 20px; border-radius: 10px; background: rgba(12,12,30,.95); border: 1px solid rgba(233,196,106,.5); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
   .toast.on { opacity: 1; transform: translateX(-50%); }
@@ -383,10 +385,12 @@
   .bpdetail dd { margin: 0; }
   .bpdetail .ctr { margin-top: 6px; color: var(--dim); }
   .bpdetail .ctr b { color: var(--ink); font-weight: 600; }
-  .bpmovedeck { border: 1px solid rgba(233,196,106,.3); border-radius: 12px; padding: 10px 14px; background: rgba(12,14,24,.88); display: flex; flex-direction: column; gap: 8px; min-width: 0; text-align: left; }
-  .deckhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .bpbot > * { min-width: 0; }
+  .bpmovedeck { border: 1px solid rgba(233,196,106,.3); border-radius: 12px; padding: 10px 14px; background: rgba(12,14,24,.88); display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow: hidden; text-align: left; }
+  .deckhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; width: 100%; }
   .decktitle { font-family: var(--title); font-size: 16px; color: var(--gold); letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
-  .decktabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; }
+  .decktabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; min-width: 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .decktabs::-webkit-scrollbar { display: none; }
   .decktabs button { background: rgba(255,255,255,.06); border: 1px solid var(--faint); color: var(--dim); font-size: 12px; padding: 3px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; transition: all .15s; }
   .decktabs button:hover { border-color: rgba(233,196,106,.5); color: var(--ink); }
   .decktabs button.sel { background: var(--gold); color: #0c0b16; font-weight: 700; border-color: var(--gold); }
@@ -407,6 +411,20 @@
     .bpbot { grid-template-columns: 1fr; }
     .deckstage { grid-template-columns: 1fr; }
     .deckcvwrap { width: 100%; height: 110px; }
+  }
+  @media (max-width: 768px) {
+    .msmall { width: min(94vw, 560px); flex-wrap: wrap; justify-content: center; gap: 6px; bottom: 5%; }
+    .msmall button { font-size: 13px; padding: 6px 13px; }
+  }
+  @media (max-width: 640px) {
+    .setp { padding: 14px 10px; max-width: 96vw; }
+    .setrow { grid-template-columns: 1fr auto; gap: 6px; }
+    .setrow > span:first-child { grid-column: 1 / -1; font-weight: 600; color: var(--gold); }
+    .setrow .seg { display: flex; flex-wrap: wrap; width: 100%; gap: 4px; }
+    .setrow .seg button { flex: 1 1 auto; min-width: 0; padding: 6px 8px; font-size: 12px; }
+    .keygrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .bpw { padding: 10px 8px; }
+    .decktabs button { font-size: 12px; padding: 3px 5px; }
   }
   @media (max-width: 760px) { .bpd { grid-template-columns: 64px 1fr; } .bpdetail img { width: 64px; height: 78px; } .bpgrid { grid-template-columns: repeat(2, 1fr); } .bph { grid-template-columns: 1fr; } .bps.right { flex-direction: row; text-align: left; } .bps.right .slots { flex-direction: row; } }
   #menu.leaving .mcard, #menu.leaving .msmall, #menu.leaving .mtitle { opacity: 0; transition: opacity .3s; }
@@ -971,6 +989,20 @@
     localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
     localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
     currentUser = { uid, displayName: name };
+
+    try {
+      const guestRaw = localStorage.getItem('renying-guest-profile');
+      if (guestRaw) {
+        const guestProf = JSON.parse(guestRaw);
+        if (guestProf) {
+          guestProf.name = name;
+          localStorage.setItem('renying-prof-' + uid, JSON.stringify(guestProf));
+          localStorage.setItem('renying-cloud-cache', JSON.stringify(guestProf));
+          localStorage.removeItem('renying-guest-profile');
+        }
+      }
+    } catch (e) {}
+
     return { uid, name, isCloud: false };
   }
 
@@ -1032,7 +1064,13 @@
   // 加载云端档案
   async function loadProfile() {
     const u = getUser();
-    if (!u) return null;
+    if (!u) {
+      try {
+        const guest = localStorage.getItem('renying-guest-profile');
+        if (guest) return JSON.parse(guest);
+      } catch (e) {}
+      return null;
+    }
 
     if (hasValidConfig() && fbDb && currentUser && !currentUser.uid.startsWith('local_')) {
       try {
@@ -1061,10 +1099,8 @@
   // 保存云端档案（支持防抖节流）
   function saveProfile(prof, immediate) {
     const u = getUser();
-    if (!u) return;
-
     const dataToSave = {
-      name: u.name || prof.name || '大侠',
+      name: (u && u.name) || prof.name || '大侠',
       ink: Math.max(0, Math.floor(prof.ink || 0)),
       owned: Array.isArray(prof.owned) ? Array.from(new Set(prof.owned)) : ['qingfeng'],
       frags: prof.frags || {},
@@ -1079,6 +1115,14 @@
       qfx: Math.max(0, Math.floor(prof.qfx || 0)),
       updatedAt: Date.now()
     };
+
+    if (!u) {
+      try {
+        localStorage.setItem('renying-guest-profile', JSON.stringify(dataToSave));
+        localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
+      } catch (e) {}
+      return;
+    }
 
     // 立即写入本地镜像
     try {
@@ -8574,7 +8618,8 @@ function bpTick(dt) {
 }
 function bpDetailHTML(i) {
   if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式与克制关系。</p>';
-  const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult], nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join('、');
+  const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult];
+  const nm = ids => (ids || []).map(id => (CHARS[CHAR_IDX[id]] ? CHARS[CHAR_IDX[id]].name : id)).filter(Boolean).join('、') || '无';
   return `<img src="${PORTRAITS[i] || ''}" alt="">
     <div><h3 style="color:rgb(${c.look.slash})">${c.name}</h3>
     <div class="meta"><span>${c.role}</span><span>上手难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${c.stat.hp}</span></div>
@@ -8833,6 +8878,7 @@ $id('accBar').addEventListener('click', async e => {
     if (window.CloudSave) await CloudSave.logout();
     setAcc(null);
     PROF.guest = true;
+    applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 });
     toast('已退出账号');
     renderAcc();
   }
@@ -9161,6 +9207,11 @@ if (window.CloudSave) {
     CloudSave.loadProfile().then(p => {
       if (p) applyProfile(p);
       else CloudSave.saveProfile(PROF, true);
+      renderAcc();
+    }).catch(() => {});
+  } else {
+    CloudSave.loadProfile().then(p => {
+      if (p) applyProfile(p);
       renderAcc();
     }).catch(() => {});
   }

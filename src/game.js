@@ -7275,7 +7275,8 @@ function bpTick(dt) {
 }
 function bpDetailHTML(i) {
   if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式与克制关系。</p>';
-  const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult], nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join('、');
+  const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult];
+  const nm = ids => (ids || []).map(id => (CHARS[CHAR_IDX[id]] ? CHARS[CHAR_IDX[id]].name : id)).filter(Boolean).join('、') || '无';
   return `<img src="${PORTRAITS[i] || ''}" alt="">
     <div><h3 style="color:rgb(${c.look.slash})">${c.name}</h3>
     <div class="meta"><span>${c.role}</span><span>上手难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${c.stat.hp}</span></div>
@@ -7534,6 +7535,7 @@ $id('accBar').addEventListener('click', async e => {
     if (window.CloudSave) await CloudSave.logout();
     setAcc(null);
     PROF.guest = true;
+    applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 });
     toast('已退出账号');
     renderAcc();
   }
@@ -7862,6 +7864,11 @@ if (window.CloudSave) {
     CloudSave.loadProfile().then(p => {
       if (p) applyProfile(p);
       else CloudSave.saveProfile(PROF, true);
+      renderAcc();
+    }).catch(() => {});
+  } else {
+    CloudSave.loadProfile().then(p => {
+      if (p) applyProfile(p);
       renderAcc();
     }).catch(() => {});
   }

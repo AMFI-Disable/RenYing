@@ -128,8 +128,19 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Responsive Grid & Panel Layout Hardening**:
+  - Fixed horizontal overflow and button spilling on narrow mobile screens (`<= 768px`) by making the menu quick-actions row (`.msmall`) wrap cleanly and adapt its padding/spacing.
+  - Fixed settings panel overflow on screens `<= 640px` by adapting `.setrow` and `.keygrid` to stack labels and adjust segmented button widths, completely preventing off-screen clipping.
+  - Fixed vertical clipping of Codex stat tiles and move cards on compact screens (`<= 520px`) by switching `.bento` grid rows to `minmax(110px, auto)` and auto-sizing content cards.
+  - Prevented BP deck tabs from expanding beyond the screen width on narrow devices with `min-width: 0;`, `overflow-x: auto;`, and styled touch scroll.
+- **Guest Session Persistence & Account Data Isolation**:
+  - Implemented persistent guest progress in `CloudSave`: unregistered players on GitHub Pages retain their ink, card pulls, and welfare hero unlocks across page reloads in `renying-guest-profile`.
+  - Added automatic guest profile migration: when a guest creates a new local account, all earned ink and unlocked heroes automatically merge into their new profile.
+  - Fixed profile data leakage on logout: in-memory `PROF` resets back to clean guest defaults upon user sign-out.
+  - Fixed `nm()` mapping in `bpDetailHTML` to safely handle non-existent or undefined hero IDs with a graceful fallback.
 - **Hero Selection & Ban/Pick Screen (BP Grid) Recovery**:
   - Restored missing `renderBP()` function and associated click/double-click/hover event listeners in `src/game.js`, fixing the critical `ReferenceError: renderBP is not defined` bug that previously prevented the 9-hero selection cards from populating `#bpGrid`.
+  - Fixed `Puppet` animation engine `hitQ` initialization bug in `set()` and `playSeq()`, eliminating the `TypeError: this.hitQ is not iterable` runtime exception.
   - Re-established real-time coordination between hero card selection, confirmation button enablement, and the panoramic move preview deck (`#bpMoveDeck`).
 - **Serverless Feature Unblocking**:
   - Removed server-dependency gates from Gacha (问剑阁), quest rewards claiming (任务一键领取), Codex skin equipping, Welfare character selection (新手福利), and Tutorial rewards, providing 100% feature availability on GitHub Pages without `server.py`.
