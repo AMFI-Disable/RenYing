@@ -5944,11 +5944,629 @@ const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 �
   liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻十连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒' };
 const ADV_SHORT = { moyu: '再按 Q 引爆墨阵', yuehua: '格反成功，月轮冷却清零', yanling: '空中俯冲命中，可再冲一次',
   feiying: '1.5 秒内再按 Q 瞬回原位', liuyun: '风遁后风刃变两道', lingshuang: '回马枪命中，枪旋冷却减半' };
+// ======================= 全真打击数据与时序 =======================
+const HERO_HIT_DETAILS = {
+  qingfeng: {
+    light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
+    charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
+    air: { name: '凌空挑斩·下砸', badge: '🌪️ 挑空击倒', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中横斩滞空，二段重坠下劈强压地面。' },
+    skill: { name: '居合·疾风斩', badge: '⚡ 斩穴定身 0.65s', badgeCls: 'badge-stun', dmg: '7', cd: '5s', desc: '身随剑走瞬间穿身，施加穴道强定身并刷新冲刺。' },
+    ranged: { name: '弧月·剑气', badge: '🌪️ 掀天挑空', badgeCls: 'badge-buff', dmg: '9', cd: '5s', desc: '半屏极速弧月剑刃，破尽暗器并挑飞空中。' },
+    ult: { name: '绝技·残月', badge: '⚡ 剑意通明', badgeCls: 'badge-stun', dmg: '29 (6连)', cd: '气满', desc: '居合连影绞杀，斩落重置全技能与绝技气量回涌。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+  },
+  tieshan: {
+    light: { name: '重剑沉猛四斩', badge: '💥 霸体压制', badgeCls: 'badge-break', dmg: '31 (4段)', cd: '', desc: '玄铁巨剑刀刀沉重带金属火星，体量压迫。' },
+    charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '12 / 20', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
+    air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '7 / 9', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
+    skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.85s', badgeCls: 'badge-stun', dmg: '8 + 10', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
+    ranged: { name: '玄甲·铁壁冲', badge: '💥 崩山破势', badgeCls: 'badge-break', dmg: '10', cd: '5s', desc: '沉肩如山重盾强冲，带霸体硬直，双倍摧毁格挡。' },
+    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '28 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，直击晕眩1.3s并回半气重置CD。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '7.0s', desc: '玄铁盾身强解受控，冷却极快（7秒）。' }
+  },
+  feiying: {
+    light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '26 (5段)', cd: '', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
+    charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '9 / 16', cd: '', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
+    air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '5 / 7', cd: '', desc: '空中回旋双刺，下落直刺钉向地面。' },
+    skill: { name: '暗影·影遁', badge: '⚡ 封脉定身 0.8s', badgeCls: 'badge-stun', dmg: '4', cd: '11s', desc: '结印化烟瞬至对手背后，十字绞杀强定身+增伤50%。' },
+    ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '2.8×4', cd: '5s', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
+    ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '31 (9连)', cd: '气满', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', cd: '9.5s', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
+  },
+  liuyun: {
+    light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '24 (3段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
+    charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '8 / 15', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
+    air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
+    skill: { name: '惊涛·风刃', badge: '🌪️ 狂风推搡 620px', badgeCls: 'badge-buff', dmg: '7', cd: '1.3s', desc: '挥扇生成巨型气刃，几无硬直，全场最强击退。' },
+    ranged: { name: '御风·风遁', badge: '🌪️ 惊风退敌 0.42s', badgeCls: 'badge-buff', dmg: '4', cd: '4s', desc: '后跃引爆斥力气旋，下一次风刃一分为二。' },
+    ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '2×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
+  },
+  leiming: {
+    light: { name: '狂雷十连轰拳', badge: '⚡ 疾电连打', badgeCls: 'badge-buff', dmg: '30 (10段)', cd: '', desc: '极速拳击十连轰击，拳影交错，末拳雷暴轰天。' },
+    charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '9 / 17', cd: '', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
+    air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中重拳下砸，接连一记沉雷踏击。' },
+    skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.82s', badgeCls: 'badge-stun', dmg: '7', cd: '4s', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.82秒。' },
+    ranged: { name: '轰雷·雷踏', badge: '⚡ 通天雷柱 460px', badgeCls: 'badge-stun', dmg: '9', cd: '3.5s', desc: '踏地引落通天巨型垂直落雷，垂直冲天挑飞。' },
+    ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '9×3', cd: '气满', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 金刚解控', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '金刚怒吼震脱受制状态，后退步稳如磐石。' }
+  },
+  lingshuang: {
+    light: { name: '银枪连刺·抽枪', badge: '⚡ 枪芒连刺', badgeCls: 'badge-buff', dmg: '28 (4段)', cd: '', desc: '长枪一线连环突刺，枪尖命中伤害提升25%。' },
+    charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '11 / 19', cd: '', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
+    air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中点枪突刺，下压枪尾横扫落地。' },
+    skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.85s', badgeCls: 'badge-stun', dmg: '10', cd: '6s', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
+    ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '3.5×7+10', cd: '6s', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
+    ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '12–22', cd: '气满', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
+  },
+  moyu: {
+    light: { name: '挥毫泼墨三式', badge: '🎨 浓墨溅射', badgeCls: 'badge-buff', dmg: '25 (3段)', cd: '', desc: '狼毫大笔挥洒浓墨，附带远程墨滴额外伤害。' },
+    charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
+    air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
+    skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 1.4s', badgeCls: 'badge-stun', dmg: '5', cd: '6s', desc: '铺开125px深墨池，踏入者深陷墨中禁锢1.4秒。' },
+    ranged: { name: '飞毫·泼墨', badge: '🎨 墨迹遮目 0.65s', badgeCls: 'badge-buff', dmg: '6', cd: '6s', desc: '抛物线掷出重浓墨团，炸裂挑空并施加2.5s减速。' },
+    ult: { name: '绘境·墨龙', badge: '🐉 笔意长存 100%', badgeCls: 'badge-stun', dmg: '20', cd: '气满', desc: '浓墨化龙穿行全屏扫灭敌人，墨水瞬间回满。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
+  },
+  yuehua: {
+    light: { name: '双月流水旋舞', badge: '🌙 月华流水', badgeCls: 'badge-buff', dmg: '26 (4段)', cd: '', desc: '双月短刃回旋如流水，舞姿飘逸清冷。' },
+    charge: { name: '合璧明月蓄斩', badge: '💥 双刀破防', badgeCls: 'badge-break', dmg: '9 / 16', cd: '', desc: '双刃化作满月合璧切落，斩断对手招架。' },
+    air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '5 / 7', cd: '', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
+    skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '14', cd: '7s', desc: '月镜架招反斩，触发太阴绝罚超长硬直与禁身。' },
+    ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '6×2', cd: '3.5s', desc: '双月轮飞出折返，去程轻削，返程背袭破防击飞。' },
+    ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +22HP', badgeCls: 'badge-buff', dmg: '10 (+22)', cd: '气满', desc: '月华凝露恢复22生命，月魄护体并重置月镜月轮。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
+  },
+  yanling: {
+    light: { name: '飞羽短刃疾斩', badge: '🪶 振羽连打', badgeCls: 'badge-buff', dmg: '27 (3段)', cd: '', desc: '羽刃翩跹迅捷凌厉，灵动逼人。' },
+    charge: { name: '破云飞翔重扑', badge: '💥 破云重扑', badgeCls: 'badge-break', dmg: '9 / 17', cd: '', desc: '双翼振起猛力前扑，切断对手阵势。' },
+    air: { name: '苍穹展翼·掠击', badge: '🪶 空中掠阵', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中长达1.2秒自由翱翔，自上而下俯瞰掠击。' },
+    skill: { name: '鹰扬·俯冲', badge: '⚡ 鹰击钉地 0.78s', badgeCls: 'badge-stun', dmg: '12', cd: '3.5s', desc: '收翼斜下猎杀钉地，空中击中可刷新且再次冲锋。' },
+    ranged: { name: '千机·翎羽', badge: '🪶 极速穿透', badgeCls: 'badge-buff', dmg: '3.5×3', cd: '2.5s', desc: '振翅激射三道穿透羽刃，贯穿全屏牵制打断。' },
+    ult: { name: '天怒·万羽', badge: '🪶 凌霄破虚 14枚', badgeCls: 'badge-buff', dmg: '2.2×14', cd: '气满', desc: '九霄万羽暴雨倾泻，重置技能并回满飞行耐力。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 振翅凌云', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '猛力振翅脱离受击，立刻升空开启空中制空权。' }
+  }
+};
+
+const HERO_MOVE_SEQS = {
+  qingfeng: {
+    light: [
+      { p: 'idle', d: 0.12, reset: true },
+      { p: 'l1s', d: 0.07, lab: '普攻1' }, { p: 'l1a', d: 0.12, dx: 12, hit: 1 },
+      { p: 'l2s', d: 0.06 }, { p: 'l2a', d: 0.12, dx: 12, hit: 1 },
+      { p: 'lcs', d: 0.06 }, { p: 'lca', d: 0.12, dx: 12, hit: 1 },
+      { p: 'l3s', d: 0.08 }, { p: 'l3a', d: 0.22, dx: 16, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.12, reset: true },
+      { p: 'charge', d: 0.45, lab: '按住蓄力' },
+      { p: 'hva', d: 0.30, dx: 36, hit: 3, launch: true, badge: '💥 破防打倒' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.18, lab: '空中' },
+      { p: 'a1a', d: 0.18, hit: 1 },
+      { p: 'a2a', d: 0.28, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'qf_charge', d: 0.14, lab: 'Q · 疾风斩' },
+      { p: 'qf_thrust', d: 0.32, dx: 52, hit: 2, fx: 'gale', badge: '居合斩穴' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'qf_charge', d: 0.14, lab: 'R · 剑气' },
+      { p: 'qf_thrust', d: 0.36, fx: 'swordqi', hit: 1, launch: true, badge: '掀天挑空' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'qf_charge', d: 0.18, lab: 'E · 残月' },
+      { p: 'qf_thrust', d: 0.14, dx: 45, hit: 1, fx: 'crescent' },
+      { p: 'l1a', d: 0.1, hit: 1 }, { p: 'l2a', d: 0.1, hit: 1 },
+      { p: 'hva', d: 0.3, hit: 3, launch: true, badge: '剑意通明' },
+      { p: 'victory', d: 0.55, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.16, lab: '右键 · 腾空闪' },
+      { p: 'bdash', d: 0.32, dx: -35 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  },
+  tieshan: {
+    light: [
+      { p: 'idle', d: 0.12, reset: true },
+      { p: 'ts_lift', d: 0.1, lab: '普攻1' }, { p: 'ts_slam', d: 0.18, dx: 14, hit: 2 },
+      { p: 'ts_shoulder', d: 0.16, dx: 16, hit: 2 },
+      { p: 'hva', d: 0.28, dx: 18, hit: 3, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.12, reset: true },
+      { p: 'charge', d: 0.5, lab: '玄铁蓄力' },
+      { p: 'ts_slam', d: 0.32, dx: 34, hit: 3, launch: true, fx: 'quake', badge: '💥 破防击倒' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.2, lab: '空中' },
+      { p: 'a1a', d: 0.18, hit: 1 },
+      { p: 'ts_slam', d: 0.3, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ts_lift', d: 0.22, lab: 'Q · 震地' },
+      { p: 'ts_slam', d: 0.36, hit: 2, fx: 'quake', launch: true, badge: '💥 撼地重震' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ts_shoulder', d: 0.15, lab: 'R · 铁壁冲' },
+      { p: 'ts_shoulder', d: 0.35, dx: 45, hit: 2, fx: 'ironwall', launch: true, badge: '💥 崩山破势' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ts_lift', d: 0.25, lab: 'E · 山崩' },
+      { p: 'ts_slam', d: 0.45, dx: 40, hit: 4, fx: 'avalanche', launch: true, badge: '💫 怒意回涌' },
+      { p: 'victory', d: 0.6, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.15, lab: '右键 · 腾空闪' },
+      { p: 'bdash', d: 0.3, dx: -30 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  },
+  feiying: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'l1s', d: 0.05, lab: '连刺' }, { p: 'l1a', d: 0.09, dx: 10, hit: 1 },
+      { p: 'l2s', d: 0.05 }, { p: 'l2a', d: 0.09, dx: 10, hit: 1 },
+      { p: 'lca', d: 0.09, dx: 10, hit: 1 },
+      { p: 'l3a', d: 0.18, dx: 14, hit: 2, launch: true },
+      { p: 'idle', d: 0.3, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'charge', d: 0.35, lab: '背刺蓄力' },
+      { p: 'fy_xslash', d: 0.28, dx: 36, hit: 2, launch: true, badge: '💥 破防背刺' },
+      { p: 'idle', d: 0.3, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.15, lab: '空中' },
+      { p: 'a1a', d: 0.15, hit: 1 },
+      { p: 'a2a', d: 0.25, hit: 2, launch: true },
+      { p: 'idle', d: 0.3, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'fy_seal', d: 0.14, lab: 'Q · 影遁' },
+      { p: 'fy_xslash', d: 0.32, dx: 55, hit: 2, fx: 'blink', badge: '⚡ 封脉定身' },
+      { p: 'idle', d: 0.3, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'fy_seal', d: 0.12, lab: 'R · 飞镖' },
+      { p: 'fy_crouch', d: 0.35, fx: 'kunai', hit: 1, badge: '极速截击' },
+      { p: 'idle', d: 0.3, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'fy_seal', d: 0.18, lab: 'E · 千影' },
+      { p: 'fy_xslash', d: 0.14, dx: 45, hit: 2, fx: 'shadows' },
+      { p: 'l1a', d: 0.08, hit: 1 }, { p: 'l2a', d: 0.08, hit: 1 },
+      { p: 'fy_xslash', d: 0.25, hit: 3, launch: true, badge: '暗影绝杀' },
+      { p: 'victory', d: 0.5, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.14, lab: '右键 · 腾空闪' },
+      { p: 'bdash', d: 0.28, dx: -35 },
+      { p: 'idle', d: 0.3, reset: true }
+    ]
+  },
+  liuyun: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'l1a', d: 0.1, dx: 10, hit: 1 }, { p: 'l2a', d: 0.1, dx: 10, hit: 1 },
+      { p: 'ly_fanswipe', d: 0.22, dx: 16, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'charge', d: 0.4, lab: '旋风蓄力' },
+      { p: 'ly_hover', d: 0.15 },
+      { p: 'hva', d: 0.28, dx: 30, hit: 2, launch: true, badge: '💥 破防卷地' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.15, lab: '御风浮空' },
+      { p: 'ly_hover', d: 0.16 },
+      { p: 'a1a', d: 0.22, hit: 2 },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ly_fanswipe', d: 0.1, lab: 'Q · 风刃' },
+      { p: 'idle', d: 0.36, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
+      { p: 'idle', d: 0.3, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ly_hover', d: 0.32, dx: -45, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ly_fanswipe', d: 0.22, lab: 'E · 龙卷' },
+      { p: 'ly_hover', d: 0.45, fx: 'tornado', hit: 3, launch: true, badge: '🌪️ 扶摇万里' },
+      { p: 'victory', d: 0.55, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ly_hover', d: 0.3, dx: -40 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  },
+  leiming: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'lm_boxer', d: 0.05, lab: '十连击' }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+      { p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+      { p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+      { p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+      { p: 'lm_kick', d: 0.22, dx: 18, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'charge', d: 0.42, lab: '奔雷蓄力' },
+      { p: 'lm_jab', d: 0.3, dx: 36, hit: 3, launch: true, badge: '💥 破防重击' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.16, lab: '空中' },
+      { p: 'a1a', d: 0.16, hit: 1 },
+      { p: 'lm_kick', d: 0.26, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'lm_boxer', d: 0.1, lab: 'Q · 雷闪' },
+      { p: 'lm_jab', d: 0.34, dx: 52, hit: 2, fx: 'thunderfist', badge: '⚡ 触电麻痹' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'lm_kick', d: 0.18, lab: 'R · 雷踏' },
+      { p: 'ts_slam', d: 0.38, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 通天雷柱' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'lm_kick', d: 0.22, lab: 'E · 雷霆万钧' },
+      { p: 'lm_boxer', d: 0.25, fx: 'thunder', hit: 3, launch: true, badge: '⚡ 雷帝灌顶' },
+      { p: 'victory', d: 0.55, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.15, lab: '右键 · 腾空闪' },
+      { p: 'bdash', d: 0.3, dx: -30 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  },
+  lingshuang: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ls_stance', d: 0.08, lab: '枪舞' }, { p: 'ls_thrust', d: 0.13, dx: 14, hit: 1 },
+      { p: 'ls_plant', d: 0.08 }, { p: 'ls_thrust', d: 0.22, dx: 18, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'charge', d: 0.44, lab: '穿杨蓄力' },
+      { p: 'ls_thrust', d: 0.32, dx: 42, hit: 3, launch: true, badge: '💥 远距破防' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.18, lab: '空中' },
+      { p: 'a1a', d: 0.16, hit: 1 },
+      { p: 'ls_plant', d: 0.28, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ls_stance', d: 0.22, dx: -24, lab: 'Q · 回马枪' },
+      { p: 'ls_thrust', d: 0.35, dx: 38, hit: 2, fx: 'backthrust', launch: true, badge: '枪尖穿心' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ls_stance', d: 0.12, lab: 'R · 枪旋' },
+      { p: 'ls_plant', d: 0.16, fx: 'spin', hit: 1 },
+      { p: 'ls_thrust', d: 0.26, dx: 22, hit: 2, launch: true, badge: '乾坤回旋' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'ls_stance', d: 0.25, lab: 'E · 刹那' },
+      { p: 'ls_thrust', d: 0.4, dx: 60, hit: 3, fx: 'timestop', launch: true, badge: '❄️ 寒芒贯日' },
+      { p: 'victory', d: 0.55, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.16, lab: '右键 · 腾空闪' },
+      { p: 'bdash', d: 0.32, dx: -35 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  },
+  moyu: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'my_stroke', d: 0.1, lab: '挥毫' }, { p: 'my_paint', d: 0.14, dx: 12, hit: 1 },
+      { p: 'hva', d: 0.24, dx: 16, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'charge', d: 0.42, lab: '万钧蓄力' },
+      { p: 'my_paint', d: 0.32, dx: 32, hit: 3, launch: true, badge: '💥 破防顿笔' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.16, lab: '空中' },
+      { p: 'a1a', d: 0.16, hit: 1 },
+      { p: 'a2a', d: 0.26, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'my_stroke', d: 0.18, lab: 'Q · 墨阵' },
+      { p: 'my_paint', d: 0.36, fx: 'inktrap', hit: 1, badge: '深墨禁锢' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' },
+      { p: 'my_paint', d: 0.38, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'my_stroke', d: 0.2, lab: 'E · 墨龙' },
+      { p: 'my_paint', d: 0.48, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
+      { p: 'victory', d: 0.55, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.16, lab: '右键 · 腾空闪' },
+      { p: 'bdash', d: 0.32, dx: -35 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  },
+  yuehua: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'l1a', d: 0.1, dx: 10, hit: 1 }, { p: 'l2a', d: 0.1, dx: 10, hit: 1 },
+      { p: 'lca', d: 0.1, dx: 10, hit: 1 },
+      { p: 'hva', d: 0.24, dx: 16, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'charge', d: 0.4, lab: '明月蓄力' },
+      { p: 'hva', d: 0.3, dx: 32, hit: 3, launch: true, badge: '💥 双刀破防' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.16, lab: '空中' },
+      { p: 'a1a', d: 0.16, hit: 1 },
+      { p: 'a2a', d: 0.26, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'yh_mirror', d: 0.24, fx: 'mirror', lab: 'Q · 月镜' },
+      { p: 'hva', d: 0.32, dx: 26, hit: 3, launch: true, badge: '🌙 太阴绝罚' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'yh_mirror', d: 0.12, lab: 'R · 月轮' },
+      { p: 'l2a', d: 0.45, fx: 'moonring', hit: 2, launch: true, badge: '🌙 背袭破防' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'yh_lotus', d: 0.5, fx: 'moonflow', hit: 1, lab: 'E · 月华如水', badge: '🌙 月魄霸体' },
+      { p: 'victory', d: 0.55, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.15, lab: '右键 · 腾空闪' },
+      { p: 'bdash', d: 0.3, dx: -35 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  },
+  yanling: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'l1a', d: 0.1, dx: 10, hit: 1 }, { p: 'l2a', d: 0.1, dx: 10, hit: 1 },
+      { p: 'a1a', d: 0.22, dx: 16, hit: 2, launch: true },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'charge', d: 0.4, lab: '破云蓄力' },
+      { p: 'yl_dive', d: 0.3, dx: 36, hit: 3, launch: true, badge: '💥 破云重扑' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    air: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'jump', d: 0.15, lab: '展翼空战' },
+      { p: 'yl_wings', d: 0.18 },
+      { p: 'a1a', d: 0.24, hit: 2 },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    skill: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'yl_wings', d: 0.14, lab: 'Q · 俯冲' },
+      { p: 'yl_dive', d: 0.36, dx: 48, hit: 2, fx: 'dive', badge: '鹰击钉地' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ranged: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'yl_wings', d: 0.12, lab: 'R · 翎羽' },
+      { p: 'a1a', d: 0.35, fx: 'feather', hit: 1, badge: '极速穿透' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    ult: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'yl_wings', d: 0.2, lab: 'E · 万羽' },
+      { p: 'a1a', d: 0.5, fx: 'featherstorm', hit: 3, launch: true, badge: '🪶 凌霄破虚' },
+      { p: 'victory', d: 0.55, reset: true }
+    ],
+    esc: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'yl_wings', d: 0.28, dx: -38 },
+      { p: 'idle', d: 0.35, reset: true }
+    ]
+  }
+};
+
+const HERO_FULL_DEMO = {
+  qingfeng: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1s', d: 0.08, lab: '普攻' }, { p: 'l1a', d: 0.12, dx: 10, hit: 1 },
+    { p: 'l2s', d: 0.07 }, { p: 'l2a', d: 0.12, dx: 10, hit: 1 },
+    { p: 'l3s', d: 0.09 }, { p: 'l3a', d: 0.22, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'qf_charge', d: 0.14, lab: 'Q · 疾风斩' }, { p: 'qf_thrust', d: 0.32, dx: 46, hit: 2, fx: 'gale', badge: '居合斩穴' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'qf_charge', d: 0.14, lab: 'R · 剑气' }, { p: 'qf_thrust', d: 0.36, fx: 'swordqi', hit: 1, launch: true, badge: '掀天挑空' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'qf_charge', d: 0.2, lab: 'E · 残月' }, { p: 'qf_thrust', d: 0.14, dx: 40, hit: 1, fx: 'crescent' },
+    { p: 'l1a', d: 0.09, hit: 1 }, { p: 'l2a', d: 0.09, hit: 1 }, { p: 'hva', d: 0.3, hit: 3, launch: true, badge: '剑意通明' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  tieshan: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'ts_lift', d: 0.1, lab: '普攻' }, { p: 'ts_slam', d: 0.18, dx: 12, hit: 2 },
+    { p: 'ts_shoulder', d: 0.15, dx: 14, hit: 2 }, { p: 'hva', d: 0.26, dx: 16, hit: 3, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ts_lift', d: 0.2, lab: 'Q · 震地' }, { p: 'ts_slam', d: 0.35, hit: 2, fx: 'quake', launch: true, badge: '💥 撼地重震' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ts_shoulder', d: 0.14, lab: 'R · 铁壁冲' }, { p: 'ts_shoulder', d: 0.34, dx: 42, hit: 2, fx: 'ironwall', launch: true, badge: '💥 崩山破势' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ts_lift', d: 0.24, lab: 'E · 山崩' }, { p: 'ts_slam', d: 0.42, dx: 38, hit: 4, fx: 'avalanche', launch: true, badge: '💫 怒意回涌' },
+    { p: 'victory', d: 0.6, reset: true }
+  ],
+  feiying: [
+    { p: 'idle', d: 0.18, reset: true },
+    { p: 'l1s', d: 0.05, lab: '普攻' }, { p: 'l1a', d: 0.09, dx: 10, hit: 1 },
+    { p: 'l2a', d: 0.09, dx: 10, hit: 1 }, { p: 'l3a', d: 0.18, dx: 14, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.14, lab: 'Q · 影遁' }, { p: 'fy_xslash', d: 0.3, dx: 50, hit: 2, fx: 'blink', badge: '⚡ 封脉定身' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.12, lab: 'R · 飞镖' }, { p: 'fy_crouch', d: 0.32, fx: 'kunai', hit: 1, badge: '极速截击' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.18, lab: 'E · 千影' }, { p: 'fy_xslash', d: 0.14, dx: 40, hit: 2, fx: 'shadows' },
+    { p: 'l1a', d: 0.08, hit: 1 }, { p: 'fy_xslash', d: 0.26, hit: 3, launch: true, badge: '暗影绝杀' },
+    { p: 'victory', d: 0.5, reset: true }
+  ],
+  liuyun: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'l2a', d: 0.1, dx: 10, hit: 1 },
+    { p: 'ly_fanswipe', d: 0.22, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ly_fanswipe', d: 0.1, lab: 'Q · 风刃' }, { p: 'idle', d: 0.35, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ly_hover', d: 0.3, dx: -40, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ly_fanswipe', d: 0.2, lab: 'E · 龙卷' }, { p: 'ly_hover', d: 0.42, fx: 'tornado', hit: 3, launch: true, badge: '🌪️ 扶摇万里' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  leiming: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'lm_boxer', d: 0.05, lab: '十连击' }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+    { p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+    { p: 'lm_kick', d: 0.2, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'lm_boxer', d: 0.1, lab: 'Q · 雷闪' }, { p: 'lm_jab', d: 0.32, dx: 48, hit: 2, fx: 'thunderfist', badge: '⚡ 触电麻痹' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'lm_kick', d: 0.16, lab: 'R · 雷踏' }, { p: 'ts_slam', d: 0.36, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 通天雷柱' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'lm_kick', d: 0.2, lab: 'E · 雷霆万钧' }, { p: 'lm_boxer', d: 0.26, fx: 'thunder', hit: 3, launch: true, badge: '⚡ 雷帝灌顶' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  lingshuang: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'ls_stance', d: 0.08, lab: '普攻' }, { p: 'ls_thrust', d: 0.13, dx: 14, hit: 1 },
+    { p: 'ls_thrust', d: 0.2, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ls_stance', d: 0.2, dx: -22, lab: 'Q · 回马枪' }, { p: 'ls_thrust', d: 0.34, dx: 36, hit: 2, fx: 'backthrust', launch: true, badge: '枪尖穿心' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ls_stance', d: 0.12, lab: 'R · 枪旋' }, { p: 'ls_plant', d: 0.15, fx: 'spin', hit: 1 }, { p: 'ls_thrust', d: 0.24, dx: 20, hit: 2, launch: true, badge: '乾坤回旋' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'ls_stance', d: 0.22, lab: 'E · 刹那' }, { p: 'ls_thrust', d: 0.38, dx: 55, hit: 3, fx: 'timestop', launch: true, badge: '❄️ 寒芒贯日' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  moyu: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'my_stroke', d: 0.1, lab: '普攻' }, { p: 'my_paint', d: 0.13, dx: 12, hit: 1 },
+    { p: 'hva', d: 0.22, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'my_stroke', d: 0.16, lab: 'Q · 墨阵' }, { p: 'my_paint', d: 0.34, fx: 'inktrap', hit: 1, badge: '深墨禁锢' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' }, { p: 'my_paint', d: 0.36, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'my_stroke', d: 0.18, lab: 'E · 墨龙' }, { p: 'my_paint', d: 0.44, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  yuehua: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'l2a', d: 0.1, dx: 10, hit: 1 },
+    { p: 'hva', d: 0.22, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yh_mirror', d: 0.22, fx: 'mirror', lab: 'Q · 月镜' }, { p: 'hva', d: 0.3, dx: 24, hit: 3, launch: true, badge: '🌙 太阴绝罚' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yh_mirror', d: 0.12, lab: 'R · 月轮' }, { p: 'l2a', d: 0.42, fx: 'moonring', hit: 2, launch: true, badge: '🌙 背袭破防' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yh_lotus', d: 0.45, fx: 'moonflow', hit: 1, lab: 'E · 月华如水', badge: '🌙 月魄霸体' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  yanling: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'a1a', d: 0.2, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yl_wings', d: 0.14, lab: 'Q · 俯冲' }, { p: 'yl_dive', d: 0.34, dx: 44, hit: 2, fx: 'dive', badge: '鹰击钉地' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yl_wings', d: 0.12, lab: 'R · 翎羽' }, { p: 'a1a', d: 0.32, fx: 'feather', hit: 1, badge: '极速穿透' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yl_wings', d: 0.18, lab: 'E · 万羽' }, { p: 'a1a', d: 0.46, fx: 'featherstorm', hit: 3, launch: true, badge: '🪶 凌霄破虚' },
+    { p: 'victory', d: 0.55, reset: true }
+  ]
+};
+
 let cxPrev = null;   // 正在预览的皮肤（null = 用自己装备的）
 function renderCodex() {
   const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult], col = `rgb(${c.look.slash})`;
   const skin = cxPrev !== null ? cxPrev : mySkin(c.id);
-  $id('cxTabs').innerHTML = CHARS.map((x, i) => `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`}">${x.name}</button>`).join('');
+  $id('cxTabs').innerHTML = CHARS.map((x, i) => `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`} ">${x.name}</button>`).join('');
   const cv2 = $id('cxCard'), g = cv2.getContext && cv2.getContext('2d');
   if (g) { g.clearRect(0, 0, 600, 800); g.drawImage(makeCardArt(cxIdx, 600, 800, skin), 0, 0); }
   const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || PROF.owned.includes(c.id), free = (PROF.rotation || []).includes(c.id);
@@ -5963,7 +6581,11 @@ function renderCodex() {
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
   const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * 10) / 10;
   const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
-  const tile = (icon, label, val, desc, cd, wide, moveKey) => `<div class="tile t-m${wide ? ' wide' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击演示招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
+  const tile = (icon, label, val, desc, cd, wide, moveKey) => {
+    const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
+    const mini = moveKey ? `<div class="card-mini-win"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
+    return `<div class="tile t-m${wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
+  };
   const sh = n => SHORT[n] || ['', ''];
   $id('cxMoves').innerHTML = [
     tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
@@ -5974,83 +6596,125 @@ function renderCodex() {
     tile('ranged', `左键+右键 · ${S2.name}`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
     tile('ult', `E · ${U.name}`, sh(U.name)[0], sh(U.name)[1], '气满', false, 'ult'),
     tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · 落地前无敌', '', false, 'esc'),
-    ADV[c.id] ? tile('adv', '进阶技巧', '', ADV[c.id], '', true) : '',
+    ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id]) : '',
     tile('vs', '克制关系', '', `克 ${nm(c.beats)}<br>怕 ${nm(c.weakTo)}`, '', !ADV_SHORT[c.id]),
   ].join('');
   for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic]}</svg>`;
+  startCodexCardsDirector();
 }
-const CODEX_MOVE_SEQS = {
-  light: [
-    { p: 'idle', d: 0.15, reset: true },
-    { p: 'l1s', d: 0.08, lab: 'L' }, { p: 'l1a', d: 0.13, dx: 12, hit: 1 },
-    { p: 'l2s', d: 0.07 }, { p: 'l2a', d: 0.13, dx: 12, hit: 1 },
-    { p: 'lcs', d: 0.07 }, { p: 'lca', d: 0.13, dx: 12, hit: 1 },
-    { p: 'l3s', d: 0.1 }, { p: 'l3a', d: 0.25, dx: 18, hit: 2 },
-    { p: 'idle', d: 0.5, reset: true }
-  ],
-  charge: [
-    { p: 'idle', d: 0.15, reset: true },
-    { p: 'charge', d: 0.65, lab: '按住蓄力' },
-    { p: 'hva', d: 0.35, dx: 36, hit: 3, fx: 'ult' },
-    { p: 'idle', d: 0.5, reset: true }
-  ],
-  air: [
-    { p: 'idle', d: 0.15, reset: true },
-    { p: 'jump', d: 0.22, lab: '空中' },
-    { p: 'a1a', d: 0.2, hit: 1 },
-    { p: 'a2a', d: 0.3, hit: 2 },
-    { p: 'idle', d: 0.5, reset: true }
-  ],
-  skill: [
-    { p: 'idle', d: 0.15, reset: true },
-    { p: 'sps', d: 0.22, lab: 'Q' },
-    { p: 'spa', d: 0.4, dx: 48, hit: 2, fx: 'skill' },
-    { p: 'idle', d: 0.5, reset: true }
-  ],
-  ranged: [
-    { p: 'idle', d: 0.15, reset: true },
-    { p: 'l2s', d: 0.18, lab: 'R' },
-    { p: 'l2a', d: 0.5, fx: 'proj' },
-    { p: 'idle', d: 0.4, reset: true }
-  ],
-  ult: [
-    { p: 'idle', d: 0.15, reset: true },
-    { p: 'charge', d: 0.45, lab: 'E' },
-    { p: 'spa', d: 0.15, dx: 52, hit: 1, fx: 'ult' },
-    { p: 'l1a', d: 0.12, hit: 1 },
-    { p: 'hva', d: 0.32, hit: 3 },
-    { p: 'victory', d: 0.85, reset: true }
-  ],
-  esc: [
-    { p: 'idle', d: 0.15, reset: true },
-    { p: 'jump', d: 0.18, lab: '腾空闪' },
-    { p: 'dash', d: 0.35, dx: -35 },
-    { p: 'idle', d: 0.5, reset: true }
-  ]
-};
+
+let cxCardsRAF = null;
+function startCodexCardsDirector() {
+  if (cxCardsRAF) return;
+  let lastT = performance.now();
+  const tick = now => {
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    if ($id('codex') && $id('codex').classList.contains('on')) {
+      const cvs = document.querySelectorAll('#cxMoves .card-mini-cv');
+      const c = CHARS[cxIdx];
+      if (c) {
+        const skin = cxPrev !== null ? cxPrev : mySkin(c.id);
+        for (const cv of cvs) {
+          const mv = cv.dataset.mv;
+          if (!mv || !HERO_MOVE_SEQS[c.id] || !HERO_MOVE_SEQS[c.id][mv]) continue;
+          let p = cv._pup;
+          if (!p || p.chIdx !== cxIdx || p.skin !== skin || cv._mv !== mv) {
+            p = new Puppet(cxIdx, skin);
+            p.playSeq(HERO_MOVE_SEQS[c.id][mv], null, true);
+            cv._pup = p;
+            cv._mv = mv;
+          }
+          p.update(dt);
+          const g = cv.getContext && cv.getContext('2d');
+          if (g) {
+            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            const cw = cv.clientWidth || 160, chh = cv.clientHeight || 76;
+            if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(chh * dpr)) {
+              cv.width = Math.round(cw * dpr); cv.height = Math.round(chh * dpr);
+            }
+            g.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const bg = g.createLinearGradient(0, 0, 0, chh);
+            bg.addColorStop(0, '#0c0d1c'); bg.addColorStop(1, '#06060e');
+            g.fillStyle = bg; g.fillRect(0, 0, cw, chh);
+            g.fillStyle = 'rgba(200,180,255,0.08)'; g.fillRect(0, chh * 0.84, cw, 1);
+            p.draw(g, cw, chh, chh / 180, true);
+          }
+        }
+      }
+    }
+    cxCardsRAF = requestAnimationFrame(tick);
+  };
+  cxCardsRAF = requestAnimationFrame(tick);
+}
+
 $id('cxMoves').addEventListener('click', e => {
   const tile = e.target.closest('.tile[data-move]');
   if (!tile) return;
   const m = tile.dataset.move;
-  const seq = CODEX_MOVE_SEQS[m];
-  if (!seq) return;
+  cxActiveMove = m;
   for (const t of $id('cxMoves').querySelectorAll('.tile')) t.classList.remove('active-demo');
   tile.classList.add('active-demo');
+  for (const btn of $id('cxDemoTabs').querySelectorAll('button')) btn.classList.toggle('sel', btn.dataset.m === m);
   const demoCanvas = $id('cxDemo');
   if (demoCanvas && demoCanvas._pup) {
-    demoCanvas._pup.playSeq(seq);
+    const ch = CHARS[cxIdx];
+    if (HERO_MOVE_SEQS[ch.id] && HERO_MOVE_SEQS[ch.id][m]) {
+      demoCanvas._pup.playSeq(HERO_MOVE_SEQS[ch.id][m], null, true);
+    }
     SFX.slice();
   }
 });
-function openCodex() { cxPrev = null; renderCodex(); }
+
+const demoTabsEl = $id('cxDemoTabs');
+if (demoTabsEl) {
+  demoTabsEl.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-m]');
+    if (!btn) return;
+    const m = btn.dataset.m;
+    cxActiveMove = m;
+    for (const b of demoTabsEl.querySelectorAll('button')) b.classList.remove('sel');
+    btn.classList.add('sel');
+    for (const t of $id('cxMoves').querySelectorAll('.tile')) t.classList.toggle('active-demo', t.dataset.move === m);
+    const demoCanvas = $id('cxDemo');
+    if (demoCanvas && demoCanvas._pup) {
+      const ch = CHARS[cxIdx];
+      if (m === 'full') {
+        demoCanvas._pup.playSeq(HERO_FULL_DEMO[ch.id] || DEMO2, null, true);
+      } else if (HERO_MOVE_SEQS[ch.id] && HERO_MOVE_SEQS[ch.id][m]) {
+        demoCanvas._pup.playSeq(HERO_MOVE_SEQS[ch.id][m], null, true);
+      }
+      SFX.slice();
+    }
+  });
+}
+
+const demoSpdEl = $id('cxDemoSpd');
+if (demoSpdEl) {
+  demoSpdEl.addEventListener('click', () => {
+    cxDemoSpeed = cxDemoSpeed === 1.0 ? 0.5 : 1.0;
+    demoSpdEl.textContent = cxDemoSpeed === 0.5 ? '原速 1.0x' : '慢放 0.5x';
+    demoSpdEl.classList.toggle('sel', cxDemoSpeed === 0.5);
+    SFX.click();
+  });
+}
+
+function openCodex() {
+  cxPrev = null;
+  cxActiveMove = 'full';
+  if ($id('cxDemoTabs')) {
+    for (const b of $id('cxDemoTabs').querySelectorAll('button')) b.classList.toggle('sel', b.dataset.m === 'full');
+  }
+  renderCodex();
+}
 $id('cxSkins').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (!SERVED) {   // 离线：直接装备，记在本机
+  if (!SERVED) {
     const id = CHARS[cxIdx].id; if (b.dataset.sk) PROF.equip[id] = b.dataset.sk; else delete PROF.equip[id];
     try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (err) {}
     cxPrev = null; if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); } renderCodex(); SFX.slice(); return;
   }
-  if (!DEV_SESSION_UNLOCKED && (b.classList.contains('lock') || !ACC.token)) {   // 没拥有或没登录：只预览
+  if (!DEV_SESSION_UNLOCKED && (b.classList.contains('lock') || !ACC.token)) {
     cxPrev = b.dataset.sk; renderCodex(); SFX.slice();
     if (b.classList.contains('lock')) toast('还没有这款皮肤，先给你看看'); else if (!ACC.token) toast('登录之后才能装备皮肤，先给你看看');
     return;
@@ -6059,7 +6723,19 @@ $id('cxSkins').addEventListener('click', async e => {
   try { const j = await api('/api/equip', { char: CHARS[cxIdx].id, skin: b.dataset.sk }); applyProfile(j.profile); renderCodex(); SFX.slice(); }
   catch (err) { toast(err.message); }
 });
-$id('cxTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { cxIdx = +b.dataset.i; cxPrev = null; renderCodex(); SFX.slice(); } });
+$id('cxTabs').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) {
+    cxIdx = +b.dataset.i;
+    cxPrev = null;
+    cxActiveMove = 'full';
+    if ($id('cxDemoTabs')) {
+      for (const btn of $id('cxDemoTabs').querySelectorAll('button')) btn.classList.toggle('sel', btn.dataset.m === 'full');
+    }
+    renderCodex();
+    SFX.slice();
+  }
+});
 
 // ======================= 社区聊天 =======================
 let comLast = 0, comTimer = null;
@@ -7278,50 +7954,95 @@ const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s'
   ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
   ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],
   ['l1a', 0.12, 0], ['l2a', 0.12, 0], ['l1a', 0.12, 0], ['hva', 0.3, 0], ['victory', 0.9, 0]];
-const DEMO_SWING = new Set(['l1a', 'l2a', 'lca', 'lda', 'l3a', 'hva', 'a1a', 'spa']);
+const DEMO_SWING = new Set(['l1a', 'l2a', 'lca', 'lda', 'l3a', 'hva', 'a1a', 'a2a', 'spa', 'qf_thrust', 'fy_xslash', 'ts_slam', 'ts_shoulder', 'ls_thrust', 'ly_fanswipe', 'lm_jab', 'lm_kick', 'my_stroke', 'my_paint', 'yl_dive']);
 class Puppet {
   constructor(i, skin) { this.set(i, skin); }
-  playSeq(seq, lab) {
+  playSeq(seq, lab, loop = false) {
     this.customSeq = seq;
     this.customLab = lab;
+    this.loopCustom = loop;
     this.k = -1;
     this.t = 99;
     this.ox = 0;
+    this.x = 0;
+    this.y = 0;
+    this.badges = [];
+    this.projs = [];
+    this.rings = [];
+    this.fx = [];
+    this.puddles = [];
   }
   set(i, skin) {
     const ch = CHARS[i];
     this.skin = skin === undefined ? mySkin(ch.id) : skin;
     Object.assign(this, { chIdx: i, ch, look: skinLook(i, this.skin), wlen: WEAPON_LEN[ch.look.weapon] || 54, size: ch.size || 1,
-      j: {}, k: 0, t: 0, ox: 0, x: 0, y: 0, face: 1, rot: 0, trail: [], scarf: [], idx: 0, state: 'idle', flying: false });
+      j: {}, k: 0, t: 0, ox: 0, x: 0, y: 0, face: 1, rot: 0, trail: [], scarf: [], idx: 0, state: 'idle', flying: false,
+      badges: [], projs: [], rings: [], fx: [], puddles: [], dummyY: 0, dummyVy: 0, dummyShake: 0 });
     for (const k of JOINTS) this.j[k] = [...POSES.idle[k]]; this.j.sw = POSES.idle.sw;
     this.sk = skeleton(this);
   }
   update(dt) {
-    let steps = this.customSeq || DEMO2;
+    const defaultSeq = (HERO_FULL_DEMO && HERO_FULL_DEMO[this.ch.id]) ? HERO_FULL_DEMO[this.ch.id] : DEMO2;
+    let steps = this.customSeq || defaultSeq;
     this.t += dt;
-    if (this.fx === undefined) { this.fx = []; this.dsh = 0; this.flashT = 0; this.proj = null; this.lab = ''; this.hitQ = []; this.rings = []; this.k = -1; this.t = 99; }
+    if (this.fx === undefined) {
+      this.fx = []; this.flashT = 0; this.proj = null; this.projs = []; this.lab = '';
+      this.hitQ = []; this.rings = []; this.badges = []; this.puddles = [];
+      this.dummyY = 0; this.dummyVy = 0; this.dummyShake = 0;
+      this.k = -1; this.t = 99;
+    }
     if (this.k < 0 || this.t >= steps[this.k].d) {
       this.t = 0; this.k++;
       if (this.k >= steps.length) {
-        if (this.customSeq) {
+        if (this.loopCustom) {
+          this.k = 0;
+        } else if (this.customSeq) {
           this.customSeq = null;
           this.customLab = null;
-          steps = DEMO2;
+          steps = defaultSeq;
           for (const el of document.querySelectorAll('#cxMoves .active-demo')) el.classList.remove('active-demo');
+          this.k = 0;
+        } else {
+          this.k = 0;
         }
-        this.k = 0;
       }
       const st = steps[this.k], ch = this.ch;
-      if (st.reset) this.ox = 0;
+      if (st.reset) { this.ox = 0; this.x = 0; }
       this.ox += st.dx || 0;
       if (this.customLab) this.lab = this.customLab;
       else if (st.lab) this.lab = { L: '左键 · 连击', Q: `Q · ${SKILLS[ch.skill].name}`, R: `左键+右键 · ${SKILLS[ch.skill2].name}`, E: `E · ${ULTS[ch.ult].name}`, '按住蓄力': '按住左键 · 蓄力', '空中': '空中斩', '腾空闪': '右键 · 腾空闪' }[st.lab] || st.lab;
-      if (st.hit) this.hitQ.push({ t: 0.045, n: st.hit });
-      if (st.fx === 'proj') this.proj = { x: this.x + 34, y: -62 };
-      if (st.fx === 'skill') this.rings.push({ x: 60, r: 10, life: 0.4 });
-      if (st.fx === 'ult') { this.flashT = 0.35; this.rings.push({ x: 60, r: 20, life: 0.5 }, { x: this.x, r: 30, life: 0.6 }); }
+      if (st.hit) this.hitQ.push({ t: 0.045, n: st.hit, launch: st.launch, badge: st.badge });
+
+      // 各种招式实体特效
+      if (st.fx === 'proj') this.projs.push({ kind: 'proj', x: this.x + 34, y: -62, vx: 880, life: 0.5, col: this.look.slash });
+      else if (st.fx === 'swordqi') { this.projs.push({ kind: 'swordqi', x: this.x + 30, y: -62, vx: 920, life: 0.5, col: '120,230,255' }); this.rings.push({ x: this.x + 30, y: -62, r: 14, life: 0.3 }); }
+      else if (st.fx === 'gale') { this.rings.push({ x: this.x + 20, y: -62, r: 18, life: 0.4 }, { x: 60, y: -62, r: 24, life: 0.4 }); this.fx.push({ x: this.x + 20, y: -62, vx: 700, vy: 0, life: 0.2, c: '120,230,255' }); }
+      else if (st.fx === 'quake') { this.projs.push({ kind: 'quake', x: this.x + 20, y: 0, vx: 560, life: 0.45, col: '255,200,120' }); for (let k = 0; k < 6; k++) this.fx.push({ x: this.x + 20 + rand(-10, 10), y: 0, vx: rand(100, 300), vy: -rand(150, 350), life: 0.35, c: '200,160,100' }); }
+      else if (st.fx === 'ironwall') { this.rings.push({ x: this.x + 10, y: -60, r: 30, life: 0.45 }); this.flashT = 0.15; }
+      else if (st.fx === 'avalanche') { this.flashT = 0.25; this.rings.push({ x: 60, y: 0, r: 40, life: 0.5 }, { x: this.x, y: 0, r: 30, life: 0.4 }); for (let k = 0; k < 10; k++) this.fx.push({ x: 60 + rand(-20, 20), y: 0, vx: rand(-200, 200), vy: -rand(200, 450), life: 0.45, c: '220,180,120' }); }
+      else if (st.fx === 'blink') { for (let k = 0; k < 10; k++) this.fx.push({ x: this.x, y: -60 + rand(-20, 20), vx: rand(-80, 80), vy: rand(-80, 80), life: 0.3, c: '40,30,50' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60, y: -62 + rand(-20, 20), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.3, c: '255,95,115' }); }
+      else if (st.fx === 'kunai') { for (const a of [-0.15, 0, 0.15]) this.projs.push({ kind: 'kunai', x: this.x + 25, y: -65, vx: 1100 * Math.cos(a), vy: 1100 * Math.sin(a), life: 0.4, col: '200,200,220' }); }
+      else if (st.fx === 'shadows') { this.flashT = 0.2; this.rings.push({ x: 60, y: -62, r: 35, life: 0.45 }); }
+      else if (st.fx === 'windblade') { this.projs.push({ kind: 'wind', x: this.x + 30, y: -62, vx: 1000, life: 0.45, col: '150,255,200' }); }
+      else if (st.fx === 'windstep') { this.rings.push({ x: this.x + 20, y: -60, r: 32, life: 0.35 }); for (let k = 0; k < 8; k++) this.fx.push({ x: this.x + 10, y: -60 + rand(-20, 20), vx: rand(-150, 150), vy: rand(-100, 100), life: 0.25, c: '150,255,200' }); }
+      else if (st.fx === 'tornado') { this.projs.push({ kind: 'tornado', x: this.x + 40, y: -70, vx: 380, life: 0.8, col: '150,255,200' }); }
+      else if (st.fx === 'thunderfist') { this.rings.push({ x: this.x + 20, y: -62, r: 24, life: 0.35 }); for (let k = 0; k < 10; k++) this.fx.push({ x: this.x + rand(-10, 30), y: -62 + rand(-25, 25), vx: rand(-180, 180), vy: rand(-180, 180), life: 0.25, c: '255,230,120' }); }
+      else if (st.fx === 'stomp') { this.projs.push({ kind: 'bolt', x: 60, y: -200, vx: 0, life: 0.35, col: '255,240,150' }); this.rings.push({ x: 60, y: 0, r: 25, life: 0.3 }); }
+      else if (st.fx === 'thunder') { this.flashT = 0.25; this.projs.push({ kind: 'bolt', x: 60, y: -200, vx: 0, life: 0.45, col: '255,240,150' }); this.rings.push({ x: 60, y: 0, r: 35, life: 0.4 }); }
+      else if (st.fx === 'backthrust') { this.rings.push({ x: 60, y: -68, r: 20, life: 0.3 }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60, y: -68, vx: rand(100, 300), vy: rand(-120, 120), life: 0.25, c: '170,220,255' }); }
+      else if (st.fx === 'spin') { this.rings.push({ x: this.x + 25, y: -65, r: 28, life: 0.35 }); }
+      else if (st.fx === 'timestop') { this.flashT = 0.3; this.rings.push({ x: 60, y: -65, r: 32, life: 0.4 }); }
+      else if (st.fx === 'inktrap') { this.puddles.push({ x: 60, life: 2.5 }); }
+      else if (st.fx === 'inkblob') { this.projs.push({ kind: 'inkblob', x: this.x + 25, y: -80, vx: 450, vy: -380, g: 1400, life: 0.6, col: '40,40,55' }); }
+      else if (st.fx === 'inkdragon') { this.projs.push({ kind: 'dragon', x: this.x + 30, y: -65, vx: 620, life: 0.8, col: '25,25,35' }); this.flashT = 0.15; }
+      else if (st.fx === 'mirror') { this.rings.push({ x: this.x + 25, y: -65, r: 24, life: 0.4 }); }
+      else if (st.fx === 'moonring') { this.projs.push({ kind: 'moonring', x: this.x + 30, y: -65, vx: 650, life: 0.7, col: '215,195,255' }); }
+      else if (st.fx === 'moonflow') { this.rings.push({ x: this.x, y: -60, r: 35, life: 0.5 }); this.badges.push({ text: '+22', x: this.x, y: -105, life: 0.8, max: 0.8 }); }
+      else if (st.fx === 'dive') { this.rings.push({ x: 60, y: -40, r: 22, life: 0.3 }); }
+      else if (st.fx === 'feather') { for (const dy of [-12, 0, 12]) this.projs.push({ kind: 'feather', x: this.x + 25, y: -68 + dy, vx: 950, life: 0.45, col: '160,205,255' }); }
+      else if (st.fx === 'featherstorm') { this.flashT = 0.2; for (let k = 0; k < 6; k++) this.projs.push({ kind: 'feather', x: 60 + rand(-30, 30), y: -220 - k * 30, vx: rand(-30, 30), vy: 950, life: 0.4, col: '160,205,255' }); }
     }
-    const st = steps[this.k], name = st.p, p = POSES[name], a = 1 - Math.exp(-(DEMO_SWING.has(name) ? 55 : 22) * dt);
+    const st = steps[this.k], name = st.p, p = POSES[name] || POSES.idle, a = 1 - Math.exp(-(DEMO_SWING.has(name) ? 55 : 22) * dt);
     for (const k of JOINTS) { this.j[k][0] += (p[k][0] - this.j[k][0]) * a; this.j[k][1] += (p[k][1] - this.j[k][1]) * a; }
     this.j.sw += (p.sw - this.j.sw) * a;
     this.flying = false; this.state = 'idle';
@@ -7330,30 +8051,67 @@ class Puppet {
     if (DEMO_SWING.has(name) && this.t < 0.14) this.trail.push({ b: this.sk.bladeMid, t: this.sk.tip, life: 1 });
     for (const e of this.trail) e.life -= dt / 0.18;
     while (this.trail.length && this.trail[0].life <= 0) this.trail.shift();
-    // 命中稻草人：火花、晃动
-    const hit = n => {
-      this.dsh = Math.min(0.5, this.dsh + 0.18 * n);
-      for (let k = 0; k < 7 * n; k++) { const an = rand(-2.4, 0.6), v = rand(120, 380); this.fx.push({ x: 60, y: -62 + rand(-16, 16), vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: rand(0.18, 0.35), c: Math.random() < 0.4 ? '255,255,255' : this.look.slash }); }
-      this.rings.push({ x: 60, r: 6, life: 0.22 });
+
+    // 命中稻草人反馈：火花、晃动、浮空、控制徽标
+    const hit = (n, launch, badge) => {
+      this.dummyShake = Math.min(0.7, this.dummyShake + 0.22 * n);
+      if (launch) this.dummyVy = -320 * Math.min(1.5, Math.sqrt(n));
+      for (let k = 0; k < 8 * n; k++) {
+        const an = rand(-2.4, 0.6), v = rand(120, 400);
+        this.fx.push({ x: 60, y: -62 + this.dummyY + rand(-16, 16), vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: rand(0.18, 0.35), c: Math.random() < 0.35 ? '255,255,255' : this.look.slash });
+      }
+      this.rings.push({ x: 60, y: -62 + this.dummyY, r: 8, life: 0.25 });
+      if (badge) this.badges.push({ text: badge, x: 60, y: -95 + this.dummyY, life: 0.75, max: 0.75 });
     };
-    for (const q of this.hitQ) { q.t -= dt; if (q.t <= 0) { hit(q.n); q.done = true; } }
+    for (const q of this.hitQ) { q.t -= dt; if (q.t <= 0) { hit(q.n, q.launch, q.badge); q.done = true; } }
     this.hitQ = this.hitQ.filter(q => !q.done);
-    if (this.proj) { this.proj.x += 900 * dt; if (this.proj.x >= 48) { hit(1.5); this.proj = null; } }
+
+    // 飞行物更新与碰撞
+    for (const p of this.projs) {
+      p.x += (p.vx || 0) * dt;
+      p.y = (p.y || -62) + (p.vy || 0) * dt;
+      if (p.g) p.vy += p.g * dt;
+      p.life -= dt;
+      if (p.kind === 'moonring' && p.life < 0.35 && p.vx > 0) p.vx = -p.vx;
+      if (!p.hitDone && p.vx > 0 && p.x >= 50 && p.x <= 75) {
+        p.hitDone = true;
+        hit(1.2, p.kind === 'tornado' || p.kind === 'bolt' || p.kind === 'dragon');
+      }
+    }
+    this.projs = this.projs.filter(p => p.life > 0);
+
+    // 稻草人物理
+    this.dummyY += this.dummyVy * dt;
+    this.dummyVy += 1300 * dt;
+    if (this.dummyY >= 0) { this.dummyY = 0; this.dummyVy = 0; }
+    this.dummyShake = Math.max(0, this.dummyShake - dt * 2.2);
+
+    for (const b of this.badges) { b.y -= 25 * dt; b.life -= dt; }
+    this.badges = this.badges.filter(b => b.life > 0);
+    for (const pud of this.puddles) pud.life -= dt;
+    this.puddles = this.puddles.filter(pud => pud.life > 0);
+
     for (const f of this.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 600 * dt; f.life -= dt; }
     this.fx = this.fx.filter(f => f.life > 0);
     for (const r of this.rings) { r.r += 260 * dt; r.life -= dt; }
     this.rings = this.rings.filter(r => r.life > 0);
-    this.dsh = Math.max(0, this.dsh - dt * 1.2); this.flashT = Math.max(0, this.flashT - dt);
+    this.flashT = Math.max(0, this.flashT - dt);
     updateScarf(this);
   }
-  draw(g, w, h, scale) {
+  draw(g, w, h, scale, hideLabel = false) {
     withCtx(g, () => {
       ctx.save(); ctx.translate(w / 2, h * 0.84); ctx.scale(scale, scale);
-      // 稻草人靶子
-      const tilt = Math.sin(performance.now() / 25) * this.dsh;
-      ctx.save(); ctx.translate(60, -60); ctx.rotate(tilt); ctx.translate(0, 60);
+      // 墨水池等地面特效
+      for (const pud of this.puddles) {
+        ctx.fillStyle = 'rgba(15,15,22,0.85)';
+        ctx.beginPath(); ctx.ellipse(pud.x, 0, 34, 9, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(40,40,65,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+      // 稻草人靶子（带浮空与晃动）
+      const tilt = Math.sin(performance.now() / 25) * this.dummyShake;
+      ctx.save(); ctx.translate(60, -60 + this.dummyY); ctx.rotate(tilt); ctx.translate(0, 60);
       ctx.fillStyle = '#4a3322'; ctx.fillRect(-3, -118, 6, 118); ctx.fillRect(-30, -88, 60, 5);
-      ctx.fillStyle = this.dsh > 0.25 ? '#f5e6c4' : '#b08a5a'; ctx.beginPath(); ctx.ellipse(0, -76, 18, 27, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -114, 12, 0, 7); ctx.fill();
+      ctx.fillStyle = this.dummyShake > 0.2 ? '#f5e6c4' : '#b08a5a'; ctx.beginPath(); ctx.ellipse(0, -76, 18, 27, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -114, 12, 0, 7); ctx.fill();
       ctx.strokeStyle = '#6b4f30'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-16, -86); ctx.lineTo(16, -86); ctx.moveTo(-16, -64); ctx.lineTo(16, -64); ctx.stroke();
       ctx.restore();
       ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(this.x, 2, 36, 7, 0, 0, Math.PI * 2); ctx.fill();
@@ -7364,49 +8122,106 @@ class Puppet {
       ctx.restore();
       drawTrail(this);
       ctx.globalCompositeOperation = 'lighter';
-      for (const r of this.rings) { ctx.strokeStyle = `rgba(${this.look.slash},${r.life * 2})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, -62, r.r, 0, 7); ctx.stroke(); }
-      for (const f of this.fx) { ctx.strokeStyle = `rgba(${f.c},${Math.min(1, f.life * 4)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.x - f.vx * 0.03, f.y - f.vy * 0.03); ctx.stroke(); }
-      if (this.proj) { ctx.fillStyle = `rgba(${this.look.slash},0.9)`; ctx.beginPath(); ctx.ellipse(this.proj.x, this.proj.y, 16, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(this.proj.x + 4, this.proj.y, 7, 3, 0, 0, Math.PI * 2); ctx.fill(); }
+      for (const r of this.rings) {
+        const rc = r.col || this.look.slash;
+        ctx.strokeStyle = `rgba(${rc},${r.life * 2})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y || -62, r.r, 0, 7); ctx.stroke();
+      }
+      for (const f of this.fx) {
+        ctx.strokeStyle = `rgba(${f.c},${Math.min(1, f.life * 4)})`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.x - f.vx * 0.03, f.y - f.vy * 0.03); ctx.stroke();
+      }
+      for (const p of this.projs) {
+        const col = p.col || this.look.slash;
+        ctx.fillStyle = `rgba(${col},0.85)`;
+        if (p.kind === 'swordqi') {
+          ctx.beginPath(); ctx.arc(p.x, p.y, 24, -1.2, 1.2); ctx.lineWidth = 5; ctx.strokeStyle = `rgba(${col},0.9)`; ctx.stroke();
+        } else if (p.kind === 'quake') {
+          ctx.fillStyle = `rgba(${col},0.75)`;
+          for (let q = -12; q <= 12; q += 8) { ctx.beginPath(); ctx.moveTo(p.x + q, 0); ctx.lineTo(p.x + q + 4, -16); ctx.lineTo(p.x + q + 8, 0); ctx.fill(); }
+        } else if (p.kind === 'bolt') {
+          ctx.strokeStyle = `rgba(${col},0.9)`; ctx.lineWidth = 8;
+          ctx.beginPath(); ctx.moveTo(p.x, -260); ctx.lineTo(p.x - 6, -140); ctx.lineTo(p.x + 8, -130); ctx.lineTo(p.x, 0); ctx.stroke();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+        } else if (p.kind === 'tornado') {
+          ctx.strokeStyle = `rgba(${col},0.8)`; ctx.lineWidth = 3;
+          for (let rk = 8; rk <= 32; rk += 8) { ctx.beginPath(); ctx.ellipse(p.x, p.y - rk * 1.5, rk, rk * 0.4, 0, 0, Math.PI * 2); ctx.stroke(); }
+        } else if (p.kind === 'dragon') {
+          ctx.strokeStyle = 'rgba(25,25,35,0.95)'; ctx.lineWidth = 14; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(p.x - 30, p.y); ctx.quadraticCurveTo(p.x, p.y - 28, p.x + 30, p.y); ctx.stroke();
+          ctx.fillStyle = '#ff4a5f'; ctx.beginPath(); ctx.arc(p.x + 24, p.y - 6, 2.5, 0, 7); ctx.fill();
+        } else if (p.kind === 'moonring') {
+          ctx.strokeStyle = `rgba(${col},0.9)`; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, Math.PI * 1.5); ctx.stroke();
+        } else if (p.kind === 'feather') {
+          ctx.strokeStyle = `rgba(${col},0.9)`; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(p.x - 8, p.y); ctx.lineTo(p.x + 8, p.y); ctx.stroke();
+        } else if (p.kind === 'kunai') {
+          ctx.fillStyle = '#eee'; ctx.beginPath(); ctx.moveTo(p.x + 8, p.y); ctx.lineTo(p.x - 6, p.y - 4); ctx.lineTo(p.x - 6, p.y + 4); ctx.fill();
+        } else {
+          ctx.beginPath(); ctx.ellipse(p.x, p.y, 14, 6, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(p.x + 3, p.y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      }
       ctx.globalCompositeOperation = 'source-over';
       ctx.restore();
       if (this.flashT > 0) { ctx.fillStyle = `rgba(${this.look.slash},${this.flashT})`; ctx.fillRect(0, 0, w, h); }
-      if (this.lab) {   // 左上角：正在演示的招式
+      for (const b of this.badges) {
+        const alpha = Math.min(1, b.life * 2.5);
+        ctx.save(); ctx.translate(w / 2, h * 0.84); ctx.scale(scale, scale);
+        ctx.font = `bold 12px ${BODY_FONT}`;
+        const bw = ctx.measureText(b.text).width;
+        ctx.fillStyle = `rgba(10,12,24,${alpha * 0.85})`;
+        ctx.beginPath(); ctx.roundRect ? ctx.roundRect(b.x - bw / 2 - 6, b.y - 10, bw + 12, 20, 4) : ctx.rect(b.x - bw / 2 - 6, b.y - 10, bw + 12, 20); ctx.fill();
+        ctx.strokeStyle = `rgba(${this.look.slash},${alpha * 0.8})`; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.text, b.x, b.y);
+        ctx.restore();
+      }
+      if (!hideLabel && this.lab) {
         ctx.font = `600 12px ${BODY_FONT}`; const tw = ctx.measureText(this.lab).width;
-        ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(8, 8, tw + 18, 22, 11) : ctx.rect(8, 8, tw + 18, 22); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(8, 8, tw + 18, 22, 11) : ctx.rect(8, 8, tw + 18, 22); ctx.fill();
         ctx.fillStyle = `rgb(${this.look.slash})`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(this.lab, 17, 19.5);
       }
     });
   }
 }
-const DEMO2 = [
-  { p: 'idle', d: 0.45, reset: true },
-  { p: 'l1s', d: 0.08, lab: 'L' }, { p: 'l1a', d: 0.13, dx: 10, hit: 1 }, { p: 'l2s', d: 0.07 }, { p: 'l2a', d: 0.13, dx: 10, hit: 1 },
-  { p: 'lcs', d: 0.07 }, { p: 'lca', d: 0.13, dx: 10, hit: 1 }, { p: 'lds', d: 0.08 }, { p: 'lda', d: 0.15, dx: 10, hit: 1 },
-  { p: 'l3s', d: 0.1 }, { p: 'l3a', d: 0.24, dx: 16, hit: 2 }, { p: 'idle', d: 0.45, reset: true },
-  { p: 'sps', d: 0.24, lab: 'Q' }, { p: 'spa', d: 0.36, dx: 44, hit: 2, fx: 'skill' }, { p: 'idle', d: 0.45, reset: true },
-  { p: 'l2s', d: 0.18, lab: 'R' }, { p: 'l2a', d: 0.5, fx: 'proj' }, { p: 'idle', d: 0.35, reset: true },
-  { p: 'charge', d: 0.5, lab: 'E' }, { p: 'spa', d: 0.14, dx: 56, hit: 1, fx: 'ult' }, { p: 'l1a', d: 0.1, hit: 1 }, { p: 'l2a', d: 0.1, hit: 1 },
-  { p: 'lca', d: 0.1, hit: 1 }, { p: 'hva', d: 0.28, hit: 3 }, { p: 'victory', d: 0.9, reset: true },
-];
-// 演示画布：在一个 canvas 上循环播放某个角色
-function demoLoop(canvas, getIdx, isOn, getSkin) {
+const DEMO2 = HERO_FULL_DEMO.qingfeng;
+// 演示画布：在一个 canvas 上循环播放某个角色（支持指定招式与变速）
+function demoLoop(canvas, getIdx, isOn, getSkin, getMoveKey) {
   const g = canvas.getContext && canvas.getContext('2d'); if (!g) return;
-  let pup = null, lastT = performance.now();
+  let pup = null, lastT = performance.now(), curMv = undefined;
   const tick = now => {
-    const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+    const spd = (canvas === $id('cxDemo')) ? cxDemoSpeed : 1.0;
+    const dt = Math.min(0.05, (now - lastT) / 1000) * spd; lastT = now;
     if (isOn()) {
       const i = getIdx();
-      if (i >= 0) {
+      if (i >= 0 && CHARS[i]) {
         const sk = getSkin ? getSkin() : mySkin(CHARS[i].id);
-        if (!pup || pup.chIdx !== i || pup.skin !== sk) pup = new Puppet(i, sk);
+        const mv = getMoveKey ? getMoveKey() : null;
+        if (!pup || pup.chIdx !== i || pup.skin !== sk) {
+          pup = new Puppet(i, sk);
+          curMv = undefined;
+        }
+        if (mv !== curMv) {
+          curMv = mv;
+          if (mv && HERO_MOVE_SEQS[CHARS[i].id] && HERO_MOVE_SEQS[CHARS[i].id][mv]) {
+            pup.playSeq(HERO_MOVE_SEQS[CHARS[i].id][mv], null, true);
+          } else {
+            pup.playSeq(HERO_FULL_DEMO[CHARS[i].id] || DEMO2, null, true);
+          }
+        }
         canvas._pup = pup;
         pup.update(dt);
         const dpr = Math.min(2, window.devicePixelRatio || 1), cw = canvas.clientWidth || 280, chh = canvas.clientHeight || 200;
-        if (canvas.width !== Math.round(cw * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(chh * dpr); }
+        if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(chh * dpr)) {
+          canvas.width = Math.round(cw * dpr); canvas.height = Math.round(chh * dpr);
+        }
         g.setTransform(dpr, 0, 0, dpr, 0, 0);
         const ST = sk ? sceneOf(sk) : null;
-        if (ST) withCtx(g, () => paintSceneCard(cw, chh, ST, now / 1000, chh / 300));   // 皮肤演示：背景换成皮肤的场景
-        else { const bg = g.createLinearGradient(0, 0, 0, chh); bg.addColorStop(0, '#15163a'); bg.addColorStop(1, '#0b0b1c'); g.fillStyle = bg; g.fillRect(0, 0, cw, chh); }
+        if (ST) withCtx(g, () => paintSceneCard(cw, chh, ST, now / 1000, chh / 300));
+        else {
+          const bg = g.createLinearGradient(0, 0, 0, chh); bg.addColorStop(0, '#15163a'); bg.addColorStop(1, '#0b0b1c'); g.fillStyle = bg; g.fillRect(0, 0, cw, chh);
+        }
         g.fillStyle = 'rgba(200,180,255,0.12)'; g.fillRect(0, chh * 0.84, cw, 1.5);
         pup.draw(g, cw, chh, chh / 190);
       }
@@ -7595,79 +8410,70 @@ function buildDetails() {
   box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
   box.dataset.built = String(PORTRAITS.length);
 }
+let bpDeckMove = 'light';
+function updateBPDeck(i) {
+  const idx = i >= 0 ? i : (bpSel >= 0 ? bpSel : 0);
+  const ch = CHARS[idx];
+  if (!ch) return;
+  const tabs = [
+    { k: 'light', lab: '普攻连击' },
+    { k: 'charge', lab: '蓄力重斩' },
+    { k: 'skill', lab: `Q · ${SKILLS[ch.skill].name}` },
+    { k: 'ranged', lab: `R · ${SKILLS[ch.skill2].name}` },
+    { k: 'ult', lab: `E · ${ULTS[ch.ult].name}` },
+  ];
+  const tabsEl = $id('bpDeckTabs');
+  if (tabsEl) {
+    tabsEl.innerHTML = tabs.map(t => `<button class="${t.k === bpDeckMove ? 'sel' : ''}" data-m="${t.k}">${t.lab}</button>`).join('');
+  }
+  const hit = (HERO_HIT_DETAILS[ch.id] && HERO_HIT_DETAILS[ch.id][bpDeckMove]) || { name: '', badge: '', badgeCls: 'badge-buff', dmg: '', desc: '' };
+  const nameEl = $id('bpdHitName');
+  if (nameEl) {
+    nameEl.innerHTML = `<span style="color:rgb(${ch.look.slash})">${hit.name}</span>${hit.dmg ? ` <span style="font-size:12px;color:var(--gold);font-weight:600">· 伤害 ${hit.dmg}</span>` : ''}`;
+  }
+  const badgeEl = $id('bpdHitBadge');
+  if (badgeEl) {
+    badgeEl.innerHTML = hit.badge ? `<span class="${hit.badgeCls}">${hit.badge}</span>` : '';
+  }
+  const descEl = $id('bpdHitDesc');
+  if (descEl) {
+    descEl.textContent = hit.desc;
+  }
+}
+
+const bpDeckTabsEl = $id('bpDeckTabs');
+if (bpDeckTabsEl) {
+  bpDeckTabsEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-m]');
+    if (!b) return;
+    bpDeckMove = b.dataset.m;
+    const idx = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);
+    updateBPDeck(idx);
+    const cv = $id('bpDeckCanvas');
+    if (cv && cv._pup && HERO_MOVE_SEQS[CHARS[idx].id] && HERO_MOVE_SEQS[CHARS[idx].id][bpDeckMove]) {
+      cv._pup.playSeq(HERO_MOVE_SEQS[CHARS[idx].id][bpDeckMove], null, true);
+    }
+    SFX.slice();
+  });
+}
+demoLoop($id('bpDeckCanvas'), () => (bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0)), () => $id('bp') && $id('bp').classList.contains('on'), null, () => bpDeckMove);
+
 function setDetail(i) {
   buildDetails();
   for (const el of document.querySelectorAll('#bpDetail .bpd')) el.classList.toggle('show', +el.dataset.i === i);
+  updateBPDeck(i);
 }
-function renderBP() {
-  if (!BP) return;
-  $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
-  const my = bpMySide(), done = BP.step >= 4;
-  const [side, type] = done ? [-1, ''] : BP_STEPS[BP.step];
-  const myTurn = !done && side === my;
-  document.getElementById('bpStep').textContent = (bpMode === 'net' && NET.isRanked ? '排位赛 · ' : '') + (done ? '准备开战' : `${bpSideName(side)}${type === 'ban' ? '禁用' : '选择'}一个角色`);
-  document.getElementById('bpStep').style.color = myTurn ? '#e9c46a' : 'var(--ink)';
-  document.getElementById('bpTime').textContent = done ? '' : `${Math.ceil(BP.t)} 秒`;
-  for (const sd of [0, 1]) {
-    const slot = (idx, kind, active) => `<div class="slot2 ${kind}${active ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${kind === 'ban' ? '禁 ' : ''}${CHARS[idx].name}</span>` : (kind === 'ban' ? '禁用' : '选择')}</div>`;
-    const keep = [...document.getElementById('bpS' + sd).querySelectorAll('.bubble')];
-    document.getElementById('bpS' + sd).innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))}</div>
-      <div class="slots">${slot(BP.bans[sd], 'ban', !done && side === sd && type === 'ban')}${slot(BP.picks[sd], 'pick', !done && side === sd && type === 'pick')}</div>`;
-    for (const b of keep) document.getElementById('bpS' + sd).appendChild(b);
-  }
-  document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
-    const banned = BP.bans.includes(i), pickedBy = BP.picks.indexOf(i);
-    const can = myTurn && bpValid(i);
-    const myAv = BP.avail && BP.avail[my], lock = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && myAv && !myAv.includes(i), free = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !(PROF.owned || []).includes(c.id) && (PROF.rotation || []).includes(c.id);
-    const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : (DEV_SESSION_UNLOCKED && !(PROF.owned || []).includes(c.id) ? '<span class="tag dev" style="background:#46d3ea;color:#0a0f1d;font-weight:700">全解锁</span>' : '');
-    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" ${can ? '' : 'aria-disabled="true"'}>
-      ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
-  }).join('');
-  const show = bpHover >= 0 ? bpHover : bpSel;
-  setDetail(show);
-  const goB = document.getElementById('bpGo');
-  goB.disabled = !(myTurn && bpValid(bpSel));
-  goB.textContent = myTurn ? (bpSel >= 0 ? `${type === 'ban' ? '禁用' : '选择'} ${CHARS[bpSel].name}` : (type === 'ban' ? '选一个禁用' : '选一个角色')) : '等待对方';
-}
-document.getElementById('bpGrid').addEventListener('click', e => {
-  const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= 4) return;
-  const i = +b.dataset.i;
-  if (BP_STEPS[BP.step][0] !== bpMySide() || !bpValid(i)) return;
-  bpSel = i; SFX.slice(); renderBP();
-});
-// 双击直接确认：两次点击同一张卡间隔小于 0.4 秒
-let lastCardClick = { i: -1, t: 0 };
-document.getElementById('bpGrid').addEventListener('click', e => {
-  const b = e.target.closest('.bpcard'); if (!b) return;
-  const i = +b.dataset.i, now = performance.now();
-  if (lastCardClick.i === i && now - lastCardClick.t < 400) {
-    lastCardClick.i = -1;
-    if (BP && BP.step < 4 && BP_STEPS[BP.step][0] === bpMySide() && bpValid(i)) { bpSel = i; bpConfirm(); }
-    return;
-  }
-  lastCardClick = { i, t: now };
-});
-// 旧的双击事件（有的浏览器仍会触发）
-document.getElementById('bpGrid').addEventListener('dblclick', e => {
-  const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= 4) return;
-  const i = +b.dataset.i;
-  if (BP_STEPS[BP.step][0] !== bpMySide() || !bpValid(i)) return;
-  bpSel = i; bpConfirm();
-});
-// 悬停：弹出演示动画
+// 悬停：更新下部检视视窗
 let popIdx = -1;
 function showPop(card) {
   const pop = $id('bpPop');
-  if (!card) { pop.classList.remove('on'); popIdx = -1; return; }
-  const i = +card.dataset.i, c = CHARS[i], r = card.getBoundingClientRect();
+  if (!card) { if (pop) pop.classList.remove('on'); popIdx = -1; return; }
+  const i = +card.dataset.i;
   popIdx = i;
-  $id('bpPopName').textContent = c.name; $id('bpPopName').style.color = `rgb(${c.look.slash})`;
-  $id('bpPopKeys').innerHTML = `<b>Q</b> ${SKILLS[c.skill].name}　<b>左+右</b> ${SKILLS[c.skill2].name}　<b>E</b> ${ULTS[c.ult].name}`;
-  let x = r.right + 12; if (x + 300 > innerWidth - 8) x = r.left - 312; x = Math.max(8, x);
-  const y = clamp(r.top, 8, innerHeight - 290);
-  pop.style.left = x + 'px'; pop.style.top = y + 'px'; pop.classList.add('on');
+  updateBPDeck(i);
+  if (pop) pop.classList.remove('on');
 }
-demoLoop($id('bpPopCv'), () => popIdx, () => popIdx >= 0);
+demoLoop($id('bpPopCv'), () => popIdx, () => false);
 document.getElementById('bpGrid').addEventListener('pointerover', e => {
   const b = e.target.closest('.bpcard'); const i = b ? +b.dataset.i : -1;
   if (i !== bpHover) { bpHover = i; setDetail(i >= 0 ? i : bpSel); showPop(b); }
