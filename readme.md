@@ -149,6 +149,7 @@ Edit the sources; never edit the generated pages.
 | `tools/hud-audit.mjs` | Headless check that no in-match HUD text is drawn below 12px |
 | `tools/touch-audit.mjs` | Emulates phones and tablets, then drives the touch controls |
 | `tools/net-test.mjs` | Drives two browsers through the server and WebRTC multiplayer paths |
+| `tools/protocol-test.mjs` | Talks raw WebSockets to the server to check its client-trust rules |
 | `index.html` | Generated online edition (GitHub Pages and `server.py`) |
 | `renying-offline.html` | Generated single-file offline edition |
 | `renying.html` | Generated redirect for the old address |

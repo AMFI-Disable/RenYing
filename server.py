@@ -867,6 +867,10 @@ def finish_room(code, room, leaver_role, forfeit_ok=True):
         room["active"] = False
         other_role = "client" if leaver_role == "host" else "host"
         reps = room.get("reports") or {}
+        # 场上只剩一个人报的胜负，而且报的人正是离开的那一方：不能采信，
+        # 否则"报个赢再退出"就能刷战绩。走的一方报的赢，按对方胜的离开处理。
+        if len(reps) == 1 and leaver_role in reps:
+            reps = {}
         if reps:
             win_role, forfeit = next(iter(reps.values())), False
         elif forfeit_ok:
@@ -1034,19 +1038,27 @@ def ws_session(conn, headers, query):
             if not fin:
                 continue
             msg, parts = parts.decode("utf-8", "replace"), b""
-            if msg.startswith('{"sp":'):          # 测速：服务器直接回复，量的是你到服务器的延迟
-                peer.send('{"spo":' + msg[6:])
-                continue
-            if msg.startswith('{"bye"'):
-                peer.bye = True
-                break
-            if msg.startswith('{"mstart"') or msg.startswith('{"report"'):
-                handle_match_msg(peer, msg)
-                continue
-            if msg.startswith('{"chat"'):         # 聊天限速：10 秒最多 12 条
-                now = time.time()
-                peer.chat_times = [t for t in peer.chat_times if now - t < 10] + [now]
-                if len(peer.chat_times) > 12 or len(msg) > 600:
+            # 先解析再分发：用字符串前缀判断可以被键序绕开（把 "chat" 写到第二个键就绕过限速了）
+            try:
+                data = json.loads(msg)
+            except ValueError:
+                data = None
+            if isinstance(data, dict):
+                if "sp" in data:                  # 测速：服务器直接回复，量的是你到服务器的延迟
+                    peer.send('{"spo":' + json.dumps(data["sp"]) + '}')
+                    continue
+                if "bye" in data:
+                    peer.bye = True
+                    break
+                if "mstart" in data or "report" in data:
+                    handle_match_msg(peer, msg)
+                    continue
+                if "chat" in data:                # 聊天限速：10 秒最多 12 条
+                    now = time.time()
+                    peer.chat_times = [t for t in peer.chat_times if now - t < 10] + [now]
+                    if len(peer.chat_times) > 12 or len(msg) > 600:
+                        continue
+                if "sys" in data:                 # sys 只由服务器发出：对端伪造的转发消息直接丢掉
                     continue
             with rooms_lock:
                 room = rooms.get(peer.room) if peer.room else None

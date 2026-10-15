@@ -97,6 +97,13 @@ jobs:
       - name: Multiplayer Regression (LAN / dedicated server)
         run: node tools/net-test.mjs server ci-net
 
+      # Raw-WebSocket checks on the server's client-trust properties: the chat rate
+      # limit cannot be bypassed by JSON key order, a peer cannot forge a server
+      # ("sys") message to its opponent, and claiming a win then leaving is recorded
+      # as a forfeit loss rather than a win.
+      - name: Server Protocol Hardening Tests
+        run: node tools/protocol-test.mjs
+
       - name: Verify Commit Message Conventions
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}

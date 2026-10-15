@@ -121,6 +121,11 @@ All notable changes, features, and architectural capabilities of this project ar
 - Ban/pick slot portraits were cropped by roughly 4px top and bottom. In a fixed-height grid an auto-sized row can still grow past its container, so `height: 100%` on the portrait had nothing definite to resolve against and the image fell back to its intrinsic height (62x83 inside a 74px box). It is now absolutely positioned with `object-fit: contain`.
 - `--gold` was used seven times in the stylesheet but never defined, so those declarations were dropped and the selected demo/deck tab rendered as dark text on a transparent background. The variable is now defined, and new 10-11px demo/deck/import text was raised to the 12px floor.
 - The touch pause button was 42x42, just under the usual 44px minimum touch target, and the compact landscape-phone layout used 10-11px for the menu subtitle and version line. Both are now larger.
+- Server-side client-trust hardening, with the properties covered by `tools/protocol-test.mjs`:
+  - Message dispatch now parses the JSON and dispatches on keys instead of matching string prefixes. Previously the chat rate limit could be bypassed simply by putting another key first (`{"n":0,"chat":...}`), and a `report` sent that way was relayed to the opponent instead of being scored.
+  - Relayed peer messages that carry a `sys` key are dropped. `sys` messages are server-to-client only; previously a matched opponent could forge one, including a fake `result` whose `me` block was written into the victim's local storage.
+  - An uncorroborated win claim from the player who leaves is no longer accepted in `finish_room`. Previously a player could claim victory and then disconnect, and that claim was recorded as a real win (the two-report path already required both sides to agree).
+- Known trade-off left in place deliberately: the HTTP API keeps `Access-Control-Allow-Origin: *` and the WebSocket URL keeps the session token in its query string. Tightening either would break the documented flow where a GitHub Pages client talks to someone else's server, and browsers cannot set custom headers on a WebSocket handshake. Anyone exposing `server.py` beyond a trusted LAN should put it behind a reverse proxy that adds an origin allowlist and TLS.
 
 ---
 
