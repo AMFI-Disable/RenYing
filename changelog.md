@@ -12,6 +12,7 @@ All notable changes, features, and architectural capabilities of this project ar
 - WebRTC Peer-to-Peer serverless multiplayer support for GitHub Pages deployment.
 - Real-time WebSocket matchmaking server with rooms, ladder ranking, and community hub.
 - Character unlocking progression on GitHub Pages: Qing Feng as the starter hero, 10 online P2P match wins to unlock a basic hero (Tie Shan or Lei Ming), and deterministic weekly free hero rotation.
+- Dev Redeem Code (`DEV`, `DEVALL`, `RENYINGDEV`, `UNLOCKALL`) unlocking all characters, skins, and stages for the active window session without polluting the permanent cloud profile or localStorage; all characters automatically re-lock upon closing and opening a new window.
 - In-game currency (墨锭 / Ink) economy with client-side 问剑阁 (Wen Jian Pavilion) gacha summoning and fragment crafting on GitHub Pages.
 - Cloud save and single-account synchronization using Google Firebase Auth and Cloud Firestore, with seamless offline local storage fallback.
 - Production-grade Cloud Firestore security rules (`firestore.rules`) enforcing user-isolated document access and schema validation.

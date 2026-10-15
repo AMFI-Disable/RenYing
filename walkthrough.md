@@ -220,6 +220,10 @@ flowchart LR
   - 初始赠送 **500 墨锭**。
   - 闯关星级首次通关赠送 **30 墨锭/星**；P2P 联机对战胜者获 **60 墨锭**、败者获 **30 墨锭**；单人练习赛亦可获得 **10~40 墨锭**。
   - 纯前端实现 **问剑阁（抽卡与合成）**：消耗墨锭可直接抽取整卡或英雄碎片，集齐 30 碎片可在藏剑录中合成永久解锁任意英雄。
+- **开发者特权兑换码 (Dev Redeem Code)**：
+  - 在任务页面兑换码输入框或账号面板中输入 `DEV`（或 `DEVALL`, `UNLOCKALL`, `RENYINGDEV`），即可激活当前窗口会话的开发者全解锁特权。
+  - **单会话隔离与零云端污染**：特权仅在当前窗口的内存与 `sessionStorage` 状态机中生效，无论是否登录账号，均不会将全英雄写入真实的云端存档 `users/{userId}` 或本地 `localStorage('renying-profile')`。
+  - **新建窗口自动恢复锁定**：一旦关闭网页或在新的浏览器窗口打开，特权自动销毁，账号角色严格恢复至真实的解锁与限免状态。
 
 ### 2. Google Firebase 纯前端 Serverless 云端存档
 - **零服务器免维护架构**：
@@ -244,7 +248,8 @@ flowchart LR
 | **英雄差异与克制** | `0eb1367` | `feat: diversify hero mechanics` | 22 个专属骨骼动画姿态，纯机制克制逻辑，伤害与挣脱平衡谱系 |
 | **铁山大招跃空操控** | `0279504` | `feat: steerable avalanche leap` | 铁山大招跃空滞空横向转向与下砸俯冲操控，火星尾迹与 AI 跟踪 |
 | **创作者署名更新** | `c21dbec` | `docs: update creator attribution` | 创作者名单更新为 Even, Luffy, and Opus 5.5（涵盖 UI、引擎、服务与文档） |
-| **英雄解锁与云存档** | `待提交` | `feat: unlock heroes cloud` | 青锋初始/10胜解锁/问剑阁墨锭经济，Firebase Auth + Firestore 单账号多端云存档 |
+| **英雄解锁与云存档** | `4997666` | `feat: unlock heroes cloud` | 青锋初始/10胜解锁/问剑阁墨锭经济，Firebase Auth + Firestore 单账号多端云存档 |
+| **开发者特权会话全解锁** | `待提交` | `feat: dev session unlock` | 开发者兑换码 DEV 本会话临时全解锁，多端与账号隔离防污染，关闭窗口自动恢复锁定 |
 
 ```bash
 # 全局自动化质量验证汇总 (全部通过)

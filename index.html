@@ -608,6 +608,13 @@
         <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:11px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
         <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
       </div>
+      <div style="margin-top:14px;border-top:1px dashed var(--faint);padding-top:10px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="accRdCode" maxlength="32" placeholder="开发者兑换码 (输入 DEV 激活全解锁)" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;padding:6px 10px;font-size:12px;background:rgba(0,0,0,0.3);color:var(--ink);border:1px solid var(--faint);border-radius:6px">
+          <button class="ghost small" id="accRdBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">兑换</button>
+        </div>
+        <p class="netnote" style="margin:4px 0 0;font-size:11px">开发者特权仅在当前窗口会话临时生效，不会污染真实云端存档。关闭或新建窗口后自动恢复锁定。</p>
+      </div>
       <p class="netnote" style="margin-top:14px">登录或注册后，英雄解锁、墨锭余额与成就数据将持久化保存。</p>
     </div>
   </div>
@@ -673,7 +680,7 @@
       <h3 class="spt">每日挑战 <span class="tsub">每天 0 点刷新</span></h3><div class="tlist" id="tDaily"></div>
       <h3 class="spt">每周任务 <span class="tsub">每周一刷新</span></h3><div class="tlist" id="tWeekly"></div>
       <h3 class="spt">兑换码</h3>
-      <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入兑换码" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
+      <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入兑换码（如 DEV 激活会话全解锁）" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
       <h3 class="spt">墨锭从哪来</h3>
       <p class="tips" style="margin:0">联机对战：赢 60，输 30。排位赛：赢 80，输 40。打电脑（每天前 10 局）：入门 10 / 5，寻常 20 / 10，劲敌 40 / 20。每天第一次赢（联机或寻常以上电脑）额外 150。新手教学 300。新账号送 500。<br>角色祈愿 60 一次、十连 540；皮肤祈愿 30 一次、十连 270。</p>
       <p class="netnote" id="tMsg"></p>
@@ -1071,6 +1078,11 @@ const VERSION = '4.5';         // 每次更新改一下，联机时双方版本�
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
+// 开发者临时全解锁特权（仅限当前窗口会话有效，关闭或新建窗口后自动恢复锁定，不污染真实云端存档）
+let DEV_SESSION_UNLOCKED = false;
+try {
+  DEV_SESSION_UNLOCKED = sessionStorage.getItem('renying-dev-unlock') === '1';
+} catch (e) {}
 const cv = document.getElementById('c');
 let ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
@@ -2342,7 +2354,7 @@ function nextStage(S) { return S.l < 4 ? [S.c, S.l + 1] : S.c < CHAPTERS.length 
 // 进度：每关拿到的最多星数，存在本机浏览器里
 let STAGE_STARS = {};
 try { STAGE_STARS = JSON.parse(localStorage.getItem('renying-stage') || '{}') || {}; } catch (e) {}
-function stageOpen(c, l) { return (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
+function stageOpen(c, l) { return DEV_SESSION_UNLOCKED || (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
 let STAGE = null, stageCh = -1;
 function renderStages() {
   if (stageCh < 0) { stageCh = 0; for (let c = 0; c < CHAPTERS.length; c++) if (stageOpen(c, 0)) stageCh = c; }   // 默认翻到最新解锁的一章
@@ -5646,12 +5658,12 @@ function renderCodex() {
   $id('cxTabs').innerHTML = CHARS.map((x, i) => `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`}">${x.name}</button>`).join('');
   const cv2 = $id('cxCard'), g = cv2.getContext && cv2.getContext('2d');
   if (g) { g.clearRect(0, 0, 600, 800); g.drawImage(makeCardArt(cxIdx, 600, 800, skin), 0, 0); }
-  const rar = CHAR_RARITY[c.id], own = PROF.owned.includes(c.id), free = (PROF.rotation || []).includes(c.id);
-  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills"><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span>${SERVED ? `<span class="pill">${own ? '已拥有' : free ? '本周限免' : '未拥有'}</span>` : ''}<span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
+  const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || PROF.owned.includes(c.id), free = (PROF.rotation || []).includes(c.id);
+  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills"><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span>${DEV_SESSION_UNLOCKED ? '<span class="pill" style="color:#46d3ea;font-weight:700">开发者特权 · 会话全解锁</span>' : SERVED ? `<span class="pill">${own ? '已拥有' : free ? '本周限免' : '未拥有'}</span>` : ''}<span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   $id('cxSkinT').textContent = cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤';
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
-    const has = (PROF.skins || []).includes(k) || !SERVED;
+    const has = (PROF.skins || []).includes(k) || !SERVED || DEV_SESSION_UNLOCKED;
     return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}" style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : v.exclusive ? ' · 青锋行通关' : ' · 预览'}</button>`;
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
@@ -5745,7 +5757,7 @@ $id('cxSkins').addEventListener('click', async e => {
     try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (err) {}
     cxPrev = null; if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); } renderCodex(); SFX.slice(); return;
   }
-  if (b.classList.contains('lock') || !ACC.token) {   // 没拥有或没登录：只预览
+  if (!DEV_SESSION_UNLOCKED && (b.classList.contains('lock') || !ACC.token)) {   // 没拥有或没登录：只预览
     cxPrev = b.dataset.sk; renderCodex(); SFX.slice();
     if (b.classList.contains('lock')) toast('还没有这款皮肤，先给你看看'); else if (!ACC.token) toast('登录之后才能装备皮肤，先给你看看');
     return;
@@ -6110,7 +6122,7 @@ const MSTAT = { maxcombo: 0, ults: 0 };
 function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), 2600); }
 // 能用的角色：已拥有 + 本周限免。单机离线版全部能用；在线网页版严格按解锁状态与限免判断
 function availList() {
-  if (OFFLINE_BUILD) return CHARS.map((c, i) => i);
+  if (OFFLINE_BUILD || DEV_SESSION_UNLOCKED) return CHARS.map((c, i) => i);
   const ok = new Set([...(PROF.owned || ['qingfeng']), ...(PROF.rotation || [])]);
   return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 }
@@ -6119,7 +6131,7 @@ function skinLook(ci, skin) {
   const ok = sk && sk.char === CHARS[ci].id;
   return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null };
 }
-function mySkin(id) { const k = (PROF.equip || {})[id]; return k && (PROF.skins || []).includes(k) ? k : ''; }
+function mySkin(id) { const k = (PROF.equip || {})[id]; return k && ((PROF.skins || []).includes(k) || !SERVED || DEV_SESSION_UNLOCKED) ? k : ''; }
 function applySkins() {
   for (const f of [A, B]) {
     let k = '';
@@ -6184,8 +6196,8 @@ function renderGacha() {
     : `完整角色：传说 ${rarPct(R.full.legend)}（${names(R.pool.legend)}），稀有 ${rarPct(R.full.rare)}（${names(R.pool.rare)}），普通 ${rarPct(R.full.common)}（${names(R.pool.common)}）<br>角色碎片：传说 ${rarPct(R.frag.legend)}，稀有 ${rarPct(R.frag.rare)}，普通 ${rarPct(R.frag.common)}，每次 1 到 3 个<br>合成所需碎片：普通 ${R.craft.common}，稀有 ${R.craft.rare}，传说 ${R.craft.legend}。连抽 ${R.pity} 次未见角色，下一次必出一个你尚未拥有的角色。<br>抽到已有的角色折算 ${R.dup} 墨锭；已有角色的碎片，每个折算 ${R.fragInk} 墨锭。`;
   const rot = PROF.rotation || [];
   $id('gRoster').innerHTML = CHARS.map((c, i) => {
-    const own = PROF.owned.includes(c.id), rar = CHAR_RARITY[c.id], need = rar === 'starter' ? 0 : R.craft[rar], have = (PROF.frags || {})[c.id] || 0;
-    const st = own ? '已拥有' : rot.includes(c.id) ? `本周限免 · 碎片 ${have}/${need}` : `碎片 ${have}/${need}`;
+    const own = DEV_SESSION_UNLOCKED || PROF.owned.includes(c.id), rar = CHAR_RARITY[c.id], need = rar === 'starter' ? 0 : R.craft[rar], have = (PROF.frags || {})[c.id] || 0;
+    const st = own ? (DEV_SESSION_UNLOCKED && !PROF.owned.includes(c.id) ? '会话全解锁' : '已拥有') : rot.includes(c.id) ? `本周限免 · 碎片 ${have}/${need}` : `碎片 ${have}/${need}`;
     return `<div class="gr${own ? '' : ' lock'}" style="border-color:rgba(${RAR_RGB[rar]},.5)"><img src="${PORTRAITS[i] || ''}" alt=""><div style="font-family:var(--title);font-size:17px;color:rgb(${c.look.slash})">${c.name}</div><div class="st">${RAR_NAME[rar]} · ${st}</div>${own ? '' : `<div class="bar"><i style="width:${Math.min(100, have / need * 100)}%"></i></div>`}${!own && have >= need && !PROF.guest ? `<button data-craft="${c.id}">合成</button>` : ''}</div>`;
   }).join('');
 }
@@ -6401,20 +6413,75 @@ if ($id('claimAllBtn')) {
     renderTasks();
   });
 }
-async function redeemCode() {
-  const code = $id('rdCode').value.trim(); if (!code) return;
-  if (!SERVED) { $id('tMsg').textContent = '兑换码请在 renying.site 上使用'; return; }
-  if (PROF.guest || !ACC.token) { $id('tMsg').textContent = '登录之后，方可兑换'; return; }
-  const bt = $id('rdBtn'); bt.disabled = true;
+async function redeemCode(rawCode) {
+  const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
+  if (!code) return;
+  const up = code.toUpperCase();
+  if (['DEV', 'DEVALL', 'RENYINGDEV', 'UNLOCKALL', 'EVEN', 'ALL'].includes(up)) {
+    DEV_SESSION_UNLOCKED = true;
+    try { sessionStorage.setItem('renying-dev-unlock', '1'); } catch (e) {}
+    if ($id('rdCode')) $id('rdCode').value = '';
+    if ($id('accRdCode')) $id('accRdCode').value = '';
+    const msg = '🛠️ 开发者特权已激活：本会话全角色已临时全解锁！（关闭网页或新建窗口后恢复真实锁定）';
+    if ($id('tMsg')) $id('tMsg').textContent = msg;
+    if ($id('accMsg')) $id('accMsg').textContent = msg;
+    toast(msg);
+    SFX.chargeFull();
+    renderAcc();
+    if (typeof renderBP === 'function' && BP) renderBP();
+    if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
+    if (typeof renderGacha === 'function' && $id('gacha').classList.contains('on')) renderGacha();
+    if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
+    if (typeof renderTrainPick === 'function') renderTrainPick();
+    return;
+  }
+  if (['LOCK', 'DEVLOCK', 'RELOCK'].includes(up)) {
+    DEV_SESSION_UNLOCKED = false;
+    try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
+    if ($id('rdCode')) $id('rdCode').value = '';
+    if ($id('accRdCode')) $id('accRdCode').value = '';
+    const msg = '🔒 已退出开发者特权，角色解锁恢复正常存档状态。';
+    if ($id('tMsg')) $id('tMsg').textContent = msg;
+    if ($id('accMsg')) $id('accMsg').textContent = msg;
+    toast(msg);
+    SFX.thud();
+    renderAcc();
+    if (typeof renderBP === 'function' && BP) renderBP();
+    if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
+    if (typeof renderGacha === 'function' && $id('gacha').classList.contains('on')) renderGacha();
+    if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
+    if (typeof renderTrainPick === 'function') renderTrainPick();
+    return;
+  }
+  if (!SERVED) {
+    const tip = '当前为纯静态/离线部署环境，普通兑换码需联机服务器校验（可输入 DEV 开启本会话临时全角色解锁）';
+    if ($id('tMsg')) $id('tMsg').textContent = tip;
+    if ($id('accMsg')) $id('accMsg').textContent = tip;
+    toast(tip);
+    return;
+  }
+  if (PROF.guest || !ACC.token) {
+    const tip = '登录之后，方可兑换';
+    if ($id('tMsg')) $id('tMsg').textContent = tip;
+    if ($id('accMsg')) $id('accMsg').textContent = tip;
+    toast(tip);
+    return;
+  }
+  const bt = $id('rdBtn'); if (bt) bt.disabled = true;
   try {
     const j = await api('/api/redeem', { code }); applyProfile(j.profile); SFX.chargeFull();
     const parts = []; if (j.ink) parts.push(`+${j.ink} 墨锭`); if (j.skin && SKINS[j.skin]) parts.push(`皮肤「${SKINS[j.skin].name}」`);
-    const msg = '兑换成功：' + (parts.join('，') || '已领取'); toast(msg); $id('tMsg').textContent = msg; $id('rdCode').value = '';
-  } catch (err) { $id('tMsg').textContent = err.message; }
-  bt.disabled = false;
+    const msg = '兑换成功：' + (parts.join('，') || '已领取'); toast(msg); if ($id('tMsg')) $id('tMsg').textContent = msg; if ($id('rdCode')) $id('rdCode').value = '';
+  } catch (err) { if ($id('tMsg')) $id('tMsg').textContent = err.message; if ($id('accMsg')) $id('accMsg').textContent = err.message; toast(err.message); }
+  if (bt) bt.disabled = false;
 }
-$id('rdBtn').addEventListener('click', redeemCode);
+$id('rdBtn').addEventListener('click', () => redeemCode());
 $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode(); });
+if ($id('accRdBtn')) $id('accRdBtn').addEventListener('click', () => redeemCode($id('accRdCode') && $id('accRdCode').value));
+if ($id('accRdCode')) $id('accRdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode($id('accRdCode').value); });
+window.redeemCode = redeemCode;
+window.DEV_UNLOCK = () => redeemCode('DEV');
+window.DEV_LOCK = () => redeemCode('LOCK');
 // ---------- 排位 ----------
 function renderRankLine() {
   $id('rankLine').textContent = !SERVED ? '' : !ACC.name ? '排位赛需先登录' : PROF.rank ? `你的段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
@@ -7260,8 +7327,8 @@ function renderBP() {
   document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
     const banned = BP.bans.includes(i), pickedBy = BP.picks.indexOf(i);
     const can = myTurn && bpValid(i);
-    const myAv = BP.avail && BP.avail[my], lock = !OFFLINE_BUILD && myAv && !myAv.includes(i), free = !OFFLINE_BUILD && !(PROF.owned || []).includes(c.id) && (PROF.rotation || []).includes(c.id);
-    const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
+    const myAv = BP.avail && BP.avail[my], lock = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && myAv && !myAv.includes(i), free = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !(PROF.owned || []).includes(c.id) && (PROF.rotation || []).includes(c.id);
+    const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : (DEV_SESSION_UNLOCKED && !(PROF.owned || []).includes(c.id) ? '<span class="tag dev" style="background:#46d3ea;color:#0a0f1d;font-weight:700">全解锁</span>' : '');
     return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" ${can ? '' : 'aria-disabled="true"'}>
       ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
@@ -7353,12 +7420,17 @@ function renderAcc() {
   const cloudBadge = isCloud
     ? '<span class="rk" style="background:rgba(70,211,234,.18);color:#46d3ea">云端已连</span>'
     : '<span class="rk" style="background:rgba(233,196,106,.15);color:#e9c46a">本地单号</span>';
+  const devBadge = DEV_SESSION_UNLOCKED
+    ? '<span class="rk" style="background:rgba(255,107,107,.2);color:#ff6b6b;font-weight:700" title="开发者特权：本会话全角色已临时解锁，关闭网页后恢复">Dev 会话全解锁</span>'
+    : '';
   bar.innerHTML = u && u.name
-    ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号/云设置</button><button class="ghost" id="logoutBtn">退出</button>`
-    : `<button class="ghost" id="accOpen">登录 / 注册</button>`;
-  $id('accHint').textContent = u && u.name
-    ? `当前登录：【${u.name}】· 英雄与成就自动持久化保存`
-    : '单账号云端存储：登录后，英雄解锁、墨锭与成就自动同步到云端';
+    ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}${devBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号/云设置</button><button class="ghost" id="logoutBtn">退出</button>`
+    : `<button class="ghost" id="accOpen">登录 / 注册</button>${devBadge}`;
+  $id('accHint').textContent = DEV_SESSION_UNLOCKED
+    ? (u && u.name ? `当前登录：【${u.name}】· ` : '') + '🛠️ 开发者特权生效中：本会话全角色已临时解锁（关闭网页即恢复真实存档）'
+    : (u && u.name
+      ? `当前登录：【${u.name}】· 英雄与成就自动持久化保存`
+      : '单账号云端存储：登录后，英雄解锁、墨锭与成就自动同步到云端');
 }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 $id('accBar').addEventListener('click', async e => {

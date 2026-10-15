@@ -214,6 +214,13 @@
         <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:11px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
         <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
       </div>
+      <div style="margin-top:14px;border-top:1px dashed var(--faint);padding-top:10px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="accRdCode" maxlength="32" placeholder="开发者兑换码 (输入 DEV 激活全解锁)" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;padding:6px 10px;font-size:12px;background:rgba(0,0,0,0.3);color:var(--ink);border:1px solid var(--faint);border-radius:6px">
+          <button class="ghost small" id="accRdBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">兑换</button>
+        </div>
+        <p class="netnote" style="margin:4px 0 0;font-size:11px">开发者特权仅在当前窗口会话临时生效，不会污染真实云端存档。关闭或新建窗口后自动恢复锁定。</p>
+      </div>
       <p class="netnote" style="margin-top:14px">登录或注册后，英雄解锁、墨锭余额与成就数据将持久化保存。</p>
     </div>
   </div>
@@ -279,7 +286,7 @@
       <h3 class="spt">每日挑战 <span class="tsub">每天 0 点刷新</span></h3><div class="tlist" id="tDaily"></div>
       <h3 class="spt">每周任务 <span class="tsub">每周一刷新</span></h3><div class="tlist" id="tWeekly"></div>
       <h3 class="spt">兑换码</h3>
-      <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入兑换码" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
+      <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入兑换码（如 DEV 激活会话全解锁）" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
       <h3 class="spt">墨锭从哪来</h3>
       <p class="tips" style="margin:0">联机对战：赢 60，输 30。排位赛：赢 80，输 40。打电脑（每天前 10 局）：入门 10 / 5，寻常 20 / 10，劲敌 40 / 20。每天第一次赢（联机或寻常以上电脑）额外 150。新手教学 300。新账号送 500。<br>角色祈愿 60 一次、十连 540；皮肤祈愿 30 一次、十连 270。</p>
       <p class="netnote" id="tMsg"></p>
