@@ -78,6 +78,10 @@ const PROBE = `(() => {
     const r = el.getBoundingClientRect();
     if (r.width < 1 && r.height < 1) continue;
     const key = desc(el);
+    const overY = el.scrollHeight > el.clientHeight + 2 && el.clientHeight > 0;
+    if (overY && cs.overflowY === 'hidden' && el.clientHeight > 12) {
+      if (!seen.has('y'+key)) { seen.add('y'+key); out.probs.push({ kind:'clipY', el:key, sh:el.scrollHeight, ch:el.clientHeight,
+        text:(el.textContent||'').trim().slice(0,26) }); } }
     const overX = el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0;
     if (overX && cs.overflowX === 'hidden') {
       if (!seen.has('x'+key)) { seen.add('x'+key); out.probs.push({ kind:'clipX', el:key, sw:el.scrollWidth, cw:el.clientWidth,
@@ -167,6 +171,8 @@ const audit = [];
 for (const [name, js] of PANELS) {
   if (ONLY && !ONLY.includes(name)) continue;
   await cdp.send('Runtime.evaluate', { expression: `(async () => { ${js} })()`, awaitPromise: true }, S);
+  if (process.env.RENYING_EXTRA_JS) {   // audit a panel in a specific state, e.g. a different codex character
+    await cdp.send('Runtime.evaluate', { expression: process.env.RENYING_EXTRA_JS }, S); await sleep(300); }
   await sleep(name === 'menu' ? 400 : 950);
   const r = await cdp.send('Runtime.evaluate', { expression: PROBE, returnByValue: true }, S);
   audit.push(r.result.value);
