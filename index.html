@@ -8417,7 +8417,7 @@ function p2pHost(sess) {
   }, 2000);
   peer.on('disconnected', () => { if (live() && !NET.open) { netStatus('和牵线服务器断开了，正在重连，房间码不变…'); relink(); } });
   peer.on('error', err => {
-    clearTimeout(sigTimer);
+    clearTimeout(t1); clearTimeout(t2);                 // 别让“正在连接…”的提示盖掉真正的错误
     clearTimeout(P2P.timer);
     if (!live()) return;
     if (!P2P.opened) {                                  // 房间还没建好

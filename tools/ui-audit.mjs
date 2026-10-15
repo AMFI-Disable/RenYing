@@ -1,0 +1,190 @@
+// Headless UI audit for RenYing: screenshots every panel + measures layout problems.
+// Node built-ins only (global fetch + WebSocket). Attaches via the browser-level CDP
+// WebSocket (the /json HTTP endpoint is unreachable in this sandbox).
+import { spawn } from 'node:child_process';
+import { mkdirSync, writeFileSync, readFileSync, openSync, readFileSync as readF } from 'node:fs';
+
+import { existsSync } from 'node:fs';
+const CHROME = process.env.RENYING_CHROME || [
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].find(p => existsSync(p));
+if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/path/to/chrome'); process.exit(1); }
+const URL = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
+const PORT = +(process.env.CDP_PORT || 9345);
+const OUT = process.argv[2] || 'ui-shots';
+const VW = +(process.argv[3] || 1440);
+const VH = +(process.argv[4] || 900);
+const ONLY = process.argv[5] ? process.argv[5].split(',') : null;
+let TOKEN = '';
+try { TOKEN = readF(process.env.RENYING_TOKEN_FILE || '/tmp/renying-token.txt', 'utf8').trim(); } catch {}
+
+
+mkdirSync(OUT, { recursive: true });
+const LOG = `${OUT}/chrome.log`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const HELPERS = `
+window.__bpDemo = () => { bpMode='cpu'; ensurePortraits();
+  BP = { step: 2, bans: [3, 6], picks: [0, -1], t: 18, avail: [[0,1,2,3,7],[0,2,4,5,8]] };
+  showScreen('bp'); renderBP(); };
+window.__endDemo = () => {
+  const t = document.getElementById('endTitle');
+  t.textContent = '青锋 胜'; t.style.color = 'rgb(120,230,255)';
+  document.getElementById('endSub').textContent = '月下无敌手';
+  document.getElementById('endRank').textContent = '+40 墨锭 · 有任务可领奖了';
+  const a = document.getElementById('againBtn'); a.textContent = '再战'; a.disabled = false;
+  const w = document.getElementById('rpWatch'); w.style.display = ''; w.textContent = '看回放';
+  showScreen('end'); };
+window.__forestDemo = () => {
+  document.getElementById('feWave').textContent = '1.3 破关';
+  document.getElementById('feStars').textContent = '★★☆';
+  document.getElementById('feInfo').innerHTML = '残存生命 62%，共击退 18 只妖物<br><span style="font-size:13px">余 60% 以上三星，30% 以上两星</span>';
+  document.getElementById('feNext').style.display = ''; showScreen('forestEnd'); };
+window.__tutdoneDemo = () => {
+  document.getElementById('tutReward').innerHTML = '该会的都会了。去找电脑或是同学，过几招吧。<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去问剑阁试试手气吧！';
+  showScreen('tutdone'); };
+`;
+
+const PANELS = [
+  ['menu', `backToMenu()`], ['single', `openScreen('single')`], ['cpu', `openScreen('cpu')`],
+  ['stage', `openScreen('stage')`], ['train', `openScreen('train')`], ['netp', `openScreen('netp')`],
+  ['help', `openScreen('help')`], ['codex', `openScreen('codex')`], ['settings', `openScreen('settings')`],
+  ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
+  ['welfare', `openWelfare()`], ['gacha', `openScreen('gacha')`], ['replays', `openScreen('replays')`],
+  ['tasks', `openScreen('tasks')`], ['bp', `__bpDemo()`], ['pause', `showScreen('pause')`],
+  ['end', `__endDemo()`], ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`],
+  ['tutdone', `__tutdoneDemo()`],
+];
+
+const PROBE = `(() => {
+  const desc = el => { let s = el.tagName.toLowerCase();
+    if (el.id) s += '#' + el.id;
+    if (el.className && typeof el.className === 'string') s += '.' + el.className.trim().split(/\\s+/).slice(0,2).join('.');
+    return s; };
+  const scr = document.querySelector('.scr.on');
+  if (!scr) return { panel: '(none)', error: 'no .scr.on' };
+  const W = innerWidth, H = innerHeight;
+  const out = { panel: scr.id, vw: W, vh: H, panelScroll: scr.scrollHeight, panelClient: scr.clientHeight,
+                needsScroll: scr.scrollHeight > scr.clientHeight + 2, probs: [], tiny: [] };
+  const seen = new Set();
+  for (const el of scr.querySelectorAll('*')) {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 && r.height < 1) continue;
+    const key = desc(el);
+    if (el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0 && cs.overflowX !== 'visible') {
+      if (!seen.has('x'+key)) { seen.add('x'+key); out.probs.push({ kind:'clipX', el:key, sw:el.scrollWidth, cw:el.clientWidth,
+        text:(el.textContent||'').trim().slice(0,26) }); } }
+    if (r.right > W + 1 || r.left < -1) {
+      if (!seen.has('o'+key)) { seen.add('o'+key); out.probs.push({ kind:'offscreenX', el:key,
+        left:Math.round(r.left), right:Math.round(r.right), text:(el.textContent||'').trim().slice(0,26) }); } }
+    // element spilling out of its own parent box (e.g. a segmented control too wide for its grid cell)
+    if (cs.position !== 'absolute' && cs.position !== 'fixed' && el.parentElement) {
+      const pr = el.parentElement.getBoundingClientRect();
+      const pcs = getComputedStyle(el.parentElement);
+      if (pcs.overflowX === 'visible' && pr.width > 0 && r.right - pr.right > 4 && !seen.has('p'+key)) {
+        seen.add('p'+key); out.probs.push({ kind:'parentOverflow', el:key,
+          over:Math.round(r.right - pr.right), text:(el.textContent||'').trim().slice(0,26) }); } }
+    const hasText = el.children.length === 0 && (el.textContent||'').trim().length > 0;
+    if (hasText) { const fs = parseFloat(cs.fontSize);
+      if (fs < 12) out.tiny.push({ el:key, fs, text:(el.textContent||'').trim().slice(0,22) }); }
+  }
+  out.tiny = out.tiny.slice(0,10); out.probs = out.probs.slice(0,25);
+  return out; })()`;
+
+class CDP {
+  constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.events = new Map();
+    ws.onmessage = e => { const m = JSON.parse(e.data);
+      if (m.id && this.pend.has(m.id)) { const { res, rej } = this.pend.get(m.id); this.pend.delete(m.id);
+        m.error ? rej(new Error(JSON.stringify(m.error))) : res(m.result); }
+      else if (m.method && this.events.has(m.method)) { this.events.get(m.method)(m.params); } }; }
+  send(method, params = {}, sid) { const id = ++this.id;
+    return new Promise((res, rej) => { this.pend.set(id, { res, rej });
+      this.ws.send(JSON.stringify(sid ? { id, method, params, sessionId: sid } : { id, method, params })); }); }
+  once(method) { return new Promise(r => this.events.set(method, p => { this.events.delete(method); r(p); })); }
+}
+
+const logFd = openSync(LOG, 'w');
+const chrome = spawn(CHROME, [
+  '--headless=new', '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
+  '--hide-scrollbars', '--mute-audio', '--no-first-run', '--no-default-browser-check', '--disable-extensions',
+  '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
+  `--remote-debugging-port=${PORT}`, '--remote-allow-origins=*', '--remote-debugging-address=127.0.0.1',
+  `--user-data-dir=${OUT}/chrome`, `--window-size=${VW},${VH}`, URL,
+], { stdio: ['ignore', logFd, logFd] });
+
+// read the browser-level ws endpoint out of the log (no HTTP dependency)
+let wsUrl = null;
+for (let i = 0; i < 80 && !wsUrl; i++) {
+  await sleep(250);
+  try { const m = readF(LOG, 'utf8').match(/DevTools listening on (ws:\/\/\S+)/); if (m) wsUrl = m[1]; } catch {}
+}
+if (!wsUrl) { console.error('Chrome never reported a DevTools endpoint'); chrome.kill(); process.exit(1); }
+console.log('attached:', wsUrl.replace(/\/devtools\/browser\/.*/, '/devtools/browser/…'));
+
+const ws = new WebSocket(wsUrl);
+ws.onclose = e => { console.error('CDP socket closed:', e.code, e.reason); process.exit(1); };
+await new Promise((res, rej) => { ws.onopen = res; setTimeout(() => rej(new Error('ws open timeout')), 10000); });
+const cdp = new CDP(ws);
+
+let pageId = null;
+for (let i = 0; i < 40 && !pageId; i++) {
+  const { targetInfos } = await cdp.send('Target.getTargets');
+  pageId = targetInfos.find(t => t.type === 'page')?.targetId;
+  if (!pageId) await sleep(250);
+}
+const { sessionId } = await cdp.send('Target.attachToTarget', { targetId: pageId, flatten: true });
+const S = sessionId;
+await cdp.send('Page.enable', {}, S);
+await cdp.send('Runtime.enable', {}, S);
+await cdp.send('Emulation.setDeviceMetricsOverride', { width: VW, height: VH, deviceScaleFactor: 1, mobile: false }, S);
+
+const seed = `(() => {
+  localStorage.setItem('renying-token', ${JSON.stringify(TOKEN)});
+  localStorage.setItem('renying-tut-seen','1'); localStorage.setItem('renying-tut-done','1');
+  localStorage.setItem('renying-net-mode','server');
+  localStorage.setItem('renying-settings', JSON.stringify({bloom:1,fps:0,shake:1.4,quality:'auto',blur:true,vig:1,music:0,sfx:0,aim:true}));
+})()`;
+await cdp.send('Runtime.evaluate', { expression: seed }, S);
+const loaded = cdp.once('Page.loadEventFired');
+await cdp.send('Page.reload', {}, S);
+await Promise.race([loaded, sleep(12000)]);
+await sleep(2800);
+await cdp.send('Runtime.evaluate', { expression: HELPERS }, S);
+await sleep(300);
+
+const audit = [];
+for (const [name, js] of PANELS) {
+  if (ONLY && !ONLY.includes(name)) continue;
+  await cdp.send('Runtime.evaluate', { expression: `(async () => { ${js} })()`, awaitPromise: true }, S);
+  await sleep(name === 'menu' ? 400 : 950);
+  const r = await cdp.send('Runtime.evaluate', { expression: PROBE, returnByValue: true }, S);
+  audit.push(r.result.value);
+  const shot = await cdp.send('Page.captureScreenshot', { format: 'png' }, S);
+  writeFileSync(`${OUT}/${VW}x${VH}-${name}.png`, Buffer.from(shot.data, 'base64'));
+}
+writeFileSync(`${OUT}/audit-${VW}x${VH}.json`, JSON.stringify(audit, null, 1));
+
+console.log(`\n================ ${VW}x${VH} ================`);
+for (const a of audit) {
+  if (!a || a.error) { console.log(`${(a?.panel||'?').padEnd(11)} ERROR ${a?.error||''}`); continue; }
+  const flags = [];
+  if (a.needsScroll) flags.push(`SCROLLS ${a.panelScroll}>${a.panelClient}`);
+  if (a.probs.length) flags.push(`${a.probs.length} overflow`);
+  if (a.tiny.length) flags.push(`${a.tiny.filter(t=>t.fs<11.5).length} tiny`);
+  console.log(`${a.panel.padEnd(11)} ${flags.length ? flags.join(' | ') : 'ok'}`);
+  for (const p of a.probs) console.log(`     [${p.kind}] ${p.el} ${p.sw?`sw${p.sw}/cw${p.cw}`:''}${p.right?` L${p.left}/R${p.right}`:''} "${p.text}"`);
+  for (const t of a.tiny) if (t.fs < 11.5) console.log(`     [font ${t.fs}px] ${t.el} "${t.text}"`);
+}
+const STRICT = !!process.env.RENYING_STRICT;
+const defects = audit.filter(a => a && !a.error && (a.probs.length || a.tiny.length));
+const scrollers = audit.filter(a => a && a.needsScroll);
+ws.close(); chrome.kill();
+if (defects.length) { console.log(`\nFAIL: ${defects.length} panel(s) with clipped/off-screen/small text: ${defects.map(d => d.panel).join(', ')}`); process.exit(1); }
+if (STRICT && scrollers.length) { console.log(`\nFAIL (strict): ${scrollers.length} panel(s) need scrolling: ${scrollers.map(d => d.panel).join(', ')}`); process.exit(1); }
+console.log(`\nPASS: ${audit.length} panels, no clipping, no sub-12px text${STRICT ? ', none need scrolling' : ''}.`);
+process.exit(0);

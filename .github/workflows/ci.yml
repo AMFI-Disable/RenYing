@@ -25,6 +25,11 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Validate Python Server Syntax
         run: |
           python3 -m py_compile server.py tools/build.py
@@ -56,6 +61,29 @@ jobs:
 
       - name: Verify Generated Pages Are Up To Date
         run: python3 tools/build.py --check
+
+      # Headless UI + multiplayer gates. Chrome is preinstalled on ubuntu-latest; set
+      # RENYING_CHROME to override the path, RENYING_URL to point at another host.
+      # The WebRTC P2P check is deliberately NOT run here: it depends on the public
+      # PeerJS signalling server and outbound UDP, which would make CI flaky.
+      # Run it locally with:  node tools/net-test.mjs p2p,errtest
+      - name: Start Local Game Server
+        run: |
+          python3 server.py 8791 > /tmp/renying-server.log 2>&1 &
+          for i in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8791/health >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8791/health >/dev/null || { echo "server failed to start"; cat /tmp/renying-server.log; exit 1; }
+          echo "Local server is up on :8791"
+
+      - name: UI Panel Layout Audit (all panels, 1440x900)
+        env:
+          RENYING_STRICT: "1"
+        run: node tools/ui-audit.mjs ci-ui 1440 900
+
+      - name: Multiplayer Regression (LAN / dedicated server)
+        run: node tools/net-test.mjs server ci-net
 
       - name: Verify Commit Message Conventions
         env:
