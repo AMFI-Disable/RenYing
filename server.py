@@ -226,6 +226,17 @@ def api_register(body):
         return 400, {"err": "密码须 6 到 64 位"}
     salt = secrets.token_bytes(16)
     with db_lock:
+        existing = db.execute("SELECT id, pw FROM users WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
+        if existing:
+            if existing[1] is None:
+                # 老站继承账号：首次设置密码直接激活并绑定老数据
+                db.execute("UPDATE users SET pw = ?, salt = ? WHERE id = ?", (hash_pw(pw, salt), salt, existing[0]))
+                token = new_session(existing[0])
+                log(f"老站玩家激活账号并继承档案：{name}")
+                user_row = db.execute(f"SELECT {USER_COLS} FROM users WHERE id = ?", (existing[0],)).fetchone()
+                return 200, {"token": token, **user_json(user_row)}
+            else:
+                return 409, {"err": "这个昵称已经有人用了，换一个吧"}
         try:
             cur = db.execute("INSERT INTO users (name, pw, salt, created) VALUES (?,?,?,?)", (name, hash_pw(pw, salt), salt, time.time()))
         except sqlite3.IntegrityError:
@@ -242,8 +253,10 @@ def api_login(body):
     if time.time() < until:
         return 429, {"err": f"密码错得太多，请 {int(until - time.time()) + 1} 秒后再试"}
     with db_lock:
-        row = db.execute(f"SELECT {USER_COLS}, pw, salt FROM users WHERE name = ?", (name,)).fetchone()
-        ok = row is not None and hmac.compare_digest(hash_pw(pw, row[7]), row[6])
+        row = db.execute(f"SELECT {USER_COLS}, pw, salt FROM users WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
+        if row and row[6] is None:
+            return 403, {"err": "此为老站继承账号，请点击【注册】设置密码即可直接激活并继承全部档案！"}
+        ok = row is not None and row[6] is not None and hmac.compare_digest(hash_pw(pw, row[7]), row[6])
         if ok:
             token = new_session(row[0])
     if not ok:

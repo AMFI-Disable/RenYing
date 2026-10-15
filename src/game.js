@@ -6590,6 +6590,9 @@ $id('accBar').addEventListener('click', async e => {
     if ($id('fbCfgIn') && cfg && cfg.projectId) $id('fbCfgIn').value = JSON.stringify(cfg, null, 2);
     menuCam.tz = 1.35;
     showScreen('acc');
+    if (typeof populateLegacyDropdown === 'function') {
+      populateLegacyDropdown(currentLegacyList, (u && u.name) || ACC.name || '');
+    }
     setTimeout(() => $id('accName').focus(), 50);
   } else if (id === 'lbBtn') {
     openLeaderboard();
@@ -6663,6 +6666,173 @@ if ($id('fbCfgClearBtn')) {
     toast('已恢复为本地独立单账号模式');
     $id('cloudCfgBox').classList.add('hidden');
     renderAcc();
+  });
+}
+
+// ======================= 老站数据继承与导入 =======================
+const LEGACY_USERS = [{"id": 1, "name": "Luffy", "wins": 8, "losses": 8, "rating": 1035, "placed": 11, "ink": 1358, "owned": ["qingfeng", "yanling", "leiming", "tieshan"], "frags": {"yuehua": 12, "liuyun": 13, "lingshuang": 12, "moyu": 13, "feiying": 13}, "pity": 1, "spity": 1, "skins": ["ly_dusk", "yl_phoenix", "lm_violet", "qf_gold", "ts_obsidian", "ts_bronze"], "equip": {"yanling": "yl_phoenix", "qingfeng": "qf_gold"}}, {"id": 2, "name": "设计失败的草履虫", "wins": 11, "losses": 11, "rating": 1152, "placed": 17, "ink": 478, "owned": ["qingfeng", "leiming", "tieshan", "liuyun", "lingshuang"], "frags": {"yuehua": 15, "feiying": 22, "yanling": 15, "moyu": 15}, "pity": 1, "spity": 5, "skins": ["qf_gold", "lm_sun"], "equip": {"qingfeng": "qf_gold", "leiming": "lm_sun"}}, {"id": 3, "name": "tct33x7", "wins": 1, "losses": 1, "rating": 1103, "placed": 2, "ink": 650, "owned": ["qingfeng", "lingshuang", "leiming", "liuyun"], "frags": {"moyu": 4, "tieshan": 10, "yanling": 1}, "pity": 9, "spity": 0, "skins": [], "equip": {}}, {"id": 4, "name": "明媚的地球", "wins": 9, "losses": 4, "rating": 1093, "placed": 8, "ink": 44, "owned": ["qingfeng", "lingshuang", "liuyun", "feiying", "yuehua", "leiming", "tieshan", "yanling", "moyu"], "frags": {}, "pity": 0, "spity": 0, "skins": ["lm_violet", "ly_dusk", "yh_sakura", "lm_sun", "ly_sky", "fy_jade", "ts_obsidian", "ts_bronze", "my_cinnabar", "ls_plum"], "equip": {"leiming": "lm_sun", "tieshan": "ts_obsidian", "moyu": "my_cinnabar", "feiying": "fy_jade", "liuyun": "ly_sky"}}, {"id": 5, "name": "张涵", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 92, "owned": ["qingfeng", "lingshuang", "feiying", "yanling", "leiming", "tieshan"], "frags": {"liuyun": 24, "yuehua": 12, "moyu": 10}, "pity": 9, "spity": 1, "skins": ["ls_plum", "yl_phoenix", "qf_frost", "lm_sun", "fy_jade"], "equip": {"qingfeng": "qf_frost", "lingshuang": "ls_plum", "yanling": "yl_phoenix"}}, {"id": 6, "name": "Luffy_iMac", "wins": 1, "losses": 2, "rating": 1135, "placed": 1, "ink": 790, "owned": ["qingfeng", "lingshuang"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 7, "name": "cxt", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 50, "owned": ["qingfeng"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 8, "name": "cxy", "wins": 2, "losses": 1, "rating": 1134, "placed": 1, "ink": 300, "owned": ["qingfeng", "liuyun"], "frags": {"tieshan": 13, "lingshuang": 6, "leiming": 9, "yanling": 13, "yuehua": 7, "feiying": 9, "moyu": 6}, "pity": 0, "spity": 8, "skins": ["ly_dusk", "ly_sky", "qf_gold"], "equip": {"liuyun": "ly_sky", "qingfeng": "qf_gold"}}, {"id": 9, "name": "MoYu", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 690, "owned": ["qingfeng", "moyu"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 10, "name": "越来越挤的大巴", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 210, "owned": ["qingfeng", "moyu", "feiying"], "frags": {"leiming": 2, "liuyun": 7, "tieshan": 2, "lingshuang": 1}, "pity": 1, "spity": 0, "skins": [], "equip": {}}, {"id": 11, "name": "hanz", "wins": 1, "losses": 2, "rating": 1068, "placed": 3, "ink": 192, "owned": ["qingfeng", "lingshuang", "tieshan"], "frags": {"yuehua": 3, "leiming": 5, "liuyun": 4, "moyu": 5, "yanling": 3}, "pity": 9, "spity": 7, "skins": ["qf_frost"], "equip": {"qingfeng": "qf_frost"}}, {"id": 12, "name": "zmjjkk", "wins": 1, "losses": 2, "rating": 1100, "placed": 0, "ink": 770, "owned": ["qingfeng", "leiming"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 13, "name": "wqfnkjrnbjv", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 36, "owned": ["qingfeng", "moyu", "liuyun"], "frags": {"leiming": 8, "feiying": 1, "tieshan": 1, "yuehua": 2, "yanling": 1}, "pity": 2, "spity": 0, "skins": [], "equip": {}}, {"id": 14, "name": "Ger1m0", "wins": 0, "losses": 0, "rating": 1100, "placed": 0, "ink": 560, "owned": ["qingfeng", "lingshuang"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 15, "name": "AAAAAAAA风铃批发", "wins": 1, "losses": 0, "rating": 1127, "placed": 1, "ink": 280, "owned": ["qingfeng", "moyu"], "frags": {"liuyun": 4, "leiming": 9, "yuehua": 1, "feiying": 4, "tieshan": 1}, "pity": 3, "spity": 8, "skins": ["qf_frost"], "equip": {"qingfeng": "qf_frost"}}, {"id": 16, "name": "Hilbert", "wins": 7, "losses": 34, "rating": 963, "placed": 39, "ink": 344, "owned": ["qingfeng", "liuyun", "feiying", "yanling", "leiming", "tieshan", "moyu", "lingshuang", "yuehua"], "frags": {}, "pity": 11, "spity": 0, "skins": ["qf_gold", "lm_violet", "ly_dusk", "yl_raven", "fy_jade", "fy_blood", "qf_frost", "my_cinnabar", "ly_sky", "ts_obsidian", "yl_phoenix", "ts_bronze"], "equip": {"qingfeng": "qf_gold", "feiying": "fy_blood", "liuyun": "ly_dusk", "leiming": "lm_violet", "yanling": "yl_raven", "tieshan": "ts_obsidian", "moyu": "my_cinnabar"}}, {"id": 17, "name": "CJ", "wins": 7, "losses": 5, "rating": 1113, "placed": 12, "ink": 86, "owned": ["qingfeng", "feiying", "moyu", "lingshuang", "tieshan", "leiming"], "frags": {"yuehua": 13, "liuyun": 16, "yanling": 18}, "pity": 10, "spity": 15, "skins": ["qf_frost", "lm_sun"], "equip": {}}, {"id": 18, "name": "神明", "wins": 35, "losses": 13, "rating": 1204, "placed": 46, "ink": 28, "owned": ["qingfeng", "yanling", "tieshan", "liuyun", "feiying", "lingshuang", "leiming"], "frags": {"yuehua": 38, "moyu": 39}, "pity": 11, "spity": 1, "skins": ["qf_gold", "qf_frost", "yl_raven", "yl_phoenix", "ly_dusk", "ts_bronze", "lm_sun"], "equip": {"qingfeng": "qf_gold", "yanling": "yl_raven", "liuyun": "ly_dusk", "tieshan": "ts_bronze", "leiming": "lm_sun"}}, {"id": 19, "name": "duyiuiavuda", "wins": 0, "losses": 1, "rating": 1071, "placed": 1, "ink": 770, "owned": ["qingfeng", "feiying"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 20, "name": "青霜", "wins": 1, "losses": 0, "rating": 1142, "placed": 1, "ink": 1125, "owned": ["qingfeng", "moyu"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}, {"id": 21, "name": "111111", "wins": 0, "losses": 1, "rating": 1054, "placed": 1, "ink": 540, "owned": ["qingfeng", "lingshuang"], "frags": {}, "pity": 0, "spity": 0, "skins": [], "equip": {}}];
+
+let currentLegacyList = LEGACY_USERS;
+
+function populateLegacyDropdown(list, selectedName) {
+  const sel = $id('legacyAccSelect');
+  if (!sel) return;
+  currentLegacyList = list || LEGACY_USERS;
+  const target = (selectedName || (ACC.name || (window.CloudSave && CloudSave.getUser() ? CloudSave.getUser().name : ''))).toLowerCase();
+  sel.innerHTML = '<option value="">-- 选择老站账号（' + currentLegacyList.length + '位大侠） --</option>' +
+    currentLegacyList.map(a => {
+      const ownCount = (a.owned || []).length;
+      const skinCount = (a.skins || []).length;
+      const ink = a.ink || 0;
+      const matchText = (a.wins || 0) + '胜' + (a.losses || 0) + '负';
+      const isSel = (target && target === a.name.toLowerCase()) ? ' selected' : '';
+      return `<option value="${escapeHTML(a.name)}"${isSel}>${escapeHTML(a.name)} (${ink}墨锭 · ${ownCount}英雄 · ${skinCount}皮肤 · ${matchText})</option>`;
+    }).join('');
+}
+
+function claimLegacyAccount(accData) {
+  if (!accData) return;
+  const name = accData.name;
+
+  // 1. 英雄拥有集合并集
+  const oldOwned = Array.isArray(PROF.owned) ? PROF.owned : ['qingfeng'];
+  const newOwned = Array.isArray(accData.owned) ? accData.owned : ['qingfeng'];
+  PROF.owned = Array.from(new Set([...oldOwned, ...newOwned]));
+
+  // 2. 皮肤拥有集合并集
+  const oldSkins = Array.isArray(PROF.skins) ? PROF.skins : [];
+  const newSkins = Array.isArray(accData.skins) ? accData.skins : [];
+  PROF.skins = Array.from(new Set([...oldSkins, ...newSkins]));
+
+  // 3. 碎片最大值合并
+  PROF.frags = PROF.frags || {};
+  if (accData.frags && typeof accData.frags === 'object') {
+    for (const [cid, cnt] of Object.entries(accData.frags)) {
+      PROF.frags[cid] = Math.max(PROF.frags[cid] || 0, cnt || 0);
+    }
+  }
+
+  // 4. 墨锭取更大值
+  PROF.ink = Math.max(PROF.ink || 0, accData.ink || 0);
+
+  // 5. 保底次数合并
+  PROF.pity = Math.max(PROF.pity || 0, accData.pity || 0);
+  PROF.spity = Math.max(PROF.spity || 0, accData.spity || 0);
+
+  // 6. 皮肤装配
+  PROF.equip = Object.assign({}, accData.equip || {}, PROF.equip || {});
+  try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (e) {}
+
+  // 7. 战绩与排位
+  PROF.netWins = Math.max(PROF.netWins || 0, accData.wins || 0);
+  PROF.netLosses = Math.max(PROF.netLosses || 0, accData.losses || 0);
+  if (accData.rating) PROF.rating = accData.rating;
+  if (accData.placed) PROF.placed = Math.max(PROF.placed || 0, accData.placed || 0);
+
+  // 8. 账号绑定
+  if (!ACC.name) {
+    ACC.name = name;
+  }
+  PROF.guest = false;
+
+  // 9. 存储同步（本地镜像与云端）
+  try { localStorage.setItem('renying-cloud-cache', JSON.stringify(PROF)); } catch (e) {}
+  if (window.CloudSave) {
+    CloudSave.saveProfile(PROF, true);
+  }
+
+  // 10. 刷新界面
+  applyProfile(PROF);
+  renderAcc();
+
+  const msg = `已成功继承【${name}】！已解锁 ${PROF.owned.length} 位英雄、${PROF.skins.length} 款皮肤、${PROF.ink} 墨锭！`;
+  if ($id('importMsg')) {
+    $id('importMsg').style.color = '#46d3ea';
+    $id('importMsg').textContent = msg;
+  }
+  toast(msg);
+}
+
+if ($id('toggleImportBoxBtn')) {
+  $id('toggleImportBoxBtn').addEventListener('click', () => {
+    $id('importBox').classList.toggle('hidden');
+    $id('toggleImportBoxBtn').textContent = $id('importBox').classList.contains('hidden') ? '📜 老站数据继承' : '收起继承设置';
+  });
+}
+
+if ($id('claimLegacyBtn')) {
+  $id('claimLegacyBtn').addEventListener('click', () => {
+    const sel = $id('legacyAccSelect');
+    const val = sel ? sel.value : '';
+    if (!val) {
+      if ($id('importMsg')) {
+        $id('importMsg').style.color = '#ff6b6b';
+        $id('importMsg').textContent = '请先在下拉菜单中选择一个老站账号';
+      }
+      return;
+    }
+    const found = currentLegacyList.find(a => a.name === val);
+    if (!found) {
+      if ($id('importMsg')) $id('importMsg').textContent = '未找到该账号信息';
+      return;
+    }
+    claimLegacyAccount(found);
+  });
+}
+
+if ($id('importFileInput')) {
+  $id('importFileInput').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        const users = d.users || [];
+        const profiles = d.profiles || [];
+        if (!Array.isArray(users) || !users.length) throw new Error('导出文件中未发现有效玩家用户数据');
+
+        const profById = {};
+        for (const p of profiles) {
+          if (p && p.user_id) profById[p.user_id] = p;
+        }
+
+        const list = users.map(u => {
+          const p = profById[u.id] || {};
+          const pdata = (p.data && typeof p.data === 'object') ? p.data : (typeof p.data === 'string' ? JSON.parse(p.data || '{}') : {});
+          return {
+            id: u.id,
+            name: u.name,
+            wins: u.wins || 0,
+            losses: u.losses || 0,
+            rating: p.rating || 1100,
+            placed: p.placed || 0,
+            ink: pdata.ink || 50,
+            owned: pdata.owned || ['qingfeng'],
+            frags: pdata.frags || {},
+            pity: pdata.pity || 0,
+            spity: pdata.spity || 0,
+            skins: pdata.skins || [],
+            equip: pdata.equip || {}
+          };
+        });
+
+        populateLegacyDropdown(list);
+        if ($id('importFileStatus')) $id('importFileStatus').textContent = `已读取 ${file.name}（${list.length} 个账号）`;
+        if ($id('importMsg')) {
+          $id('importMsg').style.color = '#e9c46a';
+          $id('importMsg').textContent = `文件解析成功！请在下拉框中选择要继承的账号后点击【一键继承】`;
+        }
+        toast(`成功载入 ${list.length} 个账号数据`);
+      } catch (err) {
+        if ($id('importMsg')) {
+          $id('importMsg').style.color = '#ff6b6b';
+          $id('importMsg').textContent = '导入失败：' + err.message;
+        }
+        alert('文件解析失败：' + err.message);
+      }
+    };
+    reader.readAsText(file);
   });
 }
 

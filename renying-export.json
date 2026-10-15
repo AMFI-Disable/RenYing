@@ -1,0 +1,2401 @@
+{
+ "exported_at": "2026-10-15 18:11:32",
+ "users": [
+  {
+   "id": 1,
+   "name": "Luffy",
+   "wins": 8,
+   "losses": 8,
+   "cwins": 0,
+   "closses": 2,
+   "muted": 0,
+   "created": 1790377990.8555589
+  },
+  {
+   "id": 2,
+   "name": "设计失败的草履虫",
+   "wins": 11,
+   "losses": 11,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790401334.265673
+  },
+  {
+   "id": 3,
+   "name": "tct33x7",
+   "wins": 1,
+   "losses": 1,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790409178.81004
+  },
+  {
+   "id": 4,
+   "name": "明媚的地球",
+   "wins": 9,
+   "losses": 4,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790415525.934746
+  },
+  {
+   "id": 5,
+   "name": "张涵",
+   "wins": 0,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790421753.7100742
+  },
+  {
+   "id": 6,
+   "name": "Luffy_iMac",
+   "wins": 1,
+   "losses": 2,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790426696.1708438
+  },
+  {
+   "id": 7,
+   "name": "cxt",
+   "wins": 0,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790433040.356491
+  },
+  {
+   "id": 8,
+   "name": "cxy",
+   "wins": 2,
+   "losses": 1,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790433071.13488
+  },
+  {
+   "id": 9,
+   "name": "MoYu",
+   "wins": 0,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1790435204.1505332
+  },
+  {
+   "id": 10,
+   "name": "越来越挤的大巴",
+   "wins": 0,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791118680.1763859
+  },
+  {
+   "id": 11,
+   "name": "hanz",
+   "wins": 1,
+   "losses": 2,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791168004.6117952
+  },
+  {
+   "id": 12,
+   "name": "zmjjkk",
+   "wins": 1,
+   "losses": 2,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791246527.9625814
+  },
+  {
+   "id": 13,
+   "name": "wqfnkjrnbjv",
+   "wins": 0,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791288848.3965461
+  },
+  {
+   "id": 14,
+   "name": "Ger1m0",
+   "wins": 0,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791335893.9614816
+  },
+  {
+   "id": 15,
+   "name": "AAAAAAAA风铃批发",
+   "wins": 1,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791856938.909491
+  },
+  {
+   "id": 16,
+   "name": "Hilbert",
+   "wins": 7,
+   "losses": 34,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791857543.82178
+  },
+  {
+   "id": 17,
+   "name": "CJ",
+   "wins": 7,
+   "losses": 5,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791867391.7004166
+  },
+  {
+   "id": 18,
+   "name": "神明",
+   "wins": 35,
+   "losses": 13,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791867643.068735
+  },
+  {
+   "id": 19,
+   "name": "duyiuiavuda",
+   "wins": 0,
+   "losses": 1,
+   "cwins": 0,
+   "closses": 1,
+   "muted": 0,
+   "created": 1791873760.019625
+  },
+  {
+   "id": 20,
+   "name": "青霜",
+   "wins": 1,
+   "losses": 0,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1791979017.1817012
+  },
+  {
+   "id": 21,
+   "name": "111111",
+   "wins": 0,
+   "losses": 1,
+   "cwins": 0,
+   "closses": 0,
+   "muted": 0,
+   "created": 1792043627.159883
+  }
+ ],
+ "profiles": [
+  {
+   "user_id": 1,
+   "data": {
+    "ink": 1358,
+    "owned": [
+     "qingfeng",
+     "yanling",
+     "leiming",
+     "tieshan"
+    ],
+    "frags": {
+     "yuehua": 12,
+     "liuyun": 13,
+     "lingshuang": 12,
+     "moyu": 13,
+     "feiying": 13
+    },
+    "pity": 1,
+    "welfare": 1,
+    "tutorial": 1,
+    "skins": [
+     "ly_dusk",
+     "yl_phoenix",
+     "lm_violet",
+     "qf_gold",
+     "ts_obsidian",
+     "ts_bronze"
+    ],
+    "equip": {
+     "yanling": "yl_phoenix",
+     "qingfeng": "qf_gold"
+    },
+    "spity": 1,
+    "daily": {
+     "day": "2026-10-15",
+     "ids": [
+      "play3",
+      "combo10",
+      "net1"
+     ],
+     "p": {
+      "games": 2,
+      "netgames": 2,
+      "rankgames": 2,
+      "maxcombo": 5
+     },
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "maxcombo": 10,
+      "ults": 4,
+      "games": 4,
+      "netgames": 4,
+      "rankgames": 4,
+      "wins": 1
+     },
+     "claimed": []
+    },
+    "redeemed": [
+     "ry666",
+     "renying888"
+    ]
+   },
+   "rating": 1035.3751719243853,
+   "placed": 11
+  },
+  {
+   "user_id": 2,
+   "data": {
+    "ink": 478,
+    "owned": [
+     "qingfeng",
+     "leiming",
+     "tieshan",
+     "liuyun",
+     "lingshuang"
+    ],
+    "frags": {
+     "yuehua": 15,
+     "feiying": 22,
+     "yanling": 15,
+     "moyu": 15
+    },
+    "pity": 1,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [
+     "qf_gold",
+     "lm_sun"
+    ],
+    "equip": {
+     "qingfeng": "qf_gold",
+     "leiming": "lm_sun"
+    },
+    "spity": 5,
+    "daily": {
+     "day": "2026-10-14",
+     "ids": [
+      "play3",
+      "win1",
+      "train300"
+     ],
+     "p": {
+      "games": 10,
+      "netgames": 7,
+      "rankgames": 7,
+      "wins": 5,
+      "maxcombo": 23,
+      "ults": 17,
+      "traindmg": 166.01999999999995
+     },
+     "claimed": [
+      "play3",
+      "win1"
+     ],
+     "cpu": 0,
+     "firstwin": true,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "maxcombo": 23,
+      "ults": 29,
+      "games": 17,
+      "wins": 8,
+      "dailydays": 2,
+      "netgames": 9,
+      "rankgames": 9,
+      "traindmg": 166.01999999999995
+     },
+     "claimed": [
+      "wrank5"
+     ]
+    }
+   },
+   "rating": 1151.8383949716685,
+   "placed": 17
+  },
+  {
+   "user_id": 3,
+   "data": {
+    "ink": 650,
+    "owned": [
+     "qingfeng",
+     "lingshuang",
+     "leiming",
+     "liuyun"
+    ],
+    "frags": {
+     "moyu": 4,
+     "tieshan": 10,
+     "yanling": 1
+    },
+    "pity": 9,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-04",
+     "ids": [
+      "play3",
+      "train300",
+      "win1"
+     ],
+     "p": {},
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W40",
+     "p": {},
+     "claimed": []
+    }
+   },
+   "rating": 1102.6703919582533,
+   "placed": 2
+  },
+  {
+   "user_id": 4,
+   "data": {
+    "ink": 44,
+    "owned": [
+     "qingfeng",
+     "lingshuang",
+     "liuyun",
+     "feiying",
+     "yuehua",
+     "leiming",
+     "tieshan",
+     "yanling",
+     "moyu"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 1,
+    "skins": [
+     "lm_violet",
+     "ly_dusk",
+     "yh_sakura",
+     "lm_sun",
+     "ly_sky",
+     "fy_jade",
+     "ts_obsidian",
+     "ts_bronze",
+     "my_cinnabar",
+     "ls_plum"
+    ],
+    "equip": {
+     "leiming": "lm_sun",
+     "tieshan": "ts_obsidian",
+     "moyu": "my_cinnabar",
+     "feiying": "fy_jade",
+     "liuyun": "ly_sky"
+    },
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-07",
+     "ids": [
+      "play3",
+      "hard1",
+      "train300"
+     ],
+     "p": {
+      "maxcombo": 15,
+      "ults": 31,
+      "games": 10,
+      "wins": 3,
+      "hardwins": 2
+     },
+     "claimed": [
+      "hard1",
+      "play3"
+     ],
+     "cpu": 2,
+     "firstwin": true,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W41",
+     "p": {
+      "maxcombo": 15,
+      "ults": 31,
+      "games": 10,
+      "wins": 3,
+      "hardwins": 2,
+      "dailydays": 1
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1092.7173845660582,
+   "placed": 8
+  },
+  {
+   "user_id": 5,
+   "data": {
+    "ink": 92,
+    "owned": [
+     "qingfeng",
+     "lingshuang",
+     "feiying",
+     "yanling",
+     "leiming",
+     "tieshan"
+    ],
+    "frags": {
+     "liuyun": 24,
+     "yuehua": 12,
+     "moyu": 10
+    },
+    "pity": 9,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [
+     "ls_plum",
+     "yl_phoenix",
+     "qf_frost",
+     "lm_sun",
+     "fy_jade"
+    ],
+    "equip": {
+     "qingfeng": "qf_frost",
+     "lingshuang": "ls_plum",
+     "yanling": "yl_phoenix"
+    },
+    "spity": 1,
+    "daily": {
+     "day": "2026-09-30",
+     "ids": [
+      "play3",
+      "hard1",
+      "train300"
+     ],
+     "p": {
+      "maxcombo": 10,
+      "ults": 9,
+      "games": 5,
+      "wins": 5,
+      "traindmg": 462.71166666666693,
+      "hardwins": 1
+     },
+     "claimed": [
+      "play3",
+      "train300",
+      "hard1"
+     ],
+     "cpu": 4,
+     "firstwin": true,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W40",
+     "p": {
+      "maxcombo": 10,
+      "ults": 43,
+      "games": 21,
+      "wins": 16,
+      "dailydays": 2,
+      "hardwins": 3,
+      "traindmg": 462.71166666666693
+     },
+     "claimed": [
+      "wwin10"
+     ]
+    }
+   },
+   "rating": 1100.0,
+   "placed": 0
+  },
+  {
+   "user_id": 6,
+   "data": {
+    "ink": 790,
+    "owned": [
+     "qingfeng",
+     "lingshuang"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-09-27",
+     "ids": [
+      "play3",
+      "win1",
+      "combo10"
+     ],
+     "p": {
+      "games": 2,
+      "netgames": 2
+     },
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W39",
+     "p": {
+      "games": 3,
+      "netgames": 3,
+      "rankgames": 1,
+      "wins": 1
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1134.939003057951,
+   "placed": 1
+  },
+  {
+   "user_id": 8,
+   "data": {
+    "ink": 300,
+    "owned": [
+     "qingfeng",
+     "liuyun"
+    ],
+    "frags": {
+     "tieshan": 13,
+     "lingshuang": 6,
+     "leiming": 9,
+     "yanling": 13,
+     "yuehua": 7,
+     "feiying": 9,
+     "moyu": 6
+    },
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 1,
+    "skins": [
+     "ly_dusk",
+     "ly_sky",
+     "qf_gold"
+    ],
+    "equip": {
+     "liuyun": "ly_sky",
+     "qingfeng": "qf_gold"
+    },
+    "spity": 8,
+    "daily": {
+     "day": "2026-10-06",
+     "ids": [
+      "play3",
+      "ult2",
+      "hard1"
+     ],
+     "p": {
+      "maxcombo": 9,
+      "traindmg": 125.16,
+      "ults": 3,
+      "games": 3,
+      "wins": 2,
+      "hardwins": 1,
+      "netgames": 2
+     },
+     "claimed": [
+      "ult2",
+      "hard1"
+     ],
+     "cpu": 1,
+     "firstwin": true,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W41",
+     "p": {
+      "games": 4,
+      "netgames": 3,
+      "rankgames": 1,
+      "wins": 3,
+      "maxcombo": 9,
+      "ults": 5,
+      "traindmg": 125.16,
+      "hardwins": 1,
+      "dailydays": 1
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1134.0840036266445,
+   "placed": 1
+  },
+  {
+   "user_id": 9,
+   "data": {
+    "ink": 690,
+    "owned": [
+     "qingfeng",
+     "moyu"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-09-27",
+     "ids": [
+      "play3",
+      "win1",
+      "combo10"
+     ],
+     "p": {},
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W39",
+     "p": {
+      "maxcombo": 7,
+      "games": 2,
+      "wins": 2
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1100.0,
+   "placed": 0
+  },
+  {
+   "user_id": 10,
+   "data": {
+    "ink": 210,
+    "owned": [
+     "qingfeng",
+     "moyu",
+     "feiying"
+    ],
+    "frags": {
+     "leiming": 2,
+     "liuyun": 7,
+     "tieshan": 2,
+     "lingshuang": 1
+    },
+    "pity": 1,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-07",
+     "ids": [
+      "play3",
+      "hard1",
+      "train300"
+     ],
+     "p": {},
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W41",
+     "p": {
+      "maxcombo": 11,
+      "traindmg": 402.92399999999975
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1100.0,
+   "placed": 0
+  },
+  {
+   "user_id": 11,
+   "data": {
+    "ink": 192,
+    "owned": [
+     "qingfeng",
+     "lingshuang",
+     "tieshan"
+    ],
+    "frags": {
+     "yuehua": 3,
+     "leiming": 5,
+     "liuyun": 4,
+     "moyu": 5,
+     "yanling": 3
+    },
+    "pity": 9,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [
+     "qf_frost"
+    ],
+    "equip": {
+     "qingfeng": "qf_frost"
+    },
+    "spity": 7,
+    "daily": {
+     "day": "2026-10-05",
+     "ids": [
+      "play3",
+      "ult2",
+      "net1"
+     ],
+     "p": {
+      "games": 4,
+      "netgames": 3,
+      "rankgames": 3,
+      "maxcombo": 7,
+      "ults": 7,
+      "wins": 2
+     },
+     "claimed": [
+      "net1",
+      "ult2",
+      "play3"
+     ],
+     "cpu": 1,
+     "firstwin": true,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W41",
+     "p": {
+      "games": 4,
+      "netgames": 3,
+      "rankgames": 3,
+      "maxcombo": 7,
+      "ults": 7,
+      "dailydays": 1,
+      "wins": 2
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1067.5467103905626,
+   "placed": 3
+  },
+  {
+   "user_id": 12,
+   "data": {
+    "ink": 770,
+    "owned": [
+     "qingfeng",
+     "leiming"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-07",
+     "ids": [
+      "play3",
+      "hard1",
+      "train300"
+     ],
+     "p": {},
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W41",
+     "p": {
+      "maxcombo": 8,
+      "games": 3,
+      "netgames": 3,
+      "wins": 1,
+      "ults": 2
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1100.0,
+   "placed": 0
+  },
+  {
+   "user_id": 13,
+   "data": {
+    "ink": 36,
+    "owned": [
+     "qingfeng",
+     "moyu",
+     "liuyun"
+    ],
+    "frags": {
+     "leiming": 8,
+     "feiying": 1,
+     "tieshan": 1,
+     "yuehua": 2,
+     "yanling": 1
+    },
+    "pity": 2,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-06",
+     "ids": [
+      "play3",
+      "ult2",
+      "hard1"
+     ],
+     "p": {
+      "maxcombo": 8,
+      "ults": 6,
+      "games": 3
+     },
+     "claimed": [
+      "play3",
+      "ult2"
+     ],
+     "cpu": 3,
+     "firstwin": false,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W41",
+     "p": {
+      "maxcombo": 8,
+      "ults": 6,
+      "games": 3,
+      "dailydays": 1
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1100.0,
+   "placed": 0
+  },
+  {
+   "user_id": 14,
+   "data": {
+    "ink": 560,
+    "owned": [
+     "qingfeng",
+     "lingshuang"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-08",
+     "ids": [
+      "play3",
+      "combo10",
+      "net1"
+     ],
+     "p": {
+      "maxcombo": 10,
+      "ults": 8,
+      "games": 4,
+      "wins": 3
+     },
+     "claimed": [],
+     "cpu": 3,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W41",
+     "p": {
+      "maxcombo": 10,
+      "ults": 16,
+      "games": 7,
+      "wins": 6
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1100.0,
+   "placed": 0
+  },
+  {
+   "user_id": 15,
+   "data": {
+    "ink": 280,
+    "owned": [
+     "qingfeng",
+     "moyu"
+    ],
+    "frags": {
+     "liuyun": 4,
+     "leiming": 9,
+     "yuehua": 1,
+     "feiying": 4,
+     "tieshan": 1
+    },
+    "pity": 3,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [
+     "qf_frost"
+    ],
+    "equip": {
+     "qingfeng": "qf_frost"
+    },
+    "spity": 8,
+    "daily": {
+     "day": "2026-10-13",
+     "ids": [
+      "play3",
+      "win1",
+      "train300"
+     ],
+     "p": {
+      "maxcombo": 9,
+      "traindmg": 474.02400000000017,
+      "ults": 3,
+      "games": 1,
+      "netgames": 1,
+      "rankgames": 1,
+      "wins": 1
+     },
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": true,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "maxcombo": 9,
+      "traindmg": 474.02400000000017,
+      "ults": 3,
+      "games": 1,
+      "netgames": 1,
+      "rankgames": 1,
+      "wins": 1
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1126.648593611955,
+   "placed": 1
+  },
+  {
+   "user_id": 16,
+   "data": {
+    "ink": 344,
+    "owned": [
+     "qingfeng",
+     "liuyun",
+     "feiying",
+     "yanling",
+     "leiming",
+     "tieshan",
+     "moyu",
+     "lingshuang",
+     "yuehua"
+    ],
+    "frags": {},
+    "pity": 11,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [
+     "qf_gold",
+     "lm_violet",
+     "ly_dusk",
+     "yl_raven",
+     "fy_jade",
+     "fy_blood",
+     "qf_frost",
+     "my_cinnabar",
+     "ly_sky",
+     "ts_obsidian",
+     "yl_phoenix",
+     "ts_bronze"
+    ],
+    "equip": {
+     "qingfeng": "qf_gold",
+     "feiying": "fy_blood",
+     "liuyun": "ly_dusk",
+     "leiming": "lm_violet",
+     "yanling": "yl_raven",
+     "tieshan": "ts_obsidian",
+     "moyu": "my_cinnabar"
+    },
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-15",
+     "ids": [
+      "play3",
+      "combo10",
+      "net1"
+     ],
+     "p": {
+      "maxcombo": 20,
+      "games": 16,
+      "wins": 13,
+      "ults": 27,
+      "traindmg": 93.00800000000001,
+      "netgames": 4,
+      "rankgames": 4
+     },
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": true,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "maxcombo": 23,
+      "games": 68,
+      "netgames": 41,
+      "rankgames": 39,
+      "ults": 49,
+      "traindmg": 3625.260000000001,
+      "wins": 17,
+      "dailydays": 2
+     },
+     "claimed": [
+      "wrank5"
+     ]
+    },
+    "redeemed": [
+     "renying888",
+     "ry666"
+    ]
+   },
+   "rating": 962.6090623606307,
+   "placed": 39
+  },
+  {
+   "user_id": 17,
+   "data": {
+    "ink": 86,
+    "owned": [
+     "qingfeng",
+     "feiying",
+     "moyu",
+     "lingshuang",
+     "tieshan",
+     "leiming"
+    ],
+    "frags": {
+     "yuehua": 13,
+     "liuyun": 16,
+     "yanling": 18
+    },
+    "pity": 10,
+    "welfare": 1,
+    "tutorial": 1,
+    "skins": [
+     "qf_frost",
+     "lm_sun"
+    ],
+    "equip": {},
+    "spity": 15,
+    "daily": {
+     "day": "2026-10-15",
+     "ids": [
+      "play3",
+      "combo10",
+      "net1"
+     ],
+     "p": {
+      "maxcombo": 9,
+      "ults": 12,
+      "games": 8,
+      "wins": 5,
+      "hardwins": 2,
+      "netgames": 2,
+      "rankgames": 2
+     },
+     "claimed": [
+      "play3"
+     ],
+     "cpu": 5,
+     "firstwin": true,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "games": 37,
+      "netgames": 12,
+      "rankgames": 12,
+      "wins": 27,
+      "maxcombo": 20,
+      "ults": 59,
+      "dailydays": 3,
+      "traindmg": 2752.7219999999975,
+      "hardwins": 2
+     },
+     "claimed": [
+      "wwin10",
+      "wrank5"
+     ]
+    }
+   },
+   "rating": 1113.1625790132748,
+   "placed": 12
+  },
+  {
+   "user_id": 18,
+   "data": {
+    "ink": 28,
+    "owned": [
+     "qingfeng",
+     "yanling",
+     "tieshan",
+     "liuyun",
+     "feiying",
+     "lingshuang",
+     "leiming"
+    ],
+    "frags": {
+     "yuehua": 38,
+     "moyu": 39
+    },
+    "pity": 11,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [
+     "qf_gold",
+     "qf_frost",
+     "yl_raven",
+     "yl_phoenix",
+     "ly_dusk",
+     "ts_bronze",
+     "lm_sun"
+    ],
+    "equip": {
+     "qingfeng": "qf_gold",
+     "yanling": "yl_raven",
+     "liuyun": "ly_dusk",
+     "tieshan": "ts_bronze",
+     "leiming": "lm_sun"
+    },
+    "spity": 1,
+    "daily": {
+     "day": "2026-10-15",
+     "ids": [
+      "play3",
+      "combo10",
+      "net1"
+     ],
+     "p": {
+      "games": 6,
+      "netgames": 1,
+      "rankgames": 1,
+      "wins": 4,
+      "maxcombo": 2,
+      "ults": 1
+     },
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": true,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "maxcombo": 19,
+      "ults": 60,
+      "games": 68,
+      "wins": 43,
+      "dailydays": 2,
+      "netgames": 48,
+      "rankgames": 46,
+      "traindmg": 1484.0650000000003
+     },
+     "claimed": []
+    },
+    "redeemed": [
+     "ry666",
+     "renying888"
+    ]
+   },
+   "rating": 1203.8215828994491,
+   "placed": 46
+  },
+  {
+   "user_id": 19,
+   "data": {
+    "ink": 770,
+    "owned": [
+     "qingfeng",
+     "feiying"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-15",
+     "ids": [
+      "play3",
+      "combo10",
+      "net1"
+     ],
+     "p": {
+      "maxcombo": 12,
+      "ults": 4,
+      "games": 5,
+      "wins": 3,
+      "hardwins": 1,
+      "netgames": 1
+     },
+     "claimed": [],
+     "cpu": 2,
+     "firstwin": true,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "games": 6,
+      "netgames": 2,
+      "rankgames": 1,
+      "maxcombo": 12,
+      "ults": 5,
+      "wins": 3,
+      "hardwins": 1
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1070.5330315478316,
+   "placed": 1
+  },
+  {
+   "user_id": 20,
+   "data": {
+    "ink": 1125,
+    "owned": [
+     "qingfeng",
+     "moyu"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-14",
+     "ids": [
+      "play3",
+      "win1",
+      "train300"
+     ],
+     "p": {
+      "maxcombo": 10,
+      "ults": 34,
+      "games": 11,
+      "netgames": 1,
+      "rankgames": 1,
+      "wins": 5,
+      "hardwins": 1
+     },
+     "claimed": [
+      "play3",
+      "win1"
+     ],
+     "cpu": 9,
+     "firstwin": true,
+     "counted": true
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "maxcombo": 10,
+      "ults": 34,
+      "games": 11,
+      "netgames": 1,
+      "rankgames": 1,
+      "wins": 5,
+      "dailydays": 1,
+      "hardwins": 1
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1142.1676418438092,
+   "placed": 1
+  },
+  {
+   "user_id": 21,
+   "data": {
+    "ink": 540,
+    "owned": [
+     "qingfeng",
+     "lingshuang"
+    ],
+    "frags": {},
+    "pity": 0,
+    "welfare": 1,
+    "tutorial": 0,
+    "skins": [],
+    "equip": {},
+    "spity": 0,
+    "daily": {
+     "day": "2026-10-15",
+     "ids": [
+      "play3",
+      "combo10",
+      "net1"
+     ],
+     "p": {
+      "games": 1,
+      "netgames": 1,
+      "rankgames": 1,
+      "maxcombo": 5,
+      "ults": 2
+     },
+     "claimed": [],
+     "cpu": 0,
+     "firstwin": false,
+     "counted": false
+    },
+    "weekly": {
+     "week": "2026-W42",
+     "p": {
+      "games": 1,
+      "netgames": 1,
+      "rankgames": 1,
+      "maxcombo": 5,
+      "ults": 2
+     },
+     "claimed": []
+    }
+   },
+   "rating": 1054.2020797269106,
+   "placed": 1
+  }
+ ],
+ "matches": [
+  {
+   "id": 1,
+   "winner": 1,
+   "loser": 3,
+   "forfeit": 0,
+   "at": 1790409704.646993,
+   "ranked": 1
+  },
+  {
+   "id": 2,
+   "winner": 6,
+   "loser": 1,
+   "forfeit": 1,
+   "at": 1790427103.581423,
+   "ranked": 1
+  },
+  {
+   "id": 3,
+   "winner": 1,
+   "loser": 6,
+   "forfeit": 0,
+   "at": 1790468781.547775,
+   "ranked": 1
+  },
+  {
+   "id": 4,
+   "winner": 1,
+   "loser": 6,
+   "forfeit": 1,
+   "at": 1790489935.5417805,
+   "ranked": 1
+  },
+  {
+   "id": 5,
+   "winner": 3,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1790509700.7111402,
+   "ranked": 1
+  },
+  {
+   "id": 6,
+   "winner": 2,
+   "loser": 4,
+   "forfeit": 0,
+   "at": 1790988826.1654968,
+   "ranked": 1
+  },
+  {
+   "id": 7,
+   "winner": 4,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790988941.4723346,
+   "ranked": 1
+  },
+  {
+   "id": 8,
+   "winner": 1,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790989078.5775576,
+   "ranked": 1
+  },
+  {
+   "id": 9,
+   "winner": 4,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1790989239.1124263,
+   "ranked": 1
+  },
+  {
+   "id": 10,
+   "winner": 2,
+   "loser": 4,
+   "forfeit": 0,
+   "at": 1790989439.1367354,
+   "ranked": 1
+  },
+  {
+   "id": 11,
+   "winner": 4,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790990234.6433108,
+   "ranked": 1
+  },
+  {
+   "id": 12,
+   "winner": 2,
+   "loser": 4,
+   "forfeit": 0,
+   "at": 1790990316.2456894,
+   "ranked": 1
+  },
+  {
+   "id": 13,
+   "winner": 4,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1790990419.985283,
+   "ranked": 1
+  },
+  {
+   "id": 14,
+   "winner": 4,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790990531.8078582,
+   "ranked": 1
+  },
+  {
+   "id": 15,
+   "winner": 2,
+   "loser": 4,
+   "forfeit": 0,
+   "at": 1790990631.0080597,
+   "ranked": 1
+  },
+  {
+   "id": 16,
+   "winner": 4,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790990932.0340214,
+   "ranked": 1
+  },
+  {
+   "id": 17,
+   "winner": 4,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790991032.381461,
+   "ranked": 1
+  },
+  {
+   "id": 18,
+   "winner": 4,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790991156.211424,
+   "ranked": 1
+  },
+  {
+   "id": 19,
+   "winner": 4,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1790991295.4405556,
+   "ranked": 1
+  },
+  {
+   "id": 20,
+   "winner": 8,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1791176329.9843445,
+   "ranked": 1
+  },
+  {
+   "id": 21,
+   "winner": 1,
+   "loser": 11,
+   "forfeit": 0,
+   "at": 1791182167.5697393,
+   "ranked": 1
+  },
+  {
+   "id": 22,
+   "winner": 1,
+   "loser": 11,
+   "forfeit": 0,
+   "at": 1791182229.759232,
+   "ranked": 1
+  },
+  {
+   "id": 23,
+   "winner": 11,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1791182379.4589603,
+   "ranked": 1
+  },
+  {
+   "id": 24,
+   "winner": null,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1791246504.698268,
+   "ranked": 0
+  },
+  {
+   "id": 25,
+   "winner": 8,
+   "loser": 12,
+   "forfeit": 0,
+   "at": 1791246702.1895657,
+   "ranked": 1
+  },
+  {
+   "id": 26,
+   "winner": 12,
+   "loser": 8,
+   "forfeit": 0,
+   "at": 1791246798.742417,
+   "ranked": 1
+  },
+  {
+   "id": 27,
+   "winner": 1,
+   "loser": 12,
+   "forfeit": 0,
+   "at": 1791246925.5292609,
+   "ranked": 1
+  },
+  {
+   "id": 28,
+   "winner": null,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1791253020.5041435,
+   "ranked": 0
+  },
+  {
+   "id": 29,
+   "winner": 2,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791857720.178951,
+   "ranked": 1
+  },
+  {
+   "id": 30,
+   "winner": 2,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791857830.2904484,
+   "ranked": 1
+  },
+  {
+   "id": 31,
+   "winner": 15,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791857979.9692328,
+   "ranked": 1
+  },
+  {
+   "id": 32,
+   "winner": 16,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1791865058.7506022,
+   "ranked": 1
+  },
+  {
+   "id": 33,
+   "winner": 17,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791867530.8499615,
+   "ranked": 1
+  },
+  {
+   "id": 34,
+   "winner": 17,
+   "loser": 19,
+   "forfeit": 0,
+   "at": 1791873863.9215472,
+   "ranked": 1
+  },
+  {
+   "id": 35,
+   "winner": 2,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791936857.875879,
+   "ranked": 1
+  },
+  {
+   "id": 36,
+   "winner": 2,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791936937.4791615,
+   "ranked": 1
+  },
+  {
+   "id": 37,
+   "winner": 2,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791937090.1423972,
+   "ranked": 1
+  },
+  {
+   "id": 38,
+   "winner": 18,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1791951965.1838305,
+   "ranked": 1
+  },
+  {
+   "id": 39,
+   "winner": 2,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791952032.415425,
+   "ranked": 1
+  },
+  {
+   "id": 40,
+   "winner": 2,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791952167.0156193,
+   "ranked": 1
+  },
+  {
+   "id": 41,
+   "winner": 1,
+   "loser": 2,
+   "forfeit": 0,
+   "at": 1791960022.268776,
+   "ranked": 1
+  },
+  {
+   "id": 42,
+   "winner": 17,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791960254.0991843,
+   "ranked": 1
+  },
+  {
+   "id": 43,
+   "winner": 17,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791960366.5377545,
+   "ranked": 1
+  },
+  {
+   "id": 44,
+   "winner": 17,
+   "loser": 18,
+   "forfeit": 1,
+   "at": 1791960476.4866424,
+   "ranked": 1
+  },
+  {
+   "id": 45,
+   "winner": 18,
+   "loser": 17,
+   "forfeit": 0,
+   "at": 1791962517.8758137,
+   "ranked": 1
+  },
+  {
+   "id": 46,
+   "winner": 17,
+   "loser": 18,
+   "forfeit": 1,
+   "at": 1791962694.7491765,
+   "ranked": 1
+  },
+  {
+   "id": 47,
+   "winner": 18,
+   "loser": 17,
+   "forfeit": 0,
+   "at": 1791962903.9329503,
+   "ranked": 1
+  },
+  {
+   "id": 48,
+   "winner": 18,
+   "loser": 17,
+   "forfeit": 0,
+   "at": 1791962995.2875943,
+   "ranked": 1
+  },
+  {
+   "id": 49,
+   "winner": 17,
+   "loser": 18,
+   "forfeit": 1,
+   "at": 1791963098.8010583,
+   "ranked": 1
+  },
+  {
+   "id": 50,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791972806.0213706,
+   "ranked": 1
+  },
+  {
+   "id": 51,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791973061.5806062,
+   "ranked": 1
+  },
+  {
+   "id": 52,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791973138.9697216,
+   "ranked": 1
+  },
+  {
+   "id": 53,
+   "winner": 16,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791973324.360975,
+   "ranked": 1
+  },
+  {
+   "id": 54,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791973568.7209096,
+   "ranked": 1
+  },
+  {
+   "id": 55,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791973648.163724,
+   "ranked": 1
+  },
+  {
+   "id": 56,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791973811.9776998,
+   "ranked": 1
+  },
+  {
+   "id": 57,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791973997.896797,
+   "ranked": 1
+  },
+  {
+   "id": 58,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974124.5728111,
+   "ranked": 1
+  },
+  {
+   "id": 59,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974306.4975169,
+   "ranked": 1
+  },
+  {
+   "id": 60,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974399.341685,
+   "ranked": 1
+  },
+  {
+   "id": 61,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974490.7916968,
+   "ranked": 1
+  },
+  {
+   "id": 62,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974552.32735,
+   "ranked": 1
+  },
+  {
+   "id": 63,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974726.9873252,
+   "ranked": 1
+  },
+  {
+   "id": 64,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974815.0102034,
+   "ranked": 1
+  },
+  {
+   "id": 65,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791974966.4102275,
+   "ranked": 1
+  },
+  {
+   "id": 66,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975112.2148972,
+   "ranked": 1
+  },
+  {
+   "id": 67,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975235.902118,
+   "ranked": 1
+  },
+  {
+   "id": 68,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975316.7040832,
+   "ranked": 1
+  },
+  {
+   "id": 69,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975461.77928,
+   "ranked": 1
+  },
+  {
+   "id": 70,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975548.5115807,
+   "ranked": 1
+  },
+  {
+   "id": 71,
+   "winner": 16,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791975647.445672,
+   "ranked": 1
+  },
+  {
+   "id": 72,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975732.5476983,
+   "ranked": 1
+  },
+  {
+   "id": 73,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975872.8960867,
+   "ranked": 1
+  },
+  {
+   "id": 74,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791975965.6601164,
+   "ranked": 1
+  },
+  {
+   "id": 75,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791976146.8105986,
+   "ranked": 1
+  },
+  {
+   "id": 76,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791976212.9125001,
+   "ranked": 1
+  },
+  {
+   "id": 77,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791976408.7271929,
+   "ranked": 1
+  },
+  {
+   "id": 78,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791977675.6685402,
+   "ranked": 1
+  },
+  {
+   "id": 79,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791978242.4621503,
+   "ranked": 1
+  },
+  {
+   "id": 80,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791978633.2616744,
+   "ranked": 1
+  },
+  {
+   "id": 81,
+   "winner": 18,
+   "loser": 16,
+   "forfeit": 0,
+   "at": 1791978940.75315,
+   "ranked": 1
+  },
+  {
+   "id": 82,
+   "winner": 20,
+   "loser": 18,
+   "forfeit": 0,
+   "at": 1791979409.7035532,
+   "ranked": 1
+  },
+  {
+   "id": 83,
+   "winner": 18,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1792022628.7792985,
+   "ranked": 1
+  },
+  {
+   "id": 84,
+   "winner": null,
+   "loser": 19,
+   "forfeit": 0,
+   "at": 1792026638.3092964,
+   "ranked": 0
+  },
+  {
+   "id": 85,
+   "winner": 16,
+   "loser": 1,
+   "forfeit": 0,
+   "at": 1792040213.6055367,
+   "ranked": 1
+  },
+  {
+   "id": 86,
+   "winner": 16,
+   "loser": 17,
+   "forfeit": 0,
+   "at": 1792043526.4854763,
+   "ranked": 1
+  },
+  {
+   "id": 87,
+   "winner": 16,
+   "loser": 17,
+   "forfeit": 0,
+   "at": 1792043575.500766,
+   "ranked": 1
+  },
+  {
+   "id": 88,
+   "winner": 16,
+   "loser": 21,
+   "forfeit": 0,
+   "at": 1792043729.080839,
+   "ranked": 1
+  }
+ ],
+ "posts": [
+  {
+   "id": 1,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "哈罗",
+   "at": 1790398981.979511
+  },
+  {
+   "id": 2,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "[e:haha]",
+   "at": 1790398986.582496
+  },
+  {
+   "id": 3,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "[e:haha]",
+   "at": 1790398990.121236
+  },
+  {
+   "id": 4,
+   "user_id": 2,
+   "name": "设计失败的草履虫",
+   "text": "666",
+   "at": 1790402396.443966
+  },
+  {
+   "id": 5,
+   "user_id": 2,
+   "name": "设计失败的草履虫",
+   "text": "还有这个",
+   "at": 1790402405.8858418
+  },
+  {
+   "id": 6,
+   "user_id": 3,
+   "name": "tct33x7",
+   "text": "?",
+   "at": 1790409949.46129
+  },
+  {
+   "id": 7,
+   "user_id": 3,
+   "name": "tct33x7",
+   "text": "666",
+   "at": 1790409958.2514791
+  },
+  {
+   "id": 8,
+   "user_id": 3,
+   "name": "tct33x7",
+   "text": "[e:haha]",
+   "at": 1790409968.521418
+  },
+  {
+   "id": 9,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "[e:bow]",
+   "at": 1790409970.925445
+  },
+  {
+   "id": 10,
+   "user_id": 3,
+   "name": "tct33x7",
+   "text": "[e:cry]",
+   "at": 1790409971.6459892
+  },
+  {
+   "id": 11,
+   "user_id": 3,
+   "name": "tct33x7",
+   "text": "[e:gg]",
+   "at": 1790409973.906291
+  },
+  {
+   "id": 12,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "[e:fight]",
+   "at": 1790409981.5032058
+  },
+  {
+   "id": 13,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "[e:angry]",
+   "at": 1790409984.7765892
+  },
+  {
+   "id": 14,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "卧槽",
+   "at": 1790410001.030259
+  },
+  {
+   "id": 15,
+   "user_id": 3,
+   "name": "tct33x7",
+   "text": "没有屏蔽666",
+   "at": 1790410010.10881
+  },
+  {
+   "id": 16,
+   "user_id": 3,
+   "name": "tct33x7",
+   "text": "请文明发言",
+   "at": 1790410019.97825
+  },
+  {
+   "id": 17,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "哈罗",
+   "at": 1790425971.1495712
+  },
+  {
+   "id": 18,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "你们现在会发现你们根本打不赢困难 IA",
+   "at": 1790426146.2828958
+  },
+  {
+   "id": 19,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "普通 AI",
+   "at": 1790426153.260231
+  },
+  {
+   "id": 20,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "也很难",
+   "at": 1790426157.69153
+  },
+  {
+   "id": 21,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "原神比鸣潮好玩",
+   "at": 1790743384.117599
+  },
+  {
+   "id": 22,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "塞尔达抄袭米哈游",
+   "at": 1790743394.6204443
+  },
+  {
+   "id": 23,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "三角洲不如暗区",
+   "at": 1790743415.3666046
+  },
+  {
+   "id": 24,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "瓦洛兰特本质csgo儿子",
+   "at": 1790743427.4425433
+  },
+  {
+   "id": 25,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "惠立思明比华语辩论杯nb",
+   "at": 1790743454.0928702
+  },
+  {
+   "id": 26,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "恋与深空nb",
+   "at": 1790743526.3012958
+  },
+  {
+   "id": 27,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "明媚的地球nb",
+   "at": 1790743536.9344997
+  },
+  {
+   "id": 28,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "QQ是微信最严厉的父亲",
+   "at": 1790743565.7548752
+  },
+  {
+   "id": 29,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "华为就是比苹果强",
+   "at": 1790743577.867782
+  },
+  {
+   "id": 30,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "地平论是对的",
+   "at": 1790743621.5315588
+  },
+  {
+   "id": 31,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "当你的天空突然下起了大雨",
+   "at": 1790743652.9066432
+  },
+  {
+   "id": 32,
+   "user_id": 4,
+   "name": "明媚的地球",
+   "text": "请文明发言。",
+   "at": 1790743664.676911
+  },
+  {
+   "id": 33,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "?",
+   "at": 1791246527.6717048
+  },
+  {
+   "id": 34,
+   "user_id": 1,
+   "name": "Luffy",
+   "text": "[e:shock]",
+   "at": 1791246538.661778
+  },
+  {
+   "id": 35,
+   "user_id": 12,
+   "name": "zmjjkk",
+   "text": "111",
+   "at": 1791246590.8725505
+  },
+  {
+   "id": 36,
+   "user_id": 15,
+   "name": "AAAAAAAA风铃批发",
+   "text": "诶云朵☁️哒哒哒哒好想玩原神,云原神",
+   "at": 1791857215.7394204
+  },
+  {
+   "id": 37,
+   "user_id": 16,
+   "name": "Hilbert",
+   "text": "[e:fight]",
+   "at": 1791865874.0425663
+  }
+ ]
+}
