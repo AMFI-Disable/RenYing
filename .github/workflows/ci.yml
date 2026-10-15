@@ -88,6 +88,12 @@ jobs:
       - name: Canvas HUD Text Audit
         run: node tools/hud-audit.mjs ci-hud 1440 900
 
+      # Emulates phones/tablets: verifies the touch path activates, the virtual stick
+      # and thumb pad are on-screen with usable hit targets, and that synthetic touches
+      # actually move and attack.
+      - name: Mobile / Touch Layout Audit
+        run: node tools/touch-audit.mjs ci-touch
+
       - name: Multiplayer Regression (LAN / dedicated server)
         run: node tools/net-test.mjs server ci-net
 
