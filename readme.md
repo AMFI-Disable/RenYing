@@ -4,8 +4,8 @@
 
 <img src="assets/skin-qingfengxing.png" width="240" alt="RenYing Artwork" />
 
-**High-Performance Ink-Wash Martial Arts Action Duel Game**  
-*Created by Even, Luffy, and Opus 5.5. Fluid real-time martial arts fighting game powered by HTML5 Canvas, serverless WebRTC P2P multiplayer, and lightweight Python WebSocket networking.*
+**An ink-wash martial-arts duel game that runs in a browser tab**  
+*By Even, Luffy, and Opus 5.5. Plain JavaScript and canvas, serverless WebRTC multiplayer, and an optional zero-dependency Python server.*
 
 [![Play Online: GitHub Pages](https://img.shields.io/badge/Play%20Online-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
@@ -43,17 +43,17 @@
 
 ## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
-**RenYing (刃影)** is a high-speed ink-wash martial arts action duel game created by **Even, Luffy, and Opus 5.5**. Designed for immediate play in school or at home, it offers both serverless browser-to-browser WebRTC Peer-to-Peer multiplayer on GitHub Pages and a standalone zero-dependency Python WebSocket server for local networks.
+**RenYing (刃影)** is a fast ink-wash martial-arts duel game. Nine characters fight on one stage, each with their own reach, weight and tricks. It is built to be played right away — at school or at home — in either of two ways: two browsers connect **directly** to each other over WebRTC (nothing to host, nothing to install), or you run the bundled Python server on a laptop and everyone joins over the local network.
 
 ---
 
 ## 🚀 Key Features <a id="key-features"></a>
 
-- **Instant Online Play on GitHub Pages**: Open in any browser without installation, clone, or server hosting.
-- **Serverless WebRTC P2P Multiplayer**: Direct peer-to-peer UDP networking between two players with 4-letter room codes and ultra-low input lag.
-- **Ink-Wash Visual Style**: Fluid brushstroke particle trails, hit-stop impacts, and traditional Chinese martial arts aesthetic.
-- **Optional Dedicated Python Server**: Zero-dependency `server.py` supporting ladder ranking, match replays, and community hub.
-- **Pure Offline Standalone Edition**: Complete client (`renying-offline.html`) with embedded audio for single-player and training mode.
+- **Plays from a URL** — open the GitHub Pages link and start. No install, no clone, no hosting.
+- **Serverless P2P multiplayer** — share a 4-character room code and the two browsers connect directly over a WebRTC DataChannel, with rollback netcode to keep the fight responsive.
+- **Drawn in code, not sprites** — brushstroke trails, scarf motion, hit-stop, screen shake and the whole ink-wash look are drawn procedurally on a 2D canvas.
+- **Optional Python server** — one zero-dependency `server.py` adds quick match, a ranked ladder, accounts, replays and reconnect for a LAN.
+- **Single-file offline build** — `renying-offline.html` opens by double-click, with the music and the Qingfengxing mini-game packed inside it.
 
 ---
 
@@ -63,36 +63,36 @@
 
 | Action | Input |
 | :--- | :--- |
-| **Move Left / Right** | `A` / `D` |
-| **Jump / Double Jump** | `W` or `Space` |
+| **Move left / right** | `A` / `D` |
+| **Jump / double jump** | `W` or `Space` |
 | **Block** | Hold `S` |
-| **Attack (5-Hit Combo)** | Left mouse button |
-| **Charged Slash** | Hold and release the left mouse button |
-| **Ranged Move** | Hold the left mouse button, then right-click (or `R`) |
-| **Aerial Escape** | Right-click (or `Left Shift`) |
-| **Skill / Ultimate** | `Q` / `E` (ultimate needs a full meter) |
-| **Pause / Mute** | `P` / `M` (single-player) |
+| **Attack (5-hit combo)** | Left mouse button |
+| **Charged slash** | Hold the left mouse button, then release |
+| **Ranged attack** | Hold the left mouse button, then right-click (or `R`) |
+| **Escape (dodge upward)** | Right-click (or `Left Shift`) |
+| **Skill / ultimate** | `Q` / `E` (the ultimate needs a full meter) |
+| **Pause / mute** | `P` / `M` (single-player) |
 
-*(Note: Custom touch controls and virtual joysticks activate automatically on mobile and tablet devices).*
+*On a phone or tablet the game switches to its own touch controls — a virtual stick on the left, action buttons on the right — and asks you to turn the device sideways.*
 
 ---
 
 ## 📦 How To Play And Multiplayer Modes <a id="how-to-play-and-multiplayer-modes"></a>
 
-### Option 1: Instant WebRTC P2P (Recommended For School - $0 Budget)
+### Option 1: Direct WebRTC (best for school — no budget needed)
 
-No software installation or Python server required:
+Nothing to install and no server to run:
 
-1. Both players visit **[https://amfi-disable.github.io/RenYing/](https://amfi-disable.github.io/RenYing/)** on their devices.
-2. Player 1 navigates to **联机对战** $\rightarrow$ clicks **建房** $\rightarrow$ shares the generated 4-character room code (e.g., `K7PQ`).
-3. Player 2 enters the code into the **加入** box $\rightarrow$ clicks **加入**.
-4. Both browsers connect directly via WebRTC DataChannels; PeerJS is only used to find each other.
+1. Both players open **[https://amfi-disable.github.io/RenYing/](https://amfi-disable.github.io/RenYing/)**.
+2. Player 1 goes to **联机对战**, clicks **建房**, and shares the 4-character room code it shows (for example `K7PQ`).
+3. Player 2 types that code into **加入** and clicks **加入**.
+4. From then on the two browsers talk straight to each other over a WebRTC DataChannel; PeerJS is only used to introduce them.
 
-Some strict networks (certain campus Wi-Fi or firewalls) block direct peer-to-peer traffic. If joining times out, switch networks or use Option 2.
+Some networks — campus Wi-Fi in particular — block peer-to-peer traffic. If joining times out, try another network or use Option 2.
 
 ### Option 2: Local Dedicated Server (LAN Mode)
 
-Run the server from the repository root. It serves the game (`index.html`), music, and assets, and adds quick match, ranked ladder, accounts, and reconnect:
+Run this from the repository root. It serves the game (`index.html`), the music and the other assets, and adds quick match, the ranked ladder, accounts and reconnect:
 
 ```bash
 # Start server on default port 8765
@@ -102,11 +102,11 @@ python3 server.py
 python3 server.py 9000
 ```
 
-Open `http://localhost:8765` in your browser. Classmates on the same Wi-Fi can connect directly via `http://<your-lan-ip>:8765`. If your server has an `https://` address (for example through a tunnel), players on GitHub Pages can also enter it under **使用联机服务器（可选）**; browsers block plain `http://` servers from HTTPS pages.
+Then open `http://localhost:8765`. Anyone on the same Wi-Fi can join at `http://<your-lan-ip>:8765` — the server prints the right address when it starts. If you happen to have an `https://` address for it (a tunnel, for example), players on GitHub Pages can also type it under **使用联机服务器（可选）**; browsers refuse to let an HTTPS page talk to a plain `http://` server.
 
 ### Option 3: Standalone Offline Play
 
-Double-click or open `renying-offline.html` directly in any web browser without running a server or requiring an active internet connection. Music and the Qingfengxing mini-game are bundled into this single file.
+Open `renying-offline.html` directly — double-click it, with no server and no internet connection. The music and the Qingfengxing mini-game are inside that single file.
 
 ---
 
@@ -124,17 +124,17 @@ flowchart TD
     end
 ```
 
-- **Client Runtime**: Pure vanilla JavaScript utilizing HTML5 Canvas 2D context for ultra-low rendering latency.
-- **Rollback Netcode**: Both sides simulate the match deterministically and exchange only inputs; late inputs are corrected by rewinding and re-simulating, with periodic state checksums.
-- **P2P Networking**: WebRTC DataChannels with PeerJS handshake and Google STUN NAT traversal (`src/net-p2p.js`).
-- **Server Networking**: Raw WebSocket implementation with RFC 6455 framing and keep-alive ping cycles.
-- **Persistence**: Local storage and optional SQLite 3 database (`data/renying.db`) storing user accounts with PBKDF2/SHA-256 salted hashes.
+- **Client runtime** — vanilla JavaScript drawing to a single HTML5 canvas. No framework, no bundler.
+- **Rollback netcode** — both sides simulate the whole match deterministically and exchange only their inputs. If an input arrives late, that side reloads the stored frame, replays it with the correct input and catches back up; the two sides also compare a state checksum periodically to catch any drift.
+- **P2P networking** — WebRTC DataChannels, with PeerJS for the handshake and public STUN servers for NAT traversal (`src/net-p2p.js`).
+- **Server networking** — a hand-rolled RFC 6455 WebSocket implementation in `server.py`, relying on application-level heartbeats to notice a peer that has gone quiet.
+- **Persistence** — `localStorage` in the browser, plus an optional SQLite database (`data/renying.db`) holding accounts with salted PBKDF2-SHA256 password hashes.
 
 ---
 
 ## 🧱 Project Structure And Building <a id="project-structure-and-building"></a>
 
-Edit the sources, never the generated pages:
+Edit the sources; never edit the generated pages.
 
 | Path | Purpose |
 | :--- | :--- |
@@ -145,6 +145,10 @@ Edit the sources, never the generated pages:
 | `assets/music/` | Background music (`.mp3`) |
 | `assets/qingfengxing.html` | Qingfengxing mini-game |
 | `tools/build.py` | Generates the pages below (Python standard library only) |
+| `tools/ui-audit.mjs` | Headless check that every panel fits, with nothing clipped or too small to read |
+| `tools/hud-audit.mjs` | Headless check that no in-match HUD text is drawn below 12px |
+| `tools/touch-audit.mjs` | Emulates phones and tablets, then drives the touch controls |
+| `tools/net-test.mjs` | Drives two browsers through the server and WebRTC multiplayer paths |
 | `index.html` | Generated online edition (GitHub Pages and `server.py`) |
 | `renying-offline.html` | Generated single-file offline edition |
 | `renying.html` | Generated redirect for the old address |
@@ -155,25 +159,25 @@ After changing anything in `src/` or `assets/`, rebuild and commit the generated
 python3 tools/build.py
 ```
 
-CI runs `python3 tools/build.py --check` and fails if the generated pages are out of date.
+CI runs `python3 tools/build.py --check` and fails if the generated pages are out of date. It also runs the panel, HUD and touch audits and a LAN multiplayer test; the WebRTC test is left as a local check, because it depends on the public PeerJS server.
 
 ---
 
 ## 🛡 Privacy And Security First <a id="privacy-and-security-first"></a>
 
-- **Zero Telemetry**: No third-party analytics, external trackers, or diagnostic telemetry.
-- **Peer-to-Peer Privacy**: In WebRTC P2P mode, game inputs travel directly between player browsers without passing through any server.
-- **Local-First Data**: All matchmaking history, ladder statistics, and replay files remain strictly on your host machine.
+- **No telemetry** — no analytics, no trackers, no crash reporting.
+- **Peer-to-peer stays peer-to-peer** — in WebRTC mode your inputs travel straight to the other player's browser and never pass through a server.
+- **Your data stays on your machine** — match history, ladder statistics and replays live in your browser's local storage, or in `data/renying.db` on the machine running the server.
 
 ---
 
 ## ⚖ Educational And Fair-Play Disclaimer <a id="educational-and-fair-play-disclaimer"></a>
 
 > [!CAUTION]
-> **IMPORTANT NOTICE & DISCLAIMER**:
-> This codebase is provided strictly for educational, research, and non-commercial gaming entertainment purposes.
-> Please respect community guidelines and maintain fair-play conduct during multiplayer matchmaking and community chat interactions.
-> The developers and contributors accept no responsibility or liability for third-party hosting or server operations.
+> **Notice**:
+> This codebase is meant for learning, research and non-commercial play.
+> Please keep multiplayer matches and community chat friendly.
+> The authors are not responsible for third-party hosting or for servers other people run.
 
 ---
 

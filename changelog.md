@@ -28,6 +28,9 @@ All notable changes, features, and architectural capabilities of this project ar
 - Domestic low-latency STUN servers (Tencent QQ, Xiaomi) for faster WebRTC NAT traversal.
 - Server startup auto-detection of local and LAN Wi-Fi URLs with clear console guide.
 - Full CORS header injection and OPTIONS preflight handling across all HTTP endpoints in `server.py`.
+- Headless audit tools, all runnable against a locally started server: `tools/ui-audit.mjs` (screenshots and measures every panel for clipping, off-screen elements, containers overflowed by children, and sub-12px text), `tools/hud-audit.mjs` (instruments canvas `fillText` and drives a real match through fighting, low health, guard break, full meter, combo, overtime and KO, plus training and campaign, flagging any label under 12px), `tools/touch-audit.mjs` (emulates phone and tablet, then drives the virtual stick and thumb pad with synthetic touches), and `tools/net-test.mjs` (drives two browsers through the LAN and WebRTC multiplayer paths, plus a host error-handler test).
+- CI now runs the panel, HUD and touch audits and a LAN multiplayer regression test after starting the local server. The WebRTC check is kept as a local-only test because it depends on the public PeerJS signalling server.
+- The full 进阶技巧 (advanced technique) text for the six heroes that have one is now shown to players — in a wide codex tile and as an 进阶 row in the ban/pick dossier — instead of only the four-character stub.
 
 ### Improved
 
@@ -113,6 +116,11 @@ All notable changes, features, and architectural capabilities of this project ar
 - Opponent names from direct rooms are sanitized before being shown, and system messages from the peer are whitelisted.
 - A waiting host keeps the same room code when the PeerJS signaling connection drops.
 - Starting a single-player match closes a waiting room, so a late joiner can no longer pull the player into character select.
+- Direct-connect hosts had no error recovery at all: the host's `peer.on('error')` handler began with `clearTimeout(sigTimer)`, but `sigTimer` was never declared anywhere, so under `'use strict'` it threw a `ReferenceError` before any recovery could run. The room-code collision retry, the user-facing error messages and the signalling relink were all unreachable, and the only symptom was a 45-second timeout. The handler now clears the two real in-scope status timers.
+- The canvas HUD drew two labels below the legibility floor: the 加时 (overtime) tag at about 6px, positioned inside the 40px round timer digits, and the 势 (guard posture) readout at about 9px. Both now have a 12px floor, and 加时 moved above the timer.
+- Ban/pick slot portraits were cropped by roughly 4px top and bottom. In a fixed-height grid an auto-sized row can still grow past its container, so `height: 100%` on the portrait had nothing definite to resolve against and the image fell back to its intrinsic height (62x83 inside a 74px box). It is now absolutely positioned with `object-fit: contain`.
+- `--gold` was used seven times in the stylesheet but never defined, so those declarations were dropped and the selected demo/deck tab rendered as dark text on a transparent background. The variable is now defined, and new 10-11px demo/deck/import text was raised to the 12px floor.
+- The touch pause button was 42x42, just under the usual 44px minimum touch target, and the compact landscape-phone layout used 10-11px for the menu subtitle and version line. Both are now larger.
 
 ---
 
