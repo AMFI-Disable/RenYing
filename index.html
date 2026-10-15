@@ -1269,7 +1269,7 @@ const HEAVY_MOVES = ['hv', 'cs1', 'cs2'];
 // ======================= 技能（Q） =======================
 // 每个技能：cd 冷却，start 开始时，update 每一帧，pose 用哪个姿势，ai 电脑什么时候用
 const SKILLS = {
-  gale: { name: '疾风斩', cd: 5, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过之处，对手僵在原地。途中若遇墨阵，一刀两断。',
+  gale: { name: '疾风斩', cd: 5, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
@@ -1281,14 +1281,17 @@ const SKILLS = {
             addP({ type: 'text', text: '破阵', x: p.x, y: -45, life: 0.6, max: 0.6, rgb: '120,230,255' });
           }
         }
-        strike(f, foe, { box: [-10, -112, 72, 0], dmg: 6, kb: [160, 0], stun: 0.5, hs: 0.08 });
+        if (strike(f, foe, { box: [-10, -112, 92, 0], dmg: 7, kb: [180, 0], stun: 0.65, hs: 0.12 })) {
+          f.dashCD = 0;
+          addP({ type: 'text', text: '居合斩穴', x: f.x, y: f.y - 110, life: 0.8, max: 0.8, rgb: '120,230,255' });
+        }
         if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
       }
       if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 140 && d < 330 },
-  blink: { name: '影遁', cd: 11, pass: true, desc: '结印入影，悄然现身对手背后，双刃交错成十字绞杀（3 伤害）。此后 1.5 秒内，下一击威力暴涨 50%。',
+  blink: { name: '影遁', cd: 11, pass: true, desc: '结印入影，现身对手背后施展十字绞杀，附带【穴道封脉】强定身（0.8 秒）。此后 1.5 秒内，下一击威力暴涨 50%。',
     start() {},
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.14) {
@@ -1301,53 +1304,66 @@ const SKILLS = {
         f.skPh = 1; f.t = 0; f.snap = true; f.trail.length = 0; f.scarf = [];
         smoke(f.x, f.y - 50, 10); SFX.poof();
         slashLine(foe.x, foe.y - 60, 0.5, '255,95,115'); slashLine(foe.x, foe.y - 60, -0.5, '255,95,115'); SFX.slice();
-        if (foe.invul <= 0 && foe.hp > 0) applyHit(f, foe, { dmg: 3, kb: [40, 0], stun: 0.3, hs: 0.05, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
+        if (foe.invul <= 0 && foe.hp > 0) {
+          applyHit(f, foe, { dmg: 4, kb: [50, 0], stun: 0.8, hs: 0.12, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
+          addP({ type: 'text', text: '⚡ 封脉定身', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,100,120' });
+        }
       }
       if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 36] : ['fy_xslash', 40],
     ai: (me, foe, d) => d > 170 },
-  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂贴地向两侧炸开，把站在地上的人掀上半空。起手带霸体，打断不得；唯腾空者不受地裂所侵。',
-    start(f) { f.armorT = 0.26; f.armorHits = 99; f.vx = 0; },
+  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（3次抵挡），砸地直击施加【撼地重震】（0.85 秒重度脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
+    start(f) { f.armorT = 0.35; f.armorHits = 99; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.22) {
         f.skPh = 1; f.t = 0; f.hitDone = false;
-        shake = Math.max(shake, 14); dust(f.x, 0, 26); ring(f.x, 0, 140, '255,200,120', 0.35); SFX.thud(); SFX.heavy();
-        for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 700, w: 70, h: 44, life: 0.75, dmg: 9, kb: [220, -760], stun: 0.5, hs: 0.1, launch: true, groundOnly: true, unbreakable: true });
-        strike(f, foe, { box: [-40, -70, 96, 4], dmg: 6, kb: [220, -520], stun: 0.4, hs: 0.08, launch: true });
+        shake = Math.max(shake, 16); dust(f.x, 0, 30); ring(f.x, 0, 160, '255,200,120', 0.4); SFX.thud(); SFX.heavy();
+        for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 760, w: 96, h: 54, life: 0.9, dmg: 10, kb: [260, -840], stun: 0.55, hs: 0.12, launch: true, groundOnly: true, unbreakable: true });
+        if (strike(f, foe, { box: [-45, -80, 110, 4], dmg: 8, kb: [260, -900], stun: 0.85, hs: 0.16, launch: true })) {
+          addP({ type: 'text', text: '💥 撼地重震', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
+        }
       }
       if (f.skPh === 1 && f.t >= 0.36) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
-    ai: (me, foe, d) => d < 400 && foe.onGround() },
-  backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪直取咽喉。枪尖挑中，人随枪起；枪旋余劲随之回转。',
+    ai: (me, foe, d) => d < 420 && foe.onGround() },
+  backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（0.85 秒穿心定身并冲天挑空）；枪旋余劲立时回转。',
     start(f) { f.vx = -f.face * 540; f.vy = -420; f.y = Math.min(f.y, -1); },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.24) { f.skPh = 1; f.t = 0; f.vx = f.face * 180; f.hitDone = false; SFX.heavy(); }
-      if (f.skPh === 1) { if (f.t < 0.12 && strike(f, foe, { box: [20, -104, 196, -44], dmg: 9, kb: [480, -420], stun: 0.5, hs: 0.1, launch: true })) f.skill2CD *= 0.5; if (f.t >= 0.34) toNeutral(f); }
+      if (f.skPh === 1) {
+        if (f.t < 0.12 && strike(f, foe, { box: [20, -104, 235, -44], dmg: 10, kb: [360, -820], stun: 0.85, hs: 0.16, launch: true })) {
+          f.skill2CD *= 0.5;
+          addP({ type: 'text', text: '枪尖穿心', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '170,220,255' });
+        }
+        if (f.t >= 0.34) toNeutral(f);
+      }
     },
     pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
-    ai: (me, foe, d) => d < 110 },
-  windblade: { name: '风刃', cd: 1.3, air: true, desc: '挥扇生风，一刃飞出。近可逼退，远可压制，连飞羽轻镖也一并吹散。',
+    ai: (me, foe, d) => d < 120 },
+  windblade: { name: '风刃', cd: 1.3, air: true, desc: '挥扇生风，风刃体积扩大。此招【无长硬直】，但附带全场最强风暴推力（620 像素击退）；连飞羽轻镖也一并吹散。',
     start() {},
     update(f) {
       if (f.skPh === 0 && f.t >= 0.03) {
         f.skPh = 1; SFX.swing();
         if (f.twinT > 0) {
           f.twinT = 0;
-          for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1130, vy, w: 50, h: 46, life: 1.2, dmg: 5, kb: [380, 0], stun: 0.4, hs: 0.05 });
-        } else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1150, w: 56, h: 52, life: 1.2, dmg: 7, kb: [420, 0], stun: 0.42, hs: 0.06 });
+          for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1150, vy, w: 78, h: 66, life: 1.2, dmg: 5, kb: [580, -90], stun: 0.22, hs: 0.04 });
+        } else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1180, w: 72, h: 62, life: 1.2, dmg: 7, kb: [620, -90], stun: 0.22, hs: 0.04 });
       }
       if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
     ai: () => true },
-  thunderfist: { name: '雷闪', cd: 4, nofric: true, pass: true, desc: '身化雷光，贴地疾冲，一拳贯穿而过（6 伤害，0.5 秒僵直）。冲刺途中，自带 1 次霸体。',
+  thunderfist: { name: '雷闪', cd: 4, nofric: true, pass: true, desc: '身化雷光贴地疾冲（判定增大）。一拳贯穿附带【触电麻痹】（0.82 秒电击瘫痪硬直），冲刺途中自带霸体，为后续十连拳创造绝对破绽。',
     start(f) { f.armorT = 0.5; f.armorHits = 1; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; f.t = 0; f.vx = f.face * 1500; f.hitDone = false; SFX.dash(); SFX.thunder(); }
       if (f.skPh === 1) {
-        strike(f, foe, { box: [-20, -110, 60, -10], dmg: 6, kb: [60, 0], stun: 0.5, hs: 0.07 });
+        if (strike(f, foe, { box: [-20, -110, 85, -10], dmg: 7, kb: [80, 0], stun: 0.82, hs: 0.14 })) {
+          addP({ type: 'text', text: '⚡ 触电麻痹', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
+        }
         if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
         if (f.t >= 0.26) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
       }
@@ -1355,26 +1371,30 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 110 && d < 360 },
-  inktrap: { name: '墨阵', cd: 6, desc: '提笔泼墨，在前方地上画出一池墨阵。踏入者被墨缠住，1.2 秒寸步难移；再按 Q 可随时引爆。',
+  inktrap: { name: '墨阵', cd: 6, desc: '提笔画出一池宽达 125 像素的巨幅墨阵。踏入者被浓墨完全锚定，陷入【深墨禁锢】（1.4 秒完全定身），寸步难移；再按 Q 可随时引爆。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.2) {
+      if (f.skPh === 0 && f.t >= 0.18) {
         f.skPh = 1; SFX.poof();
         for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-        spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 90, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 84, h: 24, life: 7, delay: 0.4, dmg: 4, kb: [0, 0], stun: 1.2, hs: 0.08, root: true, groundOnly: true });
+        spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 90, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 125, h: 28, life: 8, delay: 0.25, dmg: 5, kb: [0, 0], stun: 1.4, hs: 0.12, root: true, groundOnly: true });
       }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
     ai: (me, foe, d) => d > 90 && d < 330 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
-  dive: { name: '俯冲', cd: 3.5, air: true, desc: '如猎鹰收翼，斜斜俯冲而下。一经命中，对手顿时僵住；若自空中出手得手，此技立时可再用。',
+  dive: { name: '俯冲', cd: 3.5, air: true, desc: '猎鹰收翼斜下俯冲（判定扩大）。命中施加【鹰击钉地】（0.78 秒重度压制硬直）；自空中出手更可借力反弹回升并刷新技能。',
     start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -720; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.2) { f.skPh = 1; f.t = 0; }
       if (f.skPh === 1) {
         if (f.t < 0.02) { f.hitDone = false; SFX.dash(); }
         f.vx = f.face * 880; f.vy = 820;
-        if (strike(f, foe, { box: [-14, -80, 80, 20], dmg: 11, kb: [200, 0], stun: 0.55, hs: 0.1 })) { f.vx *= 0.2; f.vy = -300; if (f.diveAir && !f.diveChained) { f.skillCD = 0; f.diveChained = true; } }
+        if (strike(f, foe, { box: [-16, -95, 96, 25], dmg: 12, kb: [260, 0], stun: 0.78, hs: 0.14 })) {
+          addP({ type: 'text', text: '鹰击钉地', x: foe.x, y: foe.y - 80, life: 0.8, max: 0.8, rgb: '140,200,255' });
+          f.vx *= 0.2; f.vy = -380;
+          if (f.diveAir && !f.diveChained) { f.skillCD = 0; f.diveChained = true; }
+        }
         if ((f.onGround() && f.t > 0.04) || f.t > 0.4) { f.skPh = 2; f.t = 0; f.vx *= 0.2; dust(f.x, 0, 10); }
       }
       if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
@@ -1382,29 +1402,38 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['jump', 20] : f.skPh === 1 ? ['yl_dive', 50] : ['getup', 16],
     ai: (me, foe, d) => d > 110 && d < 360 },
   // ---------- 右键招式 ----------
-  swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道凛冽剑气。中距离一击打飞，慢悠悠的抛物暗器更不在话下。',
+  swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道宏大弧月剑气。中距离直接【掀天挑空】（无地面硬直，直接送上半空），暗器更不在话下。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 820, w: 60, h: 70, life: 0.42, dmg: 8, kb: [150, -460], stun: 0.45, hs: 0.07, launch: true }); }
+      if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 880, w: 92, h: 96, life: 0.46, dmg: 9, kb: [180, -700], stun: 0.3, hs: 0.08, launch: true }); }
       if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
-  kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身一甩，三枚黑铁手里剑呈扇面激射而出，快得足以截断对手的起手。',
+  kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身一甩，四枚黑铁手里剑呈扇形激射。【无硬直击飞】，纯粹以极速密雨截断对手起手，穿透轻型投掷物。',
     start() {},
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; SFX.slice(); for (const a of [-0.13, 0, 0.13]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1100 * Math.cos(a), vy: 1100 * Math.sin(a), w: 26, h: 14, life: 0.6, dmg: 3, kb: [100, -380], stun: 0.3, hs: 0.03, launch: true }); }
+      if (f.skPh === 0 && f.t >= 0.08) {
+        f.skPh = 1; SFX.slice();
+        for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), w: 26, h: 14, life: 0.55, dmg: 2.8, kb: [80, 0], stun: 0.16, hs: 0.02, launch: false });
+      }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-  ironwall: { name: '铁壁冲', cd: 5, nofric: true, desc: '沉肩如山，硬碰硬地撞将过去，把人撞得倒飞。迎面而来的拳脚尽数吞下，化作满腔怒气。',
-    start(f) { f.armorT = 0.45; f.armorHits = 99; f.vx = 0; },
+  ironwall: { name: '铁壁冲', cd: 5, nofric: true, desc: '沉肩如山以狂暴重盾之势撞将过去（判定范围扩大）。撞击附带【崩山破势】（0.75 秒重度硬直与击退），且对格挡架势造成双倍摧毁！',
+    start(f) { f.armorT = 0.55; f.armorHits = 99; f.vx = 0; },
     update(f, foe) {
-      if (f.skPh === 0 && f.t >= 0.15) { f.skPh = 1; f.t = 0; f.vx = f.face * 700; f.hitDone = false; SFX.dash(); }
-      if (f.skPh === 1) { if (strike(f, foe, { box: [0, -112, 62, 0], dmg: 8, kb: [200, -440], stun: 0.45, hs: 0.12, launch: true })) f.vx *= 0.2; if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; } }
+      if (f.skPh === 0 && f.t >= 0.15) { f.skPh = 1; f.t = 0; f.vx = f.face * 740; f.hitDone = false; SFX.dash(); }
+      if (f.skPh === 1) {
+        if (strike(f, foe, { box: [-10, -118, 90, 0], dmg: 10, kb: [560, -360], stun: 0.75, hs: 0.14, launch: true, big: true, guardBreakMul: 2.0 })) {
+          addP({ type: 'text', text: '💥 崩山破势', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,100' });
+          f.vx *= 0.2;
+        }
+        if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
+      }
       if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
     },
-    pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 230 },
-  spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，人随枪走。迎面而来的寻常暗器尽被拨开，末了一记重重扫飞。',
+    pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 240 },
+  spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（10 伤害）将贴身之敌全额扫飞！',
     start(f) { f.vx = 0; f.spinN = 0; },
     update(f, foe) {
       const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
@@ -1412,7 +1441,7 @@ const SKILLS = {
       // 弹开前方常规飞行道具
       for (const p of projs) {
         if (p.owner === foe.idx && !p.dead && !p.unbreakable) {
-          if (Math.abs(p.x - f.x) < 95 && Math.abs(p.y - (f.y - 65)) < 75) {
+          if (Math.abs(p.x - f.x) < 125 && Math.abs(p.y - (f.y - 65)) < 85) {
             p.dead = true; blockFX(p.x, p.y, f.face); SFX.block();
             addP({ type: 'text', text: '破', x: p.x, y: p.y - 25, life: 0.45, max: 0.45, rgb: '170,220,255' });
           }
@@ -1422,67 +1451,80 @@ const SKILLS = {
       if (n >= f.spinN && f.spinN < 8) {
         f.spinN++; f.hitDone = false; SFX.swing();
         const last = f.spinN === 8;
-        strike(f, foe, { box: [20, -126, 138, -14], dmg: 4, kb: last ? [160, -460] : [40, 0], stun: 0.32, hs: 0.03, launch: last, noScale: true });
+        strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 10, kb: [440, -700], stun: 0.65, hs: 0.14, launch: true, big: true }
+                            : { box: [20, -126, 138, -14], dmg: 3.5, kb: [40, 0], stun: 0.12, hs: 0.02, launch: false, noScale: true });
       }
       if (f.t >= 2) toNeutral(f);
     },
     pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-  windstep: { name: '风遁', cd: 4, air: true, nofric: true, pass: true, desc: '御风后翻，撤出重围，身形飘忽无从捉摸；下一发风刃亦得风势相助，一分为二。',
+  windstep: { name: '风遁', cd: 4, air: true, nofric: true, pass: true, desc: '御风后翻瞬间在原地引爆【惊风退敌】斥力气旋（0.42 秒击退贴脸之敌）；下一发风刃亦得风势相助，一分为二。',
     start(f) { f.vx = 0; },
-    update(f) {
-      if (f.skPh === 0) { f.skPh = 1; f.invul = Math.max(f.invul, 0.15); f.twinT = 0.8; SFX.dash(); }
+    update(f, foe) {
+      if (f.skPh === 0) {
+        f.skPh = 1; f.invul = Math.max(f.invul, 0.15); f.twinT = 0.8; SFX.dash();
+        ring(f.x, f.y - 50, 130, f.look.slash, 0.4); dust(f.x, 0, 14); SFX.swing();
+        if (foe && Math.abs(foe.x - f.x) < 150 && Math.abs(foe.y - f.y) < 120 && foe.invul <= 0) {
+          applyHit(f, foe, { dmg: 4, kb: [f.face * -420, -280], stun: 0.42, hs: 0.06, launch: true, noScale: true }, [foe.x, foe.y - 60]);
+          addP({ type: 'text', text: '🌪️ 惊风退敌', x: f.x, y: f.y - 90, life: 0.8, max: 0.8, rgb: '140,255,200' });
+        }
+      }
       f.vx = -f.face * 950 * (1 - f.t / 0.24);
       if (Math.random() < 0.7) addP({ type: 'spark', x: f.x + f.face * 20, y: f.y - rand(20, 100), vx: f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
       if (f.t >= 0.24) toNeutral(f);
     },
     pose: () => ['ly_hover', 40], ai: (m, o, d) => d < 150 },
-  stomp: { name: '雷踏', cd: 3.5, desc: '一脚踏落，前方轰然炸起雷柱，把对手震上高空。这一踏势大力沉，收招也慢。',
+  stomp: { name: '雷踏', cd: 3.5, desc: '一脚踏落，前方轰然炸起通天巨型雷柱（宽 100 像素，高 460 像素，9 伤害）。垂直通天高空挑飞，将对手直接轰向穹顶。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; dust(f.x, 0, 10); SFX.thud(); spawnProj(f, { kind: 'bolt', x: clamp(f.x + f.face * 130, WALL, STAGE_W - WALL), y: -160, vx: 0, w: 64, h: 320, life: 0.35, delay: 0.15, dmg: 7, kb: [80, -480], stun: 0.45, hs: 0.08, launch: true, unbreakable: true, small: true }); }
+      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; dust(f.x, 0, 12); SFX.thud(); spawnProj(f, { kind: 'bolt', x: clamp(f.x + f.face * 130, WALL, STAGE_W - WALL), y: -230, vx: 0, w: 100, h: 460, life: 0.42, delay: 0.15, dmg: 9, kb: [0, -840], stun: 0.65, hs: 0.12, launch: true, unbreakable: true, small: true }); }
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
-    pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 220 },
-  inksplash: { name: '泼墨', cd: 6, desc: '提笔大写意，甩出一团浓墨凌空抛落。墨团着身，人便翻飞出去。',
+    pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
+  inksplash: { name: '泼墨', cd: 6, desc: '甩出一团重浓墨团（体积增大）。墨团爆裂不仅挑飞，还施加【墨迹遮目】（0.65 秒硬直 + 2.5 秒迟缓），大幅打乱对手反击步调。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 540, vy: -440, g: 1500, lob: true, w: 34, h: 34, life: 1.4, dmg: 4, kb: [120, -460], stun: 0.45, hs: 0.06, launch: true }); }
+      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 580, vy: -460, g: 1500, lob: true, w: 50, h: 50, life: 1.4, dmg: 6, kb: [140, -480], stun: 0.65, hs: 0.08, launch: true }); }
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 150 && d < 420 },
-  moonring: { name: '月轮', cd: 3.5, desc: '双月刃脱手旋出，去而复返；自背后折回的一记，专破死守正面的架势。',
+  moonring: { name: '月轮', cd: 3.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'moonring', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 720, w: 44, h: 44, life: 1.6, dmg: 5, kb: [140, -440], stun: 0.4, launch: true, hs: 0.05, pierce: true, rehit: 0.3, maxHits: 2, boomer: true, turn: 0.38 }); }
+      if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'moonring', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 740, w: 56, h: 56, life: 1.8, dmg: 6, kb: [100, 0], stun: 0.25, launch: false, hs: 0.04, pierce: true, rehit: 0.3, maxHits: 2, boomer: true, turn: 0.38 }); }
       if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['yh_mirror', 28] : ['l2a', 50], ai: (m, o, d) => d > 120 && d < 400 },
-  darts: { name: '翎羽', cd: 2.5, air: true, desc: '振翅激射两道寒光翎羽，贯空而至，射程无界；若自空中放出，便自上而下贯穿。',
+  darts: { name: '翎羽', cd: 2.5, air: true, desc: '振翅激射三道极速破甲翎羽，贯穿全场。此技【不击飞、无长硬直】，专精于全屏连续穿刺牵制与打断，破尽突进节奏。',
     start() {},
     update(f) {
       if (f.skPh === 0 && f.t >= 0.08) {
         f.skPh = 1; SFX.slice();
         const air = f.y < -30;
-        for (const k of [0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 760 : 950), vy: air ? 560 + k * 80 : k * 40, w: 24, h: 34, life: 3, dmg: 4, kb: [120, -400], stun: 0.35, hs: 0.04, launch: true });
+        for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, w: 24, h: 36, life: 3, dmg: 3.5, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
       }
       if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['yl_wings', 30] : ['a1a', 60], ai: (m, o, d) => d > 120 },
-  mirror: { name: '月镜', cd: 7, nofric: true, desc: '举月轮如镜护胸，凝立 0.45 秒。近身来犯者被格开，随之而来的反斩无从闪避；只是镜空之时，胸前洞开。',
+  mirror: { name: '月镜', cd: 7, nofric: true, desc: '举月轮如镜护胸，凝立 0.45 秒。近身来犯者被格开，随之而来的反斩施加【太阴绝罚】（14 伤害、1.05 秒超长硬直）与【禁身锁定】，无从闪避！',
     start(f) { f.parryT = 0.45; },
     update(f, foe) {
       if (f.skPh === 0) { const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0); f.vx = damp(f.vx, dir * wk(f), 14, STEP); } else f.vx = damp(f.vx, 0, 10, STEP);
       if (f.skPh === 0 && f.t >= 0.45) { f.skPh = 1; f.t = 0; f.parryT = 0; }
       if (f.skPh === 1 && f.t >= 0.35) toNeutral(f);
       if (f.skPh === 2) {
-        if (f.t >= 0.06 && !f.hitDone) { f.hitDone = true; applyHit(f, foe, COUNTER, [foe.x, foe.y - 60]); }
+        if (f.t >= 0.06 && !f.hitDone) {
+          f.hitDone = true;
+          applyHit(f, foe, COUNTER, [foe.x, foe.y - 60]);
+          foe.breakCD = Math.max(foe.breakCD, 0.75);
+          addP({ type: 'text', text: '🌙 太阴绝罚 · 禁身锁定', x: foe.x, y: foe.y - 110, life: 1.1, max: 1.1, rgb: '220,190,255' });
+        }
         if (f.t >= 0.42) toNeutral(f);
       }
     },
     pose: f => f.skPh === 0 ? ['yh_mirror', 40] : f.skPh === 2 ? ['hva', 60] : ['idle', 10],
     ai: () => false },
 };
-const COUNTER = { dmg: 12, kb: [420, -700], stun: 0.6, hs: 0.16, launch: true, big: true, unblockable: true, noScale: true };
+const COUNTER = { dmg: 14, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 
 // ======================= 大招（E） =======================
 // flurry 类型沿用“冲刺后乱斩”的流程，其它类型用 begin / update 自己写
@@ -3191,7 +3233,19 @@ function updateProjs() {
       addP({ type: 'text', text: '霸体', x: foe.x, y: foe.y - 130, life: 0.6, max: 0.6, rgb: '255,215,120' }); continue;
     }
     p.dir = p.vx !== 0 ? Math.sign(p.vx) : (foe.x >= p.x ? 1 : -1); p.srcX = p.x - p.dir * 10;
-    const hitM = p.lastBig && p.hits === (p.maxHits || 1) - 1 ? { ...p, kb: [420, -780], hs: 0.14, big: true } : p;
+    let hitM = p.lastBig && p.hits === (p.maxHits || 1) - 1 ? { ...p, kb: [420, -780], hs: 0.14, big: true } : p;
+    if (p.kind === 'moonring') {
+      const returning = p.boomer && p.age > p.turn;
+      if (returning) {
+        hitM = { ...p, dmg: 7, stun: 0.78, hs: 0.12, launch: true, kb: [180, -580], big: true };
+        addP({ type: 'text', text: '背袭破防', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '230,200,255' });
+      } else {
+        hitM = { ...p, dmg: 5, stun: 0.25, hs: 0.04, launch: false, kb: [100, 0] };
+      }
+    } else if (p.kind === 'inkblob') {
+      foe.slowT = 2.5;
+      addP({ type: 'text', text: '墨迹遮目', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '160,160,190' });
+    }
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
     p.hits++; p.hitCD = p.rehit || 99;
     if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
@@ -3490,7 +3544,7 @@ function applyHit(att, def, m, pt) {
     def.hp = Math.max(1, def.hp - m.dmg * chipFrac);
 
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
-    const guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+    const guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1))) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
     def.guard = Math.max(0, (def.guard !== undefined ? def.guard : def.maxGuard) - guardLoss);
     def.sinceBlock = 0;
 
@@ -4910,7 +4964,9 @@ function drawProjs(glowOnly) {
     const L = [A, B][p.owner].look;
     ctx.save();
     if (p.kind === 'wind') {
-      ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y); ctx.scale(Math.sign(p.vx) || 1, 1);
+      ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y);
+      const scX = (Math.sign(p.vx) || 1) * ((p.w || 56) / 56), scY = (p.h || 52) / 52;
+      ctx.scale(scX, scY);
       ctx.fillStyle = `rgba(${L.slash},0.55)`; ctx.beginPath(); ctx.moveTo(-26, -22); ctx.quadraticCurveTo(34, 0, -26, 22); ctx.quadraticCurveTo(10, 0, -26, -22); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-24, -20); ctx.quadraticCurveTo(30, 0, -24, 20); ctx.stroke();
     } else if (p.kind === 'quake') {
@@ -4927,14 +4983,14 @@ function drawProjs(glowOnly) {
     } else if (p.kind === 'bolt') {
       if (p.delay > 0) {
         const k = 1 - p.delay / 0.46;
-        ctx.strokeStyle = `rgba(255,235,120,${0.4 + 0.5 * Math.sin(clock * 30)})`; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.ellipse(p.x, 0, 40 * (0.6 + 0.4 * k), 9, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = `rgba(255,235,120,${0.4 + 0.5 * Math.sin(clock * 30)})`; ctx.lineWidth = p.small ? 4 : 5;
+        ctx.beginPath(); ctx.ellipse(p.x, 0, (p.w || 64) * 0.5 * (0.6 + 0.4 * k), 9, 0, 0, Math.PI * 2); ctx.stroke();
         if (!p.small) { ctx.fillStyle = 'rgba(255,235,120,0.18)'; ctx.fillRect(p.x - 1, -700, 2, 700); }
       } else {
         ctx.globalCompositeOperation = 'lighter';
-        const top = p.small ? -320 : -720;
-        ctx.strokeStyle = 'rgba(255,245,190,0.95)'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(p.x, top);
-        for (let y = top; y < 0; y += 60) ctx.lineTo(p.x + rand(-22, 22), y + 60);
+        const top = p.h ? -p.h : (p.small ? -320 : -720);
+        ctx.strokeStyle = 'rgba(255,245,190,0.95)'; ctx.lineWidth = p.small ? 8 : 7; ctx.beginPath(); ctx.moveTo(p.x, top);
+        for (let y = top; y < 0; y += 60) ctx.lineTo(p.x + rand(-24, 24), y + 60);
         ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,1)'; ctx.lineWidth = 2.5; ctx.stroke();
       }
     } else if (p.kind === 'rock') {
@@ -4975,32 +5031,36 @@ function drawProjs(glowOnly) {
       ctx.fillStyle = '#e8e2d0'; ctx.beginPath(); ctx.moveTo(30, -26); ctx.lineTo(4, -54); ctx.lineTo(18, -24); ctx.fill();
       ctx.fillStyle = '#ff5a4a'; ctx.beginPath(); ctx.arc(40, -8, 4.5, 0, 7); ctx.fill();
     } else if (p.kind === 'qi') {
-      ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y); ctx.scale(Math.sign(p.vx) || 1, 1);
+      ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y);
+      const scX = (Math.sign(p.vx) || 1) * ((p.w || 60) / 60), scY = (p.h || 70) / 70;
+      ctx.scale(scX, scY);
       const a = clamp(p.life / 0.2, 0, 1);
-      ctx.strokeStyle = `rgba(${L.slash},${0.8 * a})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(-18, 0, 34, -1.1, 1.1); ctx.stroke();
+      ctx.strokeStyle = `rgba(${L.slash},${0.85 * a})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(-18, 0, 34, -1.1, 1.1); ctx.stroke();
       ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 2; ctx.stroke();
     } else if (p.kind === 'kunai') {
       ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx));
       ctx.fillStyle = '#d9dde6'; ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-4, -4); ctx.lineTo(-4, 4); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#2a1a22'; ctx.fillRect(-12, -1.5, 8, 3); ctx.strokeStyle = `rgb(${L.slash})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(-14, 0, 3, 0, 7); ctx.stroke();
     } else if (p.kind === 'inkblob') {
-      ctx.fillStyle = '#0c0c12'; ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc(p.x - Math.sign(p.vx) * 14, p.y + 4, 7, 0, 7); ctx.fill();
+      const r = (p.w || 34) * 0.44;
+      ctx.fillStyle = '#0c0c12'; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x - Math.sign(p.vx) * r * 0.9, p.y + 4, r * 0.5, 0, 7); ctx.fill();
     } else if (p.kind === 'moonring') {
       ctx.translate(p.x, p.y); ctx.rotate(p.age * 18);
-      ctx.fillStyle = `rgba(${L.slash},0.95)`; ctx.beginPath(); ctx.arc(0, 0, 20, 0.3, Math.PI * 2 - 0.3); ctx.arc(6, 0, 15, Math.PI * 2 - 0.4, 0.4, true); ctx.closePath(); ctx.fill();
+      const r = (p.w || 44) * 0.45;
+      ctx.fillStyle = `rgba(${L.slash},0.95)`; ctx.beginPath(); ctx.arc(0, 0, r, 0.3, Math.PI * 2 - 0.3); ctx.arc(r * 0.3, 0, r * 0.75, Math.PI * 2 - 0.4, 0.4, true); ctx.closePath(); ctx.fill();
     } else if (p.kind === 'feather') {
       ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx) - Math.PI / 2);
       ctx.fillStyle = `rgba(${L.slash},0.9)`; ctx.beginPath(); ctx.ellipse(0, 0, 5, 18, 0, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, 18); ctx.stroke();
     } else if (p.kind === 'trap') {
-      const armed = p.delay <= 0;
+      const armed = p.delay <= 0, r = (p.w || 84) * 0.48;
       ctx.translate(p.x, 0); ctx.scale(1, 0.28);
       ctx.strokeStyle = armed ? 'rgba(20,20,30,0.95)' : 'rgba(20,20,30,0.45)'; ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
       ctx.rotate(p.age * 1.5); ctx.lineWidth = 3;
-      for (let i = 0; i < 6; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(32, 6); ctx.stroke(); }
-      if (armed) { ctx.fillStyle = `rgba(${L.slash},${0.12 + 0.08 * Math.sin(clock * 6)})`; ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.fill(); }
+      for (let i = 0; i < 6; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(r * 0.35, 0); ctx.lineTo(r * 0.8, 6); ctx.stroke(); }
+      if (armed) { ctx.fillStyle = `rgba(${L.slash},${0.12 + 0.08 * Math.sin(clock * 6)})`; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); }
     }
     ctx.restore();
   }

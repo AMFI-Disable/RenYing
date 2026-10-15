@@ -31,6 +31,26 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Improved
 
+- **Hero Skill Overhaul & Differentiated Control Profiles (Stun, Launch & Spatial Dynamics)**:
+  - Thoroughly rebalanced and enhanced all 18 hero skills (Q skills and Right-click skills across all 9 heroes) with differentiated crowd-control, stun durations, hitboxes, and tactical properties:
+  - **Full Stun / Lock-Down Skills**:
+    - **Fei Ying (影遁)**: Cross ambush strikes vital acupoints, inflicting **0.80s Acupoint Paralysis Stun (`⚡ 封脉定身`)**, providing guaranteed setup for her +50% empowered strike.
+    - **Lei Ming (雷闪)**: High-voltage lightning fist dash inflicts **0.82s Electric Shock Paralysis (`⚡ 触电麻痹`)**, locking the opponent in electrical convulsions to set up his 10-hit flurry.
+    - **Mo Yu (墨阵)**: Ink trap pool expanded to **125px width**, inflicting **1.4s Full Entrapment Root (`深墨禁锢`)**, completely anchoring enemies to the ground.
+    - **Yue Hua (月镜 · 太阴绝罚)**: Riposte counter-slash buffed to 14 damage, **1.05s hard stun**, and imposes a **0.75s escape lock (`禁身锁定`)**, preventing opponents from breaking out.
+    - **Tie Shan (震地 & 铁壁冲)**: Quake shockwave radius expanded by 35% with 0.35s hyper armor and **0.85s heavy concussion stun (`💥 撼地重震`)**; Iron Wall shoulder tackle hitbox widened, inflicting **0.75s daze stun (`💥 崩山破势`)** and double Guard Posture damage against blocking targets.
+    - **Yan Ling (俯冲)**: Talon divebomb inflicts **0.78s Ground Pin Stun (`鹰击钉地`)**, pinning targets into the floor and rebounding Yan Ling upward to reset flight.
+    - **Ling Shuang (回马枪)**: Spear reach extended to 235px; spear tip sweetspot inflicts **0.85s Impale Stun (`枪尖穿心`)** and heavy skyward launch.
+  - **Zero / Low-Stun Rapid Harass & Pushback Skills**:
+    - **Fei Ying (飞镖)**: Fires 4 rapid shuriken in a wide fan with **no full stun and no launch (`launch: false, stun: 0.16s`)**, functioning as a pure neutral interrupt tool.
+    - **Yan Ling (翎羽)**: Fires 3 razor-sharp piercing feathers in tight formation with **no launch and no long stun (`launch: false, stun: 0.20s`)**, continuously chipping and interrupting from screen-wide range.
+    - **Liu Yun (风刃 & 风遁)**: Windblade enlarged to 72x62 with **no long stun (`stun: 0.22s`) but massive pushback (`620px knockback`)**; Windstep backflip releases a **0.42s Gale Repulsion shockwave (`🌪️ 惊风退敌`)** repelling adjacent enemies.
+    - **Ling Shuang (枪旋)**: Spinning swings 1-7 deal **no hard stun (`stun: 0.12s`)** while deflecting projectiles within 125px; the 8th final sweep delivers a **huge radial clear (10 dmg, 0.65s stun, launch: true)**.
+  - **Spatial AOE, Giant Projectiles & Trajectory Crossups**:
+    - **Qing Feng (剑气 & 疾风斩)**: Sword Qi wave enlarged to 92x96 with **direct vertical sky launch (`launch: true, kb: [180, -700]`)** without ground stun; Gale slash hitbox extended with **0.65s Iai Stun (`居合斩穴`)** and instant dash cooldown reset.
+    - **Lei Ming (雷踏)**: Thunder pillar enlarged to 100px width and 460px height with **vertical skyward launch (`kb: [0, -840]`, 0.65s stun)**.
+    - **Mo Yu (泼墨)**: Ink blob enlarged to 50x50; impact inflicts **0.65s stun and 2.5s ink blindness/slow debuff (`墨迹遮目`)**.
+    - **Yue Hua (月轮)**: Crescent blade enlarged to 56x56; forward trip deals light 0.25s flinch without launch; **return trip from behind inflicts 0.78s Back-Hit Daze Stun (`背袭破防`)** and flips enemy facing direction, shattering turtle block.
 - **Stature Advantage, Physical Attributes & Guard Posture System**:
   - Expanded all 9 heroes with comprehensive realistic physical and defensive attributes: `weight` (mass & knockback inertia), `defRating` (armor absorption), `guardMax` (posture stamina), `guardStab` (stability divider), `guardChip` (chip damage fraction), `guardRegen` (recovery rate), `poise` (hitstun reduction), and `size` (collision scale).
   - Heavy titans and veteran masters (e.g., Tie Shan at 1.65 mass, Lei Ming at 1.30 mass) exert kinetic mass suppression (`massRatio`) over lighter/smaller heroes (e.g., Fei Ying at 0.72 mass).
