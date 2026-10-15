@@ -388,7 +388,7 @@
   .bp-skin-btn { font: 12px var(--body); padding: 2px 7px; border-radius: 5px; cursor: pointer; background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid var(--faint); transition: all .15s; }
   .bp-skin-btn:hover { border-color: rgba(233,196,106,.5); }
   .bp-skin-btn.sel { border-color: #e9c46a; background: rgba(233,196,106,.18); font-weight: 600; }
-  .bp-skin-btn.lock { opacity: .45; cursor: default; }
+  .bp-skin-btn.lock, .bp-skin-btn:disabled { opacity: .45; cursor: not-allowed; }
   .bpbot > * { min-width: 0; }
   .bpmovedeck { border: 1px solid rgba(233,196,106,.3); border-radius: 12px; padding: 10px 14px; background: rgba(12,14,24,.88); display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow: hidden; text-align: left; }
   .deckhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; width: 100%; }
@@ -7430,6 +7430,12 @@ function applyProfile(p) {
     Object.assign(PROF, p, { guest: false });
   }
   PROF.loaded = true;
+  if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && PROF.equip) {
+    const ownedSkins = new Set(PROF.skins || []);
+    for (const [cid, sk] of Object.entries(PROF.equip)) {
+      if (sk && !ownedSkins.has(sk)) delete PROF.equip[cid];
+    }
+  }
   renderAcc(); updateTutBtn();
   if (!PROF.guest && typeof qfxClaim === 'function' && qfxBest() > (PROF.qfx || 0)) setTimeout(() => qfxClaim(qfxBest()), 0);
   const eq = JSON.stringify(PROF.equip || {});
@@ -8729,7 +8735,7 @@ function bpDetailHTML(i) {
   const skinBtns = `<button class="bp-skin-btn ${curSkin ? '' : 'sel'}" data-sk="" data-i="${i}">默认</button>` +
     skList.map(([k, v]) => {
       const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
-      return `<button class="bp-skin-btn ${curSkin === k ? 'sel' : ''}${has ? '' : ' lock'}" data-sk="${k}" data-i="${i}" style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : ' (未解锁)'}</button>`;
+      return `<button class="bp-skin-btn ${curSkin === k ? 'sel' : ''}${has ? '' : ' lock'}" data-sk="${k}" data-i="${i}" ${has ? '' : 'disabled title="尚未解锁该皮肤"'} style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : ' (未解锁)'}</button>`;
     }).join('');
 
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
@@ -9189,8 +9195,15 @@ function claimLegacyAccount(accData) {
   PROF.pity = Math.max(PROF.pity || 0, accData.pity || 0);
   PROF.spity = Math.max(PROF.spity || 0, accData.spity || 0);
 
-  // 6. 皮肤装配
-  PROF.equip = Object.assign({}, accData.equip || {}, PROF.equip || {});
+  // 6. 皮肤装配（严格仅保留已解锁的皮肤）
+  const validSkins = new Set(PROF.skins || []);
+  const rawEquip = Object.assign({}, accData.equip || {}, PROF.equip || {});
+  PROF.equip = {};
+  for (const [cid, sk] of Object.entries(rawEquip)) {
+    if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED)) {
+      PROF.equip[cid] = sk;
+    }
+  }
   try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (e) {}
 
   // 7. 战绩与排位

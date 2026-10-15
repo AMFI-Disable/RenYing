@@ -6012,6 +6012,12 @@ function applyProfile(p) {
     Object.assign(PROF, p, { guest: false });
   }
   PROF.loaded = true;
+  if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && PROF.equip) {
+    const ownedSkins = new Set(PROF.skins || []);
+    for (const [cid, sk] of Object.entries(PROF.equip)) {
+      if (sk && !ownedSkins.has(sk)) delete PROF.equip[cid];
+    }
+  }
   renderAcc(); updateTutBtn();
   if (!PROF.guest && typeof qfxClaim === 'function' && qfxBest() > (PROF.qfx || 0)) setTimeout(() => qfxClaim(qfxBest()), 0);
   const eq = JSON.stringify(PROF.equip || {});
@@ -7311,7 +7317,7 @@ function bpDetailHTML(i) {
   const skinBtns = `<button class="bp-skin-btn ${curSkin ? '' : 'sel'}" data-sk="" data-i="${i}">默认</button>` +
     skList.map(([k, v]) => {
       const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
-      return `<button class="bp-skin-btn ${curSkin === k ? 'sel' : ''}${has ? '' : ' lock'}" data-sk="${k}" data-i="${i}" style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : ' (未解锁)'}</button>`;
+      return `<button class="bp-skin-btn ${curSkin === k ? 'sel' : ''}${has ? '' : ' lock'}" data-sk="${k}" data-i="${i}" ${has ? '' : 'disabled title="尚未解锁该皮肤"'} style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : ' (未解锁)'}</button>`;
     }).join('');
 
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
@@ -7771,8 +7777,15 @@ function claimLegacyAccount(accData) {
   PROF.pity = Math.max(PROF.pity || 0, accData.pity || 0);
   PROF.spity = Math.max(PROF.spity || 0, accData.spity || 0);
 
-  // 6. 皮肤装配
-  PROF.equip = Object.assign({}, accData.equip || {}, PROF.equip || {});
+  // 6. 皮肤装配（严格仅保留已解锁的皮肤）
+  const validSkins = new Set(PROF.skins || []);
+  const rawEquip = Object.assign({}, accData.equip || {}, PROF.equip || {});
+  PROF.equip = {};
+  for (const [cid, sk] of Object.entries(rawEquip)) {
+    if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED)) {
+      PROF.equip[cid] = sk;
+    }
+  }
   try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (e) {}
 
   // 7. 战绩与排位
