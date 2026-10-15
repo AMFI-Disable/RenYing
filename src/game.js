@@ -17,8 +17,14 @@
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1, fps: 0, shake: 1.4, quality: 'auto', blur: true, vig: 1, music: 0.6, sfx: 1, aim: true };
-try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem('renying-settings') || '{}')); } catch (e) {}
+const SETTINGS = { bloom: 1.6, fps: 0, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true };
+try {
+  const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
+  Object.assign(SETTINGS, saved);
+  // 消除任何旧配置里的自动/优化降级默认值，默认全部保持极高原生画质与不限刷新率
+  if (!SETTINGS.quality || SETTINGS.quality === 'auto') SETTINGS.quality = 'high';
+  if (SETTINGS.bloom === undefined || SETTINGS.bloom === 1) SETTINGS.bloom = 1.6;
+} catch (e) {}
 function saveSettings() { try { localStorage.setItem('renying-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
 
 // ======================= 基础 =======================
@@ -137,51 +143,51 @@ const SP_SLASH = { ult: true, noScale: true, dmg: 2.5, kb: [0, 0], stun: .3, hs:
 // skill 是 Q 技能，ult 是 E 大招，passive 是被动。beats/weakTo 只是给玩家看的克制关系说明。
 const CHARS = [
   { id: 'qingfeng', name: '青锋', role: '游龙剑客', diff: 1, escCD: 8.5, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
-    passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 8%。',
-    stat: { hp: 105, walk: 1, speed: 1, dmg: 0.95, reach: 1, swing: 1, jump: 1 }, meterMul: 1.08, hitFeel: 1,
+    passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 8%。体量身法均称（1.00），剑气与疾风斩攻守自如。',
+    stat: { hp: 105, walk: 1, speed: 1, dmg: 0.95, reach: 1, swing: 1, jump: 1, weight: 1.00, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, meterMul: 1.08, hitFeel: 1,
     look: { body: '#e9eef6', shade: '#9aa6bd', outline: '#070914', outlineA: 1, scarf: '#46d3ea', slash: '120,230,255', blade: '#effcff', head: 'topknot', weapon: 'sword' },
     ai: { range: [70, 170] }, beats: ['moyu'], weakTo: ['yuehua'] },
   { id: 'feiying', name: '绯影', role: '暗影刺客', diff: 2, escCD: 9.5, skill: 'blink', skill2: 'kunai', ult: 'shadows', passive: 'swift',
-    passiveName: '身轻', passiveDesc: '身法最快、出手最疾，气血却最薄（88）；一旦受制，腾空闪的冷却也最久。',
-    stat: { hp: 88, walk: 1.16, speed: 0.84, dmg: 1.05, reach: 0.92, swing: 0.8, jump: 1.08 }, hitFeel: 0.8,
+    passiveName: '身轻', passiveDesc: '身法最快、出手最疾，但体格最轻薄（0.72）且气血偏薄（88）。格挡耐力极为脆弱（70），硬挡巨刃极易破防崩势，唯有以疾速、背刺与影遁分身取胜。',
+    stat: { hp: 88, walk: 1.16, speed: 0.84, dmg: 1.05, reach: 0.92, swing: 0.8, jump: 1.08, weight: 0.72, defRating: 0.90, guardMax: 70, guardStab: 0.70, guardChip: 0.18, guardRegen: 22, poise: 1.14, size: 0.88 }, hitFeel: 0.8,
     moveMods: { l1: { dmgAbs: 5 }, l2: { dmgAbs: 5 }, l3: { dmgAbs: 6 }, l4: { dmgAbs: 7 }, l5: { dmgAbs: 9 } },
     look: { body: '#2d2336', shade: '#1b1422', outline: '#ff4a5f', outlineA: .85, scarf: '#ff3b52', slash: '255,95,115', blade: '#ffe6ea', head: 'hood', weapon: 'dual' },
     ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   { id: 'tieshan', name: '铁山', role: '玄铁重甲', diff: 1, escCD: 7, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
-    passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血极厚（140）。重斩与蓄力斩自带霸体且减伤40%，腾空闪冷却最短（7秒）。',
-    stat: { hp: 140, walk: 0.84, speed: 1.20, dmg: 1.12, reach: 1.12, swing: 1.18, jump: 0.9 }, size: 1.12, hitFeel: 1.55,
+    passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血极厚（140），体量威严（1.65）。重斩与蓄力斩自带霸体减伤40%，巨刃沉身格挡固若金汤（150架势/4%微伤），轻兵刃难以撼动其身。',
+    stat: { hp: 140, walk: 0.84, speed: 1.20, dmg: 1.12, reach: 1.12, swing: 1.18, jump: 0.9, weight: 1.65, defRating: 1.15, guardMax: 150, guardStab: 1.85, guardChip: 0.04, guardRegen: 34, poise: 0.78, size: 1.14 }, hitFeel: 1.55,
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
   { id: 'lingshuang', name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.5, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
-    passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 25%，一挑冲天；贴身则力有不逮，只余三分之一。枪旋可拨开轻巧暗器。',
-    stat: { hp: 100, walk: 0.98, speed: 1.05, dmg: 0.98, reach: 1.36, swing: 1.08, jump: 1 }, hitFeel: 1.15,
+    passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 25% 且一挑冲天；贴身则力有不逮。枪长步稳（1.04体量），枪旋可拨开暗器并保持中线绝对压制。',
+    stat: { hp: 100, walk: 0.98, speed: 1.05, dmg: 0.98, reach: 1.36, swing: 1.08, jump: 1, weight: 1.04, defRating: 1.02, guardMax: 110, guardStab: 1.20, guardChip: 0.09, guardRegen: 28, poise: 0.95, size: 1.02 }, hitFeel: 1.15,
     look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
     ai: { range: [115, 205] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
   { id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 9, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
-    passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起，专把浮空之敌卷上九霄。布衣轻身，气血偏脆（92）。',
-    stat: { hp: 92, walk: 1.12, speed: 0.88, dmg: 1.17, reach: 0.98, swing: 0.95, jump: 1.05 }, jumps: 3, hitFeel: 0.9,
+    passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起卷敌浮空。布衣身轻体薄（0.80体量/92血），折扇防守易受重压渗透（14%穿透），宜飘忽制胜。',
+    stat: { hp: 92, walk: 1.12, speed: 0.88, dmg: 1.17, reach: 0.98, swing: 0.95, jump: 1.05, weight: 0.80, defRating: 0.96, guardMax: 85, guardStab: 0.85, guardChip: 0.14, guardRegen: 25, poise: 1.05, size: 0.98 }, jumps: 3, hitFeel: 0.9,
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [200, 380] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
   { id: 'leiming', name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
-    passiveName: '连环', passiveDesc: '十连快拳如骤雨，筋骨强横气血充盈（118）；只是收势太短，拳与拳之间留有空隙，对手常能借此腾空闪走脱。',
-    stat: { hp: 118, walk: 1.18, speed: 0.68, dmg: 0.88, reach: 0.8, swing: 0.62, jump: 1 }, scaling: 0.04, hitFeel: 0.8,
+    passiveName: '连环', passiveDesc: '十连快拳如骤雨，金刚体魄筋骨强横（118血/1.30体量）；架势耐力深厚且回涌极快（36/秒），防守沉稳，唯出拳收势空隙需防对手腾空闪。',
+    stat: { hp: 118, walk: 1.18, speed: 0.68, dmg: 0.88, reach: 0.8, swing: 0.62, jump: 1, weight: 1.30, defRating: 1.08, guardMax: 125, guardStab: 1.45, guardChip: 0.06, guardRegen: 36, poise: 0.84, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
     moveMods: { l1: { dmgAbs: 3 }, l2: { dmgAbs: 3 }, l3: { dmgAbs: 3 }, l4: { dmgAbs: 3 }, l5: { dmgAbs: 3, kb: [110, 0], launch: false, lunge: 120, next: { light: 'l6', heavy: 'hv' } }, l6: { dmgAbs: 3 }, l7: { dmgAbs: 3 }, l8: { dmgAbs: 3 }, l9: { dmgAbs: 3 }, l10: { dmgAbs: 3 } },
     look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
     ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   { id: 'moyu', name: '墨羽', role: '泼墨画师', diff: 3, escCD: 9, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
-    passiveName: '笔锋', passiveDesc: '墨阵一落，踩中者寸步难行 1.2 秒；可随时引爆，连起一串硬直。被困者唯有耗掉腾空闪，方能破阵脱身。',
-    stat: { hp: 90, walk: 0.95, speed: 1.02, dmg: 1.06, reach: 1.12, swing: 1.05, jump: 1 }, hitFeel: 1.1,
+    passiveName: '笔锋', passiveDesc: '墨韵宗师宗风深沉（1.10体量），墨阵定身强行封锁走位；墨水屏障加持架势耐力（115），蓄力挥洒自如，专破铁山等钝重武夫。',
+    stat: { hp: 90, walk: 0.95, speed: 1.02, dmg: 1.06, reach: 1.12, swing: 1.05, jump: 1, weight: 1.10, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 30, poise: 0.90, size: 1.00 }, hitFeel: 1.1,
     moveMods: { l1: { dmgAbs: 4 }, l2: { dmgAbs: 4 }, l3: { dmgAbs: 4 }, l4: { dmgAbs: 4 }, l5: { dmgAbs: 4 }, cs1: { reachMul: 1.4 }, cs2: { reachMul: 1.4 } }, inkShot: true,
     look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
     ai: { range: [150, 300] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
   { id: 'yuehua', name: '月华', role: '月镜宗师', diff: 3, escCD: 8.5, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
-    passiveName: '月华', passiveDesc: '月镜格开一击，反斩已然锁定——腾空闪也救不得。脱战之后，月华缓缓浸润，伤势自愈。',
-    stat: { hp: 88, walk: 1, speed: 0.88, dmg: 0.93, reach: 1, swing: 0.85, jump: 1 }, hitFeel: 0.8,
+    passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.90体量/88血），自带月魄神罡（105架势/7%微透伤）与脱战自愈，以静制动。',
+    stat: { hp: 88, walk: 1, speed: 0.88, dmg: 0.93, reach: 1, swing: 0.85, jump: 1, weight: 0.90, defRating: 1.04, guardMax: 105, guardStab: 1.25, guardChip: 0.07, guardRegen: 30, poise: 0.92, size: 0.96 }, hitFeel: 0.8,
     look: { body: '#f4eefc', shade: '#b3a6c9', outline: '#15102a', outlineA: 1, scarf: '#c9b6ff', slash: '215,195,255', blade: '#f6f0ff', head: 'moon', weapon: 'moonblade' },
     ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
   { id: 'yanling', name: '燕翎', role: '御空飞燕', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
-    passiveName: '御空', passiveDesc: '一飞冲天，地面冲击尽落空处；立足未稳时易被打散，一旦在空中抓住对手，便如鹰隼攫兔。',
-    stat: { hp: 90, walk: 1.12, speed: 0.84, dmg: 1.14, reach: 1, swing: 0.85, jump: 1.05 }, fly: 1.2, hitFeel: 0.9,
+    passiveName: '御空', passiveDesc: '一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（80架势），一旦被重兵器挑中需速用腾空闪化解。',
+    stat: { hp: 90, walk: 1.12, speed: 0.84, dmg: 1.14, reach: 1, swing: 0.85, jump: 1.05, weight: 0.84, defRating: 0.94, guardMax: 80, guardStab: 0.80, guardChip: 0.15, guardRegen: 24, poise: 1.08, size: 0.95 }, fly: 1.2, hitFeel: 0.9,
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
 ];
@@ -1719,11 +1725,18 @@ class Fighter {
     this.chIdx = i; this.ch = CHARS[i]; this.moves = CHAR_MOVES[i];
     this.look = { ...this.ch.look, name: this.ch.name };
     this.maxHp = this.ch.stat.hp; this.wlen = WEAPON_LEN[this.ch.look.weapon] || 54;
-    this.size = this.ch.size || 1;
+    this.size = this.ch.stat.size || this.ch.size || 1;
+    this.maxGuard = this.ch.stat.guardMax || 100;
+    this.guard = this.maxGuard;
+    this.sinceBlock = 0;
   }
   reset(x) {
+    this.maxGuard = (this.ch && this.ch.stat && this.ch.stat.guardMax) || 100;
+    this.guard = this.maxGuard;
+    this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: this.idx === 0 ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0,
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
+      guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
       breakCD: 0 });
@@ -2244,6 +2257,11 @@ function updateFighter(f, foe) {
   f.armorT = Math.max(0, f.armorT - STEP);
   f.slowT = Math.max(0, (f.slowT || 0) - STEP);
   f.buffT = Math.max(0, f.buffT - STEP);
+  f.sinceBlock = (f.sinceBlock || 0) + STEP;
+  if (f.state !== 'block' && f.state !== 'blockstun' && f.sinceBlock > 0.6) {
+    const regen = ((f.ch && f.ch.stat && f.ch.stat.guardRegen) || 26) * STEP;
+    f.guard = Math.min(f.maxGuard, (f.guard !== undefined ? f.guard : f.maxGuard) + regen);
+  }
   if (f.state === 'skill' && f.skill === 'mirror') f.parryT = Math.max(0, f.parryT - STEP);
   // 月华被动：3 秒没挨打缓慢回血
   f.sinceHit += STEP;
@@ -2310,7 +2328,10 @@ function physics(f) {
   if (f.flying) g = 0;
   if (f.state === 'dash' || f.state === 'held' || f.state === 'special') g = 0;
   else if (f.state === 'attack' && f.move.air) g *= 0.45;
-  else if (f.state === 'launched') g *= LAUNCH_GRAV * (1 + f.juggle * 0.12);
+  else if (f.state === 'launched') {
+    const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
+    g *= LAUNCH_GRAV * (1 + f.juggle * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow(w, 0.35)));
+  }
   if (wasAir) f.vy += g * STEP;
   if (f.state === 'held') { f.vx = 0; f.vy = 0; }
   f.x += f.vx * STEP; f.y += f.vy * STEP;
@@ -2404,17 +2425,47 @@ function applyHit(att, def, m, pt) {
   const blocking = wasBlocking && !m.unblockable;
   const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking, f: fx };
   const mm = att.ch.meterMul || 1;
+
+  // 体量压制与动量碰撞比 (Kinetic Impact Ratio)
+  const attWeight = (att.ch && att.ch.stat && att.ch.stat.weight) || 1;
+  const defWeight = (def.ch && def.ch.stat && def.ch.stat.weight) || 1;
+  const massRatio = clamp(attWeight / defWeight, 0.45, 2.5);
+
   if (blocking) {
-    def.hp = Math.max(1, def.hp - m.dmg * 0.12);
-    def.state = 'blockstun'; def.t = 0; def.stun = 0.08 + m.hs * 0.7;
-    def.vx = fx * (180 + Math.abs(m.kb[0]) * 0.35); if (!m.isProj) att.vx -= att.face * 120;
+    const chipFrac = (def.ch && def.ch.stat && def.ch.stat.guardChip) || 0.12;
+    def.hp = Math.max(1, def.hp - m.dmg * chipFrac);
+
+    // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
+    const guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+    def.guard = Math.max(0, (def.guard !== undefined ? def.guard : def.maxGuard) - guardLoss);
+    def.sinceBlock = 0;
+
+    // 破防崩势判定（Guard Break）
+    if (def.guard <= 0) {
+      def.guard = 0;
+      def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
+      def.vx = fx * 140;
+      shake = 18; flashA = 0.4; flashRGB = '255,100,80';
+      ring(def.x, def.y - 60, 160, '255,120,80', 0.45);
+      addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
+      SFX.heavy();
+      ev.guardBreak = true;
+      hitVisual(ev); netEmit(ev);
+      return;
+    }
+
+    def.state = 'blockstun'; def.t = 0;
+    def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1);
+    def.vx = fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
+    if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
     att.meter = Math.min(100, att.meter + 2 * mm); def.meter = Math.min(100, def.meter + 5);
     hitVisual(ev); netEmit(ev);
     return;
   }
   // 霸体：普通攻击打不断，只吃 60% 伤害
+  const defRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
   if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.6 > 0) {
-    const dmg = m.dmg * 0.6;
+    const dmg = (m.dmg * 0.6) / defRating;
     def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
     if (--def.armorHits <= 0) def.armorT = 0;
     att.meter = Math.min(100, att.meter + m.dmg * 0.8 * mm); def.meter = Math.min(100, def.meter + m.dmg);
@@ -2429,8 +2480,9 @@ function applyHit(att, def, m, pt) {
     return;
   }
   if (m.chip) {   // 只掉血：不会硬直、不会飞起
-    def.hp = Math.max(def.dummy ? 1 : 0, def.hp - m.dmg); def.sinceHit = 0; def.lagDelay = 0.5; def.flash = 0.08;
-    ev.dd = m.dmg; ev.nc = true; ev.cn = def.comboHits;
+    const chipDmg = m.dmg / defRating;
+    def.hp = Math.max(def.dummy ? 1 : 0, def.hp - chipDmg); def.sinceHit = 0; def.lagDelay = 0.5; def.flash = 0.08;
+    ev.dd = chipDmg; ev.nc = true; ev.cn = def.comboHits;
     if (def.hp <= 0 && M.phase === 'fight') { def.state = 'launched'; def.vy = -520; def.vx = fx * 400; def.y = Math.min(def.y, -1); M.phase = 'ko'; M.t = 0; M.koWinner = att.idx; ev.ko = true; }
     hitVisual(ev); netEmit(ev); return;
   }
@@ -2439,7 +2491,7 @@ function applyHit(att, def, m, pt) {
   def.comboHits++;
   const isCounter = !m.isProj && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
-  let dmg = m.dmg * scale;
+  let dmg = (m.dmg * scale) / defRating;
   if (isCounter) { ev.counter = true; dmg *= 1.2; ev.big = true; }
   if (att.buffT > 0 && !m.isProj) { dmg *= 1.5; att.buffT = 0; ev.big = true; }
   // 凌霜枪尖机制：最远端枪尖命中增伤且大幅挑空，贴身过近被压制削伤
@@ -2459,7 +2511,7 @@ function applyHit(att, def, m, pt) {
   att.hitConfirmed = true;
   att.meter = Math.min(100, att.meter + m.dmg * 1.5 * mm); def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.4 : 0.9));
   def.move = null;
-  if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5; def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
+  if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
   else if (m.hold) { def.state = 'held'; }
   else {
@@ -2468,12 +2520,14 @@ function applyHit(att, def, m, pt) {
       def.juggle++;
       const js = Math.max(0.45, 1 - 0.1 * (def.juggle - 1));
       def.state = 'launched'; def.t = 0;
-      def.vx = m.kb[0] * fx;
-      def.vy = m.spike ? m.kb[1] : (m.kb[1] === 0 ? -320 * js : m.kb[1] * js);
+      def.vx = m.kb[0] * fx * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
+      const baseVy = m.spike ? m.kb[1] : (m.kb[1] === 0 ? -320 * js : m.kb[1] * js);
+      def.vy = baseVy * (m.spike ? 1 : Math.min(1.25, Math.max(0.82, 1 / Math.cbrt(defWeight))));
       def.spiked = !!m.spike; if (!m.spike) def.bounced = def.bounced && air;
       def.y = Math.min(def.y, -1);
     } else {
-      def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = m.kb[0] * fx;
+      const hitStunDur = m.stun * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1) * Math.min(1.22, Math.max(0.85, Math.pow(massRatio, 0.25)));
+      def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
     }
   }
   if (def.dummy && def.ctrl && def.ctrl.mode === 'fixed' && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
@@ -2490,7 +2544,8 @@ function applyHit(att, def, m, pt) {
 function hitVisual(ev, quiet) {
   const att = [A, B][ev.a], def = [A, B][ev.d];
   if (RESIM) {   // 重算：只保留影响对战的顿帧
-    if (ev.blk) hitstop = ev.hs * 0.7;
+    if (ev.guardBreak) hitstop = 0.22;
+    else if (ev.blk) hitstop = ev.hs * 0.7;
     else if (ev.armor) hitstop = Math.max(hitstop, ev.hs * 0.6);
     else hitstop = Math.max(hitstop, ev.hs * (att.ch.hitFeel || 1));
     if (ev.ko && !ev.blk && !ev.armor) hitstop = 0.28;   // 击杀的顿帧也会影响对战，重算时不能漏掉
@@ -2499,6 +2554,14 @@ function hitVisual(ev, quiet) {
   if (quiet) {   // 效果已经提前播过了，只更新连击数
     if (!ev.blk && !ev.armor && !ev.nc) { const cu = comboUI[ev.a]; if (cu.t <= 0 || ev.cn === 1) { cu.n = 0; cu.dmg = 0; } cu.n = ev.cn; cu.dmg += ev.dd; cu.t = 1.4; }
     def.lagDelay = 0.5; return;
+  }
+  if (ev.guardBreak) {
+    shake = Math.max(shake, 18); flashA = Math.max(flashA, 0.4); flashRGB = '255,100,80';
+    ring(ev.x, ev.y, 160, '255,120,80', 0.45);
+    addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
+    SFX.heavy();
+    hitstop = Math.max(hitstop, 0.22);
+    return;
   }
   if (ev.wb) { ring(ev.x, ev.y, 80, '255,255,255', 0.3); SFX.block(); }
   const fdir = ev.f || att.face;
@@ -3964,8 +4027,26 @@ function drawHUD() {
     if (i === 0) { g.addColorStop(0, '#2a8fb0'); g.addColorStop(1, '#8ff0ff'); } else { g.addColorStop(0, '#ff8a70'); g.addColorStop(1, '#c42a45'); }
     ctx.fillStyle = f.hp < f.maxHp * 0.25 && Math.sin(clock * 12) > 0 ? '#ffd0c0' : g;
     para(i === 0 ? x0 : x0 + barW - hpW, hpW, top, bh);
+
+    // 格挡架势条（Guard Posture Bar）：紧贴血条下方，显示英雄防御耐力
+    const gh = Math.max(4, Math.round(bh * 0.3)), gy = top + bh + 3;
+    const maxG = f.maxGuard || 100, curG = clamp(f.guard !== undefined ? f.guard : maxG, 0, maxG);
+    const gRatio = curG / maxG;
+    const gw = barW * (f.ch.inkShot ? 0.54 : 0.88);
+    const gx = i === 0 ? x0 : x0 + barW - gw;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(gx - 1, gy - 1, gw + 2, gh + 2);
+    let gCol = '#e9c46a';
+    if (gRatio < 0.3) gCol = Math.sin(clock * 14) > 0 ? '#ff3b52' : '#ff7a8a';
+    else if (gRatio < 0.6) gCol = '#f39c12';
+    ctx.fillStyle = gCol;
+    ctx.fillRect(i === 0 ? gx : gx + gw - gw * gRatio, gy, gw * gRatio, gh);
+    ctx.font = `${Math.round(gh * 1.8)}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'left' : 'right';
+    ctx.fillStyle = gRatio < 0.3 ? '#ff7a8a' : 'rgba(239,232,216,0.65)';
+    if (gRatio <= 0.02) ctx.fillText('💥 崩防', i === 0 ? gx + gw + 4 : gx - 4, gy + gh / 2);
+    else if (gRatio < 0.95 || f.state === 'block' || f.state === 'blockstun') ctx.fillText(`势 ${Math.round(curG)}`, i === 0 ? gx + gw + 4 : gx - 4, gy + gh / 2);
+
     if (f.ch.inkShot) {   // 墨羽的墨水条：贴在血条下面靠中间的一侧
-      const iw = barW * 0.4, ih = Math.max(5, bh * 0.5), iy = top + bh + 4, ix = i === 0 ? x0 + barW - iw : x0;
+      const iw = barW * 0.38, ih = Math.max(5, bh * 0.5), iy = top + bh + 3, ix = i === 0 ? x0 + barW - iw : x0;
       const k = clamp(f.ink / INK_MAX, 0, 1), low = f.ink < INK_COST;
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(ix - 1, iy - 1, iw + 2, ih + 2);
       ctx.fillStyle = low ? `rgba(200,80,70,${0.55 + 0.25 * Math.sin(clock * 8)})` : 'rgba(205,200,225,0.9)';
@@ -4517,9 +4598,9 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 let settingsBack = 'menu';
 const SETTING_ROWS = [
   { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
-  { k: 'bloom', name: '泛光', opts: [[0, '关'], [0.5, '低'], [1, '中'], [1.6, '高']] },
-  { k: 'fps', name: '帧率上限', opts: [[0, '不限'], [120, '120'], [60, '60'], [30, '30']] },
-  { k: 'quality', name: '画质', opts: [['auto', '自动'], ['high', '高'], ['mid', '中'], ['low', '低']] },
+  { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
+  { k: 'fps', name: '帧率上限', opts: [[0, '不限（原生高刷）'], [144, '144'], [120, '120'], [60, '60'], [30, '30']] },
+  { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
   { k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
   { k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
   { k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
@@ -4558,7 +4639,7 @@ function buildSettings() {
     ? `<div class="setrow"><span>${r.name}</span><div class="seg" data-k="${r.k}">${r.opts.map(([v, t]) => `<button data-v='${JSON.stringify(v)}' class="${SETTINGS[r.k] === v ? 'sel' : ''}">${t}</button>`).join('')}</div><span></span></div>`
     : `<div class="setrow"><span>${r.name}</span><input type="range" data-k="${r.k}" min="${r.range[0]}" max="${r.range[1]}" step="${r.range[2]}" value="${SETTINGS[r.k]}"><span class="v" id="sv_${r.k}">${Math.round(SETTINGS[r.k] * 100)}%</span></div>`).join('');
   const keyHtml = `
-    <div style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.08);padding-top:18px;">
+    <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <span style="font-family:${TITLE_FONT};font-size:18px;color:#e9c46a;">1P 键位设置</span>
         <button id="resetKeysBtn" class="ghost" style="padding:4px 12px;font-size:12px;">恢复默认</button>
@@ -4613,14 +4694,19 @@ let cxIdx = 0;
 demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)));
 function statRows(c) {
   const m = CHAR_MOVES[CHAR_IDX[c.id]];
+  const st = c.stat;
   const rows = [
-    ['生命', c.stat.hp, 150, `${c.stat.hp}`],
-    ['移动速度', WALK * c.stat.walk, WALK * 1.2, `${Math.round(WALK * c.stat.walk)}`],
-    ['抬手速度', 1 / m.l1.su, 1 / (0.075 * 0.78), `${Math.round(m.l1.su * 1000)}ms`],
-    ['挥刀速度', 1 / m.l1.ac, 1 / (0.07 * 0.72), `${Math.round(m.l1.ac * 1000)}ms`],
-    ['伤害', c.stat.dmg, 1.25, `×${c.stat.dmg}`],
+    ['生命上限', st.hp, 150, `${st.hp}`],
+    ['体量压制', st.weight || 1, 2.0, `${st.weight || 1}×`],
+    ['防御减伤', st.defRating || 1, 1.25, `×${st.defRating || 1}`],
+    ['格挡架势', st.guardMax || 100, 160, `${st.guardMax || 100}`],
+    ['格挡稳定性', st.guardStab || 1, 2.0, `×${st.guardStab || 1}`],
+    ['格挡穿透伤', Math.round((st.guardChip || 0.12) * 100), 20, `${Math.round((st.guardChip || 0.12) * 100)}%`],
+    ['受击硬直', st.poise || 1, 1.25, `×${st.poise || 1}`],
+    ['移动速度', WALK * st.walk, WALK * 1.2, `${Math.round(WALK * st.walk)}`],
+    ['基础伤害', st.dmg, 1.25, `×${st.dmg}`],
     ['攻击距离', m.l1.box[2], 130, `${Math.round(m.l1.box[2])}`],
-    ['跳跃高度', c.stat.jump || 1, 1.2, `×${c.stat.jump || 1}`],
+    ['跳跃高度', st.jump || 1, 1.2, `×${st.jump || 1}`],
     ['卡肉感', c.hitFeel || 1, 1.6, `×${c.hitFeel || 1}`],
   ];
   if (c.fly) rows.push(['飞行时间', c.fly, 3, `${c.fly} 秒`]);
@@ -5835,8 +5921,6 @@ function touchUIUpdate() {
 }
 if (TOUCH) {
   document.body.classList.add('touchdev');
-  let saved = null; try { saved = localStorage.getItem('renying-settings'); } catch (e) {}
-  if (!saved) { SETTINGS.quality = 'mid'; SETTINGS.bloom = 0.5; saveSettings(); resize(); }   // 手机第一次打开：画质中、泛光低
   for (const b of document.querySelectorAll('#touchUI [data-a]')) {
     b.addEventListener('pointerdown', e => {
       e.preventDefault(); initAudio(); try { b.setPointerCapture(e.pointerId); } catch (err) {} b.classList.add('on');
@@ -5911,7 +5995,7 @@ function startTraining() {
 }
 function renderTrainPick() {
   const av = availList();
-  $id('trPick').innerHTML = CHARS.map((c, i) => `<button data-i="${i}" class="${i === trainChar ? 'sel' : ''}" style="color:rgb(${c.look.slash})">${c.name}${av.includes(i) ? '' : '<small style="font-size:11px;margin-left:3px;color:var(--dim)">试用</small>'}</button>`).join('');
+  $id('trPick').innerHTML = CHARS.map((c, i) => `<button data-i="${i}" class="${i === trainChar ? 'sel' : ''}" style="color:rgb(${c.look.slash})">${c.name}${av.includes(i) ? '' : '<small style="font-size:12px;margin-left:4px;color:var(--dim)">试用</small>'}</button>`).join('');
 }
 $id('trPick').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { trainChar = +b.dataset.i; renderTrainPick(); SFX.slice(); } });
 $id('trainBtn').addEventListener('click', startTraining);
@@ -6422,12 +6506,12 @@ function renderAcc() {
   const isCloud = window.CloudSave && CloudSave.hasValidConfig();
   const cloudBadge = isCloud
     ? '<span class="rk" style="background:rgba(70,211,234,.18);color:#46d3ea">云端已连</span>'
-    : '<span class="rk" style="background:rgba(233,196,106,.15);color:#e9c46a">本地单号</span>';
+    : '<span class="rk" style="background:rgba(233,196,106,.15);color:#e9c46a">本地存档</span>';
   const devBadge = DEV_SESSION_UNLOCKED
     ? '<span class="rk" style="background:rgba(255,107,107,.2);color:#ff6b6b;font-weight:700" title="开发者特权：本会话全角色已临时解锁，关闭网页后恢复">Dev 会话全解锁</span>'
     : '';
   bar.innerHTML = u && u.name
-    ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}${devBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号/云设置</button><button class="ghost" id="logoutBtn">退出</button>`
+    ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}${devBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号与云存档</button><button class="ghost" id="logoutBtn">退出</button>`
     : `<button class="ghost" id="accOpen">登录 / 注册</button>${devBadge}`;
   $id('accHint').textContent = DEV_SESSION_UNLOCKED
     ? (u && u.name ? `当前登录：【${u.name}】· ` : '') + '🛠️ 开发者特权生效中：本会话全角色已临时解锁（关闭网页即恢复真实存档）'
@@ -6813,10 +6897,11 @@ window.addEventListener('blur', () => { human[0].clear(); human[1].clear(); if (
 function resize() {
   const r = cv.getBoundingClientRect(); W = r.width || innerWidth; H = r.height || innerHeight;
   DPR = Math.min(window.devicePixelRatio || 1, 2);
-  // 画质：自动模式把画布限制在约 260 万像素以内（5K 屏幕原生分辨率太高，帧率会掉）
+  // 画质：极高画质（high）采用完整原生物理像素，绝不进行像素降级或压缩
   const q = SETTINGS.quality;
-  if (q === 'auto') DPR = Math.min(DPR, Math.sqrt(2.6e6 / Math.max(1, W * H)));
-  else DPR = Math.min(DPR, { high: 2, mid: 1.25, low: 0.85 }[q] || 2);
+  if (q === 'low') DPR = Math.min(window.devicePixelRatio || 1, 0.85);
+  else if (q === 'mid') DPR = Math.min(window.devicePixelRatio || 1, 1.25);
+  else DPR = Math.min(window.devicePixelRatio || 1, 2.5);
   DPR = Math.max(0.5, DPR);
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
 }

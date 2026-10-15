@@ -31,7 +31,16 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Improved
 
-- **Hero Max HP Archetype Rebalance**:
+- **Stature Advantage, Physical Attributes & Guard Posture System**:
+  - Expanded all 9 heroes with comprehensive realistic physical and defensive attributes: `weight` (mass & knockback inertia), `defRating` (armor absorption), `guardMax` (posture stamina), `guardStab` (stability divider), `guardChip` (chip damage fraction), `guardRegen` (recovery rate), `poise` (hitstun reduction), and `size` (collision scale).
+  - Heavy titans and veteran masters (e.g., Tie Shan at 1.65 mass, Lei Ming at 1.30 mass) exert kinetic mass suppression (`massRatio`) over lighter/smaller heroes (e.g., Fei Ying at 0.72 mass).
+  - Implemented the **Guard Posture & Guard Break (💥 破防崩势)** mechanic: holding block against heavy strikes depletes guard posture; small heroes with fragile guard (70) and low stability (0.7) risk shattering in 2-3 heavy hits, compelling them to leverage speed, spacing, and backstabs rather than facetanking.
+  - Added dynamic real-time Guard Posture bars to the in-game HUD with multi-stage color warnings and break alerts.
+  - Expanded Codex attribute rows to showcase weight class, defense rating, guard posture, stability, chip damage, and poise.
+- **Elimination of Settings Downgrades & Best Quality Defaults**:
+  - Completely eliminated optimized/downgraded defaults: removed the `auto` resolution cap (formerly capping render buffer at 2.6M pixels) and removed mobile initialization downscaling in the touch handler.
+  - Default settings now initialize to the absolute highest quality and unlimited refresh rate: `quality: 'high'` (100% native HiDPI/Retina pixel resolution), `fps: 0` (unlimited refresh rate matching 120Hz/144Hz/240Hz/ProMotion displays), `bloom: 1.6` (high bloom), `blur: true`, and full sound fidelity.
+  - Existing local storage configs automatically migrate legacy `auto` modes up to `high`.
   - Significantly buffed Tie Shan (`tieshan`) from 103 to 140 Max HP, with increased walk speed (0.84) and attack damage (1.12), firmly establishing his role as the premier heavy-armor tank.
   - Rebalanced the entire character roster's HP based on weight class and agility: Lei Ming (118), Qing Feng (105), Ling Shuang (100), Liu Yun (92), Yan Ling (90), Mo Yu (90), Fei Ying (88), and Yue Hua (88).
   - Updated Codex stat progress bar scale ceiling to 150 HP for clean UI representation.

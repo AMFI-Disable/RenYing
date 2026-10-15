@@ -28,7 +28,7 @@
   </div>
 
   <div id="single" class="scr">
-    <div class="panel narrowp">
+    <div class="panel singlep">
       <h2 id="singleT">单人练习</h2>
       <div data-sec="cpu">
         <h3 class="spt">对战电脑</h3>
@@ -38,7 +38,7 @@
       </div>
       <div data-sec="stage">
         <h3 class="spt">闯关模式</h3>
-        <p class="sub" style="margin:0 0 10px">六章，每章五关：前四关斩妖物，第五关会守关高手。通关方能解锁下一关——余血越多，得星越多。</p>
+        <p class="sub" style="margin:0 0 10px">六章，每章五关：前四关斩妖物，第五关挑战守关高手。通关方能解锁下一关——余血越多，得星越多。</p>
       </div>
       <div data-sec="stage train"><p class="netnote" style="margin:4px 0 8px">选择角色</p><div class="trpick" id="trPick"></div></div>
       <div data-sec="stage">
@@ -155,10 +155,10 @@
   </div>
 
   <div id="settings" class="scr">
-    <div class="panel narrowp setp">
+    <div class="panel setp">
       <h2>设置</h2>
       <div class="setlist" id="setList"></div>
-      <p class="netnote">设置只存在这台电脑的浏览器里。画面发卡的话，先把“画质”调低，或关掉“背景虚化”。</p>
+      <p class="netnote">设置保存在当前浏览器中。默认启用原生极高画质与不限帧率，尽享丝滑水墨对战。</p>
       <div class="row"><button class="go small" id="setDone">完成</button></div>
     </div>
   </div>
@@ -207,21 +207,21 @@
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
-      <div style="margin-top:12px;text-align:center"><button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px">☁️ 云存档设置 (Firebase)</button></div>
+      <div style="margin-top:12px;text-align:center"><button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px">☁️ 云存档设置</button></div>
       <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
-        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>Firebase 云存储配置</b>（跨设备单账号持久化）</p>
-        <p class="netnote" style="margin:0 0 6px">可直接粘贴 Firebase Web 配置 JSON（包含 projectId, apiKey 等）：</p>
-        <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:11px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
+        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云存档配置</b>（跨设备同步同一账号）</p>
+        <p class="netnote" style="margin:0 0 6px">粘贴你的 Firebase 网页配置（含 projectId、apiKey）：</p>
+        <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
         <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
       </div>
       <div style="margin-top:14px;border-top:1px dashed var(--faint);padding-top:10px">
         <div style="display:flex;gap:8px;align-items:center">
-          <input id="accRdCode" maxlength="32" placeholder="开发者兑换码 (输入 DEV 激活全解锁)" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;padding:6px 10px;font-size:12px;background:rgba(0,0,0,0.3);color:var(--ink);border:1px solid var(--faint);border-radius:6px">
+          <input id="accRdCode" maxlength="32" placeholder="开发者兑换码（输入 DEV 可全解锁）" autocomplete="off" spellcheck="false" style="flex:1;min-width:0;padding:6px 10px;font-size:12px;background:rgba(0,0,0,0.3);color:var(--ink);border:1px solid var(--faint);border-radius:6px">
           <button class="ghost small" id="accRdBtn" style="font-size:12px;padding:5px 12px;white-space:nowrap">兑换</button>
         </div>
-        <p class="netnote" style="margin:4px 0 0;font-size:11px">开发者特权仅在当前窗口会话临时生效，不会污染真实云端存档。关闭或新建窗口后自动恢复锁定。</p>
+        <p class="netnote" style="margin:4px 0 0;font-size:12px">开发者特权仅在当前窗口会话临时生效，不会污染真实云端存档。关闭或新建窗口后自动恢复锁定。</p>
       </div>
-      <p class="netnote" style="margin-top:14px">登录或注册后，英雄解锁、墨锭余额与成就数据将持久化保存。</p>
+      <p class="netnote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
     </div>
   </div>
 
