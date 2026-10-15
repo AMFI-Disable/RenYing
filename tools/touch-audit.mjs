@@ -45,6 +45,7 @@ const chrome = spawn(CHROME, [
   `--remote-debugging-port=${PORT}`, '--remote-allow-origins=*', '--remote-debugging-address=127.0.0.1',
   `--user-data-dir=${OUT}/chrome`, '--window-size=844,390', 'about:blank',
 ], { stdio: ['ignore', logFd, logFd] });
+process.on('exit', () => { try { chrome.kill(); } catch (e) {} });
 
 let wsUrl = null;
 for (let i = 0; i < 80 && !wsUrl; i++) { await sleep(250);

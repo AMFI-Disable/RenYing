@@ -149,6 +149,7 @@ const chrome = spawn(CHROME, [
   `--remote-debugging-port=${PORT}`, '--remote-allow-origins=*', '--remote-debugging-address=127.0.0.1',
   `--user-data-dir=${OUT}/chrome`, `--window-size=${VW},${VH}`, URL,
 ], { stdio: ['ignore', logFd, logFd] });
+process.on('exit', () => { try { chrome.kill(); } catch (e) {} });
 
 // read the browser-level ws endpoint out of the log (no HTTP dependency)
 let wsUrl = null;
@@ -224,7 +225,7 @@ const STRICT = !!process.env.RENYING_STRICT;
 // Composition gate: asserted at desktop sizes, where the draft must fit one screen and look deliberate.
 const compProblems = [];
 for (const a of audit) {
-  if (!a || !a.bp || a.vw < 1200 || a.vh < 820) continue;
+  if (!a || !a.bp || a.vw < 1200 || a.vh < 800) continue;
   const b = a.bp;
   if (a.needsScroll) compProblems.push(`draft needs scrolling (${a.panelScroll}px of content in ${a.panelClient}px)`);
   if (b.partialLastRow && !b.lastRowCentered) compProblems.push(`hero grid leaves an orphan row piled to the left (gaps ${b.gaps})`);

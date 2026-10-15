@@ -7312,21 +7312,11 @@ function bpDetailHTML(i) {
   const curSkin = mySkin(c.id);
   const L = skinLook(i, curSkin);
   const col = `rgb(${L.slash})`;
-  const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   const nm = ids => (ids || []).map(id => (CHARS[CHAR_IDX[id]] ? CHARS[CHAR_IDX[id]].name : id)).filter(Boolean).join('、') || '无';
-
-  const skinBtns = `<button class="bp-skin-btn ${curSkin ? '' : 'sel'}" data-sk="" data-i="${i}">默认</button>` +
-    skList.map(([k, v]) => {
-      const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
-      return `<button class="bp-skin-btn ${curSkin === k ? 'sel' : ''}${has ? '' : ' lock'}" data-sk="${k}" data-i="${i}" ${has ? '' : 'disabled title="尚未解锁该皮肤"'} style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : ' (未解锁)'}</button>`;
-    }).join('');
 
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
     <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
-    <div class="bp-skin-bar">
-      <span style="font-size:12px;color:var(--dim)">装配皮肤:</span>
-      ${skinBtns}
-    </div>
+    <!-- 皮肤改在角色图鉴里装配：选人是有时限的，这里只显示当前装束 -->
     <div class="meta"><span>${c.role}</span><span>上手难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${c.stat.hp}</span></div>
     <dl><dt>被动 ${c.passiveName}</dt><dd>${c.passiveDesc}</dd>
     <dt>技能 ${S.name}</dt><dd>${S.desc}（冷却 ${S.cd} 秒）</dd>
@@ -7357,6 +7347,7 @@ function updateBPDeck(i) {
   const tabsEl = $id('bpDeckTabs');
   if (tabsEl) {
     tabsEl.innerHTML = tabs.map(t => `<button class="${t.k === bpDeckMove ? 'sel' : ''}" data-m="${t.k}">${t.lab}</button>`).join('');
+    requestAnimationFrame(() => tabsEl.classList.toggle('overflowing', tabsEl.scrollWidth > tabsEl.clientWidth + 2));
   }
   const hit = (HERO_HIT_DETAILS[ch.id] && HERO_HIT_DETAILS[ch.id][bpDeckMove]) || { name: '', badge: '', badgeCls: 'badge-buff', dmg: '', desc: '' };
   const nameEl = $id('bpdHitName');
@@ -7462,7 +7453,9 @@ function renderBP() {
     const lock = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && myAv && !myAv.includes(i);
     const free = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !(PROF.owned || []).includes(c.id) && (PROF.rotation || []).includes(c.id);
     const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
-    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" ${can ? '' : 'aria-disabled="true"'}>
+    const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
+    const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
+    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
       ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
   const show = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);
@@ -7493,6 +7486,27 @@ document.getElementById('bpGrid').addEventListener('dblclick', e => {
   const i = +b.dataset.i;
   if (BP_STEPS[BP.step][0] !== bpMySide() || !bpValid(i)) return;
   bpSel = i; bpConfirm();
+});
+// 方向键在角色卡之间移动焦点（Enter 触发 click：第一次选中，400 毫秒内再按一次即确认），
+// 按实际行分组，窄屏换成多行时上下键依然正确
+document.getElementById('bpGrid').addEventListener('keydown', e => {
+  const k = e.key;
+  if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown') return;
+  if (!BP || BP.step >= 4) return;
+  const cards = [...document.querySelectorAll('#bpGrid .bpcard')];
+  if (!cards.length) return;
+  const rows = new Map();
+  cards.forEach((c, i) => { const t = Math.round(c.getBoundingClientRect().top); if (!rows.has(t)) rows.set(t, []); rows.get(t).push(i); });
+  const rowList = [...rows.values()];
+  const cur = cards.indexOf(document.activeElement);
+  let idx = cur < 0 ? 0 : cur;
+  const r = Math.max(0, rowList.findIndex(list => list.includes(idx)));
+  const row = rowList[r], pos = row.indexOf(idx);
+  if (k === 'ArrowLeft') idx = row[Math.max(0, pos - 1)];
+  else if (k === 'ArrowRight') idx = row[Math.min(row.length - 1, pos + 1)];
+  else if (k === 'ArrowUp' && r > 0) idx = rowList[r - 1][Math.min(pos, rowList[r - 1].length - 1)];
+  else if (k === 'ArrowDown' && r < rowList.length - 1) idx = rowList[r + 1][Math.min(pos, rowList[r + 1].length - 1)];
+  if (idx !== cur) { e.preventDefault(); cards[idx].focus(); }
 });
 // 悬停：更新下部检视视窗
 let popIdx = -1;
