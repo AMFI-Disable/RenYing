@@ -6879,7 +6879,7 @@ async function redeemCode(rawCode) {
   const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
   if (!code) return;
   const up = code.toUpperCase();
-  if (['LOCK', 'DEVLOCK', 'RELOCK'].includes(up)) {
+  if (['LOCK', 'RELOCK'].includes(up)) {
     DEV_SESSION_UNLOCKED = false;
     try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
     if ($id('rdCode')) $id('rdCode').value = '';
@@ -6923,8 +6923,6 @@ async function redeemCode(rawCode) {
 $id('rdBtn').addEventListener('click', () => redeemCode());
 $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode(); });
 window.redeemCode = redeemCode;
-window.DEV_UNLOCK = () => triggerStealthDevUnlock();
-window.DEV_LOCK = () => redeemCode('LOCK');
 // ---------- 排位 ----------
 function renderRankLine() {
   $id('rankLine').textContent = !SERVED ? '' : !ACC.name ? '排位赛需先登录' : PROF.rank ? `你的段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
@@ -8610,7 +8608,7 @@ function renderAcc() {
   // 开发者专享：全量备份与 Google Cloud 编辑器仅向 Dev 账号开放
   const actionBtns = $id('accActionBtns');
   if (actionBtns) {
-    const isDev = (u && u.name && u.name.toLowerCase() === 'dev') || (u && u.isDevMaster);
+    const isDev = !!(u && u.isDevMaster);
     const devCloudBtn = $id('devCloudBtn');
     if (devCloudBtn) {
       if (isDev) devCloudBtn.classList.remove('hidden');
@@ -8724,7 +8722,7 @@ async function doAcc(kind) {
       ACC.name = res.name;
       ACC.token = res.uid;
       PROF.guest = false;
-      if (res.isDevMaster || (res.name && res.name.toLowerCase() === 'dev')) {
+      if (res && res.isDevMaster) {
         triggerStealthDevUnlock(true);
       }
       const loaded = await CloudSave.loadProfile();

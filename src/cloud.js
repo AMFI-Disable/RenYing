@@ -310,7 +310,7 @@
   // 获取当前用户
   function getUser() {
     if (currentUser) {
-      const isDev = !!currentUser.isDevMaster || (currentUser.displayName && currentUser.displayName.toLowerCase() === 'dev');
+      const isDev = !!currentUser.isDevMaster;
       return {
         uid: currentUser.uid,
         name: currentUser.displayName || currentUser.email || '大侠',
@@ -321,7 +321,7 @@
     try {
       const local = JSON.parse(localStorage.getItem('renying-local-current') || 'null');
       if (local && local.uid) {
-        const isDev = !!local.isDevMaster || (local.name && local.name.toLowerCase() === 'dev');
+        const isDev = !!local.isDevMaster;
         currentUser = { uid: local.uid, displayName: local.name, isDevMaster: isDev };
         return { ...local, isCloud: false, isDevMaster: isDev };
       }
@@ -471,7 +471,7 @@
   // 打包导出当前浏览器所有本地账号存档 (.json)（仅管理员）
   function exportAllAccounts() {
     const u = getUser();
-    const isDev = (u && u.name && u.name.toLowerCase() === 'dev') || (u && u.isDevMaster);
+    const isDev = !!(u && u.isDevMaster);
     if (!isDev) {
       throw new Error('只有管理员可导出全量账号备份');
     }

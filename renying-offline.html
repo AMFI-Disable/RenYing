@@ -1276,7 +1276,7 @@
           </div>
           <p class="sub" style="margin:4px 0 14px;text-align:left">输入官方发布的礼包兑换码或密令，兑换丰厚墨锭与珍稀福利。</p>
           <div class="row redeemrow">
-            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码（如 DEV）" autocomplete="off" spellcheck="false">
+            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码（如 RENYING666）" autocomplete="off" spellcheck="false">
             <button class="go" id="rdBtn">兑换</button>
           </div>
           <p class="netnote" id="tMsg" style="min-height:22px;margin-top:6px"></p>
@@ -1716,7 +1716,7 @@
   // 获取当前用户
   function getUser() {
     if (currentUser) {
-      const isDev = !!currentUser.isDevMaster || (currentUser.displayName && currentUser.displayName.toLowerCase() === 'dev');
+      const isDev = !!currentUser.isDevMaster;
       return {
         uid: currentUser.uid,
         name: currentUser.displayName || currentUser.email || '大侠',
@@ -1727,7 +1727,7 @@
     try {
       const local = JSON.parse(localStorage.getItem('renying-local-current') || 'null');
       if (local && local.uid) {
-        const isDev = !!local.isDevMaster || (local.name && local.name.toLowerCase() === 'dev');
+        const isDev = !!local.isDevMaster;
         currentUser = { uid: local.uid, displayName: local.name, isDevMaster: isDev };
         return { ...local, isCloud: false, isDevMaster: isDev };
       }
@@ -1877,7 +1877,7 @@
   // 打包导出当前浏览器所有本地账号存档 (.json)（仅管理员）
   function exportAllAccounts() {
     const u = getUser();
-    const isDev = (u && u.name && u.name.toLowerCase() === 'dev') || (u && u.isDevMaster);
+    const isDev = !!(u && u.isDevMaster);
     if (!isDev) {
       throw new Error('只有管理员可导出全量账号备份');
     }
@@ -8947,7 +8947,7 @@ async function redeemCode(rawCode) {
   const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
   if (!code) return;
   const up = code.toUpperCase();
-  if (['LOCK', 'DEVLOCK', 'RELOCK'].includes(up)) {
+  if (['LOCK', 'RELOCK'].includes(up)) {
     DEV_SESSION_UNLOCKED = false;
     try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
     if ($id('rdCode')) $id('rdCode').value = '';
@@ -8991,8 +8991,6 @@ async function redeemCode(rawCode) {
 $id('rdBtn').addEventListener('click', () => redeemCode());
 $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode(); });
 window.redeemCode = redeemCode;
-window.DEV_UNLOCK = () => triggerStealthDevUnlock();
-window.DEV_LOCK = () => redeemCode('LOCK');
 // ---------- 排位 ----------
 function renderRankLine() {
   $id('rankLine').textContent = !SERVED ? '' : !ACC.name ? '排位赛需先登录' : PROF.rank ? `你的段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
@@ -10678,7 +10676,7 @@ function renderAcc() {
   // 开发者专享：全量备份与 Google Cloud 编辑器仅向 Dev 账号开放
   const actionBtns = $id('accActionBtns');
   if (actionBtns) {
-    const isDev = (u && u.name && u.name.toLowerCase() === 'dev') || (u && u.isDevMaster);
+    const isDev = !!(u && u.isDevMaster);
     const devCloudBtn = $id('devCloudBtn');
     if (devCloudBtn) {
       if (isDev) devCloudBtn.classList.remove('hidden');
@@ -10792,7 +10790,7 @@ async function doAcc(kind) {
       ACC.name = res.name;
       ACC.token = res.uid;
       PROF.guest = false;
-      if (res.isDevMaster || (res.name && res.name.toLowerCase() === 'dev')) {
+      if (res && res.isDevMaster) {
         triggerStealthDevUnlock(true);
       }
       const loaded = await CloudSave.loadProfile();
