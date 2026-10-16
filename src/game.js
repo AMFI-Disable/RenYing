@@ -2595,7 +2595,11 @@ function updateFighter(f, foe) {
   f.buffT = Math.max(0, f.buffT - STEP);
   f.sinceBlock = (f.sinceBlock || 0) + STEP;
   if (f.state !== 'block' && f.state !== 'blockstun' && f.sinceBlock > 0.6) {
-    const regen = ((f.ch && f.ch.stat && f.ch.stat.guardRegen) || 26) * STEP;
+    const baseRegen = ((f.ch && f.ch.stat && f.ch.stat.guardRegen) || 26);
+    // 现实武侠调息呼吸法：静止调息更快，体力消耗过半后调息变缓，移动/出招时调息减半
+    const hpFactor = clamp(0.55 + 0.45 * (f.hp / f.maxHp), 0.55, 1.0);
+    const stateBonus = (f.state === 'idle' && f.onGround()) ? 1.25 : (['walk', 'air'].includes(f.state) ? 0.8 : 0.5);
+    const regen = baseRegen * hpFactor * stateBonus * STEP;
     f.guard = Math.min(f.maxGuard, (f.guard !== undefined ? f.guard : f.maxGuard) + regen);
   }
   if (f.state === 'skill' && f.skill === 'mirror') f.parryT = Math.max(0, f.parryT - STEP);
@@ -2682,8 +2686,10 @@ function physics(f) {
   if (f.y >= 0) { f.y = 0; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
   const onG = f.y >= 0;
   const slide = f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].nofric;
-  if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, 9, STEP);
-  if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? 7 : 14, STEP);
+  const fw = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
+  const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12);
+  if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, dampK, STEP);
+  if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? (dampK * 0.75) : (dampK * 1.5), STEP);
   if (f.x < WALL || f.x > STAGE_W - WALL) {
     const side = f.x < WALL ? -1 : 1;
     f.x = side < 0 ? WALL : STAGE_W - WALL;
@@ -2751,24 +2757,57 @@ function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box), hu = hurtbox(foe);
   if (!overlap(hb, hu)) return;
 
-  // 真实拼刀截击机制（Blade Clash）：双方近身兵刃招式在活跃攻击帧相撞
+  // 真实物理拼刀截击机制（Dynamic Blade Clash）：活跃攻击帧相撞，按两方武器动能与体量动态判定弹刀与压制
   if (!m.isProj && !m.ult && !m.unblockable && foe.state === 'attack' && foe.move && foe.move.box && !foe.hitDone) {
     const foeSu = foe.move.su || 0.04, foeAc = foe.move.ac || 0.08;
     if (foe.t >= foeSu && foe.t <= foeSu + foeAc) {
       const foeHb = hitbox(foe, foe.move.box);
       if (overlap(hb, foeHb)) {
-        f.hitDone = true; foe.hitDone = true;
         const cx = (hb[0] + hb[2] + foeHb[0] + foeHb[2]) / 4;
         const cy = (hb[1] + hb[3] + foeHb[1] + foeHb[3]) / 4;
-        f.vx = -f.face * 180; foe.vx = -foe.face * 180;
-        f.t = Math.max(f.t, foeSu + foeAc);
-        foe.t = Math.max(foe.t, foeSu + foeAc);
-        SFX.parry();
-        shake = Math.max(shake, 8);
-        ring(cx, cy, 140, '255,225,120', 0.35);
-        for (let i = 0; i < 7; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-260, 260), vy: rand(-260, 260), rgb: '255,220,120', life: 0.22, max: 0.22 });
-        addP({ type: 'text', text: '⚔️ 拼刀', x: cx, y: cy - 40, life: 0.6, max: 0.6, rgb: '255,225,120' });
-        return;
+        const fWeight = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
+        const foeWeight = (foe.ch && foe.ch.stat && foe.ch.stat.weight) || 1;
+        // 招式冲击动能 E = 0.5 * Mass * (Dmg / Speed)^1.2
+        const fSpeed = (f.ch && f.ch.stat && f.ch.stat.speed) || 1;
+        const foeSpeed = (foe.ch && foe.ch.stat && foe.ch.stat.speed) || 1;
+        const e1 = fWeight * Math.pow((m.dmg || 15) / Math.max(0.5, fSpeed), 1.15);
+        const e2 = foeWeight * Math.pow((foe.move.dmg || 15) / Math.max(0.5, foeSpeed), 1.15);
+        const eRatio = e1 / Math.max(0.1, e2);
+
+        if (eRatio >= 2.2) {
+          // 重武器完全压制轻武器：轻武器被强力荡开，重攻击完成穿透
+          foe.hitDone = true;
+          foe.state = 'hitstun'; foe.t = 0; foe.stun = 0.32; foe.vx = -foe.face * 260;
+          f.vx *= 0.5;
+          shake = Math.max(shake, 12); SFX.heavy(); SFX.parry();
+          ring(cx, cy, 170, '255,200,90', 0.45);
+          for (let i = 0; i < 9; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-320, 320), vy: rand(-320, 320), rgb: '255,200,90', life: 0.25, max: 0.25 });
+          addP({ type: 'text', text: '⚡ 破势荡刃', x: cx, y: cy - 40, life: 0.7, max: 0.7, rgb: '255,210,100' });
+          return;
+        } else if (eRatio <= 0.45) {
+          // 对手重武器完全压制我方轻武器
+          f.hitDone = true;
+          f.state = 'hitstun'; f.t = 0; f.stun = 0.32; f.vx = -f.face * 260;
+          foe.vx *= 0.5;
+          shake = Math.max(shake, 12); SFX.heavy(); SFX.parry();
+          ring(cx, cy, 170, '255,200,90', 0.45);
+          for (let i = 0; i < 9; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-320, 320), vy: rand(-320, 320), rgb: '255,200,90', life: 0.25, max: 0.25 });
+          addP({ type: 'text', text: '⚡ 破势荡刃', x: cx, y: cy - 40, life: 0.7, max: 0.7, rgb: '255,210,100' });
+          return;
+        } else {
+          // 均势拼刀：基于冲量定理按质量反弹
+          f.hitDone = true; foe.hitDone = true;
+          f.vx = -f.face * clamp(210 / Math.sqrt(fWeight), 130, 280);
+          foe.vx = -foe.face * clamp(210 / Math.sqrt(foeWeight), 130, 280);
+          f.t = Math.max(f.t, foeSu + foeAc);
+          foe.t = Math.max(foe.t, foeSu + foeAc);
+          SFX.parry();
+          shake = Math.max(shake, 8);
+          ring(cx, cy, 140, '255,225,120', 0.35);
+          for (let i = 0; i < 7; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-260, 260), vy: rand(-260, 260), rgb: '255,220,120', life: 0.22, max: 0.22 });
+          addP({ type: 'text', text: '⚔️ 拼刀', x: cx, y: cy - 40, life: 0.6, max: 0.6, rgb: '255,225,120' });
+          return;
+        }
       }
     }
   }
@@ -2903,6 +2942,19 @@ function applyHit(att, def, m, pt) {
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
   let dmg = (m.dmg * scale) / defRating;
   if (isCounter) { ev.counter = true; dmg *= 1.2; ev.big = true; }
+  // 现实相向冲锋迎击动能加成（Relative Velocity Impact）：双方相向冲锋或飞冲碰撞时，伤害自然放大 5%~25%
+  if (!m.isProj && !m.ult) {
+    const vAtt = att.vx * att.face; // 朝向正向速度
+    const vDef = -def.vx * att.face; // 迎面撞向攻击者的速度
+    const relativeV = Math.max(0, vAtt + vDef);
+    if (relativeV > 320) {
+      const vBonus = clamp((relativeV - 320) / 1600, 0, 0.25);
+      dmg *= (1 + vBonus);
+      if (vBonus >= 0.12 && !isClient()) {
+        addP({ type: 'text', text: '迎锋破阵', x: pt[0], y: pt[1] - 48, life: 0.55, max: 0.55, rgb: '255,230,130' });
+      }
+    }
+  }
   if (att.buffT > 0 && !m.isProj) { dmg *= 1.5; att.buffT = 0; ev.big = true; }
   // 凌霜枪尖机制：最远端枪尖命中增伤且大幅挑空，贴身过近被压制削伤
   if (att.ch.passive === 'tip' && !m.isProj && !m.ult) {
