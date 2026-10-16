@@ -24,9 +24,15 @@ const ROOT = path.resolve(__dirname, '..');
 
 const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua'];
 const DEV_ALL_SKINS = [
-  'qf_gold', 'qf_frost', 'yl_phoenix', 'yl_raven', 'lm_sun', 'lm_violet',
-  'ts_bronze', 'ts_obsidian', 'ly_sky', 'ly_dusk', 'ls_plum', 'ls_aurora',
-  'my_cinnabar', 'my_ghost', 'fy_blood', 'fy_jade', 'yh_sakura', 'yh_nether'
+  'qf_frost', 'qf_gold', 'qf_qfx',
+  'fy_jade', 'fy_blood',
+  'ts_bronze', 'ts_obsidian',
+  'ls_plum', 'ls_aurora',
+  'ly_dusk', 'ly_sky',
+  'lm_violet', 'lm_sun',
+  'my_cinnabar', 'my_gold',
+  'yh_sakura', 'yh_eclipse',
+  'yl_raven', 'yl_phoenix'
 ];
 
 function getFirebaseConfig() {

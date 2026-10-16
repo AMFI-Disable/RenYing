@@ -1187,9 +1187,15 @@
 
   const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua'];
   const DEV_ALL_SKINS = [
-    'qf_gold', 'qf_frost', 'yl_phoenix', 'yl_raven', 'lm_sun', 'lm_violet',
-    'ts_bronze', 'ts_obsidian', 'ly_sky', 'ly_dusk', 'ls_plum', 'ls_aurora',
-    'my_cinnabar', 'my_ghost', 'fy_blood', 'fy_jade', 'yh_sakura', 'yh_nether'
+    'qf_frost', 'qf_gold', 'qf_qfx',
+    'fy_jade', 'fy_blood',
+    'ts_bronze', 'ts_obsidian',
+    'ls_plum', 'ls_aurora',
+    'ly_dusk', 'ly_sky',
+    'lm_violet', 'lm_sun',
+    'my_cinnabar', 'my_gold',
+    'yh_sakura', 'yh_eclipse',
+    'yl_raven', 'yl_phoenix'
   ];
 
   function makeDevProfile() {
@@ -1997,7 +2003,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 140 && d < 330 },
-  blink: { name: '影遁', cd: 11, pass: true, desc: '结印入影，现身对手背后施展十字绞杀，附带【穴道封脉】强定身（0.8 秒）。此后 1.5 秒内，下一击威力暴涨 50%。',
+  blink: { name: '影遁', cd: 11, pass: true, desc: '结印入影，现身对手背后施展十字绞杀，附带【穴道封脉】强定身（0.45 秒）。此后 1.5 秒内，下一击威力暴涨 30%。',
     start() {},
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.14) {
@@ -2011,7 +2017,7 @@ const SKILLS = {
         smoke(f.x, f.y - 50, 10); SFX.poof();
         slashLine(foe.x, foe.y - 60, 0.5, '255,95,115'); slashLine(foe.x, foe.y - 60, -0.5, '255,95,115'); SFX.slice();
         if (foe.invul <= 0 && foe.hp > 0) {
-          applyHit(f, foe, { dmg: 4, kb: [50, 0], stun: 0.8, hs: 0.12, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
+          applyHit(f, foe, { dmg: 4, kb: [50, 0], stun: 0.45, hs: 0.10, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
           addP({ type: 'text', text: '⚡ 封脉定身', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,100,120' });
         }
       }
@@ -2019,14 +2025,14 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 36] : ['fy_xslash', 40],
     ai: (me, foe, d) => d > 170 },
-  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（3次抵挡），砸地直击施加【撼地重震】（0.85 秒重度脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
-    start(f) { f.armorT = 0.35; f.armorHits = 99; f.vx = 0; },
+  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡2次攻击），砸地直击施加【撼地重震】（0.55 秒重度脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
+    start(f) { f.armorT = 0.35; f.armorHits = 2; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.22) {
         f.skPh = 1; f.t = 0; f.hitDone = false;
         shake = Math.max(shake, 16); dust(f.x, 0, 30); ring(f.x, 0, 160, '255,200,120', 0.4); SFX.thud(); SFX.heavy();
         for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 760, w: 96, h: 54, life: 0.9, dmg: 10, kb: [260, -840], stun: 0.55, hs: 0.12, launch: true, groundOnly: true, unbreakable: true });
-        if (strike(f, foe, { box: [-45, -80, 110, 4], dmg: 8, kb: [260, -900], stun: 0.85, hs: 0.16, launch: true })) {
+        if (strike(f, foe, { box: [-45, -80, 110, 4], dmg: 8, kb: [260, -900], stun: 0.55, hs: 0.14, launch: true })) {
           addP({ type: 'text', text: '💥 撼地重震', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
         }
       }
@@ -2034,12 +2040,12 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
     ai: (me, foe, d) => d < 420 && foe.onGround() },
-  backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（0.85 秒穿心定身并冲天挑空）；枪旋余劲立时回转。',
+  backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（0.52 秒穿心定身并冲天挑空）；枪旋余劲立时回转。',
     start(f) { f.vx = -f.face * 540; f.vy = -420; f.y = Math.min(f.y, -1); },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.24) { f.skPh = 1; f.t = 0; f.vx = f.face * 180; f.hitDone = false; SFX.heavy(); }
       if (f.skPh === 1) {
-        if (f.t < 0.12 && strike(f, foe, { box: [20, -104, 235, -44], dmg: 10, kb: [360, -820], stun: 0.85, hs: 0.16, launch: true })) {
+        if (f.t < 0.12 && strike(f, foe, { box: [20, -104, 235, -44], dmg: 10, kb: [360, -820], stun: 0.52, hs: 0.14, launch: true })) {
           f.skill2CD *= 0.5;
           addP({ type: 'text', text: '枪尖穿心', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '170,220,255' });
         }
@@ -2048,26 +2054,26 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
     ai: (me, foe, d) => d < 120 },
-  windblade: { name: '风刃', cd: 1.3, air: true, desc: '挥扇生风，风刃体积扩大。此招【无长硬直】，但附带全场最强风暴推力（620 像素击退）；连飞羽轻镖也一并吹散。',
+  windblade: { name: '风刃', cd: 1.3, air: true, desc: '挥扇生风，风刃体积扩大。此招【无长硬直】，附带强劲风暴推力（480 像素击退）；连飞羽轻镖也一并吹散。',
     start() {},
     update(f) {
       if (f.skPh === 0 && f.t >= 0.03) {
         f.skPh = 1; SFX.swing();
         if (f.twinT > 0) {
           f.twinT = 0;
-          for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1150, vy, w: 78, h: 66, life: 1.2, dmg: 5, kb: [580, -90], stun: 0.22, hs: 0.04 });
-        } else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1180, w: 72, h: 62, life: 1.2, dmg: 7, kb: [620, -90], stun: 0.22, hs: 0.04 });
+          for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1150, vy, w: 78, h: 66, life: 1.2, dmg: 5, kb: [460, -90], stun: 0.20, hs: 0.04 });
+        } else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1180, w: 72, h: 62, life: 1.2, dmg: 7, kb: [480, -90], stun: 0.20, hs: 0.04 });
       }
       if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
     ai: () => true },
-  thunderfist: { name: '雷闪', cd: 4, nofric: true, pass: true, desc: '身化雷光贴地疾冲（判定增大）。一拳贯穿附带【触电麻痹】（0.82 秒电击瘫痪硬直），冲刺途中自带霸体，为后续十连拳创造绝对破绽。',
+  thunderfist: { name: '雷闪', cd: 4, nofric: true, pass: true, desc: '身化雷光贴地疾冲（判定增大）。一拳贯穿附带【触电麻痹】（0.48 秒电击瘫痪硬直），冲刺途中自带单次霸体，为后续十连拳创造破绽。',
     start(f) { f.armorT = 0.5; f.armorHits = 1; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; f.t = 0; f.vx = f.face * 1500; f.hitDone = false; SFX.dash(); SFX.thunder(); }
       if (f.skPh === 1) {
-        if (strike(f, foe, { box: [-20, -110, 85, -10], dmg: 7, kb: [80, 0], stun: 0.82, hs: 0.14 })) {
+        if (strike(f, foe, { box: [-20, -110, 85, -10], dmg: 7, kb: [80, 0], stun: 0.48, hs: 0.12 })) {
           addP({ type: 'text', text: '⚡ 触电麻痹', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
         }
         if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
@@ -2077,26 +2083,26 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 110 && d < 360 },
-  inktrap: { name: '墨阵', cd: 6, desc: '提笔画出一池宽达 125 像素的巨幅墨阵。踏入者被浓墨完全锚定，陷入【深墨禁锢】（1.4 秒完全定身），寸步难移；再按 Q 可随时引爆。',
+  inktrap: { name: '墨阵', cd: 6, desc: '提笔画出一池宽达 125 像素的巨幅墨阵。踏入者被浓墨锚定，陷入【深墨禁锢】（0.65 秒强力定身）；再按 Q 可随时引爆。',
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.18) {
         f.skPh = 1; SFX.poof();
         for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-        spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 90, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 125, h: 28, life: 8, delay: 0.25, dmg: 5, kb: [0, 0], stun: 1.4, hs: 0.12, root: true, groundOnly: true });
+        spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 90, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 125, h: 28, life: 8, delay: 0.25, dmg: 5, kb: [0, 0], stun: 0.65, hs: 0.10, root: true, groundOnly: true });
       }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
     ai: (me, foe, d) => d > 90 && d < 330 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
-  dive: { name: '俯冲', cd: 3.5, air: true, desc: '猎鹰收翼斜下俯冲（判定扩大）。命中施加【鹰击钉地】（0.78 秒重度压制硬直）；自空中出手更可借力反弹回升并刷新技能。',
+  dive: { name: '俯冲', cd: 3.5, air: true, desc: '猎鹰收翼斜下俯冲（判定扩大）。命中施加【鹰击钉地】（0.50 秒重度压制硬直）；自空中出手更可借力反弹回升并刷新技能。',
     start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -720; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.2) { f.skPh = 1; f.t = 0; }
       if (f.skPh === 1) {
         if (f.t < 0.02) { f.hitDone = false; SFX.dash(); }
         f.vx = f.face * 880; f.vy = 820;
-        if (strike(f, foe, { box: [-16, -95, 96, 25], dmg: 12, kb: [260, 0], stun: 0.78, hs: 0.14 })) {
+        if (strike(f, foe, { box: [-16, -95, 96, 25], dmg: 12, kb: [260, 0], stun: 0.50, hs: 0.12 })) {
           addP({ type: 'text', text: '鹰击钉地', x: foe.x, y: foe.y - 80, life: 0.8, max: 0.8, rgb: '140,200,255' });
           f.vx *= 0.2; f.vy = -380;
           if (f.diveAir && !f.diveChained) { f.skillCD = 0; f.diveChained = true; }
@@ -2125,12 +2131,12 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-  ironwall: { name: '铁壁冲', cd: 5, nofric: true, desc: '沉肩如山以狂暴重盾之势撞将过去（判定范围扩大）。撞击附带【崩山破势】（0.75 秒重度硬直与击退），且对格挡架势造成双倍摧毁！',
-    start(f) { f.armorT = 0.55; f.armorHits = 99; f.vx = 0; },
+  ironwall: { name: '铁壁冲', cd: 5, nofric: true, desc: '沉肩如山以狂暴重盾之势撞将过去（判定范围扩大）。撞击附带【崩山破势】（0.48 秒重度硬直与击退，起手承受 2 次霸体），且对格挡架势造成双倍摧毁！',
+    start(f) { f.armorT = 0.55; f.armorHits = 2; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.15) { f.skPh = 1; f.t = 0; f.vx = f.face * 740; f.hitDone = false; SFX.dash(); }
       if (f.skPh === 1) {
-        if (strike(f, foe, { box: [-10, -118, 90, 0], dmg: 10, kb: [560, -360], stun: 0.75, hs: 0.14, launch: true, big: true, guardBreakMul: 2.0 })) {
+        if (strike(f, foe, { box: [-10, -118, 90, 0], dmg: 10, kb: [560, -360], stun: 0.48, hs: 0.12, launch: true, big: true, guardBreakMul: 2.0 })) {
           addP({ type: 'text', text: '💥 崩山破势', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,100' });
           f.vx *= 0.2;
         }
@@ -3717,7 +3723,12 @@ function neutral(f, foe) {
     if (c.consume('light')) return startAttack(f, 'l1');
     if (c.consume('heavy')) return startAttack(f, 'hv');
     if (c.consume('jump')) return doJump(f, dir);
-    if (c.held.down) { f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return; }   // 格挡时可以慢慢挪步
+    if (c.held.down) {
+      f.blockT = f.state === 'block' ? (f.blockT || 0) + STEP : 0;
+      f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
+    } else {
+      f.blockT = 0;
+    }
     if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
     if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
     const sp = dir === f.face ? wk(f) : wk(f) * 0.78;
@@ -4170,6 +4181,19 @@ function onLand(f) {
   }
   if (f.state === 'launched') {
     if (f.spiked && !f.bounced) { f.vy = -560; f.bounced = true; f.y = -1; shake = Math.max(shake, 8); dust(f.x, 0, 14); ring(f.x, 0, 70, '255,255,255', 0.35); SFX.thud(); return; }
+
+    // 落地受身翻滚判定（Tech Roll / Ukemi）：按闪避或跳跃瞬间滚身脱困
+    const c = f.ctrl;
+    const canTech = c && f.hp > 0 && !f.spiked && (c.consume('dash') || c.consume('jump') || (c.held && (c.held.dash || c.held.jump)));
+    if (canTech) {
+      const dir = (c.held && (c.held.left ? -1 : (c.held.right ? 1 : 0))) || -f.face;
+      f.state = 'dash'; f.t = 0; f.face = -dir; f.vx = dir * 560;
+      f.invul = 0.28; f.comboHits = 0; f.juggle = 0;
+      dust(f.x, 0, 12); SFX.dash();
+      addP({ type: 'text', text: '受身', x: f.x, y: f.y - 70, life: 0.55, max: 0.55, rgb: '170,230,255' });
+      return;
+    }
+
     f.state = 'knockdown'; f.t = 0; f.vx *= 0.3; f.invul = 99; f.rot = 0;
     dust(f.x, 0, 12); shake = Math.max(shake, 5); SFX.thud();
     return;
@@ -4202,6 +4226,29 @@ function tryHit(f, foe, m) {
   if (foe.invul > 0 || foe.hp <= 0) return;
   const hb = hitbox(f, m.box), hu = hurtbox(foe);
   if (!overlap(hb, hu)) return;
+
+  // 真实拼刀截击机制（Blade Clash）：双方近身兵刃招式在活跃攻击帧相撞
+  if (!m.isProj && !m.ult && !m.unblockable && foe.state === 'attack' && foe.move && foe.move.box && !foe.hitDone) {
+    const foeSu = foe.move.su || 0.04, foeAc = foe.move.ac || 0.08;
+    if (foe.t >= foeSu && foe.t <= foeSu + foeAc) {
+      const foeHb = hitbox(foe, foe.move.box);
+      if (overlap(hb, foeHb)) {
+        f.hitDone = true; foe.hitDone = true;
+        const cx = (hb[0] + hb[2] + foeHb[0] + foeHb[2]) / 4;
+        const cy = (hb[1] + hb[3] + foeHb[1] + foeHb[3]) / 4;
+        f.vx = -f.face * 180; foe.vx = -foe.face * 180;
+        f.t = Math.max(f.t, foeSu + foeAc);
+        foe.t = Math.max(foe.t, foeSu + foeAc);
+        SFX.parry();
+        shake = Math.max(shake, 8);
+        ring(cx, cy, 140, '255,225,120', 0.35);
+        for (let i = 0; i < 7; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-260, 260), vy: rand(-260, 260), rgb: '255,220,120', life: 0.22, max: 0.22 });
+        addP({ type: 'text', text: '⚔️ 拼刀', x: cx, y: cy - 40, life: 0.6, max: 0.6, rgb: '255,225,120' });
+        return;
+      }
+    }
+  }
+
   f.hitDone = true;
   const px = (Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, py = (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2;
   if (f.ch.passive === 'tip' && /^l\d/.test(m.name || '')) {
@@ -4247,6 +4294,24 @@ function applyHit(att, def, m, pt) {
   const massRatio = clamp(attWeight / defWeight, 0.45, 2.5);
 
   if (blocking) {
+    // 精准招架（Just Guard / Perfect Parry）：在受击前 0.09s 内按下格挡
+    const isJustGuard = !m.isProj && !m.unblockable && (def.blockT !== undefined && def.blockT <= 0.09);
+    if (isJustGuard) {
+      def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
+      def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
+      def.vx = fx * 80;
+      if (!m.isProj) {
+        att.state = 'hitstun'; att.t = 0; att.stun = 0.18; att.vx = -att.face * 180;
+      }
+      SFX.parry();
+      shake = Math.max(shake, 6);
+      ring(pt[0], pt[1], 130, '120,230,255', 0.4);
+      for (let i = 0; i < 6; i++) addP({ type: 'spark', x: pt[0], y: pt[1], vx: rand(-240, 240), vy: rand(-240, 240), rgb: '120,230,255', life: 0.22, max: 0.22 });
+      addP({ type: 'text', text: '🛡️ 精准招架', x: def.x, y: def.y - 110, life: 0.9, max: 0.9, rgb: '120,230,255' });
+      ev.justGuard = true;
+      hitVisual(ev); netEmit(ev);
+      return;
+    }
     const chipFrac = (def.ch && def.ch.stat && def.ch.stat.guardChip) || 0.12;
     def.hp = Math.max(1, def.hp - m.dmg * chipFrac);
 
@@ -4341,8 +4406,10 @@ function applyHit(att, def, m, pt) {
       def.spiked = !!m.spike; if (!m.spike) def.bounced = def.bounced && air;
       def.y = Math.min(def.y, -1);
     } else {
-      const hitStunDur = m.stun * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1) * Math.min(1.22, Math.max(0.85, Math.pow(massRatio, 0.25)));
-      def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
+      const comboDecay = m.noScale ? 1 : Math.max(0.48, 1 - 0.075 * (def.comboHits - 1));
+      const hitStunDur = m.stun * comboDecay * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1) * Math.min(1.22, Math.max(0.85, Math.pow(massRatio, 0.25)));
+      const kbMul = m.noScale ? 1 : Math.min(1.45, 1 + 0.05 * (def.comboHits - 1));
+      def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * kbMul * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
     }
   }
   if (def.dummy && def.ctrl && def.ctrl.mode === 'fixed' && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
@@ -9505,7 +9572,28 @@ function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp
 
 function triggerStealthDevUnlock(silent) {
   DEV_SESSION_UNLOCKED = true;
-  try { sessionStorage.setItem('renying-dev-unlock', '1'); } catch (e) {}
+  try {
+    sessionStorage.setItem('renying-dev-unlock', '1');
+    localStorage.setItem('renying-qfx', '10');
+  } catch (e) {}
+  if (typeof PROF !== 'undefined' && PROF) {
+    const allSkins = [
+      'qf_frost', 'qf_gold', 'qf_qfx',
+      'fy_jade', 'fy_blood',
+      'ts_bronze', 'ts_obsidian',
+      'ls_plum', 'ls_aurora',
+      'ly_dusk', 'ly_sky',
+      'lm_violet', 'lm_sun',
+      'my_cinnabar', 'my_gold',
+      'yh_sakura', 'yh_eclipse',
+      'yl_raven', 'yl_phoenix'
+    ];
+    PROF.skins = Array.from(new Set([...(PROF.skins || []), ...allSkins]));
+    PROF.qfx = Math.max(PROF.qfx || 0, 10);
+    CHARS.forEach(c => {
+      if (!PROF.owned.includes(c.id)) PROF.owned.push(c.id);
+    });
+  }
   if (!silent) SFX.chargeFull();
   renderAcc();
   if (typeof BP !== 'undefined' && BP) renderBP();
