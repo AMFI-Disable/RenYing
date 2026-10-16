@@ -69,3 +69,4 @@ tmp/
 .local/
 data/
 logs/
+ci-ui/
