@@ -8299,6 +8299,7 @@ function renderCodex() {
   const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee' };
   const rType = mTypes.ranged || { label: '远程', icon: 'ranged', type: 'ranged' };
   const restr = HERO_RESTRAINTS_EXPLAIN[c.id] || { beatsWhy: `克 ${nm(c.beats)}`, weakWhy: `怕 ${nm(c.weakTo)}` };
+  const sh = n => SHORT[n] || ['', ''];
   $id('cxMoves').innerHTML = [
     tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
     tile('light', '左键 · 连击 <small class="type-tag melee">近战</small>', sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
