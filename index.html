@@ -2262,6 +2262,8 @@ const MOVES = {
   cs2: { p: ['charge', 'spa'], su: .04, ac: .16, rc: .08, knock: true, dmg: 58, kb: [720, -720], stun: .6, hs: .2, box: [0, -120, 124, -10], lunge: 1350, launch: true, unblockable: true, big: true, next: {}, snd: 'heavy' },
   cf: { p: ['hvs', 'hva'], su: .05, ac: .1, rc: .26, dmg: 22, kb: [320, -420], stun: .45, hs: .08, box: [-6, -160, 104, -6], track: true, launch: true, next: {}, snd: 'swing' },
   a2: { p: ['a2s', 'a2a'], air: true, su: .08, ac: .09, rc: .22, dmg: 26, kb: [240, 1000], stun: .5, hs: .11, box: [-4, -70, 80, 24], spike: true, next: {}, snd: 'heavy' },
+  dl: { p: ['fy_crouch', 'fy_crouch'], su: .055, ac: .06, rc: .12, dmg: 5, kb: [45, 0], stun: .28, hs: .03, box: [12, -45, 82, 0], lunge: 60, next: { light: 'l1', heavy: 'hv' }, hitNext: { light: 'l1', heavy: 'hv' }, snd: 'swing' },
+  dh: { p: ['fy_crouch', 'l1a'], su: .09, ac: .08, rc: .20, dmg: 10, kb: [70, 0], stun: .32, hs: .04, box: [14, -40, 88, 0], lunge: 90, next: { light: 'l2', heavy: 'hv' }, hitNext: { light: 'l2', heavy: 'hv' }, snd: 'swing' },
 };
 const FINAL = { ult: true, noScale: true, dmg: 85, kb: [520, -900], stun: .6, hs: .24, launch: true, unblockable: true };
 const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: .035, unblockable: true, hold: true };
@@ -3542,7 +3544,9 @@ const CHAPTERS = [
   { name: '古寺', pool: ['blade', 'archer', 'owl'], boss: 'liuyun', lv: 'normal' },
   { name: '雪岭', pool: ['blade', 'archer', 'owl', 'binder'], boss: 'lingshuang', lv: 'normal' },
   { name: '血月谷', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'feiying', lv: 'hard' },
-  { name: '月宫', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuehua', lv: 'hard' },
+  { name: '雷音顶', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'leiming', lv: 'hard' },
+  { name: '云雀崖', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yanling', lv: 'hard' },
+  { name: '月宫', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuehua', lv: 'impossible' },
   { name: '墨渊', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'moyu', lv: 'impossible' },
 ];
 const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶' };
@@ -3628,11 +3632,34 @@ function stageShowEnd(win, stars, info) {
     if (window.CloudSave) CloudSave.saveProfile(PROF);
     try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {}
   }
+  const CHRONICLE_SKIN_REWARDS = {
+    tieshan: 'ts_bronze',
+    liuyun: 'ly_dusk',
+    lingshuang: 'ls_plum',
+    feiying: 'fy_jade',
+    leiming: 'lm_violet',
+    yanling: 'yl_raven',
+    yuehua: 'yh_sakura',
+    moyu: 'my_cinnabar'
+  };
+  let skinUnlockedText = '';
+  if (win && S.boss && S.C && S.C.boss) {
+    const rSkinKey = CHRONICLE_SKIN_REWARDS[S.C.boss];
+    if (rSkinKey && SKINS[rSkinKey]) {
+      PROF.skins = PROF.skins || [];
+      if (!PROF.skins.includes(rSkinKey)) {
+        PROF.skins.push(rSkinKey);
+        if (window.CloudSave) CloudSave.saveProfile(PROF);
+        skinUnlockedText = `<br><span style="color:#e9c46a;font-weight:bold">🎉 宿命通关奖励：已解锁【${CHARS[CHAR_IDX[S.C.boss]].name}】专属皮肤「${SKINS[rSkinKey].name}」！</span>`;
+        try { SFX.chargeFull(); } catch (e) {}
+      }
+    }
+  }
   playSting(win ? 'victory' : 'defeat');
   const nx = nextStage(S);
   $id('feWave').textContent = `${S.id} ${win ? '破关' : '折戟'}`;
   $id('feStars').textContent = win ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '';
-  $id('feInfo').innerHTML = info + (win && !nx ? '<br><b style="color:#e9c46a">六章三十关，尽数踏破！</b>' : '');
+  $id('feInfo').innerHTML = info + skinUnlockedText + (win && !nx ? '<br><b style="color:#e9c46a">八章四十关，天下豪杰尽数折服！</b>' : '');
   $id('feNext').style.display = win && nx ? '' : 'none';
   paused = true; showScreen('forestEnd');
 }
@@ -4288,16 +4315,17 @@ function neutral(f, foe) {
   const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
   if (onG) {
     if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
-    if (c.held.atk && clock - c.atkT >= CHARGE_START) { f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); return; }
-    if (c.consume('light')) return startAttack(f, 'l1');
-    if (c.consume('heavy')) return startAttack(f, 'hv');
-    if (c.consume('jump')) return doJump(f, dir);
     if (c.held.down) {
+      if (c.consume('light')) return startAttack(f, 'dl');
+      if (c.consume('heavy')) return startAttack(f, 'dh');
       f.blockT = f.state === 'block' ? (f.blockT || 0) + STEP : 0;
       f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
     } else {
       f.blockT = 0;
     }
+    if (c.consume('light')) return startAttack(f, 'l1');
+    if (c.consume('heavy')) return startAttack(f, 'hv');
+    if (c.consume('jump')) return doJump(f, dir);
     if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
     if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
     const sp = dir === f.face ? wk(f) : wk(f) * 0.78;
@@ -4760,6 +4788,11 @@ function updateFighter(f, foe) {
             if (c.consume('jump')) { doJump(f, dir); break; }
           }
         } else {
+          const c = f.ctrl;
+          if (c && M.phase === 'fight') {
+            if (c.consume('light')) { startAttack(f, 'dl'); break; }
+            if (c.consume('heavy')) { startAttack(f, 'dh'); break; }
+          }
           f.state = 'block';
         }
       }
