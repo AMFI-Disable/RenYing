@@ -36,6 +36,7 @@
 
       <div class="single-tabs" id="singleTabs">
         <button data-tab="cpu" class="sel" type="button">⚔️ 对战电脑</button>
+        <button data-tab="tag3" type="button">🔥 3v3 车轮战</button>
         <button data-tab="stage" type="button">🌲 守关挑战</button>
         <button data-tab="train" type="button">🥋 木人试剑</button>
       </div>
@@ -86,6 +87,47 @@
         </div>
 
         <button class="go" id="goBtn">进入选人 · 开战</button>
+      </div>
+
+      <!-- 3v3 门派车轮战 -->
+      <div data-sec="tag3" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">3v3 门派车轮战</h3>
+          <span class="sub-badge">接力对决 · 胜者守擂</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">排定【先锋】、【中坚】与【大将】三名侠客出阵。单局击破敌将后保留残血调息，迎战敌方下一名侠客，直至一方三人全灭！</p>
+
+        <div class="sec-sub-label">排定出战席位（点击卡片指定席位，再在下方挑选侠客）</div>
+        <div class="tag3-slots" id="tag3Slots"></div>
+
+        <div class="sec-sub-label">待命侠客名册（点击入阵）</div>
+        <div class="tag3-roster" id="tag3Roster"></div>
+
+        <div class="sec-sub-label" style="margin-top:10px">敌方门派战力境界</div>
+        <div class="levels-grid" id="tag3Levels">
+          <button data-lv="easy" type="button">
+            <span class="lv-top"><span class="lv-icon">🌱</span><span class="lv-name">入门</span></span>
+            <span class="lv-sub">反应迟缓 · 初涉江湖</span>
+          </button>
+          <button data-lv="normal" class="sel" type="button">
+            <span class="lv-top"><span class="lv-icon">⚔️</span><span class="lv-name">寻常</span></span>
+            <span class="lv-sub">攻防均衡 · 门派精英</span>
+          </button>
+          <button data-lv="hard" type="button">
+            <span class="lv-top"><span class="lv-icon">🔥</span><span class="lv-name">劲敌</span></span>
+            <span class="lv-sub">凌厉反击 · 连招压制</span>
+          </button>
+          <button data-lv="adaptive" type="button">
+            <span class="lv-top"><span class="lv-icon">⚡</span><span class="lv-name">宿敌</span></span>
+            <span class="lv-sub">针对克制 · 动态变强</span>
+          </button>
+          <button data-lv="impossible" type="button">
+            <span class="lv-top"><span class="lv-icon">👑</span><span class="lv-name">绝顶</span></span>
+            <span class="lv-sub">极境宗师 · 绝无破绽</span>
+          </button>
+        </div>
+
+        <button class="go" id="tag3StartBtn" style="margin-top:14px">擂台接力 · 开启车轮战</button>
       </div>
 
       <!-- 闯关模式 -->

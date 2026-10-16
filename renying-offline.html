@@ -525,6 +525,151 @@
 .keyitem button:hover { border-color: #8ff0ff; }
 .keyitem button.active { color: #e9c46a; border-color: #e9c46a; background: rgba(233,196,106,.15); animation: breath 1.2s infinite; }
 .task-go:hover { color: var(--p1); border-color: var(--p1); }
+
+/* 3v3 门派车轮战 */
+.tag3-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 10px 0 16px;
+}
+.tag3-slot {
+  position: relative;
+  padding: 10px 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--faint);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .01));
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all .15s ease;
+}
+.tag3-slot:hover {
+  border-color: rgba(233, 196, 106, .5);
+  transform: translateY(-2px);
+}
+.tag3-slot.sel {
+  border-color: var(--gold);
+  background: rgba(233, 196, 106, .1);
+  box-shadow: 0 0 16px rgba(233, 196, 106, .25);
+}
+.tag3-slot .slot-tag {
+  font-family: var(--title);
+  font-size: 12px;
+  color: #fbeee0;
+  background: var(--seal);
+  padding: 1px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.tag3-slot.sel .slot-tag {
+  background: #b8392e;
+  box-shadow: 0 0 8px rgba(184, 57, 46, .6);
+}
+.tag3-slot .slot-avatar {
+  width: clamp(52px, 5.5vw, 68px);
+  height: clamp(52px, 5.5vw, 68px);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .15);
+  background: rgba(0, 0, 0, .4);
+  margin: 4px 0 2px;
+}
+.tag3-slot .slot-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.tag3-slot .slot-name {
+  font-family: var(--title);
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.1;
+}
+.tag3-slot .slot-role {
+  font-size: 12px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.tag3-roster {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: clamp(4px, 0.6vw, 8px);
+  margin: 8px 0 14px;
+}
+@media (max-width: 720px) {
+  .tag3-roster {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .tag3-roster {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.tag3-hero-chip {
+  position: relative;
+  border: 1px solid var(--faint);
+  border-radius: 8px;
+  padding: 4px 4px 6px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .01));
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s ease;
+  min-width: 0;
+  color: var(--ink);
+  font-family: var(--body);
+}
+.tag3-hero-chip:hover {
+  transform: translateY(-2px);
+  border-color: rgba(239, 232, 216, .45);
+}
+.tag3-hero-chip img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 5px;
+  display: block;
+}
+.tag3-hero-chip .nm {
+  font-family: var(--title);
+  font-size: 13px;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag3-hero-chip .rl {
+  font-size: 12px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag3-hero-chip.in-team {
+  border-color: rgba(233, 196, 106, .6);
+  background: rgba(233, 196, 106, .08);
+}
+.tag3-hero-chip .team-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  font-family: var(--title);
+  font-size: 12px;
+  background: var(--gold);
+  color: #0c0b16;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+}
+
 </style>
 </head>
 <body>
@@ -553,6 +698,7 @@
 
       <div class="single-tabs" id="singleTabs">
         <button data-tab="cpu" class="sel" type="button">⚔️ 对战电脑</button>
+        <button data-tab="tag3" type="button">🔥 3v3 车轮战</button>
         <button data-tab="stage" type="button">🌲 守关挑战</button>
         <button data-tab="train" type="button">🥋 木人试剑</button>
       </div>
@@ -603,6 +749,47 @@
         </div>
 
         <button class="go" id="goBtn">进入选人 · 开战</button>
+      </div>
+
+      <!-- 3v3 门派车轮战 -->
+      <div data-sec="tag3" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">3v3 门派车轮战</h3>
+          <span class="sub-badge">接力对决 · 胜者守擂</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">排定【先锋】、【中坚】与【大将】三名侠客出阵。单局击破敌将后保留残血调息，迎战敌方下一名侠客，直至一方三人全灭！</p>
+
+        <div class="sec-sub-label">排定出战席位（点击卡片指定席位，再在下方挑选侠客）</div>
+        <div class="tag3-slots" id="tag3Slots"></div>
+
+        <div class="sec-sub-label">待命侠客名册（点击入阵）</div>
+        <div class="tag3-roster" id="tag3Roster"></div>
+
+        <div class="sec-sub-label" style="margin-top:10px">敌方门派战力境界</div>
+        <div class="levels-grid" id="tag3Levels">
+          <button data-lv="easy" type="button">
+            <span class="lv-top"><span class="lv-icon">🌱</span><span class="lv-name">入门</span></span>
+            <span class="lv-sub">反应迟缓 · 初涉江湖</span>
+          </button>
+          <button data-lv="normal" class="sel" type="button">
+            <span class="lv-top"><span class="lv-icon">⚔️</span><span class="lv-name">寻常</span></span>
+            <span class="lv-sub">攻防均衡 · 门派精英</span>
+          </button>
+          <button data-lv="hard" type="button">
+            <span class="lv-top"><span class="lv-icon">🔥</span><span class="lv-name">劲敌</span></span>
+            <span class="lv-sub">凌厉反击 · 连招压制</span>
+          </button>
+          <button data-lv="adaptive" type="button">
+            <span class="lv-top"><span class="lv-icon">⚡</span><span class="lv-name">宿敌</span></span>
+            <span class="lv-sub">针对克制 · 动态变强</span>
+          </button>
+          <button data-lv="impossible" type="button">
+            <span class="lv-top"><span class="lv-icon">👑</span><span class="lv-name">绝顶</span></span>
+            <span class="lv-sub">极境宗师 · 绝无破绽</span>
+          </button>
+        </div>
+
+        <button class="go" id="tag3StartBtn" style="margin-top:14px">擂台接力 · 开启车轮战</button>
       </div>
 
       <!-- 闯关模式 -->
@@ -2552,7 +2739,7 @@ function musicMode() {
   if (on('bp')) return 'bp';
   if (on('end')) return 'end';
   if (on('gacha')) return 'gacha';
-  if (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'replay') return M.ot && M.phase === 'fight' ? 'overtime' : 'fight';
+  if (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'replay' || M.mode === 'tag3') return M.ot && M.phase === 'fight' ? 'overtime' : 'fight';
   if (M.mode === 'train') return 'practice';
   return 'menu';
 }
@@ -3588,15 +3775,21 @@ function startMatch(mode, level, chars) {
 }
 function startRound() {
   A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
-  if ((M.mode === 'cpu' || M.mode === 'replay') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
-  if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
+  if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
+  if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.introFX = M.round === 1 && M.mode !== 'demo';
   M.phase = 'intro'; M.t = 0; M.timer = ROUND_TIME; M.koWinner = -1; M.flags = {};
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   comboUI[0].t = comboUI[1].t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
-    if (M.round === 1) { creditT = CREDIT; creditPending = true; metal(880, 1.8, 0.05); }   // 每场开战先显示作者
-    else { say(`第${CN[M.round] || M.round}回合`, 1.1); SFX.gong(); }
+    if (M.round === 1) {
+      creditT = CREDIT; creditPending = true; metal(880, 1.8, 0.05);
+      if (M.mode === 'tag3') setTimeout(() => say('先锋战 · 开战！', 1.4), 1200);
+    } else {
+      const titles = ['', '先锋战', '中坚战', '大将决战'];
+      const txt = M.mode === 'tag3' ? (titles[M.round] || `第${CN[M.round] || M.round}局`) : `第${CN[M.round] || M.round}回合`;
+      say(txt, 1.1); SFX.gong();
+    }
   }
   netEmit({ e: 'round', r: M.round, w: [...M.wins], ch: [A.chIdx, B.chIdx] });
 }
@@ -3644,6 +3837,23 @@ function showEnd(w) {
     setTimeout(() => stageShowEnd(win, win ? (M.wins[1] === 0 ? 3 : 2) : 0, `比分 ${M.wins[0]} : ${M.wins[1]}${win ? '<br><span style="font-size:13px">2 : 0 三星，2 : 1 两星</span>' : '，再磨一磨剑'}`), 300);
     return;
   }
+  if (M.mode === 'tag3') {
+    const win = w === 0;
+    if (win) {
+      PROF.ink = (PROF.ink || 0) + 60;
+      saveProfile();
+    }
+    playSting(win ? 'victory' : 'defeat');
+    const t = document.getElementById('endTitle');
+    t.textContent = win ? '门派车轮战 · 大捷！' : '门派车轮战 · 惜败';
+    t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
+    document.getElementById('endSub').textContent = win ? `三阵连克，斩获 60 墨锭！（击破比分 ${M.wins[0]} : ${M.wins[1]}）` : `胜败乃兵家常事，重整旗鼓再战（击破比分 ${M.wins[0]} : ${M.wins[1]}）`;
+    $id('endRank').textContent = win ? '已击破敌方全员侠客' : '敌方阵线技高一筹';
+    const again = document.getElementById('againBtn');
+    again.disabled = false; again.textContent = '再战一场';
+    setTimeout(() => showScreen('end'), 300);
+    return;
+  }
   if (w >= 0) playSting(w === localIdx() ? 'victory' : 'defeat');
   if (M.mode === 'net') send({ report: w === 0 ? 'host' : 'client' });
   if (M.mode === 'cpu' || M.mode === 'net') adaptRecord(w === localIdx());
@@ -3661,6 +3871,41 @@ function showEnd(w) {
 function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
+  if (M.mode === 'tag3') {
+    if (w < 0) {
+      startRound();
+      return;
+    }
+    const loserSide = 1 - w;
+    M.teamIdx[loserSide]++;
+    if (M.teamIdx[loserSide] >= 3) {
+      M.phase = 'end';
+      showEnd(w);
+      return;
+    }
+    const winnerFighter = [A, B][w];
+    const recoverHp = Math.round(winnerFighter.maxHp * 0.25);
+    const survHp = clamp(winnerFighter.hp + recoverHp, 1, winnerFighter.maxHp);
+    const survRatio = survHp / winnerFighter.maxHp;
+    M.carry = [null, null];
+    M.carry[w] = survRatio;
+    M.carry[loserSide] = 1.0;
+
+    const nextHeroIdx = M.teams[loserSide][M.teamIdx[loserSide]];
+    const loserFighter = [A, B][loserSide];
+    loserFighter.setChar(nextHeroIdx);
+    loserFighter.meter = 0;
+
+    M.round++;
+    startRound();
+    const heroName = CHARS[nextHeroIdx].name;
+    const isMid = M.teamIdx[loserSide] === 1;
+    const txt = loserSide === 0
+      ? (isMid ? `中坚 ${heroName} 接力出阵！` : `大将 ${heroName} 背水一战！`)
+      : (isMid ? `敌方中坚 ${heroName} 出阵！` : `敌方大将 ${heroName} 亲征！`);
+    say(txt, 1.4);
+    return;
+  }
   if (w >= 0 && M.wins[w] >= 2) {
     if (M.mode === 'demo') return startMatch('demo');
     M.phase = 'end';
@@ -5898,7 +6143,7 @@ function keyHint(i, k) {
   const skKey = keyLabel(custom1PKeys.skill);
   const p1 = { sp: ` 按 ${spKey}`, sk: ` ${skKey}`, sk2: ' 左+右', esc: ' 右键' }, p2 = { sp: ' 按 I', sk: '', sk2: '', esc: '' };
   if (M.mode === 'pvp') return (i === 0 ? p1 : p2)[k];
-  if (M.mode === 'cpu' || M.mode === 'train') return i === 0 ? p1[k] : '';
+  if (M.mode === 'cpu' || M.mode === 'train' || M.mode === 'tag3') return i === 0 ? p1[k] : '';
   if (M.mode === 'net') return i === localIdx() ? p1[k] : '';
   return '';
 }
@@ -5963,10 +6208,50 @@ function drawHUD() {
       ctx.font = `${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.6)';
       ctx.fillText(pn, i === 0 ? x0 + cw + 10 : x0 + barW - cw - 10, top + bh + 8 + bh * 0.6);
     }
-    for (let r = 0; r < 2; r++) {
-      const px = i === 0 ? cx - gap - 12 - r * 20 : cx + gap + 12 + r * 20, py = top + bh + 18;
-      ctx.save(); ctx.translate(px, py); ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = M.wins[i] > r ? '#e9c46a' : 'rgba(255,255,255,0.14)'; ctx.fillRect(-5, -5, 10, 10); ctx.restore();
+    if (M.mode === 'tag3' && M.teams && M.teams[i]) {
+      const slotTitles = ['先', '中', '大'];
+      for (let r = 0; r < 3; r++) {
+        const px = i === 0 ? cx - gap - 14 - r * 26 : cx + gap + 14 + r * 26, py = top + bh + 18;
+        const isDead = r < M.teamIdx[i];
+        const isActive = r === M.teamIdx[i];
+        ctx.save();
+        ctx.translate(px, py);
+        if (isActive) {
+          ctx.fillStyle = '#e9c46a';
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.font = `bold 12px ${BODY_FONT}`;
+          ctx.fillStyle = '#0c0b16';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(slotTitles[r], 0, 1);
+        } else if (isDead) {
+          ctx.fillStyle = 'rgba(255,80,80,0.35)';
+          ctx.strokeStyle = 'rgba(255,80,80,0.7)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.font = `12px ${BODY_FONT}`;
+          ctx.fillStyle = '#ff7a8a';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('✕', 0, 0);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.font = `12px ${BODY_FONT}`;
+          ctx.fillStyle = 'rgba(239,232,216,0.6)';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(slotTitles[r], 0, 0);
+        }
+        ctx.restore();
+      }
+    } else {
+      for (let r = 0; r < 2; r++) {
+        const px = i === 0 ? cx - gap - 12 - r * 20 : cx + gap + 12 + r * 20, py = top + bh + 18;
+        ctx.save(); ctx.translate(px, py); ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = M.wins[i] > r ? '#e9c46a' : 'rgba(255,255,255,0.14)'; ctx.fillRect(-5, -5, 10, 10); ctx.restore();
+      }
     }
     // 气槽
     const mw = barW * 0.55, my = top + bh + 44, mx = i === 0 ? x0 : x0 + barW - mw;
@@ -6533,17 +6818,26 @@ function singleSec(sec) {
   if (subEl) {
     const subs = {
       cpu: '选择 AI 难度与对手境界，在实战对局中锤炼招式攻防',
+      tag3: '挑选三位豪杰排定出战顺序，胜者保留残血守擂，直至一方全灭！',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
       train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定'
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
+  if (active === 'tag3') renderTag3();
   updateAIBrief();
 }
 function openScreen(name) {
   if (OFFLINE_BUILD && name === 'single') name = 'cpu';
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
-  if (name === 'cpu' || name === 'stage' || name === 'train') { singleSec(name); renderTrainPick(); renderStages(); showScreen('single'); return; }
+  if (name === 'cpu' || name === 'tag3' || name === 'stage' || name === 'train') {
+    singleSec(name);
+    if (name === 'tag3') renderTag3();
+    renderTrainPick();
+    renderStages();
+    showScreen('single');
+    return;
+  }
   if (name === 'single') singleSec(null);
   if (name === 'tutorial') { startTutorial(); return; }
   if (name === 'gacha') { renderGacha(); loadProfile(); }
@@ -7889,7 +8183,7 @@ function applySkins() {
   for (const f of [A, B]) {
     let k = '';
     if (M.mode === 'net') k = f.idx === localIdx() ? mySkin(f.ch.id) : ((NET.peerSkins || {})[f.ch.id] || '');
-    else if (M.mode === 'cpu' || M.mode === 'train' || M.mode === 'forest') k = mySkin(f.ch.id);   // 对电脑时，电脑用到你装备了皮肤的角色也显示皮肤
+    else if (M.mode === 'cpu' || M.mode === 'train' || M.mode === 'forest' || M.mode === 'tag3') k = mySkin(f.ch.id);   // 对电脑时，电脑用到你装备了皮肤的角色也显示皮肤
     if (!f.dummy) f.look = skinLook(f.chIdx, k);
     f.skinKey = f.dummy ? '' : k;
   }
@@ -8617,7 +8911,7 @@ const TUI = { stick: null, stickUp: false, jumpHeld: false };
 function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
   if (!TOUCH) return;
-  const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train') && !paused && !document.querySelector('.scr.on');
+  const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train' || M.mode === 'tag3') && !paused && !document.querySelector('.scr.on');
   $id('touchUI').classList.toggle('hidden', !inFight);
   if (!inFight) return;
   const me = [A, B][localIdx()];
@@ -8704,6 +8998,7 @@ if (singleTabsEl) {
     const b = e.target.closest('button');
     if (!b || !b.dataset.tab) return;
     singleSec(b.dataset.tab);
+    if (b.dataset.tab === 'tag3') renderTag3();
     if (b.dataset.tab === 'stage') renderStages();
     if (b.dataset.tab === 'train' || b.dataset.tab === 'stage') renderTrainPick();
     SFX.slice();
@@ -8740,10 +9035,141 @@ function renderTrainPick() {
 $id('trPick').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { trainChar = +b.dataset.i; renderTrainPick(); SFX.slice(); } });
 $id('trainBtn').addEventListener('click', startTraining);
 renderTrainPick();
+
+// ======================= 3v3 门派车轮战 =======================
+let tag3Team = [0, 1, 2];
+let activeTagSlot = 0;
+let tag3Level = 'normal';
+let tag3EnemyTeam = [3, 4, 5];
+
+function renderTag3() {
+  ensurePortraits();
+  const slotLabels = ['先锋', '中坚', '大将'];
+  const slotsEl = document.getElementById('tag3Slots');
+  if (slotsEl) {
+    slotsEl.innerHTML = [0, 1, 2].map(slotIdx => {
+      const charIdx = tag3Team[slotIdx] !== undefined ? tag3Team[slotIdx] : slotIdx;
+      const ch = CHARS[charIdx];
+      const col = ch ? `rgb(${ch.look.slash})` : 'var(--ink)';
+      return `<div class="tag3-slot${activeTagSlot === slotIdx ? ' sel' : ''}" data-slot="${slotIdx}">
+        <span class="slot-tag">${slotLabels[slotIdx]}</span>
+        <div class="slot-avatar">
+          <img src="${PORTRAITS[charIdx] || ''}" alt="">
+        </div>
+        <span class="slot-name" style="color:${col}">${ch ? ch.name : '未选'}</span>
+        <span class="slot-role">${ch ? ch.role : ''}</span>
+      </div>`;
+    }).join('');
+  }
+
+  const rosterEl = document.getElementById('tag3Roster');
+  if (rosterEl) {
+    rosterEl.innerHTML = CHARS.map((ch, i) => {
+      const inSlot = tag3Team.indexOf(i);
+      const tagText = inSlot >= 0 ? slotLabels[inSlot] : '';
+      const col = `rgb(${ch.look.slash})`;
+      return `<button class="tag3-hero-chip${inSlot >= 0 ? ' in-team' : ''}" data-idx="${i}" type="button">
+        ${tagText ? `<span class="team-badge">${tagText}</span>` : ''}
+        <img src="${PORTRAITS[i] || ''}" alt="">
+        <div class="nm" style="color:${col}">${ch.name}</div>
+        <div class="rl">${ch.role}</div>
+      </button>`;
+    }).join('');
+  }
+}
+
+function pickEnemyTag3Team(playerTeam) {
+  const allIdxs = CHARS.map((_, i) => i);
+  const remaining = allIdxs.filter(i => !playerTeam.includes(i));
+  const pool = remaining.length >= 3 ? remaining : allIdxs;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
+}
+
+function startTag3Match(pTeam, eTeam, lv) {
+  if (p2pActive() || NET.ws) netDropWaiting();
+  refocusGame();
+  human[0].rec = null;
+  REC.on = false;
+
+  tag3Team = [...pTeam];
+  tag3EnemyTeam = [...eTeam];
+  M.mode = 'tag3';
+  M.level = lv || tag3Level || 'normal';
+  M.teams = [ [...tag3Team], [...tag3EnemyTeam] ];
+  M.teamIdx = [0, 0];
+  M.wins = [0, 0];
+  M.round = 1;
+  M.carry = null;
+  M.stage = null;
+
+  setChars(M.teams[0][0], M.teams[1][0]);
+  A.ctrl = human[0];
+  B.ctrl = new AICtrl(M.level);
+  A.meter = B.meter = 0;
+  human[0].clear(); human[1].clear();
+
+  showScreen(null);
+  startRound();
+}
+
+const tag3SlotsEl = document.getElementById('tag3Slots');
+if (tag3SlotsEl) {
+  tag3SlotsEl.addEventListener('click', e => {
+    const b = e.target.closest('.tag3-slot');
+    if (!b) return;
+    activeTagSlot = +b.dataset.slot;
+    renderTag3();
+    SFX.slice();
+  });
+}
+const tag3RosterEl = document.getElementById('tag3Roster');
+if (tag3RosterEl) {
+  tag3RosterEl.addEventListener('click', e => {
+    const b = e.target.closest('.tag3-hero-chip');
+    if (!b) return;
+    const heroIdx = +b.dataset.idx;
+    const existingSlot = tag3Team.indexOf(heroIdx);
+    if (existingSlot >= 0) {
+      const curHeroInActive = tag3Team[activeTagSlot];
+      tag3Team[activeTagSlot] = heroIdx;
+      tag3Team[existingSlot] = curHeroInActive;
+    } else {
+      tag3Team[activeTagSlot] = heroIdx;
+      activeTagSlot = (activeTagSlot + 1) % 3;
+    }
+    renderTag3();
+    SFX.slice();
+  });
+}
+const tag3LevelsEl = document.getElementById('tag3Levels');
+if (tag3LevelsEl) {
+  tag3LevelsEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.lv) return;
+    tag3Level = b.dataset.lv;
+    for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x === b);
+    SFX.slice();
+  });
+}
+const tag3StartBtn = document.getElementById('tag3StartBtn');
+if (tag3StartBtn) {
+  tag3StartBtn.addEventListener('click', () => {
+    initAudio();
+    paused = false;
+    const enemyTeam = pickEnemyTag3Team(tag3Team);
+    startTag3Match(tag3Team, enemyTeam, tag3Level);
+  });
+}
+
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
   if (M.mode === 'net') { if (NET.role === 'host' && NET.open) bpStart('net'); return; }
+  if (M.mode === 'tag3') {
+    startTag3Match(tag3Team, pickEnemyTag3Team(tag3Team), tag3Level);
+    return;
+  }
   bpStart('cpu');
 });
 document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; showScreen(null); refocusGame(); });
@@ -10370,7 +10796,7 @@ window.addEventListener('keydown', e => {
   for (let p = 0; p < 2; p++) {
     const act = KEYS[p][e.code]; if (!act) continue;
     e.preventDefault();
-    const c = (M.mode === 'cpu' || M.mode === 'net') ? human[0] : human[p];
+    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3') ? human[0] : human[p];
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
     if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
     if (act === 'left' || act === 'right' || act === 'down') { c.held[act] = true; if (act !== 'down') c.held.aim = act === 'left' ? -1 : 1; continue; }
@@ -10380,7 +10806,7 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => {
   for (let p = 0; p < 2; p++) {
     const act = KEYS[p][e.code]; if (!act) continue;
-    const c = (M.mode === 'cpu' || M.mode === 'net') ? human[0] : human[p];
+    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3') ? human[0] : human[p];
     if (act === 'left' || act === 'right' || act === 'down') c.held[act] = false;
     if (act === 'atk') c.held.atk = false;
     if (act === 'jump') c.held.jump = false;
