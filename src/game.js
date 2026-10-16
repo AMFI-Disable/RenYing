@@ -1173,6 +1173,28 @@ function onSys(m) {
     if (pr.gain) t += ` · +${pr.gain} 墨锭`;
     $id('endRank').textContent = t; NET.lastResult = t;
   }
+  else if (m.sys === 'match_finish') {
+    NET.consensus = NET.consensus || {};
+    const localW = NET.consensus.localWinner;
+    const duration = Date.now() - (NET.matchStartTime || Date.now());
+    const hits = NET.matchHits || 0;
+    const isQualifying = m.qualifying && (duration >= 15000 || hits >= 4);
+    const agreed = localW !== undefined ? (localW === m.winner) : true;
+    NET.consensus.agreed = agreed;
+    NET.consensus.qualifying = isQualifying;
+    send({ sys: 'match_ack', matchId: m.matchId, winner: m.winner, agreed, qualifying: isQualifying });
+    if (NET.consensus.pendingReport) {
+      commitNetProgress(m.winner, agreed, isQualifying);
+    }
+  }
+  else if (m.sys === 'match_ack') {
+    NET.consensus = NET.consensus || {};
+    NET.consensus.peerAgreed = !!m.agreed;
+    NET.consensus.qualifying = NET.consensus.qualifying && !!m.qualifying;
+    if (NET.consensus.pendingReport) {
+      commitNetProgress(NET.consensus.localWinner, NET.consensus.peerAgreed, NET.consensus.qualifying);
+    }
+  }
   else if (m.sys === 'left') { clearResume(); netLost(); }
   else if (m.sys === 'nf') { netStatus(NET.matching ? '这台服务器尚不支持快速匹配，请房主更新 server.py' : '找不到这个房间，请核对房间码'); netReset(); }
   else if (m.sys === 'full') { netStatus('这间房已经满员'); netReset(); }
@@ -1196,7 +1218,7 @@ function netLost() {
   netReset();
   if (was) { toMenu(); selectMode('net'); }
   $id('roomCode').textContent = '';
-  netStatus(NET.lastResult && /中途离开/.test(NET.lastResult) ? NET.lastResult : '对方已离开房间，可重新建房或加入');
+  netStatus('对局已中断（未完成，不扣分）。可重新建房或加入');
   NET.lastResult = '';
 }
 // 状态快照：房主每帧发一次
@@ -1305,6 +1327,10 @@ function setupNetMatch() {
   human[0].clear(); NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   A.ctrl = NET.role === 'host' ? human[0] : NET.remote;
   B.ctrl = NET.role === 'host' ? NET.remote : human[0];
+  NET.matchStartTime = Date.now();
+  NET.matchHits = 0;
+  NET.matchId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  NET.consensus = { agreed: false, peerAgreed: false, qualifying: true, committed: false, pendingReport: false };
 }
 
 // ======================= 电脑 AI =======================
@@ -1967,7 +1993,23 @@ function showEnd(w) {
     return;
   }
   if (w >= 0) playSting(w === localIdx() ? 'victory' : 'defeat');
-  if (M.mode === 'net') send({ report: w === 0 ? 'host' : 'client' });
+  if (M.mode === 'net') {
+    const duration = Date.now() - (NET.matchStartTime || Date.now());
+    const hits = NET.matchHits || 0;
+    const isQualifying = duration >= 15000 || hits >= 4;
+    NET.consensus = NET.consensus || {};
+    NET.consensus.localWinner = w;
+    NET.consensus.qualifying = isQualifying;
+    send({
+      sys: 'match_finish',
+      matchId: NET.matchId || '',
+      winner: w,
+      duration,
+      hits,
+      qualifying: isQualifying
+    });
+    send({ report: w === 0 ? 'host' : 'client' });
+  }
   if (M.mode === 'cpu' || M.mode === 'net') adaptRecord(w === localIdx());
   reportProgress(w);
   $id('endRank').textContent = M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '';
@@ -2724,6 +2766,7 @@ function predictHit(att, def, m, pt) {
   predicted.push(performance.now());
 }
 function applyHit(att, def, m, pt) {
+  if (M.mode === 'net') NET.matchHits = (NET.matchHits || 0) + 1;
   if (def.forestProxy) { forestHit(att, m, pt); return; }
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
@@ -6943,33 +6986,11 @@ function reportProgress(w) {
   }
   // GitHub 站与离线模式本地结算与云端持久化
   if (M.mode === 'net') {
-    const won = w === localIdx();
-    const gain = won ? 60 : 30;
-    PROF.ink = (PROF.ink || 0) + gain;
-    if (won) {
-      PROF.netWins = (PROF.netWins || 0) + 1;
-      // 联机十胜：累计赢得 10 场联机对战，额外解锁一位基础英雄（铁山 或 雷鸣）
-      if (PROF.netWins >= 10 && !PROF.online10Unlocked) {
-        let unlockId = '';
-        if (!(PROF.owned || []).includes('tieshan')) unlockId = 'tieshan';
-        else if (!(PROF.owned || []).includes('leiming')) unlockId = 'leiming';
-        if (unlockId) {
-          PROF.owned = PROF.owned || ['qingfeng'];
-          if (!PROF.owned.includes(unlockId)) PROF.owned.push(unlockId);
-          PROF.online10Unlocked = true;
-          const uName = CHARS[CHAR_IDX[unlockId]].name;
-          setTimeout(() => {
-            SFX.gong();
-            toast(`【十胜功成】达成联机十胜，破境解锁基础角色：${uName}！`);
-          }, 800);
-        }
-      }
-    } else {
-      PROF.netLosses = (PROF.netLosses || 0) + 1;
-    }
-    $id('endRank').textContent = `+${gain} 墨锭 · 联机${won ? '胜' : '负'}（累计 ${PROF.netWins || 0} 胜）`;
-    if (window.CloudSave) CloudSave.saveProfile(PROF);
-    applyProfile(PROF);
+    NET.consensus = NET.consensus || {};
+    NET.consensus.pendingReport = true;
+    const agreed = NET.consensus.agreed !== false && NET.consensus.peerAgreed !== false;
+    const isQualifying = NET.consensus.qualifying !== false;
+    commitNetProgress(w, agreed, isQualifying);
   } else if (M.mode === 'cpu') {
     const won = w === 0;
     if (won) {
@@ -6981,6 +7002,51 @@ function reportProgress(w) {
       applyProfile(PROF);
     }
   }
+}
+
+function commitNetProgress(w, agreed, isQualifying) {
+  if (NET.consensus && NET.consensus.committed) return;
+  if (!NET.consensus) NET.consensus = {};
+  NET.consensus.committed = true;
+
+  const won = w === localIdx();
+  // 若对局过短（<15秒且<4次命中），属于切磋/自测练习局，不计入胜场与排位分，仅给予友好提示
+  if (!isQualifying) {
+    $id('endRank').textContent = '切磋对局（耗时过短，不计入排位胜场与墨锭）';
+    return;
+  }
+  // 双方意见不一致（作弊或不同步）
+  if (!agreed) {
+    $id('endRank').textContent = '对局结果同步存疑，本次结果不计入排位';
+    return;
+  }
+
+  const gain = won ? 60 : 30;
+  PROF.ink = (PROF.ink || 0) + gain;
+  if (won) {
+    PROF.netWins = (PROF.netWins || 0) + 1;
+    // 联机十胜：累计赢得 10 场联机对战，额外解锁一位基础英雄（铁山 或 雷鸣）
+    if (PROF.netWins >= 10 && !PROF.online10Unlocked) {
+      let unlockId = '';
+      if (!(PROF.owned || []).includes('tieshan')) unlockId = 'tieshan';
+      else if (!(PROF.owned || []).includes('leiming')) unlockId = 'leiming';
+      if (unlockId) {
+        PROF.owned = PROF.owned || ['qingfeng'];
+        if (!PROF.owned.includes(unlockId)) PROF.owned.push(unlockId);
+        PROF.online10Unlocked = true;
+        const uName = CHARS[CHAR_IDX[unlockId]].name;
+        setTimeout(() => {
+          SFX.gong();
+          toast(`【十胜功成】达成联机十胜，破境解锁基础角色：${uName}！`);
+        }, 800);
+      }
+    }
+  } else {
+    PROF.netLosses = (PROF.netLosses || 0) + 1;
+  }
+  $id('endRank').textContent = `+${gain} 墨锭 · 联机${won ? '胜' : '负'}（累计 ${PROF.netWins || 0} 胜）`;
+  if (window.CloudSave) CloudSave.saveProfile(PROF);
+  applyProfile(PROF);
 }
 
 // ======================= 新手教学 =======================
@@ -8995,8 +9061,9 @@ function claimLegacyAccount(accData) {
     }
   }
 
-  // 4. 墨锭取更大值
-  PROF.ink = Math.max(PROF.ink || 0, accData.ink || 0);
+  // 4. 墨锭取更大值（未签名或老版存档施加合理保护上限）
+  const incomingInk = Math.min(Math.max(0, accData.ink || 0), accData._sig ? 999999 : 5000);
+  PROF.ink = Math.max(PROF.ink || 0, incomingInk);
 
   // 5. 保底次数合并
   PROF.pity = Math.max(PROF.pity || 0, accData.pity || 0);
@@ -9055,14 +9122,14 @@ if ($id('importFileInput')) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
+    reader.onload = async ev => {
       try {
         const d = JSON.parse(ev.target.result);
 
         // 格式 A: 单账号导出格式或裸 Profile
         if (d.format === 'single-account' || (d.profile && d.account) || Array.isArray(d.owned)) {
           if (!window.CloudSave) throw new Error('存档系统未就绪');
-          const res = CloudSave.importAccountData(d);
+          const res = await CloudSave.importAccountData(d);
           ACC.name = res.name;
           PROF.guest = false;
           applyProfile(res.profile);

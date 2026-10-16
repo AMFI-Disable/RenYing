@@ -33,7 +33,10 @@ const P2P = {
   lastRx: 0,       // 最后一次收到对方消息的时间
 };
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
-const P2P_SYS = { host: ['hello', 'left'], client: ['ready', 'version', 'full', 'left'] };
+const P2P_SYS = {
+  host: ['hello', 'left', 'match_finish', 'match_ack'],
+  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack']
+};
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 
 function p2pOptions() {

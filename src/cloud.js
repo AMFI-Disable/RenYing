@@ -424,8 +424,43 @@
     }, 100);
   }
 
+  // 计算存档防篡改数字校验和 (SHA-256 Digest)
+  async function computeProfileDigest(p, salt = 'ry_sword_auth_2026') {
+    if (!p) return '';
+    const ink = Math.floor(p.ink || 0);
+    const wins = Math.floor(p.netWins || 0);
+    const losses = Math.floor(p.netLosses || 0);
+    const name = String(p.name || '').trim();
+    const owned = Array.isArray(p.owned) ? p.owned.slice().sort().join(',') : 'qingfeng';
+    const skins = Array.isArray(p.skins) ? p.skins.slice().sort().join(',') : '';
+    const raw = `RY_V1|${name}|${ink}|${owned}|${skins}|${wins}|${losses}|${salt}`;
+    try {
+      if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+        const enc = new TextEncoder().encode(raw);
+        const hashBuf = await crypto.subtle.digest('SHA-256', enc);
+        return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {}
+    let h1 = 0x811c9dc5, h2 = 0x27d4eb2f;
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 0x01000193);
+      h2 = Math.imul(h2 ^ ch, 0x5bd1e995);
+    }
+    return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
+  }
+
+  async function verifyProfileDigest(data) {
+    if (!data || typeof data !== 'object') return false;
+    const p = data.profile || data;
+    const sig = data._sig || (data.profile && data.profile._sig);
+    if (!sig) return null;
+    const expected = await computeProfileDigest(p);
+    return expected === sig;
+  }
+
   // 导出当前账号存档 (.json)
-  function exportCurrentAccount(prof) {
+  async function exportCurrentAccount(prof) {
     const u = getUser();
     let activeProf = prof;
     if (!activeProf) {
@@ -436,6 +471,24 @@
       }
     }
     const name = (u && u.name) || activeProf.name || '大侠';
+    const profData = {
+      name: name,
+      ink: Math.max(0, Math.floor(activeProf.ink || 0)),
+      owned: Array.isArray(activeProf.owned) ? Array.from(new Set(activeProf.owned)) : ['qingfeng'],
+      frags: activeProf.frags || {},
+      pity: Math.max(0, Math.floor(activeProf.pity || 0)),
+      spity: Math.max(0, Math.floor(activeProf.spity || 0)),
+      skins: Array.isArray(activeProf.skins) ? Array.from(new Set(activeProf.skins)) : [],
+      equip: activeProf.equip || {},
+      netWins: Math.max(0, Math.floor(activeProf.netWins || 0)),
+      netLosses: Math.max(0, Math.floor(activeProf.netLosses || 0)),
+      online10Unlocked: !!activeProf.online10Unlocked,
+      stageStars: activeProf.stageStars || {},
+      qfx: Math.max(0, Math.floor(activeProf.qfx || 0)),
+      rating: activeProf.rating || 1100,
+      placed: activeProf.placed || 0
+    };
+    const sig = await computeProfileDigest(profData);
     const payload = {
       app: 'renying',
       format: 'single-account',
@@ -445,23 +498,8 @@
         uid: (u && u.uid) || ('local_' + Date.now()),
         name: name
       },
-      profile: {
-        name: name,
-        ink: Math.max(0, Math.floor(activeProf.ink || 0)),
-        owned: Array.isArray(activeProf.owned) ? Array.from(new Set(activeProf.owned)) : ['qingfeng'],
-        frags: activeProf.frags || {},
-        pity: Math.max(0, Math.floor(activeProf.pity || 0)),
-        spity: Math.max(0, Math.floor(activeProf.spity || 0)),
-        skins: Array.isArray(activeProf.skins) ? Array.from(new Set(activeProf.skins)) : [],
-        equip: activeProf.equip || {},
-        netWins: Math.max(0, Math.floor(activeProf.netWins || 0)),
-        netLosses: Math.max(0, Math.floor(activeProf.netLosses || 0)),
-        online10Unlocked: !!activeProf.online10Unlocked,
-        stageStars: activeProf.stageStars || {},
-        qfx: Math.max(0, Math.floor(activeProf.qfx || 0)),
-        rating: activeProf.rating || 1100,
-        placed: activeProf.placed || 0
-      }
+      profile: profData,
+      _sig: sig
     };
     const safeName = String(name).replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g, '_') || 'player';
     triggerDownload(`renying-account-${safeName}.json`, JSON.stringify(payload, null, 2));
@@ -501,12 +539,21 @@
   }
 
   // 导入账号数据（支持单个存档、全备份、老站导出文件）
-  function importAccountData(data) {
+  async function importAccountData(data) {
     if (!data || typeof data !== 'object') throw new Error('无效的存档文件数据');
 
     // 格式 1: 单账号导出格式
     if (data.format === 'single-account' && data.profile) {
+      const isSigValid = await verifyProfileDigest(data);
+      if (isSigValid === false) {
+        throw new Error('⚠️ 存档校验和不匹配：该备份文件已被外部修改，已拒绝导入以保障账号安全');
+      }
       const p = data.profile;
+      // 若无签名（历史遗留老版本存档），对墨锭和胜场施加安全上限，防止注入巨量墨锭
+      if (isSigValid === null) {
+        p.ink = Math.min(Math.max(0, Math.floor(p.ink || 0)), 3000);
+        p.netWins = Math.min(Math.max(0, Math.floor(p.netWins || 0)), 100);
+      }
       const u = data.account || { uid: 'local_' + Date.now(), name: p.name || '大侠' };
       const name = p.name || u.name || '大侠';
       const uid = u.uid || ('local_' + Date.now());
@@ -641,6 +688,8 @@
       exportCurrentAccount,
       exportAllAccounts,
       importAccountData,
+      computeProfileDigest,
+      verifyProfileDigest,
       makeDevProfile,
       toCloudData,
       unlockAllOnCloud,

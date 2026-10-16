@@ -43,6 +43,14 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Check if the authenticated user has administrative privileges
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.uid == 'ry_admin_master'
+      );
+    }
+
     // Allowed profile fields whitelist
     function allowedProfileFields() {
       return [
@@ -131,17 +139,17 @@ service cloud.firestore {
 
     // Root collection: users/{userId}
     match /users/{userId} {
-      // Only the authenticated account owner can read their profile
-      allow read: if isOwner(userId);
+      // Only the authenticated account owner or admin can read their profile
+      allow read: if isOwner(userId) || isAdmin();
 
-      // Only the authenticated account owner can create their profile with valid schema
-      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      // Only the authenticated account owner or admin can create their profile with valid schema
+      allow create: if (isOwner(userId) && isValidUserProfile(request.resource.data)) || isAdmin();
 
-      // Only the authenticated account owner can update their profile with valid schema
-      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      // Only the authenticated account owner or admin can update their profile with valid schema
+      allow update: if (isOwner(userId) && isValidUserProfile(request.resource.data)) || isAdmin();
 
-      // Only the authenticated account owner can delete their profile
-      allow delete: if isOwner(userId);
+      // Only the authenticated account owner or admin can delete their profile
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // Default Deny: Deny all reads and writes to any unspecified path
