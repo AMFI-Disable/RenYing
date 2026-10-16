@@ -4194,6 +4194,8 @@ function endRound() {
   if (w >= 0) M.wins[w]++;
   if (M.mode === 'tower') {
     if (w === 0) {
+      M.phase = 'perk';
+      paused = true;
       showTowerPerkModal();
       return;
     } else {
@@ -4376,8 +4378,8 @@ function neutral(f, foe) {
 function attackUpdate(f, foe) {
   const m = f.move, c = f.ctrl, t = f.t;
   const act0 = m.su, act1 = m.su + m.ac;
-  // 格挡更灵活：出招前段、或打完判定之后的收招，按住 S 都能立刻转成格挡
-  if (c.held.down && f.onGround() && M.phase === 'fight' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
+  // 格挡更灵活：出招前段、或打完判定之后的收招，按住 S 都能立刻转成格挡（下蹲试探轻重攻击 dl/dh 不自取消）
+  if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && f.moveName !== 'dh' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
   if (t >= act0 && !f.lunged) {
     f.lunged = true;
     if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线飞向对手（要有墨水）
@@ -7578,6 +7580,7 @@ const ICONS = {
   vs: '<path d="M4 4l16 16M20 4L4 20M4 9V4h5M20 9V4h-5"/>',
   stats: '<path d="M5 20V11M12 20V4M19 20v-8"/>',
   skin: '<path d="M4 20c4 0 6-2 6-5l7-8a2 2 0 0 0-3-3l-8 7c-3 0-5 2-5 6z"/>',
+  chronicle: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5zM8 7h8M8 11h6"/>',
 };
 const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.skill}</svg></span>`;
 // 图鉴里的简短说明（数值 / 一句话）
@@ -8307,10 +8310,23 @@ function renderCodex() {
     tile(rType.icon || 'ranged', `左键+右键 · ${S2.name} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
     tile('ult', `E · ${U.name}`, sh(U.name)[0], sh(U.name)[1], '气满', false, 'ult'),
     tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · 落地前无敌', '', false, 'esc'),
+    tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim)">${(() => {
+      const chIdx = CHAPTERS.findIndex(chap => chap.boss === c.id);
+      if (chIdx < 0) {
+        return `<b>青锋传 · 月下起意</b><br>青锋行第十波大关可领悟绝学并解锁专属传说皮肤「青锋行」。`;
+      }
+      const ch = CHAPTERS[chIdx];
+      const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar' })[c.id];
+      const rSkin = rSkinKey && SKINS[rSkinKey];
+      const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+      const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
+      const clear = stars > 0 || DEV_SESSION_UNLOCKED;
+      return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}`;
+    })()}</div>`, '', true),
     ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id]) : '',
     tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true),
   ].filter(Boolean).join('');
-  for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic]}</svg>`;
+  for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic] || ICONS.skill}</svg>`;
   if ($id('cxBento')) $id('cxBento').style.setProperty('--cx-accent', col);
   startCodexCardsDirector();
 }
@@ -8421,6 +8437,7 @@ function openCodex() {
   }
   renderCodex();
 }
+window.openCodex = openCodex;
 $id('cxSkins').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   const sk = b.dataset.sk || '';
@@ -9630,7 +9647,7 @@ if (TOUCH) {
 // ======================= 界面按钮 =======================
 let pickMode = 'net', pickLevel = 'normal';
 function showScreen(id) {
-  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'tasks', 'tutask', 'tutdone', 'forestEnd']) document.getElementById(s).classList.toggle('on', s === id);
+  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
   if (id !== 'bp') { try { showPop(null); } catch (e) {} }
   if (id === 'menu') { menuCam.tx = 0; menuCam.tz = 1; }
@@ -9987,6 +10004,8 @@ function pickTowerPerk(perkId) {
 }
 
 function nextTowerFloor() {
+  paused = false;
+  M.phase = 'intro';
   M.towerFloor = (M.towerFloor || 1) + 1;
   PROF.towerMaxFloor = Math.max(PROF.towerMaxFloor || 0, M.towerFloor);
   saveProfile();
