@@ -7712,10 +7712,18 @@ function renderAcc() {
     ? `当前登录：【${u.name}】· 英雄与成就自动持久化保存`
     : '单账号云端存储：登录后，英雄解锁、墨锭与成就自动同步到云端';
 
-  // 开发者专享：全量备份功能仅向 Dev 账号开放
+  // 开发者专享：全量备份与 Google Cloud 编辑器仅向 Dev 账号开放
   const actionBtns = $id('accActionBtns');
   if (actionBtns) {
     const isDev = (u && u.name && u.name.toLowerCase() === 'dev') || (u && u.isDevMaster);
+    const devCloudBtn = $id('devCloudBtn');
+    if (devCloudBtn) {
+      if (isDev) devCloudBtn.classList.remove('hidden');
+      else {
+        devCloudBtn.classList.add('hidden');
+        if ($id('devCloudBox')) $id('devCloudBox').classList.add('hidden');
+      }
+    }
     let expAll = $id('exportAllBtn');
     if (isDev) {
       if (!expAll) {
@@ -7823,6 +7831,139 @@ $id('regBtn').addEventListener('click', () => doAcc('register'));
 $id('accPass').addEventListener('keydown', e => { if (e.key === 'Enter') doAcc('login'); });
 $id('accBack').addEventListener('click', backToMenu);
 
+if ($id('devCloudBtn')) {
+  $id('devCloudBtn').addEventListener('click', async () => {
+    const box = $id('devCloudBox');
+    if (!box) return;
+    box.classList.toggle('hidden');
+    if (!box.classList.contains('hidden')) {
+      const u = window.CloudSave && CloudSave.getUser();
+      const isCloud = window.CloudSave && CloudSave.hasValidConfig() && u && u.isCloud;
+      const badge = $id('devCloudBadge');
+      if (badge) {
+        if (isCloud) {
+          badge.textContent = '✅ 云端已连通 (Firestore)';
+          badge.style.color = '#46d3ea';
+        } else if (window.CloudSave && CloudSave.hasValidConfig()) {
+          badge.textContent = '⚡ 云配置就绪 (可同步)';
+          badge.style.color = 'var(--gold)';
+        } else {
+          badge.textContent = '⚠️ 本地独立模式 (未配置云)';
+          badge.style.color = '#ff6b6b';
+        }
+      }
+      const docRef = $id('devCloudDocRef');
+      if (docRef) docRef.textContent = 'users/' + ((u && u.uid) || 'dev_master');
+      const inEl = $id('devCloudJsonIn');
+      if (inEl && (!inEl.value || inEl.value.trim() === '')) {
+        let p = null;
+        if (window.CloudSave) {
+          try { p = await CloudSave.loadProfile(); } catch (e) {}
+        }
+        inEl.value = JSON.stringify(p || PROF, null, 2);
+      }
+    }
+  });
+}
+
+if ($id('devCloudUnlockAllBtn')) {
+  $id('devCloudUnlockAllBtn').addEventListener('click', async () => {
+    const msg = $id('devCloudMsg');
+    if (msg) {
+      msg.style.color = 'var(--gold)';
+      msg.textContent = '正在向 Google Cloud 写入全解锁数据…';
+    }
+    try {
+      if (!window.CloudSave) throw new Error('云存档模块未加载');
+      const res = await CloudSave.unlockAllOnCloud();
+      applyProfile(res.data);
+      triggerStealthDevUnlock(true);
+      if ($id('devCloudJsonIn')) $id('devCloudJsonIn').value = JSON.stringify(res.data, null, 2);
+      if (msg) {
+        msg.style.color = res.isCloud ? '#46d3ea' : 'var(--gold)';
+        msg.textContent = res.isCloud
+          ? '✅ 成功！Google Cloud Firestore (9英雄 + 18皮肤 + 99999墨锭) 已全部云端解锁并写入！'
+          : '⚡ 本地全英雄全皮肤已解锁！请配置 Firebase 云端以便同步至 Google Cloud。';
+      }
+      toast(res.isCloud ? 'Google Cloud 全解锁成功！' : '本地全英雄皮肤全解锁已生效！');
+      renderAcc();
+    } catch (err) {
+      if (msg) {
+        msg.style.color = '#ff6b6b';
+        msg.textContent = '全解锁写入失败：' + err.message;
+      }
+    }
+  });
+}
+
+if ($id('devCloudPullBtn')) {
+  $id('devCloudPullBtn').addEventListener('click', async () => {
+    const msg = $id('devCloudMsg');
+    if (msg) {
+      msg.style.color = '#46d3ea';
+      msg.textContent = '正在从 Google Cloud Firestore 拉取…';
+    }
+    try {
+      if (!window.CloudSave) throw new Error('云存档模块未加载');
+      const u = CloudSave.getUser();
+      const p = await (CloudSave.hasValidConfig() && u && u.isCloud
+        ? CloudSave.getCloudDocument('users', u.uid)
+        : CloudSave.loadProfile());
+      if (p) {
+        applyProfile(p);
+        renderAcc();
+        if ($id('devCloudJsonIn')) $id('devCloudJsonIn').value = JSON.stringify(p, null, 2);
+        if (msg) {
+          msg.style.color = '#46d3ea';
+          msg.textContent = '✅ 已从 Google Cloud 拉取最新档案！';
+        }
+        toast('已从云端拉取最新数据');
+      } else {
+        throw new Error('未读取到云端档案或尚未创建');
+      }
+    } catch (err) {
+      if (msg) {
+        msg.style.color = '#ff6b6b';
+        msg.textContent = '拉取失败：' + err.message;
+      }
+    }
+  });
+}
+
+if ($id('devCloudPushBtn')) {
+  $id('devCloudPushBtn').addEventListener('click', async () => {
+    const msg = $id('devCloudMsg');
+    const inEl = $id('devCloudJsonIn');
+    if (!inEl || !inEl.value.trim()) {
+      if (msg) { msg.style.color = '#ff6b6b'; msg.textContent = '请输入有效的 JSON 数据'; }
+      return;
+    }
+    if (msg) {
+      msg.style.color = 'var(--gold)';
+      msg.textContent = '正在推送更新至 Google Cloud…';
+    }
+    try {
+      if (!window.CloudSave) throw new Error('云存档模块未加载');
+      const parsed = JSON.parse(inEl.value.trim());
+      const u = CloudSave.getUser();
+      const uid = (u && u.uid) || 'dev_master';
+      const saved = await CloudSave.setCloudDocument('users', uid, parsed);
+      applyProfile(saved);
+      renderAcc();
+      if (msg) {
+        msg.style.color = '#46d3ea';
+        msg.textContent = '✅ 已成功将修改保存推送至 Google Cloud！';
+      }
+      toast('云端档案已更新');
+    } catch (err) {
+      if (msg) {
+        msg.style.color = '#ff6b6b';
+        msg.textContent = '推送失败：' + err.message;
+      }
+    }
+  });
+}
+
 if ($id('toggleCloudCfgBtn')) {
   $id('toggleCloudCfgBtn').addEventListener('click', () => {
     $id('cloudCfgBox').classList.toggle('hidden');
@@ -7834,7 +7975,18 @@ if ($id('fbCfgSaveBtn')) {
       const val = $id('fbCfgIn').value.trim();
       const parsed = JSON.parse(val);
       if (!parsed.projectId || !parsed.apiKey) throw new Error('配置需包含 projectId 和 apiKey');
-      if (window.CloudSave) CloudSave.setConfig(parsed);
+      if (window.CloudSave) {
+        CloudSave.setConfig(parsed);
+        const u = CloudSave.getUser();
+        if (u && (u.isDevMaster || (u.name && u.name.toLowerCase() === 'dev'))) {
+          CloudSave.login('Dev', 'IAMADEVBRO').then(() => {
+            renderAcc();
+            toast('Firebase 云端已连接！Dev 账号已在 Google Cloud 完成全解锁！');
+          }).catch(err => {
+            console.warn('Dev auto cloud sync error:', err);
+          });
+        }
+      }
       toast('Firebase 云端配置已保存！正在连线…');
       $id('cloudCfgBox').classList.add('hidden');
       renderAcc();

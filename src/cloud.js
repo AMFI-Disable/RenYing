@@ -121,6 +121,95 @@
     };
   }
 
+  function toCloudData(prof) {
+    const p = prof || {};
+    return {
+      name: String(p.name || 'Dev').slice(0, 24),
+      ink: Math.max(0, Math.floor(p.ink || 0)),
+      owned: Array.isArray(p.owned) && p.owned.length ? Array.from(new Set(p.owned)) : DEV_ALL_CHARS.slice(),
+      frags: (p.frags && typeof p.frags === 'object') ? p.frags : {},
+      pity: Math.max(0, Math.floor(p.pity || 0)),
+      spity: Math.max(0, Math.floor(p.spity || 0)),
+      skins: Array.isArray(p.skins) ? Array.from(new Set(p.skins)) : [],
+      equip: (p.equip && typeof p.equip === 'object') ? p.equip : {},
+      netWins: Math.max(0, Math.floor(p.netWins || 0)),
+      netLosses: Math.max(0, Math.floor(p.netLosses || 0)),
+      online10Unlocked: !!p.online10Unlocked,
+      stageStars: (p.stageStars && typeof p.stageStars === 'object') ? p.stageStars : {},
+      qfx: Math.max(0, Math.floor(p.qfx || 0)),
+      updatedAt: Date.now()
+    };
+  }
+
+  // Dev 开发者账号处理：支持直接在 Google Cloud Firestore 写入真实全解锁数据
+  async function loginDev(password) {
+    if (btoa(password) !== 'SUFNQURFVkJSTw==') {
+      throw new Error('昵称或密码不对');
+    }
+
+    const devProf = makeDevProfile();
+    const cloudData = toCloudData(devProf);
+
+    // 尝试在 Google Cloud (Firebase Auth + Cloud Firestore) 完成真实全量解锁
+    if (hasValidConfig() && fbAuth && fbDb) {
+      try {
+        const email = toEmail('Dev');
+        let cred = null;
+        try {
+          cred = await fbAuth.signInWithEmailAndPassword(email, password);
+        } catch (authErr) {
+          if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
+            cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+          } else {
+            throw authErr;
+          }
+        }
+
+        currentUser = cred.user;
+        currentUser.isDevMaster = true;
+        if (currentUser.updateProfile) {
+          try { await currentUser.updateProfile({ displayName: 'Dev' }); } catch (e) {}
+        }
+
+        // 将全英雄、全皮肤及全部关卡星数直接写入 Cloud Firestore
+        await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
+
+        // 写入本地缓存镜像
+        try {
+          localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(devProf));
+          localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+          localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: 'Dev', isDevMaster: true }));
+          const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
+          mockUsers['Dev'] = { uid: currentUser.uid, name: 'Dev', pw: 'SUFNQURFVkJSTw==', isDevMaster: true, created: Date.now() };
+          localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+        } catch (e) {}
+
+        return {
+          uid: currentUser.uid,
+          name: 'Dev',
+          email: email,
+          isCloud: true,
+          isDevMaster: true
+        };
+      } catch (cloudErr) {
+        console.warn('Google Cloud / Firebase Dev 登录同步异常，安全降级至本地模式:', cloudErr);
+      }
+    }
+
+    // 本地降级模拟
+    const uid = 'dev_master';
+    try {
+      localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+      localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true }));
+      const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
+      mockUsers['Dev'] = { uid, name: 'Dev', pw: 'SUFNQURFVkJSTw==', isDevMaster: true, created: Date.now() };
+      localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+    } catch (e) {}
+    currentUser = { uid, displayName: 'Dev', isDevMaster: true };
+    return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
+  }
+
   // 账号注册
   async function register(username, password) {
     const name = String(username).trim();
@@ -128,22 +217,8 @@
     if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
 
     if (name.toLowerCase() === 'dev') {
-      if (btoa(password) === 'SUFNQURFVkJSTw==') {
-        const uid = 'dev_master';
-        const devProf = makeDevProfile();
-        try {
-          localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
-          localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
-          localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true }));
-          const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-          mockUsers['Dev'] = { uid, name: 'Dev', pw: 'SUFNQURFVkJSTw==', isDevMaster: true, created: Date.now() };
-          localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-        } catch (e) {}
-        currentUser = { uid, displayName: 'Dev', isDevMaster: true };
-        return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
-      } else {
-        throw new Error('该昵称已被使用');
-      }
+      if (btoa(password) !== 'SUFNQURFVkJSTw==') throw new Error('该昵称已被使用');
+      return await loginDev(password);
     }
 
     if (hasValidConfig() && fbAuth && fbDb) {
@@ -193,22 +268,7 @@
     if (!password) throw new Error('请输入密码');
 
     if (name.toLowerCase() === 'dev') {
-      if (btoa(password) === 'SUFNQURFVkJSTw==') {
-        const uid = 'dev_master';
-        const devProf = makeDevProfile();
-        try {
-          localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
-          localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
-          localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true }));
-          const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-          mockUsers['Dev'] = { uid, name: 'Dev', pw: 'SUFNQURFVkJSTw==', isDevMaster: true, created: Date.now() };
-          localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-        } catch (e) {}
-        currentUser = { uid, displayName: 'Dev', isDevMaster: true };
-        return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
-      } else {
-        throw new Error('昵称或密码不对');
-      }
+      return await loginDev(password);
     }
 
     if (hasValidConfig() && fbAuth) {
@@ -248,7 +308,7 @@
       return {
         uid: currentUser.uid,
         name: currentUser.displayName || currentUser.email || '大侠',
-        isCloud: hasValidConfig() && !!fbDb,
+        isCloud: hasValidConfig() && !!fbDb && currentUser.uid !== 'dev_master' && !currentUser.uid.startsWith('local_'),
         isDevMaster: isDev
       };
     }
@@ -274,7 +334,7 @@
       return null;
     }
 
-    if (hasValidConfig() && fbDb && currentUser && !currentUser.uid.startsWith('local_')) {
+    if (hasValidConfig() && fbDb && currentUser && currentUser.uid !== 'dev_master' && !currentUser.uid.startsWith('local_')) {
       try {
         const snap = await fbDb.collection('users').doc(currentUser.uid).get();
         if (snap.exists) {
@@ -301,22 +361,8 @@
   // 保存云端档案（支持防抖节流）
   function saveProfile(prof, immediate) {
     const u = getUser();
-    const dataToSave = {
-      name: (u && u.name) || prof.name || '大侠',
-      ink: Math.max(0, Math.floor(prof.ink || 0)),
-      owned: Array.isArray(prof.owned) ? Array.from(new Set(prof.owned)) : ['qingfeng'],
-      frags: prof.frags || {},
-      pity: Math.max(0, Math.floor(prof.pity || 0)),
-      spity: Math.max(0, Math.floor(prof.spity || 0)),
-      skins: Array.isArray(prof.skins) ? prof.skins : [],
-      equip: prof.equip || {},
-      netWins: Math.max(0, Math.floor(prof.netWins || 0)),
-      netLosses: Math.max(0, Math.floor(prof.netLosses || 0)),
-      online10Unlocked: !!prof.online10Unlocked,
-      stageStars: prof.stageStars || {},
-      qfx: Math.max(0, Math.floor(prof.qfx || 0)),
-      updatedAt: Date.now()
-    };
+    const dataToSave = toCloudData(prof);
+    if (u && u.name) dataToSave.name = u.name;
 
     if (!u) {
       try {
@@ -332,7 +378,7 @@
       localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(dataToSave));
     } catch (e) {}
 
-    if (!hasValidConfig() || !fbDb || !currentUser || currentUser.uid.startsWith('local_')) {
+    if (!hasValidConfig() || !fbDb || !currentUser || currentUser.uid === 'dev_master' || currentUser.uid.startsWith('local_')) {
       return;
     }
 
@@ -519,6 +565,59 @@
     throw new Error('未识别的文件格式');
   }
 
+  // 一键将当前 Dev 账号全量解锁写入 Google Cloud
+  async function unlockAllOnCloud() {
+    const devProf = makeDevProfile();
+    const cloudData = toCloudData(devProf);
+    const u = getUser();
+    const uid = (currentUser && currentUser.uid) || (u && u.uid) || 'dev_master';
+
+    // 缓存本地镜像
+    try {
+      localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+      if (u) {
+        localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: u.name || 'Dev', isDevMaster: true }));
+      }
+    } catch (e) {}
+
+    if (hasValidConfig() && fbDb && currentUser && currentUser.uid !== 'dev_master' && !currentUser.uid.startsWith('local_')) {
+      await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
+      return { success: true, isCloud: true, data: devProf };
+    }
+    return { success: true, isCloud: false, data: devProf };
+  }
+
+  // 读写 Google Cloud Firestore 任意文档
+  async function getCloudDocument(collectionName, docId) {
+    if (!hasValidConfig() || !fbDb) throw new Error('未配置或未连通 Google Cloud Firestore');
+    const col = collectionName || 'users';
+    const id = docId || (currentUser && currentUser.uid);
+    if (!id) throw new Error('缺少文档 ID');
+    const snap = await fbDb.collection(col).doc(id).get();
+    if (!snap.exists) return null;
+    return snap.data();
+  }
+
+  async function setCloudDocument(collectionName, docId, data) {
+    if (!hasValidConfig() || !fbDb) throw new Error('未配置或未连通 Google Cloud Firestore');
+    const col = collectionName || 'users';
+    const id = docId || (currentUser && currentUser.uid);
+    if (!id) throw new Error('缺少文档 ID');
+    if (!data || typeof data !== 'object') throw new Error('数据必须是有效 JSON 对象');
+
+    const sanitized = toCloudData(data);
+    await fbDb.collection(col).doc(id).set(sanitized, { merge: true });
+
+    // 同步到本地镜像
+    try {
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(sanitized));
+      localStorage.setItem('renying-prof-' + id, JSON.stringify(sanitized));
+    } catch (e) {}
+
+    return sanitized;
+  }
+
   // 初始化
   if (typeof window !== 'undefined') {
     window.CloudSave = {
@@ -535,7 +634,14 @@
       onAuthChange,
       exportCurrentAccount,
       exportAllAccounts,
-      importAccountData
+      importAccountData,
+      makeDevProfile,
+      toCloudData,
+      unlockAllOnCloud,
+      getCloudDocument,
+      setCloudDocument,
+      getDb: () => fbDb,
+      getAuth: () => fbAuth
     };
 
     // 页面加载完成后尝试初始化
