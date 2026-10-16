@@ -27,11 +27,11 @@ flowchart TD
 ## 🏛️ 第一阶段：工程规范、模板对齐与自动化流水线
 *(来源归档：`c5d34a36-69ad-4056-b9bd-8cc554f9ee70/walkthrough.md`)*
 
-在工程初始化与仓库合规性审计中，《刃影》仓库（[`RenYing`](file:///Users/even/Desktop/Projects/Games/RenYing)）按照标准化规范完成了代码与文档全方位整顿：
+在工程初始化与仓库合规性审计中，《刃影》仓库（[`RenYing`](.)）按照标准化规范完成了代码与文档全方位整顿：
 
 ### 1. 文档锚点与 Markdownlint 格式治理
 - **片段锚点对齐 (MD051)**：
-  - 修复了所有 section 标题的 markdownlint 锚点解析异常，在 [`readme.md`](file:///Users/even/Desktop/Projects/Games/RenYing/readme.md) 与 [`readme.zh-cn.md`](file:///Users/even/Desktop/Projects/Games/RenYing/readme.zh-cn.md) 中统一植入显式 HTML 锚点 `<a id="..."></a>`。
+  - 修复了所有 section 标题的 markdownlint 锚点解析异常，在 [`readme.md`](readme.md) 与 [`readme.zh-cn.md`](readme.zh-cn.md) 中统一植入显式 HTML 锚点 `<a id="..."></a>`。
   - 标准化目录链接与徽章跳转路径，实现 `npx markdownlint-cli *.md .github/**/*.md` **0 错误、0 警告**。
 
 ### 2. 仓库瘦身与大文件剥离
@@ -39,11 +39,11 @@ flowchart TD
 
 ### 3. GitHub Issue & PR 标准化模板
 - 在 `.github/issue_template/` 下创建并规范化：
-  - [`bug_report.md`](file:///Users/even/Desktop/Projects/Games/RenYing/.github/issue_template/bug_report.md)：包含浏览器环境、联机模式（P2P/WebSocket）、控制方式（键盘/触摸）及帧率诊断字段。
-  - [`feature_request.md`](file:///Users/even/Desktop/Projects/Games/RenYing/.github/issue_template/feature_request.md)：包含功能价值阐述、替代方案分析与设计预案。
+  - [`bug_report.md`](.github/issue_template/bug_report.md)：包含浏览器环境、联机模式（P2P/WebSocket）、控制方式（键盘/触摸）及帧率诊断字段。
+  - [`feature_request.md`](.github/issue_template/feature_request.md)：包含功能价值阐述、替代方案分析与设计预案。
 
 ### 4. 严苛的 GitHub Actions CI 持续集成构建
-- 创建流水线 [`.github/workflows/ci.yml`](file:///Users/even/Desktop/Projects/Games/RenYing/.github/workflows/ci.yml)，集成六重自动化质量卡点：
+- 创建流水线 [`.github/workflows/ci.yml`](.github/workflows/ci.yml)，集成六重自动化质量卡点：
   1. **Python 3.12 语法编译**：`python3 -m py_compile server.py tools/build.py`。
   2. **Ruby YAML 严谨校验**：遍历并安全解析所有 `.github/**/*.{yml,yaml}` 配置。
   3. **全小写路径检查**：`git ls-files | grep '[A-Z]'` 严格阻断大小写混淆文件。
@@ -121,9 +121,9 @@ sequenceDiagram
 ```
 
 ### 1. 资产解耦与页面轻量化
-- **背景音乐分离**：将原本嵌入在 HTML 中的大体积音频抽出，独立存放在 [`assets/music/`](file:///Users/even/Desktop/Projects/Games/RenYing/assets/music/)，使得在线版 [`index.html`](file:///Users/even/Desktop/Projects/Games/RenYing/index.html) 从 6.5 MB 骤降至 **1.6 MB**，极大提升了弱网加载速度。
-- **PeerJS 本地化集成**：将 [`assets/peerjs.min.js`](file:///Users/even/Desktop/Projects/Games/RenYing/assets/peerjs.min.js) 打包内嵌，消除外部不可靠 CDN 的网络超时与阻断风险。
-- **单一源码构建流水线**：由 [`tools/build.py`](file:///Users/even/Desktop/Projects/Games/RenYing/tools/build.py) 统筹生成在线版 [`index.html`](file:///Users/even/Desktop/Projects/Games/RenYing/index.html) 与全内嵌离线单文件 [`renying-offline.html`](file:///Users/even/Desktop/Projects/Games/RenYing/renying-offline.html)。
+- **背景音乐分离**：将原本嵌入在 HTML 中的大体积音频抽出，独立存放在 [`assets/music/`](assets/music/)，使得在线版 [`index.html`](index.html) 从 6.5 MB 骤降至 **1.6 MB**，极大提升了弱网加载速度。
+- **PeerJS 本地化集成**：将 [`assets/peerjs.min.js`](assets/peerjs.min.js) 打包内嵌，消除外部不可靠 CDN 的网络超时与阻断风险。
+- **单一源码构建流水线**：由 [`tools/build.py`](tools/build.py) 统筹生成在线版 [`index.html`](index.html) 与全内嵌离线单文件 [`renying-offline.html`](renying-offline.html)。
 
 ### 2. 双模联机切换与环境自动探测
 - **环境自适应**：访问页面时自动探测宿主环境。在静态托管（`https://amfi-disable.github.io/RenYing/`）下默认激活 **WebRTC 免服务器直连**，杜绝了试图连接 `ws://127.0.0.1:8765` 导致的浏览器 Mixed Content 安全拦截。
@@ -232,10 +232,10 @@ flowchart LR
 
 ### 2. Google Firebase 纯前端 Serverless 云端存档
 - **零服务器免维护架构**：
-  - 在 [`src/cloud.js`](file:///Users/even/Desktop/Projects/Games/RenYing/src/cloud.js) 中集成 Firebase Auth 与 Cloud Firestore，玩家输入 Firebase 凭据即可直连 Google Cloud 后端，无需搭建或运维任何中间层服务。
+  - 在 [`src/cloud.js`](src/cloud.js) 中集成 Firebase Auth 与 Cloud Firestore，玩家输入 Firebase 凭据即可直连 Google Cloud 后端，无需搭建或运维任何中间层服务。
   - 严格支持 **离线缓存降级**：即便未配置云端或网络断开，自动安全读写本地 `localStorage('renying-profile')` 与 `localStorage('renying-cloud-cache')`，联网后自动按时间戳防冲突双向合并同步。
 - **专职子代理与生产级安全规则**：
-  - 经由专职子代理 `firestore-rules-author` 编写并校验了生产级安全规则 [`firestore.rules`](file:///Users/even/Desktop/Projects/Games/RenYing/firestore.rules)。
+  - 经由专职子代理 `firestore-rules-author` 编写并校验了生产级安全规则 [`firestore.rules`](firestore.rules)。
   - 根目录集合 `users/{userId}` 严格限制只有登录用户本人（`request.auth.uid == userId`）可读写自己的存档文档，严格校验全部 13 项字段类型与边界范围，从协议底层杜绝越权篡改。
 
 ---
@@ -372,8 +372,8 @@ flowchart LR
 
 ### 1. 导出数据体量与安全性核验
 - **分析两份导出资产**：
-  - [`export.py`](file:///Users/even/Desktop/Projects/Games/RenYing/export.py)：老站专用的只读快照导出脚本，设计上**严格剥离密码哈希与会话 Token**，保障数据迁移安全。
-  - [`renying-export.json`](file:///Users/even/Desktop/Projects/Games/RenYing/renying-export.json)：包含老站全部 21 位注册玩家、20 条高价值成长档案（涵盖 Luffy、明媚的地球、神明、Hilbert、设计失败的草履虫等老玩家，包含多位全英雄、全皮肤老将）、88 场经典天梯对局历史与 37 条江湖留言帖。
+  - [`export.py`](export.py)：老站专用的只读快照导出脚本，设计上**严格剥离密码哈希与会话 Token**，保障数据迁移安全。
+  - [`renying-export.json`](renying-export.json)：包含老站全部 21 位注册玩家、20 条高价值成长档案（涵盖 Luffy、明媚的地球、神明、Hilbert、设计失败的草履虫等老玩家，包含多位全英雄、全皮肤老将）、88 场经典天梯对局历史与 37 条江湖留言帖。
 - **数据结构 1:1 对齐映射**：
   - 老站 `profiles.data` 与新版新架构 `PROF` / `CloudSave` 规格完美兼容：`ink`（墨锭余额）、`owned`（解锁英雄集合）、`skins`（解锁皮肤库）、`frags`（各英雄碎片）、`pity`/`spity`（双保底计数器）、`equip`（武器装配）、`wins`/`losses`（战绩）及 `rating`（天梯等级分）。
 
@@ -390,11 +390,11 @@ flowchart LR
   - 前端实时解析校验，动态重载选择器并提供一键导入，未来所有数据备份均可随心还原。
 
 ### 3. 服务端 SQLite 数据自动导入与免密激活体系 (`tools/import_data.py` & `server.py`)
-- **批量导入工具 [`tools/import_data.py`](file:///Users/even/Desktop/Projects/Games/RenYing/tools/import_data.py)**：
+- **批量导入工具 [`tools/import_data.py`](tools/import_data.py)**：
   - 支持将 `renying-export.json` 一键写入 `data/renying.db`，全量恢复 21 位玩家、20 条成长档案、88 场对局与 37 条留言。
   - 将导入用户的密码与盐值设置为 `NULL`，为老玩家激活预留安全通道。
 - **老玩家首次注册激活（Seamless First-Register Activation）**：
-  - 在 [`server.py`](file:///Users/even/Desktop/Projects/Games/RenYing/server.py) 中重构注册与登录网关：
+  - 在 [`server.py`](server.py) 中重构注册与登录网关：
     - 若老玩家尝试直接登录未激活账号，拦截并提示 `403：此为老站继承账号，请点击【注册】设置密码即可直接激活并继承全部档案！`；
     - 当老玩家在注册界面输入其老站昵称与自选新密码时，后端自动捕获并执行 `UPDATE users SET pw = ?, salt = ? WHERE id = ?`，瞬间发放登录 Token 并完整绑定其原本的全部胜负场、段位积分与角色档案！
 
