@@ -453,14 +453,18 @@ flowchart LR
 | **体量防御与全画质默认** | `c07fe1a` | `feat: hero posture attributes` | 动量碰撞比、8 项防御属性矩阵、HUD 架势条与破防崩势、消除设置自动优化默认极高原生画质 |
 | **全英雄技能重构增强** | `eec5689` | `feat: enhance hero skills` | 18项技能差异化控制体系：穴道定身/雷电麻痹/深墨禁锢/折返背袭/无硬直骚扰/巨型弹道 |
 | **老站数据无缝继承与导入** | `20ba616` | `feat: import legacy accounts` | 网页端一键继承/JSON解析导入/云同步，服务端数据恢复工具与无密码首次注册激活网关 |
-| **全真打击视窗与选人底栏** | `e8ed739` | `feat: authentic move inspector` | 9 英雄全真时序库、Puppet 实体特效与稻草人物理、多视窗卡片并发渲染、选人全景招式检视台 |
+| **选人全景招式检视台** | `e8ed739` | `feat: authentic move inspector` | 9 英雄全真时序库、Puppet 实体特效与稻草人物理、多视窗卡片并发渲染、选人全景招式检视台 |
+| **窗口对焦点恢复修复** | `e3f9707` | `fix: restore window focus` | 游戏画布与暂停弹窗点击/空格自动回焦机制，彻底解决切屏与刷新后输入框脱焦打字空白问题 |
+| **选人选禁界面零滚动重构** | `0d8f08d` | `fix: compact draft layout` | 单行横向自适应英雄网格与响应式双栏底舱，全视口（1440x900至800x600）消除纵向滚动，确认按钮常驻可视 |
 
 ```bash
 # 全局自动化质量验证汇总 (全部通过)
 python3 -m py_compile server.py tools/build.py tools/import_data.py tools/export_data.py  # 语法校验：PASS (exit 0)
 python3 tools/build.py --check                                                            # 单文件零代码漂移校验：PASS (exit 0)
-node --check src/game.js                                                                  # 游戏引擎语法：PASS (exit 0)
-node --check src/cloud.js                                                                 # 云端存档模块语法：PASS (exit 0)
+node tools/ui-audit.mjs ci-ui 1440 900                                                    # UI 面板全量审计：PASS (22 panels, 0 defects)
+node tools/hud-audit.mjs ci-hud 1440 900                                                  # HUD 字体合规审计：PASS (12px floor satisfied)
+node tools/touch-audit.mjs ci-touch                                                       # 触屏与移动适配审计：PASS (exit 0)
 git status                                                                                # 工作区状态：working tree clean (ahead of origin/main by 0)
 ```
+
 
