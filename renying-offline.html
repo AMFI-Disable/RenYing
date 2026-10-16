@@ -4041,19 +4041,42 @@ function updateMatch() {
     if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
-    if (M.mode !== 'demo' && M.mode !== 'train') M.timer = Math.max(0, M.timer - STEP);
-    if (M.timer <= 0) {
-      const ra = A.hp / A.maxHp, rb = B.hp / B.maxHp;
-      if (!M.ot) {
-        if ((ra >= 0.5) !== (rb >= 0.5)) timeDeath(ra >= 0.5 ? 0 : 1, '败北');
-        else { M.ot = true; M.timer = OT_TIME; sayNet('加时', 1.2, 'big', 'gong'); }
-      } else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
+    if (M.mode !== 'train' && (A.hp <= 0 || B.hp <= 0)) {
+      const winner = (A.hp <= 0 && B.hp <= 0)
+        ? (A.hp > B.hp ? 0 : 1)
+        : (A.hp <= 0 ? 1 : 0);
+      const loser = [A, B][1 - winner];
+      loser.hp = 0;
+      if (loser.state !== 'launched') {
+        loser.state = 'launched';
+        loser.t = 0;
+        loser.vy = Math.min(loser.vy, -520);
+        loser.y = Math.min(loser.y, -1);
+      }
+      M.phase = 'ko';
+      M.t = 0;
+      M.koWinner = winner;
+    } else if (M.mode !== 'demo' && M.mode !== 'train') {
+      M.timer = Math.max(0, M.timer - STEP);
+      if (M.timer <= 0) {
+        const ra = A.hp / A.maxHp, rb = B.hp / B.maxHp;
+        if (!M.ot) {
+          if ((ra >= 0.5) !== (rb >= 0.5)) timeDeath(ra >= 0.5 ? 0 : 1, '败北');
+          else { M.ot = true; M.timer = OT_TIME; sayNet('加时', 1.2, 'big', 'gong'); }
+        } else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
+      }
     }
   } else if (M.phase === 'ko') {
     const w = M.koWinner >= 0 ? [A, B][M.koWinner] : null;
     if (w && M.t > 1.2 && w.hp > 0 && w.onGround() && (w.state === 'idle' || w.state === 'walk')) { w.state = 'victory'; w.t = 0; skinVictoryFX(w); }
-    if (M.t > 2.8) endRound();
+    if (M.t > 2.8) {
+      try { endRound(); } catch (err) { console.error('endRound error:', err); showEnd(M.koWinner >= 0 ? M.koWinner : 0); }
+    }
   }
+}
+function saveProfile() {
+  if (window.CloudSave) CloudSave.saveProfile(PROF);
+  applyProfile(PROF);
 }
 function sayNet(text, dur, style, snd) { say(text, dur, style); if (snd) SFX[snd](); netEmit({ e: 'say', text, dur, style, snd }); }
 function showEnd(w) {
@@ -4164,6 +4187,13 @@ function endRound() {
   }
   if (M.mode === 'tag3') {
     if (w < 0) {
+      M.round++;
+      if (M.round >= 10) {
+        M.phase = 'end';
+        const finalWinner = M.teamIdx[0] < M.teamIdx[1] ? 0 : (M.teamIdx[1] < M.teamIdx[0] ? 1 : (M.wins[0] >= M.wins[1] ? 0 : 1));
+        showEnd(finalWinner);
+        return;
+      }
       startRound();
       return;
     }
@@ -4197,11 +4227,12 @@ function endRound() {
     say(txt, 1.4);
     return;
   }
-  if (w >= 0 && M.wins[w] >= 2) {
+  if ((w >= 0 && M.wins[w] >= 2) || M.round >= 5) {
     if (M.mode === 'demo') return startMatch('demo');
     M.phase = 'end';
-    netEmit({ e: 'end', w, wins: [...M.wins] });
-    if (!ROLL.on) showEnd(w);
+    const finalWinner = w >= 0 ? w : (M.wins[0] >= M.wins[1] ? 0 : 1);
+    netEmit({ e: 'end', w: finalWinner, wins: [...M.wins] });
+    if (!ROLL.on) showEnd(finalWinner);
     return;
   }
   M.round++;
