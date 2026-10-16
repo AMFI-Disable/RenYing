@@ -4641,11 +4641,86 @@ function menuGo(name) {
   $id('menu').classList.add('leaving');
   setTimeout(() => { $id('menu').classList.remove('leaving'); openScreen(name); }, spot !== undefined ? 520 : 260);
 }
-// 单人面板：sec 为空时全部显示（在线版），否则只显示那一块（离线版的独立入口）
+const AI_PROFILES = {
+  easy: {
+    name: '入门',
+    badge: '初学练手',
+    badgeCol: '#46d3ea',
+    desc: '电脑出招反应较慢（0.35~0.7s），极少进行格挡招架（15%），出招以单发轻击为主。适合新手熟悉移动、按键手感与基础技能命中。',
+    traits: ['出招前摇大', '极少格挡 (15%)', '低反击欲望']
+  },
+  normal: {
+    name: '寻常',
+    badge: '标准对练',
+    badgeCol: '#2bd49a',
+    desc: '见招拆招，具备基础格挡意识（40%），会主动施展 3 连招。攻守相对平衡，适合检验常规实战走位与破招时机。',
+    traits: ['标准反应 (0.3s)', '适度格挡 (40%)', '3连段打法']
+  },
+  hard: {
+    name: '劲敌',
+    badge: '凌厉反击',
+    badgeCol: '#e9c46a',
+    desc: '身手敏捷（反应 0.08~0.22s），频繁格挡（72%）与主动抢攻，能熟练打出 4 连招与压制追击，稍有破绽即遭重创！',
+    traits: ['敏锐反击', '高频格挡 (72%)', '4连段压制']
+  },
+  adaptive: {
+    name: '宿敌',
+    badge: '动态自适应',
+    badgeCol: '#ff9f43',
+    desc: '拥有自我调整与动态成长能力！根据历史战绩动态调节强弱，并必禁你胜率最高英雄、首选你最常用的英雄出战。',
+    traits: ['战力动态自适应', '必禁绝活英雄', '镜像常用角色']
+  },
+  impossible: {
+    name: '绝顶',
+    badge: '极境宗师',
+    badgeCol: '#ff6b6b',
+    desc: '微秒级极限神经反射（12~35ms），近乎完美格挡（99%），被连击时瞬间受身脱离，神级预判与无限绝杀，挑战操作天花板！',
+    traits: ['微秒反应 (12ms)', '完美格挡 (99%)', '受身必闪']
+  }
+};
+
+function updateAIBrief() {
+  const lv = pickLevel || 'normal';
+  const p = AI_PROFILES[lv] || AI_PROFILES.normal;
+  const badgeEl = $id('aiBadge');
+  if (badgeEl) {
+    badgeEl.textContent = p.badge;
+    badgeEl.style.borderColor = p.badgeCol;
+    badgeEl.style.color = p.badgeCol;
+  }
+  const descEl = $id('aiDesc');
+  if (descEl) descEl.textContent = p.desc;
+  const traitsEl = $id('aiTraits');
+  if (traitsEl) traitsEl.innerHTML = p.traits.map(t => `<span class="trait-chip">${t}</span>`).join('');
+  const adaptEl = $id('adaptLine');
+  if (adaptEl) {
+    adaptEl.style.display = lv === 'adaptive' ? '' : 'none';
+  }
+}
+
+// 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
+let currentSingleTab = 'cpu';
 function singleSec(sec) {
-  for (const el of document.querySelectorAll('#single [data-sec]')) el.style.display = !sec || el.dataset.sec.split(' ').includes(sec) ? '' : 'none';
-  $id('singleT').textContent = sec ? { cpu: '对战电脑', stage: '闯关模式', train: '木人桩' }[sec] : '单人练习';
-  for (const h of document.querySelectorAll('#single [data-sec] h3')) h.style.display = sec ? 'none' : '';
+  const active = sec || currentSingleTab || 'cpu';
+  currentSingleTab = active;
+  for (const b of document.querySelectorAll('#singleTabs button')) {
+    b.classList.toggle('sel', b.dataset.tab === active);
+  }
+  for (const el of document.querySelectorAll('#single [data-sec]')) {
+    const secs = el.dataset.sec.split(' ');
+    el.style.display = secs.includes(active) ? '' : 'none';
+  }
+  $id('singleT').textContent = '单人模式';
+  const subEl = $id('singleSub');
+  if (subEl) {
+    const subs = {
+      cpu: '选择 AI 难度与对手境界，在实战对局中锤炼招式攻防',
+      stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
+      train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定'
+    };
+    subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
+  }
+  updateAIBrief();
 }
 function openScreen(name) {
   if (OFFLINE_BUILD && name === 'single') name = 'cpu';
@@ -6795,11 +6870,40 @@ function selectMode(mode) {
   pickMode = mode;
   if (mode === 'net') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; showScreen('netp'); }
 }
-document.getElementById('levels').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  pickLevel = b.dataset.lv;
-  for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x === b);
-});
+const levelsEl = document.getElementById('levels');
+if (levelsEl) {
+  levelsEl.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || !b.dataset.lv) return;
+    pickLevel = b.dataset.lv;
+    for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x === b);
+    updateAIBrief();
+    SFX.slice();
+  });
+}
+const singleTabsEl = document.getElementById('singleTabs');
+if (singleTabsEl) {
+  singleTabsEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.tab) return;
+    singleSec(b.dataset.tab);
+    if (b.dataset.tab === 'stage') renderStages();
+    if (b.dataset.tab === 'train' || b.dataset.tab === 'stage') renderTrainPick();
+    SFX.slice();
+  });
+}
+const taskTabsEl = document.getElementById('taskTabs');
+if (taskTabsEl) {
+  taskTabsEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.ttab) return;
+    const ttab = b.dataset.ttab;
+    for (const btn of document.querySelectorAll('#taskTabs button')) btn.classList.toggle('sel', btn === b);
+    if ($id('taskTabQuests')) $id('taskTabQuests').style.display = ttab === 'quests' ? '' : 'none';
+    if ($id('taskTabRedeem')) $id('taskTabRedeem').style.display = ttab === 'redeem' ? '' : 'none';
+    if ($id('taskTabGuide')) $id('taskTabGuide').style.display = ttab === 'guide' ? '' : 'none';
+    SFX.slice();
+  });
+}
 let trainChar = 0, dummyMode = 'stand';
 function startTraining() {
   FOREST.on = false; B.forestProxy = false; B.hidden = false;

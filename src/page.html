@@ -29,30 +29,99 @@
 
   <div id="single" class="scr">
     <div class="panel singlep">
-      <h2 id="singleT">单人练习</h2>
-      <div data-sec="cpu">
-        <h3 class="spt">对战电脑</h3>
-        <div class="seg" id="levels"><button data-lv="easy">入门</button><button data-lv="normal" class="sel">寻常</button><button data-lv="hard">劲敌</button><button data-lv="adaptive">宿敌</button><button data-lv="impossible">绝顶</button></div>
-        <p class="netnote" id="adaptLine"></p>
-        <button class="go" id="goBtn">开战</button>
+      <div class="mode-title-wrap">
+        <h2 id="singleT">单人模式</h2>
+        <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
-      <div data-sec="stage">
-        <h3 class="spt">闯关模式</h3>
-        <p class="sub" style="margin:0 0 10px">六章，每章五关：前四关斩妖物，第五关挑战守关高手。通关方能解锁下一关——余血越多，得星越多。</p>
+
+      <div class="single-tabs" id="singleTabs">
+        <button data-tab="cpu" class="sel" type="button">⚔️ 对战电脑</button>
+        <button data-tab="stage" type="button">🌲 守关挑战</button>
+        <button data-tab="train" type="button">🥋 木人试剑</button>
       </div>
-      <div data-sec="stage train"><p class="netnote" style="margin:4px 0 8px">选择角色</p><div class="trpick" id="trPick"></div></div>
-      <div data-sec="stage">
-        <p class="netnote" style="margin:4px 0 6px">选择关卡</p>
+
+      <!-- 对战电脑 (Choosing AI) -->
+      <div data-sec="cpu" class="single-sec-pane">
+        <div class="sec-head-row">
+          <h3 class="spt">对手境界选择</h3>
+          <span class="sub-badge">离线人机演练</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">选择电脑 AI 战力境界，各难度具备独立的出招倾向、格挡反应与连段深度。</p>
+
+        <div class="levels-grid" id="levels">
+          <button data-lv="easy" type="button">
+            <span class="lv-top"><span class="lv-icon">🌱</span><span class="lv-name">入门</span></span>
+            <span class="lv-sub">初学练手 · 反应迟缓</span>
+          </button>
+          <button data-lv="normal" class="sel" type="button">
+            <span class="lv-top"><span class="lv-icon">⚔️</span><span class="lv-name">寻常</span></span>
+            <span class="lv-sub">见招拆招 · 标准对练</span>
+          </button>
+          <button data-lv="hard" type="button">
+            <span class="lv-top"><span class="lv-icon">🔥</span><span class="lv-name">劲敌</span></span>
+            <span class="lv-sub">凌厉反击 · 4连段压制</span>
+          </button>
+          <button data-lv="adaptive" type="button">
+            <span class="lv-top"><span class="lv-icon">⚡</span><span class="lv-name">宿敌</span></span>
+            <span class="lv-sub">动态变强 · 针对克制</span>
+          </button>
+          <button data-lv="impossible" type="button">
+            <span class="lv-top"><span class="lv-icon">👑</span><span class="lv-name">绝顶</span></span>
+            <span class="lv-sub">极境宗师 · 零空隙弹反</span>
+          </button>
+        </div>
+
+        <div class="ai-brief-card" id="aiBriefCard">
+          <div class="ai-brief-head">
+            <span class="ai-brief-title">🧠 AI 战术情报分析</span>
+            <span class="ai-badge" id="aiBadge">标准对练</span>
+          </div>
+          <p class="ai-desc" id="aiDesc">见招拆招，具备基础格挡意识（40%），会尝试打出 3 连招。攻守平衡，适合检验常规对战走位与破招时机。</p>
+          <div class="ai-traits" id="aiTraits">
+            <span class="trait-chip">标准反应</span>
+            <span class="trait-chip">适度格挡</span>
+            <span class="trait-chip">3段连招</span>
+          </div>
+          <p class="netnote" id="adaptLine" style="display:none;margin-top:8px;text-align:left;color:var(--gold)"></p>
+        </div>
+
+        <button class="go" id="goBtn">进入选人 · 开战</button>
+      </div>
+
+      <!-- 闯关模式 -->
+      <div data-sec="stage" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">六章守关挑战</h3>
+          <span class="sub-badge">剧情通关</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">六大篇章逐级挑战，前四关斩妖除魔，终局迎战守关宗师。余血越多得星越多！</p>
+      </div>
+
+      <!-- 出战角色选择（闯关与木人桩通用） -->
+      <div data-sec="stage train" style="display:none">
+        <div class="sec-sub-label">选择出战角色</div>
+        <div class="trpick" id="trPick"></div>
+      </div>
+
+      <!-- 关卡选择 -->
+      <div data-sec="stage" style="display:none">
+        <div class="sec-sub-label">选择挑战篇章与关卡</div>
         <div class="seg sttabs" id="stTabs"></div>
         <div class="stgrid" id="stGrid"></div>
         <p class="netnote" id="stNote"></p>
       </div>
-      <div data-sec="train">
-        <h3 class="spt">木人桩练习</h3>
-        <p class="sub" style="margin:0 0 10px">对着稻草人随意出招，练熟连招。</p>
+
+      <!-- 木人桩练习 -->
+      <div data-sec="train" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">木人桩演武</h3>
+          <span class="sub-badge">自由试技</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">召唤不屈稻草人靶子，随心演练招式手感、浮空连击与爆发伤害跳字。</p>
+        <button class="go small" id="trainBtn" style="margin-top:14px">开始试炼</button>
       </div>
-      <div data-sec="train"><button class="go small" id="trainBtn">开始练习</button></div>
-      <div class="row"><button class="ghost" data-back>返回</button></div>
+
+      <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
     </div>
   </div>
 
@@ -322,20 +391,94 @@
   <div id="tasks" class="scr">
     <div class="panel taskp">
       <div class="cxhead">
-        <h2>任务</h2>
+        <div>
+          <h2>任务与秘笈</h2>
+          <p class="sub" style="margin:2px 0 0;text-align:left">修行历练 · 礼包兑换 · 墨锭经济全录</p>
+        </div>
         <div style="display:flex;align-items:center;gap:10px">
           <button class="go small hidden" id="claimAllBtn" style="padding:4px 14px;font-size:13px" type="button">一键领取全部</button>
           <div class="inkbox">墨锭 <b class="gInk">0</b></div>
           <button class="ghost" data-back>返回</button>
         </div>
       </div>
-      <h3 class="spt">每日挑战 <span class="tsub">每天 0 点刷新</span></h3><div class="tlist" id="tDaily"></div>
-      <h3 class="spt">每周任务 <span class="tsub">每周一刷新</span></h3><div class="tlist" id="tWeekly"></div>
-      <h3 class="spt">兑换码</h3>
-      <div class="row redeemrow"><input id="rdCode" maxlength="32" placeholder="输入礼包兑换码" autocomplete="off" spellcheck="false"><button class="go" id="rdBtn">兑换</button></div>
-      <h3 class="spt">墨锭从哪来</h3>
-      <p class="tips" style="margin:0">联机对战：赢 60，输 30。排位赛：赢 80，输 40。打电脑（每天前 10 局）：入门 10 / 5，寻常 20 / 10，劲敌 40 / 20。每天第一次赢（联机或寻常以上电脑）额外 150。新手教学 300。新账号送 500。<br>角色祈愿 60 一次、十连 540；皮肤祈愿 30 一次、十连 270。</p>
-      <p class="netnote" id="tMsg"></p>
+
+      <div class="task-tabs" id="taskTabs">
+        <button data-ttab="quests" class="sel" type="button">📜 挑战任务</button>
+        <button data-ttab="redeem" type="button">🎁 礼包兑换</button>
+        <button data-ttab="guide" type="button">💎 墨锭秘笈</button>
+      </div>
+
+      <!-- Tab 1: 挑战任务 -->
+      <div id="taskTabQuests" class="task-tab-pane">
+        <div class="task-sec-card">
+          <div class="sec-head-row">
+            <h3 class="spt">每日挑战</h3>
+            <span class="sub-badge">每天 0 点刷新</span>
+          </div>
+          <div class="tlist" id="tDaily"></div>
+        </div>
+        <div class="task-sec-card" style="margin-top:14px">
+          <div class="sec-head-row">
+            <h3 class="spt">每周任务</h3>
+            <span class="sub-badge">每周一 0 点刷新</span>
+          </div>
+          <div class="tlist" id="tWeekly"></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: 礼包兑换 -->
+      <div id="taskTabRedeem" class="task-tab-pane" style="display:none">
+        <div class="task-sec-card">
+          <div class="sec-head-row">
+            <h3 class="spt">礼包码兑换</h3>
+            <span class="sub-badge">输入有效密令</span>
+          </div>
+          <p class="sub" style="margin:4px 0 14px;text-align:left">输入官方发布的礼包兑换码或密令，兑换丰厚墨锭与珍稀福利。</p>
+          <div class="row redeemrow">
+            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码（如 DEV）" autocomplete="off" spellcheck="false">
+            <button class="go" id="rdBtn">兑换</button>
+          </div>
+          <p class="netnote" id="tMsg" style="min-height:22px;margin-top:6px"></p>
+        </div>
+      </div>
+
+      <!-- Tab 3: 墨锭秘笈 -->
+      <div id="taskTabGuide" class="task-tab-pane" style="display:none">
+        <div class="task-sec-card">
+          <div class="sec-head-row">
+            <h3 class="spt">墨锭经济与祈愿秘笈</h3>
+            <span class="sub-badge">系统规则全公开</span>
+          </div>
+          <p class="sub" style="margin:4px 0 14px;text-align:left">《刃影》所有角色与皮肤均可通过游玩免费获得，以下为获取与消耗规则：</p>
+          <div class="ink-grid">
+            <div class="ink-card">
+              <div class="ink-card-head"><span class="ink-icon">⚔️</span><b>对战收益</b></div>
+              <ul>
+                <li>联机对战：胜 <b>+60</b> / 负 <b>+30</b> 墨锭</li>
+                <li>排位天梯：胜 <b>+80</b> / 负 <b>+40</b> 墨锭</li>
+                <li>对战电脑（每日限前10局）：<br>· 入门：胜 <b>+10</b> / 负 <b>+5</b><br>· 寻常：胜 <b>+20</b> / 负 <b>+10</b><br>· 劲敌：胜 <b>+40</b> / 负 <b>+20</b></li>
+              </ul>
+            </div>
+            <div class="ink-card">
+              <div class="ink-card-head"><span class="ink-icon">🏆</span><b>成长与首胜</b></div>
+              <ul>
+                <li>每日首胜：胜场额外加赠 <b>+150 墨锭</b>（联机或寻常以上电脑）</li>
+                <li>新手教学：通关教学立赠 <b>+300 墨锭</b></li>
+                <li>账号注册：新号初始免费赠送 <b>+500 墨锭</b> 启动金</li>
+              </ul>
+            </div>
+            <div class="ink-card">
+              <div class="ink-card-head"><span class="ink-icon">🎋</span><b>问剑阁祈愿</b></div>
+              <ul>
+                <li>角色祈愿：<b>60</b> 墨锭/次（十连 <b>540</b>，享 9 折）</li>
+                <li>专属皮肤：<b>30</b> 墨锭/次（十连 <b>270</b>，享 9 折）</li>
+                <li>重复英雄自动折算碎片，问剑阁可直接换取专属心仪英雄</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
