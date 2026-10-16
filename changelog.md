@@ -50,6 +50,24 @@ All notable changes, features, and architectural capabilities of this project ar
   - Implemented stealth detection on the Login screen (`#acc`): typing "DEV" (case-insensitive) either in blank spaces or within text inputs triggers immediate full-roster unlock accompanied only by a subtle audio chime (`SFX.chargeFull()`), with zero website notices or textual exposure.
 - **WebSocket Protocol Verification Suite**:
   - Added headless protocol test suite `tools/protocol-test.mjs` verifying WebSocket rate-limiting bypass prevention, system message injection blocking, and forfeit loss handling on disconnect.
+- **3v3 Sect Elimination / Tag-Team Elimination Mode (`tag3`)**:
+  - Introduced the 3v3 Sect Elimination continuous duel mode (`tag3`), enabling players to configure a three-hero roster across Vanguard (先锋), Anchor (中坚), and General (大将) slots.
+  - Implemented continuous survival elimination rules: victorious combatants carry forward surviving HP into subsequent duels alongside an instant +25% max HP recovery bonus; defeated combatants are knocked out, passing the torch to the next lineup member until one sect is routed.
+  - Added interactive 3v3 team formation interface (`#tag3Slots`) supporting real-time slot selection, roster swapping, and enemy team preview.
+  - Designed custom 3v3 HUD indicators: replaced standard round diamonds with circular 3-slot squad status badges displaying slot titles ('先', '中', '大'), highlighting active combatants with a golden ring, defeated members with a red '✕', and reserve members with semi-transparent discs.
+  - Added dynamic round progression announcements ('先锋战 · 开战！', '中坚战', '大将决战', '敌方中坚出阵！', '大将亲征！') and a 60 Ink bounty on match victory.
+- **Advanced Combat Mechanics (Just Guard, Blade Clash, & Tech Roll)**:
+  - **Just Guard / Perfect Parry (`🛡️ 精准招架`)**: Blocking within 0.09s before non-projectile weapon impact negates chip damage, restores +12 guard posture, inflicts 0.18s recoil hitstun on the attacker, and triggers parry visual sparks and audio cues.
+  - **Blade Clash (`⚔️ 拼刀`)**: When both fighters land active melee weapon attacks within overlapping hitboxes simultaneously, an authentic blade clash occurs, triggering spark bursts, mutual pushback, and frame neutralization.
+  - **Tech Roll / Ukemi (`受身`)**: Tapping Dash or Jump upon ground impact when launched performs an evasive recovery roll with 0.28s invulnerability, resetting combo hit counts and avoiding vulnerable knockdown states.
+- **Single-Player Mode Hierarchy & AI Intelligence Dossier**:
+  - Reorganized single-player navigation with clean segmented tab bars (人机对战 / 进阶试炼 / 教学演练).
+  - Added 5 distinct AI difficulty tier cards (入门, 寻常, 劲敌, 宗师, 鬼神) featuring comprehensive behavioral traits, reaction latency specifications, and tactical dossiers.
+  - Redesigned Task & Rewards modal (`#taskModal`) with segmented tabs: Daily Growth Quests (日常任务), Secret Code Redemption (密令礼包兑换), and transparent Ink Economy & Gacha Rules (墨锭秘笈).
+- **Google Cloud Firestore Dev Master Synchronization & Administration Tools**:
+  - Integrated true Google Cloud Firestore synchronization for the developer master account, writing all 9 characters, 18 skins, and 99,999 ink directly to `users/{uid}`.
+  - Added developer-exclusive Cloud Inspector and live JSON profile editor (`#devCloudBox`) in the Account screen for inspecting, pulling, editing, and pushing Cloud Firestore documents directly from the browser.
+  - Added standalone command-line administration tool `tools/cloud-admin.mjs` for inspecting, backing up, restoring, and unlocking user profiles in Google Cloud Firestore.
 
 ### Changed
 
@@ -124,10 +142,37 @@ All notable changes, features, and architectural capabilities of this project ar
 - `server.py` serves `index.html`, `assets/music/`, and other whitelisted assets.
 - Updated developer and creator attribution to Even, Luffy, and Opus 5.5 across all game clients, UI screens, server, and documentation.
 - Rewrote repository documentation (`readme.md`) in plain, natural human English while preserving all URLs, badges, anchors, code fences, and policy requirements.
-- Updated master engineering walkthrough (`walkthrough.md`) with comprehensive documentation of legacy account migration and authentic move inspector architecture.
+- Updated master engineering walkthrough (`walkthrough.md`) with comprehensive documentation of legacy account migration, window focus recovery, compact draft layout architecture, and authentic move inspector architecture.
+- **Framerate Pacing & Performance Optimization**:
+  - Adjusted default target framerate to 144Hz high refresh rate (from unlimited) to stabilize pacing and eliminate frame spikes across high-refresh and variable-rate displays, streamlining options to 144, 120, 60, and 30 FPS.
+  - Clamped frame simulation accumulator to `STEP * 5` and reduced max simulation catch-up steps per tick from 12 to 5, preventing spiral-of-death lag cascades on sudden frame drops.
+  - Replaced in-place particle array slicing in `updateFX` with single-pass two-pointer compacting.
+  - Throttled background `demoLoop` with `setTimeout` when inactive, avoiding continuous `requestAnimationFrame` idling.
+  - Cached canvas dimensions (`cv._w`, `cv._h`) in move card previews to eliminate frequent DOM reflow thrashing.
+  - Capped Retina pixel ratio ceiling at 2.0 (down from 2.5) to curb excessive fillrate demands on ultra-high-density displays.
+  - Replaced full-canvas image redraw blending in `cineFX` with solid color tint fills.
+- **Combat Balance & Stun Duration Scaling**:
+  - Introduced combo hitstun decay (`comboDecay = max(0.48, 1 - 0.075 * (comboHits - 1))`) and knockback scaling (`kbMul = min(1.45, 1 + 0.05 * (comboHits - 1))`) to prevent inescapable corner-trap infinites.
+  - Rebalanced hard stun lock durations across hero skills to ensure healthy counterplay: Quake (`quake`) reduced to 0.55s, Backthrust (`backthrust`) sweetspot reduced to 0.52s, Thunderfist (`thunderfist`) reduced to 0.48s (armor hits capped at 1), Ink Trap (`inktrap`) reduced to 0.65s, Talon Dive (`dive`) reduced to 0.50s, and Iron Wall (`ironwall`) reduced to 0.48s (armor hits capped at 2).
+  - Adjusted Windblade (`windblade`) knockback to 480px and stun to 0.20s.
+- **YueHua Ultimate Heal Rebalance**:
+  - Rebalanced YueHua's ultimate (`moonflow` / 月华如水) instant heal from +22 to +12 HP (`Math.min(f.maxHp, f.hp + 12)`), preventing disproportionate sustain in competitive duels while keeping poise reset and counter stance mechanics intact.
+- **Move Mirroring & Combat Animation Fidelity**:
+  - Corrected backward block and parry arc curvatures for left-facing fighters (`f.face === -1`) by flipping radians across `[Math.PI - 1.1, Math.PI + 1.1]`.
+  - Added bespoke projectile rendering for LiuYun's glowing dual-crescent wind blade arc and MoYu's curved ink splash droplets.
+  - Replaced generic or mismatched animation sequences (`HERO_MOVE_SEQS`) across heroes, including FeiYing's backstab teleport offset (`dx: 105`), LiuYun's hover cast, LeiMing's thunder kick stomp, QingFeng's crescent release, and TieShan's shield brace charge.
+- **Melee vs. Ranged Move Archetype Differentiation**:
+  - Introduced tactical move archetype categories (`melee`, `ranged`, `dash`, `trap`, `counter`) with bespoke SVG icons and styling across Codex move lists and BP character preview decks.
+- **Hero Restraint Mechanism Dossier**:
+  - Added detailed strategic explanations (`HERO_RESTRAINTS_EXPLAIN`) in both the Codex and the Ban/Pick character dossier, detailing the tactical reasons why each hero counters specific matchups and struggles against others.
 
 ### Fixed
 
+- **Tab Navigation & Subview Switching**:
+  - Fixed tab switching bugs across single-player modes (1v1 CPU, 3v3 Sect Elimination, Training/Woodman, and Qingfengxing) by automating subview rendering and resetting scroll position (`scrollTop = 0`) on every tab change.
+  - Fixed task navigation redirection to open proper screen views instead of bypassing UI state.
+- **Woodman Practice Character Switching & Start Hardening**:
+  - Hardened `Fighter.prototype.setChar`, `startTraining`, and `renderTrainPick` against invalid string/NaN/out-of-bounds inputs, preventing practice session startup failures after changing heroes on the website.
 - **Responsive Grid & Panel Layout Hardening**:
   - Fixed horizontal overflow and button spilling on narrow mobile screens (`<= 768px`) by making the menu quick-actions row (`.msmall`) wrap cleanly and adapt its padding/spacing.
   - Fixed settings panel overflow on screens `<= 640px` by adapting `.setrow` and `.keygrid` to stack labels and adjust segmented button widths, completely preventing off-screen clipping.
@@ -160,6 +205,16 @@ All notable changes, features, and architectural capabilities of this project ar
   - Relayed peer messages that carry a `sys` key are dropped. `sys` messages are server-to-client only; previously a matched opponent could forge one, including a fake `result` whose `me` block was written into the victim's local storage.
   - An uncorroborated win claim from the player who leaves is no longer accepted in `finish_room`. Previously a player could claim victory and then disconnect, and that claim was recorded as a real win (the two-report path already required both sides to agree).
 - Known trade-off left in place deliberately: the HTTP API keeps `Access-Control-Allow-Origin: *` and the WebSocket URL keeps the session token in its query string. Tightening either would break the documented flow where a GitHub Pages client talks to someone else's server, and browsers cannot set custom headers on a WebSocket handshake. Anyone exposing `server.py` beyond a trusted LAN should put it behind a reverse proxy that adds an origin allowlist and TLS.
+- **Window & Canvas Focus Recovery**:
+  - Added `tabindex="0"` to game canvas and introduced centralized `refocusGame()` utility, guaranteeing instant registration of keyboard and mouse inputs without requiring manual click focusing.
+  - Automatically blur inactive text inputs, textareas, and buttons upon screen transitions or match initiation.
+  - Enhanced pause screen dismissal: clicking outside the modal or pressing Space, Enter, Escape, or P instantly resumes the match and restores canvas focus.
+  - Added automatic canvas refocus listeners for window focus, pointerdown, match initialization, rollback synchronization, and page loading.
+- **Compact Draft & BP Card Layout Hardening**:
+  - Overhauled Ban/Pick (BP) draft screen layout with responsive fluid clamp sizing (`clamp()`) across character portraits, typography, tabs, and canvas viewports.
+  - Eliminated vertical page scrolling across standard display resolutions (ranging from 1440x900 down to 800x600), ensuring hero grid, character dossier, and panoramic move preview deck fit cleanly within the viewport.
+  - Refined bottom dock structure to maintain persistent, non-obscured visibility for the match confirmation button (`#bpGo`).
+  - Tuned hero card slot proportions, padding, and deck stage canvas ratios to prevent element clipping or overflow on narrow and short display windows.
 
 ---
 
@@ -177,4 +232,3 @@ Inaugural release of Ren Ying (刃影), an ink-wash martial arts action duel gam
 ### Security
 
 - Enforced local-first execution, salted password hashing, and clean zero-telemetry architecture.
-

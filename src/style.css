@@ -659,3 +659,64 @@
   box-shadow: 0 2px 6px rgba(0,0,0,.5);
 }
 
+/* 招式类型与克制关系 */
+.type-tag, .pill-type {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  vertical-align: middle;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.type-tag.melee, .pill-type.melee {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff8a8a;
+  border: 1px solid rgba(255, 107, 107, 0.35);
+}
+.type-tag.ranged, .pill-type.ranged {
+  background: rgba(70, 211, 234, 0.15);
+  color: #46d3ea;
+  border: 1px solid rgba(70, 211, 234, 0.35);
+}
+.type-tag.dash, .pill-type.dash {
+  background: rgba(233, 196, 106, 0.15);
+  color: #e9c46a;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+}
+.type-tag.trap, .pill-type.trap {
+  background: rgba(180, 140, 255, 0.15);
+  color: #cbb4ff;
+  border: 1px solid rgba(180, 140, 255, 0.35);
+}
+.type-tag.counter, .pill-type.counter {
+  background: rgba(215, 195, 255, 0.15);
+  color: #d7c3ff;
+  border: 1px solid rgba(215, 195, 255, 0.35);
+}
+.vs-explain {
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.vs-explain .vs-line {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 3px;
+}
+.vs-explain .beats {
+  border-left: 2px solid #7fe0b0;
+}
+.vs-explain .weaks {
+  border-left: 2px solid #ff8a8a;
+}
+.bp-restr-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--faint);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+

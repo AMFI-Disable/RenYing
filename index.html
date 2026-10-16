@@ -670,6 +670,67 @@
   box-shadow: 0 2px 6px rgba(0,0,0,.5);
 }
 
+/* 招式类型与克制关系 */
+.type-tag, .pill-type {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  vertical-align: middle;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.type-tag.melee, .pill-type.melee {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff8a8a;
+  border: 1px solid rgba(255, 107, 107, 0.35);
+}
+.type-tag.ranged, .pill-type.ranged {
+  background: rgba(70, 211, 234, 0.15);
+  color: #46d3ea;
+  border: 1px solid rgba(70, 211, 234, 0.35);
+}
+.type-tag.dash, .pill-type.dash {
+  background: rgba(233, 196, 106, 0.15);
+  color: #e9c46a;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+}
+.type-tag.trap, .pill-type.trap {
+  background: rgba(180, 140, 255, 0.15);
+  color: #cbb4ff;
+  border: 1px solid rgba(180, 140, 255, 0.35);
+}
+.type-tag.counter, .pill-type.counter {
+  background: rgba(215, 195, 255, 0.15);
+  color: #d7c3ff;
+  border: 1px solid rgba(215, 195, 255, 0.35);
+}
+.vs-explain {
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.vs-explain .vs-line {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 3px;
+}
+.vs-explain .beats {
+  border-left: 2px solid #7fe0b0;
+}
+.vs-explain .weaks {
+  border-left: 2px solid #ff8a8a;
+}
+.bp-restr-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--faint);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
 </style>
 </head>
 <body>
@@ -822,7 +883,7 @@
           <span class="sub-badge">自由试技</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">召唤不屈稻草人靶子，随心演练招式手感、浮空连击与爆发伤害跳字。</p>
-        <button class="go small" id="trainBtn" style="margin-top:14px">开始试炼</button>
+        <button class="go small" id="trainBtn" type="button" style="margin-top:14px">开始试炼</button>
       </div>
 
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
@@ -2583,12 +2644,12 @@ const ULTS = {
       }
       if (f.t >= 1.1) endSpecial(f);
     } },
-  moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 22 点生命；月芒震退贴身之敌。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
+  moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 12 点生命；月芒震退贴身之敌。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
     begin(f) {
-      f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + 22); f.hitDone = false;
+      f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + 12); f.hitDone = false;
       f.skillCD = 0; f.skill2CD = 0; f.armorT = 4.0; f.armorHits = 3;
       ring(f.x, f.y - 60, 260, f.look.slash, 0.5); ring(f.x, f.y - 60, 180, '255,255,255', 0.4);
-      addP({ type: 'text', text: '+22', x: f.x, y: f.y - 130, life: 0.9, max: 0.9, rgb: '180,255,200' });
+      addP({ type: 'text', text: '+12', x: f.x, y: f.y - 130, life: 0.9, max: 0.9, rgb: '180,255,200' });
       addP({ type: 'text', text: '🌙 月魄霸体 · 架招重置', x: f.x, y: f.y - 150, life: 1.1, max: 1.1, rgb: '215,195,255' });
       SFX.chargeFull();
     },
@@ -3719,6 +3780,8 @@ class Fighter {
     this.meter = 0;
   }
   setChar(i) {
+    if (typeof i === 'string' && CHAR_IDX[i] !== undefined) i = CHAR_IDX[i];
+    if (typeof i !== 'number' || isNaN(i) || i < 0 || i >= CHARS.length) i = 0;
     this.chIdx = i; this.ch = CHARS[i]; this.moves = CHAR_MOVES[i];
     this.look = { ...this.ch.look, name: this.ch.name };
     this.maxHp = this.ch.stat.hp; this.wlen = WEAPON_LEN[this.ch.look.weapon] || 54;
@@ -5439,7 +5502,12 @@ function drawTrainDummy(f) {
   ctx.strokeStyle = '#6b4f30'; ctx.lineWidth = 2.5; for (const yy of [-92, -66]) { ctx.beginPath(); ctx.moveTo(-21, yy); ctx.lineTo(21, yy); ctx.stroke(); }
   ctx.fillStyle = '#f1e2c0'; ctx.fillRect(-5, -88, 10, 18); ctx.fillStyle = '#b8392e'; ctx.fillRect(-2, -85, 4, 12);
   ctx.strokeStyle = 'rgba(60,40,25,0.85)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-5, -130); ctx.lineTo(5, -122); ctx.moveTo(5, -130); ctx.lineTo(-5, -122); ctx.stroke();
-  if (f.state === 'block' || f.state === 'blockstun') { ctx.strokeStyle = 'rgba(170,210,255,0.7)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-f.face * -26, -80, 30, -1.1, 1.1); ctx.stroke(); }
+  if (f.state === 'block' || f.state === 'blockstun') {
+    ctx.strokeStyle = 'rgba(170,210,255,0.7)'; ctx.lineWidth = 3; ctx.beginPath();
+    const a1 = f.face === 1 ? -1.1 : Math.PI - 1.1;
+    const a2 = f.face === 1 ? 1.1 : Math.PI + 1.1;
+    ctx.arc(f.face * 26, -80, 30, a1, a2); ctx.stroke();
+  }
   ctx.restore();
 }
 function drawFighter(f) {
@@ -5488,7 +5556,12 @@ function drawFighter(f) {
     const g = ctx.createRadialGradient(f.x, f.y - 55, 5, f.x, f.y - 55, 80);
     g.addColorStop(0, `rgba(${rgb},${0.28 + 0.1 * Math.sin(clock * 20)})`); g.addColorStop(1, `rgba(${rgb},0)`);
     ctx.fillStyle = g; ctx.fillRect(f.x - 90, f.y - 145, 180, 180); ctx.restore();
-    if (f.parryT > 0) { ctx.strokeStyle = 'rgba(245,240,255,0.8)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(f.x + f.face * 22, f.y - 70, 38, -1.2, 1.2); ctx.stroke(); }
+    if (f.parryT > 0) {
+      ctx.strokeStyle = 'rgba(245,240,255,0.8)'; ctx.lineWidth = 2.5; ctx.beginPath();
+      const a1 = f.face === 1 ? -1.2 : Math.PI - 1.2;
+      const a2 = f.face === 1 ? 1.2 : Math.PI + 1.2;
+      ctx.arc(f.x + f.face * 22, f.y - 70, 38, a1, a2); ctx.stroke();
+    }
   }
   // 定身墨迹
   if (f.rooted && f.state === 'hitstun') { ctx.fillStyle = 'rgba(10,10,16,0.75)'; ctx.beginPath(); ctx.ellipse(f.x, 0, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); }
@@ -6815,6 +6888,8 @@ function singleSec(sec) {
     const secs = el.dataset.sec.split(' ');
     el.style.display = secs.includes(active) ? '' : 'none';
   }
+  const scr = $id('single');
+  if (scr) scr.scrollTop = 0;
   $id('singleT').textContent = '单人模式';
   const subEl = $id('singleSub');
   if (subEl) {
@@ -6827,16 +6902,15 @@ function singleSec(sec) {
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
   if (active === 'tag3') renderTag3();
-  updateAIBrief();
+  else if (active === 'stage') renderStages();
+  else if (active === 'train') renderTrainPick();
+  else if (active === 'cpu') updateAIBrief();
 }
 function openScreen(name) {
   if (OFFLINE_BUILD && name === 'single') name = 'cpu';
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
   if (name === 'cpu' || name === 'tag3' || name === 'stage' || name === 'train') {
     singleSec(name);
-    if (name === 'tag3') renderTag3();
-    renderTrainPick();
-    renderStages();
     showScreen('single');
     return;
   }
@@ -6986,7 +7060,10 @@ const ICONS = {
   charge: '<circle cx="12" cy="12" r="2.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1"/>',
   air: '<path d="M12 19V6M7 11l5-5 5 5M5 21h14"/>',
   skill: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',
-  ranged: '<path d="M3 12h15M13 7l5 5-5 5M3 8h4M3 16h4"/>',
+  ranged: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
+  melee: '<path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/>',
+  shield_bash: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM8 11h8M12 7v8"/>',
+  magic_trap: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M7.8 7.8l8.4 8.4M7.8 16.2l8.4-8.4"/>',
   ult: '<path d="M12 3l2.4 5.6L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.6-.4z"/>',
   esc: '<path d="M12 21V10M7 15l5-5 5 5M7 8l5-5 5 5"/>',
   adv: '<path d="M12 3v5M12 16v5M3 12h5M16 12h5"/><circle cx="12" cy="12" r="1.5"/>',
@@ -6994,7 +7071,7 @@ const ICONS = {
   stats: '<path d="M5 20V11M12 20V4M19 20v-8"/>',
   skin: '<path d="M4 20c4 0 6-2 6-5l7-8a2 2 0 0 0-3-3l-8 7c-3 0-5 2-5 6z"/>',
 };
-const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg></span>`;
+const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.skill}</svg></span>`;
 // 图鉴里的简短说明（数值 / 一句话）
 const SHORT = {
   疾风斩: ['6', '突进穿身'], 影遁: ['3', '瞬移身后 · 下一击 ×1.5'], 震地: ['9', '双向地波 · 掀飞'], 回马枪: ['9', '后跃回刺 · 挑飞'],
@@ -7002,12 +7079,62 @@ const SHORT = {
   剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 风遁: ['—', '快速后撤 · 短暂无敌'],
   雷踏: ['7', '前方雷柱'], 泼墨: ['4', '抛物墨团'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
   残月: ['29', '突进乱斩 · 终结回气重置'], 千影: ['31', '九影乱斩 · 绝杀分身重置'], 山崩: ['28', '砸地晕眩 · 直击回半气重置'], 刹那: ['12–22', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
-  龙卷: ['≤32', '龙卷浮空 · 刷新跳跃风遁'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 墨龙: ['20', '墨龙横扫 · 墨水回满生陷阱'], 月华如水: ['+22', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
+  龙卷: ['≤32', '龙卷浮空 · 刷新跳跃风遁'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 墨龙: ['20', '墨龙横扫 · 墨水回满生陷阱'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 · 脆皮(88血)', tieshan: '重斩蓄力霸体 · 气血冠绝(140血)', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
   liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻十连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒' };
 const ADV_SHORT = { moyu: '再按 Q 引爆墨阵', yuehua: '格反成功，月轮冷却清零', yanling: '空中俯冲命中，可再冲一次',
   feiying: '1.5 秒内再按 Q 瞬回原位', liuyun: '风遁后风刃变两道', lingshuang: '回马枪命中，枪旋冷却减半' };
+// ======================= 招式类型与克制详解 =======================
+const HERO_MOVE_TYPES = {
+  qingfeng: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '突进', icon: 'melee' }, ranged: { type: 'ranged', label: '远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
+  tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '霸体冲撞', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
+  feiying: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '背袭突进', icon: 'melee' }, ranged: { type: 'ranged', label: '暗器远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝杀' }, esc: { type: 'esc', label: '身法' } },
+  liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'ranged', label: '御风身法', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
+  leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'ranged', label: '引雷落击', icon: 'ranged' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
+  lingshuang: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '枪尖回刺', icon: 'melee' }, ranged: { type: 'melee', label: '枪旋近战', icon: 'melee' }, ult: { type: 'melee', label: '神技' }, esc: { type: 'esc', label: '身法' } },
+  moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'ranged', label: '泼墨远程', icon: 'ranged' }, ult: { type: 'ranged', label: '绘境' }, esc: { type: 'esc', label: '身法' } },
+  yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
+  yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } }
+};
+const HERO_RESTRAINTS_EXPLAIN = {
+  qingfeng: {
+    beatsWhy: '【克 墨羽】疾风斩高速穿身无视墨阵禁锢，半场剑气可对撞消融墨团，拔剑速攻直接打断挥毫。',
+    weakWhy: '【怕 月华】疾风斩正面突击必触发月镜太阴绝罚反制，月华脱战凝露使青锋换血消耗优势荡然无存。'
+  },
+  feiying: {
+    beatsWhy: '【克 流云、凌霜】影遁瞬移与背刺能无视枪尖与风压，瞬间贴身刺入安全死角，极速爆发斩灭布衣脆皮。',
+    weakWhy: '【怕 铁山、月华】铁山玄铁霸体正面硬吃飞刺直接重砸崩山；月镜完美格开多段贴身短刃必被反切。'
+  },
+  tieshan: {
+    beatsWhy: '【克 绯影、雷鸣】玄铁重甲与蓄力霸体令短手刺客与快拳无法打断起手，狂暴裂地与铁壁冲瞬间震溃对手防御。',
+    weakWhy: '【怕 流云、凌霜、燕翎】步履沉重难以触及高空燕翎，常被流云远距风刃放风筝或被凌霜枪尖在中距离精准破防。'
+  },
+  lingshuang: {
+    beatsWhy: '【克 铁山、青锋】235px极限枪尖距离在中距离完全压制铁山与青锋，枪旋可拨落远程暗器并强力击退。',
+    weakWhy: '【怕 雷鸣、绯影、燕翎】绯影瞬移背刺、雷鸣贴地雷闪与燕翎空中俯冲均能轻易越过长枪有效距离，贴身即陷被动。'
+  },
+  liuyun: {
+    beatsWhy: '【克 铁山、月华、燕翎】三段跳滞空与风刃推搡能长线放风筝折磨铁山；远距离狂风龙卷可直接破除月华静坐与燕翎滑翔。',
+    weakWhy: '【怕 雷鸣、绯影】雷鸣电光雷闪霸体直穿与绯影暗影影遁瞬移，能无视风压瞬间突脸秒杀薄弱体躯。'
+  },
+  leiming: {
+    beatsWhy: '【克 流云、凌霜】雷闪霸体冲拳直接穿过气流与枪尖阻击，十连快拳密不透风，令依赖身位拉扯的对手窒息。',
+    weakWhy: '【怕 铁山、月华】铁山重甲霸体正面拼拳毫不退让并反砸击倒；月华月镜架招专克高频连击拳。'
+  },
+  moyu: {
+    beatsWhy: '【克 铁山、青锋】画地墨阵强制定身铁山使其沦为定点木桩，大面积浓墨溅射封锁正面直冲，令笨重前压寸步难行。',
+    weakWhy: '【怕 绯影、雷鸣】绯影影遁闪身无视墨阵，雷闪贴地冲拳极快，常在泼墨后摇期间直取中宫斩杀。'
+  },
+  yuehua: {
+    beatsWhy: '【克 雷鸣、绯影、青锋、燕翎】太阴月镜能格开一切正面突进与下落扑击并自动绝罚反斩，折返月轮彻底切断贴身路线。',
+    weakWhy: '【怕 流云、墨羽】流云接天龙卷风刃与墨羽远距离泼墨全屏覆盖且不触发近战月镜反制，被远程持续消耗压制。'
+  },
+  yanling: {
+    beatsWhy: '【克 铁山、凌霜】超长时间自由滞空飞翔完全避开地面震地与一线枪芒，居高临下俯冲猎杀直取破绽。',
+    weakWhy: '【怕 流云、月华】流云扶摇龙卷将高空飞行强行打落，月华月镜太阴护体与月轮折返有效拦截俯冲。'
+  }
+};
 // ======================= 全真打击数据与时序 =======================
 const HERO_HIT_DETAILS = {
   qingfeng: {
@@ -7079,7 +7206,7 @@ const HERO_HIT_DETAILS = {
     air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '5 / 7', cd: '', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
     skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '14', cd: '7s', desc: '月镜架招反斩，触发太阴绝罚超长硬直与禁身。' },
     ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '6×2', cd: '3.5s', desc: '双月轮飞出折返，去程轻削，返程背袭破防击飞。' },
-    ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +22HP', badgeCls: 'badge-buff', dmg: '10 (+22)', cd: '气满', desc: '月华凝露恢复22生命，月魄护体并重置月镜月轮。' },
+    ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +12HP', badgeCls: 'badge-buff', dmg: '10 (+12)', cd: '气满', desc: '月华凝露恢复12生命，月魄护体并重置月镜月轮。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
   },
   yanling: {
@@ -7125,7 +7252,7 @@ const HERO_MOVE_SEQS = {
     ranged: [
       { p: 'idle', d: 0.1, reset: true },
       { p: 'qf_charge', d: 0.14, lab: 'R · 剑气' },
-      { p: 'qf_thrust', d: 0.36, fx: 'swordqi', hit: 1, launch: true, badge: '掀天挑空' },
+      { p: 'l3a', d: 0.36, fx: 'swordqi', hit: 1, launch: true, badge: '掀天挑空' },
       { p: 'idle', d: 0.35, reset: true }
     ],
     ult: [
@@ -7172,8 +7299,8 @@ const HERO_MOVE_SEQS = {
     ],
     ranged: [
       { p: 'idle', d: 0.1, reset: true },
-      { p: 'ts_shoulder', d: 0.15, lab: 'R · 铁壁冲' },
-      { p: 'ts_shoulder', d: 0.35, dx: 45, hit: 2, fx: 'ironwall', launch: true, badge: '💥 崩山破势' },
+      { p: 'ts_lift', d: 0.12, lab: 'R · 铁壁冲' },
+      { p: 'ts_shoulder', d: 0.38, dx: 48, hit: 2, fx: 'ironwall', launch: true, badge: '💥 崩山破势' },
       { p: 'idle', d: 0.35, reset: true }
     ],
     ult: [
@@ -7214,8 +7341,8 @@ const HERO_MOVE_SEQS = {
     skill: [
       { p: 'idle', d: 0.1, reset: true },
       { p: 'fy_seal', d: 0.14, lab: 'Q · 影遁' },
-      { p: 'fy_xslash', d: 0.32, dx: 55, hit: 2, fx: 'blink', badge: '⚡ 封脉定身' },
-      { p: 'idle', d: 0.3, reset: true }
+      { p: 'fy_xslash', d: 0.32, dx: 105, hit: 2, fx: 'blink', badge: '⚡ 封脉定身' },
+      { p: 'idle', d: 0.35, reset: true }
     ],
     ranged: [
       { p: 'idle', d: 0.1, reset: true },
@@ -7261,8 +7388,8 @@ const HERO_MOVE_SEQS = {
     ],
     skill: [
       { p: 'idle', d: 0.1, reset: true },
-      { p: 'ly_fanswipe', d: 0.1, lab: 'Q · 风刃' },
-      { p: 'idle', d: 0.36, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
+      { p: 'ly_fanswipe', d: 0.14, lab: 'Q · 风刃' },
+      { p: 'ly_hover', d: 0.36, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
       { p: 'idle', d: 0.3, reset: true }
     ],
     ranged: [
@@ -7313,8 +7440,8 @@ const HERO_MOVE_SEQS = {
     ],
     ranged: [
       { p: 'idle', d: 0.1, reset: true },
-      { p: 'lm_kick', d: 0.18, lab: 'R · 雷踏' },
-      { p: 'ts_slam', d: 0.38, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 通天雷柱' },
+      { p: 'lm_boxer', d: 0.12, lab: 'R · 雷踏' },
+      { p: 'lm_kick', d: 0.38, dx: 15, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 通天雷柱' },
       { p: 'idle', d: 0.35, reset: true }
     ],
     ult: [
@@ -7658,19 +7785,22 @@ function renderCodex() {
     const mini = moveKey ? `<div class="card-mini-win"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
     return `<div class="tile t-m${wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
   };
-  const sh = n => SHORT[n] || ['', ''];
+  const mTypes = HERO_MOVE_TYPES[c.id] || {};
+  const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee' };
+  const rType = mTypes.ranged || { label: '远程', icon: 'ranged', type: 'ranged' };
+  const restr = HERO_RESTRAINTS_EXPLAIN[c.id] || { beatsWhy: `克 ${nm(c.beats)}`, weakWhy: `怕 ${nm(c.weakTo)}` };
   $id('cxMoves').innerHTML = [
     tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
-    tile('light', '左键 · 连击', sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
-    tile('charge', '按住左键 · 蓄力', `${m.cs1.dmg} / ${m.cs2.dmg}`, '满蓄破防 · 打倒', '', false, 'charge'),
-    tile('air', '空中', `${m.a1.dmg} / ${m.a2.dmg}`, '空中斩 · 下砸', '', false, 'air'),
-    tile('skill', `Q · ${S.name}`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
-    tile('ranged', `左键+右键 · ${S2.name}`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
+    tile('light', '左键 · 连击 <small class="type-tag melee">近战</small>', sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
+    tile('charge', '按住左键 · 蓄力 <small class="type-tag melee">近战</small>', `${m.cs1.dmg} / ${m.cs2.dmg}`, '满蓄破防 · 打倒', '', false, 'charge'),
+    tile('air', '空中 <small class="type-tag melee">近战</small>', `${m.a1.dmg} / ${m.a2.dmg}`, '空中斩 · 下砸', '', false, 'air'),
+    tile(qType.icon || 'skill', `Q · ${S.name} <small class="type-tag ${qType.type}">${qType.label}</small>`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
+    tile(rType.icon || 'ranged', `左键+右键 · ${S2.name} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
     tile('ult', `E · ${U.name}`, sh(U.name)[0], sh(U.name)[1], '气满', false, 'ult'),
     tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · 落地前无敌', '', false, 'esc'),
     ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id]) : '',
-    tile('vs', '克制关系', '', `克 ${nm(c.beats)}<br>怕 ${nm(c.weakTo)}`, '', !ADV_SHORT[c.id]),
-  ].join('');
+    tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true),
+  ].filter(Boolean).join('');
   for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic]}</svg>`;
   if ($id('cxBento')) $id('cxBento').style.setProperty('--cx-accent', col);
   startCodexCardsDirector();
@@ -8476,8 +8606,8 @@ for (const id of ['tDaily', 'tWeekly']) $id(id).addEventListener('click', async 
   if (go && go.dataset.go) {
     const dest = go.dataset.go;
     if (dest === 'forest') startForest();
-    else if (dest === 'cpu') startMatch('cpu');
-    else if (dest === 'train') startMatch('train');
+    else if (dest === 'cpu') openScreen('cpu');
+    else if (dest === 'train') openScreen('train');
     else menuGo(dest);
     return;
   }
@@ -9000,9 +9130,6 @@ if (singleTabsEl) {
     const b = e.target.closest('button');
     if (!b || !b.dataset.tab) return;
     singleSec(b.dataset.tab);
-    if (b.dataset.tab === 'tag3') renderTag3();
-    if (b.dataset.tab === 'stage') renderStages();
-    if (b.dataset.tab === 'train' || b.dataset.tab === 'stage') renderTrainPick();
     SFX.slice();
   });
 }
@@ -9016,11 +9143,16 @@ if (taskTabsEl) {
     if ($id('taskTabQuests')) $id('taskTabQuests').style.display = ttab === 'quests' ? '' : 'none';
     if ($id('taskTabRedeem')) $id('taskTabRedeem').style.display = ttab === 'redeem' ? '' : 'none';
     if ($id('taskTabGuide')) $id('taskTabGuide').style.display = ttab === 'guide' ? '' : 'none';
+    const scr = $id('tasks');
+    if (scr) scr.scrollTop = 0;
     SFX.slice();
   });
 }
 let trainChar = 0, dummyMode = 'stand';
 function startTraining() {
+  if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
+    trainChar = 0;
+  }
   FOREST.on = false; B.forestProxy = false; B.hidden = false;
   initAudio(); paused = false;
   showScreen(null);
@@ -9031,11 +9163,29 @@ function startTraining() {
   A.x = STAGE_W / 2 - 160; B.x = dummyMode === 'fixed' ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = undefined;
 }
 function renderTrainPick() {
+  if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
+    trainChar = 0;
+  }
   const av = availList();
-  $id('trPick').innerHTML = CHARS.map((c, i) => `<button data-i="${i}" class="${i === trainChar ? 'sel' : ''}" style="color:rgb(${c.look.slash})">${c.name}${av.includes(i) ? '' : '<small style="font-size:12px;margin-left:4px;color:var(--dim)">试用</small>'}</button>`).join('');
+  const el = $id('trPick');
+  if (!el) return;
+  el.innerHTML = CHARS.map((c, i) => `<button type="button" data-i="${i}" class="${i === trainChar ? 'sel' : ''}" style="color:rgb(${c.look.slash})">${c.name}${av.includes(i) ? '' : '<small style="font-size:12px;margin-left:4px;color:var(--dim)">试用</small>'}</button>`).join('');
 }
-$id('trPick').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { trainChar = +b.dataset.i; renderTrainPick(); SFX.slice(); } });
-$id('trainBtn').addEventListener('click', startTraining);
+const trPickEl = $id('trPick');
+if (trPickEl) {
+  trPickEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.dataset.i === undefined) return;
+    const idx = parseInt(b.dataset.i, 10);
+    if (!isNaN(idx) && idx >= 0 && idx < CHARS.length) {
+      trainChar = idx;
+      renderTrainPick();
+      SFX.slice();
+    }
+  });
+}
+const trainBtnEl = $id('trainBtn');
+if (trainBtnEl) trainBtnEl.addEventListener('click', startTraining);
 renderTrainPick();
 
 // ======================= 3v3 门派车轮战 =======================
@@ -9334,7 +9484,7 @@ class Puppet {
       else if (st.fx === 'inkdragon') { this.projs.push({ kind: 'dragon', x: this.x + 30, y: -65, vx: 620, life: 0.8, col: '25,25,35' }); this.flashT = 0.15; }
       else if (st.fx === 'mirror') { this.rings.push({ x: this.x + 25, y: -65, r: 24, life: 0.4 }); }
       else if (st.fx === 'moonring') { this.projs.push({ kind: 'moonring', x: this.x + 30, y: -65, vx: 650, life: 0.7, col: '215,195,255' }); }
-      else if (st.fx === 'moonflow') { this.rings.push({ x: this.x, y: -60, r: 35, life: 0.5 }); this.badges.push({ text: '+22', x: this.x, y: -105, life: 0.8, max: 0.8 }); }
+      else if (st.fx === 'moonflow') { this.rings.push({ x: this.x, y: -60, r: 35, life: 0.5 }); this.badges.push({ text: '+12', x: this.x, y: -105, life: 0.8, max: 0.8 }); }
       else if (st.fx === 'dive') { this.rings.push({ x: 60, y: -40, r: 22, life: 0.3 }); }
       else if (st.fx === 'feather') { for (const dy of [-12, 0, 12]) this.projs.push({ kind: 'feather', x: this.x + 25, y: -68 + dy, vx: 950, life: 0.45, col: '160,205,255' }); }
       else if (st.fx === 'featherstorm') { this.flashT = 0.2; for (let k = 0; k < 6; k++) this.projs.push({ kind: 'feather', x: 60 + rand(-30, 30), y: -220 - k * 30, vx: rand(-30, 30), vy: 950, life: 0.4, col: '160,205,255' }); }
@@ -9432,6 +9582,20 @@ class Puppet {
         ctx.fillStyle = `rgba(${col},0.85)`;
         if (p.kind === 'swordqi') {
           ctx.beginPath(); ctx.arc(p.x, p.y, 24, -1.2, 1.2); ctx.lineWidth = 5; ctx.strokeStyle = `rgba(${col},0.9)`; ctx.stroke();
+        } else if (p.kind === 'wind') {
+          ctx.save();
+          ctx.strokeStyle = `rgba(${col},0.95)`; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(p.x, p.y, 20, -1.15, 1.15); ctx.stroke();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(p.x - 3, p.y, 15, -0.9, 0.9); ctx.stroke();
+          ctx.restore();
+        } else if (p.kind === 'inkblob') {
+          ctx.save();
+          ctx.fillStyle = 'rgba(25,25,35,0.95)';
+          ctx.beginPath(); ctx.ellipse(p.x, p.y, 11, 9, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(70,70,95,0.7)';
+          ctx.beginPath(); ctx.arc(p.x - 2, p.y - 2, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
         } else if (p.kind === 'quake') {
           ctx.fillStyle = `rgba(${col},0.75)`;
           for (let q = -12; q <= 12; q += 8) { ctx.beginPath(); ctx.moveTo(p.x + q, 0); ctx.lineTo(p.x + q + 4, -16); ctx.lineTo(p.x + q + 8, 0); ctx.fill(); }
@@ -9702,6 +9866,10 @@ function bpDetailHTML(i) {
   const L = skinLook(i, curSkin);
   const col = `rgb(${L.slash})`;
   const nm = ids => (ids || []).map(id => (CHARS[CHAR_IDX[id]] ? CHARS[CHAR_IDX[id]].name : id)).filter(Boolean).join('、') || '无';
+  const restr = HERO_RESTRAINTS_EXPLAIN[c.id];
+  const restrHtml = restr
+    ? `<div class="bp-restr-box" style="margin-top:6px;font-size:12px;line-height:1.45;color:var(--dim);text-align:left"><div style="color:#7fe0b0;margin-bottom:2px">${restr.beatsWhy}</div><div style="color:#ff8a8a">${restr.weakWhy}</div></div>`
+    : `<p class="ctr">克制 <b>${nm(c.beats)}</b>　怕 <b>${nm(c.weakTo)}</b></p>`;
 
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
     <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
@@ -9710,7 +9878,7 @@ function bpDetailHTML(i) {
     <dl><dt>被动 ${c.passiveName}</dt><dd>${c.passiveDesc}</dd>
     <dt>技能 ${S.name}</dt><dd>${S.desc}（冷却 ${S.cd} 秒）</dd>
     <dt>大招 ${U.name}</dt><dd>${U.desc}</dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
-    <p class="ctr">克制 <b>${nm(c.beats)}</b>　怕 <b>${nm(c.weakTo)}</b></p></div>`;
+    ${restrHtml}</div>`;
 }
 function buildDetails(force) {
   const box = document.getElementById('bpDetail');
@@ -9726,11 +9894,14 @@ function updateBPDeck(i) {
   const curSkin = mySkin(ch.id);
   const L = skinLook(idx, curSkin);
   const col = `rgb(${L.slash})`;
+  const mTypes = HERO_MOVE_TYPES[ch.id] || {};
+  const qType = mTypes.skill || { label: '技能', type: 'melee' };
+  const rType = mTypes.ranged || { label: '远程', type: 'ranged' };
   const tabs = [
-    { k: 'light', lab: '普攻连击' },
-    { k: 'charge', lab: '蓄力重斩' },
-    { k: 'skill', lab: `Q · ${SKILLS[ch.skill].name}` },
-    { k: 'ranged', lab: `R · ${SKILLS[ch.skill2].name}` },
+    { k: 'light', lab: '普攻连击 [近战]' },
+    { k: 'charge', lab: '蓄力重斩 [近战]' },
+    { k: 'skill', lab: `Q · ${SKILLS[ch.skill].name} [${qType.label}]` },
+    { k: 'ranged', lab: `R · ${SKILLS[ch.skill2].name} [${rType.label}]` },
     { k: 'ult', lab: `E · ${ULTS[ch.ult].name}` },
   ];
   const tabsEl = $id('bpDeckTabs');
@@ -9739,9 +9910,10 @@ function updateBPDeck(i) {
     requestAnimationFrame(() => tabsEl.classList.toggle('overflowing', tabsEl.scrollWidth > tabsEl.clientWidth + 2));
   }
   const hit = (HERO_HIT_DETAILS[ch.id] && HERO_HIT_DETAILS[ch.id][bpDeckMove]) || { name: '', badge: '', badgeCls: 'badge-buff', dmg: '', desc: '' };
+  const curType = mTypes[bpDeckMove] || { label: '近战', type: 'melee' };
   const nameEl = $id('bpdHitName');
   if (nameEl) {
-    nameEl.innerHTML = `<span style="color:${col}">${hit.name}</span>${hit.dmg ? ` <span style="font-size:12px;color:var(--gold);font-weight:600">· 伤害 ${hit.dmg}</span>` : ''}`;
+    nameEl.innerHTML = `<span style="color:${col}">${hit.name}</span> <span class="type-tag ${curType.type || 'melee'}">${curType.label}</span>${hit.dmg ? ` <span style="font-size:12px;color:var(--gold);font-weight:600">· 伤害 ${hit.dmg}</span>` : ''}`;
   }
   const badgeEl = $id('bpdHitBadge');
   if (badgeEl) {
