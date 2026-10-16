@@ -720,3 +720,30 @@
   padding: 6px 8px;
 }
 
+.tower-choices {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0;
+}
+@media (max-width: 600px) { .tower-choices { grid-template-columns: 1fr; } }
+.tower-perk-card {
+  background: linear-gradient(170deg, rgba(30, 24, 40, .92), rgba(15, 12, 22, .96));
+  border: 1px solid rgba(233, 196, 106, .35); border-radius: 12px;
+  padding: 18px 14px; display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 8px; transition: all .2s ease;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(0, 0, 0, .4);
+}
+.tower-perk-card:hover {
+  border-color: var(--gold); transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(233, 196, 106, .25);
+}
+.tower-perk-card .tp-icon { font-size: 36px; margin-bottom: 4px; }
+.tower-perk-card .tp-name {
+  font-family: var(--title); font-size: 19px; color: var(--gold); font-weight: 700;
+}
+.tower-perk-card .tp-desc {
+  font-size: 13px; color: var(--dim); line-height: 1.5; flex: 1; margin: 6px 0 12px;
+}
+.tower-perk-card .tp-pick {
+  width: 100%; border-radius: 999px;
+}
+
+

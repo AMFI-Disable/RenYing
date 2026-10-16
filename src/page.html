@@ -37,6 +37,8 @@
       <div class="single-tabs" id="singleTabs">
         <button data-tab="cpu" class="sel" type="button">⚔️ 对战电脑</button>
         <button data-tab="tag3" type="button">🔥 3v3 车轮战</button>
+        <button data-tab="tower" type="button">📜 问剑密卷 (肉鸽)</button>
+        <button data-tab="bushido" type="button">⚡ 一击必杀</button>
         <button data-tab="stage" type="button">🌲 守关挑战</button>
         <button data-tab="train" type="button">🥋 木人试剑</button>
       </div>
@@ -161,6 +163,32 @@
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">召唤不屈稻草人靶子，随心演练招式手感、浮空连击与爆发伤害跳字。</p>
         <button class="go small" id="trainBtn" type="button" style="margin-top:14px">开始试炼</button>
+      </div>
+
+      <!-- 问剑密卷 · 肉鸽无尽试炼 -->
+      <div data-sec="tower" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">问剑密卷 · 肉鸽无尽试炼</h3>
+          <span class="sub-badge" id="towerRecordBadge">最高通关：第 1 层</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">挑选本命侠客登临万仞剑阁！每战胜一层守关者，顿悟三选一武林秘卷天赋（雷厉电弧、墨刃剑气、借力打力、血饮残心…）。守关 AI 境界层层递进，智谋与应对算力愈发深不可测（高层极具压制智慧，绝非数值堆砌）！</p>
+        <div class="sec-sub-label">选择本命试炼侠客</div>
+        <div class="trpick" id="towerPick"></div>
+        <button class="go" id="towerStartBtn" type="button" style="margin-top:16px">开启问剑试炼</button>
+      </div>
+
+      <!-- 一击必杀 · 孤勇试剑 -->
+      <div data-sec="bushido" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">一击必杀 · 孤勇试剑</h3>
+          <span class="sub-badge">1血决死 · 见血封喉</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">双方仅余 1 点残存生命！防御架势为唯一生还护障。任何格挡与空挥招式均剧烈损耗架势，崩势破防即迎灭顶之灾！任何未格挡命中即刻触发一击绝杀水墨断魂动画。</p>
+        <div class="sec-sub-label">选择决死对决侠客</div>
+        <div class="trpick" id="bushidoPick"></div>
+        <div class="sec-sub-label" style="margin-top:10px">决死对手选择</div>
+        <div class="trpick" id="bushidoFoePick"></div>
+        <button class="go" id="bushidoStartBtn" type="button" style="margin-top:16px">进入孤勇决死</button>
       </div>
 
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
@@ -598,6 +626,14 @@
   <div id="end" class="scr">
     <div class="panel"><h2 id="endTitle">青锋 胜</h2><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
       <div class="row"><button class="go" id="againBtn">再战</button><button class="ghost" id="rpWatch">看回放</button><button class="ghost" id="menuBtn">返回菜单</button></div>
+    </div>
+  </div>
+
+  <div id="towerModal" class="scr">
+    <div class="panel" style="max-width:700px">
+      <h2 style="color:var(--gold);font-family:var(--title)">问剑悟道 · 秘卷三选一</h2>
+      <p class="sub" id="towerFloorBadge" style="margin-bottom:14px">突破守关者 · 顿悟绝学</p>
+      <div class="tower-choices" id="towerChoices"></div>
     </div>
   </div>
 </div>
