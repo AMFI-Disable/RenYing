@@ -640,7 +640,7 @@
     <div class="panel setp">
       <h2>设置</h2>
       <div class="setlist" id="setList"></div>
-      <p class="netnote">设置保存在当前浏览器中。默认启用原生极高画质与不限帧率，尽享丝滑水墨对战。</p>
+      <p class="netnote">设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。</p>
       <div class="row"><button class="go small" id="setDone">完成</button></div>
     </div>
   </div>
@@ -1449,13 +1449,15 @@
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 0, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true };
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);
-  // 消除任何旧配置里的自动/优化降级默认值，默认全部保持极高原生画质与不限刷新率
+  // 消除任何旧配置里的自动/优化降级默认值，默认全部保持极高原生画质与 144 帧高刷
   if (!SETTINGS.quality || SETTINGS.quality === 'auto') SETTINGS.quality = 'high';
   if (SETTINGS.bloom === undefined || SETTINGS.bloom === 1) SETTINGS.bloom = 1.6;
+  const ALLOWED_FPS = [144, 120, 60, 30];
+  if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
 } catch (e) {}
 function saveSettings() { try { localStorage.setItem('renying-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
 
@@ -4292,7 +4294,11 @@ function updateFX(dt) {
       if (p.type === 'ink' && p.y > 0) { p.y = 0; p.vx *= 0.3; p.vy = 0; p.g = 0; }
     }
   }
-  for (let i = particles.length - 1; i >= 0; i--) if (particles[i].life <= 0) particles.splice(i, 1);
+  let w = 0;
+  for (let r = 0; r < particles.length; r++) {
+    if (particles[r].life > 0) particles[w++] = particles[r];
+  }
+  particles.length = w;
 }
 // 背景飘落的叶子
 const petals = Array.from({ length: 46 }, () => ({ x: rand(0, STAGE_W), y: rand(-700, 0), vx: rand(-40, -10), vy: rand(20, 55), r: rand(0, 6), s: rand(2.5, 4.5), ph: rand(0, 6) }));
@@ -4347,9 +4353,10 @@ function simTick(real) {
   if (slowmo > 0) slowmo -= real;
   if (REPLAY.on) return replayTick(real);
   acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+  if (acc > STEP * 5) acc = STEP * 5;
   let n = 0;
-  while (acc >= STEP && n < 12) { step(); acc -= STEP; n++; }
-  if (n >= 12) acc = 0;
+  while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
+  if (n >= 5) acc = 0;
 }
 try {
   const wk = new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},8)'], { type: 'text/javascript' })));
@@ -4590,9 +4597,12 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 function frameBody(now) {
-  if (SETTINGS.fps && now - lastDraw < 1000 / SETTINGS.fps - 1.5) return;
-  lastDraw = now;
-  const real = Math.min(0.05, (now - last) / 1000); last = now; menuDt = real;
+  const targetFps = [144, 120, 60, 30].includes(SETTINGS.fps) ? SETTINGS.fps : 144;
+  const targetInterval = 1000 / targetFps;
+  const elapsed = now - lastDraw;
+  if (elapsed < targetInterval - 3) return;
+  lastDraw = now - (elapsed % targetInterval);
+  const real = Math.min(0.04, (now - last) / 1000); last = now; menuDt = real;
   fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
   if (NET.awayUntil) { const left = Math.max(0, Math.ceil((NET.awayUntil - now) / 1000)); netOverlay(left > 0 ? `对手掉线了，等待重连 ${left} 秒…` : '对手没有回来'); }
   if (!paused) {
@@ -4606,9 +4616,10 @@ function frameBody(now) {
     else if (REPLAY.on) replayTick(real);
     else {
       acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+      if (acc > STEP * 5) acc = STEP * 5;
       let n = 0;
-      while (acc >= STEP && n < 12) { step(); acc -= STEP; n++; }
-      if (n >= 12) acc = 0;
+      while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
+      if (n >= 5) acc = 0;
     }
     shake = damp(shake, 0, 10, real);
     flashA = damp(flashA, 0, 8, real);
@@ -5782,7 +5793,7 @@ function drawBloom(sc, sx, sy, emit) {
 }
 function cineFX(e) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.28 * e; ctx.drawImage(cv, 0, 0);   // 提高对比度
+  ctx.fillStyle = '#050510'; ctx.globalAlpha = 0.25 * e; ctx.fillRect(0, 0, W, H);
   ctx.restore();
   const bh = H * 0.09 * e;   // 电影黑边
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bh); ctx.fillRect(0, H - bh, W, bh);
@@ -5793,7 +5804,7 @@ function drawBackdrop(sc) {
     if (o.x) {
       o.x.setTransform(o.c.width / W, 0, 0, o.c.height / H, 0, 0);
       withCtx(o.x, () => drawBackground(sc));
-      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
       ctx.drawImage(o.c, 0, 0, cv.width, cv.height); ctx.restore();
       return;
     }
@@ -6091,7 +6102,7 @@ let settingsBack = 'menu';
 const SETTING_ROWS = [
   { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
   { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
-  { k: 'fps', name: '帧率上限', opts: [[0, '不限（原生高刷）'], [144, '144'], [120, '120'], [60, '60'], [30, '30']] },
+  { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
   { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
   { k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
   { k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
@@ -6905,38 +6916,40 @@ function startCodexCardsDirector() {
   if (cxCardsRAF) return;
   let lastT = performance.now();
   const tick = now => {
+    if (!$id('codex') || !$id('codex').classList.contains('on')) {
+      cxCardsRAF = null;
+      return;
+    }
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
-    if ($id('codex') && $id('codex').classList.contains('on')) {
-      const cvs = document.querySelectorAll('#cxMoves .card-mini-cv');
-      const c = CHARS[cxIdx];
-      if (c) {
-        const skin = cxPrev !== null ? cxPrev : mySkin(c.id);
-        for (const cv of cvs) {
-          const mv = cv.dataset.mv;
-          if (!mv || !HERO_MOVE_SEQS[c.id] || !HERO_MOVE_SEQS[c.id][mv]) continue;
-          let p = cv._pup;
-          if (!p || p.chIdx !== cxIdx || p.skin !== skin || cv._mv !== mv) {
-            p = new Puppet(cxIdx, skin);
-            p.playSeq(HERO_MOVE_SEQS[c.id][mv], null, true);
-            cv._pup = p;
-            cv._mv = mv;
+    const cvs = document.querySelectorAll('#cxMoves .card-mini-cv');
+    const c = CHARS[cxIdx];
+    if (c) {
+      const skin = cxPrev !== null ? cxPrev : mySkin(c.id);
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      for (const cv of cvs) {
+        const mv = cv.dataset.mv;
+        if (!mv || !HERO_MOVE_SEQS[c.id] || !HERO_MOVE_SEQS[c.id][mv]) continue;
+        let p = cv._pup;
+        if (!p || p.chIdx !== cxIdx || p.skin !== skin || cv._mv !== mv) {
+          p = new Puppet(cxIdx, skin);
+          p.playSeq(HERO_MOVE_SEQS[c.id][mv], null, true);
+          cv._pup = p;
+          cv._mv = mv;
+        }
+        p.update(dt);
+        const g = cv.getContext && cv.getContext('2d');
+        if (g) {
+          const cw = cv._w || (cv._w = cv.clientWidth || 160);
+          const chh = cv._h || (cv._h = cv.clientHeight || 76);
+          if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(chh * dpr)) {
+            cv.width = Math.round(cw * dpr); cv.height = Math.round(chh * dpr);
           }
-          p.update(dt);
-          const g = cv.getContext && cv.getContext('2d');
-          if (g) {
-            const dpr = Math.min(2, window.devicePixelRatio || 1);
-            const cw = cv.clientWidth || 160, chh = cv.clientHeight || 76;
-            if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(chh * dpr)) {
-              cv.width = Math.round(cw * dpr); cv.height = Math.round(chh * dpr);
-            }
-            g.setTransform(dpr, 0, 0, dpr, 0, 0);
-            const bg = g.createLinearGradient(0, 0, 0, chh);
-            bg.addColorStop(0, '#0c0d1c'); bg.addColorStop(1, '#06060e');
-            g.fillStyle = bg; g.fillRect(0, 0, cw, chh);
-            g.fillStyle = 'rgba(200,180,255,0.08)'; g.fillRect(0, chh * 0.84, cw, 1);
-            p.draw(g, cw, chh, chh / 180, true);
-          }
+          g.setTransform(dpr, 0, 0, dpr, 0, 0);
+          g.fillStyle = '#0a0b18';
+          g.fillRect(0, 0, cw, chh);
+          g.fillStyle = 'rgba(200,180,255,0.08)'; g.fillRect(0, chh * 0.84, cw, 1);
+          p.draw(g, cw, chh, chh / 180, true);
         }
       }
     }
@@ -8062,9 +8075,10 @@ function rollSend() {
 function rollTick(real) {
   const R = ROLL;
   acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+  if (acc > STEP * 5) acc = STEP * 5;
   let n = 0;
-  while (acc >= STEP && n < 12) { if (!rollAdvance()) { acc = 0; break; } acc -= STEP; n++; }
-  if (n >= 12) acc = 0;
+  while (acc >= STEP && n < 5) { if (!rollAdvance()) { acc = 0; break; } acc -= STEP; n++; }
+  if (n >= 5) acc = 0;
   if (R.pend < R.F && !NET.hold) rollResim();
   rollSend();
   if (R.stall > 0.35) { netOverlay('等待对手的网络…'); R.stallShown = true; }
@@ -8535,40 +8549,44 @@ function demoLoop(canvas, getIdx, isOn, getSkin, getMoveKey) {
   const g = canvas.getContext && canvas.getContext('2d'); if (!g) return;
   let pup = null, lastT = performance.now(), curMv = undefined;
   const tick = now => {
+    if (!isOn()) {
+      setTimeout(() => requestAnimationFrame(tick), 350);
+      return;
+    }
     const spd = (canvas === $id('cxDemo')) ? cxDemoSpeed : 1.0;
     const dt = Math.min(0.05, (now - lastT) / 1000) * spd; lastT = now;
-    if (isOn()) {
-      const i = getIdx();
-      if (i >= 0 && CHARS[i]) {
-        const sk = getSkin ? getSkin() : mySkin(CHARS[i].id);
-        const mv = getMoveKey ? getMoveKey() : null;
-        if (!pup || pup.chIdx !== i || pup.skin !== sk) {
-          pup = new Puppet(i, sk);
-          curMv = undefined;
-        }
-        if (mv !== curMv) {
-          curMv = mv;
-          if (mv && HERO_MOVE_SEQS[CHARS[i].id] && HERO_MOVE_SEQS[CHARS[i].id][mv]) {
-            pup.playSeq(HERO_MOVE_SEQS[CHARS[i].id][mv], null, true);
-          } else {
-            pup.playSeq(HERO_FULL_DEMO[CHARS[i].id] || DEMO2, null, true);
-          }
-        }
-        canvas._pup = pup;
-        pup.update(dt);
-        const dpr = Math.min(2, window.devicePixelRatio || 1), cw = canvas.clientWidth || 280, chh = canvas.clientHeight || 200;
-        if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(chh * dpr)) {
-          canvas.width = Math.round(cw * dpr); canvas.height = Math.round(chh * dpr);
-        }
-        g.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const ST = sk ? sceneOf(sk) : null;
-        if (ST) withCtx(g, () => paintSceneCard(cw, chh, ST, now / 1000, chh / 300));
-        else {
-          const bg = g.createLinearGradient(0, 0, 0, chh); bg.addColorStop(0, '#15163a'); bg.addColorStop(1, '#0b0b1c'); g.fillStyle = bg; g.fillRect(0, 0, cw, chh);
-        }
-        g.fillStyle = 'rgba(200,180,255,0.12)'; g.fillRect(0, chh * 0.84, cw, 1.5);
-        pup.draw(g, cw, chh, chh / 190);
+    const i = getIdx();
+    if (i >= 0 && CHARS[i]) {
+      const sk = getSkin ? getSkin() : mySkin(CHARS[i].id);
+      const mv = getMoveKey ? getMoveKey() : null;
+      if (!pup || pup.chIdx !== i || pup.skin !== sk) {
+        pup = new Puppet(i, sk);
+        curMv = undefined;
       }
+      if (mv !== curMv) {
+        curMv = mv;
+        if (mv && HERO_MOVE_SEQS[CHARS[i].id] && HERO_MOVE_SEQS[CHARS[i].id][mv]) {
+          pup.playSeq(HERO_MOVE_SEQS[CHARS[i].id][mv], null, true);
+        } else {
+          pup.playSeq(HERO_FULL_DEMO[CHARS[i].id] || DEMO2, null, true);
+        }
+      }
+      canvas._pup = pup;
+      pup.update(dt);
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const cw = canvas._w || (canvas._w = canvas.clientWidth || 280);
+      const chh = canvas._h || (canvas._h = canvas.clientHeight || 200);
+      if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(chh * dpr)) {
+        canvas.width = Math.round(cw * dpr); canvas.height = Math.round(chh * dpr);
+      }
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const ST = sk ? sceneOf(sk) : null;
+      if (ST) withCtx(g, () => paintSceneCard(cw, chh, ST, now / 1000, chh / 300));
+      else {
+        const bg = g.createLinearGradient(0, 0, 0, chh); bg.addColorStop(0, '#15163a'); bg.addColorStop(1, '#0b0b1c'); g.fillStyle = bg; g.fillRect(0, 0, cw, chh);
+      }
+      g.fillStyle = 'rgba(200,180,255,0.12)'; g.fillRect(0, chh * 0.84, cw, 1.5);
+      pup.draw(g, cw, chh, chh / 190);
     }
     requestAnimationFrame(tick);
   };
@@ -9687,7 +9705,7 @@ function resize() {
   const q = SETTINGS.quality;
   if (q === 'low') DPR = Math.min(window.devicePixelRatio || 1, 0.85);
   else if (q === 'mid') DPR = Math.min(window.devicePixelRatio || 1, 1.25);
-  else DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+  else DPR = Math.min(window.devicePixelRatio || 1, 2);
   DPR = Math.max(0.5, DPR);
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
 }
