@@ -26,7 +26,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set Up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
 
@@ -46,7 +46,7 @@ jobs:
 
       - name: Verify Lowercase Filenames
         run: |
-          if git ls-files | grep '[A-Z]'; then
+          if git ls-files | grep -v '^CNAME$' | grep '[A-Z]'; then
             echo "Error: uppercase tracked files found"
             exit 1
           fi
