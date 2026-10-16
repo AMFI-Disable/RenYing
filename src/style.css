@@ -13,7 +13,8 @@
   html, body { height: 100%; margin: 0; }
   body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; }
   #wrap { position: relative; width: 100%; height: 100%; }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+  canvas:focus, canvas:focus-visible { outline: none; }
 
   .scr {
     position: absolute; inset: 0; display: flex; overflow-y: auto;

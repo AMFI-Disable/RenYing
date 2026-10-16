@@ -24,7 +24,8 @@
   html, body { height: 100%; margin: 0; }
   body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; }
   #wrap { position: relative; width: 100%; height: 100%; }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+  canvas:focus, canvas:focus-visible { outline: none; }
 
   .scr {
     position: absolute; inset: 0; display: flex; overflow-y: auto;
@@ -480,7 +481,7 @@
 </head>
 <body>
 <div id="wrap">
-  <canvas id="c"></canvas>
+  <canvas id="c" tabindex="0"></canvas>
 
   <div class="accbar hidden" id="accBar"></div>
 
@@ -1475,6 +1476,13 @@ try {
   DEV_SESSION_UNLOCKED = sessionStorage.getItem('renying-dev-unlock') === '1';
 } catch (e) {}
 const cv = document.getElementById('c');
+function refocusGame() {
+  if (document.activeElement && document.activeElement !== cv && document.activeElement !== document.body) {
+    try { document.activeElement.blur(); } catch (e) {}
+  }
+  try { cv.focus(); } catch (e) {}
+  try { window.focus(); } catch (e) {}
+}
 let ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const STEP = 1 / 120;                 // 逻辑每秒 120 次，在高刷屏上更顺
@@ -3242,6 +3250,7 @@ function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math
 // 还在等人进房间或在排队时开始单人模式：先关掉房间，免得有人进来把你拉去选人
 function netDropWaiting() { if (!NET.open && (NET.ws || p2pActive())) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
 function startMatch(mode, level, chars) {
+  if (mode !== 'demo') refocusGame();
   if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
   human[0].rec = null;
   chars = chars || randomPair();
@@ -8003,6 +8012,7 @@ function applyInput(c, inp) {
   }
 }
 function rollStart(ch, seed) {
+  refocusGame();
   setChars(ch[0], ch[1]);
   setupNetMatch();
   ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
@@ -8210,6 +8220,11 @@ function showScreen(id) {
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
   if (id !== 'bp') { try { showPop(null); } catch (e) {} }
   if (id === 'menu') { menuCam.tx = 0; menuCam.tz = 1; }
+  if (!id) {
+    refocusGame();
+  } else if (document.activeElement && !document.activeElement.closest('#' + id)) {
+    try { document.activeElement.blur(); } catch (e) {}
+  }
 }
 function selectMode(mode) {
   pickMode = mode;
@@ -8244,7 +8259,14 @@ document.getElementById('againBtn').addEventListener('click', () => {
   if (M.mode === 'net') { if (NET.role === 'host' && NET.open) bpStart('net'); return; }
   bpStart('cpu');
 });
-document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; showScreen(null); });
+document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; showScreen(null); refocusGame(); });
+document.getElementById('pause').addEventListener('click', e => {
+  if (e.target === document.getElementById('pause')) {
+    paused = false;
+    showScreen(null);
+    refocusGame();
+  }
+});
 function toMenu() {
   ROLL.on = false; REC.on = false;
   if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
@@ -9654,9 +9676,30 @@ setTimeout(checkUrlRoom, 300);
 window.addEventListener('keydown', e => {
   initAudio();
   if (e.code === 'KeyM') { muted = !muted; return; }
-  if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) return;
+  if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
+    const scr = e.target.closest('.scr');
+    if ((scr && !scr.classList.contains('on')) || e.target.offsetParent === null) {
+      try { e.target.blur(); } catch (err) {}
+      refocusGame();
+    } else {
+      return;
+    }
+  }
+  if (e.target && e.target.tagName === 'BUTTON' && M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
+    try { e.target.blur(); } catch (err) {}
+    refocusGame();
+  }
+  if (paused && document.getElementById('pause').classList.contains('on')) {
+    if (e.code === 'KeyP' || e.code === 'Escape' || e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      paused = false;
+      showScreen(null);
+      refocusGame();
+      return;
+    }
+  }
   if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && M.phase !== 'end') {
-    paused = !paused; showScreen(paused ? 'pause' : null); return;
+    paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
   }
   if (M.mode === 'demo') return;
   if (M.mode === 'train' && /^Digit[1234]$/.test(e.code) && B.ctrl instanceof DummyCtrl) {
@@ -9685,8 +9728,14 @@ window.addEventListener('keyup', e => {
 });
 // 1P 鼠标：左键攻击（按住蓄力，松开释放），右键重斩
 cv.addEventListener('mousedown', e => {
+  refocusGame();
   initAudio();
-  if (M.mode === 'demo' || paused) return;
+  if (paused && M.mode !== 'demo' && M.phase !== 'end') {
+    paused = false;
+    showScreen(null);
+    return;
+  }
+  if (M.mode === 'demo') return;
   e.preventDefault();
   const c = human[0];
   if (e.button === 0) { c.held.atk = true; c.atkT = clock; c.press('light'); }
@@ -9694,10 +9743,23 @@ cv.addEventListener('mousedown', e => {
     if (c.held.atk) { c.press('skill2'); c.atkT = clock + 1e6; delete c.buf.light; } else c.press('dash');
   }
 });
+cv.addEventListener('pointerdown', () => refocusGame());
 window.addEventListener('mouseup', e => { if (e.button === 0) human[0].held.atk = false; });
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('blur', () => { human[0].clear(); human[1].clear(); if (M.mode !== 'demo' && M.mode !== 'net' && M.phase !== 'end' && !paused) { paused = true; showScreen('pause'); } });
+window.addEventListener('focus', () => {
+  human[0].clear(); human[1].clear();
+  if (M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
+    refocusGame();
+  }
+});
+window.addEventListener('pointerdown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
+  if (M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
+    refocusGame();
+  }
+}, true);
 
 // ======================= 启动 =======================
 function resize() {
@@ -9716,6 +9778,8 @@ resize();
 startMatch('demo');
 for (let i = 0; i < 4; i++) { animFighter(A); animFighter(B); }
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
+refocusGame();
+window.addEventListener('load', () => refocusGame());
 </script>
 <script>
 'use strict';
