@@ -8529,6 +8529,10 @@ function bpDetailHTML(i) {
     : `<p class="ctr">克制 <b>${nm(c.beats)}</b>　怕 <b>${nm(c.weakTo)}</b></p>`;
   const st = c.stat || {};
   const guardTxt = `耐力 ${st.guardMax || 100} · 稳定 ${Math.round((st.guardStab || 1) * 100)}% · 透伤 ${Math.round((st.guardChip || 0.1) * 100)}% · 回涌 ${st.guardRegen || 28}/秒`;
+  const hits = HERO_HIT_DETAILS[c.id] || {};
+  const comboFlow = hits.light ? `${hits.light.name}（${hits.light.badge || '连击'}） · 蓄力：${hits.charge ? hits.charge.name : '蓄力重斩'}` : '';
+  const S2 = SKILLS[c.skill2];
+  const specialMove = S2 ? `${S2.name} · ${S2.desc || ''}` : '';
 
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
     <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
@@ -8536,7 +8540,9 @@ function bpDetailHTML(i) {
     <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${st.hp || 500}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
     <dl><dt>被动 ${c.passiveName}</dt><dd>${c.passiveDesc}</dd>
     <dt>门派架势</dt><dd>${guardTxt}</dd>
+    ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
     <dt>技能 ${S.name}</dt><dd>${S.desc}（冷却 ${S.cd} 秒）</dd>
+    ${specialMove ? `<dt>绝技 ${S2.name}</dt><dd>${specialMove}</dd>` : ''}
     <dt>大招 ${U.name}</dt><dd>${U.desc}</dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
     ${restrHtml}</div>`;
 }
