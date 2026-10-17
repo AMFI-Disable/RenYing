@@ -8,6 +8,31 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Chaos Mode Mutations & Dynamic Modifiers**:
+  - Introduced real-time battlefield mutation system in Chaos Mode (`updateChaos`), including variable gravity (`轻功如燕` low gravity / `千钧重坠` heavy gravity), attack super armor empowerment (`修罗霸体`), jump height amplification (`御风凌空`), and dynamic guard stamina drain.
+  - Added dynamic announcement banners, mutation timer countdown HUD displays, and audio alerts on mutation transitions.
+- **Tower Mode Run State Persistence & Recovery**:
+  - Implemented automatic local saving of active Tower runs (`renying-tower-run`): preserves current floor progress, selected hero, collected perk upgrades, and remaining health.
+  - Added "Resume Tower Run" (`继续挑战`) interactive button and prompt in the Tower mode lobby to seamlessly resume interrupted challenges.
+  - Automatically clears saved run states upon game over or run completion.
+- **Mid-Air Projectile Clashing (`飞弹相碰相抵`)**:
+  - Added reciprocal projectile collision detection in `updateProjs()`: opposing non-unbreakable projectiles colliding in mid-air neutralize each other, triggering spark bursts, a `破` visual combat popup, collision sound effects, and radial shockwaves.
+- **Skin Cosmetics & Dynamic Visual Accessories Overhaul**:
+  - Expanded total character skin roster to 27 by adding 9 elite and legendary skins across all heroes: `qf_abyss` (Abyss), `fy_phantom` (Phantom), `ts_crimson` (Crimson), `ls_dragon` (Dragon), `ly_bamboo` (Bamboo), `lm_asura` (Asura), `my_celestial` (Celestial), `yh_solstice` (Solstice), and `yl_blizzard` (Blizzard).
+  - Designed animated decorative back accessories and auras in `drawDeco`, including the Void Ring / Black Hole Halo (`幽渊黑洞法环 / voiddisk`), animated Flying Wings (`幻灵/雪鸮飞翼 / wings`) with flapping physics, Azure Dragon Water Halo (`沧龙水轮 / dragonring`), and Vajra Solar Wheel (`金刚宝轮 / chakra`).
+  - Added bespoke armor elements including breastplate mirrors (`战甲胸铠 / 护心镜`) and stylized martial robe hems (`战袍长裾`).
+- **Dynamic Skin Skill & Ultimate Callouts**:
+  - Implemented custom skill and ultimate naming hooks (`skinSkillName`, `skinUltName`) for legendary skins, displaying floating calligraphy banners upon ability activation and custom super-move shoutouts during ultimate time-stop freezes.
+- **Multi-Channel Community Hub (`#com`)**:
+  - Reorganized community discussions into distinct channel filtering tabs (`#comChannelBar`): All (`综合`), Duel Challenges (`约战`), and Martial Lore / Strategy (`心得`).
+  - Added local fallback seed discussions (`COM_LOCAL_SEED_POSTS`) for offline and serverless GitHub Pages players.
+  - Redesigned message cards with sender avatar icons, channel badges, timestamps, responsive input bars, and message auto-formatting.
+- **Cloud Firestore Security Rules Hardening (`firestore.rules`)**:
+  - Added `isSuperUser()` authorization helper with administrative bypass for `dev_master`.
+  - Enforced `isValidStarterProfile` constraints on account creation: capped starter ink at 500, owned characters at 3, skins at 2, and initial net wins at 0.
+  - Enforced `isValidProfileProgression` anti-tampering limits on document updates (max +360 ink per write, +1 character, +1 skin, +1 win).
+- **Automated Combat State Test Suite (`tools/combat-test.mjs`)**:
+  - Created standalone automated test suite verifying neutral input transitions, charge attack buffering, projectile clash mechanics, and cross-mode skin rendering.
 - Initial codebase setup for Ren Ying (刃影) martial arts duel game.
 - WebRTC Peer-to-Peer serverless multiplayer support for GitHub Pages deployment.
 - Real-time WebSocket matchmaking server with rooms, ladder ranking, and community hub.
@@ -71,6 +96,21 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Single-Player Mode Hierarchy & Category Navigation**:
+  - Reorganized single-player modes into three categorized tabs: Regular Practice (⚔️ 常规演武: 1v1 CPU, Stage, Training), Roguelike / Mutation (📜 秘宝异变: Tower, Chaos), and Special Showdown (⚡ 特殊决战: 3v3 Tag-Team, Bushido).
+  - Added category switcher `#singleCatTabs` and automated active sub-tab filtering.
+- **Hero Skill & Ultimate Balancing**:
+  - Qing Feng's Gale Slash (`居合斩穴`): Direct hit now resets cooldowns for both Dash and Skill 2 (Sword Qi / 剑气).
+  - Tie Shan's Quake (`💥 撼地重震`): Direct hit now restores +30 Guard Posture and reduces Skill 2 (Iron Wall / 铁壁冲) cooldown by 2.5 seconds.
+- **Ultimate Meter Pacing & HUD Visuals**:
+  - Rebalanced offensive and defensive meter gain rates across hits and damage taken to prevent excessive ultimate chaining in fast-paced exchanges.
+  - Enhanced 100% full ultimate meter HUD presentation with boiling true-qi fire gradients, pulsing aura glows, and high-contrast outline strokes.
+- **Wen Jian Pavilion (问剑阁) Gacha Tuning**:
+  - Calibrated summon drop rates and pity counters for legendary cosmetic skins, and synchronized the developer master unlock list (`DEV_ALL_SKINS`) in `src/cloud.js` and `src/game.js`.
+- **Vector Icon Standardization**:
+  - Replaced raw emoji icons across single-player difficulty cards, navigation tabs, account action buttons, and task guides with clean, responsive inline SVG vector graphics.
+- **Custom Domain Migration**:
+  - Updated custom domain routing in `CNAME` to `renying.is-cool.dev`.
 - **Hero Skill Overhaul & Differentiated Control Profiles (Stun, Launch & Spatial Dynamics)**:
   - Thoroughly rebalanced and enhanced all 18 hero skills (Q skills and Right-click skills across all 9 heroes) with differentiated crowd-control, stun durations, hitboxes, and tactical properties:
   - **Full Stun / Lock-Down Skills**:
@@ -168,6 +208,20 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Tower Mode Combat State Freeze**:
+  - Fixed combat loop freeze upon winning a Tower floor by setting `M.phase = 'perk'` and pausing simulation before displaying the perk selection modal.
+- **Ground Attack Block Cancellation**:
+  - Prevented down-tilt attacks (`dl`/`dh`) from unintentionally auto-canceling into block during attack execution when holding down (`S`).
+- **Charge Attack Buffering & Execution**:
+  - Fixed heavy charge attack triggering in `neutral()` to reliably initiate after holding attack for `CHARGE_START` duration without leaking buffered light attacks.
+- **Cross-Mode Skin Rendering**:
+  - Fixed cosmetic palette and skin resolution to properly display selected skins across Woodman Training, Tower Mode, Bushido Duel, and Chaos Mode.
+- **Single-Player Mode Tab Flex Layout**:
+  - Fixed container width and flex shrinkage on `.single-cat-tabs` (`width: min(460px, 94vw)`) to prevent layout freezing, text clipping, and scroll distortion on mobile screens.
+- **Headless Environment Compatibility**:
+  - Hardened Fighter initialization and skin lookups against undefined `window` and missing browser globals during headless testing and Node.js execution.
+- **Obsolete Ground Heavy Move**:
+  - Removed redundant crouch heavy move (`dh`) from move tables and input listeners to eliminate conflicting ground attack chains.
 - **Tab Navigation & Subview Switching**:
   - Fixed tab switching bugs across single-player modes (1v1 CPU, 3v3 Sect Elimination, Training/Woodman, and Qingfengxing) by automating subview rendering and resetting scroll position (`scrollTop = 0`) on every tab change.
   - Fixed task navigation redirection to open proper screen views instead of bypassing UI state.
