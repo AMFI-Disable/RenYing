@@ -239,7 +239,8 @@ const SKILLS = {
         }
         if (strike(f, foe, { box: [-10, -112, 92, 0], dmg: 55, kb: [180, 0], stun: 0.65, hs: 0.12 })) {
           f.dashCD = 0;
-          addP({ type: 'text', text: '居合斩穴', x: f.x, y: f.y - 110, life: 0.8, max: 0.8, rgb: '120,230,255' });
+          f.skill2CD = 0;
+          addP({ type: 'text', text: '居合斩穴 · 剑气重置', x: f.x, y: f.y - 110, life: 0.8, max: 0.8, rgb: '120,230,255' });
         }
         if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
       }
@@ -277,7 +278,9 @@ const SKILLS = {
         shake = Math.max(shake, 16); dust(f.x, 0, 30); ring(f.x, 0, 160, '255,200,120', 0.4); SFX.thud(); SFX.heavy();
         for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 760, w: 96, h: 54, life: 0.9, dmg: 65, kb: [260, -840], stun: 0.55, hs: 0.12, launch: true, groundOnly: true, unbreakable: true });
         if (strike(f, foe, { box: [-45, -80, 110, 4], dmg: 55, kb: [260, -900], stun: 0.55, hs: 0.14, launch: true })) {
-          addP({ type: 'text', text: '💥 撼地重震', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
+          f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 30);
+          f.skill2CD = Math.max(0, f.skill2CD - 2.5);
+          addP({ type: 'text', text: '💥 撼地重震 · 固若金汤', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
         }
       }
       if (f.skPh === 1 && f.t >= 0.36) toNeutral(f);
@@ -318,7 +321,8 @@ const SKILLS = {
       if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; f.t = 0; f.vx = f.face * 1500; f.hitDone = false; SFX.dash(); SFX.thunder(); }
       if (f.skPh === 1) {
         if (strike(f, foe, { box: [-20, -110, 85, -10], dmg: 55, kb: [80, 0], stun: 0.48, hs: 0.12 })) {
-          addP({ type: 'text', text: '⚡ 触电麻痹', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
+          f.skill2CD = 0;
+          addP({ type: 'text', text: '⚡ 触电麻痹 · 雷踏重置', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
         }
         if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
         if (f.t >= 0.26) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
@@ -1376,14 +1380,17 @@ const AI_COMBOS = [
   [['light', 0], ['light', 0.17], ['heavy', 0.34]],
   [['light', 0], ['light', 0.17], ['heavy', 0.34], ['jump', 0.62], ['light', 0.78], ['light', 0.96], ['heavy', 1.2]],
 ];
-// 进阶技巧：只有稀有和传说角色有，让技能更复杂，但不直接变强
+// 进阶技巧：每个角色独有的实战招式联动与进阶操作
 const ADV = {
+  qingfeng: '疾风斩直击穿身得手后，立时重置剑气冷却，可瞬间接出弧月剑气连招。',
+  tieshan: '震地直击得手后，瞬时回涌 30 点架势耐力，并削减铁壁冲 2.5 秒冷却。',
+  feiying: '影遁之后 1.5 秒内再按 Q——影归，瞬息退回遁走前的位置。',
+  liuyun: '风遁之后 0.8 秒内，下一发风刃一分为二（每道 35 伤害）。',
+  leiming: '雷闪贴地冲拳命中对手，立时重置雷踏冷却，可直接连入冲天雷柱。',
+  lingshuang: '回马枪得手后，枪旋余下的冷却减半。',
   moyu: '墨阵尚在场时再按 Q——引爆，阵中之敌受 4 伤害，被墨浪掀飞。',
   yuehua: '月镜格开一击后，月轮立时冷却完毕，可顺势再放一轮。',
   yanling: '自空中起手的俯冲一旦命中，此技立时冷却完毕，落地前可再冲一次（每次落地前只刷新一次）。',
-  feiying: '影遁之后 1.5 秒内再按 Q——影归，瞬息退回遁走前的位置。',
-  liuyun: '风遁之后 0.8 秒内，下一发风刃一分为二（每道 5 伤害）。',
-  lingshuang: '回马枪得手后，枪旋余下的冷却减半。',
 };
 function trySecondQ(f, foe) {
   if (f.skillCD <= 0 || M.phase !== 'fight' || !['idle', 'walk', 'air'].includes(f.state)) return false;
@@ -5502,8 +5509,29 @@ const SHORT = {
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 · 脆皮(88血)', tieshan: '重斩蓄力霸体 · 气血冠绝(140血)', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
   liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻十连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒' };
-const ADV_SHORT = { moyu: '再按 Q 引爆墨阵', yuehua: '格反成功，月轮冷却清零', yanling: '空中俯冲命中，可再冲一次',
-  feiying: '1.5 秒内再按 Q 瞬回原位', liuyun: '风遁后风刃变两道', lingshuang: '回马枪命中，枪旋冷却减半' };
+const ADV_SHORT = {
+  qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
+  tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
+  feiying: '1.5 秒内再按 Q 瞬回原位',
+  liuyun: '风遁后风刃变两道',
+  leiming: '雷闪冲拳命中，立时重置雷踏冷却',
+  lingshuang: '回马枪命中，枪旋冷却减半',
+  moyu: '再按 Q 引爆墨阵',
+  yuehua: '格反成功，月轮冷却清零',
+  yanling: '空中俯冲命中，可再冲一次',
+};
+// 各角色大招怒气积攒专属特性与通用规则
+const HERO_METER_EXPLAIN = {
+  qingfeng: '【聚气流转 · 极速充能】天生剑意通明，命中与受击攒气速度常驻 +8%（meterMul 1.08）。绝技「残月」终结斩落额外回涌 20% 气量。',
+  feiying: '【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。',
+  tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」直击命中更是直接回涌 50% 气量！',
+  lingshuang: '【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。',
+  liuyun: '【御风牵制 · 风暴蓄势】远距离风刃与风遁斥力安全换血聚气；大招「龙卷」卷敌多达 16 段，持续为下一轮充能。',
+  leiming: '【狂雷十连 · 雷帝灌顶】十连快拳高频轰击令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！',
+  moyu: '【墨浪渗透 · 阵地聚怒】普攻甩墨与泼墨双重判定充能；大招「墨龙」横扫全屏巨额伤害，一次性蓄满可观气量。',
+  yuehua: '【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。',
+  yanling: '【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。',
+};
 // ======================= 招式类型与克制详解 =======================
 const HERO_MOVE_TYPES = {
   qingfeng: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '突进', icon: 'melee' }, ranged: { type: 'ranged', label: '远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
@@ -6216,7 +6244,7 @@ function renderCodex() {
     tile('air', '空中 <small class="type-tag melee">近战</small>', `${m.a1.dmg} / ${m.a2.dmg}`, '空中斩 · 下砸', '', false, 'air'),
     tile(qType.icon || 'skill', `Q · ${S.name} <small class="type-tag ${qType.type}">${qType.label}</small>`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
     tile(rType.icon || 'ranged', `左键+右键 · ${S2.name} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
-    tile('ult', `E · ${U.name}`, sh(U.name)[0], sh(U.name)[1], '气满', false, 'ult'),
+    tile('ult', `E · ${U.name}`, sh(U.name)[0], `${sh(U.name)[1]}<div style="margin-top:4px;font-size:12px;color:#ffe8a3;line-height:1.35;opacity:0.95">${HERO_METER_EXPLAIN[c.id] || ''}</div>`, '气满', true, 'ult'),
     tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · 落地前无敌', '', false, 'esc'),
     tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim)">${(() => {
       const chIdx = CHAPTERS.findIndex(chap => chap.boss === c.id);
@@ -8597,7 +8625,7 @@ function bpDetailHTML(i) {
     ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
     <dt>技能 ${S.name}</dt><dd>${S.desc}（冷却 ${S.cd} 秒）</dd>
     ${specialMove ? `<dt>绝技 ${S2.name}</dt><dd>${specialMove}</dd>` : ''}
-    <dt>大招 ${U.name}</dt><dd>${U.desc}</dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
+    <dt>大招 ${U.name}</dt><dd>${U.desc}<div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
     ${restrHtml}</div>`;
 }
 function buildDetails(force) {
