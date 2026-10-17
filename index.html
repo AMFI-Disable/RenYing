@@ -789,6 +789,7 @@
         <button data-tab="tag3" type="button">🔥 3v3 车轮战</button>
         <button data-tab="tower" type="button">📜 问剑密卷 (肉鸽)</button>
         <button data-tab="bushido" type="button">⚡ 一击必杀</button>
+        <button data-tab="chaos" type="button">🎲 天机乱斗</button>
         <button data-tab="stage" type="button">🌲 守关挑战</button>
         <button data-tab="train" type="button">🥋 木人试剑</button>
       </div>
@@ -939,6 +940,39 @@
         <div class="sec-sub-label" style="margin-top:10px">决死对手选择</div>
         <div class="trpick" id="bushidoFoePick"></div>
         <button class="go" id="bushidoStartBtn" type="button" style="margin-top:16px">进入孤勇决死</button>
+      </div>
+
+      <!-- 天机乱斗 · 乾坤异变 -->
+      <div data-sec="chaos" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">天机乱斗 · 乾坤异变</h3>
+          <span class="sub-badge">动态随机词条 · 108天机秘令</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">天道无常，战局每隔 15 秒天降水墨异象，在超过 100 种天机词条中随机变幻！（疾风超速、月华倒转、浮空低重力、无限怒气、雷霆反震、乾坤移形…）</p>
+        <div class="sec-sub-label">选择本命出战侠客</div>
+        <div class="trpick" id="chaosPick"></div>
+        <div class="sec-sub-label" style="margin-top:10px">乱斗对手选择</div>
+        <div class="trpick" id="chaosFoePick"></div>
+        <div class="sec-sub-label" style="margin-top:10px">乱斗电脑境界</div>
+        <div class="levels-grid" id="chaosLevels">
+          <button data-lv="easy" type="button">
+            <span class="lv-top"><span class="lv-icon">🌱</span><span class="lv-name">入门</span></span>
+            <span class="lv-sub">初学试水</span>
+          </button>
+          <button data-lv="normal" class="sel" type="button">
+            <span class="lv-top"><span class="lv-icon">⚔️</span><span class="lv-name">寻常</span></span>
+            <span class="lv-sub">标准切磋</span>
+          </button>
+          <button data-lv="hard" type="button">
+            <span class="lv-top"><span class="lv-icon">🔥</span><span class="lv-name">劲敌</span></span>
+            <span class="lv-sub">凌厉出招</span>
+          </button>
+          <button data-lv="impossible" type="button">
+            <span class="lv-top"><span class="lv-icon">👑</span><span class="lv-name">绝顶</span></span>
+            <span class="lv-sub">零瑕宗师</span>
+          </button>
+        </div>
+        <button class="go" id="chaosStartBtn" type="button" style="margin-top:16px">开启天机乱斗</button>
       </div>
 
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
@@ -4113,6 +4147,7 @@ function updateMatch() {
       M.t = 0;
       M.koWinner = winner;
     } else if (M.mode !== 'demo' && M.mode !== 'train') {
+      if (M.mode === 'chaos') updateChaos(STEP);
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
         const ra = A.hp / A.maxHp, rb = B.hp / B.maxHp;
@@ -4308,11 +4343,13 @@ function startAttack(f, name) {
   endEscape(f);
   f.state = 'attack'; f.move = f.moves[name]; f.moveName = name; f.t = 0;
   if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
+  if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'armor') { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
   f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
   f.face = f.onGround() ? (foeOf(f).x >= f.x ? 1 : -1) : f.face;
 }
 function doJump(f, dir) {
-  f.vy = (f.jumps === 0 ? -JUMP_V : -DJUMP_V) * (f.ch.stat.jump || 1); f.jumps++;
+  const jumpBonus = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'jump') ? currentChaosMutation.val : 1;
+  f.vy = (f.jumps === 0 ? -JUMP_V : -DJUMP_V) * (f.ch.stat.jump || 1) * jumpBonus; f.jumps++;
   f.vx = dir ? dir * wk(f) * 1.15 : f.vx * 0.5;
   f.state = 'air'; f.y = Math.min(f.y, -1);
   if (f.jumps >= 2) ring(f.x, f.y - 20, 36, f.look.slash, 0.35);
@@ -4881,7 +4918,8 @@ function physics(f) {
     const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
     g *= LAUNCH_GRAV * (1 + f.juggle * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow(w, 0.35)));
   }
-  if (wasAir) f.vy += g * STEP;
+  const chaosGrav = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'grav') ? currentChaosMutation.val : 1;
+  if (wasAir) f.vy += g * chaosGrav * STEP;
   if (f.state === 'held') { f.vx = 0; f.vy = 0; }
   f.x += f.vx * STEP; f.y += f.vy * STEP;
   if (f.y >= 0) { f.y = 0; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
@@ -5094,7 +5132,8 @@ function applyHit(att, def, m, pt) {
 
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
     const extraBushidoLoss = M.mode === 'bushido' ? 32 : 0;
-    const guardLoss = extraBushidoLoss + (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1))) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+    let guardLoss = extraBushidoLoss + (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1))) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+    if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'guard_stab') guardLoss *= currentChaosMutation.val;
     def.guard = Math.max(0, (def.guard !== undefined ? def.guard : def.maxGuard) - guardLoss);
     def.sinceBlock = 0;
 
@@ -5151,7 +5190,15 @@ function applyHit(att, def, m, pt) {
   const isCounter = !m.isProj && def.moveName !== 'dl' && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
   let dmg = (m.dmg * scale) / defRating;
-  if (isCounter) { ev.counter = true; dmg *= 1.2; ev.big = true; }
+  if (isCounter) {
+    ev.counter = true;
+    const critMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'crit') ? currentChaosMutation.val : 1.2;
+    dmg *= critMul;
+    ev.big = true;
+  }
+  if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'dmg') {
+    dmg *= currentChaosMutation.val;
+  }
   // 现实相向冲锋迎击动能加成（Relative Velocity Impact）：双方相向冲锋或飞冲碰撞时，伤害自然放大 5%~25%
   if (!m.isProj && !m.ult) {
     const vAtt = att.vx * att.face; // 朝向正向速度
@@ -5215,10 +5262,19 @@ function applyHit(att, def, m, pt) {
     SFX.slice();
   } else {
     def.hp = Math.max(m.hold ? 1 : 0, def.hp - dmg);
+    if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'vamp' && att.hp > 0 && !m.chip) {
+      const leech = Math.round(dmg * currentChaosMutation.val);
+      if (leech > 0) {
+        att.hp = Math.min(att.maxHp, att.hp + leech);
+        att.lagHp = Math.min(att.maxHp, att.lagHp + leech);
+        addP({ type: 'text', text: `+${leech} 🩸`, x: att.x, y: att.y - 120, life: 0.7, max: 0.7, rgb: '255,100,100' });
+      }
+    }
   }
   if (def.dummy) def.hp = Math.max(1, def.hp);
   att.hitConfirmed = true;
-  if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm);
+  const chaosMeterMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'meter_gain') ? currentChaosMutation.val : 1;
+  if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
   def.move = null;
   if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
@@ -5242,7 +5298,8 @@ function applyHit(att, def, m, pt) {
       } else {
         const js = Math.max(0.45, 1 - 0.1 * (def.juggle - 1));
         def.state = 'launched'; def.t = 0;
-        def.vx = m.kb[0] * fx * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
+        const chaosKb = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'kb') ? currentChaosMutation.val : 1;
+        def.vx = m.kb[0] * fx * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
         const baseVy = m.spike ? m.kb[1] : (m.kb[1] === 0 ? -320 * js : m.kb[1] * js);
         def.vy = baseVy * (m.spike ? 1 : Math.min(1.25, Math.max(0.82, 1 / Math.cbrt(defWeight))));
         def.spiked = !!m.spike; if (!m.spike) def.bounced = def.bounced && air;
@@ -5252,7 +5309,8 @@ function applyHit(att, def, m, pt) {
       const comboDecay = m.noScale ? 1 : Math.max(0.48, 1 - 0.075 * (def.comboHits - 1));
       const hitStunDur = m.stun * comboDecay * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1) * Math.min(1.22, Math.max(0.85, Math.pow(massRatio, 0.25)));
       const kbMul = m.noScale ? 1 : Math.min(1.45, 1 + 0.05 * (def.comboHits - 1));
-      def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * kbMul * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
+      const chaosKb = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'kb') ? currentChaosMutation.val : 1;
+      def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * kbMul * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
     }
   }
   if (def.dummy && def.ctrl && def.ctrl.mode === 'fixed' && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
@@ -6957,6 +7015,13 @@ function drawHUD() {
     ctx.fillStyle = '#ff6b6b';
     ctx.fillText('⚡ 孤勇决死', cx, top + bh + 18);
     ctx.restore();
+  } else if (M.mode === 'chaos') {
+    ctx.save();
+    ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
+    ctx.fillStyle = '#e9c46a';
+    const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + currentChaosMutation.name + ' (' + Math.max(0, Math.ceil(CHAOS_INTERVAL - chaosTimer)) + 's)') : '🎲 乾坤异变';
+    ctx.fillText(mutTxt, cx, top + bh + 18);
+    ctx.restore();
   }
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
 }
@@ -7463,6 +7528,7 @@ function singleSec(sec) {
       tag3: '挑选三位豪杰排定出战顺序，胜者保留残血守擂，直至一方全灭！',
       tower: '挑选本命侠客登临万仞剑阁，突破层层守关者，顿悟三选一武林秘卷！',
       bushido: '双方仅存 1 点生命，架势格挡为唯一生机，一击绝杀见血封喉！',
+      chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
       train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定'
     };
@@ -7471,6 +7537,7 @@ function singleSec(sec) {
   if (active === 'tag3') renderTag3();
   else if (active === 'tower') renderTower();
   else if (active === 'bushido') renderBushido();
+  else if (active === 'chaos') renderChaos();
   else if (active === 'stage') renderStages();
   else if (active === 'train') renderTrainPick();
   else if (active === 'cpu') updateAIBrief();
@@ -7478,7 +7545,7 @@ function singleSec(sec) {
 function openScreen(name) {
   if (OFFLINE_BUILD && name === 'single') name = 'cpu';
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'bushido' || name === 'stage' || name === 'train') {
+  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'bushido' || name === 'chaos' || name === 'stage' || name === 'train') {
     singleSec(name);
     showScreen('single');
     return;
@@ -10160,6 +10227,224 @@ function renderBushido() {
   }
 }
 
+const CHAOS_MUTATIONS = [
+  { id: "chaos_1", name: "「疾风·天罡」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_2", name: "「疾风·地煞」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_3", name: "「疾风·青龙」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 青龙出海，威动乾坤" },
+  { id: "chaos_4", name: "「疾风·白虎」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 白虎啸风，势不可挡" },
+  { id: "chaos_5", name: "「疾风·朱雀」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 朱雀振羽，生生不息" },
+  { id: "chaos_6", name: "「疾风·玄武」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_7", name: "「疾风·破晓」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 破晓晨光，势如长虹" },
+  { id: "chaos_8", name: "「疾风·残月」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 孤月映水，来去无痕" },
+  { id: "chaos_9", name: "「疾风·奔雷」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_10", name: "「疾风·离火」", icon: "🌪️", type: "spd", val: 1.45, desc: "身法迅疾，移动速度提升45% · 炽火焚天，烽烟万里" },
+  { id: "chaos_11", name: "「迅影·天罡」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_12", name: "「迅影·地煞」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_13", name: "「迅影·青龙」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 青龙出海，威动乾坤" },
+  { id: "chaos_14", name: "「迅影·白虎」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 白虎啸风，势不可挡" },
+  { id: "chaos_15", name: "「迅影·朱雀」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 朱雀振羽，生生不息" },
+  { id: "chaos_16", name: "「迅影·玄武」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_17", name: "「迅影·破晓」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 破晓晨光，势如长虹" },
+  { id: "chaos_18", name: "「迅影·残月」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 孤月映水，来去无痕" },
+  { id: "chaos_19", name: "「迅影·奔雷」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_20", name: "「迅影·离火」", icon: "⚡", type: "dash_cd", val: 0.4, desc: "轻功拔群，冲刺冷却缩减60% · 炽火焚天，烽烟万里" },
+  { id: "chaos_21", name: "「千钧·天罡」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_22", name: "「千钧·地煞」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_23", name: "「千钧·青龙」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 青龙出海，威动乾坤" },
+  { id: "chaos_24", name: "「千钧·白虎」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 白虎啸风，势不可挡" },
+  { id: "chaos_25", name: "「千钧·朱雀」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 朱雀振羽，生生不息" },
+  { id: "chaos_26", name: "「千钧·玄武」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_27", name: "「千钧·破晓」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 破晓晨光，势如长虹" },
+  { id: "chaos_28", name: "「千钧·残月」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 孤月映水，来去无痕" },
+  { id: "chaos_29", name: "「千钧·奔雷」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_30", name: "「千钧·离火」", icon: "💥", type: "dmg", val: 1.4, desc: "力拔千钧，招式伤害提升40% · 炽火焚天，烽烟万里" },
+  { id: "chaos_31", name: "「重浪·天罡」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_32", name: "「重浪·地煞」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_33", name: "「重浪·青龙」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 青龙出海，威动乾坤" },
+  { id: "chaos_34", name: "「重浪·白虎」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 白虎啸风，势不可挡" },
+  { id: "chaos_35", name: "「重浪·朱雀」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 朱雀振羽，生生不息" },
+  { id: "chaos_36", name: "「重浪·玄武」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_37", name: "「重浪·破晓」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 破晓晨光，势如长虹" },
+  { id: "chaos_38", name: "「重浪·残月」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 孤月映水，来去无痕" },
+  { id: "chaos_39", name: "「重浪·奔雷」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_40", name: "「重浪·离火」", icon: "🌊", type: "kb", val: 2.0, desc: "惊涛裂岸，攻击击退力提升100% · 炽火焚天，烽烟万里" },
+  { id: "chaos_41", name: "「踏虚·天罡」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 天罡北斗，刚劲无俦" },
+  { id: "chaos_42", name: "「踏虚·地煞」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 地煞幽冥，出奇制胜" },
+  { id: "chaos_43", name: "「踏虚·青龙」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 青龙出海，威动乾坤" },
+  { id: "chaos_44", name: "「踏虚·白虎」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 白虎啸风，势不可挡" },
+  { id: "chaos_45", name: "「踏虚·朱雀」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 朱雀振羽，生生不息" },
+  { id: "chaos_46", name: "「踏虚·玄武」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 玄武镇岳，坚固磐石" },
+  { id: "chaos_47", name: "「踏虚·破晓」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 破晓晨光，势如长虹" },
+  { id: "chaos_48", name: "「踏虚·残月」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 孤月映水，来去无痕" },
+  { id: "chaos_49", name: "「踏虚·奔雷」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_50", name: "「踏虚·离火」", icon: "🪶", type: "grav", val: 0.5, desc: "御风凌虚，重力减半滞空延长 · 炽火焚天，烽烟万里" },
+  { id: "chaos_51", name: "「凌霄·天罡」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_52", name: "「凌霄·地煞」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_53", name: "「凌霄·青龙」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 青龙出海，威动乾坤" },
+  { id: "chaos_54", name: "「凌霄·白虎」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 白虎啸风，势不可挡" },
+  { id: "chaos_55", name: "「凌霄·朱雀」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 朱雀振羽，生生不息" },
+  { id: "chaos_56", name: "「凌霄·玄武」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_57", name: "「凌霄·破晓」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 破晓晨光，势如长虹" },
+  { id: "chaos_58", name: "「凌霄·残月」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 孤月映水，来去无痕" },
+  { id: "chaos_59", name: "「凌霄·奔雷」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_60", name: "「凌霄·离火」", icon: "🕊️", type: "jump", val: 1.45, desc: "凌云蹑虚，起跳高度提升45% · 炽火焚天，烽烟万里" },
+  { id: "chaos_61", name: "「狂涌·天罡」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 天罡北斗，刚劲无俦" },
+  { id: "chaos_62", name: "「狂涌·地煞」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 地煞幽冥，出奇制胜" },
+  { id: "chaos_63", name: "「狂涌·青龙」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 青龙出海，威动乾坤" },
+  { id: "chaos_64", name: "「狂涌·白虎」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 白虎啸风，势不可挡" },
+  { id: "chaos_65", name: "「狂涌·朱雀」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 朱雀振羽，生生不息" },
+  { id: "chaos_66", name: "「狂涌·玄武」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 玄武镇岳，坚固磐石" },
+  { id: "chaos_67", name: "「狂涌·破晓」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 破晓晨光，势如长虹" },
+  { id: "chaos_68", name: "「狂涌·残月」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 孤月映水，来去无痕" },
+  { id: "chaos_69", name: "「狂涌·奔雷」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_70", name: "「狂涌·离火」", icon: "🔥", type: "meter_gain", val: 2.0, desc: "真气狂涌，聚气速度翻倍 · 炽火焚天，烽烟万里" },
+  { id: "chaos_71", name: "「神通·天罡」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_72", name: "「神通·地煞」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_73", name: "「神通·青龙」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 青龙出海，威动乾坤" },
+  { id: "chaos_74", name: "「神通·白虎」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 白虎啸风，势不可挡" },
+  { id: "chaos_75", name: "「神通·朱雀」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 朱雀振羽，生生不息" },
+  { id: "chaos_76", name: "「神通·玄武」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_77", name: "「神通·破晓」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 破晓晨光，势如长虹" },
+  { id: "chaos_78", name: "「神通·残月」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 孤月映水，来去无痕" },
+  { id: "chaos_79", name: "「神通·奔雷」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_80", name: "「神通·离火」", icon: "✨", type: "cd", val: 0.4, desc: "招意通灵，技能冷却缩减60% · 炽火焚天，烽烟万里" },
+  { id: "chaos_81", name: "「霸体·天罡」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 天罡北斗，刚劲无俦" },
+  { id: "chaos_82", name: "「霸体·地煞」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 地煞幽冥，出奇制胜" },
+  { id: "chaos_83", name: "「霸体·青龙」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 青龙出海，威动乾坤" },
+  { id: "chaos_84", name: "「霸体·白虎」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 白虎啸风，势不可挡" },
+  { id: "chaos_85", name: "「霸体·朱雀」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 朱雀振羽，生生不息" },
+  { id: "chaos_86", name: "「霸体·玄武」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 玄武镇岳，坚固磐石" },
+  { id: "chaos_87", name: "「霸体·破晓」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 破晓晨光，势如长虹" },
+  { id: "chaos_88", name: "「霸体·残月」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 孤月映水，来去无痕" },
+  { id: "chaos_89", name: "「霸体·奔雷」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_90", name: "「霸体·离火」", icon: "🛡️", type: "armor", val: 1, desc: "金石铸身，出招附带强韧霸体 · 炽火焚天，烽烟万里" },
+  { id: "chaos_91", name: "「金刚·天罡」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 天罡北斗，刚劲无俦" },
+  { id: "chaos_92", name: "「金刚·地煞」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 地煞幽冥，出奇制胜" },
+  { id: "chaos_93", name: "「金刚·青龙」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 青龙出海，威动乾坤" },
+  { id: "chaos_94", name: "「金刚·白虎」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 白虎啸风，势不可挡" },
+  { id: "chaos_95", name: "「金刚·朱雀」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 朱雀振羽，生生不息" },
+  { id: "chaos_96", name: "「金刚·玄武」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 玄武镇岳，坚固磐石" },
+  { id: "chaos_97", name: "「金刚·破晓」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 破晓晨光，势如长虹" },
+  { id: "chaos_98", name: "「金刚·残月」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 孤月映水，来去无痕" },
+  { id: "chaos_99", name: "「金刚·奔雷」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_100", name: "「金刚·离火」", icon: "🔔", type: "guard_stab", val: 2.0, desc: "不动如山，架势防御强度翻倍 · 炽火焚天，烽烟万里" },
+  { id: "chaos_101", name: "「血煞·天罡」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_102", name: "「血煞·地煞」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_103", name: "「血煞·青龙」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 青龙出海，威动乾坤" },
+  { id: "chaos_104", name: "「血煞·白虎」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 白虎啸风，势不可挡" },
+  { id: "chaos_105", name: "「血煞·朱雀」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 朱雀振羽，生生不息" },
+  { id: "chaos_106", name: "「血煞·玄武」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_107", name: "「血煞·破晓」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 破晓晨光，势如长虹" },
+  { id: "chaos_108", name: "「血煞·残月」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 孤月映水，来去无痕" },
+  { id: "chaos_109", name: "「血煞·奔雷」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_110", name: "「血煞·离火」", icon: "🩸", type: "vamp", val: 0.25, desc: "饮血淬锋，命中吸血25% · 炽火焚天，烽烟万里" },
+  { id: "chaos_111", name: "「破军·天罡」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 天罡北斗，刚劲无俦" },
+  { id: "chaos_112", name: "「破军·地煞」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 地煞幽冥，出奇制胜" },
+  { id: "chaos_113", name: "「破军·青龙」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 青龙出海，威动乾坤" },
+  { id: "chaos_114", name: "「破军·白虎」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 白虎啸风，势不可挡" },
+  { id: "chaos_115", name: "「破军·朱雀」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 朱雀振羽，生生不息" },
+  { id: "chaos_116", name: "「破军·玄武」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 玄武镇岳，坚固磐石" },
+  { id: "chaos_117", name: "「破军·破晓」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 破晓晨光，势如长虹" },
+  { id: "chaos_118", name: "「破军·残月」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 孤月映水，来去无痕" },
+  { id: "chaos_119", name: "「破军·奔雷」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 狂雷贯顶，迅若闪电" },
+  { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
+];
+
+let chaosP1 = 0, chaosP2 = 1, chaosLevel = 'normal';
+let currentChaosMutation = null;
+let chaosTimer = 0;
+const CHAOS_INTERVAL = 15;
+
+function rollChaosMutation() {
+  const mut = CHAOS_MUTATIONS[Math.floor(Math.random() * CHAOS_MUTATIONS.length)];
+  currentChaosMutation = mut;
+  chaosTimer = 0;
+  flashA = Math.max(flashA, 0.3);
+  flashRGB = '233,196,106';
+  shake = Math.max(shake, 8);
+  SFX.gong();
+  say('天机异变 · ' + mut.name, 1.6, 'big');
+  if (typeof addP === 'function' && typeof A !== 'undefined') {
+    addP({ type: 'text', text: mut.icon + ' ' + mut.name, x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
+  }
+  return mut;
+}
+
+function updateChaos(dt) {
+  if (M.mode !== 'chaos' || M.phase !== 'fight') return;
+  chaosTimer += dt;
+  if (!currentChaosMutation || chaosTimer >= CHAOS_INTERVAL) {
+    rollChaosMutation();
+  }
+}
+
+function renderChaos() {
+  const pick1 = document.getElementById('chaosPick');
+  const pick2 = document.getElementById('chaosFoePick');
+  if (pick1) {
+    pick1.innerHTML = CHARS.map((c, i) => {
+      return '<button class="trbtn' + (chaosP1 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + c.look.slash + ')">' +
+        '<span class="trn">' + c.name + '</span>' +
+        '<span class="trr">' + c.role + '</span>' +
+      '</button>';
+    }).join('');
+    pick1.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        chaosP1 = +b.dataset.idx;
+        renderChaos();
+        SFX.slice();
+      });
+    });
+  }
+  if (pick2) {
+    pick2.innerHTML = CHARS.map((c, i) => {
+      return '<button class="trbtn' + (chaosP2 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + c.look.slash + ')">' +
+        '<span class="trn">' + c.name + '</span>' +
+        '<span class="trr">' + c.role + '</span>' +
+      '</button>';
+    }).join('');
+    pick2.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        chaosP2 = +b.dataset.idx;
+        renderChaos();
+        SFX.slice();
+      });
+    });
+  }
+  const lvs = document.querySelectorAll('#chaosLevels button');
+  lvs.forEach(b => {
+    b.classList.toggle('sel', b.dataset.lv === chaosLevel);
+    b.onclick = () => {
+      chaosLevel = b.dataset.lv;
+      lvs.forEach(x => x.classList.toggle('sel', x === b));
+      SFX.slice();
+    };
+  });
+}
+
+function startChaos(p1, p2, lv) {
+  initAudio();
+  paused = false;
+  chaosP1 = p1 !== undefined ? p1 : chaosP1;
+  chaosP2 = p2 !== undefined ? p2 : chaosP2;
+  chaosLevel = lv !== undefined ? lv : chaosLevel;
+  M.mode = 'chaos';
+  M.round = 1;
+  M.wins = [0, 0];
+  M.stage = null;
+  currentChaosMutation = null;
+  chaosTimer = 0;
+  setChars(chaosP1, chaosP2);
+  A.ctrl = human[0];
+  B.ctrl = new AICtrl(chaosLevel);
+  A.meter = B.meter = 0;
+  human[0].clear(); human[1].clear();
+  showScreen(null);
+  startRound();
+  say('天机乱斗 · 乾坤异变', 1.4);
+  rollChaosMutation();
+}
+
 function startBushido(p1, p2) {
   initAudio();
   paused = false;
@@ -10185,6 +10470,9 @@ if (towerStartBtn) towerStartBtn.addEventListener('click', () => startTower(towe
 const bushidoStartBtn = document.getElementById('bushidoStartBtn');
 if (bushidoStartBtn) bushidoStartBtn.addEventListener('click', () => startBushido(bushidoP1, bushidoP2));
 
+const chaosStartBtn = document.getElementById('chaosStartBtn');
+if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => startChaos(chaosP1, chaosP2, chaosLevel));
+
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
@@ -10199,6 +10487,10 @@ document.getElementById('againBtn').addEventListener('click', () => {
   }
   if (M.mode === 'bushido') {
     startBushido(bushidoP1, bushidoP2);
+    return;
+  }
+  if (M.mode === 'chaos') {
+    startChaos(chaosP1, chaosP2, chaosLevel);
     return;
   }
   bpStart('cpu');
@@ -10221,7 +10513,7 @@ function toMenu() {
   paused = false; BP = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
   M.mode = 'demo';
-  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'bushido') {
+  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'bushido' || prevMode === 'chaos') {
     singleSec(prevMode);
     showScreen('single');
   } else {

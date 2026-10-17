@@ -39,6 +39,7 @@
         <button data-tab="tag3" type="button">🔥 3v3 车轮战</button>
         <button data-tab="tower" type="button">📜 问剑密卷 (肉鸽)</button>
         <button data-tab="bushido" type="button">⚡ 一击必杀</button>
+        <button data-tab="chaos" type="button">🎲 天机乱斗</button>
         <button data-tab="stage" type="button">🌲 守关挑战</button>
         <button data-tab="train" type="button">🥋 木人试剑</button>
       </div>
@@ -189,6 +190,39 @@
         <div class="sec-sub-label" style="margin-top:10px">决死对手选择</div>
         <div class="trpick" id="bushidoFoePick"></div>
         <button class="go" id="bushidoStartBtn" type="button" style="margin-top:16px">进入孤勇决死</button>
+      </div>
+
+      <!-- 天机乱斗 · 乾坤异变 -->
+      <div data-sec="chaos" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">天机乱斗 · 乾坤异变</h3>
+          <span class="sub-badge">动态随机词条 · 108天机秘令</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">天道无常，战局每隔 15 秒天降水墨异象，在超过 100 种天机词条中随机变幻！（疾风超速、月华倒转、浮空低重力、无限怒气、雷霆反震、乾坤移形…）</p>
+        <div class="sec-sub-label">选择本命出战侠客</div>
+        <div class="trpick" id="chaosPick"></div>
+        <div class="sec-sub-label" style="margin-top:10px">乱斗对手选择</div>
+        <div class="trpick" id="chaosFoePick"></div>
+        <div class="sec-sub-label" style="margin-top:10px">乱斗电脑境界</div>
+        <div class="levels-grid" id="chaosLevels">
+          <button data-lv="easy" type="button">
+            <span class="lv-top"><span class="lv-icon">🌱</span><span class="lv-name">入门</span></span>
+            <span class="lv-sub">初学试水</span>
+          </button>
+          <button data-lv="normal" class="sel" type="button">
+            <span class="lv-top"><span class="lv-icon">⚔️</span><span class="lv-name">寻常</span></span>
+            <span class="lv-sub">标准切磋</span>
+          </button>
+          <button data-lv="hard" type="button">
+            <span class="lv-top"><span class="lv-icon">🔥</span><span class="lv-name">劲敌</span></span>
+            <span class="lv-sub">凌厉出招</span>
+          </button>
+          <button data-lv="impossible" type="button">
+            <span class="lv-top"><span class="lv-icon">👑</span><span class="lv-name">绝顶</span></span>
+            <span class="lv-sub">零瑕宗师</span>
+          </button>
+        </div>
+        <button class="go" id="chaosStartBtn" type="button" style="margin-top:16px">开启天机乱斗</button>
       </div>
 
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
