@@ -35,14 +35,17 @@
   .seg button:focus-visible, .go:focus-visible, .ghost:focus-visible { outline: 2px solid var(--p1); outline-offset: 3px; }
   #levels.hide { visibility: hidden; }
   .single-cat-tabs {
-    display: inline-flex; gap: 8px; padding: 4px; border-radius: 999px;
+    display: flex; gap: 8px; padding: 4px; border-radius: 999px;
     background: rgba(0, 0, 0, .32); border: 1px solid rgba(233, 196, 106, .22);
-    margin: 8px 0 6px; flex-wrap: wrap; justify-content: center;
+    margin: 8px auto 6px; width: min(460px, 94vw); max-width: 100%; box-sizing: border-box;
+    justify-content: center; align-items: stretch;
   }
   .single-cat-tabs button {
+    flex: 1 1 0; min-width: 0; text-align: center; justify-content: center;
     border: none; background: transparent; color: var(--dim); font-family: var(--title);
-    font-size: 14px; padding: 5px 16px; border-radius: 999px; cursor: pointer;
-    letter-spacing: 0.5px; transition: all .15s ease; white-space: nowrap;
+    font-size: 14px; padding: 6px 4px; border-radius: 999px; cursor: pointer;
+    letter-spacing: 0.5px; transition: background .15s ease, color .15s ease, border-color .15s ease;
+    white-space: nowrap; user-select: none;
   }
   .single-cat-tabs button:hover {
     color: var(--ink); background: rgba(255, 255, 255, .05);
@@ -55,12 +58,13 @@
   .single-tabs, .task-tabs {
     display: inline-flex; gap: 6px; padding: 4px; border-radius: 999px;
     background: rgba(255, 255, 255, .05); border: 1px solid var(--faint);
-    margin: 4px 0 16px; flex-wrap: wrap; justify-content: center;
+    margin: 4px 0 16px; flex-wrap: wrap; justify-content: center; min-height: 38px;
+    box-sizing: border-box; align-items: center;
   }
   .single-tabs button, .task-tabs button {
     border: none; background: transparent; color: var(--dim); font-family: var(--body);
     font-size: 13px; padding: 5px 16px; border-radius: 999px; cursor: pointer;
-    transition: all .15s ease; white-space: nowrap;
+    transition: all .15s ease; white-space: nowrap; user-select: none;
   }
   .single-tabs button.sel, .task-tabs button.sel {
     background: var(--gold); color: #0c0b16; font-weight: 700;
