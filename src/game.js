@@ -4783,22 +4783,33 @@ function drawHUD() {
     }
     // 气槽
     const mw = barW * 0.55, my = top + bh + 44, mx = i === 0 ? x0 : x0 + barW - mw;
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(mx - 2, my - 2, mw + 4, 8);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(mx - 2, my - 2, mw + 4, 9);
     const full = f.meter >= 100;
-    ctx.fillStyle = full ? `rgba(${f.look.slash},${0.75 + 0.25 * Math.sin(clock * 10)})` : `rgba(${f.look.slash},0.7)`;
-    const fw = mw * f.meter / 100;
-    ctx.fillRect(i === 0 ? mx : mx + mw - fw, my, fw, 4);
+    const fw = mw * clamp(f.meter / 100, 0, 1);
     if (full) {
+      // 沸腾真气火焰光效与高亮脉冲
+      const pulse = 0.5 + 0.5 * Math.sin(clock * 14);
+      const auraG = ctx.createLinearGradient(mx, 0, mx + mw, 0);
+      auraG.addColorStop(0, '#e9c46a');
+      auraG.addColorStop(0.5, '#fff');
+      auraG.addColorStop(1, '#ff6a5a');
       ctx.save();
-      ctx.strokeStyle = `rgba(${f.look.slash},${0.4 + 0.35 * Math.sin(clock * 12)})`;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(mx - 3, my - 3, mw + 6, 10);
+      ctx.shadowColor = `rgba(${f.look.slash}, 0.95)`;
+      ctx.shadowBlur = 10 + 6 * pulse;
+      ctx.fillStyle = auraG;
+      ctx.fillRect(i === 0 ? mx : mx + mw - fw, my - 1, fw, 6);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.8;
+      ctx.strokeRect(mx - 3, my - 3, mw + 6, 11);
       ctx.restore();
-      ctx.font = `600 ${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.textBaseline = 'top';
+      ctx.font = `bold ${Math.max(12, Math.round(bh * 0.96))}px ${BODY_FONT}`; ctx.textBaseline = 'top';
       ctx.fillStyle = '#fff'; ctx.textAlign = i === 0 ? 'left' : 'right';
-      ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 8;
-      ctx.fillText(`⚡ ${ULTS[f.ch.ult].name}就绪${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 9);
+      ctx.shadowColor = `rgba(${f.look.slash}, 0.9)`; ctx.shadowBlur = 8;
+      ctx.fillText(`⚡ ${ULTS[f.ch.ult].name} 绝技就绪${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 11);
       ctx.shadowBlur = 0;
+    } else {
+      ctx.fillStyle = `rgba(${f.look.slash}, 0.75)`;
+      ctx.fillRect(i === 0 ? mx : mx + mw - fw, my, fw, 5);
     }
     // 技能冷却（木人桩不显示）
     if (!f.dummy) {
@@ -9089,7 +9100,7 @@ function renderBP() {
     const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
     const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
     return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
-      ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
+      <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
   const show = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);
   setDetail(show);
@@ -9124,6 +9135,19 @@ document.getElementById('bpGrid').addEventListener('dblclick', e => {
 // 按实际行分组，窄屏换成多行时上下键依然正确
 document.getElementById('bpGrid').addEventListener('keydown', e => {
   const k = e.key;
+  if (k >= '1' && k <= '9') {
+    const pickNum = parseInt(k, 10) - 1;
+    if (pickNum >= 0 && pickNum < CHARS.length && cards[pickNum]) {
+      e.preventDefault();
+      cards[pickNum].focus();
+      if (BP_STEPS[BP.step][0] === bpMySide() && bpValid(pickNum)) {
+        bpSel = pickNum;
+        SFX.slice();
+        renderBP();
+      }
+      return;
+    }
+  }
   if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown') return;
   if (!BP || BP.step >= 4) return;
   const cards = [...document.querySelectorAll('#bpGrid .bpcard')];
