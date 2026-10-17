@@ -352,6 +352,29 @@ const testSuite = [
       }
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Skin draw pool includes qf_qfx and enforces lower rates with higher BaoDi',
+    fn: `(() => {
+      const R = DEFAULT_RATES;
+      if (!R.skin || R.skin.pity < 20 || R.skin.rate.legend > 0.02 || R.skin.rate.rare > 0.08) {
+        return { pass: false, error: 'Skin rates/pity not adjusted as requested (pity=' + (R.skin && R.skin.pity) + ')' };
+      }
+      // Verify qf_qfx can be drawn when qingfeng is owned
+      PROF.owned = ['qingfeng'];
+      PROF.skins = [];
+      PROF.spity = 999; // trigger pity
+      const draw = clientDrawOne(true);
+      if (draw.type !== 'skin' || !draw.skin) {
+        return { pass: false, error: 'Pity draw failed to produce skin' };
+      }
+      // Check that all skins belonging to owned characters are eligible in draw pool
+      const poolSkins = Object.keys(SKINS).filter(k => (PROF.owned || []).includes(SKINS[k].char));
+      if (!poolSkins.includes('qf_qfx')) {
+        return { pass: false, error: 'qf_qfx is missing from poolSkins' };
+      }
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

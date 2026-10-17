@@ -1604,15 +1604,15 @@
 
   const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua'];
   const DEV_ALL_SKINS = [
-    'qf_frost', 'qf_gold', 'qf_qfx',
-    'fy_jade', 'fy_blood',
-    'ts_bronze', 'ts_obsidian',
-    'ls_plum', 'ls_aurora',
-    'ly_dusk', 'ly_sky',
-    'lm_violet', 'lm_sun',
-    'my_cinnabar', 'my_gold',
-    'yh_sakura', 'yh_eclipse',
-    'yl_raven', 'yl_phoenix'
+    'qf_frost', 'qf_gold', 'qf_abyss', 'qf_qfx',
+    'fy_jade', 'fy_blood', 'fy_phantom',
+    'ts_bronze', 'ts_obsidian', 'ts_crimson',
+    'ls_plum', 'ls_aurora', 'ls_dragon',
+    'ly_dusk', 'ly_sky', 'ly_bamboo',
+    'lm_violet', 'lm_sun', 'lm_asura',
+    'my_cinnabar', 'my_gold', 'my_celestial',
+    'yh_sakura', 'yh_eclipse', 'yh_solstice',
+    'yl_raven', 'yl_phoenix', 'yl_blizzard'
   ];
 
   function makeDevProfile() {
@@ -8598,7 +8598,8 @@ function renderCodex() {
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
     const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
     const isLeg = v.rarity === 'legend';
-    return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? '' : v.exclusive ? ' · 青锋行通关' : ' · 预览'}</button>`;
+    const lockHint = v.exclusive ? ' · 青锋行通关' : ' · 预览';
+    return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? '' : lockHint}</button>`;
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
@@ -8850,11 +8851,11 @@ const DEFAULT_RATES = {
   dup: 90,
   fragInk: 6,
   skin: {
-    rate: { legend: 0.03, rare: 0.12 },
+    rate: { legend: 0.015, rare: 0.06 },
     cost: 30,
     ten: 270,
-    pity: 15,
-    dup: 20
+    pity: 25,
+    dup: 25
   }
 };
 function getWeeklyRotation() {
@@ -11697,17 +11698,7 @@ function triggerStealthDevUnlock(silent) {
     localStorage.setItem('renying-qfx', '10');
   } catch (e) {}
   if (typeof PROF !== 'undefined' && PROF) {
-    const allSkins = [
-      'qf_frost', 'qf_gold', 'qf_qfx',
-      'fy_jade', 'fy_blood',
-      'ts_bronze', 'ts_obsidian',
-      'ls_plum', 'ls_aurora',
-      'ly_dusk', 'ly_sky',
-      'lm_violet', 'lm_sun',
-      'my_cinnabar', 'my_gold',
-      'yh_sakura', 'yh_eclipse',
-      'yl_raven', 'yl_phoenix'
-    ];
+    const allSkins = Object.keys(SKINS);
     PROF.skins = Array.from(new Set([...(PROF.skins || []), ...allSkins]));
     PROF.qfx = Math.max(PROF.qfx || 0, 10);
     CHARS.forEach(c => {

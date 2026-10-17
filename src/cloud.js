@@ -92,15 +92,15 @@
 
   const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua'];
   const DEV_ALL_SKINS = [
-    'qf_frost', 'qf_gold', 'qf_qfx',
-    'fy_jade', 'fy_blood',
-    'ts_bronze', 'ts_obsidian',
-    'ls_plum', 'ls_aurora',
-    'ly_dusk', 'ly_sky',
-    'lm_violet', 'lm_sun',
-    'my_cinnabar', 'my_gold',
-    'yh_sakura', 'yh_eclipse',
-    'yl_raven', 'yl_phoenix'
+    'qf_frost', 'qf_gold', 'qf_abyss', 'qf_qfx',
+    'fy_jade', 'fy_blood', 'fy_phantom',
+    'ts_bronze', 'ts_obsidian', 'ts_crimson',
+    'ls_plum', 'ls_aurora', 'ls_dragon',
+    'ly_dusk', 'ly_sky', 'ly_bamboo',
+    'lm_violet', 'lm_sun', 'lm_asura',
+    'my_cinnabar', 'my_gold', 'my_celestial',
+    'yh_sakura', 'yh_eclipse', 'yh_solstice',
+    'yl_raven', 'yl_phoenix', 'yl_blizzard'
   ];
 
   function makeDevProfile() {
