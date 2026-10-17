@@ -4446,7 +4446,8 @@ function startSpecial(f) {
   f.meter = 0; f.state = 'special'; f.sp = 'charge'; f.t = 0; f.invul = 99; f.vx = 0; f.spFace = f.face;
   superFreeze = 0.5; superOwner = f; dimA = 1;
   flashA = 0.35; flashRGB = f.look.slash;
-  say(ULTS[f.ch.ult].name, 0.9, 'super'); SFX.superOn();
+  const ultName = skinUltName(f) || ULTS[f.ch.ult].name;
+  say(ultName, 0.9, 'super'); SFX.superOn();
   if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
   ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
 }
@@ -4652,6 +4653,10 @@ function startSkill(f, foe, slot) {
   f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null;
   if (slot === 2) f.skill2CD = S.cd; else f.skillCD = S.cd;
   f.face = faceDir(f, foe);   // 技能朝角色面向的方向放（电脑没有方向键，自动面向对手）
+  const customNm = skinSkillName(f, slot);
+  if (customNm && f.hp > 0 && M.phase === 'fight') {
+    addP({ type: 'callout', text: customNm, x: f.x, y: f.y - 75, life: 0.65, max: 0.65, rgb: f.look.slash, scale: 1.5 });
+  }
   S.start(f, foe);
 }
 // 技能的一次近身判定（每个阶段只会打中一次）
@@ -6449,6 +6454,45 @@ function drawDeco(sk, f, L, layer) {
     ctx.fillStyle = D.shoulder; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.ellipse(sk.sh[0], sk.sh[1] + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
+  if (D.breastplate) {   // 战甲胸铠 / 护心镜
+    ctx.fillStyle = D.breastplate; ctx.strokeStyle = `rgba(${L.slash},0.8)`; ctx.lineWidth = 1.4;
+    const mx = (sk.sh[0] + sk.hip[0]) * 0.5, my = (sk.sh[1] + sk.hip[1]) * 0.5;
+    ctx.beginPath(); ctx.ellipse(mx, my - 2, 9, 13, Math.atan2(uy, ux) + Math.PI / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = `rgb(${L.slash})`; circle([mx, my - 2], 3.2);
+  }
+  if (D.robe) {   // 独有服饰下摆 / 战袍长裾
+    const rbCol = D.robe === 'ice' ? '#b8d8ff' : D.robe === 'gold' ? '#e5b842' : D.robe === 'dark' ? '#321650'
+      : D.robe === 'leaf' ? '#1f8f68' : D.robe === 'crimson' ? '#781420' : D.robe === 'spirit' ? '#105577'
+      : D.robe === 'bronze' ? '#8a6838' : D.robe === 'heavy' ? '#242030' : D.robe === 'shura' ? '#5a1212'
+      : D.robe === 'plum' ? '#c02a4a' : D.robe === 'aurora' ? '#287766' : D.robe === 'ocean' ? '#12406e'
+      : D.robe === 'dusk' ? '#a04822' : D.robe === 'celestial' ? '#306496' : D.robe === 'bamboo' ? '#2a4830'
+      : D.robe === 'thunder' ? '#4a287c' : D.robe === 'solar' ? '#ba5416' : D.robe === 'vajra' ? '#6a3610'
+      : D.robe === 'cinnabar' ? '#882014' : D.robe === 'gilt' ? '#8a6820' : D.robe === 'starry' ? '#14244a'
+      : D.robe === 'sakura' ? '#c86488' : D.robe === 'eclipse' ? '#34101e' : D.robe === 'snow' ? '#4478a8'
+      : D.robe === 'raven' ? '#1c1c24' : D.robe === 'jade_master' ? '#1a5448' : D.robe === 'phoenix' ? '#a83610' : '#284666';
+    ctx.fillStyle = rbCol; ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1.2;
+    const h = sk.hip, kf = sk.kf, kb = sk.kb;
+    const rDir = -sk.face;
+    const rTipX = (kf[0] + kb[0]) * 0.5 + rDir * (12 + Math.abs(sway)), rTipY = Math.max(kf[1], kb[1]) + 8 + (f.state === 'skill' ? Math.sin(t * 18) * 6 : 0);
+    ctx.beginPath(); ctx.moveTo(h[0] - 6, h[1]); ctx.lineTo(h[0] + 6, h[1]);
+    ctx.quadraticCurveTo(kf[0] + 8, kf[1], rTipX, rTipY);
+    ctx.quadraticCurveTo(kb[0] - 8, kb[1], h[0] - 6, h[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  if (D.orbs) {   // 环绕周身的灵珠/法球（技能时加速旋转并放大）
+    const orbSpin = (f.state === 'skill' || f.state === 'special' ? t * 8 : t * 2.5);
+    const orbR = 24 + (f.state === 'special' ? 14 : f.state === 'skill' ? 8 : 0);
+    const cx0 = (sk.hip[0] + sk.sh[0]) * 0.5, cy0 = (sk.hip[1] + sk.sh[1]) * 0.5;
+    for (let k = 0; k < 3; k++) {
+      const an = orbSpin + k * (Math.PI * 2 / 3);
+      const ox = cx0 + Math.cos(an) * orbR, oy = cy0 + Math.sin(an) * (orbR * 0.42);
+      ctx.fillStyle = D.orbs; circle([ox, oy], 3.8);
+      ctx.fillStyle = '#fff'; circle([ox - 1, oy - 1], 1.6);
+      if (f.state === 'skill' || f.state === 'special') {
+        ctx.strokeStyle = `rgba(${L.slash},0.7)`; ctx.lineWidth = 1;
+        line([cx0, cy0], [ox, oy]);
+      }
+    }
+  }
   // ---------- 武器特效 ----------
   const w = D.wfx;
   if (w) {
@@ -7089,7 +7133,8 @@ function drawHUD() {
       ctx.font = `bold ${Math.max(12, Math.round(bh * 0.96))}px ${BODY_FONT}`; ctx.textBaseline = 'top';
       ctx.fillStyle = '#fff'; ctx.textAlign = i === 0 ? 'left' : 'right';
       ctx.shadowColor = `rgba(${f.look.slash}, 0.9)`; ctx.shadowBlur = 8;
-      ctx.fillText(`⚡ ${ULTS[f.ch.ult].name} 绝技就绪${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 11);
+      const ultNm = skinUltName(f) || ULTS[f.ch.ult].name;
+      ctx.fillText(`⚡ ${ultNm} 绝技就绪${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 11);
       ctx.shadowBlur = 0;
     } else {
       ctx.fillStyle = `rgba(${f.look.slash}, 0.75)`;
@@ -7101,7 +7146,9 @@ function drawHUD() {
       const ry = my + (full ? 9 + bh * 1.3 : 12), fs = bh * 0.85;
       const S = SKILLS[f.ch.skill];
       const S2 = SKILLS[f.ch.skill2];
-      const items = [[S.name + keyHint(i, 'sk'), f.skillCD, S.cd], [S2.name + keyHint(i, 'sk2'), f.skill2CD, S2.cd], ['腾空闪' + keyHint(i, 'esc'), f.breakCD, f.ch.escCD || BREAK_CD]];
+      const s1Nm = skinSkillName(f, 1) || S.name;
+      const s2Nm = skinSkillName(f, 2) || S2.name;
+      const items = [[s1Nm + keyHint(i, 'sk'), f.skillCD, S.cd], [s2Nm + keyHint(i, 'sk2'), f.skill2CD, S2.cd], ['腾空闪' + keyHint(i, 'esc'), f.breakCD, f.ch.escCD || BREAK_CD]];
       if (f.ch.fly) items.push(['飞行', f.ch.fly - f.flyT, f.ch.fly]);
       const widths = items.map(it => ctx.measureText(it[0]).width + 8 + 46 + 16);
       const total = widths.reduce((a, b) => a + b, 0);
@@ -8614,15 +8661,17 @@ function renderCodex() {
   const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee' };
   const rType = mTypes.ranged || { label: '远程', icon: 'ranged', type: 'ranged' };
   const restr = HERO_RESTRAINTS_EXPLAIN[c.id] || { beatsWhy: `克 ${nm(c.beats)}`, weakWhy: `怕 ${nm(c.weakTo)}` };
-  const sh = n => SHORT[n] || ['', ''];
+  const qName = (skin && skinSkillName(skin, 1)) || S.name;
+  const rName = (skin && skinSkillName(skin, 2)) || S2.name;
+  const uName = (skin && skinUltName(skin)) || U.name;
   $id('cxMoves').innerHTML = [
     tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
     tile('light', '左键 · 连击 <small class="type-tag melee">近战</small>', sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
     tile('charge', '按住左键 · 蓄力 <small class="type-tag melee">近战</small>', `${m.cs1.dmg} / ${m.cs2.dmg}`, '满蓄破防 · 打倒', '', false, 'charge'),
     tile('air', '空中 <small class="type-tag melee">近战</small>', `${m.a1.dmg} / ${m.a2.dmg}`, '空中斩 · 下砸', '', false, 'air'),
-    tile(qType.icon || 'skill', `Q · ${S.name} <small class="type-tag ${qType.type}">${qType.label}</small>`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
-    tile(rType.icon || 'ranged', `左键+右键 · ${S2.name} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
-    tile('ult', `E · ${U.name}`, sh(U.name)[0], `${sh(U.name)[1]}<div style="margin-top:4px;font-size:12px;color:#ffe8a3;line-height:1.35;opacity:0.95">${HERO_METER_EXPLAIN[c.id] || ''}</div>`, '气满', true, 'ult'),
+    tile(qType.icon || 'skill', `Q · ${qName} <small class="type-tag ${qType.type}">${qType.label}</small>`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
+    tile(rType.icon || 'ranged', `左键+右键 · ${rName} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
+    tile('ult', `E · ${uName}`, sh(U.name)[0], `${sh(U.name)[1]}<div style="margin-top:4px;font-size:12px;color:#ffe8a3;line-height:1.35;opacity:0.95">${HERO_METER_EXPLAIN[c.id] || ''}</div>`, '气满', true, 'ult'),
     tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · 落地前无敌', '', false, 'esc'),
     tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim);word-break:keep-all;overflow-wrap:break-word">${(() => {
       const chIdx = CHAPTERS.findIndex(chap => chap.boss === c.id);
@@ -8879,34 +8928,34 @@ function getWeeklyRotation() {
   return result;
 }
 const SKINS = {
-  qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#e6efff', shade: '#8ea4cc', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'circlet', gem: '#bfefff', back: 'snowflake', wfx: 'frost', trail: 'snow' } },
-  qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff3d2', shade: '#c9a45a', scarf: '#ffb62e', slash: '255,196,90', blade: '#fff3cf' }, deco: { head: 'crown', back: 'sundisk', cape: '#d99a2b', wfx: 'flame', trail: 'ember', aura: 'ember' } },
-  qf_abyss: { char: 'qingfeng', rarity: 'legend', name: '幽渊', look: { body: '#241a3a', shade: '#10081c', scarf: '#9b51e0', slash: '160,80,240', blade: '#f3e8ff' }, deco: { head: 'circlet', gem: '#bd7bfa', back: 'voiddisk', cape: '#2d1445', wfx: 'void', trail: 'smoke', aura: 'smoke' } },
-  fy_jade: { char: 'feiying', rarity: 'rare', name: '碧影', look: { scarf: '#2bd49a', slash: '90,230,170', blade: '#dffff2' }, deco: { head: 'foxmask', mask: '#2bd49a', wfx: 'jade', trail: 'leaf' } },
-  fy_blood: { char: 'feiying', rarity: 'legend', name: '血月', look: { body: '#3a1420', shade: '#1a080e', scarf: '#ff2a3d', slash: '255,60,80', blade: '#ffd9dd' }, deco: { head: 'horns', hornC: '#2a0a10', back: 'bloodmoon', cape: '#5a0f1a', wfx: 'shadow', trail: 'smoke', aura: 'smoke' } },
-  fy_phantom: { char: 'feiying', rarity: 'legend', name: '幻灵', look: { body: '#f0faff', shade: '#7faac6', scarf: '#00f2fe', slash: '0,242,254', blade: '#e0ffff' }, deco: { head: 'foxmask', mask: '#00f2fe', back: 'wings', cape: '#1b4d6b', wfx: 'frost', trail: 'snow', aura: 'aurora' } },
-  ts_bronze: { char: 'tieshan', rarity: 'rare', name: '青铜', look: { body: '#c9a26b', shade: '#7a5a34', scarf: '#3fa37a', slash: '120,210,170' }, deco: { head: 'helm', helmC: '#a8804a', crest: '#3fa37a', shoulder: '#8a6a3a' } },
-  ts_obsidian: { char: 'tieshan', rarity: 'legend', name: '玄武', look: { body: '#34303e', shade: '#18161e', scarf: '#6a5cff', slash: '140,120,255', blade: '#d8d4ff' }, deco: { head: 'horns', hornC: '#1a1822', back: 'shell', shoulder: '#2a2632', wfx: 'lava', aura: 'smoke' } },
-  ts_crimson: { char: 'tieshan', rarity: 'legend', name: '修罗', look: { body: '#3a1616', shade: '#1c0808', scarf: '#ff3a30', slash: '255,50,60', blade: '#ffd8d8' }, deco: { head: 'helm', helmC: '#4a1212', crest: '#ff3a30', shoulder: '#5a1a1a', back: 'sundisk', wfx: 'flame', trail: 'ember', aura: 'ember' } },
-  ls_plum: { char: 'lingshuang', rarity: 'rare', name: '红梅', look: { scarf: '#e0365a', slash: '255,110,140', blade: '#ffe3ea' }, deco: { head: 'flower', flower: '#e0365a', trail: 'petal', petal: '255,120,150' } },
-  ls_aurora: { char: 'lingshuang', rarity: 'legend', name: '极光', look: { body: '#dff8f4', shade: '#7fb7c0', scarf: '#5ef2c9', slash: '120,255,210', blade: '#e9fffa' }, deco: { head: 'circlet', gem: '#7dffd8', back: 'aurora', wfx: 'frost', trail: 'snow', aura: 'aurora' } },
-  ls_dragon: { char: 'lingshuang', rarity: 'legend', name: '沧龙', look: { body: '#d6edff', shade: '#4d82b8', scarf: '#1f90ff', slash: '40,150,255', blade: '#e6f3ff' }, deco: { head: 'circlet', gem: '#1f90ff', back: 'dragonring', cape: '#103a66', wfx: 'water', trail: 'snow', aura: 'cloud' } },
-  ly_dusk: { char: 'liuyun', rarity: 'rare', name: '晚霞', look: { scarf: '#ff8a4a', slash: '255,160,100' }, deco: { head: 'douli', cape: '#c8602a', trail: 'leaf', leaf: '255,150,80' } },
-  ly_sky: { char: 'liuyun', rarity: 'legend', name: '天青', look: { body: '#eaf6ff', shade: '#8fb4d6', scarf: '#56b8ff', slash: '130,200,255', blade: '#f0faff' }, deco: { head: 'plume', plumeC: ['#ffffff', '#bfe2ff'], back: 'clouds', cape: '#cfe8ff', trail: 'feather', aura: 'cloud' } },
-  ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#f0f2eb', shade: '#7d8a74', scarf: '#4e7850', slash: '80,180,120', blade: '#eef6f0' }, deco: { head: 'douli', cape: '#2d4730', wfx: 'jade', trail: 'leaf', leaf: '80,180,120' } },
-  lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', wfx: 'lightning', trail: 'spark' } },
-  lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', back: 'sundisk', wfx: 'flame', trail: 'ember', aura: 'ember' } },
-  lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', back: 'chakra', shoulder: '#6a3210', wfx: 'gold', trail: 'gold', aura: 'gold' } },
-  my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'douli', wfx: 'ink', trail: 'ink', inkC: '200,50,30' } },
-  my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hoodC: '#6a5220', back: 'lotus', wfx: 'gold', trail: 'gold', aura: 'gold' } },
-  my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'douli', back: 'lotus', cape: '#102444', wfx: 'crystal', trail: 'spark', aura: 'aurora' } },
-  yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'flower', flower: '#ff9ec4', trail: 'petal', petal: '255,180,210' } },
-  yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hoodC: '#1c1024', back: 'eclipse', cape: '#1c1024', wfx: 'shadow', trail: 'smoke', aura: 'smoke' } },
-  yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'flower', flower: '#a8e0ff', back: 'snowflake', cape: '#2a5078', wfx: 'frost', trail: 'snow', aura: 'snow' } },
-  yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee' }, deco: { head: 'hood', hoodC: '#16161e', trail: 'feather', featherC: '40,40,55' } },
-  qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8' }, deco: { head: 'headband', band: '#c8321e', back: 'clouds', cape: '#1f6f62', trail: 'leaf', leaf: '150,235,200', aura: 'cloud' } },
-  yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], cape: '#e8552a', wfx: 'flame', trail: 'ember', aura: 'ember' } },
-  yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'hood', hoodC: '#1c2838', back: 'wings', cape: '#1c3048', wfx: 'frost', trail: 'feather', featherC: '220,240,255', aura: 'snow' } },
+  qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#e6efff', shade: '#8ea4cc', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'circlet', gem: '#bfefff', robe: 'ice', shoulder: '#8ea4cc', back: 'snowflake', wfx: 'frost', trail: 'snow' }, skillNames: { skill: '寒霜疾风', ranged: '玄冰剑气', ult: '霜魄残月' } },
+  qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff3d2', shade: '#c9a45a', scarf: '#ffb62e', slash: '255,196,90', blade: '#fff3cf' }, deco: { head: 'crown', robe: 'gold', breastplate: '#ffd966', shoulder: '#d4af37', back: 'sundisk', cape: '#d99a2b', orbs: '#ffdd66', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '金乌贯日', ranged: '赤阳炽芒', ult: '十日焚天' } },
+  qf_abyss: { char: 'qingfeng', rarity: 'legend', name: '幽渊', look: { body: '#241a3a', shade: '#10081c', scarf: '#9b51e0', slash: '160,80,240', blade: '#f3e8ff' }, deco: { head: 'circlet', gem: '#bd7bfa', robe: 'dark', shoulder: '#3d2060', back: 'voiddisk', cape: '#2d1445', orbs: '#9b51e0', wfx: 'void', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '幽冥疾斩', ranged: '深渊裂隙', ult: '无间寂灭' } },
+  fy_jade: { char: 'feiying', rarity: 'rare', name: '碧影', look: { scarf: '#2bd49a', slash: '90,230,170', blade: '#dffff2' }, deco: { head: 'foxmask', mask: '#2bd49a', robe: 'leaf', shoulder: '#1f8f68', wfx: 'jade', trail: 'leaf' }, skillNames: { skill: '翠影幻遁', ranged: '翡翠飞镖', ult: '万叶千影' } },
+  fy_blood: { char: 'feiying', rarity: 'legend', name: '血月', look: { body: '#3a1420', shade: '#1a080e', scarf: '#ff2a3d', slash: '255,60,80', blade: '#ffd9dd' }, deco: { head: 'horns', hornC: '#2a0a10', robe: 'crimson', breastplate: '#4a121c', back: 'bloodmoon', cape: '#5a0f1a', orbs: '#ff2a3d', wfx: 'shadow', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '血影瞬杀', ranged: '诛心血刃', ult: '猩红月劫' } },
+  fy_phantom: { char: 'feiying', rarity: 'legend', name: '幻灵', look: { body: '#f0faff', shade: '#7faac6', scarf: '#00f2fe', slash: '0,242,254', blade: '#e0ffff' }, deco: { head: 'foxmask', mask: '#00f2fe', robe: 'spirit', shoulder: '#2888aa', back: 'wings', cape: '#1b4d6b', orbs: '#00f2fe', wfx: 'frost', trail: 'snow', aura: 'aurora' }, skillNames: { skill: '极光魅影', ranged: '幽灵幻刺', ult: '九天幻灵阵' } },
+  ts_bronze: { char: 'tieshan', rarity: 'rare', name: '青铜', look: { body: '#c9a26b', shade: '#7a5a34', scarf: '#3fa37a', slash: '120,210,170' }, deco: { head: 'helm', helmC: '#a8804a', crest: '#3fa37a', shoulder: '#8a6a3a', breastplate: '#7a5a34', robe: 'bronze' }, skillNames: { skill: '撼岳地崩', ranged: '巨盾重冲', ult: '万钧巨岳' } },
+  ts_obsidian: { char: 'tieshan', rarity: 'legend', name: '玄武', look: { body: '#34303e', shade: '#18161e', scarf: '#6a5cff', slash: '140,120,255', blade: '#d8d4ff' }, deco: { head: 'horns', hornC: '#1a1822', robe: 'heavy', breastplate: '#2e2642', back: 'shell', shoulder: '#2a2632', orbs: '#8a78ff', wfx: 'lava', aura: 'smoke' }, skillNames: { skill: '冥水震岳', ranged: '玄甲冲霄', ult: '玄武碎陆' } },
+  ts_crimson: { char: 'tieshan', rarity: 'legend', name: '修罗', look: { body: '#3a1616', shade: '#1c0808', scarf: '#ff3a30', slash: '255,50,60', blade: '#ffd8d8' }, deco: { head: 'helm', helmC: '#4a1212', crest: '#ff3a30', shoulder: '#5a1a1a', breastplate: '#501414', robe: 'shura', back: 'sundisk', orbs: '#ff4433', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '修罗撼地', ranged: '焚血狂突', ult: '阿修罗劫' } },
+  ls_plum: { char: 'lingshuang', rarity: 'rare', name: '红梅', look: { scarf: '#e0365a', slash: '255,110,140', blade: '#ffe3ea' }, deco: { head: 'flower', flower: '#e0365a', robe: 'plum', shoulder: '#c02a4a', trail: 'petal', petal: '255,120,150' }, skillNames: { skill: '落梅踏雪', ranged: '红梅绽刺', ult: '傲雪惊鸿' } },
+  ls_aurora: { char: 'lingshuang', rarity: 'legend', name: '极光', look: { body: '#dff8f4', shade: '#7fb7c0', scarf: '#5ef2c9', slash: '120,255,210', blade: '#e9fffa' }, deco: { head: 'circlet', gem: '#7dffd8', robe: 'aurora', breastplate: '#4aa090', back: 'aurora', orbs: '#5ef2c9', wfx: 'frost', trail: 'snow', aura: 'aurora' }, skillNames: { skill: '极光旋缨', ranged: '碧落回枪', ult: '极光刹那' } },
+  ls_dragon: { char: 'lingshuang', rarity: 'legend', name: '沧龙', look: { body: '#d6edff', shade: '#4d82b8', scarf: '#1f90ff', slash: '40,150,255', blade: '#e6f3ff' }, deco: { head: 'circlet', gem: '#1f90ff', robe: 'ocean', breastplate: '#205080', back: 'dragonring', cape: '#103a66', orbs: '#3aa0ff', wfx: 'water', trail: 'snow', aura: 'cloud' }, skillNames: { skill: '潜龙腾渊', ranged: '沧浪旋涡', ult: '龙啸九天' } },
+  ly_dusk: { char: 'liuyun', rarity: 'rare', name: '晚霞', look: { scarf: '#ff8a4a', slash: '255,160,100' }, deco: { head: 'douli', robe: 'dusk', cape: '#c8602a', trail: 'leaf', leaf: '255,150,80' }, skillNames: { skill: '暮云疾刃', ranged: '落霞乘风', ult: '赤霞天龙' } },
+  ly_sky: { char: 'liuyun', rarity: 'legend', name: '天青', look: { body: '#eaf6ff', shade: '#8fb4d6', scarf: '#56b8ff', slash: '130,200,255', blade: '#f0faff' }, deco: { head: 'plume', plumeC: ['#ffffff', '#bfe2ff'], robe: 'celestial', breastplate: '#6ba0cc', back: 'clouds', cape: '#cfe8ff', orbs: '#70c0ff', trail: 'feather', aura: 'cloud' }, skillNames: { skill: '天风破虚', ranged: '凌霄隐步', ult: '青穹御风卷' } },
+  ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#f0f2eb', shade: '#7d8a74', scarf: '#4e7850', slash: '80,180,120', blade: '#eef6f0' }, deco: { head: 'douli', robe: 'bamboo', shoulder: '#3e6040', cape: '#2d4730', wfx: 'jade', trail: 'leaf', leaf: '80,180,120' }, skillNames: { skill: '竹影随行', ranged: '清风拂叶', ult: '万竿烟雨' } },
+  lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', robe: 'thunder', shoulder: '#5a30a0', wfx: 'lightning', trail: 'spark' }, skillNames: { skill: '紫霄惊雷', ranged: '九天引雷', ult: '狂雷寂灭' } },
+  lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', robe: 'solar', breastplate: '#b86a20', back: 'sundisk', orbs: '#ff8820', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '曜日神拳', ranged: '大日天火', ult: '阳炎劫世' } },
+  lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', robe: 'vajra', breastplate: '#6a3210', back: 'chakra', shoulder: '#6a3210', orbs: '#ffaa00', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '金刚伏魔', ranged: '罗汉踏天', ult: '大威天龙' } },
+  my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'douli', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂破墨', ult: '赤龙狂涛' } },
+  my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '流金泼墨', ult: '金莲降世' } },
+  my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'douli', robe: 'starry', breastplate: '#183060', back: 'lotus', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora' }, skillNames: { skill: '星宿锁灵', ranged: '银河点墨', ult: '太虚星图' } },
+  yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'flower', flower: '#ff9ec4', robe: 'sakura', shoulder: '#a04870', trail: 'petal', petal: '255,180,210' }, skillNames: { skill: '落樱拂花', ranged: '飞樱回旋', ult: '樱落月明' } },
+  yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hoodC: '#1c1024', robe: 'eclipse', breastplate: '#381622', back: 'eclipse', cape: '#1c1024', orbs: '#c13a4a', wfx: 'shadow', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '暗月噬光', ranged: '黑曜血环', ult: '永夜蚀月' } },
+  yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'flower', flower: '#a8e0ff', robe: 'snow', breastplate: '#4878a8', back: 'snowflake', cape: '#2a5078', orbs: '#80d0ff', wfx: 'frost', trail: 'snow', aura: 'snow' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
+  yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee' }, deco: { head: 'hood', hoodC: '#16161e', robe: 'raven', shoulder: '#20202a', trail: 'feather', featherC: '40,40,55' }, skillNames: { skill: '幽鸦裂空', ranged: '玄夜飞羽', ult: '百羽遮天' } },
+  qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8' }, deco: { head: 'headband', band: '#c8321e', robe: 'jade_master', breastplate: '#2e5a4e', back: 'clouds', cape: '#1f6f62', orbs: '#50e0b0', trail: 'leaf', leaf: '150,235,200', aura: 'cloud' }, skillNames: { skill: '沧海疾风', ranged: '碧落青锋', ult: '天地一孤行' } },
+  yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], robe: 'phoenix', breastplate: '#b84414', cape: '#e8552a', orbs: '#ff6622', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '凤翼掠空', ranged: '涅槃离火', ult: '九天凤翔天' } },
+  yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'hood', hoodC: '#1c2838', robe: 'blizzard', breastplate: '#385878', back: 'wings', cape: '#1c3048', orbs: '#70b6f6', wfx: 'frost', trail: 'feather', featherC: '220,240,255', aura: 'snow' }, skillNames: { skill: '寒枭扑杀', ranged: '风雪千羽', ult: '极寒暴风天' } },
 };
 // ======================= 皮肤场景和特效：稀有皮肤换天色、天气和命中特效，传说皮肤整个场景都换 =======================
 // sky 天空渐变 orb 天上的月亮/太阳 mist 雾色 mtn 远山 bam 竹林 wx 天气 hit 命中图案 hitC 命中颜色 stars 星星多少 rays 光柱
@@ -9177,8 +9226,19 @@ function skinLook(ci, skin) {
   const ok = sk && sk.char === CHARS[ci].id;
   return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null };
 }
+function skinSkillName(fOrKey, slot) {
+  const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);
+  const sk = skKey && SKINS[skKey];
+  if (!sk || !sk.skillNames) return '';
+  return slot === 2 ? (sk.skillNames.ranged || '') : (sk.skillNames.skill || '');
+}
+function skinUltName(fOrKey) {
+  const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);
+  const sk = skKey && SKINS[skKey];
+  return (sk && sk.skillNames && sk.skillNames.ult) || '';
+}
 function mySkin(id) { const k = (PROF.equip || {})[id]; return k && ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED) ? k : ''; }
-if (typeof window !== 'undefined') { window.skinLook = skinLook; window.mySkin = mySkin; }
+if (typeof window !== 'undefined') { window.skinLook = skinLook; window.mySkin = mySkin; window.skinSkillName = skinSkillName; window.skinUltName = skinUltName; }
 function applySkins() {
   for (const f of [A, B]) {
     let k = '';

@@ -330,7 +330,7 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Skin catalog coverage: all 9 characters have rare & legend skins with valid scenes',
+    name: 'Skin catalog coverage: all 9 characters have rare & legend skins with valid scenes and unique skill names',
     fn: `(() => {
       for (const ch of CHARS) {
         const charSkins = Object.entries(SKINS).filter(([k, v]) => v.char === ch.id);
@@ -347,6 +347,12 @@ const testSuite = [
           const look = skinLook(CHAR_IDX[ch.id], k);
           if (!look || !look.deco) {
             return { pass: false, error: 'Skin ' + k + ' has invalid skinLook or missing deco' };
+          }
+          if (!v.skillNames || !v.skillNames.skill || !v.skillNames.ranged || !v.skillNames.ult) {
+            return { pass: false, error: 'Skin ' + k + ' missing custom skillNames' };
+          }
+          if (skinSkillName(k, 1) !== v.skillNames.skill || skinSkillName(k, 2) !== v.skillNames.ranged || skinUltName(k) !== v.skillNames.ult) {
+            return { pass: false, error: 'skinSkillName/skinUltName helper failed for ' + k };
           }
         }
       }
