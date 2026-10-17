@@ -2265,7 +2265,6 @@ const MOVES = {
   cf: { p: ['hvs', 'hva'], su: .05, ac: .1, rc: .26, dmg: 22, kb: [320, -420], stun: .45, hs: .08, box: [-6, -160, 104, -6], track: true, launch: true, next: {}, snd: 'swing' },
   a2: { p: ['a2s', 'a2a'], air: true, su: .08, ac: .09, rc: .22, dmg: 26, kb: [240, 1000], stun: .5, hs: .11, box: [-4, -70, 80, 24], spike: true, next: {}, snd: 'heavy' },
   dl: { p: ['fy_crouch', 'fy_crouch'], su: .055, ac: .06, rc: .12, dmg: 5, kb: [45, 0], stun: .28, hs: .03, box: [12, -45, 82, 0], lunge: 60, next: { light: 'l1', heavy: 'hv' }, hitNext: { light: 'l1', heavy: 'hv' }, snd: 'swing' },
-  dh: { p: ['fy_crouch', 'l1a'], su: .09, ac: .08, rc: .20, dmg: 10, kb: [70, 0], stun: .32, hs: .04, box: [14, -40, 88, 0], lunge: 90, next: { light: 'l2', heavy: 'hv' }, hitNext: { light: 'l2', heavy: 'hv' }, snd: 'swing' },
 };
 const FINAL = { ult: true, noScale: true, dmg: 85, kb: [520, -900], stun: .6, hs: .24, launch: true, unblockable: true };
 const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: .035, unblockable: true, hold: true };
@@ -4321,7 +4320,6 @@ function neutral(f, foe) {
     if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
     if (c.held.down) {
       if (c.consume('light')) return startAttack(f, 'dl');
-      if (c.consume('heavy')) return startAttack(f, 'dh');
       f.blockT = f.state === 'block' ? (f.blockT || 0) + STEP : 0;
       f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
     } else {
@@ -4382,8 +4380,8 @@ function neutral(f, foe) {
 function attackUpdate(f, foe) {
   const m = f.move, c = f.ctrl, t = f.t;
   const act0 = m.su, act1 = m.su + m.ac;
-  // 格挡更灵活：出招前段、或打完判定之后的收招，按住 S 都能立刻转成格挡（下蹲试探轻重攻击 dl/dh 不自取消）
-  if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && f.moveName !== 'dh' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
+  // 格挡更灵活：出招前段、或打完判定之后的收招，按住 S 都能立刻转成格挡（下蹲试探轻攻击 dl 不自取消）
+  if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
   if (t >= act0 && !f.lunged) {
     f.lunged = true;
     if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线飞向对手（要有墨水）
@@ -4412,7 +4410,7 @@ function attackUpdate(f, foe) {
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
   if (M.phase === 'fight' && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && (f.onGround() || SKILLS[f.ch.skill2].air) && c.consume('skill2')) return startSkill(f, foe, 2);
-  if (M.phase === 'fight' && (t >= act0 + m.ac * 0.6 || (f.hitConfirmed && (f.moveName === 'dl' || f.moveName === 'dh')))) {
+  if (M.phase === 'fight' && (t >= act0 + m.ac * 0.6 || (f.hitConfirmed && f.moveName === 'dl'))) {
     if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
     if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
     if (m.next.heavy && c.consume('heavy')) return startAttack(f, m.next.heavy);
@@ -4815,7 +4813,6 @@ function updateFighter(f, foe) {
           const c = f.ctrl;
           if (c && M.phase === 'fight') {
             if (c.consume('light')) { startAttack(f, 'dl'); break; }
-            if (c.consume('heavy')) { startAttack(f, 'dh'); break; }
           }
           f.state = 'block';
         }
@@ -5122,7 +5119,7 @@ function applyHit(att, def, m, pt) {
   def.armorT = 0; def.parryT = 0; def.sinceHit = 0;
   if (def.state === 'skill') def.skill = null;
   def.comboHits++;
-  const isCounter = !m.isProj && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
+  const isCounter = !m.isProj && def.moveName !== 'dl' && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
   let dmg = (m.dmg * scale) / defRating;
   if (isCounter) { ev.counter = true; dmg *= 1.2; ev.big = true; }
