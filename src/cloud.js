@@ -599,20 +599,24 @@
       return { success: true, count: data.accounts.length, profile: lastProf, name: lastName };
     }
 
-    // 格式 3: 裸 Profile 格式 (具有 ink 和 owned)
+    // 格式 3: 裸 Profile 格式 (具有 ink 和 owned，无签名的裸 JSON 文件)
     if (Array.isArray(data.owned)) {
-      const name = data.name || '大侠';
+      const p = { ...data };
+      // 无防伪签名的裸数据必须施加安全上限，防止直接伪造 99999 墨锭或全解锁英雄
+      p.ink = Math.min(Math.max(0, Math.floor(p.ink || 0)), 1000);
+      p.netWins = Math.min(Math.max(0, Math.floor(p.netWins || 0)), 50);
+      const name = p.name || '大侠';
       const uid = 'local_' + Date.now();
       let mockUsers = {};
       try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
       mockUsers[name] = { uid, name, pw: btoa('123456'), created: Date.now() };
       localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
       localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
-      localStorage.setItem('renying-prof-' + uid, JSON.stringify(data));
-      localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
+      localStorage.setItem('renying-prof-' + uid, JSON.stringify(p));
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(p));
       currentUser = { uid, displayName: name };
-      saveProfile(data, true);
-      return { success: true, count: 1, profile: data, name };
+      saveProfile(p, true);
+      return { success: true, count: 1, profile: p, name };
     }
 
     throw new Error('未识别的文件格式');

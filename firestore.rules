@@ -43,6 +43,14 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Check if the authenticated user has administrative privileges or master dev bypass
+    function isSuperUser() {
+      return isAuthenticated() && (
+        isAdmin() ||
+        request.auth.uid == 'dev_master'
+      );
+    }
+
     // Check if the authenticated user has administrative privileges
     function isAdmin() {
       return isAuthenticated() && (
@@ -110,6 +118,26 @@ service cloud.firestore {
       return val is timestamp || ((val is int || val is float) && val >= 0);
     }
 
+    // Validate starter resource limits for regular player account creation
+    function isValidStarterProfile(data) {
+      return isSuperUser() || (
+        data.ink <= 500 &&
+        data.owned.size() <= 3 &&
+        data.skins.size() <= 2 &&
+        data.netWins == 0
+      );
+    }
+
+    // Anti-tampering and progression rate-limit validator for profile updates
+    function isValidProfileProgression(prev, next) {
+      return isSuperUser() || (
+        next.ink <= prev.ink + 360 &&
+        next.owned.size() <= prev.owned.size() + 1 &&
+        next.skins.size() <= prev.skins.size() + 1 &&
+        next.netWins <= prev.netWins + 1
+      );
+    }
+
     // ===============================================================
     // Domain Validator (Used in both create and update to prevent Update Bypass)
     // ===============================================================
@@ -139,17 +167,21 @@ service cloud.firestore {
 
     // Root collection: users/{userId}
     match /users/{userId} {
-      // Only the authenticated account owner or admin can read their profile
-      allow read: if isOwner(userId) || isAdmin();
+      // Only the authenticated account owner or admin/superuser can read their profile
+      allow read: if isOwner(userId) || isSuperUser();
 
-      // Only the authenticated account owner or admin can create their profile with valid schema
-      allow create: if (isOwner(userId) && isValidUserProfile(request.resource.data)) || isAdmin();
+      // Creation: must be valid schema and meet starter limits unless admin/superuser
+      allow create: if (isOwner(userId) || isSuperUser()) &&
+                       isValidUserProfile(request.resource.data) &&
+                       isValidStarterProfile(request.resource.data);
 
-      // Only the authenticated account owner or admin can update their profile with valid schema
-      allow update: if (isOwner(userId) && isValidUserProfile(request.resource.data)) || isAdmin();
+      // Update: must be valid schema and adhere to anti-tampering progression bounds unless admin/superuser
+      allow update: if (isOwner(userId) || isSuperUser()) &&
+                       isValidUserProfile(request.resource.data) &&
+                       isValidProfileProgression(resource.data, request.resource.data);
 
-      // Only the authenticated account owner or admin can delete their profile
-      allow delete: if isOwner(userId) || isAdmin();
+      // Deletion: owner or admin/superuser only
+      allow delete: if isOwner(userId) || isSuperUser();
     }
 
     // Default Deny: Deny all reads and writes to any unspecified path

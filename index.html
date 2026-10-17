@@ -2007,20 +2007,24 @@
       return { success: true, count: data.accounts.length, profile: lastProf, name: lastName };
     }
 
-    // 格式 3: 裸 Profile 格式 (具有 ink 和 owned)
+    // 格式 3: 裸 Profile 格式 (具有 ink 和 owned，无签名的裸 JSON 文件)
     if (Array.isArray(data.owned)) {
-      const name = data.name || '大侠';
+      const p = { ...data };
+      // 无防伪签名的裸数据必须施加安全上限，防止直接伪造 99999 墨锭或全解锁英雄
+      p.ink = Math.min(Math.max(0, Math.floor(p.ink || 0)), 1000);
+      p.netWins = Math.min(Math.max(0, Math.floor(p.netWins || 0)), 50);
+      const name = p.name || '大侠';
       const uid = 'local_' + Date.now();
       let mockUsers = {};
       try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
       mockUsers[name] = { uid, name, pw: btoa('123456'), created: Date.now() };
       localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
       localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
-      localStorage.setItem('renying-prof-' + uid, JSON.stringify(data));
-      localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
+      localStorage.setItem('renying-prof-' + uid, JSON.stringify(p));
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(p));
       currentUser = { uid, displayName: name };
-      saveProfile(data, true);
-      return { success: true, count: 1, profile: data, name };
+      saveProfile(p, true);
+      return { success: true, count: 1, profile: p, name };
     }
 
     throw new Error('未识别的文件格式');
@@ -4410,7 +4414,7 @@ function attackUpdate(f, foe) {
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
   if (M.phase === 'fight' && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && (f.onGround() || SKILLS[f.ch.skill2].air) && c.consume('skill2')) return startSkill(f, foe, 2);
-  if (M.phase === 'fight' && t >= act0 + m.ac * 0.6) {
+  if (M.phase === 'fight' && (t >= act0 + m.ac * 0.6 || (f.hitConfirmed && (f.moveName === 'dl' || f.moveName === 'dh')))) {
     if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
     if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
     if (m.next.heavy && c.consume('heavy')) return startAttack(f, m.next.heavy);
@@ -4885,9 +4889,17 @@ function onLand(f) {
   if (f.state === 'held') return;
   f.jumps = 0; f.airDash = 1;
   if (f.state === 'air' || (f.state === 'attack' && f.move.air)) {
+    const isPlunge = f.state === 'attack' && (f.moveName === 'a2' || f.moveName === 'cs2') && !f.hitConfirmed;
     toNeutral(f);
-    if (f.ctrl && f.ctrl.held && f.ctrl.held.down) { f.state = 'block'; f.face = Math.abs(foeOf(f).x - f.x) > 6 ? (foeOf(f).x >= f.x ? 1 : -1) : f.face; }
-    dust(f.x, 0, 4); SFX.land();
+    if (isPlunge) {
+      // 真实格斗落地破绽（Whiff Landing Recovery）：重型千钧下砸落空时，有 0.12s 落地缓冲破绽
+      f.vx *= 0.35;
+      dust(f.x, 0, 10); SFX.land();
+      shake = Math.max(shake, 4);
+    } else {
+      if (f.ctrl && f.ctrl.held && f.ctrl.held.down) { f.state = 'block'; f.face = Math.abs(foeOf(f).x - f.x) > 6 ? (foeOf(f).x >= f.x ? 1 : -1) : f.face; }
+      dust(f.x, 0, 4); SFX.land();
+    }
   }
   else if (f.state === 'dash') { /* 地面冲刺结束会自己转状态 */ }
 }
@@ -8323,7 +8335,7 @@ function renderCodex() {
       const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
       const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
       const clear = stars > 0 || DEV_SESSION_UNLOCKED;
-      return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}`;
+      return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
     })()}</div>`, '', true),
     ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id]) : '',
     tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true),
@@ -8381,6 +8393,15 @@ function startCodexCardsDirector() {
 }
 
 $id('cxMoves').addEventListener('click', e => {
+  const stageBtn = e.target.closest('.cx-go-stage');
+  if (stageBtn) {
+    const ch = +stageBtn.dataset.c;
+    stageCh = ch;
+    openScreen('stage');
+    renderStages();
+    SFX.click();
+    return;
+  }
   const tile = e.target.closest('.tile[data-move]');
   if (!tile) return;
   const m = tile.dataset.move;
