@@ -3706,7 +3706,7 @@ function forestHit(att, m, pt) {
   mon.hp -= m.dmg; mon.flash = 0.1; mon.stag = Math.max(mon.stag, m.launch ? 0.6 : 0.3); mon.act = null; mon.wind = 0;
   mon.vx = dir * Math.abs(m.kb ? m.kb[0] : 200) * 0.7;
   if (m.launch && !mon.T.fly) mon.vy = -420;
-  att.hitConfirmed = true; att.meter = Math.min(100, att.meter + m.dmg * 1.2);
+  att.hitConfirmed = true; att.meter = Math.min(100, att.meter + m.dmg * 0.35);
   const ev = { e: 'hit', a: att.idx, d: 1, x: pt ? pt[0] : mon.x, y: pt ? pt[1] : mon.y - 60, dmg: m.dmg, hs: m.hs || 0.06, nc: true, f: dir };
   hitFX(ev.x, ev.y, clamp(m.dmg / 8, 0.5, 1.6), att.look.slash, dir); hitstop = Math.max(hitstop, (m.hs || 0.06) * 0.8); shake = Math.max(shake, 4); SFX.hit(1);
   addP({ type: 'text', text: String(Math.round(m.dmg * 10) / 10), x: mon.x, y: mon.y - mon.T.h - 20, life: 0.5, max: 0.5, rgb: '255,240,220' });
@@ -5095,7 +5095,7 @@ function applyHit(att, def, m, pt) {
     def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1);
     def.vx = fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
     if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
-    att.meter = Math.min(100, att.meter + 2 * mm); def.meter = Math.min(100, def.meter + 5);
+    att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
     hitVisual(ev); netEmit(ev);
     return;
   }
@@ -5105,9 +5105,9 @@ function applyHit(att, def, m, pt) {
     const dmg = (m.dmg * 0.6) / defRating;
     def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
     if (--def.armorHits <= 0) def.armorT = 0;
-    att.meter = Math.min(100, att.meter + m.dmg * 0.8 * mm); def.meter = Math.min(100, def.meter + m.dmg);
+    att.meter = Math.min(100, att.meter + m.dmg * 0.28 * mm); def.meter = Math.min(100, def.meter + m.dmg * 0.22);
     if (def.ch.passive === 'armor') {
-      def.meter = Math.min(100, def.meter + 4);
+      def.meter = Math.min(100, def.meter + 2.5);
       def.skillCD = Math.max(0, def.skillCD - 0.4);
       def.skill2CD = Math.max(0, def.skill2CD - 0.4);
       ring(def.x, def.y - 60, 90, '255,200,120', 0.25);
@@ -5196,7 +5196,7 @@ function applyHit(att, def, m, pt) {
   }
   if (def.dummy) def.hp = Math.max(1, def.hp);
   att.hitConfirmed = true;
-  att.meter = Math.min(100, att.meter + m.dmg * 1.5 * mm); def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.4 : 0.9));
+  att.meter = Math.min(100, att.meter + m.dmg * 0.38 * mm); def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.12 : 0.25));
   def.move = null;
   if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
