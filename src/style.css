@@ -287,8 +287,13 @@
   .wgrid img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 6px; display: block; }
   .wgrid .wn { font-family: var(--title); font-size: 20px; } .wgrid .wr { font-size: 12px; color: var(--dim); }
   .cxskins { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-  .cxskins button { font: 13px var(--body); padding: 5px 10px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,.05); color: var(--ink); border: 1px solid var(--faint); white-space: nowrap; word-break: keep-all; }
-  .cxskins button.sel { border-color: #e9c46a; color: #e9c46a; } .cxskins button.lock { opacity: .45; cursor: default; }
+  .cxskins button { font: 13px var(--body); padding: 5px 11px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,.05); color: var(--ink); border: 1px solid var(--faint); white-space: nowrap; word-break: keep-all; transition: all .18s ease; }
+  .cxskins button:hover { transform: translateY(-1px); border-color: rgba(233,196,106,.45); }
+  .cxskins button.sel { border-color: #e9c46a; color: #e9c46a; background: rgba(233,196,106,.1); box-shadow: 0 0 14px rgba(233,196,106,.22); }
+  .cxskins button.sk-btn-legend.sel { box-shadow: 0 0 16px rgba(245,202,95,.4); border-color: #f5ca5f; color: #f5ca5f; }
+  .cxskins button.sk-btn-rare.sel { box-shadow: 0 0 16px rgba(168,213,255,.35); border-color: #a8d5ff; color: #a8d5ff; }
+  .cxskins button.lock { opacity: .45; cursor: default; }
+  .pill.sk-pill { font-weight: 600; letter-spacing: 0.5px; animation: breath 2s infinite ease-in-out; }
   .bpcard.lock img { filter: grayscale(1) brightness(.45); }
   .bpcard .tag.free { background: #3f8f5a; } .bpcard .tag.lk { background: #444; }
   .tutbox { position: fixed; left: 50%; top: 13%; transform: translateX(-50%); z-index: 20; min-width: 360px; max-width: 560px; padding: 14px 22px; border-radius: 14px; background: rgba(8,8,22,.82); border: 1px solid rgba(233,196,106,.4); text-align: center; pointer-events: none; }

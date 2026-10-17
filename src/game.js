@@ -4118,6 +4118,38 @@ function drawDeco(sk, f, L, layer) {
     } else if (D.back === 'clouds') {   // 背后流云
       ctx.fillStyle = 'rgba(235,245,255,0.8)';
       for (let k = 0; k < 4; k++) { const q = P(-20 - k * 9, -6 + Math.sin(t * 2 + k) * 4 - k * 5, nx, ny); circle(q, 9 - k * 1.2); }
+    } else if (D.back === 'voiddisk') {   // 幽渊黑洞法环
+      const r = 26;
+      const g = ctx.createRadialGradient(bc[0], bc[1], 3, bc[0], bc[1], r * 2);
+      g.addColorStop(0, 'rgba(160,80,240,0.6)'); g.addColorStop(0.7, 'rgba(40,10,70,0.4)'); g.addColorStop(1, 'rgba(20,5,35,0)'); ctx.fillStyle = g; circle(bc, r * 2);
+      ctx.strokeStyle = 'rgba(180,110,255,0.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(bc[0], bc[1], r, 0, 7); ctx.stroke();
+      ctx.fillStyle = '#080210'; circle(bc, r * 0.85);
+      for (let k = 0; k < 8; k++) { const an = k * Math.PI / 4 - t * 0.5; line([bc[0] + Math.cos(an) * r * 0.9, bc[1] + Math.sin(an) * r * 0.9], [bc[0] + Math.cos(an) * r * 1.35, bc[1] + Math.sin(an) * r * 1.35]); }
+    } else if (D.back === 'wings') {   // 幻灵/雪鸮飞翼
+      for (const s2 of [-1, 1]) {
+        ctx.fillStyle = s2 === 1 ? 'rgba(220,245,255,0.7)' : 'rgba(160,225,255,0.5)';
+        ctx.beginPath(); ctx.moveTo(bc[0], bc[1]);
+        const wSpan = 38, wFlap = Math.sin(t * 4) * 6;
+        ctx.quadraticCurveTo(bc[0] - 20, bc[1] - 30 * s2 + wFlap, bc[0] - 55, bc[1] - 22 * s2 + wFlap);
+        ctx.quadraticCurveTo(bc[0] - 30, bc[1] - 8 * s2, bc[0], bc[1]); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.2; ctx.stroke();
+      }
+    } else if (D.back === 'dragonring') {   // 沧龙水轮
+      const r = 28;
+      ctx.strokeStyle = 'rgba(70,170,255,0.85)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(bc[0], bc[1], r, t * 1.2, t * 1.2 + Math.PI * 1.65); ctx.stroke();
+      ctx.strokeStyle = 'rgba(180,230,255,0.9)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(bc[0], bc[1], r * 0.75, -t * 1.5, -t * 1.5 + Math.PI * 1.4); ctx.stroke();
+    } else if (D.back === 'chakra') {   // 金刚光轮 / 宝轮
+      const r = 27;
+      ctx.strokeStyle = 'rgba(255,190,40,0.95)'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.arc(bc[0], bc[1], r, 0, 7); ctx.stroke();
+      for (let k = 0; k < 12; k++) {
+        const a = k * Math.PI / 6 + t * 0.4;
+        const q1 = [bc[0] + Math.cos(a) * (r - 6), bc[1] + Math.sin(a) * (r - 6)], q2 = [bc[0] + Math.cos(a) * (r + 7), bc[1] + Math.sin(a) * (r + 7)];
+        line(q1, q2);
+      }
+      ctx.fillStyle = 'rgba(255,220,100,0.7)'; circle(bc, 5);
     }
     // 披风：从肩膀往后飘
     const capeC = D.cape || (D.back === 'aurora' ? null : null);
@@ -4195,13 +4227,16 @@ function drawDeco(sk, f, L, layer) {
   if (w) {
     const fists = L.weapon === 'fists';
     const A0 = fists ? sk.hf : sk.hilt, B0 = fists ? sk.hf : sk.tip;
-    ctx.globalCompositeOperation = w === 'shadow' || w === 'ink' || w === 'lava' ? 'source-over' : 'lighter';
+    ctx.globalCompositeOperation = w === 'shadow' || w === 'ink' || w === 'lava' || w === 'void' ? 'source-over' : 'lighter';
     if (w === 'flame') { ctx.strokeStyle = `rgba(255,${140 + Math.sin(t * 20) * 40 | 0},60,0.55)`; ctx.lineWidth = 7; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(255,170,70,0.5)'; circle(B0, 5 + Math.sin(t * 25) * 1.5); }
     if (w === 'frost') { ctx.strokeStyle = 'rgba(190,240,255,0.55)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1; for (let k = 1; k < 4; k++) { const q = [A0[0] + (B0[0] - A0[0]) * k / 4, A0[1] + (B0[1] - A0[1]) * k / 4]; line([q[0] - 3, q[1] - 3], [q[0] + 3, q[1] + 3]); line([q[0] + 3, q[1] - 3], [q[0] - 3, q[1] + 3]); } }
     if (w === 'jade') { ctx.strokeStyle = 'rgba(90,230,170,0.5)'; ctx.lineWidth = 6; if (!fists) line(A0, B0); }
     if (w === 'gold') { const k = (t * 1.2) % 1, q = [A0[0] + (B0[0] - A0[0]) * k, A0[1] + (B0[1] - A0[1]) * k]; ctx.strokeStyle = 'rgba(255,215,120,0.45)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(255,245,210,0.9)'; circle(q, 3); }
     if (w === 'lightning') { ctx.strokeStyle = 'rgba(200,170,255,0.9)'; ctx.lineWidth = 1.6; for (const hnd of fists ? [sk.hf, sk.hb] : [A0]) { ctx.beginPath(); let q = hnd; ctx.moveTo(q[0], q[1]); for (let k = 0; k < 4; k++) { q = [hnd[0] + rand(-14, 14), hnd[1] + rand(-14, 14)]; ctx.lineTo(q[0], q[1]); } ctx.stroke(); } }
     if (w === 'shadow') { ctx.strokeStyle = 'rgba(40,10,50,0.45)'; ctx.lineWidth = 9; if (!fists) line(A0, B0); ctx.strokeStyle = `rgba(${L.slash},0.5)`; ctx.lineWidth = 1.5; if (!fists) line(A0, B0); }
+    if (w === 'void') { ctx.strokeStyle = 'rgba(30,10,50,0.7)'; ctx.lineWidth = 8; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(170,90,255,0.85)'; ctx.lineWidth = 2.4; if (!fists) line(A0, B0); circle(B0, 4.5); }
+    if (w === 'water') { ctx.strokeStyle = 'rgba(60,170,255,0.6)'; ctx.lineWidth = 6.5; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(220,245,255,0.85)'; ctx.lineWidth = 1.8; if (!fists) line(A0, B0); }
+    if (w === 'crystal') { ctx.strokeStyle = 'rgba(100,210,255,0.6)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(240,250,255,0.95)'; circle(B0, 4); }
     if (w === 'lava') { ctx.strokeStyle = '#1a1420'; ctx.lineWidth = 4; if (!fists) line(A0, B0); ctx.strokeStyle = `rgba(255,${120 + Math.sin(t * 6) * 60 | 0},60,0.9)`; ctx.lineWidth = 1.2; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const q = [A0[0] + (B0[0] - A0[0]) * k / 6 + (k % 2 ? 2 : -2), A0[1] + (B0[1] - A0[1]) * k / 6]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); }
     if (w === 'ink') { ctx.fillStyle = `rgba(${D.inkC || '15,15,22'},0.85)`; circle(B0, 3.5); circle([B0[0], B0[1] + 6 + Math.sin(t * 4) * 2], 1.8); }
   }
@@ -6325,13 +6360,18 @@ function renderCodex() {
   }
   const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || PROF.owned.includes(c.id), free = (PROF.rotation || []).includes(c.id);
   const skMeta = skin && SKINS[skin];
-  const skPill = skMeta ? `<span class="pill" style="color:${col};border-color:${col}">皮肤 · ${skMeta.name}</span>` : '';
+  const skRarCol = skMeta ? (skMeta.rarity === 'legend' ? '#f5ca5f' : '#a8d5ff') : col;
+  const skRarName = skMeta ? (skMeta.rarity === 'legend' ? '传说皮肤' : '稀有皮肤') : '';
+  const skPill = skMeta ? `<span class="pill sk-pill" style="color:${skRarCol};border-color:${skRarCol};background:rgba(${skMeta.rarity === 'legend' ? '245,202,95,0.14' : '168,213,255,0.12'})">${skRarName} · ${skMeta.name}</span>` : '';
   $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
-  $id('cxSkinT').textContent = cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤';
+  const skScn = skMeta && SCENES[skin];
+  const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨专属全景天象与奥义特效' : '🌟专属灵光天色与命中特效'}）</span>` : '';
+  $id('cxSkinT').innerHTML = (cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤装束') + skDesc;
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
     const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
-    return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}" style="color:rgb(${RAR_RGB[v.rarity]})">${v.name}${has ? '' : v.exclusive ? ' · 青锋行通关' : ' · 预览'}</button>`;
+    const isLeg = v.rarity === 'legend';
+    return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? '' : v.exclusive ? ' · 青锋行通关' : ' · 预览'}</button>`;
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
@@ -6613,23 +6653,32 @@ function getWeeklyRotation() {
 const SKINS = {
   qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#e6efff', shade: '#8ea4cc', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'circlet', gem: '#bfefff', back: 'snowflake', wfx: 'frost', trail: 'snow' } },
   qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff3d2', shade: '#c9a45a', scarf: '#ffb62e', slash: '255,196,90', blade: '#fff3cf' }, deco: { head: 'crown', back: 'sundisk', cape: '#d99a2b', wfx: 'flame', trail: 'ember', aura: 'ember' } },
+  qf_abyss: { char: 'qingfeng', rarity: 'legend', name: '幽渊', look: { body: '#241a3a', shade: '#10081c', scarf: '#9b51e0', slash: '160,80,240', blade: '#f3e8ff' }, deco: { head: 'circlet', gem: '#bd7bfa', back: 'voiddisk', cape: '#2d1445', wfx: 'void', trail: 'smoke', aura: 'smoke' } },
   fy_jade: { char: 'feiying', rarity: 'rare', name: '碧影', look: { scarf: '#2bd49a', slash: '90,230,170', blade: '#dffff2' }, deco: { head: 'foxmask', mask: '#2bd49a', wfx: 'jade', trail: 'leaf' } },
   fy_blood: { char: 'feiying', rarity: 'legend', name: '血月', look: { body: '#3a1420', shade: '#1a080e', scarf: '#ff2a3d', slash: '255,60,80', blade: '#ffd9dd' }, deco: { head: 'horns', hornC: '#2a0a10', back: 'bloodmoon', cape: '#5a0f1a', wfx: 'shadow', trail: 'smoke', aura: 'smoke' } },
+  fy_phantom: { char: 'feiying', rarity: 'legend', name: '幻灵', look: { body: '#f0faff', shade: '#7faac6', scarf: '#00f2fe', slash: '0,242,254', blade: '#e0ffff' }, deco: { head: 'foxmask', mask: '#00f2fe', back: 'wings', cape: '#1b4d6b', wfx: 'frost', trail: 'snow', aura: 'aurora' } },
   ts_bronze: { char: 'tieshan', rarity: 'rare', name: '青铜', look: { body: '#c9a26b', shade: '#7a5a34', scarf: '#3fa37a', slash: '120,210,170' }, deco: { head: 'helm', helmC: '#a8804a', crest: '#3fa37a', shoulder: '#8a6a3a' } },
   ts_obsidian: { char: 'tieshan', rarity: 'legend', name: '玄武', look: { body: '#34303e', shade: '#18161e', scarf: '#6a5cff', slash: '140,120,255', blade: '#d8d4ff' }, deco: { head: 'horns', hornC: '#1a1822', back: 'shell', shoulder: '#2a2632', wfx: 'lava', aura: 'smoke' } },
+  ts_crimson: { char: 'tieshan', rarity: 'legend', name: '修罗', look: { body: '#3a1616', shade: '#1c0808', scarf: '#ff3a30', slash: '255,50,60', blade: '#ffd8d8' }, deco: { head: 'helm', helmC: '#4a1212', crest: '#ff3a30', shoulder: '#5a1a1a', back: 'sundisk', wfx: 'flame', trail: 'ember', aura: 'ember' } },
   ls_plum: { char: 'lingshuang', rarity: 'rare', name: '红梅', look: { scarf: '#e0365a', slash: '255,110,140', blade: '#ffe3ea' }, deco: { head: 'flower', flower: '#e0365a', trail: 'petal', petal: '255,120,150' } },
   ls_aurora: { char: 'lingshuang', rarity: 'legend', name: '极光', look: { body: '#dff8f4', shade: '#7fb7c0', scarf: '#5ef2c9', slash: '120,255,210', blade: '#e9fffa' }, deco: { head: 'circlet', gem: '#7dffd8', back: 'aurora', wfx: 'frost', trail: 'snow', aura: 'aurora' } },
+  ls_dragon: { char: 'lingshuang', rarity: 'legend', name: '沧龙', look: { body: '#d6edff', shade: '#4d82b8', scarf: '#1f90ff', slash: '40,150,255', blade: '#e6f3ff' }, deco: { head: 'circlet', gem: '#1f90ff', back: 'dragonring', cape: '#103a66', wfx: 'water', trail: 'snow', aura: 'cloud' } },
   ly_dusk: { char: 'liuyun', rarity: 'rare', name: '晚霞', look: { scarf: '#ff8a4a', slash: '255,160,100' }, deco: { head: 'douli', cape: '#c8602a', trail: 'leaf', leaf: '255,150,80' } },
   ly_sky: { char: 'liuyun', rarity: 'legend', name: '天青', look: { body: '#eaf6ff', shade: '#8fb4d6', scarf: '#56b8ff', slash: '130,200,255', blade: '#f0faff' }, deco: { head: 'plume', plumeC: ['#ffffff', '#bfe2ff'], back: 'clouds', cape: '#cfe8ff', trail: 'feather', aura: 'cloud' } },
+  ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#f0f2eb', shade: '#7d8a74', scarf: '#4e7850', slash: '80,180,120', blade: '#eef6f0' }, deco: { head: 'douli', cape: '#2d4730', wfx: 'jade', trail: 'leaf', leaf: '80,180,120' } },
   lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', wfx: 'lightning', trail: 'spark' } },
   lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', back: 'sundisk', wfx: 'flame', trail: 'ember', aura: 'ember' } },
+  lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', back: 'chakra', shoulder: '#6a3210', wfx: 'gold', trail: 'gold', aura: 'gold' } },
   my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'douli', wfx: 'ink', trail: 'ink', inkC: '200,50,30' } },
   my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hoodC: '#6a5220', back: 'lotus', wfx: 'gold', trail: 'gold', aura: 'gold' } },
+  my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'douli', back: 'lotus', cape: '#102444', wfx: 'crystal', trail: 'spark', aura: 'aurora' } },
   yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'flower', flower: '#ff9ec4', trail: 'petal', petal: '255,180,210' } },
   yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hoodC: '#1c1024', back: 'eclipse', cape: '#1c1024', wfx: 'shadow', trail: 'smoke', aura: 'smoke' } },
+  yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'flower', flower: '#a8e0ff', back: 'snowflake', cape: '#2a5078', wfx: 'frost', trail: 'snow', aura: 'snow' } },
   yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee' }, deco: { head: 'hood', hoodC: '#16161e', trail: 'feather', featherC: '40,40,55' } },
   qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8' }, deco: { head: 'headband', band: '#c8321e', back: 'clouds', cape: '#1f6f62', trail: 'leaf', leaf: '150,235,200', aura: 'cloud' } },
   yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], cape: '#e8552a', wfx: 'flame', trail: 'ember', aura: 'ember' } },
+  yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'hood', hoodC: '#1c2838', back: 'wings', cape: '#1c3048', wfx: 'frost', trail: 'feather', featherC: '220,240,255', aura: 'snow' } },
 };
 // ======================= 皮肤场景和特效：稀有皮肤换天色、天气和命中特效，传说皮肤整个场景都换 =======================
 // sky 天空渐变 orb 天上的月亮/太阳 mist 雾色 mtn 远山 bam 竹林 wx 天气 hit 命中图案 hitC 命中颜色 stars 星星多少 rays 光柱
@@ -6637,22 +6686,31 @@ const SCENES = {
   qf_frost: { sky: ['#08101f', '#152a48', '#2c4a6a', '#1c2c40'], orb: 'moon', orbC: '220,240,255', mist: '180,220,255', mtn: ['#1c2c4a', '#142238'], bam: ['#0c1424', '#081020'], wx: 'snow', wxC: '230,245,255', hit: 'snowflake', hitC: '200,240,255' },
   qf_qfx: { sky: ['#120e16', '#3a2836', '#a65e5e', '#3c2630'], orb: 'moon', orbC: '255,232,214', mist: '235,200,200', mtn: ['#2a2232', '#1a1622'], bam: ['#0c1a14', '#06100a'], wx: 'petal', wxC: '255,190,210', hit: 'leaves', hitC: '140,230,200', stars: 0.4 },
   qf_gold: { sky: ['#1a0a08', '#4a1a10', '#b0561e', '#5a2410'], orb: 'sun', orbC: '255,190,80', mist: '255,170,90', mtn: ['#4a2014', '#2e140c'], bam: ['#1c0a06', '#120604'], wx: 'ember', wxC: '255,170,70', hit: 'sunburst', hitC: '255,200,90', stars: 0.15, rays: true },
+  qf_abyss: { sky: ['#0a0414', '#1e0c38', '#451670', '#1c0a30'], orb: 'rift', orbC: '170,90,255', mist: '160,80,240', mtn: ['#220d3d', '#130624'], bam: ['#0d0417', '#080210'], wx: 'spark', wxC: '180,110,255', hit: 'crescent', hitC: '170,90,255', stars: 0.6, rays: true },
   fy_jade: { sky: ['#06140f', '#0f2e26', '#1f4a3c', '#12261e'], orb: 'moon', orbC: '205,255,232', mist: '120,230,180', mtn: ['#12302a', '#0c221c'], bam: ['#081812', '#04100c'], wx: 'leaf', wxC: '90,220,160', hit: 'leaves', hitC: '90,230,170' },
   fy_blood: { sky: ['#0a0204', '#2a0610', '#5a0c1a', '#2a060c'], orb: 'bloodmoon', orbC: '230,40,60', mist: '200,40,60', mtn: ['#2a0810', '#1a0408'], bam: ['#120206', '#0a0104'], wx: 'ash', wxC: '255,80,90', hit: 'crescent', hitC: '255,60,80', stars: 0.4, rays: true },
+  fy_phantom: { sky: ['#041018', '#0c2c3e', '#1c5a75', '#0f3246'], orb: 'moon', orbC: '180,245,255', mist: '100,230,255', mtn: ['#0f3448', '#092130'], bam: ['#061722', '#030d14'], wx: 'snow', wxC: '160,240,255', hit: 'swirl', hitC: '80,235,255', stars: 0.5, rays: true },
   ts_bronze: { sky: ['#120c06', '#2e2214', '#54402a', '#2a2014'], orb: 'moon', orbC: '255,215,160', mist: '220,180,120', mtn: ['#3a2c1a', '#281e12'], bam: ['#16100a', '#0e0a06'], wx: 'dust', wxC: '220,180,120', hit: 'shards', hitC: '210,170,100' },
   ts_obsidian: { sky: ['#06040e', '#160e2e', '#2e1a4a', '#160e22'], orb: 'rift', orbC: '150,120,255', mist: '140,110,255', mtn: ['#1e1636', '#140e26'], bam: ['#0a0614', '#06040c'], wx: 'lava', wxC: '255,130,70', hit: 'hexagon', hitC: '160,130,255', rays: true },
+  ts_crimson: { sky: ['#180404', '#480e0e', '#a02020', '#4a0e0e'], orb: 'sun', orbC: '255,70,60', mist: '255,60,60', mtn: ['#441212', '#2a0808'], bam: ['#180505', '#0e0202'], wx: 'ember', wxC: '255,80,60', hit: 'sunburst', hitC: '255,60,60', stars: 0.1, rays: true },
   ls_plum: { sky: ['#120610', '#2a1028', '#4a1a38', '#2a0e20'], orb: 'moon', orbC: '255,215,225', mist: '255,140,170', wx: 'petal', wxC: '230,60,90', hit: 'flower', hitC: '255,110,140' },
   ls_aurora: { sky: ['#020a10', '#062030', '#0c3a44', '#081c22'], orb: 'aurora', orbC: '120,255,210', mist: '120,255,210', mtn: ['#0c2a30', '#081c20'], bam: ['#04121a', '#020a10'], wx: 'snow', wxC: '200,255,240', hit: 'snowflake', hitC: '120,255,210' },
+  ls_dragon: { sky: ['#051224', '#0f2c52', '#1f5694', '#103058'], orb: 'cloudsun', orbC: '180,225,255', mist: '150,210,255', mtn: ['#133866', '#0a2140'], bam: ['#061830', '#030d1c'], wx: 'snow', wxC: '180,225,255', hit: 'swirl', hitC: '60,170,255', stars: 0.25, rays: true },
   ly_dusk: { sky: ['#140a10', '#40182a', '#9a4a30', '#40201a'], orb: 'moon', orbC: '255,190,140', mist: '255,150,90', mtn: ['#3a1c22', '#2a1218'], wx: 'leaf', wxC: '255,140,70', hit: 'leaves', hitC: '255,160,100' },
   ly_sky: { sky: ['#0a1a34', '#24507e', '#6aa0cc', '#335f86'], orb: 'cloudsun', orbC: '240,250,255', mist: '230,245,255', mtn: ['#3a5a80', '#2a4868'], bam: ['#16304a', '#0e2238'], wx: 'feather', wxC: '240,248,255', hit: 'swirl', hitC: '160,215,255', stars: 0, rays: true },
+  ly_bamboo: { sky: ['#08120c', '#142a1b', '#264c33', '#162e20'], orb: 'moon', orbC: '215,245,220', mist: '140,210,160', mtn: ['#183424', '#0f2216'], bam: ['#0a1810', '#050f09'], wx: 'leaf', wxC: '110,215,145', hit: 'leaves', hitC: '90,210,135' },
   lm_violet: { sky: ['#08061a', '#1c1240', '#34205e', '#1c1236'], orb: 'moon', orbC: '215,190,255', mist: '170,130,255', wx: 'spark', wxC: '200,160,255', hit: 'bolt', hitC: '190,150,255', storm: true },
   lm_sun: { sky: ['#180804', '#501808', '#c2501a', '#5a200a'], orb: 'sun', orbC: '255,150,60', mist: '255,140,60', mtn: ['#4a1a0a', '#301006'], bam: ['#1a0804', '#100402'], wx: 'ember', wxC: '255,140,50', hit: 'sunburst', hitC: '255,150,60', stars: 0.1, rays: true },
+  lm_asura: { sky: ['#1a0c02', '#4c2206', '#a65410', '#54280a'], orb: 'sun', orbC: '255,190,50', mist: '255,180,60', mtn: ['#441e06', '#2c1202'], bam: ['#1a0a02', '#0e0400'], wx: 'gold', wxC: '255,200,60', hit: 'bolt', hitC: '255,190,40', stars: 0.2, rays: true },
   my_cinnabar: { sky: ['#100808', '#2a1414', '#4a2420', '#241010'], orb: 'moon', orbC: '255,190,170', mist: '220,90,70', wx: 'ink', wxC: '200,50,30', hit: 'enso', hitC: '210,60,40' },
   my_gold: { sky: ['#120c04', '#3a2a10', '#8a6a2a', '#3a2a10'], orb: 'lotus', orbC: '255,215,120', mist: '255,215,140', mtn: ['#3a2c14', '#2a1e0c'], bam: ['#161006', '#0e0a04'], wx: 'gold', wxC: '255,220,130', hit: 'lotus', hitC: '255,215,120', rays: true },
+  my_celestial: { sky: ['#050818', '#0d1838', '#1c326c', '#0f1d44'], orb: 'lotus', orbC: '140,210,255', mist: '120,190,255', mtn: ['#122452', '#0a1534'], bam: ['#060c20', '#030612'], wx: 'spark', wxC: '140,215,255', hit: 'enso', hitC: '90,195,255', stars: 0.8, rays: true },
   yh_sakura: { sky: ['#120818', '#2e1436', '#52244c', '#2a1230'], orb: 'moon', orbC: '255,222,236', mist: '255,170,210', wx: 'petal', wxC: '255,175,205', hit: 'flower', hitC: '255,170,210' },
   yh_eclipse: { sky: ['#040206', '#14060e', '#300a18', '#12040a'], orb: 'eclipse', orbC: '230,80,100', mist: '200,60,90', mtn: ['#200810', '#14040a'], bam: ['#0c0206', '#060104'], wx: 'ash', wxC: '230,90,110', hit: 'crescent', hitC: '230,90,110', stars: 0.6, rays: true },
+  yh_solstice: { sky: ['#081220', '#142c4c', '#2c588e', '#163254'], orb: 'moon', orbC: '200,235,255', mist: '170,220,255', mtn: ['#1b3a64', '#102442'], bam: ['#081528', '#040b18'], wx: 'snow', wxC: '210,240,255', hit: 'snowflake', hitC: '140,220,255', stars: 0.5, rays: true },
   yl_raven: { sky: ['#08090e', '#181a24', '#2c2e3c', '#16171e'], orb: 'moon', orbC: '225,225,240', mist: '170,170,200', mtn: ['#22232e', '#181922'], wx: 'feather', wxC: '175,175,200', hit: 'feathers', hitC: '180,180,210' },
   yl_phoenix: { sky: ['#160604', '#4a1206', '#b23a12', '#501806'], orb: 'phoenix', orbC: '255,130,60', mist: '255,120,60', mtn: ['#4a160a', '#300c06'], bam: ['#1a0604', '#100302'], wx: 'ember', wxC: '255,150,60', hit: 'feathers', hitC: '255,140,60', stars: 0.1, rays: true },
+  yl_blizzard: { sky: ['#0a1422', '#163050', '#2d5c92', '#17365c'], orb: 'moon', orbC: '215,240,255', mist: '180,225,255', mtn: ['#1e426e', '#122a48'], bam: ['#0a182c', '#050f1c'], wx: 'feather', wxC: '220,240,255', hit: 'feathers', hitC: '150,210,255', stars: 0.3, rays: true },
 };
 const SCN_DEF = { mtn: ['#241f48', '#1a1636'], bam: ['#110f26', '#0b0a1c'], mist: '190,160,220' };
 const WX_RISE = { ember: 1, gold: 1, lava: 1 };

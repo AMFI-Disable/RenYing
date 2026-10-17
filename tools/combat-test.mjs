@@ -328,6 +328,30 @@ const testSuite = [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Skin catalog coverage: all 9 characters have rare & legend skins with valid scenes',
+    fn: `(() => {
+      for (const ch of CHARS) {
+        const charSkins = Object.entries(SKINS).filter(([k, v]) => v.char === ch.id);
+        const hasRare = charSkins.some(([k, v]) => v.rarity === 'rare');
+        const hasLegend = charSkins.some(([k, v]) => v.rarity === 'legend');
+        if (!hasRare || !hasLegend) {
+          return { pass: false, error: ch.name + ' missing rare or legend skin' };
+        }
+        for (const [k, v] of charSkins) {
+          const scn = SCENES[k];
+          if (!scn || !scn.sky || !scn.orb || !scn.hit) {
+            return { pass: false, error: 'Skin ' + k + ' (' + v.name + ') has incomplete scene definition' };
+          }
+          const look = skinLook(CHAR_IDX[ch.id], k);
+          if (!look || !look.deco) {
+            return { pass: false, error: 'Skin ' + k + ' has invalid skinLook or missing deco' };
+          }
+        }
+      }
+      return { pass: true, error: null };
+    })()`
   }
 ];
 
