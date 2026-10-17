@@ -1857,7 +1857,16 @@ class Fighter {
     if (typeof i === 'string' && CHAR_IDX[i] !== undefined) i = CHAR_IDX[i];
     if (typeof i !== 'number' || isNaN(i) || i < 0 || i >= CHARS.length) i = 0;
     this.chIdx = i; this.ch = CHARS[i]; this.moves = CHAR_MOVES[i];
-    this.look = { ...this.ch.look, name: this.ch.name };
+    let k = '';
+    if (typeof mySkin === 'function') {
+      if (typeof M !== 'undefined' && M.mode === 'net') {
+        k = this.idx === (typeof localIdx === 'function' ? localIdx() : 0) ? mySkin(this.ch.id) : ((typeof NET !== 'undefined' && NET.peerSkins && NET.peerSkins[this.ch.id]) || '');
+      } else {
+        k = mySkin(this.ch.id);
+      }
+    }
+    this.skinKey = this.dummy ? '' : k;
+    this.look = typeof skinLook === 'function' && !this.dummy ? skinLook(i, k) : { ...this.ch.look, name: this.ch.name };
     this.maxHp = this.ch.stat.hp; this.wlen = WEAPON_LEN[this.ch.look.weapon] || 54;
     this.size = this.ch.stat.size || this.ch.size || 1;
     this.maxGuard = this.ch.stat.guardMax || 100;
@@ -2984,7 +2993,8 @@ function applyHit(att, def, m, pt) {
     const dmg = (m.dmg * 0.6) / defRating;
     def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
     if (--def.armorHits <= 0) def.armorT = 0;
-    att.meter = Math.min(100, att.meter + m.dmg * 0.28 * mm); def.meter = Math.min(100, def.meter + m.dmg * 0.22);
+    if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
+    def.meter = Math.min(100, def.meter + m.dmg * 0.14);
     if (def.ch.passive === 'armor') {
       def.meter = Math.min(100, def.meter + 2.5);
       def.skillCD = Math.max(0, def.skillCD - 0.4);
@@ -3075,7 +3085,8 @@ function applyHit(att, def, m, pt) {
   }
   if (def.dummy) def.hp = Math.max(1, def.hp);
   att.hitConfirmed = true;
-  att.meter = Math.min(100, att.meter + m.dmg * 0.38 * mm); def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.12 : 0.25));
+  if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm);
+  def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
   def.move = null;
   if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
@@ -5526,9 +5537,9 @@ const HERO_METER_EXPLAIN = {
   feiying: '【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。',
   tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」直击命中更是直接回涌 50% 气量！',
   lingshuang: '【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。',
-  liuyun: '【御风牵制 · 风暴蓄势】远距离风刃与风遁斥力安全换血聚气；大招「龙卷」卷敌多达 16 段，持续为下一轮充能。',
+  liuyun: '【御风牵制 · 风暴蓄势】远距离风刃与风遁斥力安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
   leiming: '【狂雷十连 · 雷帝灌顶】十连快拳高频轰击令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！',
-  moyu: '【墨浪渗透 · 阵地聚怒】普攻甩墨与泼墨双重判定充能；大招「墨龙」横扫全屏巨额伤害，一次性蓄满可观气量。',
+  moyu: '【墨浪渗透 · 阵地聚怒】普攻甩墨与泼墨双重判定充能；大招「墨龙」重置技能与墨韵回满，并在敌方足下布下索敌墨印。',
   yuehua: '【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。',
   yanling: '【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。',
 };
@@ -6246,10 +6257,10 @@ function renderCodex() {
     tile(rType.icon || 'ranged', `左键+右键 · ${S2.name} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
     tile('ult', `E · ${U.name}`, sh(U.name)[0], `${sh(U.name)[1]}<div style="margin-top:4px;font-size:12px;color:#ffe8a3;line-height:1.35;opacity:0.95">${HERO_METER_EXPLAIN[c.id] || ''}</div>`, '气满', true, 'ult'),
     tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · 落地前无敌', '', false, 'esc'),
-    tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim)">${(() => {
+    tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim);word-break:keep-all;overflow-wrap:break-word">${(() => {
       const chIdx = CHAPTERS.findIndex(chap => chap.boss === c.id);
       if (chIdx < 0) {
-        return `<b>青锋传 · 月下起意</b><br>青锋行第十波大关可领悟绝学并解锁专属传说皮肤「青锋行」。`;
+        return `<b>青锋传 · 月下起意</b><br>青锋行守住第十波大关，即可领悟绝学并解锁专属传说皮肤「青锋行」。`;
       }
       const ch = CHAPTERS[chIdx];
       const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar' })[c.id];
@@ -6785,8 +6796,14 @@ function mySkin(id) { const k = (PROF.equip || {})[id]; return k && ((PROF.skins
 function applySkins() {
   for (const f of [A, B]) {
     let k = '';
-    if (M.mode === 'net') k = f.idx === localIdx() ? mySkin(f.ch.id) : ((NET.peerSkins || {})[f.ch.id] || '');
-    else if (M.mode === 'cpu' || M.mode === 'train' || M.mode === 'forest' || M.mode === 'tag3') k = mySkin(f.ch.id);   // 对电脑时，电脑用到你装备了皮肤的角色也显示皮肤
+    if (M.mode === 'net') {
+      k = f.idx === localIdx() ? mySkin(f.ch.id) : ((NET.peerSkins || {})[f.ch.id] || '');
+    } else if (M.mode === 'replay') {
+      k = (REPLAY.m && REPLAY.m.skins && REPLAY.m.skins[f.idx]) || mySkin(f.ch.id);
+    } else {
+      // 无论是 cpu、tag3、tower、bushido、stage、train、pvp 还是 demo，均显示已装备的皮肤
+      k = mySkin(f.ch.id);
+    }
     if (!f.dummy) f.look = skinLook(f.chIdx, k);
     f.skinKey = f.dummy ? '' : k;
   }
@@ -6832,7 +6849,7 @@ function applyProfile(p) {
   renderAcc(); updateTutBtn();
   if (!PROF.guest && typeof qfxClaim === 'function' && qfxBest() > (PROF.qfx || 0)) setTimeout(() => qfxClaim(qfxBest()), 0);
   const eq = JSON.stringify(PROF.equip || {});
-  if (eq !== applyProfile.eq) { applyProfile.eq = eq; if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); } }
+  if (eq !== applyProfile.eq) { applyProfile.eq = eq; if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); } applySkins(); }
   for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
   if ($id('gacha').classList.contains('on')) renderGacha();
   if ($id('tasks').classList.contains('on')) renderTasks();
