@@ -298,6 +298,36 @@ const testSuite = [
       }
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Equipped skins render in MiBao (tower, chaos) and TeShu (bushido, tag3)',
+    fn: `(() => {
+      PROF.equip = { qingfeng: 'qf_gold' };
+      PROF.skins = ['qf_gold'];
+      
+      startTower(0);
+      if (A.skinKey !== 'qf_gold' || !A.look.legend) {
+        return { pass: false, error: 'Tower mode (MiBao) did not render equipped skin (skinKey=' + A.skinKey + ')' };
+      }
+      
+      startChaos(0, 1, 'normal');
+      if (A.skinKey !== 'qf_gold' || !A.look.legend) {
+        return { pass: false, error: 'Chaos mode (MiBao) did not render equipped skin (skinKey=' + A.skinKey + ')' };
+      }
+      
+      startBushido(0, 1);
+      if (A.skinKey !== 'qf_gold' || !A.look.legend) {
+        return { pass: false, error: 'Bushido mode (TeShu) did not render equipped skin (skinKey=' + A.skinKey + ')' };
+      }
+      
+      startTag3Match([0, 1, 2], [3, 4, 5], 'normal');
+      if (A.skinKey !== 'qf_gold' || !A.look.legend) {
+        return { pass: false, error: 'Tag3 mode (TeShu) did not render equipped skin (skinKey=' + A.skinKey + ')' };
+      }
+      
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 
