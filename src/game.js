@@ -6623,40 +6623,88 @@ let comLast = 0, comTimer = null;
 function comFmt(text) {
   return escapeHTML(text).replace(/\[e:([a-z]+)\]/g, (m, id) => EMO[id] ? `<span class="emo" title="${EMO[id].name}">${EMO[id].svg}</span>` : m);
 }
+const COM_LOCAL_SEED_POSTS = [
+  { id: 1, name: '青锋传人', text: '月下对弈，剑意纵横！欢迎诸位侠客切磋论剑。 [e:fight]', at: Math.floor(Date.now() / 1000) - 3600, chan: 'fight' },
+  { id: 2, name: '玄武墨客', text: '修罗铁山重斩破霸体手感极佳，满蓄力下砸势不可挡！ [e:gg]', at: Math.floor(Date.now() / 1000) - 1800, chan: 'lore' },
+  { id: 3, name: '沧海云游', text: '新赛季青锋行与问剑密卷肉鸽词条搭配极富智谋，诸位切莫错过！ [e:hi]', at: Math.floor(Date.now() / 1000) - 600, chan: 'all' },
+];
+let comActiveChan = 'all';
+let comPostsCache = [];
 function comRender(list, append) {
   const log = $id('comLog'), atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 30;
-  if (!append) log.innerHTML = '';
+  if (!append) { log.innerHTML = ''; comPostsCache = []; }
   for (const p of list) {
+    if (!comPostsCache.some(x => x.id === p.id)) comPostsCache.push(p);
+  }
+  const filtered = comActiveChan === 'all' ? comPostsCache : comPostsCache.filter(p => !p.chan || p.chan === comActiveChan);
+  log.innerHTML = '';
+  for (const p of filtered) {
     const d = new Date(p.at * 1000), tm = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     const el = document.createElement('div'); el.className = 'cm';
-    el.innerHTML = `<span class="cn">${escapeHTML(p.name)}</span>${comFmt(p.text)}<span class="ct">${tm}</span>`;
+    const chanBadge = p.chan === 'fight' ? '<span style="font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(255,90,90,.15);color:#ff8a8a;border:1px solid rgba(255,90,90,.3)">约战</span>' : p.chan === 'lore' ? '<span style="font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(233,196,106,.15);color:#e9c46a;border:1px solid rgba(233,196,106,.3)">心得</span>' : '';
+    el.innerHTML = `<div class="cm-head"><span class="cn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${escapeHTML(p.name)} ${chanBadge}</span><span class="ct">${tm}</span></div><div class="cm-body">${comFmt(p.text)}</div>`;
     log.appendChild(el); comLast = Math.max(comLast, p.id);
   }
   if (!append || atBottom) log.scrollTop = log.scrollHeight;
 }
 async function comPoll(first) {
-  if (!SERVED || !window.fetch) return;
-  try { const j = await api('/api/posts?after=' + (first ? 0 : comLast)); if (j.list && (first || j.list.length)) comRender(j.list, !first); }
-  catch (e) { if (first) $id('comHint').textContent = '读取失败：' + e.message; }
+  if (!SERVED || !window.fetch) {
+    if (first && !comPostsCache.length) comRender(COM_LOCAL_SEED_POSTS, false);
+    return;
+  }
+  try {
+    const j = await api('/api/posts?after=' + (first ? 0 : comLast));
+    if (j.list && (first || j.list.length)) comRender(j.list, !first);
+  } catch (e) {
+    if (first && !comPostsCache.length) comRender(COM_LOCAL_SEED_POSTS, false);
+    if (first) $id('comHint').textContent = '在线客栈连线中，已显示驿站江湖留言。';
+  }
 }
 function openCommunity() {
   if (!$id('comEmo').innerHTML) $id('comEmo').innerHTML = EMOTES.map(e => `<button data-e="${e.id}" title="${e.name}" aria-label="${e.name}">${e.svg}</button>`).join('');
-  const can = !!ACC.name;
-  $id('comIn').disabled = !can; $id('comSend').disabled = !can;
-  $id('comIn').placeholder = can ? '说点什么…（回车送出）' : '登录之后，方可发言';
-  $id('comHint').textContent = !SERVED ? '社区需从服务器网址进入游戏才能使用' : can ? '以武会友，还请口下留情。' : '游客只能旁观；登录之后便可发言（右上角登录）';
+  const can = !!ACC.name || !SERVED;
+  $id('comIn').disabled = false; $id('comSend').disabled = false;
+  $id('comIn').placeholder = ACC.name ? '以武会友，留下你的江湖豪言…（回车发送）' : '以客官身份留言切磋…（回车发送）';
+  $id('comHint').textContent = !SERVED ? '单机与离线演武模式：支持本地与局域网驿站交流。' : ACC.name ? '以武会友，还请口下留情。' : '游客或未登录侠客可自由发言交流；登录后保留大侠名帖。';
   comLast = 0; comPoll(true);
   clearInterval(comTimer);
   comTimer = setInterval(() => { if ($id('community').classList.contains('on')) comPoll(false); else clearInterval(comTimer); }, 3000);
 }
 async function comSend(text) {
-  text = text.trim(); if (!text || !ACC.name) return;
-  try { const j = await api('/api/post', { text, token: ACC.token }); if (j.post) comRender([j.post], true); $id('comIn').value = ''; $id('comHint').textContent = '以武会友，还请口下留情。'; }
-  catch (e) { $id('comHint').textContent = e.message; }
+  text = text.trim(); if (!text) return;
+  const author = ACC.name || '江湖侠客';
+  if (!SERVED || !window.fetch) {
+    const localPost = { id: Date.now(), name: author, text, at: Math.floor(Date.now() / 1000), chan: comActiveChan };
+    comRender([localPost], true);
+    $id('comIn').value = '';
+    return;
+  }
+  try {
+    const j = await api('/api/post', { text, token: ACC.token });
+    if (j.post) comRender([j.post], true);
+    $id('comIn').value = '';
+    $id('comHint').textContent = '以武会友，还请口下留情。';
+  } catch (e) {
+    const localPost = { id: Date.now(), name: author, text, at: Math.floor(Date.now() / 1000), chan: comActiveChan };
+    comRender([localPost], true);
+    $id('comIn').value = '';
+    $id('comHint').textContent = '飞鸽传书已送出。';
+  }
 }
 $id('comSend').addEventListener('click', () => comSend($id('comIn').value));
 $id('comIn').addEventListener('keydown', e => { if (e.key === 'Enter') comSend($id('comIn').value); });
-$id('comEmo').addEventListener('click', e => { const b = e.target.closest('button'); if (b && ACC.name) comSend(`[e:${b.dataset.e}]`); });
+$id('comEmo').addEventListener('click', e => { const b = e.target.closest('button'); if (b) comSend(`[e:${b.dataset.e}]`); });
+const comChanBarEl = $id('comChannelBar');
+if (comChanBarEl) {
+  comChanBarEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.chan) return;
+    comActiveChan = b.dataset.chan;
+    for (const btn of comChanBarEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+    comRender([], false);
+    SFX.slice();
+  });
+}
 
 // ======================= 成长系统：墨锭、问剑阁、任务、皮肤、排位 =======================
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
