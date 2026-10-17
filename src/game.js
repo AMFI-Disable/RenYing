@@ -5349,11 +5349,34 @@ function updateAIBrief() {
   }
 }
 
+// 模式所属类别映射
+const SINGLE_TAB_CATS = {
+  cpu: 'regular', stage: 'regular', train: 'regular',
+  tower: 'rogue', chaos: 'rogue',
+  tag3: 'special', bushido: 'special'
+};
+
 // 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
 let currentSingleTab = 'cpu';
+let currentSingleCat = 'regular';
+
+function setSingleCat(cat) {
+  currentSingleCat = cat;
+  for (const b of document.querySelectorAll('#singleCatTabs button')) {
+    b.classList.toggle('sel', b.dataset.cat === cat);
+  }
+  for (const b of document.querySelectorAll('#singleTabs button')) {
+    const belongs = b.dataset.cat === cat;
+    b.style.display = belongs ? '' : 'none';
+  }
+}
+
 function singleSec(sec) {
   const active = sec || currentSingleTab || 'cpu';
   currentSingleTab = active;
+  const targetCat = SINGLE_TAB_CATS[active] || 'regular';
+  setSingleCat(targetCat);
+
   for (const b of document.querySelectorAll('#singleTabs button')) {
     b.classList.toggle('sel', b.dataset.tab === active);
   }
@@ -7673,6 +7696,22 @@ if (levelsEl) {
     pickLevel = b.dataset.lv;
     for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x === b);
     updateAIBrief();
+    SFX.slice();
+  });
+}
+const singleCatTabsEl = document.getElementById('singleCatTabs');
+if (singleCatTabsEl) {
+  singleCatTabsEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.cat) return;
+    const cat = b.dataset.cat;
+    // 找到该类别下的第一个模式
+    const firstTabBtn = document.querySelector(`#singleTabs button[data-cat="${cat}"]`);
+    if (firstTabBtn && firstTabBtn.dataset.tab) {
+      singleSec(firstTabBtn.dataset.tab);
+    } else {
+      setSingleCat(cat);
+    }
     SFX.slice();
   });
 }

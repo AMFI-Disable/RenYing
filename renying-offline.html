@@ -45,14 +45,32 @@
   .seg button.sel { background: var(--ink); color: #14121f; }
   .seg button:focus-visible, .go:focus-visible, .ghost:focus-visible { outline: 2px solid var(--p1); outline-offset: 3px; }
   #levels.hide { visibility: hidden; }
+  .single-cat-tabs {
+    display: inline-flex; gap: 8px; padding: 4px; border-radius: 999px;
+    background: rgba(0, 0, 0, .32); border: 1px solid rgba(233, 196, 106, .22);
+    margin: 8px 0 6px; flex-wrap: wrap; justify-content: center;
+  }
+  .single-cat-tabs button {
+    border: none; background: transparent; color: var(--dim); font-family: var(--title);
+    font-size: 14px; padding: 5px 16px; border-radius: 999px; cursor: pointer;
+    letter-spacing: 0.5px; transition: all .15s ease; white-space: nowrap;
+  }
+  .single-cat-tabs button:hover {
+    color: var(--ink); background: rgba(255, 255, 255, .05);
+  }
+  .single-cat-tabs button.sel {
+    background: rgba(233, 196, 106, .18); color: var(--gold); font-weight: 700;
+    border: 1px solid rgba(233, 196, 106, .45);
+    box-shadow: 0 0 12px rgba(233, 196, 106, .15);
+  }
   .single-tabs, .task-tabs {
     display: inline-flex; gap: 6px; padding: 4px; border-radius: 999px;
     background: rgba(255, 255, 255, .05); border: 1px solid var(--faint);
-    margin: 8px 0 16px; flex-wrap: wrap; justify-content: center;
+    margin: 4px 0 16px; flex-wrap: wrap; justify-content: center;
   }
   .single-tabs button, .task-tabs button {
     border: none; background: transparent; color: var(--dim); font-family: var(--body);
-    font-size: 14px; padding: 6px 18px; border-radius: 999px; cursor: pointer;
+    font-size: 13px; padding: 5px 16px; border-radius: 999px; cursor: pointer;
     transition: all .15s ease; white-space: nowrap;
   }
   .single-tabs button.sel, .task-tabs button.sel {
@@ -784,14 +802,20 @@
         <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
 
+      <div class="single-cat-tabs" id="singleCatTabs">
+        <button data-cat="regular" class="sel" type="button">⚔️ 常规演武</button>
+        <button data-cat="rogue" type="button">📜 秘宝异变</button>
+        <button data-cat="special" type="button">⚡ 特殊决战</button>
+      </div>
+
       <div class="single-tabs" id="singleTabs">
-        <button data-tab="cpu" class="sel" type="button">⚔️ 对战电脑</button>
-        <button data-tab="tag3" type="button">🔥 3v3 车轮战</button>
-        <button data-tab="tower" type="button">📜 问剑密卷 (肉鸽)</button>
-        <button data-tab="bushido" type="button">⚡ 一击必杀</button>
-        <button data-tab="chaos" type="button">🎲 天机乱斗</button>
-        <button data-tab="stage" type="button">🌲 守关挑战</button>
-        <button data-tab="train" type="button">🥋 木人试剑</button>
+        <button data-tab="cpu" data-cat="regular" class="sel" type="button">⚔️ 对战电脑</button>
+        <button data-tab="stage" data-cat="regular" type="button">🌲 守关挑战</button>
+        <button data-tab="train" data-cat="regular" type="button">🥋 木人试剑</button>
+        <button data-tab="tower" data-cat="rogue" type="button">📜 问剑密卷 (肉鸽)</button>
+        <button data-tab="chaos" data-cat="rogue" type="button">🎲 天机乱斗</button>
+        <button data-tab="tag3" data-cat="special" type="button">🔥 3v3 车轮战</button>
+        <button data-tab="bushido" data-cat="special" type="button">⚡ 一击必杀</button>
       </div>
 
       <!-- 对战电脑 (Choosing AI) -->
@@ -7504,11 +7528,34 @@ function updateAIBrief() {
   }
 }
 
+// 模式所属类别映射
+const SINGLE_TAB_CATS = {
+  cpu: 'regular', stage: 'regular', train: 'regular',
+  tower: 'rogue', chaos: 'rogue',
+  tag3: 'special', bushido: 'special'
+};
+
 // 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
 let currentSingleTab = 'cpu';
+let currentSingleCat = 'regular';
+
+function setSingleCat(cat) {
+  currentSingleCat = cat;
+  for (const b of document.querySelectorAll('#singleCatTabs button')) {
+    b.classList.toggle('sel', b.dataset.cat === cat);
+  }
+  for (const b of document.querySelectorAll('#singleTabs button')) {
+    const belongs = b.dataset.cat === cat;
+    b.style.display = belongs ? '' : 'none';
+  }
+}
+
 function singleSec(sec) {
   const active = sec || currentSingleTab || 'cpu';
   currentSingleTab = active;
+  const targetCat = SINGLE_TAB_CATS[active] || 'regular';
+  setSingleCat(targetCat);
+
   for (const b of document.querySelectorAll('#singleTabs button')) {
     b.classList.toggle('sel', b.dataset.tab === active);
   }
@@ -9828,6 +9875,22 @@ if (levelsEl) {
     pickLevel = b.dataset.lv;
     for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x === b);
     updateAIBrief();
+    SFX.slice();
+  });
+}
+const singleCatTabsEl = document.getElementById('singleCatTabs');
+if (singleCatTabsEl) {
+  singleCatTabsEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.cat) return;
+    const cat = b.dataset.cat;
+    // 找到该类别下的第一个模式
+    const firstTabBtn = document.querySelector(`#singleTabs button[data-cat="${cat}"]`);
+    if (firstTabBtn && firstTabBtn.dataset.tab) {
+      singleSec(firstTabBtn.dataset.tab);
+    } else {
+      setSingleCat(cat);
+    }
     SFX.slice();
   });
 }
