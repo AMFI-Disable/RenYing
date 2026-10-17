@@ -2220,6 +2220,7 @@ function neutral(f, foe) {
     } else {
       f.blockT = 0;
     }
+    if (c.held.atk && clock - c.atkT >= CHARGE_START) { f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); return; }
     if (c.consume('light')) return startAttack(f, 'l1');
     if (c.consume('heavy')) return startAttack(f, 'hv');
     if (c.consume('jump')) return doJump(f, dir);
