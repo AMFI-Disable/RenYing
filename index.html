@@ -4600,6 +4600,26 @@ function updateProjs() {
     p.hits++; p.hitCD = p.rehit || 99;
     if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
   }
+  // 双方远程弹道相撞相抵（Projectile Clashing）：两方飞射物在空中交错时互相抵消消散
+  for (let i = 0; i < projs.length; i++) {
+    const p1 = projs[i];
+    if (p1.dead || p1.unbreakable || p1.ult || p1.dmg <= 0) continue;
+    const b1 = projBox(p1);
+    for (let j = i + 1; j < projs.length; j++) {
+      const p2 = projs[j];
+      if (p2.dead || p2.unbreakable || p2.ult || p2.dmg <= 0 || p1.owner === p2.owner) continue;
+      const b2 = projBox(p2);
+      if (overlap(b1, b2)) {
+        p1.dead = true; p2.dead = true;
+        const cx = (p1.x + p2.x) / 2, cy = (p1.y + p2.y) / 2;
+        ring(cx, cy, 60, '255,220,130', 0.25);
+        for (let k = 0; k < 5; k++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-160, 160), vy: rand(-160, 160), rgb: '255,220,130', life: 0.18, max: 0.18 });
+        SFX.block();
+        addP({ type: 'text', text: '破', x: cx, y: cy - 20, life: 0.45, max: 0.45, rgb: '255,220,130' });
+        break;
+      }
+    }
+  }
   for (let i = projs.length - 1; i >= 0; i--) if (projs[i].dead) projs.splice(i, 1);
 }
 function boltFX(p) { shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35); flashRGB = '255,245,200'; dust(p.x, 0, 12); ring(p.x, 0, 90, '255,240,150', 0.3); SFX.thunder(); }
