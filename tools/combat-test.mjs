@@ -241,6 +241,63 @@ const testSuite = [
       toNeutral(A);
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Hold attack does not trigger l1 before CHARGE_START',
+    fn: `(() => {
+      toNeutral(A);
+      A.y = 0;
+      A.vy = 0;
+      const c = A.ctrl;
+      c.clear();
+      c.held.atk = true;
+      c.atkT = clock;
+      c.press('light');
+      neutral(A, B);
+      if (A.state === 'attack') {
+        return { pass: false, error: 'Prematurely started attack ' + A.moveName + ' while holding attack!' };
+      }
+      // Releasing before charge triggers light attack
+      c.held.atk = false;
+      neutral(A, B);
+      if (A.state !== 'attack' || A.moveName !== 'l1') {
+        return { pass: false, error: 'Releasing tap did not trigger l1 (state=' + A.state + ', move=' + A.moveName + ')' };
+      }
+      toNeutral(A);
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Tower mode saves and resumes run progress and clears on loss',
+    fn: `(() => {
+      startTower(0);
+      A.hp = 85;
+      M.towerFloor = 3;
+      M.towerPerks = ['blood_drink', 'air_burst'];
+      saveTowerRun();
+      const saved = loadTowerRun();
+      if (!saved || saved.floor !== 3 || saved.hp !== 85 || (saved.perks || []).length !== 2) {
+        return { pass: false, error: 'Failed to properly save tower run: ' + JSON.stringify(saved) };
+      }
+      toMenu();
+      const loadedInMenu = loadTowerRun();
+      if (!loadedInMenu || loadedInMenu.floor !== 3) {
+        return { pass: false, error: 'Saved run lost on toMenu()' };
+      }
+      resumeTower();
+      if (M.mode !== 'tower' || M.towerFloor !== 3 || A.hp !== 85 || (M.towerPerks || []).length !== 2) {
+        return { pass: false, error: 'Resume did not restore state accurately (floor=' + M.towerFloor + ', hp=' + A.hp + ')' };
+      }
+      // Defeat clears saved run
+      M.koWinner = 1;
+      endRound();
+      const clearedAfterDeath = loadTowerRun();
+      toMenu();
+      if (clearedAfterDeath !== null) {
+        return { pass: false, error: 'Tower run was not cleared after defeat' };
+      }
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

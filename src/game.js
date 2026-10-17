@@ -2106,6 +2106,7 @@ function endRound() {
       showTowerPerkModal();
       return;
     } else {
+      clearTowerRun();
       M.phase = 'end';
       showEnd(w);
       return;
@@ -2231,8 +2232,14 @@ function neutral(f, foe) {
     } else {
       f.blockT = 0;
     }
-    if (c.held.atk && clock - c.atkT >= CHARGE_START) { f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); return; }
-    if (c.consume('light')) return startAttack(f, 'l1');
+    if (c.held.atk) {
+      if (clock - c.atkT >= CHARGE_START) {
+        delete c.buf.light;
+        f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); return;
+      }
+    } else {
+      if (c.consume('light')) return startAttack(f, 'l1');
+    }
     if (c.consume('heavy')) return startAttack(f, 'hv');
     if (c.consume('jump')) return doJump(f, dir);
     if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
@@ -2712,8 +2719,14 @@ function updateFighter(f, foe) {
             if (f.meter >= 100 && c.consume('special')) { startSpecial(f); break; }
             if (f.skillCD <= 0 && c.consume('skill')) { startSkill(f, foe); break; }
             if (f.skill2CD <= 0 && c.consume('skill2')) { startSkill(f, foe, 2); break; }
-            if (c.held.atk && clock - c.atkT >= CHARGE_START) { f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); break; }
-            if (c.consume('light')) { startAttack(f, 'l1'); break; }
+            if (c.held.atk) {
+              if (clock - c.atkT >= CHARGE_START) {
+                delete c.buf.light;
+                f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); break;
+              }
+            } else {
+              if (c.consume('light')) { startAttack(f, 'l1'); break; }
+            }
             if (c.consume('heavy')) { startAttack(f, 'hv'); break; }
             if (c.consume('jump')) { doJump(f, dir); break; }
           }
@@ -7968,10 +7981,51 @@ const TOWER_PERKS = {
   }
 };
 
+const TOWER_SAVE_KEY = 'renying-tower-run';
+
+function saveTowerRun() {
+  if (M.mode === 'tower' && M.phase !== 'end' && A && A.hp > 0) {
+    const run = {
+      hero: M.towerHero !== undefined ? M.towerHero : towerHero,
+      floor: M.towerFloor || 1,
+      perks: M.towerPerks ? [...M.towerPerks] : [],
+      hp: Math.max(1, Math.min(A.maxHp || 100, A.hp)),
+      maxHp: A.maxHp || 100,
+      goldenBellReady: A.goldenBellReady !== false
+    };
+    try { localStorage.setItem(TOWER_SAVE_KEY, JSON.stringify(run)); } catch (e) {}
+  }
+}
+
+function loadTowerRun() {
+  try {
+    const raw = localStorage.getItem(TOWER_SAVE_KEY);
+    if (!raw) return null;
+    const run = JSON.parse(raw);
+    if (run && typeof run === 'object' && typeof run.floor === 'number' && run.floor >= 1) return run;
+  } catch (e) {}
+  return null;
+}
+
+function clearTowerRun() {
+  try { localStorage.removeItem(TOWER_SAVE_KEY); } catch (e) {}
+}
+
 let towerHero = 0;
 function renderTower() {
   const badge = document.getElementById('towerRecordBadge');
   if (badge) badge.textContent = `最高通关：第 ${PROF.towerMaxFloor || 1} 层`;
+  const resumeBtn = document.getElementById('towerResumeBtn');
+  const savedRun = loadTowerRun();
+  if (resumeBtn) {
+    if (savedRun && savedRun.floor >= 1) {
+      const heroName = (CHARS[savedRun.hero] && CHARS[savedRun.hero].name) || '侠客';
+      resumeBtn.textContent = `继续试炼（${heroName} · 第 ${savedRun.floor} 层）`;
+      resumeBtn.style.display = 'inline-block';
+    } else {
+      resumeBtn.style.display = 'none';
+    }
+  }
   const pickEl = document.getElementById('towerPick');
   if (pickEl) {
     pickEl.innerHTML = CHARS.map((c, i) => {
@@ -7991,6 +8045,7 @@ function renderTower() {
 }
 
 function startTower(heroIdx) {
+  clearTowerRun();
   initAudio();
   paused = false;
   towerHero = heroIdx !== undefined ? heroIdx : towerHero;
@@ -8011,7 +8066,44 @@ function startTower(heroIdx) {
   human[0].clear(); human[1].clear();
   showScreen(null);
   startRound();
+  saveTowerRun();
   say('问剑密卷 · 第 1 层', 1.4);
+}
+
+function resumeTower() {
+  const run = loadTowerRun();
+  if (!run) { startTower(towerHero); return; }
+  initAudio();
+  paused = false;
+  towerHero = run.hero !== undefined ? run.hero : towerHero;
+  M.mode = 'tower';
+  M.towerFloor = run.floor || 1;
+  M.towerPerks = run.perks ? [...run.perks] : [];
+  M.towerHero = towerHero;
+  M.round = 1;
+  M.wins = [0, 0];
+  let lv = 'easy';
+  if (M.towerFloor >= 12) lv = 'impossible';
+  else if (M.towerFloor >= 8) lv = 'adaptive';
+  else if (M.towerFloor >= 5) lv = 'hard';
+  else if (M.towerFloor >= 3) lv = 'normal';
+  M.level = lv;
+  M.stage = null;
+  let foeIdx = Math.floor(Math.random() * CHARS.length);
+  if (foeIdx === towerHero) foeIdx = (foeIdx + 1) % CHARS.length;
+  setChars(towerHero, foeIdx);
+  A.ctrl = human[0];
+  B.ctrl = new AICtrl(lv);
+  human[0].clear(); human[1].clear();
+  showScreen(null);
+  startRound();
+  if (typeof run.hp === 'number' && run.hp > 0) {
+    A.hp = Math.min(A.maxHp, run.hp);
+    A.lagHp = A.hp;
+  }
+  if (run.goldenBellReady !== undefined) A.goldenBellReady = run.goldenBellReady;
+  saveTowerRun();
+  say(`问剑密卷 · 继续第 ${M.towerFloor} 层`, 1.4);
 }
 
 function showTowerPerkModal() {
@@ -8081,6 +8173,7 @@ function nextTowerFloor() {
   A.lagHp = A.hp;
   A.goldenBellReady = true;
   startRound();
+  saveTowerRun();
   say(`万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);
 }
 
@@ -8360,6 +8453,9 @@ function startBushido(p1, p2) {
 const towerStartBtn = document.getElementById('towerStartBtn');
 if (towerStartBtn) towerStartBtn.addEventListener('click', () => startTower(towerHero));
 
+const towerResumeBtn = document.getElementById('towerResumeBtn');
+if (towerResumeBtn) towerResumeBtn.addEventListener('click', () => resumeTower());
+
 const bushidoStartBtn = document.getElementById('bushidoStartBtn');
 if (bushidoStartBtn) bushidoStartBtn.addEventListener('click', () => startBushido(bushidoP1, bushidoP2));
 
@@ -8405,6 +8501,7 @@ function toMenu() {
   if (TUT) endTutorial();
   paused = false; BP = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
+  if (prevMode === 'tower') saveTowerRun();
   M.mode = 'demo';
   if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'bushido' || prevMode === 'chaos') {
     singleSec(prevMode);
@@ -10117,6 +10214,7 @@ cv.addEventListener('pointerdown', () => refocusGame());
 window.addEventListener('mouseup', e => { if (e.button === 0) human[0].held.atk = false; });
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('beforeunload', () => { saveTowerRun(); });
 window.addEventListener('blur', () => { human[0].clear(); human[1].clear(); if (M.mode !== 'demo' && M.mode !== 'net' && M.phase !== 'end' && !paused) { paused = true; showScreen('pause'); } });
 window.addEventListener('focus', () => {
   human[0].clear(); human[1].clear();
