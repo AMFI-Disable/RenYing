@@ -1858,15 +1858,23 @@ class Fighter {
     if (typeof i !== 'number' || isNaN(i) || i < 0 || i >= CHARS.length) i = 0;
     this.chIdx = i; this.ch = CHARS[i]; this.moves = CHAR_MOVES[i];
     let k = '';
-    if (typeof mySkin === 'function') {
-      if (typeof M !== 'undefined' && M.mode === 'net') {
-        k = this.idx === (typeof localIdx === 'function' ? localIdx() : 0) ? mySkin(this.ch.id) : ((typeof NET !== 'undefined' && NET.peerSkins && NET.peerSkins[this.ch.id]) || '');
-      } else {
-        k = mySkin(this.ch.id);
+    try {
+      if (typeof window !== 'undefined' && window.mySkin && window.PROF && window.SKINS) {
+        if (typeof M !== 'undefined' && M.mode === 'net') {
+          k = this.idx === (typeof localIdx === 'function' ? localIdx() : 0) ? window.mySkin(this.ch.id) : ((typeof NET !== 'undefined' && NET.peerSkins && NET.peerSkins[this.ch.id]) || '');
+        } else {
+          k = window.mySkin(this.ch.id);
+        }
       }
-    }
+    } catch (e) {}
     this.skinKey = this.dummy ? '' : k;
-    this.look = typeof skinLook === 'function' && !this.dummy ? skinLook(i, k) : { ...this.ch.look, name: this.ch.name };
+    let look = null;
+    try {
+      if (typeof window !== 'undefined' && window.SKINS && typeof skinLook === 'function' && !this.dummy) {
+        look = skinLook(i, k);
+      }
+    } catch (e) {}
+    this.look = look || { ...this.ch.look, name: this.ch.name };
     this.maxHp = this.ch.stat.hp; this.wlen = WEAPON_LEN[this.ch.look.weapon] || 54;
     this.size = this.ch.stat.size || this.ch.size || 1;
     this.maxGuard = this.ch.stat.guardMax || 100;
@@ -1887,13 +1895,13 @@ class Fighter {
   }
   onGround() { return this.y >= 0 && this.vy >= 0; }
 }
+// ======================= 比赛流程 =======================
+const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {} };
 let A = new Fighter(0), B = new Fighter(1);
 const foeOf = f => f === A ? B : A;
 const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1);
 function setChars(a, b) { A.setChar(a); B.setChar(b); }
 
-// ======================= 比赛流程 =======================
-const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {} };
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let announce = null;
@@ -2701,6 +2709,7 @@ function updateFighter(f, foe) {
             if (f.meter >= 100 && c.consume('special')) { startSpecial(f); break; }
             if (f.skillCD <= 0 && c.consume('skill')) { startSkill(f, foe); break; }
             if (f.skill2CD <= 0 && c.consume('skill2')) { startSkill(f, foe, 2); break; }
+            if (c.held.atk && clock - c.atkT >= CHARGE_START) { f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); break; }
             if (c.consume('light')) { startAttack(f, 'l1'); break; }
             if (c.consume('heavy')) { startAttack(f, 'hv'); break; }
             if (c.consume('jump')) { doJump(f, dir); break; }
