@@ -71,9 +71,9 @@
     box-shadow: 0 2px 10px rgba(233, 196, 106, .25);
   }
   .levels-grid {
-    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 10px 0 14px;
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 10px 0 14px;
   }
-  @media (max-width: 680px) { .levels-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 820px) { .levels-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 440px) { .levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .levels-grid button {
     background: linear-gradient(160deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02));

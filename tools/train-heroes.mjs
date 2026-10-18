@@ -60,16 +60,24 @@ console.log(`========================================================\n`);
 const summary = [];
 
 for (const hero of targetList) {
-  console.log(`\n>>> [Hero: ${hero.name} (${hero.id})] Generating Specialized CvC Data...`);
+  console.log(`\n========================================================`);
+  console.log(`>>> [Hero: ${hero.name} (${hero.id})] Anti-All-Heroes Deep Training`);
+  console.log(`========================================================`);
   const dataPath = `data/hero_${hero.id}.jsonl`;
   const modelPath = `models/heroes/${hero.id}.json`;
 
   try {
-    // Run CvC matches where P1 is locked to the specific hero, facing diverse opponents
-    execSync(`node tools/cvc-sim.mjs --matches ${matchesPerHero} --p1 ${hero.idx} --p1-level hard --p2-level hard --export ${dataPath}`, { stdio: 'inherit' });
+    // Collect dataset by pitting this hero against all 9 heroes (including mirror match)
+    // matchesPerHero matches distributed across all 9 opponents
+    const roundsPerOpponent = Math.max(1, Math.ceil(matchesPerHero / HEROES.length));
+    console.log(`Simulating ${roundsPerOpponent} matches against each of the 9 opponents (total ${roundsPerOpponent * HEROES.length} matches)...`);
+
+    for (const opp of HEROES) {
+      execSync(`node tools/cvc-sim.mjs --matches ${roundsPerOpponent} --p1 ${hero.idx} --p2 ${opp.idx} --p1-level hard --p2-level hard --export ${dataPath}`, { stdio: 'inherit' });
+    }
     
     // Train policy specifically for this hero
-    console.log(`>>> [Hero: ${hero.name}] Training neural policy...`);
+    console.log(`>>> [Hero: ${hero.name}] Training neural policy across all matchups...`);
     execSync(`node tools/train-policy.mjs --data ${dataPath} --hero ${hero.id} --epochs ${epochs} --out ${modelPath}`, { stdio: 'inherit' });
     
     summary.push({ hero: hero.name, id: hero.id, path: modelPath, status: 'OK' });

@@ -1379,6 +1379,7 @@ const LEVELS = {
   normal: { think: [0.18, 0.42], block: 0.4,  aggr: 0.58, combo: 3 },
   hard:   { think: [0.08, 0.22], block: 0.72, aggr: 0.75, combo: 4 },
   impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true },   // 绝顶：几乎零反应时间、必挡、被连必逃
+  god:    { think: [0.005, 0.018], block: 0.99, aggr: 0.98, combo: 6, god: true, neural: true }, // 天道：全英雄对抗深度强化神经网络决策、极致预判与精准破招
 };
 // 个性化电脑：以困难为基础，按你对它的输赢自动调强弱；禁你胜率最高的角色，用你最常用的角色
 const ADAPT = { s: 1, use: {}, win: {} };
@@ -1789,14 +1790,102 @@ const ULT_AI = {
 };
 // 技能之后顺手接的动作
 const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.3], ['light', 0.48], ['light', 0.66]] };
+// 神经网络推理辅助函数（用于天道 God 难度模型）
+function aiPredictPolicy(heroId, obs) {
+  try {
+    const models = typeof window !== 'undefined' ? window.RENYING_HERO_MODELS : null;
+    if (!models || !models[heroId]) return null;
+    const m = models[heroId];
+    const { W1, b1, W2, b2, W3, b3 } = m.weights;
+    // Layer 1: Input(25) -> H1(64) + ReLU
+    const h1 = new Float32Array(b1.length);
+    for (let j = 0; j < b1.length; j++) {
+      let sum = b1[j];
+      for (let i = 0; i < obs.length; i++) sum += obs[i] * W1[i][j];
+      h1[j] = sum > 0 ? sum : 0;
+    }
+    // Layer 2: H1(64) -> H2(32) + ReLU
+    const h2 = new Float32Array(b2.length);
+    for (let j = 0; j < b2.length; j++) {
+      let sum = b2[j];
+      for (let i = 0; i < h1.length; i++) sum += h1[i] * W2[i][j];
+      h2[j] = sum > 0 ? sum : 0;
+    }
+    // Layer 3: H2(32) -> Logits(10)
+    const logits = new Float32Array(b3.length);
+    let maxL = -Infinity;
+    for (let j = 0; j < b3.length; j++) {
+      let sum = b3[j];
+      for (let i = 0; i < h2.length; i++) sum += h2[i] * W3[i][j];
+      logits[j] = sum;
+      if (sum > maxL) maxL = sum;
+    }
+    // Softmax probabilities
+    const probs = new Float32Array(b3.length);
+    let expSum = 0;
+    for (let j = 0; j < logits.length; j++) {
+      probs[j] = Math.exp(logits[j] - maxL);
+      expSum += probs[j];
+    }
+    for (let j = 0; j < probs.length; j++) probs[j] /= expSum;
+    return probs; // [0:idle, 1:left, 2:right, 3:down, 4:jump, 5:atk, 6:skill1, 7:skill2, 8:dash, 9:special]
+  } catch (e) {
+    return null;
+  }
+}
+
+function extractAIObs(me, foe) {
+  const dx = (foe.x - me.x) / STAGE_W;
+  const dy = (foe.y - me.y) / 400;
+  const dist = Math.abs(foe.x - me.x) / STAGE_W;
+  const hp1 = me.hp / me.maxHp;
+  const hp2 = foe.hp / foe.maxHp;
+  const g1 = (me.guard || 0) / (me.maxGuard || 100);
+  const g2 = (foe.guard || 0) / (foe.maxGuard || 100);
+  const m1 = (me.meter || 0) / 100;
+  const m2 = (foe.meter || 0) / 100;
+  const vy1 = me.vy / 600;
+  const vy2 = foe.vy / 600;
+  const face1 = me.face;
+  const face2 = foe.face;
+  const sAtk1 = me.state === 'attack' ? 1 : 0;
+  const sBlk1 = me.state === 'block' || me.state === 'blockstun' ? 1 : 0;
+  const sHit1 = me.state === 'hitstun' || me.state === 'launched' ? 1 : 0;
+  const sAir1 = me.onGround() ? 0 : 1;
+  const sAtk2 = foe.state === 'attack' ? 1 : 0;
+  const sBlk2 = foe.state === 'block' || foe.state === 'blockstun' ? 1 : 0;
+  const sHit2 = foe.state === 'hitstun' || foe.state === 'launched' ? 1 : 0;
+  const sAir2 = foe.onGround() ? 0 : 1;
+  const cd1 = Math.min(1, (me.skillCD || 0) / 6);
+  const cd2 = Math.min(1, (me.skill2CD || 0) / 6);
+  const breakCD = Math.min(1, (me.breakCD || 0) / 10);
+  const threatProj = projs.find(p => p.owner !== me.idx && p.dmg > 0 && Math.abs(me.x - p.x) < 300);
+  const projNear = threatProj ? (threatProj.x - me.x) / STAGE_W : 0;
+  return [
+    dx, dy, dist, hp1, hp2, g1, g2, m1, m2, vy1, vy2, face1, face2,
+    sAtk1, sBlk1, sHit1, sAir1, sAtk2, sBlk2, sHit2, sAir2,
+    cd1, cd2, breakCD, projNear
+  ];
+}
+
 class AICtrl extends Ctrl {
-  constructor(level) { super(); this.L = LEVELS[level]; this.queue = []; this.next = 0; this.holdDown = 0; this.dir = 0; this.reacted = false; this.projReact = false; }
+  constructor(level) {
+    super();
+    this.level = level;
+    this.L = LEVELS[level] || LEVELS.normal;
+    this.queue = [];
+    this.next = 0;
+    this.holdDown = 0;
+    this.dir = 0;
+    this.reacted = false;
+    this.projReact = false;
+  }
   plan(list) { this.queue = list.map(([a, dt]) => ({ at: clock + dt, a })); }
   think(me, foe) {
     const L = this.L, d = Math.abs(foe.x - me.x), to = Math.sign(foe.x - me.x) || 1;
     const ch = me.ch, [rMin, rMax] = ch.ai.range, S = SKILLS[ch.skill];
     if ((me.state === 'launched' || me.state === 'knockdown' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < L.block * 0.018) this.press('dash');
-    if (L.god && (me.state === 'hitstun' || me.state === 'launched') && me.comboHits >= 2 && me.breakCD <= 0) this.press('dash');   // 绝顶：被连两下就闪
+    if (L.god && (me.state === 'hitstun' || me.state === 'launched') && me.comboHits >= 2 && me.breakCD <= 0) this.press('dash');   // 绝顶/天道：被连两下就闪
     while (this.queue.length && this.queue[0].at <= clock) {
       const a = this.queue.shift().a;
       if (a === 'chargeStart') { this.held.atk = true; this.atkT = clock - CHARGE_START; }
@@ -1837,7 +1926,39 @@ class AICtrl extends Ctrl {
       const r = Math.random();
       this.dir = 0;
       const atkRange = me.moves.l1.box[2] + 22;
-      if (foe.rooted && foe.state === 'hitstun') {
+
+      // 天道 (God) 难度：先调用离线全门派对抗训练的神经网络预测最优战术策略
+      let neuralAct = -1;
+      if (L.neural) {
+        const obs = extractAIObs(me, foe);
+        const probs = aiPredictPolicy(ch.id, obs);
+        if (probs) {
+          let pickR = Math.random(), acc = 0;
+          for (let pi = 0; pi < probs.length; pi++) {
+            acc += probs[pi];
+            if (pickR <= acc) { neuralAct = pi; break; }
+          }
+        }
+      }
+
+      // 0:idle, 1:left, 2:right, 3:down, 4:jump, 5:atk, 6:skill1, 7:skill2, 8:dash, 9:special
+      if (neuralAct === 9 && me.meter >= 100 && ULT_AI[ch.ult](me, foe, d)) {
+        this.plan([['special', 0]]);
+      } else if (neuralAct === 8 && me.dashCD <= 0 && d > 120) {
+        this.dir = to; this.press('dash');
+      } else if (neuralAct === 7 && me.skill2CD <= 0 && SKILLS[ch.skill2].ai(me, foe, d)) {
+        this.plan([['skill2', 0]]);
+      } else if (neuralAct === 6 && me.skillCD <= 0 && S.ai(me, foe, d)) {
+        this.plan([['skill', 0], ...(SKILL_FOLLOW[ch.skill] || [])]);
+      } else if (neuralAct === 5 && d <= atkRange + 30) {
+        this.plan(AI_COMBOS[Math.min(L.combo, AI_COMBOS.length - 1)]);
+      } else if (neuralAct === 4 && me.onGround()) {
+        this.dir = to; this.plan([['jump', 0], ['light', 0.22]]);
+      } else if (neuralAct === 3) {
+        this.holdDown = 0.35;
+      } else if (neuralAct === 1 || neuralAct === 2) {
+        this.dir = (neuralAct === 2 && to > 0) || (neuralAct === 1 && to < 0) ? to : -to;
+      } else if (foe.rooted && foe.state === 'hitstun') {
         if (d < 300 && r < 0.6) this.plan([['chargeStart', 0], ['chargeEnd', 0.8], ['light', 0.96]]);
         else this.dir = to;
       }
@@ -5492,6 +5613,13 @@ const AI_PROFILES = {
     badgeCol: '#ff6b6b',
     desc: '微秒级极限神经反射（12~35ms），近乎完美格挡（99%），被连击时瞬间受身脱离，神级预判与无限绝杀，挑战操作天花板！',
     traits: ['微秒反应 (12ms)', '完美格挡 (99%)', '受身必闪']
+  },
+  god: {
+    name: '天道',
+    badge: '天道神境 · 神经网络',
+    badgeCol: '#d946ef',
+    desc: '基于全角色对抗神经网络训练！历经九门派各克制流派（包括同门相残）深度学习策略矩阵，极致读指令级预判、技能CD算计与针对性破招压制！',
+    traits: ['神经网络策略', '全门派专项克制', '极限预判破防']
   }
 };
 
@@ -8434,7 +8562,7 @@ function nextTowerFloor() {
   say(`万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);
 }
 
-let bushidoP1 = 0, bushidoP2 = 1;
+let bushidoP1 = 0, bushidoP2 = 1, bushidoLevel = 'hard';
 function renderBushido() {
   const pick1 = document.getElementById('bushidoPick');
   const pick2 = document.getElementById('bushidoFoePick');
@@ -8474,6 +8602,15 @@ function renderBushido() {
       });
     });
   }
+  const lvs = document.querySelectorAll('#bushidoLevels button');
+  lvs.forEach(b => {
+    b.classList.toggle('sel', b.dataset.lv === bushidoLevel);
+    b.onclick = () => {
+      bushidoLevel = b.dataset.lv;
+      lvs.forEach(x => x.classList.toggle('sel', x === b));
+      SFX.slice();
+    };
+  });
 }
 
 const CHAOS_MUTATIONS = [
@@ -8700,18 +8837,20 @@ function startChaos(p1, p2, lv) {
   rollChaosMutation();
 }
 
-function startBushido(p1, p2) {
+function startBushido(p1, p2, lv) {
   initAudio();
   paused = false;
   bushidoP1 = p1 !== undefined ? p1 : bushidoP1;
   bushidoP2 = p2 !== undefined ? p2 : bushidoP2;
+  bushidoLevel = lv !== undefined ? lv : bushidoLevel;
   M.mode = 'bushido';
+  M.level = bushidoLevel;
   M.round = 1;
   M.wins = [0, 0];
   M.stage = null;
   setChars(bushidoP1, bushidoP2);
   A.ctrl = human[0];
-  B.ctrl = new AICtrl('hard');
+  B.ctrl = new AICtrl(bushidoLevel);
   A.meter = B.meter = 0;
   human[0].clear(); human[1].clear();
   showScreen(null);
@@ -8726,7 +8865,7 @@ const towerResumeBtn = document.getElementById('towerResumeBtn');
 if (towerResumeBtn) towerResumeBtn.addEventListener('click', () => resumeTower());
 
 const bushidoStartBtn = document.getElementById('bushidoStartBtn');
-if (bushidoStartBtn) bushidoStartBtn.addEventListener('click', () => startBushido(bushidoP1, bushidoP2));
+if (bushidoStartBtn) bushidoStartBtn.addEventListener('click', () => startBushido(bushidoP1, bushidoP2, bushidoLevel));
 
 const chaosStartBtn = document.getElementById('chaosStartBtn');
 if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => startChaos(chaosP1, chaosP2, chaosLevel));

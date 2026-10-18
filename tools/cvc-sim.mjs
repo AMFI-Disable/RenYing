@@ -10,7 +10,7 @@
  *   node tools/cvc-sim.mjs --matches 50 --summary
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import vm from 'node:vm';
 
@@ -282,8 +282,8 @@ for (const [name, s] of Object.entries(stats.charStats)) {
 if (exportPath && dataset.length > 0) {
   const dir = dirname(exportPath);
   if (dir && !existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const outData = dataset.map(d => JSON.stringify(d)).join('\n');
-  writeFileSync(exportPath, outData, 'utf8');
-  console.log(`\n[Export] Exported ${dataset.length} training transitions to ${exportPath} (${(outData.length / 1024 / 1024).toFixed(2)} MB)`);
+  const outData = dataset.map(d => JSON.stringify(d)).join('\n') + '\n';
+  appendFileSync(exportPath, outData, 'utf8');
+  console.log(`\n[Export] Saved ${dataset.length} training transitions to ${exportPath} (${(outData.length / 1024 / 1024).toFixed(2)} MB)`);
 }
 console.log(`======================================================\n`);

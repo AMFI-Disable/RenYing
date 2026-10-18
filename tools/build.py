@@ -61,6 +61,19 @@ def music_data():
     return data
 
 
+def hero_models_data():
+    folder = os.path.join(ROOT, "models", "heroes")
+    data = {}
+    if os.path.exists(folder):
+        for name in sorted(os.listdir(folder)):
+            if name.endswith(".json"):
+                try:
+                    data[name[:-5]] = json.loads(read(folder, name))
+                except Exception:
+                    pass
+    return data
+
+
 def page(offline):
     html = read(SRC, "page.html")
     build = {"offline": offline}
@@ -68,7 +81,7 @@ def page(offline):
         "<!--@style-->\n": "<style>\n" + read(SRC, "style.css") + "</style>\n",
         "<!--@music-->\n": ("<script>window.MUSIC_DATA = " + json.dumps(music_data()) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
-            "<script>window.RENYING_BUILD = " + json.dumps(build) + ";</script>\n"
+            "<script>window.RENYING_BUILD = " + json.dumps(build) + "; window.RENYING_HERO_MODELS = " + json.dumps(hero_models_data()) + ";</script>\n"
             + ("" if offline else (
                 '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>\n'
                 '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>\n'
