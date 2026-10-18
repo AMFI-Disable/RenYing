@@ -287,14 +287,31 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
     ai: (me, foe, d) => d < 420 && foe.onGround() },
-  backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（0.52 秒穿心定身并冲天挑空）；枪旋余劲立时回转。',
+  backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（同一目标最多连挑 3 次，第 4 记强力震飞脱离）；枪旋余劲立时回转。',
     start(f) { f.vx = -f.face * 540; f.vy = -420; f.y = Math.min(f.y, -1); },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.24) { f.skPh = 1; f.t = 0; f.vx = f.face * 180; f.hitDone = false; SFX.heavy(); }
       if (f.skPh === 1) {
-        if (f.t < 0.12 && strike(f, foe, { box: [20, -104, 235, -44], dmg: 60, kb: [340, -800], stun: 0.48, hs: 0.12, launch: true })) {
-          f.skill2CD *= 0.5;
-          addP({ type: 'text', text: '枪尖穿心', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '170,220,255' });
+        if (f.t < 0.12) {
+          const curHits = foe.huiMaHits || 0;
+          if (curHits >= 3) {
+            if (strike(f, foe, { box: [20, -104, 235, -44], dmg: 45, kb: [680, -320], stun: 0.4, hs: 0.16, launch: true, big: true })) {
+              foe.huiMaHits = 0;
+              foe.invul = 0.65;
+              foe.airRecover = true;
+              f.skill2CD *= 0.5;
+              shake = Math.max(shake, 14);
+              ring(foe.x, foe.y - 60, 160, '170,220,255', 0.45);
+              addP({ type: 'text', text: '💨 枪劲震退 · 浮空脱离', x: foe.x, y: foe.y - 110, life: 1.0, max: 1.0, rgb: '170,220,255' });
+              SFX.heavy();
+            }
+          } else {
+            if (strike(f, foe, { box: [20, -104, 235, -44], dmg: 60, kb: [340, -800], stun: 0.48, hs: 0.12, launch: true })) {
+              foe.huiMaHits = curHits + 1;
+              f.skill2CD *= 0.5;
+              addP({ type: 'text', text: '枪尖穿心 (' + foe.huiMaHits + '/3)', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '170,220,255' });
+            }
+          }
         }
         if (f.t >= 0.34) toNeutral(f);
       }
@@ -2053,7 +2070,7 @@ class Fighter {
     this.maxGuard = (this.ch && this.ch.stat && this.ch.stat.guardMax) || 100;
     this.guard = this.maxGuard;
     this.sinceBlock = 0;
-    Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: this.idx === 0 ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0,
+    Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: this.idx === 0 ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
@@ -2365,7 +2382,7 @@ function endRound() {
 function toNeutral(f) {
   f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.rooted = false;
   f.state = f.onGround() ? 'idle' : 'air';
-  if (f.onGround()) { f.juggle = 0; }
+  if (f.onGround()) { f.juggle = 0; f.huiMaHits = 0; }
 }
 function startAttack(f, name) {
   endEscape(f);
@@ -2786,7 +2803,7 @@ function breakOut(f, foe) {
   const air = f.y < -1;
   f.state = air ? 'air' : 'idle'; f.t = 0; f.move = null;
   f.vx = 0; f.vy = air ? -220 : 0; f.invul = 0.4; f.rot = 0;
-  f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.airDash = 1;
+  f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.airDash = 1; f.huiMaHits = 0;
   f.face = foe.x >= f.x ? 1 : -1;
   f.trail.length = 0; f.scarf = []; f.ghosts = [];
   f.j = {}; for (const k of JOINTS) f.j[k] = [...POSES.fall[k]]; f.j.sw = POSES.fall.sw;
