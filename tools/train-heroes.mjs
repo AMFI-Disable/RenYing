@@ -99,3 +99,12 @@ for (const s of summary) {
   console.log(`  - ${s.hero.padEnd(6)} (${s.id.padEnd(10)}) -> ${s.status === 'OK' ? s.path : 'FAILED'}`);
 }
 console.log(`========================================================\n`);
+
+// Automatically run build to update bundled index.html & renying-offline.html with newly trained weights
+try {
+  console.log('Packaging updated neural weights into game build (tools/build.py)...');
+  execSync('python3 tools/build.py', { stdio: 'inherit' });
+  console.log('[Build Complete] The game is immediately ready with latest trained AI models!');
+} catch (e) {
+  console.warn('Could not auto-run build.py:', e.message);
+}

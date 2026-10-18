@@ -71,12 +71,30 @@ function randMatrix(rows, cols, scale = 0.1) {
   return m;
 }
 
-const W1 = randMatrix(IN_DIM, H1_DIM, 1.0);
-const b1 = new Float32Array(H1_DIM);
-const W2 = randMatrix(H1_DIM, H2_DIM, 1.0);
-const b2 = new Float32Array(H2_DIM);
-const W3 = randMatrix(H2_DIM, OUT_DIM, 1.0);
-const b3 = new Float32Array(OUT_DIM);
+let W1 = randMatrix(IN_DIM, H1_DIM, 1.0);
+let b1 = new Float32Array(H1_DIM);
+let W2 = randMatrix(H1_DIM, H2_DIM, 1.0);
+let b2 = new Float32Array(H2_DIM);
+let W3 = randMatrix(H2_DIM, OUT_DIM, 1.0);
+let b3 = new Float32Array(OUT_DIM);
+
+// Incremental Training / Fine-tuning: If existing model weights exist, warm-start from them!
+if (existsSync(outPath)) {
+  try {
+    const existing = JSON.parse(readFileSync(outPath, 'utf8'));
+    if (existing.weights && existing.arch && existing.arch.in === IN_DIM && existing.arch.out === OUT_DIM) {
+      console.log(`[Warm-Start] Found existing weights at ${outPath}. Continuing fine-tuning...`);
+      W1 = existing.weights.W1.map(row => new Float32Array(row));
+      b1 = new Float32Array(existing.weights.b1);
+      W2 = existing.weights.W2.map(row => new Float32Array(row));
+      b2 = new Float32Array(existing.weights.b2);
+      W3 = existing.weights.W3.map(row => new Float32Array(row));
+      b3 = new Float32Array(existing.weights.b3);
+    }
+  } catch (e) {
+    console.log(`[Init] Could not warm-start from existing weights (${e.message}), initializing fresh weights.`);
+  }
+}
 
 // Adam state
 const mW1 = randMatrix(IN_DIM, H1_DIM, 0), vW1 = randMatrix(IN_DIM, H1_DIM, 0);
