@@ -83,9 +83,9 @@ def page(offline):
         "<!--@scripts-->\n": (
             "<script>window.RENYING_BUILD = " + json.dumps(build) + "; window.RENYING_HERO_MODELS = " + json.dumps(hero_models_data()) + ";</script>\n"
             + ("" if offline else (
-                '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>\n'
-                '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>\n'
-                '<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>\n'
+                "<script>\n" + read(ASSETS, "firebase-app-compat.js") + "\n</script>\n"
+                "<script>\n" + read(ASSETS, "firebase-auth-compat.js") + "\n</script>\n"
+                "<script>\n" + read(ASSETS, "firebase-firestore-compat.js") + "\n</script>\n"
             ))
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
             + "<script>\n" + read(SRC, "cloud.js") + "</script>\n"
