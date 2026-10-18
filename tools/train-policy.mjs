@@ -104,6 +104,14 @@ const mb2 = new Float32Array(H2_DIM), vb2 = new Float32Array(H2_DIM);
 const mW3 = randMatrix(H2_DIM, OUT_DIM, 0), vW3 = randMatrix(H2_DIM, OUT_DIM, 0);
 const mb3 = new Float32Array(OUT_DIM), vb3 = new Float32Array(OUT_DIM);
 
+// Pre-allocated gradient accumulation buffers to eliminate GC churn during training
+const gW1 = randMatrix(IN_DIM, H1_DIM, 0);
+const gb1 = new Float32Array(H1_DIM);
+const gW2 = randMatrix(H1_DIM, H2_DIM, 0);
+const gb2 = new Float32Array(H2_DIM);
+const gW3 = randMatrix(H2_DIM, OUT_DIM, 0);
+const gb3 = new Float32Array(OUT_DIM);
+
 let tStep = 0;
 function adam(param, grad, m, v, lr = 0.003, b1 = 0.9, b2 = 0.999, eps = 1e-8) {
   m = b1 * m + (1 - b1) * grad;
@@ -137,24 +145,29 @@ for (let ep = 1; ep <= epochs; ep++) {
     const batch = samples.slice(b, b + BATCH_SIZE);
     if (!batch.length) continue;
 
-    // Gradients
-    const gW1 = randMatrix(IN_DIM, H1_DIM, 0);
-    const gb1 = new Float32Array(H1_DIM);
-    const gW2 = randMatrix(H1_DIM, H2_DIM, 0);
-    const gb2 = new Float32Array(H2_DIM);
-    const gW3 = randMatrix(H2_DIM, OUT_DIM, 0);
-    const gb3 = new Float32Array(OUT_DIM);
+    // Gradients (reused Float32Arrays instead of allocating every batch)
+    for (let i = 0; i < IN_DIM; i++) gW1[i].fill(0);
+    gb1.fill(0);
+    for (let i = 0; i < H1_DIM; i++) gW2[i].fill(0);
+    gb2.fill(0);
+    for (let i = 0; i < H2_DIM; i++) gW3[i].fill(0);
+    gb3.fill(0);
+
+    let effectiveBatchWeight = 0;
 
     for (const item of batch) {
       const x = item.s;
       const targetA = item.a;
+      // Advantage weighting: positive reward (winning/good trades) gets higher training weight, negative reward gets lower weight
+      const weight = Math.max(0.2, Math.min(3.0, 1.0 + (item.r || 0) * 0.75));
+      effectiveBatchWeight += weight;
 
       // Layer 1
       const h1 = new Float32Array(H1_DIM);
       for (let j = 0; j < H1_DIM; j++) {
         let sum = b1[j];
         for (let i = 0; i < IN_DIM; i++) sum += x[i] * W1[i][j];
-        h1[j] = Math.max(0, sum); // ReLU
+        h1[j] = sum > 0 ? sum : 0; // ReLU
       }
 
       // Layer 2
@@ -162,7 +175,7 @@ for (let ep = 1; ep <= epochs; ep++) {
       for (let j = 0; j < H2_DIM; j++) {
         let sum = b2[j];
         for (let i = 0; i < H1_DIM; i++) sum += h1[i] * W2[i][j];
-        h2[j] = Math.max(0, sum); // ReLU
+        h2[j] = sum > 0 ? sum : 0; // ReLU
       }
 
       // Layer 3 (Logits)
@@ -179,14 +192,15 @@ for (let ep = 1; ep <= epochs; ep++) {
       let expSum = 0;
       const probs = new Float32Array(OUT_DIM);
       for (let j = 0; j < OUT_DIM; j++) {
-        probs[j] = Math.exp(logits[j] - maxLogit);
-        expSum += probs[j];
+        const val = Math.exp(logits[j] - maxLogit);
+        probs[j] = val;
+        expSum += val;
       }
       for (let j = 0; j < OUT_DIM; j++) probs[j] /= (expSum || 1);
 
       // Cross entropy loss
       const loss = -Math.log(Math.max(1e-7, probs[targetA]));
-      totalLoss += loss;
+      totalLoss += loss * weight;
 
       // Accuracy check
       let predA = 0, bestP = -1;
@@ -195,13 +209,14 @@ for (let ep = 1; ep <= epochs; ep++) {
       }
       if (predA === targetA) correct++;
 
-      // Backpropagation
-      // Output gradient: dL/dLogit = p_i - y_i
+      // Backpropagation weighted by sample advantage
+      // Output gradient: dL/dLogit = (p_i - y_i) * weight
       const dLogits = new Float32Array(OUT_DIM);
       for (let j = 0; j < OUT_DIM; j++) {
-        dLogits[j] = probs[j] - (j === targetA ? 1 : 0);
-        gb3[j] += dLogits[j];
-        for (let i = 0; i < H2_DIM; i++) gW3[i][j] += h2[i] * dLogits[j];
+        const grad = (probs[j] - (j === targetA ? 1 : 0)) * weight;
+        dLogits[j] = grad;
+        gb3[j] += grad;
+        for (let i = 0; i < H2_DIM; i++) gW3[i][j] += h2[i] * grad;
       }
 
       // Layer 2 gradient
@@ -226,7 +241,7 @@ for (let ep = 1; ep <= epochs; ep++) {
     }
 
     // Apply Adam Optimizer
-    const n = batch.length;
+    const n = effectiveBatchWeight || batch.length;
     for (let j = 0; j < OUT_DIM; j++) {
       [b3[j], mb3[j], vb3[j]] = adam(b3[j], gb3[j] / n, mb3[j], vb3[j], lr);
       for (let i = 0; i < H2_DIM; i++) {

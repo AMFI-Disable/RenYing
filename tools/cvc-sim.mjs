@@ -26,6 +26,17 @@ const exportPath = getArg('export', '');
 const p1CharArg = getArg('p1', '');
 const p2CharArg = getArg('p2', '');
 
+// Precompile scripts once globally to avoid reparsing ~700KB on every match
+const netCode = readFileSync('src/net-p2p.js', 'utf8');
+const gameCode = readFileSync('src/game.js', 'utf8');
+const NET_SCRIPT = new vm.Script(netCode);
+const GAME_SCRIPT = new vm.Script(gameCode);
+const EXPOSE_SCRIPT = new vm.Script(`({
+  CHARS, A, B, M, projs, STAGE_W, AICtrl,
+  startMatch: (...args) => startMatch(...args),
+  step: () => step()
+})`);
+
 function createRenYingSandbox() {
   const dummyEl = {
     getContext: () => ({
@@ -88,17 +99,11 @@ function createRenYingSandbox() {
   Object.assign(sandbox.window, sandbox);
   vm.createContext(sandbox.window);
 
-  const netCode = readFileSync('src/net-p2p.js', 'utf8');
-  vm.runInContext(netCode, sandbox.window);
-  const gameCode = readFileSync('src/game.js', 'utf8');
-  vm.runInContext(gameCode, sandbox.window);
+  NET_SCRIPT.runInContext(sandbox.window);
+  GAME_SCRIPT.runInContext(sandbox.window);
 
   // Expose consts and functions declared at script top-level
-  return vm.runInContext(`({
-    CHARS, A, B, M, projs, STAGE_W, AICtrl,
-    startMatch: (...args) => startMatch(...args),
-    step: () => step()
-  })`, sandbox.window);
+  return EXPOSE_SCRIPT.runInContext(sandbox.window);
 }
 
 // Extract normalized numerical feature vector from game state for fighter `f` vs `foe`
