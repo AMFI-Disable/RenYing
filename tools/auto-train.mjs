@@ -24,7 +24,7 @@ function getArg(name, def) {
 const matches = getArg('matches', '20');
 const epochs = getArg('epochs', '5');
 const cloudBucket = getArg('cloud-bucket', process.env.RENYING_AI_BUCKET || '');
-const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+const timestamp = new Date().toISOString().toLowerCase().replace(/[:.]/g, '-');
 const dataFile = `data/dataset_${timestamp}.jsonl`;
 const modelFile = `models/renying_ai_${timestamp}.json`;
 const latestModelFile = `models/renying_ai_latest.json`;
