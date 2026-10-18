@@ -29,6 +29,7 @@ function getArg(name, def) {
 const matchesPerHero = parseInt(getArg('matches-per-hero', '6'), 10);
 const epochs = parseInt(getArg('epochs', '5'), 10);
 const singleHero = getArg('hero', '');
+const doPush = args.includes('--push');
 
 const HEROES = [
   { id: 'qingfeng', idx: 0, name: '青锋' },
@@ -105,6 +106,18 @@ try {
   console.log('Packaging updated neural weights into game build (tools/build.py)...');
   execSync('python3 tools/build.py', { stdio: 'inherit' });
   console.log('[Build Complete] The game is immediately ready with latest trained AI models!');
+  
+  if (doPush) {
+    console.log('Auto-pushing updated models and builds to git repository...');
+    execSync('git add models/ index.html renying-offline.html', { stdio: 'inherit' });
+    try {
+      execSync('git commit -m "feat: auto update models"', { stdio: 'inherit' });
+      execSync('git push origin main', { stdio: 'inherit' });
+      console.log('[Git Push Complete] Trained models successfully pushed to origin/main!');
+    } catch (gitErr) {
+      console.log('No new changes to commit or push already up to date.');
+    }
+  }
 } catch (e) {
-  console.warn('Could not auto-run build.py:', e.message);
+  console.warn('Could not complete build or push:', e.message);
 }
