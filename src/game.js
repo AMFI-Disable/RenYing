@@ -7458,7 +7458,17 @@ $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key 
 window.redeemCode = redeemCode;
 // ---------- 排位 ----------
 function renderRankLine() {
-  $id('rankLine').textContent = !SERVED ? '' : !ACC.name ? '排位赛需先登录' : PROF.rank ? `你的段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
+  const rankText = !SERVED ? '单机演武' : !ACC.name ? '需登录定级' : PROF.rank ? `${PROF.rank.label}${PROF.rank.tier ? '' : ' (定级中)'}` : '暂无评定';
+  if ($id('rankLine')) {
+    $id('rankLine').textContent = !SERVED ? '离线模式：支持本地与局域网切磋' : !ACC.name ? '排位赛需先登录账户' : PROF.rank ? `你的天梯段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
+  }
+  if ($id('netRankName')) $id('netRankName').textContent = rankText;
+  if ($id('netWinsCount')) {
+    const wins = PROF.netWins || 0, losses = PROF.netLosses || 0;
+    const total = wins + losses;
+    const rate = total > 0 ? Math.round((wins / total) * 100) : 0;
+    $id('netWinsCount').textContent = `${wins} 胜 ${losses} 负${total > 0 ? ` (${rate}%)` : ''}`;
+  }
 }
 function rankUI(on) { const b = $id('rankBtn'); b.classList.toggle('searching', !!on); b.textContent = on ? '排位中… 点击取消' : '排位赛'; }
 $id('rankBtn').addEventListener('click', () => {
@@ -10276,13 +10286,20 @@ setInterval(() => {
 }, 1000);
 // 在线情况：多少局在打、多少人在匹配
 function refreshOnline() {
-  if (!SERVED || !window.fetch || !document.getElementById('netp').classList.contains('on')) return;
+  if (!SERVED || !window.fetch || !document.getElementById('netp').classList.contains('on')) {
+    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = SERVED ? '正在监测江湖' : '单机局域模式';
+    return;
+  }
   fetch('/health').then(r => r.json()).then(h => {
     const parts = [];
-    if (h.playing) parts.push(`${h.playing} 局正在对战`);
-    if (h.waiting) parts.push(`${h.waiting} 人正在匹配`);
-    $id('onlineLine').textContent = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
-  }).catch(() => {});
+    if (h.playing) parts.push(`${h.playing} 局对战`);
+    if (h.waiting) parts.push(`${h.waiting} 人匹配`);
+    const line = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
+    if ($id('onlineLine')) $id('onlineLine').textContent = line;
+    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : '全服待命中';
+  }).catch(() => {
+    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = '连线就绪';
+  });
 }
 setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
 if (SERVED && location.protocol === 'https:' && window.fetch) {

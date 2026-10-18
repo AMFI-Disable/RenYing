@@ -253,20 +253,63 @@
   </div>
 
   <div id="netp" class="scr">
-    <div class="panel">
-      <h2>联机对战</h2>
+    <div class="panel" style="max-width:min(980px,95vw);">
+      <div class="sec-head-row" style="justify-content:center;position:relative;margin-bottom:12px;">
+        <h2 style="margin:0;font-size:clamp(28px,3.2vw,40px)">月下对弈 · 联机对战</h2>
+        <span class="sub-badge" id="netLobbyBadge" style="position:absolute;right:0;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> 全网连线 · 毫秒回滚
+        </span>
+      </div>
+
+      <!-- 战绩与段位概览条 -->
+      <div class="net-profile-strip" id="netProfileStrip">
+        <div class="nps-item">
+          <span class="nps-label">天梯段位</span>
+          <span class="nps-val" id="netRankBadge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#e9c46a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <b id="netRankName">登堂入室</b>
+          </span>
+        </div>
+        <div class="nps-div"></div>
+        <div class="nps-item">
+          <span class="nps-label">联机胜绩</span>
+          <span class="nps-val" id="netRecordBadge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#46d3ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg>
+            <span id="netWinsCount">0 胜 0 负</span>
+          </span>
+        </div>
+        <div class="nps-div"></div>
+        <div class="nps-item">
+          <span class="nps-label">实时状态</span>
+          <span class="nps-val" id="netLiveStatus">
+            <span class="net-dot online"></span>
+            <span id="netOnlineOverview">全服待命中</span>
+          </span>
+        </div>
+      </div>
+
       <div id="netPanel" class="net">
-        <div class="net-mode-bar" style="display:flex;gap:10px;justify-content:center;margin-bottom:14px;">
-          <button id="netModeP2PBtn" class="ghost small sel" style="border-radius:20px;padding:5px 15px;font-size:13px" type="button">WebRTC 免服务器直连（公网开黑）</button>
-          <button id="netModeServerBtn" class="ghost small" style="border-radius:20px;padding:5px 15px;font-size:13px" type="button">局域网 / 本地服务器</button>
+        <div class="net-mode-bar" style="display:flex;gap:10px;justify-content:center;margin:12px 0 14px;">
+          <button id="netModeP2PBtn" class="ghost small sel" style="border-radius:20px;padding:6px 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px" type="button">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            WebRTC 免服务器直连（公网开黑）
+          </button>
+          <button id="netModeServerBtn" class="ghost small" style="border-radius:20px;padding:6px 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px" type="button">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            局域网 / 本地服务器
+          </button>
         </div>
 
-        <div id="netBannerP2P" style="background:rgba(70,211,234,0.12);border:1px solid rgba(70,211,234,0.35);color:#46d3ea;font-size:13px;padding:9px 14px;border-radius:6px;margin:0 0 14px;text-align:center;line-height:1.5;display:flex;align-items:center;justify-content:center;gap:6px">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> <b>WebRTC 免服务器对战</b>：点击「建房」生成 4 位房间码分享给好友，或输入好友的房间码加入，无需下载或配置服务器！
+        <div id="netBannerP2P" class="net-banner p2p">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span><b>WebRTC 免服务器对战</b>：点击「设擂建房」生成 4 位房间码分享给好友，或输入好友的房间码加入，无需下载或配置服务器！</span>
         </div>
 
-        <div id="netBannerServer" class="hidden" style="background:rgba(43,212,154,0.12);border:1px solid rgba(43,212,154,0.35);color:#2bd49a;font-size:13px;padding:9px 14px;border-radius:6px;margin:0 0 14px;text-align:center;line-height:1.5">
-          <span id="serverStatusText" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="12" height="12" fill="#2bd49a"><circle cx="12" cy="12" r="10"/></svg> <b>局域网/离线模式</b>：同一 Wi-Fi 或离线单机开黑（房主电脑终端运行 <code>python3 server.py</code>）。</span>
+        <div id="netBannerServer" class="net-banner srv hidden">
+          <span id="serverStatusText" style="display:inline-flex;align-items:center;gap:6px">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="#2bd49a"><circle cx="12" cy="12" r="10"/></svg>
+            <b>局域网/离线模式</b>：同一 Wi-Fi 或离线单机开黑（房主电脑终端运行 <code>python3 server.py</code>）。
+          </span>
         </div>
 
         <div id="srvBox" class="hidden" style="margin-bottom:14px;">
@@ -278,32 +321,64 @@
           </div>
         </div>
 
+        <!-- 水墨风双栏卡片：设擂建房 & 赴会应战 -->
         <div class="netcols">
-          <div class="netcol">
-            <h4>建房</h4>
-            <p class="netnote">点击生成 4 位房间码</p>
-            <button class="go small" id="hostBtn">建房</button>
+          <div class="netcol wuxia-card host-card">
+            <div class="netcol-head">
+              <span class="netcol-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              </span>
+              <h4>设擂建房</h4>
+            </div>
+            <p class="netnote">摆开武林擂台，生成 4 位密令暗号</p>
+            <button class="go small" id="hostBtn" type="button">设擂建房</button>
             <p class="roomcode" id="roomCode" title="点击复制房间码"></p>
-            <button class="ghost small hidden" id="copyCodeBtn" style="margin-top:6px;font-size:13px;padding:4px 14px">复制房间码 / 链接</button>
+            <button class="ghost small hidden" id="copyCodeBtn" style="margin-top:6px;font-size:13px;padding:5px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:5px" type="button">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              复制房间码 / 链接
+            </button>
           </div>
-          <div class="netcol">
-            <h4>加入</h4>
-            <p class="netnote">输入朋友给你的房间码</p>
-            <div class="iprow"><input id="codeIn" maxlength="4" placeholder="例如 K7PQ" autocomplete="off" spellcheck="false"><button class="go small" id="joinBtn">加入</button></div>
+          <div class="netcol wuxia-card join-card">
+            <div class="netcol-head">
+              <span class="netcol-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              </span>
+              <h4>赴会应战</h4>
+            </div>
+            <p class="netnote">输入好友给你的 4 位房间密令</p>
+            <div class="iprow" style="margin-top:14px">
+              <input id="codeIn" maxlength="4" placeholder="例如 K7PQ" autocomplete="off" spellcheck="false">
+              <button class="go small" id="joinBtn" type="button">赴会入局</button>
+            </div>
           </div>
         </div>
         <p id="netStatus" class="netstatus" role="status"></p>
 
-        <div class="matchbox" id="netMatchBox">
-          <p class="netnote or">快速开战</p>
-          <div class="row" style="margin:0"><button class="go" id="matchBtn">快速匹配</button><button class="go rankb" id="rankBtn">排位赛</button></div>
-          <p class="netnote" id="rankLine"></p>
-          <p class="netnote" id="onlineLine"></p>
+        <!-- 快速开战与排位卡片 -->
+        <div class="matchbox wuxia-card match-card" id="netMatchBox">
+          <div class="match-card-head">
+            <span class="match-card-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#e9c46a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              即时匹配 · 论剑切磋
+            </span>
+            <span class="match-card-sub" id="onlineLine">现在没有人在玩，快速匹配会等别人加入</span>
+          </div>
+          <div class="match-actions-row">
+            <button class="go" id="matchBtn" type="button" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              快速匹配
+            </button>
+            <button class="go rankb" id="rankBtn" type="button" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-5-6.5 5 2-7.5L2 9h7z"/></svg>
+              天梯排位赛
+            </button>
+          </div>
+          <p class="netnote" id="rankLine" style="margin-top:10px"></p>
           <p class="netnote" id="accHint"></p>
           <p class="netnote" id="lanLine"></p>
         </div>
       </div>
-      <div class="row"><button class="ghost" data-back>返回</button></div>
+      <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
     </div>
   </div>
 
