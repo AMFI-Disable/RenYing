@@ -11934,16 +11934,23 @@ function bpStart(mode) {
 function bpValid(i) {
   if (!BP || BP.step >= 4 || i < 0 || i >= CHARS.length) return false;
   if (BP.bans.includes(i)) return false;
-  if (BP_STEPS[BP.step][1] === 'pick' && BP.picks.includes(i)) return false;
-  if (BP_STEPS[BP.step][1] === 'pick') {
-    const av = BP.avail && BP.avail[BP_STEPS[BP.step][0]];
+  const stepDef = BP_STEPS[BP.step];
+  if (!stepDef) return false;
+  if (stepDef[1] === 'pick' && BP.picks.includes(i)) return false;
+  if (stepDef[1] === 'pick') {
+    const av = BP.avail && BP.avail[stepDef[0]];
     // 自己能用的角色都被禁或被选走时，放开限制，保证总能选
-    if (av && av.some(k => !BP.bans.includes(k) && !BP.picks.includes(k)) && !av.includes(i)) return false;
+    if (av && av.length && av.some(k => !BP.bans.includes(k) && !BP.picks.includes(k)) && !av.includes(i)) return false;
   }
   return true;
 }
 function bpApply(i) {
-  if (!bpValid(i)) return;
+  if (!BP || BP.step >= 4) return;
+  if (!bpValid(i)) {
+    const fallback = CHARS.map((c, idx) => idx).find(bpValid);
+    if (fallback !== undefined) i = fallback;
+    else return;
+  }
   const [side, type] = BP_STEPS[BP.step];
   (type === 'ban' ? BP.bans : BP.picks)[side] = i;
   BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = 1;
@@ -11965,15 +11972,24 @@ function bpFinish() {
 // 电脑选人：禁掉一个随机角色；选人时六成概率挑能克制你的角色
 function bpCpuChoice() {
   const valid = CHARS.map((c, i) => i).filter(bpValid);
+  if (!valid.length) {
+    // 终极保底：任何未禁未选的角色
+    for (let i = 0; i < CHARS.length; i++) {
+      if (!BP.bans.includes(i) && (BP_STEPS[BP.step][1] !== 'pick' || !BP.picks.includes(i))) return i;
+    }
+    return 0;
+  }
   if (pickLevel === 'adaptive') {
     const fav = adaptFav(), type = BP_STEPS[BP.step][1];
     if (type === 'ban' && fav.best >= 0 && valid.includes(fav.best)) return fav.best;       // 禁你胜率最高的
     if (type === 'pick' && fav.most >= 0 && valid.includes(fav.most)) return fav.most;      // 用你最常用的
   }
   if (BP_STEPS[BP.step][1] === 'pick' && BP.picks[0] >= 0 && Math.random() < 0.6) {
-    const mine = CHARS[BP.picks[0]].id;
-    const counters = valid.filter(i => CHARS[i].beats.includes(mine));
-    if (counters.length) return counters[Math.random() * counters.length | 0];
+    const mine = CHARS[BP.picks[0]] && CHARS[BP.picks[0]].id;
+    if (mine) {
+      const counters = valid.filter(i => CHARS[i] && CHARS[i].beats && CHARS[i].beats.includes(mine));
+      if (counters.length) return counters[Math.random() * counters.length | 0];
+    }
   }
   return valid[Math.random() * valid.length | 0];
 }
@@ -11984,8 +12000,19 @@ function bpTick(dt) {
   document.getElementById('bpTime').classList.toggle('urgent', BP.t <= 8);
   if (!bpAuth()) return;
   const side = BP_STEPS[BP.step][0];
-  if (bpMode === 'cpu' && side === 1) { bpCpuT -= dt; if (bpCpuT <= 0) bpApply(bpCpuChoice()); return; }
-  if (BP.t <= 0) { const v = CHARS.map((c, i) => i).filter(bpValid); bpApply(bpSel >= 0 && bpValid(bpSel) && side === bpMySide() ? bpSel : v[Math.random() * v.length | 0]); }
+  if (bpMode === 'cpu' && side === 1) {
+    bpCpuT -= dt;
+    if (bpCpuT <= 0 || BP.t <= 0) {
+      const choice = bpCpuChoice();
+      bpApply(choice);
+    }
+    return;
+  }
+  if (BP.t <= 0) {
+    const v = CHARS.map((c, i) => i).filter(bpValid);
+    const chosen = bpSel >= 0 && bpValid(bpSel) && side === bpMySide() ? bpSel : (v.length ? v[Math.random() * v.length | 0] : 0);
+    bpApply(chosen);
+  }
 }
 function bpDetailHTML(i) {
   if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式与克制关系。</p>';
