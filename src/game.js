@@ -1,3 +1,60 @@
+// ======================= 国风朱砂篆刻印章系统 =======================
+const EMO_ICON = {'⚔':'战','🔥':'烈','🌲':'关','🥋':'练','🌱':'初','⚡':'疾','👑':'绝','🧠':'谋','🟢':'dot','💾':'存','☁':'云','📜':'卷','📥':'取','📤':'传','📂':'匣','🎁':'礼','💎':'墨','🏆':'胜','🎋':'签','⚠':'警','✅':'成','❌':'否','🔒':'锁','🎉':'贺','📦':'匣','💥':'破','🌪':'风','🌙':'月','🛡':'守','🪶':'羽','❄':'霜','💫':'震','🐉':'龙','🎨':'墨','🗡':'刃','✨':'灵','💨':'遁','★':'starf','☆':'star'};   // emoji → 印章字
+const EMO_RE = new RegExp('(' + Object.keys(EMO_ICON).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')️?\\s?', 'gu');
+const EMO_STRIP = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]\s?/gu;
+function stripEmo(t) { return typeof t === 'string' ? t.replace(EMO_STRIP, '').trim() : t; }
+function sealEl(ch, label) {   // 一枚印章图标；星星和在线状态画成圆点；label 是要直接刻进印章的 2-4 个字
+  const e = document.createElement('i'); e.setAttribute('aria-hidden', 'true');
+  if (ch === 'starf' || ch === 'star') e.className = 'sdot' + (ch === 'starf' ? ' f' : '');
+  else if (ch === 'dot') e.className = 'sdot on';
+  else if (label) { e.className = 'sic w'; e.textContent = label; e.removeAttribute('aria-hidden'); }
+  else { e.className = 'sic'; e.textContent = ch; }
+  return e;
+}
+const SEAL_LABEL = /^[\u4e00-\u9fa5·]{2,4}$/;
+function icoSvg(ch) { return sealEl(ch).outerHTML; }
+function iconizeText(node) {
+  const t = node.nodeValue; EMO_RE.lastIndex = 0;
+  if (!t || !EMO_RE.test(t)) return;
+  const p = node.parentNode; if (!p || /^(SCRIPT|STYLE|TEXTAREA|OPTION|TITLE)$/.test(p.nodeName)) return;
+  const frag = document.createDocumentFragment(); let last = 0; EMO_RE.lastIndex = 0; let m;
+  while ((m = EMO_RE.exec(t))) {
+    if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+    const rest = t.slice(m.index + m[0].length).trim(), ch = EMO_ICON[m[1]];
+    if (ch.length === 1 && !t.slice(0, m.index).trim() && SEAL_LABEL.test(rest)) { frag.appendChild(sealEl(ch, rest)); last = t.length; break; }   // 「印章 + 短词」合成一枚印章
+    frag.appendChild(sealEl(ch));
+    last = m.index + m[0].length;
+  }
+  if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+  p.replaceChild(frag, node);
+}
+function iconizeTree(root) {
+  if (root.nodeType === 3) { iconizeText(root); return; }
+  if (root.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA|CANVAS)$/.test(root.nodeName)) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), list = [];
+  while (w.nextNode()) list.push(w.currentNode);
+  for (const n of list) iconizeText(n);
+}
+// 按钮的 title / placeholder 等属性里也不留 emoji
+function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [root, ...root.querySelectorAll('[title],[placeholder]')]) for (const a of ['title', 'placeholder']) { const v = el.getAttribute && el.getAttribute(a); if (v && EMO_STRIP.test(v)) { EMO_STRIP.lastIndex = 0; el.setAttribute(a, stripEmo(v)); } EMO_STRIP.lastIndex = 0; } }
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const go = () => {
+    if (!document.body) return;
+    iconizeTree(document.body);
+    stripAttrs(document.body);
+    if (typeof MutationObserver !== 'undefined') {
+      new MutationObserver(ms => {
+        for (const m of ms) {
+          if (m.type === 'characterData') iconizeText(m.target);
+          else for (const n of m.addedNodes) { iconizeTree(n); stripAttrs(n); }
+        }
+      }).observe(document.body, { subtree: true, childList: true, characterData: true });
+    }
+  };
+  if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+})();
+
 'use strict';
 /* =====================================================================
    刃影 v0.1 —— 扩展指南
