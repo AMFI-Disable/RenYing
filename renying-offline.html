@@ -9772,6 +9772,7 @@ function renderCodex() {
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
   const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * 10) / 10;
   const fun = (typeof SKILL_FUN !== 'undefined' && SKILL_FUN[c.id]) || {};
+  const sh = n => { const p = (n || '').split('·'); return p.length > 1 ? [p[0].trim(), p[1].trim()] : ['', n || '']; };
   const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
   const tile = (icon, label, val, desc, cd, wide, moveKey) => {
     const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
