@@ -1701,7 +1701,10 @@ const CHAPTERS = [
   { name: '雪岭', pool: ['blade', 'archer', 'owl', 'binder'], boss: 'lingshuang', lv: 'normal' },
   { name: '血月谷', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'feiying', lv: 'hard' },
   { name: '雷音顶', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'leiming', lv: 'hard' },
+  { name: '醉翁亭', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'zuixian', lv: 'hard' },
+  { name: '陨星渊', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'gouchen', lv: 'hard' },
   { name: '云雀崖', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yanling', lv: 'hard' },
+  { name: '清音小筑', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuxiao', lv: 'impossible' },
   { name: '月宫', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuehua', lv: 'impossible' },
   { name: '墨渊', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'moyu', lv: 'impossible' },
 ];
@@ -1794,7 +1797,10 @@ function stageShowEnd(win, stars, info) {
     lingshuang: 'ls_plum',
     feiying: 'fy_jade',
     leiming: 'lm_violet',
+    zuixian: 'zx_amber',
+    gouchen: 'gc_crimson',
     yanling: 'yl_raven',
+    yuxiao: 'yx_snow',
     yuehua: 'yh_sakura',
     moyu: 'my_cinnabar'
   };
@@ -7199,6 +7205,21 @@ const HERO_FULL_DEMO = {
   ]
 };
 
+const SKILL_FUN = {
+  qingfeng: { passive: '师父说他悟性一般，攒气倒是一绝。', light: '五剑连刺，每一剑都在心里喊招式名。', charge: '憋了半天就为这一下，憋不住就是普通一刀。', air: '跳起来砍人，是剑客的基本修养。', skill: '一步过去，对手还没回头就定住了。', ranged: '剑气出鞘，隔空也要把你挑上天。', ult: '残月一出，月亮都得往旁边让让。', esc: '打不过就飞，这叫战术性腾空。' },
+  feiying: { passive: '血条薄如纸，跑得比消息还快。', light: '刀快到连自己都看不清。', charge: '蓄力背刺，专治站桩选手。', air: '从天而降的不只有惊喜。', skill: '“我在你身后。”经典台词，屡试不爽。', ranged: '四枚飞镖，总有一枚能中。', ult: '九个分身，哪个是真的？都是。', esc: '留下一缕烟，人早溜了。' },
+  tieshan: { passive: '出门从不带伞，雨点打在身上算挠痒。', light: '慢是慢了点，挨一下你就知道了。', charge: '蓄满这一刀，连地板都害怕。', air: '他能跳起来，本身就是奇迹。', skill: '砸地之前，请确认脚下不是自家院子。', ranged: '人形攻城锤，撞门从来不敲。', ult: '跳起来砸你，落点还能自己挑。', esc: '一百八十斤腾空，地面松了口气。' },
+  lingshuang: { passive: '一寸长一寸强，贴脸了一寸也不强。', light: '枪出如龙，每一下都戳在节奏上。', charge: '一枪捅穿防御，顺便捅穿你的心态。', air: '空中挑枪，专挑跳得高的。', skill: '先退半步，是为了捅得更远。', ranged: '转起来像风车，暗器都绕道走。', ult: '时间停一下，够她把话说完。', esc: '枪往地上一撑，人就弹出去了。' },
+  liuyun: { passive: '三段跳是基本操作，落地才算失误。', light: '扇子不是用来扇风的，是用来扇人的。', charge: '蓄一口大风，把人吹到地图那头。', air: '他在天上的时间比在地上多。', skill: '一扇子风刃，顺手吹散飞镖。', ranged: '后翻一下原地起风，优雅退场。', ult: '今日天气：平地龙卷，有人起飞。', esc: '风往哪吹，他就往哪飘。' },
+  leiming: { passive: '出家人不打诳语，只打十连。', light: '十连快拳，数到第七下你就晕了。', charge: '蓄力一拳，阿弥陀佛。', air: '跳起来的和尚最危险。', skill: '带电冲拳，碰一下全身发麻。', ranged: '一脚跺出雷柱，邻居以为要下雨。', ult: '三道天雷，师父说这招不许在庙里用。', esc: '金刚一吼，震开一切。' },
+  moyu: { passive: '画师的笔，比刀还难缠。', light: '每一笔都是真迹，挨打也算收藏。', charge: '大印落下，盖章认证“你输了”。', air: '空中挥毫，落笔即是落人。', skill: '地上画个圈，踩进去就别想走。', ranged: '一团墨泼过去，糊脸又糊眼。', ult: '画龙点睛，龙就真的飞出来了。', esc: '化作一滩墨，洗都洗不掉。' },
+  yuehua: { passive: '不打架的时候会悄悄回血，很养生。', light: '双刀如月，一刀圆一刀缺。', charge: '合璧一斩，月亮都满了。', air: '月下起舞，顺便斩人。', skill: '你打过来，我就照回去，物理反弹。', ranged: '月轮会自己飞回来，像回旋镖但更贵。', ult: '月华如水，泼你一身。', esc: '踏月而退，拒绝贴贴。' },
+  yanling: { passive: '恐高？不存在的。', light: '翅膀扇人，羽毛乱飞。', charge: '振翅一扑，落地像只大鹅。', air: '天上就是她的主场。', skill: '鹰击长空，专啄脑门。', ranged: '三根翎羽，一根比一根快。', ult: '漫天羽毛，下雨天记得带伞。', esc: '振翅一飞，你够不着了。' },
+  yuxiao: { passive: '打人也讲节奏，三拍一小节。', light: '箫管敲头，咚咚咚，是节拍。', charge: '横扫一记，音符都震飞了。', air: '跳起来吹一个高音。', skill: '攒满三个音符再吹，伤害翻倍不是梦。', ranged: '你的暗器我收下了，原样奉还。', ult: '广陵散于今绝矣？今天再奏一遍。', esc: '一个休止符，人先撤了。' },
+  zuixian: { passive: '酒量即战力，路走不直，拳却很准。', light: '东倒西歪五连拳，你永远猜不到下一拳。', charge: '蓄力一撞，像极了醉汉撞钟。', air: '跳起来，然后不知道会落在哪。', skill: '先干为敬，喝够了就喷火。', ranged: '看似摔倒，其实是战术翻滚。', ult: '八位神仙轮流揍你，排面拉满。', esc: '酒醒了一半，跑得飞快。' },
+  gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' }
+};
+
 let cxPrev = null;   // 正在预览的皮肤（null = 用自己装备的）
 function renderCodex() {
   const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult];
@@ -7231,11 +7252,13 @@ function renderCodex() {
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
   const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * 10) / 10;
+  const fun = (typeof SKILL_FUN !== 'undefined' && SKILL_FUN[c.id]) || {};
   const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
   const tile = (icon, label, val, desc, cd, wide, moveKey) => {
     const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
     const mini = moveKey ? `<div class="card-mini-win"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
-    return `<div class="tile t-m${wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
+    const f = moveKey && fun[moveKey];
+    return `<div class="tile t-m${wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${f ? `<div class="tf">“${f}”</div>` : ''}${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
   };
   const mTypes = HERO_MOVE_TYPES[c.id] || {};
   const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee' };
@@ -7259,7 +7282,7 @@ function renderCodex() {
         return `<b>青锋传 · 月下起意</b><br>青锋行守住第十波大关，即可领悟绝学并解锁专属传说皮肤「青锋行」。`;
       }
       const ch = CHAPTERS[chIdx];
-      const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar' })[c.id];
+      const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar', yuxiao: 'yx_snow', zuixian: 'zx_amber', gouchen: 'gc_crimson' })[c.id];
       const rSkin = rSkinKey && SKINS[rSkinKey];
       const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
       const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
@@ -7619,6 +7642,9 @@ const SCENES = {
   yl_raven: { sky: ['#08090e', '#181a24', '#2c2e3c', '#16171e'], orb: 'moon', orbC: '225,225,240', mist: '170,170,200', mtn: ['#22232e', '#181922'], wx: 'feather', wxC: '175,175,200', hit: 'feathers', hitC: '180,180,210' },
   yl_phoenix: { sky: ['#160604', '#4a1206', '#b23a12', '#501806'], orb: 'phoenix', orbC: '255,130,60', mist: '255,120,60', mtn: ['#4a160a', '#300c06'], bam: ['#1a0604', '#100302'], wx: 'ember', wxC: '255,150,60', hit: 'feathers', hitC: '255,140,60', stars: 0.1, rays: true },
   yl_blizzard: { sky: ['#0a1422', '#163050', '#2d5c92', '#17365c'], orb: 'moon', orbC: '215,240,255', mist: '180,225,255', mtn: ['#1e426e', '#122a48'], bam: ['#0a182c', '#050f1c'], wx: 'feather', wxC: '220,240,255', hit: 'feathers', hitC: '150,210,255', stars: 0.3, rays: true },
+  yx_snow: { sky: ['#0a1824', '#143048', '#2d587c', '#183854'], orb: 'moon', orbC: '210,240,255', mist: '180,230,255', mtn: ['#1a3854', '#10263c'], bam: ['#0a1c2c', '#06121e'], wx: 'snow', wxC: '210,240,255', hit: 'snowflake', hitC: '170,220,255', stars: 0.4 },
+  zx_amber: { sky: ['#1c1006', '#44260e', '#8c521c', '#42240e'], orb: 'moon', orbC: '255,210,130', mist: '255,180,100', mtn: ['#3e2410', '#281608'], bam: ['#180e06', '#100802'], wx: 'ember', wxC: '255,180,80', hit: 'sunburst', hitC: '255,190,90', stars: 0.2 },
+  gc_crimson: { sky: ['#160608', '#381014', '#7a1e28', '#380e14'], orb: 'bloodmoon', orbC: '255,110,110', mist: '230,80,90', mtn: ['#300c12', '#1e060a'], bam: ['#140406', '#0a0204'], wx: 'ash', wxC: '255,100,100', hit: 'shards', hitC: '255,120,110', stars: 0.3 },
 };
 const SCN_DEF = { mtn: ['#241f48', '#1a1636'], bam: ['#110f26', '#0b0a1c'], mist: '190,160,220' };
 const WX_RISE = { ember: 1, gold: 1, lava: 1 };
