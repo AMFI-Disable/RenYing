@@ -1174,7 +1174,26 @@ function onSys(m) {
   } else if (m.sys === 'ready') {
     NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
     updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
+    if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
     onNetOpen();
+  } else if (m.sys === 'room_rule') {
+    setRoomModeUI(m.rule);
+    const nameMap = { normal: '标准论剑 (BO3)', bushido: '一击必杀 (1血决死)', chaos: '天机乱斗 (随机词条)' };
+    toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
+  } else if (m.sys === 'rematch') {
+    if (m.action === 'ask') {
+      say('对手请求再战一局！', 1.2, 'go');
+      const again = $id('againBtn');
+      if (again) again.textContent = '接受再战 (BO3)';
+    } else if (m.action === 'repick') {
+      say('重新选人切磋', 1.0, 'go');
+      if (NET.role === 'host') bpStart('net');
+    } else if (m.action === 'start') {
+      if (NET.role === 'client') {
+        // 房主直接开启同阵容再战，收到后等 rstart 或 round 同步
+        say('再战开启！', 1.0, 'go');
+      }
+    }
   }
   else if (m.sys === 'result') {
     if (m.me) setAcc(m.me);
@@ -1951,11 +1970,16 @@ function startMatch(mode, level, chars) {
 function startRound() {
   if (typeof applySkins === 'function') applySkins();
   A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
-  if (M.mode === 'bushido') {
+  const isBushido = M.mode === 'bushido' || (M.mode === 'net' && netRoomMode === 'bushido');
+  if (isBushido) {
     A.maxHp = B.maxHp = 1;
     A.hp = B.hp = A.lagHp = B.lagHp = 1;
     A.guard = A.maxGuard = 100;
     B.guard = B.maxGuard = 100;
+  }
+  if (M.mode === 'net' && netRoomMode === 'chaos') {
+    if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
+    if (NET.role === 'host') rollChaosMutation();
   }
   if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
@@ -2010,7 +2034,9 @@ function updateMatch() {
       M.t = 0;
       M.koWinner = winner;
     } else if (M.mode !== 'demo' && M.mode !== 'train') {
-      if (M.mode === 'chaos') updateChaos(STEP);
+      if (M.mode === 'chaos' || (M.mode === 'net' && netRoomMode === 'chaos')) {
+        if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
+      }
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
         const ra = A.hp / A.maxHp, rb = B.hp / B.maxHp;
@@ -2113,7 +2139,15 @@ function showEnd(w) {
   document.getElementById('endSub').textContent = M.mode === 'cpu' ? (w === 0 ? '月下无敌手' : '再磨一磨剑')
     : M.mode === 'net' ? `${w === localIdx() ? '你赢了' : '你输了'}，比分 ${M.wins[0]} : ${M.wins[1]}` : `比分 ${M.wins[0]} : ${M.wins[1]}`;
   const again = document.getElementById('againBtn');
-  again.disabled = isClient(); again.textContent = isClient() ? '等房主再战' : '再战';
+  const repickBtn = document.getElementById('netRepickBtn');
+  if (repickBtn) repickBtn.classList.toggle('hidden', M.mode !== 'net');
+  if (M.mode === 'net') {
+    again.disabled = false;
+    again.textContent = '再战一局 (BO3)';
+  } else {
+    again.disabled = false;
+    again.textContent = '再战';
+  }
   setTimeout(() => showScreen('end'), 300);
 }
 function endRound() {
@@ -8695,7 +8729,23 @@ if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => startChaos(chao
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
-  if (M.mode === 'net') { if (NET.role === 'host' && NET.open) bpStart('net'); return; }
+  if (M.mode === 'net') {
+    if (!NET.open) {
+      toast('网络已断开');
+      return;
+    }
+    if (NET.role === 'host') {
+      const picks = [A.chIdx, B.chIdx];
+      const seed = (Math.random() * 2147483647) | 0;
+      send({ sys: 'rematch', action: 'start' });
+      send({ rstart: { ch: picks, seed } });
+      rollStart(picks, seed);
+    } else {
+      send({ sys: 'rematch', action: 'ask' });
+      toast('已向房主发送再战请求');
+    }
+    return;
+  }
   if (M.mode === 'tag3') {
     startTag3Match(tag3Team, pickEnemyTag3Team(tag3Team), tag3Level);
     return;
@@ -8714,6 +8764,20 @@ document.getElementById('againBtn').addEventListener('click', () => {
   }
   bpStart('cpu');
 });
+
+const netRepickBtnEl = document.getElementById('netRepickBtn');
+if (netRepickBtnEl) {
+  netRepickBtnEl.addEventListener('click', () => {
+    if (M.mode !== 'net' || !NET.open) return;
+    if (NET.role === 'host') {
+      send({ sys: 'rematch', action: 'repick' });
+      bpStart('net');
+    } else {
+      send({ sys: 'rematch', action: 'repick' });
+      toast('已请求重新选人');
+    }
+  });
+}
 document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; showScreen(null); refocusGame(); });
 document.getElementById('pause').addEventListener('click', e => {
   if (e.target === document.getElementById('pause')) {
@@ -10279,6 +10343,36 @@ function postRoomToCommunity() {
     toast('已将约战令发送至【江湖驿站 · 切磋约战】！');
   } else {
     toast(`已生成约战令：房间码 ${code}`);
+  }
+}
+
+let netRoomMode = 'normal';   // 'normal' (BO3), 'bushido' (1血决死), 'chaos' (天机乱斗)
+
+const lobbyModesSegEl = $id('lobbyModesSeg');
+if (lobbyModesSegEl) {
+  lobbyModesSegEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-mode]');
+    if (!b || !b.dataset.mode) return;
+    if (NET.role !== 'host') {
+      toast('仅擂主可调整切磋模式');
+      return;
+    }
+    netRoomMode = b.dataset.mode;
+    for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+    send({ sys: 'room_rule', rule: netRoomMode });
+    const nameMap = { normal: '标准论剑 (BO3)', bushido: '一击必杀 (1血决死)', chaos: '天机乱斗 (随机词条)' };
+    toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
+    SFX.slice();
+  });
+}
+
+function setRoomModeUI(rule) {
+  netRoomMode = rule || 'normal';
+  if (lobbyModesSegEl) {
+    for (const btn of lobbyModesSegEl.querySelectorAll('button')) {
+      btn.classList.toggle('sel', btn.dataset.mode === netRoomMode);
+      btn.disabled = NET.role !== 'host';
+    }
   }
 }
 

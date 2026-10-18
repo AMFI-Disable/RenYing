@@ -34,8 +34,8 @@ const P2P = {
 };
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
 const P2P_SYS = {
-  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong'],
-  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong']
+  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule'],
+  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 

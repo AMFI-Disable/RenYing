@@ -1254,6 +1254,19 @@
             </div>
           </div>
 
+          <!-- 私人擂台赛制规则切换 (仅房主可调，默认标准三局两胜) -->
+          <div class="lobby-rules-row" style="margin:8px 0 12px;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <span style="font-size:12.5px;color:var(--gold);display:inline-flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              擂台切磋模式：
+            </span>
+            <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px">
+              <button class="ghost small sel" data-mode="normal" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">标准论剑 (BO3)</button>
+              <button class="ghost small" data-mode="bushido" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">一击必杀 (1血决死)</button>
+              <button class="ghost small" data-mode="chaos" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">天机乱斗 (随机词条)</button>
+            </div>
+          </div>
+
           <!-- 擂台操作 -->
           <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
             <button class="ghost small" id="lobbyCancelBtn" type="button" style="padding:6px 20px;font-size:13px">解散擂台 / 退出</button>
@@ -1281,14 +1294,14 @@
           </div>
         </div>
 
-        <!-- 快速开战与排位卡片 -->
+        <!-- 快速开战与排位卡片 (全局统一池，零碎片化) -->
         <div class="matchbox wuxia-card match-card" id="netMatchBox">
           <div class="match-card-head">
             <span class="match-card-title">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#e9c46a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               即时匹配 · 论剑切磋
             </span>
-            <span class="match-card-sub" id="onlineLine">现在没有人在玩，快速匹配会等别人加入</span>
+            <span class="sub-badge" style="background:rgba(233,196,106,0.12);border-color:rgba(233,196,106,0.3);color:var(--gold);font-size:12px;padding:2px 8px">武林通则 · 标准三局两胜 (BO3) 全球直通池</span>
           </div>
           <div class="match-actions-row">
             <button class="go" id="matchBtn" type="button" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
@@ -1700,7 +1713,12 @@
 
   <div id="end" class="scr">
     <div class="panel"><h2 id="endTitle">青锋 胜</h2><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
-      <div class="row"><button class="go" id="againBtn">再战</button><button class="ghost" id="rpWatch">看回放</button><button class="ghost" id="menuBtn">返回菜单</button></div>
+      <div class="row">
+        <button class="go" id="againBtn">再战</button>
+        <button class="ghost hidden" id="netRepickBtn">换人再战</button>
+        <button class="ghost" id="rpWatch">看回放</button>
+        <button class="ghost" id="menuBtn">返回菜单</button>
+      </div>
     </div>
   </div>
 
@@ -3620,7 +3638,26 @@ function onSys(m) {
   } else if (m.sys === 'ready') {
     NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
     updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
+    if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
     onNetOpen();
+  } else if (m.sys === 'room_rule') {
+    setRoomModeUI(m.rule);
+    const nameMap = { normal: '标准论剑 (BO3)', bushido: '一击必杀 (1血决死)', chaos: '天机乱斗 (随机词条)' };
+    toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
+  } else if (m.sys === 'rematch') {
+    if (m.action === 'ask') {
+      say('对手请求再战一局！', 1.2, 'go');
+      const again = $id('againBtn');
+      if (again) again.textContent = '接受再战 (BO3)';
+    } else if (m.action === 'repick') {
+      say('重新选人切磋', 1.0, 'go');
+      if (NET.role === 'host') bpStart('net');
+    } else if (m.action === 'start') {
+      if (NET.role === 'client') {
+        // 房主直接开启同阵容再战，收到后等 rstart 或 round 同步
+        say('再战开启！', 1.0, 'go');
+      }
+    }
   }
   else if (m.sys === 'result') {
     if (m.me) setAcc(m.me);
@@ -4397,11 +4434,16 @@ function startMatch(mode, level, chars) {
 function startRound() {
   if (typeof applySkins === 'function') applySkins();
   A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
-  if (M.mode === 'bushido') {
+  const isBushido = M.mode === 'bushido' || (M.mode === 'net' && netRoomMode === 'bushido');
+  if (isBushido) {
     A.maxHp = B.maxHp = 1;
     A.hp = B.hp = A.lagHp = B.lagHp = 1;
     A.guard = A.maxGuard = 100;
     B.guard = B.maxGuard = 100;
+  }
+  if (M.mode === 'net' && netRoomMode === 'chaos') {
+    if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
+    if (NET.role === 'host') rollChaosMutation();
   }
   if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
@@ -4456,7 +4498,9 @@ function updateMatch() {
       M.t = 0;
       M.koWinner = winner;
     } else if (M.mode !== 'demo' && M.mode !== 'train') {
-      if (M.mode === 'chaos') updateChaos(STEP);
+      if (M.mode === 'chaos' || (M.mode === 'net' && netRoomMode === 'chaos')) {
+        if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
+      }
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
         const ra = A.hp / A.maxHp, rb = B.hp / B.maxHp;
@@ -4559,7 +4603,15 @@ function showEnd(w) {
   document.getElementById('endSub').textContent = M.mode === 'cpu' ? (w === 0 ? '月下无敌手' : '再磨一磨剑')
     : M.mode === 'net' ? `${w === localIdx() ? '你赢了' : '你输了'}，比分 ${M.wins[0]} : ${M.wins[1]}` : `比分 ${M.wins[0]} : ${M.wins[1]}`;
   const again = document.getElementById('againBtn');
-  again.disabled = isClient(); again.textContent = isClient() ? '等房主再战' : '再战';
+  const repickBtn = document.getElementById('netRepickBtn');
+  if (repickBtn) repickBtn.classList.toggle('hidden', M.mode !== 'net');
+  if (M.mode === 'net') {
+    again.disabled = false;
+    again.textContent = '再战一局 (BO3)';
+  } else {
+    again.disabled = false;
+    again.textContent = '再战';
+  }
   setTimeout(() => showScreen('end'), 300);
 }
 function endRound() {
@@ -11141,7 +11193,23 @@ if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => startChaos(chao
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
-  if (M.mode === 'net') { if (NET.role === 'host' && NET.open) bpStart('net'); return; }
+  if (M.mode === 'net') {
+    if (!NET.open) {
+      toast('网络已断开');
+      return;
+    }
+    if (NET.role === 'host') {
+      const picks = [A.chIdx, B.chIdx];
+      const seed = (Math.random() * 2147483647) | 0;
+      send({ sys: 'rematch', action: 'start' });
+      send({ rstart: { ch: picks, seed } });
+      rollStart(picks, seed);
+    } else {
+      send({ sys: 'rematch', action: 'ask' });
+      toast('已向房主发送再战请求');
+    }
+    return;
+  }
   if (M.mode === 'tag3') {
     startTag3Match(tag3Team, pickEnemyTag3Team(tag3Team), tag3Level);
     return;
@@ -11160,6 +11228,20 @@ document.getElementById('againBtn').addEventListener('click', () => {
   }
   bpStart('cpu');
 });
+
+const netRepickBtnEl = document.getElementById('netRepickBtn');
+if (netRepickBtnEl) {
+  netRepickBtnEl.addEventListener('click', () => {
+    if (M.mode !== 'net' || !NET.open) return;
+    if (NET.role === 'host') {
+      send({ sys: 'rematch', action: 'repick' });
+      bpStart('net');
+    } else {
+      send({ sys: 'rematch', action: 'repick' });
+      toast('已请求重新选人');
+    }
+  });
+}
 document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; showScreen(null); refocusGame(); });
 document.getElementById('pause').addEventListener('click', e => {
   if (e.target === document.getElementById('pause')) {
@@ -12728,6 +12810,36 @@ function postRoomToCommunity() {
   }
 }
 
+let netRoomMode = 'normal';   // 'normal' (BO3), 'bushido' (1血决死), 'chaos' (天机乱斗)
+
+const lobbyModesSegEl = $id('lobbyModesSeg');
+if (lobbyModesSegEl) {
+  lobbyModesSegEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-mode]');
+    if (!b || !b.dataset.mode) return;
+    if (NET.role !== 'host') {
+      toast('仅擂主可调整切磋模式');
+      return;
+    }
+    netRoomMode = b.dataset.mode;
+    for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+    send({ sys: 'room_rule', rule: netRoomMode });
+    const nameMap = { normal: '标准论剑 (BO3)', bushido: '一击必杀 (1血决死)', chaos: '天机乱斗 (随机词条)' };
+    toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
+    SFX.slice();
+  });
+}
+
+function setRoomModeUI(rule) {
+  netRoomMode = rule || 'normal';
+  if (lobbyModesSegEl) {
+    for (const btn of lobbyModesSegEl.querySelectorAll('button')) {
+      btn.classList.toggle('sel', btn.dataset.mode === netRoomMode);
+      btn.disabled = NET.role !== 'host';
+    }
+  }
+}
+
 if ($id('postToComBtn')) $id('postToComBtn').addEventListener('click', postRoomToCommunity);
 if ($id('lobbyCancelBtn')) $id('lobbyCancelBtn').addEventListener('click', () => {
   netLeave();
@@ -13017,8 +13129,8 @@ const P2P = {
 };
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
 const P2P_SYS = {
-  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong'],
-  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong']
+  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule'],
+  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 

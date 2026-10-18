@@ -391,6 +391,19 @@
             </div>
           </div>
 
+          <!-- 私人擂台赛制规则切换 (仅房主可调，默认标准三局两胜) -->
+          <div class="lobby-rules-row" style="margin:8px 0 12px;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <span style="font-size:12.5px;color:var(--gold);display:inline-flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              擂台切磋模式：
+            </span>
+            <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px">
+              <button class="ghost small sel" data-mode="normal" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">标准论剑 (BO3)</button>
+              <button class="ghost small" data-mode="bushido" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">一击必杀 (1血决死)</button>
+              <button class="ghost small" data-mode="chaos" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">天机乱斗 (随机词条)</button>
+            </div>
+          </div>
+
           <!-- 擂台操作 -->
           <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
             <button class="ghost small" id="lobbyCancelBtn" type="button" style="padding:6px 20px;font-size:13px">解散擂台 / 退出</button>
@@ -418,14 +431,14 @@
           </div>
         </div>
 
-        <!-- 快速开战与排位卡片 -->
+        <!-- 快速开战与排位卡片 (全局统一池，零碎片化) -->
         <div class="matchbox wuxia-card match-card" id="netMatchBox">
           <div class="match-card-head">
             <span class="match-card-title">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#e9c46a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               即时匹配 · 论剑切磋
             </span>
-            <span class="match-card-sub" id="onlineLine">现在没有人在玩，快速匹配会等别人加入</span>
+            <span class="sub-badge" style="background:rgba(233,196,106,0.12);border-color:rgba(233,196,106,0.3);color:var(--gold);font-size:12px;padding:2px 8px">武林通则 · 标准三局两胜 (BO3) 全球直通池</span>
           </div>
           <div class="match-actions-row">
             <button class="go" id="matchBtn" type="button" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
@@ -837,7 +850,12 @@
 
   <div id="end" class="scr">
     <div class="panel"><h2 id="endTitle">青锋 胜</h2><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
-      <div class="row"><button class="go" id="againBtn">再战</button><button class="ghost" id="rpWatch">看回放</button><button class="ghost" id="menuBtn">返回菜单</button></div>
+      <div class="row">
+        <button class="go" id="againBtn">再战</button>
+        <button class="ghost hidden" id="netRepickBtn">换人再战</button>
+        <button class="ghost" id="rpWatch">看回放</button>
+        <button class="ghost" id="menuBtn">返回菜单</button>
+      </div>
     </div>
   </div>
 
