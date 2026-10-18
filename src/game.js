@@ -1010,6 +1010,9 @@ function netReset() {
   if (NET.ws) { const w = NET.ws; NET.ws = null; try { w.close(); } catch (e) {} }
   p2pClose();
   NET.open = false; NET.out = []; NET.presses.length = 0; NET.remote.clear();
+  if (typeof updateNetLobby === 'function') updateNetLobby(false);
+  if ($id('copyCodeBtn')) $id('copyCodeBtn').classList.add('hidden');
+  if ($id('postToComBtn')) $id('postToComBtn').classList.add('hidden');
 }
 let savedNetMode = null;
 try { savedNetMode = localStorage.getItem('renying-net-mode'); } catch (e) {}
@@ -1161,10 +1164,18 @@ function onSys(m) {
     if (m.role === 'host') {
       $id('roomCode').textContent = m.code;
       if ($id('copyCodeBtn')) $id('copyCodeBtn').classList.remove('hidden');
+      if ($id('postToComBtn')) $id('postToComBtn').classList.remove('hidden');
+      updateNetLobby(true, (ACC && ACC.name) || '侠客 (房主)', '静候对手入局…', m.code, false);
       netStatus('房间已建好。把上面的房间码发给朋友，静候他入局…');
+    } else {
+      updateNetLobby(true, '擂主 (房主)', (ACC && ACC.name) || '侠士 (应战)', m.code, true);
+      netStatus('入局成功，正在同步战局…');
     }
-    else netStatus('入局成功，即刻选人…');
-  } else if (m.sys === 'ready') { NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true; onNetOpen(); }
+  } else if (m.sys === 'ready') {
+    NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
+    updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
+    onNetOpen();
+  }
   else if (m.sys === 'result') {
     if (m.me) setAcc(m.me);
     const kind = m.ranked ? '排行榜' : '切磋战绩', pm = m.won ? '+1 胜' : '+1 负', pr = m.prog || {};
@@ -10171,6 +10182,7 @@ function setNetMode(mode) {
   if ($id('netBannerP2P')) $id('netBannerP2P').classList.toggle('hidden', isServer);
   if ($id('srvBox')) $id('srvBox').classList.toggle('hidden', !isServer || SERVED);
   if ($id('netMatchBox')) $id('netMatchBox').classList.toggle('hidden', !isServer);
+  if ($id('diagProtoVal')) $id('diagProtoVal').textContent = isServer ? 'WebSocket (LAN)' : 'WebRTC P2P';
 }
 
 if ($id('netModeServerBtn')) {
@@ -10219,6 +10231,63 @@ if ($id('srvClearBtn')) {
     netStatus(SERVED ? '已重置为当前服务器：' + location.host : '已重置为本机默认地址 (127.0.0.1:8765)');
   });
 }
+
+function updateNetDiagRtt(ms) {
+  if (typeof ms !== 'number' || isNaN(ms)) return;
+  const dot = $id('diagRttDot'), val = $id('diagRttVal');
+  if (val) val.textContent = `${ms}ms`;
+  if (dot) {
+    dot.className = 'diag-dot' + (ms > 200 ? ' bad' : ms > 90 ? ' warn' : '');
+  }
+  const lping = $id('lobbyPingText');
+  if (lping) {
+    lping.textContent = `延迟 ${ms}ms`;
+    lping.style.color = ms > 200 ? 'var(--cinnabar)' : ms > 90 ? 'var(--gold)' : 'var(--jade)';
+  }
+}
+window.updateNetDiagRtt = updateNetDiagRtt;
+
+function updateNetLobby(active, hostName, peerName, roomCode, peerReady) {
+  const box = $id('netLobbyBox'), cols = $id('netCols');
+  if (!box) return;
+  if (!active) {
+    box.classList.add('hidden');
+    if (cols) cols.classList.remove('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  if (cols) cols.classList.add('hidden');
+  if ($id('lobbyRoomBadge')) $id('lobbyRoomBadge').textContent = `房间密令：${roomCode || '----'}`;
+  if ($id('lobbyHostName')) $id('lobbyHostName').textContent = hostName || '擂主 (房主)';
+  if ($id('lobbyPeerName')) $id('lobbyPeerName').textContent = peerName || (NET.role === 'host' ? '静候应战者入局…' : '正在连线…');
+  if ($id('lobbyHostState')) $id('lobbyHostState').textContent = '● 设擂就绪';
+  if ($id('lobbyPeerState')) {
+    $id('lobbyPeerState').textContent = peerReady ? '● 应战就绪' : (NET.role === 'host' ? '○ 等待加入' : '○ 连接中');
+    $id('lobbyPeerState').style.color = peerReady ? '#2bd49a' : 'var(--dim)';
+  }
+}
+window.updateNetLobby = updateNetLobby;
+
+function postRoomToCommunity() {
+  const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();
+  if (!code) { toast('请先设擂建房生成房间码'); return; }
+  const myName = (ACC && ACC.name) || '江湖擂主';
+  const text = `【设擂约战】房间码「${code}」，以武会友，月下对决，静候各路豪杰赴会！[e:fight]`;
+  if (typeof comSend === 'function') {
+    comActiveChan = 'fight';
+    comSend(text);
+    toast('已将约战令发送至【江湖驿站 · 切磋约战】！');
+  } else {
+    toast(`已生成约战令：房间码 ${code}`);
+  }
+}
+
+if ($id('postToComBtn')) $id('postToComBtn').addEventListener('click', postRoomToCommunity);
+if ($id('lobbyCancelBtn')) $id('lobbyCancelBtn').addEventListener('click', () => {
+  netLeave();
+  updateNetLobby(false);
+  netStatus('已退出武林擂台');
+});
 
 function copyRoomInvite() {
   const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();

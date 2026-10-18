@@ -169,6 +169,25 @@
   .match-card-sub { font-size: 12.5px; color: var(--dim); }
   .match-actions-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .match-actions-row .go { margin: 0; min-width: 220px; font-size: 24px; padding: 6px 26px; }
+  .net-diag-bar {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(10, 11, 22, 0.65); border: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 8px auto 10px; max-width: 480px; font-size: 12px;
+  }
+  .diag-item { display: inline-flex; align-items: center; gap: 5px; color: var(--dim); }
+  .diag-item .diag-label { color: var(--dim); }
+  .diag-item .diag-val { color: var(--ink); font-weight: 500; font-family: ui-monospace, Menlo, monospace; }
+  .diag-div { width: 1px; height: 12px; background: rgba(255, 255, 255, 0.12); }
+  .diag-dot { width: 7px; height: 7px; border-radius: 50%; background: #2bd49a; box-shadow: 0 0 6px rgba(43, 212, 154, 0.7); }
+  .diag-dot.warn { background: #e9c46a; box-shadow: 0 0 6px rgba(233, 196, 106, 0.7); }
+  .diag-dot.bad { background: #ff5e5e; box-shadow: 0 0 6px rgba(255, 94, 94, 0.7); }
+  .lobby-card {
+    border: 1px solid rgba(233, 196, 106, 0.35);
+    background: linear-gradient(160deg, rgba(22, 20, 42, 0.9), rgba(10, 9, 20, 0.92));
+    animation: fadeIn 0.25s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
   .go.small { font-size: 22px; padding: 6px 22px 6px 30px; letter-spacing: .3em; margin: 8px auto 0; }
   .iprow { display: flex; gap: 8px; margin-top: 8px; width: 100%; max-width: 380px; }
   .iprow input { flex: 1; min-width: 0; font: 15px ui-monospace, Menlo, monospace; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); -webkit-user-select: text; user-select: text; }
@@ -1166,7 +1185,7 @@
         </div>
 
         <!-- 水墨风双栏卡片：设擂建房 & 赴会应战 -->
-        <div class="netcols">
+        <div class="netcols" id="netCols">
           <div class="netcol wuxia-card host-card">
             <div class="netcol-head">
               <span class="netcol-icon">
@@ -1177,10 +1196,16 @@
             <p class="netnote">摆开武林擂台，生成 4 位密令暗号</p>
             <button class="go small" id="hostBtn" type="button">设擂建房</button>
             <p class="roomcode" id="roomCode" title="点击复制房间码"></p>
-            <button class="ghost small hidden" id="copyCodeBtn" style="margin-top:6px;font-size:13px;padding:5px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:5px" type="button">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              复制房间码 / 链接
-            </button>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+              <button class="ghost small hidden" id="copyCodeBtn" style="margin-top:6px;font-size:13px;padding:5px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:5px" type="button">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                复制房间码 / 链接
+              </button>
+              <button class="ghost small hidden" id="postToComBtn" style="margin-top:6px;font-size:13px;padding:5px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;color:var(--gold);border-color:rgba(233,196,106,0.4)" type="button">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                发约战到驿站
+              </button>
+            </div>
           </div>
           <div class="netcol wuxia-card join-card">
             <div class="netcol-head">
@@ -1196,7 +1221,65 @@
             </div>
           </div>
         </div>
+
+        <!-- 交互式等待室卡片（建房/加入后展示双方状态） -->
+        <div class="wuxia-card lobby-card hidden" id="netLobbyBox" style="margin-top:12px;padding:18px 22px;">
+          <div class="lobby-head" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span class="lobby-title" style="font-family:var(--title);font-size:20px;color:var(--gold);display:inline-flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              武林擂台 · 候战厅
+            </span>
+            <span class="lobby-room-badge" id="lobbyRoomBadge" style="font-family:ui-monospace,Menlo,monospace;font-size:16px;color:var(--gold);background:rgba(233,196,106,0.12);padding:2px 10px;border-radius:6px;border:1px solid rgba(233,196,106,0.3)">房间密令：----</span>
+          </div>
+
+          <div class="lobby-duo" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin:14px 0">
+            <!-- 房主方 -->
+            <div class="lobby-side host-side" style="padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-align:center">
+              <div class="lobby-role" style="font-size:12px;color:var(--gold);margin-bottom:4px">【擂主】</div>
+              <div class="lobby-name" id="lobbyHostName" style="font-family:var(--title);font-size:20px;color:var(--p1)">侠客 (房主)</div>
+              <div class="lobby-state" id="lobbyHostState" style="font-size:12px;color:#2bd49a;margin-top:4px">● 设擂就绪</div>
+            </div>
+
+            <!-- 对决剑标 -->
+            <div class="lobby-vs" style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span style="font-family:var(--title);font-size:24px;color:var(--dim);letter-spacing:1px">VS</span>
+              <span class="lobby-ping" id="lobbyPingText" style="font-size:11.5px;color:var(--dim);white-space:nowrap">延迟检测中</span>
+            </div>
+
+            <!-- 应战方 -->
+            <div class="lobby-side peer-side" style="padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-align:center">
+              <div class="lobby-role" style="font-size:12px;color:var(--dim);margin-bottom:4px">【应战侠士】</div>
+              <div class="lobby-name" id="lobbyPeerName" style="font-family:var(--title);font-size:20px;color:var(--p2)">静候对手入局…</div>
+              <div class="lobby-state" id="lobbyPeerState" style="font-size:12px;color:var(--dim);margin-top:4px">等待加入</div>
+            </div>
+          </div>
+
+          <!-- 擂台操作 -->
+          <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
+            <button class="ghost small" id="lobbyCancelBtn" type="button" style="padding:6px 20px;font-size:13px">解散擂台 / 退出</button>
+          </div>
+        </div>
+
         <p id="netStatus" class="netstatus" role="status"></p>
+
+        <!-- 网络诊断状态条 -->
+        <div class="net-diag-bar" id="netDiagBar">
+          <div class="diag-item">
+            <span class="diag-dot" id="diagRttDot"></span>
+            <span class="diag-label">往返延迟:</span>
+            <span class="diag-val" id="diagRttVal">检测中</span>
+          </div>
+          <div class="diag-div"></div>
+          <div class="diag-item">
+            <span class="diag-label">连线模式:</span>
+            <span class="diag-val" id="diagProtoVal">WebRTC P2P</span>
+          </div>
+          <div class="diag-div"></div>
+          <div class="diag-item">
+            <span class="diag-label">回滚状态:</span>
+            <span class="diag-val" id="diagRollVal">v2.6 待命</span>
+          </div>
+        </div>
 
         <!-- 快速开战与排位卡片 -->
         <div class="matchbox wuxia-card match-card" id="netMatchBox">
@@ -3375,6 +3458,9 @@ function netReset() {
   if (NET.ws) { const w = NET.ws; NET.ws = null; try { w.close(); } catch (e) {} }
   p2pClose();
   NET.open = false; NET.out = []; NET.presses.length = 0; NET.remote.clear();
+  if (typeof updateNetLobby === 'function') updateNetLobby(false);
+  if ($id('copyCodeBtn')) $id('copyCodeBtn').classList.add('hidden');
+  if ($id('postToComBtn')) $id('postToComBtn').classList.add('hidden');
 }
 let savedNetMode = null;
 try { savedNetMode = localStorage.getItem('renying-net-mode'); } catch (e) {}
@@ -3526,10 +3612,18 @@ function onSys(m) {
     if (m.role === 'host') {
       $id('roomCode').textContent = m.code;
       if ($id('copyCodeBtn')) $id('copyCodeBtn').classList.remove('hidden');
+      if ($id('postToComBtn')) $id('postToComBtn').classList.remove('hidden');
+      updateNetLobby(true, (ACC && ACC.name) || '侠客 (房主)', '静候对手入局…', m.code, false);
       netStatus('房间已建好。把上面的房间码发给朋友，静候他入局…');
+    } else {
+      updateNetLobby(true, '擂主 (房主)', (ACC && ACC.name) || '侠士 (应战)', m.code, true);
+      netStatus('入局成功，正在同步战局…');
     }
-    else netStatus('入局成功，即刻选人…');
-  } else if (m.sys === 'ready') { NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true; onNetOpen(); }
+  } else if (m.sys === 'ready') {
+    NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
+    updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
+    onNetOpen();
+  }
   else if (m.sys === 'result') {
     if (m.me) setAcc(m.me);
     const kind = m.ranked ? '排行榜' : '切磋战绩', pm = m.won ? '+1 胜' : '+1 负', pr = m.prog || {};
@@ -12536,6 +12630,7 @@ function setNetMode(mode) {
   if ($id('netBannerP2P')) $id('netBannerP2P').classList.toggle('hidden', isServer);
   if ($id('srvBox')) $id('srvBox').classList.toggle('hidden', !isServer || SERVED);
   if ($id('netMatchBox')) $id('netMatchBox').classList.toggle('hidden', !isServer);
+  if ($id('diagProtoVal')) $id('diagProtoVal').textContent = isServer ? 'WebSocket (LAN)' : 'WebRTC P2P';
 }
 
 if ($id('netModeServerBtn')) {
@@ -12584,6 +12679,63 @@ if ($id('srvClearBtn')) {
     netStatus(SERVED ? '已重置为当前服务器：' + location.host : '已重置为本机默认地址 (127.0.0.1:8765)');
   });
 }
+
+function updateNetDiagRtt(ms) {
+  if (typeof ms !== 'number' || isNaN(ms)) return;
+  const dot = $id('diagRttDot'), val = $id('diagRttVal');
+  if (val) val.textContent = `${ms}ms`;
+  if (dot) {
+    dot.className = 'diag-dot' + (ms > 200 ? ' bad' : ms > 90 ? ' warn' : '');
+  }
+  const lping = $id('lobbyPingText');
+  if (lping) {
+    lping.textContent = `延迟 ${ms}ms`;
+    lping.style.color = ms > 200 ? 'var(--cinnabar)' : ms > 90 ? 'var(--gold)' : 'var(--jade)';
+  }
+}
+window.updateNetDiagRtt = updateNetDiagRtt;
+
+function updateNetLobby(active, hostName, peerName, roomCode, peerReady) {
+  const box = $id('netLobbyBox'), cols = $id('netCols');
+  if (!box) return;
+  if (!active) {
+    box.classList.add('hidden');
+    if (cols) cols.classList.remove('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  if (cols) cols.classList.add('hidden');
+  if ($id('lobbyRoomBadge')) $id('lobbyRoomBadge').textContent = `房间密令：${roomCode || '----'}`;
+  if ($id('lobbyHostName')) $id('lobbyHostName').textContent = hostName || '擂主 (房主)';
+  if ($id('lobbyPeerName')) $id('lobbyPeerName').textContent = peerName || (NET.role === 'host' ? '静候应战者入局…' : '正在连线…');
+  if ($id('lobbyHostState')) $id('lobbyHostState').textContent = '● 设擂就绪';
+  if ($id('lobbyPeerState')) {
+    $id('lobbyPeerState').textContent = peerReady ? '● 应战就绪' : (NET.role === 'host' ? '○ 等待加入' : '○ 连接中');
+    $id('lobbyPeerState').style.color = peerReady ? '#2bd49a' : 'var(--dim)';
+  }
+}
+window.updateNetLobby = updateNetLobby;
+
+function postRoomToCommunity() {
+  const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();
+  if (!code) { toast('请先设擂建房生成房间码'); return; }
+  const myName = (ACC && ACC.name) || '江湖擂主';
+  const text = `【设擂约战】房间码「${code}」，以武会友，月下对决，静候各路豪杰赴会！[e:fight]`;
+  if (typeof comSend === 'function') {
+    comActiveChan = 'fight';
+    comSend(text);
+    toast('已将约战令发送至【江湖驿站 · 切磋约战】！');
+  } else {
+    toast(`已生成约战令：房间码 ${code}`);
+  }
+}
+
+if ($id('postToComBtn')) $id('postToComBtn').addEventListener('click', postRoomToCommunity);
+if ($id('lobbyCancelBtn')) $id('lobbyCancelBtn').addEventListener('click', () => {
+  netLeave();
+  updateNetLobby(false);
+  netStatus('已退出武林擂台');
+});
 
 function copyRoomInvite() {
   const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();
@@ -12867,8 +13019,8 @@ const P2P = {
 };
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
 const P2P_SYS = {
-  host: ['hello', 'left', 'match_finish', 'match_ack'],
-  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack']
+  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong'],
+  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 
@@ -12931,7 +13083,17 @@ function p2pWire(conn, sess, side, onOpen, onData) {
     P2P.lastRx = Date.now();
     let m = d;
     if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return; } }
-    if (!m || typeof m !== 'object' || m.sys === 'hb') return;
+    if (!m || typeof m !== 'object') return;
+    if (m.sys === 'ping') {
+      try { conn.send({ sys: 'pong', t: m.t }); } catch (e) {}
+      return;
+    }
+    if (m.sys === 'pong') {
+      const rtt = Math.round(performance.now() - m.t);
+      if (typeof updateNetDiagRtt === 'function') updateNetDiagRtt(rtt);
+      return;
+    }
+    if (m.sys === 'hb') return;
     if (m.sys !== undefined && !P2P_SYS[side].includes(m.sys)) return;
     onData(m);
   });
@@ -12945,10 +13107,12 @@ function p2pWire(conn, sess, side, onOpen, onData) {
   conn.on('close', gone);
   conn.on('error', () => { if (!conn.open) gone(); });   // 连通以后的单条消息出错（比如太大）不算断线
 }
-// 心跳：每 2 秒发一次；对方太久没动静（断网、合上电脑）就结束对战，不用一直干等
+// 心跳与延迟测定：每 2 秒发一次；对方太久没动静（断网、合上电脑）就结束对战，不用一直干等
+let lastP2pPingT = 0;
 setInterval(() => {
   if (!p2pOpen()) return;
-  p2pSend({ sys: 'hb' });
+  lastP2pPingT = performance.now();
+  p2pSend({ sys: 'ping', t: lastP2pPingT });
   if (NET.open && !NET.leaving && Date.now() - P2P.lastRx > P2P_SILENCE) {
     onSys({ sys: 'left' });
     netStatus('对方的网络断开了，可以重新建房或加入');

@@ -34,8 +34,8 @@ const P2P = {
 };
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
 const P2P_SYS = {
-  host: ['hello', 'left', 'match_finish', 'match_ack'],
-  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack']
+  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong'],
+  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 
@@ -98,7 +98,17 @@ function p2pWire(conn, sess, side, onOpen, onData) {
     P2P.lastRx = Date.now();
     let m = d;
     if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return; } }
-    if (!m || typeof m !== 'object' || m.sys === 'hb') return;
+    if (!m || typeof m !== 'object') return;
+    if (m.sys === 'ping') {
+      try { conn.send({ sys: 'pong', t: m.t }); } catch (e) {}
+      return;
+    }
+    if (m.sys === 'pong') {
+      const rtt = Math.round(performance.now() - m.t);
+      if (typeof updateNetDiagRtt === 'function') updateNetDiagRtt(rtt);
+      return;
+    }
+    if (m.sys === 'hb') return;
     if (m.sys !== undefined && !P2P_SYS[side].includes(m.sys)) return;
     onData(m);
   });
@@ -112,10 +122,12 @@ function p2pWire(conn, sess, side, onOpen, onData) {
   conn.on('close', gone);
   conn.on('error', () => { if (!conn.open) gone(); });   // 连通以后的单条消息出错（比如太大）不算断线
 }
-// 心跳：每 2 秒发一次；对方太久没动静（断网、合上电脑）就结束对战，不用一直干等
+// 心跳与延迟测定：每 2 秒发一次；对方太久没动静（断网、合上电脑）就结束对战，不用一直干等
+let lastP2pPingT = 0;
 setInterval(() => {
   if (!p2pOpen()) return;
-  p2pSend({ sys: 'hb' });
+  lastP2pPingT = performance.now();
+  p2pSend({ sys: 'ping', t: lastP2pPingT });
   if (NET.open && !NET.leaving && Date.now() - P2P.lastRx > P2P_SILENCE) {
     onSys({ sys: 'left' });
     netStatus('对方的网络断开了，可以重新建房或加入');

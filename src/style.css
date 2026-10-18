@@ -158,6 +158,25 @@
   .match-card-sub { font-size: 12.5px; color: var(--dim); }
   .match-actions-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .match-actions-row .go { margin: 0; min-width: 220px; font-size: 24px; padding: 6px 26px; }
+  .net-diag-bar {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(10, 11, 22, 0.65); border: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 8px auto 10px; max-width: 480px; font-size: 12px;
+  }
+  .diag-item { display: inline-flex; align-items: center; gap: 5px; color: var(--dim); }
+  .diag-item .diag-label { color: var(--dim); }
+  .diag-item .diag-val { color: var(--ink); font-weight: 500; font-family: ui-monospace, Menlo, monospace; }
+  .diag-div { width: 1px; height: 12px; background: rgba(255, 255, 255, 0.12); }
+  .diag-dot { width: 7px; height: 7px; border-radius: 50%; background: #2bd49a; box-shadow: 0 0 6px rgba(43, 212, 154, 0.7); }
+  .diag-dot.warn { background: #e9c46a; box-shadow: 0 0 6px rgba(233, 196, 106, 0.7); }
+  .diag-dot.bad { background: #ff5e5e; box-shadow: 0 0 6px rgba(255, 94, 94, 0.7); }
+  .lobby-card {
+    border: 1px solid rgba(233, 196, 106, 0.35);
+    background: linear-gradient(160deg, rgba(22, 20, 42, 0.9), rgba(10, 9, 20, 0.92));
+    animation: fadeIn 0.25s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
   .go.small { font-size: 22px; padding: 6px 22px 6px 30px; letter-spacing: .3em; margin: 8px auto 0; }
   .iprow { display: flex; gap: 8px; margin-top: 8px; width: 100%; max-width: 380px; }
   .iprow input { flex: 1; min-width: 0; font: 15px ui-monospace, Menlo, monospace; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); -webkit-user-select: text; user-select: text; }
