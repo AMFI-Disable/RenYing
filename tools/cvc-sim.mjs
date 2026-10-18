@@ -216,12 +216,16 @@ for (let m = 1; m <= matchCount; m++) {
       const r1 = (dHp2 - dHp1) / 100;
 
       matchTraj.push({
+        hero: chars[p1Idx].id,
+        heroIdx: p1Idx,
         s: obs1,
         a: act1,
         r: r1,
         p: 0
       });
       matchTraj.push({
+        hero: chars[p2Idx].id,
+        heroIdx: p2Idx,
         s: obs2,
         a: act2,
         r: -r1,

@@ -27,6 +27,7 @@ const dataPath = getArg('data', 'data/cvc_dataset.jsonl');
 const epochs = parseInt(getArg('epochs', '8'), 10);
 const outPath = getArg('out', 'models/renying_ai_v1.json');
 const lr = parseFloat(getArg('lr', '0.003'));
+const targetHero = getArg('hero', '');
 
 if (!existsSync(dataPath)) {
   console.error(`Error: Dataset not found at ${dataPath}. Run: node tools/cvc-sim.mjs --matches 10 --export ${dataPath}`);
@@ -43,11 +44,11 @@ for await (const line of rl) {
   if (!line.trim()) continue;
   try {
     const d = JSON.parse(line);
-    // filter positive reward transitions or all transitions
-    samples.push({ s: d.s, a: d.a, r: d.r });
+    if (targetHero && d.hero && d.hero !== targetHero) continue;
+    samples.push({ s: d.s, a: d.a, r: d.r, hero: d.hero });
   } catch (e) {}
 }
-console.log(`Loaded ${samples.length.toLocaleString()} training transitions.`);
+console.log(`Loaded ${samples.length.toLocaleString()} training transitions${targetHero ? ' for hero [' + targetHero + ']' : ''}.`);
 
 if (samples.length === 0) {
   console.error('No samples found in dataset.');
@@ -237,6 +238,7 @@ for (let ep = 1; ep <= epochs; ep++) {
 // 4. Export Model Weights
 const modelOutput = {
   version: 'renying_ai_v1',
+  hero: targetHero || 'all',
   arch: { in: IN_DIM, h1: H1_DIM, h2: H2_DIM, out: OUT_DIM },
   weights: {
     W1: W1.map(row => Array.from(row)),
