@@ -2651,52 +2651,52 @@ const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: 
 // stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率
 // skill 是 Q 技能，ult 是 E 大招，passive 是被动。beats/weakTo 只是给玩家看的克制关系说明。
 const CHARS = [
-  { id: 'qingfeng', name: '青锋', role: '游龙剑客', diff: 1, escCD: 8.5, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
-    passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 8%。体量身法均称（1.00），剑气与疾风斩攻守自如。',
-    stat: { hp: 500, walk: 1, speed: 1, dmg: 0.95, reach: 1, swing: 1, jump: 1, weight: 1.00, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, meterMul: 1.08, hitFeel: 1,
+  { id: 'qingfeng', name: '青锋', role: '游龙剑客', diff: 1, escCD: 8.0, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
+    passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 10%。体量身法均称（1.02），剑气与疾风斩攻守自如。',
+    stat: { hp: 510, walk: 1.02, speed: 0.96, dmg: 1.04, reach: 1.02, swing: 0.95, jump: 1, weight: 1.02, defRating: 1.02, guardMax: 105, guardStab: 1.10, guardChip: 0.09, guardRegen: 30, poise: 0.95, size: 1.00 }, meterMul: 1.10, hitFeel: 1,
     look: { body: '#e9eef6', shade: '#9aa6bd', outline: '#070914', outlineA: 1, scarf: '#46d3ea', slash: '120,230,255', blade: '#effcff', head: 'topknot', weapon: 'sword' },
     ai: { range: [70, 170] }, beats: ['moyu'], weakTo: ['yuehua'] },
-  { id: 'feiying', name: '绯影', role: '暗影刺客', diff: 2, escCD: 9.5, skill: 'blink', skill2: 'kunai', ult: 'shadows', passive: 'swift',
-    passiveName: '身轻', passiveDesc: '身法最快、出手最疾，但体格最轻薄（0.72）且气血偏薄（420）。格挡耐力极为脆弱（70），硬挡巨刃极易破防崩势，唯有以疾速、背刺与影遁分身取胜。',
-    stat: { hp: 420, walk: 1.16, speed: 0.84, dmg: 1.05, reach: 0.92, swing: 0.8, jump: 1.08, weight: 0.72, defRating: 0.90, guardMax: 70, guardStab: 0.70, guardChip: 0.18, guardRegen: 22, poise: 1.14, size: 0.88 }, hitFeel: 0.8,
+  { id: 'feiying', name: '绯影', role: '暗影刺客', diff: 2, escCD: 8.0, skill: 'blink', skill2: 'kunai', ult: 'shadows', passive: 'swift',
+    passiveName: '身轻', passiveDesc: '身法最快、出手最疾，体格轻巧（0.82）且气血充实（470）。架势耐力韧性提升（95/9%微伤），身手矫捷，唯有以疾速、背刺与影遁分身取胜。',
+    stat: { hp: 470, walk: 1.18, speed: 0.82, dmg: 1.12, reach: 0.96, swing: 0.78, jump: 1.08, weight: 0.82, defRating: 0.98, guardMax: 95, guardStab: 1.05, guardChip: 0.09, guardRegen: 28, poise: 1.00, size: 0.88 }, hitFeel: 0.8,
     moveMods: { l1: { dmgAbs: 14 }, l2: { dmgAbs: 15 }, l3: { dmgAbs: 17 }, l4: { dmgAbs: 20 }, l5: { dmgAbs: 26 } },
     look: { body: '#2d2336', shade: '#1b1422', outline: '#ff4a5f', outlineA: .85, scarf: '#ff3b52', slash: '255,95,115', blade: '#ffe6ea', head: 'hood', weapon: 'dual' },
     ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
-  { id: 'tieshan', name: '铁山', role: '玄铁重甲', diff: 1, escCD: 7, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
-    passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血极厚（650），体量威严（1.65）。重斩与蓄力斩自带霸体减伤40%，巨刃沉身格挡固若金汤（150架势/4%微伤），轻兵刃难以撼动其身。',
-    stat: { hp: 650, walk: 0.84, speed: 1.20, dmg: 1.12, reach: 1.12, swing: 1.18, jump: 0.9, weight: 1.65, defRating: 1.15, guardMax: 150, guardStab: 1.85, guardChip: 0.04, guardRegen: 34, poise: 0.78, size: 1.14 }, hitFeel: 1.55,
+  { id: 'tieshan', name: '铁山', role: '玄铁重甲', diff: 1, escCD: 8.5, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
+    passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血深厚（530），体量威严（1.35）。重斩与蓄力斩自带霸体减伤20%，巨刃沉身格挡稳健（115架势/8%微伤），刚猛沉稳。',
+    stat: { hp: 530, walk: 0.82, speed: 1.25, dmg: 0.96, reach: 1.08, swing: 1.25, jump: 0.9, weight: 1.32, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
-  { id: 'lingshuang', name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.5, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
-    passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 25% 且一挑冲天；贴身则力有不逮。枪长步稳（1.04体量），枪旋可拨开暗器并保持中线绝对压制。',
-    stat: { hp: 480, walk: 0.98, speed: 1.05, dmg: 0.98, reach: 1.36, swing: 1.08, jump: 1, weight: 1.04, defRating: 1.02, guardMax: 110, guardStab: 1.20, guardChip: 0.09, guardRegen: 28, poise: 0.95, size: 1.02 }, hitFeel: 1.15,
+  { id: 'lingshuang', name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.0, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
+    passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 20% 且一挑冲天。枪长步稳（1.05体量），枪旋可拨开暗器并保持中线绝对压制。',
+    stat: { hp: 480, walk: 0.98, speed: 1.05, dmg: 1.00, reach: 1.28, swing: 1.08, jump: 1, weight: 1.04, defRating: 1.02, guardMax: 110, guardStab: 1.20, guardChip: 0.08, guardRegen: 28, poise: 0.95, size: 1.02 }, hitFeel: 1.15,
     look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
-    ai: { range: [115, 205] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
-  { id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 9, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
-    passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起卷敌浮空。布衣身轻体薄（0.80体量/440血），折扇防守易受重压渗透（14%穿透），宜飘忽制胜。',
-    stat: { hp: 440, walk: 1.12, speed: 0.88, dmg: 1.17, reach: 0.98, swing: 0.95, jump: 1.05, weight: 0.80, defRating: 0.96, guardMax: 85, guardStab: 0.85, guardChip: 0.14, guardRegen: 25, poise: 1.05, size: 0.98 }, jumps: 3, hitFeel: 0.9,
+    ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
+  { id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 8.5, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
+    passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势韧性增强（95架势/11%微穿透），身法飘忽制胜。',
+    stat: { hp: 470, walk: 1.12, speed: 0.88, dmg: 1.17, reach: 0.98, swing: 0.95, jump: 1.05, weight: 0.85, defRating: 0.98, guardMax: 95, guardStab: 1.05, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 0.98 }, jumps: 3, hitFeel: 0.9,
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [200, 380] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
   { id: 'leiming', name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
-    passiveName: '连环', passiveDesc: '十连快拳如骤雨，金刚体魄筋骨强横（560血/1.30体量）；架势耐力深厚且回涌极快（36/秒），防守沉稳，唯出拳收势空隙需防对手腾空闪。',
-    stat: { hp: 560, walk: 1.18, speed: 0.68, dmg: 0.88, reach: 0.8, swing: 0.62, jump: 1, weight: 1.30, defRating: 1.08, guardMax: 125, guardStab: 1.45, guardChip: 0.06, guardRegen: 36, poise: 0.84, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
-    moveMods: { l1: { dmgAbs: 10 }, l2: { dmgAbs: 10 }, l3: { dmgAbs: 10 }, l4: { dmgAbs: 10 }, l5: { dmgAbs: 10, kb: [110, 0], launch: false, lunge: 120, next: { light: 'l6', heavy: 'hv' } }, l6: { dmgAbs: 10 }, l7: { dmgAbs: 10 }, l8: { dmgAbs: 10 }, l9: { dmgAbs: 10 }, l10: { dmgAbs: 10 } },
+    passiveName: '连环', passiveDesc: '十连快拳如骤雨，金刚体魄筋骨强横（520血/1.22体量）；架势耐力深厚且回涌较快（32/秒），防守沉稳，唯出拳收势空隙需防对手腾空闪。',
+    stat: { hp: 520, walk: 1.14, speed: 0.70, dmg: 0.86, reach: 0.8, swing: 0.64, jump: 1, weight: 1.22, defRating: 1.02, guardMax: 115, guardStab: 1.25, guardChip: 0.07, guardRegen: 32, poise: 0.90, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
+    moveMods: { l1: { dmgAbs: 9 }, l2: { dmgAbs: 9 }, l3: { dmgAbs: 9 }, l4: { dmgAbs: 9 }, l5: { dmgAbs: 9, kb: [110, 0], launch: false, lunge: 110, next: { light: 'l6', heavy: 'hv' } }, l6: { dmgAbs: 9 }, l7: { dmgAbs: 9 }, l8: { dmgAbs: 9 }, l9: { dmgAbs: 9 }, l10: { dmgAbs: 9 } },
     look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
     ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   { id: 'moyu', name: '墨羽', role: '泼墨画师', diff: 3, escCD: 9, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
     passiveName: '笔锋', passiveDesc: '墨韵宗师宗风深沉（1.10体量），墨阵定身强行封锁走位；墨水屏障加持架势耐力（115），蓄力挥洒自如，专破铁山等钝重武夫。',
-    stat: { hp: 450, walk: 0.95, speed: 1.02, dmg: 1.06, reach: 1.12, swing: 1.05, jump: 1, weight: 1.10, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 30, poise: 0.90, size: 1.00 }, hitFeel: 1.1,
+    stat: { hp: 430, walk: 0.95, speed: 1.02, dmg: 1.02, reach: 1.10, swing: 1.05, jump: 1, weight: 1.02, defRating: 1.00, guardMax: 100, guardStab: 1.10, guardChip: 0.09, guardRegen: 28, poise: 0.95, size: 1.00 }, hitFeel: 1.1,
     moveMods: { l1: { dmgAbs: 12 }, l2: { dmgAbs: 12 }, l3: { dmgAbs: 14 }, l4: { dmgAbs: 14 }, l5: { dmgAbs: 18 }, cs1: { reachMul: 1.4 }, cs2: { reachMul: 1.4 } }, inkShot: true,
     look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
     ai: { range: [150, 300] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
-  { id: 'yuehua', name: '月华', role: '月镜宗师', diff: 3, escCD: 8.5, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
-    passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.90体量/430血），自带月魄神罡（105架势/7%微透伤）与脱战自愈，以静制动。',
-    stat: { hp: 430, walk: 1, speed: 0.88, dmg: 0.93, reach: 1, swing: 0.85, jump: 1, weight: 0.90, defRating: 1.04, guardMax: 105, guardStab: 1.25, guardChip: 0.07, guardRegen: 30, poise: 0.92, size: 0.96 }, hitFeel: 0.8,
+  { id: 'yuehua', name: '月华', role: '月镜宗师', diff: 3, escCD: 8.0, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
+    passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.92体量/460血），自带月魄神罡（110架势/6%微透伤）与脱战自愈，以静制动。',
+    stat: { hp: 460, walk: 1.02, speed: 0.86, dmg: 1.00, reach: 1.02, swing: 0.84, jump: 1, weight: 0.92, defRating: 1.06, guardMax: 110, guardStab: 1.30, guardChip: 0.06, guardRegen: 32, poise: 0.90, size: 0.96 }, hitFeel: 0.8,
     look: { body: '#f4eefc', shade: '#b3a6c9', outline: '#15102a', outlineA: 1, scarf: '#c9b6ff', slash: '215,195,255', blade: '#f6f0ff', head: 'moon', weapon: 'moonblade' },
     ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
   { id: 'yanling', name: '燕翎', role: '御空飞燕', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
-    passiveName: '御空', passiveDesc: '一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（80架势），一旦被重兵器挑中需速用腾空闪化解。',
-    stat: { hp: 450, walk: 1.12, speed: 0.84, dmg: 1.14, reach: 1, swing: 0.85, jump: 1.05, weight: 0.84, defRating: 0.94, guardMax: 80, guardStab: 0.80, guardChip: 0.15, guardRegen: 24, poise: 1.08, size: 0.95 }, fly: 1.2, hitFeel: 0.9,
+    passiveName: '御空', passiveDesc: '一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（85架势），一旦被重兵器挑中需速用腾空闪化解。',
+    stat: { hp: 440, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump: 1.05, weight: 0.84, defRating: 0.95, guardMax: 85, guardStab: 0.85, guardChip: 0.13, guardRegen: 25, poise: 1.05, size: 0.95 }, fly: 1.1, hitFeel: 0.9,
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
 ];
@@ -2768,21 +2768,21 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 36] : ['fy_xslash', 40],
-    ai: (me, foe, d) => d > 170 },
-  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡2次攻击），砸地直击施加【撼地重震】（0.55 秒重度脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
-    start(f) { f.armorT = 0.35; f.armorHits = 2; f.vx = 0; },
+    ai: (me, foe, d) => d > 120 },
+  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
+    start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; },
     update(f, foe) {
-      if (f.skPh === 0 && f.t >= 0.22) {
+      if (f.skPh === 0 && f.t >= 0.24) {
         f.skPh = 1; f.t = 0; f.hitDone = false;
-        shake = Math.max(shake, 16); dust(f.x, 0, 30); ring(f.x, 0, 160, '255,200,120', 0.4); SFX.thud(); SFX.heavy();
-        for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 760, w: 96, h: 54, life: 0.9, dmg: 65, kb: [260, -840], stun: 0.55, hs: 0.12, launch: true, groundOnly: true, unbreakable: true });
-        if (strike(f, foe, { box: [-45, -80, 110, 4], dmg: 55, kb: [260, -900], stun: 0.55, hs: 0.14, launch: true })) {
-          f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 30);
-          f.skill2CD = Math.max(0, f.skill2CD - 2.5);
+        shake = Math.max(shake, 14); dust(f.x, 0, 24); ring(f.x, 0, 140, '255,200,120', 0.35); SFX.thud(); SFX.heavy();
+        for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 680, w: 84, h: 48, life: 0.8, dmg: 40, kb: [200, -740], stun: 0.40, hs: 0.08, launch: true, groundOnly: true, unbreakable: true });
+        if (strike(f, foe, { box: [-40, -80, 100, 4], dmg: 45, kb: [220, -800], stun: 0.45, hs: 0.12, launch: true })) {
+          f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 15);
+          f.skill2CD = Math.max(0, f.skill2CD - 1.5);
           addP({ type: 'text', text: '💥 撼地重震 · 固若金汤', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
         }
       }
-      if (f.skPh === 1 && f.t >= 0.36) toNeutral(f);
+      if (f.skPh === 1 && f.t >= 0.40) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
     ai: (me, foe, d) => d < 420 && foe.onGround() },
@@ -2791,7 +2791,7 @@ const SKILLS = {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.24) { f.skPh = 1; f.t = 0; f.vx = f.face * 180; f.hitDone = false; SFX.heavy(); }
       if (f.skPh === 1) {
-        if (f.t < 0.12 && strike(f, foe, { box: [20, -104, 235, -44], dmg: 68, kb: [360, -820], stun: 0.52, hs: 0.14, launch: true })) {
+        if (f.t < 0.12 && strike(f, foe, { box: [20, -104, 235, -44], dmg: 60, kb: [340, -800], stun: 0.48, hs: 0.12, launch: true })) {
           f.skill2CD *= 0.5;
           addP({ type: 'text', text: '枪尖穿心', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '170,220,255' });
         }
@@ -2800,28 +2800,28 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
     ai: (me, foe, d) => d < 120 },
-  windblade: { name: '风刃', cd: 1.3, air: true, desc: '挥扇生风，风刃体积扩大。此招【无长硬直】，附带强劲风暴推力（480 像素击退）；连飞羽轻镖也一并吹散。',
+  windblade: { name: '风刃', cd: 1.6, air: true, desc: '挥扇生风。此招【无长硬直】，附带风暴推力（380 像素击退）；连飞羽轻镖也一并吹散。',
     start() {},
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.03) {
+      if (f.skPh === 0 && f.t >= 0.04) {
         f.skPh = 1; SFX.swing();
         if (f.twinT > 0) {
           f.twinT = 0;
-          for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1150, vy, w: 78, h: 66, life: 1.2, dmg: 35, kb: [460, -90], stun: 0.20, hs: 0.04 });
-        } else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1180, w: 72, h: 62, life: 1.2, dmg: 48, kb: [480, -90], stun: 0.20, hs: 0.04 });
+          for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
+        } else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1120, w: 68, h: 58, life: 1.1, dmg: 38, kb: [380, -80], stun: 0.18, hs: 0.03 });
       }
       if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
     ai: () => true },
-  thunderfist: { name: '雷闪', cd: 4, nofric: true, pass: true, desc: '身化雷光贴地疾冲（判定增大）。一拳贯穿附带【触电麻痹】（0.48 秒电击瘫痪硬直），冲刺途中自带单次霸体，为后续十连拳创造破绽。',
-    start(f) { f.armorT = 0.5; f.armorHits = 1; f.vx = 0; },
+  thunderfist: { name: '雷闪', cd: 5, nofric: true, pass: true, desc: '身化雷光贴地疾冲。一拳贯穿附带【触电麻痹】（0.38 秒电击瘫痪硬直），起手片刻后化为雷光霸体。',
+    start(f) { f.armorT = 0; f.armorHits = 0; f.vx = 0; },
     update(f, foe) {
-      if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; f.t = 0; f.vx = f.face * 1500; f.hitDone = false; SFX.dash(); SFX.thunder(); }
+      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; f.t = 0; f.vx = f.face * 1350; f.armorT = 0.28; f.armorHits = 1; f.hitDone = false; SFX.dash(); SFX.thunder(); }
       if (f.skPh === 1) {
-        if (strike(f, foe, { box: [-20, -110, 85, -10], dmg: 55, kb: [80, 0], stun: 0.48, hs: 0.12 })) {
-          f.skill2CD = 0;
-          addP({ type: 'text', text: '⚡ 触电麻痹 · 雷踏重置', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
+        if (strike(f, foe, { box: [-20, -110, 75, -10], dmg: 40, kb: [80, 0], stun: 0.38, hs: 0.08 })) {
+          f.skill2CD = Math.max(0, f.skill2CD - 2.0);
+          addP({ type: 'text', text: '⚡ 触电麻痹 · 雷踏加速', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
         }
         if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
         if (f.t >= 0.26) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
@@ -2830,26 +2830,26 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 110 && d < 360 },
-  inktrap: { name: '墨阵', cd: 6, desc: '提笔画出一池宽达 125 像素的巨幅墨阵。踏入者被浓墨锚定，陷入【深墨禁锢】（0.65 秒强力定身）；再按 Q 可随时引爆。',
+  inktrap: { name: '墨阵', cd: 7.5, desc: '提笔画出一池宽 110 像素的墨阵。踏入者陷入【深墨禁锢】（0.48 秒定身）；再按 Q 可随时引爆。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.18) {
+      if (f.skPh === 0 && f.t >= 0.20) {
         f.skPh = 1; SFX.poof();
         for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-        spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 90, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 125, h: 28, life: 8, delay: 0.25, dmg: 48, kb: [0, 0], stun: 0.65, hs: 0.10, root: true, groundOnly: true });
+        spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 90, 250), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 95, h: 26, life: 4.5, delay: 0.30, dmg: 30, kb: [0, 0], stun: 0.40, hs: 0.07, root: true, groundOnly: true });
       }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
     ai: (me, foe, d) => d > 90 && d < 330 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
-  dive: { name: '俯冲', cd: 3.5, air: true, desc: '猎鹰收翼斜下俯冲（判定扩大）。命中施加【鹰击钉地】（0.50 秒重度压制硬直）；自空中出手更可借力反弹回升并刷新技能。',
-    start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -720; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
+  dive: { name: '俯冲', cd: 4.5, air: true, desc: '猎鹰收翼斜下俯冲。命中施加【鹰击钉地】（0.40 秒压制硬直）；自空中出手可借力回升并刷新技能。',
+    start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -700; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.2) { f.skPh = 1; f.t = 0; }
       if (f.skPh === 1) {
         if (f.t < 0.02) { f.hitDone = false; SFX.dash(); }
-        f.vx = f.face * 880; f.vy = 820;
-        if (strike(f, foe, { box: [-16, -95, 96, 25], dmg: 58, kb: [260, 0], stun: 0.50, hs: 0.12 })) {
+        f.vx = f.face * 840; f.vy = 780;
+        if (strike(f, foe, { box: [-16, -90, 88, 20], dmg: 46, kb: [220, 0], stun: 0.40, hs: 0.09 })) {
           addP({ type: 'text', text: '鹰击钉地', x: foe.x, y: foe.y - 80, life: 0.8, max: 0.8, rgb: '140,200,255' });
           f.vx *= 0.2; f.vy = -380;
           if (f.diveAir && !f.diveChained) { f.skillCD = 0; f.diveChained = true; }
@@ -2873,37 +2873,37 @@ const SKILLS = {
     update(f) {
       if (f.skPh === 0 && f.t >= 0.08) {
         f.skPh = 1; SFX.slice();
-        for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), w: 26, h: 14, life: 0.55, dmg: 22, kb: [80, 0], stun: 0.16, hs: 0.02, launch: false });
+        for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), w: 26, h: 14, life: 0.55, dmg: 25, kb: [80, 0], stun: 0.18, hs: 0.03, launch: false });
       }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-  ironwall: { name: '铁壁冲', cd: 5, nofric: true, desc: '沉肩如山以狂暴重盾之势撞将过去（判定范围扩大）。撞击附带【崩山破势】（0.48 秒重度硬直与击退，起手承受 2 次霸体），且对空中之敌或体重轻薄者实施强力压制！',
-    start(f) { f.armorT = 0.55; f.armorHits = 2; f.vx = 0; },
+  ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '沉肩如山以狂暴重盾之势撞将过去（判定范围适中）。撞击附带【崩山破势】（0.40 秒重度硬直与击退，起手承受 1 次霸体），且对空中之敌或体重轻薄者实施压制！',
+    start(f) { f.armorT = 0.38; f.armorHits = 1; f.vx = 0; },
     update(f, foe) {
-      if (f.skPh === 0 && f.t >= 0.15) { f.skPh = 1; f.t = 0; f.vx = f.face * 740; f.hitDone = false; SFX.dash(); }
+      if (f.skPh === 0 && f.t >= 0.16) { f.skPh = 1; f.t = 0; f.vx = f.face * 680; f.hitDone = false; SFX.dash(); }
       if (f.skPh === 1) {
-        const attWeight = (f.ch.stat && f.ch.stat.weight) || 1.65;
+        const attWeight = (f.ch.stat && f.ch.stat.weight) || 1.50;
         const defWeight = (foe.ch.stat && foe.ch.stat.weight) || 1.0;
         const wRatio = attWeight / defWeight;
         const foeInAir = !foe.onGround() || foe.y < -2;
         if (strike(f, foe, {
-          box: [-10, -260, 110, 0],
-          dmg: 68,
-          kb: foeInAir ? [Math.round(280 * wRatio), Math.round(520 * wRatio)] : [Math.round(480 * wRatio), -200],
-          stun: 0.55,
-          hs: 0.14,
+          box: [-10, -260, 95, 0],
+          dmg: 54,
+          kb: foeInAir ? [Math.round(240 * wRatio), Math.round(440 * wRatio)] : [Math.round(380 * wRatio), -160],
+          stun: 0.42,
+          hs: 0.10,
           spike: foeInAir,
           launch: true,
           big: true,
-          guardBreakMul: 2.0
+          guardBreakMul: 1.4
         })) {
           addP({ type: 'text', text: foeInAir ? '💥 泰山镇岳 · 撼坠' : '💥 崩山破势', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,100' });
           f.vx *= 0.2;
         }
-        if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
+        if (f.t >= 0.24) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
       }
-      if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
+      if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 240 },
   spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（48 伤害）扫飞贴身之敌（对地面敌人仅平推硬直，仅浮空敌人会被击落地面）！',
@@ -2925,8 +2925,8 @@ const SKILLS = {
         f.spinN++; f.hitDone = false; SFX.swing();
         const last = f.spinN === 8;
         const foeInAir = !foe.onGround() || foe.y < -2;
-        strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 48, kb: foeInAir ? [440, -680] : [480, 0], stun: 0.65, hs: 0.14, launch: foeInAir, big: true }
-                            : { box: [20, -126, 138, -14], dmg: 10, kb: [40, 0], stun: 0.12, hs: 0.02, launch: false, noScale: true });
+        strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 38, kb: foeInAir ? [420, -640] : [440, 0], stun: 0.50, hs: 0.12, launch: foeInAir, big: true }
+                            : { box: [20, -126, 142, -14], dmg: 12, kb: [40, 0], stun: 0.18, hs: 0.03, launch: false, noScale: true });
       }
       if (f.t >= 2) toNeutral(f);
     },
@@ -2947,17 +2947,17 @@ const SKILLS = {
       if (f.t >= 0.24) toNeutral(f);
     },
     pose: () => ['ly_hover', 40], ai: (m, o, d) => d < 150 },
-  stomp: { name: '雷踏', cd: 3.5, desc: '一脚踏落，前方轰然炸起通天巨型雷柱（宽 100 像素，高 460 像素，62 伤害）。垂直通天高空挑飞，将对手直接轰向穹顶。',
+  stomp: { name: '雷踏', cd: 4.5, desc: '一脚踏落，前方轰然炸起雷柱（宽 85 像素，高 420 像素，48 伤害）。垂直高空挑飞，将对手击向空中。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; dust(f.x, 0, 12); SFX.thud(); spawnProj(f, { kind: 'bolt', x: clamp(f.x + f.face * 130, WALL, STAGE_W - WALL), y: -230, vx: 0, w: 100, h: 460, life: 0.42, delay: 0.15, dmg: 62, kb: [0, -840], stun: 0.65, hs: 0.12, launch: true, unbreakable: true, small: true }); }
+      if (f.skPh === 0 && f.t >= 0.14) { f.skPh = 1; dust(f.x, 0, 12); SFX.thud(); spawnProj(f, { kind: 'bolt', x: clamp(f.x + f.face * 125, WALL, STAGE_W - WALL), y: -210, vx: 0, w: 85, h: 420, life: 0.38, delay: 0.16, dmg: 48, kb: [0, -760], stun: 0.52, hs: 0.10, launch: true, unbreakable: true, small: true }); }
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
-  inksplash: { name: '泼墨', cd: 6, desc: '甩出一团重浓墨团（体积增大）。墨团爆裂不仅挑飞，还施加【墨迹遮目】（0.65 秒硬直 + 2.5 秒迟缓），大幅打乱对手反击步调。',
+  inksplash: { name: '泼墨', cd: 7, desc: '甩出一团浓墨。墨团爆裂挑飞并施加【墨迹遮目】（0.50 秒硬直 + 1.8 秒轻微迟缓）。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 580, vy: -460, g: 1500, lob: true, w: 50, h: 50, life: 1.4, dmg: 50, kb: [140, -480], stun: 0.65, hs: 0.08, launch: true }); }
+      if (f.skPh === 0 && f.t >= 0.14) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 540, vy: -440, g: 1500, lob: true, w: 46, h: 46, life: 1.3, dmg: 38, kb: [140, -440], stun: 0.50, hs: 0.07, launch: true }); }
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 150 && d < 420 },
@@ -4288,7 +4288,7 @@ const ULT_AI = {
   inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
 };
 // 技能之后顺手接的动作
-const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.3], ['light', 0.48], ['light', 0.66]] };
+const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.16], ['light', 0.32], ['light', 0.48], ['heavy', 0.68]] };
 // 神经网络推理辅助函数（用于天道 God 难度模型）
 function aiPredictPolicy(heroId, obs) {
   try {
@@ -4396,11 +4396,15 @@ class AICtrl extends Ctrl {
     this.holdDown = Math.max(0, this.holdDown - STEP);
     const free = me.onGround() && ['idle', 'walk', 'block'].includes(me.state);
     // 看到对手出招：防御，月华会用月镜
-    const threat = foe.state === 'attack' && foe.move && foe.t < foe.move.su + 0.02 && d < foe.move.box[2] + 70;
+    const isFoeHeavy = foe.state === 'attack' && foe.move && (foe.move.unblockable || foe.move.knock || foe.moveName === 'cs1' || foe.moveName === 'cs2' || (foe.move.guardBreakMul && foe.move.guardBreakMul > 1.2));
+    const threat = foe.state === 'attack' && foe.move && foe.t < foe.move.su + 0.04 && d < foe.move.box[2] + 70;
     if (threat && !this.reacted) {
       this.reacted = true;
       if (free) {
-        if (ch.skill === 'mirror' && me.skillCD <= 0 && Math.random() < L.block * 0.9) { this.queue = []; this.press('skill'); }
+        if (isFoeHeavy && Math.random() < L.block * 0.85) {
+          if (me.dashCD <= 0 && Math.random() < 0.6) { this.queue = []; this.dir = -to; this.press('dash'); }
+          else { this.queue = []; this.press('jump'); this.dir = -to; }
+        } else if (ch.skill === 'mirror' && me.skillCD <= 0 && Math.random() < L.block * 0.9) { this.queue = []; this.press('skill'); }
         else if (Math.random() < L.block) { this.holdDown = 0.38; this.queue = []; this.dir = 0; }
       }
     }
@@ -5603,7 +5607,7 @@ function tryHit(f, foe, m) {
   const px = (Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, py = (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2;
   if (f.ch.passive === 'tip' && /^l\d/.test(m.name || '')) {
     const tip = Math.abs(hu[f.face > 0 ? 0 : 2] - f.x) > m.box[2] * 0.62;
-    m = { ...m, dmg: m.dmg * (tip ? 1.25 : 1.25 / 3) };   // 枪身伤害 = 枪尖的三分之一
+    m = { ...m, dmg: m.dmg * (tip ? 1.15 : 0.60) };   // 枪身微弱，枪尖增伤
     if (!isClient()) addP({ type: 'text', text: tip ? '枪尖' : '枪身', x: px, y: py - 30, life: 0.5, max: 0.5, rgb: tip ? f.look.slash : '180,180,190' });
   }
   applyHit(f, foe, m, [px, py]);
@@ -5701,8 +5705,8 @@ function applyHit(att, def, m, pt) {
   }
   // 霸体：普通攻击打不断，只吃 60% 伤害
   const defRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
-  if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.6 > 0) {
-    const dmg = (m.dmg * 0.6) / defRating;
+  if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.75 > 0) {
+    const dmg = (m.dmg * 0.75) / defRating;
     def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
     if (--def.armorHits <= 0) def.armorT = 0;
     if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
