@@ -41,6 +41,9 @@ const HEROES = [
   { id: 'moyu', idx: 6, name: '墨羽' },
   { id: 'yuehua', idx: 7, name: '月华' },
   { id: 'yanling', idx: 8, name: '燕翎' },
+  { id: 'yuxiao', idx: 9, name: '玉箫' },
+  { id: 'zuixian', idx: 10, name: '醉仙' },
+  { id: 'gouchen', idx: 11, name: '勾陈' },
 ];
 
 const targetList = singleHero ? HEROES.filter(h => h.id === singleHero) : HEROES;

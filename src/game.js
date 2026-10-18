@@ -179,6 +179,18 @@ const POSES = {
   yh_lotus:  { hip: [0, -58], neck: [0, -96], hf: [16, -72], hb: [-16, -72], ff: [10, -42], fb: [-10, -42], sw: 0 },
   yl_dive:   { hip: [8, -42], neck: [32, -58], hf: [-18, -48], hb: [-24, -48], ff: [28, -18], fb: [14, -26], sw: 2.8 },
   yl_wings:  { hip: [0, -68], neck: [2, -106], hf: [42, -112], hb: [-42, -112], ff: [8, -36], fb: [-8, -36], sw: -1.5 },
+  yx_play:   { hip: [0, -48],  neck: [4, -88],   hf: [16, -84],  hb: [10, -84],  ff: [16, 0],  fb: [-18, 0],  sw: 1.25 },
+  yx_push:   { hip: [8, -46],  neck: [20, -84],  hf: [48, -74],  hb: [-12, -66], ff: [28, 0],  fb: [-16, 0],  sw: 0.2 },
+  zx_drink:  { hip: [-4, -48], neck: [-10, -88], hf: [20, -70], hb: [4, -102], ff: [16, 0],  fb: [-20, 0],  sw: -1.2 },
+  zx_breath: { hip: [6, -46],  neck: [22, -84],  hf: [14, -70], hb: [-16, -64], ff: [26, 0],  fb: [-18, 0],  sw: 0.6 },
+  zx_sway:   { hip: [-6, -44], neck: [-18, -82], hf: [14, -62], hb: [-28, -74], ff: [20, 0],  fb: [-12, -4], sw: 0.9 },
+  zx_roll:   { hip: [0, -24],  neck: [16, -36],  hf: [20, -20], hb: [-6, -18],  ff: [-10, -14],fb: [-20, -6], sw: 2.2 },
+  zx_upper:  { hip: [8, -52],  neck: [16, -92],  hf: [30, -118],hb: [-14, -70], ff: [18, 0],  fb: [-16, -4], sw: -1.6 },
+  gc_wind:   { hip: [-4, -46], neck: [0, -86],   hf: [-6, -112],hb: [14, -70],  ff: [18, 0],  fb: [-22, 0],  sw: -2.2 },
+  gc_throw:  { hip: [12, -44], neck: [30, -80],  hf: [62, -80], hb: [-12, -64], ff: [40, 0],  fb: [-20, 0],  sw: 0 },
+  gc_pull:   { hip: [-10, -44],neck: [-18, -82], hf: [8, -70],  hb: [-24, -66], ff: [16, 0],  fb: [-28, 0],  sw: 0.3 },
+  gc_sweep:  { hip: [8, -32],  neck: [26, -64],  hf: [52, -26], hb: [-12, -50], ff: [36, 0],  fb: [-26, 0],  sw: 0.08 },
+  gc_spin:   { hip: [0, -46],  neck: [2, -86],   hf: [8, -130], hb: [-18, -72], ff: [22, 0],  fb: [-22, 0],  sw: -1.6 },
 };
 const JOINTS = ['hip', 'neck', 'hf', 'hb', 'ff', 'fb'];
 
@@ -257,11 +269,26 @@ const CHARS = [
     stat: { hp: 440, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump: 1.05, weight: 0.84, defRating: 0.95, guardMax: 85, guardStab: 0.85, guardChip: 0.13, guardRegen: 25, poise: 1.05, size: 0.95 }, fly: 1.1, hitFeel: 0.9,
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
+  { id: 'yuxiao', name: '玉箫', role: '箫音乐师', diff: 3, escCD: 9, skill: 'soundwave', skill2: 'echowall', ult: 'guangling', passive: 'rhythm',
+    passiveName: '宫商', passiveDesc: '以箫为刃，以音为兵。普攻每命中一次积攒一枚音律，不出手时每 2.5 秒也会自己攒一枚（最多 3 枚），清音会把音律一次吹尽：音律越满，音波越大、越快、越重，三律齐鸣时音波可穿透、挑空并令对手失律迟缓。身形清瘦（0.86 体量/455 血），被近身缠斗时要靠回音壁脱身。',
+    stat: { hp: 455, walk: 1.04, speed: 0.88, dmg: 0.98, reach: 1.12, swing: 0.86, jump: 1, weight: 0.86, defRating: 0.98, guardMax: 90, guardStab: 0.95, guardChip: 0.12, guardRegen: 27, poise: 1.00, size: 0.96 }, hitFeel: 0.85,
+    look: { body: '#eef4ec', shade: '#9fb7a6', outline: '#0d1a14', outlineA: 1, scarf: '#5fcf9a', slash: '150,240,200', blade: '#d8f5e4', head: 'jade', weapon: 'flute' },
+    ai: { range: [110, 280] }, beats: ['tieshan', 'moyu'], weakTo: ['feiying', 'leiming'] },
+  { id: 'zuixian', name: '醉仙', role: '醉拳狂客', diff: 3, escCD: 8.5, skill: 'drink', skill2: 'drunkstep', ult: 'eightimm', passive: 'drunk',
+    passiveName: '醉意', passiveDesc: '越喝越能打。豪饮一口醉意 +50，打中人也会 +4（醉意 0 到 100，每秒缓慢消退），每点醉意增伤 0.5%（满醉 +50%）；醉意过半后东倒西歪，有两成几率闪开近身攻击（醉里乾坤），这时再按豪饮会把酒喷成一道烈火。拳脚短（0.86 臂展），全靠醉步贴身。',
+    stat: { hp: 520, walk: 1.06, speed: 0.84, dmg: 1.0, reach: 0.92, swing: 0.8, jump: 1, weight: 1.15, defRating: 1.00, guardMax: 105, guardStab: 1.15, guardChip: 0.09, guardRegen: 30, poise: 0.92, size: 1.02 }, hitFeel: 1.0,
+    look: { body: '#c9a882', shade: '#8a6a4a', outline: '#1a0e06', outlineA: 1, scarf: '#d8452f', slash: '255,170,90', blade: '#f2d8a8', head: 'messy', weapon: 'gourd' },
+    ai: { range: [50, 140] }, beats: ['lingshuang', 'yuehua'], weakTo: ['liuyun', 'moyu'] },
+  { id: 'gouchen', name: '勾陈', role: '链锤游侠', diff: 2, escCD: 9, skill: 'hook', skill2: 'whirl', ult: 'skynet', passive: 'bind',
+    passiveName: '震魄', passiveDesc: '一条铁链拴着一柄方锤，走路时锤子在身边晃荡，出手时整条链子甩出去。飞锤砸中会扯链把对手拽到身前，被锤中的 1.2 秒内对手承受的伤害提高 25%；旋锤抡圆了能连砸带甩。链长（1.25 臂展），但霸体能硬吃飞锤。',
+    stat: { hp: 490, walk: 1.04, speed: 1.0, dmg: 0.97, reach: 1.25, swing: 1.0, jump: 1, weight: 0.98, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, hitFeel: 1.0,
+    look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, scarf: '#c8a24a', slash: '235,205,130', blade: '#e8e8ee', head: 'mask', weapon: 'hammer' },
+    ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
 ];
 const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
 // 墨羽的墨水：每甩一团墨消耗 INK_COST，每秒恢复 INK_REGEN
 const INK_MAX = 100, INK_COST = 20, INK_REGEN = 10, INK_DMG = 18;
-const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 30, fists: 16, brush: 62, moonblade: 58 };
+const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 30, fists: 16, brush: 62, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
 // 按角色属性生成每个角色自己的招式表
 function buildMoves(ch) {
   const out = {}, st = ch.stat;
@@ -572,6 +599,97 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['yh_mirror', 40] : f.skPh === 2 ? ['hva', 60] : ['idle', 10],
     ai: () => false },
+  soundwave: { name: '清音', cd: 3.2, air: true, desc: '横箫一吹，放出一道音波。普攻攒下的音律会一次吹尽：每枚音律让音波更大、更快、伤害 +20；三律齐鸣时音波穿透、挑空、不可斩散，并让对手陷入【绕梁 · 失律】（2.2 秒迟缓）。',
+    start(f) { f.vx *= 0.3; },
+    update(f) {
+      if (f.skPh === 0 && f.t >= 0.12) {
+        f.skPh = 1; const n = Math.min(3, f.notes || 0); f.notes = 0;
+        SFX.note(n);
+        spawnProj(f, { kind: 'note', x: f.x + f.face * 40, y: f.y - 70, vx: f.face * (620 + 60 * n), w: 54 + 16 * n, h: 54 + 16 * n, grow: 40 + 14 * n, life: 0.95,
+          dmg: 22 + 20 * n, kb: [200 + 40 * n, n >= 3 ? -420 : 0], stun: 0.3 + 0.06 * n, hs: 0.05 + 0.015 * n, launch: n >= 3, unbreakable: n >= 3, maxHits: 1, notes: n });
+        if (n >= 3) addP({ type: 'text', text: '三律齐鸣', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '150,240,200' });
+      }
+      if (f.skPh === 1 && f.t >= 0.2) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['yx_play', 30] : ['yx_push', 50],
+    ai: (me, foe, d) => d > 110 && d < 700 && ((me.notes || 0) >= 2 || d > 240) },
+  echowall: { name: '回音壁', cd: 6, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
+    start(f) { f.vx = 0; f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
+    update(f, foe) {
+      f.vx = damp(f.vx, 0, 12, STEP);
+      if (f.skPh === 0 && f.t >= 0.08) {
+        f.skPh = 1; f.hitDone = false;
+        if (strike(f, foe, { box: [-10, -130, 110, 0], dmg: 18 + 8 * (f.notes || 0), kb: [520, -120], stun: 0.35, hs: 0.06 })) {
+          f.notes = Math.min(3, (f.notes || 0) + 1);
+          addP({ type: 'text', text: '音浪', x: foe.x, y: foe.y - 100, life: 0.6, max: 0.6, rgb: '150,240,200' });
+        }
+      }
+      if (f.t >= 0.45) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
+    ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
+  drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50（饮酒时 0.3 秒毫无防备）。醉意过半时改为【酒火】：一口烈酒喷成火焰，醉意越高火越旺（30 到 60 伤害），中者酒火灼身 2 秒，消耗 50 醉意。',
+    start(f) { f.vx = 0; f.breath = (f.drunk || 0) >= 50; },
+    update(f) {
+      if (!f.breath) {
+        if (f.skPh === 0 && f.t >= 0.22) {
+          f.skPh = 1; f.drunk = Math.min(100, (f.drunk || 0) + 50); SFX.drink();
+          addP({ type: 'text', text: '醉意 +50', x: f.x, y: f.y - 115, life: 0.7, max: 0.7, rgb: '255,170,90' });
+        }
+        if (f.t >= 0.3) toNeutral(f);
+      } else {
+        if (f.skPh === 0 && f.t >= 0.14) {
+          f.skPh = 1; const k = (f.drunk || 0) / 100;
+          spawnProj(f, { kind: 'flame', x: f.x + f.face * 70, y: f.y - 82, vx: f.face * 420, w: 150, h: 70, life: 0.32, dmg: Math.round(30 + 30 * k), kb: [260, -160], stun: 0.42, hs: 0.07, pierce: true, maxHits: 1, burn: true, unbreakable: true });
+          f.drunk = Math.max(0, f.drunk - 50); SFX.fire();
+        }
+        if (f.t >= 0.36) toNeutral(f);
+      }
+    },
+    pose: f => f.breath ? (f.skPh === 0 ? ['zx_drink', 30] : ['zx_breath', 60]) : ['zx_drink', 24],
+    ai: (me, foe, d) => (me.drunk || 0) >= 50 ? d < 270 : d > 240 && foe.state !== 'attack' },
+  drunkstep: { name: '醉步', cd: 4.5, pass: true, nofric: true, desc: '东倒西歪一个滚翻（滚翻中无敌，醉意越高滚得越远），可以从对手身边穿过去，起身回头就是一记【醉打金刚】上勾拳，把人打上半空。',
+    start(f) { f.vx = 0; },
+    update(f, foe) {
+      if (f.skPh === 0) { f.skPh = 1; f.t = 0; f.vx = f.face * (720 + 4 * (f.drunk || 0)); f.invul = Math.max(f.invul, 0.3); SFX.dash(); dust(f.x, 0, 8); }
+      if (f.skPh === 1 && f.t >= 0.3) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.hitDone = false; f.face = foe.x >= f.x ? 1 : -1; SFX.heavy(); }
+      if (f.skPh === 2) {
+        if (f.t >= 0.04 && f.t < 0.16 && strike(f, foe, { box: [0, -120, 90, 0], dmg: 50, kb: [140, -760], stun: 0.5, hs: 0.1, launch: true }))
+          addP({ type: 'text', text: '醉打金刚', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,170,90' });
+        if (f.t >= 0.36) toNeutral(f);
+      }
+    },
+    pose: f => f.skPh <= 1 ? ['zx_roll', 40] : ['zx_upper', 55],
+    ai: (me, foe, d) => d > 90 && d < 330 },
+  hook: { name: '飞锤', cd: 5, air: true, desc: '把链锤朝对手甩出去（射程约 420），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
+    start(f) { f.vx *= 0.2; },
+    update(f) {
+      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.heavy(); spawnProj(f, { kind: 'hook', x: f.x + f.face * 40, y: f.y - 72, vx: f.face * 1500, w: 44, h: 40, life: 0.28, dmg: 18, kb: [0, 0], stun: 0.35, hs: 0.06, hook: true }); }
+      if (f.skPh === 1 && f.t >= 0.36) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.t < 0.18 ? ['gc_throw', 60] : ['gc_pull', 40],
+    ai: (me, foe, d) => d > 160 && d < 440 },
+  whirl: { name: '旋锤', cd: 6, nofric: true, desc: '把链锤拎过头顶抡圆了转（约 1 秒，半径约 150），转圈时能慢慢挪步：前四圈每圈砸一下（每下 7 伤害），第五圈松手一甩把人砸飞（30 伤害）。锤风还能砸碎飞来的暗器。',
+    start(f) { f.vx = 0; f.spN = 0; f.hitDone = false; },
+    update(f, foe) {
+      const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
+      f.vx = damp(f.vx, dir * wk(f) * 0.45, 10, STEP);
+      if (Math.abs(foe.x - f.x) > 3) f.face = foe.x > f.x ? 1 : -1;
+      if (f.t > 0.1 && f.t < 1.0) for (const p of projs) {
+        if (p.owner === foe.idx && !p.dead && !p.unbreakable && !p.ult && Math.abs(p.x - f.x) < 150 && Math.abs(p.y - (f.y - 90)) < 100) { p.dead = true; blockFX(p.x, p.y, f.face); SFX.block(); }
+      }
+      const n = f.t < 0.15 ? 0 : Math.min(5, 1 + Math.floor((f.t - 0.15) / 0.2));
+      if (n > f.spN) {
+        f.spN = n; f.hitDone = false; SFX.swing();
+        const last = n === 5;
+        if (strike(f, foe, last ? { box: [-160, -190, 160, 0], dmg: 30, kb: [560, -380], stun: 0.55, hs: 0.12, launch: true, big: true }
+                                : { box: [-150, -180, 150, 0], dmg: 7, kb: [40, 0], stun: 0.28, hs: 0.03, noScale: true }) && last)
+          addP({ type: 'text', text: '脱手一甩', x: foe.x, y: foe.y - 100, life: 0.7, max: 0.7, rgb: '235,205,130' });
+      }
+      if (f.t >= 1.2) toNeutral(f);
+    },
+    pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
+    ai: (me, foe, d) => d < 170 },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 
@@ -755,6 +873,44 @@ const ULTS = {
       }
       if (f.t >= 0.55) endSpecial(f);
     } },
+  guangling: { name: '广陵散', desc: '奏一曲广陵散：六道音刃从左右两侧轮番穿过对手（每道 14 伤害），曲终一记【绝响】从对手脚下炸开（60 伤害，身上每枚音律再 +15，不可格挡，挑空）。曲罢音律回满，清音冷却清零。',
+    begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'yx_play'; f.invul = 0.3; SFX.superOn(); },
+    update(f, foe) {
+      const T = [0.05, 0.2, 0.35, 0.5, 0.65, 0.8];
+      if (f.spN < 6 && f.t >= T[f.spN]) {
+        const sd = f.spN % 2 ? 1 : -1; f.spN++;
+        f.spPose = f.spN % 2 ? 'yx_play' : 'yx_push'; SFX.note(f.spN % 4);
+        spawnProj(f, { kind: 'note', x: foe.x + sd * 520, y: foe.y - 50 - (f.spN % 3) * 18, vx: -sd * 1100, w: 50, h: 50, life: 0.9, dmg: 14, kb: [60, 0], stun: 0.3, hs: 0.03, ult: true, noScale: true, pierce: true, maxHits: 1, notes: 0 });
+      }
+      if (f.spN === 6 && f.t >= 1.0) {
+        f.spN = 7; f.spPose = 'yx_push';
+        spawnProj(f, { kind: 'chord', vx: 0, x: foe.x, y: -100, delay: 0.12, w: 170, h: 200, life: 0.42, dmg: 60 + 15 * Math.min(3, f.notes || 0), kb: [300, -760], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, unbreakable: true });
+        f.notes = 3; f.skillCD = 0;
+        addP({ type: 'text', text: '曲终绝响 · 音律回满', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,240,200' });
+      }
+      if (f.t >= 1.35) endSpecial(f);
+    } },
+  eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 2.3, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身，一拳一位神仙（每拳 2.3 伤害），最后一记仙人醉拳把人打飞（终结 76 伤害）。打完醉意直接灌满。若一扑落空，破绽大开。' },
+  skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 1.2 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
+    begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitDone = false; SFX.superOn(); },
+    update(f, foe) {
+      if (f.spN === 0 && f.t >= 0.15) {
+        f.spN = 1; f.spPose = 'gc_wind'; SFX.swing();
+        spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
+      }
+      if (f.spN === 1 && f.t >= 0.95) {
+        f.spN = 2;
+        if (foe.rooted && foe.state === 'hitstun' && foe.hp > 0 && foe.invul <= 0) {
+          f.face = foe.x >= f.x ? 1 : -1; f.spPose = 'gc_pull'; f.snap = true;
+          foe.x = clamp(f.x + f.face * 70, WALL, STAGE_W - WALL); foe.y = 0;
+          applyHit(f, foe, { dmg: 80, kb: [420, -820], stun: 0.6, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
+          foe.hookedT = 1.2; f.skillCD = 0;
+          shake = Math.max(shake, 14); SFX.heavy();
+          addP({ type: 'text', text: '回锤 · 飞锤重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '235,205,130' });
+        } else f.spPose = 'idle';
+      }
+      if (f.t >= 1.3) endSpecial(f);
+    } },
 };
 
 // ======================= 声音 =======================
@@ -842,6 +998,9 @@ const SFX = {
   thunder() { sNoise(0.04, 9000, 4000, 0.7, 0.6, 'highpass'); sNoise(0.9, 2500, 60, 0.5, 0.5, 'lowpass'); sTone(70, 30, 0.9, 0.5); },
   escape() { sNoise(0.25, 600, 5000, 1.2, 0.25); metal(1700, 0.5, 0.06); },
   gong() { metal(210, 2.4, 0.16); sTone(220, 200, 1.4, 0.12, 'triangle'); },
+  note(n = 0) { const f0 = [660, 784, 880, 1047][Math.min(3, n | 0)]; sTone(f0, f0 * 0.995, 0.5, 0.12, 'triangle'); sTone(f0 * 2, f0 * 2, 0.25, 0.04); },   // 箫音
+  drink() { sNoise(0.25, 500, 900, 3, 0.12); sTone(220, 160, 0.18, 0.08); },   // 咕嘟一口
+  fire() { sNoise(0.45, 1800, 300, 0.6, 0.3, 'lowpass'); sNoise(0.2, 4000, 1500, 0.8, 0.08); },   // 喷火
 };
 
 // ======================= 原创音乐（全部由程序实时生成，不用任何现成曲子） =======================
@@ -1338,7 +1497,7 @@ function netLost() {
 // 状态快照：房主每帧发一次
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink'];
+  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT'];
 // 同步数据用数组而不是对象，体积小一半多
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 // 被打的状态：这些一定听房主的
@@ -1860,7 +2019,7 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 const ULT_AI = {
   crescent: (m, f, d) => d < 330, shadows: (m, f, d) => d < 330, avalanche: (m, f, d) => d < 700 && f.onGround(),
   phoenix: (m, f, d) => d < 230, timestop: (m, f, d) => d < 700, tornado: (m, f, d) => d < 650, thunder: () => true,
-  inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
+  inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
 };
 // 技能之后顺手接的动作
 const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.16], ['light', 0.32], ['light', 0.48], ['heavy', 0.68]] };
@@ -2040,6 +2199,7 @@ class AICtrl extends Ctrl {
         if (d < 300 && r < 0.6) this.plan([['chargeStart', 0], ['chargeEnd', 0.8], ['light', 0.96]]);
         else this.dir = to;
       }
+      else if ((foe.hookedT || 0) > 0 && foe.state === 'hitstun' && d <= atkRange + 30) this.plan(AI_COMBOS[Math.random() * Math.min(L.combo, AI_COMBOS.length) | 0]);
       else if (foe.state === 'knockdown' || foe.state === 'getup') { this.dir = d > atkRange ? to : 0; }
       else if (me.meter >= 100 && ULT_AI[ch.ult](me, foe, d) && r < 0.5) this.plan([['special', 0]]);
       else if (me.skillCD <= 0 && S.ai(me, foe, d) && r < 0.4) this.plan([['skill', 0], ...(SKILL_FOLLOW[ch.skill] || [])]);
@@ -2129,6 +2289,7 @@ class Fighter {
     this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: this.idx === 0 ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
+      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -2599,6 +2760,7 @@ function attackUpdate(f, foe) {
   }
 }
 function endSpecial(f) { f.invul = 0; toNeutral(f); }
+const EIGHT_IMM = ['汉钟离', '吕洞宾', '张果老', '曹国舅', '铁拐李', '韩湘子', '何仙姑', '蓝采和'];
 function specialUpdate(f, foe) {
   const t = f.t, U = ULTS[f.ch.ult];
   if (f.sp === 'charge') {
@@ -2634,6 +2796,8 @@ function specialUpdate(f, foe) {
         smoke(f.x, f.y - 50, 6);
       } else if (f.ch.ult === 'crescent') {
         ring(foe.x, foe.y - 55, 75, '120,230,255', 0.22);
+      } else if (f.ch.ult === 'eightimm') {
+        addP({ type: 'text', text: EIGHT_IMM[f.slashN % 8], x: foe.x + (f.slashN % 2 ? 40 : -40), y: foe.y - 120 - (f.slashN % 3) * 14, life: 0.45, max: 0.45, rgb: '255,190,110' });
       }
       applyHit(f, foe, { ...SP_SLASH, dmg: U.slash }, [foe.x, foe.y - 55]);
       SFX.slice(); f.slashN++;
@@ -2662,6 +2826,10 @@ function specialUpdate(f, foe) {
           smoke(f.x + (k === 0 ? -40 : 40), f.y - 40, 8);
         }
         addP({ type: 'text', text: '🗡️ 影遁无形 · 苦无重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,95,115' });
+        SFX.chargeFull();
+      } else if (f.ch.ult === 'eightimm') {
+        f.drunk = 100;
+        addP({ type: 'text', text: '八仙醉 · 醉意满盈', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,170,90' });
         SFX.chargeFull();
       }
     }
@@ -2722,7 +2890,7 @@ function updateProjs() {
     if (p.dead) continue;
     p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
     const wasDelay = p.delay > 0;
-    if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
+    if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
     if (p.g) p.vy += p.g * STEP;
     if (p.boomer && p.age > p.turn) {
       const o = [A, B][p.owner], dx = o.x - p.x;
@@ -2730,6 +2898,7 @@ function updateProjs() {
       if (Math.abs(dx) < 34 && p.age > p.turn + 0.15) { p.dead = true; continue; }
     }
     p.x += p.vx * STEP; p.y += p.vy * STEP;
+    if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
     if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
     if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math.random() < 0.6) addP({ type: 'ink', x: p.x - Math.sign(p.vx) * p.w * 0.4, y: p.y + rand(-p.h / 3, p.h / 3), vx: -p.vx * 0.1, vy: rand(-40, 40), life: 0.5, max: 0.5, r: rand(2, 5), rgb: p.kind === 'dragon' ? '20,20,28' : CHARS[[A, B][p.owner].chIdx].look.slash }); }
     if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
@@ -2745,6 +2914,14 @@ function updateProjs() {
     if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
     if (!overlap(box, hurtbox(foe))) continue;
+    // 玉箫回音壁：把飞行道具原路弹回去
+    if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord'].includes(p.kind)) {
+      p.owner = foe.idx; p.vx = -p.vx || foe.face * 700; p.vy = -p.vy * 0.4; p.hits = 0; p.hitCD = 0.05; p.life = Math.max(p.life, 0.8);
+      p.boomer = false; p.lob = false; p.g = 0; p.sk = true; p.hook = false;
+      foe.notes = Math.min(3, (foe.notes || 0) + 1);
+      ring(p.x, p.y, 60, foe.look.slash, 0.25); SFX.parry();
+      addP({ type: 'text', text: '回音', x: p.x, y: p.y - 30, life: 0.6, max: 0.6, rgb: foe.look.slash }); continue;
+    }
     // 霸体吃掉飞行道具
     if (foe.armorT > 0 && !p.ult) {
       p.dead = true; ring(p.x, p.y, 50, '255,215,120', 0.25); SFX.block();
@@ -2768,8 +2945,18 @@ function updateProjs() {
     } else if (p.kind === 'inkblob') {
       foe.slowT = 2.5;
       addP({ type: 'text', text: '墨迹遮目', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '160,160,190' });
+    } else if (p.kind === 'note' && p.notes >= 3) {
+      foe.slowT = 2.2;
+      addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
     }
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
+    const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
+    if (p.burn && struck) { foe.burnT = 2; addP({ type: 'text', text: '酒火灼身', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,150,60' }); }
+    if (p.hook && struck && !isClient()) {   // 勾陈飞锤：扯链拽到身前
+      foe.x = clamp(owner.x + owner.face * 72, WALL, STAGE_W - WALL); foe.y = 0; foe.vx = 0; foe.vy = 0;
+      foe.state = 'hitstun'; foe.t = 0; foe.stun = Math.max(foe.stun || 0, 0.42); foe.hookedT = 1.2;
+      dust(foe.x, 0, 6); SFX.heavy();
+    }
     p.hits++; p.hitCD = p.rehit || 99;
     if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
   }
@@ -2797,7 +2984,7 @@ function updateProjs() {
 }
 function boltFX(p) { shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35); flashRGB = '255,245,200'; dust(p.x, 0, 12); ring(p.x, 0, 90, '255,240,150', 0.3); SFX.thunder(); }
 // 腾空闪：任何状态都能用（被大招锁住时除外）。解除硬直、倒地、定身，向上闪起；落地或自己出手之前无敌
-const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing' };
+const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke' };
 function tryEscape(f, foe) {
   if (f.hp <= 0 || f.breakCD > 0 || M.phase !== 'fight' || ['held', 'special', 'victory'].includes(f.state)) return false;
   if (!f.ctrl.consume('dash')) return false;
@@ -2939,6 +3126,17 @@ function updateFighter(f, foe) {
   f.armorT = Math.max(0, f.armorT - STEP);
   f.slowT = Math.max(0, (f.slowT || 0) - STEP);
   f.buffT = Math.max(0, f.buffT - STEP);
+  f.reflectT = Math.max(0, (f.reflectT || 0) - STEP);
+  f.hookedT = Math.max(0, (f.hookedT || 0) - STEP);
+  if (f.ch.passive === 'drunk') f.drunk = Math.max(0, (f.drunk || 0) - 2 * STEP);
+  // 玉箫被动：不打人也会慢慢攒音律（每 2.5 秒一枚）
+  if (f.ch.passive === 'rhythm' && (f.notes || 0) < 3 && M.phase === 'fight') { f.noteT = (f.noteT || 0) + STEP; if (f.noteT >= 2.5) { f.noteT = 0; f.notes = (f.notes || 0) + 1; } }
+  // 酒火灼身：每 0.5 秒掉 3 血，烧不死人
+  if (f.burnT > 0) {
+    const b0 = f.burnT; f.burnT = Math.max(0, f.burnT - STEP);
+    if (Math.floor(b0 / 0.5) !== Math.floor(f.burnT / 0.5) && f.hp > 1 && M.phase === 'fight' && !isClient()) { f.hp = Math.max(1, f.hp - 3); f.sinceHit = 0; f.lagDelay = 0.5; }
+    if (Math.random() < 0.3) addP({ type: 'spark', x: f.x + rand(-14, 14), y: f.y - rand(30, 100), vx: rand(-20, 20), vy: -rand(30, 80), life: 0.35, max: 0.35, rgb: '255,140,50' });
+  }
   f.sinceBlock = (f.sinceBlock || 0) + STEP;
   if (f.state !== 'block' && f.state !== 'blockstun' && f.sinceBlock > 0.6) {
     const baseRegen = ((f.ch && f.ch.stat && f.ch.stat.guardRegen) || 26);
@@ -3190,6 +3388,13 @@ function tryHit(f, foe, m) {
 const predicted = [];
 function predictHit(att, def, m, pt) {
   if (att.idx !== localIdx() || m.isProj) return;
+  // 醉仙被动：醉意过半，两成几率闪开近身攻击
+  if (def.ch.passive === 'drunk' && (def.drunk || 0) >= 50 && !m.isProj && !m.ult && !m.unblockable && !m.hold && ['idle', 'walk', 'air'].includes(def.state) && grnd() < 0.2) {
+    def.invul = Math.max(def.invul, 0.2); def.vx = fx * 320; def.drunk = Math.max(0, def.drunk - 10);
+    addP({ type: 'text', text: '醉里乾坤', x: def.x, y: def.y - 110, life: 0.7, max: 0.7, rgb: '255,170,90' });
+    smoke(def.x, def.y - 50, 4); SFX.dash();
+    return;
+  }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
   const sx = m.srcX !== undefined ? m.srcX : att.x, fx = m.dir || att.face;
@@ -3332,6 +3537,10 @@ function applyHit(att, def, m, pt) {
     }
   }
   if (att.buffT > 0 && !m.isProj) { dmg *= 1.5; att.buffT = 0; ev.big = true; }
+  if (att.ch.passive === 'drunk') dmg *= 1 + (att.drunk || 0) * 0.005;
+  if (att.ch.passive === 'bind' && def.hookedT > 0 && !m.ult) { dmg *= 1.25; ev.big = true; }
+  if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack') att.notes = Math.min(3, (att.notes || 0) + 1);
+  if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
   // 凌霜枪尖机制：最远端枪尖命中增伤且大幅挑空，贴身过近被压制削伤
   if (att.ch.passive === 'tip' && !m.isProj && !m.ult) {
     const dist = Math.abs(def.x - att.x);
@@ -3543,7 +3752,7 @@ function targetPose(f) {
     if (f.t < m.su) { p = POSES[m.p[0]]; k = 26; } else if (f.t < m.su + m.ac) { p = POSES[m.p[1]]; k = 62; } else { p = POSES[m.p[1]]; k = 12; }
   } else if (s === 'special') {
     if (f.sp === 'charge') {
-      const chargePoses = { qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings' };
+      const chargePoses = { qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind' };
       p = POSES[chargePoses[f.ch.id] || 'sps']; k = 16;
     } else if (f.ch.ult === 'crescent') {
       const m = { dash: 'qf_thrust', miss: 'l3a', flurry: f.slashN % 2 ? 'l3a' : 'hva', final: 'a2a' };
@@ -3551,6 +3760,9 @@ function targetPose(f) {
     } else if (f.ch.ult === 'shadows') {
       const m = { dash: 'fy_crouch', miss: 'l3a', flurry: f.slashN % 2 ? 'fy_xslash' : 'bdash', final: 'fy_xslash' };
       p = POSES[m[f.sp] || 'fy_crouch'] || POSES.spa; k = 60;
+    } else if (f.ch.ult === 'eightimm') {
+      const m = { dash: 'zx_roll', miss: 'zx_sway', flurry: f.slashN % 2 ? 'lm_jab' : 'zx_upper', final: 'zx_upper' };
+      p = POSES[m[f.sp] || 'zx_roll'] || POSES.spa; k = 60;
     } else {
       p = POSES[f.spPose || 'spa'] || POSES.spa; k = 60;
     }
@@ -4276,12 +4488,32 @@ function drawFighter(f) {
   // 定身墨迹
   if (f.rooted && f.state === 'hitstun') { ctx.fillStyle = 'rgba(10,10,16,0.75)'; ctx.beginPath(); ctx.ellipse(f.x, 0, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); }
   // 围巾
+  if (f.look.weapon === 'hammer') {   // 链锤：告诉物理模拟锤子现在该干什么
+    const L = f.look, hk = projs.find(p => p.owner === f.idx && (p.kind === 'hook' || p.kind === 'net') && !p.dead);
+    if (hk && hk.kind === 'hook') { L.flMode = 'out'; L.flTo = [hk.x, hk.y]; }
+    else if (hk) { const drop = hk.delay > 0 ? hk.delay / 0.25 : 0; L.flMode = 'ult'; L.flTo = [hk.x, hk.y + 45 - drop * 320 - 40]; }
+    else if (f.state === 'skill' && f.skill === 'whirl' && f.t > 0.08 && f.spN < 5) { L.flMode = 'spin'; L.flSpin = f.t; }
+    else L.flMode = f.state === 'attack' || f.state === 'skill' || f.state === 'special' || f.state === 'charge' ? 'whip' : 'hang';
+  }
   if (f.ch && f.ch.fly) drawWings(sk, f);
   drawScarf(f);
   drawBody(sk, f, { flash: f.flash > 0, invul: f.invul > 0 && f.invul < 50 && f.state !== 'special' && f.state !== 'knockdown' });
   if (big) ctx.restore();
   // 剑光
   drawTrail(f);
+  // 玉箫头顶的音律、被勾陈震魄时身上的金圈
+  if (f.ch && f.ch.passive === 'rhythm' && (f.notes || 0) > 0 && f.hp > 0) {
+    ctx.save(); ctx.fillStyle = 'rgba(' + f.look.slash + ',0.85)'; ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.4;
+    for (let k = 0; k < f.notes; k++) {
+      const x = sk.head[0] + (k - (f.notes - 1) / 2) * 13, y = sk.head[1] - 30 + Math.sin(clock * 4 + k) * 2;
+      ctx.beginPath(); ctx.ellipse(x, y, 3.6, 2.6, -0.4, 0, 7); ctx.fill(); line([x + 3, y], [x + 3, y - 10]);
+    }
+    ctx.restore();
+  }
+  if ((f.hookedT || 0) > 0 && f.hp > 0) {
+    ctx.save(); ctx.strokeStyle = 'rgba(235,205,130,' + (0.4 + 0.3 * Math.min(1, f.hookedT)) + ')'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.ellipse(f.x, f.y - 56, 22, 34, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+  }
   // 被连击且可以挣脱时，头顶提示
   if ((f.state === 'launched' || f.state === 'knockdown' || (f.state === 'hitstun' && f.comboHits >= 2)) && f.hp > 0 && f.breakCD <= 0 && M.phase === 'fight' && M.mode !== 'demo'
       && !(f.ctrl instanceof AICtrl) && !f.dummy && f.ctrl !== NET.remote) {
@@ -4555,7 +4787,7 @@ function skinParticles(f) {
   if (au && Math.random() < 0.22) addP({ type: au.type, x: f.x + rand(-26, 26), y: f.y - rand(10, 120), vx: rand(-15, 15), vy: au.vy + rand(-20, 20), g: au.g, life: 0.8, max: 0.8, r: rand(1.5, 3), rgb: au.rgb, w: 1.6, drag: 1 });
 }
 function drawBody(sk, f, o) {
-  const L = f.look;
+  const L = f.look; DRAW_F = f;
   if (L.deco && !o.ghost) drawDeco(sk, f, L, 'back');
   const segs = [
     [sk.hip, sk.kb, 7.5, 1], [sk.kb, sk.fb, 7, 1], [sk.sh, sk.eb, 6.5, 1], [sk.eb, sk.hb, 6, 1],
@@ -4637,6 +4869,42 @@ function headAcc(sk, grow, color, L) {
       }
       topknot(sk, grow, outline ? color : '#2a3050');
       break;
+    case 'jade': {  // 玉箫：披发、发髻、一支青玉簪
+      if (!outline) {
+        ctx.strokeStyle = '#1f2a26'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(h[0] + bk * 7 + ux * 2, h[1] + uy * 2); ctx.quadraticCurveTo(h[0] + bk * 16, h[1] + 8, h[0] + bk * 13 + Math.sin(clock * 3) * 2, h[1] + 26); ctx.stroke();
+      }
+      topknot(sk, grow, outline ? color : '#1f2a26');
+      if (!outline) {
+        const kp = [h[0] + ux * 10 - sk.face * 5, h[1] + uy * 10];
+        ctx.strokeStyle = '#7fe0b0'; ctx.lineWidth = 2; line([kp[0] - px * 8, kp[1] - py * 8], [kp[0] + px * 8, kp[1] + py * 8]);
+        ctx.fillStyle = '#c9f5dc'; circle([kp[0] + px * 8, kp[1] + py * 8], 1.8);
+      }
+      break;
+    }
+    case 'messy': {  // 醉仙：乱发几撮，红布条扎额，带子飘在脑后
+      if (!outline) ctx.fillStyle = '#3a2a1e';
+      for (const k of [-1, 0, 1]) {
+        const b = [h[0] + ux * 8 + px * k * 6, h[1] + uy * 8 + py * k * 6], tp = [h[0] + ux * (16 + grow) + px * k * 10 + bk * 4, h[1] + uy * (16 + grow) + py * k * 10];
+        ctx.beginPath(); ctx.moveTo(b[0] - px * 4, b[1] - py * 4); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(b[0] + px * 4, b[1] + py * 4); ctx.closePath(); ctx.fill();
+      }
+      if (!outline) {
+        ctx.strokeStyle = L.scarf; ctx.lineWidth = 3.2; ctx.lineCap = 'round';
+        line([h[0] + px * 10 + ux * 3, h[1] + py * 10 + uy * 3], [h[0] - px * 10 + ux * 3, h[1] - py * 10 + uy * 3]);
+        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h[0] + bk * 9 + ux * 3, h[1] + uy * 3); ctx.quadraticCurveTo(h[0] + bk * 18, h[1] + 2, h[0] + bk * 24, h[1] + 8 + Math.sin(clock * 7) * 3); ctx.stroke();
+      }
+      break;
+    }
+    case 'mask': {  // 勾陈：发髻，黑面巾遮住下半张脸
+      topknot(sk, grow, outline ? color : '#15171c');
+      if (!outline) {
+        const au = Math.atan2(uy, ux);
+        ctx.fillStyle = '#15171c'; ctx.beginPath(); ctx.arc(h[0], h[1], 9.4, au + 1.75, au + 4.55); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = L.scarf; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(h[0], h[1], 9.4, au + 1.75, au + 4.55); ctx.stroke();
+        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h[0] + bk * 8, h[1] + 3); ctx.quadraticCurveTo(h[0] + bk * 16, h[1] + 6, h[0] + bk * 21, h[1] + 12 + Math.sin(clock * 8) * 3); ctx.stroke();
+      }
+      break;
+    }
     case 'moon':
       if (!outline) {
         ctx.strokeStyle = '#f5e6a8'; ctx.lineWidth = 2.5;
@@ -4647,6 +4915,52 @@ function headAcc(sk, grow, color, L) {
   }
 }
 // 武器：sword 剑 dual 双刀 greatsword 巨剑 spear 长枪 fan 扇 fists 拳套 brush 大笔 moonblade 月刃
+const FLAIL = new WeakMap();
+let DRAW_F = null;
+function flailSim(sk, L, step) {
+  const N = 9, hand = sk.hf, key = DRAW_F || L;
+  let s = FLAIL.get(key);
+  if (!s || !Number.isFinite(s.p[N - 1][0]) || Math.hypot(s.p[0][0] - hand[0], s.p[0][1] - hand[1]) > 260) {
+    s = { p: [], o: [], len: 62, t: (typeof performance !== 'undefined' ? performance.now() : Date.now()) };
+    for (let i = 0; i < N; i++) { s.p.push([hand[0] - (L.flFace || 0), hand[1] + i * 7.7]); s.o.push([hand[0], hand[1] + i * 7.7]); }
+    FLAIL.set(key, s);
+  }
+  if (!step) return s;
+  const now = (typeof performance !== 'undefined' ? performance.now() : Date.now()), dt = clamp((now - s.t) / 1000, 0, 1 / 30); s.t = now;
+  if (dt <= 0) return s;
+  const mode = L.flMode || 'hang', to = L.flTo || hand, far = mode === 'out' || mode === 'ult';
+  const want = far ? Math.hypot(to[0] - hand[0], to[1] - hand[1]) : mode === 'spin' ? 140 : mode === 'whip' ? 80 : 62;
+  s.len = far ? want : s.len + (want - s.len) * Math.min(1, dt * 9);   // 收链：长度慢慢缩回去，锤子像被拽回来
+  const sub = 3, h = dt / sub, seg = s.len / (N - 1), P = s.p, O = s.o;
+  for (let it = 0; it < sub; it++) {
+    P[0][0] = O[0][0] = hand[0]; P[0][1] = O[0][1] = hand[1];
+    for (let i = 1; i < N; i++) {
+      const p = P[i], o = O[i], vx = (p[0] - o[0]) * 0.99, vy = (p[1] - o[1]) * 0.99;
+      o[0] = p[0]; o[1] = p[1]; p[0] += vx; p[1] += vy + 2100 * h * h;
+    }
+    let kin = null;
+    if (far) kin = to;
+    else if (mode === 'spin') { const a = (L.flSpin || 0) * 19; kin = [hand[0] + Math.cos(a) * s.len, hand[1] + Math.sin(a) * s.len * 0.36]; }
+    else if (mode === 'whip') {   // 出招：锤头被甩向招式指的方向，带着惯性追过去
+      const dx = sk.tip[0] - sk.hilt[0], dy = sk.tip[1] - sk.hilt[1], d = Math.hypot(dx, dy) || 1, hd = P[N - 1];
+      hd[0] += (hand[0] + dx / d * s.len - hd[0]) * 0.22; hd[1] += (hand[1] + dy / d * s.len - hd[1]) * 0.22;
+    }
+    if (kin) { P[N - 1][0] = kin[0]; P[N - 1][1] = kin[1]; }
+    if (kin) for (let i = 1; i < N - 1; i++) {   // 甩出去或抡圆了链子是绷直的，只稍微垂一点
+      const q = i / (N - 1), sag = far ? Math.sin(q * Math.PI) * Math.min(14, s.len * 0.04) : 0;
+      P[i][0] += (hand[0] + (kin[0] - hand[0]) * q - P[i][0]) * 0.4; P[i][1] += (hand[1] + (kin[1] - hand[1]) * q + sag - P[i][1]) * 0.4;
+    }
+    for (let r = 0; r < 6; r++) for (let i = 0; i < N - 1; i++) {
+      const a = P[i], b = P[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 0.001;
+      const wa = i === 0 ? 0 : 1, wb = i + 1 === N - 1 ? (kin ? 0 : 0.45) : 1, w = wa + wb;
+      if (!w) continue;
+      const k = (d - seg) / d / w;
+      a[0] += dx * k * wa; a[1] += dy * k * wa; b[0] -= dx * k * wb; b[1] -= dy * k * wb;
+    }
+    for (let i = 1; i < N; i++) { const gy = i === N - 1 ? -11 : -2; if (P[i][1] > gy && !(kin && i === N - 1)) { P[i][1] = gy; O[i][0] += (P[i][0] - O[i][0]) * 0.3; } }   // 落地拖着走
+  }
+  return s;
+}
 function weapon(sk, L, outline, flash) {
   const g = sk.guard, t = sk.tip, hl = sk.hilt;
   const dx = t[0] - g[0], dy = t[1] - g[1], dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, px = -uy, py = ux;
@@ -4699,6 +5013,53 @@ function weapon(sk, L, outline, flash) {
       ctx.quadraticCurveTo((g[0] + t[0]) / 2 - px * 2, (g[1] + t[1]) / 2 - py * 2, g[0], g[1]); ctx.fill();
       ctx.strokeStyle = `rgba(${L.slash},0.7)`; ctx.lineWidth = 1; line(g, t);
       ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 4; line(hl, g);
+      return;
+    }
+    case 'flute': {  // 玉箫：一管青玉，几个音孔，尾挂红穗
+      if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 7; line(hl, t); return; }
+      ctx.strokeStyle = flash ? '#fff' : L.blade; ctx.lineWidth = 4.2; line(hl, t);
+      ctx.strokeStyle = 'rgba(20,60,40,0.35)'; ctx.lineWidth = 1.2; line([hl[0] + px * 1.4, hl[1] + py * 1.4], [t[0] + px * 1.4, t[1] + py * 1.4]);
+      ctx.fillStyle = 'rgba(20,50,36,0.85)';
+      for (let k = 0.4; k < 0.92; k += 0.13) circle([hl[0] + (t[0] - hl[0]) * k, hl[1] + (t[1] - hl[1]) * k], 1.1);
+      ctx.strokeStyle = '#c8372e'; ctx.lineWidth = 1.6;
+      const sway = Math.sin(clock * 4) * 3;
+      line(hl, [hl[0] - ux * 4 + sway, hl[1] - uy * 4 + 12]); line(hl, [hl[0] - ux * 4 + sway + 3, hl[1] - uy * 4 + 11]);
+      return;
+    }
+    case 'gourd': {  // 醉仙：缠布的拳头，另一只手拎着酒葫芦
+      const up = sk.hb[1] < sk.neck[1] + 4, gp = up ? [sk.hb[0] + sk.face * 6, sk.hb[1] - 2] : [sk.hb[0], sk.hb[1] + 10];
+      const top = up ? [gp[0] + sk.face * 5, gp[1] - 4] : [gp[0], gp[1] - 5], bot = up ? [gp[0] - sk.face * 6, gp[1] + 6] : [gp[0], gp[1] + 7];
+      if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 8); circle(top, 7.5); circle(bot, 10.5); return; }
+      ctx.fillStyle = flash ? '#fff' : '#e8d2a6'; circle(sk.hf, 6);
+      ctx.strokeStyle = 'rgba(120,80,40,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(sk.hf[0], sk.hf[1], 4, 0.4, 2.6); ctx.stroke();
+      ctx.fillStyle = flash ? '#fff' : '#c98a3a'; circle(bot, 8.5); circle(top, 5.5);
+      ctx.fillStyle = '#d8452f'; circle([(top[0] + bot[0]) / 2, (top[1] + bot[1]) / 2], 2.4);
+      ctx.fillStyle = 'rgba(255,255,255,0.22)'; circle([bot[0] - 3, bot[1] - 3], 2.4);
+      return;
+    }
+    case 'hammer': {  // 勾陈：一条铁链拴着方锤（流星锤），锤头按物理甩动
+      const fl = flailSim(sk, L, outline), P = fl.p, n = P.length, hd = P[n - 1], pv = P[n - 2];
+      const showHead = L.flMode !== 'ult', ang = Math.atan2(hd[1] - pv[1], hd[0] - pv[0]);
+      const head = (fill, w, h, ox) => { ctx.save(); ctx.translate(hd[0], hd[1]); ctx.rotate(ang); ctx.fillStyle = fill; ctx.fillRect(ox, -h / 2, w, h); ctx.restore(); };
+      if (outline) {
+        ctx.strokeStyle = L.outline; ctx.lineWidth = 4.6; ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]); for (let k = 1; k < n; k++) ctx.lineTo(P[k][0], P[k][1]); ctx.stroke();
+        if (showHead) { head(L.outline, 21, 31, -2); head(L.outline, 12, 8, -10); }
+        return;
+      }
+      if (L.flMode === 'spin') {   // 抡圆的锤风
+        ctx.save(); ctx.strokeStyle = 'rgba(' + L.slash + ',0.28)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(P[0][0], P[0][1], fl.len, fl.len * 0.36, 0, 0, 7); ctx.stroke(); ctx.restore();
+      }
+      for (let k = 0; k < n - 1; k++) {   // 一节节铁链
+        ctx.strokeStyle = k % 2 ? '#c4c8d2' : '#8a909e'; ctx.lineWidth = k % 2 ? 2.2 : 3; line(P[k], P[k + 1]);
+      }
+      ctx.fillStyle = '#5a5f6c'; for (let k = 1; k < n - 1; k += 2) circle(P[k], 1.6);
+      if (showHead) {
+        head('#3a2a1e', 9, 5, -9);                       // 锤颈
+        head(flash ? '#fff' : blade, 17, 27, 0);          // 锤头
+        head('rgba(40,44,54,0.55)', 17, 5, 0);
+        head(L.scarf, 3, 27, 7);
+      }
+      ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 4.5; line(hl, sk.hf);   // 手里一小截握把
       return;
     }
     default: {  // sword / moonblade
@@ -4924,6 +5285,58 @@ function drawProjs(glowOnly) {
       const a = clamp(p.life / 0.2, 0, 1);
       ctx.strokeStyle = `rgba(${L.slash},${0.85 * a})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(-18, 0, 34, -1.1, 1.1); ctx.stroke();
       ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 2; ctx.stroke();
+    } else if (p.kind === 'note') {   // 音波：几道弧线 + 一个音符
+      const dir = Math.sign(p.vx) || 1, r = p.w * 0.5, a = clamp(p.life / 0.25, 0, 1), big = p.notes >= 3;
+      ctx.translate(p.x, p.y); ctx.scale(dir, 1); ctx.globalAlpha = a;
+      for (let k = 0; k < 3; k++) {
+        ctx.strokeStyle = 'rgba(' + L.slash + ',' + ((big ? 0.75 : 0.6) - k * 0.15) + ')'; ctx.lineWidth = (big ? 3.2 : 2.4) - k * 0.5;
+        ctx.beginPath(); ctx.arc(-k * 10, 0, r * (0.55 + k * 0.2), -0.85, 0.85); ctx.stroke();
+      }
+      ctx.fillStyle = L.blade; ctx.strokeStyle = L.blade; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.ellipse(-r * 0.35, 6, 5, 3.6, -0.4, 0, 7); ctx.fill();
+      line([-r * 0.35 + 4, 5], [-r * 0.35 + 4, -12]); line([-r * 0.35 + 4, -12], [-r * 0.35 + 10, -6]);
+    } else if (p.kind === 'chord') {   // 绝响：脚下一圈五线谱，然后一柱音浪
+      if (p.delay > 0) {
+        ctx.strokeStyle = 'rgba(' + L.slash + ',0.5)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+        ctx.beginPath(); ctx.ellipse(p.x, 0, p.w * 0.5, 8, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      } else {
+        const a = clamp(p.life / 0.3, 0, 1);
+        for (let k = 0; k < 5; k++) {
+          const y = p.y - p.h * 0.4 + k * p.h * 0.2, wob = Math.sin(p.age * 30 + k) * 6;
+          ctx.strokeStyle = 'rgba(' + L.slash + ',' + (0.55 * a) + ')'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(p.x - p.w * 0.5, y + wob); ctx.quadraticCurveTo(p.x, y - wob * 2, p.x + p.w * 0.5, y + wob); ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(' + L.slash + ',' + (0.16 * a) + ')'; ctx.fillRect(p.x - p.w * 0.25, p.y - p.h * 0.5, p.w * 0.5, p.h);
+      }
+    } else if (p.kind === 'flame') {   // 酒火
+      const dir = Math.sign(p.vx) || 1, a = clamp(p.life / 0.12, 0, 1);
+      ctx.translate(p.x, p.y); ctx.scale(dir, 1);
+      for (let k = 0; k < 6; k++) {
+        const q = k / 5, x = -p.w * 0.45 + q * p.w * 0.9, r = 10 + q * p.h * 0.32 + Math.sin(p.age * 40 + k) * 3;
+        ctx.fillStyle = 'rgba(255,' + (200 - k * 18) + ',' + (80 - k * 10) + ',' + ((0.55 - q * 0.25) * a) + ')';
+        ctx.beginPath(); ctx.arc(x, Math.sin(p.age * 25 + k * 2) * 4, r, 0, 7); ctx.fill();
+      }
+    } else if (p.kind === 'hook') {   // 飞锤：链子和锤头由勾陈的链锤物理画，这里只画破风线
+      const dir = Math.sign(p.vx) || 1;
+      ctx.strokeStyle = 'rgba(' + L.slash + ',0.45)'; ctx.lineWidth = 2;
+      for (let k = 0; k < 3; k++) line([p.x - dir * (26 + k * 10), p.y - 12 + k * 12], [p.x - dir * (60 + k * 16), p.y - 12 + k * 12]);
+    } else if (p.kind === 'net') {   // 开天一锤：链锤甩上天变成巨锤砸下来，落地一圈震波
+      const drop = p.delay > 0 ? p.delay / 0.25 : 0, hw = 64, hh = 40;
+      const cy = p.y + 45 - drop * 320, top = cy - hh;
+      if (p.delay > 0) { ctx.strokeStyle = 'rgba(' + L.slash + ',0.45)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.ellipse(p.x, 0, hw + 20, 8, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
+      ctx.globalAlpha = p.delay > 0 ? 1 : clamp(p.life / 0.3, 0, 1) * 0.55;   // 落地后变淡，不挡住被砸的人
+      ctx.fillStyle = '#3a2a1e'; ctx.fillRect(p.x - 7, top - 22, 14, 22);   // 锤颈，链子由勾陈的链锤物理画
+      ctx.fillStyle = L.outline; ctx.fillRect(p.x - hw - 3, cy - hh - 3, hw * 2 + 6, hh * 2 + 6);
+      ctx.fillStyle = '#7d8492'; ctx.fillRect(p.x - hw, cy - hh, hw * 2, hh * 2);
+      ctx.fillStyle = L.blade; ctx.fillRect(p.x - hw, cy - hh, hw * 2, 7);
+      ctx.fillStyle = 'rgba(30,34,42,0.5)'; ctx.fillRect(p.x - hw, cy + hh - 8, hw * 2, 8);
+      ctx.fillStyle = L.scarf; ctx.fillRect(p.x - 10, cy - hh, 20, hh * 2);
+      ctx.globalAlpha = 1;
+      if (p.delay <= 0) {
+        const k = clamp(1 - p.life / 0.3, 0, 1);
+        ctx.strokeStyle = 'rgba(' + L.slash + ',' + (0.5 * (1 - k)) + ')'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(p.x, 0, hw + 40 + k * 120, 10 + k * 8, 0, 0, Math.PI * 2); ctx.stroke();
+      }
     } else if (p.kind === 'kunai') {
       ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx));
       ctx.fillStyle = '#d9dde6'; ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-4, -4); ctx.lineTo(-4, 4); ctx.closePath(); ctx.fill();
@@ -5133,6 +5546,35 @@ function drawHUD() {
     }
     // 气槽
     const mw = barW * 0.55, my = top + bh + 44, mx = i === 0 ? x0 : x0 + barW - mw;
+    // 角色资源条（玉箫·音律 / 醉仙·醉意）：紧贴在大招气槽下面
+    let resH = 0;
+    if (f.ch.passive === 'rhythm' || f.ch.passive === 'drunk') {
+      resH = 9;
+      const ry0 = my + 8, lab = f.ch.passive === 'rhythm' ? '音律' : '醉意';
+      ctx.save();
+      ctx.font = Math.round(bh * 0.7) + 'px ' + BODY_FONT; ctx.textBaseline = 'middle';
+      const lw = ctx.measureText(lab).width + 6, bw = mw - lw;
+      const bx0 = i === 0 ? mx + lw : mx;
+      ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.textAlign = i === 0 ? 'left' : 'right';
+      ctx.fillText(lab, i === 0 ? mx : mx + mw, ry0 + 1.5);
+      if (f.ch.passive === 'rhythm') {
+        const n = f.notes || 0, sw = (bw - 8) / 3;
+        for (let k = 0; k < 3; k++) {
+          const sx = i === 0 ? bx0 + k * (sw + 4) : bx0 + bw - (k + 1) * sw - k * 4;
+          ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(sx - 1, ry0 - 1, sw + 2, 5);
+          if (k < n) { ctx.fillStyle = n >= 3 ? 'rgba(150,240,200,' + (0.8 + 0.2 * Math.sin(clock * 9)) + ')' : 'rgb(150,240,200)'; ctx.fillRect(sx, ry0, sw, 3); }
+          else if (k === n) { ctx.fillStyle = 'rgba(150,240,200,0.35)'; ctx.fillRect(sx, ry0, sw * clamp((f.noteT || 0) / 2.5, 0, 1), 3); }
+        }
+      } else {
+        const d = clamp((f.drunk || 0) / 100, 0, 1), dw = bw * d;
+        ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(bx0 - 1, ry0 - 1, bw + 2, 5);
+        ctx.fillStyle = d >= 0.5 ? 'rgba(255,170,70,' + (0.8 + 0.2 * Math.sin(clock * 7)) + ')' : 'rgb(230,160,90)';
+        ctx.fillRect(i === 0 ? bx0 : bx0 + bw - dw, ry0, dw, 3);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(bx0 + bw * 0.5 - 0.5, ry0 - 1, 1, 5);   // 50 醉意刻度
+      }
+      ctx.restore();
+    }
+
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(mx - 2, my - 2, mw + 4, 9);
     const full = f.meter >= 100;
     const fw = mw * clamp(f.meter / 100, 0, 1);
@@ -5956,7 +6398,8 @@ const SHORT = {
   龙卷: ['≤32', '龙卷浮空 · 刷新跳跃风遁'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 墨龙: ['20', '墨龙横扫 · 墨水回满生陷阱'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 · 脆皮(88血)', tieshan: '重斩蓄力霸体 · 气血冠绝(140血)', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
-  liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻十连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒' };
+  liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻十连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒',
+  yuxiao: '普攻攒音律，清音随音律变强', zuixian: '醉意增伤，半醉可闪避近身攻击', gouchen: '被锤中的人 1.2 秒内受伤 +25%' };
 const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
@@ -5967,6 +6410,9 @@ const ADV_SHORT = {
   moyu: '再按 Q 引爆墨阵',
   yuehua: '格反成功，月轮冷却清零',
   yanling: '空中俯冲命中，可再冲一次',
+  yuxiao: '回音壁能把暗器弹回去',
+  zuixian: '醉意过半，豪饮变喷火',
+  gouchen: '飞锤拽到身前，接旋锤',
 };
 // 各角色大招怒气积攒专属特性与通用规则
 const HERO_METER_EXPLAIN = {
@@ -5979,6 +6425,9 @@ const HERO_METER_EXPLAIN = {
   moyu: '【墨浪渗透 · 阵地聚怒】普攻甩墨与泼墨双重判定充能；大招「墨龙」重置技能与墨韵回满，并在敌方足下布下索敌墨印。',
   yuehua: '【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。',
   yanling: '【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。',
+  yuxiao: '【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。',
+  zuixian: '【豪饮破障 · 八仙醉意】豪饮与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「八仙过海」连打直击打完醉意直接灌满！',
+  gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
 };
 // ======================= 招式类型与克制详解 =======================
 const HERO_MOVE_TYPES = {
@@ -5990,9 +6439,24 @@ const HERO_MOVE_TYPES = {
   lingshuang: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '枪尖回刺', icon: 'melee' }, ranged: { type: 'melee', label: '枪旋近战', icon: 'melee' }, ult: { type: 'melee', label: '神技' }, esc: { type: 'esc', label: '身法' } },
   moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'ranged', label: '泼墨远程', icon: 'ranged' }, ult: { type: 'ranged', label: '绘境' }, esc: { type: 'esc', label: '身法' } },
   yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
-  yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } }
+  yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } },
+  yuxiao: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '音波远程', icon: 'ranged' }, ranged: { type: 'counter', label: '反弹暗器', icon: 'shield_bash' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
+  zuixian: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '饮酒 / 喷火', icon: 'ranged' }, ranged: { type: 'melee', label: '滚翻上勾', icon: 'melee' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
+  gouchen: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '飞锤拉拽', icon: 'ranged' }, ranged: { type: 'melee', label: '旋锤连砸', icon: 'melee' }, ult: { type: 'melee', label: '巨锤震晕' }, esc: { type: 'esc', label: '身法' } }
 };
 const HERO_RESTRAINTS_EXPLAIN = {
+  yuxiao: {
+    beatsWhy: '【克 铁山、墨羽】铁山步子慢，被三律音波隔着半屏挑起来就很难近身；墨羽的泼墨和墨团撞上回音壁会原路飞回去。',
+    weakWhy: '【怕 绯影、雷鸣】绯影影遁直接闪到身后，雷鸣雷闪贴脸快拳，玉箫来不及攒音律，回音壁也挡不住连续近身。'
+  },
+  zuixian: {
+    beatsWhy: '【克 凌霜、月华】醉步滚翻从枪尖下穿过去，贴身后凌霜的枪施展不开；月华的月镜只格近身，醉仙可以先喷火。',
+    weakWhy: '【怕 流云、墨羽】流云风刃一直把人往外推，醉仙拳短够不着；墨羽的墨阵定住脚，醉步也滚不出去。'
+  },
+  gouchen: {
+    beatsWhy: '【克 燕翎、绯影】燕翎落地就会被旋锤卷进去；绯影血薄，被飞锤拽到身前吃满震魄增伤很快就倒。',
+    weakWhy: '【怕 铁山、月华】铁山霸体直接硬吃飞锤，带不动；月华月镜格开锤子后的反斩极痛。'
+  },
   qingfeng: {
     beatsWhy: '【克 墨羽】疾风斩高速穿身无视墨阵禁锢，半场剑气可对撞消融墨团，拔剑速攻直接打断挥毫。',
     weakWhy: '【怕 月华】疾风斩正面突击必触发月镜太阴绝罚反制，月华脱战凝露使青锋换血消耗优势荡然无存。'
@@ -6032,6 +6496,33 @@ const HERO_RESTRAINTS_EXPLAIN = {
 };
 // ======================= 全真打击数据与时序 =======================
 const HERO_HIT_DETAILS = {
+  yuxiao: {
+    light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '26 (5段)', cd: '', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
+    charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '9 / 18', cd: '', desc: '旋身横扫破开防守，将对手打倒在地。' },
+    air: { name: '高音穿云斩', badge: '挑空', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '跃起凌空横箫劈点，二段把人送上云霄。' },
+    skill: { name: '清音破空', badge: '音波穿透', badgeCls: 'badge-stun', dmg: '22~82', cd: '3.2s', desc: '将身上的音律一次吹尽，三律齐鸣时音波贯穿挑空并迟缓对手。' },
+    ranged: { name: '回音壁', badge: '弹回暗器', badgeCls: 'badge-break', dmg: '18~42', cd: '6s', desc: '筑起回音屏障推开近敌，弹回期间飞来的暗器并获得音律。' },
+    ult: { name: '广陵散', badge: '曲终绝响', badgeCls: 'badge-stun', dmg: '144~189', cd: '气满', desc: '六道音刃轮番穿身，曲终绝响从脚下炸开，音律回满。' },
+    esc: { name: '休止符', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+  },
+  zuixian: {
+    light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '东倒西歪的五连拳，醉意越高越痛。' },
+    charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '11 / 20', cd: '', desc: '身如醉钟横撞，正面撞碎对手防御。' },
+    air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '7 / 9', cd: '', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
+    skill: { name: '豪饮 / 烈火', badge: '醉意+50 / 喷火', badgeCls: 'badge-buff', dmg: '0 / 30~60', cd: '2.6s', desc: '灌一口烈酒增醉意；半醉后改为喷出烈焰灼伤对手。' },
+    ranged: { name: '醉步 · 醉打金刚', badge: '无敌穿身', badgeCls: 'badge-stun', dmg: '50', cd: '4.5s', desc: '东倒西歪滚翻穿身，起身反手一记上勾拳冲天打飞。' },
+    ult: { name: '八仙过海', badge: '醉仙灌顶', badgeCls: 'badge-stun', dmg: '94 (9连)', cd: '气满', desc: '八仙醉拳轮番上身，终结一拳把人打飞，醉意灌满。' },
+    esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+  },
+  gouchen: {
+    light: { name: '链锤连打', badge: '长臂展', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '甩着链锤抡打五连击，攻击距离比常人长一截。' },
+    charge: { name: '流星坠地', badge: '破防砸倒', badgeCls: 'badge-break', dmg: '10 / 19', cd: '', desc: '铁锤绷直重重砸落，崩裂地面砸倒对手。' },
+    air: { name: '飞轮落锤', badge: '挑空下砸', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中抡圆链锤扫打，二段势大力沉压向地面。' },
+    skill: { name: '飞锤拉拽', badge: '拽至身前', badgeCls: 'badge-stun', dmg: '18', cd: '5s', desc: '甩出链锤将远处的对手一把拽到跟前，附加震魄增伤。' },
+    ranged: { name: '旋锤风暴', badge: '砸碎暗器', badgeCls: 'badge-buff', dmg: '58 (5圈)', cd: '6s', desc: '头顶抡圆飞转砸碎飞镖暗器，第五圈脱手一甩把人击飞。' },
+    ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', cd: '气满', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
+    esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+  },
   qingfeng: {
     light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
     charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
@@ -6116,6 +6607,33 @@ const HERO_HIT_DETAILS = {
 };
 
 const HERO_MOVE_SEQS = {
+  yuxiao: {
+    light: [{ p: 'idle', d: 0.1, reset: true }, { p: 'l1a', d: 0.12, dx: 10, hit: 1, lab: '普攻' }, { p: 'l2a', d: 0.12, dx: 10, hit: 1 }, { p: 'l3a', d: 0.22, dx: 14, hit: 2, launch: true, badge: '音律 +3' }, { p: 'idle', d: 0.35, reset: true }],
+    charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防打倒' }, { p: 'idle', d: 0.35, reset: true }],
+    air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'yx_play', d: 0.14, lab: 'Q · 清音' }, { p: 'yx_push', d: 0.36, dx: 18, hit: 2, fx: 'note', launch: true, badge: '三律齐鸣' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'yx_play', d: 0.42, fx: 'mirror', hit: 1, lab: 'R · 回音壁', badge: '回音' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'yx_play', d: 0.18, lab: 'E · 广陵散' }, { p: 'yx_push', d: 0.4, fx: 'timestop', hit: 3, launch: true, badge: '曲终绝响' }, { p: 'idle', d: 0.35, reset: true }],
+    esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '休止符' }, { p: 'idle', d: 0.35, reset: true }]
+  },
+  zuixian: {
+    light: [{ p: 'idle', d: 0.1, reset: true }, { p: 'lm_jab', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'zx_sway', d: 0.1 }, { p: 'lm_jab', d: 0.1, dx: 10, hit: 1 }, { p: 'zx_upper', d: 0.22, dx: 12, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防打倒' }, { p: 'idle', d: 0.35, reset: true }],
+    air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_drink', d: 0.36, lab: 'Q · 豪饮', badge: '醉意 +50' }, { p: 'zx_breath', d: 0.34, fx: 'proj', hit: 2, badge: '酒火灼身' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_roll', d: 0.28, dx: 44, lab: 'R · 醉步' }, { p: 'zx_upper', d: 0.28, hit: 2, launch: true, badge: '醉打金刚' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_roll', d: 0.18, lab: 'E · 八仙过海' }, { p: 'zx_upper', d: 0.4, fx: 'shadows', hit: 3, launch: true, badge: '醉意满盈' }, { p: 'idle', d: 0.35, reset: true }],
+    esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '醉卧浮生' }, { p: 'idle', d: 0.35, reset: true }]
+  },
+  gouchen: {
+    light: [{ p: 'idle', d: 0.1, reset: true }, { p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'gc_sweep', d: 0.2, dx: 14, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防打倒' }, { p: 'idle', d: 0.35, reset: true }],
+    air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_throw', d: 0.2, fx: 'proj', lab: 'Q · 飞锤' }, { p: 'gc_pull', d: 0.3, hit: 1, badge: '震魄' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_spin', d: 0.4, fx: 'spin', hit: 2, lab: 'R · 旋锤' }, { p: 'gc_throw', d: 0.25, hit: 2, badge: '击飞' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_wind', d: 0.36, fx: 'avalanche', hit: 1, lab: 'E · 开天一锤', badge: '巨锤震晕' }, { p: 'gc_pull', d: 0.3, hit: 3, launch: true, badge: '回锤' }, { p: 'idle', d: 0.35, reset: true }],
+    esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '钩索腾云' }, { p: 'idle', d: 0.35, reset: true }]
+  },
   qingfeng: {
     light: [
       { p: 'idle', d: 0.12, reset: true },
@@ -6535,6 +7053,39 @@ const HERO_MOVE_SEQS = {
 };
 
 const HERO_FULL_DEMO = {
+  yuxiao: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'l3a', d: 0.2, dx: 14, hit: 2, badge: '音律 +3' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yx_play', d: 0.14, lab: 'Q · 清音' }, { p: 'yx_push', d: 0.36, fx: 'note', hit: 2, launch: true, badge: '三律齐鸣' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yx_play', d: 0.4, fx: 'mirror', hit: 1, lab: 'R · 回音壁', badge: '回音' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'yx_play', d: 0.18, lab: 'E · 广陵散' }, { p: 'yx_push', d: 0.4, fx: 'timestop', hit: 3, launch: true, badge: '曲终绝响' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  zuixian: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'lm_jab', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'zx_upper', d: 0.2, dx: 12, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'zx_drink', d: 0.36, lab: 'Q · 豪饮', badge: '醉意 +50' }, { p: 'zx_breath', d: 0.34, fx: 'proj', hit: 2, badge: '酒火灼身' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'zx_roll', d: 0.28, dx: 44, lab: 'R · 醉步' }, { p: 'zx_upper', d: 0.28, hit: 2, launch: true, badge: '醉打金刚' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'zx_roll', d: 0.18, lab: 'E · 八仙过海' }, { p: 'zx_upper', d: 0.4, fx: 'shadows', hit: 3, launch: true, badge: '醉意满盈' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
+  gouchen: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'gc_sweep', d: 0.2, dx: 14, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'gc_throw', d: 0.2, fx: 'proj', lab: 'Q · 飞锤' }, { p: 'gc_pull', d: 0.3, hit: 1, badge: '震魄' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'gc_spin', d: 0.4, fx: 'spin', hit: 2, lab: 'R · 旋锤' }, { p: 'gc_throw', d: 0.25, hit: 2, badge: '击飞' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'gc_wind', d: 0.36, fx: 'avalanche', hit: 1, lab: 'E · 开天一锤', badge: '巨锤震晕' }, { p: 'gc_pull', d: 0.3, hit: 3, launch: true, badge: '回锤' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
   qingfeng: [
     { p: 'idle', d: 0.2, reset: true },
     { p: 'l1s', d: 0.08, lab: '普攻' }, { p: 'l1a', d: 0.12, dx: 10, hit: 1 },
@@ -6965,11 +7516,11 @@ if (comChanBarEl) {
 // ======================= 成长系统：墨锭、问剑阁、任务、皮肤、排位 =======================
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
-const CHAR_RARITY = { qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
+const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
 const DEFAULT_RATES = {
   full: { legend: 0.015, rare: 0.035, common: 0.07 },
   frag: { legend: 0.1584, rare: 0.2816, common: 0.44 },
-  pool: { common: ['tieshan', 'leiming'], rare: ['feiying', 'liuyun', 'lingshuang'], legend: ['moyu', 'yuehua', 'yanling'] },
+  pool: { common: ['tieshan', 'leiming'], rare: ['feiying', 'liuyun', 'lingshuang', 'zuixian', 'gouchen'], legend: ['moyu', 'yuehua', 'yanling', 'yuxiao'] },
   craft: { common: 20, rare: 30, legend: 40 },
   cost: 60,
   ten: 540,
@@ -7031,6 +7582,9 @@ const SKINS = {
   yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'flower', flower: '#a8e0ff', robe: 'snow', breastplate: '#4878a8', back: 'snowflake', cape: '#2a5078', orbs: '#80d0ff', wfx: 'frost', trail: 'snow', aura: 'snow' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
   yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee' }, deco: { head: 'hood', hoodC: '#16161e', robe: 'raven', shoulder: '#20202a', trail: 'feather', featherC: '40,40,55' }, skillNames: { skill: '幽鸦裂空', ranged: '玄夜飞羽', ult: '百羽遮天' } },
   qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8' }, deco: { head: 'headband', band: '#c8321e', robe: 'jade_master', breastplate: '#2e5a4e', back: 'clouds', cape: '#1f6f62', orbs: '#50e0b0', trail: 'leaf', leaf: '150,235,200', aura: 'cloud' }, skillNames: { skill: '沧海疾风', ranged: '碧落青锋', ult: '天地一孤行' } },
+  yx_snow: { char: 'yuxiao', rarity: 'rare', name: '雪箫', look: { body: '#f4f8fb', shade: '#a8bccb', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { wfx: 'frost', trail: 'snow' } },
+  zx_amber: { char: 'zuixian', rarity: 'rare', name: '琥珀', look: { body: '#d9b46a', shade: '#9a7230', scarf: '#a0302a', slash: '255,190,90', blade: '#ffe8b8' }, deco: { wfx: 'flame', trail: 'ember' } },
+  gc_crimson: { char: 'gouchen', rarity: 'rare', name: '赤锤', look: { body: '#3a1a1e', shade: '#220c10', scarf: '#d83a3a', slash: '255,120,110', blade: '#ffe0dc' }, deco: { wfx: 'shadow', trail: 'smoke' } },
   yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], robe: 'phoenix', breastplate: '#b84414', cape: '#e8552a', orbs: '#ff6622', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '凤翼掠空', ranged: '涅槃离火', ult: '九天凤翔天' } },
   yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'hood', hoodC: '#1c2838', robe: 'blizzard', breastplate: '#385878', back: 'wings', cape: '#1c3048', orbs: '#70b6f6', wfx: 'frost', trail: 'feather', featherC: '220,240,255', aura: 'snow' }, skillNames: { skill: '寒枭扑杀', ranged: '风雪千羽', ult: '极寒暴风天' } },
 };
@@ -9383,7 +9937,7 @@ function demoLoop(canvas, getIdx, isOn, getSkin, getMoveKey) {
   requestAnimationFrame(tick);
 }
 // ======================= 立绘卡面 =======================
-const CARD_POSE = { qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a' };
+const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a' };
 function makeCardArt(i, CW, CH, skin) {
   const c = document.createElement('canvas'); c.width = CW; c.height = CH;
   const g = c.getContext && c.getContext('2d'); if (!g) return c;
