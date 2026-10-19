@@ -8,6 +8,22 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **ZuiXian 2.0 (醉翁 / 山水醉翁) Complete Mechanics Overhaul**:
+  - Rebuilt ability kit with `pavilion` (亭中留客, Q skill): summons a falling pavilion drop with 720 range, dropping on target and trapping them inside for 2.0s (`jailT`); enemies inside cannot move, cannot escape via airborne flash (`tengkong`), but remain fully vulnerable to attacks without being launched out of the structure.
+  - Added `feast` (与民同乐, R skill): throws a wine bottle projectile towards the opponent; drinker gains 80 HP & 0.7s self-stun, opponent gains 50 HP & 1.5s stun, and completely empties drunk gauge.
+  - Added `shanshui` (山水之间, E ultimate): full-screen ink-wash landscape painting ultimate dealing 8 fixed hits of true damage (120 dmg total, doubled during overtime), with backward compatibility fallbacks for `drink`, `drunkstep`, and `eightimm`.
+  - Added passive drunk mechanics (`酒`): skill casts grant +30 drunk, attacks grant +4 drunk, scaling damage up to +50% at 100 drunk with 20% evasion chance against melee attacks when drunk > 50.
+  - Added custom projectile renderers for `pavilion` (ancient Chinese pavilion eaves and lacquer pillars) and `bottle` (tumbling sealed wine bottle) in `drawProjs()`.
+  - Fully updated character codex dossiers, hit details (`HERO_HIT_DETAILS`), move sequences (`HERO_MOVE_SEQS`), move type categorization (`HERO_MOVE_TYPES`), and advanced tech tips (`ADV_SHORT`).
+- **Combat System Balance & Overlapping Enhancements**:
+  - **Early Skill Interrupt Refund**: If interrupted by enemy hit within the first 0.12s of skill execution (`def.t < 0.12`), full skill cooldown is automatically refunded.
+  - **Input Buffering Queue (`holdBuf`)**: Added input buffering to prevent swallowed commands during frame transitions and recovery states.
+  - **Dynamic Balance Tuning Table (`BAL`, `balOf`, `balDmg`)**: Integrated automatic balance coefficients across all 12 characters scaling normal attacks, skills, ultimates, cooldowns, and base HP.
+  - **Updated Round Rules & Overtime**:
+    - Default round duration tuned to 50 seconds (`ROUND_TIME = 50`).
+    - Added 15-second sudden death overtime (`OT_TIME = 15`) with double damage multiplier (`OT_DMG = 2`) and visual alert banners.
+    - Surviving fighter carries remaining HP plus 80 bonus health (`CARRY_HEAL = 80`) into the next round.
+    - Updated `#help` guide and overlay texts to reflect the new 50s round + 15s overtime rules.
 - **Chaos Mode Mutations & Dynamic Modifiers**:
   - Introduced real-time battlefield mutation system in Chaos Mode (`updateChaos`), including variable gravity (`轻功如燕` low gravity / `千钧重坠` heavy gravity), attack super armor empowerment (`修罗霸体`), jump height amplification (`御风凌空`), and dynamic guard stamina drain.
   - Added dynamic announcement banners, mutation timer countdown HUD displays, and audio alerts on mutation transitions.
