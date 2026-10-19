@@ -5,7 +5,7 @@
 源文件在 src/ 和 assets/，改完运行一次，生成仓库根目录下的网页：
 
   index.html            联网版：GitHub Pages 和 server.py 都用它。支持免服务器直连和联机服务器，
-                        音乐从 assets/music 下载，PeerJS 用到时才从 assets/peerjs.min.js 加载。
+                        音乐从 assets/music 下载，青锋行按需从 assets/qingfengxing.html 加载。
   renying-offline.html  离线版：一个文件就能玩（音乐、青锋行都打包在里面），双击打开，不能联机。
   renying.html          旧网址，自动跳到 index.html。
 
@@ -16,6 +16,7 @@
 import base64
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -52,6 +53,50 @@ def read(*parts, mode="r"):
         return f.read()
 
 
+def compact_css(css):
+    css = re.sub(r"/\*[\s\S]*?\*/", "", css)
+    lines = [ln.strip() for ln in css.splitlines() if ln.strip()]
+    return "\n".join(lines)
+
+
+def compact_js(js):
+    out = []
+    in_block = False
+    for ln in js.splitlines():
+        s = ln.strip()
+        if not s:
+            continue
+        if in_block:
+            if "*/" in s:
+                in_block = False
+                rest = s.split("*/", 1)[1].strip()
+                if rest:
+                    out.append(rest)
+            continue
+        if s.startswith("/*"):
+            if "*/" not in s:
+                in_block = True
+            else:
+                rest = s.split("*/", 1)[1].strip()
+                if rest:
+                    out.append(rest)
+            continue
+        if s.startswith("//"):
+            continue
+        out.append(s)
+    return "\n".join(out)
+
+
+def quantize_obj(obj):
+    if isinstance(obj, float):
+        return round(obj, 4)
+    if isinstance(obj, list):
+        return [quantize_obj(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: quantize_obj(v) for k, v in obj.items()}
+    return obj
+
+
 def music_data():
     folder = os.path.join(ASSETS, "music")
     data = {}
@@ -68,7 +113,7 @@ def hero_models_data():
         for name in sorted(os.listdir(folder)):
             if name.endswith(".json"):
                 try:
-                    data[name[:-5]] = json.loads(read(folder, name))
+                    data[name[:-5]] = quantize_obj(json.loads(read(folder, name)))
                 except Exception:
                     pass
     return data
@@ -77,23 +122,23 @@ def hero_models_data():
 def page(offline):
     html = read(SRC, "page.html")
     build = {"offline": offline}
+    qfx_b64 = base64.b64encode(read(ASSETS, "qingfengxing.html", mode="rb")).decode() if offline else ""
     parts = {
-        "<!--@style-->\n": "<style>\n" + read(SRC, "style.css") + "</style>\n",
-        "<!--@music-->\n": ("<script>window.MUSIC_DATA = " + json.dumps(music_data()) + ";</script>\n") if offline else "",
+        "<!--@style-->\n": "<style>\n" + compact_css(read(SRC, "style.css")) + "\n</style>\n",
+        "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
-            "<script>window.RENYING_BUILD = " + json.dumps(build) + "; window.RENYING_HERO_MODELS = " + json.dumps(hero_models_data()) + ";</script>\n"
+            "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_HERO_MODELS=" + json.dumps(hero_models_data(), separators=(",", ":")) + ";</script>\n"
             + ("" if offline else (
                 "<script>\n" + read(ASSETS, "firebase-app-compat.js") + "\n</script>\n"
                 "<script>\n" + read(ASSETS, "firebase-auth-compat.js") + "\n</script>\n"
                 "<script>\n" + read(ASSETS, "firebase-firestore-compat.js") + "\n</script>\n"
             ))
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
-            + "<script>\n" + read(SRC, "cloud.js") + "</script>\n"
-            + "<script>\n" + read(SRC, "game.js") + "</script>\n"
-            + "<script>\n" + read(SRC, "net-p2p.js") + "</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "game.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "net-p2p.js")) + "\n</script>\n"
         ),
-        "<!--@qfx-->\n": '<script id="qfxData" type="application/octet-stream">'
-                         + base64.b64encode(read(ASSETS, "qingfengxing.html", mode="rb")).decode() + "</script>\n",
+        "<!--@qfx-->\n": '<script id="qfxData" type="application/octet-stream">' + qfx_b64 + "</script>\n",
     }
     for marker, text in parts.items():
         if html.count(marker) != 1:
@@ -144,7 +189,7 @@ def main():
                 f.write(text)
             os.chmod(tmp, 0o644)
             os.replace(tmp, path)
-            print(f"已生成 {name}（{len(text.encode()) / 1024 / 1024:.1f} MB）")
+            print(f"已生成 {name}（{len(text.encode()) / 1024 / 1024:.2f} MB）")
     if check:
         if stale:
             print("这些网页不是最新的，运行 python3 tools/build.py 后再提交：" + "、".join(stale))

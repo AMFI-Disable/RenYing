@@ -2054,82 +2054,94 @@ const ULT_AI = {
 };
 // 技能之后顺手接的动作
 const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.16], ['light', 0.32], ['light', 0.48], ['heavy', 0.68]] };
-// 神经网络推理辅助函数（用于天道 God 难度模型）
+// 神经网络推理辅助函数（用于天道 God 难度模型，预分配缓冲区实现零 GC 推理）
+const AI_H1 = new Float32Array(64);
+const AI_H2 = new Float32Array(32);
+const AI_LOGITS = new Float32Array(10);
+const AI_PROBS = new Float32Array(10);
+const AI_OBS = new Float32Array(25);
+
 function aiPredictPolicy(heroId, obs) {
   try {
     const models = typeof window !== 'undefined' ? window.RENYING_HERO_MODELS : null;
     if (!models || !models[heroId]) return null;
     const m = models[heroId];
     const { W1, b1, W2, b2, W3, b3 } = m.weights;
-    // Layer 1: Input(25) -> H1(64) + ReLU
-    const h1 = new Float32Array(b1.length);
-    for (let j = 0; j < b1.length; j++) {
-      let sum = b1[j];
-      for (let i = 0; i < obs.length; i++) sum += obs[i] * W1[i][j];
-      h1[j] = sum > 0 ? sum : 0;
+    const n1 = b1.length, n2 = b2.length, n3 = b3.length, nIn = obs.length;
+    for (let j = 0; j < n1; j++) AI_H1[j] = b1[j];
+    for (let i = 0; i < nIn; i++) {
+      const xi = obs[i];
+      if (xi === 0) continue;
+      const wRow = W1[i];
+      for (let j = 0; j < n1; j++) AI_H1[j] += xi * wRow[j];
     }
-    // Layer 2: H1(64) -> H2(32) + ReLU
-    const h2 = new Float32Array(b2.length);
-    for (let j = 0; j < b2.length; j++) {
-      let sum = b2[j];
-      for (let i = 0; i < h1.length; i++) sum += h1[i] * W2[i][j];
-      h2[j] = sum > 0 ? sum : 0;
+    for (let j = 0; j < n1; j++) if (AI_H1[j] < 0) AI_H1[j] = 0;
+
+    for (let j = 0; j < n2; j++) AI_H2[j] = b2[j];
+    for (let i = 0; i < n1; i++) {
+      const h1i = AI_H1[i];
+      if (h1i === 0) continue;
+      const wRow = W2[i];
+      for (let j = 0; j < n2; j++) AI_H2[j] += h1i * wRow[j];
     }
-    // Layer 3: H2(32) -> Logits(10)
-    const logits = new Float32Array(b3.length);
+    for (let j = 0; j < n2; j++) if (AI_H2[j] < 0) AI_H2[j] = 0;
+
     let maxL = -Infinity;
-    for (let j = 0; j < b3.length; j++) {
+    for (let j = 0; j < n3; j++) {
       let sum = b3[j];
-      for (let i = 0; i < h2.length; i++) sum += h2[i] * W3[i][j];
-      logits[j] = sum;
+      for (let i = 0; i < n2; i++) sum += AI_H2[i] * W3[i][j];
+      AI_LOGITS[j] = sum;
       if (sum > maxL) maxL = sum;
     }
-    // Softmax probabilities
-    const probs = new Float32Array(b3.length);
+    // Low-temperature softmax (T = 0.25 -> invTemp = 4.0) sharpens optimal action selection in God Mode
     let expSum = 0;
-    for (let j = 0; j < logits.length; j++) {
-      probs[j] = Math.exp(logits[j] - maxL);
-      expSum += probs[j];
+    for (let j = 0; j < n3; j++) {
+      AI_PROBS[j] = Math.exp((AI_LOGITS[j] - maxL) * 4.0);
+      expSum += AI_PROBS[j];
     }
-    for (let j = 0; j < probs.length; j++) probs[j] /= expSum;
-    return probs; // [0:idle, 1:left, 2:right, 3:down, 4:jump, 5:atk, 6:skill1, 7:skill2, 8:dash, 9:special]
+    const invSum = 1 / (expSum || 1);
+    for (let j = 0; j < n3; j++) AI_PROBS[j] *= invSum;
+    return AI_PROBS;
   } catch (e) {
     return null;
   }
 }
 
 function extractAIObs(me, foe) {
-  const dx = (foe.x - me.x) / STAGE_W;
-  const dy = (foe.y - me.y) / 400;
-  const dist = Math.abs(foe.x - me.x) / STAGE_W;
-  const hp1 = me.hp / me.maxHp;
-  const hp2 = foe.hp / foe.maxHp;
-  const g1 = (me.guard || 0) / (me.maxGuard || 100);
-  const g2 = (foe.guard || 0) / (foe.maxGuard || 100);
-  const m1 = (me.meter || 0) / 100;
-  const m2 = (foe.meter || 0) / 100;
-  const vy1 = me.vy / 600;
-  const vy2 = foe.vy / 600;
-  const face1 = me.face;
-  const face2 = foe.face;
-  const sAtk1 = me.state === 'attack' ? 1 : 0;
-  const sBlk1 = me.state === 'block' || me.state === 'blockstun' ? 1 : 0;
-  const sHit1 = me.state === 'hitstun' || me.state === 'launched' ? 1 : 0;
-  const sAir1 = me.onGround() ? 0 : 1;
-  const sAtk2 = foe.state === 'attack' ? 1 : 0;
-  const sBlk2 = foe.state === 'block' || foe.state === 'blockstun' ? 1 : 0;
-  const sHit2 = foe.state === 'hitstun' || foe.state === 'launched' ? 1 : 0;
-  const sAir2 = foe.onGround() ? 0 : 1;
-  const cd1 = Math.min(1, (me.skillCD || 0) / 6);
-  const cd2 = Math.min(1, (me.skill2CD || 0) / 6);
-  const breakCD = Math.min(1, (me.breakCD || 0) / 10);
-  const threatProj = projs.find(p => p.owner !== me.idx && p.dmg > 0 && Math.abs(me.x - p.x) < 300);
-  const projNear = threatProj ? (threatProj.x - me.x) / STAGE_W : 0;
-  return [
-    dx, dy, dist, hp1, hp2, g1, g2, m1, m2, vy1, vy2, face1, face2,
-    sAtk1, sBlk1, sHit1, sAir1, sAtk2, sBlk2, sHit2, sAir2,
-    cd1, cd2, breakCD, projNear
-  ];
+  AI_OBS[0] = (foe.x - me.x) / STAGE_W;
+  AI_OBS[1] = (foe.y - me.y) / 400;
+  AI_OBS[2] = Math.abs(foe.x - me.x) / STAGE_W;
+  AI_OBS[3] = me.hp / me.maxHp;
+  AI_OBS[4] = foe.hp / foe.maxHp;
+  AI_OBS[5] = (me.guard || 0) / (me.maxGuard || 100);
+  AI_OBS[6] = (foe.guard || 0) / (foe.maxGuard || 100);
+  AI_OBS[7] = (me.meter || 0) / 100;
+  AI_OBS[8] = (foe.meter || 0) / 100;
+  AI_OBS[9] = me.vy / 600;
+  AI_OBS[10] = foe.vy / 600;
+  AI_OBS[11] = me.face;
+  AI_OBS[12] = foe.face;
+  AI_OBS[13] = me.state === 'attack' ? 1 : 0;
+  AI_OBS[14] = me.state === 'block' || me.state === 'blockstun' ? 1 : 0;
+  AI_OBS[15] = me.state === 'hitstun' || me.state === 'launched' ? 1 : 0;
+  AI_OBS[16] = me.onGround() ? 0 : 1;
+  AI_OBS[17] = foe.state === 'attack' ? 1 : 0;
+  AI_OBS[18] = foe.state === 'block' || foe.state === 'blockstun' ? 1 : 0;
+  AI_OBS[19] = foe.state === 'hitstun' || foe.state === 'launched' ? 1 : 0;
+  AI_OBS[20] = foe.onGround() ? 0 : 1;
+  AI_OBS[21] = Math.min(1, (me.skillCD || 0) / 6);
+  AI_OBS[22] = Math.min(1, (me.skill2CD || 0) / 6);
+  AI_OBS[23] = Math.min(1, (me.breakCD || 0) / 10);
+  let projNear = 0;
+  for (let i = 0; i < projs.length; i++) {
+    const p = projs[i];
+    if (p.owner !== me.idx && p.dmg > 0 && Math.abs(me.x - p.x) < 300) {
+      projNear = (p.x - me.x) / STAGE_W;
+      break;
+    }
+  }
+  AI_OBS[24] = projNear;
+  return AI_OBS;
 }
 
 class AICtrl extends Ctrl {
@@ -4075,9 +4087,14 @@ const EXT = { on: false, url: '' };
 function openQfx() {
   initAudio();
   if (!EXT.url) {
-    const bin = atob($id('qfxData').textContent.trim()), u8 = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    EXT.url = URL.createObjectURL(new Blob([u8], { type: 'text/html;charset=utf-8' }));
+    const qfxEl = $id('qfxData'), raw = qfxEl ? qfxEl.textContent.trim() : '';
+    if (raw) {
+      const bin = atob(raw), u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      EXT.url = URL.createObjectURL(new Blob([u8], { type: 'text/html;charset=utf-8' }));
+    } else {
+      EXT.url = 'assets/qingfengxing.html';
+    }
   }
   const fr = $id('extFrame');
   fr.src = EXT.url; $id('extGame').classList.remove('hidden'); EXT.on = true;
@@ -6480,22 +6497,22 @@ function statRows(c) {
   return rows;
 }
 const ICONS = {
-  passive: '<circle cx="12" cy="12" r="8"/><path d="M12 4a4 4 0 0 1 0 8a4 4 0 0 0 0 8"/>',
-  light: '<path d="M5 19L19 5M15 5h4v4M7 13l4 4"/>',
-  charge: '<circle cx="12" cy="12" r="2.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1"/>',
-  air: '<path d="M12 19V6M7 11l5-5 5 5M5 21h14"/>',
-  skill: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',
-  ranged: '<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
+  passive: '<circle cx="12" cy="12" r="9"/><path d="M12 3a4.5 4.5 0 0 1 0 9 4.5 4.5 0 0 0 0 9"/><circle cx="12" cy="7.5" r="1"/><circle cx="12" cy="16.5" r="1"/>',
+  light: '<path d="M20 4L7 17l-3 3 1-4L18 3l2 1zM5.5 14.5l4 4M14 6l4 4"/>',
+  charge: '<circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3l-2.8 2.8"/>',
+  air: '<path d="M12 20V5M7 10l5-5 5 5M4 17c3-2 13-2 16 0M6 21h12"/>',
+  skill: '<path d="M13 2L4 14h7l-1 8 10-12h-7z"/>',
+  ranged: '<path d="M3 12h14M13 6l7 6-7 6M7 8l4 4-4 4"/>',
   melee: '<path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/>',
   shield_bash: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM8 11h8M12 7v8"/>',
-  magic_trap: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M7.8 7.8l8.4 8.4M7.8 16.2l8.4-8.4"/>',
-  ult: '<path d="M12 3l2.4 5.6L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.6-.4z"/>',
-  esc: '<path d="M12 21V10M7 15l5-5 5 5M7 8l5-5 5 5"/>',
-  adv: '<path d="M12 3v5M12 16v5M3 12h5M16 12h5"/><circle cx="12" cy="12" r="1.5"/>',
-  vs: '<path d="M4 4l16 16M20 4L4 20M4 9V4h5M20 9V4h-5"/>',
-  stats: '<path d="M5 20V11M12 20V4M19 20v-8"/>',
-  skin: '<path d="M4 20c4 0 6-2 6-5l7-8a2 2 0 0 0-3-3l-8 7c-3 0-5 2-5 6z"/>',
-  chronicle: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5zM8 7h8M8 11h6"/>',
+  magic_trap: '<polygon points="12 2 19 7 19 17 12 22 5 17 5 7"/><circle cx="12" cy="12" r="4"/><path d="M12 2v6M12 16v6M5 7l5 3M14 14l5 3M19 7l-5 3M10 14l-5 3"/>',
+  ult: '<polygon points="12 2 15.2 8.5 22 9.4 17 14.2 18.3 21 12 17.6 5.7 21 7 14.2 2 9.4 8.8 8.5"/><circle cx="12" cy="12" r="2.5"/>',
+  esc: '<path d="M12 21V9M7 14l5-5 5 5M6 7l6-4 6 4"/>',
+  adv: '<polygon points="12 2 19 9 12 22 5 9"/><path d="M5 9h14M12 2v20"/>',
+  vs: '<path d="M14.5 17.5L3 6V3h3l11.5 11.5M9.5 17.5L21 6V3h-3L6.5 14.5M13 19l6-6M11 19l-6-6"/>',
+  stats: '<path d="M4 20h16M6 20V10h3v10M11 20V4h3v16M16 20v-7h3v7"/>',
+  skin: '<path d="M8 3l4 3 4-3 5 4-3 4v10H6V11L3 7l5-4zM12 6v15"/>',
+  chronicle: '<path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM8 7h8M8 11h8M8 15h5"/>',
 };
 const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.skill}</svg></span>`;
 // 图鉴里的简短说明（数值 / 一句话）
@@ -7359,11 +7376,11 @@ function renderCodex() {
   const fun = (typeof SKILL_FUN !== 'undefined' && SKILL_FUN[c.id]) || {};
   const sh = n => { const p = (n || '').split('·'); return p.length > 1 ? [p[0].trim(), p[1].trim()] : ['', n || '']; };
   const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
-  const tile = (icon, label, val, desc, cd, wide, moveKey) => {
+  const tile = (icon, label, val, desc, cd, wide, moveKey, half) => {
     const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
     const mini = moveKey ? `<div class="card-mini-win"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
     const f = moveKey && fun[moveKey];
-    return `<div class="tile t-m${wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${f ? `<div class="tf">“${f}”</div>` : ''}${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
+    return `<div class="tile t-m${half ? ' half' : wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${f ? `<div class="tf">“${f}”</div>` : ''}${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
   };
   const mTypes = HERO_MOVE_TYPES[c.id] || {};
   const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee' };
@@ -7394,8 +7411,8 @@ function renderCodex() {
       const clear = stars > 0 || DEV_SESSION_UNLOCKED;
       return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
     })()}</div>`, '', true),
-    ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id]) : '',
-    tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true),
+    ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', false, null, true) : '',
+    tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true, null, !!ADV_SHORT[c.id]),
   ].filter(Boolean).join('');
   for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic] || ICONS.skill}</svg>`;
   if ($id('cxBento')) $id('cxBento').style.setProperty('--cx-accent', col);
@@ -7576,7 +7593,7 @@ function comRender(list, append) {
   for (const p of filtered) {
     const d = new Date(p.at * 1000), tm = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     const el = document.createElement('div'); el.className = 'cm';
-    const chanBadge = p.chan === 'fight' ? '<span style="font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(255,90,90,.15);color:#ff8a8a;border:1px solid rgba(255,90,90,.3)">约战</span>' : p.chan === 'lore' ? '<span style="font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(233,196,106,.15);color:#e9c46a;border:1px solid rgba(233,196,106,.3)">心得</span>' : '';
+    const chanBadge = p.chan === 'fight' ? '<span style="font-size:12px;padding:1px 6px;border-radius:4px;background:rgba(255,90,90,.15);color:#ff8a8a;border:1px solid rgba(255,90,90,.3)">约战</span>' : p.chan === 'lore' ? '<span style="font-size:12px;padding:1px 6px;border-radius:4px;background:rgba(233,196,106,.15);color:#e9c46a;border:1px solid rgba(233,196,106,.3)">心得</span>' : '';
     el.innerHTML = `<div class="cm-head"><span class="cn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${escapeHTML(p.name)} ${chanBadge}</span><span class="ct">${tm}</span></div><div class="cm-body">${comFmt(p.text)}</div>`;
     log.appendChild(el); comLast = Math.max(comLast, p.id);
   }
@@ -9079,49 +9096,49 @@ const TOWER_PERKS = {
   thunder_dash: {
     id: 'thunder_dash',
     name: '「雷厉」',
-    icon: '⚡',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
     desc: '冲刺与腾空闪拖曳雷弧电芒，对贴近之敌造成 28 点雷击伤害与短暂麻痹。'
   },
   ink_blade: {
     id: 'ink_blade',
     name: '「剑气长虹」',
-    icon: '🗡️',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#46d3ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4L7 17l-3 3 1-4L18 3l2 1zM5.5 14.5l4 4M14 6l4 4"/></svg>',
     desc: '普通攻击挥出破空墨刃剑气，向前飞旋贯穿敌人造成 18 点伤害。'
   },
   parry_refresh: {
     id: 'parry_refresh',
     name: '「借力打力」',
-    icon: '🛡️',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM8 11h8M12 7v8"/></svg>',
     desc: '精准招架（Just Guard）不仅完全免受震退，并瞬间重置所有技能冷却！'
   },
   blood_drink: {
     id: 'blood_drink',
     name: '「血饮残心」',
-    icon: '🩸',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ff4a5f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
     desc: '打断敌方出招反击或空中终结技命中时，将 15% 伤害转化为生命自愈！'
   },
   flow_combo: {
     id: 'flow_combo',
     name: '「行云流水」',
-    icon: '🌊',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#46d3ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2-3 5-3 7 0s5 3 7 0 4-3 6 0M2 17c2-3 5-3 7 0s5 3 7 0 4-3 6 0M2 7c2-3 5-3 7 0s5 3 7 0 4-3 6 0"/></svg>',
     desc: '连招取消窗口延长 50%，受击聚气与攻击蓄气速度大幅提升 50%。'
   },
   golden_bell: {
     id: 'golden_bell',
     name: '「金钟护体」',
-    icon: '🔔',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
     desc: '受到致命一击时触发保命金钟罩，无敌 1.5 秒免死（每 3 层刷新一次）。'
   },
   air_burst: {
     id: 'air_burst',
     name: '「浮空破灭」',
-    icon: '🌪️',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#7fe0b0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20h2"/></svg>',
     desc: '对处于浮空与挑飞状态的敌人造成的伤害提升 35%！'
   },
   sky_master: {
     id: 'sky_master',
     name: '「凌霄御风」',
-    icon: '✨',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.2 8.5 22 9.4 17 14.2 18.3 21 12 17.6 5.7 21 7 14.2 2 9.4 8.8 8.5"/></svg>',
     desc: '腾空闪滞空时间延长至 1.5 秒，且滞空期间发动下坠斩必定暴击破防！'
   }
 };

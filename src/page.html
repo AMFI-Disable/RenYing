@@ -11,6 +11,21 @@
 <!--@style-->
 </head>
 <body>
+<svg style="display:none" aria-hidden="true">
+  <defs>
+    <g id="ic-swords"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/><path d="M9.5 17.5L21 6V3h-3L6.5 14.5M11 19l-6-6M8 16l-4 4M5 21l-2-2"/></g>
+    <g id="ic-pine"><path d="M12 2L5 11h4l-3 7h12l-3-7h4z"/><path d="M12 18v4M9 22h6"/></g>
+    <g id="ic-gourd"><path d="M10 3h4M12 3v2a3.5 3.5 0 0 1 2.2 6.2A5.5 5.5 0 1 1 7.8 11.2 3.5 3.5 0 0 1 12 5V3z"/><path d="M9 11h6"/></g>
+    <g id="ic-scroll"><path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M8 7h8M8 11h8M8 15h5"/><path d="M4 7H2M4 17H2M20 7h2M20 17h2"/></g>
+    <g id="ic-target"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></g>
+    <g id="ic-book"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M8 7h8M8 11h6"/></g>
+    <g id="ic-dummy"><circle cx="12" cy="5.5" r="3"/><path d="M12 8.5v13.5M5 12h14M8 16l8-2M8 22h8"/></g>
+    <g id="ic-pagoda"><path d="M12 2L5 6h14L12 2zM3 11l9-3 9 3H3zM4 16l8-2.5L20 16H4zM6 16v5h12v-5M3 21h18"/></g>
+    <g id="ic-yinyang"><circle cx="12" cy="12" r="9"/><path d="M12 3a4.5 4.5 0 0 1 0 9 4.5 4.5 0 0 0 0 9"/><circle cx="12" cy="7.5" r="1"/><circle cx="12" cy="16.5" r="1"/></g>
+    <g id="ic-squad"><path d="M12 3l3 5-3 3-3-3 3-5z"/><path d="M5 13l3 4-3 3-3-3 3-4zM19 13l3 4-3 3-3-3 3-4z"/><path d="M8 15h8M9.5 9.5L6.5 13M14.5 9.5l3 3.5"/></g>
+    <g id="ic-katana"><path d="M20 4L7 17l-3 3 1-4L18 3l2 1z"/><path d="M5.5 14.5l4 4"/><path d="M14 6l4 4"/></g>
+  </defs>
+</svg>
 <div id="wrap">
   <canvas id="c" tabindex="0"></canvas>
 
@@ -22,13 +37,13 @@
     <button class="mcard right" id="mNet" data-go="netp"><span class="mk">联机对战</span><span class="ms">上擂台，和同学一决高下</span></button>
     <div class="msmall-dock">
       <div class="mgroup" title="江湖游历">
-        <button id="mQfx" class="qfxbtn" title="守住第三、六、十波，可领刃影奖励"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 12h5l-4 7h14l-4-7h5zM12 19v3"/></svg></span>青锋行</button>
-        <button data-go="gacha"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2zM9 7h6M9 11h6M9 15h4"/></svg></span>问剑阁</button>
-        <button data-go="tasks"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></span>任务</button>
+        <button id="mQfx" class="qfxbtn" title="守住第三、六、十波，可领刃影奖励"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>青锋行</button>
+        <button data-go="gacha"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-gourd"/></svg></span>问剑阁</button>
+        <button data-go="tasks"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-target"/></svg></span>任务</button>
       </div>
       <div class="mgroup" title="研习修行">
-        <button data-go="codex"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5zM8 7h8M8 11h6"/></svg></span>角色图鉴</button>
-        <button data-go="tutorial"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span>新手教学</button>
+        <button data-go="codex"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-book"/></svg></span>角色图鉴</button>
+        <button data-go="tutorial"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>新手教学</button>
         <button data-go="replays"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>对局回放</button>
       </div>
       <div class="mgroup" title="系统天地">
@@ -49,19 +64,19 @@
       </div>
 
       <div class="single-cat-tabs" id="singleCatTabs">
-        <button data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span>常规演武</button>
-        <button data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2zM9 7h6M9 11h6M9 15h4"/></svg></span>秘宝异变</button>
-        <button data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>特殊决战</button>
+        <button data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>常规演武</button>
+        <button data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>秘宝异变</button>
+        <button data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-katana"/></svg></span>特殊决战</button>
       </div>
 
       <div class="single-tabs" id="singleTabs">
-        <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span>对战电脑</button>
-        <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 12h5l-4 7h14l-4-7h5zM12 19v3"/></svg></span>守关挑战</button>
-        <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="12" r="1.5"/></svg></span>木人试剑</button>
-        <button data-tab="tower" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>问剑密卷 (肉鸽)</button>
-        <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="15.5" cy="8.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/></svg></span>天机乱斗</button>
-        <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>3v3 车轮战</button>
-        <button data-tab="bushido" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>一击必杀</button>
+        <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>对战电脑</button>
+        <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>守关挑战</button>
+        <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>木人试剑</button>
+        <button data-tab="tower" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
+        <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
+        <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
+        <button data-tab="bushido" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-katana"/></svg></span>一击必杀</button>
       </div>
 
       <!-- 对战电脑 (Choosing AI) -->
@@ -288,7 +303,7 @@
   </div>
 
   <div id="netp" class="scr">
-    <div class="panel" style="max-width:min(980px,95vw);">
+    <div class="panel" style="max-width:min(1360px,96vw);">
       <div class="sec-head-row" style="justify-content:center;position:relative;margin-bottom:12px;">
         <h2 style="margin:0;font-size:clamp(28px,3.2vw,40px)">月下对弈 · 联机对战</h2>
         <span class="sub-badge" id="netLobbyBadge" style="position:absolute;right:0;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:5px;">
@@ -415,7 +430,7 @@
             <!-- 对决剑标 -->
             <div class="lobby-vs" style="display:flex;flex-direction:column;align-items:center;gap:4px">
               <span style="font-family:var(--title);font-size:24px;color:var(--dim);letter-spacing:1px">VS</span>
-              <span class="lobby-ping" id="lobbyPingText" style="font-size:11.5px;color:var(--dim);white-space:nowrap">延迟检测中</span>
+              <span class="lobby-ping" id="lobbyPingText" style="font-size:12px;color:var(--dim);white-space:nowrap">延迟检测中</span>
             </div>
 
             <!-- 应战方 -->
@@ -514,7 +529,7 @@
         </dl></div>
       </div>
       <p class="tips touchonly"><b>手机操作</b>：左边摇杆移动（往下推防御，往上推跳）。右边按键：<b>攻击</b>（点是普攻，按住蓄力、松开出蓄力斩）、<b>跳</b>、<b>远程</b>、<b>技能</b>、<b>闪</b>（腾空闪）、<b>大招</b>（气满时发光）。左上角暂停。</p>
-      <p class="tips">开打前双方先各禁用一个角色，再轮流选人，一共 9 个角色。在选人界面双击角色卡即可确认。<br>
+      <p class="tips">开打前双方先各禁用一个角色，再轮流选人，一共 12 个角色。在选人界面双击角色卡即可确认。<br>
       <b>腾空闪</b>：被连击、被挑飞、倒地都能用，立刻解除受制并向上闪起；落地或出手之前，对手碰不到你。冷却 9 秒，被大招锁住时用不出。<br>
       <b>蓄力斩</b>：蓄满时角色会闪一下，松开便是满蓄力的一斩，能打穿防御。蓄力斩会把对手直接打倒，倒地期间打不到。<br><b>远程招式</b>（按住左键再点右键）：都会把对手短暂打飞，打中后可以接着连。<br>
       连招示例：五段连击的最后一下把对手打飞，马上跳起追上去，空中连点两下左键（第二下是下砸）；远程招式也会把对手短暂打飞，可以接着连。<br>

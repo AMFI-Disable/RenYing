@@ -42,7 +42,7 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
 HERE = os.path.dirname(os.path.abspath(__file__))
 GAME = os.path.join(HERE, "index.html")
 ASSETS = os.path.join(HERE, "assets")
-ASSET_TYPES = {".js": "text/javascript; charset=utf-8", ".mp3": "audio/mpeg", ".png": "image/png"}
+ASSET_TYPES = {".js": "text/javascript; charset=utf-8", ".mp3": "audio/mpeg", ".png": "image/png", ".html": "text/html; charset=utf-8"}
 TUNNEL_LOG = os.path.join(HERE, "logs", "tunnel.log")
 URL_FILE = os.path.join(os.path.expanduser("~"), "Desktop", "刃影网址.txt")
 DB_PATH = os.path.join(HERE, "data", "renying.db")
@@ -1217,8 +1217,8 @@ def handle(conn, addr):
                     http_reply(conn, "200 OK", "text/html; charset=utf-8", f.read())
             except FileNotFoundError:
                 http_reply(conn, "404 Not Found", "text/plain; charset=utf-8", "找不到 index.html：请在项目目录先运行 python3 tools/build.py 生成页面".encode())
-        elif re.fullmatch(r"/(assets/)?music/[a-z]+\.mp3|/assets/[a-z0-9-]+(\.min)?\.(js|png)", path):
-            # 静态资源：只提供 assets 里“小写字母、数字、横线”命名的 js / png / mp3（旧网址 /music/x.mp3 也能用），浏览器缓存一天
+        elif re.fullmatch(r"/(assets/)?music/[a-z]+\.mp3|/assets/[a-z0-9-]+(\.min)?\.(js|png|html)", path):
+            # 静态资源：只提供 assets 里“小写字母、数字、横线”命名的 js / png / html / mp3（旧网址 /music/x.mp3 也能用），浏览器缓存一天
             rel = path[len("/assets/"):] if path.startswith("/assets/") else path[1:]
             files = [os.path.join(ASSETS, *rel.split("/"))]
             if rel.startswith("music/"):
