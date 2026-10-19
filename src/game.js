@@ -1090,9 +1090,9 @@ function musicMode() {
   return 'menu';
 }
 // ======================= 背景音乐文件（music 文件夹） =======================
-// 每个界面一首；循环时首尾交叉淡化 0.3 秒；切换时旧曲淡出、新曲淡入。加载失败就用程序生成的音乐
+// 每个界面一首（v5.1 原创合成曲录成的 mp3，首尾无缝）；切换时旧曲淡出、新曲淡入。加载失败就用程序生成的音乐
 const MFILE = { menu: 'menu', bp: 'select', fight: 'battle', overtime: 'overtime', practice: 'practice', gacha: 'gacha' };
-const MGAIN = { menu: 1.55, select: 0.92, battle: 0.79, overtime: 0.78, practice: 1.17, gacha: 1.66, victory: 0.9, defeat: 1, legendary: 1 };   // 拉平响度
+const MGAIN = { menu: 1, select: 1, battle: 1, overtime: 1, practice: 1, gacha: 1, victory: 1, defeat: 1, legendary: 1 };   // 新曲子录制时已按响度拉平
 const MBUF = {}, MF = { name: null, g: null, srcs: [], tok: 0, tm: 0 };
 // 音乐文件的网址（相对网页位置，GitHub Pages 和 server.py 都能用）；双击打开本地文件时没有，改用程序生成的音乐
 function musicURL(name) {
@@ -1123,25 +1123,13 @@ function musicFileSet(mode) {
   const tok = ++MF.tok;
   mload(name).then(buf => { if (buf && tok === MF.tok) musicLoop(name, buf, tok); });
   // 顺便预加载其他曲子
-  if (name === 'menu') setTimeout(() => { for (const n of ['select', 'battle', 'overtime', 'victory', 'defeat']) mload(n); }, 3000);
+  if (name === 'menu') setTimeout(() => { for (const n of ['select', 'battle', 'overtime', 'practice', 'victory', 'defeat', 'legendary']) mload(n); }, 3000);
 }
-function musicLoop(name, buf, tok) {
-  const g = AC.createGain(); g.gain.value = 0; g.connect(MUSIC.fileGain); g.gain.setTargetAtTime(MGAIN[name] || 1, AC.currentTime, 0.4);
-  MF.g = g;
-  const XF = 0.3; let t = AC.currentTime + 0.05;
-  const sched = () => {
-    if (tok !== MF.tok) return;
-    const src = AC.createBufferSource(), eg = AC.createGain();
-    src.buffer = buf; src.connect(eg); eg.connect(g);
-    const end = t + buf.duration;
-    eg.gain.setValueAtTime(0, t); eg.gain.linearRampToValueAtTime(1, t + XF);
-    eg.gain.setValueAtTime(1, end - XF); eg.gain.linearRampToValueAtTime(0, end);
-    src.start(t); src.stop(end + 0.05);
-    MF.srcs.push(src); if (MF.srcs.length > 3) MF.srcs.shift();
-    t = end - XF;
-    MF.tm = setTimeout(sched, Math.max(0, (t - AC.currentTime - 1.5) * 1000));
-  };
-  sched();
+function musicLoop(name, buf, tok) {   // 曲子本身首尾无缝，直接原生循环，不再交叉淡化（淡化会吃掉 0.3 秒，节拍会跳）
+  const g = AC.createGain(), src = AC.createBufferSource();
+  g.gain.value = 0; g.connect(MUSIC.fileGain); g.gain.setTargetAtTime(MGAIN[name] || 1, AC.currentTime, 0.4);
+  src.buffer = buf; src.loop = true; src.connect(g); src.start(AC.currentTime + 0.05);
+  MF.g = g; MF.srcs = [src];
 }
 function playSting(name, duck) {   // 胜利、失败、抽到传说
   if (!AC || !MUSIC.fileGain) return;
