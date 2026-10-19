@@ -8,6 +8,12 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Collaboration & Agent Development Guide (`tools/project_doc.typ`, `project.pdf`)**:
+  - Authored comprehensive project architecture, Git/GitHub setup, and AI agent protocol manual in Typst (`tools/project_doc.typ`) and compiled high-fidelity PDF (`project.pdf`).
+  - Documented modular source tree architecture (`src/`), build pipeline (`tools/build.py`), and headless simulation suite (`tools/cvc-sim.mjs`).
+  - Outlined collaborator setup and GitHub CLI (`gh`) authentication workflow for collaborator LuffyXing55.
+  - Established Claude and AI agent collaboration protocols: strictly prohibiting direct edits to compiled HTML artifacts (`index.html`, `renying-offline.html`), maintaining 12-character roster context, and enforcing the three-word commit message formula (`xxx: xxx xxx xxx`).
+  - Integrated mandatory task delivery verification checklist and development templates for new move authoring and task reporting.
 - **ZuiXian 2.0 (醉翁 / 山水醉翁) Complete Mechanics Overhaul**:
   - Rebuilt ability kit with `pavilion` (亭中留客, Q skill): summons a falling pavilion drop with 720 range, dropping on target and trapping them inside for 2.0s (`jailT`); enemies inside cannot move, cannot escape via airborne flash (`tengkong`), but remain fully vulnerable to attacks without being launched out of the structure.
   - Added `feast` (与民同乐, R skill): throws a wine bottle projectile towards the opponent; drinker gains 80 HP & 0.7s self-stun, opponent gains 50 HP & 1.5s stun, and completely empties drunk gauge.
