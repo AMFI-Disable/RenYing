@@ -1392,6 +1392,7 @@
           <dt>朝向</dt><dd>最后按的是 <kbd>A</kbd> 就朝左，是 <kbd>D</kbd> 就朝右；按住防御时自动面向对手（设置里可以改成一直自动面向对手）</dd>
           <dt>技能</dt><dd><kbd>Q</kbd>，各家不同</dd>
           <dt>大招</dt><dd><kbd>E</kbd>，气满时</dd>
+          <dt>回合</dt><dd>50 秒内击倒对手才算赢；没分出胜负就进 15 秒加时，加时里伤害翻倍。活下来的人带着剩下的血量 +80 进下一回合</dd>
           <dt>木人桩</dt><dd>练习时按 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 切换：任打不还手 / 一味死守 / 被连便闪 / 钉在原地</dd>
         </dl></div>
       </div>
@@ -2757,6 +2758,24 @@ const FINAL = { ult: true, noScale: true, dmg: 85, kb: [520, -900], stun: .6, hs
 const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: .035, unblockable: true, hold: true };
 
 // ======================= 角色 =======================
+// 经 5940 局高强度对战自动调参验证的全英雄平衡系数
+const BAL = {
+  qingfeng: { normal: 1.055, skill: 1.055, ult: 0.946, cd: 1, hp: 1.019 },
+  feiying: { normal: 1.193, skill: 1.249, ult: 0.976, cd: 0.95, hp: 1.009 },
+  tieshan: { normal: 0.715, skill: 0.676, ult: 0.676, cd: 1, hp: 0.982 },
+  lingshuang: { normal: 1.047, skill: 1.047, ult: 0.943, cd: 1, hp: 1.027 },
+  liuyun: { normal: 1.066, skill: 1.066, ult: 0.963, cd: 1, hp: 1.042 },
+  leiming: { normal: 0.944, skill: 0.806, ult: 0.806, cd: 1.1, hp: 1.022 },
+  moyu: { normal: 0.936, skill: 0.892, ult: 0.795, cd: 1, hp: 0.978 },
+  yuehua: { normal: 1.059, skill: 1.059, ult: 0.952, cd: 1, hp: 0.993 },
+  yanling: { normal: 0.973, skill: 0.973, ult: 0.872, cd: 1, hp: 1.011 },
+  yuxiao: { normal: 0.999, skill: 0.999, ult: 0.893, cd: 1, hp: 1.003 },
+  zuixian: { normal: 1.099, skill: 1.099, ult: 0.956, cd: 1, hp: 1.076 },
+  gouchen: { normal: 1.11, skill: 1.11, ult: 0.977, cd: 1, hp: 1.084 },
+};
+const balOf = f => (f && f.ch && BAL[f.ch.id]) || BAL.qingfeng;
+function balDmg(att, m) { const b = balOf(att); return m.ult ? b.ult : (m.sk || (!m.isProj && att.state === 'skill')) ? b.skill : b.normal; }
+
 // stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率
 // skill 是 Q 技能，ult 是 E 大招，passive 是被动。beats/weakTo 只是给玩家看的克制关系说明。
 const CHARS = [
@@ -2813,8 +2832,8 @@ const CHARS = [
     stat: { hp: 455, walk: 1.04, speed: 0.88, dmg: 0.98, reach: 1.12, swing: 0.86, jump: 1, weight: 0.86, defRating: 0.98, guardMax: 90, guardStab: 0.95, guardChip: 0.12, guardRegen: 27, poise: 1.00, size: 0.96 }, hitFeel: 0.85,
     look: { body: '#eef4ec', shade: '#9fb7a6', outline: '#0d1a14', outlineA: 1, scarf: '#5fcf9a', slash: '150,240,200', blade: '#d8f5e4', head: 'jade', weapon: 'flute' },
     ai: { range: [110, 280] }, beats: ['tieshan', 'moyu'], weakTo: ['feiying', 'leiming'] },
-  { id: 'zuixian', name: '醉仙', role: '醉拳狂客', diff: 3, escCD: 8.5, skill: 'drink', skill2: 'drunkstep', ult: 'eightimm', passive: 'drunk',
-    passiveName: '醉意', passiveDesc: '越喝越能打。豪饮一口醉意 +50，打中人也会 +4（醉意 0 到 100，每秒缓慢消退），每点醉意增伤 0.5%（满醉 +50%）；醉意过半后东倒西歪，有两成几率闪开近身攻击（醉里乾坤），这时再按豪饮会把酒喷成一道烈火。拳脚短（0.86 臂展），全靠醉步贴身。',
+  { id: 'zuixian', name: '醉翁', role: '山水醉翁', diff: 3, escCD: 8.5, skill: 'pavilion', skill2: 'feast', ult: 'shanshui', passive: 'drunk',
+    passiveName: '酒', passiveDesc: '腰间一壶酒。放任何技能都能添 30 酒（大招也算），打中人 +4（酒 0 到 100，每秒缓慢消退），每点酒增伤 0.5%（满壶 +50%）；酒过半壶就东倒西歪，有两成几率闪开近身攻击。与民同乐至少要半壶酒，并会把酒全部倒光。拳脚短（0.86 臂展）。',
     stat: { hp: 520, walk: 1.06, speed: 0.84, dmg: 1.0, reach: 0.92, swing: 0.8, jump: 1, weight: 1.15, defRating: 1.00, guardMax: 105, guardStab: 1.15, guardChip: 0.09, guardRegen: 30, poise: 0.92, size: 1.02 }, hitFeel: 1.0,
     look: { body: '#c9a882', shade: '#8a6a4a', outline: '#1a0e06', outlineA: 1, scarf: '#d8452f', slash: '255,170,90', blade: '#f2d8a8', head: 'messy', weapon: 'gourd' },
     ai: { range: [50, 140] }, beats: ['lingshuang', 'yuehua'], weakTo: ['liuyun', 'moyu'] },
@@ -3167,39 +3186,36 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
     ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
-  drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50（饮酒时 0.3 秒毫无防备）。醉意过半时改为【酒火】：一口烈酒喷成火焰，醉意越高火越旺（30 到 60 伤害），中者酒火灼身 2 秒，消耗 50 醉意。',
-    start(f) { f.vx = 0; f.breath = (f.drunk || 0) >= 50; },
-    update(f) {
-      if (!f.breath) {
-        if (f.skPh === 0 && f.t >= 0.22) {
-          f.skPh = 1; f.drunk = Math.min(100, (f.drunk || 0) + 50); SFX.drink();
-          addP({ type: 'text', text: '醉意 +50', x: f.x, y: f.y - 115, life: 0.7, max: 0.7, rgb: '255,170,90' });
-        }
-        if (f.t >= 0.3) toNeutral(f);
-      } else {
-        if (f.skPh === 0 && f.t >= 0.14) {
-          f.skPh = 1; const k = (f.drunk || 0) / 100;
-          spawnProj(f, { kind: 'flame', x: f.x + f.face * 70, y: f.y - 82, vx: f.face * 420, w: 150, h: 70, life: 0.32, dmg: Math.round(30 + 30 * k), kb: [260, -160], stun: 0.42, hs: 0.07, pierce: true, maxHits: 1, burn: true, unbreakable: true });
-          f.drunk = Math.max(0, f.drunk - 50); SFX.fire();
-        }
-        if (f.t >= 0.36) toNeutral(f);
-      }
-    },
-    pose: f => f.breath ? (f.skPh === 0 ? ['zx_drink', 30] : ['zx_breath', 60]) : ['zx_drink', 24],
-    ai: (me, foe, d) => (me.drunk || 0) >= 50 ? d < 270 : d > 240 && foe.state !== 'attack' },
-  drunkstep: { name: '醉步', cd: 4.5, pass: true, nofric: true, desc: '东倒西歪一个滚翻（滚翻中无敌，醉意越高滚得越远），可以从对手身边穿过去，起身回头就是一记【醉打金刚】上勾拳，把人打上半空。',
+  pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.15 秒就落地，射程约 720），罩住了就把人禁锢在亭中 2 秒，期间动弹不得、腾空闪也用不出，但可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
     start(f) { f.vx = 0; },
     update(f, foe) {
-      if (f.skPh === 0) { f.skPh = 1; f.t = 0; f.vx = f.face * (720 + 4 * (f.drunk || 0)); f.invul = Math.max(f.invul, 0.3); SFX.dash(); dust(f.x, 0, 8); }
-      if (f.skPh === 1 && f.t >= 0.3) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.hitDone = false; f.face = foe.x >= f.x ? 1 : -1; SFX.heavy(); }
-      if (f.skPh === 2) {
-        if (f.t >= 0.04 && f.t < 0.16 && strike(f, foe, { box: [0, -120, 90, 0], dmg: 50, kb: [140, -760], stun: 0.5, hs: 0.1, launch: true }))
-          addP({ type: 'text', text: '醉打金刚', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,170,90' });
-        if (f.t >= 0.36) toNeutral(f);
+      if (f.skPh === 0 && f.t >= 0.05) {
+        f.skPh = 1; SFX.swing();
+        const tx = clamp(foe.x, WALL + 40, STAGE_W - WALL - 40);
+        if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.1, w: 150, h: 560, life: 0.6, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
+        else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
       }
+      if (f.t >= 0.27) toNeutral(f);
     },
-    pose: f => f.skPh <= 1 ? ['zx_roll', 40] : ['zx_upper', 55],
-    ai: (me, foe, d) => d > 90 && d < 330 },
+    pose: f => f.skPh === 0 ? ['zx_sway', 30] : ['gc_wind', 40],
+    ai: (me, foe, d) => d < 650 },
+  feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 50 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 80 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
+    start(f) { f.vx = 0; f.drunk = 0; },
+    update(f, foe) {
+      if (f.skPh === 0 && f.t >= 0.18) {
+        f.skPh = 1; SFX.swing();
+        spawnProj(f, { kind: 'bottle', x: f.x + f.face * 40, y: f.y - 92, vx: f.face * 950, vy: -60, g: 260, w: 40, h: 46, life: 0.9, dmg: 1, kb: [0, 0], stun: 0, hs: 0, feast: true, unblockable: true, unbreakable: true });
+      }
+      if (f.skPh === 1 && f.t >= 0.35) {
+        f.skPh = 2; f.hp = Math.min(f.maxHp, f.hp + 80); SFX.drink();
+        addP({ type: 'text', text: '+80', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '130,230,140' });
+      }
+      if (f.t >= 1.05) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.skPh === 1 ? ['gc_throw', 60] : ['zx_drink', 24],
+    ai: (me, foe, d) => (me.drunk || 0) >= 50 && d > 120 && d < 800 && me.hp < me.maxHp * 0.85 },
+  drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.3) toNeutral(f); }, pose: () => ['zx_drink', 24], ai: () => false },
+  drunkstep: { name: '醉步', cd: 4.5, desc: '东倒西歪一个滚翻。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.36) toNeutral(f); }, pose: () => ['zx_roll', 40], ai: () => false },
   hook: { name: '飞锤', cd: 5, air: true, desc: '把链锤朝对手甩出去（射程约 420），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
     start(f) { f.vx *= 0.2; },
     update(f) {
@@ -3429,7 +3445,17 @@ const ULTS = {
       }
       if (f.t >= 1.35) endSpecial(f);
     } },
-  eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 2.3, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身，一拳一位神仙（每拳 2.3 伤害），最后一记仙人醉拳把人打飞（终结 76 伤害）。打完醉意直接灌满。若一扑落空，破绽大开。' },
+  shanshui: { name: '山水之间', desc: '醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。',
+    begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'zx_drink'; f.invul = 0.3; SFX.superOn(); },
+    update(f, foe) {
+      if (f.spN < 8 && f.t >= 0.35 + f.spN * 0.17) {
+        f.spN++; f.spPose = f.spN % 2 ? 'zx_sway' : 'zx_drink';
+        if (foe.hp > 0 && foe.invul <= 0) applyHit(f, foe, { dmg: 15, exact: true, kb: [0, 0], stun: 0.35, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: f.face }, [foe.x, foe.y - 60]);
+        shake = Math.max(shake, 4 + f.spN); SFX.thud();
+      }
+      if (f.t >= 1.95) endSpecial(f);
+    } },
+  eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 2.3, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
   skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 1.2 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitDone = false; SFX.superOn(); },
     update(f, foe) {
@@ -4036,7 +4062,7 @@ function netLost() {
 // 状态快照：房主每帧发一次
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT'];
+  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX'];
 // 同步数据用数组而不是对象，体积小一半多
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 // 被打的状态：这些一定听房主的
@@ -4564,7 +4590,7 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 const ULT_AI = {
   crescent: (m, f, d) => d < 330, shadows: (m, f, d) => d < 330, avalanche: (m, f, d) => d < 700 && f.onGround(),
   phoenix: (m, f, d) => d < 230, timestop: (m, f, d) => d < 700, tornado: (m, f, d) => d < 650, thunder: () => true,
-  inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
+  inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
 };
 // 技能之后顺手接的动作
 const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.16], ['light', 0.32], ['light', 0.48], ['heavy', 0.68]] };
@@ -4822,19 +4848,20 @@ class Fighter {
       }
     } catch (e) {}
     this.look = look || { ...this.ch.look, name: this.ch.name };
-    this.maxHp = this.ch.stat.hp; this.wlen = WEAPON_LEN[this.ch.look.weapon] || 54;
+    this.maxHp = Math.round(this.ch.stat.hp * ((BAL[this.ch.id] || {}).hp || 1)); this.wlen = WEAPON_LEN[this.ch.look.weapon] || 54;
     this.size = this.ch.stat.size || this.ch.size || 1;
     this.maxGuard = this.ch.stat.guardMax || 100;
     this.guard = this.maxGuard;
     this.sinceBlock = 0;
   }
   reset(x) {
+    this.maxHp = Math.round(this.ch.stat.hp * ((BAL[this.ch.id] || {}).hp || 1));
     this.maxGuard = (this.ch && this.ch.stat && this.ch.stat.guardMax) || 100;
     this.guard = this.maxGuard;
     this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: this.idx === 0 ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
-      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false,
+      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -4909,8 +4936,9 @@ function startRound() {
   }
   netEmit({ e: 'round', r: M.round, w: [...M.wins], ch: [A.chIdx, B.chIdx] });
 }
-// 回合规则：25 秒；到时一方过半一方不过半，不过半的败北；否则加时 15 秒，结束时血量比例低的败北
-const ROUND_TIME = 25, OT_TIME = 15;
+// 回合规则：50 秒内击倒对手才算赢；到时没人倒下就进 15 秒加时，加时里所有伤害 ×2；加时也结束时血量比例低的败北。
+// 回合结束后活下来的人带着剩下的血量 +80 进下一回合（不超过上限），倒下的人满血再来
+const ROUND_TIME = 50, OT_TIME = 15, OT_DMG = 2, CARRY_HEAL = 80;
 function timeDeath(winner, text) {
   M.phase = 'ko'; M.t = 0; M.koWinner = winner;
   M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
@@ -4950,10 +4978,8 @@ function updateMatch() {
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
         const ra = A.hp / A.maxHp, rb = B.hp / B.maxHp;
-        if (!M.ot) {
-          if ((ra >= 0.5) !== (rb >= 0.5)) timeDeath(ra >= 0.5 ? 0 : 1, '败北');
-          else { M.ot = true; M.timer = OT_TIME; sayNet('加时', 1.2, 'big', 'gong'); }
-        } else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
+        if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
+        else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
       }
     }
   } else if (M.phase === 'ko') {
@@ -5106,7 +5132,7 @@ function endRound() {
       return;
     }
     const winnerFighter = [A, B][w];
-    const recoverHp = Math.round(winnerFighter.maxHp * 0.10);
+    const recoverHp = CARRY_HEAL;
     const survHp = clamp(winnerFighter.hp + recoverHp, 1, winnerFighter.maxHp);
     const survRatio = survHp / winnerFighter.maxHp;
     M.carry = [null, null];
@@ -5137,7 +5163,8 @@ function endRound() {
     return;
   }
   M.round++;
-  M.carry = null;   // 每回合双方都满血开始（不再继承上一回合的血量）
+  M.carry = [null, null];   // 活下来的人继承剩余血量 +80，倒下的人满血
+  [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
   startRound();
 }
 
@@ -5171,6 +5198,7 @@ function startDash(f, dir) {
 }
 function startSpecial(f) {
   endEscape(f);
+  if (f.ch.passive === 'drunk') f.drunk = Math.min(100, (f.drunk || 0) + 30);
   f.meter = 0; f.state = 'special'; f.sp = 'charge'; f.t = 0; f.invul = 99; f.vx = 0; f.spFace = f.face;
   superFreeze = 0.5; superOwner = f; dimA = 1;
   flashA = 0.35; flashRGB = f.look.slash;
@@ -5384,9 +5412,13 @@ function specialUpdate(f, foe) {
 // ======================= 技能执行 =======================
 function startSkill(f, foe, slot) {
   const id = slot === 2 ? f.ch.skill2 : f.ch.skill, S = SKILLS[id];
+  if (!S) return;
+  if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: '酒不够', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
   endEscape(f);
+  if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
   f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null;
-  if (slot === 2) f.skill2CD = S.cd; else f.skillCD = S.cd;
+  const cd = S.cd * (balOf(f).cd || 1);
+  if (slot === 2) f.skill2CD = cd; else f.skillCD = cd;
   f.face = faceDir(f, foe);   // 技能朝角色面向的方向放（电脑没有方向键，自动面向对手）
   const customNm = skinSkillName(f, slot);
   if (customNm && f.hp > 0 && M.phase === 'fight') {
@@ -5459,8 +5491,18 @@ function updateProjs() {
     if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
     if (!overlap(box, hurtbox(foe))) continue;
+    if (p.feast) {   // 与民同乐：砸中就得陪着喝
+      p.dead = true;
+      if (!isClient()) {
+        foe.hp = Math.min(foe.maxHp, foe.hp + 50);
+        foe.state = 'hitstun'; foe.t = 0; foe.stun = 1.5; foe.drinkT = 1.5; foe.vx = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.rooted = true;
+      }
+      SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
+      addP({ type: 'text', text: '+50', x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
+      continue;
+    }
     // 玉箫回音壁：把飞行道具原路弹回去
-    if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord'].includes(p.kind)) {
+    if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion'].includes(p.kind)) {
       p.owner = foe.idx; p.vx = -p.vx || foe.face * 700; p.vy = -p.vy * 0.4; p.hits = 0; p.hitCD = 0.05; p.life = Math.max(p.life, 0.8);
       p.boomer = false; p.lob = false; p.g = 0; p.sk = true; p.hook = false;
       foe.notes = Math.min(3, (foe.notes || 0) + 1);
@@ -5497,6 +5539,11 @@ function updateProjs() {
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
     const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
     if (p.burn && struck) { foe.burnT = 2; addP({ type: 'text', text: '酒火灼身', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,150,60' }); }
+    if (p.jail && foe.hp > 0 && !isClient()) {   // 醉翁亭落下：留客两秒
+      foe.jailT = 2; foe.jailX = clamp(foe.x, WALL + 30, STAGE_W - WALL - 30);
+      shake = Math.max(shake, 12); dust(foe.x, 0, 16); SFX.thud();
+      addP({ type: 'text', text: '醉翁亭 · 留客两秒', x: foe.x, y: foe.y - 290, life: 1.1, max: 1.1, rgb: '255,190,90' });
+    }
     if (p.hook && struck && !isClient()) {   // 勾陈飞锤：扯链拽到身前
       foe.x = clamp(owner.x + owner.face * 72, WALL, STAGE_W - WALL); foe.y = 0; foe.vx = 0; foe.vy = 0;
       foe.state = 'hitstun'; foe.t = 0; foe.stun = Math.max(foe.stun || 0, 0.42); foe.hookedT = 1.2;
@@ -5531,7 +5578,7 @@ function boltFX(p) { shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35
 // 腾空闪：任何状态都能用（被大招锁住时除外）。解除硬直、倒地、定身，向上闪起；落地或自己出手之前无敌
 const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke' };
 function tryEscape(f, foe) {
-  if (f.hp <= 0 || f.breakCD > 0 || M.phase !== 'fight' || ['held', 'special', 'victory'].includes(f.state)) return false;
+  if (f.hp <= 0 || f.breakCD > 0 || M.phase !== 'fight' || ['held', 'special', 'victory'].includes(f.state) || f.jailT > 0 || f.drinkT > 0) return false;
   if (!f.ctrl.consume('dash')) return false;
   const noDir = !f.ctrl.held.left && !f.ctrl.held.right && !f.ctrl.held.down;
   const inAir = f.y < -15 || !f.onGround();
@@ -5652,7 +5699,16 @@ function chargeUpdate(f, foe) {
   f.walkPh += STEP * f.vx * f.face * 0.07;
   if (!c.held.atk) { f.chargeFull = false; startAttack(f, full ? 'cs2' : 'cs1'); }
 }
+// 顿帧、大招定格、被打飞倒地这些动不了的时候按下的技能先记着，能动了马上放，不会被吞掉
+const HOLD_KEYS = ['skill', 'skill2', 'special'], HOLD_STATES = ['launched', 'knockdown', 'getup', 'hitstun', 'held'];
+function holdBuf(f) {
+  const c = f && f.ctrl; if (!c || !c.buf) return;
+  const frozen = hitstop > 0 || superFreeze > 0, stuck = HOLD_STATES.includes(f.state);
+  if (!frozen && !stuck) return;
+  for (const a of frozen ? Object.keys(c.buf) : HOLD_KEYS) if (c.buf[a] !== undefined && clock - c.buf[a] <= BUF) c.buf[a] = clock;
+}
 function updateFighter(f, foe) {
+  holdBuf(f);
   f.t += STEP;
   f.dashCD = Math.max(0, f.dashCD - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);
@@ -5673,7 +5729,17 @@ function updateFighter(f, foe) {
   f.buffT = Math.max(0, f.buffT - STEP);
   f.reflectT = Math.max(0, (f.reflectT || 0) - STEP);
   f.hookedT = Math.max(0, (f.hookedT || 0) - STEP);
-  if (f.ch.passive === 'drunk') f.drunk = Math.max(0, (f.drunk || 0) - 2 * STEP);
+  if (f.ch.passive === 'drunk') f.drunk = Math.max(0, (f.drunk || 0) - STEP);
+  if (f.drinkT > 0) f.drinkT = Math.max(0, f.drinkT - STEP);
+  if (f.jailT > 0) {   // 醉翁亭：关在亭子里，原地挨打
+    f.jailT = Math.max(0, f.jailT - STEP);
+    if (f.hp <= 0) f.jailT = 0;
+    else {
+      f.x = f.jailX; f.y = 0; f.vx = f.vy = 0;
+      if (f.jailT > 0) { f.state = 'hitstun'; f.stun = f.t + f.jailT; f.rooted = true; f.move = null; f.skill = null; f.sp = null; }
+      else { f.state = 'hitstun'; f.t = 0; f.stun = 0.12; f.rooted = false; }
+    }
+  }
   // 玉箫被动：不打人也会慢慢攒音律（每 2.5 秒一枚）
   if (f.ch.passive === 'rhythm' && (f.notes || 0) < 3 && M.phase === 'fight') { f.noteT = (f.noteT || 0) + STEP; if (f.noteT >= 2.5) { f.noteT = 0; f.notes = (f.notes || 0) + 1; } }
   // 酒火灼身：每 0.5 秒掉 3 血，烧不死人
@@ -5954,6 +6020,9 @@ function predictHit(att, def, m, pt) {
 function applyHit(att, def, m, pt) {
   if (M.mode === 'net') NET.matchHits = (NET.matchHits || 0) + 1;
   if (def.forestProxy) { forestHit(att, m, pt); return; }
+  if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
+  if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
+  def.drinkT = 0;
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
   // 月镜：格开近身攻击并反斩（飞行道具和大招无效）
@@ -6054,11 +6123,14 @@ function applyHit(att, def, m, pt) {
     hitVisual(ev); netEmit(ev); return;
   }
   def.armorT = 0; def.parryT = 0; def.sinceHit = 0;
-  if (def.state === 'skill') def.skill = null;
+  if (def.state === 'skill') {
+    if (def.t < 0.12) { if (def.skill === def.ch.skill2) def.skill2CD = 0; else def.skillCD = 0; }
+    def.skill = null;
+  }
   def.comboHits++;
   const isCounter = !m.isProj && def.moveName !== 'dl' && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
-  let dmg = (m.dmg * scale) / defRating;
+  let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
   if (isCounter) {
     ev.counter = true;
     const critMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'crit') ? currentChaosMutation.val : 1.2;
@@ -6134,6 +6206,7 @@ function applyHit(att, def, m, pt) {
     SFX.heavy();
     SFX.slice();
   } else {
+    if (m.exact) dmg = m.dmg;
     def.hp = Math.max(m.hold ? 1 : 0, def.hp - dmg);
     if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'vamp' && att.hp > 0 && !m.chip) {
       const leech = Math.round(dmg * currentChaosMutation.val);
@@ -7905,7 +7978,39 @@ function drawProjs(glowOnly) {
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
       ctx.rotate(p.age * 1.5); ctx.lineWidth = 3;
       for (let i = 0; i < 6; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(r * 0.35, 0); ctx.lineTo(r * 0.8, 6); ctx.stroke(); }
-      if (armed) { ctx.fillStyle = `rgba(${L.slash},${0.12 + 0.08 * Math.sin(clock * 6)})`; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); }
+    } else if (p.kind === 'bottle') {   // 醉翁飞掷酒坛
+      ctx.translate(p.x, p.y); ctx.rotate(p.age * 12);
+      ctx.fillStyle = '#8a5a36'; ctx.strokeStyle = '#2b1b10'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 10, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#683f20'; ctx.fillRect(-4, -18, 8, 6); ctx.strokeRect(-4, -18, 8, 6);
+      ctx.fillStyle = '#d8452f'; ctx.fillRect(-5, -6, 10, 8); // 红布封口/坛签
+      ctx.fillStyle = 'rgba(255,220,150,0.5)'; ctx.fillRect(-2, -4, 4, 4);
+    } else if (p.kind === 'pavilion') { // 亭中留客：飞落的醉翁亭古建与气场
+      const drop = p.delay > 0 ? (p.delay / 0.1) * 300 : 0;
+      const py = p.y + drop;
+      ctx.translate(p.x, py);
+      ctx.globalAlpha = p.delay > 0 ? 0.85 : clamp(p.life / 0.2, 0, 1);
+      // 亭顶飞檐
+      ctx.fillStyle = '#2d1810'; ctx.strokeStyle = 'rgba(255,200,100,0.6)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -180);
+      ctx.quadraticCurveTo(-50, -150, -80, -120);
+      ctx.lineTo(80, -120);
+      ctx.quadraticCurveTo(50, -150, 0, -180);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      // 檐角翘起
+      ctx.beginPath(); ctx.moveTo(-80, -120); ctx.quadraticCurveTo(-90, -135, -84, -145); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(80, -120); ctx.quadraticCurveTo(90, -135, 84, -145); ctx.stroke();
+      // 立柱
+      ctx.fillStyle = '#842b18';
+      ctx.fillRect(-60, -120, 10, 120);
+      ctx.fillRect(50, -120, 10, 120);
+      ctx.fillRect(-25, -120, 8, 120);
+      ctx.fillRect(17, -120, 8, 120);
+      // 水墨气障笼罩
+      ctx.fillStyle = 'rgba(255,180,90,0.08)';
+      ctx.fillRect(-65, -120, 130, 120);
+      ctx.globalAlpha = 1;
     }
     ctx.restore();
   }
@@ -8971,7 +9076,7 @@ const HERO_METER_EXPLAIN = {
   yuehua: '【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。',
   yanling: '【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。',
   yuxiao: '【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。',
-  zuixian: '【豪饮破障 · 八仙醉意】豪饮与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「八仙过海」连打直击打完醉意直接灌满！',
+  zuixian: '【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「山水之间」全屏墨染八段重创并令醉意飙升！',
   gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
 };
 // ======================= 招式类型与克制详解 =======================
@@ -8986,7 +9091,7 @@ const HERO_MOVE_TYPES = {
   yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
   yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } },
   yuxiao: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '音波远程', icon: 'ranged' }, ranged: { type: 'counter', label: '反弹暗器', icon: 'shield_bash' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
-  zuixian: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '饮酒 / 喷火', icon: 'ranged' }, ranged: { type: 'melee', label: '滚翻上勾', icon: 'melee' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
+  zuixian: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '亭落禁锢', icon: 'magic_trap' }, ranged: { type: 'ranged', label: '共饮掷坛', icon: 'ranged' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
   gouchen: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '飞锤拉拽', icon: 'ranged' }, ranged: { type: 'melee', label: '旋锤连砸', icon: 'melee' }, ult: { type: 'melee', label: '巨锤震晕' }, esc: { type: 'esc', label: '身法' } }
 };
 const HERO_RESTRAINTS_EXPLAIN = {
@@ -9054,9 +9159,9 @@ const HERO_HIT_DETAILS = {
     light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '东倒西歪的五连拳，醉意越高越痛。' },
     charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '11 / 20', cd: '', desc: '身如醉钟横撞，正面撞碎对手防御。' },
     air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '7 / 9', cd: '', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
-    skill: { name: '豪饮 / 烈火', badge: '醉意+50 / 喷火', badgeCls: 'badge-buff', dmg: '0 / 30~60', cd: '2.6s', desc: '灌一口烈酒增醉意；半醉后改为喷出烈焰灼伤对手。' },
-    ranged: { name: '醉步 · 醉打金刚', badge: '无敌穿身', badgeCls: 'badge-stun', dmg: '50', cd: '4.5s', desc: '东倒西歪滚翻穿身，起身反手一记上勾拳冲天打飞。' },
-    ult: { name: '八仙过海', badge: '醉仙灌顶', badgeCls: 'badge-stun', dmg: '94 (9连)', cd: '气满', desc: '八仙醉拳轮番上身，终结一拳把人打飞，醉意灌满。' },
+    skill: { name: '亭中留客', badge: '禁锢 2.0s', badgeCls: 'badge-stun', dmg: '20', cd: '16s', desc: '召唤醉翁亭从空中砸落，将对手困在亭中两秒任由宰割，霸体可硬抗。' },
+    ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0', cd: '6.5s', desc: '半壶酒掷向对手，自身回80血晕0.7秒，对手回50血晕1.5秒并清空酒意。' },
+    ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', cd: '气满', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
     esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   gouchen: {
@@ -9165,9 +9270,9 @@ const HERO_MOVE_SEQS = {
     light: [{ p: 'idle', d: 0.1, reset: true }, { p: 'lm_jab', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'zx_sway', d: 0.1 }, { p: 'lm_jab', d: 0.1, dx: 10, hit: 1 }, { p: 'zx_upper', d: 0.22, dx: 12, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
     charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防打倒' }, { p: 'idle', d: 0.35, reset: true }],
     air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
-    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_drink', d: 0.36, lab: 'Q · 豪饮', badge: '醉意 +50' }, { p: 'zx_breath', d: 0.34, fx: 'proj', hit: 2, badge: '酒火灼身' }, { p: 'idle', d: 0.35, reset: true }],
-    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_roll', d: 0.28, dx: 44, lab: 'R · 醉步' }, { p: 'zx_upper', d: 0.28, hit: 2, launch: true, badge: '醉打金刚' }, { p: 'idle', d: 0.35, reset: true }],
-    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_roll', d: 0.18, lab: 'E · 八仙过海' }, { p: 'zx_upper', d: 0.4, fx: 'shadows', hit: 3, launch: true, badge: '醉意满盈' }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_sway', d: 0.15, lab: 'Q · 亭中留客' }, { p: 'gc_wind', d: 0.32, fx: 'avalanche', hit: 2, badge: '飞亭砸落' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_drink', d: 0.25, lab: 'R · 与民同乐' }, { p: 'gc_throw', d: 0.3, fx: 'proj', hit: 1, badge: '掷坛共饮' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_sway', d: 0.18, lab: 'E · 山水之间' }, { p: 'zx_upper', d: 0.45, fx: 'timestop', hit: 8, launch: true, badge: '全屏墨染' }, { p: 'idle', d: 0.35, reset: true }],
     esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '醉卧浮生' }, { p: 'idle', d: 0.35, reset: true }]
   },
   gouchen: {
@@ -9755,7 +9860,7 @@ const SKILL_FUN = {
   yuehua: { passive: '不打架的时候会悄悄回血，很养生。', light: '双刀如月，一刀圆一刀缺。', charge: '合璧一斩，月亮都满了。', air: '月下起舞，顺便斩人。', skill: '你打过来，我就照回去，物理反弹。', ranged: '月轮会自己飞回来，像回旋镖但更贵。', ult: '月华如水，泼你一身。', esc: '踏月而退，拒绝贴贴。' },
   yanling: { passive: '恐高？不存在的。', light: '翅膀扇人，羽毛乱飞。', charge: '振翅一扑，落地像只大鹅。', air: '天上就是她的主场。', skill: '鹰击长空，专啄脑门。', ranged: '三根翎羽，一根比一根快。', ult: '漫天羽毛，下雨天记得带伞。', esc: '振翅一飞，你够不着了。' },
   yuxiao: { passive: '打人也讲节奏，三拍一小节。', light: '箫管敲头，咚咚咚，是节拍。', charge: '横扫一记，音符都震飞了。', air: '跳起来吹一个高音。', skill: '攒满三个音符再吹，伤害翻倍不是梦。', ranged: '你的暗器我收下了，原样奉还。', ult: '广陵散于今绝矣？今天再奏一遍。', esc: '一个休止符，人先撤了。' },
-  zuixian: { passive: '酒量即战力，路走不直，拳却很准。', light: '东倒西歪五连拳，你永远猜不到下一拳。', charge: '蓄力一撞，像极了醉汉撞钟。', air: '跳起来，然后不知道会落在哪。', skill: '先干为敬，喝够了就喷火。', ranged: '看似摔倒，其实是战术翻滚。', ult: '八位神仙轮流揍你，排面拉满。', esc: '酒醒了一半，跑得飞快。' },
+  zuixian: { passive: '酒量即战力，放招添酒打中添酒，东倒西歪能闪避。', light: '东倒西歪五连拳，步法虚实难测。', charge: '蓄力一撞，重若巨石倾覆。', air: '醉步腾跃，飘忽不定难预测。', skill: '亭中留客，飞亭砸落禁锢两秒任你痛揍。', ranged: '与民同乐，半壶酒掷向对手，共醉回春。', ult: '山水之间，水墨泼染全屏八段重创。', esc: '醉意腾身，踏风撤步。' },
   gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' }
 };
 
