@@ -2450,6 +2450,16 @@ function startRound() {
     A.guard = A.maxGuard = 100;
     B.guard = B.maxGuard = 100;
   }
+  const isMayhem = M.mode === 'mayhem' || (M.mode === 'net' && netRoomMode === 'mayhem');
+  if (isMayhem) {
+    A.maxHp = Math.round(A.maxHp * 10);
+    B.maxHp = Math.round(B.maxHp * 10);
+    A.hp = A.lagHp = A.maxHp;
+    B.hp = B.lagHp = B.maxHp;
+    A.guard = A.maxGuard = 500;
+    B.guard = B.maxGuard = 500;
+    A.meter = B.meter = 100;
+  }
   if (M.mode === 'net' && netRoomMode === 'chaos') {
     if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
     if (NET.role === 'host') rollChaosMutation();
@@ -2698,8 +2708,7 @@ function endRound() {
     return;
   }
   M.round++;
-  M.carry = [null, null];   // 活下来的人继承剩余血量 +80，倒下的人满血
-  [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
+  M.carry = null;   // 非 3v3 模式均为三局两胜（BO3），每回合双方满血
   startRound();
 }
 
@@ -3257,6 +3266,16 @@ function updateFighter(f, foe) {
   if (tryEscape(f, foe)) { physics(f); return; }
   f.skillCD = Math.max(0, f.skillCD - STEP);
   f.flying = false;
+  if (M.mode === 'mayhem') {
+    f.skillCD = 0;
+    f.skill2CD = 0;
+    f.breakCD = 0;
+    f.meter = 100;
+    if (f.ch.fly) f.flyT = f.ch.fly;
+    if (f.ink !== undefined) f.ink = INK_MAX;
+    if (f.drunk !== undefined) f.drunk = 100;
+    if (f.notes !== undefined) f.notes = 3;
+  }
   if (f.dummy && (f.ctrl && f.ctrl.cfg ? f.ctrl.cfg.autoHeal : true) && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = f.maxHp;
   if (f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.infGuard : true)) { f.guard = f.maxGuard || 100; f.guardBroken = false; }
   if (f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed')) { f.vx = 0; f.vy = 0; f.y = 0; if (f.homeX === undefined) f.homeX = f.x; f.x = f.homeX; } else if (f.dummy) f.homeX = undefined;
@@ -3686,6 +3705,9 @@ function applyHit(att, def, m, pt) {
   if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'dmg') {
     dmg *= currentChaosMutation.val;
   }
+  if (M.mode === 'mayhem') {
+    dmg *= 2.8;
+  }
   // 现实相向冲锋迎击动能加成（Relative Velocity Impact）：双方相向冲锋或飞冲碰撞时，伤害自然放大 5%~25%
   if (!m.isProj && !m.ult) {
     const vAtt = att.vx * att.face; // 朝向正向速度
@@ -3879,6 +3901,19 @@ function hitVisual(ev, quiet) {
       }
     } }
   if (!ev.blk && !quiet && [A, B][ev.a]) skinHitFX([A, B][ev.a], ev);
+  if (M.mode === 'mayhem' && !quiet) {
+    shake = Math.max(shake, 16);
+    flashA = Math.max(flashA, 0.42);
+    flashRGB = att.look.slash || '255,215,80';
+    ring(ev.x, ev.y, 110, att.look.slash || '255,215,80', 0.32);
+    ring(ev.x, ev.y, 180, '255,240,160', 0.4);
+    slashLine(ev.x, ev.y, rand(-0.7, 0.7), att.look.slash);
+    slashLine(ev.x, ev.y, rand(-0.7, 0.7), '255,240,160');
+    for (let i = 0; i < 16; i++) {
+      const a = rand(0, 6.28), v = rand(220, 560);
+      addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.5, max: 0.5, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: 2.6, drag: 3.2 });
+    }
+  }
   if (!quiet && (ev.dd || 0) > 0) {   // 伤害数字：从命中点弹出来往上飘，越重越大
     const dd = Math.round(ev.dd * 10) / 10, big = dd >= 8;
     addP({ type: 'dmg', text: String(dd), x: ev.x + rand(-22, 22), y: ev.y - 20 - ((ev.cn || 0) % 3) * 16, vx: rand(-60, 60), vy: -150, g: 260, life: 0.85, max: 0.85,
@@ -4436,7 +4471,7 @@ function frameBody(now) {
       creditT -= real;
       if (creditT <= 0 && creditPending) {
         creditPending = false;
-        const rTxt = M.mode === 'tag3' ? '先锋战 · 开战！' : (M.mode === 'bushido' ? '孤勇决死 · 开战！' : `第${CN[M.round] || M.round}回合`);
+        const rTxt = M.mode === 'tag3' ? '先锋战 · 开战！' : (M.mode === 'bushido' ? '孤勇决死 · 开战！' : (M.mode === 'mayhem' ? '通天神决 · 开战！' : `第${CN[M.round] || M.round}回合`));
         say(rTxt, 1.1);
         SFX.gong();
       }
@@ -4634,6 +4669,20 @@ function drawFighter(f) {
   }
   const sk = f.sk; if (!sk) return;
   const L = f.look, sc = worldScale();
+  if (M.mode === 'mayhem') {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const auraR = 55 + Math.sin(clock * 16 + f.idx * 3) * 12;
+    const g = ctx.createRadialGradient(f.x, f.y - 50, 6, f.x, f.y - 50, auraR * 1.5);
+    g.addColorStop(0, `rgba(${L.slash}, 0.4)`);
+    g.addColorStop(0.5, `rgba(255, 215, 80, 0.22)`);
+    g.addColorStop(1, `rgba(${L.slash}, 0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(f.x - auraR * 1.5, f.y - 50 - auraR * 1.5, auraR * 3, auraR * 3);
+    ctx.restore();
+    if (Math.random() < 0.35) {
+      addP({ type: 'spark', x: f.x + rand(-30, 30), y: f.y - rand(10, 100), vx: rand(-40, 40), vy: -rand(60, 160), life: 0.4, max: 0.4, rgb: Math.random() < 0.5 ? '255,215,80' : L.slash, w: 2.2 });
+    }
+  }
   // 影子
   const hgt = clamp(-f.y / 300, 0, 1);
   ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
@@ -5311,9 +5360,11 @@ function drawTrail(f) {
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (let i = 1; i < tr.length; i++) {
     const a = tr[i - 1], b = tr[i], al = Math.max(0, b.life);
-    ctx.fillStyle = `rgba(${f.look.slash},${0.5 * al})`;
+    const mul = M.mode === 'mayhem' ? 2.5 : 1;
+    ctx.fillStyle = `rgba(${f.look.slash},${Math.min(1, 0.5 * al * mul)})`;
     ctx.beginPath(); ctx.moveTo(a.b[0], a.b[1]); ctx.lineTo(a.t[0], a.t[1]); ctx.lineTo(b.t[0], b.t[1]); ctx.lineTo(b.b[0], b.b[1]); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = `rgba(255,255,255,${0.85 * al})`; ctx.lineWidth = 2.2 * al + 0.5;
+    ctx.strokeStyle = M.mode === 'mayhem' ? `rgba(255,215,80,${0.95 * al})` : `rgba(255,255,255,${0.85 * al})`;
+    ctx.lineWidth = (2.2 * al + 0.5) * (M.mode === 'mayhem' ? 2.8 : 1);
     ctx.beginPath(); ctx.moveTo(a.t[0], a.t[1]); ctx.lineTo(b.t[0], b.t[1]); ctx.stroke();
   }
   ctx.restore();
@@ -5961,6 +6012,12 @@ function drawHUD() {
       ctx.fillText(badgeTxt, cx, by + bhBadge / 2);
     }
     ctx.restore();
+  } else if (M.mode === 'mayhem') {
+    ctx.save();
+    ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;
+    ctx.fillStyle = '#ff9f43';
+    ctx.fillText('💥 通天神决 · 神魔乱战', cx, top + bh + 18);
+    ctx.restore();
   }
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
 }
@@ -6495,7 +6552,7 @@ function updateAIBrief() {
 const SINGLE_TAB_CATS = {
   cpu: 'regular', stage: 'regular', train: 'regular',
   tower: 'rogue', chaos: 'rogue',
-  tag3: 'special', bushido: 'special'
+  tag3: 'special', bushido: 'special', mayhem: 'special'
 };
 
 // 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
@@ -6538,7 +6595,8 @@ function singleSec(sec) {
       bushido: '双方仅存 1 点生命，架势格挡为唯一生机，一击绝杀见血封喉！',
       chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
-      train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定'
+      train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定',
+      mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！'
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
@@ -6548,12 +6606,13 @@ function singleSec(sec) {
   else if (active === 'chaos') renderChaos();
   else if (active === 'stage') renderStages();
   else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
+  else if (active === 'mayhem') renderMayhem();
   else if (active === 'cpu') updateAIBrief();
 }
 function openScreen(name) {
   if (OFFLINE_BUILD && name === 'single') name = 'cpu';
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'bushido' || name === 'chaos' || name === 'stage' || name === 'train') {
+  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'bushido' || name === 'chaos' || name === 'stage' || name === 'train' || name === 'mayhem') {
     singleSec(name);
     showScreen('single');
     return;
@@ -9233,6 +9292,11 @@ function startTraining(targetMode = trainTargetMode) {
     showScreen(null);
     return;
   }
+  if (targetMode === 'mayhem') {
+    startMayhem(trainChar, oppChar, 'god');
+    showScreen(null);
+    return;
+  }
   startDummyTraining();
 }
 function renderTrainPick() {
@@ -9953,6 +10017,81 @@ if (bushidoStartBtn) bushidoStartBtn.addEventListener('click', () => startBushid
 
 const chaosStartBtn = document.getElementById('chaosStartBtn');
 if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => startChaos(chaosP1, chaosP2, chaosLevel));
+
+let mayhemP1 = 0, mayhemP2 = 1, mayhemLevel = 'hard';
+function renderMayhem() {
+  const pick1 = document.getElementById('mayhemPick');
+  const pick2 = document.getElementById('mayhemFoePick');
+  if (pick1) {
+    pick1.innerHTML = CHARS.map((c, i) => {
+      const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
+      const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
+      const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
+      return '<button class="trbtn' + (mayhemP1 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
+        '<span class="trn">' + c.name + '</span>' +
+        '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
+      '</button>';
+    }).join('');
+    pick1.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        mayhemP1 = +b.dataset.idx;
+        renderMayhem();
+        SFX.slice();
+      });
+    });
+  }
+  if (pick2) {
+    pick2.innerHTML = CHARS.map((c, i) => {
+      const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
+      const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
+      const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
+      return '<button class="trbtn' + (mayhemP2 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
+        '<span class="trn">' + c.name + '</span>' +
+        '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
+      '</button>';
+    }).join('');
+    pick2.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        mayhemP2 = +b.dataset.idx;
+        renderMayhem();
+        SFX.slice();
+      });
+    });
+  }
+  const lvs = document.querySelectorAll('#mayhemLevels button');
+  lvs.forEach(b => {
+    b.classList.toggle('sel', b.dataset.lv === mayhemLevel);
+    b.onclick = () => {
+      mayhemLevel = b.dataset.lv;
+      lvs.forEach(x => x.classList.toggle('sel', x === b));
+      SFX.slice();
+    };
+  });
+}
+
+function startMayhem(p1, p2, lv) {
+  initAudio();
+  paused = false;
+  mayhemP1 = p1 !== undefined ? p1 : mayhemP1;
+  mayhemP2 = p2 !== undefined ? p2 : mayhemP2;
+  mayhemLevel = lv !== undefined ? lv : mayhemLevel;
+  M.mode = 'mayhem';
+  M.level = mayhemLevel;
+  M.round = 1;
+  M.wins = [0, 0];
+  M.stage = null;
+  setChars(mayhemP1, mayhemP2);
+  A.ctrl = human[0];
+  B.ctrl = new AICtrl(mayhemLevel);
+  A.meter = B.meter = 100;
+  human[0].clear(); human[1].clear();
+  showScreen(null);
+  startRound();
+  say('通天神决 · 大显神通', 1.4);
+}
+
+const mayhemStartBtn = document.getElementById('mayhemStartBtn');
+if (mayhemStartBtn) mayhemStartBtn.addEventListener('click', () => startMayhem(mayhemP1, mayhemP2, mayhemLevel));
 
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);

@@ -21,7 +21,7 @@ function getArg(name, def) {
 }
 const matchCount = parseInt(getArg('matches', '10'), 10);
 const matchMode = getArg('mode', 'cpu');
-const MODE_MAX_LEVEL = { cpu: 'god', bushido: 'god', chaos: 'god', tag3: 'god', tower: 'impossible' };
+const MODE_MAX_LEVEL = { cpu: 'god', bushido: 'god', chaos: 'god', tag3: 'god', mayhem: 'god', tower: 'impossible' };
 const defaultLevel = args.includes('--mode') ? (MODE_MAX_LEVEL[matchMode] || 'god') : 'hard';
 const p1Level = getArg('p1-level', getArg('level', defaultLevel));
 const p2Level = getArg('p2-level', getArg('level', defaultLevel));
@@ -197,6 +197,11 @@ for (let m = 1; m <= matchCount; m++) {
   } else if (matchMode === 'chaos') {
     env.currentChaosMutation = null;
     env.chaosTimer = 0;
+  } else if (matchMode === 'mayhem') {
+    env.A.maxHp = env.A.hp = env.A.lagHp = Math.round(env.A.maxHp * 10);
+    env.B.maxHp = env.B.hp = env.B.lagHp = Math.round(env.B.maxHp * 10);
+    env.A.guard = env.A.maxGuard = env.B.guard = env.B.maxGuard = 500;
+    env.A.meter = env.B.meter = 100;
   }
   env.A.ctrl = new env.AICtrl(p1Level);
   env.B.ctrl = new env.AICtrl(p2Level);
