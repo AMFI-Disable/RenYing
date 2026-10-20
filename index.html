@@ -7744,6 +7744,45 @@ ctx.fillStyle = '#1a1210'; ctx.fillRect(x - 30, by - 176, 60, 20); ctx.strokeSty
 ctx.fillStyle = '#e9c46a'; ctx.font = `14px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('醉翁亭', x, by - 165.5);
 ctx.restore();
 }
+function drawShanshui() {
+const f = [A, B].find(x => x && x.state === 'special' && x.ch.ult === 'shanshui');
+if (!f) return;
+const t = f.t, e = 1 - Math.pow(1 - clamp(t / 1.55, 0, 1), 3), a = t > 1.75 ? clamp((1.95 - t) / 0.2, 0, 1) : 1;
+const top = -H + H * e, bot = top + H;
+ctx.save(); ctx.globalAlpha = a;
+ctx.beginPath(); ctx.rect(0, 0, W, Math.max(0, bot)); ctx.clip();
+const pg = ctx.createLinearGradient(0, top, 0, bot); pg.addColorStop(0, 'rgba(236,226,200,0.82)'); pg.addColorStop(1, 'rgba(220,206,174,0.62)');
+ctx.fillStyle = pg; ctx.fillRect(0, top, W, H);
+const peak = (u, fr, ph) => { const q = ((u * fr + ph) % 1 + 1) % 1; return Math.pow(1 - Math.abs(q * 2 - 1), 1.7); };
+const layers = [[0.40, 0.16, '70,80,86', 0.30, 2.2, 0.13], [0.52, 0.2, '46,54,60', 0.42, 1.6, 0.61], [0.66, 0.22, '26,30,34', 0.55, 1.25, 0.37], [0.80, 0.16, '12,14,16', 0.62, 0.9, 0.82]];
+layers.forEach(([by, amp, rgb, al, fr, ph], i) => {
+let ymin = bot;
+ctx.beginPath(); ctx.moveTo(0, bot);
+for (let x = 0; x <= W + 8; x += 8) {
+const u = x / W, h = 0.62 * peak(u, fr, ph) + 0.38 * peak(u, fr * 2.3, ph * 1.9) + 0.04 * Math.sin(u * 41 + i * 3);
+const y = top + H * (by - amp * h); ymin = Math.min(ymin, y); ctx.lineTo(x, y);
+}
+ctx.lineTo(W, bot); ctx.closePath();
+const lg = ctx.createLinearGradient(0, ymin, 0, top + H * (by + 0.12));
+lg.addColorStop(0, `rgba(${rgb},${al})`); lg.addColorStop(0.55, `rgba(${rgb},${al * 0.55})`); lg.addColorStop(1, `rgba(${rgb},0)`);
+ctx.fillStyle = lg; ctx.fill();
+});
+ctx.strokeStyle = 'rgba(20,20,24,0.8)'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(W * 0.3, top + H * 0.78); ctx.quadraticCurveTo(W * 0.32, top + H * 0.795, W * 0.36, top + H * 0.78); ctx.stroke();
+for (let k = 0; k < 4; k++) { const bx = W * (0.55 + k * 0.04), byy = top + H * (0.2 + (k % 2) * 0.03); ctx.beginPath(); ctx.moveTo(bx - 7, byy); ctx.quadraticCurveTo(bx, byy - 5, bx, byy); ctx.quadraticCurveTo(bx, byy - 5, bx + 7, byy); ctx.stroke(); }
+const fs = Math.round(Math.min(W, H) * 0.045);
+ctx.fillStyle = 'rgba(16,14,14,0.88)'; ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+const col = (str, x) => { for (let k = 0; k < str.length; k++) ctx.fillText(str[k], x, top + H * 0.17 + k * fs * 1.12); };
+col('醉翁之意不在酒', W * 0.88); col('在乎山水之间也', W * 0.88 - fs * 1.4);
+const sw = fs * 1.5; ctx.save(); ctx.translate(W * 0.88 - fs * 0.7, top + H * 0.17 + fs * 8.6); ctx.rotate(-0.05);
+ctx.fillStyle = '#b8392e'; ctx.fillRect(-sw / 2, 0, sw, sw); ctx.strokeStyle = 'rgba(255,240,225,0.7)'; ctx.lineWidth = 1.5; ctx.strokeRect(-sw / 2 + 3, 3, sw - 6, sw - 6);
+ctx.fillStyle = '#fbeee0'; ctx.font = `${Math.round(fs * 0.55)}px ${TITLE_FONT}`; ctx.textBaseline = 'middle'; ctx.fillText('山水', 0, sw / 2); ctx.restore();
+ctx.restore();
+ctx.save(); ctx.globalAlpha = a;
+ctx.fillStyle = '#3a2416'; ctx.fillRect(-10, bot - 6, W + 20, 16); ctx.fillStyle = '#6a4228'; ctx.fillRect(-10, bot - 6, W + 20, 4);
+ctx.fillStyle = '#c9a24a'; ctx.fillRect(-6, bot - 9, 18, 22); ctx.fillRect(W - 12, bot - 9, 18, 22);
+ctx.restore();
+}
 function drawHUD() {
 if (M.mode === 'demo') return;
 const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
@@ -8190,6 +8229,7 @@ if (superFreeze > 0 && superOwner && superOwner.ch.ult === 'timestop' && superOw
 ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = 'rgb(128,128,128)'; ctx.globalAlpha = 0.85; ctx.fillRect(0, 0, cv.width, cv.height); ctx.restore();
 ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#6f8fd6'; ctx.fillRect(0, 0, W, H); ctx.restore();
 }
+drawShanshui();
 const ce = cineEnv();
 if (ce > 0.01) cineFX(ce);
 { const T = superOwner && superFreeze > 0 && sceneOf(superOwner.skinKey);
