@@ -6306,16 +6306,20 @@ addP(atk.ch.id === 'moyu' ? { type: 'ink', x: ev.x, y: ev.y, vx: Math.cos(a) * v
 } }
 if (!ev.blk && !quiet && [A, B][ev.a]) skinHitFX([A, B][ev.a], ev);
 if (M.mode === 'mayhem' && !quiet) {
-shake = Math.max(shake, 16);
-flashA = Math.max(flashA, 0.42);
+shake = Math.max(shake, 24);
+flashA = Math.max(flashA, 0.55);
 flashRGB = att.look.slash || '255,215,80';
-ring(ev.x, ev.y, 110, att.look.slash || '255,215,80', 0.32);
-ring(ev.x, ev.y, 180, '255,240,160', 0.4);
-slashLine(ev.x, ev.y, rand(-0.7, 0.7), att.look.slash);
-slashLine(ev.x, ev.y, rand(-0.7, 0.7), '255,240,160');
-for (let i = 0; i < 16; i++) {
-const a = rand(0, 6.28), v = rand(220, 560);
-addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.5, max: 0.5, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: 2.6, drag: 3.2 });
+ring(ev.x, ev.y, 160, att.look.slash || '255,215,80', 0.42);
+ring(ev.x, ev.y, 280, '255,240,160', 0.5);
+slashLine(ev.x, ev.y, rand(-0.8, 0.8), att.look.slash);
+slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,240,160');
+if (ev.big || ev.ult) {
+slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,60,60');
+ring(ev.x, ev.y, 380, '255,220,80', 0.6);
+}
+for (let i = 0; i < 28; i++) {
+const a = rand(0, 6.28), v = rand(280, 720);
+addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.65, max: 0.65, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: 3.5, drag: 2.6 });
 }
 }
 if (!quiet && (ev.dd || 0) > 0) {   // 伤害数字：从命中点弹出来往上飘，越重越大

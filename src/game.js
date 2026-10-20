@@ -2808,6 +2808,20 @@ function startSpecial(f) {
   say(ultName, 0.9, 'super'); SFX.superOn();
   if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
   ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
+  if (M.mode === 'mayhem') {
+    shake = Math.max(shake, 32);
+    flashA = 0.65;
+    flashRGB = '255,225,120';
+    ring(f.x, f.y - 60, 320, '255,215,80', 0.7);
+    ring(f.x, f.y - 60, 480, f.look.slash, 0.65);
+    slashLine(f.x, f.y - 60, 0, f.look.slash);
+    slashLine(f.x, f.y - 60, Math.PI / 2, '255,240,180');
+    slashLine(f.x, f.y - 60, rand(-0.7, 0.7), f.look.slash);
+    for (let i = 0; i < 30; i++) {
+      const a = rand(0, 6.28), v = rand(240, 720);
+      addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7, max: 0.7, rgb: i % 2 === 0 ? '255,220,100' : f.look.slash, w: 3.2, drag: 2.5 });
+    }
+  }
 }
 function neutral(f, foe) {
   const c = f.ctrl, onG = f.onGround();
@@ -3026,6 +3040,18 @@ function startSkill(f, foe, slot) {
   if (customNm && f.hp > 0 && M.phase === 'fight') {
     addP({ type: 'callout', text: customNm, x: f.x, y: f.y - 75, life: 0.65, max: 0.65, rgb: f.look.slash, scale: 1.5 });
   }
+  if (M.mode === 'mayhem') {
+    shake = Math.max(shake, 18);
+    flashA = Math.max(flashA, 0.38);
+    flashRGB = f.look.slash || '255,215,80';
+    ring(f.x, f.y - 60, 160, f.look.slash || '255,215,80', 0.45);
+    ring(f.x, f.y - 60, 260, '255,240,160', 0.5);
+    slashLine(f.x, f.y - 60, rand(-0.8, 0.8), f.look.slash);
+    for (let i = 0; i < 18; i++) {
+      const a = rand(0, 6.28), v = rand(220, 580);
+      addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.55, max: 0.55, rgb: i % 2 === 0 ? '255,215,80' : f.look.slash, w: 2.8, drag: 2.8 });
+    }
+  }
   S.start(f, foe);
 }
 // 技能的一次近身判定（每个阶段只会打中一次）
@@ -3061,6 +3087,13 @@ const projs = [];
 let projSeq = 0;
 function spawnProj(f, o) {
   if (isClient()) return;   // 联机时由房主生成，加入方从快照同步
+  if (M.mode === 'mayhem') {
+    o = { ...o };
+    if (o.dmg) o.dmg = Math.round(o.dmg * 2.5);
+    if (o.w) o.w = Math.round(o.w * 1.8);
+    if (o.h) o.h = Math.round(o.h * 1.8);
+    ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
+  }
   projs.push(Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o));
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
@@ -3764,7 +3797,7 @@ function applyHit(att, def, m, pt) {
     dmg *= currentChaosMutation.val;
   }
   if (M.mode === 'mayhem') {
-    dmg *= 2.8;
+    dmg *= (m.ult ? 5.2 : (m.skill || m.isProj ? 4.5 : 3.8));
   }
   // 现实相向冲锋迎击动能加成（Relative Velocity Impact）：双方相向冲锋或飞冲碰撞时，伤害自然放大 5%~25%
   if (!m.isProj && !m.ult) {
@@ -3960,16 +3993,20 @@ function hitVisual(ev, quiet) {
     } }
   if (!ev.blk && !quiet && [A, B][ev.a]) skinHitFX([A, B][ev.a], ev);
   if (M.mode === 'mayhem' && !quiet) {
-    shake = Math.max(shake, 16);
-    flashA = Math.max(flashA, 0.42);
+    shake = Math.max(shake, 24);
+    flashA = Math.max(flashA, 0.55);
     flashRGB = att.look.slash || '255,215,80';
-    ring(ev.x, ev.y, 110, att.look.slash || '255,215,80', 0.32);
-    ring(ev.x, ev.y, 180, '255,240,160', 0.4);
-    slashLine(ev.x, ev.y, rand(-0.7, 0.7), att.look.slash);
-    slashLine(ev.x, ev.y, rand(-0.7, 0.7), '255,240,160');
-    for (let i = 0; i < 16; i++) {
-      const a = rand(0, 6.28), v = rand(220, 560);
-      addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.5, max: 0.5, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: 2.6, drag: 3.2 });
+    ring(ev.x, ev.y, 160, att.look.slash || '255,215,80', 0.42);
+    ring(ev.x, ev.y, 280, '255,240,160', 0.5);
+    slashLine(ev.x, ev.y, rand(-0.8, 0.8), att.look.slash);
+    slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,240,160');
+    if (ev.big || ev.ult) {
+      slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,60,60');
+      ring(ev.x, ev.y, 380, '255,220,80', 0.6);
+    }
+    for (let i = 0; i < 28; i++) {
+      const a = rand(0, 6.28), v = rand(280, 720);
+      addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.65, max: 0.65, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: 3.5, drag: 2.6 });
     }
   }
   if (!quiet && (ev.dd || 0) > 0) {   // 伤害数字：从命中点弹出来往上飘，越重越大
