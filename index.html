@@ -6808,6 +6808,7 @@ if (f.ch && f.ch.fly) drawWings(sk, f);
 drawScarf(f);
 drawBody(sk, f, { flash: f.flash > 0, invul: f.invul > 0 && f.invul < 50 && f.state !== 'special' && f.state !== 'knockdown' });
 if (big) ctx.restore();
+if (f.jailT > 0 && f.hp > 0) drawWengTing(f.jailX, 0, 1, Math.min(1, f.jailT * 3));   // 关在醉翁亭里：亭子罩着人，前柱半透明
 drawTrail(f);
 if (f.ch && f.ch.passive === 'rhythm' && (f.notes || 0) > 0 && f.hp > 0) {
 ctx.save(); ctx.fillStyle = 'rgba(' + f.look.slash + ',0.85)'; ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.4;
@@ -7501,7 +7502,7 @@ ctx.restore();
 }
 function drawProjs(glowOnly) {
 for (const p of projs) {
-if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake')) continue;
+if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion')) continue;
 const L = [A, B][p.owner].look;
 ctx.save();
 if (p.kind === 'wind') {
@@ -7660,28 +7661,10 @@ ctx.beginPath(); ctx.ellipse(0, 0, 10, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.s
 ctx.fillStyle = '#683f20'; ctx.fillRect(-4, -18, 8, 6); ctx.strokeRect(-4, -18, 8, 6);
 ctx.fillStyle = '#d8452f'; ctx.fillRect(-5, -6, 10, 8); // 红布封口/坛签
 ctx.fillStyle = 'rgba(255,220,150,0.5)'; ctx.fillRect(-2, -4, 4, 4);
-} else if (p.kind === 'pavilion') { // 亭中留客：飞落的醉翁亭古建与气场
-const drop = p.delay > 0 ? (p.delay / 0.1) * 300 : 0;
-const py = p.y + drop;
-ctx.translate(p.x, py);
-ctx.globalAlpha = p.delay > 0 ? 0.85 : clamp(p.life / 0.2, 0, 1);
-ctx.fillStyle = '#2d1810'; ctx.strokeStyle = 'rgba(255,200,100,0.6)'; ctx.lineWidth = 2;
-ctx.beginPath();
-ctx.moveTo(0, -180);
-ctx.quadraticCurveTo(-50, -150, -80, -120);
-ctx.lineTo(80, -120);
-ctx.quadraticCurveTo(50, -150, 0, -180);
-ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.beginPath(); ctx.moveTo(-80, -120); ctx.quadraticCurveTo(-90, -135, -84, -145); ctx.stroke();
-ctx.beginPath(); ctx.moveTo(80, -120); ctx.quadraticCurveTo(90, -135, 84, -145); ctx.stroke();
-ctx.fillStyle = '#842b18';
-ctx.fillRect(-60, -120, 10, 120);
-ctx.fillRect(50, -120, 10, 120);
-ctx.fillRect(-25, -120, 8, 120);
-ctx.fillRect(17, -120, 8, 120);
-ctx.fillStyle = 'rgba(255,180,90,0.08)';
-ctx.fillRect(-65, -120, 130, 120);
-ctx.globalAlpha = 1;
+} else if (p.kind === 'pavilion') {   // 亭中留客：醉翁亭从天而降，和关人时是同一座亭子
+const drop = p.delay > 0 ? p.delay / 0.1 : 0;
+if (p.delay > 0) { ctx.strokeStyle = 'rgba(255,190,90,0.5)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.ellipse(p.x, 0, 100, 9, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+drawWengTing(p.x, -drop * drop * 640, 1, 1);
 }
 ctx.restore();
 }
@@ -7737,6 +7720,29 @@ if (M.mode === 'pvp') return (i === 0 ? p1 : p2)[k];
 if (M.mode === 'cpu' || M.mode === 'train' || M.mode === 'tag3') return i === 0 ? p1[k] : '';
 if (M.mode === 'net') return i === localIdx() ? p1[k] : '';
 return '';
+}
+function drawWengTing(x, by, a, front) {
+ctx.save(); ctx.globalAlpha = a; ctx.lineJoin = 'round';
+const col = (k, w, al) => { ctx.globalAlpha = a * al; ctx.fillStyle = '#5a1e18'; ctx.fillRect(x + k - w / 2 - 1, by - 172, w + 2, 168); ctx.fillStyle = '#9a3328'; ctx.fillRect(x + k - w / 2, by - 172, w, 168); ctx.fillStyle = 'rgba(255,220,180,0.18)'; ctx.fillRect(x + k - w / 2 + 1, by - 172, 2, 168); };
+ctx.fillStyle = '#2b2a2e'; ctx.fillRect(x - 100, by - 8, 200, 8); ctx.fillStyle = '#4a4850'; ctx.fillRect(x - 100, by - 8, 200, 2);   // 台基
+col(-48, 8, 0.85); col(48, 8, 0.85);                                           // 后柱
+ctx.globalAlpha = a * front * 0.8; ctx.strokeStyle = '#7a2a20'; ctx.lineWidth = 3;   // 栏杆
+for (const y of [by - 26, by - 46]) { ctx.beginPath(); ctx.moveTo(x - 72, y); ctx.lineTo(x + 72, y); ctx.stroke(); }
+for (let k = -60; k <= 60; k += 20) { ctx.beginPath(); ctx.moveTo(x + k, by - 8); ctx.lineTo(x + k, by - 46); ctx.stroke(); }
+col(-74, 11, front); col(74, 11, front);                                       // 前柱
+ctx.globalAlpha = a;
+ctx.fillStyle = '#3a1612'; ctx.fillRect(x - 92, by - 184, 184, 14);           // 横梁
+ctx.fillStyle = '#c9a24a'; ctx.fillRect(x - 92, by - 184, 184, 2.5);
+ctx.fillStyle = '#1e1c22'; ctx.beginPath();                                    // 飞檐屋顶
+ctx.moveTo(x - 128, by - 168); ctx.quadraticCurveTo(x - 100, by - 186, x - 70, by - 192);
+ctx.quadraticCurveTo(x - 30, by - 222, x, by - 248); ctx.quadraticCurveTo(x + 30, by - 222, x + 70, by - 192);
+ctx.quadraticCurveTo(x + 100, by - 186, x + 128, by - 168); ctx.quadraticCurveTo(x + 96, by - 180, x, by - 182); ctx.quadraticCurveTo(x - 96, by - 180, x - 128, by - 168); ctx.fill();
+ctx.strokeStyle = 'rgba(200,190,170,0.35)'; ctx.lineWidth = 1.2;
+for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(x + k * 22, by - 184); ctx.lineTo(x + k * 9, by - 236); ctx.stroke(); }
+ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.arc(x, by - 252, 5, 0, 7); ctx.fill(); ctx.fillRect(x - 1.5, by - 262, 3, 10);   // 宝顶
+ctx.fillStyle = '#1a1210'; ctx.fillRect(x - 30, by - 176, 60, 20); ctx.strokeStyle = '#c9a24a'; ctx.lineWidth = 1.5; ctx.strokeRect(x - 30, by - 176, 60, 20);   // 匾额
+ctx.fillStyle = '#e9c46a'; ctx.font = `14px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('醉翁亭', x, by - 165.5);
+ctx.restore();
 }
 function drawHUD() {
 if (M.mode === 'demo') return;
