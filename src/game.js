@@ -1804,7 +1804,7 @@ function startStage(c, l) {
     applySkins();
     return;
   }
-  startTraining();
+  startDummyTraining();
   Object.assign(FOREST, { on: true, mons: [], shots: [], spawnT: 1, kills: {}, total: 0, t: 0, hurtT: 9, wave: 0, toSpawn: [], breakT: 1.5, over: false, overT: 0, shown: false, prot: S.K.prot, result: null });
   B.forestProxy = true; B.hidden = true; B.x = STAGE_W / 2 + 400; B.invul = 99; B.look = { ...B.look, name: '妖物' };
   A.x = STAGE_W / 2;
@@ -2058,13 +2058,43 @@ $id('feNext').addEventListener('click', () => { const nx = nextStage(STAGE); if 
 $id('feAgain').addEventListener('click', () => { paused = false; showScreen(null); startStage(STAGE.c, STAGE.l); });
 $id('feMenu').addEventListener('click', () => { paused = false; backToStages(); });
 
-// 木人桩：不还手。stand 任打不还手，block 一味死守，escape 被连便闪
+// 木人桩高级功能特性清单：将四种情况（钉在原地、持续格挡、受击腾空闪、不还手）及扩展功能融合成统一的特性列表
+const DUMMY_FEATURES = {
+  fixed: { name: '钉在原地', desc: '免除击飞击退位移，锁死原点' },
+  block: { name: '一味死守', desc: '全程保持防御格挡' },
+  escape: { name: '被连便闪', desc: '被挑空/连击4段受身腾空闪' },
+  counter: { name: '防守反击', desc: '格挡受击后适度出拳打断' },
+  infGuard: { name: '坚若磐石', desc: '架势耐力恒满永不破防' },
+  autoHeal: { name: '连段自愈', desc: '连击结束后血量秒回满' }
+};
+let dummyCfg = { fixed: false, block: false, escape: false, counter: false, infGuard: true, autoHeal: true };
 const DUMMY_MODES = { stand: '任打不还手', block: '一味死守', escape: '被连便闪', fixed: '钉在原地' };
+
 class DummyCtrl extends Ctrl {
-  constructor(mode) { super(); this.mode = DUMMY_MODES[mode] ? mode : 'stand'; }
+  constructor(modeOrCfg) {
+    super();
+    if (typeof modeOrCfg === 'object' && modeOrCfg !== null) {
+      this.cfg = { ...modeOrCfg };
+    } else {
+      this.cfg = {
+        fixed: modeOrCfg === 'fixed' || dummyCfg.fixed,
+        block: modeOrCfg === 'block' || dummyCfg.block,
+        escape: modeOrCfg === 'escape' || dummyCfg.escape,
+        counter: !!dummyCfg.counter,
+        infGuard: !!dummyCfg.infGuard,
+        autoHeal: !!dummyCfg.autoHeal
+      };
+    }
+    this.mode = typeof modeOrCfg === 'string' ? modeOrCfg : 'custom';
+  }
   think(me) {
-    this.held.down = this.mode === 'block';
-    if (this.mode === 'escape' && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) this.press('dash');
+    this.held.down = !!this.cfg.block;
+    if (this.cfg.escape && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) {
+      this.press('dash');
+    }
+    if (this.cfg.counter && me.breakCD <= 0 && me.state === 'blockstun' && Math.random() < 0.25) {
+      this.press('light');
+    }
   }
 }
 const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
@@ -2375,12 +2405,23 @@ function setChars(a, b) { A.setChar(a); B.setChar(b); }
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let announce = null;
+const announceQueue = [];
 const comboUI = [{ n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }];
 
 // 开场署名
 const CREDIT = 2.4;
 let creditT = 0, creditPending = false;
-function say(text, dur = 1.1, style = 'big') { if (RESIM) return; announce = { text, t: 0, dur, style, seed: Math.random() * 100 }; }
+function say(text, dur = 1.1, style = 'big', sub = '') {
+  if (RESIM) return;
+  const item = { text, t: 0, dur, style, sub, seed: Math.random() * 100 };
+  if (!announce) {
+    announce = item;
+  } else {
+    if (announce.text !== text && !announceQueue.some(q => q.text === text)) {
+      announceQueue.push(item);
+    }
+  }
+}
 function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math.random() * (CHARS.length - 1) | 0; if (b >= a) b++; return [a, b]; }
 // 还在等人进房间或在排队时开始单人模式：先关掉房间，免得有人进来把你拉去选人
 function netDropWaiting() { if (!NET.open && (NET.ws || p2pActive())) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
@@ -2422,7 +2463,6 @@ function startRound() {
   if (M.mode !== 'demo' && M.mode !== 'train') {
     if (M.round === 1) {
       creditT = CREDIT; creditPending = true; metal(880, 1.8, 0.05);
-      if (M.mode === 'tag3') setTimeout(() => say('先锋战 · 开战！', 1.4), 1200);
     } else {
       const titles = ['', '先锋战', '中坚战', '大将决战'];
       const txt = M.mode === 'tag3' ? (titles[M.round] || `第${CN[M.round] || M.round}局`) : `第${CN[M.round] || M.round}回合`;
@@ -3217,8 +3257,9 @@ function updateFighter(f, foe) {
   if (tryEscape(f, foe)) { physics(f); return; }
   f.skillCD = Math.max(0, f.skillCD - STEP);
   f.flying = false;
-  if (f.dummy && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = f.maxHp;
-  if (f.dummy && f.ctrl && f.ctrl.mode === 'fixed') { f.vx = 0; f.vy = 0; f.y = 0; if (f.homeX === undefined) f.homeX = f.x; f.x = f.homeX; } else if (f.dummy) f.homeX = undefined;
+  if (f.dummy && (f.ctrl && f.ctrl.cfg ? f.ctrl.cfg.autoHeal : true) && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = f.maxHp;
+  if (f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.infGuard : true)) { f.guard = f.maxGuard || 100; f.guardBroken = false; }
+  if (f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed')) { f.vx = 0; f.vy = 0; f.y = 0; if (f.homeX === undefined) f.homeX = f.x; f.x = f.homeX; } else if (f.dummy) f.homeX = undefined;
   if (f.ch.fly && f.onGround()) f.flyT = Math.min(f.ch.fly, f.flyT + STEP * 0.9);
   f.armorT = Math.max(0, f.armorT - STEP);
   f.slowT = Math.max(0, (f.slowT || 0) - STEP);
@@ -3569,7 +3610,12 @@ function applyHit(att, def, m, pt) {
     const extraBushidoLoss = M.mode === 'bushido' ? 32 : 0;
     let guardLoss = extraBushidoLoss + (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1))) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
     if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'guard_stab') guardLoss *= currentChaosMutation.val;
-    def.guard = Math.max(0, (def.guard !== undefined ? def.guard : def.maxGuard) - guardLoss);
+    if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
+      guardLoss = 0;
+      def.guard = def.maxGuard || 100;
+    } else {
+      def.guard = Math.max(0, (def.guard !== undefined ? def.guard : def.maxGuard) - guardLoss);
+    }
     def.sinceBlock = 0;
 
     // 破防崩势判定（Guard Break）
@@ -3589,7 +3635,9 @@ function applyHit(att, def, m, pt) {
 
     def.state = 'blockstun'; def.t = 0;
     def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1);
-    def.vx = fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
+    const isDefFixed = def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed');
+    def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
+    if (isDefFixed) { def.vy = 0; def.y = 0; }
     if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
     att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
     hitVisual(ev); netEmit(ev);
@@ -3757,7 +3805,7 @@ function applyHit(att, def, m, pt) {
       def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * kbMul * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
     }
   }
-  if (def.dummy && def.ctrl && def.ctrl.mode === 'fixed' && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
+  if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed') && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
   if (att.y < -2 && att.state === 'attack') att.vy = Math.min(att.vy, -170);
   ev.cn = def.comboHits; ev.dd = dmg;
   if (def.hp <= 0 && M.phase === 'fight') {
@@ -4376,10 +4424,22 @@ function frameBody(now) {
     shake = damp(shake, 0, 10, real);
     flashA = damp(flashA, 0, 8, real);
     dimA = damp(dimA, (superFreeze > 0 || (A.state === 'special' || B.state === 'special')) ? 1 : 0, 10, real);
-    if (announce) announce.t += real;
+    if (announce) {
+      announce.t += real;
+      if (announce.t >= announce.dur) {
+        announce = announceQueue.length > 0 ? announceQueue.shift() : null;
+      }
+    } else if (announceQueue.length > 0) {
+      announce = announceQueue.shift();
+    }
     if (creditT > 0) {
       creditT -= real;
-      if (creditT <= 0 && creditPending) { creditPending = false; say(`第${CN[M.round] || M.round}回合`, 1.1); SFX.gong(); }
+      if (creditT <= 0 && creditPending) {
+        creditPending = false;
+        const rTxt = M.mode === 'tag3' ? '先锋战 · 开战！' : (M.mode === 'bushido' ? '孤勇决死 · 开战！' : `第${CN[M.round] || M.round}回合`);
+        say(rTxt, 1.1);
+        SFX.gong();
+      }
     }
     updateCamera(real);
   }
@@ -5873,8 +5933,33 @@ function drawHUD() {
     ctx.save();
     ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
     ctx.fillStyle = '#e9c46a';
-    const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + currentChaosMutation.name + ' (' + Math.max(0, Math.ceil(CHAOS_INTERVAL - chaosTimer)) + 's)') : '🎲 乾坤异变';
+    const remSec = Math.max(0, Math.ceil(CHAOS_INTERVAL - chaosTimer));
+    const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + currentChaosMutation.name + ' (' + remSec + 's)') : '🎲 乾坤异变';
     ctx.fillText(mutTxt, cx, top + bh + 18);
+    if (currentChaosMutation && currentChaosMutation.desc) {
+      ctx.font = `${Math.max(12, Math.round(bh * 0.68))}px ${BODY_FONT}`;
+      ctx.fillStyle = 'rgba(239,232,216,0.88)';
+      ctx.fillText(currentChaosMutation.desc, cx, top + bh + 34);
+    }
+    if (currentChaosMutation && (!announce || announce.text !== ('天机异变 · ' + currentChaosMutation.name))) {
+      const badgeTxt = `${currentChaosMutation.icon} ${currentChaosMutation.name}：${currentChaosMutation.desc}`;
+      const bFs = Math.max(12, Math.round(bh * 0.65));
+      ctx.font = `${bFs}px ${BODY_FONT}`;
+      const tw = ctx.measureText(badgeTxt).width;
+      const padX = 14, bw = Math.min(W * 0.92, tw + padX * 2), bhBadge = Math.max(20, Math.round(bh * 1.05));
+      const bx = cx - bw / 2, by = Math.max(2, top - bhBadge - 4);
+      ctx.fillStyle = 'rgba(6,5,14,0.78)';
+      ctx.strokeStyle = 'rgba(233,196,106,0.45)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(bx, by, bw, bhBadge, 4);
+      else ctx.rect(bx, by, bw, bhBadge);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f4ecd8';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(badgeTxt, cx, by + bhBadge / 2);
+    }
     ctx.restore();
   }
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
@@ -5923,7 +6008,7 @@ function drawStats() {
 function drawCredit() {
   if (creditT <= 0 || M.mode === 'demo') return;
   const t = CREDIT - creditT, a = Math.min(clamp(t / 0.35, 0, 1), clamp(creditT / 0.45, 0, 1));
-  const cx = W / 2, cy = H * 0.42, s1 = Math.round(H * 0.028), s2 = Math.round(H * 0.07);
+  const cx = W / 2, cy = H * 0.28, s1 = Math.round(H * 0.028), s2 = Math.round(H * 0.07);
   ctx.save(); ctx.globalAlpha = a;
   const bw = Math.min(W * 0.86, s2 * 11), bh = s2 * 2.4;
   const g = ctx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
@@ -5944,12 +6029,19 @@ function drawCredit() {
   ctx.restore();
 }
 function drawAnnounce() {
-  if (!announce) return;
+  if (!announce) {
+    if (announceQueue.length > 0) announce = announceQueue.shift();
+    else return;
+  }
   const a = announce, k = a.t / a.dur;
-  if (k >= 1) { announce = null; return; }
+  if (k >= 1) {
+    announce = announceQueue.length > 0 ? announceQueue.shift() : null;
+    if (!announce) return;
+  }
   const inK = clamp(a.t / 0.15, 0, 1), outK = clamp((a.dur - a.t) / 0.25, 0, 1), al = Math.min(inK, outK);
   const sc = a.style === 'ko' ? lerp(2.2, 1, Math.pow(inK, 0.5)) : lerp(1.4, 1, inK);
-  ctx.save(); ctx.translate(W / 2, H * (a.style === 'super' ? 0.3 : 0.42)); ctx.scale(sc, sc); ctx.globalAlpha = al;
+  const cyRatio = a.style === 'super' ? 0.3 : (creditT > 0 ? 0.54 : 0.42);
+  ctx.save(); ctx.translate(W / 2, H * cyRatio); ctx.scale(sc, sc); ctx.globalAlpha = al;
   const size = H * (a.style === 'ko' ? 0.26 : a.style === 'super' ? 0.12 : 0.13);
   ctx.font = `${Math.round(size)}px ${TITLE_FONT}`;
   const tw = ctx.measureText(a.text).width;
@@ -5962,7 +6054,8 @@ function drawAnnounce() {
     // 墨迹笔刷底
     ctx.fillStyle = 'rgba(6,5,14,0.82)';
     ctx.beginPath();
-    const w = tw + size * 1.2, h = size * 0.95;
+    const w = Math.max(tw, a.sub ? ctx.measureText(a.sub).width : 0) + size * 1.2;
+    const h = a.sub ? size * 1.35 : size * 0.95;
     ctx.moveTo(-w / 2, -h / 2);
     for (let i = 0; i <= 12; i++) ctx.lineTo(-w / 2 + w * i / 12, -h / 2 + (hash(a.seed + i) - 0.5) * size * 0.14);
     for (let i = 12; i >= 0; i--) ctx.lineTo(-w / 2 + w * i / 12 + (i === 12 ? size * 0.25 : 0), h / 2 + (hash(a.seed + i + 30) - 0.5) * size * 0.14);
@@ -5970,7 +6063,13 @@ function drawAnnounce() {
     ctx.fillStyle = a.style === 'go' ? '#ff8a78' : a.style === 'super' ? '#fff' : '#efe8d8';
   }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(a.text, 0, size * 0.05);
+  const textY = a.sub ? -size * 0.14 : size * 0.05;
+  ctx.fillText(a.text, 0, textY);
+  if (a.sub) {
+    ctx.font = `${Math.max(12, Math.round(size * 0.27))}px ${BODY_FONT}`;
+    ctx.fillStyle = '#efe8d8';
+    ctx.fillText(a.sub, 0, size * 0.24);
+  }
   ctx.restore();
 }
 // 离屏画布：背景（低分辨率 = 景深虚化）和泛光
@@ -6448,7 +6547,7 @@ function singleSec(sec) {
   else if (active === 'bushido') renderBushido();
   else if (active === 'chaos') renderChaos();
   else if (active === 'stage') renderStages();
-  else if (active === 'train') renderTrainPick();
+  else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
   else if (active === 'cpu') updateAIBrief();
 }
 function openScreen(name) {
@@ -8957,10 +9056,24 @@ if (TOUCH) {
   $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
   $id('tDummy').addEventListener('click', () => {
     if (!(B.ctrl instanceof DummyCtrl)) return;
-    const order = ['stand', 'block', 'escape', 'fixed'];
-    dummyMode = B.ctrl.mode = order[(order.indexOf(dummyMode) + 1) % 4];
-    if (dummyMode === 'fixed') { B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0; }
-    say(DUMMY_MODES[dummyMode], 0.8, 'go');
+    const presets = [
+      { name: '自由试剑', cfg: { fixed: false, block: false, escape: false, counter: false, infGuard: true, autoHeal: true } },
+      { name: '钉在原地', cfg: { fixed: true, block: false, escape: false, counter: false, infGuard: true, autoHeal: true } },
+      { name: '一味死守', cfg: { fixed: false, block: true, escape: false, counter: false, infGuard: true, autoHeal: true } },
+      { name: '受身腾空', cfg: { fixed: false, block: false, escape: true, counter: false, infGuard: true, autoHeal: true } },
+      { name: '防守反击', cfg: { fixed: false, block: true, escape: true, counter: true, infGuard: true, autoHeal: true } }
+    ];
+    let curIdx = presets.findIndex(p => Object.keys(p.cfg).every(k => p.cfg[k] === B.ctrl.cfg[k]));
+    const nextP = presets[(curIdx + 1) % presets.length];
+    B.ctrl.cfg = { ...nextP.cfg };
+    dummyCfg = { ...B.ctrl.cfg };
+    if (B.ctrl.cfg.fixed) {
+      B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
+    } else {
+      B.homeX = undefined;
+    }
+    renderDummyFeatures();
+    say('木人：' + nextP.name, 0.8, 'go');
   });
   document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
@@ -9040,45 +9153,87 @@ if (trainModeSegEl) {
     if (!b || !b.dataset.tmode) return;
     trainTargetMode = b.dataset.tmode;
     for (const btn of trainModeSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+    const dfWrap = $id('dummyFeatWrap');
+    if (dfWrap) dfWrap.style.display = trainTargetMode === 'dummy' ? 'block' : 'none';
     SFX.slice();
   });
 }
-function startTraining() {
+function renderDummyFeatures() {
+  const el = $id('dummyFeatList');
+  if (!el) return;
+  el.innerHTML = Object.entries(DUMMY_FEATURES).map(([k, feat], idx) => {
+    const on = !!dummyCfg[k];
+    return `<button type="button" class="dummy-feat-chip${on ? ' sel' : ''}" data-feat="${k}" style="padding:6px 12px;border-radius:18px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s;background:${on ? 'rgba(233,196,106,0.22)' : 'rgba(255,255,255,0.06)'};border:1px solid ${on ? '#e9c46a' : 'rgba(255,255,255,0.18)'};color:${on ? '#f4ecd8' : 'rgba(239,232,216,0.65)'}">
+      <span style="font-weight:700;color:${on ? '#e9c46a' : 'rgba(255,255,255,0.4)'}">${idx + 1}.</span>
+      <span>${feat.name}</span>
+      <span style="font-size:11px;opacity:0.75;margin-left:2px">(${feat.desc})</span>
+    </button>`;
+  }).join('');
+}
+const dummyFeatEl = $id('dummyFeatList');
+if (dummyFeatEl) {
+  dummyFeatEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.feat) return;
+    const k = b.dataset.feat;
+    dummyCfg[k] = !dummyCfg[k];
+    if (B && B.ctrl instanceof DummyCtrl) {
+      B.ctrl.cfg[k] = dummyCfg[k];
+      if (k === 'fixed') {
+        if (dummyCfg.fixed) {
+          B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
+        } else {
+          B.homeX = undefined;
+        }
+      }
+    }
+    renderDummyFeatures();
+    SFX.slice();
+  });
+}
+function startDummyTraining() {
+  if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
+    trainChar = 0;
+  }
+  FOREST.on = false; B.forestProxy = false; B.hidden = false;
+  initAudio(); paused = false;
+  showScreen(null);
+  startMatch('train', { ...dummyCfg }, [trainChar, 0]);
+  Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0 });
+  B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木人桩' };
+  applySkins();
+  A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
+}
+function startTraining(targetMode = trainTargetMode) {
   if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
     trainChar = 0;
   }
   initAudio(); paused = false;
   const oppChar = Math.floor(Math.random() * CHARS.length);
-  if (trainTargetMode === 'cpu') {
+  if (targetMode === 'cpu') {
     pickLevel = 'god';
     showScreen(null);
     startMatch('cpu', 'god', [trainChar, oppChar]);
     return;
   }
-  if (trainTargetMode === 'bushido') {
+  if (targetMode === 'bushido') {
     startBushido(trainChar, oppChar, 'god');
     showScreen(null);
     return;
   }
-  if (trainTargetMode === 'chaos') {
+  if (targetMode === 'chaos') {
     startChaos(trainChar, oppChar, 'god');
     showScreen(null);
     return;
   }
-  if (trainTargetMode === 'tag3') {
+  if (targetMode === 'tag3') {
     const pTeam = [trainChar, (trainChar + 1) % CHARS.length, (trainChar + 2) % CHARS.length];
     const eTeam = pickEnemyTag3Team(pTeam);
     startTag3Match(pTeam, eTeam, 'god');
     showScreen(null);
     return;
   }
-  FOREST.on = false; B.forestProxy = false; B.hidden = false;
-  showScreen(null);
-  startMatch('train', dummyMode, [trainChar, 0]);
-  Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0 });
-  B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木人桩' };
-  applySkins();
-  A.x = STAGE_W / 2 - 160; B.x = dummyMode === 'fixed' ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = undefined;
+  startDummyTraining();
 }
 function renderTrainPick() {
   if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
@@ -9112,6 +9267,7 @@ if (trPickEl) {
 const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', startTraining);
 renderTrainPick();
+renderDummyFeatures();
 
 // ======================= 3v3 门派车轮战 =======================
 let tag3Team = [0, 1, 2];
@@ -9677,7 +9833,7 @@ function rollChaosMutation() {
   flashRGB = '233,196,106';
   shake = Math.max(shake, 8);
   SFX.gong();
-  say('天机异变 · ' + mut.name, 1.6, 'big');
+  say('天机异变 · ' + mut.name, 1.8, 'big', mut.desc);
   if (typeof addP === 'function' && typeof A !== 'undefined') {
     addP({ type: 'text', text: mut.icon + ' ' + mut.name, x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
   }
@@ -11648,10 +11804,24 @@ window.addEventListener('keydown', e => {
     paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
   }
   if (M.mode === 'demo') return;
-  if (M.mode === 'train' && /^Digit[1234]$/.test(e.code) && B.ctrl instanceof DummyCtrl) {
-    dummyMode = B.ctrl.mode = ['stand', 'block', 'escape', 'fixed'][+e.code.slice(5) - 1];
-    if (dummyMode === 'fixed') { B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0; }
-    say(DUMMY_MODES[dummyMode], 0.8, 'go'); return;
+  if (M.mode === 'train' && /^Digit[1-6]$/.test(e.code) && B.ctrl instanceof DummyCtrl) {
+    const featKeys = ['fixed', 'block', 'escape', 'counter', 'infGuard', 'autoHeal'];
+    const idx = +e.code.slice(5) - 1;
+    const feat = featKeys[idx];
+    if (feat) {
+      B.ctrl.cfg[feat] = !B.ctrl.cfg[feat];
+      dummyCfg[feat] = B.ctrl.cfg[feat];
+      if (feat === 'fixed') {
+        if (B.ctrl.cfg.fixed) {
+          B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
+        } else {
+          B.homeX = undefined;
+        }
+      }
+      renderDummyFeatures();
+      say(DUMMY_FEATURES[feat].name + (B.ctrl.cfg[feat] ? '：开启' : '：关闭'), 0.8, 'go');
+    }
+    return;
   }
   for (let p = 0; p < 2; p++) {
     const act = KEYS[p][e.code]; if (!act) continue;
