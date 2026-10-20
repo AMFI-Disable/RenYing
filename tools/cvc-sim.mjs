@@ -21,7 +21,7 @@ function getArg(name, def) {
 }
 const matchCount = parseInt(getArg('matches', '10'), 10);
 const matchMode = getArg('mode', 'cpu');
-const MODE_MAX_LEVEL = { cpu: 'god', bushido: 'god', chaos: 'god', tag3: 'god', mayhem: 'god', tower: 'impossible' };
+const MODE_MAX_LEVEL = { cpu: 'god', bushido: 'god', chaos: 'god', tag3: 'god', mayhem: 'god', watch2v2: 'god', tower: 'impossible' };
 const defaultLevel = args.includes('--mode') ? (MODE_MAX_LEVEL[matchMode] || 'god') : 'hard';
 const p1Level = getArg('p1-level', getArg('level', defaultLevel));
 const p2Level = getArg('p2-level', getArg('level', defaultLevel));
@@ -35,7 +35,7 @@ const gameCode = readFileSync('src/game.js', 'utf8');
 const NET_SCRIPT = new vm.Script(netCode);
 const GAME_SCRIPT = new vm.Script(gameCode);
 const EXPOSE_SCRIPT = new vm.Script(`({
-  CHARS, A, B, M, projs, STAGE_W, AICtrl,
+  CHARS, A, B, C, D, M, projs, STAGE_W, AICtrl,
   startMatch: (...args) => startMatch(...args),
   step: () => step()
 })`);
@@ -189,22 +189,36 @@ for (let m = 1; m <= matchCount; m++) {
   const p1Idx = p1CharArg !== '' ? parseInt(p1CharArg, 10) : Math.floor(Math.random() * chars.length);
   const p2Idx = p2CharArg !== '' ? parseInt(p2CharArg, 10) : Math.floor(Math.random() * chars.length);
 
-  env.startMatch(matchMode, p1Level, [p1Idx, p2Idx]);
-  env.M.mode = matchMode;
-  if (matchMode === 'bushido') {
-    env.A.maxHp = env.A.hp = env.A.lagHp = 1;
-    env.B.maxHp = env.B.hp = env.B.lagHp = 1;
-  } else if (matchMode === 'chaos') {
-    env.currentChaosMutation = null;
-    env.chaosTimer = 0;
-  } else if (matchMode === 'mayhem') {
-    env.A.maxHp = env.A.hp = env.A.lagHp = Math.round(env.A.maxHp * 10);
-    env.B.maxHp = env.B.hp = env.B.lagHp = Math.round(env.B.maxHp * 10);
-    env.A.guard = env.A.maxGuard = env.B.guard = env.B.maxGuard = 500;
-    env.A.meter = env.B.meter = 100;
+  if (matchMode === 'watch2v2') {
+    const pool = chars.map((_, i) => i);
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    env.M.watch2v2Draft = { bans: [pool[0], pool[1]], t0: [pool[2], pool[3]], t1: [pool[4], pool[5]] };
+    env.startMatch('watch2v2', p1Level, [pool[2], pool[4]]);
+    env.A.ctrl = new env.AICtrl(p1Level);
+    env.C.ctrl = new env.AICtrl(p1Level);
+    env.B.ctrl = new env.AICtrl(p2Level);
+    env.D.ctrl = new env.AICtrl(p2Level);
+  } else {
+    env.startMatch(matchMode, p1Level, [p1Idx, p2Idx]);
+    env.M.mode = matchMode;
+    if (matchMode === 'bushido') {
+      env.A.maxHp = env.A.hp = env.A.lagHp = 1;
+      env.B.maxHp = env.B.hp = env.B.lagHp = 1;
+    } else if (matchMode === 'chaos') {
+      env.currentChaosMutation = null;
+      env.chaosTimer = 0;
+    } else if (matchMode === 'mayhem') {
+      env.A.maxHp = env.A.hp = env.A.lagHp = Math.round(env.A.maxHp * 10);
+      env.B.maxHp = env.B.hp = env.B.lagHp = Math.round(env.B.maxHp * 10);
+      env.A.guard = env.A.maxGuard = env.B.guard = env.B.maxGuard = 500;
+      env.A.meter = env.B.meter = 100;
+    }
+    env.A.ctrl = new env.AICtrl(p1Level);
+    env.B.ctrl = new env.AICtrl(p2Level);
   }
-  env.A.ctrl = new env.AICtrl(p1Level);
-  env.B.ctrl = new env.AICtrl(p2Level);
 
   const charName1 = chars[p1Idx].name;
   const charName2 = chars[p2Idx].name;
@@ -215,7 +229,7 @@ for (let m = 1; m <= matchCount; m++) {
 
   const matchTraj = [];
   let steps = 0;
-  const maxSteps = 25 * 60 * 3 + 600; // max 3 rounds @ 60fps
+  const maxSteps = (matchMode === 'watch2v2' ? 45 : 25) * 120 * 3 + 1200; // max 3 rounds @ 120fps
 
   let prevHp1 = env.A.hp;
   let prevHp2 = env.B.hp;
