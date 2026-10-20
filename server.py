@@ -291,7 +291,7 @@ def api_leaderboard(token):
 
 # ======================= 成长系统：墨锭、问剑阁、任务、排位 =======================
 STARTER = "qingfeng"                         # 所有人一开始都有的角色
-POOL = {"common": ["tieshan", "leiming"], "rare": ["feiying", "liuyun", "lingshuang"], "legend": ["moyu", "yuehua", "yanling"]}
+POOL = {"common": ["tieshan", "leiming"], "rare": ["feiying", "liuyun", "lingshuang", "zuixian", "gouchen"], "legend": ["moyu", "yuehua", "yanling", "yuxiao"]}
 ALL_CHARS = [STARTER] + [c for cs in POOL.values() for c in cs]
 RARITY = {c: r for r, cs in POOL.items() for c in cs}
 FULL_RATE = {"legend": 0.015, "rare": 0.035, "common": 0.07}    # 直接抽中完整角色的概率（合计 12%）
@@ -312,12 +312,17 @@ DAILY_POOL = [("play3", "试剑 3 局（任意模式）", "games", 3, 120), ("wi
 WEEKLY = [("wwin10", "本周赢下 10 局", "wins", 10, 400), ("wrank5", "本周闯 5 场排位赛", "rankgames", 5, 300),
           ("wdays5", "本周有 5 天领到每日任务奖励", "dailydays", 5, 300)]
 MAX_STATS = {"maxcombo"}
-# 皮肤：每个角色一款稀有、一款传说，只改外观
-SKINS = {"qf_qfx": ("qingfeng", "legend"), "qf_frost": ("qingfeng", "rare"), "qf_gold": ("qingfeng", "legend"), "fy_jade": ("feiying", "rare"), "fy_blood": ("feiying", "legend"),
-         "ts_bronze": ("tieshan", "rare"), "ts_obsidian": ("tieshan", "legend"), "ls_plum": ("lingshuang", "rare"), "ls_aurora": ("lingshuang", "legend"),
-         "ly_dusk": ("liuyun", "rare"), "ly_sky": ("liuyun", "legend"), "lm_violet": ("leiming", "rare"), "lm_sun": ("leiming", "legend"),
-         "my_cinnabar": ("moyu", "rare"), "my_gold": ("moyu", "legend"), "yh_sakura": ("yuehua", "rare"), "yh_eclipse": ("yuehua", "legend"),
-         "yl_raven": ("yanling", "rare"), "yl_phoenix": ("yanling", "legend")}
+# 皮肤：全英雄 30 款稀有与传说皮肤
+SKINS = {"qf_qfx": ("qingfeng", "legend"), "qf_frost": ("qingfeng", "rare"), "qf_gold": ("qingfeng", "legend"), "qf_abyss": ("qingfeng", "legend"),
+         "fy_jade": ("feiying", "rare"), "fy_blood": ("feiying", "legend"), "fy_phantom": ("feiying", "legend"),
+         "ts_bronze": ("tieshan", "rare"), "ts_obsidian": ("tieshan", "legend"), "ts_crimson": ("tieshan", "legend"),
+         "ls_plum": ("lingshuang", "rare"), "ls_aurora": ("lingshuang", "legend"), "ls_dragon": ("lingshuang", "legend"),
+         "ly_dusk": ("liuyun", "rare"), "ly_sky": ("liuyun", "legend"), "ly_bamboo": ("liuyun", "rare"),
+         "lm_violet": ("leiming", "rare"), "lm_sun": ("leiming", "legend"), "lm_asura": ("leiming", "legend"),
+         "my_cinnabar": ("moyu", "rare"), "my_gold": ("moyu", "legend"), "my_celestial": ("moyu", "legend"),
+         "yh_sakura": ("yuehua", "rare"), "yh_eclipse": ("yuehua", "legend"), "yh_solstice": ("yuehua", "legend"),
+         "yl_raven": ("yanling", "rare"), "yl_phoenix": ("yanling", "legend"), "yl_blizzard": ("yanling", "legend"),
+         "yx_snow": ("yuxiao", "rare"), "zx_amber": ("zuixian", "rare"), "gc_crimson": ("gouchen", "rare")}
 SKIN_RATE = {"legend": 0.03, "rare": 0.12}          # 其余 85% 给 1 到 3 个角色碎片；皮肤只出已拥有角色的
 SKIN_COST, SKIN_TEN, SKIN_PITY, SKIN_DUP = 30, 270, 15, 20
 sysrand = random.SystemRandom()
@@ -867,8 +872,9 @@ def finish_room(code, room, leaver_role, forfeit_ok=True):
         room["active"] = False
         other_role = "client" if leaver_role == "host" else "host"
         reps = room.get("reports") or {}
-        # 场上只剩一个人报的胜负，而且报的人正是离开的那一方：不能采信，
-        # 否则"报个赢再退出"就能刷战绩。走的一方报的赢，按对方胜的离开处理。
+        # 双方报告冲突且有人离开，作废冲突报告，按离开方判负
+        if len(reps) == 2 and reps.get("host") != reps.get("client"):
+            reps = {}
         if len(reps) == 1 and leaver_role in reps:
             reps = {}
         if reps:

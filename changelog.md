@@ -8,6 +8,13 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **ZuiXian Classical Visual Overlays (`drawWengTing`, `drawShanshui`)**:
+  - Restored full-screen ink-wash landscape scroll (`drawShanshui`) descending dynamically during ZuiXian's ultimate ability (`山水之间`), featuring layered misty mountain peaks with gradient bleeds, couplet calligraphy ("醉翁之意不在酒，在乎山水之间也"), red vermilion seal stamp ("山水"), lone boat, flying birds, and wooden roller rods.
+  - Restored classical Chinese architecture overlay (`drawWengTing`) for `pavilion` (亭中留客, Q skill), displaying the ancient pavilion structure around jailed fighters for the full 2.0s duration with semi-transparent front pillars, dashed landing footprint indicator, and inscribed plaque.
+- **Feast Activation Gate Test Coverage (`tools/combat-test.mjs`)**:
+  - Added unit test coverage verifying that ZuiXian's R skill (`与民同乐` / feast) strictly enforces its activation condition (`drunk >= 50`), preserving cooldown without firing when wine is insufficient, and successfully activating once available.
+- **AI Neural Network Model Weight Synchronization**:
+  - Synchronized updated `renying_ai_v2` neural network weights across all 12 fighters in `models/heroes/*.json` and embedded HTML distribution bundles.
 - **Collaboration & Agent Development Guide (`tools/project_doc.typ`, `project.pdf`)**:
   - Authored comprehensive project architecture, Git/GitHub setup, and AI agent protocol manual in Typst (`tools/project_doc.typ`) and compiled high-fidelity PDF (`project.pdf`).
   - Documented modular source tree architecture (`src/`), build pipeline (`tools/build.py`), and headless simulation suite (`tools/cvc-sim.mjs`).
@@ -118,6 +125,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Tie Shan FenXueKuangTu / Iron Wall Infinite Height Wave Upgrade**:
+  - Upgraded Tieshan's R skill (`ironwall` / 焚血狂突) to a towering skyward wave with infinite vertical coverage (`box: [-10, -2200, 135, 0]`), preventing airborne or flying escapes (e.g. Yan Ling flight or Liu Yun high jumps).
+  - Added tiered soaring wave particle emissions, screen tremors, and heavy aerial spike downforce (`spike: true`, `kb: [260, 520]`) slamming airborne targets into the ground with bespoke callouts (`🌊 焚血狂突 · 惊涛拍岸`).
 - **Single-Player Mode Hierarchy & Category Navigation**:
   - Reorganized single-player modes into three categorized tabs: Regular Practice (⚔️ 常规演武: 1v1 CPU, Stage, Training), Roguelike / Mutation (📜 秘宝异变: Tower, Chaos), and Special Showdown (⚡ 特殊决战: 3v3 Tag-Team, Bushido).
   - Added category switcher `#singleCatTabs` and automated active sub-tab filtering.
@@ -230,6 +240,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Character Codex Window Layout Overflow**:
+  - Enforced `max-height: min(840px, 90vh)` with `overflow-y: auto` and `overflow-x: hidden` on the `.cxw` codex modal container, preventing vertical clipping and viewport overflow on compact screens.
 - **Tower Mode Combat State Freeze**:
   - Fixed combat loop freeze upon winning a Tower floor by setting `M.phase = 'perk'` and pausing simulation before displaying the perk selection modal.
 - **Ground Attack Block Cancellation**:

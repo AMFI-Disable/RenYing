@@ -71,10 +71,11 @@ border: 1px solid rgba(233, 196, 106, .45);
 box-shadow: 0 0 12px rgba(233, 196, 106, .15);
 }
 .single-tabs, .task-tabs {
-display: inline-flex; gap: 6px; padding: 4px; border-radius: 999px;
+display: flex; gap: 6px; padding: 4px; border-radius: 999px;
 background: rgba(255, 255, 255, .05); border: 1px solid var(--faint);
-margin: 4px 0 16px; flex-wrap: wrap; justify-content: center; min-height: 38px;
-box-sizing: border-box; align-items: center;
+margin: 4px 0 16px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+-webkit-overflow-scrolling: touch; justify-content: center; min-height: 38px;
+box-sizing: border-box; align-items: center; max-width: 100%;
 }
 .single-tabs button, .task-tabs button {
 border: none; background: transparent; color: var(--dim); font-family: var(--body);
@@ -120,7 +121,7 @@ text-align: left; box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
 .ai-desc { font-size: 13.5px; line-height: 1.6; color: var(--ink); margin: 4px 0 8px; }
 .ai-traits { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 2px; }
 .trait-chip { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: rgba(255, 255, 255, .06); border: 1px solid var(--faint); color: var(--dim); white-space: nowrap; }
-.sec-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
+.sec-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: nowrap; }
 .sec-head-row h3.spt { margin: 0; font-size: 22px; white-space: nowrap; }
 .sub-badge { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: rgba(233, 196, 106, .12); border: 1px solid rgba(233, 196, 106, .35); color: var(--gold); white-space: nowrap; }
 .sec-sub-label { font-size: 13px; color: var(--gold); margin: 10px 0 6px; text-align: center; font-weight: 600; letter-spacing: .5px; }
@@ -169,8 +170,8 @@ transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 .netcol .netcol-icon { color: var(--gold); display: flex; align-items: center; justify-content: center; }
 .netcol h4 { font-family: var(--title); font-weight: 400; font-size: 24px; margin: 0; color: var(--ink); }
 .matchbox.wuxia-card { padding: 16px 20px; margin-top: 14px; text-align: center; }
-.match-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-.match-card-title { font-family: var(--title); font-size: 18px; color: var(--gold); display: inline-flex; align-items: center; gap: 6px; letter-spacing: 0.5px; }
+.match-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: nowrap; gap: 8px; }
+.match-card-title { font-family: var(--title); font-size: 18px; color: var(--gold); display: inline-flex; align-items: center; gap: 6px; letter-spacing: 0.5px; white-space: nowrap; }
 .match-card-sub { font-size: 12.5px; color: var(--dim); }
 .match-actions-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 .match-actions-row .go { margin: 0; min-width: 220px; font-size: 24px; padding: 6px 26px; }
@@ -436,8 +437,9 @@ html, body { overscroll-behavior: none; }
 .setrow .seg button { padding: 5px 12px; font-size: 13px; white-space: nowrap; }
 .setrow input[type=range] { width: 100%; accent-color: #e9c46a; }
 .setrow .v { text-align: right; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tab-ic, .ink-icon { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; vertical-align: middle; flex-shrink: 0; }
-.tab-ic svg, .ink-icon svg { width: 100%; height: 100%; stroke: currentColor; }
+.tab-ic, .ink-icon { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; vertical-align: middle; flex-shrink: 0; pointer-events: none; }
+.tab-ic *, .ink-icon * { pointer-events: none; }
+.tab-ic svg, .ink-icon svg { width: 100%; height: 100%; stroke: currentColor; pointer-events: none; }
 .comp { max-width: min(1360px, 96vw); }
 .com-channel-bar { display: flex; gap: 8px; margin: 8px 0 10px; flex-wrap: wrap; }
 .com-channel-bar button {
@@ -597,9 +599,9 @@ display: grid; gap: clamp(6px, 1vh, 10px); grid-template-rows: auto auto minmax(
 .deckcvwrap { width: 100%; height: 100%; min-height: 50px; border-radius: 8px; overflow: hidden; background: #080914; border: 1px solid rgba(255,255,255,.08); flex: none; position: relative; }
 .deckcvwrap canvas { width: 100%; height: 100%; display: block; }
 .deckinfo { text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; }
-.dhitname { font-size: clamp(12px, 1vw, 14px); font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 5px; }
+.dhitname { font-size: clamp(12px, 1vw, 14px); font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 5px; white-space: nowrap; min-width: 0; }
 .dhitbadge { display: flex; gap: 4px; flex-wrap: wrap; }
-.dhitbadge span { font-size: 12px; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+.dhitbadge span { font-size: 12px; padding: 1px 5px; border-radius: 4px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
 .badge-stun { background: rgba(255,107,107,.2); color: #ff6b6b; border: 1px solid rgba(255,107,107,.4); }
 .badge-buff { background: rgba(70,211,234,.2); color: #46d3ea; border: 1px solid rgba(70,211,234,.4); }
 .badge-break { background: rgba(233,196,106,.2); color: #e9c46a; border: 1px solid rgba(233,196,106,.4); }
@@ -1442,7 +1444,7 @@ button .sic.w, .ghost .sic.w { font-size: 1em; }
           <canvas id="cxDemo"></canvas>
           <div class="demo-ctrls">
             <div class="demo-tabs" id="cxDemoTabs">
-              <button class="sel" data-m="all">全套连贯</button>
+              <button class="sel" data-m="full">全套连贯</button>
               <button data-m="light">普攻</button>
               <button data-m="charge">蓄力</button>
               <button data-m="air">空中</button>
@@ -1905,7 +1907,7 @@ fbApp = fbAuth = fbDb = null;
 }
 }
 }
-const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua'];
+const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen'];
 const DEV_ALL_SKINS = [
 'qf_frost', 'qf_gold', 'qf_abyss', 'qf_qfx',
 'fy_jade', 'fy_blood', 'fy_phantom',
@@ -1915,7 +1917,8 @@ const DEV_ALL_SKINS = [
 'lm_violet', 'lm_sun', 'lm_asura',
 'my_cinnabar', 'my_gold', 'my_celestial',
 'yh_sakura', 'yh_eclipse', 'yh_solstice',
-'yl_raven', 'yl_phoenix', 'yl_blizzard'
+'yl_raven', 'yl_phoenix', 'yl_blizzard',
+'yx_snow', 'zx_amber', 'gc_crimson'
 ];
 function makeDevProfile() {
 return {
@@ -1924,7 +1927,8 @@ ink: 99999,
 owned: DEV_ALL_CHARS.slice(),
 frags: {
 qingfeng: 99, yanling: 99, leiming: 99, tieshan: 99,
-liuyun: 99, lingshuang: 99, moyu: 99, feiying: 99, yuehua: 99
+liuyun: 99, lingshuang: 99, moyu: 99, feiying: 99, yuehua: 99,
+yuxiao: 99, zuixian: 99, gouchen: 99
 },
 pity: 0,
 spity: 0,
@@ -2487,16 +2491,19 @@ stripAttrs(document.body);
 if (typeof MutationObserver !== 'undefined') {
 new MutationObserver(ms => {
 for (const m of ms) {
-if (m.type === 'characterData') iconizeText(m.target);
-else for (const n of m.addedNodes) { iconizeTree(n); stripAttrs(n); }
+for (const n of m.addedNodes) {
+if (n.nodeType === 1 && !/^(CANVAS|SCRIPT|STYLE)$/.test(n.nodeName)) {
+iconizeTree(n); stripAttrs(n);
 }
-}).observe(document.body, { subtree: true, childList: true, characterData: true });
+}
+}
+}).observe(document.body, { subtree: true, childList: true });
 }
 };
 if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 'use strict';
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, vibrate: true };
 try {
 const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
 Object.assign(SETTINGS, saved);
@@ -2510,6 +2517,7 @@ const VERSION = '4.5';         // 每次更新改一下，联机时双方版本�
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
+let NET_HUD = false;                     // 回滚与联机遥测 HUD 开关（按 ~ 或 F2 切换）
 let DEV_SESSION_UNLOCKED = false;
 try {
 DEV_SESSION_UNLOCKED = sessionStorage.getItem('renying-dev-unlock') === '1';
@@ -2896,34 +2904,56 @@ for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x
 if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '沉肩如山以狂暴重盾之势撞将过去（判定范围适中）。撞击附带【崩山破势】（0.40 秒重度硬直与击退，起手承受 1 次霸体），且对空中之敌或体重轻薄者实施压制！',
+ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '狂暴冲锋掀起通天巨浪（通天判定，彻底封锁空中跳跃与腾空位移）。携千钧重势巨浪拍岸，对空中敌人强行下砸截落，双倍瓦解一切格挡！',
 start(f) { f.armorT = 0.38; f.armorHits = 1; f.vx = 0; },
 update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.16) { f.skPh = 1; f.t = 0; f.vx = f.face * 680; f.hitDone = false; SFX.dash(); }
+if (f.skPh === 0 && f.t >= 0.16) {
+f.skPh = 1; f.t = 0; f.vx = f.face * 720; f.hitDone = false; SFX.dash(); SFX.thud();
+shake = Math.max(shake, 12);
+}
 if (f.skPh === 1) {
 const attWeight = (f.ch.stat && f.ch.stat.weight) || 1.50;
 const defWeight = (foe.ch.stat && foe.ch.stat.weight) || 1.0;
 const wRatio = attWeight / defWeight;
 const foeInAir = !foe.onGround() || foe.y < -2;
+const isCrimson = f.skinKey === 'ts_crimson';
+const waveRGB = isCrimson ? '255,60,70' : '255,200,100';
+if (!RESIM) {
+const wx = f.x + f.face * 55;
+for (let h = 0; h < 6; h++) {
+const wy = -h * 170 - rand(10, 60);
+ring(wx + rand(-20, 20), wy, 60 + h * 16, waveRGB, 0.25);
+if (Math.random() < 0.5) {
+addP({ type: 'spark', x: wx, y: wy, vx: f.face * rand(140, 360), vy: rand(-180, 180), rgb: waveRGB, w: 3, life: 0.2, max: 0.2 });
+}
+}
+dust(f.x + f.face * 35, 0, 4);
+}
 if (strike(f, foe, {
-box: [-10, -260, 95, 0],
-dmg: 54,
-kb: foeInAir ? [Math.round(240 * wRatio), Math.round(440 * wRatio)] : [Math.round(380 * wRatio), -160],
-stun: 0.42,
-hs: 0.10,
+box: [-10, -2200, 135, 0],
+dmg: 56,
+kb: foeInAir ? [Math.round(260 * wRatio), Math.round(520 * wRatio)] : [Math.round(420 * wRatio), -180],
+stun: 0.45,
+hs: 0.12,
 spike: foeInAir,
 launch: true,
 big: true,
-guardBreakMul: 1.4
+guardBreakMul: 1.5
 })) {
-addP({ type: 'text', text: foeInAir ? '💥 泰山镇岳 · 撼坠' : '💥 崩山破势', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,100' });
+shake = Math.max(shake, 18);
+SFX.heavy(); SFX.thud();
+for (let h = 0; h < 7; h++) {
+ring(f.x + f.face * 65, -h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
+}
+const waveTxt = isCrimson ? '🌊 焚血狂突 · 惊涛拍岸' : (foeInAir ? '🌊 巨浪翻江 · 撼坠' : '🌊 巨浪裂空 · 崩山');
+addP({ type: 'text', text: waveTxt, x: f.x + f.face * 60, y: f.y - 140, life: 1.0, max: 1.0, rgb: waveRGB });
 f.vx *= 0.2;
 }
-if (f.t >= 0.24) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
+if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
 }
 if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
 },
-pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 240 },
+pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
 spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（48 伤害）扫飞贴身之敌（对地面敌人仅平推硬直，仅浮空敌人会被击落地面）！',
 start(f) { f.vx = 0; f.spinN = 0; },
 update(f, foe) {
@@ -3415,6 +3445,11 @@ note(n = 0) { const f0 = [660, 784, 880, 1047][Math.min(3, n | 0)]; sTone(f0, f0
 drink() { sNoise(0.25, 500, 900, 3, 0.12); sTone(220, 160, 0.18, 0.08); },   // 咕嘟一口
 fire() { sNoise(0.45, 1800, 300, 0.6, 0.3, 'lowpass'); sNoise(0.2, 4000, 1500, 0.8, 0.08); },   // 喷火
 };
+function haptic(pattern = 15) {
+if (typeof navigator !== 'undefined' && navigator.vibrate && SETTINGS.vibrate !== false) {
+try { navigator.vibrate(pattern); } catch (e) {}
+}
+}
 const MUSIC = { mode: null, next: 0, step: 0, key: 0, gain: null, mel: 7, flute: 0 };
 const PENTA = [0, 2, 4, 7, 9];
 function applyVolumes() { if (!AC) return; master.gain.value = 0.5 * SETTINGS.sfx; if (MUSIC.gain) MUSIC.gain.gain.value = 0.32 * SETTINGS.music; if (MUSIC.fileGain) MUSIC.fileGain.gain.value = muted ? 0 : 0.5 * SETTINGS.music; }
@@ -5309,13 +5344,14 @@ dust(foe.x, 0, 6); SFX.heavy();
 p.hits++; p.hitCD = p.rehit || 99;
 if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
 }
+const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net'];
 for (let i = 0; i < projs.length; i++) {
 const p1 = projs[i];
-if (p1.dead || p1.unbreakable || p1.ult || p1.dmg <= 0) continue;
+if (p1.dead || p1.unbreakable || p1.ult || p1.dmg <= 0 || p1.groundOnly || NO_CLASH.includes(p1.kind)) continue;
 const b1 = projBox(p1);
 for (let j = i + 1; j < projs.length; j++) {
 const p2 = projs[j];
-if (p2.dead || p2.unbreakable || p2.ult || p2.dmg <= 0 || p1.owner === p2.owner) continue;
+if (p2.dead || p2.unbreakable || p2.ult || p2.dmg <= 0 || p1.owner === p2.owner || p2.groundOnly || NO_CLASH.includes(p2.kind)) continue;
 const b2 = projBox(p2);
 if (overlap(b1, b2)) {
 p1.dead = true; p2.dead = true;
@@ -5690,7 +5726,7 @@ if (eRatio >= 2.2) {
 foe.hitDone = true;
 foe.state = 'hitstun'; foe.t = 0; foe.stun = 0.32; foe.vx = -foe.face * 260;
 f.vx *= 0.5;
-shake = Math.max(shake, 12); SFX.heavy(); SFX.parry();
+shake = Math.max(shake, 12); SFX.heavy(); SFX.parry(); haptic([20, 30, 20]);
 ring(cx, cy, 170, '255,200,90', 0.45);
 for (let i = 0; i < 9; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-320, 320), vy: rand(-320, 320), rgb: '255,200,90', life: 0.25, max: 0.25 });
 addP({ type: 'text', text: '⚡ 破势荡刃', x: cx, y: cy - 40, life: 0.7, max: 0.7, rgb: '255,210,100' });
@@ -5699,7 +5735,7 @@ return;
 f.hitDone = true;
 f.state = 'hitstun'; f.t = 0; f.stun = 0.32; f.vx = -f.face * 260;
 foe.vx *= 0.5;
-shake = Math.max(shake, 12); SFX.heavy(); SFX.parry();
+shake = Math.max(shake, 12); SFX.heavy(); SFX.parry(); haptic([20, 30, 20]);
 ring(cx, cy, 170, '255,200,90', 0.45);
 for (let i = 0; i < 9; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-320, 320), vy: rand(-320, 320), rgb: '255,200,90', life: 0.25, max: 0.25 });
 addP({ type: 'text', text: '⚡ 破势荡刃', x: cx, y: cy - 40, life: 0.7, max: 0.7, rgb: '255,210,100' });
@@ -5710,7 +5746,7 @@ f.vx = -f.face * clamp(210 / Math.sqrt(fWeight), 130, 280);
 foe.vx = -foe.face * clamp(210 / Math.sqrt(foeWeight), 130, 280);
 f.t = Math.max(f.t, foeSu + foeAc);
 foe.t = Math.max(foe.t, foeSu + foeAc);
-SFX.parry();
+SFX.parry(); haptic([15, 25, 15]);
 shake = Math.max(shake, 8);
 ring(cx, cy, 140, '255,225,120', 0.35);
 for (let i = 0; i < 7; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-260, 260), vy: rand(-260, 260), rgb: '255,220,120', life: 0.22, max: 0.22 });
@@ -5784,6 +5820,7 @@ if (!m.isProj) {
 att.state = 'hitstun'; att.t = 0; att.stun = 0.18; att.vx = -att.face * 180;
 }
 SFX.parry();
+haptic([20, 30, 20]);
 shake = Math.max(shake, 6);
 ring(pt[0], pt[1], 130, '120,230,255', 0.4);
 for (let i = 0; i < 6; i++) addP({ type: 'spark', x: pt[0], y: pt[1], vx: rand(-240, 240), vy: rand(-240, 240), rgb: '120,230,255', life: 0.22, max: 0.22 });
@@ -5807,6 +5844,7 @@ shake = 18; flashA = 0.4; flashRGB = '255,100,80';
 ring(def.x, def.y - 60, 160, '255,120,80', 0.45);
 addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
 SFX.heavy();
+haptic(45);
 ev.guardBreak = true;
 hitVisual(ev); netEmit(ev);
 return;
@@ -6338,7 +6376,12 @@ $id('mQfx').addEventListener('click', openQfx);
 $id('extBack').addEventListener('click', closeQfx);
 const RP_KEY = 'renying-replays', RP_MAX = 10;
 const RP_LV = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', adaptive: '宿敌' };
-function ctrlKey(c) { return JSON.stringify([inBits(c.held), c.atkT, c.buf]); }
+function ctrlKey(c) {
+const b = c.buf;
+let s = inBits(c.held) + ':' + c.atkT;
+for (const k in b) s += ';' + k + '=' + b[k];
+return s;
+}
 function recBegin(kind) {
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], post: ['', ''], last: [-1, -1],
 meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
@@ -8023,6 +8066,27 @@ const tx = `延迟 对手 ${ms}ms`;
 ctx.fillText(tx, x + w, y);
 if (NET.srtt) { const sm = Math.round(NET.srtt); ctx.fillStyle = 'rgba(239,232,216,0.55)'; ctx.fillText(`· 服务器 ${sm}ms`, x + w + ctx.measureText(tx + ' ').width, y); }
 }
+if (NET_HUD) {
+const hudFs = Math.max(12, Math.round(H * 0.015));
+const hw = 260, hh = 116, hx = W - hw - 14, hy = 14;
+ctx.fillStyle = 'rgba(10, 11, 28, 0.90)';
+ctx.strokeStyle = 'rgba(70, 211, 234, 0.45)';
+ctx.lineWidth = 1;
+ctx.fillRect(hx, hy, hw, hh);
+ctx.strokeRect(hx, hy, hw, hh);
+ctx.font = `bold ${hudFs}px ${BODY_FONT}`;
+ctx.fillStyle = '#46d3ea';
+ctx.fillText('📡 联机回滚遥测 (NET_HUD)', hx + 10, hy + 22);
+ctx.font = `${hudFs}px ${BODY_FONT}`;
+ctx.fillStyle = 'rgba(239,232,216,0.85)';
+const rttVal = (M.mode === 'net' && NET.rtt) ? `${Math.round(NET.rtt)}ms` : '本地';
+const advVal = ROLL.on ? `${ROLL.peerAdv}帧` : '0';
+const fVal = ROLL.on ? `${ROLL.F}/${ROLL.remLast}` : `${clock.toFixed(1)}s`;
+ctx.fillText(`RTT: ${rttVal} | 模式: ${M.mode}`, hx + 10, hy + 44);
+ctx.fillText(`帧进度: ${fVal} | 优势: ${advVal}`, hx + 10, hy + 66);
+ctx.fillText(`回滚: ${ROLL.rollbacks || 0}次 | 顿帧: ${ROLL.stall ? '是' : '否'}`, hx + 10, hy + 88);
+ctx.fillText(`状态: ${ROLL.on ? '回滚中' : '单机'} (按~或F2收起)`, hx + 10, hy + 110);
+}
 ctx.restore();
 }
 function drawCredit() {
@@ -8740,7 +8804,7 @@ gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤
 };
 const HERO_MOVE_TYPES = {
 qingfeng: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '突进', icon: 'melee' }, ranged: { type: 'ranged', label: '远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
-tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '霸体冲撞', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
+tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '通天巨浪', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
 feiying: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '背袭突进', icon: 'melee' }, ranged: { type: 'ranged', label: '暗器远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝杀' }, esc: { type: 'esc', label: '身法' } },
 liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'ranged', label: '御风身法', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
 leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'ranged', label: '引雷落击', icon: 'ranged' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
@@ -8844,7 +8908,7 @@ light: { name: '重剑沉猛四斩', badge: '💥 霸体压制', badgeCls: 'badg
 charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '12 / 20', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
 air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '7 / 9', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
 skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.85s', badgeCls: 'badge-stun', dmg: '8 + 10', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
-ranged: { name: '玄甲·铁壁冲', badge: '💥 崩山破势', badgeCls: 'badge-break', dmg: '10', cd: '5s', desc: '沉肩如山重盾强冲，带霸体硬直，双倍摧毁格挡。' },
+ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '14', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
 ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '28 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，直击晕眩1.3s并回半气重置CD。' },
 esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '7.0s', desc: '玄铁盾身强解受控，冷却极快（7秒）。' }
 },
@@ -9506,7 +9570,7 @@ yanling: [
 const SKILL_FUN = {
 qingfeng: { passive: '师父说他悟性一般，攒气倒是一绝。', light: '五剑连刺，每一剑都在心里喊招式名。', charge: '憋了半天就为这一下，憋不住就是普通一刀。', air: '跳起来砍人，是剑客的基本修养。', skill: '一步过去，对手还没回头就定住了。', ranged: '剑气出鞘，隔空也要把你挑上天。', ult: '残月一出，月亮都得往旁边让让。', esc: '打不过就飞，这叫战术性腾空。' },
 feiying: { passive: '血条薄如纸，跑得比消息还快。', light: '刀快到连自己都看不清。', charge: '蓄力背刺，专治站桩选手。', air: '从天而降的不只有惊喜。', skill: '“我在你身后。”经典台词，屡试不爽。', ranged: '四枚飞镖，总有一枚能中。', ult: '九个分身，哪个是真的？都是。', esc: '留下一缕烟，人早溜了。' },
-tieshan: { passive: '出门从不带伞，雨点打在身上算挠痒。', light: '慢是慢了点，挨一下你就知道了。', charge: '蓄满这一刀，连地板都害怕。', air: '他能跳起来，本身就是奇迹。', skill: '砸地之前，请确认脚下不是自家院子。', ranged: '人形攻城锤，撞门从来不敲。', ult: '跳起来砸你，落点还能自己挑。', esc: '一百八十斤腾空，地面松了口气。' },
+tieshan: { passive: '出门从不带伞，雨点打在身上算挠痒。', light: '慢是慢了点，挨一下你就知道了。', charge: '蓄满这一刀，连地板都害怕。', air: '他能跳起来，本身就是奇迹。', skill: '砸地之前，请确认脚下不是自家院子。', ranged: '掀起通天巨浪，飞得再高也得被拍下来。', ult: '跳起来砸你，落点还能自己挑。', esc: '一百八十斤腾空，地面松了口气。' },
 lingshuang: { passive: '一寸长一寸强，贴脸了一寸也不强。', light: '枪出如龙，每一下都戳在节奏上。', charge: '一枪捅穿防御，顺便捅穿你的心态。', air: '空中挑枪，专挑跳得高的。', skill: '先退半步，是为了捅得更远。', ranged: '转起来像风车，暗器都绕道走。', ult: '时间停一下，够她把话说完。', esc: '枪往地上一撑，人就弹出去了。' },
 liuyun: { passive: '三段跳是基本操作，落地才算失误。', light: '扇子不是用来扇风的，是用来扇人的。', charge: '蓄一口大风，把人吹到地图那头。', air: '他在天上的时间比在地上多。', skill: '一扇子风刃，顺手吹散飞镖。', ranged: '后翻一下原地起风，优雅退场。', ult: '今日天气：平地龙卷，有人起飞。', esc: '风往哪吹，他就往哪飘。' },
 leiming: { passive: '出家人不打诳语，只打十连。', light: '十连快拳，数到第七下你就晕了。', charge: '蓄力一拳，阿弥陀佛。', air: '跳起来的和尚最危险。', skill: '带电冲拳，碰一下全身发麻。', ranged: '一脚跺出雷柱，邻居以为要下雨。', ult: '三道天雷，师父说这招不许在庙里用。', esc: '金刚一吼，震开一切。' },
@@ -9679,7 +9743,7 @@ for (const t of $id('cxMoves').querySelectorAll('.tile')) t.classList.toggle('ac
 const demoCanvas = $id('cxDemo');
 if (demoCanvas && demoCanvas._pup) {
 const ch = CHARS[cxIdx];
-if (m === 'full') {
+if (m === 'full' || m === 'all') {
 demoCanvas._pup.playSeq(HERO_FULL_DEMO[ch.id] || DEMO2, null, true);
 } else if (HERO_MOVE_SEQS[ch.id] && HERO_MOVE_SEQS[ch.id][m]) {
 demoCanvas._pup.playSeq(HERO_MOVE_SEQS[ch.id][m], null, true);
@@ -9701,7 +9765,7 @@ function openCodex() {
 cxPrev = null;
 cxActiveMove = 'full';
 if ($id('cxDemoTabs')) {
-for (const b of $id('cxDemoTabs').querySelectorAll('button')) b.classList.toggle('sel', b.dataset.m === 'full');
+for (const b of $id('cxDemoTabs').querySelectorAll('button')) b.classList.toggle('sel', b.dataset.m === 'full' || b.dataset.m === 'all');
 }
 renderCodex();
 }
@@ -9734,7 +9798,7 @@ cxIdx = +b.dataset.i;
 cxPrev = null;
 cxActiveMove = 'full';
 if ($id('cxDemoTabs')) {
-for (const btn of $id('cxDemoTabs').querySelectorAll('button')) btn.classList.toggle('sel', btn.dataset.m === 'full');
+for (const btn of $id('cxDemoTabs').querySelectorAll('button')) btn.classList.toggle('sel', btn.dataset.m === 'full' || btn.dataset.m === 'all');
 }
 renderCodex();
 SFX.slice();
@@ -10731,7 +10795,18 @@ const EMPTY_IN = { h: 0, p: [] };
 const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey']);
 for (const k of Object.keys(SFX)) { const fn = SFX[k]; SFX[k] = (...a) => (RESIM ? undefined : fn(...a)); }
 { const m0 = metal; metal = (...a) => (RESIM ? undefined : m0(...a)); }
-const jclone = v => JSON.parse(JSON.stringify(v));
+function fastClone(v) {
+if (v === null || typeof v !== 'object') return v;
+if (Array.isArray(v)) {
+const len = v.length, out = new Array(len);
+for (let i = 0; i < len; i++) { const item = v[i]; out[i] = (item && typeof item === 'object') ? fastClone(item) : item; }
+return out;
+}
+const out = {};
+for (const k in v) { const val = v[k]; out[k] = (val && typeof val === 'object') ? fastClone(val) : val; }
+return out;
+}
+const jclone = v => fastClone(v);
 function capF(f) {
 const o = {};
 for (const k in f) { if (F_SKIP.has(k)) continue; const v = f[k]; if (typeof v === 'function') continue; o[k] = v && typeof v === 'object' ? jclone(v) : v; }
@@ -10928,7 +11003,7 @@ if (TOUCH) {
 document.body.classList.add('touchdev');
 for (const b of document.querySelectorAll('#touchUI [data-a]')) {
 b.addEventListener('pointerdown', e => {
-e.preventDefault(); initAudio(); try { b.setPointerCapture(e.pointerId); } catch (err) {} b.classList.add('on');
+e.preventDefault(); initAudio(); haptic(12); try { b.setPointerCapture(e.pointerId); } catch (err) {} b.classList.add('on');
 const c = human[0], a = b.dataset.a;
 if (a === 'atk') { c.held.atk = true; c.atkT = clock; c.press('light'); }
 else if (a === 'jump') { TUI.jumpHeld = true; touchHeldJump(); c.press('jump'); }
@@ -13422,6 +13497,7 @@ setTimeout(checkUrlRoom, 300);
 window.addEventListener('keydown', e => {
 initAudio();
 if (e.code === 'KeyM') { muted = !muted; return; }
+if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
 if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
 const scr = e.target.closest('.scr');
 if ((scr && !scr.classList.contains('on')) || e.target.offsetParent === null) {
@@ -13563,7 +13639,19 @@ client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping'
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 function p2pOptions() {
-return Object.assign({ debug: 0, config: { iceServers: P2P.ice } }, window.RENYING_P2P || {});
+let customIce = [];
+try {
+const saved = localStorage.getItem('renying-custom-ice');
+if (saved) customIce = JSON.parse(saved);
+} catch (e) {}
+const iceServers = [
+...(Array.isArray(customIce) ? customIce : []),
+...(window.RENYING_ICE || []),
+...P2P.ice
+];
+const userOpts = window.RENYING_P2P || {};
+const config = Object.assign({ iceServers }, userOpts.config || (userOpts.iceServers ? { iceServers: userOpts.iceServers } : {}));
+return Object.assign({ debug: 0 }, userOpts, { config });
 }
 function p2pCode() {
 const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 去掉了容易看错的 0 O 1 I

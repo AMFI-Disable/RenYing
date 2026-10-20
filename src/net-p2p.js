@@ -40,7 +40,19 @@ const P2P_SYS = {
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 
 function p2pOptions() {
-  return Object.assign({ debug: 0, config: { iceServers: P2P.ice } }, window.RENYING_P2P || {});
+  let customIce = [];
+  try {
+    const saved = localStorage.getItem('renying-custom-ice');
+    if (saved) customIce = JSON.parse(saved);
+  } catch (e) {}
+  const iceServers = [
+    ...(Array.isArray(customIce) ? customIce : []),
+    ...(window.RENYING_ICE || []),
+    ...P2P.ice
+  ];
+  const userOpts = window.RENYING_P2P || {};
+  const config = Object.assign({ iceServers }, userOpts.config || (userOpts.iceServers ? { iceServers: userOpts.iceServers } : {}));
+  return Object.assign({ debug: 0 }, userOpts, { config });
 }
 function p2pCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 去掉了容易看错的 0 O 1 I

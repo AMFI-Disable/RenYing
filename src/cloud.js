@@ -90,7 +90,7 @@
     }
   }
 
-  const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua'];
+  const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen'];
   const DEV_ALL_SKINS = [
     'qf_frost', 'qf_gold', 'qf_abyss', 'qf_qfx',
     'fy_jade', 'fy_blood', 'fy_phantom',
@@ -100,7 +100,8 @@
     'lm_violet', 'lm_sun', 'lm_asura',
     'my_cinnabar', 'my_gold', 'my_celestial',
     'yh_sakura', 'yh_eclipse', 'yh_solstice',
-    'yl_raven', 'yl_phoenix', 'yl_blizzard'
+    'yl_raven', 'yl_phoenix', 'yl_blizzard',
+    'yx_snow', 'zx_amber', 'gc_crimson'
   ];
 
   function makeDevProfile() {
@@ -110,7 +111,8 @@
       owned: DEV_ALL_CHARS.slice(),
       frags: {
         qingfeng: 99, yanling: 99, leiming: 99, tieshan: 99,
-        liuyun: 99, lingshuang: 99, moyu: 99, feiying: 99, yuehua: 99
+        liuyun: 99, lingshuang: 99, moyu: 99, feiying: 99, yuehua: 99,
+        yuxiao: 99, zuixian: 99, gouchen: 99
       },
       pity: 0,
       spity: 0,
