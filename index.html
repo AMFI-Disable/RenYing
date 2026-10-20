@@ -4619,12 +4619,62 @@ this.holdDown = 0;
 this.dir = 0;
 this.reacted = false;
 this.projReact = false;
+this.lastOppId = null;
+this.lastMeId = null;
+this.tactic = null;
+}
+updateTactic(me, foe) {
+if (!me || !foe || !me.ch || !foe.ch) return;
+this.lastOppId = foe.ch.id;
+this.lastMeId = me.ch.id;
+this.queue = [];
+this.holdDown = 0;
+this.reacted = false;
+this.projReact = false;
+this.next = 0;
+const meCh = me.ch, foeCh = foe.ch;
+const isAdvantage = (meCh.beats || []).includes(foeCh.id);
+const isDisadvantage = (meCh.weakTo || []).includes(foeCh.id) || (foeCh.beats || []).includes(meCh.id);
+const foeIsRanged = (foeCh.stat && foeCh.stat.reach && foeCh.stat.reach > 1.1) || ['liuyun', 'moyu'].includes(foeCh.id);
+const foeIsHeavy = (foeCh.stat && foeCh.stat.weight && foeCh.stat.weight > 1.15) || ['tieshan', 'leiming', 'gouchen'].includes(foeCh.id);
+const foeIsFast = (foeCh.stat && foeCh.stat.speed && foeCh.stat.speed > 0.9) || ['feiying', 'yanling'].includes(foeCh.id);
+const foeHasParry = foeCh.skill === 'mirror';
+const foeHasSpear = foeCh.passive === 'tip';
+const baseRange = meCh.ai && meCh.ai.range ? [...meCh.ai.range] : [60, 160];
+let rMin = baseRange[0], rMax = baseRange[1];
+if (foeIsRanged) {
+rMin = Math.max(40, rMin * 0.7);
+rMax = Math.max(rMin + 45, rMax * 0.75);
+} else if (foeIsHeavy) {
+rMin = Math.min(rMin * 1.25, 130);
+rMax = Math.max(rMax * 1.15, 200);
+} else if (foeHasSpear) {
+if (baseRange[0] < 120) rMax = 135;
+else rMin = 245;
+}
+this.tactic = {
+isAdvantage,
+isDisadvantage,
+foeIsRanged,
+foeIsHeavy,
+foeIsFast,
+foeHasParry,
+foeHasSpear,
+range: [rMin, rMax],
+aggrMul: isAdvantage ? 1.25 : (isDisadvantage ? 0.85 : 1.0),
+blockMul: isDisadvantage ? 1.2 : (isAdvantage ? 0.9 : 1.0)
+};
 }
 plan(list) { this.queue = list.map(([a, dt]) => ({ at: clock + dt, a })); }
 think(me, foe) {
+if (!this.tactic || this.lastOppId !== foe.ch.id || this.lastMeId !== me.ch.id) {
+this.updateTactic(me, foe);
+}
+const tactic = this.tactic;
 const L = this.L, d = Math.abs(foe.x - me.x), to = Math.sign(foe.x - me.x) || 1;
-const ch = me.ch, [rMin, rMax] = ch.ai.range, S = SKILLS[ch.skill];
-if ((me.state === 'launched' || me.state === 'knockdown' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < L.block * 0.018) this.press('dash');
+const ch = me.ch, [rMin, rMax] = tactic.range, S = SKILLS[ch.skill];
+const aggr = L.aggr * tactic.aggrMul, blockRate = Math.min(0.99, L.block * tactic.blockMul);
+if ((me.state === 'launched' || me.state === 'knockdown' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < blockRate * 0.018) this.press('dash');
 if (L.god && (me.state === 'hitstun' || me.state === 'launched') && me.comboHits >= 2 && me.breakCD <= 0) this.press('dash');   // 绝顶/天道：被连两下就闪
 while (this.queue.length && this.queue[0].at <= clock) {
 const a = this.queue.shift().a;
@@ -4641,27 +4691,27 @@ const threat = foe.state === 'attack' && foe.move && foe.t < foe.move.su + 0.04 
 if (threat && !this.reacted) {
 this.reacted = true;
 if (free) {
-if (isFoeHeavy && Math.random() < L.block * 0.85) {
+if (isFoeHeavy && Math.random() < blockRate * 0.85) {
 if (me.dashCD <= 0 && Math.random() < 0.6) { this.queue = []; this.dir = -to; this.press('dash'); }
 else { this.queue = []; this.press('jump'); this.dir = -to; }
-} else if (ch.skill === 'mirror' && me.skillCD <= 0 && Math.random() < L.block * 0.9) { this.queue = []; this.press('skill'); }
-else if (Math.random() < L.block) { this.holdDown = 0.38; this.queue = []; this.dir = 0; }
+} else if (ch.skill === 'mirror' && me.skillCD <= 0 && Math.random() < blockRate * 0.9) { this.queue = []; this.press('skill'); }
+else if (Math.random() < blockRate) { this.holdDown = 0.38; this.queue = []; this.dir = 0; }
 }
 }
 if (foe.state !== 'attack') this.reacted = false;
 const inc = projs.find(p => p.owner !== me.idx && !p.fx && p.dmg > 0 && p.delay <= 0 && p.kind !== 'trap' && Math.sign(me.x - p.x) === Math.sign(p.vx) && Math.abs(me.x - p.x) < 280);
 if (inc && !this.projReact) {
 this.projReact = true;
-if (free && Math.random() < L.block) {
+if (free && Math.random() < blockRate) {
 if (inc.unblockable || inc.groundOnly || Math.random() < 0.5) { this.queue = []; this.press('jump'); this.dir = to; }
 else { this.holdDown = 0.35; this.queue = []; }
 }
 }
 if (!inc) this.projReact = false;
 const bolt = projs.find(p => p.kind === 'bolt' && p.owner !== me.idx && p.delay > 0 && Math.abs(p.x - me.x) < 80);
-if (bolt && Math.random() < L.block * 0.2) { this.dir = me.x >= bolt.x ? 1 : -1; this.next = clock + 0.25; this.queue = []; }
+if (bolt && Math.random() < blockRate * 0.2) { this.dir = me.x >= bolt.x ? 1 : -1; this.next = clock + 0.25; this.queue = []; }
 const trap = projs.find(p => p.kind === 'trap' && p.owner !== me.idx && Math.abs(p.x - me.x) < 110 && Math.sign(p.x - me.x) === this.dir);
-if (trap && me.onGround() && Math.random() < L.block * 0.15) this.press('jump');
+if (trap && me.onGround() && Math.random() < blockRate * 0.15) this.press('jump');
 if (clock >= this.next && !this.queue.length && this.holdDown <= 0) {
 this.next = clock + rand(L.think[0], L.think[1]);
 const r = Math.random();
@@ -4839,6 +4889,8 @@ startRound();
 function startRound() {
 if (typeof applySkins === 'function') applySkins();
 A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
+if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
+if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 const isBushido = M.mode === 'bushido' || (M.mode === 'net' && netRoomMode === 'bushido');
 if (isBushido) {
 A.maxHp = B.maxHp = 1;
@@ -5081,6 +5133,8 @@ const nextHeroIdx = M.teams[loserSide][M.teamIdx[loserSide]];
 const loserFighter = [A, B][loserSide];
 loserFighter.setChar(nextHeroIdx);
 loserFighter.meter = 0;
+if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
+if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 M.round++;
 startRound();
 const heroName = CHARS[nextHeroIdx].name;
