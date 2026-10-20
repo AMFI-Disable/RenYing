@@ -515,7 +515,7 @@ code { font: 12px ui-monospace, Menlo, monospace; background: rgba(255,255,255,.
 .netbox { margin-top: 18px; display: grid; gap: 8px; }
 .netbox label { font-size: 13px; color: var(--dim); margin-top: 6px; }
 .codeRow { display: flex; gap: 8px; align-items: stretch; }
-.codeRow textarea { flex: 1; height: 58px; resize: none; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); font: 11px/1.4 ui-monospace, Menlo, monospace; padding: 8px; word-break: break-all; -webkit-user-select: text; user-select: text; }
+.codeRow textarea { flex: 1; height: 58px; resize: none; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); font: 12px/1.4 ui-monospace, Menlo, monospace; padding: 8px; word-break: break-all; -webkit-user-select: text; user-select: text; }
 .codeRow .ghost { white-space: nowrap; }
 .netstatus { text-align: center; color: #e9c46a; font-size: 14px; min-height: 20px; margin: 14px 0 0; }
 .p2pnote { margin: 0 0 14px; padding: 9px 14px; border-radius: 6px; border: 1px solid rgba(70,211,234,.35); background: rgba(70,211,234,.12); color: var(--p1); font-size: 13px; line-height: 1.6; text-align: center; }
@@ -885,17 +885,17 @@ font-size: 13px; color: var(--dim); line-height: 1.5; flex: 1; margin: 6px 0 12p
 .tower-perk-card .tp-pick {
 width: 100%; border-radius: 999px;
 }
-.sic { display: inline-flex; align-items: center; justify-content: center; width: 1.42em; height: 1.42em; margin-right: .42em; font: 400 .92em/1 var(--title); font-style: normal; color: #fbeee0; background: var(--seal); border-radius: 3px; box-shadow: inset 0 0 0 1.4px #8e2a21, inset 0 0 0 2.6px rgba(255,240,225,.42), 0 1px 3px rgba(0,0,0,.35); transform: rotate(-3deg); vertical-align: -.24em; flex: none; letter-spacing: 0; text-indent: 0; text-shadow: none; padding: 0 0 .06em; }
+.sic { display: inline-flex; align-items: center; justify-content: center; width: 1.42em; height: 1.42em; margin-right: .42em; font: 400 max(12px, 1em)/1 var(--title); font-size: max(12px, 1em); font-style: normal; color: #fbeee0; background: var(--seal); border-radius: 3px; box-shadow: inset 0 0 0 1.4px #8e2a21, inset 0 0 0 2.6px rgba(255,240,225,.42), 0 1px 3px rgba(0,0,0,.35); transform: rotate(-3deg); vertical-align: -.24em; flex: none; letter-spacing: 0; text-indent: 0; text-shadow: none; padding: 0 0 .06em; }
 .sic:nth-of-type(even) { transform: rotate(2.5deg); }
-button .sic, .ghost .sic { font-size: .86em; }
+button .sic, .ghost .sic { font-size: max(12px, 1em); }
 .sic.o { background: transparent; color: #e0574a; box-shadow: inset 0 0 0 1.5px currentColor; }
-.lv-icon .sic { font-size: 1.15em; margin: 0; }
+.lv-icon .sic { font-size: max(12px, 1.15em); margin: 0; }
 .sel .lv-icon .sic, .lv.sel .sic { box-shadow: inset 0 0 0 1.4px #8e2a21, inset 0 0 0 2.6px rgba(255,240,225,.6), 0 0 10px rgba(184,57,46,.6); }
 .ink-icon .sic { margin: 0; }
-.sic.w { width: auto; min-width: 1.42em; padding: .05em .42em .1em; margin-right: 0; letter-spacing: .08em; text-indent: .08em; height: 1.6em; font-size: 1em; transform: rotate(-1.5deg); }
+.sic.w { width: auto; min-width: 1.42em; padding: .05em .42em .1em; margin-right: 0; letter-spacing: .08em; text-indent: .08em; height: 1.6em; font-size: max(12px, 1em); transform: rotate(-1.5deg); }
 .sic.w:nth-of-type(even) { transform: rotate(1.2deg); }
-button .sic.w, .ghost .sic.w { font-size: 1em; }
-.lv-icon .sic.w { font-size: 1.1em; }
+button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
+.lv-icon .sic.w { font-size: max(12px, 1.1em); }
 .sel .sic.w, button.sel .sic.w { box-shadow: inset 0 0 0 1.4px #8e2a21, inset 0 0 0 2.6px rgba(255,240,225,.6), 0 0 10px rgba(184,57,46,.6); }
 .sdot { display: inline-block; width: .62em; height: .62em; border-radius: 50%; margin: 0 .14em; vertical-align: .04em; border: 1.6px solid var(--gold); flex: none; }
 .sdot.f { background: radial-gradient(circle at 36% 34%, #fff0bf, #e9c46a 45%, #a9782a); border-color: #c99a3e; }
@@ -11262,7 +11262,7 @@ const on = !!dummyCfg[k];
 return `<button type="button" class="dummy-feat-chip${on ? ' sel' : ''}" data-feat="${k}" style="padding:6px 12px;border-radius:18px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s;background:${on ? 'rgba(233,196,106,0.22)' : 'rgba(255,255,255,0.06)'};border:1px solid ${on ? '#e9c46a' : 'rgba(255,255,255,0.18)'};color:${on ? '#f4ecd8' : 'rgba(239,232,216,0.65)'}">
 <span style="font-weight:700;color:${on ? '#e9c46a' : 'rgba(255,255,255,0.4)'}">${idx + 1}.</span>
 <span>${feat.name}</span>
-<span style="font-size:11px;opacity:0.75;margin-left:2px">(${feat.desc})</span>
+<span style="font-size:12px;opacity:0.75;margin-left:2px">(${feat.desc})</span>
 </button>`;
 }).join('');
 }

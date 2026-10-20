@@ -9166,7 +9166,7 @@ function renderDummyFeatures() {
     return `<button type="button" class="dummy-feat-chip${on ? ' sel' : ''}" data-feat="${k}" style="padding:6px 12px;border-radius:18px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s;background:${on ? 'rgba(233,196,106,0.22)' : 'rgba(255,255,255,0.06)'};border:1px solid ${on ? '#e9c46a' : 'rgba(255,255,255,0.18)'};color:${on ? '#f4ecd8' : 'rgba(239,232,216,0.65)'}">
       <span style="font-weight:700;color:${on ? '#e9c46a' : 'rgba(255,255,255,0.4)'}">${idx + 1}.</span>
       <span>${feat.name}</span>
-      <span style="font-size:11px;opacity:0.75;margin-left:2px">(${feat.desc})</span>
+      <span style="font-size:12px;opacity:0.75;margin-left:2px">(${feat.desc})</span>
     </button>`;
   }).join('');
 }
