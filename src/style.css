@@ -251,7 +251,11 @@
   .menuscr .ver { position: absolute; left: 0; right: 0; bottom: 1.8%; text-align: center; margin: 0; }
   .menuscr .touch { position: absolute; left: 0; right: 0; top: 30%; text-align: center; }
   .accbar { position: fixed; z-index: 25; }
-  .cxw { width: min(1400px, 96vw); margin: 0 auto; padding: 14px 16px; display: grid; gap: 10px; align-self: flex-start; }
+  .cxw { width: min(1400px, 96vw); margin: 0 auto; padding: 14px 16px; display: grid; gap: 10px; align-self: flex-start; 
+  max-height: min(840px, 90vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
   .cxhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
   .cxhead h2 { margin: 0; font-size: clamp(28px, 3.2vw, 42px); white-space: nowrap; }
   .cxtabs { display: flex; flex-wrap: wrap; gap: 8px; }
