@@ -202,11 +202,19 @@
       <!-- 木人桩练习 -->
       <div data-sec="train" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">木人桩演武</h3>
-          <span class="sub-badge">自由试技</span>
+          <h3 class="spt">演武与实战专训</h3>
+          <span class="sub-badge">各模式最高境界</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">召唤不屈稻草人靶子，随心演练招式手感、浮空连击与爆发伤害跳字。</p>
-        <button class="go small" id="trainBtn" type="button" style="margin-top:14px">开始试炼</button>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">召唤不屈稻草人靶子练习连招，或直接指定各玩法的最高境界（天道神境 / 绝顶宗师）开展模式专项对战训练！</p>
+        <div class="sec-sub-label">选择专精演武目标（各模式最高境界）</div>
+        <div class="seg train-modes-seg" id="trainModeSeg" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px;justify-content:center">
+          <button data-tmode="dummy" class="sel" type="button">木人桩自由试剑</button>
+          <button data-tmode="cpu" type="button">常规论剑 · 天道神境</button>
+          <button data-tmode="bushido" type="button">一击必杀 · 决死天道</button>
+          <button data-tmode="chaos" type="button">天机乱斗 · 突变天道</button>
+          <button data-tmode="tag3" type="button">3v3车轮 · 绝境天道</button>
+        </div>
+        <button class="go small" id="trainBtn" type="button" style="margin-top:14px">开启专精演武</button>
       </div>
 
       <!-- 问剑密卷 · 肉鸽无尽试炼 -->
@@ -249,6 +257,10 @@
             <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
             <span class="lv-sub">凌厉出招</span>
           </button>
+          <button data-lv="adaptive" type="button">
+            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="lv-name">宿敌</span></span>
+            <span class="lv-sub">动态自适</span>
+          </button>
           <button data-lv="impossible" type="button">
             <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
             <span class="lv-sub">零瑕闪避</span>
@@ -285,6 +297,10 @@
           <button data-lv="hard" type="button">
             <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
             <span class="lv-sub">凌厉出招</span>
+          </button>
+          <button data-lv="adaptive" type="button">
+            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="lv-name">宿敌</span></span>
+            <span class="lv-sub">异变自适</span>
           </button>
           <button data-lv="impossible" type="button">
             <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>

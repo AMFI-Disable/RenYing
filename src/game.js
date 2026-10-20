@@ -229,7 +229,7 @@ const BAL = {
   tieshan: { normal: 0.715, skill: 0.676, ult: 0.676, cd: 1, hp: 0.982 },
   lingshuang: { normal: 1.047, skill: 1.047, ult: 0.943, cd: 1, hp: 1.027 },
   liuyun: { normal: 1.066, skill: 1.066, ult: 0.963, cd: 1, hp: 1.042 },
-  leiming: { normal: 0.944, skill: 0.806, ult: 0.806, cd: 1.1, hp: 1.022 },
+  leiming: { normal: 1.085, skill: 0.806, ult: 0.806, cd: 1.1, hp: 1.022 },
   moyu: { normal: 0.936, skill: 0.892, ult: 0.795, cd: 1, hp: 0.978 },
   yuehua: { normal: 1.059, skill: 1.059, ult: 0.952, cd: 1, hp: 0.993 },
   yanling: { normal: 0.973, skill: 0.973, ult: 0.872, cd: 1, hp: 1.011 },
@@ -271,8 +271,8 @@ const CHARS = [
     ai: { range: [200, 380] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
   { id: 'leiming', name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
     passiveName: '连环', passiveDesc: '十连快拳如骤雨，金刚体魄筋骨强横（520血/1.22体量）；架势耐力深厚且回涌较快（32/秒），防守沉稳，唯出拳收势空隙需防对手腾空闪。',
-    stat: { hp: 520, walk: 1.14, speed: 0.70, dmg: 0.86, reach: 0.8, swing: 0.64, jump: 1, weight: 1.22, defRating: 1.02, guardMax: 115, guardStab: 1.25, guardChip: 0.07, guardRegen: 32, poise: 0.90, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
-    moveMods: { l1: { dmgAbs: 9 }, l2: { dmgAbs: 9 }, l3: { dmgAbs: 9 }, l4: { dmgAbs: 9 }, l5: { dmgAbs: 9, kb: [110, 0], launch: false, lunge: 110, next: { light: 'l6', heavy: 'hv' } }, l6: { dmgAbs: 9 }, l7: { dmgAbs: 9 }, l8: { dmgAbs: 9 }, l9: { dmgAbs: 9 }, l10: { dmgAbs: 9 } },
+    stat: { hp: 520, walk: 1.14, speed: 0.70, dmg: 0.94, reach: 0.8, swing: 0.64, jump: 1, weight: 1.22, defRating: 1.02, guardMax: 115, guardStab: 1.25, guardChip: 0.07, guardRegen: 32, poise: 0.90, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
+    moveMods: { l1: { dmgAbs: 11 }, l2: { dmgAbs: 11 }, l3: { dmgAbs: 11 }, l4: { dmgAbs: 11 }, l5: { dmgAbs: 13, kb: [110, 0], launch: false, lunge: 110, next: { light: 'l6', heavy: 'hv' } }, l6: { dmgAbs: 11 }, l7: { dmgAbs: 11 }, l8: { dmgAbs: 11 }, l9: { dmgAbs: 11 }, l10: { dmgAbs: 14 } },
     look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
     ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   { id: 'moyu', name: '墨羽', role: '泼墨画师', diff: 3, escCD: 9, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
@@ -1686,7 +1686,7 @@ function adaptRecord(won) {   // 每场打完：记录你用的角色和输赢�
   const me = [A, B][localIdx()];
   ADAPT.use[me.ch.id] = (ADAPT.use[me.ch.id] || 0) + 1;
   if (won) ADAPT.win[me.ch.id] = (ADAPT.win[me.ch.id] || 0) + 1;
-  if (M.mode === 'cpu' && M.level === 'adaptive') ADAPT.s = clamp(ADAPT.s + (won ? 0.07 : -0.07), 0.55, 1.45);
+  if (M.level === 'adaptive') ADAPT.s = clamp(ADAPT.s + (won ? 0.07 : -0.07), 0.55, 1.45);
   adaptSave(); adaptLevel();
 }
 const AI_COMBOS = [
@@ -9032,13 +9032,47 @@ if (taskTabsEl) {
     SFX.slice();
   });
 }
-let trainChar = 0, dummyMode = 'stand';
+let trainChar = 0, dummyMode = 'stand', trainTargetMode = 'dummy';
+const trainModeSegEl = $id('trainModeSeg');
+if (trainModeSegEl) {
+  trainModeSegEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.tmode) return;
+    trainTargetMode = b.dataset.tmode;
+    for (const btn of trainModeSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+    SFX.slice();
+  });
+}
 function startTraining() {
   if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
     trainChar = 0;
   }
-  FOREST.on = false; B.forestProxy = false; B.hidden = false;
   initAudio(); paused = false;
+  const oppChar = Math.floor(Math.random() * CHARS.length);
+  if (trainTargetMode === 'cpu') {
+    pickLevel = 'god';
+    showScreen(null);
+    startMatch('cpu', 'god', [trainChar, oppChar]);
+    return;
+  }
+  if (trainTargetMode === 'bushido') {
+    startBushido(trainChar, oppChar, 'god');
+    showScreen(null);
+    return;
+  }
+  if (trainTargetMode === 'chaos') {
+    startChaos(trainChar, oppChar, 'god');
+    showScreen(null);
+    return;
+  }
+  if (trainTargetMode === 'tag3') {
+    const pTeam = [trainChar, (trainChar + 1) % CHARS.length, (trainChar + 2) % CHARS.length];
+    const eTeam = pickEnemyTag3Team(pTeam);
+    startTag3Match(pTeam, eTeam, 'god');
+    showScreen(null);
+    return;
+  }
+  FOREST.on = false; B.forestProxy = false; B.hidden = false;
   showScreen(null);
   startMatch('train', dummyMode, [trainChar, 0]);
   Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0 });

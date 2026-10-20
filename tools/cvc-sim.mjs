@@ -20,8 +20,11 @@ function getArg(name, def) {
   return idx !== -1 && args[idx + 1] ? args[idx + 1] : def;
 }
 const matchCount = parseInt(getArg('matches', '10'), 10);
-const p1Level = getArg('p1-level', 'hard');
-const p2Level = getArg('p2-level', 'hard');
+const matchMode = getArg('mode', 'cpu');
+const MODE_MAX_LEVEL = { cpu: 'god', bushido: 'god', chaos: 'god', tag3: 'god', tower: 'impossible' };
+const defaultLevel = args.includes('--mode') ? (MODE_MAX_LEVEL[matchMode] || 'god') : 'hard';
+const p1Level = getArg('p1-level', getArg('level', defaultLevel));
+const p2Level = getArg('p2-level', getArg('level', defaultLevel));
 const exportPath = getArg('export', '');
 const p1CharArg = getArg('p1', '');
 const p2CharArg = getArg('p2', '');
@@ -186,8 +189,15 @@ for (let m = 1; m <= matchCount; m++) {
   const p1Idx = p1CharArg !== '' ? parseInt(p1CharArg, 10) : Math.floor(Math.random() * chars.length);
   const p2Idx = p2CharArg !== '' ? parseInt(p2CharArg, 10) : Math.floor(Math.random() * chars.length);
 
-  env.startMatch('cpu', p1Level, [p1Idx, p2Idx]);
-  env.M.mode = 'cpu';
+  env.startMatch(matchMode, p1Level, [p1Idx, p2Idx]);
+  env.M.mode = matchMode;
+  if (matchMode === 'bushido') {
+    env.A.maxHp = env.A.hp = env.A.lagHp = 1;
+    env.B.maxHp = env.B.hp = env.B.lagHp = 1;
+  } else if (matchMode === 'chaos') {
+    env.currentChaosMutation = null;
+    env.chaosTimer = 0;
+  }
   env.A.ctrl = new env.AICtrl(p1Level);
   env.B.ctrl = new env.AICtrl(p2Level);
 
