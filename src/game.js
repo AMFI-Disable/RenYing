@@ -2562,6 +2562,7 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const allFighters = () => M.mode === 'watch2v2' ? [A, B, C, D] : [A, B];
+const isAiVsAi = () => !!(M.watchAi || M.mode === 'watch2v2' || M.mode === 'demo' || (A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
 const foesOf = f => {
   if (M.mode !== 'watch2v2') return [f === A ? B : A];
@@ -11168,6 +11169,7 @@ function startWatch2v2(draft) {
   if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
   const [ban0, t1a, t1b, ban1, t2a, t2b] = watch2v2Draft;
   M.mode = 'watch2v2';
+  M.watchAi = true;
   M.level = 'god';
   M.bans = [ban0, ban1];
   M.wins = [0, 0];
@@ -13111,7 +13113,45 @@ window.addEventListener('mouseup', e => { if (e.button === 0) human[0].held.atk 
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { saveTowerRun(); });
-window.addEventListener('blur', () => { human[0].clear(); human[1].clear(); if (M.mode !== 'demo' && M.mode !== 'net' && M.phase !== 'end' && !paused) { paused = true; showScreen('pause'); } });
+window.addEventListener('blur', () => {
+  human[0].clear(); human[1].clear();
+  if (M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && M.phase !== 'end' && !paused) {
+    paused = true;
+    showScreen('pause');
+  }
+});
+let bgAiTimer = null;
+function updateBgAiTicker() {
+  if (typeof document === 'undefined') return;
+  if (document.hidden && isAiVsAi() && !paused && M && M.phase === 'fight') {
+    if (!bgAiTimer) {
+      let lastBgTime = performance.now();
+      bgAiTimer = setInterval(() => {
+        if (!document.hidden || !isAiVsAi() || paused || (M && M.phase !== 'fight')) {
+          clearInterval(bgAiTimer);
+          bgAiTimer = null;
+          return;
+        }
+        const now = performance.now();
+        const dt = Math.min(0.1, (now - lastBgTime) / 1000);
+        lastBgTime = now;
+        acc += dt * (slowmo > 0 ? 0.28 : 1);
+        if (acc > STEP * 10) acc = STEP * 10;
+        let n = 0;
+        while (acc >= STEP && n < 10) {
+          step();
+          acc -= STEP;
+          n++;
+        }
+        if (n >= 10) acc = 0;
+      }, 50);
+    }
+  } else if (bgAiTimer) {
+    clearInterval(bgAiTimer);
+    bgAiTimer = null;
+  }
+}
+document.addEventListener('visibilitychange', updateBgAiTicker);
 window.addEventListener('focus', () => {
   human[0].clear(); human[1].clear();
   if (M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
