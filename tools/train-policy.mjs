@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 /**
- * Train a lightweight Neural Network policy on RenYing CvC Trajectories without external heavy dependencies.
+ * Train a lightweight Neural Network policy on RenYing Trajectories & User Fights.
  *
- * Implements a 2-layer MLP (Multi-Layer Perceptron):
- * Input (25) -> Dense (64, ReLU) -> Dense (32, ReLU) -> Output (10, Softmax)
- * Trained with Advantage-Weighted Cross-Entropy Loss, Cosine Annealing LR & Adam Optimizer.
- *
- * Exports quantized weights (4-decimal precision) to a compact JSON model format (< 22 KB per hero).
+ * Capabilities & Optimizations:
+ *   - Custom Game Mode Policy Training (--mode <cpu|watch2v2|chaos|mayhem|bushido|tag3>).
+ *   - 2v2 Co-op Dual-Agent Training (--coop): trains 31-dim state policy with ally awareness.
+ *   - User Fight Learning (--user-data data/user_fights.jsonl): distills human combat tricks.
+ *   - High-throughput buffer reuse, vectorized batch Adam optimizer, Cosine Annealing LR.
+ *   - Compact 4-decimal quantized weights (< 25 KB JSON format).
  *
  * Usage:
  *   node tools/train-policy.mjs --data data/cvc_dataset.jsonl --epochs 10 --out models/renying_ai_v1.json
+ *   node tools/train-policy.mjs --data data/coop_2v2.jsonl --coop --mode watch2v2 --out models/renying_ai_coop_2v2.json
+ *   node tools/train-policy.mjs --data data/cvc_dataset.jsonl --user-data data/user_fights.jsonl --epochs 8
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -22,41 +25,72 @@ function getArg(name, def) {
   const idx = args.indexOf('--' + name);
   return idx !== -1 && args[idx + 1] ? args[idx + 1] : def;
 }
+function hasFlag(name) {
+  return args.includes('--' + name);
+}
+
 const dataPath = getArg('data', 'data/cvc_dataset.jsonl');
+const userDataPath = getArg('user-data', 'data/user_fights.jsonl');
 const epochs = parseInt(getArg('epochs', '8'), 10);
 const outPath = getArg('out', 'models/renying_ai_v1.json');
 const baseLr = parseFloat(getArg('lr', '0.0035'));
 const targetHero = getArg('hero', '');
+const targetMode = getArg('mode', '');
+const isCoop = hasFlag('coop') || targetMode === 'watch2v2' && hasFlag('coop');
 
-if (!existsSync(dataPath)) {
-  console.error(`Error: Dataset not found at ${dataPath}. Run: node tools/cvc-sim.mjs --matches 10 --export ${dataPath}`);
-  process.exit(1);
-}
-
-// 1. Load Dataset
-const samples = [];
-const fileStream = createReadStream(dataPath);
-const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
-
-for await (const line of rl) {
-  if (!line.trim()) continue;
-  try {
-    const d = JSON.parse(line);
-    if (targetHero && d.hero && d.hero !== targetHero) continue;
-    samples.push({ s: new Float32Array(d.s), a: d.a | 0, r: +d.r || 0 });
-  } catch (e) {}
-}
-
-if (samples.length === 0) {
-  console.error('No samples found in dataset.');
-  process.exit(1);
-}
-
-// Model Architecture: 25 -> 64 -> 32 -> 10
-const IN_DIM = 25;
+const IN_DIM = isCoop ? 31 : 25;
 const H1_DIM = 64;
 const H2_DIM = 32;
 const OUT_DIM = 10;
+
+// 1. Load Datasets (Synthetic CvC + User Fight Demonstrations)
+const samples = [];
+
+async function loadDatasetFile(path, isUserFight = false) {
+  if (!existsSync(path)) return 0;
+  const fileStream = createReadStream(path);
+  const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
+  let count = 0;
+  for await (const line of rl) {
+    if (!line.trim()) continue;
+    try {
+      const d = JSON.parse(line);
+      if (targetHero && d.hero && d.hero !== targetHero) continue;
+      if (targetMode && d.mode && d.mode !== targetMode) continue;
+      if (isCoop && !d.coop && d.s.length < 31) continue;
+
+      const sArr = new Float32Array(IN_DIM);
+      const srcS = d.s || [];
+      for (let i = 0; i < Math.min(IN_DIM, srcS.length); i++) sArr[i] = srcS[i];
+
+      // Human winning actions in user fights get higher positive advantage weight (+1.5x)
+      const baseR = +d.r || 0;
+      const weightBonus = isUserFight ? 1.5 : (d.coop ? 1.2 : 1.0);
+
+      samples.push({
+        s: sArr,
+        a: d.a | 0,
+        r: baseR * weightBonus,
+        isUser: isUserFight
+      });
+      count++;
+    } catch (e) {}
+  }
+  return count;
+}
+
+const cvcCount = await loadDatasetFile(dataPath, false);
+const userCount = await loadDatasetFile(userDataPath, true);
+
+if (samples.length === 0) {
+  console.error(`No training samples found in ${dataPath} or ${userDataPath}.`);
+  console.error(`Generate samples via: node tools/cvc-sim.mjs --matches 10 --export ${dataPath}`);
+  process.exit(1);
+}
+
+console.log(`[Dataset] Loaded ${samples.length} total samples (CvC: ${cvcCount}, Human Fights: ${userCount})`);
+if (targetMode) console.log(`[Filter] Training policy specifically for Game Mode: [ ${targetMode.toUpperCase()} ]`);
+if (isCoop) console.log(`[Architecture] Co-op 2v2 Mode Enabled (Input Dim: ${IN_DIM} with ally spatial features)`);
 
 function randMatrix(rows, cols, scale = 0.1) {
   const m = [];
@@ -75,7 +109,7 @@ let b2 = new Float32Array(H2_DIM);
 let W3 = randMatrix(H2_DIM, OUT_DIM, 1.0);
 let b3 = new Float32Array(OUT_DIM);
 
-// Incremental Training / Fine-tuning: If existing model weights exist, warm-start from them!
+// Warm-start if compatible weights exist
 if (existsSync(outPath)) {
   try {
     const existing = JSON.parse(readFileSync(outPath, 'utf8'));
@@ -86,11 +120,12 @@ if (existsSync(outPath)) {
       b2 = new Float32Array(existing.weights.b2);
       W3 = existing.weights.W3.map(row => new Float32Array(row));
       b3 = new Float32Array(existing.weights.b3);
+      console.log(`[Warm-Start] Loaded existing model weights from ${outPath}`);
     }
   } catch (e) {}
 }
 
-// Adam state
+// Adam optimizer state
 const mW1 = randMatrix(IN_DIM, H1_DIM, 0), vW1 = randMatrix(IN_DIM, H1_DIM, 0);
 const mb1 = new Float32Array(H1_DIM), vb1 = new Float32Array(H1_DIM);
 const mW2 = randMatrix(H1_DIM, H2_DIM, 0), vW2 = randMatrix(H1_DIM, H2_DIM, 0);
@@ -98,7 +133,7 @@ const mb2 = new Float32Array(H2_DIM), vb2 = new Float32Array(H2_DIM);
 const mW3 = randMatrix(H2_DIM, OUT_DIM, 0), vW3 = randMatrix(H2_DIM, OUT_DIM, 0);
 const mb3 = new Float32Array(OUT_DIM), vb3 = new Float32Array(OUT_DIM);
 
-// Pre-allocated gradient and activation buffers to eliminate GC churn during training
+// Pre-allocated gradient and activation buffers
 const gW1 = randMatrix(IN_DIM, H1_DIM, 0);
 const gb1 = new Float32Array(H1_DIM);
 const gW2 = randMatrix(H1_DIM, H2_DIM, 0);
@@ -142,11 +177,11 @@ const BATCH_SIZE = 64;
 const indices = new Int32Array(samples.length);
 for (let i = 0; i < samples.length; i++) indices[i] = i;
 
+const startTime = Date.now();
+
 for (let ep = 1; ep <= epochs; ep++) {
-  // Cosine annealing learning rate schedule
   const lr = baseLr * (0.15 + 0.85 * 0.5 * (1 + Math.cos(Math.PI * (ep - 1) / Math.max(1, epochs))));
 
-  // Fast Fisher-Yates shuffle on index array
   for (let i = indices.length - 1; i > 0; i--) {
     const j = (Math.random() * (i + 1)) | 0;
     const tmp = indices[i]; indices[i] = indices[j]; indices[j] = tmp;
@@ -170,9 +205,8 @@ for (let ep = 1; ep <= epochs; ep++) {
     for (let idx = b; idx < end; idx++) {
       const item = samples[indices[idx]];
       const x = item.s;
-      const targetA = item.a;
-      // Exponential advantage weighting (AWR-style): strongly amplifies winning trades & punishes
-      const weight = Math.max(0.15, Math.min(4.0, Math.exp((item.r || 0) * 0.85)));
+      const targetA = Math.max(0, Math.min(OUT_DIM - 1, item.a));
+      const weight = Math.max(0.15, Math.min(4.5, Math.exp((item.r || 0) * 0.85)));
       effectiveBatchWeight += weight;
 
       // Forward Layer 1
@@ -279,20 +313,25 @@ for (let ep = 1; ep <= epochs; ep++) {
     adamStep(W1, gW1, mW1, vW1, IN_DIM, H1_DIM, invN, lr, b1c, b2c);
   }
 
-  if (ep === 1 || ep === epochs) {
+  if (ep === 1 || ep === epochs || ep % 2 === 0) {
     const avgLoss = (totalLoss / samples.length).toFixed(4);
     const acc = ((correct / samples.length) * 100).toFixed(2);
-    console.log(`  [${targetHero || 'all'}] Epoch ${ep}/${epochs} -> Loss: ${avgLoss} | Accuracy: ${acc}%`);
+    console.log(`  [${targetHero || targetMode || 'policy'}] Epoch ${ep}/${epochs} -> Loss: ${avgLoss} | Accuracy: ${acc}%`);
   }
 }
 
-// Quantize float to 4 decimal places to cut JSON model size by ~72% with zero accuracy loss
+const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+console.log(`\n[Training Complete] Finished ${epochs} epochs in ${elapsed}s`);
+
+// Quantize float to 4 decimal places
 const q4 = v => Math.round(v * 10000) / 10000;
 const qArr = arr => Array.from(arr, q4);
 
 const modelOutput = {
   version: 'renying_ai_v2',
   hero: targetHero || 'all',
+  mode: targetMode || 'general',
+  coop: isCoop,
   arch: { in: IN_DIM, h1: H1_DIM, h2: H2_DIM, out: OUT_DIM },
   weights: {
     W1: W1.map(qArr),
@@ -309,4 +348,4 @@ const dir = dirname(outPath);
 if (dir && !existsSync(dir)) mkdirSync(dir, { recursive: true });
 const outStr = JSON.stringify(modelOutput);
 writeFileSync(outPath, outStr, 'utf8');
-console.log(`  ✓ Saved ${outPath} (${(outStr.length / 1024).toFixed(1)} KB)`);
+console.log(`  ✓ Saved ${outPath} (${(outStr.length / 1024).toFixed(1)} KB)\n`);

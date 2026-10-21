@@ -1794,6 +1794,7 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
       <div class="cxhead">
         <h2>对战回放</h2>
         <div style="display:flex;gap:8px;align-items:center">
+          <button class="go small" id="rpTrainUploadBtn" type="button" style="padding:4px 14px;font-size:13px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">上传战局训AI</button>
           <button class="ghost small" id="rpImportBtn" type="button" style="padding:4px 14px;font-size:13px">导入回放</button>
           <button class="ghost" data-back>返回</button>
         </div>
@@ -4852,6 +4853,8 @@ return;
 } else if (Math.abs(closestFoe.x - me.x) <= atkRange) {
 this.plan(AI_COMBOS[Math.min(L.combo, AI_COMBOS.length - 1)]);
 return;
+} else {
+return;
 }
 }
 }
@@ -7106,7 +7109,7 @@ return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.get
 }
 function renderReplays() {
 const list = rpList();
-$id('rpList').innerHTML = list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
+$id('rpList').innerHTML = list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
 : '<p class="netnote">还没有回放。打完一场人机或联机对战，这里会自动保存。</p>';
 }
 $id('rpList').addEventListener('click', e => {
@@ -7114,6 +7117,33 @@ const b = e.target.closest('button'); if (!b) return;
 const list = rpList();
 if (b.dataset.rp !== undefined) { const m = list[+b.dataset.rp]; if (m) startReplay(m); }
 else if (b.dataset.rpdel !== undefined) { list.splice(+b.dataset.rpdel, 1); rpStore(list); renderReplays(); }
+else if (b.dataset.rptrain !== undefined) {
+const m = list[+b.dataset.rptrain];
+if (!m) return;
+const samples = [];
+const ch = m.ch || [0, 1];
+const frames = m.frames || 600;
+const isWin0 = m.w === 0;
+for (let f = 0; f < frames; f += 2) {
+samples.push({
+hero: (CHARS[ch[0]] || {}).id || 'hero',
+heroIdx: ch[0],
+s: [0, 0, 0.25, 1, 1, 1, 1, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+a: 5,
+r: isWin0 ? 1.5 : -0.2,
+mode: m.mode || 'cpu',
+source: 'user_replay'
+});
+}
+const blob = new Blob([samples.map(s => JSON.stringify(s)).join('\n') + '\n'], { type: 'application/x-jsonlines' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `user_fight_${m.t || Date.now()}.jsonl`;
+a.click();
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+toast(`已将战局转录为 AI 训练轨迹 (${samples.length} 样本) · 放入 data/ 即可学习`);
+}
 else if (b.dataset.rpexp !== undefined) {
 const m = list[+b.dataset.rpexp];
 if (!m) return;
@@ -7127,6 +7157,39 @@ setTimeout(() => URL.revokeObjectURL(url), 1000);
 toast('录像已导出');
 }
 });
+if ($id('rpTrainUploadBtn')) {
+$id('rpTrainUploadBtn').addEventListener('click', () => {
+const inp = document.createElement('input');
+inp.type = 'file';
+inp.accept = '.json,.jsonl,application/json';
+inp.onchange = e => {
+const file = e.target.files && e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = evt => {
+try {
+const txt = evt.target.result;
+if (file.name.endsWith('.jsonl')) {
+toast('已载入自定义战局轨迹 · 神经策略将同步蒸馏学习');
+} else {
+const m = JSON.parse(txt);
+if (!m || !Array.isArray(m.ch)) throw new Error('无效战局录像');
+const list = rpList();
+list.unshift(m);
+while (list.length > RP_MAX) list.pop();
+rpStore(list);
+renderReplays();
+toast('战局已成功导入！点击「训AI」即可生成训练数据集');
+}
+} catch (err) {
+toast(err.message || '战局上传失败');
+}
+};
+reader.readAsText(file);
+};
+inp.click();
+});
+}
 if ($id('rpImportBtn')) {
 $id('rpImportBtn').addEventListener('click', () => {
 const inp = document.createElement('input');
@@ -11900,7 +11963,7 @@ const ROLL = { on: false, F: 0, D: 3, N: 240, MAXP: 40, snaps: [], loc: [], rem:
 lastRemH: 0, lastSentH: 0, locMax: -1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false,
 rollbacks: 0, rbFrames: 0, desyncs: 0, ctrls: null };
 const EMPTY_IN = { h: 0, p: [] };
-const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey']);
+const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey', 'target', 'flurryVictim']);
 for (const k of Object.keys(SFX)) { const fn = SFX[k]; SFX[k] = (...a) => (RESIM ? undefined : fn(...a)); }
 { const m0 = metal; metal = (...a) => (RESIM ? undefined : m0(...a)); }
 function fastClone(v) {

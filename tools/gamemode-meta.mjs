@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+/**
+ * Game Mode Meta & Hero Tier Analysis Generator for RenYing.
+ *
+ * Runs headless simulations tailored to each specific game mode:
+ *   - 1v1 CPU (cpu)
+ *   - 2v2 Arena (watch2v2)
+ *   - Chaos Mode / Mutations (chaos)
+ *   - Mayhem Mode / 10x Meter (mayhem)
+ *   - Bushido Mode / 1-HP Lethality (bushido)
+ *   - Tag3 Mode / 3v3 Relays (tag3)
+ *
+ * Generates what is strong, what is weak, hero tiers (S/A/B/C), and matchup matrices.
+ *
+ * Usage:
+ *   node tools/gamemode-meta.mjs --mode watch2v2
+ *   node tools/gamemode-meta.mjs --all
+ */
+
+import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+
+const args = process.argv.slice(2);
+function getArg(name, def) {
+  const idx = args.indexOf('--' + name);
+  return idx !== -1 && args[idx + 1] ? args[idx + 1] : def;
+}
+
+const targetMode = getArg('mode', 'cpu');
+const runAll = args.includes('--all');
+const MODES = ['cpu', 'watch2v2', 'chaos', 'mayhem', 'bushido', 'tag3'];
+
+mkdirSync('data/meta', { recursive: true });
+
+function runMetaForMode(mode) {
+  console.log(`\n======================================================`);
+  console.log(`>>> Analyzing Meta for Game Mode: [ ${mode.toUpperCase()} ]`);
+  console.log(`======================================================`);
+  try {
+    execSync(`node tools/cvc-sim.mjs --mode ${mode} --meta --matches 66`, { stdio: 'inherit' });
+    const src = `data/meta_${mode}.json`;
+    const dest = `data/meta/${mode}.json`;
+    if (existsSync(src)) {
+      writeFileSync(dest, readFileSync(src, 'utf8'), 'utf8');
+    }
+  } catch (err) {
+    console.error(`Failed to generate meta for ${mode}:`, err.message);
+  }
+}
+
+if (runAll) {
+  for (const m of MODES) {
+    runMetaForMode(m);
+  }
+  console.log(`\n[Complete] Generated meta dossiers for all 6 game modes in data/meta/`);
+} else {
+  runMetaForMode(targetMode);
+}

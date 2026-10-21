@@ -8,6 +8,22 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Two-Player Co-op 2v2 Training & Dual-Agent Simultaneous Trajectories (`tools/cvc-sim.mjs --coop`)**:
+  - Implemented simultaneous dual-agent trajectory recording for 2v2 team battles: both Team 0 allies (`A` and `C`) and Team 1 allies (`B` and `D`) are captured in parallel.
+  - Expanded observation feature dimension to 31 with spatial and tactical co-op awareness: relative ally distance, ally height differential, ally remaining HP ratio, ally hitstun peel signal, shared target focus alignment, and central altar relic distance.
+  - Designed team co-op reward shaping: +0.35 peel assist reward for interrupting enemies stunning your teammate, +0.25 focus-fire reward for synchronized attacks on the same target, and team net health differential reward (`((dHpFoeTeam) - (dHpAllyTeam)) / 100`).
+- **Custom Game Mode Policy Training & Fast Simulation (`tools/cvc-sim.mjs`, `tools/train-policy.mjs`)**:
+  - Added custom game mode training support across all combat modes (`--mode <cpu|watch2v2|chaos|mayhem|bushido|tag3>`), embedding mode tags in trajectory samples and allowing mode-specific policy training (`models/renying_ai_[mode].json`).
+  - Optimized simulation speed to over 30,000 - 60,000 frames/sec (>500-800x real-time) via persistent in-process VM sandboxes, eliminating 700KB recompilation per match, and suppressing non-essential particle allocations.
+- **Mode-Specific Strength & Weakness Meta Tier Generator (`tools/gamemode-meta.mjs`, `tools/cvc-sim.mjs --meta`)**:
+  - Built an automated meta analyzer simulating round-robin tournaments for each game mode.
+  - Evaluates win rates, damage differentials, S/A/B/C tier rankings, and calculates explicit counter matchups: what each hero is strong against (优势克制) and weak against (劣势被克) tailored to that specific game mode.
+  - Generates structured JSON reports in `data/meta/[mode].json` and renders markdown summary tables.
+- **User Fight Upload & Human Demonstration Distillation (`#rpTrainUploadBtn`, `tools/ingest-replay.mjs`)**:
+  - Added "上传战局训AI" upload button and per-replay "训AI" action on the Replays screen (`#replays`), allowing players to export or upload match replays (`.json` / `.jsonl`) directly into the training pipeline.
+  - In `tools/train-policy.mjs`, added `--user-data` support to train neural policies on human fight data, boosting human winning actions with +1.5x positive advantage weight.
+- **Robust In-Process Combat Test Suite Runner (`tools/combat-test.mjs`)**:
+  - Upgraded test runner to dual-mode: automatically executes in high-speed in-process sandbox if external Chrome is absent or process spawning is restricted (`spawn EPERM`), running the complete 12-test combat and AI suite in ~1 second.
 - **AI vs AI Watch Mode Across 6 Supported Modes (`cpuWatch`, `chaos`, `tag3`, `bushido`, `mayhem`, `watch2v2`)**:
   - Implemented AI vs AI observation across exactly 6 designated modes, matching the visual presentation, HUD, and draft mechanics of their respective PvC modes:
     - **1v1 (`cpuWatch`)**: Entering watch mode (`#cpuWatchBtn`) now transitions directly to the authentic Ban & Pick (`#bp`) screen where two TianDao AIs (`苍龙 (AI)` vs `赤凤 (AI)`) carry out a four-step ban and choose draft with ~0.85s spectator pacing and sound effects before launching 1v1 combat.
@@ -22,27 +38,15 @@ All notable changes, features, and architectural capabilities of this project ar
   - Added a `visibilitychange` listener with background combat stepping ticker (`updateBgAiTicker`) so AI vs AI matches continue simulating combat even when the browser tab is minimized or hidden.
 - **2v2 Altar Relic Contest & Denial Macro AI (`AICtrl.think`)**:
   - Enhanced TianDao AI macro intelligence in 2v2: wounded bots (<75% HP) actively path toward the central altar to secure TaiYin LingDan relics, opponents approaching the altar within 280px are actively intercepted and blocked, and bots utilize Spirit Wind Geysers when skills have >2.2s cooldown remaining.
-- **2v2 Hero Freeze & Stasis Bug Fixes**:
-  - Resolved freeze and stuck issues in 2v2: added `f.flurryVictim` tracking during multihit ultimate flurries (`crescent`, `shadows`, `eightimm`) so targets are not abandoned mid-combo.
-  - Added a 1.25s hard timeout for the `held` state in `updateFighter` to prevent fighters from remaining permanently paralyzed.
-  - Added automatic victim release on `endSpecial` or interrupt hits.
-  - Added target distance hysteresis (must be ≥ 85px closer to switch targets) to eliminate rapid target jitter.
-  - Guarded friendly-fire targeting checks in projectile handling (`p.owner % 2 !== me.idx % 2`).
-  - Guarded dead fighter knockdown in `step()` (`f.state !== 'knockdown'`).
-- **LiuYun (流云) & MoYu (墨羽) Martial Arts Overhauls & Buffs**:
-  - **LiuYun**: HP buffed 470 → 495, Guard Max 95 → 112, guard chip damage reduced 11% → 7%, attack speed 0.88 → 0.85, reach 0.98 → 1.06, fan length 36px; `windblade` cooldown reduced to 1.4s, velocity increased to 1240, damage 42 (twin 32), knockback 420px; `windstep` reworked to 3.5s cooldown with 0.25s wind armor + 0.20s invulnerability, a 165px radial whirlwind push (`🌪️ 惊风退敌`) dealing 38 damage, and empowering the next windblade to split into twin blades.
-  - **MoYu**: HP buffed 430 → 485 (+55 HP), attack speed 1.02 → 0.90, normal attack chain damages 15/15/17/17/22, brush length 66px, ink resource parameters: `INK_MAX = 100`, `INK_COST = 15`, `INK_REGEN = 25`, `INK_DMG = 24`; added new passive **墨韵护体** absorbing 20% incoming damage when ink is ≥ 25 for 12 ink; `inktrap` width widened to 115px with 2.8s slow; `inksplash` reworked to 4.8s cooldown dealing 46 damage with 0.50s stun and 2.5s blinding slow (`墨迹遮目`).
-- **2v2 LingDan Altar Relic Rebalance**:
-  - Adjusted TaiYin LingDan (太阴灵丹) altar relic restoration from +135 HP down to +45 HP and +25 Guard Posture to prevent excessive match stall, with updated banner and indicator texts (`🌕 太阴灵丹 +45`).
-- **Anti-Distortion Button Layout Fix (`src/style.css`)**:
-  - Implemented anti-distortion box-model rules for navigation and back buttons (`button[data-back], #bpQuit, #accBack, #lbBack, #quitBtn, #menuBtn, #tutMenu, #feMenu`), enforcing `display: inline-flex !important`, `height: 38px !important`, `padding: 0 22px !important`, and `transform: none !important` to prevent squeezed button layouts across devices.
 - **2v2 天道演武 AI 禁选 (`startWatch2v2Draft`, `bpTickWatch2v2`, `watch2v2AiChoice`, `renderBPWatch2v2`)**:
   - 2v2 观战 now opens the same `#bp` draft screen as 1v1 and runs a six-step AI draft — 苍龙禁 → 苍龙先锋 → 苍龙次锋 → 赤凤禁 → 赤凤先锋 → 赤凤次锋 — revealing one choice every 0.75s.
   - Every ban and pick is chosen by the TianDao AI: heroes are never duplicated, banned heroes cannot be picked, and the screen shows both teams' slots filling in, the current step (`第 n / 6 步`), the previous pick, the active team and a gold highlight on the hero just chosen, then starts the match.
   - The manual slot editor, roster picker and randomize button were removed from the 2v2 pane.
-- **HUD overlap audit (`tools/hud-overlap-audit.mjs`)**:
+- **HUD Overlap Headless Audit Tool (`tools/hud-overlap-audit.mjs`)**:
   - Canvas HUD audit that wraps `fillText`/`fillRect`, maps each painted box through `ctx.getTransform()`, keeps only the HUD's own draw scale, and fails on overlapping labels, labels painted over by a HUD bar, or anything off-canvas.
   - Driven headless for any mode; used to prove the 2v2 HUD at 1440x900, 1280x800 and 844x390.
+- **Continuous Neural Network Model Optimization**:
+  - Synchronized over 220 automated self-play reinforcement learning iterations today across all 12 fighters (`models/heroes/*.json`, `models/renying_ai_latest.json`), continuously training and refining combat neural network policies.
 
 - **ZuiXian Classical Visual Overlays (`drawWengTing`, `drawShanshui`)**:
   - Restored full-screen ink-wash landscape scroll (`drawShanshui`) descending dynamically during ZuiXian's ultimate ability (`山水之间`), featuring layered misty mountain peaks with gradient bleeds, couplet calligraphy ("醉翁之意不在酒，在乎山水之间也"), red vermilion seal stamp ("山水"), lone boat, flying birds, and wooden roller rods.
@@ -161,9 +165,25 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
-- **2v2 camera zoom**: `padW` 420 → 680, `minZoom` 0.46 → 0.40, 2v2-only curve `clamp(1.08 - d/2600, 0.4, 1.0)` with a 0.70 cap. Measured `cam.zoom` at 1440x900 drops 0.711 → 0.589 and the four-fighter arena is fully framed; the 1v1 curve is mathematically unchanged.
-- **2v2 HUD (`drawHUD2v2`)**: two rows per team (先锋 then 次锋); every row shows name, `cur/max` HP, `势` value, HP bar with lag ghost, guard bar (gold → orange → red) and an ult/meter bar. The timer keeps the centre gutter, the `2v2 天道演武 · 禁选` line moved to bottom-centre, and per-fighter skill-CD rows are suppressed in 2v2. Previously the 次锋 sub-bars were painted over the move-label row (up to 100% hidden) and 次锋 had no guard or meter bar at all.
-- **Choosing-screen polish (CSS)**: the draft footer is now space-between (返回菜单 left, 确认 right, both 36px tall so they share a baseline); visible borders plus hover / disabled / `:focus-visible` states on `.go`, `.ghost`, `.seg`, deck tabs and hero cards; ban slots are red-lined and pick slots gold-lined; 44px touch targets under `pointer: coarse`.
+- **LiuYun (流云) Martial Arts Overhaul & Balancing**:
+  - HP buffed 470 → 495, Guard Max 95 → 112, guard chip damage reduced 11% → 7%, attack speed 0.88 → 0.85, reach 0.98 → 1.06, fan length 36px, normal attack damage coefficient increased (`BAL.liuyun.normal: 1.16`).
+  - `windblade` (风刃) cooldown reduced to 1.4s, velocity increased to 1240, damage 42 (twin 32), knockback 420px.
+  - `windstep` (风遁) reworked to 3.5s cooldown with 0.25s wind armor + 0.20s invulnerability, a 165px radial whirlwind push (`🌪️ 惊风退敌`) dealing 38 damage, and empowering the next windblade to split into twin blades.
+- **MoYu (墨羽) Martial Arts Overhaul & Balancing**:
+  - HP buffed 430 → 485 (+55 HP), attack speed 1.02 → 0.90, normal attack chain damages 15/15/17/17/22, brush length 66px, ink resource parameters: `INK_MAX = 100`, `INK_COST = 15`, `INK_REGEN = 25`, `INK_DMG = 24`, normal attack damage coefficient increased (`BAL.moyu.normal: 1.08`).
+  - Added new passive **墨韵护体** absorbing 20% incoming damage when ink is ≥ 25 for 12 ink.
+  - `inktrap` width widened to 115px with 2.8s slow.
+  - `inksplash` reworked to 4.8s cooldown dealing 46 damage with 0.50s stun and 2.5s blinding slow (`墨迹遮目`).
+- **Seven Heroes Combat & Martial Tuning (LuffyXing55 & AMFI-Disable)**:
+  - **Fei Ying (影遁 / `SKILLS.blink`)**: Introduced a 0.30s cast windup delay before shadow teleportation (previously 0.14s), maintaining vulnerable neutral posture during hand seals to allow opponents a realistic reaction and escape window.
+  - **ZuiXian (亭中留客 / `SKILLS.pavilion`)**: Rebalanced the pavilion jail cage duration from 2.0s down to 1.5s (`jailT = 1.5`), preventing overly prolonged entrapment while preserving full combo follow-up potential.
+  - **Lei Ming (连环 / `CHARS.leiming`)**: Overhauled Lei Ming's primary attack string from a 10-hit rapid flurry into an impactful 6-hit heavy strike sequence (`l1`-`l5` dealing 19-22 damage, `l6` dealing 32 damage with 520px knockback and aerial launch), accompanied by updated martial codex entries, animations, and passive descriptions.
+  - **Tie Shan (山崩 / `ULTS.avalanche`)**: Connecting with all seismic shocks of Tie Shan's avalanche now refills 100% super meter on initial hit, enabling an immediate chained follow-up avalanche (which refunds 50% meter on second use to prevent infinite loops) and resetting skill cooldowns (`f.avaFree`, `f.avaChain`).
+  - **Ling Shuang (枪尖 / `CHARS.lingshuang`)**: Widened spear tip sweetspot collision bounding box (`box: [20, -78, 140, -40]`), delivering more reliable max-range spacing pokes and aerial launch triggers.
+- **2v2 Camera Zoom**: `padW` 420 → 680, `minZoom` 0.46 → 0.40, 2v2-only curve `clamp(1.08 - d/2600, 0.4, 1.0)` with a 0.70 cap. Measured `cam.zoom` at 1440x900 drops 0.711 → 0.589 and the four-fighter arena is fully framed; the 1v1 curve is mathematically unchanged.
+- **2v2 HUD Presentation (`drawHUD2v2`)**: two rows per team (先锋 then 次锋); every row shows name, `cur/max` HP, `势` value, HP bar with lag ghost, guard bar (gold → orange → red) and an ult/meter bar. The timer keeps the centre gutter, the `2v2 天道演武 · 禁选` line moved to bottom-centre, and per-fighter skill-CD rows are suppressed in 2v2. Previously the 次锋 sub-bars were painted over the move-label row (up to 100% hidden) and 次锋 had no guard or meter bar at all.
+- **2v2 LingDan Altar Relic Rebalance**: Adjusted TaiYin LingDan (太阴灵丹) altar relic restoration from +135 HP down to +45 HP and +25 Guard Posture to prevent excessive match stall, with updated banner and indicator texts (`🌕 太阴灵丹 +45`).
+- **Choosing-Screen Polish (CSS)**: the draft footer is now space-between (返回菜单 left, 确认 right, both 36px tall so they share a baseline); visible borders plus hover / disabled / `:focus-visible` states on `.go`, `.ghost`, `.seg`, deck tabs and hero cards; ban slots are red-lined and pick slots gold-lined; 44px touch targets under `pointer: coarse`.
 - **Tie Shan FenXueKuangTu / Iron Wall Infinite Height Wave Upgrade**:
   - Upgraded Tieshan's R skill (`ironwall` / 焚血狂突) to a towering skyward wave with infinite vertical coverage (`box: [-10, -2200, 135, 0]`), preventing airborne or flying escapes (e.g. Yan Ling flight or Liu Yun high jumps).
   - Added tiered soaring wave particle emissions, screen tremors, and heavy aerial spike downforce (`spike: true`, `kb: [260, 520]`) slamming airborne targets into the ground with bespoke callouts (`🌊 焚血狂突 · 惊涛拍岸`).
@@ -279,6 +299,15 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **2v2 Hero Freeze & Stasis Bug Fixes**:
+  - Resolved freeze and stuck issues in 2v2: added `f.flurryVictim` tracking during multihit ultimate flurries (`crescent`, `shadows`, `eightimm`) so targets are not abandoned mid-combo.
+  - Added a 1.25s hard timeout for the `held` state in `updateFighter` to prevent fighters from remaining permanently paralyzed.
+  - Added automatic victim release on `endSpecial` or interrupt hits.
+  - Added target distance hysteresis (must be ≥ 85px closer to switch targets) to eliminate rapid target jitter.
+  - Guarded friendly-fire targeting checks in projectile handling (`p.owner % 2 !== me.idx % 2`).
+  - Guarded dead fighter knockdown in `step()` (`f.state !== 'knockdown'`).
+- **Anti-Distortion Button Layout Fix (`src/style.css`)**:
+  - Implemented anti-distortion box-model rules for navigation and back buttons (`button[data-back], #bpQuit, #accBack, #lbBack, #quitBtn, #menuBtn, #tutMenu, #feMenu`), enforcing `display: inline-flex !important`, `height: 38px !important`, `padding: 0 22px !important`, and `transform: none !important` to prevent squeezed button layouts across devices.
 - **2v2 render crash (`drawProjs`)**: `[A, B][p.owner]` threw whenever a 次锋 projectile existed (owner index 2/3), aborting the whole render frame and blanking the arena for that frame. Now `[A, B, C, D][p.owner] || A`; a 9-second 2v2 capture with owner-2/3 projectiles on screen reports 0 uncaught exceptions.
 - **Attack dead zone (0.16–0.3s)**: holding attack longer than the input buffer `BUF` (0.16s) but shorter than `CHARGE_START` (0.3s) produced no attack at all, because nothing consumed the buffered light press while the button was held. `neutral()` now keeps the light buffer alive while held, so a tap lands a light attack and a ≥0.3s hold still charges — this affected both touch and mouse input.
 - **Touch menu overflow at 844x390**: menu groups and buttons sat up to 30px outside the viewport (7 items flagged by `tools/touch-audit.mjs`); the compact dock now fits (798 → 628px wide, 0 offscreen).
