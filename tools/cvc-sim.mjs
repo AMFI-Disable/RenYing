@@ -45,6 +45,13 @@ const exportPath = getArg('export', '');
 const p1CharArg = getArg('p1', '');
 const p2CharArg = getArg('p2', '');
 
+if (hasFlag('exhaustive') || hasFlag('all-circumstances')) {
+  const { execSync } = await import('node:child_process');
+  const forwarded = args.filter(a => a !== '--exhaustive' && a !== '--all-circumstances').join(' ');
+  execSync(`node tools/simulate-all.mjs ${forwarded}`, { stdio: 'inherit' });
+  process.exit(0);
+}
+
 // Precompile scripts once globally
 const netCode = readFileSync('src/net-p2p.js', 'utf8');
 const gameCode = readFileSync('src/game.js', 'utf8');
