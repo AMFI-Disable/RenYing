@@ -36,7 +36,7 @@ p, dd, li, .sub, .td, .dhitdesc, .ai-desc, .tp-desc, .netnote, .tips, .vs-line {
 h1, h2, h3, h4, .spt, .tt { text-wrap: balance; }
 .nw { display: inline-block; white-space: nowrap; }
 .panel { text-align: center; padding: 20px 24px; max-width: min(860px, 95vw); width: 100%; margin: auto; }
-.singlep { max-width: min(1360px, 96vw); }
+.singlep { max-width: min(980px, 95vw); }
 #help .panel { max-width: min(1280px, 96vw); }
 .title-row { display: flex; align-items: center; justify-content: center; gap: 18px; }
 h1 { font-family: var(--title); font-weight: 400; font-size: clamp(88px, 14vw, 150px); margin: 0; line-height: 1; letter-spacing: .08em; text-shadow: 0 0 40px rgba(70, 211, 234, 0.25); }
@@ -52,78 +52,128 @@ h2 { font-family: var(--title); font-weight: 400; font-size: clamp(38px, 6vw, 72
 .seg button:focus-visible, .go:focus-visible, .ghost:focus-visible { outline: 2px solid var(--p1); outline-offset: 3px; }
 button:focus-visible, summary:focus-visible { outline: 2px solid var(--p1); outline-offset: 2px; }
 #levels.hide { visibility: hidden; }
+.single-nav-deck {
+background: linear-gradient(165deg, rgba(20, 22, 38, 0.82), rgba(10, 11, 24, 0.9));
+border: 1px solid rgba(233, 196, 106, 0.22);
+border-radius: 16px;
+padding: 6px 10px 8px;
+margin: 6px auto 14px;
+width: min(780px, 96vw);
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+display: flex;
+flex-direction: column;
+gap: 6px;
+}
 .single-cat-tabs {
-display: flex; gap: 8px; padding: 4px; border-radius: 999px;
-background: rgba(0, 0, 0, .32); border: 1px solid rgba(233, 196, 106, .22);
-margin: 8px auto 6px; width: min(460px, 94vw); max-width: 100%; box-sizing: border-box;
+display: flex; gap: 6px; padding: 3px; border-radius: 10px;
+background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .05);
+margin: 0; width: 100%; box-sizing: border-box;
 justify-content: center; align-items: stretch;
 }
 .single-cat-tabs button {
 flex: 1 1 0; min-width: 0; text-align: center; justify-content: center;
 border: none; background: transparent; color: var(--dim); font-family: var(--title);
-font-size: 14px; padding: 6px 4px; border-radius: 999px; cursor: pointer;
+font-size: 14px; padding: 5px 6px; border-radius: 8px; cursor: pointer;
 letter-spacing: 0.5px; transition: background .15s ease, color .15s ease, border-color .15s ease;
-white-space: nowrap; user-select: none;
+white-space: nowrap; user-select: none; display: inline-flex; align-items: center; gap: 6px;
 }
 .single-cat-tabs button:hover {
-color: var(--ink); background: rgba(255, 255, 255, .05);
+color: var(--ink); background: rgba(255, 255, 255, .06);
 }
 .single-cat-tabs button.sel {
 background: rgba(233, 196, 106, .18); color: var(--gold); font-weight: 700;
 border: 1px solid rgba(233, 196, 106, .45);
-box-shadow: 0 0 12px rgba(233, 196, 106, .15);
+box-shadow: 0 0 10px rgba(233, 196, 106, .15);
 }
-.single-tabs, .task-tabs {
+.single-tabs {
+display: flex; gap: 6px; padding: 2px 4px;
+background: transparent; border: none;
+margin: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+-webkit-overflow-scrolling: touch; justify-content: center; min-height: 32px;
+box-sizing: border-box; align-items: center; width: 100%;
+}
+.single-tabs button {
+border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .03);
+color: var(--dim); font-family: var(--body);
+font-size: 13px; padding: 4px 14px; border-radius: 999px; cursor: pointer;
+transition: all .15s ease; white-space: nowrap; user-select: none;
+display: inline-flex; align-items: center; gap: 5px;
+}
+.single-tabs button:hover {
+background: rgba(255, 255, 255, .08); color: var(--ink); border-color: rgba(233, 196, 106, .3);
+}
+.single-tabs button.sel {
+background: var(--gold); color: #0c0b16; font-weight: 700; border-color: var(--gold);
+box-shadow: 0 2px 10px rgba(233, 196, 106, .3);
+}
+.task-tabs {
 display: flex; gap: 6px; padding: 4px; border-radius: 999px;
 background: rgba(255, 255, 255, .05); border: 1px solid var(--faint);
 margin: 4px 0 16px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
 -webkit-overflow-scrolling: touch; justify-content: center; min-height: 38px;
 box-sizing: border-box; align-items: center; max-width: 100%;
 }
-.single-tabs button, .task-tabs button {
+.task-tabs button {
 border: none; background: transparent; color: var(--dim); font-family: var(--body);
 font-size: 13px; padding: 5px 16px; border-radius: 999px; cursor: pointer;
 transition: all .15s ease; white-space: nowrap; user-select: none;
 }
-.single-tabs button.sel, .task-tabs button.sel {
+.task-tabs button.sel {
 background: var(--gold); color: #0c0b16; font-weight: 700;
 box-shadow: 0 2px 10px rgba(233, 196, 106, .25);
 }
 .levels-grid {
-display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 10px 0 14px;
+display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px;
+margin: 8px 0 12px; padding: 4px; border-radius: 12px;
+background: rgba(8, 9, 20, 0.45); border: 1px solid rgba(255, 255, 255, 0.05);
+position: relative;
 }
 @media (max-width: 820px) { .levels-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 440px) { .levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .levels-grid button {
-background: linear-gradient(160deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02));
-border: 1px solid var(--faint); border-radius: 10px; padding: 10px 6px; cursor: pointer;
-display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink);
-transition: all .15s ease; min-width: 0;
+background: linear-gradient(170deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
+border: 1px solid rgba(255, 255, 255, .08); border-radius: 8px; padding: 7px 4px 6px; cursor: pointer;
+display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ink);
+transition: all .16s cubic-bezier(0.2, 0.8, 0.2, 1); min-width: 0; position: relative;
 }
 .levels-grid button:hover {
-border-color: rgba(233, 196, 106, .5); transform: translateY(-2px); background: rgba(255, 255, 255, .09);
+border-color: rgba(233, 196, 106, .45); transform: translateY(-1px); background: rgba(255, 255, 255, .08);
 }
 .levels-grid button.sel {
-border-color: #e9c46a; background: linear-gradient(160deg, rgba(233, 196, 106, .22), rgba(233, 196, 106, .06));
-box-shadow: 0 0 0 1px #e9c46a, 0 6px 20px rgba(233, 196, 106, .2);
+border-color: var(--gold);
+background: linear-gradient(170deg, rgba(233, 196, 106, .24), rgba(233, 196, 106, .08));
+box-shadow: 0 0 0 1px var(--gold), 0 4px 16px rgba(233, 196, 106, .22);
+transform: translateY(-1px);
 }
-.levels-grid .lv-top { display: flex; align-items: center; gap: 5px; }
-.levels-grid .lv-icon { font-size: 16px; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; }
+.levels-grid button[data-lv="god"].sel {
+border-color: #ffd84a;
+background: linear-gradient(170deg, rgba(255, 216, 74, .28), rgba(255, 74, 95, .15));
+box-shadow: 0 0 0 1px #ffd84a, 0 4px 20px rgba(255, 216, 74, .3);
+}
+.levels-grid .lv-top { display: flex; align-items: center; gap: 4px; }
+.levels-grid .lv-icon { font-size: 15px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; opacity: 0.85; }
 .levels-grid .lv-icon svg { width: 100%; height: 100%; stroke: currentColor; }
-.levels-grid .lv-name { font-family: var(--title); font-size: 18px; letter-spacing: 1px; white-space: nowrap; }
-.levels-grid button.sel .lv-name { color: #e9c46a; }
-.levels-grid .lv-sub { font-size: 12px; color: var(--dim); line-height: 1.3; text-align: center; white-space: nowrap; }
+.levels-grid button.sel .lv-icon { opacity: 1; color: var(--gold); filter: drop-shadow(0 0 4px rgba(233, 196, 106, 0.6)); }
+.levels-grid button[data-lv="god"].sel .lv-icon { color: #ffd84a; filter: drop-shadow(0 0 6px rgba(255, 216, 74, 0.8)); }
+.levels-grid .lv-name { font-family: var(--title); font-size: 17px; letter-spacing: 0.5px; white-space: nowrap; line-height: 1.1; }
+.levels-grid button.sel .lv-name { color: var(--gold); text-shadow: 0 0 10px rgba(233, 196, 106, 0.4); }
+.levels-grid button[data-lv="god"].sel .lv-name { color: #ffd84a; text-shadow: 0 0 12px rgba(255, 216, 74, 0.5); }
+.levels-grid .lv-sub { font-size: 12px; color: var(--dim); line-height: 1.25; text-align: center; white-space: nowrap; }
+.levels-grid button.sel .lv-sub { color: rgba(239, 232, 216, 0.9); }
 .ai-brief-card {
-border: 1px solid rgba(233, 196, 106, .3); border-radius: 12px;
-background: rgba(12, 14, 26, .85); padding: 12px 18px; margin: 12px 0 18px;
-text-align: left; box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
+border: 1px solid rgba(233, 196, 106, .26); border-radius: 12px;
+background: linear-gradient(165deg, rgba(14, 16, 32, .88), rgba(8, 9, 20, .92));
+padding: 10px 16px; margin: 8px 0 12px;
+text-align: left; box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
 }
-.ai-brief-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; flex-wrap: wrap; }
-.ai-brief-title { font-family: var(--title); font-size: 17px; color: var(--gold); letter-spacing: 1px; white-space: nowrap; }
-.ai-badge { font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--p1); color: var(--p1); font-weight: 600; letter-spacing: .5px; white-space: nowrap; }
-.ai-desc { font-size: 13.5px; line-height: 1.6; color: var(--ink); margin: 4px 0 8px; }
-.ai-traits { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 2px; }
-.trait-chip { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: rgba(255, 255, 255, .06); border: 1px solid var(--faint); color: var(--dim); white-space: nowrap; }
+.ai-brief-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px; flex-wrap: wrap; }
+.ai-brief-title { font-family: var(--title); font-size: 16px; color: var(--gold); letter-spacing: 0.5px; white-space: nowrap; }
+.ai-badge { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--p1); color: var(--p1); font-weight: 600; letter-spacing: .5px; white-space: nowrap; }
+.ai-desc { font-size: 13px; line-height: 1.55; color: var(--ink); margin: 3px 0 6px; }
+.ai-traits { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 0; }
+.trait-chip { font-size: 12px; padding: 2px 7px; border-radius: 4px; background: rgba(255, 255, 255, .05); border: 1px solid var(--faint); color: var(--dim); white-space: nowrap; }
+#single .go { margin-top: 12px; font-size: 28px; padding: 6px 32px 6px 42px; }
+#single .go.small { margin-top: 8px; font-size: 20px; padding: 5px 20px 5px 26px; }
 .sec-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: nowrap; }
 .sec-head-row h3.spt { margin: 0; font-size: 22px; white-space: nowrap; }
 .sub-badge { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: rgba(233, 196, 106, .12); border: 1px solid rgba(233, 196, 106, .35); color: var(--gold); white-space: nowrap; }
@@ -1014,22 +1064,24 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
         <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
 
-      <div class="single-cat-tabs" id="singleCatTabs">
-        <button data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>常规演武</button>
-        <button data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>秘宝异变</button>
-        <button data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-katana"/></svg></span>特殊决战</button>
-      </div>
+      <div class="single-nav-deck">
+        <div class="single-cat-tabs" id="singleCatTabs">
+          <button data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>常规演武</button>
+          <button data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>秘宝异变</button>
+          <button data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-katana"/></svg></span>特殊决战</button>
+        </div>
 
-      <div class="single-tabs" id="singleTabs">
-        <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>对战电脑</button>
-        <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>守关挑战</button>
-        <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>木人试剑</button>
-        <button data-tab="tower" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
-        <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
-        <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
-        <button data-tab="bushido" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-katana"/></svg></span>一击必杀</button>
-        <button data-tab="mayhem" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
-        <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 观战</button>
+        <div class="single-tabs" id="singleTabs">
+          <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>对战电脑</button>
+          <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>守关挑战</button>
+          <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>木人试剑</button>
+          <button data-tab="tower" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
+          <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
+          <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
+          <button data-tab="bushido" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-katana"/></svg></span>一击必杀</button>
+          <button data-tab="mayhem" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
+          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 观战</button>
+        </div>
       </div>
 
       <!-- 对战电脑 (Choosing AI) -->

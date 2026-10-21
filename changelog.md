@@ -169,6 +169,11 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Streamlined Single-Player Mode Navigation & Realm Stepper UI (`.single-nav-deck`, `.levels-grid`)**:
+  - Unified the 2-tier stacked category and mode tabs into an integrated martial navigation deck (`.single-nav-deck`), eliminating awkward vertical space bloat and layout jumping.
+  - Tamed the expansive single-player arena panel (`.singlep`) from `1360px` down to a focused `980px` maximum width, properly framing battle setups without empty horizontal stretching.
+  - Rebuilt the 6-tier difficulty grid into a streamlined horizontal cultivation realm progression stepper (`入门 ── 寻常 ── 劲敌 ── 宿敌 ── 绝顶 ── 天道`), featuring subtle realm icons, glowing border elevations, and compact proportions that fit comfortably above the fold.
+  - Tightened vertical spacing on the AI intelligence brief card (`.ai-brief-card`) and launch buttons to ensure complete single-screen visibility on laptops and desktop viewports without unnecessary scrolling.
 - **Disabled Refight for AI vs AI Observation Modes (`againBtn`, `showEnd`)**:
   - Disabled and hid the refight / rematch button (`#againBtn`) on the match conclusion screen across all AI vs AI watch modes (`cpuWatch`, `watch2v2`, `tag3`, `bushido`, `chaos`, `mayhem`).
   - Completely prevents controller pollution and buggy state desynchronizations where selecting refight from spectator mode inadvertently reset controller assignments to human player vs computer (PvC).
