@@ -419,12 +419,6 @@ html, body { overscroll-behavior: none; }
 .bento { grid-auto-rows: minmax(110px, auto); } .accbar { transform: scale(.85); transform-origin: top right; }
 .tile.t-stats, .tile.t-m { height: auto; min-height: 110px; }
 }
-@media (pointer: coarse) {
-.go, .ghost, .seg button { min-height: 44px; }
-.go, .ghost, .seg button { display: inline-flex; align-items: center; justify-content: center; }
-.bpact .go, .bpact .ghost { min-height: 44px; }
-.decktabs button { padding-top: 5px; padding-bottom: 5px; }
-}
 .toast { position: fixed; left: 50%; top: 20px; transform: translateX(-50%) translateY(-20px); z-index: 40; padding: 10px 20px; border-radius: 10px; background: rgba(12,12,30,.95); border: 1px solid rgba(233,196,106,.5); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; white-space: nowrap; }
 .toast.on { opacity: 1; transform: translateX(-50%); }
 .spt { font-family: var(--title); font-weight: 400; font-size: 26px; margin: 16px 0 6px; color: #e9c46a; }
@@ -930,6 +924,13 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
 .sdot.on { border: none; width: .55em; height: .55em; margin: 0 .42em 0 0; background: #4fd18b; box-shadow: 0 0 6px rgba(79,209,139,.7); }
 .spause { display: inline-block; width: .8em; height: 1em; vertical-align: -.14em; background: linear-gradient(90deg, currentColor 0 30%, transparent 30% 70%, currentColor 70% 100%); border-radius: 2px; }
 .tf { font-size: 12px; color: rgba(233,196,106,.82); margin-top: 5px; line-height: 1.4; font-style: italic; }
+@media (pointer: coarse) {
+.go, .ghost, .seg button { min-height: 44px; }
+.go, .ghost, .seg button { display: inline-flex; align-items: center; justify-content: center; }
+.bpact .go, .bpact .ghost { min-height: 44px; }
+.setrow .seg button { min-height: 44px; }
+.decktabs button { padding-top: 5px; padding-bottom: 5px; }
+}
 </style>
 </head>
 <body>
