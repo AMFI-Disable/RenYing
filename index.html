@@ -8360,7 +8360,7 @@ ctx.restore();
 function drawProjs(glowOnly) {
 for (const p of projs) {
 if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion')) continue;
-const L = [A, B][p.owner].look;
+const L = ([A, B, C, D][p.owner] || A).look;   // 2v2 里 C/D 的技能也会生成弹道，owner 可能是 2/3
 ctx.save();
 if (p.kind === 'wind') {
 ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y);
