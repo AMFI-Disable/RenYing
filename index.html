@@ -7160,7 +7160,7 @@ const pool = tracked.length >= 2 ? tracked : [A, B];
 const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
 const minY = Math.min(...pool.map(f => f.y));
 const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
-const padW = M.mode === 'watch2v2' ? 420 : 340;
+const padW = M.mode === 'watch2v2' ? 680 : 340;
 const fitW = W / ((d + padW) * base);
 const top = -minY + 170;
 const fitH = (H * 0.74) / (Math.max(250, top) * base);
@@ -7172,8 +7172,9 @@ const lv = clamp(lf.t / CHARGE_FULL, 0, 1); zoomMul *= 1 + 0.24 * lv; focus = le
 }
 const ce = cineEnv();
 if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
-const minZoom = M.mode === 'watch2v2' ? 0.46 : 0.6;
-const want = Math.min(clamp(1.42 - d / (M.mode === 'watch2v2' ? 1450 : 1000), minZoom, 1.35) * zoomMul, fit);
+const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
+const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
+const want = Math.min(wantBase * zoomMul, fit);
 cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
 cam.zoom = Math.min(cam.zoom, fit);
 cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
