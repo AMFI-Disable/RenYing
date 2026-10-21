@@ -410,6 +410,9 @@ html, body { overscroll-behavior: none; }
 .mtitle { top: 3%; } .mtitle h1 { font-size: 64px; } .seal { font-size: 14px; }
 .mcard { bottom: 26%; width: 36vw; padding: 12px 16px; } .mcard .mk { font-size: 26px; } .mcard .ms { font-size: 12px; }
 .msmall { bottom: 6%; gap: 6px; flex-wrap: wrap; justify-content: center; width: 94%; } .msmall button { font-size: 12px; padding: 6px 12px; }
+.msmall-dock { gap: 6px; max-width: 98vw; }
+.mgroup { padding: 2px 4px; gap: 2px; }
+.mgroup button { font-size: 12px; padding: 5px 8px; gap: 3px; }
 .menuscr .ver { font-size: 12px; bottom: 1%; }
 .panel { padding: 14px 16px; } h2 { font-size: 26px; margin: 4px 0 8px; } .spt { font-size: 20px; margin: 10px 0 6px; }
 .bpgrid { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; } .bpcard img { max-height: 44px; } .bpcard .nm { font-size: 12px; }
@@ -625,9 +628,9 @@ display: grid; gap: clamp(6px, 1vh, 10px); grid-template-rows: auto auto minmax(
 .badge-buff { background: rgba(70,211,234,.2); color: #46d3ea; border: 1px solid rgba(70,211,234,.4); }
 .badge-break { background: rgba(233,196,106,.2); color: #e9c46a; border: 1px solid rgba(233,196,106,.4); }
 .dhitdesc { font-size: 12px; color: var(--dim); line-height: 1.35; }
-.bpact { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding: 2px 0 0; flex: none; }
-.bpact .go { margin: 0; font-size: clamp(15px, 1.3vw, 18px); min-width: min(220px, 36vw); white-space: nowrap; padding: 5px 24px; }
-.bpact .ghost { padding: 5px 16px; font-size: clamp(12px, 1vw, 14px); }
+.bpact { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding: 6px 0 0; flex: none; }
+.bpact .go { margin: 0; font-size: clamp(15px, 1.3vw, 18px); min-width: min(220px, 36vw); white-space: nowrap; padding: 0 24px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.bpact .ghost { padding: 0 18px; font-size: clamp(12px, 1vw, 14px); min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
 @media (max-width: 768px) {
 .msmall { width: min(94vw, 560px); flex-wrap: wrap; justify-content: center; gap: 6px; bottom: 5%; }
 .msmall button { font-size: 13px; padding: 6px 13px; }
