@@ -279,7 +279,7 @@ const CHARS = [
     look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
     ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
   { id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 8.0, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
-    passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），风遁疾退带狂风护体，身法飘忽制胜。',
+    passiveName: '御风', passiveDesc: '御风而行，三段跳与开扇疾冲来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），身法飘忽制胜。',
     stat: { hp: 495, walk: 1.15, speed: 0.85, dmg: 1.18, reach: 1.06, swing: 0.90, jump: 1.08, weight: 0.88, defRating: 1.02, guardMax: 112, guardStab: 1.15, guardChip: 0.07, guardRegen: 32, poise: 0.95, size: 0.98 }, jumps: 3, hitFeel: 0.9,
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
@@ -324,7 +324,9 @@ const CHARS = [
 ];
 const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
 // 墨羽的墨水：每甩一团墨消耗 INK_COST，每秒恢复 INK_REGEN
-const INK_MAX = 100, INK_COST = 15, INK_REGEN = 25, INK_DMG = 24;
+const INK_MAX = 100, INK_COST = 15, INK_REGEN = 12, INK_DMG = 24;
+// 墨羽的符：R 画一张花 FU_INK 格墨水，最多 FU_MAX 张；大招全部烧掉，伤害 FU_BASE + FU_PER × 张数
+const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
 // 按兵器流派定制专属普攻武学动作映射
 const WEAPON_POSE_MODS = {
@@ -453,15 +455,12 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
     ai: (me, foe, d) => d < 120 },
-  windblade: { name: '风刃', cd: 1.4, air: true, desc: '挥扇生风。此招【无长硬直】，附带风暴推力（420 像素击退）；连飞羽轻镖也一并吹散。',
+  windblade: { name: '风刃', cd: 2.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
     start() {},
     update(f) {
       if (f.skPh === 0 && f.t >= 0.04) {
         f.skPh = 1; SFX.swing();
-        if (f.twinT > 0) {
-          f.twinT = 0;
-          for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1220, vy, w: 74, h: 62, life: 1.15, dmg: 32, kb: [400, -90], stun: 0.22, hs: 0.035 });
-        } else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1240, w: 72, h: 62, life: 1.15, dmg: 42, kb: [420, -90], stun: 0.22, hs: 0.035 });
+        for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
       }
       if (f.skPh === 1 && f.t >= 0.11) toNeutral(f);
     },
@@ -477,7 +476,8 @@ const SKILLS = {
           addP({ type: 'text', text: '⚡ 触电麻痹 · 雷踏加速', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
         }
         if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
-        if (f.t >= 0.26) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
+        const through = f.hitDone && foe && (f.x - foe.x) * f.face > 45;   // 一拳贯穿、穿过对手身后就收住，不再继续往前冲
+        if (f.t >= 0.26 || through) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
       }
       if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
     },
@@ -610,25 +610,18 @@ const SKILLS = {
       if (f.t >= 2) toNeutral(f);
     },
     pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-  windstep: { name: '风遁', cd: 3.5, air: true, nofric: true, pass: true, desc: '御风后翻瞬间在原地引爆【惊风退敌】斥力气旋（0.45 秒击退贴脸之敌）；附带狂风霸体护身（0.25 秒），下一发风刃亦得风势相助，一分为二。',
-    start(f) { f.vx = 0; f.armorT = 0.25; f.armorHits = 1; },
-    update(f, foe) {
-      if (f.skPh === 0) {
-        f.skPh = 1; f.invul = Math.max(f.invul, 0.20); f.twinT = 1.2; SFX.dash();
-        ring(f.x, f.y - 50, 140, f.look.slash, 0.45); dust(f.x, 0, 16); SFX.swing();
-        const targets = M.mode === 'watch2v2' ? foesOf(f) : [foe];
-        for (const ef of targets) {
-          if (ef && Math.abs(ef.x - f.x) < 165 && Math.abs(ef.y - f.y) < 130 && ef.invul <= 0) {
-            applyHit(f, ef, { dmg: 38, kb: [f.face * -460, -320], stun: 0.45, hs: 0.07, launch: true, noScale: true }, [ef.x, ef.y - 60]);
-            addP({ type: 'text', text: '🌪️ 惊风退敌', x: f.x, y: f.y - 90, life: 0.8, max: 0.8, rgb: '140,255,200' });
-          }
-        }
+  windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。',
+    start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); },
+    update(f) {
+      if (f.skPh < 5 && f.t >= f.skPh * 0.055) {   // 冲的路上每隔一小段撒一颗
+        f.skPh++;
+        spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: Math.random() * 6 });
       }
-      f.vx = -f.face * 1050 * (1 - f.t / 0.24);
-      if (Math.random() < 0.7) addP({ type: 'spark', x: f.x + f.face * 20, y: f.y - rand(20, 100), vx: f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
-      if (f.t >= 0.24) toNeutral(f);
+      f.vx = f.face * 1300 * Math.max(0, 1 - f.t / 0.3);
+      if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
+      if (f.t >= 0.32) toNeutral(f);
     },
-    pose: () => ['ly_hover', 40], ai: (m, o, d) => d < 160 },
+    pose: () => ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 360 && Math.sign(o.x - m.x) === m.face },
   stomp: { name: '雷踏', cd: 4.5, desc: '一脚踏落，前方轰然炸起雷柱（宽 85 像素，高 420 像素，48 伤害）。垂直高空挑飞，将对手击向空中。',
     start(f) { f.vx = 0; },
     update(f) {
@@ -636,13 +629,17 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
-  inksplash: { name: '泼墨', cd: 4.8, desc: '甩出一团浓墨。墨团爆裂挑飞并施加【墨迹遮目】（0.50 秒硬直 + 2.5 秒迟缓），落地激荡墨池。',
+  inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 580, vy: -440, g: 1500, lob: true, w: 52, h: 52, life: 1.3, dmg: 46, kb: [160, -460], stun: 0.50, hs: 0.07, launch: true }); }
-      if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
+      if (f.skPh === 0 && f.t >= 0.2) {
+        f.skPh = 1; f.ink -= INK_COST * FU_INK; f.fu = Math.min(FU_MAX, (f.fu || 0) + 1); SFX.swing();
+        ring(f.x + f.face * 30, f.y - 120, 40, '235,200,90', 0.35);
+        addP({ type: 'text', text: `画符 · ${f.fu}/${FU_MAX}`, x: f.x, y: f.y - 140, life: 0.8, max: 0.8, rgb: '235,200,90' });
+      }
+      if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
     },
-    pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 130 && d < 440 },
+    pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
   moonring: { name: '月轮', cd: 3.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
     start(f) { f.vx = 0; },
     update(f) {
@@ -708,13 +705,13 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
     ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
-  pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.15 秒就落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间动弹不得、腾空闪也用不出，但可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
+  pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.4 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间动弹不得、腾空闪也用不出，但可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.05) {
         f.skPh = 1; SFX.swing();
         const tx = clamp(foe.x, WALL + 40, STAGE_W - WALL - 40);
-        if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.1, w: 150, h: 560, life: 0.6, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
+        if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.35, w: 150, h: 560, life: 0.85, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
         else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
       }
       if (f.t >= 0.27) toNeutral(f);
@@ -872,11 +869,11 @@ const ULTS = {
       }
       if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
     } },
-  tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与风遁冷却，空中跳跃次数全额回满，乘风浮空。',
+  tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。',
     begin(f) {
       f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0;
       f.skillCD = 0; f.skill2CD = 0; f.jumps = 0;
-      addP({ type: 'text', text: '🌪️ 扶摇万里 · 风遁重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
+      addP({ type: 'text', text: '🌪️ 扶摇万里 · 开扇重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
       SFX.superOn();
     },
     update(f) {
@@ -904,20 +901,28 @@ const ULTS = {
       }
       if (f.t >= 1.2) endSpecial(f);
     } },
-  inkdragon: { name: '墨龙', desc: '饱蘸浓墨，凌空一挥——墨即成龙！巨墨龙横扫全场（180 伤害，不可格挡）。泼墨触发【笔意长存】：墨水瞬间回满至 100%，重置墨阵与泼墨冷却，并在敌足下额外布下索敌墨印。',
+  inkdragon: { name: '符阵', desc: `把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = ${FU_BASE} + 每张符 ${FU_PER}（最多 ${FU_BASE + FU_PER * FU_MAX}）。`,
     begin(f) {
       f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
+      f.spN = f.fu || 0; f.fu = 0;   // 符全部烧掉，记下这次烧了几张
     },
     update(f, foe) {
-      if (f.t >= 0.15 && !f.hitDone) {
-        f.hitDone = true; f.spPose = 'my_paint';
-        spawnProj(f, { kind: 'dragon', x: f.x + f.face * 70, y: -60, vx: f.face * 760, w: 140, h: 96, life: 2, dmg: 180, kb: [520, -760], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, unbreakable: true, noScale: true });
-        f.ink = INK_MAX; f.skillCD = 0; f.skill2CD = 0;
-        if (foe) spawnProj(f, { kind: 'trap', x: clamp(foe.x, WALL + 40, STAGE_W - WALL - 40), y: 0, vx: 0, w: 90, h: 24, life: 4.5, dmg: 25, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, unblockable: true, trap: true, unbreakable: true, noScale: true });
-        addP({ type: 'text', text: '🐉 笔意长存 · 墨韵回满', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '210,210,230' });
-        SFX.chargeFull();
+      if (f.t >= 0.25) f.spPose = 'my_paint';
+      const foes = foesOf(f).filter(e => e && e.hp > 0);   // 全图命中：2v2 里两个对手都会炸
+      const wait = foes.some(e => e.invul > 0) && f.t < 2.4;   // 对手正无敌（比如也在放大招）就等它结束再炸，最多多等一秒多
+      if (f.t >= 0.95 && !f.hitDone && !wait) {
+        f.hitDone = true; f.fuT = f.t;
+        const n = f.spN || 0;
+        if (foes.length) { shake = Math.max(shake, 14 + n * 3); flashA = Math.max(flashA, 0.35); flashRGB = '230,70,50'; SFX.ko(); }
+        for (const e of foes) {
+          const x = e.x, y = e.y - 150;
+          ring(x, y, 90 + n * 18, '230,70,50', 0.5); ring(x, y, 50, '255,230,150', 0.4);
+          for (let k = 0; k < 18 + n * 4; k++) { const a = rand(0, 6.28), v = rand(120, 420); addP({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, max: 0.6, rgb: k % 2 ? '235,200,90' : '230,70,50', w: 2.4, drag: 2 }); }
+          if (e.invul <= 0) applyHit(f, e, { dmg: FU_BASE + FU_PER * n, kb: [0, -520], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true, dir: e.face * -1 }, [e.x, e.y - 80]);
+          addP({ type: 'text', text: n ? `符爆 ×${n}` : '空符一张', x: e.x, y: e.y - 200, life: 1.1, max: 1.1, rgb: '230,70,50' });
+        }
       }
-      if (f.t >= 0.5) endSpecial(f);
+      if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
     } },
   featherstorm: { name: '万羽', desc: '展翼直上九霄，唤来漫天破甲翎羽如暴雨倾泻（14 枚，每枚 14 伤害）。齐射触发【凌霄破虚】：重置俯冲突袭与翎羽射击冷却，御空飞行耐力全额回满。',
     begin(f) {
@@ -1579,7 +1584,7 @@ function netLost() {
 // 状态快照：房主每帧发一次
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain'];
+  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT'];
 // 同步数据用数组而不是对象，体积小一半多
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 // 被打的状态：这些一定听房主的
@@ -1736,7 +1741,7 @@ const ADV = {
   qingfeng: '疾风斩直击穿身得手后，立时重置剑气冷却，可瞬间接出弧月剑气连招。',
   tieshan: '震地直击得手后，瞬时回涌 30 点架势耐力，并削减铁壁冲 2.5 秒冷却。',
   feiying: '影遁之后 1.5 秒内再按 Q——影归，瞬息退回遁走前的位置。',
-  liuyun: '风遁之后 0.8 秒内，下一发风刃一分为二（每道 35 伤害）。',
+  liuyun: '风刃一次扇出两道；开扇冲过去撒下的爆米花半秒后会炸。',
   leiming: '雷闪贴地冲拳命中对手，立时重置雷踏冷却，可直接连入冲天雷柱。',
   lingshuang: '回马枪得手后，枪旋余下的冷却减半。',
   moyu: '墨阵尚在场时再按 Q——引爆，阵中之敌受 4 伤害，被墨浪掀飞。',
@@ -2140,7 +2145,7 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 const ULT_AI = {
   crescent: (m, f, d) => d < 330, shadows: (m, f, d) => d < 330, avalanche: (m, f, d) => d < 700 && f.onGround(),
   phoenix: (m, f, d) => d < 230, timestop: (m, f, d) => d < 700, tornado: (m, f, d) => d < 650, thunder: () => true,
-  inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
+  inkdragon: (m, f) => (m.fu || 0) >= 2 || m.hp < m.maxHp * 0.5 || f.hp < FU_BASE + FU_PER * (m.fu || 0), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
 };
 // 技能之后顺手接的动作
 const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.32], ['light', 0.48], ['light', 0.64], ['heavy', 0.84]] };
@@ -2573,7 +2578,7 @@ class Fighter {
     this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
-      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false,
+      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -3076,7 +3081,8 @@ function endRound() {
     return;
   }
   M.round++;
-  M.carry = null;   // 非 3v3 模式均为三局两胜（BO3），每回合双方满血
+  M.carry = [null, null];   // 活下来的人继承剩余血量 +CARRY_HEAL，倒下的人满血
+  [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
   startRound();
 }
 
@@ -3426,7 +3432,7 @@ function updateProjs() {
     if (p.dead) continue;
     p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
     const wasDelay = p.delay > 0;
-    if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
+    if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
     if (p.g) p.vy += p.g * STEP;
     if (p.boomer && p.age > p.turn) {
       const o = fighterByIdx(p.owner), dx = o.x - p.x;
@@ -3463,7 +3469,7 @@ function updateProjs() {
       continue;
     }
     // 玉箫回音壁：把飞行道具原路弹回去
-    if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion'].includes(p.kind)) {
+    if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion', 'popcorn'].includes(p.kind)) {
       p.owner = foe.idx; p.vx = -p.vx || foe.face * 700; p.vy = -p.vy * 0.4; p.hits = 0; p.hitCD = 0.05; p.life = Math.max(p.life, 0.8);
       p.boomer = false; p.lob = false; p.g = 0; p.sk = true; p.hook = false;
       foe.notes = Math.min(3, (foe.notes || 0) + 1);
@@ -3514,7 +3520,7 @@ function updateProjs() {
     if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
   }
   // 双方远程弹道相撞相抵（Projectile Clashing）：两方飞射物在空中交错时互相抵消消散（排除地面震波、落雷、陷阱与结构物）
-  const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net'];
+  const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net', 'popcorn'];
   for (let i = 0; i < projs.length; i++) {
     const p1 = projs[i];
     if (p1.dead || p1.unbreakable || p1.ult || p1.dmg <= 0 || p1.groundOnly || NO_CLASH.includes(p1.kind)) continue;
@@ -4334,7 +4340,7 @@ function hitVisual(ev, quiet) {
   shake = Math.max(shake, ev.hs * 80 * feel);
   if (ev.dmg >= 8) cam.zoom *= 1 + 0.015 * feel;      // 重击时镜头轻微一顿
   hitFX(ev.x, ev.y, clamp(ev.dmg / 8, 0.5, 1.8), att.look.slash, fdir);
-  if (!quiet && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {
+  if (!quiet && M.mode === 'watch2v2' && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
     ARENA2V2.scars.push({ x: ev.x, r: ev.ult ? 62 : 44, life: 4.0, max: 4.0, rgb: att.look.slash || '255,215,120' });
     if (ARENA2V2.scars.length > 18) ARENA2V2.scars.shift();
   }
@@ -5065,7 +5071,9 @@ function updateCamera(dt) {
   const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
   // 2v2 再压一个上限，近身缠斗时也不回到 1.0+ 的贴脸视角（1v1 不设上限，保持原曲线）
   const maxZoom = M.mode === 'watch2v2' ? 0.70 : Infinity;
-  const want = Math.min(wantBase * zoomMul, fit, maxZoom);
+  let want = Math.min(wantBase * zoomMul, fit, maxZoom);
+  const pf = paperFX();
+  if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
   cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
   cam.zoom = Math.min(cam.zoom, fit, maxZoom);
   cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
@@ -5076,6 +5084,12 @@ function updateCamera(dt) {
   if (lo <= hi) cam.x = clamp(cam.x, lo, hi); else cam.x = mid;
 }
 const worldScale = () => (H / 560) * cam.zoom;
+// 墨羽大招「符阵」：整张图化作宣纸。返回放符的人和 0~1 的浓淡
+function paperFX() {
+  const f = allFighters().find(x => x && x.state === 'special' && x.ch.ult === 'inkdragon');
+  if (!f) return null;
+  return { f, a: clamp(f.t / 0.25, 0, 1) * (f.hitDone ? clamp(((f.fuT || 0.95) + 0.5 - f.t) / 0.25, 0, 1) : 1) };
+}
 
 // ======================= 绘制：背景 =======================
 function drawBackground(sc) {
@@ -6262,10 +6276,23 @@ function drawComboTotals() {
 }
 function drawProjs(glowOnly) {
   for (const p of projs) {
-    if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion')) continue;
+    if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion' || p.kind === 'popcorn')) continue;
     const L = ([A, B, C, D][p.owner] || A).look;   // 2v2 里 C/D 的技能也会生成弹道，owner 可能是 2/3
     ctx.save();
-    if (p.kind === 'wind') {
+    if (p.kind === 'popcorn') {   // 爆米花：落下时一小撮，半秒后噼啪炸开
+      if (p.delay > 0) {
+        const j = p.delay < 0.15 ? Math.sin(p.age * 90) * 2 : 0;   // 快炸的时候抖一抖
+        for (let k = 0; k < 4; k++) {
+          const a = p.seed + k * 1.7, x = p.x + Math.cos(a) * 7 + j, y = p.y + Math.sin(a) * 5;
+          ctx.fillStyle = k % 2 ? '#fff6dc' : '#ffe9a8'; ctx.beginPath(); ctx.arc(x, y, 5.5, 0, 7); ctx.fill();
+          ctx.fillStyle = 'rgba(214,150,60,0.8)'; ctx.beginPath(); ctx.arc(x + 1.5, y + 1.5, 1.8, 0, 7); ctx.fill();
+        }
+      } else {
+        const k = clamp(1 - p.life / 0.12, 0, 1);
+        ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 14 + k * 30, 0, 7); ctx.stroke();
+      }
+    } else if (p.kind === 'wind') {
       ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y);
       const scX = (Math.sign(p.vx) || 1) * ((p.w || 56) / 56), scY = (p.h || 52) / 52;
       ctx.scale(scX, scY);
@@ -6422,7 +6449,7 @@ function drawProjs(glowOnly) {
       ctx.fillStyle = '#d8452f'; ctx.fillRect(-5, -6, 10, 8); // 红布封口/坛签
       ctx.fillStyle = 'rgba(255,220,150,0.5)'; ctx.fillRect(-2, -4, 4, 4);
     } else if (p.kind === 'pavilion') {   // 亭中留客：醉翁亭从天而降，和关人时是同一座亭子
-      const drop = p.delay > 0 ? p.delay / 0.1 : 0;
+      const drop = p.delay > 0 ? p.delay / 0.35 : 0;   // 0.35 秒从天上落到地面
       if (p.delay > 0) { ctx.strokeStyle = 'rgba(255,190,90,0.5)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.ellipse(p.x, 0, 100, 9, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
       drawWengTing(p.x, -drop * drop * 640, 1, 1);
     }
@@ -6508,6 +6535,28 @@ function drawWengTing(x, by, a, front) {
   ctx.restore();
 }
 // 醉翁大招：一幅满屏山水从天上压下来（屏幕坐标，纯视觉，按施法者的 f.t 画）
+function drawXuanzhi(a) {   // 宣纸：米黄底子，带点纤维和帘纹
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.fillStyle = 'rgb(238,229,206)'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(170,150,110,0.12)'; ctx.lineWidth = 1;
+  for (let x = 12; x < W; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(150,130,95,0.16)';
+  for (let k = 0; k < 90; k++) {   // 纤维：位置固定，每帧一样
+    const x = (k * 397) % W, y = (k * 211) % H, l = 10 + (k % 7) * 4, r = k * 0.7;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + Math.cos(r) * l, y + Math.sin(r) * l * 0.4, x + Math.cos(r + 0.4) * l * 1.6, y + Math.sin(r + 0.4) * l * 0.6); ctx.stroke();
+  }
+  const g = groundY(); ctx.fillStyle = 'rgba(30,28,30,0.55)'; ctx.fillRect(0, g, W, 3);   // 地面只剩一道墨线
+  ctx.restore();
+}
+function drawFu(x, y, a, n) {   // 对手头顶那张符：黄纸朱砂
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.rotate(Math.sin(clock * 3) * 0.06);
+  const w = 52, h = 96;
+  ctx.fillStyle = '#efd27a'; ctx.fillRect(-w / 2, -h / 2, w, h);
+  ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2; ctx.strokeRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6);
+  ctx.fillStyle = '#b8321e'; ctx.font = `bold 34px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('符', 0, -12);
+  ctx.font = `bold 18px ${BODY_FONT}`; ctx.fillText('×' + n, 0, 28);
+  ctx.restore();
+}
 function drawShanshui() {
   const f = [A, B].find(x => x && x.state === 'special' && x.ch.ult === 'shanshui');
   if (!f) return;
@@ -6720,6 +6769,15 @@ function drawHUD() {
       for (let n = 1; n < INK_MAX / INK_COST; n++) ctx.fillRect(ix + iw * n * INK_COST / INK_MAX - 0.5, iy, 1, ih);   // 每一格是一团墨
       ctx.font = `${Math.round(ih * 2.2)}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'right' : 'left';
       ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText('墨', i === 0 ? ix - 5 : ix + iw + 5, iy + ih / 2);
+      // 符条：墨水条下面一排小黄符，和墨水分开算
+      const fy = iy + ih * 1.9, fh = Math.max(9, ih * 1.6), gap = 3, fw = (iw - gap * (FU_MAX - 1)) / FU_MAX, fu = f.fu || 0;
+      for (let n = 0; n < FU_MAX; n++) {
+        const fx = i === 0 ? ix + iw - (n + 1) * (fw + gap) + gap : ix + n * (fw + gap);
+        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(fx - 1, fy - 1, fw + 2, fh + 2);
+        ctx.fillStyle = n < fu ? '#efd27a' : 'rgba(239,210,122,0.14)'; ctx.fillRect(fx, fy, fw, fh);
+        if (n < fu) { ctx.fillStyle = '#b8321e'; ctx.fillRect(fx + fw / 2 - 1.5, fy + 2, 3, fh - 4); }
+      }
+      ctx.font = `${Math.round(fh * 1.2)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText('符', i === 0 ? ix - 5 : ix + iw + 5, fy + fh / 2);
     }
     // 名字和回合
     ctx.font = `${Math.round(bh * 2)}px ${TITLE_FONT}`; ctx.textBaseline = 'top';
@@ -7165,6 +7223,8 @@ function render() {
     ctx.fillStyle = gg; ctx.fillRect(0, gy, W, H - gy);
   }
   if (dimA > 0.01) { ctx.fillStyle = `rgba(3,3,10,${0.55 * dimA})`; ctx.fillRect(0, 0, W, H); }
+  const pf = paperFX();
+  if (pf) drawXuanzhi(pf.a);
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
   const order = M.mode === 'watch2v2'
@@ -7172,11 +7232,18 @@ function render() {
     : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
   drawDecoys();
   drawProjs();
-  for (const f of order) drawFighter(f);
+  for (const f of order) {
+    if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
+      const keep = f.look;
+      f.look = { ...keep, body: '#c8321e', shade: '#7a1a12', outline: '#ff8a70', outlineA: 1, scarf: '#ff4a32', blade: '#ffd0c4' };
+      drawFighter(f); f.look = keep;
+      if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.spN || 0);
+    } else drawFighter(f);
+  }
   drawParticles();
   drawComboTotals();
   ctx.restore();
-  if (SETTINGS.bloom > 0) drawBloom(sc, sx, sy);
+  if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
   if (FOREST.on) {
     const px = W / 2 + (A.x - cam.x) * sc, py = groundY() + (A.y - 60) * sc;
     const dk = ctx.createRadialGradient(px, py, 60 * sc, px, py, 520 * sc);
@@ -7393,8 +7460,9 @@ function renderMenu() {
   const dim = clamp(dz / 0.9, 0, 1) * 0.22;
   if (dim > 0.01) { ctx.fillStyle = `rgba(4,4,12,${dim})`; ctx.fillRect(0, 0, W, H); }
 }
+// 有自己顶栏（标题 + 返回）的页面不显示右上角账号栏，免得返回按钮和登录/退出叠在一起
+const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare'];
 // 主界面按钮：悬停时镜头平移到对应场景，点击后推进镜头再打开页面
-const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'acc', 'lb', 'gacha', 'tasks', 'welfare', 'replays'];
 function menuGo(name) {
   initAudio();
   const spot = MENU_SPOT[name];
@@ -7699,11 +7767,11 @@ const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 2
 // 图鉴里的简短说明（数值 / 一句话）
 const SHORT = {
   疾风斩: ['6', '突进穿身'], 影遁: ['3', '瞬移身后 · 下一击 ×1.5'], 震地: ['9', '双向地波 · 掀飞'], 回马枪: ['9', '后跃回刺 · 挑飞'],
-  风刃: ['7', '直线风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
-  剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 风遁: ['—', '快速后撤 · 短暂无敌'],
-  雷踏: ['7', '前方雷柱'], 泼墨: ['4', '抛物墨团'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
+  风刃: ['7×2', '上下两道风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
+  剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 开扇: ['2×5', '向前疾冲 · 撒爆米花半秒后炸'],
+  雷踏: ['7', '前方雷柱'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
   残月: ['29', '突进乱斩 · 终结回气重置'], 千影: ['31', '九影乱斩 · 绝杀分身重置'], 山崩: ['28', '砸地晕眩 · 直击回半气重置'], 刹那: ['12–22', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
-  龙卷: ['≤32', '龙卷浮空 · 刷新跳跃风遁'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 墨龙: ['20', '墨龙横扫 · 墨水回满生陷阱'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
+  龙卷: ['≤32', '龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 符阵: ['随符数', '宣纸全图 · 按符数爆伤'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 · 脆皮(88血)', tieshan: '重斩蓄力霸体 · 气血冠绝(140血)', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
   liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻六连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒',
@@ -7712,7 +7780,7 @@ const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
   feiying: '1.5 秒内再按 Q 瞬回原位',
-  liuyun: '风遁后风刃变两道',
+  liuyun: '风刃两道 · 开扇撒爆米花',
   leiming: '雷闪冲拳命中，立时重置雷踏冷却',
   lingshuang: '回马枪命中，枪旋冷却减半',
   moyu: '再按 Q 引爆墨阵',
@@ -7728,9 +7796,9 @@ const HERO_METER_EXPLAIN = {
   feiying: '【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。',
   tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」直击命中更是气量回满，可以立刻再砸一次！',
   lingshuang: '【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。',
-  liuyun: '【御风牵制 · 风暴蓄势】远距离风刃与风遁斥力安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
+  liuyun: '【御风牵制 · 风暴蓄势】远距离双风刃与开扇爆米花安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
   leiming: '【狂雷六连 · 雷帝灌顶】六连重拳记记沉猛令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！',
-  moyu: '【墨浪渗透 · 阵地聚怒】普攻甩墨与泼墨双重判定充能；大招「墨龙」重置技能与墨韵回满，并在敌方足下布下索敌墨印。',
+  moyu: '【墨符蓄势 · 一纸封喉】普攻甩墨攒气，R 花墨画符攒符；大招「符阵」把符全部烧掉，全图宣纸，符越多伤害越高。',
   yuehua: '【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。',
   yanling: '【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。',
   yuxiao: '【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。',
@@ -7742,10 +7810,10 @@ const HERO_MOVE_TYPES = {
   qingfeng: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '突进', icon: 'melee' }, ranged: { type: 'ranged', label: '远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
   tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '通天巨浪', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
   feiying: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '背袭突进', icon: 'melee' }, ranged: { type: 'ranged', label: '暗器远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝杀' }, esc: { type: 'esc', label: '身法' } },
-  liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'ranged', label: '御风身法', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
+  liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'dash', label: '开扇冲刺', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
   leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'ranged', label: '引雷落击', icon: 'ranged' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
   lingshuang: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '枪尖回刺', icon: 'melee' }, ranged: { type: 'melee', label: '枪旋近战', icon: 'melee' }, ult: { type: 'melee', label: '神技' }, esc: { type: 'esc', label: '身法' } },
-  moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'ranged', label: '泼墨远程', icon: 'ranged' }, ult: { type: 'ranged', label: '绘境' }, esc: { type: 'esc', label: '身法' } },
+  moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'counter', label: '画符蓄势', icon: 'ranged' }, ult: { type: 'ranged', label: '全图' }, esc: { type: 'esc', label: '身法' } },
   yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
   yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } },
   yuxiao: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '音波远程', icon: 'ranged' }, ranged: { type: 'counter', label: '反弹暗器', icon: 'shield_bash' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
@@ -7862,8 +7930,8 @@ const HERO_HIT_DETAILS = {
     light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '24 (3段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
     charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '8 / 15', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
     air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
-    skill: { name: '惊涛·风刃', badge: '🌪️ 狂风推搡 620px', badgeCls: 'badge-buff', dmg: '7', cd: '1.3s', desc: '挥扇生成巨型气刃，几无硬直，全场最强击退。' },
-    ranged: { name: '御风·风遁', badge: '🌪️ 惊风退敌 0.42s', badgeCls: 'badge-buff', dmg: '4', cd: '4s', desc: '后跃引爆斥力气旋，下一次风刃一分为二。' },
+    skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '7×2', cd: '2s', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
+    ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '2×5', cd: '4s', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
     ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '2×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
   },
@@ -7890,8 +7958,8 @@ const HERO_HIT_DETAILS = {
     charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
     air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
     skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 1.4s', badgeCls: 'badge-stun', dmg: '5', cd: '6s', desc: '铺开125px深墨池，踏入者深陷墨中禁锢1.4秒。' },
-    ranged: { name: '飞毫·泼墨', badge: '🎨 墨迹遮目 0.65s', badgeCls: 'badge-buff', dmg: '6', cd: '6s', desc: '抛物线掷出重浓墨团，炸裂挑空并施加2.5s减速。' },
-    ult: { name: '绘境·墨龙', badge: '🐉 笔意长存 100%', badgeCls: 'badge-stun', dmg: '20', cd: '气满', desc: '浓墨化龙穿行全屏扫灭敌人，墨水瞬间回满。' },
+    ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', cd: '2.5s', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
+    ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '随符数', cd: '气满', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
   },
   yuehua: {
@@ -8115,7 +8183,7 @@ const HERO_MOVE_SEQS = {
     ],
     ranged: [
       { p: 'idle', d: 0.1, reset: true },
-      { p: 'ly_hover', d: 0.32, dx: -45, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
+      { p: 'ly_hover', d: 0.32, dx: -45, fx: 'windstep', hit: 1, lab: 'R · 开扇', badge: '🍿 爆米花' },
       { p: 'idle', d: 0.35, reset: true }
     ],
     ult: [
@@ -8252,14 +8320,14 @@ const HERO_MOVE_SEQS = {
     ],
     ranged: [
       { p: 'idle', d: 0.1, reset: true },
-      { p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' },
+      { p: 'my_stroke', d: 0.14, lab: 'R · 画符' },
       { p: 'my_paint', d: 0.38, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
       { p: 'idle', d: 0.35, reset: true }
     ],
     ult: [
       { p: 'idle', d: 0.1, reset: true },
-      { p: 'my_stroke', d: 0.2, lab: 'E · 墨龙' },
-      { p: 'my_paint', d: 0.48, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
+      { p: 'my_stroke', d: 0.2, lab: 'E · 符阵' },
+      { p: 'my_paint', d: 0.48, fx: 'inkdragon', hit: 3, launch: true, badge: '📜 符爆' },
       { p: 'victory', d: 0.55, reset: true }
     ],
     esc: [
@@ -8440,7 +8508,7 @@ const HERO_FULL_DEMO = {
     { p: 'idle', d: 0.25, reset: true },
     { p: 'ly_fanswipe', d: 0.1, lab: 'Q · 风刃' }, { p: 'idle', d: 0.35, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
     { p: 'idle', d: 0.25, reset: true },
-    { p: 'ly_hover', d: 0.3, dx: -40, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
+    { p: 'ly_hover', d: 0.3, dx: -40, fx: 'windstep', hit: 1, lab: 'R · 开扇', badge: '🍿 爆米花' },
     { p: 'idle', d: 0.25, reset: true },
     { p: 'ly_fanswipe', d: 0.2, lab: 'E · 龙卷' }, { p: 'ly_hover', d: 0.42, fx: 'tornado', hit: 3, launch: true, badge: '🌪️ 扶摇万里' },
     { p: 'victory', d: 0.55, reset: true }
@@ -8477,9 +8545,9 @@ const HERO_FULL_DEMO = {
     { p: 'idle', d: 0.25, reset: true },
     { p: 'my_stroke', d: 0.16, lab: 'Q · 墨阵' }, { p: 'my_paint', d: 0.34, fx: 'inktrap', hit: 1, badge: '深墨禁锢' },
     { p: 'idle', d: 0.25, reset: true },
-    { p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' }, { p: 'my_paint', d: 0.36, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
+    { p: 'my_stroke', d: 0.14, lab: 'R · 画符' }, { p: 'my_paint', d: 0.36, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
     { p: 'idle', d: 0.25, reset: true },
-    { p: 'my_stroke', d: 0.18, lab: 'E · 墨龙' }, { p: 'my_paint', d: 0.44, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
+    { p: 'my_stroke', d: 0.18, lab: 'E · 符阵' }, { p: 'my_paint', d: 0.44, fx: 'inkdragon', hit: 3, launch: true, badge: '📜 符爆' },
     { p: 'victory', d: 0.55, reset: true }
   ],
   yuehua: [
@@ -8900,9 +8968,9 @@ const SKINS = {
   lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', robe: 'thunder', shoulder: '#5a30a0', wfx: 'lightning', trail: 'spark' }, skillNames: { skill: '紫霄惊雷', ranged: '九天引雷', ult: '狂雷寂灭' } },
   lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', robe: 'solar', breastplate: '#b86a20', back: 'sundisk', orbs: '#ff8820', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '曜日神拳', ranged: '大日天火', ult: '阳炎劫世' } },
   lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', robe: 'vajra', breastplate: '#6a3210', back: 'chakra', shoulder: '#6a3210', orbs: '#ffaa00', wfx: 'gold', trail: 'gold', aura: 'gold', weapStyle: 'vajra_gauntlet' }, skillNames: { skill: '金刚伏魔', ranged: '罗汉踏天', ult: '大威天龙' } },
-  my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂破墨', ult: '赤龙狂涛' } },
-  my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '流金泼墨', ult: '金莲降世' } },
-  my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'lotus', lotusC: '90,190,255', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, skillNames: { skill: '星宿锁灵', ranged: '银河点墨', ult: '太虚星图' } },
+  my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂画符', ult: '朱砂符阵' } },
+  my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '泥金画符', ult: '金符满纸' } },
+  my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'lotus', lotusC: '90,190,255', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, skillNames: { skill: '星宿锁灵', ranged: '星宿画符', ult: '太虚星图' } },
   yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'sakurabranch', flower: '#ff9ec4', robe: 'sakura', shoulder: '#a04870', trail: 'petal', petal: '255,180,210' }, skillNames: { skill: '落樱拂花', ranged: '飞樱回旋', ult: '樱落月明' } },
   yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#1c1024', robe: 'eclipse', breastplate: '#381622', back: 'eclipse', cape: '#1c1024', orbs: '#c13a4a', wfx: 'shadow', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '暗月噬光', ranged: '黑曜血环', ult: '永夜蚀月' } },
   yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'frosttiara', flower: '#a8e0ff', robe: 'snow', breastplate: '#4878a8', back: 'snowflake', cape: '#2a5078', orbs: '#80d0ff', wfx: 'frost', trail: 'snow', aura: 'snow' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
