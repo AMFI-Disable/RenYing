@@ -2562,7 +2562,7 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const allFighters = () => M.mode === 'watch2v2' ? [A, B, C, D] : [A, B];
-const isAiVsAi = () => !!(M.watchAi || M.mode === 'watch2v2' || M.mode === 'demo' || (A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
+const isAiVsAi = () => !!(M.watchAi || M.mode === 'watch2v2' || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
 const foesOf = f => {
   if (M.mode !== 'watch2v2') return [f === A ? B : A];
@@ -10876,9 +10876,6 @@ if (towerStartBtn) towerStartBtn.addEventListener('click', () => startTower(towe
 const towerResumeBtn = document.getElementById('towerResumeBtn');
 if (towerResumeBtn) towerResumeBtn.addEventListener('click', () => resumeTower());
 
-const towerWatchBtn = document.getElementById('towerWatchBtn');
-if (towerWatchBtn) towerWatchBtn.addEventListener('click', () => startTower(towerHero, true));
-
 const bushidoStartBtn = document.getElementById('bushidoStartBtn');
 if (bushidoStartBtn) bushidoStartBtn.addEventListener('click', () => startBushido(bushidoP1, bushidoP2, bushidoLevel));
 
@@ -10972,8 +10969,9 @@ if (mayhemWatchBtn) mayhemWatchBtn.addEventListener('click', () => startMayhem(m
 
 const cpuWatchBtn = document.getElementById('cpuWatchBtn');
 if (cpuWatchBtn) cpuWatchBtn.addEventListener('click', () => {
-  const p = randomPair();
-  startMatch('cpu', pickLevel || 'god', p, true);
+  initAudio();
+  paused = false;
+  bpStart('cpuWatch');
 });
 
 const tag3WatchBtn = document.getElementById('tag3WatchBtn');
@@ -10981,16 +10979,6 @@ if (tag3WatchBtn) tag3WatchBtn.addEventListener('click', () => {
   const pTeam = [tag3Team[0], tag3Team[1], tag3Team[2]];
   const eTeam = pickEnemyTag3Team(pTeam);
   startTag3Match(pTeam, eTeam, tag3Level || 'god', true);
-});
-
-const stageWatchBtn = document.getElementById('stageWatchBtn');
-if (stageWatchBtn) stageWatchBtn.addEventListener('click', () => {
-  startStage(stageCh, 0, true);
-});
-
-const trainWatchBtn = document.getElementById('trainWatchBtn');
-if (trainWatchBtn) trainWatchBtn.addEventListener('click', () => {
-  startTraining(trainTargetMode, true);
 });
 
 // ======================= 2v2 天道演武观战 (Watch AI vs AI 2v2) =======================
@@ -11269,7 +11257,7 @@ function toMenu() {
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
   M.mode = 'demo';
-  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'bushido' || prevMode === 'chaos') {
+  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'bushido' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
     singleSec(prevMode);
     showScreen('single');
   } else {
@@ -11726,18 +11714,19 @@ function makeCardArt(i, CW, CH, skin) {
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const bpAuth = () => bpMode === 'cpu' || NET.role === 'host';
+const bpAuth = () => bpMode === 'cpu' || bpMode === 'cpuWatch' || NET.role === 'host';
 const bpSideName = side => {
+  if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
   if (side === bpMySide()) return '你';
   if (bpMode === 'cpu') return '电脑';
   const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
   return n ? String(n) : '对手';
 };
 function bpStart(mode) {
-  if (mode === 'cpu') netDropWaiting();
+  if (mode === 'cpu' || mode === 'cpuWatch') netDropWaiting();
   watch2v2Bp = null;   // 进入任何 1v1 / 联机禁选都先取消可能残留的 2v2 观战禁选
   ensurePortraits(); chatClear();
-  bpMode = mode; BP = { step: 0, bans: [-1, -1], picks: [-1, -1], t: BP_TIME, avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null] }; bpSel = -1; bpCpuT = 1;
+  bpMode = mode; BP = { step: 0, bans: [-1, -1], picks: [-1, -1], t: BP_TIME, avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null] }; bpSel = -1; bpCpuT = 0.85;
   showScreen('bp'); renderBP();
   if (mode === 'net') send({ bps: BP });
 }
@@ -11763,7 +11752,7 @@ function bpApply(i) {
   }
   const [side, type] = BP_STEPS[BP.step];
   (type === 'ban' ? BP.bans : BP.picks)[side] = i;
-  BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = 1;
+  BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = 0.85;
   if (type === 'ban') SFX.thud(); else { SFX.block(); }
   if (bpMode === 'net') send({ bps: BP });
   renderBP();
@@ -11776,6 +11765,7 @@ function bpFinish() {
   showScreen(null);
   MSTAT.maxcombo = 0; MSTAT.ults = 0;
   if (bpMode === 'cpu') startMatch('cpu', pickLevel, picks);
+  else if (bpMode === 'cpuWatch') startMatch('cpu', pickLevel || 'god', picks, true);
   else if (NET.role === 'host') { const seed = (Math.random() * 2147483647) | 0; send({ rstart: { ch: picks, seed } }); rollStart(picks, seed); }
   applySkins();
 }
@@ -11811,7 +11801,7 @@ function bpTick(dt) {
   document.getElementById('bpTime').classList.toggle('urgent', BP.t <= 8);
   if (!bpAuth()) return;
   const side = BP_STEPS[BP.step][0];
-  if (bpMode === 'cpu' && side === 1) {
+  if ((bpMode === 'cpu' && side === 1) || bpMode === 'cpuWatch') {
     bpCpuT -= dt;
     if (bpCpuT <= 0 || BP.t <= 0) {
       const choice = bpCpuChoice();
@@ -11972,8 +11962,8 @@ function renderBP() {
   $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
   const my = bpMySide(), done = BP.step >= 4;
   const [side, type] = done ? [-1, ''] : BP_STEPS[BP.step];
-  const myTurn = !done && side === my;
-  document.getElementById('bpStep').innerHTML = (bpMode === 'net' && NET.isRanked ? '排位赛 · ' : '') + (done ? '准备开战' : `${bpSideName(side)}${type === 'ban' ? '禁用' : '选择'}一个角色`)
+  const myTurn = !done && (bpMode === 'cpuWatch' ? false : side === my);
+  document.getElementById('bpStep').innerHTML = (bpMode === 'net' && NET.isRanked ? '排位赛 · ' : '') + (done ? (bpMode === 'cpuWatch' ? '选人完成 · 准备开战' : '准备开战') : `${bpSideName(side)}${type === 'ban' ? '禁用' : '选择'}一个角色`)
     + (done ? '' : `<span class="bpcount">第 ${BP.step + 1} / ${BP_STEPS.length} 步</span>`);
   document.getElementById('bpStep').style.color = myTurn ? '#e9c46a' : 'var(--ink)';
   document.getElementById('bpTime').textContent = done ? '' : `${Math.ceil(BP.t)} 秒`;
@@ -11999,8 +11989,13 @@ function renderBP() {
   const show = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);
   setDetail(show);
   const goB = document.getElementById('bpGo');
-  goB.disabled = !(myTurn && bpValid(bpSel));
-  goB.textContent = myTurn ? (bpSel >= 0 ? `${type === 'ban' ? '禁用' : '选择'} ${CHARS[bpSel].name}` : (type === 'ban' ? '选一个禁用' : '选一个角色')) : '等待对方';
+  if (bpMode === 'cpuWatch') {
+    goB.disabled = true;
+    goB.textContent = done ? '即将开战 · 演武观战' : 'AI 演武禁选中…';
+  } else {
+    goB.disabled = !(myTurn && bpValid(bpSel));
+    goB.textContent = myTurn ? (bpSel >= 0 ? `${type === 'ban' ? '禁用' : '选择'} ${CHARS[bpSel].name}` : (type === 'ban' ? '选一个禁用' : '选一个角色')) : '等待对方';
+  }
 }
 document.getElementById('bpGrid').addEventListener('click', e => {
   const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= 4) return;
