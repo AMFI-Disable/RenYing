@@ -8,6 +8,34 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **AI vs AI Watch Mode Across 6 Supported Modes (`cpuWatch`, `chaos`, `tag3`, `bushido`, `mayhem`, `watch2v2`)**:
+  - Implemented AI vs AI observation across exactly 6 designated modes, matching the visual presentation, HUD, and draft mechanics of their respective PvC modes:
+    - **1v1 (`cpuWatch`)**: Entering watch mode (`#cpuWatchBtn`) now transitions directly to the authentic Ban & Pick (`#bp`) screen where two TianDao AIs (`苍龙 (AI)` vs `赤凤 (AI)`) carry out a four-step ban and choose draft with ~0.85s spectator pacing and sound effects before launching 1v1 combat.
+    - **TianJiLuanDou (`chaos`)**: "天机 AI 观战" deploys the heroes and difficulty configured on the setup screen into the dynamic mutation arena with in-game mutation countdowns, banners, and mutation properties.
+    - **3v3 (`tag3`)**: "3v3 AI群英观战" stages the selected three-hero vanguard/anchor/general squad against the enemy squad with full 3v3 relay HUD, portraits, and squad elimination rules.
+    - **YiJiBiSha (`bushido`)**: "决死 AI 观战" runs 1-HP lethality single-hit combat between selected heroes.
+    - **TongTianShenJue (`mayhem`)**: "通天 AI 观战" runs 100% full-meter combat with instant skill cooldowns and rapid meter charging.
+    - **2v2 (`watch2v2`)**: Retains the 6-hero draft sequence on `#bp` and transitions to the 2600px 4-bot relic arena.
+  - Removed watch mode buttons from single-player campaign/practice modes where watch is not applicable (Stage / 破关, Train / 木人桩, Tower / 爬塔).
+- **Unfocused Window Execution & Background Tab Simulation (`isAiVsAi`, `updateBgAiTicker`)**:
+  - Added `isAiVsAi()` check to `window.onblur`: switching windows or unfocusing the browser no longer triggers the pause screen during AI vs AI watch matches, while standard PvC and local PvP matches continue to auto-pause to protect the player.
+  - Added a `visibilitychange` listener with background combat stepping ticker (`updateBgAiTicker`) so AI vs AI matches continue simulating combat even when the browser tab is minimized or hidden.
+- **2v2 Altar Relic Contest & Denial Macro AI (`AICtrl.think`)**:
+  - Enhanced TianDao AI macro intelligence in 2v2: wounded bots (<75% HP) actively path toward the central altar to secure TaiYin LingDan relics, opponents approaching the altar within 280px are actively intercepted and blocked, and bots utilize Spirit Wind Geysers when skills have >2.2s cooldown remaining.
+- **2v2 Hero Freeze & Stasis Bug Fixes**:
+  - Resolved freeze and stuck issues in 2v2: added `f.flurryVictim` tracking during multihit ultimate flurries (`crescent`, `shadows`, `eightimm`) so targets are not abandoned mid-combo.
+  - Added a 1.25s hard timeout for the `held` state in `updateFighter` to prevent fighters from remaining permanently paralyzed.
+  - Added automatic victim release on `endSpecial` or interrupt hits.
+  - Added target distance hysteresis (must be ≥ 85px closer to switch targets) to eliminate rapid target jitter.
+  - Guarded friendly-fire targeting checks in projectile handling (`p.owner % 2 !== me.idx % 2`).
+  - Guarded dead fighter knockdown in `step()` (`f.state !== 'knockdown'`).
+- **LiuYun (流云) & MoYu (墨羽) Martial Arts Overhauls & Buffs**:
+  - **LiuYun**: HP buffed 470 → 495, Guard Max 95 → 112, guard chip damage reduced 11% → 7%, attack speed 0.88 → 0.85, reach 0.98 → 1.06, fan length 36px; `windblade` cooldown reduced to 1.4s, velocity increased to 1240, damage 42 (twin 32), knockback 420px; `windstep` reworked to 3.5s cooldown with 0.25s wind armor + 0.20s invulnerability, a 165px radial whirlwind push (`🌪️ 惊风退敌`) dealing 38 damage, and empowering the next windblade to split into twin blades.
+  - **MoYu**: HP buffed 430 → 485 (+55 HP), attack speed 1.02 → 0.90, normal attack chain damages 15/15/17/17/22, brush length 66px, ink resource parameters: `INK_MAX = 100`, `INK_COST = 15`, `INK_REGEN = 25`, `INK_DMG = 24`; added new passive **墨韵护体** absorbing 20% incoming damage when ink is ≥ 25 for 12 ink; `inktrap` width widened to 115px with 2.8s slow; `inksplash` reworked to 4.8s cooldown dealing 46 damage with 0.50s stun and 2.5s blinding slow (`墨迹遮目`).
+- **2v2 LingDan Altar Relic Rebalance**:
+  - Adjusted TaiYin LingDan (太阴灵丹) altar relic restoration from +135 HP down to +45 HP and +25 Guard Posture to prevent excessive match stall, with updated banner and indicator texts (`🌕 太阴灵丹 +45`).
+- **Anti-Distortion Button Layout Fix (`src/style.css`)**:
+  - Implemented anti-distortion box-model rules for navigation and back buttons (`button[data-back], #bpQuit, #accBack, #lbBack, #quitBtn, #menuBtn, #tutMenu, #feMenu`), enforcing `display: inline-flex !important`, `height: 38px !important`, `padding: 0 22px !important`, and `transform: none !important` to prevent squeezed button layouts across devices.
 - **2v2 天道演武 AI 禁选 (`startWatch2v2Draft`, `bpTickWatch2v2`, `watch2v2AiChoice`, `renderBPWatch2v2`)**:
   - 2v2 观战 now opens the same `#bp` draft screen as 1v1 and runs a six-step AI draft — 苍龙禁 → 苍龙先锋 → 苍龙次锋 → 赤凤禁 → 赤凤先锋 → 赤凤次锋 — revealing one choice every 0.75s.
   - Every ban and pick is chosen by the TianDao AI: heroes are never duplicated, banned heroes cannot be picked, and the screen shows both teams' slots filling in, the current step (`第 n / 6 步`), the previous pick, the active team and a gold highlight on the hero just chosen, then starts the match.
