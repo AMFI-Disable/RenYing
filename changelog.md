@@ -8,6 +8,14 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **2v2 天道演武 AI 禁选 (`startWatch2v2Draft`, `bpTickWatch2v2`, `watch2v2AiChoice`, `renderBPWatch2v2`)**:
+  - 2v2 观战 now opens the same `#bp` draft screen as 1v1 and runs a six-step AI draft — 苍龙禁 → 苍龙先锋 → 苍龙次锋 → 赤凤禁 → 赤凤先锋 → 赤凤次锋 — revealing one choice every 0.75s.
+  - Every ban and pick is chosen by the TianDao AI: heroes are never duplicated, banned heroes cannot be picked, and the screen shows both teams' slots filling in, the current step (`第 n / 6 步`), the previous pick, the active team and a gold highlight on the hero just chosen, then starts the match.
+  - The manual slot editor, roster picker and randomize button were removed from the 2v2 pane.
+- **HUD overlap audit (`tools/hud-overlap-audit.mjs`)**:
+  - Canvas HUD audit that wraps `fillText`/`fillRect`, maps each painted box through `ctx.getTransform()`, keeps only the HUD's own draw scale, and fails on overlapping labels, labels painted over by a HUD bar, or anything off-canvas.
+  - Driven headless for any mode; used to prove the 2v2 HUD at 1440x900, 1280x800 and 844x390.
+
 - **ZuiXian Classical Visual Overlays (`drawWengTing`, `drawShanshui`)**:
   - Restored full-screen ink-wash landscape scroll (`drawShanshui`) descending dynamically during ZuiXian's ultimate ability (`山水之间`), featuring layered misty mountain peaks with gradient bleeds, couplet calligraphy ("醉翁之意不在酒，在乎山水之间也"), red vermilion seal stamp ("山水"), lone boat, flying birds, and wooden roller rods.
   - Restored classical Chinese architecture overlay (`drawWengTing`) for `pavilion` (亭中留客, Q skill), displaying the ancient pavilion structure around jailed fighters for the full 2.0s duration with semi-transparent front pillars, dashed landing footprint indicator, and inscribed plaque.
@@ -125,6 +133,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **2v2 camera zoom**: `padW` 420 → 680, `minZoom` 0.46 → 0.40, 2v2-only curve `clamp(1.08 - d/2600, 0.4, 1.0)` with a 0.70 cap. Measured `cam.zoom` at 1440x900 drops 0.711 → 0.589 and the four-fighter arena is fully framed; the 1v1 curve is mathematically unchanged.
+- **2v2 HUD (`drawHUD2v2`)**: two rows per team (先锋 then 次锋); every row shows name, `cur/max` HP, `势` value, HP bar with lag ghost, guard bar (gold → orange → red) and an ult/meter bar. The timer keeps the centre gutter, the `2v2 天道演武 · 禁选` line moved to bottom-centre, and per-fighter skill-CD rows are suppressed in 2v2. Previously the 次锋 sub-bars were painted over the move-label row (up to 100% hidden) and 次锋 had no guard or meter bar at all.
+- **Choosing-screen polish (CSS)**: the draft footer is now space-between (返回菜单 left, 确认 right, both 36px tall so they share a baseline); visible borders plus hover / disabled / `:focus-visible` states on `.go`, `.ghost`, `.seg`, deck tabs and hero cards; ban slots are red-lined and pick slots gold-lined; 44px touch targets under `pointer: coarse`.
 - **Tie Shan FenXueKuangTu / Iron Wall Infinite Height Wave Upgrade**:
   - Upgraded Tieshan's R skill (`ironwall` / 焚血狂突) to a towering skyward wave with infinite vertical coverage (`box: [-10, -2200, 135, 0]`), preventing airborne or flying escapes (e.g. Yan Ling flight or Liu Yun high jumps).
   - Added tiered soaring wave particle emissions, screen tremors, and heavy aerial spike downforce (`spike: true`, `kb: [260, 520]`) slamming airborne targets into the ground with bespoke callouts (`🌊 焚血狂突 · 惊涛拍岸`).
@@ -240,6 +251,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **2v2 render crash (`drawProjs`)**: `[A, B][p.owner]` threw whenever a 次锋 projectile existed (owner index 2/3), aborting the whole render frame and blanking the arena for that frame. Now `[A, B, C, D][p.owner] || A`; a 9-second 2v2 capture with owner-2/3 projectiles on screen reports 0 uncaught exceptions.
+- **Attack dead zone (0.16–0.3s)**: holding attack longer than the input buffer `BUF` (0.16s) but shorter than `CHARGE_START` (0.3s) produced no attack at all, because nothing consumed the buffered light press while the button was held. `neutral()` now keeps the light buffer alive while held, so a tap lands a light attack and a ≥0.3s hold still charges — this affected both touch and mouse input.
+- **Touch menu overflow at 844x390**: menu groups and buttons sat up to 30px outside the viewport (7 items flagged by `tools/touch-audit.mjs`); the compact dock now fits (798 → 628px wide, 0 offscreen).
 - **Character Codex Window Layout Overflow**:
   - Enforced `max-height: min(840px, 90vh)` with `overflow-y: auto` and `overflow-x: hidden` on the `.cxw` codex modal container, preventing vertical clipping and viewport overflow on compact screens.
 - **Tower Mode Combat State Freeze**:

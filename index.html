@@ -13070,7 +13070,9 @@ const step = done ? null : WATCH2V2_STEPS_ORDER[st.step];
 const teamCol = sd => (sd === 0 ? 'var(--p1)' : 'var(--p2)');
 const active = sd => !done && step.team === sd;
 $id('bpChat').classList.add('hidden');
-$id('bpStep').innerHTML = (done ? '禁选完成 · 演武即将开始' : `${WATCH2V2_TEAMS[step.team]} · ${step.label}`)
+const stepTeam = done ? '' : WATCH2V2_TEAMS[step.team];
+$id('bpStep').innerHTML = (done ? '禁选完成 · 演武即将开始'
+: (step.label.startsWith(stepTeam) ? step.label : `${stepTeam} · ${step.label}`))
 + `<span class="bpcount">${done ? `6 / ${total} 步` : `第 ${st.step + 1} / ${total} 步`}</span>`;
 $id('bpStep').style.color = done ? 'var(--gold)' : teamCol(step.team);
 $id('bpTime').textContent = done ? '' : (st.last >= 0 ? `上一手 · ${CHARS[st.last].name}` : '天道 AI 演算中');

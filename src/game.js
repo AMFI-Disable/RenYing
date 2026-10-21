@@ -2779,7 +2779,7 @@ function showEnd(w) {
     document.getElementById('endSub').textContent = `2v2 天道演武决出胜负，比分 ${M.wins[0]} : ${M.wins[1]} ${banStr}`;
     $id('endRank').textContent = '四位天道神境 AI 倾力交锋';
     const again = document.getElementById('againBtn');
-    again.disabled = false; again.textContent = '随机重开 2v2 观战';
+    again.disabled = false; again.textContent = '重新演武 · 观战 2v2';
     setTimeout(() => showScreen('end'), 300);
     return;
   }
@@ -3025,6 +3025,10 @@ function neutral(f, foe) {
       f.blockT = 0;
     }
     if (c.held.atk) {
+      // 按住时保持轻击缓冲不过期：短按（短于 CHARGE_START）松手仍然出轻击。
+      // 否则按住 0.16（BUF）到 0.3（CHARGE_START）秒之间松手，轻击已过期、蓄力又没到，
+      // 就会出现“按了攻击却没反应”的空档（触屏与鼠标点击都受影响）。
+      c.buf.light = clock;
       if (clock - c.atkT >= CHARGE_START) {
         delete c.buf.light;
         f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); return;
@@ -4838,7 +4842,8 @@ function updateCamera(dt) {
   const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
   const minY = Math.min(...pool.map(f => f.y));
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
-  const padW = M.mode === 'watch2v2' ? 420 : 340;
+  // 2v2 观战：四名 AI 同台，镜头再退一档，把 2600 宽的奇阵擂台框得舒服些
+  const padW = M.mode === 'watch2v2' ? 680 : 340;
   const fitW = W / ((d + padW) * base);
   const top = -minY + 170;
   const fitH = (H * 0.74) / (Math.max(250, top) * base);
@@ -4850,10 +4855,14 @@ function updateCamera(dt) {
   }
   const ce = cineEnv();
   if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
-  const minZoom = M.mode === 'watch2v2' ? 0.46 : 0.6;
-  const want = Math.min(clamp(1.42 - d / (M.mode === 'watch2v2' ? 1450 : 1000), minZoom, 1.35) * zoomMul, fit);
+  const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
+  // 1v1 用原本的曲线；2v2 基准更小（近身也会留出擂台与灯火），并压低上限
+  const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
+  // 2v2 再压一个上限，近身缠斗时也不回到 1.0+ 的贴脸视角（1v1 不设上限，保持原曲线）
+  const maxZoom = M.mode === 'watch2v2' ? 0.70 : Infinity;
+  const want = Math.min(wantBase * zoomMul, fit, maxZoom);
   cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
-  cam.zoom = Math.min(cam.zoom, fit);
+  cam.zoom = Math.min(cam.zoom, fit, maxZoom);
   cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
   cam.x = damp(cam.x, focus, 8, dt);
   const vw = W / worldScale();
@@ -6049,7 +6058,7 @@ function drawComboTotals() {
 function drawProjs(glowOnly) {
   for (const p of projs) {
     if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion')) continue;
-    const L = [A, B][p.owner].look;
+    const L = ([A, B, C, D][p.owner] || A).look;   // 2v2 里 C/D 的技能也会生成弹道，owner 可能是 2/3
     ctx.save();
     if (p.kind === 'wind') {
       ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y);
@@ -6337,8 +6346,108 @@ function drawShanshui() {
   ctx.fillStyle = '#c9a24a'; ctx.fillRect(-6, bot - 9, 18, 22); ctx.fillRect(W - 12, bot - 9, 18, 22);
   ctx.restore();
 }
+// ============ 2v2 天道演武专用 HUD ============
+// 四名角色分左右两队两行排布：每行 = 名字 + 血量数值 + 势值，下面依次是血条、架势条、真气条。
+// 中线只留给计时器；"👁️ 2v2 天道演武 · 禁选" 挪到屏幕底部，避免与任何顶部信息打架。
+function drawHUD2v2() {
+  const bh = Math.max(12, H * 0.02);
+  const top = Math.max(22, H * 0.04) + (H < 520 ? 8 : 0);
+  const cx = W / 2;
+  const margin = Math.max(10, Math.round(W * 0.012));
+  const gutter = Math.max(84, Math.round(W * 0.1));
+  const blk = Math.max(160, Math.floor((W - margin * 2 - gutter) / 2));
+  const fsTop = Math.max(13, Math.round(bh * 1.3));
+  const fsSub = Math.max(12, Math.round(bh * 0.95));
+  const fsNum = Math.max(12, Math.round(bh * 0.82));
+  const hpTopH = Math.max(9, Math.round(bh * 0.95));
+  const hpSubH = Math.max(8, Math.round(bh * 0.7));
+  const gmH = Math.max(4, Math.round(bh * 0.32));
+  const txtGap = 8, rowGap = Math.max(7, Math.round(bh * 0.55));
+  // 行 1（先锋 A/B）与行 2（次锋 C/D）的纵向节奏
+  const r1 = { y: top, fs: fsTop, hpY: top + fsTop + 4, hpH: hpTopH };
+  r1.gmY = r1.hpY + r1.hpH + 2;
+  const r2 = { y: r1.gmY + gmH + rowGap, fs: fsSub, hpH: hpSubH };
+  r2.hpY = r2.y + fsSub + 4; r2.gmY = r2.hpY + r2.hpH + 2;
+
+  // —— 中央计时（正好落在左右两队之间的空档里）
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `700 ${Math.round(bh * 2.3)}px ${BODY_FONT}`;
+  ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
+  if (M.ot) ctx.fillStyle = '#ff6a5a';
+  ctx.fillText(Math.ceil(M.timer), cx, top + bh / 2 + 2);
+  if (M.ot) { ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); }
+  ctx.restore();
+
+  // 通用条：黑底 + 残影 + 填充；rev 表示从右端开始填充（右队）
+  const bar = (x, y, w, h, ratio, style, rev, lag) => {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+    if (lag > 0) { ctx.fillStyle = 'rgba(255,240,220,0.7)'; ctx.fillRect(rev ? x + w - w * lag : x, y, w * lag, h); }
+    if (ratio > 0) { ctx.fillStyle = style; ctx.fillRect(rev ? x + w - w * ratio : x, y, w * ratio, h); }
+  };
+
+  const team = (main, sub, si) => {
+    const rev = si === 1;
+    const x = rev ? W - margin - blk : margin;
+    const edge = rev ? x + blk : x;
+    const line = (f, y, fsN) => {
+      if (!f) return;
+      const dead = f.hp <= 0;
+      const maxG = f.maxGuard || 100;
+      const curG = Math.round(clamp(f.guard !== undefined ? f.guard : maxG, 0, maxG));
+      const gLow = curG < maxG * 0.3;
+      const hpTxt = `${Math.max(0, Math.round(f.hp))}/${f.maxHp}`;
+      const gTxt = `势 ${curG}`;
+      ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(f.look.name).width;
+      ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
+      const total = nameW + hpW + gW + txtGap * 2;
+      const nameFont = `bold ${fsN}px ${TITLE_FONT}`, numFont = `${fsNum}px ${BODY_FONT}`;
+      const items = rev
+        ? [[gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [f.look.name, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW]]
+        : [[f.look.name, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW]];
+      let px = rev ? edge - total : x;
+      const yMid = y + Math.max(fsN, fsNum) / 2;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      for (const [str, font, col, w] of items) { ctx.font = font; ctx.fillStyle = col; ctx.fillText(str, px, yMid); px += w + txtGap; }
+    };
+    const rows = [[main, r1], [sub, r2]];
+    for (const [f, R] of rows) {
+      if (!f) continue;
+      line(f, R.y, R.fs);
+      const dead = f.hp <= 0;
+      const grad = ctx.createLinearGradient(x, 0, x + blk, 0);
+      if (!rev) { grad.addColorStop(0, '#2a8fb0'); grad.addColorStop(1, '#8ff0ff'); }
+      else { grad.addColorStop(0, '#ff8a70'); grad.addColorStop(1, '#c42a45'); }
+      bar(x, R.hpY, blk, R.hpH, clamp(f.hp / f.maxHp, 0, 1), dead ? 'rgba(120,120,130,0.45)' : grad, rev, clamp(f.lagHp / f.maxHp, 0, 1));
+      // 架势（外侧）与真气（内侧）并排在同一条窄带上，不占用额外高度
+      const gW2 = Math.round(blk * 0.46), mW2 = Math.round(blk * 0.46);
+      const gMax = f.maxGuard || 100, gRatio = clamp(clamp(f.guard !== undefined ? f.guard : gMax, 0, gMax) / gMax, 0, 1);
+      let gCol = '#e9c46a';
+      if (gRatio < 0.3) gCol = Math.sin(clock * 14) > 0 ? '#ff3b52' : '#ff7a8a';
+      else if (gRatio < 0.6) gCol = '#f39c12';
+      bar(rev ? x + blk - gW2 : x, R.gmY, gW2, gmH, gRatio, gCol, rev, 0);
+      const mRatio = clamp(f.meter / 100, 0, 1), full = f.meter >= 100;
+      if (full) { ctx.save(); ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 8 + 4 * (0.5 + 0.5 * Math.sin(clock * 14)); }
+      bar(rev ? x : x + blk - mW2, R.gmY, mW2, gmH, mRatio, full ? '#ffe9a8' : `rgba(${f.look.slash},0.85)`, !rev, 0);
+      if (full) ctx.restore();
+    }
+  };
+  team(A, C, 0);
+  team(B, D, 1);
+
+  // —— 观战标签 + 禁选：移到底部中间，顶部只留计时器
+  ctx.save();
+  ctx.font = `bold ${Math.max(12, Math.round(H * 0.018))}px ${TITLE_FONT}`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillStyle = '#46d3ea';
+  ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
+  const banTxt = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
+  ctx.fillText(`👁️ 2v2 天道演武${banTxt}`, cx, H - 10);
+  ctx.restore();
+}
 function drawHUD() {
   if (M.mode === 'demo') return;
+  if (M.mode === 'watch2v2') { drawHUD2v2(); return; }
   const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
   [A, B].forEach((f, i) => {
     if (f.hidden) return;
@@ -6619,32 +6728,6 @@ function drawHUD() {
     ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;
     ctx.fillStyle = '#ff9f43';
     ctx.fillText('💥 通天神决 · 神魔乱战', cx, top + bh + 18);
-    ctx.restore();
-  } else if (M.mode === 'watch2v2') {
-    ctx.save();
-    ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
-    ctx.fillStyle = '#46d3ea';
-    const banTxt = (M.bans && M.bans.length === 2) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
-    ctx.fillText(`👁️ 2v2 天道演武${banTxt}`, cx, top + bh + 18);
-    // 绘制双方次锋（C 与 D）副血条与状态
-    const subW = Math.round(barW * 0.72), subH = Math.max(10, Math.round(bh * 0.68)), subY = top + bh + 54;
-    [[C, 0], [D, 1]].forEach(([sf, si]) => {
-      if (!sf || sf.hidden) return;
-      const sx0 = si === 0 ? cx - gap - subW : cx + gap;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(sx0 - 2, subY - 2, subW + 4, subH + 4);
-      const sRatio = clamp(sf.hp / sf.maxHp, 0, 1);
-      const sg = ctx.createLinearGradient(sx0, 0, sx0 + subW, 0);
-      if (si === 0) { sg.addColorStop(0, '#1e6b8a'); sg.addColorStop(1, '#5ce1e6'); }
-      else { sg.addColorStop(0, '#ff6b6b'); sg.addColorStop(1, '#a82038'); }
-      ctx.fillStyle = sf.hp <= 0 ? 'rgba(120,120,130,0.4)' : sg;
-      ctx.fillRect(si === 0 ? sx0 : sx0 + subW - subW * sRatio, subY, subW * sRatio, subH);
-      ctx.font = `bold ${Math.max(12, Math.round(subH * 1.15))}px ${TITLE_FONT}`;
-      ctx.fillStyle = sf.hp <= 0 ? 'rgba(200,120,120,0.7)' : `rgb(${sf.look.slash})`;
-      ctx.textAlign = si === 0 ? 'left' : 'right';
-      ctx.textBaseline = 'top';
-      ctx.fillText(`${sf.look.name} (${Math.max(0, Math.round(sf.hp))}/${sf.maxHp})`, si === 0 ? sx0 : sx0 + subW, subY + subH + 4);
-    });
     ctx.restore();
   }
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
@@ -9942,9 +10025,7 @@ function startTraining(targetMode = trainTargetMode) {
     return;
   }
   if (targetMode === 'watch2v2') {
-    randomizeWatch2v2();
-    startWatch2v2();
-    showScreen(null);
+    startWatch2v2Draft();
     return;
   }
   startDummyTraining();
@@ -10746,63 +10827,169 @@ if (mayhemStartBtn) mayhemStartBtn.addEventListener('click', () => startMayhem(m
 // ======================= 2v2 天道演武观战 (Watch AI vs AI 2v2) =======================
 // watch2v2Draft: [ban1, team1_p1, team1_p2, ban2, team2_p1, team2_p2] -> 6 个完全不重复的英雄索引
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
-let activeWatchSlot = 1;
 
-function randomizeWatch2v2() {
-  const pool = CHARS.map((_, i) => i);
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = (Math.random() * (i + 1)) | 0;
-    const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
-  }
-  watch2v2Draft = pool.slice(0, 6);
-  renderWatch2v2();
-}
+// 2v2 的禁选顺序：直接复用 1v1 的 #bp 选人界面，但每一手都由天道 AI 自动完成，玩家只旁观。
+// 步骤顺序严格对应 watch2v2Draft 的形状：[苍龙禁, 苍龙先锋, 苍龙次锋, 赤凤禁, 赤凤先锋, 赤凤次锋]
+const WATCH2V2_TEAMS = ['苍龙', '赤凤'];
+const WATCH2V2_STEPS_ORDER = [
+  { team: 0, type: 'ban', label: '苍龙禁' },
+  { team: 0, type: 'pick', label: '苍龙先锋' },
+  { team: 0, type: 'pick', label: '苍龙次锋' },
+  { team: 1, type: 'ban', label: '赤凤禁' },
+  { team: 1, type: 'pick', label: '赤凤先锋' },
+  { team: 1, type: 'pick', label: '赤凤次锋' },
+];
+const WATCH2V2_STEP_DELAY = 0.75;     // 每一步停留 0.75 秒，足够看清 AI 的出手顺序
+const WATCH2V2_FINISH_DELAY = 1.15;   // 禁选完成后留一点时间给玩家看清最终阵容
+let watch2v2Bp = null;                // 2v2 专属禁选状态；1v1 仍然使用 BP / bpMode，互不干扰
 
 function renderWatch2v2() {
   ensurePortraits();
-  const slotMeta = [
-    { label: '苍龙禁用', isBan: true, team: 0 },
-    { label: '苍龙先锋 · 天道', isBan: false, team: 0 },
-    { label: '苍龙次锋 · 天道', isBan: false, team: 0 },
-    { label: '赤凤禁用', isBan: true, team: 1 },
-    { label: '赤凤先锋 · 天道', isBan: false, team: 1 },
-    { label: '赤凤次锋 · 天道', isBan: false, team: 1 },
-  ];
-  const slotsEl = document.getElementById('watch2v2Slots');
-  if (slotsEl) {
-    slotsEl.innerHTML = slotMeta.map((sm, idx) => {
-      const cIdx = watch2v2Draft[idx] !== undefined ? watch2v2Draft[idx] : idx;
-      const ch = CHARS[cIdx];
-      const col = sm.isBan ? '#ff6b6b' : (ch ? `rgb(${ch.look.slash})` : 'var(--ink)');
-      const borderStyle = sm.isBan ? 'border-color:rgba(255,90,90,0.55);background:rgba(60,12,18,0.45);' : '';
-      return `<div class="tag3-slot${activeWatchSlot === idx ? ' sel' : ''}" data-slot="${idx}" style="${borderStyle}">
-        <span class="slot-tag" style="color:${sm.isBan ? '#ff7a8a' : (sm.team === 0 ? '#46d3ea' : '#ffb142')}">${sm.label}</span>
-        <div class="slot-avatar" style="${sm.isBan ? 'filter:grayscale(0.75);opacity:0.75;' : ''}">
-          <img src="${PORTRAITS[cIdx] || ''}" alt="">
-        </div>
-        <span class="slot-name" style="color:${col}">${sm.isBan ? '禁 · ' : ''}${ch ? ch.name : '未选'}</span>
-        <span class="slot-role">${ch ? ch.role : ''}</span>
-      </div>`;
-    }).join('');
-  }
-  const rosterEl = document.getElementById('watch2v2Roster');
-  if (rosterEl) {
-    const badgeNames = ['苍龙禁', '苍龙一', '苍龙二', '赤凤禁', '赤凤一', '赤凤二'];
-    rosterEl.innerHTML = CHARS.map((ch, i) => {
-      const sIdx = watch2v2Draft.indexOf(i);
-      const bTxt = sIdx >= 0 ? badgeNames[sIdx] : '';
-      const isBan = sIdx === 0 || sIdx === 3;
-      const col = `rgb(${ch.look.slash})`;
-      return `<button class="tag3-hero-chip${sIdx >= 0 ? ' in-team' : ''}" data-idx="${i}" type="button" style="${isBan ? 'border-color:rgba(255,80,80,0.65);opacity:0.65;' : ''}">
-        ${bTxt ? `<span class="team-badge" style="${isBan ? 'background:#c83232;color:#fff' : ''}">${bTxt}</span>` : ''}
-        <img src="${PORTRAITS[i] || ''}" alt="">
-        <div class="nm" style="color:${col}">${ch.name}</div>
-        <div class="rl">${ch.role}</div>
-      </button>`;
-    }).join('');
-  }
+  const el = document.getElementById('watch2v2Slots');
+  if (!el) return;
+  el.innerHTML = WATCH2V2_STEPS_ORDER.map((s, idx) => {
+    const isBan = s.type === 'ban';
+    const teamCol = s.team === 0 ? '#46d3ea' : '#ffb142';
+    const badgeBg = isBan ? '#b8392e' : (s.team === 0 ? 'rgba(70,211,234,.22)' : 'rgba(255,177,66,.2)');
+    return `<div style="position:relative;padding:10px 8px 12px;border-radius:12px;border:1px solid ${isBan ? 'rgba(255,90,90,.5)' : 'rgba(255,255,255,.16)'};background:${isBan ? 'rgba(60,12,18,.35)' : 'rgba(255,255,255,.04)'};text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <span style="font-family:var(--title);font-size:12px;padding:1px 8px;border-radius:4px;background:${badgeBg};color:#fbeee0;letter-spacing:1px">第 ${idx + 1} 步</span>
+      <span style="font-family:var(--title);font-size:20px;line-height:1.1;color:${isBan ? '#ff8a8a' : teamCol}">${s.label}</span>
+      <span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '选择侠客'}</span>
+    </div>`;
+  }).join('');
 }
 
+// 进入 2v2 禁选：切到 #bp 选人界面，由 bpTick 驱动的天道 AI 逐步完成 6 手禁选。
+function startWatch2v2Draft() {
+  initAudio();
+  ensurePortraits();
+  chatClear();
+  BP = null;
+  watch2v2Bp = {
+    step: 0,
+    bans: [-1, -1],
+    picks: [[-1, -1], [-1, -1]],
+    draft: [-1, -1, -1, -1, -1, -1],
+    last: -1,
+    t: WATCH2V2_STEP_DELAY,
+  };
+  bpMode = 'watch2v2';
+  bpSel = -1; bpHover = -1;
+  showScreen('bp');
+  renderBP();
+}
+
+// 天道 AI 的选人逻辑：禁选永远从“未被禁、未被选”的侠客里挑，保证 6 个席位互不重复；
+// 选人时优先拿能克制敌方已选阵容的侠客，禁用时优先封掉能克制自家已选阵容的侠客。
+function watch2v2AiChoice(step) {
+  const st = watch2v2Bp;
+  const used = new Set();
+  for (const b of st.bans) if (b >= 0) used.add(b);
+  for (const side of st.picks) for (const i of side) if (i >= 0) used.add(i);
+  const avail = CHARS.map((_, i) => i).filter(i => !used.has(i));
+  if (!avail.length) return 0;
+  if (step.type === 'pick') {
+    const foes = st.picks[1 - step.team].filter(i => i >= 0).map(i => CHARS[i].id);
+    if (foes.length) {
+      const counters = avail.filter(i => (CHARS[i].beats || []).some(id => foes.includes(id)));
+      if (counters.length && Math.random() < 0.65) return counters[(Math.random() * counters.length) | 0];
+    }
+  } else {
+    const mine = st.picks[step.team].filter(i => i >= 0).map(i => CHARS[i].id);
+    if (mine.length) {
+      const threats = avail.filter(i => mine.some(id => (CHARS[i].beats || []).includes(id)));
+      if (threats.length && Math.random() < 0.7) return threats[(Math.random() * threats.length) | 0];
+    }
+  }
+  return avail[(Math.random() * avail.length) | 0];
+}
+
+function watch2v2ApplyStep() {
+  const st = watch2v2Bp;
+  const step = WATCH2V2_STEPS_ORDER[st.step];
+  const i = watch2v2AiChoice(step);
+  st.draft[st.step] = i;
+  if (step.type === 'ban') {
+    st.bans[step.team] = i;
+    SFX.thud();
+  } else {
+    const slots = st.picks[step.team];
+    const k = slots.findIndex(v => v < 0);
+    slots[k < 0 ? slots.length - 1 : k] = i;
+    SFX.block();
+  }
+  st.last = i;
+  st.step++;
+  st.t = st.step >= WATCH2V2_STEPS_ORDER.length ? WATCH2V2_FINISH_DELAY : WATCH2V2_STEP_DELAY;
+  bpSel = i;
+  renderBP();
+}
+
+function bpTickWatch2v2(dt) {
+  const st = watch2v2Bp;
+  if (!st) return;
+  const scr = $id('bp');
+  if (!scr || !scr.classList.contains('on')) { watch2v2Bp = null; return; }
+  st.t -= dt;
+  if (st.t > 0) return;
+  if (st.step >= WATCH2V2_STEPS_ORDER.length) {
+    const draft = st.draft.slice();
+    watch2v2Bp = null;
+    showPop(null);
+    startWatch2v2(draft);
+    return;
+  }
+  watch2v2ApplyStep();
+}
+
+// 2v2 禁选界面的绘制：沿用 #bp 的骨架（双方席位 / 中央步骤 / 英雄网格 / 详情 / 招式速览 / 底栏），
+// 只把槽位扩成每队 1 禁 2 选，并把操作全部交给 AI。
+function renderBPWatch2v2() {
+  const st = watch2v2Bp;
+  if (!st) return;
+  const total = WATCH2V2_STEPS_ORDER.length;
+  const done = st.step >= total;
+  const step = done ? null : WATCH2V2_STEPS_ORDER[st.step];
+  const teamCol = sd => (sd === 0 ? 'var(--p1)' : 'var(--p2)');
+  const active = sd => !done && step.team === sd;
+  $id('bpChat').classList.add('hidden');
+  // 步骤名里已经带上了队名（苍龙禁 / 赤凤先锋），标题不再重复一遍
+  const stepTeam = done ? '' : WATCH2V2_TEAMS[step.team];
+  $id('bpStep').innerHTML = (done ? '禁选完成 · 演武即将开始'
+    : (step.label.startsWith(stepTeam) ? step.label : `${stepTeam} · ${step.label}`))
+    + `<span class="bpcount">${done ? `6 / ${total} 步` : `第 ${st.step + 1} / ${total} 步`}</span>`;
+  $id('bpStep').style.color = done ? 'var(--gold)' : teamCol(step.team);
+  $id('bpTime').textContent = done ? '' : (st.last >= 0 ? `上一手 · ${CHARS[st.last].name}` : '天道 AI 演算中');
+  $id('bpTime').classList.remove('urgent');
+  for (const sd of [0, 1]) {
+    const banActive = active(sd) && step.type === 'ban';
+    const pickActive = active(sd) && step.type === 'pick';
+    const pickNum = pickActive ? st.picks[sd].filter(i => i >= 0).length : -1;
+    const slot = (idx, kind, on, lab) => `<div class="slot2 ${kind}${on ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${lab}${CHARS[idx].name}</span>` : lab}</div>`;
+    const slotsHtml = slot(st.bans[sd], 'ban', banActive, '禁 ')
+      + slot(st.picks[sd][0], 'pick', pickActive && pickNum === 0, '选1 ')
+      + slot(st.picks[sd][1], 'pick', pickActive && pickNum === 1, '选2 ');
+    $id('bpS' + sd).innerHTML = `<div class="who" style="color:${teamCol(sd)}">${WATCH2V2_TEAMS[sd]}队${active(sd) ? ' · 行动中' : ''}</div>
+      <div class="slots">${slotsHtml}</div>`;
+  }
+  $id('bpGrid').innerHTML = CHARS.map((c, i) => {
+    const banned = st.bans.includes(i);
+    const pickedBy = st.picks.findIndex(p => p.includes(i));
+    const isLast = st.last === i;
+    const tag = banned ? '<span class="tag">禁</span>'
+      : pickedBy >= 0 ? `<span class="tag p" style="background:${pickedBy === 0 ? '#2b6f86' : '#8a5a1e'}">${WATCH2V2_TEAMS[pickedBy]}</span>` : '';
+    const state = banned ? '，已禁用' : pickedBy >= 0 ? `，已被${WATCH2V2_TEAMS[pickedBy]}队选择` : '，等待天道 AI 选择';
+    return `<button class="bpcard${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${isLast ? ' sel' : ''}" data-i="${i}" type="button" aria-label="${c.name}，${c.role}${state}" aria-disabled="true"${isLast ? ' style="opacity:1"' : ''}>
+      ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
+  }).join('');
+  const show = bpHover >= 0 ? bpHover : (st.last >= 0 ? st.last : 0);
+  setDetail(show);
+  const goB = $id('bpGo');
+  goB.disabled = true;
+  goB.textContent = done ? '演武即将开始…' : '天道 AI 自动禁选';
+}
+
+// 禁选结束后按 [苍龙禁, 苍龙先, 苍龙次, 赤凤禁, 赤凤先, 赤凤次] 的阵容真正开打。
 function startWatch2v2(draft) {
   if (p2pActive() || NET.ws) netDropWaiting();
   initAudio();
@@ -10830,39 +11017,8 @@ function startWatch2v2(draft) {
   say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
 }
 
-const watch2v2SlotsEl = document.getElementById('watch2v2Slots');
-if (watch2v2SlotsEl) {
-  watch2v2SlotsEl.addEventListener('click', e => {
-    const b = e.target.closest('.tag3-slot');
-    if (!b) return;
-    activeWatchSlot = +b.dataset.slot;
-    renderWatch2v2();
-    SFX.slice();
-  });
-}
-const watch2v2RosterEl = document.getElementById('watch2v2Roster');
-if (watch2v2RosterEl) {
-  watch2v2RosterEl.addEventListener('click', e => {
-    const b = e.target.closest('.tag3-hero-chip');
-    if (!b) return;
-    const heroIdx = +b.dataset.idx;
-    const existing = watch2v2Draft.indexOf(heroIdx);
-    if (existing >= 0) {
-      const cur = watch2v2Draft[activeWatchSlot];
-      watch2v2Draft[activeWatchSlot] = heroIdx;
-      watch2v2Draft[existing] = cur;
-    } else {
-      watch2v2Draft[activeWatchSlot] = heroIdx;
-      activeWatchSlot = (activeWatchSlot + 1) % 6;
-    }
-    renderWatch2v2();
-    SFX.slice();
-  });
-}
-const watch2v2RandBtn = document.getElementById('watch2v2RandBtn');
-if (watch2v2RandBtn) watch2v2RandBtn.addEventListener('click', () => { randomizeWatch2v2(); SFX.slice(); });
 const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
-if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2(watch2v2Draft));
+if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
 
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
@@ -10885,8 +11041,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
     return;
   }
   if (M.mode === 'watch2v2') {
-    randomizeWatch2v2();
-    startWatch2v2(watch2v2Draft);
+    startWatch2v2Draft();
     return;
   }
   if (M.mode === 'mayhem') {
@@ -10940,7 +11095,7 @@ function toMenu() {
   M.stage = null;
   if (M.mode === 'train' && !TUT && SERVED && ACC.token && TRAIN.total > 0) api('/api/progress', { mode: 'train', traindmg: TRAIN.total, maxcombo: TRAIN.best }).then(j => applyProfile(j.profile)).catch(() => {});
   if (TUT) endTutorial();
-  paused = false; BP = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
+  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
   M.mode = 'demo';
@@ -11410,6 +11565,7 @@ const bpSideName = side => {
 };
 function bpStart(mode) {
   if (mode === 'cpu') netDropWaiting();
+  watch2v2Bp = null;   // 进入任何 1v1 / 联机禁选都先取消可能残留的 2v2 观战禁选
   ensurePortraits(); chatClear();
   bpMode = mode; BP = { step: 0, bans: [-1, -1], picks: [-1, -1], t: BP_TIME, avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null] }; bpSel = -1; bpCpuT = 1;
   showScreen('bp'); renderBP();
@@ -11478,6 +11634,7 @@ function bpCpuChoice() {
   return valid[Math.random() * valid.length | 0];
 }
 function bpTick(dt) {
+  if (bpMode === 'watch2v2') { bpTickWatch2v2(dt); return; }
   if (!BP || BP.step >= 4 || !document.getElementById('bp').classList.contains('on') || NET.hold) return;
   BP.t = Math.max(0, BP.t - dt);
   document.getElementById('bpTime').textContent = `${Math.ceil(BP.t)} 秒`;
@@ -11639,6 +11796,8 @@ function setDetail(i) {
 }
 
 function renderBP() {
+  // 2v2 观战禁选走独立状态与独立渲染，1v1 / 联机路径完全不变
+  if (bpMode === 'watch2v2') { if (watch2v2Bp) renderBPWatch2v2(); return; }
   if (!BP) return;
   $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
   const my = bpMySide(), done = BP.step >= 4;
@@ -11699,6 +11858,7 @@ document.getElementById('bpGrid').addEventListener('dblclick', e => {
 // 方向键在角色卡之间移动焦点（Enter 触发 click：第一次选中，400 毫秒内再按一次即确认），
 // 按实际行分组，窄屏换成多行时上下键依然正确
 document.getElementById('bpGrid').addEventListener('keydown', e => {
+  if (!BP) return;   // 2v2 观战禁选没有玩家操作，按键不参与
   const k = e.key;
   if (k >= '1' && k <= '9') {
     const pickNum = parseInt(k, 10) - 1;
