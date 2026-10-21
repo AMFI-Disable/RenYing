@@ -587,8 +587,14 @@ for (const [name, s] of Object.entries(stats.charStats)) {
 if (exportPath && dataset.length > 0) {
   const dir = dirname(exportPath);
   if (dir && !existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const outData = dataset.map(d => JSON.stringify(d)).join('\n') + '\n';
-  appendFileSync(exportPath, outData, 'utf8');
-  console.log(`\n[Export] Saved ${dataset.length} training transitions to ${exportPath} (${(outData.length / 1024 / 1024).toFixed(2)} MB)`);
+  if (existsSync(exportPath)) {
+    try { writeFileSync(exportPath, '', 'utf8'); } catch (e) {}
+  }
+  const CHUNK_SIZE = 2000;
+  for (let i = 0; i < dataset.length; i += CHUNK_SIZE) {
+    const chunk = dataset.slice(i, i + CHUNK_SIZE);
+    appendFileSync(exportPath, chunk.map(d => JSON.stringify(d)).join('\n') + '\n', 'utf8');
+  }
+  console.log(`\n[Export] Saved ${dataset.length} training transitions to ${exportPath}`);
 }
 console.log(`======================================================\n`);

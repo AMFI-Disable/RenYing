@@ -119,6 +119,16 @@ def hero_models_data():
     return data
 
 
+def model_2v2_data():
+    path = os.path.join(ROOT, "models", "renying_ai_watch2v2.json")
+    if os.path.exists(path):
+        try:
+            return quantize_obj(json.loads(read(path)))
+        except Exception:
+            pass
+    return {}
+
+
 def page(offline):
     html = read(SRC, "page.html")
     build = {"offline": offline}
@@ -127,7 +137,7 @@ def page(offline):
         "<!--@style-->\n": "<style>\n" + compact_css(read(SRC, "style.css")) + "\n</style>\n",
         "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
-            "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_HERO_MODELS=" + json.dumps(hero_models_data(), separators=(",", ":")) + ";</script>\n"
+            "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_HERO_MODELS=" + json.dumps(hero_models_data(), separators=(",", ":")) + ";window.RENYING_2V2_MODEL=" + json.dumps(model_2v2_data(), separators=(",", ":")) + ";</script>\n"
             + ("" if offline else (
                 "<script>\n" + read(ASSETS, "firebase-app-compat.js") + "\n</script>\n"
                 "<script>\n" + read(ASSETS, "firebase-auth-compat.js") + "\n</script>\n"

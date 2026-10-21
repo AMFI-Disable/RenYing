@@ -169,6 +169,11 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Enhanced 2v2 Neural Co-op Model & Two-Player Duo Circumstances Simulation (`models/renying_ai_watch2v2.json`, `tools/simulate-all.mjs`, `tools/combat-test.mjs`)**:
+  - Trained an enhanced 31-dimensional state co-op neural network policy on over 1,025,000 dual-agent 2v2 battle transitions, embedding spatial ally relative vectors, hitstun peel signals, focus fire alignment, and altar relic metrics.
+  - Rebuilt the 2v2 exhaustive simulation in `tools/simulate-all.mjs` to simulate Two Players vs Two Players across all 66 unique duo team combinations (unordered pairs), generating the 66-combination Duo Team Tier List (`data/meta/watch2v2_duo_meta.json`) and the Best Partner Synergy Matrix for every hero.
+  - Injected `window.RENYING_2V2_MODEL` directly into game distribution bundles (`index.html`, `renying-offline.html`) and updated `aiPredictPolicy` in `src/game.js` to prioritize the 31-dim 2v2 co-op policy during 2v2 watch matches.
+  - Expanded `tools/combat-test.mjs` to 16 comprehensive tests, adding coverage for 2v2 two-player vs two-player duo team initialization, 31-dim co-op observation extraction, team elimination resolution, and 2v2 model architecture verification.
 - **Standardized English Game Mode Naming in Test Suite (`tools/combat-test.mjs`, `tools/simulate-all.mjs`, `tools/cvc-sim.mjs`)**:
   - Standardized English mode reporting to "One-Hit Mode (1-HP Lethal)" across automated combat tests, headless simulation outputs, and meta ranking reports.
 - **Reverted to Standard GitHub Pages Hosting (`CNAME`)**:

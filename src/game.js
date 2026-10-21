@@ -2149,13 +2149,18 @@ const AI_H1 = new Float32Array(64);
 const AI_H2 = new Float32Array(32);
 const AI_LOGITS = new Float32Array(10);
 const AI_PROBS = new Float32Array(10);
-const AI_OBS = new Float32Array(25);
+const AI_OBS = new Float32Array(31);
 
 function aiPredictPolicy(heroId, obs) {
   try {
-    const models = typeof window !== 'undefined' ? window.RENYING_HERO_MODELS : null;
-    if (!models || !models[heroId]) return null;
-    const m = models[heroId];
+    let m = null;
+    if (M.mode === 'watch2v2' && typeof window !== 'undefined' && window.RENYING_2V2_MODEL && window.RENYING_2V2_MODEL.weights) {
+      m = window.RENYING_2V2_MODEL;
+    } else {
+      const models = typeof window !== 'undefined' ? window.RENYING_HERO_MODELS : null;
+      if (!models || !models[heroId]) return null;
+      m = models[heroId];
+    }
     const { W1, b1, W2, b2, W3, b3 } = m.weights;
     const n1 = b1.length, n2 = b2.length, n3 = b3.length, nIn = obs.length;
     for (let j = 0; j < n1; j++) AI_H1[j] = b1[j];
@@ -2163,6 +2168,7 @@ function aiPredictPolicy(heroId, obs) {
       const xi = obs[i];
       if (xi === 0) continue;
       const wRow = W1[i];
+      if (!wRow) continue;
       for (let j = 0; j < n1; j++) AI_H1[j] += xi * wRow[j];
     }
     for (let j = 0; j < n1; j++) if (AI_H1[j] < 0) AI_H1[j] = 0;
@@ -2231,7 +2237,24 @@ function extractAIObs(me, foe) {
     }
   }
   AI_OBS[24] = projNear;
-  return AI_OBS;
+
+  // 2v2 Co-op 31-dim features (features 25-30)
+  if (M.mode === 'watch2v2' && typeof ARENA2V2 !== 'undefined') {
+    const mate = (me.idx % 2 === 0) ? (me.idx === 0 ? C : A) : (me.idx === 1 ? D : B);
+    if (mate) {
+      AI_OBS[25] = (mate.x - me.x) / STAGE_W;
+      AI_OBS[26] = (mate.y - me.y) / 400;
+      AI_OBS[27] = mate.hp > 0 ? (mate.hp / mate.maxHp) : 0;
+      AI_OBS[28] = (mate.state === 'hitstun' || mate.state === 'launched') ? 1 : 0;
+      AI_OBS[29] = (mate.target && me.target && mate.target === me.target) ? 1 : 0;
+    } else {
+      AI_OBS[25] = 0; AI_OBS[26] = 0; AI_OBS[27] = 0; AI_OBS[28] = 0; AI_OBS[29] = 0;
+    }
+    AI_OBS[30] = (STAGE_W / 2 - me.x) / STAGE_W;
+    return AI_OBS;
+  }
+
+  return AI_OBS.subarray(0, 25);
 }
 
 class AICtrl extends Ctrl {

@@ -143,6 +143,11 @@ async function initRunner() {
   sandbox.window.document = sandbox.document;
   sandbox.window.location = sandbox.location;
   sandbox.globalThis = sandbox.window;
+  if (existsSync('models/renying_ai_watch2v2.json')) {
+    try {
+      sandbox.window.RENYING_2V2_MODEL = JSON.parse(readFileSync('models/renying_ai_watch2v2.json', 'utf8'));
+    } catch (e) {}
+  }
   Object.assign(sandbox.window, sandbox);
   vm.createContext(sandbox.window);
 
@@ -465,6 +470,96 @@ const testSuite = [
         return { pass: false, error: 'All 4 fighters died prematurely' };
       }
       toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: '2v2 Two Players vs Two Players: All circumstances duo initialization & team assignment',
+    fn: `(() => {
+      // Test distinct duo combinations
+      const testDuoPairs = [
+        [[0, 2], [1, 3]],
+        [[4, 5], [6, 7]],
+        [[8, 9], [10, 11]]
+      ];
+      for (const [duoA, duoB] of testDuoPairs) {
+        startWatch2v2([0, duoA[0], duoA[1], 1, duoB[0], duoB[1]]);
+        if (M.mode !== 'watch2v2' || STAGE_W !== 2600) {
+          return { pass: false, error: 'Failed 2v2 stage initialization for duos' };
+        }
+        if (A.idx !== 0 || C.idx !== 2 || B.idx !== 1 || D.idx !== 3) {
+          return { pass: false, error: 'Fighter index team mismatch in 2v2 duo' };
+        }
+        if (A.ch.id !== CHARS[duoA[0]].id || C.ch.id !== CHARS[duoA[1]].id) {
+          return { pass: false, error: 'Team 0 duo hero mismatch' };
+        }
+        if (B.ch.id !== CHARS[duoB[0]].id || D.ch.id !== CHARS[duoB[1]].id) {
+          return { pass: false, error: 'Team 1 duo hero mismatch' };
+        }
+      }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: '2v2 Co-op: 31-dim state observation vector with ally awareness & altar distance',
+    fn: `(() => {
+      startWatch2v2([0, 0, 2, 1, 1, 3]);
+      M.phase = 'fight';
+      const obs = extractAIObs(A, B);
+      if (!obs || obs.length !== 31) {
+        return { pass: false, error: 'Expected 31-dim observation in 2v2, got: ' + (obs ? obs.length : 0) };
+      }
+      // Check feature 25 (ally relative dx) and feature 30 (altar distance)
+      const expectedAllyDx = (C.x - A.x) / STAGE_W;
+      if (Math.abs(obs[25] - expectedAllyDx) > 0.01) {
+        return { pass: false, error: 'Ally dx observation mismatch: ' + obs[25] + ' vs ' + expectedAllyDx };
+      }
+      const expectedAltar = (STAGE_W / 2 - A.x) / STAGE_W;
+      if (Math.abs(obs[30] - expectedAltar) > 0.01) {
+        return { pass: false, error: 'Altar distance observation mismatch: ' + obs[30] + ' vs ' + expectedAltar };
+      }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: '2v2 Elimination: Full match resolution awarding victory to surviving 2-player team',
+    fn: `(() => {
+      startWatch2v2([0, 0, 2, 1, 1, 3]);
+      M.phase = 'fight';
+      M.wins = [0, 0];
+      // Eliminate both Team 1 fighters
+      B.hp = 0; B.state = 'lying';
+      D.hp = 0; D.state = 'lying';
+      A.hp = 200; C.hp = 250;
+      step(); // triggers KO transition
+      const enteredKo = (M.phase === 'ko' && M.koWinner === 0);
+      if (!enteredKo) return { pass: false, error: 'Failed to transition to KO phase for Team 0 victory: ' + M.phase };
+      // Step past KO celebratory delay (2.8s = ~340 steps)
+      for (let s = 0; s < 360; s++) {
+        step();
+      }
+      const roundResolved = M.wins[0] >= 1 || M.phase === 'roundEnd' || M.phase === 'intro';
+      toMenu();
+      return { pass: enteredKo && roundResolved, error: roundResolved ? null : 'Failed to finalize round resolution after KO' };
+    })()`
+  },
+  {
+    name: '2v2 Model: Architecture (31 in, 10 out) & quantized weights validation',
+    fn: `(() => {
+      // In-process sandbox check for 2v2 model
+      const model = typeof window !== 'undefined' ? window.RENYING_2V2_MODEL : null;
+      if (!model || !model.weights) {
+        return { pass: false, error: 'window.RENYING_2V2_MODEL missing or unpopulated' };
+      }
+      if (model.arch?.in !== 31 || model.arch?.out !== 10) {
+        return { pass: false, error: 'Invalid 2v2 model architecture: ' + JSON.stringify(model.arch) };
+      }
+      const w1 = model.weights.W1;
+      if (!Array.isArray(w1) || w1.length !== 31 || w1[0].length !== 64) {
+        return { pass: false, error: 'W1 dimension mismatch for 31-dim input' };
+      }
       return { pass: true, error: null };
     })()`
   }
