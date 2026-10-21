@@ -13007,6 +13007,32 @@ const goB = $id('bpGo');
 goB.disabled = true;
 goB.textContent = done ? '演武即将开始…' : '天道 AI 自动禁选';
 }
+function startWatch2v2(draft) {
+if (p2pActive() || NET.ws) netDropWaiting();
+initAudio();
+refocusGame();
+paused = false;
+human[0].rec = null;
+REC.on = false;
+if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
+const [ban0, t1a, t1b, ban1, t2a, t2b] = watch2v2Draft;
+M.mode = 'watch2v2';
+M.level = 'god';
+M.bans = [ban0, ban1];
+M.wins = [0, 0];
+M.round = 1;
+M.carry = null;
+M.stage = null;
+A.setChar(t1a); C.setChar(t1b);
+B.setChar(t2a); D.setChar(t2b);
+A.ctrl = new AICtrl('god'); C.ctrl = new AICtrl('god');
+B.ctrl = new AICtrl('god'); D.ctrl = new AICtrl('god');
+A.meter = B.meter = C.meter = D.meter = 35;
+human[0].clear(); human[1].clear();
+showScreen(null);
+startRound();
+say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
+}
 const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
 if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
 function go() { initAudio(); paused = false; bpStart('cpu'); }
@@ -13084,7 +13110,7 @@ if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.fores
 M.stage = null;
 if (M.mode === 'train' && !TUT && SERVED && ACC.token && TRAIN.total > 0) api('/api/progress', { mode: 'train', traindmg: TRAIN.total, maxcombo: TRAIN.best }).then(j => applyProfile(j.profile)).catch(() => {});
 if (TUT) endTutorial();
-paused = false; BP = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
+paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
 const prevMode = M.mode;
 if (prevMode === 'tower') saveTowerRun();
 M.mode = 'demo';
@@ -13524,6 +13550,7 @@ return n ? String(n) : '对手';
 };
 function bpStart(mode) {
 if (mode === 'cpu') netDropWaiting();
+watch2v2Bp = null;   // 进入任何 1v1 / 联机禁选都先取消可能残留的 2v2 观战禁选
 ensurePortraits(); chatClear();
 bpMode = mode; BP = { step: 0, bans: [-1, -1], picks: [-1, -1], t: BP_TIME, avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null] }; bpSel = -1; bpCpuT = 1;
 showScreen('bp'); renderBP();
@@ -13589,6 +13616,7 @@ if (counters.length) return counters[Math.random() * counters.length | 0];
 return valid[Math.random() * valid.length | 0];
 }
 function bpTick(dt) {
+if (bpMode === 'watch2v2') { bpTickWatch2v2(dt); return; }
 if (!BP || BP.step >= 4 || !document.getElementById('bp').classList.contains('on') || NET.hold) return;
 BP.t = Math.max(0, BP.t - dt);
 document.getElementById('bpTime').textContent = `${Math.ceil(BP.t)} 秒`;
@@ -13745,6 +13773,7 @@ for (const el of document.querySelectorAll('#bpDetail .bpd')) el.classList.toggl
 updateBPDeck(i);
 }
 function renderBP() {
+if (bpMode === 'watch2v2') { if (watch2v2Bp) renderBPWatch2v2(); return; }
 if (!BP) return;
 $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
 const my = bpMySide(), done = BP.step >= 4;
