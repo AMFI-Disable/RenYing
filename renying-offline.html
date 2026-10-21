@@ -1110,7 +1110,7 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
           <button data-tmode="chaos" type="button">天机乱斗 · 突变天道</button>
           <button data-tmode="tag3" type="button">3v3车轮 · 绝境天道</button>
           <button data-tmode="mayhem" type="button">通天神决 · 狂暴天道</button>
-          <button data-tmode="watch2v2" type="button">2v2观战 · 天道同台</button>
+          <button data-tmode="watch2v2" type="button">2v2演武 · 天道同台</button>
         </div>
         <div id="dummyFeatWrap">
           <div class="sec-sub-label">木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）</div>
@@ -1264,13 +1264,11 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
           <span class="sub-badge">双队禁选 · 四神同台 · 阔野奇阵</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">四名【天道】神经网络 AI 同台 2v2 混战！两队各禁选 1 名侠客（共 2 禁），并各选 2 名不重复侠客同场竞技。擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央立【天道剑坛】刷出神符增益，并伴随【天劫剑雨】！</p>
-        <div class="sec-sub-label">禁选与出战席位（两队共 2 禁 4 选，全员互不重复；点击席位再点下方名册可自定）</div>
-        <div class="tag3-slots" id="watch2v2Slots" style="grid-template-columns:repeat(6,1fr);gap:8px"></div>
-        <div class="sec-sub-label" style="margin-top:8px">十二门派侠客名册（点击指派至当前选中席位）</div>
-        <div class="tag3-roster" id="watch2v2Roster"></div>
+        <div class="sec-sub-label">天道 AI 自动禁选顺序（共 6 步 · 两队 2 禁 4 选 · 全局互不重复）</div>
+        <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
+        <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入与 1v1 相同的选人界面：两位天道 AI 依次完成 2 禁 4 选，每一手都清晰可见，玩家只旁观不入局。</p>
         <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
-          <button class="ghost" id="watch2v2RandBtn" type="button">随机禁选与阵容</button>
-          <button class="go" id="watch2v2StartBtn" type="button">开启 2v2 天道观战</button>
+          <button class="go" id="watch2v2StartBtn" type="button">开启 2v2 天道演武</button>
         </div>
       </div>
 
@@ -12085,9 +12083,7 @@ showScreen(null);
 return;
 }
 if (targetMode === 'watch2v2') {
-randomizeWatch2v2();
-startWatch2v2();
-showScreen(null);
+startWatch2v2Draft();
 return;
 }
 startDummyTraining();
