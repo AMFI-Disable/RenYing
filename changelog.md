@@ -169,6 +169,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Reverted to Standard GitHub Pages Hosting (`CNAME`)**:
+  - Removed the custom domain `CNAME` (`renying.is-cool.dev`), restoring default GitHub Pages deployment at `amfi-disable.github.io/RenYing`.
 - **Streamlined Single-Player Mode Navigation & Realm Stepper UI (`.single-nav-deck`, `.levels-grid`)**:
   - Unified the 2-tier stacked category and mode tabs into an integrated martial navigation deck (`.single-nav-deck`), eliminating awkward vertical space bloat and layout jumping.
   - Tamed the expansive single-player arena panel (`.singlep`) from `1360px` down to a focused `980px` maximum width, properly framing battle setups without empty horizontal stretching.
