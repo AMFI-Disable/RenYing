@@ -205,10 +205,10 @@ const testSuite = [
         toNeutral(A);
         A.skill2CD = 0;
         const gate = SKILLS[A.ch.skill2].can;
-        if (gate) {   // 有使用条件的技能（醉翁与民同乐要半壶酒）：条件不够时不能放，也不扣冷却
-          A.drunk = 0; startSkill(A, B, 2);
+        if (gate) {   // 有使用条件的技能（醉翁与民同乐要半壶酒，墨羽画符要 3 格墨水）：条件不够时不能放，也不扣冷却
+          A.drunk = 0; A.ink = 0; startSkill(A, B, 2);
           if (A.state === 'skill' || A.skill2CD > 0) return { pass: false, error: CHARS[ci].name + ' skill 2 fired without meeting its condition' };
-          A.drunk = 100;
+          A.drunk = 100; A.ink = 100; A.fu = 0;
         }
         startSkill(A, B, 2);
         if (A.state !== 'skill' && A.state !== 'attack') {
