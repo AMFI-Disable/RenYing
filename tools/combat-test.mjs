@@ -325,10 +325,10 @@ const testSuite = [
         return { pass: false, error: '1v1 CPU watch mode setup mismatch' };
       }
 
-      // 2. Bushido Mode (1-hit lethality)
+      // 2. One-Hit Mode (1-HP lethality)
       startBushido(0, 1, 'god', true);
       if (M.mode !== 'bushido' || !M.watchAi || A.maxHp !== 1 || B.maxHp !== 1) {
-        return { pass: false, error: 'Bushido mode 1-HP lethality watch setup failed' };
+        return { pass: false, error: 'One-Hit mode 1-HP lethality watch setup failed' };
       }
 
       // 3. Chaos Mode

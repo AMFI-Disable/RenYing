@@ -396,10 +396,21 @@ if (isMetaMode) {
     })
   };
 
+  const MODE_TITLES = {
+    cpu: '1v1 CPU Duel',
+    bushido: 'One-Hit Mode (1-HP Lethal)',
+    chaos: 'Chaos Mutation Arena',
+    mayhem: 'Mayhem Mode (10x Meter)',
+    watch2v2: '2v2 Team Watch',
+    tag3: '3v3 Tag Relay',
+    tower: 'Tower of Swords'
+  };
+  const displayTitle = MODE_TITLES[matchMode] || matchMode.toUpperCase();
+
   console.log(`\n======================================================`);
-  console.log(`   ${matchMode.toUpperCase()} Meta Analysis & Hero Tier List`);
+  console.log(`   ${displayTitle} Meta Analysis & Hero Tier List`);
   console.log(`======================================================\n`);
-  console.log('| 排名 | 梯队 | 侠客 | 胜率 | 战绩 | 优势克制 (Strong Against) | 劣势被克 (Weak Against) |');
+  console.log('| Rank | Tier | Hero | Win Rate | Record | Strong Against | Weak Against |');
   console.log('|:---:|:---:|:---:|:---:|:---:|:---|:---|');
   for (const r of metaReport.rankings) {
     console.log(`| #${r.rank} | **${r.tier}** | ${r.hero} | ${r.winRate} | ${r.record} | ${r.strongAgainst.join('、')} | ${r.weakAgainst.join('、')} |`);

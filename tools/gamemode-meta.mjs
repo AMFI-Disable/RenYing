@@ -32,9 +32,19 @@ const MODES = ['cpu', 'watch2v2', 'chaos', 'mayhem', 'bushido', 'tag3'];
 
 mkdirSync('data/meta', { recursive: true });
 
+const MODE_TITLES = {
+  cpu: '1v1 CPU Duel',
+  bushido: 'One-Hit Mode (1-HP Lethality)',
+  chaos: 'Chaos Mutation Arena',
+  mayhem: 'Mayhem Mode (10x Meter)',
+  watch2v2: '2v2 Team Battle',
+  tag3: '3v3 Tag Relay'
+};
+
 function runMetaForMode(mode) {
+  const displayTitle = MODE_TITLES[mode] || mode.toUpperCase();
   console.log(`\n======================================================`);
-  console.log(`>>> Analyzing Meta for Game Mode: [ ${mode.toUpperCase()} ]`);
+  console.log(`>>> Analyzing Meta for Game Mode: [ ${displayTitle} ]`);
   console.log(`======================================================`);
   try {
     execSync(`node tools/cvc-sim.mjs --mode ${mode} --meta --matches 66`, { stdio: 'inherit' });

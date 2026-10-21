@@ -169,6 +169,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Standardized English Game Mode Naming in Test Suite (`tools/combat-test.mjs`, `tools/simulate-all.mjs`, `tools/cvc-sim.mjs`)**:
+  - Standardized English mode reporting to "One-Hit Mode (1-HP Lethal)" across automated combat tests, headless simulation outputs, and meta ranking reports.
 - **Reverted to Standard GitHub Pages Hosting (`CNAME`)**:
   - Removed the custom domain `CNAME` (`renying.is-cool.dev`), restoring default GitHub Pages deployment at `amfi-disable.github.io/RenYing`.
 - **Streamlined Single-Player Mode Navigation & Realm Stepper UI (`.single-nav-deck`, `.levels-grid`)**:
