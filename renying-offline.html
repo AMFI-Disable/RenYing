@@ -7185,7 +7185,7 @@ const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : 
 const maxZoom = M.mode === 'watch2v2' ? 0.70 : 1.35;
 const want = Math.min(wantBase * zoomMul, fit, maxZoom);
 cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
-cam.zoom = Math.min(cam.zoom, fit);
+cam.zoom = Math.min(cam.zoom, fit, maxZoom);
 cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
 cam.x = damp(cam.x, focus, 8, dt);
 const vw = W / worldScale();
