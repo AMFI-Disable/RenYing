@@ -12843,119 +12843,152 @@ say('通天神决 · 大显神通', 1.4);
 const mayhemStartBtn = document.getElementById('mayhemStartBtn');
 if (mayhemStartBtn) mayhemStartBtn.addEventListener('click', () => startMayhem(mayhemP1, mayhemP2, mayhemLevel));
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
-let activeWatchSlot = 1;
-function randomizeWatch2v2() {
-const pool = CHARS.map((_, i) => i);
-for (let i = pool.length - 1; i > 0; i--) {
-const j = (Math.random() * (i + 1)) | 0;
-const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
-}
-watch2v2Draft = pool.slice(0, 6);
-renderWatch2v2();
-}
+const WATCH2V2_TEAMS = ['苍龙', '赤凤'];
+const WATCH2V2_STEPS_ORDER = [
+{ team: 0, type: 'ban', label: '苍龙禁' },
+{ team: 0, type: 'pick', label: '苍龙先锋' },
+{ team: 0, type: 'pick', label: '苍龙次锋' },
+{ team: 1, type: 'ban', label: '赤凤禁' },
+{ team: 1, type: 'pick', label: '赤凤先锋' },
+{ team: 1, type: 'pick', label: '赤凤次锋' },
+];
+const WATCH2V2_STEP_DELAY = 0.75;     // 每一步停留 0.75 秒，足够看清 AI 的出手顺序
+const WATCH2V2_FINISH_DELAY = 1.15;   // 禁选完成后留一点时间给玩家看清最终阵容
+let watch2v2Bp = null;                // 2v2 专属禁选状态；1v1 仍然使用 BP / bpMode，互不干扰
 function renderWatch2v2() {
 ensurePortraits();
-const slotMeta = [
-{ label: '苍龙禁用', isBan: true, team: 0 },
-{ label: '苍龙先锋 · 天道', isBan: false, team: 0 },
-{ label: '苍龙次锋 · 天道', isBan: false, team: 0 },
-{ label: '赤凤禁用', isBan: true, team: 1 },
-{ label: '赤凤先锋 · 天道', isBan: false, team: 1 },
-{ label: '赤凤次锋 · 天道', isBan: false, team: 1 },
-];
-const slotsEl = document.getElementById('watch2v2Slots');
-if (slotsEl) {
-slotsEl.innerHTML = slotMeta.map((sm, idx) => {
-const cIdx = watch2v2Draft[idx] !== undefined ? watch2v2Draft[idx] : idx;
-const ch = CHARS[cIdx];
-const col = sm.isBan ? '#ff6b6b' : (ch ? `rgb(${ch.look.slash})` : 'var(--ink)');
-const borderStyle = sm.isBan ? 'border-color:rgba(255,90,90,0.55);background:rgba(60,12,18,0.45);' : '';
-return `<div class="tag3-slot${activeWatchSlot === idx ? ' sel' : ''}" data-slot="${idx}" style="${borderStyle}">
-<span class="slot-tag" style="color:${sm.isBan ? '#ff7a8a' : (sm.team === 0 ? '#46d3ea' : '#ffb142')}">${sm.label}</span>
-<div class="slot-avatar" style="${sm.isBan ? 'filter:grayscale(0.75);opacity:0.75;' : ''}">
-<img src="${PORTRAITS[cIdx] || ''}" alt="">
-</div>
-<span class="slot-name" style="color:${col}">${sm.isBan ? '禁 · ' : ''}${ch ? ch.name : '未选'}</span>
-<span class="slot-role">${ch ? ch.role : ''}</span>
+const el = document.getElementById('watch2v2Slots');
+if (!el) return;
+el.innerHTML = WATCH2V2_STEPS_ORDER.map((s, idx) => {
+const isBan = s.type === 'ban';
+const teamCol = s.team === 0 ? '#46d3ea' : '#ffb142';
+const badgeBg = isBan ? '#b8392e' : (s.team === 0 ? 'rgba(70,211,234,.22)' : 'rgba(255,177,66,.2)');
+return `<div style="position:relative;padding:10px 8px 12px;border-radius:12px;border:1px solid ${isBan ? 'rgba(255,90,90,.5)' : 'rgba(255,255,255,.16)'};background:${isBan ? 'rgba(60,12,18,.35)' : 'rgba(255,255,255,.04)'};text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px">
+<span style="font-family:var(--title);font-size:12px;padding:1px 8px;border-radius:4px;background:${badgeBg};color:#fbeee0;letter-spacing:1px">第 ${idx + 1} 步</span>
+<span style="font-family:var(--title);font-size:20px;line-height:1.1;color:${isBan ? '#ff8a8a' : teamCol}">${s.label}</span>
+<span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '选择侠客'}</span>
 </div>`;
 }).join('');
 }
-const rosterEl = document.getElementById('watch2v2Roster');
-if (rosterEl) {
-const badgeNames = ['苍龙禁', '苍龙一', '苍龙二', '赤凤禁', '赤凤一', '赤凤二'];
-rosterEl.innerHTML = CHARS.map((ch, i) => {
-const sIdx = watch2v2Draft.indexOf(i);
-const bTxt = sIdx >= 0 ? badgeNames[sIdx] : '';
-const isBan = sIdx === 0 || sIdx === 3;
-const col = `rgb(${ch.look.slash})`;
-return `<button class="tag3-hero-chip${sIdx >= 0 ? ' in-team' : ''}" data-idx="${i}" type="button" style="${isBan ? 'border-color:rgba(255,80,80,0.65);opacity:0.65;' : ''}">
-${bTxt ? `<span class="team-badge" style="${isBan ? 'background:#c83232;color:#fff' : ''}">${bTxt}</span>` : ''}
-<img src="${PORTRAITS[i] || ''}" alt="">
-<div class="nm" style="color:${col}">${ch.name}</div>
-<div class="rl">${ch.role}</div>
-</button>`;
-}).join('');
-}
-}
-function startWatch2v2(draft) {
-if (p2pActive() || NET.ws) netDropWaiting();
+function startWatch2v2Draft() {
 initAudio();
-refocusGame();
-paused = false;
-human[0].rec = null;
-REC.on = false;
-if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
-const [ban0, t1a, t1b, ban1, t2a, t2b] = watch2v2Draft;
-M.mode = 'watch2v2';
-M.level = 'god';
-M.bans = [ban0, ban1];
-M.wins = [0, 0];
-M.round = 1;
-M.carry = null;
-M.stage = null;
-A.setChar(t1a); C.setChar(t1b);
-B.setChar(t2a); D.setChar(t2b);
-A.ctrl = new AICtrl('god'); C.ctrl = new AICtrl('god');
-B.ctrl = new AICtrl('god'); D.ctrl = new AICtrl('god');
-A.meter = B.meter = C.meter = D.meter = 35;
-human[0].clear(); human[1].clear();
-showScreen(null);
-startRound();
-say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
+ensurePortraits();
+chatClear();
+BP = null;
+watch2v2Bp = {
+step: 0,
+bans: [-1, -1],
+picks: [[-1, -1], [-1, -1]],
+draft: [-1, -1, -1, -1, -1, -1],
+last: -1,
+t: WATCH2V2_STEP_DELAY,
+};
+bpMode = 'watch2v2';
+bpSel = -1; bpHover = -1;
+showScreen('bp');
+renderBP();
 }
-const watch2v2SlotsEl = document.getElementById('watch2v2Slots');
-if (watch2v2SlotsEl) {
-watch2v2SlotsEl.addEventListener('click', e => {
-const b = e.target.closest('.tag3-slot');
-if (!b) return;
-activeWatchSlot = +b.dataset.slot;
-renderWatch2v2();
-SFX.slice();
-});
+function watch2v2AiChoice(step) {
+const st = watch2v2Bp;
+const used = new Set();
+for (const b of st.bans) if (b >= 0) used.add(b);
+for (const side of st.picks) for (const i of side) if (i >= 0) used.add(i);
+const avail = CHARS.map((_, i) => i).filter(i => !used.has(i));
+if (!avail.length) return 0;
+if (step.type === 'pick') {
+const foes = st.picks[1 - step.team].filter(i => i >= 0).map(i => CHARS[i].id);
+if (foes.length) {
+const counters = avail.filter(i => (CHARS[i].beats || []).some(id => foes.includes(id)));
+if (counters.length && Math.random() < 0.65) return counters[(Math.random() * counters.length) | 0];
 }
-const watch2v2RosterEl = document.getElementById('watch2v2Roster');
-if (watch2v2RosterEl) {
-watch2v2RosterEl.addEventListener('click', e => {
-const b = e.target.closest('.tag3-hero-chip');
-if (!b) return;
-const heroIdx = +b.dataset.idx;
-const existing = watch2v2Draft.indexOf(heroIdx);
-if (existing >= 0) {
-const cur = watch2v2Draft[activeWatchSlot];
-watch2v2Draft[activeWatchSlot] = heroIdx;
-watch2v2Draft[existing] = cur;
 } else {
-watch2v2Draft[activeWatchSlot] = heroIdx;
-activeWatchSlot = (activeWatchSlot + 1) % 6;
+const mine = st.picks[step.team].filter(i => i >= 0).map(i => CHARS[i].id);
+if (mine.length) {
+const threats = avail.filter(i => mine.some(id => (CHARS[i].beats || []).includes(id)));
+if (threats.length && Math.random() < 0.7) return threats[(Math.random() * threats.length) | 0];
 }
-renderWatch2v2();
-SFX.slice();
-});
 }
-const watch2v2RandBtn = document.getElementById('watch2v2RandBtn');
-if (watch2v2RandBtn) watch2v2RandBtn.addEventListener('click', () => { randomizeWatch2v2(); SFX.slice(); });
+return avail[(Math.random() * avail.length) | 0];
+}
+function watch2v2ApplyStep() {
+const st = watch2v2Bp;
+const step = WATCH2V2_STEPS_ORDER[st.step];
+const i = watch2v2AiChoice(step);
+st.draft[st.step] = i;
+if (step.type === 'ban') {
+st.bans[step.team] = i;
+SFX.thud();
+} else {
+const slots = st.picks[step.team];
+const k = slots.findIndex(v => v < 0);
+slots[k < 0 ? slots.length - 1 : k] = i;
+SFX.block();
+}
+st.last = i;
+st.step++;
+st.t = st.step >= WATCH2V2_STEPS_ORDER.length ? WATCH2V2_FINISH_DELAY : WATCH2V2_STEP_DELAY;
+bpSel = i;
+renderBP();
+}
+function bpTickWatch2v2(dt) {
+const st = watch2v2Bp;
+if (!st) return;
+const scr = $id('bp');
+if (!scr || !scr.classList.contains('on')) { watch2v2Bp = null; return; }
+st.t -= dt;
+if (st.t > 0) return;
+if (st.step >= WATCH2V2_STEPS_ORDER.length) {
+const draft = st.draft.slice();
+watch2v2Bp = null;
+showPop(null);
+startWatch2v2(draft);
+return;
+}
+watch2v2ApplyStep();
+}
+function renderBPWatch2v2() {
+const st = watch2v2Bp;
+if (!st) return;
+const total = WATCH2V2_STEPS_ORDER.length;
+const done = st.step >= total;
+const step = done ? null : WATCH2V2_STEPS_ORDER[st.step];
+const teamCol = sd => (sd === 0 ? 'var(--p1)' : 'var(--p2)');
+const active = sd => !done && step.team === sd;
+$id('bpChat').classList.add('hidden');
+$id('bpStep').innerHTML = (done ? '禁选完成 · 演武即将开始' : `${WATCH2V2_TEAMS[step.team]} · ${step.label}`)
++ `<span class="bpcount">${done ? `6 / ${total} 步` : `第 ${st.step + 1} / ${total} 步`}</span>`;
+$id('bpStep').style.color = done ? 'var(--gold)' : teamCol(step.team);
+$id('bpTime').textContent = done ? '' : (st.last >= 0 ? `上一手 · ${CHARS[st.last].name}` : '天道 AI 演算中');
+$id('bpTime').classList.remove('urgent');
+for (const sd of [0, 1]) {
+const banActive = active(sd) && step.type === 'ban';
+const pickActive = active(sd) && step.type === 'pick';
+const pickNum = pickActive ? st.picks[sd].filter(i => i >= 0).length : -1;
+const slot = (idx, kind, on, lab) => `<div class="slot2 ${kind}${on ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${lab}${CHARS[idx].name}</span>` : lab}</div>`;
+const slotsHtml = slot(st.bans[sd], 'ban', banActive, '禁 ')
++ slot(st.picks[sd][0], 'pick', pickActive && pickNum === 0, '选1 ')
++ slot(st.picks[sd][1], 'pick', pickActive && pickNum === 1, '选2 ');
+$id('bpS' + sd).innerHTML = `<div class="who" style="color:${teamCol(sd)}">${WATCH2V2_TEAMS[sd]}队${active(sd) ? ' · 行动中' : ''}</div>
+<div class="slots">${slotsHtml}</div>`;
+}
+$id('bpGrid').innerHTML = CHARS.map((c, i) => {
+const banned = st.bans.includes(i);
+const pickedBy = st.picks.findIndex(p => p.includes(i));
+const isLast = st.last === i;
+const tag = banned ? '<span class="tag">禁</span>'
+: pickedBy >= 0 ? `<span class="tag p" style="background:${pickedBy === 0 ? '#2b6f86' : '#8a5a1e'}">${WATCH2V2_TEAMS[pickedBy]}</span>` : '';
+const state = banned ? '，已禁用' : pickedBy >= 0 ? `，已被${WATCH2V2_TEAMS[pickedBy]}队选择` : '，等待天道 AI 选择';
+return `<button class="bpcard${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${isLast ? ' sel' : ''}" data-i="${i}" type="button" aria-label="${c.name}，${c.role}${state}" aria-disabled="true"${isLast ? ' style="opacity:1"' : ''}>
+${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
+}).join('');
+const show = bpHover >= 0 ? bpHover : (st.last >= 0 ? st.last : 0);
+setDetail(show);
+const goB = $id('bpGo');
+goB.disabled = true;
+goB.textContent = done ? '演武即将开始…' : '天道 AI 自动禁选';
+}
 const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
-if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2(watch2v2Draft));
+if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
