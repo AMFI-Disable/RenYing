@@ -1009,6 +1009,299 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
 .setrow .seg button { min-height: 44px; }
 .decktabs button { padding-top: 5px; padding-bottom: 5px; }
 }
+:root { --v-red: #ff4655; --v-navy: #0f1923; --v-navy2: #1f2a36; --v-white: #ece8e1; --v-cond: "Oswald", "DIN Condensed", "Arial Narrow", "Noto Sans SC", sans-serif; }
+.mm-hero { margin: 4px auto 10px; width: min(1180px, 100%); text-align: left; }
+.season-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 14px; padding: 0 2px; font-family: var(--v-cond); letter-spacing: .06em; color: rgba(236,232,225,.7); font-size: 14px; }
+.season-tag { background: var(--v-red); color: #fff; padding: 4px 14px 4px 12px; font-weight: 700; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); letter-spacing: .12em; }
+.season-range { color: var(--v-white); font-weight: 600; }
+.season-left::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--v-red); margin-right: 8px; transform: rotate(45deg) translateY(-2px); }
+.mm-cards { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+.mm-card { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 6px; padding: 22px 26px 24px; min-height: 250px;
+background: linear-gradient(135deg, rgba(15,25,35,.94), rgba(31,42,54,.9)); border: 1px solid rgba(236,232,225,.12);
+clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px)); transition: transform .18s ease, border-color .18s; }
+.mm-card:hover { transform: translateY(-2px); border-color: rgba(255,70,85,.5); }
+.mm-card-bg { position: absolute; inset: 0; pointer-events: none; opacity: .9;
+background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 100% 0%, rgba(255,70,85,.28), transparent 60%); }
+.mm-ranked .mm-card-bg { background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 0% 100%, rgba(233,196,106,.22), transparent 60%), radial-gradient(ellipse at 100% 0%, rgba(114,245,214,.12), transparent 55%); }
+.mm-card > *:not(.mm-card-bg) { position: relative; }
+.mm-kicker { align-self: flex-start; font-family: var(--v-cond); font-size: 12px; letter-spacing: .2em; color: var(--v-red); border: 1px solid rgba(255,70,85,.55); padding: 2px 10px; }
+.mm-ranked .mm-kicker { color: var(--gold); border-color: rgba(233,196,106,.55); }
+.mm-title { font-family: var(--title); font-size: clamp(44px, 4.6vw, 64px); line-height: 1.02; color: var(--v-white); letter-spacing: .06em; }
+.mm-en { font-family: var(--v-cond); font-weight: 700; font-size: 15px; letter-spacing: .42em; color: rgba(236,232,225,.38); margin-top: -2px; }
+.mm-desc { color: rgba(236,232,225,.72); font-size: 14px; margin: 6px 0 auto; }
+.mm-go { margin-top: 16px; align-self: flex-start; min-width: 220px; padding: 14px 34px; border: none; cursor: pointer; font-family: var(--v-cond); font-weight: 700; font-size: 19px; letter-spacing: .3em; color: #fff; background: var(--v-red);
+clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); transition: background .15s, transform .1s, box-shadow .15s; box-shadow: 0 0 0 rgba(255,70,85,0); }
+.mm-go:hover:not(:disabled) { background: #ff5d6a; box-shadow: 0 0 28px rgba(255,70,85,.45); }
+.mm-go:active:not(:disabled) { transform: translateY(1px); }
+.mm-go:disabled { cursor: default; background: #6b2a33; color: rgba(255,255,255,.75); }
+.mm-ranked .mm-go { background: linear-gradient(90deg, #d9a440, #f3cf73); color: #1a1206; }
+.mm-ranked .mm-go:hover:not(:disabled) { box-shadow: 0 0 28px rgba(233,196,106,.45); background: linear-gradient(90deg, #e6b250, #ffdc85); }
+.mm-ranked .mm-go:disabled { background: #5d4a22; color: rgba(255,240,210,.7); }
+.mm-rank-row { display: flex; align-items: center; gap: 16px; margin-top: 4px; }
+.mm-medal { flex: none; width: 108px; height: 108px; display: grid; place-items: center; filter: drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
+.mm-rank-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.mm-ranked .mm-title { font-size: clamp(38px, 3.8vw, 52px); }
+.mm-rank-label { font-family: var(--v-cond); font-weight: 700; font-size: 20px; color: var(--v-white); letter-spacing: .06em; margin-top: 4px; }
+.mm-rank-sub { font-size: 12.5px; color: rgba(236,232,225,.62); }
+.mm-bar { display: block; height: 5px; background: rgba(236,232,225,.12); margin-top: 6px; max-width: 320px; }
+.mm-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #fff1c4); transition: width .6s ease; }
+.mm-rank-actions { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-top: auto; }
+.mm-link { background: none; border: none; color: rgba(236,232,225,.7); font-family: var(--body); font-size: 13.5px; cursor: pointer; padding: 6px 2px; border-bottom: 1px solid rgba(236,232,225,.3); }
+.mm-link:hover { color: #fff; border-color: var(--gold); }
+.mm-card.searching { border-color: rgba(255,70,85,.75); }
+.mm-card.searching::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--v-red), transparent); animation: mmScan 1.4s linear infinite; }
+.mm-ranked.searching { border-color: rgba(233,196,106,.75); }
+.mm-ranked.searching::after { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+@keyframes mmScan { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.mm-search { display: flex; align-items: center; gap: 16px; margin: 14px 0 0; padding: 12px 18px; background: rgba(15,25,35,.92); border-left: 4px solid var(--v-red); }
+.mm-spin { width: 26px; height: 26px; border: 3px solid rgba(236,232,225,.15); border-top-color: var(--v-red); border-radius: 50%; animation: mmSpin .8s linear infinite; flex: none; }
+@keyframes mmSpin { to { transform: rotate(360deg); } }
+.mm-search-txt { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.mm-search-txt b { font-family: var(--v-cond); letter-spacing: .08em; font-size: 16px; color: var(--v-white); }
+.mm-search-txt span { font-family: var(--v-cond); font-size: 13px; color: rgba(236,232,225,.6); letter-spacing: .05em; }
+.mm-cancel { background: transparent; color: var(--v-white); border: 1px solid rgba(236,232,225,.35); padding: 7px 18px; cursor: pointer; font-family: var(--body); font-size: 13px; }
+.mm-cancel:hover { border-color: var(--v-red); color: #fff; background: rgba(255,70,85,.15); }
+.mm-foot { display: flex; justify-content: center; margin-top: 14px; }
+.mm-room-btn { background: rgba(15,25,35,.6); border: 1px solid rgba(236,232,225,.2); color: rgba(236,232,225,.78); font-family: var(--body); font-size: 13px; padding: 7px 18px; cursor: pointer; letter-spacing: .04em; }
+.mm-room-btn::after { content: "▾"; margin-left: 8px; display: inline-block; transition: transform .2s; }
+.mm-room-btn.sel::after { transform: rotate(180deg); }
+.mm-room-btn:hover, .mm-room-btn.sel { color: #fff; border-color: rgba(236,232,225,.45); }
+#roomWrap { margin-top: 10px; }
+@media (max-width: 760px) {
+.mm-cards { grid-template-columns: 1fr; }
+.mm-card { min-height: 0; padding: 18px 18px 20px; }
+.mm-go { min-width: 0; width: 100%; }
+.mm-medal { width: 84px; height: 84px; }
+.mm-medal svg { width: 84px; height: 84px; }
+}
+.rk-medal { overflow: visible; display: block; }
+.rk-medal .rk-shine { animation: rkShine 3.6s ease-in-out infinite; }
+.rk-medal .rk-spin { transform-origin: 100px 100px; animation: mmSpin 9s linear infinite; }
+.rk-medal.t4 { filter: drop-shadow(0 0 10px rgba(255,90,90,.55)); }
+.rk-medal.t3 { filter: drop-shadow(0 0 8px rgba(114,245,214,.35)); }
+@keyframes rkShine { 0%, 55% { transform: translateX(-40px) rotate(25deg); } 85%, 100% { transform: translateX(260px) rotate(25deg); } }
+@media (prefers-reduced-motion: reduce) { .rk-medal .rk-shine, .rk-medal .rk-spin, .mm-spin, .mm-card.searching::after { animation: none; } }
+.rk-info { position: fixed; inset: 0; z-index: 60; background: rgba(5,8,12,.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.rk-info.hidden { display: none; }
+.rk-info-panel { width: min(860px, 100%); max-height: 92vh; overflow-y: auto; background: linear-gradient(160deg, #142130, #0d151e); border: 1px solid rgba(236,232,225,.14); text-align: left; padding: 20px 22px; clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); }
+.rk-info-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.rk-info-head b { font-family: var(--title); font-size: 30px; font-weight: 400; color: var(--v-white); }
+.rk-info-head span { font-family: var(--v-cond); color: rgba(236,232,225,.6); letter-spacing: .05em; flex: 1; }
+.rki-me { display: flex; gap: 18px; align-items: center; padding: 14px 16px; background: rgba(255,255,255,.04); border-left: 4px solid var(--gold); margin-bottom: 14px; }
+.rki-me-l { font-family: var(--v-cond); font-size: 26px; font-weight: 700; color: var(--v-white); letter-spacing: .05em; }
+.rki-me-s { font-size: 13px; color: rgba(236,232,225,.7); margin-top: 3px; }
+.rki-hist { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.rki-hist span { font-family: var(--v-cond); font-size: 12px; padding: 2px 7px; background: rgba(255,255,255,.06); }
+.rki-hist .w { color: #5ee6b0; border-left: 2px solid #5ee6b0; }
+.rki-hist .l { color: #ff8a93; border-left: 2px solid var(--v-red); }
+.rki-tiers { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.rki-tier { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255,255,255,.03); border: 1px solid transparent; }
+.rki-tier.mine { border-color: rgba(233,196,106,.6); background: rgba(233,196,106,.08); }
+.rki-tier b { display: block; font-family: var(--v-cond); font-size: 16px; color: var(--v-white); letter-spacing: .05em; }
+.rki-tier span { display: block; font-size: 12px; color: rgba(236,232,225,.62); }
+.rki-tier .rki-subs { font-size: 11px; color: rgba(236,232,225,.45); }
+.rki-note { font-size: 13px; color: rgba(236,232,225,.66); margin: 14px 0 0; line-height: 1.7; }
+.rk-reveal { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(20,30,45,.9), rgba(3,5,8,.96)); opacity: 0; transition: opacity .3s; }
+.rk-reveal.hidden { display: none; }
+.rk-reveal.on { opacity: 1; }
+.rkr-in { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.rkr-kicker { font-family: var(--v-cond); letter-spacing: .5em; color: var(--v-red); font-size: 16px; font-weight: 700; }
+.rkr-medal { transform: scale(.4); opacity: 0; }
+.rk-reveal.on .rkr-medal { animation: rkPop .9s cubic-bezier(.2,1.4,.4,1) .15s forwards; }
+@keyframes rkPop { to { transform: scale(1); opacity: 1; } }
+.rkr-label { font-family: var(--v-cond); font-size: 64px; font-weight: 700; color: #fff; letter-spacing: .08em; line-height: 1; }
+.rkr-name { font-family: var(--title); font-size: 32px; color: var(--gold); }
+.rkr-pts { font-family: var(--v-cond); color: rgba(236,232,225,.7); letter-spacing: .1em; margin-bottom: 14px; }
+.end-rk { display: inline-flex; align-items: center; gap: 10px; text-align: left; }
+.end-rk > span { display: flex; flex-direction: column; }
+.end-rk b.up { color: #5ee6b0; } .end-rk b.down { color: #ff8a93; }
+.end-rk small { color: var(--dim); font-size: 12px; }
+@media (max-height: 520px) {
+.mm-card { min-height: 0; padding: 12px 16px 14px; gap: 3px; }
+.mm-title { font-size: 34px; }
+.mm-ranked .mm-title { font-size: 30px; }
+.mm-en { font-size: 11px; }
+.mm-desc { font-size: 12.5px; margin-bottom: 4px; }
+.mm-go { margin-top: 8px; padding: 10px 24px; font-size: 16px; min-width: 170px; }
+.mm-medal, .mm-medal svg { width: 72px; height: 72px; }
+.season-bar { margin-bottom: 8px; font-size: 12.5px; }
+}
+:root { --nav-h: 58px; --line: rgba(236,232,225,.12); --panel: rgba(13,21,30,.84); --panel2: rgba(22,32,44,.9); }
+.topnav { position: fixed; left: 0; right: 0; top: 0; height: var(--nav-h); z-index: 30; display: flex; align-items: stretch; gap: 8px; padding: 0 14px 0 0;
+background: linear-gradient(180deg, rgba(10,16,24,.97), rgba(13,21,30,.92)); border-bottom: 1px solid var(--line); box-shadow: 0 6px 24px rgba(0,0,0,.35); padding-top: env(safe-area-inset-top, 0px); }
+.topnav.hidden { display: none; }
+body.has-nav #accBar { display: none !important; }
+body.has-nav .scr { top: var(--nav-h); }
+.tn-logo { display: flex; align-items: center; gap: 10px; padding: 0 22px 0 18px; border: none; cursor: pointer; background: var(--v-red); color: #fff; clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%); }
+.tn-mark { font-family: var(--title); font-size: 28px; line-height: 1; letter-spacing: .06em; }
+.tn-en { font-family: var(--v-cond); font-weight: 700; font-size: 11px; letter-spacing: .32em; opacity: .85; }
+.tn-tabs { display: flex; align-items: stretch; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: center; }
+.tn-tabs::-webkit-scrollbar { display: none; }
+.tn-tabs button { position: relative; border: none; background: none; color: rgba(236,232,225,.62); font-family: var(--body); font-size: 15px; letter-spacing: .12em; padding: 0 16px; cursor: pointer; white-space: nowrap; transition: color .15s, background .15s; }
+.tn-tabs button::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 3px; background: var(--v-red); transform: scaleX(0); transition: transform .2s; }
+.tn-tabs button:hover { color: #fff; background: rgba(236,232,225,.04); }
+.tn-tabs button.sel { color: #fff; }
+.tn-tabs button.sel::after { transform: scaleX(1); }
+.tn-tabs .tn-play { margin: 8px 10px; padding: 0 30px; color: #fff; background: var(--v-red); font-family: var(--v-cond); font-weight: 700; letter-spacing: .3em; font-size: 16px;
+clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.tn-tabs .tn-play::after { display: none; }
+.tn-tabs .tn-play:hover, .tn-tabs .tn-play.sel { background: #ff5d6a; box-shadow: 0 0 22px rgba(255,70,85,.45); }
+.tn-tabs .tn-play.searching { animation: tnPulse 1.2s ease-in-out infinite; }
+@keyframes tnPulse { 50% { background: #b8303d; } }
+.tn-right { display: flex; align-items: center; gap: 10px; flex: none; }
+.tn-ink { display: inline-flex; align-items: center; gap: 6px; font-family: var(--v-cond); font-size: 15px; color: var(--gold); padding: 4px 10px; background: rgba(233,196,106,.08); border: 1px solid rgba(233,196,106,.22); }
+.tn-ink svg { width: 15px; height: 15px; }
+.tn-player { position: relative; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 6px; border: 1px solid var(--line); background: rgba(236,232,225,.04); color: var(--v-white); cursor: pointer; text-align: left;
+clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); transition: border-color .15s, background .15s; }
+.tn-player:hover { border-color: rgba(255,70,85,.6); background: rgba(255,70,85,.08); }
+.tn-medal { width: 34px; height: 34px; display: grid; place-items: center; }
+.tn-who { display: flex; flex-direction: column; line-height: 1.15; max-width: 150px; }
+.tn-who b { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-who small { font-family: var(--v-cond); font-size: 11.5px; color: rgba(236,232,225,.58); letter-spacing: .06em; white-space: nowrap; }
+.tn-sync { width: 8px; height: 8px; border-radius: 50%; position: absolute; right: 6px; top: 6px; background: transparent; }
+.tn-sync.s-ok { background: #3ddc97; box-shadow: 0 0 6px #3ddc97; }
+.tn-sync.s-pending, .tn-sync.s-syncing { background: var(--gold); animation: tnBlink 1s ease-in-out infinite; }
+.tn-sync.s-offline, .tn-sync.s-local { background: #8a94a3; }
+.tn-sync.s-error { background: var(--v-red); box-shadow: 0 0 6px var(--v-red); }
+@keyframes tnBlink { 50% { opacity: .3; } }
+.tn-icon { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--line); background: transparent; color: rgba(236,232,225,.7); cursor: pointer; }
+.tn-icon svg { width: 18px; height: 18px; }
+.tn-icon:hover { color: #fff; border-color: rgba(236,232,225,.4); }
+@media (max-width: 1100px) { .tn-ink { display: none; } .tn-tabs button { padding: 0 11px; font-size: 14px; letter-spacing: .06em; } .tn-tabs .tn-play { padding: 0 20px; } }
+@media (max-width: 820px) { .tn-who { display: none; } .tn-en { display: none; } .tn-logo { padding: 0 18px 0 12px; } .tn-tabs { justify-content: flex-start; } }
+@media (max-height: 520px) { :root { --nav-h: 46px; } .tn-mark { font-size: 22px; } .tn-player { height: 36px; } .tn-icon { width: 32px; height: 32px; } .tn-tabs .tn-play { margin: 6px 8px; } }
+.home-scrim { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(8,12,20,.78) 0%, rgba(8,12,20,.45) 34%, rgba(8,12,20,0) 60%), linear-gradient(0deg, rgba(8,12,20,.6), rgba(8,12,20,0) 30%); }
+.home-kicker { position: absolute; left: 6vw; top: 12%; display: flex; align-items: center; gap: 12px; font-family: var(--v-cond); letter-spacing: .08em; color: rgba(236,232,225,.75); font-size: 14px; z-index: 1; }
+.menuscr .mtitle { left: 6vw; top: calc(12% + 34px); transform: none; }
+.menuscr .mtitle h1 { font-size: clamp(84px, 11vw, 150px); }
+.home-tag { position: absolute; left: 6vw; top: calc(12% + 34px + clamp(92px, 12vw, 162px)); margin: 0; font-family: var(--v-cond); font-size: 15px; letter-spacing: .32em; color: rgba(236,232,225,.7); }
+.menuscr .mcard { left: 6vw; right: auto; bottom: auto; width: auto; min-width: 280px; text-align: left; background: var(--v-red); border: none; border-radius: 0; padding: 16px 40px 16px 26px; box-shadow: 0 10px 40px rgba(255,70,85,.25);
+clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%); }
+.menuscr .mcard.right { top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 46px); }
+.menuscr .mcard.left { top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 46px + 112px); background: rgba(13,21,30,.82); border: 1px solid rgba(236,232,225,.22); box-shadow: none; min-width: 240px; padding: 12px 34px 12px 22px; }
+.menuscr .mcard .mk { font-size: clamp(30px, 3vw, 40px); letter-spacing: .14em; color: #fff; }
+.menuscr .mcard.left .mk { font-size: clamp(22px, 2.2vw, 28px); }
+.menuscr .mcard .ms { color: rgba(255,255,255,.82); font-size: 13px; }
+.menuscr .mcard.left .ms { color: rgba(236,232,225,.6); }
+.menuscr .mcard.right::after { content: "PLAY  ›"; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-family: var(--v-cond); font-weight: 700; letter-spacing: .3em; font-size: 13px; color: rgba(255,255,255,.85); }
+.menuscr .mcard.right { padding-right: 120px; }
+.menuscr .mcard:hover, .menuscr .mcard:focus-visible { transform: translateX(6px); }
+.menuscr .mcard.right:hover { background: #ff5d6a; box-shadow: 0 10px 44px rgba(255,70,85,.45); }
+.menuscr .mcard.left:hover { border-color: rgba(236,232,225,.55); }
+#menu.hl-single .mcard.left, #menu.hl-netp .mcard.right { transform: translateX(8px); }
+#menu.hl-single .mtitle h1 span, #menu.hl-netp .mtitle h1 span { transform: none !important; opacity: 1 !important; filter: none !important; }
+#menu.hl-single .mtitle .seal, #menu.hl-netp .mtitle .seal { transform: rotate(3deg) !important; opacity: 1 !important; }
+.home-side { position: absolute; right: 3vw; bottom: 14%; display: flex; flex-direction: column; gap: 10px; width: min(330px, 30vw); z-index: 1; }
+.home-card { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); color: var(--v-white);
+clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+button.home-card { cursor: pointer; font: inherit; transition: border-color .15s, transform .15s; }
+button.home-card:hover { border-color: rgba(233,196,106,.6); transform: translateY(-2px); }
+.hc-kicker { font-family: var(--v-cond); font-size: 11.5px; letter-spacing: .28em; color: var(--v-red); }
+.home-rank .hc-kicker { color: var(--gold); }
+.hc-row { display: flex; align-items: center; gap: 12px; }
+.hc-medal { width: 56px; height: 56px; display: grid; place-items: center; flex: none; }
+.hc-txt { display: flex; flex-direction: column; }
+.hc-txt b { font-family: var(--v-cond); font-size: 18px; letter-spacing: .05em; }
+.hc-txt small { font-size: 12.5px; color: rgba(236,232,225,.6); }
+.home-news ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: rgba(236,232,225,.72); }
+.home-news li b { color: var(--v-white); margin-right: 8px; font-weight: 700; }
+.home-news li::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--v-red); margin-right: 8px; transform: rotate(45deg) translateY(-2px); }
+.menuscr .msmall-dock { background: rgba(13,21,30,.8); border-top: 1px solid var(--line); }
+body.has-nav .menuscr .msmall-dock [data-go="gacha"], body.has-nav .menuscr .msmall-dock [data-go="tasks"], body.has-nav .menuscr .msmall-dock [data-go="codex"],
+body.has-nav .menuscr .msmall-dock [data-go="community"], body.has-nav .menuscr .msmall-dock [data-go="settings"], body.has-nav .menuscr .msmall-dock [data-go="help"] { display: none; }
+.menuscr .mgroup { border-radius: 0; background: transparent; border: none; }
+.menuscr .mgroup button { border-radius: 0; }
+@media (max-height: 620px) { .home-side { display: none; } }
+@media (max-height: 520px) {
+.home-kicker { top: 6%; font-size: 12px; }
+.menuscr .mtitle { top: calc(6% + 26px); } .menuscr .mtitle h1 { font-size: 72px; }
+.home-tag { top: calc(6% + 26px + 78px); font-size: 12px; }
+.menuscr .mcard.right { top: calc(6% + 26px + 78px + 30px); padding: 10px 100px 10px 18px; min-width: 0; }
+.menuscr .mcard.left { top: calc(6% + 26px + 78px + 30px + 78px); padding: 8px 26px 8px 16px; min-width: 0; }
+.menuscr .mcard .mk { font-size: 24px; } .menuscr .mcard.left .mk { font-size: 18px; } .menuscr .mcard .ms { display: none; }
+}
+.scr:not(.menuscr):not(#bp):not(#pause):not(#end) { background: linear-gradient(180deg, rgba(6,10,16,.74), rgba(6,10,16,.86)); }
+body.has-nav .scr:not(.menuscr) > .panel { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.45); margin: 22px auto; padding: 22px 28px 26px;
+clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px)); }
+body.has-nav #netp > .panel { background: transparent; border: none; box-shadow: none; clip-path: none; }
+.scr h2 { position: relative; padding-bottom: 12px; }
+.scr h2::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 46px; height: 3px; background: var(--v-red); transform: translateX(-50%); }
+.rk-info-head b::after, .menuscr h2::after { display: none; }
+.go { font-family: var(--v-cond), var(--title); font-weight: 700; font-size: 22px; letter-spacing: .3em; padding: 12px 40px 12px 46px; border: none; border-radius: 0; background: var(--v-red); color: #fff; box-shadow: none;
+clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); }
+.go:hover:not(:disabled) { transform: none; background: #ff5d6a; box-shadow: 0 0 26px rgba(255,70,85,.4); }
+.go:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+.go:disabled { background: #5a2a31; color: rgba(255,255,255,.6); }
+.go.small { font-size: 16px; padding: 9px 26px 9px 30px; letter-spacing: .2em; }
+.go.alt { background: transparent; color: var(--v-white); box-shadow: inset 0 0 0 1px rgba(236,232,225,.5); }
+.go.alt:hover:not(:disabled) { background: rgba(236,232,225,.1); box-shadow: inset 0 0 0 1px #fff; }
+.ghost { border-radius: 0; background: rgba(236,232,225,.04); border: 1px solid rgba(236,232,225,.22); }
+.ghost:hover { background: rgba(236,232,225,.09); border-color: rgba(236,232,225,.5); }
+.ghost.sel, .ghost.sel:hover { background: var(--v-white); color: var(--v-navy); border-color: var(--v-white); }
+.seg { border-radius: 0; padding: 0; gap: 0; background: transparent; border: none; border-bottom: 1px solid var(--line); }
+.seg button { border-radius: 0; padding: 10px 20px; position: relative; letter-spacing: .08em; }
+.seg button.sel { background: transparent; color: #fff; }
+.seg button.sel::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px; background: var(--v-red); }
+.seg button:not(.sel):not(:disabled):hover { background: rgba(236,232,225,.05); }
+.scr input:not([type="range"]):not([type="checkbox"]):not([type="file"]), .scr textarea { border-radius: 0 !important; background: rgba(5,10,16,.7) !important; border: 1px solid rgba(236,232,225,.16) !important; border-bottom: 2px solid rgba(236,232,225,.3) !important; color: var(--v-white); }
+.scr input:focus, .scr textarea:focus { outline: none; border-bottom-color: var(--v-red) !important; }
+.toast { border-radius: 0; background: rgba(13,21,30,.97); border: none; border-left: 4px solid var(--v-red); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 14px; }
+.scr ::-webkit-scrollbar { width: 8px; height: 8px; }
+.scr ::-webkit-scrollbar-thumb { background: rgba(236,232,225,.18); }
+.scr ::-webkit-scrollbar-track { background: transparent; }
+.wuxia-card, .netcol { border-radius: 0 !important; }
+#end .panel, #pause .panel { background: rgba(10,16,24,.9); border: 1px solid var(--line); clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px)); padding: 26px 30px; }
+#endTitle { font-family: var(--v-cond), var(--title); font-weight: 700; letter-spacing: .12em; }
+#end h2::after, #pause h2::after { left: 50%; }
+.accp { max-width: min(760px, 95vw); text-align: left; }
+.accp h2 { text-align: left; } .accp h2::after { left: 0; transform: none; }
+.accp .sub { text-align: left; }
+.accp .row { justify-content: flex-start; }
+.ad-kicker { display: inline-block; font-family: var(--v-cond); font-size: 12px; letter-spacing: .28em; color: var(--v-red); margin-bottom: 4px; }
+.ad-tools-k { display: block; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+#accActionBtns { justify-content: flex-start !important; }
+.ad-card { display: flex; align-items: center; gap: 18px; padding: 18px; background: linear-gradient(120deg, rgba(255,70,85,.14), rgba(13,21,30,.2) 55%); border: 1px solid var(--line); }
+.ad-avatar { --tier: #8a94a3; flex: none; width: 76px; height: 76px; display: grid; place-items: center; font-family: var(--title); font-size: 42px; color: #fff; background: linear-gradient(160deg, #23303f, #0d151e);
+border: 2px solid var(--tier); box-shadow: 0 0 18px color-mix(in srgb, var(--tier) 40%, transparent); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)); }
+.ad-who { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.ad-name { font-size: 28px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad-rank { font-family: var(--v-cond); font-size: 15px; color: var(--gold); letter-spacing: .05em; margin-top: 2px; }
+.ad-medal { flex: none; width: 96px; height: 96px; display: grid; place-items: center; }
+.ad-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.ad-stat { padding: 10px 12px; background: rgba(236,232,225,.04); border-left: 3px solid rgba(236,232,225,.18); display: flex; flex-direction: column; }
+.ad-stat span { font-size: 12px; color: rgba(236,232,225,.55); letter-spacing: .1em; }
+.ad-stat b { font-family: var(--v-cond); font-size: 20px; color: var(--v-white); letter-spacing: .03em; }
+.ad-stat small { font-size: 11.5px; color: rgba(236,232,225,.5); }
+.ad-sync { margin-top: 12px; padding: 14px 16px; background: rgba(5,10,16,.55); border: 1px solid var(--line); }
+.ad-sync-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ad-sync-head b { font-size: 16px; color: #fff; }
+.ad-sync-head span:last-child { font-size: 13px; color: rgba(236,232,225,.62); }
+.ad-dot { width: 10px; height: 10px; border-radius: 50%; background: #8a94a3; flex: none; }
+.ad-dot.s-ok { background: #3ddc97; box-shadow: 0 0 8px #3ddc97; }
+.ad-dot.s-pending, .ad-dot.s-syncing { background: var(--gold); animation: tnBlink 1s infinite; }
+.ad-dot.s-error { background: var(--v-red); box-shadow: 0 0 8px var(--v-red); }
+.ad-sync-note { font-size: 12.5px; color: rgba(236,232,225,.55); margin: 8px 0 10px; line-height: 1.6; }
+.ad-sync-btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ad-btn { margin-top: 0; min-width: 0; padding: 10px 26px; font-size: 15px; letter-spacing: .2em; }
+.acc-dash.hidden, .acc-in.hidden { display: none; }
+@media (max-width: 640px) { .ad-stats { grid-template-columns: repeat(2, 1fr); } .ad-medal { display: none; } }
+body.has-nav .scr:not(.menuscr):not(#netp) { padding: 18px 0; }
+body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
+.go.alt { clip-path: none; }
+.row .go, .row .go.small { margin: 0; }
+.accp .form { margin: 14px 0 0; max-width: 420px; }
+.accp .row { margin-top: 18px; }
+.accp #accMsg { text-align: left; }
+.accp #accFootNote { text-align: left; }
+.end-kicker { font-family: var(--v-cond); font-weight: 700; font-size: clamp(54px, 8vw, 104px); line-height: .9; letter-spacing: .14em; margin: -6px 0 6px; color: rgba(236,232,225,.9); text-shadow: 0 6px 30px rgba(0,0,0,.5); }
+.end-kicker.win { color: #5ee6c4; text-shadow: 0 0 40px rgba(94,230,196,.35); }
+.end-kicker.lose { color: var(--v-red); text-shadow: 0 0 40px rgba(255,70,85,.35); }
+.end-kicker.neutral { font-size: clamp(34px, 4.6vw, 60px); color: rgba(236,232,225,.7); }
+.end-kicker:empty { display: none; }
+.tn-sync.s-idle { background: #3ddc97; opacity: .6; }
+.ad-dot.s-idle { background: #3ddc97; opacity: .6; }
+.ad-sync #adMsg { margin: 8px 0 0; min-height: 0; text-align: left; }
+.ad-sync #adMsg:empty { display: none; }
 </style>
 </head>
 <body>
@@ -1031,11 +1324,51 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
   <canvas id="c" tabindex="0"></canvas>
 
   <div class="accbar hidden" id="accBar"></div>
+  <!-- 顶部导航（菜单类页面常驻）：左边标志，中间分区，右边墨锭、玩家名片和设置 -->
+  <nav class="topnav hidden" id="topNav" aria-label="主导航">
+    <button class="tn-logo" type="button" data-nav="menu" aria-label="回到首页"><span class="tn-mark">刃影</span><span class="tn-en">RENYING</span></button>
+    <div class="tn-tabs">
+      <button type="button" data-nav="menu">首页</button>
+      <button type="button" data-nav="single">单人</button>
+      <button type="button" data-nav="netp" class="tn-play">对战</button>
+      <button type="button" data-nav="codex">英雄</button>
+      <button type="button" data-nav="gacha">问剑阁</button>
+      <button type="button" data-nav="tasks">任务</button>
+      <button type="button" data-nav="community">社区</button>
+    </div>
+    <div class="tn-right">
+      <span class="tn-ink" id="tnInk" title="墨锭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-gourd"/></svg><b id="tnInkN">0</b></span>
+      <button class="tn-player" id="tnPlayer" type="button" data-nav="acc" aria-label="账号与存档">
+        <span class="tn-medal" id="tnMedal"></span>
+        <span class="tn-who"><b id="tnName">未登录</b><small id="tnRank">登录 / 注册</small></span>
+        <span class="tn-sync" id="tnSync" title="存档状态"></span>
+      </button>
+      <button class="tn-icon" type="button" data-nav="settings" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="tn-icon" type="button" data-nav="help" title="操作说明" aria-label="操作说明"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
+    </div>
+  </nav>
 
   <div id="menu" class="scr on menuscr">
+    <div class="home-scrim" aria-hidden="true"></div>
+    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
+    <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
+    <div class="home-side">
+      <button class="home-card home-rank" id="homeRank" type="button">
+        <span class="hc-kicker">我的段位</span>
+        <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
+      </button>
+      <div class="home-card home-news">
+        <span class="hc-kicker">版本动态</span>
+        <ul>
+          <li><b>匹配对战</b>全服随机对手，开局即打</li>
+          <li><b>排位赛</b>D 到 S 五段，定级 5 场</li>
+          <li><b>流云 · 墨羽</b>技能重做</li>
+        </ul>
+      </div>
+    </div>
     <button class="mcard left" id="mSingle" data-go="single"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
-    <button class="mcard right" id="mNet" data-go="netp"><span class="mk">联机对战</span><span class="ms">上擂台，和同学一决高下</span></button>
+    <button class="mcard right" id="mNet" data-go="netp"><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
     <div class="msmall-dock">
       <div class="mgroup" title="江湖游历">
         <button id="mQfx" class="qfxbtn" title="守住第三、六、十波，可领刃影奖励"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>青锋行</button>
@@ -1411,6 +1744,52 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
         </span>
       </div>
 
+      <!-- 对战大厅：匹配对战（主要玩法）+ 排位赛，房间对战收在下面的小按钮里 -->
+      <div class="mm-hero" id="mmHero">
+        <div class="season-bar">
+          <span class="season-tag" id="seasonName">第一赛季</span>
+          <span class="season-range">10.22 – 11.22</span>
+          <span class="season-left" id="seasonLeft"></span>
+        </div>
+        <div class="mm-cards">
+          <div class="mm-card mm-quick" id="mmQuickCard">
+            <div class="mm-card-bg" aria-hidden="true"></div>
+            <span class="mm-kicker">主要玩法</span>
+            <span class="mm-title">匹配对战</span>
+            <span class="mm-en">QUICK MATCH</span>
+            <span class="mm-desc">全服随机对手，谁都可能遇到 · 标准三局两胜 · 不影响段位</span>
+            <button class="mm-go" id="mmQuickBtn" type="button">开始匹配</button>
+          </div>
+          <div class="mm-card mm-ranked" id="mmRankCard">
+            <div class="mm-card-bg" aria-hidden="true"></div>
+            <span class="mm-kicker">赛季排位</span>
+            <div class="mm-rank-row">
+              <span class="mm-medal" id="mmMedal"></span>
+              <div class="mm-rank-txt">
+                <span class="mm-title">排位赛</span>
+                <span class="mm-en">COMPETITIVE</span>
+                <span class="mm-rank-label" id="mmRankLabel">登录后开启排位</span>
+                <span class="mm-rank-sub" id="mmRankSub"></span>
+                <span class="mm-bar"><i id="mmRankBar"></i></span>
+              </div>
+            </div>
+            <div class="mm-rank-actions">
+              <button class="mm-go" id="mmRankBtn" type="button">开始排位</button>
+              <button class="mm-link" id="mmRankInfoBtn" type="button">段位与战绩</button>
+            </div>
+          </div>
+        </div>
+        <div class="mm-search hidden" id="mmSearch" role="status">
+          <span class="mm-spin" aria-hidden="true"></span>
+          <div class="mm-search-txt"><b id="mmSearchTitle">正在寻找对手</b><span id="mmSearchSub">0:00</span></div>
+          <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
+        </div>
+        <div class="mm-foot">
+          <button class="mm-room-btn" id="mmRoomBtn" type="button" aria-expanded="false">房间对战 · 和好友约战</button>
+        </div>
+      </div>
+
+      <div id="roomWrap" class="hidden">
       <!-- 战绩与段位概览条 -->
       <div class="net-profile-strip" id="netProfileStrip">
         <div class="nps-item">
@@ -1605,7 +1984,14 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
           <p class="netnote" id="lanLine"></p>
         </div>
       </div>
+      </div><!-- /roomWrap -->
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
+      <div class="rk-info hidden" id="rkInfo" role="dialog" aria-modal="true" aria-label="段位与战绩">
+        <div class="rk-info-panel">
+          <div class="rk-info-head"><b>段位与战绩</b><span id="rkInfoSeason"></span><button class="mm-cancel" id="rkInfoClose" type="button">关闭</button></div>
+          <div id="rkInfoBody"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1749,15 +2135,37 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
   <div id="netOv" class="netov" role="status"></div>
 
   <div id="acc" class="scr">
-    <div class="panel narrowp">
-      <h2>账号</h2>
-      <p class="sub">登录后，联机对战的胜负会记到排行榜上</p>
+    <div class="panel narrowp accp">
+      <div class="acc-dash hidden" id="accDash">
+        <div class="ad-card">
+          <span class="ad-avatar" id="adAvatar">侠</span>
+          <div class="ad-who">
+            <span class="ad-kicker" id="adKind">云端账号</span>
+            <b class="ad-name" id="adName">大侠</b>
+            <span class="ad-rank" id="adRank"></span>
+          </div>
+          <span class="ad-medal" id="adMedal"></span>
+        </div>
+        <div class="ad-stats" id="adStats"></div>
+        <div class="ad-sync">
+          <div class="ad-sync-head"><span class="ad-dot" id="adSyncDot"></span><b id="adSyncT">已同步</b><span id="adSyncS"></span></div>
+          <p class="ad-sync-note" id="adSyncNote">存档先存在本机，再自动上传到云端；上传失败会自动重试，没传完就关了网页，下次打开会补传。</p>
+          <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-cancel" id="adPull" type="button">从云端拉取</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
+          <p class="netstatus" id="adMsg" role="status"></p>
+        </div>
+      </div>
+      <div class="acc-in" id="accIn">
+      <span class="ad-kicker">账号</span>
+      <h2>登录刃影</h2>
+      <p class="sub">登录后，角色、墨锭、战绩和排位分数都跟着账号走，换电脑也能接着玩</p>
       <div class="form">
         <label>昵称<input id="accName" maxlength="12" autocomplete="username" spellcheck="false"></label>
         <label>密码<input id="accPass" type="password" maxlength="64" autocomplete="current-password"></label>
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
+      </div>
+      <span class="ad-kicker ad-tools-k">存档管理</span>
       <div id="accActionBtns" style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
         <button class="ghost small" id="exportAccBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px" title="将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>导出当前存档</button>
         <button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>云存档设置</button>
@@ -1803,7 +2211,7 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
         <div id="importSelectArea" class="hidden" style="margin-top:8px"></div>
         <p id="importMsg" class="netstatus" style="margin:6px 0 0;font-size:12px" role="status"></p>
       </div>
-      <p class="netnote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
+      <p class="netnote" id="accFootNote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
     </div>
   </div>
 
@@ -1977,6 +2385,7 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
 
   <div class="tutbox hidden" id="tutBox"><div class="tn" id="tutN"></div><div class="tt" id="tutT"></div><div class="td" id="tutD"></div></div>
   <div class="toast" id="toast"></div>
+  <div class="rk-reveal hidden" id="rkReveal" role="dialog" aria-modal="true" aria-label="段位"></div>
   <div id="touchUI" class="hidden">
     <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>
     <button class="tbtn tdummy hidden" id="tDummy">切换木人</button>
@@ -2001,7 +2410,7 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
   </div>
 
   <div id="end" class="scr">
-    <div class="panel"><h2 id="endTitle">青锋 胜</h2><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle">青锋 胜</h2><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>
@@ -2052,6 +2461,74 @@ let fbDb = null;
 let currentUser = null;
 let authListeners = [];
 let saveTimer = null;
+let rkBlocked = false;
+const sync = { state: 'local', at: 0, err: '' };
+const syncListeners = [];
+let pendingData = null, retryN = 0;
+function cloudActive() { return !!(hasValidConfig() && fbDb && currentUser && currentUser.uid !== 'dev_master' && !String(currentUser.uid).startsWith('local_')); }
+function dirtyKey() { return 'renying-sync-dirty-' + (currentUser && currentUser.uid); }
+function setSync(patch) {
+Object.assign(sync, patch);
+try { if (sync.at) localStorage.setItem('renying-sync-at-' + (currentUser && currentUser.uid), String(sync.at)); } catch (e) {}
+const snap = getSyncState();
+syncListeners.forEach(fn => { try { fn(snap); } catch (e) {} });
+}
+function getSyncState() {
+let at = sync.at;
+if (!at && currentUser) { try { at = +localStorage.getItem('renying-sync-at-' + currentUser.uid) || 0; } catch (e) {} }
+let state = cloudActive() ? sync.state : 'local';
+if (state === 'local' && cloudActive()) state = at ? 'ok' : 'idle';   // 连上了云端但这次还没传过
+return { state, at, err: sync.err, cloud: cloudActive(), pending: !!pendingData };
+}
+function onSyncChange(fn) { if (typeof fn === 'function') syncListeners.push(fn); }
+async function writeDoc(data) {
+try {
+await fbDb.collection('users').doc(currentUser.uid).set(data, { merge: true });
+} catch (err) {
+if (data.rk && err && err.code === 'permission-denied') {   // 规则还不认识 rk：去掉再试一次
+rkBlocked = true;
+delete data.rk;
+await fbDb.collection('users').doc(currentUser.uid).set(data, { merge: true });
+return;
+}
+throw err;
+}
+}
+async function doSync() {
+if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+const data = pendingData;
+if (!data || !cloudActive()) return;
+if (typeof navigator !== 'undefined' && navigator.onLine === false) { setSync({ state: 'offline' }); return; }
+setSync({ state: 'syncing' });
+try {
+await writeDoc(data);
+if (pendingData === data) {
+pendingData = null;
+try { localStorage.removeItem(dirtyKey()); } catch (e) {}
+}
+retryN = 0;
+setSync({ state: pendingData ? 'pending' : 'ok', at: Date.now(), err: '' });
+if (pendingData) saveTimer = setTimeout(doSync, 800);
+} catch (err) {
+console.warn('Sync profile to Firestore failed:', err);
+if (err && err.code === 'permission-denied') {   // 云端校验不通过，重试也没用：本机数据还在，提示一下
+if (pendingData === data) pendingData = null;
+setSync({ state: 'error', err: '云端拒绝了这次存档（单次变化超出了云端的校验范围），本机存档不受影响' });
+return;
+}
+retryN++;
+const wait = [2, 5, 15, 30, 60][Math.min(retryN, 5) - 1] * 1000;
+setSync({ state: 'error', err: `上传失败，${Math.round(wait / 1000)} 秒后自动重试` });
+saveTimer = setTimeout(doSync, wait);
+}
+}
+function flush() { if (pendingData && cloudActive()) doSync(); }
+if (typeof window !== 'undefined') {
+window.addEventListener('online', flush);
+window.addEventListener('offline', () => { if (pendingData) setSync({ state: 'offline' }); });
+window.addEventListener('pagehide', flush);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+}
 function getConfig() {
 if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId) {
 return window.FIREBASE_CONFIG;
@@ -2167,7 +2644,8 @@ netLosses: Math.max(0, Math.floor(p.netLosses || 0)),
 online10Unlocked: !!p.online10Unlocked,
 stageStars: (p.stageStars && typeof p.stageStars === 'object') ? p.stageStars : {},
 qfx: Math.max(0, Math.floor(p.qfx || 0)),
-updatedAt: Date.now()
+updatedAt: Date.now(),
+...(p.rk && typeof p.rk === 'object' && !rkBlocked ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {})
 };
 }
 async function loginDev(password) {
@@ -2335,7 +2813,19 @@ try {
 const snap = await fbDb.collection('users').doc(currentUser.uid).get();
 if (snap.exists) {
 const data = snap.data();
-try { localStorage.setItem('renying-cloud-cache', JSON.stringify(data)); } catch (e) {}
+let local = null, dirty = 0;
+try { dirty = +localStorage.getItem(dirtyKey()) || 0; local = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || 'null'); } catch (e) {}
+const cloudAt = typeof data.updatedAt === 'number' ? data.updatedAt : (data.updatedAt && data.updatedAt.toMillis ? data.updatedAt.toMillis() : 0);
+if (dirty && local && (local.updatedAt || 0) > cloudAt) {
+saveProfile(local, true);
+return local;
+}
+try {
+localStorage.removeItem(dirtyKey());
+localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
+localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(data));
+} catch (e) {}
+if (!pendingData) setSync({ state: 'ok', at: Date.now(), err: '' });
 return data;
 }
 } catch (err) {
@@ -2365,23 +2855,38 @@ try {
 localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
 localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(dataToSave));
 } catch (e) {}
-if (!hasValidConfig() || !fbDb || !currentUser || currentUser.uid === 'dev_master' || currentUser.uid.startsWith('local_')) {
-return;
-}
-const doSync = async () => {
-try {
-await fbDb.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true });
-} catch (err) {
-console.warn('Sync profile to Firestore failed:', err);
-}
-};
-if (immediate) {
-if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
-doSync();
-} else {
+if (!cloudActive()) { setSync({ state: 'local' }); return; }
+pendingData = dataToSave;
+try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
+if (sync.state !== 'syncing') setSync({ state: 'pending' });
 if (saveTimer) clearTimeout(saveTimer);
-saveTimer = setTimeout(doSync, 1500);
+if (immediate) doSync();
+else saveTimer = setTimeout(doSync, 1500);
 }
+async function syncNow() {
+if (!cloudActive()) throw new Error('当前是本地存档，没有连接云端');
+if (!pendingData) {
+let local = null;
+try { local = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || 'null'); } catch (e) {}
+if (!local) throw new Error('本机没有可上传的存档');
+pendingData = Object.assign(toCloudData(local), { name: getUser().name, updatedAt: Date.now() });
+}
+await doSync();
+if (sync.state === 'error') throw new Error(sync.err);
+}
+async function pullNow() {
+if (!cloudActive()) throw new Error('当前是本地存档，没有连接云端');
+const snap = await fbDb.collection('users').doc(currentUser.uid).get();
+if (!snap.exists) throw new Error('云端还没有这个账号的存档');
+const data = snap.data();
+pendingData = null;
+try {
+localStorage.removeItem(dirtyKey());
+localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
+localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(data));
+} catch (e) {}
+setSync({ state: 'ok', at: Date.now(), err: '' });
+return data;
 }
 function onAuthChange(fn) {
 if (typeof fn === 'function') authListeners.push(fn);
@@ -2629,6 +3134,10 @@ logout,
 getUser,
 loadProfile,
 saveProfile,
+syncNow,
+pullNow,
+getSyncState,
+onSyncChange,
 onAuthChange,
 exportCurrentAccount,
 exportAllAccounts,
@@ -2894,7 +3403,7 @@ stat: { hp: 480, walk: 0.98, speed: 1.05, dmg: 1.00, reach: 1.28, swing: 1.08, j
 look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
 ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
 { id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 8.0, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
-passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），风遁疾退带狂风护体，身法飘忽制胜。',
+passiveName: '御风', passiveDesc: '御风而行，三段跳与开扇疾冲来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），身法飘忽制胜。',
 stat: { hp: 495, walk: 1.15, speed: 0.85, dmg: 1.18, reach: 1.06, swing: 0.90, jump: 1.08, weight: 0.88, defRating: 1.02, guardMax: 112, guardStab: 1.15, guardChip: 0.07, guardRegen: 32, poise: 0.95, size: 0.98 }, jumps: 3, hitFeel: 0.9,
 look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
 ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
@@ -2938,7 +3447,8 @@ look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, sca
 ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
 ];
 const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
-const INK_MAX = 100, INK_COST = 15, INK_REGEN = 25, INK_DMG = 24;
+const INK_MAX = 100, INK_COST = 15, INK_REGEN = 12, INK_DMG = 24;
+const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
 const WEAPON_POSE_MODS = {
 spear: { l1: ['sp_l1s', 'sp_l1a'], l2: ['sp_l2s', 'sp_l2a'], l3: ['ls_stance', 'ls_thrust'], l5: ['ls_stance', 'ls_thrust'] },
@@ -3061,15 +3571,12 @@ if (f.t >= 0.34) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
 ai: (me, foe, d) => d < 120 },
-windblade: { name: '风刃', cd: 1.4, air: true, desc: '挥扇生风。此招【无长硬直】，附带风暴推力（420 像素击退）；连飞羽轻镖也一并吹散。',
+windblade: { name: '风刃', cd: 2.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
 start() {},
 update(f) {
 if (f.skPh === 0 && f.t >= 0.04) {
 f.skPh = 1; SFX.swing();
-if (f.twinT > 0) {
-f.twinT = 0;
-for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1220, vy, w: 74, h: 62, life: 1.15, dmg: 32, kb: [400, -90], stun: 0.22, hs: 0.035 });
-} else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1240, w: 72, h: 62, life: 1.15, dmg: 42, kb: [420, -90], stun: 0.22, hs: 0.035 });
+for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
 }
 if (f.skPh === 1 && f.t >= 0.11) toNeutral(f);
 },
@@ -3085,7 +3592,8 @@ f.skill2CD = Math.max(0, f.skill2CD - 2.0);
 addP({ type: 'text', text: '⚡ 触电麻痹 · 雷踏加速', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
 }
 if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
-if (f.t >= 0.26) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
+const through = f.hitDone && foe && (f.x - foe.x) * f.face > 45;   // 一拳贯穿、穿过对手身后就收住，不再继续往前冲
+if (f.t >= 0.26 || through) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
 }
 if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
 },
@@ -3212,25 +3720,18 @@ strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 38, kb: foeInAir ? [420,
 if (f.t >= 2) toNeutral(f);
 },
 pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-windstep: { name: '风遁', cd: 3.5, air: true, nofric: true, pass: true, desc: '御风后翻瞬间在原地引爆【惊风退敌】斥力气旋（0.45 秒击退贴脸之敌）；附带狂风霸体护身（0.25 秒），下一发风刃亦得风势相助，一分为二。',
-start(f) { f.vx = 0; f.armorT = 0.25; f.armorHits = 1; },
-update(f, foe) {
-if (f.skPh === 0) {
-f.skPh = 1; f.invul = Math.max(f.invul, 0.20); f.twinT = 1.2; SFX.dash();
-ring(f.x, f.y - 50, 140, f.look.slash, 0.45); dust(f.x, 0, 16); SFX.swing();
-const targets = M.mode === 'watch2v2' ? foesOf(f) : [foe];
-for (const ef of targets) {
-if (ef && Math.abs(ef.x - f.x) < 165 && Math.abs(ef.y - f.y) < 130 && ef.invul <= 0) {
-applyHit(f, ef, { dmg: 38, kb: [f.face * -460, -320], stun: 0.45, hs: 0.07, launch: true, noScale: true }, [ef.x, ef.y - 60]);
-addP({ type: 'text', text: '🌪️ 惊风退敌', x: f.x, y: f.y - 90, life: 0.8, max: 0.8, rgb: '140,255,200' });
+windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。',
+start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); },
+update(f) {
+if (f.skPh < 5 && f.t >= f.skPh * 0.055) {   // 冲的路上每隔一小段撒一颗
+f.skPh++;
+spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: Math.random() * 6 });
 }
-}
-}
-f.vx = -f.face * 1050 * (1 - f.t / 0.24);
-if (Math.random() < 0.7) addP({ type: 'spark', x: f.x + f.face * 20, y: f.y - rand(20, 100), vx: f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
-if (f.t >= 0.24) toNeutral(f);
+f.vx = f.face * 1300 * Math.max(0, 1 - f.t / 0.3);
+if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
+if (f.t >= 0.32) toNeutral(f);
 },
-pose: () => ['ly_hover', 40], ai: (m, o, d) => d < 160 },
+pose: () => ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 360 && Math.sign(o.x - m.x) === m.face },
 stomp: { name: '雷踏', cd: 4.5, desc: '一脚踏落，前方轰然炸起雷柱（宽 85 像素，高 420 像素，48 伤害）。垂直高空挑飞，将对手击向空中。',
 start(f) { f.vx = 0; },
 update(f) {
@@ -3238,13 +3739,17 @@ if (f.skPh === 0 && f.t >= 0.14) { f.skPh = 1; dust(f.x, 0, 12); SFX.thud(); spa
 if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
-inksplash: { name: '泼墨', cd: 4.8, desc: '甩出一团浓墨。墨团爆裂挑飞并施加【墨迹遮目】（0.50 秒硬直 + 2.5 秒迟缓），落地激荡墨池。',
+inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
 start(f) { f.vx = 0; },
 update(f) {
-if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 580, vy: -440, g: 1500, lob: true, w: 52, h: 52, life: 1.3, dmg: 46, kb: [160, -460], stun: 0.50, hs: 0.07, launch: true }); }
-if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
+if (f.skPh === 0 && f.t >= 0.2) {
+f.skPh = 1; f.ink -= INK_COST * FU_INK; f.fu = Math.min(FU_MAX, (f.fu || 0) + 1); SFX.swing();
+ring(f.x + f.face * 30, f.y - 120, 40, '235,200,90', 0.35);
+addP({ type: 'text', text: `画符 · ${f.fu}/${FU_MAX}`, x: f.x, y: f.y - 140, life: 0.8, max: 0.8, rgb: '235,200,90' });
+}
+if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
 },
-pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 130 && d < 440 },
+pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
 moonring: { name: '月轮', cd: 3.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
 start(f) { f.vx = 0; },
 update(f) {
@@ -3310,13 +3815,13 @@ if (f.t >= 0.45) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
 ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
-pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.15 秒就落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间动弹不得、腾空闪也用不出，但可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
+pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.4 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间动弹不得、腾空闪也用不出，但可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.05) {
 f.skPh = 1; SFX.swing();
 const tx = clamp(foe.x, WALL + 40, STAGE_W - WALL - 40);
-if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.1, w: 150, h: 560, life: 0.6, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
+if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.35, w: 150, h: 560, life: 0.85, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
 else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
 }
 if (f.t >= 0.27) toNeutral(f);
@@ -3469,11 +3974,11 @@ SFX.chargeFull();
 }
 if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
 } },
-tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与风遁冷却，空中跳跃次数全额回满，乘风浮空。',
+tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。',
 begin(f) {
 f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0;
 f.skillCD = 0; f.skill2CD = 0; f.jumps = 0;
-addP({ type: 'text', text: '🌪️ 扶摇万里 · 风遁重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
+addP({ type: 'text', text: '🌪️ 扶摇万里 · 开扇重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
 SFX.superOn();
 },
 update(f) {
@@ -3501,20 +4006,28 @@ spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL
 }
 if (f.t >= 1.2) endSpecial(f);
 } },
-inkdragon: { name: '墨龙', desc: '饱蘸浓墨，凌空一挥——墨即成龙！巨墨龙横扫全场（180 伤害，不可格挡）。泼墨触发【笔意长存】：墨水瞬间回满至 100%，重置墨阵与泼墨冷却，并在敌足下额外布下索敌墨印。',
+inkdragon: { name: '符阵', desc: `把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = ${FU_BASE} + 每张符 ${FU_PER}（最多 ${FU_BASE + FU_PER * FU_MAX}）。`,
 begin(f) {
 f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
+f.spN = f.fu || 0; f.fu = 0;   // 符全部烧掉，记下这次烧了几张
 },
 update(f, foe) {
-if (f.t >= 0.15 && !f.hitDone) {
-f.hitDone = true; f.spPose = 'my_paint';
-spawnProj(f, { kind: 'dragon', x: f.x + f.face * 70, y: -60, vx: f.face * 760, w: 140, h: 96, life: 2, dmg: 180, kb: [520, -760], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, unbreakable: true, noScale: true });
-f.ink = INK_MAX; f.skillCD = 0; f.skill2CD = 0;
-if (foe) spawnProj(f, { kind: 'trap', x: clamp(foe.x, WALL + 40, STAGE_W - WALL - 40), y: 0, vx: 0, w: 90, h: 24, life: 4.5, dmg: 25, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, unblockable: true, trap: true, unbreakable: true, noScale: true });
-addP({ type: 'text', text: '🐉 笔意长存 · 墨韵回满', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '210,210,230' });
-SFX.chargeFull();
+if (f.t >= 0.25) f.spPose = 'my_paint';
+const foes = foesOf(f).filter(e => e && e.hp > 0);   // 全图命中：2v2 里两个对手都会炸
+const wait = foes.some(e => e.invul > 0) && f.t < 2.4;   // 对手正无敌（比如也在放大招）就等它结束再炸，最多多等一秒多
+if (f.t >= 0.95 && !f.hitDone && !wait) {
+f.hitDone = true; f.fuT = f.t;
+const n = f.spN || 0;
+if (foes.length) { shake = Math.max(shake, 14 + n * 3); flashA = Math.max(flashA, 0.35); flashRGB = '230,70,50'; SFX.ko(); }
+for (const e of foes) {
+const x = e.x, y = e.y - 150;
+ring(x, y, 90 + n * 18, '230,70,50', 0.5); ring(x, y, 50, '255,230,150', 0.4);
+for (let k = 0; k < 18 + n * 4; k++) { const a = rand(0, 6.28), v = rand(120, 420); addP({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, max: 0.6, rgb: k % 2 ? '235,200,90' : '230,70,50', w: 2.4, drag: 2 }); }
+if (e.invul <= 0) applyHit(f, e, { dmg: FU_BASE + FU_PER * n, kb: [0, -520], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true, dir: e.face * -1 }, [e.x, e.y - 80]);
+addP({ type: 'text', text: n ? `符爆 ×${n}` : '空符一张', x: e.x, y: e.y - 200, life: 1.1, max: 1.1, rgb: '230,70,50' });
 }
-if (f.t >= 0.5) endSpecial(f);
+}
+if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
 } },
 featherstorm: { name: '万羽', desc: '展翼直上九霄，唤来漫天破甲翎羽如暴雨倾泻（14 枚，每枚 14 伤害）。齐射触发【凌霄破虚】：重置俯冲突袭与翎羽射击冷却，御空飞行耐力全额回满。',
 begin(f) {
@@ -3901,6 +4414,9 @@ function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on) 
 function netReset() {
 ROLL.on = false;
 rankUI(false);
+if (typeof mmStop === 'function') mmStop();
+mmUI(null);
+NET.peerQuit = false;
 NET.matching = false; NET.hold = false; NET.awayUntil = 0; matchUI(false);
 if (NET.ws) { const w = NET.ws; NET.ws = null; try { w.close(); } catch (e) {} }
 p2pClose();
@@ -3933,6 +4449,11 @@ return null;
 }
 function netLeave() {
 NET.leaving = true;
+if (NET.isRanked && !NET.rkDone && rkOwner() && rkState().pending) {   // 排位打到一半自己走：判负
+NET.rkDone = true;
+const r = rkFinish(false, 'quit');
+if (r) toast(`中途离开排位赛，判负（${r.delta} 分）`);
+}
 if (NET.ws && NET.ws.readyState === 1) { try { NET.ws.send('{"bye":1}'); } catch (e) {} }
 p2pSend({ sys: 'left' });
 clearResume(); stopReconnect(); netReset();
@@ -4044,7 +4565,8 @@ netStatus('方才那场对战已经结束了');
 return;
 }
 if (m.sys === 'room' && m.matched) {
-NET.role = m.role; NET.matching = false; matchUI(false); rankUI(false); NET.isRanked = !!m.ranked;
+NET.role = m.role; NET.matching = false; matchUI(false); rankUI(false); NET.isRanked = !!m.ranked; NET.rkDone = false;
+if (typeof setRoomModeUI === 'function') setRoomModeUI('normal');   // 匹配和排位一律标准三局两胜
 netStatus(m.ranked ? '排位对手已找到！' : '对手已找到！'); SFX.chargeFull();
 return;
 }
@@ -4137,16 +4659,23 @@ else netStatus('已连接，即刻选人…');
 }
 function netLost() {
 const was = M.mode === 'net' || bpMode === 'net';
+let rkMsg = '';
+if (NET.isRanked && !NET.rkDone && rkState().pending) {
+NET.rkDone = true;
+if (NET.peerQuit) { const r = rkFinish(true, 'forfeit'); if (r) rkMsg = `对手中途离开，这场排位算你赢（${rkResultText(r)}）`; }
+else { rkClearPending(); rkMsg = '排位对局因网络中断，不计分'; }
+}
 stopReconnect(); clearResume();
 netReset();
 if (was) { toMenu(); selectMode('net'); }
 $id('roomCode').textContent = '';
-netStatus('对局已中断（未完成，不扣分）。可重新建房或加入');
+netStatus(rkMsg || '对局已中断（未完成，不扣分）。可重新建房或加入');
+if (rkMsg) toast(rkMsg);
 NET.lastResult = '';
 }
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain'];
+'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 const VICTIM = ['hitstun', 'launched', 'knockdown', 'getup', 'held', 'blockstun'];
 function applyF(f, arr, exact) {
@@ -4248,6 +4777,7 @@ NET.matchStartTime = Date.now();
 NET.matchHits = 0;
 NET.matchId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 NET.consensus = { agreed: false, peerAgreed: false, qualifying: true, committed: false, pendingReport: false };
+rkBegin();
 }
 const LEVELS = {
 easy:   { think: [0.35, 0.7],  block: 0.15, aggr: 0.4,  combo: 1 },
@@ -4294,7 +4824,7 @@ const ADV = {
 qingfeng: '疾风斩直击穿身得手后，立时重置剑气冷却，可瞬间接出弧月剑气连招。',
 tieshan: '震地直击得手后，瞬时回涌 30 点架势耐力，并削减铁壁冲 2.5 秒冷却。',
 feiying: '影遁之后 1.5 秒内再按 Q——影归，瞬息退回遁走前的位置。',
-liuyun: '风遁之后 0.8 秒内，下一发风刃一分为二（每道 35 伤害）。',
+liuyun: '风刃一次扇出两道；开扇冲过去撒下的爆米花半秒后会炸。',
 leiming: '雷闪贴地冲拳命中对手，立时重置雷踏冷却，可直接连入冲天雷柱。',
 lingshuang: '回马枪得手后，枪旋余下的冷却减半。',
 moyu: '墨阵尚在场时再按 Q——引爆，阵中之敌受 4 伤害，被墨浪掀飞。',
@@ -4681,7 +5211,7 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 const ULT_AI = {
 crescent: (m, f, d) => d < 330, shadows: (m, f, d) => d < 330, avalanche: (m, f, d) => d < 700 && f.onGround(),
 phoenix: (m, f, d) => d < 230, timestop: (m, f, d) => d < 700, tornado: (m, f, d) => d < 650, thunder: () => true,
-inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
+inkdragon: (m, f) => (m.fu || 0) >= 2 || m.hp < m.maxHp * 0.5 || f.hp < FU_BASE + FU_PER * (m.fu || 0), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
 };
 const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.32], ['light', 0.48], ['light', 0.64], ['heavy', 0.84]] };
 const AI_H1 = new Float32Array(64);
@@ -5079,7 +5609,7 @@ this.guard = this.maxGuard;
 this.sinceBlock = 0;
 Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
 skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
-notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false,
+notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -5377,6 +5907,10 @@ function sayNet(text, dur, style, snd) { say(text, dur, style); if (snd) SFX[snd
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
 if (REC.on) recSave(w);
+const solo = !(M.mode === 'pvp' || isAiVsAi() || M.watchAi || M.mode === 'watch2v2');
+const youWin = w >= 0 && w === localIdx();
+$id('endKicker').textContent = !solo || w < 0 ? 'MATCH OVER' : youWin ? 'VICTORY' : 'DEFEAT';
+$id('endKicker').className = 'end-kicker ' + (!solo || w < 0 ? 'neutral' : youWin ? 'win' : 'lose');
 $id('againBtn').style.display = (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
 if (M.stage) {
 const win = w === 0;
@@ -5484,7 +6018,8 @@ again.style.display = 'none';
 } else if (M.mode === 'net') {
 again.style.display = '';
 again.disabled = false;
-again.textContent = '再战一局 (BO3)';
+again.textContent = NET.isRanked ? '继续排位' : '再战一局 (BO3)';
+if (repickBtn && NET.isRanked) repickBtn.classList.add('hidden');
 } else {
 again.style.display = '';
 again.disabled = false;
@@ -5570,7 +6105,8 @@ if (!ROLL.on) showEnd(finalWinner);
 return;
 }
 M.round++;
-M.carry = null;   // 非 3v3 模式均为三局两胜（BO3），每回合双方满血
+M.carry = [null, null];   // 活下来的人继承剩余血量 +CARRY_HEAL，倒下的人满血
+[A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
 startRound();
 }
 function toNeutral(f) {
@@ -5907,7 +6443,7 @@ for (const p of projs) {
 if (p.dead) continue;
 p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
 const wasDelay = p.delay > 0;
-if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
+if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
 if (p.g) p.vy += p.g * STEP;
 if (p.boomer && p.age > p.turn) {
 const o = fighterByIdx(p.owner), dx = o.x - p.x;
@@ -5942,7 +6478,7 @@ SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: f
 addP({ type: 'text', text: '+50', x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
 continue;
 }
-if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion'].includes(p.kind)) {
+if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion', 'popcorn'].includes(p.kind)) {
 p.owner = foe.idx; p.vx = -p.vx || foe.face * 700; p.vy = -p.vy * 0.4; p.hits = 0; p.hitCD = 0.05; p.life = Math.max(p.life, 0.8);
 p.boomer = false; p.lob = false; p.g = 0; p.sk = true; p.hook = false;
 foe.notes = Math.min(3, (foe.notes || 0) + 1);
@@ -5991,7 +6527,7 @@ dust(foe.x, 0, 6); SFX.heavy();
 p.hits++; p.hitCD = p.rehit || 99;
 if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
 }
-const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net'];
+const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net', 'popcorn'];
 for (let i = 0; i < projs.length; i++) {
 const p1 = projs[i];
 if (p1.dead || p1.unbreakable || p1.ult || p1.dmg <= 0 || p1.groundOnly || NO_CLASH.includes(p1.kind)) continue;
@@ -6769,7 +7305,7 @@ hitstop = Math.max(hitstop, ev.hs * feel);
 shake = Math.max(shake, ev.hs * 80 * feel);
 if (ev.dmg >= 8) cam.zoom *= 1 + 0.015 * feel;      // 重击时镜头轻微一顿
 hitFX(ev.x, ev.y, clamp(ev.dmg / 8, 0.5, 1.8), att.look.slash, fdir);
-if (!quiet && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {
+if (!quiet && M.mode === 'watch2v2' && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
 ARENA2V2.scars.push({ x: ev.x, r: ev.ult ? 62 : 44, life: 4.0, max: 4.0, rgb: att.look.slash || '255,215,120' });
 if (ARENA2V2.scars.length > 18) ARENA2V2.scars.shift();
 }
@@ -7473,7 +8009,9 @@ if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.ow
 const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
 const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
 const maxZoom = M.mode === 'watch2v2' ? 0.70 : Infinity;
-const want = Math.min(wantBase * zoomMul, fit, maxZoom);
+let want = Math.min(wantBase * zoomMul, fit, maxZoom);
+const pf = paperFX();
+if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
 cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
 cam.zoom = Math.min(cam.zoom, fit, maxZoom);
 cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
@@ -7484,6 +8022,11 @@ const lo = maxX - vw / 2 + 60, hi = minX + vw / 2 - 60;
 if (lo <= hi) cam.x = clamp(cam.x, lo, hi); else cam.x = mid;
 }
 const worldScale = () => (H / 560) * cam.zoom;
+function paperFX() {
+const f = allFighters().find(x => x && x.state === 'special' && x.ch.ult === 'inkdragon');
+if (!f) return null;
+return { f, a: clamp(f.t / 0.25, 0, 1) * (f.hitDone ? clamp(((f.fuT || 0.95) + 0.5 - f.t) / 0.25, 0, 1) : 1) };
+}
 function drawBackground(sc) {
 const T = SCN, sky = T ? T.sky : ['#070918', '#1a1840', '#3a2552', '#2a1a3a'];
 const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -8627,10 +9170,23 @@ ctx.restore();
 }
 function drawProjs(glowOnly) {
 for (const p of projs) {
-if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion')) continue;
+if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion' || p.kind === 'popcorn')) continue;
 const L = ([A, B, C, D][p.owner] || A).look;   // 2v2 里 C/D 的技能也会生成弹道，owner 可能是 2/3
 ctx.save();
-if (p.kind === 'wind') {
+if (p.kind === 'popcorn') {   // 爆米花：落下时一小撮，半秒后噼啪炸开
+if (p.delay > 0) {
+const j = p.delay < 0.15 ? Math.sin(p.age * 90) * 2 : 0;   // 快炸的时候抖一抖
+for (let k = 0; k < 4; k++) {
+const a = p.seed + k * 1.7, x = p.x + Math.cos(a) * 7 + j, y = p.y + Math.sin(a) * 5;
+ctx.fillStyle = k % 2 ? '#fff6dc' : '#ffe9a8'; ctx.beginPath(); ctx.arc(x, y, 5.5, 0, 7); ctx.fill();
+ctx.fillStyle = 'rgba(214,150,60,0.8)'; ctx.beginPath(); ctx.arc(x + 1.5, y + 1.5, 1.8, 0, 7); ctx.fill();
+}
+} else {
+const k = clamp(1 - p.life / 0.12, 0, 1);
+ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 3;
+ctx.beginPath(); ctx.arc(p.x, p.y, 14 + k * 30, 0, 7); ctx.stroke();
+}
+} else if (p.kind === 'wind') {
 ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y);
 const scX = (Math.sign(p.vx) || 1) * ((p.w || 56) / 56), scY = (p.h || 52) / 52;
 ctx.scale(scX, scY);
@@ -8787,7 +9343,7 @@ ctx.fillStyle = '#683f20'; ctx.fillRect(-4, -18, 8, 6); ctx.strokeRect(-4, -18, 
 ctx.fillStyle = '#d8452f'; ctx.fillRect(-5, -6, 10, 8); // 红布封口/坛签
 ctx.fillStyle = 'rgba(255,220,150,0.5)'; ctx.fillRect(-2, -4, 4, 4);
 } else if (p.kind === 'pavilion') {   // 亭中留客：醉翁亭从天而降，和关人时是同一座亭子
-const drop = p.delay > 0 ? p.delay / 0.1 : 0;
+const drop = p.delay > 0 ? p.delay / 0.35 : 0;   // 0.35 秒从天上落到地面
 if (p.delay > 0) { ctx.strokeStyle = 'rgba(255,190,90,0.5)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.ellipse(p.x, 0, 100, 9, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
 drawWengTing(p.x, -drop * drop * 640, 1, 1);
 }
@@ -8867,6 +9423,28 @@ for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(x + k * 22, by - 184
 ctx.fillStyle = '#c9a24a'; ctx.beginPath(); ctx.arc(x, by - 252, 5, 0, 7); ctx.fill(); ctx.fillRect(x - 1.5, by - 262, 3, 10);   // 宝顶
 ctx.fillStyle = '#1a1210'; ctx.fillRect(x - 30, by - 176, 60, 20); ctx.strokeStyle = '#c9a24a'; ctx.lineWidth = 1.5; ctx.strokeRect(x - 30, by - 176, 60, 20);   // 匾额
 ctx.fillStyle = '#e9c46a'; ctx.font = `14px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('醉翁亭', x, by - 165.5);
+ctx.restore();
+}
+function drawXuanzhi(a) {   // 宣纸：米黄底子，带点纤维和帘纹
+ctx.save(); ctx.globalAlpha = a;
+ctx.fillStyle = 'rgb(238,229,206)'; ctx.fillRect(0, 0, W, H);
+ctx.strokeStyle = 'rgba(170,150,110,0.12)'; ctx.lineWidth = 1;
+for (let x = 12; x < W; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+ctx.strokeStyle = 'rgba(150,130,95,0.16)';
+for (let k = 0; k < 90; k++) {   // 纤维：位置固定，每帧一样
+const x = (k * 397) % W, y = (k * 211) % H, l = 10 + (k % 7) * 4, r = k * 0.7;
+ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + Math.cos(r) * l, y + Math.sin(r) * l * 0.4, x + Math.cos(r + 0.4) * l * 1.6, y + Math.sin(r + 0.4) * l * 0.6); ctx.stroke();
+}
+const g = groundY(); ctx.fillStyle = 'rgba(30,28,30,0.55)'; ctx.fillRect(0, g, W, 3);   // 地面只剩一道墨线
+ctx.restore();
+}
+function drawFu(x, y, a, n) {   // 对手头顶那张符：黄纸朱砂
+ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.rotate(Math.sin(clock * 3) * 0.06);
+const w = 52, h = 96;
+ctx.fillStyle = '#efd27a'; ctx.fillRect(-w / 2, -h / 2, w, h);
+ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2; ctx.strokeRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6);
+ctx.fillStyle = '#b8321e'; ctx.font = `bold 34px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('符', 0, -12);
+ctx.font = `bold 18px ${BODY_FONT}`; ctx.fillText('×' + n, 0, 28);
 ctx.restore();
 }
 function drawShanshui() {
@@ -9060,6 +9638,14 @@ ctx.fillStyle = 'rgba(0,0,0,0.55)';
 for (let n = 1; n < INK_MAX / INK_COST; n++) ctx.fillRect(ix + iw * n * INK_COST / INK_MAX - 0.5, iy, 1, ih);   // 每一格是一团墨
 ctx.font = `${Math.round(ih * 2.2)}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'right' : 'left';
 ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText('墨', i === 0 ? ix - 5 : ix + iw + 5, iy + ih / 2);
+const fy = iy + ih * 1.9, fh = Math.max(9, ih * 1.6), gap = 3, fw = (iw - gap * (FU_MAX - 1)) / FU_MAX, fu = f.fu || 0;
+for (let n = 0; n < FU_MAX; n++) {
+const fx = i === 0 ? ix + iw - (n + 1) * (fw + gap) + gap : ix + n * (fw + gap);
+ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(fx - 1, fy - 1, fw + 2, fh + 2);
+ctx.fillStyle = n < fu ? '#efd27a' : 'rgba(239,210,122,0.14)'; ctx.fillRect(fx, fy, fw, fh);
+if (n < fu) { ctx.fillStyle = '#b8321e'; ctx.fillRect(fx + fw / 2 - 1.5, fy + 2, 3, fh - 4); }
+}
+ctx.font = `${Math.round(fh * 1.2)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText('符', i === 0 ? ix - 5 : ix + iw + 5, fy + fh / 2);
 }
 ctx.font = `${Math.round(bh * 2)}px ${TITLE_FONT}`; ctx.textBaseline = 'top';
 ctx.fillStyle = `rgb(${f.look.slash})`;
@@ -9488,6 +10074,8 @@ gg.addColorStop(0, `rgba(${SCN.mist},${SCN.legend ? 0.16 : 0.08})`); gg.addColor
 ctx.fillStyle = gg; ctx.fillRect(0, gy, W, H - gy);
 }
 if (dimA > 0.01) { ctx.fillStyle = `rgba(3,3,10,${0.55 * dimA})`; ctx.fillRect(0, 0, W, H); }
+const pf = paperFX();
+if (pf) drawXuanzhi(pf.a);
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
 const order = M.mode === 'watch2v2'
@@ -9495,11 +10083,18 @@ const order = M.mode === 'watch2v2'
 : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
 drawDecoys();
 drawProjs();
-for (const f of order) drawFighter(f);
+for (const f of order) {
+if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
+const keep = f.look;
+f.look = { ...keep, body: '#c8321e', shade: '#7a1a12', outline: '#ff8a70', outlineA: 1, scarf: '#ff4a32', blade: '#ffd0c4' };
+drawFighter(f); f.look = keep;
+if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.spN || 0);
+} else drawFighter(f);
+}
 drawParticles();
 drawComboTotals();
 ctx.restore();
-if (SETTINGS.bloom > 0) drawBloom(sc, sx, sy);
+if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
 if (FOREST.on) {
 const px = W / 2 + (A.x - cam.x) * sc, py = groundY() + (A.y - 60) * sc;
 const dk = ctx.createRadialGradient(px, py, 60 * sc, px, py, 520 * sc);
@@ -9710,7 +10305,7 @@ ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
 const dim = clamp(dz / 0.9, 0, 1) * 0.22;
 if (dim > 0.01) { ctx.fillStyle = `rgba(4,4,12,${dim})`; ctx.fillRect(0, 0, W, H); }
 }
-const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'acc', 'lb', 'gacha', 'tasks', 'welfare', 'replays'];
+const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare'];
 function menuGo(name) {
 initAudio();
 const spot = MENU_SPOT[name];
@@ -9858,6 +10453,46 @@ if (name === 'community') openCommunity();
 showScreen(name);
 }
 function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); }
+const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
+function navTo(name) {
+initAudio();
+if (name === 'menu') { backToMenu(); return; }
+if (name === 'acc') { openAcc(); return; }
+if ($id('menu').classList.contains('on') && MENU_SPOT[name] !== undefined) { menuGo(name); return; }
+if (name === 'netp') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; }
+openScreen(name);
+}
+for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
+function renderTopNav() {
+const nav = $id('topNav');
+if (!nav) return;
+const name = curName();
+$id('tnInkN').textContent = (PROF.ink || 0).toLocaleString();
+$id('tnName').textContent = name || '未登录';
+if (name) {
+const s = rkState();
+$id('tnRank').textContent = rkPlaced(s) ? `${rkTier(s.pts).label} · ${rkTier(s.pts).name}` : `定级赛 ${s.placed}/${RK.PLACE}`;
+$id('tnMedal').innerHTML = rkMedalFor(s, 34);
+} else {
+$id('tnRank').textContent = '登录 / 注册';
+$id('tnMedal').innerHTML = rkMedalSVG(null, 34, { placed: 0 });
+}
+const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
+$id('tnSync').className = 'tn-sync s-' + (name ? st.state : 'none');
+$id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败' }[st.state] || '';
+}
+function renderHome() {
+const sea = rkSeason();
+$id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
+$id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
+const name = curName();
+if (!name) { $id('homeMedal').innerHTML = rkMedalSVG(null, 56, { placed: 0 }); $id('homeRankL').textContent = '未定级'; $id('homeRankS').textContent = '登录后打 5 场定级赛'; return; }
+const s = rkState();
+$id('homeMedal').innerHTML = rkMedalFor(s, 56);
+if (rkPlaced(s)) { const t = rkTier(s.pts); $id('homeRankL').textContent = `${t.label} · ${t.name}`; $id('homeRankS').textContent = `${t.pts.toLocaleString()} 分 · ${s.w} 胜 ${s.l} 负`; }
+else { $id('homeRankL').textContent = `定级赛 ${s.placed}/${RK.PLACE}`; $id('homeRankS').textContent = `估分 ～${Math.round(s.est).toLocaleString()}`; }
+}
+$id('homeRank').addEventListener('click', () => navTo('netp'));
 for (const b of document.querySelectorAll('#menu [data-go]')) {
 b.addEventListener('click', () => { b.classList.add('pressed'); setTimeout(() => b.classList.remove('pressed'), 900); menuGo(b.dataset.go); });
 if (MENU_SPOT[b.dataset.go] !== undefined) {
@@ -10002,11 +10637,11 @@ chronicle: '<path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 
 const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.skill}</svg></span>`;
 const SHORT = {
 疾风斩: ['6', '突进穿身'], 影遁: ['3', '瞬移身后 · 下一击 ×1.5'], 震地: ['9', '双向地波 · 掀飞'], 回马枪: ['9', '后跃回刺 · 挑飞'],
-风刃: ['7', '直线风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
-剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 风遁: ['—', '快速后撤 · 短暂无敌'],
-雷踏: ['7', '前方雷柱'], 泼墨: ['4', '抛物墨团'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
+风刃: ['7×2', '上下两道风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
+剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 开扇: ['2×5', '向前疾冲 · 撒爆米花半秒后炸'],
+雷踏: ['7', '前方雷柱'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
 残月: ['29', '突进乱斩 · 终结回气重置'], 千影: ['31', '九影乱斩 · 绝杀分身重置'], 山崩: ['28', '砸地晕眩 · 直击回半气重置'], 刹那: ['12–22', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
-龙卷: ['≤32', '龙卷浮空 · 刷新跳跃风遁'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 墨龙: ['20', '墨龙横扫 · 墨水回满生陷阱'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
+龙卷: ['≤32', '龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 符阵: ['随符数', '宣纸全图 · 按符数爆伤'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 · 脆皮(88血)', tieshan: '重斩蓄力霸体 · 气血冠绝(140血)', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
 liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻六连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒',
@@ -10015,7 +10650,7 @@ const ADV_SHORT = {
 qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
 tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
 feiying: '1.5 秒内再按 Q 瞬回原位',
-liuyun: '风遁后风刃变两道',
+liuyun: '风刃两道 · 开扇撒爆米花',
 leiming: '雷闪冲拳命中，立时重置雷踏冷却',
 lingshuang: '回马枪命中，枪旋冷却减半',
 moyu: '再按 Q 引爆墨阵',
@@ -10030,9 +10665,9 @@ qingfeng: '【聚气流转 · 极速充能】天生剑意通明，命中与受�
 feiying: '【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。',
 tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」直击命中更是气量回满，可以立刻再砸一次！',
 lingshuang: '【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。',
-liuyun: '【御风牵制 · 风暴蓄势】远距离风刃与风遁斥力安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
+liuyun: '【御风牵制 · 风暴蓄势】远距离双风刃与开扇爆米花安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
 leiming: '【狂雷六连 · 雷帝灌顶】六连重拳记记沉猛令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！',
-moyu: '【墨浪渗透 · 阵地聚怒】普攻甩墨与泼墨双重判定充能；大招「墨龙」重置技能与墨韵回满，并在敌方足下布下索敌墨印。',
+moyu: '【墨符蓄势 · 一纸封喉】普攻甩墨攒气，R 花墨画符攒符；大招「符阵」把符全部烧掉，全图宣纸，符越多伤害越高。',
 yuehua: '【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。',
 yanling: '【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。',
 yuxiao: '【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。',
@@ -10043,10 +10678,10 @@ const HERO_MOVE_TYPES = {
 qingfeng: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '突进', icon: 'melee' }, ranged: { type: 'ranged', label: '远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
 tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '通天巨浪', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
 feiying: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '背袭突进', icon: 'melee' }, ranged: { type: 'ranged', label: '暗器远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝杀' }, esc: { type: 'esc', label: '身法' } },
-liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'ranged', label: '御风身法', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
+liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'dash', label: '开扇冲刺', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
 leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'ranged', label: '引雷落击', icon: 'ranged' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
 lingshuang: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '枪尖回刺', icon: 'melee' }, ranged: { type: 'melee', label: '枪旋近战', icon: 'melee' }, ult: { type: 'melee', label: '神技' }, esc: { type: 'esc', label: '身法' } },
-moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'ranged', label: '泼墨远程', icon: 'ranged' }, ult: { type: 'ranged', label: '绘境' }, esc: { type: 'esc', label: '身法' } },
+moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'counter', label: '画符蓄势', icon: 'ranged' }, ult: { type: 'ranged', label: '全图' }, esc: { type: 'esc', label: '身法' } },
 yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
 yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } },
 yuxiao: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '音波远程', icon: 'ranged' }, ranged: { type: 'counter', label: '反弹暗器', icon: 'shield_bash' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
@@ -10162,8 +10797,8 @@ liuyun: {
 light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '24 (3段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
 charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '8 / 15', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
 air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
-skill: { name: '惊涛·风刃', badge: '🌪️ 狂风推搡 620px', badgeCls: 'badge-buff', dmg: '7', cd: '1.3s', desc: '挥扇生成巨型气刃，几无硬直，全场最强击退。' },
-ranged: { name: '御风·风遁', badge: '🌪️ 惊风退敌 0.42s', badgeCls: 'badge-buff', dmg: '4', cd: '4s', desc: '后跃引爆斥力气旋，下一次风刃一分为二。' },
+skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '7×2', cd: '2s', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
+ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '2×5', cd: '4s', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
 ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '2×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
 esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
 },
@@ -10190,8 +10825,8 @@ light: { name: '挥毫泼墨三式', badge: '🎨 浓墨溅射', badgeCls: 'badg
 charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
 air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
 skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 1.4s', badgeCls: 'badge-stun', dmg: '5', cd: '6s', desc: '铺开125px深墨池，踏入者深陷墨中禁锢1.4秒。' },
-ranged: { name: '飞毫·泼墨', badge: '🎨 墨迹遮目 0.65s', badgeCls: 'badge-buff', dmg: '6', cd: '6s', desc: '抛物线掷出重浓墨团，炸裂挑空并施加2.5s减速。' },
-ult: { name: '绘境·墨龙', badge: '🐉 笔意长存 100%', badgeCls: 'badge-stun', dmg: '20', cd: '气满', desc: '浓墨化龙穿行全屏扫灭敌人，墨水瞬间回满。' },
+ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', cd: '2.5s', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
+ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '随符数', cd: '气满', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
 esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
 },
 yuehua: {
@@ -10414,7 +11049,7 @@ skill: [
 ],
 ranged: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'ly_hover', d: 0.32, dx: -45, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
+{ p: 'ly_hover', d: 0.32, dx: -45, fx: 'windstep', hit: 1, lab: 'R · 开扇', badge: '🍿 爆米花' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 ult: [
@@ -10551,14 +11186,14 @@ skill: [
 ],
 ranged: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' },
+{ p: 'my_stroke', d: 0.14, lab: 'R · 画符' },
 { p: 'my_paint', d: 0.38, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 ult: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'my_stroke', d: 0.2, lab: 'E · 墨龙' },
-{ p: 'my_paint', d: 0.48, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
+{ p: 'my_stroke', d: 0.2, lab: 'E · 符阵' },
+{ p: 'my_paint', d: 0.48, fx: 'inkdragon', hit: 3, launch: true, badge: '📜 符爆' },
 { p: 'victory', d: 0.55, reset: true }
 ],
 esc: [
@@ -10738,7 +11373,7 @@ liuyun: [
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ly_fanswipe', d: 0.1, lab: 'Q · 风刃' }, { p: 'idle', d: 0.35, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'ly_hover', d: 0.3, dx: -40, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
+{ p: 'ly_hover', d: 0.3, dx: -40, fx: 'windstep', hit: 1, lab: 'R · 开扇', badge: '🍿 爆米花' },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ly_fanswipe', d: 0.2, lab: 'E · 龙卷' }, { p: 'ly_hover', d: 0.42, fx: 'tornado', hit: 3, launch: true, badge: '🌪️ 扶摇万里' },
 { p: 'victory', d: 0.55, reset: true }
@@ -10775,9 +11410,9 @@ moyu: [
 { p: 'idle', d: 0.25, reset: true },
 { p: 'my_stroke', d: 0.16, lab: 'Q · 墨阵' }, { p: 'my_paint', d: 0.34, fx: 'inktrap', hit: 1, badge: '深墨禁锢' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' }, { p: 'my_paint', d: 0.36, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
+{ p: 'my_stroke', d: 0.14, lab: 'R · 画符' }, { p: 'my_paint', d: 0.36, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'my_stroke', d: 0.18, lab: 'E · 墨龙' }, { p: 'my_paint', d: 0.44, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
+{ p: 'my_stroke', d: 0.18, lab: 'E · 符阵' }, { p: 'my_paint', d: 0.44, fx: 'inkdragon', hit: 3, launch: true, badge: '📜 符爆' },
 { p: 'victory', d: 0.55, reset: true }
 ],
 yuehua: [
@@ -11187,9 +11822,9 @@ ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#f0f
 lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', robe: 'thunder', shoulder: '#5a30a0', wfx: 'lightning', trail: 'spark' }, skillNames: { skill: '紫霄惊雷', ranged: '九天引雷', ult: '狂雷寂灭' } },
 lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', robe: 'solar', breastplate: '#b86a20', back: 'sundisk', orbs: '#ff8820', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '曜日神拳', ranged: '大日天火', ult: '阳炎劫世' } },
 lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', robe: 'vajra', breastplate: '#6a3210', back: 'chakra', shoulder: '#6a3210', orbs: '#ffaa00', wfx: 'gold', trail: 'gold', aura: 'gold', weapStyle: 'vajra_gauntlet' }, skillNames: { skill: '金刚伏魔', ranged: '罗汉踏天', ult: '大威天龙' } },
-my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂破墨', ult: '赤龙狂涛' } },
-my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '流金泼墨', ult: '金莲降世' } },
-my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'lotus', lotusC: '90,190,255', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, skillNames: { skill: '星宿锁灵', ranged: '银河点墨', ult: '太虚星图' } },
+my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂画符', ult: '朱砂符阵' } },
+my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '泥金画符', ult: '金符满纸' } },
+my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'lotus', lotusC: '90,190,255', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, skillNames: { skill: '星宿锁灵', ranged: '星宿画符', ult: '太虚星图' } },
 yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'sakurabranch', flower: '#ff9ec4', robe: 'sakura', shoulder: '#a04870', trail: 'petal', petal: '255,180,210' }, skillNames: { skill: '落樱拂花', ranged: '飞樱回旋', ult: '樱落月明' } },
 yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#1c1024', robe: 'eclipse', breastplate: '#381622', back: 'eclipse', cape: '#1c1024', orbs: '#c13a4a', wfx: 'shadow', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '暗月噬光', ranged: '黑曜血环', ult: '永夜蚀月' } },
 yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'frosttiara', flower: '#a8e0ff', robe: 'snow', breastplate: '#4878a8', back: 'snowflake', cape: '#2a5078', orbs: '#80d0ff', wfx: 'frost', trail: 'snow', aura: 'snow' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
@@ -11868,7 +12503,224 @@ if ($id('tMsg')) $id('tMsg').textContent = '兑换码无效或已过期';
 $id('rdBtn').addEventListener('click', () => redeemCode());
 $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode(); });
 window.redeemCode = redeemCode;
+const SEASON = { id: 'S1', name: '第一赛季', start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 21, 16) };   // 北京时间 10 月 22 日 0 点到 11 月 22 日 0 点
+const RK = { MIN: 1000, MAX: 25000, STEP: 5000, EDGE: 1500, PLACE: 5, PLACE_CAP: 14999, PLACE_START: 2600 };
+const RK_TIERS = [
+{ l: 'D', n: '初出茅庐', c1: '#e0a06a', c2: '#5a2c12', glow: '#ffb27a' },
+{ l: 'C', n: '小有名气', c1: '#e8eef5', c2: '#4f5c6c', glow: '#dff0ff' },
+{ l: 'B', n: '名动一方', c1: '#ffd875', c2: '#7e4f0c', glow: '#ffe7a3' },
+{ l: 'A', n: '一代宗师', c1: '#72f5d6', c2: '#0b4f5a', glow: '#8fffe6' },
+{ l: 'S', n: '天下无双', c1: '#ff5a5a', c2: '#4d0718', glow: '#ffcf6e' },
+];
+function rkSeason() {
+const now = Date.now();
+if (now < SEASON.start) return { id: 'S0', name: '季前赛', pre: true, left: SEASON.start - now };
+return { id: SEASON.id, name: SEASON.name, pre: false, left: Math.max(0, SEASON.end - now), over: now >= SEASON.end };
+}
+function rkClamp(v, hi) { return Math.max(RK.MIN, Math.min(hi || RK.MAX, Math.round(+v || 0))); }
+function rkTier(pts) {
+pts = rkClamp(pts);
+const li = Math.min(4, Math.floor(pts / RK.STEP));
+const lo = li === 0 ? RK.MIN : li * RK.STEP, hi = (li + 1) * RK.STEP;
+const sub = pts < lo + RK.EDGE ? '-' : pts >= hi - RK.EDGE ? '+' : '';
+const prev = sub === '-' ? lo : sub === '' ? lo + RK.EDGE : hi - RK.EDGE;
+const next = Math.min(RK.MAX, sub === '-' ? lo + RK.EDGE : sub === '' ? hi - RK.EDGE : hi);
+const t = RK_TIERS[li];
+return { li, sub, letter: t.l, label: t.l + sub, name: t.n, pts, lo, hi, prev, next, prog: Math.max(0, Math.min(1, (pts - prev) / Math.max(1, next - prev))) };
+}
+function rkOwner() { const u = window.CloudSave && CloudSave.getUser && CloudSave.getUser(); return (u && u.name) || ACC.name || ''; }
+let RKS = null, RKS_KEY = '';
+function rkFresh(season) { return { season, owner: rkOwner(), pts: 0, placed: 0, est: RK.PLACE_START, w: 0, l: 0, peak: 0, streak: 0, hist: [], pending: null, at: 0 }; }
+function rkState() {
+const owner = rkOwner(), key = 'renying-rk-' + owner, sid = rkSeason().id;
+if (!RKS || RKS_KEY !== key) {
+let s = null;
+try { s = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+RKS = s && typeof s === 'object' ? s : null; RKS_KEY = key;
+}
+const c = PROF.rk;
+if (c && typeof c === 'object' && c.owner === owner && (!RKS || (c.at || 0) > (RKS.at || 0))) RKS = JSON.parse(JSON.stringify(c));
+if (!RKS || RKS.season !== sid) {
+const old = RKS;
+RKS = rkFresh(sid);
+if (old && old.placed >= RK.PLACE) RKS.last = { season: old.season, label: rkTier(old.pts).label, peak: old.peak || old.pts };
+}
+RKS.owner = owner;
+return RKS;
+}
+function rkSave() {
+const s = rkState();
+s.at = Date.now();
+try { localStorage.setItem(RKS_KEY, JSON.stringify(s)); } catch (e) {}
+PROF.rk = JSON.parse(JSON.stringify(s));
+if (window.CloudSave && rkOwner()) CloudSave.saveProfile(PROF, true);
+if (typeof renderTopNav === 'function') renderTopNav();
+}
+function rkPlaced(s) { return (s || rkState()).placed >= RK.PLACE; }
+function rkMatchPts() { const s = rkState(); return rkPlaced(s) ? s.pts : s.est; }
+function rkMatchInfo() {
+const s = rkState(), pts = rkMatchPts();
+return { band: rkTier(pts).li, uid: rkOwner(), rk: { pts, placed: s.placed, label: rkPlaced(s) ? rkTier(s.pts).label : '定级中' } };
+}
+function rkLabel(s) {
+s = s || rkState();
+if (!rkPlaced(s)) return `定级赛 ${s.placed}/${RK.PLACE} · ～${Math.round(s.est)} 分`;
+const t = rkTier(s.pts);
+return `${t.label} · ${t.name} · ${t.pts.toLocaleString()} 分`;
+}
+function rkDelta(me, opp, won, placing, streak) {
+const E = 1 / (1 + Math.pow(10, (opp - me) / 6000));
+let d = won ? (placing ? 3200 : 600) * (1 - E) : -(placing ? 1900 : 600) * E;   // 定级赛输了扣得比赢了涨得少
+if (placing) d = won ? Math.max(900, d) : Math.min(-400, d);
+else {
+d = won ? Math.max(80, d) : Math.min(-60, d);
+if (won && streak >= 2) d *= 1 + Math.min(0.5, (streak - 1) * 0.1);   // 连胜加成，最多 +50%
+}
+return Math.round(d);
+}
+function rkBegin() {
+if (!NET.isRanked || NET.rkDone || !rkOwner()) return;
+const s = rkState();
+const o = NET.oppRk || {};
+s.pending = { opp: rkClamp(o.pts || rkMatchPts()), at: Date.now() };
+rkSave();
+}
+function rkFinish(won, why) {
+const s = rkState();
+if (!s.pending) return null;
+const opp = s.pending.opp, placing = !rkPlaced(s);
+const beforeT = placing ? null : rkTier(s.pts);
+s.streak = won ? Math.max(0, s.streak) + 1 : Math.min(0, s.streak) - 1;
+const d = rkDelta(placing ? s.est : s.pts, opp, won, placing, won ? s.streak : 0);
+won ? s.w++ : s.l++;
+const r = { won, delta: d, placing, why: why || '' };
+if (placing) {
+s.est = rkClamp(s.est + d, RK.PLACE_CAP);
+s.placed++;
+r.est = s.est;
+if (rkPlaced(s)) { s.pts = s.est; s.peak = Math.max(s.peak || 0, s.pts); r.placedDone = true; }
+} else {
+s.pts = rkClamp(s.pts + d);
+s.peak = Math.max(s.peak || 0, s.pts);
+const t = rkTier(s.pts);
+if (t.li > beforeT.li) r.promo = 'letter'; else if (t.li === beforeT.li && t.label !== beforeT.label && d > 0) r.promo = 'sub';
+if (t.li < beforeT.li) r.demote = true;
+}
+r.tier = rkTier(rkPlaced(s) ? s.pts : s.est);
+s.hist = [{ w: won ? 1 : 0, d, o: opp, t: Date.now(), p: placing ? 1 : 0 }].concat(s.hist || []).slice(0, 20);
+s.pending = null;
+rkSave();
+return r;
+}
+function rkClearPending() { const s = rkState(); if (s.pending) { s.pending = null; rkSave(); } }
+function rkResultText(r) {
+if (!r) return '';
+const sign = r.delta >= 0 ? '+' : '';
+if (r.placing && !r.placedDone) return `定级赛 ${rkState().placed}/${RK.PLACE} · 估分 ${sign}${r.delta} → ～${r.est}`;
+if (r.placedDone) return `定级完成 · ${r.tier.label} ${r.tier.name}（${r.tier.pts.toLocaleString()} 分）`;
+return `排位赛 ${sign}${r.delta} 分 · ${r.tier.label}（${r.tier.pts.toLocaleString()}）${r.promo === 'letter' ? ' · 晋升！' : r.promo === 'sub' ? ' · 升段' : r.demote ? ' · 掉段' : ''}`;
+}
+function rkCheckPending() {
+if (!rkOwner() || (M.mode === 'net' && NET.open) || bpMode === 'net') return;
+const s = rkState();
+if (!s.pending) return;
+const r = rkFinish(false, 'quit');
+if (r) setTimeout(() => toast(`上一场排位赛中途离开，判负（${r.delta} 分）`), 600);
+}
+let rkMedalN = 0;
+function rkMedalSVG(t, size, opt) {
+opt = opt || {};
+const id = 'rkm' + (++rkMedalN), sz = size || 96;
+const hex = (r, cx = 100, cy = 100) => Array.from({ length: 6 }, (_, i) => { const a = Math.PI / 3 * i - Math.PI / 2; return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`; }).join(' ');
+if (!t) {   // 定级中：灰色问号，外圈 5 格表示打了几场
+const n = opt.placed || 0, segs = [];
+for (let i = 0; i < RK.PLACE; i++) {
+const a0 = -Math.PI / 2 + i * 2 * Math.PI / RK.PLACE + 0.08, a1 = a0 + 2 * Math.PI / RK.PLACE - 0.16, R = 86;
+segs.push(`<path d="M${(100 + R * Math.cos(a0)).toFixed(1)} ${(100 + R * Math.sin(a0)).toFixed(1)} A${R} ${R} 0 0 1 ${(100 + R * Math.cos(a1)).toFixed(1)} ${(100 + R * Math.sin(a1)).toFixed(1)}" stroke="${i < n ? '#ece8e1' : 'rgba(236,232,225,.18)'}" stroke-width="7" fill="none" stroke-linecap="round"/>`);
+}
+return `<svg class="rk-medal unranked" viewBox="0 0 200 200" width="${sz}" height="${sz}" aria-hidden="true"><defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6470"/><stop offset="1" stop-color="#1c222b"/></linearGradient></defs>${segs.join('')}<polygon points="${hex(62)}" fill="url(#${id}g)" stroke="rgba(236,232,225,.5)" stroke-width="2"/><polygon points="${hex(50)}" fill="#0f1923" stroke="rgba(236,232,225,.25)" stroke-width="1.5"/><text x="100" y="121" text-anchor="middle" font-size="58" font-weight="800" fill="#ece8e1" font-family="Oswald,Impact,'Arial Narrow',sans-serif">?</text></svg>`;
+}
+const T = RK_TIERS[t.li], blades = [];
+const nb = [0, 2, 4, 6, 8][t.li];
+const m = nb / 2;
+for (let k = 0; k < m; k++) for (const side of [1, -1]) {   // 背后左右对称的刃：段位越高越多
+const off = m === 1 ? -0.25 : -0.7 + 1.4 * k / (m - 1);
+const a = side > 0 ? off : Math.PI - off, w = 0.2, L = 99 - Math.abs(off) * 12;
+const pt = (r, aa) => `${(100 + r * Math.cos(aa)).toFixed(1)},${(100 + r * Math.sin(aa)).toFixed(1)}`;
+blades.push(`<polygon points="${pt(50, a - w)} ${pt(L, a)} ${pt(50, a + w)}" fill="url(#${id}b)" stroke="${T.c1}" stroke-opacity=".55" stroke-width="1.2"/>`);
+}
+const pips = t.sub === '-' ? 1 : t.sub === '' ? 2 : 3, chev = [];
+for (let i = 0; i < pips; i++) { const y = 168 + i * 9; chev.push(`<path d="M84 ${y} L100 ${y + 7} L116 ${y}" stroke="${T.c1}" stroke-width="4" fill="none" stroke-linejoin="miter"/>`); }
+const crown = t.li >= 3 ? `<polygon points="100,14 108,30 100,40 92,30" fill="${T.glow}" stroke="#fff" stroke-opacity=".6"/>` : '';
+const flame = t.li === 4 ? `<circle cx="100" cy="100" r="86" fill="none" stroke="url(#${id}f)" stroke-width="3" stroke-dasharray="3 7" class="rk-spin"/><circle cx="100" cy="100" r="80" fill="none" stroke="${T.glow}" stroke-opacity=".35" stroke-width="1"/>` : '';
+return `<svg class="rk-medal t${t.li}" viewBox="0 0 200 200" width="${sz}" height="${sz}" aria-hidden="true"><defs>
+<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${T.c1}"/><stop offset=".55" stop-color="${T.c2}"/><stop offset="1" stop-color="${T.c1}"/></linearGradient>
+<linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.c1}" stop-opacity=".95"/><stop offset="1" stop-color="${T.c2}" stop-opacity=".9"/></linearGradient>
+<linearGradient id="${id}t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="${T.c1}"/></linearGradient>
+<radialGradient id="${id}r"><stop offset="0" stop-color="${T.glow}" stop-opacity=".55"/><stop offset="1" stop-color="${T.glow}" stop-opacity="0"/></radialGradient>
+<linearGradient id="${id}f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffcf6e"/><stop offset=".5" stop-color="#ff4655"/><stop offset="1" stop-color="#ffcf6e"/></linearGradient>
+<clipPath id="${id}c"><polygon points="${hex(62)}"/></clipPath></defs>
+<circle cx="100" cy="100" r="${70 + t.li * 6}" fill="url(#${id}r)"/>${flame}${blades.join('')}${crown}
+<polygon points="${hex(62)}" fill="url(#${id}g)" stroke="${T.glow}" stroke-width="2.5"/>
+<polygon points="${hex(57)}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2"/>
+<polygon points="${hex(50)}" fill="#0f1923" stroke="${T.c1}" stroke-width="2"/>
+<path d="M${hex(50).split(' ').slice(4).join(' L')} L${hex(50).split(' ')[0]} L${hex(50).split(' ')[1]} Z" fill="#fff" opacity=".05"/>
+<g clip-path="url(#${id}c)"><rect class="rk-shine" x="-60" y="-20" width="34" height="240" fill="#fff" opacity=".18" transform="rotate(25 100 100)"/></g>
+<text x="100" y="122" text-anchor="middle" font-size="64" font-weight="800" fill="url(#${id}t)" font-family="Oswald,Impact,'Arial Narrow',sans-serif" letter-spacing="1">${T.l}</text>
+${chev.join('')}</svg>`;
+}
+function rkMedalFor(s, size) { s = s || rkState(); return rkPlaced(s) ? rkMedalSVG(rkTier(s.pts), size) : rkMedalSVG(null, size, { placed: s.placed }); }
+function rkReveal(r) {
+const box = $id('rkReveal');
+if (!box || !r || !(r.placedDone || r.promo === 'letter')) return;
+const t = r.tier;
+box.innerHTML = `<div class="rkr-in"><div class="rkr-kicker">${r.placedDone ? '定级完成' : '段位晋升'}</div><div class="rkr-medal">${rkMedalSVG(t, 220)}</div><div class="rkr-label">${t.label}</div><div class="rkr-name">${t.name}</div><div class="rkr-pts">${t.pts.toLocaleString()} 分</div><button class="go" type="button">继续</button></div>`;
+box.classList.remove('hidden');
+requestAnimationFrame(() => box.classList.add('on'));
+SFX.gong();
+const close = () => { box.classList.remove('on'); setTimeout(() => box.classList.add('hidden'), 300); };
+box.querySelector('button').onclick = close;
+}
+function fmtLeft(ms) { const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24; return d > 0 ? `${d} 天 ${h} 小时` : `${h} 小时 ${Math.floor(ms / 60000) % 60} 分`; }
+function renderLobby() {
+const sea = rkSeason();
+if ($id('seasonName')) $id('seasonName').textContent = sea.pre ? '季前赛' : SEASON.name;
+if ($id('seasonLeft')) $id('seasonLeft').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启（季前赛分数届时清零）` : sea.over ? '赛季已结束' : `剩余 ${fmtLeft(sea.left)}`;
+const owner = rkOwner();
+if ($id('mmMedal')) $id('mmMedal').innerHTML = owner ? rkMedalFor(null, 108) : rkMedalSVG(null, 108, { placed: 0 });
+if (!owner) {
+if ($id('mmRankLabel')) $id('mmRankLabel').textContent = '登录后开启排位';
+if ($id('mmRankSub')) $id('mmRankSub').textContent = '段位与分数保存在账号里';
+if ($id('mmRankBar')) $id('mmRankBar').style.width = '0%';
+return;
+}
+const s = rkState();
+if (rkPlaced(s)) {
+const t = rkTier(s.pts);
+$id('mmRankLabel').textContent = `${t.label} · ${t.name}`;
+$id('mmRankSub').textContent = `${t.pts.toLocaleString()} 分 · 距下一段 ${Math.max(0, t.next - t.pts).toLocaleString()} 分 · ${s.w} 胜 ${s.l} 负`;
+$id('mmRankBar').style.width = (t.prog * 100).toFixed(1) + '%';
+} else {
+$id('mmRankLabel').textContent = `定级赛 ${s.placed}/${RK.PLACE}`;
+$id('mmRankSub').textContent = `当前估分 ～${Math.round(s.est).toLocaleString()} 分（最高定到 B+）`;
+$id('mmRankBar').style.width = (s.placed / RK.PLACE * 100) + '%';
+}
+}
+function renderRankInfo() {
+const box = $id('rkInfoBody');
+if (!box) return;
+const s = rkOwner() ? rkState() : null;
+const rows = RK_TIERS.map((T, li) => {
+const lo = li === 0 ? RK.MIN : li * RK.STEP, hi = (li + 1) * RK.STEP;
+const mine = s && rkPlaced(s) && rkTier(s.pts).li === li;
+return `<div class="rki-tier${mine ? ' mine' : ''}">${rkMedalSVG(rkTier(lo + RK.EDGE + 1), 64)}<div><b>${T.l} · ${T.n}</b><span>${lo.toLocaleString()} – ${hi.toLocaleString()} 分</span><span class="rki-subs">${T.l}- ${lo.toLocaleString()}+ · ${T.l} ${(lo + RK.EDGE).toLocaleString()}+ · ${T.l}+ ${(hi - RK.EDGE).toLocaleString()}+</span></div></div>`;
+}).join('');
+const hist = s && s.hist && s.hist.length ? `<div class="rki-hist">${s.hist.slice(0, 10).map(h => `<span class="${h.w ? 'w' : 'l'}" title="${new Date(h.t).toLocaleString()}">${h.w ? '胜' : '负'} ${h.d >= 0 ? '+' : ''}${h.d}</span>`).join('')}</div>` : '';
+const me = s ? `<div class="rki-me">${rkMedalFor(s, 120)}<div><div class="rki-me-l">${rkPlaced(s) ? rkTier(s.pts).label + ' · ' + rkTier(s.pts).name : '定级中'}</div><div class="rki-me-s">${rkLabel(s)}</div><div class="rki-me-s">本赛季 ${s.w} 胜 ${s.l} 负 · 最高 ${(s.peak || 0) ? rkTier(s.peak).label + '（' + s.peak.toLocaleString() + '）' : '—'}${s.last ? ` · 上赛季 ${s.last.label}` : ''}</div>${hist}</div></div>` : '<p class="netnote">登录后即可开始定级。</p>';
+box.innerHTML = `${me}<div class="rki-tiers">${rows}</div><p class="rki-note">新赛季先打 ${RK.PLACE} 场定级赛：定级期间显示估分，起点偏低、每场涨落很大，最高可定到 B+。之后每场按对手强弱加减分，连胜有额外加成。排位只会匹配同段位或相差 1–2 个大段的对手；开打后中途离开按输算。</p>`;
+}
 function renderRankLine() {
+renderLobby();
 const rankText = !SERVED ? '单机演武' : !ACC.name ? '需登录定级' : PROF.rank ? `${PROF.rank.label}${PROF.rank.tier ? '' : ' (定级中)'}` : '暂无评定';
 if ($id('rankLine')) {
 $id('rankLine').textContent = !SERVED ? '离线模式：支持本地与局域网切磋' : !ACC.name ? '排位赛需先登录账户' : PROF.rank ? `你的天梯段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
@@ -11918,12 +12770,16 @@ if (NET.consensus && NET.consensus.committed) return;
 if (!NET.consensus) NET.consensus = {};
 NET.consensus.committed = true;
 const won = w === localIdx();
+const ranked = NET.isRanked && !NET.rkDone && rkOwner();
+if (ranked) NET.rkDone = true;
 if (!isQualifying) {
 $id('endRank').textContent = '切磋对局（耗时过短，不计入排位胜场与墨锭）';
+if (ranked) rkClearPending();
 return;
 }
 if (!agreed) {
 $id('endRank').textContent = '对局结果同步存疑，本次结果不计入排位';
+if (ranked) rkClearPending();
 return;
 }
 const gain = won ? 60 : 30;
@@ -11949,6 +12805,13 @@ toast(`【十胜功成】达成联机十胜，破境解锁基础角色：${uName
 PROF.netLosses = (PROF.netLosses || 0) + 1;
 }
 $id('endRank').textContent = `+${gain} 墨锭 · 联机${won ? '胜' : '负'}（累计 ${PROF.netWins || 0} 胜）`;
+if (ranked) {
+const r = rkFinish(won);
+if (r) {
+$id('endRank').innerHTML = `<span class="end-rk">${rkMedalSVG(r.placing && !r.placedDone ? null : r.tier, 44, { placed: rkState().placed })}<span><b class="${r.delta >= 0 ? 'up' : 'down'}">${escapeHTML(rkResultText(r))}</b><small>+${gain} 墨锭</small></span></span>`;
+setTimeout(() => rkReveal(r), 900);
+}
+}
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 applyProfile(PROF);
 }
@@ -12313,6 +13176,16 @@ for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single',
 $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
 if (id !== 'bp') { try { showPop(null); } catch (e) {} }
 if (id === 'menu') { menuCam.tx = 0; menuCam.tz = 1; }
+if (id === 'netp') renderLobby();
+const nav = !OFFLINE_BUILD && NAV_SCREENS.includes(id);
+$id('topNav').classList.toggle('hidden', !nav);
+document.body.classList.toggle('has-nav', nav);
+if (nav) {
+for (const b of document.querySelectorAll('#topNav .tn-tabs [data-nav]')) b.classList.toggle('sel', b.dataset.nav === id);
+renderTopNav();
+}
+if (id === 'menu') renderHome();
+if (id === 'acc') renderAccPage();
 if (!id) {
 refocusGame();
 } else if (document.activeElement && !document.activeElement.closest('#' + id)) {
@@ -13443,6 +14316,10 @@ function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
 if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') return;
+if (M.mode === 'net' && NET.isRanked) {   // 排位不和同一个人连打：回大厅找下一个对手
+netLeave(); toMenu(); selectMode('net'); mmStart('ranked');
+return;
+}
 if (M.mode === 'net') {
 if (!NET.open) {
 toast('网络已断开');
@@ -14316,6 +15193,7 @@ if (nk !== setAcc.last) { setAcc.last = nk; loadProfile(); adaptLoad(); }
 renderAcc();
 }
 function renderAcc() {
+renderTopNav();
 const bar = $id('accBar');
 if (OFFLINE_BUILD) { bar.classList.add('hidden'); return; }
 bar.classList.remove('hidden');
@@ -14398,9 +15276,7 @@ toast('已成功导出当前账号存档');
 }
 });
 }
-$id('accBar').addEventListener('click', async e => {
-const id = e.target.id;
-if (id === 'accOpen') {
+function openAcc() {
 $id('accMsg').textContent = '';
 const u = window.CloudSave && CloudSave.getUser();
 if (u && u.name) $id('accName').value = u.name;
@@ -14408,21 +15284,93 @@ const cfg = window.CloudSave && CloudSave.getConfig();
 if ($id('fbCfgIn') && cfg && cfg.projectId) $id('fbCfgIn').value = JSON.stringify(cfg, null, 2);
 menuCam.tz = 1.35;
 showScreen('acc');
-setTimeout(() => $id('accName').focus(), 50);
-} else if (id === 'lbBtn') {
-openLeaderboard();
-} else if (id === 'logoutBtn') {
+renderAccPage();
+if (!$id('accIn').classList.contains('hidden')) setTimeout(() => $id('accName').focus(), 50);
+}
+async function doLogout() {
 if (SERVED && window.fetch) {
 try { await api('/api/logout', { token: ACC.token }); } catch (err) {}
 }
-if (window.CloudSave) await CloudSave.logout();
+if (window.CloudSave) { try { await CloudSave.syncNow(); } catch (e) {} await CloudSave.logout(); }
 setAcc(null);
 PROF.guest = true;
 applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 });
 toast('已退出账号');
 renderAcc();
+renderAccPage();
 }
+$id('accBar').addEventListener('click', async e => {
+const id = e.target.id;
+if (id === 'accOpen') openAcc();
+else if (id === 'lbBtn') openLeaderboard();
+else if (id === 'logoutBtn') doLogout();
 });
+function agoText(t) {
+if (!t) return '还没有上传过';
+const d = Date.now() - t;
+if (d < 60000) return '刚刚';
+if (d < 3600000) return `${Math.floor(d / 60000)} 分钟前`;
+if (d < 86400000) return `${Math.floor(d / 3600000)} 小时前`;
+return new Date(t).toLocaleString();
+}
+function curName() { const u = window.CloudSave && CloudSave.getUser(); return (u && u.name) || ACC.name || ''; }
+function renderAccPage() {
+if (!$id('accDash')) return;
+const u = window.CloudSave && CloudSave.getUser(), name = curName();
+$id('accDash').classList.toggle('hidden', !name);
+$id('accIn').classList.toggle('hidden', !!name);
+$id('accFootNote').classList.toggle('hidden', !!name);
+if (!name) return;
+const s = rkState(), placed = rkPlaced(s), t = placed ? rkTier(s.pts) : null;
+$id('adAvatar').textContent = name.slice(0, 1);
+$id('adAvatar').style.setProperty('--tier', placed ? RK_TIERS[t.li].c1 : '#8a94a3');
+$id('adName').textContent = name;
+$id('adKind').textContent = u && u.isDevMaster ? '开发者账号' : u && u.isCloud ? '云端账号' : '本机账号';
+$id('adRank').textContent = placed ? `${t.label} · ${t.name} · ${t.pts.toLocaleString()} 分` : `定级赛 ${s.placed}/${RK.PLACE} · 估分 ～${Math.round(s.est).toLocaleString()}`;
+$id('adMedal').innerHTML = rkMedalFor(s, 96);
+const w = PROF.netWins || 0, l = PROF.netLosses || 0;
+const stats = [
+['墨锭', (PROF.ink || 0).toLocaleString()],
+['角色', `${(PROF.owned || []).length} / ${CHARS.length}`],
+['皮肤', String((PROF.skins || []).length)],
+['联机战绩', `${w} 胜 ${l} 负`, w + l ? `胜率 ${Math.round(w / (w + l) * 100)}%` : ''],
+['本赛季排位', `${s.w} 胜 ${s.l} 负`, rkSeason().pre ? '季前赛' : SEASON.name],
+['赛季最高', s.peak ? rkTier(s.peak).label : '—', s.peak ? s.peak.toLocaleString() + ' 分' : ''],
+];
+$id('adStats').innerHTML = stats.map(([k, v, sub]) => `<div class="ad-stat"><span>${k}</span><b>${escapeHTML(v)}</b>${sub ? `<small>${escapeHTML(sub)}</small>` : ''}</div>`).join('');
+renderAccSync();
+}
+function renderAccSync() {
+if (!$id('adSyncT')) return;
+const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
+const M_ = {
+local: ['本机存档', '没有连接云端，存档只保存在这台设备上'],
+idle: ['已连接云端', '有新进度会自动上传'],
+ok: ['已同步', `上次上传：${agoText(st.at)}`],
+pending: ['等待上传', '有新进度，马上自动上传'],
+syncing: ['上传中…', ''],
+offline: ['断网中', '联网后自动补传，进度不会丢'],
+error: ['上传失败', st.err || ''],
+}[st.state] || ['本机存档', ''];
+$id('adSyncDot').className = 'ad-dot s-' + st.state;
+$id('adSyncT').textContent = M_[0];
+$id('adSyncS').textContent = M_[1];
+$id('adSyncNow').classList.toggle('hidden', !st.cloud);
+$id('adPull').classList.toggle('hidden', !st.cloud);
+$id('adSyncNow').disabled = st.state === 'syncing';
+}
+$id('adSyncNow').addEventListener('click', async () => {
+$id('adMsg').textContent = '正在上传…';
+try { await CloudSave.syncNow(); $id('adMsg').textContent = '已上传到云端'; } catch (e) { $id('adMsg').textContent = e.message; }
+});
+$id('adPull').addEventListener('click', async () => {
+if (!confirm('用云端的存档覆盖这台设备上的存档？')) return;
+$id('adMsg').textContent = '正在拉取…';
+try { const d = await CloudSave.pullNow(); applyProfile(d); RKS = null; renderAccPage(); $id('adMsg').textContent = '已从云端载入存档'; } catch (e) { $id('adMsg').textContent = e.message; }
+});
+$id('adLogout').addEventListener('click', () => doLogout());
+if (window.CloudSave && CloudSave.onSyncChange) CloudSave.onSyncChange(() => { renderTopNav(); if ($id('acc').classList.contains('on')) renderAccSync(); });
+setInterval(() => { if ($id('acc').classList.contains('on')) renderAccSync(); }, 20000);
 async function doAcc(kind) {
 const name = $id('accName').value.trim(), pass = $id('accPass').value;
 if (!name || !pass) { $id('accMsg').textContent = '昵称与密码都得填'; return; }
@@ -14976,6 +15924,7 @@ return;
 }
 box.classList.remove('hidden');
 if (cols) cols.classList.add('hidden');
+if ($id('roomWrap')) { $id('roomWrap').classList.remove('hidden'); $id('mmRoomBtn').classList.add('sel'); }
 if ($id('lobbyRoomBadge')) $id('lobbyRoomBadge').textContent = `房间密令：${roomCode || '----'}`;
 if ($id('lobbyHostName')) $id('lobbyHostName').textContent = hostName || '擂主 (房主)';
 if ($id('lobbyPeerName')) $id('lobbyPeerName').textContent = peerName || (NET.role === 'host' ? '静候应战者入局…' : '正在连线…');
@@ -15087,6 +16036,59 @@ initAudio();
 if ($id('matchBtn').classList.contains('searching') || NET.matching) { netReset(); netStatus('已取消匹配'); return; }
 netConnect(false, null, true); matchUI(true);
 });
+let mmKind = null;
+function mmUI(kind) {
+mmKind = kind || null;
+const box = $id('mmSearch');
+if (!box) return;
+box.classList.toggle('hidden', !kind);
+$id('mmQuickBtn').textContent = kind === 'quick' ? '匹配中…' : '开始匹配';
+$id('mmRankBtn').textContent = kind === 'ranked' ? '排位中…' : '开始排位';
+$id('mmQuickBtn').disabled = $id('mmRankBtn').disabled = !!kind;
+$id('mmQuickCard').classList.toggle('searching', kind === 'quick');
+$id('mmRankCard').classList.toggle('searching', kind === 'ranked');
+const tp = document.querySelector('#topNav .tn-play');
+if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? (kind === 'ranked' ? '排位中' : '匹配中') : '对战'; }
+if (kind) { $id('mmSearchTitle').textContent = kind === 'ranked' ? '排位赛 · 正在寻找对手' : '匹配对战 · 正在寻找对手'; mmTick(); }
+}
+function mmTick() {
+if (!mmKind || typeof MM === 'undefined' || !MM.on) return;
+const t = Math.floor((Date.now() - MM.t0) / 1000);
+let sub = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+if (mmKind === 'ranked') {
+const span = mmSpan(), L = RK_TIERS.map(x => x.l), b = MM.band;
+const lo = L[Math.max(0, b - span)], hi = L[Math.min(4, b + span)];
+sub += ` · 匹配范围 ${lo === hi ? lo + ' 段' : lo + '–' + hi + ' 段'}`;
+} else sub += ' · 全服随机';
+$id('mmSearchSub').textContent = sub;
+}
+setInterval(mmTick, 1000);
+setInterval(() => { if ($id('netp').classList.contains('on') && !mmKind) renderLobby(); }, 30000);
+function mmGo(kind) {
+initAudio();
+if (kind === 'ranked' && !rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
+if (kind === 'ranked') rkCheckPending();
+if (currentNetMode === 'server' && SERVED) { netConnect(false, null, true, null, kind === 'ranked'); kind === 'ranked' ? rankUI(true) : matchUI(true); return; }
+mmStart(kind);
+netStatus(kind === 'ranked' ? `排位赛：${rkLabel()}` : '匹配对战：正在全服寻找对手…');
+}
+$id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
+$id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
+$id('mmCancelBtn').addEventListener('click', () => { netReset(); netStatus('已取消'); });
+$id('mmRoomBtn').addEventListener('click', () => {
+const w = $id('roomWrap'), open = w.classList.toggle('hidden') === false;
+$id('mmRoomBtn').setAttribute('aria-expanded', String(open));
+$id('mmRoomBtn').classList.toggle('sel', open);
+});
+$id('mmRankInfoBtn').addEventListener('click', () => {
+renderRankInfo();
+const sea = rkSeason();
+$id('rkInfoSeason').textContent = sea.pre ? `季前赛 · 第一赛季 10 月 22 日开启` : `${SEASON.name} · 10.22 – 11.22${sea.over ? ' · 已结束' : ' · 剩余 ' + fmtLeft(sea.left)}`;
+$id('rkInfo').classList.remove('hidden');
+});
+$id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('hidden'));
+$id('rkInfo').addEventListener('click', e => { if (e.target === $id('rkInfo')) $id('rkInfo').classList.add('hidden'); });
+setTimeout(() => { try { rkCheckPending(); } catch (e) {} }, 2500);
 setInterval(() => {
 if (NET.matching && ($id('matchBtn').classList.contains('searching') || $id('rankBtn').classList.contains('searching'))) {
 const t = Math.floor((performance.now() - matchT0) / 1000);
@@ -15427,6 +16429,7 @@ if (typeof updateNetDiagRtt === 'function') updateNetDiagRtt(rtt);
 return;
 }
 if (m.sys === 'hb') return;
+if (m.sys === 'left') NET.peerQuit = true;   // 对方主动离开（不是网络断了）
 if (m.sys !== undefined && !P2P_SYS[side].includes(m.sys)) return;
 onData(m);
 });
@@ -15589,6 +16592,164 @@ if (!live()) return;
 if (NET.open && err.type !== 'peer-unavailable') return;
 fail(err.type === 'peer-unavailable' ? `找不到房间 ${code}：请核对房间码，并确认房主网页仍在开启等候` : p2pErrorText(err));
 });
+}
+const MM = { on: false, kind: '', t0: 0, peer: null, myId: '', band: 0, timer: 0, busy: false, tries: 0 };
+const MM_SEATS = 3;          // 每段几个座位
+const MM_BANDS = 5;          // 排位按大段位分段：D C B A S
+const MM_PROBE = 3000;       // 多久去敲一轮门
+function mmPool() { return MM.kind === 'ranked' ? 'r' : 'q'; }
+function mmSeatId(band, seat) { return `${P2P.prefix}mm-${String(VERSION).replace(/\W/g, '')}-${mmPool()}-${band}-${seat}`; }
+function mmSpan() { if (MM.kind !== 'ranked') return 0; const s = (Date.now() - MM.t0) / 1000; return s < 10 ? 0 : s < 25 ? 1 : 2; }
+function mmInfo() { return MM.kind === 'ranked' && typeof rkMatchInfo === 'function' ? rkMatchInfo() : null; }
+function mmStop() {
+MM.on = false; MM.busy = false;
+clearTimeout(MM.timer);
+if (MM.peer && MM.peer !== P2P.peer) { try { MM.peer.destroy(); } catch (e) {} }
+MM.peer = null;
+}
+async function mmStart(kind) {
+netReset();
+NET.leaving = false; NET.base = null; NET.matching = true; NET.isRanked = kind === 'ranked';
+NET.oppRk = null;
+Object.assign(MM, { on: true, kind, t0: Date.now(), busy: false, tries: 0 });
+MM.band = kind === 'ranked' && typeof rkMatchInfo === 'function' ? rkMatchInfo().band : 0;
+if (typeof mmUI === 'function') mmUI(kind);
+const sess = P2P.sess;
+const ok = await p2pLoad();
+if (sess !== P2P.sess || !MM.on) return;
+if (!ok) { netStatus('直连组件加载失败，检查一下网络后再试'); netReset(); return; }
+mmSit(sess, 0);
+}
+function mmSit(sess, seat) {
+if (sess !== P2P.sess || !MM.on) return;
+if (seat >= MM_SEATS) {                      // 这一段的座位都满了（很少见）：不占座，只去敲门
+return mmSitAs(sess, null);
+}
+mmSitAs(sess, mmSeatId(MM.band, seat), seat);
+}
+function mmSitAs(sess, id, seat) {
+let peer;
+try { peer = id ? new Peer(id, p2pOptions()) : new Peer(p2pOptions()); }
+catch (e) { netStatus(p2pErrorText(e)); netReset(); return; }
+P2P.peer = MM.peer = peer;
+const live = () => sess === P2P.sess && peer === P2P.peer;
+let opened = false;
+clearTimeout(P2P.timer);
+P2P.timer = setTimeout(() => { if (live() && !opened) { netStatus('连接牵线服务器超时，请检查网络后重试'); netReset(); } }, 30000);
+peer.on('open', realId => {
+if (!live()) return;
+opened = true; clearTimeout(P2P.timer);
+MM.myId = realId;
+mmProbeLoop(sess, peer);
+});
+peer.on('connection', conn => mmIncoming(sess, peer, conn));
+peer.on('disconnected', () => {             // 和牵线服务器断了：还在排队就重连（座位号不变）
+if (live() && MM.on && !peer.destroyed) setTimeout(() => { if (live() && MM.on && peer.disconnected && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } }, 1500);
+});
+peer.on('error', err => {
+if (!live()) return;
+if (err.type === 'peer-unavailable') { if (MM.onMiss) MM.onMiss(); return; }   // 敲的座位没人
+if (!opened && err.type === 'unavailable-id') {   // 座位被人占了：换下一个
+try { peer.destroy(); } catch (e) {}
+P2P.peer = MM.peer = null;
+return mmSit(sess, (seat || 0) + 1);
+}
+if (NET.open) return;
+if (!opened) { netStatus(p2pErrorText(err)); netReset(); return; }
+if (MM.onMiss && (err.type === 'webrtc' || err.type === 'negotiation-failed')) MM.onMiss();
+});
+}
+function mmIncoming(sess, peer, conn) {
+const live = () => sess === P2P.sess && peer === P2P.peer;
+const refuse = () => { conn.on('open', () => { try { conn.send({ sys: 'full' }); } catch (e) {} setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); }); };
+if (!live() || !MM.on || MM.busy || P2P.conn) return refuse();
+MM.busy = true;
+P2P.conn = conn;
+const drop = () => { if (P2P.conn === conn) P2P.conn = null; MM.busy = false; try { conn.close(); } catch (e) {} };
+const t = setTimeout(() => { if (live() && P2P.conn === conn && !NET.open) drop(); }, 8000);
+p2pWire(conn, sess, 'host', () => {}, m => {
+if (m.sys === 'hello') {
+const mine = mmInfo(), theirs = m.mm || {};
+const fit = m.v === VERSION && theirs.kind === MM.kind &&
+(MM.kind !== 'ranked' || (mine && Math.abs((theirs.band | 0) - mine.band) <= 2 && !(mine.uid && theirs.uid && mine.uid === theirs.uid)));
+if (!fit) { try { conn.send({ sys: 'full' }); } catch (e) {} clearTimeout(t); setTimeout(drop, 300); return; }
+clearTimeout(t);
+NET.role = 'host';
+NET.oppRk = theirs.rk || null;
+const ready = { sys: 'ready', names: { host: (ACC && ACC.name) || '房主', client: p2pName(m.name, '对手') }, tiers: {}, mm: { kind: MM.kind, rk: mine ? mine.rk : null } };
+conn.send(ready);
+mmMatched(peer, 'host');
+onSys(ready);
+return;
+}
+if (m.sys) onSys(m); else onNetMsg(m);
+});
+}
+function mmTargets() {
+const span = mmSpan(), out = [];
+const bands = [MM.band];
+for (let d = 1; d <= span; d++) { if (MM.band - d >= 0) bands.push(MM.band - d); if (MM.band + d < MM_BANDS) bands.push(MM.band + d); }
+for (const b of (MM.kind === 'ranked' ? bands : [0])) for (let s = 0; s < MM_SEATS; s++) {
+const id = mmSeatId(b, s);
+if (id < MM.myId || !MM.myId.startsWith(P2P.prefix + 'mm-')) out.push(id);   // 没占到座位的人可以敲所有的门
+}
+return out;
+}
+async function mmProbeLoop(sess, peer) {
+const live = () => sess === P2P.sess && peer === P2P.peer && MM.on;
+while (live()) {
+for (const id of mmTargets()) {
+if (!live() || NET.open) return;
+if (MM.busy) break;                       // 正有人在敲我的门，这一轮先不出去敲
+const r = await mmKnock(sess, peer, id);
+if (r === 'matched' || !live()) return;
+}
+if (typeof mmTick === 'function') mmTick();
+await new Promise(ok => { MM.timer = setTimeout(ok, MM_PROBE + Math.random() * 800); });
+}
+}
+function mmKnock(sess, peer, id) {
+return new Promise(done => {
+let over = false;
+const conn = peer.connect(id, { reliable: true, serialization: 'json' });
+const finish = r => {
+if (over) return; over = true;
+clearTimeout(t); MM.onMiss = null;
+if (r !== 'matched') { if (P2P.conn === conn) P2P.conn = null; if (MM.busy && MM.knocking === conn) MM.busy = false; try { conn.close(); } catch (e) {} }
+MM.knocking = null;
+done(r);
+};
+const t = setTimeout(() => finish('timeout'), 5000);
+MM.onMiss = () => finish('empty');
+if (MM.busy || P2P.conn) return finish('busy');
+MM.busy = true; MM.knocking = conn; P2P.conn = conn;
+p2pWire(conn, sess, 'client', () => {
+const mine = mmInfo();
+conn.send({ sys: 'hello', v: VERSION, name: (ACC && ACC.name) || '', mm: { kind: MM.kind, band: mine ? mine.band : 0, uid: mine ? mine.uid : '', rk: mine ? mine.rk : null } });
+}, m => {
+if (over && m.sys !== 'ready' && P2P.conn === conn) { if (m.sys) onSys(m); else onNetMsg(m); return; }
+if (m.sys === 'full' || m.sys === 'version') return finish('full');
+if (m.sys === 'ready') {
+if (!m.mm || m.mm.kind !== MM.kind) return finish('full');
+NET.role = 'client';
+NET.oppRk = m.mm.rk || null;
+m.names = { host: p2pName(m.names && m.names.host, '房主'), client: p2pName(m.names && m.names.client, '对手') }; m.tiers = {};
+finish('matched');
+mmMatched(peer, 'client');
+onSys(m);
+return;
+}
+if (m.sys) onSys(m); else onNetMsg(m);
+});
+});
+}
+function mmMatched(peer, role) {
+const kind = MM.kind;
+MM.on = false; MM.busy = false; clearTimeout(MM.timer); MM.peer = null;
+NET.matching = false;
+if (typeof mmUI === 'function') mmUI(null);
+onSys({ sys: 'room', matched: true, role, ranked: kind === 'ranked' });
+setTimeout(() => { try { if (!peer.destroyed && !peer.disconnected) peer.disconnect(); } catch (e) {} }, 600);
 }
 window.addEventListener('pagehide', () => { if (p2pOpen()) p2pSend({ sys: 'left' }); });
 </script>

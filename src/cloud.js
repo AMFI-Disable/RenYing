@@ -23,6 +23,77 @@
   // 云端规则还没更新、不认识排位字段 rk 时，去掉它再存一次，以后这个会话里就不再带上
   let rkBlocked = false;
 
+  // ---------- 云同步状态：本机先存、再上传；失败自动重试，关网页前没传完的下次打开补传 ----------
+  // state: local（没连云端，只存本机） idle（连上云端，还没传过） pending（等待上传） syncing（上传中） ok（已同步） offline（断网，联网后自动补传） error（失败）
+  const sync = { state: 'local', at: 0, err: '' };
+  const syncListeners = [];
+  let pendingData = null, retryN = 0;
+  function cloudActive() { return !!(hasValidConfig() && fbDb && currentUser && currentUser.uid !== 'dev_master' && !String(currentUser.uid).startsWith('local_')); }
+  function dirtyKey() { return 'renying-sync-dirty-' + (currentUser && currentUser.uid); }
+  function setSync(patch) {
+    Object.assign(sync, patch);
+    try { if (sync.at) localStorage.setItem('renying-sync-at-' + (currentUser && currentUser.uid), String(sync.at)); } catch (e) {}
+    const snap = getSyncState();
+    syncListeners.forEach(fn => { try { fn(snap); } catch (e) {} });
+  }
+  function getSyncState() {
+    let at = sync.at;
+    if (!at && currentUser) { try { at = +localStorage.getItem('renying-sync-at-' + currentUser.uid) || 0; } catch (e) {} }
+    let state = cloudActive() ? sync.state : 'local';
+    if (state === 'local' && cloudActive()) state = at ? 'ok' : 'idle';   // 连上了云端但这次还没传过
+    return { state, at, err: sync.err, cloud: cloudActive(), pending: !!pendingData };
+  }
+  function onSyncChange(fn) { if (typeof fn === 'function') syncListeners.push(fn); }
+  async function writeDoc(data) {
+    try {
+      await fbDb.collection('users').doc(currentUser.uid).set(data, { merge: true });
+    } catch (err) {
+      if (data.rk && err && err.code === 'permission-denied') {   // 规则还不认识 rk：去掉再试一次
+        rkBlocked = true;
+        delete data.rk;
+        await fbDb.collection('users').doc(currentUser.uid).set(data, { merge: true });
+        return;
+      }
+      throw err;
+    }
+  }
+  async function doSync() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    const data = pendingData;
+    if (!data || !cloudActive()) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) { setSync({ state: 'offline' }); return; }
+    setSync({ state: 'syncing' });
+    try {
+      await writeDoc(data);
+      if (pendingData === data) {
+        pendingData = null;
+        try { localStorage.removeItem(dirtyKey()); } catch (e) {}
+      }
+      retryN = 0;
+      setSync({ state: pendingData ? 'pending' : 'ok', at: Date.now(), err: '' });
+      if (pendingData) saveTimer = setTimeout(doSync, 800);
+    } catch (err) {
+      console.warn('Sync profile to Firestore failed:', err);
+      if (err && err.code === 'permission-denied') {   // 云端校验不通过，重试也没用：本机数据还在，提示一下
+        if (pendingData === data) pendingData = null;
+        setSync({ state: 'error', err: '云端拒绝了这次存档（单次变化超出了云端的校验范围），本机存档不受影响' });
+        return;
+      }
+      retryN++;
+      const wait = [2, 5, 15, 30, 60][Math.min(retryN, 5) - 1] * 1000;
+      setSync({ state: 'error', err: `上传失败，${Math.round(wait / 1000)} 秒后自动重试` });
+      saveTimer = setTimeout(doSync, wait);
+    }
+  }
+  // 立刻把还没上传的存档传上去（切到后台、关网页、恢复联网时）
+  function flush() { if (pendingData && cloudActive()) doSync(); }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', flush);
+    window.addEventListener('offline', () => { if (pendingData) setSync({ state: 'offline' }); });
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  }
+
   function getConfig() {
     if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId) {
       return window.FIREBASE_CONFIG;
@@ -350,8 +421,20 @@
         const snap = await fbDb.collection('users').doc(currentUser.uid).get();
         if (snap.exists) {
           const data = snap.data();
-          // 本地缓存备份
-          try { localStorage.setItem('renying-cloud-cache', JSON.stringify(data)); } catch (e) {}
+          // 上次关网页前有没传完的本机存档，而且比云端新：用本机的，并补传上去
+          let local = null, dirty = 0;
+          try { dirty = +localStorage.getItem(dirtyKey()) || 0; local = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || 'null'); } catch (e) {}
+          const cloudAt = typeof data.updatedAt === 'number' ? data.updatedAt : (data.updatedAt && data.updatedAt.toMillis ? data.updatedAt.toMillis() : 0);
+          if (dirty && local && (local.updatedAt || 0) > cloudAt) {
+            saveProfile(local, true);
+            return local;
+          }
+          try {
+            localStorage.removeItem(dirtyKey());
+            localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
+            localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(data));
+          } catch (e) {}
+          if (!pendingData) setSync({ state: 'ok', at: Date.now(), err: '' });
           return data;
         }
       } catch (err) {
@@ -389,30 +472,42 @@
       localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(dataToSave));
     } catch (e) {}
 
-    if (!hasValidConfig() || !fbDb || !currentUser || currentUser.uid === 'dev_master' || currentUser.uid.startsWith('local_')) {
-      return;
-    }
+    if (!cloudActive()) { setSync({ state: 'local' }); return; }
 
-    const doSync = async () => {
-      try {
-        await fbDb.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true });
-      } catch (err) {
-        if (dataToSave.rk && err && err.code === 'permission-denied') {
-          rkBlocked = true;
-          delete dataToSave.rk;
-          try { await fbDb.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true }); return; } catch (e2) { err = e2; }
-        }
-        console.warn('Sync profile to Firestore failed:', err);
-      }
-    };
+    pendingData = dataToSave;
+    try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
+    if (sync.state !== 'syncing') setSync({ state: 'pending' });
+    if (saveTimer) clearTimeout(saveTimer);
+    if (immediate) doSync();
+    else saveTimer = setTimeout(doSync, 1500);
+  }
 
-    if (immediate) {
-      if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
-      doSync();
-    } else {
-      if (saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(doSync, 1500);
+  // 手动“立即上传”：把本机最新的存档传一遍
+  async function syncNow() {
+    if (!cloudActive()) throw new Error('当前是本地存档，没有连接云端');
+    if (!pendingData) {
+      let local = null;
+      try { local = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || 'null'); } catch (e) {}
+      if (!local) throw new Error('本机没有可上传的存档');
+      pendingData = Object.assign(toCloudData(local), { name: getUser().name, updatedAt: Date.now() });
     }
+    await doSync();
+    if (sync.state === 'error') throw new Error(sync.err);
+  }
+  // 手动“从云端拉取”：以云端为准覆盖本机
+  async function pullNow() {
+    if (!cloudActive()) throw new Error('当前是本地存档，没有连接云端');
+    const snap = await fbDb.collection('users').doc(currentUser.uid).get();
+    if (!snap.exists) throw new Error('云端还没有这个账号的存档');
+    const data = snap.data();
+    pendingData = null;
+    try {
+      localStorage.removeItem(dirtyKey());
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
+      localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(data));
+    } catch (e) {}
+    setSync({ state: 'ok', at: Date.now(), err: '' });
+    return data;
   }
 
   function onAuthChange(fn) {
@@ -698,6 +793,10 @@
       getUser,
       loadProfile,
       saveProfile,
+      syncNow,
+      pullNow,
+      getSyncState,
+      onSyncChange,
       onAuthChange,
       exportCurrentAccount,
       exportAllAccounts,

@@ -30,11 +30,51 @@
   <canvas id="c" tabindex="0"></canvas>
 
   <div class="accbar hidden" id="accBar"></div>
+  <!-- 顶部导航（菜单类页面常驻）：左边标志，中间分区，右边墨锭、玩家名片和设置 -->
+  <nav class="topnav hidden" id="topNav" aria-label="主导航">
+    <button class="tn-logo" type="button" data-nav="menu" aria-label="回到首页"><span class="tn-mark">刃影</span><span class="tn-en">RENYING</span></button>
+    <div class="tn-tabs">
+      <button type="button" data-nav="menu">首页</button>
+      <button type="button" data-nav="single">单人</button>
+      <button type="button" data-nav="netp" class="tn-play">对战</button>
+      <button type="button" data-nav="codex">英雄</button>
+      <button type="button" data-nav="gacha">问剑阁</button>
+      <button type="button" data-nav="tasks">任务</button>
+      <button type="button" data-nav="community">社区</button>
+    </div>
+    <div class="tn-right">
+      <span class="tn-ink" id="tnInk" title="墨锭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-gourd"/></svg><b id="tnInkN">0</b></span>
+      <button class="tn-player" id="tnPlayer" type="button" data-nav="acc" aria-label="账号与存档">
+        <span class="tn-medal" id="tnMedal"></span>
+        <span class="tn-who"><b id="tnName">未登录</b><small id="tnRank">登录 / 注册</small></span>
+        <span class="tn-sync" id="tnSync" title="存档状态"></span>
+      </button>
+      <button class="tn-icon" type="button" data-nav="settings" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="tn-icon" type="button" data-nav="help" title="操作说明" aria-label="操作说明"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
+    </div>
+  </nav>
 
   <div id="menu" class="scr on menuscr">
+    <div class="home-scrim" aria-hidden="true"></div>
+    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
+    <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
+    <div class="home-side">
+      <button class="home-card home-rank" id="homeRank" type="button">
+        <span class="hc-kicker">我的段位</span>
+        <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
+      </button>
+      <div class="home-card home-news">
+        <span class="hc-kicker">版本动态</span>
+        <ul>
+          <li><b>匹配对战</b>全服随机对手，开局即打</li>
+          <li><b>排位赛</b>D 到 S 五段，定级 5 场</li>
+          <li><b>流云 · 墨羽</b>技能重做</li>
+        </ul>
+      </div>
+    </div>
     <button class="mcard left" id="mSingle" data-go="single"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
-    <button class="mcard right" id="mNet" data-go="netp"><span class="mk">联机对战</span><span class="ms">上擂台，和同学一决高下</span></button>
+    <button class="mcard right" id="mNet" data-go="netp"><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
     <div class="msmall-dock">
       <div class="mgroup" title="江湖游历">
         <button id="mQfx" class="qfxbtn" title="守住第三、六、十波，可领刃影奖励"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>青锋行</button>
@@ -801,15 +841,37 @@
   <div id="netOv" class="netov" role="status"></div>
 
   <div id="acc" class="scr">
-    <div class="panel narrowp">
-      <h2>账号</h2>
-      <p class="sub">登录后，联机对战的胜负会记到排行榜上</p>
+    <div class="panel narrowp accp">
+      <div class="acc-dash hidden" id="accDash">
+        <div class="ad-card">
+          <span class="ad-avatar" id="adAvatar">侠</span>
+          <div class="ad-who">
+            <span class="ad-kicker" id="adKind">云端账号</span>
+            <b class="ad-name" id="adName">大侠</b>
+            <span class="ad-rank" id="adRank"></span>
+          </div>
+          <span class="ad-medal" id="adMedal"></span>
+        </div>
+        <div class="ad-stats" id="adStats"></div>
+        <div class="ad-sync">
+          <div class="ad-sync-head"><span class="ad-dot" id="adSyncDot"></span><b id="adSyncT">已同步</b><span id="adSyncS"></span></div>
+          <p class="ad-sync-note" id="adSyncNote">存档先存在本机，再自动上传到云端；上传失败会自动重试，没传完就关了网页，下次打开会补传。</p>
+          <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-cancel" id="adPull" type="button">从云端拉取</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
+          <p class="netstatus" id="adMsg" role="status"></p>
+        </div>
+      </div>
+      <div class="acc-in" id="accIn">
+      <span class="ad-kicker">账号</span>
+      <h2>登录刃影</h2>
+      <p class="sub">登录后，角色、墨锭、战绩和排位分数都跟着账号走，换电脑也能接着玩</p>
       <div class="form">
         <label>昵称<input id="accName" maxlength="12" autocomplete="username" spellcheck="false"></label>
         <label>密码<input id="accPass" type="password" maxlength="64" autocomplete="current-password"></label>
       </div>
       <p class="netstatus" id="accMsg" role="status"></p>
       <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
+      </div>
+      <span class="ad-kicker ad-tools-k">存档管理</span>
       <div id="accActionBtns" style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
         <button class="ghost small" id="exportAccBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px" title="将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>导出当前存档</button>
         <button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>云存档设置</button>
@@ -855,7 +917,7 @@
         <div id="importSelectArea" class="hidden" style="margin-top:8px"></div>
         <p id="importMsg" class="netstatus" style="margin:6px 0 0;font-size:12px" role="status"></p>
       </div>
-      <p class="netnote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
+      <p class="netnote" id="accFootNote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
     </div>
   </div>
 
@@ -1054,7 +1116,7 @@
   </div>
 
   <div id="end" class="scr">
-    <div class="panel"><h2 id="endTitle">青锋 胜</h2><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle">青锋 胜</h2><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>

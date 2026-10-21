@@ -2904,6 +2904,11 @@ function sayNet(text, dur, style, snd) { say(text, dur, style); if (snd) SFX[snd
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (REC.on) recSave(w);
+  // 结算页顶上的大字：自己打的局显示胜利/失败，双人同屏和观战只写“对局结束”
+  const solo = !(M.mode === 'pvp' || isAiVsAi() || M.watchAi || M.mode === 'watch2v2');
+  const youWin = w >= 0 && w === localIdx();
+  $id('endKicker').textContent = !solo || w < 0 ? 'MATCH OVER' : youWin ? 'VICTORY' : 'DEFEAT';
+  $id('endKicker').className = 'end-kicker ' + (!solo || w < 0 ? 'neutral' : youWin ? 'win' : 'lose');
   $id('againBtn').style.display = (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
   if (M.stage) {
     const win = w === 0;
@@ -7637,6 +7642,47 @@ function openScreen(name) {
   showScreen(name);
 }
 function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); }
+// ---------- 顶部导航 ----------
+const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
+function navTo(name) {
+  initAudio();
+  if (name === 'menu') { backToMenu(); return; }
+  if (name === 'acc') { openAcc(); return; }
+  if ($id('menu').classList.contains('on') && MENU_SPOT[name] !== undefined) { menuGo(name); return; }
+  if (name === 'netp') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; }
+  openScreen(name);
+}
+for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
+function renderTopNav() {
+  const nav = $id('topNav');
+  if (!nav) return;
+  const name = curName();
+  $id('tnInkN').textContent = (PROF.ink || 0).toLocaleString();
+  $id('tnName').textContent = name || '未登录';
+  if (name) {
+    const s = rkState();
+    $id('tnRank').textContent = rkPlaced(s) ? `${rkTier(s.pts).label} · ${rkTier(s.pts).name}` : `定级赛 ${s.placed}/${RK.PLACE}`;
+    $id('tnMedal').innerHTML = rkMedalFor(s, 34);
+  } else {
+    $id('tnRank').textContent = '登录 / 注册';
+    $id('tnMedal').innerHTML = rkMedalSVG(null, 34, { placed: 0 });
+  }
+  const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
+  $id('tnSync').className = 'tn-sync s-' + (name ? st.state : 'none');
+  $id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败' }[st.state] || '';
+}
+function renderHome() {
+  const sea = rkSeason();
+  $id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
+  $id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
+  const name = curName();
+  if (!name) { $id('homeMedal').innerHTML = rkMedalSVG(null, 56, { placed: 0 }); $id('homeRankL').textContent = '未定级'; $id('homeRankS').textContent = '登录后打 5 场定级赛'; return; }
+  const s = rkState();
+  $id('homeMedal').innerHTML = rkMedalFor(s, 56);
+  if (rkPlaced(s)) { const t = rkTier(s.pts); $id('homeRankL').textContent = `${t.label} · ${t.name}`; $id('homeRankS').textContent = `${t.pts.toLocaleString()} 分 · ${s.w} 胜 ${s.l} 负`; }
+  else { $id('homeRankL').textContent = `定级赛 ${s.placed}/${RK.PLACE}`; $id('homeRankS').textContent = `估分 ～${Math.round(s.est).toLocaleString()}`; }
+}
+$id('homeRank').addEventListener('click', () => navTo('netp'));
 for (const b of document.querySelectorAll('#menu [data-go]')) {
   b.addEventListener('click', () => { b.classList.add('pressed'); setTimeout(() => b.classList.remove('pressed'), 900); menuGo(b.dataset.go); });
   if (MENU_SPOT[b.dataset.go] !== undefined) {
@@ -9750,6 +9796,7 @@ function rkSave() {
   try { localStorage.setItem(RKS_KEY, JSON.stringify(s)); } catch (e) {}
   PROF.rk = JSON.parse(JSON.stringify(s));
   if (window.CloudSave && rkOwner()) CloudSave.saveProfile(PROF, true);
+  if (typeof renderTopNav === 'function') renderTopNav();
 }
 function rkPlaced(s) { return (s || rkState()).placed >= RK.PLACE; }
 function rkMatchPts() { const s = rkState(); return rkPlaced(s) ? s.pts : s.est; }
@@ -10404,6 +10451,15 @@ function showScreen(id) {
   if (id !== 'bp') { try { showPop(null); } catch (e) {} }
   if (id === 'menu') { menuCam.tx = 0; menuCam.tz = 1; }
   if (id === 'netp') renderLobby();
+  const nav = !OFFLINE_BUILD && NAV_SCREENS.includes(id);
+  $id('topNav').classList.toggle('hidden', !nav);
+  document.body.classList.toggle('has-nav', nav);
+  if (nav) {
+    for (const b of document.querySelectorAll('#topNav .tn-tabs [data-nav]')) b.classList.toggle('sel', b.dataset.nav === id);
+    renderTopNav();
+  }
+  if (id === 'menu') renderHome();
+  if (id === 'acc') renderAccPage();
   if (!id) {
     refocusGame();
   } else if (document.activeElement && !document.activeElement.closest('#' + id)) {
@@ -12525,6 +12581,7 @@ function setAcc(j) {
   renderAcc();
 }
 function renderAcc() {
+  renderTopNav();
   const bar = $id('accBar');
   if (OFFLINE_BUILD) { bar.classList.add('hidden'); return; }
   bar.classList.remove('hidden');
@@ -12612,31 +12669,102 @@ if ($id('exportAccBtn')) {
   });
 }
 
+function openAcc() {
+  $id('accMsg').textContent = '';
+  const u = window.CloudSave && CloudSave.getUser();
+  if (u && u.name) $id('accName').value = u.name;
+  const cfg = window.CloudSave && CloudSave.getConfig();
+  if ($id('fbCfgIn') && cfg && cfg.projectId) $id('fbCfgIn').value = JSON.stringify(cfg, null, 2);
+  menuCam.tz = 1.35;
+  showScreen('acc');
+  renderAccPage();
+  if (!$id('accIn').classList.contains('hidden')) setTimeout(() => $id('accName').focus(), 50);
+}
+async function doLogout() {
+  if (SERVED && window.fetch) {
+    try { await api('/api/logout', { token: ACC.token }); } catch (err) {}
+  }
+  if (window.CloudSave) { try { await CloudSave.syncNow(); } catch (e) {} await CloudSave.logout(); }
+  setAcc(null);
+  PROF.guest = true;
+  applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 });
+  toast('已退出账号');
+  renderAcc();
+  renderAccPage();
+}
 $id('accBar').addEventListener('click', async e => {
   const id = e.target.id;
-  if (id === 'accOpen') {
-    $id('accMsg').textContent = '';
-    const u = window.CloudSave && CloudSave.getUser();
-    if (u && u.name) $id('accName').value = u.name;
-    const cfg = window.CloudSave && CloudSave.getConfig();
-    if ($id('fbCfgIn') && cfg && cfg.projectId) $id('fbCfgIn').value = JSON.stringify(cfg, null, 2);
-    menuCam.tz = 1.35;
-    showScreen('acc');
-    setTimeout(() => $id('accName').focus(), 50);
-  } else if (id === 'lbBtn') {
-    openLeaderboard();
-  } else if (id === 'logoutBtn') {
-    if (SERVED && window.fetch) {
-      try { await api('/api/logout', { token: ACC.token }); } catch (err) {}
-    }
-    if (window.CloudSave) await CloudSave.logout();
-    setAcc(null);
-    PROF.guest = true;
-    applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 });
-    toast('已退出账号');
-    renderAcc();
-  }
+  if (id === 'accOpen') openAcc();
+  else if (id === 'lbBtn') openLeaderboard();
+  else if (id === 'logoutBtn') doLogout();
 });
+// ---------- 账号页：登录后是个人名片 + 云存档状态 ----------
+function agoText(t) {
+  if (!t) return '还没有上传过';
+  const d = Date.now() - t;
+  if (d < 60000) return '刚刚';
+  if (d < 3600000) return `${Math.floor(d / 60000)} 分钟前`;
+  if (d < 86400000) return `${Math.floor(d / 3600000)} 小时前`;
+  return new Date(t).toLocaleString();
+}
+function curName() { const u = window.CloudSave && CloudSave.getUser(); return (u && u.name) || ACC.name || ''; }
+function renderAccPage() {
+  if (!$id('accDash')) return;
+  const u = window.CloudSave && CloudSave.getUser(), name = curName();
+  $id('accDash').classList.toggle('hidden', !name);
+  $id('accIn').classList.toggle('hidden', !!name);
+  $id('accFootNote').classList.toggle('hidden', !!name);
+  if (!name) return;
+  const s = rkState(), placed = rkPlaced(s), t = placed ? rkTier(s.pts) : null;
+  $id('adAvatar').textContent = name.slice(0, 1);
+  $id('adAvatar').style.setProperty('--tier', placed ? RK_TIERS[t.li].c1 : '#8a94a3');
+  $id('adName').textContent = name;
+  $id('adKind').textContent = u && u.isDevMaster ? '开发者账号' : u && u.isCloud ? '云端账号' : '本机账号';
+  $id('adRank').textContent = placed ? `${t.label} · ${t.name} · ${t.pts.toLocaleString()} 分` : `定级赛 ${s.placed}/${RK.PLACE} · 估分 ～${Math.round(s.est).toLocaleString()}`;
+  $id('adMedal').innerHTML = rkMedalFor(s, 96);
+  const w = PROF.netWins || 0, l = PROF.netLosses || 0;
+  const stats = [
+    ['墨锭', (PROF.ink || 0).toLocaleString()],
+    ['角色', `${(PROF.owned || []).length} / ${CHARS.length}`],
+    ['皮肤', String((PROF.skins || []).length)],
+    ['联机战绩', `${w} 胜 ${l} 负`, w + l ? `胜率 ${Math.round(w / (w + l) * 100)}%` : ''],
+    ['本赛季排位', `${s.w} 胜 ${s.l} 负`, rkSeason().pre ? '季前赛' : SEASON.name],
+    ['赛季最高', s.peak ? rkTier(s.peak).label : '—', s.peak ? s.peak.toLocaleString() + ' 分' : ''],
+  ];
+  $id('adStats').innerHTML = stats.map(([k, v, sub]) => `<div class="ad-stat"><span>${k}</span><b>${escapeHTML(v)}</b>${sub ? `<small>${escapeHTML(sub)}</small>` : ''}</div>`).join('');
+  renderAccSync();
+}
+function renderAccSync() {
+  if (!$id('adSyncT')) return;
+  const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
+  const M_ = {
+    local: ['本机存档', '没有连接云端，存档只保存在这台设备上'],
+    idle: ['已连接云端', '有新进度会自动上传'],
+    ok: ['已同步', `上次上传：${agoText(st.at)}`],
+    pending: ['等待上传', '有新进度，马上自动上传'],
+    syncing: ['上传中…', ''],
+    offline: ['断网中', '联网后自动补传，进度不会丢'],
+    error: ['上传失败', st.err || ''],
+  }[st.state] || ['本机存档', ''];
+  $id('adSyncDot').className = 'ad-dot s-' + st.state;
+  $id('adSyncT').textContent = M_[0];
+  $id('adSyncS').textContent = M_[1];
+  $id('adSyncNow').classList.toggle('hidden', !st.cloud);
+  $id('adPull').classList.toggle('hidden', !st.cloud);
+  $id('adSyncNow').disabled = st.state === 'syncing';
+}
+$id('adSyncNow').addEventListener('click', async () => {
+  $id('adMsg').textContent = '正在上传…';
+  try { await CloudSave.syncNow(); $id('adMsg').textContent = '已上传到云端'; } catch (e) { $id('adMsg').textContent = e.message; }
+});
+$id('adPull').addEventListener('click', async () => {
+  if (!confirm('用云端的存档覆盖这台设备上的存档？')) return;
+  $id('adMsg').textContent = '正在拉取…';
+  try { const d = await CloudSave.pullNow(); applyProfile(d); RKS = null; renderAccPage(); $id('adMsg').textContent = '已从云端载入存档'; } catch (e) { $id('adMsg').textContent = e.message; }
+});
+$id('adLogout').addEventListener('click', () => doLogout());
+if (window.CloudSave && CloudSave.onSyncChange) CloudSave.onSyncChange(() => { renderTopNav(); if ($id('acc').classList.contains('on')) renderAccSync(); });
+setInterval(() => { if ($id('acc').classList.contains('on')) renderAccSync(); }, 20000);
 async function doAcc(kind) {
   const name = $id('accName').value.trim(), pass = $id('accPass').value;
   if (!name || !pass) { $id('accMsg').textContent = '昵称与密码都得填'; return; }
@@ -13376,6 +13504,8 @@ function mmUI(kind) {
   $id('mmQuickBtn').disabled = $id('mmRankBtn').disabled = !!kind;
   $id('mmQuickCard').classList.toggle('searching', kind === 'quick');
   $id('mmRankCard').classList.toggle('searching', kind === 'ranked');
+  const tp = document.querySelector('#topNav .tn-play');
+  if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? (kind === 'ranked' ? '排位中' : '匹配中') : '对战'; }
   if (kind) { $id('mmSearchTitle').textContent = kind === 'ranked' ? '排位赛 · 正在寻找对手' : '匹配对战 · 正在寻找对手'; mmTick(); }
 }
 function mmTick() {
