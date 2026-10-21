@@ -145,6 +145,22 @@ text-align: left; box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
 .ghost:disabled, .ghost[aria-disabled="true"] { opacity: .45; cursor: default; }
 .ghost.sel { background: var(--ink); color: #14121f; border-color: var(--ink); }
 .ghost.sel:hover { background: var(--ink); border-color: var(--ink); }
+button[data-back], #bpQuit, #accBack, #lbBack, #quitBtn, #menuBtn, #tutMenu, #feMenu {
+display: inline-flex !important;
+align-items: center !important;
+justify-content: center !important;
+flex: 0 0 auto !important;
+min-height: 38px !important;
+height: 38px !important;
+padding: 0 22px !important;
+font-size: 14px !important;
+line-height: 1 !important;
+box-sizing: border-box !important;
+transform: none !important;
+white-space: nowrap !important;
+text-align: center !important;
+letter-spacing: 0.05em !important;
+}
 .row { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
 .row .go { margin: 0; }
 .keys { display: grid; grid-template-columns: 1fr; margin: 16px auto 0; max-width: min(860px, 94vw); text-align: left; font-size: 13.5px; background: rgba(255,255,255,.03); border: 1px solid var(--faint); border-radius: 12px; padding: 14px 20px; }
@@ -480,7 +496,19 @@ cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition
 .form label { display: grid; gap: 6px; font-size: 13px; color: var(--dim); }
 .form input { font: 16px var(--body); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); -webkit-user-select: text; user-select: text; }
 .form input:focus-visible { outline: 2px solid var(--p1); outline-offset: 1px; }
-.go.alt { background: #2b5f74; box-shadow: none; }
+.go.alt {
+background: linear-gradient(135deg, #1d3e5e, #0c2036);
+box-shadow: 0 8px 24px rgba(12, 32, 54, 0.45), inset 0 0 0 2px #38bdf8;
+color: #e0f2fe;
+letter-spacing: .15em;
+padding: 8px 24px 8px 28px;
+font-size: 20px;
+}
+.go.alt:hover:not(:disabled) {
+background: linear-gradient(135deg, #255078, #102d4c);
+box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4), inset 0 0 0 2px #7dd3fc;
+color: #fff;
+}
 .lbwrap { max-height: 64vh; overflow-y: auto; margin: 8px auto 0; max-width: min(1160px, 95vw); border: 1px solid var(--faint); border-radius: 10px; }
 .lbt { width: 100%; border-collapse: collapse; font-size: 15px; }
 .lbt th { position: sticky; top: 0; background: #15142a; color: var(--dim); font-weight: 400; font-size: 12px; padding: 10px 12px; text-align: left; }
@@ -1053,7 +1081,10 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
           <p class="netnote" id="adaptLine" style="display:none;margin-top:8px;text-align:left;color:var(--gold)"></p>
         </div>
 
-        <button class="go" id="goBtn">进入选人 · 开战</button>
+        <div style="display:flex;gap:12px;margin-top:18px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="goBtn">进入选人 · 开战</button>
+          <button class="go alt" id="cpuWatchBtn" type="button">AI 对决 · 演武观战</button>
+        </div>
       </div>
 
       <!-- 3v3 门派车轮战 -->
@@ -1098,7 +1129,10 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
           </button>
         </div>
 
-        <button class="go" id="tag3StartBtn" style="margin-top:14px">擂台接力 · 开启车轮战</button>
+        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
+          <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI群英观战</button>
+        </div>
       </div>
 
       <!-- 闯关模式 -->
@@ -1122,6 +1156,9 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
         <div class="seg sttabs" id="stTabs"></div>
         <div class="stgrid" id="stGrid"></div>
         <p class="netnote" id="stNote"></p>
+        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+          <button class="go alt" id="stageWatchBtn" type="button">天道破关 · 演示观战</button>
+        </div>
       </div>
 
       <!-- 木人桩练习 -->
@@ -1145,7 +1182,10 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
           <div class="sec-sub-label">木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）</div>
           <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;justify-content:center"></div>
         </div>
-        <button class="go small" id="trainBtn" type="button" style="margin-top:14px">开启专精演武</button>
+        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+          <button class="go small" id="trainBtn" type="button">开启专精演武</button>
+          <button class="go small alt" id="trainWatchBtn" type="button">AI 试剑 · 演示观战</button>
+        </div>
       </div>
 
       <!-- 问剑密卷 · 肉鸽无尽试炼 -->
@@ -1157,9 +1197,10 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
         <p class="sub" style="margin:2px 0 10px;text-align:left">挑选本命侠客登临万仞剑阁！每战胜一层守关者，顿悟三选一武林秘卷天赋（雷厉电弧、墨刃剑气、借力打力、血饮残心…）。守关 AI 境界层层递进，智谋与应对算力愈发深不可测（高层极具压制智慧，绝非数值堆砌）！</p>
         <div class="sec-sub-label">选择本命试炼侠客</div>
         <div class="trpick" id="towerPick"></div>
-        <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
           <button class="go" id="towerResumeBtn" type="button" style="display:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">继续试炼</button>
           <button class="go" id="towerStartBtn" type="button">开启新试炼</button>
+          <button class="go alt" id="towerWatchBtn" type="button">天道密卷 · 爬塔观战</button>
         </div>
       </div>
 
@@ -1201,7 +1242,10 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
             <span class="lv-sub">神级策略</span>
           </button>
         </div>
-        <button class="go" id="bushidoStartBtn" type="button" style="margin-top:16px">进入孤勇决死</button>
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="bushidoStartBtn" type="button">进入孤勇决死</button>
+          <button class="go alt" id="bushidoWatchBtn" type="button">决死 AI 观战</button>
+        </div>
       </div>
 
       <!-- 天机乱斗 · 乾坤异变 -->
@@ -1242,7 +1286,10 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
             <span class="lv-sub">神经网络</span>
           </button>
         </div>
-        <button class="go" id="chaosStartBtn" type="button" style="margin-top:16px">开启天机乱斗</button>
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
+          <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
+        </div>
       </div>
 
       <!-- 通天神决 · 神魔乱斗 -->
@@ -1283,7 +1330,10 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
             <span class="lv-sub">神级策略</span>
           </button>
         </div>
-        <button class="go" id="mayhemStartBtn" type="button" style="margin-top:16px">开启通天神决</button>
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
+          <button class="go alt" id="mayhemWatchBtn" type="button">通天 AI 观战</button>
+        </div>
       </div>
 
       <!-- 2v2 天道演武观战 (Watch AI vs AI 2v2) -->
@@ -2782,9 +2832,9 @@ qingfeng: { normal: 1.055, skill: 1.055, ult: 0.946, cd: 1, hp: 1.019 },
 feiying: { normal: 1.193, skill: 1.249, ult: 0.976, cd: 0.95, hp: 1.009 },
 tieshan: { normal: 0.715, skill: 0.676, ult: 0.676, cd: 1, hp: 0.982 },
 lingshuang: { normal: 1.047, skill: 1.047, ult: 0.943, cd: 1, hp: 1.027 },
-liuyun: { normal: 1.12, skill: 1.066, ult: 0.963, cd: 1, hp: 1.042 },
+liuyun: { normal: 1.16, skill: 1.14, ult: 0.98, cd: 0.92, hp: 1.06 },
 leiming: { normal: 1.085, skill: 0.806, ult: 0.806, cd: 1.1, hp: 1.022 },
-moyu: { normal: 0.936, skill: 0.892, ult: 0.795, cd: 1, hp: 0.978 },
+moyu: { normal: 1.08, skill: 1.10, ult: 0.94, cd: 0.90, hp: 1.06 },
 yuehua: { normal: 1.059, skill: 1.059, ult: 0.952, cd: 1, hp: 0.993 },
 yanling: { normal: 0.973, skill: 0.973, ult: 0.872, cd: 1, hp: 1.011 },
 yuxiao: { normal: 0.999, skill: 0.999, ult: 0.893, cd: 1, hp: 1.003 },
@@ -2815,11 +2865,11 @@ passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 20% 且�
 stat: { hp: 480, walk: 0.98, speed: 1.05, dmg: 1.00, reach: 1.28, swing: 1.08, jump: 1, weight: 1.04, defRating: 1.02, guardMax: 110, guardStab: 1.20, guardChip: 0.08, guardRegen: 28, poise: 0.95, size: 1.02 }, hitFeel: 1.15,
 look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
 ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
-{ id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 8.5, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
-passiveName: '御风', passiveDesc: '御风而行，三段跳与开扇疾冲来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势韧性增强（95架势/11%微穿透），身法飘忽制胜。',
-stat: { hp: 470, walk: 1.12, speed: 0.88, dmg: 1.17, reach: 0.98, swing: 0.95, jump: 1.05, weight: 0.85, defRating: 0.98, guardMax: 95, guardStab: 1.05, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 0.98 }, jumps: 3, hitFeel: 0.9,
+{ id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 8.0, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
+passiveName: '御风', passiveDesc: '御风而行，三段跳与风遁来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），风遁疾退带狂风护体，身法飘忽制胜。',
+stat: { hp: 495, walk: 1.15, speed: 0.85, dmg: 1.18, reach: 1.06, swing: 0.90, jump: 1.08, weight: 0.88, defRating: 1.02, guardMax: 112, guardStab: 1.15, guardChip: 0.07, guardRegen: 32, poise: 0.95, size: 0.98 }, jumps: 3, hitFeel: 0.9,
 look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
-ai: { range: [200, 380] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
+ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
 { id: 'leiming', name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
 passiveName: '连环', passiveDesc: '六连重拳如惊雷，金刚体魄筋骨强横（520血/1.22体量）；架势耐力深厚且回涌较快（32/秒），防守沉稳，唯出拳收势空隙需防对手腾空闪。',
 stat: { hp: 520, walk: 1.14, speed: 0.70, dmg: 0.94, reach: 0.8, swing: 0.64, jump: 1, weight: 1.22, defRating: 1.02, guardMax: 115, guardStab: 1.25, guardChip: 0.07, guardRegen: 32, poise: 0.90, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
@@ -2827,12 +2877,12 @@ moveMods: { l1: { dmgAbs: 19 }, l2: { dmgAbs: 19 }, l3: { dmgAbs: 20 }, l4: { dm
 l6: { p: ['l3s', 'l3a'], su: .09, ac: .08, rc: .24, dmgAbs: 32, kb: [520, -260], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 260, launch: true, next: {}, snd: 'heavy' } },   // 六连重拳，第六拳收尾挑飞
 look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
 ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
-{ id: 'moyu', name: '墨羽', role: '泼墨画师', diff: 3, escCD: 9, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
-passiveName: '笔锋', passiveDesc: '墨韵宗师宗风深沉（1.10体量），墨阵定身强行封锁走位；墨水屏障加持架势耐力（115），蓄力挥洒自如，专破铁山等钝重武夫。',
-stat: { hp: 430, walk: 0.95, speed: 1.02, dmg: 1.02, reach: 1.10, swing: 1.05, jump: 1, weight: 1.02, defRating: 1.00, guardMax: 100, guardStab: 1.10, guardChip: 0.09, guardRegen: 28, poise: 0.95, size: 1.00 }, hitFeel: 1.1,
-moveMods: { l1: { dmgAbs: 12 }, l2: { dmgAbs: 12 }, l3: { dmgAbs: 14 }, l4: { dmgAbs: 14 }, l5: { dmgAbs: 18 }, cs1: { reachMul: 1.4 }, cs2: { reachMul: 1.4 } }, inkShot: true,
+{ id: 'moyu', name: '墨羽', role: '泼墨画师', diff: 3, escCD: 8.5, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
+passiveName: '笔锋', passiveDesc: '墨韵宗师宗风深沉（1.10体量），墨阵定身强行封锁走位；墨水屏障加持架势耐力（115），蓄力挥洒自如，更有【墨韵护体】减免重创，专破铁山等钝重武夫。',
+stat: { hp: 485, walk: 1.02, speed: 0.90, dmg: 1.08, reach: 1.15, swing: 0.95, jump: 1.02, weight: 1.04, defRating: 1.02, guardMax: 115, guardStab: 1.18, guardChip: 0.07, guardRegen: 32, poise: 0.92, size: 1.00 }, hitFeel: 1.05,
+moveMods: { l1: { dmgAbs: 15 }, l2: { dmgAbs: 15 }, l3: { dmgAbs: 17 }, l4: { dmgAbs: 17 }, l5: { dmgAbs: 22 }, cs1: { reachMul: 1.45 }, cs2: { reachMul: 1.45 } }, inkShot: true,
 look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
-ai: { range: [150, 300] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
+ai: { range: [140, 290] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
 { id: 'yuehua', name: '月华', role: '月镜宗师', diff: 3, escCD: 8.0, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
 passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.92体量/460血），自带月魄神罡（110架势/6%微透伤）与脱战自愈，以静制动。',
 stat: { hp: 460, walk: 1.02, speed: 0.86, dmg: 1.00, reach: 1.02, swing: 0.84, jump: 1, weight: 0.92, defRating: 1.06, guardMax: 110, guardStab: 1.30, guardChip: 0.06, guardRegen: 32, poise: 0.90, size: 0.96 }, hitFeel: 0.8,
@@ -2860,9 +2910,8 @@ look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, sca
 ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
 ];
 const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
-const INK_MAX = 100, INK_COST = 20, INK_REGEN = 12, INK_DMG = 18;
-const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
-const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 30, fists: 16, brush: 62, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
+const INK_MAX = 100, INK_COST = 15, INK_REGEN = 25, INK_DMG = 24;
+const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
 const WEAPON_POSE_MODS = {
 spear: { l1: ['sp_l1s', 'sp_l1a'], l2: ['sp_l2s', 'sp_l2a'], l3: ['ls_stance', 'ls_thrust'], l5: ['ls_stance', 'ls_thrust'] },
 dual: { l1: ['du_l1s', 'du_l1a'], l2: ['du_l2s', 'du_l2a'], l3: ['fy_crouch', 'fy_xslash'], l4: ['du_l1s', 'fy_xslash'] },
@@ -2984,14 +3033,17 @@ if (f.t >= 0.34) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
 ai: (me, foe, d) => d < 120 },
-windblade: { name: '风刃', cd: 2.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
+windblade: { name: '风刃', cd: 1.4, air: true, desc: '挥扇生风。此招【无长硬直】，附带风暴推力（420 像素击退）；连飞羽轻镖也一并吹散。',
 start() {},
 update(f) {
 if (f.skPh === 0 && f.t >= 0.04) {
 f.skPh = 1; SFX.swing();
-for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
+if (f.twinT > 0) {
+f.twinT = 0;
+for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1220, vy, w: 74, h: 62, life: 1.15, dmg: 32, kb: [400, -90], stun: 0.22, hs: 0.035 });
+} else spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1240, w: 72, h: 62, life: 1.15, dmg: 42, kb: [420, -90], stun: 0.22, hs: 0.035 });
 }
-if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
+if (f.skPh === 1 && f.t >= 0.11) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
 ai: () => true },
@@ -3011,18 +3063,18 @@ if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
 ai: (me, foe, d) => d > 110 && d < 360 },
-inktrap: { name: '墨阵', cd: 7.5, desc: '提笔画出一池宽 110 像素的墨阵。踏入者陷入【深墨禁锢】（0.48 秒定身）；再按 Q 可随时引爆。',
+inktrap: { name: '墨阵', cd: 5.2, desc: '提笔画出一池宽 115 像素的墨阵。踏入者陷入【深墨禁锢】（0.48 秒定身 + 2.8 秒迟缓）；再按 Q 可随时引爆。',
 start(f) { f.vx = 0; },
 update(f) {
-if (f.skPh === 0 && f.t >= 0.20) {
+if (f.skPh === 0 && f.t >= 0.16) {
 f.skPh = 1; SFX.poof();
 for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 90, 250), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 95, h: 26, life: 4.5, delay: 0.30, dmg: 30, kb: [0, 0], stun: 0.40, hs: 0.07, root: true, groundOnly: true });
+spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 80, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 115, h: 28, life: 5.0, delay: 0.22, dmg: 35, kb: [0, 0], stun: 0.48, hs: 0.07, root: true, groundOnly: true });
 }
-if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
+if (f.skPh === 1 && f.t >= 0.22) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
-ai: (me, foe, d) => d > 90 && d < 330 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
+ai: (me, foe, d) => d > 80 && d < 340 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
 dive: { name: '俯冲', cd: 4.5, air: true, desc: '猎鹰收翼斜下俯冲。命中施加【鹰击钉地】（0.40 秒压制硬直）；自空中出手可借力回升并刷新技能。',
 start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -700; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
 update(f, foe) {
@@ -3132,18 +3184,25 @@ strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 38, kb: foeInAir ? [420,
 if (f.t >= 2) toNeutral(f);
 },
 pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。',
-start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); },
-update(f) {
-if (f.skPh < 5 && f.t >= f.skPh * 0.055) {   // 冲的路上每隔一小段撒一颗
-f.skPh++;
-spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: Math.random() * 6 });
+windstep: { name: '风遁', cd: 3.5, air: true, nofric: true, pass: true, desc: '御风后翻瞬间在原地引爆【惊风退敌】斥力气旋（0.45 秒击退贴脸之敌）；附带狂风霸体护身（0.25 秒），下一发风刃亦得风势相助，一分为二。',
+start(f) { f.vx = 0; f.armorT = 0.25; f.armorHits = 1; },
+update(f, foe) {
+if (f.skPh === 0) {
+f.skPh = 1; f.invul = Math.max(f.invul, 0.20); f.twinT = 1.2; SFX.dash();
+ring(f.x, f.y - 50, 140, f.look.slash, 0.45); dust(f.x, 0, 16); SFX.swing();
+const targets = M.mode === 'watch2v2' ? foesOf(f) : [foe];
+for (const ef of targets) {
+if (ef && Math.abs(ef.x - f.x) < 165 && Math.abs(ef.y - f.y) < 130 && ef.invul <= 0) {
+applyHit(f, ef, { dmg: 38, kb: [f.face * -460, -320], stun: 0.45, hs: 0.07, launch: true, noScale: true }, [ef.x, ef.y - 60]);
+addP({ type: 'text', text: '🌪️ 惊风退敌', x: f.x, y: f.y - 90, life: 0.8, max: 0.8, rgb: '140,255,200' });
 }
-f.vx = f.face * 1300 * Math.max(0, 1 - f.t / 0.3);
-if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
-if (f.t >= 0.32) toNeutral(f);
+}
+}
+f.vx = -f.face * 1050 * (1 - f.t / 0.24);
+if (Math.random() < 0.7) addP({ type: 'spark', x: f.x + f.face * 20, y: f.y - rand(20, 100), vx: f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
+if (f.t >= 0.24) toNeutral(f);
 },
-pose: () => ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 360 && Math.sign(o.x - m.x) === m.face },
+pose: () => ['ly_hover', 40], ai: (m, o, d) => d < 160 },
 stomp: { name: '雷踏', cd: 4.5, desc: '一脚踏落，前方轰然炸起雷柱（宽 85 像素，高 420 像素，48 伤害）。垂直高空挑飞，将对手击向空中。',
 start(f) { f.vx = 0; },
 update(f) {
@@ -3151,17 +3210,13 @@ if (f.skPh === 0 && f.t >= 0.14) { f.skPh = 1; dust(f.x, 0, 12); SFX.thud(); spa
 if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
-inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
+inksplash: { name: '泼墨', cd: 4.8, desc: '甩出一团浓墨。墨团爆裂挑飞并施加【墨迹遮目】（0.50 秒硬直 + 2.5 秒迟缓），落地激荡墨池。',
 start(f) { f.vx = 0; },
 update(f) {
-if (f.skPh === 0 && f.t >= 0.2) {
-f.skPh = 1; f.ink -= INK_COST * FU_INK; f.fu = Math.min(FU_MAX, (f.fu || 0) + 1); SFX.swing();
-ring(f.x + f.face * 30, f.y - 120, 40, '235,200,90', 0.35);
-addP({ type: 'text', text: `画符 · ${f.fu}/${FU_MAX}`, x: f.x, y: f.y - 140, life: 0.8, max: 0.8, rgb: '235,200,90' });
-}
-if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
+if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'inkblob', x: f.x + f.face * 30, y: f.y - 90, vx: f.face * 580, vy: -440, g: 1500, lob: true, w: 52, h: 52, life: 1.3, dmg: 46, kb: [160, -460], stun: 0.50, hs: 0.07, launch: true }); }
+if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
 },
-pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
+pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 130 && d < 440 },
 moonring: { name: '月轮', cd: 3.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
 start(f) { f.vx = 0; },
 update(f) {
@@ -3386,11 +3441,11 @@ SFX.chargeFull();
 }
 if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
 } },
-tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。',
+tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与风遁冷却，空中跳跃次数全额回满，乘风浮空。',
 begin(f) {
 f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0;
 f.skillCD = 0; f.skill2CD = 0; f.jumps = 0;
-addP({ type: 'text', text: '🌪️ 扶摇万里 · 开扇重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
+addP({ type: 'text', text: '🌪️ 扶摇万里 · 风遁重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
 SFX.superOn();
 },
 update(f) {
@@ -3418,28 +3473,20 @@ spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL
 }
 if (f.t >= 1.2) endSpecial(f);
 } },
-inkdragon: { name: '符阵', desc: `把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = ${FU_BASE} + 每张符 ${FU_PER}（最多 ${FU_BASE + FU_PER * FU_MAX}）。`,
+inkdragon: { name: '墨龙', desc: '饱蘸浓墨，凌空一挥——墨即成龙！巨墨龙横扫全场（180 伤害，不可格挡）。泼墨触发【笔意长存】：墨水瞬间回满至 100%，重置墨阵与泼墨冷却，并在敌足下额外布下索敌墨印。',
 begin(f) {
 f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
-f.spN = f.fu || 0; f.fu = 0;   // 符全部烧掉，记下这次烧了几张
 },
 update(f, foe) {
-if (f.t >= 0.25) f.spPose = 'my_paint';
-const foes = foesOf(f).filter(e => e && e.hp > 0);   // 全图命中：2v2 里两个对手都会炸
-const wait = foes.some(e => e.invul > 0) && f.t < 2.4;   // 对手正无敌（比如也在放大招）就等它结束再炸，最多多等一秒多
-if (f.t >= 0.95 && !f.hitDone && !wait) {
-f.hitDone = true; f.fuT = f.t;
-const n = f.spN || 0;
-if (foes.length) { shake = Math.max(shake, 14 + n * 3); flashA = Math.max(flashA, 0.35); flashRGB = '230,70,50'; SFX.ko(); }
-for (const e of foes) {
-const x = e.x, y = e.y - 150;
-ring(x, y, 90 + n * 18, '230,70,50', 0.5); ring(x, y, 50, '255,230,150', 0.4);
-for (let k = 0; k < 18 + n * 4; k++) { const a = rand(0, 6.28), v = rand(120, 420); addP({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, max: 0.6, rgb: k % 2 ? '235,200,90' : '230,70,50', w: 2.4, drag: 2 }); }
-if (e.invul <= 0) applyHit(f, e, { dmg: FU_BASE + FU_PER * n, kb: [0, -520], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true, dir: e.face * -1 }, [e.x, e.y - 80]);
-addP({ type: 'text', text: n ? `符爆 ×${n}` : '空符一张', x: e.x, y: e.y - 200, life: 1.1, max: 1.1, rgb: '230,70,50' });
+if (f.t >= 0.15 && !f.hitDone) {
+f.hitDone = true; f.spPose = 'my_paint';
+spawnProj(f, { kind: 'dragon', x: f.x + f.face * 70, y: -60, vx: f.face * 760, w: 140, h: 96, life: 2, dmg: 180, kb: [520, -760], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, unbreakable: true, noScale: true });
+f.ink = INK_MAX; f.skillCD = 0; f.skill2CD = 0;
+if (foe) spawnProj(f, { kind: 'trap', x: clamp(foe.x, WALL + 40, STAGE_W - WALL - 40), y: 0, vx: 0, w: 90, h: 24, life: 4.5, dmg: 25, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, unblockable: true, trap: true, unbreakable: true, noScale: true });
+addP({ type: 'text', text: '🐉 笔意长存 · 墨韵回满', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '210,210,230' });
+SFX.chargeFull();
 }
-}
-if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
+if (f.t >= 0.5) endSpecial(f);
 } },
 featherstorm: { name: '万羽', desc: '展翼直上九霄，唤来漫天破甲翎羽如暴雨倾泻（14 枚，每枚 14 伤害）。齐射触发【凌霄破虚】：重置俯冲突袭与翎羽射击冷却，御空飞行耐力全额回满。',
 begin(f) {
@@ -4071,7 +4118,7 @@ NET.lastResult = '';
 }
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT'];
+'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 const VICTIM = ['hitstun', 'launched', 'knockdown', 'getup', 'held', 'blockstun'];
 function applyF(f, arr, exact) {
@@ -4219,7 +4266,7 @@ const ADV = {
 qingfeng: '疾风斩直击穿身得手后，立时重置剑气冷却，可瞬间接出弧月剑气连招。',
 tieshan: '震地直击得手后，瞬时回涌 30 点架势耐力，并削减铁壁冲 2.5 秒冷却。',
 feiying: '影遁之后 1.5 秒内再按 Q——影归，瞬息退回遁走前的位置。',
-liuyun: '风刃一次扇出两道；开扇冲过去撒下的爆米花半秒后会炸。',
+liuyun: '风遁之后 0.8 秒内，下一发风刃一分为二（每道 35 伤害）。',
 leiming: '雷闪贴地冲拳命中对手，立时重置雷踏冷却，可直接连入冲天雷柱。',
 lingshuang: '回马枪得手后，枪旋余下的冷却减半。',
 moyu: '墨阵尚在场时再按 Q——引爆，阵中之敌受 4 伤害，被墨浪掀飞。',
@@ -4305,22 +4352,25 @@ $id('stNote').textContent = `第 ${stageCh + 1} 章 · ${C.name}　守关难度�
 }
 $id('stTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { stageCh = +b.dataset.c; renderStages(); SFX.slice(); } });
 $id('stGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) startStage(stageCh, +b.dataset.l); });
-function startStage(c, l) {
+function startStage(c, l, isWatch = false) {
 const S = STAGE = stageInfo(c, l); stageCh = c;
+M.watchAi = !!isWatch;
 if (S.boss) {   // 守关：和这一章的高手打一场三局两胜
 FOREST.on = false; B.forestProxy = false; B.hidden = false; B.dummy = false;
 initAudio(); paused = false; showScreen(null);
 MSTAT.maxcombo = 0; MSTAT.ults = 0;
-startMatch('cpu', S.C.lv, [trainChar, CHAR_IDX[S.C.boss]]);
+startMatch('cpu', S.C.lv, [trainChar, CHAR_IDX[S.C.boss]], isWatch);
 M.stage = S;
 applySkins();
+if (isWatch) say(`天道破关 · 迎战 ${S.C.name}`, 1.4);
 return;
 }
 startDummyTraining();
 Object.assign(FOREST, { on: true, mons: [], shots: [], spawnT: 1, kills: {}, total: 0, t: 0, hurtT: 9, wave: 0, toSpawn: [], breakT: 1.5, over: false, overT: 0, shown: false, prot: S.K.prot, result: null });
 B.forestProxy = true; B.hidden = true; B.x = STAGE_W / 2 + 400; B.invul = 99; B.look = { ...B.look, name: '妖物' };
 A.x = STAGE_W / 2;
-say(`${S.id} ${S.C.name}`, 1.3, 'big');
+if (isWatch) A.ctrl = new AICtrl('god');
+say(isWatch ? `${S.id} ${S.C.name} · 破关演示` : `${S.id} ${S.C.name}`, 1.3, 'big');
 }
 function forestNextWave() {
 const F = FOREST; F.wave++;
@@ -4603,7 +4653,7 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 const ULT_AI = {
 crescent: (m, f, d) => d < 330, shadows: (m, f, d) => d < 330, avalanche: (m, f, d) => d < 700 && f.onGround(),
 phoenix: (m, f, d) => d < 230, timestop: (m, f, d) => d < 700, tornado: (m, f, d) => d < 650, thunder: () => true,
-inkdragon: (m, f) => (m.fu || 0) >= 2 || m.hp < m.maxHp * 0.5 || f.hp < FU_BASE + FU_PER * (m.fu || 0), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
+inkdragon: (m, f, d) => d < 900 && f.onGround(), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
 };
 const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.32], ['light', 0.48], ['light', 0.64], ['heavy', 0.84]] };
 const AI_H1 = new Float32Array(64);
@@ -4681,7 +4731,7 @@ AI_OBS[23] = Math.min(1, (me.breakCD || 0) / 10);
 let projNear = 0;
 for (let i = 0; i < projs.length; i++) {
 const p = projs[i];
-if (p.owner !== me.idx && p.dmg > 0 && Math.abs(me.x - p.x) < 300) {
+if ((p.owner % 2 !== me.idx % 2) && p.dmg > 0 && Math.abs(me.x - p.x) < 300) {
 projNear = (p.x - me.x) / STAGE_W;
 break;
 }
@@ -4708,11 +4758,13 @@ updateTactic(me, foe) {
 if (!me || !foe || !me.ch || !foe.ch) return;
 this.lastOppId = foe.ch.id;
 this.lastMeId = me.ch.id;
+if (me.state !== 'attack') {
 this.queue = [];
+this.next = 0;
+}
 this.holdDown = 0;
 this.reacted = false;
 this.projReact = false;
-this.next = 0;
 const meCh = me.ch, foeCh = foe.ch;
 const isAdvantage = (meCh.beats || []).includes(foeCh.id);
 const isDisadvantage = (meCh.weakTo || []).includes(foeCh.id) || (foeCh.beats || []).includes(meCh.id);
@@ -4780,7 +4832,7 @@ else if (Math.random() < blockRate) { this.holdDown = 0.38; this.queue = []; thi
 }
 }
 if (foe.state !== 'attack') this.reacted = false;
-const inc = projs.find(p => p.owner !== me.idx && !p.fx && p.dmg > 0 && p.delay <= 0 && p.kind !== 'trap' && Math.sign(me.x - p.x) === Math.sign(p.vx) && Math.abs(me.x - p.x) < 280);
+const inc = projs.find(p => (p.owner % 2 !== me.idx % 2) && !p.fx && p.dmg > 0 && p.delay <= 0 && p.kind !== 'trap' && Math.sign(me.x - p.x) === Math.sign(p.vx) && Math.abs(me.x - p.x) < 280);
 if (inc && !this.projReact) {
 this.projReact = true;
 if (free && Math.random() < blockRate) {
@@ -4789,15 +4841,74 @@ else { this.holdDown = 0.35; this.queue = []; }
 }
 }
 if (!inc) this.projReact = false;
-const bolt = projs.find(p => p.kind === 'bolt' && p.owner !== me.idx && p.delay > 0 && Math.abs(p.x - me.x) < 80);
+const bolt = projs.find(p => p.kind === 'bolt' && (p.owner % 2 !== me.idx % 2) && p.delay > 0 && Math.abs(p.x - me.x) < 80);
 if (bolt && Math.random() < blockRate * 0.2) { this.dir = me.x >= bolt.x ? 1 : -1; this.next = clock + 0.25; this.queue = []; }
-const trap = projs.find(p => p.kind === 'trap' && p.owner !== me.idx && Math.abs(p.x - me.x) < 110 && Math.sign(p.x - me.x) === this.dir);
+const trap = projs.find(p => p.kind === 'trap' && (p.owner % 2 !== me.idx % 2) && Math.abs(p.x - me.x) < 110 && Math.sign(p.x - me.x) === this.dir);
 if (trap && me.onGround() && Math.random() < blockRate * 0.15) this.press('jump');
 if (clock >= this.next && !this.queue.length && this.holdDown <= 0) {
 this.next = clock + rand(L.think[0], L.think[1]);
 const r = Math.random();
 this.dir = 0;
 const atkRange = me.moves.l1.box[2] + 22;
+if (M.mode === 'watch2v2' && typeof ARENA2V2 !== 'undefined') {
+const cx = STAGE_W / 2;
+if (ARENA2V2.orb && ARENA2V2.orb.active) {
+const k = ARENA2V2.orb.kind; // 0: 破军神火, 1: 太阴灵丹, 2: 紫微星魄
+const dAltar = Math.abs(me.x - cx);
+const mate = (me.idx % 2 === 0) ? (me.idx === 0 ? C : A) : (me.idx === 1 ? D : B);
+const activeFoes = foesOf(me).filter(ef => !ef.hidden && ef.hp > 0);
+let closestFoe = null, minFoeAltar = 9999;
+for (const ef of activeFoes) {
+const df = Math.abs(ef.x - cx);
+if (df < minFoeAltar) { minFoeAltar = df; closestFoe = ef; }
+}
+const wantLingDan = (k === 1) && (me.hp < me.maxHp * 0.75 || (mate && mate.hp <= 0));
+const wantBuff = (k === 0 || k === 2) || wantLingDan;
+if (closestFoe && minFoeAltar < 280) {
+const canIntercept = Math.abs(me.x - closestFoe.x) < atkRange + 90;
+if (canIntercept && (dAltar <= minFoeAltar + 70)) {
+this.dir = Math.sign(closestFoe.x - me.x) || to;
+if (me.skillCD <= 0 && S.ai(me, closestFoe, Math.abs(closestFoe.x - me.x))) {
+this.plan([['skill', 0], ...(SKILL_FOLLOW[ch.skill] || [])]);
+return;
+} else if (me.skill2CD <= 0 && SKILLS[ch.skill2].ai(me, closestFoe, Math.abs(closestFoe.x - me.x))) {
+this.plan([['skill2', 0]]);
+return;
+} else if (Math.abs(closestFoe.x - me.x) <= atkRange) {
+this.plan(AI_COMBOS[Math.min(L.combo, AI_COMBOS.length - 1)]);
+return;
+}
+}
+}
+if (wantBuff && (dAltar < minFoeAltar + 140)) {
+const mateRushing = mate && mate.hp > 0 && Math.abs(mate.x - cx) < dAltar && (k !== 1 || mate.hp < me.hp);
+if (!mateRushing) {
+if (dAltar < 48 && me.onGround()) {
+this.dir = Math.sign(cx - me.x) || to;
+this.plan([['jump', 0]]);
+return;
+} else {
+this.dir = Math.sign(cx - me.x);
+if (dAltar > 120 && me.dashCD <= 0 && Math.random() < 0.65) {
+this.press('dash');
+return;
+}
+return;
+}
+}
+}
+}
+if (ARENA2V2.geysers && (me.skillCD > 2.2 || me.skill2CD > 2.2)) {
+for (const g of ARENA2V2.geysers) {
+if (g.cd <= 0 && Math.abs(me.x - g.x) < 180 && Math.abs(me.x - g.x) > 30) {
+if (Math.random() < 0.35) {
+this.dir = Math.sign(g.x - me.x);
+return;
+}
+}
+}
+}
+}
 let neuralAct = -1;
 if (L.neural) {
 const obs = extractAIObs(me, foe);
@@ -4918,7 +5029,7 @@ this.guard = this.maxGuard;
 this.sinceBlock = 0;
 Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
 skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
-notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
+notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -4941,11 +5052,25 @@ return alive.length ? alive : list;
 const foeOf = f => {
 if (M.mode !== 'watch2v2') return f === A ? B : A;
 const list = foesOf(f);
+if (!list.length) return A;
+if (list.length === 1) { f.target = list[0]; return list[0]; }
+let cur = f.target && !f.target.hidden && f.target.hp > 0 && list.includes(f.target) ? f.target : null;
+if (cur) {
+const curDist = Math.abs(cur.x - f.x);
+const other = list.find(e => e !== cur);
+if (other) {
+const otherDist = Math.abs(other.x - f.x);
+if (otherDist < curDist - 85) cur = other;
+}
+f.target = cur;
+return cur;
+}
 let best = list[0], minDist = Math.abs(best.x - f.x);
 for (let i = 1; i < list.length; i++) {
 const dist = Math.abs(list[i].x - f.x);
 if (dist < minDist) { best = list[i]; minDist = dist; }
 }
+f.target = best;
 return best;
 };
 const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1);
@@ -4994,7 +5119,7 @@ ARENA2V2.altarTimer -= dt;
 if (ARENA2V2.altarTimer <= 0) {
 ARENA2V2.orb.active = true;
 ARENA2V2.orb.kind = (Math.random() * 3) | 0;
-const names = ['🔥 朱雀神火 · 破军', '🌕 太阴甘露 · 固本', '⚡ 紫微星魄 · 满怒'];
+const names = ['🔥 朱雀神火 · 破军', '🌕 太阴灵丹 · 固本', '⚡ 紫微星魄 · 满怒'];
 const cols = ['255,120,70', '120,245,190', '190,140,255'];
 ring(cx, -65, 180, cols[ARENA2V2.orb.kind], 0.5);
 addP({ type: 'text', text: '剑坛赐福：' + names[ARENA2V2.orb.kind], x: cx, y: -150, life: 1.3, max: 1.3, rgb: cols[ARENA2V2.orb.kind] });
@@ -5011,11 +5136,11 @@ f.buffT = 4.5; f.skillCD = 0; f.skill2CD = 0;
 ring(f.x, f.y - 55, 170, '255,120,70', 0.45);
 addP({ type: 'text', text: '🔥 朱雀战魂 · 狂暴破招', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '255,130,80' });
 } else if (k === 1) {
-f.hp = Math.min(f.maxHp, f.hp + 135);
+f.hp = Math.min(f.maxHp, f.hp + 45);
 f.lagHp = Math.max(f.lagHp, f.hp);
-f.guard = f.maxGuard;
+f.guard = Math.min(f.maxGuard, (f.guard || 0) + 25);
 ring(f.x, f.y - 55, 170, '120,245,190', 0.45);
-addP({ type: 'text', text: '🌕 太阴甘露 +135', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '120,245,190' });
+addP({ type: 'text', text: '🌕 太阴灵丹 +45', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '120,245,190' });
 } else {
 f.meter = 100; f.armorT = 2.2; f.armorHits = 3;
 ring(f.x, f.y - 55, 170, '190,140,255', 0.45);
@@ -5059,7 +5184,7 @@ announceQueue.push(item);
 }
 function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math.random() * (CHARS.length - 1) | 0; if (b >= a) b++; return [a, b]; }
 function netDropWaiting() { if (!NET.open && (NET.ws || p2pActive())) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
-function startMatch(mode, level, chars) {
+function startMatch(mode, level, chars, isWatch = false) {
 if (mode !== 'demo') refocusGame();
 if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
 human[0].rec = null;
@@ -5067,12 +5192,14 @@ chars = chars || randomPair();
 setChars(chars[0], chars[1]);
 if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
 M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null;
+M.watchAi = !!isWatch;
 A.meter = B.meter = 0;
-A.ctrl = mode === 'demo' ? new AICtrl('normal') : human[0];
+A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
 B.ctrl = mode === 'pvp' ? human[1] : mode === 'train' ? new DummyCtrl(level) : new AICtrl(mode === 'demo' ? 'normal' : level);
 human[0].clear(); human[1].clear();
-REC.on = false; if ((mode === 'cpu' || mode === 'pvp') && !TUT) recBegin('loc');
+REC.on = false; if ((mode === 'cpu' || mode === 'pvp') && !TUT && !isWatch) recBegin('loc');
 startRound();
+if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
 STAGE_W = M.mode === 'watch2v2' ? 2600 : 1800;
@@ -5364,6 +5491,7 @@ const nextHeroIdx = M.teams[loserSide][M.teamIdx[loserSide]];
 const loserFighter = [A, B][loserSide];
 loserFighter.setChar(nextHeroIdx);
 loserFighter.meter = 0;
+if (loserSide === 0 && M.watchAi) loserFighter.ctrl = new AICtrl(M.level || 'god');
 if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
 if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 M.round++;
@@ -5564,7 +5692,12 @@ toNeutral(f);
 if (c.held.down && f.onGround()) { f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; }
 }
 }
-function endSpecial(f) { f.invul = 0; toNeutral(f); }
+function endSpecial(f) {
+if (f.flurryVictim && f.flurryVictim.state === 'held') toNeutral(f.flurryVictim);
+f.flurryVictim = null;
+f.invul = 0;
+toNeutral(f);
+}
 const EIGHT_IMM = ['汉钟离', '吕洞宾', '张果老', '曹国舅', '铁拐李', '韩湘子', '何仙姑', '蓝采和'];
 function specialUpdate(f, foe) {
 const t = f.t, U = ULTS[f.ch.ult];
@@ -5577,10 +5710,11 @@ else U.begin(f, foe);
 return;
 }
 if (!U.flurry) { U.update(f, foe); return; }
+const victim = (f.flurryVictim && !f.flurryVictim.hidden && f.flurryVictim.hp > 0) ? f.flurryVictim : foe;
 if (f.sp === 'dash') {
 if (!isClient() && foe.hp > 0 && foe.invul <= 0 && overlap(hitbox(f, [0, -118, 96, 0]), hurtbox(foe))) {
-f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0;
-foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.y = Math.min(foe.y, -50);
+f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.flurryVictim = foe;
+foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
 const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
 hitVisual(ev); netEmit(ev);
 } else if (t >= 0.26) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
@@ -5590,34 +5724,34 @@ if (t >= 0.42) { f.invul = 0; toNeutral(f); }
 const n = Math.floor(t / U.iv);
 if (n > f.slashN - 1 && f.slashN < U.n) {
 const side = f.slashN % 2 ? 1 : -1;
-f.x = clamp(foe.x + side * grand(60, 90), WALL, STAGE_W - WALL);
-f.y = Math.min(0, foe.y + grand(-30, 30));
-f.face = foe.x >= f.x ? 1 : -1;
+f.x = clamp(victim.x + side * grand(60, 90), WALL, STAGE_W - WALL);
+f.y = Math.min(0, victim.y + grand(-30, 30));
+f.face = victim.x >= f.x ? 1 : -1;
 f.snap = true; f.trail.length = 0;
 const ang = rand(0, Math.PI);
-slashLine(foe.x, foe.y - 55, ang, f.look.slash);
+slashLine(victim.x, victim.y - 55, ang, f.look.slash);
 if (f.ch.ult === 'shadows') {
 decoys.push({ owner: f.idx, sk: f.sk, x0: f.x, y0: f.y, x: f.x, y: f.y, vx: rand(-40, 40), vy: rand(-30, 30), rot: 0, vr: 0, life: 0.35, landed: true, age: 0 });
 smoke(f.x, f.y - 50, 6);
 } else if (f.ch.ult === 'crescent') {
-ring(foe.x, foe.y - 55, 75, '120,230,255', 0.22);
+ring(victim.x, victim.y - 55, 75, '120,230,255', 0.22);
 } else if (f.ch.ult === 'eightimm') {
-addP({ type: 'text', text: EIGHT_IMM[f.slashN % 8], x: foe.x + (f.slashN % 2 ? 40 : -40), y: foe.y - 120 - (f.slashN % 3) * 14, life: 0.45, max: 0.45, rgb: '255,190,110' });
+addP({ type: 'text', text: EIGHT_IMM[f.slashN % 8], x: victim.x + (f.slashN % 2 ? 40 : -40), y: victim.y - 120 - (f.slashN % 3) * 14, life: 0.45, max: 0.45, rgb: '255,190,110' });
 }
-applyHit(f, foe, { ...SP_SLASH, dmg: U.slash }, [foe.x, foe.y - 55]);
+applyHit(f, victim, { ...SP_SLASH, dmg: U.slash }, [victim.x, victim.y - 55]);
 SFX.slice(); f.slashN++;
 }
 if (t >= U.iv * U.n + 0.06) {
 f.sp = 'final'; f.t = 0; f.snap = true; f.trail.length = 0;
-f.x = clamp(foe.x - f.spFace * 80, WALL, STAGE_W - WALL); f.face = f.spFace; f.y = Math.min(0, foe.y + 40);
+f.x = clamp(victim.x - f.spFace * 80, WALL, STAGE_W - WALL); f.face = f.spFace; f.y = Math.min(0, victim.y + 40);
 }
 } else if (f.sp === 'final') {
 if (t >= 0.07 && !f.finalDone) {
 f.finalDone = true; f.snap = false;
-if (U.land) { f.y = 0; f.vy = 0; applyHit(f, foe, { ...FINAL, dmg: U.fin, kb: [260, 0], knock: true }, [foe.x, foe.y - 60]); }
-else applyHit(f, foe, { ...FINAL, dmg: U.fin }, [foe.x, foe.y - 60]);
+if (U.land) { f.y = 0; f.vy = 0; applyHit(f, victim, { ...FINAL, dmg: U.fin, kb: [260, 0], knock: true }, [victim.x, victim.y - 60]); }
+else applyHit(f, victim, { ...FINAL, dmg: U.fin }, [victim.x, victim.y - 60]);
 flashA = 0.6; flashRGB = f.ch.ult === 'shadows' ? '255,95,115' : '255,255,255'; shake = 22;
-for (let i = 0; i < (f.ch.ult === 'shadows' ? 4 : 3); i++) slashLine(foe.x, foe.y - 55, rand(-0.4, 0.4), f.look.slash);
+for (let i = 0; i < (f.ch.ult === 'shadows' ? 4 : 3); i++) slashLine(victim.x, victim.y - 55, rand(-0.4, 0.4), f.look.slash);
 if (f.ch.ult === 'crescent') {
 f.skillCD = 0; f.skill2CD = 0; f.dashCD = 0;
 f.meter = Math.min(100, f.meter + 20);
@@ -5716,7 +5850,7 @@ for (const p of projs) {
 if (p.dead) continue;
 p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
 const wasDelay = p.delay > 0;
-if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
+if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
 if (p.g) p.vy += p.g * STEP;
 if (p.boomer && p.age > p.turn) {
 const o = fighterByIdx(p.owner), dx = o.x - p.x;
@@ -5751,7 +5885,7 @@ SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: f
 addP({ type: 'text', text: '+50', x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
 continue;
 }
-if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion', 'popcorn'].includes(p.kind)) {
+if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion'].includes(p.kind)) {
 p.owner = foe.idx; p.vx = -p.vx || foe.face * 700; p.vy = -p.vy * 0.4; p.hits = 0; p.hitCD = 0.05; p.life = Math.max(p.life, 0.8);
 p.boomer = false; p.lob = false; p.g = 0; p.sk = true; p.hook = false;
 foe.notes = Math.min(3, (foe.notes || 0) + 1);
@@ -5800,7 +5934,7 @@ dust(foe.x, 0, 6); SFX.heavy();
 p.hits++; p.hitCD = p.rehit || 99;
 if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
 }
-const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net', 'popcorn'];
+const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net'];
 for (let i = 0; i < projs.length; i++) {
 const p1 = projs[i];
 if (p1.dead || p1.unbreakable || p1.ult || p1.dmg <= 0 || p1.groundOnly || NO_CLASH.includes(p1.kind)) continue;
@@ -6075,6 +6209,7 @@ case 'special': specialUpdate(f, foe); break;
 case 'charge': chargeUpdate(f, foe); break;
 case 'skill': SKILLS[f.skill].update(f, foe); break;
 case 'launched': break;
+case 'held': if (f.t >= 1.25) toNeutral(f); break;
 }
 physics(f);
 }
@@ -6398,6 +6533,14 @@ if (att.ch.passive === 'drunk') dmg *= 1 + (att.drunk || 0) * 0.005;
 if (att.ch.passive === 'bind' && def.hookedT > 0 && !m.ult) { dmg *= 1.25; ev.big = true; }
 if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack') att.notes = Math.min(3, (att.notes || 0) + 1);
 if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
+if (def.ch && def.ch.id === 'moyu' && (def.ink || 0) >= 25 && !m.hold && dmg > 8) {
+def.ink = Math.max(0, def.ink - 12);
+dmg *= 0.80;
+if (!RESIM) {
+smoke(def.x, def.y - 50, 4);
+addP({ type: 'text', text: '墨韵护体 -20%', x: def.x, y: def.y - 110, life: 0.65, max: 0.65, rgb: '160,160,190' });
+}
+}
 if (att.ch.passive === 'tip' && !m.isProj && !m.ult) {
 const dist = Math.abs(def.x - att.x);
 if (dist >= 142) {
@@ -6850,7 +6993,9 @@ updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
 if (M.mode === 'watch2v2') {
 updateFighter(C, foeOf(C)); updateFighter(D, foeOf(D));
 for (const f of [A, B, C, D]) {
-if (f.hp <= 0 && M.phase === 'fight' && f.onGround()) { f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; }
+if (f.hp <= 0 && M.phase === 'fight' && f.onGround() && f.state !== 'knockdown') {
+f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99;
+}
 }
 updateArena2v2(STEP);
 }
@@ -7211,9 +7356,7 @@ if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.ow
 const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
 const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
 const maxZoom = M.mode === 'watch2v2' ? 0.70 : Infinity;
-let want = Math.min(wantBase * zoomMul, fit, maxZoom);
-const pf = paperFX();
-if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
+const want = Math.min(wantBase * zoomMul, fit, maxZoom);
 cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
 cam.zoom = Math.min(cam.zoom, fit, maxZoom);
 cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
@@ -7224,11 +7367,6 @@ const lo = maxX - vw / 2 + 60, hi = minX + vw / 2 - 60;
 if (lo <= hi) cam.x = clamp(cam.x, lo, hi); else cam.x = mid;
 }
 const worldScale = () => (H / 560) * cam.zoom;
-function paperFX() {
-const f = allFighters().find(x => x && x.state === 'special' && x.ch.ult === 'inkdragon');
-if (!f) return null;
-return { f, a: clamp(f.t / 0.25, 0, 1) * (f.hitDone ? clamp(((f.fuT || 0.95) + 0.5 - f.t) / 0.25, 0, 1) : 1) };
-}
 function drawBackground(sc) {
 const T = SCN, sky = T ? T.sky : ['#070918', '#1a1840', '#3a2552', '#2a1a3a'];
 const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -7359,7 +7497,7 @@ ctx.fillStyle = '#241d38'; ctx.strokeStyle = 'rgba(233,196,106,0.75)'; ctx.lineW
 ctx.beginPath(); ctx.ellipse(ax, 2, 64, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 if (ARENA2V2.orb && ARENA2V2.orb.active) {
 const cols = ['255,110,70', '110,245,185', '195,135,255'];
-const labels = ['破军神火', '太阴甘露', '紫微星魄'];
+const labels = ['破军神火', '太阴灵丹', '紫微星魄'];
 const oc = cols[ARENA2V2.orb.kind] || cols[0];
 const oy = -64 + Math.sin(clock * 4.5) * 8;
 const og = ctx.createRadialGradient(ax, oy, 3, ax, oy, 46);
@@ -8372,23 +8510,10 @@ ctx.restore();
 }
 function drawProjs(glowOnly) {
 for (const p of projs) {
-if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion' || p.kind === 'popcorn')) continue;
+if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion')) continue;
 const L = ([A, B, C, D][p.owner] || A).look;   // 2v2 里 C/D 的技能也会生成弹道，owner 可能是 2/3
 ctx.save();
-if (p.kind === 'popcorn') {   // 爆米花：落下时一小撮，半秒后噼啪炸开
-if (p.delay > 0) {
-const j = p.delay < 0.15 ? Math.sin(p.age * 90) * 2 : 0;   // 快炸的时候抖一抖
-for (let k = 0; k < 4; k++) {
-const a = p.seed + k * 1.7, x = p.x + Math.cos(a) * 7 + j, y = p.y + Math.sin(a) * 5;
-ctx.fillStyle = k % 2 ? '#fff6dc' : '#ffe9a8'; ctx.beginPath(); ctx.arc(x, y, 5.5, 0, 7); ctx.fill();
-ctx.fillStyle = 'rgba(214,150,60,0.8)'; ctx.beginPath(); ctx.arc(x + 1.5, y + 1.5, 1.8, 0, 7); ctx.fill();
-}
-} else {
-const k = clamp(1 - p.life / 0.12, 0, 1);
-ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 3;
-ctx.beginPath(); ctx.arc(p.x, p.y, 14 + k * 30, 0, 7); ctx.stroke();
-}
-} else if (p.kind === 'wind') {
+if (p.kind === 'wind') {
 ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y);
 const scX = (Math.sign(p.vx) || 1) * ((p.w || 56) / 56), scY = (p.h || 52) / 52;
 ctx.scale(scX, scY);
@@ -8627,28 +8752,6 @@ ctx.fillStyle = '#1a1210'; ctx.fillRect(x - 30, by - 176, 60, 20); ctx.strokeSty
 ctx.fillStyle = '#e9c46a'; ctx.font = `14px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('醉翁亭', x, by - 165.5);
 ctx.restore();
 }
-function drawXuanzhi(a) {   // 宣纸：米黄底子，带点纤维和帘纹
-ctx.save(); ctx.globalAlpha = a;
-ctx.fillStyle = 'rgb(238,229,206)'; ctx.fillRect(0, 0, W, H);
-ctx.strokeStyle = 'rgba(170,150,110,0.12)'; ctx.lineWidth = 1;
-for (let x = 12; x < W; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-ctx.strokeStyle = 'rgba(150,130,95,0.16)';
-for (let k = 0; k < 90; k++) {   // 纤维：位置固定，每帧一样
-const x = (k * 397) % W, y = (k * 211) % H, l = 10 + (k % 7) * 4, r = k * 0.7;
-ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + Math.cos(r) * l, y + Math.sin(r) * l * 0.4, x + Math.cos(r + 0.4) * l * 1.6, y + Math.sin(r + 0.4) * l * 0.6); ctx.stroke();
-}
-const g = groundY(); ctx.fillStyle = 'rgba(30,28,30,0.55)'; ctx.fillRect(0, g, W, 3);   // 地面只剩一道墨线
-ctx.restore();
-}
-function drawFu(x, y, a, n) {   // 对手头顶那张符：黄纸朱砂
-ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.rotate(Math.sin(clock * 3) * 0.06);
-const w = 52, h = 96;
-ctx.fillStyle = '#efd27a'; ctx.fillRect(-w / 2, -h / 2, w, h);
-ctx.strokeStyle = '#b8321e'; ctx.lineWidth = 2; ctx.strokeRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6);
-ctx.fillStyle = '#b8321e'; ctx.font = `bold 34px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('符', 0, -12);
-ctx.font = `bold 18px ${BODY_FONT}`; ctx.fillText('×' + n, 0, 28);
-ctx.restore();
-}
 function drawShanshui() {
 const f = [A, B].find(x => x && x.state === 'special' && x.ch.ult === 'shanshui');
 if (!f) return;
@@ -8840,14 +8943,6 @@ ctx.fillStyle = 'rgba(0,0,0,0.55)';
 for (let n = 1; n < INK_MAX / INK_COST; n++) ctx.fillRect(ix + iw * n * INK_COST / INK_MAX - 0.5, iy, 1, ih);   // 每一格是一团墨
 ctx.font = `${Math.round(ih * 2.2)}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = i === 0 ? 'right' : 'left';
 ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText('墨', i === 0 ? ix - 5 : ix + iw + 5, iy + ih / 2);
-const fy = iy + ih * 1.9, fh = Math.max(9, ih * 1.6), gap = 3, fw = (iw - gap * (FU_MAX - 1)) / FU_MAX, fu = f.fu || 0;
-for (let n = 0; n < FU_MAX; n++) {
-const fx = i === 0 ? ix + iw - (n + 1) * (fw + gap) + gap : ix + n * (fw + gap);
-ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(fx - 1, fy - 1, fw + 2, fh + 2);
-ctx.fillStyle = n < fu ? '#efd27a' : 'rgba(239,210,122,0.14)'; ctx.fillRect(fx, fy, fw, fh);
-if (n < fu) { ctx.fillStyle = '#b8321e'; ctx.fillRect(fx + fw / 2 - 1.5, fy + 2, 3, fh - 4); }
-}
-ctx.font = `${Math.round(fh * 1.2)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText('符', i === 0 ? ix - 5 : ix + iw + 5, fy + fh / 2);
 }
 ctx.font = `${Math.round(bh * 2)}px ${TITLE_FONT}`; ctx.textBaseline = 'top';
 ctx.fillStyle = `rgb(${f.look.slash})`;
@@ -9276,8 +9371,6 @@ gg.addColorStop(0, `rgba(${SCN.mist},${SCN.legend ? 0.16 : 0.08})`); gg.addColor
 ctx.fillStyle = gg; ctx.fillRect(0, gy, W, H - gy);
 }
 if (dimA > 0.01) { ctx.fillStyle = `rgba(3,3,10,${0.55 * dimA})`; ctx.fillRect(0, 0, W, H); }
-const pf = paperFX();
-if (pf) drawXuanzhi(pf.a);
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
 const order = M.mode === 'watch2v2'
@@ -9285,18 +9378,11 @@ const order = M.mode === 'watch2v2'
 : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
 drawDecoys();
 drawProjs();
-for (const f of order) {
-if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
-const keep = f.look;
-f.look = { ...keep, body: '#c8321e', shade: '#7a1a12', outline: '#ff8a70', outlineA: 1, scarf: '#ff4a32', blade: '#ffd0c4' };
-drawFighter(f); f.look = keep;
-if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.spN || 0);
-} else drawFighter(f);
-}
+for (const f of order) drawFighter(f);
 drawParticles();
 drawComboTotals();
 ctx.restore();
-if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
+if (SETTINGS.bloom > 0) drawBloom(sc, sx, sy);
 if (FOREST.on) {
 const px = W / 2 + (A.x - cam.x) * sc, py = groundY() + (A.y - 60) * sc;
 const dk = ctx.createRadialGradient(px, py, 60 * sc, px, py, 520 * sc);
@@ -9799,11 +9885,11 @@ chronicle: '<path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 
 const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.skill}</svg></span>`;
 const SHORT = {
 疾风斩: ['6', '突进穿身'], 影遁: ['3', '瞬移身后 · 下一击 ×1.5'], 震地: ['9', '双向地波 · 掀飞'], 回马枪: ['9', '后跃回刺 · 挑飞'],
-风刃: ['7×2', '上下两道风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
-剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 开扇: ['2×5', '向前疾冲 · 撒爆米花半秒后炸'],
-雷踏: ['7', '前方雷柱'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
+风刃: ['7', '直线风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
+剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 风遁: ['—', '快速后撤 · 短暂无敌'],
+雷踏: ['7', '前方雷柱'], 泼墨: ['4', '抛物墨团'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
 残月: ['29', '突进乱斩 · 终结回气重置'], 千影: ['31', '九影乱斩 · 绝杀分身重置'], 山崩: ['28', '砸地晕眩 · 直击回半气重置'], 刹那: ['12–22', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
-龙卷: ['≤32', '龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 符阵: ['随符数', '宣纸全图 · 按符数爆伤'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
+龙卷: ['≤32', '龙卷浮空 · 刷新跳跃风遁'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 墨龙: ['20', '墨龙横扫 · 墨水回满生陷阱'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 · 脆皮(88血)', tieshan: '重斩蓄力霸体 · 气血冠绝(140血)', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
 liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻六连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒',
@@ -9812,7 +9898,7 @@ const ADV_SHORT = {
 qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
 tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
 feiying: '1.5 秒内再按 Q 瞬回原位',
-liuyun: '风刃两道 · 开扇撒爆米花',
+liuyun: '风遁后风刃变两道',
 leiming: '雷闪冲拳命中，立时重置雷踏冷却',
 lingshuang: '回马枪命中，枪旋冷却减半',
 moyu: '再按 Q 引爆墨阵',
@@ -9827,9 +9913,9 @@ qingfeng: '【聚气流转 · 极速充能】天生剑意通明，命中与受�
 feiying: '【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。',
 tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」直击命中更是气量回满，可以立刻再砸一次！',
 lingshuang: '【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。',
-liuyun: '【御风牵制 · 风暴蓄势】远距离双风刃与开扇爆米花安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
+liuyun: '【御风牵制 · 风暴蓄势】远距离风刃与风遁斥力安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
 leiming: '【狂雷六连 · 雷帝灌顶】六连重拳记记沉猛令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！',
-moyu: '【墨符蓄势 · 一纸封喉】普攻甩墨攒气，R 花墨画符攒符；大招「符阵」把符全部烧掉，全图宣纸，符越多伤害越高。',
+moyu: '【墨浪渗透 · 阵地聚怒】普攻甩墨与泼墨双重判定充能；大招「墨龙」重置技能与墨韵回满，并在敌方足下布下索敌墨印。',
 yuehua: '【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。',
 yanling: '【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。',
 yuxiao: '【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。',
@@ -9840,10 +9926,10 @@ const HERO_MOVE_TYPES = {
 qingfeng: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '突进', icon: 'melee' }, ranged: { type: 'ranged', label: '远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
 tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '通天巨浪', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
 feiying: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '背袭突进', icon: 'melee' }, ranged: { type: 'ranged', label: '暗器远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝杀' }, esc: { type: 'esc', label: '身法' } },
-liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'dash', label: '开扇冲刺', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
+liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'ranged', label: '御风身法', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
 leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'ranged', label: '引雷落击', icon: 'ranged' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
 lingshuang: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '枪尖回刺', icon: 'melee' }, ranged: { type: 'melee', label: '枪旋近战', icon: 'melee' }, ult: { type: 'melee', label: '神技' }, esc: { type: 'esc', label: '身法' } },
-moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'counter', label: '画符蓄势', icon: 'ranged' }, ult: { type: 'ranged', label: '全图' }, esc: { type: 'esc', label: '身法' } },
+moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'ranged', label: '泼墨远程', icon: 'ranged' }, ult: { type: 'ranged', label: '绘境' }, esc: { type: 'esc', label: '身法' } },
 yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
 yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } },
 yuxiao: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '音波远程', icon: 'ranged' }, ranged: { type: 'counter', label: '反弹暗器', icon: 'shield_bash' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
@@ -9959,8 +10045,8 @@ liuyun: {
 light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '24 (3段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
 charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '8 / 15', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
 air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
-skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '7×2', cd: '2s', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
-ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '2×5', cd: '4s', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
+skill: { name: '惊涛·风刃', badge: '🌪️ 狂风推搡 620px', badgeCls: 'badge-buff', dmg: '7', cd: '1.3s', desc: '挥扇生成巨型气刃，几无硬直，全场最强击退。' },
+ranged: { name: '御风·风遁', badge: '🌪️ 惊风退敌 0.42s', badgeCls: 'badge-buff', dmg: '4', cd: '4s', desc: '后跃引爆斥力气旋，下一次风刃一分为二。' },
 ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '2×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
 esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
 },
@@ -9987,8 +10073,8 @@ light: { name: '挥毫泼墨三式', badge: '🎨 浓墨溅射', badgeCls: 'badg
 charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
 air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
 skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 1.4s', badgeCls: 'badge-stun', dmg: '5', cd: '6s', desc: '铺开125px深墨池，踏入者深陷墨中禁锢1.4秒。' },
-ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', cd: '2.5s', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
-ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '随符数', cd: '气满', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
+ranged: { name: '飞毫·泼墨', badge: '🎨 墨迹遮目 0.65s', badgeCls: 'badge-buff', dmg: '6', cd: '6s', desc: '抛物线掷出重浓墨团，炸裂挑空并施加2.5s减速。' },
+ult: { name: '绘境·墨龙', badge: '🐉 笔意长存 100%', badgeCls: 'badge-stun', dmg: '20', cd: '气满', desc: '浓墨化龙穿行全屏扫灭敌人，墨水瞬间回满。' },
 esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
 },
 yuehua: {
@@ -10211,7 +10297,7 @@ skill: [
 ],
 ranged: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'ly_hover', d: 0.32, dx: -45, fx: 'windstep', hit: 1, lab: 'R · 开扇', badge: '🍿 爆米花' },
+{ p: 'ly_hover', d: 0.32, dx: -45, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 ult: [
@@ -10348,14 +10434,14 @@ skill: [
 ],
 ranged: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'my_stroke', d: 0.14, lab: 'R · 画符' },
+{ p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' },
 { p: 'my_paint', d: 0.38, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 ult: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'my_stroke', d: 0.2, lab: 'E · 符阵' },
-{ p: 'my_paint', d: 0.48, fx: 'inkdragon', hit: 3, launch: true, badge: '📜 符爆' },
+{ p: 'my_stroke', d: 0.2, lab: 'E · 墨龙' },
+{ p: 'my_paint', d: 0.48, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
 { p: 'victory', d: 0.55, reset: true }
 ],
 esc: [
@@ -10535,7 +10621,7 @@ liuyun: [
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ly_fanswipe', d: 0.1, lab: 'Q · 风刃' }, { p: 'idle', d: 0.35, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'ly_hover', d: 0.3, dx: -40, fx: 'windstep', hit: 1, lab: 'R · 开扇', badge: '🍿 爆米花' },
+{ p: 'ly_hover', d: 0.3, dx: -40, fx: 'windstep', hit: 1, lab: 'R · 风遁', badge: '🌪️ 惊风退敌' },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ly_fanswipe', d: 0.2, lab: 'E · 龙卷' }, { p: 'ly_hover', d: 0.42, fx: 'tornado', hit: 3, launch: true, badge: '🌪️ 扶摇万里' },
 { p: 'victory', d: 0.55, reset: true }
@@ -10572,9 +10658,9 @@ moyu: [
 { p: 'idle', d: 0.25, reset: true },
 { p: 'my_stroke', d: 0.16, lab: 'Q · 墨阵' }, { p: 'my_paint', d: 0.34, fx: 'inktrap', hit: 1, badge: '深墨禁锢' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'my_stroke', d: 0.14, lab: 'R · 画符' }, { p: 'my_paint', d: 0.36, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
+{ p: 'my_stroke', d: 0.14, lab: 'R · 泼墨' }, { p: 'my_paint', d: 0.36, fx: 'inkblob', hit: 1, launch: true, badge: '墨迹遮目' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'my_stroke', d: 0.18, lab: 'E · 符阵' }, { p: 'my_paint', d: 0.44, fx: 'inkdragon', hit: 3, launch: true, badge: '📜 符爆' },
+{ p: 'my_stroke', d: 0.18, lab: 'E · 墨龙' }, { p: 'my_paint', d: 0.44, fx: 'inkdragon', hit: 3, launch: true, badge: '🐉 笔意长存' },
 { p: 'victory', d: 0.55, reset: true }
 ],
 yuehua: [
@@ -10984,9 +11070,9 @@ ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#f0f
 lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', robe: 'thunder', shoulder: '#5a30a0', wfx: 'lightning', trail: 'spark' }, skillNames: { skill: '紫霄惊雷', ranged: '九天引雷', ult: '狂雷寂灭' } },
 lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', robe: 'solar', breastplate: '#b86a20', back: 'sundisk', orbs: '#ff8820', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '曜日神拳', ranged: '大日天火', ult: '阳炎劫世' } },
 lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', robe: 'vajra', breastplate: '#6a3210', back: 'chakra', shoulder: '#6a3210', orbs: '#ffaa00', wfx: 'gold', trail: 'gold', aura: 'gold', weapStyle: 'vajra_gauntlet' }, skillNames: { skill: '金刚伏魔', ranged: '罗汉踏天', ult: '大威天龙' } },
-my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂画符', ult: '朱砂符阵' } },
-my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '泥金画符', ult: '金符满纸' } },
-my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'lotus', lotusC: '90,190,255', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, skillNames: { skill: '星宿锁灵', ranged: '星宿画符', ult: '太虚星图' } },
+my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂破墨', ult: '赤龙狂涛' } },
+my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '流金泼墨', ult: '金莲降世' } },
+my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'lotus', lotusC: '90,190,255', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, skillNames: { skill: '星宿锁灵', ranged: '银河点墨', ult: '太虚星图' } },
 yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'sakurabranch', flower: '#ff9ec4', robe: 'sakura', shoulder: '#a04870', trail: 'petal', petal: '255,180,210' }, skillNames: { skill: '落樱拂花', ranged: '飞樱回旋', ult: '樱落月明' } },
 yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#1c1024', robe: 'eclipse', breastplate: '#381622', back: 'eclipse', cape: '#1c1024', orbs: '#c13a4a', wfx: 'shadow', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '暗月噬光', ranged: '黑曜血环', ult: '永夜蚀月' } },
 yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'frosttiara', flower: '#a8e0ff', robe: 'snow', breastplate: '#4878a8', back: 'snowflake', cape: '#2a5078', orbs: '#80d0ff', wfx: 'frost', trail: 'snow', aura: 'snow' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
@@ -12228,37 +12314,38 @@ B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木
 applySkins();
 A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
 }
-function startTraining(targetMode = trainTargetMode) {
+function startTraining(targetMode = trainTargetMode, isWatch = false) {
 if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
 trainChar = 0;
 }
 initAudio(); paused = false;
+M.watchAi = !!isWatch;
 const oppChar = Math.floor(Math.random() * CHARS.length);
 if (targetMode === 'cpu') {
 pickLevel = 'god';
 showScreen(null);
-startMatch('cpu', 'god', [trainChar, oppChar]);
+startMatch('cpu', 'god', [trainChar, oppChar], isWatch);
 return;
 }
 if (targetMode === 'bushido') {
-startBushido(trainChar, oppChar, 'god');
+startBushido(trainChar, oppChar, 'god', isWatch);
 showScreen(null);
 return;
 }
 if (targetMode === 'chaos') {
-startChaos(trainChar, oppChar, 'god');
+startChaos(trainChar, oppChar, 'god', isWatch);
 showScreen(null);
 return;
 }
 if (targetMode === 'tag3') {
 const pTeam = [trainChar, (trainChar + 1) % CHARS.length, (trainChar + 2) % CHARS.length];
 const eTeam = pickEnemyTag3Team(pTeam);
-startTag3Match(pTeam, eTeam, 'god');
+startTag3Match(pTeam, eTeam, 'god', isWatch);
 showScreen(null);
 return;
 }
 if (targetMode === 'mayhem') {
-startMayhem(trainChar, oppChar, 'god');
+startMayhem(trainChar, oppChar, 'god', isWatch);
 showScreen(null);
 return;
 }
@@ -12267,6 +12354,10 @@ startWatch2v2Draft();
 return;
 }
 startDummyTraining();
+if (isWatch) {
+A.ctrl = new AICtrl('god');
+say('木人试剑 · AI 演示连招', 1.4);
+}
 }
 function renderTrainPick() {
 if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
@@ -12346,7 +12437,7 @@ const pool = remaining.length >= 3 ? remaining : allIdxs;
 const shuffled = [...pool].sort(() => Math.random() - 0.5);
 return shuffled.slice(0, 3);
 }
-function startTag3Match(pTeam, eTeam, lv) {
+function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 if (p2pActive() || NET.ws) netDropWaiting();
 refocusGame();
 human[0].rec = null;
@@ -12361,13 +12452,15 @@ M.wins = [0, 0];
 M.round = 1;
 M.carry = null;
 M.stage = null;
+M.watchAi = !!isWatch;
 setChars(M.teams[0][0], M.teams[1][0]);
-A.ctrl = human[0];
-B.ctrl = new AICtrl(M.level);
+A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+B.ctrl = new AICtrl(M.level || 'god');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
 startRound();
+if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
 }
 const tag3SlotsEl = document.getElementById('tag3Slots');
 if (tag3SlotsEl) {
@@ -12528,7 +12621,7 @@ SFX.slice();
 });
 }
 }
-function startTower(heroIdx) {
+function startTower(heroIdx, isWatch = false) {
 clearTowerRun();
 initAudio();
 paused = false;
@@ -12541,17 +12634,18 @@ M.round = 1;
 M.wins = [0, 0];
 M.level = 'easy';
 M.stage = null;
+M.watchAi = !!isWatch;
 let foeIdx = Math.floor(Math.random() * CHARS.length);
 if (foeIdx === towerHero) foeIdx = (foeIdx + 1) % CHARS.length;
 setChars(towerHero, foeIdx);
-A.ctrl = human[0];
+A.ctrl = isWatch ? new AICtrl('god') : human[0];
 B.ctrl = new AICtrl('easy');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
 startRound();
-saveTowerRun();
-say('问剑密卷 · 第 1 层', 1.4);
+if (!isWatch) saveTowerRun();
+say(isWatch ? '问剑密卷 · 天道爬塔观战' : '问剑密卷 · 第 1 层', 1.4);
 }
 function resumeTower() {
 const run = loadTowerRun();
@@ -12622,6 +12716,13 @@ pickTowerPerk(pid);
 const fb = document.getElementById('towerFloorBadge');
 if (fb) fb.textContent = `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
 showScreen('towerModal');
+if (M.watchAi) {
+setTimeout(() => {
+if (M.mode === 'tower' && M.watchAi && picked.length) {
+pickTowerPerk(picked[Math.floor(Math.random() * picked.length)]);
+}
+}, 1200);
+}
 }
 function pickTowerPerk(perkId) {
 if (!M.towerPerks) M.towerPerks = [];
@@ -12646,13 +12747,14 @@ else if (M.towerFloor >= 8) lv = 'adaptive';
 else if (M.towerFloor >= 5) lv = 'hard';
 else if (M.towerFloor >= 3) lv = 'normal';
 M.level = lv;
+if (M.watchAi) A.ctrl = new AICtrl('god');
 B.ctrl = new AICtrl(lv);
 A.hp = Math.min(A.maxHp, A.hp + Math.round(A.maxHp * 0.20));
 A.lagHp = A.hp;
 A.goldenBellReady = true;
 startRound();
-saveTowerRun();
-say(`万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);
+if (!M.watchAi) saveTowerRun();
+say(M.watchAi ? `天道爬塔 · 第 ${M.towerFloor} 层` : `万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);
 }
 let bushidoP1 = 0, bushidoP2 = 1, bushidoLevel = 'hard';
 function renderBushido() {
@@ -12900,29 +13002,31 @@ SFX.slice();
 };
 });
 }
-function startChaos(p1, p2, lv) {
+function startChaos(p1, p2, lv, isWatch = false) {
 initAudio();
 paused = false;
 chaosP1 = p1 !== undefined ? p1 : chaosP1;
 chaosP2 = p2 !== undefined ? p2 : chaosP2;
 chaosLevel = lv !== undefined ? lv : chaosLevel;
 M.mode = 'chaos';
+M.level = chaosLevel;
 M.round = 1;
 M.wins = [0, 0];
 M.stage = null;
+M.watchAi = !!isWatch;
 currentChaosMutation = null;
 chaosTimer = 0;
 setChars(chaosP1, chaosP2);
-A.ctrl = human[0];
-B.ctrl = new AICtrl(chaosLevel);
+A.ctrl = isWatch ? new AICtrl(chaosLevel || 'god') : human[0];
+B.ctrl = new AICtrl(chaosLevel || 'god');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
 startRound();
-say('天机乱斗 · 乾坤异变', 1.4);
+say(isWatch ? '天机乱斗 · 乾坤异变观战' : '天机乱斗 · 乾坤异变', 1.4);
 rollChaosMutation();
 }
-function startBushido(p1, p2, lv) {
+function startBushido(p1, p2, lv, isWatch = false) {
 initAudio();
 paused = false;
 bushidoP1 = p1 !== undefined ? p1 : bushidoP1;
@@ -12933,23 +13037,30 @@ M.level = bushidoLevel;
 M.round = 1;
 M.wins = [0, 0];
 M.stage = null;
+M.watchAi = !!isWatch;
 setChars(bushidoP1, bushidoP2);
-A.ctrl = human[0];
-B.ctrl = new AICtrl(bushidoLevel);
+A.ctrl = isWatch ? new AICtrl(bushidoLevel || 'god') : human[0];
+B.ctrl = new AICtrl(bushidoLevel || 'god');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
 startRound();
-say('一击必杀 · 决死试剑', 1.4);
+say(isWatch ? '一击必杀 · 决死 AI 观战' : '一击必杀 · 决死试剑', 1.4);
 }
 const towerStartBtn = document.getElementById('towerStartBtn');
 if (towerStartBtn) towerStartBtn.addEventListener('click', () => startTower(towerHero));
 const towerResumeBtn = document.getElementById('towerResumeBtn');
 if (towerResumeBtn) towerResumeBtn.addEventListener('click', () => resumeTower());
+const towerWatchBtn = document.getElementById('towerWatchBtn');
+if (towerWatchBtn) towerWatchBtn.addEventListener('click', () => startTower(towerHero, true));
 const bushidoStartBtn = document.getElementById('bushidoStartBtn');
 if (bushidoStartBtn) bushidoStartBtn.addEventListener('click', () => startBushido(bushidoP1, bushidoP2, bushidoLevel));
+const bushidoWatchBtn = document.getElementById('bushidoWatchBtn');
+if (bushidoWatchBtn) bushidoWatchBtn.addEventListener('click', () => startBushido(bushidoP1, bushidoP2, bushidoLevel, true));
 const chaosStartBtn = document.getElementById('chaosStartBtn');
 if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => startChaos(chaosP1, chaosP2, chaosLevel));
+const chaosWatchBtn = document.getElementById('chaosWatchBtn');
+if (chaosWatchBtn) chaosWatchBtn.addEventListener('click', () => startChaos(chaosP1, chaosP2, chaosLevel, true));
 let mayhemP1 = 0, mayhemP2 = 1, mayhemLevel = 'hard';
 function renderMayhem() {
 const pick1 = document.getElementById('mayhemPick');
@@ -13000,7 +13111,7 @@ SFX.slice();
 };
 });
 }
-function startMayhem(p1, p2, lv) {
+function startMayhem(p1, p2, lv, isWatch = false) {
 initAudio();
 paused = false;
 mayhemP1 = p1 !== undefined ? p1 : mayhemP1;
@@ -13011,17 +13122,39 @@ M.level = mayhemLevel;
 M.round = 1;
 M.wins = [0, 0];
 M.stage = null;
+M.watchAi = !!isWatch;
 setChars(mayhemP1, mayhemP2);
-A.ctrl = human[0];
-B.ctrl = new AICtrl(mayhemLevel);
+A.ctrl = isWatch ? new AICtrl(mayhemLevel || 'god') : human[0];
+B.ctrl = new AICtrl(mayhemLevel || 'god');
 A.meter = B.meter = 100;
 human[0].clear(); human[1].clear();
 showScreen(null);
 startRound();
-say('通天神决 · 大显神通', 1.4);
+say(isWatch ? '通天神决 · 神魔 AI 观战' : '通天神决 · 大显神通', 1.4);
 }
 const mayhemStartBtn = document.getElementById('mayhemStartBtn');
 if (mayhemStartBtn) mayhemStartBtn.addEventListener('click', () => startMayhem(mayhemP1, mayhemP2, mayhemLevel));
+const mayhemWatchBtn = document.getElementById('mayhemWatchBtn');
+if (mayhemWatchBtn) mayhemWatchBtn.addEventListener('click', () => startMayhem(mayhemP1, mayhemP2, mayhemLevel, true));
+const cpuWatchBtn = document.getElementById('cpuWatchBtn');
+if (cpuWatchBtn) cpuWatchBtn.addEventListener('click', () => {
+const p = randomPair();
+startMatch('cpu', pickLevel || 'god', p, true);
+});
+const tag3WatchBtn = document.getElementById('tag3WatchBtn');
+if (tag3WatchBtn) tag3WatchBtn.addEventListener('click', () => {
+const pTeam = [tag3Team[0], tag3Team[1], tag3Team[2]];
+const eTeam = pickEnemyTag3Team(pTeam);
+startTag3Match(pTeam, eTeam, tag3Level || 'god', true);
+});
+const stageWatchBtn = document.getElementById('stageWatchBtn');
+if (stageWatchBtn) stageWatchBtn.addEventListener('click', () => {
+startStage(stageCh, 0, true);
+});
+const trainWatchBtn = document.getElementById('trainWatchBtn');
+if (trainWatchBtn) trainWatchBtn.addEventListener('click', () => {
+startTraining(trainTargetMode, true);
+});
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
 const WATCH2V2_TEAMS = ['苍龙', '赤凤'];
 const WATCH2V2_STEPS_ORDER = [

@@ -205,10 +205,10 @@ const testSuite = [
         toNeutral(A);
         A.skill2CD = 0;
         const gate = SKILLS[A.ch.skill2].can;
-        if (gate) {   // 有使用条件的技能（醉翁与民同乐要半壶酒，墨羽画符要 3 格墨水）：条件不够时不能放，也不扣冷却
-          A.drunk = 0; A.ink = 0; startSkill(A, B, 2);
+        if (gate) {   // 有使用条件的技能（醉翁与民同乐要半壶酒）：条件不够时不能放，也不扣冷却
+          A.drunk = 0; startSkill(A, B, 2);
           if (A.state === 'skill' || A.skill2CD > 0) return { pass: false, error: CHARS[ci].name + ' skill 2 fired without meeting its condition' };
-          A.drunk = 100; A.ink = 100; A.fu = 0;
+          A.drunk = 100;
         }
         startSkill(A, B, 2);
         if (A.state !== 'skill' && A.state !== 'attack') {
@@ -385,6 +385,100 @@ const testSuite = [
       if (!poolSkins.includes('qf_qfx')) {
         return { pass: false, error: 'qf_qfx is missing from poolSkins' };
       }
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Game modes correspond to appropriate AI levels and specific configurations',
+    fn: `(() => {
+      // 1. CPU Mode
+      startMatch('cpu', 'god', [0, 1]);
+      if (M.mode !== 'cpu' || B.ctrl.level !== 'god' || STAGE_W !== 1800) {
+        return { pass: false, error: 'CPU mode AI level or stage width mismatch' };
+      }
+
+      // 2. Bushido Mode (1-hit lethality)
+      startBushido(0, 1, 'god');
+      if (M.mode !== 'bushido' || A.maxHp !== 1 || B.maxHp !== 1) {
+        return { pass: false, error: 'Bushido mode 1-HP lethality configuration failed' };
+      }
+
+      // 3. Chaos Mode
+      startChaos(0, 1, 'god');
+      if (M.mode !== 'chaos' || M.level !== 'god') {
+        return { pass: false, error: 'Chaos mode configuration failed' };
+      }
+
+      // 4. Tag3 Mode (3v3 relay)
+      startTag3Match([0, 1, 2], [3, 4, 5], 'god');
+      if (M.mode !== 'tag3' || (M.teams[0] || []).length !== 3 || (M.teams[1] || []).length !== 3) {
+        return { pass: false, error: 'Tag3 mode 3-hero squad configuration failed' };
+      }
+
+      // 5. Mayhem Mode (10x meter / instant cooldowns)
+      startMayhem(0, 1, 'god');
+      if (M.mode !== 'mayhem' || A.meter !== 100 || B.meter !== 100) {
+        return { pass: false, error: 'Mayhem mode 100% meter configuration failed' };
+      }
+
+      // 6. 2v2 Watch Mode (4 TianDao God bots, 2600 stage)
+      startWatch2v2([0, 1, 2, 3, 4, 5]);
+      if (M.mode !== 'watch2v2' || STAGE_W !== 2600 || C.hidden || D.hidden || !A.ctrl || !B.ctrl || !C.ctrl || !D.ctrl || A.ctrl.level !== 'god') {
+        return { pass: false, error: 'Watch2v2 mode 4-bot TianDao setup failed' };
+      }
+
+      // 7. Tower Mode (impossible AI level)
+      startTower(0);
+      if (M.mode !== 'tower' || !B.ctrl || B.ctrl.level !== 'impossible') {
+        return { pass: false, error: 'Tower mode impossible AI setup failed' };
+      }
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: '2v2 AI evaluates LingDan / Altar Buff site contesting and opponent denial',
+    fn: `(() => {
+      startWatch2v2([0, 1, 2, 3, 4, 5]);
+      M.phase = 'fight';
+      const cx = STAGE_W / 2;
+
+      // Scenario 1: Active LingDan relic with wounded fighter -> AI seeks LingDan
+      ARENA2V2.orb.active = true;
+      ARENA2V2.orb.kind = 1; // 太阴灵丹
+      A.hp = 120; // severely injured
+      A.x = cx - 220; // west of altar
+      A.face = 1;
+      B.x = cx + 500; // far away
+      D.x = cx + 600;
+      A.ctrl.queue = [];
+      A.ctrl.next = clock - 0.1;
+      A.ctrl.think(A, foeOf(A));
+
+      // A should move towards cx (dir === 1)
+      if (A.ctrl.dir !== 1) {
+        return { pass: false, error: 'Injured AI failed to navigate towards LingDan relic at altar (dir=' + A.ctrl.dir + ')' };
+      }
+
+      // Scenario 2: Opponent approaches altar -> AI positions to contest and block
+      ARENA2V2.orb.active = true;
+      ARENA2V2.orb.kind = 0; // 破军神火
+      A.hp = A.maxHp;
+      A.x = cx - 70; // controlling altar entrance
+      B.x = cx - 180; // B rushing altar from west
+      B.face = 1;
+      A.face = -1;
+      A.ctrl.queue = [];
+      A.ctrl.next = clock - 0.1;
+      A.ctrl.think(A, B);
+
+      // A should actively face and intercept approaching B (dir === -1)
+      if (A.ctrl.dir !== -1 && !A.ctrl.queue.length) {
+        return { pass: false, error: 'AI failed to intercept or block opponent approaching the altar relic' };
+      }
+
+      toMenu();
       return { pass: true, error: null };
     })()`
   }

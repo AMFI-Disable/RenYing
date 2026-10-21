@@ -130,7 +130,10 @@
           <p class="netnote" id="adaptLine" style="display:none;margin-top:8px;text-align:left;color:var(--gold)"></p>
         </div>
 
-        <button class="go" id="goBtn">进入选人 · 开战</button>
+        <div style="display:flex;gap:12px;margin-top:18px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="goBtn">进入选人 · 开战</button>
+          <button class="go alt" id="cpuWatchBtn" type="button">AI 对决 · 演武观战</button>
+        </div>
       </div>
 
       <!-- 3v3 门派车轮战 -->
@@ -175,7 +178,10 @@
           </button>
         </div>
 
-        <button class="go" id="tag3StartBtn" style="margin-top:14px">擂台接力 · 开启车轮战</button>
+        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
+          <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI群英观战</button>
+        </div>
       </div>
 
       <!-- 闯关模式 -->
@@ -199,6 +205,9 @@
         <div class="seg sttabs" id="stTabs"></div>
         <div class="stgrid" id="stGrid"></div>
         <p class="netnote" id="stNote"></p>
+        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+          <button class="go alt" id="stageWatchBtn" type="button">天道破关 · 演示观战</button>
+        </div>
       </div>
 
       <!-- 木人桩练习 -->
@@ -222,7 +231,10 @@
           <div class="sec-sub-label">木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）</div>
           <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;justify-content:center"></div>
         </div>
-        <button class="go small" id="trainBtn" type="button" style="margin-top:14px">开启专精演武</button>
+        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+          <button class="go small" id="trainBtn" type="button">开启专精演武</button>
+          <button class="go small alt" id="trainWatchBtn" type="button">AI 试剑 · 演示观战</button>
+        </div>
       </div>
 
       <!-- 问剑密卷 · 肉鸽无尽试炼 -->
@@ -234,9 +246,10 @@
         <p class="sub" style="margin:2px 0 10px;text-align:left">挑选本命侠客登临万仞剑阁！每战胜一层守关者，顿悟三选一武林秘卷天赋（雷厉电弧、墨刃剑气、借力打力、血饮残心…）。守关 AI 境界层层递进，智谋与应对算力愈发深不可测（高层极具压制智慧，绝非数值堆砌）！</p>
         <div class="sec-sub-label">选择本命试炼侠客</div>
         <div class="trpick" id="towerPick"></div>
-        <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
           <button class="go" id="towerResumeBtn" type="button" style="display:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">继续试炼</button>
           <button class="go" id="towerStartBtn" type="button">开启新试炼</button>
+          <button class="go alt" id="towerWatchBtn" type="button">天道密卷 · 爬塔观战</button>
         </div>
       </div>
 
@@ -278,7 +291,10 @@
             <span class="lv-sub">神级策略</span>
           </button>
         </div>
-        <button class="go" id="bushidoStartBtn" type="button" style="margin-top:16px">进入孤勇决死</button>
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="bushidoStartBtn" type="button">进入孤勇决死</button>
+          <button class="go alt" id="bushidoWatchBtn" type="button">决死 AI 观战</button>
+        </div>
       </div>
 
       <!-- 天机乱斗 · 乾坤异变 -->
@@ -319,7 +335,10 @@
             <span class="lv-sub">神经网络</span>
           </button>
         </div>
-        <button class="go" id="chaosStartBtn" type="button" style="margin-top:16px">开启天机乱斗</button>
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
+          <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
+        </div>
       </div>
 
       <!-- 通天神决 · 神魔乱斗 -->
@@ -360,7 +379,10 @@
             <span class="lv-sub">神级策略</span>
           </button>
         </div>
-        <button class="go" id="mayhemStartBtn" type="button" style="margin-top:16px">开启通天神决</button>
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+          <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
+          <button class="go alt" id="mayhemWatchBtn" type="button">通天 AI 观战</button>
+        </div>
       </div>
 
       <!-- 2v2 天道演武观战 (Watch AI vs AI 2v2) -->

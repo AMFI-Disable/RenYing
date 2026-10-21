@@ -136,6 +136,23 @@
   .ghost:disabled, .ghost[aria-disabled="true"] { opacity: .45; cursor: default; }
   .ghost.sel { background: var(--ink); color: #14121f; border-color: var(--ink); }
   .ghost.sel:hover { background: var(--ink); border-color: var(--ink); }
+  /* 返回按钮专有防畸变防拉伸规整 */
+  button[data-back], #bpQuit, #accBack, #lbBack, #quitBtn, #menuBtn, #tutMenu, #feMenu {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 22px !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    letter-spacing: 0.05em !important;
+  }
   .row { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
   .row .go { margin: 0; }
   .keys { display: grid; grid-template-columns: 1fr; margin: 16px auto 0; max-width: min(860px, 94vw); text-align: left; font-size: 13.5px; background: rgba(255,255,255,.03); border: 1px solid var(--faint); border-radius: 12px; padding: 14px 20px; }
@@ -471,7 +488,19 @@
   .form label { display: grid; gap: 6px; font-size: 13px; color: var(--dim); }
   .form input { font: 16px var(--body); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); -webkit-user-select: text; user-select: text; }
   .form input:focus-visible { outline: 2px solid var(--p1); outline-offset: 1px; }
-  .go.alt { background: #2b5f74; box-shadow: none; }
+  .go.alt {
+    background: linear-gradient(135deg, #1d3e5e, #0c2036);
+    box-shadow: 0 8px 24px rgba(12, 32, 54, 0.45), inset 0 0 0 2px #38bdf8;
+    color: #e0f2fe;
+    letter-spacing: .15em;
+    padding: 8px 24px 8px 28px;
+    font-size: 20px;
+  }
+  .go.alt:hover:not(:disabled) {
+    background: linear-gradient(135deg, #255078, #102d4c);
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4), inset 0 0 0 2px #7dd3fc;
+    color: #fff;
+  }
   .lbwrap { max-height: 64vh; overflow-y: auto; margin: 8px auto 0; max-width: min(1160px, 95vw); border: 1px solid var(--faint); border-radius: 10px; }
   .lbt { width: 100%; border-collapse: collapse; font-size: 15px; }
   .lbt th { position: sticky; top: 0; background: #15142a; color: var(--dim); font-weight: 400; font-size: 12px; padding: 10px 12px; text-align: left; }
