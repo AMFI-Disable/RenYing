@@ -5305,7 +5305,7 @@ function sayNet(text, dur, style, snd) { say(text, dur, style); if (snd) SFX[snd
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
 if (REC.on) recSave(w);
-$id('againBtn').style.display = ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
+$id('againBtn').style.display = (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
 if (M.stage) {
 const win = w === 0;
 M.stage = null;
@@ -5323,7 +5323,7 @@ const banStr = (M.bans && M.bans.length === 2) ? `（本局禁选：${CHARS[M.ba
 document.getElementById('endSub').textContent = `2v2 天道演武决出胜负，比分 ${M.wins[0]} : ${M.wins[1]} ${banStr}`;
 $id('endRank').textContent = '四位天道神境 AI 倾力交锋';
 const again = document.getElementById('againBtn');
-again.disabled = false; again.textContent = '重新演武 · 观战 2v2';
+again.style.display = 'none';
 setTimeout(() => showScreen('end'), 300);
 return;
 }
@@ -5340,7 +5340,8 @@ t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
 document.getElementById('endSub').textContent = win ? `三阵连克，斩获 60 墨锭！（击破比分 ${M.wins[0]} : ${M.wins[1]}）` : `胜败乃兵家常事，重整旗鼓再战（击破比分 ${M.wins[0]} : ${M.wins[1]}）`;
 $id('endRank').textContent = win ? '已击破敌方全员侠客' : '敌方阵线技高一筹';
 const again = document.getElementById('againBtn');
-again.disabled = false; again.textContent = '再战一场';
+if (isAiVsAi() || M.watchAi) { again.style.display = 'none'; }
+else { again.style.display = ''; again.disabled = false; again.textContent = '再战一场'; }
 setTimeout(() => showScreen('end'), 300);
 return;
 }
@@ -5366,7 +5367,8 @@ t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
 document.getElementById('endSub').textContent = `电光石火，一击立决！（决死比分 ${M.wins[0]} : ${M.wins[1]}）`;
 $id('endRank').textContent = win ? '刀出见血，一击封喉' : '剑走偏锋，稍逊一筹';
 const again = document.getElementById('againBtn');
-again.disabled = false; again.textContent = '再决生死';
+if (isAiVsAi() || M.watchAi) { again.style.display = 'none'; }
+else { again.style.display = ''; again.disabled = false; again.textContent = '再决生死'; }
 setTimeout(() => showScreen('end'), 300);
 return;
 }
@@ -5405,10 +5407,14 @@ document.getElementById('endSub').textContent = M.mode === 'cpu' ? (w === 0 ? '�
 const again = document.getElementById('againBtn');
 const repickBtn = document.getElementById('netRepickBtn');
 if (repickBtn) repickBtn.classList.toggle('hidden', M.mode !== 'net');
-if (M.mode === 'net') {
+if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
+again.style.display = 'none';
+} else if (M.mode === 'net') {
+again.style.display = '';
 again.disabled = false;
 again.textContent = '再战一局 (BO3)';
 } else {
+again.style.display = '';
 again.disabled = false;
 again.textContent = '再战';
 }
@@ -13364,6 +13370,7 @@ if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatc
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
+if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') return;
 if (M.mode === 'net') {
 if (!NET.open) {
 toast('网络已断开');
@@ -15104,8 +15111,12 @@ return;
 }
 if (e.code === 'Space' || e.code === 'Enter') {
 e.preventDefault();
+if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
+toMenu();
+return;
+}
 const againBtn = document.getElementById('againBtn');
-if (againBtn && !againBtn.disabled) againBtn.click();
+if (againBtn && !againBtn.disabled && againBtn.style.display !== 'none') againBtn.click();
 return;
 }
 }

@@ -169,6 +169,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Disabled Refight for AI vs AI Observation Modes (`againBtn`, `showEnd`)**:
+  - Disabled and hid the refight / rematch button (`#againBtn`) on the match conclusion screen across all AI vs AI watch modes (`cpuWatch`, `watch2v2`, `tag3`, `bushido`, `chaos`, `mayhem`).
+  - Completely prevents controller pollution and buggy state desynchronizations where selecting refight from spectator mode inadvertently reset controller assignments to human player vs computer (PvC).
+  - Tapping Space or Enter on the victory screen during AI vs AI matches now cleanly and safely returns the spectator to the main menu (`toMenu()`).
 - **LiuYun (流云) Martial Arts Overhaul & Balancing**:
   - HP buffed 470 → 495, Guard Max 95 → 112, guard chip damage reduced 11% → 7%, attack speed 0.88 → 0.85, reach 0.98 → 1.06, fan length 36px, normal attack damage coefficient increased (`BAL.liuyun.normal: 1.16`).
   - `windblade` (风刃) cooldown reduced to 1.4s, velocity increased to 1240, damage 42 (twin 32), knockback 420px.
