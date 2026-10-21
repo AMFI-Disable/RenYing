@@ -7182,7 +7182,8 @@ const ce = cineEnv();
 if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
 const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
 const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
-const want = Math.min(wantBase * zoomMul, fit);
+const maxZoom = M.mode === 'watch2v2' ? 0.70 : 1.35;
+const want = Math.min(wantBase * zoomMul, fit, maxZoom);
 cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
 cam.zoom = Math.min(cam.zoom, fit);
 cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
