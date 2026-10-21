@@ -68,9 +68,20 @@ service cloud.firestore {
       ];
     }
 
+    // Optional fields: may be missing on older profiles
+    //   - rk: map (<= 20 keys) - Ranked season state (season, pts, placed, est, w, l, peak, streak, hist, pending, at, owner, last)
+    function optionalProfileFields() {
+      return ['rk'];
+    }
+
     // Enforce strict schema: no arbitrary or extraneous fields allowed
     function hasOnlyAllowedFields() {
-      return request.resource.data.keys().hasOnly(allowedProfileFields());
+      return request.resource.data.keys().hasOnly(allowedProfileFields().concat(optionalProfileFields()));
+    }
+
+    // Validate ranked state map when present
+    function isValidRanked(data) {
+      return !('rk' in data) || (data.rk is map && data.rk.keys().size() <= 20);
     }
 
     // Validate that all required fields are present in the document
@@ -158,6 +169,7 @@ service cloud.firestore {
              data.online10Unlocked is bool &&
              isValidStageStars(data.stageStars) &&
              isNonNegativeNum(data.qfx) &&
+             isValidRanked(data) &&
              isValidUpdatedAt(data.updatedAt);
     }
 

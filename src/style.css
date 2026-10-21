@@ -1019,3 +1019,126 @@
     .decktabs button { padding-top: 5px; padding-bottom: 5px; }
   }
 
+
+  /* ======================= 对战大厅：匹配对战 / 排位赛 ======================= */
+  :root { --v-red: #ff4655; --v-navy: #0f1923; --v-navy2: #1f2a36; --v-white: #ece8e1; --v-cond: "Oswald", "DIN Condensed", "Arial Narrow", "Noto Sans SC", sans-serif; }
+  .mm-hero { margin: 4px auto 10px; width: min(1180px, 100%); text-align: left; }
+  .season-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 14px; padding: 0 2px; font-family: var(--v-cond); letter-spacing: .06em; color: rgba(236,232,225,.7); font-size: 14px; }
+  .season-tag { background: var(--v-red); color: #fff; padding: 4px 14px 4px 12px; font-weight: 700; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); letter-spacing: .12em; }
+  .season-range { color: var(--v-white); font-weight: 600; }
+  .season-left::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--v-red); margin-right: 8px; transform: rotate(45deg) translateY(-2px); }
+  .mm-cards { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+  .mm-card { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 6px; padding: 22px 26px 24px; min-height: 250px;
+    background: linear-gradient(135deg, rgba(15,25,35,.94), rgba(31,42,54,.9)); border: 1px solid rgba(236,232,225,.12);
+    clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px)); transition: transform .18s ease, border-color .18s; }
+  .mm-card:hover { transform: translateY(-2px); border-color: rgba(255,70,85,.5); }
+  .mm-card-bg { position: absolute; inset: 0; pointer-events: none; opacity: .9;
+    background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 100% 0%, rgba(255,70,85,.28), transparent 60%); }
+  .mm-ranked .mm-card-bg { background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 0% 100%, rgba(233,196,106,.22), transparent 60%), radial-gradient(ellipse at 100% 0%, rgba(114,245,214,.12), transparent 55%); }
+  .mm-card > *:not(.mm-card-bg) { position: relative; }
+  .mm-kicker { align-self: flex-start; font-family: var(--v-cond); font-size: 12px; letter-spacing: .2em; color: var(--v-red); border: 1px solid rgba(255,70,85,.55); padding: 2px 10px; }
+  .mm-ranked .mm-kicker { color: var(--gold); border-color: rgba(233,196,106,.55); }
+  .mm-title { font-family: var(--title); font-size: clamp(44px, 4.6vw, 64px); line-height: 1.02; color: var(--v-white); letter-spacing: .06em; }
+  .mm-en { font-family: var(--v-cond); font-weight: 700; font-size: 15px; letter-spacing: .42em; color: rgba(236,232,225,.38); margin-top: -2px; }
+  .mm-desc { color: rgba(236,232,225,.72); font-size: 14px; margin: 6px 0 auto; }
+  .mm-go { margin-top: 16px; align-self: flex-start; min-width: 220px; padding: 14px 34px; border: none; cursor: pointer; font-family: var(--v-cond); font-weight: 700; font-size: 19px; letter-spacing: .3em; color: #fff; background: var(--v-red);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); transition: background .15s, transform .1s, box-shadow .15s; box-shadow: 0 0 0 rgba(255,70,85,0); }
+  .mm-go:hover:not(:disabled) { background: #ff5d6a; box-shadow: 0 0 28px rgba(255,70,85,.45); }
+  .mm-go:active:not(:disabled) { transform: translateY(1px); }
+  .mm-go:disabled { cursor: default; background: #6b2a33; color: rgba(255,255,255,.75); }
+  .mm-ranked .mm-go { background: linear-gradient(90deg, #d9a440, #f3cf73); color: #1a1206; }
+  .mm-ranked .mm-go:hover:not(:disabled) { box-shadow: 0 0 28px rgba(233,196,106,.45); background: linear-gradient(90deg, #e6b250, #ffdc85); }
+  .mm-ranked .mm-go:disabled { background: #5d4a22; color: rgba(255,240,210,.7); }
+  .mm-rank-row { display: flex; align-items: center; gap: 16px; margin-top: 4px; }
+  .mm-medal { flex: none; width: 108px; height: 108px; display: grid; place-items: center; filter: drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
+  .mm-rank-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+  .mm-ranked .mm-title { font-size: clamp(38px, 3.8vw, 52px); }
+  .mm-rank-label { font-family: var(--v-cond); font-weight: 700; font-size: 20px; color: var(--v-white); letter-spacing: .06em; margin-top: 4px; }
+  .mm-rank-sub { font-size: 12.5px; color: rgba(236,232,225,.62); }
+  .mm-bar { display: block; height: 5px; background: rgba(236,232,225,.12); margin-top: 6px; max-width: 320px; }
+  .mm-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #fff1c4); transition: width .6s ease; }
+  .mm-rank-actions { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-top: auto; }
+  .mm-link { background: none; border: none; color: rgba(236,232,225,.7); font-family: var(--body); font-size: 13.5px; cursor: pointer; padding: 6px 2px; border-bottom: 1px solid rgba(236,232,225,.3); }
+  .mm-link:hover { color: #fff; border-color: var(--gold); }
+  .mm-card.searching { border-color: rgba(255,70,85,.75); }
+  .mm-card.searching::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--v-red), transparent); animation: mmScan 1.4s linear infinite; }
+  .mm-ranked.searching { border-color: rgba(233,196,106,.75); }
+  .mm-ranked.searching::after { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  @keyframes mmScan { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .mm-search { display: flex; align-items: center; gap: 16px; margin: 14px 0 0; padding: 12px 18px; background: rgba(15,25,35,.92); border-left: 4px solid var(--v-red); }
+  .mm-spin { width: 26px; height: 26px; border: 3px solid rgba(236,232,225,.15); border-top-color: var(--v-red); border-radius: 50%; animation: mmSpin .8s linear infinite; flex: none; }
+  @keyframes mmSpin { to { transform: rotate(360deg); } }
+  .mm-search-txt { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .mm-search-txt b { font-family: var(--v-cond); letter-spacing: .08em; font-size: 16px; color: var(--v-white); }
+  .mm-search-txt span { font-family: var(--v-cond); font-size: 13px; color: rgba(236,232,225,.6); letter-spacing: .05em; }
+  .mm-cancel { background: transparent; color: var(--v-white); border: 1px solid rgba(236,232,225,.35); padding: 7px 18px; cursor: pointer; font-family: var(--body); font-size: 13px; }
+  .mm-cancel:hover { border-color: var(--v-red); color: #fff; background: rgba(255,70,85,.15); }
+  .mm-foot { display: flex; justify-content: center; margin-top: 14px; }
+  .mm-room-btn { background: rgba(15,25,35,.6); border: 1px solid rgba(236,232,225,.2); color: rgba(236,232,225,.78); font-family: var(--body); font-size: 13px; padding: 7px 18px; cursor: pointer; letter-spacing: .04em; }
+  .mm-room-btn::after { content: "▾"; margin-left: 8px; display: inline-block; transition: transform .2s; }
+  .mm-room-btn.sel::after { transform: rotate(180deg); }
+  .mm-room-btn:hover, .mm-room-btn.sel { color: #fff; border-color: rgba(236,232,225,.45); }
+  #roomWrap { margin-top: 10px; }
+  @media (max-width: 760px) {
+    .mm-cards { grid-template-columns: 1fr; }
+    .mm-card { min-height: 0; padding: 18px 18px 20px; }
+    .mm-go { min-width: 0; width: 100%; }
+    .mm-medal { width: 84px; height: 84px; }
+    .mm-medal svg { width: 84px; height: 84px; }
+  }
+  /* 段位勋章 */
+  .rk-medal { overflow: visible; display: block; }
+  .rk-medal .rk-shine { animation: rkShine 3.6s ease-in-out infinite; }
+  .rk-medal .rk-spin { transform-origin: 100px 100px; animation: mmSpin 9s linear infinite; }
+  .rk-medal.t4 { filter: drop-shadow(0 0 10px rgba(255,90,90,.55)); }
+  .rk-medal.t3 { filter: drop-shadow(0 0 8px rgba(114,245,214,.35)); }
+  @keyframes rkShine { 0%, 55% { transform: translateX(-40px) rotate(25deg); } 85%, 100% { transform: translateX(260px) rotate(25deg); } }
+  @media (prefers-reduced-motion: reduce) { .rk-medal .rk-shine, .rk-medal .rk-spin, .mm-spin, .mm-card.searching::after { animation: none; } }
+  /* 段位与战绩 */
+  .rk-info { position: fixed; inset: 0; z-index: 60; background: rgba(5,8,12,.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .rk-info.hidden { display: none; }
+  .rk-info-panel { width: min(860px, 100%); max-height: 92vh; overflow-y: auto; background: linear-gradient(160deg, #142130, #0d151e); border: 1px solid rgba(236,232,225,.14); text-align: left; padding: 20px 22px; clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); }
+  .rk-info-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .rk-info-head b { font-family: var(--title); font-size: 30px; font-weight: 400; color: var(--v-white); }
+  .rk-info-head span { font-family: var(--v-cond); color: rgba(236,232,225,.6); letter-spacing: .05em; flex: 1; }
+  .rki-me { display: flex; gap: 18px; align-items: center; padding: 14px 16px; background: rgba(255,255,255,.04); border-left: 4px solid var(--gold); margin-bottom: 14px; }
+  .rki-me-l { font-family: var(--v-cond); font-size: 26px; font-weight: 700; color: var(--v-white); letter-spacing: .05em; }
+  .rki-me-s { font-size: 13px; color: rgba(236,232,225,.7); margin-top: 3px; }
+  .rki-hist { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .rki-hist span { font-family: var(--v-cond); font-size: 12px; padding: 2px 7px; background: rgba(255,255,255,.06); }
+  .rki-hist .w { color: #5ee6b0; border-left: 2px solid #5ee6b0; }
+  .rki-hist .l { color: #ff8a93; border-left: 2px solid var(--v-red); }
+  .rki-tiers { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+  .rki-tier { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255,255,255,.03); border: 1px solid transparent; }
+  .rki-tier.mine { border-color: rgba(233,196,106,.6); background: rgba(233,196,106,.08); }
+  .rki-tier b { display: block; font-family: var(--v-cond); font-size: 16px; color: var(--v-white); letter-spacing: .05em; }
+  .rki-tier span { display: block; font-size: 12px; color: rgba(236,232,225,.62); }
+  .rki-tier .rki-subs { font-size: 11px; color: rgba(236,232,225,.45); }
+  .rki-note { font-size: 13px; color: rgba(236,232,225,.66); margin: 14px 0 0; line-height: 1.7; }
+  /* 定级 / 晋升展示 */
+  .rk-reveal { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(20,30,45,.9), rgba(3,5,8,.96)); opacity: 0; transition: opacity .3s; }
+  .rk-reveal.hidden { display: none; }
+  .rk-reveal.on { opacity: 1; }
+  .rkr-in { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .rkr-kicker { font-family: var(--v-cond); letter-spacing: .5em; color: var(--v-red); font-size: 16px; font-weight: 700; }
+  .rkr-medal { transform: scale(.4); opacity: 0; }
+  .rk-reveal.on .rkr-medal { animation: rkPop .9s cubic-bezier(.2,1.4,.4,1) .15s forwards; }
+  @keyframes rkPop { to { transform: scale(1); opacity: 1; } }
+  .rkr-label { font-family: var(--v-cond); font-size: 64px; font-weight: 700; color: #fff; letter-spacing: .08em; line-height: 1; }
+  .rkr-name { font-family: var(--title); font-size: 32px; color: var(--gold); }
+  .rkr-pts { font-family: var(--v-cond); color: rgba(236,232,225,.7); letter-spacing: .1em; margin-bottom: 14px; }
+  /* 结算页的排位结果 */
+  .end-rk { display: inline-flex; align-items: center; gap: 10px; text-align: left; }
+  .end-rk > span { display: flex; flex-direction: column; }
+  .end-rk b.up { color: #5ee6b0; } .end-rk b.down { color: #ff8a93; }
+  .end-rk small { color: var(--dim); font-size: 12px; }
+  @media (max-height: 520px) {
+    .mm-card { min-height: 0; padding: 12px 16px 14px; gap: 3px; }
+    .mm-title { font-size: 34px; }
+    .mm-ranked .mm-title { font-size: 30px; }
+    .mm-en { font-size: 11px; }
+    .mm-desc { font-size: 12.5px; margin-bottom: 4px; }
+    .mm-go { margin-top: 8px; padding: 10px 24px; font-size: 16px; min-width: 170px; }
+    .mm-medal, .mm-medal svg { width: 72px; height: 72px; }
+    .season-bar { margin-bottom: 8px; font-size: 12.5px; }
+  }

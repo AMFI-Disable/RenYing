@@ -20,6 +20,8 @@
   let currentUser = null;
   let authListeners = [];
   let saveTimer = null;
+  // 云端规则还没更新、不认识排位字段 rk 时，去掉它再存一次，以后这个会话里就不再带上
+  let rkBlocked = false;
 
   function getConfig() {
     if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId) {
@@ -145,7 +147,8 @@
       online10Unlocked: !!p.online10Unlocked,
       stageStars: (p.stageStars && typeof p.stageStars === 'object') ? p.stageStars : {},
       qfx: Math.max(0, Math.floor(p.qfx || 0)),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      ...(p.rk && typeof p.rk === 'object' && !rkBlocked ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {})
     };
   }
 
@@ -394,6 +397,11 @@
       try {
         await fbDb.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true });
       } catch (err) {
+        if (dataToSave.rk && err && err.code === 'permission-denied') {
+          rkBlocked = true;
+          delete dataToSave.rk;
+          try { await fbDb.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true }); return; } catch (e2) { err = e2; }
+        }
         console.warn('Sync profile to Firestore failed:', err);
       }
     };

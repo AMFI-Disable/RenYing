@@ -121,6 +121,7 @@ function p2pWire(conn, sess, side, onOpen, onData) {
       return;
     }
     if (m.sys === 'hb') return;
+    if (m.sys === 'left') NET.peerQuit = true;   // 对方主动离开（不是网络断了）
     if (m.sys !== undefined && !P2P_SYS[side].includes(m.sys)) return;
     onData(m);
   });
@@ -290,6 +291,177 @@ function p2pJoin(sess, code) {
     if (NET.open && err.type !== 'peer-unavailable') return;
     fail(err.type === 'peer-unavailable' ? `找不到房间 ${code}：请核对房间码，并确认房主网页仍在开启等候` : p2pErrorText(err));
   });
+}
+
+// ---------- 匹配对战 / 排位赛：同样不要服务器，靠牵线服务器上的“占座”排队 ----------
+// 每个池子按大段位分成几段（快速匹配只有一段），每段有几个座位，座位就是一个固定的 PeerJS id：
+//   前缀 + mm-<版本>-<池>-<段>-<座>
+// 找对手的人先占一个空座坐下（被占了牵线服务器会回 unavailable-id，就换下一个座）；
+// 坐下以后每隔几秒去敲“编号比自己小”的座位的门（只往小的敲，两个人就不会同时敲对方）。
+// 敲开了就由座位的主人当房主，敲门的人加入，之后和房间对战一模一样（选人、回滚对战）。
+// 配对成功后房主马上和牵线服务器断开，把座位让给后面的人，已经建立的直连不受影响。
+const MM = { on: false, kind: '', t0: 0, peer: null, myId: '', band: 0, timer: 0, busy: false, tries: 0 };
+const MM_SEATS = 3;          // 每段几个座位
+const MM_BANDS = 5;          // 排位按大段位分段：D C B A S
+const MM_PROBE = 3000;       // 多久去敲一轮门
+function mmPool() { return MM.kind === 'ranked' ? 'r' : 'q'; }
+function mmSeatId(band, seat) { return `${P2P.prefix}mm-${String(VERSION).replace(/\W/g, '')}-${mmPool()}-${band}-${seat}`; }
+// 等得越久，能接受的段位差越大：先只找同段，10 秒后放宽到相邻一段，25 秒后放宽到两段
+function mmSpan() { if (MM.kind !== 'ranked') return 0; const s = (Date.now() - MM.t0) / 1000; return s < 10 ? 0 : s < 25 ? 1 : 2; }
+function mmInfo() { return MM.kind === 'ranked' && typeof rkMatchInfo === 'function' ? rkMatchInfo() : null; }
+function mmStop() {
+  MM.on = false; MM.busy = false;
+  clearTimeout(MM.timer);
+  if (MM.peer && MM.peer !== P2P.peer) { try { MM.peer.destroy(); } catch (e) {} }
+  MM.peer = null;
+}
+async function mmStart(kind) {
+  netReset();
+  NET.leaving = false; NET.base = null; NET.matching = true; NET.isRanked = kind === 'ranked';
+  NET.oppRk = null;
+  Object.assign(MM, { on: true, kind, t0: Date.now(), busy: false, tries: 0 });
+  MM.band = kind === 'ranked' && typeof rkMatchInfo === 'function' ? rkMatchInfo().band : 0;
+  if (typeof mmUI === 'function') mmUI(kind);
+  const sess = P2P.sess;
+  const ok = await p2pLoad();
+  if (sess !== P2P.sess || !MM.on) return;
+  if (!ok) { netStatus('直连组件加载失败，检查一下网络后再试'); netReset(); return; }
+  mmSit(sess, 0);
+}
+// 占座：从 0 号座开始找空的
+function mmSit(sess, seat) {
+  if (sess !== P2P.sess || !MM.on) return;
+  if (seat >= MM_SEATS) {                      // 这一段的座位都满了（很少见）：不占座，只去敲门
+    return mmSitAs(sess, null);
+  }
+  mmSitAs(sess, mmSeatId(MM.band, seat), seat);
+}
+function mmSitAs(sess, id, seat) {
+  let peer;
+  try { peer = id ? new Peer(id, p2pOptions()) : new Peer(p2pOptions()); }
+  catch (e) { netStatus(p2pErrorText(e)); netReset(); return; }
+  P2P.peer = MM.peer = peer;
+  const live = () => sess === P2P.sess && peer === P2P.peer;
+  let opened = false;
+  clearTimeout(P2P.timer);
+  P2P.timer = setTimeout(() => { if (live() && !opened) { netStatus('连接牵线服务器超时，请检查网络后重试'); netReset(); } }, 30000);
+  peer.on('open', realId => {
+    if (!live()) return;
+    opened = true; clearTimeout(P2P.timer);
+    MM.myId = realId;
+    mmProbeLoop(sess, peer);
+  });
+  peer.on('connection', conn => mmIncoming(sess, peer, conn));
+  peer.on('disconnected', () => {             // 和牵线服务器断了：还在排队就重连（座位号不变）
+    if (live() && MM.on && !peer.destroyed) setTimeout(() => { if (live() && MM.on && peer.disconnected && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } }, 1500);
+  });
+  peer.on('error', err => {
+    if (!live()) return;
+    if (err.type === 'peer-unavailable') { if (MM.onMiss) MM.onMiss(); return; }   // 敲的座位没人
+    if (!opened && err.type === 'unavailable-id') {   // 座位被人占了：换下一个
+      try { peer.destroy(); } catch (e) {}
+      P2P.peer = MM.peer = null;
+      return mmSit(sess, (seat || 0) + 1);
+    }
+    if (NET.open) return;
+    if (!opened) { netStatus(p2pErrorText(err)); netReset(); return; }
+    if (MM.onMiss && (err.type === 'webrtc' || err.type === 'negotiation-failed')) MM.onMiss();
+  });
+}
+// 有人来敲门：看看是不是合适的对手
+function mmIncoming(sess, peer, conn) {
+  const live = () => sess === P2P.sess && peer === P2P.peer;
+  const refuse = () => { conn.on('open', () => { try { conn.send({ sys: 'full' }); } catch (e) {} setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); }); };
+  if (!live() || !MM.on || MM.busy || P2P.conn) return refuse();
+  MM.busy = true;
+  P2P.conn = conn;
+  const drop = () => { if (P2P.conn === conn) P2P.conn = null; MM.busy = false; try { conn.close(); } catch (e) {} };
+  const t = setTimeout(() => { if (live() && P2P.conn === conn && !NET.open) drop(); }, 8000);
+  p2pWire(conn, sess, 'host', () => {}, m => {
+    if (m.sys === 'hello') {
+      const mine = mmInfo(), theirs = m.mm || {};
+      const fit = m.v === VERSION && theirs.kind === MM.kind &&
+        (MM.kind !== 'ranked' || (mine && Math.abs((theirs.band | 0) - mine.band) <= 2 && !(mine.uid && theirs.uid && mine.uid === theirs.uid)));
+      if (!fit) { try { conn.send({ sys: 'full' }); } catch (e) {} clearTimeout(t); setTimeout(drop, 300); return; }
+      clearTimeout(t);
+      NET.role = 'host';
+      NET.oppRk = theirs.rk || null;
+      const ready = { sys: 'ready', names: { host: (ACC && ACC.name) || '房主', client: p2pName(m.name, '对手') }, tiers: {}, mm: { kind: MM.kind, rk: mine ? mine.rk : null } };
+      conn.send(ready);
+      mmMatched(peer, 'host');
+      onSys(ready);
+      return;
+    }
+    if (m.sys) onSys(m); else onNetMsg(m);
+  });
+}
+// 每隔几秒去敲一轮门：只敲编号比自己小的座位，同段优先，等久了再往相邻的段找
+function mmTargets() {
+  const span = mmSpan(), out = [];
+  const bands = [MM.band];
+  for (let d = 1; d <= span; d++) { if (MM.band - d >= 0) bands.push(MM.band - d); if (MM.band + d < MM_BANDS) bands.push(MM.band + d); }
+  for (const b of (MM.kind === 'ranked' ? bands : [0])) for (let s = 0; s < MM_SEATS; s++) {
+    const id = mmSeatId(b, s);
+    if (id < MM.myId || !MM.myId.startsWith(P2P.prefix + 'mm-')) out.push(id);   // 没占到座位的人可以敲所有的门
+  }
+  return out;
+}
+async function mmProbeLoop(sess, peer) {
+  const live = () => sess === P2P.sess && peer === P2P.peer && MM.on;
+  while (live()) {
+    for (const id of mmTargets()) {
+      if (!live() || NET.open) return;
+      if (MM.busy) break;                       // 正有人在敲我的门，这一轮先不出去敲
+      const r = await mmKnock(sess, peer, id);
+      if (r === 'matched' || !live()) return;
+    }
+    if (typeof mmTick === 'function') mmTick();
+    await new Promise(ok => { MM.timer = setTimeout(ok, MM_PROBE + Math.random() * 800); });
+  }
+}
+function mmKnock(sess, peer, id) {
+  return new Promise(done => {
+    let over = false;
+    const conn = peer.connect(id, { reliable: true, serialization: 'json' });
+    const finish = r => {
+      if (over) return; over = true;
+      clearTimeout(t); MM.onMiss = null;
+      if (r !== 'matched') { if (P2P.conn === conn) P2P.conn = null; if (MM.busy && MM.knocking === conn) MM.busy = false; try { conn.close(); } catch (e) {} }
+      MM.knocking = null;
+      done(r);
+    };
+    const t = setTimeout(() => finish('timeout'), 5000);
+    MM.onMiss = () => finish('empty');
+    if (MM.busy || P2P.conn) return finish('busy');
+    MM.busy = true; MM.knocking = conn; P2P.conn = conn;
+    p2pWire(conn, sess, 'client', () => {
+      const mine = mmInfo();
+      conn.send({ sys: 'hello', v: VERSION, name: (ACC && ACC.name) || '', mm: { kind: MM.kind, band: mine ? mine.band : 0, uid: mine ? mine.uid : '', rk: mine ? mine.rk : null } });
+    }, m => {
+      if (over && m.sys !== 'ready' && P2P.conn === conn) { if (m.sys) onSys(m); else onNetMsg(m); return; }
+      if (m.sys === 'full' || m.sys === 'version') return finish('full');
+      if (m.sys === 'ready') {
+        if (!m.mm || m.mm.kind !== MM.kind) return finish('full');
+        NET.role = 'client';
+        NET.oppRk = m.mm.rk || null;
+        m.names = { host: p2pName(m.names && m.names.host, '房主'), client: p2pName(m.names && m.names.client, '对手') }; m.tiers = {};
+        finish('matched');
+        mmMatched(peer, 'client');
+        onSys(m);
+        return;
+      }
+      if (m.sys) onSys(m); else onNetMsg(m);
+    });
+  });
+}
+// 配对成功：停止排队，房主把座位让出来
+function mmMatched(peer, role) {
+  const kind = MM.kind;
+  MM.on = false; MM.busy = false; clearTimeout(MM.timer); MM.peer = null;
+  NET.matching = false;
+  if (typeof mmUI === 'function') mmUI(null);
+  onSys({ sys: 'room', matched: true, role, ranked: kind === 'ranked' });
+  setTimeout(() => { try { if (!peer.destroyed && !peer.disconnected) peer.disconnect(); } catch (e) {} }, 600);
 }
 
 // 关网页或切到别的应用被系统关掉时，尽量告诉对方

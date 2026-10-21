@@ -410,6 +410,52 @@
         </span>
       </div>
 
+      <!-- 对战大厅：匹配对战（主要玩法）+ 排位赛，房间对战收在下面的小按钮里 -->
+      <div class="mm-hero" id="mmHero">
+        <div class="season-bar">
+          <span class="season-tag" id="seasonName">第一赛季</span>
+          <span class="season-range">10.22 – 11.22</span>
+          <span class="season-left" id="seasonLeft"></span>
+        </div>
+        <div class="mm-cards">
+          <div class="mm-card mm-quick" id="mmQuickCard">
+            <div class="mm-card-bg" aria-hidden="true"></div>
+            <span class="mm-kicker">主要玩法</span>
+            <span class="mm-title">匹配对战</span>
+            <span class="mm-en">QUICK MATCH</span>
+            <span class="mm-desc">全服随机对手，谁都可能遇到 · 标准三局两胜 · 不影响段位</span>
+            <button class="mm-go" id="mmQuickBtn" type="button">开始匹配</button>
+          </div>
+          <div class="mm-card mm-ranked" id="mmRankCard">
+            <div class="mm-card-bg" aria-hidden="true"></div>
+            <span class="mm-kicker">赛季排位</span>
+            <div class="mm-rank-row">
+              <span class="mm-medal" id="mmMedal"></span>
+              <div class="mm-rank-txt">
+                <span class="mm-title">排位赛</span>
+                <span class="mm-en">COMPETITIVE</span>
+                <span class="mm-rank-label" id="mmRankLabel">登录后开启排位</span>
+                <span class="mm-rank-sub" id="mmRankSub"></span>
+                <span class="mm-bar"><i id="mmRankBar"></i></span>
+              </div>
+            </div>
+            <div class="mm-rank-actions">
+              <button class="mm-go" id="mmRankBtn" type="button">开始排位</button>
+              <button class="mm-link" id="mmRankInfoBtn" type="button">段位与战绩</button>
+            </div>
+          </div>
+        </div>
+        <div class="mm-search hidden" id="mmSearch" role="status">
+          <span class="mm-spin" aria-hidden="true"></span>
+          <div class="mm-search-txt"><b id="mmSearchTitle">正在寻找对手</b><span id="mmSearchSub">0:00</span></div>
+          <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
+        </div>
+        <div class="mm-foot">
+          <button class="mm-room-btn" id="mmRoomBtn" type="button" aria-expanded="false">房间对战 · 和好友约战</button>
+        </div>
+      </div>
+
+      <div id="roomWrap" class="hidden">
       <!-- 战绩与段位概览条 -->
       <div class="net-profile-strip" id="netProfileStrip">
         <div class="nps-item">
@@ -604,7 +650,14 @@
           <p class="netnote" id="lanLine"></p>
         </div>
       </div>
+      </div><!-- /roomWrap -->
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
+      <div class="rk-info hidden" id="rkInfo" role="dialog" aria-modal="true" aria-label="段位与战绩">
+        <div class="rk-info-panel">
+          <div class="rk-info-head"><b>段位与战绩</b><span id="rkInfoSeason"></span><button class="mm-cancel" id="rkInfoClose" type="button">关闭</button></div>
+          <div id="rkInfoBody"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -976,6 +1029,7 @@
 
   <div class="tutbox hidden" id="tutBox"><div class="tn" id="tutN"></div><div class="tt" id="tutT"></div><div class="td" id="tutD"></div></div>
   <div class="toast" id="toast"></div>
+  <div class="rk-reveal hidden" id="rkReveal" role="dialog" aria-modal="true" aria-label="段位"></div>
   <div id="touchUI" class="hidden">
     <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>
     <button class="tbtn tdummy hidden" id="tDummy">切换木人</button>
