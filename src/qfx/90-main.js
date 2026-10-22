@@ -20,7 +20,7 @@ function clearField() {
   for (const e of G.enemies) { GFX.scene.remove(e.rig.root); e.rig.dispose(); if (e.trail) e.trail.dispose(); if (e.tele) e.tele.cancel(); }
   for (const p of G.projs) killProj(p); for (const h of G.hazards) if (h.tele) h.tele.cancel();
   if (Pl.rig) for (const o of Orbs.list) collectOrb(o);
-  Object.assign(G, { enemies: [], projs: [], hazards: [], queue: [], tokens: 0, boss: null, bossDead: false });
+  Object.assign(G, { enemies: [], projs: [], hazards: [], queue: [], tokens: 0, boss: null, bossDead: false }); clearZones();
   Orbs.list.length = 0; Orbs.mesh.count = 0; FX.clear();
 }
 function resetGame() {
@@ -51,7 +51,7 @@ const Game = {
     const go = () => {
       clearField(); if (World.id !== ch.id) World.build(ch.id); placePlayer(); applyQuality();
       try { GFX.renderer.compile(GFX.scene, GFX.camera); } catch (_) {}
-      Save.snapRun(); G.stage = ch.stages[0] - 1; G.inter = 5; G.intro = true; G.clearT = 0; G.hitstop = 0; G.enemyTS = 1; G.slowT = 0;
+      Pl.reviveUsed = false; Pl.bellT = Pl.wuyingT = 0; Save.snapRun(); G.stage = ch.stages[0] - 1; G.inter = 5; G.intro = true; G.clearT = 0; G.hitstop = 0; G.enemyTS = 1; G.slowT = 0;
       // 过场至少停留两秒半，让章名和题记读得完
       setTimeout(() => {
         $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; canvas.focus(); travelHide();
@@ -63,7 +63,7 @@ const Game = {
   pause() { if (G.state !== 'playing') return; G.state = 'paused'; UI.perkList('pausePerks'); $('pause').hidden = false; unlock(); },
   resume() { if (G.state !== 'paused') return; $('pause').hidden = true; G.state = 'playing'; canvas.focus(); },
   levelUp() { G.state = 'levelup'; unlock(); UI.showLevelUp(); },
-  pickPerk(p) { if (G.state !== 'levelup' || !p) return; takePerk(p); Pl.pending--; if (Pl.pending > 0) { UI.showLevelUp(); return; } $('levelup').hidden = true; G.state = 'playing'; Pl.iframe = Math.max(Pl.iframe, .8); canvas.focus(); },
+  pickPerk(p) { if (G.state !== 'levelup' || !p) return; takeCard(p); Pl.pending--; if (Pl.pending > 0) { UI.showLevelUp(); return; } $('levelup').hidden = true; G.state = 'playing'; Pl.iframe = Math.max(Pl.iframe, .8); canvas.focus(); },
   openShop() { if (G.state === 'interlude') { G.shopFrom = 'interlude'; $('interlude').hidden = true; } else { if (G.state !== 'playing' || G.inter <= 0 || G.intro || !G.stage) return; G.shopFrom = 'playing'; } G.state = 'shop'; unlock(); UI.showShop(); },
   closeShop() { if (G.state !== 'shop') return; $('shop').hidden = true; if (G.shopFrom === 'interlude') { G.state = 'interlude'; $('interlude').hidden = false; return; } G.state = 'playing'; canvas.focus(); },
   onDeath() { G.deathT = 0; Snd.gong(); },
@@ -114,9 +114,9 @@ function frame(now) {
     G.t += dt; if (Pl.state !== 'dead') G.playT += dt;
     updatePlayer(dt);
     for (let i = G.enemies.length - 1; i >= 0; i--) if (!updateEnemy(G.enemies[i], dt, G.t)) G.enemies.splice(i, 1);
-    updateProjs(dt, G.t); updateOrbs(dt, G.t); if (G.state === 'playing') updateStage(dt);
+    updateProjs(dt, G.t); updateZones(dt); updateOrbs(dt, G.t); if (G.state === 'playing') updateStage(dt);
     Snd.combat = G.enemies.length ? 1 : 0;
-    if (G.state === 'playing' && Pl.pending > 0 && !['ult', 'dead', 'attack', 'exec', 'flash', 'charge'].includes(Pl.state) && G.hitstop <= 0) Game.levelUp();
+    if (G.state === 'playing' && Pl.pending > 0 && !['ult', 'ultL', 'dead', 'attack', 'exec', 'flash', 'charge', 'skShadow'].includes(Pl.state) && G.hitstop <= 0) Game.levelUp();
     FX.update(dt, G.t); World.update(rdt, GFX.time.value, Pl.pos); updateCamera(dt, rdt); UI.update(rdt);
   } else if (G.state === 'title') {
     G.t += rdt; Pl.rig.root.position.copy(Pl.pos); Pl.rig.root.rotation.y = .3; animHuman(Pl.rig, rdt, G.t, { speed: 0, rate: 10, pose: P => setHand(P, -.36, .98, -.1, -.1, .94, -.33) });
@@ -139,7 +139,7 @@ function bindUI() {
   $('btnQual').onclick = () => { GFX.quality = (GFX.quality + 2) % 3; applyQuality(); };
   const fs = () => { const el = document.documentElement; try { if (document.fullscreenElement) document.exitFullscreen(); else { const p = (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (p && p.catch) p.catch(() => {}); } } catch (_) {} };
   $('btnFull').onclick = fs; $('btnFull2').onclick = fs;
-  for (let i = 0; i < SKILLS.length; i++) $('sk' + i).onclick = () => { Input.hits['Sk' + i] = true; canvas.focus(); }; $('sk4').onclick = () => { Input.hits.KeyC = true; canvas.focus(); };
+  for (let i = 0; i < 4; i++) $('sk' + i).onclick = () => { Input.hits['Sk' + i] = true; canvas.focus(); }; $('sk4').onclick = () => { Input.hits.KeyC = true; canvas.focus(); };
   addEventListener('resize', () => applyQuality()); document.addEventListener('visibilitychange', () => { if (document.hidden) Game.pause(); });
   addEventListener('touchstart', () => { if (!Input.touch) { Input.touch = true; if (G.state === 'playing') $('touch').hidden = false; } }, { passive: true });
   setupPointer(canvas, () => G.state === 'playing' && !Input.touch); setupTouchUI();
@@ -153,7 +153,7 @@ async function boot() {
     GFX.renderer.compile(GFX.scene, GFX.camera);
     last = performance.now(); requestAnimationFrame(frame);
     $('btnStart').disabled = false; $('loading').hidden = true;
-    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SKILLS, PERKS, findExec, startExec, parriedBy, breakPoise };
+    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise };
   } catch (err) { console.error(err && err.stack || err); $('loading').textContent = '无法启动 3D 画面：' + (err && err.message ? err.message : err) + '。请换用支持 WebGL 的桌面浏览器。'; }
 }
 boot();

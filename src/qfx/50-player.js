@@ -12,22 +12,19 @@ const HEAVY = { name: '旋风斩', dur: .72, w: .28, a: .64, cancel: .82, mult: 
 const PISHAN = { name: '破山', dur: .7, w: .36, a: .58, cancel: .86, mult: 3.4, range: 2.7, off: 2.2, arc: TAU, lunge: 1.9, anim: 'chop', knock: 7.5, stop: .15, shake: .55, poise: 6, sta: 24, slam: true, pishan: true };
 /* 弹反：起手 win 秒内卸开来招；win 到 guard 之间只算格挡；落空后还要 rec 秒收势 */
 const PARRY = { win: .22, guard: .45, rec: .3, sta: 8 };
-const SKILLS = [
-  { name: '剑气纵横', mp: 20, cd: 4, lv: 1 }, { name: '回风落雁', mp: 30, cd: 9, lv: 2 },
-];
 const Pl = { pos: new V3(0, 0, 9), vel: new V3(), yaw: PI, kx: 0, kz: 0 };
 const _b = new V3(), _t = new V3(), _v1 = new V3(), _v2 = new V3(), _v3 = new V3();
 /* 镜头别钻进场外：收回到场地半径以内，且不低于地面 */
 function collideCam(v) { const cr = Math.hypot(v.x, v.z), R = World.R + 7; if (cr > R) { v.x *= R / cr; v.z *= R / cr; } v.y = Math.max(.5, v.y); }
 
 function resetPlayer() {
-  Object.assign(Pl, { lv: 1, xp: 0, hp: 120, mp: 60, sta: 100, rage: 0, gold: 0, pots: 3, swordLv: 0, bodyLv: 0, qiLv: 0, perks: {}, state: 'free', st: 0, combo: 0, comboT: 0, buf: 0, bufH: 0, iframe: 0, staDelay: 0, cds: [0, 0, 0, 0], potCd: 0, lock: null, hits: 0, hitT: 0, shield: 0, shieldT: 0, buffT: 0, combatT: 0, hurtV: 0, speedN: 0, atkDef: null, hitSet: new Set(), kx: 0, kz: 0, yaw: PI, deadT: 0, tick: 0, pending: 0, parries: 0, execT: null, execE: null, flashE: null, perfectT: 0, perfectSrc: null, charged: false, flickAcc: 0, flickCd: 0 });
+  Object.assign(Pl, { lv: 1, xp: 0, hp: 120, mp: 60, sta: 100, rage: 0, gold: 0, pots: 3, swordLv: 0, bodyLv: 0, qiLv: 0, perks: {}, state: 'free', st: 0, combo: 0, comboT: 0, buf: 0, bufH: 0, iframe: 0, staDelay: 0, cds: [0, 0, 0, 0], potCd: 0, lock: null, hits: 0, hitT: 0, shield: 0, shieldT: 0, buffT: 0, combatT: 0, hurtV: 0, speedN: 0, atkDef: null, hitSet: new Set(), kx: 0, kz: 0, yaw: PI, deadT: 0, tick: 0, pending: 0, parries: 0, execT: null, execE: null, flashE: null, perfectT: 0, perfectSrc: null, charged: false, flickAcc: 0, flickCd: 0, boltN: 0, slots: ['qi', null, null], ult: null, skLv: { qi: 1 }, cdMax: [1, 1, 1, 1], bellT: 0, wuyingT: 0, nextCrit: 0, reviveUsed: false });
   Pl.pos.set(0, 0, 9); Pl.vel.set(0, 0, 0); recalc(); Pl.hp = Pl.maxHp; Pl.mp = Pl.maxMp; setSwordTier();
 }
 const pk = k => Pl.perks[k] || 0;
 function recalc() {
   Pl.atk = (20 + 2.2 * (Pl.lv - 1)) * (1 + .13 * Pl.swordLv) * (1 + .15 * pk('atk'));
-  Pl.maxHp = Math.round(120 + 6 * (Pl.lv - 1) + 30 * pk('hp') + 28 * Pl.bodyLv); Pl.maxMp = 60 + 20 * pk('mp') + 22 * Pl.qiLv; Pl.maxSta = 100;
+  Pl.maxHp = Math.round((120 + 6 * (Pl.lv - 1) + 30 * pk('hp') + 28 * Pl.bodyLv) * (reso('gen') >= 3 ? 1.15 : 1)); Pl.maxMp = 60 + 20 * pk('mp') + 22 * Pl.qiLv; Pl.maxSta = 100;
   Pl.crit = .08 + .08 * pk('crit'); Pl.critD = 1.7 + .35 * pk('critd'); Pl.aspd = 1 + .1 * pk('aspd'); Pl.mspd = 1 + .08 * pk('mspd'); Pl.cdr = Math.pow(.87, pk('cdr')); Pl.mpRegen = (2.4 + .5 * Pl.qiLv) * (1 + .5 * pk('mp'));
   Pl.xpNeed = Math.round(34 + 30 * (Pl.lv - 1) + 9 * Math.pow(Pl.lv - 1, 1.6));
 }
@@ -54,7 +51,7 @@ function startAttack(def) {
   Pl.yawT = want; Snd.swing(def.slam || def.spin ? 1 : 0);
 }
 function tryDodge() {
-  const cost = 22 * (1 - .2 * pk('mspd')); if (Pl.sta < cost) { UI.toast('体力不济'); return false; }
+  const cost = 22 * (1 - .2 * pk('mspd')) * (reso('shen') >= 3 ? .7 : 1); if (Pl.sta < cost) { UI.toast('体力不济'); return false; }
   Pl.sta -= cost; Pl.staDelay = .7; Pl.state = 'dodge'; Pl.st = 0; Pl.iframe = .36; Pl.perfect = false;
   Pl.dodgeYaw = Pl.moveMag > .3 ? Pl.moveYaw : Pl.yaw + PI; Pl.yawT = Pl.moveMag > .3 ? Pl.moveYaw : Pl.yaw; Snd.dodge(); FX.dust(Pl.pos, 5, .5); return true;
 }
@@ -68,7 +65,9 @@ function startParry() {
 function onDeflect(src, sx, sz, o) {
   const ax = sx - Pl.pos.x, az = sz - Pl.pos.z, d = Math.hypot(ax, az) || 1; Pl.yawT = Math.atan2(ax, az);
   if (Pl.state !== 'deflect' || Pl.st > .05) { Pl.state = 'deflect'; Pl.st = 0; }
-  Pl.sta = Math.min(Pl.maxSta, Pl.sta + 20); Pl.mp = Math.min(Pl.maxMp, Pl.mp + 8); Pl.combatT = 3; Pl.parries++;
+  Pl.sta = Math.min(Pl.maxSta, Pl.sta + 20); Pl.mp = Math.min(Pl.maxMp, Pl.mp + 8); Pl.combatT = 3; Pl.parries++; gainRage(8); if (pk('huifeng')) Pl.nextCrit = 3;
+  if (o.proj && pk('jieli')) Pl.mp = Math.min(Pl.maxMp, Pl.mp + 10);
+  if (reso('yi') >= 6) { FX.ring(Pl.pos, .4, 4.4, swordTier().trail, .3); for (const e of G.enemies) if (e.state !== 'dead' && e !== src && Math.hypot(e.pos.x - Pl.pos.x, e.pos.z - Pl.pos.z) < 4.4 + e.radius) playerDamage(e, 1.3, { knock: 5, poise: 2, noRage: true }); }
   const p = { x: Pl.pos.x + ax / d * .75, y: 1.3, z: Pl.pos.z + az / d * .75 };
   FX.sparks(p, 24, 0xfff2c8, 11, 2.5); FX.glint(p, 0xfff6e0, 2.2, .28); FX.ring(p, .3, 2.4, 0xfff0c8, .25, 1.3); GFX.flashAt(p, 0xfff0d0, 4);
   G.hitstop = Math.max(G.hitstop, .1); Cam.shake = Math.max(Cam.shake, .22); Snd.parry();
@@ -90,13 +89,13 @@ function startExec(e) {
 /* 处决这一刺：小卒毙命，精锐去半条命，头领掉一成二 */
 function execImpact(e) {
   if (e.state === 'dead') return;
-  const p = { x: e.pos.x, y: e.hitY, z: e.pos.z }, dmg = e.boss ? e.maxHp * .12 + Pl.atk * 3 : e.elite ? Math.max(e.maxHp * .5, Pl.atk * 6) : e.hp + 1;
+  const p = { x: e.pos.x, y: e.hitY, z: e.pos.z }, dmg = (e.boss ? e.maxHp * .12 + Pl.atk * 3 : e.elite ? Math.max(e.maxHp * .5, Pl.atk * 6) : e.hp + 1) * (1 + .3 * pk('duanyue'));
   e.stun = 0; damageEnemy(e, dmg, { crit: true, kx: Math.sin(Pl.yaw) * 3, kz: Math.cos(Pl.yaw) * 3 });
   G.dmgDone += dmg; Pl.hits++; Pl.hitT = 2.6; if (Pl.hits > G.maxCombo) G.maxCombo = Pl.hits; UI.combo(Pl.hits);
   FX.inkBurst(p, 16, 1.1); FX.sparks(p, 30, 0xff5a3a, 12, 3); FX.glow(p, 0xffffff, 4, .2); FX.decal(e.pos, 3.4);
   FX.slash({ x: Pl.pos.x, y: e.hitY, z: Pl.pos.z, yaw: Pl.yaw, roll: PI / 2, r: 3.2, arc: .45, inner: .05, color: 0xffe6c0, dur: .22, inten: 2 });
   G.hitstop = .18; Cam.shake = Math.max(Cam.shake, .55); GFX.final.uniforms.uFlash.value = .22; GFX.flashAt(p, 0xffe0c0, 6);
-  FX.num({ x: e.pos.x, y: e.hitY + .5, z: e.pos.z }, '斩', 'exec', 1.4); Snd.exec(); Pl.mp = Math.min(Pl.maxMp, Pl.mp + 15); healPlayer(Pl.maxHp * .04);
+  FX.num({ x: e.pos.x, y: e.hitY + .5, z: e.pos.z }, '斩', 'exec', 1.4); Snd.exec(); Pl.mp = Math.min(Pl.maxMp, Pl.mp + 15); healPlayer(Pl.maxHp * (.04 + .04 * pk('duanyue'))); gainRage(18);
 }
 /* 踏雪之后趁势出剑：瞬身至出手者背后一斩 */
 function startFlash(e) {
@@ -112,13 +111,16 @@ function switchLock(dir) {
   if (best) { Pl.lock = best; Snd.pick(); }
 }
 function trySkill(i) {
-  const s = SKILLS[i]; if (Pl.lv < s.lv) { UI.toast(`未至${cnNum(s.lv)}境，难悟「${s.name}」`); return; }
+  const s = slotDef(i); if (!s) { if (i < 3) UI.toast('此槽尚空 · 破境时择剑谱'); else UI.toast('尚未悟得绝学'); return; }
   if (Pl.cds[i] > 0) return;
   if (i === 3) { if (Pl.rage < 100) { UI.toast('剑意未满'); return; } Pl.rage = 0; }
   else if (Pl.mp < s.mp) { UI.toast('内力不继'); return; }
-  Pl.mp -= s.mp; Pl.cds[i] = s.cd * Pl.cdr; Pl.cdMax = Pl.cdMax || [1, 1, 1, 1]; Pl.cdMax[i] = Pl.cds[i]; Pl.combatT = 3; Pl.st = 0; Pl.tick = 0; Pl.fired = false; Pl.hitSet.clear(); Snd.skill();
-  const tg = pickTarget(Pl.yaw, 22, 1.2); if (tg && i !== 1) Pl.yawT = Pl.yaw = Math.atan2(tg.pos.x - Pl.pos.x, tg.pos.z - Pl.pos.z);
-  if (i === 0) Pl.state = 'castQ'; else if (i === 1) Pl.state = 'whirl'; else if (i === 2) Pl.state = 'castR'; else { Pl.state = 'ult'; Pl.iframe = 3.2; G.enemyTS = .12; G.slowT = 2.7; UI.banner('万剑归宗', '', 'gold'); Snd.gong(); }
+  else { Pl.mp -= s.mp; Pl.cds[i] = s.cd * Pl.cdr; Pl.cdMax[i] = Pl.cds[i]; }
+  Pl.combatT = 3; Pl.st = 0; Pl.tick = 0; Pl.fired = false; Pl.hitSet.clear(); Snd.skill();
+  const tg = Pl.lock && Pl.lock.state !== 'dead' ? Pl.lock : pickTarget(Pl.yaw, 22, 1.2); if (tg && s.st !== 'whirl') Pl.yawT = Pl.yaw = Math.atan2(tg.pos.x - Pl.pos.x, tg.pos.z - Pl.pos.z);
+  Pl.state = s.st;
+  if (s.st === 'skShadow') { Pl.tick = -1; Pl.iframe = (3 + skLv('shadow')) * .15 + .1; }
+  if (i === 3) { Pl.iframe = s.st === 'ultW' ? .6 : 3.3; if (s.st === 'ult') { G.enemyTS = .12; G.slowT = 2.7; } if (s.st === 'ultL') { G.enemyTS = .3; G.slowT = 3.1; } UI.banner(s.n, '', 'gold'); Snd.gong(); }
   FX.ring(Pl.pos, .4, 3.2, swordTier().trail, .4); FX.wisp({ x: Pl.pos.x, y: 1, z: Pl.pos.z }, swordTier().trail, 14, 2.4);
 }
 function usePotion() {
@@ -128,18 +130,20 @@ function usePotion() {
 function healPlayer(h, quiet) { const b = Pl.hp; Pl.hp = Math.min(Pl.maxHp, Pl.hp + h); const d = Math.round(Pl.hp - b); if (d >= 1 && !quiet) FX.num({ x: Pl.pos.x, y: 2, z: Pl.pos.z }, '+' + d, 'heal'); }
 
 function playerDamage(e, mult, o = {}) {
-  let dmg = Pl.atk * mult * rand(.93, 1.07); const crit = Math.random() < Pl.crit + (o.critBonus || 0); if (crit) dmg *= Pl.critD;
-  if (Pl.buffT > 0) dmg *= 1.4; if (e.slowT > 0 && pk('frost')) dmg *= 1 + .15 * pk('frost');
+  let dmg = Pl.atk * mult * rand(.93, 1.07); const crit = Pl.nextCrit > 0 && o.melee || Math.random() < Pl.crit + (o.critBonus || 0); if (crit) dmg *= Pl.critD; if (crit && o.melee) Pl.nextCrit = 0;
+  if (Pl.buffT > 0) dmg *= 1.4; if (Pl.wuyingT > 0) dmg *= 1.5; if (e.slowT > 0 && pk('frost')) dmg *= 1 + .15 * pk('frost');
   const dx = e.pos.x - Pl.pos.x, dz = e.pos.z - Pl.pos.z, d = Math.hypot(dx, dz) || 1;
   const ok = damageEnemy(e, dmg, { crit, kx: dx / d * (o.knock || 0), kz: dz / d * (o.knock || 0), poise: o.poise || 1, cls: o.cls });
   if (!ok) return false;
   G.dmgDone += dmg; Pl.hits++; Pl.hitT = 2.6; if (Pl.hits > G.maxCombo) G.maxCombo = Pl.hits; UI.combo(Pl.hits);
   if (o.melee) Pl.mp = Math.min(Pl.maxMp, Pl.mp + 1.6);
-  if (false) Pl.rage = Math.min(100, Pl.rage + (o.melee ? 2.4 : 1) * (1 + .3 * pk('rage')));
+  if (!o.noRage) gainRage(o.melee ? 2.2 : .7);
   if (pk('leech')) healPlayer(dmg * .025 * pk('leech'), true);
   if (!o.noProc) {
     if (pk('frost')) e.slowT = 2.6;
     if (pk('burn')) { e.burnT = 3; e.burnDps = Pl.atk * .22 * pk('burn'); }
+    if (crit && reso('lei') >= 3 && !pk('burn')) { e.burnT = 3; e.burnDps = Math.max(e.burnDps, Pl.atk * .2); }
+    if (reso('lei') >= 6 && o.melee && ++Pl.boltN % 6 === 0) { FX.bolt(e.pos); Snd.bolt(); for (const o2 of G.enemies) if (o2.state !== 'dead' && Math.hypot(o2.pos.x - e.pos.x, o2.pos.z - e.pos.z) < 3.4) playerDamage(o2, 1.6, { noProc: true, cls: 'bolt', knock: 2, noRage: true }); }
     if (crit && pk('thunder') && Math.random() < .2 + .12 * pk('thunder')) { FX.bolt(e.pos); Snd.bolt(); Cam.shake = Math.max(Cam.shake, .3); for (const o2 of G.enemies) if (o2.state !== 'dead' && Math.hypot(o2.pos.x - e.pos.x, o2.pos.z - e.pos.z) < 3.8) playerDamage(o2, 1.5, { noProc: true, cls: 'bolt', knock: 2 }); }
   }
   const hp = { x: e.pos.x - dx / d * e.radius * .6, y: e.hitY, z: e.pos.z - dz / d * e.radius * .6 };
@@ -152,23 +156,25 @@ function playerDamage(e, mult, o = {}) {
 function hurtPlayer(dmg, sx, sz, o = {}) {
   if (Pl.state === 'dead' || G.state !== 'playing') return false;
   // 弹反：架势初起的一瞬（以及卸剑后片刻，防同时两刀），接得住的招式全数卸开
-  if (o.parry !== false && ((Pl.state === 'parry' && Pl.st <= PARRY.win) || (Pl.state === 'deflect' && Pl.st < .14))) { onDeflect(o.src, sx, sz, o); return 'parry'; }
+  if (o.parry !== false && ((Pl.state === 'parry' && Pl.st <= PARRY.win + .05 * pk('tingfeng')) || (Pl.state === 'deflect' && Pl.st < .14) || (Pl.bellT > 0 && Pl.iframe <= 0 && Pl.state !== 'dead'))) { onDeflect(o.src, sx, sz, o); return 'parry'; }
   const guard = o.parry !== false && Pl.state === 'parry' && Pl.st <= PARRY.guard;
   if (Pl.iframe > 0) {
     if (Pl.state === 'dodge' && Pl.st < .3 && !Pl.perfect) {
-      Pl.perfect = true; G.enemyTS = .22; G.slowT = 1.1; Pl.mp = Math.min(Pl.maxMp, Pl.mp + 14); if (Pl.lv >= 6) Pl.rage = Math.min(100, Pl.rage + 10); Pl.sta = Math.min(Pl.maxSta, Pl.sta + 22); if (pk('snow')) Pl.buffT = 3 + pk('snow');
+      Pl.perfect = true; G.enemyTS = .22; G.slowT = 1.1; Pl.mp = Math.min(Pl.maxMp, Pl.mp + 14); gainRage(10); Pl.sta = Math.min(Pl.maxSta, Pl.sta + 22); if (pk('snow')) Pl.buffT = 3 + pk('snow');
       FX.num({ x: Pl.pos.x, y: 2.2, z: Pl.pos.z }, '踏雪', 'word', 1.1); Snd.perfect(); FX.ring(Pl.pos, .5, 4, 0x9ff0e0, .5); GFX.final.uniforms.uFlash.value = .12;
       if (o.src && !o.proj && o.src.state !== 'dead') { Pl.perfectSrc = o.src; Pl.perfectT = 1.2; UI.toast('趁势出剑 · 瞬斩', 1.2); }
+      if (reso('shen') >= 6) afterImage();
     }
     return false;
   }
   if (Pl.shield > 0) { Pl.shield--; Pl.shieldT = 12; Pl.iframe = .5; FX.num({ x: Pl.pos.x, y: 2.1, z: Pl.pos.z }, '真气护体', 'word', .9); FX.ring(Pl.pos, .6, 2.6, 0x62cdb9, .35); Snd.clang(); return false; }
-  const armor = Pl.state === 'whirl'; if (armor) dmg *= .5; if (guard) dmg *= .3;
+  const armor = Pl.state === 'whirl' || Pl.bellT > 0; if (armor) dmg *= .5; if (guard) dmg *= reso('yi') >= 3 ? 0 : .3;
   dmg = Math.round(dmg); Pl.hp -= dmg; Pl.iframe = .5; Pl.hurtV = guard ? .35 : 1; Pl.hits = 0; UI.combo(0); Cam.shake = Math.max(Cam.shake, (guard ? .18 : .35) + dmg * .008);
   FX.num({ x: Pl.pos.x, y: 2.1, z: Pl.pos.z }, '-' + dmg, 'hurt');
   if (guard) { Pl.sta = Math.max(0, Pl.sta - 14); Pl.staDelay = .8; Snd.block(); FX.sparks({ x: Pl.pos.x, y: 1.3, z: Pl.pos.z }, 10, 0xffd8a0, 7); FX.num({ x: Pl.pos.x, y: 2.5, z: Pl.pos.z }, '格', 'word', .7); }
   else { Snd.hurt(); FX.inkBurst({ x: Pl.pos.x, y: 1.1, z: Pl.pos.z }, 6, .7); }
   const dx = Pl.pos.x - sx, dz = Pl.pos.z - sz, d = Math.hypot(dx, dz) || 1, kb = (o.knock === undefined ? 5 : o.knock) * (guard ? .5 : 1); Pl.kx += dx / d * kb; Pl.kz += dz / d * kb;
+  if (Pl.hp <= 0 && reso('gen') >= 6 && !Pl.reviveUsed) { Pl.reviveUsed = true; Pl.hp = Math.round(Pl.maxHp * .4); Pl.iframe = 2; FX.pillar(Pl.pos, 0x8be0a0, 8); FX.ring(Pl.pos, .5, 6, 0x8be0a0, .6); UI.banner('回魂', '根基深厚，一口气续上', 'gold'); Snd.level(); G.enemyTS = .2; G.slowT = 1.2; }
   if (Pl.hp <= 0) { Pl.hp = 0; Pl.state = 'dead'; Pl.st = 0; G.enemyTS = .25; G.slowT = 99; Game.onDeath(); return true; }
   if (!armor && !guard && Pl.state !== 'ult') { Pl.state = 'hurt'; Pl.st = 0; }
   return true;
@@ -177,6 +183,7 @@ function hurtPlayer(dmg, sx, sz, o = {}) {
 function updatePlayer(dt) {
   const rig = Pl.rig; Pl.st += dt; Pl.iframe -= dt; Pl.combatT -= dt; Pl.potCd -= dt; Pl.buffT -= dt; Pl.hurtV = Math.max(0, Pl.hurtV - dt * 2.2);
   for (let i = 0; i < 4; i++) Pl.cds[i] = Math.max(0, Pl.cds[i] - dt);
+  Pl.bellT -= dt; Pl.wuyingT -= dt; Pl.nextCrit -= dt; bellFx(Pl.bellT > 0 && Pl.state !== 'dead', G.t);
   if (Pl.hitT > 0) { Pl.hitT -= dt; if (Pl.hitT <= 0) { Pl.hits = 0; UI.combo(0); } }
   if (Pl.state !== 'dead') {
     Pl.mp = Math.min(Pl.maxMp, Pl.mp + Pl.mpRegen * dt); Pl.staDelay -= dt; if (Pl.staDelay <= 0) Pl.sta = Math.min(Pl.maxSta, Pl.sta + 30 * dt);
@@ -190,7 +197,7 @@ function updatePlayer(dt) {
   const wantDodge = Input.hit('Space') || Input.hit('KeyL'), wantParry = Input.hit('KeyF');
   const busy = Pl.state === 'exec' || Pl.state === 'flash';
   const canAct = Pl.state === 'free' || Pl.state === 'deflect' || (Pl.state === 'attack' && Pl.st / (Pl.atkDef.dur / Pl.aspd) > Pl.atkDef.cancel);
-  const alive = Pl.state !== 'dead' && Pl.state !== 'ult';
+  const alive = Pl.state !== 'dead' && Pl.state !== 'ult' && Pl.state !== 'ultL' && Pl.state !== 'skShadow';
   Pl.perfectT -= dt; Pl.flickCd -= dt; Pl.execT = alive && !busy ? findExec() : null;
   if (alive && !busy) {
     if (Input.hit('KeyC')) usePotion();
@@ -204,6 +211,7 @@ function updatePlayer(dt) {
     else if (Pl.buf > 0 && Pl.perfectT > 0 && Pl.perfectSrc && Pl.perfectSrc.state !== 'dead' && (Pl.state === 'free' || Pl.state === 'dodge')) startFlash(Pl.perfectSrc);
     else if (canAct || (Pl.state === 'attack' && Pl.st > .12)) {
       if (Input.hit('KeyQ') || Input.hit('Digit1') || Input.hit('Sk0')) trySkill(0); else if (Input.hit('KeyE') || Input.hit('Digit2') || Input.hit('Sk1')) trySkill(1);
+      else if (Input.hit('KeyR') || Input.hit('Digit3') || Input.hit('Sk2')) trySkill(2); else if (Input.hit('KeyV') || Input.hit('Digit4') || Input.hit('Sk3')) trySkill(3);
     }
     if (canAct && (Pl.state === 'free' || Pl.state === 'attack' || Pl.state === 'deflect')) {
       if (Pl.bufH > 0) { if (Pl.sta >= HEAVY.sta) { Pl.state = 'charge'; Pl.st = 0; Pl.charged = false; Pl.bufH = 0; Pl.buf = 0; Pl.combatT = 3; } else { Pl.bufH = 0; UI.toast('体力不济'); } }
@@ -222,7 +230,7 @@ function updatePlayer(dt) {
     const d = Pl.atkDef, dur = d.dur / Pl.aspd, u = Pl.st / dur; action = { name: d.anim, u: Math.min(1, u), w: d.w, a: d.a }; rate = 34; Pl.yaw = dampAng(Pl.yaw, Pl.yawT, 22, dt);
     const l0 = d.slam ? .06 : d.w * .5, l1 = d.slam ? (d.w + d.a) * .5 : d.a * .9, lv = u > l0 && u < l1 ? Pl.lungeD / ((l1 - l0) * dur) : 0;
     Pl.vel.x = Math.sin(Pl.yaw) * lv; Pl.vel.z = Math.cos(Pl.yaw) * lv; trailOn = u > d.w - .08 && u < d.a + .1; Pl.attackActive = u >= d.w && u <= d.a;
-    if (!Pl.atkFx && u >= d.w && !d.slam) { Pl.atkFx = true; if (d.anim === 'thrust') { FX.slash({ x: Pl.pos.x + Math.sin(Pl.yaw) * 1.4, y: 1.3, z: Pl.pos.z + Math.cos(Pl.yaw) * 1.4, yaw: Pl.yaw, roll: PI / 2, r: 2.9, arc: .5, inner: .1, color: tier.trail, dur: .2, inten: 1.3 }); } else FX.slash({ x: Pl.pos.x, y: d.spin ? 1.15 : 1.25, z: Pl.pos.z, yaw: Pl.yaw + (d.spin ? PI : 0), roll: d.roll || 0, dir: d.dir || 1, r: d.range * .98, arc: d.spin ? TAU * .98 : d.arc, color: tier.trail, dur: d.spin ? .3 : .2, follow: Pl.pos }); }
+    if (!Pl.atkFx && u >= d.w && !d.slam) { Pl.atkFx = true; if (reso('qi') >= 6 && !d.spin) spawnWave(Pl.yaw, .7); if (d.anim === 'thrust') { FX.slash({ x: Pl.pos.x + Math.sin(Pl.yaw) * 1.4, y: 1.3, z: Pl.pos.z + Math.cos(Pl.yaw) * 1.4, yaw: Pl.yaw, roll: PI / 2, r: 2.9, arc: .5, inner: .1, color: tier.trail, dur: .2, inten: 1.3 }); } else FX.slash({ x: Pl.pos.x, y: d.spin ? 1.15 : 1.25, z: Pl.pos.z, yaw: Pl.yaw + (d.spin ? PI : 0), roll: d.roll || 0, dir: d.dir || 1, r: d.range * .98, arc: d.spin ? TAU * .98 : d.arc, color: tier.trail, dur: d.spin ? .3 : .2, follow: Pl.pos }); }
     if (d.slam) {
       const land = (d.w + d.a) * .5;
       if (!Pl.slamDone && u >= land) {
@@ -249,19 +257,19 @@ function updatePlayer(dt) {
     if (u >= 1) { Pl.state = 'free'; if (Pl.buf > 0) { startAttack(ATK[2]); Pl.combo = 3; } }
   } else if (Pl.state === 'castQ') {
     const dur = .36, u = Pl.st / dur; action = { name: 'sweepRL', u: Math.min(1, u), w: .25, a: .6 }; rate = 36; Pl.vel.x *= .8; Pl.vel.z *= .8; trailOn = true;
-    if (!Pl.fired && u >= .3) { Pl.fired = true; const n = 1 + 2 * pk('split'); for (let i = 0; i < n; i++) spawnWave(Pl.yaw + (i - (n - 1) / 2) * .24, 2.3); FX.slash({ x: Pl.pos.x, y: 1.25, z: Pl.pos.z, yaw: Pl.yaw, roll: .1, r: 3.4, arc: 2.9, color: tier.trail, dur: .22, inten: 1.4 }); Snd.swing(1); Cam.shake = Math.max(Cam.shake, .14); }
+    if (!Pl.fired && u >= .3) { Pl.fired = true; const n = Math.min(11, 1 + 2 * (skLv('qi') - 1) + 2 * pk('split')); for (let i = 0; i < n; i++) spawnWave(Pl.yaw + (i - (n - 1) / 2) * .24, 2.3); FX.slash({ x: Pl.pos.x, y: 1.25, z: Pl.pos.z, yaw: Pl.yaw, roll: .1, r: 3.4, arc: 2.9, color: tier.trail, dur: .22, inten: 1.4 }); Snd.swing(1); Cam.shake = Math.max(Cam.shake, .14); }
     if (u >= 1) Pl.state = 'free';
   } else if (Pl.state === 'whirl') {
-    const dur = 1.3; action = { name: 'whirl', u: 0 }; rate = 30; trailOn = true; const sp = 5 * Pl.mspd * mag; Pl.vel.x = damp(Pl.vel.x, mx * sp, 10, dt); Pl.vel.z = damp(Pl.vel.z, mz * sp, 10, dt); Pl.tick -= dt;
+    const dur = 1.3 + .3 * (skLv('whirl') - 1); action = { name: 'whirl', u: 0 }; rate = 30; trailOn = true; const sp = 5 * Pl.mspd * mag; Pl.vel.x = damp(Pl.vel.x, mx * sp, 10, dt); Pl.vel.z = damp(Pl.vel.z, mz * sp, 10, dt); Pl.tick -= dt;
     if (Pl.tick <= 0) {
       Pl.tick = .15; let any = false; FX.slash({ x: Pl.pos.x, y: rand(.9, 1.5), z: Pl.pos.z, yaw: rand(TAU), roll: rand(-.25, .25), r: 4.3, arc: 4.2, color: tier.trail, dur: .24, follow: Pl.pos, inten: .9 }); Snd.swing(0);
       for (const e of G.enemies) { if (e.state === 'dead') continue; const dx = e.pos.x - Pl.pos.x, dz = e.pos.z - Pl.pos.z, dd = Math.hypot(dx, dz); if (dd < 4.5 + e.radius) { any = playerDamage(e, .55, { melee: true, knock: e.boss ? 0 : -1.6, poise: .7, shake: .06 }) || any; } }
       if (any) Snd.hit(0);
     }
-    if (Pl.st >= dur) { Pl.state = 'free'; FX.ring(Pl.pos, 1, 6, tier.trail, .45); Cam.shake = Math.max(Cam.shake, .3); Snd.boom(); for (const e of G.enemies) if (e.state !== 'dead' && Math.hypot(e.pos.x - Pl.pos.x, e.pos.z - Pl.pos.z) < 5.4 + e.radius) playerDamage(e, 1.6, { knock: 8, poise: 3, stop: .08 }); }
+    if (Pl.st >= dur) { Pl.state = 'free'; FX.ring(Pl.pos, 1, 6, tier.trail, .45); Cam.shake = Math.max(Cam.shake, .3); Snd.boom(); for (const e of G.enemies) if (e.state !== 'dead' && Math.hypot(e.pos.x - Pl.pos.x, e.pos.z - Pl.pos.z) < 5.4 + e.radius) playerDamage(e, 1.6 * (1 + .3 * (skLv('whirl') - 1)), { knock: 8, poise: 3, stop: .08 }); }
   } else if (Pl.state === 'castR') {
     const dur = .5, u = Pl.st / dur; action = { name: 'summon', u: Math.min(1, u) }; rate = 26; Pl.vel.x *= .8; Pl.vel.z *= .8;
-    if (!Pl.fired && u >= .25) { Pl.fired = true; const n = 5 + 3 * pk('fly'); for (let i = 0; i < n; i++) spawnProj({ kind: 'fly', x: Pl.pos.x, y: 1.6, z: Pl.pos.z, ang: i / n * TAU, delay: .45 + i * .08, life: 4, dmg: 1.5 }); }
+    if (!Pl.fired && u >= .25) { Pl.fired = true; const n = 5 + 2 * (skLv('fly') - 1); for (let i = 0; i < n; i++) spawnProj({ kind: 'fly', x: Pl.pos.x, y: 1.6, z: Pl.pos.z, ang: i / n * TAU, delay: .45 + i * .08, life: 4, dmg: 1.5 }); }
     if (u >= 1) Pl.state = 'free';
   } else if (Pl.state === 'ult') {
     const dur = 2.9, u = Pl.st / dur; action = { name: 'ult', u: Math.min(1, u) }; rate = 20; Pl.vel.x = Pl.vel.z = 0; Pl.tick -= dt; Cam.distT = 11.5;
@@ -272,6 +280,7 @@ function updatePlayer(dt) {
     if (Math.random() < .5) FX.wisp({ x: Pl.pos.x, y: 1.2 + (rig.P.rootY || 0), z: Pl.pos.z }, tier.trail, 2, 2.5);
     if (!Pl.fired && u >= .9) { Pl.fired = true; FX.ring(Pl.pos, 1, 15, tier.trail, .6); FX.ring(Pl.pos, .5, 9, 0xffffff, .4); FX.dust(Pl.pos, 30, 2.5); Cam.shake = .8; Snd.boom(); GFX.final.uniforms.uFlash.value = .35; GFX.flashAt(Pl.pos, 0xffffff, 8); for (const e of G.enemies) if (e.state !== 'dead' && Math.hypot(e.pos.x - Pl.pos.x, e.pos.z - Pl.pos.z) < 14) playerDamage(e, 5 * (1 + .25 * pk('rage')), { knock: 9, poise: 8, noRage: true }); }
     if (u >= 1) { Pl.state = 'free'; Pl.iframe = .5; Cam.distT = 7.4; }
+  } else if (SKST[Pl.state]) { [action, rate, trailOn] = SKST[Pl.state](dt, tier);
   } else if (Pl.state === 'parry') {
     action = { name: 'parry', u: Math.min(1, Pl.st / (PARRY.guard + PARRY.rec)) }; rate = 34; Pl.vel.x *= .7; Pl.vel.z *= .7; Pl.yaw = dampAng(Pl.yaw, Pl.yawT, 18, dt);
     if (Pl.st >= PARRY.guard + PARRY.rec) Pl.state = 'free';
@@ -295,13 +304,13 @@ function updatePlayer(dt) {
     if (e.state !== 'dead') Pl.yaw = dampAng(Pl.yaw, Math.atan2(e.pos.x - Pl.pos.x, e.pos.z - Pl.pos.z), 20, dt);
     if (!Pl.fired && u >= .2) {
       Pl.fired = true; FX.slash({ x: Pl.pos.x, y: 1.25, z: Pl.pos.z, yaw: Pl.yaw, roll: .1, r: 3.8, arc: 3.0, color: 0xffffff, dur: .22, inten: 1.6, follow: Pl.pos }); let any = false;
-      for (const o of G.enemies) { if (o.state === 'dead') continue; const dx = o.pos.x - Pl.pos.x, dz = o.pos.z - Pl.pos.z, dd = Math.hypot(dx, dz); if (dd > 3.8 + o.radius || (dd > o.radius + .6 && Math.abs(angDiff(Pl.yaw, Math.atan2(dx, dz))) > 1.6)) continue; any = playerDamage(o, o === e ? 2.8 : 1.4, { melee: true, critBonus: 1, knock: 4, poise: 4, stop: .12, shake: .3 }) || any; }
+      for (const o of G.enemies) { if (o.state === 'dead') continue; const dx = o.pos.x - Pl.pos.x, dz = o.pos.z - Pl.pos.z, dd = Math.hypot(dx, dz); if (dd > 3.8 + o.radius || (dd > o.radius + .6 && Math.abs(angDiff(Pl.yaw, Math.atan2(dx, dz))) > 1.6)) continue; any = playerDamage(o, (o === e ? 2.8 : 1.4) * (1 + .3 * pk('youshen')), { melee: true, critBonus: 1, knock: 4, poise: 4, stop: .12, shake: .3 }) || any; }
       if (any) Snd.hit(1);
     }
     if (u >= 1) Pl.state = 'free';
   } else if (Pl.state === 'hurt') { Pl.vel.x *= .85; Pl.vel.z *= .85; rate = 26; if (Pl.st > .24) Pl.state = 'free'; }
   else if (Pl.state === 'dead') { Pl.vel.x = Pl.vel.z = 0; Pl.deadT += dt; }
-  if (Pl.state !== 'ult') Cam.distT = sprint ? 8.2 : 7.4;
+  if (Pl.state !== 'ult' && Pl.state !== 'ultL') Cam.distT = sprint ? 8.2 : 7.4;
   // 位移
   Pl.pos.x += (Pl.vel.x + Pl.kx) * dt; Pl.pos.z += (Pl.vel.z + Pl.kz) * dt; const kd = Math.exp(-9 * dt); Pl.kx *= kd; Pl.kz *= kd; collide(Pl.pos, .42);
   for (const e of G.enemies) { if (e.state === 'dead' || Pl.state === 'dodge' || e.ghost) continue; const dx = Pl.pos.x - e.pos.x, dz = Pl.pos.z - e.pos.z, d = Math.hypot(dx, dz), rr = e.radius + .4; if (d < rr && d > .001) { const k = (rr - d) / d * (e.boss ? 1 : .5); Pl.pos.x += dx * k; Pl.pos.z += dz * k; } }

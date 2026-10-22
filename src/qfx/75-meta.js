@@ -15,13 +15,13 @@ const Save = {
   snapRun() {
     const d = this.load();
     d.run = { ch: G.chapter, lv: Pl.lv, xp: Pl.xp, gold: Math.floor(Pl.gold), pots: Pl.pots, swordLv: Pl.swordLv, bodyLv: Pl.bodyLv, qiLv: Pl.qiLv, perks: Object.assign({}, Pl.perks),
-      playT: G.playT, kills: G.kills, dmg: Math.round(G.dmgDone), maxCombo: G.maxCombo };
+      slots: Pl.slots.slice(), ult: Pl.ult, skLv: Object.assign({}, Pl.skLv), rage: Math.round(Pl.rage), playT: G.playT, kills: G.kills, dmg: Math.round(G.dmgDone), maxCombo: G.maxCombo };
     this.write();
   },
   run() { return this.load().run; },
   clearRun() { this.load().run = null; this.write(); },
   applyRun(r) {
-    Object.assign(Pl, { lv: r.lv, xp: r.xp, gold: r.gold, pots: r.pots, swordLv: r.swordLv, bodyLv: r.bodyLv, qiLv: r.qiLv, perks: Object.assign({}, r.perks) });
+    Object.assign(Pl, { lv: r.lv, xp: r.xp, gold: r.gold, pots: r.pots, swordLv: r.swordLv, bodyLv: r.bodyLv, qiLv: r.qiLv, perks: Object.assign({}, r.perks), slots: (r.slots || ['qi', null, null]).slice(), ult: r.ult || null, skLv: Object.assign({}, r.skLv || { qi: 1 }), rage: r.rage || 0 });
     recalc(); Pl.hp = Pl.maxHp; Pl.mp = Pl.maxMp; Pl.shield = pk('shield') ? 1 : 0; setSwordTier();
     Object.assign(G, { playT: r.playT, kills: r.kills, dmgDone: r.dmg, maxCombo: r.maxCombo });
   },

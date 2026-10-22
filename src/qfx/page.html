@@ -81,6 +81,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .sk.locked .g{color:var(--dim);opacity:.4}.sk.locked::after{content:attr(data-lock);position:absolute;inset:0;display:grid;place-items:center;
   font-size:11px;color:var(--paper2);background:rgba(5,7,8,.55);border-radius:50%}
 .sk.nomp .g{color:var(--dim)}
+.sk.empty .g{color:var(--dim);opacity:.35;font-size:22px}.sk.empty .n{opacity:.5}.sk.ult.empty .ring{opacity:.25}
 .sk.ult{width:70px;height:70px}.sk.ult .g{font-size:36px;color:var(--gold)}
 .sk.ult .ring{position:absolute;inset:-7px;border-radius:50%;
   background:conic-gradient(var(--gold) calc(var(--rage,0)*360deg),rgba(220,174,85,.14) 0);
@@ -166,6 +167,10 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .card .ck{border:1px solid #6b6352;padding:0 7px;font-size:11px}
 .card .rs{position:absolute;right:14px;top:16px;width:30px;height:30px;display:grid;place-items:center;color:#efe6d1;font-weight:900;font-size:16px;background:#6b6352}
 .card.r2 .rs{background:var(--jade2)}.card.r3 .rs{background:var(--cinnabar)}
+.card .cr{font-size:11.5px;line-height:1.5;color:#5d5444;border-top:1px dashed rgba(107,99,82,.45);padding-top:6px}
+.card.skill{background:linear-gradient(180deg,#e3ece4,#c9d8cc)}.card.skill .rs{background:var(--jade2);font-family:var(--f-brush);font-weight:400;font-size:20px}
+.card.ult{background:linear-gradient(180deg,#f3e2b8,#dcc184)}.card.ult .rs{background:#8a5a12}.card.ult .cn{color:#5a3608}
+.pk-sk{color:var(--jade)!important}.pk-ult{color:var(--gold)!important}
 .shopgrid{display:grid;grid-template-columns:repeat(2,minmax(0,300px));gap:12px;max-width:100%}
 .item{background:rgba(22,27,32,.92);border:1px solid rgba(185,162,106,.45);padding:13px 15px;text-align:left;display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:center}
 .item:hover:not(:disabled){border-color:var(--gold);background:var(--ink3)}
@@ -246,7 +251,9 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="skills" id="skills">
       <button class="sk pot" id="sk4" type="button"><span class="g">丹</span><span class="cd"></span><span class="c" id="pots">3</span><span class="k">C</span><span class="n">回春丹</span></button>
       <button class="sk" id="sk0" type="button"><span class="g">气</span><span class="cd"></span><span class="k">Q</span><span class="n">剑气纵横</span></button>
-      <button class="sk" id="sk1" type="button" data-lock="二境"><span class="g">风</span><span class="cd"></span><span class="k">E</span><span class="n">回风落雁</span></button>
+      <button class="sk" id="sk1" type="button"><span class="g">空</span><span class="cd"></span><span class="k">E</span><span class="n">空槽</span></button>
+      <button class="sk" id="sk2" type="button"><span class="g">空</span><span class="cd"></span><span class="k">R</span><span class="n">空槽</span></button>
+      <button class="sk ult" id="sk3" type="button"><span class="ring"></span><span class="g">绝</span><span class="cd"></span><span class="k">V</span><span class="n">绝学</span></button>
     </div>
     <div class="xp"><i id="xpFill"></i></div>
     <div class="hint" id="hint">
@@ -284,7 +291,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
         <kbd>左键 / J</kbd><span>轻剑四连</span><kbd>右键 / K</kbd><span>重剑·旋风斩</span>
         <kbd>F</kbd><span>弹反（敌刃金光时）· 破绽处决</span><kbd>按住 K</kbd><span>蓄满·破山</span>
         <kbd>空格 / L</kbd><span>闪避（贴刃即踏雪）</span><kbd>Shift</kbd><span>疾行</span>
-        <kbd>Q</kbd><span>剑气纵横</span><kbd>E</kbd><span>回风落雁（二境方悟）</span>
+        <kbd>Q E R</kbd><span>三槽剑技（破境择剑谱）</span><kbd>V</kbd><span>绝学（剑意满时）</span>
         <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定（← → 换人）</span>
         <kbd>← →</kbd><span>键盘转视角</span><kbd>P · M</kbd><span>暂停 · 静音</span>
       </div>

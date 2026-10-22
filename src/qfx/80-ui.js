@@ -12,8 +12,11 @@ const UI = {
     if (this.toastT > 0) { this.toastT -= dt; if (this.toastT <= 0) $('toast').classList.remove('show'); }
     this.bar('hpFill', Pl.hp / Pl.maxHp); this.bar('hpLag', Pl.hp / Pl.maxHp); this.set('hpTxt', Math.ceil(Pl.hp) + ' / ' + Pl.maxHp); this.bar('mpFill', Pl.mp / Pl.maxMp); this.bar('staFill', Pl.sta / Pl.maxSta);
     this.cls('hpBar', 'shield', Pl.shield > 0); this.set('lvNum', cnNum(Pl.lv)); this.set('gold', Math.floor(Pl.gold)); this.set('swName', swordTier().name + (Pl.swordLv ? ' · ' + cnNum(Pl.swordLv) + '重' : '')); this.set('pots', Pl.pots);
-    this.set('buffs', (Pl.buffT > 0 ? '踏雪 ' : '') + (Pl.shield > 0 ? '真气 ' : '')); this.bar('xpFill', Pl.xp / Pl.xpNeed);
-    for (let i = 0; i < SKILLS.length; i++) { const s = SKILLS[i], id = 'sk' + i, locked = Pl.lv < s.lv; this.cls(id, 'locked', locked); const cd = locked ? 0 : Pl.cds[i] / ((Pl.cdMax && Pl.cdMax[i]) || s.cd); const k = id + '.cd', v = Math.round(cd * 100) / 100; if (this.c[k] !== v) { this.c[k] = v; $(id).style.setProperty('--cd', v); } this.cls(id, 'nomp', !locked && Pl.mp < s.mp); }
+    this.set('buffs', (Pl.buffT > 0 ? '踏雪 ' : '') + (Pl.shield > 0 ? '真气 ' : '') + (Pl.bellT > 0 ? '金钟 ' : '') + (Pl.wuyingT > 0 ? '无影 ' : '') + (Pl.nextCrit > 0 ? '回锋 ' : '')); this.bar('xpFill', Pl.xp / Pl.xpNeed);
+    for (let i = 0; i < 4; i++) { const d = slotDef(i), id = 'sk' + i, empty = !d; this.cls(id, 'empty', empty); if (this.c[id + '.d'] !== d) { this.c[id + '.d'] = d; const b = $(id); b.querySelector('.g').textContent = d ? d.g : i === 3 ? '绝' : '空'; b.querySelector('.n').textContent = d ? d.n + (i < 3 && skLv(Pl.slots[i]) > 1 ? ' · ' + cnNum(skLv(Pl.slots[i])) + '重' : '') : i === 3 ? '绝学' : '空槽'; }
+      if (i < 3) { const lvk = id + '.l', lv = d ? skLv(Pl.slots[i]) : 0; if (this.c[lvk] !== lv) { this.c[lvk] = lv; this.c[id + '.d'] = null; } }
+      const cd = empty ? 0 : i === 3 ? 0 : Pl.cds[i] / (Pl.cdMax[i] || d.cd), k = id + '.cd', v = Math.round(cd * 100) / 100; if (this.c[k] !== v) { this.c[k] = v; $(id).style.setProperty('--cd', v); } this.cls(id, 'nomp', !empty && i < 3 && Pl.mp < d.mp); }
+    { const v = Math.round(Pl.rage) / 100; if (this.c.rage !== v) { this.c.rage = v; $('sk3').style.setProperty('--rage', v); } this.cls('sk3', 'ready', !!Pl.ult && Pl.rage >= 100); }
     { const v = Math.round(sat(Pl.potCd / 1.5) * 100) / 100; if (this.c.potcd !== v) { this.c.potcd = v; $('sk4').style.setProperty('--cd', v); } }
     const alive = G.enemies.filter(e => e.state !== 'dead').length + G.queue.length;
     let t1, t2; const ch = CHAPTERS[G.chapter] || CHAPTERS[0];
@@ -42,11 +45,21 @@ const UI = {
     for (const h of G.hazards) { if (!h.tele) continue; p = P(h.x, h.z); g.strokeStyle = '#ff3a22'; g.beginPath(); g.arc(p[0], p[1], h.r * k, 0, TAU); g.stroke(); }
     const a = angDiff(yaw, Pl.yaw); g.translate(c, c); g.rotate(-a); g.fillStyle = '#62cdb9'; g.beginPath(); g.moveTo(0, -11); g.lineTo(7, 8); g.lineTo(0, 4); g.lineTo(-7, 8); g.closePath(); g.fill(); g.restore();
   },
-  perkList(el) { const html = PERKS.filter(p => pk(p.id)).map(p => `<span>${p.n}${pk(p.id) > 1 ? ' ' + cnNum(pk(p.id)) + '重' : ''}</span>`).join(''); $(el).innerHTML = html || '<span>尚无机缘</span>'; },
+  perkList(el) {
+    const sk = Pl.slots.filter(Boolean).map(id => `<span class="pk-sk">${SK[id].n}${skLv(id) > 1 ? ' ' + cnNum(skLv(id)) + '重' : ''}</span>`).concat(Pl.ult ? [`<span class="pk-ult">${ULT[Pl.ult].n}</span>`] : []);
+    const rs = Object.keys(SCHOOLS).filter(s => reso(s) >= 3).map(s => `<span class="pk-rs" style="color:${SCHOOLS[s].c}">${SCHOOLS[s].n}共鸣 ${reso(s) >= 6 ? '六' : '三'}重</span>`);
+    const html = sk.concat(rs, PERKS.filter(p => pk(p.id)).map(p => `<span>${p.n}${pk(p.id) > 1 ? ' ' + cnNum(pk(p.id)) + '重' : ''}</span>`)).join(''); $(el).innerHTML = html || '<span>尚无机缘</span>'; },
+  cardHtml(c, i) {
+    if (c.k === 'perk') { const p = c.p, S = SCHOOLS[p.s], r = reso(p.s), nx = r + 1, tip = r < 3 && nx >= 3 ? `共鸣三重：${S.r3}` : r < 6 && nx >= 6 ? `共鸣六重：${S.r6}` : `${S.n} ${r} → ${nx} 重`;
+      return [`card r${p.r}`, `<span class="rs">${['', '凡', '珍', '绝'][p.r]}</span><span class="ct" style="color:${S.c}">机缘 · ${S.n}</span><span class="cn">${p.n}</span><span class="cdsc">${p.d}</span><span class="cr">${tip}</span><span class="cs"><span>${pk(p.id) ? '已修 ' + cnNum(pk(p.id)) + ' 重' : '初悟'} / ${cnNum(p.max)}</span><span class="ck">${i + 1}</span></span>`]; }
+    if (c.k === 'ult') { const u = ULT[c.id]; return ['card ult', `<span class="rs">绝</span><span class="ct">绝学 · V</span><span class="cn">${u.n}</span><span class="cdsc">${u.d}</span><span class="cr">剑意满时施展，只能择一门</span><span class="cs"><span>绝学</span><span class="ck">${i + 1}</span></span>`]; }
+    const d = SK[c.id], l = skLv(c.id), slot = l ? Pl.slots.indexOf(c.id) : Pl.slots.indexOf(null);
+    return ['card skill', `<span class="rs">${d.g}</span><span class="ct">剑谱 · ${'QER'[slot]}</span><span class="cn">${d.n}</span><span class="cdsc">${d.d(l + 1)}</span><span class="cr">内力 ${d.mp} · 调息 ${d.cd} 息</span><span class="cs"><span>${l ? `${cnNum(l)}重 → ${cnNum(l + 1)}重` : '新学，入' + 'QER'[slot] + '槽'}</span><span class="ck">${i + 1}</span></span>`];
+  },
   showLevelUp() {
-    const perks = offerPerks(), host = $('cards'); host.innerHTML = ''; $('luSub').textContent = `已入${cnNum(Pl.lv - Pl.pending + 1)}境 · 机缘一道，择之`;
-    perks.forEach((p, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'card r' + p.r; b.id = 'card' + i; b.innerHTML = `<span class="rs">${['', '凡', '珍', '绝'][p.r]}</span><span class="ct">机缘</span><span class="cn">${p.n}</span><span class="cdsc">${p.d}</span><span class="cs"><span>${pk(p.id) ? '已修 ' + cnNum(pk(p.id)) + ' 重' : '初悟'} / ${cnNum(p.max)}</span><span class="ck">${i + 1}</span></span>`; b.onclick = () => Game.pickPerk(p); host.appendChild(b); });
-    this.perks = perks; $('levelup').hidden = false;
+    const cards = offerCards(), host = $('cards'); host.innerHTML = ''; $('luSub').textContent = `已入${cnNum(Pl.lv - Pl.pending + 1)}境 · 择其一`;
+    cards.forEach((c, i) => { const b = document.createElement('button'), [cls, html] = this.cardHtml(c, i); b.type = 'button'; b.className = cls; b.id = 'card' + i; b.innerHTML = html; b.onclick = () => Game.pickPerk(c); host.appendChild(b); });
+    this.perks = cards; $('levelup').hidden = false;
   },
   showShop() {
     const host = $('shopGrid'); host.innerHTML = ''; $('shopGold').textContent = Math.floor(Pl.gold);

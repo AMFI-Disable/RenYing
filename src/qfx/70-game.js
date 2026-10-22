@@ -28,13 +28,13 @@ function projMesh(kind) {
   PM.orb = PM.orb || new T.MeshBasicMaterial({ color: 0xc48aff, toneMapped: false }); return new T.Mesh(sphG(.2, 10, 8), PM.orb);
 }
 function spawnProj(o) { const p = Object.assign({ t: 0, hit: new Set(), vx: 0, vy: 0, vz: 0, y: 1.2 }, o); p.mesh = projMesh(p.kind); GFX.scene.add(p.mesh); G.projs.push(p); return p; }
-function spawnWave(yaw, mult) { spawnProj({ kind: 'wave', x: Pl.pos.x + Math.sin(yaw) * .6, y: 1.15, z: Pl.pos.z + Math.cos(yaw) * .6, vx: Math.sin(yaw) * 28, vz: Math.cos(yaw) * 28, yaw, roll: rand(-.35, .35), life: .78, dmg: mult }); }
+function spawnWave(yaw, mult) { mult *= 1 + .25 * pk('jiangang') + (reso('qi') >= 3 ? .3 : 0); spawnProj({ kind: 'wave', x: Pl.pos.x + Math.sin(yaw) * .6, y: 1.15, z: Pl.pos.z + Math.cos(yaw) * .6, vx: Math.sin(yaw) * 28, vz: Math.cos(yaw) * 28, yaw, roll: rand(-.35, .35), life: .78, dmg: mult }); }
 function killProj(p) { GFX.scene.remove(p.mesh); if (p.mesh.userData.own) p.mesh.material.dispose(); if (p.mesh.userData.mat) p.mesh.userData.mat.dispose(); }
 const _pd = new V3();
 /* 弹反飞物：掉头飞回出手者（不在了就找最近的敌人），化作自己的剑气 */
 function reflectProj(p) {
   const tg = p.src && p.src.state !== 'dead' ? p.src : nearestEnemy(p.x, p.z, 30), sp = Math.max(18, Math.hypot(p.vx, p.vz) * 1.6), a = tg ? Math.atan2(tg.pos.x - p.x, tg.pos.z - p.z) : Math.atan2(-p.vx, -p.vz);
-  p.vx = Math.sin(a) * sp; p.vz = Math.cos(a) * sp; p.yaw = a; p.reflect = true; p.done = false; p.enemy = false; p.t = 0; p.life = 1.8; p.target = tg; p.turn = 6; p.dmg = 1.6 + (p.kind === 'ewave' ? .8 : 0);
+  p.vx = Math.sin(a) * sp; p.vz = Math.cos(a) * sp; p.yaw = a; p.reflect = true; p.done = false; p.enemy = false; p.t = 0; p.life = 1.8; p.target = tg; p.turn = 6; p.dmg = (1.6 + (p.kind === 'ewave' ? .8 : 0)) * (1 + pk('jieli'));
   if (p.kind === 'ewave') p.mesh.material.uniforms.uCol.value.set(swordTier().trail);
   if (p.kind === 'orb') { PM.orbR = PM.orbR || new T.MeshBasicMaterial({ color: 0xbff4ff, toneMapped: false }); p.mesh.material = PM.orbR; }
 }
@@ -96,28 +96,54 @@ function gainXp(v) {
   while (Pl.xp >= Pl.xpNeed) {
     Pl.xp -= Pl.xpNeed; Pl.lv++; recalc(); healPlayer(Pl.maxHp * .15); Pl.mp = Pl.maxMp; Pl.pending++; FX.pillar(Pl.pos, 0x62cdb9, 8); FX.ring(Pl.pos, .5, 7, 0x62cdb9, .7); Snd.level(); GFX.flashAt(Pl.pos, 0x9ff0e0, 5);
     FX.num({ x: Pl.pos.x, y: 2.5, z: Pl.pos.z }, `${cnNum(Pl.lv)}境`, 'word', 1.4);
-    const un = SKILLS.find(s => s.lv === Pl.lv); if (un) UI.toast(`悟得剑技「${un.name}」`, 3.5);
   }
 }
 
 /* ---- 机缘 ---- */
+/* s 流派：qi 剑气 · lei 雷火 · shen 身法 · yi 剑意 · gen 根基；同派机缘合计三重、六重各有共鸣 */
 const PERKS = [
-  { id: 'atk', n: '锋锐', r: 1, max: 6, d: '剑锋加锐，攻击提高 15%。' }, { id: 'aspd', n: '疾风', r: 1, max: 5, d: '剑走疾风，出剑速度提高 10%。' }, { id: 'crit', n: '洞察', r: 1, max: 5, d: '目察破绽，暴击几率提高 8%。' },
-  { id: 'critd', n: '破军', r: 2, max: 4, d: '一击破军，暴击伤害提高 35%。' }, { id: 'hp', n: '金钟', r: 1, max: 6, d: '身如金钟，生命上限 +30，并回复等量生命。' }, { id: 'leech', n: '汲魂', r: 2, max: 3, d: '剑饮敌血，造成伤害的 2.5% 化为生命。' },
-  { id: 'mspd', n: '凌波', r: 1, max: 4, d: '踏波而行，移动速度 +8%，闪避更省体力。' }, { id: 'mp', n: '归元', r: 1, max: 4, d: '气归丹田，内力上限 +20，回复加快 50%。' },
-  { id: 'wave', n: '剑气外放', r: 2, max: 3, d: '轻剑第四式「跃斩」落地，荡出一道剑气，每重多一道。' }, { id: 'thunder', n: '惊雷', r: 3, max: 3, d: '暴击时或有落雷应声而下，殃及周围敌人。' },
-  { id: 'frost', n: '寒魄', r: 2, max: 3, d: '剑附寒魄，中者迟缓；对迟缓之敌伤害 +15%。' }, { id: 'burn', n: '焚心', r: 2, max: 3, d: '命中即燃，三息之内灼烧不止。' },
-  { id: 'split', n: '分光', r: 2, max: 2, d: '「剑气纵横」多荡出两道剑气。' },
-  { id: 'cdr', n: '剑心通明', r: 2, max: 3, d: '心念一动，剑技调息缩短 13%。' }, { id: 'shield', n: '护体真气', r: 3, max: 3, d: '真气自凝成罩，每隔一阵可挡一次伤害。' },
-  { id: 'snow', n: '踏雪', r: 3, max: 2, d: '贴刃闪避成「踏雪」，数息之内伤害 +40%。' }, { id: 'wolf', n: '贪狼', r: 1, max: 3, d: '每斩一敌，回 4 点内力、2% 生命。' },
-  { id: 'gold', n: '聚宝', r: 1, max: 3, d: '财气自聚，铜钱收获 +30%，拾取范围更广。' },
+  { id: 'atk', s: 'gen', n: '锋锐', r: 1, max: 6, d: '剑锋加锐，攻击提高 15%。' }, { id: 'aspd', s: 'qi', n: '疾风', r: 1, max: 5, d: '剑走疾风，出剑速度提高 10%。' }, { id: 'crit', s: 'lei', n: '洞察', r: 1, max: 5, d: '目察破绽，暴击几率提高 8%。' },
+  { id: 'critd', s: 'lei', n: '破军', r: 2, max: 4, d: '一击破军，暴击伤害提高 35%。' }, { id: 'hp', s: 'gen', n: '金钟', r: 1, max: 6, d: '身如金钟，生命上限 +30，并回复等量生命。' }, { id: 'leech', s: 'gen', n: '汲魂', r: 2, max: 3, d: '剑饮敌血，造成伤害的 2.5% 化为生命。' },
+  { id: 'mspd', s: 'shen', n: '凌波', r: 1, max: 4, d: '踏波而行，移动速度 +8%，闪避更省体力。' }, { id: 'mp', s: 'gen', n: '归元', r: 1, max: 4, d: '气归丹田，内力上限 +20，回复加快 50%。' },
+  { id: 'wave', s: 'qi', n: '剑气外放', r: 2, max: 3, d: '轻剑末式「跃斩」与「破山」落地，荡出剑气，每重多一道。' }, { id: 'thunder', s: 'lei', n: '惊雷', r: 3, max: 3, d: '暴击时或有落雷应声而下，殃及周围敌人。' },
+  { id: 'frost', s: 'lei', n: '寒魄', r: 2, max: 3, d: '剑附寒魄，中者迟缓；对迟缓之敌伤害 +15%。' }, { id: 'burn', s: 'lei', n: '焚心', r: 2, max: 3, d: '命中即燃，三息之内灼烧不止。' },
+  { id: 'split', s: 'qi', n: '分光', r: 2, max: 2, d: '「剑气纵横」多荡出两道剑气。', need: 'qi' }, { id: 'jiangang', s: 'qi', n: '剑罡', r: 1, max: 3, d: '剑气凝罡，一切剑气伤害 +25%。' },
+  { id: 'cdr', s: 'qi', n: '剑心通明', r: 2, max: 3, d: '心念一动，剑技调息缩短 13%。' }, { id: 'shield', s: 'gen', n: '护体真气', r: 3, max: 3, d: '真气自凝成罩，每隔一阵可挡一次伤害。' },
+  { id: 'snow', s: 'shen', n: '踏雪', r: 3, max: 2, d: '贴刃闪避成「踏雪」，数息之内伤害 +40%。' }, { id: 'wolf', s: 'shen', n: '贪狼', r: 1, max: 3, d: '每斩一敌，回 4 点内力、2% 生命。' },
+  { id: 'youshen', s: 'shen', n: '游身', r: 2, max: 3, d: '踏雪判定更宽，「瞬斩」伤害 +30%。' },
+  { id: 'tingfeng', s: 'yi', n: '听风', r: 1, max: 3, d: '听风辨器，弹反时机放宽 0.05 息。' }, { id: 'huifeng', s: 'yi', n: '回锋', r: 2, max: 1, d: '弹反之后三息之内，下一剑必定暴击。' },
+  { id: 'duanyue', s: 'yi', n: '断岳', r: 2, max: 3, d: '处决伤害 +30%，处决回复的生命多 4%。' }, { id: 'jieli', s: 'yi', n: '借力', r: 1, max: 2, d: '反弹回去的飞物伤害翻倍；接住飞物回 10 点内力。' },
+  { id: 'gold', s: 'gen', n: '聚宝', r: 1, max: 3, d: '财气自聚，铜钱收获 +30%，拾取范围更广。' },
 ];
-function offerPerks() {
-  const pool = PERKS.filter(p => pk(p.id) < p.max && (!p.lv || Pl.lv >= p.lv)), out = [];
-  while (out.length < 3 && pool.length) { let tw = 0; for (const p of pool) tw += [0, 55, 32, 14][p.r]; let r = Math.random() * tw, c = pool[0]; for (const p of pool) { r -= [0, 55, 32, 14][p.r]; if (r <= 0) { c = p; break; } } out.push(c); pool.splice(pool.indexOf(c), 1); }
+const SCHOOLS = {
+  qi: { n: '剑气', c: '#62cdb9', r3: '剑气伤害 +30%', r6: '每一式轻剑都带出一道小剑气' },
+  lei: { n: '雷火', c: '#e8874f', r3: '暴击必燃', r6: '每斩六剑，引落一道天雷' },
+  shen: { n: '身法', c: '#9fc7e8', r3: '闪避省三成体力，踏雪判定更宽', r6: '踏雪时留下残影，一息后炸开' },
+  yi: { n: '剑意', c: '#dcae55', r3: '格挡不再掉血', r6: '弹反时震出一圈剑气' },
+  gen: { n: '根基', c: '#c9b48a', r3: '生命上限 +15%', r6: '每章一次，濒死回魂' },
+};
+function reso(s) { let n = 0; for (const p of PERKS) if (p.s === s) n += pk(p.id); return n; }
+const cardW = r => [0, 55, 32, 14][r];
+/* 破境三选一：机缘、剑谱、绝学混在一起。有空槽时前几次破境必出一张剑谱 */
+function offerCards() {
+  const pool = PERKS.filter(p => pk(p.id) < p.max && (!p.need || skLv(p.need))).map(p => ({ k: 'perk', p, w: cardW(p.r) }));
+  const empty = Pl.slots.includes(null), skills = [];
+  for (const id in SK) { const l = skLv(id); if (l ? l < 3 : empty) skills.push({ k: 'skill', id, w: l ? 22 : 30 }); }
+  const ults = Pl.lv >= 5 && !Pl.ult ? Object.keys(ULT).map(id => ({ k: 'ult', id, w: 20 })) : [];
+  const out = [];
+  if (empty && skills.length && (Pl.lv <= 4 || Math.random() < .5)) { const c = wpick(skills.filter(c => !skLv(c.id))); if (c) out.push(c); }
+  if (ults.length && Pl.lv >= 5 && (Pl.lv === 5 || Math.random() < .45)) out.push(wpick(ults));
+  const all = pool.concat(skills, ults).filter(c => !out.some(o => o.k === c.k && (o.id || o.p) === (c.id || c.p)));
+  while (out.length < 3 && all.length) { const c = wpick(all); out.push(c); all.splice(all.indexOf(c), 1); if (c.k === 'ult') for (let i = all.length - 1; i >= 0; i--) if (all[i].k === 'ult') all.splice(i, 1); }
   return out;
 }
-function takePerk(p) { Pl.perks[p.id] = pk(p.id) + 1; const hp0 = Pl.maxHp; recalc(); if (p.id === 'hp') Pl.hp = Math.min(Pl.maxHp, Pl.hp + 30); if (p.id === 'mp') Pl.mp = Pl.maxMp; if (p.id === 'shield') { Pl.shield = 1; } Snd.ui(); }
+function wpick(a) { let tw = 0; for (const c of a) tw += c.w; let r = Math.random() * tw; for (const c of a) { r -= c.w; if (r <= 0) return c; } return a[a.length - 1]; }
+function takeCard(c) {
+  if (c.k !== 'perk') { learnSkill(c.id); Snd.ui(); return; }
+  const p = c.p, s0 = reso(p.s); takePerk(p); const s1 = reso(p.s), S = SCHOOLS[p.s];
+  if (s0 < 3 && s1 >= 3) UI.toast(`${S.n}共鸣 · 三重：${S.r3}`, 3.2); else if (s0 < 6 && s1 >= 6) UI.toast(`${S.n}共鸣 · 六重：${S.r6}`, 3.2);
+}
+function takePerk(p) { Pl.perks[p.id] = pk(p.id) + 1; const hp0 = Pl.maxHp; recalc(); Pl.hp = Math.min(Pl.maxHp, Pl.hp + Math.max(0, Pl.maxHp - hp0)); if (p.id === 'mp') Pl.mp = Pl.maxMp; if (p.id === 'shield') { Pl.shield = 1; } Snd.ui(); }
 const SHOP = [
   { id: 'sword', n: () => '锻剑 · ' + cnNum(Pl.swordLv + 1) + '重', cost: () => Math.round(55 * Math.pow(1.5, Pl.swordLv)), max: () => Pl.swordLv >= 9, d: () => { const nt = SWORD_TIERS[Math.min(4, Math.floor((Pl.swordLv + 1) / 2))]; return '攻击 +13%。' + (nt !== swordTier() ? `剑身一振，蜕作「${nt.name}」。` : `手中仍是「${swordTier().name}」`); }, buy: () => { Pl.swordLv++; recalc(); setSwordTier(); Snd.forge(); } },
   { id: 'body', n: () => '淬体', cost: () => Math.round(45 * Math.pow(1.38, Pl.bodyLv)), max: () => Pl.bodyLv >= 10, d: () => '筋强骨壮，生命上限 +28，并回复三成生命。', buy: () => { Pl.bodyLv++; recalc(); healPlayer(Pl.maxHp * .3 + 28); Snd.ui(); } },
