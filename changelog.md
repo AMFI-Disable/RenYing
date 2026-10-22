@@ -343,6 +343,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Online Rematch Always Froze (第二把卡)**: after a P2P match ended, the end screen kept sending the old match's input frames; when the rematch started they bumped the new match's confirmed frame far ahead, so the host dropped the other player's inputs (their fighter stood still or snapped back, with repeated desync resyncs). Every rollback message now carries the match seed, stale ones are ignored and early ones are replayed when the match starts.
 - **醉翁 山水之间 Played Its Scroll Twice**: the scroll overlay was also drawn during the 0.42 s wind-up and then restarted when the ultimate began; it now drops once.
 - **墨羽 画符 Said "酒不够"**: skills that can't be cast now say why (墨不够 / 符已画满 for 墨羽, 酒不够 for 醉翁).
 

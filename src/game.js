@@ -1640,7 +1640,7 @@ function onNetMsg(msg) {
   if (msg.ru !== undefined) { rollRecv(msg); return; }
   if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed); return; }
   if (msg.rsync) { rollAdopt(msg.rsync); return; }
-  if (msg.rdesync) { if (NET.role === 'host') rollSendSync(); return; }
+  if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
   if (msg.po !== undefined) { const r = performance.now() - msg.po; NET.rtt = NET.rtt ? NET.rtt * 0.7 + r * 0.3 : r; return; }
   if (msg.spo !== undefined) { const r = performance.now() - msg.spo; NET.srtt = NET.srtt ? NET.srtt * 0.7 + r * 0.3 : r; return; }
@@ -10352,15 +10352,18 @@ function rollStart(ch, seed) {
   human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
   clock = 0; projSeq = 0; GRNG.s = seed | 0;
+  ROLL.lastMid = ROLL.mid;
   Object.assign(ROLL, { on: true, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
-    locMax: ROLL.D - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0 });
+    locMax: ROLL.D - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0, mid: seed | 0 });
   for (let f = 0; f < ROLL.D; f++) { ROLL.loc[f] = EMPTY_IN; ROLL.rem[f] = EMPTY_IN; }
+  const early = (ROLL.early || []).filter(x => x.m === ROLL.mid); ROLL.early = [];   // 对方先开了这一局，早到的按键补上
   BP = null; showScreen(null); creditT = 0;
   recBegin('net');
   startRound();
   applySkins(); MSTAT.maxcombo = 0; MSTAT.ults = 0; acc = 0;
   if (NET.role === 'host') send({ mstart: 1 });
   $id('endRank').textContent = '';
+  for (const x of early) rollRecv(x);
 }
 function rollFrame(f) {
   const R = ROLL;
@@ -10374,7 +10377,7 @@ function rollFrame(f) {
 function rollResim() {
   const R = ROLL, from = R.pend; R.pend = Infinity;
   const sn = R.snaps[from % R.N];
-  if (!sn || sn.f !== from) { if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1 }); return; }
+  if (!sn || sn.f !== from) { if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1, m: R.mid }); return; }
   const pre = [A.x, A.y, B.x, B.y];
   restState(sn.st);
   RESIM = true;
@@ -10412,7 +10415,7 @@ function rollSend() {
   const R = ROLL, now = performance.now();
   if (!R.out.length && !R.ckOut && now - (R.lastSend || 0) < 33) return;
   R.lastSend = now;
-  const msg = { ru: R.locMax, adv: R.F - 1 - R.remLast };
+  const msg = { ru: R.locMax, adv: R.F - 1 - R.remLast, m: R.mid };
   if (R.out.length) msg.ri = R.out.splice(0);
   if (R.ckOut) { msg.ck = R.ckOut; R.ckOut = null; }
   send(msg);
@@ -10429,8 +10432,12 @@ function rollTick(real) {
   if (R.stall > 0.35) { netOverlay('等待对手的网络…'); R.stallShown = true; }
   else if (R.stallShown) { netOverlay(''); R.stallShown = false; }
 }
+// 每局的消息都带着这一局的编号：上一局结算时还在发的旧消息不能算进新一局（否则新局的确认帧会被旧帧号顶上去，对面的按键全被丢掉）
+const rollMine = msg => msg.m === undefined || msg.m === ROLL.mid;
 function rollRecv(msg) {
-  const R = ROLL; if (!R.on) return;
+  const R = ROLL;
+  if (!rollMine(msg)) { if (msg.m !== R.lastMid) { (R.early = R.early || []).push(msg); if (R.early.length > 240) R.early.shift(); } return; }
+  if (!R.on) return;
   if (msg.ri) for (const r of msg.ri) R.remChg[r[0]] = { h: r[1], p: r.slice(2) };
   for (let f = R.remLast + 1; f <= msg.ru; f++) {
     const c = R.remChg[f]; let inp;
@@ -10445,7 +10452,7 @@ function rollRecv(msg) {
     const [f, h] = msg.ck, sn = R.snaps[f % R.N];
     if (sn && sn.f === f && f <= R.remLast && f < R.F && R.pend > f && hashState(sn.st) !== h) {
       R.desyncs++;
-      if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1 });
+      if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1, m: R.mid });
     }
   }
 }
@@ -10453,10 +10460,10 @@ function rollRecv(msg) {
 function rollSendSync() {
   const R = ROLL, f = Math.min(R.F, R.remLast + 1), sn = R.snaps[f % R.N];
   const st = f === R.F ? capState() : (sn && sn.f === f ? sn.st : null);
-  if (st) send({ rsync: { f, st } });
+  if (st) send({ rsync: { f, st, m: R.mid } });
 }
 function rollAdopt(p) {
-  const R = ROLL; if (!R.on) return;
+  const R = ROLL; if (!R.on || !rollMine(p)) return;
   REC.bad = true;
   const target = R.F;
   restState(p.st); R.F = p.f; R.pend = Infinity;
@@ -10466,7 +10473,7 @@ function rollAdopt(p) {
 function rollResumePayload() {
   const R = ROLL, li = [];
   for (let f = R.F; f <= R.locMax; f++) { const x = R.loc[f] || EMPTY_IN; li.push([f, x.h, ...x.p]); }
-  return { k: 'rmatch', ch: [A.chIdx, B.chIdx], F: R.F, st: capState(), rl: R.remLast, ph: R.lastRemH, li, ru: R.locMax, lh: R.lastSentH, ended: R.ended, skins: PROF.equip || {} };
+  return { k: 'rmatch', ch: [A.chIdx, B.chIdx], F: R.F, st: capState(), rl: R.remLast, ph: R.lastRemH, li, ru: R.locMax, lh: R.lastSentH, ended: R.ended, skins: PROF.equip || {}, mid: R.mid };
 }
 function rollResume(p) {
   REC.on = false;
@@ -10474,7 +10481,7 @@ function rollResume(p) {
   setupNetMatch();
   ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
   human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-  Object.assign(ROLL, { on: true, snaps: [], loc: [], rem: [], used: [], remChg: {}, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: !!p.ended });
+  Object.assign(ROLL, { on: true, snaps: [], loc: [], rem: [], used: [], remChg: {}, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: !!p.ended, mid: p.mid, early: [] });
   restState(p.st); ROLL.F = p.F;
   for (let f = p.rl + 1; f < p.F + ROLL.D; f++) ROLL.loc[f] = { h: p.ph, p: [] };   // 掉线那段时间按对方猜的算
   ROLL.locMax = p.F + ROLL.D - 1; ROLL.lastSentH = p.ph;
