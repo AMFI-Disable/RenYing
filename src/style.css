@@ -499,7 +499,7 @@
   @media (max-width: 560px) { .stgrid { grid-template-columns: repeat(3, 1fr); } }
   .setp { max-width: min(1360px, 96vw); }
   .setlist { display: grid; gap: 12px; margin: 12px 0; text-align: left; }
-  @media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; column-gap: 36px; } }
+  @media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; column-gap: 36px; } .setlist > .keypanel { grid-column: 1 / -1; grid-row: 6; } }
   .setrow { display: grid; grid-template-columns: minmax(90px, max-content) 1fr minmax(48px, auto); gap: 10px; align-items: center; font-size: 13.5px; }
   .setrow > span:first-child { white-space: nowrap; }
   .setrow .seg { margin: 0; }
