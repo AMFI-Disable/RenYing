@@ -1325,8 +1325,8 @@ const human = [new Ctrl(), new Ctrl()];
 const NET = { role: null, ws: null, open: false, remote: new Ctrl(), out: [], presses: [] };
 // 是否是从联机服务器打开的网页（而不是双击本地文件、GitHub Pages 或在线预览）
 const SERVED = !OFFLINE_BUILD && /^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent|anthropic|github\.io/.test(location.hostname);
-const localIdx = () => M.mode === 'net' ? (NET.duo ? NET.seat || 0 : NET.role === 'client' ? 1 : 0) : 0;
-const localTeam = () => localIdx() % 2;   // 0 = 左边（苍龙）队，1 = 右边（赤凤）队；2v2 里 A、C 一队，B、D 一队
+const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
+const localTeam = () => localIdx();   // 0 = 左边，1 = 右边（联机客户端）
 const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on;
 function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on) NET.out.push(ev); }
 function netReset() {
@@ -1335,9 +1335,6 @@ function netReset() {
   if (typeof mmStop === 'function') mmStop();
   mmUI(null);
   NET.peerQuit = false;
-  NET.duo = false; NET.duoSeats = null; NET.seat = 0; ROLL.duo = false;
-  if (typeof netRoomMode !== 'undefined' && netRoomMode === 'duo') setRoomModeUI('normal');
-  if (typeof renderDuoLobby === 'function') renderDuoLobby();
   NET.matching = false; NET.hold = false; NET.awayUntil = 0; matchUI(false);
   if (NET.ws) { const w = NET.ws; NET.ws = null; try { w.close(); } catch (e) {} }
   p2pClose();
@@ -1509,12 +1506,6 @@ function onSys(m) {
       updateNetLobby(true, '擂主 (房主)', (ACC && ACC.name) || '侠士 (应战)', m.code, true);
       netStatus('入局成功，正在同步战局…');
     }
-  } else if (m.sys === 'ready' && m.duo && NET.role === 'client') {   // 进的是 2v2 房间
-    NET.names = m.names || {}; NET.open = true; NET.duo = true; NET.duoId = String(m.duo.id || ''); NET.duoSeats = m.duo.seats; NET.duoLevel = m.duo.lv;
-    updateNetLobby(true, (m.names && m.names.host) || '房主', (ACC && ACC.name) || '你', NET.code, true);
-    setRoomModeUI('duo'); renderDuoLobby();
-    netStatus('已进入 2v2 房间，等房主开战');
-    initAudio();
   } else if (m.sys === 'ready') {
     NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
     updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
@@ -1522,7 +1513,7 @@ function onSys(m) {
     onNetOpen();
   } else if (m.sys === 'room_rule') {
     setRoomModeUI(m.rule);
-    const nameMap = { normal: '标准论剑 (BO3)', duo: '2v2 组队（最多 4 人）', chaos: '天机乱斗 (随机词条)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)' };
     toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
   } else if (m.sys === 'rematch') {
     if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -1643,7 +1634,6 @@ function applySnapshot(sn, exact) {
 }
 function onNetMsg(msg) {
   if (msg.mstart || msg.report) return;
-  if (NET.duo && NET.role === 'client' && duoClientMsg(msg)) return;
   if (msg.ru !== undefined) { rollRecv(msg); return; }
   if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed); return; }
   if (msg.rsync) { rollAdopt(msg.rsync); return; }
@@ -1710,7 +1700,7 @@ function netTick(dt) {
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
-  M.mode = 'net'; M.duo = false; M.wins = [0, 0]; M.round = 1; M.carry = null; A.meter = B.meter = 0;
+  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; A.meter = B.meter = 0;
   human[0].clear(); NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   A.ctrl = NET.role === 'host' ? human[0] : NET.remote;
   B.ctrl = NET.role === 'host' ? NET.remote : human[0];
@@ -2187,7 +2177,7 @@ const AI_OBS = new Float32Array(31);
 function aiPredictPolicy(heroId, obs) {
   try {
     let m = null;
-    if (duo() && typeof window !== 'undefined' && window.RENYING_2V2_MODEL && window.RENYING_2V2_MODEL.weights) {
+    if (M.mode === 'watch2v2' && typeof window !== 'undefined' && window.RENYING_2V2_MODEL && window.RENYING_2V2_MODEL.weights) {
       m = window.RENYING_2V2_MODEL;
     } else {
       const models = typeof window !== 'undefined' ? window.RENYING_HERO_MODELS : null;
@@ -2272,7 +2262,7 @@ function extractAIObs(me, foe) {
   AI_OBS[24] = projNear;
 
   // 2v2 Co-op 31-dim features (features 25-30)
-  if (duo() && typeof ARENA2V2 !== 'undefined') {
+  if (M.mode === 'watch2v2' && typeof ARENA2V2 !== 'undefined') {
     const mate = (me.idx % 2 === 0) ? (me.idx === 0 ? C : A) : (me.idx === 1 ? D : B);
     if (mate) {
       AI_OBS[25] = (mate.x - me.x) / STAGE_W;
@@ -2410,7 +2400,7 @@ class AICtrl extends Ctrl {
       const atkRange = me.moves.l1.box[2] + 22;
 
       // 2v2 专属战场大局观（争夺太阴灵丹/增益符、阻截对手抢点、利用灵泉调息）
-      if (duo() && typeof ARENA2V2 !== 'undefined') {
+      if (M.mode === 'watch2v2' && typeof ARENA2V2 !== 'undefined') {
         const cx = STAGE_W / 2;
         if (ARENA2V2.orb && ARENA2V2.orb.active) {
           const k = ARENA2V2.orb.kind; // 0: 破军神火, 1: 太阴灵丹, 2: 紫微星魄
@@ -2619,19 +2609,17 @@ class Fighter {
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
-// 四人同台：2v2 观战、和电脑队友组队、四人联机房间都算（M.duo 会跟着回滚存档一起保存）
-const duo = () => M.mode === 'watch2v2' || M.mode === 'duo' || (M.mode === 'net' && !!M.duo);
-const allFighters = () => duo() ? [A, B, C, D] : [A, B];
+const allFighters = () => M.mode === 'watch2v2' ? [A, B, C, D] : [A, B];
 const isAiVsAi = () => !!(M.watchAi || M.mode === 'watch2v2' || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
 const foesOf = f => {
-  if (!duo()) return [f === A ? B : A];
+  if (M.mode !== 'watch2v2') return [f === A ? B : A];
   const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
   const alive = list.filter(e => !e.hidden && e.hp > 0);
   return alive.length ? alive : list;
 };
 const foeOf = f => {
-  if (!duo()) return f === A ? B : A;
+  if (M.mode !== 'watch2v2') return f === A ? B : A;
   const list = foesOf(f);
   if (!list.length) return A;
   if (list.length === 1) { f.target = list[0]; return list[0]; }
@@ -2790,9 +2778,9 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-  STAGE_W = duo() ? 2600 : 1800;
+  STAGE_W = M.mode === 'watch2v2' ? 2600 : 1800;
   if (typeof applySkins === 'function') applySkins();
-  if (duo()) {
+  if (M.mode === 'watch2v2') {
     C.hidden = false; D.hidden = false;
     A.reset(STAGE_W / 2 - 420); C.reset(STAGE_W / 2 - 210);
     B.reset(STAGE_W / 2 + 210); D.reset(STAGE_W / 2 + 420);
@@ -2823,7 +2811,7 @@ function startRound() {
   if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.introFX = M.round === 1 && M.mode !== 'demo';
-  M.phase = 'intro'; M.t = 0; M.timer = duo() ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
+  M.phase = 'intro'; M.t = 0; M.timer = M.mode === 'watch2v2' ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -2844,7 +2832,7 @@ function timeDeath(winner, text) {
   M.phase = 'ko'; M.t = 0; M.koWinner = winner;
   M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
   if (winner >= 0) {
-    const losers = duo() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+    const losers = M.mode === 'watch2v2' ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
     const winRef = [A, B][winner];
     for (const l of losers) {
       l.hp = 0; l.state = 'launched'; l.t = 0; l.vy = -380; l.vx = (l.x >= winRef.x ? 1 : -1) * 260; l.y = Math.min(l.y, -1); l.invul = 99; l.move = null; l.skill = null;
@@ -2860,13 +2848,13 @@ function updateMatch() {
     if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
-    const team0Out = duo() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
-    const team1Out = duo() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
+    const team0Out = M.mode === 'watch2v2' ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
+    const team1Out = M.mode === 'watch2v2' ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
     if (M.mode !== 'train' && (team0Out || team1Out)) {
       const winner = (team0Out && team1Out)
-        ? ((A.hp + (duo() ? C.hp : 0)) > (B.hp + (duo() ? D.hp : 0)) ? 0 : 1)
+        ? ((A.hp + (M.mode === 'watch2v2' ? C.hp : 0)) > (B.hp + (M.mode === 'watch2v2' ? D.hp : 0)) ? 0 : 1)
         : (team0Out ? 1 : 0);
-      const losers = duo() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+      const losers = M.mode === 'watch2v2' ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
       for (const loser of losers) {
         loser.hp = 0;
         if (loser.state !== 'launched' && loser.state !== 'knockdown') {
@@ -2885,14 +2873,14 @@ function updateMatch() {
       }
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
-        const ra = duo() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
-        const rb = duo() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
+        const ra = M.mode === 'watch2v2' ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
+        const rb = M.mode === 'watch2v2' ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
         if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
         else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
       }
     }
   } else if (M.phase === 'ko') {
-    const winners = M.koWinner >= 0 ? (duo() ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
+    const winners = M.koWinner >= 0 ? (M.mode === 'watch2v2' ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
     for (const w of winners) {
       if (w && M.t > 1.2 && w.hp > 0 && w.onGround() && (w.state === 'idle' || w.state === 'walk')) { w.state = 'victory'; w.t = 0; skinVictoryFX(w); }
     }
@@ -2970,7 +2958,7 @@ function showEnd(w) {
     return;
   }
   if (w >= 0) playSting(w === localTeam() ? 'victory' : 'defeat');
-  if (M.mode === 'net' && !NET.duo) {
+  if (M.mode === 'net') {
     const duration = Date.now() - (NET.matchStartTime || Date.now());
     const hits = NET.matchHits || 0;
     const isQualifying = duration >= 15000 || hits >= 4;
@@ -2987,29 +2975,21 @@ function showEnd(w) {
     });
     send({ report: w === 0 ? 'host' : 'client' });
   }
-  if (M.mode === 'cpu' || (M.mode === 'net' && !NET.duo)) adaptRecord(w === localTeam());
+  if (M.mode === 'cpu' || M.mode === 'net') adaptRecord(w === localTeam());
   $id('endRank').textContent = M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '';
-  if (!(M.mode === 'net' && NET.duo)) reportProgress(w);
+  reportProgress(w);
   const t = document.getElementById('endTitle');
   const wf = [A, B][w];
   const lost = w >= 0 && w !== localTeam() && !(M.mode === 'pvp' || isAiVsAi() || M.watchAi);
   if (w < 0) { t.textContent = '平手'; t.className = ''; t.style.color = ''; }
-  else if (duo()) inkTitle(`${wf.look.name} · ${(w === 0 ? C : D).look.name}`, lost);
   else inkTitle(wf.look.name, lost);
   document.getElementById('endSub').textContent = M.mode === 'cpu' ? (w === 0 ? '月下无敌手' : '再磨一磨剑')
-    : duo() ? `${w === localTeam() ? '我方胜' : '对方胜'}，比分 ${M.wins[localTeam()]} : ${M.wins[1 - localTeam()]}`
     : M.mode === 'net' ? `${w === localTeam() ? '你赢了' : '你输了'}，比分 ${M.wins[0]} : ${M.wins[1]}` : `比分 ${M.wins[0]} : ${M.wins[1]}`;
   const again = document.getElementById('againBtn');
   const repickBtn = document.getElementById('netRepickBtn');
   if (repickBtn) repickBtn.classList.toggle('hidden', M.mode !== 'net');
   if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
     again.style.display = 'none';
-  } else if (M.mode === 'net' && NET.duo) {
-    again.style.display = NET.role === 'host' ? '' : 'none';
-    again.disabled = false;
-    again.textContent = '再来一局';
-    if (repickBtn) repickBtn.classList.add('hidden');
-    if (NET.role !== 'host') $id('endRank').textContent = '等房主开下一局';
   } else if (M.mode === 'net') {
     again.style.display = '';
     again.disabled = false;
@@ -3093,7 +3073,7 @@ function endRound() {
   }
   M.round++;
   M.carry = [null, null];   // 活下来的人继承剩余血量 +CARRY_HEAL，倒下的人满血（2v2 每回合都满血重来）
-  if (!duo()) [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
+  if (M.mode !== 'watch2v2') [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
   startRound();
 }
 
@@ -3396,7 +3376,7 @@ function strike(f, foe, spec) {
   if (f.hitDone) return false;
   const hb = hitbox(f, spec.box);
   if (hitDecoy(f, hb)) return false;
-  const targets = duo() ? foesOf(f) : [foe];
+  const targets = M.mode === 'watch2v2' ? foesOf(f) : [foe];
   for (const tf of targets) {
     if (tf.invul > 0 || tf.hp <= 0 || !overlap(hb, hurtbox(tf))) continue;
     f.hitDone = true;
@@ -3457,7 +3437,7 @@ function updateProjs() {
     if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
     if (p.fx || p.dmg <= 0) continue;
     const owner = fighterByIdx(p.owner), box = projBox(p);
-    const candidates = duo() ? foesOf(owner) : [foeOf(owner)];
+    const candidates = M.mode === 'watch2v2' ? foesOf(owner) : [foeOf(owner)];
     let foe = candidates.find(ef => ef.hp > 0 && overlap(box, hurtbox(ef))) || candidates[0];
     // 斩弹：对手的刀砍中飞行道具就把它打散
     if (!p.unbreakable && foe.state === 'attack' && foe.move && foe.t >= foe.move.su && foe.t < foe.move.su + foe.move.ac && overlap(hitbox(foe, foe.move.box), box)) {
@@ -3920,7 +3900,7 @@ const overlap = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[
 function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitDecoy(f, hb)) return;
-  if (duo()) {
+  if (M.mode === 'watch2v2') {
     const matchTarget = foesOf(f).find(ef => ef.invul <= 0 && ef.hp > 0 && overlap(hb, hurtbox(ef)));
     if (matchTarget) foe = matchTarget;
   }
@@ -4269,7 +4249,7 @@ function applyHit(att, def, m, pt) {
   ev.cn = def.comboHits; ev.dd = dmg;
   if (def.hp <= 0 && M.phase === 'fight') {
     def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.y = Math.min(def.y, -1);
-    if (duo()) {
+    if (M.mode === 'watch2v2') {
       const mate = def === A ? C : def === C ? A : def === B ? D : B;
       if (mate && !mate.hidden && mate.hp > 0) {
         def.invul = 99;
@@ -4339,7 +4319,7 @@ function hitVisual(ev, quiet) {
   shake = Math.max(shake, ev.hs * 80 * feel);
   if (ev.dmg >= 8) cam.zoom *= 1 + 0.015 * feel;      // 重击时镜头轻微一顿
   hitFX(ev.x, ev.y, clamp(ev.dmg / 8, 0.5, 1.8), att.look.slash, fdir);
-  if (!quiet && duo() && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
+  if (!quiet && M.mode === 'watch2v2' && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
     ARENA2V2.scars.push({ x: ev.x, r: ev.ult ? 62 : 44, life: 4.0, max: 4.0, rgb: att.look.slash || '255,215,120' });
     if (ARENA2V2.scars.length > 18) ARENA2V2.scars.shift();
   }
@@ -4630,12 +4610,12 @@ function step() {
   for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
   updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
-  if (duo()) {
+  if (M.mode === 'watch2v2') {
     updateFighter(C, foeOf(C)); updateFighter(D, foeOf(D));
     updateArena2v2(STEP);
   }
   // 倒下的人一直躺着：落地后不管之前是什么状态（受身、被打、技能收招）都按回地上，不再站起来
-  if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (duo() && M.phase === 'fight'))) {
+  if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (M.mode === 'watch2v2' && M.phase === 'fight'))) {
     for (const f of allFighters()) {
       if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
         f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skill = null; f.airRecover = false; f.escInvul = false;
@@ -5028,7 +5008,7 @@ function frameBody(now) {
       creditT -= real;
       if (creditT <= 0 && creditPending) {
         creditPending = false;
-        const rTxt = M.mode === 'tag3' ? '先锋战 · 开战！' : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : duo() && M.round === 1 ? '2v2 组队 · 开战！' : `第${CN[M.round] || M.round}回合`));
+        const rTxt = M.mode === 'tag3' ? '先锋战 · 开战！' : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : M.mode === 'watch2v2' && M.round === 1 ? '2v2 组队 · 开战！' : `第${CN[M.round] || M.round}回合`));
         say(rTxt, 1.1);
         SFX.gong();
       }
@@ -5050,29 +5030,29 @@ function updateCamera(dt) {
     cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
     return;
   }
-  const tracked = duo() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
+  const tracked = M.mode === 'watch2v2' ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
   const pool = tracked.length >= 2 ? tracked : [A, B];
   const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
   const minY = Math.min(...pool.map(f => f.y));
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
   // 2v2 观战：四名 AI 同台，镜头再退一档，把 2600 宽的奇阵擂台框得舒服些
-  const padW = duo() ? 680 : 340;
+  const padW = M.mode === 'watch2v2' ? 680 : 340;
   const fitW = W / ((d + padW) * base);
   const top = -minY + 170;
   const fitH = (H * 0.74) / (Math.max(250, top) * base);
   const fit = Math.max(0.28, Math.min(fitW, fitH));
   let focus = mid, zoomMul = superFreeze > 0 ? 1.1 : 1;
   const lf = [A, B][localIdx()];
-  if (lf && lf.state === 'charge' && M.mode !== 'demo' && !duo()) {
+  if (lf && lf.state === 'charge' && M.mode !== 'demo' && M.mode !== 'watch2v2') {
     const lv = clamp(lf.t / CHARGE_FULL, 0, 1); zoomMul *= 1 + 0.24 * lv; focus = lerp(mid, lf.x, 0.4 * lv);
   }
   const ce = cineEnv();
   if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
-  const minZoom = duo() ? 0.4 : 0.6;
+  const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
   // 1v1 用原本的曲线；2v2 基准更小（近身也会留出擂台与灯火），并压低上限
-  const wantBase = duo() ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
+  const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
   // 2v2 再压一个上限，近身缠斗时也不回到 1.0+ 的贴脸视角（1v1 不设上限，保持原曲线）
-  const maxZoom = duo() ? 0.70 : Infinity;
+  const maxZoom = M.mode === 'watch2v2' ? 0.70 : Infinity;
   let want = Math.min(wantBase * zoomMul, fit, maxZoom);
   const pf = paperFX();
   if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
@@ -5186,7 +5166,7 @@ function drawGround() {
     ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);
   }
   // 石灯笼
-  const lanternXs = duo() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
+  const lanternXs = M.mode === 'watch2v2' ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
   for (const lx of lanternXs) lantern(lx, -2);
   // 地面重击裂痕 / 焦痕
   if (ARENA2V2.scars && ARENA2V2.scars.length) {
@@ -5207,7 +5187,7 @@ function drawGround() {
     }
   }
   // 2v2 扩阔擂台专属交互奇阵：两侧【御风灵泉】与中央【天道剑坛】
-  if (duo()) {
+  if (M.mode === 'watch2v2') {
     ctx.save();
     for (const gy of ARENA2V2.geysers) {
       const ready = gy.cd <= 0;
@@ -5290,29 +5270,6 @@ function drawTrainDummy(f) {
   }
   ctx.restore();
 }
-// 2v2 敌我标识：头顶小旗 + 脚下光圈 + 血条颜色都用同一套颜色
-const duoIsMe = f => M.mode !== 'watch2v2' && f.idx === duoMine();
-const duoTagRGB = f => duoIsMe(f) ? '233,196,106' : duoAlly(f) ? '70,211,234' : '255,70,85';
-function drawDuoTags(sc) {
-  ctx.save();
-  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  const fs = Math.max(12, Math.round(H * 0.017));
-  for (const f of [A, B, C, D]) {
-    if (f.hidden || f.hp <= 0) continue;
-    const px = W / 2 + (f.x + (f.vox || 0) - cam.x) * sc, py = groundY() + (f.y - 150 * (f.size || 1)) * sc - 10;
-    const rgb = duoTagRGB(f), me = duoIsMe(f), ally = duoAlly(f);
-    const lab = M.mode === 'watch2v2' ? (f.idx % 2 === 0 ? '苍龙' : '赤凤') : me ? '你' : ally ? '队友' : '';
-    ctx.fillStyle = `rgb(${rgb})`;
-    ctx.beginPath(); ctx.moveTo(px - 7, py - 8); ctx.lineTo(px + 7, py - 8); ctx.lineTo(px, py); ctx.closePath(); ctx.fill();
-    if (lab) {
-      ctx.font = `bold ${fs}px ${TITLE_FONT}`;
-      ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 4;
-      ctx.fillText(lab, px, py - 10);
-      ctx.shadowBlur = 0;
-    }
-  }
-  ctx.restore();
-}
 function drawFighter(f) {
   if (f.hidden) return;
   if (f.dummy) return drawTrainDummy(f);
@@ -5347,13 +5304,6 @@ function drawFighter(f) {
   const hgt = clamp(-f.y / 300, 0, 1);
   ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
   ctx.beginPath(); ctx.ellipse(f.x, 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
-  if (duo() && f.hp > 0) {   // 2v2：脚下一圈队伍颜色，自己金色、队友青色、对手朱红
-    const rgb = duoTagRGB(f), me = duoIsMe(f);
-    ctx.save();
-    ctx.fillStyle = `rgba(${rgb},0.16)`; ctx.strokeStyle = `rgba(${rgb},0.95)`; ctx.lineWidth = me ? 4 : 3;
-    ctx.beginPath(); ctx.ellipse(f.x, 2, 46, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.restore();
-  }
   // 蓄力光环
   if (f.state === 'charge') {
     const lv = clamp(f.t / CHARGE_FULL, 0, 1), full = f.t >= CHARGE_FULL;
@@ -6702,9 +6652,8 @@ function drawHUD2v2() {
       line(f, R.y, R.fs);
       const dead = f.hp <= 0;
       const grad = ctx.createLinearGradient(x, 0, x + blk, 0);
-      const allySide = si === (M.mode === 'watch2v2' ? 0 : localTeam());   // 我方血条青色，对方朱红
-      if (allySide) { grad.addColorStop(rev ? 1 : 0, '#2a8fb0'); grad.addColorStop(rev ? 0 : 1, '#8ff0ff'); }
-      else { grad.addColorStop(rev ? 0 : 1, '#ff8a70'); grad.addColorStop(rev ? 1 : 0, '#c42a45'); }
+      if (!rev) { grad.addColorStop(0, '#2a8fb0'); grad.addColorStop(1, '#8ff0ff'); }
+      else { grad.addColorStop(0, '#ff8a70'); grad.addColorStop(1, '#c42a45'); }
       bar(x, R.hpY, blk, R.hpH, clamp(f.hp / f.maxHp, 0, 1), dead ? 'rgba(120,120,130,0.45)' : grad, rev, clamp(f.lagHp / f.maxHp, 0, 1));
       // 架势（外侧）与真气（内侧）并排在同一条窄带上，不占用额外高度
       const gW2 = Math.round(blk * 0.46), mW2 = Math.round(blk * 0.46);
@@ -6729,22 +6678,12 @@ function drawHUD2v2() {
   ctx.fillStyle = '#46d3ea';
   ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
   const banTxt = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
-  if (M.mode === 'watch2v2') ctx.fillText(`👁️ 2v2 天道演武${banTxt}`, cx, H - 10);
-  ctx.restore();
-  // 回合比分：计时器下方，我方在左
-  const lt = M.mode === 'watch2v2' ? 0 : localTeam();
-  ctx.save();
-  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.font = `700 ${Math.max(12, Math.round(bh * 0.95))}px ${BODY_FONT}`;
-  const y = top + bh * 1.9;
-  ctx.fillStyle = '#46d3ea'; ctx.fillText(String(M.wins[lt] || 0), cx - 16, y);
-  ctx.fillStyle = 'rgba(239,232,216,.6)'; ctx.fillText(':', cx, y);
-  ctx.fillStyle = '#ff6b78'; ctx.fillText(String(M.wins[1 - lt] || 0), cx + 16, y);
+  ctx.fillText(`👁️ 2v2 天道演武${banTxt}`, cx, H - 10);
   ctx.restore();
 }
 function drawHUD() {
   if (M.mode === 'demo') return;
-  if (duo()) { drawHUD2v2(); return; }
+  if (M.mode === 'watch2v2') { drawHUD2v2(); return; }
   const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
   [A, B].forEach((f, i) => {
     if (f.hidden) return;
@@ -7264,7 +7203,7 @@ function render() {
   if (pf) drawXuanzhi(pf.a);
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-  const order = duo()
+  const order = M.mode === 'watch2v2'
     ? [A, B, C, D].sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
     : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
   drawDecoys();
@@ -7280,7 +7219,6 @@ function render() {
   drawParticles();
   drawComboTotals();
   ctx.restore();
-  if (duo()) drawDuoTags(sc);
   if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
   if (FOREST.on) {
     const px = W / 2 + (A.x - cam.x) * sc, py = groundY() + (A.y - 60) * sc;
@@ -10260,14 +10198,12 @@ function resC(c, o) { c.held = { ...o.h }; c.buf = { ...o.b }; c.atkT = o.a; }
 function capState() {
   const st = { clock, hitstop, superFreeze, so: superOwner ? superOwner.idx : -1, projSeq, rng: GRNG.s,
     a: capF(A), b: capF(B), projs: jclone(projs), decoys: jclone(decoys), M: jclone(M), c: [capC(A.ctrl), capC(B.ctrl)] };
-  if (ROLL.duo) { st.c2 = capF(C); st.d2 = capF(D); st.cc = [capC(C.ctrl), capC(D.ctrl)]; const { scars, ...ar } = ARENA2V2; st.ar = jclone(ar); }   // 地上的焦痕只是画面，不存   // 2v2：另外两人和擂台机关也要存
   return st;
 }
 function restState(st) {
   clock = st.clock; hitstop = st.hitstop; superFreeze = st.superFreeze; superOwner = st.so >= 0 ? fighterByIdx(st.so) : null;
   projSeq = st.projSeq; GRNG.s = st.rng;
   resF(A, st.a); resF(B, st.b);
-  if (st.c2) { resF(C, st.c2); resF(D, st.d2); resC(C.ctrl, st.cc[0]); resC(D.ctrl, st.cc[1]); for (const k of Object.keys(ARENA2V2)) if (k !== 'scars') delete ARENA2V2[k]; Object.assign(ARENA2V2, jclone(st.ar)); }
   projs.length = 0; for (const q of jclone(st.projs)) projs.push(q);
   decoys.length = 0; for (const q of jclone(st.decoys)) decoys.push(q);
   for (const k of Object.keys(M)) delete M[k]; Object.assign(M, jclone(st.M));
@@ -10297,7 +10233,7 @@ function rollStart(ch, seed) {
   human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
   clock = 0; projSeq = 0; GRNG.s = seed | 0;
-  Object.assign(ROLL, { on: true, duo: false, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
+  Object.assign(ROLL, { on: true, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
     locMax: ROLL.D - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0 });
   for (let f = 0; f < ROLL.D; f++) { ROLL.loc[f] = EMPTY_IN; ROLL.rem[f] = EMPTY_IN; }
   BP = null; showScreen(null); creditT = 0;
@@ -10309,7 +10245,6 @@ function rollStart(ch, seed) {
 }
 function rollFrame(f) {
   const R = ROLL;
-  if (R.duo) return rollFrameDuo(f);
   R.snaps[f % R.N] = { f, st: capState() };
   const li = R.loc[f] || EMPTY_IN, ri = f <= R.remLast ? (R.rem[f] || { h: R.lastRemH, p: [] }) : { h: R.lastRemH, p: [] };
   R.used[f] = ri;
@@ -10331,7 +10266,6 @@ function rollResim() {
 }
 function rollAdvance() {
   const R = ROLL;
-  if (R.duo) return rollAdvanceDuo();
   if (NET.hold || R.ended) return false;
   if (R.F - R.remLast > R.MAXP) { R.stall += STEP; return false; }          // 对方的按键太久没到：等一等
   if (R.skipT > 0) R.skipT -= STEP;
@@ -10357,7 +10291,6 @@ function rollAdvance() {
 }
 function rollSend() {
   const R = ROLL, now = performance.now();
-  if (R.duo) return rollSendDuo();
   if (!R.out.length && !R.ckOut && now - (R.lastSend || 0) < 33) return;
   R.lastSend = now;
   const msg = { ru: R.locMax, adv: R.F - 1 - R.remLast };
@@ -10397,148 +10330,9 @@ function rollRecv(msg) {
     }
   }
 }
-// ---------- 2v2 四人回滚 ----------
-// 和 1v1 一样每帧只交换按键，只是座位多了：
-//   自己的座位 → 本地按键；别人的座位 → 收到的按键（没到就猜他还按着上一次的）；
-//   房主那里的电脑座位 → 房主每帧让电脑想一次，把它的“按键”当成一个玩家发给大家。
-// 大家只连房主：客人把自己的按键发给房主，房主马上转给其他客人。
-function duoMinLast() {
-  const R = ROLL; let m = Infinity;
-  for (let s = 0; s < 4; s++) if (R.src[s] === 'rem') m = Math.min(m, R.rin[s].last);
-  return m === Infinity ? R.locMax : m;
-}
-function rollStartDuo(ch, seed, ai) {
-  refocusGame();
-  A.setChar(ch[0]); B.setChar(ch[1]); C.setChar(ch[2]); D.setChar(ch[3]);
-  setupNetMatch(); M.duo = true; NET.matchHits = 0;
-  ROLL.ctrls = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
-  [A, B, C, D].forEach((f, i) => { f.ctrl = ROLL.ctrls[i]; f.meter = 0; });
-  human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-  for (const f of [A, B, C, D]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy', 'target']) delete f[k];
-  clock = 0; projSeq = 0; GRNG.s = seed | 0;
-  const me = NET.seat || 0, host = NET.role === 'host', D0 = ROLL.D;
-  Object.assign(ROLL, { on: true, duo: true, me, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: D0 - 1, lastRemH: 0, lastSentH: 0,
-    locMax: D0 - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0,
-    src: [], rin: [], ai: [], aiIn: [], aiOut: [], aiH: [] });
-  for (let s = 0; s < 4; s++) {
-    ROLL.src[s] = s === me ? 'me' : host && ai[s] ? 'ai' : 'rem';
-    if (ROLL.src[s] === 'rem') { ROLL.rin[s] = { rem: [], chg: {}, last: D0 - 1, lastH: 0, used: [] }; for (let f = 0; f < D0; f++) ROLL.rin[s].rem[f] = EMPTY_IN; }
-    if (ROLL.src[s] === 'ai') { ROLL.ai[s] = new AICtrl(NET.duoLevel || 'hard'); ROLL.aiIn[s] = []; ROLL.aiOut[s] = []; ROLL.aiH[s] = 0; for (let f = 0; f < D0; f++) ROLL.aiIn[s][f] = EMPTY_IN; }
-  }
-  for (let f = 0; f < D0; f++) ROLL.loc[f] = EMPTY_IN;
-  BP = null; DBP = null; showScreen(null); creditT = 0;
-  REC.on = false;
-  startRound();
-  applySkins(); MSTAT.maxcombo = 0; MSTAT.ults = 0; acc = 0;
-  $id('endRank').textContent = '';
-}
-function rollFrameDuo(f) {
-  const R = ROLL, fs = [A, B, C, D];
-  R.snaps[f % R.N] = { f, st: capState() };
-  for (let s = 0; s < 4; s++) {
-    let inp;
-    if (R.src[s] === 'me') inp = R.loc[f] || EMPTY_IN;
-    else if (R.src[s] === 'ai') inp = R.aiIn[s][f] || { h: R.aiH[s], p: [] };
-    else { const q = R.rin[s]; inp = f <= q.last ? (q.rem[f] || { h: q.lastH, p: [] }) : { h: q.lastH, p: [] }; q.used[f] = inp; }
-    applyInput(fs[s].ctrl, inp);
-  }
-  step();
-}
-// 电脑座位这一帧的“按键”：只在第一次算这一帧时想一次，回滚重算时照抄
-function duoAiInput(s) {
-  const R = ROLL, ai = R.ai[s], f = [A, B, C, D][s];
-  if (!ai || f.hidden || f.hp <= 0 || M.phase === 'ko' || M.phase === 'end') return { h: 0, p: [] };
-  ai.buf = {}; ai.rec = [];
-  const keep = [A, B, C, D].map(x => x.target);   // 电脑想的时候会改“锁定目标”，想完放回去，不能影响对局本身
-  try { ai.think(f, foeOf(f)); } catch (e) { ai.rec = []; }
-  [A, B, C, D].forEach((x, i) => { x.target = keep[i]; });
-  const inp = { h: inBits(ai.held), p: ai.rec };
-  ai.rec = null;
-  return inp;
-}
-function rollAdvanceDuo() {
-  const R = ROLL;
-  if (NET.hold || R.ended) return false;
-  const last = duoMinLast();
-  if (R.F - last > R.MAXP) { R.stall += STEP; return false; }
-  if (R.skipT > 0) R.skipT -= STEP;
-  else if ((R.F - 1 - last) - R.peerAdv > 8) { R.skipT = 0.25; return false; }
-  R.stall = 0;
-  if (R.pend < R.F) rollResim();
-  const fi = R.F + R.D;
-  if (fi > R.locMax) {
-    const h = inBits(human[0].held), pr = NET.presses.splice(0);
-    for (let x = R.locMax + 1; x < fi; x++) R.loc[x] = { h: R.lastSentH, p: [] };
-    R.loc[fi] = { h, p: pr };
-    if (h !== R.lastSentH || pr.length) { R.out.push([fi, h, ...pr]); R.lastSentH = h; }
-    for (let s = 0; s < 4; s++) if (R.src[s] === 'ai') {
-      for (let x = R.locMax + 1; x < fi; x++) R.aiIn[s][x] = { h: R.aiH[s], p: [] };
-      const inp = duoAiInput(s);
-      R.aiIn[s][fi] = inp;
-      if (inp.h !== R.aiH[s] || inp.p.length) { R.aiOut[s].push([fi, inp.h, ...inp.p]); R.aiH[s] = inp.h; }
-    }
-    R.locMax = fi;
-  }
-  rollFrameDuo(R.F);
-  R.F++;
-  const cf = Math.min(R.F, duoMinLast() + 1), cs = R.snaps[cf % R.N];
-  if (!R.ended && cs && cs.f === cf && cs.st.M.phase === 'end') { R.ended = true; showEnd(cs.st.M.koWinner); }
-  if (NET.role === 'host' && R.F % 60 === 0) { const f = Math.min(R.F - 30, duoMinLast()); const sn = R.snaps[f % R.N]; if (f > 0 && sn && sn.f === f) R.ckOut = [f, hashState(sn.st)]; }
-  if (R.F % 600 === 0) {
-    const lists = [R.loc];
-    for (let s = 0; s < 4; s++) { if (R.rin[s]) lists.push(R.rin[s].rem, R.rin[s].used); if (R.aiIn[s]) lists.push(R.aiIn[s]); }
-    for (const arr of lists) for (let k = R.F - 1200; k < R.F - 600; k++) if (k >= 0) delete arr[k];
-  }
-  return true;
-}
-function rollSendDuo() {
-  const R = ROLL, now = performance.now();
-  const busy = R.out.length || R.ckOut || R.aiOut.some(o => o && o.length);
-  if (!busy && now - (R.lastSend || 0) < 33) return;
-  R.lastSend = now;
-  const adv = R.F - 1 - duoMinLast();
-  if (NET.role !== 'host') { const msg = { ru: R.locMax, adv }; if (R.out.length) msg.ri = R.out.splice(0); send(msg); return; }
-  const r4 = [[R.me, R.locMax, R.out.splice(0)]];
-  for (let s = 0; s < 4; s++) if (R.src[s] === 'ai') r4.push([s, R.locMax, R.aiOut[s].splice(0)]);
-  const msg = { r4, adv };
-  if (R.ckOut) { msg.ck = R.ckOut; R.ckOut = null; }
-  send(msg);
-}
-function rollRecvSeat(s, ru, ri) {
-  const R = ROLL, q = R.rin[s];
-  if (!R.on || !R.duo || !q || R.src[s] !== 'rem') return;
-  if (ri) for (const r of ri) q.chg[r[0]] = { h: r[1], p: r.slice(2) };
-  for (let f = q.last + 1; f <= ru; f++) {
-    const c = q.chg[f]; let inp;
-    if (c) { inp = c; q.lastH = c.h; delete q.chg[f]; } else inp = { h: q.lastH, p: [] };
-    q.rem[f] = inp;
-    if (f < R.F) { const u = q.used[f]; if (!u || u.h !== inp.h || inp.p.length) R.pend = Math.min(R.pend, f); }
-  }
-  if (ru > q.last) q.last = ru;
-}
-function rollRecvDuo(msg) {
-  const R = ROLL;
-  if (!R.on || !R.duo) return;
-  for (const e of msg.r4 || []) if (e[0] !== R.me) rollRecvSeat(e[0], e[1], e[2]);
-  if (msg.adv !== undefined) R.peerAdv = msg.adv;
-  if (msg.ck) {
-    const [f, h] = msg.ck, sn = R.snaps[f % R.N];
-    if (sn && sn.f === f && f <= duoMinLast() && f < R.F && R.pend > f && hashState(sn.st) !== h) { R.desyncs++; send({ rdesync: 1 }); }
-  }
-}
-// 房主：有人中途走了，他的座位从下一帧起由房主的电脑接着打（之前收到的按键照旧）
-function rollSeatToAi(s) {
-  const R = ROLL, q = R.rin[s];
-  if (!R.on || !R.duo || R.src[s] !== 'rem' || !q) return;
-  R.ai[s] = new AICtrl(NET.duoLevel || 'hard'); R.aiIn[s] = []; R.aiOut[s] = []; R.aiH[s] = q.lastH;
-  for (let x = Math.max(0, R.F - R.N); x <= q.last; x++) if (q.rem[x]) R.aiIn[s][x] = q.rem[x];
-  for (let x = q.last + 1; x <= R.locMax; x++) R.aiIn[s][x] = { h: q.lastH, p: [] };
-  if (q.last < R.locMax) R.aiOut[s].push([q.last + 1, q.lastH]);
-  R.src[s] = 'ai'; R.rin[s] = null;
-}
 // 状态不一致时：房主把一帧“两边都确认过”的存档发给对方
 function rollSendSync() {
-  const R = ROLL, f = Math.min(R.F, (R.duo ? duoMinLast() : R.remLast) + 1), sn = R.snaps[f % R.N];
+  const R = ROLL, f = Math.min(R.F, R.remLast + 1), sn = R.snaps[f % R.N];
   const st = f === R.F ? capState() : (sn && sn.f === f ? sn.st : null);
   if (st) send({ rsync: { f, st } });
 }
@@ -11773,258 +11567,12 @@ function startWatch2v2(draft) {
 const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
 if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
 
-// ======================= 2v2 组队：你 + 电脑队友，或者四人联机房间 =======================
-// 座位号就是角色序号：0 = A、2 = C 在左队，1 = B、3 = D 在右队。
-// 选人不禁人，顺序 左1 → 右1 → 左2 → 右2，四个人不能重复。联机时房主说了算，别人只发“我选了谁”。
-const DUO_ORDER = [0, 1, 2, 3];
-const DUO_TIME = 20;          // 每人选人限时
-const DUO_AI_DELAY = 0.8;     // 电脑座位停一下再选，看得清
-const DUO_SEAT_NAMES = ['左一', '右一', '左二', '右二'];
-let duoLevel = 'hard';
-let DBP = null;               // { net, step, picks: [4], seats: [{ name, ai, av, id }], t, aiT }
-
-const duoMine = () => (DBP && DBP.net) || (M.mode === 'net' && NET.duo) ? (NET.seat || 0) : 0;
-const duoAuth = () => !DBP || !DBP.net || NET.role === 'host';
-const duoAlly = f => (f.idx % 2) === (M.mode === 'watch2v2' ? 0 : localTeam());
-function duoSeatsCpu() {
-  return [{ name: ACC.name || '你', ai: false, av: availList() }, { name: '电脑', ai: true }, { name: '电脑队友', ai: true }, { name: '电脑', ai: true }];
-}
-function duoSeatTag(s, seats) {
-  const st = (seats || (DBP && DBP.seats) || [])[s];
-  if (!st) return '';
-  if (s === duoMine()) return '你';
-  if (st.ai) return (s % 2) === (duoMine() % 2) ? '电脑队友' : '电脑';
-  return st.name;
-}
-function duoValid(i, seat) {
-  if (!DBP || DBP.step >= 4 || i < 0 || i >= CHARS.length || DBP.picks.includes(i)) return false;
-  const av = DBP.seats[seat] && DBP.seats[seat].av;
-  // 自己能用的角色都被选走了就放开限制，保证总能选上
-  if (av && av.length && av.some(k => !DBP.picks.includes(k)) && !av.includes(i)) return false;
-  return true;
-}
-function duoBegin(net) {
-  initAudio(); ensurePortraits(); chatClear();
-  if (!net) netDropWaiting();
-  BP = null; watch2v2Bp = null;
-  const seats = net ? NET.duoSeats.map(x => ({ ...x })) : duoSeatsCpu();
-  DBP = { net: !!net, step: 0, picks: [-1, -1, -1, -1], seats, t: DUO_TIME, aiT: DUO_AI_DELAY };
-  bpMode = 'duo'; bpSel = -1; bpHover = -1;
-  showScreen('bp'); renderBP();
-  if (net) send({ dbp: DBP });
-}
-// 电脑选人：优先拿能克制对面已选的；队友这边不和自己人撞同一类打法
-function duoAiChoice(seat) {
-  const valid = CHARS.map((c, i) => i).filter(i => duoValid(i, seat));
-  if (!valid.length) return CHARS.map((c, i) => i).find(i => !DBP.picks.includes(i)) || 0;
-  const foes = DBP.picks.filter((p, s) => p >= 0 && s % 2 !== seat % 2).map(p => CHARS[p].id);
-  if (foes.length && Math.random() < 0.6) {
-    const counters = valid.filter(i => (CHARS[i].beats || []).some(id => foes.includes(id)));
-    if (counters.length) return counters[Math.random() * counters.length | 0];
-  }
-  return valid[Math.random() * valid.length | 0];
-}
-function duoApply(i) {
-  if (!DBP || DBP.step >= 4) return;
-  const seat = DUO_ORDER[DBP.step];
-  if (!duoValid(i, seat)) { const fb = CHARS.map((c, k) => k).find(k => duoValid(k, seat)); if (fb === undefined) return; i = fb; }
-  DBP.picks[seat] = i; DBP.step++; DBP.t = DUO_TIME; DBP.aiT = DUO_AI_DELAY; bpSel = -1;
-  SFX.block();
-  if (DBP.net) send({ dbp: DBP });
-  renderBP();
-  if (DBP.step >= 4) setTimeout(duoFinish, 1100);
-}
-function duoFinish() {
-  if (!DBP || DBP.step < 4 || !duoAuth()) return;
-  const picks = DBP.picks.slice(), net = DBP.net;
-  showPop(null);
-  if (!net) { DBP = null; startDuo(picks); return; }
-  const seed = (Math.random() * 2147483647) | 0, ai = NET.duoSeats.map(x => !!x.ai);
-  send({ dstart: { ch: picks, seed, ai, lv: NET.duoLevel || 'hard' } });
-  rollStartDuo(picks, seed, ai);
-}
-function duoTick(dt) {
-  if (!DBP || DBP.step >= 4 || !$id('bp').classList.contains('on')) return;
-  DBP.t = Math.max(0, DBP.t - dt);
-  $id('bpTime').textContent = `${Math.ceil(DBP.t)} 秒`;
-  $id('bpTime').classList.toggle('urgent', DBP.t <= 6);
-  if (!duoAuth()) return;
-  const seat = DUO_ORDER[DBP.step];
-  if (DBP.seats[seat].ai) { DBP.aiT -= dt; if (DBP.aiT <= 0) duoApply(duoAiChoice(seat)); return; }
-  if (DBP.t <= 0) duoApply(seat === duoMine() && duoValid(bpSel, seat) ? bpSel : duoAiChoice(seat));
-}
-function duoSelect(i) {
-  if (!DBP || DBP.step >= 4 || DUO_ORDER[DBP.step] !== duoMine() || !duoValid(i, duoMine())) return false;
-  bpSel = i; SFX.slice(); renderBP(); return true;
-}
-function duoConfirm() {
-  if (!DBP || DBP.step >= 4 || DUO_ORDER[DBP.step] !== duoMine() || !duoValid(bpSel, duoMine())) return;
-  if (duoAuth()) duoApply(bpSel); else { send({ dpick: bpSel }); $id('bpGo').disabled = true; }
-}
-function renderBPDuo() {
-  if (!DBP) return;
-  const done = DBP.step >= 4, seat = done ? -1 : DUO_ORDER[DBP.step], me = duoMine(), myTurn = seat === me;
-  const myTeam = me % 2;
-  const col = sd => (sd === myTeam ? 'var(--ally, #46d3ea)' : 'var(--enemy, #ff4655)');
-  $id('bpChat').classList.add('hidden');
-  $id('bpStep').innerHTML = (done ? '选人完成 · 准备开战' : `${escapeHTML(duoSeatTag(seat))}${myTurn ? '来' : ''}选一个角色`)
-    + `<span class="bpcount">${done ? '4 / 4' : `第 ${DBP.step + 1} / 4 步`}</span>`;
-  $id('bpStep').style.color = myTurn ? '#e9c46a' : 'var(--ink)';
-  if (done) $id('bpTime').textContent = '';
-  for (const sd of [0, 1]) {
-    const slot = s => {
-      const idx = DBP.picks[s], on = s === seat;
-      const who = `<span class="duo-who">${escapeHTML(duoSeatTag(s))}</span>`;
-      return `<div class="slot2 pick${on ? ' on' : ''}${s === me ? ' me' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${CHARS[idx].name}</span>` : '选择'}${who}</div>`;
-    };
-    $id('bpS' + sd).innerHTML = `<div class="who" style="color:${col(sd)}">${sd === myTeam ? '我方' : '对方'} · ${sd === 0 ? '左队' : '右队'}</div><div class="slots">${slot(sd)}${slot(sd + 2)}</div>`;
-  }
-  $id('bpGrid').innerHTML = CHARS.map((c, i) => {
-    const by = DBP.picks.indexOf(i), can = myTurn && duoValid(i, me);
-    const myAv = DBP.seats[me] && DBP.seats[me].av;
-    const lock = myAv && myAv.length && !myAv.includes(i);
-    const tag = by >= 0 ? `<span class="tag p" style="background:${by % 2 === myTeam ? '#1f6f86' : '#8a2a33'}">${escapeHTML(duoSeatTag(by))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : '';
-    return `<button class="bpcard${lock ? ' lock' : ''}${by >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${c.name}，${c.role}${by >= 0 ? '，已被选' : ''}" ${can ? '' : 'aria-disabled="true"'}>
-      <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
-  }).join('');
-  setDetail(bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0));
-  const goB = $id('bpGo');
-  goB.disabled = !(myTurn && duoValid(bpSel, me));
-  goB.textContent = done ? '即将开战…' : myTurn ? (bpSel >= 0 ? `选择 ${CHARS[bpSel].name}` : '选一个角色') : `等待${duoSeatTag(seat)}`;
-}
-// 离线：你在 A，队友 C 和对手 B、D 都是电脑
-function startDuo(picks) {
-  initAudio(); refocusGame();
-  paused = false; human[0].rec = null; REC.on = false;
-  M.mode = 'duo'; M.duo = false; M.watchAi = false; M.level = duoLevel; M.bans = [];
-  M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null;
-  A.setChar(picks[0]); B.setChar(picks[1]); C.setChar(picks[2]); D.setChar(picks[3]);
-  A.ctrl = human[0]; C.ctrl = new AICtrl(duoLevel); B.ctrl = new AICtrl(duoLevel); D.ctrl = new AICtrl(duoLevel);
-  A.meter = B.meter = C.meter = D.meter = 0;
-  human[0].clear(); human[1].clear();
-  showScreen(null); startRound();
-}
-{
-  const lvs = document.querySelectorAll('#duoLevels button');
-  lvs.forEach(b => b.addEventListener('click', () => { duoLevel = b.dataset.lv; lvs.forEach(x => x.classList.toggle('sel', x === b)); SFX.slice(); }));
-  const go = $id('duoStartBtn');
-  if (go) go.addEventListener('click', () => duoBegin(false));
-}
-
-// ---------- 四人联机房间（只走直连；房主 = 0 号座，也就是 A） ----------
-// 进来的人依次坐 左二(C) → 右一(B) → 右二(D)：两个人进房就是一起打两个电脑，满四人就是 2v2 对打。
-// 空座由电脑补。房主可以把人换到另一边。
-const DUO_FILL = [2, 1, 3];
-function duoLobbyInit() {
-  NET.duo = true; NET.seat = 0; NET.duoId = 'h'; NET.duoLevel = NET.duoLevel || 'hard';
-  NET.duoSeats = [{ id: 'h', name: (ACC && ACC.name) || '房主', ai: false, av: availList() }, null, null, null].map(x => x || { id: '', name: '电脑', ai: true });
-  renderDuoLobby();
-}
-function duoLobbyOpen() { return NET.duo && !DBP && !(M.mode === 'net' && ROLL.on && !ROLL.ended); }
-function duoJoinSeat(id, name, av) {   // 房主：有人敲门，给他找个座
-  if (!NET.duo || NET.role !== 'host' || !duoLobbyOpen()) return -1;
-  const s = DUO_FILL.find(k => NET.duoSeats[k].ai);
-  if (s === undefined) return -1;
-  NET.duoSeats[s] = { id, name, ai: false, av: Array.isArray(av) ? av.filter(n => Number.isInteger(n)).slice(0, 32) : null };
-  NET.open = true;
-  toast(`${name} 进了房间（${DUO_SEAT_NAMES[s]}）`);
-  duoLobbyChanged();
-  return s;
-}
-function duoSeatOf(id) { return NET.duoSeats ? NET.duoSeats.findIndex(x => !x.ai && x.id === id) : -1; }
-function duoSeatLeft(id) {   // 房主：有人走了，座位交给电脑
-  const s = duoSeatOf(id);
-  if (s < 0) return;
-  const name = NET.duoSeats[s].name;
-  NET.duoSeats[s] = { id: '', name: '电脑', ai: true };
-  if (DBP && DBP.net) { DBP.seats[s] = { id: '', name: '电脑', ai: true }; send({ dbp: DBP }); renderBP(); }
-  if (M.mode === 'net' && ROLL.on && ROLL.duo) rollSeatToAi(s);
-  toast(`${name} 离开了，${DUO_SEAT_NAMES[s]}由电脑接手`);
-  send({ dleft: name });
-  duoLobbyChanged();
-}
-function duoLobbyChanged() {
-  if (NET.role === 'host') send({ dlobby: { seats: NET.duoSeats, lv: NET.duoLevel } });
-  renderDuoLobby();
-}
-function duoSwap(s) {   // 房主：把这个座位的人挪到另一队
-  if (NET.role !== 'host' || !duoLobbyOpen() || s <= 0) return;
-  const t = s === 2 ? 1 : 2;
-  const a = NET.duoSeats[s]; NET.duoSeats[s] = NET.duoSeats[t]; NET.duoSeats[t] = a;
-  SFX.slice(); duoLobbyChanged();
-}
-function renderDuoLobby() {
-  const box = $id('duoLobby');
-  if (!box) return;
-  const on = !!NET.duo;
-  box.classList.toggle('hidden', !on);
-  const one = $id('netLobbyBox') && $id('netLobbyBox').querySelector('.lobby-duo');
-  if (one) one.classList.toggle('hidden', on);
-  if (!on || !NET.duoSeats) return;
-  if (NET.role !== 'host') { const s = duoSeatOf(NET.duoId); if (s >= 0) NET.seat = s; }
-  const me = NET.seat || 0, host = NET.role === 'host';
-  const seat = s => {
-    const x = NET.duoSeats[s];
-    const tag = s === me ? '你' : s === 0 ? '房主' : x.ai ? '电脑补位' : '侠士';
-    const btn = host && s > 0 && !x.ai ? `<button class="ghost small duo-swap" data-s="${s}" type="button">换边</button>` : '';
-    return `<div class="duo-seat${x.ai ? ' ai' : ''}${s === me ? ' me' : ''}"><span class="duo-pos">${DUO_SEAT_NAMES[s]}</span><b>${escapeHTML(x.name)}</b><small>${tag}</small>${btn}</div>`;
-  };
-  const humans = NET.duoSeats.filter(x => !x.ai).length;
-  const team = sd => `<div class="duo-team ${sd === me % 2 ? 'ally' : 'enemy'}"><div class="duo-th">${sd === me % 2 ? '我方' : '对方'} · ${sd === 0 ? '左队' : '右队'}</div>${seat(sd)}${seat(sd + 2)}</div>`;
-  $id('duoTeams').innerHTML = team(0) + '<div class="duo-vs">VS</div>' + team(1);
-  $id('duoInfo').textContent = humans >= 4 ? '满员，四人 2v2 对打' : humans === 1 ? '把房间码发给朋友，最多再进 3 人；空位由电脑补上' : `${humans} 人在房间，空位由电脑补上${host ? '，人齐了就点开战' : ''}`;
-  $id('duoLvWrap').classList.toggle('hidden', !host); $id('duoLv').value = NET.duoLevel || 'hard';
-  $id('duoGoBtn').classList.toggle('hidden', !host);
-  $id('duoGoBtn').disabled = humans < 2;
-  $id('duoWait').classList.toggle('hidden', host);
-  for (const b of box.querySelectorAll('.duo-swap')) b.onclick = () => duoSwap(+b.dataset.s);
-}
-{
-  const lv = $id('duoLv');
-  if (lv) lv.addEventListener('change', () => { NET.duoLevel = lv.value; duoLobbyChanged(); });
-  const go = $id('duoGoBtn');
-  if (go) go.addEventListener('click', () => { if (NET.role === 'host' && duoLobbyOpen()) duoBegin(true); });
-}
-// 房主收到某个座位发来的消息
-function duoHostMsg(id, m, reply, relay) {
-  const s = duoSeatOf(id);
-  if (s < 0) return;
-  if (m.ru !== undefined) {
-    if (ROLL.on && ROLL.duo) { rollRecvSeat(s, m.ru, m.ri); if (m.adv !== undefined) ROLL.peerAdv = Math.max(0, m.adv); }
-    relay({ r4: [[s, m.ru, m.ri || []]] });
-    return;
-  }
-  if (m.dpick !== undefined) { if (DBP && DBP.net && DBP.step < 4 && DUO_ORDER[DBP.step] === s) duoApply(m.dpick | 0); return; }
-  if (m.rdesync) { rollSendSync(); return; }
-  if (m.pg !== undefined) { reply({ po: m.pg }); return; }
-  if (m.chat) { relay(m); chatRecv(m.chat); return; }
-  if (m.po !== undefined) onNetMsg(m);
-}
-// 其他人收到房主的 2v2 消息
-function duoClientMsg(m) {
-  if (m.dlobby) { NET.duoSeats = m.dlobby.seats; NET.duoLevel = m.dlobby.lv; renderDuoLobby(); return true; }
-  if (m.dleft) { toast(`${m.dleft} 离开了，由电脑接手`); return true; }
-  if (m.dbp) {
-    const fresh = !DBP || DBP.step !== m.dbp.step;
-    DBP = m.dbp; DBP.net = true; bpMode = 'duo'; if (fresh) bpSel = -1;
-    ensurePortraits(); if (DBP.step < 4) showScreen('bp'); renderBP();
-    return true;
-  }
-  if (m.dstart) { NET.duoLevel = m.dstart.lv; rollStartDuo(m.dstart.ch, m.dstart.seed, m.dstart.ai); return true; }
-  if (m.r4) { rollRecvDuo(m); return true; }
-  return false;
-}
-
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
   if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') return;
   if (M.mode === 'net' && NET.isRanked) {   // 排位不和同一个人连打：回大厅找下一个对手
     netLeave(); toMenu(); selectMode('net'); mmStart('ranked');
-    return;
-  }
-  if (M.mode === 'net' && NET.duo) {   // 2v2 房间：房主带大家重新选人再来一局
-    if (NET.role === 'host') duoBegin(true);
     return;
   }
   if (M.mode === 'net') {
@@ -12048,7 +11596,6 @@ document.getElementById('againBtn').addEventListener('click', () => {
     startWatch2v2Draft();
     return;
   }
-  if (M.mode === 'duo') { duoBegin(false); return; }
   if (M.mode === 'mayhem') {
     startMayhem(mayhemP1, mayhemP2, mayhemLevel);
     return;
@@ -12096,12 +11643,12 @@ function toMenu() {
   M.stage = null;
   if (M.mode === 'train' && !TUT && SERVED && ACC.token && TRAIN.total > 0) api('/api/progress', { mode: 'train', traindmg: TRAIN.total, maxcombo: TRAIN.best }).then(j => applyProfile(j.profile)).catch(() => {});
   if (TUT) endTutorial();
-  paused = false; BP = null; watch2v2Bp = null; DBP = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
+  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
   M.mode = 'demo';
-  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2' || prevMode === 'duo') {
-    singleSec(prevMode === 'duo' ? 'watch2v2' : prevMode);
+  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
+    singleSec(prevMode);
     showScreen('single');
   } else {
     showScreen('menu');
@@ -12569,7 +12116,7 @@ const bpSideName = side => {
 };
 function bpStart(mode) {
   if (mode === 'cpu' || mode === 'cpuWatch') netDropWaiting();
-  watch2v2Bp = null; DBP = null;   // 进入任何 1v1 / 联机禁选都先取消可能残留的 2v2 禁选
+  watch2v2Bp = null;   // 进入任何 1v1 / 联机禁选都先取消可能残留的 2v2 禁选
   ensurePortraits(); chatClear();
   bpMode = mode; BP = { step: 0, steps: mode === 'cpu' ? BP_CPU_STEPS : BP_STEPS, bans: [-1, -1], picks: [-1, -1], t: BP_TIME, avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null] }; bpSel = -1; bpCpuT = 0.85;
   showScreen('bp'); renderBP();
@@ -12640,7 +12187,6 @@ function bpCpuChoice() {
 }
 function bpTick(dt) {
   if (bpMode === 'watch2v2') { bpTickWatch2v2(dt); return; }
-  if (bpMode === 'duo') { duoTick(dt); return; }
   if (!BP || BP.step >= bpSteps().length || !document.getElementById('bp').classList.contains('on') || NET.hold) return;
   BP.t = Math.max(0, BP.t - dt);
   document.getElementById('bpTime').textContent = `${Math.ceil(BP.t)} 秒`;
@@ -12804,7 +12350,6 @@ function setDetail(i) {
 function renderBP() {
   // 2v2 观战禁选走独立状态与独立渲染，1v1 / 联机路径完全不变
   if (bpMode === 'watch2v2') { if (watch2v2Bp) renderBPWatch2v2(); return; }
-  if (bpMode === 'duo') { renderBPDuo(); return; }
   if (!BP) return;
   $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
   const my = bpMySide(), done = BP.step >= bpSteps().length;
@@ -12845,7 +12390,6 @@ function renderBP() {
   }
 }
 document.getElementById('bpGrid').addEventListener('click', e => {
-  if (bpMode === 'duo') { const d = e.target.closest('.bpcard'); if (d) duoSelect(+d.dataset.i); return; }
   const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= bpSteps().length) return;
   const i = +b.dataset.i;
   if (bpSteps()[BP.step][0] !== bpMySide() || !bpValid(i)) return;
@@ -12857,14 +12401,12 @@ document.getElementById('bpGrid').addEventListener('click', e => {
   const i = +b.dataset.i, now = performance.now();
   if (lastCardClick.i === i && now - lastCardClick.t < 400) {
     lastCardClick.i = -1;
-    if (bpMode === 'duo') { if (duoSelect(i) || bpSel === i) duoConfirm(); return; }
     if (BP && BP.step < bpSteps().length && bpSteps()[BP.step][0] === bpMySide() && bpValid(i)) { bpSel = i; bpConfirm(); }
     return;
   }
   lastCardClick = { i, t: now };
 });
 document.getElementById('bpGrid').addEventListener('dblclick', e => {
-  if (bpMode === 'duo') return;
   const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= bpSteps().length) return;
   const i = +b.dataset.i;
   if (bpSteps()[BP.step][0] !== bpMySide() || !bpValid(i)) return;
@@ -12922,7 +12464,6 @@ document.getElementById('bpGrid').addEventListener('pointerover', e => {
 });
 document.getElementById('bpGrid').addEventListener('pointerleave', () => { bpHover = -1; setDetail(bpSel); showPop(null); });
 function bpConfirm() {
-  if (bpMode === 'duo') { duoConfirm(); return; }
   if (!BP || BP.step >= bpSteps().length || bpSteps()[BP.step][0] !== bpMySide() || !bpValid(bpSel)) return;
   if (bpAuth()) bpApply(bpSel); else { send({ bp: bpSel }); document.getElementById('bpGo').disabled = true; }
 }
@@ -13769,7 +13310,7 @@ function postRoomToCommunity() {
   }
 }
 
-let netRoomMode = 'normal';   // 'normal' (BO3), 'duo' (2v2 组队，最多 4 人), 'chaos' (天机乱斗)
+let netRoomMode = 'normal';   // 'normal' (BO3), 'chaos' (天机乱斗)
 
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
@@ -13780,16 +13321,10 @@ if (lobbyModesSegEl) {
       toast('仅擂主可调整切磋模式');
       return;
     }
-    const wantDuo = b.dataset.mode === 'duo';
-    if (wantDuo !== !!NET.duo) {
-      if (NET.duo ? NET.duoSeats.some((x, i) => i > 0 && !x.ai) : NET.open) { toast(wantDuo ? '已经有人进来了，要打 2v2 请重新建房再切换' : '房间里还有人，不能切回 1v1'); return; }
-      if (wantDuo && (NET.ws || currentNetMode === 'server')) { toast('2v2 房间只支持 WebRTC 直连'); return; }
-      if (wantDuo) duoLobbyInit(); else { NET.duo = false; renderDuoLobby(); }
-    }
     netRoomMode = b.dataset.mode;
     for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
     send({ sys: 'room_rule', rule: netRoomMode });
-    const nameMap = { normal: '标准论剑 (BO3)', duo: '2v2 组队（最多 4 人）', chaos: '天机乱斗 (随机词条)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)' };
     toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
     SFX.slice();
   });
@@ -14058,7 +13593,7 @@ window.addEventListener('keydown', e => {
   for (let p = 0; p < 2; p++) {
     const act = KEYS[p][e.code]; if (!act) continue;
     e.preventDefault();
-    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || M.mode === 'duo') ? human[0] : human[p];
+    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : human[p];
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
     if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
     if (act === 'left' || act === 'right' || act === 'down') { c.held[act] = true; if (act !== 'down') c.held.aim = act === 'left' ? -1 : 1; continue; }
@@ -14068,7 +13603,7 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => {
   for (let p = 0; p < 2; p++) {
     const act = KEYS[p][e.code]; if (!act) continue;
-    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || M.mode === 'duo') ? human[0] : human[p];
+    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : human[p];
     if (act === 'left' || act === 'right' || act === 'down') c.held[act] = false;
     if (act === 'atk') c.held.atk = false;
     if (act === 'jump') c.held.jump = false;
