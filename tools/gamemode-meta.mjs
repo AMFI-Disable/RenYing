@@ -7,7 +7,6 @@
  *   - 2v2 Arena (watch2v2)
  *   - Chaos Mode / Mutations (chaos)
  *   - Mayhem Mode / 10x Meter (mayhem)
- *   - Bushido Mode / 1-HP Lethality (bushido)
  *   - Tag3 Mode / 3v3 Relays (tag3)
  *
  * Generates what is strong, what is weak, hero tiers (S/A/B/C), and matchup matrices.
@@ -28,13 +27,12 @@ function getArg(name, def) {
 
 const targetMode = getArg('mode', 'cpu');
 const runAll = args.includes('--all');
-const MODES = ['cpu', 'watch2v2', 'chaos', 'mayhem', 'bushido', 'tag3'];
+const MODES = ['cpu', 'watch2v2', 'chaos', 'mayhem', 'tag3'];
 
 mkdirSync('data/meta', { recursive: true });
 
 const MODE_TITLES = {
   cpu: '1v1 CPU Duel',
-  bushido: 'One-Hit Mode (1-HP Lethality)',
   chaos: 'Chaos Mutation Arena',
   mayhem: 'Mayhem Mode (10x Meter)',
   watch2v2: '2v2 Team Battle',

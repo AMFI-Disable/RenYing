@@ -82,15 +82,19 @@ function p2pLoad() {
 }
 // 对方发来的名字只留字母、数字、下划线和汉字（和服务器的昵称规则一样）
 function p2pName(n, dflt) { return (String(n || '').match(/[\w\u4e00-\u9fff]/g) || []).join('').slice(0, 12) || dflt; }
-function p2pOpen() { return !!(P2P.conn && P2P.conn.open); }
-function p2pActive() { return !!(P2P.peer || P2P.conn); }
-function p2pSend(o) { if (p2pOpen()) { try { P2P.conn.send(o); } catch (e) {} } }
+function p2pOpen() { return duoHosting() ? DUOP.conns.some(e => e.conn.open) : !!(P2P.conn && P2P.conn.open); }
+function p2pActive() { return !!(P2P.peer || P2P.conn || DUOP.conns.length); }
+function p2pSend(o) {
+  if (duoHosting()) { duoSendExcept(o, null); return; }
+  if (P2P.conn && P2P.conn.open) { try { P2P.conn.send(o); } catch (e) {} }
+}
 // 关掉当前的直连。sess 加一，旧连接迟到的事件就不会再影响新的房间
 function p2pClose() {
   P2P.sess++; P2P.opened = false;
   clearTimeout(P2P.timer);
   const c = P2P.conn, p = P2P.peer;
   P2P.conn = P2P.peer = null;
+  for (const e of DUOP.conns.splice(0)) { try { e.conn.close(); } catch (x) {} }
   if (c) { try { c.close(); } catch (e) {} }
   if (p) { try { p.destroy(); } catch (e) {} }
 }
@@ -138,6 +142,13 @@ function p2pWire(conn, sess, side, onOpen, onData) {
 // 心跳与延迟测定：每 2 秒发一次；对方太久没动静（断网、合上电脑）就结束对战，不用一直干等
 let lastP2pPingT = 0;
 setInterval(() => {
+  if (duoHosting()) {   // 2v2 房主：每个客人单独心跳，谁太久没动静就当他走了
+    for (const e of DUOP.conns.slice()) {
+      if (e.conn.open) { try { e.conn.send({ sys: 'ping', t: performance.now() }); } catch (x) {} }
+      if (Date.now() - e.lastRx > P2P_SILENCE) duoDrop(e);
+    }
+    return;
+  }
   if (!p2pOpen()) return;
   lastP2pPingT = performance.now();
   p2pSend({ sys: 'ping', t: lastP2pPingT });
@@ -193,6 +204,7 @@ function p2pHost(sess) {
   });
   peer.on('connection', conn => {
     if (!live()) return;
+    if (NET.duo) { duoAccept(conn, sess); return; }     // 2v2 房间：最多再收 3 个人
     if (p2pOpen()) {                                    // 已经有人了
       conn.on('open', () => { try { conn.send({ sys: 'full' }); } catch (e) {} setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); });
       return;
@@ -246,6 +258,53 @@ function p2pHost(sess) {
   });
 }
 
+// ---------- 2v2 房间：房主同时连着最多 3 个客人 ----------
+// 客人只连房主。房主收到谁的消息就知道是哪个座位；按键、聊天由房主转给其他客人。
+const DUOP = { conns: [], n: 0 };   // [{ conn, id, lastRx }]
+function duoHosting() { return typeof NET !== 'undefined' && NET.duo && NET.role === 'host'; }
+function duoSendExcept(o, except) { for (const e of DUOP.conns) if (e !== except && e.id && e.conn.open) { try { e.conn.send(o); } catch (x) {} } }
+function duoDrop(e) {
+  const i = DUOP.conns.indexOf(e);
+  if (i < 0) return;
+  DUOP.conns.splice(i, 1);
+  try { e.conn.close(); } catch (x) {}
+  if (e.id && typeof duoSeatLeft === 'function') duoSeatLeft(e.id);
+}
+function duoAccept(conn, sess) {
+  const e = { conn, id: '', lastRx: Date.now() };
+  DUOP.conns.push(e);
+  const live = () => sess === P2P.sess && DUOP.conns.includes(e);
+  const t = setTimeout(() => { if (live() && !e.id) duoDrop(e); }, 15000);   // 15 秒没打完招呼：多半连不通
+  conn.on('data', d => {
+    if (!live()) return;
+    e.lastRx = Date.now();
+    let m = d;
+    if (typeof m === 'string') { try { m = JSON.parse(m); } catch (x) { return; } }
+    if (!m || typeof m !== 'object') return;
+    if (m.sys === 'ping') { try { conn.send({ sys: 'pong', t: m.t }); } catch (x) {} return; }
+    if (m.sys === 'pong' || m.sys === 'hb') return;
+    if (m.sys === 'hello') {
+      if (e.id) return;
+      clearTimeout(t);
+      const bye = sys => { try { conn.send(sys); } catch (x) {} setTimeout(() => duoDrop(e), 400); };
+      if (m.v !== VERSION) return bye({ sys: 'version', need: VERSION });
+      const id = 'p' + (++DUOP.n) + Math.random().toString(36).slice(2, 6), name = p2pName(m.name, '侠士');
+      const seat = typeof duoJoinSeat === 'function' ? duoJoinSeat(id, name, m.av) : -1;
+      if (seat < 0) return bye({ sys: 'full' });
+      e.id = id;
+      try { conn.send({ sys: 'ready', names: { host: (ACC && ACC.name) || '房主', client: name }, tiers: {}, duo: { id, seats: NET.duoSeats, lv: NET.duoLevel } }); } catch (x) {}
+      duoLobbyChanged();
+      return;
+    }
+    if (!e.id) return;
+    if (m.sys === 'left') { duoDrop(e); return; }
+    if (m.sys !== undefined) return;
+    duoHostMsg(e.id, m, o => { try { conn.send(o); } catch (x) {} }, o => duoSendExcept(o, e));
+  });
+  conn.on('close', () => { if (live()) duoDrop(e); });
+  conn.on('error', () => { if (live() && !conn.open) duoDrop(e); });
+}
+
 // ---------- 加入：按房间码找到房主 ----------
 function p2pJoin(sess, code) {
   code = String(code || '').trim().toUpperCase();
@@ -277,7 +336,7 @@ function p2pJoin(sess, code) {
       clearTimeout(P2P.timer);
       NET.role = 'client';
       onSys({ sys: 'room', role: 'client', code });
-      conn.send({ sys: 'hello', v: VERSION, name: (ACC && ACC.name) || '' });
+      conn.send({ sys: 'hello', v: VERSION, name: (ACC && ACC.name) || '', av: typeof availList === 'function' ? availList() : null });
     }, m => {
       if (m.sys === 'ready') { clearTimeout(P2P.timer); m.names = { host: p2pName(m.names && m.names.host, '房主'), client: p2pName(m.names && m.names.client, '对手') }; m.tiers = {}; }
       if (m.sys) onSys(m); else onNetMsg(m);
@@ -300,7 +359,9 @@ function p2pJoin(sess, code) {
 // 坐下以后每隔几秒去敲“编号比自己小”的座位的门（只往小的敲，两个人就不会同时敲对方）。
 // 敲开了就由座位的主人当房主，敲门的人加入，之后和房间对战一模一样（选人、回滚对战）。
 // 配对成功后房主马上和牵线服务器断开，把座位让给后面的人，已经建立的直连不受影响。
-const MM = { on: false, kind: '', t0: 0, peer: null, myId: '', band: 0, timer: 0, busy: false, tries: 0 };
+const MM = { on: false, kind: '', t0: 0, peer: null, myId: '', band: 0, timer: 0, busy: false, tries: 0, avoid: null };
+const MM_AVOID = 10 * 60 * 1000;   // 排位不跟刚打过的人连着再打：10 分钟内不再配到同一个人
+function mmAvoided(uid) { return !!(uid && MM.kind === 'ranked' && MM.avoid && MM.avoid.uid === uid && Date.now() < MM.avoid.until); }
 const MM_SEATS = 3;          // 每段几个座位
 const MM_BANDS = 5;          // 排位按大段位分段：D C B A S
 const MM_PROBE = 3000;       // 多久去敲一轮门
@@ -381,12 +442,12 @@ function mmIncoming(sess, peer, conn) {
     if (m.sys === 'hello') {
       const mine = mmInfo(), theirs = m.mm || {};
       const fit = m.v === VERSION && theirs.kind === MM.kind &&
-        (MM.kind !== 'ranked' || (mine && Math.abs((theirs.band | 0) - mine.band) <= 2 && !(mine.uid && theirs.uid && mine.uid === theirs.uid)));
+        (MM.kind !== 'ranked' || (mine && Math.abs((theirs.band | 0) - mine.band) <= 2 && !(mine.uid && theirs.uid && mine.uid === theirs.uid) && !mmAvoided(theirs.uid)));
       if (!fit) { try { conn.send({ sys: 'full' }); } catch (e) {} clearTimeout(t); setTimeout(drop, 300); return; }
       clearTimeout(t);
       NET.role = 'host';
-      NET.oppRk = theirs.rk || null;
-      const ready = { sys: 'ready', names: { host: (ACC && ACC.name) || '房主', client: p2pName(m.name, '对手') }, tiers: {}, mm: { kind: MM.kind, rk: mine ? mine.rk : null } };
+      NET.oppRk = theirs.rk || null; NET.oppUid = theirs.uid || '';
+      const ready = { sys: 'ready', names: { host: (ACC && ACC.name) || '房主', client: p2pName(m.name, '对手') }, tiers: {}, mm: { kind: MM.kind, rk: mine ? mine.rk : null, uid: mine ? mine.uid : '' } };
       conn.send(ready);
       mmMatched(peer, 'host');
       onSys(ready);
@@ -441,9 +502,9 @@ function mmKnock(sess, peer, id) {
       if (over && m.sys !== 'ready' && P2P.conn === conn) { if (m.sys) onSys(m); else onNetMsg(m); return; }
       if (m.sys === 'full' || m.sys === 'version') return finish('full');
       if (m.sys === 'ready') {
-        if (!m.mm || m.mm.kind !== MM.kind) return finish('full');
+        if (!m.mm || m.mm.kind !== MM.kind || mmAvoided(m.mm.uid)) return finish('full');
         NET.role = 'client';
-        NET.oppRk = m.mm.rk || null;
+        NET.oppRk = m.mm.rk || null; NET.oppUid = m.mm.uid || '';
         m.names = { host: p2pName(m.names && m.names.host, '房主'), client: p2pName(m.names && m.names.client, '对手') }; m.tiers = {};
         finish('matched');
         mmMatched(peer, 'client');
@@ -457,6 +518,7 @@ function mmKnock(sess, peer, id) {
 // 配对成功：停止排队，房主把座位让出来
 function mmMatched(peer, role) {
   const kind = MM.kind;
+  if (kind === 'ranked' && NET.oppUid) MM.avoid = { uid: NET.oppUid, until: Date.now() + MM_AVOID };
   MM.on = false; MM.busy = false; clearTimeout(MM.timer); MM.peer = null;
   NET.matching = false;
   if (typeof mmUI === 'function') mmUI(null);

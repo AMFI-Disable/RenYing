@@ -322,7 +322,7 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Supported 6 game modes correspond to appropriate AI levels and configs',
+    name: 'Supported 5 game modes correspond to appropriate AI levels and configs',
     fn: `(() => {
       // 1. 1v1 CPU
       startMatch('cpu', 'god', [0, 1], true);
@@ -330,31 +330,25 @@ const testSuite = [
         return { pass: false, error: '1v1 CPU watch mode setup mismatch' };
       }
 
-      // 2. One-Hit Mode (1-HP lethality)
-      startBushido(0, 1, 'god', true);
-      if (M.mode !== 'bushido' || !M.watchAi || A.maxHp !== 1 || B.maxHp !== 1) {
-        return { pass: false, error: 'One-Hit mode 1-HP lethality watch setup failed' };
-      }
-
-      // 3. Chaos Mode
+      // 2. Chaos Mode
       startChaos(0, 1, 'god', true);
       if (M.mode !== 'chaos' || !M.watchAi || M.level !== 'god') {
         return { pass: false, error: 'Chaos mode watch setup failed' };
       }
 
-      // 4. Tag3 Mode (3v3 relay)
+      // 3. Tag3 Mode (3v3 relay)
       startTag3Match([0, 1, 2], [3, 4, 5], 'god', true);
       if (M.mode !== 'tag3' || !M.watchAi || (M.teams[0] || []).length !== 3) {
         return { pass: false, error: 'Tag3 mode 3-hero squad watch setup failed' };
       }
 
-      // 5. Mayhem Mode (10x meter / instant cooldowns)
+      // 4. Mayhem Mode (10x meter / instant cooldowns)
       startMayhem(0, 1, 'god', true);
       if (M.mode !== 'mayhem' || !M.watchAi || A.meter !== 100 || B.meter !== 100) {
         return { pass: false, error: 'Mayhem mode 100% meter watch setup failed' };
       }
 
-      // 6. 2v2 Watch Mode (4 TianDao God bots, 2600 stage)
+      // 5. 2v2 Watch Mode (4 TianDao God bots, 2600 stage)
       startWatch2v2([0, 1, 2, 3, 4, 5]);
       if (M.mode !== 'watch2v2' || !M.watchAi || STAGE_W !== 2600 || !A.ctrl || !B.ctrl || !C.ctrl || !D.ctrl) {
         return { pass: false, error: 'Watch2v2 mode 4-bot TianDao setup failed' };

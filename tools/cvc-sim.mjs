@@ -4,7 +4,7 @@
  *
  * Optimizations & Capabilities:
  *   1. Persistent VM Sandbox with Fast Reset (~60,000+ frames/sec, >800x real-time speed).
- *   2. Custom Game Mode Training (--mode <cpu|watch2v2|chaos|mayhem|bushido|tag3>).
+ *   2. Custom Game Mode Training (--mode <cpu|watch2v2|chaos|mayhem|tag3>).
  *   3. Two-Player Co-op 2v2 Training (--coop): simultaneous dual-agent trajectory recording
  *      with ally relative position, peel signals, focus fire alignment, and shared relic rewards.
  *   4. Mode-Specific Meta & Tier Matrix Generator (--meta): computes S/A/B/C tiers, strengths &
@@ -37,7 +37,7 @@ const matchMode = getArg('mode', 'cpu');
 const isCoop = hasFlag('coop') || matchMode === 'watch2v2' && hasFlag('coop');
 const isMetaMode = hasFlag('meta') || hasFlag('tierlist');
 const replayPath = getArg('replay', '');
-const MODE_MAX_LEVEL = { cpu: 'god', bushido: 'god', chaos: 'god', tag3: 'god', mayhem: 'god', watch2v2: 'god', tower: 'impossible' };
+const MODE_MAX_LEVEL = { cpu: 'god', chaos: 'god', tag3: 'god', mayhem: 'god', watch2v2: 'god', tower: 'impossible' };
 const defaultLevel = args.includes('--mode') ? (MODE_MAX_LEVEL[matchMode] || 'god') : 'hard';
 const p1Level = getArg('p1-level', getArg('level', defaultLevel));
 const p2Level = getArg('p2-level', getArg('level', defaultLevel));
@@ -61,7 +61,6 @@ const EXPOSE_SCRIPT = new vm.Script(`({
   CHARS, A, B, C, D, M, projs, STAGE_W, AICtrl, ARENA2V2,
   startMatch: (...args) => startMatch(...args),
   startTag3Match: (...args) => startTag3Match(...args),
-  startBushido: (...args) => startBushido(...args),
   startChaos: (...args) => startChaos(...args),
   startMayhem: (...args) => startMayhem(...args),
   startWatch2v2: (...args) => startWatch2v2(...args),
@@ -328,8 +327,6 @@ if (isMetaMode) {
           env.startWatch2v2([0, i, a2, 1, j, b2]);
         } else if (matchMode === 'mayhem') {
           env.startMayhem(i, j, 'god', true);
-        } else if (matchMode === 'bushido') {
-          env.startBushido(i, j, 'god', true);
         } else if (matchMode === 'chaos') {
           env.startChaos(i, j, 'god', true);
         } else {
@@ -398,7 +395,6 @@ if (isMetaMode) {
 
   const MODE_TITLES = {
     cpu: '1v1 CPU Duel',
-    bushido: 'One-Hit Mode (1-HP Lethal)',
     chaos: 'Chaos Mutation Arena',
     mayhem: 'Mayhem Mode (10x Meter)',
     watch2v2: '2v2 Team Watch',
@@ -462,8 +458,6 @@ for (let m = 1; m <= matchCount; m++) {
     env.startWatch2v2([pool[0], pool[2], pool[3], pool[1], pool[4], pool[5]]);
   } else if (matchMode === 'mayhem') {
     env.startMayhem(p1Idx, p2Idx, p1Level, true);
-  } else if (matchMode === 'bushido') {
-    env.startBushido(p1Idx, p2Idx, p1Level, true);
   } else if (matchMode === 'chaos') {
     env.startChaos(p1Idx, p2Idx, p1Level, true);
   } else if (matchMode === 'tag3') {

@@ -3,7 +3,7 @@
  * Exhaustive RenYing Match Simulator & Meta Analyzer.
  *
  * Runs 5 matches for EVERY CIRCUMSTANCE:
- *   - All 6 Game Modes: cpu (1v1), bushido (One-Hit Mode), chaos (mutations), mayhem (10x meter), watch2v2 (2-Player vs 2-Player), tag3 (3v3)
+ *   - All 5 Game Modes: cpu (1v1), chaos (mutations), mayhem (10x meter), watch2v2 (2-Player vs 2-Player), tag3 (3v3)
  *   - 2v2 Mode: Simulates Two Players vs Two Players across all 66 duo combinations and compiles Duo Tier Lists & Partner Synergy
  *   - 1v1 Modes: All 78 unique pairings across all 12 characters (including mirror matches)
  *   - Multi-core parallel execution across CPU workers for maximum throughput (~100,000+ frames/sec)
@@ -41,7 +41,7 @@ for (let i = 0; i < HEROES.length; i++) {
   }
 }
 
-const MODES = ['cpu', 'bushido', 'chaos', 'mayhem', 'watch2v2', 'tag3'];
+const MODES = ['cpu', 'chaos', 'mayhem', 'watch2v2', 'tag3'];
 
 // =========================================================================
 // WORKER THREAD LOGIC
@@ -56,7 +56,6 @@ if (!isMainThread) {
     CHARS, A, B, C, D, M, projs, STAGE_W, AICtrl, ARENA2V2,
     startMatch: (...args) => startMatch(...args),
     startTag3Match: (...args) => startTag3Match(...args),
-    startBushido: (...args) => startBushido(...args),
     startChaos: (...args) => startChaos(...args),
     startMayhem: (...args) => startMayhem(...args),
     startWatch2v2: (...args) => startWatch2v2(...args),
@@ -138,8 +137,6 @@ if (!isMainThread) {
         env.startWatch2v2([0, p1, p2, 1, p3, p4]);
       } else if (mode === 'mayhem') {
         env.startMayhem(p1, p2, 'god', true);
-      } else if (mode === 'bushido') {
-        env.startBushido(p1, p2, 'god', true);
       } else if (mode === 'chaos') {
         env.startChaos(p1, p2, 'god', true);
       } else if (mode === 'tag3') {
@@ -238,7 +235,7 @@ if (isMainThread) {
         });
       }
     } else {
-      // 1v1 Modes (cpu, bushido, chaos, mayhem): All 78 unique pairings including mirror matches
+      // 1v1 Modes (cpu, chaos, mayhem): All 78 unique pairings including mirror matches
       for (let i = 0; i < HEROES.length; i++) {
         for (let j = i; j < HEROES.length; j++) {
           tasks.push({
@@ -366,7 +363,6 @@ if (isMainThread) {
 
   const MODE_TITLES = {
     cpu: '1v1 CPU Duel',
-    bushido: 'One-Hit Mode (1-HP Lethal)',
     chaos: 'Chaos Mutation Arena',
     mayhem: 'Mayhem Mode (10x Meter)',
     watch2v2: '2v2 Team Watch',

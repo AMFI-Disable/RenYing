@@ -3,7 +3,7 @@
  * Train a lightweight Neural Network policy on RenYing Trajectories & User Fights.
  *
  * Capabilities & Optimizations:
- *   - Custom Game Mode Policy Training (--mode <cpu|watch2v2|chaos|mayhem|bushido|tag3>).
+ *   - Custom Game Mode Policy Training (--mode <cpu|watch2v2|chaos|mayhem|tag3>).
  *   - 2v2 Co-op Dual-Agent Training (--coop): trains 31-dim state policy with ally awareness.
  *   - User Fight Learning (--user-data data/user_fights.jsonl): distills human combat tricks.
  *   - High-throughput buffer reuse, vectorized batch Adam optimizer, Cosine Annealing LR.
