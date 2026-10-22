@@ -14,10 +14,20 @@
  */
 
 import { execSync, spawn } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import { Worker, isMainThread, parentPort } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
+function getNodeBin() {
+  if (process.execPath && existsSync(process.execPath)) return process.execPath;
+  if (process.argv[0] && existsSync(process.argv[0])) return process.argv[0];
+  const candidates = ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node'];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return 'node';
+}
+
 
 const HEROES = [
   { id: 'qingfeng', idx: 0, name: '青锋' },
@@ -371,13 +381,19 @@ if (isMainThread) {
     writeFileSync(dataPath, list.map(d => JSON.stringify(d)).join('\n') + '\n', 'utf8');
 
     return new Promise((resolve) => {
-      const proc = spawn(process.execPath, [
+      const proc = spawn(getNodeBin(), [
         'tools/train-policy.mjs',
         '--data', dataPath,
         '--hero', hero.id,
         '--epochs', String(epochs),
         '--out', modelPath
       ], { stdio: 'inherit' });
+
+      proc.on('error', (err) => {
+        console.error(`  ✗  ${hero.name} (${hero.id}) spawn error:`, err.message);
+        summary.push({ hero: hero.name, id: hero.id, path: modelPath, status: `FAILED (${err.message})` });
+        resolve();
+      });
 
       proc.on('close', code => {
         summary.push({ hero: hero.name, id: hero.id, path: modelPath, status: code === 0 ? 'OK' : 'FAILED' });

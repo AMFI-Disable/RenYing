@@ -23,11 +23,21 @@
  *   node tools/auto-balance.mjs --verify          # Run simulation & print KeZhi balance report only
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+function getNodeBin() {
+  if (process.execPath && existsSync(process.execPath)) return process.execPath;
+  if (process.argv[0] && existsSync(process.argv[0])) return process.argv[0];
+  const candidates = ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node'];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return 'node';
+}
+
 
 const HEROES = [
   { id: 'qingfeng', idx: 0, name: '青锋' },
@@ -482,7 +492,7 @@ if (isMainThread) {
       // Verify combat mechanics test suite
       console.log(`Running regression check (tools/combat-test.mjs)...`);
       try {
-        execSync(`${process.execPath} tools/combat-test.mjs`, { stdio: 'inherit' });
+        execSync(`${getNodeBin()} tools/combat-test.mjs`, { stdio: 'inherit' });
         console.log(`✓ Combat mechanics verified 100% PASS.`);
       } catch (err) {
         console.error(`✗ Regression test failed! Rolling back changes...`);

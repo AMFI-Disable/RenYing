@@ -8,6 +8,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Resilient Node Process Resolution & Spawn Error Handling (`tools/simulate-all.mjs`, `tools/train-heroes.mjs`, `tools/auto-balance.mjs`)**:
+  - Replaced rigid `process.execPath` invocations with a robust multi-stage binary resolver (`getNodeBin()`) checking `process.execPath`, `process.argv[0]`, and standard Homebrew/system paths (`/opt/homebrew/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`).
+  - Added explicit `'error'` event handlers on child process instances in neural training and balance simulation pipelines, preventing unhandled spawn exceptions (such as `ENOENT` during background package updates) from crashing the parent runner.
 - **Account Cloud Synchronization & Local Fallback Migration (`src/cloud.js`, `src/game.js`, `firestore.rules`)**:
   - Removed auto-cheating unlock script upon `Dev` account login; `Dev` is now treated as a legitimate, persistent account with authentic progression.
   - Implemented automatic local-to-cloud migration: when users with local accounts (`local_...`) log in or click "一键升级为云端账号" in `#acc`, their progress (unlocked characters, skins, ink, and stars) is automatically uploaded and registered in Firebase Auth and Cloud Firestore.

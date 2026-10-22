@@ -24,6 +24,16 @@ import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { execSync, spawn } from 'node:child_process';
+function getNodeBin() {
+  if (process.execPath && existsSync(process.execPath)) return process.execPath;
+  if (process.argv[0] && existsSync(process.argv[0])) return process.argv[0];
+  const candidates = ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node'];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return 'node';
+}
+
 
 const HEROES = [
   { id: 'qingfeng', idx: 0, name: '青锋' },
@@ -313,7 +323,7 @@ if (isMainThread) {
   if (doAutoBalance) {
     console.log(`[Auto-Balance] Tuning combat stats (dmg, escCD, hp) with KeZhi ±10% acceptance...`);
     try {
-      execSync(`${process.execPath} tools/auto-balance.mjs --apply --rounds ${balanceRounds} --matches ${Math.max(3, Math.min(6, matchesPerMatchup))}`, { stdio: 'inherit' });
+      execSync(`${getNodeBin()} tools/auto-balance.mjs --apply --rounds ${balanceRounds} --matches ${Math.max(3, Math.min(6, matchesPerMatchup))}`, { stdio: 'inherit' });
       console.log(`[Auto-Balance] Completed & applied to src/game.js successfully.\n`);
     } catch (balErr) {
       console.warn(`⚠ Auto-balance warning:`, balErr.message);
@@ -788,13 +798,18 @@ if (isMainThread) {
       writeFileSync(dataPath, list.map(d => JSON.stringify(d)).join('\n') + '\n', 'utf8');
 
       return new Promise(resolve => {
-        const proc = spawn(process.execPath, [
+        const proc = spawn(getNodeBin(), [
           'tools/train-policy.mjs',
           '--data', dataPath,
           '--hero', hero.id,
           '--epochs', String(epochs),
           '--out', modelPath
         ], { stdio: 'inherit' });
+        proc.on('error', err => {
+          console.error(`  ✗  ${hero.name} (${hero.id}) training spawn error:`, err.message);
+          trainSummary.push({ hero: hero.name, id: hero.id, path: modelPath, status: `FAILED (${err.message})` });
+          resolve();
+        });
         proc.on('close', code => {
           trainSummary.push({ hero: hero.name, id: hero.id, path: modelPath, status: code === 0 ? 'OK' : 'FAILED' });
           resolve();
@@ -832,7 +847,7 @@ if (isMainThread) {
       console.log('[Build Complete] Game is ready with latest models!');
 
       console.log('\nRunning regression check (tools/combat-test.mjs)...');
-      execSync(`${process.execPath} tools/combat-test.mjs`, { stdio: 'inherit' });
+      execSync(`${getNodeBin()} tools/combat-test.mjs`, { stdio: 'inherit' });
       console.log('✓ Combat mechanics verified 100% PASS.');
 
       if (doPush) {
