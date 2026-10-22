@@ -283,26 +283,60 @@ if (isMainThread) {
     return idx !== -1 && args[idx + 1] ? args[idx + 1] : def;
   }
 
+  const allInOne = args.includes('--all-in-one');
+  const doAutoBalance = allInOne || args.includes('--auto-balance');
+  const balanceRounds = parseInt(getArg('balance-rounds', '2'), 10);
+  const doPush = args.includes('--push');
+  const skipTrain = !allInOne && (args.includes('--skip-train') && !args.includes('--train-all'));
   const matchesPerMatchup = parseInt(getArg('matches-per-matchup', getArg('matches', '5')), 10);
-  const targetMode = getArg('mode', 'all');
+  const targetMode = allInOne || args.includes('--simulate-all') ? 'all' : getArg('mode', 'all');
   const concurrency = parseInt(getArg('workers', getArg('concurrency', String(Math.max(2, os.cpus().length)))), 10);
   const exportPath = getArg('export', '');
-  const skipTrain = args.includes('--skip-train');
-  const doPush = args.includes('--push');
   const epochs = parseInt(getArg('epochs', '6'), 10);
   const roundsPerMatch = parseInt(getArg('rounds', '2'), 10);
 
   const modesToRun = targetMode === 'all' ? MODES : [targetMode];
-  // Collect training trajectories only when running cpu mode (or all modes)
   const collectTrajectories = !skipTrain && modesToRun.includes('cpu');
 
   console.log(`\n================================================================`);
-  console.log(`   RenYing Exhaustive Simulator → Trainer → Publisher           `);
+  console.log(`   RenYing Master Pipeline: Simulate -> Auto-Balance -> Train -> Push`);
   console.log(`   Matches Per Circumstance : ${matchesPerMatchup} | Workers: ${concurrency}`);
   console.log(`   Modes Scheduled          : ${modesToRun.join(', ')}`);
+  console.log(`   Auto-Combat Balance      : ${doAutoBalance ? `enabled (rounds=${balanceRounds}, KeZhi ±10% tolerance)` : 'off (pass --auto-balance)'}`);
   console.log(`   Neural Training          : ${skipTrain ? 'SKIPPED (--skip-train)' : `enabled (epochs=${epochs}, rounds=${roundsPerMatch})`}`);
   console.log(`   Auto Push                : ${doPush ? 'YES' : 'no'}`);
   console.log(`================================================================\n`);
+
+  // =========================================================================
+  // STEP 0: AUTO-COMBAT BALANCE (if requested or --all-in-one)
+  // =========================================================================
+  if (doAutoBalance) {
+    console.log(`[Auto-Balance] Tuning combat stats (dmg, escCD, hp) with KeZhi ±10% acceptance...`);
+    try {
+      execSync(`${process.execPath} tools/auto-balance.mjs --apply --rounds ${balanceRounds} --matches ${Math.max(3, Math.min(6, matchesPerMatchup))}`, { stdio: 'inherit' });
+      console.log(`[Auto-Balance] Completed & applied to src/game.js successfully.\n`);
+    } catch (balErr) {
+      console.warn(`⚠ Auto-balance warning:`, balErr.message);
+    }
+  }
+
+  // Load hero KeZhi (克制) metadata from src/game.js
+  const gameCode = readFileSync('src/game.js', 'utf8');
+  for (const h of HEROES) {
+    const m = gameCode.match(new RegExp(`id:\\s*'${h.id}'[\\s\\S]*?beats:\\s*(\\[[^\\]]*\\])[\\s\\S]*?weakTo:\\s*(\\[[^\\]]*\\])`));
+    if (m) {
+      try {
+        h.beats = JSON.parse(m[1].replace(/'/g, '"'));
+        h.weakTo = JSON.parse(m[2].replace(/'/g, '"'));
+      } catch (e) {
+        h.beats = [];
+        h.weakTo = [];
+      }
+    } else {
+      h.beats = [];
+      h.weakTo = [];
+    }
+  }
 
   // Build task list for every circumstance
   const tasks = [];
@@ -310,12 +344,10 @@ if (isMainThread) {
 
   for (const mode of modesToRun) {
     if (mode === 'watch2v2') {
-      // 2v2: Every circumstance of TWO PLAYERS VS TWO PLAYERS
-      // 12 heroes yield 66 unique two-player duo team combinations
+      // 2v2: Every circumstance of TWO PLAYERS VS TWO PLAYERS (66 unique duo teams)
       for (let d1 = 0; d1 < DUOS.length; d1++) {
         const t1 = DUOS[d1];
         let oppCount = 0;
-        // Pair each two-player duo against multiple diverse non-overlapping duo teams
         for (let step = 1; step < DUOS.length && oppCount < 2; step++) {
           const d2 = (d1 + step) % DUOS.length;
           if (d2 <= d1) continue;
@@ -418,7 +450,6 @@ if (isMainThread) {
         completedTasks++;
         totalFramesSimulated += msg.totalFrames;
 
-        // Accumulate training trajectories from cpu-mode tasks
         if (msg.trajectories && msg.trajectories.length > 0) {
           for (const tr of msg.trajectories) {
             const hero = HEROES[tr.heroIdx];
@@ -477,7 +508,6 @@ if (isMainThread) {
         }
       });
 
-      // Initial task dispatch
       if (taskCursor < tasks.length) {
         worker.postMessage(tasks[taskCursor++]);
       }
@@ -509,7 +539,6 @@ if (isMainThread) {
     const modeTitle = MODE_TITLES[mode] || mode.toUpperCase();
 
     if (mode === 'watch2v2') {
-      // 2v2 SPECIFIC: 2-Player Duo Team Meta & Partner Synergy Charts
       const duoRankings = DUOS.map(d => {
         const wins = ms.duoWins[d.id] || 0;
         const matches = ms.duoMatches[d.id] || 0;
@@ -541,7 +570,6 @@ if (isMainThread) {
       });
       duoRankings.sort((a, b) => b.wrVal - a.wrVal);
 
-      // Best Partner Matrix for Each Individual Hero
       const partnerMatrix = HEROES.map((h, i) => {
         const partnerStats = [];
         for (let j = 0; j < HEROES.length; j++) {
@@ -589,7 +617,6 @@ if (isMainThread) {
       writeFileSync(`data/meta/watch2v2_duo_meta.json`, JSON.stringify(allReports[mode], null, 2), 'utf8');
       writeFileSync(`data/meta/${mode}.json`, JSON.stringify(allReports[mode], null, 2), 'utf8');
     } else {
-      // 1v1 and Tag3 Single Hero Rankings
       const rankings = HEROES.map((h, i) => {
         const wins = ms.heroWins[i];
         const matches = ms.heroMatches[i];
@@ -631,7 +658,7 @@ if (isMainThread) {
         rankings
       };
 
-      console.log(`\n### [ ${modeTitle} ] Hero Meta Rankings (5 Matches Per Circumstance):`);
+      console.log(`\n### [ ${modeTitle} ] Hero Meta Rankings:`);
       console.log('| Rank | Tier | Hero | Win Rate | Record | Strong Against | Weak Against |');
       console.log('|:---:|:---:|:---:|:---:|:---:|:---|:---|');
       rankings.forEach((r, idx) => {
@@ -647,29 +674,87 @@ if (isMainThread) {
   console.log(`✓ Master report saved to data/meta/exhaustive_report.json\n`);
 
   // =========================================================================
-  // HERO WIN-RATE BALANCE REPORT (cpu mode, printed from live simulation data)
+  // HERO WIN-RATE & KEZHI (克制 ±10%) BALANCE AUDIT REPORT (cpu mode)
   // =========================================================================
   if (modeStats['cpu']) {
     const ms = modeStats['cpu'];
     console.log(`\n=================================================================`);
-    console.log(`               RenYing Hero Balance Audit Report                 `);
+    console.log(`   RenYing Hero Balance & KeZhi (克制 ±10% Acceptable) Audit    `);
     console.log(`=================================================================`);
-    const sortedStats = HEROES.map(h => ({
-      ...h,
-      picks: ms.heroMatches[h.idx],
-      wins: ms.heroWins[h.idx],
-      rate: ms.heroMatches[h.idx] > 0 ? (ms.heroWins[h.idx] / ms.heroMatches[h.idx]) * 100 : 0
-    })).sort((a, b) => b.rate - a.rate);
 
-    console.log(`  英雄     | 胜场 / 场次 | 胜率    | 评定状态`);
-    console.log(`  ---------|-------------|---------|---------------------------`);
-    for (const s of sortedStats) {
+    const balanceData = HEROES.map(h => {
+      const picks = ms.heroMatches[h.idx];
+      const wins = ms.heroWins[h.idx];
+      const overallWr = picks > 0 ? (wins / picks) : 0.50;
+
+      let counterCount = 0;
+      let counterInTolerance = 0;
+      let totalDeviation = 0;
+      let evaluatedMatchups = 0;
+
+      for (let j = 0; j < HEROES.length; j++) {
+        if (h.idx === j) continue;
+        const wAgainst = ms.matchupWins[h.idx][j];
+        const lAgainst = ms.matchupWins[j][h.idx];
+        const tot = wAgainst + lAgainst;
+        if (tot === 0) continue;
+
+        const actualWr = wAgainst / tot;
+        const opp = HEROES[j];
+        const isAdvantage = h.beats && (h.beats.includes(opp.id) || (opp.weakTo && opp.weakTo.includes(h.id)));
+        const isDisadvantage = h.weakTo && (h.weakTo.includes(opp.id) || (opp.beats && opp.beats.includes(h.id)));
+
+        let target = 0.50;
+        let tol = 0.05; // Neutral matchups: ±5%
+        if (isAdvantage && !isDisadvantage) {
+          target = 0.58;
+          tol = 0.10; // KeZhi: ±10% acceptable range
+          counterCount++;
+        } else if (isDisadvantage && !isAdvantage) {
+          target = 0.42;
+          tol = 0.10; // KeZhi: ±10% acceptable range
+          counterCount++;
+        }
+
+        const minAcc = Math.max(0.10, target - tol);
+        const maxAcc = Math.min(0.90, target + tol);
+        let dev = 0;
+        if (actualWr > maxAcc) dev = actualWr - maxAcc;
+        else if (actualWr < minAcc) dev = actualWr - minAcc;
+
+        if (isAdvantage || isDisadvantage) {
+          if (dev === 0) counterInTolerance++;
+        }
+
+        totalDeviation += dev;
+        evaluatedMatchups++;
+      }
+
+      const avgDev = evaluatedMatchups > 0 ? (totalDeviation / evaluatedMatchups) : 0;
+      return {
+        ...h,
+        picks,
+        wins,
+        rate: overallWr * 100,
+        avgDev,
+        counterCount,
+        counterInTolerance
+      };
+    }).sort((a, b) => b.rate - a.rate);
+
+    console.log(`  英雄     | 胜场 / 场次 | 胜率    | 克制合格率 (±10%内) | 评定状态`);
+    console.log(`  ---------|-------------|---------|---------------------|---------------------------`);
+    for (const s of balanceData) {
       let status = '🟢 均衡 (Balanced)';
-      if (s.rate > 65)       status = '🔴 过强 (Dominant — Needs Nerf)';
-      else if (s.rate > 55)  status = '🟡 强势 (Strong)';
-      else if (s.rate < 35)  status = '🔵 偏弱 (Underpowered — Needs Buff)';
-      else if (s.rate < 45)  status = '⚪ 略弱 (Slightly Weak)';
-      console.log(`  ${s.name.padEnd(6)} | ${(s.wins + '/' + s.picks).padEnd(11)} | ${s.rate.toFixed(1).padStart(5)}%  | ${status}`);
+      if (Math.abs(s.avgDev) <= 0.02) {
+        status = '🟢 均衡 (In Tolerance)';
+      } else if (s.avgDev > 0) {
+        status = s.avgDev > 0.10 ? '🔴 过强 (Dominant — Needs Nerf)' : '🟡 偏强 (Slightly Strong)';
+      } else {
+        status = s.avgDev < -0.10 ? '🔵 偏弱 (Underpowered — Needs Buff)' : '⚪ 略弱 (Slightly Weak)';
+      }
+      const kezhiRatio = s.counterCount > 0 ? `${s.counterInTolerance}/${s.counterCount} 合格`.padEnd(19) : '无克制对局'.padEnd(19);
+      console.log(`  ${s.name.padEnd(6)} | ${(s.wins + '/' + s.picks).padEnd(11)} | ${s.rate.toFixed(1).padStart(5)}%  | ${kezhiRatio} | ${status}`);
     }
     console.log(`=================================================================\n`);
   }
@@ -726,13 +811,11 @@ if (isMainThread) {
     });
     await Promise.all(trainWorkerPool);
 
-    // Clean up intermediate JSONL files
     try { execSync('rm -rf data/hero_*.jsonl', { stdio: 'ignore' }); } catch (e) {}
 
     const trainTime = ((Date.now() - trainStart) / 1000).toFixed(2);
     console.log(`\n✓ Neural training complete in ${trainTime}s!`);
 
-    // Training summary table
     console.log(`\n  Hero      | Status`);
     console.log(`  ----------|----------`);
     for (const s of trainSummary) {
@@ -741,33 +824,37 @@ if (isMainThread) {
     }
 
     // =========================================================================
-    // BUILD + GIT PUSH
+    // BUILD + VERIFY + GIT PUSH
     // =========================================================================
     try {
       console.log('\nPackaging updated neural weights into game build (tools/build.py)...');
       execSync('python3 tools/build.py', { stdio: 'inherit' });
-      console.log('[Build Complete] Game is ready with the latest trained AI models!');
+      console.log('[Build Complete] Game is ready with latest models!');
+
+      console.log('\nRunning regression check (tools/combat-test.mjs)...');
+      execSync(`${process.execPath} tools/combat-test.mjs`, { stdio: 'inherit' });
+      console.log('✓ Combat mechanics verified 100% PASS.');
 
       if (doPush) {
         console.log('\nCommitting and pushing to origin/main...');
-        execSync('git add models/ index.html renying-offline.html', { stdio: 'inherit' });
+        execSync('git add models/ data/meta/ index.html renying-offline.html', { stdio: 'inherit' });
         try {
-          execSync('git commit -m "feat: auto-simulate, train & update hero models"', { stdio: 'inherit' });
+          execSync('git commit -m "feat: simulate all, train & auto balance"', { stdio: 'inherit' });
           execSync('git push origin main', { stdio: 'inherit' });
           console.log('✓ Pushed to origin/main successfully.');
         } catch (gitErr) {
-          console.warn('⚠  git commit/push failed (nothing new to commit, or push rejected).');
+          console.warn('⚠ git commit/push failed (nothing new to commit or push rejected).');
         }
       }
     } catch (e) {
-      console.warn('⚠  Could not complete build or push:', e.message);
+      console.warn('⚠ Could not complete build, verify or push:', e.message);
     }
   } else if (doPush && skipTrain) {
-    // Push-only path when --skip-train is used (e.g. meta data only)
     try {
-      execSync('git add models/ index.html renying-offline.html', { stdio: 'inherit' });
+      execSync('python3 tools/build.py', { stdio: 'inherit' });
+      execSync('git add models/ data/meta/ index.html renying-offline.html', { stdio: 'inherit' });
       try {
-        execSync('git commit -m "chore: update simulation meta reports"', { stdio: 'inherit' });
+        execSync('git commit -m "chore: update simulation meta and balance"', { stdio: 'inherit' });
         execSync('git push origin main', { stdio: 'inherit' });
         console.log('✓ Pushed to origin/main.');
       } catch (gitErr) {}
