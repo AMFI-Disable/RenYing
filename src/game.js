@@ -8834,10 +8834,13 @@ function setMenuHero(ci) {
   if (MENU_HERO && menuHeroId === ci && MENU_HERO.skinKey === k) return;
   const f = new Fighter(0); f.setChar(ci); f.look = skinLook(ci, k); f.skinKey = k; f.reset(0); f.face = 1;
   MENU_HERO = f; menuHeroId = ci;
+  const sk = k && SKINS[k];   // 穿着皮肤时样子会变很多，名字写出来免得认不出是谁
+  $id('heroName').innerHTML = escapeHTML(CHARS[ci].name) + (sk ? `<small>${escapeHTML(sk.name)}</small>` : '');
 }
-function heroQuickFight() {
+function heroQuickFight(lv) {
   if (menuLock || menuHeroId < 0) return;
-  initAudio(); heroPickShow(false);
+  initAudio(); heroPickShow(false); heroLvShow(false);
+  if (lv) { pickLevel = lv; for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x.dataset.lv === lv); }
   const pool = CHARS.map((c, i) => i).filter(i => i !== menuHeroId), opp = pool[Math.random() * pool.length | 0];
   paused = false; bpMode = 'cpu'; showScreen(null);
   MSTAT.maxcombo = 0; MSTAT.ults = 0;
@@ -8852,14 +8855,21 @@ function heroPickShow(on) {
     el.innerHTML = av.map(i => `<button type="button" data-i="${i}" class="${i === menuHeroId ? 'sel' : ''}"><img src="${PORTRAITS[i] || ''}" alt=""><span style="color:rgb(${CHARS[i].look.slash})">${CHARS[i].name}</span></button>`).join('');
   }
   el.hidden = !on;
+  if (on) heroLvShow(false);
 }
-$id('heroGo').addEventListener('click', () => { SFX.slice && SFX.slice(); heroQuickFight(); });
+function heroLvShow(on) {   // 点「开始人机对战」先弹一排难度，点哪个就用哪个开打
+  const el = $id('heroLv'); if (!el) return;
+  if (on) { heroPickShow(false); for (const b of el.querySelectorAll('button')) b.classList.toggle('sel', b.dataset.lv === pickLevel); }
+  el.hidden = !on;
+}
+$id('heroGo').addEventListener('click', e => { e.stopPropagation(); SFX.block && SFX.block(); heroLvShow($id('heroLv').hidden); });
+$id('heroLv').addEventListener('click', e => { const b = e.target.closest('button[data-lv]'); if (!b) return; e.stopPropagation(); SFX.slice && SFX.slice(); heroQuickFight(b.dataset.lv); });
 $id('heroSwap').addEventListener('click', e => { e.stopPropagation(); heroPickShow($id('heroPick').hidden); });
 $id('heroPick').addEventListener('click', e => {
   const b = e.target.closest('button[data-i]'); if (!b) return;
   e.stopPropagation(); setMenuHero(+b.dataset.i); heroPickShow(false); SFX.block && SFX.block();
 });
-document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) heroPickShow(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) { heroPickShow(false); heroLvShow(false); } });
 // 回放从设置里进：返回时回到设置
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });

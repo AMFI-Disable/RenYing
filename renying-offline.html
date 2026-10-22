@@ -1438,6 +1438,14 @@ clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 
 .hh-pick button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px; background: rgba(255,255,255,.04); border: 1px solid transparent; clip-path: none; font-size: 12px; letter-spacing: .04em; }
 .hh-pick button img { width: 44px; height: 52px; object-fit: cover; }
 .hh-pick button.sel, .hh-pick button:hover { border-color: rgba(233,196,106,.7); background: rgba(233,196,106,.1); }
+.hh-name { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-family: var(--title); font-size: 18px; letter-spacing: .2em; color: #f4f1ea; text-shadow: 0 2px 8px rgba(0,0,0,.8); pointer-events: none; }
+.hh-name small { margin-left: 8px; font-family: var(--body); font-size: 12px; letter-spacing: .1em; opacity: .75; }
+.hh-lv { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 6px 8px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0,0,0,.5); white-space: nowrap; }
+.hh-lv[hidden] { display: none; }
+.hh-lv span { font-size: 12px; color: var(--dim); margin-right: 4px; letter-spacing: .1em; }
+.home-hero .hh-lv button { padding: 3px 10px; font-size: 12px; letter-spacing: .08em; background: rgba(255,255,255,.04); color: rgba(244,241,234,.85); border: 1px solid rgba(244,241,234,.2); clip-path: none; }
+.home-hero .hh-lv button:hover { border-color: rgba(244,241,234,.7); }
+.home-hero .hh-lv button.sel { background: #f4f1ea; color: #12141e; border-color: #f4f1ea; }
 @media (max-height: 520px) { .home-hero button { padding: 4px 10px; font-size: 12px; } }
 body.offline .tn-online, body:not(.offline) .tn-offline { display: none !important; }
 </style>
@@ -1516,9 +1524,11 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
     <button class="mcard left" id="mSingle" data-go="single"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
     <button class="mcard right" id="mNet" data-go="netp"><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走 -->
+      <div class="hh-name" id="heroName"></div>
       <button class="hh-go" id="heroGo" type="button">开始人机对战</button>
       <button class="hh-swap" id="heroSwap" type="button">更换角色</button>
       <div class="hh-pick" id="heroPick" hidden></div>
+      <div class="hh-lv" id="heroLv" hidden><span>选难度</span><button type="button" data-lv="easy">入门</button><button type="button" data-lv="normal">寻常</button><button type="button" data-lv="hard">劲敌</button><button type="button" data-lv="impossible">绝顶</button><button type="button" data-lv="god">天道</button></div>
     </div>
     <p class="ver" id="verLine"></p>
     <p class="touch">这游戏得用键盘和鼠标，请在电脑上打开。</p>
@@ -11852,10 +11862,13 @@ const k = mySkin(CHARS[ci].id);
 if (MENU_HERO && menuHeroId === ci && MENU_HERO.skinKey === k) return;
 const f = new Fighter(0); f.setChar(ci); f.look = skinLook(ci, k); f.skinKey = k; f.reset(0); f.face = 1;
 MENU_HERO = f; menuHeroId = ci;
+const sk = k && SKINS[k];   // 穿着皮肤时样子会变很多，名字写出来免得认不出是谁
+$id('heroName').innerHTML = escapeHTML(CHARS[ci].name) + (sk ? `<small>${escapeHTML(sk.name)}</small>` : '');
 }
-function heroQuickFight() {
+function heroQuickFight(lv) {
 if (menuLock || menuHeroId < 0) return;
-initAudio(); heroPickShow(false);
+initAudio(); heroPickShow(false); heroLvShow(false);
+if (lv) { pickLevel = lv; for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x.dataset.lv === lv); }
 const pool = CHARS.map((c, i) => i).filter(i => i !== menuHeroId), opp = pool[Math.random() * pool.length | 0];
 paused = false; bpMode = 'cpu'; showScreen(null);
 MSTAT.maxcombo = 0; MSTAT.ults = 0;
@@ -11870,14 +11883,21 @@ el.style.gridTemplateColumns = `repeat(${Math.min(6, av.length)}, 64px)`;
 el.innerHTML = av.map(i => `<button type="button" data-i="${i}" class="${i === menuHeroId ? 'sel' : ''}"><img src="${PORTRAITS[i] || ''}" alt=""><span style="color:rgb(${CHARS[i].look.slash})">${CHARS[i].name}</span></button>`).join('');
 }
 el.hidden = !on;
+if (on) heroLvShow(false);
 }
-$id('heroGo').addEventListener('click', () => { SFX.slice && SFX.slice(); heroQuickFight(); });
+function heroLvShow(on) {   // 点「开始人机对战」先弹一排难度，点哪个就用哪个开打
+const el = $id('heroLv'); if (!el) return;
+if (on) { heroPickShow(false); for (const b of el.querySelectorAll('button')) b.classList.toggle('sel', b.dataset.lv === pickLevel); }
+el.hidden = !on;
+}
+$id('heroGo').addEventListener('click', e => { e.stopPropagation(); SFX.block && SFX.block(); heroLvShow($id('heroLv').hidden); });
+$id('heroLv').addEventListener('click', e => { const b = e.target.closest('button[data-lv]'); if (!b) return; e.stopPropagation(); SFX.slice && SFX.slice(); heroQuickFight(b.dataset.lv); });
 $id('heroSwap').addEventListener('click', e => { e.stopPropagation(); heroPickShow($id('heroPick').hidden); });
 $id('heroPick').addEventListener('click', e => {
 const b = e.target.closest('button[data-i]'); if (!b) return;
 e.stopPropagation(); setMenuHero(+b.dataset.i); heroPickShow(false); SFX.block && SFX.block();
 });
-document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) heroPickShow(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) { heroPickShow(false); heroLvShow(false); } });
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
 $id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
