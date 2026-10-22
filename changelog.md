@@ -8,6 +8,15 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **14-Day Free Skin Event & 1000-Ink Welcome Task (`src/game.js`)**:
+  - All players can equip every skin from 2026-10-22 00:00 to 2026-11-05 00:00 (Beijing time); `skinOwned()` now gates every skin check, and borrowed skins show a 限免 tag in the codex. Equips of skins you don't own drop back to default once the event ends.
+  - One-time task during the event: finish 3 matches against the CPU (win or lose) to claim 1000 ink. Guests' progress carries over after they log in.
+  - Home screen event card with days remaining; it opens the task page.
+
+### Fixed
+
+- **Tasks Never Progressed on the GitHub Pages Build**: daily and weekly tasks now track matches, wins, max combo and ultimates per account in local storage, reset at Beijing midnight / Monday, and remember what was claimed (previously progress stayed at 0 and the first task could be re-claimed after every reload).
+
 - **Exhaustive Simulation Across All Circumstances (`tools/simulate-all.mjs`, `tools/cvc-sim.mjs --exhaustive`)**:
   - Implemented a unified command executing 5 matches for every conceivable circumstance: all 6 game modes (`cpu`, `bushido`, `chaos`, `mayhem`, `watch2v2`, `tag3`) and every hero matchup across all 12 characters (78 unique pairings including mirror matches).
   - Utilizes parallel multi-worker threads (`node:worker_threads`) across CPU cores achieving over 100,000 frames/sec (>1600x real-time speed).

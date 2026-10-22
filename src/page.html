@@ -60,6 +60,10 @@
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
     <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
+      <button class="home-card home-evt" id="homeEvt" type="button" hidden>
+        <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
+        <span class="hc-txt"><b>全皮肤免费穿</b><small>打 3 局人机，再领 1000 墨锭</small></span>
+      </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
         <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
@@ -928,6 +932,13 @@
 
       <!-- Tab 1: 挑战任务 -->
       <div id="taskTabQuests" class="task-tab-pane">
+        <div class="task-sec-card evt-card" id="tEvtCard" hidden style="margin-bottom:14px">
+          <div class="sec-head-row">
+            <h3 class="spt">限时福利</h3>
+            <span class="sub-badge" id="tEvtLeft"></span>
+          </div>
+          <div class="tlist" id="tEvt"></div>
+        </div>
         <div class="task-sec-card">
           <div class="sec-head-row">
             <h3 class="spt">每日挑战</h3>

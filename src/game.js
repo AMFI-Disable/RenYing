@@ -98,6 +98,8 @@ const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上
 let NET_HUD = false;                     // 回滚与联机遥测 HUD 开关（按 ~ 或 F2 切换）
 // 开发者临时全解锁特权（仅限当前窗口会话有效，关闭或新建窗口后自动恢复锁定，不污染真实云端存档）
 let DEV_SESSION_UNLOCKED = false;
+// 限免活动：北京时间 10.22 0:00 起 14 天，所有玩家所有皮肤都能穿
+const FREE_SKIN_EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };
 try {
   DEV_SESSION_UNLOCKED = sessionStorage.getItem('renying-dev-unlock') === '1';
 } catch (e) {}
@@ -2904,6 +2906,7 @@ function inkTitle(name, lost) {
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (REC.on) recSave(w);
+  taskMatchEnd(w);
   $id('endKicker').textContent = '';
   $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
   $id('againBtn').style.display = (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
@@ -8622,10 +8625,10 @@ function renderCodex() {
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨专属全景天象与奥义特效' : '🌟专属灵光天色与命中特效'}）</span>` : '';
   $id('cxSkinT').innerHTML = (cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤装束') + skDesc;
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
-    const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+    const has = skinOwned(k);
     const isLeg = v.rarity === 'legend';
     const lockHint = v.exclusive ? ' · 青锋行通关' : ' · 预览';
-    return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? '' : lockHint}</button>`;
+    return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
@@ -8796,7 +8799,7 @@ $id('cxSkins').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   const sk = b.dataset.sk || '';
   const id = CHARS[cxIdx].id;
-  const has = !sk || (PROF.skins || []).includes(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+  const has = skinOwned(sk);
   if (!has) {
     cxPrev = sk; renderCodex(); SFX.slice();
     toast('还没有这款皮肤，先给你看看');
@@ -9279,7 +9282,10 @@ function skinUltName(fOrKey) {
   const sk = skKey && SKINS[skKey];
   return (sk && sk.skillNames && sk.skillNames.ult) || '';
 }
-function mySkin(id) { const k = (PROF.equip || {})[id]; return k && ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED) ? k : ''; }
+function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start && now < FREE_SKIN_EVENT.end; }
+function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
+function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent(); }
+function mySkin(id) { const k = (PROF.equip || {})[id]; return k && skinOwned(k) ? k : ''; }
 if (typeof window !== 'undefined') { window.skinLook = skinLook; window.mySkin = mySkin; window.skinSkillName = skinSkillName; window.skinUltName = skinUltName; }
 function applySkins() {
   for (const f of allFighters()) {
@@ -9335,7 +9341,7 @@ function applyProfile(p) {
     Object.assign(PROF, p, { guest: false });
   }
   PROF.loaded = true;
-  if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && PROF.equip) {
+  if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !freeSkinEvent() && PROF.equip) {
     const ownedSkins = new Set(PROF.skins || []);
     for (const [cid, sk] of Object.entries(PROF.equip)) {
       if (sk && !ownedSkins.has(sk)) delete PROF.equip[cid];
@@ -9560,7 +9566,58 @@ function taskDest(name) {
   if (/图鉴|招式/.test(name)) return 'codex';
   return 'cpu';
 }
+// GitHub 站没有服务器：任务进度按账号存在本机，北京时间 0 点换日、周一换周
+const TASK_DEFS = {
+  daily: [['d1', '习武精进：进行 1 局对战', 'games', 1, 30], ['d2', '招式纯熟：一局里打出 5 连击', 'combo', 5, 40], ['d3', '破敌致胜：击败 1 名对手', 'wins', 1, 50]],
+  weekly: [['w1', '百炼成钢：进行 5 局对战', 'games', 5, 120], ['w2', '名扬四海：赢得 3 场胜利', 'wins', 3, 180], ['w3', '融会贯通：施展 5 次终极奥义', 'ults', 5, 200]],
+};
+const EVT_TASK = { id: 'e1000', name: '打满 3 局人机（输赢都算）', target: 3, reward: 1000 };
+function bjDay(t = Date.now()) { return Math.floor((t + 8 * 3600e3) / 86400e3); }
+function taskKey(name) { return 'renying-tasks-' + (name || 'guest'); }
+function loadTasks() {
+  const name = curName(); let s = null;
+  try { s = JSON.parse(localStorage.getItem(taskKey(name)) || 'null'); } catch (e) {}
+  if (!s || typeof s !== 'object') s = {};
+  const day = bjDay(), week = Math.floor((day + 3) / 7);
+  if (s.day !== day) Object.assign(s, { day, d: {}, dc: [] });
+  if (s.week !== week) Object.assign(s, { week, w: {}, wc: [] });
+  s.evt = s.evt || { cpu: 0, claimed: false };
+  if (name && !s.evt.claimed) {   // 没登录时打的人机局，登录后接着算
+    try { const g = JSON.parse(localStorage.getItem(taskKey('')) || 'null'); if (g && g.evt) s.evt.cpu = Math.max(s.evt.cpu, g.evt.cpu || 0); } catch (e) {}
+  }
+  return s;
+}
+function saveTasks(s) { try { localStorage.setItem(taskKey(curName()), JSON.stringify(s)); } catch (e) {} }
+function taskBump(s, stat, v, max) { for (const per of [s.d, s.w]) per[stat] = max ? Math.max(per[stat] || 0, v) : (per[stat] || 0) + v; }
+// 一局打完记进度：观战、回放、木人桩不算；本地双人只算对战局数
+function taskMatchEnd(w) {
+  if (SERVED || isAiVsAi() || M.watchAi || ['replay', 'demo', 'train', 'watch2v2'].includes(M.mode)) return;
+  const s = loadTasks(), pvp = M.mode === 'pvp';
+  taskBump(s, 'games', 1);
+  if (!pvp && w >= 0 && w === localTeam()) taskBump(s, 'wins', 1);
+  if (!pvp && MSTAT.maxcombo) taskBump(s, 'combo', MSTAT.maxcombo, true);
+  if (!pvp && MSTAT.ults) taskBump(s, 'ults', MSTAT.ults);
+  if (!pvp && M.mode !== 'net' && freeSkinEvent()) s.evt.cpu++;
+  saveTasks(s);
+}
+function taskMarkClaimed(ids) {
+  if (SERVED) return;
+  const s = loadTasks();
+  for (const id of ids) {
+    if (id === EVT_TASK.id) s.evt.claimed = true;
+    else if (TASK_DEFS.daily.some(x => x[0] === id)) s.dc.push(id);
+    else s.wc.push(id);
+  }
+  saveTasks(s);
+}
 function ensureClientTasks() {
+  if (!SERVED) {
+    const s = loadTasks(), row = (x, per, cl) => ({ id: x[0], name: x[1], target: x[3], prog: Math.min(x[3], per[x[2]] || 0), reward: x[4], claimed: cl.includes(x[0]) });
+    PROF.daily = TASK_DEFS.daily.map(x => row(x, s.d, s.dc));
+    PROF.weekly = TASK_DEFS.weekly.map(x => row(x, s.w, s.wc));
+    PROF.evtTask = freeSkinEvent() ? Object.assign({}, EVT_TASK, { prog: Math.min(EVT_TASK.target, s.evt.cpu), claimed: !!s.evt.claimed }) : null;
+    return;
+  }
   if (!Array.isArray(PROF.daily) || !PROF.daily.length) {
     PROF.daily = [
       { id: 'd1', name: '习武精进：进行 1 局对战', prog: 1, target: 1, reward: 30, claimed: false },
@@ -9576,6 +9633,7 @@ function ensureClientTasks() {
     ];
   }
 }
+function allTasks() { return [...(PROF.evtTask ? [PROF.evtTask] : []), ...(PROF.daily || []), ...(PROF.weekly || [])]; }
 function renderTasks() {
   ensureClientTasks();
   for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
@@ -9586,13 +9644,19 @@ function renderTasks() {
   };
   $id('tDaily').innerHTML = PROF.guest ? '<p class="netnote">登录之后，方可领任务</p>' : (PROF.daily || []).map(row).join('');
   $id('tWeekly').innerHTML = PROF.guest ? '' : (PROF.weekly || []).map(row).join('');
-  const canClaimAny = !PROF.guest && [...(PROF.daily || []), ...(PROF.weekly || [])].some(t => !t.claimed && t.prog >= t.target);
+  const ev = PROF.evtTask;
+  $id('tEvtCard').hidden = !ev;
+  if (ev) {
+    $id('tEvtLeft').textContent = `全皮肤限免 · 剩 ${freeSkinDaysLeft()} 天`;
+    $id('tEvt').innerHTML = row(ev) + (PROF.guest ? '<p class="netnote">进度先替你记着，登录之后就能领</p>' : '');
+  }
+  const canClaimAny = !PROF.guest && allTasks().some(t => !t.claimed && t.prog >= t.target);
   if ($id('claimAllBtn')) {
     $id('claimAllBtn').classList.toggle('hidden', PROF.guest || !canClaimAny);
     $id('claimAllBtn').disabled = !canClaimAny;
   }
 }
-for (const id of ['tDaily', 'tWeekly']) $id(id).addEventListener('click', async e => {
+for (const id of ['tEvt', 'tDaily', 'tWeekly']) $id(id).addEventListener('click', async e => {
   const go = e.target.closest('.task-go');
   if (go && go.dataset.go) {
     const dest = go.dataset.go;
@@ -9604,10 +9668,10 @@ for (const id of ['tDaily', 'tWeekly']) $id(id).addEventListener('click', async 
   }
   const b = e.target.closest('button[data-t]'); if (!b || b.disabled) return;
   const tid = b.dataset.t;
-  const all = [...(PROF.daily || []), ...(PROF.weekly || [])];
-  const t = all.find(x => x.id === tid);
+  if (PROF.guest) return;
+  const t = allTasks().find(x => x.id === tid);
   if (!t || t.claimed || t.prog < t.target) return;
-  t.claimed = true;
+  t.claimed = true; taskMarkClaimed([tid]);
   const gain = t.reward || 50;
   PROF.ink = (PROF.ink || 0) + gain;
   if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -9619,8 +9683,9 @@ for (const id of ['tDaily', 'tWeekly']) $id(id).addEventListener('click', async 
 if ($id('claimAllBtn')) {
   $id('claimAllBtn').addEventListener('click', async () => {
     if (PROF.guest) return;
-    const all = [...(PROF.daily || []), ...(PROF.weekly || [])].filter(t => !t.claimed && t.prog >= t.target);
+    const all = allTasks().filter(t => !t.claimed && t.prog >= t.target);
     if (!all.length) return;
+    taskMarkClaimed(all.map(t => t.id));
     let totalGain = 0;
     for (const t of all) {
       t.claimed = true;
@@ -12308,7 +12373,7 @@ if (bpDetailEl) {
     const sk = b.dataset.sk || '';
     const ch = CHARS[idx];
     if (!ch) return;
-    const has = !sk || (PROF.skins || []).includes(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+    const has = skinOwned(sk);
     if (!has) {
       SFX.slice();
       toast('尚未解锁该皮肤');
@@ -12492,8 +12557,14 @@ function setAcc(j) {
   if (nk !== setAcc.last) { setAcc.last = nk; loadProfile(); adaptLoad(); }
   renderAcc();
 }
+function renderEvtCard() {
+  const on = freeSkinEvent() && !OFFLINE_BUILD;
+  $id('homeEvt').hidden = !on;
+  if (on) $id('homeEvtLeft').textContent = `剩 ${freeSkinDaysLeft()} 天`;
+}
+$id('homeEvt').addEventListener('click', () => { initAudio(); openScreen('tasks'); });
 function renderAcc() {
-  renderTopNav();
+  renderTopNav(); renderEvtCard();
   const bar = $id('accBar');
   if (OFFLINE_BUILD) { bar.classList.add('hidden'); return; }
   bar.classList.remove('hidden');
@@ -12973,7 +13044,7 @@ function claimLegacyAccount(accData) {
   const rawEquip = Object.assign({}, accData.equip || {}, PROF.equip || {});
   PROF.equip = {};
   for (const [cid, sk] of Object.entries(rawEquip)) {
-    if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED)) {
+    if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent())) {
       PROF.equip[cid] = sk;
     }
   }
