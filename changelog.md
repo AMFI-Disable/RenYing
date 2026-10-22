@@ -8,6 +8,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Auto Best Skin (设置 → 皮肤)**: on by default; any hero you haven't picked a skin for wears your highest-rarity owned skin (legend over elite). Choosing 默认 for a hero keeps it on the default look, and online opponents now receive the skins you actually wear.
 - **流云 开扇 Aerial Dive (`windstep`)**: the ground dash now travels about 40% farther (≈270 px); casting it in the air dives diagonally to the ground and bursts on landing (24 damage, launches) and scatters 5 popcorn.
 
 - **14-Day Free Skin Event & 1000-Ink Welcome Task (`src/game.js`)**:

@@ -77,7 +77,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, vibrate: true };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, vibrate: true, autoSkin: true };
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);
@@ -1579,7 +1579,7 @@ function send(o) {
 }
 function onNetOpen() {
   netStatus('已连接');
-  send({ pskin: PROF.equip || {} });
+  send({ pskin: mySkinMap() });
   initAudio();
   if (NET.role === 'host') bpStart('net');
   else netStatus('已连接，即刻选人…');
@@ -7660,6 +7660,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 let settingsBack = 'menu';
 const SETTING_ROWS = [
   { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
+  { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
   { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
   { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
   { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
@@ -7742,6 +7743,7 @@ $id('setList').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
   const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
   if (k === 'quality') resize();
+  if (k === 'autoSkin') applySkins();
 });
 $id('setList').addEventListener('input', e => {
   const k = e.target.dataset.k; if (!k) return;
@@ -8825,7 +8827,7 @@ $id('cxSkins').addEventListener('click', async e => {
   }
   cxPrev = null;
   PROF.equip = PROF.equip || {};
-  if (sk) PROF.equip[id] = sk; else delete PROF.equip[id];
+  PROF.equip[id] = sk;   // 点“默认”记成空串：自动选皮肤不再替这个角色换
   try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (err) {}
   if (window.CloudSave) CloudSave.saveProfile(PROF);
   if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
@@ -9303,7 +9305,18 @@ function skinUltName(fOrKey) {
 function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start && now < FREE_SKIN_EVENT.end; }
 function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
 function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent(); }
-function mySkin(id) { const k = (PROF.equip || {})[id]; return k && skinOwned(k) ? k : ''; }
+// 自动穿最好的皮肤：没手动选过的角色，穿已拥有里稀有度最高的那款（手动点过“默认”就记成空，不再自动换）
+function bestSkin(id) {
+  let best = '', br = 0;
+  for (const [k, v] of Object.entries(SKINS)) { if (v.char !== id || !skinOwned(k)) continue; const r = v.rarity === 'legend' ? 2 : 1; if (r > br) { br = r; best = k; } }
+  return best;
+}
+function mySkin(id) {
+  const eq = PROF.equip || {}, k = eq[id];
+  if (k && skinOwned(k)) return k;
+  return SETTINGS.autoSkin !== false && !(id in eq && k === '') ? bestSkin(id) : '';
+}
+function mySkinMap() { const m = {}; for (const c of CHARS) { const k = mySkin(c.id); if (k) m[c.id] = k; } return m; }
 if (typeof window !== 'undefined') { window.skinLook = skinLook; window.mySkin = mySkin; window.skinSkillName = skinSkillName; window.skinUltName = skinUltName; }
 function applySkins() {
   for (const f of allFighters()) {
@@ -10473,7 +10486,7 @@ function rollAdopt(p) {
 function rollResumePayload() {
   const R = ROLL, li = [];
   for (let f = R.F; f <= R.locMax; f++) { const x = R.loc[f] || EMPTY_IN; li.push([f, x.h, ...x.p]); }
-  return { k: 'rmatch', ch: [A.chIdx, B.chIdx], F: R.F, st: capState(), rl: R.remLast, ph: R.lastRemH, li, ru: R.locMax, lh: R.lastSentH, ended: R.ended, skins: PROF.equip || {}, mid: R.mid };
+  return { k: 'rmatch', ch: [A.chIdx, B.chIdx], F: R.F, st: capState(), rl: R.remLast, ph: R.lastRemH, li, ru: R.locMax, lh: R.lastSentH, ended: R.ended, skins: mySkinMap(), mid: R.mid };
 }
 function rollResume(p) {
   REC.on = false;
@@ -12441,8 +12454,7 @@ if (bpDetailEl) {
       return;
     }
     PROF.equip = PROF.equip || {};
-    if (sk) PROF.equip[ch.id] = sk;
-    else delete PROF.equip[ch.id];
+    PROF.equip[ch.id] = sk;
     try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (err) {}
     if (window.CloudSave) CloudSave.saveProfile(PROF);
     PORTRAITS.length = 0;
@@ -12453,7 +12465,7 @@ if (bpDetailEl) {
     updateBPDeck(idx);
     renderBP();
     if (M.mode === 'net' || bpMode === 'net') {
-      send({ pskin: PROF.equip || {} });
+      send({ pskin: mySkinMap() });
     }
     const cv = $id('bpDeckCanvas');
     if (cv && cv._pup) {
