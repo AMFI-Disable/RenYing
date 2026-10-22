@@ -1220,6 +1220,10 @@
   .tn-tabs .tn-play { margin: 8px 10px; padding: 0 30px; color: #fff; background: var(--v-red); font-family: var(--v-cond); font-weight: 700; letter-spacing: .3em; font-size: 16px;
     clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
   .tn-tabs .tn-play::after { display: none; }
+  .tn-tabs .tn-qfx { color: #e9c46a; }
+  .tn-tabs .tn-qfx:hover { color: #ffd98a; }
+  body.has-nav .msmall-dock { display: none; }   /* 顶部导航在时不再重复一排底部按钮 */
+  .help-tut { margin: 0 0 12px; text-align: center; }
   .tn-tabs .tn-play:hover, .tn-tabs .tn-play.sel { background: #ff5d6a; box-shadow: 0 0 22px rgba(255,70,85,.45); }
   .tn-tabs .tn-play.searching { animation: tnPulse 1.2s ease-in-out infinite; }
   @keyframes tnPulse { 50% { background: #b8303d; } }

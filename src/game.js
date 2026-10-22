@@ -977,7 +977,7 @@ const ULTS = {
       }
       if (f.t >= 1.35) endSpecial(f);
     } },
-  shanshui: { name: '山水之间', desc: '醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。',
+  shanshui: { name: '山水之间', desc: '醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。画卷落下后对手困在蓬莱境里 4 秒：对手的屏幕被画挡住，看不见自己和醉翁在哪，只有醉翁一方看得见。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'zx_drink'; f.invul = 0.3; SFX.superOn(); },
     update(f, foe) {
       if (f.spN < 8 && f.t >= 0.35 + f.spN * 0.17) {
@@ -985,7 +985,7 @@ const ULTS = {
         if (foe.hp > 0 && foe.invul <= 0) applyHit(f, foe, { dmg: 15, exact: true, kb: [0, 0], stun: 0.35, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: f.face }, [foe.x, foe.y - 60]);
         shake = Math.max(shake, 4 + f.spN); SFX.thud();
       }
-      if (f.t >= 1.95) endSpecial(f);
+      if (f.t >= 1.95) { if (foe.hp > 0) foe.veilT = PENGLAI_T; endSpecial(f); }
     } },
   eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 2.3, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
   skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 1.2 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
@@ -2347,7 +2347,26 @@ class AICtrl extends Ctrl {
     };
   }
   plan(list) { this.queue = list.map(([a, dt]) => ({ at: clock + dt, a })); }
+  // 困在蓬莱境里：看不见自己和对手在哪，不看对手出招也不看暗器，只能凭感觉乱走、乱挡、乱打
+  blindThink(me) {
+    if ((me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < this.L.block * 0.012) this.press('dash');   // 挨打是摸得出来的
+    while (this.queue.length && this.queue[0].at <= clock) { const a = this.queue.shift().a; if (a !== 'chargeStart' && a !== 'chargeEnd') this.press(a); }
+    this.holdDown = Math.max(0, this.holdDown - STEP);
+    if (clock >= this.next && !this.queue.length && this.holdDown <= 0) {
+      this.next = clock + rand(0.3, 0.7);
+      const r = Math.random();
+      this.dir = Math.random() < 0.5 ? -1 : 1;
+      if (r < 0.3) this.plan([['light', 0], ['light', 0.2]]);
+      else if (r < 0.5) { this.dir = 0; this.holdDown = rand(0.4, 0.9); }
+      else if (r < 0.58) this.plan([['jump', 0]]);
+      else if (r < 0.64 && me.skillCD <= 0) this.plan([['skill', 0]]);
+      else if (r < 0.75) this.dir = 0;
+    }
+    this.held.down = this.holdDown > 0; this.held.atk = false; this.held.jump = false;
+    this.held.left = this.dir < 0; this.held.right = this.dir > 0;
+  }
   think(me, foe) {
+    if (me.veilT > 0) return this.blindThink(me);
     if (!this.tactic || this.lastOppId !== foe.ch.id || this.lastMeId !== me.ch.id) {
       this.updateTactic(me, foe);
     }
@@ -2599,7 +2618,7 @@ class Fighter {
     this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
-      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
+      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -2813,7 +2832,7 @@ function startRound() {
   }
   if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
-  M.carry = null; M.pre = null; M.ot = false; M.introFX = M.round === 1 && M.mode !== 'demo';
+  M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
   M.phase = 'intro'; M.t = 0; M.timer = M.mode === 'watch2v2' ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
@@ -2829,8 +2848,9 @@ function startRound() {
   netEmit({ e: 'round', r: M.round, w: [...M.wins], ch: [A.chIdx, B.chIdx] });
 }
 // 回合规则：50 秒内击倒对手才算赢；到时没人倒下就进 15 秒加时，加时里所有伤害 ×2；加时也结束时血量比例低的败北。
-// 回合结束后活下来的人带着剩下的血量 +80 进下一回合（不超过上限），倒下的人满血再来
+// 1v1 每回合双方满血重来；三人接力赛里守擂的人带着剩下的血量 +80 迎战下一位（不超过上限）
 const ROUND_TIME = 50, OT_TIME = 15, OT_DMG = 2, CARRY_HEAL = 80;
+const PENGLAI_T = 4;   // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
 function timeDeath(winner, text) {
   M.phase = 'ko'; M.t = 0; M.koWinner = winner;
   M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
@@ -3076,8 +3096,7 @@ function endRound() {
     return;
   }
   M.round++;
-  M.carry = [null, null];   // 活下来的人继承剩余血量 +CARRY_HEAL，倒下的人满血（2v2 每回合都满血重来）
-  if (M.mode !== 'watch2v2') [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
+  M.carry = null;   // 1v1 每回合双方都满血重来（只有三人接力赛的守擂者带血）
   startRound();
 }
 
@@ -3719,6 +3738,7 @@ function updateFighter(f, foe) {
   f.buffT = Math.max(0, f.buffT - STEP);
   f.reflectT = Math.max(0, (f.reflectT || 0) - STEP);
   f.hookedT = Math.max(0, (f.hookedT || 0) - STEP);
+  if (f.veilT > 0) f.veilT = f.hp > 0 ? Math.max(0, f.veilT - STEP) : 0;
   if (f.ch.passive === 'drunk') f.drunk = Math.max(0, (f.drunk || 0) - STEP);
   if (f.drinkT > 0) f.drinkT = Math.max(0, f.drinkT - STEP);
   if (f.jailT > 0) {   // 醉翁亭：关在亭子里，原地挨打
@@ -5545,17 +5565,19 @@ function skinTint(sk, f, L) {
   ctx.strokeStyle = `rgba(${L.fx.c},${0.18 + 0.06 * Math.sin(clock * 3 + (f.idx || 0))})`; ctx.lineWidth = 6; line(seg[0], seg[1]);
   ctx.restore();
 }
-// 传说：眼睛发光；动得快时眼光拖成一道线
+// 传说：眼睛发光；冲刺这类快速移动时眼光拖成一道线（走路不拖），每回合清空
 const EYE_TR = new WeakMap();
 function skinEyes(f, ex, ey) {
   const c = f.look.fx.c;
-  let tr = EYE_TR.get(f); if (!tr) { tr = []; EYE_TR.set(f, tr); }
-  const now = clock;
-  tr.push([ex, ey, now]); while (tr.length && now - tr[0][2] > 0.14) tr.shift();
+  let tr = EYE_TR.get(f);
+  if (!tr || tr.r !== M.rseq) { tr = []; tr.r = M.rseq; EYE_TR.set(f, tr); }
+  const now = performance.now() / 1000, last = tr[tr.length - 1];
+  if (last && (now < last[2] || Math.hypot(last[0] - ex, last[1] - ey) > 160)) tr.length = 0;   // 瞬移、回滚或时间倒退：断开，不连线
+  tr.push([ex, ey, now]); while (tr.length > 24 || (tr.length && now - tr[0][2] > 0.14)) tr.shift();
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 7); g.addColorStop(0, `rgba(255,255,255,0.8)`); g.addColorStop(0.4, `rgba(${c},0.6)`); g.addColorStop(1, `rgba(${c},0)`);
   ctx.fillStyle = g; ctx.fillRect(ex - 7, ey - 7, 14, 14);
-  if (tr.length > 2 && Math.hypot(tr[0][0] - ex, tr[0][1] - ey) > 14) {
+  if (tr.length > 2 && Math.hypot(tr[0][0] - ex, tr[0][1] - ey) > 90) {
     for (let i = 1; i < tr.length; i++) { const k = i / tr.length; ctx.strokeStyle = `rgba(${c},${0.75 * k})`; ctx.lineWidth = 2.6 * k; line(tr[i - 1], tr[i]); }
   }
   ctx.restore();
@@ -6577,13 +6599,43 @@ function drawFu(x, y, a, n) {   // 对手头顶那张符：黄纸朱砂
   ctx.font = `bold 18px ${BODY_FONT}`; ctx.fillText('×' + n, 0, 28);
   ctx.restore();
 }
+// 谁在看这块屏幕：本机玩家的序号；AI 观战、回放、同屏双人、演示都算旁观者（-1）
+function viewerIdx() { return (M.watchAi || M.mode === 'demo' || M.mode === 'replay' || M.mode === 'pvp' || M.mode === 'watch2v2') ? -1 : localIdx(); }
+// 山水之间 / 蓬莱境：画卷落下时人人都看得到；落下之后被困的一方整屏被画挡住，醉翁一方和旁观者照常看，只在被困的人身上留一圈雾
 function drawShanshui() {
   const f = [A, B].find(x => x && x.state === 'special' && x.sp === 'cast' && x.ch.ult === 'shanshui');   // 起手蓄势那 0.42 秒不画，否则画卷会落两遍
-  if (!f) return;
-  const t = f.t, e = 1 - Math.pow(1 - clamp(t / 1.55, 0, 1), 3), a = t > 1.75 ? clamp((1.95 - t) / 0.2, 0, 1) : 1;
+  const vi = viewerIdx(), vf = vi >= 0 ? [A, B][vi] : null;
+  for (const x of [A, B]) if (x && x.veilT > 0 && x !== vf && x.hp > 0) drawPenglaiMist(x);
+  if (f && f !== vf && vf && vf.hp > 0) {   // 我被开大：画卷落下后不再淡出，慢慢变成不透明
+    const t = f.t;
+    drawShanshuiScroll(1 - Math.pow(1 - clamp(t / 1.55, 0, 1), 3), 1, clamp((t - 1.1) / 0.45, 0, 1));
+  } else if (f) {
+    const t = f.t;
+    drawShanshuiScroll(1 - Math.pow(1 - clamp(t / 1.55, 0, 1), 3), t > 1.75 ? clamp((1.95 - t) / 0.2, 0, 1) : 1, 0);
+  } else if (vf && vf.veilT > 0 && vf.hp > 0) {
+    drawShanshuiScroll(1, clamp(vf.veilT / 0.4, 0, 1), 1);
+    const fs = Math.round(Math.min(W, H) * 0.03);
+    ctx.save(); ctx.globalAlpha = clamp(vf.veilT / 0.4, 0, 1); ctx.fillStyle = 'rgba(40,30,24,0.85)'; ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`困于蓬莱境 · ${vf.veilT.toFixed(1)}`, W / 2, H * 0.9); ctx.restore();
+  }
+}
+// 被困的人身上一圈淡淡的画纸雾和倒计时（醉翁一方和旁观者看到的）
+function drawPenglaiMist(x) {
+  const sc = worldScale(), px = W / 2 + (x.x - cam.x) * sc, py = groundY() + (x.y - 70) * sc, r = 95 * sc, k = clamp(x.veilT / 0.4, 0, 1);
+  ctx.save(); ctx.globalAlpha = k;
+  const g = ctx.createRadialGradient(px, py, r * 0.2, px, py, r); g.addColorStop(0, 'rgba(236,226,200,0.05)'); g.addColorStop(0.7, 'rgba(236,226,200,0.28)'); g.addColorStop(1, 'rgba(236,226,200,0)');
+  ctx.fillStyle = g; ctx.fillRect(px - r, py - r, r * 2, r * 2);
+  const fy = groundY() + 34 * sc, fs = Math.max(12, Math.round(14 * sc));   // 倒计时放在脚下，不和头顶的伤害数字挤在一起
+  ctx.strokeStyle = 'rgba(184,57,46,0.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px - fs * 2.2, fy, 8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * x.veilT / PENGLAI_T); ctx.stroke();
+  ctx.fillStyle = 'rgba(250,238,220,0.9)'; ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('蓬莱境', px + 6, fy);
+  ctx.restore();
+}
+// 画卷本身：e 落下进度（0 在天上，1 铺满），a 整体透明度，op 底纸不透明度（1 就完全挡住后面的战场）
+function drawShanshuiScroll(e, a, op) {
   const top = -H + H * e, bot = top + H;
   ctx.save(); ctx.globalAlpha = a;
   ctx.beginPath(); ctx.rect(0, 0, W, Math.max(0, bot)); ctx.clip();
+  if (op > 0) { ctx.fillStyle = `rgba(226,214,186,${op})`; ctx.fillRect(0, top, W, H); }
   const pg = ctx.createLinearGradient(0, top, 0, bot); pg.addColorStop(0, 'rgba(236,226,200,0.82)'); pg.addColorStop(1, 'rgba(220,206,174,0.62)');
   ctx.fillStyle = pg; ctx.fillRect(0, top, W, H);
   // 远山到近山，越近越浓；每层山峰顶上墨重、山脚化进云雾里（水墨的晕染）
@@ -7630,11 +7682,13 @@ function navTo(name) {
   initAudio();
   if (name === 'menu') { backToMenu(); return; }
   if (name === 'acc') { openAcc(); return; }
+  if (name === 'qfx') { openQfx(); return; }
   if ($id('menu').classList.contains('on') && MENU_SPOT[name] !== undefined) { menuGo(name); return; }
   if (name === 'netp') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; }
   openScreen(name);
 }
 for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
+$id('helpTut').addEventListener('click', () => openScreen('tutorial'));
 function renderTopNav() {
   const nav = $id('topNav');
   if (!nav) return;

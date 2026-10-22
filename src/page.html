@@ -36,10 +36,12 @@
     <div class="tn-tabs">
       <button type="button" data-nav="menu">首页</button>
       <button type="button" data-nav="single">单人</button>
+      <button type="button" data-nav="qfx" class="tn-qfx" title="打通青锋行三章，可领刃影奖励">青锋行</button>
       <button type="button" data-nav="netp" class="tn-play">对战</button>
       <button type="button" data-nav="codex">英雄</button>
       <button type="button" data-nav="gacha">问剑阁</button>
       <button type="button" data-nav="tasks">任务</button>
+      <button type="button" data-nav="replays">回放</button>
       <button type="button" data-nav="community">社区</button>
     </div>
     <div class="tn-right">
@@ -79,7 +81,7 @@
     </div>
     <button class="mcard left" id="mSingle" data-go="single"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
     <button class="mcard right" id="mNet" data-go="netp"><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
-    <div class="msmall-dock">
+    <div class="msmall-dock">   <!-- 离线版没有顶部导航时才显示这排按钮 -->
       <div class="mgroup" title="江湖游历">
         <button id="mQfx" class="qfxbtn" title="打通青锋行三章，可领刃影奖励"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>青锋行</button>
         <button data-go="gacha"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-gourd"/></svg></span>问剑阁</button>
@@ -644,6 +646,7 @@
   <div id="help" class="scr">
     <div class="panel">
       <h2>说明</h2>
+      <p class="help-tut"><button type="button" class="ghost" id="helpTut">新手教学 · 两分钟学会基本招式</button></p>
       <div class="keys keyonly">
         <div class="p1"><dl>
           <dt>移动</dt><dd><kbd>A</kbd> <kbd>D</kbd></dd>
@@ -656,7 +659,7 @@
           <dt>朝向</dt><dd>最后按的是 <kbd>A</kbd> 就朝左，是 <kbd>D</kbd> 就朝右；按住防御时自动面向对手（设置里可以改成一直自动面向对手）</dd>
           <dt>技能</dt><dd><kbd>Q</kbd>，各家不同</dd>
           <dt>大招</dt><dd><kbd>E</kbd>，气满时</dd>
-          <dt>回合</dt><dd>50 秒内击倒对手才算赢；没分出胜负就进 15 秒加时，加时里伤害翻倍。活下来的人带着剩下的血量 +80 进下一回合</dd>
+          <dt>回合</dt><dd>50 秒内击倒对手才算赢；没分出胜负就进 15 秒加时，加时里伤害翻倍。每回合双方都满血重来</dd>
           <dt>木人桩</dt><dd>练习时按 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 切换：任打不还手 / 一味死守 / 被连便闪 / 钉在原地</dd>
         </dl></div>
       </div>

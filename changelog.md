@@ -191,6 +191,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **醉翁 山水之间 → 蓬莱境 (`src/game.js`)**: damage is unchanged (8 × 15, unblockable), but once the scroll lands the opponent is trapped in 蓬莱境 for 4 s (`PENGLAI_T`). On the trapped player's screen the painting stays down and turns opaque, hiding both fighters, with a 困于蓬莱境 countdown; 醉翁's side and spectators see the fight normally plus a paper-mist ring and countdown under the trapped fighter. A trapped AI ignores positions, incoming attacks and projectiles and walks, blocks and swings at random until it ends.
+- **One Menu Bar**: the online home screen no longer shows the bottom button dock that duplicated the top nav. 青锋行 and 回放 moved into the top nav and 新手教学 is a button on the 说明 page; the offline build, which has no top nav, keeps the dock.
+- **1v1 Rounds Start at Full HP**: both fighters start every 1v1 round at full HP again instead of the survivor carrying their HP + 80. The 3v3 relay still carries the winner's HP into the next opponent.
 - **Skin Art Rework (`src/game.js`)**: all 34 skins now keep their hero's own hair, hat, helmet and weapon shape and change only colors, instead of pasting on crowns, horns, sun discs, wings and chest orbs (the `deco` layer and its weapon reshapes are gone). Looks come from light and motion, grouped into 14 themes (flame, frost, void, thunder, water, aurora, star, gold, ink, wind, petal, leaf, feather, metal). Elite skins get a themed trail, a faint weapon tint and a few particles; legend skins add a glowing blade edge with a light sweep, a light-ribbon scarf, a breathing body glow, glowing eyes that streak when moving fast, a light pool at the feet, ambient effects (embers, cold mist, dark wisps, sparks, droplets, glints, gold leaf…), themed hit bursts (fire, ice shards, implosion, lightning forks, splashes…) and glowing wings for 燕翎. The legend blade also feeds the bloom pass.
 
 - **墨羽 ink regeneration** 12 → 10 per second.
@@ -347,6 +350,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Legend Eye Streak Lines While Walking**: the glowing-eye streak drew a line whenever a legend-skin fighter walked, and its history used the game clock, which jumps back on rollback and at netplay start, so the trail could stop pruning and keep growing. It now uses wall time, keeps at most 24 points, breaks on teleports, clears every round and only streaks on dash-speed movement.
 - **Online Rematch Always Froze (第二把卡)**: after a P2P match ended, the end screen kept sending the old match's input frames; when the rematch started they bumped the new match's confirmed frame far ahead, so the host dropped the other player's inputs (their fighter stood still or snapped back, with repeated desync resyncs). Every rollback message now carries the match seed, stale ones are ignored and early ones are replayed when the match starts.
 - **醉翁 山水之间 Played Its Scroll Twice**: the scroll overlay was also drawn during the 0.42 s wind-up and then restarted when the ultimate began; it now drops once.
 - **墨羽 画符 Said "酒不够"**: skills that can't be cast now say why (墨不够 / 符已画满 for 墨羽, 酒不够 for 醉翁).
