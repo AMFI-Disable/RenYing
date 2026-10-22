@@ -507,7 +507,7 @@ html, body { overscroll-behavior: none; }
 @media (max-width: 560px) { .stgrid { grid-template-columns: repeat(3, 1fr); } }
 .setp { max-width: min(1360px, 96vw); }
 .setlist { display: grid; gap: 12px; margin: 12px 0; text-align: left; }
-@media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; column-gap: 36px; } }
+@media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; column-gap: 36px; } .setlist > .keypanel { grid-column: 1 / -1; grid-row: 6; } }
 .setrow { display: grid; grid-template-columns: minmax(90px, max-content) 1fr minmax(48px, auto); gap: 10px; align-items: center; font-size: 13.5px; }
 .setrow > span:first-child { white-space: nowrap; }
 .setrow .seg { margin: 0; }
@@ -518,14 +518,6 @@ html, body { overscroll-behavior: none; }
 .tab-ic *, .ink-icon * { pointer-events: none; }
 .tab-ic svg, .ink-icon svg { width: 100%; height: 100%; stroke: currentColor; pointer-events: none; }
 .comp { max-width: min(1360px, 96vw); }
-.com-channel-bar { display: flex; gap: 8px; margin: 8px 0 10px; flex-wrap: wrap; }
-.com-channel-bar button {
-font-family: var(--body); font-size: 13px; padding: 5px 14px; border-radius: 999px;
-background: rgba(255,255,255,.04); border: 1px solid var(--faint); color: var(--dim);
-cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s ease; white-space: nowrap;
-}
-.com-channel-bar button:hover { background: rgba(255,255,255,.08); color: var(--ink); border-color: rgba(233,196,106,.4); }
-.com-channel-bar button.sel { background: rgba(233,196,106,.15); color: var(--gold); border-color: var(--gold); font-weight: 600; }
 .comlog { height: clamp(320px, 56vh, 580px); overflow-y: auto; border: 1px solid var(--faint); border-radius: 12px; padding: 12px 16px; background: rgba(8,9,20,.65); text-align: left; font-size: 14px; line-height: 1.6; margin: 10px 0; box-shadow: inset 0 2px 10px rgba(0,0,0,.4); }
 .comlog .cm { padding: 9px 12px; margin-bottom: 8px; border-radius: 8px; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.04); transition: background .12s; }
 .comlog .cm:hover { background: rgba(255,255,255,.05); }
@@ -538,6 +530,67 @@ cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition
 .comin input { flex: 1; min-width: 0; font: 15px var(--body); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--faint); background: rgba(0,0,0,.45); color: var(--ink); -webkit-user-select: text; user-select: text; }
 .comin input:focus-visible { outline: 2px solid var(--p1); outline-offset: 1px; }
 #comEmo { margin-top: 8px; justify-content: center; }
+.soc { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 14px; margin-top: 10px; text-align: left; }
+.soc-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.soc-list { height: clamp(320px, 56vh, 580px); overflow-y: auto; border: 1px solid var(--faint); border-radius: 12px; background: rgba(8,9,20,.55); padding: 6px; }
+.soc-it { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 9px 10px; border-radius: 9px; background: transparent; border: 1px solid transparent; color: var(--ink); cursor: pointer; font: 14px var(--body); }
+.soc-it:hover { background: rgba(255,255,255,.05); }
+.soc-it.sel { background: rgba(233,196,106,.12); border-color: rgba(233,196,106,.4); }
+.soc-n { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.soc-n b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.soc-n small { color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.soc-it em { font-style: normal; font-size: 11px; min-width: 18px; padding: 1px 6px; border-radius: 999px; background: var(--p2); color: #fff; text-align: center; }
+.soc-on { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.18); flex-shrink: 0; }
+.soc-on.y { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,.7); }
+.soc-sec { margin: 12px 8px 4px; font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+.soc-sec span { opacity: .7; }
+.soc-empty { margin: 4px 10px; font-size: 13px; color: var(--dim); }
+.soc-req { display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin: 2px 0; border-radius: 8px; background: rgba(233,196,106,.08); }
+.soc-req span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.soc-req button { padding: 3px 10px; font-size: 12px; }
+.soc-wait { padding: 4px 12px; font-size: 13px; color: var(--dim); }
+.soc-wait small { opacity: .7; }
+.soc-tools { display: flex; flex-direction: column; gap: 8px; }
+.soc-addrow { display: flex; gap: 6px; }
+.soc-addrow input { flex: 1; min-width: 0; font: 14px var(--body); padding: 7px 10px; border-radius: 8px; border: 1px solid var(--faint); background: rgba(0,0,0,.45); color: var(--ink); -webkit-user-select: text; user-select: text; }
+.soc-main { min-width: 0; display: flex; flex-direction: column; }
+.soc-main .comlog { margin: 8px 0 10px; height: clamp(260px, 49vh, 510px); }
+.soc-head { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+.soc-back { display: none; padding: 2px 12px; font-size: 18px; }
+.soc-hd { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.soc-hd b { font-size: 17px; color: var(--gold); }
+.soc-hd small { color: var(--dim); font-size: 12px; flex: 1; min-width: 0; }
+.soc-acts { display: flex; gap: 6px; }
+.soc-acts button { padding: 3px 10px; font-size: 12px; }
+.soc-status { font-size: 12px; padding: 3px 9px; border-radius: 4px; border: 1px solid var(--faint); color: var(--dim); white-space: nowrap; }
+.soc-status.on { background: rgba(74,222,128,.1); border-color: rgba(74,222,128,.35); color: #4ade80; }
+.comlog .cm.me { background: rgba(70,211,234,.07); border-color: rgba(70,211,234,.16); margin-left: 12%; }
+.comlog .cm.me .cn { color: var(--p1); }
+.comlog .cm:not(.me):not(.sys) { margin-right: 12%; }
+.comlog .cm.sys { text-align: center; background: transparent; border: none; color: var(--dim); font-size: 12px; padding: 2px; }
+.comlog .cm.sys .ct { margin-left: 8px; }
+.soc-none { color: var(--dim); text-align: center; margin-top: 18%; }
+.soc-add { margin-left: 6px; font: 11px var(--body); padding: 0 7px; border-radius: 999px; border: 1px solid rgba(233,196,106,.4); background: transparent; color: var(--gold); cursor: pointer; opacity: 0; transition: opacity .12s; }
+.comlog .cm:hover .soc-add, .soc-add:focus-visible { opacity: 1; }
+.soc-pend { color: var(--gold); margin-right: 8px; }
+.soc-dot { position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--p2); color: #fff; font: 600 10px/16px var(--body); text-align: center; pointer-events: none; }
+[data-nav="community"], #menu [data-go="community"] { position: relative; }
+.soc-pick { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); }
+.soc-pk { width: min(360px, 92vw); max-height: 80vh; display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; border-radius: 14px; background: var(--panel2, #16202c); border: 1px solid var(--line, rgba(255,255,255,.12)); text-align: left; }
+.soc-pk h3 { margin: 0; font-size: 16px; color: var(--gold); }
+.soc-pk .soc-gname { font: 14px var(--body); padding: 7px 10px; border-radius: 8px; border: 1px solid var(--faint); background: rgba(0,0,0,.45); color: var(--ink); }
+.soc-pl { overflow-y: auto; display: flex; flex-direction: column; gap: 4px; max-height: 46vh; }
+.soc-pl label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+.soc-pl label:hover { background: rgba(255,255,255,.05); }
+.soc-pl small { color: #4ade80; }
+.soc-pk .row { justify-content: flex-end; gap: 8px; margin: 0; }
+@media (max-width: 760px) {
+.soc { grid-template-columns: 1fr; }
+#community:not(.soc-chat) .soc-main { display: none; }
+#community.soc-chat .soc-side { display: none; }
+.soc-back { display: inline-block; }
+.soc-list { height: auto; max-height: 58vh; }
+}
 .accbar { position: absolute; top: 14px; right: 18px; display: flex; gap: 10px; align-items: center; z-index: 2; font-size: 14px; }
 .accbar .who { color: var(--ink); }
 .accbar .rec { color: var(--dim); font-size: 13px; }
@@ -1198,6 +1251,11 @@ button.home-card { cursor: pointer; font: inherit; transition: border-color .15s
 button.home-card:hover { border-color: rgba(233,196,106,.6); transform: translateY(-2px); }
 .hc-kicker { font-family: var(--v-cond); font-size: 11.5px; letter-spacing: .28em; color: var(--v-red); }
 .home-rank .hc-kicker { color: var(--gold); }
+.home-evt { border-color: rgba(233,196,106,.55); background: linear-gradient(120deg, rgba(233,196,106,.16), rgba(255,70,85,.10) 60%, var(--panel)); }
+.home-evt .hc-kicker { color: var(--gold); }
+.home-card[hidden], .task-sec-card[hidden] { display: none; }
+.evt-card { border-color: rgba(233,196,106,.5); background: linear-gradient(120deg, rgba(233,196,106,.12), rgba(12,14,26,.7) 55%); }
+.evt-card .trow .rw { font-weight: 700; }
 .hc-row { display: flex; align-items: center; gap: 12px; }
 .hc-medal { width: 56px; height: 56px; display: grid; place-items: center; flex: none; }
 .hc-txt { display: flex; flex-direction: column; }
@@ -1207,8 +1265,6 @@ button.home-card:hover { border-color: rgba(233,196,106,.6); transform: translat
 .home-news li b { color: var(--v-white); margin-right: 8px; font-weight: 700; }
 .home-news li::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--v-red); margin-right: 8px; transform: rotate(45deg) translateY(-2px); }
 .menuscr .msmall-dock { background: rgba(13,21,30,.8); border-top: 1px solid var(--line); }
-body.has-nav .menuscr .msmall-dock [data-go="gacha"], body.has-nav .menuscr .msmall-dock [data-go="tasks"], body.has-nav .menuscr .msmall-dock [data-go="codex"],
-body.has-nav .menuscr .msmall-dock [data-go="community"], body.has-nav .menuscr .msmall-dock [data-go="settings"], body.has-nav .menuscr .msmall-dock [data-go="help"] { display: none; }
 .menuscr .mgroup { border-radius: 0; background: transparent; border: none; }
 .menuscr .mgroup button { border-radius: 0; }
 @media (max-height: 620px) { .home-side { display: none; } }
@@ -1379,6 +1435,10 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
     <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
+      <button class="home-card home-evt" id="homeEvt" type="button" hidden>
+        <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
+        <span class="hc-txt"><b>全皮肤免费穿</b><small>打 3 局人机领 1000 墨锭 · 补偿自选侠客</small></span>
+      </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
         <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
@@ -1396,7 +1456,7 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
     <button class="mcard right" id="mNet" data-go="netp"><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
     <div class="msmall-dock">
       <div class="mgroup" title="江湖游历">
-        <button id="mQfx" class="qfxbtn" title="守住第三、六、十波，可领刃影奖励"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>青锋行</button>
+        <button id="mQfx" class="qfxbtn" title="打通青锋行三章，可领刃影奖励"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>青锋行</button>
         <button data-go="gacha"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-gourd"/></svg></span>问剑阁</button>
         <button data-go="tasks"><span class="m-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-target"/></svg></span>任务</button>
       </div>
@@ -2028,24 +2088,30 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
       <div class="cxhead">
         <div style="display:flex;align-items:center;gap:10px">
           <h2>江湖驿站</h2>
-          <span class="sub-badge" style="background:rgba(70,211,234,.12);border-color:rgba(70,211,234,.35);color:#46d3ea;font-size:12px;padding:3px 9px">全服客栈 · 实时飞鸽</span>
+          <span class="soc-status" id="socStatus">连接中…</span>
         </div>
         <button class="ghost" data-back>返回菜单</button>
       </div>
-      <div class="com-channel-bar" id="comChannelBar">
-        <button class="sel" data-chan="all" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>江湖阔论</button>
-        <button data-chan="fight" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span>切磋约战</button>
-        <button data-chan="lore" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5zM8 7h8M8 11h6"/></svg></span>流派心得</button>
+      <div class="soc">
+        <aside class="soc-side">
+          <div class="soc-list" id="socList"></div>
+          <div class="soc-tools">
+            <div class="soc-addrow"><input id="socAddIn" maxlength="12" placeholder="输入名字加好友" autocomplete="off"><button type="button" class="go small" id="socAddBtn">加好友</button></div>
+            <button type="button" class="ghost small" id="socGroupBtn">建群</button>
+          </div>
+        </aside>
+        <section class="soc-main">
+          <div class="soc-head"><button type="button" class="ghost small soc-back" id="socBackList" aria-label="返回列表">‹</button><div class="soc-hd" id="socHead"></div></div>
+          <div class="comlog" id="comLog"></div>
+          <div class="comin">
+            <input id="comIn" maxlength="200" placeholder="在大厅说点什么（回车发送）" autocomplete="off">
+            <button class="go small" id="comSend" style="display:inline-flex;align-items:center;gap:4px">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>发送
+            </button>
+          </div>
+          <div class="emobar" id="comEmo"></div>
+        </section>
       </div>
-      <div class="comlog" id="comLog"></div>
-      <div class="comin">
-        <input id="comIn" maxlength="200" placeholder="以武会友，留下你的江湖豪言…（回车发送）" autocomplete="off">
-        <button class="go small" id="comSend" style="display:inline-flex;align-items:center;gap:4px">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>发送
-        </button>
-      </div>
-      <div class="emobar" id="comEmo"></div>
-      <p class="netnote" id="comHint" style="margin-top:6px"></p>
     </div>
   </div>
 
@@ -2188,10 +2254,11 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
 
   <div id="welfare" class="scr">
     <div class="panel">
-      <h2>新手福利</h2>
-      <p class="sub">人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。</p>
+      <h2 id="wTitle">新手福利</h2>
+      <p class="sub" id="wSub">人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。</p>
       <div class="wgrid" id="wGrid"></div>
       <button class="go" id="wGo" disabled>就选这个</button>
+      <button class="ghost hidden" id="wLater" type="button">稍后再选</button>
       <p class="netnote" id="wMsg"></p>
     </div>
   </div>
@@ -2247,6 +2314,13 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
 
       <!-- Tab 1: 挑战任务 -->
       <div id="taskTabQuests" class="task-tab-pane">
+        <div class="task-sec-card evt-card" id="tEvtCard" hidden style="margin-bottom:14px">
+          <div class="sec-head-row">
+            <h3 class="spt">限时福利</h3>
+            <span class="sub-badge" id="tEvtLeft"></span>
+          </div>
+          <div class="tlist" id="tEvt"></div>
+        </div>
         <div class="task-sec-card">
           <div class="sec-head-row">
             <h3 class="spt">每日挑战</h3>
@@ -3200,7 +3274,7 @@ iconizeTree(n); stripAttrs(n);
 if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 'use strict';
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, vibrate: true };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, vibrate: true, autoSkin: true };
 try {
 const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
 Object.assign(SETTINGS, saved);
@@ -3216,6 +3290,7 @@ const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
 let NET_HUD = false;                     // 回滚与联机遥测 HUD 开关（按 ~ 或 F2 切换）
 let DEV_SESSION_UNLOCKED = false;
+const FREE_SKIN_EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };
 try {
 DEV_SESSION_UNLOCKED = sessionStorage.getItem('renying-dev-unlock') === '1';
 } catch (e) {}
@@ -3428,7 +3503,7 @@ look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, sca
 ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
 ];
 const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
-const INK_MAX = 100, INK_COST = 15, INK_REGEN = 12, INK_DMG = 24;
+const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
 const WEAPON_POSE_MODS = {
@@ -3701,18 +3776,19 @@ strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 38, kb: foeInAir ? [420,
 if (f.t >= 2) toNeutral(f);
 },
 pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。',
-start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); },
-update(f) {
-if (f.skPh < 5 && f.t >= f.skPh * 0.055) {   // 冲的路上每隔一小段撒一颗
+windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。在空中开扇会斜着俯冲下去，落地炸开一圈风爆（24 伤害，挑起），再崩出 5 颗爆米花。',
+start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (f.y < -40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
+update(f, foe) {
+if (f.skPh >= 10) { windDive(f, foe); return; }
+if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗
 f.skPh++;
 spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 7.3 + f.x * 0.013) % 6 });   // 只管画面的花样，但存进回滚存档里，两边要一样
 }
-f.vx = f.face * 1300 * Math.max(0, 1 - f.t / 0.3);
+f.vx = f.face * 1450 * Math.max(0, 1 - f.t / 0.38);
 if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
-if (f.t >= 0.32) toNeutral(f);
+if (f.t >= 0.4) toNeutral(f);
 },
-pose: () => ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 360 && Math.sign(o.x - m.x) === m.face },
+pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
 stomp: { name: '雷踏', cd: 4.5, desc: '一脚踏落，前方轰然炸起雷柱（宽 85 像素，高 420 像素，48 伤害）。垂直高空挑飞，将对手击向空中。',
 start(f) { f.vx = 0; },
 update(f) {
@@ -3720,7 +3796,7 @@ if (f.skPh === 0 && f.t >= 0.14) { f.skPh = 1; dust(f.x, 0, 12); SFX.thud(); spa
 if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
-inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
+inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, lack: f => (f.fu || 0) >= FU_MAX ? '符已画满' : '墨不够', desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
 start(f) { f.vx = 0; },
 update(f) {
 if (f.skPh === 0 && f.t >= 0.2) {
@@ -3809,7 +3885,7 @@ if (f.t >= 0.27) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['zx_sway', 30] : ['gc_wind', 40],
 ai: (me, foe, d) => d < 650 },
-feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 50 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 80 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
+feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, lack: () => '酒不够', desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 50 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 80 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
 start(f) { f.vx = 0; f.drunk = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.18) {
@@ -4633,7 +4709,7 @@ else p2pSend(o);
 }
 function onNetOpen() {
 netStatus('已连接');
-send({ pskin: PROF.equip || {} });
+send({ pskin: mySkinMap() });
 initAudio();
 if (NET.role === 'host') bpStart('net');
 else netStatus('已连接，即刻选人…');
@@ -4688,7 +4764,7 @@ if (msg.mstart || msg.report) return;
 if (msg.ru !== undefined) { rollRecv(msg); return; }
 if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed); return; }
 if (msg.rsync) { rollAdopt(msg.rsync); return; }
-if (msg.rdesync) { if (NET.role === 'host') rollSendSync(); return; }
+if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
 if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
 if (msg.po !== undefined) { const r = performance.now() - msg.po; NET.rtt = NET.rtt ? NET.rtt * 0.7 + r * 0.3 : r; return; }
 if (msg.spo !== undefined) { const r = performance.now() - msg.spo; NET.srtt = NET.srtt ? NET.srtt * 0.7 + r * 0.3 : r; return; }
@@ -5887,6 +5963,7 @@ t.innerHTML = `<span class="it-name">${escapeHTML(name)}</span><span class="it-c
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
 if (REC.on) recSave(w);
+taskMatchEnd(w);
 $id('endKicker').textContent = '';
 $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
 $id('againBtn').style.display = (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
@@ -6318,7 +6395,7 @@ if (t >= 0.5) { f.finalDone = false; endSpecial(f); }
 function startSkill(f, foe, slot) {
 const id = slot === 2 ? f.ch.skill2 : f.ch.skill, S = SKILLS[id];
 if (!S) return;
-if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: '酒不够', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
+if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
 endEscape(f);
 if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
 f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null;
@@ -6342,6 +6419,21 @@ addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) 
 }
 }
 S.start(f, foe);
+}
+function windDive(f, foe) {
+if (f.skPh === 10) {
+f.vx = f.face * 820; f.vy = Math.max(f.vy, 1750);
+for (let k = 0; k < 2; k++) addP({ type: 'spark', x: f.x - f.face * rand(10, 40), y: f.y - rand(10, 90), vx: -f.face * rand(120, 260), vy: -rand(300, 520), life: 0.3, max: 0.3, rgb: k ? f.look.slash : '255,255,255', w: 1.8, drag: 3 });
+if (f.y + f.vy * STEP >= 0 || f.t >= 0.7) {   // 下一帧就着地：在这帧炸开，免得落地判定先把技能收掉
+f.skPh = 11; f.t = 0; f.y = 0; f.vx = 0; f.vy = 0; f.hitDone = false; f.jumps = 0; f.airDash = 1;
+strike(f, foe, { box: [-130, -120, 130, 6], dmg: 24, kb: [240, -640], stun: 0.45, hs: 0.1, launch: true });
+for (let k = 0; k < 5; k++) spawnProj(f, { kind: 'popcorn', x: clamp(f.x + (k - 2) * 62, WALL, STAGE_W - WALL), y: -12, vx: 0, delay: 0.32 + k * 0.05, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 5.1 + k * 1.7) % 6 });
+shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.22); flashRGB = f.look.slash;
+ring(f.x, -10, 150, f.look.slash, 0.4); ring(f.x, -10, 95, '255,255,255', 0.3); dust(f.x, 0, 22);
+for (let k = 0; k < 22; k++) { const a = Math.PI + (k / 21) * Math.PI, v = rand(260, 620); addP({ type: 'spark', x: f.x, y: -8, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.8, life: 0.45, max: 0.45, rgb: k % 3 ? f.look.slash : '255,245,210', w: 2.6, drag: 2.4 }); }
+SFX.thud(); SFX.poof();
+}
+} else if (f.t >= 0.24) toNeutral(f);
 }
 function strike(f, foe, spec) {
 if (f.hitDone) return false;
@@ -7277,7 +7369,7 @@ addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v
 if (!quiet && (ev.dd || 0) > 0) {   // 伤害数字：从命中点弹出来往上飘，越重越大
 const dd = Math.round(ev.dd * 10) / 10, big = dd >= 8;
 addP({ type: 'dmg', text: String(dd), x: ev.x + rand(-22, 22), y: ev.y - 20 - ((ev.cn || 0) % 3) * 16, vx: rand(-60, 60), vy: -150, g: 260, life: 0.85, max: 0.85,
-s: ev.blk ? 0.7 : clamp(0.8 + dd / 14, 0.85, 1.6), rgb: ev.blk ? '170,180,200' : big ? '255,210,90' : '255,250,240', edge: fighterByIdx(ev.a) ? fighterByIdx(ev.a).look.slash : '255,255,255' });
+s: ev.blk ? 0.62 : clamp(0.72 + dd / 20, 0.75, 1.25), rgb: ev.blk ? '170,180,200' : big ? '255,210,90' : '255,250,240', edge: fighterByIdx(ev.a) ? fighterByIdx(ev.a).look.slash : '255,255,255' });
 }
 if (M.mode === 'train' && ev.d === 1) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); }
 if (ev.root) { for (let i = 0; i < 14; i++) addP({ type: 'ink', x: def.x + rand(-30, 30), y: -rand(0, 30), vx: rand(-60, 60), vy: rand(-200, -40), g: 900, life: 0.7, max: 0.7, r: rand(2, 5), rgb: '15,15,22' }); addP({ type: 'text', text: '定', x: def.x, y: def.y - 130, life: 0.8, max: 0.8, rgb: '210,210,230' }); }
@@ -7591,7 +7683,7 @@ const fr = $id('extFrame');
 fr.src = EXT.url; $id('extGame').classList.remove('hidden'); EXT.on = true;
 try { if (AC) AC.suspend(); } catch (e) {}
 fr.onload = () => { try { fr.focus(); fr.contentWindow.focus(); } catch (e) {} };
-if (SERVED) setTimeout(() => extToast('守住第三、六、十波，可在刃影领墨锭与专属皮肤「青锋行」', 6), 800);
+if (SERVED) setTimeout(() => extToast('打通山门、竹林、剑冢三章，可在刃影领墨锭与专属皮肤「青锋行」', 6), 800);
 }
 function closeQfx() {
 EXT.on = false; $id('extFrame').src = 'about:blank'; $id('extGame').classList.add('hidden');
@@ -7851,8 +7943,9 @@ QFX.busy = false;
 function qfxCleared(n) {
 if (n > qfxBest()) try { localStorage.setItem('renying-qfx', String(n)); } catch (e) {}
 const r = QFX_REW.find(x => x[0] === n);
-if (!SERVED) { if (r) extToast(`守住第${CN[n] || n}波！`); return; }
-if (!ACC.token || PROF.guest) { if (r) extToast('守住了！登录刃影后就能领这一档的奖励'); return; }
+const chName = { 3: '山门', 6: '竹林', 10: '剑冢' }[n];
+if (!SERVED) { if (r) extToast(`${chName}已破！`); return; }
+if (!ACC.token || PROF.guest) { if (r) extToast(`${chName}已破！登录刃影后就能领这一档的奖励`); return; }
 qfxClaim(Math.max(n, qfxBest()));
 }
 window.addEventListener('message', e => {
@@ -8152,13 +8245,12 @@ function drawFighter(f) {
 if (f.hidden) return;
 if (f.dummy) return drawTrainDummy(f);
 const rt = CHAR_RARITY[f.ch.id];
-if (rt === 'legend' && Math.random() < 0.2) {   // 传说角色：专属粒子
+if (f.look.fx) skinAmbient(f);
+else if (rt === 'legend' && Math.random() < 0.2) {   // 传说角色：专属粒子
 const k = f.ch.id, x = f.x + rand(-30, 30), y = f.y - rand(20, 115);
 addP(k === 'moyu' ? { type: 'ink', x, y, vx: rand(-15, 15), vy: -rand(15, 45), g: -30, life: 0.8, max: 0.8, r: rand(1.5, 3), rgb: '15,15,22' }
 : { type: 'spark', x, y, vx: rand(-15, 15), vy: k === 'yanling' ? rand(10, 40) : -rand(20, 60), life: 0.7, max: 0.7, rgb: k === 'yanling' ? '225,238,255' : '235,228,255', w: k === 'yanling' ? 2 : 1.2 });
 } else if (rt === 'rare' && Math.random() < 0.06) addP({ type: 'spark', x: f.x + rand(-24, 24), y: f.y - rand(20, 110), vx: 0, vy: -rand(20, 50), life: 0.5, max: 0.5, rgb: f.look.slash, w: 1 });
-if (f.look.deco) skinParticles(f);
-if (!f.look.deco && f.look.legend && Math.random() < 0.35) addP({ type: 'spark', x: f.x + rand(-26, 26), y: f.y - rand(10, 120), vx: rand(-10, 10), vy: -rand(30, 90), life: 0.6, max: 0.6, rgb: f.look.slash, w: 1.2 });
 if (f.meter >= 100 && f.hp > 0 && Math.random() < 0.22) {
 addP({ type: 'spark', x: f.x + rand(-22, 22), y: f.y - rand(8, 55), vx: rand(-10, 10), vy: -rand(35, 95), life: 0.42, max: 0.42, rgb: f.look.slash, w: 1.4 });
 }
@@ -8178,6 +8270,7 @@ if (Math.random() < 0.35) {
 addP({ type: 'spark', x: f.x + rand(-30, 30), y: f.y - rand(10, 100), vx: rand(-40, 40), vy: -rand(60, 160), life: 0.4, max: 0.4, rgb: Math.random() < 0.5 ? '255,215,80' : L.slash, w: 2.2 });
 }
 }
+if (f.look.legend && f.look.fx) skinGround(f);
 const hgt = clamp(-f.y / 300, 0, 1);
 ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
 ctx.beginPath(); ctx.ellipse(f.x, 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
@@ -8267,345 +8360,344 @@ line([sk.head[0] - 4, sk.head[1] - 3], [sk.head[0] + 4, sk.head[1] + 3]); line([
 ctx.restore();
 }
 }
-function drawDeco(sk, f, L, layer) {
-const D = L.deco; if (!D) return;
-const t = typeof clock === 'number' ? clock : 0;
-const hx = sk.head[0], hy = sk.head[1], nx = sk.neck[0], ny = sk.neck[1];
-let ux = hx - nx, uy = hy - ny; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;   // 头的“上”方向
-const fx = -uy * sk.face, fy = ux * sk.face;                                                // 头的“前”方向
-const P = (a, b, bx = hx, by = hy) => [bx + fx * a + ux * b, by + fy * a + uy * b];      // 以头为原点：a 向前，b 向上
-const sway = Math.sin(t * 3 + (f.idx || 0)) * 3 - clamp((f.vx || 0) * sk.face / 60, -8, 8);
-ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-if (layer === 'back') {
-const bc = P(-16, -4, nx, ny);
-if (D.back === 'sundisk' || D.back === 'bloodmoon' || D.back === 'eclipse') {
-const r = 26, col = D.back === 'sundisk' ? '255,200,90' : D.back === 'bloodmoon' ? '220,40,60' : '230,70,90';
-const g = ctx.createRadialGradient(bc[0], bc[1], 4, bc[0], bc[1], r * 1.9);
-g.addColorStop(0, `rgba(${col},0.55)`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; circle(bc, r * 1.9);
-if (D.back === 'sundisk') {
-ctx.strokeStyle = 'rgba(255,215,120,0.9)'; ctx.lineWidth = 2;
-for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + t * 0.4; ctx.beginPath(); ctx.moveTo(bc[0] + Math.cos(a) * r * 1.05, bc[1] + Math.sin(a) * r * 1.05); ctx.lineTo(bc[0] + Math.cos(a) * r * 1.45, bc[1] + Math.sin(a) * r * 1.45); ctx.stroke(); }
-ctx.fillStyle = '#ffcf5a'; circle(bc, r); ctx.strokeStyle = '#fff1c0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(bc[0], bc[1], r * 0.7, 0, 7); ctx.stroke();
-} else if (D.back === 'bloodmoon') {
-ctx.fillStyle = '#c21e32'; circle(bc, r); ctx.fillStyle = 'rgba(40,5,10,0.85)'; circle([bc[0] - sk.face * 9, bc[1] - 4], r * 0.85);
-} else {
-ctx.strokeStyle = 'rgba(255,120,120,0.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(bc[0], bc[1], r + 2, 0, 7); ctx.stroke();
-ctx.fillStyle = '#07050a'; circle(bc, r);
+const SKIN_TH = {
+flame: { trail: 'fire', amb: 'ember', hit: 'fire' },
+frost: { trail: 'frost', amb: 'mist', hit: 'shatter' },
+void: { trail: 'smoke', amb: 'wisp', hit: 'implode' },
+thunder: { trail: 'bolt', amb: 'arc', hit: 'fork' },
+water: { trail: 'flow', amb: 'drop', hit: 'splash' },
+aurora: { trail: 'prism', amb: 'glint', hit: 'prism' },
+star: { trail: 'star', amb: 'glint', hit: 'starburst' },
+gold: { trail: 'gilt', amb: 'flake', hit: 'gilt' },
+ink: { trail: 'brush', amb: 'inkdrop', hit: 'inksplat' },
+wind: { trail: 'wind', amb: 'streak', hit: 'gust' },
+petal: { trail: 'ribbon', amb: 'petal', hit: 'petals' },
+leaf: { trail: 'ribbon', amb: 'leaf', hit: 'petals' },
+feather: { trail: 'ribbon', amb: 'feather', hit: 'petals' },
+metal: { trail: 'ribbon', amb: 'spark', hit: 'sparks' },
+};
+const rgbMix = (a, b, k) => { const p = a.split(','), q = b.split(','); return p.map((v, i) => Math.round(+v + (+q[i] - +v) * k)).join(','); };
+const skinTh = L => L && L.fx ? SKIN_TH[L.fx.th] : null;
+function skinBladeSeg(sk, f, L) {
+const w = L.weapon;
+if (w === 'fists' || w === 'gourd') return null;
+if (w === 'hammer') { const s = FLAIL.get(f); if (!s) return null; const n = s.p.length; return [s.p[n - 3], s.p[n - 1]]; }
+if (w === 'flute' || w === 'brush') return [sk.hilt, sk.tip];
+if (w === 'fan') { const dx = sk.tip[0] - sk.guard[0], dy = sk.tip[1] - sk.guard[1], d = Math.hypot(dx, dy) || 1; return [[sk.guard[0] + dx / d * 12, sk.guard[1] + dy / d * 12], [sk.guard[0] + dx / d * 31, sk.guard[1] + dy / d * 31]]; }
+return [sk.guard, sk.tip];
 }
-} else if (D.back === 'shell') {   // 玄武龟甲：六边形纹
-const c = P(-12, -24, nx, ny);
-ctx.fillStyle = '#211d2a'; ctx.strokeStyle = 'rgba(140,120,255,0.7)'; ctx.lineWidth = 1.6;
-ctx.beginPath(); ctx.ellipse(c[0], c[1], 20, 30, Math.atan2(uy, ux) + Math.PI / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-for (const [a, b] of [[0, 0], [0, 14], [0, -14], [-9, 7], [-9, -7]]) { const q = P(a - 12, b - 24, nx, ny); ctx.beginPath(); for (let k = 0; k < 6; k++) { const an = k * Math.PI / 3; ctx.lineTo(q[0] + Math.cos(an) * 5.5, q[1] + Math.sin(an) * 5.5); } ctx.closePath(); ctx.stroke(); }
-} else if (D.back === 'lotus') {   // 圣莲 / 星莲（支持自定义主题色 D.lotusC）
-const lc = D.lotusC || '233,196,106';
-for (let k = -3; k <= 3; k++) {
-const a = Math.atan2(uy, ux) + k * 0.32, len = 35 - Math.abs(k) * 3;
-ctx.fillStyle = `rgba(${lc},${0.78 - Math.abs(k) * 0.08})`; ctx.beginPath();
-ctx.ellipse(bc[0] + Math.cos(a) * len * 0.5, bc[1] + Math.sin(a) * len * 0.5, 6.2, len * 0.5, a + Math.PI / 2, 0, Math.PI * 2); ctx.fill();
+const lerp2 = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+function zigzag(a, b, n, amp) {
+const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1, px = -dy / d, py = dx / d;
+ctx.beginPath(); ctx.moveTo(a[0], a[1]);
+for (let i = 1; i < n; i++) { const k = i / n, o = (Math.random() - 0.5) * 2 * amp; ctx.lineTo(a[0] + dx * k + px * o, a[1] + dy * k + py * o); }
+ctx.lineTo(b[0], b[1]); ctx.stroke();
 }
-} else if (D.back === 'snowflake') {   // 冰晶：六个分叉，缓缓旋转
-ctx.strokeStyle = 'rgba(200,240,255,0.85)'; ctx.lineWidth = 2.2;
-for (let k = 0; k < 6; k++) {
-const a = k * Math.PI / 3 + t * 0.3, ex = bc[0] + Math.cos(a) * 26, ey = bc[1] + Math.sin(a) * 26;
-line(bc, [ex, ey]);
-for (const d2 of [0.5, 0.75]) { const mx = bc[0] + Math.cos(a) * 26 * d2, my = bc[1] + Math.sin(a) * 26 * d2; for (const s2 of [-1, 1]) line([mx, my], [mx + Math.cos(a + s2 * 0.8) * 7, my + Math.sin(a + s2 * 0.8) * 7]); }
+function glint(x, y, r, rgb, a) {   // 四角星光
+ctx.fillStyle = `rgba(${rgb},${a})`;
+ctx.beginPath(); ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r * 0.28, y); ctx.quadraticCurveTo(x, y, x, y + r); ctx.quadraticCurveTo(x, y, x - r * 0.28, y); ctx.quadraticCurveTo(x, y, x, y - r); ctx.fill();
+ctx.beginPath(); ctx.moveTo(x - r * 0.7, y); ctx.quadraticCurveTo(x, y, x, y + r * 0.2); ctx.quadraticCurveTo(x, y, x + r * 0.7, y); ctx.quadraticCurveTo(x, y, x, y - r * 0.2); ctx.quadraticCurveTo(x, y, x - r * 0.7, y); ctx.fill();
+ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(x, y, r * 0.16, 0, 7); ctx.fill();
 }
-ctx.fillStyle = 'rgba(230,250,255,0.9)'; circle(bc, 4);
-} else if (D.back === 'aurora') {   // 极光光带：三条波浪，从绿到紫
-for (let k = 0; k < 3; k++) {
-const g = ctx.createLinearGradient(bc[0] - 50, bc[1], bc[0] + 30, bc[1] - 40);
-g.addColorStop(0, 'rgba(120,255,210,0)'); g.addColorStop(0.4, `rgba(120,255,210,${0.55 - k * 0.12})`); g.addColorStop(1, `rgba(190,120,255,${0.45 - k * 0.1})`);
-ctx.strokeStyle = g; ctx.lineWidth = 7 - k * 1.5; ctx.beginPath();
-for (let q = 0; q <= 12; q++) { const u = q / 12, pt = P(-48 + u * 60, 6 + k * 10 + Math.sin(u * 6 + t * 2 + k) * 6, nx, ny); q ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]); }
-ctx.stroke();
-}
-} else if (D.back === 'clouds') {   // 背后流云
-ctx.fillStyle = 'rgba(235,245,255,0.8)';
-for (let k = 0; k < 4; k++) { const q = P(-20 - k * 9, -6 + Math.sin(t * 2 + k) * 4 - k * 5, nx, ny); circle(q, 9 - k * 1.2); }
-} else if (D.back === 'voiddisk') {   // 幽渊黑洞法环
-const r = 26;
-const g = ctx.createRadialGradient(bc[0], bc[1], 3, bc[0], bc[1], r * 2);
-g.addColorStop(0, 'rgba(160,80,240,0.6)'); g.addColorStop(0.7, 'rgba(40,10,70,0.4)'); g.addColorStop(1, 'rgba(20,5,35,0)'); ctx.fillStyle = g; circle(bc, r * 2);
-ctx.strokeStyle = 'rgba(180,110,255,0.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(bc[0], bc[1], r, 0, 7); ctx.stroke();
-ctx.fillStyle = '#080210'; circle(bc, r * 0.85);
-for (let k = 0; k < 8; k++) { const an = k * Math.PI / 4 - t * 0.5; line([bc[0] + Math.cos(an) * r * 0.9, bc[1] + Math.sin(an) * r * 0.9], [bc[0] + Math.cos(an) * r * 1.35, bc[1] + Math.sin(an) * r * 1.35]); }
-} else if (D.back === 'wings') {   // 幻灵/雪鸮飞翼
-for (const s2 of [-1, 1]) {
-ctx.fillStyle = s2 === 1 ? 'rgba(220,245,255,0.7)' : 'rgba(160,225,255,0.5)';
-ctx.beginPath(); ctx.moveTo(bc[0], bc[1]);
-const wSpan = 38, wFlap = Math.sin(t * 4) * 6;
-ctx.quadraticCurveTo(bc[0] - 20, bc[1] - 30 * s2 + wFlap, bc[0] - 55, bc[1] - 22 * s2 + wFlap);
-ctx.quadraticCurveTo(bc[0] - 30, bc[1] - 8 * s2, bc[0], bc[1]); ctx.fill();
-ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.2; ctx.stroke();
-}
-} else if (D.back === 'dragonring') {   // 沧龙水轮
-const r = 28;
-ctx.strokeStyle = 'rgba(70,170,255,0.85)'; ctx.lineWidth = 3;
-ctx.beginPath(); ctx.arc(bc[0], bc[1], r, t * 1.2, t * 1.2 + Math.PI * 1.65); ctx.stroke();
-ctx.strokeStyle = 'rgba(180,230,255,0.9)'; ctx.lineWidth = 1.5;
-ctx.beginPath(); ctx.arc(bc[0], bc[1], r * 0.75, -t * 1.5, -t * 1.5 + Math.PI * 1.4); ctx.stroke();
-} else if (D.back === 'chakra') {   // 金刚光轮 / 宝轮
-const r = 27;
-ctx.strokeStyle = 'rgba(255,190,40,0.95)'; ctx.lineWidth = 2.2;
-ctx.beginPath(); ctx.arc(bc[0], bc[1], r, 0, 7); ctx.stroke();
-for (let k = 0; k < 12; k++) {
-const a = k * Math.PI / 6 + t * 0.4;
-const q1 = [bc[0] + Math.cos(a) * (r - 6), bc[1] + Math.sin(a) * (r - 6)], q2 = [bc[0] + Math.cos(a) * (r + 7), bc[1] + Math.sin(a) * (r + 7)];
-line(q1, q2);
-}
-ctx.fillStyle = 'rgba(255,220,100,0.7)'; circle(bc, 5);
-}
-if (D.cape || D.back === 'aurora') {
-const a = sk.sh, h = sk.hip, back = -sk.face;
-const tipX = h[0] + back * (26 + Math.abs(sway) * 1.5), tipY = h[1] + 22 + sway;
-if (D.back === 'aurora') { const g = ctx.createLinearGradient(a[0], a[1], tipX, tipY); g.addColorStop(0, 'rgba(120,255,210,0.85)'); g.addColorStop(0.5, 'rgba(120,170,255,0.75)'); g.addColorStop(1, 'rgba(200,120,255,0.3)'); ctx.fillStyle = g; }
-else ctx.fillStyle = D.cape;
-ctx.beginPath(); ctx.moveTo(a[0] + back * 3, a[1]);
-ctx.quadraticCurveTo(a[0] + back * 22, (a[1] + tipY) / 2 + sway, tipX, tipY);
-ctx.lineTo(tipX - back * 12, tipY - 4);
-ctx.quadraticCurveTo(h[0] + back * 4, h[1], a[0] - back * 2, a[1] + 4); ctx.closePath(); ctx.fill();
-}
-ctx.restore(); return;
-}
-const hd = D.head;
-if (hd === 'douli' || hd === 'veilhat' || hd === 'bamboohat' || hd === 'talismanhat') {
-const L1 = P(-27, 5), R1 = P(27, 5), T1 = P(0, 21);
-ctx.fillStyle = D.hatC || '#c9a86a'; ctx.strokeStyle = '#3a2818'; ctx.lineWidth = 1.5;
-ctx.beginPath(); ctx.moveTo(L1[0], L1[1]); ctx.quadraticCurveTo(T1[0], T1[1], R1[0], R1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.strokeStyle = 'rgba(255,255,255,0.22)'; for (let k = -2; k <= 2; k++) line(P(k * 9, 6), P(k * 2, 18));
-if (hd === 'veilhat') {
-ctx.fillStyle = D.veilC || 'rgba(255,150,95,0.42)';
-ctx.beginPath(); ctx.moveTo(L1[0] + fx * 3, L1[1]); ctx.lineTo(R1[0] - fx * 3, R1[1]);
-ctx.lineTo(P(18 + sway * 0.6, -12)[0], P(18 + sway * 0.6, -12)[1]);
-ctx.lineTo(P(-20 + sway * 0.8, -14)[0], P(-20 + sway * 0.8, -14)[1]); ctx.closePath(); ctx.fill();
-} else if (hd === 'bamboohat') {
-ctx.strokeStyle = '#7fe0a0'; ctx.lineWidth = 1.6;
-line(P(6, 14), P(16, 22)); line(P(10, 17), P(18, 16)); line(P(11, 18), P(14, 24));
-} else if (hd === 'talismanhat') {
-for (const s2 of [-14, 14]) {
-const p0 = P(s2, 5), p1 = P(s2 + sway * 0.4, -7);
-ctx.fillStyle = '#d83226'; ctx.beginPath(); ctx.moveTo(p0[0] - 2, p0[1]); ctx.lineTo(p0[0] + 2, p0[1]); ctx.lineTo(p1[0] + 2, p1[1]); ctx.lineTo(p1[0] - 2, p1[1]); ctx.closePath(); ctx.fill();
-}
-}
-} else if (hd === 'crown') {   // 帝日金冠
-ctx.fillStyle = '#f2c14e'; ctx.strokeStyle = '#8a5a12'; ctx.lineWidth = 1.2; ctx.beginPath();
-const pts = [P(-10, 6), P(-10, 13), P(-6, 10), P(-3, 18), P(0, 11), P(3, 18), P(6, 10), P(10, 13), P(10, 6)];
-ctx.moveTo(pts[0][0], pts[0][1]); for (const q of pts) ctx.lineTo(q[0], q[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.fillStyle = '#e8403a'; circle(P(0, 9), 2); ctx.fillStyle = '#6fd6ff'; circle(P(-6, 8), 1.4); circle(P(6, 8), 1.4);
-} else if (hd === 'icecrown') {   // 寒霜冰棱冠（区别于幽渊）
-ctx.fillStyle = '#d8f4ff'; ctx.strokeStyle = '#5ab4e6'; ctx.lineWidth = 1.3;
-for (const [ox, h1] of [[-8, 14], [-4, 19], [0, 24], [4, 19], [8, 14]]) {
-const bL = P(ox - 2.2, 6), bR = P(ox + 2.2, 6), tp = P(ox, h1);
-ctx.beginPath(); ctx.moveTo(bL[0], bL[1]); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(bR[0], bR[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-}
-ctx.fillStyle = '#ffffff'; circle(P(0, 10), 2.2);
-} else if (hd === 'voidhorns') {   // 幽渊/冥狱：裂空暗渊双角 + 虚空眉印
-ctx.fillStyle = '#1b0d2e'; ctx.strokeStyle = '#b56bff'; ctx.lineWidth = 1.4;
-for (const s2 of [-1, 1]) {
-const b0 = P(s2 * 4, 8), c1 = P(s2 * 14 - 4, 20), tp = P(s2 * 9 - 12, 29);
-ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.lineTo(P(s2 * 7, 7)[0], P(s2 * 7, 7)[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-}
-ctx.fillStyle = '#d896ff'; circle(P(8, 5), 2.5);
-} else if (hd === 'horns') {   // 血月恶鬼长角
-ctx.fillStyle = D.hornC || '#222'; ctx.strokeStyle = `rgba(${L.slash},0.85)`; ctx.lineWidth = 1.3;
-for (const s2 of [-1, 1]) {
-const b0 = P(s2 * 5 - 2, 8), b1 = P(s2 * 9 - 2, 9), c1 = P(s2 * 14 - 8, 22), tp = P(s2 * 10 - 14, 30);
-ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.quadraticCurveTo(c1[0] + fx * 4, c1[1] + fy * 4, b1[0], b1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-}
-} else if (hd === 'jadevisor') {   // 绯影·碧影：翡翠半脸轻甲面帘 + 翠叶发簪（与幻灵狐面完全区分）
-ctx.fillStyle = '#12382c'; ctx.strokeStyle = '#2bd49a'; ctx.lineWidth = 1.4;
-const m0 = P(1, -1), m1 = P(11, 2), m2 = P(9, -8), m3 = P(-2, -6);
-ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.lineTo(m2[0], m2[1]); ctx.lineTo(m3[0], m3[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.fillStyle = '#5ef2c0'; circle(P(6, 3.2), 1.8);
-ctx.fillStyle = '#2bd49a'; ctx.beginPath(); const lf = P(-6, 11); ctx.ellipse(lf[0], lf[1], 7, 3, Math.atan2(uy, ux) - 0.5, 0, Math.PI * 2); ctx.fill();
-} else if (hd === 'foxmask') {   // 绯影·幻灵：九尾妖狐全覆灵面 + 幽蓝灵耳与妖瞳
-const c = P(4.5, 0.5);
-ctx.fillStyle = '#eefaff'; ctx.strokeStyle = D.mask || '#00f2fe'; ctx.lineWidth = 1.4;
-ctx.beginPath(); ctx.ellipse(c[0], c[1], 9, 10, Math.atan2(uy, ux) + Math.PI / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-for (const s2 of [-1, 1]) {
-const e0 = P(s2 * 5 + 2, 7), e1 = P(s2 * 8 + 1, 19), e2 = P(s2 * 1 + 2, 9);
-ctx.fillStyle = '#eefaff'; ctx.beginPath(); ctx.moveTo(e0[0], e0[1]); ctx.lineTo(e1[0], e1[1]); ctx.lineTo(e2[0], e2[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-}
-ctx.strokeStyle = D.mask || '#00f2fe'; ctx.lineWidth = 2;
-line(P(5, 3), P(10, 4.5));
-ctx.lineWidth = 1.4; line(P(6, 0), P(10, -2)); line(P(5, -3), P(9, -5));
-} else if (hd === 'taotiehelm') {   // 铁山·青铜：商周饕餮方冠胄
-ctx.fillStyle = D.helmC || '#a8804a'; ctx.strokeStyle = '#3fa37a'; ctx.lineWidth = 1.5;
-const p1 = P(-11, -2), p2 = P(-11, 13), p3 = P(11, 13), p4 = P(11, -2);
-ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.lineTo(p4[0], p4[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-for (const s2 of [-1, 1]) { line(P(s2 * 9, 13), P(s2 * 13, 20)); }
-ctx.fillStyle = '#3fa37a'; circle(P(6, 5), 2.2);
-} else if (hd === 'asuramask') {   // 铁山·修罗：阿修罗鬼面 + 狂暴赤发
-ctx.fillStyle = '#380a0a'; ctx.strokeStyle = '#ff3a30'; ctx.lineWidth = 1.5;
-ctx.beginPath(); const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 12.2, a0 - Math.PI * 0.6, a0 + Math.PI * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.strokeStyle = '#ff3a30'; ctx.lineWidth = 3.2;
-for (let k = 0; k < 3; k++) {
-const b0 = P(-2, 11 - k * 3), c1 = P(-16, 22 - k * 4 + sway), tp = P(-30 - k * 4, 16 - k * 6 + sway * 1.3);
-ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke();
-}
-ctx.fillStyle = '#ffea70'; circle(P(8, 3), 2); circle(P(6, 8), 1.6);
-} else if (hd === 'helm') {   // 头盔 + 盔缨
-ctx.fillStyle = D.helmC; ctx.strokeStyle = '#3a2a14'; ctx.lineWidth = 1.2; ctx.beginPath();
-const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 12, a0 - Math.PI / 2 - 0.2, a0 + Math.PI / 2 + 0.2); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.strokeStyle = D.crest; ctx.lineWidth = 3; ctx.beginPath(); const b0 = P(0, 12), c1 = P(-10, 24), tp = P(-22, 20 + sway); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke();
-} else if (hd === 'valkyrie') {   // 凌霜·极光：极光羽翼女武神冠
-ctx.strokeStyle = '#7dffd8'; ctx.fillStyle = '#dffcf4'; ctx.lineWidth = 1.5;
-line(P(-9, 5), P(10, 5));
-const w0 = P(-1, 6), w1 = P(-14, 19), w2 = P(-19, 13), w3 = P(-6, 4);
-ctx.beginPath(); ctx.moveTo(w0[0], w0[1]); ctx.lineTo(w1[0], w1[1]); ctx.lineTo(w2[0], w2[1]); ctx.lineTo(w3[0], w3[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.fillStyle = '#5ef2c9'; circle(P(9, 5.5), 2.6);
-} else if (hd === 'dragonhorns') {   // 凌霜·沧龙：沧海分支龙角
-ctx.strokeStyle = '#1f90ff'; ctx.lineWidth = 2.6;
-for (const s2 of [-1, 1]) {
-const b0 = P(s2 * 3, 9), m1 = P(s2 * 6 - 7, 19), t1 = P(s2 * 4 - 16, 27), br = P(s2 * 8 - 4, 24);
-line(b0, m1); line(m1, t1); line(m1, br);
-}
-ctx.fillStyle = '#80d4ff'; circle(P(8, 5), 2.4);
-} else if (hd === 'starguan') {   // 墨羽·星墨 / 玉箫·钧天：太虚星官高冠
-ctx.fillStyle = '#14244a'; ctx.strokeStyle = '#6fd6ff'; ctx.lineWidth = 1.4;
-const g0 = P(-6, 9), g1 = P(-4, 21), g2 = P(5, 21), g3 = P(6, 9);
-ctx.beginPath(); ctx.moveTo(g0[0], g0[1]); ctx.lineTo(g1[0], g1[1]); ctx.lineTo(g2[0], g2[1]); ctx.lineTo(g3[0], g3[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-line(P(-11, 14), P(11, 14));
-ctx.fillStyle = '#fff'; circle(P(0, 15), 2.2);
-} else if (hd === 'sakurabranch') {   // 月华·樱月：双樱花枝与粉樱飘带
-ctx.strokeStyle = '#6b3428'; ctx.lineWidth = 1.6; line(P(-10, 4), P(4, 14));
-for (const [a, b, r] of [[-6, 9, 4.8], [2, 13, 4.0], [-11, 4, 3.4]]) {
-const c = P(a, b); ctx.fillStyle = D.flower || '#ff9ec4';
-for (let k = 0; k < 5; k++) { const an = k * Math.PI * 0.4 + t * 0.3; circle([c[0] + Math.cos(an) * r * 0.65, c[1] + Math.sin(an) * r * 0.65], r * 0.5); }
-ctx.fillStyle = '#fff5f8'; circle(c, r * 0.28);
-}
-ctx.strokeStyle = '#ff9ec4'; ctx.lineWidth = 2; line(P(-9, 5), P(-24 + sway, -8));
-} else if (hd === 'frosttiara') {   // 月华·霜华 / 玉箫·雪箫：六棱冰钻冠冕
-ctx.strokeStyle = '#a8e0ff'; ctx.fillStyle = '#eef9ff'; ctx.lineWidth = 1.4;
-for (const [ox, h1] of [[-6, 13], [0, 19], [6, 13]]) {
-const c = P(ox, h1);
-ctx.beginPath(); ctx.moveTo(c[0], c[1] - 4); ctx.lineTo(c[0] + 3, c[1]); ctx.lineTo(c[0], c[1] + 4); ctx.lineTo(c[0] - 3, c[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-}
-line(P(-9, 6), P(9, 6));
-} else if (hd === 'ravencowl') {   // 燕翎·玄羽：夜鸦尖喙暗살兜帽
-ctx.fillStyle = '#181822'; ctx.strokeStyle = '#8a8aa6'; ctx.lineWidth = 1.3;
-const a0 = Math.atan2(uy, ux);
-ctx.beginPath(); ctx.arc(hx, hy, 12.8, a0 - Math.PI * 0.7, a0 + Math.PI * 0.2);
-const beak = P(15, 3), tail = P(-19, -7 + sway * 0.5);
-ctx.lineTo(beak[0], beak[1]); ctx.lineTo(P(6, -1)[0], P(6, -1)[1]); ctx.lineTo(tail[0], tail[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-} else if (hd === 'owlhood') {   // 燕翎·雪鸮：极地雪鸮白羽耳簇兜帽
-ctx.fillStyle = '#dcebfa'; ctx.strokeStyle = '#70b6f6'; ctx.lineWidth = 1.4;
-const a0 = Math.atan2(uy, ux);
-ctx.beginPath(); ctx.arc(hx, hy, 12.8, a0 - Math.PI * 0.7, a0 + Math.PI * 0.25); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.6;
-line(P(3, 8), P(-6, 18)); line(P(5, 7), P(-2, 16));
-} else if (hd === 'gourdcrown') {   // 醉翁·琥珀：金樽藤叶束发金箍
-ctx.strokeStyle = '#e5a93c'; ctx.lineWidth = 3.2; line(P(-10, 4), P(10, 4));
-ctx.fillStyle = '#d9822b'; circle(P(0, 12), 4.2); circle(P(0, 17), 2.8);
-} else if (hd === 'ironvisage') {   // 勾陈·赤锤：赤狱百炼鬼面铁胄
-ctx.fillStyle = '#2b1014'; ctx.strokeStyle = '#ff4d4d'; ctx.lineWidth = 1.5;
-ctx.beginPath(); const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 11.8, a0 - 1.4, a0 + 2.2); ctx.closePath(); ctx.fill(); ctx.stroke();
-ctx.fillStyle = '#ff4d4d'; circle(P(6, 2), 2.1);
-} else if (hd === 'circlet') {   // 额环 + 宝石
-ctx.strokeStyle = '#e6e9f5'; ctx.lineWidth = 2; line(P(-9, 5), P(9, 5));
-ctx.fillStyle = D.gem || '#7dd'; circle(P(9, 5), 2.8); ctx.fillStyle = 'rgba(255,255,255,0.8)'; circle(P(9.6, 5.8), 1);
-} else if (hd === 'flower') {   // 花簪
-for (const [a, b, r] of [[-7, 9, 5], [-11, 3, 3.6]]) {
-const c = P(a, b); ctx.fillStyle = D.flower;
-for (let k = 0; k < 5; k++) { const an = k * Math.PI * 0.4 + t * 0.3; circle([c[0] + Math.cos(an) * r * 0.7, c[1] + Math.sin(an) * r * 0.7], r * 0.55); }
-ctx.fillStyle = '#ffe07a'; circle(c, r * 0.3);
-}
-ctx.strokeStyle = '#e9c46a'; ctx.lineWidth = 1; line(P(-9, 6), P(-14 + sway * 0.5, -10));
-} else if (hd === 'hood') {   // 兜帽
-ctx.fillStyle = D.hoodC || '#222'; ctx.beginPath();
-const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 13, a0 - Math.PI / 2 - 0.9, a0 + Math.PI / 2 + 0.25);
-const tail = P(-18, -8 + sway * 0.5); ctx.lineTo(tail[0], tail[1]); ctx.closePath(); ctx.fill();
-ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1; ctx.stroke();
-} else if (hd === 'plume') {   // 翎羽冠
-const cols = D.plumeC || ['#fff', '#ddd'];
-for (let k = 0; k < 3; k++) {
-const b0 = P(-3, 10), c1 = P(-16 - k * 6, 30 + k * 4), tp = P(-34 - k * 10, 34 + k * 6 + sway * (1 + k * 0.4));
-ctx.strokeStyle = cols[k % cols.length]; ctx.lineWidth = 3.2 - k * 0.6; ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke();
-}
-} else if (hd === 'headband') {   // 头巾 + 飘带
-ctx.strokeStyle = D.band; ctx.lineWidth = 3; line(P(-10, 3), P(10, 3));
-ctx.lineWidth = 2.2; for (const k of [0, 1]) { const b0 = P(-10, 3), c1 = P(-22, -2 - k * 4 + sway), tp = P(-34 - k * 4, -8 - k * 6 + sway * 1.5); ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke(); }
-}
-if (D.shoulder) {   // 护肩
-ctx.fillStyle = D.shoulder; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1.2;
-ctx.beginPath(); ctx.ellipse(sk.sh[0], sk.sh[1] + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-}
-if (D.breastplate) {   // 战甲胸铠 / 护心镜
-ctx.fillStyle = D.breastplate; ctx.strokeStyle = `rgba(${L.slash},0.8)`; ctx.lineWidth = 1.4;
-const mx = (sk.sh[0] + sk.hip[0]) * 0.5, my = (sk.sh[1] + sk.hip[1]) * 0.5;
-ctx.beginPath(); ctx.ellipse(mx, my - 2, 9, 13, Math.atan2(uy, ux) + Math.PI / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-ctx.fillStyle = `rgb(${L.slash})`; circle([mx, my - 2], 3.2);
-}
-if (D.robe) {   // 独有服饰下摆 / 战袍长裾
-const rbCol = D.robe === 'ice' ? '#b8d8ff' : D.robe === 'gold' ? '#e5b842' : D.robe === 'dark' ? '#321650'
-: D.robe === 'leaf' ? '#1f8f68' : D.robe === 'crimson' ? '#781420' : D.robe === 'spirit' ? '#105577'
-: D.robe === 'bronze' ? '#8a6838' : D.robe === 'heavy' ? '#242030' : D.robe === 'shura' ? '#5a1212'
-: D.robe === 'plum' ? '#c02a4a' : D.robe === 'aurora' ? '#287766' : D.robe === 'ocean' ? '#12406e'
-: D.robe === 'dusk' ? '#a04822' : D.robe === 'celestial' ? '#306496' : D.robe === 'bamboo' ? '#2a4830'
-: D.robe === 'thunder' ? '#4a287c' : D.robe === 'solar' ? '#ba5416' : D.robe === 'vajra' ? '#6a3610'
-: D.robe === 'cinnabar' ? '#882014' : D.robe === 'gilt' ? '#8a6820' : D.robe === 'starry' ? '#14244a'
-: D.robe === 'sakura' ? '#c86488' : D.robe === 'eclipse' ? '#34101e' : D.robe === 'snow' ? '#4478a8'
-: D.robe === 'raven' ? '#1c1c24' : D.robe === 'jade_master' ? '#1a5448' : D.robe === 'phoenix' ? '#a83610' : '#284666';
-ctx.fillStyle = rbCol; ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1.2;
-const h = sk.hip, kf = sk.kf, kb = sk.kb;
-const rDir = -sk.face;
-const rTipX = (kf[0] + kb[0]) * 0.5 + rDir * (12 + Math.abs(sway)), rTipY = Math.max(kf[1], kb[1]) + 8 + (f.state === 'skill' ? Math.sin(t * 18) * 6 : 0);
-ctx.beginPath(); ctx.moveTo(h[0] - 6, h[1]); ctx.lineTo(h[0] + 6, h[1]);
-ctx.quadraticCurveTo(kf[0] + 8, kf[1], rTipX, rTipY);
-ctx.quadraticCurveTo(kb[0] - 8, kb[1], h[0] - 6, h[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-}
-if (D.orbs) {   // 环绕周身的灵珠/法球（技能时加速旋转并放大）
-const orbSpin = (f.state === 'skill' || f.state === 'special' ? t * 8 : t * 2.5);
-const orbR = 24 + (f.state === 'special' ? 14 : f.state === 'skill' ? 8 : 0);
-const cx0 = (sk.hip[0] + sk.sh[0]) * 0.5, cy0 = (sk.hip[1] + sk.sh[1]) * 0.5;
-for (let k = 0; k < 3; k++) {
-const an = orbSpin + k * (Math.PI * 2 / 3);
-const ox = cx0 + Math.cos(an) * orbR, oy = cy0 + Math.sin(an) * (orbR * 0.42);
-ctx.fillStyle = D.orbs; circle([ox, oy], 3.8);
-ctx.fillStyle = '#fff'; circle([ox - 1, oy - 1], 1.6);
-if (f.state === 'skill' || f.state === 'special') {
-ctx.strokeStyle = `rgba(${L.slash},0.7)`; ctx.lineWidth = 1;
-line([cx0, cy0], [ox, oy]);
-}
-}
-}
-const w = D.wfx;
-if (w) {
-const fists = L.weapon === 'fists';
-const A0 = fists ? sk.hf : sk.hilt, B0 = fists ? sk.hf : sk.tip;
-ctx.globalCompositeOperation = w === 'shadow' || w === 'ink' || w === 'lava' || w === 'void' ? 'source-over' : 'lighter';
-if (w === 'flame') { ctx.strokeStyle = `rgba(255,${140 + Math.sin(t * 20) * 40 | 0},60,0.55)`; ctx.lineWidth = 7; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(255,170,70,0.5)'; circle(B0, 5 + Math.sin(t * 25) * 1.5); }
-if (w === 'frost') { ctx.strokeStyle = 'rgba(190,240,255,0.55)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1; for (let k = 1; k < 4; k++) { const q = [A0[0] + (B0[0] - A0[0]) * k / 4, A0[1] + (B0[1] - A0[1]) * k / 4]; line([q[0] - 3, q[1] - 3], [q[0] + 3, q[1] + 3]); line([q[0] + 3, q[1] - 3], [q[0] - 3, q[1] + 3]); } }
-if (w === 'jade') { ctx.strokeStyle = 'rgba(90,230,170,0.5)'; ctx.lineWidth = 6; if (!fists) line(A0, B0); }
-if (w === 'gold') { const k = (t * 1.2) % 1, q = [A0[0] + (B0[0] - A0[0]) * k, A0[1] + (B0[1] - A0[1]) * k]; ctx.strokeStyle = 'rgba(255,215,120,0.45)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(255,245,210,0.9)'; circle(q, 3); }
-if (w === 'lightning') { ctx.strokeStyle = 'rgba(200,170,255,0.9)'; ctx.lineWidth = 1.6; for (const hnd of fists ? [sk.hf, sk.hb] : [A0]) { ctx.beginPath(); let q = hnd; ctx.moveTo(q[0], q[1]); for (let k = 0; k < 4; k++) { q = [hnd[0] + rand(-14, 14), hnd[1] + rand(-14, 14)]; ctx.lineTo(q[0], q[1]); } ctx.stroke(); } }
-if (w === 'shadow') { ctx.strokeStyle = 'rgba(40,10,50,0.45)'; ctx.lineWidth = 9; if (!fists) line(A0, B0); ctx.strokeStyle = `rgba(${L.slash},0.5)`; ctx.lineWidth = 1.5; if (!fists) line(A0, B0); }
-if (w === 'void') { ctx.strokeStyle = 'rgba(30,10,50,0.7)'; ctx.lineWidth = 8; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(170,90,255,0.85)'; ctx.lineWidth = 2.4; if (!fists) line(A0, B0); circle(B0, 4.5); }
-if (w === 'water') { ctx.strokeStyle = 'rgba(60,170,255,0.6)'; ctx.lineWidth = 6.5; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(220,245,255,0.85)'; ctx.lineWidth = 1.8; if (!fists) line(A0, B0); }
-if (w === 'crystal') { ctx.strokeStyle = 'rgba(100,210,255,0.6)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(240,250,255,0.95)'; circle(B0, 4); }
-if (w === 'lava') { ctx.strokeStyle = '#1a1420'; ctx.lineWidth = 4; if (!fists) line(A0, B0); ctx.strokeStyle = `rgba(255,${120 + Math.sin(t * 6) * 60 | 0},60,0.9)`; ctx.lineWidth = 1.2; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const q = [A0[0] + (B0[0] - A0[0]) * k / 6 + (k % 2 ? 2 : -2), A0[1] + (B0[1] - A0[1]) * k / 6]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); }
-if (w === 'ink') { ctx.fillStyle = `rgba(${D.inkC || '15,15,22'},0.85)`; circle(B0, 3.5); circle([B0[0], B0[1] + 6 + Math.sin(t * 4) * 2], 1.8); }
+function skinGlow(segs, sk, f, L) {
+const c = L.fx.c, br = 0.75 + 0.25 * Math.sin(clock * 2.4 + (f.idx || 0) * 1.7);
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+for (const [grow, a] of [[11, 0.05], [6, 0.08]]) {
+ctx.globalAlpha = a * br;
+for (const s of segs) drawTaperedSeg(s[0], s[1], s[2] + grow, s[3] + grow, `rgb(${c})`);
+ctx.fillStyle = `rgb(${c})`; circle(sk.head, 10 + grow);
 }
 ctx.restore();
 }
-const SKIN_P = {
-ember: { rgb: '255,160,60', vy: -60, g: -40, type: 'spark' }, snow: { rgb: '220,245,255', vy: 30, g: 20, type: 'spark' },
-petal: { rgb: '255,160,190', vy: 20, g: 30, type: 'spark' }, leaf: { rgb: '120,220,150', vy: 20, g: 30, type: 'spark' },
-smoke: { rgb: '30,10,40', vy: -30, g: -20, type: 'ink' }, ink: { rgb: '15,15,22', vy: 40, g: 400, type: 'ink' },
-gold: { rgb: '255,215,120', vy: -40, g: -10, type: 'spark' }, feather: { rgb: '240,245,255', vy: 30, g: 40, type: 'spark' },
-spark: { rgb: '190,150,255', vy: 0, g: 0, type: 'spark' }, aurora: { rgb: '120,255,210', vy: -30, g: -10, type: 'spark' }, cloud: { rgb: '235,245,255', vy: -10, g: -5, type: 'spark' },
-};
-function skinParticles(f) {
-const D = f.look.deco; if (!D) return;
-const tr = SKIN_P[D.trail];
-if (tr && f.trail.length > 1 && Math.random() < 0.6) {
-const e = f.trail[f.trail.length - 1], q = [e.b[0] + (e.t[0] - e.b[0]) * Math.random(), e.b[1] + (e.t[1] - e.b[1]) * Math.random()];
-const rgb = D.trail === 'petal' ? D.petal || tr.rgb : D.trail === 'leaf' ? D.leaf || tr.rgb : D.trail === 'ink' ? D.inkC || tr.rgb : D.trail === 'feather' ? D.featherC || tr.rgb : tr.rgb;
-addP({ type: tr.type, x: q[0], y: q[1], vx: rand(-40, 40), vy: tr.vy + rand(-30, 30), g: tr.g, life: 0.6, max: 0.6, r: rand(1.5, 3), rgb, w: 2.2, drag: 2 });
+function skinBlade(sk, f, L) {
+const seg = skinBladeSeg(sk, f, L), th = L.fx.th, c = L.fx.c, c2 = L.fx.c2 || c, t = clock;
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+if (!seg) {   // 拳、葫芦：两只手上一团光
+for (const h of [sk.hf, sk.hb]) {
+const r = 13 + Math.sin(t * 6 + h[0] * 0.1) * 2, g = ctx.createRadialGradient(h[0], h[1], 0, h[0], h[1], r);
+g.addColorStop(0, `rgba(255,255,255,0.55)`); g.addColorStop(0.35, `rgba(${c},0.45)`); g.addColorStop(1, `rgba(${c},0)`);
+ctx.fillStyle = g; ctx.fillRect(h[0] - r, h[1] - r, r * 2, r * 2);
+if (th === 'thunder' && Math.random() < 0.5) { ctx.strokeStyle = `rgba(${c},0.9)`; ctx.lineWidth = 1.3; const a = Math.random() * 6.28; zigzag(h, [h[0] + Math.cos(a) * 18, h[1] + Math.sin(a) * 18], 4, 4); }
+if (th === 'flame') { ctx.fillStyle = `rgba(${c2},0.5)`; const lk = 8 + Math.sin(t * 25 + h[1]) * 3; ctx.beginPath(); ctx.moveTo(h[0] - 5, h[1]); ctx.quadraticCurveTo(h[0], h[1] - lk * 2, h[0] + 1, h[1] - lk * 2.2); ctx.quadraticCurveTo(h[0] + 2, h[1] - lk, h[0] + 5, h[1]); ctx.fill(); }
 }
-const au = SKIN_P[D.aura];
-if (au && Math.random() < 0.22) addP({ type: au.type, x: f.x + rand(-26, 26), y: f.y - rand(10, 120), vx: rand(-15, 15), vy: au.vy + rand(-20, 20), g: au.g, life: 0.8, max: 0.8, r: rand(1.5, 3), rgb: au.rgb, w: 1.6, drag: 1 });
+ctx.restore(); return;
+}
+const [a, b] = seg;
+if (th === 'void' || th === 'ink' || th === 'star') {   // 暗芯：先压一道深色，再描亮边
+ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = `rgba(${c2},${th === 'ink' ? 0.55 : 0.7})`; ctx.lineWidth = 7; line(a, b);
+ctx.globalCompositeOperation = 'lighter';
+}
+ctx.strokeStyle = `rgba(${c},0.22)`; ctx.lineWidth = 9; line(a, b);
+ctx.strokeStyle = `rgba(${c},0.45)`; ctx.lineWidth = 4.5; line(a, b);
+if (th === 'aurora') {   // 刃上的颜色在两种之间流动
+const g = ctx.createLinearGradient(a[0], a[1], b[0], b[1]), s = (t * 0.6) % 1;
+g.addColorStop(0, `rgba(${c},0.85)`); g.addColorStop(s, `rgba(${c2},0.85)`); g.addColorStop(1, `rgba(${c},0.85)`);
+ctx.strokeStyle = g; ctx.lineWidth = 2.6; line(a, b);
+}
+ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.1; line(a, b);
+const k = (t * (th === 'gold' ? 0.9 : 1.4) + (f.idx || 0) * 0.37) % 1.4;
+if (k < 1) {
+const p0 = lerp2(a, b, Math.max(0, k - 0.18)), p1 = lerp2(a, b, Math.min(1, k + 0.04)), g = ctx.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
+g.addColorStop(0, `rgba(255,255,255,0)`); g.addColorStop(0.8, `rgba(255,255,255,${th === 'gold' ? 1 : 0.85})`); g.addColorStop(1, `rgba(255,255,255,0)`);
+ctx.strokeStyle = g; ctx.lineWidth = th === 'gold' ? 4 : 3; line(p0, p1);
+}
+const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1, px = -dy / d, py = dx / d;
+if (th === 'flame') {   // 刃上冒火舌，往上飘
+for (let i = 0; i < 4; i++) {
+const q = lerp2(a, b, 0.25 + i * 0.22), lk = 7 + 5 * Math.sin(t * 22 + i * 2.1) + 3 * Math.sin(t * 37 + i);
+const g = ctx.createLinearGradient(q[0], q[1], q[0], q[1] - lk * 2.2); g.addColorStop(0, `rgba(${c},0.75)`); g.addColorStop(1, `rgba(${c2},0)`);
+ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(q[0] - 3.5, q[1]); ctx.quadraticCurveTo(q[0] - 2, q[1] - lk * 1.4, q[0] + Math.sin(t * 9 + i) * 3, q[1] - lk * 2.2); ctx.quadraticCurveTo(q[0] + 2, q[1] - lk * 1.2, q[0] + 3.5, q[1]); ctx.fill();
+}
+} else if (th === 'frost' || th === 'star') {   // 刃上闪几颗星光
+for (let i = 0; i < 3; i++) { const ph = (t * 1.3 + i * 0.33) % 1, q = lerp2(a, b, hash(Math.floor(t * 1.3 + i * 0.33) * 3 + i)); glint(q[0], q[1], 7 * Math.sin(ph * Math.PI), th === 'star' ? '255,255,255' : c, 0.9 * Math.sin(ph * Math.PI)); }
+} else if (th === 'thunder') {
+if (Math.random() < 0.7) { ctx.strokeStyle = `rgba(${c},0.95)`; ctx.lineWidth = 1.4; zigzag(a, b, 6, 6); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 0.7; zigzag(a, b, 6, 3); }
+} else if (th === 'water') {   // 刃上一道起伏的水光
+ctx.strokeStyle = `rgba(${c2},0.7)`; ctx.lineWidth = 1.4; ctx.beginPath();
+for (let i = 0; i <= 12; i++) { const k2 = i / 12, q = lerp2(a, b, k2), o = Math.sin(k2 * 9 - t * 8) * 2.6; ctx.lineTo(q[0] + px * o, q[1] + py * o); }
+ctx.stroke();
+} else if (th === 'wind') {   // 刃后几缕风线
+ctx.strokeStyle = `rgba(${c2},0.35)`; ctx.lineWidth = 1;
+for (let i = 1; i <= 3; i++) { const o = i * 4 * -sk.face, s = (t * 3 + i * 0.3) % 1; line(lerp2([a[0] + px * o, a[1] + py * o], [b[0] + px * o, b[1] + py * o], s * 0.5), lerp2([a[0] + px * o, a[1] + py * o], [b[0] + px * o, b[1] + py * o], s * 0.5 + 0.5)); }
+}
+const tg = ctx.createRadialGradient(b[0], b[1], 0, b[0], b[1], 12); tg.addColorStop(0, `rgba(255,255,255,0.7)`); tg.addColorStop(0.4, `rgba(${c},0.35)`); tg.addColorStop(1, `rgba(${c},0)`);
+ctx.fillStyle = tg; ctx.fillRect(b[0] - 12, b[1] - 12, 24, 24);
+ctx.restore();
+}
+function skinTint(sk, f, L) {
+const seg = skinBladeSeg(sk, f, L); if (!seg) return;
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+ctx.strokeStyle = `rgba(${L.fx.c},${0.18 + 0.06 * Math.sin(clock * 3 + (f.idx || 0))})`; ctx.lineWidth = 6; line(seg[0], seg[1]);
+ctx.restore();
+}
+const EYE_TR = new WeakMap();
+function skinEyes(f, ex, ey) {
+const c = f.look.fx.c;
+let tr = EYE_TR.get(f); if (!tr) { tr = []; EYE_TR.set(f, tr); }
+const now = clock;
+tr.push([ex, ey, now]); while (tr.length && now - tr[0][2] > 0.14) tr.shift();
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 7); g.addColorStop(0, `rgba(255,255,255,0.8)`); g.addColorStop(0.4, `rgba(${c},0.6)`); g.addColorStop(1, `rgba(${c},0)`);
+ctx.fillStyle = g; ctx.fillRect(ex - 7, ey - 7, 14, 14);
+if (tr.length > 2 && Math.hypot(tr[0][0] - ex, tr[0][1] - ey) > 14) {
+for (let i = 1; i < tr.length; i++) { const k = i / tr.length; ctx.strokeStyle = `rgba(${c},${0.75 * k})`; ctx.lineWidth = 2.6 * k; line(tr[i - 1], tr[i]); }
+}
+ctx.restore();
+}
+function skinScarf(f, left, right) {
+const c = f.look.fx.c, s = f.scarf, n = s.length;
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+const g = ctx.createLinearGradient(s[0].x, s[0].y, s[n - 1].x, s[n - 1].y);
+g.addColorStop(0, `rgba(${c},0.05)`); g.addColorStop(0.6, `rgba(${c},0.35)`); g.addColorStop(1, `rgba(255,255,255,0.55)`);
+ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(left[0][0], left[0][1]);
+for (const p of left) ctx.lineTo(p[0], p[1]);
+for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1]);
+ctx.closePath(); ctx.fill();
+ctx.strokeStyle = `rgba(${c},0.5)`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(left[0][0], left[0][1]); for (const p of left) ctx.lineTo(p[0], p[1]); ctx.stroke();
+ctx.restore();
+}
+function skinGround(f) {
+const c = f.look.fx.c, hg = clamp(1 + f.y / 160, 0, 1); if (hg <= 0) return;
+const r = 62 + Math.sin(clock * 2 + (f.idx || 0)) * 6;
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(f.x, 1); ctx.scale(1, 0.16);
+const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r); g.addColorStop(0, `rgba(${c},${0.32 * hg})`); g.addColorStop(1, `rgba(${c},0)`);
+ctx.fillStyle = g; ctx.fillRect(-r, -r, r * 2, r * 2); ctx.restore();
+}
+function skinTrail(f, tr) {
+const L = f.look, th = skinTh(L), c = L.fx.c, c2 = L.fx.c2 || c, leg = L.legend, mul = leg ? 1.25 : 0.95, kind = th.trail;
+ctx.save();
+const quad = (p, q, r, s) => { ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.lineTo(r[0], r[1]); ctx.lineTo(s[0], s[1]); ctx.closePath(); ctx.fill(); };
+if (kind === 'smoke' || kind === 'brush') {   // 深色的烟/墨先铺一层（正常混合）
+for (let i = 1; i < tr.length; i++) {
+const a = tr[i - 1], b = tr[i], al = Math.max(0, b.life);
+ctx.fillStyle = `rgba(${c2},${(kind === 'brush' ? 0.8 : 0.55) * al})`;
+const ext = (p, q, k) => [q[0] + (q[0] - p[0]) * k, q[1] + (q[1] - p[1]) * k];
+quad(a.b, ext(a.b, a.t, 0.12), ext(b.b, b.t, 0.12), b.b);
+if (kind === 'brush' && i % 3 === 0 && al > 0.5) { ctx.beginPath(); ctx.arc(b.t[0] + Math.sin(i * 7) * 6, b.t[1] + Math.cos(i * 5) * 6, 1.6 + al * 1.5, 0, 7); ctx.fill(); }
+}
+}
+ctx.globalCompositeOperation = 'lighter';
+for (let i = 1; i < tr.length; i++) {
+const a = tr[i - 1], b = tr[i], al = Math.max(0, b.life), q = i / tr.length;
+let col = c;
+if (kind === 'prism') col = rgbMix(c, c2, (Math.sin(q * 5 - clock * 4) + 1) / 2);
+else if (kind === 'fire') col = rgbMix(c2, c, al);
+if (a.h && b.h && kind !== 'brush') { ctx.fillStyle = `rgba(${col},${Math.min(0.45, 0.24 * al * mul)})`; quad(a.h, a.t, b.t, b.h); }
+ctx.fillStyle = `rgba(${col},${Math.min(1, (kind === 'smoke' || kind === 'brush' ? 0.35 : 0.62) * al * mul)})`; quad(a.b, a.t, b.t, b.b);
+ctx.strokeStyle = kind === 'fire' ? `rgba(255,240,200,${0.95 * al})` : `rgba(255,255,255,${0.9 * al})`;
+ctx.lineWidth = (2.6 * al + 0.6) * (leg ? 1.35 : 1.1); line(a.t, b.t);
+if (!leg) continue;
+const dx = b.t[0] - b.b[0], dy = b.t[1] - b.b[1], d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
+if (kind === 'fire' && al > 0.2) {   // 刃尖外侧一排跳动的火舌
+const lk = (10 + 9 * Math.sin(clock * 30 + i * 1.9)) * al;
+const g = ctx.createLinearGradient(b.t[0], b.t[1], b.t[0] + nx * lk * 2, b.t[1] + ny * lk * 2 - lk);
+g.addColorStop(0, `rgba(${c},${0.7 * al})`); g.addColorStop(1, `rgba(${c2},0)`);
+ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(a.t[0], a.t[1]); ctx.quadraticCurveTo(b.t[0] + nx * lk, b.t[1] + ny * lk - lk * 0.6, b.t[0] + nx * lk * 2, b.t[1] + ny * lk * 2 - lk); ctx.lineTo(b.t[0], b.t[1]); ctx.closePath(); ctx.fill();
+} else if ((kind === 'frost' || kind === 'star' || kind === 'gilt') && i % 4 === 0 && al > 0.3) {
+const p = lerp2(b.b, b.t, 0.4 + 0.5 * hash(i * 13 + Math.floor(clock * 8)));
+glint(p[0], p[1], (kind === 'gilt' ? 6 : 8) * al, kind === 'gilt' ? '255,245,210' : '255,255,255', al);
+} else if (kind === 'flow' && al > 0.2) {   // 水流：刃尖内侧一道起伏的浪花线
+const o = Math.sin(i * 0.9 - clock * 10) * 5 * al, p0 = [a.t[0] - nx * (9 + o), a.t[1] - ny * (9 + o)], p1 = [b.t[0] - nx * (9 - o), b.t[1] - ny * (9 - o)];
+ctx.strokeStyle = `rgba(${c2},${0.75 * al})`; ctx.lineWidth = 1.6 * al + 0.4; line(p0, p1);
+} else if (kind === 'wind' && al > 0.2) {   // 风：外侧两道细线
+for (const o of [10, 20]) { ctx.strokeStyle = `rgba(${c2},${0.45 * al * (o === 10 ? 1 : 0.6)})`; ctx.lineWidth = 1; line([a.t[0] + nx * o, a.t[1] + ny * o], [b.t[0] + nx * o, b.t[1] + ny * o]); }
+}
+}
+if (kind === 'bolt' && tr.length > 3) {   // 沿着刃尖的轨迹劈出一道闪电（每帧都在跳）
+const pts = tr.filter((e, i) => i % 3 === 0 && e.life > 0.15).map(e => e.t);
+if (pts.length > 1) for (const [w, col] of [[leg ? 2.4 : 1.6, c], [0.9, '255,255,255']]) {
+ctx.strokeStyle = `rgba(${col},0.9)`; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+for (let i = 1; i < pts.length; i++) { const m = lerp2(pts[i - 1], pts[i], 0.5); ctx.lineTo(m[0] + (Math.random() - 0.5) * 16, m[1] + (Math.random() - 0.5) * 16); ctx.lineTo(pts[i][0], pts[i][1]); }
+ctx.stroke();
+}
+}
+ctx.restore();
+}
+function skinAmbient(f) {
+const L = f.look, th = skinTh(L); if (!th) return;
+const leg = L.legend, c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || th.amb;
+const e = f.trail.length > 1 ? f.trail[f.trail.length - 1] : null;
+if (e && Math.random() < (leg ? 0.8 : 0.45)) { const q = lerp2(e.b, e.t, 0.3 + Math.random() * 0.7); skinSpawn(kind, q[0], q[1], c, c2, leg ? 1 : 0.7, true); }
+if (!leg) { if (Math.random() < 0.04) skinSpawn(kind, f.x + rand(-24, 24), f.y - rand(10, 110), c, c2, 0.7, false); return; }
+if (Math.random() < 0.3) skinSpawn(kind, f.x + rand(-26, 26), f.y - rand(8, 120), c, c2, 1, false);
+if (kind !== 'arc' && th.amb === 'arc' && Math.random() < 0.06) skinSpawn('arc', f.x + rand(-20, 20), f.y - rand(30, 100), c, c2, 1, false);   // 雷：配着别的粒子时也偶尔跳一道电
+}
+function skinSpawn(kind, x, y, c, c2, s, fromBlade) {
+const v = fromBlade ? 1.6 : 1;
+switch (kind) {
+case 'ember': addP({ type: 'ember', x, y, vx: rand(-30, 30) * v, vy: -rand(40, 110), g: -40, drag: 1.2, life: rand(0.5, 1), max: 1, r: rand(1.2, 2.4) * s, rgb: Math.random() < 0.5 ? c : c2, ph: rand(0, 6) }); break;
+case 'mist': addP({ type: 'mist', x, y: fromBlade ? y : Math.min(-4, y * 0.15), vx: rand(-25, 25), vy: rand(-12, 4), drag: 0.8, life: rand(0.8, 1.4), max: 1.4, r: rand(5, 10) * s, rgb: c2 }); if (Math.random() < 0.3) addP({ type: 'glint', x, y, life: 0.5, max: 0.5, r: rand(3, 6) * s, rgb: '255,255,255' }); break;
+case 'wisp': addP({ type: 'wisp', x, y, vx: rand(-15, 15), vy: -rand(30, 70), drag: 0.6, life: rand(0.6, 1.1), max: 1.1, r: rand(3, 6) * s, rgb: c2 }); if (Math.random() < 0.4) addP({ type: 'ember', x, y, vx: rand(-20, 20), vy: rand(10, 50), drag: 1, life: 0.6, max: 0.6, r: 1.2 * s, rgb: c, ph: 0 }); break;
+case 'arc': { const a = rand(0, 6.28), l = rand(14, 30) * s; addP({ type: 'arc', x, y, x2: x + Math.cos(a) * l, y2: y + Math.sin(a) * l, life: rand(0.06, 0.14), max: 0.14, rgb: c }); break; }
+case 'drop': addP({ type: 'drop', x, y, vx: rand(-60, 60) * v, vy: -rand(20, 120) * v, g: 520, life: rand(0.5, 0.9), max: 0.9, r: rand(1.4, 2.4) * s, rgb: Math.random() < 0.6 ? c : c2 }); break;
+case 'glint': addP({ type: 'glint', x, y, vx: rand(-10, 10), vy: -rand(5, 25), life: rand(0.4, 0.8), max: 0.8, r: rand(3, 6) * s, rgb: Math.random() < 0.5 ? c : c2 }); break;
+case 'flake': addP({ type: 'flake', x, y, vx: rand(-25, 25) * v, vy: rand(-30, 20), g: 60, drag: 1.4, life: rand(0.8, 1.4), max: 1.4, r: rand(2, 3.6) * s, rgb: Math.random() < 0.7 ? c : c2, rot: rand(0, 6), spin: rand(-9, 9) }); break;
+case 'inkdrop': addP({ type: 'ink', x, y, vx: rand(-30, 30) * v, vy: rand(0, 60), g: 700, life: rand(0.4, 0.8), max: 0.8, r: rand(1.4, 2.8) * s, rgb: c2 }); if (Math.random() < 0.35) addP({ type: 'ember', x, y, vx: rand(-15, 15), vy: -rand(20, 50), drag: 1, life: 0.7, max: 0.7, r: 1.4 * s, rgb: c, ph: 0 }); break;
+case 'streak': addP({ type: 'streak', x, y, vx: rand(-260, -120) * (Math.random() < 0.5 ? 1 : -1), vy: rand(-20, 10), drag: 1.5, life: rand(0.3, 0.6), max: 0.6, rgb: Math.random() < 0.5 ? c2 : c }); break;
+case 'spark': addP({ type: 'spark', x, y, vx: rand(-120, 120) * v, vy: -rand(40, 160) * v, g: 700, drag: 1, life: rand(0.25, 0.5), max: 0.5, rgb: c, w: 1.4 }); break;
+default: addP({ type: 'shape', sh: kind, x, y, vx: rand(-40, 40) * v, vy: rand(-20, 30), g: 40, drag: 1.2, life: rand(0.8, 1.4), max: 1.4, r: rand(2.4, 3.8) * s, rgb: c, spin: rand(-5, 5) });   // petal leaf feather snow
+}
+}
+function skinHitFX(atk, ev) {
+const L = atk.look, th = skinTh(L); if (!th) return;
+const leg = L.legend, c = L.fx.c, c2 = L.fx.c2 || c, p = clamp(ev.dmg / 7, 0.7, 1.6), n = Math.round((leg ? 14 : 6) * p), x = ev.x, y = ev.y, kind = L.fx.part || th.amb;
+const out = (fn, k = n) => { for (let i = 0; i < k; i++) { const a = rand(0, 6.28), s = rand(140, 420) * p * (leg ? 1.15 : 1); fn(Math.cos(a) * s, Math.sin(a) * s, a); } };
+if (leg) addP({ type: 'glow', x, y, r: 46 * p, life: 0.22, max: 0.22, rgb: c });
+switch (th.hit) {
+case 'fire':
+out((vx, vy) => addP({ type: 'ember', x, y, vx, vy: vy - 120, g: -260, drag: 3, life: rand(0.4, 0.8), max: 0.8, r: rand(1.6, 3) * p, rgb: Math.random() < 0.5 ? c : c2, ph: rand(0, 6) }));
+if (leg) for (let i = 0; i < 4; i++) addP({ type: 'wisp', x: x + rand(-14, 14), y: y + rand(-10, 10), vx: rand(-40, 40), vy: -rand(40, 90), drag: 1, life: 0.9, max: 0.9, r: rand(6, 10), rgb: '40,24,20' });
+break;
+case 'shatter':
+out((vx, vy, a) => addP({ type: 'shard', x, y, vx, vy, g: 500, drag: 2, life: rand(0.35, 0.7), max: 0.7, r: rand(3, 7) * p, rgb: Math.random() < 0.5 ? c : '255,255,255', rot: a, spin: rand(-14, 14) }));
+for (let i = 0; i < (leg ? 4 : 2); i++) addP({ type: 'mist', x: x + rand(-12, 12), y: y + rand(-12, 12), vx: rand(-40, 40), vy: rand(-30, 10), drag: 1.5, life: 0.9, max: 0.9, r: rand(8, 14), rgb: c2 });
+break;
+case 'implode':
+addP({ type: 'iring', x, y, r: 70 * p, life: 0.26, max: 0.26, rgb: c });
+out((vx, vy) => addP({ type: 'wisp', x, y, vx: vx * 0.5, vy: vy * 0.5 - 40, drag: 2, life: rand(0.5, 0.9), max: 0.9, r: rand(3, 6) * p, rgb: c2 }), Math.round(n * 0.7));
+out((vx, vy) => addP({ type: 'ember', x, y, vx, vy, drag: 4, life: 0.4, max: 0.4, r: 1.6, rgb: c, ph: 0 }), Math.round(n * 0.5));
+break;
+case 'fork':
+for (let i = 0; i < (leg ? 5 : 2); i++) { const a = rand(0, 6.28), l = rand(50, 110) * p; addP({ type: 'arc', x, y, x2: x + Math.cos(a) * l, y2: y + Math.sin(a) * l, life: rand(0.12, 0.22), max: 0.22, rgb: c, w: leg ? 2.2 : 1.5 }); }
+out((vx, vy) => addP({ type: 'spark', x, y, vx, vy, drag: 5, life: 0.3, max: 0.3, rgb: Math.random() < 0.5 ? c : '255,255,255', w: 1.6 }));
+break;
+case 'splash':
+out((vx, vy) => addP({ type: 'drop', x, y, vx, vy: vy - 180, g: 900, life: rand(0.4, 0.8), max: 0.8, r: rand(1.6, 3) * p, rgb: Math.random() < 0.6 ? c : c2 }));
+ring(x, y, 54 * p, c2, 0.3);
+break;
+case 'prism':
+out((vx, vy) => addP({ type: 'glint', x, y, vx: vx * 0.6, vy: vy * 0.6, drag: 3, life: rand(0.4, 0.7), max: 0.7, r: rand(4, 8) * p, rgb: rgbMix(c, c2, Math.random()) }));
+ring(x, y, 50 * p, c, 0.26); if (leg) ring(x, y, 70 * p, c2, 0.34);
+break;
+case 'starburst':
+out((vx, vy) => addP({ type: 'glint', x, y, vx: vx * 0.5, vy: vy * 0.5, drag: 3, life: rand(0.4, 0.8), max: 0.8, r: rand(4, 9) * p, rgb: Math.random() < 0.5 ? c : '255,255,255' }));
+if (leg) addP({ type: 'glint', x, y, life: 0.3, max: 0.3, r: 36 * p, rgb: c2 });
+break;
+case 'gilt':
+out((vx, vy) => addP({ type: 'flake', x, y, vx, vy: vy - 60, g: 260, drag: 2.5, life: rand(0.6, 1.1), max: 1.1, r: rand(2.4, 4.2) * p, rgb: Math.random() < 0.7 ? c : c2, rot: rand(0, 6), spin: rand(-12, 12) }));
+break;
+case 'inksplat':
+out((vx, vy) => addP({ type: 'ink', x, y, vx, vy: vy - 100, g: 1300, life: rand(0.5, 0.9), max: 0.9, r: rand(2.4, 5) * p, rgb: c2 }));
+if (leg) out((vx, vy) => addP({ type: 'ember', x, y, vx: vx * 0.7, vy: vy * 0.7, drag: 3, life: 0.5, max: 0.5, r: 1.8, rgb: c, ph: 0 }), 6);
+break;
+case 'gust':
+for (let i = 0; i < n; i++) { const a = (atk.face > 0 ? 0 : Math.PI) + rand(-0.6, 0.6), s = rand(300, 700) * p; addP({ type: 'streak', x, y: y + rand(-20, 20), vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: 4, life: rand(0.25, 0.45), max: 0.45, rgb: Math.random() < 0.5 ? c : c2 }); }
+break;
+case 'sparks':
+out((vx, vy) => addP({ type: 'spark', x, y, vx, vy: vy - 100, g: 1100, drag: 1.5, life: rand(0.3, 0.6), max: 0.6, rgb: Math.random() < 0.5 ? c : '255,240,200', w: rand(1.4, 2.4) }));
+break;
+default:   // petals：花瓣、叶子、羽毛炸开
+out((vx, vy) => addP({ type: 'shape', sh: kind, x, y, vx, vy: vy - 60, g: 260, drag: 2.5, life: rand(0.6, 1.1), max: 1.1, r: rand(2.6, 4.4) * p, rgb: c, spin: rand(-8, 8) }));
+}
+if (L.fx.part && th.hit !== 'petals' && leg) out((vx, vy) => addP({ type: 'shape', sh: L.fx.part, x, y, vx: vx * 0.6, vy: vy * 0.6 - 60, g: 200, drag: 2.5, life: 0.9, max: 0.9, r: rand(2.6, 4) * p, rgb: c, spin: rand(-8, 8) }), 5);
+}
+function skinIntroFX(f) {
+const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
+addP({ type: 'text', text: `${S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2, max: 2.2, rgb: S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
+const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
+for (let i = 0; i < (leg ? 34 : 12); i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
+if (!leg) return;
+addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c });
+ring(f.x, f.y - 60, 120, c, 0.55);
+}
+function skinVictoryFX(f) {
+const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
+const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
+for (let i = 0; i < (leg ? 40 : 16); i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); skinSpawn(kind, f.x, f.y - 60, c, c2, 1.3, true); const q = particles[particles.length - 1]; if (q) { q.vx = Math.cos(a) * v; q.vy = Math.sin(a) * v; q.g = 420; q.life = q.max = rand(1, 1.8); } }
+if (leg) addP({ type: 'glow', x: f.x, y: f.y - 80, r: 110, life: 0.8, max: 0.8, rgb: c });
+}
+function drawSkinParticle(p, k) {
+switch (p.type) {
+case 'ember': {
+const fl = 0.65 + 0.35 * Math.sin(clock * 25 + (p.ph || 0)), r = p.r * 2.6, g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+g.addColorStop(0, `rgba(255,250,230,${k * fl})`); g.addColorStop(0.35, `rgba(${p.rgb},${k * fl * 0.8})`); g.addColorStop(1, `rgba(${p.rgb},0)`);
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); ctx.restore(); return;
+}
+case 'mist': case 'wisp': {   // 寒雾、暗焰：边缘化开的一团
+const r = p.r * (p.type === 'mist' ? 2.4 - k : 2.2 - k), a = p.type === 'mist' ? 0.22 : 0.5, g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+g.addColorStop(0, `rgba(${p.rgb},${k * a})`); g.addColorStop(1, `rgba(${p.rgb},0)`);
+ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); return;
+}
+case 'arc':
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+ctx.strokeStyle = `rgba(${p.rgb},${k})`; ctx.lineWidth = p.w || 1.5; zigzag([p.x, p.y], [p.x2, p.y2], 5, 7);
+ctx.strokeStyle = `rgba(255,255,255,${k})`; ctx.lineWidth = 0.7; zigzag([p.x, p.y], [p.x2, p.y2], 5, 3); ctx.restore(); return;
+case 'drop': {
+const a = Math.atan2(p.vy || 1, p.vx || 0), sp = Math.min(3, Math.hypot(p.vx || 0, p.vy || 0) / 200 + 1);
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y); ctx.rotate(a); ctx.fillStyle = `rgba(${p.rgb},${k * 0.85})`;
+ctx.beginPath(); ctx.ellipse(0, 0, p.r * sp, p.r * 0.8, 0, 0, 7); ctx.fill(); ctx.restore(); return;
+}
+case 'glint': ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(p.x, p.y, p.r * Math.sin(k * Math.PI), p.rgb, Math.min(1, k * 1.6)); ctx.restore(); return;
+case 'flake': {
+const r = (p.rot || 0) + (p.spin || 0) * (p.max - p.life), sh = Math.abs(Math.cos(r * 1.3));
+ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(r); ctx.fillStyle = `rgba(${p.rgb},${k * (0.45 + 0.55 * sh)})`; ctx.fillRect(-p.r, -p.r * 0.7 * sh, p.r * 2, p.r * 1.4 * sh + 0.4);
+if (sh > 0.85) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,250,225,${k * 0.8})`; ctx.fillRect(-p.r, -0.5, p.r * 2, 1); }
+ctx.restore(); return;
+}
+case 'shard': {
+const r = (p.rot || 0) + (p.spin || 0) * (p.max - p.life);
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(p.x, p.y); ctx.rotate(r); ctx.fillStyle = `rgba(${p.rgb},${k * 0.9})`;
+ctx.beginPath(); ctx.moveTo(p.r * 1.6, 0); ctx.lineTo(-p.r * 0.6, p.r * 0.45); ctx.lineTo(-p.r * 0.6, -p.r * 0.45); ctx.closePath(); ctx.fill(); ctx.restore(); return;
+}
+case 'streak':
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.strokeStyle = `rgba(${p.rgb},${k * 0.7})`; ctx.lineWidth = 1.3;
+line([p.x, p.y], [p.x - (p.vx || 0) * 0.07, p.y - (p.vy || 0) * 0.07]); ctx.restore(); return;
+case 'glow': {
+const r = p.r * (1 + (1 - k) * 0.6), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+g.addColorStop(0, `rgba(255,255,255,${k * 0.6})`); g.addColorStop(0.3, `rgba(${p.rgb},${k * 0.5})`); g.addColorStop(1, `rgba(${p.rgb},0)`);
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); ctx.restore(); return;
+}
+case 'iring':
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${p.rgb},${(1 - k) * 0.9 + 0.1})`; ctx.lineWidth = 2 + 4 * k;
+ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, p.r * k), 0, 7); ctx.stroke(); ctx.restore(); return;
+}
+}
+const SKIN_GLOW_P = { ember: 1, arc: 1, glint: 1, glow: 1, shard: 1, streak: 1, drop: 1 };
+function skinEmissive(f) {
+const L = f.look; if (!L.legend || !L.fx || f.hidden || !f.sk) return;
+const seg = skinBladeSeg(f.sk, f, L);
+ctx.strokeStyle = `rgba(${L.fx.c},0.9)`; ctx.lineWidth = 6; ctx.lineCap = 'round';
+if (seg) line(seg[0], seg[1]); else { ctx.fillStyle = `rgba(${L.fx.c},0.8)`; circle(f.sk.hf, 7); circle(f.sk.hb, 7); }
 }
 function drawTaperedSeg(a, b, r1, r2, fill) {
 const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1;
@@ -8638,10 +8730,10 @@ ctx.fillStyle = `rgb(${L.slash})`;
 circle([h[0] + fx * 6.5 + ux * 4.5, h[1] + fy * 6.5 + uy * 4.5], 1.5);
 }
 ctx.restore();
+if (L.legend && L.fx) skinEyes(f, ex, ey);
 }
 function drawBody(sk, f, o) {
 const L = f.look; DRAW_F = f;
-if (L.deco && !o.ghost) drawDeco(sk, f, L, 'back');
 const chId = (f.ch && f.ch.id) || 'qingfeng';
 const isHeavy = chId === 'tieshan' || chId === 'gouchen';
 const isRobed = chId === 'liuyun' || chId === 'yuxiao' || chId === 'yuehua' || chId === 'moyu';
@@ -8669,13 +8761,13 @@ if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${L.slash},${o.ghost})`; ctx
 return;
 }
 const alpha = o.invul ? 0.55 : 1;
-const hideBaseHead = !!(L.deco && L.deco.hideBaseHead);
+if (L.legend && L.fx && !o.flash) skinGlow([...segs, ...arm], sk, f, L);
 ctx.globalAlpha = alpha;
 ctx.strokeStyle = L.outline; ctx.fillStyle = L.outline;
 ctx.globalAlpha = alpha * L.outlineA;
 for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2] + 2.5, s[3] + 2.5, L.outline);
 circle(sk.head, 12.5);
-if (!hideBaseHead) headAcc(sk, 3, L.outline, L);
+headAcc(sk, 3, L.outline, L);
 weapon(sk, L, true, false);
 ctx.globalAlpha = alpha;
 for (const s of segs) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : (s[4] ? L.shade : L.body));
@@ -8685,15 +8777,15 @@ line([sk.hip[0] - 6, sk.hip[1]], [sk.hip[0] + 6, sk.hip[1]]);
 }
 ctx.fillStyle = o.flash ? '#fff' : L.body; circle(sk.head, 10);
 drawFace(sk, f, L, o.flash);
-if (!hideBaseHead) headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
+headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
 weapon(sk, L, false, o.flash);
+if (L.fx && !o.flash) { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
 for (const s of arm) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : L.body);
 if (!o.flash && !isRobed) {
 ctx.strokeStyle = L.scarf; ctx.lineWidth = 2.0;
 line(sk.ef, [(sk.ef[0] + sk.hf[0]) * 0.5, (sk.ef[1] + sk.hf[1]) * 0.5]);
 }
 ctx.globalAlpha = 1;
-if (L.deco) drawDeco(sk, f, L, 'front');
 }
 function headAcc(sk, grow, color, L) {
 const h = sk.head, nx = h[0] - sk.neck[0], ny = h[1] - sk.neck[1], nl = Math.hypot(nx, ny) || 1;
@@ -8702,7 +8794,7 @@ const outline = grow > 0;
 ctx.fillStyle = color; ctx.strokeStyle = color;
 switch (L.head) {
 case 'hat': hat(sk, grow); break;
-case 'topknot': topknot(sk, grow, color); break;
+case 'topknot': topknot(sk, grow, outline ? color : L.hair || color); break;
 case 'hood':
 ctx.beginPath(); ctx.moveTo(h[0] + ux * (12 + grow), h[1] + uy * (12 + grow)); ctx.lineTo(h[0] + bk * (22 + grow) - ux * 6, h[1] - uy * 6 + 4);
 ctx.lineTo(h[0] - ux * (8 + grow) + bk * 4, h[1] - uy * (8 + grow)); ctx.closePath();
@@ -8711,18 +8803,18 @@ if (!outline) { ctx.fillStyle = L.scarf; ctx.fillRect(h[0] - 7 + sk.face * 2, h[
 break;
 case 'helm':
 ctx.beginPath(); ctx.arc(h[0] + ux * 2, h[1] + uy * 2, 12 + grow, Math.atan2(uy, ux) - 1.7, Math.atan2(uy, ux) + 1.7); ctx.closePath();
-if (!outline) ctx.fillStyle = '#9a9ea8'; ctx.fill();
+if (!outline) ctx.fillStyle = L.helmC || '#9a9ea8'; ctx.fill();
 if (!outline) { ctx.fillStyle = L.scarf; ctx.beginPath(); ctx.arc(h[0] + ux * 14, h[1] + uy * 14, 3.5, 0, 7); ctx.fill(); }
 break;
 case 'ponytail': {
 ctx.lineWidth = 5 + grow; ctx.lineCap = 'round';
 const a = [h[0] + ux * 6 + bk * 6, h[1] + uy * 6], b = [a[0] + bk * 16, a[1] + 10 + Math.sin(clock * 5) * 3], c = [b[0] + bk * 8, b[1] + 16];
-if (!outline) ctx.strokeStyle = '#2a2f3a';
+if (!outline) ctx.strokeStyle = L.hair || '#2a2f3a';
 ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo(b[0], b[1], c[0], c[1]); ctx.stroke();
 break;
 }
 case 'bun':
-if (!outline) ctx.fillStyle = '#2a3a30';
+if (!outline) ctx.fillStyle = L.hair || '#2a3a30';
 for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(h[0] + ux * 9 + px * sd * 8, h[1] + uy * 9 + py * sd * 8, 5 + grow, 0, 7); ctx.fill(); }
 break;
 case 'band':
@@ -8738,14 +8830,14 @@ ctx.strokeStyle = L.scarf; ctx.lineWidth = 3; ctx.lineCap = 'round';
 ctx.beginPath(); ctx.moveTo(h[0] + ux * 8, h[1] + uy * 8); ctx.quadraticCurveTo(h[0] + ux * 22 + bk * 8, h[1] + uy * 22, h[0] + ux * 16 + bk * 22, h[1] + uy * 20 + 4); ctx.stroke();
 ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
 }
-topknot(sk, grow, outline ? color : '#2a3050');
+topknot(sk, grow, outline ? color : L.hair || '#2a3050');
 break;
 case 'jade': {  // 玉箫：披发、发髻、一支青玉簪
 if (!outline) {
-ctx.strokeStyle = '#1f2a26'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+ctx.strokeStyle = L.hair || '#1f2a26'; ctx.lineWidth = 5; ctx.lineCap = 'round';
 ctx.beginPath(); ctx.moveTo(h[0] + bk * 7 + ux * 2, h[1] + uy * 2); ctx.quadraticCurveTo(h[0] + bk * 16, h[1] + 8, h[0] + bk * 13 + Math.sin(clock * 3) * 2, h[1] + 26); ctx.stroke();
 }
-topknot(sk, grow, outline ? color : '#1f2a26');
+topknot(sk, grow, outline ? color : L.hair || '#1f2a26');
 if (!outline) {
 const kp = [h[0] + ux * 10 - sk.face * 5, h[1] + uy * 10];
 ctx.strokeStyle = '#7fe0b0'; ctx.lineWidth = 2; line([kp[0] - px * 8, kp[1] - py * 8], [kp[0] + px * 8, kp[1] + py * 8]);
@@ -8754,7 +8846,7 @@ ctx.fillStyle = '#c9f5dc'; circle([kp[0] + px * 8, kp[1] + py * 8], 1.8);
 break;
 }
 case 'messy': {  // 醉仙：乱发几撮，红布条扎额，带子飘在脑后
-if (!outline) ctx.fillStyle = '#3a2a1e';
+if (!outline) ctx.fillStyle = L.hair || '#3a2a1e';
 for (const k of [-1, 0, 1]) {
 const b = [h[0] + ux * 8 + px * k * 6, h[1] + uy * 8 + py * k * 6], tp = [h[0] + ux * (16 + grow) + px * k * 10 + bk * 4, h[1] + uy * (16 + grow) + py * k * 10];
 ctx.beginPath(); ctx.moveTo(b[0] - px * 4, b[1] - py * 4); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(b[0] + px * 4, b[1] + py * 4); ctx.closePath(); ctx.fill();
@@ -8767,7 +8859,7 @@ ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h[0] + bk * 9 + ux * 3, h[1] + uy
 break;
 }
 case 'mask': {  // 勾陈：发髻，黑面巾遮住下半张脸
-topknot(sk, grow, outline ? color : '#15171c');
+topknot(sk, grow, outline ? color : L.hair || '#15171c');
 if (!outline) {
 const au = Math.atan2(uy, ux);
 ctx.fillStyle = '#15171c'; ctx.beginPath(); ctx.arc(h[0], h[1], 9.4, au + 1.75, au + 4.55); ctx.closePath(); ctx.fill();
@@ -8781,7 +8873,7 @@ if (!outline) {
 ctx.strokeStyle = '#f5e6a8'; ctx.lineWidth = 2.5;
 ctx.beginPath(); ctx.arc(h[0] + ux * 11 + bk * 4, h[1] + uy * 11, 7, 0.6, 3.6); ctx.stroke();
 }
-topknot(sk, grow, outline ? color : '#3a3050');
+topknot(sk, grow, outline ? color : L.hair || '#3a3050');
 break;
 }
 }
@@ -8835,14 +8927,13 @@ function weapon(sk, L, outline, flash) {
 const g = sk.guard, t = sk.tip, hl = sk.hilt;
 const dx = t[0] - g[0], dy = t[1] - g[1], dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, px = -uy, py = ux;
 const blade = flash ? '#fff' : L.blade;
-const ws = (L.deco && L.deco.weapStyle) || '';
 ctx.lineCap = 'round';
-const guardBar = (w, col = '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
+const guardBar = (w, col = L.metal || '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
 switch (L.weapon) {
 case 'fists':
 if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 8.5); circle(sk.hb, 8); }
 else {
-ctx.fillStyle = flash ? '#fff' : (ws === 'vajra_gauntlet' ? '#ffaa00' : '#c9a24a');
+ctx.fillStyle = flash ? '#fff' : (L.metal || '#c9a24a');
 circle(sk.hf, 6.5); circle(sk.hb, 6);
 ctx.fillStyle = `rgb(${L.slash})`; circle(sk.hf, 3.2); circle(sk.hb, 2.8);
 }
@@ -8850,15 +8941,15 @@ return;
 case 'spear': {
 const back = [g[0] - ux * 36, g[1] - uy * 36];
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.5; line(back, t); return; }
-ctx.strokeStyle = ws === 'dragon_spear' ? '#1a4b8c' : (ws === 'aurora_lance' ? '#2c7873' : '#6a4a2e');
+ctx.strokeStyle = L.haft || '#6a4a2e';
 ctx.lineWidth = 3.2; line(back, [t[0] - ux * 15, t[1] - uy * 15]);
 ctx.fillStyle = blade; ctx.beginPath(); ctx.moveTo(t[0], t[1]);
-const wid = ws === 'dragon_spear' ? 6.5 : 4.5;
+const wid = 4.5;
 ctx.lineTo(t[0] - ux * 18 + px * wid, t[1] - uy * 18 + py * wid);
 ctx.lineTo(t[0] - ux * 14, t[1] - uy * 14);
 ctx.lineTo(t[0] - ux * 18 - px * wid, t[1] - uy * 18 - py * wid);
 ctx.closePath(); ctx.fill();
-ctx.fillStyle = ws === 'dragon_spear' ? '#1f90ff' : (ws === 'aurora_lance' ? '#5ef2c9' : '#d9383a');
+ctx.fillStyle = L.fx ? L.scarf : '#d9383a';
 ctx.beginPath(); ctx.arc(t[0] - ux * 19, t[1] - uy * 19, 3.8, 0, 7); ctx.fill();
 return;
 }
@@ -8866,12 +8957,12 @@ case 'greatsword': {
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 11.5; line(hl, t); return; }
 ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 5; line(hl, g);
 const b0 = [g[0] + px * 4.5, g[1] + py * 4.5], b1 = [g[0] - px * 4.5, g[1] - py * 4.5];
-const t0 = [t[0] - ux * 8 + px * (ws === 'shura_blade' ? 6.5 : 4), t[1] - uy * 8 + py * (ws === 'shura_blade' ? 6.5 : 4)];
+const t0 = [t[0] - ux * 8 + px * 4, t[1] - uy * 8 + py * 4];
 const t1 = [t[0] - ux * 8 - px * 4, t[1] - uy * 8 - py * 4];
 ctx.fillStyle = blade; ctx.beginPath();
 ctx.moveTo(b0[0], b0[1]); ctx.lineTo(t0[0], t0[1]); ctx.lineTo(t[0], t[1]); ctx.lineTo(t1[0], t1[1]); ctx.lineTo(b1[0], b1[1]); ctx.closePath(); ctx.fill();
 ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 2.2; line(g, [t[0] - ux * 6, t[1] - uy * 6]);
-guardBar(11, ws === 'bronze_cleaver' ? '#3fa37a' : '#d9b36a');
+guardBar(11);
 return;
 }
 case 'fan': {
@@ -8883,21 +8974,15 @@ return;
 }
 case 'brush':
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 7; line(hl, t); ctx.fillStyle = L.outline; circle(t, 8); return; }
-ctx.strokeStyle = ws === 'star_brush' ? '#244680' : '#8a5a34'; ctx.lineWidth = 4.2; line(hl, [t[0] - ux * 10, t[1] - uy * 10]);
-ctx.fillStyle = ws === 'star_brush' ? '#4facfe' : '#0c0c10';
+ctx.strokeStyle = L.haft || '#8a5a34'; ctx.lineWidth = 4.2; line(hl, [t[0] - ux * 10, t[1] - uy * 10]);
+ctx.fillStyle = L.fx ? L.blade : '#0c0c10';
 ctx.beginPath(); ctx.ellipse(t[0] - ux * 4, t[1] - uy * 4, 9.5, 5.2, Math.atan2(uy, ux), 0, 7); ctx.fill();
 return;
 case 'dual': {
 const b2 = [sk.hb[0] + ux * 38, sk.hb[1] + uy * 38];
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.2; line(hl, t); line(sk.hb, b2); return; }
-if (ws === 'blood_scythes') {
-ctx.strokeStyle = '#ff2a3d'; ctx.lineWidth = 3.2;
-ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.quadraticCurveTo((g[0] + t[0]) * 0.5 + px * 8, (g[1] + t[1]) * 0.5 + py * 8, t[0], t[1]); ctx.stroke();
-ctx.beginPath(); ctx.moveTo(sk.hb[0], sk.hb[1]); ctx.quadraticCurveTo((sk.hb[0] + b2[0]) * 0.5 - px * 8, (sk.hb[1] + b2[1]) * 0.5 - py * 8, b2[0], b2[1]); ctx.stroke();
-} else {
 ctx.strokeStyle = blade; ctx.lineWidth = 3.0; line(g, t); line(sk.hb, b2);
 ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 1.2; line(g, t);
-}
 ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 4; line(hl, g);
 return;
 }
@@ -8927,7 +9012,7 @@ const top = up ? [gp[0] + sk.face * 5, gp[1] - 4] : [gp[0], gp[1] - 5], bot = up
 if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 8); circle(top, 7.5); circle(bot, 10.5); return; }
 ctx.fillStyle = flash ? '#fff' : '#e8d2a6'; circle(sk.hf, 6);
 ctx.strokeStyle = 'rgba(120,80,40,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(sk.hf[0], sk.hf[1], 4, 0.4, 2.6); ctx.stroke();
-ctx.fillStyle = flash ? '#fff' : (ws === 'jade_gourd' ? '#50d8c8' : '#c98a3a'); circle(bot, 8.5); circle(top, 5.5);
+ctx.fillStyle = flash ? '#fff' : (L.metal || '#c98a3a'); circle(bot, 8.5); circle(top, 5.5);
 ctx.fillStyle = L.scarf || '#d8452f'; circle([(top[0] + bot[0]) / 2, (top[1] + bot[1]) / 2], 2.4);
 ctx.fillStyle = 'rgba(255,255,255,0.26)'; circle([bot[0] - 3, bot[1] - 3], 2.4);
 return;
@@ -8959,10 +9044,10 @@ return;
 }
 default: {  // sword / moonblade
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.2; line(hl, g); return; }
-ctx.strokeStyle = blade; ctx.lineWidth = ws === 'sun_sword' ? 4.4 : 3.4; line(g, t);
+ctx.strokeStyle = blade; ctx.lineWidth = 3.4; line(g, t);
 ctx.strokeStyle = `rgba(${L.slash},0.65)`; ctx.lineWidth = 1.5; line(g, t);
 ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 4.5; line(hl, g);
-guardBar(ws === 'sun_sword' ? 8.5 : 6, ws === 'abyss_blade' ? '#9b51e0' : '#d9b36a');
+guardBar(6);
 if (L.weapon === 'moonblade') { ctx.strokeStyle = blade; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.arc(t[0] - ux * 6, t[1] - uy * 6, 10, Math.atan2(uy, ux) - 2.2, Math.atan2(uy, ux) + 2.2); ctx.stroke(); }
 }
 }
@@ -8972,7 +9057,7 @@ const h = sk.head, nx = h[0] - sk.neck[0], ny = h[1] - sk.neck[1], nl = Math.hyp
 const ux = nx / nl, uy = ny / nl, px = -uy, py = ux;
 const top = [h[0] + ux * (16 + grow), h[1] + uy * (16 + grow)];
 const bx = h[0] + ux * 3, by = h[1] + uy * 3, w = 24 + grow;
-ctx.fillStyle = grow ? ctx.fillStyle : '#5a3a2e';
+ctx.fillStyle = grow ? ctx.fillStyle : (DRAW_F && DRAW_F.look.hatC) || '#5a3a2e';
 ctx.beginPath(); ctx.moveTo(bx + px * w, by + py * w); ctx.lineTo(top[0], top[1]); ctx.lineTo(bx - px * w, by - py * w); ctx.closePath(); ctx.fill();
 }
 function topknot(sk, grow, color) {
@@ -8994,6 +9079,11 @@ ctx.lineTo(base[0] + bk * Math.cos(a) * r, base[1] + Math.sin(a) * r);
 ctx.lineTo(base[0] + bk * Math.cos(a + 0.11) * r * 0.78, base[1] + Math.sin(a + 0.11) * r * 0.78);
 }
 ctx.closePath(); ctx.globalAlpha = f.look.outlineA; ctx.stroke(); ctx.globalAlpha = 1; ctx.fill();
+if (f.look.legend && f.look.fx) {   // 传说：羽翼从根部向羽尖渐亮，羽缘一道光
+const c = f.look.fx.c, c2 = f.look.fx.c2 || c, tip = [base[0] + bk * Math.cos(ang + 0.5) * len, base[1] + Math.sin(ang + 0.5) * len];
+const g = ctx.createLinearGradient(base[0], base[1], tip[0], tip[1]); g.addColorStop(0, `rgba(${c},0)`); g.addColorStop(0.7, `rgba(${c},${0.35 + 0.1 * Math.sin(clock * 4)})`); g.addColorStop(1, `rgba(${c2},0.6)`);
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = `rgba(${c},0.55)`; ctx.lineWidth = 1.2; ctx.stroke(); ctx.restore();
+}
 }
 }
 function drawScarf(f) {
@@ -9012,9 +9102,11 @@ for (const p of left) ctx.lineTo(p[0], p[1]);
 for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1]);
 ctx.closePath();
 ctx.strokeStyle = f.look.outline; ctx.lineWidth = 3; ctx.globalAlpha = f.look.outlineA; ctx.stroke(); ctx.globalAlpha = 1; ctx.fill();
+if (f.look.legend && f.look.fx) skinScarf(f, left, right);
 }
 function drawTrail(f) {
 const tr = f.trail; if (tr.length < 2) return;
+if (f.look.fx && M.mode !== 'mayhem') return skinTrail(f, tr);
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
 const mul = M.mode === 'mayhem' ? 2.4 : 1.15;
 for (let i = 1; i < tr.length; i++) {
@@ -9035,7 +9127,7 @@ const line = (a, b) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0
 const circle = (p, r) => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fill(); };
 function drawParticles(glowOnly) {
 for (const p of particles) {
-if (glowOnly && !(p.type === 'spark' || p.type === 'flash' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph')) continue;
+if (glowOnly && !(p.type === 'spark' || p.type === 'flash' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph' || SKIN_GLOW_P[p.type])) continue;
 const k = clamp(p.life / p.max, 0, 1);
 if (p.type === 'spark') {
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -9052,8 +9144,8 @@ ctx.fillStyle = g; ctx.fillRect(p.x - p.r * 2, p.y - p.r * 2, p.r * 4, p.r * 4);
 } else if (p.type === 'dmg') {
 const pop = 1 + Math.max(0, (p.life - p.max + 0.12) / 0.12) * 0.6;
 ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s * pop, p.s * pop);
-ctx.globalAlpha = Math.min(1, k * 2.5); ctx.font = `800 26px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(10,8,20,0.85)'; ctx.strokeText(p.text, 0, 0);
+ctx.globalAlpha = Math.min(1, k * 2.5); ctx.font = `800 21px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(10,8,20,0.85)'; ctx.strokeText(p.text, 0, 0);
 ctx.shadowColor = `rgba(${p.edge},0.9)`; ctx.shadowBlur = 10; ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, 0, 0); ctx.restore();
 } else if (p.type === 'shape') {   // 皮肤碎片：雪花、花瓣、羽毛……
 ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.spin || 0) * (p.max - p.life));
@@ -9089,7 +9181,7 @@ ctx.fillStyle = `rgba(${p.rgb},${k * 0.8})`;
 ctx.beginPath(); ctx.moveTo(-len / 2, 0); ctx.quadraticCurveTo(0, -7 * k, len / 2, 0); ctx.quadraticCurveTo(0, 7 * k, -len / 2, 0); ctx.fill();
 ctx.fillStyle = `rgba(255,255,255,${k})`; ctx.fillRect(-len / 2, -0.8, len, 1.6);
 ctx.restore();
-}
+} else drawSkinParticle(p, k);
 }
 }
 function drawComboTotals() {
@@ -9099,10 +9191,10 @@ if (!d || d.hidden || cu.t <= 0 || cu.n < 2 || cu.dmg <= 0) continue;
 const a = clamp(cu.t / 0.5, 0, 1), pop = 1 + Math.max(0, cu.t - 1.25) * 2;
 ctx.save(); ctx.translate(d.x, d.y - 200 * (d.size || 1)); ctx.scale(pop, pop); ctx.globalAlpha = a;
 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-ctx.font = `800 40px ${BODY_FONT}`; ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(10,8,20,0.85)';
+ctx.font = `800 30px ${BODY_FONT}`; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(10,8,20,0.85)';
 const t = String(Math.round(cu.dmg));
 ctx.strokeText(t, 0, 0); ctx.shadowColor = `rgba(${atk.look.slash},0.95)`; ctx.shadowBlur = 16; ctx.fillStyle = '#ffe9b0'; ctx.fillText(t, 0, 0);
-ctx.shadowBlur = 0; ctx.font = `16px ${TITLE_FONT}`; ctx.lineWidth = 4; ctx.strokeText(`${cu.n} 连击`, 0, 30); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(`${cu.n} 连击`, 0, 30);
+ctx.shadowBlur = 0; ctx.font = `13px ${TITLE_FONT}`; ctx.lineWidth = 3.5; ctx.strokeText(`${cu.n} 连击`, 0, 24); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(`${cu.n} 连击`, 0, 24);
 ctx.restore();
 }
 }
@@ -9386,7 +9478,7 @@ ctx.font = `bold 18px ${BODY_FONT}`; ctx.fillText('×' + n, 0, 28);
 ctx.restore();
 }
 function drawShanshui() {
-const f = [A, B].find(x => x && x.state === 'special' && x.ch.ult === 'shanshui');
+const f = [A, B].find(x => x && x.state === 'special' && x.sp === 'cast' && x.ch.ult === 'shanshui');   // 起手蓄势那 0.42 秒不画，否则画卷会落两遍
 if (!f) return;
 const t = f.t, e = 1 - Math.pow(1 - clamp(t / 1.55, 0, 1), 3), a = t > 1.75 ? clamp((1.95 - t) / 0.2, 0, 1) : 1;
 const top = -H + H * e, bot = top + H;
@@ -9724,11 +9816,11 @@ const a = clamp(cu.t / 0.4, 0, 1), pop = 1 + Math.max(0, cu.t - 1.25) * 3;
 const x = i === 0 ? W * 0.06 : W * 0.94, y = H * 0.32;
 ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(pop, pop);
 ctx.textAlign = i === 0 ? 'left' : 'right'; ctx.textBaseline = 'alphabetic';
-ctx.font = `700 ${Math.round(H * 0.075)}px ${BODY_FONT}`; ctx.fillStyle = '#fff';
+ctx.font = `700 ${Math.round(H * 0.058)}px ${BODY_FONT}`; ctx.fillStyle = '#fff';
 ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 20;
 ctx.fillText(cu.n, 0, 0); ctx.shadowBlur = 0;
-ctx.font = `${Math.round(H * 0.035)}px ${TITLE_FONT}`; ctx.fillStyle = `rgb(${f.look.slash})`;
-ctx.fillText('连击', 0, H * 0.045);
+ctx.font = `${Math.round(H * 0.028)}px ${TITLE_FONT}`; ctx.fillStyle = `rgb(${f.look.slash})`;
+ctx.fillText('连击', 0, H * 0.036);
 ctx.font = `${Math.round(H * 0.02)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.7)';
 ctx.fillText(`${Math.round(cu.dmg)} 伤害`, 0, H * 0.075);
 ctx.restore();
@@ -9945,6 +10037,7 @@ const g = ctx.createRadialGradient(f.x, f.y - 60, 4, f.x, f.y - 60, 90);
 g.addColorStop(0, `rgba(${f.look.slash},0.8)`); g.addColorStop(1, `rgba(${f.look.slash},0)`);
 ctx.fillStyle = g; ctx.fillRect(f.x - 90, f.y - 150, 180, 180);
 }
+skinEmissive(f);
 drawTrail(f);
 }
 drawParticles(true);
@@ -10375,7 +10468,7 @@ if (name === 'codex') openCodex();
 if (name === 'community') openCommunity();
 showScreen(name);
 }
-function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); }
+function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
 initAudio();
@@ -10427,6 +10520,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 let settingsBack = 'menu';
 const SETTING_ROWS = [
 { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
+{ k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
 { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
 { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
 { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
@@ -10468,7 +10562,7 @@ const baseHtml = SETTING_ROWS.map(r => r.opts
 ? `<div class="setrow"><span>${r.name}</span><div class="seg" data-k="${r.k}">${r.opts.map(([v, t]) => `<button data-v='${JSON.stringify(v)}' class="${SETTINGS[r.k] === v ? 'sel' : ''}">${t}</button>`).join('')}</div><span></span></div>`
 : `<div class="setrow"><span>${r.name}</span><input type="range" data-k="${r.k}" min="${r.range[0]}" max="${r.range[1]}" step="${r.range[2]}" value="${SETTINGS[r.k]}"><span class="v" id="sv_${r.k}">${Math.round(SETTINGS[r.k] * 100)}%</span></div>`).join('');
 const keyHtml = `
-<div style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
+<div class="keypanel" style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
 <span style="font-family:${TITLE_FONT};font-size:18px;color:#e9c46a;">1P 键位设置</span>
 <button id="resetKeysBtn" class="ghost" style="padding:4px 12px;font-size:12px;">恢复默认</button>
@@ -10509,6 +10603,7 @@ return;
 const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
 const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
 if (k === 'quality') resize();
+if (k === 'autoSkin') applySkins();
 });
 $id('setList').addEventListener('input', e => {
 const k = e.target.dataset.k; if (!k) return;
@@ -11400,10 +11495,10 @@ const skScn = skMeta && SCENES[skin];
 const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨专属全景天象与奥义特效' : '🌟专属灵光天色与命中特效'}）</span>` : '';
 $id('cxSkinT').innerHTML = (cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤装束') + skDesc;
 $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
-const has = (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+const has = skinOwned(k);
 const isLeg = v.rarity === 'legend';
 const lockHint = v.exclusive ? ' · 青锋行通关' : ' · 预览';
-return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? '' : lockHint}</button>`;
+return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
 }).join('');
 $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
 const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
@@ -11436,7 +11531,7 @@ tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · �
 tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim);word-break:keep-all;overflow-wrap:break-word">${(() => {
 const chIdx = CHAPTERS.findIndex(chap => chap.boss === c.id);
 if (chIdx < 0) {
-return `<b>青锋传 · 月下起意</b><br>青锋行守住第十波大关，即可领悟绝学并解锁专属传说皮肤「青锋行」。`;
+return `<b>青锋传 · 月下起意</b><br>青锋行打通第三章「剑冢」，斩落剑魔，即可领悟绝学并解锁专属传说皮肤「青锋行」。`;
 }
 const ch = CHAPTERS[chIdx];
 const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar', yuxiao: 'yx_snow', zuixian: 'zx_amber', gouchen: 'gc_crimson' })[c.id];
@@ -11569,7 +11664,7 @@ $id('cxSkins').addEventListener('click', async e => {
 const b = e.target.closest('button'); if (!b) return;
 const sk = b.dataset.sk || '';
 const id = CHARS[cxIdx].id;
-const has = !sk || (PROF.skins || []).includes(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+const has = skinOwned(sk);
 if (!has) {
 cxPrev = sk; renderCodex(); SFX.slice();
 toast('还没有这款皮肤，先给你看看');
@@ -11577,7 +11672,7 @@ return;
 }
 cxPrev = null;
 PROF.equip = PROF.equip || {};
-if (sk) PROF.equip[id] = sk; else delete PROF.equip[id];
+PROF.equip[id] = sk;   // 点“默认”记成空串：自动选皮肤不再替这个角色换
 try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (err) {}
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
@@ -11599,92 +11694,6 @@ renderCodex();
 SFX.slice();
 }
 });
-let comLast = 0, comTimer = null;
-function comFmt(text) {
-return escapeHTML(text).replace(/\[e:([a-z]+)\]/g, (m, id) => EMO[id] ? `<span class="emo" title="${EMO[id].name}">${EMO[id].svg}</span>` : m);
-}
-const COM_LOCAL_SEED_POSTS = [
-{ id: 1, name: '青锋传人', text: '月下对弈，剑意纵横！欢迎诸位侠客切磋论剑。 [e:fight]', at: Math.floor(Date.now() / 1000) - 3600, chan: 'fight' },
-{ id: 2, name: '玄武墨客', text: '修罗铁山重斩破霸体手感极佳，满蓄力下砸势不可挡！ [e:gg]', at: Math.floor(Date.now() / 1000) - 1800, chan: 'lore' },
-{ id: 3, name: '沧海云游', text: '新赛季青锋行与问剑密卷肉鸽词条搭配极富智谋，诸位切莫错过！ [e:hi]', at: Math.floor(Date.now() / 1000) - 600, chan: 'all' },
-];
-let comActiveChan = 'all';
-let comPostsCache = [];
-function comRender(list, append) {
-const log = $id('comLog'), atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 30;
-if (!append) { log.innerHTML = ''; comPostsCache = []; }
-for (const p of list) {
-if (!comPostsCache.some(x => x.id === p.id)) comPostsCache.push(p);
-}
-const filtered = comActiveChan === 'all' ? comPostsCache : comPostsCache.filter(p => !p.chan || p.chan === comActiveChan);
-log.innerHTML = '';
-for (const p of filtered) {
-const d = new Date(p.at * 1000), tm = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-const el = document.createElement('div'); el.className = 'cm';
-const chanBadge = p.chan === 'fight' ? '<span style="font-size:12px;padding:1px 6px;border-radius:4px;background:rgba(255,90,90,.15);color:#ff8a8a;border:1px solid rgba(255,90,90,.3)">约战</span>' : p.chan === 'lore' ? '<span style="font-size:12px;padding:1px 6px;border-radius:4px;background:rgba(233,196,106,.15);color:#e9c46a;border:1px solid rgba(233,196,106,.3)">心得</span>' : '';
-el.innerHTML = `<div class="cm-head"><span class="cn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${escapeHTML(p.name)} ${chanBadge}</span><span class="ct">${tm}</span></div><div class="cm-body">${comFmt(p.text)}</div>`;
-log.appendChild(el); comLast = Math.max(comLast, p.id);
-}
-if (!append || atBottom) log.scrollTop = log.scrollHeight;
-}
-async function comPoll(first) {
-if (!SERVED || !window.fetch) {
-if (first && !comPostsCache.length) comRender(COM_LOCAL_SEED_POSTS, false);
-return;
-}
-try {
-const j = await api('/api/posts?after=' + (first ? 0 : comLast));
-if (j.list && (first || j.list.length)) comRender(j.list, !first);
-} catch (e) {
-if (first && !comPostsCache.length) comRender(COM_LOCAL_SEED_POSTS, false);
-if (first) $id('comHint').textContent = '在线客栈连线中，已显示驿站江湖留言。';
-}
-}
-function openCommunity() {
-if (!$id('comEmo').innerHTML) $id('comEmo').innerHTML = EMOTES.map(e => `<button data-e="${e.id}" title="${e.name}" aria-label="${e.name}">${e.svg}</button>`).join('');
-const can = !!ACC.name || !SERVED;
-$id('comIn').disabled = false; $id('comSend').disabled = false;
-$id('comIn').placeholder = ACC.name ? '以武会友，留下你的江湖豪言…（回车发送）' : '以客官身份留言切磋…（回车发送）';
-$id('comHint').textContent = !SERVED ? '单机与离线演武模式：支持本地与局域网驿站交流。' : ACC.name ? '以武会友，还请口下留情。' : '游客或未登录侠客可自由发言交流；登录后保留大侠名帖。';
-comLast = 0; comPoll(true);
-clearInterval(comTimer);
-comTimer = setInterval(() => { if ($id('community').classList.contains('on')) comPoll(false); else clearInterval(comTimer); }, 3000);
-}
-async function comSend(text) {
-text = text.trim(); if (!text) return;
-const author = ACC.name || '江湖侠客';
-if (!SERVED || !window.fetch) {
-const localPost = { id: Date.now(), name: author, text, at: Math.floor(Date.now() / 1000), chan: comActiveChan };
-comRender([localPost], true);
-$id('comIn').value = '';
-return;
-}
-try {
-const j = await api('/api/post', { text, token: ACC.token });
-if (j.post) comRender([j.post], true);
-$id('comIn').value = '';
-$id('comHint').textContent = '以武会友，还请口下留情。';
-} catch (e) {
-const localPost = { id: Date.now(), name: author, text, at: Math.floor(Date.now() / 1000), chan: comActiveChan };
-comRender([localPost], true);
-$id('comIn').value = '';
-$id('comHint').textContent = '飞鸽传书已送出。';
-}
-}
-$id('comSend').addEventListener('click', () => comSend($id('comIn').value));
-$id('comIn').addEventListener('keydown', e => { if (e.key === 'Enter') comSend($id('comIn').value); });
-$id('comEmo').addEventListener('click', e => { const b = e.target.closest('button'); if (b) comSend(`[e:${b.dataset.e}]`); });
-const comChanBarEl = $id('comChannelBar');
-if (comChanBarEl) {
-comChanBarEl.addEventListener('click', e => {
-const b = e.target.closest('button');
-if (!b || !b.dataset.chan) return;
-comActiveChan = b.dataset.chan;
-for (const btn of comChanBarEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
-comRender([], false);
-SFX.slice();
-});
-}
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
 const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
@@ -11727,40 +11736,40 @@ result.push(list.splice(idx, 1)[0]);
 return result;
 }
 const SKINS = {
-qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#e6efff', shade: '#8ea4cc', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'icecrown', gem: '#bfefff', robe: 'ice', shoulder: '#8ea4cc', back: 'snowflake', wfx: 'frost', trail: 'snow' }, skillNames: { skill: '寒霜疾风', ranged: '玄冰剑气', ult: '霜魄残月' } },
-qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff3d2', shade: '#c9a45a', scarf: '#ffb62e', slash: '255,196,90', blade: '#fff3cf' }, deco: { head: 'crown', robe: 'gold', breastplate: '#ffd966', shoulder: '#d4af37', back: 'sundisk', cape: '#d99a2b', orbs: '#ffdd66', wfx: 'flame', trail: 'ember', aura: 'ember', weapStyle: 'sun_sword' }, skillNames: { skill: '金乌贯日', ranged: '赤阳炽芒', ult: '十日焚天' } },
-qf_abyss: { char: 'qingfeng', rarity: 'legend', name: '幽渊', look: { body: '#241a3a', shade: '#10081c', scarf: '#9b51e0', slash: '160,80,240', blade: '#f3e8ff' }, deco: { head: 'voidhorns', gem: '#bd7bfa', robe: 'dark', shoulder: '#3d2060', back: 'voiddisk', cape: '#2d1445', orbs: '#9b51e0', wfx: 'void', trail: 'smoke', aura: 'smoke', weapStyle: 'abyss_blade' }, skillNames: { skill: '幽冥疾斩', ranged: '深渊裂隙', ult: '无间寂灭' } },
-fy_jade: { char: 'feiying', rarity: 'rare', name: '碧影', look: { scarf: '#2bd49a', slash: '90,230,170', blade: '#dffff2' }, deco: { head: 'jadevisor', hideBaseHead: true, mask: '#2bd49a', robe: 'leaf', shoulder: '#1f8f68', wfx: 'jade', trail: 'leaf', weapStyle: 'jade_daggers' }, skillNames: { skill: '翠影幻遁', ranged: '翡翠飞镖', ult: '万叶千影' } },
-fy_blood: { char: 'feiying', rarity: 'legend', name: '血月', look: { body: '#3a1420', shade: '#1a080e', scarf: '#ff2a3d', slash: '255,60,80', blade: '#ffd9dd' }, deco: { head: 'horns', hideBaseHead: true, hornC: '#2a0a10', robe: 'crimson', breastplate: '#4a121c', back: 'bloodmoon', cape: '#5a0f1a', orbs: '#ff2a3d', wfx: 'shadow', trail: 'smoke', aura: 'smoke', weapStyle: 'blood_scythes' }, skillNames: { skill: '血影瞬杀', ranged: '诛心血刃', ult: '猩红月劫' } },
-fy_phantom: { char: 'feiying', rarity: 'legend', name: '幻灵', look: { body: '#f0faff', shade: '#7faac6', scarf: '#00f2fe', slash: '0,242,254', blade: '#e0ffff' }, deco: { head: 'foxmask', hideBaseHead: true, mask: '#00f2fe', robe: 'spirit', shoulder: '#2888aa', back: 'wings', cape: '#1b4d6b', orbs: '#00f2fe', wfx: 'frost', trail: 'snow', aura: 'aurora' }, skillNames: { skill: '极光魅影', ranged: '幽灵幻刺', ult: '九天幻灵阵' } },
-ts_bronze: { char: 'tieshan', rarity: 'rare', name: '青铜', look: { body: '#c9a26b', shade: '#7a5a34', scarf: '#3fa37a', slash: '120,210,170' }, deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#a8804a', crest: '#3fa37a', shoulder: '#8a6a3a', breastplate: '#7a5a34', robe: 'bronze', weapStyle: 'bronze_cleaver' }, skillNames: { skill: '撼岳地崩', ranged: '巨盾重冲', ult: '万钧巨岳' } },
-ts_obsidian: { char: 'tieshan', rarity: 'legend', name: '玄武', look: { body: '#34303e', shade: '#18161e', scarf: '#6a5cff', slash: '140,120,255', blade: '#d8d4ff' }, deco: { head: 'horns', hideBaseHead: true, hornC: '#1a1822', robe: 'heavy', breastplate: '#2e2642', back: 'shell', shoulder: '#2a2632', orbs: '#8a78ff', wfx: 'lava', aura: 'smoke' }, skillNames: { skill: '冥水震岳', ranged: '玄甲冲霄', ult: '玄武碎陆' } },
-ts_crimson: { char: 'tieshan', rarity: 'legend', name: '修罗', look: { body: '#3a1616', shade: '#1c0808', scarf: '#ff3a30', slash: '255,50,60', blade: '#ffd8d8' }, deco: { head: 'asuramask', hideBaseHead: true, helmC: '#4a1212', crest: '#ff3a30', shoulder: '#5a1a1a', breastplate: '#501414', robe: 'shura', back: 'sundisk', orbs: '#ff4433', wfx: 'flame', trail: 'ember', aura: 'ember', weapStyle: 'shura_blade' }, skillNames: { skill: '修罗撼地', ranged: '焚血狂突', ult: '阿修罗劫' } },
-ls_plum: { char: 'lingshuang', rarity: 'rare', name: '红梅', look: { scarf: '#e0365a', slash: '255,110,140', blade: '#ffe3ea' }, deco: { head: 'flower', flower: '#e0365a', robe: 'plum', shoulder: '#c02a4a', trail: 'petal', petal: '255,120,150' }, skillNames: { skill: '落梅踏雪', ranged: '红梅绽刺', ult: '傲雪惊鸿' } },
-ls_aurora: { char: 'lingshuang', rarity: 'legend', name: '极光', look: { body: '#dff8f4', shade: '#7fb7c0', scarf: '#5ef2c9', slash: '120,255,210', blade: '#e9fffa' }, deco: { head: 'valkyrie', gem: '#7dffd8', robe: 'aurora', breastplate: '#4aa090', back: 'aurora', orbs: '#5ef2c9', wfx: 'frost', trail: 'snow', aura: 'aurora', weapStyle: 'aurora_lance' }, skillNames: { skill: '极光旋缨', ranged: '碧落回枪', ult: '极光刹那' } },
-ls_dragon: { char: 'lingshuang', rarity: 'legend', name: '沧龙', look: { body: '#d6edff', shade: '#4d82b8', scarf: '#1f90ff', slash: '40,150,255', blade: '#e6f3ff' }, deco: { head: 'dragonhorns', gem: '#1f90ff', robe: 'ocean', breastplate: '#205080', back: 'dragonring', cape: '#103a66', orbs: '#3aa0ff', wfx: 'water', trail: 'snow', aura: 'cloud', weapStyle: 'dragon_spear' }, skillNames: { skill: '潜龙腾渊', ranged: '沧浪旋涡', ult: '龙啸九天' } },
-ly_dusk: { char: 'liuyun', rarity: 'rare', name: '晚霞', look: { scarf: '#ff8a4a', slash: '255,160,100' }, deco: { head: 'veilhat', hatC: '#c97a46', veilC: 'rgba(255,140,85,0.42)', robe: 'dusk', cape: '#c8602a', trail: 'leaf', leaf: '255,150,80' }, skillNames: { skill: '暮云疾刃', ranged: '落霞乘风', ult: '赤霞天龙' } },
-ly_sky: { char: 'liuyun', rarity: 'legend', name: '天青', look: { body: '#eaf6ff', shade: '#8fb4d6', scarf: '#56b8ff', slash: '130,200,255', blade: '#f0faff' }, deco: { head: 'plume', plumeC: ['#ffffff', '#bfe2ff'], robe: 'celestial', breastplate: '#6ba0cc', back: 'clouds', cape: '#cfe8ff', orbs: '#70c0ff', trail: 'feather', aura: 'cloud' }, skillNames: { skill: '天风破虚', ranged: '凌霄隐步', ult: '青穹御风卷' } },
-ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#f0f2eb', shade: '#7d8a74', scarf: '#4e7850', slash: '80,180,120', blade: '#eef6f0' }, deco: { head: 'bamboohat', hatC: '#426b44', robe: 'bamboo', shoulder: '#3e6040', cape: '#2d4730', wfx: 'jade', trail: 'leaf', leaf: '80,180,120' }, skillNames: { skill: '竹影随行', ranged: '清风拂叶', ult: '万竿烟雨' } },
-lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', robe: 'thunder', shoulder: '#5a30a0', wfx: 'lightning', trail: 'spark' }, skillNames: { skill: '紫霄惊雷', ranged: '九天引雷', ult: '狂雷寂灭' } },
-lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', robe: 'solar', breastplate: '#b86a20', back: 'sundisk', orbs: '#ff8820', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '曜日神拳', ranged: '大日天火', ult: '阳炎劫世' } },
-lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', robe: 'vajra', breastplate: '#6a3210', back: 'chakra', shoulder: '#6a3210', orbs: '#ffaa00', wfx: 'gold', trail: 'gold', aura: 'gold', weapStyle: 'vajra_gauntlet' }, skillNames: { skill: '金刚伏魔', ranged: '罗汉踏天', ult: '大威天龙' } },
-my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂画符', ult: '朱砂符阵' } },
-my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', orbs: '#d8b04a', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '泥金点翠', ranged: '泥金画符', ult: '金符满纸' } },
-my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'lotus', lotusC: '90,190,255', cape: '#102444', orbs: '#4facfe', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, skillNames: { skill: '星宿锁灵', ranged: '星宿画符', ult: '太虚星图' } },
-yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'sakurabranch', flower: '#ff9ec4', robe: 'sakura', shoulder: '#a04870', trail: 'petal', petal: '255,180,210' }, skillNames: { skill: '落樱拂花', ranged: '飞樱回旋', ult: '樱落月明' } },
-yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#1c1024', robe: 'eclipse', breastplate: '#381622', back: 'eclipse', cape: '#1c1024', orbs: '#c13a4a', wfx: 'shadow', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '暗月噬光', ranged: '黑曜血环', ult: '永夜蚀月' } },
-yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'frosttiara', flower: '#a8e0ff', robe: 'snow', breastplate: '#4878a8', back: 'snowflake', cape: '#2a5078', orbs: '#80d0ff', wfx: 'frost', trail: 'snow', aura: 'snow' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
-yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee' }, deco: { head: 'ravencowl', hideBaseHead: true, hoodC: '#16161e', robe: 'raven', shoulder: '#20202a', trail: 'feather', featherC: '40,40,55' }, skillNames: { skill: '幽鸦裂空', ranged: '玄夜飞羽', ult: '百羽遮天' } },
-qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8' }, deco: { head: 'headband', band: '#c8321e', robe: 'jade_master', breastplate: '#2e5a4e', back: 'clouds', cape: '#1f6f62', orbs: '#50e0b0', trail: 'leaf', leaf: '150,235,200', aura: 'cloud' }, skillNames: { skill: '沧海疾风', ranged: '碧落青锋', ult: '天地一孤行' } },
-yx_snow: { char: 'yuxiao', rarity: 'rare', name: '雪箫', look: { body: '#f4f8fb', shade: '#a8bccb', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'frosttiara', robe: 'snow', shoulder: '#7ca8cc', back: 'snowflake', wfx: 'frost', trail: 'snow' }, skillNames: { skill: '寒江雪音', ranged: '冰弦回壁', ult: '霜天广陵散' } },
-yx_celestial: { char: 'yuxiao', rarity: 'legend', name: '钧天', look: { body: '#fff8e7', shade: '#c7a66b', scarf: '#ffd166', slash: '255,215,110', blade: '#fff6d6' }, deco: { head: 'starguan', robe: 'gold', breastplate: '#c99a3e', back: 'aurora', cape: '#8a5a1e', orbs: '#ffe082', wfx: 'gold', trail: 'gold', aura: 'gold' }, skillNames: { skill: '钧天广乐', ranged: '凤鸣九霄', ult: '万古仙音曲' } },
-zx_amber: { char: 'zuixian', rarity: 'rare', name: '琥珀', look: { body: '#d9b46a', shade: '#9a7230', scarf: '#a0302a', slash: '255,190,90', blade: '#ffe8b8' }, deco: { head: 'gourdcrown', robe: 'solar', shoulder: '#8a5820', wfx: 'flame', trail: 'ember' }, skillNames: { skill: '琥珀留客', ranged: '烈酒焚天', ult: '金樽山水长' } },
-zx_immortal: { char: 'zuixian', rarity: 'legend', name: '酒剑仙', look: { body: '#e6f9ff', shade: '#78b0c8', scarf: '#38e8ff', slash: '90,235,255', blade: '#eaffff' }, deco: { head: 'plume', plumeC: ['#e0ffff', '#56d8ff'], robe: 'jade_master', breastplate: '#2a6f82', back: 'clouds', cape: '#1c5266', orbs: '#56e8ff', wfx: 'water', trail: 'cloud', aura: 'cloud', weapStyle: 'jade_gourd' }, skillNames: { skill: '太白仙亭', ranged: '琼浆御仙', ult: '醉卧蓬莱境' } },
-gc_crimson: { char: 'gouchen', rarity: 'rare', name: '赤锤', look: { body: '#3a1a1e', shade: '#220c10', scarf: '#d83a3a', slash: '255,120,110', blade: '#ffe0dc' }, deco: { head: 'ironvisage', hideBaseHead: true, robe: 'shura', shoulder: '#6a1a1e', wfx: 'shadow', trail: 'smoke' }, skillNames: { skill: '血链夺魄', ranged: '赤狱狂旋', ult: '修罗天罗网' } },
-gc_underworld: { char: 'gouchen', rarity: 'legend', name: '冥狱', look: { body: '#241834', shade: '#120a1e', scarf: '#a855f7', slash: '185,105,255', blade: '#f0e0ff' }, deco: { head: 'voidhorns', hideBaseHead: true, robe: 'dark', breastplate: '#3b1d5e', shoulder: '#4c2478', back: 'voiddisk', cape: '#24103c', orbs: '#b56bff', wfx: 'void', trail: 'smoke', aura: 'smoke' }, skillNames: { skill: '勾魂索命', ranged: '九幽冥轮', ult: '森罗万象劫' } },
-yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], robe: 'phoenix', breastplate: '#b84414', cape: '#e8552a', orbs: '#ff6622', wfx: 'flame', trail: 'ember', aura: 'ember' }, skillNames: { skill: '凤翼掠空', ranged: '涅槃离火', ult: '九天凤翔天' } },
-yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'owlhood', hideBaseHead: true, hoodC: '#1c2838', robe: 'blizzard', breastplate: '#385878', back: 'wings', cape: '#1c3048', orbs: '#70b6f6', wfx: 'frost', trail: 'feather', featherC: '220,240,255', aura: 'snow' }, skillNames: { skill: '寒枭扑杀', ranged: '风雪千羽', ult: '极寒暴风天' } },
+qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#dde9f8', shade: '#6f8fc0', scarf: '#bfeaff', slash: '170,225,255', blade: '#e4f6ff', outline: '#0a1630', hair: '#a9c8ee', metal: '#bfe6ff' }, fx: { th: 'frost', c: '170,225,255', c2: '225,245,255' }, skillNames: { skill: '寒霜疾风', ranged: '玄冰剑气', ult: '霜魄残月' } },
+qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff4dc', shade: '#d1a75c', scarf: '#ff8a24', slash: '255,180,70', blade: '#fff6dc', outline: '#2a1204', metal: '#f0c040' }, fx: { th: 'flame', c: '255,175,60', c2: '255,80,20' }, skillNames: { skill: '金乌贯日', ranged: '赤阳炽芒', ult: '十日焚天' } },
+qf_abyss: { char: 'qingfeng', rarity: 'legend', name: '幽渊', look: { body: '#2a1f40', shade: '#150c24', scarf: '#a45cff', slash: '175,100,255', blade: '#f1e6ff', outline: '#b98cff', outlineA: 0.9, metal: '#9b51e0' }, fx: { th: 'void', c: '175,95,255', c2: '34,8,64' }, skillNames: { skill: '幽冥疾斩', ranged: '深渊裂隙', ult: '无间寂灭' } },
+fy_jade: { char: 'feiying', rarity: 'rare', name: '碧影', look: { body: '#1e2f2a', shade: '#122019', outline: '#2bd49a', outlineA: 0.85, scarf: '#2bd49a', slash: '90,230,170', blade: '#dffff2' }, fx: { th: 'leaf', c: '90,220,160' }, skillNames: { skill: '翠影幻遁', ranged: '翡翠飞镖', ult: '万叶千影' } },
+fy_blood: { char: 'feiying', rarity: 'legend', name: '血月', look: { body: '#30101a', shade: '#18060c', outline: '#ff3048', outlineA: 0.95, scarf: '#ff2a3d', slash: '255,60,80', blade: '#ffe0e4' }, fx: { th: 'void', c: '255,45,65', c2: '60,0,12' }, skillNames: { skill: '血影瞬杀', ranged: '诛心血刃', ult: '猩红月劫' } },
+fy_phantom: { char: 'feiying', rarity: 'legend', name: '幻灵', look: { body: '#18222e', shade: '#0c131c', outline: '#3ff0ff', outlineA: 0.9, scarf: '#00e5ff', slash: '0,235,255', blade: '#e0ffff' }, fx: { th: 'aurora', c: '0,235,255', c2: '170,120,255' }, skillNames: { skill: '极光魅影', ranged: '幽灵幻刺', ult: '九天幻灵阵' } },
+ts_bronze: { char: 'tieshan', rarity: 'rare', name: '青铜', look: { body: '#b08a56', shade: '#6e5130', scarf: '#3fa37a', slash: '120,210,170', blade: '#e8d2a8', outline: '#120a04', helmC: '#8a6a3a', metal: '#3fa37a' }, fx: { th: 'metal', c: '150,230,190' }, skillNames: { skill: '撼岳地崩', ranged: '巨盾重冲', ult: '万钧巨岳' } },
+ts_obsidian: { char: 'tieshan', rarity: 'legend', name: '玄武', look: { body: '#2c2a38', shade: '#16141e', outline: '#7a86ff', outlineA: 0.8, scarf: '#5a6cff', slash: '120,140,255', blade: '#dfe2ff', helmC: '#1e1c28', metal: '#6a78ff' }, fx: { th: 'water', c: '110,135,255', c2: '200,215,255' }, skillNames: { skill: '冥水震岳', ranged: '玄甲冲霄', ult: '玄武碎陆' } },
+ts_crimson: { char: 'tieshan', rarity: 'legend', name: '修罗', look: { body: '#3a1414', shade: '#1c0606', outline: '#ff5a3a', outlineA: 0.9, scarf: '#ff3a20', slash: '255,80,50', blade: '#ffe2d8', helmC: '#2a0a0a', metal: '#ff5a3a' }, fx: { th: 'flame', c: '255,95,40', c2: '170,10,0' }, skillNames: { skill: '修罗撼地', ranged: '焚血狂突', ult: '阿修罗劫' } },
+ls_plum: { char: 'lingshuang', rarity: 'rare', name: '红梅', look: { scarf: '#e0365a', slash: '255,110,140', blade: '#ffe8ee', hair: '#2a1a22', haft: '#5a1a24' }, fx: { th: 'petal', c: '255,120,150' }, skillNames: { skill: '落梅踏雪', ranged: '红梅绽刺', ult: '傲雪惊鸿' } },
+ls_aurora: { char: 'lingshuang', rarity: 'legend', name: '极光', look: { body: '#e4faf5', shade: '#82bcc4', scarf: '#5ef2c9', slash: '120,255,210', blade: '#eafffa', hair: '#1e3a40', haft: '#2c7873' }, fx: { th: 'aurora', c: '110,255,205', c2: '170,120,255' }, skillNames: { skill: '极光旋缨', ranged: '碧落回枪', ult: '极光刹那' } },
+ls_dragon: { char: 'lingshuang', rarity: 'legend', name: '沧龙', look: { body: '#dcefff', shade: '#4f84ba', scarf: '#1f90ff', slash: '60,160,255', blade: '#e8f4ff', hair: '#0e2a4a', haft: '#1a4b8c' }, fx: { th: 'water', c: '70,170,255', c2: '210,240,255' }, skillNames: { skill: '潜龙腾渊', ranged: '沧浪旋涡', ult: '龙啸九天' } },
+ly_dusk: { char: 'liuyun', rarity: 'rare', name: '晚霞', look: { body: '#f7ece2', shade: '#c39a7e', scarf: '#ff8a4a', slash: '255,160,100', hair: '#3a2216' }, fx: { th: 'leaf', c: '255,140,70' }, skillNames: { skill: '暮云疾刃', ranged: '落霞乘风', ult: '赤霞天龙' } },
+ly_sky: { char: 'liuyun', rarity: 'legend', name: '天青', look: { body: '#eef7ff', shade: '#93b6d8', scarf: '#5ab8ff', slash: '140,205,255', blade: '#f4fbff', hair: '#24364a' }, fx: { th: 'wind', c: '150,210,255', c2: '245,250,255', part: 'feather' }, skillNames: { skill: '天风破虚', ranged: '凌霄隐步', ult: '青穹御风卷' } },
+ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#eef1e8', shade: '#7d8a74', scarf: '#4e8a56', slash: '90,190,120', blade: '#eef6f0', hair: '#1e2a1e' }, fx: { th: 'leaf', c: '100,190,120' }, skillNames: { skill: '竹影随行', ranged: '清风拂叶', ult: '万竿烟雨' } },
+lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255', outline: '#b48cff', blade: '#f0e8ff' }, fx: { th: 'thunder', c: '190,150,255' }, skillNames: { skill: '紫霄惊雷', ranged: '九天引雷', ult: '狂雷寂灭' } },
+lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#4a2410', shade: '#2a1206', outline: '#ffb040', outlineA: 0.9, scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, fx: { th: 'flame', c: '255,160,50', c2: '255,60,10' }, skillNames: { skill: '曜日神拳', ranged: '大日天火', ult: '阳炎劫世' } },
+lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#2e1a08', shade: '#160c02', outline: '#ffd040', outlineA: 1, scarf: '#ffb000', slash: '255,200,60', blade: '#fff4d0' }, fx: { th: 'thunder', c: '255,205,70', c2: '255,250,220' }, skillNames: { skill: '金刚伏魔', ranged: '罗汉踏天', ult: '大威天龙' } },
+my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60', hatC: '#4a1410', outline: '#e8c8b0' }, fx: { th: 'ink', c: '230,70,50', c2: '120,16,10' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂画符', ult: '朱砂符阵' } },
+my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#1e1a14', shade: '#100c08', outline: '#e6c46a', outlineA: 0.9, scarf: '#d8b04a', slash: '240,205,110', blade: '#2a2010', hatC: '#3a2c10' }, fx: { th: 'gold', c: '245,205,105', c2: '255,245,200' }, skillNames: { skill: '泥金点翠', ranged: '泥金画符', ult: '金符满纸' } },
+my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#121a34', shade: '#080c1c', outline: '#8fc8ff', outlineA: 0.85, scarf: '#4facfe', slash: '90,175,255', blade: '#0c1430', hatC: '#0e1630' }, fx: { th: 'star', c: '120,190,255', c2: '8,14,40' }, skillNames: { skill: '星宿锁灵', ranged: '星宿画符', ult: '太虚星图' } },
+yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6', hair: '#4a2a3a' }, fx: { th: 'petal', c: '255,170,200' }, skillNames: { skill: '落樱拂花', ranged: '飞樱回旋', ult: '樱落月明' } },
+yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2a2034', shade: '#140e1c', outline: '#ff6a7a', outlineA: 0.85, scarf: '#c13a4a', slash: '235,90,110', blade: '#ffdce2', hair: '#120a14' }, fx: { th: 'void', c: '255,95,115', c2: '26,4,14' }, skillNames: { skill: '暗月噬光', ranged: '黑曜血环', ult: '永夜蚀月' } },
+yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f4f9ff', shade: '#98b8dd', scarf: '#80d0ff', slash: '140,215,255', blade: '#f6fbff', hair: '#2a3a52' }, fx: { th: 'frost', c: '150,220,255', c2: '235,248,255' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
+yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', outline: '#a0a0c0', outlineA: 0.8, scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee', hair: '#0e0e14' }, fx: { th: 'feather', c: '120,120,150' }, skillNames: { skill: '幽鸦裂空', ranged: '玄夜飞羽', ult: '百羽遮天' } },
+qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8', outline: '#121a16' }, fx: { th: 'ink', c: '120,225,190', c2: '18,24,22' }, skillNames: { skill: '沧海疾风', ranged: '碧落青锋', ult: '天地一孤行' } },
+yx_snow: { char: 'yuxiao', rarity: 'rare', name: '雪箫', look: { body: '#f4f8fb', shade: '#a8bccb', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff', hair: '#2a3a4a' }, fx: { th: 'frost', c: '170,225,255', c2: '230,245,255' }, skillNames: { skill: '寒江雪音', ranged: '冰弦回壁', ult: '霜天广陵散' } },
+yx_celestial: { char: 'yuxiao', rarity: 'legend', name: '钧天', look: { body: '#fff8e7', shade: '#c7a66b', scarf: '#ffcf4a', slash: '255,215,110', blade: '#fff3c8', hair: '#2a200e' }, fx: { th: 'gold', c: '255,210,100', c2: '255,250,220' }, skillNames: { skill: '钧天广乐', ranged: '凤鸣九霄', ult: '万古仙音曲' } },
+zx_amber: { char: 'zuixian', rarity: 'rare', name: '琥珀', look: { body: '#d9b46a', shade: '#9a7230', scarf: '#a0302a', slash: '255,190,90', blade: '#ffe8b8', hair: '#4a2a10' }, fx: { th: 'flame', c: '255,175,70', c2: '220,90,20' }, skillNames: { skill: '琥珀留客', ranged: '烈酒焚天', ult: '金樽山水长' } },
+zx_immortal: { char: 'zuixian', rarity: 'legend', name: '酒剑仙', look: { body: '#e6f9ff', shade: '#78b0c8', scarf: '#38e8ff', slash: '90,235,255', blade: '#eaffff', hair: '#1a3440' }, fx: { th: 'water', c: '90,230,255', c2: '230,255,255' }, skillNames: { skill: '太白仙亭', ranged: '琼浆御仙', ult: '醉卧蓬莱境' } },
+gc_crimson: { char: 'gouchen', rarity: 'rare', name: '赤锤', look: { body: '#3a1a1e', shade: '#220c10', outline: '#e06a5a', scarf: '#d83a3a', slash: '255,120,110', blade: '#ffe0dc', hair: '#1a0a0c' }, fx: { th: 'metal', c: '255,140,90' }, skillNames: { skill: '血链夺魄', ranged: '赤狱狂旋', ult: '修罗天罗网' } },
+gc_underworld: { char: 'gouchen', rarity: 'legend', name: '冥狱', look: { body: '#241834', shade: '#120a1e', outline: '#c08aff', outlineA: 0.85, scarf: '#a855f7', slash: '185,105,255', blade: '#f0e0ff', hair: '#0c0614' }, fx: { th: 'void', c: '185,105,255', c2: '28,0,56' }, skillNames: { skill: '勾魂索命', ranged: '九幽冥轮', ult: '森罗万象劫' } },
+yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0', hair: '#5a1a0a' }, fx: { th: 'flame', c: '255,145,50', c2: '255,60,20', part: 'feather' }, skillNames: { skill: '凤翼掠空', ranged: '涅槃离火', ult: '九天凤翔天' } },
+yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '130,195,255', blade: '#f2f8ff', hair: '#2a3a4e' }, fx: { th: 'frost', c: '150,210,255', c2: '235,245,255', part: 'feather' }, skillNames: { skill: '寒枭扑杀', ranged: '风雪千羽', ult: '极寒暴风天' } },
 };
 const SCENES = {
 qf_frost: { sky: ['#08101f', '#152a48', '#2c4a6a', '#1c2c40'], orb: 'moon', orbC: '220,240,255', mist: '180,220,255', mtn: ['#1c2c4a', '#142238'], bam: ['#0c1424', '#081020'], wx: 'snow', wxC: '230,245,255', hit: 'snowflake', hitC: '200,240,255' },
@@ -11947,30 +11956,6 @@ drawShape(T.wx, s * (0.7 + near * 0.6), T.wxC, a);
 ctx.restore();
 }
 }
-function skinHitFX(atk, ev) {
-const T = sceneOf(atk.skinKey); if (!T) return;
-const n = T.legend ? 12 : 6;
-for (let i = 0; i < n; i++) {
-const a = rand(0, Math.PI * 2), v = rand(120, 360) * (T.legend ? 1.2 : 1);
-addP({ type: 'shape', sh: T.wx, x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, g: WX_RISE[T.wx] ? -120 : 500, life: rand(0.45, 0.8), max: 0.8, r: rand(2.5, 4.5), rgb: T.wxC, spin: rand(-8, 8), drag: 3 });
-}
-if (T.legend || ev.dmg >= 5) addP({ type: 'glyph', g2: T.hit, x: ev.x, y: ev.y, r: (T.legend ? 62 : 38) * clamp(ev.dmg / 7, 0.7, 1.5), life: 0.42, max: 0.42, rgb: T.hitC, rot: rand(0, 6.28) });
-if (T.legend) ring(ev.x, ev.y, 90, T.hitC, 0.3);
-}
-function skinIntroFX(f) {
-const T = sceneOf(f.skinKey); if (!T) return;
-addP({ type: 'text', text: `${T.legend ? '传说' : '稀有'} · ${T.name}`, x: f.x, y: f.y - 175, life: 2.2, max: 2.2, rgb: T.legend ? '233,196,106' : '150,200,255' });
-if (!T.legend) return;
-addP({ type: 'glyph', g2: T.hit, x: f.x, y: f.y - 70, r: 150, life: 1.6, max: 1.6, rgb: T.hitC, rot: 0, spin: 0.6 });
-for (let i = 0; i < 26; i++) addP({ type: 'shape', sh: T.wx, x: f.x + rand(-60, 60), y: rand(-10, 0), vx: rand(-80, 80), vy: rand(-520, -200), g: 260, life: rand(0.9, 1.6), max: 1.6, r: rand(2.5, 4.5), rgb: T.wxC, spin: rand(-6, 6), drag: 1.2 });
-ring(f.x, f.y - 60, 140, T.hitC, 0.6);
-}
-function skinVictoryFX(f) {
-const T = sceneOf(f.skinKey); if (!T) return;
-const n = T.legend ? 40 : 16;
-for (let i = 0; i < n; i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); addP({ type: 'shape', sh: T.wx, x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 420, life: rand(1, 1.8), max: 1.8, r: rand(2.5, 5), rgb: T.wxC, spin: rand(-8, 8), drag: 1.5 }); }
-if (T.legend) addP({ type: 'glyph', g2: T.hit, x: f.x, y: f.y - 80, r: 130, life: 1.4, max: 1.4, rgb: T.hitC, rot: 0, spin: -0.5 });
-}
 function paintSceneCard(CW, CH, T, t, u) {
 const bg = ctx.createLinearGradient(0, 0, 0, CH);
 T.sky.forEach((c, k) => bg.addColorStop([0, 0.45, 0.75, 1][k], c));
@@ -12022,7 +12007,7 @@ return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 function skinLook(ci, skin) {
 const sk = SKINS[skin];
 const ok = sk && sk.char === CHARS[ci].id;
-return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null };
+return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), fx: ok ? sk.fx || null : null };
 }
 function skinSkillName(fOrKey, slot) {
 const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);
@@ -12035,7 +12020,20 @@ const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);
 const sk = skKey && SKINS[skKey];
 return (sk && sk.skillNames && sk.skillNames.ult) || '';
 }
-function mySkin(id) { const k = (PROF.equip || {})[id]; return k && ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED) ? k : ''; }
+function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start && now < FREE_SKIN_EVENT.end; }
+function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
+function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent(); }
+function bestSkin(id) {
+let best = '', br = 0;
+for (const [k, v] of Object.entries(SKINS)) { if (v.char !== id || !skinOwned(k)) continue; const r = v.rarity === 'legend' ? 2 : 1; if (r > br) { br = r; best = k; } }
+return best;
+}
+function mySkin(id) {
+const eq = PROF.equip || {}, k = eq[id];
+if (k && skinOwned(k)) return k;
+return SETTINGS.autoSkin !== false && !(id in eq && k === '') ? bestSkin(id) : '';
+}
+function mySkinMap() { const m = {}; for (const c of CHARS) { const k = mySkin(c.id); if (k) m[c.id] = k; } return m; }
 if (typeof window !== 'undefined') { window.skinLook = skinLook; window.mySkin = mySkin; window.skinSkillName = skinSkillName; window.skinUltName = skinUltName; }
 function applySkins() {
 for (const f of allFighters()) {
@@ -12063,6 +12061,9 @@ async function loadProfile() {
 if (!SERVED || !window.fetch) return;
 try { const j = await api('/api/profile'); applyProfile(j.profile || j); } catch (e) {}
 }
+function flagsKey() { return 'renying-flags-' + (curName() || 'guest'); }
+function loadFlags() { try { return JSON.parse(localStorage.getItem(flagsKey()) || '{}') || {}; } catch (e) { return {}; } }
+function saveFlag(k, v) { const fl = loadFlags(); fl[k] = v; try { localStorage.setItem(flagsKey(), JSON.stringify(fl)); } catch (e) {} }
 function applyProfile(p) {
 if (!p) return;
 if (p.guest) {
@@ -12090,7 +12091,10 @@ rates: p.rates || PROF.rates
 Object.assign(PROF, p, { guest: false });
 }
 PROF.loaded = true;
-if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && PROF.equip) {
+{ const fl = loadFlags();   // 一次性奖励的领取记录不进云存档，按账号记在本机，刷新后还在
+if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
+if (fl.tutorial && !PROF.guest) PROF.tutorial = 1; }
+if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !freeSkinEvent() && PROF.equip) {
 const ownedSkins = new Set(PROF.skins || []);
 for (const [cid, sk] of Object.entries(PROF.equip)) {
 if (sk && !ownedSkins.has(sk)) delete PROF.equip[cid];
@@ -12113,20 +12117,46 @@ if ($id('gacha').classList.contains('on')) renderGacha();
 if ($id('tasks').classList.contains('on')) renderTasks();
 if ($id('netp').classList.contains('on')) renderRankLine();
 if (!PROF.guest && !PROF.welfare && $id('menu').classList.contains('on')) openWelfare();
+else if ($id('menu').classList.contains('on')) compMaybe();
+}
+let compAsked = false;
+function compKey() { return 'renying-comp1022-' + curName(); }
+function compState() {
+if (OFFLINE_BUILD || SERVED || Date.now() >= FREE_SKIN_EVENT.end) return null;
+let claimed = false; try { claimed = !!curName() && localStorage.getItem(compKey()) === '1'; } catch (e) {}
+return { claimed };
+}
+function compMaybe() {   // 登录后回到首页时弹一次，点了稍后再选就不再追着弹
+const st = compState();
+if (st && !st.claimed && !compAsked && !PROF.guest && curName()) { compAsked = true; setTimeout(compClaim, 400); }
+}
+function compMark() { try { localStorage.setItem(compKey(), '1'); } catch (e) {} }
+function compClaim() {
+const st = compState(); if (!st || st.claimed || PROF.guest || !curName()) return;
+if (CHARS.every(c => (PROF.owned || []).includes(c.id))) {   // 侠客都有了：改发墨锭
+compMark(); PROF.ink = (PROF.ink || 0) + 500; saveProfile(); SFX.chargeFull(); toast('侠客已全部拥有，补偿改发 500 墨锭'); return;
+}
+openWelfare('comp');
 }
 let wSel = -1;
-function openWelfare() {
-ensurePortraits(); wSel = -1;
+let wMode = 'new';
+function openWelfare(mode = 'new') {
+ensurePortraits(); wSel = -1; wMode = mode;
+const comp = mode === 'comp';
+$id('wTitle').textContent = comp ? '补偿 · 自选侠客' : '新手福利';
+$id('wSub').textContent = comp ? '之前任务刷新后能重复领奖，现在已经修好。给每位大侠补一位自选侠客，永久拥有。' : '人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。';
+$id('wLater').classList.toggle('hidden', !comp);
 $id('wGrid').innerHTML = CHARS.map((c, i) => PROF.owned.includes(c.id) ? '' : `<button data-i="${i}"><img src="${PORTRAITS[i] || ''}" alt=""><div class="wn" style="color:rgb(${c.look.slash})">${c.name}</div><div class="wr">${c.role} · ${RAR_NAME[CHAR_RARITY[c.id]]}</div></button>`).join('');
 $id('wGo').disabled = true; $id('wMsg').textContent = '';
 showScreen('welfare');
 }
 $id('wGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; wSel = +b.dataset.i; for (const x of $id('wGrid').children) x.classList.toggle('sel', x === b); $id('wGo').disabled = false; });
+$id('wLater').addEventListener('click', () => backToMenu());
 $id('wGo').addEventListener('click', async () => {
 if (wSel < 0) return;
 const picked = CHARS[wSel].id;
 PROF.owned = Array.from(new Set([...(PROF.owned || ['qingfeng']), picked]));
-PROF.welfare = 1;
+if (wMode === 'comp') compMark(); else PROF.welfare = 1;
 if (window.CloudSave) CloudSave.saveProfile(PROF, true);
 applyProfile(PROF);
 toast(`新得角色：${CHARS[wSel].name}`);
@@ -12303,7 +12333,56 @@ if (/试炼|木人/.test(name)) return 'train';
 if (/图鉴|招式/.test(name)) return 'codex';
 return 'cpu';
 }
+const TASK_DEFS = {
+daily: [['d1', '习武精进：进行 1 局对战', 'games', 1, 30], ['d2', '招式纯熟：一局里打出 5 连击', 'combo', 5, 40], ['d3', '破敌致胜：击败 1 名对手', 'wins', 1, 50]],
+weekly: [['w1', '百炼成钢：进行 5 局对战', 'games', 5, 120], ['w2', '名扬四海：赢得 3 场胜利', 'wins', 3, 180], ['w3', '融会贯通：施展 5 次终极奥义', 'ults', 5, 200]],
+};
+const EVT_TASK = { id: 'e1000', name: '打满 3 局人机（输赢都算）', target: 3, reward: 1000 };
+function bjDay(t = Date.now()) { return Math.floor((t + 8 * 3600e3) / 86400e3); }
+function taskKey(name) { return 'renying-tasks-' + (name || 'guest'); }
+function loadTasks() {
+const name = curName(); let s = null;
+try { s = JSON.parse(localStorage.getItem(taskKey(name)) || 'null'); } catch (e) {}
+if (!s || typeof s !== 'object') s = {};
+const day = bjDay(), week = Math.floor((day + 3) / 7);
+if (s.day !== day) Object.assign(s, { day, d: {}, dc: [] });
+if (s.week !== week) Object.assign(s, { week, w: {}, wc: [] });
+s.evt = s.evt || { cpu: 0, claimed: false };
+if (name && !s.evt.claimed) {   // 没登录时打的人机局，登录后接着算
+try { const g = JSON.parse(localStorage.getItem(taskKey('')) || 'null'); if (g && g.evt) s.evt.cpu = Math.max(s.evt.cpu, g.evt.cpu || 0); } catch (e) {}
+}
+return s;
+}
+function saveTasks(s) { try { localStorage.setItem(taskKey(curName()), JSON.stringify(s)); } catch (e) {} }
+function taskBump(s, stat, v, max) { for (const per of [s.d, s.w]) per[stat] = max ? Math.max(per[stat] || 0, v) : (per[stat] || 0) + v; }
+function taskMatchEnd(w) {
+if (SERVED || isAiVsAi() || M.watchAi || ['replay', 'demo', 'train', 'watch2v2'].includes(M.mode)) return;
+const s = loadTasks(), pvp = M.mode === 'pvp';
+taskBump(s, 'games', 1);
+if (!pvp && w >= 0 && w === localTeam()) taskBump(s, 'wins', 1);
+if (!pvp && MSTAT.maxcombo) taskBump(s, 'combo', MSTAT.maxcombo, true);
+if (!pvp && MSTAT.ults) taskBump(s, 'ults', MSTAT.ults);
+if (!pvp && M.mode !== 'net' && freeSkinEvent()) s.evt.cpu++;
+saveTasks(s);
+}
+function taskMarkClaimed(ids) {
+if (SERVED) return;
+const s = loadTasks();
+for (const id of ids) {
+if (id === EVT_TASK.id) s.evt.claimed = true;
+else if (TASK_DEFS.daily.some(x => x[0] === id)) s.dc.push(id);
+else s.wc.push(id);
+}
+saveTasks(s);
+}
 function ensureClientTasks() {
+if (!SERVED) {
+const s = loadTasks(), row = (x, per, cl) => ({ id: x[0], name: x[1], target: x[3], prog: Math.min(x[3], per[x[2]] || 0), reward: x[4], claimed: cl.includes(x[0]) });
+PROF.daily = TASK_DEFS.daily.map(x => row(x, s.d, s.dc));
+PROF.weekly = TASK_DEFS.weekly.map(x => row(x, s.w, s.wc));
+PROF.evtTask = freeSkinEvent() ? Object.assign({}, EVT_TASK, { prog: Math.min(EVT_TASK.target, s.evt.cpu), claimed: !!s.evt.claimed }) : null;
+return;
+}
 if (!Array.isArray(PROF.daily) || !PROF.daily.length) {
 PROF.daily = [
 { id: 'd1', name: '习武精进：进行 1 局对战', prog: 1, target: 1, reward: 30, claimed: false },
@@ -12319,6 +12398,7 @@ PROF.weekly = [
 ];
 }
 }
+function allTasks() { return [...(PROF.evtTask ? [PROF.evtTask] : []), ...(PROF.daily || []), ...(PROF.weekly || [])]; }
 function renderTasks() {
 ensureClientTasks();
 for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
@@ -12329,13 +12409,21 @@ return `<div class="trow"><span>${t.name}</span><div class="bar"><i style="width
 };
 $id('tDaily').innerHTML = PROF.guest ? '<p class="netnote">登录之后，方可领任务</p>' : (PROF.daily || []).map(row).join('');
 $id('tWeekly').innerHTML = PROF.guest ? '' : (PROF.weekly || []).map(row).join('');
-const canClaimAny = !PROF.guest && [...(PROF.daily || []), ...(PROF.weekly || [])].some(t => !t.claimed && t.prog >= t.target);
+const ev = PROF.evtTask, comp = compState();
+$id('tEvtCard').hidden = !ev && !comp;
+if (ev || comp) {
+$id('tEvtLeft').textContent = `全皮肤限免 · 剩 ${freeSkinDaysLeft()} 天`;
+const compRow = comp ? `<div class="trow"><span>系统补偿：自选 1 位侠客</span><div class="bar"><i style="width:${comp.claimed ? 100 : 0}%"></i></div><span class="rw">自选侠客</span><div style="display:flex;align-items:center;"><button id="compBtn" ${comp.claimed || PROF.guest ? 'disabled' : ''}>${comp.claimed ? '已领取' : '去挑选'}</button></div></div>` : '';
+$id('tEvt').innerHTML = compRow + (ev ? row(ev) : '') + (PROF.guest ? '<p class="netnote">进度先替你记着，登录之后就能领</p>' : '');
+}
+const canClaimAny = !PROF.guest && allTasks().some(t => !t.claimed && t.prog >= t.target);
 if ($id('claimAllBtn')) {
 $id('claimAllBtn').classList.toggle('hidden', PROF.guest || !canClaimAny);
 $id('claimAllBtn').disabled = !canClaimAny;
 }
 }
-for (const id of ['tDaily', 'tWeekly']) $id(id).addEventListener('click', async e => {
+for (const id of ['tEvt', 'tDaily', 'tWeekly']) $id(id).addEventListener('click', async e => {
+if (e.target.closest('#compBtn')) { compClaim(); return; }
 const go = e.target.closest('.task-go');
 if (go && go.dataset.go) {
 const dest = go.dataset.go;
@@ -12347,10 +12435,10 @@ return;
 }
 const b = e.target.closest('button[data-t]'); if (!b || b.disabled) return;
 const tid = b.dataset.t;
-const all = [...(PROF.daily || []), ...(PROF.weekly || [])];
-const t = all.find(x => x.id === tid);
+if (PROF.guest) return;
+const t = allTasks().find(x => x.id === tid);
 if (!t || t.claimed || t.prog < t.target) return;
-t.claimed = true;
+t.claimed = true; taskMarkClaimed([tid]);
 const gain = t.reward || 50;
 PROF.ink = (PROF.ink || 0) + gain;
 if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -12362,8 +12450,9 @@ renderTasks();
 if ($id('claimAllBtn')) {
 $id('claimAllBtn').addEventListener('click', async () => {
 if (PROF.guest) return;
-const all = [...(PROF.daily || []), ...(PROF.weekly || [])].filter(t => !t.claimed && t.prog >= t.target);
+const all = allTasks().filter(t => !t.claimed && t.prog >= t.target);
 if (!all.length) return;
+taskMarkClaimed(all.map(t => t.id));
 let totalGain = 0;
 for (const t of all) {
 t.claimed = true;
@@ -12407,7 +12496,7 @@ toast('该兑换码已使用过了');
 if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
 return;
 }
-redeemed.push(up);
+redeemed.push(up); saveFlag('codes', redeemed);
 const inkGain = clientCodes[up];
 PROF.ink = (PROF.ink || 0) + inkGain;
 if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -12851,7 +12940,7 @@ $id('tutBox').classList.add('hidden');
 let msg = '该会的都会了。去找电脑或是同学，过几招吧。';
 if (!PROF.guest) {
 if (!PROF.tutorial) {
-PROF.tutorial = 1;
+PROF.tutorial = 1; saveFlag('tutorial', 1);
 PROF.ink = (PROF.ink || 0) + 300;
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 applyProfile(PROF);
@@ -12868,6 +12957,7 @@ $id('tutMenu').addEventListener('click', () => { paused = false; toMenu(); });
 $id('tutStay').addEventListener('click', () => { paused = false; showScreen(null); });
 $id('tutYes').addEventListener('click', () => startTutorial());
 $id('tutNo').addEventListener('click', () => { try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
+setTimeout(() => { if ($id('menu').classList.contains('on')) showScreen('menu'); }, 0);   // 一打开就和点返回回来的首页一个样子（顶栏在、底栏不变）
 setTimeout(() => {
 let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (e) {}
 if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
@@ -12944,15 +13034,18 @@ ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctr
 human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
 for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
 clock = 0; projSeq = 0; GRNG.s = seed | 0;
+ROLL.lastMid = ROLL.mid;
 Object.assign(ROLL, { on: true, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
-locMax: ROLL.D - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0 });
+locMax: ROLL.D - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0, mid: seed | 0 });
 for (let f = 0; f < ROLL.D; f++) { ROLL.loc[f] = EMPTY_IN; ROLL.rem[f] = EMPTY_IN; }
+const early = (ROLL.early || []).filter(x => x.m === ROLL.mid); ROLL.early = [];   // 对方先开了这一局，早到的按键补上
 BP = null; showScreen(null); creditT = 0;
 recBegin('net');
 startRound();
 applySkins(); MSTAT.maxcombo = 0; MSTAT.ults = 0; acc = 0;
 if (NET.role === 'host') send({ mstart: 1 });
 $id('endRank').textContent = '';
+for (const x of early) rollRecv(x);
 }
 function rollFrame(f) {
 const R = ROLL;
@@ -12966,7 +13059,7 @@ step();
 function rollResim() {
 const R = ROLL, from = R.pend; R.pend = Infinity;
 const sn = R.snaps[from % R.N];
-if (!sn || sn.f !== from) { if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1 }); return; }
+if (!sn || sn.f !== from) { if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1, m: R.mid }); return; }
 const pre = [A.x, A.y, B.x, B.y];
 restState(sn.st);
 RESIM = true;
@@ -13002,7 +13095,7 @@ function rollSend() {
 const R = ROLL, now = performance.now();
 if (!R.out.length && !R.ckOut && now - (R.lastSend || 0) < 33) return;
 R.lastSend = now;
-const msg = { ru: R.locMax, adv: R.F - 1 - R.remLast };
+const msg = { ru: R.locMax, adv: R.F - 1 - R.remLast, m: R.mid };
 if (R.out.length) msg.ri = R.out.splice(0);
 if (R.ckOut) { msg.ck = R.ckOut; R.ckOut = null; }
 send(msg);
@@ -13019,8 +13112,11 @@ rollSend();
 if (R.stall > 0.35) { netOverlay('等待对手的网络…'); R.stallShown = true; }
 else if (R.stallShown) { netOverlay(''); R.stallShown = false; }
 }
+const rollMine = msg => msg.m === undefined || msg.m === ROLL.mid;
 function rollRecv(msg) {
-const R = ROLL; if (!R.on) return;
+const R = ROLL;
+if (!rollMine(msg)) { if (msg.m !== R.lastMid) { (R.early = R.early || []).push(msg); if (R.early.length > 240) R.early.shift(); } return; }
+if (!R.on) return;
 if (msg.ri) for (const r of msg.ri) R.remChg[r[0]] = { h: r[1], p: r.slice(2) };
 for (let f = R.remLast + 1; f <= msg.ru; f++) {
 const c = R.remChg[f]; let inp;
@@ -13035,17 +13131,17 @@ if (msg.ck) {   // 两边校验同一帧的状态
 const [f, h] = msg.ck, sn = R.snaps[f % R.N];
 if (sn && sn.f === f && f <= R.remLast && f < R.F && R.pend > f && hashState(sn.st) !== h) {
 R.desyncs++;
-if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1 });
+if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1, m: R.mid });
 }
 }
 }
 function rollSendSync() {
 const R = ROLL, f = Math.min(R.F, R.remLast + 1), sn = R.snaps[f % R.N];
 const st = f === R.F ? capState() : (sn && sn.f === f ? sn.st : null);
-if (st) send({ rsync: { f, st } });
+if (st) send({ rsync: { f, st, m: R.mid } });
 }
 function rollAdopt(p) {
-const R = ROLL; if (!R.on) return;
+const R = ROLL; if (!R.on || !rollMine(p)) return;
 REC.bad = true;
 const target = R.F;
 restState(p.st); R.F = p.f; R.pend = Infinity;
@@ -13054,7 +13150,7 @@ if (R.F < target) { RESIM = true; try { while (R.F < target) { rollFrame(R.F); R
 function rollResumePayload() {
 const R = ROLL, li = [];
 for (let f = R.F; f <= R.locMax; f++) { const x = R.loc[f] || EMPTY_IN; li.push([f, x.h, ...x.p]); }
-return { k: 'rmatch', ch: [A.chIdx, B.chIdx], F: R.F, st: capState(), rl: R.remLast, ph: R.lastRemH, li, ru: R.locMax, lh: R.lastSentH, ended: R.ended, skins: PROF.equip || {} };
+return { k: 'rmatch', ch: [A.chIdx, B.chIdx], F: R.F, st: capState(), rl: R.remLast, ph: R.lastRemH, li, ru: R.locMax, lh: R.lastSentH, ended: R.ended, skins: mySkinMap(), mid: R.mid };
 }
 function rollResume(p) {
 REC.on = false;
@@ -13062,7 +13158,7 @@ setChars(p.ch[0], p.ch[1]);
 setupNetMatch();
 ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
 human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-Object.assign(ROLL, { on: true, snaps: [], loc: [], rem: [], used: [], remChg: {}, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: !!p.ended });
+Object.assign(ROLL, { on: true, snaps: [], loc: [], rem: [], used: [], remChg: {}, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: !!p.ended, mid: p.mid, early: [] });
 restState(p.st); ROLL.F = p.F;
 for (let f = p.rl + 1; f < p.F + ROLL.D; f++) ROLL.loc[f] = { h: p.ph, p: [] };   // 掉线那段时间按对方猜的算
 ROLL.locMax = p.F + ROLL.D - 1; ROLL.lastSentH = p.ph;
@@ -14911,15 +15007,14 @@ const idx = +b.dataset.i;
 const sk = b.dataset.sk || '';
 const ch = CHARS[idx];
 if (!ch) return;
-const has = !sk || (PROF.skins || []).includes(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+const has = skinOwned(sk);
 if (!has) {
 SFX.slice();
 toast('尚未解锁该皮肤');
 return;
 }
 PROF.equip = PROF.equip || {};
-if (sk) PROF.equip[ch.id] = sk;
-else delete PROF.equip[ch.id];
+PROF.equip[ch.id] = sk;
 try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip)); } catch (err) {}
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 PORTRAITS.length = 0;
@@ -14930,7 +15025,7 @@ setDetail(idx);
 updateBPDeck(idx);
 renderBP();
 if (M.mode === 'net' || bpMode === 'net') {
-send({ pskin: PROF.equip || {} });
+send({ pskin: mySkinMap() });
 }
 const cv = $id('bpDeckCanvas');
 if (cv && cv._pup) {
@@ -15085,8 +15180,14 @@ const nk = (ACC.token || '') + '|' + ACC.name;
 if (nk !== setAcc.last) { setAcc.last = nk; loadProfile(); adaptLoad(); }
 renderAcc();
 }
+function renderEvtCard() {
+const on = freeSkinEvent() && !OFFLINE_BUILD;
+$id('homeEvt').hidden = !on;
+if (on) $id('homeEvtLeft').textContent = `剩 ${freeSkinDaysLeft()} 天`;
+}
+$id('homeEvt').addEventListener('click', () => { initAudio(); openScreen('tasks'); });
 function renderAcc() {
-renderTopNav();
+renderTopNav(); renderEvtCard();
 const bar = $id('accBar');
 if (OFFLINE_BUILD) { bar.classList.add('hidden'); return; }
 bar.classList.remove('hidden');
@@ -15538,7 +15639,7 @@ const validSkins = new Set(PROF.skins || []);
 const rawEquip = Object.assign({}, accData.equip || {}, PROF.equip || {});
 PROF.equip = {};
 for (const [cid, sk] of Object.entries(rawEquip)) {
-if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED)) {
+if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent())) {
 PROF.equip[cid] = sk;
 }
 }
@@ -15828,19 +15929,6 @@ $id('lobbyPeerState').style.color = peerReady ? '#2bd49a' : 'var(--dim)';
 }
 }
 window.updateNetLobby = updateNetLobby;
-function postRoomToCommunity() {
-const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();
-if (!code) { toast('请先设擂建房生成房间码'); return; }
-const myName = (ACC && ACC.name) || '江湖擂主';
-const text = `【设擂约战】房间码「${code}」，以武会友，月下对决，静候各路豪杰赴会！[e:fight]`;
-if (typeof comSend === 'function') {
-comActiveChan = 'fight';
-comSend(text);
-toast('已将约战令发送至【江湖驿站 · 切磋约战】！');
-} else {
-toast(`已生成约战令：房间码 ${code}`);
-}
-}
 let netRoomMode = 'normal';   // 'normal' (BO3), 'chaos' (天机乱斗)
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
@@ -15868,7 +15956,6 @@ btn.disabled = NET.role !== 'host';
 }
 }
 }
-if ($id('postToComBtn')) $id('postToComBtn').addEventListener('click', postRoomToCommunity);
 if ($id('lobbyCancelBtn')) $id('lobbyCancelBtn').addEventListener('click', () => {
 netLeave();
 updateNetLobby(false);
@@ -16648,6 +16735,572 @@ onSys({ sys: 'room', matched: true, role, ranked: kind === 'ranked' });
 setTimeout(() => { try { if (!peer.destroyed && !peer.disconnected) peer.disconnect(); } catch (e) {} }, 600);
 }
 window.addEventListener('pagehide', () => { if (p2pOpen()) p2pSend({ sys: 'left' }); });
+</script>
+<script>
+'use strict';
+const SOC = {
+hallId: 'renying-hall-0',
+ver: 1,
+me: '', uid: '', alt: false,   // alt：同一个账号在别的页面也开着，这边收不到私聊
+peer: null, hubPeer: null, hubConns: new Map(), hall: null,
+conns: new Map(),              // 名字 → 和这个人的直连
+online: [], hist: [],           // 大厅在线名单、大厅最近的聊天
+data: null, cur: 'hall', sess: 0, joinT: 0, tick: 0, lastSay: 0,
+state: 'off',                   // off / connecting / on
+};
+const SOC_MAX_CONV = 200, SOC_MAX_HALL = 150, SOC_TEXT = 200;
+function socHash(s) {
+let a = 0x811c9dc5, b = 0x01000193 ^ 0x5bd1e995;
+for (const ch of String(s)) { const c = ch.codePointAt(0); a = Math.imul(a ^ c, 16777619) >>> 0; b = Math.imul(b ^ c, 2246822519) >>> 0; b = (b ^ (b >>> 13)) >>> 0; }
+return a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0');
+}
+const socUid = name => 'renying-u-' + socHash(name);
+const socIdOk = (pid, name) => !!name && (pid === socUid(name) || String(pid).startsWith(socUid(name) + '-'));
+function socGuest() {
+let n = '';
+try { n = localStorage.getItem('renying-guest-name') || ''; } catch (e) {}
+if (!/^游客\d{4}$/.test(n)) { n = '游客' + String(Math.floor(1000 + Math.random() * 9000)); try { localStorage.setItem('renying-guest-name', n); } catch (e) {} }
+return n;
+}
+const socWho = () => (typeof ACC !== 'undefined' && ACC.name) ? ACC.name : socGuest();
+const socGuestNow = () => !(typeof ACC !== 'undefined' && ACC.name);
+const socRid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const socClean = t => String(t || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, SOC_TEXT);
+function socKey() { return 'renying-social-' + SOC.me; }
+function socLoad() {
+let d = null;
+try { d = JSON.parse(localStorage.getItem(socKey()) || 'null'); } catch (e) {}
+d = d && typeof d === 'object' ? d : {};
+for (const k of ['friends', 'reqIn', 'reqOut', 'convs', 'groups', 'unread', 'outbox']) if (!d[k] || typeof d[k] !== 'object') d[k] = {};
+SOC.data = d;
+try { const h = JSON.parse(localStorage.getItem('renying-hall-cache') || '[]'); SOC.hist = Array.isArray(h) ? h.slice(-SOC_MAX_HALL) : []; } catch (e) { SOC.hist = []; }
+}
+let socSaveT = 0;
+function socSave() {
+clearTimeout(socSaveT);
+socSaveT = setTimeout(() => {
+try { localStorage.setItem(socKey(), JSON.stringify(SOC.data)); } catch (e) {}
+try { localStorage.setItem('renying-hall-cache', JSON.stringify(SOC.hist.slice(-SOC_MAX_HALL))); } catch (e) {}
+}, 200);
+}
+function socConv(key) { return SOC.data.convs[key] || (SOC.data.convs[key] = []); }
+function socPush(key, m) {
+const c = socConv(key);
+if (c.some(x => x.id === m.id)) return false;
+c.push(m); c.sort((a, b) => a.at - b.at);
+if (c.length > SOC_MAX_CONV) c.splice(0, c.length - SOC_MAX_CONV);
+if (key !== SOC.cur || !socVisible()) { if (m.from !== SOC.me) SOC.data.unread[key] = (SOC.data.unread[key] || 0) + 1; }
+socSave(); return true;
+}
+function socOpts() { return typeof p2pOptions === 'function' ? p2pOptions() : { debug: 0 }; }
+function socStop() {
+SOC.sess++; clearTimeout(SOC.joinT);
+for (const c of SOC.conns.values()) { try { c.close(); } catch (e) {} }
+SOC.conns.clear();
+socHubStop();
+if (SOC.peer) { try { SOC.peer.destroy(); } catch (e) {} }
+SOC.peer = null; SOC.hall = null; SOC.online = []; SOC.state = 'off';
+}
+function socStart() {
+const who = socWho();
+if (SOC.peer && SOC.me === who) return;
+socStop();
+SOC.me = who; SOC.uid = socUid(who); SOC.alt = false; SOC.cur = 'hall';
+socLoad();
+if (typeof Peer === 'undefined') { if (typeof p2pLoad === 'function') p2pLoad().then(ok => ok && socStart()); return; }
+socOpenPeer(SOC.uid);
+}
+function socOpenPeer(id) {
+const sess = ++SOC.sess;
+SOC.state = 'connecting'; socRenderStatus();
+let p;
+try { p = SOC.peer = new Peer(id, socOpts()); } catch (e) { SOC.state = 'off'; socRenderStatus(); return; }
+p.on('open', () => { if (sess !== SOC.sess) return; socJoinHall(); socFlushAll(); });
+p.on('connection', c => { if (sess === SOC.sess) socWireIn(c); });
+p.on('disconnected', () => { if (sess === SOC.sess && !p.destroyed) setTimeout(() => { try { if (sess === SOC.sess && p.disconnected && !p.destroyed) p.reconnect(); } catch (e) {} }, 3000); });
+p.on('error', err => {
+if (sess !== SOC.sess) return;
+const t = err && err.type, msg = String(err && err.message || '');
+if (t === 'unavailable-id' && !SOC.alt) {   // 同一个账号在别的页面开着：这边换个后缀，只逛大厅
+SOC.alt = true; try { p.destroy(); } catch (e) {}
+socOpenPeer(SOC.uid + '-' + Math.random().toString(36).slice(2, 7)); return;
+}
+if (t === 'peer-unavailable') {
+if (msg.includes(SOC.hallId)) socClaimHall(sess);
+else for (const [n, c] of SOC.conns) if (msg.includes(c.peer)) { SOC.conns.delete(n); try { c.close(); } catch (e) {} }
+return;
+}
+if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') { SOC.state = 'connecting'; socRenderStatus(); }
+});
+}
+function socSend(c, o) { if (c && c.open) { try { c.send(o); return true; } catch (e) {} } return false; }
+function socParse(d) { let m = d; if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return null; } } return m && typeof m === 'object' ? m : null; }
+function socJoinHall() {
+const sess = SOC.sess, p = SOC.peer;
+if (!p || p.destroyed || p.disconnected || (SOC.hall && SOC.hall.open)) return;
+clearTimeout(SOC.joinT);
+let c;
+try { c = p.connect(SOC.hallId, { reliable: true, metadata: { name: SOC.me } }); } catch (e) { return; }
+SOC.hall = c;
+const giveUp = setTimeout(() => { if (sess === SOC.sess && SOC.hall === c && !c.open) { try { c.close(); } catch (e) {} socClaimHall(sess); } }, 9000);
+c.on('open', () => {
+clearTimeout(giveUp);
+if (sess !== SOC.sess || SOC.hall !== c) return;
+SOC.hallRx = Date.now();
+const last = SOC.hist.length ? SOC.hist[SOC.hist.length - 1].at : 0;
+socSend(c, { t: 'hi', v: SOC.ver, name: SOC.me, since: last });
+});
+c.on('data', d => { if (sess === SOC.sess && SOC.hall === c) { SOC.hallRx = Date.now(); socHallRx(socParse(d)); } });
+c.on('close', () => { clearTimeout(giveUp); socHallLost(c); });
+}
+function socHallLost(c) {
+if (SOC.hall !== c) return;
+try { c.close(); } catch (e) {}
+SOC.hall = null; SOC.online = []; SOC.state = 'connecting'; socRenderAll();
+clearTimeout(SOC.joinT);
+SOC.joinT = setTimeout(() => socJoinHall(), 600 + Math.random() * 2400);
+}
+function socClaimHall(sess) {
+if (sess !== SOC.sess || SOC.hubPeer) return;
+let hp;
+try { hp = SOC.hubPeer = new Peer(SOC.hallId, socOpts()); } catch (e) { SOC.hubPeer = null; return; }
+hp.on('open', () => { if (sess !== SOC.sess || SOC.hubPeer !== hp) return; SOC.hubHist = SOC.hist.slice(-SOC_MAX_HALL); setTimeout(socJoinHall, 50); });
+hp.on('connection', c => { if (SOC.hubPeer === hp) socHubWire(c); });
+hp.on('disconnected', () => {   // 和牵线服务器断了：先试着要回这个 id，被别人占了就让位
+if (SOC.hubPeer !== hp) return;
+setTimeout(() => { try { if (SOC.hubPeer === hp && hp.disconnected && !hp.destroyed) hp.reconnect(); } catch (e) {} }, 1500);
+});
+hp.on('error', err => {
+if (SOC.hubPeer !== hp) return;
+const t = err && err.type;
+if (t === 'unavailable-id') {   // 别人先抢到了：去连他
+socHubStop();
+if (sess === SOC.sess) SOC.joinT = setTimeout(socJoinHall, 300 + Math.random() * 900);
+}
+});
+}
+function socHubStop() {
+const hp = SOC.hubPeer; SOC.hubPeer = null;
+for (const c of SOC.hubConns.keys()) { try { c.close(); } catch (e) {} }
+SOC.hubConns.clear();
+if (hp) { try { hp.destroy(); } catch (e) {} }
+}
+function socHubSweep() {
+let gone = false;
+for (const [c, x] of SOC.hubConns) if (Date.now() - x.rx > 15000) { SOC.hubConns.delete(c); try { c.close(); } catch (e) {} if (x.name) gone = true; }
+if (gone) socHubCast({ t: 'online', online: socHubOnline() });
+}
+function socHubOnline() { return [...new Set([...SOC.hubConns.values()].filter(x => x.name).map(x => x.name))]; }
+function socHubCast(o) { for (const [c, x] of SOC.hubConns) if (x.name) socSend(c, o); }
+function socHubWire(c) {
+const st = { name: '', last: 0, burst: 0, rx: Date.now() };
+SOC.hubConns.set(c, st);
+const kick = setTimeout(() => { if (!st.name) { try { c.close(); } catch (e) {} } }, 15000);
+c.on('data', d => {
+const m = socParse(d); if (!m) return;
+st.rx = Date.now();
+if (m.t === 'ping') { socSend(c, { t: 'pong' }); return; }
+if (m.t === 'hi') {
+const name = typeof p2pName === 'function' ? p2pName(m.name, '') : String(m.name || '').slice(0, 12);
+if (!name || !socIdOk(c.peer, name)) { try { c.close(); } catch (e) {} return; }
+clearTimeout(kick); st.name = name;
+const since = +m.since || 0;
+socSend(c, { t: 'welcome', v: SOC.ver, hist: SOC.hubHist.filter(x => x.at > since).slice(-100), online: socHubOnline() });
+socHubCast({ t: 'online', online: socHubOnline() });
+return;
+}
+if (!st.name) return;
+if (m.t === 'say') {
+const now = Date.now(), text = socClean(m.text);
+if (!text) return;
+st.burst = Math.max(0, st.burst - (now - st.last) / 1500) + 1; st.last = now;   // 每 1.5 秒回一格，连发超过 5 条就吞掉
+if (st.burst > 5) return;
+const msg = { id: socRid(), from: st.name, text, at: now };
+SOC.hubHist.push(msg); if (SOC.hubHist.length > SOC_MAX_HALL) SOC.hubHist.splice(0, SOC.hubHist.length - SOC_MAX_HALL);
+socHubCast({ t: 'msg', m: msg });
+}
+});
+c.on('close', () => { clearTimeout(kick); const had = st.name; SOC.hubConns.delete(c); if (had) socHubCast({ t: 'online', online: socHubOnline() }); });
+c.on('error', () => {});
+}
+function socHallRx(m) {
+if (!m) return;
+if (m.t === 'welcome') {
+SOC.state = 'on';
+for (const x of (Array.isArray(m.hist) ? m.hist : [])) socHallAdd(x, true);
+SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : [];
+socSave(); socRenderAll(); socFlushAll(); return;
+}
+if (m.t === 'bye') { socHallLost(SOC.hall); return; }
+if (m.t === 'online') { SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : []; socRenderList(); socRenderHead(); socFlushAll(); return; }
+if (m.t === 'msg' && m.m) {
+if (socHallAdd(m.m)) { socSave(); if (SOC.cur === 'hall') socRenderLog(true); }
+}
+}
+function socHallAdd(x, quiet) {
+if (!x || typeof x !== 'object' || !x.id || SOC.hist.some(h => h.id === x.id)) return false;
+const m = { id: String(x.id).slice(0, 24), from: String(x.from || '').slice(0, 12), text: socClean(x.text), at: +x.at || Date.now() };
+if (!m.from || !m.text) return false;
+SOC.hist.push(m); SOC.hist.sort((a, b) => a.at - b.at);
+if (SOC.hist.length > SOC_MAX_HALL) SOC.hist.splice(0, SOC.hist.length - SOC_MAX_HALL);
+if (!quiet && (SOC.cur !== 'hall' || !socVisible()) && m.from !== SOC.me) SOC.data.unread.hall = Math.min(99, (SOC.data.unread.hall || 0) + 1);
+return true;
+}
+function socHallSay(text) {
+text = socClean(text);
+if (!text) return false;
+if (!socSend(SOC.hall, { t: 'say', text })) { toast('大厅还没连上，稍等一下再发'); return false; }
+return true;
+}
+function socWireIn(c) {
+const name = typeof p2pName === 'function' ? p2pName(c.metadata && c.metadata.name, '') : '';
+if (!name || !socIdOk(c.peer, name) || name === SOC.me) { setTimeout(() => { try { c.close(); } catch (e) {} }, 100); return; }
+const old = SOC.conns.get(name);
+SOC.conns.set(name, c);
+if (old && old !== c) { try { old.close(); } catch (e) {} }
+socWire(c, name);
+}
+function socWire(c, name) {
+const sess = SOC.sess;
+c._t = c._t || Date.now();
+c.on('open', () => { if (sess === SOC.sess) socFlush(name); });
+c.on('data', d => { if (sess === SOC.sess) { c._rx = Date.now(); socRx(name, socParse(d)); } });
+c.on('close', () => { if (SOC.conns.get(name) === c) SOC.conns.delete(name); });
+c.on('error', () => {});
+if (c.open) socFlush(name);
+}
+function socConnTo(name) {
+const old = SOC.conns.get(name);
+if (old && (old.open || Date.now() - (old._t || 0) < 10000)) return old;
+if (!SOC.peer || SOC.peer.destroyed || SOC.peer.disconnected || SOC.alt) return null;
+let c;
+try { c = SOC.peer.connect(socUid(name), { reliable: true, metadata: { name: SOC.me } }); } catch (e) { return null; }
+c._t = Date.now();
+SOC.conns.set(name, c); socWire(c, name);
+return c;
+}
+function socQueue(to, pkt) {
+if (!to || to === SOC.me) return;
+pkt.id = pkt.id || socRid(); pkt.from = SOC.me; pkt.v = SOC.ver;
+(SOC.data.outbox[to] = SOC.data.outbox[to] || []).push(pkt);
+if (SOC.data.outbox[to].length > 300) SOC.data.outbox[to].splice(0, SOC.data.outbox[to].length - 300);
+socSave(); socFlush(to);
+}
+function socFlush(to) {
+const box = SOC.data && SOC.data.outbox[to];
+if (!box || !box.length) return;
+const c = SOC.conns.get(to);
+if (c && c.open) {
+if (box.some(p => p._s && Date.now() - p._s > 20000) && Date.now() - (c._rx || c._t || 0) > 20000) { SOC.conns.delete(to); try { c.close(); } catch (e) {} if (SOC.online.includes(to)) socConnTo(to); return; }
+for (const p of box) { if (!p._s) p._s = Date.now(); socSend(c, p); }
+return;
+}
+if (SOC.online.includes(to)) socConnTo(to);
+}
+function socFlushAll() { if (SOC.data) for (const n of Object.keys(SOC.data.outbox)) socFlush(n); }
+function socRx(name, m) {
+if (!m || !m.t) return;
+const D = SOC.data, c = SOC.conns.get(name);
+if (m.t === 'ack') {
+const ids = new Set(Array.isArray(m.ids) ? m.ids : []);
+if (D.outbox[name]) { D.outbox[name] = D.outbox[name].filter(p => !ids.has(p.id)); if (!D.outbox[name].length) delete D.outbox[name]; }
+for (const k of Object.keys(D.convs)) for (const x of D.convs[k]) if (ids.has(x.id) && x.from === SOC.me) x.ok = 1;
+socSave(); socRenderLog(false); return;
+}
+const ack = () => socSend(c, { t: 'ack', ids: [m.id] });
+if (!m.id) return;
+const id = String(m.id).slice(0, 24), at = Math.min(Date.now(), +m.at || Date.now());
+let changed = false, note = '';
+if (m.t === 'freq') {
+if (D.friends[name]) socQueue(name, { t: 'facc' });           // 已经是好友了（比如对方清了存档）：直接回同意
+else if (D.reqOut[name]) { delete D.reqOut[name]; D.friends[name] = { since: Date.now() }; socQueue(name, { t: 'facc' }); note = `你和 ${name} 成为好友了`; }
+else if (!D.reqIn[name]) { D.reqIn[name] = at; note = `${name} 想加你为好友`; }
+changed = true;
+} else if (m.t === 'facc') {
+if (D.reqOut[name] || !D.friends[name]) { delete D.reqOut[name]; delete D.reqIn[name]; D.friends[name] = { since: Date.now() }; note = `${name} 通过了你的好友申请`; changed = true; }
+} else if (m.t === 'fdel') {
+delete D.friends[name]; delete D.reqIn[name]; delete D.reqOut[name]; changed = true;
+} else if (m.t === 'dm') {
+if (D.friends[name]) {
+const text = socClean(m.text);
+if (text && socPush('u:' + name, { id, from: name, text, at })) { changed = true; note = `${name}：${text}`; }
+}
+} else if (m.t === 'ginv' || m.t === 'gupd') {
+const g = m.g || {}, gid = String(g.id || '').slice(0, 24);
+const members = [...new Set((Array.isArray(g.members) ? g.members : []).map(x => p2pName(x, '')).filter(Boolean))].slice(0, 30);
+if (gid && members.includes(name) && members.includes(SOC.me)) {
+const cur = D.groups[gid];
+if (!cur && m.t === 'ginv' && D.friends[name]) {             // 只接受好友拉的群
+D.groups[gid] = { name: socClean(g.name).slice(0, 16) || '群聊', members, owner: p2pName(g.owner, name) };
+socPush('g:' + gid, { id, from: '', sys: 1, text: `${name} 把你拉进了群`, at });
+note = `${name} 把你拉进了群「${D.groups[gid].name}」`; changed = true;
+} else if (cur && cur.members.includes(name)) {
+cur.members = [...new Set(cur.members.concat(members))].slice(0, 30);
+changed = true;
+}
+}
+} else if (m.t === 'gleave') {
+const g = D.groups[String(m.gid || '')];
+if (g && g.members.includes(name)) { g.members = g.members.filter(x => x !== name); socPush('g:' + m.gid, { id, from: '', sys: 1, text: `${name} 退出了群`, at }); changed = true; }
+} else if (m.t === 'gmsg') {
+const gid = String(m.gid || ''), g = D.groups[gid];
+if (g && g.members.includes(name)) {
+const text = socClean(m.text);
+if (text && socPush('g:' + gid, { id, from: name, text, at })) { changed = true; note = `${name}@${g.name}：${text}`; }
+}
+}
+ack();
+if (changed) { socSave(); socRenderAll(); }
+if (note && !socVisible()) { toast(note.length > 40 ? note.slice(0, 40) + '…' : note); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); }
+}
+function socAddFriend(raw) {
+if (socGuestNow()) { toast('登录后才能加好友'); return; }
+const name = p2pName(raw, '');
+const D = SOC.data;
+if (!name) { toast('输入对方的名字'); return; }
+if (name === SOC.me) { toast('不能加自己'); return; }
+if (D.friends[name]) { socOpen('u:' + name); return; }
+if (D.reqIn[name]) { socAccept(name); return; }
+D.reqOut[name] = Date.now();
+socQueue(name, { t: 'freq' });
+toast(SOC.online.includes(name) ? `已向 ${name} 发出好友申请` : `已发出申请，${name} 上线后会收到`);
+socRenderAll();
+}
+function socAccept(name) {
+const D = SOC.data;
+delete D.reqIn[name]; D.friends[name] = { since: Date.now() };
+socQueue(name, { t: 'facc' }); socSave(); socOpen('u:' + name);
+}
+function socDecline(name) { delete SOC.data.reqIn[name]; socSave(); socRenderAll(); }
+function socRemoveFriend(name) {
+if (!confirm(`删除好友 ${name}？聊天记录也会一起清掉。`)) return;
+const D = SOC.data;
+delete D.friends[name]; delete D.convs['u:' + name]; delete D.unread['u:' + name];
+D.outbox[name] = (D.outbox[name] || []).filter(p => p.t !== 'dm');
+socQueue(name, { t: 'fdel' });
+socOpen('hall');
+}
+function socMakeGroup() {
+if (socGuestNow()) { toast('登录后才能建群'); return; }
+const fs = Object.keys(SOC.data.friends);
+if (!fs.length) { toast('先加几个好友再建群'); return; }
+socPick('建群：选几个好友', fs, [], true, (picked, gname) => {
+if (!picked.length) return;
+const gid = 'g' + socRid(), members = [SOC.me, ...picked];
+const g = SOC.data.groups[gid] = { name: gname || members.slice(0, 3).join('、').slice(0, 16), members, owner: SOC.me };
+socPush('g:' + gid, { id: socRid(), from: '', sys: 1, text: '群建好了，邀请已发出', at: Date.now() });
+for (const n of picked) socQueue(n, { t: 'ginv', g: { id: gid, name: g.name, members, owner: SOC.me } });
+socOpen('g:' + gid);
+});
+}
+function socInvite(gid) {
+const g = SOC.data.groups[gid]; if (!g) return;
+const fs = Object.keys(SOC.data.friends).filter(n => !g.members.includes(n));
+if (!fs.length) { toast('好友都已经在群里了'); return; }
+socPick('拉好友进群', fs, [], false, picked => {
+if (!picked.length) return;
+const old = g.members.slice();
+g.members = [...new Set(g.members.concat(picked))].slice(0, 30);
+const pkt = () => ({ g: { id: gid, name: g.name, members: g.members, owner: g.owner } });
+for (const n of picked) socQueue(n, Object.assign({ t: 'ginv' }, pkt()));
+for (const n of old) if (n !== SOC.me) socQueue(n, Object.assign({ t: 'gupd' }, pkt()));
+socPush('g:' + gid, { id: socRid(), from: '', sys: 1, text: `你邀请了 ${picked.join('、')}`, at: Date.now() });
+socRenderAll();
+});
+}
+function socLeave(gid) {
+const g = SOC.data.groups[gid]; if (!g) return;
+if (!confirm(`退出群「${g.name}」？`)) return;
+for (const n of g.members) if (n !== SOC.me) socQueue(n, { t: 'gleave', gid });
+delete SOC.data.groups[gid]; delete SOC.data.convs['g:' + gid]; delete SOC.data.unread['g:' + gid];
+socOpen('hall');
+}
+function socSendCur(text) {
+text = socClean(text);
+if (!text) return false;
+const k = SOC.cur;
+if (k === 'hall') return socHallSay(text);
+const now = Date.now();
+if (now - SOC.lastSay < 350) return false;
+SOC.lastSay = now;
+const id = socRid();
+if (k.startsWith('u:')) {
+const to = k.slice(2);
+if (!SOC.data.friends[to]) { toast('对方已经不是你的好友了'); return false; }
+socPush(k, { id, from: SOC.me, text, at: now });
+socQueue(to, { t: 'dm', id, text, at: now });
+} else {
+const gid = k.slice(2), g = SOC.data.groups[gid]; if (!g) return false;
+socPush(k, { id, from: SOC.me, text, at: now, ok: 1 });
+for (const n of g.members) if (n !== SOC.me) socQueue(n, { t: 'gmsg', gid, id, text, at: now });
+}
+socRenderLog(true); socRenderList();
+return true;
+}
+const socVisible = () => !!($id('community') && $id('community').classList.contains('on') && !document.hidden);
+function socFmt(text) {
+return escapeHTML(text).replace(/\[e:([a-z]+)\]/g, (m, id) => EMO[id] ? `<span class="emo" title="${EMO[id].name}">${EMO[id].svg}</span>` : m);
+}
+function socTime(at) {
+const d = new Date(at), now = new Date(), hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+return d.toDateString() === now.toDateString() ? hm : `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+}
+function socUnreadTotal() {
+if (!SOC.data) return 0;
+let n = Object.keys(SOC.data.reqIn).length;
+for (const k in SOC.data.unread) if (k !== 'hall') n += SOC.data.unread[k] || 0;
+return n;
+}
+function socRenderBadge() {
+const n = socUnreadTotal();
+for (const b of document.querySelectorAll('[data-nav="community"], #menu [data-go="community"]')) {
+let s = b.querySelector('.soc-dot');
+if (!n) { if (s) s.remove(); continue; }
+if (!s) { s = document.createElement('span'); s.className = 'soc-dot'; b.appendChild(s); }
+s.textContent = n > 99 ? '99+' : n;
+}
+}
+function socRenderStatus() {
+const el = $id('socStatus'); if (!el) return;
+const n = SOC.online.length;
+el.className = 'soc-status ' + (SOC.state === 'on' ? 'on' : '');
+el.textContent = SOC.state === 'on' ? `${n} 人在线` : SOC.state === 'connecting' ? '连接中…' : '未连接';
+}
+function socItem(key, label, sub, dot, extra) {
+const un = SOC.data.unread[key] || 0;
+return `<button type="button" class="soc-it${SOC.cur === key ? ' sel' : ''}" data-k="${escapeHTML(key)}">${dot !== undefined ? `<i class="soc-on${dot ? ' y' : ''}"></i>` : ''}<span class="soc-n"><b>${escapeHTML(label)}</b>${sub ? `<small>${escapeHTML(sub)}</small>` : ''}</span>${extra || ''}${un ? `<em>${un > 99 ? '99+' : un}</em>` : ''}</button>`;
+}
+function socLastText(key) {
+const c = SOC.data.convs[key]; if (!c || !c.length) return '';
+const m = c[c.length - 1]; return (m.sys ? '' : m.from === SOC.me ? '我：' : key.startsWith('g:') ? m.from + '：' : '') + m.text.replace(/\[e:[a-z]+\]/g, '[表情]');
+}
+function socRenderList() {
+const el = $id('socList'); if (!el || !SOC.data) return;
+const D = SOC.data, on = new Set(SOC.online);
+let h = socItem('hall', '江湖大厅', SOC.state === 'on' ? `${SOC.online.length} 人在线` : '连接中…');
+const reqs = Object.keys(D.reqIn);
+if (reqs.length) h += `<div class="soc-sec">好友申请</div>` + reqs.map(n => `<div class="soc-req"><span>${escapeHTML(n)}</span><button type="button" class="go small" data-acc="${escapeHTML(n)}">同意</button><button type="button" class="ghost small" data-dec="${escapeHTML(n)}">忽略</button></div>`).join('');
+const fs = Object.keys(D.friends).sort((a, b) => (on.has(b) - on.has(a)) || a.localeCompare(b, 'zh'));
+h += `<div class="soc-sec">好友 <span>${fs.length}</span></div>`;
+h += fs.length ? fs.map(n => socItem('u:' + n, n, socLastText('u:' + n) || (on.has(n) ? '在线' : '离线'), on.has(n))).join('') : `<p class="soc-empty">${socGuestNow() ? '登录后可以加好友' : '还没有好友，在下面输入名字添加'}</p>`;
+const out = Object.keys(D.reqOut);
+if (out.length) h += out.map(n => `<div class="soc-wait">${escapeHTML(n)} <small>等对方通过</small></div>`).join('');
+const gs = Object.keys(D.groups);
+h += `<div class="soc-sec">群聊 <span>${gs.length}</span></div>`;
+h += gs.length ? gs.map(g => socItem('g:' + g, D.groups[g].name, socLastText('g:' + g) || `${D.groups[g].members.length} 人`)).join('') : '<p class="soc-empty">还没有群</p>';
+el.innerHTML = h;
+socRenderBadge();
+}
+function socRenderHead() {
+const el = $id('socHead'); if (!el || !SOC.data) return;
+const k = SOC.cur, on = new Set(SOC.online);
+if (k === 'hall') {
+el.innerHTML = `<b>江湖大厅</b><small>所有在线玩家都能看到，点名字可以加好友</small>`;
+} else if (k.startsWith('u:')) {
+const n = k.slice(2), pend = (SOC.data.outbox[n] || []).filter(p => p.t === 'dm').length;
+el.innerHTML = `<b>${escapeHTML(n)}</b><small>${on.has(n) ? '在线' : '离线'}${pend ? ` · ${pend} 条等对方上线后送达` : ''}</small><span class="soc-acts"><button type="button" class="ghost small" data-act="unfriend">删除好友</button></span>`;
+} else {
+const g = SOC.data.groups[k.slice(2)];
+if (!g) { socOpen('hall'); return; }
+el.innerHTML = `<b>${escapeHTML(g.name)}</b><small>${g.members.map(n => (n === SOC.me ? '我' : n) + (n !== SOC.me && on.has(n) ? '·在线' : '')).map(escapeHTML).join('、')}</small><span class="soc-acts"><button type="button" class="ghost small" data-act="invite">拉人</button><button type="button" class="ghost small" data-act="leave">退群</button></span>`;
+}
+const inp = $id('comIn');
+if (inp) {
+const off = k === 'hall' && SOC.state !== 'on';
+inp.placeholder = off ? '正在连接大厅…' : k === 'hall' ? '在大厅说点什么（回车发送）' : k.startsWith('u:') ? `发给 ${k.slice(2)}（回车发送）` : '发到群里（回车发送）';
+}
+}
+function socRenderLog(keepBottom) {
+const log = $id('comLog'); if (!log || !SOC.data) return;
+const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 40;
+const k = SOC.cur, list = k === 'hall' ? SOC.hist : (SOC.data.convs[k] || []);
+const fr = SOC.data.friends, guest = socGuestNow();
+if (!list.length) {
+log.innerHTML = `<p class="soc-none">${k === 'hall' ? (SOC.state === 'on' ? '大厅里还没人说话，来说第一句吧' : '正在连接大厅…') : '还没有消息，打个招呼吧'}</p>`;
+} else {
+log.innerHTML = list.map(m => {
+if (m.sys) return `<div class="cm sys">${escapeHTML(m.text)}<span class="ct">${socTime(m.at)}</span></div>`;
+const mine = m.from === SOC.me;
+const add = k === 'hall' && !mine && !guest && !fr[m.from] && !/^游客\d{4}$/.test(m.from) ? `<button type="button" class="soc-add" data-add="${escapeHTML(m.from)}">+好友</button>` : '';
+const st = mine && k.startsWith('u:') ? (m.ok ? '' : '<span class="soc-pend" title="对方上线后送达">未送达</span>') : '';
+return `<div class="cm${mine ? ' me' : ''}"><div class="cm-head"><span class="cn">${escapeHTML(mine ? '我' : m.from)}${add}</span><span class="ct">${st}${socTime(m.at)}</span></div><div class="cm-body">${socFmt(m.text)}</div></div>`;
+}).join('');
+}
+if (!keepBottom || atBottom || keepBottom === 'force') log.scrollTop = log.scrollHeight;
+}
+function socRenderAll() { if (!SOC.data) return; socRenderStatus(); socRenderList(); if ($id('socHead')) { socRenderHead(); socRenderLog(true); } }
+function socOpen(key) {
+SOC.cur = key;
+if (SOC.data) { delete SOC.data.unread[key]; socSave(); }
+socRenderStatus(); socRenderList(); socRenderHead(); socRenderLog('force');
+const box = $id('community'); if (box) box.classList.add('soc-chat');
+}
+function socPick(title, names, sel, askName, done) {
+const wrap = document.createElement('div'); wrap.className = 'soc-pick';
+wrap.innerHTML = `<div class="soc-pk"><h3>${escapeHTML(title)}</h3>${askName ? '<input class="soc-gname" maxlength="16" placeholder="群名（可不填）">' : ''}<div class="soc-pl">${names.map(n => `<label><input type="checkbox" value="${escapeHTML(n)}"${sel.includes(n) ? ' checked' : ''}> ${escapeHTML(n)}${SOC.online.includes(n) ? ' <small>在线</small>' : ''}</label>`).join('')}</div><div class="row"><button type="button" class="ghost small" data-x>取消</button><button type="button" class="go small" data-ok>确定</button></div></div>`;
+$id('community').appendChild(wrap);
+wrap.addEventListener('click', e => {
+if (e.target === wrap || e.target.closest('[data-x]')) { wrap.remove(); return; }
+if (e.target.closest('[data-ok]')) {
+const picked = [...wrap.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+const gn = askName ? socClean(wrap.querySelector('.soc-gname').value).slice(0, 16) : '';
+wrap.remove(); done(picked, gn);
+}
+});
+}
+function openCommunity() {
+if (!$id('comEmo').innerHTML) $id('comEmo').innerHTML = EMOTES.map(e => `<button data-e="${e.id}" title="${e.name}" aria-label="${e.name}">${e.svg}</button>`).join('');
+socStart();
+$id('socAddIn').disabled = socGuestNow(); $id('socAddBtn').disabled = socGuestNow(); $id('socGroupBtn').disabled = socGuestNow();
+$id('socAddIn').placeholder = socGuestNow() ? '登录后可以加好友' : '输入名字加好友';
+socOpen(SOC.cur || 'hall');
+$id('community').classList.remove('soc-chat');
+}
+function postRoomToCommunity() {
+const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();
+if (!code) { toast('请先设擂建房生成房间码'); return; }
+if (socHallSay(`【约战】房间码「${code}」，来切磋！[e:fight]`)) toast('房间码已发到江湖大厅');
+}
+$id('comSend').addEventListener('click', () => { if (socSendCur($id('comIn').value)) $id('comIn').value = ''; });
+$id('comIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { if (socSendCur($id('comIn').value)) $id('comIn').value = ''; } });
+$id('comEmo').addEventListener('click', e => { const b = e.target.closest('button'); if (b) socSendCur(`[e:${b.dataset.e}]`); });
+$id('socList').addEventListener('click', e => {
+const a = e.target.closest('[data-acc]'), d = e.target.closest('[data-dec]'), it = e.target.closest('[data-k]');
+if (a) socAccept(a.dataset.acc); else if (d) socDecline(d.dataset.dec); else if (it) socOpen(it.dataset.k);
+});
+$id('comLog').addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) socAddFriend(b.dataset.add); });
+$id('socHead').addEventListener('click', e => {
+const b = e.target.closest('[data-act]'); if (!b) return;
+const k = SOC.cur;
+if (b.dataset.act === 'unfriend') socRemoveFriend(k.slice(2));
+else if (b.dataset.act === 'invite') socInvite(k.slice(2));
+else if (b.dataset.act === 'leave') socLeave(k.slice(2));
+});
+$id('socAddBtn').addEventListener('click', () => { socAddFriend($id('socAddIn').value); $id('socAddIn').value = ''; });
+$id('socAddIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { socAddFriend($id('socAddIn').value); $id('socAddIn').value = ''; } });
+$id('socGroupBtn').addEventListener('click', socMakeGroup);
+$id('socBackList').addEventListener('click', () => $id('community').classList.remove('soc-chat'));
+if ($id('postToComBtn')) $id('postToComBtn').addEventListener('click', postRoomToCommunity);
+if (!(window.RENYING_BUILD && window.RENYING_BUILD.offline)) {
+setTimeout(socStart, 2500);
+setInterval(() => {
+const p = SOC.peer, t = ++SOC.tick;
+if ((p && SOC.me !== socWho()) || ((!p || p.destroyed) && t % 15 === 0)) socStart();
+else if (p && t % 5 === 0) {   // 断网恢复后自己重连、重新进大厅
+if (p.disconnected && !p.destroyed) { try { p.reconnect(); } catch (e) {} }
+else if (p.open && !(SOC.hall && SOC.hall.open) && !SOC.hubPeer) socJoinHall();
+}
+if (SOC.hall && SOC.hall.open) { if (Date.now() - (SOC.hallRx || 0) > 12000) socHallLost(SOC.hall); else if (t % 2 === 0) socSend(SOC.hall, { t: 'ping' }); }
+if (SOC.hubPeer && t % 3 === 0) socHubSweep();
+if (SOC.data && t % 10 === 0) socFlushAll();
+if (SOC.data) socRenderBadge();
+}, 2000);
+window.addEventListener('pagehide', () => {
+if (SOC.hubPeer) socHubCast({ t: 'bye' });
+setTimeout(() => { try { socHubStop(); if (SOC.peer) SOC.peer.destroy(); } catch (e) {} }, 0);
+});
+document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.data) { delete SOC.data.unread[SOC.cur]; socRenderList(); } });
+}
 </script>
 <script id="qfxData" type="application/octet-stream"></script>
 </body>

@@ -191,6 +191,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Skin Art Rework (`src/game.js`)**: all 34 skins now keep their hero's own hair, hat, helmet and weapon shape and change only colors, instead of pasting on crowns, horns, sun discs, wings and chest orbs (the `deco` layer and its weapon reshapes are gone). Looks come from light and motion, grouped into 14 themes (flame, frost, void, thunder, water, aurora, star, gold, ink, wind, petal, leaf, feather, metal). Elite skins get a themed trail, a faint weapon tint and a few particles; legend skins add a glowing blade edge with a light sweep, a light-ribbon scarf, a breathing body glow, glowing eyes that streak when moving fast, a light pool at the feet, ambient effects (embers, cold mist, dark wisps, sparks, droplets, glints, gold leaf…), themed hit bursts (fire, ice shards, implosion, lightning forks, splashes…) and glowing wings for 燕翎. The legend blade also feeds the bloom pass.
+
 - **墨羽 ink regeneration** 12 → 10 per second.
 - **Smaller damage numbers**: hit numbers, combo totals and the HUD combo counter are about 20–25% smaller.
 - **Enhanced 2v2 Neural Co-op Model & Two-Player Duo Circumstances Simulation (`models/renying_ai_watch2v2.json`, `tools/simulate-all.mjs`, `tools/combat-test.mjs`)**:
