@@ -26,7 +26,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
 /* ---------- HUD ---------- */
-#hud{position:absolute;inset:0;pointer-events:none;font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+#hud{position:absolute;inset:0;pointer-events:none;transition:opacity .25s;font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+#hud.cine{opacity:.22}
 .vitals{position:absolute;left:18px;top:16px;display:flex;gap:12px;align-items:flex-start}
 .lv{width:62px;height:62px;flex:none;border-radius:50%;display:grid;place-items:center;
   background:radial-gradient(circle at 35% 30%,var(--ink3),var(--ink) 70%);
@@ -104,6 +105,17 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .toast.show{opacity:1}
 .lockm{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border:2px solid var(--cinnabar);transform:rotate(45deg);opacity:.9;
   box-shadow:0 0 10px var(--cinnabar)}
+.lockinfo{position:absolute;left:0;top:0;width:96px;margin-left:-48px;display:flex;flex-direction:column;gap:2px}
+.lockinfo .lb{display:block;height:4px;background:rgba(8,10,12,.72);overflow:hidden}
+.lockinfo .lb i{display:block;height:100%;transform-origin:left center}
+#lockHp{background:linear-gradient(90deg,var(--cinnabar2),#e8674f)}
+#lockPo{background:var(--gold)}
+.lockinfo.stun #lockPo{background:#fff2c8;box-shadow:0 0 8px #ffd890;animation:blink .35s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.execm{position:absolute;left:0;top:0;font-family:var(--f-brush);font-size:22px;color:#ffe9c4;white-space:nowrap;transform-origin:center;
+  text-shadow:0 0 10px rgba(255,90,50,.9),0 1px 3px #000;animation:execp .7s ease-in-out infinite alternate}
+.execm kbd{font:600 13px var(--f-text);border:1px solid #ffb48a;padding:0 6px;margin-right:6px;background:rgba(60,10,6,.7);vertical-align:3px}
+@keyframes execp{to{opacity:.7}}
 #dmg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #dmg span{position:absolute;left:0;top:0;font-family:var(--f-text);font-weight:900;font-size:20px;color:var(--paper);white-space:nowrap;
   text-shadow:0 0 4px #000,0 2px 2px #000;will-change:transform,opacity}
@@ -111,6 +123,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 #dmg .hurt{color:#ff6b57;font-size:24px}
 #dmg .heal{color:#8be0a0}
 #dmg .word{font-family:var(--f-brush);font-weight:400;font-size:34px;color:var(--jade)}
+#dmg .exec{font-family:var(--f-brush);font-weight:400;font-size:64px;color:#ff4a32;text-shadow:0 0 18px rgba(255,60,30,.8),0 2px 4px #000}
+#dmg .parry{color:#fff2c8;font-size:40px;text-shadow:0 0 14px rgba(255,220,150,.9),0 1px 3px #000}
 #dmg .fire{color:#ff9b4a}#dmg .bolt{color:#bcd2ff}
 
 /* ---------- 屏幕 ---------- */
@@ -189,6 +203,10 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 #tAtk{right:26px;bottom:104px;width:84px;height:84px;font-size:34px}
 #tDodge{right:122px;bottom:92px;width:60px;height:60px;font-size:24px}
 #tHeavy{right:40px;bottom:200px;width:60px;height:60px;font-size:24px}
+#tParry{right:126px;bottom:178px;width:56px;height:56px;font-size:23px}
+#tParry.exec{border-color:#ff8a6a;color:#ffd6c4;box-shadow:0 0 14px rgba(255,80,50,.7)}
+#tLock{right:24px;bottom:278px;width:46px;height:46px;font-size:19px}
+#tLock.on{border-color:var(--cinnabar);color:#ffb4a6}
 
 @media (max-width:720px){
   #title{flex-direction:column;align-items:flex-start;justify-content:flex-start;background:rgba(8,10,12,.84);padding-block:20px}
@@ -234,11 +252,14 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="hint" id="hint">
       <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>移动　<kbd>Shift</kbd>疾行<br>
       <kbd>左键</kbd>/<kbd>J</kbd>轻剑　<kbd>右键</kbd>/<kbd>K</kbd>重剑<br>
-      <kbd>空格</kbd>闪避　<kbd>Tab</kbd>锁定　<kbd>P</kbd>暂停
+      <kbd>空格</kbd>闪避　<kbd>F</kbd>弹反·处决　<kbd>按住K</kbd>蓄力<br>
+      <kbd>Tab</kbd>锁定　<kbd>P</kbd>暂停
     </div>
     <div class="banner" id="banner"><div class="t" id="banT"></div><div class="s" id="banS"></div></div>
     <div class="toast" id="toast"></div>
     <div class="lockm" id="lockm" hidden></div>
+    <div class="lockinfo" id="lockInfo" hidden><span class="lb"><i id="lockHp"></i></span><span class="lb"><i id="lockPo"></i></span></div>
+    <div class="execm" id="execm" hidden><kbd>F</kbd>处决</div>
   </div>
 
   <div id="touch" hidden>
@@ -246,6 +267,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <button class="tb" id="tAtk" type="button">斩</button>
     <button class="tb" id="tDodge" type="button">闪</button>
     <button class="tb" id="tHeavy" type="button">旋</button>
+    <button class="tb" id="tParry" type="button">格</button>
+    <button class="tb" id="tLock" type="button">锁</button>
   </div>
 
   <div id="title" class="screen">
@@ -259,9 +282,10 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
       <div class="keys">
         <kbd>W A S D</kbd><span>移动</span><kbd>鼠标</kbd><span>转动视角</span>
         <kbd>左键 / J</kbd><span>轻剑四连</span><kbd>右键 / K</kbd><span>重剑·旋风斩</span>
+        <kbd>F</kbd><span>弹反（敌刃金光时）· 破绽处决</span><kbd>按住 K</kbd><span>蓄满·破山</span>
         <kbd>空格 / L</kbd><span>闪避（贴刃即踏雪）</span><kbd>Shift</kbd><span>疾行</span>
         <kbd>Q</kbd><span>剑气纵横</span><kbd>E</kbd><span>回风落雁（二境方悟）</span>
-        <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定目标</span>
+        <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定（← → 换人）</span>
         <kbd>← →</kbd><span>键盘转视角</span><kbd>P · M</kbd><span>暂停 · 静音</span>
       </div>
     </div>

@@ -50,6 +50,7 @@ function spawnFromQueue() {
   const p = new V3(x, 0, z); collide(p, 1); const eliteP = G.stage >= 3 ? Math.min(.28, .07 + .02 * (G.stage - 3)) : 0; spawnEnemy(type, p.x, p.z, { elite: Math.random() < eliteP });
 }
 function updateStage(dt) {
+  G.atkGap = (G.atkGap || 0) - dt * G.enemyTS;
   if (G.clearT > 0) { G.clearT -= dt; if (G.clearT <= 0) Game.chapterClear(); return; }
   if (G.inter > 0) { G.inter -= dt; if (G.inter <= 0 || Input.hit('Enter')) startStage(G.stage + 1); return; }
   const alive = G.enemies.filter(e => e.state !== 'dead').length;

@@ -108,6 +108,16 @@ FX.bolt = p => {
   FX.sparks({ x: p.x, y: .3, z: p.z }, 26, 0xcfe0ff, 9, 3); FX.ring(p, .5, 4.5, 0xa8c4ff, .35); GFX.flashAt(p, 0xbcd0ff, 5);
 };
 
+/* 寒光：出手前刀尖一闪的星芒（红色即不可弹反） */
+FX.glint = (p, color = 0xffffff, size = 1.3, dur = .32) => {
+  if (!FX.starTex) {
+    const S = 128, c = makeCanvas(S, S), g = c.getContext('2d'), blob = (sx, sy, a) => { g.save(); g.translate(S / 2, S / 2); g.scale(sx, sy); const gr = g.createRadialGradient(0, 0, 0, 0, 0, S / 2); gr.addColorStop(0, `rgba(255,255,255,${a})`); gr.addColorStop(.22, `rgba(255,255,255,${a * .35})`); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, S / 2, 0, TAU); g.fill(); g.restore(); };
+    g.globalCompositeOperation = 'lighter'; blob(.7, .7, .9); blob(1, .05, 1); blob(.05, 1, 1); FX.starTex = canvasTex(c, false);
+  }
+  const m = new T.Sprite(new T.SpriteMaterial({ map: FX.starTex, color, transparent: true, blending: T.AdditiveBlending, depthWrite: false, depthTest: false, fog: false, toneMapped: false })); m.position.set(p.x, p.y, p.z); m.renderOrder = 9; GFX.scene.add(m);
+  let t = 0; FX.list.push({ update(dt) { t += dt; const k = t / dur, s = size * (k < .25 ? easeOut(k / .25) : 1 - .5 * (k - .25) / .75); m.scale.set(s, s, 1); m.material.rotation = k * .9; m.material.opacity = k < .25 ? 1 : 1 - (k - .25) / .75; if (k >= 1) { GFX.scene.remove(m); m.material.dispose(); return false; } return true; } });
+};
+
 /* 地面预警 */
 const TELE_FS = `varying vec2 vUv; uniform vec3 uCol; uniform float uProg, uFade, uSide;
   void main(){ float fill = step(vUv.y, uProg); float rim = smoothstep(.94, 1., vUv.y); float side = uSide * (smoothstep(.05, 0., vUv.x) + smoothstep(.95, 1., vUv.x));

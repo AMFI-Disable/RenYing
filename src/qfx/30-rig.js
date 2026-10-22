@@ -492,6 +492,32 @@ const HA = {
     else if (u < a) { const k = (u - w) / (a - w); vertHand(P, lerp(-1.0, 2.1, easeIn(k)), 1.45, .38, -.14); P.torRX = lerp(-.3, .55, k); P.LlX = -.9; P.LsX = 1.3; P.RlX = .2; P.RsX = 1.2; P.LaX = -2.4 + 1.6 * k; }
     else { vertHand(P, 2.1, 1.4, .36, -.14); P.torRX = .5; P.hipY = -.32; P.LlX = -.8; P.LsX = 1.0; P.RlX = .5; P.RsX = .7; }
   },
+  // 弹反：剑横胸前，剑尖斜指左上，护住中门
+  parry(P, u) {
+    const k = u < .6 ? smooth(u / .12) : 1 - smooth((u - .6) / .4);
+    setHand(P, lerp(-.36, -.12, k), lerp(.93, 1.24, k), lerp(.14, .4, k), lerp(-.28, .62, k), lerp(-.52, .66, k), lerp(.8, .3, k));
+    P.torRY = -.32 * k; P.torRX = .06 * k; P.hipY = -.12 * k; P.LlX = -.45 * k; P.LsX = .5 * k; P.RlX = .35 * k; P.RsX = .2 * k; P.LaX = .25 * k; P.LaZ = .14 + .45 * k; P.LfX = -.2 - .8 * k;
+  },
+  // 卸剑：从架势向外一拨，剑尖甩向右前，再收回
+  deflect(P, u) {
+    const k = easeOut(sat(u / .4)), r = u < .55 ? 0 : smooth((u - .55) / .45), b = 1 - r;
+    setHand(P, lerp(lerp(-.12, -.56, k), -.36, r), lerp(lerp(1.24, 1.14, k), .93, r), lerp(lerp(.4, .34, k), .14, r), lerp(lerp(.62, -.72, k), -.28, r), lerp(lerp(.66, .16, k), -.52, r), lerp(lerp(.3, .66, k), .8, r));
+    P.torRY = lerp(-.32, .42, k) * b; P.hipY = -.12 * b; P.LlX = -.45 * b; P.LsX = .5 * b; P.RlX = .35 * b; P.LaX = .3 * b; P.LaZ = .14 + .5 * b; P.LfX = -.2 - .7 * b;
+  },
+  // 处决：贴身一刺贯穿，拧腕抽剑，振剑甩血
+  exec(P, u) {
+    if (u < .2) { const k = smooth(u / .2); setHand(P, -.32, lerp(1.0, 1.18, k), lerp(.1, -.28, k), 0, .05, 1); P.torRY = -.7 * k; P.hipY = -.18 * k; P.torRX = .1 * k; }
+    else if (u < .44) { const k = easeOut((u - .2) / .24); setHand(P, lerp(-.32, -.04, k), lerp(1.18, 1.26, k), lerp(-.28, .98, k), 0, 0, 1); P.torRY = lerp(-.7, .45, k); P.torRX = lerp(.1, .36, k); P.hipY = lerp(-.18, -.3, k); }
+    else if (u < .62) { const k = (u - .44) / .18; setHand(P, -.04, 1.26, .98 + .04 * Math.sin(k * PI), 0, 0, 1); P.torRY = .45; P.torRX = .36; P.hipY = -.3; }
+    else if (u < .8) { const k = easeOut((u - .62) / .18); setHand(P, lerp(-.04, -.78, k), lerp(1.26, 1.18, k), lerp(.98, .28, k), lerp(0, -.92, k), lerp(0, .1, k), lerp(1, .3, k)); P.torRY = lerp(.45, -.45, k); P.torRX = lerp(.36, .18, k); P.hipY = lerp(-.3, -.2, k); }
+    else { const k = smooth((u - .8) / .2); setHand(P, lerp(-.78, -.38, k), lerp(1.18, .95, k), lerp(.28, .16, k), lerp(-.92, -.3, k), lerp(.1, -.82, k), lerp(.3, .45, k)); P.torRY = lerp(-.45, 0, k); P.torRX = lerp(.18, .05, k); P.hipY = lerp(-.2, -.06, k); }
+    const s = u < .8 ? 1 : 1 - smooth((u - .8) / .2); P.LlX = -.9 * s; P.LsX = .9 * s; P.RlX = .7 * s; P.RsX = .25 * s; P.LaX = .9 * s; P.LaZ = .14 + .4 * s; P.LfX = -.3;
+  },
+  // 蓄力：剑自身前举过头顶落到肩后，沉身聚劲；蓄满后剑身微颤
+  charge(P, u, w, a, rig, t) {
+    const k = smooth(u), tr = u >= 1 ? Math.sin(t * 46) * .012 : 0; vertHand(P, lerp(1.4, -1.15, k) + tr, 1.42, .36, -.14);
+    P.torRX = -.22 * k; P.torRY = -.35 * k; P.hipY = -.2 * k; P.LlX = -.55 * k; P.LsX = .75 * k; P.RlX = .45 * k; P.RsX = .3 * k; P.LaX = -.9 * k; P.LaZ = .35; P.LfX = -.6;
+  },
   roar(P, u) { const k = Math.sin(PI * sat(u)); P.torRX = -.35 * k; P.headRX = -.4 * k; P.LaZ = .14 + 1.2 * k; P.LaX = -.3 * k; setHand(P, -.7, 1.0 + .6 * k, .1, -.6, .7, .2); P.hipY = -.12 * k; P.LlZ = .2; P.RlZ = -.2; },
 };
 

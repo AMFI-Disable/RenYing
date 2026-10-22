@@ -25,7 +25,7 @@ function clearField() {
 }
 function resetGame() {
   Orbs.list.length = 0; clearField();
-  Object.assign(G, { stage: 0, chapter: 0, kills: 0, inter: 0, clearT: 0, intro: false, spawnT: 0, maxTokens: 2, cap: 6, endless: false, dmgDone: 0, maxCombo: 0, playT: 0, hitstop: 0, enemyTS: 1, slowT: 0, deathT: 0, t: 0, waves: [], sub: 0, subT: 0, stageName: '' });
+  Object.assign(G, { stage: 0, chapter: 0, kills: 0, inter: 0, clearT: 0, intro: false, spawnT: 0, maxTokens: 2, cap: 6, endless: false, dmgDone: 0, maxCombo: 0, playT: 0, hitstop: 0, enemyTS: 1, slowT: 0, deathT: 0, t: 0, waves: [], sub: 0, subT: 0, stageName: '', atkGap: 0 });
   resetPlayer(); Pl.rig.setOpacity(1); UI.combo(0); GFX.final.uniforms.uGray.value = 0;
 }
 function placePlayer() {
@@ -116,7 +116,7 @@ function frame(now) {
     for (let i = G.enemies.length - 1; i >= 0; i--) if (!updateEnemy(G.enemies[i], dt, G.t)) G.enemies.splice(i, 1);
     updateProjs(dt, G.t); updateOrbs(dt, G.t); if (G.state === 'playing') updateStage(dt);
     Snd.combat = G.enemies.length ? 1 : 0;
-    if (G.state === 'playing' && Pl.pending > 0 && Pl.state !== 'ult' && Pl.state !== 'dead' && G.hitstop <= 0 && Pl.state !== 'attack') Game.levelUp();
+    if (G.state === 'playing' && Pl.pending > 0 && !['ult', 'dead', 'attack', 'exec', 'flash', 'charge'].includes(Pl.state) && G.hitstop <= 0) Game.levelUp();
     FX.update(dt, G.t); World.update(rdt, GFX.time.value, Pl.pos); updateCamera(dt, rdt); UI.update(rdt);
   } else if (G.state === 'title') {
     G.t += rdt; Pl.rig.root.position.copy(Pl.pos); Pl.rig.root.rotation.y = .3; animHuman(Pl.rig, rdt, G.t, { speed: 0, rate: 10, pose: P => setHand(P, -.36, .98, -.1, -.1, .94, -.33) });
@@ -153,7 +153,7 @@ async function boot() {
     GFX.renderer.compile(GFX.scene, GFX.camera);
     last = performance.now(); requestAnimationFrame(frame);
     $('btnStart').disabled = false; $('loading').hidden = true;
-    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SKILLS, PERKS };
+    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SKILLS, PERKS, findExec, startExec, parriedBy, breakPoise };
   } catch (err) { console.error(err && err.stack || err); $('loading').textContent = '无法启动 3D 画面：' + (err && err.message ? err.message : err) + '。请换用支持 WebGL 的桌面浏览器。'; }
 }
 boot();

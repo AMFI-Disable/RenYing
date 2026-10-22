@@ -55,6 +55,11 @@ const ET = {
   },
 };
 const _eb = new V3(), _et = new V3();
+/* 不可弹反的招式：跳劈、旋风、突进、地震、剑雨；出手前刀尖闪红光，其余闪寒光 */
+const unblockable = a => !!(a.unblock || a.quake || a.kind === 'leap' || a.kind === 'spin' || a.kind === 'dash' || a.kind === 'rain');
+const GLINT = new Set(['melee', 'pounce', 'dash', 'leap', 'spin']);
+/* 在玩家镜头背后：这类敌人要多等一会儿才出手 */
+const behindCam = e => { const dx = e.pos.x - Pl.pos.x, dz = e.pos.z - Pl.pos.z, d = Math.hypot(dx, dz) || 1; return (dx * Math.sin(Cam.yaw) + dz * Math.cos(Cam.yaw)) / d < -.3; };
 
 function spawnEnemy(type, x, z, o = {}) {
   const cfg = ET[type], rig = cfg.rig(); const elite = !!o.elite && !cfg.boss, wv = Math.max(1, G.stage), hs = (1 + .19 * (wv - 1) + (G.endless ? .08 * (wv - 10) * (wv - 10) : 0)) * (cfg.boss && G.endless ? 1.6 : 1), ds = 1.15 + .12 * (wv - 1);
@@ -75,14 +80,26 @@ function damageEnemy(e, dmg, o = {}) {
   FX.num({ x: e.pos.x, y: e.hitY + .7, z: e.pos.z }, '' + dmg, o.crit ? 'crit' : (o.cls || ''), o.crit ? 1 : .8);
   const m = e.cfg.mass; e.kx += (o.kx || 0) / m; e.kz += (o.kz || 0) / m;
   if (e.hp <= 0) { killEnemy(e); return true; }
-  if (e.stun <= 0 && e.state !== 'spawn') {
+  if (e.stun <= 0 && e.state !== 'spawn' && !e.execd) {
     e.poiseD += o.poise || 1;
     if (e.poiseD >= e.cfg.poise * (e.elite ? 1.6 : 1)) {
-      e.poiseD = 0; const super_ = e.atk && (e.atk.kind === 'leap' || e.atk.kind === 'dash') && e.state === 'active';
-      if (!super_) { cancelAttack(e); e.state = 'stagger'; e.st = 0; e.stagger = e.boss ? 2.4 : (e.cfg.poise > 4 ? .9 : .42); if (e.boss || e.cfg.poise > 4) { e.stun = e.stagger; FX.num({ x: e.pos.x, y: e.hitY + 1.3, z: e.pos.z }, '破绽', 'word', 1.2); Snd.clang(); FX.ring(e.pos, .5, 4, 0xffd060, .4); } }
+      const super_ = e.atk && (e.atk.kind === 'leap' || e.atk.kind === 'dash') && e.state === 'active';
+      // 力士、头领架势一破就露破绽；小卒只是踉跄，挨了重手（破山、瞬斩）才露破绽
+      if (!super_) { if (e.boss || e.cfg.poise > 4 || (o.poise || 1) >= 4) breakPoise(e); else { e.poiseD = 0; cancelAttack(e); e.state = 'stagger'; e.st = 0; e.stagger = .42; } }
     }
   }
   return true;
+}
+function breakPoise(e) {
+  e.poiseD = 0; cancelAttack(e); e.state = 'stagger'; e.st = 0; e.stagger = e.stun = e.boss ? 2.6 : e.cfg.poise > 4 ? 1.8 : 1.3;
+  FX.num({ x: e.pos.x, y: e.hitY + 1.3, z: e.pos.z }, '破绽', 'word', 1.2); Snd.clang(); FX.ring(e.pos, .5, 4, 0xffd060, .4);
+}
+/* 被弹反：小卒当场露出破绽，力士与头领吃一大截架势 */
+function parriedBy(e) {
+  if (e.state === 'dead' || e.execd) return false; const c = e.cfg, dx = e.pos.x - Pl.pos.x, dz = e.pos.z - Pl.pos.z, d = Math.hypot(dx, dz) || 1, cap = c.poise * (e.elite ? 1.6 : 1);
+  e.kx += dx / d * 4 / c.mass; e.kz += dz / d * 4 / c.mass;
+  if (e.boss || c.poise > 4) { e.poiseD += cap * (e.boss ? .22 : .4); if (e.poiseD >= cap) { breakPoise(e); return true; } if (!e.boss) { cancelAttack(e); e.state = 'stagger'; e.st = 0; e.stagger = .5; } return false; }
+  breakPoise(e); if (e.elite) e.stagger = e.stun = 1.05; return true;
 }
 function killEnemy(e) {
   cancelAttack(e); e.state = 'dead'; e.deadT = 0; e.hp = 0; G.kills++; if (Pl.lock === e) Pl.lock = null;
@@ -103,11 +120,11 @@ function enemyHitsPlayer(e, a) {
   const along = dx * fx + dz * fz, lat = Math.abs(dx * fz - dz * fx); return along > -.3 && along < s.len * sc + .3 && lat < s.w / 2 + .35;
 }
 function makeTele(e, a, dur) {
-  const s = a.shape, fx = Math.sin(e.yaw), fz = Math.cos(e.yaw), sc = e.elite ? 1.1 : 1;
+  const s = a.shape, fx = Math.sin(e.yaw), fz = Math.cos(e.yaw), sc = e.elite ? 1.1 : 1, color = unblockable(a) ? 0xff3a22 : 0xffb24a;
   if (a.kind === 'melee' && s) {
-    if (s.t === 'arc') return FX.telegraph({ type: 'sector', x: e.pos.x, z: e.pos.z, yaw: e.yaw, r: s.r * sc, arc: s.arc, dur });
-    if (s.t === 'circle') return FX.telegraph({ type: 'circle', x: e.pos.x + fx * s.off, z: e.pos.z + fz * s.off, r: s.r * sc, dur });
-    return FX.telegraph({ type: 'line', x: e.pos.x, z: e.pos.z, yaw: e.yaw, len: s.len * sc, w: s.w, dur });
+    if (s.t === 'arc') return FX.telegraph({ type: 'sector', x: e.pos.x, z: e.pos.z, yaw: e.yaw, r: s.r * sc, arc: s.arc, dur, color });
+    if (s.t === 'circle') return FX.telegraph({ type: 'circle', x: e.pos.x + fx * s.off, z: e.pos.z + fz * s.off, r: s.r * sc, dur, color });
+    return FX.telegraph({ type: 'line', x: e.pos.x, z: e.pos.z, yaw: e.yaw, len: s.len * sc, w: s.w, dur, color });
   }
   return null;
 }
@@ -122,16 +139,16 @@ function chooseAttack(e, d) {
 }
 function startAttack_E(e, i, chained) {
   const a = e.cfg.atks[i]; e.atk = a; e.atkI = i; e.state = 'windup'; e.st = 0; e.didHit = false; e.tick = 0; e.cds[i] = a.cd * rand(.85, 1.25) / (e.phase > 1 ? 1.25 : 1);
-  e.wind = a.wind * (chained ? 1 : rand(.95, 1.1)) / (e.phase > 1 ? 1.15 : 1); e.teleMade = false; e.lockYaw = false;
+  e.wind = a.wind * (chained ? 1 : rand(.95, 1.1)) / (e.phase > 1 ? 1.15 : 1); e.teleMade = false; e.lockYaw = false; e.glinted = false;
   if (a.kind === 'leap') { e.tele = null; }
-  if (a.kind === 'dash') { e.tele = FX.telegraph({ type: 'line', x: e.pos.x, z: e.pos.z, yaw: e.yaw, len: a.speed * a.act, w: 2.2, dur: e.wind }); }
+  if (a.kind === 'dash') { e.tele = FX.telegraph({ type: 'line', x: e.pos.x, z: e.pos.z, yaw: e.yaw, len: a.speed * a.act, w: 2.2, dur: e.wind, color: 0xff3a22 }); }
   if (a.kind === 'summon') { UI.banner('喽啰何在', '', 'red'); Snd.gong(); }
 }
 function execAttack(e) {
   const a = e.atk, fx = Math.sin(e.yaw), fz = Math.cos(e.yaw), dmg = a.dmg * e.dmgK;
-  if (a.kind === 'shoot') { const dx = Pl.pos.x + Pl.vel.x * .25 - e.pos.x, dz = Pl.pos.z + Pl.vel.z * .25 - e.pos.z, d = Math.hypot(dx, dz) || 1; spawnProj({ kind: 'arrow', x: e.pos.x + fx * .6, y: 1.4, z: e.pos.z + fz * .6, vx: dx / d * 21, vz: dz / d * 21, life: 2.6, dmg, enemy: true }); Snd.bow(); }
-  else if (a.kind === 'cast') { for (let i = 0; i < a.n; i++) { const an = e.yaw + (i - (a.n - 1) / 2) * .5; spawnProj({ kind: 'orb', x: e.pos.x + Math.sin(an) * .8, y: 1.6, z: e.pos.z + Math.cos(an) * .8, vx: Math.sin(an) * 8.5, vz: Math.cos(an) * 8.5, life: 4.2, dmg, enemy: true, turn: 1.5 }); } Snd.cast(); }
-  else if (a.kind === 'waves') { for (let i = 0; i < a.n; i++) { const an = e.yaw + (i - (a.n - 1) / 2) * .26; spawnProj({ kind: 'ewave', x: e.pos.x, y: 1.1, z: e.pos.z, vx: Math.sin(an) * 19, vz: Math.cos(an) * 19, yaw: an, life: 1.7, dmg, enemy: true }); } Snd.swing(1); FX.slash({ x: e.pos.x, y: 1.4, z: e.pos.z, yaw: e.yaw, r: 4, arc: 2.9, color: 0xff3a22, dur: .22 }); }
+  if (a.kind === 'shoot') { const dx = Pl.pos.x + Pl.vel.x * .25 - e.pos.x, dz = Pl.pos.z + Pl.vel.z * .25 - e.pos.z, d = Math.hypot(dx, dz) || 1; spawnProj({ kind: 'arrow', x: e.pos.x + fx * .6, y: 1.4, z: e.pos.z + fz * .6, vx: dx / d * 21, vz: dz / d * 21, life: 2.6, dmg, enemy: true, src: e }); Snd.bow(); }
+  else if (a.kind === 'cast') { for (let i = 0; i < a.n; i++) { const an = e.yaw + (i - (a.n - 1) / 2) * .5; spawnProj({ kind: 'orb', x: e.pos.x + Math.sin(an) * .8, y: 1.6, z: e.pos.z + Math.cos(an) * .8, vx: Math.sin(an) * 8.5, vz: Math.cos(an) * 8.5, life: 4.2, dmg, enemy: true, turn: 1.5, src: e }); } Snd.cast(); }
+  else if (a.kind === 'waves') { for (let i = 0; i < a.n; i++) { const an = e.yaw + (i - (a.n - 1) / 2) * .26; spawnProj({ kind: 'ewave', x: e.pos.x, y: 1.1, z: e.pos.z, vx: Math.sin(an) * 19, vz: Math.cos(an) * 19, yaw: an, life: 1.7, dmg, enemy: true, src: e }); } Snd.swing(1); FX.slash({ x: e.pos.x, y: 1.4, z: e.pos.z, yaw: e.yaw, r: 4, arc: 2.9, color: 0xff3a22, dur: .22 }); }
   else if (a.kind === 'blink') {
     FX.smoke(e.pos, 14, 1.2, .08); let nx, nz;
     if (a.behind) { const py = Pl.yaw; nx = Pl.pos.x - Math.sin(py) * 2.6; nz = Pl.pos.z - Math.cos(py) * 2.6; } else { const an = rand(TAU), r = rand(9, 13); nx = Pl.pos.x + Math.cos(an) * r; nz = Pl.pos.z + Math.sin(an) * r; }
@@ -162,7 +179,14 @@ function updateEnemy(e, dt0, t) {
   else if (e.state === 'chase') {
     e.yaw = dampAng(e.yaw, toP, 7, dt); let moveA = null, sp = c.spd * (e.phase > 1 ? 1.15 : 1);
     const ai = d < 30 ? chooseAttack(e, d) : -1; let started = false;
-    if (ai >= 0 && e.st > .25) { const a = c.atks[ai]; const needTok = (a.kind === 'melee' || a.kind === 'pounce') && !e.boss; if (!needTok || G.tokens < G.maxTokens) { if (needTok) { e.token = true; G.tokens++; } startAttack_E(e, ai); started = true; } }
+    if (ai >= 0 && e.st > .25) {
+      const a = c.atks[ai], needTok = (a.kind === 'melee' || a.kind === 'pounce') && !e.boss, ranged = a.kind === 'shoot' || a.kind === 'cast';
+      // 围攻也讲节奏：近身出手要等令牌和全局间隔；镜头背后的多等一会儿；同时最多两人开弓施法
+      let ok = !needTok || (G.tokens < G.maxTokens && G.atkGap <= 0);
+      if (ok && needTok && behindCam(e)) { e.waitT = (e.waitT || 0) + dt; if (e.waitT < 1.3) ok = false; }
+      if (ok && ranged && G.enemies.reduce((n, o) => n + (o !== e && o.atk && (o.state === 'windup' || o.state === 'active') && (o.atk.kind === 'shoot' || o.atk.kind === 'cast') ? 1 : 0), 0) >= 2) ok = false;
+      if (ok) { if (needTok) { e.token = true; G.tokens++; G.atkGap = rand(.3, .6) * (G.stage >= 7 ? .75 : 1); } e.waitT = 0; startAttack_E(e, ai); started = true; }
+    }
     if (!started) {
       if (c.keep) { if (d < c.keep[0]) { moveA = toP + PI; sp *= .85; } else if (d > c.keep[1]) moveA = toP; else { moveA = toP + e.strafe * PI / 2; sp *= .45; } }
       else if (d > (c.reach || 2) * .82 + e.radius) { moveA = toP; if (!e.boss && G.tokens >= G.maxTokens && d < 6.5) { moveA = toP + e.strafe * (PI / 2 - (d > 5 ? .5 : -.25)); sp *= .5; } }
@@ -173,6 +197,10 @@ function updateEnemy(e, dt0, t) {
   else if (e.state === 'windup') {
     const a = e.atk, u0 = e.st / e.wind; if (u0 < .72 || a.kind === 'shoot') e.yaw = dampAng(e.yaw, toP, a.kind === 'dash' ? 10 : 5.5, dt);
     if (a.tele && !e.teleMade && u0 >= .25) { e.teleMade = true; e.tele = makeTele(e, a, e.wind * .75); }
+    if (!e.glinted && e.wind - e.st <= .3 && GLINT.has(a.kind)) {
+      e.glinted = true; const ub = unblockable(a); if (rig.bladeLen) rig.bladePts(_eb, _et); else _et.set(e.pos.x + Math.sin(e.yaw) * .7, e.hitY + .1, e.pos.z + Math.cos(e.yaw) * .7);
+      FX.glint(_et, ub ? 0xff2a1a : 0xdff2ff, (ub ? 1.9 : 1.35) * (e.boss ? 1.4 : 1)); if (ub) Snd.danger(); else Snd.glint();
+    }
     if (e.tele && a.kind === 'dash') { e.tele.mesh.rotation.y = e.yaw; }
     if (e.tele && a.kind === 'melee' && u0 < .72) { e.tele.mesh.rotation.y = e.yaw; if (a.shape.t === 'circle') { e.tele.mesh.position.x = e.pos.x + Math.sin(e.yaw) * a.shape.off; e.tele.mesh.position.z = e.pos.z + Math.cos(e.yaw) * a.shape.off; } else { e.tele.mesh.position.x = e.pos.x; e.tele.mesh.position.z = e.pos.z; } }
     const tot = e.wind + a.act + a.rec; action = { name: a.anim, u: e.st / tot, w: e.wind / tot, a: (e.wind + a.act) / tot }; glow = smooth(u0); rate = 22;
@@ -183,10 +211,12 @@ function updateEnemy(e, dt0, t) {
   else if (e.state === 'active') {
     const a = e.atk, tot = e.wind + a.act + a.rec; action = { name: a.anim, u: (e.wind + e.st) / tot, w: e.wind / tot, a: (e.wind + a.act) / tot }; rate = 32; trail = true; glow = .6;
     const fx = Math.sin(e.yaw), fz = Math.cos(e.yaw), dmg = a.dmg * e.dmgK;
-    if (a.kind === 'melee') { const lv = (a.lunge || 0) / a.act; if (d > e.radius + .9) { mvx = fx * lv; mvz = fz * lv; } if (!e.didHit && enemyHitsPlayer(e, a)) { e.didHit = true; if (hurtPlayer(dmg, e.pos.x, e.pos.z, { knock: c.mass > 2 ? 9 : 5 })) { G.hitstop = Math.max(G.hitstop, .06); } } if (a.quake && !e.fxDone && e.st >= a.act * .5) { e.fxDone = true; const p = { x: e.pos.x + fx * a.shape.off, z: e.pos.z + fz * a.shape.off }; FX.ring(p, .5, a.shape.r + .5, 0xffa060, .4); FX.dust(p, 18, 1.4); Cam.shake = Math.max(Cam.shake, .4); Snd.boom(); FX.decal(p, 3); } }
-    else if (a.kind === 'pounce' || a.kind === 'dash') { mvx = fx * a.speed; mvz = fz * a.speed; rootY += a.kind === 'pounce' ? Math.sin(PI * sat(e.st / a.act)) * .9 : 0; if (!e.didHit && d < e.radius + (a.kind === 'dash' ? 1.5 : 1.0)) { e.didHit = true; hurtPlayer(dmg, e.pos.x - fx, e.pos.z - fz, { knock: 7 }); } if (a.kind === 'dash') { FX.smoke(e.pos, 1, .8, .05, .5); FX.wisp({ x: e.pos.x, y: 1.2, z: e.pos.z }, 0xff3a22, 2, 1); } }
-    else if (a.kind === 'leap') { const k = sat(e.st / a.act); e.pos.x = lerp(e.lx, e.tx, k); e.pos.z = lerp(e.lz, e.tz, k); rootY += Math.sin(PI * k) * 4.5; if (k >= 1 && !e.didHit) { e.didHit = true; e.tele = null; FX.ring(e.pos, 1, a.r + 1, 0xffa060, .5); FX.dust(e.pos, 30, 2); Cam.shake = Math.max(Cam.shake, .7); Snd.boom(); FX.decal(e.pos, 5); if (d < a.r + .3) hurtPlayer(dmg, e.pos.x, e.pos.z, { knock: 11 }); } }
-    else if (a.kind === 'spin') { e.yaw = dampAng(e.yaw, toP, 3, dt); mvx = Math.sin(toP) * a.speed; mvz = Math.cos(toP) * a.speed; action = { name: 'whirl', u: 0 }; e.tick -= dt; if (e.tick <= 0) { e.tick = .32; FX.slash({ x: e.pos.x, y: rand(1.2, 2), z: e.pos.z, yaw: rand(TAU), r: a.r, arc: 4.2, color: 0xff5a32, dur: .26, follow: e.pos, inten: 1.2 }); Snd.swing(1); if (d < a.r + .3) hurtPlayer(dmg, e.pos.x, e.pos.z, { knock: 8 }); } }
+    if (a.kind === 'melee') { const lv = (a.lunge || 0) / a.act; if (d > e.radius + .9) { mvx = fx * lv; mvz = fz * lv; } if (!e.didHit && enemyHitsPlayer(e, a)) { e.didHit = true; if (hurtPlayer(dmg, e.pos.x, e.pos.z, { knock: c.mass > 2 ? 9 : 5, src: e, parry: !unblockable(a) }) === true) { G.hitstop = Math.max(G.hitstop, .06); } }
+      // 贴刃闪开：刀落时人刚闪出刃口一步之内，也算踏雪
+      else if (!e.didHit && Pl.state === 'dodge' && Pl.iframe > 0 && e.st > a.act * .3 && d < (a.shape.r || a.shape.len || 3) + (a.shape.off || 0) + e.radius + 1.4) { e.didHit = true; hurtPlayer(dmg, e.pos.x, e.pos.z, { src: e }); } if (a.quake && !e.fxDone && e.st >= a.act * .5) { e.fxDone = true; const p = { x: e.pos.x + fx * a.shape.off, z: e.pos.z + fz * a.shape.off }; FX.ring(p, .5, a.shape.r + .5, 0xffa060, .4); FX.dust(p, 18, 1.4); Cam.shake = Math.max(Cam.shake, .4); Snd.boom(); FX.decal(p, 3); } }
+    else if (a.kind === 'pounce' || a.kind === 'dash') { mvx = fx * a.speed; mvz = fz * a.speed; rootY += a.kind === 'pounce' ? Math.sin(PI * sat(e.st / a.act)) * .9 : 0; if (!e.didHit && d < e.radius + (a.kind === 'dash' ? 1.5 : 1.0)) { e.didHit = true; hurtPlayer(dmg, e.pos.x - fx, e.pos.z - fz, { knock: 7, src: e, parry: a.kind !== 'dash' }); } if (a.kind === 'dash') { FX.smoke(e.pos, 1, .8, .05, .5); FX.wisp({ x: e.pos.x, y: 1.2, z: e.pos.z }, 0xff3a22, 2, 1); } }
+    else if (a.kind === 'leap') { const k = sat(e.st / a.act); e.pos.x = lerp(e.lx, e.tx, k); e.pos.z = lerp(e.lz, e.tz, k); rootY += Math.sin(PI * k) * 4.5; if (k >= 1 && !e.didHit) { e.didHit = true; e.tele = null; FX.ring(e.pos, 1, a.r + 1, 0xffa060, .5); FX.dust(e.pos, 30, 2); Cam.shake = Math.max(Cam.shake, .7); Snd.boom(); FX.decal(e.pos, 5); if (d < a.r + .3) hurtPlayer(dmg, e.pos.x, e.pos.z, { knock: 11, src: e, parry: false }); } }
+    else if (a.kind === 'spin') { e.yaw = dampAng(e.yaw, toP, 3, dt); mvx = Math.sin(toP) * a.speed; mvz = Math.cos(toP) * a.speed; action = { name: 'whirl', u: 0 }; e.tick -= dt; if (e.tick <= 0) { e.tick = .32; FX.slash({ x: e.pos.x, y: rand(1.2, 2), z: e.pos.z, yaw: rand(TAU), r: a.r, arc: 4.2, color: 0xff5a32, dur: .26, follow: e.pos, inten: 1.2 }); Snd.swing(1); if (d < a.r + .3) hurtPlayer(dmg, e.pos.x, e.pos.z, { knock: 8, src: e, parry: false }); } }
     if (e.st >= a.act) {
       e.fxDone = false; e.jumpY = 0;
       if (a.chain !== undefined && e.stun <= 0 && (a.kind !== 'melee' || d < 9)) { const ci = a.chain; e.yaw = dampAng(e.yaw, toP, 60, .05); startAttack_E(e, ci, true); }

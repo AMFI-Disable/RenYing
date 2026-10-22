@@ -23,8 +23,11 @@ const UI = {
     else { t1 = `第${cnNum(G.stage)}关`; t2 = `${G.stageName} · 残敌 ${alive}`; }
     this.set('waveT', t1); this.set('waveS', t2);
     const b = G.boss && G.boss.state !== 'dead' ? G.boss : null; this.hide('bossBox', !b); if (b) { this.set('bossName', b.name); this.bar('bossFill', b.hp / b.maxHp); this.bar('bossLag', b.hp / b.maxHp); this.bar('bossPoise', b.stun > 0 ? 1 : b.poiseD / b.cfg.poise); }
-    const lk = Pl.lock && Pl.lock.state !== 'dead' ? Pl.lock : null; this.hide('lockm', !lk);
-    if (lk) { _pv.set(lk.pos.x, lk.hitY, lk.pos.z).project(GFX.camera); $('lockm').style.transform = `translate(${((_pv.x * .5 + .5) * innerWidth).toFixed(0)}px,${((-_pv.y * .5 + .5) * innerHeight).toFixed(0)}px) rotate(45deg)`; }
+    const lk = Pl.lock && Pl.lock.state !== 'dead' && Pl.state !== 'exec' ? Pl.lock : null; this.cls('hud', 'cine', Pl.state === 'exec'); this.hide('lockm', !lk);
+    if (lk) { _pv.set(lk.pos.x, lk.hitY, lk.pos.z).project(GFX.camera); const sx = ((_pv.x * .5 + .5) * innerWidth).toFixed(0), sy = (-_pv.y * .5 + .5) * innerHeight; $('lockm').style.transform = `translate(${sx}px,${sy.toFixed(0)}px) rotate(45deg)`; if (!lk.boss) $('lockInfo').style.transform = `translate(${sx}px,${(sy - 44 - lk.radius * 14).toFixed(0)}px)`; }
+    this.hide('lockInfo', !lk || !!lk.boss); if (lk && !lk.boss) { this.bar('lockHp', lk.hp / lk.maxHp); this.bar('lockPo', lk.stun > 0 ? 1 : (lk.poiseD || 0) / (lk.cfg.poise * (lk.elite ? 1.6 : 1))); this.cls('lockInfo', 'stun', lk.stun > 0); }
+    const ex = Pl.state !== 'dead' && Pl.state !== 'exec' ? findExec() : null; this.hide('execm', !ex || Input.touch); this.cls('tParry', 'exec', !!ex); this.set('tParry', ex ? '决' : '格'); this.cls('tLock', 'on', !!lk);
+    if (ex && !Input.touch) { _pv.set(ex.pos.x, ex.hitY + .2, ex.pos.z).project(GFX.camera); $('execm').style.transform = `translate(${((_pv.x * .5 + .5) * innerWidth).toFixed(0)}px,${((-_pv.y * .5 + .5) * innerHeight).toFixed(0)}px) translate(18px,-50%)`; }
     this.mini();
   },
   mini() {

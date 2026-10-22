@@ -64,7 +64,10 @@ function setupTouchUI() {
   const end = () => { id = null; Input.ax = Input.ay = 0; knob.style.transform = ''; };
   stick.addEventListener('touchend', end); stick.addEventListener('touchcancel', end);
   const tap = (el, code) => el.addEventListener('touchstart', e => { Input.hits[code] = true; e.preventDefault(); }, { passive: false });
-  tap($('tAtk'), 'KeyJ'); tap($('tDodge'), 'Space'); tap($('tHeavy'), 'KeyK');
+  tap($('tAtk'), 'KeyJ'); tap($('tDodge'), 'Space'); tap($('tParry'), 'KeyF'); tap($('tLock'), 'Tab');
+  // 旋：轻点旋风斩，按住蓄力破山
+  const th = $('tHeavy'), up = () => { Input.keys.TouchK = false; };
+  th.addEventListener('touchstart', e => { Input.hits.KeyK = true; Input.keys.TouchK = true; e.preventDefault(); }, { passive: false }); th.addEventListener('touchend', up); th.addEventListener('touchcancel', up);
 }
 
 /* ---------------- 声音（全部合成） ---------------- */
@@ -140,6 +143,14 @@ const Snd = {
   gong() { if (!this.ctx) return; const t = this.now();[82, 123.5, 164.8, 207].forEach((f, i) => this.tone(t, f * 1.02, f, 3.2 - i * .5, .26 - i * .04, 'sine', .8)); this.noise(t, .4, 900, 200, 1, .2); },
   bow() { if (!this.ctx) return; const t = this.now(); this.tone(t, 320, 140, .12, .16, 'triangle'); this.noise(t, .18, 2500, 5000, 3, .1); },
   cast() { if (!this.ctx) return; this.tone(this.now(), 180, 520, .45, .12, 'sawtooth', .7); },
-  forge() { if (!this.ctx) return; const t = this.now(); for (let i = 0; i < 3; i++) { this.tone(t + i * .16, 1400 + i * 200, 900, .25, .14, 'triangle', .5); this.noise(t + i * .16, .05, 5000, 2000, 1, .2, 'highpass'); } }
+  forge() { if (!this.ctx) return; const t = this.now(); for (let i = 0; i < 3; i++) { this.tone(t + i * .16, 1400 + i * 200, 900, .25, .14, 'triangle', .5); this.noise(t + i * .16, .05, 5000, 2000, 1, .2, 'highpass'); } },
+  guard() { if (!this.ctx) return; this.noise(this.now(), .09, 2200, 900, 1.2, .1); },
+  parry() { if (!this.ctx) return; const t = this.now(); this.tone(t, 2650, 2380, .55, .16, 'triangle', .9); this.tone(t, 3970, 3650, .4, .08, 'sine', .9); this.tone(t, 1320, 1180, .32, .1, 'sine', .5); this.noise(t, .06, 7000, 3500, 1.5, .26, 'highpass'); },
+  block() { if (!this.ctx) return; const t = this.now(); this.tone(t, 900, 620, .2, .14, 'triangle', .3); this.noise(t, .1, 1600, 500, .8, .22); },
+  glint() { if (!this.ctx) return; this.tone(this.now(), 3300, 4700, .18, .045, 'sine', .8); },
+  danger() { if (!this.ctx) return; const t = this.now(); this.tone(t, 196, 150, .4, .14, 'sawtooth', .4); this.tone(t, 294, 230, .36, .06, 'square', .2); },
+  exec() { if (!this.ctx) return; const t = this.now(); this.tone(t, 72, 28, .9, .8); this.noise(t, .45, 1200, 70, .7, .5, 'lowpass'); this.noise(t + .02, .12, 4200, 1500, 1, .3); this.tone(t, 1600, 900, .45, .08, 'triangle', .8); },
+  charged() { if (!this.ctx) return; const t = this.now(); this.tone(t, 880, 1760, .22, .07, 'sine', .7); this.tone(t + .08, 1760, 1760, .6, .06, 'sine', .9); },
+  flash() { if (!this.ctx) return; const t = this.now(); this.noise(t, .2, 500, 6500, 1.2, .24); this.tone(t, 1200, 2600, .22, .05, 'sine', .6); }
 };
 

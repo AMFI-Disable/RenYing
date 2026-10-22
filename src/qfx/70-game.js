@@ -31,6 +31,17 @@ function spawnProj(o) { const p = Object.assign({ t: 0, hit: new Set(), vx: 0, v
 function spawnWave(yaw, mult) { spawnProj({ kind: 'wave', x: Pl.pos.x + Math.sin(yaw) * .6, y: 1.15, z: Pl.pos.z + Math.cos(yaw) * .6, vx: Math.sin(yaw) * 28, vz: Math.cos(yaw) * 28, yaw, roll: rand(-.35, .35), life: .78, dmg: mult }); }
 function killProj(p) { GFX.scene.remove(p.mesh); if (p.mesh.userData.own) p.mesh.material.dispose(); if (p.mesh.userData.mat) p.mesh.userData.mat.dispose(); }
 const _pd = new V3();
+/* 弹反飞物：掉头飞回出手者（不在了就找最近的敌人），化作自己的剑气 */
+function reflectProj(p) {
+  const tg = p.src && p.src.state !== 'dead' ? p.src : nearestEnemy(p.x, p.z, 30), sp = Math.max(18, Math.hypot(p.vx, p.vz) * 1.6), a = tg ? Math.atan2(tg.pos.x - p.x, tg.pos.z - p.z) : Math.atan2(-p.vx, -p.vz);
+  p.vx = Math.sin(a) * sp; p.vz = Math.cos(a) * sp; p.yaw = a; p.reflect = true; p.done = false; p.enemy = false; p.t = 0; p.life = 1.8; p.target = tg; p.turn = 6; p.dmg = 1.6 + (p.kind === 'ewave' ? .8 : 0);
+  if (p.kind === 'ewave') p.mesh.material.uniforms.uCol.value.set(swordTier().trail);
+  if (p.kind === 'orb') { PM.orbR = PM.orbR || new T.MeshBasicMaterial({ color: 0xbff4ff, toneMapped: false }); p.mesh.material = PM.orbR; }
+}
+function reflectHit(p, r) {
+  for (const e of G.enemies) { if (e.state === 'dead' || p.hit.has(e)) continue; if (Math.hypot(e.pos.x - p.x, e.pos.z - p.z) < r + e.radius) { p.hit.add(e); playerDamage(e, p.dmg, { knock: 4, poise: 3, shake: .12, stop: .05, critBonus: .5 }); Snd.hit(1); FX.sparks({ x: p.x, y: p.y, z: p.z }, 14, swordTier().trail, 9); if (p.kind !== 'ewave') return true; } }
+  return false;
+}
 function updateProjs(dt, t) {
   const tr = swordTier();
   for (let i = G.projs.length - 1; i >= 0; i--) {
@@ -41,7 +52,8 @@ function updateProjs(dt, t) {
       if (Math.random() < .6) FX.wisp({ x: p.x, y: p.y, z: p.z }, tr.trail, 1, .5);
     } else if (p.kind === 'ewave') {
       p.x += p.vx * d; p.z += p.vz * d; const sc = 2.1; m.scale.setScalar(sc); m.rotation.set(0, p.yaw, .2, 'YXZ'); m.position.set(p.x - Math.sin(p.yaw) * sc * .9, p.y, p.z - Math.cos(p.yaw) * sc * .9); m.material.uniforms.uProg.value = sat((p.t - p.life + .25) / .25);
-      if (!p.done && Math.hypot(Pl.pos.x - p.x, Pl.pos.z - p.z) < 1.25) { p.done = true; hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 4 }); }
+      if (p.reflect) reflectHit(p, 1.6);
+      else if (!p.done && Math.hypot(Pl.pos.x - p.x, Pl.pos.z - p.z) < 1.25) { p.done = true; if (hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 4, src: p.src, proj: true }) === 'parry') reflectProj(p); }
     } else if (p.kind === 'fly') {
       if (p.t < p.delay) { p.ang += dt * 5.5; p.x = Pl.pos.x + Math.cos(p.ang) * 1.35; p.z = Pl.pos.z + Math.sin(p.ang) * 1.35; p.y = 1.7 + Math.sin(p.ang * 2) * .25; m.quaternion.identity(); }
       else {
@@ -58,21 +70,23 @@ function updateProjs(dt, t) {
       if (p.y <= .5) { dead = true; const q = { x: p.x, y: .4, z: p.z }; FX.ring(q, .3, 2.8, tr.trail, .3); FX.sparks(q, 8, tr.trail, 8, 3); FX.glow(q, 0xffffff, 2.4, .14); Cam.shake = Math.max(Cam.shake, .12); if (Math.random() < .5) Snd.hit(0); for (const e of G.enemies) if (e.state !== 'dead' && Math.hypot(e.pos.x - p.x, e.pos.z - p.z) < 2.6 + e.radius) playerDamage(e, p.dmg, { knock: 1.5, poise: .8, noRage: true }); }
     } else if (p.kind === 'arrow') {
       p.x += p.vx * d; p.z += p.vz * d; m.position.set(p.x, p.y, p.z); _pd.set(p.vx, 0, p.vz).normalize(); m.quaternion.setFromUnitVectors(UP, _pd); const dd = Math.hypot(Pl.pos.x - p.x, Pl.pos.z - p.z);
-      if (Pl.attackActive && dd < 2.3) { dead = true; Snd.clang(); FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xffe0a0, 8); Pl.mp = Math.min(Pl.maxMp, Pl.mp + 3); }
-      else if (!p.done && dd < .6) { p.done = true; if (hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 3 })) dead = true; }
+      if (p.reflect) { if (reflectHit(p, .9)) dead = true; if (Math.random() < .5) FX.wisp({ x: p.x, y: p.y, z: p.z }, tr.trail, 1, .3); }
+      else if (Pl.attackActive && dd < 2.3) { dead = true; Snd.clang(); FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xffe0a0, 8); Pl.mp = Math.min(Pl.maxMp, Pl.mp + 3); }
+      else if (!p.done && dd < .6) { p.done = true; const r = hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 3, src: p.src, proj: true }); if (r === 'parry') reflectProj(p); else if (r) dead = true; }
     } else if (p.kind === 'orb') {
-      const ta = Math.atan2(Pl.pos.x - p.x, Pl.pos.z - p.z), ca = Math.atan2(p.vx, p.vz), na = ca + clamp(angDiff(ca, ta), -p.turn * d, p.turn * d), sp = Math.hypot(p.vx, p.vz); p.vx = Math.sin(na) * sp; p.vz = Math.cos(na) * sp;
+      const tx = p.reflect ? (p.target && p.target.state !== 'dead' ? p.target.pos : null) : Pl.pos, ta = tx ? Math.atan2(tx.x - p.x, tx.z - p.z) : Math.atan2(p.vx, p.vz), ca = Math.atan2(p.vx, p.vz), na = ca + clamp(angDiff(ca, ta), -p.turn * d, p.turn * d), sp = Math.hypot(p.vx, p.vz); p.vx = Math.sin(na) * sp; p.vz = Math.cos(na) * sp;
       p.x += p.vx * d; p.z += p.vz * d; p.y = 1.3 + Math.sin(p.t * 5) * .2; m.position.set(p.x, p.y, p.z); const dd = Math.hypot(Pl.pos.x - p.x, Pl.pos.z - p.z);
       if (Math.random() < .7) FX.add.emit({ x: p.x, y: p.y, z: p.z, vx: rand(-.5, .5), vy: rand(-.5, .5), vz: rand(-.5, .5), life: .4, s0: .35, s1: 0, r: .7, g: .4, b: 1, grav: 0 });
-      if (Pl.attackActive && dd < 2.6) { dead = true; FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xc48aff, 6); Snd.clang(); }
-      else if (!p.done && dd < .75) { p.done = true; hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 3 }); dead = true; FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xc48aff, 6); }
+      if (p.reflect) { if (reflectHit(p, 1)) dead = true; }
+      else if (Pl.attackActive && dd < 2.6) { dead = true; FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xc48aff, 6); Snd.clang(); }
+      else if (!p.done && dd < .75) { p.done = true; const r = hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 3, src: p.src, proj: true }); if (r === 'parry') reflectProj(p); else { dead = true; FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xc48aff, 6); } }
     }
     if (Math.hypot(p.x, p.z) > 62) dead = true;
     if (dead) { killProj(p); G.projs.splice(i, 1); }
   }
   for (let i = G.hazards.length - 1; i >= 0; i--) {
     const h = G.hazards[i]; h.t += dt * G.enemyTS; if (h.t >= h.delay && !h.tele) h.tele = FX.telegraph({ type: 'circle', x: h.x, z: h.z, r: h.r, dur: h.dur });
-    if (h.t >= h.delay + h.dur) { const q = { x: h.x, y: .3, z: h.z }; FX.ring(q, .4, h.r + .4, 0xff3a22, .35); FX.sparks(q, 16, 0xff5a32, 10, 4); FX.pillar(q, 0xff3a22, 7); FX.decal(q, 2.4); Cam.shake = Math.max(Cam.shake, .25); Snd.hit(1); if (Math.hypot(Pl.pos.x - h.x, Pl.pos.z - h.z) < h.r + .2) hurtPlayer(h.dmg, h.x, h.z, { knock: 4 }); G.hazards.splice(i, 1); }
+    if (h.t >= h.delay + h.dur) { const q = { x: h.x, y: .3, z: h.z }; FX.ring(q, .4, h.r + .4, 0xff3a22, .35); FX.sparks(q, 16, 0xff5a32, 10, 4); FX.pillar(q, 0xff3a22, 7); FX.decal(q, 2.4); Cam.shake = Math.max(Cam.shake, .25); Snd.hit(1); if (Math.hypot(Pl.pos.x - h.x, Pl.pos.z - h.z) < h.r + .2) hurtPlayer(h.dmg, h.x, h.z, { knock: 4, parry: false }); G.hazards.splice(i, 1); }
   }
 }
 
