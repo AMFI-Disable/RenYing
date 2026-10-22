@@ -218,6 +218,7 @@ function updatePlayer(dt) {
 
 function updateCamera(dt, rdt) {
   const cam = GFX.camera;
+  if (window.__cam) { const c = window.__cam; cam.position.set(c.p[0], c.p[1], c.p[2]); cam.lookAt(c.t[0], c.t[1], c.t[2]); cam.fov = c.fov || 52; cam.updateProjectionMatrix(); return; }
   if (G.state === 'title') {
     Cam.tOrbit += rdt * .05; const a = Math.sin(Cam.tOrbit) * .55 - .15; Cam.pos.set(Pl.pos.x + Math.sin(a) * 4.3, 1.75 + Math.sin(Cam.tOrbit * 2) * .25, Pl.pos.z + Math.cos(a) * 4.3); Cam.look.set(Pl.pos.x - Math.sin(a + 1.15) * 1.25, 1.32, Pl.pos.z - Math.cos(a + 1.15) * 1.25);
     cam.position.copy(Cam.pos); cam.lookAt(Cam.look); cam.fov = 44; cam.updateProjectionMatrix(); return;

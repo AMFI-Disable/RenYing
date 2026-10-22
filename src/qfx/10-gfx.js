@@ -65,37 +65,58 @@ function initGfx(canvas) {
   const cam = GFX.camera = new T.PerspectiveCamera(52, 1, .2, 1400);
 
   // 光
-  const hemi = new T.HemisphereLight(0x93aede, 0x6f5a48, .78); scene.add(hemi);
+  const hemi = GFX.hemi = new T.HemisphereLight(0x93aede, 0x6f5a48, .78); scene.add(hemi);
   const sun = GFX.sun = new T.DirectionalLight(0xffc48a, 1.22); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = -34; sc.right = 34; sc.top = 34; sc.bottom = -34; sc.near = 10; sc.far = 220;
   sun.shadow.bias = -.0004; sun.shadow.normalBias = .04; sun.shadow.radius = 2.2;
   scene.add(sun); scene.add(sun.target);
-  const fill = new T.DirectionalLight(0x6f8fd0, .32); fill.position.set(.7, .5, .6); scene.add(fill);
+  const fill = GFX.fill = new T.DirectionalLight(0x6f8fd0, .32); fill.position.set(.7, .5, .6); scene.add(fill);
   GFX.flash = [0, 1].map(() => { const l = new T.PointLight(0xffffff, 0, 16, 2); l.userData.v = 0; scene.add(l); return l; });
 
-  // 天空
+  // 天空：颜色全走 uniform，换地图时整套替换（GFX.setEnv）
+  const C3 = () => ({ value: new T.Color() });
+  const SU = GFX.skyU = { uSun: { value: SUN_DIR }, uTime: GFX.time, uZen: C3(), uMid: C3(), uHor: C3(), uHor2: C3(), uGlow: C3(), uHalo: C3(), uDisc: C3(), uDiscK: { value: .9992 }, uCloudD: C3(), uCloudL: C3(), uCloudG: C3(), uCov: { value: .46 }, uGround: C3(), uStars: { value: 0 }, uMoon: { value: 0 } };
   const sky = new T.Mesh(new T.SphereGeometry(1200, 40, 20), new T.ShaderMaterial({
-    side: T.BackSide, depthWrite: false, fog: false, uniforms: { uSun: { value: SUN_DIR }, uTime: GFX.time },
+    side: T.BackSide, depthWrite: false, fog: false, uniforms: SU,
     vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
-    fragmentShader: `varying vec3 vD; uniform vec3 uSun; uniform float uTime;
+    fragmentShader: `varying vec3 vD; uniform vec3 uSun, uZen, uMid, uHor, uHor2, uGlow, uHalo, uDisc, uCloudD, uCloudL, uCloudG, uGround; uniform float uTime, uDiscK, uCov, uStars, uMoon;
       float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
       float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x), f.y); }
       float fbm(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*n(p); p=p*2.03+vec2(3.1,1.7); a*=.5; } return s; }
       void main(){ vec3 d = normalize(vD); float y = max(d.y, 0.);
         float sd = max(dot(d, uSun), 0.); float az = max(dot(normalize(d.xz), normalize(uSun.xz)), 0.);
-        vec3 zen = vec3(.105,.19,.36), mid = vec3(.58,.47,.56), hor = mix(vec3(.80,.63,.60), vec3(1.0,.70,.42), pow(az, 2.2));
-        vec3 c = mix(hor, mid, smoothstep(0., .22, y)); c = mix(c, zen, smoothstep(.12, .7, y));
-        c += vec3(1.,.55,.25) * pow(sd, 6.) * .32; c += vec3(1.,.82,.6) * pow(sd, 90.) * .7; c += vec3(1.,.95,.85) * smoothstep(.9992, .9996, sd) * 2.2;
+        vec3 hor = mix(uHor, uHor2, pow(az, 2.2));
+        vec3 c = mix(hor, uMid, smoothstep(0., .22, y)); c = mix(c, uZen, smoothstep(.12, .7, y));
+        if (uStars > 0.) { vec2 sp = d.xz / (d.y + .35) * 150.; float st = h(floor(sp)); float tw = .55 + .45 * sin(uTime * (1.3 + st * 3.) + st * 40.);
+          c += vec3(.86,.9,1.) * step(.986, st) * smoothstep(.45, .0, length(fract(sp) - .5)) * tw * uStars * smoothstep(.06, .4, y); }
+        c += uGlow * pow(sd, 6.); c += uHalo * pow(sd, 90.);
+        float disc = smoothstep(uDiscK, uDiscK + (1. - uDiscK) * .5, sd);
+        if (uMoon > 0.) { vec3 tp = d - uSun * dot(d, uSun); disc *= mix(1., .7 + .3 * fbm(tp.xy * 700. + tp.zx * 400.), uMoon); }
+        c += uDisc * disc;
         vec2 cp = d.xz / (y + .16) * 1.3 + vec2(uTime * .006, uTime * .002);
-        float cl = fbm(cp); float cov = smoothstep(.46, .78, cl) * smoothstep(.0, .12, y) * .92;
-        vec3 cc = mix(vec3(.36,.30,.42), vec3(1.,.66,.46), pow(sd, 1.6) * .9 + .12); cc += vec3(1.,.8,.55) * smoothstep(.5,.9,cl) * pow(sd, 5.) * .5;
+        float cl = fbm(cp); float cov = smoothstep(uCov, uCov + .32, cl) * smoothstep(.0, .12, y) * .92;
+        vec3 cc = mix(uCloudD, uCloudL, pow(sd, 1.6) * .9 + .12); cc += uCloudG * smoothstep(.5,.9,cl) * pow(sd, 5.);
         c = mix(c, cc, cov);
-        c = mix(vec3(.80,.66,.60), c, smoothstep(-.03, .05, d.y));
+        c = mix(uGround, c, smoothstep(-.03, .05, d.y));
         gl_FragColor = vec4(c, 1.); }`
   })); sky.frustumCulled = false; sky.renderOrder = -10; scene.add(sky); GFX.sky = sky;
-  { const ec = makeCanvas(256, 128), eg = ec.getContext('2d'); let gr = eg.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, '#22406e'); gr.addColorStop(.36, '#8f86a8'); gr.addColorStop(.5, '#f0c8a6'); gr.addColorStop(.52, '#5a4a3e'); gr.addColorStop(1, '#2a2622'); eg.fillStyle = gr; eg.fillRect(0, 0, 256, 128);
-    for (const sx of [60, 316, -196]) { gr = eg.createRadialGradient(sx, 50, 0, sx, 50, 70); gr.addColorStop(0, 'rgba(255,240,210,1)'); gr.addColorStop(.12, 'rgba(255,196,130,.9)'); gr.addColorStop(1, 'rgba(255,170,110,0)'); eg.fillStyle = gr; eg.fillRect(sx - 70, 0, 140, 110); }
-    const et = canvasTex(ec); et.mapping = T.EquirectangularReflectionMapping; try { const pm = new T.PMREMGenerator(R); GFX.env = pm.fromEquirectangular(et).texture; pm.dispose(); } catch (err) { GFX.env = null; } et.dispose(); }
+  // 环境反射：一条竖向渐变 + 几团日光，经 PMREM 预滤波
+  const makeEnv = (grad, glow) => {
+    const ec = makeCanvas(256, 128), eg = ec.getContext('2d'); let gr = eg.createLinearGradient(0, 0, 0, 128); for (const [o, c] of grad) gr.addColorStop(o, c); eg.fillStyle = gr; eg.fillRect(0, 0, 256, 128);
+    for (const sx of [60, 316, -196]) { gr = eg.createRadialGradient(sx, 50, 0, sx, 50, 70); gr.addColorStop(0, glow[0]); gr.addColorStop(.12, glow[1]); gr.addColorStop(1, glow[2]); eg.fillStyle = gr; eg.fillRect(sx - 70, 0, 140, 110); }
+    const et = canvasTex(ec); et.mapping = T.EquirectangularReflectionMapping; let rt = null; try { const pm = new T.PMREMGenerator(R); rt = pm.fromEquirectangular(et); pm.dispose(); } catch (err) { rt = null; } et.dispose(); return rt;
+  };
+  GFX.setEnv = e => {
+    scene.fog.color.setHex(e.fog); scene.fog.density = e.fogD; FOG_COL.setHex(e.fog);
+    hemi.color.setHex(e.hemi[0]); hemi.groundColor.setHex(e.hemi[1]); hemi.intensity = e.hemi[2];
+    sun.color.setHex(e.sun[0]); sun.intensity = e.sun[1]; SUN_DIR.set(e.sunDir[0], e.sunDir[1], e.sunDir[2]).normalize();
+    fill.color.setHex(e.fill[0]); fill.intensity = e.fill[1]; R.toneMappingExposure = e.exp || 1.02;
+    for (const k in e.sky) { const u = SU[k], v = e.sky[k]; if (!u) continue; if (u.value && u.value.isColor) u.value.setRGB(v[0], v[1], v[2]); else u.value = v; }
+    // 预滤波结果是一张渲染目标，换图时连目标一起释放
+    const old = GFX.env, oldRT = GFX.envRT; GFX.envRT = makeEnv(e.envGrad, e.envGlow); GFX.env = GFX.envRT ? GFX.envRT.texture : null;
+    if (old) scene.traverse(o => { if (!o.material) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m.envMap === old) m.envMap = GFX.env; });
+    if (oldRT) oldRT.dispose();
+  };
 
   // ---- 后期：泛光 + 暗角 + 调色 ----
   const tri = new T.BufferGeometry();
@@ -151,12 +172,14 @@ function initGfx(canvas) {
 }
 
 /* ---------------- 几何缓存 ---------------- */
+/* 共用几何缓存：打上 cached 标记，换地图时不释放 */
 const _geo = {};
-function cylG(rt, rb, h, seg = 10, open = false) { const k = 'c' + rt + '_' + rb + '_' + h + '_' + seg + open; return _geo[k] || (_geo[k] = new T.CylinderGeometry(rt, rb, h, seg, 1, open)); }
-function sphG(r, w = 14, h = 10) { const k = 's' + r + '_' + w + '_' + h; return _geo[k] || (_geo[k] = new T.SphereGeometry(r, w, h)); }
-function boxG(x, y, z) { const k = 'b' + x + '_' + y + '_' + z; return _geo[k] || (_geo[k] = new T.BoxGeometry(x, y, z)); }
-function coneG(r, h, seg = 10) { const k = 'k' + r + '_' + h + '_' + seg; return _geo[k] || (_geo[k] = new T.ConeGeometry(r, h, seg)); }
-function icoG(r, d = 1) { const k = 'i' + r + '_' + d; return _geo[k] || (_geo[k] = new T.IcosahedronGeometry(r, d)); }
+function geoC(k, mk) { let g = _geo[k]; if (!g) { g = _geo[k] = mk(); g.userData.cached = true; } return g; }
+function cylG(rt, rb, h, seg = 10, open = false) { return geoC('c' + rt + '_' + rb + '_' + h + '_' + seg + open, () => new T.CylinderGeometry(rt, rb, h, seg, 1, open)); }
+function sphG(r, w = 14, h = 10) { return geoC('s' + r + '_' + w + '_' + h, () => new T.SphereGeometry(r, w, h)); }
+function boxG(x, y, z) { return geoC('b' + x + '_' + y + '_' + z, () => new T.BoxGeometry(x, y, z)); }
+function coneG(r, h, seg = 10) { return geoC('k' + r + '_' + h + '_' + seg, () => new T.ConeGeometry(r, h, seg)); }
+function icoG(r, d = 1) { return geoC('i' + r + '_' + d, () => new T.IcosahedronGeometry(r, d)); }
 function mesh(geo, mat, x = 0, y = 0, z = 0, parent) { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); if (parent) parent.add(m); return m; }
 function group(x = 0, y = 0, z = 0, parent) { const g = new T.Group(); g.position.set(x, y, z); if (parent) parent.add(g); return g; }
 

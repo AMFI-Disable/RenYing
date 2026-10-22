@@ -16,7 +16,12 @@ const UI = {
     for (let i = 0; i < SKILLS.length; i++) { const s = SKILLS[i], id = 'sk' + i, locked = Pl.lv < s.lv; this.cls(id, 'locked', locked); const cd = locked ? 0 : Pl.cds[i] / ((Pl.cdMax && Pl.cdMax[i]) || s.cd); const k = id + '.cd', v = Math.round(cd * 100) / 100; if (this.c[k] !== v) { this.c[k] = v; $(id).style.setProperty('--cd', v); } this.cls(id, 'nomp', !locked && Pl.mp < s.mp); }
     { const v = Math.round(sat(Pl.potCd / 1.5) * 100) / 100; if (this.c.potcd !== v) { this.c.potcd = v; $('sk4').style.setProperty('--cd', v); } }
     const alive = G.enemies.filter(e => e.state !== 'dead').length + G.queue.length;
-    this.set('waveT', G.wave ? `第${cnNum(G.wave)}波` : '试剑坪'); this.set('waveS', G.inter > 0 ? (G.wave ? `休整 ${Math.ceil(G.inter)} · B 入剑庐 · Enter 开战` : '') : `残敌 ${alive}`);
+    let t1, t2; const ch = CHAPTERS[G.chapter] || CHAPTERS[0];
+    if (G.intro) { t1 = ch.n; t2 = `整装 ${Math.ceil(G.inter)} · Enter 开战`; }
+    else if (G.clearT > 0) { t1 = ch.n; t2 = '已破'; }
+    else if (G.inter > 0) { t1 = `第${cnNum(G.stage + 1)}关`; t2 = `休整 ${Math.ceil(G.inter)} · B 入剑庐 · Enter 开战`; }
+    else { t1 = `第${cnNum(G.stage)}关`; t2 = `${G.stageName} · 残敌 ${alive}`; }
+    this.set('waveT', t1); this.set('waveS', t2);
     const b = G.boss && G.boss.state !== 'dead' ? G.boss : null; this.hide('bossBox', !b); if (b) { this.set('bossName', b.name); this.bar('bossFill', b.hp / b.maxHp); this.bar('bossLag', b.hp / b.maxHp); this.bar('bossPoise', b.stun > 0 ? 1 : b.poiseD / b.cfg.poise); }
     const lk = Pl.lock && Pl.lock.state !== 'dead' ? Pl.lock : null; this.hide('lockm', !lk);
     if (lk) { _pv.set(lk.pos.x, lk.hitY, lk.pos.z).project(GFX.camera); $('lockm').style.transform = `translate(${((_pv.x * .5 + .5) * innerWidth).toFixed(0)}px,${((-_pv.y * .5 + .5) * innerHeight).toFixed(0)}px) rotate(45deg)`; }
@@ -26,8 +31,9 @@ const UI = {
     const cv = $('mini'), g = this.mg || (this.mg = cv.getContext('2d')), S = cv.width, c = S / 2, k = c / 34, yaw = Cam.yaw, rx = -Math.cos(yaw), rz = Math.sin(yaw), fx = Math.sin(yaw), fz = Math.cos(yaw);
     const P = (x, z) => { const dx = x - Pl.pos.x, dz = z - Pl.pos.z; return [c + (dx * rx + dz * rz) * k, c - (dx * fx + dz * fz) * k]; };
     g.clearRect(0, 0, S, S); g.save(); g.beginPath(); g.arc(c, c, c, 0, TAU); g.clip();
-    let p = P(0, 0); g.strokeStyle = 'rgba(233,223,200,.35)'; g.lineWidth = 2; g.beginPath(); g.arc(p[0], p[1], ARENA_R * k, 0, TAU); g.stroke(); g.fillStyle = 'rgba(233,223,200,.1)'; g.beginPath(); g.arc(p[0], p[1], 20 * k, 0, TAU); g.fill();
-    p = P(0, -50); g.fillStyle = 'rgba(198,59,46,.8)'; g.fillRect(p[0] - 9, p[1] - 5, 18, 10);
+    let p = P(0, 0); g.strokeStyle = 'rgba(233,223,200,.35)'; g.lineWidth = 2; g.beginPath(); g.arc(p[0], p[1], World.R * k, 0, TAU); g.stroke(); g.fillStyle = 'rgba(233,223,200,.1)'; g.beginPath(); g.arc(p[0], p[1], 20 * k, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(233,223,200,.22)'; for (const c of World.colliders) { if (c.r < .8 || Math.hypot(c.x, c.z) > World.R) continue; p = P(c.x, c.z); g.beginPath(); g.arc(p[0], p[1], Math.max(1.5, c.r * k), 0, TAU); g.fill(); }
+    const mp = MAPS[World.id]; if (mp && mp.mini) mp.mini(g, P, k);
     for (const o of Orbs.list) { if (o.type === 0) continue; p = P(o.x, o.z); g.fillStyle = o.type === 1 ? '#dcae55' : '#ff6b57'; g.fillRect(p[0] - 2, p[1] - 2, 4, 4); }
     for (const e of G.enemies) { if (e.state === 'dead') continue; p = P(e.pos.x, e.pos.z); g.fillStyle = e.boss ? '#ff3a22' : e.elite ? '#ffc040' : '#e8674f'; g.beginPath(); g.arc(p[0], p[1], e.boss ? 9 : e.elite ? 6 : 4.5, 0, TAU); g.fill(); }
     for (const h of G.hazards) { if (!h.tele) continue; p = P(h.x, h.z); g.strokeStyle = '#ff3a22'; g.beginPath(); g.arc(p[0], p[1], h.r * k, 0, TAU); g.stroke(); }

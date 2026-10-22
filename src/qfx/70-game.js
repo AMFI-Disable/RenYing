@@ -1,10 +1,10 @@
-/* ---------------- 灵气珠 / 飞行物 / 波次 / 成长 ---------------- */
+/* ---------------- 灵气珠 / 飞行物 / 成长 / 机缘 / 剑庐 ---------------- */
 const Orbs = { list: [], mesh: null, m4: new T.Matrix4(), col: [new T.Color(.35, 1, .88), new T.Color(1, .78, .25), new T.Color(1, .3, .25)] };
 function initOrbs(scene) { const m = Orbs.mesh = new T.InstancedMesh(new T.IcosahedronGeometry(.1, 0), new T.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), 500); m.count = 0; m.frustumCulled = false; m.setColorAt(0, Orbs.col[0]); scene.add(m); }
 function spawnOrb(p, type, val) { if (Orbs.list.length >= 500) { collectOrb(Orbs.list.shift()); } const a = rand(TAU), s = rand(1.5, 5); Orbs.list.push({ x: p.x, y: rand(.8, 1.6), z: p.z, vx: Math.cos(a) * s, vy: rand(3, 7), vz: Math.sin(a) * s, type, val, age: 0 }); }
 function collectOrb(o) { if (o.type === 0) gainXp(o.val); else if (o.type === 1) { Pl.gold += o.val; } else healPlayer(o.val); }
 function updateOrbs(dt, t) {
-  const L = Orbs.list, m = Orbs.mesh, range = 4.5 + 2.5 * pk('gold'), all = G.inter > 0 || G.queue.length === 0 && !G.enemies.some(e => e.state !== 'dead'); let n = 0, snd = 0;
+  const L = Orbs.list, m = Orbs.mesh, range = 4.5 + 2.5 * pk('gold'), all = G.inter > 0 || G.clearT > 0 || G.queue.length === 0 && !G.enemies.some(e => e.state !== 'dead'); let n = 0, snd = 0;
   for (let i = L.length - 1; i >= 0; i--) {
     const o = L[i]; o.age += dt; const dx = Pl.pos.x - o.x, dy = 1.1 - o.y, dz = Pl.pos.z - o.z, d = Math.hypot(dx, dz);
     if (o.age > .45 && (d < range || all || o.pull) && Pl.state !== 'dead') { o.pull = true; const sp = Math.min(30, 8 + o.age * 22), l = Math.hypot(d, dy) || 1; o.vx = dx / l * sp; o.vy = dy / l * sp; o.vz = dz / l * sp; if (l < .7) { collectOrb(o); L.splice(i, 1); snd |= 1 << o.type; continue; } }
@@ -76,33 +76,7 @@ function updateProjs(dt, t) {
   }
 }
 
-/* ---- 波次 ---- */
-const WAVES = [null, { bandit: 6 }, { bandit: 6, wolf: 4 }, { bandit: 7, wolf: 2, spear: 3 }, { wolf: 6, spear: 5, bandit: 3, brute: 1 }, { boss1: 1 }, { wraith: 4, bandit: 8, wolf: 4 }, { brute: 2, archer: 1, spear: 7, bandit: 4 }, { wolf: 8, wraith: 5, spear: 4, brute: 2 }, { brute: 3, wraith: 5, archer: 2, bandit: 9, spear: 5 }, { boss2: 1 }];
-const WNAME = ['', '山贼探路', '狼嚎四野', '长枪列阵', '力士压阵', '黑风寨主', '幽魂夜行', '铁壁冷箭', '群妖乱舞', '倾巢而出', '剑魔临世'];
-function startWave(n) {
-  G.wave = n; G.inter = 0; G.bossDead = false; G.maxTokens = Math.min(4, 2 + Math.floor(n / 4)); G.cap = Math.min(13, 6 + Math.floor(n / 2)); G.tokens = 0; for (const e of G.enemies) e.token = false;
-  let comp = WAVES[n];
-  if (!comp) { comp = {}; if (n % 5 === 0) { comp[n % 10 === 0 ? 'boss2' : 'boss1'] = 1; } else { let b = 28 + (n - 10) * 5; const cost = { bandit: 1, wolf: 1, archer: 1.5, spear: 1.5, wraith: 2, brute: 4 }, ks = Object.keys(cost); while (b > 0) { const k = pick(ks); if (k === 'archer' && (comp.archer || 0) >= 2) continue; comp[k] = (comp[k] || 0) + 1; b -= cost[k]; } } }
-  const q = []; for (const k in comp) for (let i = 0; i < comp[k]; i++) q.push(k); for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[q[i], q[j]] = [q[j], q[i]]; }
-  G.queue = q; G.spawnT = 1.1; const boss = comp.boss1 || comp.boss2;
-  UI.banner(boss ? WNAME[n] || '强敌再临' : `第${cnNum(n)}波`, boss ? ET[comp.boss1 ? 'boss1' : 'boss2'].name : (WNAME[n] || '无尽试炼'), boss ? 'red' : ''); if (!boss) Snd.gong();
-}
-function spawnFromQueue() {
-  const type = G.queue.pop(), boss = ET[type].boss; let x, z, tries = 0;
-  do { const a = rand(TAU), r = boss ? 15 : rand(13, 24); x = Pl.pos.x + Math.cos(a) * r; z = Pl.pos.z + Math.sin(a) * r; } while (Math.hypot(x, z) > ARENA_R - 3 && tries++ < 30);
-  if (Math.hypot(x, z) > ARENA_R - 3) { const a = rand(TAU); x = Math.cos(a) * 20; z = Math.sin(a) * 20; }
-  const p = new V3(x, 0, z); collide(p, 1); const eliteP = G.wave >= 4 ? Math.min(.28, .08 + .015 * (G.wave - 4)) : 0; spawnEnemy(type, p.x, p.z, { elite: Math.random() < eliteP });
-}
-function updateWaves(dt) {
-  if (G.inter > 0) { G.inter -= dt; if (G.inter <= 0 || Input.hit('Enter')) { startWave(G.wave + 1); } return; }
-  const alive = G.enemies.filter(e => e.state !== 'dead').length;
-  if (G.queue.length && alive < G.cap) { G.spawnT -= dt; if (G.spawnT <= 0) { spawnFromQueue(); G.spawnT = alive < 3 ? .25 : .7; } }
-  if (!G.queue.length && G.enemies.length === 0 && G.wave > 0 && Pl.state !== 'dead') {
-    try { if (parent !== window) parent.postMessage({ qfx: 'wave', n: G.wave }, '*'); } catch (_) {}
-    if (G.wave === 10 && !G.endless) { Game.victory(); return; }
-    G.inter = 22; healPlayer(Pl.maxHp * .1); Pl.mp = Pl.maxMp; UI.banner('敌势暂歇', `第${cnNum(G.wave)}波已清`, 'gold'); Snd.level(); G.hazards.length = 0;
-  }
-}
+/* ---- 成长 ---- */
 function gainXp(v) {
   Pl.xp += v * (1 + .0 * 1);
   while (Pl.xp >= Pl.xpNeed) {

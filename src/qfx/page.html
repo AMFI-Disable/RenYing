@@ -166,6 +166,21 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .perklist span{border:1px solid rgba(185,162,106,.5);padding:2px 9px;color:var(--paper2)}
 .note{font-size:12.5px;color:var(--dim);letter-spacing:.1em;text-align:center}
 
+/* ---------- 章节过场 ---------- */
+.il-next{max-width:520px;margin:0;text-align:center;line-height:1.9;color:var(--paper2);font-size:14.5px;text-wrap:pretty}
+.travel{position:absolute;inset:0;z-index:8;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .6s ease}
+.travel.on{opacity:1;pointer-events:auto}
+.tv-wash{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,#1b2024 0,#0c0f12 58%,#050607 100%)}
+.tv-wash::after{content:"";position:absolute;inset:-10%;background:radial-gradient(circle at 30% 40%,rgba(233,223,200,.05),transparent 40%),radial-gradient(circle at 72% 64%,rgba(233,223,200,.04),transparent 36%)}
+.tv-text{position:relative;text-align:center;padding:16px;max-width:620px}
+.tv-idx{font-size:14px;letter-spacing:.8em;text-indent:.8em;color:var(--paper2)}
+.tv-name{font-family:var(--f-brush);font-size:clamp(84px,18vw,168px);line-height:1.1;color:var(--paper);letter-spacing:.2em;text-indent:.2em;text-shadow:0 8px 40px rgba(0,0,0,.9)}
+.tv-sub{display:inline-block;margin-top:2px;background:var(--cinnabar);color:var(--paper);font-size:13px;padding:2px 12px;letter-spacing:.5em;text-indent:.5em}
+.tv-story{margin:22px auto 0;line-height:2;color:var(--paper2);font-size:15px;text-wrap:pretty;opacity:0;transform:translateY(8px);transition:opacity 1s .5s,transform 1s .5s}
+.travel.on .tv-story{opacity:1;transform:none}
+.travel.on .tv-name{animation:tvIn 1.2s ease both}
+@keyframes tvIn{0%{opacity:0;filter:blur(10px);letter-spacing:.6em}100%{opacity:1;filter:blur(0)}}
+
 /* ---------- 触屏 ---------- */
 #touch{position:absolute;inset:0;z-index:3;pointer-events:none}
 #stick{position:absolute;left:22px;bottom:92px;width:120px;height:120px;border-radius:50%;border:1.5px solid rgba(233,223,200,.35);pointer-events:auto;background:rgba(8,10,12,.25)}
@@ -237,8 +252,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="tname"><span>青</span><span>锋</span><span>行</span><i class="seal"><b>暮</b><b>山</b><b>试</b><b>剑</b></i></div>
     <div class="tbody">
       <p>暮色四合，山门告急。黑风寨夜袭青云剑宗，师兄弟尽数下山未归，偌大试剑坪上，只剩你一人一剑。</p>
-      <p>守住十波来敌。每破一境，可择一道机缘；每歇一波，可入剑庐锻剑。</p>
-      <div class="btns"><button class="btn pri" id="btnStart" type="button" disabled>入山</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
+      <p>三章十关：山门、竹林、剑冢。每破一境，可择一道机缘；每过一关，可入剑庐锻剑；每入一章，留一处存档。</p>
+      <div class="btns"><button class="btn pri" id="btnCont" type="button" hidden>续行</button><button class="btn pri" id="btnStart" type="button" disabled>入山</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
       <div class="loading" id="loading">山色渐起……</div>
       <div class="best" id="best"></div>
       <div class="keys">
@@ -284,7 +299,20 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <h2 id="overT">剑折人亡<small id="overS"></small></h2>
     <div class="stats" id="overStats"></div>
     <div class="perklist" id="overPerks"></div>
-    <div class="btns"><button class="btn pri" id="btnAgain" type="button">再战</button><button class="btn" id="btnEndless" type="button" hidden>无尽试炼</button></div>
+    <div class="btns"><button class="btn pri" id="btnRetry" type="button">从本章重来</button><button class="btn" id="btnEndless" type="button" hidden>无尽试炼</button><button class="btn" id="btnAgain" type="button">重新入山</button><button class="btn sm" id="btnHome" type="button">回山门</button></div>
+  </div>
+
+  <div id="interlude" class="screen veil" hidden>
+    <h2 id="ilT">已破<small id="ilS"></small></h2>
+    <div class="stats" id="ilStats"></div>
+    <p class="il-next" id="ilNext"></p>
+    <div class="btns"><button class="btn" id="btnIlShop" type="button">入剑庐</button><button class="btn pri" id="btnIlGo" type="button">启程</button></div>
+    <div class="note">启程即入下一章，章首自动存档</div>
+  </div>
+
+  <div id="travel" class="travel" hidden>
+    <div class="tv-wash"></div>
+    <div class="tv-text"><div class="tv-idx" id="tvIdx"></div><div class="tv-name" id="tvName"></div><div class="tv-sub" id="tvSub"></div><p class="tv-story" id="tvStory"></p></div>
   </div>
 </div>
 

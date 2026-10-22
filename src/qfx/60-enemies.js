@@ -57,7 +57,7 @@ const ET = {
 const _eb = new V3(), _et = new V3();
 
 function spawnEnemy(type, x, z, o = {}) {
-  const cfg = ET[type], rig = cfg.rig(); const elite = !!o.elite && !cfg.boss, wv = Math.max(1, G.wave), hs = (1 + .19 * (wv - 1) + (G.endless ? .08 * (wv - 10) * (wv - 10) : 0)) * (cfg.boss && G.endless ? 1.6 : 1), ds = 1.15 + .12 * (wv - 1);
+  const cfg = ET[type], rig = cfg.rig(); const elite = !!o.elite && !cfg.boss, wv = Math.max(1, G.stage), hs = (1 + .19 * (wv - 1) + (G.endless ? .08 * (wv - 10) * (wv - 10) : 0)) * (cfg.boss && G.endless ? 1.6 : 1), ds = 1.15 + .12 * (wv - 1);
   const e = { type, cfg, rig, pos: new V3(x, 0, z), yaw: Math.atan2(Pl.pos.x - x, Pl.pos.z - z), maxHp: Math.round(cfg.hp * hs * (elite ? 2.4 : 1)), dmgK: ds * (elite ? 1.3 : 1), state: 'spawn', st: 0, atk: null, cds: cfg.atks.map(() => rand(.4, 1.6)), token: false, stagger: 0, poiseD: 0, slowT: 0, burnT: 0, burnDps: 0, burnTick: 0, flash: 0, elite, boss: !!cfg.boss, ghost: !!cfg.ghost, kx: 0, kz: 0, didHit: false, tele: null, strafe: Math.random() < .5 ? 1 : -1, strafeT: rand(1, 3), speedN: 0, deadT: 0, name: cfg.name, phase: 1, tick: 0, jumpY: 0, summoned: 0, stun: 0, fx: 0 };
   e.hp = e.maxHp; const sc = rig.root.scale.x * (elite ? 1.18 : 1); rig.root.scale.setScalar(sc); e.radius = cfg.r * (elite ? 1.15 : 1); e.hitY = (cfg.hitY || 1.15) * sc + (cfg.float || 0);
   rig.root.position.copy(e.pos); rig.root.rotation.y = e.yaw; GFX.scene.add(rig.root);
@@ -86,7 +86,7 @@ function damageEnemy(e, dmg, o = {}) {
 }
 function killEnemy(e) {
   cancelAttack(e); e.state = 'dead'; e.deadT = 0; e.hp = 0; G.kills++; if (Pl.lock === e) Pl.lock = null;
-  const c = e.cfg, n = e.boss ? 26 : e.elite ? 8 : 3, xp = c.xp * (e.elite ? 2.5 : 1) * (1 + .06 * (G.wave - 1)), gold = randi(c.gold[0], c.gold[1]) * (e.elite ? 2.5 : 1) * (1 + .3 * pk('gold')) * (1 + .05 * (G.wave - 1));
+  Save.kill(); const c = e.cfg, n = e.boss ? 26 : e.elite ? 8 : 3, xp = c.xp * (e.elite ? 2.5 : 1) * (1 + .06 * (G.stage - 1)), gold = randi(c.gold[0], c.gold[1]) * (e.elite ? 2.5 : 1) * (1 + .3 * pk('gold')) * (1 + .05 * (G.stage - 1));
   for (let i = 0; i < n; i++) spawnOrb(e.pos, 0, xp / n); const gn = e.boss ? 16 : Math.min(5, Math.ceil(gold / 4)); for (let i = 0; i < gn; i++) spawnOrb(e.pos, 1, gold / gn);
   if (Math.random() < (e.boss ? 1 : e.elite ? .5 : .07)) for (let i = 0; i < (e.boss ? 4 : 1); i++) spawnOrb(e.pos, 2, 18);
   if (pk('wolf')) { Pl.mp = Math.min(Pl.maxMp, Pl.mp + 4 * pk('wolf')); healPlayer(Pl.maxHp * .02 * pk('wolf'), true); }
