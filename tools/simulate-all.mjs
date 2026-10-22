@@ -1,23 +1,29 @@
 #!/usr/bin/env node
 /**
- * Exhaustive RenYing Match Simulator & Meta Analyzer.
+ * Exhaustive RenYing Match Simulator, Meta Analyzer, Neural Trainer & Auto-Publisher.
  *
  * Runs 5 matches for EVERY CIRCUMSTANCE:
  *   - All 5 Game Modes: cpu (1v1), chaos (mutations), mayhem (10x meter), watch2v2 (2-Player vs 2-Player), tag3 (3v3)
  *   - 2v2 Mode: Simulates Two Players vs Two Players across all 66 duo combinations and compiles Duo Tier Lists & Partner Synergy
  *   - 1v1 Modes: All 78 unique pairings across all 12 characters (including mirror matches)
  *   - Multi-core parallel execution across CPU workers for maximum throughput (~100,000+ frames/sec)
+ *   - After simulation: collects hero training trajectories, trains neural policies in parallel,
+ *     prints full win-rate / balance report, then optionally builds & pushes to git.
  *
  * Usage:
  *   node tools/simulate-all.mjs
  *   node tools/simulate-all.mjs --matches-per-matchup 5 --export data/exhaustive_dataset.jsonl
  *   node tools/simulate-all.mjs --mode watch2v2 --matches-per-matchup 5
+ *   node tools/simulate-all.mjs --push                   # build + git commit + push after training
+ *   node tools/simulate-all.mjs --epochs 8 --rounds 3    # tune neural training
+ *   node tools/simulate-all.mjs --skip-train             # simulate + report only, no NN training
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
+import { execSync, spawn } from 'node:child_process';
 
 const HEROES = [
   { id: 'qingfeng', idx: 0, name: '青锋' },
@@ -122,16 +128,77 @@ if (!isMainThread) {
 
   const env = createSandbox();
 
+  // ---------------------------------------------------------------------------
+  // Trajectory helpers (mirrors train-heroes.mjs worker logic)
+  // ---------------------------------------------------------------------------
+  function extractObs(f, foe, projs, STAGE_W) {
+    const dx = (foe.x - f.x) / STAGE_W;
+    const dy = (foe.y - f.y) / 400;
+    const dist = Math.abs(foe.x - f.x) / STAGE_W;
+    const hp1 = f.hp / f.maxHp;
+    const hp2 = foe.hp / foe.maxHp;
+    const g1 = (f.guard || 0) / (f.maxGuard || 100);
+    const g2 = (foe.guard || 0) / (foe.maxGuard || 100);
+    const m1 = (f.meter || 0) / 100;
+    const m2 = (foe.meter || 0) / 100;
+    const vy1 = f.vy / 600;
+    const vy2 = foe.vy / 600;
+    const face1 = f.face;
+    const face2 = foe.face;
+    const sAtk1 = f.state === 'attack' ? 1 : 0;
+    const sBlk1 = f.state === 'block' || f.state === 'blockstun' ? 1 : 0;
+    const sHit1 = f.state === 'hitstun' || f.state === 'launched' ? 1 : 0;
+    const sAir1 = f.onGround() ? 0 : 1;
+    const sAtk2 = foe.state === 'attack' ? 1 : 0;
+    const sBlk2 = foe.state === 'block' || foe.state === 'blockstun' ? 1 : 0;
+    const sHit2 = foe.state === 'hitstun' || foe.state === 'launched' ? 1 : 0;
+    const sAir2 = foe.onGround() ? 0 : 1;
+    const cd1 = Math.min(1, (f.skillCD || 0) / 6);
+    const cd2 = Math.min(1, (f.skill2CD || 0) / 6);
+    const breakCD = Math.min(1, (f.breakCD || 0) / 10);
+    let projNear = 0;
+    for (let i = 0; i < projs.length; i++) {
+      const p = projs[i];
+      if (p.owner !== f.idx && p.dmg > 0 && Math.abs(f.x - p.x) < 300) {
+        projNear = (p.x - f.x) / STAGE_W;
+        break;
+      }
+    }
+    return [
+      dx, dy, dist, hp1, hp2, g1, g2, m1, m2, vy1, vy2, face1, face2,
+      sAtk1, sBlk1, sHit1, sAir1, sAtk2, sBlk2, sHit2, sAir2,
+      cd1, cd2, breakCD, projNear
+    ];
+  }
+
+  function encodeAction(c) {
+    if (c.buf.special || c.held.special) return 9;
+    if (c.buf.dash || c.held.dash) return 8;
+    if (c.buf.skill2 || c.held.skill2) return 7;
+    if (c.buf.skill || c.held.skill) return 6;
+    if (c.buf.light || c.held.atk) return 5;
+    if (c.buf.jump || c.held.jump) return 4;
+    if (c.held.down) return 3;
+    if (c.held.right) return 2;
+    if (c.held.left) return 1;
+    return 0;
+  }
+
   parentPort.on('message', task => {
-    const { mode, p1, p2, p3, p4, duo1, duo2, pTeam, eTeam, matches } = task;
+    const { mode, p1, p2, p3, p4, duo1, duo2, pTeam, eTeam, matches, collectTrajectories } = task;
     const results = [];
     let totalFrames = 0;
+    // trajectories: only collected for 1v1 cpu mode tasks (training signal)
+    const trajectories = [];
 
     for (let m = 0; m < matches; m++) {
       env.projs.length = 0;
       env.M.wins = [0, 0];
       env.M.round = 1;
       env.M.phase = 'fight';
+
+      // Alternate between 'impossible' and 'hard' for richer training trajectories
+      const matchLv = collectTrajectories ? ((m % 2 === 0) ? 'impossible' : 'hard') : 'god';
 
       if (mode === 'watch2v2') {
         env.startWatch2v2([0, p1, p2, 1, p3, p4]);
@@ -142,22 +209,67 @@ if (!isMainThread) {
       } else if (mode === 'tag3') {
         env.startTag3Match(pTeam, eTeam, 'god', true);
       } else {
-        env.startMatch('cpu', 'god', [p1, p2], true);
+        // cpu (1v1) — use dynamic level for trajectory collection
+        env.startMatch('cpu', matchLv, [p1, p2], true);
+        if (collectTrajectories) {
+          env.A.ctrl = new env.AICtrl(matchLv);
+          env.B.ctrl = new env.AICtrl(matchLv);
+        }
       }
 
       let steps = 0;
       const maxSteps = (mode === 'watch2v2' ? 45 : 25) * 120 * 3 + 1200;
+
+      let prevHp1 = env.A ? env.A.hp : 0;
+      let prevHp2 = env.B ? env.B.hp : 0;
+      let prevG1 = env.A ? (env.A.guard || 100) : 100;
+      let prevG2 = env.B ? (env.B.guard || 100) : 100;
+      const matchTraj = [];
+
       while (env.M.phase !== 'end' && steps < maxSteps) {
         steps++;
+
+        // Collect trajectory data every 2 frames for 1v1 cpu matches
+        if (collectTrajectories && mode === 'cpu' && steps % 2 === 0 && env.A && env.B) {
+          const obs1 = extractObs(env.A, env.B, env.projs, env.STAGE_W);
+          const act1 = encodeAction(env.A.ctrl);
+          const obs2 = extractObs(env.B, env.A, env.projs, env.STAGE_W);
+          const act2 = encodeAction(env.B.ctrl);
+          const dHp1 = prevHp1 - env.A.hp;
+          const dHp2 = prevHp2 - env.B.hp;
+          const dG1 = prevG1 - (env.A.guard || 0);
+          const dG2 = prevG2 - (env.B.guard || 0);
+          const r1 = (dHp2 - dHp1) / 80 + (dG2 - dG1) / 250;
+          if (act1 !== 0 || Math.abs(r1) > 0.01 || steps % 6 === 0) {
+            matchTraj.push({ heroIdx: p1, s: obs1, a: act1, r: r1, p: 0 });
+          }
+          if (act2 !== 0 || Math.abs(r1) > 0.01 || steps % 6 === 0) {
+            matchTraj.push({ heroIdx: p2, s: obs2, a: act2, r: -r1, p: 1 });
+          }
+          prevHp1 = env.A.hp;
+          prevHp2 = env.B.hp;
+          prevG1 = env.A.guard || 0;
+          prevG2 = env.B.guard || 0;
+        }
+
         env.step();
       }
       totalFrames += steps;
 
       const w = env.M.wins[0] > env.M.wins[1] ? 0 : env.M.wins[1] > env.M.wins[0] ? 1 : -1;
       results.push({ winner: w, steps, score: [env.M.wins[0], env.M.wins[1]] });
+
+      // Apply win/loss bonus to trajectory rewards
+      if (collectTrajectories && mode === 'cpu') {
+        for (const rec of matchTraj) {
+          if (rec.p === w) rec.r += 1.0;
+          else if (w !== -1) rec.r -= 0.8;
+          trajectories.push(rec);
+        }
+      }
     }
 
-    parentPort.postMessage({ taskId: task.id, mode, p1, p2, p3, p4, duo1, duo2, results, totalFrames });
+    parentPort.postMessage({ taskId: task.id, mode, p1, p2, p3, p4, duo1, duo2, results, totalFrames, trajectories });
   });
 }
 
@@ -175,13 +287,21 @@ if (isMainThread) {
   const targetMode = getArg('mode', 'all');
   const concurrency = parseInt(getArg('workers', getArg('concurrency', String(Math.max(2, os.cpus().length)))), 10);
   const exportPath = getArg('export', '');
+  const skipTrain = args.includes('--skip-train');
+  const doPush = args.includes('--push');
+  const epochs = parseInt(getArg('epochs', '6'), 10);
+  const roundsPerMatch = parseInt(getArg('rounds', '2'), 10);
 
   const modesToRun = targetMode === 'all' ? MODES : [targetMode];
+  // Collect training trajectories only when running cpu mode (or all modes)
+  const collectTrajectories = !skipTrain && modesToRun.includes('cpu');
 
   console.log(`\n================================================================`);
-  console.log(`   RenYing Exhaustive Circumstance Simulator (All Matchups)     `);
-  console.log(`   Matches Per Circumstance: ${matchesPerMatchup} | Workers: ${concurrency}`);
-  console.log(`   Modes Scheduled: ${modesToRun.join(', ')}`);
+  console.log(`   RenYing Exhaustive Simulator → Trainer → Publisher           `);
+  console.log(`   Matches Per Circumstance : ${matchesPerMatchup} | Workers: ${concurrency}`);
+  console.log(`   Modes Scheduled          : ${modesToRun.join(', ')}`);
+  console.log(`   Neural Training          : ${skipTrain ? 'SKIPPED (--skip-train)' : `enabled (epochs=${epochs}, rounds=${roundsPerMatch})`}`);
+  console.log(`   Auto Push                : ${doPush ? 'YES' : 'no'}`);
   console.log(`================================================================\n`);
 
   // Build task list for every circumstance
@@ -211,7 +331,8 @@ if (isMainThread) {
               duo1: d1,
               duo2: d2,
               label: `【${t1.name}】vs【${t2.name}】`,
-              matches: matchesPerMatchup
+              matches: matchesPerMatchup,
+              collectTrajectories: false
             });
             oppCount++;
           }
@@ -231,7 +352,8 @@ if (isMainThread) {
           p1: pTeam[0],
           p2: eTeam[0],
           label: `${HEROES[pTeam[0]].name}队 vs ${HEROES[eTeam[0]].name}队`,
-          matches: matchesPerMatchup
+          matches: matchesPerMatchup,
+          collectTrajectories: false
         });
       }
     } else {
@@ -244,7 +366,8 @@ if (isMainThread) {
             p1: i,
             p2: j,
             label: `${HEROES[i].name} vs ${HEROES[j].name}`,
-            matches: matchesPerMatchup
+            matches: matchesPerMatchup,
+            collectTrajectories: collectTrajectories && mode === 'cpu'
           });
         }
       }
@@ -258,6 +381,10 @@ if (isMainThread) {
   const startTime = Date.now();
   let completedTasks = 0;
   let totalFramesSimulated = 0;
+
+  // Training trajectory accumulators (keyed by hero id, filled from cpu-mode tasks)
+  const trajectoriesByHero = {};
+  for (const h of HEROES) trajectoriesByHero[h.id] = [];
 
   // Aggregate stats per mode
   const modeStats = {};
@@ -290,6 +417,14 @@ if (isMainThread) {
       worker.on('message', msg => {
         completedTasks++;
         totalFramesSimulated += msg.totalFrames;
+
+        // Accumulate training trajectories from cpu-mode tasks
+        if (msg.trajectories && msg.trajectories.length > 0) {
+          for (const tr of msg.trajectories) {
+            const hero = HEROES[tr.heroIdx];
+            if (hero) trajectoriesByHero[hero.id].push(tr);
+          }
+        }
 
         const ms = modeStats[msg.mode];
         if (ms) {
@@ -510,4 +645,134 @@ if (isMainThread) {
   writeFileSync('data/meta/exhaustive_report.json', JSON.stringify(allReports, null, 2), 'utf8');
   console.log(`\n✓ All mode meta dossiers exported to data/meta/`);
   console.log(`✓ Master report saved to data/meta/exhaustive_report.json\n`);
+
+  // =========================================================================
+  // HERO WIN-RATE BALANCE REPORT (cpu mode, printed from live simulation data)
+  // =========================================================================
+  if (modeStats['cpu']) {
+    const ms = modeStats['cpu'];
+    console.log(`\n=================================================================`);
+    console.log(`               RenYing Hero Balance Audit Report                 `);
+    console.log(`=================================================================`);
+    const sortedStats = HEROES.map(h => ({
+      ...h,
+      picks: ms.heroMatches[h.idx],
+      wins: ms.heroWins[h.idx],
+      rate: ms.heroMatches[h.idx] > 0 ? (ms.heroWins[h.idx] / ms.heroMatches[h.idx]) * 100 : 0
+    })).sort((a, b) => b.rate - a.rate);
+
+    console.log(`  英雄     | 胜场 / 场次 | 胜率    | 评定状态`);
+    console.log(`  ---------|-------------|---------|---------------------------`);
+    for (const s of sortedStats) {
+      let status = '🟢 均衡 (Balanced)';
+      if (s.rate > 65)       status = '🔴 过强 (Dominant — Needs Nerf)';
+      else if (s.rate > 55)  status = '🟡 强势 (Strong)';
+      else if (s.rate < 35)  status = '🔵 偏弱 (Underpowered — Needs Buff)';
+      else if (s.rate < 45)  status = '⚪ 略弱 (Slightly Weak)';
+      console.log(`  ${s.name.padEnd(6)} | ${(s.wins + '/' + s.picks).padEnd(11)} | ${s.rate.toFixed(1).padStart(5)}%  | ${status}`);
+    }
+    console.log(`=================================================================\n`);
+  }
+
+  // =========================================================================
+  // NEURAL HERO TRAINING (parallel, using cpu-mode trajectories)
+  // =========================================================================
+  if (!skipTrain && collectTrajectories) {
+    const totalTraj = Object.values(trajectoriesByHero).reduce((s, a) => s + a.length, 0);
+    console.log(`\n=================================================================`);
+    console.log(`   Neural Training: ${HEROES.length} heroes | ${totalTraj.toLocaleString()} total trajectories`);
+    console.log(`   Epochs: ${epochs} | Parallel jobs: ${Math.min(concurrency, HEROES.length)}`);
+    console.log(`=================================================================\n`);
+
+    mkdirSync('data', { recursive: true });
+    mkdirSync('models/heroes', { recursive: true });
+
+    const trainStart = Date.now();
+    const trainQueue = [...HEROES];
+    const trainSummary = [];
+
+    async function runTrainJob(hero) {
+      const list = trajectoriesByHero[hero.id];
+      if (!list || list.length === 0) {
+        console.log(`  ⚠  ${hero.name} (${hero.id}): no trajectories collected — skipping.`);
+        trainSummary.push({ hero: hero.name, id: hero.id, status: 'SKIPPED (no data)' });
+        return;
+      }
+      const dataPath = `data/hero_${hero.id}.jsonl`;
+      const modelPath = `models/heroes/${hero.id}.json`;
+      writeFileSync(dataPath, list.map(d => JSON.stringify(d)).join('\n') + '\n', 'utf8');
+
+      return new Promise(resolve => {
+        const proc = spawn(process.execPath, [
+          'tools/train-policy.mjs',
+          '--data', dataPath,
+          '--hero', hero.id,
+          '--epochs', String(epochs),
+          '--out', modelPath
+        ], { stdio: 'inherit' });
+        proc.on('close', code => {
+          trainSummary.push({ hero: hero.name, id: hero.id, path: modelPath, status: code === 0 ? 'OK' : 'FAILED' });
+          resolve();
+        });
+      });
+    }
+
+    const numTrainWorkers = Math.min(concurrency, HEROES.length);
+    const trainWorkerPool = Array.from({ length: numTrainWorkers }, async () => {
+      while (trainQueue.length > 0) {
+        const nextHero = trainQueue.shift();
+        if (nextHero) await runTrainJob(nextHero);
+      }
+    });
+    await Promise.all(trainWorkerPool);
+
+    // Clean up intermediate JSONL files
+    try { execSync('rm -rf data/hero_*.jsonl', { stdio: 'ignore' }); } catch (e) {}
+
+    const trainTime = ((Date.now() - trainStart) / 1000).toFixed(2);
+    console.log(`\n✓ Neural training complete in ${trainTime}s!`);
+
+    // Training summary table
+    console.log(`\n  Hero      | Status`);
+    console.log(`  ----------|----------`);
+    for (const s of trainSummary) {
+      const icon = s.status === 'OK' ? '✓' : s.status.startsWith('SKIPPED') ? '–' : '✗';
+      console.log(`  ${s.hero.padEnd(9)} | ${icon} ${s.status}`);
+    }
+
+    // =========================================================================
+    // BUILD + GIT PUSH
+    // =========================================================================
+    try {
+      console.log('\nPackaging updated neural weights into game build (tools/build.py)...');
+      execSync('python3 tools/build.py', { stdio: 'inherit' });
+      console.log('[Build Complete] Game is ready with the latest trained AI models!');
+
+      if (doPush) {
+        console.log('\nCommitting and pushing to origin/main...');
+        execSync('git add models/ index.html renying-offline.html', { stdio: 'inherit' });
+        try {
+          execSync('git commit -m "feat: auto-simulate, train & update hero models"', { stdio: 'inherit' });
+          execSync('git push origin main', { stdio: 'inherit' });
+          console.log('✓ Pushed to origin/main successfully.');
+        } catch (gitErr) {
+          console.warn('⚠  git commit/push failed (nothing new to commit, or push rejected).');
+        }
+      }
+    } catch (e) {
+      console.warn('⚠  Could not complete build or push:', e.message);
+    }
+  } else if (doPush && skipTrain) {
+    // Push-only path when --skip-train is used (e.g. meta data only)
+    try {
+      execSync('git add models/ index.html renying-offline.html', { stdio: 'inherit' });
+      try {
+        execSync('git commit -m "chore: update simulation meta reports"', { stdio: 'inherit' });
+        execSync('git push origin main', { stdio: 'inherit' });
+        console.log('✓ Pushed to origin/main.');
+      } catch (gitErr) {}
+    } catch (e) {}
+  }
+
+  console.log('\n✓ All done!\n');
 }
