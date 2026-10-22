@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Changed
+
+- **Skins Get Their First-Version Looks Back, and Every Legend Its Own Silhouette (`src/game.js`)**: every skin again uses its original look from before the skin-art rework (headgear, masks, robes, palettes and signature weapons via `deco` and `weapStyle`). Skins no longer draw the oval chest plate with a gem in the middle (the breastplate color becomes a diagonal strap), legends no longer share the orbiting orbs and the disc behind the back, and each has its own back piece (`drawBackPiece`): 金乌 flame wings, 幽渊 floating void shards, 青锋行 a hovering flying sword, 血月 a blood crescent, 幻灵 five fox tails, 修罗 flaming war banners, 沧龙 a dragon coiled up the back, 天青 a celestial silk ribbon, 烈阳 a flame mane, 星墨 the Big Dipper, 月蚀 a tattered cloak, 霜华 ice-crystal wings, 凤羽 phoenix tail plumes, 钧天 a frame of bronze bells, 酒剑仙 a jade gourd and a cloud underfoot, 冥狱 ghost chains and wisps. The light layer from the rework stays on top. Skins no longer rename the hero or its moves; the HUD, callouts and codex use the base hero's names.
+
 ### Fixed
 
 - **Home Menu Transition Flow (`src/game.js`, `src/style.css`, `src/page.html`)**:

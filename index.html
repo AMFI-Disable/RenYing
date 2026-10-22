@@ -3950,7 +3950,7 @@ SFX.heavy(); SFX.thud();
 for (let h = 0; h < 7; h++) {
 ring(f.x + f.face * 65, -h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
 }
-const waveTxt = isCrimson ? '🌊 焚血狂突 · 惊涛拍岸' : (foeInAir ? '🌊 巨浪翻江 · 撼坠' : '🌊 巨浪裂空 · 崩山');
+const waveTxt = foeInAir ? '🌊 巨浪翻江 · 撼坠' : '🌊 巨浪裂空 · 崩山';
 addP({ type: 'text', text: waveTxt, x: f.x + f.face * 60, y: f.y - 140, life: 1.0, max: 1.0, rgb: waveRGB });
 f.vx *= 0.2;
 }
@@ -8928,6 +8928,581 @@ const seg = skinBladeSeg(f.sk, f, L);
 ctx.strokeStyle = `rgba(${L.fx.c},0.9)`; ctx.lineWidth = 6; ctx.lineCap = 'round';
 if (seg) line(seg[0], seg[1]); else { ctx.fillStyle = `rgba(${L.fx.c},0.8)`; circle(f.sk.hf, 7); circle(f.sk.hb, 7); }
 }
+function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
+const bk = -sk.face, sh = sk.sh, hip = sk.hip, idx = f.idx || 0;
+const bez = (p0, p1, p2, u) => [(1 - u) * (1 - u) * p0[0] + 2 * (1 - u) * u * p1[0] + u * u * p2[0], (1 - u) * (1 - u) * p0[1] + 2 * (1 - u) * u * p1[1] + u * u * p2[1]];
+const ribbon = (p0, p1, p2, w0, w1, fill, n = 14) => {
+const L1 = [], R1 = [];
+for (let i = 0; i <= n; i++) {
+const u = i / n, p = bez(p0, p1, p2, u), q = bez(p0, p1, p2, Math.min(1, u + 0.02)), r = bez(p0, p1, p2, Math.max(0, u - 0.02));
+let dx = q[0] - r[0], dy = q[1] - r[1]; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+const w = typeof w0 === 'function' ? w0(u) : w0 + (w1 - w0) * u; L1.push([p[0] - dy * w, p[1] + dx * w]); R1.push([p[0] + dy * w, p[1] - dx * w]);
+}
+ctx.fillStyle = fill; ctx.beginPath(); ctx.moveTo(L1[0][0], L1[0][1]);
+for (const p of L1) ctx.lineTo(p[0], p[1]);
+for (let i = R1.length - 1; i >= 0; i--) ctx.lineTo(R1[i][0], R1[i][1]);
+ctx.closePath(); ctx.fill();
+};
+const lg = (a, b, stops) => { const g = ctx.createLinearGradient(a[0], a[1], b[0], b[1]); for (const [o, c] of stops) g.addColorStop(o, c); return g; };
+const glow = (c, r, col, a) => { const g = ctx.createRadialGradient(c[0], c[1], 0, c[0], c[1], r); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.fillRect(c[0] - r, c[1] - r, r * 2, r * 2); };
+switch (kind) {
+case 'crowwings': {   // 金乌：两扇金红火羽翼，羽尖跳动的火苗
+const flap = Math.sin(t * 3.2 + idx) * 0.12;
+glow([bc[0] + bk * 18, bc[1] - 14], 62, '255,170,60', 0.28);
+for (const layer of [1, 0]) {
+const sc = layer ? 0.82 : 1, root = [bc[0] - bk * layer * 6, bc[1] + 2 - layer * 3];
+for (let k = 0; k < 7; k++) {
+const a = -1.45 + k * 0.29 + flap * (1 - k / 8) + layer * 0.12, len = (54 - k * 3.2) * sc;
+const tip = [root[0] + bk * Math.cos(a) * len, root[1] + Math.sin(a) * len];
+const mid = [root[0] + bk * Math.cos(a - 0.18) * len * 0.55, root[1] + Math.sin(a - 0.18) * len * 0.55];
+ctx.globalAlpha = layer ? 0.7 : 1;
+ribbon(root, mid, tip, 5.5 * sc, 0.6, lg(root, tip, [[0, '#fff3c4'], [0.45, '#ffb43a'], [1, '#e2421a']]), 10);
+const fl = 4 + Math.sin(t * 14 + k * 1.7) * 2.5;
+ctx.fillStyle = 'rgba(255,230,140,0.85)'; ctx.beginPath(); ctx.ellipse(tip[0], tip[1], 2.2, fl, a + Math.PI / 2, 0, 7); ctx.fill();
+}
+}
+ctx.globalAlpha = 1; break;
+}
+case 'voidshards': {   // 幽渊：五片悬浮的黑晶碎片扇形排开，紫光描边，黑雾在后
+glow(bc, 58, '120,40,200', 0.35);
+for (let k = 0; k < 5; k++) {
+const a = -2.2 + k * 0.48, r = 34 + (k % 2) * 8, bob = Math.sin(t * 2 + k * 1.3) * 3;
+const c = [bc[0] + bk * Math.cos(a) * r * -1, bc[1] + Math.sin(a) * r + bob];
+const len = 15 - Math.abs(k - 2) * 1.5, rot = a + Math.PI / 2 + Math.sin(t + k) * 0.15;
+const q = (d, w) => [c[0] + Math.cos(rot) * d * bk - Math.sin(rot) * w, c[1] + Math.sin(rot) * d + Math.cos(rot) * w * bk];
+ctx.fillStyle = '#12061f'; ctx.strokeStyle = 'rgba(200,130,255,0.95)'; ctx.lineWidth = 1.4;
+ctx.beginPath(); const p1 = q(-len, 0), p2 = q(0, 5), p3 = q(len, 0), p4 = q(-2, -4);
+ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.lineTo(p4[0], p4[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.strokeStyle = 'rgba(240,210,255,0.7)'; ctx.lineWidth = 0.8; line(p1, p3);
+}
+break;
+}
+case 'flysword': {   // 青锋行：一柄青色飞剑斜悬在背后，剑穗飘动，脚下一朵墨云
+const bob = Math.sin(t * 2.2 + idx) * 4;
+const hilt = [bc[0] + bk * 22, bc[1] + 30 + bob], tip = [bc[0] - bk * 6, bc[1] - 58 + bob];
+const dx = tip[0] - hilt[0], dy = tip[1] - hilt[1], dl = Math.hypot(dx, dy), ux = dx / dl, uy = dy / dl, px = -uy, py = ux;
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+ctx.strokeStyle = 'rgba(120,230,195,0.25)'; ctx.lineWidth = 12; line([hilt[0] + ux * 14, hilt[1] + uy * 14], tip);
+ctx.restore();
+const g0 = [hilt[0] + ux * 14, hilt[1] + uy * 14];
+ctx.fillStyle = lg(g0, tip, [[0, '#d8fff2'], [1, '#ffffff']]); ctx.beginPath();
+ctx.moveTo(g0[0] + px * 3.2, g0[1] + py * 3.2); ctx.lineTo(tip[0] - ux * 8 + px * 3, tip[1] - uy * 8 + py * 3); ctx.lineTo(tip[0], tip[1]);
+ctx.lineTo(tip[0] - ux * 8 - px * 3, tip[1] - uy * 8 - py * 3); ctx.lineTo(g0[0] - px * 3.2, g0[1] - py * 3.2); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = 'rgba(80,190,160,0.9)'; ctx.lineWidth = 1; line(g0, [tip[0] - ux * 6, tip[1] - uy * 6]);
+ctx.strokeStyle = '#2e5a4e'; ctx.lineWidth = 4; line(hilt, g0);
+ctx.strokeStyle = '#d9b36a'; ctx.lineWidth = 2.6; line([g0[0] - px * 8, g0[1] - py * 8], [g0[0] + px * 8, g0[1] + py * 8]);
+ctx.strokeStyle = '#c8321e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(hilt[0], hilt[1]);
+ctx.quadraticCurveTo(hilt[0] + bk * 6, hilt[1] + 10, hilt[0] + bk * 10 + Math.sin(t * 4) * 3, hilt[1] + 18); ctx.stroke();
+ctx.fillStyle = 'rgba(30,40,36,0.55)';
+for (let k = 0; k < 4; k++) { const q = [sk.hip[0] + bk * (14 + k * 9), sk.hip[1] + 6 - k * 4 + Math.sin(t * 2 + k) * 3]; circle(q, 8 - k); }
+break;
+}
+case 'crescent': {   // 血月：头后一弯巨大的血色新月，月刃锋利，红光外溢
+const c = [bc[0] + bk * 8, bc[1] - 26], r = 34, rot = -0.5 * bk + Math.sin(t * 1.5) * 0.06;
+glow([c[0] + bk * 14, c[1]], 40, '230,30,50', 0.22);
+ctx.save(); ctx.translate(c[0], c[1]); ctx.rotate(rot); ctx.scale(bk, 1);
+ctx.fillStyle = lg([-r, 0], [r, 0], [[0, '#4a0610'], [0.6, '#d21a32'], [1, '#ff6070']]);
+ctx.beginPath(); ctx.arc(0, 0, r, -Math.PI * 0.62, Math.PI * 0.62); ctx.arc(-10, 0, r * 0.94, Math.PI * 0.56, -Math.PI * 0.56, true); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = 'rgba(255,200,205,0.85)'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(0, 0, r, -Math.PI * 0.6, Math.PI * 0.6); ctx.stroke();
+ctx.restore(); break;
+}
+case 'foxtails': {   // 幻灵：五条蓬松的灵狐尾巴扇形张开，青到紫的渐变，尾尖雪白
+const base = [hip[0] + bk * 4, hip[1] - 4], wf = u => 1.5 + 8.5 * Math.sin(Math.PI * Math.pow(u, 0.75)) * (1 - u * 0.2);
+for (let k = 4; k >= 0; k--) {
+const a = -1.55 + k * 0.34, wv = Math.sin(t * 2.4 + k * 0.9) * 0.14, len = 66 - Math.abs(k - 2) * 6;
+const tip = [base[0] + bk * Math.cos(a + wv) * len, base[1] + Math.sin(a + wv) * len];
+const mid = [base[0] + bk * Math.cos(a + 0.55 + wv * 2) * len * 0.62, base[1] + Math.sin(a + 0.55 + wv * 2) * len * 0.62];
+ctx.globalAlpha = 0.92;
+ribbon(base, mid, tip, wf, 0, lg(base, tip, [[0, 'rgba(0,190,255,0.55)'], [0.45, 'rgba(90,170,255,0.9)'], [0.75, 'rgba(170,140,255,0.95)'], [0.9, '#efeaff'], [1, '#ffffff']]), 18);
+}
+ctx.globalAlpha = 1; break;
+}
+case 'flamebanners': {   // 修罗：背插两面黑红战旗，旗尾烧着火
+for (const [k, ang] of [[0, -0.25], [1, 0.05]]) {
+const root = [sh[0] + bk * (8 + k * 6), sh[1] + 10], top = [root[0] + bk * Math.sin(-ang) * -60 + bk * 6, root[1] - 64 + k * 6];
+ctx.strokeStyle = '#1a0a08'; ctx.lineWidth = 2.6; line(root, top);
+ctx.fillStyle = '#d9b36a'; circle(top, 2.6);
+const w = 22, h = 34, pts = [];
+for (let i = 0; i <= 8; i++) { const u = i / 8; pts.push([top[0] + bk * u * w, top[1] + 4 + Math.sin(t * 5 + u * 4 + k) * 3 * u]); }
+ctx.fillStyle = k ? '#2a0606' : '#6a0e10'; ctx.beginPath(); ctx.moveTo(top[0], top[1] + 4);
+for (const p of pts) ctx.lineTo(p[0], p[1]);
+for (let i = 8; i >= 0; i--) { const p = pts[i]; ctx.lineTo(p[0], p[1] + h - (i % 2 ? 6 : 0) * (i / 8)); }
+ctx.closePath(); ctx.fill();
+ctx.strokeStyle = '#e8b04a'; ctx.lineWidth = 1.2; ctx.stroke();
+const em = [top[0] + bk * w * 0.5, top[1] + 4 + h * 0.45];
+ctx.fillStyle = '#ff5a30'; ctx.beginPath(); ctx.moveTo(em[0], em[1] - 8); ctx.quadraticCurveTo(em[0] + 6, em[1], em[0], em[1] + 6); ctx.quadraticCurveTo(em[0] - 6, em[1], em[0], em[1] - 8); ctx.fill();
+const tail = pts[8], fl = 6 + Math.sin(t * 12 + k * 2) * 3;
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,120,40,0.75)';
+for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(tail[0] + bk * (3 + i * 2), tail[1] + 6 + i * 10, 3, fl - i, 0.4 * bk, 0, 7); ctx.fill(); }
+ctx.restore();
+}
+break;
+}
+case 'dragon': {   // 沧龙：一条青龙从腰后盘上肩头，龙首探在肩上
+const wv = (u) => Math.sin(t * 2 + u * 7) * 5;
+const pts = [];
+for (let i = 0; i <= 22; i++) {
+const u = i / 22;
+pts.push([hip[0] + bk * (28 * Math.sin(u * Math.PI * 1.15) + 6) + wv(u) * 0.6, hip[1] + 18 - u * 112 + Math.cos(u * 6) * 6]);
+}
+for (let i = 1; i < pts.length; i++) {
+const u = i / pts.length, w = 3 + 5 * Math.sin(Math.min(1, u * 1.2) * Math.PI * 0.9);
+ctx.strokeStyle = `rgb(${30 + u * 60 | 0},${120 + u * 70 | 0},${230 + u * 25 | 0})`; ctx.lineWidth = w * 2; line(pts[i - 1], pts[i]);
+if (i % 3 === 0) { const d = [pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]], dl = Math.hypot(d[0], d[1]) || 1; ctx.fillStyle = '#bfe6ff'; ctx.beginPath(); ctx.moveTo(pts[i][0] - d[1] / dl * w, pts[i][1] + d[0] / dl * w); ctx.lineTo(pts[i][0] - d[1] / dl * (w + 5) * bk * bk, pts[i][1] + d[0] / dl * (w + 5)); ctx.lineTo(pts[i - 1][0] - d[1] / dl * w, pts[i - 1][1] + d[0] / dl * w); ctx.fill(); }
+}
+const hd = pts[pts.length - 1];
+ctx.fillStyle = '#5ab4ff'; ctx.beginPath(); ctx.ellipse(hd[0] - bk * 5, hd[1], 9, 6, 0, 0, 7); ctx.fill();
+ctx.fillStyle = '#2a7ad8'; ctx.beginPath(); ctx.moveTo(hd[0] - bk * 10, hd[1] - 3); ctx.lineTo(hd[0] - bk * 20, hd[1] + 1); ctx.lineTo(hd[0] - bk * 10, hd[1] + 5); ctx.fill();
+ctx.strokeStyle = '#e8f6ff'; ctx.lineWidth = 1.6; line([hd[0] + bk * 1, hd[1] - 4], [hd[0] + bk * 9, hd[1] - 14]); line([hd[0] - bk * 3, hd[1] - 5], [hd[0] + bk * 2, hd[1] - 16]);
+ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hd[0] - bk * 16, hd[1] + 2); ctx.quadraticCurveTo(hd[0] - bk * 24, hd[1] + 8 + Math.sin(t * 5) * 3, hd[0] - bk * 30, hd[1] + 2); ctx.stroke();
+ctx.fillStyle = '#fff'; circle([hd[0] - bk * 8, hd[1] - 2], 1.6);
+break;
+}
+case 'pibo': {   // 天青：一条天衣披帛从肩后绕过头顶垂到身前，另一端在身后随风飘
+const fl = Math.sin(t * 1.8 + idx) * 6, s0 = [sh[0] + bk * 6, sh[1] + 12];
+const fill = (a, b) => lg(a, b, [[0, 'rgba(255,255,255,0.9)'], [0.5, 'rgba(150,210,255,0.85)'], [1, 'rgba(225,240,255,0.7)']]);
+const e1 = [sh[0] - bk * 20, sh[1] + 34 + fl * 0.5];
+ribbon(s0, [bc[0] + bk * 22, bc[1] - 96 + fl], e1, u => 1.6 + 2.6 * Math.sin(Math.PI * u), 0, fill(s0, e1), 22);
+const e2 = [hip[0] + bk * 62 + fl, hip[1] + 26 + fl * 0.6];
+ribbon(s0, [hip[0] + bk * 34, hip[1] - 22], e2, u => 3.6 - 2.6 * u, 0, fill(s0, e2), 18);
+ctx.fillStyle = 'rgba(235,245,255,0.7)';
+for (let k = 0; k < 3; k++) { const q = [bc[0] + bk * (30 + k * 10), bc[1] - 4 - k * 6 + Math.sin(t * 2 + k) * 3]; circle(q, 7 - k * 1.5); }
+break;
+}
+case 'flamemane': {   // 烈阳：肩背燃起一圈火舌，像太阳的火焰日冕
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+const c = [bc[0] + bk * 2, bc[1] - 10];
+for (let k = 0; k < 11; k++) {
+const a = -Math.PI * 0.95 + k * Math.PI * 0.9 / 10 * 1.1, h = 26 + Math.sin(t * 9 + k * 2.1) * 6 + (k % 2) * 8;
+const base = [c[0] + Math.cos(a) * 18 * bk, c[1] + Math.sin(a) * 18], tip = [c[0] + Math.cos(a) * (18 + h) * bk, c[1] + Math.sin(a) * (18 + h)];
+const mid = [(base[0] + tip[0]) / 2 + Math.sin(t * 7 + k) * 4, (base[1] + tip[1]) / 2];
+ribbon(base, mid, tip, 5, 0.5, lg(base, tip, [[0, 'rgba(255,240,170,0.9)'], [0.5, 'rgba(255,140,40,0.75)'], [1, 'rgba(220,40,10,0)']]), 8);
+}
+ctx.restore(); break;
+}
+case 'constellation': {   // 星墨：背后浮着北斗七星，星与星之间连着细线，星光一闪一闪
+glow([bc[0] + bk * 14, bc[1] - 20], 60, '60,120,255', 0.25);
+const S = [[-8, 10], [6, 2], [18, -6], [30, -8], [36, -24], [52, -28], [50, -10]].map(([a, b]) => [bc[0] + bk * (a + 4), bc[1] - 26 + b + Math.sin(t * 1.4 + a) * 1.5]);
+ctx.strokeStyle = 'rgba(150,200,255,0.55)'; ctx.lineWidth = 1;
+ctx.beginPath(); S.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.lineTo(S[3][0], S[3][1]); ctx.stroke();
+S.forEach((p, i) => {
+const tw = 2.5 + Math.sin(t * 4 + i * 1.7) * 1.2;
+ctx.fillStyle = 'rgba(220,240,255,0.95)'; ctx.beginPath();
+for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, r = k % 2 ? tw * 0.4 : tw * 2; ctx.lineTo(p[0] + Math.cos(a) * r, p[1] + Math.sin(a) * r); }
+ctx.closePath(); ctx.fill();
+});
+break;
+}
+case 'tattered': {   // 月蚀：一件残破的大斗篷，外黑内红，下摆碎成锯齿
+const back = bk, a = sh, h = hip;
+const bot = h[1] + 46 + sway, far = h[0] + back * (36 + Math.abs(sway) * 1.6);
+const edge = [];
+for (let i = 0; i <= 7; i++) { const u = i / 7; edge.push([a[0] + back * 2 + (far - a[0] - back * 2) * u, bot - u * 12 + (i % 2 ? -10 : 0) + Math.sin(t * 3 + i) * 2]); }
+ctx.fillStyle = '#7a1424'; ctx.beginPath(); ctx.moveTo(a[0] + back * 2, a[1]);
+ctx.quadraticCurveTo(a[0] + back * 30, a[1] + 20, far, bot - 12); for (let i = 7; i >= 0; i--) ctx.lineTo(edge[i][0], edge[i][1]); ctx.closePath(); ctx.fill();
+ctx.fillStyle = '#120a18'; ctx.beginPath(); ctx.moveTo(a[0] - back * 4, a[1] - 2);
+ctx.quadraticCurveTo(a[0] + back * 36, a[1] + 10, far + back * 6, bot - 16);
+for (let i = 7; i >= 0; i--) ctx.lineTo(edge[i][0] + back * 4, edge[i][1] - 6); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = 'rgba(255,90,110,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+break;
+}
+case 'icewings': {   // 霜华：冰晶羽翼，一片片棱角分明的冰刃向后上方展开
+const flap = Math.sin(t * 2.6 + idx) * 0.08;
+for (const layer of [1, 0]) {
+const root = [bc[0] - bk * layer * 4, bc[1] + 2];
+for (let k = 0; k < 6; k++) {
+const a = -1.5 + k * 0.3 + flap + layer * 0.15, len = (50 - Math.abs(k - 1.5) * 6) * (layer ? 0.8 : 1);
+const tip = [root[0] + bk * Math.cos(a) * len, root[1] + Math.sin(a) * len];
+const s1 = [root[0] + bk * Math.cos(a - 0.12) * len * 0.45, root[1] + Math.sin(a - 0.12) * len * 0.45], s2 = [root[0] + bk * Math.cos(a + 0.12) * len * 0.5, root[1] + Math.sin(a + 0.12) * len * 0.5];
+ctx.fillStyle = layer ? 'rgba(160,215,255,0.45)' : 'rgba(215,240,255,0.75)'; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1;
+ctx.beginPath(); ctx.moveTo(root[0], root[1]); ctx.lineTo(s1[0], s1[1]); ctx.lineTo(tip[0], tip[1]); ctx.lineTo(s2[0], s2[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+}
+break;
+}
+case 'phoenixtail': {   // 凤羽：三根长长的凤尾翎从腰后垂下，翎尖有金色凤眼
+const base = [hip[0] + bk * 4, hip[1] - 2];
+for (let k = 0; k < 3; k++) {
+const wv = Math.sin(t * 2 + k * 1.2) * 8, len = 70 + k * 10;
+const tip = [base[0] + bk * (len * 0.75 + wv), base[1] + 26 + k * 12 + wv * 0.5];
+const mid = [base[0] + bk * len * 0.35, base[1] - 10 + k * 6];
+ribbon(base, mid, tip, 2, 5, lg(base, tip, [[0, '#ffd25a'], [0.5, '#ff7a2a'], [1, '#d8341a']]), 14);
+ctx.fillStyle = '#ffd25a'; circle(tip, 5); ctx.fillStyle = '#c0281a'; circle(tip, 2.6); ctx.fillStyle = '#2a0a06'; circle(tip, 1.2);
+}
+break;
+}
+case 'bells': {   // 钧天：背后一架弯弯的金色编钟，五口小钟轻轻摇
+const L0 = [bc[0] - bk * 20, bc[1] - 30], R0 = [bc[0] + bk * 44, bc[1] - 22], T0 = [bc[0] + bk * 12, bc[1] - 58];
+ctx.strokeStyle = '#c99a3e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(L0[0], L0[1]); ctx.quadraticCurveTo(T0[0], T0[1], R0[0], R0[1]); ctx.stroke();
+ctx.fillStyle = '#ffe08a'; circle(L0, 3); circle(R0, 3);
+for (let k = 0; k < 5; k++) {
+const u = 0.12 + k * 0.19, p = bez(L0, T0, R0, u), sw = Math.sin(t * 3 + k * 1.3) * 0.18;
+ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(sw);
+ctx.strokeStyle = '#8a5a1e'; ctx.lineWidth = 1; line([0, 0], [0, 6]);
+const s = 1 - Math.abs(k - 2) * 0.12;
+ctx.fillStyle = lg([-6 * s, 0], [6 * s, 0], [[0, '#a8761e'], [0.5, '#ffe9a0'], [1, '#b8862a']]);
+ctx.beginPath(); ctx.moveTo(-4 * s, 6); ctx.lineTo(4 * s, 6); ctx.lineTo(6.5 * s, 18 * s + 6); ctx.quadraticCurveTo(0, 21 * s + 6, -6.5 * s, 18 * s + 6); ctx.closePath(); ctx.fill();
+ctx.restore();
+}
+break;
+}
+case 'gourdback': {   // 酒剑仙：背着一只大青玉葫芦，红绳系着，脚下踩一朵仙云
+const c = [bc[0] + bk * 14, bc[1] + 8], rot = 0.5 * bk + Math.sin(t * 2) * 0.05;
+ctx.save(); ctx.translate(c[0], c[1]); ctx.rotate(rot);
+ctx.fillStyle = lg([-14, 0], [14, 0], [[0, '#1e8a8a'], [0.45, '#7ff0e0'], [1, '#1a6a70']]);
+circle([0, 10], 14); circle([0, -12], 9); ctx.fillRect(-4, -6, 8, 8);
+ctx.fillStyle = '#c8321e'; ctx.fillRect(-6, -3, 12, 3);
+ctx.fillStyle = '#5a3a1e'; ctx.fillRect(-3, -25, 6, 6);
+ctx.fillStyle = 'rgba(255,255,255,0.35)'; circle([-5, 6], 3.5);
+ctx.restore();
+ctx.strokeStyle = '#c8321e'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sh[0], sh[1] + 4); ctx.quadraticCurveTo(c[0], c[1] + 18, hip[0] - bk * 4, hip[1]); ctx.stroke();
+const fy0 = Math.max(sk.ff[1], sk.fb[1]) + 6;
+for (let k = 0; k < 6; k++) { ctx.fillStyle = k % 2 ? 'rgba(200,250,255,0.8)' : 'rgba(255,255,255,0.85)'; circle([(sk.ff[0] + sk.fb[0]) / 2 + (k - 2.5) * 9 + Math.sin(t * 2 + k) * 2, fy0 + Math.cos(t * 2.5 + k) * 2 - (k % 2) * 3], 8 - Math.abs(k - 2.5)); }
+break;
+}
+case 'ghostchains': {   // 冥狱：两条幽冥锁链在身后盘绕，三团鬼火飘着
+for (const s2 of [0, 1]) {
+const p0 = [sh[0] - bk * 4, sh[1] + 6 + s2 * 20], p1 = [bc[0] + bk * (50 + s2 * 10), bc[1] - 40 + s2 * 50 + Math.sin(t * 2 + s2) * 8], p2 = [hip[0] + bk * (20 + s2 * 26), hip[1] + 30 + s2 * 6];
+for (let i = 0; i <= 12; i++) {
+const u = i / 12, p = bez(p0, p1, p2, u), q = bez(p0, p1, p2, Math.min(1, u + 0.05)), a = Math.atan2(q[1] - p[1], q[0] - p[0]);
+ctx.strokeStyle = i % 2 ? 'rgba(200,150,255,0.9)' : 'rgba(120,70,190,0.95)'; ctx.lineWidth = 1.8;
+ctx.beginPath(); ctx.ellipse(p[0], p[1], 4.5, i % 2 ? 1.6 : 3, a, 0, 7); ctx.stroke();
+}
+}
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+for (let k = 0; k < 3; k++) {
+const q = [bc[0] + bk * (20 + k * 16), bc[1] - 34 + k * 18 + Math.sin(t * 2.5 + k * 2) * 5], h = 12 + Math.sin(t * 9 + k) * 3;
+const g = ctx.createRadialGradient(q[0], q[1] + 2, 0, q[0], q[1], h); g.addColorStop(0, 'rgba(230,200,255,0.95)'); g.addColorStop(0.5, 'rgba(160,80,255,0.6)'); g.addColorStop(1, 'rgba(90,20,180,0)');
+ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(q[0], q[1] - h); ctx.quadraticCurveTo(q[0] + 7, q[1], q[0], q[1] + 5); ctx.quadraticCurveTo(q[0] - 7, q[1], q[0], q[1] - h); ctx.fill();
+}
+ctx.restore(); break;
+}
+default: return false;
+}
+return true;
+}
+function drawDeco(sk, f, L, layer) {
+const D = L.deco; if (!D) return;
+const t = typeof clock === 'number' ? clock : 0;
+const hx = sk.head[0], hy = sk.head[1], nx = sk.neck[0], ny = sk.neck[1];
+let ux = hx - nx, uy = hy - ny; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;   // 头的“上”方向
+const fx = -uy * sk.face, fy = ux * sk.face;                                                // 头的“前”方向
+const P = (a, b, bx = hx, by = hy) => [bx + fx * a + ux * b, by + fy * a + uy * b];      // 以头为原点：a 向前，b 向上
+const sway = Math.sin(t * 3 + (f.idx || 0)) * 3 - clamp((f.vx || 0) * sk.face / 60, -8, 8);
+ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+if (layer === 'back') {
+const bc = P(-16, -4, nx, ny);
+if (drawBackPiece(D.back, D, sk, f, L, t, bc, sway)) { /* 传说专属背饰 */ }
+else if (D.back === 'sundisk' || D.back === 'bloodmoon' || D.back === 'eclipse') {
+const r = 26, col = D.back === 'sundisk' ? '255,200,90' : D.back === 'bloodmoon' ? '220,40,60' : '230,70,90';
+const g = ctx.createRadialGradient(bc[0], bc[1], 4, bc[0], bc[1], r * 1.9);
+g.addColorStop(0, `rgba(${col},0.55)`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; circle(bc, r * 1.9);
+if (D.back === 'sundisk') {
+ctx.strokeStyle = 'rgba(255,215,120,0.9)'; ctx.lineWidth = 2;
+for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + t * 0.4; ctx.beginPath(); ctx.moveTo(bc[0] + Math.cos(a) * r * 1.05, bc[1] + Math.sin(a) * r * 1.05); ctx.lineTo(bc[0] + Math.cos(a) * r * 1.45, bc[1] + Math.sin(a) * r * 1.45); ctx.stroke(); }
+ctx.fillStyle = '#ffcf5a'; circle(bc, r); ctx.strokeStyle = '#fff1c0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(bc[0], bc[1], r * 0.7, 0, 7); ctx.stroke();
+} else if (D.back === 'bloodmoon') {
+ctx.fillStyle = '#c21e32'; circle(bc, r); ctx.fillStyle = 'rgba(40,5,10,0.85)'; circle([bc[0] - sk.face * 9, bc[1] - 4], r * 0.85);
+} else {
+ctx.strokeStyle = 'rgba(255,120,120,0.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(bc[0], bc[1], r + 2, 0, 7); ctx.stroke();
+ctx.fillStyle = '#07050a'; circle(bc, r);
+}
+} else if (D.back === 'shell') {   // 玄武龟甲：六边形纹
+const c = P(-12, -24, nx, ny);
+ctx.fillStyle = '#211d2a'; ctx.strokeStyle = 'rgba(140,120,255,0.7)'; ctx.lineWidth = 1.6;
+ctx.beginPath(); ctx.ellipse(c[0], c[1], 20, 30, Math.atan2(uy, ux) + Math.PI / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+for (const [a, b] of [[0, 0], [0, 14], [0, -14], [-9, 7], [-9, -7]]) { const q = P(a - 12, b - 24, nx, ny); ctx.beginPath(); for (let k = 0; k < 6; k++) { const an = k * Math.PI / 3; ctx.lineTo(q[0] + Math.cos(an) * 5.5, q[1] + Math.sin(an) * 5.5); } ctx.closePath(); ctx.stroke(); }
+} else if (D.back === 'lotus') {   // 圣莲 / 星莲（支持自定义主题色 D.lotusC）
+const lc = D.lotusC || '233,196,106';
+for (let k = -3; k <= 3; k++) {
+const a = Math.atan2(uy, ux) + k * 0.32, len = 35 - Math.abs(k) * 3;
+ctx.fillStyle = `rgba(${lc},${0.78 - Math.abs(k) * 0.08})`; ctx.beginPath();
+ctx.ellipse(bc[0] + Math.cos(a) * len * 0.5, bc[1] + Math.sin(a) * len * 0.5, 6.2, len * 0.5, a + Math.PI / 2, 0, Math.PI * 2); ctx.fill();
+}
+} else if (D.back === 'snowflake') {   // 冰晶：六个分叉，缓缓旋转
+ctx.strokeStyle = 'rgba(200,240,255,0.85)'; ctx.lineWidth = 2.2;
+for (let k = 0; k < 6; k++) {
+const a = k * Math.PI / 3 + t * 0.3, ex = bc[0] + Math.cos(a) * 26, ey = bc[1] + Math.sin(a) * 26;
+line(bc, [ex, ey]);
+for (const d2 of [0.5, 0.75]) { const mx = bc[0] + Math.cos(a) * 26 * d2, my = bc[1] + Math.sin(a) * 26 * d2; for (const s2 of [-1, 1]) line([mx, my], [mx + Math.cos(a + s2 * 0.8) * 7, my + Math.sin(a + s2 * 0.8) * 7]); }
+}
+ctx.fillStyle = 'rgba(230,250,255,0.9)'; circle(bc, 4);
+} else if (D.back === 'aurora') {   // 极光光带：三条波浪，从绿到紫
+for (let k = 0; k < 3; k++) {
+const g = ctx.createLinearGradient(bc[0] - 50, bc[1], bc[0] + 30, bc[1] - 40);
+g.addColorStop(0, 'rgba(120,255,210,0)'); g.addColorStop(0.4, `rgba(120,255,210,${0.55 - k * 0.12})`); g.addColorStop(1, `rgba(190,120,255,${0.45 - k * 0.1})`);
+ctx.strokeStyle = g; ctx.lineWidth = 7 - k * 1.5; ctx.beginPath();
+for (let q = 0; q <= 12; q++) { const u = q / 12, pt = P(-48 + u * 60, 6 + k * 10 + Math.sin(u * 6 + t * 2 + k) * 6, nx, ny); q ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]); }
+ctx.stroke();
+}
+} else if (D.back === 'clouds') {   // 背后流云
+ctx.fillStyle = 'rgba(235,245,255,0.8)';
+for (let k = 0; k < 4; k++) { const q = P(-20 - k * 9, -6 + Math.sin(t * 2 + k) * 4 - k * 5, nx, ny); circle(q, 9 - k * 1.2); }
+} else if (D.back === 'voiddisk') {   // 幽渊黑洞法环
+const r = 26;
+const g = ctx.createRadialGradient(bc[0], bc[1], 3, bc[0], bc[1], r * 2);
+g.addColorStop(0, 'rgba(160,80,240,0.6)'); g.addColorStop(0.7, 'rgba(40,10,70,0.4)'); g.addColorStop(1, 'rgba(20,5,35,0)'); ctx.fillStyle = g; circle(bc, r * 2);
+ctx.strokeStyle = 'rgba(180,110,255,0.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(bc[0], bc[1], r, 0, 7); ctx.stroke();
+ctx.fillStyle = '#080210'; circle(bc, r * 0.85);
+for (let k = 0; k < 8; k++) { const an = k * Math.PI / 4 - t * 0.5; line([bc[0] + Math.cos(an) * r * 0.9, bc[1] + Math.sin(an) * r * 0.9], [bc[0] + Math.cos(an) * r * 1.35, bc[1] + Math.sin(an) * r * 1.35]); }
+} else if (D.back === 'wings') {   // 幻灵/雪鸮飞翼
+for (const s2 of [-1, 1]) {
+ctx.fillStyle = s2 === 1 ? 'rgba(220,245,255,0.7)' : 'rgba(160,225,255,0.5)';
+ctx.beginPath(); ctx.moveTo(bc[0], bc[1]);
+const wSpan = 38, wFlap = Math.sin(t * 4) * 6;
+ctx.quadraticCurveTo(bc[0] - 20, bc[1] - 30 * s2 + wFlap, bc[0] - 55, bc[1] - 22 * s2 + wFlap);
+ctx.quadraticCurveTo(bc[0] - 30, bc[1] - 8 * s2, bc[0], bc[1]); ctx.fill();
+ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.2; ctx.stroke();
+}
+} else if (D.back === 'dragonring') {   // 沧龙水轮
+const r = 28;
+ctx.strokeStyle = 'rgba(70,170,255,0.85)'; ctx.lineWidth = 3;
+ctx.beginPath(); ctx.arc(bc[0], bc[1], r, t * 1.2, t * 1.2 + Math.PI * 1.65); ctx.stroke();
+ctx.strokeStyle = 'rgba(180,230,255,0.9)'; ctx.lineWidth = 1.5;
+ctx.beginPath(); ctx.arc(bc[0], bc[1], r * 0.75, -t * 1.5, -t * 1.5 + Math.PI * 1.4); ctx.stroke();
+} else if (D.back === 'chakra') {   // 金刚光轮 / 宝轮
+const r = 27;
+ctx.strokeStyle = 'rgba(255,190,40,0.95)'; ctx.lineWidth = 2.2;
+ctx.beginPath(); ctx.arc(bc[0], bc[1], r, 0, 7); ctx.stroke();
+for (let k = 0; k < 12; k++) {
+const a = k * Math.PI / 6 + t * 0.4;
+const q1 = [bc[0] + Math.cos(a) * (r - 6), bc[1] + Math.sin(a) * (r - 6)], q2 = [bc[0] + Math.cos(a) * (r + 7), bc[1] + Math.sin(a) * (r + 7)];
+line(q1, q2);
+}
+ctx.fillStyle = 'rgba(255,220,100,0.7)'; circle(bc, 5);
+}
+if (D.cape || D.back === 'aurora') {
+const a = sk.sh, h = sk.hip, back = -sk.face;
+const tipX = h[0] + back * (26 + Math.abs(sway) * 1.5), tipY = h[1] + 22 + sway;
+if (D.back === 'aurora') { const g = ctx.createLinearGradient(a[0], a[1], tipX, tipY); g.addColorStop(0, 'rgba(120,255,210,0.85)'); g.addColorStop(0.5, 'rgba(120,170,255,0.75)'); g.addColorStop(1, 'rgba(200,120,255,0.3)'); ctx.fillStyle = g; }
+else ctx.fillStyle = D.cape;
+ctx.beginPath(); ctx.moveTo(a[0] + back * 3, a[1]);
+ctx.quadraticCurveTo(a[0] + back * 22, (a[1] + tipY) / 2 + sway, tipX, tipY);
+ctx.lineTo(tipX - back * 12, tipY - 4);
+ctx.quadraticCurveTo(h[0] + back * 4, h[1], a[0] - back * 2, a[1] + 4); ctx.closePath(); ctx.fill();
+}
+ctx.restore(); return;
+}
+const hd = D.head;
+if (hd === 'douli' || hd === 'veilhat' || hd === 'bamboohat' || hd === 'talismanhat') {
+const L1 = P(-27, 5), R1 = P(27, 5), T1 = P(0, 21);
+ctx.fillStyle = D.hatC || '#c9a86a'; ctx.strokeStyle = '#3a2818'; ctx.lineWidth = 1.5;
+ctx.beginPath(); ctx.moveTo(L1[0], L1[1]); ctx.quadraticCurveTo(T1[0], T1[1], R1[0], R1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.strokeStyle = 'rgba(255,255,255,0.22)'; for (let k = -2; k <= 2; k++) line(P(k * 9, 6), P(k * 2, 18));
+if (hd === 'veilhat') {
+ctx.fillStyle = D.veilC || 'rgba(255,150,95,0.42)';
+ctx.beginPath(); ctx.moveTo(L1[0] + fx * 3, L1[1]); ctx.lineTo(R1[0] - fx * 3, R1[1]);
+ctx.lineTo(P(18 + sway * 0.6, -12)[0], P(18 + sway * 0.6, -12)[1]);
+ctx.lineTo(P(-20 + sway * 0.8, -14)[0], P(-20 + sway * 0.8, -14)[1]); ctx.closePath(); ctx.fill();
+} else if (hd === 'bamboohat') {
+ctx.strokeStyle = '#7fe0a0'; ctx.lineWidth = 1.6;
+line(P(6, 14), P(16, 22)); line(P(10, 17), P(18, 16)); line(P(11, 18), P(14, 24));
+} else if (hd === 'talismanhat') {
+for (const s2 of [-14, 14]) {
+const p0 = P(s2, 5), p1 = P(s2 + sway * 0.4, -7);
+ctx.fillStyle = '#d83226'; ctx.beginPath(); ctx.moveTo(p0[0] - 2, p0[1]); ctx.lineTo(p0[0] + 2, p0[1]); ctx.lineTo(p1[0] + 2, p1[1]); ctx.lineTo(p1[0] - 2, p1[1]); ctx.closePath(); ctx.fill();
+}
+}
+} else if (hd === 'crown') {   // 帝日金冠
+ctx.fillStyle = '#f2c14e'; ctx.strokeStyle = '#8a5a12'; ctx.lineWidth = 1.2; ctx.beginPath();
+const pts = [P(-10, 6), P(-10, 13), P(-6, 10), P(-3, 18), P(0, 11), P(3, 18), P(6, 10), P(10, 13), P(10, 6)];
+ctx.moveTo(pts[0][0], pts[0][1]); for (const q of pts) ctx.lineTo(q[0], q[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.fillStyle = '#e8403a'; circle(P(0, 9), 2); ctx.fillStyle = '#6fd6ff'; circle(P(-6, 8), 1.4); circle(P(6, 8), 1.4);
+} else if (hd === 'icecrown') {   // 寒霜冰棱冠（区别于幽渊）
+ctx.fillStyle = '#d8f4ff'; ctx.strokeStyle = '#5ab4e6'; ctx.lineWidth = 1.3;
+for (const [ox, h1] of [[-8, 14], [-4, 19], [0, 24], [4, 19], [8, 14]]) {
+const bL = P(ox - 2.2, 6), bR = P(ox + 2.2, 6), tp = P(ox, h1);
+ctx.beginPath(); ctx.moveTo(bL[0], bL[1]); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(bR[0], bR[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+ctx.fillStyle = '#ffffff'; circle(P(0, 10), 2.2);
+} else if (hd === 'voidhorns') {   // 幽渊/冥狱：裂空暗渊双角 + 虚空眉印
+ctx.fillStyle = '#1b0d2e'; ctx.strokeStyle = '#b56bff'; ctx.lineWidth = 1.4;
+for (const s2 of [-1, 1]) {
+const b0 = P(s2 * 4, 8), c1 = P(s2 * 14 - 4, 20), tp = P(s2 * 9 - 12, 29);
+ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.lineTo(P(s2 * 7, 7)[0], P(s2 * 7, 7)[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+ctx.fillStyle = '#d896ff'; circle(P(8, 5), 2.5);
+} else if (hd === 'horns') {   // 血月恶鬼长角
+ctx.fillStyle = D.hornC || '#222'; ctx.strokeStyle = `rgba(${L.slash},0.85)`; ctx.lineWidth = 1.3;
+for (const s2 of [-1, 1]) {
+const b0 = P(s2 * 5 - 2, 8), b1 = P(s2 * 9 - 2, 9), c1 = P(s2 * 14 - 8, 22), tp = P(s2 * 10 - 14, 30);
+ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.quadraticCurveTo(c1[0] + fx * 4, c1[1] + fy * 4, b1[0], b1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+} else if (hd === 'jadevisor') {   // 绯影·碧影：翡翠半脸轻甲面帘 + 翠叶发簪（与幻灵狐面完全区分）
+ctx.fillStyle = '#12382c'; ctx.strokeStyle = '#2bd49a'; ctx.lineWidth = 1.4;
+const m0 = P(1, -1), m1 = P(11, 2), m2 = P(9, -8), m3 = P(-2, -6);
+ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.lineTo(m2[0], m2[1]); ctx.lineTo(m3[0], m3[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.fillStyle = '#5ef2c0'; circle(P(6, 3.2), 1.8);
+ctx.fillStyle = '#2bd49a'; ctx.beginPath(); const lf = P(-6, 11); ctx.ellipse(lf[0], lf[1], 7, 3, Math.atan2(uy, ux) - 0.5, 0, Math.PI * 2); ctx.fill();
+} else if (hd === 'foxmask') {   // 绯影·幻灵：九尾妖狐全覆灵面 + 幽蓝灵耳与妖瞳
+const c = P(4.5, 0.5);
+ctx.fillStyle = '#eefaff'; ctx.strokeStyle = D.mask || '#00f2fe'; ctx.lineWidth = 1.4;
+ctx.beginPath(); ctx.ellipse(c[0], c[1], 9, 10, Math.atan2(uy, ux) + Math.PI / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+for (const s2 of [-1, 1]) {
+const e0 = P(s2 * 5 + 2, 7), e1 = P(s2 * 8 + 1, 19), e2 = P(s2 * 1 + 2, 9);
+ctx.fillStyle = '#eefaff'; ctx.beginPath(); ctx.moveTo(e0[0], e0[1]); ctx.lineTo(e1[0], e1[1]); ctx.lineTo(e2[0], e2[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+ctx.strokeStyle = D.mask || '#00f2fe'; ctx.lineWidth = 2;
+line(P(5, 3), P(10, 4.5));
+ctx.lineWidth = 1.4; line(P(6, 0), P(10, -2)); line(P(5, -3), P(9, -5));
+} else if (hd === 'taotiehelm') {   // 铁山·青铜：商周饕餮方冠胄
+ctx.fillStyle = D.helmC || '#a8804a'; ctx.strokeStyle = '#3fa37a'; ctx.lineWidth = 1.5;
+const p1 = P(-11, -2), p2 = P(-11, 13), p3 = P(11, 13), p4 = P(11, -2);
+ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.lineTo(p4[0], p4[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+for (const s2 of [-1, 1]) { line(P(s2 * 9, 13), P(s2 * 13, 20)); }
+ctx.fillStyle = '#3fa37a'; circle(P(6, 5), 2.2);
+} else if (hd === 'asuramask') {   // 铁山·修罗：阿修罗鬼面 + 狂暴赤发
+ctx.fillStyle = '#380a0a'; ctx.strokeStyle = '#ff3a30'; ctx.lineWidth = 1.5;
+ctx.beginPath(); const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 12.2, a0 - Math.PI * 0.6, a0 + Math.PI * 0.6); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.strokeStyle = '#ff3a30'; ctx.lineWidth = 3.2;
+for (let k = 0; k < 3; k++) {
+const b0 = P(-2, 11 - k * 3), c1 = P(-16, 22 - k * 4 + sway), tp = P(-30 - k * 4, 16 - k * 6 + sway * 1.3);
+ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke();
+}
+ctx.fillStyle = '#ffea70'; circle(P(8, 3), 2); circle(P(6, 8), 1.6);
+} else if (hd === 'helm') {   // 头盔 + 盔缨
+ctx.fillStyle = D.helmC; ctx.strokeStyle = '#3a2a14'; ctx.lineWidth = 1.2; ctx.beginPath();
+const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 12, a0 - Math.PI / 2 - 0.2, a0 + Math.PI / 2 + 0.2); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.strokeStyle = D.crest; ctx.lineWidth = 3; ctx.beginPath(); const b0 = P(0, 12), c1 = P(-10, 24), tp = P(-22, 20 + sway); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke();
+} else if (hd === 'valkyrie') {   // 凌霜·极光：极光羽翼女武神冠
+ctx.strokeStyle = '#7dffd8'; ctx.fillStyle = '#dffcf4'; ctx.lineWidth = 1.5;
+line(P(-9, 5), P(10, 5));
+const w0 = P(-1, 6), w1 = P(-14, 19), w2 = P(-19, 13), w3 = P(-6, 4);
+ctx.beginPath(); ctx.moveTo(w0[0], w0[1]); ctx.lineTo(w1[0], w1[1]); ctx.lineTo(w2[0], w2[1]); ctx.lineTo(w3[0], w3[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.fillStyle = '#5ef2c9'; circle(P(9, 5.5), 2.6);
+} else if (hd === 'dragonhorns') {   // 凌霜·沧龙：沧海分支龙角
+ctx.strokeStyle = '#1f90ff'; ctx.lineWidth = 2.6;
+for (const s2 of [-1, 1]) {
+const b0 = P(s2 * 3, 9), m1 = P(s2 * 6 - 7, 19), t1 = P(s2 * 4 - 16, 27), br = P(s2 * 8 - 4, 24);
+line(b0, m1); line(m1, t1); line(m1, br);
+}
+ctx.fillStyle = '#80d4ff'; circle(P(8, 5), 2.4);
+} else if (hd === 'starguan') {   // 墨羽·星墨 / 玉箫·钧天：太虚星官高冠
+ctx.fillStyle = '#14244a'; ctx.strokeStyle = '#6fd6ff'; ctx.lineWidth = 1.4;
+const g0 = P(-6, 9), g1 = P(-4, 21), g2 = P(5, 21), g3 = P(6, 9);
+ctx.beginPath(); ctx.moveTo(g0[0], g0[1]); ctx.lineTo(g1[0], g1[1]); ctx.lineTo(g2[0], g2[1]); ctx.lineTo(g3[0], g3[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+line(P(-11, 14), P(11, 14));
+ctx.fillStyle = '#fff'; circle(P(0, 15), 2.2);
+} else if (hd === 'sakurabranch') {   // 月华·樱月：双樱花枝与粉樱飘带
+ctx.strokeStyle = '#6b3428'; ctx.lineWidth = 1.6; line(P(-10, 4), P(4, 14));
+for (const [a, b, r] of [[-6, 9, 4.8], [2, 13, 4.0], [-11, 4, 3.4]]) {
+const c = P(a, b); ctx.fillStyle = D.flower || '#ff9ec4';
+for (let k = 0; k < 5; k++) { const an = k * Math.PI * 0.4 + t * 0.3; circle([c[0] + Math.cos(an) * r * 0.65, c[1] + Math.sin(an) * r * 0.65], r * 0.5); }
+ctx.fillStyle = '#fff5f8'; circle(c, r * 0.28);
+}
+ctx.strokeStyle = '#ff9ec4'; ctx.lineWidth = 2; line(P(-9, 5), P(-24 + sway, -8));
+} else if (hd === 'frosttiara') {   // 月华·霜华 / 玉箫·雪箫：六棱冰钻冠冕
+ctx.strokeStyle = '#a8e0ff'; ctx.fillStyle = '#eef9ff'; ctx.lineWidth = 1.4;
+for (const [ox, h1] of [[-6, 13], [0, 19], [6, 13]]) {
+const c = P(ox, h1);
+ctx.beginPath(); ctx.moveTo(c[0], c[1] - 4); ctx.lineTo(c[0] + 3, c[1]); ctx.lineTo(c[0], c[1] + 4); ctx.lineTo(c[0] - 3, c[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+line(P(-9, 6), P(9, 6));
+} else if (hd === 'ravencowl') {   // 燕翎·玄羽：夜鸦尖喙暗살兜帽
+ctx.fillStyle = '#181822'; ctx.strokeStyle = '#8a8aa6'; ctx.lineWidth = 1.3;
+const a0 = Math.atan2(uy, ux);
+ctx.beginPath(); ctx.arc(hx, hy, 12.8, a0 - Math.PI * 0.7, a0 + Math.PI * 0.2);
+const beak = P(15, 3), tail = P(-19, -7 + sway * 0.5);
+ctx.lineTo(beak[0], beak[1]); ctx.lineTo(P(6, -1)[0], P(6, -1)[1]); ctx.lineTo(tail[0], tail[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+} else if (hd === 'owlhood') {   // 燕翎·雪鸮：极地雪鸮白羽耳簇兜帽
+ctx.fillStyle = '#dcebfa'; ctx.strokeStyle = '#70b6f6'; ctx.lineWidth = 1.4;
+const a0 = Math.atan2(uy, ux);
+ctx.beginPath(); ctx.arc(hx, hy, 12.8, a0 - Math.PI * 0.7, a0 + Math.PI * 0.25); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.6;
+line(P(3, 8), P(-6, 18)); line(P(5, 7), P(-2, 16));
+} else if (hd === 'gourdcrown') {   // 醉翁·琥珀：金樽藤叶束发金箍
+ctx.strokeStyle = '#e5a93c'; ctx.lineWidth = 3.2; line(P(-10, 4), P(10, 4));
+ctx.fillStyle = '#d9822b'; circle(P(0, 12), 4.2); circle(P(0, 17), 2.8);
+} else if (hd === 'ironvisage') {   // 勾陈·赤锤：赤狱百炼鬼面铁胄
+ctx.fillStyle = '#2b1014'; ctx.strokeStyle = '#ff4d4d'; ctx.lineWidth = 1.5;
+ctx.beginPath(); const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 11.8, a0 - 1.4, a0 + 2.2); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.fillStyle = '#ff4d4d'; circle(P(6, 2), 2.1);
+} else if (hd === 'circlet') {   // 额环 + 宝石
+ctx.strokeStyle = '#e6e9f5'; ctx.lineWidth = 2; line(P(-9, 5), P(9, 5));
+ctx.fillStyle = D.gem || '#7dd'; circle(P(9, 5), 2.8); ctx.fillStyle = 'rgba(255,255,255,0.8)'; circle(P(9.6, 5.8), 1);
+} else if (hd === 'flower') {   // 花簪
+for (const [a, b, r] of [[-7, 9, 5], [-11, 3, 3.6]]) {
+const c = P(a, b); ctx.fillStyle = D.flower;
+for (let k = 0; k < 5; k++) { const an = k * Math.PI * 0.4 + t * 0.3; circle([c[0] + Math.cos(an) * r * 0.7, c[1] + Math.sin(an) * r * 0.7], r * 0.55); }
+ctx.fillStyle = '#ffe07a'; circle(c, r * 0.3);
+}
+ctx.strokeStyle = '#e9c46a'; ctx.lineWidth = 1; line(P(-9, 6), P(-14 + sway * 0.5, -10));
+} else if (hd === 'hood') {   // 兜帽
+ctx.fillStyle = D.hoodC || '#222'; ctx.beginPath();
+const a0 = Math.atan2(uy, ux); ctx.arc(hx, hy, 13, a0 - Math.PI / 2 - 0.9, a0 + Math.PI / 2 + 0.25);
+const tail = P(-18, -8 + sway * 0.5); ctx.lineTo(tail[0], tail[1]); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1; ctx.stroke();
+} else if (hd === 'plume') {   // 翎羽冠
+const cols = D.plumeC || ['#fff', '#ddd'];
+for (let k = 0; k < 3; k++) {
+const b0 = P(-3, 10), c1 = P(-16 - k * 6, 30 + k * 4), tp = P(-34 - k * 10, 34 + k * 6 + sway * (1 + k * 0.4));
+ctx.strokeStyle = cols[k % cols.length]; ctx.lineWidth = 3.2 - k * 0.6; ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke();
+}
+} else if (hd === 'headband') {   // 头巾 + 飘带
+ctx.strokeStyle = D.band; ctx.lineWidth = 3; line(P(-10, 3), P(10, 3));
+ctx.lineWidth = 2.2; for (const k of [0, 1]) { const b0 = P(-10, 3), c1 = P(-22, -2 - k * 4 + sway), tp = P(-34 - k * 4, -8 - k * 6 + sway * 1.5); ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke(); }
+}
+if (D.shoulder) {   // 护肩
+ctx.fillStyle = D.shoulder; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1.2;
+ctx.beginPath(); ctx.ellipse(sk.sh[0], sk.sh[1] + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+}
+if (D.breastplate) {   // 斜挎的甲带（不画胸口的护心镜圆片）
+const a0 = [sk.sh[0] + sk.face * 4, sk.sh[1] - 1], a1 = [sk.hip[0] - sk.face * 6, sk.hip[1] + 2];
+ctx.strokeStyle = D.breastplate; ctx.lineWidth = 4.5; line(a0, a1);
+ctx.strokeStyle = `rgba(${L.slash},0.7)`; ctx.lineWidth = 1; line(a0, a1);
+}
+if (D.robe) {   // 独有服饰下摆 / 战袍长裾
+const rbCol = D.robe === 'ice' ? '#b8d8ff' : D.robe === 'gold' ? '#e5b842' : D.robe === 'dark' ? '#321650'
+: D.robe === 'leaf' ? '#1f8f68' : D.robe === 'crimson' ? '#781420' : D.robe === 'spirit' ? '#105577'
+: D.robe === 'bronze' ? '#8a6838' : D.robe === 'heavy' ? '#242030' : D.robe === 'shura' ? '#5a1212'
+: D.robe === 'plum' ? '#c02a4a' : D.robe === 'aurora' ? '#287766' : D.robe === 'ocean' ? '#12406e'
+: D.robe === 'dusk' ? '#a04822' : D.robe === 'celestial' ? '#306496' : D.robe === 'bamboo' ? '#2a4830'
+: D.robe === 'thunder' ? '#4a287c' : D.robe === 'solar' ? '#ba5416' : D.robe === 'vajra' ? '#6a3610'
+: D.robe === 'cinnabar' ? '#882014' : D.robe === 'gilt' ? '#8a6820' : D.robe === 'starry' ? '#14244a'
+: D.robe === 'sakura' ? '#c86488' : D.robe === 'eclipse' ? '#34101e' : D.robe === 'snow' ? '#4478a8'
+: D.robe === 'raven' ? '#1c1c24' : D.robe === 'jade_master' ? '#1a5448' : D.robe === 'phoenix' ? '#a83610' : '#284666';
+ctx.fillStyle = rbCol; ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1.2;
+const h = sk.hip, kf = sk.kf, kb = sk.kb;
+const rDir = -sk.face;
+const rTipX = (kf[0] + kb[0]) * 0.5 + rDir * (12 + Math.abs(sway)), rTipY = Math.max(kf[1], kb[1]) + 8 + (f.state === 'skill' ? Math.sin(t * 18) * 6 : 0);
+ctx.beginPath(); ctx.moveTo(h[0] - 6, h[1]); ctx.lineTo(h[0] + 6, h[1]);
+ctx.quadraticCurveTo(kf[0] + 8, kf[1], rTipX, rTipY);
+ctx.quadraticCurveTo(kb[0] - 8, kb[1], h[0] - 6, h[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+if (D.orbs) {   // 环绕周身的灵珠/法球（技能时加速旋转并放大）
+const orbSpin = (f.state === 'skill' || f.state === 'special' ? t * 8 : t * 2.5);
+const orbR = 24 + (f.state === 'special' ? 14 : f.state === 'skill' ? 8 : 0);
+const cx0 = (sk.hip[0] + sk.sh[0]) * 0.5, cy0 = (sk.hip[1] + sk.sh[1]) * 0.5;
+for (let k = 0; k < 3; k++) {
+const an = orbSpin + k * (Math.PI * 2 / 3);
+const ox = cx0 + Math.cos(an) * orbR, oy = cy0 + Math.sin(an) * (orbR * 0.42);
+ctx.fillStyle = D.orbs; circle([ox, oy], 3.8);
+ctx.fillStyle = '#fff'; circle([ox - 1, oy - 1], 1.6);
+if (f.state === 'skill' || f.state === 'special') {
+ctx.strokeStyle = `rgba(${L.slash},0.7)`; ctx.lineWidth = 1;
+line([cx0, cy0], [ox, oy]);
+}
+}
+}
+const w = D.wfx;
+if (w) {
+const fists = L.weapon === 'fists';
+const A0 = fists ? sk.hf : sk.hilt, B0 = fists ? sk.hf : sk.tip;
+ctx.globalCompositeOperation = w === 'shadow' || w === 'ink' || w === 'lava' || w === 'void' ? 'source-over' : 'lighter';
+if (w === 'flame') { ctx.strokeStyle = `rgba(255,${140 + Math.sin(t * 20) * 40 | 0},60,0.55)`; ctx.lineWidth = 7; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(255,170,70,0.5)'; circle(B0, 5 + Math.sin(t * 25) * 1.5); }
+if (w === 'frost') { ctx.strokeStyle = 'rgba(190,240,255,0.55)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1; for (let k = 1; k < 4; k++) { const q = [A0[0] + (B0[0] - A0[0]) * k / 4, A0[1] + (B0[1] - A0[1]) * k / 4]; line([q[0] - 3, q[1] - 3], [q[0] + 3, q[1] + 3]); line([q[0] + 3, q[1] - 3], [q[0] - 3, q[1] + 3]); } }
+if (w === 'jade') { ctx.strokeStyle = 'rgba(90,230,170,0.5)'; ctx.lineWidth = 6; if (!fists) line(A0, B0); }
+if (w === 'gold') { const k = (t * 1.2) % 1, q = [A0[0] + (B0[0] - A0[0]) * k, A0[1] + (B0[1] - A0[1]) * k]; ctx.strokeStyle = 'rgba(255,215,120,0.45)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(255,245,210,0.9)'; circle(q, 3); }
+if (w === 'lightning') { ctx.strokeStyle = 'rgba(200,170,255,0.9)'; ctx.lineWidth = 1.6; for (const hnd of fists ? [sk.hf, sk.hb] : [A0]) { ctx.beginPath(); let q = hnd; ctx.moveTo(q[0], q[1]); for (let k = 0; k < 4; k++) { q = [hnd[0] + rand(-14, 14), hnd[1] + rand(-14, 14)]; ctx.lineTo(q[0], q[1]); } ctx.stroke(); } }
+if (w === 'shadow') { ctx.strokeStyle = 'rgba(40,10,50,0.45)'; ctx.lineWidth = 9; if (!fists) line(A0, B0); ctx.strokeStyle = `rgba(${L.slash},0.5)`; ctx.lineWidth = 1.5; if (!fists) line(A0, B0); }
+if (w === 'void') { ctx.strokeStyle = 'rgba(30,10,50,0.7)'; ctx.lineWidth = 8; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(170,90,255,0.85)'; ctx.lineWidth = 2.4; if (!fists) line(A0, B0); circle(B0, 4.5); }
+if (w === 'water') { ctx.strokeStyle = 'rgba(60,170,255,0.6)'; ctx.lineWidth = 6.5; if (!fists) line(A0, B0); ctx.strokeStyle = 'rgba(220,245,255,0.85)'; ctx.lineWidth = 1.8; if (!fists) line(A0, B0); }
+if (w === 'crystal') { ctx.strokeStyle = 'rgba(100,210,255,0.6)'; ctx.lineWidth = 5; if (!fists) line(A0, B0); ctx.fillStyle = 'rgba(240,250,255,0.95)'; circle(B0, 4); }
+if (w === 'lava') { ctx.strokeStyle = '#1a1420'; ctx.lineWidth = 4; if (!fists) line(A0, B0); ctx.strokeStyle = `rgba(255,${120 + Math.sin(t * 6) * 60 | 0},60,0.9)`; ctx.lineWidth = 1.2; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const q = [A0[0] + (B0[0] - A0[0]) * k / 6 + (k % 2 ? 2 : -2), A0[1] + (B0[1] - A0[1]) * k / 6]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } ctx.stroke(); }
+if (w === 'ink') { ctx.fillStyle = `rgba(${D.inkC || '15,15,22'},0.85)`; circle(B0, 3.5); circle([B0[0], B0[1] + 6 + Math.sin(t * 4) * 2], 1.8); }
+}
+ctx.restore();
+}
 function drawTaperedSeg(a, b, r1, r2, fill) {
 const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1;
 const nx = -dy / d, ny = dx / d;
@@ -8963,6 +9538,7 @@ if (L.legend && L.fx) skinEyes(f, ex, ey);
 }
 function drawBody(sk, f, o) {
 const L = f.look; DRAW_F = f;
+if (L.deco && !o.ghost) drawDeco(sk, f, L, 'back');
 const chId = (f.ch && f.ch.id) || 'qingfeng';
 const isHeavy = chId === 'tieshan' || chId === 'gouchen';
 const isRobed = chId === 'liuyun' || chId === 'yuxiao' || chId === 'yuehua' || chId === 'moyu';
@@ -8990,13 +9566,14 @@ if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${L.slash},${o.ghost})`; ctx
 return;
 }
 const alpha = o.invul ? 0.55 : 1;
+const hideBaseHead = !!(L.deco && L.deco.hideBaseHead);
 if (L.legend && L.fx && !o.flash) skinGlow([...segs, ...arm], sk, f, L);
 ctx.globalAlpha = alpha;
 ctx.strokeStyle = L.outline; ctx.fillStyle = L.outline;
 ctx.globalAlpha = alpha * L.outlineA;
 for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2] + 2.5, s[3] + 2.5, L.outline);
 circle(sk.head, 12.5);
-headAcc(sk, 3, L.outline, L);
+if (!hideBaseHead) headAcc(sk, 3, L.outline, L);
 weapon(sk, L, true, false);
 ctx.globalAlpha = alpha;
 for (const s of segs) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : (s[4] ? L.shade : L.body));
@@ -9006,7 +9583,7 @@ line([sk.hip[0] - 6, sk.hip[1]], [sk.hip[0] + 6, sk.hip[1]]);
 }
 ctx.fillStyle = o.flash ? '#fff' : L.body; circle(sk.head, 10);
 drawFace(sk, f, L, o.flash);
-headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
+if (!hideBaseHead) headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
 weapon(sk, L, false, o.flash);
 if (L.fx && !o.flash) { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
 for (const s of arm) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : L.body);
@@ -9015,6 +9592,7 @@ ctx.strokeStyle = L.scarf; ctx.lineWidth = 2.0;
 line(sk.ef, [(sk.ef[0] + sk.hf[0]) * 0.5, (sk.ef[1] + sk.hf[1]) * 0.5]);
 }
 ctx.globalAlpha = 1;
+if (L.deco) drawDeco(sk, f, L, 'front');
 }
 function headAcc(sk, grow, color, L) {
 const h = sk.head, nx = h[0] - sk.neck[0], ny = h[1] - sk.neck[1], nl = Math.hypot(nx, ny) || 1;
@@ -9156,13 +9734,14 @@ function weapon(sk, L, outline, flash) {
 const g = sk.guard, t = sk.tip, hl = sk.hilt;
 const dx = t[0] - g[0], dy = t[1] - g[1], dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, px = -uy, py = ux;
 const blade = flash ? '#fff' : L.blade;
+const ws = (L.deco && L.deco.weapStyle) || '';
 ctx.lineCap = 'round';
 const guardBar = (w, col = L.metal || '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
 switch (L.weapon) {
 case 'fists':
 if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 8.5); circle(sk.hb, 8); }
 else {
-ctx.fillStyle = flash ? '#fff' : (L.metal || '#c9a24a');
+ctx.fillStyle = flash ? '#fff' : (ws === 'vajra_gauntlet' ? '#ffaa00' : L.metal || '#c9a24a');
 circle(sk.hf, 6.5); circle(sk.hb, 6);
 ctx.fillStyle = `rgb(${L.slash})`; circle(sk.hf, 3.2); circle(sk.hb, 2.8);
 }
@@ -9170,15 +9749,15 @@ return;
 case 'spear': {
 const back = [g[0] - ux * 36, g[1] - uy * 36];
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.5; line(back, t); return; }
-ctx.strokeStyle = L.haft || '#6a4a2e';
+ctx.strokeStyle = ws === 'dragon_spear' ? '#1a4b8c' : (ws === 'aurora_lance' ? '#2c7873' : L.haft || '#6a4a2e');
 ctx.lineWidth = 3.2; line(back, [t[0] - ux * 15, t[1] - uy * 15]);
 ctx.fillStyle = blade; ctx.beginPath(); ctx.moveTo(t[0], t[1]);
-const wid = 4.5;
+const wid = ws === 'dragon_spear' ? 6.5 : 4.5;
 ctx.lineTo(t[0] - ux * 18 + px * wid, t[1] - uy * 18 + py * wid);
 ctx.lineTo(t[0] - ux * 14, t[1] - uy * 14);
 ctx.lineTo(t[0] - ux * 18 - px * wid, t[1] - uy * 18 - py * wid);
 ctx.closePath(); ctx.fill();
-ctx.fillStyle = L.fx ? L.scarf : '#d9383a';
+ctx.fillStyle = ws === 'dragon_spear' ? '#1f90ff' : (ws === 'aurora_lance' ? '#5ef2c9' : L.fx ? L.scarf : '#d9383a');
 ctx.beginPath(); ctx.arc(t[0] - ux * 19, t[1] - uy * 19, 3.8, 0, 7); ctx.fill();
 return;
 }
@@ -9186,12 +9765,12 @@ case 'greatsword': {
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 11.5; line(hl, t); return; }
 ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 5; line(hl, g);
 const b0 = [g[0] + px * 4.5, g[1] + py * 4.5], b1 = [g[0] - px * 4.5, g[1] - py * 4.5];
-const t0 = [t[0] - ux * 8 + px * 4, t[1] - uy * 8 + py * 4];
+const t0 = [t[0] - ux * 8 + px * (ws === 'shura_blade' ? 6.5 : 4), t[1] - uy * 8 + py * (ws === 'shura_blade' ? 6.5 : 4)];
 const t1 = [t[0] - ux * 8 - px * 4, t[1] - uy * 8 - py * 4];
 ctx.fillStyle = blade; ctx.beginPath();
 ctx.moveTo(b0[0], b0[1]); ctx.lineTo(t0[0], t0[1]); ctx.lineTo(t[0], t[1]); ctx.lineTo(t1[0], t1[1]); ctx.lineTo(b1[0], b1[1]); ctx.closePath(); ctx.fill();
 ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 2.2; line(g, [t[0] - ux * 6, t[1] - uy * 6]);
-guardBar(11);
+guardBar(11, ws === 'bronze_cleaver' ? '#3fa37a' : undefined);
 return;
 }
 case 'fan': {
@@ -9203,15 +9782,21 @@ return;
 }
 case 'brush':
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 7; line(hl, t); ctx.fillStyle = L.outline; circle(t, 8); return; }
-ctx.strokeStyle = L.haft || '#8a5a34'; ctx.lineWidth = 4.2; line(hl, [t[0] - ux * 10, t[1] - uy * 10]);
-ctx.fillStyle = L.fx ? L.blade : '#0c0c10';
+ctx.strokeStyle = ws === 'star_brush' ? '#244680' : L.haft || '#8a5a34'; ctx.lineWidth = 4.2; line(hl, [t[0] - ux * 10, t[1] - uy * 10]);
+ctx.fillStyle = ws === 'star_brush' ? '#4facfe' : L.fx ? L.blade : '#0c0c10';
 ctx.beginPath(); ctx.ellipse(t[0] - ux * 4, t[1] - uy * 4, 9.5, 5.2, Math.atan2(uy, ux), 0, 7); ctx.fill();
 return;
 case 'dual': {
 const b2 = [sk.hb[0] + ux * 38, sk.hb[1] + uy * 38];
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.2; line(hl, t); line(sk.hb, b2); return; }
+if (ws === 'blood_scythes') {
+ctx.strokeStyle = '#ff2a3d'; ctx.lineWidth = 3.2;
+ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.quadraticCurveTo((g[0] + t[0]) * 0.5 + px * 8, (g[1] + t[1]) * 0.5 + py * 8, t[0], t[1]); ctx.stroke();
+ctx.beginPath(); ctx.moveTo(sk.hb[0], sk.hb[1]); ctx.quadraticCurveTo((sk.hb[0] + b2[0]) * 0.5 - px * 8, (sk.hb[1] + b2[1]) * 0.5 - py * 8, b2[0], b2[1]); ctx.stroke();
+} else {
 ctx.strokeStyle = blade; ctx.lineWidth = 3.0; line(g, t); line(sk.hb, b2);
 ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 1.2; line(g, t);
+}
 ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 4; line(hl, g);
 return;
 }
@@ -9241,7 +9826,7 @@ const top = up ? [gp[0] + sk.face * 5, gp[1] - 4] : [gp[0], gp[1] - 5], bot = up
 if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 8); circle(top, 7.5); circle(bot, 10.5); return; }
 ctx.fillStyle = flash ? '#fff' : '#e8d2a6'; circle(sk.hf, 6);
 ctx.strokeStyle = 'rgba(120,80,40,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(sk.hf[0], sk.hf[1], 4, 0.4, 2.6); ctx.stroke();
-ctx.fillStyle = flash ? '#fff' : (L.metal || '#c98a3a'); circle(bot, 8.5); circle(top, 5.5);
+ctx.fillStyle = flash ? '#fff' : (ws === 'jade_gourd' ? '#50d8c8' : L.metal || '#c98a3a'); circle(bot, 8.5); circle(top, 5.5);
 ctx.fillStyle = L.scarf || '#d8452f'; circle([(top[0] + bot[0]) / 2, (top[1] + bot[1]) / 2], 2.4);
 ctx.fillStyle = 'rgba(255,255,255,0.26)'; circle([bot[0] - 3, bot[1] - 3], 2.4);
 return;
@@ -9273,10 +9858,10 @@ return;
 }
 default: {  // sword / moonblade
 if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.2; line(hl, g); return; }
-ctx.strokeStyle = blade; ctx.lineWidth = 3.4; line(g, t);
+ctx.strokeStyle = blade; ctx.lineWidth = ws === 'sun_sword' ? 4.4 : 3.4; line(g, t);
 ctx.strokeStyle = `rgba(${L.slash},0.65)`; ctx.lineWidth = 1.5; line(g, t);
 ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 4.5; line(hl, g);
-guardBar(6);
+guardBar(ws === 'sun_sword' ? 8.5 : 6, ws === 'abyss_blade' ? '#9b51e0' : undefined);
 if (L.weapon === 'moonblade') { ctx.strokeStyle = blade; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.arc(t[0] - ux * 6, t[1] - uy * 6, 10, Math.atan2(uy, ux) - 2.2, Math.atan2(uy, ux) + 2.2); ctx.stroke(); }
 }
 }
@@ -12037,40 +12622,40 @@ result.push(list.splice(idx, 1)[0]);
 return result;
 }
 const SKINS = {
-qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#dde9f8', shade: '#6f8fc0', scarf: '#bfeaff', slash: '170,225,255', blade: '#e4f6ff', outline: '#0a1630', hair: '#a9c8ee', metal: '#bfe6ff' }, fx: { th: 'frost', c: '170,225,255', c2: '225,245,255' }, skillNames: { skill: '寒霜疾风', ranged: '玄冰剑气', ult: '霜魄残月' } },
-qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff4dc', shade: '#d1a75c', scarf: '#ff8a24', slash: '255,180,70', blade: '#fff6dc', outline: '#2a1204', metal: '#f0c040' }, fx: { th: 'flame', c: '255,175,60', c2: '255,80,20' }, skillNames: { skill: '金乌贯日', ranged: '赤阳炽芒', ult: '十日焚天' } },
-qf_abyss: { char: 'qingfeng', rarity: 'legend', name: '幽渊', look: { body: '#2a1f40', shade: '#150c24', scarf: '#a45cff', slash: '175,100,255', blade: '#f1e6ff', outline: '#b98cff', outlineA: 0.9, metal: '#9b51e0' }, fx: { th: 'void', c: '175,95,255', c2: '34,8,64' }, skillNames: { skill: '幽冥疾斩', ranged: '深渊裂隙', ult: '无间寂灭' } },
-fy_jade: { char: 'feiying', rarity: 'rare', name: '碧影', look: { body: '#1e2f2a', shade: '#122019', outline: '#2bd49a', outlineA: 0.85, scarf: '#2bd49a', slash: '90,230,170', blade: '#dffff2' }, fx: { th: 'leaf', c: '90,220,160' }, skillNames: { skill: '翠影幻遁', ranged: '翡翠飞镖', ult: '万叶千影' } },
-fy_blood: { char: 'feiying', rarity: 'legend', name: '血月', look: { body: '#30101a', shade: '#18060c', outline: '#ff3048', outlineA: 0.95, scarf: '#ff2a3d', slash: '255,60,80', blade: '#ffe0e4' }, fx: { th: 'void', c: '255,45,65', c2: '60,0,12' }, skillNames: { skill: '血影瞬杀', ranged: '诛心血刃', ult: '猩红月劫' } },
-fy_phantom: { char: 'feiying', rarity: 'legend', name: '幻灵', look: { body: '#18222e', shade: '#0c131c', outline: '#3ff0ff', outlineA: 0.9, scarf: '#00e5ff', slash: '0,235,255', blade: '#e0ffff' }, fx: { th: 'aurora', c: '0,235,255', c2: '170,120,255' }, skillNames: { skill: '极光魅影', ranged: '幽灵幻刺', ult: '九天幻灵阵' } },
-ts_bronze: { char: 'tieshan', rarity: 'rare', name: '青铜', look: { body: '#b08a56', shade: '#6e5130', scarf: '#3fa37a', slash: '120,210,170', blade: '#e8d2a8', outline: '#120a04', helmC: '#8a6a3a', metal: '#3fa37a' }, fx: { th: 'metal', c: '150,230,190' }, skillNames: { skill: '撼岳地崩', ranged: '巨盾重冲', ult: '万钧巨岳' } },
-ts_obsidian: { char: 'tieshan', rarity: 'legend', name: '玄武', look: { body: '#2c2a38', shade: '#16141e', outline: '#7a86ff', outlineA: 0.8, scarf: '#5a6cff', slash: '120,140,255', blade: '#dfe2ff', helmC: '#1e1c28', metal: '#6a78ff' }, fx: { th: 'water', c: '110,135,255', c2: '200,215,255' }, skillNames: { skill: '冥水震岳', ranged: '玄甲冲霄', ult: '玄武碎陆' } },
-ts_crimson: { char: 'tieshan', rarity: 'legend', name: '修罗', look: { body: '#3a1414', shade: '#1c0606', outline: '#ff5a3a', outlineA: 0.9, scarf: '#ff3a20', slash: '255,80,50', blade: '#ffe2d8', helmC: '#2a0a0a', metal: '#ff5a3a' }, fx: { th: 'flame', c: '255,95,40', c2: '170,10,0' }, skillNames: { skill: '修罗撼地', ranged: '焚血狂突', ult: '阿修罗劫' } },
-ls_plum: { char: 'lingshuang', rarity: 'rare', name: '红梅', look: { scarf: '#e0365a', slash: '255,110,140', blade: '#ffe8ee', hair: '#2a1a22', haft: '#5a1a24' }, fx: { th: 'petal', c: '255,120,150' }, skillNames: { skill: '落梅踏雪', ranged: '红梅绽刺', ult: '傲雪惊鸿' } },
-ls_aurora: { char: 'lingshuang', rarity: 'legend', name: '极光', look: { body: '#e4faf5', shade: '#82bcc4', scarf: '#5ef2c9', slash: '120,255,210', blade: '#eafffa', hair: '#1e3a40', haft: '#2c7873' }, fx: { th: 'aurora', c: '110,255,205', c2: '170,120,255' }, skillNames: { skill: '极光旋缨', ranged: '碧落回枪', ult: '极光刹那' } },
-ls_dragon: { char: 'lingshuang', rarity: 'legend', name: '沧龙', look: { body: '#dcefff', shade: '#4f84ba', scarf: '#1f90ff', slash: '60,160,255', blade: '#e8f4ff', hair: '#0e2a4a', haft: '#1a4b8c' }, fx: { th: 'water', c: '70,170,255', c2: '210,240,255' }, skillNames: { skill: '潜龙腾渊', ranged: '沧浪旋涡', ult: '龙啸九天' } },
-ly_dusk: { char: 'liuyun', rarity: 'rare', name: '晚霞', look: { body: '#f7ece2', shade: '#c39a7e', scarf: '#ff8a4a', slash: '255,160,100', hair: '#3a2216' }, fx: { th: 'leaf', c: '255,140,70' }, skillNames: { skill: '暮云疾刃', ranged: '落霞乘风', ult: '赤霞天龙' } },
-ly_sky: { char: 'liuyun', rarity: 'legend', name: '天青', look: { body: '#eef7ff', shade: '#93b6d8', scarf: '#5ab8ff', slash: '140,205,255', blade: '#f4fbff', hair: '#24364a' }, fx: { th: 'wind', c: '150,210,255', c2: '245,250,255', part: 'feather' }, skillNames: { skill: '天风破虚', ranged: '凌霄隐步', ult: '青穹御风卷' } },
-ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#eef1e8', shade: '#7d8a74', scarf: '#4e8a56', slash: '90,190,120', blade: '#eef6f0', hair: '#1e2a1e' }, fx: { th: 'leaf', c: '100,190,120' }, skillNames: { skill: '竹影随行', ranged: '清风拂叶', ult: '万竿烟雨' } },
-lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255', outline: '#b48cff', blade: '#f0e8ff' }, fx: { th: 'thunder', c: '190,150,255' }, skillNames: { skill: '紫霄惊雷', ranged: '九天引雷', ult: '狂雷寂灭' } },
-lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#4a2410', shade: '#2a1206', outline: '#ffb040', outlineA: 0.9, scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, fx: { th: 'flame', c: '255,160,50', c2: '255,60,10' }, skillNames: { skill: '曜日神拳', ranged: '大日天火', ult: '阳炎劫世' } },
-lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#2e1a08', shade: '#160c02', outline: '#ffd040', outlineA: 1, scarf: '#ffb000', slash: '255,200,60', blade: '#fff4d0' }, fx: { th: 'thunder', c: '255,205,70', c2: '255,250,220' }, skillNames: { skill: '金刚伏魔', ranged: '罗汉踏天', ult: '大威天龙' } },
-my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60', hatC: '#4a1410', outline: '#e8c8b0' }, fx: { th: 'ink', c: '230,70,50', c2: '120,16,10' }, skillNames: { skill: '朱墨封灵', ranged: '丹砂画符', ult: '朱砂符阵' } },
-my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#1e1a14', shade: '#100c08', outline: '#e6c46a', outlineA: 0.9, scarf: '#d8b04a', slash: '240,205,110', blade: '#2a2010', hatC: '#3a2c10' }, fx: { th: 'gold', c: '245,205,105', c2: '255,245,200' }, skillNames: { skill: '泥金点翠', ranged: '泥金画符', ult: '金符满纸' } },
-my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#121a34', shade: '#080c1c', outline: '#8fc8ff', outlineA: 0.85, scarf: '#4facfe', slash: '90,175,255', blade: '#0c1430', hatC: '#0e1630' }, fx: { th: 'star', c: '120,190,255', c2: '8,14,40' }, skillNames: { skill: '星宿锁灵', ranged: '星宿画符', ult: '太虚星图' } },
-yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6', hair: '#4a2a3a' }, fx: { th: 'petal', c: '255,170,200' }, skillNames: { skill: '落樱拂花', ranged: '飞樱回旋', ult: '樱落月明' } },
-yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2a2034', shade: '#140e1c', outline: '#ff6a7a', outlineA: 0.85, scarf: '#c13a4a', slash: '235,90,110', blade: '#ffdce2', hair: '#120a14' }, fx: { th: 'void', c: '255,95,115', c2: '26,4,14' }, skillNames: { skill: '暗月噬光', ranged: '黑曜血环', ult: '永夜蚀月' } },
-yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f4f9ff', shade: '#98b8dd', scarf: '#80d0ff', slash: '140,215,255', blade: '#f6fbff', hair: '#2a3a52' }, fx: { th: 'frost', c: '150,220,255', c2: '235,248,255' }, skillNames: { skill: '凝霜反镜', ranged: '玄晶冰魄', ult: '千里冰华' } },
-yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', outline: '#a0a0c0', outlineA: 0.8, scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee', hair: '#0e0e14' }, fx: { th: 'feather', c: '120,120,150' }, skillNames: { skill: '幽鸦裂空', ranged: '玄夜飞羽', ult: '百羽遮天' } },
-qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8', outline: '#121a16' }, fx: { th: 'ink', c: '120,225,190', c2: '18,24,22' }, skillNames: { skill: '沧海疾风', ranged: '碧落青锋', ult: '天地一孤行' } },
-yx_snow: { char: 'yuxiao', rarity: 'rare', name: '雪箫', look: { body: '#f4f8fb', shade: '#a8bccb', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff', hair: '#2a3a4a' }, fx: { th: 'frost', c: '170,225,255', c2: '230,245,255' }, skillNames: { skill: '寒江雪音', ranged: '冰弦回壁', ult: '霜天广陵散' } },
-yx_celestial: { char: 'yuxiao', rarity: 'legend', name: '钧天', look: { body: '#fff8e7', shade: '#c7a66b', scarf: '#ffcf4a', slash: '255,215,110', blade: '#fff3c8', hair: '#2a200e' }, fx: { th: 'gold', c: '255,210,100', c2: '255,250,220' }, skillNames: { skill: '钧天广乐', ranged: '凤鸣九霄', ult: '万古仙音曲' } },
-zx_amber: { char: 'zuixian', rarity: 'rare', name: '琥珀', look: { body: '#d9b46a', shade: '#9a7230', scarf: '#a0302a', slash: '255,190,90', blade: '#ffe8b8', hair: '#4a2a10' }, fx: { th: 'flame', c: '255,175,70', c2: '220,90,20' }, skillNames: { skill: '琥珀留客', ranged: '烈酒焚天', ult: '金樽山水长' } },
-zx_immortal: { char: 'zuixian', rarity: 'legend', name: '酒剑仙', look: { body: '#e6f9ff', shade: '#78b0c8', scarf: '#38e8ff', slash: '90,235,255', blade: '#eaffff', hair: '#1a3440' }, fx: { th: 'water', c: '90,230,255', c2: '230,255,255' }, skillNames: { skill: '太白仙亭', ranged: '琼浆御仙', ult: '醉卧蓬莱境' } },
-gc_crimson: { char: 'gouchen', rarity: 'rare', name: '赤锤', look: { body: '#3a1a1e', shade: '#220c10', outline: '#e06a5a', scarf: '#d83a3a', slash: '255,120,110', blade: '#ffe0dc', hair: '#1a0a0c' }, fx: { th: 'metal', c: '255,140,90' }, skillNames: { skill: '血链夺魄', ranged: '赤狱狂旋', ult: '修罗天罗网' } },
-gc_underworld: { char: 'gouchen', rarity: 'legend', name: '冥狱', look: { body: '#241834', shade: '#120a1e', outline: '#c08aff', outlineA: 0.85, scarf: '#a855f7', slash: '185,105,255', blade: '#f0e0ff', hair: '#0c0614' }, fx: { th: 'void', c: '185,105,255', c2: '28,0,56' }, skillNames: { skill: '勾魂索命', ranged: '九幽冥轮', ult: '森罗万象劫' } },
-yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0', hair: '#5a1a0a' }, fx: { th: 'flame', c: '255,145,50', c2: '255,60,20', part: 'feather' }, skillNames: { skill: '凤翼掠空', ranged: '涅槃离火', ult: '九天凤翔天' } },
-yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '130,195,255', blade: '#f2f8ff', hair: '#2a3a4e' }, fx: { th: 'frost', c: '150,210,255', c2: '235,245,255', part: 'feather' }, skillNames: { skill: '寒枭扑杀', ranged: '风雪千羽', ult: '极寒暴风天' } },
+qf_frost: { char: 'qingfeng', rarity: 'rare', name: '寒霜', look: { body: '#e6efff', shade: '#8ea4cc', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'icecrown', gem: '#bfefff', robe: 'ice', shoulder: '#8ea4cc', back: 'snowflake', wfx: 'frost', trail: 'snow' }, fx: { th: 'frost', c: '170,225,255', c2: '225,245,255' } },
+qf_gold: { char: 'qingfeng', rarity: 'legend', name: '金乌', look: { body: '#fff3d2', shade: '#c9a45a', scarf: '#ffb62e', slash: '255,196,90', blade: '#fff3cf' }, deco: { head: 'crown', robe: 'gold', breastplate: '#ffd966', shoulder: '#d4af37', back: 'crowwings', wfx: 'flame', trail: 'ember', aura: 'ember', weapStyle: 'sun_sword' }, fx: { th: 'flame', c: '255,175,60', c2: '255,80,20' } },
+qf_abyss: { char: 'qingfeng', rarity: 'legend', name: '幽渊', look: { body: '#241a3a', shade: '#10081c', scarf: '#9b51e0', slash: '160,80,240', blade: '#f3e8ff' }, deco: { head: 'voidhorns', gem: '#bd7bfa', robe: 'dark', shoulder: '#3d2060', back: 'voidshards', wfx: 'void', trail: 'smoke', aura: 'smoke', weapStyle: 'abyss_blade' }, fx: { th: 'void', c: '175,95,255', c2: '34,8,64' } },
+fy_jade: { char: 'feiying', rarity: 'rare', name: '碧影', look: { scarf: '#2bd49a', slash: '90,230,170', blade: '#dffff2' }, deco: { head: 'jadevisor', hideBaseHead: true, mask: '#2bd49a', robe: 'leaf', shoulder: '#1f8f68', wfx: 'jade', trail: 'leaf', weapStyle: 'jade_daggers' }, fx: { th: 'leaf', c: '90,220,160' } },
+fy_blood: { char: 'feiying', rarity: 'legend', name: '血月', look: { body: '#3a1420', shade: '#1a080e', scarf: '#ff2a3d', slash: '255,60,80', blade: '#ffd9dd' }, deco: { head: 'horns', hideBaseHead: true, hornC: '#2a0a10', robe: 'crimson', breastplate: '#4a121c', back: 'crescent', wfx: 'shadow', trail: 'smoke', aura: 'smoke', weapStyle: 'blood_scythes' }, fx: { th: 'void', c: '255,45,65', c2: '60,0,12' } },
+fy_phantom: { char: 'feiying', rarity: 'legend', name: '幻灵', look: { body: '#f0faff', shade: '#7faac6', scarf: '#00f2fe', slash: '0,242,254', blade: '#e0ffff' }, deco: { head: 'foxmask', hideBaseHead: true, mask: '#00f2fe', robe: 'spirit', shoulder: '#2888aa', back: 'foxtails', cape: '#1b4d6b', wfx: 'frost', trail: 'snow', aura: 'aurora' }, fx: { th: 'aurora', c: '0,235,255', c2: '170,120,255' } },
+ts_bronze: { char: 'tieshan', rarity: 'rare', name: '青铜', look: { body: '#c9a26b', shade: '#7a5a34', scarf: '#3fa37a', slash: '120,210,170' }, deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#a8804a', crest: '#3fa37a', shoulder: '#8a6a3a', breastplate: '#7a5a34', robe: 'bronze', weapStyle: 'bronze_cleaver' }, fx: { th: 'metal', c: '150,230,190' } },
+ts_obsidian: { char: 'tieshan', rarity: 'legend', name: '玄武', look: { body: '#34303e', shade: '#18161e', scarf: '#6a5cff', slash: '140,120,255', blade: '#d8d4ff' }, deco: { head: 'horns', hideBaseHead: true, hornC: '#1a1822', robe: 'heavy', breastplate: '#2e2642', back: 'shell', shoulder: '#2a2632', wfx: 'lava', aura: 'smoke' }, fx: { th: 'water', c: '110,135,255', c2: '200,215,255' } },
+ts_crimson: { char: 'tieshan', rarity: 'legend', name: '修罗', look: { body: '#3a1616', shade: '#1c0808', scarf: '#ff3a30', slash: '255,50,60', blade: '#ffd8d8' }, deco: { head: 'asuramask', hideBaseHead: true, helmC: '#4a1212', crest: '#ff3a30', shoulder: '#5a1a1a', breastplate: '#501414', robe: 'shura', back: 'flamebanners', wfx: 'flame', trail: 'ember', aura: 'ember', weapStyle: 'shura_blade' }, fx: { th: 'flame', c: '255,95,40', c2: '170,10,0' } },
+ls_plum: { char: 'lingshuang', rarity: 'rare', name: '红梅', look: { scarf: '#e0365a', slash: '255,110,140', blade: '#ffe3ea' }, deco: { head: 'flower', flower: '#e0365a', robe: 'plum', shoulder: '#c02a4a', trail: 'petal', petal: '255,120,150' }, fx: { th: 'petal', c: '255,120,150' } },
+ls_aurora: { char: 'lingshuang', rarity: 'legend', name: '极光', look: { body: '#dff8f4', shade: '#7fb7c0', scarf: '#5ef2c9', slash: '120,255,210', blade: '#e9fffa' }, deco: { head: 'valkyrie', gem: '#7dffd8', robe: 'aurora', breastplate: '#4aa090', back: 'aurora', wfx: 'frost', trail: 'snow', aura: 'aurora', weapStyle: 'aurora_lance' }, fx: { th: 'aurora', c: '110,255,205', c2: '170,120,255' } },
+ls_dragon: { char: 'lingshuang', rarity: 'legend', name: '沧龙', look: { body: '#d6edff', shade: '#4d82b8', scarf: '#1f90ff', slash: '40,150,255', blade: '#e6f3ff' }, deco: { head: 'dragonhorns', gem: '#1f90ff', robe: 'ocean', breastplate: '#205080', back: 'dragon', cape: '#103a66', wfx: 'water', trail: 'snow', aura: 'cloud', weapStyle: 'dragon_spear' }, fx: { th: 'water', c: '70,170,255', c2: '210,240,255' } },
+ly_dusk: { char: 'liuyun', rarity: 'rare', name: '晚霞', look: { scarf: '#ff8a4a', slash: '255,160,100' }, deco: { head: 'veilhat', hatC: '#c97a46', veilC: 'rgba(255,140,85,0.42)', robe: 'dusk', cape: '#c8602a', trail: 'leaf', leaf: '255,150,80' }, fx: { th: 'leaf', c: '255,140,70' } },
+ly_sky: { char: 'liuyun', rarity: 'legend', name: '天青', look: { body: '#eaf6ff', shade: '#8fb4d6', scarf: '#56b8ff', slash: '130,200,255', blade: '#f0faff' }, deco: { head: 'plume', plumeC: ['#ffffff', '#bfe2ff'], robe: 'celestial', breastplate: '#6ba0cc', back: 'pibo', trail: 'feather', aura: 'cloud' }, fx: { th: 'wind', c: '150,210,255', c2: '245,250,255', part: 'feather' } },
+ly_bamboo: { char: 'liuyun', rarity: 'rare', name: '墨竹', look: { body: '#f0f2eb', shade: '#7d8a74', scarf: '#4e7850', slash: '80,180,120', blade: '#eef6f0' }, deco: { head: 'bamboohat', hatC: '#426b44', robe: 'bamboo', shoulder: '#3e6040', cape: '#2d4730', wfx: 'jade', trail: 'leaf', leaf: '80,180,120' }, fx: { th: 'leaf', c: '100,190,120' } },
+lm_violet: { char: 'leiming', rarity: 'rare', name: '紫电', look: { scarf: '#9a5cff', slash: '185,140,255' }, deco: { head: 'headband', band: '#9a5cff', robe: 'thunder', shoulder: '#5a30a0', wfx: 'lightning', trail: 'spark' }, fx: { th: 'thunder', c: '190,150,255' } },
+lm_sun: { char: 'leiming', rarity: 'legend', name: '烈阳', look: { body: '#ffe7c2', shade: '#d08a3a', scarf: '#ff6a1a', slash: '255,150,60', blade: '#fff0dc' }, deco: { head: 'crown', robe: 'solar', breastplate: '#b86a20', back: 'flamemane', wfx: 'flame', trail: 'ember', aura: 'ember' }, fx: { th: 'flame', c: '255,160,50', c2: '255,60,10' } },
+lm_asura: { char: 'leiming', rarity: 'legend', name: '金刚', look: { body: '#3c1808', shade: '#1c0a02', scarf: '#ffaa00', slash: '255,180,40', blade: '#fff2d0' }, deco: { head: 'headband', band: '#ffaa00', robe: 'vajra', breastplate: '#6a3210', back: 'chakra', shoulder: '#6a3210', wfx: 'gold', trail: 'gold', aura: 'gold', weapStyle: 'vajra_gauntlet' }, fx: { th: 'thunder', c: '255,205,70', c2: '255,250,220' } },
+my_cinnabar: { char: 'moyu', rarity: 'rare', name: '朱砂', look: { scarf: '#c8321e', slash: '230,80,60' }, deco: { head: 'talismanhat', hideBaseHead: true, hatC: '#6b1c14', robe: 'cinnabar', shoulder: '#781c10', wfx: 'ink', trail: 'ink', inkC: '200,50,30' }, fx: { th: 'ink', c: '230,70,50', c2: '120,16,10' } },
+my_gold: { char: 'moyu', rarity: 'legend', name: '泥金', look: { body: '#f5ead0', shade: '#b39a5c', scarf: '#d8b04a', slash: '235,200,110', blade: '#fff4d6' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#6a5220', robe: 'gilt', breastplate: '#8a6a20', back: 'lotus', lotusC: '233,196,106', wfx: 'gold', trail: 'gold', aura: 'gold' }, fx: { th: 'gold', c: '245,205,105', c2: '255,245,200' } },
+my_celestial: { char: 'moyu', rarity: 'legend', name: '星墨', look: { body: '#141c36', shade: '#0a0d1c', scarf: '#4facfe', slash: '79,172,254', blade: '#dcf4ff' }, deco: { head: 'starguan', hideBaseHead: true, robe: 'starry', breastplate: '#183060', back: 'constellation', lotusC: '90,190,255', cape: '#102444', wfx: 'crystal', trail: 'spark', aura: 'aurora', weapStyle: 'star_brush' }, fx: { th: 'star', c: '120,190,255', c2: '8,14,40' } },
+yh_sakura: { char: 'yuehua', rarity: 'rare', name: '樱月', look: { scarf: '#ff9ec4', slash: '255,170,210', blade: '#fff0f6' }, deco: { head: 'sakurabranch', flower: '#ff9ec4', robe: 'sakura', shoulder: '#a04870', trail: 'petal', petal: '255,180,210' }, fx: { th: 'petal', c: '255,170,200' } },
+yh_eclipse: { char: 'yuehua', rarity: 'legend', name: '月蚀', look: { body: '#2c2238', shade: '#140e1c', scarf: '#c13a4a', slash: '230,90,110', blade: '#ffd8de' }, deco: { head: 'hood', hideBaseHead: true, hoodC: '#1c1024', robe: 'eclipse', breastplate: '#381622', back: 'tattered', wfx: 'shadow', trail: 'smoke', aura: 'smoke' }, fx: { th: 'void', c: '255,95,115', c2: '26,4,14' } },
+yh_solstice: { char: 'yuehua', rarity: 'legend', name: '霜华', look: { body: '#f2f8ff', shade: '#95b5db', scarf: '#80d0ff', slash: '130,215,255', blade: '#f4faff' }, deco: { head: 'frosttiara', flower: '#a8e0ff', robe: 'snow', breastplate: '#4878a8', back: 'icewings', cape: '#2a5078', wfx: 'frost', trail: 'snow', aura: 'snow' }, fx: { th: 'frost', c: '150,220,255', c2: '235,248,255' } },
+yl_raven: { char: 'yanling', rarity: 'rare', name: '玄羽', look: { body: '#2c2c36', shade: '#14141a', scarf: '#8a8aa6', slash: '170,170,200', blade: '#e0e0ee' }, deco: { head: 'ravencowl', hideBaseHead: true, hoodC: '#16161e', robe: 'raven', shoulder: '#20202a', trail: 'feather', featherC: '40,40,55' }, fx: { th: 'feather', c: '120,120,150' } },
+qf_qfx: { char: 'qingfeng', rarity: 'legend', name: '青锋行', exclusive: true, look: { body: '#f6f2e8', shade: '#9db3aa', scarf: '#c8321e', slash: '120,220,190', blade: '#eafff8' }, deco: { head: 'headband', band: '#c8321e', robe: 'jade_master', breastplate: '#2e5a4e', back: 'flysword', trail: 'leaf', leaf: '150,235,200', aura: 'cloud' }, fx: { th: 'ink', c: '120,225,190', c2: '18,24,22' } },
+yx_snow: { char: 'yuxiao', rarity: 'rare', name: '雪箫', look: { body: '#f4f8fb', shade: '#a8bccb', scarf: '#9fd8ff', slash: '170,220,255', blade: '#eef8ff' }, deco: { head: 'frosttiara', robe: 'snow', shoulder: '#7ca8cc', back: 'snowflake', wfx: 'frost', trail: 'snow' }, fx: { th: 'frost', c: '170,225,255', c2: '230,245,255' } },
+yx_celestial: { char: 'yuxiao', rarity: 'legend', name: '钧天', look: { body: '#fff8e7', shade: '#c7a66b', scarf: '#ffd166', slash: '255,215,110', blade: '#fff6d6' }, deco: { head: 'starguan', robe: 'gold', breastplate: '#c99a3e', back: 'bells', wfx: 'gold', trail: 'gold', aura: 'gold' }, fx: { th: 'gold', c: '255,210,100', c2: '255,250,220' } },
+zx_amber: { char: 'zuixian', rarity: 'rare', name: '琥珀', look: { body: '#d9b46a', shade: '#9a7230', scarf: '#a0302a', slash: '255,190,90', blade: '#ffe8b8' }, deco: { head: 'gourdcrown', robe: 'solar', shoulder: '#8a5820', wfx: 'flame', trail: 'ember' }, fx: { th: 'flame', c: '255,175,70', c2: '220,90,20' } },
+zx_immortal: { char: 'zuixian', rarity: 'legend', name: '酒剑仙', look: { body: '#e6f9ff', shade: '#78b0c8', scarf: '#38e8ff', slash: '90,235,255', blade: '#eaffff' }, deco: { head: 'plume', plumeC: ['#e0ffff', '#56d8ff'], robe: 'jade_master', breastplate: '#2a6f82', back: 'gourdback', wfx: 'water', trail: 'cloud', aura: 'cloud', weapStyle: 'jade_gourd' }, fx: { th: 'water', c: '90,230,255', c2: '230,255,255' } },
+gc_crimson: { char: 'gouchen', rarity: 'rare', name: '赤锤', look: { body: '#3a1a1e', shade: '#220c10', scarf: '#d83a3a', slash: '255,120,110', blade: '#ffe0dc' }, deco: { head: 'ironvisage', hideBaseHead: true, robe: 'shura', shoulder: '#6a1a1e', wfx: 'shadow', trail: 'smoke' }, fx: { th: 'metal', c: '255,140,90' } },
+gc_underworld: { char: 'gouchen', rarity: 'legend', name: '冥狱', look: { body: '#241834', shade: '#120a1e', scarf: '#a855f7', slash: '185,105,255', blade: '#f0e0ff' }, deco: { head: 'voidhorns', hideBaseHead: true, robe: 'dark', breastplate: '#3b1d5e', shoulder: '#4c2478', back: 'ghostchains', wfx: 'void', trail: 'smoke', aura: 'smoke' }, fx: { th: 'void', c: '185,105,255', c2: '28,0,56' } },
+yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { back: 'phoenixtail', head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], robe: 'phoenix', breastplate: '#b84414', cape: '#e8552a', wfx: 'flame', trail: 'ember', aura: 'ember' }, fx: { th: 'flame', c: '255,145,50', c2: '255,60,20', part: 'feather' } },
+yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'owlhood', hideBaseHead: true, hoodC: '#1c2838', robe: 'blizzard', breastplate: '#385878', back: 'wings', wfx: 'frost', trail: 'feather', featherC: '220,240,255', aura: 'snow' }, fx: { th: 'frost', c: '150,210,255', c2: '235,245,255', part: 'feather' } },
 };
 const SCENES = {
 qf_frost: { sky: ['#08101f', '#152a48', '#2c4a6a', '#1c2c40'], orb: 'moon', orbC: '220,240,255', mist: '180,220,255', mtn: ['#1c2c4a', '#142238'], bam: ['#0c1424', '#081020'], wx: 'snow', wxC: '230,245,255', hit: 'snowflake', hitC: '200,240,255' },
@@ -12308,7 +12893,7 @@ return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 function skinLook(ci, skin) {
 const sk = SKINS[skin];
 const ok = sk && sk.char === CHARS[ci].id;
-return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), fx: ok ? sk.fx || null : null };
+return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null, fx: ok ? sk.fx || null : null };
 }
 function skinSkillName(fOrKey, slot) {
 const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);
