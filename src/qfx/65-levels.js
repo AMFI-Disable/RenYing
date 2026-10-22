@@ -37,7 +37,7 @@ function fillQueue(comp) {
   G.queue = q.concat(G.queue);
 }
 function startStage(n) {
-  const st = stageDef(n); G.stage = n; G.inter = 0; G.intro = false; G.clearT = 0; G.bossDead = false; G.sub = 0; G.subT = 0; G.waves = st.waves; G.stageName = st.name;
+  const st = stageDef(n); G.stage = n; G.inter = 0; G.intro = false; G.clearT = 0; G.bossDead = false; G.sub = 0; G.subT = 0; G.waves = st.waves; G.stageName = st.name; G.k0 = G.kills;
   G.maxTokens = Math.min(4, 2 + Math.floor(n / 4)); G.cap = Math.min(13, 6 + Math.floor(n / 2)); G.tokens = 0; for (const e of G.enemies) e.token = false;
   G.queue = []; fillQueue(G.waves[0]); G.spawnT = 1.1;
   if (st.boss) UI.banner(st.name, ET[st.boss].name, 'red');
@@ -66,7 +66,7 @@ function stageClear() {
   const n = G.stage;
   try { if (parent !== window) parent.postMessage({ qfx: 'wave', n }, '*'); } catch (_) {}
   G.hazards.length = 0; Pl.mp = Pl.maxMp; Save.stageDone(n);
-  const sg = addSoul((4 + 2 * Math.min(n, 12)) * (stageDef(n).boss ? 3 : 1)); G.soulRun = (G.soulRun || 0) + sg; setTimeout(() => UI.toast(`剑魄 +${sg}`, 1.6), 900);
+  const sg = addSoul((4 + 2 * Math.min(n, 12)) * (stageDef(n).boss ? 3 : 1) + (G.kills - (G.k0 ?? G.kills)) * .25); G.soulRun = (G.soulRun || 0) + sg; setTimeout(() => UI.toast(`剑魄 +${sg}`, 1.6), 900);
   if (!G.endless && n === LAST_STAGE) { Game.victory(); return; }
   if (!G.endless && isChapterEnd(n)) { G.clearT = 3.2; const ch = CHAPTERS[chapterOf(n)]; UI.banner(`${ch.n} · 已破`, ch.idx + ' · ' + ch.sub, 'gold'); Snd.level(); return; }
   G.inter = G.endless ? 15 : 20; healPlayer(Pl.maxHp * .1); UI.banner('敌势暂歇', `第${cnNum(n)}关已过`, 'gold'); Snd.level();

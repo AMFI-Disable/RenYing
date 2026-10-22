@@ -12,10 +12,18 @@ All notable changes, features, and architectural capabilities of this project ar
   - All players can equip every skin from 2026-10-22 00:00 to 2026-11-05 00:00 (Beijing time); `skinOwned()` now gates every skin check, and borrowed skins show a 限免 tag in the codex. Equips of skins you don't own drop back to default once the event ends.
   - One-time task during the event: finish 3 matches against the CPU (win or lose) to claim 1000 ink. Guests' progress carries over after they log in.
   - Home screen event card with days remaining; it opens the task page.
-
-### Fixed
-
-- **Tasks Never Progressed on the GitHub Pages Build**: daily and weekly tasks now track matches, wins, max combo and ultimates per account in local storage, reset at Beijing midnight / Monday, and remember what was claimed (previously progress stayed at 0 and the first task could be re-claimed after every reload).
+- **青锋行 2.0 (`src/qfx/`, built into `assets/qingfengxing.html`)**:
+  - Split the single-file mini game into ordered source modules (`src/qfx/NN-name.js` + `page.html`) concatenated by `tools/build.py`.
+  - Three chapters, ten stages (山门 / 竹林 / 剑冢), each with its own map, sub-waves and a chapter boss; endless trial after stage 10 rotates all three bosses.
+  - Combat feel: parry window with arrow / orb / sword-wave reflection, poise and break, execution (决) with cinematic HUD dimming, charged 破山 strike, perfect-dodge flash with near-miss detection.
+  - Skill slots: three active skills plus one ultimate (剑气纵横、回风落雁、御剑术、惊雷剑、焚天、流影、寒江雪、金钟罩；万剑归宗、雷霆万钧、无影) with rage meter and levels.
+  - Level-up cards now offer perks, skills and ultimates; perks belong to five schools (剑气 / 雷火 / 身法 / 剑意 / 根基) with 3- and 6-piece resonance bonuses; card reroll.
+  - New foes: 刺客、尸奴 (revives once)、剑灵, and a third boss 竹影·无相 with clones; all bosses gained HP-threshold phases shown as ticks on the boss bar.
+  - Meta progression: 剑魄 earned per stage, spent on eight permanent upgrades; records screen.
+  - Settings: four quality presets (流畅 / 均衡 / 精美 / 极致), camera sensitivity, screen shake, damage numbers, volume.
+  - Six-step first-run tutorial (试剑) covering move, attack, dodge, parry, execution and charge; skippable.
+  - Mobile touch layout with parry / lock / pause buttons.
+  - 刃影 reward copy now refers to chapters instead of waves; the reward protocol is unchanged.
 
 - **Exhaustive Simulation Across All Circumstances (`tools/simulate-all.mjs`, `tools/cvc-sim.mjs --exhaustive`)**:
   - Implemented a unified command executing 5 matches for every conceivable circumstance: all 6 game modes (`cpu`, `bushido`, `chaos`, `mayhem`, `watch2v2`, `tag3`) and every hero matchup across all 12 characters (78 unique pairings including mirror matches).
@@ -329,6 +337,8 @@ All notable changes, features, and architectural capabilities of this project ar
   - Added detailed strategic explanations (`HERO_RESTRAINTS_EXPLAIN`) in both the Codex and the Ban/Pick character dossier, detailing the tactical reasons why each hero counters specific matchups and struggles against others.
 
 ### Fixed
+
+- **Tasks Never Progressed on the GitHub Pages Build**: daily and weekly tasks now track matches, wins, max combo and ultimates per account in local storage, reset at Beijing midnight / Monday, and remember what was claimed (previously progress stayed at 0 and the first task could be re-claimed after every reload).
 
 - **2v2 Hero Freeze & Stasis Bug Fixes**:
   - Resolved freeze and stuck issues in 2v2: added `f.flurryVictim` tracking during multihit ultimate flurries (`crescent`, `shadows`, `eightimm`) so targets are not abandoned mid-combo.

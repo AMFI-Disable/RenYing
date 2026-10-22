@@ -154,7 +154,7 @@ function playerDamage(e, mult, o = {}) {
 }
 /* o.src 出手的敌人；o.proj 飞行物；o.parry === false 为不可弹反。弹开时返回 'parry' */
 function hurtPlayer(dmg, sx, sz, o = {}) {
-  if (Pl.state === 'dead' || G.state !== 'playing') return false;
+  if (Pl.state === 'dead' || G.state !== 'playing' || G.clearT > 0) return false;
   // 弹反：架势初起的一瞬（以及卸剑后片刻，防同时两刀），接得住的招式全数卸开
   if (o.parry !== false && ((Pl.state === 'parry' && Pl.st <= PARRY.win + .05 * pk('tingfeng')) || (Pl.state === 'deflect' && Pl.st < .14) || (Pl.bellT > 0 && Pl.iframe <= 0 && Pl.state !== 'dead'))) { onDeflect(o.src, sx, sz, o); return 'parry'; }
   const guard = o.parry !== false && Pl.state === 'parry' && Pl.st <= PARRY.guard;

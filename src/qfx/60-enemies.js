@@ -43,7 +43,7 @@ const ET = {
     { kind: 'summon', anim: 'roar', max: 99, wind: .9, act: .1, rec: .6, dmg: 0, cd: 999, only: 'script' }]
   },
   boss2: {
-    name: '剑魔 · 独孤夜', hp: 5400, spd: 4.6, r: .65, xp: 400, gold: [200, 240], poise: 30, mass: 5, reach: 2.9, boss: true,
+    name: '剑魔 · 独孤夜', hp: 6200, dmgB: .2, spd: 4.6, r: .65, xp: 400, gold: [200, 240], poise: 30, mass: 5, reach: 2.9, boss: true,
     rig: () => makeHumanoid({ colors: { robe: 0x151217, trim: 0x7a1a1a, sash: 0x7a1a1a, skin: 0xcfc4c0, hair: 0xe8e6e0, pants: 0x121013, boots: 0x0c0a0c, eye: 0xff2a1a }, head: 'demon', scale: 1.32, sleeves: 'long', skirt: .82, weapon: 'dark', cape: 0x1a1418, capeRag: true, stance: [-.42, .9, -.04, -.3, -.7, -.6] }),
     atks: [{ kind: 'melee', anim: 'sweepRL', max: 3.8, wind: .42, act: .16, rec: .16, dmg: 20, shape: { t: 'arc', r: 4.2, arc: 2.9 }, lunge: 2.2, cd: 2.2, tele: true, chain: 1 },
     { kind: 'melee', anim: 'sweepLR', max: 0, wind: .34, act: .16, rec: .16, dmg: 20, shape: { t: 'arc', r: 4.2, arc: 2.9 }, lunge: 2.2, cd: 0, tele: true, only: 'chain', chain: 2 },
@@ -62,7 +62,7 @@ const GLINT = new Set(['melee', 'pounce', 'dash', 'leap', 'spin']);
 const behindCam = e => { const dx = e.pos.x - Pl.pos.x, dz = e.pos.z - Pl.pos.z, d = Math.hypot(dx, dz) || 1; return (dx * Math.sin(Cam.yaw) + dz * Math.cos(Cam.yaw)) / d < -.3; };
 
 function spawnEnemy(type, x, z, o = {}) {
-  const cfg = ET[type], rig = cfg.rig(); const elite = !!o.elite && !cfg.boss, wv = Math.max(1, G.stage), hs = (1 + .19 * (wv - 1) + (G.endless ? .08 * (wv - 10) * (wv - 10) : 0)) * (cfg.boss && G.endless ? 1.6 : 1), ds = 1.15 + .12 * (wv - 1);
+  const cfg = ET[type], rig = cfg.rig(); const elite = !!o.elite && !cfg.boss, wv = Math.max(1, G.stage), hs = (1 + .19 * (wv - 1) + (G.endless ? .08 * (wv - 10) * (wv - 10) : 0)) * (cfg.boss && G.endless ? 1.6 : 1), ds = 1.15 + .12 * (wv - 1) + (wv >= 7 && !G.endless ? .08 : 0) + (cfg.dmgB || 0);
   const e = { type, cfg, rig, pos: new V3(x, 0, z), yaw: Math.atan2(Pl.pos.x - x, Pl.pos.z - z), maxHp: Math.round(cfg.hp * hs * (elite ? 2.4 : 1)), dmgK: ds * (elite ? 1.3 : 1), state: 'spawn', st: 0, atk: null, cds: cfg.atks.map(() => rand(.4, 1.6)), token: false, stagger: 0, poiseD: 0, slowT: 0, burnT: 0, burnDps: 0, burnTick: 0, flash: 0, elite, boss: !!cfg.boss, ghost: !!cfg.ghost, kx: 0, kz: 0, didHit: false, tele: null, strafe: Math.random() < .5 ? 1 : -1, strafeT: rand(1, 3), speedN: 0, deadT: 0, name: cfg.name, phase: 1, tick: 0, jumpY: 0, summoned: 0, stun: 0, fx: 0 };
   e.hp = e.maxHp; const sc = rig.root.scale.x * (elite ? 1.18 : 1); rig.root.scale.setScalar(sc); e.radius = cfg.r * (elite ? 1.15 : 1); e.hitY = (cfg.hitY || 1.15) * sc + (cfg.float || 0);
   rig.root.position.copy(e.pos); rig.root.rotation.y = e.yaw; GFX.scene.add(rig.root);

@@ -83,7 +83,7 @@ const Game = {
     $('overT').firstChild.textContent = win ? '万剑归寂' : '剑折人亡';
     $('overS').textContent = win ? '三章尽破，青锋入鞘' : `剑锋折于${CHAPTERS[G.chapter].n} · 第${cnNum(Math.max(1, G.stage))}关`;
     $('overStats').innerHTML = `<div><b>${cnNum(Math.max(1, G.stage))}</b>关</div><div><b>${cnNum(Pl.lv)}</b>境界</div><div><b>${G.kills}</b>斩敌</div><div><b>${G.maxCombo}</b>最高连击</div><div><b>${fmtTime(G.playT)}</b>历时</div><div><b>${Math.round(G.dmgDone)}</b>总伤害</div><div><b>${swordTier().name[0]}${swordTier().name[1]}</b>佩剑</div><div><b>${Math.floor(Pl.gold)}</b>余钱</div>`;
-    UI.perkList('overPerks'); const run = !win && Save.run(); const sg = addSoul(G.kills * .25 + (win ? 60 : 0)) + (G.soulRun || 0);
+    UI.perkList('overPerks'); const run = !win && Save.run(); const sg = addSoul(win ? 60 : 0) + (G.soulRun || 0);
     $('overSoul').textContent = `此行共得剑魄 ${sg} · 藏经阁中现有 ${Save.load().soul}`;
     $('btnRetry').hidden = !run; if (run) $('btnRetry').textContent = '从' + CHAPTERS[run.ch].n + '重来';
     $('btnEndless').hidden = !win; $('over').hidden = false;
@@ -94,15 +94,17 @@ const Game = {
 };
 Input.onLock = locked => { if (!locked && G.state === 'playing') Game.pause(); };
 
+/* 关面板那一下的按键不再落到战斗里（数字键会顺手放技能、回车会跳过歇息） */
+function eatKeys() { for (const k in Input.hits) delete Input.hits[k]; }
 function handleKeys() {
   const s = G.state;
   if (Input.hit('KeyM')) { Snd.setMute(!Snd.muted); $('btnMute').textContent = '声音：' + (Snd.muted ? '关' : '开'); }
   if (s === 'playing') { if (Input.hit('KeyP') || Input.hit('Escape')) Game.pause(); else if (Input.hit('KeyB')) Game.openShop(); }
   else if (s === 'paused') { if (!$('settings').hidden) { if (Input.hit('Escape')) UI.closeSettings(); } else if (Input.hit('KeyP') || Input.hit('Escape')) Game.resume(); }
-  else if (s === 'shop') { if (Input.hit('KeyB') || Input.hit('Escape') || Input.hit('Enter')) Game.closeShop(); }
+  else if (s === 'shop') { if (Input.hit('KeyB') || Input.hit('Escape') || Input.hit('Enter')) { Game.closeShop(); eatKeys(); } }
   else if (s === 'interlude') { if (Input.hit('KeyB')) Game.openShop(); else if (Input.hit('Enter')) Game.nextChapter(); }
-  else if (s === 'levelup') { if (Input.hit('KeyR')) Game.reroll(); for (let i = 0; i < 3; i++) if (Input.hit('Digit' + (i + 1)) || Input.hit('Numpad' + (i + 1))) { Game.pickPerk(UI.perks[i]); break; } }
-  else if (s === 'title') { if (Input.hit('Enter') && !$('btnStart').disabled) { if (Save.run()) Game.cont(); else Game.start(); } }
+  else if (s === 'levelup') { if (Input.hit('KeyR')) Game.reroll(); for (let i = 0; i < 3; i++) if (Input.hit('Digit' + (i + 1)) || Input.hit('Numpad' + (i + 1))) { Game.pickPerk(UI.perks[i]); eatKeys(); break; } }
+  else if (s === 'title') { if (Input.hit('Enter') && !$('title').hidden && !$('btnStart').disabled) { if (Save.run()) Game.cont(); else Game.start(); } }
 }
 
 let last = 0, slowAcc = 0, fN = 0, fT = 0;
@@ -160,7 +162,7 @@ async function boot() {
     GFX.renderer.compile(GFX.scene, GFX.camera);
     last = performance.now(); requestAnimationFrame(frame);
     $('btnStart').disabled = false; $('loading').hidden = true;
-    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise };
+    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise, Tut };
   } catch (err) { console.error(err && err.stack || err); $('loading').textContent = '无法启动 3D 画面：' + (err && err.message ? err.message : err) + '。请换用支持 WebGL 的桌面浏览器。'; }
 }
 boot();
