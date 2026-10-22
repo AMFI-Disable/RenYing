@@ -15,6 +15,16 @@
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
+function getNodeBin() {
+  if (process.execPath && existsSync(process.execPath)) return process.execPath;
+  if (process.argv[0] && existsSync(process.argv[0])) return process.argv[0];
+  const candidates = ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node'];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return 'node';
+}
+
 const args = process.argv.slice(2);
 function getArg(name, def) {
   const idx = args.indexOf('--' + name);
@@ -40,7 +50,7 @@ console.log(`========================================================\n`);
 // Step 1: Headless CvC Simulation
 console.log(`[Step 1/3] Running Headless CvC Simulation (${matches} matches)...`);
 try {
-  execSync(`node tools/cvc-sim.mjs --matches ${matches} --export ${dataFile}`, { stdio: 'inherit' });
+  execSync(`"${getNodeBin()}" tools/cvc-sim.mjs --matches ${matches} --export ${dataFile}`, { stdio: 'inherit' });
 } catch (e) {
   console.error('Failed to run CvC simulation:', e);
   process.exit(1);
@@ -49,7 +59,7 @@ try {
 // Step 2: Policy Training
 console.log(`\n[Step 2/3] Training Neural Policy Model (${epochs} epochs)...`);
 try {
-  execSync(`node tools/train-policy.mjs --data ${dataFile} --epochs ${epochs} --out ${modelFile}`, { stdio: 'inherit' });
+  execSync(`"${getNodeBin()}" tools/train-policy.mjs --data ${dataFile} --epochs ${epochs} --out ${modelFile}`, { stdio: 'inherit' });
   // Copy to latest
   writeFileSync(latestModelFile, readFileSync(modelFile));
   console.log(`[Model] Updated ${latestModelFile}`);

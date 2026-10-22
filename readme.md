@@ -43,7 +43,7 @@
 
 ## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
-**RenYing (刃影)** is a fast ink-wash martial-arts duel game. Nine characters fight on one stage, each with their own reach, weight and tricks. It is built to be played right away — at school or at home — in either of two ways: two browsers connect **directly** to each other over WebRTC (nothing to host, nothing to install), or you run the bundled Python server on a laptop and everyone joins over the local network.
+**RenYing (刃影)** is a fast ink-wash martial-arts duel game. Twelve characters fight on one stage, each with their own reach, weight and tricks. It is built to be played right away — at school or at home — in either of two ways: two browsers connect **directly** to each other over WebRTC (nothing to host, nothing to install), or you run the bundled Python server on a laptop and everyone joins over the local network.
 
 ---
 
@@ -140,13 +140,20 @@ Edit the sources; never edit the generated pages.
 | :--- | :--- |
 | `src/page.html` | Page markup with build markers |
 | `src/style.css` | All styles |
-| `src/game.js` | Game engine, menus, rollback netcode, and server networking |
+| `src/game.js` | Game engine, 12-character roster, menus, rollback netcode, and server networking |
 | `src/net-p2p.js` | Serverless WebRTC direct connection |
+| `src/cloud.js` | Firebase cloud save sync and signed local account backup/restore |
+| `src/social.js` | Serverless WebRTC P2P community hub, friends, and live spectating |
+| `src/qfx/` | Modular source files for the Qingfengxing mini-game |
+| `firestore.rules` | Firestore security and progression rate-limit rules |
 | `assets/music/` | Background music (`.mp3`) |
-| `assets/qingfengxing.html` | Qingfengxing mini-game |
+| `assets/qingfengxing.html` | Generated Qingfengxing mini-game page |
 | `tools/build.py` | Generates the pages below (Python standard library only) |
+| `tools/combat-test.mjs` | Headless/in-process regression suite for all 12 heroes, 2v2 AI, and combat state transitions |
+| `tools/simulate-all.mjs` | Multi-threaded simulation, counter audit, and neural policy training pipeline |
 | `tools/ui-audit.mjs` | Headless check that every panel fits, with nothing clipped or too small to read |
 | `tools/hud-audit.mjs` | Headless check that no in-match HUD text is drawn below 12px |
+| `tools/hud-overlap-audit.mjs` | Headless check that HUD text and bars never overlap or run off-canvas |
 | `tools/touch-audit.mjs` | Emulates phones and tablets, then drives the touch controls |
 | `tools/net-test.mjs` | Drives two browsers through the server and WebRTC multiplayer paths |
 | `tools/protocol-test.mjs` | Talks raw WebSockets to the server to check its client-trust rules |

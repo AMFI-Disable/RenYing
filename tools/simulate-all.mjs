@@ -836,9 +836,9 @@ if (isMainThread) {
 
       if (doPush) {
         console.log('\nCommitting and pushing to origin/main...');
-        execSync('git add models/ data/meta/ index.html renying-offline.html', { stdio: 'inherit' });
+        execSync('git add models/ index.html renying-offline.html', { stdio: 'inherit' });
         try {
-          execSync('git commit -m "feat: train AI models"', { stdio: 'inherit' });
+          execSync('git commit -m "feat: train ai models"', { stdio: 'inherit' });
           execSync('git push origin main', { stdio: 'inherit' });
           console.log('✓ Pushed to origin/main successfully.');
         } catch (gitErr) {
@@ -851,7 +851,7 @@ if (isMainThread) {
   } else if (doPush && skipTrain) {
     try {
       execSync('python3 tools/build.py', { stdio: 'inherit' });
-      execSync('git add models/ data/meta/ index.html renying-offline.html', { stdio: 'inherit' });
+      execSync('git add models/ index.html renying-offline.html', { stdio: 'inherit' });
       try {
         execSync('git commit -m "chore: update simulation meta"', { stdio: 'inherit' });
         execSync('git push origin main', { stdio: 'inherit' });

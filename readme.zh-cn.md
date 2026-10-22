@@ -139,11 +139,17 @@ flowchart TD
 | :--- | :--- |
 | `src/page.html` | 网页结构，带打包标记 |
 | `src/style.css` | 全部样式 |
-| `src/game.js` | 游戏引擎、菜单、回滚联机和服务器联机 |
+| `src/game.js` | 游戏引擎、12 名英雄机制、菜单、回滚联机和服务器联机 |
 | `src/net-p2p.js` | 免服务器 WebRTC 直连 |
+| `src/cloud.js` | Firebase 云存档同步与本地备份导入/导出 |
+| `src/social.js` | 免服务器 P2P 江湖茶馆社区、好友与观战 |
+| `src/qfx/` | 青锋行小游戏模块化源码 |
+| `firestore.rules` | Firestore 云存档安全与防篡改规则 |
 | `assets/music/` | 背景音乐（`.mp3`） |
-| `assets/qingfengxing.html` | 青锋行小游戏 |
+| `assets/qingfengxing.html` | 生成的青锋行小游戏页面 |
 | `tools/build.py` | 生成下面三个网页（只用 Python 自带的库） |
+| `tools/combat-test.mjs` | 12 英雄招式、状态机与 2v2 AI 回归测试套件 |
+| `tools/simulate-all.mjs` | 全模式 AI 仿真对战、克制审计与神经网络训练管线 |
 | `index.html` | 生成的联网版（GitHub Pages 和 `server.py` 都用它） |
 | `renying-offline.html` | 生成的单文件离线版 |
 | `renying.html` | 生成的旧网址跳转页 |

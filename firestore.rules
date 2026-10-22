@@ -48,7 +48,7 @@ service cloud.firestore {
       return isAuthenticated() && (
         isAdmin() ||
         request.auth.uid == 'dev_master' ||
-        (request.auth.token.email != null && request.auth.token.email.matches('.*dev.*@renying\\.game'))
+        request.auth.token.email == 'ry_dev@renying.game'
       );
     }
 
@@ -143,9 +143,9 @@ service cloud.firestore {
     // Anti-tampering and progression rate-limit validator for profile updates
     function isValidProfileProgression(prev, next) {
       return isSuperUser() || (
-        next.ink <= prev.ink + 3000 &&
-        next.owned.size() <= prev.owned.size() + 2 &&
-        next.skins.size() <= prev.skins.size() + 2 &&
+        next.ink <= prev.ink + 5000 &&
+        next.owned.size() <= prev.owned.size() + 10 &&
+        next.skins.size() <= prev.skins.size() + 10 &&
         next.netWins <= prev.netWins + 20
       );
     }

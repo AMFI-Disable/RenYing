@@ -187,15 +187,27 @@ def outputs():
 
 
 def check_js():
-    """有 node 的话检查一下 JS 语法（没有就跳过）"""
+    """有 node 的话检查一下 JS 语法（包括压缩后的产物，没有 node 就跳过）"""
     node = shutil.which("node")
+    if not node:
+        for cand in ("/opt/homebrew/bin/node", "/usr/local/bin/node", "/usr/bin/node"):
+            if os.path.exists(cand):
+                node = cand
+                break
     if not node:
         return True
     ok = True
     for name in ("cloud.js", "game.js", "net-p2p.js", "social.js"):
-        r = subprocess.run([node, "--check", os.path.join(SRC, name)], capture_output=True, text=True)
+        src_path = os.path.join(SRC, name)
+        r = subprocess.run([node, "--check", src_path], capture_output=True, text=True)
         if r.returncode:
             print(f"src/{name} 语法错误：\n{r.stderr}")
+            ok = False
+            continue
+        compacted = compact_js(read(SRC, name))
+        rc = subprocess.run([node, "--check", "-"], input=compacted, capture_output=True, text=True)
+        if rc.returncode:
+            print(f"src/{name} 压缩后语法错误：\n{rc.stderr}")
             ok = False
     # 青锋行的各个文件共用一个闭包，拼起来再查
     game = "".join(read(QFX, n) for n in qfx_modules())

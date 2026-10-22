@@ -584,6 +584,8 @@ if (!(window.RENYING_BUILD && window.RENYING_BUILD.offline)) {
   setTimeout(socStart, 2500);
   setInterval(() => {
     const p = SOC.peer, t = ++SOC.tick;
+    const inFight = typeof M !== 'undefined' && M && M.phase === 'fight' && !socVisible();
+    if (inFight) return;
     if ((p && SOC.me !== socWho()) || ((!p || p.destroyed) && t % 15 === 0)) socStart();
     else if (p && t % 5 === 0) {   // 断网恢复后自己重连、重新进大厅
       if (p.disconnected && !p.destroyed) { try { p.reconnect(); } catch (e) {} }

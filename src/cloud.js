@@ -989,6 +989,7 @@
       toCloudData,
       unlockAllOnCloud,
       getCloudDocument,
+      setCloudDocument,
       promoteLocalToCloud,
       isCloudAvailable: () => !!(hasValidConfig() && fbAuth && fbDb),
       getDb: () => fbDb,

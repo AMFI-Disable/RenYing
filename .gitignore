@@ -70,3 +70,8 @@ tmp/
 data/
 logs/
 ci-ui/
+_site/
+models/renying_ai_20*.json
+*.db
+*.sqlite
+*.sqlite3

@@ -19,6 +19,16 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 
+function getNodeBin() {
+  if (process.execPath && existsSync(process.execPath)) return process.execPath;
+  if (process.argv[0] && existsSync(process.argv[0])) return process.argv[0];
+  const candidates = ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node'];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return 'node';
+}
+
 const args = process.argv.slice(2);
 function getArg(name, def) {
   const idx = args.indexOf('--' + name);
@@ -45,7 +55,7 @@ function runMetaForMode(mode) {
   console.log(`>>> Analyzing Meta for Game Mode: [ ${displayTitle} ]`);
   console.log(`======================================================`);
   try {
-    execSync(`node tools/cvc-sim.mjs --mode ${mode} --meta --matches 66`, { stdio: 'inherit' });
+    execSync(`"${getNodeBin()}" tools/cvc-sim.mjs --mode ${mode} --meta --matches 66`, { stdio: 'inherit' });
     const src = `data/meta_${mode}.json`;
     const dest = `data/meta/${mode}.json`;
     if (existsSync(src)) {

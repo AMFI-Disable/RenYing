@@ -16,24 +16,27 @@ All notable changes, features, and architectural capabilities of this project ar
   - The home entrance (title, cards, dock) plays once on boot and again when coming back from a match, not on every return from 设置 / 任务 / 图鉴.
   - Target panels are built during the dolly instead of on the frame they appear, and the pressed card no longer runs two blurs at once.
   - `prefers-reduced-motion` now covers the entrance, the hand-off and the dock/nav swap.
-- **Resilient Node Process Resolution & Spawn Error Handling (`tools/simulate-all.mjs`, `tools/train-heroes.mjs`, `tools/auto-balance.mjs`)**:
-  - Replaced rigid `process.execPath` invocations with a robust multi-stage binary resolver (`getNodeBin()`) checking `process.execPath`, `process.argv[0]`, and standard Homebrew/system paths (`/opt/homebrew/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`).
+- **Cloud Save Inspector Export (`src/cloud.js`)**:
+  - Exported `setCloudDocument` on `window.CloudSave` so the Dev Cloud Inspector save action in `src/game.js` functions without a missing-method error.
+- **P2P Social Background Throttling (`src/social.js`)**:
+  - Paused background PeerJS reconnect and outbox flush sweeps during active combat (`M.phase === 'fight'`) when the community drawer is closed to eliminate signaling jitter.
+- **Resilient Node Process Resolution & Spawn Error Handling (`tools/simulate-all.mjs`, `tools/train-heroes.mjs`, `tools/gamemode-meta.mjs`, `tools/auto-train.mjs`, `tools/build.py`)**:
+  - Replaced rigid `process.execPath` invocations with a robust multi-stage binary resolver (`getNodeBin()`) checking `process.execPath`, `process.argv[0]`, and standard Homebrew/system paths (`/opt/homebrew/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`), and updated `tools/build.py` to syntax-check compacted JS payloads via `node --check -`.
   - Added explicit `'error'` event handlers on child process instances in neural training and balance simulation pipelines, preventing unhandled spawn exceptions (such as `ENOENT` during background package updates) from crashing the parent runner.
 - **Account Cloud Synchronization & Local Fallback Migration (`src/cloud.js`, `src/game.js`, `firestore.rules`)**:
   - Removed auto-cheating unlock script upon `Dev` account login; `Dev` is now treated as a legitimate, persistent account with authentic progression.
   - Implemented automatic local-to-cloud migration: when users with local accounts (`local_...`) log in or click "一键升级为云端账号" in `#acc`, their progress (unlocked characters, skins, ink, and stars) is automatically uploaded and registered in Firebase Auth and Cloud Firestore.
   - Hardened error reporting across `login()` and `register()` to display actionable diagnostics (domain whitelisting, auth provider configuration, credential mismatch) rather than silently falling back to local storage.
-  - Relaxed starter profile limits in `firestore.rules` (`isValidStarterProfile`) to support carried-over guest progress, avoiding permission-denied rejections when guests register accounts after playing matches.
-  - Added superuser regex matching for developer emails (`.*dev.*@renying\.game`) in `isSuperUser()` to ensure legitimate cloud writes succeed.
+  - Relaxed starter profile limits in `firestore.rules` (`isValidStarterProfile`) and raised per-write `owned`/`skins` progression caps (`+10`) to support 10-pull gacha unlocks and carried-over guest progress.
+  - Restricted `isSuperUser()` in `firestore.rules` to exact `ry_dev@renying.game` and admin claims to prevent open registration privilege escalation.
 - **FanHui (返回) Button Fixed Positioning (`src/style.css`)**:
   - Anchored back buttons in single-player, multiplayer, and account panels (`#single button[data-back], #netp button[data-back], #accBack`) to the bottom-right corner using fixed bottom-right positioning, eliminating layout blockage caused by action buttons on small viewports.
 
 ### Added
 
-- **Automated Combat Balancer & KeZhi Counter Audit (`tools/auto-balance.mjs`, `tools/simulate-all.mjs`)**:
-  - Implemented automated multi-worker balance engine to micro-tune attack damage multipliers (`stat.dmg`), break/escape cooldowns (`escCD`), and base HP pools through continuous closed-loop tournament tests.
+- **Exhaustive Simulation & KeZhi Counter Audit (`tools/simulate-all.mjs`)**:
   - Implemented asymmetric KeZhi (克制) counter evaluation: hero counter relationships accept an advantage tolerance window of ±10% (expected ~58% ± 10%, i.e. 48%–68%), whereas neutral matchups enforce tight ±5% equilibrium (45%–55%).
-  - Upgraded `tools/simulate-all.mjs` with full one-command pipeline support (`--all-in-one`, `--auto-balance`, `--balance-rounds`, `--simulate-all`, `--train-all`, `--print-all`, and `--push`), running auto-balancing, multi-mode simulation, neural policy training, distribution bundle builds, regression tests, and remote publishing.
+  - Upgraded `tools/simulate-all.mjs` with full one-command pipeline support (`--all-in-one`, `--simulate-all`, `--train-all`, `--print-all`, and `--push`), running multi-mode simulation, neural policy training, distribution bundle builds, regression tests, and remote publishing.
 - **江湖驿站 Community Rework (`src/social.js`)**: one community screen with a public hall, friends, private chats and group chats, working on the static GitHub Pages site with no server. Players find each other through the same PeerJS broker netplay uses; whoever claims the hall slot first relays hall chat and the online list, and another player takes over within seconds when they leave. Friend requests, DMs and group messages go browser to browser; if the other player is offline they wait on the sender's side and are delivered when both are online, marked 未送达 until acknowledged. The seeded sample posts and the 约战 / 心得 channel tabs are gone; 发到社区 from a room now posts the room code to the hall. Unread DMs and friend requests show a badge on the 社区 tab.
 - **Auto Best Skin (设置 → 皮肤)**: on by default; any hero you haven't picked a skin for wears your highest-rarity owned skin (legend over elite). Choosing 默认 for a hero keeps it on the default look, and online opponents now receive the skins you actually wear.
 - **流云 开扇 Aerial Dive (`windstep`)**: the ground dash now travels about 40% farther (≈270 px); casting it in the air dives diagonally to the ground and bursts on landing (24 damage, launches) and scatters 5 popcorn.
