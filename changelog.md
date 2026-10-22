@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **流云 开扇 Aerial Dive (`windstep`)**: the ground dash now travels about 40% farther (≈270 px); casting it in the air dives diagonally to the ground and bursts on landing (24 damage, launches) and scatters 5 popcorn.
+
 - **14-Day Free Skin Event & 1000-Ink Welcome Task (`src/game.js`)**:
   - All players can equip every skin from 2026-10-22 00:00 to 2026-11-05 00:00 (Beijing time); `skinOwned()` now gates every skin check, and borrowed skins show a 限免 tag in the codex. Equips of skins you don't own drop back to default once the event ends.
   - One-time task during the event: finish 3 matches against the CPU (win or lose) to claim 1000 ink. Guests' progress carries over after they log in.
@@ -187,6 +189,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **墨羽 ink regeneration** 12 → 10 per second.
+- **Smaller damage numbers**: hit numbers, combo totals and the HUD combo counter are about 20–25% smaller.
 - **Enhanced 2v2 Neural Co-op Model & Two-Player Duo Circumstances Simulation (`models/renying_ai_watch2v2.json`, `tools/simulate-all.mjs`, `tools/combat-test.mjs`)**:
   - Trained an enhanced 31-dimensional state co-op neural network policy on over 1,025,000 dual-agent 2v2 battle transitions, embedding spatial ally relative vectors, hitstun peel signals, focus fire alignment, and altar relic metrics.
   - Rebuilt the 2v2 exhaustive simulation in `tools/simulate-all.mjs` to simulate Two Players vs Two Players across all 66 unique duo team combinations (unordered pairs), generating the 66-combination Duo Team Tier List (`data/meta/watch2v2_duo_meta.json`) and the Best Partner Synergy Matrix for every hero.
@@ -338,6 +342,9 @@ All notable changes, features, and architectural capabilities of this project ar
   - Added detailed strategic explanations (`HERO_RESTRAINTS_EXPLAIN`) in both the Codex and the Ban/Pick character dossier, detailing the tactical reasons why each hero counters specific matchups and struggles against others.
 
 ### Fixed
+
+- **醉翁 山水之间 Played Its Scroll Twice**: the scroll overlay was also drawn during the 0.42 s wind-up and then restarted when the ultimate began; it now drops once.
+- **墨羽 画符 Said "酒不够"**: skills that can't be cast now say why (墨不够 / 符已画满 for 墨羽, 酒不够 for 醉翁).
 
 - **Redeem Codes and Tutorial Reward Could Be Claimed Again After Refresh**: used codes and the tutorial reward flag are now remembered per account in local storage (they were dropped from the cloud profile on every save).
 - **Home Dock Lost Buttons After Pressing Back**: the home screen now looks the same on first load as after returning from another page (top nav shown, all dock buttons kept).

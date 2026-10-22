@@ -326,7 +326,7 @@ const CHARS = [
 ];
 const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
 // 墨羽的墨水：每甩一团墨消耗 INK_COST，每秒恢复 INK_REGEN
-const INK_MAX = 100, INK_COST = 15, INK_REGEN = 12, INK_DMG = 24;
+const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 // 墨羽的符：R 画一张花 FU_INK 格墨水，最多 FU_MAX 张；大招全部烧掉，伤害 FU_BASE + FU_PER × 张数
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
@@ -612,18 +612,19 @@ const SKILLS = {
       if (f.t >= 2) toNeutral(f);
     },
     pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-  windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。',
-    start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); },
-    update(f) {
-      if (f.skPh < 5 && f.t >= f.skPh * 0.055) {   // 冲的路上每隔一小段撒一颗
+  windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。在空中开扇会斜着俯冲下去，落地炸开一圈风爆（24 伤害，挑起），再崩出 5 颗爆米花。',
+    start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (f.y < -40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
+    update(f, foe) {
+      if (f.skPh >= 10) { windDive(f, foe); return; }
+      if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗
         f.skPh++;
         spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 7.3 + f.x * 0.013) % 6 });   // 只管画面的花样，但存进回滚存档里，两边要一样
       }
-      f.vx = f.face * 1300 * Math.max(0, 1 - f.t / 0.3);
+      f.vx = f.face * 1450 * Math.max(0, 1 - f.t / 0.38);
       if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
-      if (f.t >= 0.32) toNeutral(f);
+      if (f.t >= 0.4) toNeutral(f);
     },
-    pose: () => ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 360 && Math.sign(o.x - m.x) === m.face },
+    pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
   stomp: { name: '雷踏', cd: 4.5, desc: '一脚踏落，前方轰然炸起雷柱（宽 85 像素，高 420 像素，48 伤害）。垂直高空挑飞，将对手击向空中。',
     start(f) { f.vx = 0; },
     update(f) {
@@ -631,7 +632,7 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
-  inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
+  inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, lack: f => (f.fu || 0) >= FU_MAX ? '符已画满' : '墨不够', desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
     start(f) { f.vx = 0; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.2) {
@@ -720,7 +721,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['zx_sway', 30] : ['gc_wind', 40],
     ai: (me, foe, d) => d < 650 },
-  feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 50 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 80 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
+  feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, lack: () => '酒不够', desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 50 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 80 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
     start(f) { f.vx = 0; f.drunk = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.18) {
@@ -3349,7 +3350,7 @@ function specialUpdate(f, foe) {
 function startSkill(f, foe, slot) {
   const id = slot === 2 ? f.ch.skill2 : f.ch.skill, S = SKILLS[id];
   if (!S) return;
-  if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: '酒不够', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
+  if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
   endEscape(f);
   if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
   f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null;
@@ -3373,6 +3374,22 @@ function startSkill(f, foe, slot) {
     }
   }
   S.start(f, foe);
+}
+// 流云空中开扇：斜着俯冲，落地风爆，崩出一圈爆米花
+function windDive(f, foe) {
+  if (f.skPh === 10) {
+    f.vx = f.face * 820; f.vy = Math.max(f.vy, 1750);
+    for (let k = 0; k < 2; k++) addP({ type: 'spark', x: f.x - f.face * rand(10, 40), y: f.y - rand(10, 90), vx: -f.face * rand(120, 260), vy: -rand(300, 520), life: 0.3, max: 0.3, rgb: k ? f.look.slash : '255,255,255', w: 1.8, drag: 3 });
+    if (f.y + f.vy * STEP >= 0 || f.t >= 0.7) {   // 下一帧就着地：在这帧炸开，免得落地判定先把技能收掉
+      f.skPh = 11; f.t = 0; f.y = 0; f.vx = 0; f.vy = 0; f.hitDone = false; f.jumps = 0; f.airDash = 1;
+      strike(f, foe, { box: [-130, -120, 130, 6], dmg: 24, kb: [240, -640], stun: 0.45, hs: 0.1, launch: true });
+      for (let k = 0; k < 5; k++) spawnProj(f, { kind: 'popcorn', x: clamp(f.x + (k - 2) * 62, WALL, STAGE_W - WALL), y: -12, vx: 0, delay: 0.32 + k * 0.05, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 5.1 + k * 1.7) % 6 });
+      shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.22); flashRGB = f.look.slash;
+      ring(f.x, -10, 150, f.look.slash, 0.4); ring(f.x, -10, 95, '255,255,255', 0.3); dust(f.x, 0, 22);
+      for (let k = 0; k < 22; k++) { const a = Math.PI + (k / 21) * Math.PI, v = rand(260, 620); addP({ type: 'spark', x: f.x, y: -8, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.8, life: 0.45, max: 0.45, rgb: k % 3 ? f.look.slash : '255,245,210', w: 2.6, drag: 2.4 }); }
+      SFX.thud(); SFX.poof();
+    }
+  } else if (f.t >= 0.24) toNeutral(f);
 }
 // 技能的一次近身判定（每个阶段只会打中一次）
 function strike(f, foe, spec) {
@@ -4358,7 +4375,7 @@ function hitVisual(ev, quiet) {
   if (!quiet && (ev.dd || 0) > 0) {   // 伤害数字：从命中点弹出来往上飘，越重越大
     const dd = Math.round(ev.dd * 10) / 10, big = dd >= 8;
     addP({ type: 'dmg', text: String(dd), x: ev.x + rand(-22, 22), y: ev.y - 20 - ((ev.cn || 0) % 3) * 16, vx: rand(-60, 60), vy: -150, g: 260, life: 0.85, max: 0.85,
-      s: ev.blk ? 0.7 : clamp(0.8 + dd / 14, 0.85, 1.6), rgb: ev.blk ? '170,180,200' : big ? '255,210,90' : '255,250,240', edge: fighterByIdx(ev.a) ? fighterByIdx(ev.a).look.slash : '255,255,255' });
+      s: ev.blk ? 0.62 : clamp(0.72 + dd / 20, 0.75, 1.25), rgb: ev.blk ? '170,180,200' : big ? '255,210,90' : '255,250,240', edge: fighterByIdx(ev.a) ? fighterByIdx(ev.a).look.slash : '255,255,255' });
   }
   if (M.mode === 'train' && ev.d === 1) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); }
   if (ev.root) { for (let i = 0; i < 14; i++) addP({ type: 'ink', x: def.x + rand(-30, 30), y: -rand(0, 30), vx: rand(-60, 60), vy: rand(-200, -40), g: 900, life: 0.7, max: 0.7, r: rand(2, 5), rgb: '15,15,22' }); addP({ type: 'text', text: '定', x: def.x, y: def.y - 130, life: 0.8, max: 0.8, rgb: '210,210,230' }); }
@@ -6206,8 +6223,8 @@ function drawParticles(glowOnly) {
     } else if (p.type === 'dmg') {
       const pop = 1 + Math.max(0, (p.life - p.max + 0.12) / 0.12) * 0.6;
       ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s * pop, p.s * pop);
-      ctx.globalAlpha = Math.min(1, k * 2.5); ctx.font = `800 26px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(10,8,20,0.85)'; ctx.strokeText(p.text, 0, 0);
+      ctx.globalAlpha = Math.min(1, k * 2.5); ctx.font = `800 21px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(10,8,20,0.85)'; ctx.strokeText(p.text, 0, 0);
       ctx.shadowColor = `rgba(${p.edge},0.9)`; ctx.shadowBlur = 10; ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, 0, 0); ctx.restore();
     } else if (p.type === 'shape') {   // 皮肤碎片：雪花、花瓣、羽毛……
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.spin || 0) * (p.max - p.life));
@@ -6253,10 +6270,10 @@ function drawComboTotals() {
     const a = clamp(cu.t / 0.5, 0, 1), pop = 1 + Math.max(0, cu.t - 1.25) * 2;
     ctx.save(); ctx.translate(d.x, d.y - 200 * (d.size || 1)); ctx.scale(pop, pop); ctx.globalAlpha = a;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `800 40px ${BODY_FONT}`; ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(10,8,20,0.85)';
+    ctx.font = `800 30px ${BODY_FONT}`; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(10,8,20,0.85)';
     const t = String(Math.round(cu.dmg));
     ctx.strokeText(t, 0, 0); ctx.shadowColor = `rgba(${atk.look.slash},0.95)`; ctx.shadowBlur = 16; ctx.fillStyle = '#ffe9b0'; ctx.fillText(t, 0, 0);
-    ctx.shadowBlur = 0; ctx.font = `16px ${TITLE_FONT}`; ctx.lineWidth = 4; ctx.strokeText(`${cu.n} 连击`, 0, 30); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(`${cu.n} 连击`, 0, 30);
+    ctx.shadowBlur = 0; ctx.font = `13px ${TITLE_FONT}`; ctx.lineWidth = 3.5; ctx.strokeText(`${cu.n} 连击`, 0, 24); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(`${cu.n} 连击`, 0, 24);
     ctx.restore();
   }
 }
@@ -6544,7 +6561,7 @@ function drawFu(x, y, a, n) {   // 对手头顶那张符：黄纸朱砂
   ctx.restore();
 }
 function drawShanshui() {
-  const f = [A, B].find(x => x && x.state === 'special' && x.ch.ult === 'shanshui');
+  const f = [A, B].find(x => x && x.state === 'special' && x.sp === 'cast' && x.ch.ult === 'shanshui');   // 起手蓄势那 0.42 秒不画，否则画卷会落两遍
   if (!f) return;
   const t = f.t, e = 1 - Math.pow(1 - clamp(t / 1.55, 0, 1), 3), a = t > 1.75 ? clamp((1.95 - t) / 0.2, 0, 1) : 1;
   const top = -H + H * e, bot = top + H;
@@ -6911,11 +6928,11 @@ function drawHUD() {
       const x = i === 0 ? W * 0.06 : W * 0.94, y = H * 0.32;
       ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(pop, pop);
       ctx.textAlign = i === 0 ? 'left' : 'right'; ctx.textBaseline = 'alphabetic';
-      ctx.font = `700 ${Math.round(H * 0.075)}px ${BODY_FONT}`; ctx.fillStyle = '#fff';
+      ctx.font = `700 ${Math.round(H * 0.058)}px ${BODY_FONT}`; ctx.fillStyle = '#fff';
       ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 20;
       ctx.fillText(cu.n, 0, 0); ctx.shadowBlur = 0;
-      ctx.font = `${Math.round(H * 0.035)}px ${TITLE_FONT}`; ctx.fillStyle = `rgb(${f.look.slash})`;
-      ctx.fillText('连击', 0, H * 0.045);
+      ctx.font = `${Math.round(H * 0.028)}px ${TITLE_FONT}`; ctx.fillStyle = `rgb(${f.look.slash})`;
+      ctx.fillText('连击', 0, H * 0.036);
       ctx.font = `${Math.round(H * 0.02)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.7)';
       ctx.fillText(`${Math.round(cu.dmg)} 伤害`, 0, H * 0.075);
       ctx.restore();
