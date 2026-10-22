@@ -977,7 +977,7 @@ const ULTS = {
       }
       if (f.t >= 1.35) endSpecial(f);
     } },
-  shanshui: { name: '山水之间', desc: '醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。画卷落下后对手困在蓬莱境里 4 秒：对手的屏幕被画挡住，看不见自己和醉翁在哪，只有醉翁一方看得见。',
+  shanshui: { name: '山水之间', desc: '醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。画卷落下后对手困在蓬莱境里 2 秒：对手的屏幕被画挡住，看不见自己和醉翁在哪，只有醉翁一方看得见。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'zx_drink'; f.invul = 0.3; SFX.superOn(); },
     update(f, foe) {
       if (f.spN < 8 && f.t >= 0.35 + f.spN * 0.17) {
@@ -2850,7 +2850,7 @@ function startRound() {
 // 回合规则：50 秒内击倒对手才算赢；到时没人倒下就进 15 秒加时，加时里所有伤害 ×2；加时也结束时血量比例低的败北。
 // 1v1 每回合双方满血重来；三人接力赛里守擂的人带着剩下的血量 +80 迎战下一位（不超过上限）
 const ROUND_TIME = 50, OT_TIME = 15, OT_DMG = 2, CARRY_HEAL = 80;
-const PENGLAI_T = 4;   // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
+const PENGLAI_T = 2;   // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
 function timeDeath(winner, text) {
   M.phase = 'ko'; M.t = 0; M.koWinner = winner;
   M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
