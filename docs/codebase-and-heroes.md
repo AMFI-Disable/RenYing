@@ -5,7 +5,7 @@
 
 ---
 
-## 0. One-paragraph summary
+## 0. One-Paragraph Summary
 
 **RenYing (刃影)** is an ink-wash martial-arts fighting game that runs entirely in a browser tab. It is written in
 plain JavaScript against a single `<canvas>` (no framework, no bundler, no npm dependencies at runtime), with:
@@ -23,7 +23,7 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 
 ---
 
-## 1. Top-level repository map
+## 1. Top-Level Repository Map
 
 | Path | Size | What it is |
 | :--- | ---: | :--- |
@@ -48,9 +48,9 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 
 ---
 
-## 2. Build pipeline (`tools/build.py`, Python stdlib only)
+## 2. Build Pipeline (`tools/build.py`, Python Stdlib Only)
 
-```
+```text
 src/page.html ──┐
 src/style.css ──┤  CSS comment-stripped, blank lines dropped
 src/game.js  ───┤  cloud.js → game.js → net-p2p.js → social.js
@@ -132,7 +132,7 @@ Classes: `Ctrl` (human input), `DummyCtrl`, `AICtrl`, `Fighter`, `Puppet` (menu 
 
 ---
 
-## 4. Core engine facts
+## 4. Core Engine Facts
 
 | Constant | Value | Meaning |
 | :--- | :--- | :--- |
@@ -152,7 +152,7 @@ and is explicitly excluded from rollback snapshots (`F_SKIP`).
 
 ---
 
-## 5. Combat math (the part that makes the hero numbers mean something)
+## 5. Combat Math (the Part That Makes the Hero Numbers Mean Something)
 
 `applyHit(att, def, move, point)` — `src/game.js:4036` onward — resolves in this order:
 
@@ -188,7 +188,7 @@ Practical consequences: `stat.dmg` is baked into the move table, `BAL` is a seco
 
 ---
 
-## 6. Movement, defense and the escape
+## 6. Movement, Defense and the Escape
 
 * **Escape / 腾空闪** — right-click or `Left Shift`; cancels hitstun, launches upward with invulnerability until landing
   (`escInvul`) or 1.1 s. Per-hero cooldown `escCD` ranges **7.5 s (Feiying, Lingshuang) to 9.4 s (Gouchen)**.
@@ -202,7 +202,7 @@ Practical consequences: `stat.dmg` is baked into the move table, `BAL` is a seco
 
 ---
 
-## 7. Multiplayer & online services
+## 7. Multiplayer & Online Services
 
 ### 7.1 Serverless P2P (`src/net-p2p.js`)
 
@@ -212,9 +212,9 @@ Practical consequences: `stat.dmg` is baked into the move table, `BAL` is a seco
   each other without a server; ranked bands, probes every 3 s, avoids the same opponent for 10 min.
 * Works from GitHub Pages with no backend; blocked on some campus networks.
 
-### 7.2 Dedicated server (`server.py`, stdlib only)
+### 7.2 Dedicated Server (`server.py`, Stdlib Only)
 
-```
+```text
 HTTP:  /  /index.html  /renying.html
        /assets/... (js/png/html) and /music/*.mp3
        /health
@@ -229,7 +229,7 @@ WS:    /ws?create=1 | join=CODE | match=1 | rank=1 | resume=CODE&rt=...   (+ &v=
 * Data: SQLite `data/renying.db` — users (salted PBKDF2-SHA256), profiles, matches, posts.
 * Also serves quick match, chat/social posts with rate limits, daily/weekly tasks, 问剑阁 gacha, skins.
 
-### 7.3 Cloud save (`src/cloud.js`)
+### 7.3 Cloud Save (`src/cloud.js`)
 
 * Firebase **Auth + Firestore**, config from `window.FIREBASE_CONFIG` or `localStorage`.
 * `window.CloudSave` exposes login/register/logout/save/load and a sync state machine:
@@ -244,7 +244,7 @@ WS:    /ws?create=1 | join=CODE | match=1 | rank=1 | resume=CODE&rt=...   (+ &v=
 * First client to claim the hall slot relays hall chat/presence; another takes over if it leaves.
 * Messages to offline friends are queued in `outbox` and delivered when both are online (`未送达` until acked).
 
-### 7.5 Rollback netcode (`src/game.js:10249`)
+### 7.5 Rollback Netcode (`src/game.js:10249`)
 
 * Both peers simulate the full match; only **input bits** cross the wire (`inBits`: left/right/down/atk/jump/aim).
 * Default input delay `ROLL.D = 3` frames, 240-frame history, max 40 predicted frames.
@@ -255,7 +255,7 @@ WS:    /ws?create=1 | join=CODE | match=1 | rank=1 | resume=CODE&rt=...   (+ &v=
 
 ---
 
-## 8. Qingfengxing (青锋行) — the second game
+## 8. Qingfengxing (青锋行) — The Second Game
 
 `src/qfx/` is a standalone three.js action game, concatenated in filename order into one IIFE:
 
@@ -281,7 +281,7 @@ exclusive Qingfeng skin (`qf_qfx`).
 
 ---
 
-## 9. AI models & the tooling that makes them
+## 9. AI Models & the Tooling That Makes Them
 
 * `models/heroes/<hero>.json` — one policy per hero, architecture **25 → 64 → 32 → 10** (`W1,b1,W2,b2,W3,b3`),
   outputs the 10 actions `idle,left,right,down,jump,atk,skill1,skill2,dash,special`.
@@ -316,7 +316,7 @@ Game modes present in the code: `cpu` (1v1 vs AI), `net` (PvP), `train` (dummy),
 
 ---
 
-## 10. Hero data model
+## 10. Hero Data Model
 
 Each hero is one object in `CHARS` (`src/game.js:261`):
 
@@ -352,7 +352,7 @@ Each hero is one object in `CHARS` (`src/game.js:261`):
 | `ai.range` | Preferred spacing for the CPU. |
 | `beats` / `weakTo` | Flavour counter chart (shown in UI; no hidden damage rule). |
 
-### `BAL` — the global balance layer (`src/game.js:242`)
+### `BAL` — The Global Balance Layer (`src/game.js:242`)
 
 | Hero | normal | skill | ult | cd | hp |
 | :--- | ---: | ---: | ---: | ---: | ---: |
@@ -377,7 +377,7 @@ Each hero is one object in `CHARS` (`src/game.js:261`):
 
 ---
 
-## 11. Roster at a glance
+## 11. Roster at a Glance
 
 Raw values from `CHARS`; damage numbers are the move-table values (**after** `stat.dmg`, **before** `BAL` and the
 defender's `defRating`). `L1 reach` = first light-attack box length in px. `Walk` in px/s.
@@ -400,7 +400,7 @@ defender's `defRating`). `L1 reach` = first light-attack box length in px. `Walk
 Weapon/rig scale comes from `WEAPON_LEN`: sword 54, dual 40, greatsword 70, spear 88, fan 36, fists 16, brush 66,
 moonblade 58, wing 48, flute 50, gourd 16, hammer 56.
 
-### Damage table (light chain, heavy, air, charged, Q/R/E)
+### Damage Table (Light Chain, Heavy, Air, Charged, Q/R/E)
 
 | Hero | L1→L5 per-hit | 5-hit total | Heavy (`hv`) | Air (`a1`) | Charge 1 / 2 | Q (cd) | R (cd) | E |
 | :--- | :--- | ---: | ---: | ---: | :--- | :--- | :--- | :--- |
@@ -422,7 +422,7 @@ Flurry ults (`crescent`, `shadows`, `eightimm`) all start with a 9-damage dash-i
 
 ---
 
-## 12. Hero-by-hero detail
+## 12. Hero-by-Hero Detail
 
 Each card lists: identity, exact stats, passive, and kit with the code's own numbers. “AI spacing” is the CPU's preferred
 range. “Beats / weak to” is the in-game counter chart text.
@@ -614,7 +614,7 @@ range. “Beats / weak to” is the in-game counter chart text.
 
 ---
 
-## 13. Inconsistencies and dead content found while reading
+## 13. Inconsistencies and Dead Content Found While Reading
 
 These are worth knowing before you touch balance or the codex UI:
 
@@ -640,7 +640,7 @@ These are worth knowing before you touch balance or the codex UI:
 
 ---
 
-## 14. Where to change what
+## 14. Where to Change What
 
 | Task | File / location |
 | :--- | :--- |
@@ -664,7 +664,7 @@ After changes: `python3 tools/build.py`, then run the relevant audit (`node tool
 
 ---
 
-## 15. Quick reference: one-screen hero cheat sheet
+## 15. Quick Reference: One-Screen Hero Cheat Sheet
 
 | Hero | One-line game plan | Signature threat |
 | :--- | :--- | :--- |
