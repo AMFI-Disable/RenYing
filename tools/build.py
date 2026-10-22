@@ -6,6 +6,7 @@
 
   index.html            联网版：GitHub Pages 和 server.py 都用它。支持免服务器直连和联机服务器，
                         音乐从 assets/music 下载，青锋行按需从 assets/qingfengxing.html 加载。
+  assets/qingfengxing.html  青锋行（三维小游戏）：由 src/qfx/ 里的 page.html 和按编号排好的各个 .js 拼成。
   renying-offline.html  离线版：一个文件就能玩（音乐、青锋行都打包在里面），双击打开，不能联机。
   renying.html          旧网址，自动跳到 index.html。
 
@@ -129,10 +130,28 @@ def model_2v2_data():
     return {}
 
 
+QFX = os.path.join(SRC, "qfx")
+
+
+def qfx_modules():
+    return sorted(n for n in os.listdir(QFX) if re.match(r"^\d\d-[a-z0-9-]+\.js$", n))
+
+
+def qfx_page():
+    """青锋行：三维引擎原样放进来，游戏代码按文件名顺序拼进同一个闭包"""
+    html = read(QFX, "page.html")
+    game = "(function(){\n'use strict';\n" + "".join(f"/* === {n} === */\n" + read(QFX, n) for n in qfx_modules()) + "\n})();"
+    for marker, text in (("<!--@three-->", "<script>\n" + read(ASSETS, "three.min.js") + "\n</script>"), ("<!--@game-->", "<script>\n" + game + "\n</script>")):
+        if html.count(marker) != 1:
+            raise SystemExit(f"src/qfx/page.html 里应该正好有一个 {marker}")
+        html = html.replace(marker, text)
+    return html
+
+
 def page(offline):
     html = read(SRC, "page.html")
     build = {"offline": offline}
-    qfx_b64 = base64.b64encode(read(ASSETS, "qingfengxing.html", mode="rb")).decode() if offline else ""
+    qfx_b64 = base64.b64encode(qfx_page().encode("utf-8")).decode() if offline else ""
     parts = {
         "<!--@style-->\n": "<style>\n" + compact_css(read(SRC, "style.css")) + "\n</style>\n",
         "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
@@ -162,6 +181,7 @@ def outputs():
         "index.html": page(offline=False),
         "renying-offline.html": page(offline=True),
         "renying.html": REDIRECT,
+        "assets/qingfengxing.html": qfx_page(),
     }
 
 
@@ -176,6 +196,12 @@ def check_js():
         if r.returncode:
             print(f"src/{name} 语法错误：\n{r.stderr}")
             ok = False
+    # 青锋行的各个文件共用一个闭包，拼起来再查
+    game = "".join(read(QFX, n) for n in qfx_modules())
+    r = subprocess.run([node, "--check", "-"], input="(function(){\n'use strict';\n" + game + "\n})();", capture_output=True, text=True)
+    if r.returncode:
+        print(f"src/qfx 语法错误：\n{r.stderr}")
+        ok = False
     return ok
 
 
