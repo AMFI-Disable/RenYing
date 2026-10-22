@@ -241,7 +241,7 @@ const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: 
 // 全英雄基础属性与战斗配置（严格遵循英雄设定）
 const BAL = {
   qingfeng: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  feiying: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  feiying: { normal: 0.85, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },   // 普攻削弱 15%
   tieshan: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
   lingshuang: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
   liuyun: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
@@ -387,27 +387,33 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 140 && d < 330 },
-  blink: { name: '影遁', cd: 11, pass: true, desc: '结印 0.3 秒后入影（结印时站着不动），现身对手背后施展十字绞杀，附带【穴道封脉】强定身（0.45 秒）。此后 1.5 秒内，下一击威力暴涨 30%。',
+  blink: { name: '影遁', cd: 11, pass: true, desc: '结印 0.3 秒后入影（结印时站着不动），影子 0.15 秒掠到对手背后施展十字绞杀（只伤血，不让对手僵直）。此后 1.5 秒内，下一击威力暴涨 30%。',
     start() {},
     update(f, foe) {
-      if (f.skPh === 0 && f.t >= 0.3) {   // 结印 0.3 秒僵直，才能传送
+      const behind = () => { let nx = foe.x - foe.face * 70; if (nx < WALL || nx > STAGE_W - WALL) nx = foe.x + foe.face * 70; return clamp(nx, WALL, STAGE_W - WALL); };
+      if (f.skPh === 0 && f.t >= 0.3) {   // 结印 0.3 秒，入影
         smoke(f.x, f.y - 50, 12);
-        let nx = foe.x - foe.face * 70;
-        if (nx < WALL || nx > STAGE_W - WALL) nx = foe.x + foe.face * 70;
-        f.bbX = f.x; f.bbT = 1.5;
-        f.x = clamp(nx, WALL, STAGE_W - WALL); f.y = Math.min(0, foe.y); f.vy = 0; f.vx = 0;
+        f.bbX = f.x; f.bbT = 1.5; f.blinkX0 = f.x; f.vx = 0; f.vy = 0;
+        f.skPh = 2; f.t = 0;
+      }
+      if (f.skPh === 2) {   // 影子贴地飞过去，0.15 秒才到对手背后（对手这时还能走开）
+        const k = Math.min(1, f.t / 0.15);
+        f.x = f.blinkX0 + (behind() - f.blinkX0) * k; f.vx = 0; f.vy = 0;
+        if (Math.random() < 0.7) smoke(f.x, f.y - 40, 2);
+      }
+      if (f.skPh === 2 && f.t >= 0.15) {
+        f.x = behind(); f.y = Math.min(0, foe.y); f.vy = 0; f.vx = 0;
         f.face = foe.x >= f.x ? 1 : -1; f.buffT = 1.5;
         f.skPh = 1; f.t = 0; f.snap = true; f.trail.length = 0; f.scarf = [];
         smoke(f.x, f.y - 50, 10); SFX.poof();
         slashLine(foe.x, foe.y - 60, 0.5, '255,95,115'); slashLine(foe.x, foe.y - 60, -0.5, '255,95,115'); SFX.slice();
         if (foe.invul <= 0 && foe.hp > 0) {
-          applyHit(f, foe, { dmg: 45, kb: [50, 0], stun: 0.45, hs: 0.10, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
-          addP({ type: 'text', text: '⚡ 封脉定身', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,100,120' });
+          applyHit(f, foe, { dmg: 45, kb: [0, 0], stun: 0, hs: 0.06, noScale: true, noStun: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);   // 只掉血，不让对手僵直
         }
       }
       if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
     },
-    pose: f => f.skPh === 0 ? ['fy_seal', 36] : ['fy_xslash', 40],
+    pose: f => f.skPh === 0 ? ['fy_seal', 36] : f.skPh === 2 ? ['dash', 60] : ['fy_xslash', 40],
     ai: (me, foe, d) => d > 120 },
   quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
     start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; },
@@ -4249,8 +4255,9 @@ function applyHit(att, def, m, pt) {
   const chaosMeterMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'meter_gain') ? currentChaosMutation.val : 1;
   if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
-  def.move = null;
-  if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
+  if (!m.noStun || def.hp <= 0) def.move = null;
+  if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
+  else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
   else if (m.hold) { def.state = 'held'; }
   else {
@@ -4734,7 +4741,6 @@ function closeQfx() {
   EXT.on = false; $id('extFrame').src = 'about:blank'; $id('extGame').classList.add('hidden');
   try { if (AC) AC.resume(); } catch (e) {}
 }
-$id('mQfx').addEventListener('click', openQfx);
 $id('extBack').addEventListener('click', closeQfx);
 
 // ======================= 对战回放 =======================
@@ -8589,9 +8595,9 @@ function renderMenu() {
   menuCam.x = damp(menuCam.x, menuCam.tx, 3.2, dt); menuCam.z = damp(menuCam.z, menuCam.tz, 2.4, dt);
   const onMenu = $id('menu').classList.contains('on');
   MENU_M.sx = damp(MENU_M.sx, onMenu ? MENU_M.x : 0, 2, dt); MENU_M.sy = damp(MENU_M.sy, onMenu ? MENU_M.y : 0, 2, dt);
-  const dz = menuCam.z - 1, baseX = menuCam.x + MENU_M.sx * 70;
+  const dz = menuCam.z - 1, baseX = menuCam.x + MENU_M.sx * 18;
   // 分层：远处的东西随镜头移动和放大得少，近处的多 → 推进时有纵深感
-  const layer = (par, zk) => { cam.x = baseX * par; cam.y = -MENU_M.sy * 14 * par - dz * 30 * zk; cam.zoom = 1 + dz * zk; };
+  const layer = (par, zk) => { cam.x = baseX * par; cam.y = -MENU_M.sy * 5 * par - dz * 30 * zk; cam.zoom = 1 + dz * zk; };
   for (const f of MENU_FLIES) { f.ph += dt * f.sp; f.x += Math.cos(f.ph * 0.7) * 18 * dt; f.y = clamp(f.y + Math.sin(f.ph) * 12 * dt, -440, -20); }
   for (const l of MENU_LEAVES) { l.x += (l.vx + Math.sin(clock + l.ph) * 20) * dt; l.y += l.vy * dt; l.r += dt * 2; if (l.y > 20) { l.y = rand(-800, -500); l.x = rand(cam.x - 1200, cam.x + 1200); } }
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -8610,6 +8616,12 @@ function renderMenu() {
   drawDummy(S1 + 250, 1); drawDummy(S1 + 330, 2); drawDummy(S1 + 410, 3); drawRocks(S1 + 460, 2);
   drawArena(S2); drawWarDrum(S2 - 320); drawRocks(S2 + 300, 3); drawPlum(S2 + 420);
   lantern(160, -2); lantern(-160, -2);
+  if (MENU_HERO && onMenu) {   // 正中站着当前选的侠客
+    animFighter(MENU_HERO);
+    ctx.save(); ctx.scale(1.4, 1.4); drawFighter(MENU_HERO); drawParticles(false); ctx.restore();   // 放大一点，站在两盏灯中间
+    const hx = W / 2 + (MENU_HERO.x - cam.x) * sc, hy = groundY() + 10, el = $id('homeHero');
+    if (el && (el._x !== Math.round(hx) || el._y !== Math.round(hy))) { el._x = Math.round(hx); el._y = Math.round(hy); el.style.left = el._x + 'px'; el.style.top = el._y + 'px'; }
+  }
   menuFlies(false);
   for (const l of MENU_LEAVES) { ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(l.r); ctx.fillStyle = 'rgba(120,160,110,0.6)'; ctx.beginPath(); ctx.ellipse(0, 0, l.s, l.s * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
   ctx.restore();
@@ -8808,6 +8820,50 @@ function openScreen(name, reveal = true) {
   return name;
 }
 function backToMenu() { menuLock = false; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
+// ---------- 首页正中的展示角色：下面一个「开始人机对战」直接用他开打，一个「更换角色」 ----------
+let MENU_HERO = null, menuHeroId = -1;
+function menuHeroPick() {   // 记住上次展示的角色；现在用不了就换成第一个能用的
+  const av = availList();
+  let id = null; try { id = localStorage.getItem('renying-hero'); } catch (e) {}
+  const i = CHARS.findIndex(c => c.id === id);
+  return av.includes(i) ? i : (av.length ? av[0] : 0);
+}
+function setMenuHero(ci) {
+  try { localStorage.setItem('renying-hero', CHARS[ci].id); } catch (e) {}
+  const k = mySkin(CHARS[ci].id);
+  if (MENU_HERO && menuHeroId === ci && MENU_HERO.skinKey === k) return;
+  const f = new Fighter(0); f.setChar(ci); f.look = skinLook(ci, k); f.skinKey = k; f.reset(0); f.face = 1;
+  MENU_HERO = f; menuHeroId = ci;
+}
+function heroQuickFight() {
+  if (menuLock || menuHeroId < 0) return;
+  initAudio(); heroPickShow(false);
+  const pool = CHARS.map((c, i) => i).filter(i => i !== menuHeroId), opp = pool[Math.random() * pool.length | 0];
+  paused = false; bpMode = 'cpu'; showScreen(null);
+  MSTAT.maxcombo = 0; MSTAT.ults = 0;
+  startMatch('cpu', pickLevel, [menuHeroId, opp]);
+  applySkins();
+}
+function heroPickShow(on) {
+  const el = $id('heroPick'); if (!el) return;
+  if (on) {
+    const av = availList(); ensurePortraits();
+    el.style.gridTemplateColumns = `repeat(${Math.min(6, av.length)}, 64px)`;
+    el.innerHTML = av.map(i => `<button type="button" data-i="${i}" class="${i === menuHeroId ? 'sel' : ''}"><img src="${PORTRAITS[i] || ''}" alt=""><span style="color:rgb(${CHARS[i].look.slash})">${CHARS[i].name}</span></button>`).join('');
+  }
+  el.hidden = !on;
+}
+$id('heroGo').addEventListener('click', () => { SFX.slice && SFX.slice(); heroQuickFight(); });
+$id('heroSwap').addEventListener('click', e => { e.stopPropagation(); heroPickShow($id('heroPick').hidden); });
+$id('heroPick').addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  e.stopPropagation(); setMenuHero(+b.dataset.i); heroPickShow(false); SFX.block && SFX.block();
+});
+document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) heroPickShow(false); });
+// 回放从设置里进：返回时回到设置
+let replaysFrom = 'menu';
+$id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
+$id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
 // ---------- 顶部导航 ----------
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
@@ -8858,19 +8914,7 @@ for (const b of document.querySelectorAll('#menu [data-go]')) {
     setTimeout(() => b.classList.remove('pressed'), 900);
     menuGo(b.dataset.go);
   });
-  if (MENU_SPOT[b.dataset.go] !== undefined) {
-    b.addEventListener('pointerenter', () => {
-      if (menuLock || !$id('menu').classList.contains('on')) return;
-      menuCam.tx = MENU_SPOT[b.dataset.go] * 0.55;
-      $id('menu').classList.add('hl-' + b.dataset.go);
-    });
-    b.addEventListener('pointerleave', () => {
-      if (menuLock) return;                                // 已经出发：别把镜头拉回来、也别解除高亮
-      if ($id('menu').classList.contains('on')) menuCam.tx = 0;
-      $id('menu').classList.remove('hl-' + b.dataset.go);
-    });
-  }
-}
+}   // 悬停不再把镜头甩到两边：场景只跟着鼠标轻轻晃（见 renderMenu 里的 MENU_M）
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
 
 // ======================= 设置 =======================
@@ -9169,7 +9213,7 @@ const HERO_HIT_DETAILS = {
     light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '26 (5段)', cd: '', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
     charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '9 / 16', cd: '', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
     air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '5 / 7', cd: '', desc: '空中回旋双刺，下落直刺钉向地面。' },
-    skill: { name: '暗影·影遁', badge: '⚡ 封脉定身 0.8s', badgeCls: 'badge-stun', dmg: '4', cd: '11s', desc: '结印化烟瞬至对手背后，十字绞杀强定身+增伤50%。' },
+    skill: { name: '暗影·影遁', badge: '🌑 背后绞杀', badgeCls: 'badge-stun', dmg: '4', cd: '11s', desc: '结印化烟，0.15 秒掠到对手背后十字绞杀（不让对手僵直），之后下一击增伤。' },
     ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '2.8×4', cd: '5s', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
     ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '31 (9连)', cd: '气满', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', cd: '9.5s', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
@@ -9378,7 +9422,7 @@ const HERO_MOVE_SEQS = {
     skill: [
       { p: 'idle', d: 0.1, reset: true },
       { p: 'fy_seal', d: 0.14, lab: 'Q · 影遁' },
-      { p: 'fy_xslash', d: 0.32, dx: 105, hit: 2, fx: 'blink', badge: '⚡ 封脉定身' },
+      { p: 'fy_xslash', d: 0.32, dx: 105, hit: 2, fx: 'blink', badge: '🌑 背后绞杀' },
       { p: 'idle', d: 0.35, reset: true }
     ],
     ranged: [
@@ -9741,7 +9785,7 @@ const HERO_FULL_DEMO = {
     { p: 'l1s', d: 0.05, lab: '普攻' }, { p: 'l1a', d: 0.09, dx: 10, hit: 1 },
     { p: 'l2a', d: 0.09, dx: 10, hit: 1 }, { p: 'l3a', d: 0.18, dx: 14, hit: 2, launch: true },
     { p: 'idle', d: 0.25, reset: true },
-    { p: 'fy_seal', d: 0.14, lab: 'Q · 影遁' }, { p: 'fy_xslash', d: 0.3, dx: 50, hit: 2, fx: 'blink', badge: '⚡ 封脉定身' },
+    { p: 'fy_seal', d: 0.14, lab: 'Q · 影遁' }, { p: 'fy_xslash', d: 0.3, dx: 50, hit: 2, fx: 'blink', badge: '🌑 背后绞杀' },
     { p: 'idle', d: 0.25, reset: true },
     { p: 'fy_seal', d: 0.12, lab: 'R · 飞镖' }, { p: 'fy_crouch', d: 0.32, fx: 'kunai', hit: 1, badge: '极速截击' },
     { p: 'idle', d: 0.25, reset: true },
@@ -11700,7 +11744,7 @@ function showScreen(id) {
     menuCam.tx = 0; menuCam.tz = 1;
   }
   if (id === 'netp') renderLobby();
-  const nav = !OFFLINE_BUILD && NAV_SCREENS.includes(id);
+  const nav = NAV_SCREENS.includes(id);   // 离线版也用顶栏（离线用不到的按钮由 body.offline 藏起来）
   $id('topNav').classList.toggle('hidden', !nav);
   document.body.classList.toggle('has-nav', nav);
   if (nav) {
@@ -11708,7 +11752,7 @@ function showScreen(id) {
     renderTopNav();
   }
   if (id === 'menu') {
-    renderHome();
+    renderHome(); setMenuHero(menuHeroPick());
     // 入场只在冷启动和从对局退回时播；设置/任务之间来回属于同一次浏览，不再重放
     const el = $id('menu'), play = !menuEntered || prev === null;
     if (play && !prefersReduced()) {
@@ -11718,6 +11762,7 @@ function showScreen(id) {
     } else delete el.dataset.enter;
     menuEntered = true;
   }
+  if (id === 'settings') $id('setReplays').hidden = settingsBack !== 'menu';
   if (id === 'acc') renderAccPage();
   if (!id) {
     refocusGame();
@@ -14481,13 +14526,10 @@ if (!SERVED && $id('onlineLine')) $id('onlineLine').textContent = '';
 if ($id('verLine')) $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
 // 离线单文件版：全部皮肤可用，装备记在本机；在线版拥有完整成长与解锁
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
+document.body.classList.toggle('offline', OFFLINE_BUILD);
 if (OFFLINE_BUILD) {
   $id('mSingle').innerHTML = '<span class="mk">对战电脑</span><span class="ms">和电脑过招，难度可选</span>';
   $id('mNet').innerHTML = '<span class="mk">闯关模式</span><span class="ms">六章三十关，一关一关打上去</span>';
-  for (const k of ['gacha', 'tasks', 'community']) { const b = document.querySelector(`#menu [data-go="${k}"]`); if (b) b.style.display = 'none'; }
-  const tb = document.createElement('button'); tb.textContent = '木人桩'; tb.dataset.go = 'train';
-  tb.addEventListener('click', () => menuGo('train'));
-  const cx = document.querySelector('#menu [data-go="codex"]'); cx.parentNode.insertBefore(tb, cx);
   const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
 }
 try { $id('srvIn').value = localStorage.getItem('renying-srv') || ''; } catch (e) {}

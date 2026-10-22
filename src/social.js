@@ -8,13 +8,17 @@
    大厅：  谁先登记上 renying-hall-0 谁就是“大厅主持”，其他人都连到他，
            他负责转发大厅发言、记住最近的聊天、告诉大家谁在线。
            主持关了网页，大家稍等一下重新抢这个位置，抢到的人从自己本机记的聊天接着放。
+           如果这个位置被一个连不上的主持占着（网页挂在后台、网络打不通），就换到
+           renying-hall-1、-2、-3；主持在后面的位置时每 30 秒看一眼前面的位置能不能连上，
+           能连上就带着大家搬回去，免得大厅分成两半。
    私聊、群聊：直接连对方。对方不在线时消息先存在自己这边，等对方上线自动补发，
            收到对方回执才算送达。
 
    本机存档（按账号分开）：好友、好友申请、群、每段聊天最近 200 条、还没送达的消息。
    ===================================================================== */
 const SOC = {
-  hallId: 'renying-hall-0',
+  slot: 0, dead: {}, probeN: 0,  // 大厅用第几个位置；连不上的位置 → 上次失败的时间
+  startAt: 0,
   ver: 1,
   me: '', uid: '', alt: false,   // alt：同一个账号在别的页面也开着，这边收不到私聊
   peer: null, hubPeer: null, hubConns: new Map(), hall: null,
@@ -23,7 +27,8 @@ const SOC = {
   data: null, cur: 'hall', sess: 0, joinT: 0, tick: 0, lastSay: 0,
   state: 'off',                   // off / connecting / on
 };
-const SOC_MAX_CONV = 200, SOC_MAX_HALL = 150, SOC_TEXT = 200;
+const SOC_MAX_CONV = 200, SOC_MAX_HALL = 150, SOC_TEXT = 200, SOC_SLOTS = 4;
+function socHallId(s) { return 'renying-hall-' + (s == null ? SOC.slot : s); }
 
 /* ---------- 名字与 id ---------- */
 function socHash(s) {
@@ -81,13 +86,13 @@ function socStop() {
   SOC.conns.clear();
   socHubStop();
   if (SOC.peer) { try { SOC.peer.destroy(); } catch (e) {} }
-  SOC.peer = null; SOC.hall = null; SOC.online = []; SOC.state = 'off';
+  SOC.peer = null; SOC.hall = null; SOC.probing = null; SOC.online = []; SOC.state = 'off';
 }
 function socStart() {
   const who = socWho();
   if (SOC.peer && SOC.me === who) return;
   socStop();
-  SOC.me = who; SOC.uid = socUid(who); SOC.alt = false; SOC.cur = 'hall';
+  SOC.me = who; SOC.uid = socUid(who); SOC.alt = false; SOC.cur = 'hall'; SOC.startAt = Date.now();
   socLoad();
   if (typeof Peer === 'undefined') { if (typeof p2pLoad === 'function') p2pLoad().then(ok => ok && socStart()); return; }
   socOpenPeer(SOC.uid);
@@ -108,7 +113,7 @@ function socOpenPeer(id) {
       socOpenPeer(SOC.uid + '-' + Math.random().toString(36).slice(2, 7)); return;
     }
     if (t === 'peer-unavailable') {
-      if (msg.includes(SOC.hallId)) socClaimHall(sess);
+      if (msg.includes(socHallId())) socClaimHall(sess);
       else for (const [n, c] of SOC.conns) if (msg.includes(c.peer)) { SOC.conns.delete(n); try { c.close(); } catch (e) {} }
       return;
     }
@@ -124,9 +129,20 @@ function socJoinHall() {
   if (!p || p.destroyed || p.disconnected || (SOC.hall && SOC.hall.open)) return;
   clearTimeout(SOC.joinT);
   let c;
-  try { c = p.connect(SOC.hallId, { reliable: true, metadata: { name: SOC.me } }); } catch (e) { return; }
+  if (SOC.hubPeer && SOC.hubPeer.open) {   // 自己就是主持：本机直接接上，不走网络
+    const pair = socLoopPair(p.id);
+    c = pair[0]; socHubWire(pair[1]);
+    setTimeout(() => c.emit('open'), 0);
+  } else {
+    try { c = p.connect(socHallId(), { reliable: true, metadata: { name: SOC.me } }); } catch (e) { return; }
+  }
   SOC.hall = c;
-  const giveUp = setTimeout(() => { if (sess === SOC.sess && SOC.hall === c && !c.open) { try { c.close(); } catch (e) {} socClaimHall(sess); } }, 9000);
+  const giveUp = setTimeout(() => {
+    if (sess !== SOC.sess || SOC.hall !== c || c.open) return;
+    try { c.close(); } catch (e) {}
+    SOC.dead[SOC.slot] = Date.now();   // 这个位置有人登记了却连不上（或者根本没人）：先试着自己占，占不到就换下一个
+    socClaimHall(sess);
+  }, 9000);
   c.on('open', () => {
     clearTimeout(giveUp);
     if (sess !== SOC.sess || SOC.hall !== c) return;
@@ -148,7 +164,7 @@ function socHallLost(c) {
 function socClaimHall(sess) {
   if (sess !== SOC.sess || SOC.hubPeer) return;
   let hp;
-  try { hp = SOC.hubPeer = new Peer(SOC.hallId, socOpts()); } catch (e) { SOC.hubPeer = null; return; }
+  try { hp = SOC.hubPeer = new Peer(socHallId(), socOpts()); } catch (e) { SOC.hubPeer = null; return; }
   hp.on('open', () => { if (sess !== SOC.sess || SOC.hubPeer !== hp) return; SOC.hubHist = SOC.hist.slice(-SOC_MAX_HALL); setTimeout(socJoinHall, 50); });
   hp.on('connection', c => { if (SOC.hubPeer === hp) socHubWire(c); });
   hp.on('disconnected', () => {   // 和牵线服务器断了：先试着要回这个 id，被别人占了就让位
@@ -158,11 +174,51 @@ function socClaimHall(sess) {
   hp.on('error', err => {
     if (SOC.hubPeer !== hp) return;
     const t = err && err.type;
-    if (t === 'unavailable-id') {   // 别人先抢到了：去连他
+    if (t === 'unavailable-id') {   // 别人先抢到了：去连他；刚才就是连他连不上，换下一个位置
       socHubStop();
-      if (sess === SOC.sess) SOC.joinT = setTimeout(socJoinHall, 300 + Math.random() * 900);
+      if (sess !== SOC.sess) return;
+      const stuck = Date.now() - (SOC.dead[SOC.slot] || 0) < 30000;
+      if (stuck) socNextSlot();
+      SOC.joinT = setTimeout(socJoinHall, (stuck ? 100 : 300) + Math.random() * 900);
     }
   });
+}
+function socNextSlot() {
+  for (let i = 1; i <= SOC_SLOTS; i++) {
+    const s = (SOC.slot + i) % SOC_SLOTS;
+    if (Date.now() - (SOC.dead[s] || 0) > 60000) { SOC.slot = s; return; }
+  }
+  SOC.dead = {}; SOC.slot = (SOC.slot + 1) % SOC_SLOTS;   // 全都试过了：从头再来
+}
+// 主持在后面的位置上：轮流看前面的位置有没有活着的大厅，有就带大家搬过去
+function socProbe() {
+  const p = SOC.peer, hp = SOC.hubPeer;
+  if (!p || !p.open || !hp || !hp.open || SOC.slot === 0 || SOC.probing) return;
+  const s = SOC.probeN++ % SOC.slot;
+  let c;
+  try { c = p.connect(socHallId(s), { reliable: true, metadata: { probe: 1 } }); } catch (e) { return; }
+  SOC.probing = c;
+  const end = () => { if (SOC.probing === c) SOC.probing = null; try { c.close(); } catch (e) {} };
+  const to = setTimeout(end, 8000);
+  c.on('open', () => {
+    clearTimeout(to); end();
+    if (SOC.hubPeer !== hp) return;
+    socHubCast({ t: 'move', slot: s });
+    setTimeout(() => { if (SOC.hubPeer === hp) socHubStop(); }, 300);
+  });
+  c.on('error', () => {});
+}
+// 本机两头直接相连的“假连接”，接口和 PeerJS 的 DataConnection 一样用
+function socLoopPair(id) {
+  const mk = () => ({
+    open: false, peer: id, h: {},
+    on(e, f) { (this.h[e] || (this.h[e] = [])).push(f); return this; },
+    emit(e, a) { if (e === 'open') this.open = true; for (const f of this.h[e] || []) { try { f(a); } catch (err) {} } },
+    send(d) { const o = this.other, j = JSON.stringify(d); if (this.open) setTimeout(() => { if (o.open) o.emit('data', j); }, 0); },
+    close() { if (!this.open && !this.other.open) return; const o = this.other; this.open = false; o.open = false; setTimeout(() => { this.emit('close'); o.emit('close'); }, 0); },
+  });
+  const a = mk(), b = mk(); a.other = b; b.other = a; b.open = true;
+  return [a, b];
 }
 function socHubStop() {
   const hp = SOC.hubPeer; SOC.hubPeer = null;
@@ -212,12 +268,13 @@ function socHubWire(c) {
 function socHallRx(m) {
   if (!m) return;
   if (m.t === 'welcome') {
-    SOC.state = 'on';
+    SOC.state = 'on'; delete SOC.dead[SOC.slot];
     for (const x of (Array.isArray(m.hist) ? m.hist : [])) socHallAdd(x, true);
     SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : [];
     socSave(); socRenderAll(); socFlushAll(); return;
   }
   if (m.t === 'bye') { socHallLost(SOC.hall); return; }
+  if (m.t === 'move') { const s = +m.slot; if (s >= 0 && s < SOC_SLOTS && s !== SOC.slot) { SOC.slot = s; delete SOC.dead[s]; socHallLost(SOC.hall); } return; }
   if (m.t === 'online') { SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : []; socRenderList(); socRenderHead(); socFlushAll(); return; }
   if (m.t === 'msg' && m.m) {
     if (socHallAdd(m.m)) { socSave(); if (SOC.cur === 'hall') socRenderLog(true); }
@@ -359,6 +416,44 @@ function socAddFriend(raw) {
   toast(SOC.online.includes(name) ? `已向 ${name} 发出好友申请` : `已发出申请，${name} 上线后会收到`);
   socRenderAll();
 }
+// 搜人：输入的每个字名字里都要有（不分先后），连在一起出现的排前面
+function socNamePool() {
+  const D = SOC.data || { friends: {}, reqIn: {}, reqOut: {}, convs: {}, groups: {} }, set = new Set(SOC.online);
+  for (const m of SOC.hist) set.add(m.from);
+  for (const n of [...Object.keys(D.friends), ...Object.keys(D.reqIn), ...Object.keys(D.reqOut)]) set.add(n);
+  for (const k of Object.keys(D.convs)) if (k.startsWith('u:')) set.add(k.slice(2));
+  for (const g of Object.values(D.groups)) for (const n of g.members || []) set.add(n);
+  if (typeof LEGACY_USERS !== 'undefined') for (const u of LEGACY_USERS) set.add(u.name);
+  set.delete(SOC.me); set.delete('');
+  return [...set];
+}
+function socSearch(q) {
+  q = String(q || '').trim().toLowerCase();
+  const chars = [...new Set([...q].filter(ch => ch.trim()))];
+  if (!chars.length) return [];
+  const on = new Set(SOC.online);
+  return socNamePool().filter(n => { const l = n.toLowerCase(); return chars.every(ch => l.includes(ch)); })
+    .sort((a, b) => (b.toLowerCase().includes(q) - a.toLowerCase().includes(q)) || (on.has(b) - on.has(a)) || a.length - b.length || a.localeCompare(b, 'zh'))
+    .slice(0, 8);
+}
+function socRenderFind() {
+  const el = $id('socFind'); if (!el) return;
+  const q = $id('socAddIn').value.trim(), res = SOC.data ? socSearch(q) : [];
+  el.hidden = !q;
+  if (!q) { el.innerHTML = ''; return; }
+  const D = SOC.data, on = new Set(SOC.online);
+  el.innerHTML = res.length ? res.map(n => {
+    const tag = D.friends[n] ? '好友' : D.reqOut[n] ? '已申请' : D.reqIn[n] ? '想加你' : on.has(n) ? '在线' : '';
+    const btn = D.friends[n] ? '聊天' : D.reqIn[n] ? '同意' : D.reqOut[n] ? '' : '加好友';
+    return `<div class="soc-fr"><span class="soc-on${on.has(n) ? ' y' : ''}"></span><b>${escapeHTML(n)}</b>${tag ? `<small>${tag}</small>` : ''}${btn ? `<button type="button" class="go small" data-fadd="${escapeHTML(n)}">${btn}</button>` : ''}</div>`;
+  }).join('') : `<p class="soc-empty">没找到名字里同时有「${escapeHTML(q)}」这几个字的人，按回车按全名加</p>`;
+}
+function socAddTyped() {
+  const q = $id('socAddIn').value.trim(); if (!q) return;
+  const res = socSearch(q), exact = res.find(n => n.toLowerCase() === q.toLowerCase());
+  socAddFriend(exact || (res.length === 1 ? res[0] : q));
+  $id('socAddIn').value = ''; socRenderFind();
+}
 function socAccept(name) {
   const D = SOC.data;
   delete D.reqIn[name]; D.friends[name] = { since: Date.now() };
@@ -455,11 +550,17 @@ function socRenderBadge() {
     s.textContent = n > 99 ? '99+' : n;
   }
 }
+function socStateText() {
+  if (SOC.state === 'on') return `${SOC.online.length} 人在线`;
+  if (SOC.state !== 'connecting') return '未连接';
+  const p = SOC.peer;
+  if (p && p.open) return SOC.slot ? `正在换大厅（${SOC.slot + 1} 号）…` : '正在进大厅…';
+  return Date.now() - SOC.startAt > 12000 ? '连不上牵线服务器，检查网络' : '连接中…';
+}
 function socRenderStatus() {
   const el = $id('socStatus'); if (!el) return;
-  const n = SOC.online.length;
-  el.className = 'soc-status ' + (SOC.state === 'on' ? 'on' : '');
-  el.textContent = SOC.state === 'on' ? `${n} 人在线` : SOC.state === 'connecting' ? '连接中…' : '未连接';
+  el.className = 'soc-status ' + (SOC.state === 'on' ? 'on' : SOC.state === 'connecting' && Date.now() - SOC.startAt > 12000 && !(SOC.peer && SOC.peer.open) ? 'bad' : '');
+  el.textContent = socStateText();
 }
 function socItem(key, label, sub, dot, extra) {
   const un = SOC.data.unread[key] || 0;
@@ -472,7 +573,7 @@ function socLastText(key) {
 function socRenderList() {
   const el = $id('socList'); if (!el || !SOC.data) return;
   const D = SOC.data, on = new Set(SOC.online);
-  let h = socItem('hall', '江湖大厅', SOC.state === 'on' ? `${SOC.online.length} 人在线` : '连接中…');
+  let h = socItem('hall', '江湖大厅', socStateText());
   const reqs = Object.keys(D.reqIn);
   if (reqs.length) h += `<div class="soc-sec">好友申请</div>` + reqs.map(n => `<div class="soc-req"><span>${escapeHTML(n)}</span><button type="button" class="go small" data-acc="${escapeHTML(n)}">同意</button><button type="button" class="ghost small" data-dec="${escapeHTML(n)}">忽略</button></div>`).join('');
   const fs = Object.keys(D.friends).sort((a, b) => (on.has(b) - on.has(a)) || a.localeCompare(b, 'zh'));
@@ -548,7 +649,7 @@ function openCommunity() {
   if (!$id('comEmo').innerHTML) $id('comEmo').innerHTML = EMOTES.map(e => `<button data-e="${e.id}" title="${e.name}" aria-label="${e.name}">${e.svg}</button>`).join('');
   socStart();
   $id('socAddIn').disabled = socGuestNow(); $id('socAddBtn').disabled = socGuestNow(); $id('socGroupBtn').disabled = socGuestNow();
-  $id('socAddIn').placeholder = socGuestNow() ? '登录后可以加好友' : '输入名字加好友';
+  $id('socAddIn').placeholder = socGuestNow() ? '登录后可以加好友' : '输入几个字搜人加好友';
   socOpen(SOC.cur || 'hall');
   $id('community').classList.remove('soc-chat');
 }
@@ -573,8 +674,10 @@ $id('socHead').addEventListener('click', e => {
   else if (b.dataset.act === 'invite') socInvite(k.slice(2));
   else if (b.dataset.act === 'leave') socLeave(k.slice(2));
 });
-$id('socAddBtn').addEventListener('click', () => { socAddFriend($id('socAddIn').value); $id('socAddIn').value = ''; });
-$id('socAddIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { socAddFriend($id('socAddIn').value); $id('socAddIn').value = ''; } });
+$id('socAddBtn').addEventListener('click', socAddTyped);
+$id('socAddIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) socAddTyped(); else if (e.key === 'Escape') { $id('socAddIn').value = ''; socRenderFind(); } });
+$id('socAddIn').addEventListener('input', socRenderFind);
+$id('socFind').addEventListener('click', e => { const b = e.target.closest('[data-fadd]'); if (b) { socAddFriend(b.dataset.fadd); $id('socAddIn').value = ''; socRenderFind(); } });
 $id('socGroupBtn').addEventListener('click', socMakeGroup);
 $id('socBackList').addEventListener('click', () => $id('community').classList.remove('soc-chat'));
 if ($id('postToComBtn')) $id('postToComBtn').addEventListener('click', postRoomToCommunity);
@@ -593,6 +696,8 @@ if (!(window.RENYING_BUILD && window.RENYING_BUILD.offline)) {
     }
     if (SOC.hall && SOC.hall.open) { if (Date.now() - (SOC.hallRx || 0) > 12000) socHallLost(SOC.hall); else if (t % 2 === 0) socSend(SOC.hall, { t: 'ping' }); }
     if (SOC.hubPeer && t % 3 === 0) socHubSweep();
+    if (SOC.hubPeer && SOC.slot && t % 15 === 0) socProbe();
+    if (SOC.state !== 'on' && SOC.data) { socRenderStatus(); if (t % 3 === 0) socRenderList(); }
     if (SOC.data && t % 10 === 0) socFlushAll();
     if (SOC.data) socRenderBadge();
   }, 2000);
