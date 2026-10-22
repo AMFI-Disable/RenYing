@@ -8,6 +8,14 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Home Menu Transition Flow (`src/game.js`, `src/style.css`, `src/page.html`)**:
+  - One click now drives one timeline: the camera dolly, the home fade-out and the next screen's reveal are scheduled together instead of racing three separate timers.
+  - Leaving a card no longer cancels its own camera push (`pointerleave` is ignored once a destination is committed), and double clicks cannot start two transitions.
+  - The home content leaves before the next panel arrives, so two half-transparent screens no longer stack over the canvas — the "flash" is gone.
+  - Returning to the home from a match keeps the background duel running instead of re-staging it from its opening pose.
+  - The home entrance (title, cards, dock) plays once on boot and again when coming back from a match, not on every return from 设置 / 任务 / 图鉴.
+  - Target panels are built during the dolly instead of on the frame they appear, and the pressed card no longer runs two blurs at once.
+  - `prefers-reduced-motion` now covers the entrance, the hand-off and the dock/nav swap.
 - **Resilient Node Process Resolution & Spawn Error Handling (`tools/simulate-all.mjs`, `tools/train-heroes.mjs`, `tools/auto-balance.mjs`)**:
   - Replaced rigid `process.execPath` invocations with a robust multi-stage binary resolver (`getNodeBin()`) checking `process.execPath`, `process.argv[0]`, and standard Homebrew/system paths (`/opt/homebrew/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`).
   - Added explicit `'error'` event handlers on child process instances in neural training and balance simulation pipelines, preventing unhandled spawn exceptions (such as `ENOENT` during background package updates) from crashing the parent runner.

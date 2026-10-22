@@ -4,7 +4,8 @@
 > Written against the working tree at commit `351e61b` (`fix: resilient spawn runner`), game `VERSION = '4.5'`.
 > Every claim below cites `src/game.js` or `src/style.css` by line so it can be checked before anything changes.
 >
-> This is a **proposal**: no source file has been modified.
+> **Status: implemented.** Every item below landed in `src/game.js`, `src/style.css` and `src/page.html`; §2 is kept as
+> the evidence trail and §3 keeps the exact selectors and timings so they can be retuned later.
 
 ---
 
@@ -518,13 +519,22 @@ Items 1–3 are the ones the user will notice; each is small and independently r
 
 ## 5. Verification
 
-There is no Chrome/Chromium in this sandbox, so the plan is verified by code review plus the repo's own gates:
+There is no Chrome/Chromium in this sandbox, so the change was verified with the repo's own gates plus a DOM
+harness that boots the generated page outside a browser:
 
 ```bash
 python3 tools/build.py            # regenerate index.html + renying-offline.html
 python3 tools/build.py --check    # CI's "generated pages up to date" gate
 node --check src/game.js          # syntax before anything else
 ```
+
+The harness (`linkedom` + a stub 2D context, kept outside the repo) loads `index.html`, runs the boot sequence and
+walks the menu paths with 30 assertions: the home is on at boot, a press sets `data-phase` and holds the target
+screen back, the second screen reveals after the dolly and cleans up `menu-handoff`, `backToMenu()` restores the
+home without replaying the entrance, quitting a match replays it, the dock path uses the short phase, a throwing
+panel build still restores the home, direct `openScreen()` calls still reveal immediately (the path
+`tools/ui-audit.mjs` uses), `prefers-reduced-motion` skips the dolly, and a demo battle is not re-staged when only
+a menu screen was open.
 
 CI additionally runs `tools/ui-audit.mjs ci-ui 1440 900`, `tools/hud-audit.mjs`, `tools/touch-audit.mjs`,
 `tools/net-test.mjs server ci-net` and `tools/protocol-test.mjs` (`.github/workflows/ci.yml`), so layout and

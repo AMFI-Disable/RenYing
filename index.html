@@ -29,7 +29,7 @@ canvas:focus, canvas:focus-visible { outline: none; }
 .scr {
 position: absolute; inset: 0; display: flex; overflow-y: auto;
 background: radial-gradient(ellipse at center, rgba(8, 8, 22, 0.35), rgba(5, 5, 14, 0.8));
-opacity: 0; pointer-events: none; transition: opacity .4s ease;
+opacity: 0; pointer-events: none; transition: opacity .4s ease, top .22s ease;
 }
 .scr.on { opacity: 1; pointer-events: auto; }
 p, dd, li, .sub, .td, .dhitdesc, .ai-desc, .tp-desc, .netnote, .tips, .vs-line { text-wrap: pretty; line-break: strict; }
@@ -304,16 +304,13 @@ animation: fadeIn 0.25s ease-out;
 .mtitle { position: absolute; left: 50%; top: 9%; transform: translateX(-50%); display: flex; gap: 16px; align-items: center; pointer-events: none; text-shadow: 0 6px 40px rgba(0,0,0,.6); }
 .mtitle h1 { font-size: clamp(90px, 13vw, 170px); display: flex; }
 .mtitle h1 span, .mtitle .seal { display: inline-block; transition: transform .8s cubic-bezier(.2,.8,.2,1), opacity .6s, filter .6s; }
-#menu.hl-single .mtitle h1 span:nth-child(1), #menu.hl-netp .mtitle h1 span:nth-child(1) { transform: translate(-120px, -34px) rotate(-10deg) scale(.9); opacity: .1; filter: blur(4px); }
-#menu.hl-single .mtitle h1 span:nth-child(2), #menu.hl-netp .mtitle h1 span:nth-child(2) { transform: translate(120px, -24px) rotate(8deg) scale(.9); opacity: .1; filter: blur(4px); }
 #menu.hl-single .mtitle .seal, #menu.hl-netp .mtitle .seal { transform: translateY(40px) scale(.7); opacity: 0; }
-.mcard, .msmall, .msmall-dock { transition: transform .45s cubic-bezier(.2,.8,.2,1), border-color .3s, box-shadow .3s, opacity .4s, filter .4s !important; }
 #menu.hl-single .mcard.left, #menu.hl-netp .mcard.right { transform: translateY(-8px) scale(1.07); border-color: rgba(233,196,106,.7); box-shadow: 0 20px 60px rgba(233,196,106,.22); }
 #menu.hl-single .mcard.right, #menu.hl-netp .mcard.left, #menu.hl-single .msmall, #menu.hl-netp .msmall, #menu.hl-single .msmall-dock, #menu.hl-netp .msmall-dock { opacity: .45; filter: blur(3px); transform: scale(.96); }
-#menu.leaving .mcard.pressed { transform: scale(1.18); opacity: 0; filter: blur(8px); transition: all .5s cubic-bezier(.2,.8,.2,1) !important; }
 .mcard { position: absolute; bottom: 21%; width: min(300px, 30vw); padding: 22px 26px; text-align: left; cursor: pointer; color: var(--ink);
 border-radius: 16px; border: 1px solid rgba(239,232,216,.18); background: linear-gradient(160deg, rgba(20,18,44,.72), rgba(8,8,22,.55));
-backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .25s, border-color .25s, box-shadow .25s; }
+backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+transition: transform .28s cubic-bezier(.2,.8,.2,1), border-color .28s, box-shadow .28s, opacity .28s, filter .28s; }
 .mcard.left { left: 8%; } .mcard.right { right: 8%; text-align: right; }
 .mcard .mk { display: block; font-family: var(--title); font-size: clamp(34px, 3.6vw, 48px); letter-spacing: .12em; }
 .mcard .ms { display: block; font-size: 13px; color: var(--dim); margin-top: 4px; }
@@ -321,7 +318,7 @@ backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: tran
 .msmall-dock {
 position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%);
 display: flex; gap: 12px; align-items: center; justify-content: center;
-max-width: 96vw;
+max-width: 96vw; transition: opacity .2s, transform .2s, visibility 0s;
 }
 .mgroup {
 display: inline-flex; gap: 4px; padding: 3px 6px; border-radius: 999px;
@@ -784,7 +781,6 @@ display: grid; gap: clamp(6px, 1vh, 10px); grid-template-rows: auto auto minmax(
 .decktabs button { font-size: 12px; padding: 3px 5px; }
 }
 @media (max-width: 760px) { .bpd { grid-template-columns: 64px 1fr; } .bpdetail img { width: 64px; height: 78px; } .bpgrid { grid-template-columns: repeat(2, 1fr); } .bph { grid-template-columns: 1fr; } .bps.right { flex-direction: row; text-align: left; } .bps.right .slots { flex-direction: row; } }
-#menu.leaving .mcard, #menu.leaving .msmall, #menu.leaving .mtitle { opacity: 0; transition: opacity .3s; }
 .touch { display: none; color: #ffb4a6; font-size: 14px; margin-top: 16px; }
 @media (max-width: 560px) { .keys { grid-template-columns: 1fr; gap: 18px; } }
 .redeemrow { gap: 8px; margin: 4px 0 10px; align-items: center; }
@@ -1207,7 +1203,8 @@ clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
 .tn-tabs .tn-play::after { display: none; }
 .tn-tabs .tn-qfx { color: #e9c46a; }
 .tn-tabs .tn-qfx:hover { color: #ffd98a; }
-body.has-nav .msmall-dock { display: none; }
+body.has-nav .msmall-dock { opacity: 0; pointer-events: none; visibility: hidden; transform: translateX(-50%) translateY(18px);
+transition: opacity .2s, transform .2s, visibility 0s .2s; }
 .help-tut { margin: 0 0 12px; text-align: center; }
 .tn-tabs .tn-play:hover, .tn-tabs .tn-play.sel { background: #ff5d6a; box-shadow: 0 0 22px rgba(255,70,85,.45); }
 .tn-tabs .tn-play.searching { animation: tnPulse 1.2s ease-in-out infinite; }
@@ -1286,6 +1283,32 @@ button.home-card:hover { border-color: rgba(233,196,106,.6); transform: translat
 .menuscr .mcard.right { top: calc(6% + 26px + 78px + 30px); padding: 10px 100px 10px 18px; min-width: 0; }
 .menuscr .mcard.left { top: calc(6% + 26px + 78px + 30px + 78px); padding: 8px 26px 8px 16px; min-width: 0; }
 .menuscr .mcard .mk { font-size: 24px; } .menuscr .mcard.left .mk { font-size: 18px; } .menuscr .mcard .ms { display: none; }
+}
+#menu[data-enter="run"] .home-kicker { animation: homeIn .42s cubic-bezier(.2,.8,.2,1) backwards; }
+#menu[data-enter="run"] .home-tag { animation: homeIn .42s cubic-bezier(.2,.8,.2,1) .06s backwards; }
+#menu[data-enter="run"] .home-card { animation: homeIn .42s cubic-bezier(.2,.8,.2,1) .1s backwards; }
+#menu[data-enter="run"] .home-card:nth-child(2) { animation-delay: .16s; }
+#menu[data-enter="run"] .home-card:nth-child(3) { animation-delay: .22s; }
+#menu[data-enter="run"] #mSingle { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .12s backwards; }
+#menu[data-enter="run"] #mNet { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .18s backwards; }
+#menu[data-enter="run"] .mtitle, #menu[data-enter="run"] .msmall-dock { animation: homeInCenter .52s cubic-bezier(.2,.8,.2,1) .04s backwards; }
+@keyframes homeIn { from { opacity: 0; transform: translateY(14px); } }
+@keyframes homeInCenter { from { opacity: 0; transform: translateX(-50%) translateY(14px); } }
+#menu[data-phase] .mtitle, #menu[data-phase] .home-kicker, #menu[data-phase] .home-tag { opacity: 0; transition: opacity .2s; }
+#menu[data-phase] .home-side { opacity: 0; transition: opacity .2s .04s; }
+#menu[data-phase] .msmall-dock { opacity: 0; transition: opacity .18s; }
+#menu[data-phase] .mcard { opacity: 0; transform: translateY(8px) scale(.98); backdrop-filter: none; -webkit-backdrop-filter: none; transition-duration: .22s; }
+#menu[data-phase] .mcard.pressed { transform: translateY(6px) scale(1.01); }
+#menu[data-phase="out"] { opacity: 0; transition: opacity .4s ease .02s; }
+#menu[data-phase="out-fast"] { opacity: 0; transition: opacity .2s ease; }
+body.menu-handoff .scr.on { transition-duration: .22s; }
+body.menu-handoff .scr.on > .panel { animation: scrIn .26s cubic-bezier(.2,.8,.2,1) backwards; }
+@keyframes scrIn { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+#menu[data-enter] *, body.menu-handoff .scr.on > .panel { animation: none !important; }
+#menu[data-phase="out"], #menu[data-phase="out-fast"] { transition-duration: .01s !important; }
+.scr { transition-duration: .12s !important; }
+.mcard, .msmall-dock, .home-card { transition-duration: .12s !important; }
 }
 .scr:not(.menuscr):not(#bp):not(#pause):not(#end) { background: linear-gradient(180deg, rgba(6,10,16,.74), rgba(6,10,16,.86)); }
 body.has-nav .scr:not(.menuscr) > .panel { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.45); margin: 22px auto; padding: 22px 28px 26px;
@@ -1442,7 +1465,7 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
     </div>
   </nav>
 
-  <div id="menu" class="scr on menuscr">
+  <div id="menu" class="scr on menuscr" data-enter="run">
     <div class="home-scrim" aria-hidden="true"></div>
     <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
@@ -4370,6 +4393,7 @@ noiseBuf = AC.createBuffer(1, AC.sampleRate * 1, AC.sampleRate);
 const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
 } catch (e) { AC = null; }
 }
+window.addEventListener('pointerdown', () => { initAudio(); }, { capture: true, once: true });
 function sNoise(dur, f0, f1, q, vol, type = 'bandpass') {
 if (!AC || muted || ![dur, f0, f1, q, vol].every(Number.isFinite)) return;   // 数值不对就不播，免得浏览器报错
 const t = AC.currentTime, src = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
@@ -10561,12 +10585,42 @@ const dim = clamp(dz / 0.9, 0, 1) * 0.22;
 if (dim > 0.01) { ctx.fillStyle = `rgba(4,4,12,${dim})`; ctx.fillRect(0, 0, W, H); }
 }
 const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare'];
+const MENU_DOLLY = 520;                 // 推进镜头的时长，和 CSS 里 .scr 的交接收尾对齐
+let menuLock = false;                   // 按下之后锁住悬停和连点，回到首页才解锁
+let menuEntered = false;                // 首页入场动画是否已经播过
+let currentScreen = 'menu';             // showScreen 当前显示的是哪一页（null = 在对局里）
+const prefersReduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 function menuGo(name) {
+if (menuLock) return;                 // 已经出发了：忽略连点和二次点击
+menuLock = true;
 initAudio();
 const spot = MENU_SPOT[name];
-menuCam.tx = spot !== undefined ? spot * 1.05 : menuCam.tx; menuCam.tz = spot !== undefined ? 1.9 : 1.35;
-$id('menu').classList.add('leaving');
-setTimeout(() => { $id('menu').classList.remove('leaving'); openScreen(name); }, spot !== undefined ? 520 : 260);
+const root = $id('menu');
+if (spot !== undefined) { menuCam.tx = spot * 1.05; menuCam.tz = 1.9; }
+root.classList.remove('hl-single', 'hl-netp');   // 出发了就收掉悬停态，别让两张卡一个亮一个暗地退场
+delete root.dataset.enter;                       // 入场还没播完就点了：直接切到退场
+root.dataset.phase = spot !== undefined ? 'out' : 'out-fast';
+document.body.classList.add('menu-handoff');
+let target = null;
+try { target = openScreen(name, false); }   // 先把页面建好，等镜头推到位再上屏
+catch (err) {                               // 建页出错也要把首页放回来，别让它停在全透明的状态
+console.error('刃影：打开页面出错', err);
+menuLock = false;
+delete root.dataset.phase;
+document.body.classList.remove('menu-handoff');
+return;
+}
+if (!target) {                        // 教程直接在场上开讲，没有要上屏的页面
+menuLock = false;
+delete root.dataset.phase;
+document.body.classList.remove('menu-handoff');
+return;
+}
+setTimeout(() => {
+delete root.dataset.phase;
+showScreen(target);
+setTimeout(() => document.body.classList.remove('menu-handoff'), 320);
+}, prefersReduced() ? 0 : (spot !== undefined ? MENU_DOLLY : 220));
 }
 const AI_PROFILES = {
 easy: {
@@ -10678,16 +10732,16 @@ else if (active === 'mayhem') renderMayhem();
 else if (active === 'watch2v2') renderWatch2v2();
 else if (active === 'cpu') updateAIBrief();
 }
-function openScreen(name) {
+function openScreen(name, reveal = true) {
 if (OFFLINE_BUILD && name === 'single') name = 'cpu';
 if (OFFLINE_BUILD && name === 'netp') name = 'stage';
 if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
 singleSec(name);
-showScreen('single');
-return;
+if (reveal) showScreen('single');
+return 'single';
 }
 if (name === 'single') singleSec(null);
-if (name === 'tutorial') { startTutorial(); return; }
+if (name === 'tutorial') { startTutorial(); return null; }   // 开的是教学对局，没有页面要上屏
 if (name === 'gacha') { renderGacha(); loadProfile(); }
 if (name === 'tasks') { renderTasks(); loadProfile(); }
 if (name === 'replays') renderReplays();
@@ -10696,17 +10750,18 @@ if (name === 'single') { renderTrainPick(); renderStages(); }
 if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
 if (name === 'codex') openCodex();
 if (name === 'community') openCommunity();
-showScreen(name);
+if (reveal) showScreen(name);
+return name;
 }
-function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
+function backToMenu() { menuLock = false; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
 initAudio();
 if (name === 'menu') { backToMenu(); return; }
 if (name === 'acc') { openAcc(); return; }
 if (name === 'qfx') { openQfx(); return; }
-if ($id('menu').classList.contains('on') && MENU_SPOT[name] !== undefined) { menuGo(name); return; }
-if (name === 'netp') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; }
+if ($id('menu').classList.contains('on')) { menuGo(name); return; }   // 和卡片走同一条时间线，目的地一样感觉就一样
+if (MENU_SPOT[name] !== undefined) { menuCam.tx = MENU_SPOT[name]; menuCam.tz = 1.35; }
 openScreen(name);
 }
 for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
@@ -10742,10 +10797,23 @@ else { $id('homeRankL').textContent = `定级赛 ${s.placed}/${RK.PLACE}`; $id('
 }
 $id('homeRank').addEventListener('click', () => navTo('netp'));
 for (const b of document.querySelectorAll('#menu [data-go]')) {
-b.addEventListener('click', () => { b.classList.add('pressed'); setTimeout(() => b.classList.remove('pressed'), 900); menuGo(b.dataset.go); });
+b.addEventListener('click', () => {
+if (menuLock) return;                                  // 连点只算一次
+b.classList.add('pressed');
+setTimeout(() => b.classList.remove('pressed'), 900);
+menuGo(b.dataset.go);
+});
 if (MENU_SPOT[b.dataset.go] !== undefined) {
-b.addEventListener('pointerenter', () => { if ($id('menu').classList.contains('on')) { menuCam.tx = MENU_SPOT[b.dataset.go] * 0.55; $id('menu').classList.add('hl-' + b.dataset.go); } });
-b.addEventListener('pointerleave', () => { if ($id('menu').classList.contains('on')) menuCam.tx = 0; $id('menu').classList.remove('hl-' + b.dataset.go); });
+b.addEventListener('pointerenter', () => {
+if (menuLock || !$id('menu').classList.contains('on')) return;
+menuCam.tx = MENU_SPOT[b.dataset.go] * 0.55;
+$id('menu').classList.add('hl-' + b.dataset.go);
+});
+b.addEventListener('pointerleave', () => {
+if (menuLock) return;                                // 已经出发：别把镜头拉回来、也别解除高亮
+if ($id('menu').classList.contains('on')) menuCam.tx = 0;
+$id('menu').classList.remove('hl-' + b.dataset.go);
+});
 }
 }
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
@@ -13475,10 +13543,18 @@ document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
+const prev = currentScreen; currentScreen = id;
 for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
 $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
 if (id !== 'bp') { try { showPop(null); } catch (e) {} }
-if (id === 'menu') { menuCam.tx = 0; menuCam.tz = 1; }
+if (id === 'menu') {
+menuLock = false;                                   // 不管从哪条路回家，都要解锁
+delete $id('menu').dataset.phase;
+document.body.classList.remove('menu-handoff');
+$id('menu').classList.remove('hl-single', 'hl-netp');   // 走之前留下的悬停态别带回家
+for (const b of document.querySelectorAll('#menu .mcard.pressed')) b.classList.remove('pressed');
+menuCam.tx = 0; menuCam.tz = 1;
+}
 if (id === 'netp') renderLobby();
 const nav = !OFFLINE_BUILD && NAV_SCREENS.includes(id);
 $id('topNav').classList.toggle('hidden', !nav);
@@ -13487,7 +13563,16 @@ if (nav) {
 for (const b of document.querySelectorAll('#topNav .tn-tabs [data-nav]')) b.classList.toggle('sel', b.dataset.nav === id);
 renderTopNav();
 }
-if (id === 'menu') renderHome();
+if (id === 'menu') {
+renderHome();
+const el = $id('menu'), play = !menuEntered || prev === null;
+if (play && !prefersReduced()) {
+delete el.dataset.enter;
+if (!menuEntered) el.dataset.enter = 'run';          // 首帧就播，避免先亮一下再入场
+else requestAnimationFrame(() => requestAnimationFrame(() => { if (el.classList.contains('on')) el.dataset.enter = 'run'; }));
+} else delete el.dataset.enter;
+menuEntered = true;
+}
 if (id === 'acc') renderAccPage();
 if (!id) {
 refocusGame();
@@ -14620,7 +14705,7 @@ showScreen('single');
 } else {
 showScreen('menu');
 }
-startMatch('demo');
+if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
 document.getElementById('menuBtn').addEventListener('click', toMenu);

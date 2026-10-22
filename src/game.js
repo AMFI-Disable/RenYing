@@ -1031,6 +1031,8 @@ function initAudio() {
     const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   } catch (e) { AC = null; }
 }
+// 第一次按下就把音频图建好：别让建图那几毫秒挤在按钮动画的第一帧里
+window.addEventListener('pointerdown', () => { initAudio(); }, { capture: true, once: true });
 function sNoise(dur, f0, f1, q, vol, type = 'bandpass') {
   if (!AC || muted || ![dur, f0, f1, q, vol].every(Number.isFinite)) return;   // 数值不对就不播，免得浏览器报错
   const t = AC.currentTime, src = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
@@ -7529,13 +7531,44 @@ function renderMenu() {
 }
 // 有自己顶栏（标题 + 返回）的页面不显示右上角账号栏，免得返回按钮和登录/退出叠在一起
 const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare'];
+// 首页动效：一次按压只走一条时间线 —— 镜头推进、首页散场、新页面入场都在这里排好
+const MENU_DOLLY = 520;                 // 推进镜头的时长，和 CSS 里 .scr 的交接收尾对齐
+let menuLock = false;                   // 按下之后锁住悬停和连点，回到首页才解锁
+let menuEntered = false;                // 首页入场动画是否已经播过
+let currentScreen = 'menu';             // showScreen 当前显示的是哪一页（null = 在对局里）
+const prefersReduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 // 主界面按钮：悬停时镜头平移到对应场景，点击后推进镜头再打开页面
 function menuGo(name) {
+  if (menuLock) return;                 // 已经出发了：忽略连点和二次点击
+  menuLock = true;
   initAudio();
   const spot = MENU_SPOT[name];
-  menuCam.tx = spot !== undefined ? spot * 1.05 : menuCam.tx; menuCam.tz = spot !== undefined ? 1.9 : 1.35;
-  $id('menu').classList.add('leaving');
-  setTimeout(() => { $id('menu').classList.remove('leaving'); openScreen(name); }, spot !== undefined ? 520 : 260);
+  const root = $id('menu');
+  if (spot !== undefined) { menuCam.tx = spot * 1.05; menuCam.tz = 1.9; }
+  root.classList.remove('hl-single', 'hl-netp');   // 出发了就收掉悬停态，别让两张卡一个亮一个暗地退场
+  delete root.dataset.enter;                       // 入场还没播完就点了：直接切到退场
+  root.dataset.phase = spot !== undefined ? 'out' : 'out-fast';
+  document.body.classList.add('menu-handoff');
+  let target = null;
+  try { target = openScreen(name, false); }   // 先把页面建好，等镜头推到位再上屏
+  catch (err) {                               // 建页出错也要把首页放回来，别让它停在全透明的状态
+    console.error('刃影：打开页面出错', err);
+    menuLock = false;
+    delete root.dataset.phase;
+    document.body.classList.remove('menu-handoff');
+    return;
+  }
+  if (!target) {                        // 教程直接在场上开讲，没有要上屏的页面
+    menuLock = false;
+    delete root.dataset.phase;
+    document.body.classList.remove('menu-handoff');
+    return;
+  }
+  setTimeout(() => {
+    delete root.dataset.phase;
+    showScreen(target);
+    setTimeout(() => document.body.classList.remove('menu-handoff'), 320);
+  }, prefersReduced() ? 0 : (spot !== undefined ? MENU_DOLLY : 220));
 }
 const AI_PROFILES = {
   easy: {
@@ -7655,16 +7688,17 @@ function singleSec(sec) {
   else if (active === 'watch2v2') renderWatch2v2();
   else if (active === 'cpu') updateAIBrief();
 }
-function openScreen(name) {
+// 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
+function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'single') name = 'cpu';
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
   if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
     singleSec(name);
-    showScreen('single');
-    return;
+    if (reveal) showScreen('single');
+    return 'single';
   }
   if (name === 'single') singleSec(null);
-  if (name === 'tutorial') { startTutorial(); return; }
+  if (name === 'tutorial') { startTutorial(); return null; }   // 开的是教学对局，没有页面要上屏
   if (name === 'gacha') { renderGacha(); loadProfile(); }
   if (name === 'tasks') { renderTasks(); loadProfile(); }
   if (name === 'replays') renderReplays();
@@ -7673,9 +7707,10 @@ function openScreen(name) {
   if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
   if (name === 'codex') openCodex();
   if (name === 'community') openCommunity();
-  showScreen(name);
+  if (reveal) showScreen(name);
+  return name;
 }
-function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
+function backToMenu() { menuLock = false; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
 // ---------- 顶部导航 ----------
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
@@ -7683,8 +7718,8 @@ function navTo(name) {
   if (name === 'menu') { backToMenu(); return; }
   if (name === 'acc') { openAcc(); return; }
   if (name === 'qfx') { openQfx(); return; }
-  if ($id('menu').classList.contains('on') && MENU_SPOT[name] !== undefined) { menuGo(name); return; }
-  if (name === 'netp') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; }
+  if ($id('menu').classList.contains('on')) { menuGo(name); return; }   // 和卡片走同一条时间线，目的地一样感觉就一样
+  if (MENU_SPOT[name] !== undefined) { menuCam.tx = MENU_SPOT[name]; menuCam.tz = 1.35; }
   openScreen(name);
 }
 for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
@@ -7720,10 +7755,23 @@ function renderHome() {
 }
 $id('homeRank').addEventListener('click', () => navTo('netp'));
 for (const b of document.querySelectorAll('#menu [data-go]')) {
-  b.addEventListener('click', () => { b.classList.add('pressed'); setTimeout(() => b.classList.remove('pressed'), 900); menuGo(b.dataset.go); });
+  b.addEventListener('click', () => {
+    if (menuLock) return;                                  // 连点只算一次
+    b.classList.add('pressed');
+    setTimeout(() => b.classList.remove('pressed'), 900);
+    menuGo(b.dataset.go);
+  });
   if (MENU_SPOT[b.dataset.go] !== undefined) {
-    b.addEventListener('pointerenter', () => { if ($id('menu').classList.contains('on')) { menuCam.tx = MENU_SPOT[b.dataset.go] * 0.55; $id('menu').classList.add('hl-' + b.dataset.go); } });
-    b.addEventListener('pointerleave', () => { if ($id('menu').classList.contains('on')) menuCam.tx = 0; $id('menu').classList.remove('hl-' + b.dataset.go); });
+    b.addEventListener('pointerenter', () => {
+      if (menuLock || !$id('menu').classList.contains('on')) return;
+      menuCam.tx = MENU_SPOT[b.dataset.go] * 0.55;
+      $id('menu').classList.add('hl-' + b.dataset.go);
+    });
+    b.addEventListener('pointerleave', () => {
+      if (menuLock) return;                                // 已经出发：别把镜头拉回来、也别解除高亮
+      if ($id('menu').classList.contains('on')) menuCam.tx = 0;
+      $id('menu').classList.remove('hl-' + b.dataset.go);
+    });
   }
 }
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
@@ -10540,10 +10588,18 @@ if (TOUCH) {
 // ======================= 界面按钮 =======================
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
+  const prev = currentScreen; currentScreen = id;
   for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
   if (id !== 'bp') { try { showPop(null); } catch (e) {} }
-  if (id === 'menu') { menuCam.tx = 0; menuCam.tz = 1; }
+  if (id === 'menu') {
+    menuLock = false;                                   // 不管从哪条路回家，都要解锁
+    delete $id('menu').dataset.phase;
+    document.body.classList.remove('menu-handoff');
+    $id('menu').classList.remove('hl-single', 'hl-netp');   // 走之前留下的悬停态别带回家
+    for (const b of document.querySelectorAll('#menu .mcard.pressed')) b.classList.remove('pressed');
+    menuCam.tx = 0; menuCam.tz = 1;
+  }
   if (id === 'netp') renderLobby();
   const nav = !OFFLINE_BUILD && NAV_SCREENS.includes(id);
   $id('topNav').classList.toggle('hidden', !nav);
@@ -10552,7 +10608,17 @@ function showScreen(id) {
     for (const b of document.querySelectorAll('#topNav .tn-tabs [data-nav]')) b.classList.toggle('sel', b.dataset.nav === id);
     renderTopNav();
   }
-  if (id === 'menu') renderHome();
+  if (id === 'menu') {
+    renderHome();
+    // 入场只在冷启动和从对局退回时播；设置/任务之间来回属于同一次浏览，不再重放
+    const el = $id('menu'), play = !menuEntered || prev === null;
+    if (play && !prefersReduced()) {
+      delete el.dataset.enter;
+      if (!menuEntered) el.dataset.enter = 'run';          // 首帧就播，避免先亮一下再入场
+      else requestAnimationFrame(() => requestAnimationFrame(() => { if (el.classList.contains('on')) el.dataset.enter = 'run'; }));
+    } else delete el.dataset.enter;
+    menuEntered = true;
+  }
   if (id === 'acc') renderAccPage();
   if (!id) {
     refocusGame();
@@ -11749,7 +11815,7 @@ function toMenu() {
   } else {
     showScreen('menu');
   }
-  startMatch('demo');
+  if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
 document.getElementById('menuBtn').addEventListener('click', toMenu);
