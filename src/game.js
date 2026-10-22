@@ -4689,7 +4689,7 @@ function openQfx() {
   fr.src = EXT.url; $id('extGame').classList.remove('hidden'); EXT.on = true;
   try { if (AC) AC.suspend(); } catch (e) {}
   fr.onload = () => { try { fr.focus(); fr.contentWindow.focus(); } catch (e) {} };
-  if (SERVED) setTimeout(() => extToast('守住第三、六、十波，可在刃影领墨锭与专属皮肤「青锋行」', 6), 800);
+  if (SERVED) setTimeout(() => extToast('打通山门、竹林、剑冢三章，可在刃影领墨锭与专属皮肤「青锋行」', 6), 800);
 }
 function closeQfx() {
   EXT.on = false; $id('extFrame').src = 'about:blank'; $id('extGame').classList.add('hidden');
@@ -4932,7 +4932,7 @@ for (const b of document.querySelectorAll('#rpBar [data-sp]')) b.addEventListene
 });
 window.addEventListener('keydown', e => { if (REPLAY.on && e.code === 'Space' && M.phase !== 'end') { e.preventDefault(); e.stopImmediatePropagation(); $id('rpPause').click(); } }, true);
 
-// ======================= 青锋行打通：守住波次，在刃影领奖励 =======================
+// ======================= 青锋行打通：每破一章（第三、六、十关），在刃影领奖励 =======================
 const QFX_REW = [[3, 200, ''], [6, 300, ''], [10, 500, 'qf_qfx']];
 const QFX = { busy: false };
 function qfxBest() { try { return +localStorage.getItem('renying-qfx') || 0; } catch (e) { return 0; } }
@@ -4956,8 +4956,9 @@ async function qfxClaim(n) {
 function qfxCleared(n) {
   if (n > qfxBest()) try { localStorage.setItem('renying-qfx', String(n)); } catch (e) {}
   const r = QFX_REW.find(x => x[0] === n);
-  if (!SERVED) { if (r) extToast(`守住第${CN[n] || n}波！`); return; }
-  if (!ACC.token || PROF.guest) { if (r) extToast('守住了！登录刃影后就能领这一档的奖励'); return; }
+  const chName = { 3: '山门', 6: '竹林', 10: '剑冢' }[n];
+  if (!SERVED) { if (r) extToast(`${chName}已破！`); return; }
+  if (!ACC.token || PROF.guest) { if (r) extToast(`${chName}已破！登录刃影后就能领这一档的奖励`); return; }
   qfxClaim(Math.max(n, qfxBest()));
 }
 window.addEventListener('message', e => {
@@ -8661,7 +8662,7 @@ function renderCodex() {
     tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim);word-break:keep-all;overflow-wrap:break-word">${(() => {
       const chIdx = CHAPTERS.findIndex(chap => chap.boss === c.id);
       if (chIdx < 0) {
-        return `<b>青锋传 · 月下起意</b><br>青锋行守住第十波大关，即可领悟绝学并解锁专属传说皮肤「青锋行」。`;
+        return `<b>青锋传 · 月下起意</b><br>青锋行打通第三章「剑冢」，斩落剑魔，即可领悟绝学并解锁专属传说皮肤「青锋行」。`;
       }
       const ch = CHAPTERS[chIdx];
       const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar', yuxiao: 'yx_snow', zuixian: 'zx_amber', gouchen: 'gc_crimson' })[c.id];
