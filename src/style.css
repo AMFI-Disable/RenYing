@@ -19,7 +19,7 @@
   .scr {
     position: absolute; inset: 0; display: flex; overflow-y: auto;
     background: radial-gradient(ellipse at center, rgba(8, 8, 22, 0.35), rgba(5, 5, 14, 0.8));
-    opacity: 0; pointer-events: none; transition: opacity .4s ease;
+    opacity: 0; pointer-events: none; transition: opacity .4s ease, top .22s ease;
   }
   .scr.on { opacity: 1; pointer-events: auto; }
   p, dd, li, .sub, .td, .dhitdesc, .ai-desc, .tp-desc, .netnote, .tips, .vs-line { text-wrap: pretty; line-break: strict; }
@@ -297,16 +297,13 @@
   .mtitle { position: absolute; left: 50%; top: 9%; transform: translateX(-50%); display: flex; gap: 16px; align-items: center; pointer-events: none; text-shadow: 0 6px 40px rgba(0,0,0,.6); }
   .mtitle h1 { font-size: clamp(90px, 13vw, 170px); display: flex; }
   .mtitle h1 span, .mtitle .seal { display: inline-block; transition: transform .8s cubic-bezier(.2,.8,.2,1), opacity .6s, filter .6s; }
-  #menu.hl-single .mtitle h1 span:nth-child(1), #menu.hl-netp .mtitle h1 span:nth-child(1) { transform: translate(-120px, -34px) rotate(-10deg) scale(.9); opacity: .1; filter: blur(4px); }
-  #menu.hl-single .mtitle h1 span:nth-child(2), #menu.hl-netp .mtitle h1 span:nth-child(2) { transform: translate(120px, -24px) rotate(8deg) scale(.9); opacity: .1; filter: blur(4px); }
   #menu.hl-single .mtitle .seal, #menu.hl-netp .mtitle .seal { transform: translateY(40px) scale(.7); opacity: 0; }
-  .mcard, .msmall, .msmall-dock { transition: transform .45s cubic-bezier(.2,.8,.2,1), border-color .3s, box-shadow .3s, opacity .4s, filter .4s !important; }
   #menu.hl-single .mcard.left, #menu.hl-netp .mcard.right { transform: translateY(-8px) scale(1.07); border-color: rgba(233,196,106,.7); box-shadow: 0 20px 60px rgba(233,196,106,.22); }
   #menu.hl-single .mcard.right, #menu.hl-netp .mcard.left, #menu.hl-single .msmall, #menu.hl-netp .msmall, #menu.hl-single .msmall-dock, #menu.hl-netp .msmall-dock { opacity: .45; filter: blur(3px); transform: scale(.96); }
-  #menu.leaving .mcard.pressed { transform: scale(1.18); opacity: 0; filter: blur(8px); transition: all .5s cubic-bezier(.2,.8,.2,1) !important; }
   .mcard { position: absolute; bottom: 21%; width: min(300px, 30vw); padding: 22px 26px; text-align: left; cursor: pointer; color: var(--ink);
     border-radius: 16px; border: 1px solid rgba(239,232,216,.18); background: linear-gradient(160deg, rgba(20,18,44,.72), rgba(8,8,22,.55));
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: transform .25s, border-color .25s, box-shadow .25s; }
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    transition: transform .28s cubic-bezier(.2,.8,.2,1), border-color .28s, box-shadow .28s, opacity .28s, filter .28s; }
   .mcard.left { left: 8%; } .mcard.right { right: 8%; text-align: right; }
   .mcard .mk { display: block; font-family: var(--title); font-size: clamp(34px, 3.6vw, 48px); letter-spacing: .12em; }
   .mcard .ms { display: block; font-size: 13px; color: var(--dim); margin-top: 4px; }
@@ -314,7 +311,7 @@
   .msmall-dock {
     position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%);
     display: flex; gap: 12px; align-items: center; justify-content: center;
-    max-width: 96vw;
+    max-width: 96vw; transition: opacity .2s, transform .2s, visibility 0s;
   }
   .mgroup {
     display: inline-flex; gap: 4px; padding: 3px 6px; border-radius: 999px;
@@ -777,7 +774,6 @@
     .decktabs button { font-size: 12px; padding: 3px 5px; }
   }
   @media (max-width: 760px) { .bpd { grid-template-columns: 64px 1fr; } .bpdetail img { width: 64px; height: 78px; } .bpgrid { grid-template-columns: repeat(2, 1fr); } .bph { grid-template-columns: 1fr; } .bps.right { flex-direction: row; text-align: left; } .bps.right .slots { flex-direction: row; } }
-  #menu.leaving .mcard, #menu.leaving .msmall, #menu.leaving .mtitle { opacity: 0; transition: opacity .3s; }
   .touch { display: none; color: #ffb4a6; font-size: 14px; margin-top: 16px; }
 
   @media (max-width: 560px) { .keys { grid-template-columns: 1fr; gap: 18px; } }
@@ -1230,7 +1226,8 @@
   .tn-tabs .tn-play::after { display: none; }
   .tn-tabs .tn-qfx { color: #e9c46a; }
   .tn-tabs .tn-qfx:hover { color: #ffd98a; }
-  body.has-nav .msmall-dock { display: none; }   /* 顶部导航在时不再重复一排底部按钮 */
+  body.has-nav .msmall-dock { opacity: 0; pointer-events: none; visibility: hidden; transform: translateX(-50%) translateY(18px);   /* 顶部导航在时不再重复一排底部按钮 */
+    transition: opacity .2s, transform .2s, visibility 0s .2s; }
   .help-tut { margin: 0 0 12px; text-align: center; }
   .tn-tabs .tn-play:hover, .tn-tabs .tn-play.sel { background: #ff5d6a; box-shadow: 0 0 22px rgba(255,70,85,.45); }
   .tn-tabs .tn-play.searching { animation: tnPulse 1.2s ease-in-out infinite; }
@@ -1311,6 +1308,40 @@
     .menuscr .mcard.right { top: calc(6% + 26px + 78px + 30px); padding: 10px 100px 10px 18px; min-width: 0; }
     .menuscr .mcard.left { top: calc(6% + 26px + 78px + 30px + 78px); padding: 8px 26px 8px 16px; min-width: 0; }
     .menuscr .mcard .mk { font-size: 24px; } .menuscr .mcard.left .mk { font-size: 18px; } .menuscr .mcard .ms { display: none; }
+  }
+
+  /* ---------- 首页动效：入场、退场、换页交接 ---------- */
+  /* 入场只在冷启动和从对局退回时播一次；keyframes 只写 from，收尾自动回到元素自身的样式 */
+  #menu[data-enter="run"] .home-kicker { animation: homeIn .42s cubic-bezier(.2,.8,.2,1) backwards; }
+  #menu[data-enter="run"] .home-tag { animation: homeIn .42s cubic-bezier(.2,.8,.2,1) .06s backwards; }
+  #menu[data-enter="run"] .home-card { animation: homeIn .42s cubic-bezier(.2,.8,.2,1) .1s backwards; }
+  #menu[data-enter="run"] .home-card:nth-child(2) { animation-delay: .16s; }
+  #menu[data-enter="run"] .home-card:nth-child(3) { animation-delay: .22s; }
+  #menu[data-enter="run"] #mSingle { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .12s backwards; }
+  #menu[data-enter="run"] #mNet { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .18s backwards; }
+  #menu[data-enter="run"] .mtitle, #menu[data-enter="run"] .msmall-dock { animation: homeInCenter .52s cubic-bezier(.2,.8,.2,1) .04s backwards; }
+  @keyframes homeIn { from { opacity: 0; transform: translateY(14px); } }
+  @keyframes homeInCenter { from { opacity: 0; transform: translateX(-50%) translateY(14px); } }
+
+  /* 退场：内容先散，整屏再淡。等 showScreen 换页时首页已经看不见，两层半透明不会再叠在一起 */
+  #menu[data-phase] .mtitle, #menu[data-phase] .home-kicker, #menu[data-phase] .home-tag { opacity: 0; transition: opacity .2s; }
+  #menu[data-phase] .home-side { opacity: 0; transition: opacity .2s .04s; }
+  #menu[data-phase] .msmall-dock { opacity: 0; transition: opacity .18s; }
+  #menu[data-phase] .mcard { opacity: 0; transform: translateY(8px) scale(.98); backdrop-filter: none; -webkit-backdrop-filter: none; transition-duration: .22s; }
+  #menu[data-phase] .mcard.pressed { transform: translateY(6px) scale(1.01); }
+  #menu[data-phase="out"] { opacity: 0; transition: opacity .4s ease .02s; }
+  #menu[data-phase="out-fast"] { opacity: 0; transition: opacity .2s ease; }
+
+  /* 换页交接：新页面用更短的淡入 + 轻微上浮接手 */
+  body.menu-handoff .scr.on { transition-duration: .22s; }
+  body.menu-handoff .scr.on > .panel { animation: scrIn .26s cubic-bezier(.2,.8,.2,1) backwards; }
+  @keyframes scrIn { from { opacity: 0; transform: translateY(10px); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    #menu[data-enter] *, body.menu-handoff .scr.on > .panel { animation: none !important; }
+    #menu[data-phase="out"], #menu[data-phase="out-fast"] { transition-duration: .01s !important; }
+    .scr { transition-duration: .12s !important; }
+    .mcard, .msmall-dock, .home-card { transition-duration: .12s !important; }
   }
 
   /* ---------- 通用：菜单页底板、标题、按钮、分段、输入框 ---------- */
