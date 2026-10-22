@@ -76,7 +76,7 @@ function cancelAttack(e) { if (e.tele) { e.tele.cancel(); e.tele = null; } relea
 
 function damageEnemy(e, dmg, o = {}) {
   if (e.state === 'dead') return false; if (e.state === 'spawn' && e.st < .25) return false;
-  if (e.stun > 0) dmg *= 1.3; dmg = Math.max(1, Math.round(dmg)); e.hp -= dmg; e.flash = 1;
+  if (e.stun > 0) dmg *= 1.3; dmg = Math.max(1, Math.round(dmg)); e.hp -= dmg; e.flash = 1; if (e.tut) Tut.hits = (Tut.hits || 0) + 1;
   FX.num({ x: e.pos.x, y: e.hitY + .7, z: e.pos.z }, '' + dmg, o.crit ? 'crit' : (o.cls || ''), o.crit ? 1 : .8);
   const m = e.cfg.mass; e.kx += (o.kx || 0) / m; e.kz += (o.kz || 0) / m;
   if (e.hp <= 0) { killEnemy(e); return true; }
@@ -105,7 +105,7 @@ function killEnemy(e) {
   if (e.cfg.revive && !e.revived && !e.execd && e.state !== 'dead') { slaveDown(e); return; }
   if (e.clone) { cancelAttack(e); e.state = 'dead'; e.deadT = .9; e.hp = 0; if (Pl.lock === e) Pl.lock = null; FX.smoke(e.pos, 18, 1.3, .1); FX.wisp({ x: e.pos.x, y: e.hitY, z: e.pos.z }, 0x9ff0e0, 12, 2); Snd.cast(); return; }
   cancelAttack(e); e.state = 'dead'; e.deadT = 0; e.hp = 0; G.kills++; if (Pl.lock === e) Pl.lock = null;
-  Save.kill(); const c = e.cfg, n = e.boss ? 26 : e.elite ? 8 : 3, xp = c.xp * (e.elite ? 2.5 : 1) * (1 + .06 * (G.stage - 1)), gold = randi(c.gold[0], c.gold[1]) * (e.elite ? 2.5 : 1) * (1 + .3 * pk('gold')) * (1 + .05 * (G.stage - 1));
+  Save.kill(); const c = e.cfg, n = e.boss ? 26 : e.elite ? 8 : 3, xp = c.xp * (e.xpK ?? 1) * (e.elite ? 2.5 : 1) * (1 + .06 * (G.stage - 1)), gold = randi(c.gold[0], c.gold[1]) * (e.elite ? 2.5 : 1) * (1 + .3 * pk('gold')) * (1 + .05 * (G.stage - 1));
   for (let i = 0; i < n; i++) spawnOrb(e.pos, 0, xp / n); const gn = e.boss ? 16 : Math.min(5, Math.ceil(gold / 4)); for (let i = 0; i < gn; i++) spawnOrb(e.pos, 1, gold / gn);
   if (Math.random() < (e.boss ? 1 : e.elite ? .5 : .07)) for (let i = 0; i < (e.boss ? 4 : 1); i++) spawnOrb(e.pos, 2, 18);
   if (pk('wolf')) { Pl.mp = Math.min(Pl.maxMp, Pl.mp + 4 * pk('wolf')); healPlayer(Pl.maxHp * .02 * pk('wolf'), true); }
@@ -141,7 +141,7 @@ function chooseAttack(e, d) {
 }
 function startAttack_E(e, i, chained) {
   const a = e.cfg.atks[i]; e.atk = a; e.atkI = i; e.state = 'windup'; e.st = 0; e.didHit = false; e.tick = 0; e.cds[i] = a.cd * rand(.85, 1.25) / (e.phase > 1 ? 1.25 : 1);
-  e.wind = a.wind * (chained ? 1 : rand(.95, 1.1)) / (e.phase > 1 ? 1.15 : 1); e.teleMade = false; e.lockYaw = false; e.glinted = false;
+  e.wind = a.wind * (chained ? 1 : rand(.95, 1.1)) / (e.phase > 1 ? 1.15 : 1) * (e.windK || 1); e.teleMade = false; e.lockYaw = false; e.glinted = false;
   if (a.kind === 'leap') { e.tele = null; }
   if (a.kind === 'dash') { e.tele = FX.telegraph({ type: 'line', x: e.pos.x, z: e.pos.z, yaw: e.yaw, len: a.speed * a.act, w: 2.2, dur: e.wind, color: 0xff3a22 }); }
   if (a.kind === 'summon') { UI.banner('喽啰何在', '', 'red'); Snd.gong(); }
@@ -181,6 +181,7 @@ function updateEnemy(e, dt0, t) {
   }
   else if (e.state === 'down') { fall = e.st < 1.9 ? smooth(e.st / .35) : 1 - smooth((e.st - 1.9) / .5); rate = 20; if (e.st >= 2.4) { e.state = 'chase'; e.st = 0; e.stun = 0; FX.wisp({ x: e.pos.x, y: e.hitY, z: e.pos.z }, 0x5affc8, 8, 1.2); } }
   else if (e.state === 'stagger') { hurt = sat(1 - e.st / Math.max(.3, e.stagger)) * .8 + .2; rate = 24; if (e.st >= e.stagger) { e.state = 'chase'; e.st = 0; } }
+  else if (e.state === 'chase' && e.tut === 'dummy') { e.yaw = dampAng(e.yaw, toP, 4, dt); }
   else if (e.state === 'chase') {
     e.yaw = dampAng(e.yaw, toP, 7, dt); let moveA = null, sp = c.spd * (e.phase > 1 ? 1.15 : 1);
     const ai = d < 30 ? chooseAttack(e, d) : -1; let started = false;

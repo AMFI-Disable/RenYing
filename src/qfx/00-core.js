@@ -64,7 +64,7 @@ function setupTouchUI() {
   const end = () => { id = null; Input.ax = Input.ay = 0; knob.style.transform = ''; };
   stick.addEventListener('touchend', end); stick.addEventListener('touchcancel', end);
   const tap = (el, code) => el.addEventListener('touchstart', e => { Input.hits[code] = true; e.preventDefault(); }, { passive: false });
-  tap($('tAtk'), 'KeyJ'); tap($('tDodge'), 'Space'); tap($('tParry'), 'KeyF'); tap($('tLock'), 'Tab');
+  tap($('tAtk'), 'KeyJ'); tap($('tDodge'), 'Space'); tap($('tParry'), 'KeyF'); tap($('tLock'), 'Tab'); tap($('tPause'), 'KeyP');
   // 旋：轻点旋风斩，按住蓄力破山
   const th = $('tHeavy'), up = () => { Input.keys.TouchK = false; };
   th.addEventListener('touchstart', e => { Input.hits.KeyK = true; Input.keys.TouchK = true; e.preventDefault(); }, { passive: false }); th.addEventListener('touchend', up); th.addEventListener('touchcancel', up);

@@ -105,6 +105,12 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .toast{position:absolute;left:50%;bottom:132px;transform:translateX(-50%);font-size:14px;letter-spacing:.2em;color:var(--paper);
   background:rgba(8,10,12,.62);padding:5px 18px;opacity:0;transition:opacity .3s;white-space:nowrap;border-left:2px solid var(--cinnabar)}
 .toast.show{opacity:1}
+.tut{position:absolute;left:50%;top:96px;transform:translateX(-50%);text-align:center;pointer-events:auto;background:rgba(8,10,12,.62);border-top:2px solid var(--jade);padding:10px 22px 12px;max-width:min(560px,92vw)}
+.tut .tn{font-size:11px;letter-spacing:.4em;text-indent:.4em;color:var(--jade)}
+.tut .tt{font-size:17px;line-height:1.7;margin:4px 0 8px;color:var(--paper)}
+.tut kbd{font:600 13px var(--f-text);border:1px solid var(--straw);padding:0 6px;margin:0 2px;background:rgba(8,10,12,.6)}
+.tut .btn.sm{font-size:11.5px;padding:4px 12px}
+#game.touch .bar.hp{width:min(260px,31vw)}#game.touch .bar.mp{width:min(220px,26vw)}#game.touch .bar.sta{width:min(180px,21vw)}
 .lockm{position:absolute;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;border:2px solid var(--cinnabar);transform:rotate(45deg);opacity:.9;
   box-shadow:0 0 10px var(--cinnabar)}
 .lockinfo{position:absolute;left:0;top:0;width:96px;margin-left:-48px;display:flex;flex-direction:column;gap:2px}
@@ -222,7 +228,11 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 #tHeavy{right:40px;bottom:200px;width:60px;height:60px;font-size:24px}
 #tParry{right:126px;bottom:178px;width:56px;height:56px;font-size:23px}
 #tParry.exec{border-color:#ff8a6a;color:#ffd6c4;box-shadow:0 0 14px rgba(255,80,50,.7)}
-#tLock{right:24px;bottom:278px;width:46px;height:46px;font-size:19px}
+#tLock{right:200px;bottom:150px;width:46px;height:46px;font-size:19px}
+#tPause{right:162px;top:16px;width:40px;height:40px;font-size:16px;font-family:var(--f-text)}
+#game.touch .hint{display:none}#game.touch .sk .k,#game.touch .sk .n{display:none}
+#game.touch .skills{bottom:12px;gap:8px}#game.touch .sk{width:48px;height:48px}#game.touch .sk .g{font-size:23px}#game.touch .sk.ult{width:56px;height:56px}
+@media (max-height:500px){.tbody .keys,.tbody p+p{display:none}.tbody{gap:12px;padding-block:12px}.tname{font-size:min(17vh,96px)}}
 #tLock.on{border-color:var(--cinnabar);color:#ffb4a6}
 
 @media (max-width:720px){
@@ -279,6 +289,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="lockm" id="lockm" hidden></div>
     <div class="lockinfo" id="lockInfo" hidden><span class="lb"><i id="lockHp"></i></span><span class="lb"><i id="lockPo"></i></span></div>
     <div class="execm" id="execm" hidden><kbd>F</kbd>处决</div>
+    <div class="tut" id="tut" hidden><div class="tn" id="tutN"></div><div class="tt" id="tutT"></div><button class="btn sm" id="btnTutSkip" type="button">跳过试剑</button></div>
   </div>
 
   <div id="touch" hidden>
@@ -288,6 +299,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <button class="tb" id="tHeavy" type="button">旋</button>
     <button class="tb" id="tParry" type="button">格</button>
     <button class="tb" id="tLock" type="button">锁</button>
+    <button class="tb" id="tPause" type="button">‖</button>
   </div>
 
   <div id="title" class="screen">

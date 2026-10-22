@@ -9,6 +9,7 @@ const UI = {
   banner(t, s = '', cls = '') { const el = $('banner'); $('banT').textContent = t; $('banS').textContent = s; el.className = 'banner ' + cls; void el.offsetWidth; el.classList.add('show'); },
   combo(n) { if (n < 2) { this.hide('combo', true); return; } this.hide('combo', false); this.set('comboN', n); this.set('comboR', n >= 60 ? '万夫莫敌' : n >= 40 ? '无双' : n >= 25 ? '游龙' : n >= 12 ? '流水' : n >= 5 ? '行云' : ''); const el = $('combo'); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); },
   update(dt) {
+    this.cls('game', 'touch', Input.touch);
     if (this.toastT > 0) { this.toastT -= dt; if (this.toastT <= 0) $('toast').classList.remove('show'); }
     this.bar('hpFill', Pl.hp / Pl.maxHp); this.bar('hpLag', Pl.hp / Pl.maxHp); this.set('hpTxt', Math.ceil(Pl.hp) + ' / ' + Pl.maxHp); this.bar('mpFill', Pl.mp / Pl.maxMp); this.bar('staFill', Pl.sta / Pl.maxSta);
     this.cls('hpBar', 'shield', Pl.shield > 0); this.set('lvNum', cnNum(Pl.lv)); this.set('gold', Math.floor(Pl.gold)); this.set('swName', swordTier().name + (Pl.swordLv ? ' · ' + cnNum(Pl.swordLv) + '重' : '')); this.set('pots', Pl.pots);
@@ -20,7 +21,8 @@ const UI = {
     { const v = Math.round(sat(Pl.potCd / 1.5) * 100) / 100; if (this.c.potcd !== v) { this.c.potcd = v; $('sk4').style.setProperty('--cd', v); } }
     const alive = G.enemies.filter(e => e.state !== 'dead').length + G.queue.length;
     let t1, t2; const ch = CHAPTERS[G.chapter] || CHAPTERS[0];
-    if (G.intro) { t1 = ch.n; t2 = `整装 ${Math.ceil(G.inter)} · Enter 开战`; }
+    if (Tut.on) { t1 = '试剑'; t2 = '山门前 · 先活动活动筋骨'; }
+    else if (G.intro) { t1 = ch.n; t2 = `整装 ${Math.ceil(G.inter)} · Enter 开战`; }
     else if (G.clearT > 0) { t1 = ch.n; t2 = '已破'; }
     else if (G.inter > 0) { t1 = `第${cnNum(G.stage + 1)}关`; t2 = `休整 ${Math.ceil(G.inter)} · B 入剑庐 · Enter 开战`; }
     else { t1 = `第${cnNum(G.stage)}关`; t2 = `${G.stageName} · 残敌 ${alive}`; }

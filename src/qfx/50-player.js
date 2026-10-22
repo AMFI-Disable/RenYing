@@ -52,7 +52,7 @@ function startAttack(def) {
 }
 function tryDodge() {
   const cost = 22 * (1 - .2 * pk('mspd')) * (reso('shen') >= 3 ? .7 : 1); if (Pl.sta < cost) { UI.toast('体力不济'); return false; }
-  Pl.sta -= cost; Pl.staDelay = .7; Pl.state = 'dodge'; Pl.st = 0; Pl.iframe = .36; Pl.perfect = false;
+  Pl.sta -= cost; Pl.staDelay = .7; Pl.state = 'dodge'; Tut.dodged = true; Pl.st = 0; Pl.iframe = .36; Pl.perfect = false;
   Pl.dodgeYaw = Pl.moveMag > .3 ? Pl.moveYaw : Pl.yaw + PI; Pl.yawT = Pl.moveMag > .3 ? Pl.moveYaw : Pl.yaw; Snd.dodge(); FX.dust(Pl.pos, 5, .5); return true;
 }
 function startParry() {
@@ -169,7 +169,7 @@ function hurtPlayer(dmg, sx, sz, o = {}) {
   }
   if (Pl.shield > 0) { Pl.shield--; Pl.shieldT = 12; Pl.iframe = .5; FX.num({ x: Pl.pos.x, y: 2.1, z: Pl.pos.z }, '真气护体', 'word', .9); FX.ring(Pl.pos, .6, 2.6, 0x62cdb9, .35); Snd.clang(); return false; }
   const armor = Pl.state === 'whirl' || Pl.bellT > 0; if (armor) dmg *= .5; if (guard) dmg *= reso('yi') >= 3 ? 0 : .3;
-  dmg = Math.round(dmg); Pl.hp -= dmg; Pl.iframe = .5; Pl.hurtV = guard ? .35 : 1; Pl.hits = 0; UI.combo(0); Cam.shake = Math.max(Cam.shake, (guard ? .18 : .35) + dmg * .008);
+  dmg = Math.round(dmg); if (dmg < 1 && !guard) { Pl.iframe = .3; return false; } Pl.hp -= dmg; Pl.iframe = .5; Pl.hurtV = guard ? .35 : 1; Pl.hits = 0; UI.combo(0); Cam.shake = Math.max(Cam.shake, (guard ? .18 : .35) + dmg * .008);
   FX.num({ x: Pl.pos.x, y: 2.1, z: Pl.pos.z }, '-' + dmg, 'hurt');
   if (guard) { Pl.sta = Math.max(0, Pl.sta - 14); Pl.staDelay = .8; Snd.block(); FX.sparks({ x: Pl.pos.x, y: 1.3, z: Pl.pos.z }, 10, 0xffd8a0, 7); FX.num({ x: Pl.pos.x, y: 2.5, z: Pl.pos.z }, '格', 'word', .7); }
   else { Snd.hurt(); FX.inkBurst({ x: Pl.pos.x, y: 1.1, z: Pl.pos.z }, 6, .7); }

@@ -52,6 +52,7 @@ function spawnFromQueue() {
 function updateStage(dt) {
   G.atkGap = (G.atkGap || 0) - dt * G.enemyTS;
   if (G.clearT > 0) { G.clearT -= dt; if (G.clearT <= 0) Game.chapterClear(); return; }
+  if (Tut.on) { Tut.update(dt); return; }
   if (G.inter > 0) { G.inter -= dt; if (G.inter <= 0 || Input.hit('Enter')) startStage(G.stage + 1); return; }
   const alive = G.enemies.filter(e => e.state !== 'dead').length;
   if (G.queue.length && alive < G.cap) { G.spawnT -= dt; if (G.spawnT <= 0) { spawnFromQueue(); G.spawnT = alive < 3 ? .25 : .7; } }

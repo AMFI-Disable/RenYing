@@ -34,7 +34,7 @@ function placePlayer() {
   Cam.yaw = sp[2]; Cam.pitch = .34; Cam.look.set(Pl.pos.x, 1.5, Pl.pos.z); Cam.dist = Cam.distT = 7.4;
 }
 function unlock() { if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock(); }
-function hideAll() { for (const id of ['title', 'levelup', 'shop', 'pause', 'over', 'interlude', 'meta', 'settings']) $(id).hidden = true; }
+function hideAll() { if (Tut.on) Tut.end(false); for (const id of ['title', 'levelup', 'shop', 'pause', 'over', 'interlude', 'meta', 'settings']) $(id).hidden = true; }
 /* 墨色过场：盖住画面 → 换地图 → 揭开 */
 function travelShow(ch) {
   $('tvIdx').textContent = ch.idx; $('tvName').textContent = ch.n; $('tvSub').textContent = ch.sub; $('tvStory').textContent = ch.story;
@@ -56,7 +56,7 @@ const Game = {
       // 过场至少停留两秒半，让章名和题记读得完
       setTimeout(() => {
         $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; canvas.focus(); travelHide();
-        UI.banner(ch.n, ch.idx + ' · ' + ch.sub, ''); Snd.gong();
+        UI.banner(ch.n, ch.idx + ' · ' + ch.sub, ''); Snd.gong(); if (ci === 0 && !Save.load().tut && !window.__noTut) Tut.begin();
       }, window.__instant ? 0 : Math.max(0, 2600 - (performance.now() - t0)));
     };
     if (window.__instant) go(); else setTimeout(go, 650);
@@ -141,7 +141,7 @@ function bindUI() {
   $('btnMute').onclick = () => { Snd.setMute(!Snd.muted); $('btnMute').textContent = '声音：' + (Snd.muted ? '关' : '开'); };
   $('btnMeta').onclick = () => UI.showMeta(); $('btnMetaClose').onclick = () => { $('meta').hidden = true; $('title').hidden = false; showBest(); };
   $('btnSet').onclick = () => UI.showSettings('title'); $('btnSet2').onclick = () => UI.showSettings('pause'); $('btnSetClose').onclick = () => UI.closeSettings();
-  $('btnReroll').onclick = () => Game.reroll();
+  $('btnReroll').onclick = () => Game.reroll(); $('btnTutSkip').onclick = () => { Tut.end(false); canvas.focus(); };
   $('setSens').oninput = e => setSetting('sens', +e.target.value); $('setVol').oninput = e => setSetting('vol', +e.target.value);
   const fs = () => { const el = document.documentElement; try { if (document.fullscreenElement) document.exitFullscreen(); else { const p = (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (p && p.catch) p.catch(() => {}); } } catch (_) {} };
   $('btnFull').onclick = fs; $('btnFull2').onclick = fs;
