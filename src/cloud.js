@@ -169,7 +169,7 @@
     'fy_jade', 'fy_blood', 'fy_phantom',
     'ts_bronze', 'ts_obsidian', 'ts_crimson',
     'ls_plum', 'ls_aurora', 'ls_dragon',
-    'ly_dusk', 'ly_sky', 'ly_bamboo',
+    'ly_dusk', 'ly_sky', 'ly_bamboo', 'ly_fox',
     'lm_violet', 'lm_sun', 'lm_asura',
     'my_cinnabar', 'my_gold', 'my_celestial',
     'yh_sakura', 'yh_eclipse', 'yh_solstice',
