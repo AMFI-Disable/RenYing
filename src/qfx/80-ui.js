@@ -60,8 +60,25 @@ const UI = {
   showLevelUp() {
     const cards = offerCards(), host = $('cards'); host.innerHTML = ''; $('luSub').textContent = `已入${cnNum(Pl.lv - Pl.pending + 1)}境 · 择其一`;
     cards.forEach((c, i) => { const b = document.createElement('button'), [cls, html] = this.cardHtml(c, i); b.type = 'button'; b.className = cls; b.id = 'card' + i; b.innerHTML = html; b.onclick = () => Game.pickPerk(c); host.appendChild(b); });
-    this.perks = cards; $('levelup').hidden = false;
+    this.perks = cards; $('levelup').hidden = false; const rr = $('btnReroll'); rr.hidden = !(Pl.rerolls > 0); rr.textContent = `重掷 · 余 ${Pl.rerolls}（R）`;
   },
+  showMeta() {
+    const d = Save.load(), host = $('metaGrid'); host.innerHTML = ''; $('metaSoul').textContent = d.soul;
+    META.forEach((m, i) => { const l = up(m.id), mx = l >= m.max, cost = mx ? 0 : m.cost(l), b = document.createElement('button'); b.type = 'button'; b.className = 'item'; b.id = 'meta' + i; b.disabled = mx || d.soul < cost;
+      b.innerHTML = `<span class="in">${m.n}</span><span class="ip">${mx ? '已臻圆满' : cost + ' 剑魄'}</span><span class="id">${m.d(Math.max(1, mx ? l : l + 1))}</span><span class="mlv">${cnNum(l)} / ${cnNum(m.max)} 重</span>`;
+      b.onclick = () => { if (buyMeta(m)) { Snd.init(); Snd.forge(); UI.showMeta(); } }; host.appendChild(b); });
+    const r = d.rec; $('recs').innerHTML = [[r.best ? '第' + cnNum(r.best) + '关' : '—', '最远'], [r.clears, '通关'], [r.bestTime ? fmtTime(r.bestTime) : '—', '最快'], [r.maxCombo, '最高连击'], [r.kills, '总斩敌'], [r.runs, '入山'], [r.souls || 0, '累计剑魄']].map(([v, k]) => `<span><b>${v}</b>${k}</span>`).join('');
+    $('meta').hidden = false; $('title').hidden = true;
+  },
+  showSettings(from) {
+    this.setFrom = from; const seg = (id, opts, cur, fn) => { const h = $(id); h.innerHTML = ''; opts.forEach(([v, n]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.className = v === cur ? 'on' : ''; b.onclick = () => { fn(v); UI.showSettings(from); }; h.appendChild(b); }); };
+    seg('setQ', QN.map((n, i) => [i, n]), GFX.quality, v => { GFX.quality = v; setSetting('q', v); applyQuality(); });
+    seg('setShake', [[0, '关'], [.5, '弱'], [1, '强']], setting('shake'), v => setSetting('shake', v));
+    seg('setNums', [[1, '显示'], [0, '隐藏']], setting('nums'), v => setSetting('nums', v));
+    $('setSens').value = setting('sens'); $('setVol').value = setting('vol');
+    if (from === 'pause') $('pause').hidden = true; else $('title').hidden = true; $('settings').hidden = false;
+  },
+  closeSettings() { $('settings').hidden = true; if (this.setFrom === 'pause') $('pause').hidden = false; else $('title').hidden = false; },
   showShop() {
     const host = $('shopGrid'); host.innerHTML = ''; $('shopGold').textContent = Math.floor(Pl.gold);
     SHOP.forEach((it, i) => { const b = document.createElement('button'), mx = it.max(), cost = it.cost(); b.type = 'button'; b.className = 'item'; b.id = 'shop' + i; b.disabled = mx || Pl.gold < cost; b.innerHTML = `<span class="in">${it.n()}</span><span class="ip">${mx ? '已臻极致' : cost + ' 文'}</span><span class="id">${it.d()}</span>`; b.onclick = () => { if (Pl.gold >= cost && !it.max()) { Pl.gold -= cost; it.buy(); UI.showShop(); } }; host.appendChild(b); });

@@ -79,7 +79,7 @@ const Snd = {
     try {
       const c = this.ctx = new AC();
       const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 5;
-      this.out = c.createGain(); this.out.gain.value = .55; this.out.connect(comp); comp.connect(c.destination);
+      this.out = c.createGain(); this.out.gain.value = this.muted ? 0 : .55 * setting('vol') / .8; this.out.connect(comp); comp.connect(c.destination);
       const len = c.sampleRate * 2.6, ib = c.createBuffer(2, len, c.sampleRate);
       for (let ch = 0; ch < 2; ch++) { const d = ib.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
       this.rev = c.createConvolver(); this.rev.buffer = ib; const rg = c.createGain(); rg.gain.value = .5; this.rev.connect(rg); rg.connect(this.out);
@@ -91,7 +91,7 @@ const Snd = {
       this._next = c.currentTime + .4; this._timer = setInterval(() => this.music(), 120);
     } catch (_) { this.ctx = null; }
   },
-  setMute(m) { this.muted = m; if (this.out) this.out.gain.value = m ? 0 : .55; },
+  setMute(m) { this.muted = m; if (this.out) this.out.gain.value = m ? 0 : .55 * setting('vol') / .8; },
   noise(t, dur, f0, f1, q, g, type = 'bandpass') {
     const c = this.ctx; if (!c) return; const s = c.createBufferSource(); s.buffer = this.nbuf; s.playbackRate.value = rand(.8, 1.2);
     const f = c.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);

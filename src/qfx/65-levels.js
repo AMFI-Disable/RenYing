@@ -65,6 +65,7 @@ function stageClear() {
   const n = G.stage;
   try { if (parent !== window) parent.postMessage({ qfx: 'wave', n }, '*'); } catch (_) {}
   G.hazards.length = 0; Pl.mp = Pl.maxMp; Save.stageDone(n);
+  const sg = addSoul((4 + 2 * Math.min(n, 12)) * (stageDef(n).boss ? 3 : 1)); G.soulRun = (G.soulRun || 0) + sg; setTimeout(() => UI.toast(`剑魄 +${sg}`, 1.6), 900);
   if (!G.endless && n === LAST_STAGE) { Game.victory(); return; }
   if (!G.endless && isChapterEnd(n)) { G.clearT = 3.2; const ch = CHAPTERS[chapterOf(n)]; UI.banner(`${ch.n} · 已破`, ch.idx + ' · ' + ch.sub, 'gold'); Snd.level(); return; }
   G.inter = G.endless ? 15 : 20; healPlayer(Pl.maxHp * .1); UI.banner('敌势暂歇', `第${cnNum(n)}关已过`, 'gold'); Snd.level();

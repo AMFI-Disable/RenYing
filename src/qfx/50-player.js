@@ -18,13 +18,13 @@ const _b = new V3(), _t = new V3(), _v1 = new V3(), _v2 = new V3(), _v3 = new V3
 function collideCam(v) { const cr = Math.hypot(v.x, v.z), R = World.R + 7; if (cr > R) { v.x *= R / cr; v.z *= R / cr; } v.y = Math.max(.5, v.y); }
 
 function resetPlayer() {
-  Object.assign(Pl, { lv: 1, xp: 0, hp: 120, mp: 60, sta: 100, rage: 0, gold: 0, pots: 3, swordLv: 0, bodyLv: 0, qiLv: 0, perks: {}, state: 'free', st: 0, combo: 0, comboT: 0, buf: 0, bufH: 0, iframe: 0, staDelay: 0, cds: [0, 0, 0, 0], potCd: 0, lock: null, hits: 0, hitT: 0, shield: 0, shieldT: 0, buffT: 0, combatT: 0, hurtV: 0, speedN: 0, atkDef: null, hitSet: new Set(), kx: 0, kz: 0, yaw: PI, deadT: 0, tick: 0, pending: 0, parries: 0, execT: null, execE: null, flashE: null, perfectT: 0, perfectSrc: null, charged: false, flickAcc: 0, flickCd: 0, boltN: 0, slots: ['qi', null, null], ult: null, skLv: { qi: 1 }, cdMax: [1, 1, 1, 1], bellT: 0, wuyingT: 0, nextCrit: 0, reviveUsed: false });
+  Object.assign(Pl, { lv: 1, xp: 0, hp: 120, mp: 60, sta: 100, rage: 0, gold: 0, pots: 3, swordLv: 0, bodyLv: 0, qiLv: 0, perks: {}, state: 'free', st: 0, combo: 0, comboT: 0, buf: 0, bufH: 0, iframe: 0, staDelay: 0, cds: [0, 0, 0, 0], potCd: 0, lock: null, hits: 0, hitT: 0, shield: 0, shieldT: 0, buffT: 0, combatT: 0, hurtV: 0, speedN: 0, atkDef: null, hitSet: new Set(), kx: 0, kz: 0, yaw: PI, deadT: 0, tick: 0, pending: 0, parries: 0, execT: null, execE: null, flashE: null, perfectT: 0, perfectSrc: null, charged: false, flickAcc: 0, flickCd: 0, boltN: 0, metaRevive: false, rerolls: 0, slots: ['qi', null, null], ult: null, skLv: { qi: 1 }, cdMax: [1, 1, 1, 1], bellT: 0, wuyingT: 0, nextCrit: 0, reviveUsed: false });
   Pl.pos.set(0, 0, 9); Pl.vel.set(0, 0, 0); recalc(); Pl.hp = Pl.maxHp; Pl.mp = Pl.maxMp; setSwordTier();
 }
 const pk = k => Pl.perks[k] || 0;
 function recalc() {
-  Pl.atk = (20 + 2.2 * (Pl.lv - 1)) * (1 + .13 * Pl.swordLv) * (1 + .15 * pk('atk'));
-  Pl.maxHp = Math.round((120 + 6 * (Pl.lv - 1) + 30 * pk('hp') + 28 * Pl.bodyLv) * (reso('gen') >= 3 ? 1.15 : 1)); Pl.maxMp = 60 + 20 * pk('mp') + 22 * Pl.qiLv; Pl.maxSta = 100;
+  Pl.atk = (20 + 2.2 * (Pl.lv - 1)) * (1 + .13 * Pl.swordLv) * (1 + .15 * pk('atk')) * (1 + .05 * up('jian'));
+  Pl.maxHp = Math.round((120 + 6 * (Pl.lv - 1) + 30 * pk('hp') + 28 * Pl.bodyLv) * (reso('gen') >= 3 ? 1.15 : 1) * (1 + .06 * up('gu'))); Pl.maxMp = 60 + 20 * pk('mp') + 22 * Pl.qiLv; Pl.maxSta = 100;
   Pl.crit = .08 + .08 * pk('crit'); Pl.critD = 1.7 + .35 * pk('critd'); Pl.aspd = 1 + .1 * pk('aspd'); Pl.mspd = 1 + .08 * pk('mspd'); Pl.cdr = Math.pow(.87, pk('cdr')); Pl.mpRegen = (2.4 + .5 * Pl.qiLv) * (1 + .5 * pk('mp'));
   Pl.xpNeed = Math.round(34 + 30 * (Pl.lv - 1) + 9 * Math.pow(Pl.lv - 1, 1.6));
 }
@@ -175,6 +175,7 @@ function hurtPlayer(dmg, sx, sz, o = {}) {
   else { Snd.hurt(); FX.inkBurst({ x: Pl.pos.x, y: 1.1, z: Pl.pos.z }, 6, .7); }
   const dx = Pl.pos.x - sx, dz = Pl.pos.z - sz, d = Math.hypot(dx, dz) || 1, kb = (o.knock === undefined ? 5 : o.knock) * (guard ? .5 : 1); Pl.kx += dx / d * kb; Pl.kz += dz / d * kb;
   if (Pl.hp <= 0 && reso('gen') >= 6 && !Pl.reviveUsed) { Pl.reviveUsed = true; Pl.hp = Math.round(Pl.maxHp * .4); Pl.iframe = 2; FX.pillar(Pl.pos, 0x8be0a0, 8); FX.ring(Pl.pos, .5, 6, 0x8be0a0, .6); UI.banner('回魂', '根基深厚，一口气续上', 'gold'); Snd.level(); G.enemyTS = .2; G.slowT = 1.2; }
+  if (Pl.hp <= 0 && Pl.metaRevive) { Pl.metaRevive = false; Pl.hp = Math.round(Pl.maxHp * .3); Pl.iframe = 2; FX.pillar(Pl.pos, 0x8be0a0, 8); FX.ring(Pl.pos, .5, 6, 0x8be0a0, .6); UI.banner('回魂', '藏经阁所授，续一口气', 'gold'); Snd.level(); G.enemyTS = .2; G.slowT = 1.2; }
   if (Pl.hp <= 0) { Pl.hp = 0; Pl.state = 'dead'; Pl.st = 0; G.enemyTS = .25; G.slowT = 99; Game.onDeath(); return true; }
   if (!armor && !guard && Pl.state !== 'ult') { Pl.state = 'hurt'; Pl.st = 0; }
   return true;
@@ -332,7 +333,7 @@ function updateCamera(dt, rdt) {
     Cam.tOrbit += rdt * .05; const a = Math.sin(Cam.tOrbit) * .55 - .15; Cam.pos.set(Pl.pos.x + Math.sin(a) * 4.3, 1.75 + Math.sin(Cam.tOrbit * 2) * .25, Pl.pos.z + Math.cos(a) * 4.3); Cam.look.set(Pl.pos.x - Math.sin(a + 1.15) * 1.25, 1.32, Pl.pos.z - Math.cos(a + 1.15) * 1.25);
     cam.position.copy(Cam.pos); cam.lookAt(Cam.look); cam.fov = 44; cam.updateProjectionMatrix(); return;
   }
-  const sens = Input.touch ? .005 : .0026; Cam.yaw -= Input.mdx * sens; Cam.pitch = clamp(Cam.pitch + Input.mdy * sens * .8, -.12, 1.15);
+  const sens = (Input.touch ? .005 : .0026) * setting('sens'); Cam.yaw -= Input.mdx * sens; Cam.pitch = clamp(Cam.pitch + Input.mdy * sens * .8, -.12, 1.15);
   Cam.yaw += ((Input.down('ArrowLeft') ? 1 : 0) - (Input.down('ArrowRight') ? 1 : 0)) * 2.3 * rdt; Cam.pitch = clamp(Cam.pitch + ((Input.down('ArrowDown') ? 1 : 0) - (Input.down('ArrowUp') ? 1 : 0)) * 1.2 * rdt, -.12, 1.15);
   const lk = Pl.lock && Pl.lock.state !== 'dead' ? Pl.lock : null;
   // 锁定：镜头随目标转，离得越近俯得越高，把两人都框进画面
@@ -343,7 +344,7 @@ function updateCamera(dt, rdt) {
   _v1.set(Pl.pos.x, 1.55 + ry * .6, Pl.pos.z); if (lk) { _v1.x += (lk.pos.x - Pl.pos.x) * .2; _v1.z += (lk.pos.z - Pl.pos.z) * .2; } Cam.look.lerp(_v1, 1 - Math.exp(-14 * rdt));
   _v2.set(Cam.look.x - Math.sin(Cam.yaw) * cp * Cam.dist, Cam.look.y + sp * Cam.dist + .35, Cam.look.z - Math.cos(Cam.yaw) * cp * Cam.dist);
   collideCam(_v2);
-  Cam.pos.copy(_v2); const s = Cam.shake * Cam.shake * 1.3; _v3.set(Cam.look.x, Cam.look.y + .15, Cam.look.z);
+  Cam.pos.copy(_v2); const s = Cam.shake * Cam.shake * 1.3 * setting('shake'); _v3.set(Cam.look.x, Cam.look.y + .15, Cam.look.z);
   // 处决特写：镜头绕到两人侧面贴近，事后再缓缓退回
   Cam.execK = damp(Cam.execK || 0, Pl.state === 'exec' ? 1 : 0, Pl.state === 'exec' ? 8 : 4, rdt);
   if (Cam.execK > .002 && Pl.execE) {

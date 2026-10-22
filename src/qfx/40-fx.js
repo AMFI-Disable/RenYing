@@ -142,7 +142,7 @@ FX.decal = (p, size) => {
 /* 飘字 */
 const _pv = new V3();
 FX.initNums = () => { const host = $('dmg'); for (let i = 0; i < 56; i++) { const el = document.createElement('span'); el.style.opacity = 0; host.appendChild(el); FX.nums.push({ el, t: 0, life: 0, p: new V3(), ox: 0 }); } FX.ni = 0; };
-FX.num = (p, text, cls = '', life = .85) => { const n = FX.nums[FX.ni++ % FX.nums.length]; n.el.textContent = text; n.el.className = cls; n.t = 0; n.life = life; n.p.set(p.x + rand(-.35, .35), p.y + rand(-.1, .3), p.z + rand(-.35, .35)); n.ox = rand(-14, 14); };
+FX.num = (p, text, cls = '', life = .85) => { if (!setting('nums') && !/word|exec|parry/.test(cls)) return; const n = FX.nums[FX.ni++ % FX.nums.length]; n.el.textContent = text; n.el.className = cls; n.t = 0; n.life = life; n.p.set(p.x + rand(-.35, .35), p.y + rand(-.1, .3), p.z + rand(-.35, .35)); n.ox = rand(-14, 14); };
 FX.updateNums = (dt, cam, w, h) => {
   for (const n of FX.nums) {
     if (n.life <= 0) continue; n.t += dt; const k = n.t / n.life; if (k >= 1) { n.life = 0; n.el.style.opacity = 0; continue; }

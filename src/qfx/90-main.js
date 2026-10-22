@@ -1,19 +1,20 @@
 /* ---------------- 流程与主循环 ---------------- */
 const canvas = $('c'), root = $('game');
-const QN = ['低', '中', '高'];
+const QN = ['流畅', '均衡', '精美', '极致'];
 function showBest() {
   const r = Save.load().rec, run = Save.run(), parts = [];
   if (r.best) parts.push(r.best >= LAST_STAGE ? `已通关 ${r.clears} 次` : `最远至第${cnNum(r.best)}关`);
   if (r.bestTime) parts.push(`最快 ${fmtTime(r.bestTime)}`); if (r.maxCombo) parts.push(`最高 ${r.maxCombo} 连`);
   $('best').textContent = parts.length ? '旧日战绩：' + parts.join(' · ') : '';
+  const sl = Save.load().soul; $('btnMeta').textContent = sl ? `藏经阁 · 剑魄 ${sl}` : '藏经阁';
   const c = $('btnCont'); c.hidden = !run; if (run) c.textContent = '续行 · ' + CHAPTERS[run.ch].n;
   $('btnStart').textContent = run ? '重新入山' : '入山'; $('btnStart').classList.toggle('pri', !run);
 }
 function applyQuality() {
-  const q = GFX.quality, pr = Math.min(window.devicePixelRatio || 1, [1, 1.5, 2][q]); GFX.resize(root.clientWidth || innerWidth, root.clientHeight || innerHeight, pr);
-  if (World.grass) World.grass.count = Math.floor(World.grass.userData.full * [.3, .65, 1][q]);
-  GFX.renderer.shadowMap.enabled = true; const ms = [1024, 2048, 2048][q]; if (GFX.sun.shadow.mapSize.x !== ms) { GFX.sun.shadow.mapSize.set(ms, ms); if (GFX.sun.shadow.map) { GFX.sun.shadow.map.dispose(); GFX.sun.shadow.map = null; } }
-  $('btnQual').textContent = '画质：' + QN[q];
+  const q = GFX.quality, pr = Math.min(window.devicePixelRatio || 1, [1, 1.25, 1.5, 2][q]); GFX.resize(root.clientWidth || innerWidth, root.clientHeight || innerHeight, pr);
+  if (World.grass) World.grass.count = Math.floor(World.grass.userData.full * [.25, .55, .85, 1][q]);
+  GFX.renderer.shadowMap.enabled = true; const ms = [1024, 1024, 2048, 4096][q]; if (GFX.sun.shadow.mapSize.x !== ms) { GFX.sun.shadow.mapSize.set(ms, ms); if (GFX.sun.shadow.map) { GFX.sun.shadow.map.dispose(); GFX.sun.shadow.map = null; } }
+  GFX.final.uniforms.uBloom.value = q ? 1 : .8;
 }
 /* 清场：敌人、飞行物、地面预警、灵气珠（剩下的珠子直接收进囊中） */
 function clearField() {
@@ -25,7 +26,7 @@ function clearField() {
 }
 function resetGame() {
   Orbs.list.length = 0; clearField();
-  Object.assign(G, { stage: 0, chapter: 0, kills: 0, inter: 0, clearT: 0, intro: false, spawnT: 0, maxTokens: 2, cap: 6, endless: false, dmgDone: 0, maxCombo: 0, playT: 0, hitstop: 0, enemyTS: 1, slowT: 0, deathT: 0, t: 0, waves: [], sub: 0, subT: 0, stageName: '', atkGap: 0 });
+  Object.assign(G, { soulRun: 0, stage: 0, chapter: 0, kills: 0, inter: 0, clearT: 0, intro: false, spawnT: 0, maxTokens: 2, cap: 6, endless: false, dmgDone: 0, maxCombo: 0, playT: 0, hitstop: 0, enemyTS: 1, slowT: 0, deathT: 0, t: 0, waves: [], sub: 0, subT: 0, stageName: '', atkGap: 0 });
   resetPlayer(); Pl.rig.setOpacity(1); UI.combo(0); GFX.final.uniforms.uGray.value = 0;
 }
 function placePlayer() {
@@ -33,7 +34,7 @@ function placePlayer() {
   Cam.yaw = sp[2]; Cam.pitch = .34; Cam.look.set(Pl.pos.x, 1.5, Pl.pos.z); Cam.dist = Cam.distT = 7.4;
 }
 function unlock() { if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock(); }
-function hideAll() { for (const id of ['title', 'levelup', 'shop', 'pause', 'over', 'interlude']) $(id).hidden = true; }
+function hideAll() { for (const id of ['title', 'levelup', 'shop', 'pause', 'over', 'interlude', 'meta', 'settings']) $(id).hidden = true; }
 /* 墨色过场：盖住画面 → 换地图 → 揭开 */
 function travelShow(ch) {
   $('tvIdx').textContent = ch.idx; $('tvName').textContent = ch.n; $('tvSub').textContent = ch.sub; $('tvStory').textContent = ch.story;
@@ -42,7 +43,7 @@ function travelShow(ch) {
 function travelHide() { const el = $('travel'); el.classList.remove('on'); setTimeout(() => { if (!el.classList.contains('on')) el.hidden = true; }, 700); }
 const Game = {
   /* 开新局：从第一章开始 */
-  start() { Snd.init(); Save.clearRun(); Save.load().rec.runs++; resetGame(); Game.enterChapter(0); },
+  start() { Snd.init(); Save.clearRun(); Save.load().rec.runs++; resetGame(); applyMetaStart(); Game.enterChapter(0); },
   /* 续行 / 从本章重来：读章首快照 */
   cont() { const r = Save.run(); if (!r) { Game.start(); return; } Snd.init(); resetGame(); Save.applyRun(r); Game.enterChapter(r.ch); },
   enterChapter(ci) {
@@ -51,7 +52,7 @@ const Game = {
     const go = () => {
       clearField(); if (World.id !== ch.id) World.build(ch.id); placePlayer(); applyQuality();
       try { GFX.renderer.compile(GFX.scene, GFX.camera); } catch (_) {}
-      Pl.reviveUsed = false; Pl.bellT = Pl.wuyingT = 0; Save.snapRun(); G.stage = ch.stages[0] - 1; G.inter = 5; G.intro = true; G.clearT = 0; G.hitstop = 0; G.enemyTS = 1; G.slowT = 0;
+      Pl.reviveUsed = false; Pl.rerolls = up('wu'); Pl.bellT = Pl.wuyingT = 0; Save.snapRun(); G.stage = ch.stages[0] - 1; G.inter = 5; G.intro = true; G.clearT = 0; G.hitstop = 0; G.enemyTS = 1; G.slowT = 0;
       // 过场至少停留两秒半，让章名和题记读得完
       setTimeout(() => {
         $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; canvas.focus(); travelHide();
@@ -63,6 +64,7 @@ const Game = {
   pause() { if (G.state !== 'playing') return; G.state = 'paused'; UI.perkList('pausePerks'); $('pause').hidden = false; unlock(); },
   resume() { if (G.state !== 'paused') return; $('pause').hidden = true; G.state = 'playing'; canvas.focus(); },
   levelUp() { G.state = 'levelup'; unlock(); UI.showLevelUp(); },
+  reroll() { if (G.state !== 'levelup' || Pl.rerolls <= 0) return; Pl.rerolls--; Snd.ui(); UI.showLevelUp(); },
   pickPerk(p) { if (G.state !== 'levelup' || !p) return; takeCard(p); Pl.pending--; if (Pl.pending > 0) { UI.showLevelUp(); return; } $('levelup').hidden = true; G.state = 'playing'; Pl.iframe = Math.max(Pl.iframe, .8); canvas.focus(); },
   openShop() { if (G.state === 'interlude') { G.shopFrom = 'interlude'; $('interlude').hidden = true; } else { if (G.state !== 'playing' || G.inter <= 0 || G.intro || !G.stage) return; G.shopFrom = 'playing'; } G.state = 'shop'; unlock(); UI.showShop(); },
   closeShop() { if (G.state !== 'shop') return; $('shop').hidden = true; if (G.shopFrom === 'interlude') { G.state = 'interlude'; $('interlude').hidden = false; return; } G.state = 'playing'; canvas.focus(); },
@@ -81,7 +83,8 @@ const Game = {
     $('overT').firstChild.textContent = win ? '万剑归寂' : '剑折人亡';
     $('overS').textContent = win ? '三章尽破，青锋入鞘' : `剑锋折于${CHAPTERS[G.chapter].n} · 第${cnNum(Math.max(1, G.stage))}关`;
     $('overStats').innerHTML = `<div><b>${cnNum(Math.max(1, G.stage))}</b>关</div><div><b>${cnNum(Pl.lv)}</b>境界</div><div><b>${G.kills}</b>斩敌</div><div><b>${G.maxCombo}</b>最高连击</div><div><b>${fmtTime(G.playT)}</b>历时</div><div><b>${Math.round(G.dmgDone)}</b>总伤害</div><div><b>${swordTier().name[0]}${swordTier().name[1]}</b>佩剑</div><div><b>${Math.floor(Pl.gold)}</b>余钱</div>`;
-    UI.perkList('overPerks'); const run = !win && Save.run();
+    UI.perkList('overPerks'); const run = !win && Save.run(); const sg = addSoul(G.kills * .25 + (win ? 60 : 0)) + (G.soulRun || 0);
+    $('overSoul').textContent = `此行共得剑魄 ${sg} · 藏经阁中现有 ${Save.load().soul}`;
     $('btnRetry').hidden = !run; if (run) $('btnRetry').textContent = '从' + CHAPTERS[run.ch].n + '重来';
     $('btnEndless').hidden = !win; $('over').hidden = false;
   },
@@ -95,10 +98,10 @@ function handleKeys() {
   const s = G.state;
   if (Input.hit('KeyM')) { Snd.setMute(!Snd.muted); $('btnMute').textContent = '声音：' + (Snd.muted ? '关' : '开'); }
   if (s === 'playing') { if (Input.hit('KeyP') || Input.hit('Escape')) Game.pause(); else if (Input.hit('KeyB')) Game.openShop(); }
-  else if (s === 'paused') { if (Input.hit('KeyP') || Input.hit('Escape')) Game.resume(); }
+  else if (s === 'paused') { if (!$('settings').hidden) { if (Input.hit('Escape')) UI.closeSettings(); } else if (Input.hit('KeyP') || Input.hit('Escape')) Game.resume(); }
   else if (s === 'shop') { if (Input.hit('KeyB') || Input.hit('Escape') || Input.hit('Enter')) Game.closeShop(); }
   else if (s === 'interlude') { if (Input.hit('KeyB')) Game.openShop(); else if (Input.hit('Enter')) Game.nextChapter(); }
-  else if (s === 'levelup') { for (let i = 0; i < 3; i++) if (Input.hit('Digit' + (i + 1)) || Input.hit('Numpad' + (i + 1))) { Game.pickPerk(UI.perks[i]); break; } }
+  else if (s === 'levelup') { if (Input.hit('KeyR')) Game.reroll(); for (let i = 0; i < 3; i++) if (Input.hit('Digit' + (i + 1)) || Input.hit('Numpad' + (i + 1))) { Game.pickPerk(UI.perks[i]); break; } }
   else if (s === 'title') { if (Input.hit('Enter') && !$('btnStart').disabled) { if (Save.run()) Game.cont(); else Game.start(); } }
 }
 
@@ -136,7 +139,10 @@ function bindUI() {
   $('btnAgain').onclick = () => Game.start(); $('btnRetry').onclick = () => Game.cont(); $('btnHome').onclick = () => Game.home(); $('btnEndless').onclick = () => Game.endless(); $('btnShopClose').onclick = () => Game.closeShop();
   $('btnIlShop').onclick = () => Game.openShop(); $('btnIlGo').onclick = () => Game.nextChapter();
   $('btnMute').onclick = () => { Snd.setMute(!Snd.muted); $('btnMute').textContent = '声音：' + (Snd.muted ? '关' : '开'); };
-  $('btnQual').onclick = () => { GFX.quality = (GFX.quality + 2) % 3; applyQuality(); };
+  $('btnMeta').onclick = () => UI.showMeta(); $('btnMetaClose').onclick = () => { $('meta').hidden = true; $('title').hidden = false; showBest(); };
+  $('btnSet').onclick = () => UI.showSettings('title'); $('btnSet2').onclick = () => UI.showSettings('pause'); $('btnSetClose').onclick = () => UI.closeSettings();
+  $('btnReroll').onclick = () => Game.reroll();
+  $('setSens').oninput = e => setSetting('sens', +e.target.value); $('setVol').oninput = e => setSetting('vol', +e.target.value);
   const fs = () => { const el = document.documentElement; try { if (document.fullscreenElement) document.exitFullscreen(); else { const p = (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (p && p.catch) p.catch(() => {}); } } catch (_) {} };
   $('btnFull').onclick = fs; $('btnFull2').onclick = fs;
   for (let i = 0; i < 4; i++) $('sk' + i).onclick = () => { Input.hits['Sk' + i] = true; canvas.focus(); }; $('sk4').onclick = () => { Input.hits.KeyC = true; canvas.focus(); };
@@ -145,6 +151,7 @@ function bindUI() {
   setupPointer(canvas, () => G.state === 'playing' && !Input.touch); setupTouchUI();
 }
 async function boot() {
+  const q0 = setting('q'); if (typeof window.__QUALITY !== 'number') GFX.quality = q0 >= 0 ? q0 : (matchMedia('(pointer:coarse)').matches || Math.min(innerWidth, innerHeight) < 500 ? 1 : 2);
   bindUI(); showBest();
   try { if (document.fonts && document.fonts.load) await Promise.race([Promise.all([document.fonts.load('80px "Ma Shan Zheng"', '青云剑宗试坪'), document.fonts.load('900 20px "Noto Serif SC"', '0123456789')]), new Promise(r => setTimeout(r, 2500))]); } catch (_) {}
   await new Promise(r => setTimeout(r, 30));

@@ -151,6 +151,17 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .keys{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:5px 10px;font-size:12.5px;color:var(--paper2);align-items:center}
 .keys kbd{font:inherit;font-size:11.5px;border:1px solid var(--straw);padding:1px 7px;color:var(--paper);background:rgba(8,10,12,.5);white-space:nowrap;text-align:center}
 .loading{font-size:13px;color:var(--dim);letter-spacing:.3em}
+.recs{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;font-size:12.5px;color:var(--paper2);max-width:640px}
+.recs b{color:var(--gold);font-weight:600;margin-right:4px}
+.setgrid{display:grid;grid-template-columns:auto minmax(0,320px);gap:14px 20px;align-items:center;font-size:14px;color:var(--paper2)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{border:1px solid var(--straw);background:rgba(12,15,18,.6);padding:5px 12px;font-size:13px}
+.seg button.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.setgrid input[type=range]{width:100%;accent-color:var(--cinnabar)}
+.item .mlv{font-size:11.5px;color:var(--jade)}
+#metaGrid{grid-template-columns:repeat(4,minmax(0,210px))}
+@media (max-width:900px){#metaGrid{grid-template-columns:repeat(2,minmax(0,210px))}}
+#meta{gap:14px}#meta h2{font-size:clamp(34px,5vw,52px)}
+.soulgain{color:var(--jade);font-size:14px;letter-spacing:.1em}
 
 .veil{background:rgba(6,8,10,.74);align-items:center;justify-content:center;flex-direction:column;gap:22px;padding:16px;overflow:auto;
   backdrop-filter:blur(3px)}
@@ -285,16 +296,17 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
       <p>暮色四合，山门告急。黑风寨夜袭青云剑宗，师兄弟尽数下山未归，偌大试剑坪上，只剩你一人一剑。</p>
       <p>三章十关：山门、竹林、剑冢。每破一境，可择一道机缘；每过一关，可入剑庐锻剑；每入一章，留一处存档。</p>
       <div class="btns"><button class="btn pri" id="btnCont" type="button" hidden>续行</button><button class="btn pri" id="btnStart" type="button" disabled>入山</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
+      <div class="btns"><button class="btn sm" id="btnMeta" type="button">藏经阁</button><button class="btn sm" id="btnSet" type="button">设置</button></div>
       <div class="loading" id="loading">山色渐起……</div>
       <div class="best" id="best"></div>
       <div class="keys">
         <kbd>W A S D</kbd><span>移动</span><kbd>鼠标</kbd><span>转动视角</span>
         <kbd>左键 / J</kbd><span>轻剑四连</span><kbd>右键 / K</kbd><span>重剑·旋风斩</span>
-        <kbd>F</kbd><span>弹反（敌刃金光时）· 破绽处决</span><kbd>按住 K</kbd><span>蓄满·破山</span>
-        <kbd>空格 / L</kbd><span>闪避（贴刃即踏雪）</span><kbd>Shift</kbd><span>疾行</span>
-        <kbd>Q E R</kbd><span>三槽剑技（破境择剑谱）</span><kbd>V</kbd><span>绝学（剑意满时）</span>
-        <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定（← → 换人）</span>
-        <kbd>← →</kbd><span>键盘转视角</span><kbd>P · M</kbd><span>暂停 · 静音</span>
+        <kbd>F</kbd><span>弹反 · 处决</span><kbd>按住 K</kbd><span>蓄满 · 破山</span>
+        <kbd>空格 / L</kbd><span>闪避 · 踏雪</span><kbd>Shift</kbd><span>疾行</span>
+        <kbd>Q E R</kbd><span>三槽剑技</span><kbd>V</kbd><span>绝学</span>
+        <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定 · ← → 换人</span>
+        <kbd>P</kbd><span>暂停</span><kbd>M</kbd><span>静音</span>
       </div>
     </div>
   </div>
@@ -302,6 +314,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   <div id="levelup" class="screen veil" hidden>
     <h2>破境<small id="luSub">机缘一道，择之</small></h2>
     <div class="cards" id="cards"></div>
+    <div class="btns"><button class="btn sm" id="btnReroll" type="button" hidden>重掷</button></div>
     <div class="note">按 1 / 2 / 3 或点击卷轴</div>
   </div>
 
@@ -322,7 +335,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     </div>
     <div class="btns">
       <button class="btn sm" id="btnMute" type="button">声音：开</button>
-      <button class="btn sm" id="btnQual" type="button">画质：高</button>
+      <button class="btn sm" id="btnSet2" type="button">设置</button>
       <button class="btn sm" id="btnFull2" type="button">全屏</button>
     </div>
   </div>
@@ -330,8 +343,30 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   <div id="over" class="screen veil" hidden>
     <h2 id="overT">剑折人亡<small id="overS"></small></h2>
     <div class="stats" id="overStats"></div>
+    <div class="soulgain" id="overSoul"></div>
     <div class="perklist" id="overPerks"></div>
     <div class="btns"><button class="btn pri" id="btnRetry" type="button">从本章重来</button><button class="btn" id="btnEndless" type="button" hidden>无尽试炼</button><button class="btn" id="btnAgain" type="button">重新入山</button><button class="btn sm" id="btnHome" type="button">回山门</button></div>
+  </div>
+
+  <div id="meta" class="screen veil" hidden>
+    <h2>藏经阁<small>剑魄不灭，修为长存</small></h2>
+    <div class="purse">剑魄 <b id="metaSoul">0</b></div>
+    <div class="shopgrid" id="metaGrid"></div>
+    <div class="recs" id="recs"></div>
+    <div class="btns"><button class="btn" id="btnMetaClose" type="button">下山</button></div>
+    <div class="note">每过一关、每斩一敌都得剑魄；身死也不散</div>
+  </div>
+
+  <div id="settings" class="screen veil" hidden>
+    <h2>设置</h2>
+    <div class="setgrid">
+      <span>画质</span><div class="seg" id="setQ"></div>
+      <span>视角灵敏</span><input type="range" id="setSens" min="0.4" max="2.2" step="0.1">
+      <span>震屏</span><div class="seg" id="setShake"></div>
+      <span>伤害数字</span><div class="seg" id="setNums"></div>
+      <span>音量</span><input type="range" id="setVol" min="0" max="1" step="0.05">
+    </div>
+    <div class="btns"><button class="btn" id="btnSetClose" type="button">返回</button></div>
   </div>
 
   <div id="interlude" class="screen veil" hidden>
