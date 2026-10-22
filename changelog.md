@@ -12,6 +12,7 @@ All notable changes, features, and architectural capabilities of this project ar
   - All players can equip every skin from 2026-10-22 00:00 to 2026-11-05 00:00 (Beijing time); `skinOwned()` now gates every skin check, and borrowed skins show a 限免 tag in the codex. Equips of skins you don't own drop back to default once the event ends.
   - One-time task during the event: finish 3 matches against the CPU (win or lose) to claim 1000 ink. Guests' progress carries over after they log in.
   - Home screen event card with days remaining; it opens the task page.
+  - Compensation for the task-refresh exploit: every logged-in player picks one character they don't own (500 ink if they own them all), offered once on the home screen and from the 限时福利 card until the event ends.
 - **青锋行 2.0 (`src/qfx/`, built into `assets/qingfengxing.html`)**:
   - Split the single-file mini game into ordered source modules (`src/qfx/NN-name.js` + `page.html`) concatenated by `tools/build.py`.
   - Three chapters, ten stages (山门 / 竹林 / 剑冢), each with its own map, sub-waves and a chapter boss; endless trial after stage 10 rotates all three bosses.
@@ -338,6 +339,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Redeem Codes and Tutorial Reward Could Be Claimed Again After Refresh**: used codes and the tutorial reward flag are now remembered per account in local storage (they were dropped from the cloud profile on every save).
+- **Home Dock Lost Buttons After Pressing Back**: the home screen now looks the same on first load as after returning from another page (top nav shown, all dock buttons kept).
 - **Tasks Never Progressed on the GitHub Pages Build**: daily and weekly tasks now track matches, wins, max combo and ultimates per account in local storage, reset at Beijing midnight / Monday, and remember what was claimed (previously progress stayed at 0 and the first task could be re-claimed after every reload).
 
 - **2v2 Hero Freeze & Stasis Bug Fixes**:

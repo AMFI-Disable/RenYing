@@ -1236,8 +1236,6 @@
   .home-news li b { color: var(--v-white); margin-right: 8px; font-weight: 700; }
   .home-news li::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--v-red); margin-right: 8px; transform: rotate(45deg) translateY(-2px); }
   .menuscr .msmall-dock { background: rgba(13,21,30,.8); border-top: 1px solid var(--line); }
-  body.has-nav .menuscr .msmall-dock [data-go="gacha"], body.has-nav .menuscr .msmall-dock [data-go="tasks"], body.has-nav .menuscr .msmall-dock [data-go="codex"],
-  body.has-nav .menuscr .msmall-dock [data-go="community"], body.has-nav .menuscr .msmall-dock [data-go="settings"], body.has-nav .menuscr .msmall-dock [data-go="help"] { display: none; }
   .menuscr .mgroup { border-radius: 0; background: transparent; border: none; }
   .menuscr .mgroup button { border-radius: 0; }
   @media (max-height: 620px) { .home-side { display: none; } }

@@ -62,7 +62,7 @@
     <div class="home-side">
       <button class="home-card home-evt" id="homeEvt" type="button" hidden>
         <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
-        <span class="hc-txt"><b>全皮肤免费穿</b><small>打 3 局人机，再领 1000 墨锭</small></span>
+        <span class="hc-txt"><b>全皮肤免费穿</b><small>打 3 局人机领 1000 墨锭 · 补偿自选侠客</small></span>
       </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
@@ -873,10 +873,11 @@
 
   <div id="welfare" class="scr">
     <div class="panel">
-      <h2>新手福利</h2>
-      <p class="sub">人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。</p>
+      <h2 id="wTitle">新手福利</h2>
+      <p class="sub" id="wSub">人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。</p>
       <div class="wgrid" id="wGrid"></div>
       <button class="go" id="wGo" disabled>就选这个</button>
+      <button class="ghost hidden" id="wLater" type="button">稍后再选</button>
       <p class="netnote" id="wMsg"></p>
     </div>
   </div>

@@ -7588,7 +7588,7 @@ function openScreen(name) {
   if (name === 'community') openCommunity();
   showScreen(name);
 }
-function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); }
+function backToMenu() { menuCam.tx = 0; menuCam.tz = 1; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
 // ---------- 顶部导航 ----------
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
@@ -9315,6 +9315,9 @@ async function loadProfile() {
   if (!SERVED || !window.fetch) return;
   try { const j = await api('/api/profile'); applyProfile(j.profile || j); } catch (e) {}
 }
+function flagsKey() { return 'renying-flags-' + (curName() || 'guest'); }
+function loadFlags() { try { return JSON.parse(localStorage.getItem(flagsKey()) || '{}') || {}; } catch (e) { return {}; } }
+function saveFlag(k, v) { const fl = loadFlags(); fl[k] = v; try { localStorage.setItem(flagsKey(), JSON.stringify(fl)); } catch (e) {} }
 function applyProfile(p) {
   if (!p) return;
   if (p.guest) {
@@ -9342,6 +9345,9 @@ function applyProfile(p) {
     Object.assign(PROF, p, { guest: false });
   }
   PROF.loaded = true;
+  { const fl = loadFlags();   // 一次性奖励的领取记录不进云存档，按账号记在本机，刷新后还在
+    if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
+    if (fl.tutorial && !PROF.guest) PROF.tutorial = 1; }
   if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !freeSkinEvent() && PROF.equip) {
     const ownedSkins = new Set(PROF.skins || []);
     for (const [cid, sk] of Object.entries(PROF.equip)) {
@@ -9365,21 +9371,48 @@ function applyProfile(p) {
   if ($id('tasks').classList.contains('on')) renderTasks();
   if ($id('netp').classList.contains('on')) renderRankLine();
   if (!PROF.guest && !PROF.welfare && $id('menu').classList.contains('on')) openWelfare();
+  else if ($id('menu').classList.contains('on')) compMaybe();
+}
+// ---------- 补偿：任务能刷新重复领奖，给每位玩家补一位自选侠客（活动期内领） ----------
+let compAsked = false;
+function compKey() { return 'renying-comp1022-' + curName(); }
+function compState() {
+  if (OFFLINE_BUILD || SERVED || Date.now() >= FREE_SKIN_EVENT.end) return null;
+  let claimed = false; try { claimed = !!curName() && localStorage.getItem(compKey()) === '1'; } catch (e) {}
+  return { claimed };
+}
+function compMaybe() {   // 登录后回到首页时弹一次，点了稍后再选就不再追着弹
+  const st = compState();
+  if (st && !st.claimed && !compAsked && !PROF.guest && curName()) { compAsked = true; setTimeout(compClaim, 400); }
+}
+function compMark() { try { localStorage.setItem(compKey(), '1'); } catch (e) {} }
+function compClaim() {
+  const st = compState(); if (!st || st.claimed || PROF.guest || !curName()) return;
+  if (CHARS.every(c => (PROF.owned || []).includes(c.id))) {   // 侠客都有了：改发墨锭
+    compMark(); PROF.ink = (PROF.ink || 0) + 500; saveProfile(); SFX.chargeFull(); toast('侠客已全部拥有，补偿改发 500 墨锭'); return;
+  }
+  openWelfare('comp');
 }
 // ---------- 新手福利 ----------
 let wSel = -1;
-function openWelfare() {
-  ensurePortraits(); wSel = -1;
+let wMode = 'new';
+function openWelfare(mode = 'new') {
+  ensurePortraits(); wSel = -1; wMode = mode;
+  const comp = mode === 'comp';
+  $id('wTitle').textContent = comp ? '补偿 · 自选侠客' : '新手福利';
+  $id('wSub').textContent = comp ? '之前任务刷新后能重复领奖，现在已经修好。给每位大侠补一位自选侠客，永久拥有。' : '人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。';
+  $id('wLater').classList.toggle('hidden', !comp);
   $id('wGrid').innerHTML = CHARS.map((c, i) => PROF.owned.includes(c.id) ? '' : `<button data-i="${i}"><img src="${PORTRAITS[i] || ''}" alt=""><div class="wn" style="color:rgb(${c.look.slash})">${c.name}</div><div class="wr">${c.role} · ${RAR_NAME[CHAR_RARITY[c.id]]}</div></button>`).join('');
   $id('wGo').disabled = true; $id('wMsg').textContent = '';
   showScreen('welfare');
 }
 $id('wGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; wSel = +b.dataset.i; for (const x of $id('wGrid').children) x.classList.toggle('sel', x === b); $id('wGo').disabled = false; });
+$id('wLater').addEventListener('click', () => backToMenu());
 $id('wGo').addEventListener('click', async () => {
   if (wSel < 0) return;
   const picked = CHARS[wSel].id;
   PROF.owned = Array.from(new Set([...(PROF.owned || ['qingfeng']), picked]));
-  PROF.welfare = 1;
+  if (wMode === 'comp') compMark(); else PROF.welfare = 1;
   if (window.CloudSave) CloudSave.saveProfile(PROF, true);
   applyProfile(PROF);
   toast(`新得角色：${CHARS[wSel].name}`);
@@ -9645,11 +9678,12 @@ function renderTasks() {
   };
   $id('tDaily').innerHTML = PROF.guest ? '<p class="netnote">登录之后，方可领任务</p>' : (PROF.daily || []).map(row).join('');
   $id('tWeekly').innerHTML = PROF.guest ? '' : (PROF.weekly || []).map(row).join('');
-  const ev = PROF.evtTask;
-  $id('tEvtCard').hidden = !ev;
-  if (ev) {
+  const ev = PROF.evtTask, comp = compState();
+  $id('tEvtCard').hidden = !ev && !comp;
+  if (ev || comp) {
     $id('tEvtLeft').textContent = `全皮肤限免 · 剩 ${freeSkinDaysLeft()} 天`;
-    $id('tEvt').innerHTML = row(ev) + (PROF.guest ? '<p class="netnote">进度先替你记着，登录之后就能领</p>' : '');
+    const compRow = comp ? `<div class="trow"><span>系统补偿：自选 1 位侠客</span><div class="bar"><i style="width:${comp.claimed ? 100 : 0}%"></i></div><span class="rw">自选侠客</span><div style="display:flex;align-items:center;"><button id="compBtn" ${comp.claimed || PROF.guest ? 'disabled' : ''}>${comp.claimed ? '已领取' : '去挑选'}</button></div></div>` : '';
+    $id('tEvt').innerHTML = compRow + (ev ? row(ev) : '') + (PROF.guest ? '<p class="netnote">进度先替你记着，登录之后就能领</p>' : '');
   }
   const canClaimAny = !PROF.guest && allTasks().some(t => !t.claimed && t.prog >= t.target);
   if ($id('claimAllBtn')) {
@@ -9658,6 +9692,7 @@ function renderTasks() {
   }
 }
 for (const id of ['tEvt', 'tDaily', 'tWeekly']) $id(id).addEventListener('click', async e => {
+  if (e.target.closest('#compBtn')) { compClaim(); return; }
   const go = e.target.closest('.task-go');
   if (go && go.dataset.go) {
     const dest = go.dataset.go;
@@ -9730,7 +9765,7 @@ async function redeemCode(rawCode) {
       if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
       return;
     }
-    redeemed.push(up);
+    redeemed.push(up); saveFlag('codes', redeemed);
     const inkGain = clientCodes[up];
     PROF.ink = (PROF.ink || 0) + inkGain;
     if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -10201,7 +10236,7 @@ async function tutFinish() {
   let msg = '该会的都会了。去找电脑或是同学，过几招吧。';
   if (!PROF.guest) {
     if (!PROF.tutorial) {
-      PROF.tutorial = 1;
+      PROF.tutorial = 1; saveFlag('tutorial', 1);
       PROF.ink = (PROF.ink || 0) + 300;
       if (window.CloudSave) CloudSave.saveProfile(PROF);
       applyProfile(PROF);
@@ -10218,6 +10253,7 @@ $id('tutMenu').addEventListener('click', () => { paused = false; toMenu(); });
 $id('tutStay').addEventListener('click', () => { paused = false; showScreen(null); });
 $id('tutYes').addEventListener('click', () => startTutorial());
 $id('tutNo').addEventListener('click', () => { try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
+setTimeout(() => { if ($id('menu').classList.contains('on')) showScreen('menu'); }, 0);   // 一打开就和点返回回来的首页一个样子（顶栏在、底栏不变）
 setTimeout(() => {
   let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (e) {}
   if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
