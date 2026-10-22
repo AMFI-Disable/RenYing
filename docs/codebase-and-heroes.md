@@ -1,5 +1,6 @@
 # RenYing — Codebase Map & Full Hero Reference
 
+> [!NOTE]
 > Generated from the working tree at commit `351e61b` (`fix: resilient spawn runner`), game `VERSION = '4.5'`.
 > Every number below was read out of the source — `src/game.js` line references are given so you can check them.
 

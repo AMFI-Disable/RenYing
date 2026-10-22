@@ -1,8 +1,10 @@
 # RenYing — Home Menu Motion and Flow Plan
 
-> Read out of the working tree at commit `351e61b` (`fix: resilient spawn runner`), game `VERSION = '4.5'`.
-> Every claim below cites `src/game.js` or `src/style.css` by line so it can be checked before anything is changed.
-> This is a **proposal**; no source file has been modified.
+> [!NOTE]
+> Written against the working tree at commit `351e61b` (`fix: resilient spawn runner`), game `VERSION = '4.5'`.
+> Every claim below cites `src/game.js` or `src/style.css` by line so it can be checked before anything changes.
+>
+> This is a **proposal**: no source file has been modified.
 
 ---
 
@@ -13,7 +15,7 @@ the background never resets itself, and no element plays two exit animations at 
 
 The home is two stacked things that must move as one:
 
-| Layer | Source | Motion owner |
+| Layer | Source | Motion Owner |
 | :--- | :--- | :--- |
 | The 3D-ish scene behind everything | `renderMenu()` `src/game.js:7488` (canvas, drawn every frame) | JS camera damping, always running |
 | The DOM skin on top | `#menu.menuscr` `src/page.html:58`, styled `src/style.css:296`, `:1262-1317` | CSS transitions on `.scr`, `.mcard`, `.mtitle` |
