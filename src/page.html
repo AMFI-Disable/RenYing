@@ -713,24 +713,30 @@
       <div class="cxhead">
         <div style="display:flex;align-items:center;gap:10px">
           <h2>江湖驿站</h2>
-          <span class="sub-badge" style="background:rgba(70,211,234,.12);border-color:rgba(70,211,234,.35);color:#46d3ea;font-size:12px;padding:3px 9px">全服客栈 · 实时飞鸽</span>
+          <span class="soc-status" id="socStatus">连接中…</span>
         </div>
         <button class="ghost" data-back>返回菜单</button>
       </div>
-      <div class="com-channel-bar" id="comChannelBar">
-        <button class="sel" data-chan="all" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>江湖阔论</button>
-        <button data-chan="fight" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span>切磋约战</button>
-        <button data-chan="lore" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5zM8 7h8M8 11h6"/></svg></span>流派心得</button>
+      <div class="soc">
+        <aside class="soc-side">
+          <div class="soc-list" id="socList"></div>
+          <div class="soc-tools">
+            <div class="soc-addrow"><input id="socAddIn" maxlength="12" placeholder="输入名字加好友" autocomplete="off"><button type="button" class="go small" id="socAddBtn">加好友</button></div>
+            <button type="button" class="ghost small" id="socGroupBtn">建群</button>
+          </div>
+        </aside>
+        <section class="soc-main">
+          <div class="soc-head"><button type="button" class="ghost small soc-back" id="socBackList" aria-label="返回列表">‹</button><div class="soc-hd" id="socHead"></div></div>
+          <div class="comlog" id="comLog"></div>
+          <div class="comin">
+            <input id="comIn" maxlength="200" placeholder="在大厅说点什么（回车发送）" autocomplete="off">
+            <button class="go small" id="comSend" style="display:inline-flex;align-items:center;gap:4px">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>发送
+            </button>
+          </div>
+          <div class="emobar" id="comEmo"></div>
+        </section>
       </div>
-      <div class="comlog" id="comLog"></div>
-      <div class="comin">
-        <input id="comIn" maxlength="200" placeholder="以武会友，留下你的江湖豪言…（回车发送）" autocomplete="off">
-        <button class="go small" id="comSend" style="display:inline-flex;align-items:center;gap:4px">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>发送
-        </button>
-      </div>
-      <div class="emobar" id="comEmo"></div>
-      <p class="netnote" id="comHint" style="margin-top:6px"></p>
     </div>
   </div>
 

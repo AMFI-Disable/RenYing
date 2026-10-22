@@ -8,6 +8,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **江湖驿站 Community Rework (`src/social.js`)**: one community screen with a public hall, friends, private chats and group chats, working on the static GitHub Pages site with no server. Players find each other through the same PeerJS broker netplay uses; whoever claims the hall slot first relays hall chat and the online list, and another player takes over within seconds when they leave. Friend requests, DMs and group messages go browser to browser; if the other player is offline they wait on the sender's side and are delivered when both are online, marked 未送达 until acknowledged. The seeded sample posts and the 约战 / 心得 channel tabs are gone; 发到社区 from a room now posts the room code to the hall. Unread DMs and friend requests show a badge on the 社区 tab.
 - **Auto Best Skin (设置 → 皮肤)**: on by default; any hero you haven't picked a skin for wears your highest-rarity owned skin (legend over elite). Choosing 默认 for a hero keeps it on the default look, and online opponents now receive the skins you actually wear.
 - **流云 开扇 Aerial Dive (`windstep`)**: the ground dash now travels about 40% farther (≈270 px); casting it in the air dives diagonally to the ground and bursts on landing (24 damage, launches) and scatters 5 popcorn.
 

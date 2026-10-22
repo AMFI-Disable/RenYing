@@ -166,6 +166,7 @@ def page(offline):
             + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "game.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "net-p2p.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "social.js")) + "\n</script>\n"
         ),
         "<!--@qfx-->\n": '<script id="qfxData" type="application/octet-stream">' + qfx_b64 + "</script>\n",
     }
@@ -191,7 +192,7 @@ def check_js():
     if not node:
         return True
     ok = True
-    for name in ("cloud.js", "game.js", "net-p2p.js"):
+    for name in ("cloud.js", "game.js", "net-p2p.js", "social.js"):
         r = subprocess.run([node, "--check", os.path.join(SRC, name)], capture_output=True, text=True)
         if r.returncode:
             print(f"src/{name} 语法错误：\n{r.stderr}")
