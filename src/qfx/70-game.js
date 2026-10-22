@@ -85,8 +85,8 @@ function updateProjs(dt, t) {
     if (dead) { killProj(p); G.projs.splice(i, 1); }
   }
   for (let i = G.hazards.length - 1; i >= 0; i--) {
-    const h = G.hazards[i]; h.t += dt * G.enemyTS; if (h.t >= h.delay && !h.tele) h.tele = FX.telegraph({ type: 'circle', x: h.x, z: h.z, r: h.r, dur: h.dur });
-    if (h.t >= h.delay + h.dur) { const q = { x: h.x, y: .3, z: h.z }; FX.ring(q, .4, h.r + .4, 0xff3a22, .35); FX.sparks(q, 16, 0xff5a32, 10, 4); FX.pillar(q, 0xff3a22, 7); FX.decal(q, 2.4); Cam.shake = Math.max(Cam.shake, .25); Snd.hit(1); if (Math.hypot(Pl.pos.x - h.x, Pl.pos.z - h.z) < h.r + .2) hurtPlayer(h.dmg, h.x, h.z, { knock: 4, parry: false }); G.hazards.splice(i, 1); }
+    const h = G.hazards[i]; h.t += dt * G.enemyTS; if (h.t >= h.delay && !h.tele) h.tele = FX.telegraph({ type: 'circle', x: h.x, z: h.z, r: h.r, dur: h.dur, color: h.kind === 'jar' ? 0xff8a2a : h.kind === 'spike' ? 0xd0a040 : 0xff3a22 });
+    if (h.t >= h.delay + h.dur) { hazardFx(h); if (Math.hypot(Pl.pos.x - h.x, Pl.pos.z - h.z) < h.r + .2) hurtPlayer(h.dmg, h.x, h.z, { knock: 4, parry: false }); G.hazards.splice(i, 1); }
   }
 }
 

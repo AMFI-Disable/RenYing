@@ -38,6 +38,7 @@ function clearZones() { for (const z of Zones) dropZone(z); Zones.length = 0; }
 function updateZones(dt) {
   for (let i = Zones.length - 1; i >= 0; i--) {
     const z = Zones[i]; z.t += dt; z.tick -= dt; const fade = sat((z.life - z.t) / .6);
+    if (z.type === 'efire') updateEFire(z, dt);
     if (z.type === 'fire') {
       if (!z.mesh) z.mesh = fireStrip(z); z.mesh.material.opacity = Math.min(1, z.t * 6) * fade * (.75 + Math.sin(z.t * 13) * .12 + Math.sin(z.t * 31) * .06);
       const n = Math.ceil(z.len * 1.1 * fade); for (let k = 0; k < n; k++) { if (Math.random() > .8) continue; const s = rand(z.len), w = rand(-z.w, z.w) * .5, x = z.x + z.fx * s + z.fz * w, zz = z.z + z.fz * s - z.fx * w;

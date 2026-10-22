@@ -12,12 +12,12 @@ const STAGES = [null,
   { name: '山贼探路', waves: [{ bandit: 5 }, { bandit: 4, archer: 1 }] },
   { name: '狼嚎四野', waves: [{ wolf: 4, bandit: 3 }, { spear: 3, bandit: 2, archer: 1 }, { brute: 1, wolf: 3 }] },
   { name: '黑风寨主', boss: 'boss1', waves: [{ boss1: 1 }] },
-  { name: '林间冷箭', waves: [{ wolf: 4, archer: 2 }, { bandit: 4, spear: 3 }, { wraith: 2, wolf: 3 }] },
-  { name: '竹影幢幢', waves: [{ wraith: 3, archer: 2, wolf: 3 }, { spear: 4, bandit: 4 }, { brute: 1, wraith: 2, wolf: 3 }] },
-  { name: '无相', boss: 'boss1', waves: [{ boss1: 1 }] },
-  { name: '冢前孤魂', waves: [{ wraith: 4, bandit: 4 }, { brute: 1, spear: 4 }, { wraith: 3, archer: 2 }] },
-  { name: '剑灵出鞘', waves: [{ wolf: 6, wraith: 2 }, { brute: 2, spear: 3 }, { wraith: 4, archer: 2 }] },
-  { name: '万剑同悲', waves: [{ brute: 1, wraith: 4, bandit: 4 }, { wolf: 6, spear: 4 }, { brute: 2, wraith: 3, archer: 2 }] },
+  { name: '林间冷箭', waves: [{ wolf: 4, archer: 2 }, { assassin: 2, spear: 3 }, { assassin: 2, wolf: 3, archer: 1 }] },
+  { name: '竹影幢幢', waves: [{ assassin: 3, archer: 2 }, { wraith: 2, spear: 3, wolf: 2 }, { brute: 1, assassin: 3, wraith: 1 }] },
+  { name: '无相', boss: 'boss3', waves: [{ boss3: 1 }] },
+  { name: '冢前孤魂', waves: [{ slave: 3, wraith: 2 }, { spirit: 5, slave: 2 }, { brute: 1, slave: 2, wraith: 2 }] },
+  { name: '剑灵出鞘', waves: [{ spirit: 7, slave: 1 }, { slave: 3, wraith: 2, spirit: 3 }, { brute: 2, spirit: 5 }] },
+  { name: '万剑同悲', waves: [{ slave: 4, spirit: 4 }, { brute: 1, wraith: 3, spirit: 5 }, { brute: 2, slave: 3, spirit: 4 }] },
   { name: '剑魔临世', boss: 'boss2', waves: [{ boss2: 1 }] },
 ];
 const LAST_STAGE = 10;
@@ -26,8 +26,8 @@ const isChapterEnd = n => CHAPTERS.some(c => c.stages[c.stages.length - 1] === n
 /* 无尽试炼：十关之后随机配兵，每五关一位旧日强敌 */
 function stageDef(n) {
   if (STAGES[n]) return STAGES[n];
-  if (n % 5 === 0) { const b = ['boss1', 'boss2'][(n / 5) % 2]; return { name: '强敌再临', boss: b, waves: [{ [b]: 1 }] }; }
-  const cost = { bandit: 1, wolf: 1, archer: 1.5, spear: 1.5, wraith: 2, brute: 4 }, ks = Object.keys(cost), waves = [];
+  if (n % 5 === 0) { const b = ['boss1', 'boss3', 'boss2'][(n / 5) % 3]; return { name: '强敌再临', boss: b, waves: [{ [b]: 1 }] }; }
+  const cost = { bandit: 1, wolf: 1, archer: 1.5, spear: 1.5, wraith: 2, brute: 4, assassin: 2, slave: 2.5, spirit: .8 }, ks = Object.keys(cost), waves = [];
   for (let w = 0; w < 3; w++) { let b = 10 + (n - 10) * 2; const comp = {}; while (b > 0) { const k = pick(ks); if (k === 'archer' && (comp.archer || 0) >= 2) continue; comp[k] = (comp[k] || 0) + 1; b -= cost[k]; } waves.push(comp); }
   return { name: '无尽试炼', waves };
 }

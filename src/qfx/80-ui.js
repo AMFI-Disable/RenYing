@@ -25,7 +25,8 @@ const UI = {
     else if (G.inter > 0) { t1 = `第${cnNum(G.stage + 1)}关`; t2 = `休整 ${Math.ceil(G.inter)} · B 入剑庐 · Enter 开战`; }
     else { t1 = `第${cnNum(G.stage)}关`; t2 = `${G.stageName} · 残敌 ${alive}`; }
     this.set('waveT', t1); this.set('waveS', t2);
-    const b = G.boss && G.boss.state !== 'dead' ? G.boss : null; this.hide('bossBox', !b); if (b) { this.set('bossName', b.name); this.bar('bossFill', b.hp / b.maxHp); this.bar('bossLag', b.hp / b.maxHp); this.bar('bossPoise', b.stun > 0 ? 1 : b.poiseD / b.cfg.poise); }
+    const b = G.boss && G.boss.state !== 'dead' ? G.boss : null; this.hide('bossBox', !b); if (b && this.c.bossTk !== b) { this.c.bossTk = b; const bb = $('bossFill').parentNode; bb.querySelectorAll('.tk').forEach(x => x.remove()); for (const ph of PHASES[b.type] || []) { const t = document.createElement('i'); t.className = 'tk'; t.style.left = (ph.at * 100) + '%'; bb.appendChild(t); } }
+    if (b) { this.set('bossName', b.name); this.bar('bossFill', b.hp / b.maxHp); this.bar('bossLag', b.hp / b.maxHp); this.bar('bossPoise', b.stun > 0 ? 1 : b.poiseD / b.cfg.poise); }
     const lk = Pl.lock && Pl.lock.state !== 'dead' && Pl.state !== 'exec' ? Pl.lock : null; this.cls('hud', 'cine', Pl.state === 'exec'); this.hide('lockm', !lk);
     if (lk) { _pv.set(lk.pos.x, lk.hitY, lk.pos.z).project(GFX.camera); const sx = ((_pv.x * .5 + .5) * innerWidth).toFixed(0), sy = (-_pv.y * .5 + .5) * innerHeight; $('lockm').style.transform = `translate(${sx}px,${sy.toFixed(0)}px) rotate(45deg)`; if (!lk.boss) $('lockInfo').style.transform = `translate(${sx}px,${(sy - 44 - lk.radius * 14).toFixed(0)}px)`; }
     this.hide('lockInfo', !lk || !!lk.boss); if (lk && !lk.boss) { this.bar('lockHp', lk.hp / lk.maxHp); this.bar('lockPo', lk.stun > 0 ? 1 : (lk.poiseD || 0) / (lk.cfg.poise * (lk.elite ? 1.6 : 1))); this.cls('lockInfo', 'stun', lk.stun > 0); }
