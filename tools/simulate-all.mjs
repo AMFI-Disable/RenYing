@@ -294,8 +294,6 @@ if (isMainThread) {
   }
 
   const allInOne = args.includes('--all-in-one');
-  const doAutoBalance = allInOne || args.includes('--auto-balance');
-  const balanceRounds = parseInt(getArg('balance-rounds', '2'), 10);
   const doPush = args.includes('--push');
   const skipTrain = !allInOne && (args.includes('--skip-train') && !args.includes('--train-all'));
   const matchesPerMatchup = parseInt(getArg('matches-per-matchup', getArg('matches', '5')), 10);
@@ -309,26 +307,12 @@ if (isMainThread) {
   const collectTrajectories = !skipTrain && modesToRun.includes('cpu');
 
   console.log(`\n================================================================`);
-  console.log(`   RenYing Master Pipeline: Simulate -> Auto-Balance -> Train -> Push`);
+  console.log(`   RenYing Simulation & Training Pipeline                       `);
   console.log(`   Matches Per Circumstance : ${matchesPerMatchup} | Workers: ${concurrency}`);
   console.log(`   Modes Scheduled          : ${modesToRun.join(', ')}`);
-  console.log(`   Auto-Combat Balance      : ${doAutoBalance ? `enabled (rounds=${balanceRounds}, KeZhi ±10% tolerance)` : 'off (pass --auto-balance)'}`);
   console.log(`   Neural Training          : ${skipTrain ? 'SKIPPED (--skip-train)' : `enabled (epochs=${epochs}, rounds=${roundsPerMatch})`}`);
   console.log(`   Auto Push                : ${doPush ? 'YES' : 'no'}`);
   console.log(`================================================================\n`);
-
-  // =========================================================================
-  // STEP 0: AUTO-COMBAT BALANCE (if requested or --all-in-one)
-  // =========================================================================
-  if (doAutoBalance) {
-    console.log(`[Auto-Balance] Tuning combat stats (dmg, escCD, hp) with KeZhi ±10% acceptance...`);
-    try {
-      execSync(`${getNodeBin()} tools/auto-balance.mjs --apply --rounds ${balanceRounds} --matches ${Math.max(3, Math.min(6, matchesPerMatchup))}`, { stdio: 'inherit' });
-      console.log(`[Auto-Balance] Completed & applied to src/game.js successfully.\n`);
-    } catch (balErr) {
-      console.warn(`⚠ Auto-balance warning:`, balErr.message);
-    }
-  }
 
   // Load hero KeZhi (克制) metadata from src/game.js
   const gameCode = readFileSync('src/game.js', 'utf8');
@@ -854,7 +838,7 @@ if (isMainThread) {
         console.log('\nCommitting and pushing to origin/main...');
         execSync('git add models/ data/meta/ index.html renying-offline.html', { stdio: 'inherit' });
         try {
-          execSync('git commit -m "feat: simulate all, train & auto balance"', { stdio: 'inherit' });
+          execSync('git commit -m "feat: train AI models"', { stdio: 'inherit' });
           execSync('git push origin main', { stdio: 'inherit' });
           console.log('✓ Pushed to origin/main successfully.');
         } catch (gitErr) {
@@ -869,7 +853,7 @@ if (isMainThread) {
       execSync('python3 tools/build.py', { stdio: 'inherit' });
       execSync('git add models/ data/meta/ index.html renying-offline.html', { stdio: 'inherit' });
       try {
-        execSync('git commit -m "chore: update simulation meta and balance"', { stdio: 'inherit' });
+        execSync('git commit -m "chore: update simulation meta"', { stdio: 'inherit' });
         execSync('git push origin main', { stdio: 'inherit' });
         console.log('✓ Pushed to origin/main.');
       } catch (gitErr) {}
