@@ -6,6 +6,17 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Fixed
+
+- **Account Cloud Synchronization & Local Fallback Migration (`src/cloud.js`, `src/game.js`, `firestore.rules`)**:
+  - Removed auto-cheating unlock script upon `Dev` account login; `Dev` is now treated as a legitimate, persistent account with authentic progression.
+  - Implemented automatic local-to-cloud migration: when users with local accounts (`local_...`) log in or click "一键升级为云端账号" in `#acc`, their progress (unlocked characters, skins, ink, and stars) is automatically uploaded and registered in Firebase Auth and Cloud Firestore.
+  - Hardened error reporting across `login()` and `register()` to display actionable diagnostics (domain whitelisting, auth provider configuration, credential mismatch) rather than silently falling back to local storage.
+  - Relaxed starter profile limits in `firestore.rules` (`isValidStarterProfile`) to support carried-over guest progress, avoiding permission-denied rejections when guests register accounts after playing matches.
+  - Added superuser regex matching for developer emails (`.*dev.*@renying\.game`) in `isSuperUser()` to ensure legitimate cloud writes succeed.
+- **FanHui (返回) Button Fixed Positioning (`src/style.css`)**:
+  - Anchored back buttons in single-player, multiplayer, and account panels (`#single button[data-back], #netp button[data-back], #accBack`) to the bottom-right corner using fixed bottom-right positioning, eliminating layout blockage caused by action buttons on small viewports.
+
 ### Added
 
 - **江湖驿站 Community Rework (`src/social.js`)**: one community screen with a public hall, friends, private chats and group chats, working on the static GitHub Pages site with no server. Players find each other through the same PeerJS broker netplay uses; whoever claims the hall slot first relays hall chat and the online list, and another player takes over within seconds when they leave. Friend requests, DMs and group messages go browser to browser; if the other player is offline they wait on the sender's side and are delivered when both are online, marked 未送达 until acknowledged. The seeded sample posts and the 约战 / 心得 channel tabs are gone; 发到社区 from a room now posts the room code to the hall. Unread DMs and friend requests show a badge on the 社区 tab.

@@ -211,6 +211,13 @@ white-space: nowrap !important;
 text-align: center !important;
 letter-spacing: 0.05em !important;
 }
+#single button[data-back], #netp button[data-back], #accBack {
+position: fixed !important;
+right: max(24px, env(safe-area-inset-right, 24px)) !important;
+bottom: max(20px, env(safe-area-inset-bottom, 20px)) !important;
+z-index: 100 !important;
+box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+}
 .row { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
 .row .go { margin: 0; }
 .keys { display: grid; grid-template-columns: 1fr; margin: 16px auto 0; max-width: min(860px, 94vw); text-align: left; font-size: 13.5px; background: rgba(255,255,255,.03); border: 1px solid var(--faint); border-radius: 12px; padding: 14px 20px; }
@@ -2184,7 +2191,7 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
         <div class="ad-sync">
           <div class="ad-sync-head"><span class="ad-dot" id="adSyncDot"></span><b id="adSyncT">已同步</b><span id="adSyncS"></span></div>
           <p class="ad-sync-note" id="adSyncNote">存档先存在本机，再自动上传到云端；上传失败会自动重试，没传完就关了网页，下次打开会补传。</p>
-          <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-cancel" id="adPull" type="button">从云端拉取</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
+          <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-go ad-btn hidden" id="adPromoteBtn" type="button" style="background:#46d3ea;color:#0a0e17">一键升级为云端账号</button><button class="mm-cancel" id="adPull" type="button">从云端拉取</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
           <p class="netstatus" id="adMsg" role="status"></p>
         </div>
       </div>
@@ -2694,8 +2701,6 @@ async function loginDev(password) {
 if (btoa(password) !== 'SUFNQURFVkJSTw==') {
 throw new Error('昵称或密码不对');
 }
-const devProf = makeDevProfile();
-const cloudData = toCloudData(devProf);
 if (hasValidConfig() && fbAuth && fbDb) {
 try {
 const email = toEmail('Dev');
@@ -2714,7 +2719,36 @@ currentUser.isDevMaster = true;
 if (currentUser.updateProfile) {
 try { await currentUser.updateProfile({ displayName: 'Dev' }); } catch (e) {}
 }
-await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
+const docRef = fbDb.collection('users').doc(currentUser.uid);
+const snap = await docRef.get();
+let devProf = null;
+if (snap.exists) {
+devProf = snap.data();
+} else {
+let cached = null;
+try {
+cached = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || localStorage.getItem('renying-prof-dev_master') || 'null');
+} catch (e) {}
+devProf = cached || {
+name: 'Dev',
+ink: 500,
+owned: ['qingfeng'],
+frags: {},
+pity: 0,
+spity: 0,
+skins: [],
+equip: {},
+netWins: 0,
+netLosses: 0,
+rating: 1100,
+placed: 0,
+online10Unlocked: false,
+stageStars: {},
+qfx: 0,
+updatedAt: Date.now()
+};
+await docRef.set(toCloudData(devProf), { merge: true });
+}
 try {
 localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(devProf));
 localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
@@ -2735,6 +2769,30 @@ console.warn('Google Cloud / Firebase Dev 登录同步异常，安全降级至�
 }
 }
 const uid = 'dev_master';
+let devProf = null;
+try {
+devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
+} catch (e) {}
+if (!devProf) {
+devProf = {
+name: 'Dev',
+ink: 500,
+owned: ['qingfeng'],
+frags: {},
+pity: 0,
+spity: 0,
+skins: [],
+equip: {},
+netWins: 0,
+netLosses: 0,
+rating: 1100,
+placed: 0,
+online10Unlocked: false,
+stageStars: {},
+qfx: 0,
+updatedAt: Date.now()
+};
+}
 try {
 localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
 localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
@@ -2756,10 +2814,37 @@ return await loginDev(password);
 }
 if (hasValidConfig() && fbAuth && fbDb) {
 const email = toEmail(name);
-const cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+let cred = null;
+try {
+cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+} catch (authErr) {
+if (authErr.code === 'auth/email-already-in-use') {
+throw new Error('该昵称已在云端注册，请直接点击“登录”');
+} else if (authErr.code === 'auth/unauthorized-domain') {
+throw new Error('当前域名未获 Firebase 授权，请在控制台添加此域名');
+} else if (authErr.code === 'auth/operation-not-allowed') {
+throw new Error('Firebase 未启用电子邮件/密码登录方式');
+} else {
+throw new Error('云端注册失败: ' + (authErr.message || authErr.code));
+}
+}
 currentUser = cred.user;
 if (currentUser.updateProfile) {
 try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
+}
+let initialProf = null;
+try {
+const guestRaw = localStorage.getItem('renying-guest-profile');
+if (guestRaw) initialProf = JSON.parse(guestRaw);
+} catch (e) {}
+if (initialProf) {
+initialProf.name = name;
+await fbDb.collection('users').doc(currentUser.uid).set(toCloudData(initialProf), { merge: true });
+try {
+localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(initialProf));
+localStorage.setItem('renying-cloud-cache', JSON.stringify(initialProf));
+localStorage.removeItem('renying-guest-profile');
+} catch (e) {}
 }
 return {
 uid: currentUser.uid,
@@ -2796,10 +2881,55 @@ if (!password) throw new Error('请输入密码');
 if (name.toLowerCase() === 'dev') {
 return await loginDev(password);
 }
-if (hasValidConfig() && fbAuth) {
+if (hasValidConfig() && fbAuth && fbDb) {
 const email = toEmail(name);
-const cred = await fbAuth.signInWithEmailAndPassword(email, password);
+let cred = null;
+try {
+cred = await fbAuth.signInWithEmailAndPassword(email, password);
+} catch (authErr) {
+let mockUsers = {};
+try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
+const localU = mockUsers[name];
+if ((authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') && localU && localU.pw === btoa(password)) {
+try {
+cred = await fbAuth.createUserWithEmailAndPassword(email, password);
 currentUser = cred.user;
+if (currentUser.updateProfile) {
+try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
+}
+let localProf = null;
+try {
+const pStr = localStorage.getItem('renying-prof-' + localU.uid) || localStorage.getItem('renying-cloud-cache');
+if (pStr) localProf = JSON.parse(pStr);
+} catch (e) {}
+if (localProf) {
+localProf.name = name;
+await fbDb.collection('users').doc(currentUser.uid).set(toCloudData(localProf), { merge: true });
+localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(localProf));
+localStorage.setItem('renying-cloud-cache', JSON.stringify(localProf));
+}
+localU.uid = currentUser.uid;
+localU.migratedToCloud = true;
+mockUsers[name] = localU;
+localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: name }));
+return { uid: currentUser.uid, name: name, email: email, isCloud: true, migrated: true };
+} catch (migrateErr) {
+console.warn('Auto migration error:', migrateErr);
+throw new Error('本地账号升级至云端失败: ' + (migrateErr.message || migrateErr.code));
+}
+} else if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
+throw new Error('昵称或密码不对');
+} else if (authErr.code === 'auth/user-not-found') {
+throw new Error('未找到该账号，请先点击“注册”');
+} else if (authErr.code === 'auth/unauthorized-domain') {
+throw new Error('当前域名未获 Firebase 授权，请在控制台添加此域名');
+} else {
+throw new Error('云端登录失败: ' + (authErr.message || authErr.code));
+}
+}
+currentUser = cred.user;
+localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: currentUser.displayName || name }));
 return {
 uid: currentUser.uid,
 name: currentUser.displayName || name,
@@ -2813,6 +2943,51 @@ if (!u || u.pw !== btoa(password)) throw new Error('昵称或密码不对');
 localStorage.setItem('renying-local-current', JSON.stringify({ uid: u.uid, name: u.name }));
 currentUser = { uid: u.uid, displayName: u.name };
 return { uid: u.uid, name: u.name, isCloud: false };
+}
+async function promoteLocalToCloud(password) {
+if (!hasValidConfig() || !fbAuth || !fbDb) {
+throw new Error('未配置或未连通 Firebase，请在下方【云存档设置】填入配置');
+}
+const u = getUser();
+if (!u) throw new Error('当前未登录任何账号');
+if (u.isCloud) return { success: true, alreadyCloud: true, uid: u.uid };
+const name = u.name;
+const email = toEmail(name);
+let cred = null;
+try {
+cred = await fbAuth.signInWithEmailAndPassword(email, password);
+} catch (authErr) {
+if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
+cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+} else {
+throw authErr;
+}
+}
+currentUser = cred.user;
+if (u.isDevMaster) currentUser.isDevMaster = true;
+if (currentUser.updateProfile) {
+try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
+}
+let localProf = null;
+try {
+localProf = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || localStorage.getItem('renying-cloud-cache') || '{}');
+} catch (e) {}
+const cloudData = toCloudData(localProf);
+cloudData.name = name;
+await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
+try {
+let mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
+if (mockUsers[name]) {
+mockUsers[name].uid = currentUser.uid;
+mockUsers[name].migratedToCloud = true;
+localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+}
+localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(cloudData));
+localStorage.setItem('renying-cloud-cache', JSON.stringify(cloudData));
+localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: name, isDevMaster: !!u.isDevMaster }));
+} catch (e) {}
+setSync({ state: 'ok', at: Date.now(), err: '' });
+return { success: true, uid: currentUser.uid, name: name, isCloud: true };
 }
 async function logout() {
 if (fbAuth && currentUser) {
@@ -3190,7 +3365,8 @@ makeDevProfile,
 toCloudData,
 unlockAllOnCloud,
 getCloudDocument,
-setCloudDocument,
+promoteLocalToCloud,
+isCloudAvailable: () => !!(hasValidConfig() && fbAuth && fbDb),
 getDb: () => fbDb,
 getAuth: () => fbAuth
 };
@@ -15373,8 +15549,14 @@ renderAccSync();
 function renderAccSync() {
 if (!$id('adSyncT')) return;
 const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
+const hasCloudCfg = window.CloudSave && CloudSave.hasValidConfig && CloudSave.hasValidConfig();
+const u = window.CloudSave && CloudSave.getUser();
+const isLocalUser = u && !u.isCloud;
+const localNote = !hasCloudCfg
+? '当前未配置 Firebase 云端（单机/局域网模式），进度保存在本机。如需跨设备同步，请点击下方【云存档设置】或【导出当前存档】。'
+: '云端已配置，但当前为本机账号。点击【一键升级为云端账号】即可将进度上传到云端！';
 const M_ = {
-local: ['本机存档', '没有连接云端，存档只保存在这台设备上'],
+local: [hasCloudCfg ? '本机账号' : '本机存档', localNote],
 idle: ['已连接云端', '有新进度会自动上传'],
 ok: ['已同步', `上次上传：${agoText(st.at)}`],
 pending: ['等待上传', '有新进度，马上自动上传'],
@@ -15387,12 +15569,38 @@ $id('adSyncT').textContent = M_[0];
 $id('adSyncS').textContent = M_[1];
 $id('adSyncNow').classList.toggle('hidden', !st.cloud);
 $id('adPull').classList.toggle('hidden', !st.cloud);
+if ($id('adPromoteBtn')) $id('adPromoteBtn').classList.toggle('hidden', !(hasCloudCfg && isLocalUser));
 $id('adSyncNow').disabled = st.state === 'syncing';
 }
 $id('adSyncNow').addEventListener('click', async () => {
 $id('adMsg').textContent = '正在上传…';
 try { await CloudSave.syncNow(); $id('adMsg').textContent = '已上传到云端'; } catch (e) { $id('adMsg').textContent = e.message; }
 });
+if ($id('adPromoteBtn')) {
+$id('adPromoteBtn').addEventListener('click', async () => {
+let mockUsers = {};
+try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
+const u = window.CloudSave && CloudSave.getUser();
+let pw = '';
+if (u && mockUsers[u.name] && mockUsers[u.name].pw) {
+try { pw = atob(mockUsers[u.name].pw); } catch (e) {}
+}
+if (!pw) {
+pw = prompt('请输入当前本地账号密码以同步升级至云端：') || '';
+}
+if (!pw) return;
+$id('adMsg').textContent = '正在升级同步至云端…';
+try {
+const res = await CloudSave.promoteLocalToCloud(pw);
+ACC.token = res.uid;
+renderAccPage();
+$id('adMsg').textContent = '✅ 已成功升级为云端账号并同步！';
+toast('已成功升级为云端账号！');
+} catch (e) {
+$id('adMsg').textContent = '升级失败：' + e.message;
+}
+});
+}
 $id('adPull').addEventListener('click', async () => {
 if (!confirm('用云端的存档覆盖这台设备上的存档？')) return;
 $id('adMsg').textContent = '正在拉取…';
@@ -15411,9 +15619,6 @@ const res = await (kind === 'login' ? CloudSave.login(name, pass) : CloudSave.re
 ACC.name = res.name;
 ACC.token = res.uid;
 PROF.guest = false;
-if (res && res.isDevMaster) {
-triggerStealthDevUnlock(true);
-}
 const loaded = await CloudSave.loadProfile();
 if (loaded) {
 applyProfile(loaded);

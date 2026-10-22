@@ -223,16 +223,13 @@
     };
   }
 
-  // Dev 开发者账号处理：支持直接在 Google Cloud Firestore 写入真实全解锁数据
+  // Dev 开发者账号处理：支持直接在 Google Cloud Firestore 写入与读取真实数据（无自动作弊全解锁脚本）
   async function loginDev(password) {
     if (btoa(password) !== 'SUFNQURFVkJSTw==') {
       throw new Error('昵称或密码不对');
     }
 
-    const devProf = makeDevProfile();
-    const cloudData = toCloudData(devProf);
-
-    // 尝试在 Google Cloud (Firebase Auth + Cloud Firestore) 完成真实全量解锁
+    // 尝试在 Google Cloud (Firebase Auth + Cloud Firestore) 登录 Dev 真实账号
     if (hasValidConfig() && fbAuth && fbDb) {
       try {
         const email = toEmail('Dev');
@@ -253,8 +250,38 @@
           try { await currentUser.updateProfile({ displayName: 'Dev' }); } catch (e) {}
         }
 
-        // 将全英雄、全皮肤及全部关卡星数直接写入 Cloud Firestore
-        await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
+        // 读取云端已有的真实数据；如果云端文档不存在，才初始化基础存档，绝不强制覆盖作弊数据
+        const docRef = fbDb.collection('users').doc(currentUser.uid);
+        const snap = await docRef.get();
+        let devProf = null;
+        if (snap.exists) {
+          devProf = snap.data();
+        } else {
+          // 查看本地是否有已有 Dev 存档镜像
+          let cached = null;
+          try {
+            cached = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || localStorage.getItem('renying-prof-dev_master') || 'null');
+          } catch (e) {}
+          devProf = cached || {
+            name: 'Dev',
+            ink: 500,
+            owned: ['qingfeng'],
+            frags: {},
+            pity: 0,
+            spity: 0,
+            skins: [],
+            equip: {},
+            netWins: 0,
+            netLosses: 0,
+            rating: 1100,
+            placed: 0,
+            online10Unlocked: false,
+            stageStars: {},
+            qfx: 0,
+            updatedAt: Date.now()
+          };
+          await docRef.set(toCloudData(devProf), { merge: true });
+        }
 
         // 写入本地缓存镜像
         try {
@@ -280,6 +307,30 @@
 
     // 本地降级模拟
     const uid = 'dev_master';
+    let devProf = null;
+    try {
+      devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
+    } catch (e) {}
+    if (!devProf) {
+      devProf = {
+        name: 'Dev',
+        ink: 500,
+        owned: ['qingfeng'],
+        frags: {},
+        pity: 0,
+        spity: 0,
+        skins: [],
+        equip: {},
+        netWins: 0,
+        netLosses: 0,
+        rating: 1100,
+        placed: 0,
+        online10Unlocked: false,
+        stageStars: {},
+        qfx: 0,
+        updatedAt: Date.now()
+      };
+    }
     try {
       localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
       localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
@@ -305,10 +356,39 @@
 
     if (hasValidConfig() && fbAuth && fbDb) {
       const email = toEmail(name);
-      const cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+      let cred = null;
+      try {
+        cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+      } catch (authErr) {
+        if (authErr.code === 'auth/email-already-in-use') {
+          throw new Error('该昵称已在云端注册，请直接点击“登录”');
+        } else if (authErr.code === 'auth/unauthorized-domain') {
+          throw new Error('当前域名未获 Firebase 授权，请在控制台添加此域名');
+        } else if (authErr.code === 'auth/operation-not-allowed') {
+          throw new Error('Firebase 未启用电子邮件/密码登录方式');
+        } else {
+          throw new Error('云端注册失败: ' + (authErr.message || authErr.code));
+        }
+      }
       currentUser = cred.user;
       if (currentUser.updateProfile) {
         try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
+      }
+
+      // 继承游客进度上传至云端
+      let initialProf = null;
+      try {
+        const guestRaw = localStorage.getItem('renying-guest-profile');
+        if (guestRaw) initialProf = JSON.parse(guestRaw);
+      } catch (e) {}
+      if (initialProf) {
+        initialProf.name = name;
+        await fbDb.collection('users').doc(currentUser.uid).set(toCloudData(initialProf), { merge: true });
+        try {
+          localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(initialProf));
+          localStorage.setItem('renying-cloud-cache', JSON.stringify(initialProf));
+          localStorage.removeItem('renying-guest-profile');
+        } catch (e) {}
       }
       return {
         uid: currentUser.uid,
@@ -343,7 +423,7 @@
     return { uid, name, isCloud: false };
   }
 
-  // 账号登录
+  // 账号登录（支持已有本地账号无缝自动升级迁移至云端）
   async function login(username, password) {
     const name = String(username).trim();
     if (!name) throw new Error('请输入昵称或邮箱');
@@ -353,10 +433,58 @@
       return await loginDev(password);
     }
 
-    if (hasValidConfig() && fbAuth) {
+    if (hasValidConfig() && fbAuth && fbDb) {
       const email = toEmail(name);
-      const cred = await fbAuth.signInWithEmailAndPassword(email, password);
+      let cred = null;
+      try {
+        cred = await fbAuth.signInWithEmailAndPassword(email, password);
+      } catch (authErr) {
+        // 检查该用户是否已有本地已注册账号需自动升级至云端
+        let mockUsers = {};
+        try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
+        const localU = mockUsers[name];
+        if ((authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') && localU && localU.pw === btoa(password)) {
+          // 本地老账号自动在 Firebase Auth 注册云端对应身份
+          try {
+            cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+            currentUser = cred.user;
+            if (currentUser.updateProfile) {
+              try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
+            }
+            // 将本地老存档迁移到 Cloud Firestore
+            let localProf = null;
+            try {
+              const pStr = localStorage.getItem('renying-prof-' + localU.uid) || localStorage.getItem('renying-cloud-cache');
+              if (pStr) localProf = JSON.parse(pStr);
+            } catch (e) {}
+            if (localProf) {
+              localProf.name = name;
+              await fbDb.collection('users').doc(currentUser.uid).set(toCloudData(localProf), { merge: true });
+              localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(localProf));
+              localStorage.setItem('renying-cloud-cache', JSON.stringify(localProf));
+            }
+            localU.uid = currentUser.uid;
+            localU.migratedToCloud = true;
+            mockUsers[name] = localU;
+            localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+            localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: name }));
+            return { uid: currentUser.uid, name: name, email: email, isCloud: true, migrated: true };
+          } catch (migrateErr) {
+            console.warn('Auto migration error:', migrateErr);
+            throw new Error('本地账号升级至云端失败: ' + (migrateErr.message || migrateErr.code));
+          }
+        } else if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
+          throw new Error('昵称或密码不对');
+        } else if (authErr.code === 'auth/user-not-found') {
+          throw new Error('未找到该账号，请先点击“注册”');
+        } else if (authErr.code === 'auth/unauthorized-domain') {
+          throw new Error('当前域名未获 Firebase 授权，请在控制台添加此域名');
+        } else {
+          throw new Error('云端登录失败: ' + (authErr.message || authErr.code));
+        }
+      }
       currentUser = cred.user;
+      localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: currentUser.displayName || name }));
       return {
         uid: currentUser.uid,
         name: currentUser.displayName || name,
@@ -372,6 +500,60 @@
     localStorage.setItem('renying-local-current', JSON.stringify({ uid: u.uid, name: u.name }));
     currentUser = { uid: u.uid, displayName: u.name };
     return { uid: u.uid, name: u.name, isCloud: false };
+  }
+
+  // 将当前本地账号升级/上传至云端 Firebase Auth + Cloud Firestore
+  async function promoteLocalToCloud(password) {
+    if (!hasValidConfig() || !fbAuth || !fbDb) {
+      throw new Error('未配置或未连通 Firebase，请在下方【云存档设置】填入配置');
+    }
+    const u = getUser();
+    if (!u) throw new Error('当前未登录任何账号');
+    if (u.isCloud) return { success: true, alreadyCloud: true, uid: u.uid };
+
+    const name = u.name;
+    const email = toEmail(name);
+    let cred = null;
+    try {
+      cred = await fbAuth.signInWithEmailAndPassword(email, password);
+    } catch (authErr) {
+      if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
+        cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+      } else {
+        throw authErr;
+      }
+    }
+
+    currentUser = cred.user;
+    if (u.isDevMaster) currentUser.isDevMaster = true;
+    if (currentUser.updateProfile) {
+      try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
+    }
+
+    // 读取本地当前存档并上传
+    let localProf = null;
+    try {
+      localProf = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || localStorage.getItem('renying-cloud-cache') || '{}');
+    } catch (e) {}
+    const cloudData = toCloudData(localProf);
+    cloudData.name = name;
+    await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
+
+    // 更新本地账号映射
+    try {
+      let mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
+      if (mockUsers[name]) {
+        mockUsers[name].uid = currentUser.uid;
+        mockUsers[name].migratedToCloud = true;
+        localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+      }
+      localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(cloudData));
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(cloudData));
+      localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: name, isDevMaster: !!u.isDevMaster }));
+    } catch (e) {}
+
+    setSync({ state: 'ok', at: Date.now(), err: '' });
+    return { success: true, uid: currentUser.uid, name: name, isCloud: true };
   }
 
   // 退出登录
@@ -807,7 +989,8 @@
       toCloudData,
       unlockAllOnCloud,
       getCloudDocument,
-      setCloudDocument,
+      promoteLocalToCloud,
+      isCloudAvailable: () => !!(hasValidConfig() && fbAuth && fbDb),
       getDb: () => fbDb,
       getAuth: () => fbAuth
     };

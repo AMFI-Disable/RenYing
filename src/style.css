@@ -203,6 +203,14 @@
     text-align: center !important;
     letter-spacing: 0.05em !important;
   }
+  /* 右下角固定浮动返回按钮，彻底避免被界面操作按钮遮挡或挤出屏幕 */
+  #single button[data-back], #netp button[data-back], #accBack {
+    position: fixed !important;
+    right: max(24px, env(safe-area-inset-right, 24px)) !important;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px)) !important;
+    z-index: 100 !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+  }
   .row { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
   .row .go { margin: 0; }
   .keys { display: grid; grid-template-columns: 1fr; margin: 16px auto 0; max-width: min(860px, 94vw); text-align: left; font-size: 13.5px; background: rgba(255,255,255,.03); border: 1px solid var(--faint); border-radius: 12px; padding: 14px 20px; }

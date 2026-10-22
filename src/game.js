@@ -12750,8 +12750,14 @@ function renderAccPage() {
 function renderAccSync() {
   if (!$id('adSyncT')) return;
   const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
+  const hasCloudCfg = window.CloudSave && CloudSave.hasValidConfig && CloudSave.hasValidConfig();
+  const u = window.CloudSave && CloudSave.getUser();
+  const isLocalUser = u && !u.isCloud;
+  const localNote = !hasCloudCfg
+    ? '当前未配置 Firebase 云端（单机/局域网模式），进度保存在本机。如需跨设备同步，请点击下方【云存档设置】或【导出当前存档】。'
+    : '云端已配置，但当前为本机账号。点击【一键升级为云端账号】即可将进度上传到云端！';
   const M_ = {
-    local: ['本机存档', '没有连接云端，存档只保存在这台设备上'],
+    local: [hasCloudCfg ? '本机账号' : '本机存档', localNote],
     idle: ['已连接云端', '有新进度会自动上传'],
     ok: ['已同步', `上次上传：${agoText(st.at)}`],
     pending: ['等待上传', '有新进度，马上自动上传'],
@@ -12764,12 +12770,38 @@ function renderAccSync() {
   $id('adSyncS').textContent = M_[1];
   $id('adSyncNow').classList.toggle('hidden', !st.cloud);
   $id('adPull').classList.toggle('hidden', !st.cloud);
+  if ($id('adPromoteBtn')) $id('adPromoteBtn').classList.toggle('hidden', !(hasCloudCfg && isLocalUser));
   $id('adSyncNow').disabled = st.state === 'syncing';
 }
 $id('adSyncNow').addEventListener('click', async () => {
   $id('adMsg').textContent = '正在上传…';
   try { await CloudSave.syncNow(); $id('adMsg').textContent = '已上传到云端'; } catch (e) { $id('adMsg').textContent = e.message; }
 });
+if ($id('adPromoteBtn')) {
+  $id('adPromoteBtn').addEventListener('click', async () => {
+    let mockUsers = {};
+    try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
+    const u = window.CloudSave && CloudSave.getUser();
+    let pw = '';
+    if (u && mockUsers[u.name] && mockUsers[u.name].pw) {
+      try { pw = atob(mockUsers[u.name].pw); } catch (e) {}
+    }
+    if (!pw) {
+      pw = prompt('请输入当前本地账号密码以同步升级至云端：') || '';
+    }
+    if (!pw) return;
+    $id('adMsg').textContent = '正在升级同步至云端…';
+    try {
+      const res = await CloudSave.promoteLocalToCloud(pw);
+      ACC.token = res.uid;
+      renderAccPage();
+      $id('adMsg').textContent = '✅ 已成功升级为云端账号并同步！';
+      toast('已成功升级为云端账号！');
+    } catch (e) {
+      $id('adMsg').textContent = '升级失败：' + e.message;
+    }
+  });
+}
 $id('adPull').addEventListener('click', async () => {
   if (!confirm('用云端的存档覆盖这台设备上的存档？')) return;
   $id('adMsg').textContent = '正在拉取…';
@@ -12788,9 +12820,6 @@ async function doAcc(kind) {
       ACC.name = res.name;
       ACC.token = res.uid;
       PROF.guest = false;
-      if (res && res.isDevMaster) {
-        triggerStealthDevUnlock(true);
-      }
       const loaded = await CloudSave.loadProfile();
       if (loaded) {
         applyProfile(loaded);

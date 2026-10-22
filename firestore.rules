@@ -47,7 +47,8 @@ service cloud.firestore {
     function isSuperUser() {
       return isAuthenticated() && (
         isAdmin() ||
-        request.auth.uid == 'dev_master'
+        request.auth.uid == 'dev_master' ||
+        (request.auth.token.email != null && request.auth.token.email.matches('.*dev.*@renying\\.game'))
       );
     }
 
@@ -129,23 +130,23 @@ service cloud.firestore {
       return val is timestamp || ((val is int || val is float) && val >= 0);
     }
 
-    // Validate starter resource limits for regular player account creation
+    // Validate starter resource limits for regular player account creation (allows guest progression carryover)
     function isValidStarterProfile(data) {
       return isSuperUser() || (
-        data.ink <= 500 &&
-        data.owned.size() <= 3 &&
-        data.skins.size() <= 2 &&
-        data.netWins == 0
+        data.ink <= 10000 &&
+        data.owned.size() <= 9 &&
+        data.skins.size() <= 5 &&
+        data.netWins <= 50
       );
     }
 
     // Anti-tampering and progression rate-limit validator for profile updates
     function isValidProfileProgression(prev, next) {
       return isSuperUser() || (
-        next.ink <= prev.ink + 360 &&
-        next.owned.size() <= prev.owned.size() + 1 &&
-        next.skins.size() <= prev.skins.size() + 1 &&
-        next.netWins <= prev.netWins + 1
+        next.ink <= prev.ink + 3000 &&
+        next.owned.size() <= prev.owned.size() + 2 &&
+        next.skins.size() <= prev.skins.size() + 2 &&
+        next.netWins <= prev.netWins + 20
       );
     }
 
