@@ -1120,6 +1120,33 @@ const SFX = {
   note(n = 0) { const f0 = [660, 784, 880, 1047][Math.min(3, n | 0)]; sTone(f0, f0 * 0.995, 0.5, 0.12, 'triangle'); sTone(f0 * 2, f0 * 2, 0.25, 0.04); },   // 箫音
   drink() { sNoise(0.25, 500, 900, 3, 0.12); sTone(220, 160, 0.18, 0.08); },   // 咕嘟一口
   fire() { sNoise(0.45, 1800, 300, 0.6, 0.3, 'lowpass'); sNoise(0.2, 4000, 1500, 0.8, 0.08); },   // 喷火
+  thunderHit(p = 1) {
+    sNoise(0.035, 12000, 3500, 1.2, 0.65 * p, 'highpass');
+    sTone(380, 75, 0.22, 0.45 * p, 'sawtooth');
+    sTone(190, 40, 0.35, 0.55 * p, 'triangle');
+    sNoise(0.28, 1800, 120, 0.7, 0.4 * p, 'lowpass');
+  },
+  frostHit(p = 1) {
+    metal(3400, 0.45, 0.12 * p);
+    metal(5200, 0.28, 0.08 * p);
+    sNoise(0.06, 14000, 6000, 2.5, 0.4 * p, 'highpass');
+    sTone(1200, 400, 0.18, 0.18 * p, 'sine');
+  },
+  windHit(p = 1) {
+    sNoise(0.18, 5200, 1200, 2.8, 0.45 * p);
+    sNoise(0.08, 8500, 3000, 1.4, 0.35 * p, 'highpass');
+    sTone(260, 90, 0.15, 0.2 * p, 'sine');
+  },
+  fireHit(p = 1) {
+    sNoise(0.32, 2200, 300, 0.8, 0.45 * p, 'lowpass');
+    sNoise(0.12, 6000, 1800, 1.5, 0.28 * p, 'highpass');
+    sTone(110, 35, 0.25, 0.35 * p, 'triangle');
+  },
+  inkHit(p = 1) {
+    sNoise(0.22, 1600, 320, 2.2, 0.38 * p, 'bandpass');
+    sTone(240, 80, 0.16, 0.3 * p, 'sine');
+    metal(1200, 0.18, 0.04 * p);
+  },
 };
 function haptic(pattern = 15) {
   if (typeof navigator !== 'undefined' && navigator.vibrate && SETTINGS.vibrate !== false) {
@@ -3461,6 +3488,7 @@ function parryVisual(ev) {
   ring(ev.x, ev.y, 110, '255,255,255', 0.35); ring(ev.x, ev.y, 60, d.look.slash, 0.3);
   slashLine(ev.x, ev.y, -0.6, d.look.slash); flashA = Math.max(flashA, 0.35); flashRGB = '255,255,255';
   hitstop = Math.max(hitstop, 0.14); shake = Math.max(shake, 10);
+  camImpact(ev.x, ev.y, 0.26, 0.45);
   addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,225,120', scale: 2.2 });
   SFX.block(); metal(1900, 0.8, 0.1);
 }
@@ -3473,7 +3501,8 @@ function thunderGuardCounter(def, att, pt) {
   ring(def.x, def.y - 60, 130, '255,230,120', 0.4);
   ring(def.x, def.y - 60, 65, '255,255,255', 0.3);
   dust(def.x, 0, 16);
-  SFX.parry(); SFX.thunder();
+  camImpact(def.x, def.y - 60, 0.32, 0.50);
+  SFX.parry(); SFX.thunder(); SFX.thunderHit(1.2);
   addP({ type: 'text', text: '⚡ 金刚雷铠 · 引雷天罚', x: def.x, y: def.y - 120, life: 0.85, max: 0.85, rgb: '255,230,120' });
   addP({ type: 'callout', text: '雷', x: def.x, y: def.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
   const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20);
@@ -3486,8 +3515,9 @@ function thunderCounterVisual(ev) {
   ring(ev.x, ev.y, 65, '255,255,255', 0.3);
   flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
   shake = Math.max(shake, 14);
+  camImpact(ev.x, ev.y, 0.32, 0.50);
   addP({ type: 'callout', text: '雷', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
-  SFX.thunder();
+  SFX.thunder(); SFX.thunderHit(1.2);
 }
 
 // ======================= 飞行道具 =======================
@@ -4263,6 +4293,8 @@ function applyHit(att, def, m, pt) {
     if (dist >= 142) {
       dmg *= 1.25; m.launch = true; ev.big = true;
       ring(pt[0], pt[1], 100, '170,220,255', 0.35);
+      camImpact(pt[0], pt[1], 0.22, 0.35);
+      SFX.frostHit(1.1);
       addP({ type: 'text', text: '枪尖', x: pt[0], y: pt[1] - 40, life: 0.5, max: 0.5, rgb: '170,220,255' });
     } else if (dist < 72) {
       dmg *= 0.38; m.launch = false;
@@ -4409,6 +4441,7 @@ function hitVisual(ev, quiet) {
   }
   if (ev.counter && !quiet) {
     flashA = Math.max(flashA, 0.38); flashRGB = '255,60,50'; shake = Math.max(shake, 14); hitstop = Math.max(hitstop, 0.18);
+    camImpact(ev.x, ev.y, 0.24, 0.40);
     addP({ type: 'callout', text: '破', x: ev.x, y: ev.y - 85, life: 0.75, max: 0.75, rgb: '255,75,55', scale: 2.4 });
     ring(ev.x, ev.y, 65, '255,75,55', 0.28);
   }
@@ -4464,9 +4497,22 @@ function hitVisual(ev, quiet) {
   if (M.mode === 'train' && ev.d === 1) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); }
   if (ev.root) { for (let i = 0; i < 14; i++) addP({ type: 'ink', x: def.x + rand(-30, 30), y: -rand(0, 30), vx: rand(-60, 60), vy: rand(-200, -40), g: 900, life: 0.7, max: 0.7, r: rand(2, 5), rgb: '15,15,22' }); addP({ type: 'text', text: '定', x: def.x, y: def.y - 130, life: 0.8, max: 0.8, rgb: '210,210,230' }); }
   SFX.hit(Math.min(1.2, 0.5 + ev.dmg / 12));
+  if (!ev.blk) {
+    const elem = ev.elem || (att && (
+      att.ch.id === 'leiming' ? 'thunder' :
+      att.ch.id === 'lingshuang' ? 'frost' :
+      att.ch.id === 'liuyun' ? 'wind' :
+      att.ch.id === 'moyu' ? 'ink' :
+      (att.ch.id === 'zuixian' && (ev.burn || (att.drunk || 0) >= 30)) ? 'fire' : null
+    ));
+    if (elem && SFX[elem + 'Hit']) {
+      SFX[elem + 'Hit'](Math.min(1.4, 0.55 + ev.dmg / 12));
+    }
+  }
   if (ev.big) { slashLine(ev.x, ev.y, rand(-0.35, 0.35), att.look.slash); flashA = Math.max(flashA, 0.35); flashRGB = att.look.slash; }
   if (ev.ko) {
     slowmo = 1.3; hitstop = 0.28; shake = 26; flashA = 0.7; flashRGB = '255,255,255';
+    camImpact(ev.x, ev.y, 0.42, 1.4);
     say('斩', 1.6, 'ko'); SFX.ko();
   }
 }
@@ -4740,6 +4786,17 @@ function step() {
   if (!RESIM) for (const c of comboUI) c.t -= STEP;
 }
 const cam = { x: STAGE_W / 2, y: 0, zoom: 1 };
+let camPunch = { zoom: 0, x: STAGE_W / 2, y: 0, t: 0, maxT: 0 };
+function camImpact(x, y, zoomBoost, duration) {
+  if (M.mode === 'watch2v2') zoomBoost *= 0.6;
+  if (camPunch.t <= 0 || zoomBoost >= camPunch.zoom) {
+    camPunch.zoom = zoomBoost;
+    camPunch.x = x !== undefined ? x : cam.x;
+    camPunch.y = y !== undefined ? y : 0;
+    camPunch.t = duration;
+    camPunch.maxT = duration;
+  }
+}
 let acc = 0, last = performance.now(), FPS = 0, fpsN = 0, fpsT = 0;
 let lastDraw = 0, bgLast = 0;
 // 鼠标朝向：角色面朝鼠标所在的一侧（按住防御时仍然自动面向对手）
@@ -5146,6 +5203,13 @@ function updateCamera(dt) {
   const fitH = (H * 0.74) / (Math.max(250, top) * base);
   const fit = Math.max(0.28, Math.min(fitW, fitH));
   let focus = mid, zoomMul = superFreeze > 0 ? 1.1 : 1;
+  if (camPunch.t > 0) {
+    camPunch.t = Math.max(0, camPunch.t - dt);
+    const k = camPunch.maxT > 0 ? (camPunch.t / camPunch.maxT) : 0;
+    const ease = Math.sin(k * Math.PI * 0.5);
+    zoomMul *= 1 + camPunch.zoom * ease;
+    focus = lerp(focus, camPunch.x, 0.65 * ease);
+  }
   const lf = [A, B][localIdx()];
   if (lf && lf.state === 'charge' && M.mode !== 'demo' && M.mode !== 'watch2v2') {
     const lv = clamp(lf.t / CHARGE_FULL, 0, 1); zoomMul *= 1 + 0.24 * lv; focus = lerp(mid, lf.x, 0.4 * lv);
