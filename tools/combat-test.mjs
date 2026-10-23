@@ -132,9 +132,20 @@ async function initRunner() {
     dataset: {}, getAttribute: () => null, setAttribute: () => {}, closest: () => null
   };
 
+  const elCache = {};
+  const getEl = id => {
+    if (!elCache[id]) {
+      elCache[id] = Object.assign({}, dummyEl, {
+        id, textContent: '', innerHTML: '', style: {},
+        classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false }
+      });
+    }
+    return elCache[id];
+  };
+
   const sandbox = {
     window: { innerWidth: 1440, innerHeight: 900, addEventListener: () => {}, removeEventListener: () => {}, matchMedia: () => ({ matches: false }) },
-    document: { getElementById: () => dummyEl, querySelectorAll: () => [], querySelector: () => dummyEl, createElement: () => dummyEl, addEventListener: () => {}, removeEventListener: () => {}, body: dummyEl },
+    document: { getElementById: id => getEl(id), querySelectorAll: () => [], querySelector: () => dummyEl, createElement: () => dummyEl, addEventListener: () => {}, removeEventListener: () => {}, body: dummyEl },
     location: { protocol: 'http:', hostname: '127.0.0.1', search: '', hash: '' },
     localStorage: {
       _data: {},
@@ -567,6 +578,84 @@ const testSuite = [
       const w1 = model.weights.W1;
       if (!Array.isArray(w1) || w1.length !== 31 || w1[0].length !== 64) {
         return { pass: false, error: 'W1 dimension mismatch for 31-dim input' };
+      }
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: '2v2 P&CvC&C Mode: 1P player controls A, AI teammate controls C, 2 AI opponents control B & D',
+    fn: `(() => {
+      start2v2PlayerMatch(0, 2, 1, 3, 'normal');
+      if (M.mode !== '2v2' || M.subMode !== 'pc_cc' || M.watchAi) {
+        return { pass: false, error: 'P&CvC&C mode state flags mismatch' };
+      }
+      if (STAGE_W !== 2600) {
+        return { pass: false, error: 'Expected 2600 stage width in 2v2, got: ' + STAGE_W };
+      }
+      if (A.ctrl !== human[0]) {
+        return { pass: false, error: 'Player 1 should control fighter A via human[0]' };
+      }
+      if (!(C.ctrl instanceof AICtrl)) {
+        return { pass: false, error: 'Teammate C should be controlled by AICtrl' };
+      }
+      if (!(B.ctrl instanceof AICtrl) || !(D.ctrl instanceof AICtrl)) {
+        return { pass: false, error: 'Opponents B and D should be controlled by AICtrl' };
+      }
+      if (isAiVsAi()) {
+        return { pass: false, error: 'isAiVsAi() should be false when player participates' };
+      }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: '2v2 P&PvC&C Mode: 1P controls A, 2P controls C, 2 AI opponents on Team 1',
+    fn: `(() => {
+      start2v2LocalCoop(0, 2, 1, 3, 'normal');
+      if (M.mode !== '2v2' || M.subMode !== 'pp_cc') {
+        return { pass: false, error: 'P&PvC&C mode state flags mismatch' };
+      }
+      if (A.ctrl !== human[0] || C.ctrl !== human[1]) {
+        return { pass: false, error: '1P and 2P controllers not bound to A and C' };
+      }
+      if (!(B.ctrl instanceof AICtrl) || !(D.ctrl instanceof AICtrl)) {
+        return { pass: false, error: 'Opponents B and D should be AICtrl' };
+      }
+      if (localTeam() !== 0) {
+        return { pass: false, error: 'Both players in P&PvC&C co-op should be on Team 0' };
+      }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: '2v2 P&PvP&P Mode: 4-Player setup across two teams on 2600 stage',
+    fn: `(() => {
+      start2v2LocalVs(0, 2, 1, 3);
+      if (M.mode !== '2v2' || M.subMode !== 'pp_pp') {
+        return { pass: false, error: 'P&PvP&P mode state flags mismatch' };
+      }
+      if (STAGE_W !== 2600) {
+        return { pass: false, error: 'Expected 2600 stage width in 2v2' };
+      }
+      if (A.ctrl !== human[0] || C.ctrl !== human[1]) {
+        return { pass: false, error: '1P and 2P not bound to Team 0 (A & C)' };
+      }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Home page live online count display updates correctly',
+    fn: `(() => {
+      refreshOnline();
+      const el = document.getElementById('homeOnlineCount');
+      if (!el || !el.textContent || !el.textContent.includes('人在线')) {
+        return { pass: false, error: 'homeOnlineCount element missing or not populated' };
+      }
+      const cardEl = document.getElementById('homeOnlineCardNum');
+      if (!cardEl || !cardEl.textContent || !cardEl.textContent.includes('位侠士在线')) {
+        return { pass: false, error: 'homeOnlineCardNum element missing or not populated' };
       }
       return { pass: true, error: null };
     })()`

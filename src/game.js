@@ -1351,6 +1351,8 @@ function keyLabel(code) {
 const KEYS = [
   {},
   { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill' },
+  { KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special' },
+  { Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special' },
 ];
 function applyCustomKeys() {
   KEYS[0] = {};
@@ -1367,7 +1369,7 @@ const CHARGE_FULL = 0.75;   // 蓄力多久算满
 const DODGE_CD = 0.3;
 const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
 const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
-const human = [new Ctrl(), new Ctrl()];
+const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 
 // ======================= 联机（公共部分） =======================
 // 两种连法，对战代码完全一样，只是消息走的路不同：
@@ -1378,7 +1380,15 @@ const NET = { role: null, ws: null, open: false, remote: new Ctrl(), out: [], pr
 // 是否是从联机服务器打开的网页（而不是双击本地文件、GitHub Pages 或在线预览）
 const SERVED = !OFFLINE_BUILD && /^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent|anthropic|github\.io/.test(location.hostname);
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
-const localTeam = () => localIdx();   // 0 = 左边，1 = 右边（联机客户端）
+const localTeam = () => {
+  if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
+    if (M.subMode === 'pp_cc' || (M.mode === 'net' && netRoomMode === 'pp_cc')) return 0;
+    if (M.subMode === 'pc_cc') return 0;
+    if (M.mode === 'net') return NET.role === 'client' ? 1 : 0;
+    return 0;
+  }
+  return localIdx();
+};
 const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on;
 function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on) NET.out.push(ev); }
 function netReset() {
@@ -1754,9 +1764,44 @@ function netTick(dt) {
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
   M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; A.meter = B.meter = 0;
-  human[0].clear(); NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-  A.ctrl = NET.role === 'host' ? human[0] : NET.remote;
-  B.ctrl = NET.role === 'host' ? NET.remote : human[0];
+  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+  NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
+  if (netRoomMode === 'pp_cc') {
+    M.subMode = 'pp_cc';
+    M.level = 'god';
+    M.watchAi = false;
+    if (NET.role === 'host') {
+      A.ctrl = human[0];
+      C.ctrl = NET.remote;
+    } else {
+      A.ctrl = NET.remote;
+      C.ctrl = human[0];
+    }
+    B.ctrl = new AICtrl('god');
+    D.ctrl = new AICtrl('god');
+    if (!B.ch) B.setChar(1);
+    if (!D.ch) D.setChar(3);
+  } else if (netRoomMode === 'pp_pp') {
+    M.subMode = 'pp_pp';
+    M.watchAi = false;
+    if (NET.role === 'host') {
+      A.ctrl = human[0];
+      C.ctrl = human[1] || new AICtrl('god');
+      B.ctrl = NET.remote;
+      D.ctrl = new AICtrl('god');
+    } else {
+      A.ctrl = NET.remote;
+      C.ctrl = new AICtrl('god');
+      B.ctrl = human[0];
+      D.ctrl = human[1] || new AICtrl('god');
+    }
+    if (!C.ch) C.setChar((A.chIdx + 2) % CHARS.length);
+    if (!D.ch) D.setChar((B.chIdx + 2) % CHARS.length);
+  } else {
+    M.subMode = null;
+    A.ctrl = NET.role === 'host' ? human[0] : NET.remote;
+    B.ctrl = NET.role === 'host' ? NET.remote : human[0];
+  }
   NET.matchStartTime = Date.now();
   NET.matchHits = 0;
   NET.matchId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -1766,11 +1811,11 @@ function setupNetMatch() {
 
 // ======================= 电脑 AI =======================
 const LEVELS = {
-  easy:   { think: [0.35, 0.7],  block: 0.15, aggr: 0.4,  combo: 1 },
-  normal: { think: [0.18, 0.42], block: 0.4,  aggr: 0.58, combo: 3 },
-  hard:   { think: [0.08, 0.22], block: 0.72, aggr: 0.75, combo: 4 },
-  impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true },   // 绝顶：几乎零反应时间、必挡、被连必逃
-  god:    { think: [0.005, 0.018], block: 0.99, aggr: 0.98, combo: 6, god: true, neural: true }, // 天道：全英雄对抗深度强化神经网络决策、极致预判与精准破招
+  easy:       { think: [0.35, 0.70], block: 0.15, aggr: 0.40, combo: 1, confirm: false, whiffPunish: false, meaty: false, baitBreak: false, heroMastery: false, adaptHabit: false, aimUlt: false },
+  normal:     { think: [0.18, 0.42], block: 0.40, aggr: 0.58, combo: 3, confirm: false, whiffPunish: false, meaty: false, baitBreak: false, heroMastery: false, adaptHabit: false, aimUlt: false },
+  hard:       { think: [0.08, 0.22], block: 0.72, aggr: 0.75, combo: 4, confirm: true,  whiffPunish: true,  meaty: false, baitBreak: false, heroMastery: true,  adaptHabit: false, aimUlt: true  },
+  impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true, confirm: true, whiffPunish: true, meaty: true, baitBreak: true, heroMastery: true, adaptHabit: false, aimUlt: true },   // 绝顶：几乎零反应时间、必挡、被连必逃、起身压制與骗闪
+  god:        { think: [0.004, 0.014], block: 0.99, aggr: 0.98, combo: 6, god: true, neural: true, confirm: true, whiffPunish: true, meaty: true, baitBreak: true, heroMastery: true, adaptHabit: true, aimUlt: true }, // 天道：全英雄对抗深度强化神经网络决策、极致预判与精准破招
 };
 // 个性化电脑：以困难为基础，按你对它的输赢自动调强弱；禁你胜率最高的角色，用你最常用的角色
 const ADAPT = { s: 1, use: {}, win: {} };
@@ -1779,7 +1824,20 @@ function adaptLoad() { try { Object.assign(ADAPT, { s: 1, use: {}, win: {} }, JS
 function adaptSave() { try { localStorage.setItem(adaptKey(), JSON.stringify(ADAPT)); } catch (e) {} }
 function adaptLevel() {
   const k = clamp(ADAPT.s, 0.55, 1.45);
-  LEVELS.adaptive = { think: [0.08 / k, 0.22 / k], block: Math.min(0.95, 0.72 * k), aggr: Math.min(0.95, 0.75 * k), combo: k > 1.1 ? 5 : 4 };
+  LEVELS.adaptive = {
+    think: [0.08 / k, 0.22 / k],
+    block: Math.min(0.96, 0.72 * k),
+    aggr: Math.min(0.96, 0.75 * k),
+    combo: k > 1.1 ? 5 : 4,
+    confirm: k >= 0.85,
+    whiffPunish: k >= 0.95,
+    meaty: k >= 1.12,
+    baitBreak: k >= 1.18,
+    heroMastery: k >= 0.9,
+    adaptHabit: true,
+    aimUlt: k >= 0.9,
+    god: k >= 1.25
+  };
   const el = document.getElementById('adaptLine');
   if (el) { const fav = adaptFav(); el.textContent = `宿敌：如今强度 ${Math.round(k * 100)}%${fav.best >= 0 ? `，必禁你的${CHARS[fav.best].name}` : ''}${fav.most >= 0 ? `，惯用你的${CHARS[fav.most].name}` : ''}`; }
 }
@@ -2681,17 +2739,18 @@ class Fighter {
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
-const allFighters = () => M.mode === 'watch2v2' ? [A, B, C, D] : [A, B];
-const isAiVsAi = () => !!(M.watchAi || M.mode === 'watch2v2' || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
+const allFighters = () => is2v2() ? [A, B, C, D] : [A, B];
+const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !is2v2() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
 const foesOf = f => {
-  if (M.mode !== 'watch2v2') return [f === A ? B : A];
+  if (!is2v2()) return [f === A ? B : A];
   const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
   const alive = list.filter(e => !e.hidden && e.hp > 0);
   return alive.length ? alive : list;
 };
 const foeOf = f => {
-  if (M.mode !== 'watch2v2') return f === A ? B : A;
+  if (!is2v2()) return f === A ? B : A;
   const list = foesOf(f);
   if (!list.length) return A;
   if (list.length === 1) { f.target = list[0]; return list[0]; }
@@ -2850,9 +2909,9 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-  STAGE_W = M.mode === 'watch2v2' ? 2600 : 1800;
+  STAGE_W = is2v2() ? 2600 : 1800;
   if (typeof applySkins === 'function') applySkins();
-  if (M.mode === 'watch2v2') {
+  if (is2v2()) {
     C.hidden = false; D.hidden = false;
     A.reset(STAGE_W / 2 - 420); C.reset(STAGE_W / 2 - 210);
     B.reset(STAGE_W / 2 + 210); D.reset(STAGE_W / 2 + 420);
@@ -2883,7 +2942,7 @@ function startRound() {
   if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
-  M.phase = 'intro'; M.t = 0; M.timer = M.mode === 'watch2v2' ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
+  M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -2905,7 +2964,7 @@ function timeDeath(winner, text) {
   M.phase = 'ko'; M.t = 0; M.koWinner = winner;
   M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
   if (winner >= 0) {
-    const losers = M.mode === 'watch2v2' ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+    const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
     const winRef = [A, B][winner];
     for (const l of losers) {
       l.hp = 0; l.state = 'launched'; l.t = 0; l.vy = -380; l.vx = (l.x >= winRef.x ? 1 : -1) * 260; l.y = Math.min(l.y, -1); l.invul = 99; l.move = null; l.skill = null;
@@ -2921,13 +2980,13 @@ function updateMatch() {
     if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
-    const team0Out = M.mode === 'watch2v2' ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
-    const team1Out = M.mode === 'watch2v2' ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
+    const team0Out = is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
+    const team1Out = is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
     if (M.mode !== 'train' && (team0Out || team1Out)) {
       const winner = (team0Out && team1Out)
-        ? ((A.hp + (M.mode === 'watch2v2' ? C.hp : 0)) > (B.hp + (M.mode === 'watch2v2' ? D.hp : 0)) ? 0 : 1)
+        ? ((A.hp + (is2v2() ? C.hp : 0)) > (B.hp + (is2v2() ? D.hp : 0)) ? 0 : 1)
         : (team0Out ? 1 : 0);
-      const losers = M.mode === 'watch2v2' ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+      const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
       for (const loser of losers) {
         loser.hp = 0;
         if (loser.state !== 'launched' && loser.state !== 'knockdown') {
@@ -2946,14 +3005,14 @@ function updateMatch() {
       }
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
-        const ra = M.mode === 'watch2v2' ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
-        const rb = M.mode === 'watch2v2' ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
+        const ra = is2v2() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
+        const rb = is2v2() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
         if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
         else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
       }
     }
   } else if (M.phase === 'ko') {
-    const winners = M.koWinner >= 0 ? (M.mode === 'watch2v2' ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
+    const winners = M.koWinner >= 0 ? (is2v2() ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
     for (const w of winners) {
       if (w && M.t > 1.2 && w.hp > 0 && w.onGround() && (w.state === 'idle' || w.state === 'walk')) { w.state = 'victory'; w.t = 0; skinVictoryFX(w); }
     }
@@ -2980,23 +3039,38 @@ function showEnd(w) {
   taskMatchEnd(w);
   $id('endKicker').textContent = '';
   $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
-  $id('againBtn').style.display = (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
+  $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
   if (M.stage) {
     const win = w === 0;
     M.stage = null;
     setTimeout(() => stageShowEnd(win, win ? (M.wins[1] === 0 ? 3 : 2) : 0, `比分 ${M.wins[0]} : ${M.wins[1]}${win ? '<br><span style="font-size:13px">2 : 0 三星，2 : 1 两星</span>' : '，再磨一磨剑'}`), 300);
     return;
   }
-  if (M.mode === 'watch2v2') {
+  if (M.mode === 'watch2v2' || M.mode === '2v2') {
+    const isWatch = !!M.watchAi;
     const win = w === 0;
-    playSting('victory');
+    const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
+    const iWon = w === myTeam;
+    playSting(isWatch ? 'victory' : (iWon ? 'victory' : 'defeat'));
     const t = document.getElementById('endTitle');
-    inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, false);
-    const banStr = (M.bans && M.bans.length === 2) ? `（本局禁选：${CHARS[M.bans[0]].name}、${CHARS[M.bans[1]].name}）` : '';
-    document.getElementById('endSub').textContent = `2v2 天道演武决出胜负，比分 ${M.wins[0]} : ${M.wins[1]} ${banStr}`;
-    $id('endRank').textContent = '四位天道神境 AI 倾力交锋';
-    const again = document.getElementById('againBtn');
-    again.style.display = 'none';
+    if (isWatch) {
+      inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, false);
+      const banStr = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? `（本局禁选：${CHARS[M.bans[0]].name}、${CHARS[M.bans[1]].name}）` : '';
+      document.getElementById('endSub').textContent = `2v2 天道演武决出胜负，比分 ${M.wins[0]} : ${M.wins[1]} ${banStr}`;
+      $id('endRank').textContent = '四位天道神境 AI 倾力交锋';
+      const again = document.getElementById('againBtn');
+      again.style.display = 'none';
+    } else {
+      inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, !iWon);
+      const modeNames = { pc_cc: '2v2 侠客组队', pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
+      const modeName = modeNames[M.subMode] || '2v2 组队演武';
+      document.getElementById('endSub').textContent = `${modeName} · ${iWon ? '凯旋大捷！' : '惜败，择日再战！'} 比分 ${M.wins[0]} : ${M.wins[1]}`;
+      $id('endRank').textContent = iWon ? '双雄合璧，克敌制胜' : '胜败乃兵家常事';
+      const again = document.getElementById('againBtn');
+      again.style.display = '';
+      again.disabled = false;
+      again.textContent = '再战一局';
+    }
     setTimeout(() => showScreen('end'), 300);
     return;
   }
@@ -7942,7 +8016,7 @@ function drawFu(x, y, a, n) {   // 对手头顶那张符：黄纸朱砂
   ctx.restore();
 }
 // 谁在看这块屏幕：本机玩家的序号；AI 观战、回放、同屏双人、演示都算旁观者（-1）
-function viewerIdx() { return (M.watchAi || M.mode === 'demo' || M.mode === 'replay' || M.mode === 'pvp' || M.mode === 'watch2v2') ? -1 : localIdx(); }
+function viewerIdx() { return (M.watchAi || M.mode === 'demo' || M.mode === 'replay' || (M.mode === 'pvp' && !is2v2()) || (M.mode === 'watch2v2' && M.watchAi)) ? -1 : localIdx(); }
 // 山水之间 / 蓬莱境：画卷落下时人人都看得到；落下之后被困的一方整屏被画挡住，醉翁一方和旁观者照常看，只在被困的人身上留一圈雾
 function drawShanshui() {
   const f = [A, B].find(x => x && x.state === 'special' && x.sp === 'cast' && x.ch.ult === 'shanshui');   // 起手蓄势那 0.42 秒不画，否则画卷会落两遍
@@ -8066,13 +8140,26 @@ function drawHUD2v2() {
       const gLow = curG < maxG * 0.3;
       const hpTxt = `${Math.max(0, Math.round(f.hp))}/${f.maxHp}`;
       const gTxt = `势 ${curG}`;
-      ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(f.look.name).width;
+      let fTag = '';
+      if (f.ctrl === human[0]) fTag = ' [1P]';
+      else if (f.ctrl === human[1] && (M.subMode === 'pp_cc' || M.subMode === 'pp_pp')) fTag = ' [2P]';
+      else if (f.ctrl === human[2]) fTag = ' [3P]';
+      else if (f.ctrl === human[3]) fTag = ' [4P]';
+      else if (M.mode === 'net') {
+        if (netRoomMode === 'pp_cc') {
+          fTag = (f === A || f === C) ? (f.ctrl === human[0] ? ' [我]' : ' [队友]') : ' [电脑]';
+        } else if (netRoomMode === 'pp_pp') {
+          fTag = (f === A || f === C) ? (NET.role === 'host' ? ' [我方]' : ' [敌方]') : (NET.role === 'client' ? ' [我方]' : ' [敌方]');
+        }
+      }
+      const dispName = f.look.name + fTag;
+      ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(dispName).width;
       ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
       const total = nameW + hpW + gW + txtGap * 2;
       const nameFont = `bold ${fsN}px ${TITLE_FONT}`, numFont = `${fsNum}px ${BODY_FONT}`;
       const items = rev
-        ? [[gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [f.look.name, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW]]
-        : [[f.look.name, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW]];
+        ? [[gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [dispName, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW]]
+        : [[dispName, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW]];
       let px = rev ? edge - total : x;
       const yMid = y + Math.max(fsN, fsNum) / 2;
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -8103,19 +8190,27 @@ function drawHUD2v2() {
   team(A, C, 0);
   team(B, D, 1);
 
-  // —— 观战标签 + 禁选：移到底部中间，顶部只留计时器
+  // —— 底部标签与模式
   ctx.save();
   ctx.font = `bold ${Math.max(12, Math.round(H * 0.018))}px ${TITLE_FONT}`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
   ctx.fillStyle = '#46d3ea';
   ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
   const banTxt = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
-  ctx.fillText(`👁️ 2v2 天道演武${banTxt}`, cx, H - 10);
+  let bTitle = `👁️ 2v2 天道演武${banTxt}`;
+  if (!M.watchAi) {
+    if (M.subMode === 'pc_cc') bTitle = '⚔️ 2v2 侠客组队 (P&C v C&C)';
+    else if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (P&P v C&C)';
+    else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四人对决 (P&P v P&P)';
+    else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (P&P v C&C)';
+    else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 组队切磋 (P&P v P&P)';
+  }
+  ctx.fillText(bTitle, cx, H - 10);
   ctx.restore();
 }
 function drawHUD() {
   if (M.mode === 'demo') return;
-  if (M.mode === 'watch2v2') { drawHUD2v2(); return; }
+  if (is2v2()) { drawHUD2v2(); return; }
   const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
   [A, B].forEach((f, i) => {
     if (f.hidden) return;
@@ -9031,7 +9126,7 @@ function singleSec(sec) {
   else if (active === 'stage') renderStages();
   else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
   else if (active === 'mayhem') renderMayhem();
-  else if (active === 'watch2v2') renderWatch2v2();
+  else if (active === 'watch2v2') { if (typeof renderPlay2v2 === 'function') renderPlay2v2(); renderWatch2v2(); }
   else if (active === 'cpu') updateAIBrief();
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
@@ -13114,7 +13209,7 @@ function startWatch2v2(draft) {
   A.ctrl = new AICtrl('god'); C.ctrl = new AICtrl('god');
   B.ctrl = new AICtrl('god'); D.ctrl = new AICtrl('god');
   A.meter = B.meter = C.meter = D.meter = 35;
-  human[0].clear(); human[1].clear();
+  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   showScreen(null);
   startRound();
   say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
@@ -13123,10 +13218,279 @@ function startWatch2v2(draft) {
 const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
 if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
 
+// ======================= 2v2 演武与组队 (P&CvC&C, P&PvC&C, P&PvP&P) =======================
+let single2v2SubMode = 'play'; // 'play' (P&C v C&C) or 'watch' (C&C v C&C)
+const p2v2SlotsData = {
+  p1: 0,        // 1P 玩家
+  mate: 2,      // 电脑同袍搭档
+  foe1: 1,      // 敌方先锋
+  foe2: 3,      // 敌方次席
+  curSlot: 'p1',
+  level: 'normal'
+};
+
+function renderPlay2v2() {
+  ensurePortraits();
+  const slotsEl = document.getElementById('play2v2Slots');
+  if (slotsEl) {
+    const slots = [
+      { key: 'p1', team: 0, role: '【我方 1P 侠客】', sub: '玩家操控', idx: p2v2SlotsData.p1 },
+      { key: 'mate', team: 0, role: '【我方同袍搭档】', sub: '电脑协同', idx: p2v2SlotsData.mate },
+      { key: 'foe1', team: 1, role: '【敌方先锋】', sub: '电脑敌手', idx: p2v2SlotsData.foe1 },
+      { key: 'foe2', team: 1, role: '【敌方次席】', sub: '电脑敌手', idx: p2v2SlotsData.foe2 }
+    ];
+    slotsEl.innerHTML = slots.map(s => {
+      const isSel = p2v2SlotsData.curSlot === s.key;
+      const c = CHARS[s.idx] || CHARS[0];
+      return `<div class="play2v2-slot team${s.team}${isSel ? ' sel' : ''}" data-slot="${s.key}">
+        <div class="p2v2-role" style="color:${s.team === 0 ? 'var(--p1)' : 'var(--p2)'}">${s.role}</div>
+        <div class="p2v2-hero" style="color:rgb(${c.look.slash})">${c.name}</div>
+        <div class="p2v2-sub">${c.role} · ${s.sub}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const rosterEl = document.getElementById('play2v2Roster');
+  if (rosterEl) {
+    rosterEl.innerHTML = CHARS.map((c, i) => {
+      const activeIdx = p2v2SlotsData[p2v2SlotsData.curSlot];
+      const isSel = activeIdx === i;
+      return `<button class="tcard${isSel ? ' sel' : ''}" data-i="${i}" type="button">
+        <img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div>
+      </button>`;
+    }).join('');
+  }
+}
+
+function start2v2PlayerMatch(p1 = 0, mate = 2, foe1 = 1, foe2 = 3, level = 'normal') {
+  if (p2pActive() || NET.ws) netDropWaiting();
+  initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+  M.mode = '2v2';
+  M.subMode = 'pc_cc';
+  M.watchAi = false;
+  M.level = level;
+  M.bans = [];
+  M.wins = [0, 0];
+  M.round = 1;
+  M.carry = null;
+  M.stage = null;
+  A.setChar(p1); C.setChar(mate);
+  B.setChar(foe1); D.setChar(foe2);
+  A.ctrl = human[0];
+  C.ctrl = new AICtrl(level);
+  B.ctrl = new AICtrl(level);
+  D.ctrl = new AICtrl(level);
+  A.meter = B.meter = C.meter = D.meter = 35;
+  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+  showScreen(null);
+  startRound();
+  say(`2v2 组队 · 【${CHARS[p1].name} + ${CHARS[mate].name}】开战！`, 1.4);
+}
+
+function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal') {
+  if (p2pActive() || NET.ws) netDropWaiting();
+  initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+  M.mode = '2v2';
+  M.subMode = 'pp_cc';
+  M.watchAi = false;
+  M.level = level;
+  M.bans = [];
+  M.wins = [0, 0];
+  M.round = 1;
+  M.carry = null;
+  M.stage = null;
+  A.setChar(p1); C.setChar(p2);
+  B.setChar(foe1); D.setChar(foe2);
+  A.ctrl = human[0]; // 1P
+  C.ctrl = human[1]; // 2P
+  B.ctrl = new AICtrl(level);
+  D.ctrl = new AICtrl(level);
+  A.meter = B.meter = C.meter = D.meter = 35;
+  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+  showScreen(null);
+  startRound();
+  say(`双人共斗 · 【${CHARS[p1].name} & ${CHARS[p2].name}】同心破天道！`, 1.4);
+}
+
+function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
+  if (p2pActive() || NET.ws) netDropWaiting();
+  initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+  M.mode = '2v2';
+  M.subMode = 'pp_pp';
+  M.watchAi = false;
+  M.level = 'god';
+  M.bans = [];
+  M.wins = [0, 0];
+  M.round = 1;
+  M.carry = null;
+  M.stage = null;
+  A.setChar(p1); C.setChar(p2);
+  B.setChar(p3); D.setChar(p4);
+  A.ctrl = human[0]; // 1P
+  C.ctrl = human[1]; // 2P
+  B.ctrl = human[2] || new AICtrl('god'); // 3P
+  D.ctrl = human[3] || new AICtrl('god'); // 4P
+  A.meter = B.meter = C.meter = D.meter = 35;
+  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+  showScreen(null);
+  startRound();
+  say(`2v2 四人对决 · 苍龙 vs 赤凤！`, 1.4);
+}
+
+const single2v2SegEl = document.getElementById('single2v2Seg');
+if (single2v2SegEl) {
+  single2v2SegEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-sub]');
+    if (!b) return;
+    single2v2SubMode = b.dataset.sub;
+    for (const btn of single2v2SegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+    const playPane = document.getElementById('single2v2PlayPane');
+    const watchPane = document.getElementById('single2v2WatchPane');
+    if (playPane) playPane.style.display = single2v2SubMode === 'play' ? '' : 'none';
+    if (watchPane) watchPane.style.display = single2v2SubMode === 'watch' ? '' : 'none';
+    if (single2v2SubMode === 'play') renderPlay2v2();
+    else renderWatch2v2();
+  });
+}
+
+const play2v2SlotsEl = document.getElementById('play2v2Slots');
+if (play2v2SlotsEl) {
+  play2v2SlotsEl.addEventListener('click', e => {
+    const s = e.target.closest('[data-slot]');
+    if (!s) return;
+    p2v2SlotsData.curSlot = s.dataset.slot;
+    renderPlay2v2();
+  });
+}
+
+const play2v2RosterEl = document.getElementById('play2v2Roster');
+if (play2v2RosterEl) {
+  play2v2RosterEl.addEventListener('click', e => {
+    const c = e.target.closest('[data-i]');
+    if (!c) return;
+    const idx = parseInt(c.dataset.i, 10);
+    p2v2SlotsData[p2v2SlotsData.curSlot] = idx;
+    renderPlay2v2();
+  });
+}
+
+const btn2v2SuggestPartner = document.getElementById('btn2v2SuggestPartner');
+if (btn2v2SuggestPartner) {
+  btn2v2SuggestPartner.addEventListener('click', () => {
+    const p1Hero = CHARS[p2v2SlotsData.p1];
+    let best = (p2v2SlotsData.p1 + 2) % CHARS.length;
+    if (p1Hero && p1Hero.weakTo && p1Hero.weakTo.length) {
+      const needCover = p1Hero.weakTo;
+      const candidates = CHARS.map((c, i) => ({ i, c, score: (c.beats || []).filter(b => needCover.includes(b)).length }))
+        .filter(x => x.i !== p2v2SlotsData.p1);
+      candidates.sort((a, b) => b.score - a.score);
+      if (candidates.length && candidates[0].score > 0) best = candidates[0].i;
+    }
+    p2v2SlotsData.mate = best;
+    renderPlay2v2();
+    toast(`已推荐最佳搭档：${CHARS[best].name}`);
+  });
+}
+
+const btn2v2RandomFoes = document.getElementById('btn2v2RandomFoes');
+if (btn2v2RandomFoes) {
+  btn2v2RandomFoes.addEventListener('click', () => {
+    const used = new Set([p2v2SlotsData.p1, p2v2SlotsData.mate]);
+    const avail = CHARS.map((_, i) => i).filter(i => !used.has(i));
+    const r1 = avail[(Math.random() * avail.length) | 0];
+    const avail2 = avail.filter(i => i !== r1);
+    const r2 = avail2[(Math.random() * avail2.length) | 0];
+    p2v2SlotsData.foe1 = r1;
+    p2v2SlotsData.foe2 = r2;
+    renderPlay2v2();
+    toast(`已随机敌方阵容：${CHARS[r1].name} + ${CHARS[r2].name}`);
+  });
+}
+
+const play2v2LevelsEl = document.getElementById('play2v2Levels');
+if (play2v2LevelsEl) {
+  play2v2LevelsEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-lv]');
+    if (!b) return;
+    p2v2SlotsData.level = b.dataset.lv;
+    for (const btn of play2v2LevelsEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+  });
+}
+
+const play2v2StartBtn = document.getElementById('play2v2StartBtn');
+if (play2v2StartBtn) {
+  play2v2StartBtn.addEventListener('click', () => {
+    start2v2PlayerMatch(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, p2v2SlotsData.level);
+  });
+}
+
+// 联机大厅 2v2 弹窗交互
+let active2v2ModalMode = 'pp_cc';
+function open2v2Modal(mode) {
+  active2v2ModalMode = mode;
+  const modal = document.getElementById('modal2v2');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const t = document.getElementById('modal2v2Title');
+  const desc = document.getElementById('modal2v2Desc');
+  const ldesc = document.getElementById('modal2v2LocalDesc');
+  if (mode === 'pp_cc') {
+    if (t) t.textContent = '2v2 双人共斗 · 模式选择 (P&P v C&C)';
+    if (desc) desc.textContent = '双人成行，同队迎战两名天道 AI 宗师！选择加入方式：';
+    if (ldesc) ldesc.textContent = '同台电脑双人合作（1P: WASD+鼠标/J，2P: 方向键+K）。';
+  } else {
+    if (t) t.textContent = '2v2 四人组队切磋 · 模式选择 (P&P v P&P)';
+    if (desc) desc.textContent = '两队四名侠客，同台竞技对决！选择加入方式：';
+    if (ldesc) ldesc.textContent = '同台电脑四人对决（1P/2P 苍龙队，3P/4P 赤凤队）。';
+  }
+}
+
+const mm2v2CoopBtn = document.getElementById('mm2v2CoopBtn');
+if (mm2v2CoopBtn) mm2v2CoopBtn.addEventListener('click', () => open2v2Modal('pp_cc'));
+
+const mm2v2VsBtn = document.getElementById('mm2v2VsBtn');
+if (mm2v2VsBtn) mm2v2VsBtn.addEventListener('click', () => open2v2Modal('pp_pp'));
+
+const modal2v2Close = document.getElementById('modal2v2Close');
+if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
+  const modal = document.getElementById('modal2v2');
+  if (modal) modal.classList.add('hidden');
+});
+
+const btn2v2GoOnline = document.getElementById('btn2v2GoOnline');
+if (btn2v2GoOnline) {
+  btn2v2GoOnline.addEventListener('click', () => {
+    const modal = document.getElementById('modal2v2');
+    if (modal) modal.classList.add('hidden');
+    netRoomMode = active2v2ModalMode;
+    setRoomModeUI(netRoomMode);
+    if ($id('roomWrap')) {
+      $id('roomWrap').classList.remove('hidden');
+      $id('mmRoomBtn').classList.add('sel');
+    }
+    const hb = $id('hostBtn');
+    if (hb) hb.click();
+    toast(`已创建 ${active2v2ModalMode === 'pp_cc' ? '双人共斗' : '2v2 组队'} 房间，请将 4 位密令分享给好友`);
+  });
+}
+
+const btn2v2GoLocal = document.getElementById('btn2v2GoLocal');
+if (btn2v2GoLocal) {
+  btn2v2GoLocal.addEventListener('click', () => {
+    const modal = document.getElementById('modal2v2');
+    if (modal) modal.classList.add('hidden');
+    if (active2v2ModalMode === 'pp_cc') {
+      start2v2LocalCoop(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, 'normal');
+    } else {
+      start2v2LocalVs(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2);
+    }
+  });
+}
+
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
-  if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') return;
+  if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
   if (M.mode === 'net' && NET.isRanked) {   // 排位不和同一个人连打：回大厅找下一个对手
     netLeave(); toMenu(); selectMode('net'); mmStart('ranked');
     return;
@@ -13147,6 +13511,18 @@ document.getElementById('againBtn').addEventListener('click', () => {
       toast('已向房主发送再战请求');
     }
     return;
+  }
+  if (M.mode === '2v2' || (M.mode === 'watch2v2' && !M.watchAi)) {
+    if (M.subMode === 'pc_cc') {
+      start2v2PlayerMatch(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, p2v2SlotsData.level);
+      return;
+    } else if (M.subMode === 'pp_cc') {
+      start2v2LocalCoop(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, p2v2SlotsData.level);
+      return;
+    } else if (M.subMode === 'pp_pp') {
+      start2v2LocalVs(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2);
+      return;
+    }
   }
   if (M.mode === 'watch2v2') {
     startWatch2v2Draft();
@@ -14214,8 +14590,8 @@ function renderAccSync() {
   const u = window.CloudSave && CloudSave.getUser();
   const isLocalUser = u && !u.isCloud;
   const localNote = !hasCloudCfg
-    ? '当前未配置 Firebase 云端（单机/局域网模式），进度保存在本机。如需跨设备同步，请点击下方【云存档设置】或【导出当前存档】。'
-    : '云端已配置，但当前为本机账号。点击【一键升级为云端账号】即可将进度上传到云端！';
+    ? '当前未连接云端，进度保存在本机。如需跨设备同步，请点击下方【云端服务设置】或【导出当前存档】。'
+    : '云端已连接，但当前为本机账号。点击【一键升级为云端账号】即可将进度上传到云端！';
   const M_ = {
     local: [hasCloudCfg ? '本机账号' : '本机存档', localNote],
     idle: ['已连接云端', '有新进度会自动上传'],
@@ -14436,27 +14812,24 @@ if ($id('devCloudPushBtn')) {
 if ($id('toggleCloudCfgBtn')) {
   $id('toggleCloudCfgBtn').addEventListener('click', () => {
     $id('cloudCfgBox').classList.toggle('hidden');
+    if (!$id('cloudCfgBox').classList.contains('hidden') && $id('fbCfgIn')) {
+      $id('fbCfgIn').value = (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '');
+    }
   });
 }
 if ($id('fbCfgSaveBtn')) {
   $id('fbCfgSaveBtn').addEventListener('click', () => {
     try {
       const val = $id('fbCfgIn').value.trim();
-      const parsed = JSON.parse(val);
-      if (!parsed.projectId || !parsed.apiKey) throw new Error('配置需包含 projectId 和 apiKey');
-      if (window.CloudSave) {
-        CloudSave.setConfig(parsed);
-        const u = CloudSave.getUser();
-        if (u && (u.isDevMaster || (u.name && u.name.toLowerCase() === 'dev'))) {
-          CloudSave.login('Dev', 'IAMADEVBRO').then(() => {
-            renderAcc();
-            toast('Firebase 云端已连接！Dev 账号已在 Google Cloud 完成全解锁！');
-          }).catch(err => {
-            console.warn('Dev auto cloud sync error:', err);
-          });
-        }
+      let endpoint = val;
+      if (val.startsWith('{')) {
+        const parsed = JSON.parse(val);
+        endpoint = parsed.endpoint || parsed.url || '';
       }
-      toast('Firebase 云端配置已保存！正在连线…');
+      if (window.CloudSave) {
+        CloudSave.setConfig(endpoint);
+      }
+      toast('云端服务接口已更新！');
       $id('cloudCfgBox').classList.add('hidden');
       renderAcc();
     } catch (e) {
@@ -14468,7 +14841,7 @@ if ($id('fbCfgClearBtn')) {
   $id('fbCfgClearBtn').addEventListener('click', () => {
     if (window.CloudSave) CloudSave.setConfig(null);
     if ($id('fbCfgIn')) $id('fbCfgIn').value = '';
-    toast('已恢复为本地独立单账号模式');
+    toast('已恢复默认云端接口 (renying.evengao6688.workers.dev)');
     $id('cloudCfgBox').classList.add('hidden');
     renderAcc();
   });
@@ -14897,7 +15270,7 @@ if (lobbyModesSegEl) {
     netRoomMode = b.dataset.mode;
     for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
     send({ sys: 'room_rule', rule: netRoomMode });
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (P&P v C&C)', pp_pp: '2v2 组队切磋 (P&P v P&P)' };
     toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
     SFX.slice();
   });
@@ -15037,21 +15410,33 @@ setInterval(() => {
     if (NET.ws && NET.ws.readyState === 1 && t % 4 === 0) send({ ping: 1 });   // 告诉服务器自己还在
   }
 }, 1000);
-// 在线情况：多少局在打、多少人在匹配
+// 在线情况：多少局在打、多少人在匹配、首页全服在线人数
 function refreshOnline() {
-  if (!SERVED || !window.fetch || !document.getElementById('netp').classList.contains('on')) {
-    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = SERVED ? '正在监测江湖' : '单机局域模式';
+  let count = 0;
+  if (typeof SOC !== 'undefined' && SOC.online && SOC.online.length) {
+    count = Math.max(count, SOC.online.length);
+  }
+  const updatePills = (cnt, h) => {
+    const total = Math.max(1, cnt);
+    const parts = [];
+    if (h && h.playing) parts.push(`${h.playing} 局对战`);
+    if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
+    const line = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
+    if ($id('onlineLine')) $id('onlineLine').textContent = line;
+    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : `${total} 人在线 · 全网连线`;
+    if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
+    if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
+    if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
+  };
+  if (!SERVED || !window.fetch) {
+    updatePills(count);
     return;
   }
   fetch('/health').then(r => r.json()).then(h => {
-    const parts = [];
-    if (h.playing) parts.push(`${h.playing} 局对战`);
-    if (h.waiting) parts.push(`${h.waiting} 人匹配`);
-    const line = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
-    if ($id('onlineLine')) $id('onlineLine').textContent = line;
-    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : '全服待命中';
+    const srvOnline = h.online || ((h.playing || 0) * 2 + (h.waiting || 0));
+    updatePills(Math.max(count, srvOnline), h);
   }).catch(() => {
-    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = '连线就绪';
+    updatePills(count);
   });
 }
 setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
@@ -15162,10 +15547,23 @@ window.addEventListener('keydown', e => {
     }
     return;
   }
-  for (let p = 0; p < 2; p++) {
-    const act = KEYS[p][e.code]; if (!act) continue;
+  for (let p = 0; p < KEYS.length; p++) {
+    const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
     e.preventDefault();
-    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : human[p];
+    let c = human[0];
+    if (M.mode === 'pvp') {
+      c = human[p] || human[0];
+    } else if (M.mode === '2v2' || is2v2()) {
+      if (M.subMode === 'pp_cc') {
+        c = p === 1 ? human[1] : human[0];
+      } else if (M.subMode === 'pp_pp') {
+        c = human[p] || human[0];
+      } else {
+        c = human[0];
+      }
+    } else {
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
+    }
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
     if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
     if (act === 'left' || act === 'right' || act === 'down') { c.held[act] = true; if (act !== 'down') c.held.aim = act === 'left' ? -1 : 1; continue; }
@@ -15173,9 +15571,22 @@ window.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('keyup', e => {
-  for (let p = 0; p < 2; p++) {
-    const act = KEYS[p][e.code]; if (!act) continue;
-    const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : human[p];
+  for (let p = 0; p < KEYS.length; p++) {
+    const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
+    let c = human[0];
+    if (M.mode === 'pvp') {
+      c = human[p] || human[0];
+    } else if (M.mode === '2v2' || is2v2()) {
+      if (M.subMode === 'pp_cc') {
+        c = p === 1 ? human[1] : human[0];
+      } else if (M.subMode === 'pp_pp') {
+        c = human[p] || human[0];
+      } else {
+        c = human[0];
+      }
+    } else {
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
+    }
     if (act === 'left' || act === 'right' || act === 'down') c.held[act] = false;
     if (act === 'atk') c.held.atk = false;
     if (act === 'jump') c.held.jump = false;
@@ -15204,7 +15615,7 @@ cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { saveTowerRun(); });
 window.addEventListener('blur', () => {
-  human[0].clear(); human[1].clear();
+  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   if (M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && M.phase !== 'end' && !paused) {
     paused = true;
     showScreen('pause');

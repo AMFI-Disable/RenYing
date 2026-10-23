@@ -1080,7 +1080,8 @@ button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
 .season-tag { background: var(--v-red); color: #fff; padding: 4px 14px 4px 12px; font-weight: 700; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); letter-spacing: .12em; }
 .season-range { color: var(--v-white); font-weight: 600; }
 .season-left::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--v-red); margin-right: 8px; transform: rotate(45deg) translateY(-2px); }
-.mm-cards { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+.mm-cards { display: grid; grid-template-columns: 1.15fr 1fr 1.05fr; gap: 16px; }
+@media (max-width: 1160px) { .mm-cards { grid-template-columns: 1fr; } }
 .mm-card { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 6px; padding: 22px 26px 24px; min-height: 250px;
 background: linear-gradient(135deg, rgba(15,25,35,.94), rgba(31,42,54,.9)); border: 1px solid rgba(236,232,225,.12);
 clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px)); transition: transform .18s ease, border-color .18s; }
@@ -1088,10 +1089,13 @@ clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 
 .mm-card-bg { position: absolute; inset: 0; pointer-events: none; opacity: .9;
 background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 100% 0%, rgba(255,70,85,.28), transparent 60%); }
 .mm-ranked .mm-card-bg { background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 0% 100%, rgba(233,196,106,.22), transparent 60%), radial-gradient(ellipse at 100% 0%, rgba(114,245,214,.12), transparent 55%); }
+.mm-2v2 .mm-card-bg { background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 100% 0%, rgba(70,211,234,.28), transparent 60%), radial-gradient(ellipse at 0% 100%, rgba(43,212,154,.18), transparent 60%); }
 .mm-card > *:not(.mm-card-bg) { position: relative; }
 .mm-kicker { align-self: flex-start; font-family: var(--v-cond); font-size: 12px; letter-spacing: .2em; color: var(--v-red); border: 1px solid rgba(255,70,85,.55); padding: 2px 10px; }
 .mm-ranked .mm-kicker { color: var(--gold); border-color: rgba(233,196,106,.55); }
+.mm-2v2 .mm-kicker { color: #46d3ea; border-color: rgba(70,211,234,.55); }
 .mm-title { font-family: var(--title); font-size: clamp(44px, 4.6vw, 64px); line-height: 1.02; color: var(--v-white); letter-spacing: .06em; }
+.mm-2v2 .mm-title { font-size: clamp(38px, 3.8vw, 52px); }
 .mm-en { font-family: var(--v-cond); font-weight: 700; font-size: 15px; letter-spacing: .42em; color: rgba(236,232,225,.38); margin-top: -2px; }
 .mm-desc { color: rgba(236,232,225,.72); font-size: 14px; margin: 6px 0 auto; }
 .mm-go { margin-top: 16px; align-self: flex-start; min-width: 220px; padding: 14px 34px; border: none; cursor: pointer; font-family: var(--v-cond); font-weight: 700; font-size: 19px; letter-spacing: .3em; color: #fff; background: var(--v-red);
@@ -1102,6 +1106,10 @@ clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 
 .mm-ranked .mm-go { background: linear-gradient(90deg, #d9a440, #f3cf73); color: #1a1206; }
 .mm-ranked .mm-go:hover:not(:disabled) { box-shadow: 0 0 28px rgba(233,196,106,.45); background: linear-gradient(90deg, #e6b250, #ffdc85); }
 .mm-ranked .mm-go:disabled { background: #5d4a22; color: rgba(255,240,210,.7); }
+.mm-2v2 .mm-go { background: linear-gradient(90deg, #1b8a9e, #46d3ea); color: #0b1d28; }
+.mm-2v2 .mm-go:hover:not(:disabled) { box-shadow: 0 0 28px rgba(70,211,234,.45); background: linear-gradient(90deg, #22a0b7, #5ee0f7); }
+.mm-2v2 .mm-go.alt { background: rgba(70,211,234,.12); border: 1px solid rgba(70,211,234,.4); color: #46d3ea; }
+.mm-2v2 .mm-go.alt:hover:not(:disabled) { background: rgba(70,211,234,.24); border-color: #46d3ea; color: #fff; }
 .mm-rank-row { display: flex; align-items: center; gap: 16px; margin-top: 4px; }
 .mm-medal { flex: none; width: 108px; height: 108px; display: grid; place-items: center; filter: drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
 .mm-rank-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
@@ -1284,6 +1292,28 @@ button.home-card:hover { border-color: rgba(233,196,106,.6); transform: translat
 .menuscr .msmall-dock { background: rgba(13,21,30,.8); border-top: 1px solid var(--line); }
 .menuscr .mgroup { border-radius: 0; background: transparent; border: none; }
 .menuscr .mgroup button { border-radius: 0; }
+.home-online-pill {
+display: inline-flex; align-items: center; gap: 7px; padding: 3px 12px; border-radius: 999px;
+background: rgba(43,212,154,0.14); border: 1px solid rgba(43,212,154,0.35); color: #2bd49a;
+font-size: 13px; letter-spacing: .04em; font-weight: 600;
+}
+.home-online-dot {
+width: 8px; height: 8px; border-radius: 50%; background: #2bd49a; box-shadow: 0 0 8px #2bd49a;
+animation: homePulseDot 2s infinite ease-in-out; flex: none;
+}
+@keyframes homePulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+.play2v2-slots { margin: 10px 0 14px; }
+.play2v2-slot {
+padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+border-radius: 8px; cursor: pointer; text-align: center; transition: all .15s ease;
+}
+.play2v2-slot:hover { border-color: rgba(233,196,106,0.6); background: rgba(255,255,255,0.06); }
+.play2v2-slot.sel { border-color: var(--gold); background: rgba(233,196,106,0.12); box-shadow: 0 0 14px rgba(233,196,106,0.25); }
+.play2v2-slot.team0 { border-left: 3px solid var(--p1); }
+.play2v2-slot.team1 { border-left: 3px solid var(--p2); }
+.play2v2-slot .p2v2-role { font-size: 11px; margin-bottom: 4px; font-weight: 700; color: var(--gold); }
+.play2v2-slot .p2v2-hero { font-family: var(--title); font-size: 18px; color: #fff; }
+.play2v2-slot .p2v2-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
 @media (max-height: 620px) { .home-side { display: none; } }
 @media (max-height: 520px) {
 .home-kicker { top: 6%; font-size: 12px; }
@@ -1508,10 +1538,17 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
 
   <div id="menu" class="scr on menuscr" data-enter="run">
     <div class="home-scrim" aria-hidden="true"></div>
-    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span></div>
+    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 1 人在线</span></span></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
     <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
+      <div class="home-card home-online-card" id="homeOnlineCard">
+        <span class="hc-kicker" style="color:#2bd49a">实时江湖</span>
+        <div class="hc-row">
+          <span class="home-online-dot"></span>
+          <span class="hc-txt"><b id="homeOnlineCardNum">1 位侠士在线</b><small id="homeOnlineCardSub">全服连线待命中 · 随时开战</small></span>
+        </div>
+      </div>
       <button class="home-card home-evt" id="homeEvt" type="button" hidden>
         <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
         <span class="hc-txt"><b>全皮肤免费穿</b><small>打 3 局人机领 1000 墨锭 · 补偿自选侠客</small></span>
@@ -1564,7 +1601,7 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
           <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
           <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
           <button data-tab="mayhem" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
-          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 观战</button>
+          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 演武</button>
         </div>
       </div>
 
@@ -1808,15 +1845,66 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
 
       <div data-sec="watch2v2" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">2v2 天道演武 · 巅峰AI观战</h3>
-          <span class="sub-badge">双队禁选 · 四神同台 · 阔野奇阵</span>
+          <h3 class="spt">2v2 巅峰演武 · 阔野奇阵</h3>
+          <span class="sub-badge">双人协同 · 2600尺阔野战场 · 灵泉神坛</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">四名【天道】神经网络 AI 同台 2v2 混战！两队各禁选 1 名侠客（共 2 禁），并各选 2 名不重复侠客同场竞技。擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央立【天道剑坛】刷出神符增益，并伴随【天劫剑雨】！</p>
-        <div class="sec-sub-label">天道 AI 自动禁选顺序（共 6 步 · 两队 2 禁 4 选 · 全局互不重复）</div>
-        <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
-        <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入与 1v1 相同的选人界面：两位天道 AI 依次完成 2 禁 4 选，每一手都清晰可见，玩家只旁观不入局。</p>
-        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
-          <button class="go" id="watch2v2StartBtn" type="button">开启 2v2 天道演武</button>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">双人同舟，驰骋阔野！擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央【天道剑坛】定时刷出神符灵丹，并伴随【天劫剑雨】！</p>
+
+        <!-- 2v2 子模式切换：玩家组队参战 (P&C v C&C) vs 天道巅峰观战 (C&C v C&C) -->
+        <div class="seg single-2v2-seg" id="single2v2Seg" style="display:flex;gap:6px;justify-content:center;margin:8px 0 14px">
+          <button class="sel" id="single2v2PlayTab" data-sub="play" type="button">侠客同袍 · 玩家组队 (P&C v C&C)</button>
+          <button id="single2v2WatchTab" data-sub="watch" type="button">天道同台 · 演武观战 (C&C v C&C)</button>
+        </div>
+
+        <!-- 玩家组队参战区 (P&C v C&C) -->
+        <div id="single2v2PlayPane">
+          <div class="sec-sub-label">排定两队对阵阵容（点击指定席位卡片，再在下方挑选侠客）</div>
+          <div class="play2v2-slots" id="play2v2Slots" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 12px"></div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap">
+            <button class="ghost small" id="btn2v2SuggestPartner" type="button" style="color:var(--gold);border-color:rgba(233,196,106,0.4)">✨ 推荐最佳协同搭档</button>
+            <button class="ghost small" id="btn2v2RandomFoes" type="button">🎲 随机敌方双人组</button>
+          </div>
+
+          <div class="sec-sub-label">待命侠客名册（点击入选当前席位）</div>
+          <div class="tag3-roster" id="play2v2Roster"></div>
+
+          <div class="sec-sub-label" style="margin-top:10px">敌方与同袍电脑战力境界</div>
+          <div class="levels-grid" id="play2v2Levels">
+            <button data-lv="easy" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+              <span class="lv-sub">反应迟缓 · 初学练手</span>
+            </button>
+            <button data-lv="normal" class="sel" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+              <span class="lv-sub">见招拆招 · 攻守均衡</span>
+            </button>
+            <button data-lv="hard" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+              <span class="lv-sub">凌厉反击 · 连招压制</span>
+            </button>
+            <button data-lv="impossible" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+              <span class="lv-sub">极境宗师 · 绝无破绽</span>
+            </button>
+            <button data-lv="god" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+              <span class="lv-sub">神经网络 · 协同战术</span>
+            </button>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+            <button class="go" id="play2v2StartBtn" type="button">开启 2v2 组队开战 (P&C v C&C)</button>
+          </div>
+        </div>
+
+        <!-- 观战区 (C&C v C&C) -->
+        <div id="single2v2WatchPane" style="display:none">
+          <div class="sec-sub-label">天道 AI 自动禁选顺序（共 6 步 · 两队 2 禁 4 选 · 全局互不重复）</div>
+          <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
+          <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入与 1v1 相同的选人界面：两位天道 AI 依次完成 2 禁 4 选，每一手都清晰可见，玩家只旁观不入局。</p>
+          <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+            <button class="go" id="watch2v2StartBtn" type="button">开启 2v2 天道演武 (C&C v C&C)</button>
+          </div>
         </div>
       </div>
 
@@ -1865,6 +1953,17 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
             <div class="mm-rank-actions">
               <button class="mm-go" id="mmRankBtn" type="button">开始排位</button>
               <button class="mm-link" id="mmRankInfoBtn" type="button">段位与战绩</button>
+            </div>
+          </div>
+          <div class="mm-card mm-2v2" id="mm2v2Card">
+            <div class="mm-card-bg" aria-hidden="true"></div>
+            <span class="mm-kicker">全新玩法 · 协同决战</span>
+            <span class="mm-title">2v2 组队开黑</span>
+            <span class="mm-en">2V2 TEAM & CO-OP</span>
+            <span class="mm-desc">双人同袍共破天道 (P&P v C&C)，或四人组队同台切磋 (P&P v P&P)！支持联机约战与同屏开黑。</span>
+            <div class="mm-2v2-actions" style="display:flex;gap:10px;margin-top:auto;padding-top:10px;flex-wrap:wrap">
+              <button class="mm-go" id="mm2v2CoopBtn" type="button" style="min-width:160px;padding:12px 18px;font-size:15px">双人共斗 (P&P v C&C)</button>
+              <button class="mm-go alt" id="mm2v2VsBtn" type="button" style="min-width:160px;padding:12px 18px;font-size:15px">四人对决 (P&P v P&P)</button>
             </div>
           </div>
         </div>
@@ -2015,9 +2114,11 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               擂台切磋模式：
             </span>
-            <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px">
+            <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px;flex-wrap:wrap">
               <button class="ghost small sel" data-mode="normal" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">标准论剑 (BO3)</button>
               <button class="ghost small" data-mode="chaos" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">天机乱斗 (随机词条)</button>
+              <button class="ghost small" data-mode="pp_cc" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">双人共斗 (P&P v C&C)</button>
+              <button class="ghost small" data-mode="pp_pp" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">2v2 组队切磋 (P&P v P&P)</button>
             </div>
           </div>
 
@@ -2078,6 +2179,32 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
         <div class="rk-info-panel">
           <div class="rk-info-head"><b>段位与战绩</b><span id="rkInfoSeason"></span><button class="mm-cancel" id="rkInfoClose" type="button">关闭</button></div>
           <div id="rkInfoBody"></div>
+        </div>
+      </div>
+      <!-- 2v2 玩法选择模态弹窗 -->
+      <div class="rk-info hidden" id="modal2v2" role="dialog" aria-modal="true" aria-label="2v2 玩法模式选择">
+        <div class="rk-info-panel" style="max-width:580px">
+          <div class="rk-info-head">
+            <b id="modal2v2Title">2v2 协同决战 · 模式选择</b>
+            <button class="mm-cancel" id="modal2v2Close" type="button">关闭</button>
+          </div>
+          <div style="padding:16px 20px 20px" id="modal2v2Body">
+            <p class="sub" id="modal2v2Desc" style="margin:0 0 16px;text-align:left;color:rgba(236,232,225,0.85)">
+              选择进入对决的方式：
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="modal2v2Options">
+              <div class="wuxia-card" id="modal2v2OnlineCard" style="padding:16px;cursor:pointer;border-color:rgba(70,211,234,0.4);background:rgba(70,211,234,0.06);transition:transform .15s">
+                <h4 style="color:#46d3ea;margin:0 0 6px;font-size:17px;font-family:var(--title)">🌐 在线联机开黑</h4>
+                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5">设擂建房生成 4 位房间码分享好友，跨越网络千里同袍。</p>
+                <button class="go small" id="btn2v2GoOnline" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">设擂开黑</button>
+              </div>
+              <div class="wuxia-card" id="modal2v2LocalCard" style="padding:16px;cursor:pointer;border-color:rgba(233,196,106,0.4);background:rgba(233,196,106,0.06);transition:transform .15s">
+                <h4 style="color:var(--gold);margin:0 0 6px;font-size:17px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
+                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5" id="modal2v2LocalDesc">同台电脑键盘对决（1P: WASD+鼠标/J，2P: 方向键+K）。</p>
+                <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">本地开战</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2289,10 +2416,10 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
         <p id="devCloudMsg" class="netstatus" style="margin:4px 0 0;font-size:12px" role="status"></p>
       </div>
       <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
-        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云存档配置</b>（跨设备同步同一账号）</p>
-        <p class="netnote" style="margin:0 0 6px">粘贴你的 Firebase 网页配置（含 projectId、apiKey）：</p>
-        <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
-        <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
+        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云端账号服务配置</b>（Cloudflare Workers + D1）</p>
+        <p class="netnote" style="margin:0 0 6px">当前云端服务接口已默认连接：</p>
+        <input id="fbCfgIn" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;padding:6px;box-sizing:border-box" placeholder="https://renying.evengao6688.workers.dev">
+        <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存接口</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
       </div>
       <div id="importBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(233,196,106,.3);border-radius:8px;background:rgba(20,24,35,.75);text-align:left">
         <p style="margin:0 0 6px;font-size:13px;color:var(--gold)"><b>存档导入与继承</b></p>
@@ -2551,149 +2678,98 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
 <script>
 (function() {
 'use strict';
-const DEFAULT_CONFIG = {
-apiKey: '',
-authDomain: '',
-projectId: '',
-storageBucket: '',
-messagingSenderId: '',
-appId: ''
+const DEFAULT_ENDPOINT = 'https://renying.evengao6688.workers.dev';
+function getEndpoint() {
+if (typeof window !== 'undefined' && window.RENYING_CLOUD_API) {
+return String(window.RENYING_CLOUD_API).replace(/\/+$/, '');
+}
+try {
+const saved = localStorage.getItem('renying-cloud-endpoint');
+if (saved) return String(saved).replace(/\/+$/, '');
+} catch (e) {}
+return DEFAULT_ENDPOINT;
+}
+function setEndpoint(url) {
+try {
+if (url && typeof url === 'string' && url.trim()) {
+localStorage.setItem('renying-cloud-endpoint', url.trim().replace(/\/+$/, ''));
+} else {
+localStorage.removeItem('renying-cloud-endpoint');
+}
+} catch (e) {}
+}
+function getConfig() {
+return {
+endpoint: getEndpoint(),
+provider: 'Cloudflare Workers + D1'
 };
-let fbApp = null;
-let fbAuth = null;
-let fbDb = null;
+}
+function setConfig(cfg) {
+if (cfg && typeof cfg === 'object' && cfg.endpoint) {
+setEndpoint(cfg.endpoint);
+} else if (typeof cfg === 'string') {
+setEndpoint(cfg);
+}
+}
+function hasValidConfig() {
+return !!getEndpoint();
+}
 let currentUser = null;
-let authListeners = [];
-let saveTimer = null;
-let rkBlocked = false;
-const sync = { state: 'local', at: 0, err: '' };
+const authListeners = [];
 const syncListeners = [];
-let pendingData = null, retryN = 0;
-function cloudActive() { return !!(hasValidConfig() && fbDb && currentUser && currentUser.uid !== 'dev_master' && !String(currentUser.uid).startsWith('local_')); }
-function dirtyKey() { return 'renying-sync-dirty-' + (currentUser && currentUser.uid); }
+let saveTimer = null;
+let pendingData = null;
+let retryN = 0;
+const sync = { state: 'local', at: 0, err: '' };
+function getToken() {
+try {
+return localStorage.getItem('renying-cloud-token') || (currentUser && currentUser.token) || '';
+} catch (e) {
+return '';
+}
+}
+function setToken(tok) {
+try {
+if (tok) localStorage.setItem('renying-cloud-token', tok);
+else localStorage.removeItem('renying-cloud-token');
+} catch (e) {}
+}
+function cloudActive() {
+const u = getUser();
+return !!(hasValidConfig() && u && u.isCloud && getToken());
+}
+function dirtyKey() {
+return 'renying-sync-dirty-' + (currentUser && currentUser.uid);
+}
 function setSync(patch) {
 Object.assign(sync, patch);
-try { if (sync.at) localStorage.setItem('renying-sync-at-' + (currentUser && currentUser.uid), String(sync.at)); } catch (e) {}
+try {
+if (sync.at && currentUser) {
+localStorage.setItem('renying-sync-at-' + currentUser.uid, String(sync.at));
+}
+} catch (e) {}
 const snap = getSyncState();
 syncListeners.forEach(fn => { try { fn(snap); } catch (e) {} });
 }
 function getSyncState() {
 let at = sync.at;
-if (!at && currentUser) { try { at = +localStorage.getItem('renying-sync-at-' + currentUser.uid) || 0; } catch (e) {} }
+if (!at && currentUser) {
+try { at = +localStorage.getItem('renying-sync-at-' + currentUser.uid) || 0; } catch (e) {}
+}
 let state = cloudActive() ? sync.state : 'local';
-if (state === 'local' && cloudActive()) state = at ? 'ok' : 'idle';   // 连上了云端但这次还没传过
+if (state === 'local' && cloudActive()) state = at ? 'ok' : 'idle';
 return { state, at, err: sync.err, cloud: cloudActive(), pending: !!pendingData };
 }
-function onSyncChange(fn) { if (typeof fn === 'function') syncListeners.push(fn); }
-async function writeDoc(data) {
-try {
-await fbDb.collection('users').doc(currentUser.uid).set(data, { merge: true });
-} catch (err) {
-if (data.rk && err && err.code === 'permission-denied') {   // 规则还不认识 rk：去掉再试一次
-rkBlocked = true;
-delete data.rk;
-await fbDb.collection('users').doc(currentUser.uid).set(data, { merge: true });
-return;
+function onSyncChange(fn) {
+if (typeof fn === 'function') syncListeners.push(fn);
 }
-throw err;
+function onAuthChange(fn) {
+if (typeof fn === 'function') authListeners.push(fn);
 }
-}
-async function doSync() {
-if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
-const data = pendingData;
-if (!data || !cloudActive()) return;
-if (typeof navigator !== 'undefined' && navigator.onLine === false) { setSync({ state: 'offline' }); return; }
-setSync({ state: 'syncing' });
-try {
-await writeDoc(data);
-if (pendingData === data) {
-pendingData = null;
-try { localStorage.removeItem(dirtyKey()); } catch (e) {}
-}
-retryN = 0;
-setSync({ state: pendingData ? 'pending' : 'ok', at: Date.now(), err: '' });
-if (pendingData) saveTimer = setTimeout(doSync, 800);
-} catch (err) {
-console.warn('Sync profile to Firestore failed:', err);
-if (err && err.code === 'permission-denied') {   // 云端校验不通过，重试也没用：本机数据还在，提示一下
-if (pendingData === data) pendingData = null;
-setSync({ state: 'error', err: '云端拒绝了这次存档（单次变化超出了云端的校验范围），本机存档不受影响' });
-return;
-}
-retryN++;
-const wait = [2, 5, 15, 30, 60][Math.min(retryN, 5) - 1] * 1000;
-setSync({ state: 'error', err: `上传失败，${Math.round(wait / 1000)} 秒后自动重试` });
-saveTimer = setTimeout(doSync, wait);
-}
-}
-function flush() { if (pendingData && cloudActive()) doSync(); }
-if (typeof window !== 'undefined') {
-window.addEventListener('online', flush);
-window.addEventListener('offline', () => { if (pendingData) setSync({ state: 'offline' }); });
-window.addEventListener('pagehide', flush);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
-}
-function getConfig() {
-if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId) {
-return window.FIREBASE_CONFIG;
-}
-try {
-const saved = localStorage.getItem('renying-firebase-config');
-if (saved) {
-const parsed = JSON.parse(saved);
-if (parsed && parsed.projectId) return parsed;
-}
-} catch (e) {}
-return DEFAULT_CONFIG;
-}
-function setConfig(cfg) {
-try {
-if (cfg && cfg.projectId) {
-localStorage.setItem('renying-firebase-config', JSON.stringify(cfg));
-} else {
-localStorage.removeItem('renying-firebase-config');
-}
-} catch (e) {}
-fbApp = fbAuth = fbDb = null;
-init();
-}
-function hasValidConfig() {
-const cfg = getConfig();
-return !!(cfg && cfg.projectId && cfg.apiKey);
-}
-function toEmail(nameOrEmail) {
-const s = String(nameOrEmail).trim();
-if (s.includes('@')) return s;
-let encoded = '';
-try {
-encoded = btoa(encodeURIComponent(s)).replace(/=/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
-} catch (e) {
-encoded = 'u_' + Date.now();
-}
-return `ry_${encoded}@renying.game`;
-}
-function init() {
-const cfg = getConfig();
-if (window.firebase && cfg.projectId && cfg.apiKey) {
-try {
-if (!firebase.apps || !firebase.apps.length) {
-fbApp = firebase.initializeApp(cfg);
-} else {
-fbApp = firebase.app();
-}
-fbAuth = firebase.auth();
-fbDb = firebase.firestore();
-fbAuth.onAuthStateChanged(user => {
-currentUser = user;
+function notifyAuthChange(user) {
 authListeners.forEach(fn => {
 try { fn(user); } catch (err) { console.warn('Auth listener error:', err); }
 });
-});
-} catch (err) {
-console.warn('Firebase init error, fallback to local storage:', err);
-fbApp = fbAuth = fbDb = null;
-}
-}
 }
 const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen'];
 const DEV_ALL_SKINS = [
@@ -2735,9 +2811,9 @@ updatedAt: Date.now()
 function toCloudData(prof) {
 const p = prof || {};
 return {
-name: String(p.name || 'Dev').slice(0, 24),
+name: String(p.name || '侠客').slice(0, 24),
 ink: Math.max(0, Math.floor(p.ink || 0)),
-owned: Array.isArray(p.owned) && p.owned.length ? Array.from(new Set(p.owned)) : DEV_ALL_CHARS.slice(),
+owned: Array.isArray(p.owned) && p.owned.length ? Array.from(new Set(p.owned)) : ['qingfeng'],
 frags: (p.frags && typeof p.frags === 'object') ? p.frags : {},
 pity: Math.max(0, Math.floor(p.pity || 0)),
 spity: Math.max(0, Math.floor(p.spity || 0)),
@@ -2748,80 +2824,69 @@ netLosses: Math.max(0, Math.floor(p.netLosses || 0)),
 online10Unlocked: !!p.online10Unlocked,
 stageStars: (p.stageStars && typeof p.stageStars === 'object') ? p.stageStars : {},
 qfx: Math.max(0, Math.floor(p.qfx || 0)),
+rating: typeof p.rating === 'number' ? p.rating : 1100,
+placed: typeof p.placed === 'number' ? p.placed : 0,
 updatedAt: Date.now(),
-...(p.rk && typeof p.rk === 'object' && !rkBlocked ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {})
+...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {})
 };
+}
+async function api(path, options = {}) {
+const base = getEndpoint();
+const url = base + path;
+const token = getToken();
+const headers = {
+'Content-Type': 'application/json',
+...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+...(options.headers || {})
+};
+const res = await fetch(url, { ...options, headers });
+const data = await res.json().catch(() => ({}));
+if (!res.ok) {
+throw new Error(data.error || `请求失败 (${res.status})`);
+}
+return data;
+}
+async function doSync() {
+if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+const data = pendingData;
+if (!data || !cloudActive()) return;
+if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+setSync({ state: 'offline' });
+return;
+}
+setSync({ state: 'syncing' });
+try {
+const res = await api('/api/profile', {
+method: 'POST',
+body: JSON.stringify({ profile: data })
+});
+if (pendingData === data) {
+pendingData = null;
+try { localStorage.removeItem(dirtyKey()); } catch (e) {}
+}
+retryN = 0;
+setSync({ state: pendingData ? 'pending' : 'ok', at: res.updatedAt || Date.now(), err: '' });
+if (pendingData) saveTimer = setTimeout(doSync, 800);
+} catch (err) {
+console.warn('Sync profile to Cloudflare failed:', err);
+retryN++;
+const wait = [2, 5, 15, 30, 60][Math.min(retryN, 5) - 1] * 1000;
+setSync({ state: 'error', err: `上传失败，${Math.round(wait / 1000)} 秒后自动重试` });
+saveTimer = setTimeout(doSync, wait);
+}
+}
+function flush() {
+if (pendingData && cloudActive()) doSync();
+}
+if (typeof window !== 'undefined') {
+window.addEventListener('online', flush);
+window.addEventListener('offline', () => { if (pendingData) setSync({ state: 'offline' }); });
+window.addEventListener('pagehide', flush);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
 }
 async function loginDev(password) {
 if (btoa(password) !== 'SUFNQURFVkJSTw==') {
 throw new Error('昵称或密码不对');
-}
-if (hasValidConfig() && fbAuth && fbDb) {
-try {
-const email = toEmail('Dev');
-let cred = null;
-try {
-cred = await fbAuth.signInWithEmailAndPassword(email, password);
-} catch (authErr) {
-if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
-cred = await fbAuth.createUserWithEmailAndPassword(email, password);
-} else {
-throw authErr;
-}
-}
-currentUser = cred.user;
-currentUser.isDevMaster = true;
-if (currentUser.updateProfile) {
-try { await currentUser.updateProfile({ displayName: 'Dev' }); } catch (e) {}
-}
-const docRef = fbDb.collection('users').doc(currentUser.uid);
-const snap = await docRef.get();
-let devProf = null;
-if (snap.exists) {
-devProf = snap.data();
-} else {
-let cached = null;
-try {
-cached = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || localStorage.getItem('renying-prof-dev_master') || 'null');
-} catch (e) {}
-devProf = cached || {
-name: 'Dev',
-ink: 500,
-owned: ['qingfeng'],
-frags: {},
-pity: 0,
-spity: 0,
-skins: [],
-equip: {},
-netWins: 0,
-netLosses: 0,
-rating: 1100,
-placed: 0,
-online10Unlocked: false,
-stageStars: {},
-qfx: 0,
-updatedAt: Date.now()
-};
-await docRef.set(toCloudData(devProf), { merge: true });
-}
-try {
-localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(devProf));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: 'Dev', isDevMaster: true }));
-const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-mockUsers['Dev'] = { uid: currentUser.uid, name: 'Dev', pw: 'SUFNQURFVkJSTw==', isDevMaster: true, created: Date.now() };
-localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-} catch (e) {}
-return {
-uid: currentUser.uid,
-name: 'Dev',
-email: email,
-isCloud: true,
-isDevMaster: true
-};
-} catch (cloudErr) {
-console.warn('Google Cloud / Firebase Dev 登录同步异常，安全降级至本地模式:', cloudErr);
-}
 }
 const uid = 'dev_master';
 let devProf = null;
@@ -2829,34 +2894,15 @@ try {
 devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
 } catch (e) {}
 if (!devProf) {
-devProf = {
-name: 'Dev',
-ink: 500,
-owned: ['qingfeng'],
-frags: {},
-pity: 0,
-spity: 0,
-skins: [],
-equip: {},
-netWins: 0,
-netLosses: 0,
-rating: 1100,
-placed: 0,
-online10Unlocked: false,
-stageStars: {},
-qfx: 0,
-updatedAt: Date.now()
-};
+devProf = makeDevProfile();
 }
 try {
 localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
 localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true }));
-const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-mockUsers['Dev'] = { uid, name: 'Dev', pw: 'SUFNQURFVkJSTw==', isDevMaster: true, created: Date.now() };
-localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true, isCloud: false }));
 } catch (e) {}
-currentUser = { uid, displayName: 'Dev', isDevMaster: true };
+currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
+notifyAuthChange(currentUser);
 return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
 }
 async function register(username, password) {
@@ -2867,206 +2913,164 @@ if (name.toLowerCase() === 'dev') {
 if (btoa(password) !== 'SUFNQURFVkJSTw==') throw new Error('该昵称已被使用');
 return await loginDev(password);
 }
-if (hasValidConfig() && fbAuth && fbDb) {
-const email = toEmail(name);
-let cred = null;
-try {
-cred = await fbAuth.createUserWithEmailAndPassword(email, password);
-} catch (authErr) {
-if (authErr.code === 'auth/email-already-in-use') {
-throw new Error('该昵称已在云端注册，请直接点击“登录”');
-} else if (authErr.code === 'auth/unauthorized-domain') {
-throw new Error('当前域名未获 Firebase 授权，请在控制台添加此域名');
-} else if (authErr.code === 'auth/operation-not-allowed') {
-throw new Error('Firebase 未启用电子邮件/密码登录方式');
-} else {
-throw new Error('云端注册失败: ' + (authErr.message || authErr.code));
-}
-}
-currentUser = cred.user;
-if (currentUser.updateProfile) {
-try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
-}
 let initialProf = null;
 try {
 const guestRaw = localStorage.getItem('renying-guest-profile');
 if (guestRaw) initialProf = JSON.parse(guestRaw);
 } catch (e) {}
-if (initialProf) {
-initialProf.name = name;
-await fbDb.collection('users').doc(currentUser.uid).set(toCloudData(initialProf), { merge: true });
 try {
-localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(initialProf));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(initialProf));
+const data = await api('/api/register', {
+method: 'POST',
+body: JSON.stringify({
+username: name,
+password: password,
+profile: initialProf ? toCloudData(initialProf) : null
+})
+});
+setToken(data.token);
+const userObj = {
+uid: data.uid,
+name: data.username,
+displayName: data.username,
+token: data.token,
+isCloud: true
+};
+currentUser = userObj;
+localStorage.setItem('renying-local-current', JSON.stringify(userObj));
+if (data.profile) {
+try {
+localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
+localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
 localStorage.removeItem('renying-guest-profile');
 } catch (e) {}
 }
-return {
-uid: currentUser.uid,
-name: name,
-email: email,
-isCloud: true
-};
+setSync({ state: 'ok', at: Date.now(), err: '' });
+notifyAuthChange(currentUser);
+return userObj;
+} catch (err) {
+if (err.message && err.message.includes('已') && err.message.includes('注册')) {
+throw err;
 }
+console.warn('Cloudflare Worker register failed, falling back to local account:', err);
 const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
 if (mockUsers[name]) throw new Error('该昵称已在本机注册');
 const uid = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
 mockUsers[name] = { uid, name, pw: btoa(password), created: Date.now() };
 localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
-currentUser = { uid, displayName: name };
-try {
-const guestRaw = localStorage.getItem('renying-guest-profile');
-if (guestRaw) {
-const guestProf = JSON.parse(guestRaw);
-if (guestProf) {
-guestProf.name = name;
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(guestProf));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(guestProf));
-localStorage.removeItem('renying-guest-profile');
+const userObj = { uid, name, displayName: name, isCloud: false };
+localStorage.setItem('renying-local-current', JSON.stringify(userObj));
+currentUser = userObj;
+notifyAuthChange(currentUser);
+return userObj;
 }
-}
-} catch (e) {}
-return { uid, name, isCloud: false };
 }
 async function login(username, password) {
 const name = String(username).trim();
-if (!name) throw new Error('请输入昵称或邮箱');
+if (!name) throw new Error('请输入昵称');
 if (!password) throw new Error('请输入密码');
 if (name.toLowerCase() === 'dev') {
 return await loginDev(password);
 }
-if (hasValidConfig() && fbAuth && fbDb) {
-const email = toEmail(name);
-let cred = null;
 try {
-cred = await fbAuth.signInWithEmailAndPassword(email, password);
-} catch (authErr) {
+const data = await api('/api/login', {
+method: 'POST',
+body: JSON.stringify({ username: name, password: password })
+});
+setToken(data.token);
+const userObj = {
+uid: data.uid,
+name: data.username,
+displayName: data.username,
+token: data.token,
+isCloud: true
+};
+currentUser = userObj;
+localStorage.setItem('renying-local-current', JSON.stringify(userObj));
+if (data.profile) {
+try {
+localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
+localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
+} catch (e) {}
+}
+setSync({ state: 'ok', at: Date.now(), err: '' });
+notifyAuthChange(currentUser);
+return userObj;
+} catch (err) {
 let mockUsers = {};
 try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
 const localU = mockUsers[name];
-if ((authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') && localU && localU.pw === btoa(password)) {
+if (localU && localU.pw === btoa(password)) {
 try {
-cred = await fbAuth.createUserWithEmailAndPassword(email, password);
-currentUser = cred.user;
-if (currentUser.updateProfile) {
-try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
-}
 let localProf = null;
 try {
 const pStr = localStorage.getItem('renying-prof-' + localU.uid) || localStorage.getItem('renying-cloud-cache');
 if (pStr) localProf = JSON.parse(pStr);
 } catch (e) {}
-if (localProf) {
-localProf.name = name;
-await fbDb.collection('users').doc(currentUser.uid).set(toCloudData(localProf), { merge: true });
-localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(localProf));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(localProf));
-}
-localU.uid = currentUser.uid;
+const data = await api('/api/register', {
+method: 'POST',
+body: JSON.stringify({
+username: name,
+password: password,
+profile: localProf ? toCloudData(localProf) : null
+})
+});
+setToken(data.token);
+const userObj = {
+uid: data.uid,
+name: data.username,
+displayName: data.username,
+token: data.token,
+isCloud: true,
+migrated: true
+};
+currentUser = userObj;
+localU.uid = data.uid;
 localU.migratedToCloud = true;
 mockUsers[name] = localU;
 localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: name }));
-return { uid: currentUser.uid, name: name, email: email, isCloud: true, migrated: true };
-} catch (migrateErr) {
-console.warn('Auto migration error:', migrateErr);
-throw new Error('本地账号升级至云端失败: ' + (migrateErr.message || migrateErr.code));
-}
-} else if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
-throw new Error('昵称或密码不对');
-} else if (authErr.code === 'auth/user-not-found') {
-throw new Error('未找到该账号，请先点击“注册”');
-} else if (authErr.code === 'auth/unauthorized-domain') {
-throw new Error('当前域名未获 Firebase 授权，请在控制台添加此域名');
-} else {
-throw new Error('云端登录失败: ' + (authErr.message || authErr.code));
-}
-}
-currentUser = cred.user;
-localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: currentUser.displayName || name }));
-return {
-uid: currentUser.uid,
-name: currentUser.displayName || name,
-email: email,
-isCloud: true
-};
-}
-const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-const u = mockUsers[name];
-if (!u || u.pw !== btoa(password)) throw new Error('昵称或密码不对');
-localStorage.setItem('renying-local-current', JSON.stringify({ uid: u.uid, name: u.name }));
-currentUser = { uid: u.uid, displayName: u.name };
-return { uid: u.uid, name: u.name, isCloud: false };
-}
-async function promoteLocalToCloud(password) {
-if (!hasValidConfig() || !fbAuth || !fbDb) {
-throw new Error('未配置或未连通 Firebase，请在下方【云存档设置】填入配置');
-}
-const u = getUser();
-if (!u) throw new Error('当前未登录任何账号');
-if (u.isCloud) return { success: true, alreadyCloud: true, uid: u.uid };
-const name = u.name;
-const email = toEmail(name);
-let cred = null;
-try {
-cred = await fbAuth.signInWithEmailAndPassword(email, password);
-} catch (authErr) {
-if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/invalid-login-credentials') {
-cred = await fbAuth.createUserWithEmailAndPassword(email, password);
-} else {
-throw authErr;
-}
-}
-currentUser = cred.user;
-if (u.isDevMaster) currentUser.isDevMaster = true;
-if (currentUser.updateProfile) {
-try { await currentUser.updateProfile({ displayName: name }); } catch (e) {}
-}
-let localProf = null;
-try {
-localProf = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || localStorage.getItem('renying-cloud-cache') || '{}');
-} catch (e) {}
-const cloudData = toCloudData(localProf);
-cloudData.name = name;
-await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
-try {
-let mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-if (mockUsers[name]) {
-mockUsers[name].uid = currentUser.uid;
-mockUsers[name].migratedToCloud = true;
-localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-}
-localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(cloudData));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(cloudData));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid: currentUser.uid, name: name, isDevMaster: !!u.isDevMaster }));
-} catch (e) {}
+localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 setSync({ state: 'ok', at: Date.now(), err: '' });
-return { success: true, uid: currentUser.uid, name: name, isCloud: true };
+notifyAuthChange(currentUser);
+return userObj;
+} catch (regErr) {
+const userObj = { uid: localU.uid, name, displayName: name, isCloud: false };
+localStorage.setItem('renying-local-current', JSON.stringify(userObj));
+currentUser = userObj;
+notifyAuthChange(currentUser);
+return userObj;
+}
+}
+throw err;
+}
 }
 async function logout() {
-if (fbAuth && currentUser) {
-try { await fbAuth.signOut(); } catch (e) {}
-}
+try {
+await api('/api/logout', { method: 'POST' }).catch(() => {});
+} catch (e) {}
+setToken('');
 currentUser = null;
 try { localStorage.removeItem('renying-local-current'); } catch (e) {}
+notifyAuthChange(null);
 }
 function getUser() {
 if (currentUser) {
 const isDev = !!currentUser.isDevMaster;
 return {
 uid: currentUser.uid,
-name: currentUser.displayName || currentUser.email || '大侠',
-isCloud: hasValidConfig() && !!fbDb && currentUser.uid !== 'dev_master' && !currentUser.uid.startsWith('local_'),
-isDevMaster: isDev
+name: currentUser.displayName || currentUser.name || '大侠',
+isCloud: !!(currentUser.isCloud && currentUser.token),
+isDevMaster: isDev,
+token: currentUser.token || getToken()
 };
 }
 try {
 const local = JSON.parse(localStorage.getItem('renying-local-current') || 'null');
 if (local && local.uid) {
+const token = getToken();
+const isCloud = !!(token && local.isCloud !== false);
 const isDev = !!local.isDevMaster;
-currentUser = { uid: local.uid, displayName: local.name, isDevMaster: isDev };
-return { ...local, isCloud: false, isDevMaster: isDev };
+currentUser = { ...local, token, isCloud, displayName: local.name, isDevMaster: isDev };
+return currentUser;
 }
 } catch (e) {}
 return null;
@@ -3080,14 +3084,17 @@ if (guest) return JSON.parse(guest);
 } catch (e) {}
 return null;
 }
-if (hasValidConfig() && fbDb && currentUser && currentUser.uid !== 'dev_master' && !currentUser.uid.startsWith('local_')) {
+if (cloudActive()) {
 try {
-const snap = await fbDb.collection('users').doc(currentUser.uid).get();
-if (snap.exists) {
-const data = snap.data();
+const res = await api('/api/profile', { method: 'GET' });
+if (res && res.profile) {
+const data = res.profile;
 let local = null, dirty = 0;
-try { dirty = +localStorage.getItem(dirtyKey()) || 0; local = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || 'null'); } catch (e) {}
-const cloudAt = typeof data.updatedAt === 'number' ? data.updatedAt : (data.updatedAt && data.updatedAt.toMillis ? data.updatedAt.toMillis() : 0);
+try {
+dirty = +localStorage.getItem(dirtyKey()) || 0;
+local = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || 'null');
+} catch (e) {}
+const cloudAt = typeof data.updatedAt === 'number' ? data.updatedAt : 0;
 if (dirty && local && (local.updatedAt || 0) > cloudAt) {
 saveProfile(local, true);
 return local;
@@ -3095,7 +3102,7 @@ return local;
 try {
 localStorage.removeItem(dirtyKey());
 localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
-localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(data));
+localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(data));
 } catch (e) {}
 if (!pendingData) setSync({ state: 'ok', at: Date.now(), err: '' });
 return data;
@@ -3127,19 +3134,22 @@ try {
 localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
 localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(dataToSave));
 } catch (e) {}
-if (!cloudActive()) { setSync({ state: 'local' }); return; }
+if (!cloudActive()) {
+setSync({ state: 'local' });
+return;
+}
 pendingData = dataToSave;
 try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
 if (sync.state !== 'syncing') setSync({ state: 'pending' });
 if (saveTimer) clearTimeout(saveTimer);
 if (immediate) doSync();
-else saveTimer = setTimeout(doSync, 1500);
+else saveTimer = setTimeout(doSync, 1200);
 }
 async function syncNow() {
-if (!cloudActive()) throw new Error('当前是本地存档，没有连接云端');
+if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
 if (!pendingData) {
 let local = null;
-try { local = JSON.parse(localStorage.getItem('renying-prof-' + currentUser.uid) || 'null'); } catch (e) {}
+try { local = JSON.parse(localStorage.getItem('renying-prof-' + getUser().uid) || 'null'); } catch (e) {}
 if (!local) throw new Error('本机没有可上传的存档');
 pendingData = Object.assign(toCloudData(local), { name: getUser().name, updatedAt: Date.now() });
 }
@@ -3147,21 +3157,19 @@ await doSync();
 if (sync.state === 'error') throw new Error(sync.err);
 }
 async function pullNow() {
-if (!cloudActive()) throw new Error('当前是本地存档，没有连接云端');
-const snap = await fbDb.collection('users').doc(currentUser.uid).get();
-if (!snap.exists) throw new Error('云端还没有这个账号的存档');
-const data = snap.data();
+if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
+const res = await api('/api/profile', { method: 'GET' });
+if (!res || !res.profile) throw new Error('云端还没有这个账号的存档');
+const data = res.profile;
 pendingData = null;
+const uid = getUser().uid;
 try {
 localStorage.removeItem(dirtyKey());
 localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
-localStorage.setItem('renying-prof-' + currentUser.uid, JSON.stringify(data));
+localStorage.setItem('renying-prof-' + uid, JSON.stringify(data));
 } catch (e) {}
 setSync({ state: 'ok', at: Date.now(), err: '' });
 return data;
-}
-function onAuthChange(fn) {
-if (typeof fn === 'function') authListeners.push(fn);
 }
 function triggerDownload(filename, text) {
 const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
@@ -3219,28 +3227,13 @@ activeProf = {};
 }
 }
 const name = (u && u.name) || activeProf.name || '大侠';
-const profData = {
-name: name,
-ink: Math.max(0, Math.floor(activeProf.ink || 0)),
-owned: Array.isArray(activeProf.owned) ? Array.from(new Set(activeProf.owned)) : ['qingfeng'],
-frags: activeProf.frags || {},
-pity: Math.max(0, Math.floor(activeProf.pity || 0)),
-spity: Math.max(0, Math.floor(activeProf.spity || 0)),
-skins: Array.isArray(activeProf.skins) ? Array.from(new Set(activeProf.skins)) : [],
-equip: activeProf.equip || {},
-netWins: Math.max(0, Math.floor(activeProf.netWins || 0)),
-netLosses: Math.max(0, Math.floor(activeProf.netLosses || 0)),
-online10Unlocked: !!activeProf.online10Unlocked,
-stageStars: activeProf.stageStars || {},
-qfx: Math.max(0, Math.floor(activeProf.qfx || 0)),
-rating: activeProf.rating || 1100,
-placed: activeProf.placed || 0
-};
+const profData = toCloudData(activeProf);
+profData.name = name;
 const sig = await computeProfileDigest(profData);
 const payload = {
 app: 'renying',
 format: 'single-account',
-version: 1,
+version: 2,
 exportedAt: new Date().toISOString(),
 account: {
 uid: (u && u.uid) || ('local_' + Date.now()),
@@ -3254,11 +3247,6 @@ triggerDownload(`renying-account-${safeName}.json`, JSON.stringify(payload, null
 return payload;
 }
 function exportAllAccounts() {
-const u = getUser();
-const isDev = !!(u && u.isDevMaster);
-if (!isDev) {
-throw new Error('只有管理员可导出全量账号备份');
-}
 let mockUsers = {};
 try {
 mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
@@ -3275,7 +3263,7 @@ accounts.push({ account: u, profile: prof });
 const payload = {
 app: 'renying',
 format: 'all-accounts-backup',
-version: 1,
+version: 2,
 exportedAt: new Date().toISOString(),
 count: accounts.length,
 accounts: accounts
@@ -3288,111 +3276,40 @@ if (!data || typeof data !== 'object') throw new Error('无效的存档文件数
 if (data.format === 'single-account' && data.profile) {
 const isSigValid = await verifyProfileDigest(data);
 if (isSigValid === false) {
-throw new Error('⚠️ 存档校验和不匹配：该备份文件已被外部修改，已拒绝导入以保障账号安全');
+throw new Error('⚠️ 存档校验和不匹配：该备份文件已被外部篡改');
 }
 const p = data.profile;
-if (isSigValid === null) {
-p.ink = Math.min(Math.max(0, Math.floor(p.ink || 0)), 3000);
-p.netWins = Math.min(Math.max(0, Math.floor(p.netWins || 0)), 100);
-}
-const u = data.account || { uid: 'local_' + Date.now(), name: p.name || '大侠' };
-const name = p.name || u.name || '大侠';
-const uid = u.uid || ('local_' + Date.now());
-let mockUsers = {};
-try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
-mockUsers[name] = { uid, name, pw: btoa('123456'), created: Date.now() };
-localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
+const uid = (data.account && data.account.uid) || ('imported_' + Date.now());
+const name = (data.account && data.account.name) || p.name || '大侠';
 localStorage.setItem('renying-prof-' + uid, JSON.stringify(p));
 localStorage.setItem('renying-cloud-cache', JSON.stringify(p));
-currentUser = { uid, displayName: name };
+localStorage.setItem('renying-local-current', JSON.stringify({ uid, name, isCloud: false }));
+currentUser = { uid, name, displayName: name, isCloud: false };
+notifyAuthChange(currentUser);
+if (cloudActive()) {
 saveProfile(p, true);
-return { success: true, count: 1, profile: p, name };
 }
-if (data.format === 'all-accounts-backup' && Array.isArray(data.accounts)) {
-let mockUsers = {};
-try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
-let lastProf = null, lastName = '';
-for (const item of data.accounts) {
-if (!item || !item.account) continue;
-const name = item.account.name;
-const uid = item.account.uid || ('local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
-mockUsers[name] = { ...item.account, uid, name };
-if (item.profile) {
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(item.profile));
-lastProf = item.profile;
-lastName = name;
+return p;
 }
+throw new Error('不支持的文件格式');
 }
-localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-if (lastProf && lastName) {
-const uid = mockUsers[lastName].uid;
-localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: lastName }));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(lastProf));
-currentUser = { uid, displayName: lastName };
-saveProfile(lastProf, true);
-}
-return { success: true, count: data.accounts.length, profile: lastProf, name: lastName };
-}
-if (Array.isArray(data.owned)) {
-const p = { ...data };
-p.ink = Math.min(Math.max(0, Math.floor(p.ink || 0)), 1000);
-p.netWins = Math.min(Math.max(0, Math.floor(p.netWins || 0)), 50);
-const name = p.name || '大侠';
-const uid = 'local_' + Date.now();
-let mockUsers = {};
-try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
-mockUsers[name] = { uid, name, pw: btoa('123456'), created: Date.now() };
-localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid, name }));
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(p));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(p));
-currentUser = { uid, displayName: name };
-saveProfile(p, true);
-return { success: true, count: 1, profile: p, name };
-}
-throw new Error('未识别的文件格式');
-}
-async function unlockAllOnCloud() {
-const devProf = makeDevProfile();
-const cloudData = toCloudData(devProf);
+async function promoteLocalToCloud(password) {
 const u = getUser();
-const uid = (currentUser && currentUser.uid) || (u && u.uid) || 'dev_master';
+if (!u) throw new Error('当前未登录任何账号');
+if (u.isCloud && getToken()) return { success: true, alreadyCloud: true, uid: u.uid };
+const name = u.name;
+let localProf = null;
 try {
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
-if (u) {
-localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: u.name || 'Dev', isDevMaster: true }));
-}
+localProf = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || localStorage.getItem('renying-cloud-cache') || '{}');
 } catch (e) {}
-if (hasValidConfig() && fbDb && currentUser && currentUser.uid !== 'dev_master' && !currentUser.uid.startsWith('local_')) {
-await fbDb.collection('users').doc(currentUser.uid).set(cloudData, { merge: true });
-return { success: true, isCloud: true, data: devProf };
+const res = await register(name, password);
+if (localProf) {
+saveProfile(localProf, true);
 }
-return { success: true, isCloud: false, data: devProf };
+return { success: true, uid: res.uid, name: res.name, isCloud: true };
 }
-async function getCloudDocument(collectionName, docId) {
-if (!hasValidConfig() || !fbDb) throw new Error('未配置或未连通 Google Cloud Firestore');
-const col = collectionName || 'users';
-const id = docId || (currentUser && currentUser.uid);
-if (!id) throw new Error('缺少文档 ID');
-const snap = await fbDb.collection(col).doc(id).get();
-if (!snap.exists) return null;
-return snap.data();
-}
-async function setCloudDocument(collectionName, docId, data) {
-if (!hasValidConfig() || !fbDb) throw new Error('未配置或未连通 Google Cloud Firestore');
-const col = collectionName || 'users';
-const id = docId || (currentUser && currentUser.uid);
-if (!id) throw new Error('缺少文档 ID');
-if (!data || typeof data !== 'object') throw new Error('数据必须是有效 JSON 对象');
-const sanitized = toCloudData(data);
-await fbDb.collection(col).doc(id).set(sanitized, { merge: true });
-try {
-localStorage.setItem('renying-cloud-cache', JSON.stringify(sanitized));
-localStorage.setItem('renying-prof-' + id, JSON.stringify(sanitized));
-} catch (e) {}
-return sanitized;
+function init() {
+getUser();
 }
 if (typeof window !== 'undefined') {
 window.CloudSave = {
@@ -3418,13 +3335,10 @@ computeProfileDigest,
 verifyProfileDigest,
 makeDevProfile,
 toCloudData,
-unlockAllOnCloud,
-getCloudDocument,
-setCloudDocument,
 promoteLocalToCloud,
-isCloudAvailable: () => !!(hasValidConfig() && fbAuth && fbDb),
-getDb: () => fbDb,
-getAuth: () => fbAuth
+isCloudAvailable: () => true,
+getEndpoint,
+setEndpoint
 };
 if (document.readyState === 'loading') {
 document.addEventListener('DOMContentLoaded', init);
@@ -4713,6 +4627,8 @@ return code;
 const KEYS = [
 {},
 { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill' },
+{ KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special' },
+{ Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special' },
 ];
 function applyCustomKeys() {
 KEYS[0] = {};
@@ -4729,11 +4645,19 @@ const CHARGE_FULL = 0.75;   // 蓄力多久算满
 const DODGE_CD = 0.3;
 const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
 const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
-const human = [new Ctrl(), new Ctrl()];
+const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 const NET = { role: null, ws: null, open: false, remote: new Ctrl(), out: [], presses: [] };
 const SERVED = !OFFLINE_BUILD && /^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent|anthropic|github\.io/.test(location.hostname);
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
-const localTeam = () => localIdx();   // 0 = 左边，1 = 右边（联机客户端）
+const localTeam = () => {
+if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
+if (M.subMode === 'pp_cc' || (M.mode === 'net' && netRoomMode === 'pp_cc')) return 0;
+if (M.subMode === 'pc_cc') return 0;
+if (M.mode === 'net') return NET.role === 'client' ? 1 : 0;
+return 0;
+}
+return localIdx();
+};
 const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on;
 function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on) NET.out.push(ev); }
 function netReset() {
@@ -5095,9 +5019,44 @@ if (msg.i || msg.s || msg.ev) send(msg);
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
 M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; A.meter = B.meter = 0;
-human[0].clear(); NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
+human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
+if (netRoomMode === 'pp_cc') {
+M.subMode = 'pp_cc';
+M.level = 'god';
+M.watchAi = false;
+if (NET.role === 'host') {
+A.ctrl = human[0];
+C.ctrl = NET.remote;
+} else {
+A.ctrl = NET.remote;
+C.ctrl = human[0];
+}
+B.ctrl = new AICtrl('god');
+D.ctrl = new AICtrl('god');
+if (!B.ch) B.setChar(1);
+if (!D.ch) D.setChar(3);
+} else if (netRoomMode === 'pp_pp') {
+M.subMode = 'pp_pp';
+M.watchAi = false;
+if (NET.role === 'host') {
+A.ctrl = human[0];
+C.ctrl = human[1] || new AICtrl('god');
+B.ctrl = NET.remote;
+D.ctrl = new AICtrl('god');
+} else {
+A.ctrl = NET.remote;
+C.ctrl = new AICtrl('god');
+B.ctrl = human[0];
+D.ctrl = human[1] || new AICtrl('god');
+}
+if (!C.ch) C.setChar((A.chIdx + 2) % CHARS.length);
+if (!D.ch) D.setChar((B.chIdx + 2) % CHARS.length);
+} else {
+M.subMode = null;
 A.ctrl = NET.role === 'host' ? human[0] : NET.remote;
 B.ctrl = NET.role === 'host' ? NET.remote : human[0];
+}
 NET.matchStartTime = Date.now();
 NET.matchHits = 0;
 NET.matchId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -5105,11 +5064,11 @@ NET.consensus = { agreed: false, peerAgreed: false, qualifying: true, committed:
 rkBegin();
 }
 const LEVELS = {
-easy:   { think: [0.35, 0.7],  block: 0.15, aggr: 0.4,  combo: 1 },
-normal: { think: [0.18, 0.42], block: 0.4,  aggr: 0.58, combo: 3 },
-hard:   { think: [0.08, 0.22], block: 0.72, aggr: 0.75, combo: 4 },
-impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true },   // 绝顶：几乎零反应时间、必挡、被连必逃
-god:    { think: [0.005, 0.018], block: 0.99, aggr: 0.98, combo: 6, god: true, neural: true }, // 天道：全英雄对抗深度强化神经网络决策、极致预判与精准破招
+easy:       { think: [0.35, 0.70], block: 0.15, aggr: 0.40, combo: 1, confirm: false, whiffPunish: false, meaty: false, baitBreak: false, heroMastery: false, adaptHabit: false, aimUlt: false },
+normal:     { think: [0.18, 0.42], block: 0.40, aggr: 0.58, combo: 3, confirm: false, whiffPunish: false, meaty: false, baitBreak: false, heroMastery: false, adaptHabit: false, aimUlt: false },
+hard:       { think: [0.08, 0.22], block: 0.72, aggr: 0.75, combo: 4, confirm: true,  whiffPunish: true,  meaty: false, baitBreak: false, heroMastery: true,  adaptHabit: false, aimUlt: true  },
+impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true, confirm: true, whiffPunish: true, meaty: true, baitBreak: true, heroMastery: true, adaptHabit: false, aimUlt: true },   // 绝顶：几乎零反应时间、必挡、被连必逃、起身压制與骗闪
+god:        { think: [0.004, 0.014], block: 0.99, aggr: 0.98, combo: 6, god: true, neural: true, confirm: true, whiffPunish: true, meaty: true, baitBreak: true, heroMastery: true, adaptHabit: true, aimUlt: true }, // 天道：全英雄对抗深度强化神经网络决策、极致预判与精准破招
 };
 const ADAPT = { s: 1, use: {}, win: {} };
 function adaptKey() { return 'renying-adapt' + (ACC && ACC.name ? '-' + ACC.name : ''); }
@@ -5117,7 +5076,20 @@ function adaptLoad() { try { Object.assign(ADAPT, { s: 1, use: {}, win: {} }, JS
 function adaptSave() { try { localStorage.setItem(adaptKey(), JSON.stringify(ADAPT)); } catch (e) {} }
 function adaptLevel() {
 const k = clamp(ADAPT.s, 0.55, 1.45);
-LEVELS.adaptive = { think: [0.08 / k, 0.22 / k], block: Math.min(0.95, 0.72 * k), aggr: Math.min(0.95, 0.75 * k), combo: k > 1.1 ? 5 : 4 };
+LEVELS.adaptive = {
+think: [0.08 / k, 0.22 / k],
+block: Math.min(0.96, 0.72 * k),
+aggr: Math.min(0.96, 0.75 * k),
+combo: k > 1.1 ? 5 : 4,
+confirm: k >= 0.85,
+whiffPunish: k >= 0.95,
+meaty: k >= 1.12,
+baitBreak: k >= 1.18,
+heroMastery: k >= 0.9,
+adaptHabit: true,
+aimUlt: k >= 0.9,
+god: k >= 1.25
+};
 const el = document.getElementById('adaptLine');
 if (el) { const fav = adaptFav(); el.textContent = `宿敌：如今强度 ${Math.round(k * 100)}%${fav.best >= 0 ? `，必禁你的${CHARS[fav.best].name}` : ''}${fav.most >= 0 ? `，惯用你的${CHARS[fav.most].name}` : ''}`; }
 }
@@ -5964,17 +5936,18 @@ onGround() { return this.y >= 0 && this.vy >= 0; }
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
-const allFighters = () => M.mode === 'watch2v2' ? [A, B, C, D] : [A, B];
-const isAiVsAi = () => !!(M.watchAi || M.mode === 'watch2v2' || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
+const allFighters = () => is2v2() ? [A, B, C, D] : [A, B];
+const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !is2v2() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
 const foesOf = f => {
-if (M.mode !== 'watch2v2') return [f === A ? B : A];
+if (!is2v2()) return [f === A ? B : A];
 const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
 const alive = list.filter(e => !e.hidden && e.hp > 0);
 return alive.length ? alive : list;
 };
 const foeOf = f => {
-if (M.mode !== 'watch2v2') return f === A ? B : A;
+if (!is2v2()) return f === A ? B : A;
 const list = foesOf(f);
 if (!list.length) return A;
 if (list.length === 1) { f.target = list[0]; return list[0]; }
@@ -6126,9 +6099,9 @@ startRound();
 if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-STAGE_W = M.mode === 'watch2v2' ? 2600 : 1800;
+STAGE_W = is2v2() ? 2600 : 1800;
 if (typeof applySkins === 'function') applySkins();
-if (M.mode === 'watch2v2') {
+if (is2v2()) {
 C.hidden = false; D.hidden = false;
 A.reset(STAGE_W / 2 - 420); C.reset(STAGE_W / 2 - 210);
 B.reset(STAGE_W / 2 + 210); D.reset(STAGE_W / 2 + 420);
@@ -6159,7 +6132,7 @@ if (NET.role === 'host') rollChaosMutation();
 if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
 if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
 M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
-M.phase = 'intro'; M.t = 0; M.timer = M.mode === 'watch2v2' ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
+M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
 hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
 for (const cu of comboUI) cu.t = 0;
 if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -6179,7 +6152,7 @@ function timeDeath(winner, text) {
 M.phase = 'ko'; M.t = 0; M.koWinner = winner;
 M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
 if (winner >= 0) {
-const losers = M.mode === 'watch2v2' ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
 const winRef = [A, B][winner];
 for (const l of losers) {
 l.hp = 0; l.state = 'launched'; l.t = 0; l.vy = -380; l.vx = (l.x >= winRef.x ? 1 : -1) * 260; l.y = Math.min(l.y, -1); l.invul = 99; l.move = null; l.skill = null;
@@ -6195,13 +6168,13 @@ const go = M.mode === 'demo' || M.mode === 'train' ? 0.3 : 1.25 + (M.round === 1
 if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
 if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
 } else if (M.phase === 'fight') {
-const team0Out = M.mode === 'watch2v2' ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
-const team1Out = M.mode === 'watch2v2' ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
+const team0Out = is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
+const team1Out = is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
 if (M.mode !== 'train' && (team0Out || team1Out)) {
 const winner = (team0Out && team1Out)
-? ((A.hp + (M.mode === 'watch2v2' ? C.hp : 0)) > (B.hp + (M.mode === 'watch2v2' ? D.hp : 0)) ? 0 : 1)
+? ((A.hp + (is2v2() ? C.hp : 0)) > (B.hp + (is2v2() ? D.hp : 0)) ? 0 : 1)
 : (team0Out ? 1 : 0);
-const losers = M.mode === 'watch2v2' ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
 for (const loser of losers) {
 loser.hp = 0;
 if (loser.state !== 'launched' && loser.state !== 'knockdown') {
@@ -6220,14 +6193,14 @@ if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
 }
 M.timer = Math.max(0, M.timer - STEP);
 if (M.timer <= 0) {
-const ra = M.mode === 'watch2v2' ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
-const rb = M.mode === 'watch2v2' ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
+const ra = is2v2() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
+const rb = is2v2() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
 if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
 else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
 }
 }
 } else if (M.phase === 'ko') {
-const winners = M.koWinner >= 0 ? (M.mode === 'watch2v2' ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
+const winners = M.koWinner >= 0 ? (is2v2() ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
 for (const w of winners) {
 if (w && M.t > 1.2 && w.hp > 0 && w.onGround() && (w.state === 'idle' || w.state === 'walk')) { w.state = 'victory'; w.t = 0; skinVictoryFX(w); }
 }
@@ -6253,23 +6226,38 @@ if (REC.on) recSave(w);
 taskMatchEnd(w);
 $id('endKicker').textContent = '';
 $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
-$id('againBtn').style.display = (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
+$id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
 if (M.stage) {
 const win = w === 0;
 M.stage = null;
 setTimeout(() => stageShowEnd(win, win ? (M.wins[1] === 0 ? 3 : 2) : 0, `比分 ${M.wins[0]} : ${M.wins[1]}${win ? '<br><span style="font-size:13px">2 : 0 三星，2 : 1 两星</span>' : '，再磨一磨剑'}`), 300);
 return;
 }
-if (M.mode === 'watch2v2') {
+if (M.mode === 'watch2v2' || M.mode === '2v2') {
+const isWatch = !!M.watchAi;
 const win = w === 0;
-playSting('victory');
+const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
+const iWon = w === myTeam;
+playSting(isWatch ? 'victory' : (iWon ? 'victory' : 'defeat'));
 const t = document.getElementById('endTitle');
+if (isWatch) {
 inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, false);
-const banStr = (M.bans && M.bans.length === 2) ? `（本局禁选：${CHARS[M.bans[0]].name}、${CHARS[M.bans[1]].name}）` : '';
+const banStr = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? `（本局禁选：${CHARS[M.bans[0]].name}、${CHARS[M.bans[1]].name}）` : '';
 document.getElementById('endSub').textContent = `2v2 天道演武决出胜负，比分 ${M.wins[0]} : ${M.wins[1]} ${banStr}`;
 $id('endRank').textContent = '四位天道神境 AI 倾力交锋';
 const again = document.getElementById('againBtn');
 again.style.display = 'none';
+} else {
+inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, !iWon);
+const modeNames = { pc_cc: '2v2 侠客组队', pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
+const modeName = modeNames[M.subMode] || '2v2 组队演武';
+document.getElementById('endSub').textContent = `${modeName} · ${iWon ? '凯旋大捷！' : '惜败，择日再战！'} 比分 ${M.wins[0]} : ${M.wins[1]}`;
+$id('endRank').textContent = iWon ? '双雄合璧，克敌制胜' : '胜败乃兵家常事';
+const again = document.getElementById('againBtn');
+again.style.display = '';
+again.disabled = false;
+again.textContent = '再战一局';
+}
 setTimeout(() => showScreen('end'), 300);
 return;
 }
@@ -11035,7 +11023,7 @@ ctx.fillStyle = '#b8321e'; ctx.font = `bold 34px ${TITLE_FONT}`; ctx.textAlign =
 ctx.font = `bold 18px ${BODY_FONT}`; ctx.fillText('×' + n, 0, 28);
 ctx.restore();
 }
-function viewerIdx() { return (M.watchAi || M.mode === 'demo' || M.mode === 'replay' || M.mode === 'pvp' || M.mode === 'watch2v2') ? -1 : localIdx(); }
+function viewerIdx() { return (M.watchAi || M.mode === 'demo' || M.mode === 'replay' || (M.mode === 'pvp' && !is2v2()) || (M.mode === 'watch2v2' && M.watchAi)) ? -1 : localIdx(); }
 function drawShanshui() {
 const f = [A, B].find(x => x && x.state === 'special' && x.sp === 'cast' && x.ch.ult === 'shanshui');   // 起手蓄势那 0.42 秒不画，否则画卷会落两遍
 const vi = viewerIdx(), vf = vi >= 0 ? [A, B][vi] : null;
@@ -11143,13 +11131,26 @@ const curG = Math.round(clamp(f.guard !== undefined ? f.guard : maxG, 0, maxG));
 const gLow = curG < maxG * 0.3;
 const hpTxt = `${Math.max(0, Math.round(f.hp))}/${f.maxHp}`;
 const gTxt = `势 ${curG}`;
-ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(f.look.name).width;
+let fTag = '';
+if (f.ctrl === human[0]) fTag = ' [1P]';
+else if (f.ctrl === human[1] && (M.subMode === 'pp_cc' || M.subMode === 'pp_pp')) fTag = ' [2P]';
+else if (f.ctrl === human[2]) fTag = ' [3P]';
+else if (f.ctrl === human[3]) fTag = ' [4P]';
+else if (M.mode === 'net') {
+if (netRoomMode === 'pp_cc') {
+fTag = (f === A || f === C) ? (f.ctrl === human[0] ? ' [我]' : ' [队友]') : ' [电脑]';
+} else if (netRoomMode === 'pp_pp') {
+fTag = (f === A || f === C) ? (NET.role === 'host' ? ' [我方]' : ' [敌方]') : (NET.role === 'client' ? ' [我方]' : ' [敌方]');
+}
+}
+const dispName = f.look.name + fTag;
+ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(dispName).width;
 ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
 const total = nameW + hpW + gW + txtGap * 2;
 const nameFont = `bold ${fsN}px ${TITLE_FONT}`, numFont = `${fsNum}px ${BODY_FONT}`;
 const items = rev
-? [[gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [f.look.name, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW]]
-: [[f.look.name, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW]];
+? [[gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [dispName, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW]]
+: [[dispName, nameFont, dead ? 'rgba(200,120,120,0.65)' : `rgb(${f.look.slash})`, nameW], [hpTxt, numFont, dead ? 'rgba(200,140,140,0.8)' : 'rgba(255,255,255,0.92)', hpW], [gTxt, numFont, gLow ? '#ff7a8a' : 'rgba(233,196,106,0.95)', gW]];
 let px = rev ? edge - total : x;
 const yMid = y + Math.max(fsN, fsNum) / 2;
 ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -11184,12 +11185,20 @@ ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
 ctx.fillStyle = '#46d3ea';
 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
 const banTxt = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
-ctx.fillText(`👁️ 2v2 天道演武${banTxt}`, cx, H - 10);
+let bTitle = `👁️ 2v2 天道演武${banTxt}`;
+if (!M.watchAi) {
+if (M.subMode === 'pc_cc') bTitle = '⚔️ 2v2 侠客组队 (P&C v C&C)';
+else if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (P&P v C&C)';
+else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四人对决 (P&P v P&P)';
+else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (P&P v C&C)';
+else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 组队切磋 (P&P v P&P)';
+}
+ctx.fillText(bTitle, cx, H - 10);
 ctx.restore();
 }
 function drawHUD() {
 if (M.mode === 'demo') return;
-if (M.mode === 'watch2v2') { drawHUD2v2(); return; }
+if (is2v2()) { drawHUD2v2(); return; }
 const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
 [A, B].forEach((f, i) => {
 if (f.hidden) return;
@@ -12065,7 +12074,7 @@ else if (active === 'chaos') renderChaos();
 else if (active === 'stage') renderStages();
 else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
 else if (active === 'mayhem') renderMayhem();
-else if (active === 'watch2v2') renderWatch2v2();
+else if (active === 'watch2v2') { if (typeof renderPlay2v2 === 'function') renderPlay2v2(); renderWatch2v2(); }
 else if (active === 'cpu') updateAIBrief();
 }
 function openScreen(name, reveal = true) {
@@ -15995,17 +16004,265 @@ B.setChar(t2a); D.setChar(t2b);
 A.ctrl = new AICtrl('god'); C.ctrl = new AICtrl('god');
 B.ctrl = new AICtrl('god'); D.ctrl = new AICtrl('god');
 A.meter = B.meter = C.meter = D.meter = 35;
-human[0].clear(); human[1].clear();
+human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 showScreen(null);
 startRound();
 say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
 }
 const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
 if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
+let single2v2SubMode = 'play'; // 'play' (P&C v C&C) or 'watch' (C&C v C&C)
+const p2v2SlotsData = {
+p1: 0,        // 1P 玩家
+mate: 2,      // 电脑同袍搭档
+foe1: 1,      // 敌方先锋
+foe2: 3,      // 敌方次席
+curSlot: 'p1',
+level: 'normal'
+};
+function renderPlay2v2() {
+ensurePortraits();
+const slotsEl = document.getElementById('play2v2Slots');
+if (slotsEl) {
+const slots = [
+{ key: 'p1', team: 0, role: '【我方 1P 侠客】', sub: '玩家操控', idx: p2v2SlotsData.p1 },
+{ key: 'mate', team: 0, role: '【我方同袍搭档】', sub: '电脑协同', idx: p2v2SlotsData.mate },
+{ key: 'foe1', team: 1, role: '【敌方先锋】', sub: '电脑敌手', idx: p2v2SlotsData.foe1 },
+{ key: 'foe2', team: 1, role: '【敌方次席】', sub: '电脑敌手', idx: p2v2SlotsData.foe2 }
+];
+slotsEl.innerHTML = slots.map(s => {
+const isSel = p2v2SlotsData.curSlot === s.key;
+const c = CHARS[s.idx] || CHARS[0];
+return `<div class="play2v2-slot team${s.team}${isSel ? ' sel' : ''}" data-slot="${s.key}">
+<div class="p2v2-role" style="color:${s.team === 0 ? 'var(--p1)' : 'var(--p2)'}">${s.role}</div>
+<div class="p2v2-hero" style="color:rgb(${c.look.slash})">${c.name}</div>
+<div class="p2v2-sub">${c.role} · ${s.sub}</div>
+</div>`;
+}).join('');
+}
+const rosterEl = document.getElementById('play2v2Roster');
+if (rosterEl) {
+rosterEl.innerHTML = CHARS.map((c, i) => {
+const activeIdx = p2v2SlotsData[p2v2SlotsData.curSlot];
+const isSel = activeIdx === i;
+return `<button class="tcard${isSel ? ' sel' : ''}" data-i="${i}" type="button">
+<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div>
+</button>`;
+}).join('');
+}
+}
+function start2v2PlayerMatch(p1 = 0, mate = 2, foe1 = 1, foe2 = 3, level = 'normal') {
+if (p2pActive() || NET.ws) netDropWaiting();
+initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+M.mode = '2v2';
+M.subMode = 'pc_cc';
+M.watchAi = false;
+M.level = level;
+M.bans = [];
+M.wins = [0, 0];
+M.round = 1;
+M.carry = null;
+M.stage = null;
+A.setChar(p1); C.setChar(mate);
+B.setChar(foe1); D.setChar(foe2);
+A.ctrl = human[0];
+C.ctrl = new AICtrl(level);
+B.ctrl = new AICtrl(level);
+D.ctrl = new AICtrl(level);
+A.meter = B.meter = C.meter = D.meter = 35;
+human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+showScreen(null);
+startRound();
+say(`2v2 组队 · 【${CHARS[p1].name} + ${CHARS[mate].name}】开战！`, 1.4);
+}
+function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal') {
+if (p2pActive() || NET.ws) netDropWaiting();
+initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+M.mode = '2v2';
+M.subMode = 'pp_cc';
+M.watchAi = false;
+M.level = level;
+M.bans = [];
+M.wins = [0, 0];
+M.round = 1;
+M.carry = null;
+M.stage = null;
+A.setChar(p1); C.setChar(p2);
+B.setChar(foe1); D.setChar(foe2);
+A.ctrl = human[0]; // 1P
+C.ctrl = human[1]; // 2P
+B.ctrl = new AICtrl(level);
+D.ctrl = new AICtrl(level);
+A.meter = B.meter = C.meter = D.meter = 35;
+human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+showScreen(null);
+startRound();
+say(`双人共斗 · 【${CHARS[p1].name} & ${CHARS[p2].name}】同心破天道！`, 1.4);
+}
+function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
+if (p2pActive() || NET.ws) netDropWaiting();
+initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+M.mode = '2v2';
+M.subMode = 'pp_pp';
+M.watchAi = false;
+M.level = 'god';
+M.bans = [];
+M.wins = [0, 0];
+M.round = 1;
+M.carry = null;
+M.stage = null;
+A.setChar(p1); C.setChar(p2);
+B.setChar(p3); D.setChar(p4);
+A.ctrl = human[0]; // 1P
+C.ctrl = human[1]; // 2P
+B.ctrl = human[2] || new AICtrl('god'); // 3P
+D.ctrl = human[3] || new AICtrl('god'); // 4P
+A.meter = B.meter = C.meter = D.meter = 35;
+human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+showScreen(null);
+startRound();
+say(`2v2 四人对决 · 苍龙 vs 赤凤！`, 1.4);
+}
+const single2v2SegEl = document.getElementById('single2v2Seg');
+if (single2v2SegEl) {
+single2v2SegEl.addEventListener('click', e => {
+const b = e.target.closest('button[data-sub]');
+if (!b) return;
+single2v2SubMode = b.dataset.sub;
+for (const btn of single2v2SegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+const playPane = document.getElementById('single2v2PlayPane');
+const watchPane = document.getElementById('single2v2WatchPane');
+if (playPane) playPane.style.display = single2v2SubMode === 'play' ? '' : 'none';
+if (watchPane) watchPane.style.display = single2v2SubMode === 'watch' ? '' : 'none';
+if (single2v2SubMode === 'play') renderPlay2v2();
+else renderWatch2v2();
+});
+}
+const play2v2SlotsEl = document.getElementById('play2v2Slots');
+if (play2v2SlotsEl) {
+play2v2SlotsEl.addEventListener('click', e => {
+const s = e.target.closest('[data-slot]');
+if (!s) return;
+p2v2SlotsData.curSlot = s.dataset.slot;
+renderPlay2v2();
+});
+}
+const play2v2RosterEl = document.getElementById('play2v2Roster');
+if (play2v2RosterEl) {
+play2v2RosterEl.addEventListener('click', e => {
+const c = e.target.closest('[data-i]');
+if (!c) return;
+const idx = parseInt(c.dataset.i, 10);
+p2v2SlotsData[p2v2SlotsData.curSlot] = idx;
+renderPlay2v2();
+});
+}
+const btn2v2SuggestPartner = document.getElementById('btn2v2SuggestPartner');
+if (btn2v2SuggestPartner) {
+btn2v2SuggestPartner.addEventListener('click', () => {
+const p1Hero = CHARS[p2v2SlotsData.p1];
+let best = (p2v2SlotsData.p1 + 2) % CHARS.length;
+if (p1Hero && p1Hero.weakTo && p1Hero.weakTo.length) {
+const needCover = p1Hero.weakTo;
+const candidates = CHARS.map((c, i) => ({ i, c, score: (c.beats || []).filter(b => needCover.includes(b)).length }))
+.filter(x => x.i !== p2v2SlotsData.p1);
+candidates.sort((a, b) => b.score - a.score);
+if (candidates.length && candidates[0].score > 0) best = candidates[0].i;
+}
+p2v2SlotsData.mate = best;
+renderPlay2v2();
+toast(`已推荐最佳搭档：${CHARS[best].name}`);
+});
+}
+const btn2v2RandomFoes = document.getElementById('btn2v2RandomFoes');
+if (btn2v2RandomFoes) {
+btn2v2RandomFoes.addEventListener('click', () => {
+const used = new Set([p2v2SlotsData.p1, p2v2SlotsData.mate]);
+const avail = CHARS.map((_, i) => i).filter(i => !used.has(i));
+const r1 = avail[(Math.random() * avail.length) | 0];
+const avail2 = avail.filter(i => i !== r1);
+const r2 = avail2[(Math.random() * avail2.length) | 0];
+p2v2SlotsData.foe1 = r1;
+p2v2SlotsData.foe2 = r2;
+renderPlay2v2();
+toast(`已随机敌方阵容：${CHARS[r1].name} + ${CHARS[r2].name}`);
+});
+}
+const play2v2LevelsEl = document.getElementById('play2v2Levels');
+if (play2v2LevelsEl) {
+play2v2LevelsEl.addEventListener('click', e => {
+const b = e.target.closest('button[data-lv]');
+if (!b) return;
+p2v2SlotsData.level = b.dataset.lv;
+for (const btn of play2v2LevelsEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+});
+}
+const play2v2StartBtn = document.getElementById('play2v2StartBtn');
+if (play2v2StartBtn) {
+play2v2StartBtn.addEventListener('click', () => {
+start2v2PlayerMatch(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, p2v2SlotsData.level);
+});
+}
+let active2v2ModalMode = 'pp_cc';
+function open2v2Modal(mode) {
+active2v2ModalMode = mode;
+const modal = document.getElementById('modal2v2');
+if (!modal) return;
+modal.classList.remove('hidden');
+const t = document.getElementById('modal2v2Title');
+const desc = document.getElementById('modal2v2Desc');
+const ldesc = document.getElementById('modal2v2LocalDesc');
+if (mode === 'pp_cc') {
+if (t) t.textContent = '2v2 双人共斗 · 模式选择 (P&P v C&C)';
+if (desc) desc.textContent = '双人成行，同队迎战两名天道 AI 宗师！选择加入方式：';
+if (ldesc) ldesc.textContent = '同台电脑双人合作（1P: WASD+鼠标/J，2P: 方向键+K）。';
+} else {
+if (t) t.textContent = '2v2 四人组队切磋 · 模式选择 (P&P v P&P)';
+if (desc) desc.textContent = '两队四名侠客，同台竞技对决！选择加入方式：';
+if (ldesc) ldesc.textContent = '同台电脑四人对决（1P/2P 苍龙队，3P/4P 赤凤队）。';
+}
+}
+const mm2v2CoopBtn = document.getElementById('mm2v2CoopBtn');
+if (mm2v2CoopBtn) mm2v2CoopBtn.addEventListener('click', () => open2v2Modal('pp_cc'));
+const mm2v2VsBtn = document.getElementById('mm2v2VsBtn');
+if (mm2v2VsBtn) mm2v2VsBtn.addEventListener('click', () => open2v2Modal('pp_pp'));
+const modal2v2Close = document.getElementById('modal2v2Close');
+if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
+const modal = document.getElementById('modal2v2');
+if (modal) modal.classList.add('hidden');
+});
+const btn2v2GoOnline = document.getElementById('btn2v2GoOnline');
+if (btn2v2GoOnline) {
+btn2v2GoOnline.addEventListener('click', () => {
+const modal = document.getElementById('modal2v2');
+if (modal) modal.classList.add('hidden');
+netRoomMode = active2v2ModalMode;
+setRoomModeUI(netRoomMode);
+if ($id('roomWrap')) {
+$id('roomWrap').classList.remove('hidden');
+$id('mmRoomBtn').classList.add('sel');
+}
+const hb = $id('hostBtn');
+if (hb) hb.click();
+toast(`已创建 ${active2v2ModalMode === 'pp_cc' ? '双人共斗' : '2v2 组队'} 房间，请将 4 位密令分享给好友`);
+});
+}
+const btn2v2GoLocal = document.getElementById('btn2v2GoLocal');
+if (btn2v2GoLocal) {
+btn2v2GoLocal.addEventListener('click', () => {
+const modal = document.getElementById('modal2v2');
+if (modal) modal.classList.add('hidden');
+if (active2v2ModalMode === 'pp_cc') {
+start2v2LocalCoop(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, 'normal');
+} else {
+start2v2LocalVs(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2);
+}
+});
+}
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 document.getElementById('againBtn').addEventListener('click', () => {
-if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') return;
+if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
 if (M.mode === 'net' && NET.isRanked) {   // 排位不和同一个人连打：回大厅找下一个对手
 netLeave(); toMenu(); selectMode('net'); mmStart('ranked');
 return;
@@ -16026,6 +16283,18 @@ send({ sys: 'rematch', action: 'ask' });
 toast('已向房主发送再战请求');
 }
 return;
+}
+if (M.mode === '2v2' || (M.mode === 'watch2v2' && !M.watchAi)) {
+if (M.subMode === 'pc_cc') {
+start2v2PlayerMatch(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, p2v2SlotsData.level);
+return;
+} else if (M.subMode === 'pp_cc') {
+start2v2LocalCoop(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2, p2v2SlotsData.level);
+return;
+} else if (M.subMode === 'pp_pp') {
+start2v2LocalVs(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2SlotsData.foe2);
+return;
+}
 }
 if (M.mode === 'watch2v2') {
 startWatch2v2Draft();
@@ -17040,8 +17309,8 @@ const hasCloudCfg = window.CloudSave && CloudSave.hasValidConfig && CloudSave.ha
 const u = window.CloudSave && CloudSave.getUser();
 const isLocalUser = u && !u.isCloud;
 const localNote = !hasCloudCfg
-? '当前未配置 Firebase 云端（单机/局域网模式），进度保存在本机。如需跨设备同步，请点击下方【云存档设置】或【导出当前存档】。'
-: '云端已配置，但当前为本机账号。点击【一键升级为云端账号】即可将进度上传到云端！';
+? '当前未连接云端，进度保存在本机。如需跨设备同步，请点击下方【云端服务设置】或【导出当前存档】。'
+: '云端已连接，但当前为本机账号。点击【一键升级为云端账号】即可将进度上传到云端！';
 const M_ = {
 local: [hasCloudCfg ? '本机账号' : '本机存档', localNote],
 idle: ['已连接云端', '有新进度会自动上传'],
@@ -17257,27 +17526,24 @@ msg.textContent = '推送失败：' + err.message;
 if ($id('toggleCloudCfgBtn')) {
 $id('toggleCloudCfgBtn').addEventListener('click', () => {
 $id('cloudCfgBox').classList.toggle('hidden');
+if (!$id('cloudCfgBox').classList.contains('hidden') && $id('fbCfgIn')) {
+$id('fbCfgIn').value = (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '');
+}
 });
 }
 if ($id('fbCfgSaveBtn')) {
 $id('fbCfgSaveBtn').addEventListener('click', () => {
 try {
 const val = $id('fbCfgIn').value.trim();
+let endpoint = val;
+if (val.startsWith('{')) {
 const parsed = JSON.parse(val);
-if (!parsed.projectId || !parsed.apiKey) throw new Error('配置需包含 projectId 和 apiKey');
+endpoint = parsed.endpoint || parsed.url || '';
+}
 if (window.CloudSave) {
-CloudSave.setConfig(parsed);
-const u = CloudSave.getUser();
-if (u && (u.isDevMaster || (u.name && u.name.toLowerCase() === 'dev'))) {
-CloudSave.login('Dev', 'IAMADEVBRO').then(() => {
-renderAcc();
-toast('Firebase 云端已连接！Dev 账号已在 Google Cloud 完成全解锁！');
-}).catch(err => {
-console.warn('Dev auto cloud sync error:', err);
-});
+CloudSave.setConfig(endpoint);
 }
-}
-toast('Firebase 云端配置已保存！正在连线…');
+toast('云端服务接口已更新！');
 $id('cloudCfgBox').classList.add('hidden');
 renderAcc();
 } catch (e) {
@@ -17289,7 +17555,7 @@ if ($id('fbCfgClearBtn')) {
 $id('fbCfgClearBtn').addEventListener('click', () => {
 if (window.CloudSave) CloudSave.setConfig(null);
 if ($id('fbCfgIn')) $id('fbCfgIn').value = '';
-toast('已恢复为本地独立单账号模式');
+toast('已恢复默认云端接口 (renying.evengao6688.workers.dev)');
 $id('cloudCfgBox').classList.add('hidden');
 renderAcc();
 });
@@ -17667,7 +17933,7 @@ return;
 netRoomMode = b.dataset.mode;
 for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
 send({ sys: 'room_rule', rule: netRoomMode });
-const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)' };
+const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (P&P v C&C)', pp_pp: '2v2 组队切磋 (P&P v P&P)' };
 toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
 SFX.slice();
 });
@@ -17802,19 +18068,31 @@ if (NET.ws && NET.ws.readyState === 1 && t % 4 === 0) send({ ping: 1 });   // �
 }
 }, 1000);
 function refreshOnline() {
-if (!SERVED || !window.fetch || !document.getElementById('netp').classList.contains('on')) {
-if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = SERVED ? '正在监测江湖' : '单机局域模式';
+let count = 0;
+if (typeof SOC !== 'undefined' && SOC.online && SOC.online.length) {
+count = Math.max(count, SOC.online.length);
+}
+const updatePills = (cnt, h) => {
+const total = Math.max(1, cnt);
+const parts = [];
+if (h && h.playing) parts.push(`${h.playing} 局对战`);
+if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
+const line = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
+if ($id('onlineLine')) $id('onlineLine').textContent = line;
+if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : `${total} 人在线 · 全网连线`;
+if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
+if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
+if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
+};
+if (!SERVED || !window.fetch) {
+updatePills(count);
 return;
 }
 fetch('/health').then(r => r.json()).then(h => {
-const parts = [];
-if (h.playing) parts.push(`${h.playing} 局对战`);
-if (h.waiting) parts.push(`${h.waiting} 人匹配`);
-const line = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
-if ($id('onlineLine')) $id('onlineLine').textContent = line;
-if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : '全服待命中';
+const srvOnline = h.online || ((h.playing || 0) * 2 + (h.waiting || 0));
+updatePills(Math.max(count, srvOnline), h);
 }).catch(() => {
-if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = '连线就绪';
+updatePills(count);
 });
 }
 setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
@@ -17922,10 +18200,23 @@ say(DUMMY_FEATURES[feat].name + (B.ctrl.cfg[feat] ? '：开启' : '：关闭'), 
 }
 return;
 }
-for (let p = 0; p < 2; p++) {
-const act = KEYS[p][e.code]; if (!act) continue;
+for (let p = 0; p < KEYS.length; p++) {
+const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
 e.preventDefault();
-const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : human[p];
+let c = human[0];
+if (M.mode === 'pvp') {
+c = human[p] || human[0];
+} else if (M.mode === '2v2' || is2v2()) {
+if (M.subMode === 'pp_cc') {
+c = p === 1 ? human[1] : human[0];
+} else if (M.subMode === 'pp_pp') {
+c = human[p] || human[0];
+} else {
+c = human[0];
+}
+} else {
+c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
+}
 if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
 if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
 if (act === 'left' || act === 'right' || act === 'down') { c.held[act] = true; if (act !== 'down') c.held.aim = act === 'left' ? -1 : 1; continue; }
@@ -17933,9 +18224,22 @@ if (!e.repeat) c.press(act);
 }
 });
 window.addEventListener('keyup', e => {
-for (let p = 0; p < 2; p++) {
-const act = KEYS[p][e.code]; if (!act) continue;
-const c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : human[p];
+for (let p = 0; p < KEYS.length; p++) {
+const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
+let c = human[0];
+if (M.mode === 'pvp') {
+c = human[p] || human[0];
+} else if (M.mode === '2v2' || is2v2()) {
+if (M.subMode === 'pp_cc') {
+c = p === 1 ? human[1] : human[0];
+} else if (M.subMode === 'pp_pp') {
+c = human[p] || human[0];
+} else {
+c = human[0];
+}
+} else {
+c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
+}
 if (act === 'left' || act === 'right' || act === 'down') c.held[act] = false;
 if (act === 'atk') c.held.atk = false;
 if (act === 'jump') c.held.jump = false;
@@ -17963,7 +18267,7 @@ cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { saveTowerRun(); });
 window.addEventListener('blur', () => {
-human[0].clear(); human[1].clear();
+human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 if (M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && M.phase !== 'end' && !paused) {
 paused = true;
 showScreen('pause');

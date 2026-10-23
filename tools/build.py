@@ -157,11 +157,6 @@ def page(offline):
         "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
             "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_HERO_MODELS=" + json.dumps(hero_models_data(), separators=(",", ":")) + ";window.RENYING_2V2_MODEL=" + json.dumps(model_2v2_data(), separators=(",", ":")) + ";</script>\n"
-            + ("" if offline else (
-                "<script>\n" + read(ASSETS, "firebase-app-compat.js") + "\n</script>\n"
-                "<script>\n" + read(ASSETS, "firebase-auth-compat.js") + "\n</script>\n"
-                "<script>\n" + read(ASSETS, "firebase-firestore-compat.js") + "\n</script>\n"
-            ))
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "game.js")) + "\n</script>\n"

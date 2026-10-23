@@ -1,0 +1,8 @@
+name = "renying"
+main = "worker.js"
+compatibility_date = "2024-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "renying-db"
+database_id = "" # Can be filled if deploying via CLI

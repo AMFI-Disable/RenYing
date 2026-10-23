@@ -6,38 +6,29 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
-### Changed
-
-- **Skins Get Their First-Version Looks Back, and Every Legend Its Own Silhouette (`src/game.js`)**: every skin again uses its original look from before the skin-art rework (headgear, masks, robes, palettes and signature weapons via `deco` and `weapStyle`). Skins no longer draw the oval chest plate with a gem in the middle (the breastplate color becomes a diagonal strap), legends no longer share the orbiting orbs and the disc behind the back, and each has its own back piece (`drawBackPiece`): 金乌 flame wings, 幽渊 floating void shards, 青锋行 a hovering flying sword, 血月 a blood crescent, 幻灵 five fox tails, 修罗 flaming war banners, 沧龙 a dragon coiled up the back, 天青 a celestial silk ribbon, 烈阳 a flame mane, 星墨 the Big Dipper, 月蚀 a tattered cloak, 霜华 ice-crystal wings, 凤羽 phoenix tail plumes, 钧天 a frame of bronze bells, 酒剑仙 a jade gourd and a cloud underfoot, 冥狱 ghost chains and wisps. The light layer from the rework stays on top. Skins no longer rename the hero or its moves; the HUD, callouts and codex use the base hero's names.
-
-### Fixed
-
-- **Home Menu Transition Flow (`src/game.js`, `src/style.css`, `src/page.html`)**:
-  - One click now drives one timeline: the camera dolly, the home fade-out and the next screen's reveal are scheduled together instead of racing three separate timers.
-  - Leaving a card no longer cancels its own camera push (`pointerleave` is ignored once a destination is committed), and double clicks cannot start two transitions.
-  - The home content leaves before the next panel arrives, so two half-transparent screens no longer stack over the canvas — the "flash" is gone.
-  - Returning to the home from a match keeps the background duel running instead of re-staging it from its opening pose.
-  - The home entrance (title, cards, dock) plays once on boot and again when coming back from a match, not on every return from 设置 / 任务 / 图鉴.
-  - Target panels are built during the dolly instead of on the frame they appear, and the pressed card no longer runs two blurs at once.
-  - `prefers-reduced-motion` now covers the entrance, the hand-off and the dock/nav swap.
-- **Cloud Save Inspector Export (`src/cloud.js`)**:
-  - Exported `setCloudDocument` on `window.CloudSave` so the Dev Cloud Inspector save action in `src/game.js` functions without a missing-method error.
-- **P2P Social Background Throttling (`src/social.js`)**:
-  - Paused background PeerJS reconnect and outbox flush sweeps during active combat (`M.phase === 'fight'`) when the community drawer is closed to eliminate signaling jitter.
-- **Resilient Node Process Resolution & Spawn Error Handling (`tools/simulate-all.mjs`, `tools/train-heroes.mjs`, `tools/gamemode-meta.mjs`, `tools/auto-train.mjs`, `tools/build.py`)**:
-  - Replaced rigid `process.execPath` invocations with a robust multi-stage binary resolver (`getNodeBin()`) checking `process.execPath`, `process.argv[0]`, and standard Homebrew/system paths (`/opt/homebrew/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`), and updated `tools/build.py` to syntax-check compacted JS payloads via `node --check -`.
-  - Added explicit `'error'` event handlers on child process instances in neural training and balance simulation pipelines, preventing unhandled spawn exceptions (such as `ENOENT` during background package updates) from crashing the parent runner.
-- **Account Cloud Synchronization & Local Fallback Migration (`src/cloud.js`, `src/game.js`, `firestore.rules`)**:
-  - Removed auto-cheating unlock script upon `Dev` account login; `Dev` is now treated as a legitimate, persistent account with authentic progression.
-  - Implemented automatic local-to-cloud migration: when users with local accounts (`local_...`) log in or click "一键升级为云端账号" in `#acc`, their progress (unlocked characters, skins, ink, and stars) is automatically uploaded and registered in Firebase Auth and Cloud Firestore.
-  - Hardened error reporting across `login()` and `register()` to display actionable diagnostics (domain whitelisting, auth provider configuration, credential mismatch) rather than silently falling back to local storage.
-  - Relaxed starter profile limits in `firestore.rules` (`isValidStarterProfile`) and raised per-write `owned`/`skins` progression caps (`+10`) to support 10-pull gacha unlocks and carried-over guest progress.
-  - Restricted `isSuperUser()` in `firestore.rules` to exact `ry_dev@renying.game` and admin claims to prevent open registration privilege escalation.
-- **FanHui (返回) Button Fixed Positioning (`src/style.css`)**:
-  - Anchored back buttons in single-player, multiplayer, and account panels (`#single button[data-back], #netp button[data-back], #accBack`) to the bottom-right corner using fixed bottom-right positioning, eliminating layout blockage caused by action buttons on small viewports.
-
 ### Added
 
+- **Qingfengxing 3.0 Open World Qingyun Mountain (`src/qfx/`, `assets/qingfengxing.html`)**:
+  - Transformed Qingfengxing into a seamless 1 km² open-world martial arts adventure (`src/qfx/12-terrain.js`, `25-owgen.js`, `26-owart.js`, `27-owmat.js`, `28-owbuild.js`, `29-owstruct.js`, `67-world.js`) featuring procedural heightmap terrain generation, exponential height fog, volumetric lighting, procedural bamboo groves and pine forests, mountain cliffs, and waterfalls.
+  - Divided the open world into 8 distinct territories with 8 Earth God Shrines (土地庙) providing healing rest, cloud saving, and teleportation fast travel.
+  - Populated the mountain with 18 enemy encampments featuring patrol paths, alert state triggers, and tactical retreat behaviors, alongside 3 elite boss dueling arenas and 22 hidden treasure chests.
+  - Added an interactive full-screen World Map (山河图, shortcut `M`) and circular topographic minimap HUD.
+  - Implemented soul return death mechanics: defeated players resurrect at the nearest activated Earth God Shrine, dropping 30% of their accumulated copper coins.
+  - Procedural character model overhaul (`src/qfx/31-hero.js`) upgrading Qingfeng with expressive facial geometry, styled hair, realistic cloth folds, and articulated hands.
+  - Preserved the classic 10-stage linear progression as the standalone "十关试炼" (Ten-Stage Trial) mode.
+- **Custom Weapon Visuals for All Skins (`src/game.js`)**:
+  - Implemented unique procedural weapon geometries and visual effects (`SKIN_WEAP`) for every character's skins, replacing generic blade glows with distinctive silhouettes: frost sword (`frost_sword`), sun sword (`sun_sword`), floating severed abyss blade (`abyss_blade`), red-tasseled sword (`qfx_sword`), jade daggers (`jade_daggers`), crescent blood scythes (`blood_scythes`), phantom kunai (`phantom_kunai`), bronze cleaver (`bronze_cleaver`), obsidian slab (`obsidian_slab`), serrated shura blade (`shura_blade`), plum blossom spear (`plum_spear`), aurora lance (`aurora_lance`), dragon head spear (`dragon_spear`), dusk fan (`dusk_fan`), feather fan (`feather_fan`), bamboo fan (`bamboo_fan`), violet gauntlet (`violet_gauntlet`), sun gauntlet (`sun_gauntlet`), vajra gauntlet (`vajra_gauntlet`), cinnabar brush (`cinnabar_brush`), gold leaf brush (`gold_brush`), star brush (`star_brush`), sakura crescent (`sakura_moon`), eclipse moon blade (`eclipse_moon`), frost crystal moon (`frost_moon`), raven feather daggers (`raven_feather`), phoenix tail blade (`phoenix_feather`), owl feather blade (`owl_feather`), snow flute (`snow_flute`), golden bell flute (`bell_flute`), amber gourd (`amber_gourd`), and cloud jade gourd (`jade_gourd`).
+- **Liuyun Legendary Skin: 狐火 (`src/game.js`, `src/cloud.js`)**:
+  - Added Liuyun's legendary skin `ly_fox` (狐火) featuring upright white fox ears with vermilion inner shading (`foxears`), revolving triple-foxfire fan weapon (`fox_fan`), curling bushy white fox-tail back piece tipped with burning fox fire (`kitsunetails`), custom fiery atmosphere, and registered `'ly_fox'` in cloud save profile validation schema.
+- **Interactive Home Hero Lobby & Unified Navigation (`src/page.html`, `src/game.js`, `src/style.css`)**:
+  - Rebuilt the main home screen into an interactive hero lobby showcasing the currently equipped character in full stance with instant quick CPU fight launch and inline hero selection switcher (`.home-hero`, `.hh-go`, `.hh-swap`, `.hh-pick`).
+  - Streamlined the interface by relocating the home bottom button dock to a unified top navigation bar (`#topNav`), moved battle replays into the settings drawer, and added character-based friend search in the community panel (`#socFind`, `.soc-find`).
+- **2v2 Overhead Team Indicators (`src/game.js`)**:
+  - Added floating animated chevron indicators above combatants' heads in 2v2 battle mode (`watch2v2`), with distinct color coding: green for the player, cyan for allied teammate, and crimson for opponents, with smooth vertical bobbing animation and automatic hiding upon KO.
+- **Dynamic Camera Punch Impact (`src/game.js`)**:
+  - Added dynamic screen punch zoom and directional focal recoil (`camImpact`, `camPunch`) on impactful combat events including parries, counters, KO finishes, spear tip sweetspots, and Vajra Thunder Armor counters, with dampened 0.6x zoom scaling in 2v2 spectator mode.
+- **Procedural Elemental Hit Audio (`src/game.js`)**:
+  - Added synthesized Web Audio procedural sound effects for elemental strikes: `thunderHit` (highpass crackle and sub rumble), `frostHit` (ice shatter and ringing metal), `windHit` (air rush whip), `fireHit` (flame thud), and `inkHit` (metallic fluid splash), dynamically triggered on unblocked hits based on hero archetype or attack elemental attributes.
 - **Exhaustive Simulation & KeZhi Counter Audit (`tools/simulate-all.mjs`)**:
   - Implemented asymmetric KeZhi (克制) counter evaluation: hero counter relationships accept an advantage tolerance window of ±10% (expected ~58% ± 10%, i.e. 48%–68%), whereas neutral matchups enforce tight ±5% equilibrium (45%–55%).
   - Upgraded `tools/simulate-all.mjs` with full one-command pipeline support (`--all-in-one`, `--simulate-all`, `--train-all`, `--print-all`, and `--push`), running multi-mode simulation, neural policy training, distribution bundle builds, regression tests, and remote publishing.
@@ -224,6 +215,20 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Leiming Skill 2 Rework: 金刚雷铠 (`src/game.js`)**:
+  - Replaced offensive ground stomp (`stomp`) with Vajra Thunder Armor (`金刚雷铠`, cd: 5.5s): assumes a defensive stance for 0.55s reducing incoming damage by 75% with infinite super armor (99 hits); automatically absorbs any incoming melee strike or projectile, retaliating with a vertical lightning punishment bolt (`⚡ 金刚雷铠 · 引雷天罚`, 50 damage, high vertical launch). Synchronized state via `thunderGuardT` across network snapshots, and updated move previews and move sequences.
+- **Hero Combat Balance & Mechanics Adjustments (`src/game.js`)**:
+  - **Feiying**: Normal attack damage reduced by 15% (`normal: 0.85`). Reworked `blink` (影遁) dash mechanics: shadow travels across the ground reaching behind the opponent in 0.15s, and cross-slash deals damage without imposing hard stun (`noStun: true`), preventing inescapable stunlock combos while maintaining offensive pressure.
+  - **Liuyun**: Increased windblade projectile skill cooldown from 2.0s to 3.0s (`cd: 3`).
+- **Skin Art Revamp for Qingfeng & Lingshuang (`src/game.js`)**:
+  - Reworked Qingfeng's frost skin into 烟雨 (Mist & Rain / `qf_frost`) featuring an oil-paper umbrella (`paper_umbrella`), jade hairpin (`jadepin`), rain sword (`rain_sword`), and rippling atmospheric rain stage.
+  - Enhanced Lingshuang's 红梅 (`ls_plum`) with full-length dress, shawl, plum hairpin (`plumhairpin`), and lacquered spear (`lacquer_spear`).
+- **PeerJS Community Hall Failover (`src/social.js`)**:
+  - Enhanced P2P lobby broker resilience, automatically probing and falling back to alternative slot brokers when the primary community hub is unreachable or offline.
+- **Neural AI Policy Model Retraining (`models/heroes/*.json`, `index.html`, `renying-offline.html`)**:
+  - Retrained and re-embedded neural policy weights across all 12 heroes following combat rebalancing, Feiying shadow dash adjustments, and Leiming Vajra Thunder Armor mechanics.
+- **Skins Get Their First-Version Looks Back, and Every Legend Its Own Silhouette (`src/game.js`)**: every skin again uses its original look from before the skin-art rework (headgear, masks, robes, palettes and signature weapons via `deco` and `weapStyle`). Skins no longer draw the oval chest plate with a gem in the middle (the breastplate color becomes a diagonal strap), legends no longer share the orbiting orbs and the disc behind the back, and each has its own back piece (`drawBackPiece`): 金乌 flame wings, 幽渊 floating void shards, 青锋行 a hovering flying sword, 血月 a blood crescent, 幻灵 five fox tails, 修罗 flaming war banners, 沧龙 a dragon coiled up the back, 天青 a celestial silk ribbon, 烈阳 a flame mane, 星墨 the Big Dipper, 月蚀 a tattered cloak, 霜华 ice-crystal wings, 凤羽 phoenix tail plumes, 钧天 a frame of bronze bells, 酒剑仙 a jade gourd and a cloud underfoot, 冥狱 ghost chains and wisps. The light layer from the rework stays on top. Skins no longer rename the hero or its moves; the HUD, callouts and codex use the base hero's names.
+
 - **醉翁 山水之间 → 蓬莱境 (`src/game.js`)**: damage is unchanged (8 × 15, unblockable), but once the scroll lands the opponent is trapped in 蓬莱境 for 2 s (`PENGLAI_T`; 4 s pushed AI-vs-AI win rate from about 61% to 78%, 2 s gives about 71%). On the trapped player's screen the painting stays down and turns opaque, hiding both fighters, with a 困于蓬莱境 countdown; 醉翁's side and spectators see the fight normally plus a paper-mist ring and countdown under the trapped fighter. A trapped AI ignores positions, incoming attacks and projectiles and walks, blocks and swings at random until it ends.
 - **One Menu Bar**: the online home screen no longer shows the bottom button dock that duplicated the top nav. 青锋行 and 回放 moved into the top nav and 新手教学 is a button on the 说明 page; the offline build, which has no top nav, keeps the dock.
 - **1v1 Rounds Start at Full HP**: both fighters start every 1v1 round at full HP again instead of the survivor carrying their HP + 80. The 3v3 relay still carries the winner's HP into the next opponent.
@@ -383,6 +388,35 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Home Quick Battle Difficulty Selector (`src/game.js`, `src/page.html`, `src/style.css`)**:
+  - Integrated an interactive difficulty selection prompt prior to launching home quick CPU matches, and displayed the active hero's name and equipped skin prominently above action buttons.
+- **Test Suite & Worker Simulation Stability (`tools/combat-test.mjs`, `tools/simulate-all.mjs`)**:
+  - Added HTTP server connectivity pre-check before launching Chrome in `tools/combat-test.mjs` with graceful fallback to high-speed in-process sandbox.
+  - Added worker thread error handling in `tools/simulate-all.mjs` to prevent pipeline hangs on worker failure.
+- **Home Menu Transition Flow (`src/game.js`, `src/style.css`, `src/page.html`)**:
+  - One click now drives one timeline: the camera dolly, the home fade-out and the next screen's reveal are scheduled together instead of racing three separate timers.
+  - Leaving a card no longer cancels its own camera push (`pointerleave` is ignored once a destination is committed), and double clicks cannot start two transitions.
+  - The home content leaves before the next panel arrives, so two half-transparent screens no longer stack over the canvas — the "flash" is gone.
+  - Returning to the home from a match keeps the background duel running instead of re-staging it from its opening pose.
+  - The home entrance (title, cards, dock) plays once on boot and again when coming back from a match, not on every return from 设置 / 任务 / 图鉴.
+  - Target panels are built during the dolly instead of on the frame they appear, and the pressed card no longer runs two blurs at once.
+  - `prefers-reduced-motion` now covers the entrance, the hand-off and the dock/nav swap.
+- **Cloud Save Inspector Export (`src/cloud.js`)**:
+  - Exported `setCloudDocument` on `window.CloudSave` so the Dev Cloud Inspector save action in `src/game.js` functions without a missing-method error.
+- **P2P Social Background Throttling (`src/social.js`)**:
+  - Paused background PeerJS reconnect and outbox flush sweeps during active combat (`M.phase === 'fight'`) when the community drawer is closed to eliminate signaling jitter.
+- **Resilient Node Process Resolution & Spawn Error Handling (`tools/simulate-all.mjs`, `tools/train-heroes.mjs`, `tools/gamemode-meta.mjs`, `tools/auto-train.mjs`, `tools/build.py`)**:
+  - Replaced rigid `process.execPath` invocations with a robust multi-stage binary resolver (`getNodeBin()`) checking `process.execPath`, `process.argv[0]`, and standard Homebrew/system paths (`/opt/homebrew/bin/node`, `/usr/local/bin/node`, `/usr/bin/node`), and updated `tools/build.py` to syntax-check compacted JS payloads via `node --check -`.
+  - Added explicit `'error'` event handlers on child process instances in neural training and balance simulation pipelines, preventing unhandled spawn exceptions (such as `ENOENT` during background package updates) from crashing the parent runner.
+- **Account Cloud Synchronization & Local Fallback Migration (`src/cloud.js`, `src/game.js`, `firestore.rules`)**:
+  - Removed auto-cheating unlock script upon `Dev` account login; `Dev` is now treated as a legitimate, persistent account with authentic progression.
+  - Implemented automatic local-to-cloud migration: when users with local accounts (`local_...`) log in or click "一键升级为云端账号" in `#acc`, their progress (unlocked characters, skins, ink, and stars) is automatically uploaded and registered in Firebase Auth and Cloud Firestore.
+  - Hardened error reporting across `login()` and `register()` to display actionable diagnostics (domain whitelisting, auth provider configuration, credential mismatch) rather than silently falling back to local storage.
+  - Relaxed starter profile limits in `firestore.rules` (`isValidStarterProfile`) and raised per-write `owned`/`skins` progression caps (`+10`) to support 10-pull gacha unlocks and carried-over guest progress.
+  - Restricted `isSuperUser()` in `firestore.rules` to exact `ry_dev@renying.game` and admin claims to prevent open registration privilege escalation.
+- **FanHui (返回) Button Fixed Positioning (`src/style.css`)**:
+  - Anchored back buttons in single-player, multiplayer, and account panels (`#single button[data-back], #netp button[data-back], #accBack`) to the bottom-right corner using fixed bottom-right positioning, eliminating layout blockage caused by action buttons on small viewports.
+
 - **Legend Eye Streak Lines While Walking**: the glowing-eye streak drew a line whenever a legend-skin fighter walked, and its history used the game clock, which jumps back on rollback and at netplay start, so the trail could stop pruning and keep growing. It now uses wall time, keeps at most 24 points, breaks on teleports, clears every round and only streaks on dash-speed movement.
 - **Online Rematch Always Froze (第二把卡)**: after a P2P match ended, the end screen kept sending the old match's input frames; when the rematch started they bumped the new match's confirmed frame far ahead, so the host dropped the other player's inputs (their fighter stood still or snapped back, with repeated desync resyncs). Every rollback message now carries the match seed, stale ones are ignored and early ones are replayed when the match starts.
 - **醉翁 山水之间 Played Its Scroll Twice**: the scroll overlay was also drawn during the 0.42 s wind-up and then restarted when the ultimate began; it now drops once.
@@ -467,6 +501,17 @@ All notable changes, features, and architectural capabilities of this project ar
   - Eliminated vertical page scrolling across standard display resolutions (ranging from 1440x900 down to 800x600), ensuring hero grid, character dossier, and panoramic move preview deck fit cleanly within the viewport.
   - Refined bottom dock structure to maintain persistent, non-obscured visibility for the match confirmation button (`#bpGo`).
   - Tuned hero card slot proportions, padding, and deck stage canvas ratios to prevent element clipping or overflow on narrow and short display windows.
+
+### Security
+
+- **Client-Side Anti-Cheat Detection Engine (`src/anticheat.js`, `tools/build.py`)**:
+  - Implemented real-time anomaly detection monitoring ink currency spikes (>5,000 ink single gain or >12,000 ink / 10 min), memory/damage function tampering (`BAL`, `CHARS`, `MOVES`), and impossible single-hit damage calculations.
+  - Enforced a graduated disciplinary system (1st offense: warning & ink rollback; 2nd offense: 24h temporary ban; 3rd offense: permanent ban) with checksummed local logging and cloud synchronization to `sanctions/{uid}`.
+- **Cloud Firestore Security Rules Hardening (`firestore.rules`)**:
+  - Enforced monotonic write rules on `/sanctions/{uid}`: clients can only create or escalate violation severity/heavier sanctions, never delete or mitigate them.
+  - Blocked profile writes (`/users/{uid}`) while an active ban is registered in `/sanctions/{uid}`.
+- **Cloud Administration Tooling (`tools/cloud-admin.mjs`)**:
+  - Added CLI administration commands for manual account sanctioning (`sanction`) and unbanning (`unban`).
 
 ---
 

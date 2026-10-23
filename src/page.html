@@ -60,10 +60,17 @@
 
   <div id="menu" class="scr on menuscr" data-enter="run">
     <div class="home-scrim" aria-hidden="true"></div>
-    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span></div>
+    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 1 人在线</span></span></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
     <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
+      <div class="home-card home-online-card" id="homeOnlineCard">
+        <span class="hc-kicker" style="color:#2bd49a">实时江湖</span>
+        <div class="hc-row">
+          <span class="home-online-dot"></span>
+          <span class="hc-txt"><b id="homeOnlineCardNum">1 位侠士在线</b><small id="homeOnlineCardSub">全服连线待命中 · 随时开战</small></span>
+        </div>
+      </div>
       <button class="home-card home-evt" id="homeEvt" type="button" hidden>
         <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
         <span class="hc-txt"><b>全皮肤免费穿</b><small>打 3 局人机领 1000 墨锭 · 补偿自选侠客</small></span>
@@ -116,7 +123,7 @@
           <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
           <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
           <button data-tab="mayhem" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
-          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 观战</button>
+          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 演武</button>
         </div>
       </div>
 
@@ -360,15 +367,66 @@
 
       <div data-sec="watch2v2" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">2v2 天道演武 · 巅峰AI观战</h3>
-          <span class="sub-badge">双队禁选 · 四神同台 · 阔野奇阵</span>
+          <h3 class="spt">2v2 巅峰演武 · 阔野奇阵</h3>
+          <span class="sub-badge">双人协同 · 2600尺阔野战场 · 灵泉神坛</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">四名【天道】神经网络 AI 同台 2v2 混战！两队各禁选 1 名侠客（共 2 禁），并各选 2 名不重复侠客同场竞技。擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央立【天道剑坛】刷出神符增益，并伴随【天劫剑雨】！</p>
-        <div class="sec-sub-label">天道 AI 自动禁选顺序（共 6 步 · 两队 2 禁 4 选 · 全局互不重复）</div>
-        <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
-        <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入与 1v1 相同的选人界面：两位天道 AI 依次完成 2 禁 4 选，每一手都清晰可见，玩家只旁观不入局。</p>
-        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
-          <button class="go" id="watch2v2StartBtn" type="button">开启 2v2 天道演武</button>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">双人同舟，驰骋阔野！擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央【天道剑坛】定时刷出神符灵丹，并伴随【天劫剑雨】！</p>
+
+        <!-- 2v2 子模式切换：玩家组队参战 (P&C v C&C) vs 天道巅峰观战 (C&C v C&C) -->
+        <div class="seg single-2v2-seg" id="single2v2Seg" style="display:flex;gap:6px;justify-content:center;margin:8px 0 14px">
+          <button class="sel" id="single2v2PlayTab" data-sub="play" type="button">侠客同袍 · 玩家组队 (P&C v C&C)</button>
+          <button id="single2v2WatchTab" data-sub="watch" type="button">天道同台 · 演武观战 (C&C v C&C)</button>
+        </div>
+
+        <!-- 玩家组队参战区 (P&C v C&C) -->
+        <div id="single2v2PlayPane">
+          <div class="sec-sub-label">排定两队对阵阵容（点击指定席位卡片，再在下方挑选侠客）</div>
+          <div class="play2v2-slots" id="play2v2Slots" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 12px"></div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap">
+            <button class="ghost small" id="btn2v2SuggestPartner" type="button" style="color:var(--gold);border-color:rgba(233,196,106,0.4)">✨ 推荐最佳协同搭档</button>
+            <button class="ghost small" id="btn2v2RandomFoes" type="button">🎲 随机敌方双人组</button>
+          </div>
+
+          <div class="sec-sub-label">待命侠客名册（点击入选当前席位）</div>
+          <div class="tag3-roster" id="play2v2Roster"></div>
+
+          <div class="sec-sub-label" style="margin-top:10px">敌方与同袍电脑战力境界</div>
+          <div class="levels-grid" id="play2v2Levels">
+            <button data-lv="easy" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+              <span class="lv-sub">反应迟缓 · 初学练手</span>
+            </button>
+            <button data-lv="normal" class="sel" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+              <span class="lv-sub">见招拆招 · 攻守均衡</span>
+            </button>
+            <button data-lv="hard" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+              <span class="lv-sub">凌厉反击 · 连招压制</span>
+            </button>
+            <button data-lv="impossible" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+              <span class="lv-sub">极境宗师 · 绝无破绽</span>
+            </button>
+            <button data-lv="god" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+              <span class="lv-sub">神经网络 · 协同战术</span>
+            </button>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+            <button class="go" id="play2v2StartBtn" type="button">开启 2v2 组队开战 (P&C v C&C)</button>
+          </div>
+        </div>
+
+        <!-- 观战区 (C&C v C&C) -->
+        <div id="single2v2WatchPane" style="display:none">
+          <div class="sec-sub-label">天道 AI 自动禁选顺序（共 6 步 · 两队 2 禁 4 选 · 全局互不重复）</div>
+          <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
+          <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入与 1v1 相同的选人界面：两位天道 AI 依次完成 2 禁 4 选，每一手都清晰可见，玩家只旁观不入局。</p>
+          <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+            <button class="go" id="watch2v2StartBtn" type="button">开启 2v2 天道演武 (C&C v C&C)</button>
+          </div>
         </div>
       </div>
 
@@ -417,6 +475,17 @@
             <div class="mm-rank-actions">
               <button class="mm-go" id="mmRankBtn" type="button">开始排位</button>
               <button class="mm-link" id="mmRankInfoBtn" type="button">段位与战绩</button>
+            </div>
+          </div>
+          <div class="mm-card mm-2v2" id="mm2v2Card">
+            <div class="mm-card-bg" aria-hidden="true"></div>
+            <span class="mm-kicker">全新玩法 · 协同决战</span>
+            <span class="mm-title">2v2 组队开黑</span>
+            <span class="mm-en">2V2 TEAM & CO-OP</span>
+            <span class="mm-desc">双人同袍共破天道 (P&P v C&C)，或四人组队同台切磋 (P&P v P&P)！支持联机约战与同屏开黑。</span>
+            <div class="mm-2v2-actions" style="display:flex;gap:10px;margin-top:auto;padding-top:10px;flex-wrap:wrap">
+              <button class="mm-go" id="mm2v2CoopBtn" type="button" style="min-width:160px;padding:12px 18px;font-size:15px">双人共斗 (P&P v C&C)</button>
+              <button class="mm-go alt" id="mm2v2VsBtn" type="button" style="min-width:160px;padding:12px 18px;font-size:15px">四人对决 (P&P v P&P)</button>
             </div>
           </div>
         </div>
@@ -567,9 +636,11 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               擂台切磋模式：
             </span>
-            <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px">
+            <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px;flex-wrap:wrap">
               <button class="ghost small sel" data-mode="normal" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">标准论剑 (BO3)</button>
               <button class="ghost small" data-mode="chaos" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">天机乱斗 (随机词条)</button>
+              <button class="ghost small" data-mode="pp_cc" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">双人共斗 (P&P v C&C)</button>
+              <button class="ghost small" data-mode="pp_pp" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">2v2 组队切磋 (P&P v P&P)</button>
             </div>
           </div>
 
@@ -630,6 +701,32 @@
         <div class="rk-info-panel">
           <div class="rk-info-head"><b>段位与战绩</b><span id="rkInfoSeason"></span><button class="mm-cancel" id="rkInfoClose" type="button">关闭</button></div>
           <div id="rkInfoBody"></div>
+        </div>
+      </div>
+      <!-- 2v2 玩法选择模态弹窗 -->
+      <div class="rk-info hidden" id="modal2v2" role="dialog" aria-modal="true" aria-label="2v2 玩法模式选择">
+        <div class="rk-info-panel" style="max-width:580px">
+          <div class="rk-info-head">
+            <b id="modal2v2Title">2v2 协同决战 · 模式选择</b>
+            <button class="mm-cancel" id="modal2v2Close" type="button">关闭</button>
+          </div>
+          <div style="padding:16px 20px 20px" id="modal2v2Body">
+            <p class="sub" id="modal2v2Desc" style="margin:0 0 16px;text-align:left;color:rgba(236,232,225,0.85)">
+              选择进入对决的方式：
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="modal2v2Options">
+              <div class="wuxia-card" id="modal2v2OnlineCard" style="padding:16px;cursor:pointer;border-color:rgba(70,211,234,0.4);background:rgba(70,211,234,0.06);transition:transform .15s">
+                <h4 style="color:#46d3ea;margin:0 0 6px;font-size:17px;font-family:var(--title)">🌐 在线联机开黑</h4>
+                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5">设擂建房生成 4 位房间码分享好友，跨越网络千里同袍。</p>
+                <button class="go small" id="btn2v2GoOnline" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">设擂开黑</button>
+              </div>
+              <div class="wuxia-card" id="modal2v2LocalCard" style="padding:16px;cursor:pointer;border-color:rgba(233,196,106,0.4);background:rgba(233,196,106,0.06);transition:transform .15s">
+                <h4 style="color:var(--gold);margin:0 0 6px;font-size:17px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
+                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5" id="modal2v2LocalDesc">同台电脑键盘对决（1P: WASD+鼠标/J，2P: 方向键+K）。</p>
+                <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">本地开战</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -841,10 +938,10 @@
         <p id="devCloudMsg" class="netstatus" style="margin:4px 0 0;font-size:12px" role="status"></p>
       </div>
       <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
-        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云存档配置</b>（跨设备同步同一账号）</p>
-        <p class="netnote" style="margin:0 0 6px">粘贴你的 Firebase 网页配置（含 projectId、apiKey）：</p>
-        <textarea id="fbCfgIn" rows="4" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
-        <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存云配置</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
+        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云端账号服务配置</b>（Cloudflare Workers + D1）</p>
+        <p class="netnote" style="margin:0 0 6px">当前云端服务接口已默认连接：</p>
+        <input id="fbCfgIn" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;padding:6px;box-sizing:border-box" placeholder="https://renying.evengao6688.workers.dev">
+        <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存接口</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
       </div>
       <div id="importBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(233,196,106,.3);border-radius:8px;background:rgba(20,24,35,.75);text-align:left">
         <p style="margin:0 0 6px;font-size:13px;color:var(--gold)"><b>存档导入与继承</b></p>
