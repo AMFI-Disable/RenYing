@@ -8,6 +8,8 @@
  *   node tools/cloud-admin.mjs get <uid>                获取指定用户的 Cloud Firestore 档案
  *   node tools/cloud-admin.mjs set <uid> '<json>'       直接修改更新 Cloud Firestore 中的玩家档案
  *   node tools/cloud-admin.mjs config                   显示当前配置
+ *   node tools/cloud-admin.mjs sanction <uid>           查看玩家的作弊处罚记录（警告 / 封禁）
+ *   node tools/cloud-admin.mjs unban <uid>              解封：清空处罚记录（玩家刷新网页后生效）
  *
  * 环境变量支持：
  *   FIREBASE_CONFIG='{"apiKey":"...","projectId":"..."}'
@@ -257,8 +259,35 @@ async function main() {
     return;
   }
 
+  if (cmd === 'sanction' || cmd === 'unban') {
+    const uid = args[1];
+    if (!uid) {
+      console.error(`用法: node tools/cloud-admin.mjs ${cmd} <uid>`);
+      process.exit(1);
+    }
+    const auth = await loginOrRegisterDev(cfg);   // 处罚记录只有本人和管理员能读写
+    const docUrl = `https://firestore.googleapis.com/v1/projects/${cfg.projectId}/databases/(default)/documents/sanctions/${uid}?key=${cfg.apiKey}`;
+    const hd = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${auth.idToken}` };
+    if (cmd === 'sanction') {
+      const res = await fetch(docUrl, { headers: hd });
+      if (res.status === 404) { console.log('这个玩家没有处罚记录'); return; }
+      if (!res.ok) { console.error('❌ 获取失败:', await res.text()); process.exit(1); }
+      const d = fromFirestoreFields((await res.json()).fields);
+      console.log(JSON.stringify(d, null, 2));
+      if (d.perm) console.log('状态：永久封禁');
+      else if (d.banUntil > Date.now()) console.log('状态：封禁到', new Date(d.banUntil).toLocaleString());
+      else console.log(`状态：未封禁（已被警告 ${d.strikes || 0} 次）`);
+      return;
+    }
+    const now = Date.now();
+    const res = await fetch(docUrl, { method: 'PATCH', headers: hd, body: JSON.stringify({ fields: toFirestoreFields({ strikes: 0, banUntil: 0, perm: false, log: [], at: now, pardon: now }) }) });
+    if (!res.ok) { console.error('❌ 解封失败:', await res.text()); process.exit(1); }
+    console.log('✓ 已解封，作弊次数清零。玩家刷新网页后就能正常进入游戏');
+    return;
+  }
+
   console.log('未知命令:', cmd);
-  console.log('可用命令: status, unlock-dev, get, set, config');
+  console.log('可用命令: status, unlock-dev, get, set, config, sanction, unban');
 }
 
 main().catch(err => {

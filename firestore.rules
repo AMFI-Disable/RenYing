@@ -175,6 +175,34 @@ service cloud.firestore {
     }
 
     // ===============================================================
+    // Anti-cheat sanctions: sanctions/{userId}
+    // ===============================================================
+    //   - strikes: int (1-100) - times caught cheating
+    //   - banUntil: int (epoch ms) - temporary ban end (24h on the 2nd strike)
+    //   - perm: bool - permanent ban (3rd strike)
+    //   - log: list (<= 20) - { r: reason, at: epoch ms }
+    //   - at: int - last change; pardon: int - set by an admin when unbanning; name: string
+    // A player's own client may only make the record heavier: one more strike per write,
+    // ban never shortened, permanent never lifted. Only admins can pardon or delete.
+
+    function isValidSanction(d) {
+      return d.keys().hasOnly(['strikes', 'banUntil', 'perm', 'log', 'at', 'pardon', 'name']) &&
+             d.strikes is int && d.strikes >= 1 && d.strikes <= 100 &&
+             (d.banUntil is int || d.banUntil is float) && d.banUntil >= 0 &&
+             d.perm is bool &&
+             d.log is list && d.log.size() <= 20 &&
+             (d.strikes < 2 || d.banUntil >= request.time.toMillis() + 23 * 3600 * 1000 || ('banUntil' in resource.data && d.banUntil == resource.data.banUntil)) &&
+             (d.strikes < 3 || d.perm == true);
+    }
+
+    // Profile writes are refused while the account is banned
+    function notBanned(userId) {
+      let p = /databases/$(database)/documents/sanctions/$(userId);
+      return isSuperUser() || !exists(p) ||
+             (get(p).data.perm != true && get(p).data.banUntil < request.time.toMillis());
+    }
+
+    // ===============================================================
     // Collection Match Rules
     // ===============================================================
 
@@ -185,16 +213,31 @@ service cloud.firestore {
 
       // Creation: must be valid schema and meet starter limits unless admin/superuser
       allow create: if (isOwner(userId) || isSuperUser()) &&
+                       notBanned(userId) &&
                        isValidUserProfile(request.resource.data) &&
                        isValidStarterProfile(request.resource.data);
 
       // Update: must be valid schema and adhere to anti-tampering progression bounds unless admin/superuser
       allow update: if (isOwner(userId) || isSuperUser()) &&
+                       notBanned(userId) &&
                        isValidUserProfile(request.resource.data) &&
                        isValidProfileProgression(resource.data, request.resource.data);
 
       // Deletion: owner or admin/superuser only
       allow delete: if isOwner(userId) || isSuperUser();
+    }
+
+    match /sanctions/{userId} {
+      allow read: if isOwner(userId) || isSuperUser();
+      allow create: if isSuperUser() ||
+                       (isOwner(userId) && request.resource.data.strikes == 1 && isValidSanction(request.resource.data));
+      allow update: if isSuperUser() ||
+                       (isOwner(userId) && isValidSanction(request.resource.data) &&
+                        request.resource.data.strikes == resource.data.strikes + 1 &&
+                        request.resource.data.banUntil >= resource.data.banUntil &&
+                        (resource.data.perm != true || request.resource.data.perm == true) &&
+                        request.resource.data.get('pardon', 0) == resource.data.get('pardon', 0));
+      allow delete: if isSuperUser();
     }
 
     // Default Deny: Deny all reads and writes to any unspecified path

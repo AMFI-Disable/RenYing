@@ -1491,3 +1491,12 @@
   @media (max-height: 520px) { .home-hero button { padding: 4px 10px; font-size: 12px; } }
   /* 离线版和在线版共用一条顶栏：各自用不到的按钮藏起来 */
   body.offline .tn-online, body:not(.offline) .tn-offline { display: none !important; }
+  /* ---------- 反作弊：警告 / 封号遮罩 ---------- */
+  .ac-mask { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(6,8,14,.72); backdrop-filter: blur(3px); }
+  .ac-mask.ban { background: rgba(6,8,14,.94); }
+  .ac-mask[hidden] { display: none; }
+  .ac-box { position: relative; width: min(440px, calc(100vw - 32px)); padding: 30px 28px 24px; text-align: center; background: var(--panel); border: 1px solid rgba(216,52,79,.55); box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  .ac-box h2 { margin: 6px 0 12px; font-family: var(--title); font-size: 26px; letter-spacing: .2em; color: #ff6b7d; }
+  .ac-box p { margin: 0 0 18px; font-size: 14px; line-height: 1.9; color: var(--ink); }
+  .ac-box p b { color: #ffd166; font-weight: normal; }
+  .ac-seal { width: 54px; height: 54px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-family: var(--title); font-size: 30px; color: #fff3f0; background: #b8243f; border: 2px solid #ff8a9a; transform: rotate(-6deg); }

@@ -1448,6 +1448,14 @@ clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 
 .home-hero .hh-lv button.sel { background: #f4f1ea; color: #12141e; border-color: #f4f1ea; }
 @media (max-height: 520px) { .home-hero button { padding: 4px 10px; font-size: 12px; } }
 body.offline .tn-online, body:not(.offline) .tn-offline { display: none !important; }
+.ac-mask { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(6,8,14,.72); backdrop-filter: blur(3px); }
+.ac-mask.ban { background: rgba(6,8,14,.94); }
+.ac-mask[hidden] { display: none; }
+.ac-box { position: relative; width: min(440px, calc(100vw - 32px)); padding: 30px 28px 24px; text-align: center; background: var(--panel); border: 1px solid rgba(216,52,79,.55); box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.ac-box h2 { margin: 6px 0 12px; font-family: var(--title); font-size: 26px; letter-spacing: .2em; color: #ff6b7d; }
+.ac-box p { margin: 0 0 18px; font-size: 14px; line-height: 1.9; color: var(--ink); }
+.ac-box p b { color: #ffd166; font-weight: normal; }
+.ac-seal { width: 54px; height: 54px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-family: var(--title); font-size: 30px; color: #fff3f0; background: #b8243f; border: 2px solid #ff8a9a; transform: rotate(-6deg); }
 </style>
 </head>
 <body>
@@ -19112,6 +19120,188 @@ setTimeout(() => { try { socHubStop(); if (SOC.peer) SOC.peer.destroy(); } catch
 });
 document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.data) { delete SOC.data.unread[SOC.cur]; socRenderList(); } });
 }
+</script>
+<script>
+'use strict';
+const AC_CONTACT = '如有异议，请联系作者申请解封。';
+const AC_BAN_MS = 24 * 3600 * 1000, AC_JUMP = 5000, AC_WIN_MS = 10 * 60 * 1000, AC_WIN_MAX = 12000;
+const ACH = { base: null, gains: [], loadT: 0, sig: '', fns: null, hits: 0, hitSeq: -1, busy: false, rec: null, recKey: '', tick: 0, test: false };
+function acUser() { try { return (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null; } catch (e) { return null; } }
+function acExempt() { const u = acUser(); return !!(u && (u.isDevMaster || u.uid === 'dev_master' || String(u.name || '').toLowerCase() === 'dev')); }
+function acKey() { const u = acUser(); return 'renying-ac-' + (u && u.uid ? u.uid : 'device'); }
+function acHash(s) {
+let a = 0x811c9dc5, b = 0x9e3779b9;
+s = 'ry-ac|' + s;
+for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); a = Math.imul(a ^ c, 0x01000193); b = Math.imul(b ^ c, 0x5bd1e995) ^ (b >>> 13); }
+return (a >>> 0).toString(36) + (b >>> 0).toString(36);
+}
+const acBlank = () => ({ strikes: 0, banUntil: 0, perm: false, log: [], at: 0, pardon: 0 });
+function acPack(r) { return JSON.stringify({ s: r.strikes, b: r.banUntil, p: r.perm ? 1 : 0, l: r.log, a: r.at, d: r.pardon || 0 }); }
+function acLoadLocal() {
+let raw = null; try { raw = JSON.parse(localStorage.getItem(acKey()) || 'null'); } catch (e) {}
+if (!raw || !raw.d) return acBlank();
+const r = { strikes: +raw.d.s || 0, banUntil: +raw.d.b || 0, perm: !!raw.d.p, log: Array.isArray(raw.d.l) ? raw.d.l.slice(-20) : [], at: +raw.d.a || 0, pardon: +raw.d.d || 0 };
+if (raw.h !== acHash(acPack(r))) { r.strikes = Math.max(r.strikes, 3); r.perm = true; r.log.push({ r: '改动封禁记录', at: Date.now() }); }   // 记录被手改过
+return r;
+}
+function acSaveLocal(r) { try { localStorage.setItem(acKey(), JSON.stringify({ d: JSON.parse(acPack(r)), h: acHash(acPack(r)) })); } catch (e) {} }
+function acCloudRef() {
+const u = acUser();
+if (!u || !u.isCloud || !window.CloudSave || !CloudSave.isCloudAvailable || !CloudSave.isCloudAvailable()) return null;
+try { return CloudSave.getDb().collection('sanctions').doc(u.uid); } catch (e) { return null; }
+}
+async function acLoadCloud() {
+const ref = acCloudRef(); if (!ref) return null;
+try { const s = await ref.get(); return s.exists ? Object.assign(acBlank(), s.data()) : acBlank(); } catch (e) { return null; }
+}
+async function acSaveCloud(r) {
+const ref = acCloudRef(); if (!ref) return;
+const u = acUser();
+try { await ref.set({ strikes: r.strikes, banUntil: r.banUntil, perm: r.perm, log: r.log.slice(-20), at: r.at, pardon: r.pardon || 0, name: String((u && u.name) || '').slice(0, 24) }); } catch (e) {}
+}
+function acMerge(a, b) {
+if (!b) return a;
+if ((b.pardon || 0) > (a.at || 0) && (b.pardon || 0) >= (a.pardon || 0)) return Object.assign(acBlank(), b);
+return { strikes: Math.max(a.strikes, b.strikes || 0), banUntil: Math.max(a.banUntil, b.banUntil || 0), perm: a.perm || !!b.perm, log: (a.log.length >= (b.log || []).length ? a.log : b.log).slice(-20), at: Math.max(a.at, b.at || 0), pardon: Math.max(a.pardon || 0, b.pardon || 0) };
+}
+const acBanned = r => !!r && (r.perm || r.banUntil > Date.now());
+async function acRefresh() {
+ACH.recKey = acKey();
+let r = acLoadLocal();
+r = acMerge(r, await acLoadCloud());
+ACH.rec = r; acSaveLocal(r);
+if (acBanned(r) && !acExempt()) acShow(r); else acHide();
+}
+async function acStrike(reason) {
+if (acExempt() || ACH.busy) return;
+ACH.busy = true;
+const r = ACH.rec || acLoadLocal(), now = Date.now();
+r.strikes += 1; r.at = now; r.log = (r.log || []).concat({ r: reason, at: now }).slice(-20);
+if (r.strikes === 2) r.banUntil = Math.max(r.banUntil, now + AC_BAN_MS);
+if (r.strikes >= 3) r.perm = true;
+ACH.rec = r; acSaveLocal(r); acSaveCloud(r);
+if (typeof M !== 'undefined' && M.phase && M.phase !== 'end' && typeof backToMenu === 'function' && typeof showScreen === 'function' && !$id('menu').classList.contains('on')) {
+try { paused = false; backToMenu(); } catch (e) {}   // 正在打的这局作废，不发奖励
+}
+acShow(r, reason);
+ACH.hits = 0; ACH.gains = []; ACH.base = null;
+}
+function acFmt(ms) { const d = new Date(ms), p = n => String(n).padStart(2, '0'); return `${d.getMonth() + 1} 月 ${d.getDate()} 日 ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function acShow(r, reason) {
+let el = $id('acMask');
+if (!el) { el = document.createElement('div'); el.id = 'acMask'; el.className = 'ac-mask'; document.body.appendChild(el); }
+const banned = acBanned(r);
+const why = reason || (r.log && r.log.length ? r.log[r.log.length - 1].r : '');
+let title, body, btn = '';
+if (!banned) { title = '检测到作弊'; body = `${escapeHTML(why)}。<br>这是第一次警告，相关收益已经撤回。<br>再次被检测到会封号 1 天，第三次永久封号。`; btn = '<button type="button" class="go small" id="acOk">我知道了</button>'; }
+else if (r.perm) { title = '账号已被永久封禁'; body = `原因：${escapeHTML(why)}。<br>已累计 ${r.strikes} 次作弊。<br>${AC_CONTACT}`; }
+else { title = '账号已被封禁 1 天'; body = `原因：${escapeHTML(why)}。<br>解封时间：${acFmt(r.banUntil)}（还剩 <b id="acLeft"></b>）。<br>再被检测到一次将永久封号。${AC_CONTACT}`; }
+el.innerHTML = `<div class="ac-box"><div class="ac-seal">${banned ? '封' : '警'}</div><h2>${title}</h2><p>${body}</p>${btn}</div>`;
+el.hidden = false; el.classList.toggle('ban', banned);
+if (!banned) $id('acOk').addEventListener('click', () => { acHide(); ACH.busy = false; if (ACH.reload) location.reload(); });
+else { ACH.busy = false; if (ACH.reload) setTimeout(() => location.reload(), 4000); }
+acTickLeft();
+}
+function acHide() { const el = $id('acMask'); if (el) el.hidden = true; }
+function acTickLeft() {
+const r = ACH.rec, el = $id('acLeft');
+if (!r || r.perm || !el) return;
+const ms = r.banUntil - Date.now();
+if (ms <= 0) { acHide(); return; }
+const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60;
+el.textContent = h ? `${h} 小时 ${m} 分` : `${m + 1} 分钟`;
+}
+window.addEventListener('keydown', e => { if (ACH.rec && acBanned(ACH.rec) && !acExempt()) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+const acLoading = () => Date.now() < ACH.loadT;
+function acInkTick() {
+if (typeof PROF === 'undefined') return;
+const ink = +PROF.ink || 0, now = Date.now();
+if (ACH.base === null || acLoading() || acExempt()) { ACH.base = ink; return; }
+const d = ink - ACH.base;
+if (d <= 0) { ACH.base = ink; return; }
+ACH.gains = ACH.gains.filter(g => now - g[0] < AC_WIN_MS);
+const total = ACH.gains.reduce((s, g) => s + g[1], 0) + d;
+if (d > AC_JUMP || total > AC_WIN_MAX) {
+const back = ACH.base;
+PROF.ink = back; try { saveProfile(); } catch (e) {}
+acStrike(d > AC_JUMP ? `墨锭一下子多了 ${Math.round(d)}` : `10 分钟内墨锭异常增加 ${Math.round(total)}`);
+return;
+}
+ACH.gains.push([now, d]); ACH.base = ink;
+}
+function acHookLoads() {
+const mark = () => { ACH.loadT = Date.now() + 4000; ACH.base = null; };
+if (typeof applyProfile === 'function') {
+const ap = applyProfile;
+applyProfile = function (p) { if (p && p !== PROF) mark(); const r = ap.apply(this, arguments); if (p && p !== PROF) mark(); return r; };
+}
+if (typeof claimLegacyAccount === 'function') {
+const cl = claimLegacyAccount;
+claimLegacyAccount = function () { mark(); const r = cl.apply(this, arguments); mark(); return r; };
+}
+if (window.CloudSave) for (const k of ['login', 'register', 'loadProfile', 'pullNow', 'importAccountData', 'promoteLocalToCloud', 'logout']) {
+const f = CloudSave[k]; if (typeof f !== 'function') continue;
+CloudSave[k] = function () {
+mark(); const r = f.apply(this, arguments);
+if (r && typeof r.then === 'function') r.then(() => { mark(); setTimeout(acRefresh, 500); }, () => mark()); else { mark(); setTimeout(acRefresh, 500); }
+return r;
+};
+}
+}
+function acTableSig() {
+try {
+return acHash(JSON.stringify([MOVES, FINAL, SP_SLASH, BAL, SKILLS, CHARS.map(c => c.stat), CHAR_MOVES.map(o => Object.keys(o).map(k => o[k].dmg))]));
+} catch (e) { return ''; }
+}
+function acLocalAttacker(att) {
+if (ACH.test) return true;
+if (!att || REPLAY.on || (typeof TUT !== 'undefined' && TUT) || M.watchAi || M.mode === 'demo' || M.mode === 'watch2v2' || M.mode === 'replay') return false;
+if (typeof isAiVsAi === 'function' && isAiVsAi()) return false;
+return M.mode === 'net' ? att.idx === localIdx() : att.ctrl === human[0];
+}
+function acCheckHit(att, def, m, before) {
+if (!def || !m || typeof before !== 'number' || typeof def.hp !== 'number' || !acLocalAttacker(att)) return;
+const dealt = before - def.hp, base = m.dmgAbs !== undefined ? m.dmgAbs : (m.dmg || 0);
+const wild = M.mode === 'mayhem' || M.mode === 'chaos' ? 6 : 1;
+if (dealt <= 150 || dealt <= Math.max(base, 20) * 12 * wild) return;
+if (ACH.hitSeq !== M.rseq) { ACH.hitSeq = M.rseq; ACH.hits = 0; }
+if (++ACH.hits >= 2) acStrike(`一下打出 ${Math.round(dealt)} 伤害，远超招式上限`);
+}
+function acHookHits() {
+const orig = applyHit;
+const wrapped = function (att, def, m, pt) {
+const before = def && def.hp;
+const r = orig.apply(this, arguments);
+try { acCheckHit(att, def, m, before); } catch (e) {}
+return r;
+};
+applyHit = wrapped;
+ACH.fns = { applyHit: wrapped, balDmg };
+ACH.sig = acTableSig();
+}
+function acCodeTick() {
+if (!ACH.fns || acExempt()) return;
+if (applyHit !== ACH.fns.applyHit || balDmg !== ACH.fns.balDmg) {
+applyHit = ACH.fns.applyHit; balDmg = ACH.fns.balDmg;   // 换回原来的函数
+acStrike('伤害计算被篡改');
+return;
+}
+const s = acTableSig();
+if (s && ACH.sig && s !== ACH.sig) { ACH.sig = s; ACH.reload = true; acStrike('招式伤害数值被篡改'); }   // 改过的数值没法一项项换回来：确认后重新载入网页
+}
+function acStart() {
+acHookLoads(); acHookHits();
+acRefresh();
+setInterval(() => {
+ACH.tick++;
+acInkTick();
+if (ACH.tick % 3 === 0) acCodeTick();
+if (ACH.rec && acBanned(ACH.rec) && !acExempt()) { const el = $id('acMask'); if (!el || el.hidden) acShow(ACH.rec); else acTickLeft(); }
+else if (ACH.rec && $id('acMask') && !$id('acMask').hidden && $id('acMask').classList.contains('ban')) acHide();
+if (acKey() !== ACH.recKey) acRefresh();   // 换了账号
+}, 1000);
+}
+acStart();
 </script>
 <script id="qfxData" type="application/octet-stream"></script>
 </body>
