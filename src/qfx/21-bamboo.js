@@ -50,7 +50,7 @@ function texBambooGround(S, span) {
 function bambooStalkMat() {
   const m = stdMat(0xffffff, { rough: .48 });
   m.onBeforeCompile = sh => {
-    sh.vertexShader = 'varying float vWY, vLY, vSeed;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+    terrU(sh); sh.vertexShader = 'varying float vWY, vLY, vSeed;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       vec4 bw = vec4(transformed, 1.); vSeed = 0.;
       #ifdef USE_INSTANCING
         bw = instanceMatrix * bw; vSeed = fract(instanceMatrix[3].x * .37 + instanceMatrix[3].z * .71);

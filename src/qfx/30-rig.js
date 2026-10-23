@@ -15,7 +15,7 @@ const KC = h => new T.Color(h).convertSRGBToLinear(), shade = (c, k) => c.clone(
 
 /* 网格构建器：环形管、椭球、路径管、布片；可带骨骼权重，四个材质组（布 / 纹边 / 光泽 / 金属） */
 class MB {
-  constructor(skin) { this.skin = skin; this.P = []; this.C = []; this.U = []; this.SI = []; this.SW = []; this.I = [[], [], [], []]; this.W = []; this.m = null; this.n = 0; }
+  constructor(skin, ng = 4) { this.skin = skin; this.P = []; this.C = []; this.U = []; this.SI = []; this.SW = []; this.I = Array.from({ length: ng }, () => []); this.W = []; this.m = null; this.n = 0; }
   T(x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, s = 1) { this.m = new T.Matrix4().compose(new V3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(rx, ry, rz)), new V3(s, s, s)); return this; }
   T0() { this.m = null; return this; }
   v(x, y, z, col, u, v, w) {
@@ -376,6 +376,12 @@ function makeHumanoid(o) {
   if (o.weapon && o.weapon !== 'none') { const w = makeWeapon(o.weapon, rig); if (o.weapon === 'bow') rig.handL.add(w.group); else { rig.handR.add(w.group); rig.bladeLen = w.len; rig.bladeBase = w.base; } rig.weapon = w.group; }
   root.scale.setScalar(o.scale || 1); rig.finish();
 
+  humanMethods(rig);
+  return rig;
+}
+
+/* 人形骨架的通用方法：右臂 IK、剑锋取点、姿势复位与插值 */
+function humanMethods(rig) {
   rig.solveIK = function () {
     const C = this.C, s = this.root.scale.x, a = .28 * s, bb = .28 * s, K = _ik;
     this.torso.updateWorldMatrix(true, false); this.torso.matrixWorld.decompose(K.p, K.qt, K.sc); this.inner.matrixWorld.decompose(K.p, K.qi, K.sc);
@@ -401,9 +407,7 @@ function makeHumanoid(o) {
     if (this.ik) this.solveIK(); else { this.armR.quaternion.setFromEuler(_e.set(C.RaX, 0, C.RaZ)); this.foreR.quaternion.setFromEuler(_e.set(C.RfX, 0, 0)); }
     for (const l of this.lag) { const tg = l.rest + mv * l.amp + Math.sin(t * l.w + this.phase) * l.sway; l.o.rotation.x = damp(l.o.rotation.x, tg, 7, dt); }
   };
-  return rig;
 }
-
 const _e = new T.Euler();
 
 function locomotion(rig, P, sp, dt, t) {

@@ -5,7 +5,7 @@ World.update = (dt, t, focus) => { WIND_U.uPlayer.value.copy(focus); if (World.t
 /* 拆掉当前地图：几何、材质、贴图全部释放（共用的几何缓存除外） */
 World.clear = () => {
   const r = World.root; World.colliders.length = 0; World.lamps.length = 0; World.fires.length = 0; World.grass = null; World.tick = null; World.root = null; World.id = '';
-  for (const k of ['inWater', 'leaves', 'smokes', 'runes', 'giants']) World[k] = null; World.rage = 1;
+  for (const k of ['inWater', 'leaves', 'smokes', 'runes', 'giants']) World[k] = null; World.rage = 1; World.open = false; World.cg = null; World.arena = null; TERR.off();
   if (!r) return; GFX.scene.remove(r);
   const geos = new Set(), mats = new Set(), texs = new Set();
   r.traverse(o => {
@@ -17,7 +17,7 @@ World.clear = () => {
 };
 World.build = id => {
   World.clear(); const m = MAPS[id]; World.id = id; World.R = m.R;
-  const root = World.root = new T.Group(); GFX.scene.add(root); GFX.setEnv(m.env);
+  const root = World.root = new T.Group(); GFX.scene.add(root); GFX.setEnv(m.env); GFX.camera.far = m.far || 1400; GFX.camera.updateProjectionMatrix();
   if (window.__NOWORLD) { const gp = new T.Mesh(new T.CircleGeometry(m.R, 48).rotateX(-PI / 2), stdMat(0x8a857b)); gp.receiveShadow = true; root.add(gp); }
   else m.build(root);
 };
@@ -34,8 +34,11 @@ function dirtAt(x, z) {
   d = Math.max(d, sstep(.6, .72, fbm(x * .05 + 9.3, z * .05 - 2.1, 3)) * .8);
   return d;
 }
+function collideOne(p, rad, c) { const dx = p.x - c.x, dz = p.z - c.z, rr = c.r + rad, d2 = dx * dx + dz * dz; if (d2 < rr * rr && d2 > 1e-6) { const d = Math.sqrt(d2), k = (rr - d) / d; p.x += dx * k; p.z += dz * k; } }
 function collide(p, rad) {
-  for (const c of World.colliders) { const dx = p.x - c.x, dz = p.z - c.z, rr = c.r + rad, d2 = dx * dx + dz * dz; if (d2 < rr * rr && d2 > 1e-6) { const d = Math.sqrt(d2), k = (rr - d) / d; p.x += dx * k; p.z += dz * k; } }
+  if (World.cg) { const gx = Math.floor(p.x / 8), gz = Math.floor(p.z / 8); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const L = World.cg.get((gx + a) * 4096 + gz + b); if (L) for (const c of L) collideOne(p, rad, c); } }
+  else for (const c of World.colliders) collideOne(p, rad, c);
+  if (World.open) { terrPush(p, rad); const A = World.arena; if (A) { const dx = p.x - A.x, dz = p.z - A.z, r = Math.hypot(dx, dz), m = A.r - rad; if (r > m) { p.x = A.x + dx * m / r; p.z = A.z + dz * m / r; } } return; }
   const r = Math.hypot(p.x, p.z), m = World.R - rad; if (r > m) { p.x *= m / r; p.z *= m / r; }
 }
 

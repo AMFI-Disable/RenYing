@@ -81,7 +81,7 @@ function updateProjs(dt, t) {
       else if (Pl.attackActive && dd < 2.6) { dead = true; FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xc48aff, 6); Snd.clang(); }
       else if (!p.done && dd < .75) { p.done = true; const r = hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 3, src: p.src, proj: true }); if (r === 'parry') reflectProj(p); else { dead = true; FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xc48aff, 6); } }
     }
-    if (Math.hypot(p.x, p.z) > 62) dead = true;
+    if (World.open ? Math.hypot(p.x - Pl.pos.x, p.z - Pl.pos.z) > 70 : Math.hypot(p.x, p.z) > 62) dead = true;
     if (dead) { killProj(p); G.projs.splice(i, 1); }
   }
   for (let i = G.hazards.length - 1; i >= 0; i--) {

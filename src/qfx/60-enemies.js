@@ -62,8 +62,8 @@ const GLINT = new Set(['melee', 'pounce', 'dash', 'leap', 'spin']);
 const behindCam = e => { const dx = e.pos.x - Pl.pos.x, dz = e.pos.z - Pl.pos.z, d = Math.hypot(dx, dz) || 1; return (dx * Math.sin(Cam.yaw) + dz * Math.cos(Cam.yaw)) / d < -.3; };
 
 function spawnEnemy(type, x, z, o = {}) {
-  const cfg = ET[type], rig = cfg.rig(); const elite = !!o.elite && !cfg.boss, wv = Math.max(1, G.stage), hs = (1 + .19 * (wv - 1) + (G.endless ? .08 * (wv - 10) * (wv - 10) : 0)) * (cfg.boss && G.endless ? 1.6 : 1), ds = 1.15 + .12 * (wv - 1) + (wv >= 7 && !G.endless ? .08 : 0) + (cfg.dmgB || 0);
-  const e = { type, cfg, rig, pos: new V3(x, 0, z), yaw: Math.atan2(Pl.pos.x - x, Pl.pos.z - z), maxHp: Math.round(cfg.hp * hs * (elite ? 2.4 : 1)), dmgK: ds * (elite ? 1.3 : 1), state: 'spawn', st: 0, atk: null, cds: cfg.atks.map(() => rand(.4, 1.6)), token: false, stagger: 0, poiseD: 0, slowT: 0, burnT: 0, burnDps: 0, burnTick: 0, flash: 0, elite, boss: !!cfg.boss, ghost: !!cfg.ghost, kx: 0, kz: 0, didHit: false, tele: null, strafe: Math.random() < .5 ? 1 : -1, strafeT: rand(1, 3), speedN: 0, deadT: 0, name: cfg.name, phase: 1, tick: 0, jumpY: 0, summoned: 0, stun: 0, fx: 0 };
+  const cfg = ET[type], rig = cfg.rig(); const elite = !!o.elite && !cfg.boss, wv = Math.max(1, o.lv || G.stage), hs = (1 + .19 * (wv - 1) + (G.endless ? .08 * (wv - 10) * (wv - 10) : 0)) * (cfg.boss && G.endless ? 1.6 : 1), ds = 1.15 + .12 * (wv - 1) + (wv >= 7 && !G.endless ? .08 : 0) + (cfg.dmgB || 0);
+  const e = { type, cfg, rig, pos: new V3(x, 0, z), yaw: Math.atan2(Pl.pos.x - x, Pl.pos.z - z), maxHp: Math.round(cfg.hp * hs * (elite ? 2.4 : 1)), dmgK: ds * (elite ? 1.3 : 1), state: 'spawn', st: 0, atk: null, cds: cfg.atks.map(() => rand(.4, 1.6)), token: false, stagger: 0, poiseD: 0, slowT: 0, burnT: 0, burnDps: 0, burnTick: 0, flash: 0, elite, boss: !!cfg.boss, ghost: !!cfg.ghost, kx: 0, kz: 0, didHit: false, tele: null, strafe: Math.random() < .5 ? 1 : -1, strafeT: rand(1, 3), speedN: 0, deadT: 0, name: cfg.name, phase: 1, tick: 0, jumpY: 0, summoned: 0, stun: 0, fx: 0, lv: wv, home: o.home || null, camp: o.camp, aggro: o.aggro || (cfg.ranged ? 22 : 15) };
   e.hp = e.maxHp; const sc = rig.root.scale.x * (elite ? 1.18 : 1); rig.root.scale.setScalar(sc); e.radius = cfg.r * (elite ? 1.15 : 1); e.hitY = (cfg.hitY || 1.15) * sc + (cfg.float || 0);
   rig.root.position.copy(e.pos); rig.root.rotation.y = e.yaw; GFX.scene.add(rig.root);
   if (rig.bladeLen) e.trail = new Trail(cfg.boss ? 0xff4a2a : 0xff8a5a, .16, cfg.boss ? 1.3 : .8);
@@ -71,11 +71,18 @@ function spawnEnemy(type, x, z, o = {}) {
   FX.smoke(e.pos, cfg.boss ? 22 : 10, cfg.boss ? 1.5 : .9); if (cfg.boss) { G.boss = e; FX.ring(e.pos, 1, 9, 0xff3a22, .7); Cam.shake = .5; Snd.gong(); }
   G.enemies.push(e); return e;
 }
+/* 营中的敌人：一个被惊动，整营都扑上来 */
+function wakeEnemy(e) {
+  if (e.state !== 'idle' && e.state !== 'return') return; e.state = 'chase'; e.st = 0; e.alerted = true;
+  FX.num({ x: e.pos.x, y: e.hitY + 1.1, z: e.pos.z }, '！', 'word', .9);
+  if (e.camp !== undefined) for (const o of G.enemies) if (o !== e && o.camp === e.camp && (o.state === 'idle' || o.state === 'return')) { o.state = 'chase'; o.st = rand(.1, .5); }
+}
 function releaseToken(e) { if (e.token) { e.token = false; G.tokens--; } }
 function cancelAttack(e) { if (e.tele) { e.tele.cancel(); e.tele = null; } releaseToken(e); e.atk = null; e.jumpY = 0; }
 
 function damageEnemy(e, dmg, o = {}) {
   if (e.state === 'dead') return false; if (e.state === 'spawn' && e.st < .25) return false;
+  if (e.state === 'idle' || e.state === 'return') wakeEnemy(e);
   if (e.stun > 0) dmg *= 1.3; dmg = Math.max(1, Math.round(dmg)); e.hp -= dmg; e.flash = 1; if (e.tut) Tut.hits = (Tut.hits || 0) + 1;
   FX.num({ x: e.pos.x, y: e.hitY + .7, z: e.pos.z }, '' + dmg, o.crit ? 'crit' : (o.cls || ''), o.crit ? 1 : .8);
   const m = e.cfg.mass; e.kx += (o.kx || 0) / m; e.kz += (o.kz || 0) / m;
@@ -105,7 +112,7 @@ function killEnemy(e) {
   if (e.cfg.revive && !e.revived && !e.execd && e.state !== 'dead') { slaveDown(e); return; }
   if (e.clone) { cancelAttack(e); e.state = 'dead'; e.deadT = .9; e.hp = 0; if (Pl.lock === e) Pl.lock = null; FX.smoke(e.pos, 18, 1.3, .1); FX.wisp({ x: e.pos.x, y: e.hitY, z: e.pos.z }, 0x9ff0e0, 12, 2); Snd.cast(); return; }
   cancelAttack(e); e.state = 'dead'; e.deadT = 0; e.hp = 0; G.kills++; if (Pl.lock === e) Pl.lock = null;
-  Save.kill(); const c = e.cfg, n = e.boss ? 26 : e.elite ? 8 : 3, xp = c.xp * (e.xpK ?? 1) * (e.elite ? 2.5 : 1) * (1 + .06 * (G.stage - 1)), gold = randi(c.gold[0], c.gold[1]) * (e.elite ? 2.5 : 1) * (1 + .3 * pk('gold')) * (1 + .05 * (G.stage - 1));
+  Save.kill(); const c = e.cfg, n = e.boss ? 26 : e.elite ? 8 : 3, lv = e.lv || G.stage, xp = c.xp * (e.xpK ?? 1) * (e.elite ? 2.5 : 1) * (1 + .06 * (lv - 1)), gold = randi(c.gold[0], c.gold[1]) * (e.elite ? 2.5 : 1) * (1 + .3 * pk('gold')) * (1 + .05 * (lv - 1));
   for (let i = 0; i < n; i++) spawnOrb(e.pos, 0, xp / n); const gn = e.boss ? 16 : Math.min(5, Math.ceil(gold / 4)); for (let i = 0; i < gn; i++) spawnOrb(e.pos, 1, gold / gn);
   if (Math.random() < (e.boss ? 1 : e.elite ? .5 : .07)) for (let i = 0; i < (e.boss ? 4 : 1); i++) spawnOrb(e.pos, 2, 18);
   if (pk('wolf')) { Pl.mp = Math.min(Pl.maxMp, Pl.mp + 4 * pk('wolf')); healPlayer(Pl.maxHp * .02 * pk('wolf'), true); }
@@ -174,14 +181,30 @@ function updateEnemy(e, dt0, t) {
   if (e.boss && e.state !== 'dead') {
     bossPhase(e);
   }
-  if (e.state === 'spawn') { const k = sat(e.st / .7); rootY += -2.0 * (1 - easeOut(k)) * rig.root.scale.x; if (e.st > .7) { e.state = 'chase'; e.st = 0; } }
+  if (e.state === 'spawn') { const k = sat(e.st / .7); rootY += -2.0 * (1 - easeOut(k)) * rig.root.scale.x; if (e.st > .7) { e.state = e.home ? 'idle' : 'chase'; e.st = 0; } }
   else if (e.state === 'dead') {
     e.deadT += dt0; fall = smooth(e.deadT / .45); if (e.deadT > .9) rig.setOpacity(sat(1 - (e.deadT - .9) / .7)); rootY -= Math.max(0, e.deadT - .9) * .5;
     if (Math.random() < .5 && e.deadT > .5) FX.ink.emit({ x: e.pos.x + rand(-.5, .5), y: rand(.1, .6), z: e.pos.z + rand(-.5, .5), vy: rand(.5, 1.6), life: rand(.5, 1), s0: .3, s1: .9, r: .05, g: .05, b: .06, a: .5, grav: -.5 });
   }
   else if (e.state === 'down') { fall = e.st < 1.9 ? smooth(e.st / .35) : 1 - smooth((e.st - 1.9) / .5); rate = 20; if (e.st >= 2.4) { e.state = 'chase'; e.st = 0; e.stun = 0; FX.wisp({ x: e.pos.x, y: e.hitY, z: e.pos.z }, 0x5affc8, 8, 1.2); } }
   else if (e.state === 'stagger') { hurt = sat(1 - e.st / Math.max(.3, e.stagger)) * .8 + .2; rate = 24; if (e.st >= e.stagger) { e.state = 'chase'; e.st = 0; } }
+  else if (e.state === 'idle') {
+    // 守营：原地站岗、偶尔踱两步；人走近、或看见同伴挨打，就扑上来
+    const hd = Math.hypot(e.pos.x - e.home.x, e.pos.z - e.home.z);
+    if (!e.wander || e.st > e.wander.t) { const a = rand(TAU), r = rand(0, 4.5); e.wander = { x: e.home.x + Math.cos(a) * r, z: e.home.z + Math.sin(a) * r, t: e.st + rand(3, 7) }; }
+    const wx = e.wander.x - e.pos.x, wz = e.wander.z - e.pos.z, wd = Math.hypot(wx, wz);
+    if (wd > .6 && e.st % 7 < 3.5) { const a = Math.atan2(wx, wz); e.yaw = dampAng(e.yaw, a, 3, dt); mvx = Math.sin(a) * c.spd * .28; mvz = Math.cos(a) * c.spd * .28; speed = .28 * c.spd / (rig.kind === 'wolf' ? 6 : 4.5); }
+    if (d < e.aggro && Pl.state !== 'dead' && (d < e.aggro * .55 || Math.abs(angDiff(e.yaw, toP)) < 1.6 || Pl.speedN > 1.2)) wakeEnemy(e);
+    if (hd > 20) { e.state = 'return'; e.st = 0; }
+  }
+  else if (e.state === 'return') {
+    // 脱战：走回营地，一路回血
+    const hx = e.home.x - e.pos.x, hz = e.home.z - e.pos.z, hd = Math.hypot(hx, hz), a = Math.atan2(hx, hz); e.yaw = dampAng(e.yaw, a, 6, dt);
+    mvx = Math.sin(a) * c.spd * 1.15; mvz = Math.cos(a) * c.spd * 1.15; speed = 1.15 * c.spd / (rig.kind === 'wolf' ? 6 : 4.5); e.hp = Math.min(e.maxHp, e.hp + e.maxHp * .25 * dt);
+    if (hd < 2) { e.state = 'idle'; e.st = 0; e.hp = e.maxHp; } else if (d < 7 && e.st > 1.5) wakeEnemy(e);
+  }
   else if (e.state === 'chase' && e.tut === 'dummy') { e.yaw = dampAng(e.yaw, toP, 4, dt); }
+  else if (e.state === 'chase' && e.home && !e.boss && (Math.hypot(e.pos.x - e.home.x, e.pos.z - e.home.z) > 42 || d > 38 || Pl.state === 'dead')) { releaseToken(e); e.state = 'return'; e.st = 0; }
   else if (e.state === 'chase') {
     e.yaw = dampAng(e.yaw, toP, 7, dt); let moveA = null, sp = c.spd * (e.phase > 1 ? 1.15 : 1);
     const ai = d < 30 ? chooseAttack(e, d) : -1; let started = false;

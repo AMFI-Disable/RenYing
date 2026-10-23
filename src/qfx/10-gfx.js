@@ -20,7 +20,7 @@ function normalFromCanvas(src, strength = 2) {
 }
 
 const RIM_FRAG = 'float rimF = pow(1.0 - saturate(dot(normalize(vViewPosition), normal)), 2.6);\n outgoingLight += uRim * rimF;\n gl_FragColor = vec4( outgoingLight, diffuseColor.a );';
-function rimHook(shader) { shader.uniforms.uRim = this.userData.rim; shader.fragmentShader = 'uniform vec3 uRim;\n' + shader.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', RIM_FRAG); }
+function rimHook(shader) { terrU(shader); shader.uniforms.uRim = this.userData.rim; shader.fragmentShader = 'uniform vec3 uRim;\n' + shader.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', RIM_FRAG); }
 function stdMat(color, o = {}) {
   const m = new T.MeshStandardMaterial({ color, roughness: o.rough === undefined ? .82 : o.rough, metalness: o.metal || 0, flatShading: !!o.flat, side: o.side || T.FrontSide });
   if (o.emissive !== undefined) { m.emissive.set(o.emissive); m.emissiveIntensity = o.ei === undefined ? 1 : o.ei; }
@@ -34,22 +34,28 @@ function stdMat(color, o = {}) {
 const WIND_U = { uTime: GFX.time, uPlayer: { value: new V3() } };
 function windMat(mat, amp, hScale, push) {
   mat.onBeforeCompile = sh => {
-    sh.uniforms.uTime = WIND_U.uTime; sh.uniforms.uPlayer = WIND_U.uPlayer;
+    terrU(sh); sh.uniforms.uTime = WIND_U.uTime; sh.uniforms.uPlayer = WIND_U.uPlayer;
     sh.vertexShader = 'uniform float uTime;uniform vec3 uPlayer;\n' + sh.vertexShader.replace('#include <project_vertex>', `
-      vec4 mvPosition = vec4( transformed, 1.0 );
+      vec4 tWP = vec4( transformed, 1.0 );
       #ifdef USE_INSTANCING
-        mvPosition = instanceMatrix * mvPosition;
-        vec3 ip = instanceMatrix[3].xyz;
+        tWP = instanceMatrix * tWP;
+        vec3 ip = (modelMatrix * vec4(instanceMatrix[3].xyz, 1.)).xyz;
       #else
         vec3 ip = vec3(0.);
       #endif
+      tWP = modelMatrix * tWP;
       float wh = clamp(position.y * ${hScale.toFixed(3)}, 0., 1.); wh *= wh;
       float ph = uTime * 1.6 + ip.x * .21 + ip.z * .17;
       float sw = (sin(ph) + .5 * sin(ph * 2.7 + 1.3) + .6 * sin(uTime * .5 + ip.x * .03)) * ${amp.toFixed(3)} * wh;
-      mvPosition.x += sw; mvPosition.z += sw * .55;
+      tWP.x += sw; tWP.z += sw * .55;
       ${push ? `vec2 dp = ip.xz - uPlayer.xz; float dl = length(dp); float pf = (1. - smoothstep(.2, 1.3, dl)) * wh;
-      mvPosition.xz += normalize(dp + vec2(.001)) * pf * .32; mvPosition.y -= pf * .2;` : ''}
-      mvPosition = modelViewMatrix * mvPosition;
+      tWP.xz += normalize(dp + vec2(.001)) * pf * .32; tWP.y -= pf * .2;` : ''}
+      #ifdef USE_INSTANCING
+        tWP.y += tH(ip.xz);
+      #else
+        tWP.y += tH(tWP.xz);
+      #endif
+      vec4 mvPosition = viewMatrix * tWP;
       gl_Position = projectionMatrix * mvPosition;`);
   };
   mat.customProgramCacheKey = () => 'wind' + amp + '_' + hScale + '_' + push;
@@ -110,7 +116,8 @@ function initGfx(canvas) {
     scene.fog.color.setHex(e.fog); scene.fog.density = e.fogD; FOG_COL.setHex(e.fog);
     hemi.color.setHex(e.hemi[0]); hemi.groundColor.setHex(e.hemi[1]); hemi.intensity = e.hemi[2];
     sun.color.setHex(e.sun[0]); sun.intensity = e.sun[1]; SUN_DIR.set(e.sunDir[0], e.sunDir[1], e.sunDir[2]).normalize();
-    fill.color.setHex(e.fill[0]); fill.intensity = e.fill[1]; R.toneMappingExposure = e.exp || 1.02;
+    fill.color.setHex(e.fill[0]); fill.intensity = e.fill[1]; R.toneMappingExposure = e.exp || 1.02; GFX.shaft = e.shaft || 0; if (e.shaftC) mFinal.uniforms.uShaftC.value.fromArray(e.shaftC);
+    FOGX.U.uFogH.value.fromArray(e.fogH || [0, 0, 0, 0]); FOGX.U.uFogSunC.value.fromArray(e.fogSun || [1, .8, .6]); OWU.uSkyZ.value.fromArray(e.sky.uZen); OWU.uSkyH.value.fromArray(e.sky.uHor);
     for (const k in e.sky) { const u = SU[k], v = e.sky[k]; if (!u) continue; if (u.value && u.value.isColor) u.value.setRGB(v[0], v[1], v[2]); else u.value = v; }
     // 预滤波结果是一张渲染目标，换图时连目标一起释放
     const old = GFX.env, oldRT = GFX.envRT; GFX.envRT = makeEnv(e.envGrad, e.envGlow); GFX.env = GFX.envRT ? GFX.envRT.texture : null;
@@ -128,11 +135,16 @@ function initGfx(canvas) {
   const mBlur = pm(`varying vec2 vUv; uniform sampler2D tD; uniform vec2 uDir;
     void main(){ vec3 c = texture2D(tD, vUv).rgb * .2270; c += (texture2D(tD, vUv + uDir*1.385).rgb + texture2D(tD, vUv - uDir*1.385).rgb) * .3162;
       c += (texture2D(tD, vUv + uDir*3.231).rgb + texture2D(tD, vUv - uDir*3.231).rgb) * .0703; gl_FragColor = vec4(c, 1.); }`, { tD: { value: null }, uDir: { value: new T.Vector2() } });
-  const mFinal = GFX.final = pm(`varying vec2 vUv; uniform sampler2D tS, tB1, tB2; uniform float uHurt, uGray, uTime, uFlash, uFocus, uBloom;
+  /* 体积光：把亮部朝太阳在屏幕上的位置做径向拖影，被山、树挡住的地方自然留出暗条 */
+  const mShaft = pm(`varying vec2 vUv; uniform sampler2D tD; uniform vec2 uSun; uniform float uK;
+    void main(){ vec2 d = (uSun - vUv) * (1. / 48.); vec2 uv = vUv; float w = 1.; vec3 s = vec3(0.);
+      for (int i = 0; i < 48; i++) { s += texture2D(tD, uv).rgb * w; w *= .962; uv += d; }
+      gl_FragColor = vec4(s * (uK / 48.), 1.); }`, { tD: { value: null }, uSun: { value: new T.Vector2() }, uK: { value: 0 } });
+  const mFinal = GFX.final = pm(`varying vec2 vUv; uniform sampler2D tS, tB1, tB2, tR; uniform float uHurt, uGray, uTime, uFlash, uFocus, uBloom, uShaft; uniform vec3 uShaftC;
     void main(){ vec2 uv = vUv; vec2 q = uv - .5; float r2 = dot(q, q);
       vec3 c = texture2D(tS, uv).rgb;
       if (uFocus > .001) { vec2 o = q * uFocus * .09 * smoothstep(.02, .3, r2); c = (c + texture2D(tS, uv - o).rgb + texture2D(tS, uv - o * 2.).rgb + texture2D(tS, uv - o * 3.).rgb) * .25; }
-      vec3 b = texture2D(tB1, uv).rgb * .6 + texture2D(tB2, uv).rgb * .7; c += b * uBloom;
+      vec3 b = texture2D(tB1, uv).rgb * .6 + texture2D(tB2, uv).rgb * .7; c += b * uBloom; if (uShaft > 0.) c += texture2D(tR, uv).rgb * uShaftC * uShaft;
       float l = dot(c, vec3(.299,.587,.114));
       c = mix(c, c * vec3(.94,1.0,1.07), (1. - smoothstep(0., .45, l)) * .55); c = mix(c, c * vec3(1.05,1.0,.93), smoothstep(.5, 1., l) * .5);
       c = mix(vec3(l), c, 1.08); c = (c - .5) * 1.05 + .5;
@@ -140,34 +152,38 @@ function initGfx(canvas) {
       c *= 1. - r2 * .9; c = mix(c, vec3(.55,.03,.02), smoothstep(.1, .55, r2) * uHurt);
       c += uFlash; c += (fract(sin(dot(uv * (uTime + 1.), vec2(12.9898,78.233))) * 43758.5453) - .5) * .018;
       gl_FragColor = vec4(c, 1.); }`,
-    { tS: { value: null }, tB1: { value: null }, tB2: { value: null }, uHurt: { value: 0 }, uGray: { value: 0 }, uTime: GFX.time, uFlash: { value: 0 }, uFocus: { value: 0 }, uBloom: { value: 1 } });
+    { tS: { value: null }, tB1: { value: null }, tB2: { value: null }, tR: { value: null }, uShaft: { value: 0 }, uShaftC: { value: new T.Color(1, .85, .6) }, uHurt: { value: 0 }, uGray: { value: 0 }, uTime: GFX.time, uFlash: { value: 0 }, uFocus: { value: 0 }, uBloom: { value: 1 } });
   const quad = new T.Mesh(tri, mFinal); quad.frustumCulled = false; const pScene = new T.Scene(); pScene.add(quad); const pCam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-  let rtS, rtA, rtB, rtC, rtD, rtE;
+  let rtS, rtA, rtB, rtC, rtD, rtE, rtF;
   const mk = (w, h) => new T.WebGLRenderTarget(Math.max(2, w | 0), Math.max(2, h | 0), { minFilter: T.LinearFilter, magFilter: T.LinearFilter, depthBuffer: false });
   GFX.resize = (w, h, pr) => {
     R.setPixelRatio(pr); R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
     const W = Math.max(2, Math.floor(w * pr)), H = Math.max(2, Math.floor(h * pr));
-    [rtS, rtA, rtB, rtC, rtD, rtE].forEach(r => r && r.dispose());
+    [rtS, rtA, rtB, rtC, rtD, rtE, rtF].forEach(r => r && r.dispose());
     if (R.capabilities.isWebGL2) { rtS = new T.WebGLMultisampleRenderTarget(W, H, { minFilter: T.LinearFilter, magFilter: T.LinearFilter }); rtS.samples = GFX.quality >= 1 ? 4 : 0; }
     else rtS = new T.WebGLRenderTarget(W, H, { minFilter: T.LinearFilter, magFilter: T.LinearFilter });
     rtS.texture.encoding = T.sRGBEncoding;
-    rtA = mk(W / 2, H / 2); rtB = mk(W / 4, H / 4); rtC = mk(W / 4, H / 4); rtD = mk(W / 8, H / 8); rtE = mk(W / 8, H / 8);
+    rtA = mk(W / 2, H / 2); rtB = mk(W / 4, H / 4); rtC = mk(W / 4, H / 4); rtD = mk(W / 8, H / 8); rtE = mk(W / 8, H / 8); rtF = mk(W / 4, H / 4);
     GFX.W = W; GFX.H = H; GFX.vh = h;
   };
+  const _sv = new V3(), _sd = new V3();
   const pass = (mat, target) => { quad.material = mat; R.setRenderTarget(target); R.render(pScene, pCam); };
   GFX.render = () => {
-    R.setRenderTarget(rtS); R.render(scene, cam);
+    FOGX.U.uCamP.value.setFromMatrixPosition(cam.matrixWorld); R.setRenderTarget(rtS); R.render(scene, cam);
     mBright.uniforms.tD.value = rtS.texture; pass(mBright, rtA);
     mBlur.uniforms.tD.value = rtA.texture; mBlur.uniforms.uDir.value.set(1 / rtB.width, 0); pass(mBlur, rtB);
     mBlur.uniforms.tD.value = rtB.texture; mBlur.uniforms.uDir.value.set(0, 1 / rtC.height); pass(mBlur, rtC);
     mBlur.uniforms.tD.value = rtC.texture; mBlur.uniforms.uDir.value.set(1.6 / rtD.width, 0); pass(mBlur, rtD);
     mBlur.uniforms.tD.value = rtD.texture; mBlur.uniforms.uDir.value.set(0, 1.6 / rtE.height); pass(mBlur, rtE);
+    // 体积光：太阳在镜头前方才画
+    let sk = 0; if (GFX.shaft > 0) { _sv.copy(SUN_DIR).multiplyScalar(1000).add(cam.position); _sv.project(cam); cam.getWorldDirection(_sd); const front = _sd.dot(SUN_DIR); if (front > 0 && _sv.z < 1) { const ox = Math.max(0, Math.abs(_sv.x) - 1), oy = Math.max(0, Math.abs(_sv.y) - 1); sk = GFX.shaft * sstep(0, .5, front) * (1 - sstep(0, .8, Math.hypot(ox, oy))); } }
+    mFinal.uniforms.uShaft.value = sk; if (sk > 0) { mShaft.uniforms.tD.value = rtA.texture; mShaft.uniforms.uSun.value.set(_sv.x * .5 + .5, _sv.y * .5 + .5); mShaft.uniforms.uK.value = 1; pass(mShaft, rtF); mFinal.uniforms.tR.value = rtF.texture; }
     mFinal.uniforms.tS.value = rtS.texture; mFinal.uniforms.tB1.value = rtC.texture; mFinal.uniforms.tB2.value = rtE.texture; pass(mFinal, null);
   };
   // 太阳阴影跟随
   const tmp = new V3();
-  GFX.followSun = p => { tmp.set(Math.round(p.x), 0, Math.round(p.z)); sun.target.position.copy(tmp); sun.position.copy(tmp).addScaledVector(SUN_DIR, 110); sun.target.updateMatrixWorld(); };
-  GFX.flashAt = (pos, color, intensity) => { const l = GFX.flash[0].userData.v <= GFX.flash[1].userData.v ? GFX.flash[0] : GFX.flash[1]; l.position.copy(pos); l.position.y += 1.2; l.color.set(color); l.userData.v = intensity; };
+  GFX.followSun = p => { tmp.set(Math.round(p.x), gH(p.x, p.z), Math.round(p.z)); sun.target.position.copy(tmp); sun.position.copy(tmp).addScaledVector(SUN_DIR, 110); sun.target.updateMatrixWorld(); };
+  GFX.flashAt = (pos, color, intensity) => { const l = GFX.flash[0].userData.v <= GFX.flash[1].userData.v ? GFX.flash[0] : GFX.flash[1]; l.position.copy(pos); l.position.y += 1.2 + gH(pos.x, pos.z); l.color.set(color); l.userData.v = intensity; };
   GFX.updateFlash = dt => { for (const l of GFX.flash) { l.userData.v = Math.max(0, l.userData.v - dt * 14 * (l.userData.v + .3)); l.intensity = l.userData.v; } };
 }
 

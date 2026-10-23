@@ -201,6 +201,13 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .stats b{display:block;font-family:var(--f-brush);font-weight:400;font-size:36px;color:var(--paper);line-height:1.1}
 .perklist{display:flex;flex-wrap:wrap;gap:6px;max-width:560px;justify-content:center;font-size:12px}
 .perklist span{border:1px solid rgba(185,162,106,.5);padding:2px 9px;color:var(--paper2)}
+.actp{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);font-family:var(--f-brush);font-size:24px;color:#ffe9c4;white-space:nowrap;text-shadow:0 2px 8px #000;pointer-events:auto;cursor:pointer}
+.actp kbd{font:600 13px var(--f-text);border:1px solid var(--gold);padding:1px 7px;margin-right:8px;background:rgba(20,16,10,.75);vertical-align:3px}
+.region{position:absolute;left:50%;top:21%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
+.region.show{opacity:1}.region b{display:block;font-family:var(--f-brush);font-weight:400;font-size:clamp(44px,6vw,72px);letter-spacing:.35em;text-indent:.35em;color:#f3ead6;text-shadow:0 3px 18px rgba(0,0,0,.8)}
+.region i{font-style:normal;font-size:14px;letter-spacing:.6em;text-indent:.6em;color:var(--paper2)}
+#mapc{width:min(86vmin,900px);height:min(86vmin,900px);border:1px solid rgba(185,162,106,.5);box-shadow:0 0 40px rgba(0,0,0,.6);cursor:crosshair}
+.tplist{display:grid;grid-template-columns:repeat(2,minmax(0,240px));gap:10px}
 .note{font-size:12.5px;color:var(--dim);letter-spacing:.1em;text-align:center}
 
 /* ---------- 章节过场 ---------- */
@@ -289,6 +296,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="lockm" id="lockm" hidden></div>
     <div class="lockinfo" id="lockInfo" hidden><span class="lb"><i id="lockHp"></i></span><span class="lb"><i id="lockPo"></i></span></div>
     <div class="execm" id="execm" hidden><kbd>F</kbd>处决</div>
+    <div class="actp" id="actp" hidden></div>
+    <div class="region" id="region"><b id="regT"></b><i id="regS"></i></div>
     <div class="tut" id="tut" hidden><div class="tn" id="tutN"></div><div class="tt" id="tutT"></div><button class="btn sm" id="btnTutSkip" type="button">跳过试剑</button></div>
   </div>
 
@@ -305,10 +314,10 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   <div id="title" class="screen">
     <div class="tname"><span>青</span><span>锋</span><span>行</span><i class="seal"><b>暮</b><b>山</b><b>试</b><b>剑</b></i></div>
     <div class="tbody">
-      <p>暮色四合，山门告急。黑风寨夜袭青云剑宗，师兄弟尽数下山未归，偌大试剑坪上，只剩你一人一剑。</p>
-      <p>三章十关：山门、竹林、剑冢。每破一境，可择一道机缘；每过一关，可入剑庐锻剑；每入一章，留一处存档。</p>
+      <p>青云山一夜劫火，师门星散。你自山门旧址醒来，一人一剑，要走遍枫林、竹海、寒潭、古寺，直上剑冢。</p>
+      <p>满山敌营任你挑，土地庙里歇脚存档、锻剑传送；黑风寨主、竹海无相、剑魔独孤夜各据一方，先打谁随你。</p>
       <div class="btns"><button class="btn pri" id="btnCont" type="button" hidden>续行</button><button class="btn pri" id="btnStart" type="button" disabled>入山</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
-      <div class="btns"><button class="btn sm" id="btnMeta" type="button">藏经阁</button><button class="btn sm" id="btnSet" type="button">设置</button></div>
+      <div class="btns"><button class="btn sm" id="btnTrial" type="button">十关试炼</button><button class="btn sm" id="btnTrialCont" type="button" hidden>续 · 试炼</button><button class="btn sm" id="btnMeta" type="button">藏经阁</button><button class="btn sm" id="btnSet" type="button">设置</button></div>
       <div class="loading" id="loading">山色渐起……</div>
       <div class="best" id="best"></div>
       <div class="keys">
@@ -318,7 +327,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
         <kbd>空格 / L</kbd><span>闪避 · 踏雪</span><kbd>Shift</kbd><span>疾行</span>
         <kbd>Q E R</kbd><span>三槽剑技</span><kbd>V</kbd><span>绝学</span>
         <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定 · ← → 换人</span>
-        <kbd>P</kbd><span>暂停</span><kbd>M</kbd><span>静音</span>
+        <kbd>G</kbd><span>拜庙 · 开箱</span><kbd>M</kbd><span>山河图</span>
+        <kbd>P</kbd><span>暂停</span><kbd>N</kbd><span>静音</span>
       </div>
     </div>
   </div>
@@ -387,6 +397,19 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <p class="il-next" id="ilNext"></p>
     <div class="btns"><button class="btn" id="btnIlShop" type="button">入剑庐</button><button class="btn pri" id="btnIlGo" type="button">启程</button></div>
     <div class="note">启程即入下一章，章首自动存档</div>
+  </div>
+
+  <div id="shrine" class="screen veil" hidden>
+    <h2 id="shT">土地庙<small id="shS">香火未断，可歇脚</small></h2>
+    <div class="btns"><button class="btn pri" id="btnRest" type="button">歇息 · 存档</button><button class="btn" id="btnShShop" type="button">剑庐</button><button class="btn" id="btnShLeave" type="button">起身</button></div>
+    <div class="note">歇息会回满气血、补足回春丹，各处敌营也会重新聚拢</div>
+    <h2 style="font-size:28px">传送<small>只能去拜过的土地庙</small></h2>
+    <div class="tplist" id="tpList"></div>
+  </div>
+
+  <div id="map" class="screen veil" hidden>
+    <canvas id="mapc" width="900" height="900"></canvas>
+    <div class="note">山河图 · 金点为土地庙，红点为敌营，赤圈为强敌，绿点为未开宝箱 · 按 M 或 Esc 合上</div>
   </div>
 
   <div id="travel" class="travel" hidden>

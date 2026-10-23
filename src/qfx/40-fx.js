@@ -9,7 +9,7 @@ class Particles {
     g.setAttribute('position', new T.BufferAttribute(this.pos, 3)); g.setAttribute('aCol', new T.BufferAttribute(this.col, 4)); g.setAttribute('aSize', new T.BufferAttribute(this.size, 1));
     this.mat = new T.ShaderMaterial({
       transparent: true, depthWrite: false, blending: additive ? T.AdditiveBlending : T.NormalBlending, uniforms: { uScale: { value: 600 } },
-      vertexShader: 'attribute vec4 aCol; attribute float aSize; uniform float uScale; varying vec4 vCol; void main(){ vCol = aCol; vec4 mv = modelViewMatrix * vec4(position, 1.); gl_PointSize = aSize * uScale / max(.2, -mv.z); gl_Position = projectionMatrix * mv; }',
+      vertexShader: TERR_PARS + 'attribute vec4 aCol; attribute float aSize; uniform float uScale; varying vec4 vCol; void main(){ vCol = aCol; vec4 mv = terrMV(position); gl_PointSize = aSize * uScale / max(.2, -mv.z); gl_Position = projectionMatrix * mv; }',
       fragmentShader: additive ? 'varying vec4 vCol; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = smoothstep(1., 0., d); a = a * a + smoothstep(.35, 0., d) * .6; gl_FragColor = vec4(vCol.rgb, vCol.a * a); }'
         : 'varying vec4 vCol; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = smoothstep(1., .25, d); gl_FragColor = vec4(vCol.rgb, vCol.a * a); }'
     });
@@ -45,7 +45,7 @@ FX.wisp = (p, color, n = 4, sp = 1) => { _c.set(color); for (let i = 0; i < n; i
 FX.pillar = (p, color, h = 6) => { _c.set(color); for (let i = 0; i < 70; i++) { const a = rand(TAU), r = rand(.2, 1.1); FX.add.emit({ x: p.x + Math.cos(a) * r, y: rand(0, .5), z: p.z + Math.sin(a) * r, vx: 0, vy: rand(3, h * 2), vz: 0, life: rand(.5, 1.2), s0: rand(.12, .34), s1: 0, r: _c.r, g: _c.g, b: _c.b, grav: -2, drag: .6 }); } };
 
 /* 剑光拖尾 */
-const TRAIL_VS = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }';
+const TRAIL_VS = TERR_PARS + 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * terrMV(position); }';
 const TRAIL_FS = 'varying vec2 vUv; uniform vec3 uCol; uniform float uInt; void main(){ float t = 1. - vUv.x; float a = t * t * (.12 + .88 * pow(vUv.y, 2.2)) * smoothstep(0., .05, vUv.x + .05); vec3 c = mix(uCol, vec3(1.), pow(vUv.y, 6.) * t * .85); gl_FragColor = vec4(c * uInt, a); }';
 class Trail {
   constructor(color, life = .2, inten = 1.1) {
@@ -146,7 +146,7 @@ FX.num = (p, text, cls = '', life = .85) => { if (!setting('nums') && !/word|exe
 FX.updateNums = (dt, cam, w, h) => {
   for (const n of FX.nums) {
     if (n.life <= 0) continue; n.t += dt; const k = n.t / n.life; if (k >= 1) { n.life = 0; n.el.style.opacity = 0; continue; }
-    _pv.copy(n.p); _pv.y += k * 1.1; _pv.project(cam); if (_pv.z > 1) { n.el.style.opacity = 0; continue; }
+    _pv.copy(n.p); _pv.y += k * 1.1 + gH(n.p.x, n.p.z); _pv.project(cam); if (_pv.z > 1) { n.el.style.opacity = 0; continue; }
     const sc = k < .12 ? lerp(1.7, 1, k / .12) : 1; n.el.style.opacity = k > .7 ? (1 - k) / .3 : 1;
     n.el.style.transform = `translate(${((_pv.x * .5 + .5) * w + n.ox).toFixed(1)}px,${((-_pv.y * .5 + .5) * h).toFixed(1)}px) translate(-50%,-50%) scale(${sc.toFixed(2)})`;
   }

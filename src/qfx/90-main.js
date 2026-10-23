@@ -7,8 +7,9 @@ function showBest() {
   if (r.bestTime) parts.push(`最快 ${fmtTime(r.bestTime)}`); if (r.maxCombo) parts.push(`最高 ${r.maxCombo} 连`);
   $('best').textContent = parts.length ? '旧日战绩：' + parts.join(' · ') : '';
   const sl = Save.load().soul; $('btnMeta').textContent = sl ? `藏经阁 · 剑魄 ${sl}` : '藏经阁';
-  const c = $('btnCont'); c.hidden = !run; if (run) c.textContent = '续行 · ' + CHAPTERS[run.ch].n;
-  $('btnStart').textContent = run ? '重新入山' : '入山'; $('btnStart').classList.toggle('pri', !run);
+  const w = Save.world(), c = $('btnCont'); c.hidden = !w; if (w) c.textContent = '续行 · ' + OW.SHRINES[w.shrine || 0].n;
+  $('btnStart').textContent = w ? '重新入山' : '入山'; $('btnStart').classList.toggle('pri', !w);
+  const tc = $('btnTrialCont'); tc.hidden = !run; if (run) tc.textContent = '续 · 试炼 · ' + CHAPTERS[run.ch].n;
 }
 function applyQuality() {
   const q = GFX.quality, pr = Math.min(window.devicePixelRatio || 1, [1, 1.25, 1.5, 2][q]); GFX.resize(root.clientWidth || innerWidth, root.clientHeight || innerHeight, pr);
@@ -26,7 +27,7 @@ function clearField() {
 }
 function resetGame() {
   Orbs.list.length = 0; clearField();
-  Object.assign(G, { soulRun: 0, stage: 0, chapter: 0, kills: 0, inter: 0, clearT: 0, intro: false, spawnT: 0, maxTokens: 2, cap: 6, endless: false, dmgDone: 0, maxCombo: 0, playT: 0, hitstop: 0, enemyTS: 1, slowT: 0, deathT: 0, t: 0, waves: [], sub: 0, subT: 0, stageName: '', atkGap: 0 });
+  Object.assign(G, { mode: 'trial', soulRun: 0, stage: 0, chapter: 0, kills: 0, inter: 0, clearT: 0, intro: false, spawnT: 0, maxTokens: 2, cap: 6, endless: false, dmgDone: 0, maxCombo: 0, playT: 0, hitstop: 0, enemyTS: 1, slowT: 0, deathT: 0, t: 0, waves: [], sub: 0, subT: 0, stageName: '', atkGap: 0 });
   resetPlayer(); Pl.rig.setOpacity(1); UI.combo(0); GFX.final.uniforms.uGray.value = 0;
 }
 function placePlayer() {
@@ -34,7 +35,7 @@ function placePlayer() {
   Cam.yaw = sp[2]; Cam.pitch = .34; Cam.look.set(Pl.pos.x, 1.5, Pl.pos.z); Cam.dist = Cam.distT = 7.4;
 }
 function unlock() { if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock(); }
-function hideAll() { if (Tut.on) Tut.end(false); for (const id of ['title', 'levelup', 'shop', 'pause', 'over', 'interlude', 'meta', 'settings']) $(id).hidden = true; }
+function hideAll() { if (Tut.on) Tut.end(false); for (const id of ['title', 'levelup', 'shop', 'pause', 'over', 'interlude', 'meta', 'settings', 'shrine', 'map']) $(id).hidden = true; }
 /* 墨色过场：盖住画面 → 换地图 → 揭开 */
 function travelShow(ch) {
   $('tvIdx').textContent = ch.idx; $('tvName').textContent = ch.n; $('tvSub').textContent = ch.sub; $('tvStory').textContent = ch.story;
@@ -61,13 +62,15 @@ const Game = {
     };
     if (window.__instant) go(); else setTimeout(go, 650);
   },
-  pause() { if (G.state !== 'playing') return; G.state = 'paused'; UI.perkList('pausePerks'); $('pause').hidden = false; unlock(); },
+  /* 开放世界：fresh 为重新入山 */
+  world(fresh) { if (fresh && Save.world() && !window.__instant && !confirm('重新入山会抹掉开放世界的进度（藏经阁与剑魄保留），确定吗？')) return; worldEnter(fresh); },
+  pause() { if (G.state !== 'playing') return; $('btnRestart').textContent = G.mode === 'world' ? '回土地庙' : '重来'; G.state = 'paused'; UI.perkList('pausePerks'); $('pause').hidden = false; unlock(); },
   resume() { if (G.state !== 'paused') return; $('pause').hidden = true; G.state = 'playing'; canvas.focus(); },
   levelUp() { G.state = 'levelup'; unlock(); UI.showLevelUp(); },
   reroll() { if (G.state !== 'levelup' || Pl.rerolls <= 0) return; Pl.rerolls--; Snd.ui(); UI.showLevelUp(); },
   pickPerk(p) { if (G.state !== 'levelup' || !p) return; takeCard(p); Pl.pending--; if (Pl.pending > 0) { UI.showLevelUp(); return; } $('levelup').hidden = true; G.state = 'playing'; Pl.iframe = Math.max(Pl.iframe, .8); canvas.focus(); },
-  openShop() { if (G.state === 'interlude') { G.shopFrom = 'interlude'; $('interlude').hidden = true; } else { if (G.state !== 'playing' || G.inter <= 0 || G.intro || !G.stage) return; G.shopFrom = 'playing'; } G.state = 'shop'; unlock(); UI.showShop(); },
-  closeShop() { if (G.state !== 'shop') return; $('shop').hidden = true; if (G.shopFrom === 'interlude') { G.state = 'interlude'; $('interlude').hidden = false; return; } G.state = 'playing'; canvas.focus(); },
+  openShop() { if (G.state === 'shrine') { G.shopFrom = 'shrine'; $('shrine').hidden = true; } else if (G.state === 'interlude') { G.shopFrom = 'interlude'; $('interlude').hidden = true; } else { if (G.state !== 'playing' || G.inter <= 0 || G.intro || !G.stage) return; G.shopFrom = 'playing'; } G.state = 'shop'; unlock(); UI.showShop(); },
+  closeShop() { if (G.state !== 'shop') return; $('shop').hidden = true; if (G.shopFrom === 'shrine') { G.state = 'shrine'; $('shrine').hidden = false; return; } if (G.shopFrom === 'interlude') { G.state = 'interlude'; $('interlude').hidden = false; return; } G.state = 'playing'; canvas.focus(); },
   onDeath() { G.deathT = 0; Snd.gong(); },
   /* 一章打完：结算 + 剑庐 + 启程 */
   chapterClear() {
@@ -90,7 +93,7 @@ const Game = {
   },
   victory() { UI.banner('万剑归寂', '', 'gold'); Snd.level(); Game.over(true); },
   endless() { if (G.state !== 'over') return; $('over').hidden = true; G.endless = true; G.state = 'playing'; G.inter = 12; G.intro = false; canvas.focus(); UI.toast('无尽试炼：一关更比一关凶', 4); },
-  home() { hideAll(); $('hud').hidden = true; $('touch').hidden = true; clearField(); resetGame(); placePlayer(); G.state = 'title'; $('title').hidden = false; showBest(); },
+  home() { if (WS.fight) fightEnd(false); hideAll(); $('hud').hidden = true; $('touch').hidden = true; clearField(); resetGame(); placePlayer(); G.state = 'title'; $('title').hidden = false; showBest(); },
 };
 Input.onLock = locked => { if (!locked && G.state === 'playing') Game.pause(); };
 
@@ -98,13 +101,15 @@ Input.onLock = locked => { if (!locked && G.state === 'playing') Game.pause(); }
 function eatKeys() { for (const k in Input.hits) delete Input.hits[k]; }
 function handleKeys() {
   const s = G.state;
-  if (Input.hit('KeyM')) { Snd.setMute(!Snd.muted); $('btnMute').textContent = '声音：' + (Snd.muted ? '关' : '开'); }
-  if (s === 'playing') { if (Input.hit('KeyP') || Input.hit('Escape')) Game.pause(); else if (Input.hit('KeyB')) Game.openShop(); }
+  if (Input.hit('KeyN')) { Snd.setMute(!Snd.muted); $('btnMute').textContent = '声音：' + (Snd.muted ? '关' : '开'); }
+  if (s === 'playing') { if (Input.hit('KeyP') || Input.hit('Escape')) Game.pause(); else if (G.mode === 'world' && Input.hit('KeyM')) { mapOpen(); eatKeys(); } else if (Input.hit('KeyB')) Game.openShop(); }
+  else if (s === 'map') { if (Input.hit('KeyM') || Input.hit('Escape')) { mapClose(); eatKeys(); } }
+  else if (s === 'shrine') { if (Input.hit('Escape') || Input.hit('KeyG')) { shrineLeave(); eatKeys(); } else if (Input.hit('KeyB')) Game.openShop(); else if (Input.hit('Enter')) shrineRest(); }
   else if (s === 'paused') { if (!$('settings').hidden) { if (Input.hit('Escape')) UI.closeSettings(); } else if (Input.hit('KeyP') || Input.hit('Escape')) Game.resume(); }
   else if (s === 'shop') { if (Input.hit('KeyB') || Input.hit('Escape') || Input.hit('Enter')) { Game.closeShop(); eatKeys(); } }
   else if (s === 'interlude') { if (Input.hit('KeyB')) Game.openShop(); else if (Input.hit('Enter')) Game.nextChapter(); }
   else if (s === 'levelup') { if (Input.hit('KeyR')) Game.reroll(); for (let i = 0; i < 3; i++) if (Input.hit('Digit' + (i + 1)) || Input.hit('Numpad' + (i + 1))) { Game.pickPerk(UI.perks[i]); eatKeys(); break; } }
-  else if (s === 'title') { if (Input.hit('Enter') && !$('title').hidden && !$('btnStart').disabled) { if (Save.run()) Game.cont(); else Game.start(); } }
+  else if (s === 'title') { if (Input.hit('Enter') && !$('title').hidden && !$('btnStart').disabled) { Game.world(false); } }
 }
 
 let last = 0, slowAcc = 0, fN = 0, fT = 0;
@@ -115,11 +120,11 @@ function frame(now) {
   if (G.state === 'playing') {
     if (G.hitstop > 0) { G.hitstop -= rdt; dt = rdt * .05; } else dt = rdt;
     if (G.slowT > 0) { G.slowT -= rdt; if (G.slowT <= 0) G.enemyTS = 1; }
-    if (Pl.state === 'dead') { dt *= .45; G.deathT += rdt; U.uGray.value = sat(G.deathT / 1.5); if (G.deathT > 2.4) Game.over(false); }
+    if (Pl.state === 'dead') { dt *= .45; G.deathT += rdt; U.uGray.value = sat(G.deathT / 1.5); if (G.deathT > 2.4) { if (G.mode === 'world') worldRespawn(true); else Game.over(false); } }
     G.t += dt; if (Pl.state !== 'dead') G.playT += dt;
     updatePlayer(dt);
     for (let i = G.enemies.length - 1; i >= 0; i--) if (!updateEnemy(G.enemies[i], dt, G.t)) G.enemies.splice(i, 1);
-    updateProjs(dt, G.t); updateZones(dt); updateOrbs(dt, G.t); if (G.state === 'playing') updateStage(dt);
+    updateProjs(dt, G.t); updateZones(dt); updateOrbs(dt, G.t); if (G.state === 'playing') { if (G.mode === 'world') updateWorld(dt); else updateStage(dt); }
     Snd.combat = G.enemies.length ? 1 : 0;
     if (G.state === 'playing' && Pl.pending > 0 && !['ult', 'ultL', 'dead', 'attack', 'exec', 'flash', 'charge', 'skShadow'].includes(Pl.state) && G.hitstop <= 0) Game.levelUp();
     FX.update(dt, G.t); World.update(rdt, GFX.time.value, Pl.pos); updateCamera(dt, rdt); UI.update(rdt);
@@ -127,7 +132,7 @@ function frame(now) {
     G.t += rdt; Pl.rig.root.position.copy(Pl.pos); Pl.rig.root.rotation.y = .3; animHuman(Pl.rig, rdt, G.t, { speed: 0, rate: 10, pose: P => setHand(P, -.36, .98, -.1, -.1, .94, -.33) });
     FX.update(rdt, G.t); World.update(rdt, GFX.time.value, Pl.pos); updateCamera(rdt, rdt);
   } else { World.update(0, GFX.time.value, Pl.pos); }
-  GFX.followSun(Pl.pos); GFX.updateFlash(rdt);
+  GFX.followSun(Pl.pos); GFX.updateFlash(rdt); GFX.sky.position.copy(GFX.camera.position);
   const low = Pl.hp / Pl.maxHp < .3 && Pl.state !== 'dead' && G.state !== 'title' ? (.3 + Math.sin(GFX.time.value * 5) * .12) : 0;
   U.uHurt.value = Math.max(Pl.hurtV * .75, low); U.uFlash.value = Math.max(0, U.uFlash.value - rdt * 1.6); U.uFocus.value = damp(U.uFocus.value, G.state === 'playing' && G.enemyTS < 1 && Pl.state !== 'dead' ? 1 : 0, 8, rdt);
   FX.updateNums(G.state === 'playing' ? rdt : 0, GFX.camera, root.clientWidth, root.clientHeight);
@@ -137,7 +142,9 @@ function frame(now) {
 }
 
 function bindUI() {
-  $('btnStart').onclick = () => Game.start(); $('btnCont').onclick = () => Game.cont(); $('btnResume').onclick = () => Game.resume(); $('btnRestart').onclick = () => { $('pause').hidden = true; Game.cont(); };
+  $('btnStart').onclick = () => Game.world(true); $('btnCont').onclick = () => Game.world(false); $('btnTrial').onclick = () => Game.start(); $('btnTrialCont').onclick = () => Game.cont();
+  $('btnResume').onclick = () => Game.resume(); $('btnRestart').onclick = () => { $('pause').hidden = true; if (G.mode === 'world') worldRespawn(false); else Game.cont(); };
+  $('btnRest').onclick = () => shrineRest(); $('btnShShop').onclick = () => Game.openShop(); $('btnShLeave').onclick = () => shrineLeave(); $('mapc').onclick = () => mapClose(); $('actp').onclick = () => { if (G.state === 'playing' && G.mode === 'world') worldInteract(); };
   $('btnAgain').onclick = () => Game.start(); $('btnRetry').onclick = () => Game.cont(); $('btnHome').onclick = () => Game.home(); $('btnEndless').onclick = () => Game.endless(); $('btnShopClose').onclick = () => Game.closeShop();
   $('btnIlShop').onclick = () => Game.openShop(); $('btnIlGo').onclick = () => Game.nextChapter();
   $('btnMute').onclick = () => { Snd.setMute(!Snd.muted); $('btnMute').textContent = '声音：' + (Snd.muted ? '关' : '开'); };
@@ -162,7 +169,7 @@ async function boot() {
     GFX.renderer.compile(GFX.scene, GFX.camera);
     last = performance.now(); requestAnimationFrame(frame);
     $('btnStart').disabled = false; $('loading').hidden = true;
-    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise, Tut };
+    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, startStage, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, STAGES, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise, Tut, TERR, gH, OW, OWD, WS, worldEnter, worldRespawn, worldSave, updateWorld, openChest, shrineOpen, mapOpen, drawMap };
   } catch (err) { console.error(err && err.stack || err); $('loading').textContent = '无法启动 3D 画面：' + (err && err.message ? err.message : err) + '。请换用支持 WebGL 的桌面浏览器。'; }
 }
 boot();

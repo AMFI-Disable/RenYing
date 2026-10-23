@@ -15,7 +15,7 @@ const PARRY = { win: .22, guard: .45, rec: .3, sta: 8 };
 const Pl = { pos: new V3(0, 0, 9), vel: new V3(), yaw: PI, kx: 0, kz: 0 };
 const _b = new V3(), _t = new V3(), _v1 = new V3(), _v2 = new V3(), _v3 = new V3();
 /* 镜头别钻进场外：收回到场地半径以内，且不低于地面 */
-function collideCam(v) { const cr = Math.hypot(v.x, v.z), R = World.R + 7; if (cr > R) { v.x *= R / cr; v.z *= R / cr; } v.y = Math.max(.5, v.y); }
+function collideCam(v) { if (World.open) return; const cr = Math.hypot(v.x, v.z), R = World.R + 7; if (cr > R) { v.x *= R / cr; v.z *= R / cr; } v.y = Math.max(.5, v.y); }
 
 function resetPlayer() {
   Object.assign(Pl, { lv: 1, xp: 0, hp: 120, mp: 60, sta: 100, rage: 0, gold: 0, pots: 3, swordLv: 0, bodyLv: 0, qiLv: 0, perks: {}, state: 'free', st: 0, combo: 0, comboT: 0, buf: 0, bufH: 0, iframe: 0, staDelay: 0, cds: [0, 0, 0, 0], potCd: 0, lock: null, hits: 0, hitT: 0, shield: 0, shieldT: 0, buffT: 0, combatT: 0, hurtV: 0, speedN: 0, atkDef: null, hitSet: new Set(), kx: 0, kz: 0, yaw: PI, deadT: 0, tick: 0, pending: 0, parries: 0, execT: null, execE: null, flashE: null, perfectT: 0, perfectSrc: null, charged: false, flickAcc: 0, flickCd: 0, boltN: 0, metaRevive: false, rerolls: 0, slots: ['qi', null, null], ult: null, skLv: { qi: 1 }, cdMax: [1, 1, 1, 1], bellT: 0, wuyingT: 0, nextCrit: 0, reviveUsed: false });
@@ -31,7 +31,7 @@ function recalc() {
 const swordTier = () => SWORD_TIERS[Math.min(4, Math.floor(Pl.swordLv / 2))];
 function setSwordTier() { const tr = swordTier(), m = Pl.rig.bladeMat; m.color.set(tr.blade); m.userData.em0.set(tr.glow).multiplyScalar(tr.ei); m.emissive.copy(m.userData.em0); Pl.trail.setColor(tr.trail); }
 function initPlayer(scene) {
-  Pl.rig = makeHumanoid({ colors: { robe: 0xdcd8ce, trim: 0x2f6f6a, sash: 0x2f6f6a, skin: 0xe2b79a, hair: 0x15130f, pants: 0xd6d0c2, boots: 0x2a2622 }, head: 'knot', sleeves: 'long', scabbard: true, jade: true, skirt: .8, weapon: 'sword' });
+  Pl.rig = makeHero({ colors: { robe: 0xeeebe4, coat: 0xd3e2dc, skin: 0xe9c2a6, hair: 0x15110e, pants: 0xe2ddd2, boots: 0x22201e, accent: 0xb3261e, jade: 0x7fd8b8, silver: 0xd8dde2, sheath: 0x1c2b2c } });
   Pl.rig.setRim(.42, .3, .2); scene.add(Pl.rig.root); Pl.trail = new Trail(0xc8dcea, .2, .95); resetPlayer();
 }
 
@@ -331,7 +331,7 @@ function updateCamera(dt, rdt) {
   if (window.__cam) { const c = window.__cam; cam.position.set(c.p[0], c.p[1], c.p[2]); cam.lookAt(c.t[0], c.t[1], c.t[2]); cam.fov = c.fov || 52; cam.updateProjectionMatrix(); return; }
   if (G.state === 'title') {
     Cam.tOrbit += rdt * .05; const a = Math.sin(Cam.tOrbit) * .55 - .15; Cam.pos.set(Pl.pos.x + Math.sin(a) * 4.3, 1.75 + Math.sin(Cam.tOrbit * 2) * .25, Pl.pos.z + Math.cos(a) * 4.3); Cam.look.set(Pl.pos.x - Math.sin(a + 1.15) * 1.25, 1.32, Pl.pos.z - Math.cos(a + 1.15) * 1.25);
-    cam.position.copy(Cam.pos); cam.lookAt(Cam.look); cam.fov = 44; cam.updateProjectionMatrix(); return;
+    const gy = gH(Pl.pos.x, Pl.pos.z); cam.position.set(Cam.pos.x, Cam.pos.y + gy, Cam.pos.z); cam.lookAt(Cam.look.x, Cam.look.y + gy, Cam.look.z); cam.fov = 44; cam.updateProjectionMatrix(); return;
   }
   const sens = (Input.touch ? .005 : .0026) * setting('sens'); Cam.yaw -= Input.mdx * sens; Cam.pitch = clamp(Cam.pitch + Input.mdy * sens * .8, -.12, 1.15);
   Cam.yaw += ((Input.down('ArrowLeft') ? 1 : 0) - (Input.down('ArrowRight') ? 1 : 0)) * 2.3 * rdt; Cam.pitch = clamp(Cam.pitch + ((Input.down('ArrowDown') ? 1 : 0) - (Input.down('ArrowUp') ? 1 : 0)) * 1.2 * rdt, -.12, 1.15);
@@ -351,7 +351,10 @@ function updateCamera(dt, rdt) {
     const e = Pl.execE, fx = e.pos.x - Pl.pos.x, fz = e.pos.z - Pl.pos.z, fl = Math.hypot(fx, fz) || 1, ux = fx / fl, uz = fz / fl, mx = (Pl.pos.x + e.pos.x) / 2, mz = (Pl.pos.z + e.pos.z) / 2, k = smooth(Cam.execK);
     _v1.set(mx + uz * 3.4 - ux * 1.5, 1.7 + e.hitY * .3, mz - ux * 3.4 - uz * 1.5); collideCam(_v1); Cam.pos.lerp(_v1, k); _v1.set(mx, .95 + e.hitY * .35, mz); _v3.lerp(_v1, k);
   }
-  cam.position.set(Cam.pos.x + rand(-s, s), Cam.pos.y + rand(-s, s), Cam.pos.z + rand(-s, s)); cam.lookAt(_v3);
+  // 地形起伏：镜头与注视点一起抬到脚下地面的高度；镜头不钻进山坡
+  Cam.gy = TERR.on ? damp(Cam.gy === undefined ? gH(Pl.pos.x, Pl.pos.z) : Cam.gy, gH(Pl.pos.x, Pl.pos.z), 9, rdt) : 0; _v3.y += Cam.gy;
+  let cy = Cam.pos.y + Cam.gy; if (TERR.on) cy = Math.max(cy, gH(Cam.pos.x, Cam.pos.z) + .7, gH(lerp(Cam.pos.x, _v3.x, .5), lerp(Cam.pos.z, _v3.z, .5)) + .5);
+  cam.position.set(Cam.pos.x + rand(-s, s), cy + rand(-s, s), Cam.pos.z + rand(-s, s)); cam.lookAt(_v3);
   const tf = 52 + (Pl.state === 'dodge' ? 5 : 0) + (Pl.speedN > 1.2 ? 4 : 0) + (Pl.state === 'ult' ? 6 : 0) - 8 * (Cam.execK || 0); Cam.fov = damp(Cam.fov, tf, 6, rdt); cam.fov = Cam.fov; cam.updateProjectionMatrix();
 }
 
