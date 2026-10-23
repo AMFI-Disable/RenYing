@@ -5546,6 +5546,34 @@ function drawFighter(f) {
     ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * Math.sin(clock * 14)})`;
     ctx.fillText('腾空闪', sk.head[0], sk.head[1] - 28); ctx.restore();
   }
+  // 2v2 队伍头顶指示三角（玩家绿、队友蓝、对手双红；阵亡后自动消失）
+  if (M.mode === 'watch2v2' && f.hp > 0 && !f.hidden && sk.head) {
+    const me = (typeof localIdx === 'function') ? localIdx() : 0;
+    const isUser = f.idx === me;
+    const isTeammate = (f.idx % 2 === me % 2) && !isUser;
+    const col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : '#ff4d4d');
+    const glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)');
+    const hx = sk.head[0];
+    const bounce = Math.sin(clock * 5 + f.idx * 1.5) * 2.5;
+    const tipY = sk.head[1] - 32 + bounce;
+    const topY = tipY - 12;
+    const halfW = 7;
+    ctx.save();
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 5;
+    ctx.fillStyle = col;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.4;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(hx, tipY);
+    ctx.lineTo(hx - halfW, topY);
+    ctx.lineTo(hx + halfW, topY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 function drawDecoys() {
   for (const d of decoys) {
