@@ -8,6 +8,14 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **刃影武库 CS-Style Skin Armory (`src/armory-core.js`, `src/armory.js`, `src/style.css`, `cloudflare/worker.js`)**:
+  - New 武库 tab: weapon cases opened with keys on a spinning reel, five rarity tiers, wear (float 0–1 across five conditions), pattern seeds, StatTrak kill counters, name tags, a full-size inspect view with a wear bar, and an inventory of up to 300 items with hero / rarity / sort filters.
+  - 江湖市场: a daily price for every item and condition with a 30-day chart, buying cases or items with ink, instant sell, and your own listings that sell on the server over time.
+  - 汰换合同 (trade-up): ten items of one rarity become one item of the next rarity from the inputs' collections; the output wear is the plain average of the input wears.
+  - 江湖行动: weekly missions (wins, 2v2 games, opening cases, trade-ups, market trades) earn stars for a star shop with ink, cases, keys, name tags and operation-only items. Server-verified matches also have a 15% drop chance (4 drops a week at most), and 5 matches a week unlock a weekly supply pick.
+  - The store sells keys and name tags for 玉珏, plus a few each week for ink. 玉珏 come from signed one-time redeem codes, or from a clearly labelled simulated top-up that only test servers enable (`ECON_SANDBOX`) and that asks for an age band first. There is no real payment path. Armory items are cosmetic only and never change stats.
+  - Equipped armory skins show in matches and on the hero lobby; 问剑阁 skins keep working as before. The offline build has no armory.
+
 - **Qingfengxing 3.0 Open World Qingyun Mountain (`src/qfx/`, `assets/qingfengxing.html`)**:
   - Transformed Qingfengxing into a seamless 1 km² open-world martial arts adventure (`src/qfx/12-terrain.js`, `25-owgen.js`, `26-owart.js`, `27-owmat.js`, `28-owbuild.js`, `29-owstruct.js`, `67-world.js`) featuring procedural heightmap terrain generation, exponential height fog, volumetric lighting, procedural bamboo groves and pine forests, mountain cliffs, and waterfalls.
   - Divided the open world into 8 distinct territories with 8 Earth God Shrines (土地庙) providing healing rest, cloud saving, and teleportation fast travel.
@@ -388,6 +396,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Home Card Labels at 12px (`src/style.css`)**: the home screen card labels (`.hc-kicker`) were 11.5px, which failed the CI UI audit's 12px minimum on the menu panel.
 - **Home Quick Battle Difficulty Selector (`src/game.js`, `src/page.html`, `src/style.css`)**:
   - Integrated an interactive difficulty selection prompt prior to launching home quick CPU matches, and displayed the active hero's name and equipped skin prominently above action buttons.
 - **Test Suite & Worker Simulation Stability (`tools/combat-test.mjs`, `tools/simulate-all.mjs`)**:
@@ -504,6 +513,13 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Security
 
+- **Arbitrage-Free Armory Market (`src/armory-core.js`)**: prices drift at most ±10% from their reference, sellers on the market ask 2–12% above it, instant sell pays 88% of it, and your own listings can ask at most 95% of it, with a 15% fee on every sale. Under these spreads, buying on any day and selling on any later day, or trading up items bought on the market, always loses ink. `tools/econ-test.mjs` checks the worst case from the rules and also replays a year of market listings and trade-ups.
+- **Server-Authoritative Armory Economy & Ink Ledger (`cloudflare/worker.js`, `src/cloud.js`, `src/anticheat.js`, `tools/econ-admin.mjs`, `tools/econ-test.mjs`)**:
+  - Every armory action (open, buy, sell, list, trade-up, redeem, top-up, equip) is computed by the Worker; the client only shows the result. Writes are version-checked and retried, and every request carries a nonce, so replayed and concurrent requests (double-spends) apply once.
+  - The server now holds the ink balance. Ink earned or spent locally is reported as numbered ledger entries that are each applied once. Local income per day is capped at 1,500 plus 80 per server-verified match (6,000 at most); small overflow is queued (4,000 at most) and paid out later. Spending always applies and can't be voided. Reports of tens of thousands at once are logged for the admin.
+  - When the client anti-cheat catches a forged ink jump it voids exactly the forged ledger entries and checks the balance right before every upload, so legitimate balance is never wiped; if an entry already reached the server, the server takes back exactly what it credited for it.
+  - Uploaded profiles can't add armory skins; registration caps carried-over ink at 5,000. Strikes (warning, 24 h ban, permanent ban) are enforced on the server and block trading and syncing. Logins lock for 15 minutes after 8 wrong passwords, with per-account and per-IP rate limits and a per-IP registration limit.
+  - Admin tool `node tools/econ-admin.mjs` generates redeem codes, shows an account's ledger and strikes, and unbans. `node tools/econ-test.mjs` runs the Worker locally on an emulated D1 and plays honest and cheating flows (128 checks); CI runs it against both `worker.js` and the deployed `worker.bundle.js`.
 - **Client-Side Anti-Cheat Detection Engine (`src/anticheat.js`, `tools/build.py`)**:
   - Implemented real-time anomaly detection monitoring ink currency spikes (>5,000 ink single gain or >12,000 ink / 10 min), memory/damage function tampering (`BAL`, `CHARS`, `MOVES`), and impossible single-hit damage calculations.
   - Enforced a graduated disciplinary system (1st offense: warning & ink rollback; 2nd offense: 24h temporary ban; 3rd offense: permanent ban) with checksummed local logging and cloud synchronization to `sanctions/{uid}`.

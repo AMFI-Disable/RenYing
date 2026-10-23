@@ -62,6 +62,15 @@ jobs:
       - name: Verify Generated Pages Are Up To Date
         run: python3 tools/build.py --check
 
+      # Runs the Cloudflare Worker locally (D1 emulated with node:sqlite) and plays the
+      # armory economy both honestly and like a cheater: forged ink, forged skins, replayed
+      # and concurrent requests, junk arguments, forged redeem codes, farmed match rewards.
+      # The second run tests the bundled file that actually gets deployed.
+      - name: Armory Economy & Anti-Cheat Server Tests
+        run: |
+          node tools/econ-test.mjs
+          node tools/econ-test.mjs --bundle
+
       - name: Run Combat & AI Regression Suite
         run: node tools/combat-test.mjs --sim
 

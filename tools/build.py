@@ -9,6 +9,8 @@
   assets/qingfengxing.html  青锋行（三维小游戏）：由 src/qfx/ 里的 page.html 和按编号排好的各个 .js 拼成。
   renying-offline.html  离线版：一个文件就能玩（音乐、青锋行都打包在里面），双击打开，不能联机。
   renying.html          旧网址，自动跳到 index.html。
+  cloudflare/worker.bundle.js  云端账号的 Cloudflare Worker：worker.js 加上武库规则（src/armory-core.js）拼成一个文件，
+                        wrangler deploy 用它，在 Cloudflare 网页编辑器里整段粘贴也能用。
 
 用法：
   python3 tools/build.py          生成网页
@@ -138,6 +140,8 @@ def page(offline):
             + "<script>\n" + compact_js(read(SRC, "game.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "net-p2p.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "social.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "armory-core.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "armory.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "anticheat.js")) + "\n</script>\n"
         ),
         "<!--@qfx-->\n": '<script id="qfxData" type="application/octet-stream">' + qfx_b64 + "</script>\n",
@@ -149,12 +153,25 @@ def page(offline):
     return html
 
 
+CORE_IMPORT = "import '../src/armory-core.js';\n"
+
+
+def worker_bundle():
+    """Cloudflare Worker：把 worker.js 引用的武库规则原样拼进去，浏览器和服务器用的是同一份规则"""
+    src = read(ROOT, "cloudflare", "worker.js")
+    if src.count(CORE_IMPORT) != 1:
+        raise SystemExit("cloudflare/worker.js 里应该正好有一行 " + CORE_IMPORT.strip())
+    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js 和 src/armory-core.js 再重新生成。\n"
+    return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + read(SRC, "armory-core.js") + "\n/* === cloudflare/worker.js === */\n")
+
+
 def outputs():
     return {
         "index.html": page(offline=False),
         "renying-offline.html": page(offline=True),
         "renying.html": REDIRECT,
         "assets/qingfengxing.html": qfx_page(),
+        "cloudflare/worker.bundle.js": worker_bundle(),
     }
 
 
@@ -169,7 +186,7 @@ def check_js():
     if not node:
         return True
     ok = True
-    for name in ("cloud.js", "ai.js", "game.js", "net-p2p.js", "social.js", "anticheat.js"):
+    for name in ("cloud.js", "ai.js", "game.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
         src_path = os.path.join(SRC, name)
         r = subprocess.run([node, "--check", src_path], capture_output=True, text=True)
         if r.returncode:
@@ -186,6 +203,10 @@ def check_js():
     r = subprocess.run([node, "--check", "-"], input="(function(){\n'use strict';\n" + game + "\n})();", capture_output=True, text=True)
     if r.returncode:
         print(f"src/qfx 语法错误：\n{r.stderr}")
+        ok = False
+    r = subprocess.run([node, "--input-type=module", "--check", "-"], input=worker_bundle(), capture_output=True, text=True)
+    if r.returncode:
+        print(f"cloudflare/worker.bundle.js 语法错误：\n{r.stderr}")
         ok = False
     return ok
 

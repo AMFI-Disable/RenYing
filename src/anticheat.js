@@ -1,22 +1,26 @@
 'use strict';
 /* =====================================================================
-   刃影 —— 反作弊
+   刃影 —— 反作弊（本机这一层）
    ---------------------------------------------------------------------
-   抓两类挂：
+   真正管钱的是服务器（cloudflare/worker.js）：武库全在服务器上算，墨锭由服务器记账、每天有上限。
+   本机这一层抓两类挂：
      刷墨锭：每秒看一眼墨锭。正常一次最多进账一两千（兑换码、任务、补偿），
-             一下子涨过 5000，或者 10 分钟里累计进账超过 12000，就算作弊，墨锭退回涨之前的数。
-             从云端或别的设备载入存档时不算（那是真实进度）。
+             一下子涨过 5000，或者 10 分钟里累计进账超过 12000，就算作弊，凭空多出来的墨锭退回去。
+             从云端或别的设备载入存档时不算（那是真实进度）；服务器确认的、武库结算的入账也不算
+             （云端模块记一笔，这里对账，对得上才放过；记账入口只交给武库，控制台拿不到）。
      改伤害：开局时记下招式表、平衡表、技能表的指纹，之后每 3 秒对一次，被改过就算作弊；
              伤害函数被换掉也算；自己打出去的一下伤害远超这一招可能的最大值（两次）也算。
    处罚（按账号记，开发者账号不管）：
      第一次警告；第二次封 1 天；第三次永久封号，要联系作者解封。
-   记录存两份：本机（带校验，改了也认得出来）和云端 sanctions/{uid}。云端规则只许次数往上加、
-   封禁时间往后延，被封期间云端也不让写存档（见 firestore.rules）。作者用
-   node tools/cloud-admin.mjs unban <uid> 解封。
+   记录存两份：本机（带校验，改了也认得出来）和服务器（/api/ac，客户端只能往上加，被封期间服务器
+   不让写存档、不让交易）。作者用 node tools/econ-admin.mjs unban <昵称> 解封。
    ===================================================================== */
 const AC_CONTACT = '如有异议，请联系作者申请解封。';
 const AC_BAN_MS = 24 * 3600 * 1000, AC_JUMP = 5000, AC_WIN_MS = 10 * 60 * 1000, AC_WIN_MAX = 12000;
-const ACH = { base: null, gains: [], loadT: 0, sig: '', fns: null, hits: 0, hitSeq: -1, busy: false, rec: null, recKey: '', tick: 0, test: false };
+const ACH = { base: null, baseT: 0, gains: [], loadT: 0, sig: '', fns: null, hits: 0, hitSeq: -1, busy: false, rec: null, recKey: '', tick: 0, test: false };
+// 网页一打开就记下云端接口：之后控制台里把它们换掉也骗不过这里
+const AC_TAKE = window.CloudSave && CloudSave.inkGrantTake, AC_GET = window.CloudSave && CloudSave.acGet, AC_REPORT = window.CloudSave && CloudSave.acReport;
+const AC_REVERT = window.CloudSave && CloudSave.ledgerRevert, AC_BEFORE_SYNC = window.CloudSave && CloudSave.onBeforeSync;
 
 function acUser() { try { return (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null; } catch (e) { return null; } }
 function acExempt() { const u = acUser(); return !!(u && (u.isDevMaster || u.uid === 'dev_master' || String(u.name || '').toLowerCase() === 'dev')); }
@@ -37,19 +41,17 @@ function acLoadLocal() {
   return r;
 }
 function acSaveLocal(r) { try { localStorage.setItem(acKey(), JSON.stringify({ d: JSON.parse(acPack(r)), h: acHash(acPack(r)) })); } catch (e) {} }
-function acCloudRef() {
-  const u = acUser();
-  if (!u || !u.isCloud || !window.CloudSave || !CloudSave.isCloudAvailable || !CloudSave.isCloudAvailable()) return null;
-  try { return CloudSave.getDb().collection('sanctions').doc(u.uid); } catch (e) { return null; }
-}
+const acCloud = () => { const u = acUser(); return !!(u && u.isCloud && AC_GET); };
 async function acLoadCloud() {
-  const ref = acCloudRef(); if (!ref) return null;
-  try { const s = await ref.get(); return s.exists ? Object.assign(acBlank(), s.data()) : acBlank(); } catch (e) { return null; }
+  if (!acCloud()) return null;
+  try { const r = await AC_GET(); return r && r.rec ? Object.assign(acBlank(), r.rec) : null; } catch (e) { return null; }   // 老服务器没有这个接口：只看本机记录
 }
-async function acSaveCloud(r) {
-  const ref = acCloudRef(); if (!ref) return;
-  const u = acUser();
-  try { await ref.set({ strikes: r.strikes, banUntil: r.banUntil, perm: r.perm, log: r.log.slice(-20), at: r.at, pardon: r.pardon || 0, name: String((u && u.name) || '').slice(0, 24) }); } catch (e) {}
+async function acSaveCloud(r, reason) {
+  if (!acCloud() || !AC_REPORT) return;
+  try {
+    const res = await AC_REPORT(reason);
+    if (res && res.rec) { ACH.rec = acMerge(ACH.rec || r, res.rec); acSaveLocal(ACH.rec); }   // 服务器记的次数可能更多
+  } catch (e) {}
 }
 // 本机和云端取更重的那份；作者在云端解封过（pardon 比本机记录新），就以云端为准
 function acMerge(a, b) {
@@ -74,7 +76,7 @@ async function acStrike(reason) {
   r.strikes += 1; r.at = now; r.log = (r.log || []).concat({ r: reason, at: now }).slice(-20);
   if (r.strikes === 2) r.banUntil = Math.max(r.banUntil, now + AC_BAN_MS);
   if (r.strikes >= 3) r.perm = true;
-  ACH.rec = r; acSaveLocal(r); acSaveCloud(r);
+  ACH.rec = r; acSaveLocal(r); acSaveCloud(r, reason);
   if (typeof M !== 'undefined' && M.phase && M.phase !== 'end' && typeof backToMenu === 'function' && typeof showScreen === 'function' && !$id('menu').classList.contains('on')) {
     try { paused = false; backToMenu(); } catch (e) {}   // 正在打的这局作废，不发奖励
   }
@@ -113,14 +115,20 @@ window.addEventListener('keydown', e => { if (ACH.rec && acBanned(ACH.rec) && !a
 const acLoading = () => Date.now() < ACH.loadT;
 function acInkTick() {
   if (typeof PROF === 'undefined') return;
-  const ink = +PROF.ink || 0, now = Date.now();
+  const ink = +PROF.ink || 0, now = Date.now(), since = ACH.baseT;
+  ACH.baseT = now;
   if (ACH.base === null || acLoading() || acExempt()) { ACH.base = ink; return; }
-  const d = ink - ACH.base;
+  let d = ink - ACH.base;
+  if (d <= 0) { ACH.base = ink; return; }
+  if (typeof AC_TAKE === 'function') d -= AC_TAKE(d);   // 服务器确认的、武库结算的入账：对得上的部分不算
   if (d <= 0) { ACH.base = ink; return; }
   ACH.gains = ACH.gains.filter(g => now - g[0] < AC_WIN_MS);
   const total = ACH.gains.reduce((s, g) => s + g[1], 0) + d;
   if (d > AC_JUMP || total > AC_WIN_MAX) {
-    const back = ACH.base;
+    // 只退凭空多出来的那部分。云端账号：上次检查以后记进账本的收入，从最新的往前整条作废、够数就停
+    // （同步前一定先检查一遍，所以这几条还没报上去；万一已经报了，服务器按它当时认的数扣回）。以前的余额一分不动
+    let back = ink - d;
+    if (typeof AC_REVERT === 'function') { const v = AC_REVERT(d, since - 50); if (v !== null) back = v; }
     PROF.ink = back; try { saveProfile(); } catch (e) {}
     acStrike(d > AC_JUMP ? `墨锭一下子多了 ${Math.round(d)}` : `10 分钟内墨锭异常增加 ${Math.round(total)}`);
     return;
@@ -194,6 +202,7 @@ function acCodeTick() {
 /* ---------- 启动 ---------- */
 function acStart() {
   acHookLoads(); acHookHits();
+  if (typeof AC_BEFORE_SYNC === 'function') AC_BEFORE_SYNC(acInkTick);   // 存档上传前先对一遍墨锭
   acRefresh();
   setInterval(() => {
     ACH.tick++;

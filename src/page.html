@@ -43,6 +43,7 @@
       <button type="button" data-nav="train" class="tn-offline">木人桩</button>
       <button type="button" data-nav="tutorial" class="tn-offline">新手教学</button>
       <button type="button" data-nav="gacha" class="tn-online">问剑阁</button>
+      <button type="button" data-nav="armory" class="tn-online tn-arm">武库</button>
       <button type="button" data-nav="tasks" class="tn-online">任务</button>
       <button type="button" data-nav="community" class="tn-online">社区</button>
     </div>
@@ -82,6 +83,7 @@
       <div class="home-card home-news">
         <span class="hc-kicker">版本动态</span>
         <ul>
+          <li><b>刃影武库</b>武器箱、江湖市场、汰换合同</li>
           <li><b>匹配对战</b>全服随机对手，开局即打</li>
           <li><b>排位赛</b>D 到 S 五段，定级 5 场</li>
           <li><b>流云 · 墨羽</b>技能重做</li>
@@ -995,6 +997,27 @@
     </div>
   </div>
 
+  <div id="armory" class="scr">
+    <div class="panel armp">
+      <div class="cxhead ar-head">
+        <div class="ar-title"><h2>刃影武库</h2><p class="sub">武器箱 · 江湖市场 · 汰换合同 · 江湖行动</p></div>
+        <div class="ar-wallet">
+          <span class="ar-cur ar-ink" title="墨锭：打对局、做任务、在市场卖饰品得到"><i>墨</i><b class="gInk">0</b></span>
+          <span class="ar-cur ar-jade" title="玉珏：只用来买钥匙和改名标签"><i>玉</i><b id="arJade">0</b></span>
+          <span class="ar-cur ar-key" title="武器箱钥匙"><i>钥</i><b id="arKeys">0</b></span>
+          <button class="ghost" type="button" data-back>返回</button>
+        </div>
+      </div>
+      <div class="seg ar-tabs" id="arTabs" role="tablist"></div>
+      <p class="ar-msg" id="arMsg" aria-live="polite"></p>
+      <div class="ar-main" id="arMain"></div>
+    </div>
+    <div class="ar-modal" id="arModal" hidden></div>
+    <div class="ar-ins" id="arIns" hidden>
+      <div class="ar-insbox"><div class="ar-stage"><canvas id="arInsCv" aria-label="穿上后的样子"></canvas></div><div class="ar-insinfo" id="arInsInfo"></div></div>
+    </div>
+  </div>
+
   <div id="replays" class="scr">
     <div class="panel taskp">
       <div class="cxhead">
@@ -1163,7 +1186,7 @@
   </div>
 
   <div id="end" class="scr">
-    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><p class="end-arm" id="endArm"></p>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>

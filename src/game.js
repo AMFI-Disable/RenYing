@@ -8734,6 +8734,7 @@ function openScreen(name, reveal = true) {
   if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
   if (name === 'codex') openCodex();
   if (name === 'community') openCommunity();
+  if (name === 'armory' && typeof window.openArmory === 'function') window.openArmory();
   if (reveal) showScreen(name);
   return name;
 }
@@ -8793,7 +8794,7 @@ let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
 $id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
 // ---------- 顶部导航 ----------
-const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
+const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
   initAudio();
   if (name === 'menu') { backToMenu(); return; }
@@ -9836,7 +9837,7 @@ function renderCodex() {
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
     const has = skinOwned(k);
     const isLeg = v.rarity === 'legend';
-    const lockHint = v.exclusive ? ' · 青锋行通关' : ' · 预览';
+    const lockHint = v.exclusive ? ' · 青锋行通关' : v.cs ? ' · 武库' : ' · 预览';
     return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
@@ -10385,7 +10386,8 @@ function skinUltName(fOrKey) {
 }
 function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start && now < FREE_SKIN_EVENT.end; }
 function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
-function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent(); }
+// 限免活动只包括原来的皮肤；武库里的饰品（cs）要自己开出来或买到
+function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
 // 自动穿最好的皮肤：没手动选过的角色，穿已拥有里稀有度最高的那款（手动点过“默认”就记成空，不再自动换）
 function bestSkin(id) {
   let best = '', br = 0;
@@ -10568,7 +10570,7 @@ function clientDrawOne(sk) {
   const R = PROF.rates || DEFAULT_RATES;
   if (sk) {
     const rs = R.skin;
-    const mine = Object.keys(SKINS).filter(k => ownsHero(SKINS[k].char));
+    const mine = Object.keys(SKINS).filter(k => ownsHero(SKINS[k].char) && !SKINS[k].cs);   // 武库的饰品不进问剑阁
     const unowned = mine.filter(k => !(PROF.skins || []).includes(k));
     let pick = null;
     if ((PROF.spity || 0) >= rs.pity && unowned.length) {
@@ -11665,7 +11667,7 @@ if (TOUCH) {
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
   const prev = currentScreen; currentScreen = id;
-  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
   if (id !== 'bp') { try { showPop(null); } catch (e) {} }
   if (id === 'menu') {

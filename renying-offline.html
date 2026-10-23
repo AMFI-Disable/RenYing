@@ -1274,7 +1274,7 @@ clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 
 clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
 button.home-card { cursor: pointer; font: inherit; transition: border-color .15s, transform .15s; }
 button.home-card:hover { border-color: rgba(233,196,106,.6); transform: translateY(-2px); }
-.hc-kicker { font-family: var(--v-cond); font-size: 11.5px; letter-spacing: .28em; color: var(--v-red); }
+.hc-kicker { font-family: var(--v-cond); font-size: 12px; letter-spacing: .28em; color: var(--v-red); }
 .home-rank .hc-kicker { color: var(--gold); }
 .home-evt { border-color: rgba(233,196,106,.55); background: linear-gradient(120deg, rgba(233,196,106,.16), rgba(255,70,85,.10) 60%, var(--panel)); }
 .home-evt .hc-kicker { color: var(--gold); }
@@ -1486,6 +1486,250 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
 .ac-box p { margin: 0 0 18px; font-size: 14px; line-height: 1.9; color: var(--ink); }
 .ac-box p b { color: #ffd166; font-weight: normal; }
 .ac-seal { width: 54px; height: 54px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-family: var(--title); font-size: 30px; color: #fff3f0; background: #b8243f; border: 2px solid #ff8a9a; transform: rotate(-6deg); }
+.armp { max-width: min(1360px, 96vw); width: 100%; text-align: left; }
+.ar-head { align-items: flex-end; margin-bottom: 4px; }
+.ar-title h2::after { left: 0; transform: none; }
+.ar-title .sub { margin: 4px 0 0; font-size: 14px; }
+.ar-wallet { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ar-wallet .ar-cur { font-size: 17px; padding: 6px 12px; background: rgba(236,232,225,.05); border: 1px solid var(--line); }
+.ar-wallet .ar-cur b { color: #fff; font-weight: 700; }
+.ar-wallet .ghost { margin-left: 4px; }
+.ar-cur { display: inline-flex; align-items: center; gap: 5px; vertical-align: -3px; font-family: var(--v-cond); font-variant-numeric: tabular-nums; white-space: nowrap; letter-spacing: .02em; }
+.ar-cur i { display: inline-grid; place-items: center; width: 1.3em; min-width: 17px; height: 1.3em; min-height: 17px; font-style: normal; font-family: var(--title); font-size: 13px; line-height: 1; letter-spacing: 0; color: #14121f; background: var(--gold); clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px); }
+.ar-jade i { background: #7fe0c2; }
+.ar-key i { background: #c9d2dc; }
+.ar-tabs { display: flex; width: 100%; margin: 6px 0 0; overflow-x: auto; scrollbar-width: none; }
+.ar-tabs::-webkit-scrollbar { display: none; }
+.ar-tabs button { flex: none; font-size: 15px; padding: 10px 18px; }
+.ar-dot { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--v-red); box-shadow: 0 0 6px var(--v-red); vertical-align: 6px; }
+.ar-msg { min-height: 20px; margin: 6px 0 4px; font-size: 14px; color: #ffb4bb; }
+.ar-busy .ar-main, .ar-busy .ar-box, .ar-busy .ar-insbox { cursor: progress; }
+.ar-banner { margin: 0 0 12px; padding: 10px 14px; font-size: 14px; line-height: 1.6; color: var(--v-white); background: rgba(255,70,85,.12); border-left: 3px solid var(--v-red); }
+.ar-banner.soft { color: rgba(236,232,225,.86); background: rgba(233,196,106,.08); border-left-color: var(--gold); }
+.ar-note { margin: 8px 0 0; font-size: 13px; line-height: 1.7; color: var(--dim); }
+.ar-note.top { margin: 0 0 12px; }
+.ar-h { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 22px 0 10px; font-size: 16px; font-weight: 700; letter-spacing: .08em; color: var(--v-white); }
+.ar-h::before { content: ""; align-self: center; width: 4px; height: 14px; background: var(--v-red); }
+.ar-h small { font-size: 12px; font-weight: 400; letter-spacing: .02em; color: var(--dim); }
+.ar-empty { margin: 0; padding: 34px 16px; text-align: center; font-size: 14px; color: var(--dim); background: rgba(236,232,225,.03); border: 1px dashed rgba(236,232,225,.14); }
+.ar-empty p { margin: 0 0 14px; }
+.ar-empty p:last-child { margin: 0; }
+.armp .ar-empty .go.small { margin: 0 auto; }
+.armp .go.small, .ar-modal .go.small, .ar-ins .go.small { margin: 0; font-size: 14px; letter-spacing: .14em; padding: 8px 18px 8px 22px; }
+.armp .ghost.small, .ar-modal .ghost.small, .ar-ins .ghost.small { font-size: 14px; padding: 7px 14px; }
+.armp small, .ar-modal small, .ar-ins small { font-size: 12px; }
+.ar-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin: 2px 0 12px; font-size: 14px; color: var(--dim); }
+.ar-sum b { font-family: var(--v-cond); font-size: 17px; color: #fff; }
+.ar-caserow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.ar-caseitem { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px 7px 7px; cursor: pointer; font: 14px var(--body); color: var(--v-white); background: linear-gradient(120deg, rgba(var(--cc), .24), rgba(var(--cc), .05)); border: 1px solid rgba(var(--cc), .45); transition: border-color .15s; }
+.ar-caseitem:hover { border-color: rgb(var(--cc)); }
+.ar-caseitem small { font-family: var(--v-cond); font-size: 14px; color: var(--dim); }
+.ar-emb { display: inline-grid; place-items: center; width: 30px; height: 30px; font-family: var(--title); font-size: 20px; color: #fff; background: rgb(var(--cc)); clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+.ar-filter { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.ar-sel { appearance: none; -webkit-appearance: none; font: 14px var(--body); color: var(--v-white); padding: 8px 32px 8px 12px; cursor: pointer; border-radius: 0; background: rgba(5,10,16,.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ece8e1'/%3E%3C/svg%3E") no-repeat right 12px center; border: 1px solid rgba(236,232,225,.18); }
+.ar-sel:hover { border-color: rgba(236,232,225,.4); }
+.ar-sel option { color: #ece8e1; background: #0f1923; }
+.ar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.ar-grid.sm { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.ar-it { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 2px; min-width: 0; padding: 0 0 12px; text-align: left; font: inherit; color: var(--v-white); cursor: pointer;
+background: linear-gradient(180deg, rgba(var(--tc), .18), rgba(13,21,30,.62) 62%); border: 1px solid rgba(236,232,225,.1); transition: transform .12s, border-color .15s, box-shadow .15s; }
+.ar-it:hover:not(:disabled):not(.bound) { transform: translateY(-2px); border-color: rgba(var(--tc), .85); box-shadow: 0 10px 26px rgba(var(--tc), .22); }
+.ar-it img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; background: #0b0f16; }
+.ar-it b { padding: 7px 10px 0; font-size: 14px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.ar-it small { padding: 0 10px; line-height: 1.45; color: var(--dim); overflow-wrap: anywhere; }
+.ar-it.eq { border-color: rgba(var(--tc), .95); box-shadow: inset 0 0 0 1px rgba(var(--tc), .95); }
+.ar-it.bound { cursor: default; }
+.ar-it:disabled { cursor: default; opacity: .36; filter: grayscale(.6); }
+.ar-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgb(var(--tc)); box-shadow: 0 0 10px rgba(var(--tc), .7); }
+.ar-st, .ar-eq, .ar-new { position: absolute; top: 6px; padding: 4px 6px; font-family: var(--v-cond); font-size: 12px; line-height: 1; letter-spacing: .04em; white-space: nowrap; }
+.ar-st { left: 6px; color: #ffa149; background: rgba(8,10,16,.84); border: 1px solid rgba(255,161,73,.55); }
+.ar-eq { right: 6px; font-weight: 700; color: var(--v-navy); background: var(--v-white); }
+.ar-new { right: 6px; font-weight: 700; color: #fff; background: var(--v-red); }
+.ar-eq ~ .ar-new { top: 30px; }
+.ar-modal, .ar-ins { position: fixed; inset: 0; z-index: 35; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4,7,11,.76); backdrop-filter: blur(3px); }
+.ar-modal[hidden], .ar-ins[hidden] { display: none; }
+.ar-modal { z-index: 36; }
+.ar-box, .ar-insbox { position: relative; max-height: 100%; overflow-y: auto; text-align: left; background: var(--panel2); border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.6);
+clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px)); }
+.ar-box { width: min(500px, 100%); padding: 22px 24px; }
+.ar-box.wide { width: min(980px, 100%); }
+.ar-box h3 { margin: 0 0 10px; font-size: 20px; letter-spacing: .06em; color: #fff; }
+.ar-box p { margin: 0 0 10px; font-size: 14px; line-height: 1.75; color: rgba(236,232,225,.86); }
+.ar-box .row { justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.ar-input { width: 100%; padding: 9px 12px; font: 16px var(--body); color: var(--v-white); }
+.ar-listrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.ar-listrow .ar-input { flex: none; width: 160px; font-family: var(--v-cond); font-size: 18px; }
+.ar-listrow .ar-note { margin: 0; }
+.ar-insbox { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr); width: min(1080px, 100%); }
+.ar-stage { position: relative; min-height: 440px; background: #070b11; }
+.ar-insinfo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 24px 26px; }
+.ar-insinfo h3 { margin: 2px 0 0; font-size: 22px; line-height: 1.35; color: #fff; }
+.ar-insinfo .ar-note { margin: 4px 0 0; }
+.ar-tier { display: inline-block; padding: 4px 16px 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: .12em; color: #fff; background: rgba(var(--tc), .88); clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+.ar-tagname { margin: -2px 0 0; font-size: 15px; font-style: italic; color: #ffd98a; }
+.ar-wearbar { position: relative; align-self: stretch; height: 8px; margin: 10px 0 4px; background: linear-gradient(90deg, #3ddc97 0 7%, #9bd14f 7% 15%, #e9c46a 15% 38%, #f08a4b 38% 45%, #e04b4b 45% 100%); }
+.ar-wearbar i { position: absolute; top: -5px; width: 3px; height: 18px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 8px #fff; }
+.ar-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); align-self: stretch; gap: 7px 16px; margin: 6px 0; font-size: 14px; }
+.ar-dl dt { white-space: nowrap; color: var(--dim); }
+.ar-dl dd { margin: 0; color: var(--v-white); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ar-lucky { margin-left: 6px; padding: 2px 6px; font-size: 12px; color: #ffd34d; border: 1px solid rgba(255,211,77,.5); }
+.ar-insbtns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.ar-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(236,232,225,.04); border: 1px solid var(--line); }
+.ar-gift { justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; font-size: 14px; background: linear-gradient(110deg, rgba(255,70,85,.2), rgba(13,21,30,.3) 70%); border-color: rgba(255,70,85,.45); }
+.ar-gift b { margin-right: 8px; color: #fff; }
+.ar-cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(390px, 100%), 1fr)); gap: 14px; }
+.ar-casecard { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: linear-gradient(160deg, rgba(var(--cc), .15), rgba(13,21,30,.5) 45%); border: 1px solid rgba(var(--cc), .36); }
+.ar-casehead { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 4px; }
+.ar-casehead h3 { margin: 0; font-size: 20px; color: #fff; }
+.ar-casehead p { margin: 4px 0 10px; font-size: 14px; color: var(--dim); }
+.ar-casehead .row { justify-content: flex-start; gap: 8px; margin: 0; }
+.ar-casebox { flex: none; position: relative; display: grid; place-items: center; width: 84px; height: 64px; background: linear-gradient(160deg, rgb(var(--cc)), rgba(var(--cc), .42));
+box-shadow: inset 0 0 0 2px rgba(255,255,255,.2); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px); }
+.ar-casebox::after { content: ""; position: absolute; left: 0; right: 0; top: 46%; height: 3px; background: rgba(0,0,0,.28); }
+.ar-casebox span { position: relative; z-index: 1; font-family: var(--title); font-size: 34px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.ar-casebox.sm { width: 54px; height: 42px; }
+.ar-casebox.sm span { font-size: 22px; }
+.ar-ctier { display: grid; grid-template-columns: 118px minmax(0, 1fr); align-items: center; gap: 10px; padding: 6px 0 0; border-top: 1px solid rgba(236,232,225,.06); }
+.ar-ctier > span { font-size: 12px; font-weight: 700; color: rgb(var(--tc)); }
+.ar-minis { display: flex; flex-wrap: wrap; gap: 4px; }
+.ar-minis img { width: 36px; height: 48px; object-fit: cover; background: #0b0f16; border-bottom: 2px solid rgb(var(--tc)); }
+.ar-col { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-top: 4px; padding-top: 10px; font-size: 13px; color: var(--dim); border-top: 1px solid rgba(236,232,225,.08); }
+.ar-reel { position: relative; height: 200px; margin: 6px 0 4px; overflow: hidden; background: #070b11; border: 1px solid var(--line); }
+.ar-reel::before, .ar-reel::after { content: ""; position: absolute; top: 0; bottom: 0; width: 90px; z-index: 2; pointer-events: none; }
+.ar-reel::before { left: 0; background: linear-gradient(90deg, #070b11, transparent); }
+.ar-reel::after { right: 0; background: linear-gradient(270deg, #070b11, transparent); }
+.ar-strip { position: absolute; left: 0; top: 14px; display: flex; gap: 8px; will-change: transform; }
+.ar-rt { flex: none; display: flex; flex-direction: column; width: 124px; height: 170px; background: linear-gradient(180deg, rgba(var(--tc), .28), rgba(13,21,30,.92)); border-bottom: 4px solid rgb(var(--tc)); }
+.ar-rt img { display: block; width: 124px; height: 140px; object-fit: cover; }
+.ar-rt b { padding: 5px 6px 0; font-size: 12px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ar-mark { position: absolute; left: 50%; top: 0; bottom: 0; z-index: 3; width: 2px; margin-left: -1px; background: #ffd34d; box-shadow: 0 0 12px #ffd34d; }
+.ar-mark::before, .ar-mark::after { content: ""; position: absolute; left: -7px; border: 8px solid transparent; }
+.ar-mark::before { top: 0; border-top-color: #ffd34d; border-bottom: 0; }
+.ar-mark::after { bottom: 0; border-bottom-color: #ffd34d; border-top: 0; }
+.ar-fast { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--dim); cursor: pointer; }
+.ar-reveal { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ar-reveal img { display: block; width: 180px; height: 240px; margin: 12px auto; object-fit: cover; border: 2px solid rgb(var(--tc)); box-shadow: 0 0 44px rgba(var(--tc), .55), 0 0 0 6px rgba(var(--tc), .12); animation: arReveal .6s cubic-bezier(.2, 1.4, .4, 1) both; }
+.ar-reveal h3 { margin: 0 0 6px; }
+.ar-reveal p { margin: 0 0 4px; text-align: center; }
+.ar-reveal + .row { justify-content: center; }
+@keyframes arReveal { from { transform: scale(.6) rotate(-4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.ar-seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.ar-seg button { padding: 7px 14px; cursor: pointer; font: 14px var(--body); letter-spacing: .04em; white-space: nowrap; color: var(--dim); background: rgba(236,232,225,.04); border: 1px solid var(--line); transition: color .15s, border-color .15s; }
+.ar-seg button:hover { color: #fff; border-color: rgba(236,232,225,.35); }
+.ar-seg button.sel { font-weight: 700; color: var(--v-navy); background: var(--v-white); border-color: var(--v-white); }
+.ar-mklist { display: grid; gap: 6px; }
+.ar-mkrow { display: flex; align-items: center; gap: 14px; width: 100%; padding: 6px 14px 6px 6px; text-align: left; font: inherit; color: var(--v-white); cursor: pointer; background: rgba(236,232,225,.035); border: 1px solid transparent; border-left: 3px solid rgb(var(--tc)); transition: background .15s, border-color .15s; }
+.ar-mkrow:not(.static):hover { background: rgba(236,232,225,.07); border-color: rgba(var(--tc), .45); border-left-color: rgb(var(--tc)); }
+.ar-mkrow.static { cursor: default; }
+.ar-mkrow > img { flex: none; display: block; width: 54px; height: 72px; object-fit: cover; background: #0b0f16; }
+.ar-mkrow > .ar-casebox { margin: 0 0 0 4px; }
+.ar-mkn { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; min-width: 0; }
+.ar-mkn b { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.ar-mkn small { color: var(--dim); }
+.ar-spark { flex: none; display: block; }
+.ar-spark.up polyline { stroke: #3ddc97; }
+.ar-spark.down polyline { stroke: #ff6b6b; }
+.ar-chg { flex: none; width: 64px; text-align: right; font-family: var(--v-cond); font-size: 14px; font-variant-numeric: tabular-nums; }
+.ar-chg.up { color: #3ddc97; }
+.ar-chg.down { color: #ff6b6b; }
+.ar-mkp { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 124px; font-size: 14px; white-space: nowrap; }
+.ar-mkp small { color: var(--dim); }
+.ar-mkbtns { flex: none; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.ar-hist { display: grid; gap: 4px; }
+.ar-hrow { display: grid; grid-template-columns: 172px 84px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 12px; font-size: 13px; background: rgba(236,232,225,.03); }
+.ar-hrow > span:first-child { color: var(--dim); font-variant-numeric: tabular-nums; }
+.ar-hrow > span:nth-child(3) { overflow-wrap: anywhere; }
+.ar-hrow > span:last-child { text-align: right; font-family: var(--v-cond); }
+.ar-oid { font-size: 12px; color: var(--dim); overflow-wrap: anywhere; }
+.ar-mkhead { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.ar-mkhead img { flex: none; width: 90px; height: 120px; object-fit: cover; border-bottom: 3px solid rgb(var(--tc)); }
+.ar-mkhead h3 { margin: 8px 0 2px; }
+.ar-mkhead .ar-note { margin: 0; }
+.ar-chart { margin: 6px 0 10px; padding: 12px 12px 8px; background: rgba(5,10,16,.6); border: 1px solid var(--line); }
+.ar-chart svg { display: block; width: 100%; height: 150px; }
+.ar-chart polyline.fill { fill: rgba(233,196,106,.12); stroke: none; }
+.ar-chart polyline.line { fill: none; stroke: var(--gold); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.ar-chartlbl { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 12px; color: var(--dim); }
+.ar-lst { display: grid; gap: 4px; }
+.ar-lrow { display: grid; grid-template-columns: 84px 92px 84px 70px minmax(90px, 1fr) auto; align-items: center; gap: 10px; padding: 6px 10px; font-size: 13px; font-variant-numeric: tabular-nums; background: rgba(236,232,225,.035); }
+.ar-lrow > span:nth-child(5) { text-align: right; }
+.ar-lrow.gone { opacity: .45; }
+.ar-slots { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin: 4px 0 12px; }
+.ar-slot { position: relative; display: flex; flex-direction: column; justify-content: flex-end; aspect-ratio: 3 / 4; padding: 0; font: inherit; color: var(--v-white); background: rgba(236,232,225,.03); border: 1px dashed rgba(236,232,225,.2); }
+.ar-slot.on { cursor: pointer; border: 1px solid rgb(var(--tc)); }
+.ar-slot.on img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ar-slot.on small { position: relative; padding: 3px 2px; text-align: center; background: rgba(8,10,16,.82); }
+.ar-slot.on:hover { box-shadow: 0 0 0 2px rgba(255,70,85,.7); }
+.ar-trbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 6px; }
+.ar-trbar > span:first-child { min-width: 64px; font-family: var(--v-cond); font-size: 20px; color: #fff; }
+.ar-err { font-size: 13px; color: #ff8a93; }
+.ar-outs { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
+.ar-out { display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px; background: linear-gradient(180deg, rgba(var(--tc), .18), rgba(13,21,30,.5)); border-bottom: 3px solid rgb(var(--tc)); }
+.ar-out img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; object-position: 50% 30%; }
+.ar-out b { padding: 5px 8px 0; font-size: 13px; overflow-wrap: anywhere; }
+.ar-out small { padding: 0 8px; color: var(--dim); }
+.ar-ophead { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; padding: 16px 18px; background: linear-gradient(110deg, rgba(90,200,150,.17), rgba(13,21,30,.3) 60%); border: 1px solid rgba(90,200,150,.36); }
+.ar-ophead h3 { margin: 6px 0 0; font-size: 22px; color: #fff; }
+.ar-ophead h3 b { font-family: var(--v-cond); font-size: 32px; color: var(--gold); }
+.ar-ophead h3 small { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--dim); }
+.ar-ophead .ar-note { max-width: 540px; margin: 0; }
+.ar-k { font-family: var(--v-cond); font-size: 12px; letter-spacing: .24em; color: var(--v-red); }
+.ar-ophead .ar-k { color: #5ad19a; }
+.ar-sup { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.ar-supo { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 10px; cursor: pointer; font: inherit; color: var(--v-white); background: rgba(236,232,225,.04); border: 1px solid var(--line); border-bottom: 3px solid rgb(var(--tc)); transition: background .15s, border-color .15s; }
+.ar-supo:hover:not(:disabled) { border-color: rgba(var(--tc), .7); border-bottom-color: rgb(var(--tc)); }
+.ar-supo.sel { background: rgba(var(--tc), .16); border-color: rgb(var(--tc)); box-shadow: inset 0 0 0 1px rgb(var(--tc)); }
+.ar-supo:disabled { cursor: default; opacity: .5; }
+.ar-supo img, .ar-supi { width: 72px; height: 96px; }
+.ar-supo img { object-fit: cover; }
+.ar-supi { display: grid; place-items: center; font-family: var(--title); font-size: 40px; color: rgb(var(--tc)); background: rgba(var(--tc), .08); border: 1px solid rgba(var(--tc), .3); }
+.ar-supo b { font-size: 13px; text-align: center; overflow-wrap: anywhere; }
+.ar-grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 10px; }
+.ar-starg { flex-wrap: wrap; }
+.ar-starg b { flex: 1 1 auto; font-size: 14px; color: #fff; }
+.ar-starc { font-size: 14px; letter-spacing: .1em; white-space: nowrap; color: var(--gold); }
+.ar-good { flex-direction: column; align-items: flex-start; gap: 4px; }
+.ar-good b { font-size: 15px; color: #fff; }
+.ar-good small { color: var(--dim); }
+.ar-good .go.small { margin-top: 6px; }
+.ar-tiers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 10px 0 12px; }
+.ar-tier-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 10px; cursor: pointer; font: inherit; color: var(--v-white); background: linear-gradient(170deg, rgba(127,224,194,.13), rgba(13,21,30,.5)); border: 1px solid rgba(127,224,194,.32); transition: border-color .15s, box-shadow .15s; }
+.ar-tier-btn:hover:not(:disabled) { border-color: #7fe0c2; box-shadow: 0 0 18px rgba(127,224,194,.2); }
+.ar-tier-btn:disabled { cursor: default; opacity: .45; }
+.ar-tier-btn .ar-cur { font-size: 20px; }
+.ar-tier-btn b { font-family: var(--v-cond); font-size: 15px; color: var(--dim); }
+.ar-redeem { flex-wrap: wrap; }
+.ar-redeem > span { font-size: 14px; white-space: nowrap; color: #fff; }
+.ar-redeem .ar-input { flex: 1 1 220px; width: auto; font-family: var(--v-cond); letter-spacing: .08em; text-transform: uppercase; }
+.ar-redeem small { flex-basis: 100%; color: var(--dim); }
+.ar-link { padding: 0; font: inherit; font-size: 12px; color: #9fd0ff; text-decoration: underline; cursor: pointer; background: none; border: none; }
+.ar-age { display: grid; gap: 8px; margin: 10px 0; }
+.ar-age button { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+.ar-age small { color: var(--dim); }
+.ar-pay { text-align: center; }
+.ar-pay .ar-k { display: block; }
+.ar-pay h3 { margin: 8px 0 0; }
+.ar-payamt { margin: 4px 0 12px; font-family: var(--v-cond); font-size: 44px; color: #fff; }
+.ar-paym { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; padding: 10px; font-size: 14px; background: rgba(236,232,225,.04); border: 1px solid var(--line); }
+.ar-pay p { text-align: center; }
+.ar-pay .row { justify-content: center; }
+.end-arm { margin: 4px 0 0; font-size: 14px; color: var(--gold); }
+.end-arm:empty { display: none; }
+.tn-tabs button.tn-dot::before { content: ""; position: absolute; top: 12px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--v-red); box-shadow: 0 0 6px var(--v-red); }
+@media (max-width: 900px) {
+.ar-insbox { grid-template-columns: minmax(0, 1fr); }
+.ar-stage { min-height: 300px; }
+.ar-sup { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+.ar-spark { display: none; }
+.ar-slots { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ar-hrow { grid-template-columns: minmax(0, 1fr) auto; }
+.ar-lrow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ar-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.ar-ctier { grid-template-columns: minmax(0, 1fr); }
+.ar-mkrow { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
@@ -1521,6 +1765,7 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
       <button type="button" data-nav="train" class="tn-offline">木人桩</button>
       <button type="button" data-nav="tutorial" class="tn-offline">新手教学</button>
       <button type="button" data-nav="gacha" class="tn-online">问剑阁</button>
+      <button type="button" data-nav="armory" class="tn-online tn-arm">武库</button>
       <button type="button" data-nav="tasks" class="tn-online">任务</button>
       <button type="button" data-nav="community" class="tn-online">社区</button>
     </div>
@@ -1560,6 +1805,7 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
       <div class="home-card home-news">
         <span class="hc-kicker">版本动态</span>
         <ul>
+          <li><b>刃影武库</b>武器箱、江湖市场、汰换合同</li>
           <li><b>匹配对战</b>全服随机对手，开局即打</li>
           <li><b>排位赛</b>D 到 S 五段，定级 5 场</li>
           <li><b>流云 · 墨羽</b>技能重做</li>
@@ -2473,6 +2719,27 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
     </div>
   </div>
 
+  <div id="armory" class="scr">
+    <div class="panel armp">
+      <div class="cxhead ar-head">
+        <div class="ar-title"><h2>刃影武库</h2><p class="sub">武器箱 · 江湖市场 · 汰换合同 · 江湖行动</p></div>
+        <div class="ar-wallet">
+          <span class="ar-cur ar-ink" title="墨锭：打对局、做任务、在市场卖饰品得到"><i>墨</i><b class="gInk">0</b></span>
+          <span class="ar-cur ar-jade" title="玉珏：只用来买钥匙和改名标签"><i>玉</i><b id="arJade">0</b></span>
+          <span class="ar-cur ar-key" title="武器箱钥匙"><i>钥</i><b id="arKeys">0</b></span>
+          <button class="ghost" type="button" data-back>返回</button>
+        </div>
+      </div>
+      <div class="seg ar-tabs" id="arTabs" role="tablist"></div>
+      <p class="ar-msg" id="arMsg" aria-live="polite"></p>
+      <div class="ar-main" id="arMain"></div>
+    </div>
+    <div class="ar-modal" id="arModal" hidden></div>
+    <div class="ar-ins" id="arIns" hidden>
+      <div class="ar-insbox"><div class="ar-stage"><canvas id="arInsCv" aria-label="穿上后的样子"></canvas></div><div class="ar-insinfo" id="arInsInfo"></div></div>
+    </div>
+  </div>
+
   <div id="replays" class="scr">
     <div class="panel taskp">
       <div class="cxhead">
@@ -2641,7 +2908,7 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
   </div>
 
   <div id="end" class="scr">
-    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p>
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><p class="end-arm" id="endArm"></p>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>
@@ -2721,6 +2988,74 @@ let saveTimer = null;
 let pendingData = null;
 let retryN = 0;
 const sync = { state: 'local', at: 0, err: '' };
+const LEDGER = { uid: '', s: null, v: -1, un: [] };
+const ledgerKey = uid => 'renying-ledger-' + uid;
+const rhex = n => { const a = new Uint8Array(n); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); };
+function ledgerLoad(uid) {
+if (LEDGER.uid === uid) return LEDGER;
+let o = null;
+try { o = JSON.parse(localStorage.getItem(ledgerKey(uid)) || 'null'); } catch (e) {}
+LEDGER.uid = uid;
+LEDGER.s = o && typeof o.s === 'number' ? o.s : null;
+LEDGER.v = o && typeof o.v === 'number' ? o.v : -1;
+LEDGER.un = o && Array.isArray(o.un) ? o.un.filter(x => x && typeof x.id === 'string' && Number.isFinite(x.d) && Number.isFinite(x.t)) : [];
+return LEDGER;
+}
+function ledgerSave() { try { localStorage.setItem(ledgerKey(LEDGER.uid), JSON.stringify({ s: LEDGER.s, v: LEDGER.v, un: LEDGER.un })); } catch (e) {} }
+const pendSum = () => LEDGER.un.reduce((a, x) => a + x.d, 0);
+function ledgerNote(uid, ink) {
+ledgerLoad(uid);
+if (LEDGER.s === null || !Number.isFinite(+ink)) return;
+const d = Math.floor(+ink) - LEDGER.s - pendSum();
+if (d) { LEDGER.un.push({ id: rhex(8), d, t: Date.now() }); ledgerSave(); }
+}
+function ledgerRevert(amount, since) {
+const u = getUser();
+if (!u || !u.isCloud) return null;
+ledgerLoad(u.uid);
+if (LEDGER.s === null) return null;
+let left = Math.floor(+amount) || 0;
+const ids = [];
+for (let i = LEDGER.un.length - 1; i >= 0 && left > 0; i--) {
+const x = LEDGER.un[i];
+if (x.t < since) break;
+if (x.d > 0 && !x.r) { ids.push(x.id); left -= x.d; LEDGER.un.splice(i, 1); }
+}
+if (!ids.length) return null;
+LEDGER.un.push({ id: rhex(8), d: 0, t: Date.now(), r: ids });
+ledgerSave();
+return Math.max(0, LEDGER.s + pendSum());
+}
+function ledgerSync(L, curInk) {
+const u = getUser();
+if (!u || !L || typeof L.ink !== 'number') return curInk;
+if (curInk !== null && curInk !== undefined) ledgerNote(u.uid, curInk);
+ledgerLoad(u.uid);
+const acks = new Set(Array.isArray(L.acks) ? L.acks : []), now = Date.now();
+LEDGER.un = LEDGER.un.filter(x => !acks.has(x.id) && now - x.t < 10 * 86400e3);
+if (L.ver >= LEDGER.v || LEDGER.s === null) { LEDGER.s = L.ink; LEDGER.v = L.ver; }
+ledgerSave();
+return Math.max(0, LEDGER.s + pendSum());
+}
+const ledgerListeners = [], syncHooks = [];
+function onLedger(fn) { if (typeof fn === 'function') ledgerListeners.push(fn); }
+function onBeforeSync(fn) { if (typeof fn === 'function') syncHooks.push(fn); }
+const GRANTS = [];
+let grantGiven = false;
+function grantAdd(n) { n = Math.floor(+n || 0); if (n > 0) GRANTS.push([Date.now(), n]); }
+function grantTake(n) {
+const now = Date.now();
+let got = 0;
+while (GRANTS.length && got < n) {
+const g = GRANTS[0];
+if (now - g[0] > 15000) { GRANTS.shift(); continue; }
+const t = Math.min(g[1], n - got);
+g[1] -= t; got += t;
+if (!g[1]) GRANTS.shift();
+}
+return got;
+}
+function inkGrantKey() { if (grantGiven) return null; grantGiven = true; return grantAdd; }
 function getToken() {
 try {
 return localStorage.getItem('renying-cloud-token') || (currentUser && currentUser.token) || '';
@@ -2827,7 +3162,8 @@ qfx: Math.max(0, Math.floor(p.qfx || 0)),
 rating: typeof p.rating === 'number' ? p.rating : 1100,
 placed: typeof p.placed === 'number' ? p.placed : 0,
 updatedAt: Date.now(),
-...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {})
+...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {}),
+...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : {})   // 只有本机模式的武库才有（带校验）；新版服务器不收
 };
 }
 async function api(path, options = {}) {
@@ -2842,12 +3178,52 @@ const headers = {
 const res = await fetch(url, { ...options, headers });
 const data = await res.json().catch(() => ({}));
 if (!res.ok) {
-throw new Error(data.error || `请求失败 (${res.status})`);
+const err = new Error(data.error || `请求失败 (${res.status})`);
+err.status = res.status;
+if (data.ban) err.ban = data.ban;
+throw err;
 }
 return data;
 }
+async function econ(act, args) {
+const u = getUser();
+if (!cloudActive() || !u) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
+const nonce = rhex(16);
+for (let i = 0; i < 3; i++) {
+let res = null, data = {};
+try {
+res = await fetch(getEndpoint() + '/api/econ', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+body: JSON.stringify({ act, args: args || {}, nonce })
+});
+data = await res.json().catch(() => ({}));
+} catch (e) {
+await new Promise(r => setTimeout(r, 500 * (i + 1)));
+continue;
+}
+if (!getUser() || getUser().uid !== u.uid) { const e = new Error('账号已切换'); e.status = 409; throw e; }
+if (!res.ok) { const e = new Error(data.error || `请求失败 (${res.status})`); e.status = res.status; if (data.ban) e.ban = data.ban; throw e; }
+return data;
+}
+const e = new Error('连不上服务器，等联网了再试'); e.status = 0; e.net = true; throw e;
+}
+async function flushNow() { if (pendingData && cloudActive()) await doSync(); }
+async function acGet() { if (!cloudActive()) return null; const r = await api('/api/ac', { method: 'GET' }); return r && r.rec ? r : null; }
+async function acReport(reason) { if (!cloudActive()) return null; const r = await api('/api/ac', { method: 'POST', body: JSON.stringify({ reason: String(reason || '').slice(0, 60) }) }); return r && r.rec ? r : null; }
+function adoptProfile(uid, profile, L) {
+if (!profile || !L) return profile;
+ledgerLoad(uid);
+const acks = new Set(Array.isArray(L.acks) ? L.acks : []), now = Date.now();
+LEDGER.un = LEDGER.un.filter(x => !acks.has(x.id) && now - x.t < 10 * 86400e3);
+if (L.ver >= LEDGER.v || LEDGER.s === null) { LEDGER.s = L.ink; LEDGER.v = L.ver; }
+ledgerSave();
+profile.ink = Math.max(0, LEDGER.s + pendSum());
+return profile;
+}
 async function doSync() {
 if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+syncHooks.forEach(fn => { try { fn(); } catch (e) { console.warn('before sync', e); } });
 const data = pendingData;
 if (!data || !cloudActive()) return;
 if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -2855,11 +3231,17 @@ setSync({ state: 'offline' });
 return;
 }
 setSync({ state: 'syncing' });
+const uid = getUser().uid;
+ledgerLoad(uid);
+const ledger = LEDGER.s !== null ? { deltas: LEDGER.un.slice(0, 60).map(x => x.r ? { id: x.id, d: 0, r: x.r } : { id: x.id, d: x.d }), ev: LEDGER.v } : undefined;
 try {
 const res = await api('/api/profile', {
 method: 'POST',
-body: JSON.stringify({ profile: data })
+body: JSON.stringify({ profile: data, ledger })
 });
+if (res && res.ledger && getUser() && getUser().uid === uid) {
+ledgerListeners.forEach(fn => { try { fn(res.ledger, res.fix || null, res.capped || 0, res.owed || 0); } catch (e) { console.warn('ledger listener', e); } });
+}
 if (pendingData === data) {
 pendingData = null;
 try { localStorage.removeItem(dirtyKey()); } catch (e) {}
@@ -2938,6 +3320,7 @@ isCloud: true
 currentUser = userObj;
 localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 if (data.profile) {
+adoptProfile(data.uid, data.profile, data.ledger);
 try {
 localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
 localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
@@ -2987,6 +3370,7 @@ isCloud: true
 currentUser = userObj;
 localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 if (data.profile) {
+adoptProfile(data.uid, data.profile, data.ledger);
 try {
 localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
 localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
@@ -3096,9 +3480,17 @@ local = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || 'null');
 } catch (e) {}
 const cloudAt = typeof data.updatedAt === 'number' ? data.updatedAt : 0;
 if (dirty && local && (local.updatedAt || 0) > cloudAt) {
+if (res.ledger) {   // 离线时本机的变化先记成条目，墨锭再按服务器的账算
+ledgerLoad(u.uid);
+if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }   // 这台设备第一次见到账本：和服务器的差就是离线时的变化
+ledgerNote(u.uid, local.ink);
+adoptProfile(u.uid, local, res.ledger);
+}
 saveProfile(local, true);
 return local;
 }
+adoptProfile(u.uid, data, res.ledger);
+if (res.ledger && LEDGER.un.length) setTimeout(() => saveProfile(data), 1500);   // 还有没报上去的条目：补报
 try {
 localStorage.removeItem(dirtyKey());
 localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
@@ -3138,6 +3530,7 @@ if (!cloudActive()) {
 setSync({ state: 'local' });
 return;
 }
+ledgerNote(u.uid, dataToSave.ink);   // 这次存档里墨锭的变化记成一条待上报
 pendingData = dataToSave;
 try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
 if (sync.state !== 'syncing') setSync({ state: 'pending' });
@@ -3161,6 +3554,7 @@ if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
 const res = await api('/api/profile', { method: 'GET' });
 if (!res || !res.profile) throw new Error('云端还没有这个账号的存档');
 const data = res.profile;
+adoptProfile(getUser().uid, data, res.ledger);
 pendingData = null;
 const uid = getUser().uid;
 try {
@@ -3338,7 +3732,17 @@ toCloudData,
 promoteLocalToCloud,
 isCloudAvailable: () => true,
 getEndpoint,
-setEndpoint
+setEndpoint,
+econ,
+flushNow,
+acGet,
+acReport,
+ledgerSync,
+ledgerRevert,
+onLedger,
+onBeforeSync,
+inkGrantKey,
+inkGrantTake: grantTake
 };
 if (document.readyState === 'loading') {
 document.addEventListener('DOMContentLoaded', init);
@@ -12628,6 +13032,7 @@ if (name === 'single') { renderTrainPick(); renderStages(); }
 if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
 if (name === 'codex') openCodex();
 if (name === 'community') openCommunity();
+if (name === 'armory' && typeof window.openArmory === 'function') window.openArmory();
 if (reveal) showScreen(name);
 return name;
 }
@@ -12684,7 +13089,7 @@ document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) { 
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
 $id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
-const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
+const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
 initAudio();
 if (name === 'menu') { backToMenu(); return; }
@@ -13715,7 +14120,7 @@ $id('cxSkinT').innerHTML = (cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤
 $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
 const has = skinOwned(k);
 const isLeg = v.rarity === 'legend';
-const lockHint = v.exclusive ? ' · 青锋行通关' : ' · 预览';
+const lockHint = v.exclusive ? ' · 青锋行通关' : v.cs ? ' · 武库' : ' · 预览';
 return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
 }).join('');
 $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
@@ -14247,7 +14652,7 @@ return (sk && sk.skillNames && sk.skillNames.ult) || '';
 }
 function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start && now < FREE_SKIN_EVENT.end; }
 function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
-function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent(); }
+function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
 function bestSkin(id) {
 let best = '', br = 0;
 for (const [k, v] of Object.entries(SKINS)) { if (v.char !== id || !skinOwned(k)) continue; const r = v.rarity === 'legend' ? 2 : 1; if (r > br) { br = r; best = k; } }
@@ -14425,7 +14830,7 @@ function clientDrawOne(sk) {
 const R = PROF.rates || DEFAULT_RATES;
 if (sk) {
 const rs = R.skin;
-const mine = Object.keys(SKINS).filter(k => ownsHero(SKINS[k].char));
+const mine = Object.keys(SKINS).filter(k => ownsHero(SKINS[k].char) && !SKINS[k].cs);   // 武库的饰品不进问剑阁
 const unowned = mine.filter(k => !(PROF.skins || []).includes(k));
 let pick = null;
 if ((PROF.spity || 0) >= rs.pity && unowned.length) {
@@ -15469,7 +15874,7 @@ document.addEventListener('touchstart', () => initAudio(), { passive: true });
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
 const prev = currentScreen; currentScreen = id;
-for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
 $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
 if (id !== 'bp') { try { showPop(null); } catch (e) {} }
 if (id === 'menu') {
@@ -19968,10 +20373,1367 @@ document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.da
 }
 </script>
 <script>
+(function (G) {
+'use strict';
+const C = {};
+C.VER = 1;
+C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
+C.SEASON_DAYS = 32;
+C.INV_MAX = 300, C.LIST_MAX = 20, C.HIST_MAX = 40, C.ORDER_MAX = 60;
+C.FEE = 0.15;                                // 市场手续费
+C.ASK = [1.02, 1.12], C.BID = 0.88, C.LIST_MAX_R = 0.95;
+C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
+C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
+C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen'];
+C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
+C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+C.TIERS = ['mil', 'res', 'cla', 'cov', 'gold'];
+C.TIER = {
+mil: { n: '军规级', c: '75,105,255' },
+res: { n: '受限', c: '136,71,255' },
+cla: { n: '保密', c: '211,44,230' },
+cov: { n: '隐秘', c: '235,75,75' },
+gold: { n: '★ 非凡', c: '228,174,57' },
+};
+C.ODDS = { mil: 0.7992, res: 0.1598, cla: 0.032, cov: 0.0064, gold: 0.0026 };
+C.ST_P = 0.1;                                // 出斩数版（StatTrak）的概率
+C.WEAR = [[0.07, '崭新出厂', '崭新'], [0.15, '略有磨损', '略磨'], [0.38, '久经沙场', '久经'], [0.45, '破损不堪', '破损'], [1.0001, '战痕累累', '战痕']];
+C.LUCKY = [1, 8, 88, 168, 520, 666, 888, 999];   // 稀有图案模板
+C.BASE = { mil: 35, res: 160, cla: 650, cov: 2200, gold: 8800 };   // 参考价（墨锭）
+C.WEAR_MUL = [1.55, 1.18, 1, 0.9, 0.8];
+C.PAINTS = [
+['qf_p1', 'qingfeng', '竹影', { body: '#e4efe2', shade: '#87a58a', scarf: '#3d8f5a', slash: '120,210,150', blade: '#effff2' }],
+['ts_p1', 'tieshan', '锈蚀', { body: '#7a5544', shade: '#4a3024', scarf: '#c46a2a', slash: '230,140,80', blade: '#e8d6c6' }],
+['lm_p1', 'leiming', '夜雨', { body: '#232c3a', shade: '#141a24', scarf: '#4aa8ff', slash: '120,190,255', blade: '#e6f2ff', outline: '#6ab8ff' }],
+['fy_p1', 'feiying', '沙暴', { body: '#b89a6a', shade: '#7a6040', scarf: '#e0b050', slash: '240,200,120', blade: '#fff2d8', outline: '#3a2810' }],
+['ly_p1', 'liuyun', '胭脂', { body: '#f6e6ea', shade: '#c49aa4', scarf: '#d84a6a', slash: '255,140,170', blade: '#fff0f4' }],
+['ls_p1', 'lingshuang', '墨梅', { body: '#2a2a33', shade: '#16161c', scarf: '#c83a5a', slash: '230,90,120', blade: '#ffe6ee', outline: '#d8c8cc' }],
+['yh_p1', 'yuehua', '碧潮', { body: '#e2f4f2', shade: '#86b8b4', scarf: '#2fb8a8', slash: '110,230,210', blade: '#eafffb' }],
+['my_p1', 'moyu', '月白', { body: '#ecebe6', shade: '#a6a49a', scarf: '#8a8a96', slash: '230,230,240', blade: '#3a3a44', outline: '#1a1a22', outlineA: 1 }],
+['yl_p1', 'yanling', '赤霞', { body: '#f8e8e0', shade: '#c8988a', scarf: '#e0502a', slash: '255,140,100', blade: '#fff0e8' }],
+['gc_p1', 'gouchen', '苔痕', { body: '#3a4436', shade: '#222a20', scarf: '#8ab04a', slash: '180,220,120', blade: '#eef4e0', outline: '#c8d8a0' }],
+['yx_p1', 'yuxiao', '紫檀', { body: '#ece4f2', shade: '#a594b8', scarf: '#8a5ac8', slash: '190,150,255', blade: '#b89ae0' }],
+['zx_p1', 'zuixian', '松烟', { body: '#a8a49c', shade: '#6a665e', scarf: '#3a3a40', slash: '200,200,210', blade: '#e8e4dc' }],
+['qf_p2', 'qingfeng', '赤练', { body: '#f4ecea', shade: '#b89a96', scarf: '#d8322a', slash: '255,110,100', blade: '#fff4f2' }],
+['ts_p2', 'tieshan', '冰川', { body: '#c8d8e4', shade: '#8aa0b4', scarf: '#5ab4e8', slash: '150,210,255', blade: '#f0f8ff' }],
+['ls_p2', 'lingshuang', '琥珀', { body: '#f4e6cc', shade: '#c4a274', scarf: '#e09a2a', slash: '255,200,110', blade: '#fff6e0' }],
+['lm_p2', 'leiming', '霓虹', { body: '#2a1a30', shade: '#160c1a', scarf: '#ff4ad8', slash: '255,110,230', blade: '#ffe6fa', outline: '#ff6ae0' }],
+['fy_p2', 'feiying', '夜航', { body: '#1e2638', shade: '#0e1420', scarf: '#3a6aff', slash: '110,150,255', blade: '#e0e8ff', outline: '#5a8aff' }],
+['ly_p2', 'liuyun', '苍山', { body: '#d4dad8', shade: '#8a9894', scarf: '#4a6a64', slash: '150,190,180', blade: '#eef6f4' }],
+['yh_p2', 'yuehua', '鎏金', { body: '#f8f0dc', shade: '#c8b070', scarf: '#d8a830', slash: '255,215,110', blade: '#fff8e0' }],
+['yl_p2', 'yanling', '夜鸦', { body: '#2a2a30', shade: '#121216', scarf: '#6a6a7a', slash: '190,190,210', blade: '#dcdce6' }],
+];
+C.STARS = {
+gc_wolf: { char: 'gouchen', name: '霜狼',
+look: { body: '#dfe9f2', shade: '#7d93ab', scarf: '#7fd4ff', slash: '140,210,255', blade: '#f0f8ff', outline: '#0a1422', outlineA: 1 },
+deco: { head: 'voidhorns', hideBaseHead: true, gem: '#9fe0ff', robe: 'blizzard', breastplate: '#3a5878', shoulder: '#2d4a66', back: 'icewings', trail: 'snow', aura: 'snow', weapStyle: 'frost_hammer' },
+fx: { th: 'frost', c: '150,215,255', c2: '235,248,255' },
+scene: { sky: ['#06101c', '#10243a', '#24486a', '#10243a'], orb: 'moon', orbC: '220,240,255', mist: '170,215,255', mtn: ['#16304c', '#0c1e32'], bam: ['#081624', '#040c16'], wx: 'snow', wxC: '225,242,255', hit: 'snowflake', hitC: '150,215,255', stars: 0.5, rays: true } },
+zx_moon: { char: 'zuixian', name: '醉月',
+look: { body: '#e9ecf8', shade: '#8a93b8', scarf: '#8fa2ff', slash: '170,185,255', blade: '#f2f4ff' },
+deco: { head: 'veilhat', hatC: '#2a3550', veilC: 'rgba(170,190,255,0.40)', robe: 'starry', breastplate: '#2c3a66', back: 'gourdback', trail: 'cloud', aura: 'cloud', weapStyle: 'moon_gourd' },
+fx: { th: 'star', c: '170,190,255', c2: '240,244,255' },
+scene: { sky: ['#070a1c', '#141a3c', '#2a3470', '#121838'], orb: 'moon', orbC: '235,238,255', mist: '170,185,255', mtn: ['#1a2048', '#10142e'], bam: ['#0a0e22', '#060816'], wx: 'petal', wxC: '210,215,255', hit: 'swirl', hitC: '170,190,255', stars: 0.8, rays: true } },
+qf_renying: { char: 'qingfeng', name: '刃影',
+look: { body: '#2a2426', shade: '#141012', scarf: '#ff3b30', slash: '255,72,60', blade: '#fff1ee', outline: '#070708' },
+deco: { head: 'headband', band: '#ff3b30', robe: 'dark', breastplate: '#2a1416', shoulder: '#3a1a1c', back: 'flysword', trail: 'ink', aura: 'smoke', weapStyle: 'renying_blade' },
+fx: { th: 'ink', c: '255,80,70', c2: '12,8,8' },
+scene: { sky: ['#0c0606', '#2a0c0c', '#6a1a16', '#2a0a0a'], orb: 'bloodmoon', orbC: '255,90,70', mist: '255,90,80', mtn: ['#220a0a', '#140606'], bam: ['#0e0404', '#080202'], wx: 'ink', wxC: '40,20,20', hit: 'inksplat', hitC: '255,80,70', stars: 0.15, rays: true } },
+};
+C.COLS = {
+c1: { name: '初刃', price: 90, emblem: '刃', col: '200,70,60',
+mil: ['qf_p1', 'ts_p1', 'lm_p1', 'fy_p1', 'ly_p1'], res: ['qf_frost', 'ts_bronze', 'lm_violet', 'ly_dusk'], cla: ['ts_obsidian', 'ly_sky', 'lm_sun'], cov: ['qf_gold', 'fy_blood', 'ly_fox'], gold: ['gc_wolf'] },
+c2: { name: '霜华', price: 120, emblem: '霜', col: '90,160,230',
+mil: ['ls_p1', 'yh_p1', 'my_p1', 'yl_p1', 'gc_p1'], res: ['ls_plum', 'yh_sakura', 'my_cinnabar', 'gc_crimson'], cla: ['yh_eclipse', 'my_gold'], cov: ['ls_aurora', 'yh_solstice', 'gc_underworld'], gold: ['zx_moon'] },
+c3: { name: '名剑', price: 160, emblem: '剑', col: '220,170,70',
+mil: ['yx_p1', 'zx_p1', 'qf_p2', 'ts_p2', 'ls_p2'], res: ['yx_snow', 'zx_amber', 'fy_jade'], cla: ['yx_celestial', 'yl_phoenix'], cov: ['qf_abyss', 'zx_immortal', 'ls_dragon'], gold: ['qf_renying'] },
+op: { name: '江湖行动', price: 0, nocase: true, emblem: '行', col: '90,200,150',
+mil: ['lm_p2', 'fy_p2', 'ly_p2', 'yh_p2', 'yl_p2'], res: ['ly_bamboo', 'yl_raven'], cla: ['fy_phantom', 'lm_asura'], cov: ['my_celestial', 'ts_crimson', 'yl_blizzard'], gold: [] },
+};
+C.CASES = ['c1', 'c2', 'c3'];
+const RANGE = { mil: [0.06, 0.8], res: [0, 0.7], cla: [0, 0.65], cov: [0, 0.6], gold: [0, 0.8] };
+const RANGE_FIX = { my_p1: [0, 0.08], gc_p1: [0.4, 1] };   // 月白只有新的，苔痕只有旧的
+C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
+C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
+C.STORE = [
+{ id: 'key1', name: '武器箱钥匙', give: ['keys', 1], cost: ['jade', 25] },
+{ id: 'key5', name: '武器箱钥匙 ×5', give: ['keys', 5], cost: ['jade', 120] },
+{ id: 'keyink', name: '武器箱钥匙（墨锭）', give: ['keys', 1], cost: ['ink', 300], lim: 3 },
+{ id: 'tag', name: '改名标签', give: ['tags', 1], cost: ['jade', 20] },
+{ id: 'tagink', name: '改名标签（墨锭）', give: ['tags', 1], cost: ['ink', 400], lim: 2 },
+];
+C.TOPUP = [[6, 60], [30, 300], [68, 680]];
+C.AGE = {
+u8: { name: '未满 8 周岁', one: 0, month: 0 },
+u16: { name: '8 到 16 周岁', one: 50, month: 200 },
+u18: { name: '16 到 18 周岁', one: 100, month: 400 },
+adult: { name: '已满 18 周岁', one: 0, month: 0, free: true },
+};
+C.MISSIONS = {
+games: { g: 0, n: 5, star: 1, t: '进行 {n} 局对战' },
+wins: { g: 0, n: 3, star: 1, t: '赢下 {n} 局' },
+hero: { g: 1, n: 2, star: 2, t: '用{h}赢下 {n} 局' },
+hard: { g: 1, n: 1, star: 2, t: '在劲敌或更高难度下赢 {n} 局人机' },
+flaw: { g: 1, n: 1, star: 2, t: '以 2 : 0 拿下 {n} 局' },
+combo: { g: 2, n: 15, star: 1, max: true, t: '一局里打出 {n} 连击' },
+ults: { g: 2, n: 6, star: 1, t: '施展 {n} 次终极奥义' },
+net: { g: 2, n: 2, star: 2, t: '联机对战 {n} 局' },
+tower: { g: 2, n: 1, star: 1, t: '打 {n} 局问剑密卷' },
+chaos: { g: 2, n: 1, star: 1, t: '打 {n} 局天机乱斗' },
+tag3: { g: 2, n: 1, star: 2, t: '赢下 {n} 局 3v3 车轮战' },
+duo: { g: 2, n: 1, star: 1, t: '打 {n} 局 2v2' },
+open: { g: 3, n: 2, star: 1, t: '开启 {n} 个武器箱' },
+trade: { g: 3, n: 1, star: 1, t: '签 {n} 份汰换合同' },
+sell: { g: 3, n: 1, star: 1, t: '在江湖市场卖出 {n} 件饰品' },
+buy: { g: 3, n: 1, star: 1, t: '在江湖市场买入 {n} 件饰品' },
+};
+C.STAR_SHOP = [
+{ id: 'ink', cost: 1, name: '300 墨锭' },
+{ id: 'case', cost: 2, name: '随机武器箱' },
+{ id: 'tag', cost: 2, name: '改名标签' },
+{ id: 'key', cost: 3, name: '武器箱钥匙' },
+{ id: 'opres', cost: 5, name: '行动收藏品 · 随机受限' },
+{ id: 'opcla', cost: 9, name: '行动收藏品 · 随机保密' },
+{ id: 'opcov', cost: 15, name: '行动收藏品 · 自选隐秘' },
+];
+function hash32(str) {
+let h = 0x811c9dc5;
+str = String(str);
+for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 0x01000193);
+h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+return h >>> 0;
+}
+function rng(seed) {   // mulberry32：同一个种子在哪台机器上都得到同一串数
+let a = seed >>> 0;
+return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const r01 = (seed, i) => hash32(seed + ':' + i) / 4294967296;
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined;
+C.own = own;
+C.hash32 = hash32; C.rng = rng;
+C.day = t => Math.floor((t + 8 * 3600e3) / 86400e3);
+C.week = d => Math.floor((d + 3) / 7);
+C.monthKey = d => { const x = new Date(d * 86400e3); return x.getUTCFullYear() * 100 + x.getUTCMonth() + 1; };
+C.season = d => { const k = Math.max(0, Math.floor((d - C.DAY0) / C.SEASON_DAYS)), s = C.DAY0 + k * C.SEASON_DAYS; return { k, id: 's' + (k + 1), start: s, end: s + C.SEASON_DAYS }; };
+C.wearIdx = f => { for (let i = 0; i < C.WEAR.length; i++) if (f < C.WEAR[i][0]) return i; return C.WEAR.length - 1; };
+C.wearName = f => C.WEAR[C.wearIdx(f)][1];
+C.wearShort = f => C.WEAR[C.wearIdx(f)][2];
+C.ITEM = Object.create(null);
+for (const [cid, col] of Object.entries(C.COLS)) for (const t of C.TIERS) for (const k of col[t] || []) {
+const r = RANGE_FIX[k] || RANGE[t];
+C.ITEM[k] = { col: cid, tier: t, fmin: r[0], fmax: r[1], mul: 0.85 + (hash32('pop|' + k) % 450) / 1000 };   // 热门程度 0.85~1.3
+}
+C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
+const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen' };
+C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
+C.trend = (key, day) => {
+const h = 'tr|' + key;
+const oct = (period, amp, salt) => {
+const x = day / period, i = Math.floor(x), t = x - i, u = t * t * (3 - 2 * t);
+const a = r01(h + salt, i), b = r01(h + salt, i + 1);
+return (a + (b - a) * u - 0.5) * 2 * amp;
+};
+return 1 + oct(29, 0.06, 'a') + oct(9, 0.028, 'b') + oct(3, 0.012, 'c');   // 加起来最多 ±10%
+};
+C.price = (it, day) => {
+const d = C.ITEM[it.k]; if (!d) return 0;
+let p = C.BASE[d.tier] * d.mul * C.WEAR_MUL[C.wearIdx(it.f)];
+if (it.f < 0.01 || it.f > 0.98) p *= 1.15;
+if (it.st >= 0) p *= d.tier === 'gold' ? 1.4 : 1.75;
+if (C.LUCKY.includes(it.p)) p *= 1.8;
+return Math.max(2, Math.round(p * C.trend(it.k, day)));
+};
+C.refPrice = (k, day) => C.price({ k, f: 0.26, st: -1, p: 0 }, day);   // 走势图用：久经沙场、普通版
+C.casePrice = (cid, day) => Math.max(5, Math.round(C.COLS[cid].price * C.trend('case|' + cid, day)));
+C.quick = p => Math.floor(p * C.BID * (1 - C.FEE));   // 直接卖出（饰品、武器箱）到手多少
+C.net = p => Math.floor(p * (1 - C.FEE));             // 挂单成交到手多少
+C.listings = (k, day) => {
+const d = C.isItem(k) && C.ITEM[k]; if (!d) return [];
+const r = rng(hash32(`ls|${k}|${day}`)), n = 3 + Math.floor(r() * 4), out = [];
+for (let j = 0; j < n; j++) {
+const f = +(d.fmin + r() * (d.fmax - d.fmin)).toFixed(9), st = r() < 0.12 ? Math.floor(r() * 150) : -1, p = Math.floor(r() * 1000), m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
+const it = { k, f, st, p };
+out.push({ l: `${day}.${k}.${j}`, k, f, st, p, price: Math.round(C.price(it, day) * m) });
+}
+return out.sort((a, b) => a.price - b.price);
+};
+C.sellRate = ratio => ratio > C.LIST_MAX_R ? 0 : Math.min(6, 0.6 * Math.exp(-(ratio - C.LIST_MAX_R) * 8));
+C.blank = () => ({
+v: C.VER, jade: 0, keys: 0, tags: 0, nid: 1, inv: [], cases: { c1: 0, c2: 0, c3: 0 }, via: [], eq: {},
+lst: [], hist: [], bought: { d: 0, ids: [] }, drop: { w: 0, g: 0, n: 0, sup: 0 },
+op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {}, orders: [], age: '',
+codes: [], stat: { open: 0, trade: 0, sold: 0, bought: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
+});
+const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
+const int = (x, lo = 0, hi = 1e15) => { const v = Math.floor(+x); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
+const num = (x, lo = 0, hi = 1e15) => { const v = +x; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
+const str = (x, n) => typeof x === 'string' ? x.slice(0, n) : '';
+const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
+i: int(x.i, 1), k: x.k, f: num(x.f, 0, 1), p: int(x.p, 0, 999), st: Math.floor(+x.st) >= 0 ? int(x.st, 0, 1e7) : -1,
+n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
+C.normalize = (s, env) => {
+if (!isObj(s)) s = C.blank();
+const b = C.blank();
+for (const k of Object.keys(b)) {
+const okType = Array.isArray(b[k]) ? Array.isArray(s[k]) : isObj(b[k]) ? isObj(s[k]) : b[k] === null ? (s[k] === null || isObj(s[k])) : typeof s[k] === typeof b[k];
+if (!okType) s[k] = b[k];
+}
+for (const k of Object.keys(s)) if (!(k in b)) delete s[k];
+s.v = C.VER;
+for (const k of ['jade', 'keys', 'tags']) s[k] = int(s[k], 0, 1e9);
+s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
+const seen = new Set();
+s.inv = s.inv.map(cleanItem).filter(x => x && !seen.has(x.i) && seen.add(x.i)).slice(0, C.INV_MAX);
+s.lst = s.lst.map(L => {
+const it = isObj(L) && cleanItem(L.it);
+if (!it || seen.has(it.i) || !/^L\d{1,12}$/.test(String(L.l))) return null;
+seen.add(it.i);
+return { l: String(L.l), it, price: int(L.price, 1, 9999999), t: num(L.t), at: num(L.at) };
+}).filter(Boolean).slice(0, C.LIST_MAX);
+let top = 0;
+for (const x of s.inv) top = Math.max(top, x.i);
+for (const L of s.lst) top = Math.max(top, L.it.i, +L.l.slice(1));
+s.nid = Math.max(int(s.nid, 1), top + 1);
+s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
+s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
+s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold'].includes(h.kind) ? h.kind : 'sell',
+...(C.CASES.includes(h.c) ? { c: h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', f: num(h.f, 0, 1), st: Math.floor(+h.st) >= 0 ? int(h.st) : -1 }),
+price: int(h.price, 0, 1e9), ...(h.gain !== undefined ? { gain: int(h.gain, 0, 1e9) } : {}) }));
+s.orders = s.orders.filter(isObj).slice(0, C.ORDER_MAX).map(o => ({ id: str(o.id, 24).replace(/[^A-Z0-9]/g, ''), t: num(o.t), m: int(o.m), name: str(o.name, 20).replace(/[<>&"'`\\]/g, ''), yuan: int(o.yuan, 0, 1e6), sb: o.sb ? 1 : 0 }));
+s.codes = s.codes.filter(c => typeof c === 'string').map(c => c.slice(0, 40)).slice(-200);
+s.cc = Array.from(new Set(s.cc.filter(c => own(C.COLS, c))));
+s.buys = Object.fromEntries(Object.entries(s.buys).filter(([id, v]) => C.STORE.some(g => g.id === id) && isObj(v)).map(([id, v]) => [id, { k: str(v.k, 12), n: int(v.n, 0, 1e6) }]));
+s.stat = Object.fromEntries(Object.keys(b.stat).map(k => [k, int(s.stat[k])]));
+s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
+s.last = num(s.last); s.gift = s.gift ? 1 : 0; s.age = own(C.AGE, s.age) ? s.age : '';
+s.bought = { d: int(s.bought.d), ids: Array.isArray(s.bought.ids) ? s.bought.ids.filter(x => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, 600) : [] };
+s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
+s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
+const op = s.op, ms = Array.isArray(op.ms) && op.ms.length === 4 && op.ms.every(m => isObj(m) && own(C.MISSIONS, m.id)) ? op.ms.map(m => ({ id: m.id, n: C.MISSIONS[m.id].n, star: C.MISSIONS[m.id].star, ...(m.id === 'hero' ? { h: C.HERO_IDS.includes(m.h) ? m.h : 'qingfeng' } : {}) })) : null;
+const earned = int(op.earned, 0, 1e6);
+s.op = { s: str(op.s, 8), earned, spent: int(op.spent, 0, earned), w: ms ? int(op.w) : -1, ms: ms || [],
+prog: ms ? Object.fromEntries([0, 1, 2, 3].filter(i => i in (isObj(op.prog) ? op.prog : {})).map(i => [i, int(op.prog[i], 0, ms[i].n)])) : {},
+done: ms && Array.isArray(op.done) ? Array.from(new Set(op.done.map(Number).filter(i => i >= 0 && i < 4 && Number.isInteger(i)))) : [] };
+const now = env.now, day = C.day(now), wk = C.week(day), se = C.season(day);
+if (s.bought.d !== day) s.bought = { d: day, ids: [] };
+if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
+if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
+if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk, env.owned), prog: {}, done: [] });
+if (s.dm.d !== day) s.dm = { d: day, n: 0 };
+return s;
+};
+C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); for (const L of o.lst) delete L.at; delete o.tk; return o; };
+C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.STARS)];
+C.genMissions = (uid, wk, owned) => {
+const r = rng(hash32(`ms|${uid}|${wk}`)), out = [];
+for (let g = 0; g < 4; g++) {
+const ids = Object.keys(C.MISSIONS).filter(id => C.MISSIONS[id].g === g), id = ids[Math.floor(r() * ids.length)], m = C.MISSIONS[id];
+const row = { id, n: m.n, star: m.star };
+if (id === 'hero') { const pool = (owned && owned.length ? owned : ['qingfeng']).filter(h => C.HERO_IDS.includes(h)); row.h = pool[Math.floor(r() * pool.length)] || 'qingfeng'; }
+out.push(row);
+}
+return out;
+};
+C.supplyOpts = (uid, wk) => {
+const r = rng(hash32(`sup|${uid}|${wk}`)), pick = a => a[Math.floor(r() * a.length)];
+const mils = [], ress = [];
+for (const [k, d] of Object.entries(C.ITEM)) { if (d.tier === 'mil') mils.push(k); else if (d.tier === 'res') ress.push(k); }
+const opts = [{ t: 'case', c: pick(C.CASES) }, { t: 'key', n: 1 }, r() < 0.3 ? { t: 'item', k: pick(ress) } : { t: 'item', k: pick(mils) }, r() < 0.5 ? { t: 'ink', n: 400 } : { t: 'tag', n: 1 }];
+for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+return opts;
+};
+C.mkItem = (s, k, src, rnd, o = {}) => {
+const d = C.ITEM[k];
+const f = o.f !== undefined ? o.f : +(d.fmin + rnd() * (d.fmax - d.fmin)).toFixed(9);
+const st = o.st !== undefined ? o.st : (rnd() < C.ST_P ? 0 : -1);
+const p = o.p !== undefined ? o.p : Math.floor(rnd() * 1000);
+return { i: s.nid++, k, f, p, st, n: '', t: o.t || 0, src };
+};
+C.addItem = (s, it, env) => {
+it.t = it.t || env.now;
+s.inv.push(it);
+if (!env.skins.includes(it.k)) { env.skins.push(it.k); if (!s.via.includes(it.k)) s.via.push(it.k); }
+return it;
+};
+C.findItem = (s, id) => s.inv.find(x => x.i === id) || null;
+C.dropItem = (s, id, env) => {
+const ix = s.inv.findIndex(x => x.i === id); if (ix < 0) return null;
+const it = s.inv.splice(ix, 1)[0], char = C.charOf(it.k);
+for (const [c, v] of Object.entries(s.eq)) if (v === id) delete s.eq[c];
+if (!s.inv.some(x => x.k === it.k) && s.via.includes(it.k)) {
+s.via = s.via.filter(x => x !== it.k);
+const j = env.skins.indexOf(it.k); if (j >= 0) env.skins.splice(j, 1);
+if (char && env.equip[char] === it.k) delete env.equip[char];
+}
+return it;
+};
+const histPush = (s, row) => { s.hist.unshift(row); if (s.hist.length > C.HIST_MAX) s.hist.length = C.HIST_MAX; };
+const giveInk = (env, n) => {
+if (!Number.isFinite(n) || !Number.isFinite(env.ink)) throw new Error('bad ink');   // 算出来不是数：整个动作作废
+env.ink = Math.max(0, Math.floor(env.ink + n)); env.inkGain = (env.inkGain || 0) + Math.max(0, n);
+};
+const bump = (s, id, v, max) => {
+s.op.ms.forEach((m, i) => {
+if (m.id !== id || s.op.done.includes(i)) return;
+const cur = s.op.prog[i] || 0;
+s.op.prog[i] = Math.min(m.n, max ? Math.max(cur, v) : cur + v);
+});
+};
+const periodKey = (lim, day) => lim ? 'w' + C.week(day) : 'all';
+const bought = (s, id, day) => { const b = s.buys[id]; return b && b.k === periodKey(1, day) ? b.n : 0; };
+const rollTier = rnd => { let r = rnd(), acc = 0; for (const t of C.TIERS) { acc += C.ODDS[t]; if (r < acc) return t; } return 'mil'; };
+const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
+C.invFull = (s, n = 1) => s.inv.length + n > C.INV_MAX;
+C.monthSpend = (s, day) => { const m = C.monthKey(day); return s.orders.filter(o => o.m === m).reduce((a, o) => a + o.yuan, 0); };
+C.payCheck = (s, yuan, day) => {
+const a = own(C.AGE, s.age);
+if (!a) return { need: 'age' };
+if (a.free) return { ok: true };
+if (!a.one) return { err: '未满 8 周岁不能充值。钥匙也可以用墨锭买，或者靠江湖行动和每周补给拿。' };
+if (yuan > a.one) return { err: `${a.name}单笔最多 ${a.one} 元，这一笔是 ${yuan} 元。` };
+const used = C.monthSpend(s, day);
+if (used + yuan > a.month) return { err: `${a.name}每月最多充值 ${a.month} 元，本月已充 ${used} 元。` };
+return { ok: true };
+};
+C.tradeCheck = (s, ids) => {
+if (!Array.isArray(ids) || !ids.length) return { err: '还没放材料' };
+const uniq = Array.from(new Set(ids.map(Number)));
+if (uniq.length !== ids.length) return { err: '同一件放了两次' };
+const items = uniq.map(id => C.findItem(s, id));
+if (items.some(x => !x)) return { err: '有材料已经不在库存里了' };
+const tier = C.ITEM[items[0].k].tier, up = C.UP[tier];
+if (!up) return { err: '★ 非凡已经是最高一档' };
+if (items.some(x => C.ITEM[x.k].tier !== tier)) return { err: '材料要同一档品质' };
+const stN = items.filter(x => x.st >= 0).length;
+if (stN && stN !== items.length) return { err: '斩数版和普通版不能混着放' };
+if (items.some(x => !(C.COLS[C.ITEM[x.k].col][up] || []).length)) return { err: '有材料的收藏品里没有更高一档的饰品' };
+const odds = {};
+let avg = 0;
+for (const x of items) {
+const d = C.ITEM[x.k], list = C.COLS[d.col][up];
+for (const k of list) odds[k] = (odds[k] || 0) + 1 / list.length / items.length;
+avg += x.f;
+}
+avg /= items.length;
+const outs = Object.entries(odds).map(([k, p]) => { const d = C.ITEM[k]; return { k, p, f: +Math.min(d.fmax, Math.max(d.fmin, avg)).toFixed(9) }; }).sort((a, b) => b.p - a.p);
+const full = items.length === C.NEED[tier];
+return { ok: full, full, err: full ? '' : `要正好 ${C.NEED[tier]} 件，现在 ${items.length} 件`, items, tier, up, outs, st: stN === items.length };
+};
+C.ctxOk = c => isObj(c) && C.MODES.includes(c.mode) && C.HERO_IDS.includes(c.char);
+const A = {};
+A.open = (s, a, env) => {
+const cid = a.c;
+if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
+if ((s.cases[cid] || 0) < 1) return { err: '没有这个武器箱了' };
+if (s.keys < 1) return { err: '没有钥匙' };
+if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
+s.cases[cid]--; s.keys--; s.stat.open++;
+const tier = rollTier(env.rnd), k = pickOf(env.rnd, C.COLS[cid][tier]);
+const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd), env);
+bump(s, 'open', 1);
+return { ok: true, item: it };
+};
+A.store = (s, a, env) => {
+const g = C.STORE.find(x => x.id === a.id), n = Math.max(1, Math.min(10, Math.floor(+a.n || 1)));
+if (!g) return { err: '没有这件商品' };
+const day = C.day(env.now);
+if (g.lim && bought(s, g.id, day) + n > g.lim) return { err: `本周最多买 ${g.lim} 次` };
+const cost = g.cost[1] * n;
+if (g.cost[0] === 'jade') { if (s.jade < cost) return { err: '玉珏不够' }; s.jade -= cost; }
+else { if (env.ink < cost) return { err: '墨锭不够' }; giveInk(env, -cost); }
+s[g.give[0]] += g.give[1] * n;
+if (g.lim) { const pk = periodKey(1, day); if (!s.buys[g.id] || s.buys[g.id].k !== pk) s.buys[g.id] = { k: pk, n: 0 }; s.buys[g.id].n += n; }
+return { ok: true };
+};
+A.buy = (s, a, env) => {   // 买市场上的一件
+const day = C.day(env.now), parts = String(a.l || '').split('.');
+if (parts.length !== 3 || +parts[0] !== day) return { err: '这件已经下架了，刷新看看' };
+const L = C.listings(parts[1], day).find(x => x.l === a.l);
+if (!L) return { err: '没有这件挂单' };
+if (s.bought.ids.includes(a.l)) return { err: '这件已经被你买走了' };
+if (C.invFull(s)) return { err: '库存满了' };
+if (env.ink < L.price) return { err: `墨锭不够，要 ${L.price}` };
+giveInk(env, -L.price);
+s.bought.ids.push(a.l); s.stat.bought++;
+const it = C.addItem(s, C.mkItem(s, L.k, 'market', env.rnd, { f: L.f, st: L.st, p: L.p }), env);
+histPush(s, { t: env.now, kind: 'buy', k: L.k, f: L.f, st: L.st, price: L.price });
+bump(s, 'buy', 1);
+return { ok: true, item: it, price: L.price };
+};
+A.buyCase = (s, a, env) => {
+const cid = a.c, n = Math.max(1, Math.min(10, Math.floor(+a.n || 1)));
+if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
+const p = C.casePrice(cid, C.day(env.now)) * n;
+if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
+giveInk(env, -p); s.cases[cid] += n;
+histPush(s, { t: env.now, kind: 'buy', c: cid, n, price: p });
+return { ok: true, price: p };
+};
+A.sellCase = (s, a, env) => {
+const cid = a.c, n = Math.max(1, Math.min(50, Math.floor(+a.n || 1)));
+if (!C.CASES.includes(cid) || s.cases[cid] < n) return { err: '武器箱不够' };
+const p = C.quick(C.casePrice(cid, C.day(env.now))) * n;
+s.cases[cid] -= n; giveInk(env, p); s.stat.sold += n;
+histPush(s, { t: env.now, kind: 'sell', c: cid, n, price: p });
+bump(s, 'sell', n);
+return { ok: true, gain: p };
+};
+A.quick = (s, a, env) => {   // 直接卖给收购的人：市场价扣掉手续费
+const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
+const p = C.quick(C.price(it, C.day(env.now)));
+C.dropItem(s, it.i, env); giveInk(env, p); s.stat.sold++;
+histPush(s, { t: env.now, kind: 'sell', k: it.k, f: it.f, st: it.st, price: p });
+bump(s, 'sell', 1);
+return { ok: true, gain: p };
+};
+A.list = (s, a, env) => {   // 自己定价挂单，卖掉才到账
+const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
+if (s.lst.length >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };
+const day = C.day(env.now), mk = C.price(it, day), price = Math.floor(+a.price || 0);
+if (!(price >= 1) || price > 9999999) return { err: '标价不对' };
+if (price > Math.floor(mk * C.LIST_MAX_R)) return { err: `标价最高 ${Math.floor(mk * C.LIST_MAX_R)}（市场价的 ${Math.round(C.LIST_MAX_R * 100)}%），再高没人买` };
+const rate = C.sellRate(price / mk), u = env.rnd();
+const at = rate > 0 ? env.now + Math.round(-Math.log(1 - u) / rate * 3600e3) : 0;
+C.dropItem(s, it.i, env);
+s.lst.push({ l: 'L' + (s.nid++), it, price, t: env.now, at });
+return { ok: true };
+};
+A.cancel = (s, a, env) => {
+const ix = s.lst.findIndex(x => x.l === a.l); if (ix < 0) return { err: '没有这个挂单' };
+if (C.invFull(s)) return { err: '库存满了，放不回去' };
+const L = s.lst.splice(ix, 1)[0];
+C.addItem(s, L.it, env);
+return { ok: true };
+};
+C.settle = (s, env) => {
+const sold = [];
+s.lst = s.lst.filter(L => {
+if (!L.at || env.now < L.at) return true;
+const gain = C.net(L.price);
+giveInk(env, gain); s.stat.sold++;
+histPush(s, { t: L.at, kind: 'sold', k: L.it.k, f: L.it.f, st: L.it.st, price: L.price, gain });
+bump(s, 'sell', 1);
+sold.push({ k: L.it.k, price: L.price, gain });
+return false;
+});
+return sold;
+};
+A.trade = (s, a, env) => {
+const chk = C.tradeCheck(s, a.ids);
+if (!chk.ok) return { err: chk.err };
+let r = env.rnd(), pick = chk.outs[chk.outs.length - 1];
+for (const o of chk.outs) { if (r < o.p) { pick = o; break; } r -= o.p; }
+for (const x of chk.items) C.dropItem(s, x.i, env);
+const it = C.addItem(s, C.mkItem(s, pick.k, 'trade', env.rnd, { f: pick.f, st: chk.st ? 0 : -1 }), env);
+s.stat.trade++;
+bump(s, 'trade', 1);
+return { ok: true, item: it };
+};
+A.rename = (s, a, env) => {
+const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
+const name = String(a.name || '').replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, '').trim().slice(0, 12);
+if (name && s.tags < 1) return { err: '没有改名标签' };
+if (name) s.tags--;
+it.n = name;
+return { ok: true };
+};
+A.equip = (s, a, env) => {
+const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
+const char = C.charOf(it.k);
+if (!char) return { err: '这件穿不上' };
+s.eq[char] = it.i; env.equip[char] = it.k;
+return { ok: true, char };
+};
+A.unequip = (s, a, env) => {
+const char = String(a.char || ''); if (!C.HERO_IDS.includes(char)) return { err: '没有这位侠客' };
+delete s.eq[char]; env.equip[char] = '';
+return { ok: true };
+};
+A.supply = (s, a, env) => {
+const picks = Array.isArray(a.picks) ? a.picks.map(Number).filter(Number.isInteger) : [];
+if (s.drop.sup) return { err: '这周的补给已经领过了' };
+if (s.drop.g < C.SUPPLY_GAMES) return { err: `这周再打 ${C.SUPPLY_GAMES - s.drop.g} 局就能领` };
+if (picks.length !== 2 || picks[0] === picks[1] || picks.some(x => !(x >= 0 && x < 4))) return { err: '要从四样里挑两样' };
+const opts = C.supplyOpts(env.uid, s.drop.w), got = [];
+if (picks.some(x => opts[x].t === 'item') && C.invFull(s)) return { err: '库存满了' };
+s.drop.sup = 1;
+for (const x of picks) {
+const o = opts[x];
+if (o.t === 'case') { s.cases[o.c]++; got.push(o); }
+else if (o.t === 'key') { s.keys += o.n; got.push(o); }
+else if (o.t === 'tag') { s.tags += o.n; got.push(o); }
+else if (o.t === 'ink') { giveInk(env, o.n); got.push(o); }
+else if (o.t === 'item') got.push({ t: 'item', item: C.addItem(s, C.mkItem(s, o.k, 'supply', env.rnd), env) });
+}
+return { ok: true, got };
+};
+A.mission = (s, a, env) => {
+const i = Math.floor(+a.m), m = s.op.ms[i];
+if (!m) return { err: '没有这个任务' };
+if (s.op.done.includes(i)) return { err: '已经领过了' };
+if ((s.op.prog[i] || 0) < m.n) return { err: '还没完成' };
+s.op.done.push(i); s.op.earned += m.star;
+return { ok: true, star: m.star };
+};
+A.star = (s, a, env) => {
+const g = C.STAR_SHOP.find(x => x.id === a.id); if (!g) return { err: '没有这一项' };
+if (s.op.earned - s.op.spent < g.cost) return { err: '星章不够' };
+const op = C.COLS.op, r = env.rnd;
+let res = { ok: true };
+if (g.id === 'ink') giveInk(env, 300);
+else if (g.id === 'case') { const c = pickOf(r, C.CASES); s.cases[c]++; res.c = c; }
+else if (g.id === 'tag') s.tags++;
+else if (g.id === 'key') s.keys++;
+else {
+if (C.invFull(s)) return { err: '库存满了' };
+let k;
+if (g.id === 'opcov') { if (!op.cov.includes(a.k)) return { err: '要从行动收藏品的隐秘级里挑一件' }; k = a.k; }
+else k = pickOf(r, g.id === 'opres' ? op.res : op.cla);
+res.item = C.addItem(s, C.mkItem(s, k, 'op', r), env);
+}
+s.op.spent += g.cost;
+return res;
+};
+A.collect = (s, a, env) => {
+const col = own(C.COLS, a.c); if (!col) return { err: '没有这套收藏品' };
+if (s.cc.includes(a.c)) return { err: '已经领过了' };
+if (!col.mil.every(k => s.inv.some(x => x.k === k))) return { err: '还没集齐' };
+s.cc.push(a.c); s.keys++; s.tags++;
+return { ok: true };
+};
+A.age = (s, a, env) => { if (!own(C.AGE, a.age)) return { err: '请选年龄段' }; s.age = a.age; return { ok: true }; };
+A.topup = (s, a, env) => {
+const tier = C.TOPUP[Math.floor(+a.t)];
+if (!tier) return { err: '没有这一档' };
+if (!env.sandbox) return { err: '充值暂未开放' };
+const day = C.day(env.now), chk = C.payCheck(s, tier[0], day);
+if (chk.need) return { err: '请先选择年龄段', need: 'age' };
+if (chk.err) return { err: chk.err };
+const id = 'RY' + env.now.toString(36).toUpperCase() + Math.floor(env.rnd() * 1296).toString(36).toUpperCase().padStart(2, '0');
+s.orders.unshift({ id, t: env.now, m: C.monthKey(day), name: `${tier[1]} 玉珏`, yuan: tier[0], sb: 1 });
+if (s.orders.length > C.ORDER_MAX) s.orders.length = C.ORDER_MAX;
+s.jade += tier[1];
+return { ok: true, id, jade: tier[1] };
+};
+A.redeem = (s, a, env) => {
+const code = String(a.code || '').trim().toUpperCase();
+if (!env.server) return { err: '兑换码要登录云端账号才能用' };
+if (!env.code) return { err: '兑换码不对，或者已经被用过了' };
+if (s.codes.includes(code)) return { err: '这个兑换码你已经用过了' };
+s.codes.push(code); if (s.codes.length > 200) s.codes.shift();
+s.jade += env.code;
+return { ok: true, jade: env.code };
+};
+A.matchEnd = (s, a, env) => {
+const c = a.ctx;
+if (!C.ctxOk(c)) return { err: '这局不算' };
+if (env.server) {   // 服务器上：要有开局时领的票，打够时间，两局之间隔开，每天有上限
+const tk = s.tk; s.tk = null;
+if (!tk || env.now - tk.t0 < C.MATCH_MIN_MS || env.now - tk.t0 > C.MATCH_MAX_MS) return { err: '这局时间不对，不算' };
+if (env.now - (s.last || 0) < C.MATCH_GAP_MS) return { err: '太快了，不算' };
+if (s.dm.n >= C.MATCH_DAY_CAP) return { err: '今天的对局奖励已经拿满了' };
+}
+s.last = env.now; s.dm.n++;
+const win = !!c.win, rounds = Math.max(0, Math.min(5, Math.floor(+c.rounds || 0)));
+const combo = Math.max(0, Math.min(200, Math.floor(+c.combo || 0))), ults = Math.max(0, Math.min(30, Math.floor(+c.ults || 0)));
+s.drop.g++;
+bump(s, 'games', 1);
+if (win) bump(s, 'wins', 1);
+s.op.ms.forEach((m, i) => { if (m.id === 'hero' && win && c.char === m.h && !s.op.done.includes(i)) s.op.prog[i] = Math.min(m.n, (s.op.prog[i] || 0) + 1); });
+if (win && c.mode === 'cpu' && ['hard', 'impossible', 'god'].includes(c.level)) bump(s, 'hard', 1);
+if (win && c.flawless) bump(s, 'flaw', 1);
+if (combo) bump(s, 'combo', combo, true);
+if (ults) bump(s, 'ults', ults);
+if (c.mode === 'net') bump(s, 'net', 1);
+if (c.mode === 'tower') bump(s, 'tower', 1);
+if (c.mode === 'chaos') bump(s, 'chaos', 1);
+if (c.mode === 'tag3' && win) bump(s, 'tag3', 1);
+if (c.mode === '2v2') bump(s, 'duo', 1);
+const res = { ok: true, notes: [] };
+const eq = s.eq[c.char] && C.findItem(s, s.eq[c.char]);
+if (eq && eq.st >= 0 && rounds) { eq.st += rounds; res.st = { i: eq.i, add: rounds, total: eq.st }; }
+if (s.drop.n < C.DROP_CAP && env.rnd() < C.DROP_P && !C.invFull(s)) {
+s.drop.n++;
+const r = env.rnd();
+if (r < 0.3) { const cid = env.rnd() < 0.5 ? 'c1' : env.rnd() < 0.6 ? 'c2' : 'c3'; s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
+else {
+const tier = r < 0.85 ? 'mil' : 'res', pool = [];
+for (const [k, d] of Object.entries(C.ITEM)) if (d.tier === tier) pool.push(k);
+res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, pool), 'drop', env.rnd), env) };
+}
+}
+return res;
+};
+A.matchStart = (s, a, env) => {
+const mode = String(a.mode || '');
+if (!C.MODES.includes(mode)) return { err: '这个模式不记' };
+s.tk = { t0: env.now, mode };
+return { ok: true };
+};
+A.sync = () => ({ ok: true });
+A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一把钥匙
+if (s.gift) return { err: '已经领过了' };
+s.gift = 1; s.cases.c1++; s.keys++;
+return { ok: true };
+};
+C.ACTIONS = Object.keys(A);
+C.run = (state, name, args, env) => {
+if (!own(A, name)) return { res: { err: '不认识的操作' }, state };
+const s = C.normalize(JSON.parse(JSON.stringify(state || C.blank())), env);
+const ink0 = env.ink, skins0 = env.skins.slice(), equip0 = JSON.parse(JSON.stringify(env.equip));
+const sold = C.settle(s, env);
+let res;
+try { res = A[name](s, args || {}, env); } catch (e) { res = { err: '操作失败' }; }
+if (!res || res.err) {   // 失败了：动作本身改的全部撤回，只留下结算挂单的结果
+const s2 = C.normalize(JSON.parse(JSON.stringify(state || C.blank())), env);
+env.ink = ink0; env.skins.length = 0; env.skins.push(...skins0);
+Object.keys(env.equip).forEach(k => delete env.equip[k]); Object.assign(env.equip, equip0);
+env.inkGain = 0;
+const sold2 = C.settle(s2, env);
+return { res: res || { err: '操作失败' }, state: s2, sold: sold2 };
+}
+return { res, state: s, sold };
+};
+const deepFreeze = o => { if (o && typeof o === 'object' && !Object.isFrozen(o)) { Object.freeze(o); for (const v of Object.values(o)) deepFreeze(v); } return o; };
+deepFreeze(C);
+if (!G.ArmoryCore) Object.defineProperty(G, 'ArmoryCore', { value: C, writable: false, configurable: false, enumerable: false });
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+<script>
+(function () {
+'use strict';
+const C = window.ArmoryCore;
+if (!C || typeof PROF === 'undefined' || typeof SKINS === 'undefined') return;
+if (typeof OFFLINE_BUILD !== 'undefined' && OFFLINE_BUILD) return;   // 离线版没有武库（也不把武库皮肤放进图鉴）
+const NOW = Date.now.bind(Date);
+const GRV = crypto.getRandomValues.bind(crypto);
+const CS = window.CloudSave || null;
+const ECON = CS && CS.econ, LSYNC = CS && CS.ledgerSync, FLUSH = CS && CS.flushNow;
+const GRANT = CS && CS.inkGrantKey ? CS.inkGrantKey() || (() => {}) : () => {};   // 反作弊认的入账：只有这里能记
+const rnd = () => { const a = new Uint32Array(2); GRV(a); return (a[0] * 2097152 + (a[1] >>> 11)) / 9007199254740992; };
+const LOCAL_SANDBOX = true;   // 本机模式的模拟充值（服务器模式由服务器的 ECON_SANDBOX 决定）
+for (const [k, char, name, look] of C.PAINTS) SKINS[k] = { char, rarity: 'rare', name, cs: 'paint', look: { ...look } };
+for (const [k, d] of Object.entries(C.STARS)) {
+SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: 'star', look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
+SCENES[k] = JSON.parse(JSON.stringify(d.scene));
+}
+HAMMER_LOOK.frost_hammer = { chain: ['#3a5a7a', '#cfeaff'], head: '#e4f2ff', band: '#7fd4ff', crack: '150,220,255', spikes: '#9fc8e8' };
+SKIN_WEAP.moon_gourd = W => {   // 醉月：银白葫芦，腰上一弯新月，口上冒一缕月光
+const G = gourdParts(W); if (!G) return;
+const { top, bot, mid } = G;
+const fillG = (c, r) => { const q = ctx.createRadialGradient(c[0] - r * 0.3, c[1] - r * 0.3, 1, c[0], c[1], r); q.addColorStop(0, '#ffffff'); q.addColorStop(0.6, '#b8c4ff'); q.addColorStop(1, '#4a5694'); ctx.fillStyle = W.flash ? '#fff' : q; circle(c, r); };
+fillG(bot, 8.5); fillG(top, 5.5);
+if (!W.live) return;
+ctx.fillStyle = '#2a3460'; ctx.fillRect(mid[0] - 3.5, mid[1] - 1.2, 7, 2.4);
+ctx.fillStyle = '#f4f6ff'; ctx.beginPath(); ctx.arc(bot[0] + 1, bot[1], 4.2, 0.6, 5.2); ctx.arc(bot[0] + 2.6, bot[1] - 0.6, 3.4, 5.0, 0.8, true); ctx.fill();
+ctx.globalCompositeOperation = 'lighter';
+const ph = (W.T * 0.7) % 1;
+W.glow([top[0], top[1] - 6 - ph * 10], 6, '190,205,255', 0.55 * (1 - ph));
+};
+SKIN_WEAP.renying_blade = W => {   // 刃影：乌钢长刀，刃口一线朱红，刀尖滴墨
+const { P, poly, bar, live, t, T, hl } = W;
+bar(hl, W.g, 4.5, '#120c0c');
+poly([P(0, -2.6), P(0.86, -3), t, P(0.9, 1.4), P(0, 2.4)], W.lg(W.g, t, [[0, '#1a1416'], [0.7, '#2c2224'], [1, '#463638']]));
+poly([P(0.02, -6), P(-0.04, -7.2), P(-0.04, 7.2), P(0.02, 6)], '#3a1a1c');
+if (!live) return;
+ctx.strokeStyle = `rgba(255,70,60,${0.7 + Math.sin(T * 6) * 0.2})`; ctx.lineWidth = 1.2; line(P(0.05, -2.4), P(0.86, -2.8));
+ctx.globalCompositeOperation = 'lighter'; W.glow(t, 8, '255,70,60', 0.45);
+ctx.globalCompositeOperation = 'source-over';
+const ph = (T * 0.9) % 1; ctx.fillStyle = `rgba(10,6,6,${0.9 - ph * 0.6})`; circle([t[0], t[1] + ph * 16], 1.6 - ph * 0.6);
+};
+let FORCE = null;   // 画某一件的卡面时临时指定用哪一件的磨损
+const wearAmt = f => f < 0.07 ? 0 : 0.1 + 0.62 * Math.pow((f - 0.07) / 0.93, 0.85);
+const hueOf = (k, p) => SKINS[k] && SKINS[k].cs === 'paint' ? (((p * 37) % 41) - 20) * 1.1 : 0;
+function rgbOf(c) {
+if (typeof c !== 'string') return null;
+let m = c.match(/^#([0-9a-f]{6})$/i); if (m) { const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255, 'hex']; }
+m = c.match(/^(\d+),\s*(\d+),\s*(\d+)$/); if (m) return [+m[1], +m[2], +m[3], 'rgb'];
+return null;
+}
+function hueRot(r, g, b, deg) {
+const a = deg * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a);
+const m = [0.213 + cs * 0.787 - sn * 0.213, 0.715 - cs * 0.715 - sn * 0.715, 0.072 - cs * 0.072 + sn * 0.928,
+0.213 - cs * 0.213 + sn * 0.143, 0.715 + cs * 0.285 + sn * 0.140, 0.072 - cs * 0.072 - sn * 0.283,
+0.213 - cs * 0.213 - sn * 0.787, 0.715 - cs * 0.715 + sn * 0.715, 0.072 + cs * 0.928 + sn * 0.072];
+return [r * m[0] + g * m[1] + b * m[2], r * m[3] + g * m[4] + b * m[5], r * m[6] + g * m[7] + b * m[8]];
+}
+function tint(c, w, hue) {
+const v = rgbOf(c); if (!v) return c;
+let [r, g, b] = v;
+if (hue) [r, g, b] = hueRot(r, g, b, hue);
+if (w) {
+const y = 0.3 * r + 0.59 * g + 0.11 * b;
+r += (y - r) * w * 0.65; g += (y - g) * w * 0.65; b += (y - b) * w * 0.65;
+r += (96 - r) * w * 0.3; g += (86 - g) * w * 0.3; b += (72 - b) * w * 0.3;
+const k = 1 - w * 0.16; r *= k; g *= k; b *= k;
+}
+const q = x => Math.max(0, Math.min(255, Math.round(x)));
+return v[3] === 'hex' ? '#' + ((1 << 24) | (q(r) << 16) | (q(g) << 8) | q(b)).toString(16).slice(1) : `${q(r)},${q(g)},${q(b)}`;
+}
+const deepTint = (o, w) => Array.isArray(o) ? o.map(x => deepTint(x, w)) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, deepTint(v, w)])) : tint(o, w, 0);
+function wearOf(ci, k) {
+if (!k || !C.isItem(k)) return null;
+if (FORCE && FORCE.k === k) return FORCE;
+if (!ST || !CHARS[ci]) return null;
+const eqId = ST.eq[CHARS[ci].id];
+let it = eqId ? ST.inv.find(x => x.i === eqId && x.k === k) : null;
+if (!it) for (const x of ST.inv) if (x.k === k && (!it || x.f < it.f)) it = x;
+return it;
+}
+const baseSkinLook = skinLook;
+skinLook = function (ci, skin) {
+const L = baseSkinLook(ci, skin), it = wearOf(ci, skin);
+if (!it) return L;
+const w = wearAmt(it.f), hue = hueOf(it.k, it.p);
+if (!w && !hue) return L;
+const out = { ...L };
+for (const key of ['body', 'shade', 'scarf']) out[key] = tint(L[key], w, hue);
+for (const key of ['slash', 'blade']) out[key] = tint(L[key], w * 0.5, hue);
+if (L.deco) out.deco = deepTint(L.deco, w);
+return out;
+};
+window.skinLook = skinLook;
+let ST = null, MODE = 'none', UID = '', BUSY = false, TAB = 'inv', SIG = '', TK = 0, LOADING = null;
+const SALT = 'ry-armory|v1|';
+const sigOf = s => C.hash32(SALT + UID + '|' + JSON.stringify(s)).toString(36) + C.hash32(JSON.stringify(s) + '|' + UID + SALT).toString(36);
+const user = () => (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
+const cloudOn = () => { const u = user(); return !!(u && u.isCloud && ECON); };
+const live = () => !!ST && (MODE === 'server' || MODE === 'local');   // 现在能不能开箱、买卖
+const envBase = () => ({ now: NOW(), rnd, uid: UID, ink: Math.max(0, Math.floor(PROF.ink || 0)), skins: (PROF.skins || []).slice(), equip: { ...(PROF.equip || {}) }, owned: (PROF.owned || []).slice(), sandbox: LOCAL_SANDBOX, server: false });
+function strike(reason) { try { if (typeof acStrike === 'function') acStrike(reason); } catch (e) {} }
+Object.defineProperty(PROF, 'armory', {
+configurable: false, enumerable: true,
+get() { return ST && MODE === 'local' ? Object.assign(JSON.parse(JSON.stringify(ST)), { sig: SIG }) : undefined; },
+set(v) { loadLocal(v); },
+});
+let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
+function loadLocal(v, force) {
+const u = user(); UID = u ? String(u.uid || u.name || '') : '';
+if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
+if (cloudOn() && !force && MODE !== 'local') {   // 云端账号先等服务器回话（connect），这期间什么都不能做，免得本机和服务器各记一笔
+LOCAL_V = v;
+if (MODE !== 'server') { ST = null; MODE = 'wait'; }
+return;
+}
+let s = null;
+if (v && typeof v === 'object') {
+const { sig, ...rest } = v;
+if (sig && sig === sigOf(rest)) s = rest;
+else if (Object.keys(rest).length) { console.warn('武库存档校验不过，已作废'); strike('武库存档被改过'); }
+}
+ST = C.normalize(s || C.blank(), envBase());
+SIG = sigOf(ST);
+MODE = 'local';
+}
+async function connect(force) {   // 云端账号先问服务器支不支持武库；支持就由服务器管
+const u = user();
+if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
+UID = String(u.uid || u.name || '');
+if (!cloudOn()) { if (!ST) loadLocal(undefined); MODE = 'local'; return; }
+if (MODE === 'server' && !force) return;
+if (LOADING) return LOADING;
+LOADING = (async () => {
+try {
+const out = await ECON('sync', {});
+MODE = 'server'; ECON_INFO = out.info || ECON_INFO; apply(out, true);
+} catch (e) {
+if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还是旧版：先用本机规则
+else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
+else { if (MODE !== 'server') { ST = null; MODE = 'offline'; } msg('连不上服务器，武库暂时只能看'); }
+} finally { LOADING = null; }
+})();
+return LOADING;
+}
+let LOOK = '';
+function refreshLooks(force) {
+const sig = ST ? Object.values(ST.eq).map(id => { const it = ST.inv.find(x => x.i === id); return it ? `${it.k}|${it.f}|${it.p}` : ''; }).join(',') : '';
+if (!force && sig === LOOK) return;
+LOOK = sig;
+try {
+if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
+if (menuHeroId >= 0) { MENU_HERO = null; setMenuHero(menuHeroId); }
+applySkins();
+} catch (e) {}
+}
+function apply(out, quiet) {
+if (!out) return;
+if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
+const ink0 = Math.floor(PROF.ink || 0);
+let ink1 = ink0;
+if (MODE === 'server' && out.ledger && LSYNC) ink1 = LSYNC(out.ledger, ink0);   // 服务器的账 + 本机还没报上去的
+else if (MODE !== 'server' && typeof out.ink === 'number') ink1 = out.ink;
+if (ink1 > ink0) GRANT(ink1 - ink0);
+PROF.ink = ink1;
+let own = false;
+if (Array.isArray(out.skins)) { PROF.skins = out.skins.slice(); own = true; }
+if (out.skinsAdd || out.skinsDel) { const set = new Set(PROF.skins || []); for (const k of out.skinsAdd || []) set.add(k); for (const k of out.skinsDel || []) set.delete(k); PROF.skins = Array.from(set); own = true; }
+if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } own = true; }
+if (out.sold && out.sold.length && !quiet) for (const x of out.sold) toast(`挂单卖出：${itemName({ k: x.k, st: -1 })}，到账 ${x.gain} 墨锭`);
+if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
+try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
+if (window.CloudSave) CloudSave.saveProfile(PROF);
+baseApply(PROF);
+refreshLooks(false);
+for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
+}
+const patchOf = (env, skins0, equip0) => {
+const a = new Set(skins0), b = new Set(env.skins), eq = {};
+for (const k of new Set([...Object.keys(equip0), ...Object.keys(env.equip)])) if (equip0[k] !== env.equip[k]) eq[k] = env.equip[k] === undefined ? null : env.equip[k];
+return { skinsAdd: [...b].filter(k => !a.has(k)), skinsDel: [...a].filter(k => !b.has(k)), equip: eq };
+};
+async function act(name, args, opt = {}) {
+if (!opt.bg && BUSY) return null;
+if (MODE === 'wait') { msg('正在连接服务器，稍等一下'); return null; }
+if (MODE === 'offline') { msg('连不上服务器，等联网了再试'); await connect(true); if (MODE !== 'server') return null; }
+if (MODE === 'none' || !ST) { msg('登录之后才能用武库'); return null; }
+if (!opt.bg) { BUSY = true; busyUi(true); }
+try {
+let out;
+if (MODE === 'server') {
+try {
+if (FLUSH && !opt.bg) await Promise.race([FLUSH().catch(() => {}), new Promise(r => setTimeout(r, 3000))]);   // 先把本机的存档变化报上去，免得两边对不上
+out = await ECON(name, args || {});
+} catch (e) {
+if (!opt.bg) msg(e && e.message ? e.message : '服务器出错了');
+if (e && e.ban && typeof acRefresh === 'function') acRefresh();
+return null;
+}
+} else {
+const env = envBase(), skins0 = env.skins.slice(), equip0 = { ...env.equip };
+const r = C.run(ST, name, args || {}, env);
+out = { res: r.res, state: r.state, ink: env.ink, sold: r.sold, ...patchOf(env, skins0, equip0) };
+}
+apply(out, opt.bg);
+const res = out.res || {};
+if (res.err && !opt.bg) msg(res.err);
+return res;
+} finally { if (!opt.bg) { BUSY = false; busyUi(false); } }
+}
+const tierOf = k => C.ITEM[k] ? C.ITEM[k].tier : 'mil';
+const charName = k => { const c = CHARS[CHAR_IDX[C.charOf(k)]]; return c ? c.name : ''; };
+const skinName = k => (SKINS[k] && SKINS[k].name) || k;
+function itemName(it, plain) {
+const star = tierOf(it.k) === 'gold' ? '★ ' : '', stp = it.st >= 0 ? '斩数 · ' : '';
+return `${star}${stp}${charName(it.k)} | ${skinName(it.k)}${plain || it.f === undefined ? '' : `（${C.wearName(it.f)}）`}`;
+}
+const tc = k => C.TIER[tierOf(k)].c;
+const today = () => C.day(NOW());
+const ART = new Map();
+function art(it) {
+const w = Math.round(wearAmt(it.f || 0) * 10), h = Math.round(hueOf(it.k, it.p || 0)), key = `${it.k}|${w}|${h}`;
+if (ART.has(key)) return ART.get(key);
+let url = '';
+try { FORCE = { k: it.k, f: it.f || 0, p: it.p || 0 }; url = makeCardArt(CHAR_IDX[C.charOf(it.k)], 150, 200, it.k).toDataURL('image/jpeg', 0.86); }
+catch (e) {} finally { FORCE = null; }
+ART.set(key, url); return url;
+}
+const fmt = n => Math.round(n).toLocaleString();
+const ink = n => `<span class="ar-cur ar-ink"><i>墨</i>${fmt(n)}</span>`;
+const jadeC = n => `<span class="ar-cur ar-jade"><i>玉</i>${fmt(n)}</span>`;
+function msg(t) { const el = $id('arMsg'); if (el && $id('armory').classList.contains('on')) { el.textContent = t; clearTimeout(msg.tm); msg.tm = setTimeout(() => { el.textContent = ''; }, 4500); } else toast(t); }
+function busyUi(on) { const m = $id('armory'); if (m) m.classList.toggle('ar-busy', on); }
+const seenKey = () => 'renying-arm-seen-' + UID;
+const seenAt = () => { try { return +localStorage.getItem(seenKey()) || 0; } catch (e) { return 0; } };
+const markSeen = () => { try { localStorage.setItem(seenKey(), String(NOW())); } catch (e) {} };
+function modal(html, cls = '') { const m = $id('arModal'); m.innerHTML = `<div class="ar-box ${cls}">${html}</div>`; m.hidden = false; return m; }
+function closeModal() { const m = $id('arModal'); m.hidden = true; m.innerHTML = ''; REEL.on = false; }
+function confirmBox(title, body, okText, fn) {
+modal(`<h3>${title}</h3><p>${body}</p><div class="row"><button class="go small" id="arOk">${okText}</button><button class="ghost small" data-ar-close>取消</button></div>`);
+$id('arOk').addEventListener('click', async () => { closeModal(); await fn(); });
+}
+function tile(it, extra = '') {
+const eq = ST && Object.values(ST.eq).includes(it.i), fresh = it.t && it.t > seenAt() && it.i;
+return `<button type="button" class="ar-it${eq ? ' eq' : ''}" style="--tc:${tc(it.k)}" ${it.i ? `data-it="${it.i}"` : ''} ${extra}>
+<img src="${art(it)}" alt="" loading="lazy">${it.st >= 0 ? `<span class="ar-st">斩数 ${it.st}</span>` : ''}${eq ? '<span class="ar-eq">穿着</span>' : ''}${fresh ? '<span class="ar-new">新</span>' : ''}
+<b>${tierOf(it.k) === 'gold' ? '★ ' : ''}${escapeHTML(skinName(it.k))}</b><small>${charName(it.k)}${it.f !== undefined ? ' · ' + C.wearShort(it.f) : ''}${it.n ? ` · ‘${escapeHTML(it.n)}’` : ''}</small><i class="ar-bar"></i></button>`;
+}
+const TABS = [['inv', '库存'], ['cases', '武器箱'], ['market', '江湖市场'], ['trade', '汰换合同'], ['op', '江湖行动'], ['store', '商店']];
+function dots() {
+if (!ST || MODE === 'none') return {};
+const d = {};
+d.inv = ST.inv.some(x => x.t > seenAt());
+d.op = (ST.drop.g >= C.SUPPLY_GAMES && !ST.drop.sup) || ST.op.ms.some((m, i) => !ST.op.done.includes(i) && (ST.op.prog[i] || 0) >= m.n);
+d.cases = !ST.gift || (ST.keys > 0 && C.CASES.some(c => ST.cases[c] > 0));
+d.any = d.inv || d.op || d.cases;
+return d;
+}
+function render() {
+if (!$id('armory')) return;
+const d = dots();
+$id('arJade').textContent = ST ? fmt(ST.jade) : 0; $id('arKeys').textContent = ST ? ST.keys : 0;
+for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
+$id('arTabs').innerHTML = TABS.map(([k, n]) => `<button type="button" data-tab="${k}" class="${k === TAB ? 'sel' : ''}">${n}${d[k] ? '<i class="ar-dot"></i>' : ''}</button>`).join('');
+const banner = MODE === 'none' ? '<p class="ar-banner">登录之后才能开箱、交易。先逛逛看吧。</p>'
+: MODE === 'wait' ? '<p class="ar-banner soft">正在连接服务器…</p>'
+: MODE === 'offline' ? '<p class="ar-banner">连不上服务器，武库暂时只能看。</p>'
+: MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：武库数据先存在你的存档里，服务器版上线后由服务器统一保管（到时会重新发新手礼）。</p>' : '';
+const R = { inv: pInv, cases: pCases, market: pMarket, trade: pTrade, op: pOp, store: pStore }[TAB] || pInv;
+$id('arMain').innerHTML = banner + R();
+if (TAB === 'inv') markSeenSoon();
+renderTopNav();
+}
+let seenTm = 0;
+function markSeenSoon() { clearTimeout(seenTm); seenTm = setTimeout(() => { if (TAB === 'inv' && $id('armory').classList.contains('on')) markSeen(); }, 2500); }
+function blankS() { return ST || C.normalize(C.blank(), { now: NOW(), uid: '', owned: [] }); }
+const INV = { char: '', tier: '', sort: 'new' };
+function invValue(s) { const d = today(); return s.inv.reduce((a, x) => a + C.price(x, d), 0); }
+function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !(OFFLINE_BUILD || DEV_SESSION_UNLOCKED)); }
+function pInv() {
+const s = blankS(), d = today();
+let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier));
+const tr = x => C.TIERS.indexOf(tierOf(x.k));
+const sorts = { new: (a, b) => b.i - a.i, tier: (a, b) => tr(b) - tr(a) || b.i - a.i, price: (a, b) => C.price(b, d) - C.price(a, d), wear: (a, b) => a.f - b.f };
+list = list.slice().sort(sorts[INV.sort] || sorts.new);
+const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button" class="ar-caseitem" data-gotab="cases" style="--cc:${C.COLS[c].col}"><span class="ar-emb">${C.COLS[c].emblem}</span><b>${C.COLS[c].name}武器箱</b><small>×${s.cases[c]}</small></button>`).join('');
+const legacy = legacySkins(s);
+return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> / ${C.INV_MAX}</span><span>库存估值 ${ink(invValue(s))}</span><span>钥匙 <b>${s.keys}</b></span><span>改名标签 <b>${s.tags}</b></span></div>
+${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
+<div class="ar-filter">
+<select id="arInvChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${INV.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
+<select id="arInvTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${INV.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
+<select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['tier', '品质最高'], ['price', '最值钱'], ['wear', '磨损最低']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+</div>
+${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty"><p>${s.inv.length ? '没有符合条件的饰品。' : '库存还是空的。打对局有机会掉落，或者去开箱、逛市场。'}</p>${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
+${legacy.length ? `<h4 class="ar-h">问剑阁得到的皮肤 <small>绑定账号，不能出售和汰换</small></h4><div class="ar-grid sm">${legacy.map(k => `<div class="ar-it bound" style="--tc:${SKINS[k].rarity === 'legend' ? '235,75,75' : '136,71,255'}"><img src="${art({ k, f: 0, p: 0 })}" alt="" loading="lazy"><b>${escapeHTML(SKINS[k].name)}</b><small>${charName(k)} · 绑定</small><i class="ar-bar"></i></div>`).join('')}</div>` : ''}
+${typeof freeSkinEvent === 'function' && freeSkinEvent() ? '<p class="ar-note">限免活动只包括原来的皮肤。武库里的饰品要开箱、掉落或在市场买到，永久拥有，带磨损和斩数，能在市场卖掉。</p>' : ''}`;
+}
+let INS = null;
+function inspect(it, from) {
+INS = { it, from };
+const box = $id('arIns'); box.hidden = false;
+const cv = $id('arInsCv'); cv._w = 0; cv._h = 0;
+insInfo();
+}
+function insInfo() {
+const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i), d = today(), price = C.price(it, d), ci = CHAR_IDX[C.charOf(it.k)];
+const worn = own && ST.eq[C.charOf(it.k)] === it.i, idx = C.wearIdx(it.f), lucky = C.LUCKY.includes(it.p), col = C.COLS[C.ITEM[it.k].col];
+const can = live();
+const src = { case: '开箱', drop: '对局掉落', market: '市场买入', trade: '汰换合同', supply: '每周补给', op: '江湖行动' }[it.src] || '';
+$id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[tierOf(it.k)].n}</span>
+<h3>${escapeHTML(itemName(it, true))}</h3>${it.n ? `<p class="ar-tagname">‘${escapeHTML(it.n)}’</p>` : ''}
+<div class="ar-wearbar"><i style="left:${it.f * 100}%"></i></div>
+<dl class="ar-dl"><dt>磨损</dt><dd>${C.WEAR[idx][1]} · ${it.f.toFixed(9)}</dd><dt>图案模板</dt><dd>#${it.p}${lucky ? ' <b class="ar-lucky">稀有图案</b>' : ''}</dd>
+${it.st >= 0 ? `<dt>斩数计数</dt><dd>${it.st}（穿着它每拿下一回合 +1）</dd>` : ''}<dt>收藏品</dt><dd>${col.name}收藏品</dd>
+${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateString() : ''}</dd>` : ''}<dt>市场价</dt><dd>${ink(price)}</dd></dl>
+<div class="ar-insbtns">${own ? `${worn ? `<button type="button" class="ghost small" data-ins="unequip">脱下</button>` : `<button type="button" class="go small" data-ins="equip" ${can ? '' : 'disabled'}>穿上</button>`}
+<button type="button" class="ghost small" data-ins="quick" ${can ? '' : 'disabled'}>直接卖出 ${ink(C.quick(price))}</button>
+<button type="button" class="ghost small" data-ins="list" ${can ? '' : 'disabled'}>挂单</button>
+<button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
+<button type="button" class="ghost small" data-ins="close">关闭</button></div>
+<p class="ar-note">直接卖出是卖给收购商（市场价的 ${Math.round(C.BID * 100)}%），挂单能多卖一点；成交都扣 ${Math.round(C.FEE * 100)}% 手续费。${ci === undefined ? '' : '左边是穿上后的样子（磨损越高越旧）。'}</p>`;
+}
+function closeIns() { $id('arIns').hidden = true; INS = null; }
+async function insAction(a) {
+const it = INS && INS.it; if (!it) return;
+if (a === 'close') { closeIns(); return; }
+if (a === 'equip') { const r = await act('equip', { i: it.i }); if (r && r.ok) { SFX.slice && SFX.slice(); toast(`已穿上「${skinName(it.k)}」`); insInfo(); render(); } return; }
+if (a === 'unequip') { const r = await act('unequip', { char: C.charOf(it.k) }); if (r && r.ok) { insInfo(); render(); } return; }
+if (a === 'quick') {
+const p = C.quick(C.price(it, today()));
+confirmBox('直接卖出', `把「${escapeHTML(itemName(it))}」卖给收购的人，到手 ${ink(p)}（已扣手续费）。`, '卖出', async () => {
+const r = await act('quick', { i: it.i }); if (r && r.ok) { closeIns(); SFX.wood && SFX.wood(); toast(`卖出到账 ${r.gain} 墨锭`); render(); }
+});
+return;
+}
+if (a === 'list') { listBox(it); return; }
+if (a === 'rename') {
+modal(`<h3>改名标签</h3><p>给「${escapeHTML(itemName(it))}」起个名字（最多 12 个字），用掉 1 张改名标签。留空就是去掉名字（不用标签）。</p>
+<input id="arName" class="ar-input" maxlength="12" value="${escapeHTML(it.n || '')}" autocomplete="off" spellcheck="false">
+<div class="row"><button class="go small" id="arNameGo" ${ST.tags < 1 ? 'disabled' : ''}>确定</button><button class="ghost small" data-ar-close>取消</button></div>${ST.tags < 1 ? '<p class="ar-note">没有改名标签，可以在商店或江湖行动里换。</p>' : ''}`);
+$id('arName').addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); });
+$id('arNameGo').addEventListener('click', async () => { const r = await act('rename', { i: it.i, name: $id('arName').value }); if (r && r.ok) { closeModal(); INS.it = ST.inv.find(x => x.i === it.i) || it; insInfo(); render(); } });
+}
+}
+function listBox(it) {
+const mk = C.price(it, today()), top = Math.floor(mk * C.LIST_MAX_R);
+modal(`<h3>挂单出售</h3><p>「${escapeHTML(itemName(it))}」现在的市场价是 ${ink(mk)}，最高能标到 ${ink(top)}。标得越低卖得越快，成交后扣 ${Math.round(C.FEE * 100)}% 手续费再到账。</p>
+<div class="ar-listrow"><input id="arPrice" class="ar-input" type="number" min="1" max="${top}" step="1" value="${top}"><span id="arEta" class="ar-note"></span></div>
+<div class="row"><button class="go small" id="arListGo">挂上去</button><button class="ghost small" data-ar-close>取消</button></div>`);
+const eta = () => {
+const v = Math.floor(+$id('arPrice').value || 0), r = C.sellRate(v / mk);
+$id('arEta').innerHTML = v < 1 ? '' : v > top ? `最高标 ${fmt(top)}，再高没人买` : `到手 ${ink(C.net(v))} · ${r >= 2 ? '很快就能卖掉' : `大约 ${Math.max(1, Math.round(1 / r))} 小时卖掉`}`;
+};
+$id('arPrice').addEventListener('input', eta); $id('arPrice').addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); }); eta();
+$id('arListGo').addEventListener('click', async () => {
+const r = await act('list', { i: it.i, price: Math.floor(+$id('arPrice').value || 0) });
+if (r && r.ok) { closeModal(); closeIns(); toast('已挂到江湖市场，卖掉了会通知你'); render(); }
+});
+}
+function pCases() {
+const s = blankS(), d = today();
+const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一把钥匙，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
+const cards = C.CASES.map(cid => {
+const col = C.COLS[cid], n = s.cases[cid], have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
+const tiers = C.TIERS.filter(t => (col[t] || []).length).map(t => `<div class="ar-ctier" style="--tc:${C.TIER[t].c}"><span>${C.TIER[t].n} · ${(C.ODDS[t] * 100).toFixed(2)}%</span><div class="ar-minis">${col[t].map(k => `<img src="${art({ k, f: 0.1, p: 0 })}" alt="" title="${escapeHTML(itemName({ k, st: -1 }, true))}" loading="lazy">`).join('')}</div></div>`).join('');
+return `<div class="ar-casecard" style="--cc:${col.col}">
+<div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 市场价 ${ink(C.casePrice(cid, d))}</p>
+<div class="row"><button type="button" class="go small" data-open="${cid}" ${n && s.keys ? '' : 'disabled'}>开启（用 1 把钥匙）</button><button type="button" class="ghost small" data-buycase="${cid}">买一个 ${ink(C.casePrice(cid, d))}</button></div>
+${!s.keys && n ? '<p class="ar-note">没有钥匙了：商店、江湖行动、每周补给都能拿到。</p>' : ''}</div></div>
+${tiers}
+<div class="ar-col"><span>集齐本收藏品 5 款军规级：${have}/5，送 1 把钥匙 + 1 张改名标签</span><button type="button" class="${have >= 5 && !claimed ? 'go' : 'ghost'} small" data-collect="${cid}" ${have >= 5 && !claimed ? '' : 'disabled'}>${claimed ? '已领取' : have >= 5 ? '领取' : '未集齐'}</button></div>
+</div>`;
+}).join('');
+return `${gift}<p class="ar-note top">开箱概率（和 CS 一样）：军规级 79.92%、受限 15.98%、保密 3.20%、隐秘 0.64%、★ 非凡 0.26%。每件都有 10% 是斩数版。磨损度和图案模板随机。</p><div class="ar-cases">${cards}</div>`;
+}
+const REEL = { on: false };
+const CW = 132;   // 每格宽 + 间隔
+function reelFill(cid, win) {
+const col = C.COLS[cid], out = [];
+for (let i = 0; i < 56; i++) {
+let r = Math.random(), t = 'mil'; for (const x of C.TIERS) { if (r < C.ODDS[x] * (x === 'mil' ? 1 : 3)) { t = x; break; } r -= C.ODDS[x] * (x === 'mil' ? 1 : 3); }
+if (!(col[t] || []).length) t = 'mil';
+out.push({ k: col[t][Math.floor(Math.random() * col[t].length)], f: 0.1, p: 0, st: -1 });
+}
+out[48] = win;
+return out;
+}
+function skipAnim() { try { return localStorage.getItem('renying-arm-fast') === '1'; } catch (e) { return false; } }
+async function openCase(cid) {
+if (REEL.on) return;
+const r = await act('open', { c: cid });
+if (!r || !r.ok) { render(); return; }
+const win = r.item;
+render();
+const strip = reelFill(cid, win);
+REEL.on = true;
+modal(`<h3>${C.COLS[cid].name}武器箱</h3><div class="ar-reel"><div class="ar-strip" id="arStrip">${strip.map(x => `<div class="ar-rt" style="--tc:${tc(x.k)}"><img src="${art(x)}" alt=""><b>${escapeHTML(skinName(x.k))}</b></div>`).join('')}</div><i class="ar-mark"></i></div>
+<div class="row"><button class="ghost small" id="arSkip">跳过</button><label class="ar-fast"><input type="checkbox" id="arFast" ${skipAnim() ? 'checked' : ''}> 以后直接出结果</label></div>`, 'wide');
+$id('arFast').addEventListener('change', e => { try { localStorage.setItem('renying-arm-fast', e.target.checked ? '1' : '0'); } catch (err) {} });
+const el = $id('arStrip'), box = el.parentElement, mid = box.clientWidth / 2;
+const target = -(48 * CW + CW / 2 - mid) + Math.round((Math.random() - 0.5) * (CW - 24));
+let done = false, lastI = -1, raf = 0;
+const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); REEL.on = false; reveal(win, cid); };
+const tick = () => {
+if (done) return;
+const m = getComputedStyle(el).transform, x = m && m !== 'none' ? +m.split(',')[4] : 0, i = Math.floor((mid - x) / CW);
+if (i !== lastI) { lastI = i; try { sNoise(0.012, 7000, 4000, 1, 0.1, 'highpass'); } catch (e) {} }
+raf = requestAnimationFrame(tick);
+};
+$id('arSkip').addEventListener('click', finish);
+if (skipAnim()) { finish(); return; }
+requestAnimationFrame(() => { el.style.transition = 'transform 6.2s cubic-bezier(0.06, 0.62, 0.1, 1)'; el.style.transform = `translateX(${target}px)`; raf = requestAnimationFrame(tick); });
+el.addEventListener('transitionend', () => setTimeout(finish, 450), { once: true });
+}
+function reveal(it, cid) {
+const t = tierOf(it.k);
+if (t === 'cov' || t === 'gold') playSting('legendary', true); else if (t === 'cla') SFX.gong && SFX.gong(); else SFX.chargeFull && SFX.chargeFull();
+const again = cid && ST.cases[cid] > 0 && ST.keys > 0;
+modal(`<div class="ar-reveal" style="--tc:${tc(it.k)}"><span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[t].n}</span><img src="${art(it)}" alt=""><h3>${escapeHTML(itemName(it, true))}</h3>
+<p>${C.wearName(it.f)} · 磨损 ${it.f.toFixed(6)} · 图案 #${it.p}${C.LUCKY.includes(it.p) ? ' · 稀有图案' : ''}</p><p>市场价 ${ink(C.price(it, today()))}</p></div>
+<div class="row"><button class="go small" id="arKeep">收下</button><button class="ghost small" id="arSee">检视</button>${again ? `<button class="ghost small" id="arAgain">再开一个</button>` : ''}</div>`);
+$id('arKeep').addEventListener('click', () => { closeModal(); render(); });
+$id('arSee').addEventListener('click', () => { closeModal(); const x = ST.inv.find(y => y.i === it.i); if (x) inspect(x, 'inv'); });
+if (again) $id('arAgain').addEventListener('click', () => { closeModal(); openCase(cid); });
+}
+const MK = { view: 'items', tier: '', char: '', sort: 'hot' };
+function spark(k, w = 120, h = 34, days = 30, price = C.refPrice) {
+const d = today(), ys = []; for (let i = days - 1; i >= 0; i--) ys.push(price(k, d - i));
+const lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1;
+const pts = ys.map((y, i) => `${(i / (ys.length - 1) * w).toFixed(1)},${(h - 3 - (y - lo) / sp * (h - 6)).toFixed(1)}`).join(' ');
+const up = ys[ys.length - 1] >= ys[ys.length - 8];
+return `<svg class="ar-spark ${up ? 'up' : 'down'}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke-width="1.6"/></svg>`;
+}
+const chg = (k, price = C.refPrice) => { const d = today(), a = price(k, d - 7), b = price(k, d); return (b - a) / a; };
+function pMarket() {
+const s = blankS(), d = today();
+const tabs = [['items', '饰品'], ['cases', '武器箱'], ['mine', `我的挂单${s.lst.length ? ` (${s.lst.length})` : ''}`], ['hist', '成交记录']].map(([k, n]) => `<button type="button" data-mkv="${k}" class="${MK.view === k ? 'sel' : ''}">${n}</button>`).join('');
+let body = '';
+if (MK.view === 'items') {
+let keys = Object.keys(C.ITEM).filter(k => (!MK.tier || tierOf(k) === MK.tier) && (!MK.char || C.charOf(k) === MK.char));
+const lo = k => { const L = C.listings(k, d).filter(x => !s.bought.ids.includes(x.l)); return L.length ? L[0].price : 0; };
+const sorts = { hot: (a, b) => C.TIERS.indexOf(tierOf(b)) - C.TIERS.indexOf(tierOf(a)) || lo(b) - lo(a), up: (a, b) => chg(b) - chg(a), down: (a, b) => chg(a) - chg(b), cheap: (a, b) => lo(a) - lo(b) };
+keys = keys.sort(sorts[MK.sort] || sorts.hot);
+body = `<div class="ar-filter"><select id="arMkTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${MK.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
+<select id="arMkChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${MK.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
+<select id="arMkSort" class="ar-sel">${[['hot', '品质高的在前'], ['up', '这周涨得多'], ['down', '这周跌得多'], ['cheap', '最便宜']].map(([k, n]) => `<option value="${k}" ${MK.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+<div class="ar-mklist">${keys.map(k => { const c = chg(k), p = lo(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${art({ k, f: 0.26, p: 0 })}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }, true))}</b><small>${C.TIER[tierOf(k)].n} · ${C.COLS[C.ITEM[k].col].name}收藏品</small></span>${spark(k)}<span class="ar-chg ${c >= 0 ? 'up' : 'down'}">${c >= 0 ? '+' : ''}${(c * 100).toFixed(1)}%</span><span class="ar-mkp">${p ? `最低 ${ink(p)}` : '暂无在售'}</span></button>`; }).join('')}</div>`;
+} else if (MK.view === 'cases') {
+body = `<div class="ar-mklist">${C.CASES.map(cid => { const cp = (k, day) => C.casePrice(k, day), c = chg(cid, cp); return `<div class="ar-mkrow static" style="--tc:${C.COLS[cid].col}"><span class="ar-casebox sm" style="--cc:${C.COLS[cid].col}"><span>${C.COLS[cid].emblem}</span></span><span class="ar-mkn"><b>${C.COLS[cid].name}武器箱</b><small>拥有 ${s.cases[cid]} 个</small></span>${spark(cid, 120, 34, 30, cp)}<span class="ar-chg ${c >= 0 ? 'up' : 'down'}">${c >= 0 ? '+' : ''}${(c * 100).toFixed(1)}%</span><span class="ar-mkp">${ink(C.casePrice(cid, d))}</span><span class="ar-mkbtns"><button type="button" class="go small" data-buycase="${cid}">买入</button><button type="button" class="ghost small" data-sellcase="${cid}" ${s.cases[cid] ? '' : 'disabled'}>卖出 ${ink(C.quick(C.casePrice(cid, d)))}</button></span></div>`; }).join('')}</div>`;
+} else if (MK.view === 'mine') {
+body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => { const r = C.sellRate(L.price / C.price(L.it, d)); return `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${art(L.it)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · ${r <= 0 ? '标价太高，基本卖不掉' : '等人来买'}</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>到手 ${fmt(C.net(L.price))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`; }).join('')}</div>`
+: '<p class="ar-empty">没有挂单。在库存里点一件饰品，选“挂单”就能自己定价卖。</p>';
+} else {
+body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${{ buy: '买入', sell: '卖出', sold: '挂单成交' }[h.kind] || ''}</span><span>${h.c ? `${C.COLS[h.c].name}武器箱 ×${h.n}` : escapeHTML(itemName({ k: h.k, f: h.f, st: h.st }))}</span><span>${h.kind === 'buy' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : '<p class="ar-empty">还没有成交记录。</p>';
+}
+return `<div class="ar-seg">${tabs}</div><p class="ar-note top">价格每天小幅浮动。在售的比市场价贵一点；直接卖出按市场价的 ${Math.round(C.BID * 100)}% 收，自己挂单最高标到 ${Math.round(C.LIST_MAX_R * 100)}%；成交扣 ${Math.round(C.FEE * 100)}% 手续费。</p>${body}`;
+}
+function marketItem(k) {
+const s = blankS(), d = today(), L = C.listings(k, d);
+const mine = s.inv.filter(x => x.k === k);
+const ys = []; for (let i = 29; i >= 0; i--) ys.push(C.refPrice(k, d - i));
+const W = 520, H = 150, lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1;
+const pts = ys.map((y, i) => `${(i / 29 * W).toFixed(1)},${(H - 14 - (y - lo) / sp * (H - 28)).toFixed(1)}`).join(' ');
+modal(`<div class="ar-mkhead" style="--tc:${tc(k)}"><img src="${art({ k, f: 0.1, p: 0 })}" alt=""><div><span class="ar-tier" style="--tc:${tc(k)}">${C.TIER[tierOf(k)].n}</span><h3>${escapeHTML(itemName({ k, st: -1 }, true))}</h3><p class="ar-note">${C.COLS[C.ITEM[k].col].name}收藏品 · 磨损范围 ${C.ITEM[k].fmin.toFixed(2)} – ${C.ITEM[k].fmax.toFixed(2)}</p></div></div>
+<div class="ar-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="近 30 天参考价"><polyline points="0,${H} ${pts} ${W},${H}" class="fill"/><polyline points="${pts}" class="line"/></svg><div class="ar-chartlbl"><span>30 天前</span><span>参考价（久经沙场）：最高 ${fmt(hi)} · 最低 ${fmt(lo)} · 今天 ${fmt(ys[29])}</span><span>今天</span></div></div>
+<h4 class="ar-h">在售</h4><div class="ar-lst">${L.map(x => { const sold = s.bought.ids.includes(x.l); return `<div class="ar-lrow${sold ? ' gone' : ''}"><span>${C.wearName(x.f)}</span><span>${x.f.toFixed(6)}</span><span>#${x.p}${C.LUCKY.includes(x.p) ? ' 稀有' : ''}</span><span>${x.st >= 0 ? `斩数 ${x.st}` : ''}</span><span>${ink(x.price)}</span><button type="button" class="go small" data-buyl="${x.l}" ${sold || !live() ? 'disabled' : ''}>${sold ? '已买' : '购买'}</button></div>`; }).join('')}</div>
+${mine.length ? `<h4 class="ar-h">我库存里的这款</h4><div class="ar-lst">${mine.map(x => `<div class="ar-lrow"><span>${C.wearName(x.f)}</span><span>${x.f.toFixed(6)}</span><span>#${x.p}</span><span>${x.st >= 0 ? `斩数 ${x.st}` : ''}</span><span>${ink(C.price(x, d))}</span><button type="button" class="ghost small" data-insp="${x.i}">卖出 / 检视</button></div>`).join('')}</div>` : ''}
+<div class="row"><button class="ghost small" data-ar-close>关闭</button></div>`, 'wide');
+}
+const TR = { tier: 'mil', sel: [] };
+function pTrade() {
+const s = blankS(), up = C.UP[TR.tier], need = C.NEED[TR.tier];
+TR.sel = TR.sel.filter(id => s.inv.some(x => x.i === id && tierOf(x.k) === TR.tier));
+const chk = TR.sel.length ? C.tradeCheck(s, TR.sel) : null;
+const selItems = TR.sel.map(id => s.inv.find(x => x.i === id));
+const stMode = selItems.length ? selItems[0].st >= 0 : null;
+const usable = x => tierOf(x.k) === TR.tier && (C.COLS[C.ITEM[x.k].col][up] || []).length && (stMode === null || (x.st >= 0) === stMode);
+const pool = s.inv.filter(x => tierOf(x.k) === TR.tier && !TR.sel.includes(x.i));
+const slots = []; for (let i = 0; i < need; i++) { const it = selItems[i]; slots.push(it ? `<button type="button" class="ar-slot on" data-unsel="${it.i}" style="--tc:${tc(it.k)}"><img src="${art(it)}" alt=""><small>${C.wearShort(it.f)}</small></button>` : '<span class="ar-slot"></span>'); }
+const outs = chk && chk.outs ? chk.outs.map(o => `<div class="ar-out" style="--tc:${tc(o.k)}"><img src="${art({ k: o.k, f: o.f, p: 0 })}" alt=""><b>${escapeHTML(skinName(o.k))}</b><small>${charName(o.k)} · ${(o.p * 100).toFixed(1)}%</small><small>${C.wearName(o.f)} ${o.f.toFixed(4)}</small></div>`).join('') : '';
+return `<div class="ar-seg">${['mil', 'res', 'cla', 'cov'].map(t => `<button type="button" data-trt="${t}" class="${TR.tier === t ? 'sel' : ''}">${C.TIER[t].n} → ${C.TIER[C.UP[t]].n}</button>`).join('')}</div>
+<p class="ar-note top">放进 ${need} 件${C.TIER[TR.tier].n}饰品，换 1 件${C.TIER[up].n}。出什么取决于材料来自哪套收藏品；新饰品的磨损是材料磨损的平均。斩数版只能和斩数版一起换。</p>
+<div class="ar-slots">${slots.join('')}</div>
+<div class="ar-trbar"><span>${TR.sel.length} / ${need}</span>${chk && chk.err && !chk.partial && chk.full === undefined ? `<span class="ar-err">${chk.err}</span>` : ''}<button type="button" class="go small" id="arTradeGo" ${chk && chk.ok ? '' : 'disabled'}>签订合同</button><button type="button" class="ghost small" id="arTradeClr" ${TR.sel.length ? '' : 'disabled'}>清空</button></div>
+${outs ? `<h4 class="ar-h">可能换到</h4><div class="ar-outs">${outs}</div>` : ''}
+<h4 class="ar-h">库存里的${C.TIER[TR.tier].n}饰品 <small>点一下放进合同</small></h4>
+${pool.length ? `<div class="ar-grid sm">${pool.map(x => tile(x, usable(x) && TR.sel.length < need ? 'data-sel="1"' : 'disabled')).join('')}</div>` : '<p class="ar-empty">库存里没有这一档的饰品。</p>'}`;
+}
+function supplyName(o) {
+if (o.t === 'case') return `${C.COLS[o.c].name}武器箱`;
+if (o.t === 'key') return '武器箱钥匙';
+if (o.t === 'tag') return '改名标签';
+if (o.t === 'ink') return `${o.n} 墨锭`;
+return itemName({ k: o.k, st: -1 }, true);
+}
+const SUP = { pick: [] };
+function pOp() {
+const s = blankS(), se = C.season(today()), left = se.end - today(), stars = s.op.earned - s.op.spent;
+const ms = s.op.ms.map((m, i) => {
+const prog = Math.min(m.n, s.op.prog[i] || 0), done = s.op.done.includes(i), D = C.MISSIONS[m.id];
+const name = D.t.replace('{n}', m.n).replace('{h}', m.h ? `「${CHARS[CHAR_IDX[m.h]].name}」` : '');
+return `<div class="trow"><span>${name}</span><div class="bar"><i style="width:${prog / m.n * 100}%"></i></div><span class="rw">${'★'.repeat(m.star)}</span><div><button data-mission="${i}" ${done || prog < m.n || !live() ? 'disabled' : ''}>${done ? '已领' : prog >= m.n ? '领星章' : `${prog}/${m.n}`}</button></div></div>`;
+}).join('');
+const opts = live() ? C.supplyOpts(UID, s.drop.w) : [];
+const ready = s.drop.g >= C.SUPPLY_GAMES;
+const sup = s.drop.sup ? '<p class="ar-note">这周的补给已经领了，下周一再来。</p>'
+: `<div class="ar-sup">${opts.map((o, i) => `<button type="button" class="ar-supo${SUP.pick.includes(i) ? ' sel' : ''}" data-sup="${i}" ${ready ? '' : 'disabled'} style="--tc:${o.t === 'item' ? tc(o.k) : '233,196,106'}">${o.t === 'item' ? `<img src="${art({ k: o.k, f: 0.2, p: 0 })}" alt="">` : `<span class="ar-supi">${{ case: '箱', key: '钥', tag: '签', ink: '墨' }[o.t]}</span>`}<b>${escapeHTML(supplyName(o))}</b></button>`).join('')}</div>
+<div class="row"><button type="button" class="go small" id="arSupGo" ${ready && SUP.pick.length === 2 ? '' : 'disabled'}>领取这两样</button></div>`;
+const shop = C.STAR_SHOP.map(g => `<div class="ar-card ar-starg"><b>${g.name}</b><span class="ar-starc">${'★'.repeat(Math.min(g.cost, 5))}${g.cost > 5 ? ` ×${g.cost}` : ''}</span><button type="button" class="go small" data-star="${g.id}" ${stars >= g.cost && live() ? '' : 'disabled'}>${g.cost} 星章兑换</button></div>`).join('');
+return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.k + 1} 季 · 剩 ${left} 天</span><h3>星章 <b>${stars}</b> <small>本季共得 ${s.op.earned}</small></h3></div><p class="ar-note">每周一换四个任务，完成拿星章，星章换钥匙、武器箱和只在这里出的行动收藏品。</p></div>
+<h4 class="ar-h">本周任务</h4><div class="tlist">${ms || '<p class="ar-empty">登录之后才有任务。</p>'}</div>
+<h4 class="ar-h">每周补给 <small>${ready ? '已解锁：四样里挑两样' : `这周再打 ${C.SUPPLY_GAMES - s.drop.g} 局解锁（${s.drop.g}/${C.SUPPLY_GAMES}）`}</small></h4>${live() ? sup : ''}
+<h4 class="ar-h">星章兑换</h4><div class="ar-grid3">${shop}</div>
+<p class="ar-note">对局掉落：每局 ${Math.round(C.DROP_P * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.DROP_CAP} 次（本周已掉 ${s.drop.n} 次）。</p>`;
+}
+function opCovPick() {
+const list = C.COLS.op.cov;
+modal(`<h3>自选一件行动收藏品 · 隐秘</h3><div class="ar-grid sm">${list.map(k => `<button type="button" class="ar-it" style="--tc:${tc(k)}" data-opcov="${k}"><img src="${art({ k, f: 0.1, p: 0 })}" alt=""><b>${escapeHTML(skinName(k))}</b><small>${charName(k)}</small><i class="ar-bar"></i></button>`).join('')}</div><div class="row"><button class="ghost small" data-ar-close>取消</button></div>`, 'wide');
+}
+function pStore() {
+const s = blankS(), d = today(), sandbox = MODE === 'server' ? !!(ECON_INFO && ECON_INFO.sandbox) : LOCAL_SANDBOX;
+const goods = C.STORE.map(g => {
+const n = g.lim && s.buys[g.id] && s.buys[g.id].k === 'w' + C.week(d) ? s.buys[g.id].n : 0, out = g.lim && n >= g.lim;
+return `<div class="ar-card ar-good"><b>${g.name}</b>${g.lim ? `<small>每周 ${g.lim} 次 · 已买 ${n}</small>` : '<small>&nbsp;</small>'}<button type="button" class="go small" data-store="${g.id}" ${out || !live() ? 'disabled' : ''}>${out ? '本周买完了' : g.cost[0] === 'jade' ? jadeC(g.cost[1]) : ink(g.cost[1])}</button></div>`;
+}).join('');
+const a = C.AGE[s.age];
+const tiers = C.TOPUP.map(([yuan, jd], i) => `<button type="button" class="ar-tier-btn" data-topup="${i}" ${sandbox && live() ? '' : 'disabled'}>${jadeC(jd)}<b>¥ ${yuan}</b></button>`).join('');
+const orders = s.orders.length ? s.orders.slice(0, 8).map(o => `<div class="ar-hrow"><span>${new Date(o.t).toLocaleString()}</span><span>${escapeHTML(o.name)}</span><span>¥ ${o.yuan}${o.sb ? ' · 模拟' : ''}</span><span class="ar-oid">${o.id}</span></div>`).join('') : '<p class="ar-note">还没有充值记录。</p>';
+return `<h4 class="ar-h">道具 <small>只卖便利，不卖属性</small></h4><div class="ar-grid3">${goods}</div>
+<h4 class="ar-h">玉珏 <small>${sandbox ? '测试版：模拟支付，不扣真钱' : '充值暂未开放'}</small></h4>
+<p class="ar-note">1 元 = 10 玉珏，玉珏只用来买钥匙和改名标签。${sandbox ? '' : '正式支付接通前，可以用兑换码领取玉珏。'}${a ? `消费保护：${a.name}${a.free ? '，不限额' : a.one ? `，单笔 ≤ ${a.one} 元，每月 ≤ ${a.month} 元（本月已充 ${C.monthSpend(s, d)} 元）` : '，不能充值'}。` : '第一次充值前会请你确认年龄。'}</p>
+<div class="ar-tiers">${tiers}</div>
+<div class="ar-card ar-redeem"><span>玉珏兑换码</span><input id="arCode" class="ar-input" maxlength="32" placeholder="YJ-数额-XXXX-XXXXXX" autocomplete="off" spellcheck="false"><button type="button" class="go small" id="arCodeGo" ${MODE === 'server' ? '' : 'disabled'}>兑换</button>${MODE === 'server' ? '' : '<small>兑换码要登录云端账号才能用</small>'}</div>
+<h4 class="ar-h">充值记录 <small>${a ? a.name : '未选年龄段'} · <button type="button" class="ar-link" id="arAgeRe">重新选择年龄段</button></small></h4><div class="ar-hist">${orders}</div>`;
+}
+function ageAsk(then) {
+modal(`<h3>先确认一下年龄</h3><p>按照未成年人网络游戏消费的规定，不同年龄能充值的额度不一样。请如实选择。</p>
+<div class="ar-age">${Object.entries(C.AGE).map(([k, a]) => `<button type="button" class="ghost" data-age="${k}"><b>${a.name}</b><small>${a.free ? '不限额' : a.one ? `单笔 ≤ ${a.one} 元 · 每月 ≤ ${a.month} 元` : '不能充值'}</small></button>`).join('')}</div>
+<div class="row"><button class="ghost small" data-ar-close>取消</button></div>`);
+for (const b of document.querySelectorAll('#arModal [data-age]')) b.addEventListener('click', async () => { closeModal(); const r = await act('age', { age: b.dataset.age }); if (r && r.ok) { render(); then && then(); } });
+}
+function topup(i) {
+const s = blankS(), t = C.TOPUP[i], chk = C.payCheck(s, t[0], today());
+if (chk.need) { ageAsk(() => topup(i)); return; }
+if (chk.err) { modal(`<h3>超出消费限额</h3><p>${escapeHTML(chk.err)}</p><p class="ar-note">这是为了保护未成年人。年龄选错了可以在下面重新选择。</p><div class="row"><button class="go small" data-ar-close>知道了</button></div>`); return; }
+modal(`<div class="ar-pay"><span class="ar-k">收银台 · 测试版</span><h3>${t[1]} 玉珏</h3><div class="ar-payamt">¥ ${t[0]}</div><label class="ar-paym"><input type="radio" checked> 模拟支付（测试用，不扣真钱）</label>
+<p class="ar-note">正式上线后会接入需要家长同意的支付渠道，到账以服务器收到支付平台的通知为准。</p>
+<div class="row"><button class="go small" id="arPayGo">确认支付</button><button class="ghost small" data-ar-close>取消</button></div></div>`);
+$id('arPayGo').addEventListener('click', async () => {
+const b = $id('arPayGo'); b.disabled = true; b.textContent = '支付中…';
+const r = await act('topup', { t: i });
+if (r && r.ok) { modal(`<h3>支付成功</h3><p>到账 ${jadeC(r.jade)}</p><p class="ar-note">订单号 ${r.id}</p><div class="row"><button class="go small" data-ar-close>好的</button></div>`); SFX.gong && SFX.gong(); render(); }
+else closeModal();
+});
+}
+function bind() {
+$id('arTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; SFX.slice && SFX.slice(); TAB = b.dataset.tab; render(); $id('arMain').scrollTop = 0; });
+$id('arModal').addEventListener('click', async e => {
+if (e.target.closest('[data-ar-close]') || e.target === $id('arModal')) { if (!REEL.on) closeModal(); return; }
+const b = e.target.closest('button'); if (!b || b.disabled) return;
+if (b.dataset.buyl) { const r = await act('buy', { l: b.dataset.buyl }); if (r && r.ok) { SFX.wood && SFX.wood(); toast(`买到了：${itemName(r.item)}`); marketItem(r.item.k); render(); } }
+else if (b.dataset.insp) { const it = ST.inv.find(x => x.i === +b.dataset.insp); closeModal(); if (it) inspect(it, 'inv'); }
+else if (b.dataset.opcov) { const r = await act('star', { id: 'opcov', k: b.dataset.opcov }); if (r && r.ok) { closeModal(); reveal(r.item); render(); } }
+});
+$id('arIns').addEventListener('click', e => { if (e.target === $id('arIns')) { closeIns(); return; } const b = e.target.closest('[data-ins]'); if (b && !b.disabled) insAction(b.dataset.ins); });
+const main = $id('arMain');
+main.addEventListener('change', e => {
+const id = e.target.id, v = e.target.value;
+if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvSort') INV.sort = v;
+else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else return;
+render();
+});
+main.addEventListener('keydown', e => { if (e.key === 'Escape') return; e.stopPropagation(); if (e.key === 'Enter' && e.target.id === 'arCode') redeem(); });   // 打字时别触发游戏的快捷键
+main.addEventListener('click', async e => {
+const b = e.target.closest('button'); if (!b || b.disabled) return;
+const d = b.dataset;
+if (d.gotab) { TAB = d.gotab; render(); return; }
+if (d.it && !d.sel) { const it = ST && ST.inv.find(x => x.i === +d.it); if (it) inspect(it, 'inv'); return; }
+if (d.mk) { marketItem(d.mk); return; }
+if (d.mkv) { MK.view = d.mkv; render(); return; }
+if (d.trt) { TR.tier = d.trt; TR.sel = []; render(); return; }
+if (d.sel) { TR.sel.push(+d.it); render(); return; }
+if (d.unsel) { TR.sel = TR.sel.filter(x => x !== +d.unsel); render(); return; }
+if (d.sup !== undefined) { const i = +d.sup; SUP.pick = SUP.pick.includes(i) ? SUP.pick.filter(x => x !== i) : [...SUP.pick, i].slice(-2); render(); return; }
+if (!live()) { msg(MODE === 'wait' ? '正在连接服务器，稍等一下' : MODE === 'offline' ? '连不上服务器，等联网了再试' : '登录之后才能用武库'); return; }
+if (d.open) { openCase(d.open); return; }
+if (d.buycase) { const p = C.casePrice(d.buycase, today()); confirmBox('买武器箱', `花 ${ink(p)} 买一个${C.COLS[d.buycase].name}武器箱？开箱还要一把钥匙。`, '买入', async () => { const r = await act('buyCase', { c: d.buycase, n: 1 }); if (r && r.ok) { SFX.wood && SFX.wood(); render(); } }); return; }
+if (d.sellcase) { const r = await act('sellCase', { c: d.sellcase, n: 1 }); if (r && r.ok) { toast(`卖出到账 ${r.gain} 墨锭`); render(); } return; }
+if (d.cancel) { const r = await act('cancel', { l: d.cancel }); if (r && r.ok) { toast('已撤下，放回库存'); render(); } return; }
+if (d.collect) { const r = await act('collect', { c: d.collect }); if (r && r.ok) { SFX.gong && SFX.gong(); toast('集齐奖励：钥匙 +1，改名标签 +1'); render(); } return; }
+if (d.mission !== undefined) { const r = await act('mission', { m: +d.mission }); if (r && r.ok) { SFX.chargeFull && SFX.chargeFull(); toast(`星章 +${r.star}`); render(); } return; }
+if (d.star) {
+if (d.star === 'opcov') { opCovPick(); return; }
+const r = await act('star', { id: d.star });
+if (r && r.ok) { if (r.item) reveal(r.item); else toast('兑换成功'); render(); }
+return;
+}
+if (d.store) { const g = C.STORE.find(x => x.id === d.store); confirmBox('确认购买', `${g.name}，花 ${g.cost[0] === 'jade' ? jadeC(g.cost[1]) : ink(g.cost[1])}。`, '购买', async () => { const r = await act('store', { id: g.id }); if (r && r.ok) { SFX.wood && SFX.wood(); toast('买好了'); render(); } }); return; }
+if (d.topup !== undefined) { topup(+d.topup); return; }
+if (b.id === 'arGift') { const r = await act('gift', {}); if (r && r.ok) { SFX.gong && SFX.gong(); toast('新手礼：初刃武器箱 +1，钥匙 +1'); render(); } return; }
+if (b.id === 'arTradeGo') { tradeGo(); return; }
+if (b.id === 'arTradeClr') { TR.sel = []; render(); return; }
+if (b.id === 'arSupGo') { const r = await act('supply', { picks: SUP.pick }); if (r && r.ok) { SUP.pick = []; SFX.gong && SFX.gong(); const it = r.got.find(x => x.t === 'item'); if (it) reveal(it.item); else toast('补给到手'); render(); } return; }
+if (b.id === 'arCodeGo') { redeem(); return; }
+if (b.id === 'arAgeRe') { ageAsk(); return; }
+});
+}
+async function redeem() {
+const code = $id('arCode') ? $id('arCode').value.trim() : ''; if (!code) return;
+const r = await act('redeem', { code });
+if (r && r.ok) { SFX.gong && SFX.gong(); toast(`兑换成功：玉珏 +${r.jade}`); render(); }
+}
+function tradeGo() {
+const s = ST, chk = C.tradeCheck(s, TR.sel); if (!chk.ok) { msg(chk.err); return; }
+confirmBox('签订汰换合同', `这 ${TR.sel.length} 件${C.TIER[chk.tier].n}饰品会被收走，换 1 件${C.TIER[chk.up].n}。确定吗？`, '签订', async () => {
+const r = await act('trade', { ids: TR.sel });
+if (r && r.ok) { TR.sel = []; reveal(r.item); render(); }
+});
+}
+let ECON_INFO = null, POLL = 0;
+async function openArmory(tab) {
+if (tab) TAB = tab;
+ensurePortraits();
+render();
+await connect(false);
+if (MODE === 'server') { try { const out = await ECON('sync', {}); ECON_INFO = out.info || ECON_INFO; apply(out); } catch (e) {} }
+else if (MODE === 'local' && ST) { const env = envBase(), sold = C.settle(ST, env); if (sold.length) apply({ state: ST, ink: env.ink, sold }); }
+render();
+clearInterval(POLL);
+POLL = setInterval(() => { if (!$id('armory').classList.contains('on')) { clearInterval(POLL); return; } if (!BUSY && !REEL.on) act('sync', {}, { bg: true }).then(() => { if (!BUSY && !REEL.on && $id('arModal').hidden && $id('arIns').hidden) render(); }); }, 60000);
+}
+window.openArmory = openArmory;
+bind();
+document.addEventListener('keydown', e => {   // Esc 关掉弹窗 / 检视
+if (e.key !== 'Escape' || !$id('armory').classList.contains('on')) return;
+if (!$id('arModal').hidden) { if (!REEL.on) closeModal(); }
+else if (INS) closeIns();
+});
+demoLoop($id('arInsCv'), () => INS ? CHARS.findIndex(c => c.id === C.charOf(INS.it.k)) : -1, () => !$id('arIns').hidden && !!INS, () => INS ? INS.it.k : '', () => null);
+(function insWear() {   // 舞台上那位侠客的磨损跟着正在检视的这一件
+if (!$id('armory').classList.contains('on')) {   // 离开武库就收起检视和弹窗（开箱滚轮转完再收）
+if (INS) closeIns();
+if (!REEL.on && !$id('arModal').hidden) closeModal();
+}
+const cv = $id('arInsCv'), p = cv && cv._pup;
+if (p && INS) { const sig = `${INS.it.i}|${INS.it.k}|${INS.it.f}|${INS.it.p}`; if (p._ar !== sig) { FORCE = { k: INS.it.k, f: INS.it.f, p: INS.it.p }; try { p.look = skinLook(p.chIdx, p.skin); } finally { FORCE = null; } p._ar = sig; } }
+requestAnimationFrame(insWear);
+})();
+let CAP_TOAST = 0;
+if (CS && CS.onLedger) CS.onLedger((L, fix, capped, owed) => {
+const before = Math.floor(PROF.ink || 0), v = LSYNC(L, before);
+if (v > before) GRANT(v - before);
+PROF.ink = v;
+if (fix) {
+const set = new Set(PROF.skins || []);
+for (const k of fix.skinsAdd || []) set.add(k);
+for (const k of fix.skinsDel || []) { set.delete(k); for (const [c, x] of Object.entries(PROF.equip || {})) if (x === k) delete PROF.equip[c]; }
+PROF.skins = Array.from(set);
+if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
+try { applySkins(); } catch (e) {}
+}
+if (capped > 0 && NOW() - CAP_TOAST > 10 * 60000) {   // 十分钟最多提醒一次
+CAP_TOAST = NOW();
+toast(owed > 0 ? `墨锭收入超过今天的额度，${capped} 先记着，之后补上` : `墨锭收入超过今天的额度，${capped} 没有计入`);   // 额度：每天 1500 + 每局对战 80
+}
+for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
+try { renderTopNav(); } catch (e) {}
+});
+const baseApply = applyProfile;
+applyProfile = function (p) {
+if (p && p !== PROF && typeof p === 'object') {
+const u = user(), uid = u ? String(u.uid || u.name || '') : '';
+if (uid !== UID || p.guest) { ST = null; MODE = 'none'; UID = uid; }
+if (!p.guest && !('armory' in p) && MODE !== 'server') loadLocal(undefined);
+}
+const r = baseApply.apply(this, arguments);
+refreshLooks(false);
+if (p && p !== PROF && !PROF.guest && cloudOn() && MODE !== 'server') connect(false).then(() => { if ($id('armory').classList.contains('on')) render(); });
+try { if (p && p !== PROF && $id('armory').classList.contains('on')) render(); } catch (e) {}
+return r;
+};
+window.applyProfile = applyProfile;
+const baseStartRound = startRound;
+startRound = function () {
+const r = baseStartRound.apply(this, arguments);
+try {
+const mode = M.mode;
+if (MODE === 'server' && C.MODES.includes(mode) && !M.watchAi && !(typeof isAiVsAi === 'function' && isAiVsAi()) && (!TK || NOW() - TK > 40 * 60000)) { TK = NOW(); ECON('matchStart', { mode }).catch(() => { TK = 0; }); }
+} catch (e) {}
+return r;
+};
+const baseTaskEnd = taskMatchEnd;
+taskMatchEnd = function (w) {
+const r = baseTaskEnd.apply(this, arguments);
+try { matchEnd(w); } catch (e) { console.warn('armory match end', e); }
+return r;
+};
+async function matchEnd(w) {
+const el = $id('endArm'); if (el) el.innerHTML = '';
+if (!live() || PROF.guest || OFFLINE_BUILD || REPLAY.on) return;
+if (!C.MODES.includes(M.mode) || M.watchAi || (typeof isAiVsAi === 'function' && isAiVsAi())) return;
+const me = typeof localTeam === 'function' ? localTeam() : 0, f = M.mode === 'net' ? [A, B][localIdx()] : A;
+const wins = M.wins || [0, 0], win = w >= 0 && w === me;
+const ctx = { mode: M.mode, level: M.level || '', char: f && f.ch ? f.ch.id : '', win, rounds: wins[me] || 0, flawless: win && !(wins[1 - me] || 0), combo: MSTAT.maxcombo || 0, ults: MSTAT.ults || 0 };
+TK = 0;
+const res = await act('matchEnd', { ctx }, { bg: true });
+if (!res || !res.ok) return;
+const notes = [];
+if (res.st) notes.push(`斩数 +${res.st.add}（共 ${res.st.total}）`);
+if (res.drop) notes.push(res.drop.t === 'case' ? `掉落：${C.COLS[res.drop.c].name}武器箱` : `<span style="color:rgb(${tc(res.drop.item.k)})">掉落：${escapeHTML(itemName(res.drop.item))}</span>`);
+if (ST.drop.g === C.SUPPLY_GAMES && !ST.drop.sup) notes.push('每周补给已解锁，去武库领');
+if (res.drop) { SFX.chargeFull && SFX.chargeFull(); }
+if (el && notes.length) el.innerHTML = notes.join(' · ');
+}
+const baseTopNav = renderTopNav;
+renderTopNav = function () {
+const r = baseTopNav.apply(this, arguments);
+try { const b = document.querySelector('#topNav [data-nav="armory"]'); if (b) b.classList.toggle('tn-dot', !!dots().any); } catch (e) {}
+return r;
+};
+refreshLooks(true);
+setInterval(() => {
+if (MODE !== 'local' || !ST) return;
+if (sigOf(ST) !== SIG) { strike('武库数据被篡改'); loadLocal(undefined); render(); }
+}, 1000);
+})();
+</script>
+<script>
 'use strict';
 const AC_CONTACT = '如有异议，请联系作者申请解封。';
 const AC_BAN_MS = 24 * 3600 * 1000, AC_JUMP = 5000, AC_WIN_MS = 10 * 60 * 1000, AC_WIN_MAX = 12000;
-const ACH = { base: null, gains: [], loadT: 0, sig: '', fns: null, hits: 0, hitSeq: -1, busy: false, rec: null, recKey: '', tick: 0, test: false };
+const ACH = { base: null, baseT: 0, gains: [], loadT: 0, sig: '', fns: null, hits: 0, hitSeq: -1, busy: false, rec: null, recKey: '', tick: 0, test: false };
+const AC_TAKE = window.CloudSave && CloudSave.inkGrantTake, AC_GET = window.CloudSave && CloudSave.acGet, AC_REPORT = window.CloudSave && CloudSave.acReport;
+const AC_REVERT = window.CloudSave && CloudSave.ledgerRevert, AC_BEFORE_SYNC = window.CloudSave && CloudSave.onBeforeSync;
 function acUser() { try { return (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null; } catch (e) { return null; } }
 function acExempt() { const u = acUser(); return !!(u && (u.isDevMaster || u.uid === 'dev_master' || String(u.name || '').toLowerCase() === 'dev')); }
 function acKey() { const u = acUser(); return 'renying-ac-' + (u && u.uid ? u.uid : 'device'); }
@@ -19991,19 +21753,17 @@ if (raw.h !== acHash(acPack(r))) { r.strikes = Math.max(r.strikes, 3); r.perm = 
 return r;
 }
 function acSaveLocal(r) { try { localStorage.setItem(acKey(), JSON.stringify({ d: JSON.parse(acPack(r)), h: acHash(acPack(r)) })); } catch (e) {} }
-function acCloudRef() {
-const u = acUser();
-if (!u || !u.isCloud || !window.CloudSave || !CloudSave.isCloudAvailable || !CloudSave.isCloudAvailable()) return null;
-try { return CloudSave.getDb().collection('sanctions').doc(u.uid); } catch (e) { return null; }
-}
+const acCloud = () => { const u = acUser(); return !!(u && u.isCloud && AC_GET); };
 async function acLoadCloud() {
-const ref = acCloudRef(); if (!ref) return null;
-try { const s = await ref.get(); return s.exists ? Object.assign(acBlank(), s.data()) : acBlank(); } catch (e) { return null; }
+if (!acCloud()) return null;
+try { const r = await AC_GET(); return r && r.rec ? Object.assign(acBlank(), r.rec) : null; } catch (e) { return null; }   // 老服务器没有这个接口：只看本机记录
 }
-async function acSaveCloud(r) {
-const ref = acCloudRef(); if (!ref) return;
-const u = acUser();
-try { await ref.set({ strikes: r.strikes, banUntil: r.banUntil, perm: r.perm, log: r.log.slice(-20), at: r.at, pardon: r.pardon || 0, name: String((u && u.name) || '').slice(0, 24) }); } catch (e) {}
+async function acSaveCloud(r, reason) {
+if (!acCloud() || !AC_REPORT) return;
+try {
+const res = await AC_REPORT(reason);
+if (res && res.rec) { ACH.rec = acMerge(ACH.rec || r, res.rec); acSaveLocal(ACH.rec); }   // 服务器记的次数可能更多
+} catch (e) {}
 }
 function acMerge(a, b) {
 if (!b) return a;
@@ -20025,7 +21785,7 @@ const r = ACH.rec || acLoadLocal(), now = Date.now();
 r.strikes += 1; r.at = now; r.log = (r.log || []).concat({ r: reason, at: now }).slice(-20);
 if (r.strikes === 2) r.banUntil = Math.max(r.banUntil, now + AC_BAN_MS);
 if (r.strikes >= 3) r.perm = true;
-ACH.rec = r; acSaveLocal(r); acSaveCloud(r);
+ACH.rec = r; acSaveLocal(r); acSaveCloud(r, reason);
 if (typeof M !== 'undefined' && M.phase && M.phase !== 'end' && typeof backToMenu === 'function' && typeof showScreen === 'function' && !$id('menu').classList.contains('on')) {
 try { paused = false; backToMenu(); } catch (e) {}   // 正在打的这局作废，不发奖励
 }
@@ -20061,14 +21821,18 @@ window.addEventListener('keydown', e => { if (ACH.rec && acBanned(ACH.rec) && !a
 const acLoading = () => Date.now() < ACH.loadT;
 function acInkTick() {
 if (typeof PROF === 'undefined') return;
-const ink = +PROF.ink || 0, now = Date.now();
+const ink = +PROF.ink || 0, now = Date.now(), since = ACH.baseT;
+ACH.baseT = now;
 if (ACH.base === null || acLoading() || acExempt()) { ACH.base = ink; return; }
-const d = ink - ACH.base;
+let d = ink - ACH.base;
+if (d <= 0) { ACH.base = ink; return; }
+if (typeof AC_TAKE === 'function') d -= AC_TAKE(d);   // 服务器确认的、武库结算的入账：对得上的部分不算
 if (d <= 0) { ACH.base = ink; return; }
 ACH.gains = ACH.gains.filter(g => now - g[0] < AC_WIN_MS);
 const total = ACH.gains.reduce((s, g) => s + g[1], 0) + d;
 if (d > AC_JUMP || total > AC_WIN_MAX) {
-const back = ACH.base;
+let back = ink - d;
+if (typeof AC_REVERT === 'function') { const v = AC_REVERT(d, since - 50); if (v !== null) back = v; }
 PROF.ink = back; try { saveProfile(); } catch (e) {}
 acStrike(d > AC_JUMP ? `墨锭一下子多了 ${Math.round(d)}` : `10 分钟内墨锭异常增加 ${Math.round(total)}`);
 return;
@@ -20137,6 +21901,7 @@ if (s && ACH.sig && s !== ACH.sig) { ACH.sig = s; ACH.reload = true; acStrike('�
 }
 function acStart() {
 acHookLoads(); acHookHits();
+if (typeof AC_BEFORE_SYNC === 'function') AC_BEFORE_SYNC(acInkTick);   // 存档上传前先对一遍墨锭
 acRefresh();
 setInterval(() => {
 ACH.tick++;
