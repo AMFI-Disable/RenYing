@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { mkdirSync, readFileSync, openSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
+import { gameSource } from './ai-code.mjs';
 
 console.log('===== RenYing Combat Mechanics & AI Capabilities Suite =====\n');
 
@@ -115,7 +116,7 @@ async function initRunner() {
   // Fast In-Process Sandbox Fallback
   console.log('[Runner] Executing in high-speed in-process sandbox.');
   const netCode = readFileSync('src/net-p2p.js', 'utf8');
-  const gameCode = readFileSync('src/game.js', 'utf8');
+  const gameCode = gameSource();
   const dummyEl = {
     getContext: () => ({
       fillRect: () => {}, clearRect: () => {}, beginPath: () => {}, arc: () => {}, fill: () => {},
@@ -446,12 +447,12 @@ const testSuite = [
       A.face = 1;
       B.x = cx + 500;
       D.x = cx + 600;
-      A.ctrl.queue = [];
-      A.ctrl.next = clock - 0.1;
+      A.ctrl.brain.queue.length = 0;
+      A.ctrl.brain.next = clock - 0.1;
       A.ctrl.think(A, foeOf(A));
 
-      if (A.ctrl.dir !== 1) {
-        return { pass: false, error: 'Injured AI failed to navigate towards LingDan relic at altar (dir=' + A.ctrl.dir + ')' };
+      if (A.ctrl.brain.dir !== 1) {
+        return { pass: false, error: 'Injured AI failed to navigate towards LingDan relic at altar (dir=' + A.ctrl.brain.dir + ')' };
       }
 
       // Scenario 2: Opponent approaches altar -> AI positions to contest and block
@@ -462,11 +463,11 @@ const testSuite = [
       B.x = cx - 180;
       B.face = 1;
       A.face = -1;
-      A.ctrl.queue = [];
-      A.ctrl.next = clock - 0.1;
+      A.ctrl.brain.queue.length = 0;
+      A.ctrl.brain.next = clock - 0.1;
       A.ctrl.think(A, B);
 
-      if (A.ctrl.dir !== -1 && !A.ctrl.queue.length) {
+      if (A.ctrl.brain.dir !== -1 && !A.ctrl.brain.queue.length) {
         return { pass: false, error: 'AI failed to intercept or block opponent approaching altar relic' };
       }
 
@@ -521,24 +522,15 @@ const testSuite = [
     })()`
   },
   {
-    name: '2v2 Co-op: 31-dim state observation vector with ally awareness & altar distance',
+    name: '2v2 AI: every fighter is driven by the AI brain and the fight goes on',
     fn: `(() => {
       startWatch2v2([0, 0, 2, 1, 1, 3]);
-      M.phase = 'fight';
-      const obs = extractAIObs(A, B);
-      if (!obs || obs.length !== 31) {
-        return { pass: false, error: 'Expected 31-dim observation in 2v2, got: ' + (obs ? obs.length : 0) };
-      }
-      // Check feature 25 (ally relative dx) and feature 30 (altar distance)
-      const expectedAllyDx = (C.x - A.x) / STAGE_W;
-      if (Math.abs(obs[25] - expectedAllyDx) > 0.01) {
-        return { pass: false, error: 'Ally dx observation mismatch: ' + obs[25] + ' vs ' + expectedAllyDx };
-      }
-      const expectedAltar = (STAGE_W / 2 - A.x) / STAGE_W;
-      if (Math.abs(obs[30] - expectedAltar) > 0.01) {
-        return { pass: false, error: 'Altar distance observation mismatch: ' + obs[30] + ' vs ' + expectedAltar };
-      }
+      for (const f of [A, B, C, D]) if (!(f.ctrl && f.ctrl.brain instanceof AIBrain)) return { pass: false, error: 'fighter without AIBrain' };
+      const hp0 = A.hp + B.hp + C.hp + D.hp;
+      for (let i = 0; i < 120 * 20; i++) step();
+      const hp1 = A.hp + B.hp + C.hp + D.hp;
       toMenu();
+      if (!(hp1 < hp0)) return { pass: false, error: 'no damage dealt in 20 s of 2v2' };
       return { pass: true, error: null };
     })()`
   },

@@ -272,7 +272,8 @@ const CHARS = [
     ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   { id: 'tieshan', name: '铁山', role: '玄铁重甲', diff: 1, escCD: 8.5, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
     passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血深厚（530），体量威严（1.35）。重斩与蓄力斩自带霸体减伤20%，巨刃沉身格挡稳健（115架势/8%微伤），刚猛沉稳。',
-    stat: { hp: 530, walk: 0.82, speed: 1.25, dmg: 0.96, reach: 1.08, swing: 1.25, jump: 0.9, weight: 1.32, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
+    stat: { hp: 530, walk: 0.82, speed: 1.15, dmg: 0.96, reach: 1.08, swing: 1.15, jump: 0.9, weight: 1.32, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
+    moveMods: { l1: { suAdd: 0.1 } },   // 巨刃第一刀先举起、顿 0.1 秒再砍下来
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
   { id: 'lingshuang', name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.0, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
@@ -351,6 +352,7 @@ function buildMoves(ch) {
     if (wMods[k]) m.p = [...wMods[k]];
     Object.assign(m, (ch.moveMods || {})[k]);
     m.su *= st.speed; m.rc *= st.speed; m.ac *= st.swing || Math.sqrt(st.speed);
+    if (m.suAdd) m.su += m.suAdd;   // 额外的起手僵直（不随出手速度缩放）
     m.dmg = m.dmgAbs !== undefined ? m.dmgAbs : Math.round(m.dmg * st.dmg * 10) / 10;
     const reach = st.reach * (m.reachMul || 1);
     m.box[2] = m.box[0] + (m.box[2] - m.box[0]) * reach;
@@ -612,8 +614,8 @@ const SKILLS = {
         f.spinN++; f.hitDone = false; SFX.swing();
         const last = f.spinN === 8;
         const foeInAir = !foe.onGround() || foe.y < -2;
-        strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 38, kb: foeInAir ? [420, -640] : [440, 0], stun: 0.50, hs: 0.12, launch: foeInAir, big: true }
-                            : { box: [20, -126, 142, -14], dmg: 12, kb: [40, 0], stun: 0.18, hs: 0.03, launch: false, noScale: true });
+        strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 48, kb: foeInAir ? [420, -640] : [440, 0], stun: 0.50, hs: 0.12, launch: foeInAir, big: true }
+                            : { box: [20, -126, 142, -14], dmg: 15, kb: [40, 0], stun: 0.18, hs: 0.03, launch: false, noScale: true });
       }
       if (f.t >= 2) toNeutral(f);
     },
@@ -795,7 +797,7 @@ const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, b
 const ULTS = {
   crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 2.5, fin: 85, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
   shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 2.1, fin: 80, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
-  avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！直击命中敌方触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩（连放的第二次只回 50%），并重置震地与铁壁冲冷却！',
+  avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
     begin(f, foe) {
       f.sp = 'leap'; f.vy = -1050; f.y = -1;
       const c = f.ctrl, dir = (c && c.held && c.held.right ? 1 : 0) - (c && c.held && c.held.left ? 1 : 0);
@@ -830,20 +832,27 @@ const ULTS = {
           const foeIsFlying = foe.flying || (foe.ch && foe.ch.id === 'yanling' && foe.y < -80);
           const foeIsDashUlt = foe.state === 'special' && ['dash', 'rush', 'sweep'].includes(foe.sp);
           const canCrushUlt = foe.state === 'special' && !foeIsFlying && !foeIsDashUlt;
-          if (Math.abs(foe.x - f.x) < 185 && foe.y > -80 && (foe.invul <= 0 || canCrushUlt) && !foeIsFlying && !foeIsDashUlt) {
+          const dx = Math.abs(foe.x - f.x), foeDown = foe.state === 'knockdown' || foe.state === 'getup';   // 倒在地上的人也砸得到
+          if (dx < 185 && foe.y > -80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
             const dir = foe.x >= f.x ? 1 : -1;
-            const isLeiMingUlt = foe.ch && foe.ch.id === 'leiming' && foe.state === 'special';
-            applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 1.3, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
-            foe.state = 'hitstun'; foe.stun = 1.3; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
-            if (!isLeiMingUlt && foe.state === 'special') {
-              foe.sp = null; // 打断地面常规绝技蓄势
+            // 正中（落点 92 像素以内、对手站着）才算打满；砸到边缘或砸倒地的人只回一半气量
+            const full = dx < 92.5 && !foeDown;
+            if (foeDown) {
+              applyHit(f, foe, { dmg: 185, kb: [0, 0], stun: 0, hs: 0.25, unblockable: true, ult: true, noScale: true, noStun: true, dir, big: true }, [foe.x, foe.y - 20]);   // 只掉血，人还躺着
+            } else {
+              const isLeiMingUlt = foe.ch && foe.ch.id === 'leiming' && foe.state === 'special';
+              applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 1.3, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
+              foe.state = 'hitstun'; foe.stun = 1.3; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
+              if (!isLeiMingUlt && foe.state === 'special') {
+                foe.sp = null; // 打断地面常规绝技蓄势
+              }
             }
-            const free = !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次只回 50%，免得无限连
+            const free = full && !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次、砸偏或砸倒地的人只回 50%
             f.meter = free ? 100 : Math.min(100, f.meter + 50); f.avaFree = free;
             f.skillCD = 0; f.skill2CD = 0;
             ring(f.x, f.y - 60, 220, '255,200,120', 0.6);
             addP({ type: 'text', text: free ? '⚡ 怒意回涌 · 再来一次' : '⚡ 怒意回涌 +50% 气量', x: f.x, y: f.y - 130, life: 1.2, max: 1.2, rgb: '255,200,100' });
-            addP({ type: 'text', text: '💫 震荡晕眩 · 破灭万法', x: foe.x, y: foe.y - 110, life: 1.3, max: 1.3, rgb: '255,220,120' });
+            if (!foeDown) addP({ type: 'text', text: '💫 震荡晕眩 · 破灭万法', x: foe.x, y: foe.y - 110, life: 1.3, max: 1.3, rgb: '255,220,120' });
             SFX.chargeFull();
           }
           // 地面碎裂：石块向两边飞溅
@@ -1810,13 +1819,7 @@ function setupNetMatch() {
 }
 
 // ======================= 电脑 AI =======================
-const LEVELS = {
-  easy:       { think: [0.35, 0.70], block: 0.15, aggr: 0.40, combo: 1, confirm: false, whiffPunish: false, meaty: false, baitBreak: false, heroMastery: false, adaptHabit: false, aimUlt: false },
-  normal:     { think: [0.18, 0.42], block: 0.40, aggr: 0.58, combo: 3, confirm: false, whiffPunish: false, meaty: false, baitBreak: false, heroMastery: false, adaptHabit: false, aimUlt: false },
-  hard:       { think: [0.08, 0.22], block: 0.72, aggr: 0.75, combo: 4, confirm: true,  whiffPunish: true,  meaty: false, baitBreak: false, heroMastery: true,  adaptHabit: false, aimUlt: true  },
-  impossible: { think: [0.012, 0.035], block: 0.99, aggr: 0.95, combo: 5, god: true, confirm: true, whiffPunish: true, meaty: true, baitBreak: true, heroMastery: true, adaptHabit: false, aimUlt: true },   // 绝顶：几乎零反应时间、必挡、被连必逃、起身压制與骗闪
-  god:        { think: [0.004, 0.014], block: 0.99, aggr: 0.98, combo: 6, god: true, neural: true, confirm: true, whiffPunish: true, meaty: true, baitBreak: true, heroMastery: true, adaptHabit: true, aimUlt: true }, // 天道：全英雄对抗深度强化神经网络决策、极致预判与精准破招
-};
+// 难度、打法和大脑都在 src/ai.js
 // 个性化电脑：以困难为基础，按你对它的输赢自动调强弱；禁你胜率最高的角色，用你最常用的角色
 const ADAPT = { s: 1, use: {}, win: {} };
 function adaptKey() { return 'renying-adapt' + (ACC && ACC.name ? '-' + ACC.name : ''); }
@@ -1824,20 +1827,7 @@ function adaptLoad() { try { Object.assign(ADAPT, { s: 1, use: {}, win: {} }, JS
 function adaptSave() { try { localStorage.setItem(adaptKey(), JSON.stringify(ADAPT)); } catch (e) {} }
 function adaptLevel() {
   const k = clamp(ADAPT.s, 0.55, 1.45);
-  LEVELS.adaptive = {
-    think: [0.08 / k, 0.22 / k],
-    block: Math.min(0.96, 0.72 * k),
-    aggr: Math.min(0.96, 0.75 * k),
-    combo: k > 1.1 ? 5 : 4,
-    confirm: k >= 0.85,
-    whiffPunish: k >= 0.95,
-    meaty: k >= 1.12,
-    baitBreak: k >= 1.18,
-    heroMastery: k >= 0.9,
-    adaptHabit: true,
-    aimUlt: k >= 0.9,
-    god: k >= 1.25
-  };
+  LEVELS.adaptive = aiBlendLevel(k);
   const el = document.getElementById('adaptLine');
   if (el) { const fav = adaptFav(); el.textContent = `宿敌：如今强度 ${Math.round(k * 100)}%${fav.best >= 0 ? `，必禁你的${CHARS[fav.best].name}` : ''}${fav.most >= 0 ? `，惯用你的${CHARS[fav.most].name}` : ''}`; }
 }
@@ -1857,14 +1847,6 @@ function adaptRecord(won) {   // 每场打完：记录你用的角色和输赢�
   if (M.level === 'adaptive') ADAPT.s = clamp(ADAPT.s + (won ? 0.07 : -0.07), 0.55, 1.45);
   adaptSave(); adaptLevel();
 }
-const AI_COMBOS = [
-  [['light', 0], ['light', 0.12], ['light', 0.24], ['light', 0.36], ['light', 0.48], ['light', 0.6], ['light', 0.72], ['light', 0.84], ['light', 0.96], ['light', 1.08]],
-  [['light', 0], ['light', 0.17], ['light', 0.34], ['light', 0.52], ['light', 0.72]],
-  [['light', 0], ['light', 0.17], ['light', 0.34]],
-  [['heavy', 0]],
-  [['light', 0], ['light', 0.17], ['heavy', 0.34]],
-  [['light', 0], ['light', 0.17], ['heavy', 0.34], ['jump', 0.62], ['light', 0.78], ['light', 0.96], ['heavy', 1.2]],
-];
 // 进阶技巧：每个角色独有的实战招式联动与进阶操作
 const ADV = {
   qingfeng: '疾风斩直击穿身得手后，立时重置剑气冷却，可瞬间接出弧月剑气连招。',
@@ -2270,408 +2252,11 @@ class DummyCtrl extends Ctrl {
 }
 const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 
-// 电脑什么时候放大招
-const ULT_AI = {
-  crescent: (m, f, d) => d < 330, shadows: (m, f, d) => d < 330, avalanche: (m, f, d) => d < 700 && f.onGround(),
-  phoenix: (m, f, d) => d < 230, timestop: (m, f, d) => d < 700, tornado: (m, f, d) => d < 650, thunder: () => true,
-  inkdragon: (m, f) => (m.fu || 0) >= 2 || m.hp < m.maxHp * 0.5 || f.hp < FU_BASE + FU_PER * (m.fu || 0), featherstorm: (m, f, d) => d < 500, guangling: (m, f, d) => d < 700, shanshui: () => true, eightimm: (m, f, d) => d < 300, skynet: (m, f, d) => d < 600, moonflow: (m, f, d) => d < 230 || m.hp < m.maxHp * 0.45,
-};
-// 技能之后顺手接的动作
-const SKILL_FOLLOW = { gale: [['light', 0.42], ['light', 0.6], ['light', 0.78]], blink: [['light', 0.32], ['light', 0.48], ['light', 0.64], ['heavy', 0.84]] };
-// 神经网络推理辅助函数（用于天道 God 难度模型，预分配缓冲区实现零 GC 推理）
-const AI_H1 = new Float32Array(64);
-const AI_H2 = new Float32Array(32);
-const AI_LOGITS = new Float32Array(10);
-const AI_PROBS = new Float32Array(10);
-const AI_OBS = new Float32Array(31);
-
-function aiPredictPolicy(heroId, obs) {
-  try {
-    let m = null;
-    if (M.mode === 'watch2v2' && typeof window !== 'undefined' && window.RENYING_2V2_MODEL && window.RENYING_2V2_MODEL.weights) {
-      m = window.RENYING_2V2_MODEL;
-    } else {
-      const models = typeof window !== 'undefined' ? window.RENYING_HERO_MODELS : null;
-      if (!models || !models[heroId]) return null;
-      m = models[heroId];
-    }
-    const { W1, b1, W2, b2, W3, b3 } = m.weights;
-    const n1 = b1.length, n2 = b2.length, n3 = b3.length, nIn = obs.length;
-    for (let j = 0; j < n1; j++) AI_H1[j] = b1[j];
-    for (let i = 0; i < nIn; i++) {
-      const xi = obs[i];
-      if (xi === 0) continue;
-      const wRow = W1[i];
-      if (!wRow) continue;
-      for (let j = 0; j < n1; j++) AI_H1[j] += xi * wRow[j];
-    }
-    for (let j = 0; j < n1; j++) if (AI_H1[j] < 0) AI_H1[j] = 0;
-
-    for (let j = 0; j < n2; j++) AI_H2[j] = b2[j];
-    for (let i = 0; i < n1; i++) {
-      const h1i = AI_H1[i];
-      if (h1i === 0) continue;
-      const wRow = W2[i];
-      for (let j = 0; j < n2; j++) AI_H2[j] += h1i * wRow[j];
-    }
-    for (let j = 0; j < n2; j++) if (AI_H2[j] < 0) AI_H2[j] = 0;
-
-    let maxL = -Infinity;
-    for (let j = 0; j < n3; j++) {
-      let sum = b3[j];
-      for (let i = 0; i < n2; i++) sum += AI_H2[i] * W3[i][j];
-      AI_LOGITS[j] = sum;
-      if (sum > maxL) maxL = sum;
-    }
-    // Low-temperature softmax (T = 0.25 -> invTemp = 4.0) sharpens optimal action selection in God Mode
-    let expSum = 0;
-    for (let j = 0; j < n3; j++) {
-      AI_PROBS[j] = Math.exp((AI_LOGITS[j] - maxL) * 4.0);
-      expSum += AI_PROBS[j];
-    }
-    const invSum = 1 / (expSum || 1);
-    for (let j = 0; j < n3; j++) AI_PROBS[j] *= invSum;
-    return AI_PROBS;
-  } catch (e) {
-    return null;
-  }
-}
-
-function extractAIObs(me, foe) {
-  AI_OBS[0] = (foe.x - me.x) / STAGE_W;
-  AI_OBS[1] = (foe.y - me.y) / 400;
-  AI_OBS[2] = Math.abs(foe.x - me.x) / STAGE_W;
-  AI_OBS[3] = me.hp / me.maxHp;
-  AI_OBS[4] = foe.hp / foe.maxHp;
-  AI_OBS[5] = (me.guard || 0) / (me.maxGuard || 100);
-  AI_OBS[6] = (foe.guard || 0) / (foe.maxGuard || 100);
-  AI_OBS[7] = (me.meter || 0) / 100;
-  AI_OBS[8] = (foe.meter || 0) / 100;
-  AI_OBS[9] = me.vy / 600;
-  AI_OBS[10] = foe.vy / 600;
-  AI_OBS[11] = me.face;
-  AI_OBS[12] = foe.face;
-  AI_OBS[13] = me.state === 'attack' ? 1 : 0;
-  AI_OBS[14] = me.state === 'block' || me.state === 'blockstun' ? 1 : 0;
-  AI_OBS[15] = me.state === 'hitstun' || me.state === 'launched' ? 1 : 0;
-  AI_OBS[16] = me.onGround() ? 0 : 1;
-  AI_OBS[17] = foe.state === 'attack' ? 1 : 0;
-  AI_OBS[18] = foe.state === 'block' || foe.state === 'blockstun' ? 1 : 0;
-  AI_OBS[19] = foe.state === 'hitstun' || foe.state === 'launched' ? 1 : 0;
-  AI_OBS[20] = foe.onGround() ? 0 : 1;
-  AI_OBS[21] = Math.min(1, (me.skillCD || 0) / 6);
-  AI_OBS[22] = Math.min(1, (me.skill2CD || 0) / 6);
-  AI_OBS[23] = Math.min(1, (me.breakCD || 0) / 10);
-  let projNear = 0;
-  for (let i = 0; i < projs.length; i++) {
-    const p = projs[i];
-    if ((p.owner % 2 !== me.idx % 2) && p.dmg > 0 && Math.abs(me.x - p.x) < 300) {
-      projNear = (p.x - me.x) / STAGE_W;
-      break;
-    }
-  }
-  AI_OBS[24] = projNear;
-
-  // 2v2 Co-op 31-dim features (features 25-30)
-  if (M.mode === 'watch2v2' && typeof ARENA2V2 !== 'undefined') {
-    const mate = (me.idx % 2 === 0) ? (me.idx === 0 ? C : A) : (me.idx === 1 ? D : B);
-    if (mate) {
-      AI_OBS[25] = (mate.x - me.x) / STAGE_W;
-      AI_OBS[26] = (mate.y - me.y) / 400;
-      AI_OBS[27] = mate.hp > 0 ? (mate.hp / mate.maxHp) : 0;
-      AI_OBS[28] = (mate.state === 'hitstun' || mate.state === 'launched') ? 1 : 0;
-      AI_OBS[29] = (mate.target && me.target && mate.target === me.target) ? 1 : 0;
-    } else {
-      AI_OBS[25] = 0; AI_OBS[26] = 0; AI_OBS[27] = 0; AI_OBS[28] = 0; AI_OBS[29] = 0;
-    }
-    AI_OBS[30] = (STAGE_W / 2 - me.x) / STAGE_W;
-    return AI_OBS;
-  }
-
-  return AI_OBS.subarray(0, 25);
-}
-
+// 电脑：按键都由 src/ai.js 里的 AIBrain 决定，这里只是接到操作上
 class AICtrl extends Ctrl {
-  constructor(level) {
-    super();
-    this.level = level;
-    this.L = LEVELS[level] || LEVELS.normal;
-    this.queue = [];
-    this.next = 0;
-    this.holdDown = 0;
-    this.dir = 0;
-    this.reacted = false;
-    this.projReact = false;
-    this.lastOppId = null;
-    this.lastMeId = null;
-    this.tactic = null;
-  }
-  updateTactic(me, foe) {
-    if (!me || !foe || !me.ch || !foe.ch) return;
-    this.lastOppId = foe.ch.id;
-    this.lastMeId = me.ch.id;
-    if (me.state !== 'attack') {
-      this.queue = [];
-      this.next = 0;
-    }
-    this.holdDown = 0;
-    this.reacted = false;
-    this.projReact = false;
-
-    const meCh = me.ch, foeCh = foe.ch;
-    const isAdvantage = (meCh.beats || []).includes(foeCh.id);
-    const isDisadvantage = (meCh.weakTo || []).includes(foeCh.id) || (foeCh.beats || []).includes(meCh.id);
-    const foeIsRanged = (foeCh.stat && foeCh.stat.reach && foeCh.stat.reach > 1.1) || ['liuyun', 'moyu'].includes(foeCh.id);
-    const foeIsHeavy = (foeCh.stat && foeCh.stat.weight && foeCh.stat.weight > 1.15) || ['tieshan', 'leiming', 'gouchen'].includes(foeCh.id);
-    const foeIsFast = (foeCh.stat && foeCh.stat.speed && foeCh.stat.speed > 0.9) || ['feiying', 'yanling'].includes(foeCh.id);
-    const foeHasParry = foeCh.skill === 'mirror';
-    const foeHasSpear = foeCh.passive === 'tip';
-
-    const baseRange = meCh.ai && meCh.ai.range ? [...meCh.ai.range] : [60, 160];
-    let rMin = baseRange[0], rMax = baseRange[1];
-
-    if (foeIsRanged) {
-      rMin = Math.max(40, rMin * 0.7);
-      rMax = Math.max(rMin + 45, rMax * 0.75);
-    } else if (foeIsHeavy) {
-      rMin = Math.min(rMin * 1.25, 130);
-      rMax = Math.max(rMax * 1.15, 200);
-    } else if (foeHasSpear) {
-      if (baseRange[0] < 120) rMax = 135;
-      else rMin = 245;
-    }
-
-    this.tactic = {
-      isAdvantage,
-      isDisadvantage,
-      foeIsRanged,
-      foeIsHeavy,
-      foeIsFast,
-      foeHasParry,
-      foeHasSpear,
-      range: [rMin, rMax],
-      aggrMul: isAdvantage ? 1.25 : (isDisadvantage ? 0.85 : 1.0),
-      blockMul: isDisadvantage ? 1.2 : (isAdvantage ? 0.9 : 1.0)
-    };
-  }
-  plan(list) { this.queue = list.map(([a, dt]) => ({ at: clock + dt, a })); }
-  // 困在蓬莱境里：看不见自己和对手在哪，不看对手出招也不看暗器，只能凭感觉乱走、乱挡、乱打
-  blindThink(me) {
-    if ((me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < this.L.block * 0.012) this.press('dash');   // 挨打是摸得出来的
-    while (this.queue.length && this.queue[0].at <= clock) { const a = this.queue.shift().a; if (a !== 'chargeStart' && a !== 'chargeEnd') this.press(a); }
-    this.holdDown = Math.max(0, this.holdDown - STEP);
-    if (clock >= this.next && !this.queue.length && this.holdDown <= 0) {
-      this.next = clock + rand(0.3, 0.7);
-      const r = Math.random();
-      this.dir = Math.random() < 0.5 ? -1 : 1;
-      if (r < 0.3) this.plan([['light', 0], ['light', 0.2]]);
-      else if (r < 0.5) { this.dir = 0; this.holdDown = rand(0.4, 0.9); }
-      else if (r < 0.58) this.plan([['jump', 0]]);
-      else if (r < 0.64 && me.skillCD <= 0) this.plan([['skill', 0]]);
-      else if (r < 0.75) this.dir = 0;
-    }
-    this.held.down = this.holdDown > 0; this.held.atk = false; this.held.jump = false;
-    this.held.left = this.dir < 0; this.held.right = this.dir > 0;
-  }
-  think(me, foe) {
-    if (me.veilT > 0) return this.blindThink(me);
-    if (!this.tactic || this.lastOppId !== foe.ch.id || this.lastMeId !== me.ch.id) {
-      this.updateTactic(me, foe);
-    }
-    const tactic = this.tactic;
-    const L = this.L, d = Math.abs(foe.x - me.x), to = Math.sign(foe.x - me.x) || 1;
-    const ch = me.ch, [rMin, rMax] = tactic.range, S = SKILLS[ch.skill];
-    const aggr = L.aggr * tactic.aggrMul, blockRate = Math.min(0.99, L.block * tactic.blockMul);
-    if ((me.state === 'launched' || me.state === 'knockdown' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < blockRate * 0.018) this.press('dash');
-    if (L.god && (me.state === 'hitstun' || me.state === 'launched') && me.comboHits >= 2 && me.breakCD <= 0) this.press('dash');   // 绝顶/天道：被连两下就闪
-    while (this.queue.length && this.queue[0].at <= clock) {
-      const a = this.queue.shift().a;
-      if (a === 'chargeStart') { this.held.atk = true; this.atkT = clock - CHARGE_START; }
-      else if (a === 'chargeEnd') this.held.atk = false;
-      else if (a === 'jump' && me.ch.fly) { this.press('jump'); this.flyUntil = clock + rand(0.5, 1.4); }
-      else this.press(a);
-    }
-    if (!this.queue.length) this.held.atk = false;
-    this.holdDown = Math.max(0, this.holdDown - STEP);
-    const free = me.onGround() && ['idle', 'walk', 'block'].includes(me.state);
-    // 看到对手出招：防御，月华会用月镜
-    const isFoeHeavy = foe.state === 'attack' && foe.move && (foe.move.unblockable || foe.move.knock || foe.moveName === 'cs1' || foe.moveName === 'cs2' || (foe.move.guardBreakMul && foe.move.guardBreakMul > 1.2));
-    const threat = foe.state === 'attack' && foe.move && foe.t < foe.move.su + 0.04 && d < foe.move.box[2] + 70;
-    if (threat && !this.reacted) {
-      this.reacted = true;
-      if (free) {
-        if (isFoeHeavy && Math.random() < blockRate * 0.85) {
-          if (me.dashCD <= 0 && Math.random() < 0.6) { this.queue = []; this.dir = -to; this.press('dash'); }
-          else { this.queue = []; this.press('jump'); this.dir = -to; }
-        } else if (ch.skill === 'mirror' && me.skillCD <= 0 && Math.random() < blockRate * 0.9) { this.queue = []; this.press('skill'); }
-        else if (Math.random() < blockRate) { this.holdDown = 0.38; this.queue = []; this.dir = 0; }
-      }
-    }
-    if (foe.state !== 'attack') this.reacted = false;
-    // 看到敌方飞行道具：跳或挡；看到雷印就走开（同队队友暗器不避让）
-    const inc = projs.find(p => (p.owner % 2 !== me.idx % 2) && !p.fx && p.dmg > 0 && p.delay <= 0 && p.kind !== 'trap' && Math.sign(me.x - p.x) === Math.sign(p.vx) && Math.abs(me.x - p.x) < 280);
-    if (inc && !this.projReact) {
-      this.projReact = true;
-      if (free && Math.random() < blockRate) {
-        if (inc.unblockable || inc.groundOnly || Math.random() < 0.5) { this.queue = []; this.press('jump'); this.dir = to; }
-        else { this.holdDown = 0.35; this.queue = []; }
-      }
-    }
-    if (!inc) this.projReact = false;
-    const bolt = projs.find(p => p.kind === 'bolt' && (p.owner % 2 !== me.idx % 2) && p.delay > 0 && Math.abs(p.x - me.x) < 80);
-    if (bolt && Math.random() < blockRate * 0.2) { this.dir = me.x >= bolt.x ? 1 : -1; this.next = clock + 0.25; this.queue = []; }
-    const trap = projs.find(p => p.kind === 'trap' && (p.owner % 2 !== me.idx % 2) && Math.abs(p.x - me.x) < 110 && Math.sign(p.x - me.x) === this.dir);
-    if (trap && me.onGround() && Math.random() < blockRate * 0.15) this.press('jump');
-
-    if (clock >= this.next && !this.queue.length && this.holdDown <= 0) {
-      this.next = clock + rand(L.think[0], L.think[1]);
-      const r = Math.random();
-      this.dir = 0;
-      const atkRange = me.moves.l1.box[2] + 22;
-
-      // 2v2 专属战场大局观（争夺太阴灵丹/增益符、阻截对手抢点、利用灵泉调息）
-      if (M.mode === 'watch2v2' && typeof ARENA2V2 !== 'undefined') {
-        const cx = STAGE_W / 2;
-        if (ARENA2V2.orb && ARENA2V2.orb.active) {
-          const k = ARENA2V2.orb.kind; // 0: 破军神火, 1: 太阴灵丹, 2: 紫微星魄
-          const dAltar = Math.abs(me.x - cx);
-          const mate = (me.idx % 2 === 0) ? (me.idx === 0 ? C : A) : (me.idx === 1 ? D : B);
-          const activeFoes = foesOf(me).filter(ef => !ef.hidden && ef.hp > 0);
-          
-          let closestFoe = null, minFoeAltar = 9999;
-          for (const ef of activeFoes) {
-            const df = Math.abs(ef.x - cx);
-            if (df < minFoeAltar) { minFoeAltar = df; closestFoe = ef; }
-          }
-          
-          const wantLingDan = (k === 1) && (me.hp < me.maxHp * 0.75 || (mate && mate.hp <= 0));
-          const wantBuff = (k === 0 || k === 2) || wantLingDan;
-
-          // 1. 阻截/卡位策略：敌方英雄逼近祭坛企图夺取灵丹/增益
-          if (closestFoe && minFoeAltar < 280) {
-            const canIntercept = Math.abs(me.x - closestFoe.x) < atkRange + 90;
-            if (canIntercept && (dAltar <= minFoeAltar + 70)) {
-              this.dir = Math.sign(closestFoe.x - me.x) || to;
-              if (me.skillCD <= 0 && S.ai(me, closestFoe, Math.abs(closestFoe.x - me.x))) {
-                this.plan([['skill', 0], ...(SKILL_FOLLOW[ch.skill] || [])]);
-                return;
-              } else if (me.skill2CD <= 0 && SKILLS[ch.skill2].ai(me, closestFoe, Math.abs(closestFoe.x - me.x))) {
-                this.plan([['skill2', 0]]);
-                return;
-              } else if (Math.abs(closestFoe.x - me.x) <= atkRange) {
-                this.plan(AI_COMBOS[Math.min(L.combo, AI_COMBOS.length - 1)]);
-                return;
-              } else {
-                return;
-              }
-            }
-          }
-
-          // 2. 夺取策略：优先抢夺太阴灵丹回血或争夺强力增益
-          if (wantBuff && (dAltar < minFoeAltar + 140)) {
-            const mateRushing = mate && mate.hp > 0 && Math.abs(mate.x - cx) < dAltar && (k !== 1 || mate.hp < me.hp);
-            if (!mateRushing) {
-              if (dAltar < 48 && me.onGround()) {
-                this.dir = Math.sign(cx - me.x) || to;
-                this.plan([['jump', 0]]);
-                return;
-              } else {
-                this.dir = Math.sign(cx - me.x);
-                if (dAltar > 120 && me.dashCD <= 0 && Math.random() < 0.65) {
-                  this.press('dash');
-                  return;
-                }
-                return;
-              }
-            }
-          }
-        }
-
-        // 3. 御风灵泉调息策略：技能全在大冷却且临近灵泉时借风御空减CD
-        if (ARENA2V2.geysers && (me.skillCD > 2.2 || me.skill2CD > 2.2)) {
-          for (const g of ARENA2V2.geysers) {
-            if (g.cd <= 0 && Math.abs(me.x - g.x) < 180 && Math.abs(me.x - g.x) > 30) {
-              if (Math.random() < 0.35) {
-                this.dir = Math.sign(g.x - me.x);
-                return;
-              }
-            }
-          }
-        }
-      }
-
-      // 天道 (God) 难度：先调用离线全门派对抗训练的神经网络预测最优战术策略
-      let neuralAct = -1;
-      if (L.neural) {
-        const obs = extractAIObs(me, foe);
-        const probs = aiPredictPolicy(ch.id, obs);
-        if (probs) {
-          let pickR = Math.random(), acc = 0;
-          for (let pi = 0; pi < probs.length; pi++) {
-            acc += probs[pi];
-            if (pickR <= acc) { neuralAct = pi; break; }
-          }
-        }
-      }
-
-      // 0:idle, 1:left, 2:right, 3:down, 4:jump, 5:atk, 6:skill1, 7:skill2, 8:dash, 9:special
-      if (neuralAct === 9 && me.meter >= 100 && ULT_AI[ch.ult](me, foe, d)) {
-        this.plan([['special', 0]]);
-      } else if (neuralAct === 8 && me.dashCD <= 0 && d > 120) {
-        this.dir = to; this.press('dash');
-      } else if (neuralAct === 7 && me.skill2CD <= 0 && SKILLS[ch.skill2].ai(me, foe, d)) {
-        this.plan([['skill2', 0]]);
-      } else if (neuralAct === 6 && me.skillCD <= 0 && S.ai(me, foe, d)) {
-        this.plan([['skill', 0], ...(SKILL_FOLLOW[ch.skill] || [])]);
-      } else if (neuralAct === 5 && d <= atkRange + 30) {
-        this.plan(AI_COMBOS[Math.min(L.combo, AI_COMBOS.length - 1)]);
-      } else if (neuralAct === 4 && me.onGround()) {
-        this.dir = to; this.plan([['jump', 0], ['light', 0.22]]);
-      } else if (neuralAct === 3) {
-        this.holdDown = 0.35;
-      } else if (neuralAct === 1 || neuralAct === 2) {
-        this.dir = (neuralAct === 2 && to > 0) || (neuralAct === 1 && to < 0) ? to : -to;
-      } else if (foe.rooted && foe.state === 'hitstun') {
-        if (d < 300 && r < 0.6) this.plan([['chargeStart', 0], ['chargeEnd', 0.8], ['light', 0.96]]);
-        else this.dir = to;
-      }
-      else if ((foe.hookedT || 0) > 0 && foe.state === 'hitstun' && d <= atkRange + 30) this.plan(AI_COMBOS[Math.random() * Math.min(L.combo, AI_COMBOS.length) | 0]);
-      else if (foe.state === 'knockdown' || foe.state === 'getup') { this.dir = d > atkRange ? to : 0; }
-      else if (me.meter >= 100 && ULT_AI[ch.ult](me, foe, d) && r < 0.5) this.plan([['special', 0]]);
-      else if (me.skillCD <= 0 && S.ai(me, foe, d) && r < 0.4) this.plan([['skill', 0], ...(SKILL_FOLLOW[ch.skill] || [])]);
-      else if (me.skill2CD <= 0 && SKILLS[ch.skill2].ai(me, foe, d) && r < 0.62) this.plan([['skill2', 0]]);
-      else if (me.hp < me.maxHp * 0.3 && d < 150 && r < 0.2) { this.dir = -to; }
-      else if (d > rMax) { this.dir = to; if (r < 0.15) this.plan([['jump', 0]]); }
-      else if (d < rMin && rMin > 110) {           // 远程和长枪：太近了先还手或把人推开，再拉开距离
-        if (d <= atkRange && r < L.aggr * 0.6) this.plan(AI_COMBOS[Math.random() * Math.min(L.combo, AI_COMBOS.length) | 0]);
-        else if (me.skillCD <= 0 && S.ai(me, foe, d) && r < 0.6) this.plan([['skill', 0]]);
-        else if (r < 0.75) this.dir = -to;
-        else if (r < 0.88) { this.dir = -to; this.plan([['jump', 0], ['jump', 0.22]]); }
-        else this.holdDown = 0.3;
-      } else if (d <= atkRange) {
-        if (r < L.aggr) this.plan(AI_COMBOS[Math.random() * Math.min(L.combo, AI_COMBOS.length) | 0]);
-        else if (r < L.aggr + 0.18) this.holdDown = 0.4;
-        else this.dir = -to;
-      } else {
-        if (r < L.aggr * 0.45) this.dir = to;
-        else if (r < L.aggr * 0.7) { this.dir = to; this.plan([['jump', 0], ['light', 0.3]]); }
-        else if (r < L.aggr) { this.dir = to; this.plan([['light', 0.2]]); }
-        else if (r < L.aggr + 0.1) { const r2 = rand(0.35, 1.0); this.plan([['chargeStart', 0], ['chargeEnd', r2], ['light', r2 + 0.16]]); }
-        else if (r < 0.85) this.dir = -to;
-      }
-    }
-    // 往后退却快撞墙了：跳过对手头顶
-    if (this.dir === -to && ((this.dir < 0 && me.x < WALL + 130) || (this.dir > 0 && me.x > STAGE_W - WALL - 130))) {
-      this.dir = to; if (me.onGround() && !this.queue.length) this.plan([['jump', 0], ['jump', 0.25]]);
-    }
-    if (me.state === 'special' && me.ch.ult === 'avalanche') {
-      this.dir = Math.abs(me.x - foe.x) > 40 ? to : 0;
-      if (Math.abs(me.x - foe.x) < 80 && me.t > 0.2) this.holdDown = 0.3;
-    }
-    this.held.down = this.holdDown > 0;
-    this.held.jump = !!(me.ch.fly && clock < (this.flyUntil || 0));
-    this.held.left = this.dir < 0; this.held.right = this.dir > 0;
-  }
+  constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
+  updateTactic() { this.brain.newRound(); }
+  think(me, foe) { this.brain.think(me, foe); }
 }
 
 // ======================= 角色对象 =======================
@@ -2956,9 +2541,9 @@ function startRound() {
   }
   netEmit({ e: 'round', r: M.round, w: [...M.wins], ch: [A.chIdx, B.chIdx] });
 }
-// 回合规则：50 秒内击倒对手才算赢；到时没人倒下就进 15 秒加时，加时里所有伤害 ×2；加时也结束时血量比例低的败北。
-// 1v1 每回合双方满血重来；三人接力赛里守擂的人带着剩下的血量 +80 迎战下一位（不超过上限）
-const ROUND_TIME = 50, OT_TIME = 15, OT_DMG = 2, CARRY_HEAL = 80;
+// 回合规则：50 秒内击倒对手才算赢；到时没人倒下就进 20 秒加时，加时里所有伤害 ×2；加时也结束时血量比例低的败北。
+// 回合结束后活下来的人带着剩下的血量 +80 进下一回合（不超过上限），倒下的人满血再来；三人接力赛里守擂的人同样带血迎战下一位
+const ROUND_TIME = 50, OT_TIME = 20, OT_DMG = 2, CARRY_HEAL = 80;
 const PENGLAI_T = 2;   // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
 function timeDeath(winner, text) {
   M.phase = 'ko'; M.t = 0; M.koWinner = winner;
@@ -3220,7 +2805,8 @@ function endRound() {
     return;
   }
   M.round++;
-  M.carry = null;   // 1v1 每回合双方都满血重来（只有三人接力赛的守擂者带血）
+  M.carry = [null, null];   // 活下来的人继承剩余血量 +CARRY_HEAL，倒下的人满血（2v2 每回合都满血重来）
+  if (!is2v2()) [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
   startRound();
 }
 
@@ -9016,36 +8602,36 @@ const AI_PROFILES = {
     name: '入门',
     badge: '初学练手',
     badgeCol: '#46d3ea',
-    desc: '电脑出招反应较慢（0.35~0.7s），极少进行格挡招架（15%），出招以单发轻击为主。适合新手熟悉移动、按键手感与基础技能命中。',
-    traits: ['出招前摇大', '极少格挡 (15%)', '低反击欲望']
+    desc: '反应很慢（0.42~0.7 秒），很少格挡（15%），一套最多打 2 下，技能常常乱放，三成动作会失误。适合熟悉移动、按键手感和技能命中。',
+    traits: ['反应 0.4 秒以上', '很少格挡 (15%)', '2 连段']
   },
   normal: {
     name: '寻常',
     badge: '标准对练',
     badgeCol: '#2bd49a',
-    desc: '见招拆招，具备基础格挡意识（40%），会主动施展 3 连招。攻守相对平衡，适合检验常规实战走位与破招时机。',
-    traits: ['标准反应 (0.3s)', '适度格挡 (40%)', '3连段打法']
+    desc: '反应 0.26~0.42 秒，会格挡（40%）、偶尔确反，能打 3 连段、偶尔取消接技能，被连多了会腾空闪。适合练常规走位和破招时机。',
+    traits: ['反应约 0.3 秒', '格挡 40%', '3 连段']
   },
   hard: {
     name: '劲敌',
     badge: '凌厉反击',
     badgeCol: '#e9c46a',
-    desc: '身手敏捷（反应 0.08~0.22s），频繁格挡（72%）与主动抢攻，能熟练打出 4 连招与压制追击，稍有破绽即遭重创！',
-    traits: ['敏锐反击', '高频格挡 (72%)', '4连段压制']
+    desc: '反应 0.15~0.25 秒，格挡 68% 并偶尔精准招架，挡住就确反，5 连段接技能，会压起身、偶尔骗闪，血量领先会拉开距离，并按双方角色调整站位。',
+    traits: ['挡后确反', '压起身', '按角色针对']
   },
   impossible: {
     name: '绝顶',
     badge: '极境宗师',
     badgeCol: '#ff6b6b',
-    desc: '微秒级极限神经反射（12~35ms），近乎完美格挡（99%），被连击时瞬间受身脱离，神级预判与无限绝杀，挑战操作天花板！',
-    traits: ['微秒反应 (12ms)', '完美格挡 (99%)', '受身必闪']
+    desc: '反应 0.08~0.13 秒，格挡 88%、四成精准招架，记住你被连几下会闪并停手骗闪，算好起身时机压起身，用自我对弈训练出的角色打法。本难度电脑多 35% 血。',
+    traits: ['骗闪', '读你的起身习惯', '训练出的角色打法']
   },
   god: {
     name: '天道',
-    badge: '天道神境 · 神经网络',
+    badge: '天道神境 · 自我对弈',
     badgeCol: '#d946ef',
-    desc: '基于全角色对抗神经网络训练！历经九门派各克制流派（包括同门相残）深度学习策略矩阵，极致读指令级预判、技能CD算计与针对性破招压制！',
-    traits: ['神经网络策略', '全门派专项克制', '极限预判破防']
+    desc: '反应只有 0.025~0.05 秒，几乎每招都防、九成精准招架，蓄力斩没蓄满就打断，躲大招、骗闪、压起身、针对角色特性全开；每个角色的打法都是 AI 和 AI 自我对弈进化出来的。',
+    traits: ['自我对弈训练', '九成精准招架', '骗闪与压起身']
   }
 };
 
@@ -9402,7 +8988,7 @@ const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 2
 const SHORT = {
   疾风斩: ['6', '突进穿身'], 影遁: ['3', '瞬移身后 · 下一击 ×1.5'], 震地: ['9', '双向地波 · 掀飞'], 回马枪: ['9', '后跃回刺 · 挑飞'],
   风刃: ['7×2', '上下两道风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
-  剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['4×8', '身前旋转 2 秒'], 开扇: ['2×5', '向前疾冲 · 撒爆米花半秒后炸'],
+  剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['2×5', '向前疾冲 · 撒爆米花半秒后炸'],
   雷踏: ['7', '前方雷柱'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
   残月: ['29', '突进乱斩 · 终结回气重置'], 千影: ['31', '九影乱斩 · 绝杀分身重置'], 山崩: ['28', '砸地晕眩 · 直击回半气重置'], 刹那: ['12–22', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
   龙卷: ['≤32', '龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 符阵: ['随符数', '宣纸全图 · 按符数爆伤'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
@@ -9428,7 +9014,7 @@ const ADV_SHORT = {
 const HERO_METER_EXPLAIN = {
   qingfeng: '【聚气流转 · 极速充能】天生剑意通明，命中与受击攒气速度常驻 +8%（meterMul 1.08）。绝技「残月」终结斩落额外回涌 20% 气量。',
   feiying: '【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。',
-  tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」直击命中更是气量回满，可以立刻再砸一次！',
+  tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」正中命中更是气量回满，可以立刻再砸一次（砸偏或砸倒地的对手只回一半）！',
   lingshuang: '【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。',
   liuyun: '【御风牵制 · 风暴蓄势】远距离双风刃与开扇爆米花安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。',
   leiming: '【狂雷六连 · 雷帝灌顶】六连重拳记记沉猛令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！',
@@ -9548,7 +9134,7 @@ const HERO_HIT_DETAILS = {
     air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '7 / 9', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
     skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.85s', badgeCls: 'badge-stun', dmg: '8 + 10', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
     ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '14', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
-    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '28 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，直击晕眩1.3s并回半气重置CD。' },
+    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '28 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '7.0s', desc: '玄铁盾身强解受控，冷却极快（7秒）。' }
   },
   feiying: {
@@ -9583,7 +9169,7 @@ const HERO_HIT_DETAILS = {
     charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '11 / 19', cd: '', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
     air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中点枪突刺，下压枪尾横扫落地。' },
     skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.85s', badgeCls: 'badge-stun', dmg: '10', cd: '6s', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
-    ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '3.5×7+10', cd: '6s', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
+    ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '15×7+48', cd: '6s', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
     ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '12–22', cd: '气满', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
   },
@@ -10237,12 +9823,12 @@ function renderCodex() {
     cv2.style.boxShadow = `0 16px 48px ${col.replace('rgb', 'rgba').replace(')', ',0.35)')}`;
     cv2.style.borderColor = col;
   }
-  const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || PROF.owned.includes(c.id), free = (PROF.rotation || []).includes(c.id);
+  const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
   const skMeta = skin && SKINS[skin];
   const skRarCol = skMeta ? (skMeta.rarity === 'legend' ? '#f5ca5f' : '#a8d5ff') : col;
   const skRarName = skMeta ? (skMeta.rarity === 'legend' ? '传说皮肤' : '稀有皮肤') : '';
   const skPill = skMeta ? `<span class="pill sk-pill" style="color:${skRarCol};border-color:${skRarCol};background:rgba(${skMeta.rarity === 'legend' ? '245,202,95,0.14' : '168,213,255,0.12'})">${skRarName} · ${skMeta.name}</span>` : '';
-  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
+  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   const skScn = skMeta && SCENES[skin];
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨专属全景天象与奥义特效' : '🌟专属灵光天色与命中特效'}）</span>` : '';
@@ -10773,9 +10359,11 @@ const PROF = {
 };
 const MSTAT = { maxcombo: 0, ults: 0 };
 function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), 2600); }
-// 能用的角色：已拥有 + 本周限免。单机离线版全部能用；在线网页版严格按解锁状态与限免判断
+// 能用的角色：已拥有 + 本周限免；限时活动期间（和全皮肤限免同一段时间）全部角色都能用。单机离线版全部能用
+function ownsHero(id) { return (PROF.owned || []).includes(id); }   // 真正拥有（抽卡、合成、补偿按这个算）
+function heroesFree() { return freeSkinEvent(); }
 function availList() {
-  if (OFFLINE_BUILD || DEV_SESSION_UNLOCKED) return CHARS.map((c, i) => i);
+  if (OFFLINE_BUILD || DEV_SESSION_UNLOCKED || heroesFree()) return CHARS.map((c, i) => i);
   const ok = new Set([...(PROF.owned || ['qingfeng']), ...(PROF.rotation || [])]);
   return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 }
@@ -10911,7 +10499,7 @@ function compMaybe() {   // 登录后回到首页时弹一次，点了稍后再�
 function compMark() { try { localStorage.setItem(compKey(), '1'); } catch (e) {} }
 function compClaim() {
   const st = compState(); if (!st || st.claimed || PROF.guest || !curName()) return;
-  if (CHARS.every(c => (PROF.owned || []).includes(c.id))) {   // 侠客都有了：改发墨锭
+  if (CHARS.every(c => ownsHero(c.id))) {   // 侠客都有了：改发墨锭
     compMark(); PROF.ink = (PROF.ink || 0) + 500; saveProfile(); SFX.chargeFull(); toast('侠客已全部拥有，补偿改发 500 墨锭'); return;
   }
   openWelfare('comp');
@@ -10962,9 +10550,9 @@ function renderGacha() {
     : `完整角色：传说 ${rarPct(R.full.legend)}（${names(R.pool.legend)}），稀有 ${rarPct(R.full.rare)}（${names(R.pool.rare)}），普通 ${rarPct(R.full.common)}（${names(R.pool.common)}）<br>角色碎片：传说 ${rarPct(R.frag.legend)}，稀有 ${rarPct(R.frag.rare)}，普通 ${rarPct(R.frag.common)}，每次 1 到 3 个<br>合成所需碎片：普通 ${R.craft.common}，稀有 ${R.craft.rare}，传说 ${R.craft.legend}。连抽 ${R.pity} 次未见角色，下一次必出一个你尚未拥有的角色。<br>抽到已有的角色折算 ${R.dup} 墨锭；已有角色的碎片，每个折算 ${R.fragInk} 墨锭。`;
   const rot = PROF.rotation || [];
   $id('gRoster').innerHTML = CHARS.map((c, i) => {
-    const own = DEV_SESSION_UNLOCKED || PROF.owned.includes(c.id), rar = CHAR_RARITY[c.id], need = rar === 'starter' ? 0 : R.craft[rar], have = (PROF.frags || {})[c.id] || 0;
-    const st = own ? '已拥有' : rot.includes(c.id) ? `本周限免 · 碎片 ${have}/${need}` : `碎片 ${have}/${need}`;
-    return `<div class="gr${own ? '' : ' lock'}" style="border-color:rgba(${RAR_RGB[rar]},.5)"><img src="${PORTRAITS[i] || ''}" alt=""><div style="font-family:var(--title);font-size:17px;color:rgb(${c.look.slash})">${c.name}</div><div class="st">${RAR_NAME[rar]} · ${st}</div>${own ? '' : `<div class="bar"><i style="width:${Math.min(100, have / need * 100)}%"></i></div>`}${!own && have >= need && !PROF.guest ? `<button data-craft="${c.id}">合成</button>` : ''}</div>`;
+    const own = DEV_SESSION_UNLOCKED || ownsHero(c.id), rar = CHAR_RARITY[c.id], need = rar === 'starter' ? 0 : R.craft[rar], have = (PROF.frags || {})[c.id] || 0;
+    const st = own ? '已拥有' : heroesFree() ? '限时免费' : rot.includes(c.id) ? `本周限免 · 碎片 ${have}/${need}` : `碎片 ${have}/${need}`;
+    return `<div class="gr${own || heroesFree() ? '' : ' lock'}" style="border-color:rgba(${RAR_RGB[rar]},.5)"><img src="${PORTRAITS[i] || ''}" alt=""><div style="font-family:var(--title);font-size:17px;color:rgb(${c.look.slash})">${c.name}</div><div class="st">${RAR_NAME[rar]} · ${st}</div>${own ? '' : `<div class="bar"><i style="width:${Math.min(100, have / need * 100)}%"></i></div>`}${!own && have >= need && !PROF.guest ? `<button data-craft="${c.id}">合成</button>` : ''}</div>`;
   }).join('');
 }
 function gCard(r, big) {
@@ -10980,7 +10568,7 @@ function clientDrawOne(sk) {
   const R = PROF.rates || DEFAULT_RATES;
   if (sk) {
     const rs = R.skin;
-    const mine = Object.keys(SKINS).filter(k => (PROF.owned || []).includes(SKINS[k].char));
+    const mine = Object.keys(SKINS).filter(k => ownsHero(SKINS[k].char));
     const unowned = mine.filter(k => !(PROF.skins || []).includes(k));
     let pick = null;
     if ((PROF.spity || 0) >= rs.pity && unowned.length) {
@@ -11003,7 +10591,7 @@ function clientDrawOne(sk) {
       return { type: 'skin', skin: pick, char: SKINS[pick].char, rarity: SKINS[pick].rarity, new: true };
     }
     PROF.spity = (PROF.spity || 0) + 1;
-    const need = CHARS.map(c => c.id).filter(id => !(PROF.owned || []).includes(id));
+    const need = CHARS.map(c => c.id).filter(id => !ownsHero(id));
     if (!need.length) {
       PROF.ink = (PROF.ink || 0) + R.fragInk;
       return { type: 'ink', ink: R.fragInk };
@@ -11017,7 +10605,7 @@ function clientDrawOne(sk) {
 
   // 角色祈愿
   const pool = R.pool;
-  const unownedChars = CHARS.map(c => c.id).filter(id => !(PROF.owned || []).includes(id));
+  const unownedChars = CHARS.map(c => c.id).filter(id => !ownsHero(id));
   const fullR = Math.random();
   const forced = (PROF.pity || 0) >= R.pity && unownedChars.length > 0;
   const fullHit = forced || fullR < (R.full.legend + R.full.rare + R.full.common);
@@ -11032,7 +10620,7 @@ function clientDrawOne(sk) {
       full = p[Math.floor(Math.random() * p.length)];
     }
     PROF.pity = 0;
-    if ((PROF.owned || []).includes(full)) {
+    if (ownsHero(full)) {
       PROF.ink = (PROF.ink || 0) + R.dup;
       return { type: 'char', char: full, rarity: CHAR_RARITY[full], dup: true, ink: R.dup };
     }
@@ -11053,7 +10641,7 @@ function clientDrawOne(sk) {
   const c = p[Math.floor(Math.random() * p.length)];
   const n = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
 
-  if ((PROF.owned || []).includes(c)) {
+  if (ownsHero(c)) {
     const ink = n * R.fragInk;
     PROF.ink = (PROF.ink || 0) + ink;
     return { type: 'frag', char: c, rarity: rar, n, ink };
@@ -11077,7 +10665,7 @@ function clientGacha(n, sk) {
 function clientCraft(charId) {
   const R = PROF.rates || DEFAULT_RATES;
   const rar = CHAR_RARITY[charId];
-  if (!rar || rar === 'starter' || (PROF.owned || []).includes(charId)) {
+  if (!rar || rar === 'starter' || ownsHero(charId)) {
     throw new Error('这个角色不能合成（已经拥有，或本就不能合）');
   }
   const need = R.craft[rar];
@@ -11204,7 +10792,7 @@ function renderTasks() {
   const ev = PROF.evtTask, comp = compState();
   $id('tEvtCard').hidden = !ev && !comp;
   if (ev || comp) {
-    $id('tEvtLeft').textContent = `全皮肤限免 · 剩 ${freeSkinDaysLeft()} 天`;
+    $id('tEvtLeft').textContent = `全角色全皮肤限免 · 剩 ${freeSkinDaysLeft()} 天`;
     const compRow = comp ? `<div class="trow"><span>系统补偿：自选 1 位侠客</span><div class="bar"><i style="width:${comp.claimed ? 100 : 0}%"></i></div><span class="rw">自选侠客</span><div style="display:flex;align-items:center;"><button id="compBtn" ${comp.claimed || PROF.guest ? 'disabled' : ''}>${comp.claimed ? '已领取' : '去挑选'}</button></div></div>` : '';
     $id('tEvt').innerHTML = compRow + (ev ? row(ev) : '') + (PROF.guest ? '<p class="netnote">进度先替你记着，登录之后就能领</p>' : '');
   }
@@ -14302,7 +13890,7 @@ function renderBP() {
     const can = myTurn && bpValid(i);
     const myAv = BP.avail && BP.avail[my];
     const lock = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && myAv && !myAv.includes(i);
-    const free = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !(PROF.owned || []).includes(c.id) && (PROF.rotation || []).includes(c.id);
+    const free = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
     const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
     const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
     const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;

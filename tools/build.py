@@ -88,16 +88,6 @@ def compact_js(js):
     return "\n".join(out)
 
 
-def quantize_obj(obj):
-    if isinstance(obj, float):
-        return round(obj, 4)
-    if isinstance(obj, list):
-        return [quantize_obj(x) for x in obj]
-    if isinstance(obj, dict):
-        return {k: quantize_obj(v) for k, v in obj.items()}
-    return obj
-
-
 def music_data():
     folder = os.path.join(ASSETS, "music")
     data = {}
@@ -107,26 +97,11 @@ def music_data():
     return data
 
 
-def hero_models_data():
-    folder = os.path.join(ROOT, "models", "heroes")
-    data = {}
-    if os.path.exists(folder):
-        for name in sorted(os.listdir(folder)):
-            if name.endswith(".json"):
-                try:
-                    data[name[:-5]] = quantize_obj(json.loads(read(folder, name)))
-                except Exception:
-                    pass
-    return data
-
-
-def model_2v2_data():
-    path = os.path.join(ROOT, "models", "renying_ai_watch2v2.json")
+def ai_brain_data():
+    """电脑 AI 的打击数据和训练出来的打法基因（tools/ai-framedata.mjs、tools/ai-train.mjs 生成）"""
+    path = os.path.join(ROOT, "models", "ai-brain.json")
     if os.path.exists(path):
-        try:
-            return quantize_obj(json.loads(read(path)))
-        except Exception:
-            pass
+        return json.loads(read(path))
     return {}
 
 
@@ -156,9 +131,10 @@ def page(offline):
         "<!--@style-->\n": "<style>\n" + compact_css(read(SRC, "style.css")) + "\n</style>\n",
         "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
-            "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_HERO_MODELS=" + json.dumps(hero_models_data(), separators=(",", ":")) + ";window.RENYING_2V2_MODEL=" + json.dumps(model_2v2_data(), separators=(",", ":")) + ";</script>\n"
+            "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_AI_BRAIN=" + json.dumps(ai_brain_data(), separators=(",", ":")) + ";</script>\n"
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "ai.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "game.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "net-p2p.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "social.js")) + "\n</script>\n"
@@ -193,7 +169,7 @@ def check_js():
     if not node:
         return True
     ok = True
-    for name in ("cloud.js", "game.js", "net-p2p.js", "social.js", "anticheat.js"):
+    for name in ("cloud.js", "ai.js", "game.js", "net-p2p.js", "social.js", "anticheat.js"):
         src_path = os.path.join(SRC, name)
         r = subprocess.run([node, "--check", src_path], capture_output=True, text=True)
         if r.returncode:

@@ -22,6 +22,7 @@
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import vm from 'node:vm';
+import { gameSource } from './ai-code.mjs';
 
 const args = process.argv.slice(2);
 function getArg(name, def) {
@@ -54,7 +55,7 @@ if (hasFlag('exhaustive') || hasFlag('all-circumstances')) {
 
 // Precompile scripts once globally
 const netCode = readFileSync('src/net-p2p.js', 'utf8');
-const gameCode = readFileSync('src/game.js', 'utf8');
+const gameCode = gameSource();
 const NET_SCRIPT = new vm.Script(netCode);
 const GAME_SCRIPT = new vm.Script(gameCode);
 const EXPOSE_SCRIPT = new vm.Script(`({

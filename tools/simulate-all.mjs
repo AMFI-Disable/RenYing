@@ -24,6 +24,7 @@ import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { execSync, spawn } from 'node:child_process';
+import { gameSource } from './ai-code.mjs';
 function getNodeBin() {
   if (process.execPath && existsSync(process.execPath)) return process.execPath;
   if (process.argv[0] && existsSync(process.argv[0])) return process.argv[0];
@@ -65,7 +66,7 @@ const MODES = ['cpu', 'chaos', 'mayhem', 'watch2v2', 'tag3'];
 if (!isMainThread) {
   const vm = await import('node:vm');
   const netCode = readFileSync('src/net-p2p.js', 'utf8');
-  const gameCode = readFileSync('src/game.js', 'utf8');
+  const gameCode = gameSource();
   const NET_SCRIPT = new vm.Script(netCode);
   const GAME_SCRIPT = new vm.Script(gameCode);
   const EXPOSE_SCRIPT = new vm.Script(`({
