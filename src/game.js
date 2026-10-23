@@ -286,7 +286,7 @@ const CHARS = [
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
   { id: 'leiming', name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8.0, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
-    passiveName: '连环', passiveDesc: '六连重拳如惊雷，金刚体魄筋骨强横（520血/1.22体量）；架势耐力深厚且回涌较快（32/秒），防守沉稳，唯出拳收势空隙需防对手腾空闪。',
+    passiveName: '连环', passiveDesc: '六连重拳如惊雷，金刚体魄筋骨强横（520血/1.22体量）；架势耐力深厚且回涌较快（32/秒），金刚雷铠御守引雷反击，防守沉稳转守为攻。',
     stat: { hp: 520, walk: 1.14, speed: 0.70, dmg: 0.94, reach: 0.8, swing: 0.64, jump: 1, weight: 1.22, defRating: 1.02, guardMax: 115, guardStab: 1.25, guardChip: 0.07, guardRegen: 32, poise: 0.90, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
     moveMods: { l1: { dmgAbs: 19 }, l2: { dmgAbs: 19 }, l3: { dmgAbs: 20 }, l4: { dmgAbs: 20 }, l5: { dmgAbs: 22, kb: [110, 0], launch: false, lunge: 110, next: { light: 'l6', heavy: 'hv' } },
       l6: { p: ['l3s', 'l3a'], su: .09, ac: .08, rc: .24, dmgAbs: 32, kb: [520, -260], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 260, launch: true, next: {}, snd: 'heavy' } },   // 六连重拳，第六拳收尾挑飞
@@ -631,13 +631,27 @@ const SKILLS = {
       if (f.t >= 0.4) toNeutral(f);
     },
     pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
-  stomp: { name: '雷踏', cd: 4.5, desc: '一脚踏落，前方轰然炸起雷柱（宽 85 像素，高 420 像素，48 伤害）。垂直高空挑飞，将对手击向空中。',
-    start(f) { f.vx = 0; },
-    update(f) {
-      if (f.skPh === 0 && f.t >= 0.14) { f.skPh = 1; dust(f.x, 0, 12); SFX.thud(); spawnProj(f, { kind: 'bolt', x: clamp(f.x + f.face * 125, WALL, STAGE_W - WALL), y: -210, vx: 0, w: 85, h: 420, life: 0.38, delay: 0.16, dmg: 48, kb: [0, -760], stun: 0.52, hs: 0.10, launch: true, unbreakable: true, small: true }); }
-      if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
+  stomp: { name: '金刚雷铠', cd: 5.5, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
+    start(f) {
+      f.vx = 0; f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
+      dust(f.x, 0, 10); SFX.block();
+      ring(f.x, f.y - 60, 75, '255,230,120', 0.35);
     },
-    pose: f => f.skPh === 0 ? ['lm_kick', 24] : ['ts_slam', 50], ai: (m, o, d) => d > 80 && d < 240 },
+    update(f, foe) {
+      if (f.skPh === 0) {
+        f.vx = 0;
+        if (Math.random() < 0.4) addP({ type: 'spark', x: f.x + rand(-25, 25), y: f.y - rand(20, 90), vx: rand(-40, 40), vy: rand(-50, 20), life: 0.22, max: 0.22, rgb: '255,230,120', w: 1.6 });
+        if (f.t >= 0.55) {
+          f.thunderGuardT = 0; f.armorT = 0; f.skPh = 2; f.t = 0;
+        }
+      } else if (f.skPh === 1) {
+        if (f.t >= 0.24) toNeutral(f);
+      } else if (f.skPh === 2) {
+        if (f.t >= 0.20) toNeutral(f);
+      }
+    },
+    pose: f => f.skPh === 0 ? ['lm_boxer', 26] : f.skPh === 1 ? ['ts_slam', 48] : ['idle', 18],
+    ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260) || (d < 150 && Math.random() < 0.75) },
   inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, lack: f => (f.fu || 0) >= FU_MAX ? '符已画满' : '墨不够', desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
     start(f) { f.vx = 0; },
     update(f) {
@@ -1612,7 +1626,7 @@ function netLost() {
 // 状态快照：房主每帧发一次
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT'];
+  'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT'];
 // 同步数据用数组而不是对象，体积小一半多
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 // 被打的状态：这些一定听房主的
@@ -1678,6 +1692,7 @@ function playEvent(ev) {
     else hitVisual(ev);
   }
   else if (ev.e === 'parry') parryVisual(ev);
+  else if (ev.e === 'thunder_counter') thunderCounterVisual(ev);
   else if (ev.e === 'say') { say(ev.text, ev.dur, ev.style); if (ev.snd) SFX[ev.snd](); }
   else if (ev.e === 'round') {
     if (ev.ch) setChars(ev.ch[0], ev.ch[1]);
@@ -2625,7 +2640,7 @@ class Fighter {
     this.guard = this.maxGuard;
     this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
-      skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
+      skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
       notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
@@ -3110,7 +3125,7 @@ function endRound() {
 
 // ======================= 动作 =======================
 function toNeutral(f) {
-  f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.rooted = false;
+  f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.thunderGuardT = 0; f.rooted = false;
   f.state = f.onGround() ? 'idle' : 'air';
   if (f.onGround()) { f.juggle = 0; f.huiMaHits = 0; }
 }
@@ -3449,6 +3464,31 @@ function parryVisual(ev) {
   addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,225,120', scale: 2.2 });
   SFX.block(); metal(1900, 0.8, 0.1);
 }
+// 雷鸣金刚雷铠招架：格挡近战或飞行道具，引落九天玄雷轰击敌首
+function thunderGuardCounter(def, att, pt) {
+  def.thunderGuardT = 0; def.armorT = 0; def.skPh = 1; def.t = 0; def.invul = 0.35;
+  const target = att || foeOf(def);
+  def.face = target.x >= def.x ? 1 : -1;
+  shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
+  ring(def.x, def.y - 60, 130, '255,230,120', 0.4);
+  ring(def.x, def.y - 60, 65, '255,255,255', 0.3);
+  dust(def.x, 0, 16);
+  SFX.parry(); SFX.thunder();
+  addP({ type: 'text', text: '⚡ 金刚雷铠 · 引雷天罚', x: def.x, y: def.y - 120, life: 0.85, max: 0.85, rgb: '255,230,120' });
+  addP({ type: 'callout', text: '雷', x: def.x, y: def.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
+  const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20);
+  spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, unbreakable: true, small: true });
+  const ev = { e: 'thunder_counter', a: def.idx, x: def.x, y: def.y - 60, tx: strikeX };
+  netEmit(ev);
+}
+function thunderCounterVisual(ev) {
+  ring(ev.x, ev.y, 130, '255,230,120', 0.4);
+  ring(ev.x, ev.y, 65, '255,255,255', 0.3);
+  flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
+  shake = Math.max(shake, 14);
+  addP({ type: 'callout', text: '雷', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
+  SFX.thunder();
+}
 
 // ======================= 飞行道具 =======================
 const projs = [];
@@ -3504,6 +3544,12 @@ function updateProjs() {
       }
       SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
       addP({ type: 'text', text: '+50', x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
+      continue;
+    }
+    // 雷鸣金刚雷铠：消解飞行道具并降雷轰顶反制
+    if (foe.state === 'skill' && foe.thunderGuardT > 0 && !p.ult) {
+      p.dead = true;
+      thunderGuardCounter(foe, owner, [p.x, p.y]);
       continue;
     }
     // 玉箫回音壁：把飞行道具原路弹回去
@@ -3776,6 +3822,7 @@ function updateFighter(f, foe) {
     f.guard = Math.min(f.maxGuard, (f.guard !== undefined ? f.guard : f.maxGuard) + regen);
   }
   if (f.state === 'skill' && f.skill === 'mirror') f.parryT = Math.max(0, f.parryT - STEP);
+  if (f.state === 'skill' && f.skill === 'stomp') f.thunderGuardT = Math.max(0, (f.thunderGuardT || 0) - STEP);
   // 月华被动：3 秒没挨打缓慢回血
   f.sinceHit += STEP;
   if (f.ch.passive === 'regen' && M.phase === 'fight' && f.hp > 0 && f.hp < f.maxHp && f.sinceHit > 3 && f.regenLeft > 0) {
@@ -3841,7 +3888,7 @@ function updateFighter(f, foe) {
       break;
     case 'special': specialUpdate(f, foe); break;
     case 'charge': chargeUpdate(f, foe); break;
-    case 'skill': SKILLS[f.skill].update(f, foe); break;
+    case 'skill': if (SKILLS[f.skill]) SKILLS[f.skill].update(f, foe); else toNeutral(f); break;
     case 'launched': break;
     case 'held': if (f.t >= 1.25) toNeutral(f); break;
   }
@@ -4051,6 +4098,11 @@ function applyHit(att, def, m, pt) {
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
   // 月镜：格开近身攻击并反斩（飞行道具和大招无效）
   if (def.state === 'skill' && def.parryT > 0 && !m.isProj && !m.ult) { parry(def, att, pt); def.skill2CD = 0; return; }
+  // 雷鸣：金刚雷铠招架反击（吸收近战攻击并引动天雷反制敌首）
+  if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult) {
+    thunderGuardCounter(def, att, pt);
+    return;
+  }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
   if (wasBlocking && !m.unblockable) {
@@ -4154,10 +4206,13 @@ function applyHit(att, def, m, pt) {
     if (def.hp <= 0 && M.phase === 'fight') { def.state = 'launched'; def.vy = -520; def.vx = fx * 400; def.y = Math.min(def.y, -1); M.phase = 'ko'; M.t = 0; M.koWinner = att.idx; ev.ko = true; }
     hitVisual(ev); netEmit(ev); return;
   }
-  def.armorT = 0; def.parryT = 0; def.sinceHit = 0;
-  if (def.state === 'skill') {
-    if (def.t < 0.12) { if (def.skill === def.ch.skill2) def.skill2CD = 0; else def.skillCD = 0; }
-    def.skill = null;
+  def.sinceHit = 0;
+  if (!m.noStun || def.hp <= 0) {
+    def.armorT = 0; def.parryT = 0;
+    if (def.state === 'skill') {
+      if (def.t < 0.12) { if (def.skill === def.ch.skill2) def.skill2CD = 0; else def.skillCD = 0; }
+      def.skill = null;
+    }
   }
   def.comboHits++;
   const isCounter = !m.isProj && def.moveName !== 'dl' && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
@@ -4534,7 +4589,7 @@ function animFighter(f) {
   if (f.trail.length > 28) f.trail.shift();
   // 残影
   f.ghostT -= STEP;
-  if ((f.escInvul || f.state === 'dash' || (f.state === 'special' && f.sp !== 'charge' && f.sp !== 'cast' && f.sp !== 'wave') || (f.state === 'skill' && f.skPh === 1 && SKILLS[f.skill].nofric)) && f.ghostT <= 0) { f.ghosts.push({ sk: f.sk, life: 1 }); f.ghostT = 0.022; }
+  if ((f.escInvul || f.state === 'dash' || (f.state === 'special' && f.sp !== 'charge' && f.sp !== 'cast' && f.sp !== 'wave') || (f.state === 'skill' && f.skPh === 1 && SKILLS[f.skill] && SKILLS[f.skill].nofric)) && f.ghostT <= 0) { f.ghosts.push({ sk: f.sk, life: 1 }); f.ghostT = 0.022; }
   for (const g of f.ghosts) g.life -= STEP / 0.22;
   while (f.ghosts.length && f.ghosts[0].life <= 0) f.ghosts.shift();
   updateScarf(f);
@@ -5372,9 +5427,9 @@ function drawFighter(f) {
   const big = f.size !== 1;
   if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size, f.size); ctx.translate(-f.x, -f.y); }
   for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * 0.4 });
-  // 霸体金光 / 影遁增益 / 月镜
-  if (f.armorT > 0 || f.buffT > 0 || f.parryT > 0) {
-    const rgb = f.armorT > 0 ? '255,210,120' : f.parryT > 0 ? '235,225,255' : '190,80,255';
+  // 霸体金光 / 影遁增益 / 月镜 / 金刚雷铠
+  if (f.armorT > 0 || f.buffT > 0 || f.parryT > 0 || (f.thunderGuardT && f.thunderGuardT > 0)) {
+    const rgb = (f.thunderGuardT && f.thunderGuardT > 0) ? '255,230,120' : (f.armorT > 0 ? '255,210,120' : f.parryT > 0 ? '235,225,255' : '190,80,255');
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(f.x, f.y - 55, 5, f.x, f.y - 55, 80);
     g.addColorStop(0, `rgba(${rgb},${0.28 + 0.1 * Math.sin(clock * 20)})`); g.addColorStop(1, `rgba(${rgb},0)`);
@@ -5384,6 +5439,10 @@ function drawFighter(f) {
       const a1 = f.face === 1 ? -1.2 : Math.PI - 1.2;
       const a2 = f.face === 1 ? 1.2 : Math.PI + 1.2;
       ctx.arc(f.x + f.face * 22, f.y - 70, 38, a1, a2); ctx.stroke();
+    }
+    if (f.thunderGuardT && f.thunderGuardT > 0) {
+      ctx.strokeStyle = 'rgba(255,235,140,0.85)'; ctx.lineWidth = 2.5; ctx.beginPath();
+      ctx.arc(f.x, f.y - 60, 45 + 5 * Math.sin(clock * 25), 0, Math.PI * 2); ctx.stroke();
     }
   }
   // 定身墨迹
@@ -9617,8 +9676,8 @@ const HERO_MOVE_SEQS = {
     ],
     ranged: [
       { p: 'idle', d: 0.1, reset: true },
-      { p: 'lm_boxer', d: 0.12, lab: 'R · 雷踏' },
-      { p: 'lm_kick', d: 0.38, dx: 15, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 通天雷柱' },
+      { p: 'lm_boxer', d: 0.12, lab: 'R · 金刚雷铠' },
+      { p: 'ts_slam', d: 0.38, dx: 15, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 引雷反震' },
       { p: 'idle', d: 0.35, reset: true }
     ],
     ult: [
@@ -9909,7 +9968,7 @@ const HERO_FULL_DEMO = {
     { p: 'idle', d: 0.25, reset: true },
     { p: 'lm_boxer', d: 0.1, lab: 'Q · 雷闪' }, { p: 'lm_jab', d: 0.32, dx: 48, hit: 2, fx: 'thunderfist', badge: '⚡ 触电麻痹' },
     { p: 'idle', d: 0.25, reset: true },
-    { p: 'lm_kick', d: 0.16, lab: 'R · 雷踏' }, { p: 'ts_slam', d: 0.36, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 通天雷柱' },
+    { p: 'lm_kick', d: 0.16, lab: 'R · 金刚雷铠' }, { p: 'ts_slam', d: 0.36, fx: 'stomp', hit: 2, launch: true, badge: '⚡ 引雷反震' },
     { p: 'idle', d: 0.25, reset: true },
     { p: 'lm_kick', d: 0.2, lab: 'E · 雷霆万钧' }, { p: 'lm_boxer', d: 0.26, fx: 'thunder', hit: 3, launch: true, badge: '⚡ 雷帝灌顶' },
     { p: 'victory', d: 0.55, reset: true }

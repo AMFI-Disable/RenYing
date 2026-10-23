@@ -502,6 +502,12 @@ if (isMainThread) {
         }
       });
 
+      worker.on('error', err => {
+        console.error(`\nWorker thread error:`, err);
+        worker.terminate();
+        if (completedTasks === tasks.length) resolve();
+      });
+
       if (taskCursor < tasks.length) {
         worker.postMessage(tasks[taskCursor++]);
       }

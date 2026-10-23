@@ -29,15 +29,26 @@ async function initRunner() {
   ].find(p => existsSync(p));
 
   const forceHeadless = process.argv.includes('--headless') || process.argv.includes('--sim');
+  const preferChrome = process.argv.includes('--chrome') || !!process.env.RENYING_USE_CHROME;
 
-  if (CHROME && !forceHeadless) {
+  if (CHROME && !forceHeadless && preferChrome) {
     try {
       const PORT = +(process.env.RENYING_CDP_PORT || 9377);
       const GAME = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+      // Verify game server is accessible before launching Chrome; otherwise use in-process sandbox
+      const serverAlive = await fetch(GAME, { method: 'HEAD', signal: AbortSignal.timeout(1000) })
+        .then(r => r.ok || r.status < 500)
+        .catch(() => false);
+
+      if (!serverAlive) {
+        throw new Error('Local game server is not running on ' + GAME);
+      }
+
       const OUT = join(tmpdir(), 'renying-combat-test');
       mkdirSync(OUT, { recursive: true });
       const LOG = `${OUT}/chrome.log`;
-      const sleep = ms => new Promise(r => setTimeout(r, ms));
 
       class CDP {
         constructor(ws) {
@@ -81,10 +92,11 @@ async function initRunner() {
         const ws = new WebSocket(wsUrl);
         await new Promise((res, rej) => { ws.onopen = res; setTimeout(() => rej(new Error('ws timeout')), 4000); });
         const cdp = new CDP(ws);
-        const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
+        const { targetId } = await cdp.send('Target.createTarget', { url: GAME });
         const { sessionId: S } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
         await cdp.send('Page.enable', {}, S);
         await cdp.send('Runtime.enable', {}, S);
+        await sleep(1500);
 
         ev = async (expr) => {
           const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }, S);
@@ -162,16 +174,18 @@ async function initRunner() {
 await initRunner();
 
 // Initialize test state
-await ev(`
-  localStorage.setItem('renying-tut-seen','1');
-  localStorage.setItem('renying-tut-done','1');
+await ev(`(() => {
+  try {
+    localStorage.setItem('renying-tut-seen','1');
+    localStorage.setItem('renying-tut-done','1');
+  } catch (e) {}
   startMatch('train', 'stand', [0, 1]);
   showScreen(null);
   paused = false;
   M.phase = 'fight';
   A.hp = A.maxHp;
   B.hp = B.maxHp;
-`);
+})()`);
 
 const testSuite = [
   {
