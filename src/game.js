@@ -1156,7 +1156,23 @@ const SFX = {
     sTone(240, 80, 0.16, 0.3 * p, 'sine');
     metal(1200, 0.18, 0.04 * p);
   },
+  // 武库的好皮肤：开出金一串往上走的铃音；非凡级命中“叮”一声，隐秘级命中“铮”一声
+  sparkle() { [1318.5, 1661.2, 1975.5, 2637, 3322.4].forEach((f, i) => bellAt(f, i * 0.075, 1.2 - i * 0.1, 0.075)); },
+  shine(p = 1) { bellAt(2093, 0, 0.55, 0.05 * p); bellAt(3136, 0.025, 0.4, 0.028 * p); },
+  shing(p = 1) { sNoise(0.05, 9500, 6000, 0.8, 0.12 * p, 'highpass'); metal(1850, 0.3, 0.035 * p); },
 };
+// 铃：一个基音加两个不成整数倍的泛音，起音快、尾音长（delay 秒后响）
+function bellAt(f, delay, dur, vol) {
+  if (!AC || muted || ![f, delay, dur, vol].every(Number.isFinite)) return;
+  const t = AC.currentTime + delay;
+  for (const [r, v, d] of [[1, 1, 1], [2.76, 0.42, 0.55], [5.4, 0.16, 0.3]]) {
+    if (f * r > 15000) continue;
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.frequency.value = f * r;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol * v, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur * d);
+    o.connect(g).connect(master); o.start(t); o.stop(t + dur * d + 0.03);
+  }
+}
 function haptic(pattern = 15) {
   if (typeof navigator !== 'undefined' && navigator.vibrate && SETTINGS.vibrate !== false) {
     try { navigator.vibrate(pattern); } catch (e) {}
@@ -5177,6 +5193,7 @@ function drawFighter(f) {
     }
   }
   if (f.look.legend && f.look.fx) skinGround(f);
+  if (f.look.tier && f.look.fx) skinTierGround(f);
   // 影子
   const hgt = clamp(-f.y / 300, 0, 1);
   ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
@@ -5199,7 +5216,9 @@ function drawFighter(f) {
   // 残影
   const big = f.size !== 1;
   if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size, f.size); ctx.translate(-f.x, -f.y); }
-  for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * 0.4 });
+  const gt = tierRank(L) >= 3 ? L.fx : null;   // 隐秘、非凡：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
+  for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
+  skinTierMotes(f, false);
   // 霸体金光 / 影遁增益 / 月镜 / 金刚雷铠
   if (f.armorT > 0 || f.buffT > 0 || f.parryT > 0 || (f.thunderGuardT && f.thunderGuardT > 0)) {
     const rgb = (f.thunderGuardT && f.thunderGuardT > 0) ? '255,230,120' : (f.armorT > 0 ? '255,210,120' : f.parryT > 0 ? '235,225,255' : '190,80,255');
@@ -5235,6 +5254,7 @@ function drawFighter(f) {
   if (f.jailT > 0 && f.hp > 0) drawWengTing(f.jailX, 0, 1, Math.min(1, f.jailT * 3));   // 关在醉翁亭里：亭子罩着人，前柱半透明
   // 剑光
   drawTrail(f);
+  skinTierMotes(f, true);
   // 玉箫头顶的音律、被勾陈震魄时身上的金圈
   if (f.ch && f.ch.passive === 'rhythm' && (f.notes || 0) > 0 && f.hp > 0) {
     ctx.save(); ctx.fillStyle = 'rgba(' + f.look.slash + ',0.85)'; ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.4;
@@ -5332,9 +5352,17 @@ const SKIN_TH = {
   leaf: { trail: 'ribbon', amb: 'leaf', hit: 'petals' },
   feather: { trail: 'ribbon', amb: 'feather', hit: 'petals' },
   metal: { trail: 'ribbon', amb: 'spark', hit: 'sparks' },
+  nebula: { trail: 'prism', amb: 'glint', hit: 'starburst' },
+  butterfly: { trail: 'prism', amb: 'glint', hit: 'petals' },
+  crystal: { trail: 'frost', amb: 'glint', hit: 'shatter' },
+  note: { trail: 'gilt', amb: 'flake', hit: 'petals' },
 };
 const rgbMix = (a, b, k) => { const p = a.split(','), q = b.split(','); return p.map((v, i) => Math.round(+v + (+q[i] - +v) * k)).join(','); };
 const skinTh = L => L && L.fx ? SKIN_TH[L.fx.th] : null;
+// 武库品质：保密 2、隐秘 3、非凡 4（不在武库里的皮肤是 0）。越高，拖尾、命中、开场、残影越华丽，只改画面和声音
+const TIER_RANK = { mil: 0, res: 1, cla: 2, cov: 3, gold: 4 };
+const tierRank = L => (L && L.fx && TIER_RANK[L.tier]) || 0;
+const TIER_TXT = { cla: ['保密', '235,120,255'], cov: ['隐秘', '255,120,110'], gold: ['★ 非凡', '255,214,120'] };
 // 兵器上“发光的那一段”：刀剑枪是护手到刃尖，拳和葫芦是两只手，锤是锤头
 function skinBladeSeg(sk, f, L) {
   const w = L.weapon;
@@ -5476,7 +5504,7 @@ function skinGround(f) {
 }
 // 主题拖尾：替换默认的刀光（传说更亮、更宽）
 function skinTrail(f, tr) {
-  const L = f.look, th = skinTh(L), c = L.fx.c, c2 = L.fx.c2 || c, leg = L.legend, mul = leg ? 1.25 : 0.95, kind = th.trail;
+  const L = f.look, th = skinTh(L), c = L.fx.c, c2 = L.fx.c2 || c, leg = L.legend, rk = tierRank(L), mul = (leg ? 1.25 : 0.95) + Math.max(0, rk - 1) * 0.1, kind = th.trail;
   ctx.save();
   const quad = (p, q, r, s) => { ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.lineTo(r[0], r[1]); ctx.lineTo(s[0], s[1]); ctx.closePath(); ctx.fill(); };
   if (kind === 'smoke' || kind === 'brush') {   // 深色的烟/墨先铺一层（正常混合）
@@ -5500,6 +5528,10 @@ function skinTrail(f, tr) {
     ctx.lineWidth = (2.6 * al + 0.6) * (leg ? 1.35 : 1.1); line(a.t, b.t);
     if (!leg) continue;
     const dx = b.t[0] - b.b[0], dy = b.t[1] - b.b[1], d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
+    if (rk >= 4 && a.h && al > 0.15) {   // 非凡：刀光外沿再铺一层淡金的光边
+      ctx.fillStyle = `rgba(${rgbMix(c, '255,226,150', 0.5)},${0.16 * al})`; quad(a.t, [a.t[0] + nx * 11 * al, a.t[1] + ny * 11 * al], [b.t[0] + nx * 11 * al, b.t[1] + ny * 11 * al], b.t);
+    }
+    if (rk >= 3 && i % 3 === 0 && al > 0.35) glint(b.t[0], b.t[1], (rk >= 4 ? 7.5 : 5.5) * al, rk >= 4 ? '255,240,190' : c2, al * 0.9);   // 隐秘以上：刃尖划过的地方留几颗星光
     if (kind === 'fire' && al > 0.2) {   // 刃尖外侧一排跳动的火舌
       const lk = (10 + 9 * Math.sin(clock * 30 + i * 1.9)) * al;
       const g = ctx.createLinearGradient(b.t[0], b.t[1], b.t[0] + nx * lk * 2, b.t[1] + ny * lk * 2 - lk);
@@ -5533,6 +5565,7 @@ function skinAmbient(f) {
   if (e && Math.random() < (leg ? 0.8 : 0.45)) { const q = lerp2(e.b, e.t, 0.3 + Math.random() * 0.7); skinSpawn(kind, q[0], q[1], c, c2, leg ? 1 : 0.7, true); }
   if (!leg) { if (Math.random() < 0.04) skinSpawn(kind, f.x + rand(-24, 24), f.y - rand(10, 110), c, c2, 0.7, false); return; }
   if (Math.random() < 0.3) skinSpawn(kind, f.x + rand(-26, 26), f.y - rand(8, 120), c, c2, 1, false);
+  if (tierRank(L) >= 3 && Math.random() < 0.12) addP({ type: 'glint', x: f.x + rand(-30, 30), y: f.y - rand(10, 125), vx: rand(-6, 6), vy: -rand(10, 30), life: rand(0.5, 0.9), max: 0.9, r: rand(2.5, 4.5), rgb: Math.random() < 0.5 ? c2 : '255,255,255' });   // 隐秘以上：身边时不时亮一颗星
   if (kind !== 'arc' && th.amb === 'arc' && Math.random() < 0.06) skinSpawn('arc', f.x + rand(-20, 20), f.y - rand(30, 100), c, c2, 1, false);   // 雷：配着别的粒子时也偶尔跳一道电
 }
 function skinSpawn(kind, x, y, c, c2, s, fromBlade) {
@@ -5604,23 +5637,57 @@ function skinHitFX(atk, ev) {
       out((vx, vy) => addP({ type: 'shape', sh: kind, x, y, vx, vy: vy - 60, g: 260, drag: 2.5, life: rand(0.6, 1.1), max: 1.1, r: rand(2.6, 4.4) * p, rgb: c, spin: rand(-8, 8) }));
   }
   if (L.fx.part && th.hit !== 'petals' && leg) out((vx, vy) => addP({ type: 'shape', sh: L.fx.part, x, y, vx: vx * 0.6, vy: vy * 0.6 - 60, g: 200, drag: 2.5, life: 0.9, max: 0.9, r: rand(2.6, 4) * p, rgb: c, spin: rand(-8, 8) }), 5);
+  skinTierHit(atk, ev, p, out);
+}
+// 武库品质越高，打中越“脆”：保密多一圈亮环和一下白闪；隐秘再加一圈主题环、往外射的冲击线、镜头多震一点、“铮”一声；
+// 非凡再加金色八角星印、一圈飞散的金星、重击时一层淡淡的金光、“叮”一声。都只是画面和声音，不碰顿帧和伤害
+let TIER_SFX_T = 0;
+function skinTierHit(atk, ev, p, out) {
+  const L = atk.look, tr = tierRank(L); if (tr < 2) return;
+  const c = L.fx.c, c2 = L.fx.c2 || c, x = ev.x, y = ev.y;
+  addP({ type: 'ring', x, y, r: 40 * p, life: 0.16, max: 0.16, rgb: '255,255,255', ng: 1 });
+  if (tr < 3) return;
+  addP({ type: 'ring', x, y, r: 86 * p, life: 0.3, max: 0.3, rgb: c2, ng: 1 });
+  for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283 + rand(-0.15, 0.15), sp = rand(700, 1100) * p; addP({ type: 'streak', x: x + Math.cos(a) * 10, y: y + Math.sin(a) * 10, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, drag: 7, life: 0.2, max: 0.2, rgb: i % 2 ? c : '255,255,255', ng: 1 }); }
+  shake = Math.max(shake, 7 * p);
+  const now = performance.now();
+  if (now - TIER_SFX_T > 70) { TIER_SFX_T = now; if (tr >= 4) SFX.shine(clamp(ev.dmg / 8, 0.6, 1.4)); else SFX.shing(clamp(ev.dmg / 8, 0.6, 1.3)); }   // 连击时别叠成一片
+  if (tr < 4) return;
+  addP({ type: 'glyph', g2: 'star8', x, y, r: 44 * p, life: 0.42, max: 0.42, rgb: '255,214,120', rot: rand(0, 1), spin: 1.5, ng: 1 });
+  out((vx, vy) => addP({ type: 'glint', x, y, vx: vx * 0.75, vy: vy * 0.75 - 40, drag: 3.5, life: rand(0.45, 0.8), max: 0.8, r: rand(4, 8) * p, rgb: Math.random() < 0.5 ? '255,226,150' : '255,255,255', ng: 1 }), 8);
+  if (ev.dmg >= 8 || ev.big || ev.ult) { flashA = Math.max(flashA, 0.16); flashRGB = '255,214,120'; }
 }
 // 开场亮相：名号 + 主题粒子从脚下升起（传说多一圈光）
 function skinIntroFX(f) {
   const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
-  addP({ type: 'text', text: `${S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2, max: 2.2, rgb: S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
+  const tr = tierRank(L), T = TIER_TXT[L.tier];
   const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
-  for (let i = 0; i < (leg ? 34 : 12); i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
-  if (!leg) return;
-  addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c });
+  const name = () => addP({ type: 'text', text: `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
+  for (let i = 0; i < (leg ? 34 : 12) + (tr >= 3 ? 16 : 0); i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
+  if (!leg && tr < 2) { name(); return; }
+  addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c, ng: tr >= 2 ? 1 : 0 });   // 品质皮肤的不进泛光：开场一下别把人照成白的
   ring(f.x, f.y - 60, 120, c, 0.55);
+  if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < 14; i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
+  if (tr >= 4) {   // 非凡：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
+    addP({ type: 'pillar', x: f.x, y: f.y, r: 40, life: 1.5, max: 1.5, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
+    addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 70, r: 78, life: 0.9, max: 0.9, rgb: '255,214,120', rot: 0, spin: 0.8, ng: 1 });
+    addP({ type: 'ring', x: f.x, y: f.y - 4, r: 150, life: 0.9, max: 0.9, rgb: '255,226,150', ng: 1 });
+    if (!RESIM) SFX.sparkle();
+  } else if (tr >= 3 && !RESIM) SFX.shing(1.2);
+  name();   // 名号最后加：画在光柱、光环上面，不会被盖住
 }
 // 胜利：主题粒子像烟花一样喷出来
 function skinVictoryFX(f) {
   const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
-  const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
-  for (let i = 0; i < (leg ? 40 : 16); i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); skinSpawn(kind, f.x, f.y - 60, c, c2, 1.3, true); const q = particles[particles.length - 1]; if (q) { q.vx = Math.cos(a) * v; q.vy = Math.sin(a) * v; q.g = 420; q.life = q.max = rand(1, 1.8); } }
+  const leg = S.rarity === 'legend', tr = tierRank(L), c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
+  for (let i = 0; i < (leg ? 40 : 16) + tr * 6; i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); skinSpawn(kind, f.x, f.y - 60, c, c2, 1.3, true); const q = particles[particles.length - 1]; if (q) { q.vx = Math.cos(a) * v; q.vy = Math.sin(a) * v; q.g = 420; q.life = q.max = rand(1, 1.8); } }
   if (leg) addP({ type: 'glow', x: f.x, y: f.y - 80, r: 110, life: 0.8, max: 0.8, rgb: c });
+  if (tr >= 3) for (let i = 0; i < 18; i++) { const a = rand(-Math.PI * 0.9, -Math.PI * 0.1), v = rand(200, 520); addP({ type: 'glint', x: f.x, y: f.y - 70, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 300, drag: 1.2, life: rand(0.9, 1.6), max: 1.6, r: rand(4, 8), rgb: tr >= 4 ? (Math.random() < 0.6 ? '255,226,150' : '255,255,255') : (Math.random() < 0.5 ? c2 : '255,255,255'), ng: 1 }); }
+  if (tr >= 4) {
+    addP({ type: 'pillar', x: f.x, y: f.y, r: 46, life: 1.7, max: 1.7, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
+    addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 80, r: 92, life: 1.1, max: 1.1, rgb: '255,214,120', rot: 0, spin: 0.6, ng: 1 });
+    if (!RESIM) SFX.sparkle();
+  }
 }
 // 新粒子的画法（drawParticles 里调用）
 function drawSkinParticle(p, k) {
@@ -5667,15 +5734,72 @@ function drawSkinParticle(p, k) {
     case 'iring':
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${p.rgb},${(1 - k) * 0.9 + 0.1})`; ctx.lineWidth = 2 + 4 * k;
       ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, p.r * k), 0, 7); ctx.stroke(); ctx.restore(); return;
+    case 'pillar': {   // 非凡开场 / 胜利：一道柔光从天上落下来，落到脚下化成一圈光晕，慢慢收窄淡掉
+      const age = 1 - k, reach = Math.min(1, age * 5), a = Math.min(1, age * 8) * Math.pow(k, 0.6), w = p.r * (0.45 + 0.55 * k), h = 1100, top = p.y - h, bot = top + h * reach;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const v = ctx.createLinearGradient(0, top, 0, bot); v.addColorStop(0, `rgba(${p.rgb},0)`); v.addColorStop(0.6, `rgba(${p.rgb},${0.12 * a})`); v.addColorStop(1, `rgba(${p.rgb},${0.28 * a})`);
+      ctx.fillStyle = v; ctx.fillRect(p.x - w * 1.9, top, w * 3.8, bot - top);   // 外面一层淡淡的色光
+      const g = ctx.createLinearGradient(p.x - w, 0, p.x + w, 0); g.addColorStop(0, 'rgba(255,250,235,0)'); g.addColorStop(0.5, `rgba(255,250,235,${0.34 * a})`); g.addColorStop(1, 'rgba(255,250,235,0)');
+      ctx.fillStyle = g; ctx.fillRect(p.x - w, top, w * 2, bot - top);   // 中间一道白光
+      ctx.fillStyle = `rgba(255,255,255,${0.5 * a})`; ctx.fillRect(p.x - 0.8, top, 1.6, bot - top);   // 光芯一条细线
+      if (reach >= 1) {   // 落到地上的光晕
+        const e = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, w * 2.8); e.addColorStop(0, `rgba(255,250,235,${0.42 * a})`); e.addColorStop(0.45, `rgba(${p.rgb},${0.2 * a})`); e.addColorStop(1, `rgba(${p.rgb},0)`);
+        ctx.translate(p.x, p.y); ctx.scale(1, 0.24); ctx.translate(-p.x, -p.y); ctx.fillStyle = e; ctx.fillRect(p.x - w * 2.8, p.y - w * 2.8, w * 5.6, w * 5.6);
+      }
+      ctx.restore(); return;
+    }
   }
 }
-const SKIN_GLOW_P = { ember: 1, arc: 1, glint: 1, glow: 1, shard: 1, streak: 1, drop: 1 };
+const SKIN_GLOW_P = { ember: 1, arc: 1, glint: 1, shard: 1, streak: 1, drop: 1, pillar: 1 };   // glow 本身就是一团渐变光，不再泛一遍
 // 泛光那一遍：传说兵器的刃再画粗一点，模糊后就是真正的光晕
 function skinEmissive(f) {
   const L = f.look; if (!L.legend || !L.fx || f.hidden || !f.sk) return;
   const seg = skinBladeSeg(f.sk, f, L);
   ctx.strokeStyle = `rgba(${L.fx.c},0.9)`; ctx.lineWidth = 6; ctx.lineCap = 'round';
   if (seg) line(seg[0], seg[1]); else { ctx.fillStyle = `rgba(${L.fx.c},0.8)`; circle(f.sk.hf, 7); circle(f.sk.hb, 7); }
+  if (tierRank(L) >= 4) { ctx.fillStyle = `rgba(${rgbMix(L.fx.c, '255,226,150', 0.5)},0.9)`; for (const m of tierMotes(f)) circle(m, 4); }   // 非凡的三颗光点也泛光
+}
+// 非凡：三颗绕着身子转的光点（位置按时间算，不存状态）。第三个数是前后：大于 0 在身前
+function tierMotes(f) {
+  const t = clock * 1.6 + (f.idx || 0) * 2.1, out = [];
+  for (let k = 0; k < 3; k++) { const a = t + k * 2.094; out.push([f.x + Math.cos(a) * 36, f.y - 64 + Math.sin(t * 1.3 + k * 2) * 26 + Math.sin(a) * 8, Math.sin(a)]); }
+  return out;
+}
+function skinTierMotes(f, front) {
+  const L = f.look; if (tierRank(L) < 4) return;
+  const c = rgbMix(L.fx.c, '255,226,150', 0.5);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const [x, y, z] of tierMotes(f)) {
+    if ((z >= 0) !== front) continue;
+    const r = 8 + z * 2.5, g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,255,255,${0.75 + z * 0.2})`); g.addColorStop(0.3, `rgba(${c},0.6)`); g.addColorStop(1, `rgba(${c},0)`);
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  ctx.restore();
+  if (front && Math.random() < 0.3) { const m = tierMotes(f)[Math.floor(Math.random() * 3)]; addP({ type: 'glint', x: m[0], y: m[1], vx: rand(-8, 8), vy: -rand(8, 24), life: 0.45, max: 0.45, r: rand(2, 3.5), rgb: '255,236,180' }); }   // 光点后面拖一串小星
+}
+// 脚下：隐秘是一圈会呼吸的主题色光环；非凡是一座慢慢转的金色法阵（两圈、十二道刻纹、一个六芒星）
+function skinTierGround(f) {
+  const L = f.look, tr = tierRank(L); if (tr < 3) return;
+  const hg = clamp(1 + f.y / 160, 0, 1); if (hg <= 0) return;
+  const c = tr >= 4 ? rgbMix(L.fx.c, '255,214,120', 0.55) : L.fx.c, t = clock + (f.idx || 0) * 1.7;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(f.x, 1); ctx.scale(1, 0.2);
+  if (tr === 3) {
+    const r = 46 + Math.sin(t * 2.2) * 4;
+    ctx.strokeStyle = `rgba(${c},${(0.3 + 0.12 * Math.sin(t * 3)) * hg})`; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,255,${0.16 * hg})`; ctx.lineWidth = 2.5; ctx.stroke();
+  } else {
+    const R = 60, g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+    g.addColorStop(0, `rgba(${c},${0.2 * hg})`); g.addColorStop(1, `rgba(${c},0)`); ctx.fillStyle = g; ctx.fillRect(-R, -R, R * 2, R * 2);
+    ctx.strokeStyle = `rgba(${c},${0.5 * hg})`; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.stroke();
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, R * 0.8, 0, 7); ctx.stroke();
+    ctx.save(); ctx.rotate(t * 0.6); ctx.fillStyle = `rgba(${c},${0.6 * hg})`;
+    for (let k = 0; k < 12; k++) { ctx.rotate(Math.PI / 6); ctx.fillRect(R * 0.82, -3, R * 0.15, 6); }
+    ctx.restore();
+    ctx.save(); ctx.rotate(-t * 0.4); ctx.strokeStyle = `rgba(255,240,200,${0.42 * hg})`; ctx.lineWidth = 3;
+    for (const o of [0, Math.PI]) { ctx.beginPath(); for (let k = 0; k <= 3; k++) { const a = o + k * 2.094 - Math.PI / 2; ctx.lineTo(Math.cos(a) * R * 0.76, Math.sin(a) * R * 0.76); } ctx.stroke(); }
+    ctx.restore();
+  }
+  ctx.restore();
 }
 // 锥形流线肢体与服饰轮廓绘制（支持重甲护胫、宽袖长袍、武僧绑腿与刺客护腕）
 // 传说背饰：每款一个自己的轮廓（金乌火翼、幻灵狐尾、沧龙盘龙、修罗战旗……），不再都是背后一个圆盘
@@ -5949,6 +6073,106 @@ function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(q[0], q[1] - h); ctx.quadraticCurveTo(q[0] + 7, q[1], q[0], q[1] + 5); ctx.quadraticCurveTo(q[0] - 7, q[1], q[0], q[1] - h); ctx.fill();
       }
       ctx.restore(); break;
+    }
+    // ---------- 神兵武器箱 ----------
+    case 'galaxy': {   // 天河：背后一团慢慢转的星系，两条旋臂一蓝一粉，星核发白光，外面一圈淡淡的星环
+      const c = [bc[0] + bk * 10, bc[1] - 18], R = 40, rot = t * 0.35 * bk;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      glow(c, R * 1.5, '150,140,255', 0.2);
+      ctx.translate(c[0], c[1]); ctx.rotate(-0.35 * bk); ctx.scale(1, 0.6);
+      for (let arm = 0; arm < 2; arm++) {
+        const col = arm ? '255,150,225' : '150,175,255';
+        for (let i = 0; i < 28; i++) {
+          const u = i / 28, a = rot + arm * Math.PI + u * 4.4 * bk, r = 4 + u * R, x = Math.cos(a) * r, y = Math.sin(a) * r;
+          ctx.fillStyle = `rgba(${col},${0.36 * (1 - u * 0.55)})`; ctx.beginPath(); ctx.arc(x, y, (1 - u) * 4.5 + 1.8, 0, 7); ctx.fill();
+          if (i % 4 === 2) { const tw = 0.5 + 0.5 * Math.sin(t * 4 + i + arm * 3); ctx.fillStyle = `rgba(255,255,255,${0.45 + 0.55 * tw})`; ctx.beginPath(); ctx.arc(x, y, 0.8 + tw * 0.8, 0, 7); ctx.fill(); }
+        }
+      }
+      const core = ctx.createRadialGradient(0, 0, 0, 0, 0, 13); core.addColorStop(0, 'rgba(255,255,255,0.95)'); core.addColorStop(0.4, 'rgba(225,205,255,0.55)'); core.addColorStop(1, 'rgba(180,160,255,0)');
+      ctx.fillStyle = core; ctx.fillRect(-13, -13, 26, 26);
+      ctx.strokeStyle = 'rgba(205,215,255,0.32)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, R + 5, 0, 7); ctx.stroke();
+      ctx.restore(); break;
+    }
+    case 'butterflywings': {   // 幻蝶：一对半透明的大蝶翼，紫青两色慢慢流转，有翼脉和翼斑，一扇一扇
+      const flap = 0.74 + 0.26 * Math.sin(t * 2.4 + idx), mix = (Math.sin(t * 1.3 + idx) + 1) / 2;
+      const UP = [[0, 0], [6, -48], [44, -64], [78, -52], [60, -22], [40, -4], [0, 0]], LO = [[0, 4], [38, 6], [50, 30], [46, 54], [24, 44], [10, 24], [0, 4]];
+      for (const [layer, sc, al] of [[1, 0.84, 0.45], [0, 1, 0.85]]) {
+        const root = [bc[0] - bk * layer * 6, bc[1] + 4 - layer * 2], X = (x, y) => [root[0] + bk * x * flap * sc, root[1] + y * sc];
+        const shape = pts => { ctx.beginPath(); ctx.moveTo(...X(...pts[0])); for (let i = 1; i + 1 < pts.length; i += 2) ctx.quadraticCurveTo(...X(...pts[i]), ...X(...pts[i + 1])); ctx.closePath(); };
+        const c1 = rgbMix('120,235,255', '190,140,255', mix), c2 = rgbMix('190,140,255', '255,170,240', mix);
+        ctx.globalAlpha = al;
+        shape(UP); ctx.fillStyle = lg(root, X(76, -54), [[0, `rgba(${c1},0.25)`], [0.55, `rgba(${c2},0.6)`], [1, 'rgba(245,230,255,0.85)']]); ctx.fill();
+        ctx.strokeStyle = 'rgba(235,220,255,0.85)'; ctx.lineWidth = 1.1; ctx.stroke();
+        shape(LO); ctx.fillStyle = lg(root, X(46, 54), [[0, `rgba(${c1},0.3)`], [1, `rgba(${c2},0.65)`]]); ctx.fill(); ctx.stroke();
+        if (!layer) {   // 翼脉、翼斑只画近的那一对
+          ctx.strokeStyle = 'rgba(240,230,255,0.45)'; ctx.lineWidth = 0.8;
+          for (const [x, y] of [[44, -62], [76, -50], [58, -22], [48, 30], [44, 52]]) { ctx.beginPath(); ctx.moveTo(...X(0, 2)); ctx.quadraticCurveTo(...X(x * 0.5, y * 0.35), ...X(x * 0.92, y * 0.92)); ctx.stroke(); }
+          for (const [x, y, r] of [[50, -42, 6.5], [32, 32, 4.5]]) { const q = X(x, y); ctx.fillStyle = 'rgba(120,240,255,0.8)'; circle(q, r); ctx.fillStyle = 'rgba(40,20,80,0.85)'; circle(q, r * 0.55); ctx.fillStyle = 'rgba(255,255,255,0.9)'; circle([q[0] - 1, q[1] - 1], r * 0.18); }
+        }
+      }
+      ctx.globalAlpha = 1; break;
+    }
+    case 'crystals': {   // 琉璃：头后悬着一圈琉璃晶柱，粉青两色，慢慢浮动，晶面上闪光
+      glow([bc[0] + bk * 6, bc[1] - 22], 58, '170,240,255', 0.18);
+      for (let k = 0; k < 6; k++) {
+        const a = -2.35 + k * 0.42, r = 36 + (k % 2) * 7, bob = Math.sin(t * 1.8 + k * 1.1) * 3;
+        const c = [bc[0] - bk * Math.cos(a) * r, bc[1] - 6 + Math.sin(a) * r + bob], len = 14 - Math.abs(k - 2.5) * 1.6, w = 4.2, rot = Math.atan2(c[1] - bc[1] + 6, c[0] - bc[0]) + Math.sin(t * 0.8 + k) * 0.1;
+        const q = (d, s2) => [c[0] + Math.cos(rot) * d - Math.sin(rot) * s2, c[1] + Math.sin(rot) * d + Math.cos(rot) * s2];
+        const pts = [q(len, 0), q(len * 0.5, w), q(-len * 0.6, w), q(-len, 0), q(-len * 0.6, -w), q(len * 0.5, -w)];
+        ctx.fillStyle = lg(q(-len, 0), q(len, 0), [[0, 'rgba(160,230,250,0.75)'], [0.6, 'rgba(225,250,255,0.85)'], [1, 'rgba(255,190,235,0.9)']]);
+        ctx.beginPath(); for (const p of pts) ctx.lineTo(p[0], p[1]); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 0.9; ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.beginPath(); ctx.moveTo(...q(len, 0)); ctx.lineTo(...q(len * 0.5, w)); ctx.lineTo(...q(-len * 0.6, w)); ctx.lineTo(...q(-len, 0)); ctx.closePath(); ctx.fill();
+        const tw = Math.max(0, Math.sin(t * 2.6 + k * 1.9)); if (tw > 0.2) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(...q(len * 0.7, 0), 2 + tw * 4, '255,240,255', tw); ctx.restore(); }
+      }
+      break;
+    }
+    case 'notering': {   // 天籁：背后一圈金色的五线谱光环，音符沿着光环慢慢转
+      const c = [bc[0] + bk * 8, bc[1] - 20], R = 31;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      glow(c, R * 1.6, '255,215,130', 0.2);
+      for (let k = 0; k < 5; k++) { ctx.strokeStyle = `rgba(255,${200 + k * 10},${110 + k * 22},${0.55 - k * 0.06})`; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(c[0], c[1], R - 6 + k * 3, 0, 7); ctx.stroke(); }
+      for (let k = 0; k < 6; k++) { const a = t * 0.5 * bk + k * Math.PI / 3, q = [c[0] + Math.cos(a) * R, c[1] + Math.sin(a) * R], bob = Math.sin(t * 3 + k) * 1.5; ctx.save(); ctx.translate(q[0], q[1] + bob); drawShape('note', 3.4, '255,226,150', 0.95); ctx.restore(); }
+      ctx.restore(); break;
+    }
+    case 'scroll': {   // 青绿：背后浮着一卷展开的青绿山水，两头是木轴、玉轴头，随风轻轻起伏
+      const c = [bc[0] + bk * 16, bc[1] - 12];
+      ctx.save(); ctx.translate(c[0], c[1]); ctx.rotate((-0.2 + Math.sin(t * 1.6 + idx) * 0.04) * bk); ctx.scale(bk, 1);
+      const wv = x => Math.sin(x * 0.12 + t * 2.2) * 2.2, top = x => -15 + wv(x), bot = x => 15 + wv(x);
+      ctx.beginPath(); for (let x = -30; x <= 30; x += 6) ctx.lineTo(x, top(x)); for (let x = 30; x >= -30; x -= 6) ctx.lineTo(x, bot(x)); ctx.closePath();
+      ctx.fillStyle = '#f2ead2'; ctx.fill();
+      ctx.save(); ctx.clip();
+      for (const [x0, h, col] of [[-26, 20, '#3f9a86'], [-6, 26, '#1f6f78'], [14, 18, '#5fae7c']]) {
+        ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x0 - 14, 16); ctx.lineTo(x0 - 4, 16 - h * 0.6); ctx.lineTo(x0, 16 - h); ctx.lineTo(x0 + 6, 16 - h * 0.7); ctx.lineTo(x0 + 16, 16); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.moveTo(x0 - 1, 16 - h); ctx.lineTo(x0 + 2, 16 - h * 0.7); ctx.lineTo(x0 - 2, 16 - h * 0.55); ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(-30, 4 + wv(0), 60, 3);
+      ctx.fillStyle = '#c8321e'; ctx.fillRect(20, -11 + wv(20), 4, 4);
+      ctx.restore();
+      for (const x of [-32, 32]) { ctx.fillStyle = '#6a3a1e'; ctx.fillRect(x - 2, top(x) - 4, 4, 38); ctx.fillStyle = '#6ad8b4'; circle([x, top(x) - 5], 2.6); circle([x, bot(x) + 5], 2.6); }
+      ctx.restore(); break;
+    }
+    case 'peacock': {   // 孔雀：腰后开一把孔雀屏，九根长翎扇形张开，翎眼金、青、宝蓝
+      const base = [hip[0] + bk * 4, hip[1] - 6], open = 0.9 + 0.1 * Math.sin(t * 1.6 + idx);
+      for (let k = 8; k >= 0; k--) {
+        const th = -0.12 - k * 0.2 * open + Math.sin(t * 2 + k * 0.7) * 0.025, len = 62 + Math.sin(k * 1.7) * 6;
+        const tip = [base[0] + bk * Math.cos(th) * len, base[1] + Math.sin(th) * len], mid = [base[0] + bk * Math.cos(th + 0.12) * len * 0.5, base[1] + Math.sin(th + 0.12) * len * 0.5];
+        ribbon(base, mid, tip, 0.8, 3.6, lg(base, tip, [[0, '#0a4a40'], [0.6, '#14a88c'], [1, '#7fe8c8']]), 12);
+        const a = Math.atan2(tip[1] - base[1], tip[0] - base[0]);
+        for (const [r, col] of [[5.6, '#e8c040'], [4.4, '#14a88c'], [3.1, '#1a3a9a'], [1.5, '#0a0e2a']]) { ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(tip[0], tip[1], r * 1.25, r, a, 0, 7); ctx.fill(); }
+        const sh = Math.max(0, Math.sin(t * 2.2 + k * 0.9)); if (sh > 0.3) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(tip[0], tip[1] - 1, 1.5 + sh * 2.5, '200,255,235', sh * 0.8); ctx.restore(); }
+      }
+      break;
+    }
+    case 'koi': {   // 锦鲤：一红一金两尾锦鲤在背后绕着圈游，身后一圈水纹
+      const c = [bc[0] + bk * 12, bc[1] - 12], R = 27;
+      ctx.strokeStyle = 'rgba(170,220,240,0.35)'; ctx.lineWidth = 1.2;
+      for (const [r, k] of [[R - 7, 0], [R + 6, 1]]) { ctx.beginPath(); ctx.ellipse(c[0], c[1], r + Math.sin(t * 2 + k) * 1.2, (r + Math.sin(t * 2 + k) * 1.2) * 0.8, 0, 0, 7); ctx.stroke(); }
+      for (const [k, body, spot] of [[0, '#ff5a3a', '#fff4ee'], [1, '#ffb83a', '#fff2cc']]) {
+        const a = t * 0.9 * bk + k * Math.PI, q = [c[0] + Math.cos(a) * R, c[1] + Math.sin(a) * R * 0.8];
+        ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(Math.atan2(Math.cos(a) * 0.8 * bk, -Math.sin(a) * bk)); drawKoi(7, body, spot, t * 7 + k * 2); ctx.restore();
+      }
+      break;
     }
     default: return false;
   }
@@ -6403,10 +6627,11 @@ function drawBody(sk, f, o) {
   ];
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (o.ghost) {
-    ctx.fillStyle = `rgba(${L.slash},${o.ghost})`;
-    for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2], s[3], `rgba(${L.slash},${o.ghost})`);
+    const gc = o.tint || L.slash;
+    ctx.fillStyle = `rgba(${gc},${o.ghost})`;
+    for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2], s[3], `rgba(${gc},${o.ghost})`);
     circle(sk.head, 10);
-    if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${L.slash},${o.ghost})`; ctx.lineWidth = 2.5; line(sk.hilt, sk.tip); }
+    if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${gc},${o.ghost})`; ctx.lineWidth = 2.5; line(sk.hilt, sk.tip); }
     return;
   }
   const alpha = o.invul ? 0.55 : 1;
@@ -7296,7 +7521,7 @@ const line = (a, b) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0
 const circle = (p, r) => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fill(); };
 function drawParticles(glowOnly) {
   for (const p of particles) {
-    if (glowOnly && !(p.type === 'spark' || p.type === 'flash' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph' || SKIN_GLOW_P[p.type])) continue;
+    if (glowOnly && (p.ng || !(p.type === 'spark' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph' || SKIN_GLOW_P[p.type]))) continue;   // ng：品质特效不进泛光；命中闪光本身就是一团柔光，再泛一遍就糊成一团白
     const k = clamp(p.life / p.max, 0, 1);
     if (p.type === 'spark') {
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -7307,17 +7532,18 @@ function drawParticles(glowOnly) {
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (1.15 - k * 0.8), 0, Math.PI * 2); ctx.stroke();
     } else if (p.type === 'flash') {
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2);
-      g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g; ctx.fillRect(p.x - p.r * 2, p.y - p.r * 2, p.r * 4, p.r * 4); ctx.restore();
+      const R = p.r * 1.7, g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);   // 亮的只有中间一小团，外圈很快淡下去：击倒慢放时闪光停得久，整块白圆盘会把人盖住
+      g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(0.22, `rgba(255,255,255,${k * 0.55})`); g.addColorStop(0.55, `rgba(255,255,255,${k * 0.14})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(p.x - R, p.y - R, R * 2, R * 2); ctx.restore();
     } else if (p.type === 'dmg') {
       const pop = 1 + Math.max(0, (p.life - p.max + 0.12) / 0.12) * 0.6;
       ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s * pop, p.s * pop);
       ctx.globalAlpha = Math.min(1, k * 2.5); ctx.font = `800 21px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(10,8,20,0.85)'; ctx.strokeText(p.text, 0, 0);
       ctx.shadowColor = `rgba(${p.edge},0.9)`; ctx.shadowBlur = 10; ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, 0, 0); ctx.restore();
-    } else if (p.type === 'shape') {   // 皮肤碎片：雪花、花瓣、羽毛……
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.spin || 0) * (p.max - p.life));
+    } else if (p.type === 'shape') {   // 皮肤碎片：雪花、花瓣、羽毛……（锦鲤朝着游的方向，蝴蝶基本立着、轻轻晃）
+      ctx.save(); ctx.translate(p.x, p.y);
+      ctx.rotate(p.sh === 'koi' ? Math.atan2(p.vy || 0, p.vx || 1) : p.sh === 'butterfly' ? Math.sin(p.life * 7 + p.r * 5) * 0.35 : (p.spin || 0) * (p.max - p.life));
       if (WX_RISE[p.sh] || p.sh === 'spark') ctx.globalCompositeOperation = 'lighter';
       drawShape(p.sh, p.r, p.rgb, Math.min(1, k * 1.5)); ctx.restore();
     } else if (p.type === 'glyph') {   // 皮肤命中图案
@@ -8281,7 +8507,7 @@ function drawFireflies(glow) {
 // ---------- 发光层：只画会发光的东西，再模糊叠加 ----------
 function drawEmissive(sc, sx, sy) {
   const mx = W * 0.68 - (cam.x - STAGE_W / 2) * 0.04 * sc, my = H * 0.26, mr = H * 0.11;
-  ctx.fillStyle = 'rgba(255,236,210,0.32)'; circle([mx, my], mr * 1.02);
+  moonGlow(mx, my, mr);
   ctx.fillStyle = '#fff';
   for (let i = 0; i < 90; i += 3) {
     const x = ((hash(i) * W * 1.4 - cam.x * 0.02 * sc) % W + W) % W, y = hash(i + 50) * H * 0.5;
@@ -8515,9 +8741,14 @@ function menuEmissive(sc) {
   menuFlies(true);
   ctx.restore();
 }
+// 泛光里的月亮：天河的星核是斜着的椭圆，不是圆月
+function moonGlow(mx, my, mr) {
+  if (SCN && SCN.orb === 'galaxy') { ctx.save(); ctx.translate(mx, my); ctx.rotate(-0.3); ctx.scale(1, 0.46); ctx.fillStyle = 'rgba(255,236,250,0.3)'; circle([0, 0], mr * 0.75); ctx.restore(); }
+  else { ctx.fillStyle = 'rgba(255,236,210,0.32)'; circle([mx, my], mr * 1.02); }
+}
 function withBloomScreen(sc) {   // 月亮和星星的发光
   const mx = W * 0.68 - (cam.x - STAGE_W / 2) * 0.04 * sc, my = H * 0.26, mr = H * 0.11;
-  ctx.fillStyle = 'rgba(255,236,210,0.32)'; circle([mx, my], mr * 1.02);
+  moonGlow(mx, my, mr);
   ctx.fillStyle = '#fff';
   for (let i = 0; i < 90; i += 3) {
     const x = ((hash(i) * W * 1.4 - cam.x * 0.02 * sc) % W + W) % W, y = hash(i + 50) * H * 0.5;
@@ -10216,11 +10447,39 @@ function drawShape(kind, s, rgb, a) {
   else if (kind === 'ash') { ctx.fillRect(-s * 0.6, -s * 0.4, s * 1.2, s * 0.8); }
   else if (kind === 'dust') { ctx.beginPath(); ctx.arc(0, 0, s * 0.5, 0, 7); ctx.fill(); }
   else if (kind === 'spark') { ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-s, -s * 1.5); ctx.lineTo(s * 0.3, -s * 0.2); ctx.lineTo(-s * 0.3, s * 0.2); ctx.lineTo(s, s * 1.5); ctx.stroke(); }
+  else if (kind === 'twinkle') {   // 星星：四道细芒 + 一个亮点
+    ctx.beginPath(); for (let k = 0; k < 8; k++) { const r = k % 2 ? s * 0.22 : s * 1.7, an = k * Math.PI / 4; ctx.lineTo(Math.cos(an) * r, Math.sin(an) * r); } ctx.closePath(); ctx.fill();
+    ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(0, 0, s * 0.32, 0, 7); ctx.fill();
+  }
+  else if (kind === 'butterfly') {   // 蝴蝶：上下两对翅膀，一扇一扇（每只扇的节奏不一样）
+    const fl = 0.28 + 0.72 * Math.abs(Math.sin(clock * 11 + s * 37));
+    ctx.save(); ctx.scale(fl, 1);
+    for (const sg of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sg * s * 1.9, -s * 2.3, sg * s * 2.2, -s * 0.5); ctx.quadraticCurveTo(sg * s * 1.3, s * 0.1, 0, 0); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sg * s * 1.7, s * 0.3, sg * s * 1.1, s * 1.6); ctx.quadraticCurveTo(sg * s * 0.4, s * 1.1, 0, 0); ctx.fill();
+    }
+    ctx.restore();
+    ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(-s * 0.12, -s * 0.9, s * 0.24, s * 1.9);
+  }
+  else if (kind === 'note') {   // 音符：一个八分音符
+    ctx.beginPath(); ctx.ellipse(0, s * 0.9, s * 0.78, s * 0.54, -0.4, 0, 7); ctx.fill();
+    ctx.lineWidth = Math.max(0.8, s * 0.24); ctx.beginPath(); ctx.moveTo(s * 0.66, s * 0.72); ctx.lineTo(s * 0.66, -s * 1.9); ctx.quadraticCurveTo(s * 1.6, -s * 1.2, s * 1.45, -s * 0.15); ctx.stroke();
+  }
+  else if (kind === 'koi') drawKoi(s * 1.15, c, `rgba(255,250,240,${a * 0.9})`, clock * 9 + s * 5);
   else {   // ember gold lava：会发光的小点
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 2.2); g.addColorStop(0, `rgba(255,250,230,${a})`); g.addColorStop(0.35, c); g.addColorStop(1, `rgba(${rgb},0)`);
     ctx.fillStyle = g; ctx.fillRect(-s * 2.2, -s * 2.2, s * 4.4, s * 4.4);
     if (kind === 'gold' && s > 2) { ctx.strokeStyle = `rgba(255,250,220,${a})`; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(-s * 2.5, 0); ctx.lineTo(s * 2.5, 0); ctx.moveTo(0, -s * 2.5); ctx.lineTo(0, s * 2.5); ctx.stroke(); }
   }
+}
+// 锦鲤：头朝 +x，身子一扭一扭，尾鳍跟着摆；spot 是背上的一块白斑（不要就传空）
+function drawKoi(s, body, spot, wig) {
+  const w = Math.sin(wig) * 0.35, tx = -s * 0.95, ty = w * s * 0.6;
+  ctx.fillStyle = body;
+  ctx.beginPath(); ctx.moveTo(s * 1.6, 0); ctx.quadraticCurveTo(s * 0.8, -s * 0.78, -s * 0.5, -s * 0.32 + w * s * 0.3); ctx.quadraticCurveTo(-s * 1.05, w * s * 0.5, -s * 0.5, s * 0.32 + w * s * 0.3); ctx.quadraticCurveTo(s * 0.8, s * 0.78, s * 1.6, 0); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx + s * 0.3, ty); ctx.quadraticCurveTo(tx - s * 0.5, ty - s * 0.9, tx - s * 1.05, ty - s * 0.75 + w * s); ctx.quadraticCurveTo(tx - s * 0.5, ty, tx - s * 1.05, ty + s * 0.75 + w * s); ctx.quadraticCurveTo(tx - s * 0.5, ty + s * 0.9, tx + s * 0.3, ty); ctx.fill();
+  for (const sg of [-1, 1]) { ctx.beginPath(); ctx.ellipse(s * 0.45, sg * s * 0.58, s * 0.38, s * 0.14, sg * 0.7, 0, 7); ctx.fill(); }
+  if (spot) { ctx.fillStyle = spot; ctx.beginPath(); ctx.ellipse(s * 0.25, -s * 0.08, s * 0.48, s * 0.24, 0.15, 0, 7); ctx.fill(); }
 }
 // ---------- 命中图案：以命中点为中心，放大并淡出 ----------
 function drawGlyph(kind, r, rgb, a) {
@@ -10240,8 +10499,14 @@ function drawGlyph(kind, r, rgb, a) {
   else if (kind === 'shards') arms(5, () => { ctx.beginPath(); ctx.moveTo(r * 0.35, -r * 0.1); ctx.lineTo(r, 0); ctx.lineTo(r * 0.35, r * 0.1); ctx.closePath(); ctx.fill(); });
   else if (kind === 'ripple') { ctx.save(); ctx.scale(1, 0.42); for (const [q, w] of [[0.35, 2.6], [0.68, 1.8], [1, 1.1]]) { ctx.lineWidth = w; ctx.globalAlpha = 1.15 - q * 0.6; ctx.beginPath(); ctx.arc(0, 0, r * q, 0, 7); ctx.stroke(); } ctx.restore(); ctx.fillStyle = w; ctx.beginPath(); ctx.arc(0, 0, r * 0.08, 0, 7); ctx.fill(); }
   else if (kind === 'feathers') arms(5, () => { ctx.save(); ctx.translate(r * 0.55, 0); ctx.rotate(Math.PI / 2); drawShape('feather', r * 0.2, rgb, a); ctx.restore(); });
+  else if (kind === 'star8') {   // 非凡：八角星印，长短芒交替，中间一圈
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r * 0.3, 0, 7); ctx.stroke();
+    arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.34, -r * 0.07); ctx.lineTo(r, 0); ctx.lineTo(r * 0.34, r * 0.07); ctx.closePath(); ctx.fill(); });
+    ctx.save(); ctx.rotate(Math.PI / 8); arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.32, -r * 0.05); ctx.lineTo(r * 0.6, 0); ctx.lineTo(r * 0.32, r * 0.05); ctx.closePath(); ctx.fill(); }); ctx.restore();
+    ctx.fillStyle = w; ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, 7); ctx.fill();
+  }
 }
-// ---------- 天上的东西：月亮、太阳、血月、日蚀、极光、金莲、裂月、云日、凤凰 ----------
+// ---------- 天上的东西：月亮、太阳、血月、日蚀、极光、金莲、裂月、云日、凤凰、天河 ----------
 function drawOrb(T, mx, my, mr, t) {
   const o = T ? T.orb : 'moon', c = T ? T.orbC : '255,236,210';
   const glow = (r0, r1, a) => { const g = ctx.createRadialGradient(mx, my, r0, mx, my, r1); g.addColorStop(0, `rgba(${c},${a})`); g.addColorStop(1, `rgba(${c},0)`); ctx.fillStyle = g; ctx.fillRect(mx - r1, my - r1, r1 * 2, r1 * 2); };
@@ -10280,6 +10545,30 @@ function drawOrb(T, mx, my, mr, t) {
     ctx.save(); ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.clip();
     ctx.strokeStyle = `rgba(255,${130 + Math.sin(t * 2) * 50 | 0},70,0.9)`; ctx.lineWidth = mr * 0.045;
     for (let k = 0; k < 5; k++) { ctx.beginPath(); let x = mx + (hash(k) - 0.5) * mr * 0.4, y = my + (hash(k + 3) - 0.5) * mr * 0.4; ctx.moveTo(x, y); for (let n = 0; n < 4; n++) { const an = k * 1.26 + (hash(k * 7 + n) - 0.5); x += Math.cos(an) * mr * 0.35; y += Math.sin(an) * mr * 0.35; ctx.lineTo(x, y); } ctx.stroke(); }
+    ctx.restore();
+  } else if (o === 'galaxy') {   // 天河：一条星河斜着横过天空，中间一道暗的尘带，星核是斜着的一团亮光，两条旋臂慢慢转
+    const L = Math.max(W, mr * 14);
+    ctx.save(); ctx.translate(mx, my); ctx.rotate(-0.42); ctx.globalCompositeOperation = 'lighter';
+    for (const [w, a, col] of [[mr * 3.4, 0.13, c], [mr * 1.8, 0.15, '255,150,220'], [mr * 0.8, 0.2, '240,244,255']]) {
+      const g = ctx.createLinearGradient(0, -w, 0, w); g.addColorStop(0, `rgba(${col},0)`); g.addColorStop(0.5, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = g; ctx.fillRect(-L, -w, L * 2, w * 2);
+    }
+    ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(8,6,28,0.32)'; ctx.beginPath();   // 尘带
+    for (let x = -L; x <= L; x += mr * 0.5) ctx.lineTo(x, Math.sin(x / (mr * 2.6)) * mr * 0.22 - mr * 0.12);
+    for (let x = L; x >= -L; x -= mr * 0.5) ctx.lineTo(x, Math.sin(x / (mr * 2.6) + 0.8) * mr * 0.16 + mr * 0.1);
+    ctx.fill(); ctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 140; k++) {   // 星河里的星尘，一闪一闪
+      const x = (hash(k + 210) - 0.5) * L * 2, y = (hash(k + 330) + hash(k + 450) - 1) * mr * 1.7, tw = 0.35 + 0.65 * Math.sin(t * (0.8 + hash(k + 570) * 2.2) + k) ** 2, z = 1.2 + hash(k + 690) * 2.2;
+      ctx.fillStyle = `rgba(${k % 5 ? '255,255,255' : '255,200,240'},${0.7 * tw})`; ctx.fillRect(x - z / 2, y - z / 2, z, z);
+    }
+    ctx.rotate(0.12); ctx.scale(1, 0.46);   // 星系盘斜着放，旋臂在盘里慢慢转
+    for (let arm = 0; arm < 2; arm++) for (let k = 0; k < 48; k++) {   // 旋臂
+      const q = k / 48, an = arm * Math.PI + q * 4.4 + t * 0.05, r = mr * (0.2 + q * 1.7);
+      ctx.fillStyle = `rgba(${q < 0.45 ? '255,235,250' : c},${0.6 * (1 - q)})`;
+      ctx.beginPath(); ctx.arc(Math.cos(an) * r, Math.sin(an) * r, (1 - q) * 4.5 + 1.2, 0, 7); ctx.fill();
+    }
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, mr * 1.05); g.addColorStop(0, 'rgba(255,252,255,0.95)'); g.addColorStop(0.25, `rgba(${c},0.55)`); g.addColorStop(1, `rgba(${c},0)`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, mr * 1.05, 0, 7); ctx.fill();   // 星核（压扁成斜着的椭圆，不像月亮）
     ctx.restore();
   } else if (o === 'lotus') {   // 金莲托月
     glow(mr * 0.6, mr * 5, 0.42);
@@ -10334,15 +10623,16 @@ function drawWeather(T, sc) {
   const n = Math.round((T.legend ? 90 : 42) * (SETTINGS.quality === 'low' ? 0.4 : SETTINGS.quality === 'mid' ? 0.7 : 1)), spanX = W / sc + 200, top = -groundY() / sc - 60, spanY = -top + 30, rise = WX_RISE[T.wx];
   for (let i = 0; i < n; i++) {
     const rain = T.wx === 'rain';
-    const sp = (rain ? 520 : T.wx === 'snow' ? 50 : T.wx === 'ink' ? 160 : rise ? 45 : 60) * (0.6 + hash(i + 3) * 0.8), dr = rain ? -110 : T.wx === 'spark' ? 0 : -25 + hash(i + 8) * 20;
+    const tw = T.wx === 'twinkle', sp = (rain ? 520 : T.wx === 'snow' ? 50 : T.wx === 'ink' ? 160 : rise ? 45 : tw ? 12 : 60) * (0.6 + hash(i + 3) * 0.8), dr = rain ? -110 : T.wx === 'spark' || tw ? 0 : -25 + hash(i + 8) * 20;
     let y = (hash(i + 1) * spanY + sp * clock) % spanY; y = rise ? 20 - y : top + y;
     const x = cam.x - spanX / 2 + ((hash(i) * spanX + dr * clock + (rain ? 0 : Math.sin(clock * (0.6 + hash(i + 5)) + i) * 30)) % spanX + spanX) % spanX;
     const s = (T.legend ? 2 : 1.6) + hash(i + 7) * 2.4, near = hash(i + 9);
     let a = 0.35 + near * 0.55;
     if (T.wx === 'spark') { a *= Math.max(0, Math.sin(clock * 6 + i * 3.7)) ** 6; if (a < 0.02) continue; }
+    else if (tw) { a *= 0.12 + 0.88 * Math.max(0, Math.sin(clock * (1.2 + hash(i + 11)) + i * 2.3)) ** 3; }
     if (rise) a *= clamp((20 - y) / 120, 0, 1) * clamp((y - top) / 150, 0, 1);
     ctx.save(); ctx.translate(x, y); ctx.rotate(rain ? -Math.atan2(dr, sp) : clock * (hash(i + 2) - 0.5) * 3 + i);
-    if (rise || T.wx === 'spark') ctx.globalCompositeOperation = 'lighter';
+    if (rise || T.wx === 'spark' || tw) ctx.globalCompositeOperation = 'lighter';
     drawShape(T.wx, s * (0.7 + near * 0.6), T.wxC, a);
     ctx.restore();
   }
@@ -10364,7 +10654,7 @@ function paintSceneCard(CW, CH, T, t, u) {
   for (let i = 0; i < (T.legend ? 34 : 18); i++) {
     const rise = WX_RISE[T.wx], y = ((hash(i + 1) * CH + (rise ? -1 : 1) * 30 * u * t * (0.6 + hash(i + 3))) % CH + CH) % CH;
     ctx.save(); ctx.translate(hash(i) * CW + Math.sin(t + i) * 8 * u, y); ctx.rotate(t * (hash(i + 2) - 0.5) * 2 + i);
-    if (rise || T.wx === 'spark') ctx.globalCompositeOperation = 'lighter';
+    if (rise || T.wx === 'spark' || T.wx === 'twinkle') ctx.globalCompositeOperation = 'lighter';
     drawShape(T.wx, (1.6 + hash(i + 7) * 2.6) * u, T.wxC, 0.4 + hash(i + 9) * 0.5); ctx.restore();
   }
 }
@@ -10401,7 +10691,8 @@ function availList() {
 function skinLook(ci, skin) {
   const sk = SKINS[skin];
   const ok = sk && sk.char === CHARS[ci].id;
-  return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null, fx: ok ? sk.fx || null : null };
+  const it = ok && window.ArmoryCore && ArmoryCore.ITEM[skin];
+  return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null, fx: ok ? sk.fx || null : null, tier: it ? it.tier : '' };
 }
 function skinSkillName(fOrKey, slot) {
   const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);

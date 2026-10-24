@@ -1617,6 +1617,7 @@
   .ar-pips { display: inline-flex; gap: 5px; }
   .ar-pips i { width: 20px; height: 7px; background: rgba(236,232,225,.14); transform: skewX(-20deg); }
   .ar-pips i.on { background: var(--gold); box-shadow: 0 0 8px rgba(233,196,106,.5); }
+  .ar-pips.gold i.on { background: linear-gradient(90deg, #fff1c4, #e4ae39); box-shadow: 0 0 12px rgba(255,205,100,.8); }
   .ar-cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(390px, 100%), 1fr)); gap: 14px; }
   .ar-casecard { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: linear-gradient(160deg, rgba(var(--cc), .15), rgba(13,21,30,.5) 45%); border: 1px solid rgba(var(--cc), .36); }
   .ar-casehead { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 4px; }
@@ -1634,6 +1635,48 @@
   .ar-minis { display: flex; flex-wrap: wrap; gap: 4px; }
   .ar-minis img { width: 36px; height: 48px; object-fit: cover; background: #0b0f16; border-bottom: 2px solid rgb(var(--tc)); }
   .ar-col { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-top: 4px; padding-top: 10px; font-size: 13px; color: var(--dim); border-top: 1px solid rgba(236,232,225,.08); }
+  /* 神兵武器箱：整行、金边、慢慢扫过一道光 */
+  .ar-casecard.prem { grid-column: 1 / -1; position: relative; overflow: hidden; padding: 18px; border-color: rgba(240,190,80,.72);
+    background: radial-gradient(120% 140% at 0% 0%, rgba(255,215,120,.22), transparent 55%), linear-gradient(160deg, rgba(120,70,20,.32), rgba(13,21,30,.6) 55%);
+    box-shadow: inset 0 0 0 1px rgba(255,220,140,.12), 0 12px 40px rgba(228,174,57,.12); }
+  .ar-casecard.prem::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255,240,200,.13) 45%, transparent 60%); background-size: 250% 100%; animation: arSheen 5.5s ease-in-out infinite; }
+  @keyframes arSheen { 0% { background-position: 120% 0; } 60%, 100% { background-position: -120% 0; } }
+  .ar-casecard.prem .ar-casebox, .ar-casebox.prem { background: linear-gradient(160deg, #fff1c4, #e4ae39 45%, #8a5a14); box-shadow: 0 0 18px rgba(255,210,110,.45); }
+  .ar-casecard.prem h3 { color: #ffe7a0; text-shadow: 0 0 12px rgba(255,210,110,.45); }
+  .ar-casecard.prem .ar-note { margin: 0; }
+  .ar-minis img[data-pv] { cursor: zoom-in; transition: transform .15s; }
+  .ar-minis img[data-pv]:hover { transform: translateY(-2px); }
+  .ar-casecard.prem { display: grid; grid-template-columns: minmax(280px, 350px) minmax(0, 1fr); align-items: center; gap: 18px 26px; }
+  .ar-premside { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .ar-premside .ar-casehead { margin: 0; }
+  .ar-podds { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ar-podds span { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700; color: rgb(var(--tc)); background: rgba(var(--tc), .1); border: 1px solid rgba(var(--tc), .38); }
+  .ar-podds b { font-family: var(--v-cond); font-size: 17px; color: #fff; }
+  /* 七款摆成一排：非凡在前、大一号，金边会呼吸，卡面上隔一会儿扫过一道光 */
+  .ar-pshow { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
+  .ar-pcard { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 0 0 9px; font: inherit; text-align: center; color: #fff; cursor: zoom-in;
+    background: linear-gradient(180deg, rgba(var(--tc), .05), rgba(var(--tc), .22)); border: 1px solid rgba(var(--tc), .5); box-shadow: 0 6px 20px rgba(0,0,0,.35); transition: transform .18s, box-shadow .18s, border-color .18s; }
+  .ar-pcard.t-gold { flex-grow: 1.3; border-color: rgba(255,214,120,.9); animation: arGoldPulse 2.8s ease-in-out infinite; }
+  .ar-pcard:hover, .ar-pcard:focus-visible { transform: translateY(-5px); border-color: rgb(var(--tc)); box-shadow: 0 12px 30px rgba(var(--tc), .38); }
+  .ar-pcard::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgb(var(--tc)); box-shadow: 0 0 10px rgba(var(--tc), .8); }
+  .ar-pimg { position: relative; display: block; overflow: hidden; aspect-ratio: 3 / 4; background: #0b0f16; }
+  .ar-pimg img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+  .ar-pcard:hover .ar-pimg img { transform: scale(1.05); }
+  .ar-pcard.t-gold .ar-pimg::after, .ar-pcard.t-cov .ar-pimg::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 36%, rgba(255,248,225,.5) 50%, transparent 64%); background-size: 260% 100%; background-position: 130% 0; animation: arCardSweep 4s ease-in-out infinite; }
+  .ar-pcard.t-cov .ar-pimg::after { background-image: linear-gradient(115deg, transparent 40%, rgba(255,225,220,.26) 50%, transparent 60%); animation-duration: 5.5s; animation-delay: 1.2s; }
+  .ar-pcard.t-gold + .ar-pcard.t-gold .ar-pimg::after { animation-delay: .7s; }
+  .ar-pcard b { padding: 4px 4px 0; font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ar-pcard.t-gold b { font-size: 17px; color: #ffe7a0; text-shadow: 0 0 10px rgba(255,210,110,.6); }
+  .ar-pcard small { padding: 0 4px; font-size: 12px; color: rgb(var(--tc)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @keyframes arGoldPulse { 0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,.35), 0 0 0 rgba(255,214,120,0); } 50% { box-shadow: 0 6px 20px rgba(0,0,0,.35), 0 0 24px rgba(255,214,120,.5); } }
+  @keyframes arCardSweep { 0% { background-position: 130% 0; } 50%, 100% { background-position: -30% 0; } }
+  @media (max-width: 1180px) { .ar-casecard.prem { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 640px) {
+    .ar-pshow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .ar-pcard { grid-column: span 2; }
+    .ar-pcard.t-gold { grid-column: span 3; }
+  }
+  .ar-premtag { position: relative; align-self: flex-start; padding: 4px 16px 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: .1em; color: #2a1a04; background: linear-gradient(90deg, #ffe7a0, #e4ae39); clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
   /* 开箱滚轮：每格 124 宽 + 8 间隔 = armory.js 里的 CW (132) */
   .ar-reel { position: relative; height: 200px; margin: 6px 0 4px; overflow: hidden; background: #070b11; border: 1px solid var(--line); }
   .ar-reel::before, .ar-reel::after { content: ""; position: absolute; top: 0; bottom: 0; width: 90px; z-index: 2; pointer-events: none; }
@@ -1654,6 +1697,55 @@
   .ar-reveal p { margin: 0 0 4px; text-align: center; }
   .ar-reveal + .row { justify-content: center; }
   @keyframes arReveal { from { transform: scale(.6) rotate(-4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+  /* 保密以上的揭晓：背后转着光、一圈光环炸开、四周飘星点，卡面扫过一道亮光；非凡再加一下金色闪光 */
+  .ar-reveal { position: relative; }
+  .ar-reveal > :not(.ar-rvfx) { position: relative; z-index: 1; }
+  .ar-rvart { margin: 12px auto; animation: arReveal .6s cubic-bezier(.2, 1.4, .4, 1) both; }
+  .ar-rvart img { margin: 0; animation: none; }
+  .ar-shine { position: absolute; inset: 2px; overflow: hidden; pointer-events: none; }
+  .ar-shine::before { content: ""; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 42%; opacity: 0; transform: skewX(-18deg); background: linear-gradient(100deg, transparent, rgba(255,255,255,.6), transparent); }
+  .t-cla .ar-shine::before, .t-cov .ar-shine::before, .t-gold .ar-shine::before { animation: arShine 2.6s ease-in-out .6s infinite; }
+  @keyframes arShine { 0% { left: -60%; opacity: 0; } 8% { opacity: 1; } 42% { left: 125%; opacity: 1; } 43%, 100% { left: 125%; opacity: 0; } }
+  .ar-rvfx { position: absolute; left: 50%; top: 158px; width: 0; height: 0; pointer-events: none; }
+  .ar-rays { position: absolute; left: -270px; top: -270px; width: 540px; height: 540px; border-radius: 50%;
+    background: repeating-conic-gradient(rgba(var(--tc), 0) 0deg 8deg, rgba(var(--tc), .32) 11deg 14deg, rgba(var(--tc), 0) 17deg 24deg);
+    -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 68%); mask-image: radial-gradient(circle, #000 18%, transparent 68%);
+    animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
+  .t-cla .ar-rays { opacity: .55; }
+  .ar-burst { position: absolute; left: -45px; top: -45px; width: 90px; height: 90px; border-radius: 50%; border: 3px solid rgba(var(--tc), .95); box-shadow: 0 0 30px rgba(var(--tc), .8), inset 0 0 20px rgba(var(--tc), .6); animation: arBurst .9s ease-out .05s both; }
+  .ar-rvfx b { position: absolute; left: 0; top: 0; width: 10px; height: 10px; margin: -5px; opacity: 0; border-radius: 50%; background: radial-gradient(circle, #fff 0 18%, rgba(var(--tc), .9) 34%, transparent 70%); animation: arTwinkle 2.4s ease-in-out var(--d) infinite; }
+  .ar-rvfx b::before, .ar-rvfx b::after { content: ""; position: absolute; left: 50%; top: 50%; background: #fff; transform: translate(-50%, -50%); }
+  .ar-rvfx b::before { width: 1px; height: 22px; background: linear-gradient(transparent, #fff, transparent); }
+  .ar-rvfx b::after { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, #fff, transparent); }
+  .t-gold .ar-rvfx::after { content: ""; position: absolute; left: -420px; top: -420px; width: 840px; height: 840px; border-radius: 50%; background: radial-gradient(circle, rgba(255,246,215,.95), rgba(255,214,120,.45) 28%, transparent 62%); animation: arFlash .8s ease-out both; }
+  .t-gold .ar-rvart { animation: arRevealGold 1.05s cubic-bezier(.2, 1.25, .35, 1) both; }
+  .t-gold .ar-rvart img { border-color: #ffd36a; box-shadow: 0 0 60px rgba(255,205,100,.7), 0 0 0 6px rgba(255,214,120,.18); }
+  .t-gold h3 { background: linear-gradient(90deg, #fff1c4, #ffcf5a 40%, #fff6dc 55%, #ffcf5a 70%, #fff1c4); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: arGoldText 3s linear infinite; }
+  .t-gold .ar-tier { background: linear-gradient(90deg, #b8801c, #ffd36a 50%, #b8801c); background-size: 200% 100%; color: #241604; animation: arGoldText 2.2s linear infinite; }
+  .ar-box.rv.t-gold { background: radial-gradient(circle at 50% 32%, rgba(228,174,57,.2), transparent 62%), var(--panel2); border-color: rgba(228,174,57,.6); }
+  .ar-box.rv.t-cov { background: radial-gradient(circle at 50% 32%, rgba(235,75,75,.16), transparent 62%), var(--panel2); }
+  .ar-box.rv.t-cla { background: radial-gradient(circle at 50% 32%, rgba(211,44,230,.13), transparent 62%), var(--panel2); }
+  @keyframes arSpin { to { transform: rotate(360deg); } }
+  @keyframes arFade { from { opacity: 0; } }
+  @keyframes arBurst { from { transform: scale(.2); opacity: 1; } to { transform: scale(5.2); opacity: 0; } }
+  @keyframes arTwinkle { 0% { opacity: 0; transform: translate(var(--x), var(--y)) scale(0); } 35% { opacity: 1; transform: translate(var(--x), calc(var(--y) - 10px)) scale(var(--s)); } 100% { opacity: 0; transform: translate(var(--x), calc(var(--y) - 36px)) scale(0); } }
+  @keyframes arFlash { from { opacity: 1; transform: scale(.25); } to { opacity: 0; transform: scale(1.3); } }
+  @keyframes arRevealGold { 0% { transform: scale(.3) rotateY(90deg); opacity: 0; filter: brightness(3); } 55% { transform: scale(1.08) rotateY(0); opacity: 1; filter: brightness(1.6); } 100% { transform: none; filter: none; } }
+  @keyframes arGoldText { to { background-position: -220% 0; } }
+  /* 滚轮停在保密以上：中间那一格亮起来，指针变成那一档的颜色 */
+  .ar-reel { transition: box-shadow .3s; }
+  .ar-reel.prem { border-color: rgba(228,174,57,.55); box-shadow: inset 0 0 30px rgba(228,174,57,.14); }
+  .ar-reel.land { box-shadow: inset 0 0 70px rgba(var(--wc), .38); }
+  .ar-reel.land .ar-mark { background: rgb(var(--wc)); box-shadow: 0 0 18px rgb(var(--wc)); }
+  .ar-reel.land .ar-mark::before { border-top-color: rgb(var(--wc)); }
+  .ar-reel.land .ar-mark::after { border-bottom-color: rgb(var(--wc)); }
+  .ar-rt { position: relative; transition: transform .25s, box-shadow .25s; }
+  .ar-rt.win { z-index: 1; transform: scale(1.06); box-shadow: 0 0 0 2px rgb(var(--wc)), 0 0 34px rgba(var(--wc), .9); }
+  @media (prefers-reduced-motion: reduce) {
+    .ar-rays, .ar-burst, .ar-rvfx b, .ar-shine::before, .t-gold .ar-rvfx::after, .ar-rvart, .t-gold .ar-rvart, .t-gold h3, .t-gold .ar-tier, .ar-casecard.prem::before, .ar-pcard, .ar-pimg::after { animation: none !important; }
+    .ar-burst, .t-gold .ar-rvfx::after { display: none; }
+    .ar-rvfx b { opacity: .8; transform: translate(var(--x), var(--y)) scale(var(--s)); }
+  }
 
   /* 终端机：一次报一件，新的一件出来时卡面像在解码 */
   .ar-term { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; gap: 22px; padding: 18px; background: linear-gradient(135deg, rgba(var(--tc), .16), rgba(7,11,17,.86) 55%); border: 1px solid rgba(120,220,200,.32); }
@@ -1680,6 +1772,9 @@
   .ar-termseal .ar-note { margin: 4px 0 0; }
   .ar-termbox { flex: none; display: grid; place-items: center; width: 84px; height: 64px; background: linear-gradient(160deg, #2a6e66, #0f2a2a); box-shadow: inset 0 0 0 2px rgba(120,220,200,.45); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px); }
   .ar-termbox span { font-family: var(--title); font-size: 32px; color: #c8fff2; text-shadow: 0 0 10px rgba(120,240,215,.7); }
+  .ar-termbox.sm { width: 54px; height: 42px; margin: 0 0 0 4px; }
+  .ar-termbox.sm span { font-size: 22px; }
+  .ar-termbtns { display: flex; flex-wrap: wrap; gap: 8px; }
   .ar-todds { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--v-white); }
   .ar-todds span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
   .ar-todds span i { width: 10px; height: 10px; background: rgb(var(--tc)); }
@@ -1709,6 +1804,7 @@
   .ar-mkp { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 124px; font-size: 14px; white-space: nowrap; }
   .ar-mkp small { color: var(--dim); }
   .ar-mkbtns { flex: none; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  .ar-mkbtns [data-sellg] { min-width: 112px; }
   .ar-hist { display: grid; gap: 4px; }
   .ar-hrow { display: grid; grid-template-columns: 172px 84px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 12px; font-size: 13px; background: rgba(236,232,225,.03); }
   .ar-hrow > span:first-child { color: var(--dim); font-variant-numeric: tabular-nums; }

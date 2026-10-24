@@ -21,7 +21,8 @@
    刃影武库 · 规则核心
    ---------------------------------------------------------------------
    浏览器（src/armory.js）和云端（cloudflare/worker.js）共用这一份规则：
-   收藏品和武器箱、品质与概率、斩数、终端机、市场价格、汰换合同、对局掉落、每周补给、江湖行动。
+   收藏品和武器箱、品质与概率、开箱次数、斩数、终端机、市场价格（饰品、武器箱、终端机都能买卖）、
+   汰换合同、对局掉落、每周补给、江湖行动。
    这里不碰页面，只改传进来的存档对象 s，所以同一份代码在服务器上跑出来的结果和本机一模一样。
    连上新版云端时，开箱、买卖、汰换都由服务器算（随机数也在服务器上取），本机只负责显示。
    所有数据表都冻结了，控制台改不动概率和价格。
@@ -29,7 +30,7 @@
 (function (G) {
   'use strict';
   const C = {};
-  C.VER = 2;                                   // 2：去掉磨损、图案模板、钥匙和玉珏，加终端机，六个武器箱
+  C.VER = 3;                                   // 3：爆率调高，加神兵武器箱，改成限制每天开几个，武器箱和终端机上市场（2：去掉磨损和玉珏，加终端机）
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
   C.INV_MAX = 300, C.LIST_MAX = 20, C.HIST_MAX = 40;
@@ -37,7 +38,8 @@
   // 买卖差价：在售的比市场价贵 2%~12%；直接卖出是卖给收购商，按市场价的 88% 收；自己挂单最高标到市场价的 95%。
   // 价格每天最多偏离 ±10%，所以哪天买、哪天卖都赚不到差价，汰换合同也换不出比材料更值钱的东西（见 tools/econ-test.mjs 的“套利”一节）
   C.ASK = [1.02, 1.12], C.BID = 0.88, C.LIST_MAX_R = 0.95;
-  C.CASE_WEEK = 5;                             // 每周最多用墨锭买 5 个武器箱
+  C.OPEN_DAY = 2;                              // 普通武器箱每天最多开 2 个（北京时间零点刷新）
+  C.PREM_WEEK = 1;                             // 神兵武器箱每周最多开 1 个（周一刷新），不占每天那 2 个
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
   C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
@@ -54,12 +56,13 @@
     cov: { n: '隐秘', c: '235,75,75' },
     gold: { n: '★ 非凡', c: '228,174,57' },
   };
-  C.ODDS = { mil: 0.7992, res: 0.1598, cla: 0.032, cov: 0.0064, gold: 0.0026 };
+  C.ODDS = { mil: 0.53, res: 0.27, cla: 0.13, cov: 0.052, gold: 0.018 };   // 普通武器箱；神兵武器箱的写在它自己那一项里
   C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
-  C.BASE = { mil: 35, res: 160, cla: 650, cov: 2200, gold: 8800 };   // 参考价（墨锭）
+  C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 参考价（墨锭）：爆率调高以后跟着重定，开箱平均开不回箱子的钱
   // 终端机（照 CS2）：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
-  // 5 件都不要终端机也没了；开封 3 天不处理就作废。报价是当天市场价的 1~1.3 倍，所以买下来转手赚不到钱
-  C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1, 1.3] };
+  // 5 件都不要终端机也没了；开封 3 天不处理就作废。报价是当天市场价的 1~1.3 倍，所以买下来转手赚不到钱。
+  // 没开封的终端机也能在市场上买卖，参考价 base
+  C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1, 1.3], base: 120 };
 
   // 新涂装：只换配色的军规级饰品 [皮肤 key, 侠客, 名字, 配色]
   C.PAINTS = [
@@ -88,8 +91,8 @@
     ['yx_p2', 'yuxiao', '靛青', { body: '#dfe6f4', shade: '#8c9ac0', scarf: '#3a4fb0', slash: '120,140,240', blade: '#e8ecff' }],
     ['zx_p2', 'zuixian', '青瓷', { body: '#cfe0d4', shade: '#8aa894', scarf: '#4a8a78', slash: '140,220,190', blade: '#eef8f2' }],
   ];
-  // ★ 非凡：只在武器箱里出的传说皮肤（青锋行那款是游戏里原有的，也放进了江湖武器箱）
-  C.STARS = {
+  // 武库专属的整套皮肤：五款 ★ 非凡（青锋行那款是游戏里原有的，放在江湖武器箱），后面七款只在神兵武器箱里出
+  C.FULL = {
     gc_wolf: { char: 'gouchen', name: '霜狼',
       look: { body: '#dfe9f2', shade: '#7d93ab', scarf: '#7fd4ff', slash: '140,210,255', blade: '#f0f8ff', outline: '#0a1422', outlineA: 1 },
       deco: { head: 'voidhorns', hideBaseHead: true, gem: '#9fe0ff', robe: 'blizzard', breastplate: '#3a5878', shoulder: '#2d4a66', back: 'icewings', trail: 'snow', aura: 'snow', weapStyle: 'frost_hammer' },
@@ -115,23 +118,64 @@
       deco: { head: 'jadepin', gem: '#cfe0ff', robe: 'starry', breastplate: '#1a2650', back: 'crescent', trail: 'snow', aura: 'cloud', weapStyle: 'guanghan_moon' },
       fx: { th: 'star', c: '205,222,255', c2: '255,255,255' },
       scene: { sky: ['#03061a', '#0a163a', '#1c3468', '#0a1632'], orb: 'moon', orbC: '240,246,255', mist: '190,210,255', mtn: ['#122444', '#0a162c'], bam: ['#060c1c', '#040812'], wx: 'snow', wxC: '230,240,255', hit: 'crescent', hitC: '205,222,255', stars: 0.9, rays: true } },
+    // ---------- 神兵武器箱 ----------
+    ls_tianhe: { char: 'lingshuang', name: '天河',
+      look: { body: '#1c2146', shade: '#0c0f26', scarf: '#a9c2ff', slash: '170,190,255', blade: '#f6f8ff', outline: '#d6e0ff', outlineA: 0.85 },
+      deco: { head: 'valkyrie', gem: '#ffd6f4', robe: 'starry', breastplate: '#262c64', shoulder: '#323a80', back: 'galaxy', trail: 'spark', aura: 'aurora', weapStyle: 'tianhe_spear' },
+      fx: { th: 'nebula', c: '165,185,255', c2: '255,150,225' },
+      scene: { sky: ['#03030d', '#0a0b26', '#1e1a50', '#0a0a24'], orb: 'galaxy', orbC: '170,180,255', mist: '170,160,255', mtn: ['#14143a', '#0a0a24'], bam: ['#06061a', '#030310'], wx: 'twinkle', wxC: '225,220,255', hit: 'swirl', hitC: '190,170,255', stars: 1, rays: true } },
+    fy_huandie: { char: 'feiying', name: '幻蝶',
+      look: { body: '#22163a', shade: '#100a1e', scarf: '#c08cff', slash: '190,150,255', blade: '#f6ecff', outline: '#8ff4ff', outlineA: 0.75 },
+      deco: { head: 'foxmask', hideBaseHead: true, mask: '#8ff4ff', robe: 'spirit', shoulder: '#3a2468', back: 'butterflywings', cape: '#1c1238', trail: 'snow', aura: 'aurora', weapStyle: 'butterfly_daggers' },
+      fx: { th: 'butterfly', c: '185,140,255', c2: '120,240,255', part: 'butterfly' },
+      scene: { sky: ['#07040f', '#160c2a', '#2e1a4e', '#120a22'], orb: 'moon', orbC: '225,210,255', mist: '180,150,255', mtn: ['#1e1238', '#120a24'], bam: ['#0c0618', '#06030e'], wx: 'petal', wxC: '200,170,255', hit: 'swirl', hitC: '160,230,255', stars: 0.7, rays: true } },
+    ts_liuli: { char: 'tieshan', name: '琉璃',
+      look: { body: '#c4e6f2', shade: '#6ea6bf', scarf: '#ff9ad5', slash: '170,240,255', blade: '#f4feff', outline: '#16323f', outlineA: 1 },
+      deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#9fd4e6', crest: '#ff9ad5', shoulder: '#7fbcd2', breastplate: '#a8d8ea', robe: 'heavy', back: 'crystals', trail: 'snow', aura: 'snow', weapStyle: 'crystal_greatsword' },
+      fx: { th: 'crystal', c: '170,240,255', c2: '255,170,230' },
+      scene: { sky: ['#041018', '#0a2230', '#16405a', '#0a1c28'], orb: 'moon', orbC: '220,248,255', mist: '160,230,255', mtn: ['#123448', '#0a2232'], bam: ['#06141e', '#030c12'], wx: 'snow', wxC: '230,250,255', hit: 'hexagon', hitC: '170,240,255', stars: 0.5, rays: true } },
+    yx_tianlai: { char: 'yuxiao', name: '天籁',
+      look: { body: '#fbf6e8', shade: '#c9b88a', scarf: '#ffcf6a', slash: '255,220,140', blade: '#fff8e6', outline: '#3a2a10', outlineA: 1 },
+      deco: { head: 'starguan', robe: 'celestial', breastplate: '#c9a24e', back: 'notering', trail: 'gold', aura: 'gold', weapStyle: 'tianlai_flute' },
+      fx: { th: 'note', c: '255,212,120', c2: '255,248,225', part: 'note' },
+      scene: { sky: ['#140c06', '#3a2410', '#86602c', '#2e1c0a'], orb: 'sun', orbC: '255,226,150', mist: '255,215,140', mtn: ['#3a2812', '#24180a'], bam: ['#160e06', '#0e0804'], wx: 'gold', wxC: '255,225,150', hit: 'sunburst', hitC: '255,215,120', stars: 0.2, rays: true } },
+    my_qinglv: { char: 'moyu', name: '青绿',
+      look: { body: '#e6efe2', shade: '#7f9c86', scarf: '#1f8a76', slash: '70,200,170', blade: '#163c40', outline: '#0e2a2a', outlineA: 1 },
+      deco: { head: 'bamboohat', hatC: '#2a6a5a', robe: 'jade_master', breastplate: '#2a6a5a', back: 'scroll', trail: 'ink', inkC: '30,120,110', weapStyle: 'jade_brush' },
+      fx: { th: 'ink', c: '70,200,170', c2: '16,60,64' },
+      scene: { sky: ['#06120f', '#0f2a26', '#2a5a4c', '#10261f'], orb: 'moon', orbC: '220,250,235', mist: '120,210,180', mtn: ['#1a4a40', '#0e2e28'], bam: ['#0a1c16', '#06120e'], wx: 'ink', wxC: '40,140,120', hit: 'enso', hitC: '70,200,170', stars: 0.2 } },
+    yl_kongque: { char: 'yanling', name: '孔雀',
+      look: { body: '#e8f6f2', shade: '#76a8a0', scarf: '#14a88c', slash: '60,215,185', blade: '#eafffa', outline: '#0a2a26', outlineA: 1 },
+      deco: { head: 'plume', plumeC: ['#14a88c', '#e8c040'], robe: 'phoenix', breastplate: '#0e6a5c', cape: '#0c5a50', back: 'peacock', trail: 'feather', featherC: '60,215,185', weapStyle: 'peacock_feather' },
+      fx: { th: 'feather', c: '60,215,185', c2: '235,195,70', part: 'feather' },
+      scene: { sky: ['#04120f', '#0a2a24', '#145448', '#0a2620'], orb: 'moon', orbC: '220,255,240', mist: '100,220,190', mtn: ['#0e3a32', '#082420'], bam: ['#061a16', '#03100c'], wx: 'feather', wxC: '120,230,200', hit: 'feathers', hitC: '60,215,185', stars: 0.3 } },
+    ly_jinli: { char: 'liuyun', name: '锦鲤',
+      look: { body: '#fff6ee', shade: '#d4ab94', scarf: '#ff5a3a', slash: '255,140,110', blade: '#fff4ee', outline: '#2a1208', outlineA: 1 },
+      deco: { head: 'veilhat', hatC: '#d8483a', veilC: 'rgba(255,170,140,0.38)', robe: 'dusk', cape: '#e0603a', back: 'koi', trail: 'cloud', weapStyle: 'koi_fan' },
+      fx: { th: 'water', c: '255,125,95', c2: '255,232,205', part: 'koi' },
+      scene: { sky: ['#0a1018', '#14283a', '#2a5470', '#12283a'], orb: 'moon', orbC: '255,236,220', mist: '170,210,235', mtn: ['#16304a', '#0e2032'], bam: ['#0a1624', '#060e18'], wx: 'petal', wxC: '255,170,150', hit: 'ripple', hitC: '255,150,120', stars: 0.3 } },
   };
-  // 六个武器箱，各是一套收藏品：游戏里原有的 35 款皮肤和武库的 29 款全在里面，每款只在一个箱子里
+  // 七个武器箱，各是一套收藏品：游戏里原有的 35 款皮肤和武库的 36 款全在里面，每款只在一个箱子里。
+  // 前六个是普通武器箱（爆率 C.ODDS），神兵武器箱只出保密、隐秘、非凡三档，价钱也高
   C.COLS = {
-    c1: { name: '初刃', price: 180, emblem: '刃', col: '200,70,60',
+    c1: { name: '初刃', price: 280, emblem: '刃', col: '200,70,60',
       mil: ['qf_p1', 'ts_p1', 'lm_p1', 'fy_p1'], res: ['qf_frost', 'ts_bronze', 'ly_dusk'], cla: ['ts_obsidian', 'ly_sky'], cov: ['qf_gold', 'fy_blood'], gold: ['gc_wolf'] },
-    c2: { name: '霜华', price: 220, emblem: '霜', col: '90,160,230',
+    c2: { name: '霜华', price: 270, emblem: '霜', col: '90,160,230',
       mil: ['ls_p1', 'yh_p1', 'my_p1', 'gc_p1'], res: ['ls_plum', 'yh_sakura'], cla: ['yh_eclipse', 'my_gold'], cov: ['ls_aurora', 'yh_solstice'], gold: ['zx_moon'] },
     c3: { name: '名剑', price: 260, emblem: '剑', col: '220,170,70',
       mil: ['yx_p1', 'zx_p1', 'qf_p2', 'ts_p2'], res: ['yx_snow', 'zx_amber'], cla: ['yx_celestial', 'yl_phoenix'], cov: ['qf_abyss', 'zx_immortal'], gold: ['qf_renying'] },
-    c4: { name: '江湖', price: 220, emblem: '行', col: '90,200,150',
+    c4: { name: '江湖', price: 250, emblem: '行', col: '90,200,150',
       mil: ['lm_p2', 'fy_p2', 'ly_p2', 'yh_p2'], res: ['ly_bamboo', 'yl_raven'], cla: ['fy_phantom'], cov: ['my_celestial', 'ts_crimson'], gold: ['qf_qfx'] },
-    c5: { name: '惊雷', price: 240, emblem: '雷', col: '150,100,240',
+    c5: { name: '惊雷', price: 280, emblem: '雷', col: '150,100,240',
       mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
     c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
       mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
+    c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
+      mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie'] },
   };
   C.CASES = Object.keys(C.COLS);
+  C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱：对局掉落、补给、星章送的都是这几种
+  C.oddsOf = cid => C.COLS[cid].odds || C.ODDS;
   C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
   C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
 
@@ -193,6 +237,8 @@
     C.ITEM[k] = { col: cid, tier: t, mul: 0.85 + (hash32('pop|' + k) % 450) / 1000 };   // 热门程度 0.85~1.3
   C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
   C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
+  C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
+  C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵武器箱的那 7 款靠开箱、市场、终端机、汰换
   const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
@@ -216,15 +262,22 @@
   };
   C.refPrice = (k, day) => C.price({ k, st: -1 }, day);   // 走势图用：普通版
   C.casePrice = (cid, day) => Math.max(5, Math.round(C.COLS[cid].price * C.trend('case|' + cid, day)));
-  C.quick = p => Math.floor(p * C.BID * (1 - C.FEE));   // 直接卖出（饰品、武器箱）到手多少
+  // 武器箱和终端机（下面统称“箱子”）也是市场上的货：一样每天浮动、一样有在售的和挂单
+  C.GOODS = [...C.CASES, 'term'];
+  C.isGood = k => C.GOODS.includes(k);
+  C.goodPrice = (k, day) => k === 'term' ? Math.max(5, Math.round(C.TERM.base * C.trend('term', day))) : C.casePrice(k, day);
+  C.quick = p => Math.floor(p * C.BID * (1 - C.FEE));   // 直接卖出（饰品、箱子）到手多少
   C.net = p => Math.floor(p * (1 - C.FEE));             // 挂单成交到手多少
-  // 市场上今天在卖的几件（别的江湖人挂的单）：同一天同一件饰品，谁来看都是这几件
+  // 市场上今天在卖的（别的江湖人挂的单）：同一天同一样东西，谁来看都是这几个。
+  // 饰品每款 3~6 件、五分之一是斩数版；普通武器箱每种 6~12 个，神兵武器箱 2~4 个，终端机 4~8 台
   C.listings = (k, day) => {
-    if (!C.isItem(k)) return [];
-    const r = rng(hash32(`ls|${k}|${day}`)), n = 3 + Math.floor(r() * 4), out = [];
+    const item = C.isItem(k);
+    if (!item && !C.isGood(k)) return [];
+    const r = rng(hash32(`ls|${k}|${day}`)), out = [];
+    const n = item ? 3 + Math.floor(r() * 4) : k === 'term' ? 4 + Math.floor(r() * 5) : C.COLS[k].prem ? 2 + Math.floor(r() * 3) : 6 + Math.floor(r() * 7);
     for (let j = 0; j < n; j++) {
-      const st = r() < 0.2 ? Math.floor(r() * 150) : -1, m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
-      out.push({ l: `${day}.${k}.${j}`, k, st, price: Math.round(C.price({ k, st }, day) * m) });
+      const st = item && r() < 0.2 ? Math.floor(r() * 150) : -1, m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
+      out.push({ l: `${day}.${k}.${j}`, k, st, price: Math.round((item ? C.price({ k, st }, day) : C.goodPrice(k, day)) * m) });
     }
     return out.sort((a, b) => a.price - b.price);
   };
@@ -234,7 +287,7 @@
   /* ---------- 存档 ---------- */
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
-    lst: [], hist: [], bought: { d: 0, ids: [] }, cw: { w: 0, n: 0 }, drop: { w: 0, g: 0, n: 0, sup: 0 },
+    lst: [], hist: [], bought: { d: 0, ids: [] }, od: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
   });
@@ -246,7 +299,8 @@
   const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
     i: int(x.i, 1), k: x.k, st: stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
   // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务。
-  // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台终端机，饰品和武器箱照旧
+  // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台终端机，饰品和武器箱照旧。
+  // 第 2 版的“本周买了几个箱子”也丢掉（现在不限买，限的是每天开几个）
   C.normalize = (s, env) => {
     if (!isObj(s)) s = C.blank();
     const oldKeys = s.v === 1 ? int(s.keys, 0, 50) : 0;
@@ -261,20 +315,23 @@
     s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
     const seen = new Set();
     s.inv = s.inv.map(cleanItem).filter(x => x && !seen.has(x.i) && seen.add(x.i)).slice(0, C.INV_MAX);
-    s.lst = s.lst.map(L => {
-      const it = isObj(L) && cleanItem(L.it);
-      if (!it || seen.has(it.i) || !/^L\d{1,12}$/.test(String(L.l))) return null;
+    s.lst = s.lst.map(L => {   // 挂着的单：一件饰品（it），或者一个箱子（g 是武器箱编号或 'term'）
+      if (!isObj(L) || !/^L\d{1,12}$/.test(String(L.l))) return null;
+      const tail = { price: int(L.price, 1, 9999999), t: num(L.t), at: num(L.at) };
+      if (L.g !== undefined) return C.isGood(L.g) ? { l: String(L.l), g: L.g, ...tail } : null;
+      const it = cleanItem(L.it);
+      if (!it || seen.has(it.i)) return null;
       seen.add(it.i);
-      return { l: String(L.l), it, price: int(L.price, 1, 9999999), t: num(L.t), at: num(L.at) };
+      return { l: String(L.l), it, ...tail };
     }).filter(Boolean).slice(0, C.LIST_MAX);
     let top = 0;
     for (const x of s.inv) top = Math.max(top, x.i);
-    for (const L of s.lst) top = Math.max(top, L.it.i, +L.l.slice(1));
+    for (const L of s.lst) top = Math.max(top, L.it ? L.it.i : 0, +L.l.slice(1));
     s.nid = Math.max(int(s.nid, 1), top + 1);
     s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
     s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
     s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold', 'term'].includes(h.kind) ? h.kind : 'sell',
-      ...(C.CASES.includes(h.c) ? { c: h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),
+      ...(C.isGood(h.g) || C.CASES.includes(h.c) ? { g: C.isGood(h.g) ? h.g : h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),   // 第 2 版的箱子记录写在 c 里
       price: int(h.price, 0, 1e9), ...(h.gain !== undefined ? { gain: int(h.gain, 0, 1e9) } : {}) }));
     s.cc = Array.from(new Set(s.cc.filter(c => own(C.COLS, c))));
     s.buys = Object.fromEntries(Object.entries(s.buys).filter(([id, v]) => C.STORE.some(g => g.id === id) && isObj(v)).map(([id, v]) => [id, { k: str(v.k, 12), n: int(v.n, 0, 1e6) }]));
@@ -282,7 +339,8 @@
     s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
     s.last = num(s.last); s.gift = s.gift ? 1 : 0;
     s.bought = { d: int(s.bought.d), ids: Array.isArray(s.bought.ids) ? s.bought.ids.filter(x => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, 600) : [] };
-    s.cw = { w: int(s.cw.w), n: int(s.cw.n, 0, C.CASE_WEEK) };
+    s.od = { d: int(s.od.d), n: int(s.od.n, 0, C.OPEN_DAY) };
+    s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, C.PREM_WEEK) };
     s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
     s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
     const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
@@ -294,7 +352,8 @@
       done: ms && Array.isArray(op.done) ? Array.from(new Set(op.done.map(Number).filter(i => i >= 0 && i < 4 && Number.isInteger(i)))) : [] };
     const now = env.now, day = C.day(now), wk = C.week(day), se = C.season(day);
     if (s.bought.d !== day) s.bought = { d: day, ids: [] };
-    if (s.cw.w !== wk) s.cw = { w: wk, n: 0 };
+    if (s.od.d !== day) s.od = { d: day, n: 0 };
+    if (s.pw.w !== wk) s.pw = { w: wk, n: 0 };
     if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
     if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
     if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk), prog: {}, done: [] });
@@ -304,8 +363,8 @@
   };
   // 给玩家看的那份：挂单什么时候成交只有服务器知道（不然撤了重挂能刷出马上成交的单）
   C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); for (const L of o.lst) delete L.at; delete o.tk; return o; };
-  // 只在武库里出的皮肤（24 款涂装和 5 款 ★）：服务器只认库存里真有的
-  C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.STARS)];
+  // 只在武库里出的皮肤（24 款涂装、5 款 ★ 和神兵武器箱的 7 款）：服务器只认库存里真有的
+  C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.FULL)];
   C.genMissions = (uid, wk) => {
     const r = rng(hash32(`ms|${uid}|${wk}`)), out = [];
     for (let g = 0; g < 4; g++) {
@@ -318,11 +377,12 @@
   };
   C.supplyOpts = (uid, wk) => {
     const r = rng(hash32(`sup|${uid}|${wk}`)), pick = a => a[Math.floor(r() * a.length)];
-    const opts = [{ t: 'case', c: pick(C.CASES) }, { t: 'term', n: 1 }, r() < 0.3 ? { t: 'item', k: pick(C.ofTier('res')) } : { t: 'item', k: pick(C.ofTier('mil')) }, r() < 0.5 ? { t: 'ink', n: 400 } : { t: 'tag', n: 1 }];
+    const opts = [{ t: 'case', c: pick(C.REG) }, { t: 'term', n: 1 }, r() < 0.3 ? { t: 'item', k: pick(C.ofTier('res')) } : { t: 'item', k: pick(C.ofTier('mil')) }, r() < 0.5 ? { t: 'ink', n: 400 } : { t: 'tag', n: 1 }];
     for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
     return opts;
   };
-  C.caseLeft = s => Math.max(0, C.CASE_WEEK - s.cw.n);   // 这周还能用墨锭买几个武器箱
+  // 今天还能开几个普通武器箱、这周还能开几个神兵武器箱
+  C.openLeft = (s, cid) => cid && C.COLS[cid] && C.COLS[cid].prem ? Math.max(0, C.PREM_WEEK - s.pw.n) : Math.max(0, C.OPEN_DAY - s.od.n);
 
   /* ---------- 物品进出库存 ---------- */
   C.mkItem = (s, k, src, rnd, o = {}) => {
@@ -362,7 +422,13 @@
     });
   };
   const bought = (s, id, day) => { const b = s.buys[id]; return b && b.k === 'w' + C.week(day) ? b.n : 0; };
-  const rollTier = (rnd, odds) => { let r = rnd(), acc = 0; for (const t of C.TIERS) { acc += odds[t]; if (r < acc) return t; } return 'mil'; };
+  const rollTier = (rnd, odds) => {   // 概率是 0 的档跳过；浮点误差落到最后时，给最后一档有概率的
+    let r = rnd(), acc = 0, last = 'mil';
+    for (const t of C.TIERS) { if (!(odds[t] > 0)) continue; last = t; acc += odds[t]; if (r < acc) return t; }
+    return last;
+  };
+  const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
+  const addGood = (s, k, n) => { if (k === 'term') s.term += n; else s.cases[k] += n; };
   const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
   C.invFull = (s, n = 1) => s.inv.length + n > C.INV_MAX;
   // 终端机报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是今天市场价的 1~1.3 倍
@@ -398,13 +464,16 @@
   /* ---------- 动作 ---------- */
   // env：now 现在时间、rnd 随机数、uid、ink 墨锭（会被改）、skins 可穿的皮肤（会被改）、equip 穿着（会被改）、server 是不是服务器在算
   const A = {};
-  A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个
+  A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个。普通武器箱每天最多开 2 个，神兵武器箱每周 1 个
     const cid = a.c;
     if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
     if ((s.cases[cid] || 0) < 1) return { err: '没有这个武器箱了' };
+    const col = C.COLS[cid];
+    if (!C.openLeft(s, cid)) return { err: col.prem ? `${col.name}武器箱每周只能开 ${C.PREM_WEEK} 个，下周一再来` : `今天的 ${C.OPEN_DAY} 个武器箱已经开完了，明天再来` };
     if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
     s.cases[cid]--; s.stat.open++;
-    const tier = rollTier(env.rnd, C.ODDS), k = pickOf(env.rnd, C.COLS[cid][tier]);
+    if (col.prem) s.pw.n++; else s.od.n++;
+    const tier = rollTier(env.rnd, C.oddsOf(cid)), k = pickOf(env.rnd, col[tier]);
     const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd), env);
     bump(s, 'open', 1);
     return { ok: true, item: it };
@@ -423,42 +492,56 @@
     s.buys[g.id].n += n;
     return { ok: true };
   };
-  A.buy = (s, a, env) => {   // 买市场上的一件
+  A.buy = (s, a, env) => {   // 买市场上的一件饰品，或者一个箱子
     const day = C.day(env.now), parts = String(a.l || '').split('.');
     if (parts.length !== 3 || +parts[0] !== day) return { err: '这件已经下架了，刷新看看' };
     const L = C.listings(parts[1], day).find(x => x.l === a.l);
     if (!L) return { err: '没有这件挂单' };
     if (s.bought.ids.includes(a.l)) return { err: '这件已经被你买走了' };
-    if (C.invFull(s)) return { err: '库存满了' };
+    const good = C.isGood(L.k);
+    if (!good && C.invFull(s)) return { err: '库存满了' };
     if (env.ink < L.price) return { err: `墨锭不够，要 ${L.price}` };
     giveInk(env, -L.price);
-    s.bought.ids.push(a.l); s.stat.bought++;
+    s.bought.ids.push(a.l);
+    if (good) {
+      addGood(s, L.k, 1);
+      histPush(s, { t: env.now, kind: 'buy', g: L.k, n: 1, price: L.price });
+      return { ok: true, good: L.k, price: L.price };
+    }
+    s.stat.bought++;
     const it = C.addItem(s, C.mkItem(s, L.k, 'market', env.rnd, { st: L.st }), env);
     histPush(s, { t: env.now, kind: 'buy', k: L.k, st: L.st, price: L.price });
     bump(s, 'buy', 1);
     return { ok: true, item: it, price: L.price };
   };
-  A.buyCase = (s, a, env) => {   // 用墨锭买武器箱：每周最多 5 个
-    const cid = a.c, n = a.n === undefined ? 1 : Math.floor(+a.n);
-    if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
-    if (!(n >= 1 && n <= C.CASE_WEEK)) return { err: '数量不对' };
-    const left = C.caseLeft(s);
-    if (n > left) return { err: left ? `这周还能买 ${left} 个` : `这周的 ${C.CASE_WEEK} 次已经用完了，下周一再来` };
-    const p = C.casePrice(cid, C.day(env.now)) * n;
+  // 一键买箱子：买今天市场上最便宜的那几个（和在市场里一个一个点“购买”一样，买过的那几个就没了）
+  const buyCheapest = (s, k, a, env) => {
+    const n = a.n === undefined ? 1 : +a.n;
+    if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
+    const day = C.day(env.now), L = C.listings(k, day).filter(x => !s.bought.ids.includes(x.l));
+    if (L.length < n) return { err: L.length ? `今天市场上只剩 ${L.length} 个了` : '今天市场上的已经卖完了，明天再来' };
+    const pick = L.slice(0, n), p = pick.reduce((t, x) => t + x.price, 0);
     if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
-    giveInk(env, -p); s.cases[cid] += n; s.cw.n += n;
-    histPush(s, { t: env.now, kind: 'buy', c: cid, n, price: p });
-    return { ok: true, price: p };
+    giveInk(env, -p); addGood(s, k, n);
+    for (const x of pick) s.bought.ids.push(x.l);
+    histPush(s, { t: env.now, kind: 'buy', g: k, n, price: p });
+    return { ok: true, price: p, n };
   };
-  A.sellCase = (s, a, env) => {
-    const cid = a.c, n = Math.max(1, Math.min(50, Math.floor(+a.n || 1)));
-    if (!C.CASES.includes(cid) || s.cases[cid] < n) return { err: '武器箱不够' };
-    const p = C.quick(C.casePrice(cid, C.day(env.now))) * n;
-    s.cases[cid] -= n; giveInk(env, p); s.stat.sold += n;
-    histPush(s, { t: env.now, kind: 'sell', c: cid, n, price: p });
+  // 直接卖给收购商：当天市场价的 88%，再扣手续费
+  const sellGoods = (s, k, a, env) => {
+    const n = a.n === undefined ? 1 : +a.n;
+    if (!(Number.isInteger(n) && n >= 1 && n <= 50)) return { err: '数量不对' };
+    if (goodHave(s, k) < n) return { err: k === 'term' ? '终端机不够' : '武器箱不够' };
+    const p = C.quick(C.goodPrice(k, C.day(env.now))) * n;
+    addGood(s, k, -n); giveInk(env, p); s.stat.sold += n;
+    histPush(s, { t: env.now, kind: 'sell', g: k, n, price: p });
     bump(s, 'sell', n);
     return { ok: true, gain: p };
   };
+  A.buyCase = (s, a, env) => C.CASES.includes(a.c) ? buyCheapest(s, a.c, a, env) : { err: '没有这个武器箱' };
+  A.buyTerm = (s, a, env) => buyCheapest(s, 'term', a, env);
+  A.sellCase = (s, a, env) => C.CASES.includes(a.c) ? sellGoods(s, a.c, a, env) : { err: '武器箱不够' };
+  A.sellTerm = (s, a, env) => sellGoods(s, 'term', a, env);
   A.quick = (s, a, env) => {   // 直接卖给收购的人：市场价扣掉手续费
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
     const p = C.quick(C.price(it, C.day(env.now)));
@@ -467,23 +550,28 @@
     bump(s, 'sell', 1);
     return { ok: true, gain: p };
   };
-  A.list = (s, a, env) => {   // 自己定价挂单，卖掉才到账
-    const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
+  A.list = (s, a, env) => {   // 自己定价挂单，卖掉才到账：一件饰品（i），或者一个箱子（c：武器箱编号或 'term'）
+    const good = a.c !== undefined;
+    if (good && !C.isGood(a.c)) return { err: '没有这个东西' };
+    const it = good ? null : C.findItem(s, +a.i);
+    if (!good && !it) return { err: '库存里没有这件' };
+    if (good && goodHave(s, a.c) < 1) return { err: a.c === 'term' ? '没有终端机' : '没有这个武器箱' };
     if (s.lst.length >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };
-    const day = C.day(env.now), mk = C.price(it, day), price = Math.floor(+a.price || 0);
+    const day = C.day(env.now), mk = good ? C.goodPrice(a.c, day) : C.price(it, day), price = Math.floor(+a.price || 0);
     if (!(price >= 1) || price > 9999999) return { err: '标价不对' };
     if (price > Math.floor(mk * C.LIST_MAX_R)) return { err: `标价最高 ${Math.floor(mk * C.LIST_MAX_R)}（市场价的 ${Math.round(C.LIST_MAX_R * 100)}%），再高没人买` };
     const rate = C.sellRate(price / mk), u = env.rnd();
     const at = rate > 0 ? env.now + Math.round(-Math.log(1 - u) / rate * 3600e3) : 0;
-    C.dropItem(s, it.i, env);
-    s.lst.push({ l: 'L' + (s.nid++), it, price, t: env.now, at });
+    const l = 'L' + (s.nid++);
+    if (good) { addGood(s, a.c, -1); s.lst.push({ l, g: a.c, price, t: env.now, at }); }
+    else { C.dropItem(s, it.i, env); s.lst.push({ l, it, price, t: env.now, at }); }
     return { ok: true };
   };
   A.cancel = (s, a, env) => {
     const ix = s.lst.findIndex(x => x.l === a.l); if (ix < 0) return { err: '没有这个挂单' };
-    if (C.invFull(s)) return { err: '库存满了，放不回去' };
+    if (!s.lst[ix].g && C.invFull(s)) return { err: '库存满了，放不回去' };
     const L = s.lst.splice(ix, 1)[0];
-    C.addItem(s, L.it, env);
+    if (L.g) addGood(s, L.g, 1); else C.addItem(s, L.it, env);
     return { ok: true };
   };
   // 到时间的挂单算成交（每次读存档都会先结一遍）
@@ -493,9 +581,14 @@
       if (!L.at || env.now < L.at) return true;
       const gain = C.net(L.price);
       giveInk(env, gain); s.stat.sold++;
-      histPush(s, { t: L.at, kind: 'sold', k: L.it.k, st: L.it.st, price: L.price, gain });
+      if (L.g) {
+        histPush(s, { t: L.at, kind: 'sold', g: L.g, n: 1, price: L.price, gain });
+        sold.push({ g: L.g, price: L.price, gain });
+      } else {
+        histPush(s, { t: L.at, kind: 'sold', k: L.it.k, st: L.it.st, price: L.price, gain });
+        sold.push({ k: L.it.k, price: L.price, gain });
+      }
       bump(s, 'sell', 1);
-      sold.push({ k: L.it.k, price: L.price, gain });
       return false;
     });
     return sold;
@@ -589,14 +682,14 @@
     const r = env.rnd;
     let res = { ok: true };
     if (g.id === 'ink') giveInk(env, 300);
-    else if (g.id === 'case') { const c = pickOf(r, C.CASES); s.cases[c]++; res.c = c; }
+    else if (g.id === 'case') { const c = pickOf(r, C.REG); s.cases[c]++; res.c = c; }
     else if (g.id === 'tag') s.tags++;
     else if (g.id === 'term') s.term++;
     else {
       if (C.invFull(s)) return { err: '库存满了' };
       let k;
-      if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov')) return { err: '要从隐秘级里挑一件' }; k = a.k; }
-      else k = pickOf(r, C.ofTier(g.id));
+      if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的隐秘级里挑一件' }; k = a.k; }
+      else k = pickOf(r, C.ofTierReg(g.id));
       res.item = C.addItem(s, C.mkItem(s, k, 'op', r), env);
     }
     s.op.spent += g.cost;
@@ -604,7 +697,7 @@
   };
   // 集齐一套收藏品的 4 款军规级：送这个武器箱一个和一张改名标签
   A.collect = (s, a, env) => {
-    const col = own(C.COLS, a.c); if (!col) return { err: '没有这套收藏品' };
+    const col = own(C.COLS, a.c); if (!col || !col.mil.length) return { err: '没有这套收藏品' };
     if (s.cc.includes(a.c)) return { err: '已经领过了' };
     if (!col.mil.every(k => s.inv.some(x => x.k === k))) return { err: '还没集齐' };
     s.cc.push(a.c); s.cases[a.c]++; s.tags++;
@@ -647,7 +740,7 @@
     }
     if (s.drop.n < C.DROP_CAP && env.rnd() < C.DROP_P && !C.invFull(s)) {
       s.drop.n++;
-      if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.CASES); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
+      if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.REG); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
       else res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, C.ofTier(env.rnd() < 0.85 ? 'mil' : 'res')), 'drop', env.rnd), env) };
     }
     return res;

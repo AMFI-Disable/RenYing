@@ -38,7 +38,7 @@ if (cmd === 'log' || cmd === 'sanction') {
   if (j.econ) {
     const s = j.econ.state || {};
     const cases = Object.values(s.cases || {}).reduce((a, n) => a + (+n || 0), 0);
-    console.log(`墨锭 ${j.econ.ink} · 武器箱 ${cases} 个（本周买了 ${(s.cw && s.cw.n) || 0} 个）· 终端机 ${(s.term || 0) + (s.tm ? 1 : 0)} 台 · 改名标签 ${s.tags || 0} · 饰品 ${(s.inv || []).length} 件 · 挂单 ${(s.lst || []).length} 个 · 存档版本 ${j.econ.ver} · 最后改动 ${time(j.econ.at)}`);
+    console.log(`墨锭 ${j.econ.ink} · 武器箱 ${cases} 个（今天开了 ${(s.od && s.od.n) || 0} 个，本周开了 ${(s.pw && s.pw.n) || 0} 个神兵武器箱）· 终端机 ${(s.term || 0) + (s.tm ? 1 : 0)} 台 · 改名标签 ${s.tags || 0} · 饰品 ${(s.inv || []).length} 件 · 挂单 ${(s.lst || []).length} 个 · 存档版本 ${j.econ.ver} · 最后改动 ${time(j.econ.at)}`);
   } else console.log('还没有武库存档（没打开过武库，也没同步过存档）');
   const sc = j.sanction;
   if (sc && (sc.strikes || sc.perm || sc.banUntil)) {

@@ -1564,6 +1564,7 @@ clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 
 .ar-pips { display: inline-flex; gap: 5px; }
 .ar-pips i { width: 20px; height: 7px; background: rgba(236,232,225,.14); transform: skewX(-20deg); }
 .ar-pips i.on { background: var(--gold); box-shadow: 0 0 8px rgba(233,196,106,.5); }
+.ar-pips.gold i.on { background: linear-gradient(90deg, #fff1c4, #e4ae39); box-shadow: 0 0 12px rgba(255,205,100,.8); }
 .ar-cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(390px, 100%), 1fr)); gap: 14px; }
 .ar-casecard { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: linear-gradient(160deg, rgba(var(--cc), .15), rgba(13,21,30,.5) 45%); border: 1px solid rgba(var(--cc), .36); }
 .ar-casehead { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 4px; }
@@ -1581,6 +1582,46 @@ box-shadow: inset 0 0 0 2px rgba(255,255,255,.2); clip-path: polygon(8px 0, calc
 .ar-minis { display: flex; flex-wrap: wrap; gap: 4px; }
 .ar-minis img { width: 36px; height: 48px; object-fit: cover; background: #0b0f16; border-bottom: 2px solid rgb(var(--tc)); }
 .ar-col { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-top: 4px; padding-top: 10px; font-size: 13px; color: var(--dim); border-top: 1px solid rgba(236,232,225,.08); }
+.ar-casecard.prem { grid-column: 1 / -1; position: relative; overflow: hidden; padding: 18px; border-color: rgba(240,190,80,.72);
+background: radial-gradient(120% 140% at 0% 0%, rgba(255,215,120,.22), transparent 55%), linear-gradient(160deg, rgba(120,70,20,.32), rgba(13,21,30,.6) 55%);
+box-shadow: inset 0 0 0 1px rgba(255,220,140,.12), 0 12px 40px rgba(228,174,57,.12); }
+.ar-casecard.prem::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255,240,200,.13) 45%, transparent 60%); background-size: 250% 100%; animation: arSheen 5.5s ease-in-out infinite; }
+@keyframes arSheen { 0% { background-position: 120% 0; } 60%, 100% { background-position: -120% 0; } }
+.ar-casecard.prem .ar-casebox, .ar-casebox.prem { background: linear-gradient(160deg, #fff1c4, #e4ae39 45%, #8a5a14); box-shadow: 0 0 18px rgba(255,210,110,.45); }
+.ar-casecard.prem h3 { color: #ffe7a0; text-shadow: 0 0 12px rgba(255,210,110,.45); }
+.ar-casecard.prem .ar-note { margin: 0; }
+.ar-minis img[data-pv] { cursor: zoom-in; transition: transform .15s; }
+.ar-minis img[data-pv]:hover { transform: translateY(-2px); }
+.ar-casecard.prem { display: grid; grid-template-columns: minmax(280px, 350px) minmax(0, 1fr); align-items: center; gap: 18px 26px; }
+.ar-premside { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ar-premside .ar-casehead { margin: 0; }
+.ar-podds { display: flex; flex-wrap: wrap; gap: 6px; }
+.ar-podds span { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700; color: rgb(var(--tc)); background: rgba(var(--tc), .1); border: 1px solid rgba(var(--tc), .38); }
+.ar-podds b { font-family: var(--v-cond); font-size: 17px; color: #fff; }
+.ar-pshow { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
+.ar-pcard { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 0 0 9px; font: inherit; text-align: center; color: #fff; cursor: zoom-in;
+background: linear-gradient(180deg, rgba(var(--tc), .05), rgba(var(--tc), .22)); border: 1px solid rgba(var(--tc), .5); box-shadow: 0 6px 20px rgba(0,0,0,.35); transition: transform .18s, box-shadow .18s, border-color .18s; }
+.ar-pcard.t-gold { flex-grow: 1.3; border-color: rgba(255,214,120,.9); animation: arGoldPulse 2.8s ease-in-out infinite; }
+.ar-pcard:hover, .ar-pcard:focus-visible { transform: translateY(-5px); border-color: rgb(var(--tc)); box-shadow: 0 12px 30px rgba(var(--tc), .38); }
+.ar-pcard::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgb(var(--tc)); box-shadow: 0 0 10px rgba(var(--tc), .8); }
+.ar-pimg { position: relative; display: block; overflow: hidden; aspect-ratio: 3 / 4; background: #0b0f16; }
+.ar-pimg img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+.ar-pcard:hover .ar-pimg img { transform: scale(1.05); }
+.ar-pcard.t-gold .ar-pimg::after, .ar-pcard.t-cov .ar-pimg::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 36%, rgba(255,248,225,.5) 50%, transparent 64%); background-size: 260% 100%; background-position: 130% 0; animation: arCardSweep 4s ease-in-out infinite; }
+.ar-pcard.t-cov .ar-pimg::after { background-image: linear-gradient(115deg, transparent 40%, rgba(255,225,220,.26) 50%, transparent 60%); animation-duration: 5.5s; animation-delay: 1.2s; }
+.ar-pcard.t-gold + .ar-pcard.t-gold .ar-pimg::after { animation-delay: .7s; }
+.ar-pcard b { padding: 4px 4px 0; font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ar-pcard.t-gold b { font-size: 17px; color: #ffe7a0; text-shadow: 0 0 10px rgba(255,210,110,.6); }
+.ar-pcard small { padding: 0 4px; font-size: 12px; color: rgb(var(--tc)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@keyframes arGoldPulse { 0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,.35), 0 0 0 rgba(255,214,120,0); } 50% { box-shadow: 0 6px 20px rgba(0,0,0,.35), 0 0 24px rgba(255,214,120,.5); } }
+@keyframes arCardSweep { 0% { background-position: 130% 0; } 50%, 100% { background-position: -30% 0; } }
+@media (max-width: 1180px) { .ar-casecard.prem { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+.ar-pshow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.ar-pcard { grid-column: span 2; }
+.ar-pcard.t-gold { grid-column: span 3; }
+}
+.ar-premtag { position: relative; align-self: flex-start; padding: 4px 16px 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: .1em; color: #2a1a04; background: linear-gradient(90deg, #ffe7a0, #e4ae39); clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
 .ar-reel { position: relative; height: 200px; margin: 6px 0 4px; overflow: hidden; background: #070b11; border: 1px solid var(--line); }
 .ar-reel::before, .ar-reel::after { content: ""; position: absolute; top: 0; bottom: 0; width: 90px; z-index: 2; pointer-events: none; }
 .ar-reel::before { left: 0; background: linear-gradient(90deg, #070b11, transparent); }
@@ -1600,6 +1641,53 @@ box-shadow: inset 0 0 0 2px rgba(255,255,255,.2); clip-path: polygon(8px 0, calc
 .ar-reveal p { margin: 0 0 4px; text-align: center; }
 .ar-reveal + .row { justify-content: center; }
 @keyframes arReveal { from { transform: scale(.6) rotate(-4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.ar-reveal { position: relative; }
+.ar-reveal > :not(.ar-rvfx) { position: relative; z-index: 1; }
+.ar-rvart { margin: 12px auto; animation: arReveal .6s cubic-bezier(.2, 1.4, .4, 1) both; }
+.ar-rvart img { margin: 0; animation: none; }
+.ar-shine { position: absolute; inset: 2px; overflow: hidden; pointer-events: none; }
+.ar-shine::before { content: ""; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 42%; opacity: 0; transform: skewX(-18deg); background: linear-gradient(100deg, transparent, rgba(255,255,255,.6), transparent); }
+.t-cla .ar-shine::before, .t-cov .ar-shine::before, .t-gold .ar-shine::before { animation: arShine 2.6s ease-in-out .6s infinite; }
+@keyframes arShine { 0% { left: -60%; opacity: 0; } 8% { opacity: 1; } 42% { left: 125%; opacity: 1; } 43%, 100% { left: 125%; opacity: 0; } }
+.ar-rvfx { position: absolute; left: 50%; top: 158px; width: 0; height: 0; pointer-events: none; }
+.ar-rays { position: absolute; left: -270px; top: -270px; width: 540px; height: 540px; border-radius: 50%;
+background: repeating-conic-gradient(rgba(var(--tc), 0) 0deg 8deg, rgba(var(--tc), .32) 11deg 14deg, rgba(var(--tc), 0) 17deg 24deg);
+-webkit-mask-image: radial-gradient(circle, #000 18%, transparent 68%); mask-image: radial-gradient(circle, #000 18%, transparent 68%);
+animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
+.t-cla .ar-rays { opacity: .55; }
+.ar-burst { position: absolute; left: -45px; top: -45px; width: 90px; height: 90px; border-radius: 50%; border: 3px solid rgba(var(--tc), .95); box-shadow: 0 0 30px rgba(var(--tc), .8), inset 0 0 20px rgba(var(--tc), .6); animation: arBurst .9s ease-out .05s both; }
+.ar-rvfx b { position: absolute; left: 0; top: 0; width: 10px; height: 10px; margin: -5px; opacity: 0; border-radius: 50%; background: radial-gradient(circle, #fff 0 18%, rgba(var(--tc), .9) 34%, transparent 70%); animation: arTwinkle 2.4s ease-in-out var(--d) infinite; }
+.ar-rvfx b::before, .ar-rvfx b::after { content: ""; position: absolute; left: 50%; top: 50%; background: #fff; transform: translate(-50%, -50%); }
+.ar-rvfx b::before { width: 1px; height: 22px; background: linear-gradient(transparent, #fff, transparent); }
+.ar-rvfx b::after { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, #fff, transparent); }
+.t-gold .ar-rvfx::after { content: ""; position: absolute; left: -420px; top: -420px; width: 840px; height: 840px; border-radius: 50%; background: radial-gradient(circle, rgba(255,246,215,.95), rgba(255,214,120,.45) 28%, transparent 62%); animation: arFlash .8s ease-out both; }
+.t-gold .ar-rvart { animation: arRevealGold 1.05s cubic-bezier(.2, 1.25, .35, 1) both; }
+.t-gold .ar-rvart img { border-color: #ffd36a; box-shadow: 0 0 60px rgba(255,205,100,.7), 0 0 0 6px rgba(255,214,120,.18); }
+.t-gold h3 { background: linear-gradient(90deg, #fff1c4, #ffcf5a 40%, #fff6dc 55%, #ffcf5a 70%, #fff1c4); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: arGoldText 3s linear infinite; }
+.t-gold .ar-tier { background: linear-gradient(90deg, #b8801c, #ffd36a 50%, #b8801c); background-size: 200% 100%; color: #241604; animation: arGoldText 2.2s linear infinite; }
+.ar-box.rv.t-gold { background: radial-gradient(circle at 50% 32%, rgba(228,174,57,.2), transparent 62%), var(--panel2); border-color: rgba(228,174,57,.6); }
+.ar-box.rv.t-cov { background: radial-gradient(circle at 50% 32%, rgba(235,75,75,.16), transparent 62%), var(--panel2); }
+.ar-box.rv.t-cla { background: radial-gradient(circle at 50% 32%, rgba(211,44,230,.13), transparent 62%), var(--panel2); }
+@keyframes arSpin { to { transform: rotate(360deg); } }
+@keyframes arFade { from { opacity: 0; } }
+@keyframes arBurst { from { transform: scale(.2); opacity: 1; } to { transform: scale(5.2); opacity: 0; } }
+@keyframes arTwinkle { 0% { opacity: 0; transform: translate(var(--x), var(--y)) scale(0); } 35% { opacity: 1; transform: translate(var(--x), calc(var(--y) - 10px)) scale(var(--s)); } 100% { opacity: 0; transform: translate(var(--x), calc(var(--y) - 36px)) scale(0); } }
+@keyframes arFlash { from { opacity: 1; transform: scale(.25); } to { opacity: 0; transform: scale(1.3); } }
+@keyframes arRevealGold { 0% { transform: scale(.3) rotateY(90deg); opacity: 0; filter: brightness(3); } 55% { transform: scale(1.08) rotateY(0); opacity: 1; filter: brightness(1.6); } 100% { transform: none; filter: none; } }
+@keyframes arGoldText { to { background-position: -220% 0; } }
+.ar-reel { transition: box-shadow .3s; }
+.ar-reel.prem { border-color: rgba(228,174,57,.55); box-shadow: inset 0 0 30px rgba(228,174,57,.14); }
+.ar-reel.land { box-shadow: inset 0 0 70px rgba(var(--wc), .38); }
+.ar-reel.land .ar-mark { background: rgb(var(--wc)); box-shadow: 0 0 18px rgb(var(--wc)); }
+.ar-reel.land .ar-mark::before { border-top-color: rgb(var(--wc)); }
+.ar-reel.land .ar-mark::after { border-bottom-color: rgb(var(--wc)); }
+.ar-rt { position: relative; transition: transform .25s, box-shadow .25s; }
+.ar-rt.win { z-index: 1; transform: scale(1.06); box-shadow: 0 0 0 2px rgb(var(--wc)), 0 0 34px rgba(var(--wc), .9); }
+@media (prefers-reduced-motion: reduce) {
+.ar-rays, .ar-burst, .ar-rvfx b, .ar-shine::before, .t-gold .ar-rvfx::after, .ar-rvart, .t-gold .ar-rvart, .t-gold h3, .t-gold .ar-tier, .ar-casecard.prem::before, .ar-pcard, .ar-pimg::after { animation: none !important; }
+.ar-burst, .t-gold .ar-rvfx::after { display: none; }
+.ar-rvfx b { opacity: .8; transform: translate(var(--x), var(--y)) scale(var(--s)); }
+}
 .ar-term { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; gap: 22px; padding: 18px; background: linear-gradient(135deg, rgba(var(--tc), .16), rgba(7,11,17,.86) 55%); border: 1px solid rgba(120,220,200,.32); }
 .ar-termart { position: relative; overflow: hidden; background: #070b11; border: 1px solid rgba(var(--tc), .6); box-shadow: 0 0 30px rgba(var(--tc), .25); }
 .ar-termart img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
@@ -1624,6 +1712,9 @@ box-shadow: inset 0 0 0 2px rgba(255,255,255,.2); clip-path: polygon(8px 0, calc
 .ar-termseal .ar-note { margin: 4px 0 0; }
 .ar-termbox { flex: none; display: grid; place-items: center; width: 84px; height: 64px; background: linear-gradient(160deg, #2a6e66, #0f2a2a); box-shadow: inset 0 0 0 2px rgba(120,220,200,.45); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%, 0 8px); }
 .ar-termbox span { font-family: var(--title); font-size: 32px; color: #c8fff2; text-shadow: 0 0 10px rgba(120,240,215,.7); }
+.ar-termbox.sm { width: 54px; height: 42px; margin: 0 0 0 4px; }
+.ar-termbox.sm span { font-size: 22px; }
+.ar-termbtns { display: flex; flex-wrap: wrap; gap: 8px; }
 .ar-todds { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--v-white); }
 .ar-todds span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .ar-todds span i { width: 10px; height: 10px; background: rgb(var(--tc)); }
@@ -1651,6 +1742,7 @@ box-shadow: inset 0 0 0 2px rgba(255,255,255,.2); clip-path: polygon(8px 0, calc
 .ar-mkp { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 124px; font-size: 14px; white-space: nowrap; }
 .ar-mkp small { color: var(--dim); }
 .ar-mkbtns { flex: none; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.ar-mkbtns [data-sellg] { min-width: 112px; }
 .ar-hist { display: grid; gap: 4px; }
 .ar-hrow { display: grid; grid-template-columns: 172px 84px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 12px; font-size: 13px; background: rgba(236,232,225,.03); }
 .ar-hrow > span:first-child { color: var(--dim); font-variant-numeric: tabular-nums; }
@@ -5765,7 +5857,21 @@ sNoise(0.22, 1600, 320, 2.2, 0.38 * p, 'bandpass');
 sTone(240, 80, 0.16, 0.3 * p, 'sine');
 metal(1200, 0.18, 0.04 * p);
 },
+sparkle() { [1318.5, 1661.2, 1975.5, 2637, 3322.4].forEach((f, i) => bellAt(f, i * 0.075, 1.2 - i * 0.1, 0.075)); },
+shine(p = 1) { bellAt(2093, 0, 0.55, 0.05 * p); bellAt(3136, 0.025, 0.4, 0.028 * p); },
+shing(p = 1) { sNoise(0.05, 9500, 6000, 0.8, 0.12 * p, 'highpass'); metal(1850, 0.3, 0.035 * p); },
 };
+function bellAt(f, delay, dur, vol) {
+if (!AC || muted || ![f, delay, dur, vol].every(Number.isFinite)) return;
+const t = AC.currentTime + delay;
+for (const [r, v, d] of [[1, 1, 1], [2.76, 0.42, 0.55], [5.4, 0.16, 0.3]]) {
+if (f * r > 15000) continue;
+const o = AC.createOscillator(), g = AC.createGain();
+o.frequency.value = f * r;
+g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol * v, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur * d);
+o.connect(g).connect(master); o.start(t); o.stop(t + dur * d + 0.03);
+}
+}
 function haptic(pattern = 15) {
 if (typeof navigator !== 'undefined' && navigator.vibrate && SETTINGS.vibrate !== false) {
 try { navigator.vibrate(pattern); } catch (e) {}
@@ -9600,6 +9706,7 @@ addP({ type: 'spark', x: f.x + rand(-30, 30), y: f.y - rand(10, 100), vx: rand(-
 }
 }
 if (f.look.legend && f.look.fx) skinGround(f);
+if (f.look.tier && f.look.fx) skinTierGround(f);
 const hgt = clamp(-f.y / 300, 0, 1);
 ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
 ctx.beginPath(); ctx.ellipse(f.x, 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
@@ -9618,7 +9725,9 @@ ctx.restore();
 if (f.escInvul) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${f.look.slash},${0.4 + 0.3 * Math.sin(clock * 30)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, f.y - 55, 34, 60, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
 const big = f.size !== 1;
 if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size, f.size); ctx.translate(-f.x, -f.y); }
-for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * 0.4 });
+const gt = tierRank(L) >= 3 ? L.fx : null;   // 隐秘、非凡：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
+for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
+skinTierMotes(f, false);
 if (f.armorT > 0 || f.buffT > 0 || f.parryT > 0 || (f.thunderGuardT && f.thunderGuardT > 0)) {
 const rgb = (f.thunderGuardT && f.thunderGuardT > 0) ? '255,230,120' : (f.armorT > 0 ? '255,210,120' : f.parryT > 0 ? '235,225,255' : '190,80,255');
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -9650,6 +9759,7 @@ drawBody(sk, f, { flash: f.flash > 0, invul: f.invul > 0 && f.invul < 50 && f.st
 if (big) ctx.restore();
 if (f.jailT > 0 && f.hp > 0) drawWengTing(f.jailX, 0, 1, Math.min(1, f.jailT * 3));   // 关在醉翁亭里：亭子罩着人，前柱半透明
 drawTrail(f);
+skinTierMotes(f, true);
 if (f.ch && f.ch.passive === 'rhythm' && (f.notes || 0) > 0 && f.hp > 0) {
 ctx.save(); ctx.fillStyle = 'rgba(' + f.look.slash + ',0.85)'; ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.4;
 for (let k = 0; k < f.notes; k++) {
@@ -9736,9 +9846,16 @@ petal: { trail: 'ribbon', amb: 'petal', hit: 'petals' },
 leaf: { trail: 'ribbon', amb: 'leaf', hit: 'petals' },
 feather: { trail: 'ribbon', amb: 'feather', hit: 'petals' },
 metal: { trail: 'ribbon', amb: 'spark', hit: 'sparks' },
+nebula: { trail: 'prism', amb: 'glint', hit: 'starburst' },
+butterfly: { trail: 'prism', amb: 'glint', hit: 'petals' },
+crystal: { trail: 'frost', amb: 'glint', hit: 'shatter' },
+note: { trail: 'gilt', amb: 'flake', hit: 'petals' },
 };
 const rgbMix = (a, b, k) => { const p = a.split(','), q = b.split(','); return p.map((v, i) => Math.round(+v + (+q[i] - +v) * k)).join(','); };
 const skinTh = L => L && L.fx ? SKIN_TH[L.fx.th] : null;
+const TIER_RANK = { mil: 0, res: 1, cla: 2, cov: 3, gold: 4 };
+const tierRank = L => (L && L.fx && TIER_RANK[L.tier]) || 0;
+const TIER_TXT = { cla: ['保密', '235,120,255'], cov: ['隐秘', '255,120,110'], gold: ['★ 非凡', '255,214,120'] };
 function skinBladeSeg(sk, f, L) {
 const w = L.weapon;
 if (w === 'fists' || w === 'gourd') return null;
@@ -9869,7 +9986,7 @@ const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r); g.addColorStop(0, `rgba(${
 ctx.fillStyle = g; ctx.fillRect(-r, -r, r * 2, r * 2); ctx.restore();
 }
 function skinTrail(f, tr) {
-const L = f.look, th = skinTh(L), c = L.fx.c, c2 = L.fx.c2 || c, leg = L.legend, mul = leg ? 1.25 : 0.95, kind = th.trail;
+const L = f.look, th = skinTh(L), c = L.fx.c, c2 = L.fx.c2 || c, leg = L.legend, rk = tierRank(L), mul = (leg ? 1.25 : 0.95) + Math.max(0, rk - 1) * 0.1, kind = th.trail;
 ctx.save();
 const quad = (p, q, r, s) => { ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.lineTo(r[0], r[1]); ctx.lineTo(s[0], s[1]); ctx.closePath(); ctx.fill(); };
 if (kind === 'smoke' || kind === 'brush') {   // 深色的烟/墨先铺一层（正常混合）
@@ -9893,6 +10010,10 @@ ctx.strokeStyle = kind === 'fire' ? `rgba(255,240,200,${0.95 * al})` : `rgba(255
 ctx.lineWidth = (2.6 * al + 0.6) * (leg ? 1.35 : 1.1); line(a.t, b.t);
 if (!leg) continue;
 const dx = b.t[0] - b.b[0], dy = b.t[1] - b.b[1], d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
+if (rk >= 4 && a.h && al > 0.15) {   // 非凡：刀光外沿再铺一层淡金的光边
+ctx.fillStyle = `rgba(${rgbMix(c, '255,226,150', 0.5)},${0.16 * al})`; quad(a.t, [a.t[0] + nx * 11 * al, a.t[1] + ny * 11 * al], [b.t[0] + nx * 11 * al, b.t[1] + ny * 11 * al], b.t);
+}
+if (rk >= 3 && i % 3 === 0 && al > 0.35) glint(b.t[0], b.t[1], (rk >= 4 ? 7.5 : 5.5) * al, rk >= 4 ? '255,240,190' : c2, al * 0.9);   // 隐秘以上：刃尖划过的地方留几颗星光
 if (kind === 'fire' && al > 0.2) {   // 刃尖外侧一排跳动的火舌
 const lk = (10 + 9 * Math.sin(clock * 30 + i * 1.9)) * al;
 const g = ctx.createLinearGradient(b.t[0], b.t[1], b.t[0] + nx * lk * 2, b.t[1] + ny * lk * 2 - lk);
@@ -9925,6 +10046,7 @@ const e = f.trail.length > 1 ? f.trail[f.trail.length - 1] : null;
 if (e && Math.random() < (leg ? 0.8 : 0.45)) { const q = lerp2(e.b, e.t, 0.3 + Math.random() * 0.7); skinSpawn(kind, q[0], q[1], c, c2, leg ? 1 : 0.7, true); }
 if (!leg) { if (Math.random() < 0.04) skinSpawn(kind, f.x + rand(-24, 24), f.y - rand(10, 110), c, c2, 0.7, false); return; }
 if (Math.random() < 0.3) skinSpawn(kind, f.x + rand(-26, 26), f.y - rand(8, 120), c, c2, 1, false);
+if (tierRank(L) >= 3 && Math.random() < 0.12) addP({ type: 'glint', x: f.x + rand(-30, 30), y: f.y - rand(10, 125), vx: rand(-6, 6), vy: -rand(10, 30), life: rand(0.5, 0.9), max: 0.9, r: rand(2.5, 4.5), rgb: Math.random() < 0.5 ? c2 : '255,255,255' });   // 隐秘以上：身边时不时亮一颗星
 if (kind !== 'arc' && th.amb === 'arc' && Math.random() < 0.06) skinSpawn('arc', f.x + rand(-20, 20), f.y - rand(30, 100), c, c2, 1, false);   // 雷：配着别的粒子时也偶尔跳一道电
 }
 function skinSpawn(kind, x, y, c, c2, s, fromBlade) {
@@ -9995,21 +10117,53 @@ default:   // petals：花瓣、叶子、羽毛炸开
 out((vx, vy) => addP({ type: 'shape', sh: kind, x, y, vx, vy: vy - 60, g: 260, drag: 2.5, life: rand(0.6, 1.1), max: 1.1, r: rand(2.6, 4.4) * p, rgb: c, spin: rand(-8, 8) }));
 }
 if (L.fx.part && th.hit !== 'petals' && leg) out((vx, vy) => addP({ type: 'shape', sh: L.fx.part, x, y, vx: vx * 0.6, vy: vy * 0.6 - 60, g: 200, drag: 2.5, life: 0.9, max: 0.9, r: rand(2.6, 4) * p, rgb: c, spin: rand(-8, 8) }), 5);
+skinTierHit(atk, ev, p, out);
+}
+let TIER_SFX_T = 0;
+function skinTierHit(atk, ev, p, out) {
+const L = atk.look, tr = tierRank(L); if (tr < 2) return;
+const c = L.fx.c, c2 = L.fx.c2 || c, x = ev.x, y = ev.y;
+addP({ type: 'ring', x, y, r: 40 * p, life: 0.16, max: 0.16, rgb: '255,255,255', ng: 1 });
+if (tr < 3) return;
+addP({ type: 'ring', x, y, r: 86 * p, life: 0.3, max: 0.3, rgb: c2, ng: 1 });
+for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283 + rand(-0.15, 0.15), sp = rand(700, 1100) * p; addP({ type: 'streak', x: x + Math.cos(a) * 10, y: y + Math.sin(a) * 10, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, drag: 7, life: 0.2, max: 0.2, rgb: i % 2 ? c : '255,255,255', ng: 1 }); }
+shake = Math.max(shake, 7 * p);
+const now = performance.now();
+if (now - TIER_SFX_T > 70) { TIER_SFX_T = now; if (tr >= 4) SFX.shine(clamp(ev.dmg / 8, 0.6, 1.4)); else SFX.shing(clamp(ev.dmg / 8, 0.6, 1.3)); }   // 连击时别叠成一片
+if (tr < 4) return;
+addP({ type: 'glyph', g2: 'star8', x, y, r: 44 * p, life: 0.42, max: 0.42, rgb: '255,214,120', rot: rand(0, 1), spin: 1.5, ng: 1 });
+out((vx, vy) => addP({ type: 'glint', x, y, vx: vx * 0.75, vy: vy * 0.75 - 40, drag: 3.5, life: rand(0.45, 0.8), max: 0.8, r: rand(4, 8) * p, rgb: Math.random() < 0.5 ? '255,226,150' : '255,255,255', ng: 1 }), 8);
+if (ev.dmg >= 8 || ev.big || ev.ult) { flashA = Math.max(flashA, 0.16); flashRGB = '255,214,120'; }
 }
 function skinIntroFX(f) {
 const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
-addP({ type: 'text', text: `${S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2, max: 2.2, rgb: S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
+const tr = tierRank(L), T = TIER_TXT[L.tier];
 const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
-for (let i = 0; i < (leg ? 34 : 12); i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
-if (!leg) return;
-addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c });
+const name = () => addP({ type: 'text', text: `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
+for (let i = 0; i < (leg ? 34 : 12) + (tr >= 3 ? 16 : 0); i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
+if (!leg && tr < 2) { name(); return; }
+addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c, ng: tr >= 2 ? 1 : 0 });   // 品质皮肤的不进泛光：开场一下别把人照成白的
 ring(f.x, f.y - 60, 120, c, 0.55);
+if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < 14; i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
+if (tr >= 4) {   // 非凡：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
+addP({ type: 'pillar', x: f.x, y: f.y, r: 40, life: 1.5, max: 1.5, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
+addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 70, r: 78, life: 0.9, max: 0.9, rgb: '255,214,120', rot: 0, spin: 0.8, ng: 1 });
+addP({ type: 'ring', x: f.x, y: f.y - 4, r: 150, life: 0.9, max: 0.9, rgb: '255,226,150', ng: 1 });
+if (!RESIM) SFX.sparkle();
+} else if (tr >= 3 && !RESIM) SFX.shing(1.2);
+name();   // 名号最后加：画在光柱、光环上面，不会被盖住
 }
 function skinVictoryFX(f) {
 const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
-const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
-for (let i = 0; i < (leg ? 40 : 16); i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); skinSpawn(kind, f.x, f.y - 60, c, c2, 1.3, true); const q = particles[particles.length - 1]; if (q) { q.vx = Math.cos(a) * v; q.vy = Math.sin(a) * v; q.g = 420; q.life = q.max = rand(1, 1.8); } }
+const leg = S.rarity === 'legend', tr = tierRank(L), c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
+for (let i = 0; i < (leg ? 40 : 16) + tr * 6; i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); skinSpawn(kind, f.x, f.y - 60, c, c2, 1.3, true); const q = particles[particles.length - 1]; if (q) { q.vx = Math.cos(a) * v; q.vy = Math.sin(a) * v; q.g = 420; q.life = q.max = rand(1, 1.8); } }
 if (leg) addP({ type: 'glow', x: f.x, y: f.y - 80, r: 110, life: 0.8, max: 0.8, rgb: c });
+if (tr >= 3) for (let i = 0; i < 18; i++) { const a = rand(-Math.PI * 0.9, -Math.PI * 0.1), v = rand(200, 520); addP({ type: 'glint', x: f.x, y: f.y - 70, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 300, drag: 1.2, life: rand(0.9, 1.6), max: 1.6, r: rand(4, 8), rgb: tr >= 4 ? (Math.random() < 0.6 ? '255,226,150' : '255,255,255') : (Math.random() < 0.5 ? c2 : '255,255,255'), ng: 1 }); }
+if (tr >= 4) {
+addP({ type: 'pillar', x: f.x, y: f.y, r: 46, life: 1.7, max: 1.7, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
+addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 80, r: 92, life: 1.1, max: 1.1, rgb: '255,214,120', rot: 0, spin: 0.6, ng: 1 });
+if (!RESIM) SFX.sparkle();
+}
 }
 function drawSkinParticle(p, k) {
 switch (p.type) {
@@ -10055,14 +10209,69 @@ ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fil
 case 'iring':
 ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${p.rgb},${(1 - k) * 0.9 + 0.1})`; ctx.lineWidth = 2 + 4 * k;
 ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, p.r * k), 0, 7); ctx.stroke(); ctx.restore(); return;
+case 'pillar': {   // 非凡开场 / 胜利：一道柔光从天上落下来，落到脚下化成一圈光晕，慢慢收窄淡掉
+const age = 1 - k, reach = Math.min(1, age * 5), a = Math.min(1, age * 8) * Math.pow(k, 0.6), w = p.r * (0.45 + 0.55 * k), h = 1100, top = p.y - h, bot = top + h * reach;
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+const v = ctx.createLinearGradient(0, top, 0, bot); v.addColorStop(0, `rgba(${p.rgb},0)`); v.addColorStop(0.6, `rgba(${p.rgb},${0.12 * a})`); v.addColorStop(1, `rgba(${p.rgb},${0.28 * a})`);
+ctx.fillStyle = v; ctx.fillRect(p.x - w * 1.9, top, w * 3.8, bot - top);   // 外面一层淡淡的色光
+const g = ctx.createLinearGradient(p.x - w, 0, p.x + w, 0); g.addColorStop(0, 'rgba(255,250,235,0)'); g.addColorStop(0.5, `rgba(255,250,235,${0.34 * a})`); g.addColorStop(1, 'rgba(255,250,235,0)');
+ctx.fillStyle = g; ctx.fillRect(p.x - w, top, w * 2, bot - top);   // 中间一道白光
+ctx.fillStyle = `rgba(255,255,255,${0.5 * a})`; ctx.fillRect(p.x - 0.8, top, 1.6, bot - top);   // 光芯一条细线
+if (reach >= 1) {   // 落到地上的光晕
+const e = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, w * 2.8); e.addColorStop(0, `rgba(255,250,235,${0.42 * a})`); e.addColorStop(0.45, `rgba(${p.rgb},${0.2 * a})`); e.addColorStop(1, `rgba(${p.rgb},0)`);
+ctx.translate(p.x, p.y); ctx.scale(1, 0.24); ctx.translate(-p.x, -p.y); ctx.fillStyle = e; ctx.fillRect(p.x - w * 2.8, p.y - w * 2.8, w * 5.6, w * 5.6);
+}
+ctx.restore(); return;
 }
 }
-const SKIN_GLOW_P = { ember: 1, arc: 1, glint: 1, glow: 1, shard: 1, streak: 1, drop: 1 };
+}
+const SKIN_GLOW_P = { ember: 1, arc: 1, glint: 1, shard: 1, streak: 1, drop: 1, pillar: 1 };   // glow 本身就是一团渐变光，不再泛一遍
 function skinEmissive(f) {
 const L = f.look; if (!L.legend || !L.fx || f.hidden || !f.sk) return;
 const seg = skinBladeSeg(f.sk, f, L);
 ctx.strokeStyle = `rgba(${L.fx.c},0.9)`; ctx.lineWidth = 6; ctx.lineCap = 'round';
 if (seg) line(seg[0], seg[1]); else { ctx.fillStyle = `rgba(${L.fx.c},0.8)`; circle(f.sk.hf, 7); circle(f.sk.hb, 7); }
+if (tierRank(L) >= 4) { ctx.fillStyle = `rgba(${rgbMix(L.fx.c, '255,226,150', 0.5)},0.9)`; for (const m of tierMotes(f)) circle(m, 4); }   // 非凡的三颗光点也泛光
+}
+function tierMotes(f) {
+const t = clock * 1.6 + (f.idx || 0) * 2.1, out = [];
+for (let k = 0; k < 3; k++) { const a = t + k * 2.094; out.push([f.x + Math.cos(a) * 36, f.y - 64 + Math.sin(t * 1.3 + k * 2) * 26 + Math.sin(a) * 8, Math.sin(a)]); }
+return out;
+}
+function skinTierMotes(f, front) {
+const L = f.look; if (tierRank(L) < 4) return;
+const c = rgbMix(L.fx.c, '255,226,150', 0.5);
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+for (const [x, y, z] of tierMotes(f)) {
+if ((z >= 0) !== front) continue;
+const r = 8 + z * 2.5, g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,255,255,${0.75 + z * 0.2})`); g.addColorStop(0.3, `rgba(${c},0.6)`); g.addColorStop(1, `rgba(${c},0)`);
+ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+ctx.restore();
+if (front && Math.random() < 0.3) { const m = tierMotes(f)[Math.floor(Math.random() * 3)]; addP({ type: 'glint', x: m[0], y: m[1], vx: rand(-8, 8), vy: -rand(8, 24), life: 0.45, max: 0.45, r: rand(2, 3.5), rgb: '255,236,180' }); }   // 光点后面拖一串小星
+}
+function skinTierGround(f) {
+const L = f.look, tr = tierRank(L); if (tr < 3) return;
+const hg = clamp(1 + f.y / 160, 0, 1); if (hg <= 0) return;
+const c = tr >= 4 ? rgbMix(L.fx.c, '255,214,120', 0.55) : L.fx.c, t = clock + (f.idx || 0) * 1.7;
+ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(f.x, 1); ctx.scale(1, 0.2);
+if (tr === 3) {
+const r = 46 + Math.sin(t * 2.2) * 4;
+ctx.strokeStyle = `rgba(${c},${(0.3 + 0.12 * Math.sin(t * 3)) * hg})`; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke();
+ctx.strokeStyle = `rgba(255,255,255,${0.16 * hg})`; ctx.lineWidth = 2.5; ctx.stroke();
+} else {
+const R = 60, g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+g.addColorStop(0, `rgba(${c},${0.2 * hg})`); g.addColorStop(1, `rgba(${c},0)`); ctx.fillStyle = g; ctx.fillRect(-R, -R, R * 2, R * 2);
+ctx.strokeStyle = `rgba(${c},${0.5 * hg})`; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.stroke();
+ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, R * 0.8, 0, 7); ctx.stroke();
+ctx.save(); ctx.rotate(t * 0.6); ctx.fillStyle = `rgba(${c},${0.6 * hg})`;
+for (let k = 0; k < 12; k++) { ctx.rotate(Math.PI / 6); ctx.fillRect(R * 0.82, -3, R * 0.15, 6); }
+ctx.restore();
+ctx.save(); ctx.rotate(-t * 0.4); ctx.strokeStyle = `rgba(255,240,200,${0.42 * hg})`; ctx.lineWidth = 3;
+for (const o of [0, Math.PI]) { ctx.beginPath(); for (let k = 0; k <= 3; k++) { const a = o + k * 2.094 - Math.PI / 2; ctx.lineTo(Math.cos(a) * R * 0.76, Math.sin(a) * R * 0.76); } ctx.stroke(); }
+ctx.restore();
+}
+ctx.restore();
 }
 function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
 const bk = -sk.face, sh = sk.sh, hip = sk.hip, idx = f.idx || 0;
@@ -10333,6 +10542,105 @@ const g = ctx.createRadialGradient(q[0], q[1] + 2, 0, q[0], q[1], h); g.addColor
 ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(q[0], q[1] - h); ctx.quadraticCurveTo(q[0] + 7, q[1], q[0], q[1] + 5); ctx.quadraticCurveTo(q[0] - 7, q[1], q[0], q[1] - h); ctx.fill();
 }
 ctx.restore(); break;
+}
+case 'galaxy': {   // 天河：背后一团慢慢转的星系，两条旋臂一蓝一粉，星核发白光，外面一圈淡淡的星环
+const c = [bc[0] + bk * 10, bc[1] - 18], R = 40, rot = t * 0.35 * bk;
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+glow(c, R * 1.5, '150,140,255', 0.2);
+ctx.translate(c[0], c[1]); ctx.rotate(-0.35 * bk); ctx.scale(1, 0.6);
+for (let arm = 0; arm < 2; arm++) {
+const col = arm ? '255,150,225' : '150,175,255';
+for (let i = 0; i < 28; i++) {
+const u = i / 28, a = rot + arm * Math.PI + u * 4.4 * bk, r = 4 + u * R, x = Math.cos(a) * r, y = Math.sin(a) * r;
+ctx.fillStyle = `rgba(${col},${0.36 * (1 - u * 0.55)})`; ctx.beginPath(); ctx.arc(x, y, (1 - u) * 4.5 + 1.8, 0, 7); ctx.fill();
+if (i % 4 === 2) { const tw = 0.5 + 0.5 * Math.sin(t * 4 + i + arm * 3); ctx.fillStyle = `rgba(255,255,255,${0.45 + 0.55 * tw})`; ctx.beginPath(); ctx.arc(x, y, 0.8 + tw * 0.8, 0, 7); ctx.fill(); }
+}
+}
+const core = ctx.createRadialGradient(0, 0, 0, 0, 0, 13); core.addColorStop(0, 'rgba(255,255,255,0.95)'); core.addColorStop(0.4, 'rgba(225,205,255,0.55)'); core.addColorStop(1, 'rgba(180,160,255,0)');
+ctx.fillStyle = core; ctx.fillRect(-13, -13, 26, 26);
+ctx.strokeStyle = 'rgba(205,215,255,0.32)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, R + 5, 0, 7); ctx.stroke();
+ctx.restore(); break;
+}
+case 'butterflywings': {   // 幻蝶：一对半透明的大蝶翼，紫青两色慢慢流转，有翼脉和翼斑，一扇一扇
+const flap = 0.74 + 0.26 * Math.sin(t * 2.4 + idx), mix = (Math.sin(t * 1.3 + idx) + 1) / 2;
+const UP = [[0, 0], [6, -48], [44, -64], [78, -52], [60, -22], [40, -4], [0, 0]], LO = [[0, 4], [38, 6], [50, 30], [46, 54], [24, 44], [10, 24], [0, 4]];
+for (const [layer, sc, al] of [[1, 0.84, 0.45], [0, 1, 0.85]]) {
+const root = [bc[0] - bk * layer * 6, bc[1] + 4 - layer * 2], X = (x, y) => [root[0] + bk * x * flap * sc, root[1] + y * sc];
+const shape = pts => { ctx.beginPath(); ctx.moveTo(...X(...pts[0])); for (let i = 1; i + 1 < pts.length; i += 2) ctx.quadraticCurveTo(...X(...pts[i]), ...X(...pts[i + 1])); ctx.closePath(); };
+const c1 = rgbMix('120,235,255', '190,140,255', mix), c2 = rgbMix('190,140,255', '255,170,240', mix);
+ctx.globalAlpha = al;
+shape(UP); ctx.fillStyle = lg(root, X(76, -54), [[0, `rgba(${c1},0.25)`], [0.55, `rgba(${c2},0.6)`], [1, 'rgba(245,230,255,0.85)']]); ctx.fill();
+ctx.strokeStyle = 'rgba(235,220,255,0.85)'; ctx.lineWidth = 1.1; ctx.stroke();
+shape(LO); ctx.fillStyle = lg(root, X(46, 54), [[0, `rgba(${c1},0.3)`], [1, `rgba(${c2},0.65)`]]); ctx.fill(); ctx.stroke();
+if (!layer) {   // 翼脉、翼斑只画近的那一对
+ctx.strokeStyle = 'rgba(240,230,255,0.45)'; ctx.lineWidth = 0.8;
+for (const [x, y] of [[44, -62], [76, -50], [58, -22], [48, 30], [44, 52]]) { ctx.beginPath(); ctx.moveTo(...X(0, 2)); ctx.quadraticCurveTo(...X(x * 0.5, y * 0.35), ...X(x * 0.92, y * 0.92)); ctx.stroke(); }
+for (const [x, y, r] of [[50, -42, 6.5], [32, 32, 4.5]]) { const q = X(x, y); ctx.fillStyle = 'rgba(120,240,255,0.8)'; circle(q, r); ctx.fillStyle = 'rgba(40,20,80,0.85)'; circle(q, r * 0.55); ctx.fillStyle = 'rgba(255,255,255,0.9)'; circle([q[0] - 1, q[1] - 1], r * 0.18); }
+}
+}
+ctx.globalAlpha = 1; break;
+}
+case 'crystals': {   // 琉璃：头后悬着一圈琉璃晶柱，粉青两色，慢慢浮动，晶面上闪光
+glow([bc[0] + bk * 6, bc[1] - 22], 58, '170,240,255', 0.18);
+for (let k = 0; k < 6; k++) {
+const a = -2.35 + k * 0.42, r = 36 + (k % 2) * 7, bob = Math.sin(t * 1.8 + k * 1.1) * 3;
+const c = [bc[0] - bk * Math.cos(a) * r, bc[1] - 6 + Math.sin(a) * r + bob], len = 14 - Math.abs(k - 2.5) * 1.6, w = 4.2, rot = Math.atan2(c[1] - bc[1] + 6, c[0] - bc[0]) + Math.sin(t * 0.8 + k) * 0.1;
+const q = (d, s2) => [c[0] + Math.cos(rot) * d - Math.sin(rot) * s2, c[1] + Math.sin(rot) * d + Math.cos(rot) * s2];
+const pts = [q(len, 0), q(len * 0.5, w), q(-len * 0.6, w), q(-len, 0), q(-len * 0.6, -w), q(len * 0.5, -w)];
+ctx.fillStyle = lg(q(-len, 0), q(len, 0), [[0, 'rgba(160,230,250,0.75)'], [0.6, 'rgba(225,250,255,0.85)'], [1, 'rgba(255,190,235,0.9)']]);
+ctx.beginPath(); for (const p of pts) ctx.lineTo(p[0], p[1]); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 0.9; ctx.stroke();
+ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.beginPath(); ctx.moveTo(...q(len, 0)); ctx.lineTo(...q(len * 0.5, w)); ctx.lineTo(...q(-len * 0.6, w)); ctx.lineTo(...q(-len, 0)); ctx.closePath(); ctx.fill();
+const tw = Math.max(0, Math.sin(t * 2.6 + k * 1.9)); if (tw > 0.2) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(...q(len * 0.7, 0), 2 + tw * 4, '255,240,255', tw); ctx.restore(); }
+}
+break;
+}
+case 'notering': {   // 天籁：背后一圈金色的五线谱光环，音符沿着光环慢慢转
+const c = [bc[0] + bk * 8, bc[1] - 20], R = 31;
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+glow(c, R * 1.6, '255,215,130', 0.2);
+for (let k = 0; k < 5; k++) { ctx.strokeStyle = `rgba(255,${200 + k * 10},${110 + k * 22},${0.55 - k * 0.06})`; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(c[0], c[1], R - 6 + k * 3, 0, 7); ctx.stroke(); }
+for (let k = 0; k < 6; k++) { const a = t * 0.5 * bk + k * Math.PI / 3, q = [c[0] + Math.cos(a) * R, c[1] + Math.sin(a) * R], bob = Math.sin(t * 3 + k) * 1.5; ctx.save(); ctx.translate(q[0], q[1] + bob); drawShape('note', 3.4, '255,226,150', 0.95); ctx.restore(); }
+ctx.restore(); break;
+}
+case 'scroll': {   // 青绿：背后浮着一卷展开的青绿山水，两头是木轴、玉轴头，随风轻轻起伏
+const c = [bc[0] + bk * 16, bc[1] - 12];
+ctx.save(); ctx.translate(c[0], c[1]); ctx.rotate((-0.2 + Math.sin(t * 1.6 + idx) * 0.04) * bk); ctx.scale(bk, 1);
+const wv = x => Math.sin(x * 0.12 + t * 2.2) * 2.2, top = x => -15 + wv(x), bot = x => 15 + wv(x);
+ctx.beginPath(); for (let x = -30; x <= 30; x += 6) ctx.lineTo(x, top(x)); for (let x = 30; x >= -30; x -= 6) ctx.lineTo(x, bot(x)); ctx.closePath();
+ctx.fillStyle = '#f2ead2'; ctx.fill();
+ctx.save(); ctx.clip();
+for (const [x0, h, col] of [[-26, 20, '#3f9a86'], [-6, 26, '#1f6f78'], [14, 18, '#5fae7c']]) {
+ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x0 - 14, 16); ctx.lineTo(x0 - 4, 16 - h * 0.6); ctx.lineTo(x0, 16 - h); ctx.lineTo(x0 + 6, 16 - h * 0.7); ctx.lineTo(x0 + 16, 16); ctx.closePath(); ctx.fill();
+ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.moveTo(x0 - 1, 16 - h); ctx.lineTo(x0 + 2, 16 - h * 0.7); ctx.lineTo(x0 - 2, 16 - h * 0.55); ctx.closePath(); ctx.fill();
+}
+ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(-30, 4 + wv(0), 60, 3);
+ctx.fillStyle = '#c8321e'; ctx.fillRect(20, -11 + wv(20), 4, 4);
+ctx.restore();
+for (const x of [-32, 32]) { ctx.fillStyle = '#6a3a1e'; ctx.fillRect(x - 2, top(x) - 4, 4, 38); ctx.fillStyle = '#6ad8b4'; circle([x, top(x) - 5], 2.6); circle([x, bot(x) + 5], 2.6); }
+ctx.restore(); break;
+}
+case 'peacock': {   // 孔雀：腰后开一把孔雀屏，九根长翎扇形张开，翎眼金、青、宝蓝
+const base = [hip[0] + bk * 4, hip[1] - 6], open = 0.9 + 0.1 * Math.sin(t * 1.6 + idx);
+for (let k = 8; k >= 0; k--) {
+const th = -0.12 - k * 0.2 * open + Math.sin(t * 2 + k * 0.7) * 0.025, len = 62 + Math.sin(k * 1.7) * 6;
+const tip = [base[0] + bk * Math.cos(th) * len, base[1] + Math.sin(th) * len], mid = [base[0] + bk * Math.cos(th + 0.12) * len * 0.5, base[1] + Math.sin(th + 0.12) * len * 0.5];
+ribbon(base, mid, tip, 0.8, 3.6, lg(base, tip, [[0, '#0a4a40'], [0.6, '#14a88c'], [1, '#7fe8c8']]), 12);
+const a = Math.atan2(tip[1] - base[1], tip[0] - base[0]);
+for (const [r, col] of [[5.6, '#e8c040'], [4.4, '#14a88c'], [3.1, '#1a3a9a'], [1.5, '#0a0e2a']]) { ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(tip[0], tip[1], r * 1.25, r, a, 0, 7); ctx.fill(); }
+const sh = Math.max(0, Math.sin(t * 2.2 + k * 0.9)); if (sh > 0.3) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(tip[0], tip[1] - 1, 1.5 + sh * 2.5, '200,255,235', sh * 0.8); ctx.restore(); }
+}
+break;
+}
+case 'koi': {   // 锦鲤：一红一金两尾锦鲤在背后绕着圈游，身后一圈水纹
+const c = [bc[0] + bk * 12, bc[1] - 12], R = 27;
+ctx.strokeStyle = 'rgba(170,220,240,0.35)'; ctx.lineWidth = 1.2;
+for (const [r, k] of [[R - 7, 0], [R + 6, 1]]) { ctx.beginPath(); ctx.ellipse(c[0], c[1], r + Math.sin(t * 2 + k) * 1.2, (r + Math.sin(t * 2 + k) * 1.2) * 0.8, 0, 0, 7); ctx.stroke(); }
+for (const [k, body, spot] of [[0, '#ff5a3a', '#fff4ee'], [1, '#ffb83a', '#fff2cc']]) {
+const a = t * 0.9 * bk + k * Math.PI, q = [c[0] + Math.cos(a) * R, c[1] + Math.sin(a) * R * 0.8];
+ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(Math.atan2(Math.cos(a) * 0.8 * bk, -Math.sin(a) * bk)); drawKoi(7, body, spot, t * 7 + k * 2); ctx.restore();
+}
+break;
 }
 default: return false;
 }
@@ -10783,10 +11091,11 @@ const arm = [
 ];
 ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 if (o.ghost) {
-ctx.fillStyle = `rgba(${L.slash},${o.ghost})`;
-for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2], s[3], `rgba(${L.slash},${o.ghost})`);
+const gc = o.tint || L.slash;
+ctx.fillStyle = `rgba(${gc},${o.ghost})`;
+for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2], s[3], `rgba(${gc},${o.ghost})`);
 circle(sk.head, 10);
-if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${L.slash},${o.ghost})`; ctx.lineWidth = 2.5; line(sk.hilt, sk.tip); }
+if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${gc},${o.ghost})`; ctx.lineWidth = 2.5; line(sk.hilt, sk.tip); }
 return;
 }
 const alpha = o.invul ? 0.55 : 1;
@@ -11653,7 +11962,7 @@ const line = (a, b) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0
 const circle = (p, r) => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fill(); };
 function drawParticles(glowOnly) {
 for (const p of particles) {
-if (glowOnly && !(p.type === 'spark' || p.type === 'flash' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph' || SKIN_GLOW_P[p.type])) continue;
+if (glowOnly && (p.ng || !(p.type === 'spark' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph' || SKIN_GLOW_P[p.type]))) continue;   // ng：品质特效不进泛光；命中闪光本身就是一团柔光，再泛一遍就糊成一团白
 const k = clamp(p.life / p.max, 0, 1);
 if (p.type === 'spark') {
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -11664,17 +11973,18 @@ ctx.strokeStyle = `rgba(${p.rgb},${k * 0.9})`; ctx.lineWidth = 3 * k + 0.5;
 ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (1.15 - k * 0.8), 0, Math.PI * 2); ctx.stroke();
 } else if (p.type === 'flash') {
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
-const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2);
-g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(1, 'rgba(255,255,255,0)');
-ctx.fillStyle = g; ctx.fillRect(p.x - p.r * 2, p.y - p.r * 2, p.r * 4, p.r * 4); ctx.restore();
+const R = p.r * 1.7, g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);   // 亮的只有中间一小团，外圈很快淡下去：击倒慢放时闪光停得久，整块白圆盘会把人盖住
+g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(0.22, `rgba(255,255,255,${k * 0.55})`); g.addColorStop(0.55, `rgba(255,255,255,${k * 0.14})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+ctx.fillStyle = g; ctx.fillRect(p.x - R, p.y - R, R * 2, R * 2); ctx.restore();
 } else if (p.type === 'dmg') {
 const pop = 1 + Math.max(0, (p.life - p.max + 0.12) / 0.12) * 0.6;
 ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.s * pop, p.s * pop);
 ctx.globalAlpha = Math.min(1, k * 2.5); ctx.font = `800 21px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(10,8,20,0.85)'; ctx.strokeText(p.text, 0, 0);
 ctx.shadowColor = `rgba(${p.edge},0.9)`; ctx.shadowBlur = 10; ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, 0, 0); ctx.restore();
-} else if (p.type === 'shape') {   // 皮肤碎片：雪花、花瓣、羽毛……
-ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.spin || 0) * (p.max - p.life));
+} else if (p.type === 'shape') {   // 皮肤碎片：雪花、花瓣、羽毛……（锦鲤朝着游的方向，蝴蝶基本立着、轻轻晃）
+ctx.save(); ctx.translate(p.x, p.y);
+ctx.rotate(p.sh === 'koi' ? Math.atan2(p.vy || 0, p.vx || 1) : p.sh === 'butterfly' ? Math.sin(p.life * 7 + p.r * 5) * 0.35 : (p.spin || 0) * (p.max - p.life));
 if (WX_RISE[p.sh] || p.sh === 'spark') ctx.globalCompositeOperation = 'lighter';
 drawShape(p.sh, p.r, p.rgb, Math.min(1, k * 1.5)); ctx.restore();
 } else if (p.type === 'glyph') {   // 皮肤命中图案
@@ -12591,7 +12901,7 @@ circle([f.x, f.y], glow ? 5 : 1.8);
 }
 function drawEmissive(sc, sx, sy) {
 const mx = W * 0.68 - (cam.x - STAGE_W / 2) * 0.04 * sc, my = H * 0.26, mr = H * 0.11;
-ctx.fillStyle = 'rgba(255,236,210,0.32)'; circle([mx, my], mr * 1.02);
+moonGlow(mx, my, mr);
 ctx.fillStyle = '#fff';
 for (let i = 0; i < 90; i += 3) {
 const x = ((hash(i) * W * 1.4 - cam.x * 0.02 * sc) % W + W) % W, y = hash(i + 50) * H * 0.5;
@@ -12822,9 +13132,13 @@ drawStoneLantern(160, true); drawStoneLantern(-160, true);
 menuFlies(true);
 ctx.restore();
 }
+function moonGlow(mx, my, mr) {
+if (SCN && SCN.orb === 'galaxy') { ctx.save(); ctx.translate(mx, my); ctx.rotate(-0.3); ctx.scale(1, 0.46); ctx.fillStyle = 'rgba(255,236,250,0.3)'; circle([0, 0], mr * 0.75); ctx.restore(); }
+else { ctx.fillStyle = 'rgba(255,236,210,0.32)'; circle([mx, my], mr * 1.02); }
+}
 function withBloomScreen(sc) {   // 月亮和星星的发光
 const mx = W * 0.68 - (cam.x - STAGE_W / 2) * 0.04 * sc, my = H * 0.26, mr = H * 0.11;
-ctx.fillStyle = 'rgba(255,236,210,0.32)'; circle([mx, my], mr * 1.02);
+moonGlow(mx, my, mr);
 ctx.fillStyle = '#fff';
 for (let i = 0; i < 90; i += 3) {
 const x = ((hash(i) * W * 1.4 - cam.x * 0.02 * sc) % W + W) % W, y = hash(i + 50) * H * 0.5;
@@ -14482,11 +14796,38 @@ else if (kind === 'rain') { ctx.lineWidth = Math.max(0.6, s * 0.3); ctx.beginPat
 else if (kind === 'ash') { ctx.fillRect(-s * 0.6, -s * 0.4, s * 1.2, s * 0.8); }
 else if (kind === 'dust') { ctx.beginPath(); ctx.arc(0, 0, s * 0.5, 0, 7); ctx.fill(); }
 else if (kind === 'spark') { ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-s, -s * 1.5); ctx.lineTo(s * 0.3, -s * 0.2); ctx.lineTo(-s * 0.3, s * 0.2); ctx.lineTo(s, s * 1.5); ctx.stroke(); }
+else if (kind === 'twinkle') {   // 星星：四道细芒 + 一个亮点
+ctx.beginPath(); for (let k = 0; k < 8; k++) { const r = k % 2 ? s * 0.22 : s * 1.7, an = k * Math.PI / 4; ctx.lineTo(Math.cos(an) * r, Math.sin(an) * r); } ctx.closePath(); ctx.fill();
+ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(0, 0, s * 0.32, 0, 7); ctx.fill();
+}
+else if (kind === 'butterfly') {   // 蝴蝶：上下两对翅膀，一扇一扇（每只扇的节奏不一样）
+const fl = 0.28 + 0.72 * Math.abs(Math.sin(clock * 11 + s * 37));
+ctx.save(); ctx.scale(fl, 1);
+for (const sg of [-1, 1]) {
+ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sg * s * 1.9, -s * 2.3, sg * s * 2.2, -s * 0.5); ctx.quadraticCurveTo(sg * s * 1.3, s * 0.1, 0, 0); ctx.fill();
+ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sg * s * 1.7, s * 0.3, sg * s * 1.1, s * 1.6); ctx.quadraticCurveTo(sg * s * 0.4, s * 1.1, 0, 0); ctx.fill();
+}
+ctx.restore();
+ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(-s * 0.12, -s * 0.9, s * 0.24, s * 1.9);
+}
+else if (kind === 'note') {   // 音符：一个八分音符
+ctx.beginPath(); ctx.ellipse(0, s * 0.9, s * 0.78, s * 0.54, -0.4, 0, 7); ctx.fill();
+ctx.lineWidth = Math.max(0.8, s * 0.24); ctx.beginPath(); ctx.moveTo(s * 0.66, s * 0.72); ctx.lineTo(s * 0.66, -s * 1.9); ctx.quadraticCurveTo(s * 1.6, -s * 1.2, s * 1.45, -s * 0.15); ctx.stroke();
+}
+else if (kind === 'koi') drawKoi(s * 1.15, c, `rgba(255,250,240,${a * 0.9})`, clock * 9 + s * 5);
 else {   // ember gold lava：会发光的小点
 const g = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 2.2); g.addColorStop(0, `rgba(255,250,230,${a})`); g.addColorStop(0.35, c); g.addColorStop(1, `rgba(${rgb},0)`);
 ctx.fillStyle = g; ctx.fillRect(-s * 2.2, -s * 2.2, s * 4.4, s * 4.4);
 if (kind === 'gold' && s > 2) { ctx.strokeStyle = `rgba(255,250,220,${a})`; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(-s * 2.5, 0); ctx.lineTo(s * 2.5, 0); ctx.moveTo(0, -s * 2.5); ctx.lineTo(0, s * 2.5); ctx.stroke(); }
 }
+}
+function drawKoi(s, body, spot, wig) {
+const w = Math.sin(wig) * 0.35, tx = -s * 0.95, ty = w * s * 0.6;
+ctx.fillStyle = body;
+ctx.beginPath(); ctx.moveTo(s * 1.6, 0); ctx.quadraticCurveTo(s * 0.8, -s * 0.78, -s * 0.5, -s * 0.32 + w * s * 0.3); ctx.quadraticCurveTo(-s * 1.05, w * s * 0.5, -s * 0.5, s * 0.32 + w * s * 0.3); ctx.quadraticCurveTo(s * 0.8, s * 0.78, s * 1.6, 0); ctx.fill();
+ctx.beginPath(); ctx.moveTo(tx + s * 0.3, ty); ctx.quadraticCurveTo(tx - s * 0.5, ty - s * 0.9, tx - s * 1.05, ty - s * 0.75 + w * s); ctx.quadraticCurveTo(tx - s * 0.5, ty, tx - s * 1.05, ty + s * 0.75 + w * s); ctx.quadraticCurveTo(tx - s * 0.5, ty + s * 0.9, tx + s * 0.3, ty); ctx.fill();
+for (const sg of [-1, 1]) { ctx.beginPath(); ctx.ellipse(s * 0.45, sg * s * 0.58, s * 0.38, s * 0.14, sg * 0.7, 0, 7); ctx.fill(); }
+if (spot) { ctx.fillStyle = spot; ctx.beginPath(); ctx.ellipse(s * 0.25, -s * 0.08, s * 0.48, s * 0.24, 0.15, 0, 7); ctx.fill(); }
 }
 function drawGlyph(kind, r, rgb, a) {
 const c = `rgba(${rgb},${a})`, w = `rgba(255,255,255,${a * 0.8})`;
@@ -14505,6 +14846,12 @@ else if (kind === 'lotus') { for (let k = -3; k <= 3; k++) { ctx.save(); ctx.rot
 else if (kind === 'shards') arms(5, () => { ctx.beginPath(); ctx.moveTo(r * 0.35, -r * 0.1); ctx.lineTo(r, 0); ctx.lineTo(r * 0.35, r * 0.1); ctx.closePath(); ctx.fill(); });
 else if (kind === 'ripple') { ctx.save(); ctx.scale(1, 0.42); for (const [q, w] of [[0.35, 2.6], [0.68, 1.8], [1, 1.1]]) { ctx.lineWidth = w; ctx.globalAlpha = 1.15 - q * 0.6; ctx.beginPath(); ctx.arc(0, 0, r * q, 0, 7); ctx.stroke(); } ctx.restore(); ctx.fillStyle = w; ctx.beginPath(); ctx.arc(0, 0, r * 0.08, 0, 7); ctx.fill(); }
 else if (kind === 'feathers') arms(5, () => { ctx.save(); ctx.translate(r * 0.55, 0); ctx.rotate(Math.PI / 2); drawShape('feather', r * 0.2, rgb, a); ctx.restore(); });
+else if (kind === 'star8') {   // 非凡：八角星印，长短芒交替，中间一圈
+ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r * 0.3, 0, 7); ctx.stroke();
+arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.34, -r * 0.07); ctx.lineTo(r, 0); ctx.lineTo(r * 0.34, r * 0.07); ctx.closePath(); ctx.fill(); });
+ctx.save(); ctx.rotate(Math.PI / 8); arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.32, -r * 0.05); ctx.lineTo(r * 0.6, 0); ctx.lineTo(r * 0.32, r * 0.05); ctx.closePath(); ctx.fill(); }); ctx.restore();
+ctx.fillStyle = w; ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, 7); ctx.fill();
+}
 }
 function drawOrb(T, mx, my, mr, t) {
 const o = T ? T.orb : 'moon', c = T ? T.orbC : '255,236,210';
@@ -14544,6 +14891,30 @@ disk('#cfc6f2');
 ctx.save(); ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.clip();
 ctx.strokeStyle = `rgba(255,${130 + Math.sin(t * 2) * 50 | 0},70,0.9)`; ctx.lineWidth = mr * 0.045;
 for (let k = 0; k < 5; k++) { ctx.beginPath(); let x = mx + (hash(k) - 0.5) * mr * 0.4, y = my + (hash(k + 3) - 0.5) * mr * 0.4; ctx.moveTo(x, y); for (let n = 0; n < 4; n++) { const an = k * 1.26 + (hash(k * 7 + n) - 0.5); x += Math.cos(an) * mr * 0.35; y += Math.sin(an) * mr * 0.35; ctx.lineTo(x, y); } ctx.stroke(); }
+ctx.restore();
+} else if (o === 'galaxy') {   // 天河：一条星河斜着横过天空，中间一道暗的尘带，星核是斜着的一团亮光，两条旋臂慢慢转
+const L = Math.max(W, mr * 14);
+ctx.save(); ctx.translate(mx, my); ctx.rotate(-0.42); ctx.globalCompositeOperation = 'lighter';
+for (const [w, a, col] of [[mr * 3.4, 0.13, c], [mr * 1.8, 0.15, '255,150,220'], [mr * 0.8, 0.2, '240,244,255']]) {
+const g = ctx.createLinearGradient(0, -w, 0, w); g.addColorStop(0, `rgba(${col},0)`); g.addColorStop(0.5, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`);
+ctx.fillStyle = g; ctx.fillRect(-L, -w, L * 2, w * 2);
+}
+ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(8,6,28,0.32)'; ctx.beginPath();   // 尘带
+for (let x = -L; x <= L; x += mr * 0.5) ctx.lineTo(x, Math.sin(x / (mr * 2.6)) * mr * 0.22 - mr * 0.12);
+for (let x = L; x >= -L; x -= mr * 0.5) ctx.lineTo(x, Math.sin(x / (mr * 2.6) + 0.8) * mr * 0.16 + mr * 0.1);
+ctx.fill(); ctx.globalCompositeOperation = 'lighter';
+for (let k = 0; k < 140; k++) {   // 星河里的星尘，一闪一闪
+const x = (hash(k + 210) - 0.5) * L * 2, y = (hash(k + 330) + hash(k + 450) - 1) * mr * 1.7, tw = 0.35 + 0.65 * Math.sin(t * (0.8 + hash(k + 570) * 2.2) + k) ** 2, z = 1.2 + hash(k + 690) * 2.2;
+ctx.fillStyle = `rgba(${k % 5 ? '255,255,255' : '255,200,240'},${0.7 * tw})`; ctx.fillRect(x - z / 2, y - z / 2, z, z);
+}
+ctx.rotate(0.12); ctx.scale(1, 0.46);   // 星系盘斜着放，旋臂在盘里慢慢转
+for (let arm = 0; arm < 2; arm++) for (let k = 0; k < 48; k++) {   // 旋臂
+const q = k / 48, an = arm * Math.PI + q * 4.4 + t * 0.05, r = mr * (0.2 + q * 1.7);
+ctx.fillStyle = `rgba(${q < 0.45 ? '255,235,250' : c},${0.6 * (1 - q)})`;
+ctx.beginPath(); ctx.arc(Math.cos(an) * r, Math.sin(an) * r, (1 - q) * 4.5 + 1.2, 0, 7); ctx.fill();
+}
+const g = ctx.createRadialGradient(0, 0, 0, 0, 0, mr * 1.05); g.addColorStop(0, 'rgba(255,252,255,0.95)'); g.addColorStop(0.25, `rgba(${c},0.55)`); g.addColorStop(1, `rgba(${c},0)`);
+ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, mr * 1.05, 0, 7); ctx.fill();   // 星核（压扁成斜着的椭圆，不像月亮）
 ctx.restore();
 } else if (o === 'lotus') {   // 金莲托月
 glow(mr * 0.6, mr * 5, 0.42);
@@ -14596,15 +14967,16 @@ function drawWeather(T, sc) {
 const n = Math.round((T.legend ? 90 : 42) * (SETTINGS.quality === 'low' ? 0.4 : SETTINGS.quality === 'mid' ? 0.7 : 1)), spanX = W / sc + 200, top = -groundY() / sc - 60, spanY = -top + 30, rise = WX_RISE[T.wx];
 for (let i = 0; i < n; i++) {
 const rain = T.wx === 'rain';
-const sp = (rain ? 520 : T.wx === 'snow' ? 50 : T.wx === 'ink' ? 160 : rise ? 45 : 60) * (0.6 + hash(i + 3) * 0.8), dr = rain ? -110 : T.wx === 'spark' ? 0 : -25 + hash(i + 8) * 20;
+const tw = T.wx === 'twinkle', sp = (rain ? 520 : T.wx === 'snow' ? 50 : T.wx === 'ink' ? 160 : rise ? 45 : tw ? 12 : 60) * (0.6 + hash(i + 3) * 0.8), dr = rain ? -110 : T.wx === 'spark' || tw ? 0 : -25 + hash(i + 8) * 20;
 let y = (hash(i + 1) * spanY + sp * clock) % spanY; y = rise ? 20 - y : top + y;
 const x = cam.x - spanX / 2 + ((hash(i) * spanX + dr * clock + (rain ? 0 : Math.sin(clock * (0.6 + hash(i + 5)) + i) * 30)) % spanX + spanX) % spanX;
 const s = (T.legend ? 2 : 1.6) + hash(i + 7) * 2.4, near = hash(i + 9);
 let a = 0.35 + near * 0.55;
 if (T.wx === 'spark') { a *= Math.max(0, Math.sin(clock * 6 + i * 3.7)) ** 6; if (a < 0.02) continue; }
+else if (tw) { a *= 0.12 + 0.88 * Math.max(0, Math.sin(clock * (1.2 + hash(i + 11)) + i * 2.3)) ** 3; }
 if (rise) a *= clamp((20 - y) / 120, 0, 1) * clamp((y - top) / 150, 0, 1);
 ctx.save(); ctx.translate(x, y); ctx.rotate(rain ? -Math.atan2(dr, sp) : clock * (hash(i + 2) - 0.5) * 3 + i);
-if (rise || T.wx === 'spark') ctx.globalCompositeOperation = 'lighter';
+if (rise || T.wx === 'spark' || tw) ctx.globalCompositeOperation = 'lighter';
 drawShape(T.wx, s * (0.7 + near * 0.6), T.wxC, a);
 ctx.restore();
 }
@@ -14625,7 +14997,7 @@ const mist = ctx.createLinearGradient(0, CH * 0.5, 0, CH); mist.addColorStop(0, 
 for (let i = 0; i < (T.legend ? 34 : 18); i++) {
 const rise = WX_RISE[T.wx], y = ((hash(i + 1) * CH + (rise ? -1 : 1) * 30 * u * t * (0.6 + hash(i + 3))) % CH + CH) % CH;
 ctx.save(); ctx.translate(hash(i) * CW + Math.sin(t + i) * 8 * u, y); ctx.rotate(t * (hash(i + 2) - 0.5) * 2 + i);
-if (rise || T.wx === 'spark') ctx.globalCompositeOperation = 'lighter';
+if (rise || T.wx === 'spark' || T.wx === 'twinkle') ctx.globalCompositeOperation = 'lighter';
 drawShape(T.wx, (1.6 + hash(i + 7) * 2.6) * u, T.wxC, 0.4 + hash(i + 9) * 0.5); ctx.restore();
 }
 }
@@ -14661,7 +15033,8 @@ return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 function skinLook(ci, skin) {
 const sk = SKINS[skin];
 const ok = sk && sk.char === CHARS[ci].id;
-return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null, fx: ok ? sk.fx || null : null };
+const it = ok && window.ArmoryCore && ArmoryCore.ITEM[skin];
+return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null, fx: ok ? sk.fx || null : null, tier: it ? it.tier : '' };
 }
 function skinSkillName(fOrKey, slot) {
 const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);
@@ -20241,13 +20614,14 @@ document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.da
 (function (G) {
 'use strict';
 const C = {};
-C.VER = 2;                                   // 2：去掉磨损、图案模板、钥匙和玉珏，加终端机，六个武器箱
+C.VER = 3;                                   // 3：爆率调高，加神兵武器箱，改成限制每天开几个，武器箱和终端机上市场（2：去掉磨损和玉珏，加终端机）
 C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
 C.SEASON_DAYS = 32;
 C.INV_MAX = 300, C.LIST_MAX = 20, C.HIST_MAX = 40;
 C.FEE = 0.15;                                // 市场手续费
 C.ASK = [1.02, 1.12], C.BID = 0.88, C.LIST_MAX_R = 0.95;
-C.CASE_WEEK = 5;                             // 每周最多用墨锭买 5 个武器箱
+C.OPEN_DAY = 2;                              // 普通武器箱每天最多开 2 个（北京时间零点刷新）
+C.PREM_WEEK = 1;                             // 神兵武器箱每周最多开 1 个（周一刷新），不占每天那 2 个
 C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
 C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
 C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
@@ -20262,10 +20636,10 @@ cla: { n: '保密', c: '211,44,230' },
 cov: { n: '隐秘', c: '235,75,75' },
 gold: { n: '★ 非凡', c: '228,174,57' },
 };
-C.ODDS = { mil: 0.7992, res: 0.1598, cla: 0.032, cov: 0.0064, gold: 0.0026 };
+C.ODDS = { mil: 0.53, res: 0.27, cla: 0.13, cov: 0.052, gold: 0.018 };   // 普通武器箱；神兵武器箱的写在它自己那一项里
 C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
-C.BASE = { mil: 35, res: 160, cla: 650, cov: 2200, gold: 8800 };   // 参考价（墨锭）
-C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1, 1.3] };
+C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 参考价（墨锭）：爆率调高以后跟着重定，开箱平均开不回箱子的钱
+C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1, 1.3], base: 120 };
 C.PAINTS = [
 ['qf_p1', 'qingfeng', '竹影', { body: '#e4efe2', shade: '#87a58a', scarf: '#3d8f5a', slash: '120,210,150', blade: '#effff2' }],
 ['ts_p1', 'tieshan', '锈蚀', { body: '#7a5544', shade: '#4a3024', scarf: '#c46a2a', slash: '230,140,80', blade: '#e8d6c6' }],
@@ -20292,7 +20666,7 @@ C.PAINTS = [
 ['yx_p2', 'yuxiao', '靛青', { body: '#dfe6f4', shade: '#8c9ac0', scarf: '#3a4fb0', slash: '120,140,240', blade: '#e8ecff' }],
 ['zx_p2', 'zuixian', '青瓷', { body: '#cfe0d4', shade: '#8aa894', scarf: '#4a8a78', slash: '140,220,190', blade: '#eef8f2' }],
 ];
-C.STARS = {
+C.FULL = {
 gc_wolf: { char: 'gouchen', name: '霜狼',
 look: { body: '#dfe9f2', shade: '#7d93ab', scarf: '#7fd4ff', slash: '140,210,255', blade: '#f0f8ff', outline: '#0a1422', outlineA: 1 },
 deco: { head: 'voidhorns', hideBaseHead: true, gem: '#9fe0ff', robe: 'blizzard', breastplate: '#3a5878', shoulder: '#2d4a66', back: 'icewings', trail: 'snow', aura: 'snow', weapStyle: 'frost_hammer' },
@@ -20318,22 +20692,61 @@ look: { body: '#24305a', shade: '#121a3a', scarf: '#e8eeff', slash: '215,228,255
 deco: { head: 'jadepin', gem: '#cfe0ff', robe: 'starry', breastplate: '#1a2650', back: 'crescent', trail: 'snow', aura: 'cloud', weapStyle: 'guanghan_moon' },
 fx: { th: 'star', c: '205,222,255', c2: '255,255,255' },
 scene: { sky: ['#03061a', '#0a163a', '#1c3468', '#0a1632'], orb: 'moon', orbC: '240,246,255', mist: '190,210,255', mtn: ['#122444', '#0a162c'], bam: ['#060c1c', '#040812'], wx: 'snow', wxC: '230,240,255', hit: 'crescent', hitC: '205,222,255', stars: 0.9, rays: true } },
+ls_tianhe: { char: 'lingshuang', name: '天河',
+look: { body: '#1c2146', shade: '#0c0f26', scarf: '#a9c2ff', slash: '170,190,255', blade: '#f6f8ff', outline: '#d6e0ff', outlineA: 0.85 },
+deco: { head: 'valkyrie', gem: '#ffd6f4', robe: 'starry', breastplate: '#262c64', shoulder: '#323a80', back: 'galaxy', trail: 'spark', aura: 'aurora', weapStyle: 'tianhe_spear' },
+fx: { th: 'nebula', c: '165,185,255', c2: '255,150,225' },
+scene: { sky: ['#03030d', '#0a0b26', '#1e1a50', '#0a0a24'], orb: 'galaxy', orbC: '170,180,255', mist: '170,160,255', mtn: ['#14143a', '#0a0a24'], bam: ['#06061a', '#030310'], wx: 'twinkle', wxC: '225,220,255', hit: 'swirl', hitC: '190,170,255', stars: 1, rays: true } },
+fy_huandie: { char: 'feiying', name: '幻蝶',
+look: { body: '#22163a', shade: '#100a1e', scarf: '#c08cff', slash: '190,150,255', blade: '#f6ecff', outline: '#8ff4ff', outlineA: 0.75 },
+deco: { head: 'foxmask', hideBaseHead: true, mask: '#8ff4ff', robe: 'spirit', shoulder: '#3a2468', back: 'butterflywings', cape: '#1c1238', trail: 'snow', aura: 'aurora', weapStyle: 'butterfly_daggers' },
+fx: { th: 'butterfly', c: '185,140,255', c2: '120,240,255', part: 'butterfly' },
+scene: { sky: ['#07040f', '#160c2a', '#2e1a4e', '#120a22'], orb: 'moon', orbC: '225,210,255', mist: '180,150,255', mtn: ['#1e1238', '#120a24'], bam: ['#0c0618', '#06030e'], wx: 'petal', wxC: '200,170,255', hit: 'swirl', hitC: '160,230,255', stars: 0.7, rays: true } },
+ts_liuli: { char: 'tieshan', name: '琉璃',
+look: { body: '#c4e6f2', shade: '#6ea6bf', scarf: '#ff9ad5', slash: '170,240,255', blade: '#f4feff', outline: '#16323f', outlineA: 1 },
+deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#9fd4e6', crest: '#ff9ad5', shoulder: '#7fbcd2', breastplate: '#a8d8ea', robe: 'heavy', back: 'crystals', trail: 'snow', aura: 'snow', weapStyle: 'crystal_greatsword' },
+fx: { th: 'crystal', c: '170,240,255', c2: '255,170,230' },
+scene: { sky: ['#041018', '#0a2230', '#16405a', '#0a1c28'], orb: 'moon', orbC: '220,248,255', mist: '160,230,255', mtn: ['#123448', '#0a2232'], bam: ['#06141e', '#030c12'], wx: 'snow', wxC: '230,250,255', hit: 'hexagon', hitC: '170,240,255', stars: 0.5, rays: true } },
+yx_tianlai: { char: 'yuxiao', name: '天籁',
+look: { body: '#fbf6e8', shade: '#c9b88a', scarf: '#ffcf6a', slash: '255,220,140', blade: '#fff8e6', outline: '#3a2a10', outlineA: 1 },
+deco: { head: 'starguan', robe: 'celestial', breastplate: '#c9a24e', back: 'notering', trail: 'gold', aura: 'gold', weapStyle: 'tianlai_flute' },
+fx: { th: 'note', c: '255,212,120', c2: '255,248,225', part: 'note' },
+scene: { sky: ['#140c06', '#3a2410', '#86602c', '#2e1c0a'], orb: 'sun', orbC: '255,226,150', mist: '255,215,140', mtn: ['#3a2812', '#24180a'], bam: ['#160e06', '#0e0804'], wx: 'gold', wxC: '255,225,150', hit: 'sunburst', hitC: '255,215,120', stars: 0.2, rays: true } },
+my_qinglv: { char: 'moyu', name: '青绿',
+look: { body: '#e6efe2', shade: '#7f9c86', scarf: '#1f8a76', slash: '70,200,170', blade: '#163c40', outline: '#0e2a2a', outlineA: 1 },
+deco: { head: 'bamboohat', hatC: '#2a6a5a', robe: 'jade_master', breastplate: '#2a6a5a', back: 'scroll', trail: 'ink', inkC: '30,120,110', weapStyle: 'jade_brush' },
+fx: { th: 'ink', c: '70,200,170', c2: '16,60,64' },
+scene: { sky: ['#06120f', '#0f2a26', '#2a5a4c', '#10261f'], orb: 'moon', orbC: '220,250,235', mist: '120,210,180', mtn: ['#1a4a40', '#0e2e28'], bam: ['#0a1c16', '#06120e'], wx: 'ink', wxC: '40,140,120', hit: 'enso', hitC: '70,200,170', stars: 0.2 } },
+yl_kongque: { char: 'yanling', name: '孔雀',
+look: { body: '#e8f6f2', shade: '#76a8a0', scarf: '#14a88c', slash: '60,215,185', blade: '#eafffa', outline: '#0a2a26', outlineA: 1 },
+deco: { head: 'plume', plumeC: ['#14a88c', '#e8c040'], robe: 'phoenix', breastplate: '#0e6a5c', cape: '#0c5a50', back: 'peacock', trail: 'feather', featherC: '60,215,185', weapStyle: 'peacock_feather' },
+fx: { th: 'feather', c: '60,215,185', c2: '235,195,70', part: 'feather' },
+scene: { sky: ['#04120f', '#0a2a24', '#145448', '#0a2620'], orb: 'moon', orbC: '220,255,240', mist: '100,220,190', mtn: ['#0e3a32', '#082420'], bam: ['#061a16', '#03100c'], wx: 'feather', wxC: '120,230,200', hit: 'feathers', hitC: '60,215,185', stars: 0.3 } },
+ly_jinli: { char: 'liuyun', name: '锦鲤',
+look: { body: '#fff6ee', shade: '#d4ab94', scarf: '#ff5a3a', slash: '255,140,110', blade: '#fff4ee', outline: '#2a1208', outlineA: 1 },
+deco: { head: 'veilhat', hatC: '#d8483a', veilC: 'rgba(255,170,140,0.38)', robe: 'dusk', cape: '#e0603a', back: 'koi', trail: 'cloud', weapStyle: 'koi_fan' },
+fx: { th: 'water', c: '255,125,95', c2: '255,232,205', part: 'koi' },
+scene: { sky: ['#0a1018', '#14283a', '#2a5470', '#12283a'], orb: 'moon', orbC: '255,236,220', mist: '170,210,235', mtn: ['#16304a', '#0e2032'], bam: ['#0a1624', '#060e18'], wx: 'petal', wxC: '255,170,150', hit: 'ripple', hitC: '255,150,120', stars: 0.3 } },
 };
 C.COLS = {
-c1: { name: '初刃', price: 180, emblem: '刃', col: '200,70,60',
+c1: { name: '初刃', price: 280, emblem: '刃', col: '200,70,60',
 mil: ['qf_p1', 'ts_p1', 'lm_p1', 'fy_p1'], res: ['qf_frost', 'ts_bronze', 'ly_dusk'], cla: ['ts_obsidian', 'ly_sky'], cov: ['qf_gold', 'fy_blood'], gold: ['gc_wolf'] },
-c2: { name: '霜华', price: 220, emblem: '霜', col: '90,160,230',
+c2: { name: '霜华', price: 270, emblem: '霜', col: '90,160,230',
 mil: ['ls_p1', 'yh_p1', 'my_p1', 'gc_p1'], res: ['ls_plum', 'yh_sakura'], cla: ['yh_eclipse', 'my_gold'], cov: ['ls_aurora', 'yh_solstice'], gold: ['zx_moon'] },
 c3: { name: '名剑', price: 260, emblem: '剑', col: '220,170,70',
 mil: ['yx_p1', 'zx_p1', 'qf_p2', 'ts_p2'], res: ['yx_snow', 'zx_amber'], cla: ['yx_celestial', 'yl_phoenix'], cov: ['qf_abyss', 'zx_immortal'], gold: ['qf_renying'] },
-c4: { name: '江湖', price: 220, emblem: '行', col: '90,200,150',
+c4: { name: '江湖', price: 250, emblem: '行', col: '90,200,150',
 mil: ['lm_p2', 'fy_p2', 'ly_p2', 'yh_p2'], res: ['ly_bamboo', 'yl_raven'], cla: ['fy_phantom'], cov: ['my_celestial', 'ts_crimson'], gold: ['qf_qfx'] },
-c5: { name: '惊雷', price: 240, emblem: '雷', col: '150,100,240',
+c5: { name: '惊雷', price: 280, emblem: '雷', col: '150,100,240',
 mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
 c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
 mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
+c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
+mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie'] },
 };
 C.CASES = Object.keys(C.COLS);
+C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱：对局掉落、补给、星章送的都是这几种
+C.oddsOf = cid => C.COLS[cid].odds || C.ODDS;
 C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
 C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
 C.STORE = [{ id: 'tag', name: '改名标签', give: ['tags', 1], cost: 400, lim: 2 }];
@@ -20387,6 +20800,8 @@ for (const [cid, col] of Object.entries(C.COLS)) for (const t of C.TIERS) for (c
 C.ITEM[k] = { col: cid, tier: t, mul: 0.85 + (hash32('pop|' + k) % 450) / 1000 };   // 热门程度 0.85~1.3
 C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
 C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
+C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
+C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵武器箱的那 7 款靠开箱、市场、终端机、汰换
 const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen' };
 C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 C.trend = (key, day) => {
@@ -20407,21 +20822,26 @@ return Math.max(2, Math.round(p * C.trend(it.k, day)));
 };
 C.refPrice = (k, day) => C.price({ k, st: -1 }, day);   // 走势图用：普通版
 C.casePrice = (cid, day) => Math.max(5, Math.round(C.COLS[cid].price * C.trend('case|' + cid, day)));
-C.quick = p => Math.floor(p * C.BID * (1 - C.FEE));   // 直接卖出（饰品、武器箱）到手多少
+C.GOODS = [...C.CASES, 'term'];
+C.isGood = k => C.GOODS.includes(k);
+C.goodPrice = (k, day) => k === 'term' ? Math.max(5, Math.round(C.TERM.base * C.trend('term', day))) : C.casePrice(k, day);
+C.quick = p => Math.floor(p * C.BID * (1 - C.FEE));   // 直接卖出（饰品、箱子）到手多少
 C.net = p => Math.floor(p * (1 - C.FEE));             // 挂单成交到手多少
 C.listings = (k, day) => {
-if (!C.isItem(k)) return [];
-const r = rng(hash32(`ls|${k}|${day}`)), n = 3 + Math.floor(r() * 4), out = [];
+const item = C.isItem(k);
+if (!item && !C.isGood(k)) return [];
+const r = rng(hash32(`ls|${k}|${day}`)), out = [];
+const n = item ? 3 + Math.floor(r() * 4) : k === 'term' ? 4 + Math.floor(r() * 5) : C.COLS[k].prem ? 2 + Math.floor(r() * 3) : 6 + Math.floor(r() * 7);
 for (let j = 0; j < n; j++) {
-const st = r() < 0.2 ? Math.floor(r() * 150) : -1, m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
-out.push({ l: `${day}.${k}.${j}`, k, st, price: Math.round(C.price({ k, st }, day) * m) });
+const st = item && r() < 0.2 ? Math.floor(r() * 150) : -1, m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
+out.push({ l: `${day}.${k}.${j}`, k, st, price: Math.round((item ? C.price({ k, st }, day) : C.goodPrice(k, day)) * m) });
 }
 return out.sort((a, b) => a.price - b.price);
 };
 C.sellRate = ratio => ratio > C.LIST_MAX_R ? 0 : Math.min(6, 0.6 * Math.exp(-(ratio - C.LIST_MAX_R) * 8));
 C.blank = () => ({
 v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
-lst: [], hist: [], bought: { d: 0, ids: [] }, cw: { w: 0, n: 0 }, drop: { w: 0, g: 0, n: 0, sup: 0 },
+lst: [], hist: [], bought: { d: 0, ids: [] }, od: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, drop: { w: 0, g: 0, n: 0, sup: 0 },
 op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
 stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
 });
@@ -20446,20 +20866,23 @@ s.tags = int(s.tags, 0, 1e9); s.term = int(s.term, 0, 1e6) + oldKeys;
 s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
 const seen = new Set();
 s.inv = s.inv.map(cleanItem).filter(x => x && !seen.has(x.i) && seen.add(x.i)).slice(0, C.INV_MAX);
-s.lst = s.lst.map(L => {
-const it = isObj(L) && cleanItem(L.it);
-if (!it || seen.has(it.i) || !/^L\d{1,12}$/.test(String(L.l))) return null;
+s.lst = s.lst.map(L => {   // 挂着的单：一件饰品（it），或者一个箱子（g 是武器箱编号或 'term'）
+if (!isObj(L) || !/^L\d{1,12}$/.test(String(L.l))) return null;
+const tail = { price: int(L.price, 1, 9999999), t: num(L.t), at: num(L.at) };
+if (L.g !== undefined) return C.isGood(L.g) ? { l: String(L.l), g: L.g, ...tail } : null;
+const it = cleanItem(L.it);
+if (!it || seen.has(it.i)) return null;
 seen.add(it.i);
-return { l: String(L.l), it, price: int(L.price, 1, 9999999), t: num(L.t), at: num(L.at) };
+return { l: String(L.l), it, ...tail };
 }).filter(Boolean).slice(0, C.LIST_MAX);
 let top = 0;
 for (const x of s.inv) top = Math.max(top, x.i);
-for (const L of s.lst) top = Math.max(top, L.it.i, +L.l.slice(1));
+for (const L of s.lst) top = Math.max(top, L.it ? L.it.i : 0, +L.l.slice(1));
 s.nid = Math.max(int(s.nid, 1), top + 1);
 s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
 s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
 s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold', 'term'].includes(h.kind) ? h.kind : 'sell',
-...(C.CASES.includes(h.c) ? { c: h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),
+...(C.isGood(h.g) || C.CASES.includes(h.c) ? { g: C.isGood(h.g) ? h.g : h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),   // 第 2 版的箱子记录写在 c 里
 price: int(h.price, 0, 1e9), ...(h.gain !== undefined ? { gain: int(h.gain, 0, 1e9) } : {}) }));
 s.cc = Array.from(new Set(s.cc.filter(c => own(C.COLS, c))));
 s.buys = Object.fromEntries(Object.entries(s.buys).filter(([id, v]) => C.STORE.some(g => g.id === id) && isObj(v)).map(([id, v]) => [id, { k: str(v.k, 12), n: int(v.n, 0, 1e6) }]));
@@ -20467,7 +20890,8 @@ s.stat = Object.fromEntries(Object.keys(b.stat).map(k => [k, int(s.stat[k])]));
 s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
 s.last = num(s.last); s.gift = s.gift ? 1 : 0;
 s.bought = { d: int(s.bought.d), ids: Array.isArray(s.bought.ids) ? s.bought.ids.filter(x => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, 600) : [] };
-s.cw = { w: int(s.cw.w), n: int(s.cw.n, 0, C.CASE_WEEK) };
+s.od = { d: int(s.od.d), n: int(s.od.n, 0, C.OPEN_DAY) };
+s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, C.PREM_WEEK) };
 s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
 s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
 const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
@@ -20479,7 +20903,8 @@ prog: ms ? Object.fromEntries([0, 1, 2, 3].filter(i => i in (isObj(op.prog) ? op
 done: ms && Array.isArray(op.done) ? Array.from(new Set(op.done.map(Number).filter(i => i >= 0 && i < 4 && Number.isInteger(i)))) : [] };
 const now = env.now, day = C.day(now), wk = C.week(day), se = C.season(day);
 if (s.bought.d !== day) s.bought = { d: day, ids: [] };
-if (s.cw.w !== wk) s.cw = { w: wk, n: 0 };
+if (s.od.d !== day) s.od = { d: day, n: 0 };
+if (s.pw.w !== wk) s.pw = { w: wk, n: 0 };
 if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
 if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
 if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk), prog: {}, done: [] });
@@ -20488,7 +20913,7 @@ if (s.tm && !(now - s.tm.t0 < C.TERM.days * 86400e3)) s.tm = null;   // 开封�
 return s;
 };
 C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); for (const L of o.lst) delete L.at; delete o.tk; return o; };
-C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.STARS)];
+C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.FULL)];
 C.genMissions = (uid, wk) => {
 const r = rng(hash32(`ms|${uid}|${wk}`)), out = [];
 for (let g = 0; g < 4; g++) {
@@ -20501,11 +20926,11 @@ return out;
 };
 C.supplyOpts = (uid, wk) => {
 const r = rng(hash32(`sup|${uid}|${wk}`)), pick = a => a[Math.floor(r() * a.length)];
-const opts = [{ t: 'case', c: pick(C.CASES) }, { t: 'term', n: 1 }, r() < 0.3 ? { t: 'item', k: pick(C.ofTier('res')) } : { t: 'item', k: pick(C.ofTier('mil')) }, r() < 0.5 ? { t: 'ink', n: 400 } : { t: 'tag', n: 1 }];
+const opts = [{ t: 'case', c: pick(C.REG) }, { t: 'term', n: 1 }, r() < 0.3 ? { t: 'item', k: pick(C.ofTier('res')) } : { t: 'item', k: pick(C.ofTier('mil')) }, r() < 0.5 ? { t: 'ink', n: 400 } : { t: 'tag', n: 1 }];
 for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
 return opts;
 };
-C.caseLeft = s => Math.max(0, C.CASE_WEEK - s.cw.n);   // 这周还能用墨锭买几个武器箱
+C.openLeft = (s, cid) => cid && C.COLS[cid] && C.COLS[cid].prem ? Math.max(0, C.PREM_WEEK - s.pw.n) : Math.max(0, C.OPEN_DAY - s.od.n);
 C.mkItem = (s, k, src, rnd, o = {}) => {
 const st = o.st !== undefined ? o.st : (rnd() < C.ST_P ? 0 : -1);
 return { i: s.nid++, k, st, n: '', t: o.t || 0, src };
@@ -20541,7 +20966,13 @@ s.op.prog[i] = Math.min(m.n, max ? Math.max(cur, v) : cur + v);
 });
 };
 const bought = (s, id, day) => { const b = s.buys[id]; return b && b.k === 'w' + C.week(day) ? b.n : 0; };
-const rollTier = (rnd, odds) => { let r = rnd(), acc = 0; for (const t of C.TIERS) { acc += odds[t]; if (r < acc) return t; } return 'mil'; };
+const rollTier = (rnd, odds) => {   // 概率是 0 的档跳过；浮点误差落到最后时，给最后一档有概率的
+let r = rnd(), acc = 0, last = 'mil';
+for (const t of C.TIERS) { if (!(odds[t] > 0)) continue; last = t; acc += odds[t]; if (r < acc) return t; }
+return last;
+};
+const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
+const addGood = (s, k, n) => { if (k === 'term') s.term += n; else s.cases[k] += n; };
 const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
 C.invFull = (s, n = 1) => s.inv.length + n > C.INV_MAX;
 C.termOffer = (rnd, day) => {
@@ -20572,13 +21003,16 @@ return { ok: full, full, err: full ? '' : `要正好 ${C.NEED[tier]} 件，现�
 };
 C.ctxOk = c => isObj(c) && C.MODES.includes(c.mode) && C.HERO_IDS.includes(c.char);
 const A = {};
-A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个
+A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个。普通武器箱每天最多开 2 个，神兵武器箱每周 1 个
 const cid = a.c;
 if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
 if ((s.cases[cid] || 0) < 1) return { err: '没有这个武器箱了' };
+const col = C.COLS[cid];
+if (!C.openLeft(s, cid)) return { err: col.prem ? `${col.name}武器箱每周只能开 ${C.PREM_WEEK} 个，下周一再来` : `今天的 ${C.OPEN_DAY} 个武器箱已经开完了，明天再来` };
 if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
 s.cases[cid]--; s.stat.open++;
-const tier = rollTier(env.rnd, C.ODDS), k = pickOf(env.rnd, C.COLS[cid][tier]);
+if (col.prem) s.pw.n++; else s.od.n++;
+const tier = rollTier(env.rnd, C.oddsOf(cid)), k = pickOf(env.rnd, col[tier]);
 const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd), env);
 bump(s, 'open', 1);
 return { ok: true, item: it };
@@ -20597,42 +21031,54 @@ if (!s.buys[g.id] || s.buys[g.id].k !== pk) s.buys[g.id] = { k: pk, n: 0 };
 s.buys[g.id].n += n;
 return { ok: true };
 };
-A.buy = (s, a, env) => {   // 买市场上的一件
+A.buy = (s, a, env) => {   // 买市场上的一件饰品，或者一个箱子
 const day = C.day(env.now), parts = String(a.l || '').split('.');
 if (parts.length !== 3 || +parts[0] !== day) return { err: '这件已经下架了，刷新看看' };
 const L = C.listings(parts[1], day).find(x => x.l === a.l);
 if (!L) return { err: '没有这件挂单' };
 if (s.bought.ids.includes(a.l)) return { err: '这件已经被你买走了' };
-if (C.invFull(s)) return { err: '库存满了' };
+const good = C.isGood(L.k);
+if (!good && C.invFull(s)) return { err: '库存满了' };
 if (env.ink < L.price) return { err: `墨锭不够，要 ${L.price}` };
 giveInk(env, -L.price);
-s.bought.ids.push(a.l); s.stat.bought++;
+s.bought.ids.push(a.l);
+if (good) {
+addGood(s, L.k, 1);
+histPush(s, { t: env.now, kind: 'buy', g: L.k, n: 1, price: L.price });
+return { ok: true, good: L.k, price: L.price };
+}
+s.stat.bought++;
 const it = C.addItem(s, C.mkItem(s, L.k, 'market', env.rnd, { st: L.st }), env);
 histPush(s, { t: env.now, kind: 'buy', k: L.k, st: L.st, price: L.price });
 bump(s, 'buy', 1);
 return { ok: true, item: it, price: L.price };
 };
-A.buyCase = (s, a, env) => {   // 用墨锭买武器箱：每周最多 5 个
-const cid = a.c, n = a.n === undefined ? 1 : Math.floor(+a.n);
-if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
-if (!(n >= 1 && n <= C.CASE_WEEK)) return { err: '数量不对' };
-const left = C.caseLeft(s);
-if (n > left) return { err: left ? `这周还能买 ${left} 个` : `这周的 ${C.CASE_WEEK} 次已经用完了，下周一再来` };
-const p = C.casePrice(cid, C.day(env.now)) * n;
+const buyCheapest = (s, k, a, env) => {
+const n = a.n === undefined ? 1 : +a.n;
+if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
+const day = C.day(env.now), L = C.listings(k, day).filter(x => !s.bought.ids.includes(x.l));
+if (L.length < n) return { err: L.length ? `今天市场上只剩 ${L.length} 个了` : '今天市场上的已经卖完了，明天再来' };
+const pick = L.slice(0, n), p = pick.reduce((t, x) => t + x.price, 0);
 if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
-giveInk(env, -p); s.cases[cid] += n; s.cw.n += n;
-histPush(s, { t: env.now, kind: 'buy', c: cid, n, price: p });
-return { ok: true, price: p };
+giveInk(env, -p); addGood(s, k, n);
+for (const x of pick) s.bought.ids.push(x.l);
+histPush(s, { t: env.now, kind: 'buy', g: k, n, price: p });
+return { ok: true, price: p, n };
 };
-A.sellCase = (s, a, env) => {
-const cid = a.c, n = Math.max(1, Math.min(50, Math.floor(+a.n || 1)));
-if (!C.CASES.includes(cid) || s.cases[cid] < n) return { err: '武器箱不够' };
-const p = C.quick(C.casePrice(cid, C.day(env.now))) * n;
-s.cases[cid] -= n; giveInk(env, p); s.stat.sold += n;
-histPush(s, { t: env.now, kind: 'sell', c: cid, n, price: p });
+const sellGoods = (s, k, a, env) => {
+const n = a.n === undefined ? 1 : +a.n;
+if (!(Number.isInteger(n) && n >= 1 && n <= 50)) return { err: '数量不对' };
+if (goodHave(s, k) < n) return { err: k === 'term' ? '终端机不够' : '武器箱不够' };
+const p = C.quick(C.goodPrice(k, C.day(env.now))) * n;
+addGood(s, k, -n); giveInk(env, p); s.stat.sold += n;
+histPush(s, { t: env.now, kind: 'sell', g: k, n, price: p });
 bump(s, 'sell', n);
 return { ok: true, gain: p };
 };
+A.buyCase = (s, a, env) => C.CASES.includes(a.c) ? buyCheapest(s, a.c, a, env) : { err: '没有这个武器箱' };
+A.buyTerm = (s, a, env) => buyCheapest(s, 'term', a, env);
+A.sellCase = (s, a, env) => C.CASES.includes(a.c) ? sellGoods(s, a.c, a, env) : { err: '武器箱不够' };
+A.sellTerm = (s, a, env) => sellGoods(s, 'term', a, env);
 A.quick = (s, a, env) => {   // 直接卖给收购的人：市场价扣掉手续费
 const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
 const p = C.quick(C.price(it, C.day(env.now)));
@@ -20641,23 +21087,28 @@ histPush(s, { t: env.now, kind: 'sell', k: it.k, st: it.st, price: p });
 bump(s, 'sell', 1);
 return { ok: true, gain: p };
 };
-A.list = (s, a, env) => {   // 自己定价挂单，卖掉才到账
-const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
+A.list = (s, a, env) => {   // 自己定价挂单，卖掉才到账：一件饰品（i），或者一个箱子（c：武器箱编号或 'term'）
+const good = a.c !== undefined;
+if (good && !C.isGood(a.c)) return { err: '没有这个东西' };
+const it = good ? null : C.findItem(s, +a.i);
+if (!good && !it) return { err: '库存里没有这件' };
+if (good && goodHave(s, a.c) < 1) return { err: a.c === 'term' ? '没有终端机' : '没有这个武器箱' };
 if (s.lst.length >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };
-const day = C.day(env.now), mk = C.price(it, day), price = Math.floor(+a.price || 0);
+const day = C.day(env.now), mk = good ? C.goodPrice(a.c, day) : C.price(it, day), price = Math.floor(+a.price || 0);
 if (!(price >= 1) || price > 9999999) return { err: '标价不对' };
 if (price > Math.floor(mk * C.LIST_MAX_R)) return { err: `标价最高 ${Math.floor(mk * C.LIST_MAX_R)}（市场价的 ${Math.round(C.LIST_MAX_R * 100)}%），再高没人买` };
 const rate = C.sellRate(price / mk), u = env.rnd();
 const at = rate > 0 ? env.now + Math.round(-Math.log(1 - u) / rate * 3600e3) : 0;
-C.dropItem(s, it.i, env);
-s.lst.push({ l: 'L' + (s.nid++), it, price, t: env.now, at });
+const l = 'L' + (s.nid++);
+if (good) { addGood(s, a.c, -1); s.lst.push({ l, g: a.c, price, t: env.now, at }); }
+else { C.dropItem(s, it.i, env); s.lst.push({ l, it, price, t: env.now, at }); }
 return { ok: true };
 };
 A.cancel = (s, a, env) => {
 const ix = s.lst.findIndex(x => x.l === a.l); if (ix < 0) return { err: '没有这个挂单' };
-if (C.invFull(s)) return { err: '库存满了，放不回去' };
+if (!s.lst[ix].g && C.invFull(s)) return { err: '库存满了，放不回去' };
 const L = s.lst.splice(ix, 1)[0];
-C.addItem(s, L.it, env);
+if (L.g) addGood(s, L.g, 1); else C.addItem(s, L.it, env);
 return { ok: true };
 };
 C.settle = (s, env) => {
@@ -20666,9 +21117,14 @@ s.lst = s.lst.filter(L => {
 if (!L.at || env.now < L.at) return true;
 const gain = C.net(L.price);
 giveInk(env, gain); s.stat.sold++;
+if (L.g) {
+histPush(s, { t: L.at, kind: 'sold', g: L.g, n: 1, price: L.price, gain });
+sold.push({ g: L.g, price: L.price, gain });
+} else {
 histPush(s, { t: L.at, kind: 'sold', k: L.it.k, st: L.it.st, price: L.price, gain });
-bump(s, 'sell', 1);
 sold.push({ k: L.it.k, price: L.price, gain });
+}
+bump(s, 'sell', 1);
 return false;
 });
 return sold;
@@ -20761,21 +21217,21 @@ if (s.op.earned - s.op.spent < g.cost) return { err: '星章不够' };
 const r = env.rnd;
 let res = { ok: true };
 if (g.id === 'ink') giveInk(env, 300);
-else if (g.id === 'case') { const c = pickOf(r, C.CASES); s.cases[c]++; res.c = c; }
+else if (g.id === 'case') { const c = pickOf(r, C.REG); s.cases[c]++; res.c = c; }
 else if (g.id === 'tag') s.tags++;
 else if (g.id === 'term') s.term++;
 else {
 if (C.invFull(s)) return { err: '库存满了' };
 let k;
-if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov')) return { err: '要从隐秘级里挑一件' }; k = a.k; }
-else k = pickOf(r, C.ofTier(g.id));
+if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的隐秘级里挑一件' }; k = a.k; }
+else k = pickOf(r, C.ofTierReg(g.id));
 res.item = C.addItem(s, C.mkItem(s, k, 'op', r), env);
 }
 s.op.spent += g.cost;
 return res;
 };
 A.collect = (s, a, env) => {
-const col = own(C.COLS, a.c); if (!col) return { err: '没有这套收藏品' };
+const col = own(C.COLS, a.c); if (!col || !col.mil.length) return { err: '没有这套收藏品' };
 if (s.cc.includes(a.c)) return { err: '已经领过了' };
 if (!col.mil.every(k => s.inv.some(x => x.k === k))) return { err: '还没集齐' };
 s.cc.push(a.c); s.cases[a.c]++; s.tags++;
@@ -20817,7 +21273,7 @@ res.st.push({ i: eq.i, k: eq.k, add, total: eq.st });
 }
 if (s.drop.n < C.DROP_CAP && env.rnd() < C.DROP_P && !C.invFull(s)) {
 s.drop.n++;
-if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.CASES); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
+if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.REG); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
 else res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, C.ofTier(env.rnd() < 0.85 ? 'mil' : 'res')), 'drop', env.rnd), env) };
 }
 return res;
@@ -20870,7 +21326,7 @@ const ECON = CS && CS.econ, LSYNC = CS && CS.ledgerSync, FLUSH = CS && CS.flushN
 const GRANT = CS && CS.inkGrantKey ? CS.inkGrantKey() || (() => {}) : () => {};   // 反作弊认的入账：只有这里能记
 const rnd = () => { const a = new Uint32Array(2); GRV(a); return (a[0] * 2097152 + (a[1] >>> 11)) / 9007199254740992; };
 for (const [k, char, name, look] of C.PAINTS) SKINS[k] = { char, rarity: 'rare', name, cs: 'paint', look: { ...look } };
-for (const [k, d] of Object.entries(C.STARS)) {
+for (const [k, d] of Object.entries(C.FULL)) {
 SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: 'star', look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
 SCENES[k] = JSON.parse(JSON.stringify(d.scene));
 }
@@ -20923,7 +21379,127 @@ ctx.strokeStyle = `rgba(200,220,255,${0.3 + 0.15 * Math.sin(W.T * 2.4)})`; ctx.l
 for (let k = 0; k < 3; k++) { const b = a - 1.6 + k * 1.6, tw = 0.5 + 0.5 * Math.sin(W.T * 3 + k * 2); glint(c[0] + Math.cos(b) * 12.5, c[1] + Math.sin(b) * 12.5, 1.6 + tw * 1.8, '220,235,255', 0.35 + tw * 0.5); }
 ctx.globalCompositeOperation = 'source-over';
 };
-let ST = null, MODE = 'none', UID = '', BUSY = false, TAB = 'inv', SIG = '', TK = 0, LOADING = null;
+SKIN_WEAP.tianhe_spear = W => {   // 天河：夜蓝枪杆里流着一道星河，枪头是一片淡蓝到粉白的星晶，下面一颗四角星，两条星云带
+const { At, t, bar, live, T } = W, back = At(W.g, -36), head0 = At(t, -26);
+bar(back, head0, 3.4, '#1a1f4a');
+W.poly([t, At(t, -8, 4.2), At(t, -20, 3), At(t, -26, 1.2), At(t, -26, -1.2), At(t, -20, -3), At(t, -8, -4.2)], W.lg(At(t, -26), t, [[0, '#7f8cff'], [0.5, '#cfd8ff'], [0.82, '#ffd6f4'], [1, '#ffffff']]));
+const sb = At(t, -28);
+W.poly([At(sb, 0, -6.5), At(sb, 1.6, -1.6), At(sb, 6, 0), At(sb, 1.6, 1.6), At(sb, 0, 6.5), At(sb, -1.6, 1.6), At(sb, -6, 0), At(sb, -1.6, -1.6)], '#e9e4ff');
+if (!live) return;
+ctx.strokeStyle = 'rgba(120,130,220,0.7)'; ctx.lineWidth = 0.8; line(At(t, -24), At(t, -3));
+ctx.globalCompositeOperation = 'lighter';
+ctx.strokeStyle = W.lg(back, head0, [[0, 'rgba(120,140,255,0.12)'], [0.5, 'rgba(170,150,255,0.5)'], [1, 'rgba(255,160,230,0.6)']]); ctx.lineWidth = 1.6; line(back, head0);
+for (let k = 0; k < 6; k++) { const u = (T * 0.35 + k / 6) % 1; ctx.fillStyle = `rgba(255,255,255,${0.9 * Math.sin(u * Math.PI)})`; circle([back[0] + (head0[0] - back[0]) * u, back[1] + (head0[1] - back[1]) * u], 0.9); }   // 星点顺着杆往枪头流
+const r0 = At(t, -29);
+for (const [k, col] of [[0, '165,185,255'], [1, '255,150,225']]) {
+const c1 = At(r0, -12, 7 * Math.sin(T * 3 + k * 2) + (k ? 4 : -4)), e1 = At(r0, -28, 11 * Math.sin(T * 3 + 1.2 + k * 2) + (k ? 7 : -7));
+ctx.strokeStyle = `rgba(${col},0.5)`; ctx.lineWidth = 3 - k; ctx.beginPath(); ctx.moveTo(...r0); ctx.quadraticCurveTo(...c1, ...e1); ctx.stroke();
+ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 0.8; ctx.stroke();
+const tw = 0.5 + 0.5 * Math.sin(T * 5 + k * 3); glint(e1[0], e1[1], 2 + tw * 2.5, col, 0.4 + tw * 0.5);
+}
+W.glow(At(t, -12), 10, '190,170,255', 0.35);
+const tw = 0.5 + 0.5 * Math.sin(T * 4); glint(t[0], t[1], 4 + tw * 4, '255,240,255', 0.6 + tw * 0.4);
+};
+SKIN_WEAP.butterfly_daggers = W => {   // 幻蝶：一对蝶翼短刃，刃身紫到青，根上张着两片小蝶翼，刃边绕着两只光蝶
+const pr = dualPair(W), wings = [];
+W.bar(W.hl, W.g, 4, '#2a1a48');
+for (const [a, b] of pr) {
+const ex = b[0] - a[0], ey = b[1] - a[1], el = Math.hypot(ex, ey) || 1, nx = -ey / el, ny = ex / el, h = [a[0] + ex * 0.22, a[1] + ey * 0.22];
+for (const sg of [-1, 1]) W.fillWith(() => { ctx.moveTo(...h); ctx.quadraticCurveTo(h[0] + nx * sg * 12 - ex / el * 6, h[1] + ny * sg * 12 - ey / el * 6, h[0] + nx * sg * 9 + ex / el * 4, h[1] + ny * sg * 9 + ey / el * 4); ctx.quadraticCurveTo(h[0] + nx * sg * 4 + ex / el * 6, h[1] + ny * sg * 4 + ey / el * 6, h[0] + ex / el * 4, h[1] + ey / el * 4); }, W.lg(h, [h[0] + nx * sg * 11, h[1] + ny * sg * 11], [[0, '#8ff4ff'], [1, '#c08cff']]));
+W.leaf(h, b, 4, W.lg(h, b, [[0, '#b48cff'], [0.6, '#d8ccff'], [1, '#f0fdff']]));
+wings.push([a, b, h, ex, ey, el, nx, ny]);
+}
+if (!W.live) return;
+for (const [a, b, h] of wings) { ctx.strokeStyle = 'rgba(110,60,200,0.8)'; ctx.lineWidth = 0.9; line(h, b); }
+ctx.globalCompositeOperation = 'lighter';
+wings.forEach(([a, b, h, ex, ey, el, nx, ny], i) => {
+W.glow(b, 7, '160,230,255', 0.4);
+const ph = W.T * 2.2 + i * 2.6, q = [h[0] + ex * (0.45 + 0.3 * Math.sin(ph)), h[1] + ey * (0.45 + 0.3 * Math.sin(ph))], o = 8 + 3 * Math.cos(ph * 1.3);
+ctx.save(); ctx.translate(q[0] + nx * o, q[1] + ny * o); ctx.rotate(Math.sin(ph * 2) * 0.4); drawShape('butterfly', 2.2, i ? '120,240,255' : '200,150,255', 0.9); ctx.restore();
+});
+};
+SKIN_WEAP.crystal_greatsword = W => {   // 琉璃：通透的琉璃巨剑，刃面切成几块晶面，一道光从护手扫到刃尖，护手是两簇晶石
+const { P, poly, bar, live, t, T } = W;
+bar(W.hl, W.g, 5, '#3a6a80');
+const edge = [P(0, -5.5), P(0.82, -6.2), t, P(0.82, 6.8), P(0, 5.5)];
+poly(edge, W.lg(P(0, 0), t, [[0, 'rgba(150,225,245,0.94)'], [0.5, 'rgba(214,246,255,0.92)'], [1, 'rgba(255,200,236,0.96)']]));
+for (const s2 of [-1, 1]) { poly([P(0, s2 * 3), P(0.07, s2 * 10.5), P(-0.05, s2 * 13.5), P(-0.1, s2 * 6)], '#9fd4e6'); poly([P(-0.02, s2 * 4), P(0.02, s2 * 8), P(-0.08, s2 * 9.5)], '#ffb8e0'); }
+if (!live) return;
+ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1; line(P(0.02, 0), t);
+[[0, 0.3], [0.3, 0.58], [0.58, 0.82]].forEach(([a, b], k) => { for (const s2 of [-1, 1]) {   // 晶面：亮暗交替
+ctx.fillStyle = `rgba(255,255,255,${(k + (s2 > 0 ? 1 : 0)) % 2 ? 0.24 : 0.07})`; ctx.beginPath(); ctx.moveTo(...P(a, 0)); ctx.lineTo(...P(b, 0)); ctx.lineTo(...P(b, s2 * 6.2)); ctx.lineTo(...P(a, s2 * 5.6)); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = 'rgba(110,190,225,0.55)'; ctx.lineWidth = 0.7; ctx.stroke();
+} });
+ctx.strokeStyle = 'rgba(180,245,255,0.7)'; ctx.lineWidth = 1.1; ctx.beginPath(); for (const q of edge) ctx.lineTo(q[0], q[1]); ctx.closePath(); ctx.stroke();
+ctx.save(); ctx.beginPath(); for (const q of edge) ctx.lineTo(q[0], q[1]); ctx.closePath(); ctx.clip();
+const k = (T * 0.6) % 1.4;
+if (k < 1.1) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.moveTo(...P(k - 0.08, -8)); ctx.lineTo(...P(k, -8)); ctx.lineTo(...P(k + 0.1, 8)); ctx.lineTo(...P(k + 0.02, 8)); ctx.closePath(); ctx.fill(); }
+ctx.restore();
+ctx.globalCompositeOperation = 'lighter';
+for (let i = 0; i < 3; i++) { const tw = Math.max(0, Math.sin(T * 3 + i * 2.1)); if (tw > 0.15) glint(...P(0.2 + i * 0.26, (i % 2 ? 3 : -3)), 1.5 + tw * 3, '255,240,255', tw); }
+W.glow(t, 10, '255,170,230', 0.4);
+};
+SKIN_WEAP.tianlai_flute = W => {   // 天籁：象牙白的箫镶金箍，箫孔里飘出金色的音符，穗子坠一枚青玉璧
+const F = fluteBody(W, '#fbf3dc', [0.08, 0.3, 0.92], '#d8a640');
+if (!W.live) return;
+ctx.strokeStyle = 'rgba(190,140,50,0.5)'; ctx.lineWidth = 0.8; line(F(0.1, 1.7), F(0.9, 1.7));
+const k0 = W.hl, sw = Math.sin(W.T * 3.2) * 3, end = [k0[0] - W.ux * 4 + sw, k0[1] + 14];
+ctx.strokeStyle = '#e8b84a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(...k0); ctx.quadraticCurveTo(k0[0] - W.ux * 5, k0[1] + 7, ...end); ctx.stroke();
+ctx.fillStyle = '#7fd8b4'; circle(end, 3); ctx.fillStyle = '#fbf3dc'; circle(end, 1.1);
+ctx.globalCompositeOperation = 'lighter';
+for (let i = 0; i < 3; i++) {   // 音符：从箫孔飘起来，一边飘一边淡
+const ph = (W.T * 0.55 + i / 3) % 1, h0 = F(0.45 + i * 0.15);
+ctx.save(); ctx.translate(h0[0] + Math.sin(ph * 6 + i) * 4, h0[1] - ph * 26); drawShape('note', 2.2 + ph, '255,214,120', Math.sin(ph * Math.PI) * 0.95); ctx.restore();
+}
+W.glow(F(0.5), 12, '255,215,130', 0.18);
+};
+SKIN_WEAP.jade_brush = W => {   // 青绿：翠玉笔杆、金笔斗，笔头蘸着石青石绿，滴下来是一点青绿，杆尾坠一颗玉
+const { At, t, hl, bar, live, T } = W;
+bar(hl, At(t, -11), 4.4, '#2a8a72');
+brushTip(W, W.lg(At(t, -12), At(t, 2.5), [[0, '#0e3a3a'], [0.5, '#1f8a76'], [1, '#8fe6c8']]));
+bar(At(t, -14), At(t, -11.5), 5.4, '#e8c45a');
+if (!live) return;
+ctx.strokeStyle = 'rgba(220,255,240,0.45)'; ctx.lineWidth = 1; line(At(hl, 1, -1.2), At(t, -15, -1.2));
+ctx.strokeStyle = 'rgba(10,60,50,0.5)'; ctx.lineWidth = 0.8; for (const s of [0.25, 0.5]) { const q = [hl[0] + (t[0] - hl[0]) * s, hl[1] + (t[1] - hl[1]) * s]; line(At(q, 0, -2.3), At(q, 0, 2.3)); }
+const dp = (T * 1.2) % 1; ctx.fillStyle = `rgba(40,170,140,${1 - dp})`; circle([t[0], t[1] + 4 + dp * 10], 1.5);
+const s0 = At(hl, 3), sw = Math.sin(T * 3) * 2.5;
+ctx.strokeStyle = '#d8b04a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(...s0); ctx.quadraticCurveTo(s0[0] + sw * 0.4, s0[1] + 6, s0[0] + sw, s0[1] + 11); ctx.stroke();
+ctx.fillStyle = '#6ad8b4'; circle([s0[0] + sw, s0[1] + 13], 2.4); ctx.fillStyle = 'rgba(255,255,255,0.6)'; circle([s0[0] + sw - 0.7, s0[1] + 12.3], 0.8);
+ctx.globalCompositeOperation = 'lighter'; W.glow(t, 8, '90,220,180', 0.35);
+};
+SKIN_WEAP.peacock_feather = W => {   // 孔雀：碧绿翎刃，靠刃尖一只翎眼（金、青、宝蓝三圈），羽丝泛着光
+W.bar(W.hl, W.g, 4, '#0a3a32');
+const V = featherVane(W, 13, 3.5, 12, (i, u) => (i % 2 ? 1.2 : 0) * Math.sin(Math.PI * u));
+W.fillWith(() => { ctx.moveTo(...W.g); for (const q of V.outer) ctx.lineTo(q[0], q[1]); ctx.quadraticCurveTo(V.c2[0], V.c2[1], ...W.g); }, W.lg(W.g, W.t, [[0, '#0e6a5c'], [0.6, '#14a88c'], [1, '#7fe8c8']]));
+if (!W.live) return;
+ctx.strokeStyle = 'rgba(220,255,240,0.35)'; ctx.lineWidth = 0.6;
+for (let i = 1; i < 11; i++) { const u = i / 12, p = V.bz(V.c1, u), q = [W.g[0] + (W.t[0] - W.g[0]) * u, W.g[1] + (W.t[1] - W.g[1]) * u]; line(q, [q[0] + (p[0] - q[0]) * 0.95 + W.ux * 2, q[1] + (p[1] - q[1]) * 0.95 + W.uy * 2]); }
+ctx.strokeStyle = '#e8c040'; ctx.lineWidth = 1; line(W.g, W.t);
+const u = 0.62, p = V.bz(V.c1, u), q = [W.g[0] + (W.t[0] - W.g[0]) * u, W.g[1] + (W.t[1] - W.g[1]) * u], c = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], a = Math.atan2(W.uy, W.ux);
+for (const [r, col] of [[3.4, '#e8c040'], [2.6, '#14a88c'], [1.9, '#1a3a9a'], [0.9, '#0a0e2a']]) { ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(c[0], c[1], r * 1.3, r, a, 0, 7); ctx.fill(); }
+ctx.globalCompositeOperation = 'lighter';
+const sh = 0.5 + 0.5 * Math.sin(W.T * 3); ctx.fillStyle = `rgba(120,255,220,${0.18 + 0.16 * sh})`; ctx.beginPath(); ctx.ellipse(c[0], c[1], 5.5, 4.2, a, 0, 7); ctx.fill();
+glint(c[0] + W.ux, c[1] + W.uy - 1, 1.4 + sh * 1.4, '255,250,220', 0.6 + 0.3 * sh);
+};
+SKIN_WEAP.koi_fan = W => {   // 锦鲤：扇面是一汪浅水，一红一金两尾锦鲤绕着游，扇沿描一道朱漆
+const { g, live, T } = W, a = Math.atan2(W.uy, W.ux);
+W.bar(W.hl, g, 3.4, '#6a2a18');
+const q = ctx.createRadialGradient(g[0], g[1], 4, g[0], g[1], 32); for (const [k, c] of [[0, '#fff6ee'], [0.5, '#d8f0f6'], [1, '#8cc8dc']]) q.addColorStop(k, c);
+W.fillWith(() => fanSector(W, 31, a - 0.72, a + 0.72), q);
+if (!live) return;
+ctx.save(); ctx.beginPath(); fanSector(W, 30.5, a - 0.72, a + 0.72); ctx.closePath(); ctx.clip();
+ctx.strokeStyle = 'rgba(90,160,190,0.45)'; ctx.lineWidth = 0.8;
+for (const r of [12, 19, 26]) { ctx.beginPath(); ctx.arc(g[0], g[1], r + Math.sin(T * 2 + r) * 0.8, a - 0.7, a + 0.7); ctx.stroke(); }
+for (const [k, body, spot] of [[0, '#ff5a3a', '#ffffff'], [1, '#ffb83a', '#fff4d0']]) {   // 两尾鱼在扇面上来回游
+const ph = T * 0.9 + k * Math.PI, b = a + Math.sin(ph) * 0.5, r = 20 + Math.cos(ph * 2) * 3 + k * 3, c = [g[0] + Math.cos(b) * r, g[1] + Math.sin(b) * r];
+ctx.save(); ctx.translate(c[0], c[1]); ctx.rotate(b + (Math.cos(ph) >= 0 ? 1 : -1) * Math.PI / 2); drawKoi(3.4, body, spot, T * 8 + k); ctx.restore();
+}
+ctx.restore();
+ctx.strokeStyle = 'rgba(80,30,16,0.75)'; ctx.lineWidth = 0.9;
+for (let i = -3; i <= 3; i++) { const b = a + i * 0.2; line([g[0] + Math.cos(b) * 4, g[1] + Math.sin(b) * 4], [g[0] + Math.cos(b) * 9, g[1] + Math.sin(b) * 9]); }
+ctx.strokeStyle = '#d8483a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(g[0], g[1], 30.5, a - 0.72, a + 0.72); ctx.stroke();
+};
+let ST = null, MODE = 'none', UID = '', BUSY = false, TAB = 'inv', SIG = '', TK = 0, LOADING = null, OLDV = 0;
 const SALT = 'ry-armory|v1|';
 const sigOf = s => C.hash32(SALT + UID + '|' + JSON.stringify(s)).toString(36) + C.hash32(JSON.stringify(s) + '|' + UID + SALT).toString(36);
 const user = () => (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
@@ -20966,7 +21542,7 @@ if (LOADING) return LOADING;
 LOADING = (async () => {
 try {
 const out = await ECON('sync', {});
-if (out && out.state && out.state.v < C.VER) { MODE = 'old'; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是第 1 版的武库：先只给看，等服务器更新
+if (out && out.state && out.state.v < C.VER) { MODE = 'old'; OLDV = out.state.v; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是旧版的武库：先只给看，等服务器更新
 if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
 MODE = 'server'; apply(out, true);
 } catch (e) {
@@ -20997,7 +21573,7 @@ let own = false;
 if (Array.isArray(out.skins)) { PROF.skins = out.skins.slice(); own = true; }
 if (out.skinsAdd || out.skinsDel) { const set = new Set(PROF.skins || []); for (const k of out.skinsAdd || []) set.add(k); for (const k of out.skinsDel || []) set.delete(k); PROF.skins = Array.from(set); own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own; }
 if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
-if (out.sold && out.sold.length && !quiet) for (const x of out.sold) toast(`挂单卖出：${itemName({ k: x.k, st: -1 })}，到账 ${x.gain} 墨锭`);
+if (out.sold && out.sold.length && !quiet) for (const x of out.sold) toast(`挂单卖出：${x.g ? goodName(x.g) : itemName({ k: x.k, st: -1 })}，到账 ${x.gain} 墨锭`);
 if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
 try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
 if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -21085,7 +21661,7 @@ if (!ST || MODE === 'none') return {};
 const d = {};
 d.inv = ST.inv.some(x => x.t > seenAt());
 d.op = (ST.drop.g >= C.SUPPLY_GAMES && !ST.drop.sup) || ST.op.ms.some((m, i) => !ST.op.done.includes(i) && (ST.op.prog[i] || 0) >= m.n);
-d.cases = !ST.gift || C.CASES.some(c => ST.cases[c] > 0);
+d.cases = !ST.gift || C.CASES.some(c => ST.cases[c] > 0 && C.openLeft(ST, c) > 0);   // 有箱子、今天（这周）还能开
 d.term = ST.term > 0 || !!ST.tm;
 d.any = d.inv || d.op || d.cases || d.term;
 return d;
@@ -21098,8 +21674,8 @@ $id('arTabs').innerHTML = TABS.map(([k, n]) => `<button type="button" data-tab="
 const banner = MODE === 'none' ? '<p class="ar-banner">登录之后才能开箱、交易。先逛逛看吧。</p>'
 : MODE === 'wait' ? '<p class="ar-banner soft">正在连接服务器…</p>'
 : MODE === 'offline' ? '<p class="ar-banner">连不上服务器，武库暂时只能看。</p>'
-: MODE === 'old' ? '<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易：你的饰品和武器箱都在，钥匙会一把换一台终端机。</p>'
-: MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：武库数据先存在你的存档里，服务器版上线后由服务器统一保管（到时会重新发新手礼）。</p>' : '';
+: MODE === 'old' ? `<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易，你的饰品和武器箱都在${OLDV === 1 ? '，没用完的钥匙会一把换一台终端机' : ''}。</p>`
+: MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：服务器还没开武库，现在开箱、交易都只记在你的存档里，用来试玩。服务器版上线以后武库从零开始（会重新发新手礼），测试期开出来的东西不会带过去。</p>' : '';
 const R = { inv: pInv, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
 $id('arMain').innerHTML = banner + R();
 if (TAB === 'inv') markSeenSoon();
@@ -21128,7 +21704,7 @@ ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
 <select id="arInvTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${INV.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
 <select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['tier', '品质最高'], ['price', '最值钱'], ['st', '斩数最多']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
 </div>
-${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty"><p>${s.inv.length ? '没有符合条件的饰品。' : '库存还是空的。打对局有机会掉落，或者去开箱、逛市场。'}</p>${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
+${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty"><p>${s.inv.length ? '没有符合条件的饰品。' : `武库的库存还是空的${legacy.length ? '（以前得到的皮肤在下面，一直都能穿）' : ''}。打对局有机会掉落，或者去开箱、逛市场。`}</p>${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
 ${legacy.length ? `<h4 class="ar-h">以前得到的皮肤 <small>绑定账号，不能出售和汰换</small></h4><div class="ar-grid sm">${legacy.map(k => `<div class="ar-it bound" style="--tc:${C.isItem(k) ? tc(k) : SKINS[k].rarity === 'legend' ? '235,75,75' : '136,71,255'}"><img src="${art(k)}" alt="" loading="lazy"><b>${escapeHTML(SKINS[k].name)}</b><small>${charName(k)} · 绑定</small><i class="ar-bar"></i></div>`).join('')}</div>` : ''}
 ${typeof freeSkinEvent === 'function' && freeSkinEvent() ? '<p class="ar-note">限免活动只包括游戏里原有的皮肤，活动结束就收回。从武库拿到的饰品永久拥有，能在市场卖掉，开出斩数版还会记击倒数。</p>' : ''}`;
 }
@@ -21151,13 +21727,14 @@ ${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateS
 <button type="button" class="ghost small" data-ins="quick" ${can ? '' : 'disabled'}>直接卖出 ${ink(C.quick(price))}</button>
 <button type="button" class="ghost small" data-ins="list" ${can ? '' : 'disabled'}>挂单</button>
 <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
-<button type="button" class="ghost small" data-ins="close">关闭</button></div>
-<p class="ar-note">直接卖出是卖给收购商（市场价的 ${Math.round(C.BID * 100)}%），挂单能多卖一点；成交都扣 ${Math.round(C.FEE * 100)}% 手续费。</p>`;
+${INS.from === 'pv' ? `<button type="button" class="ghost small" data-ins="market">去江湖市场看看</button>` : ''}<button type="button" class="ghost small" data-ins="close">关闭</button></div>
+<p class="ar-note">${INS.from === 'pv' ? `这是预览。从${colName(it.k)}武器箱开出来、在江湖市场买到，或者汰换合同、终端机碰上了，就能穿上。` : `直接卖出是卖给收购商（市场价的 ${Math.round(C.BID * 100)}%），挂单能多卖一点；成交都扣 ${Math.round(C.FEE * 100)}% 手续费。`}</p>`;
 }
 function closeIns() { $id('arIns').hidden = true; INS = null; }
 async function insAction(a) {
 const it = INS && INS.it; if (!it) return;
 if (a === 'close') { closeIns(); return; }
+if (a === 'market') { closeIns(); marketItem(it.k); return; }
 if (a === 'equip') { const r = await act('equip', { i: it.i }); if (r && r.ok) { SFX.slice && SFX.slice(); toast(`已穿上「${skinName(it.k)}」`); insInfo(); render(); } return; }
 if (a === 'unequip') { const r = await act('unequip', { char: C.charOf(it.k) }); if (r && r.ok) { insInfo(); render(); } return; }
 if (a === 'quick') {
@@ -21180,9 +21757,9 @@ if ($id('arTagBuy')) $id('arTagBuy').addEventListener('click', async () => { con
 $id('arNameGo').addEventListener('click', async () => { const r = await act('rename', { i: it.i, name: $id('arName').value }); if (r && r.ok) { closeModal(); INS.it = ST.inv.find(x => x.i === it.i) || it; insInfo(); render(); } });
 }
 async function buyTag() { const r = await act('store', { id: 'tag' }); if (r && r.ok) { SFX.wood && SFX.wood(); toast('改名标签 +1'); render(); return true; } return false; }
-function listBox(it) {
-const mk = C.price(it, today()), top = Math.floor(mk * C.LIST_MAX_R);
-modal(`<h3>挂单出售</h3><p>「${escapeHTML(itemName(it))}」现在的市场价是 ${ink(mk)}，最高能标到 ${ink(top)}。标得越低卖得越快，成交后扣 ${Math.round(C.FEE * 100)}% 手续费再到账。</p>
+function listBox(it, g) {   // 挂单：一件饰品（it），或者一个箱子（g：武器箱编号或 'term'）
+const mk = g ? C.goodPrice(g, today()) : C.price(it, today()), top = Math.floor(mk * C.LIST_MAX_R);
+modal(`<h3>挂单出售</h3><p>${g ? `一个${goodName(g)}` : `「${escapeHTML(itemName(it))}」`}现在的市场价是 ${ink(mk)}，最高能标到 ${ink(top)}。标得越低卖得越快，成交后扣 ${Math.round(C.FEE * 100)}% 手续费再到账。</p>
 <div class="ar-listrow"><input id="arPrice" class="ar-input" type="number" min="1" max="${top}" step="1" value="${top}"><span id="arEta" class="ar-note"></span></div>
 <div class="row"><button class="go small" id="arListGo">挂上去</button><button class="ghost small" data-ar-close>取消</button></div>`);
 const eta = () => {
@@ -21191,34 +21768,67 @@ $id('arEta').innerHTML = v < 1 ? '' : v > top ? `最高标 ${fmt(top)}，再高�
 };
 $id('arPrice').addEventListener('input', eta); $id('arPrice').addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); }); eta();
 $id('arListGo').addEventListener('click', async () => {
-const r = await act('list', { i: it.i, price: Math.floor(+$id('arPrice').value || 0) });
-if (r && r.ok) { closeModal(); closeIns(); toast('已挂到江湖市场，卖掉了会通知你'); render(); }
+const price = Math.floor(+$id('arPrice').value || 0), r = await act('list', g ? { c: g, price } : { i: it.i, price });
+if (r && r.ok) { closeModal(); if (!g) closeIns(); toast('已挂到江湖市场，卖掉了会通知你'); render(); }
 });
 }
+function buyGood(k) {   // 一键买一个箱子：今天在售里最便宜的那一个
+const c = cheapest(k, blankS());
+if (!c.left) { msg('今天市场上的已经卖完了，明天再来'); return; }
+confirmBox(`买${goodName(k)}`, `花 ${ink(c.p)} 买一个${goodName(k)}？这是今天在售里最便宜的一个（还有 ${c.left} 个在售）。`, '买入', async () => {
+const r = await act(k === 'term' ? 'buyTerm' : 'buyCase', k === 'term' ? { n: 1 } : { c: k, n: 1 });
+if (r && r.ok) { SFX.wood && SFX.wood(); toast(`买到了：${goodName(k)}（${r.price} 墨锭）`); render(); }
+});
+}
+function sellGood(k) {   // 直接卖一个给收购的人
+const p = C.quick(C.goodPrice(k, today()));
+confirmBox('直接卖出', `把一个${goodName(k)}卖给收购的人，到手 ${ink(p)}（已扣手续费）。`, '卖出', async () => {
+const r = await act(k === 'term' ? 'sellTerm' : 'sellCase', k === 'term' ? { n: 1 } : { c: k, n: 1 });
+if (r && r.ok) { SFX.wood && SFX.wood(); toast(`卖出到账 ${r.gain} 墨锭`); render(); }
+});
+}
+function cheapest(k, s) { const L = C.listings(k, today()).filter(x => !s.bought.ids.includes(x.l)); return { p: L.length ? L[0].price : 0, left: L.length }; }
+const goodName = k => k === 'term' ? '终端机' : `${C.COLS[k].name}武器箱`;
+const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
+const pips = (n, max) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
 function pCases() {
-const s = blankS(), d = today(), left = C.caseLeft(s);
+const s = blankS(), d = today(), dl = C.openLeft(s, C.REG[0]), wl = C.openLeft(s, 'c7');
 const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台终端机，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
-const week = `<div class="ar-card ar-week"><span>本周还能用墨锭买 <b>${left}</b> 个武器箱</span><span class="ar-pips" aria-hidden="true">${Array.from({ length: C.CASE_WEEK }, (_, i) => `<i class="${i < left ? 'on' : ''}"></i>`).join('')}</span><small>每周一刷新</small></div>`;
-const cards = C.CASES.map(cid => {
-const col = C.COLS[cid], n = s.cases[cid], have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid), p = C.casePrice(cid, d);
-const tiers = C.TIERS.filter(t => (col[t] || []).length).map(t => `<div class="ar-ctier" style="--tc:${C.TIER[t].c}"><span>${C.TIER[t].n} · ${pct(C.ODDS[t])}</span><div class="ar-minis">${col[t].map(k => `<img src="${art(k)}" alt="" title="${escapeHTML(itemName({ k, st: -1 }))}" loading="lazy">`).join('')}</div></div>`).join('');
+const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.OPEN_DAY)}</span>
+<span>本周还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.PREM_WEEK)}</span><small>普通的每天零点刷新，神兵的每周一刷新；箱子随时能在市场上买卖</small></div>`;
+const card = cid => {
+const col = C.COLS[cid], O = C.oddsOf(cid), n = s.cases[cid], left = C.openLeft(s, cid), buy = cheapest(cid, s);
+const have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
+const tiers = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length).map(t => `<div class="ar-ctier" style="--tc:${C.TIER[t].c}"><span>${C.TIER[t].n} · ${pct(O[t])}</span><div class="ar-minis">${col[t].map(k => `<img src="${art(k)}" alt="" title="${escapeHTML(itemName({ k, st: -1 }))}" data-pv="${k}" loading="lazy">`).join('')}</div></div>`).join('');
+const openTxt = n && !left ? '今天开完了' : '开启';
 return `<div class="ar-casecard" style="--cc:${col.col}">
-<div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 市场价 ${ink(p)}</p>
-<div class="row"><button type="button" class="go small" data-open="${cid}" ${n ? '' : 'disabled'}>开启</button><button type="button" class="ghost small" data-buycase="${cid}" ${left ? '' : 'disabled'}>买一个 ${ink(p)}</button></div></div></div>
+<div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 市场价 ${ink(C.casePrice(cid, d))}</p>
+<div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${openTxt}</button><button type="button" class="ghost small" data-buyg="${cid}" ${buy.left ? '' : 'disabled'}>${buy.left ? `买一个 ${ink(buy.p)}` : '今天卖完了'}</button></div></div></div>
 ${tiers}
-<div class="ar-col"><span>集齐这个箱子的 ${col.mil.length} 款军规级：${have}/${col.mil.length}，送 1 个${col.name}武器箱 + 1 张改名标签</span><button type="button" class="${have >= col.mil.length && !claimed ? 'go' : 'ghost'} small" data-collect="${cid}" ${have >= col.mil.length && !claimed ? '' : 'disabled'}>${claimed ? '已领取' : have >= col.mil.length ? '领取' : '未集齐'}</button></div>
+${col.mil.length ? `<div class="ar-col"><span>集齐这个箱子的 ${col.mil.length} 款军规级：${have}/${col.mil.length}，送 1 个${col.name}武器箱 + 1 张改名标签</span><button type="button" class="${have >= col.mil.length && !claimed ? 'go' : 'ghost'} small" data-collect="${cid}" ${have >= col.mil.length && !claimed ? '' : 'disabled'}>${claimed ? '已领取' : have >= col.mil.length ? '领取' : '未集齐'}</button></div>` : ''}
 </div>`;
-}).join('');
-return `${gift}${week}<div class="ar-cases">${cards}</div>`;
+};
+const premCard = cid => {   // 神兵武器箱：左边开箱、右边把 7 款饰品摆出来，点一下就能看穿上的样子
+const col = C.COLS[cid], O = C.oddsOf(cid), n = s.cases[cid], left = C.openLeft(s, cid), buy = cheapest(cid, s);
+const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length);
+const show = ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
+return `<div class="ar-casecard prem" style="--cc:${col.col}"><div class="ar-premside">
+<span class="ar-premtag">每周限开 ${C.PREM_WEEK} 个 · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
+<div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 市场价 ${ink(C.casePrice(cid, d))}</p>
+<div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${n && !left ? '这周开过了' : '开启'}</button><button type="button" class="ghost small" data-buyg="${cid}" ${buy.left ? '' : 'disabled'}>${buy.left ? `买一个 ${ink(buy.p)}` : '今天卖完了'}</button></div></div></div>
+<div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
+<p class="ar-note">只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.OPEN_DAY} 个。点一下饰品，就能先看看穿上的样子。</p>
+</div><div class="ar-pshow">${show}</div></div>`;
+};
+return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem).map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
 }
 const REEL = { on: false };
 const CW = 132;   // 每格宽 + 间隔
-function reelFill(cid, win) {
-const col = C.COLS[cid], out = [];
+function reelFill(cid, win) {   // 滚轮上的其他格子按这个箱子的爆率随便摆（好的那几档多摆一点，看着热闹）
+const col = C.COLS[cid], O = C.oddsOf(cid), ts = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length), w = ts.map((t, i) => O[t] * (i ? 3 : 1)), sum = w.reduce((a, b) => a + b, 0), out = [];
 for (let i = 0; i < 56; i++) {
-let r = Math.random(), t = 'mil'; for (const x of C.TIERS) { if (r < C.ODDS[x] * (x === 'mil' ? 1 : 3)) { t = x; break; } r -= C.ODDS[x] * (x === 'mil' ? 1 : 3); }
-if (!(col[t] || []).length) t = 'mil';
-out.push({ k: col[t][Math.floor(Math.random() * col[t].length)], st: -1 });
+let r = Math.random() * sum, j = 0; while (j < ts.length - 1 && r >= w[j]) r -= w[j++];
+const a = col[ts[j]]; out.push({ k: a[Math.floor(Math.random() * a.length)], st: -1 });
 }
 out[48] = win;
 return out;
@@ -21228,17 +21838,25 @@ async function openCase(cid) {
 if (REEL.on) return;
 const r = await act('open', { c: cid });
 if (!r || !r.ok) { render(); return; }
-const win = r.item;
+const win = r.item, big = C.TIERS.indexOf(tierOf(win.k)) >= 2;
 render();
 const strip = reelFill(cid, win);
 REEL.on = true;
-modal(`<h3>${C.COLS[cid].name}武器箱</h3><div class="ar-reel"><div class="ar-strip" id="arStrip">${strip.map(x => `<div class="ar-rt" style="--tc:${tc(x.k)}"><img src="${art(x.k)}" alt=""><b>${escapeHTML(skinName(x.k))}</b></div>`).join('')}</div><i class="ar-mark"></i></div>
+modal(`<h3>${C.COLS[cid].name}武器箱</h3><div class="ar-reel${C.COLS[cid].prem ? ' prem' : ''}"><div class="ar-strip" id="arStrip">${strip.map(x => `<div class="ar-rt" style="--tc:${tc(x.k)}"><img src="${art(x.k)}" alt=""><b>${escapeHTML(skinName(x.k))}</b></div>`).join('')}</div><i class="ar-mark"></i></div>
 <div class="row"><button class="ghost small" id="arSkip">跳过</button><label class="ar-fast"><input type="checkbox" id="arFast" ${skipAnim() ? 'checked' : ''}> 以后直接出结果</label></div>`, 'wide');
 $id('arFast').addEventListener('change', e => { try { localStorage.setItem('renying-arm-fast', e.target.checked ? '1' : '0'); } catch (err) {} });
 const el = $id('arStrip'), box = el.parentElement, mid = box.clientWidth / 2;
 const target = -(48 * CW + CW / 2 - mid) + Math.round((Math.random() - 0.5) * (CW - 24));
 let done = false, lastI = -1, raf = 0;
 const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); REEL.on = false; reveal(win, cid); };
+const land = () => {   // 停在保密以上：中间那一格先亮一下，再出结果
+if (done) return;
+if (!big) { setTimeout(finish, 450); return; }
+const t = el.children[48]; if (t) t.classList.add('win');
+box.classList.add('land'); box.style.setProperty('--wc', tc(win.k));
+try { SFX.shine ? SFX.shine() : SFX.chargeFull && SFX.chargeFull(); } catch (e) {}
+setTimeout(finish, 750);
+};
 const tick = () => {
 if (done) return;
 const m = getComputedStyle(el).transform, x = m && m !== 'none' ? +m.split(',')[4] : 0, i = Math.floor((mid - x) / CW);
@@ -21248,16 +21866,33 @@ raf = requestAnimationFrame(tick);
 $id('arSkip').addEventListener('click', finish);
 if (skipAnim()) { finish(); return; }
 requestAnimationFrame(() => { el.style.transition = 'transform 6.2s cubic-bezier(0.06, 0.62, 0.1, 1)'; el.style.transform = `translateX(${target}px)`; raf = requestAnimationFrame(tick); });
-el.addEventListener('transitionend', () => setTimeout(finish, 450), { once: true });
+el.addEventListener('transitionend', land, { once: true });
 }
-function sting(k) { const t = tierOf(k); if (t === 'cov' || t === 'gold') playSting('legendary', true); else if (t === 'cla') SFX.gong && SFX.gong(); else SFX.chargeFull && SFX.chargeFull(); }
+function sting(k) {   // 越好的越响：非凡是一串铃音，隐秘、保密是锣
+const t = tierOf(k);
+try {
+if (t === 'gold') { playSting('legendary', true); SFX.sparkle && SFX.sparkle(); }
+else if (t === 'cov') { playSting('legendary', true); SFX.gong && SFX.gong(); }
+else if (t === 'cla') { SFX.gong && SFX.gong(); SFX.shine && SFX.shine(); }
+else SFX.chargeFull && SFX.chargeFull();
+} catch (e) {}
+}
+function revealFx(lv) {
+if (lv < 2) return '';
+const n = [0, 0, 10, 16, 26][lv], dots = [];
+for (let i = 0; i < n; i++) {
+const a = Math.random() * 6.283, r = 90 + Math.random() * 120;
+dots.push(`<b style="--x:${Math.round(Math.cos(a) * r)}px;--y:${Math.round(Math.sin(a) * r * 0.8)}px;--d:${(Math.random() * 1.6).toFixed(2)}s;--s:${(0.6 + Math.random() * 0.9).toFixed(2)}"></b>`);
+}
+return `<div class="ar-rvfx" aria-hidden="true"><i class="ar-rays"></i><i class="ar-burst"></i>${dots.join('')}</div>`;
+}
 function reveal(it, cid) {
-const t = tierOf(it.k);
+const t = tierOf(it.k), lv = C.TIERS.indexOf(t);
 sting(it.k);
-const again = cid && ST.cases[cid] > 0;
-modal(`<div class="ar-reveal" style="--tc:${tc(it.k)}"><span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[t].n}</span><img src="${art(it.k)}" alt=""><h3>${escapeHTML(itemName(it))}</h3>
+const again = cid && ST.cases[cid] > 0 && C.openLeft(ST, cid) > 0;
+modal(`<div class="ar-reveal t-${t}" style="--tc:${tc(it.k)}">${revealFx(lv)}<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[t].n}</span><div class="ar-rvart"><img src="${art(it.k)}" alt=""><i class="ar-shine"></i></div><h3>${escapeHTML(itemName(it))}</h3>
 ${it.st >= 0 ? '<p class="ar-stline">斩数版：穿着它每击倒一个对手，计数 +1</p>' : ''}<p>${colName(it.k)}武器箱 · 市场价 ${ink(C.price(it, today()))}</p></div>
-<div class="row"><button class="go small" id="arKeep">收下</button><button class="ghost small" id="arSee">检视</button>${again ? `<button class="ghost small" id="arAgain">再开一个</button>` : ''}</div>`);
+<div class="row"><button class="go small" id="arKeep">收下</button><button class="ghost small" id="arSee">检视</button>${again ? `<button class="ghost small" id="arAgain">再开一个</button>` : ''}</div>`, `rv t-${t}`);
 $id('arKeep').addEventListener('click', () => { closeModal(); render(); });
 $id('arSee').addEventListener('click', () => { closeModal(); const x = ST.inv.find(y => y.i === it.i); if (x) inspect(x, 'inv'); });
 if (again) $id('arAgain').addEventListener('click', () => { closeModal(); openCase(cid); });
@@ -21281,12 +21916,13 @@ body = `<div class="ar-term${fx ? ' scan' : ''}" style="--tc:${tc(o.k)}">
 <div class="ar-insbtns"><button type="button" class="go small" data-term="buy" ${live() ? '' : 'disabled'}>买下 ${ink(o.price)}</button><button type="button" class="ghost small" data-term="next" ${live() ? '' : 'disabled'}>${left ? `不要，换下一件（还能换 ${left} 次）` : '不要（这台终端机就没了）'}</button></div>
 <p class="ar-note" id="arTermLeft"></p></div></div>`;
 } else {
+const buy = cheapest('term', s);
 body = `<div class="ar-card ar-termseal"><span class="ar-termbox"><span>终</span></span><div><h3>终端机 <small>还有 ${s.term} 台没开封</small></h3>
-<p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : '终端机从每周补给、星章兑换里拿，新手礼也送一台。'}</p></div>
-<button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button></div>`;
+<p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : '终端机可以在江湖市场上买，每周补给、星章兑换也有，新手礼也送一台。'}</p></div>
+<div class="ar-termbtns"><button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button>${s.term ? '' : `<button type="button" class="ghost small" data-buyg="term" ${buy.left ? '' : 'disabled'}>${buy.left ? `买一台 ${ink(buy.p)}` : '今天卖完了'}</button>`}</div></div>`;
 }
-return `${body}<h4 class="ar-h">终端机报价的概率 <small>每件都从六个武器箱的全部饰品里抽，价格是当天市场价的 1~1.3 倍</small></h4>${odds}
-<p class="ar-note">买下一件，这台终端机就用掉了；5 件都不要，终端机也没了。开封 ${C.TERM.days} 天内不处理会作废。</p>`;
+return `${body}<h4 class="ar-h">终端机报价的概率 <small>每件都从七个武器箱的全部饰品里抽（神兵武器箱的也有），价格是当天市场价的 1~1.3 倍</small></h4>${odds}
+<p class="ar-note">买下一件，这台终端机就用掉了；5 件都不要，终端机也没了。开封 ${C.TERM.days} 天内不处理会作废。没开封的终端机能在江湖市场上买卖。</p>`;
 }
 let TERM_TM = 0;
 function termTick() {   // 开着的终端机：显示还剩多久作废
@@ -21328,42 +21964,64 @@ const up = ys[ys.length - 1] >= ys[ys.length - 8];
 return `<svg class="ar-spark ${up ? 'up' : 'down'}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke-width="1.6"/></svg>`;
 }
 const chg = (k, price = C.refPrice) => { const d = today(), a = price(k, d - 7), b = price(k, d); return (b - a) / a; };
+const chgTag = c => `<span class="ar-chg ${c >= 0 ? 'up' : 'down'}">${c >= 0 ? '+' : ''}${(c * 100).toFixed(1)}%</span>`;
+const goodCol = k => k === 'term' ? '120,220,200' : C.COLS[k].col;
+const goodIcon = k => k === 'term' ? '<span class="ar-termbox sm"><span>终</span></span>' : `<span class="ar-casebox sm${C.COLS[k].prem ? ' prem' : ''}" style="--cc:${C.COLS[k].col}"><span>${C.COLS[k].emblem}</span></span>`;
+function chart(k, price, what) {   // 近 30 天的参考价
+const d = today(), ys = []; for (let i = 29; i >= 0; i--) ys.push(price(k, d - i));
+const W = 520, H = 150, lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1;
+const pts = ys.map((y, i) => `${(i / 29 * W).toFixed(1)},${(H - 14 - (y - lo) / sp * (H - 28)).toFixed(1)}`).join(' ');
+return `<div class="ar-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="近 30 天参考价"><polyline points="0,${H} ${pts} ${W},${H}" class="fill"/><polyline points="${pts}" class="line"/></svg><div class="ar-chartlbl"><span>30 天前</span><span>${what}：最高 ${fmt(hi)} · 最低 ${fmt(lo)} · 今天 ${fmt(ys[29])}</span><span>今天</span></div></div>`;
+}
 function pMarket() {
 const s = blankS(), d = today();
-const tabs = [['items', '饰品'], ['cases', '武器箱'], ['mine', `我的挂单${s.lst.length ? ` (${s.lst.length})` : ''}`], ['hist', '成交记录']].map(([k, n]) => `<button type="button" data-mkv="${k}" class="${MK.view === k ? 'sel' : ''}">${n}</button>`).join('');
+const tabs = [['items', '饰品'], ['cases', '箱子'], ['mine', `我的挂单${s.lst.length ? ` (${s.lst.length})` : ''}`], ['hist', '成交记录']].map(([k, n]) => `<button type="button" data-mkv="${k}" class="${MK.view === k ? 'sel' : ''}">${n}</button>`).join('');
 let body = '';
 if (MK.view === 'items') {
 let keys = Object.keys(C.ITEM).filter(k => (!MK.tier || tierOf(k) === MK.tier) && (!MK.char || C.charOf(k) === MK.char));
-const lo = k => { const L = C.listings(k, d).filter(x => !s.bought.ids.includes(x.l)); return L.length ? L[0].price : 0; };
+const lo = k => cheapest(k, s).p;
 const sorts = { hot: (a, b) => C.TIERS.indexOf(tierOf(b)) - C.TIERS.indexOf(tierOf(a)) || lo(b) - lo(a), up: (a, b) => chg(b) - chg(a), down: (a, b) => chg(a) - chg(b), cheap: (a, b) => lo(a) - lo(b) };
 keys = keys.sort(sorts[MK.sort] || sorts.hot);
 body = `<div class="ar-filter"><select id="arMkTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${MK.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
 <select id="arMkChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${MK.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
 <select id="arMkSort" class="ar-sel">${[['hot', '品质高的在前'], ['up', '这周涨得多'], ['down', '这周跌得多'], ['cheap', '最便宜']].map(([k, n]) => `<option value="${k}" ${MK.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
-<div class="ar-mklist">${keys.map(k => { const c = chg(k), p = lo(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${art(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span>${spark(k)}<span class="ar-chg ${c >= 0 ? 'up' : 'down'}">${c >= 0 ? '+' : ''}${(c * 100).toFixed(1)}%</span><span class="ar-mkp">${p ? `最低 ${ink(p)}` : '暂无在售'}</span></button>`; }).join('')}</div>`;
-} else if (MK.view === 'cases') {
-const left = C.caseLeft(s);
-body = `<div class="ar-mklist">${C.CASES.map(cid => { const cp = (k, day) => C.casePrice(k, day), c = chg(cid, cp); return `<div class="ar-mkrow static" style="--tc:${C.COLS[cid].col}"><span class="ar-casebox sm" style="--cc:${C.COLS[cid].col}"><span>${C.COLS[cid].emblem}</span></span><span class="ar-mkn"><b>${C.COLS[cid].name}武器箱</b><small>拥有 ${s.cases[cid]} 个</small></span>${spark(cid, 120, 34, 30, cp)}<span class="ar-chg ${c >= 0 ? 'up' : 'down'}">${c >= 0 ? '+' : ''}${(c * 100).toFixed(1)}%</span><span class="ar-mkp">${ink(C.casePrice(cid, d))}</span><span class="ar-mkbtns"><button type="button" class="go small" data-buycase="${cid}" ${left ? '' : 'disabled'}>买入</button><button type="button" class="ghost small" data-sellcase="${cid}" ${s.cases[cid] ? '' : 'disabled'}>卖出 ${ink(C.quick(C.casePrice(cid, d)))}</button></span></div>`; }).join('')}</div>
-<p class="ar-note">本周还能用墨锭买 ${left} 个武器箱（每周 ${C.CASE_WEEK} 个）。</p>`;
+<div class="ar-mklist">${keys.map(k => { const p = lo(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${art(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span>${spark(k)}${chgTag(chg(k))}<span class="ar-mkp">${p ? `最低 ${ink(p)}` : '暂无在售'}</span></button>`; }).join('')}</div>`;
+} else if (MK.view === 'cases') {   // 武器箱和终端机：一键买最便宜的、直接卖给收购商，点“在售 / 挂单”看每一个
+body = `<div class="ar-mklist">${[...C.CASES.filter(c => C.COLS[c].prem), ...C.REG, 'term'].map(k => {
+const buy = cheapest(k, s), n = goodHave(s, k), mk = C.goodPrice(k, d);
+return `<div class="ar-mkrow static" style="--tc:${goodCol(k)}">${goodIcon(k)}<span class="ar-mkn"><b>${goodName(k)}</b><small>拥有 ${n} 个 · 今天在售 ${buy.left} 个${k !== 'term' && C.COLS[k].prem ? ' · 每周限开 1 个' : ''}</small></span>${spark(k, 120, 34, 30, C.goodPrice)}${chgTag(chg(k, C.goodPrice))}<span class="ar-mkp">${buy.left ? `最低 ${ink(buy.p)}` : '今天卖完了'}<small>市场价 ${fmt(mk)}</small></span>
+<span class="ar-mkbtns"><button type="button" class="go small" data-buyg="${k}" ${buy.left ? '' : 'disabled'}>买入</button><button type="button" class="ghost small" data-sellg="${k}" ${n ? '' : 'disabled'}>卖出 ${ink(C.quick(mk))}</button><button type="button" class="ghost small" data-mkg="${k}">在售 / 挂单</button></span></div>`;
+}).join('')}</div>
+<p class="ar-note">“买入”买的是今天在售里最便宜的那一个。开箱有次数限制（普通武器箱每天 ${C.OPEN_DAY} 个、神兵武器箱每周 ${C.PREM_WEEK} 个），买卖不限。</p>`;
 } else if (MK.view === 'mine') {
-body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => { const r = C.sellRate(L.price / C.price(L.it, d)); return `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${art(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · ${r <= 0 ? '标价太高，基本卖不掉' : '等人来买'}</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>到手 ${fmt(C.net(L.price))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`; }).join('')}</div>`
-: '<p class="ar-empty">没有挂单。在库存里点一件饰品，选“挂单”就能自己定价卖。</p>';
+body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => {
+const g = L.g, mk = g ? C.goodPrice(g, d) : C.price(L.it, d), r = C.sellRate(L.price / mk);
+return `<div class="ar-mkrow static" style="--tc:${g ? goodCol(g) : tc(L.it.k)}">${g ? goodIcon(g) : `<img src="${art(L.it.k)}" alt="">`}<span class="ar-mkn"><b>${g ? goodName(g) : escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · ${r <= 0 ? '标价太高，基本卖不掉' : '等人来买'}</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>到手 ${fmt(C.net(L.price))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`;
+}).join('')}</div>`
+: '<p class="ar-empty">没有挂单。在库存里点一件饰品选“挂单”，或者在“箱子”里点“在售 / 挂单”，就能自己定价卖。</p>';
 } else {
-body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${{ buy: '买入', sell: '卖出', sold: '挂单成交', term: '终端机买入' }[h.kind] || ''}</span><span>${h.c ? `${C.COLS[h.c].name}武器箱 ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : '<p class="ar-empty">还没有成交记录。</p>';
+body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${{ buy: '买入', sell: '卖出', sold: '挂单成交', term: '终端机买入' }[h.kind] || ''}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : '<p class="ar-empty">还没有成交记录。</p>';
 }
 return `<div class="ar-seg">${tabs}</div><p class="ar-note top">价格每天小幅浮动。在售的比市场价贵一点；直接卖出按市场价的 ${Math.round(C.BID * 100)}% 收，自己挂单最高标到 ${Math.round(C.LIST_MAX_R * 100)}%；成交扣 ${Math.round(C.FEE * 100)}% 手续费。</p>${body}`;
 }
+const buyBtn = (s, x) => { const sold = s.bought.ids.includes(x.l); return [sold, `<button type="button" class="go small" data-buyl="${x.l}" ${sold || !live() ? 'disabled' : ''}>${sold ? '已买' : '购买'}</button>`]; };
 function marketItem(k) {
 const s = blankS(), d = today(), L = C.listings(k, d);
 const mine = s.inv.filter(x => x.k === k);
-const ys = []; for (let i = 29; i >= 0; i--) ys.push(C.refPrice(k, d - i));
-const W = 520, H = 150, lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1;
-const pts = ys.map((y, i) => `${(i / 29 * W).toFixed(1)},${(H - 14 - (y - lo) / sp * (H - 28)).toFixed(1)}`).join(' ');
-const row = (x, btn) => `<div class="ar-lrow"><span>${x.st >= 0 ? `<b class="ar-stn">斩数 ${x.st}</b>` : '普通版'}</span><span>${ink(x.price !== undefined ? x.price : C.price(x, d))}</span>${btn}</div>`;
+const row = (x, btn, gone) => `<div class="ar-lrow${gone ? ' gone' : ''}"><span>${x.st >= 0 ? `<b class="ar-stn">斩数 ${x.st}</b>` : '普通版'}</span><span>${ink(x.price !== undefined ? x.price : C.price(x, d))}</span>${btn}</div>`;
 modal(`<div class="ar-mkhead" style="--tc:${tc(k)}"><img src="${art(k)}" alt=""><div><span class="ar-tier" style="--tc:${tc(k)}">${C.TIER[tierOf(k)].n}</span><h3>${escapeHTML(itemName({ k, st: -1 }))}</h3><p class="ar-note">${colName(k)}武器箱 · 斩数版贵 ${Math.round((C.ST_MUL(tierOf(k)) - 1) * 100)}%</p></div></div>
-<div class="ar-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="近 30 天参考价"><polyline points="0,${H} ${pts} ${W},${H}" class="fill"/><polyline points="${pts}" class="line"/></svg><div class="ar-chartlbl"><span>30 天前</span><span>参考价（普通版）：最高 ${fmt(hi)} · 最低 ${fmt(lo)} · 今天 ${fmt(ys[29])}</span><span>今天</span></div></div>
-<h4 class="ar-h">在售</h4><div class="ar-lst">${L.map(x => { const sold = s.bought.ids.includes(x.l); return row(x, `<button type="button" class="go small" data-buyl="${x.l}" ${sold || !live() ? 'disabled' : ''}>${sold ? '已买' : '购买'}</button>`).replace('ar-lrow', `ar-lrow${sold ? ' gone' : ''}`); }).join('')}</div>
+${chart(k, C.refPrice, '参考价（普通版）')}
+<h4 class="ar-h">在售</h4><div class="ar-lst">${L.map(x => { const [sold, btn] = buyBtn(s, x); return row(x, btn, sold); }).join('')}</div>
 ${mine.length ? `<h4 class="ar-h">我库存里的这款</h4><div class="ar-lst">${mine.map(x => row(x, `<button type="button" class="ghost small" data-insp="${x.i}">卖出 / 检视</button>`)).join('')}</div>` : ''}
+<div class="row"><button class="ghost small" data-ar-close>关闭</button></div>`, 'wide');
+}
+function marketGood(k) {   // 一种箱子：今天在售的每一个、自己手上的直接卖或者挂单
+const s = blankS(), d = today(), L = C.listings(k, d), n = goodHave(s, k), mk = C.goodPrice(k, d), can = live();
+modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>${goodName(k)}</h3><p class="ar-note">拥有 ${n} 个 · 市场价 ${ink(mk)}${k === 'term' ? '' : C.COLS[k].prem ? ` · 每周限开 ${C.PREM_WEEK} 个` : ` · 普通武器箱每天一共能开 ${C.OPEN_DAY} 个`}</p></div></div>
+${chart(k, C.goodPrice, '参考价')}
+<h4 class="ar-h">在售 <small>别的江湖人挂的，每天换一批</small></h4><div class="ar-lst">${L.map((x, i) => { const [sold, btn] = buyBtn(s, x); return `<div class="ar-lrow${sold ? ' gone' : ''}"><span>第 ${i + 1} 个</span><span>${ink(x.price)}</span>${btn}</div>`; }).join('')}</div>
+<h4 class="ar-h">卖出我的 <small>手上有 ${n} 个</small></h4>
+<div class="ar-insbtns"><button type="button" class="ghost small" data-sellg="${k}" ${n && can ? '' : 'disabled'}>直接卖出一个 ${ink(C.quick(mk))}</button><button type="button" class="ghost small" data-listg="${k}" ${n && can ? '' : 'disabled'}>挂单（自己定价）</button></div>
 <div class="row"><button class="ghost small" data-ar-close>关闭</button></div>`, 'wide');
 }
 const TR = { tier: 'mil', sel: [] };
@@ -21409,11 +22067,11 @@ const shop = C.STAR_SHOP.map(g => `<div class="ar-card ar-starg"><b>${g.name}</b
 return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.k + 1} 季 · 剩 ${left} 天</span><h3>星章 <b>${stars}</b> <small>本季共得 ${s.op.earned}</small></h3></div><p class="ar-note">每周一换四个任务，完成拿星章，星章换武器箱、终端机、改名标签和饰品。</p></div>
 <h4 class="ar-h">本周任务</h4><div class="tlist">${ms || '<p class="ar-empty">登录之后才有任务。</p>'}</div>
 <h4 class="ar-h">每周补给 <small>${ready ? '已解锁：四样里挑两样' : `这周再打 ${C.SUPPLY_GAMES - s.drop.g} 局解锁（${s.drop.g}/${C.SUPPLY_GAMES}）`}</small></h4>${live() ? sup : ''}
-<h4 class="ar-h">星章兑换</h4><div class="ar-grid3">${shop}</div>
+<h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵武器箱的那 7 款换不到</small></h4><div class="ar-grid3">${shop}</div>
 <p class="ar-note">对局掉落：每局 ${Math.round(C.DROP_P * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.DROP_CAP} 次（本周已掉 ${s.drop.n} 次）。</p>`;
 }
 function covPick() {
-const list = C.ofTier('cov');
+const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
 modal(`<h3>自选一件隐秘饰品</h3><div class="ar-grid sm">${list.map(k => `<button type="button" class="ar-it" style="--tc:${tc(k)}" data-opcov="${k}"><img src="${art(k)}" alt=""><b>${escapeHTML(skinName(k))}</b><small>${charName(k)} · ${colName(k)}</small><i class="ar-bar"></i></button>`).join('')}</div><div class="row"><button class="ghost small" data-ar-close>取消</button></div>`, 'wide');
 }
 function bind() {
@@ -21421,7 +22079,12 @@ $id('arTabs').addEventListener('click', e => { const b = e.target.closest('[data
 $id('arModal').addEventListener('click', async e => {
 if (e.target.closest('[data-ar-close]') || e.target === $id('arModal')) { if (!REEL.on) closeModal(); return; }
 const b = e.target.closest('button'); if (!b || b.disabled) return;
-if (b.dataset.buyl) { const r = await act('buy', { l: b.dataset.buyl }); if (r && r.ok) { SFX.wood && SFX.wood(); toast(`买到了：${itemName(r.item)}`); marketItem(r.item.k); render(); } }
+if (b.dataset.buyl) {
+const r = await act('buy', { l: b.dataset.buyl });
+if (r && r.ok) { SFX.wood && SFX.wood(); if (r.good) { toast(`买到了：${goodName(r.good)}`); marketGood(r.good); } else { toast(`买到了：${itemName(r.item)}`); marketItem(r.item.k); } render(); }
+}
+else if (b.dataset.sellg) sellGood(b.dataset.sellg);
+else if (b.dataset.listg) listBox(null, b.dataset.listg);
 else if (b.dataset.insp) { const it = ST.inv.find(x => x.i === +b.dataset.insp); closeModal(); if (it) inspect(it, 'inv'); }
 else if (b.dataset.opcov) { const r = await act('star', { id: 'cov', k: b.dataset.opcov }); if (r && r.ok) { closeModal(); reveal(r.item); render(); } }
 });
@@ -21435,6 +22098,8 @@ render();
 });
 main.addEventListener('keydown', e => { if (e.key === 'Escape') return; e.stopPropagation(); });   // 打字时别触发游戏的快捷键
 main.addEventListener('click', async e => {
+const pv = e.target.closest('[data-pv]');   // 武器箱里的饰品：点开预览
+if (pv) { inspect({ i: -1, k: pv.dataset.pv, st: -1, t: 0 }, 'pv'); return; }
 const b = e.target.closest('button'); if (!b || b.disabled) return;
 const d = b.dataset;
 if (d.gotab) { TAB = d.gotab; render(); return; }
@@ -21452,8 +22117,9 @@ if (live()) { render(); msg('连上了，可以用了'); return; }
 if (!live()) { msg(MODE === 'wait' ? '正在连接服务器，稍等一下' : MODE === 'offline' ? '连不上服务器，等联网了再试' : MODE === 'old' ? OLD_MSG : '登录之后才能用武库'); return; }
 if (d.open) { openCase(d.open); return; }
 if (d.term) { termAct(d.term); return; }
-if (d.buycase) { const p = C.casePrice(d.buycase, today()), left = C.caseLeft(ST); confirmBox('买武器箱', `花 ${ink(p)} 买一个${C.COLS[d.buycase].name}武器箱？买完这周还能买 ${left - 1} 个。`, '买入', async () => { const r = await act('buyCase', { c: d.buycase, n: 1 }); if (r && r.ok) { SFX.wood && SFX.wood(); render(); } }); return; }
-if (d.sellcase) { const r = await act('sellCase', { c: d.sellcase, n: 1 }); if (r && r.ok) { toast(`卖出到账 ${r.gain} 墨锭`); render(); } return; }
+if (d.buyg) { buyGood(d.buyg); return; }
+if (d.sellg) { sellGood(d.sellg); return; }
+if (d.mkg) { marketGood(d.mkg); return; }
 if (d.cancel) { const r = await act('cancel', { l: d.cancel }); if (r && r.ok) { toast('已撤下，放回库存'); render(); } return; }
 if (d.collect) { const r = await act('collect', { c: d.collect }); if (r && r.ok) { SFX.gong && SFX.gong(); toast(`集齐奖励：${C.COLS[d.collect].name}武器箱 +1，改名标签 +1`); render(); } return; }
 if (d.mission !== undefined) { const r = await act('mission', { m: +d.mission }); if (r && r.ok) { SFX.chargeFull && SFX.chargeFull(); toast(`星章 +${r.star}`); render(); } return; }
