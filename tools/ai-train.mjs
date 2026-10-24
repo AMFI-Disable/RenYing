@@ -9,6 +9,10 @@
 // 搜索方法：逐个基因往上、往下各试一步；变好了（且复核通过）就留下并保持步长，否则步长减半。
 //   node tools/ai-train.mjs --stage global --sweeps 2
 //   node tools/ai-train.mjs --stage hero --sweeps 1 --heroes qingfeng,feiying --genes aggr,charge
+// 只给一个难度单独调（--lvkey，和 --level 一样写难度名）：结果存在 lvGenes[难度][角色]，只有那个难度用，共用基因不动
+//   node tools/ai-train.mjs --stage hero --level god --lvkey god --heroes tieshan --genes aggr,charge
+// 角色段的对手默认和自己同一难度；--opp 换成别的难度（比如天道的铁山专门练“打绝顶的随机角色”）
+//   node tools/ai-train.mjs --stage hero --level god --lvkey god --opp impossible --heroes tieshan
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs';
 import os from 'node:os';
 import { Pool, HEROES, NAMES, score } from './ai-arena.mjs';
@@ -27,12 +31,31 @@ const src = readFileSync(ROOT + 'src/ai.js', 'utf8'), i0 = src.indexOf('const AI
 const DEF = Function('"use strict";return (' + src.slice(i0 + 'const AI_GENE_DEF = '.length, src.indexOf('};', i0) + 1) + ')')();
 const KEYS = arg('genes') ? arg('genes').split(',') : Object.keys(DEF);
 const brain = existsSync(BRAIN) ? JSON.parse(readFileSync(BRAIN, 'utf8')) : {};
-const champ = {};
-for (const h of HEROES) { champ[h] = {}; for (const k of Object.keys(DEF)) champ[h][k] = brain.genes && brain.genes[h] && brain.genes[h][k] !== undefined ? brain.genes[h][k] : DEF[k][2]; }
-const save = () => { brain.genes = champ; brain.trainedAt = new Date().toISOString(); brain.level = LEVEL; delete brain.sigma; writeFileSync(BRAIN, JSON.stringify(brain)); };
+const LVKEY = arg('lvkey', '');
+const champ = {}, lvOf = h => (LVKEY && brain.lvGenes && brain.lvGenes[LVKEY] && brain.lvGenes[LVKEY][h]) || {};
+for (const h of HEROES) { champ[h] = {}; for (const k of Object.keys(DEF)) champ[h][k] = lvOf(h)[k] ?? (brain.genes && brain.genes[h] && brain.genes[h][k] !== undefined ? brain.genes[h][k] : DEF[k][2]); }
+const save = () => {
+  if (LVKEY) {   // 只记和共用基因不一样的几项
+    const T = (brain.lvGenes = brain.lvGenes || {})[LVKEY] = brain.lvGenes[LVKEY] || {};
+    for (const h of HEROES) {
+      const base = (brain.genes && brain.genes[h]) || {}, diff = {};
+      for (const k of Object.keys(DEF)) if (champ[h][k] !== (base[k] ?? DEF[k][2])) diff[k] = champ[h][k];
+      if (Object.keys(diff).length) T[h] = diff; else delete T[h];
+    }
+  } else { brain.genes = champ; brain.level = LEVEL; }
+  brain.trainedAt = new Date().toISOString(); delete brain.sigma; writeFileSync(BRAIN, JSON.stringify(brain));
+};
 const log = line => { console.log(line); appendFileSync(LOG, line + '\n'); };
 const pool = new Pool(os.cpus().length);
 const lv = genes => ({ base: LEVEL, genes });
+const OPP = arg('opp', '');
+// 对手（--opp）用那个难度自己的基因：共用基因，加上那个难度单独训练过的几项
+const oppLv = h => {
+  const g = {}, L = (brain.lvGenes && brain.lvGenes[OPP] && brain.lvGenes[OPP][h]) || {};
+  for (const k of Object.keys(DEF)) g[k] = L[k] ?? (brain.genes && brain.genes[h] && brain.genes[h][k] !== undefined ? brain.genes[h][k] : DEF[k][2]);
+  return { base: OPP, genes: g };
+};
+const foe = o => OPP ? oppLv(HEROES[o]) : lv(champ[HEROES[o]]);
 const clampG = (k, v) => Math.round(Math.min(DEF[k][1], Math.max(DEF[k][0], v)) * 1000) / 1000;
 let seedBase = +arg('seed', 1);
 
@@ -50,8 +73,8 @@ function heroGames(hi, genes, rep, s0) {
   const g = [];
   for (let o = 0; o < 12; o++) for (let r = 0; r < rep; r++) {
     const s = s0 + o * 100 + r * 2;
-    g.push({ a: hi, b: o, la: lv(genes), lb: lv(champ[HEROES[o]]), flip: 0, seed: s });
-    g.push({ a: o, b: hi, la: lv(champ[HEROES[o]]), lb: lv(genes), flip: 1, seed: s + 1 });
+    g.push({ a: hi, b: o, la: lv(genes), lb: foe(o), flip: 0, seed: s });
+    g.push({ a: o, b: hi, la: foe(o), lb: lv(genes), flip: 1, seed: s + 1 });
   }
   return g;
 }
@@ -61,7 +84,7 @@ async function evalHeroPair(hi, cand, rep) {   // 返回 [候选胜率, 冠军�
   return [score(rc), score(rb)];
 }
 
-log(`\n== 训练 ${new Date().toISOString()}  阶段 ${STAGE}  轮数 ${SWEEPS}  每次 ${STAGE === 'global' ? 144 * REP : 24 * REP} 场  门槛 +${(GAIN * 100).toFixed(1)}% ==`);
+log(`\n== 训练 ${new Date().toISOString()}  阶段 ${STAGE}${LVKEY ? `（只调 ${LVKEY}）` : ''}  难度 ${LEVEL}${OPP ? `  对手 ${OPP}` : ''}  角色 ${ONLY.join(',')}  轮数 ${SWEEPS}  每次 ${STAGE === 'global' ? 144 * REP : 24 * REP} 场  门槛 +${(GAIN * 100).toFixed(1)}% ==`);
 const step = {}; for (const k of KEYS) step[k] = (DEF[k][1] - DEF[k][0]) * 0.25;
 for (let sw = 1; sw <= SWEEPS; sw++) {
   for (const k of KEYS) {

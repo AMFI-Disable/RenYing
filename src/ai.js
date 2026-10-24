@@ -106,9 +106,10 @@ function aiDefaultGenes() { const g = {}; for (const k of AI_GENE_KEYS) g[k] = A
 let AI_BRAIN = null;
 function aiTuneReload() { AI_BRAIN = (typeof window !== 'undefined' && (window.RENYING_AI_TUNE || window.RENYING_AI_BRAIN)) || {}; }
 function aiBrainData() { if (!AI_BRAIN) aiTuneReload(); return AI_BRAIN; }
-function aiGenes(heroId) {
-  const t = aiBrainData().genes, g = t && t[heroId];
-  return g ? Object.assign(aiDefaultGenes(), g) : aiDefaultGenes();
+// lvGenes：某个难度单独训练过的角色（比如天道的铁山）在共用基因上再改几项
+function aiGenes(heroId, lv) {
+  const B = aiBrainData(), g = B.genes && B.genes[heroId], o = lv && B.lvGenes && B.lvGenes[lv] && B.lvGenes[lv][heroId];
+  return Object.assign(aiDefaultGenes(), g || {}, o || {});
 }
 
 // ---------- 4. 打击数据 ----------
@@ -169,6 +170,7 @@ class AIBrain {
     // level 可以是难度名，也可以是 { base: 'god', genes: {...} }（训练时给某一方换一套基因）
     if (level && typeof level === 'object' && level.base) { this.L = LEVELS[level.base] || LEVELS.god; this.geneOverride = level.genes; }
     else this.L = typeof level === 'object' ? level : (LEVELS[level] || LEVELS.normal);
+    this.lvKey = typeof level === 'string' ? level : '';
     this.model = new FoeModel();
     this.heroId = null;
     this.g = aiDefaultGenes();
@@ -202,7 +204,7 @@ class AIBrain {
 
   think(me, foe) {
     if (!foe || !me.ch || !foe.ch) return;
-    if (this.heroId !== me.ch.id) { this.heroId = me.ch.id; this.g = this.geneOverride ? Object.assign(aiDefaultGenes(), this.geneOverride) : this.L.genes ? aiGenes(me.ch.id) : aiDefaultGenes(); }
+    if (this.heroId !== me.ch.id) { this.heroId = me.ch.id; this.g = this.geneOverride ? Object.assign(aiDefaultGenes(), this.geneOverride) : this.L.genes ? aiGenes(me.ch.id, this.lvKey) : aiDefaultGenes(); }
     const c = this.c;
     if (me.veilT > 0) return this.blind(me);
     this.watch(me, foe);
