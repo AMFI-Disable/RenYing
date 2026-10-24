@@ -376,14 +376,8 @@
 
         <!-- 2v2 子模式切换：玩家组队参战 vs 天道巅峰观战 -->
         <div class="seg single-2v2-seg" id="single2v2Seg" style="display:flex;gap:8px;justify-content:center;margin:8px 0 14px">
-          <button class="sel" id="single2v2PlayTab" data-sub="play" type="button" style="display:inline-flex;align-items:center;gap:6px">
-            <span>⚔️ 亲自出战 · 人机协同</span>
-            <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(70,211,234,0.18);color:#46d3ea;font-weight:700">P&amp;C vs C&amp;C</span>
-          </button>
-          <button id="single2v2WatchTab" data-sub="watch" type="button" style="display:inline-flex;align-items:center;gap:6px">
-            <span>👁️ 纯观战演武 · 四圣论剑</span>
-            <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(180,120,255,0.22);color:#d4b3ff;font-weight:700">4神机AI互搏</span>
-          </button>
+          <button class="sel tab-ink" id="single2v2PlayTab" data-sub="play" type="button"><span>⚔️ 亲自出战 · 人机协同</span><span class="mode-pill">● ○ vs ○ ○</span></button>
+          <button class="tab-ink" id="single2v2WatchTab" data-sub="watch" type="button"><span>👁️ 纯观战演武 · 四圣论剑</span><span class="mode-pill watch">○ ○ vs ○ ○</span></button>
         </div>
 
         <!-- 玩家组队参战区 -->
@@ -433,7 +427,7 @@
           <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
           <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入天道演武选人：4 位天道顶尖神级 AI 依次完成 2 禁 4 选，随后苍龙赤凤 4 机协同互搏，纯观战无操作。</p>
           <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
-            <button class="go" id="watch2v2StartBtn" type="button" style="background:linear-gradient(90deg, #5b3a99, #8c52ff);box-shadow:0 0 24px rgba(140,82,255,0.35)">开启天道演武 · 纯观战 (4机对决)</button>
+            <button class="go btn-watch" id="watch2v2StartBtn" type="button">开启天道演武 · 纯观战 (4机对决)</button>
           </div>
         </div>
       </div>
@@ -491,19 +485,10 @@
             <span class="mm-title">2v2 组队开黑</span>
             <span class="mm-en">2V2 TEAM & CO-OP</span>
             <span class="mm-desc">双人同袍共破天道，或四人组队同台切磋！更有四圣神机 AI 自动禁选互搏纯观战演武。</span>
-            <div class="mm-2v2-actions" style="display:flex;gap:10px;margin-top:auto;padding-top:10px;flex-wrap:wrap">
-              <button class="mm-go" id="mm2v2CoopBtn" type="button" style="min-width:145px;padding:12px 14px;font-size:14.5px;display:inline-flex;flex-direction:column;align-items:center;line-height:1.2;gap:3px">
-                <span>双人破阵 · 共斗</span>
-                <span style="font-size:11px;opacity:0.85;font-weight:normal;letter-spacing:0">双人同袍 vs 双天道</span>
-              </button>
-              <button class="mm-go alt" id="mm2v2VsBtn" type="button" style="min-width:145px;padding:12px 14px;font-size:14.5px;display:inline-flex;flex-direction:column;align-items:center;line-height:1.2;gap:3px">
-                <span>四方争锋 · 对决</span>
-                <span style="font-size:11px;opacity:0.85;font-weight:normal;letter-spacing:0">2人 vs 2人 巅峰对战</span>
-              </button>
-              <button class="mm-go alt" id="mm2v2WatchBtn" type="button" style="min-width:145px;padding:12px 14px;font-size:14.5px;border-color:rgba(180,120,255,0.6);color:#d4b3ff;background:rgba(180,120,255,0.1);display:inline-flex;flex-direction:column;align-items:center;line-height:1.2;gap:3px">
-                <span>纯观战 · 天道演武</span>
-                <span style="font-size:11px;color:#caa6ff;font-weight:normal;letter-spacing:0">4神机AI神仙打架</span>
-              </button>
+            <div class="mm-2v2-actions">
+              <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>双人破阵 · 共斗</span><span class="go-sub">双人同袍 vs 双天道</span></button>
+              <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>四方争锋 · 对决</span><span class="go-sub">2人 vs 2人 巅峰对战</span></button>
+              <button class="mm-go btn-watch" id="mm2v2WatchBtn" type="button"><span>纯观战 · 天道演武</span><span class="go-sub">4神机AI神仙打架</span></button>
             </div>
           </div>
         </div>
@@ -733,25 +718,25 @@
               选择进入对决的方式：
             </p>
             <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px" id="modal2v2Options">
-              <div class="wuxia-card" id="modal2v2MatchCard" style="padding:14px;cursor:pointer;border-color:rgba(56,217,118,0.4);background:rgba(56,217,118,0.06);transition:transform .15s">
-                <h4 style="color:#38d976;margin:0 0 6px;font-size:16px;font-family:var(--title)">⚡ 全服快速匹配</h4>
-                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2MatchDesc">全网自动撮合队友与对手，即刻切磋！</p>
-                <button class="go small" id="btn2v2GoMatch" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px;background:#2bd49a;color:#0b0d10">快速匹配</button>
+              <div class="ink-card" id="modal2v2MatchCard" style="--card-c:rgb(56,217,118)">
+                <h4>⚡ 全服快速匹配</h4>
+                <p id="modal2v2MatchDesc">全网自动撮合队友与对手，即刻切磋！</p>
+                <button class="go small" id="btn2v2GoMatch" type="button">快速匹配</button>
               </div>
-              <div class="wuxia-card" id="modal2v2OnlineCard" style="padding:14px;cursor:pointer;border-color:rgba(70,211,234,0.4);background:rgba(70,211,234,0.06);transition:transform .15s">
-                <h4 style="color:#46d3ea;margin:0 0 6px;font-size:16px;font-family:var(--title)">🌐 设擂密令开黑</h4>
-                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45">生成 4 位房间码分享好友，约战同袍。</p>
-                <button class="go small" id="btn2v2GoOnline" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px">设擂开黑</button>
+              <div class="ink-card" id="modal2v2OnlineCard" style="--card-c:rgb(70,211,234)">
+                <h4>🌐 设擂密令开黑</h4>
+                <p>生成 4 位房间码分享好友，约战同袍。</p>
+                <button class="go small" id="btn2v2GoOnline" type="button">设擂开黑</button>
               </div>
-              <div class="wuxia-card" id="modal2v2LocalCard" style="padding:14px;cursor:pointer;border-color:rgba(233,196,106,0.4);background:rgba(233,196,106,0.06);transition:transform .15s">
-                <h4 style="color:var(--gold);margin:0 0 6px;font-size:16px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
-                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2LocalDesc">同台电脑键盘对决（1P/2P 合作或对决）。</p>
-                <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px">本地开战</button>
+              <div class="ink-card" id="modal2v2LocalCard" style="--card-c:rgb(233,196,106)">
+                <h4>⚔️ 同屏本地开黑</h4>
+                <p id="modal2v2LocalDesc">同台电脑键盘对决（1P/2P 合作或对决）。</p>
+                <button class="go small" id="btn2v2GoLocal" type="button">本地开战</button>
               </div>
-              <div class="wuxia-card" id="modal2v2WatchCard" style="padding:14px;cursor:pointer;border-color:rgba(180,120,255,0.4);background:rgba(180,120,255,0.06);transition:transform .15s">
-                <h4 style="color:#d4b3ff;margin:0 0 6px;font-size:16px;font-family:var(--title)">👁️ 天道演武 · 纯观战</h4>
-                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45">4 位天道顶尖神级 AI 自动 6 手禁选、协同互搏，坐观神仙打架！</p>
-                <button class="go small alt" id="btn2v2GoWatch" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px;border-color:rgba(180,120,255,0.6);color:#d4b3ff">开启观战</button>
+              <div class="ink-card" id="modal2v2WatchCard" style="--card-c:rgb(180,120,255)">
+                <h4>👁️ 天道演武 · 纯观战</h4>
+                <p>4 位天道顶尖神级 AI 自动 6 手禁选、协同互搏，坐观神仙打架！</p>
+                <button class="go small btn-watch" id="btn2v2GoWatch" type="button">开启观战</button>
               </div>
             </div>
           </div>

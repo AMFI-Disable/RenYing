@@ -1880,3 +1880,78 @@
     .ar-ctier { grid-template-columns: minmax(0, 1fr); }
     .ar-mkrow { flex-wrap: wrap; }
   }
+
+  /* =====================================================================
+     水墨层：主按钮是一笔浓墨 + 朱砂印，次按钮是淡墨晕染；放在最后覆盖竞技风格层。
+     ===================================================================== */
+  :root {
+    --ink-black: #16120f; --rice: #efe6d2; --seal-red: #b8392e; --ink-violet: #2c2150;
+    --brush-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 64' preserveAspectRatio='none'%3E%3Cfilter id='r' x='-5%25' y='-20%25' width='110%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035 .6' numOctaves='3' seed='7'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='10'/%3E%3C/filter%3E%3Cpath d='M8 14 Q60 6 120 9 T232 12 L234 50 Q170 58 120 55 T6 52 Z' fill='%2316120f' filter='url(%23r)'/%3E%3C/svg%3E");
+    --brush-violet: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 64' preserveAspectRatio='none'%3E%3Cfilter id='r' x='-5%25' y='-20%25' width='110%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035 .6' numOctaves='3' seed='3'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='10'/%3E%3C/filter%3E%3Cpath d='M8 14 Q60 6 120 9 T232 12 L234 50 Q170 58 120 55 T6 52 Z' fill='%232c2150' filter='url(%23r)'/%3E%3C/svg%3E");
+  }
+  .go, .mm-go, .mm-2v2 .mm-go, .mm-ranked .mm-go {
+    position: relative; overflow: visible; isolation: isolate;
+    background: var(--brush-ink) center / 100% 100% no-repeat; color: var(--rice);
+    border: none; border-radius: 0; clip-path: none; box-shadow: none;
+    text-shadow: 0 1px 0 rgba(0,0,0,.6); padding-right: 46px;
+    transition: transform .12s, filter .18s;
+  }
+  .go::after, .mm-go::after {   /* 朱砂印 */
+    content: "刃"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%) rotate(-7deg);
+    font: 13px/1 var(--title); letter-spacing: 0; color: #fff3ea; background: var(--seal-red);
+    padding: 3px 4px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); opacity: .92; pointer-events: none;
+  }
+  .go::before, .mm-go::before {   /* 点下去墨晕散开 */
+    content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; z-index: -1;
+    border-radius: 50%; transform: translate(-50%, -50%) scale(0); opacity: 0; pointer-events: none;
+    background: radial-gradient(circle, rgba(184,57,46,.35), rgba(22,18,15,0) 70%);
+    transition: transform .5s ease-out, opacity .5s;
+  }
+  .go:active:not(:disabled)::before, .mm-go:active:not(:disabled)::before { transform: translate(-50%, -50%) scale(26); opacity: 1; transition: 0s; }
+  .go:hover:not(:disabled), .mm-go:hover:not(:disabled),
+  .mm-2v2 .mm-go:hover:not(:disabled), .mm-ranked .mm-go:hover:not(:disabled) {
+    background: var(--brush-ink) center / 100% 100% no-repeat; box-shadow: none;
+    transform: translateY(-2px); filter: drop-shadow(0 0 10px rgba(184,57,46,.55)) drop-shadow(0 6px 10px rgba(0,0,0,.45));
+  }
+  .go:active:not(:disabled), .mm-go:active:not(:disabled) { transform: scale(.97); }
+  .go:disabled, .mm-go:disabled { background: var(--brush-ink) center / 100% 100% no-repeat; opacity: .5; filter: grayscale(1); }
+  .mm-ranked .mm-go { color: #f3cf73; }
+  .mm-ranked .mm-go::after { content: "位"; background: #a8791f; }
+  /* 次级：淡墨晕染 */
+  .mm-go.alt, .mm-2v2 .mm-go.alt {
+    background: radial-gradient(ellipse at center, rgba(239,230,210,.12), rgba(239,230,210,.03) 70%, transparent 72%);
+    border: none; border-bottom: 1px solid rgba(239,230,210,.3); color: var(--rice);
+  }
+  .mm-go.alt:hover:not(:disabled), .mm-2v2 .mm-go.alt:hover:not(:disabled) {
+    background: radial-gradient(ellipse at center, rgba(239,230,210,.22), rgba(239,230,210,.05) 70%, transparent 72%); color: #fff; border-color: rgba(239,230,210,.6);
+  }
+  .mm-go.alt::after { content: "合"; background: rgba(184,57,46,.75); }
+  /* 观战：靛紫墨 + “观”字印 */
+  .btn-watch, .mm-2v2 .mm-go.btn-watch, .go.btn-watch,
+  .btn-watch:hover:not(:disabled), .mm-2v2 .mm-go.btn-watch:hover:not(:disabled), .go.btn-watch:hover:not(:disabled) {
+    background: var(--brush-violet) center / 100% 100% no-repeat; color: #e2d0ff; border: none;
+  }
+  .btn-watch:hover:not(:disabled) { filter: drop-shadow(0 0 12px rgba(140,82,255,.55)); }
+  .btn-watch::after { content: "观"; background: #6b4bd6; }
+  .mm-go .go-sub { display: block; font-size: 11px; font-weight: 400; letter-spacing: 0; opacity: .8; margin-top: 3px; }
+  .mm-2v2 .mm-go { min-width: 150px; padding: 12px 44px 12px 16px; font-size: 14.5px; letter-spacing: .12em; display: inline-flex; flex-direction: column; align-items: center; line-height: 1.2; }
+  .mm-2v2-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 10px; flex-wrap: wrap; }
+  /* 对阵小牌：实心 = 玩家，空心 = 电脑 */
+  .mode-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 3px; background: rgba(70,211,234,.16); color: #46d3ea; }
+  .mode-pill.watch { background: rgba(180,120,255,.2); color: #d4b3ff; }
+  .tab-ink { display: inline-flex; align-items: center; gap: 6px; }
+  /* 次按钮 ghost：一抹淡墨横扫 */
+  .ghost { background: linear-gradient(90deg, transparent, rgba(239,230,210,.08) 14%, rgba(239,230,210,.08) 86%, transparent); border: none; border-bottom: 1px solid rgba(239,230,210,.22); border-radius: 0; }
+  .ghost:hover { background: linear-gradient(90deg, transparent, rgba(239,230,210,.15) 14%, rgba(239,230,210,.15) 86%, transparent); border-color: rgba(233,196,106,.6); }
+  .ghost.sel, .ghost.sel:hover { background: linear-gradient(90deg, transparent, var(--rice) 10%, var(--rice) 90%, transparent); color: var(--ink-black); border-color: transparent; }
+  /* 模式卡片（2v2 弹窗等）：宣纸纹 + 墨边 */
+  .ink-card { position: relative; padding: 14px; cursor: pointer; border: 1px solid rgba(239,230,210,.16); transition: transform .15s, border-color .15s;
+    background: radial-gradient(ellipse at 0% 0%, rgba(239,230,210,.07), transparent 60%), rgba(255,255,255,.02); }
+  .ink-card:hover { transform: translateY(-2px); border-color: var(--card-c, rgba(239,230,210,.5)); }
+  .ink-card h4 { color: var(--card-c, var(--gold)); margin: 0 0 6px; font-size: 16px; font-family: var(--title); }
+  .ink-card p { font-size: 12px; color: rgba(236,232,225,.7); margin: 0 0 12px; line-height: 1.45; }
+  .ink-card .go { width: 100%; margin: 0; padding: 8px 40px 8px 10px; font-size: 14px; letter-spacing: .2em; }
+  @media (prefers-reduced-motion: reduce) {
+    .go::before, .mm-go::before { display: none; }
+    .go:hover, .mm-go:hover, .ink-card:hover { transform: none; }
+  }

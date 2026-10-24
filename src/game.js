@@ -2374,6 +2374,16 @@ const foeOf = f => {
   const list = foesOf(f);
   if (!list.length) return A;
   if (list.length === 1) { f.target = list[0]; return list[0]; }
+  // 电脑侠客的团队意识：残血的敌人两人一起收割；队友残血被缠住就过去解围（只影响电脑，玩家的朝向不变）
+  if (f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1]) {
+    const mate = fighterByIdx(f.idx ^ 2);
+    const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
+    if (low) { f.target = low; return low; }
+    if (mate && mate !== f && !mate.hidden && mate.hp > 0 && mate.hp < mate.maxHp * 0.3) {
+      const bully = list.find(e => Math.abs(e.x - mate.x) < 260);
+      if (bully) { f.target = bully; return bully; }
+    }
+  }
   let cur = f.target && !f.target.hidden && f.target.hp > 0 && list.includes(f.target) ? f.target : null;
   if (cur) {
     const curDist = Math.abs(cur.x - f.x);
@@ -12953,11 +12963,23 @@ function watch2v2AiChoice(step) {
   const avail = CHARS.map((_, i) => i).filter(i => !used.has(i));
   if (!avail.length) return 0;
   if (step.type === 'pick') {
-    const foes = st.picks[1 - step.team].filter(i => i >= 0).map(i => CHARS[i].id);
-    if (foes.length) {
-      const counters = avail.filter(i => (CHARS[i].beats || []).some(id => foes.includes(id)));
-      if (counters.length && Math.random() < 0.65) return counters[(Math.random() * counters.length) | 0];
+    // 打分选人：克制对面 +3、被对面克制 -2.5、和队友招式定位互补（近身配远程）+1.5，再加一点随机避免每局同一套
+    const foes = st.picks[1 - step.team].filter(i => i >= 0).map(i => CHARS[i]);
+    const mates = st.picks[step.team].filter(i => i >= 0).map(i => CHARS[i]);
+    const role = ch => (typeof AI_KIT !== 'undefined' && AI_KIT[ch.skill] && AI_KIT[ch.skill].role) || 'rush';
+    const ranged = r => r === 'proj' || r === 'trap' || r === 'zone';
+    let best = avail[0], bestS = -Infinity;
+    for (const i of avail) {
+      const ch = CHARS[i];
+      let s = Math.random() * 1.6;
+      for (const f of foes) {
+        if ((ch.beats || []).includes(f.id)) s += 3;
+        if ((f.beats || []).includes(ch.id)) s -= 2.5;
+      }
+      for (const m of mates) if (ranged(role(m)) !== ranged(role(ch))) s += 1.5;
+      if (s > bestS) { bestS = s; best = i; }
     }
+    return best;
   } else {
     const mine = st.picks[step.team].filter(i => i >= 0).map(i => CHARS[i].id);
     if (mine.length) {

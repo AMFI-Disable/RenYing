@@ -256,7 +256,7 @@ class AIBrain {
     }
     if (/^getup/.test(prev)) {
       const k = foe.escInvul ? 'escape' : foe.state === 'block' ? 'block' : foe.state === 'attack' || foe.state === 'charge' ? 'attack' : foe.state === 'skill' || foe.state === 'special' ? 'skill' : null;
-      if (k) M_.wake[k]++;
+      if (k) { for (const w in M_.wake) M_.wake[w] *= 0.8; M_.wake[k]++; }   // 旧习惯逐渐淡忘：对手中途换打法也能跟上
     }
     if (foe.state === 'air' && !foe.escInvul && /^(idle|walk)/.test(prev)) M_.ema('jumpRate', 1, 0.1);
     else if (foe.state === 'attack' || foe.state === 'skill') M_.ema('aggr', 1, 0.08);
@@ -1117,6 +1117,20 @@ class AIBrain {
   watch2v2(me, foe, d, to) {
     if (!(typeof is2v2 === 'function' && is2v2()) || typeof ARENA2V2 === 'undefined') return false;
     const cx = STAGE_W / 2, orb = ARENA2V2.orb;
+    // 天劫落雷：地上出现预警圈就走出去（反应受境界影响）
+    if (typeof projs !== 'undefined' && Math.random() < 0.3 + 0.7 * this.L.read) {
+      for (const p of projs) if (p.kind === 'bolt' && (p.delay || 0) > 0 && Math.abs(p.x - me.x) < (p.w || 68) / 2 + 30) { this.dir = me.x < p.x ? -1 : 1; return true; }
+    }
+    // 站位分工：远程侠客在近战队友缠住敌人时，退到后排放招，不挤进人堆
+    {
+      const mateF = (me.idx === 0 ? C : me.idx === 2 ? A : me.idx === 1 ? D : B);
+      const role = k => (AI_KIT[k] && AI_KIT[k].role) || 'rush';
+      const ranged = r => r === 'proj' || r === 'trap' || r === 'zone';
+      if (mateF && mateF.hp > 0 && !mateF.hidden && ranged(role(me.ch.skill)) && !ranged(role(mateF.ch.skill))
+        && Math.abs(mateF.x - foe.x) < 220 && d < 240 && me.onGround() && me.hp < foe.hp * 1.3 && Math.random() < 0.45) {
+        this.dir = -to; return true;
+      }
+    }
     if (orb && orb.active) {
       const dAltar = Math.abs(me.x - cx);
       const mate = (me.idx % 2 === 0) ? (me.idx === 0 ? C : A) : (me.idx === 1 ? D : B);
