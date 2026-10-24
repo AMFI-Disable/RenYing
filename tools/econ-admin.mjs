@@ -45,6 +45,11 @@ if (cmd === 'log' || cmd === 'sanction') {
     console.log(`处罚：第 ${sc.strikes} 次${sc.perm ? ' · 永久封号' : sc.banUntil > Date.now() ? ` · 封到 ${time(sc.banUntil)}` : ''}`);
     for (const x of sc.log || []) console.log(`  ${time(x.at)}  ${x.r || ''}${x.src ? `（${x.src}）` : ''}`);
   } else console.log('处罚：没有');
+  if (Array.isArray(j.mkt) && j.mkt.length) {
+    console.log(`\n玩家市场最近 ${j.mkt.length} 单（新的在上）：`);
+    const st = ['在卖', '卖掉了', '撤下了'];
+    for (const m of j.mkt) console.log(`  ${time(m.at)}  ${m.seller === j.uid ? '卖' : '买'}  ${m.k}${m.st >= 0 ? `（斩数 ${m.st}）` : ''}  ${m.price} 墨锭  ${st[m.state] || m.state}${m.state === 1 ? `${m.paid ? '' : '，卖家还没结账'} · ${time(m.done_at)}` : ''}`);
+  }
   console.log(`\n最近 ${j.log.length} 条流水（新的在上）：`);
   for (const r of j.log) {
     const ink = r.ink0 === null || r.ink0 === undefined ? '' : ` 墨锭 ${r.ink0}→${r.ink1}`;

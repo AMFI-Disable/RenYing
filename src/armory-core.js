@@ -2,24 +2,24 @@
    刃影武库 · 规则核心
    ---------------------------------------------------------------------
    浏览器（src/armory.js）和云端（cloudflare/worker.js）共用这一份规则：
-   收藏品和武器箱、品质与概率、开箱次数、斩数、终端机、市场价格（饰品、武器箱、终端机都能买卖）、
-   汰换合同、对局掉落、每周补给、江湖行动。
+   收藏品和武器箱、品质与概率、开箱次数、斩数、终端机、商店（武器箱和终端机按固定价格卖）、
+   玩家市场（只有玩家之间买卖饰品，价格由玩家自己定）、汰换合同、对局掉落、每周补给、江湖行动。
    这里不碰页面，只改传进来的存档对象 s，所以同一份代码在服务器上跑出来的结果和本机一模一样。
    连上新版云端时，开箱、买卖、汰换都由服务器算（随机数也在服务器上取），本机只负责显示。
+   玩家市场的挂单放在服务器的 mkt 表里：挂单、购买、撤单时服务器把那一单交给这里（env.mkt），
+   这里定下来要怎么改（env.mkt.out），服务器再和存档一起原子地写进去。
    所有数据表都冻结了，控制台改不动概率和价格。
    ===================================================================== */
 (function (G) {
   'use strict';
   const C = {};
-  C.VER = 3;                                   // 3：爆率调高，加神兵武器箱，改成限制每天开几个，武器箱和终端机上市场（2：去掉磨损和玉珏，加终端机）
+  C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和终端机改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加终端机）
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
   C.INV_MAX = 1000000000, C.LIST_MAX = 20, C.HIST_MAX = 40;
-  C.FEE = 0.15;                                // 市场手续费
-  // 买卖差价：在售的比市场价贵 2%~12%；直接卖出是卖给收购商，按市场价的 88% 收；自己挂单最高标到市场价的 95%。
-  // 价格每天最多偏离 ±10%，所以哪天买、哪天卖都赚不到差价，汰换合同也换不出比材料更值钱的东西（见 tools/econ-test.mjs 的“套利”一节）
-  C.ASK = [1.02, 1.12], C.BID = 0.88, C.LIST_MAX_R = 0.95;
-  C.OPEN_DAY = 2;                              // 普通武器箱每天最多开 2 个（北京时间零点刷新）
+  C.FEE = 0.15;                                // 玩家市场成交扣的手续费（墨锭从这里流出去，免得越攒越多）
+  C.PRICE_MAX = 999999;                        // 挂单标价 1 ~ 999999 墨锭，多少由玩家自己定，系统不定价、也不收购
+  C.OPEN_DAY = 2;                            // 普通武器箱每天最多开 2 个（北京时间零点刷新）
   C.PREM_WEEK = 1;                             // 神兵武器箱每周最多开 1 个（周一刷新），不占每天那 2 个
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
@@ -39,11 +39,11 @@
   };
   C.ODDS = { mil: 0.53, res: 0.27, cla: 0.13, cov: 0.052, gold: 0.018 };   // 普通武器箱；神兵武器箱的写在它自己那一项里
   C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
-  C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 参考价（墨锭）：爆率调高以后跟着重定，开箱平均开不回箱子的钱
+  C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 每档的基准价（墨锭）：只用来定终端机的报价
   // 终端机（照 CS2）：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
-  // 5 件都不要终端机也没了；开封 3 天不处理就作废。报价是当天市场价的 1~1.3 倍，所以买下来转手赚不到钱。
-  // 没开封的终端机也能在市场上买卖，参考价 base
-  C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1, 1.3], base: 120 };
+  // 5 件都不要终端机也没了；开封 3 天不处理就作废。终端机在商店按固定价格 price 卖（不能转卖），
+  // 报价是这一件基准价的 1.2~1.5 倍（按品质、热门程度、斩数定，不跟玩家市场走）
+  C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1.2, 1.5], price: 500 };
 
   // 新涂装：只换配色的军规级饰品 [皮肤 key, 侠客, 名字, 配色]
   C.PAINTS = [
@@ -137,7 +137,7 @@
       scene: { sky: ['#0a1018', '#14283a', '#2a5470', '#12283a'], orb: 'moon', orbC: '255,236,220', mist: '170,210,235', mtn: ['#16304a', '#0e2032'], bam: ['#0a1624', '#060e18'], wx: 'petal', wxC: '255,170,150', hit: 'ripple', hitC: '255,150,120', stars: 0.3 } },
   };
   // 七个武器箱，各是一套收藏品：游戏里原有的 35 款皮肤和武库的 36 款全在里面，每款只在一个箱子里。
-  // 前六个是普通武器箱（爆率 C.ODDS），神兵武器箱只出保密、隐秘、非凡三档，价钱也高
+  // 前六个是普通武器箱（爆率 C.ODDS），神兵武器箱只出保密、隐秘、非凡三档，价钱也高。price 是商店的固定价格
   C.COLS = {
     c1: { name: '初刃', price: 280, emblem: '刃', col: '200,70,60',
       mil: ['qf_p1', 'ts_p1', 'lm_p1', 'fy_p1'], res: ['qf_frost', 'ts_bronze', 'ly_dusk'], cla: ['ts_obsidian', 'ly_sky'], cov: ['qf_gold', 'fy_blood'], gold: ['gc_wolf'] },
@@ -160,9 +160,10 @@
   C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
   C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
 
-  // 商店只剩改名标签（墨锭，每周限量）；武器箱在武器箱页用墨锭买
+  // 商店：改名标签（墨锭，每周限量）；武器箱和终端机按固定价格不限量（见 A.buyCase / A.buyTerm）
   C.STORE = [{ id: 'tag', name: '改名标签', give: ['tags', 1], cost: 400, lim: 2 }];
-  // 江湖行动：每周四个任务（四组里各抽一个），完成得星章
+  // 江湖行动：每周四个任务（四组里各抽一个），完成得星章。
+  // 市场的两个（sell / buy）不再抽到：玩家市场人少的时候不一定做得完；已经抽到的这周照样能做（g: 9 不在 0~3 里）
   C.MISSIONS = {
     games: { g: 0, n: 5, star: 1, t: '进行 {n} 局对战' },
     wins: { g: 0, n: 3, star: 1, t: '赢下 {n} 局' },
@@ -178,8 +179,8 @@
     duo: { g: 2, n: 1, star: 1, t: '打 {n} 局 2v2' },
     open: { g: 3, n: 2, star: 1, t: '开启 {n} 个武器箱' },
     trade: { g: 3, n: 1, star: 1, t: '签 {n} 份汰换合同' },
-    sell: { g: 3, n: 1, star: 1, t: '在江湖市场卖出 {n} 件饰品' },
-    buy: { g: 3, n: 1, star: 1, t: '在江湖市场买入 {n} 件饰品' },
+    sell: { g: 9, n: 1, star: 1, t: '在玩家市场卖出 {n} 件饰品' },
+    buy: { g: 9, n: 1, star: 1, t: '在玩家市场买入 {n} 件饰品' },
   };
   C.STAR_SHOP = [
     { id: 'ink', cost: 1, name: '300 墨锭' },
@@ -203,7 +204,6 @@
     let a = seed >>> 0;
     return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   }
-  const r01 = (seed, i) => hash32(seed + ':' + i) / 4294967296;
   // 查表一律只认表里自己的键（'__proto__'、'constructor' 这种名字查不到东西）
   const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined;
   C.own = own;
@@ -223,52 +223,25 @@
   const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
-  /* ---------- 市场价格 ---------- */
-  // 每天的价格走势：几层平滑的随机起伏叠在一起（只用整数哈希和加减乘除，哪个浏览器、服务器算出来都一样）
-  C.trend = (key, day) => {
-    const h = 'tr|' + key;
-    const oct = (period, amp, salt) => {
-      const x = day / period, i = Math.floor(x), t = x - i, u = t * t * (3 - 2 * t);
-      const a = r01(h + salt, i), b = r01(h + salt, i + 1);
-      return (a + (b - a) * u - 0.5) * 2 * amp;
-    };
-    return 1 + oct(29, 0.06, 'a') + oct(9, 0.028, 'b') + oct(3, 0.012, 'c');   // 加起来最多 ±10%
-  };
-  C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 斩数版贵多少
-  C.price = (it, day) => {
+  /* ---------- 价格 ---------- */
+  // 系统只给自己卖的东西定价：武器箱、终端机（商店固定价格）和终端机报的那一件。
+  // 饰品在玩家市场上卖多少钱全由玩家定，系统不定价、不收购，所以也没有“市场价”。
+  C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 终端机报斩数版时贵多少
+  C.refVal = it => {   // 一件饰品的基准价：只用来定终端机的报价
     const d = C.ITEM[it.k]; if (!d) return 0;
-    let p = C.BASE[d.tier] * d.mul;
-    if (it.st >= 0) p *= C.ST_MUL(d.tier);
-    return Math.max(2, Math.round(p * C.trend(it.k, day)));
+    return Math.max(2, Math.round(C.BASE[d.tier] * d.mul * (it.st >= 0 ? C.ST_MUL(d.tier) : 1)));
   };
-  C.refPrice = (k, day) => C.price({ k, st: -1 }, day);   // 走势图用：普通版
-  C.casePrice = (cid, day) => Math.max(5, Math.round(C.COLS[cid].price * C.trend('case|' + cid, day)));
-  // 武器箱和终端机（下面统称“箱子”）也是市场上的货：一样每天浮动、一样有在售的和挂单
-  C.GOODS = [...C.CASES, 'term'];
+  C.GOODS = [...C.CASES, 'term'];              // 武器箱和终端机：只在商店卖，不能挂到市场
   C.isGood = k => C.GOODS.includes(k);
-  C.goodPrice = (k, day) => k === 'term' ? Math.max(5, Math.round(C.TERM.base * C.trend('term', day))) : C.casePrice(k, day);
-  C.quick = p => Math.floor(p * C.BID * (1 - C.FEE));   // 直接卖出（饰品、箱子）到手多少
-  C.net = p => Math.floor(p * (1 - C.FEE));             // 挂单成交到手多少
-  // 市场上今天在卖的（别的江湖人挂的单）：同一天同一样东西，谁来看都是这几个。
-  // 饰品每款 3~6 件、五分之一是斩数版；普通武器箱每种 6~12 个，神兵武器箱 2~4 个，终端机 4~8 台
-  C.listings = (k, day) => {
-    const item = C.isItem(k);
-    if (!item && !C.isGood(k)) return [];
-    const r = rng(hash32(`ls|${k}|${day}`)), out = [];
-    const n = item ? 3 + Math.floor(r() * 4) : k === 'term' ? 4 + Math.floor(r() * 5) : C.COLS[k].prem ? 2 + Math.floor(r() * 3) : 6 + Math.floor(r() * 7);
-    for (let j = 0; j < n; j++) {
-      const st = item && r() < 0.2 ? Math.floor(r() * 150) : -1, m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
-      out.push({ l: `${day}.${k}.${j}`, k, st, price: Math.round((item ? C.price({ k, st }, day) : C.goodPrice(k, day)) * m) });
-    }
-    return out.sort((a, b) => a.price - b.price);
-  };
-  // 挂单多久能卖掉：标价和市场价的比，越便宜越快（每小时卖出的机会）；超过 95% 没人买
-  C.sellRate = ratio => ratio > C.LIST_MAX_R ? 0 : Math.min(6, 0.6 * Math.exp(-(ratio - C.LIST_MAX_R) * 8));
+  C.shopPrice = k => k === 'term' ? C.TERM.price : own(C.COLS, k) ? C.COLS[k].price : 0;
+  C.net = p => Math.floor(p * (1 - C.FEE));    // 挂单卖掉，卖家到手多少
+  const LID_RE = /^[0-9a-f]{16}$/;
+  C.isLid = l => typeof l === 'string' && LID_RE.test(l);   // 挂单编号：服务器随机给的 16 位
 
   /* ---------- 存档 ---------- */
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
-    lst: [], hist: [], bought: { d: 0, ids: [] }, od: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, drop: { w: 0, g: 0, n: 0, sup: 0 },
+    lst: [], hist: [], od: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
   });
@@ -281,10 +254,11 @@
     i: int(x.i, 1), k: x.k, st: stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
   // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务。
   // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台终端机，饰品和武器箱照旧。
-  // 第 2 版的“本周买了几个箱子”也丢掉（现在不限买，限的是每天开几个）
+  // 第 2 版的“本周买了几个箱子”也丢掉（现在不限买，限的是每天开几个）。
+  // 第 3 版以前挂着的单是卖给系统的（系统按时间成交）：换成第 4 版时全部撤下，饰品、武器箱、终端机退回来
   C.normalize = (s, env) => {
     if (!isObj(s)) s = C.blank();
-    const oldKeys = s.v === 1 ? int(s.keys, 0, 50) : 0;
+    const oldKeys = s.v === 1 ? int(s.keys, 0, 50) : 0, oldLst = !(+s.v >= 4);
     const b = C.blank();
     for (const k of Object.keys(b)) {
       const okType = Array.isArray(b[k]) ? Array.isArray(s[k]) : isObj(b[k]) ? isObj(s[k]) : b[k] === null ? (s[k] === null || isObj(s[k])) : typeof s[k] === typeof b[k];
@@ -296,18 +270,25 @@
     s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
     const seen = new Set();
     s.inv = s.inv.map(cleanItem).filter(x => x && !seen.has(x.i) && seen.add(x.i)).slice(0, C.INV_MAX);
-    s.lst = s.lst.map(L => {   // 挂着的单：一件饰品（it），或者一个箱子（g 是武器箱编号或 'term'）
-      if (!isObj(L) || !/^L\d{1,12}$/.test(String(L.l))) return null;
-      const tail = { price: int(L.price, 1, 9999999), t: num(L.t), at: num(L.at) };
-      if (L.g !== undefined) return C.isGood(L.g) ? { l: String(L.l), g: L.g, ...tail } : null;
+    if (oldLst) {   // 旧版的挂单：退回库存
+      for (const L of s.lst.slice(0, 200)) {
+        if (!isObj(L)) continue;
+        if (L.g === 'term') s.term++;
+        else if (L.g !== undefined) { if (own(C.COLS, L.g)) s.cases[L.g]++; }
+        else { const it = cleanItem(L.it); if (it && !seen.has(it.i)) { seen.add(it.i); s.inv.push(it); } }
+      }
+      s.lst = [];
+    }
+    s.lst = s.lst.map(L => {   // 挂在玩家市场上的饰品：编号是服务器给的，和 mkt 表里的那一单对应
+      if (!isObj(L) || !C.isLid(L.l)) return null;
       const it = cleanItem(L.it);
       if (!it || seen.has(it.i)) return null;
       seen.add(it.i);
-      return { l: String(L.l), it, ...tail };
+      return { l: L.l, it: { ...it, n: '' }, price: int(L.price, 1, C.PRICE_MAX), t: num(L.t) };
     }).filter(Boolean).slice(0, C.LIST_MAX);
     let top = 0;
     for (const x of s.inv) top = Math.max(top, x.i);
-    for (const L of s.lst) top = Math.max(top, L.it ? L.it.i : 0, +L.l.slice(1));
+    for (const L of s.lst) top = Math.max(top, L.it.i);
     s.nid = Math.max(int(s.nid, 1), top + 1);
     s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
     s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
@@ -319,8 +300,7 @@
     s.stat = Object.fromEntries(Object.keys(b.stat).map(k => [k, int(s.stat[k])]));
     s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
     s.last = num(s.last); s.gift = s.gift ? 1 : 0;
-    s.bought = { d: int(s.bought.d), ids: Array.isArray(s.bought.ids) ? s.bought.ids.filter(x => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, 600) : [] };
-    s.od = { d: int(s.od.d), n: int(s.od.n, 0, C.OPEN_DAY) };
+    s.od ={ d: int(s.od.d), n: int(s.od.n, 0, C.OPEN_DAY) };
     s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, C.PREM_WEEK) };
     s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
     s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
@@ -332,7 +312,6 @@
       prog: ms ? Object.fromEntries([0, 1, 2, 3].filter(i => i in (isObj(op.prog) ? op.prog : {})).map(i => [i, int(op.prog[i], 0, ms[i].n)])) : {},
       done: ms && Array.isArray(op.done) ? Array.from(new Set(op.done.map(Number).filter(i => i >= 0 && i < 4 && Number.isInteger(i)))) : [] };
     const now = env.now, day = C.day(now), wk = C.week(day), se = C.season(day);
-    if (s.bought.d !== day) s.bought = { d: day, ids: [] };
     if (s.od.d !== day) s.od = { d: day, n: 0 };
     if (s.pw.w !== wk) s.pw = { w: wk, n: 0 };
     if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
@@ -342,8 +321,8 @@
     if (s.tm && !(now - s.tm.t0 < C.TERM.days * 86400e3)) s.tm = null;   // 开封超过 3 天：作废
     return s;
   };
-  // 给玩家看的那份：挂单什么时候成交只有服务器知道（不然撤了重挂能刷出马上成交的单）
-  C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); for (const L of o.lst) delete L.at; delete o.tk; return o; };
+  // 给玩家看的那份：开局领的票只有服务器知道
+  C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); delete o.tk; return o; };
   // 只在武库里出的皮肤（24 款涂装、5 款 ★ 和神兵武器箱的 7 款）：服务器只认库存里真有的
   C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.FULL)];
   C.genMissions = (uid, wk) => {
@@ -408,15 +387,13 @@
     for (const t of C.TIERS) { if (!(odds[t] > 0)) continue; last = t; acc += odds[t]; if (r < acc) return t; }
     return last;
   };
-  const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
-  const addGood = (s, k, n) => { if (k === 'term') s.term += n; else s.cases[k] += n; };
   const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
   C.invFull = (s, n = 1) => false;
-  // 终端机报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是今天市场价的 1~1.3 倍
-  C.termOffer = (rnd, day) => {
+  // 终端机报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是这一件基准价的 1.2~1.5 倍
+  C.termOffer = rnd => {
     const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.ST_P ? 0 : -1;
     const m = C.TERM.markup[0] + rnd() * (C.TERM.markup[1] - C.TERM.markup[0]);
-    return { k, st, price: Math.max(1, Math.round(C.price({ k, st }, day) * m)) };
+    return { k, st, price: Math.max(1, Math.round(C.refVal({ k, st }) * m)) };
   };
   // 汰换合同能出什么：每件材料平分它所在收藏品里高一档的那些饰品（和 CS 一样的算法）
   C.tradeCheck = (s, ids) => {
@@ -473,105 +450,83 @@
     s.buys[g.id].n += n;
     return { ok: true };
   };
-  A.buy = (s, a, env) => {   // 买市场上的一件饰品，或者一个箱子
-    const day = C.day(env.now), parts = String(a.l || '').split('.');
-    if (parts.length !== 3 || +parts[0] !== day) return { err: '这件已经下架了，刷新看看' };
-    const L = C.listings(parts[1], day).find(x => x.l === a.l);
-    if (!L) return { err: '没有这件挂单' };
-    if (s.bought.ids.includes(a.l)) return { err: '这件已经被你买走了' };
-    const good = C.isGood(L.k);
-    if (!good && C.invFull(s)) return { err: '库存满了' };
-    if (env.ink < L.price) return { err: `墨锭不够，要 ${L.price}` };
-    giveInk(env, -L.price);
-    s.bought.ids.push(a.l);
-    if (good) {
-      addGood(s, L.k, 1);
-      histPush(s, { t: env.now, kind: 'buy', g: L.k, n: 1, price: L.price });
-      return { ok: true, good: L.k, price: L.price };
-    }
-    s.stat.bought++;
-    const it = C.addItem(s, C.mkItem(s, L.k, 'market', env.rnd, { st: L.st }), env);
-    histPush(s, { t: env.now, kind: 'buy', k: L.k, st: L.st, price: L.price });
-    bump(s, 'buy', 1);
-    return { ok: true, item: it, price: L.price };
-  };
-  // 一键买箱子：买今天市场上最便宜的那几个（和在市场里一个一个点“购买”一样，买过的那几个就没了）
-  const buyCheapest = (s, k, a, env) => {
+  // 商店：武器箱、终端机按固定价格买，不限量（限的是每天开几个）；买来的不能转卖
+  const shopBuy = (s, k, a, env) => {
     const n = a.n === undefined ? 1 : +a.n;
     if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
-    const day = C.day(env.now), L = C.listings(k, day).filter(x => !s.bought.ids.includes(x.l));
-    if (L.length < n) return { err: L.length ? `今天市场上只剩 ${L.length} 个了` : '今天市场上的已经卖完了，明天再来' };
-    const pick = L.slice(0, n), p = pick.reduce((t, x) => t + x.price, 0);
+    const p = C.shopPrice(k) * n;
+    if (!(p > 0)) return { err: '没有这件商品' };
     if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
-    giveInk(env, -p); addGood(s, k, n);
-    for (const x of pick) s.bought.ids.push(x.l);
+    giveInk(env, -p);
+    if (k === 'term') s.term += n; else s.cases[k] += n;
     histPush(s, { t: env.now, kind: 'buy', g: k, n, price: p });
     return { ok: true, price: p, n };
   };
-  // 直接卖给收购商：当天市场价的 88%，再扣手续费
-  const sellGoods = (s, k, a, env) => {
-    const n = a.n === undefined ? 1 : +a.n;
-    if (!(Number.isInteger(n) && n >= 1 && n <= 50)) return { err: '数量不对' };
-    if (goodHave(s, k) < n) return { err: k === 'term' ? '终端机不够' : '武器箱不够' };
-    const p = C.quick(C.goodPrice(k, C.day(env.now))) * n;
-    addGood(s, k, -n); giveInk(env, p); s.stat.sold += n;
-    histPush(s, { t: env.now, kind: 'sell', g: k, n, price: p });
-    bump(s, 'sell', n);
-    return { ok: true, gain: p };
-  };
-  A.buyCase = (s, a, env) => C.CASES.includes(a.c) ? buyCheapest(s, a.c, a, env) : { err: '没有这个武器箱' };
-  A.buyTerm = (s, a, env) => buyCheapest(s, 'term', a, env);
-  A.sellCase = (s, a, env) => C.CASES.includes(a.c) ? sellGoods(s, a.c, a, env) : { err: '武器箱不够' };
-  A.sellTerm = (s, a, env) => sellGoods(s, 'term', a, env);
-  A.quick = (s, a, env) => {   // 直接卖给收购的人：市场价扣掉手续费
+  A.buyCase = (s, a, env) => C.CASES.includes(a.c) ? shopBuy(s, a.c, a, env) : { err: '没有这个武器箱' };
+  A.buyTerm = (s, a, env) => shopBuy(s, 'term', a, env);
+  // 玩家市场：只有饰品，只有玩家之间买卖，标价自己定。挂单、购买、撤单都要服务器（env.mkt）：
+  // 服务器把这次要用的挂单编号（id）或者那一单现在的样子（row）交进来，这里决定要怎么改（out），服务器原子地写
+  const NO_MKT = '玩家市场要登录云端账号、连上服务器才能用';
+  A.list = (s, a, env) => {
+    const m = env.mkt;
+    if (!m || !C.isLid(m.id)) return { err: NO_MKT };
+    if (a.c !== undefined) return { err: '武器箱和终端机只在商店按固定价格卖，不能挂到市场' };
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
-    const p = C.quick(C.price(it, C.day(env.now)));
-    C.dropItem(s, it.i, env); giveInk(env, p); s.stat.sold++;
-    histPush(s, { t: env.now, kind: 'sell', k: it.k, st: it.st, price: p });
-    bump(s, 'sell', 1);
-    return { ok: true, gain: p };
-  };
-  A.list = (s, a, env) => {   // 自己定价挂单，卖掉才到账：一件饰品（i），或者一个箱子（c：武器箱编号或 'term'）
-    const good = a.c !== undefined;
-    if (good && !C.isGood(a.c)) return { err: '没有这个东西' };
-    const it = good ? null : C.findItem(s, +a.i);
-    if (!good && !it) return { err: '库存里没有这件' };
-    if (good && goodHave(s, a.c) < 1) return { err: a.c === 'term' ? '没有终端机' : '没有这个武器箱' };
     if (s.lst.length >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };
-    const day = C.day(env.now), mk = good ? C.goodPrice(a.c, day) : C.price(it, day), price = Math.floor(+a.price || 0);
-    if (!(price >= 1) || price > 9999999) return { err: '标价不对' };
-    if (price > Math.floor(mk * C.LIST_MAX_R)) return { err: `标价最高 ${Math.floor(mk * C.LIST_MAX_R)}（市场价的 ${Math.round(C.LIST_MAX_R * 100)}%），再高没人买` };
-    const rate = C.sellRate(price / mk), u = env.rnd();
-    const at = rate > 0 ? env.now + Math.round(-Math.log(1 - u) / rate * 3600e3) : 0;
-    const l = 'L' + (s.nid++);
-    if (good) { addGood(s, a.c, -1); s.lst.push({ l, g: a.c, price, t: env.now, at }); }
-    else { C.dropItem(s, it.i, env); s.lst.push({ l, it, price, t: env.now, at }); }
-    return { ok: true };
+    const price = +a.price;
+    if (!(Number.isInteger(price) && price >= 1 && price <= C.PRICE_MAX)) return { err: `标价要是 1 到 ${C.PRICE_MAX} 之间的整数` };
+    C.dropItem(s, it.i, env);
+    const L = { l: m.id, it: { ...it, n: '' }, price, t: env.now };   // 名字标签不跟着卖出去
+    s.lst.push(L);
+    m.out = { list: L };
+    return { ok: true, l: L.l, price };
   };
-  A.cancel = (s, a, env) => {
-    const ix = s.lst.findIndex(x => x.l === a.l); if (ix < 0) return { err: '没有这个挂单' };
-    if (!s.lst[ix].g && C.invFull(s)) return { err: '库存满了，放不回去' };
+  A.buy = (s, a, env) => {   // 买别的玩家挂的一件
+    const m = env.mkt, r = m && m.row;
+    if (!m) return { err: NO_MKT };
+    if (!r || r.id !== a.l) return { err: '没有这件挂单，刷新看看' };
+    if (r.state !== 0) return { err: r.state === 1 ? '这件已经被别人买走了' : '这件已经撤下了' };
+    if (r.seller === env.uid) return { err: '这是你自己挂的，要拿回来就撤下' };
+    if (a.price !== undefined && +a.price !== r.price) return { err: '标价变了，刷新看看' };
+    const it0 = cleanItem(r.item);
+    if (!it0 || it0.k !== r.k) return { err: '这件挂单坏了' };
+    if (C.invFull(s)) return { err: '库存满了' };
+    if (env.ink < r.price) return { err: `墨锭不够，要 ${r.price}` };
+    giveInk(env, -r.price);
+    const it = C.addItem(s, { i: s.nid++, k: it0.k, st: it0.st, n: '', t: env.now, src: 'market' }, env);   // 斩数跟着走
+    histPush(s, { t: env.now, kind: 'buy', k: it.k, st: it.st, price: r.price });
+    s.stat.bought++;
+    bump(s, 'buy', 1);
+    m.out = { buy: r.id };
+    return { ok: true, item: it, price: r.price };
+  };
+  A.cancel = (s, a, env) => {   // 撤下自己挂的：饰品放回库存
+    const m = env.mkt;
+    const ix = s.lst.findIndex(x => x.l === a.l); if (ix < 0) return { err: '没有这个挂单，可能已经卖掉了' };
+    if (!m) return { err: NO_MKT };
+    const r = m.row && m.row.id === a.l ? m.row : null;
+    if (r && r.state === 1) return { err: '这件刚被买走了，钱马上到账' };
+    if (C.invFull(s)) return { err: '库存满了，放不回去' };
     const L = s.lst.splice(ix, 1)[0];
-    if (L.g) addGood(s, L.g, 1); else C.addItem(s, L.it, env);
+    C.addItem(s, L.it, env);
+    if (r && r.state === 0) m.out = { cancel: L.l };   // 市场上找不到这一单（没人能买到它）就只把东西放回来
     return { ok: true };
   };
-  // 到时间的挂单算成交（每次读存档都会先结一遍）
+  // 卖掉的挂单结账：服务器把“别的玩家已经买走、还没给钱”的单放在 env.paid 里，这里给钱（扣手续费）。
+  // 每次动作之前都先结一遍；结过的编号记在 env.settled，服务器在同一批写入里把它们标成已付
   C.settle = (s, env) => {
     const sold = [];
-    s.lst = s.lst.filter(L => {
-      if (!L.at || env.now < L.at) return true;
-      const gain = C.net(L.price);
+    env.settled = [];
+    for (const r of Array.isArray(env.paid) ? env.paid.slice(0, 40) : []) {
+      if (!isObj(r) || !C.isLid(r.id) || env.settled.includes(r.id)) continue;
+      const ix = s.lst.findIndex(L => L.l === r.id), L = ix >= 0 ? s.lst.splice(ix, 1)[0] : null;
+      const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price), k = L ? L.it.k : C.isItem(r.k) ? r.k : 'qf_p1', st = L ? L.it.st : stOf(r.st);
       giveInk(env, gain); s.stat.sold++;
-      if (L.g) {
-        histPush(s, { t: L.at, kind: 'sold', g: L.g, n: 1, price: L.price, gain });
-        sold.push({ g: L.g, price: L.price, gain });
-      } else {
-        histPush(s, { t: L.at, kind: 'sold', k: L.it.k, st: L.it.st, price: L.price, gain });
-        sold.push({ k: L.it.k, price: L.price, gain });
-      }
+      histPush(s, { t: num(r.at) || env.now, kind: 'sold', k, st, price, gain });
+      sold.push({ k, st, price, gain });
+      env.settled.push(r.id);
       bump(s, 'sell', 1);
-      return false;
-    });
+    }
     return sold;
   };
   A.trade = (s, a, env) => {
@@ -610,14 +565,14 @@
     if (s.tm) return { err: '已经有一台开着的终端机，先处理完它' };
     if (s.term < 1) return { err: '没有终端机' };
     s.term--;
-    s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd, C.day(env.now)) };
+    s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd) };
     return { ok: true, tm: s.tm };
   };
   A.termNext = (s, a, env) => {
     if (!s.tm) return { err: '没有开着的终端机' };
     if (a.n !== undefined && +a.n !== s.tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点得太快、请求重发：不会一下跳过两件
     if (s.tm.n >= C.TERM.offers) { s.tm = null; return { ok: true, gone: true }; }
-    s.tm.n++; s.tm.o = C.termOffer(env.rnd, C.day(env.now));
+    s.tm.n++; s.tm.o = C.termOffer(env.rnd);
     return { ok: true, tm: s.tm };
   };
   A.termBuy = (s, a, env) => {
@@ -739,7 +694,7 @@
     return { ok: true };
   };
   C.ACTIONS = Object.keys(A);
-  // 跑一个动作：先整理存档、结掉到期的挂单，再做动作。出错时存档原样不动（先在副本上做）
+  // 跑一个动作：先整理存档、结掉卖出去的挂单，再做动作。出错时存档原样不动（先在副本上做）
   C.run = (state, name, args, env) => {
     if (!own(A, name)) return { res: { err: '不认识的操作' }, state };
     const s = C.normalize(JSON.parse(JSON.stringify(state || C.blank())), env);
@@ -752,6 +707,7 @@
       env.ink = ink0; env.skins.length = 0; env.skins.push(...skins0);
       Object.keys(env.equip).forEach(k => delete env.equip[k]); Object.assign(env.equip, equip0);
       env.inkGain = 0;
+      if (env.mkt) env.mkt.out = null;
       const sold2 = C.settle(s2, env);
       return { res: res || { err: '操作失败' }, state: s2, sold: sold2 };
     }

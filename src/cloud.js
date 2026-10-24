@@ -305,6 +305,11 @@
     }
     const e = new Error('连不上服务器，等联网了再试'); e.status = 0; e.net = true; throw e;
   }
+  // 玩家市场：不带 k 是每一款在卖几件、最低多少、最近成交；带 k 是这一款在卖的每一单和成交记录
+  async function market(k) {
+    if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
+    return api('/api/market' + (k ? '?k=' + encodeURIComponent(k) : ''), { method: 'GET' });
+  }
   async function flushNow() { if (pendingData && cloudActive()) await doSync(); }
   // 反作弊记录（服务器那份只能往上加）
   async function acGet() { if (!cloudActive()) return null; const r = await api('/api/ac', { method: 'GET' }); return r && r.rec ? r : null; }
@@ -899,6 +904,7 @@
       getEndpoint,
       setEndpoint,
       econ,
+      market,
       flushNow,
       acGet,
       acReport,

@@ -7,9 +7,12 @@
  *   ADMIN_SECRET      管理接口口令：查流水、查处罚、解封（node tools/econ-admin.mjs）
  *
  * 防作弊（和钱有关的都在服务器上算，客户端只负责显示）：
- *   武库：开箱、终端机、买卖、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算；武器箱每周最多用墨锭买 5 个。
+ *   武库：开箱、终端机、商店、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算。
  *         存档带版本号，同时到的两个请求只有一个能改成（另一个重读再算，防双花）；每个请求带一次性编号，网络重试
- *         不会重复执行；挂单什么时候成交不告诉客户端（防撤单重挂刷成交）；对局奖励要开局领票、打够时间、每天有上限。
+ *         不会重复执行；对局奖励要开局领票、打够时间、每天有上限。
+ *   玩家市场：只有玩家之间买卖饰品（mkt 表），标价玩家自己定。买、撤同一单时，先把那一单从“在卖”改掉，
+ *         同一批写入里的其他语句都要看到这一改才生效：同时买同一件只有一个人买到，买和撤撞上只成一个。
+ *         卖家的钱等卖家下次动武库时结（和卖家的存档一起写，只结一次）。
  *   墨锭：服务器记账。武库里赚的花的由服务器直接算；客户端本地赚的（打赢电脑、任务、关卡星）按条上报，
  *         每条带编号只记一次；每天先认 1500，每打完一局服务器认可的对局再多认 80，最多 6000；一次报几万的记进流水给管理员查。
  *   皮肤：武库专属的 29 款只认库存里真有的；卖掉之后，旧存档也覆盖不回来。没有充值，也没有别的货币。
@@ -64,6 +67,11 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS idx_econ_log_uid ON econ_log (uid, at)`,
   `CREATE TABLE IF NOT EXISTS sanctions (uid TEXT PRIMARY KEY, strikes INTEGER NOT NULL DEFAULT 0, ban_until INTEGER NOT NULL DEFAULT 0, perm INTEGER NOT NULL DEFAULT 0, log_json TEXT NOT NULL DEFAULT '[]', at INTEGER NOT NULL DEFAULT 0, pardon INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS rate (k TEXT PRIMARY KEY, n INTEGER NOT NULL, reset INTEGER NOT NULL)`,
+  // 玩家市场：state 0 在卖、1 卖掉了、2 撤下了；paid 是卖家拿到钱没有；tx 是改它的那个请求（同一批写入靠它确认改成了）
+  `CREATE TABLE IF NOT EXISTS mkt (id TEXT PRIMARY KEY, seller TEXT NOT NULL, k TEXT NOT NULL, st INTEGER NOT NULL, item_json TEXT NOT NULL, price INTEGER NOT NULL, at INTEGER NOT NULL, state INTEGER NOT NULL DEFAULT 0, buyer TEXT, done_at INTEGER, paid INTEGER NOT NULL DEFAULT 0, tx TEXT)`,
+  `CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price)`,
+  `CREATE INDEX IF NOT EXISTS idx_mkt_seller ON mkt (seller, state, paid)`,
+  `CREATE INDEX IF NOT EXISTS idx_mkt_done ON mkt (state, done_at)`,
 ];
 let schemaReady = null;
 function ensureSchema(env) {
@@ -83,7 +91,10 @@ async function hashPassword(password, salt) {
 
 // Generate crypto-secure token
 function generateToken() {
-  const bytes = new Uint8Array(32);
+  return randHex(32);
+}
+function randHex(nBytes) {
+  const bytes = new Uint8Array(nBytes);
   crypto.getRandomValues(bytes);
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -303,16 +314,18 @@ function applyDeltas(eco, deltas, now) {
 function pruneGone(srv, now) {
   srv.gone = Object.fromEntries(Object.entries(srv.gone).filter(([, v]) => Array.isArray(v) && now - v[1] < 30 * DAY_MS).slice(-200));
 }
-// 一批写入里的每一条都带上“版本号还是读出来时那个”：中间被别的请求改过，这一批就什么都不写，重读再算
-// guard 只给 INSERT … SELECT 用（语句里本来没有 WHERE）
-const guard = (env, sql, binds, uid, ver) => env.DB.prepare(`${sql} WHERE EXISTS (SELECT 1 FROM econ WHERE uid = ? AND ver = ?)`).bind(...binds, uid, ver);
-function userWrite(env, uid, prof, now, ver) {
-  return env.DB.prepare('UPDATE users SET profile_json = ?, updated_at = ? WHERE id = ? AND EXISTS (SELECT 1 FROM econ WHERE uid = ? AND ver = ?)')
-    .bind(JSON.stringify(prof), now, uid, uid, ver);
+// 一批写入里的每一条都带上“版本号还是读出来时那个”：中间被别的请求改过，这一批就什么都不写，重读再算。
+// 买、撤玩家市场上的一单时还要再带一条“那一单是被这个请求改掉的”（tx = [挂单编号, 请求标记]）：别人先买走了，这一批也什么都不写
+const TXC = ' AND EXISTS (SELECT 1 FROM mkt WHERE id = ? AND tx = ?)';
+// guard 只给 INSERT … SELECT、UPDATE … WHERE 后面接着用（cond 前面没有 AND）
+const guard = (env, sql, binds, uid, ver, tx) => env.DB.prepare(`${sql} EXISTS (SELECT 1 FROM econ WHERE uid = ? AND ver = ?)${tx ? TXC : ''}`).bind(...binds, uid, ver, ...(tx || []));
+const ins = (env, sql, binds, uid, ver, tx) => guard(env, sql + ' WHERE', binds, uid, ver, tx);
+function userWrite(env, uid, prof, now, ver, tx) {
+  return guard(env, 'UPDATE users SET profile_json = ?, updated_at = ? WHERE id = ? AND', [JSON.stringify(prof), now, uid], uid, ver, tx);
 }
-function econWrite(env, uid, ver, now, srv, ink, stateJson) {
-  return env.DB.prepare('UPDATE econ SET state_json = ?, srv_json = ?, ink = ?, ver = ver + 1, updated_at = ? WHERE uid = ? AND ver = ?')
-    .bind(stateJson, JSON.stringify(srv), ink, now, uid, ver);
+function econWrite(env, uid, ver, now, srv, ink, stateJson, tx) {
+  return env.DB.prepare(`UPDATE econ SET state_json = ?, srv_json = ?, ink = ?, ver = ver + 1, updated_at = ? WHERE uid = ? AND ver = ?${tx ? TXC : ''}`)
+    .bind(stateJson, JSON.stringify(srv), ink, now, uid, ver, ...(tx || []));
 }
 
 /* ---------- 武库：所有动作都在服务器上算 ---------- */
@@ -342,7 +355,14 @@ async function handleEcon(env, auth, body, now) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
     const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
-    const E = { now, rnd, uid, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true };
+    // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
+    const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
+    const mkt = { id: randHex(8), row: null, out: null };
+    if ((act === 'buy' || act === 'cancel') && C.isLid(args.l)) {
+      const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state FROM mkt WHERE id = ?').bind(args.l).first();
+      if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json) };
+    }
+    const E = { now, rnd, uid, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, mkt };
     const equip0 = { ...E.equip };
     const r = C.run(eco.state, act, args, E);
     const res = r.res || {}, st = r.state, stJson = JSON.stringify(st);
@@ -356,7 +376,8 @@ async function handleEcon(env, auth, body, now) {
       await logRow(env, uid, now, 'invariant', 0, eco.ink, null, JSON.stringify({ act, args, bad }).slice(0, 400));
       return error('操作失败，已记录', 500);
     }
-    if (!out.sold.length && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
+    const mo = mkt.out, settled = E.settled || [];
+    if (!out.sold.length && !mo && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
       return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {} });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
@@ -367,15 +388,26 @@ async function handleEcon(env, auth, body, now) {
     delete p.armory; delete p.ledger;
     const quiet = QUIET.includes(act) && !out.sold.length;
     const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i}${res.item.st >= 0 ? ' st' : ''}` : res.gain || res.price || '', s: out.sold.length || undefined }).slice(0, 400);
-    const stmts = [guard(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver)];
-    if (!quiet) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver));
-    stmts.push(userWrite(env, uid, p, now, ver));
-    stmts.push(econWrite(env, uid, ver, now, srv, E.ink, stJson));
+    // 买、撤：先把那一单从“在卖”改掉（只有它还在卖、版本号也没变才改得动），后面每一条都要看到这一改才生效
+    const id = mo && (mo.buy || mo.cancel), tx = id ? [id, nonce.slice(0, 24) + '.' + attempt] : null;
+    const stmts = [];
+    if (mo && mo.buy) stmts.push(guard(env, 'UPDATE mkt SET state = 1, buyer = ?, done_at = ?, tx = ? WHERE id = ? AND state = 0 AND seller <> ? AND', [uid, now, tx[1], id, uid], uid, ver));
+    if (mo && mo.cancel) stmts.push(guard(env, 'UPDATE mkt SET state = 2, done_at = ?, tx = ? WHERE id = ? AND seller = ? AND state = 0 AND', [now, tx[1], id, uid], uid, ver));
+    if (mo && mo.list) {
+      const L = mo.list;
+      stmts.push(ins(env, 'INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) SELECT ?, ?, ?, ?, ?, ?, ?, 0, 0', [L.l, uid, L.it.k, L.it.st, JSON.stringify(L.it), L.price, now], uid, ver));
+    }
+    if (settled.length) stmts.push(guard(env, `UPDATE mkt SET paid = 1 WHERE seller = ? AND state = 1 AND paid = 0 AND id IN (${settled.map(() => '?').join(', ')}) AND`, [uid, ...settled], uid, ver, tx));
+    stmts.push(ins(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver, tx));
+    if (!quiet) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver, tx));
+    stmts.push(userWrite(env, uid, p, now, ver, tx));
+    stmts.push(econWrite(env, uid, ver, now, srv, E.ink, stJson, tx));
     let results;
     try { results = await env.DB.batch(stmts); }
     catch (e) {
       const m = String(e && e.message || e);
       if (/econ_nonce/.test(m)) continue;   // 同一个编号的请求正好同时到：重来一遍会走上面“已经做过”
+      if (/UNIQUE/.test(m) && mo && mo.list) continue;   // 挂单编号撞上了（几乎不可能）：换一个再来
       throw e;
     }
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 版本冲突：别的请求先改了，重读再算
@@ -423,7 +455,7 @@ async function handleProfilePost(env, auth, body, now) {
     p.equip = fixEquip(cleanEquip(p.equip), p.skins);
     const fix = { skinsAdd: p.skins.filter(k => !sent.includes(k)), skinsDel: sent.filter(k => !p.skins.includes(k)) };
     const stmts = [userWrite(env, uid, p, now, ver)];
-    if (eco.ink !== ink0 || capped) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, forged ? 'ink_spike' : 'ledger', 1, ink0, eco.ink, [capped ? `超过今天的额度 ${allow}，没认 ${capped}` : '', paid ? `补上以前记下的 ${paid}` : '', owed ? `还记着 ${owed}` : '', forged ? `一条上报 ${forged}` : '', revoked ? `反作弊撤回 ${revoked}` : ''].filter(Boolean).join('；')], uid, ver));
+    if (eco.ink !== ink0 || capped) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, forged ? 'ink_spike' : 'ledger', 1, ink0, eco.ink, [capped ? `超过今天的额度 ${allow}，没认 ${capped}` : '', paid ? `补上以前记下的 ${paid}` : '', owed ? `还记着 ${owed}` : '', forged ? `一条上报 ${forged}` : '', revoked ? `反作弊撤回 ${revoked}` : ''].filter(Boolean).join('；')], uid, ver));
     stmts.push(econWrite(env, uid, ver, now, eco.srv, eco.ink, eco.stateJson));
     const results = await env.DB.batch(stmts);
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;
@@ -453,6 +485,24 @@ async function profileOut(env, user, now) {
   return { profile: overlay(prof, eco), ledger: ledgerOut(eco, now) };
 }
 
+/* ---------- 玩家市场：看谁在卖什么、最近成交多少（挂单、买、撤都走 /api/econ） ---------- */
+// 不给卖家是谁：只告诉看的人哪几单是他自己挂的
+async function handleMarket(env, uid, k, now) {
+  if (k) {
+    if (!C.isItem(k)) return error('没有这件饰品', 404);
+    const open = (await env.DB.prepare('SELECT id, st, price, at, seller = ? AS mine FROM mkt WHERE k = ? AND state = 0 ORDER BY price, at LIMIT 80').bind(uid, k).all()).results || [];
+    const deals = (await env.DB.prepare('SELECT st, price, done_at AS at FROM mkt WHERE k = ? AND state = 1 ORDER BY done_at DESC LIMIT 120').bind(k).all()).results || [];
+    return json({ ok: true, now, k, open: open.map(r => ({ l: r.id, st: r.st, price: r.price, at: r.at, mine: !!r.mine })), deals: deals.map(r => ({ st: r.st, price: r.price, at: r.at })) });
+  }
+  // 每一款：在卖几件、最低多少（普通版 n / lo，斩数版 sn / slo），最近一次成交（last / slast），30 天成交几次（d）
+  const open = (await env.DB.prepare('SELECT k, st >= 0 AS s, COUNT(*) AS n, MIN(price) AS lo FROM mkt WHERE state = 0 GROUP BY k, st >= 0').all()).results || [];
+  const deals = (await env.DB.prepare('SELECT k, st >= 0 AS s, price FROM mkt WHERE state = 1 AND done_at > ? ORDER BY done_at DESC LIMIT 3000').bind(now - 30 * DAY_MS).all()).results || [];
+  const items = {}, of = k => items[k] || (items[k] = { n: 0, lo: 0, sn: 0, slo: 0, last: 0, slast: 0, d: 0 });
+  for (const r of open) { if (!C.isItem(r.k)) continue; const x = of(r.k); if (r.s) { x.sn = r.n; x.slo = r.lo; } else { x.n = r.n; x.lo = r.lo; } }
+  for (const r of deals) { if (!C.isItem(r.k)) continue; const x = of(r.k); x.d++; if (r.s) x.slast = x.slast || r.price; else x.last = x.last || r.price; }
+  return json({ ok: true, now, items });
+}
+
 /* ---------- 管理接口（要 ADMIN_SECRET） ---------- */
 async function handleAdmin(env, request, path, now) {
   if (!env.ADMIN_SECRET || !sameStr(getBearerToken(request) || '', env.ADMIN_SECRET)) return error('没有权限', 403);
@@ -463,7 +513,8 @@ async function handleAdmin(env, request, path, now) {
     if (!u) return error('没有这个账号', 404);
     const row = await env.DB.prepare('SELECT state_json, ink, ver, updated_at FROM econ WHERE uid = ?').bind(u.id).first();
     const log = await env.DB.prepare('SELECT at, act, ok, ink0, ink1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all();
-    return json({ ok: true, uid: u.id, username: u.username, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null, sanction: await sanctionOf(env, u.id), log: log.results || [] });
+    const mk = await env.DB.prepare('SELECT id, seller, buyer, k, st, price, at, state, done_at, paid FROM mkt WHERE seller = ? OR buyer = ? ORDER BY at DESC LIMIT 60').bind(u.id, u.id).all();
+    return json({ ok: true, uid: u.id, username: u.username, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null, sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
   if (path === '/api/admin/pardon' && request.method === 'POST') {
     const body = await readBody(request) || {};
@@ -482,6 +533,8 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM econ_nonce WHERE at < ?').bind(now - 2 * DAY_MS),
     env.DB.prepare('DELETE FROM rate WHERE reset < ?').bind(now - DAY_MS),
     env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
+    env.DB.prepare('DELETE FROM mkt WHERE state = 2 AND done_at < ?').bind(now - 7 * DAY_MS),               // 撤下的单留一周
+    env.DB.prepare('DELETE FROM mkt WHERE state = 1 AND paid = 1 AND done_at < ?').bind(now - 120 * DAY_MS),   // 成交记录留四个月（价格走势用）
   ]);
 }
 
@@ -674,7 +727,15 @@ export default {
         return await handleEcon(env, auth, body, now);
       }
 
-      // 7. 反作弊记录：客户端查自己的处罚；客户端抓到作弊时上报（只能往上加，10 分钟最多记一次）
+      // 7. 玩家市场：看在卖的、最近成交（挂单、买、撤走上面的 /api/econ）
+      if (path === '/api/market' && request.method === 'GET') {
+        const auth = await authenticate(env, request);
+        if (!auth) return error('未登录或登录已过期，请重新登录', 401);
+        if (!(await hit(env, 'mkt:' + auth.user.id, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        return await handleMarket(env, auth.user.id, String(url.searchParams.get('k') || '').slice(0, 24), now);
+      }
+
+      // 8. 反作弊记录：客户端查自己的处罚；客户端抓到作弊时上报（只能往上加，10 分钟最多记一次）
       if (path === '/api/ac') {
         const auth = await authenticate(env, request);
         if (!auth) return error('未登录或登录已过期，请重新登录', 401);
@@ -689,7 +750,7 @@ export default {
 
       if (path.startsWith('/api/admin/')) return await handleAdmin(env, request, path, now);
 
-      // 8. Logout
+      // 9. Logout
       if (path === '/api/logout' && request.method === 'POST') {
         const token = getBearerToken(request);
         if (token) {

@@ -1752,6 +1752,46 @@
     .ar-rvfx b { opacity: .8; transform: translate(var(--x), var(--y)) scale(var(--s)); }
   }
 
+  /* 揭晓特效分五档：柔光（全部）→ 星点（受限起）→ 光芒和冲击波（保密起）→ 第二道冲击、火星和轻震（隐秘）→ 满屏金光、金叶（非凡） */
+  .ar-glow { position: absolute; left: -150px; top: -150px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--tc), .34), rgba(var(--tc), .1) 45%, transparent 70%); animation: arGlowIn .8s ease-out both, arGlowBreath 3.2s ease-in-out .8s infinite; }
+  .ar-rvfx.lv0 .ar-glow { opacity: .55; }
+  .ar-rvfx.lv1 .ar-glow { opacity: .8; }
+  .ar-rvfx.lv3 .ar-glow, .ar-rvfx.lv4 .ar-glow { left: -220px; top: -220px; width: 440px; height: 440px; }
+  .ar-burst.b2 { border-width: 2px; animation: arBurst 1.25s cubic-bezier(.15, .7, .3, 1) .28s both; }
+  .ar-rvfx em { position: absolute; left: 0; top: 60px; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; opacity: 0; background: radial-gradient(circle, #fff3e0 0 25%, rgba(255,110,80,.95) 45%, transparent 72%); box-shadow: 0 0 8px rgba(255,90,60,.9); animation: arEmber 2.8s ease-out var(--d) infinite; }
+  .ar-rvfx u { position: absolute; left: 0; top: -250px; width: 9px; height: 14px; margin: -7px -4.5px; opacity: 0; text-decoration: none; border-radius: 0 80% 0 80%; background: linear-gradient(135deg, #fff2c4, #f0c45a 45%, #b07a1e); box-shadow: 0 0 6px rgba(255,214,120,.7); animation: arLeaf var(--w) linear var(--d) infinite; }
+  .ar-box.rv.t-cov { animation: arQuake .42s cubic-bezier(.36, .07, .19, .97) .02s both; }
+  .ar-box.rv.t-gold { animation: arQuake .5s cubic-bezier(.36, .07, .19, .97) .05s both; }
+  .ar-reel.land.lv4 { box-shadow: inset 0 0 90px rgba(var(--wc), .55), 0 0 40px rgba(var(--wc), .35); }
+  .ar-reel.land.lv4 .ar-rt.win { animation: arWinPulse .38s ease-in-out infinite alternate; }
+  @keyframes arGlowIn { from { opacity: 0; transform: scale(.4); } }
+  @keyframes arGlowBreath { 50% { transform: scale(1.08); filter: brightness(1.15); } }
+  @keyframes arEmber { 0% { opacity: 0; transform: translate(var(--x), 0) scale(var(--s)); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(var(--x) * 1.2), -260px) scale(0); } }
+  @keyframes arLeaf { 0% { opacity: 0; transform: translate(var(--x), 0) rotate(var(--r)) scale(var(--s)); } 10% { opacity: 1; } 85% { opacity: .9; } 100% { opacity: 0; transform: translate(calc(var(--x) + 40px), 520px) rotate(calc(var(--r) + 540deg)) scale(var(--s)); } }
+  @keyframes arQuake { 10%, 90% { transform: translate(-1px, 0); } 20%, 80% { transform: translate(3px, 1px); } 30%, 50%, 70% { transform: translate(-5px, -1px); } 40%, 60% { transform: translate(5px, 1px); } }
+  @keyframes arWinPulse { to { box-shadow: 0 0 0 3px rgb(var(--wc)), 0 0 60px rgba(var(--wc), 1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .ar-glow, .ar-burst.b2, .ar-rvfx em, .ar-rvfx u, .ar-box.rv.t-cov, .ar-box.rv.t-gold, .ar-reel.land.lv4 .ar-rt.win { animation: none !important; }
+    .ar-rvfx em, .ar-rvfx u, .ar-burst.b2 { display: none; }
+  }
+  /* 玩家市场 */
+  .ar-mkc { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 150px; font-size: 13px; white-space: nowrap; }
+  .ar-mkc small { color: var(--dim); font-size: 12px; }
+  .ar-mkp > small:first-child { font-size: 11px; letter-spacing: .08em; }
+  .ar-chk { display: inline-flex; align-items: center; gap: 6px; padding: 0 4px; font-size: 13px; color: var(--dim); cursor: pointer; user-select: none; }
+  .ar-chk input { accent-color: var(--gold); }
+  .ar-lrow > span:first-child { display: flex; flex-direction: column; gap: 2px; }
+  .ar-lrow > span:first-child small { color: var(--dim); font-size: 11px; }
+  .ar-lrow.mine { background: rgba(233,196,106,.07); box-shadow: inset 3px 0 0 var(--gold); }
+  .ar-empty.sm { padding: 16px 12px; font-size: 13px; }
+  .ar-qty { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; }
+  .ar-qty .ghost.small { width: 40px; padding-left: 0; padding-right: 0; font-size: 18px; line-height: 1; }
+  .ar-qty b { min-width: 34px; text-align: center; font-family: var(--v-cond); font-size: 24px; font-variant-numeric: tabular-nums; }
+  .ar-qtot { margin-left: auto; font-size: 14px; }
+  @media (max-width: 720px) {
+    .ar-mkrow .ar-mkc { display: none; }
+  }
+
   /* 终端机：一次报一件，新的一件出来时卡面像在解码 */
   .ar-term { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; gap: 22px; padding: 18px; background: linear-gradient(135deg, rgba(var(--tc), .16), rgba(7,11,17,.86) 55%); border: 1px solid rgba(120,220,200,.32); }
   .ar-termart { position: relative; overflow: hidden; background: #070b11; border: 1px solid rgba(var(--tc), .6); box-shadow: 0 0 30px rgba(var(--tc), .25); }
@@ -1800,16 +1840,9 @@
   .ar-mkn { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; min-width: 0; }
   .ar-mkn b { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
   .ar-mkn small { color: var(--dim); }
-  .ar-spark { flex: none; display: block; }
-  .ar-spark.up polyline { stroke: #3ddc97; }
-  .ar-spark.down polyline { stroke: #ff6b6b; }
-  .ar-chg { flex: none; width: 64px; text-align: right; font-family: var(--v-cond); font-size: 14px; font-variant-numeric: tabular-nums; }
-  .ar-chg.up { color: #3ddc97; }
-  .ar-chg.down { color: #ff6b6b; }
   .ar-mkp { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 124px; font-size: 14px; white-space: nowrap; }
   .ar-mkp small { color: var(--dim); }
   .ar-mkbtns { flex: none; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-  .ar-mkbtns [data-sellg] { min-width: 112px; }
   .ar-hist { display: grid; gap: 4px; }
   .ar-hrow { display: grid; grid-template-columns: 172px 84px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 12px; font-size: 13px; background: rgba(236,232,225,.03); }
   .ar-hrow > span:first-child { color: var(--dim); font-variant-numeric: tabular-nums; }
@@ -1876,7 +1909,6 @@
     .ar-sup { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 720px) {
-    .ar-spark { display: none; }
     .ar-slots { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .ar-hrow { grid-template-columns: minmax(0, 1fr) auto; }
     .ar-term { grid-template-columns: minmax(0, 1fr); }

@@ -74,3 +74,23 @@ CREATE TABLE IF NOT EXISTS rate (
     n INTEGER NOT NULL,
     reset INTEGER NOT NULL
 );
+
+-- 玩家市场：只有玩家之间买卖饰品，标价玩家自己定。state 0 在卖、1 卖掉了、2 撤下了；
+-- paid 是卖家拿到钱没有（卖家下次动武库时结）；tx 是改这一单的那个请求（买、撤同一单只有一个能成）。
+CREATE TABLE IF NOT EXISTS mkt (
+    id TEXT PRIMARY KEY,
+    seller TEXT NOT NULL,
+    k TEXT NOT NULL,
+    st INTEGER NOT NULL,
+    item_json TEXT NOT NULL,
+    price INTEGER NOT NULL,
+    at INTEGER NOT NULL,
+    state INTEGER NOT NULL DEFAULT 0,
+    buyer TEXT,
+    done_at INTEGER,
+    paid INTEGER NOT NULL DEFAULT 0,
+    tx TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price);
+CREATE INDEX IF NOT EXISTS idx_mkt_seller ON mkt (seller, state, paid);
+CREATE INDEX IF NOT EXISTS idx_mkt_done ON mkt (state, done_at);
