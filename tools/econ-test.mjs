@@ -200,11 +200,13 @@ section('重放：同一个请求编号发两次只算一次');
   ok(bad.status === 400, '没有合格的请求编号直接拒绝', bad);
 }
 
+let RACE_K = '';
 section('并发双花：同一件同时挂 12 次、同一个箱子同时开 12 次、同一单同时买');
 {
   const u = await newUser('racer');
   await econ(u.token, 'gift');
   const o = await econ(u.token, 'open', { c: 'c1' });
+  RACE_K = o.res.item.k;   // 这件后面以 50 卖掉了：开出来的要是霜狼（gc_wolf，初刃武器箱的非凡），玩家市场那段的成交记录会多一笔
   const rs = await Promise.all(Array.from({ length: 12 }, () => econ(u.token, 'list', { i: o.res.item.i, price: 50 })));
   const wins = rs.filter(r => r.res && r.res.ok);
   ok(wins.length === 1 && stateOf(u.uid).lst.length === 1 && row('SELECT COUNT(*) AS n FROM mkt WHERE seller = ?', u.uid).n === 1, `12 个并发挂单只挂上 1 单（挂上 ${wins.length}）`, rs.map(r => r.res ? r.res.err || 'ok' : r.error));
@@ -381,9 +383,10 @@ section('玩家市场：只在玩家之间买卖饰品，标价自己定；卖�
   ok(lr.err && br.err && lr.err.includes('服务器'), '本机存档挂单、买都会提示要连服务器', [lr, br]);
 
   const m2 = await market(B.token);
-  ok(m2.items.qf_p1.slast === 300 && m2.items.gc_wolf.last === 2000 && m2.items.gc_wolf.d === 1 && !m2.items.gc_wolf.n, '行情里记着最近成交价和 30 天成交几笔', m2.items.gc_wolf);
+  const early = RACE_K === 'gc_wolf' ? 1 : 0;   // 并发双花那段碰巧开出霜狼、以 50 卖掉的那一笔
+  ok(m2.items.qf_p1.slast === 300 && m2.items.gc_wolf.last === 2000 && m2.items.gc_wolf.d === 1 + early && !m2.items.gc_wolf.n, '行情里记着最近成交价和 30 天成交几笔', m2.items.gc_wolf);
   const mi = await market(B.token, 'gc_wolf');
-  ok(mi.deals.length === 1 && mi.deals[0].price === 2000 && mi.open.length === 0, '一款的成交记录（画走势用）', mi);
+  ok(mi.deals.length === 1 + early && mi.deals[0].price === 2000 && mi.open.length === 0, '一款的成交记录（画走势用）', mi);
 }
 
 section('终端机：一次报一件，最多 5 件，买下就用掉；重发、并发都不会跳过或多买');
