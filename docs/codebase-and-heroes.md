@@ -80,7 +80,7 @@ python3 tools/build.py --check   # what CI does
 
 ---
 
-## 3. Anatomy of `src/game.js`
+## 3. Anatomy Of `src/game.js`
 
 `grep -n '^// =======================' src/game.js` gives the whole skeleton:
 
@@ -153,7 +153,7 @@ and is explicitly excluded from rollback snapshots (`F_SKIP`).
 
 ---
 
-## 5. Combat Math (the Part That Makes the Hero Numbers Mean Something)
+## 5. Combat Math (The Part That Makes The Hero Numbers Mean Something)
 
 `applyHit(att, def, move, point)` — `src/game.js:4036` onward — resolves in this order:
 
@@ -189,7 +189,7 @@ Practical consequences: `stat.dmg` is baked into the move table, `BAL` is a seco
 
 ---
 
-## 6. Movement, Defense and the Escape
+## 6. Movement, Defense And The Escape
 
 * **Escape / 腾空闪** — right-click or `Left Shift`; cancels hitstun, launches upward with invulnerability until landing
   (`escInvul`) or 1.1 s. Per-hero cooldown `escCD` ranges **7.5 s (Feiying, Lingshuang) to 9.4 s (Gouchen)**.
@@ -282,7 +282,7 @@ exclusive Qingfeng skin (`qf_qfx`).
 
 ---
 
-## 9. AI Models & the Tooling That Makes Them
+## 9. AI Models & The Tooling That Makes Them
 
 * `models/heroes/<hero>.json` — one policy per hero, architecture **25 → 64 → 32 → 10** (`W1,b1,W2,b2,W3,b3`),
   outputs the 10 actions `idle,left,right,down,jump,atk,skill1,skill2,dash,special`.
@@ -378,7 +378,7 @@ Each hero is one object in `CHARS` (`src/game.js:261`):
 
 ---
 
-## 11. Roster at a Glance
+## 11. Roster At A Glance
 
 Raw values from `CHARS`; damage numbers are the move-table values (**after** `stat.dmg`, **before** `BAL` and the
 defender's `defRating`). `L1 reach` = first light-attack box length in px. `Walk` in px/s.
@@ -615,7 +615,7 @@ range. “Beats / weak to” is the in-game counter chart text.
 
 ---
 
-## 13. Inconsistencies and Dead Content Found While Reading
+## 13. Inconsistencies And Dead Content Found While Reading
 
 These are worth knowing before you touch balance or the codex UI:
 
@@ -641,7 +641,7 @@ These are worth knowing before you touch balance or the codex UI:
 
 ---
 
-## 14. Where to Change What
+## 14. Where To Change What
 
 | Task | File / location |
 | :--- | :--- |

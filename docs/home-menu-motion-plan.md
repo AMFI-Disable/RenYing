@@ -1,4 +1,4 @@
-# RenYing — Home Menu Motion and Flow Plan
+# RenYing — Home Menu Motion And Flow Plan
 
 > [!NOTE]
 > Written against the working tree at commit `351e61b` (`fix: resilient spawn runner`), game `VERSION = '4.5'`.
@@ -26,7 +26,7 @@ a 400 ms CSS fade, and a 500 ms press transition — none of which know about ea
 
 ---
 
-## 1. How a Press Works Today
+## 1. How A Press Works Today
 
 `#mSingle` / `#mNet` are plain buttons with `data-go` (`src/page.html:80-81`). One click does:
 
@@ -48,9 +48,9 @@ frame where the new panel starts fading in. Twelve smaller defects follow from t
 
 ---
 
-## 2. What Reads as Jank (Evidence)
+## 2. What Reads As Jank (Evidence)
 
-### 2.1 Two Full-Screen Fades Run over a Live Canvas
+### 2.1 Two Full-Screen Fades Run Over A Live Canvas
 
 `.scr` fades opacity over 0.4 s (`src/style.css:19-24`) and `showScreen` toggles exactly one `.on` at a time
 (`src/game.js:10542-10543`). During those 400 ms the outgoing home is still painted — including its own
@@ -61,7 +61,7 @@ scrims stack in the middle of the transition and then unstack as the home finish
 brighten dip over ~400 ms is the flash — nothing is wrong with the new screen, it is just being revealed on top
 of one that has not left yet.
 
-### 2.2 The Dolly Is Cancelled by the Pointer Leaving the Card
+### 2.2 The Dolly Is Cancelled By The Pointer Leaving The Card
 
 ```js
 // game.js:7723-7726
@@ -104,7 +104,7 @@ it (`:306`) with `transition: all` — so the compositor re-runs the backdrop bl
 simultaneously scaling and blurring, for 500 ms, on the biggest surface on screen. Drop one of the two and the
 exit stops stuttering on integrated GPUs.
 
-### 2.5 `!important` Fights, and Some of It Is Already Dead
+### 2.5 `!important` Fights, And Some Of It Is Already Dead
 
 - `:303` forces `.mcard, .msmall, .msmall-dock` to `transition: ... !important`; `:306` forces `all ... !important`;
   `:309` declares `.mcard`'s transition again without it. Three owners for one property.
@@ -128,7 +128,7 @@ were in the settings panel — `step()` only needs `!paused` and `M.mode === 'de
 auto-restarts itself on KO (`:3091`). So the scene you were watching is thrown away and re-staged the instant you
 come back. **This is the "re-doing animations" the user feels**, and it costs nothing to fix.
 
-### 2.7 The Home Is Painted Twice at Boot
+### 2.7 The Home Is Painted Twice At Boot
 
 `src/page.html:58` ships `<div id="menu" class="scr on menuscr">`, then `src/game.js:10243` runs
 `setTimeout(() => { if ($id('menu').classList.contains('on')) showScreen('menu'); }, 0)`. That second call runs
@@ -136,39 +136,39 @@ come back. **This is the "re-doing animations" the user feels**, and it costs no
 `#homeSeasonTxt`, `#tnMedal`, `#tnInk`, … — so anything with an entrance animation keyed to "menu shown" fires
 twice, and any animation on those child nodes restarts on every nav.
 
-### 2.8 The Reveal Frame Is Also the Build Frame
+### 2.8 The Reveal Frame Is Also The Build Frame
 
 `openScreen` (`:7658`) runs `singleSec()` (`:7619`) plus, unconditionally, `renderTrainPick()` (`:10716`, twelve
 portrait rows) and `renderStages()` (`:1842`) — *after* the 520 ms wait, in the same tick as `showScreen('single')`
 (`:7666-7676`). The panel is populated in the frame where it starts fading in. It also renders the stage grid even
 when the visible tab is `cpu`.
 
-### 2.9 The Nav and the Cards Don't Share One Path
+### 2.9 The Nav And The Cards Don't Share One Path
 
 `navTo` (`:7681-7690`) routes to `menuGo` only when `MENU_SPOT[name]` exists; otherwise it sets
 `menuCam.tx/tz` and calls `openScreen` immediately (`:7686-7687`). Same destination, 520 ms from the card and 0 ms
 from the tab. It also leaves `menuCam.tz = 1.9` behind, so the *next* return home starts pushed-in.
 
-### 2.10 The Chrome Swap Is a Hard Cut (Minor)
+### 2.10 The Chrome Swap Is A Hard Cut (Minor)
 
 `body.has-nav .msmall-dock { display: none }` (`:1233`) and `body.has-nav .scr { top: var(--nav-h) }` (`:1217`)
 have no transition, and `--nav-h` changes 58 → 46 px under 520 px height (`:1259`). Only visible in the online
 build when the nav appears/disappears under a fading screen; cosmetic but free to smooth.
 
-### 2.11 The First Press Pays for the Audio Graph
+### 2.11 The First Press Pays For The Audio Graph
 
 `menuGo` calls `initAudio()` (`:7534`) before adding the class (`:7537`). `initAudio` (`:1015-1033`) builds a
 2 × 61 600-sample convolver impulse and a 44 100-sample noise buffer synchronously. One-time, but it delays the
 start of the very animation the user is judging.
 
-### 2.12 Reduced Motion Covers Four Selectors, None of Them the Home
+### 2.12 Reduced Motion Covers Four Selectors, None Of Them The Home
 
 `@media (prefers-reduced-motion: reduce)` at `:1157` disables `.rk-shine`, `.rk-spin`, `.mm-spin`,
 `.mm-card.searching::after`. Everything in this document must add to that block.
 
 ---
 
-## 3. The Plan, Ordered by Impact
+## 3. The Plan, Ordered By Impact
 
 ### 3.0 The Target Timeline
 
@@ -207,7 +207,7 @@ let homeEntered = false;  // has the home entrance animation played already?
 let currentScreenId = 'menu';   // what showScreen() is showing right now
 ```
 
-### 3.1 Lock the Press so One Click Produces One Move
+### 3.1 Lock The Press So One Click Produces One Move
 
 *Fixes 2.2, 2.3 (double-fire), and the "it restarts" feeling.*
 
@@ -263,7 +263,7 @@ function backToMenu() {
 `openQfx`, tutorial exit). Grep for `showScreen('menu')` and route all of them through `backToMenu`, or clear the
 flag in `showScreen` when `id === 'menu'`.
 
-### 3.2 Make the Demo Duel Survive the Trip Through the Menus
+### 3.2 Make The Demo Duel Survive The Trip Through The Menus
 
 *Fixes 2.6. Highest visible win per line changed.*
 
@@ -287,7 +287,7 @@ continuously while you were in 设置 — the camera pans back to it instead of 
 *Risk:* coming back from `train`, `cpu`, `net`, `replay`, `stage`, `watch2v2` still restarts, which is what you
 want (those change `STAGE_W`, the fighter set, or `B.dummy`).
 
-### 3.3 One Sequential Hand-Off Instead of Two Parallel Crossfades
+### 3.3 One Sequential Hand-Off Instead Of Two Parallel Crossfades
 
 *Fixes 2.1 and the 520 vs 300 vs 500 ms disagreement in 2.3.*
 
@@ -322,7 +322,7 @@ while the fade is still running.
 *Risk:* `.scr` opacity is also used by every other screen (`pause`, `end`, `bp`). Keep the 400 ms default there;
 only the menu path shortens it.
 
-### 3.4 Give the Card One Exit, and Stop Blurring It Twice
+### 3.4 Give The Card One Exit, And Stop Blurring It Twice
 
 *Fixes 2.4 and most of 2.5.*
 
@@ -351,7 +351,7 @@ Then remove `!important` from `:303`, drop `.mcard`'s duplicate transition at `:
 *Risk:* `.hl-single` / `.hl-netp` also target `.mcard` transforms (`:304-305`, `:1280`). Collapse them to
 opacity/filter only and let the transform be owned by press/exit; that also removes the axis mismatch in 2.5.
 
-### 3.5 Enter the Home Once, Not on Every Return
+### 3.5 Enter The Home Once, Not On Every Return
 
 *Fixes 2.7, and is the precondition for any entrance animation.*
 
@@ -395,7 +395,7 @@ that kills the double first paint in 2.7 and gives the boot its entrance for fre
 *Risk:* the `data-enter` attribute is only *set* when the animation should run, never toggled, so the browser
 won't restart it on the next return.
 
-### 3.6 Take the DOM Build off the Reveal Frame
+### 3.6 Take The DOM Build Off The Reveal Frame
 
 *Fixes 2.8.*
 
@@ -422,7 +422,7 @@ Two wins: the 12-portrait picker and stage grid are built during the 520 ms doll
 at the reveal), and `renderStages()` stops running when the user is on the 木人试剑 tab. `navTo` (`:7681`) keeps
 calling `openScreen(name)` and gets the new behaviour for free.
 
-### 3.7 Unify the Nav Strip and the Cards on One Transition
+### 3.7 Unify The Nav Strip And The Cards On One Transition
 
 *Fixes 2.9.*
 
@@ -442,7 +442,7 @@ function navTo(name) {
 Now every route off the home is one dolly, and the camera no longer leaves `tz = 1.9` behind when you jump from
 图鉴 to 对战.
 
-### 3.8 Let the Return Trip Be the Animation
+### 3.8 Let The Return Trip Be The Animation
 
 There is no camera pop on return — `showScreen` sets `tx/tz` *targets* (`:10546`) and `renderMenu` damps toward
 them at 3.2 / 2.4 per second (`:7489`), so the camera already eases back. Two things still read badly:
@@ -453,7 +453,7 @@ them at 3.2 / 2.4 per second (`:7489`), so the camera already eases back. Two th
   (`menuCam.x = damp(menuCam.x, menuCam.tx, 6, dt)` behind a `returning` flag for the first 600 ms), or ignore
   hover until `Math.abs(menuCam.x - menuCam.tx) < 8`.
 
-### 3.9 Animate the Nav/Dock Swap Instead of Cutting It
+### 3.9 Animate The Nav/Dock Swap Instead Of Cutting It
 
 *Fixes 2.10, cosmetic.*
 
@@ -464,7 +464,7 @@ body.has-nav .msmall-dock { opacity: 0; transform: translateX(-50%) translateY(1
 /* replaces `display: none` at style.css:1233 */
 ```
 
-### 3.10 Warm the Audio Graph on Pointer-Down, Not on the Animation Frame
+### 3.10 Warm The Audio Graph On Pointer-Down, Not On The Animation Frame
 
 *Fixes 2.11.*
 
@@ -477,7 +477,7 @@ window.addEventListener('pointerdown', () => { if (!audioWarm) { audioWarm = tru
 and drop the `initAudio()` call from `menuGo` (`:7534`) / `navTo` (`:7682`). Keep the remaining call sites —
 they are cheap once `AC` exists (`:1016`).
 
-### 3.11 Extend Reduced Motion to the Whole Plan
+### 3.11 Extend Reduced Motion To The Whole Plan
 
 ```css
 @media (prefers-reduced-motion: reduce) {
@@ -492,7 +492,7 @@ they are cheap once `AC` exists (`:1016`).
 `reducedMotion()` in 3.1/3.5 already collapses the dolly to 0 ms, so the screens swap instantly while the canvas
 keeps drawing (it is not decorative-only motion, so it stays).
 
-### 3.12 Clean up What the `!important` Rules Made Dead
+### 3.12 Clean Up What The `!important` Rules Made Dead
 
 Only after 3.4 lands: either delete `:300-302` + the `hl-*` class toggles in the pointer handlers, or remove the
 `!important` from `:1281-1282` and let the title actually respond. Do not leave both, or the 800 ms transition at
@@ -500,7 +500,7 @@ Only after 3.4 lands: either delete `:300-302` + the `hl-*` class toggles in the
 
 ---
 
-## 4. Suggested Order and Effort
+## 4. Suggested Order And Effort
 
 | # | Change | Files | Lines touched | Impact |
 | :-- | :--- | :--- | ---: | :--- |
