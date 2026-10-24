@@ -1888,6 +1888,7 @@ box-shadow: inset 0 0 0 2px rgba(255,255,255,.2); clip-path: polygon(8px 0, calc
         <div style="display:flex;gap:12px;margin-top:18px;justify-content:center;flex-wrap:wrap">
           <button class="go" id="goBtn">进入选人 · 开战</button>
           <button class="go alt" id="cpuWatchBtn" type="button">AI 对决 · 演武观战</button>
+          <button class="ghost" id="cpuTutBtn" type="button" style="border-color:rgba(233,196,106,0.5);color:var(--gold)"><span class="tab-ic" style="margin-right:4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>新手演练·招式教学</button>
         </div>
       </div>
 
@@ -8352,6 +8353,7 @@ ring(pt[0], pt[1], 130, '120,230,255', 0.4);
 for (let i = 0; i < 6; i++) addP({ type: 'spark', x: pt[0], y: pt[1], vx: rand(-240, 240), vy: rand(-240, 240), rgb: '120,230,255', life: 0.22, max: 0.22 });
 addP({ type: 'text', text: '🛡️ 精准招架', x: def.x, y: def.y - 110, life: 0.9, max: 0.9, rgb: '120,230,255' });
 ev.justGuard = true;
+if (typeof TUT !== 'undefined' && TUT && def.idx === 0) TUT.justGuards = (TUT.justGuards || 0) + 1;
 hitVisual(ev); netEmit(ev);
 return;
 }
@@ -15349,52 +15351,73 @@ applyProfile(PROF);
 let TUT = null;
 function stunA() { A.state = 'hitstun'; A.t = 0; A.stun = 3; A.vx = 0; A.flash = 0.1; A.comboHits = 3; }
 const TUT_STEPS = [
-{ t: '移动', d: '按 A、D 左右走两步。', ok: () => Math.abs(A.x - TUT.x0) > 260 },
-{ t: '跳跃', d: '按 W 或空格起跳，身在半空再按一次，便是二段跳。', ok: () => A.jumps >= 2 },
-{ t: '五段连击', d: '贴到稻草人身边，连点左键打满五段；末了一记，会把它掀飞出去。', ok: () => TUT.hit.l5 },
-{ t: '蓄力斩', d: '按住左键不放，待寒光一闪、听得一声“叮”，再松手。蓄满的一斩，连防御也能劈开。', ok: () => TUT.hit.cs2 },
-{ t: '空中连击', d: '跃起后在空中点左键，再点一下便是下砸。把对手打飞之后，就靠这一手追上去。', ok: () => A.state === 'attack' && /^a[12]$/.test(A.moveName) },
-{ t: '远程招式', d: '按住左键，再点右键（或按 R）。各家招式不同，青锋使的是剑气。', ok: () => A.skill2CD > 0 },
-{ t: '技能', d: '按 Q 施展技能。青锋的疾风斩，能径直穿过对手。', ok: () => A.skillCD > 0 },
-{ t: '防御', d: '稻草人会朝你放风刃，按住 S 挡下两次——记得面朝着它。', ok: () => TUT.blocks >= 2, setup: () => { TUT.shotT = 0.6; } },
-{ t: '腾空闪', d: '你被击中，动不了了！点一下右键（或按左 Shift），腾空闪出去。', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
-{ t: '大招', d: '气已为你蓄满——按 E，放手一搏！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
+{ t: '移动身法', d: '按 A、D 左右走动，熟悉侠客的立回步法。', ok: () => Math.abs(A.x - TUT.x0) > 260 },
+{ t: '起跳与滞空', d: '按 W 或空格起跳，身在半空再按一次，便是二段跳。', ok: () => A.jumps >= 2 },
+{ t: '地面五段连段', d: '贴近稻草人连续点按左键打满五段（L1~L5）；末段强力挑飞击退对手。', ok: () => TUT.hit.l5 },
+{ t: '破势蓄力斩', d: '按住左键蓄力，待寒芒一闪、剑鸣铮铮时松手。蓄满的一斩为霸体不可挡，能强行破防！', ok: () => TUT.hit.cs2 },
+{ t: '挑飞追空打击', d: '将对手打飞或跃起后，在空中点左键（空斩 A1），再点一下下砸（A2），实现空中追打追击。', ok: () => A.state === 'attack' && /^a[12]$/.test(A.moveName) },
+{ t: '远程暗器 / 剑气', d: '按住左键再点右键（或直接按 R）。各派武学各异，青锋可挥出疾速剑气。', ok: () => A.skill2CD > 0 },
+{ t: '核心门派技能', d: '按 Q 施展专属门派武学。青锋的「疾风斩」附带位移穿透与破防。', ok: () => A.skillCD > 0 },
+{ t: '严密格挡', d: '稻草人会朝你连发风刃，按住 S 挡下两次！记得面朝来袭方向。', ok: () => TUT.blocks >= 2, setup: () => { TUT.shotT = 0.5; } },
+{ t: '精准弹刀 (招架)', d: '在近身来袭瞬间（受击前 0.09 秒内）轻按 S，即可触发「精准招架」，完全不掉架势且反震硬直！', ok: () => (TUT.justGuards || 0) >= 1, setup: () => { TUT.parryShotT = 0.6; } },
+{ t: '绝境腾空闪', d: '受到硬直连击陷入绝境时，按右键（或左 Shift）引爆真气触发「腾空闪」逃脱并获短暂无敌！', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
+{ t: '真元爆发 · 绝招', d: '怒气已为你灌满！按 E 释放震撼全场的天地绝技！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
 ];
 function startTutorial() {
 try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
 trainChar = 0; dummyMode = 'stand';
 startTraining();
 B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
-TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, prev: '', shotT: 0 };
+TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
 tutNext();
 $id('tutBox').classList.remove('hidden');
 }
-const TUT_TOUCH = ['拨左边的摇杆，左右走两步。', '摇杆往上推，或点「跳」；身在半空再点一次，便是二段跳。', '贴近稻草人，连点「攻击」打满五段。',
-'按住「攻击」不放，待寒光一闪、听得一声“叮”，再松手。', '点「跳」跃起，在空中点「攻击」，再点一下便是下砸。', '点「远程」放出远程招式，青锋使的是剑气。',
-'点「技能」施展技能。青锋的疾风斩，能径直穿过对手。', '稻草人会朝你放风刃，摇杆下推格挡，挡下两次——记得面朝着它。', '你被击中，动不了了！点「闪」腾空闪出去。', '气已为你蓄满，点那发亮的「大招」！'];
+const TUT_TOUCH = [
+'拨动左摇杆，左右走动熟悉身法。',
+'向上推摇杆或点「跳」；在半空中再点一次触发二段跳。',
+'贴近稻草人，连点「攻击」打满五段连击。',
+'按住「攻击」蓄力，待寒芒闪耀与剑鸣时松手，劈出霸体破防斩！',
+'起跳后在空中点「攻击」，随后再点下砸完成追空！',
+'点击「远程」放出远程武学，青锋施展远程剑气。',
+'点击「技能」施展专属门派武学，穿透对手。',
+'稻草人放风刃袭来，摇杆下推防御挡下两次。',
+'在受到攻击瞬间快速下拉摇杆，触发「精准招架」反震对手！',
+'受到攻击陷入僵直时，点「闪」腾空闪逃脱危局！',
+'真元已蓄满，点击发光的「大招」释放天地绝技！'
+];
 function tutNext() {
 TUT.step++; TUT.wait = 0; TUT.hit = {}; TUT.x0 = A.x;
 const st = TUT_STEPS[TUT.step];
 if (!st) return tutFinish();
 $id('tutBox').classList.remove('ok');
-$id('tutN').textContent = `新手教学 ${TUT.step + 1} / ${TUT_STEPS.length}`;
+$id('tutN').textContent = `新手演武教学 ${TUT.step + 1} / ${TUT_STEPS.length}`;
 $id('tutT').textContent = st.t; $id('tutD').textContent = TOUCH ? TUT_TOUCH[TUT.step] : st.d;
 if (st.setup) st.setup();
 }
 function tutTick(dt) {
 const st = TUT_STEPS[TUT.step]; if (!st) return;
-A.hp = A.maxHp; A.breakCD = TUT.step === 8 ? 0 : A.breakCD;
+A.hp = A.maxHp; A.breakCD = TUT.step === 9 ? 0 : A.breakCD;
 if (A.state === 'attack' && A.hitConfirmed) TUT.hit[A.moveName] = true;
 if (A.state === 'blockstun' && TUT.prev !== 'blockstun') TUT.blocks++;
 TUT.prev = A.state;
-if (TUT.step === 7 && !TUT.wait) {                     // 防御：稻草人放风刃
+if (TUT.step === 7 && !TUT.wait) {
 TUT.shotT -= dt;
 if (TUT.shotT <= 0) {
 TUT.shotT = 1.6; const dir = A.x >= B.x ? 1 : -1;
 spawnProj(B, { kind: 'wind', x: B.x + dir * 40, y: B.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 2, kb: [160, 0], stun: 0.3, hs: 0.04 });
 }
 }
-if (TUT.step === 8 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
+if (TUT.step === 8 && !TUT.wait) {
+TUT.parryShotT = (TUT.parryShotT || 0) - dt;
+if (TUT.parryShotT <= 0 && B.state === 'idle') {
+TUT.parryShotT = 2.0;
+B.x = A.x + (A.face === 1 ? 75 : -75);
+B.face = -A.face;
+B.state = 'attack'; B.t = 0;
+B.move = { name: 'l1', su: 0.28, ac: 0.12, rc: 0.2, box: [10, -80, 75, 10], dmg: 10, hs: 0.08, kb: [120, 0], stun: 0.25 };
+}
+}
+if (TUT.step === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
 if (TUT.wait) { TUT.wait -= dt; if (TUT.wait <= 0) tutNext(); return; }
 if (st.ok()) { TUT.wait = 1; $id('tutBox').classList.add('ok'); SFX.chargeFull(); }
 }
@@ -17041,6 +17064,8 @@ start2v2LocalVs(p2v2SlotsData.p1, p2v2SlotsData.mate, p2v2SlotsData.foe1, p2v2Sl
 }
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
+const cpuTutBtn = document.getElementById('cpuTutBtn');
+if (cpuTutBtn) cpuTutBtn.addEventListener('click', () => { initAudio(); startTutorial(); });
 document.getElementById('againBtn').addEventListener('click', () => {
 if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
 if (M.mode === 'net' && NET.isRanked) {   // 排位不和同一个人连打：回大厅找下一个对手
