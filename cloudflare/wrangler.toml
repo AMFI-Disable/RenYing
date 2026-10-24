@@ -5,4 +5,4 @@ compatibility_date = "2024-10-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "renying-db"
-database_id = "" # Can be filled if deploying via CLI
+database_id = "86f80607-7c39-4a0f-8b1f-b2ad4c8d6e72"
