@@ -78,6 +78,7 @@ ci-ui/
 ci-hud/
 ci-touch/
 ci-net/
+tools/music/out/
 _site/
 *.db
 *.sqlite

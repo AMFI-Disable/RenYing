@@ -1268,13 +1268,14 @@ function musicMode() {
   const on = id => document.getElementById(id).classList.contains('on');
   if (on('bp')) return 'bp';
   if (on('end')) return 'end';
-  if (on('armory')) return 'gacha';   // 武库用原来问剑阁那首
+  if (on('armory')) return 'gacha';   // 武库：藏锋阁
   if (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'replay' || M.mode === 'tag3') return M.ot && M.phase === 'fight' ? 'overtime' : 'fight';
   if (M.mode === 'train') return 'practice';
   return 'menu';
 }
 // ======================= 背景音乐文件（music 文件夹） =======================
-// 每个界面一首（v5.1 原创合成曲录成的 mp3，首尾无缝）；切换时旧曲淡出、新曲淡入。加载失败就用程序生成的音乐
+// 每个界面一首原创曲（管弦乐 + 古筝、笛子、二胡、尺八、太鼓，用音色库渲染再混音，录成首尾无缝的 mp3）；
+// 切换时旧曲淡出、新曲淡入。加载失败就用程序生成的音乐
 const MFILE = { menu: 'menu', bp: 'select', fight: 'battle', overtime: 'overtime', practice: 'practice', gacha: 'gacha' };
 const MGAIN = { menu: 1, select: 1, battle: 1, overtime: 1, practice: 1, gacha: 1, victory: 1, defeat: 1, legendary: 1 };   // 新曲子录制时已按响度拉平
 const MBUF = {}, MF = { name: null, g: null, srcs: [], tok: 0, tm: 0 };
