@@ -9111,7 +9111,6 @@ function singleSec(sec) {
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
 function openScreen(name, reveal = true) {
-  if (OFFLINE_BUILD && name === 'single') name = 'cpu';
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
   if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
     singleSec(name);
@@ -12022,7 +12021,17 @@ function showScreen(id) {
   const prev = currentScreen; currentScreen = id;
   for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
-  if (id !== 'bp') { try { showPop(null); } catch (e) {} }
+  if (id !== 'bp') {
+    try { showPop(null); } catch (e) {}
+    if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
+    if (prev === 'bp') { BP = null; watch2v2Bp = null; }
+  }
+  if (id === 'single') {
+    singleSec(currentSingleTab || 'cpu');
+  }
+  if (id === 'codex' && $id('cxTabs') && !$id('cxTabs').children.length) {
+    openCodex();
+  }
   if (id === 'menu') {
     menuLock = false;                                   // 不管从哪条路回家，都要解锁
     delete $id('menu').dataset.phase;
@@ -14046,7 +14055,9 @@ const bpSideName = side => {
   const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
   return n ? String(n) : '对手';
 };
+let bpFinishTimer = null;
 function bpStart(mode, customOpts = null) {
+  if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
   if (mode === 'cpu' || mode === 'cpuWatch' || mode === 'chaos' || mode === 'mayhem' || mode === 'tag3' || mode === 'tower' || mode === 'stage' || mode === 'train' || mode === '2v2') netDropWaiting();
   watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
   ensurePortraits(); chatClear();
@@ -14149,10 +14160,14 @@ function bpApply(i) {
   if (type === 'ban') SFX.thud(); else { SFX.block(); }
   if (bpMode === 'net') send({ bps: BP });
   renderBP();
-  if (BP.step >= bpSteps().length) setTimeout(bpFinish, 1100);
+  if (BP.step >= bpSteps().length) {
+    if (bpFinishTimer) clearTimeout(bpFinishTimer);
+    bpFinishTimer = setTimeout(bpFinish, 1100);
+  }
 }
 function bpFinish() {
-  if (!BP || BP.step < bpSteps().length) return;
+  bpFinishTimer = null;
+  if (currentScreen !== 'bp' || !BP || BP.step < bpSteps().length) return;
   showPop(null);
   const picks = JSON.parse(JSON.stringify(BP.picks));
   const bans = Array.isArray(BP.bans) ? BP.bans.filter(x => x >= 0) : [];

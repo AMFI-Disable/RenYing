@@ -168,11 +168,11 @@
           <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>对战电脑</button>
           <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>守关挑战</button>
           <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>木人试剑</button>
-          <button data-tab="tower" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
-          <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
-          <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
-          <button data-tab="mayhem" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
-          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 演武</button>
+          <button data-tab="tower" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
+          <button data-tab="chaos" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
+          <button data-tab="tag3" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
+          <button data-tab="mayhem" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
+          <button data-tab="watch2v2" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 演武</button>
         </div>
       </div>
 
@@ -221,7 +221,7 @@
           <p class="netnote" id="adaptLine" style="display:none;margin-top:8px;text-align:left;color:var(--gold)"></p>
         </div>
 
-        <div style="display:flex;gap:12px;margin-top:18px;justify-content:center;flex-wrap:wrap">
+        <div class="single-action-row">
           <button class="go" id="goBtn">进入选人 · 开战</button>
           <button class="go alt" id="cpuWatchBtn" type="button">AI 对决 · 演武观战</button>
           <button class="ghost" id="cpuTutBtn" type="button" style="border-color:rgba(233,196,106,0.5);color:var(--gold)"><span class="tab-ic" style="margin-right:4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>新手演练·招式教学</button>
@@ -270,7 +270,7 @@
           </button>
         </div>
 
-        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+        <div class="single-action-row">
           <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
           <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI群英观战</button>
         </div>
@@ -325,7 +325,7 @@
           <div class="sec-sub-label">木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）</div>
           <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;justify-content:center"></div>
         </div>
-        <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+        <div class="single-action-row">
           <button class="go small" id="trainBtn" type="button">开启专精演武</button>
         </div>
       </div>
@@ -345,7 +345,7 @@
           </div>
         </div>
         <div class="trpick" id="towerPick" hidden></div>
-        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+        <div class="single-action-row">
           <button class="go" id="towerResumeBtn" type="button" style="display:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">继续试炼</button>
           <button class="go" id="towerStartBtn" type="button">开启新试炼</button>
         </div>
@@ -390,7 +390,7 @@
             <span class="lv-sub">神经网络</span>
           </button>
         </div>
-        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+        <div class="single-action-row">
           <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
           <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
         </div>
@@ -435,7 +435,7 @@
             <span class="lv-sub">神级策略</span>
           </button>
         </div>
-        <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+        <div class="single-action-row">
           <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
           <button class="go alt" id="mayhemWatchBtn" type="button">通天 AI 观战</button>
         </div>
@@ -490,7 +490,7 @@
             </button>
           </div>
 
-          <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+          <div class="single-action-row">
             <button class="go" id="play2v2StartBtn" type="button">开启 2v2 协同实战</button>
           </div>
         </div>
@@ -500,7 +500,7 @@
           <div class="sec-sub-label">天道神机自动禁选顺序（共 6 步 · 苍龙赤凤 2 禁 4 选 · 全局互不重复）</div>
           <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
           <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入天道演武选人：4 位天道顶尖神级 AI 依次完成 2 禁 4 选，随后苍龙赤凤 4 机协同互搏，纯观战无操作。</p>
-          <div style="display:flex;gap:12px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+          <div class="single-action-row">
             <button class="go btn-watch" id="watch2v2StartBtn" type="button">开启天道演武 · 纯观战 (4机对决)</button>
           </div>
         </div>
