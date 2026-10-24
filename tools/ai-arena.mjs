@@ -2,6 +2,7 @@
 // 人机强度测试场：在无画面的沙盒里跑电脑对电脑，统计胜率。
 //   node tools/ai-arena.mjs --a god --b impossible --n 4          每对角色各打 n 场（双方左右各一半）
 //   node tools/ai-arena.mjs --ladder --n 4                         各难度两两对打
+//   AI_BAL=bal.json node tools/ai-arena.mjs --a hard --b hard       先按文件改平衡系数再打（调平衡用）
 // 也被 tools/ai-train.mjs 当作库使用（runPool）。
 import { readFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
@@ -42,6 +43,8 @@ export async function makeEnv(tuneFile) {
   new vm.Script(readFileSync(ROOT + 'src/net-p2p.js', 'utf8')).runInContext(w);
   new vm.Script(readFileSync(ROOT + 'src/ai.js', 'utf8'), { filename: 'ai.js' }).runInContext(w);
   new vm.Script(readFileSync(ROOT + 'src/game.js', 'utf8'), { filename: 'game.js' }).runInContext(w);
+  // 试改平衡（AI_BAL=文件路径，{ "tieshan": { "normal": 0.9, "hp": 0.95 } }，写法和 game.js 的 BAL 一样）：调平衡时不用改 game.js 就能比较
+  if (process.env.AI_BAL) new vm.Script(`for (const [id, s] of Object.entries(${readFileSync(process.env.AI_BAL, 'utf8')})) if (BAL[id]) Object.assign(BAL[id], s);`).runInContext(w);
   // 另一版 AI 的快照（AI_SNAP=文件路径，'snap:god' 这样写），用来对比改动前后
   if (process.env.AI_SNAP) new vm.Script('window.SnapBrain = (function () {\n' + readFileSync(process.env.AI_SNAP, 'utf8') + '\nreturn AIBrain; })();', { filename: 'snap.js' }).runInContext(w);
   const env = new vm.Script(`({ CHARS, CHAR_MOVES, SKILLS, ULTS, M, AICtrl, LEVELS, Ctrl, projs, decoys, STEP, get clock() { return clock; }, get A() { return A; }, get B() { return B; },

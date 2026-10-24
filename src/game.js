@@ -240,22 +240,35 @@ const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: 
 
 // ======================= 角色 =======================
 // 全英雄基础属性与战斗配置（严格遵循英雄设定）
+// 强度：伤害（普攻 normal、技能 skill、大招 ult）、冷却 cd、气血 hp 的倍率。
+// 用 tools/ai-arena.mjs 在五个难度各打同级对局（每个难度 864 场，每个侠客 144 场），按各侠客的平均胜率迭代五轮，取最后三轮的几何平均：
+// 调之前各侠客平均胜率 28%~91%，调之后 47%~56%。铁山原来九成胜率，削得最多；它的大招“山崩”正中能回满气量连放，单独多削一些。
 const BAL = {
-  qingfeng: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  feiying: { normal: 0.85, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },   // 普攻削弱 15%
-  tieshan: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  lingshuang: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  liuyun: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  leiming: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  moyu: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  yuehua: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  yanling: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  yuxiao: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  zuixian: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  gouchen: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  qingfeng: { normal: 0.92, skill: 0.92, ult: 0.92, cd: 1.0, hp: 0.92 },
+  feiying: { normal: 0.95, skill: 1.12, ult: 1.12, cd: 1.0, hp: 1.12 },
+  tieshan: { normal: 0.77, skill: 0.77, ult: 0.59, cd: 1.0, hp: 0.77 },
+  lingshuang: { normal: 1.15, skill: 1.15, ult: 1.15, cd: 1.0, hp: 1.15 },
+  liuyun: { normal: 0.94, skill: 0.94, ult: 0.94, cd: 1.0, hp: 0.94 },
+  leiming: { normal: 0.99, skill: 0.99, ult: 0.99, cd: 1.0, hp: 0.99 },
+  moyu: { normal: 0.88, skill: 0.88, ult: 0.88, cd: 1.0, hp: 0.88 },
+  yuehua: { normal: 1.14, skill: 1.14, ult: 1.14, cd: 1.0, hp: 1.14 },
+  yanling: { normal: 1.04, skill: 1.04, ult: 1.04, cd: 1.0, hp: 1.04 },
+  yuxiao: { normal: 1.02, skill: 1.02, ult: 1.02, cd: 1.0, hp: 1.02 },
+  zuixian: { normal: 0.95, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.95 },
+  gouchen: { normal: 1.12, skill: 1.12, ult: 1.12, cd: 1.0, hp: 1.12 },
 };
 const balOf = f => (f && f.ch && BAL[f.ch.id]) || BAL.qingfeng;
 function balDmg(att, m) { const b = balOf(att); return m.ult ? b.ult : (m.sk || (!m.isProj && att.state === 'skill')) ? b.skill : b.normal; }
+// 图鉴里标出强度调整（招式说明里写的伤害是调整前的数）
+function balNote(id) {
+  const b = BAL[id], x = v => `×${+v.toFixed(2)}`; if (!b) return '';
+  if (b.normal === b.skill && b.skill === b.ult && b.ult === b.hp) return b.hp === 1 ? '' : `伤害与气血 ${x(b.hp)}`;
+  const out = [b.normal === b.skill ? `伤害 ${x(b.normal)}` : `普攻 ${x(b.normal)}`];
+  if (b.normal !== b.skill) out.push(`技能${b.ult === b.skill ? '与大招' : ''} ${x(b.skill)}`);
+  if (b.ult !== b.skill) out.push(`大招 ${x(b.ult)}`);
+  out.push(`气血 ${x(b.hp)}`);
+  return out.join(' · ');
+}
 
 // stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率
 // skill 是 Q 技能，ult 是 E 大招，passive 是被动。beats/weakTo 只是给玩家看的克制关系说明。
@@ -9184,9 +9197,9 @@ let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
 demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)), () => cxActiveMove === 'full' ? null : cxActiveMove);
 function statRows(c) {
   const m = CHAR_MOVES[CHAR_IDX[c.id]];
-  const st = c.stat;
+  const st = c.stat, B = BAL[c.id] || BAL.qingfeng, hp = Math.round(st.hp * B.hp), dmg = +(st.dmg * B.normal).toFixed(2);
   const rows = [
-    ['生命上限', st.hp, 150, `${st.hp}`],
+    ['生命上限', hp, 150, `${hp}`],
     ['体量压制', st.weight || 1, 2.0, `${st.weight || 1}×`],
     ['防御减伤', st.defRating || 1, 1.25, `×${st.defRating || 1}`],
     ['格挡架势', st.guardMax || 100, 160, `${st.guardMax || 100}`],
@@ -9194,7 +9207,7 @@ function statRows(c) {
     ['格挡穿透伤', Math.round((st.guardChip || 0.12) * 100), 20, `${Math.round((st.guardChip || 0.12) * 100)}%`],
     ['受击硬直', st.poise || 1, 1.25, `×${st.poise || 1}`],
     ['移动速度', WALK * st.walk, WALK * 1.2, `${Math.round(WALK * st.walk)}`],
-    ['基础伤害', st.dmg, 1.25, `×${st.dmg}`],
+    ['基础伤害', dmg, 1.25, `×${dmg}`],
     ['攻击距离', m.l1.box[2], 130, `${Math.round(m.l1.box[2])}`],
     ['跳跃高度', st.jump || 1, 1.2, `×${st.jump || 1}`],
     ['卡肉感', c.hitFeel || 1, 1.6, `×${c.hitFeel || 1}`],
@@ -10063,7 +10076,7 @@ function renderCodex() {
   const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
   const skMeta = skin && SKINS[skin], skG = skMeta && skinGrade(skin);
   const skPill = skMeta ? `<span class="pill sk-pill" style="--tc:${skG.c}">${skG.n} · ${skMeta.name}</span>` : '';
-  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
+  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   const skScn = skMeta && SCENES[skin];
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨专属全景天象与奥义特效' : '🌟专属灵光天色与命中特效'}）</span>` : '';
@@ -10075,7 +10088,8 @@ function renderCodex() {
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
-  const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * 10) / 10;
+  const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10) / 10;   // 普攻、蓄力、空中按强度调整后的数
+  const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * bn * 10) / 10;
   const fun = (typeof SKILL_FUN !== 'undefined' && SKILL_FUN[c.id]) || {};
   const sh = n => { const p = (n || '').split('·'); return p.length > 1 ? [p[0].trim(), p[1].trim()] : ['', n || '']; };
   const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
@@ -10095,8 +10109,8 @@ function renderCodex() {
   $id('cxMoves').innerHTML = [
     tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
     tile('light', '左键 · 连击 <small class="type-tag melee">近战</small>', sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
-    tile('charge', '按住左键 · 蓄力 <small class="type-tag melee">近战</small>', `${m.cs1.dmg} / ${m.cs2.dmg}`, '满蓄破防 · 打倒', '', false, 'charge'),
-    tile('air', '空中 <small class="type-tag melee">近战</small>', `${m.a1.dmg} / ${m.a2.dmg}`, '空中斩 · 下砸', '', false, 'air'),
+    tile('charge', '按住左键 · 蓄力 <small class="type-tag melee">近战</small>', `${dv(m.cs1.dmg)} / ${dv(m.cs2.dmg)}`, '满蓄破防 · 打倒', '', false, 'charge'),
+    tile('air', '空中 <small class="type-tag melee">近战</small>', `${dv(m.a1.dmg)} / ${dv(m.a2.dmg)}`, '空中斩 · 下砸', '', false, 'air'),
     tile(qType.icon || 'skill', `Q · ${qName} <small class="type-tag ${qType.type}">${qType.label}</small>`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
     tile(rType.icon || 'ranged', `左键+右键 · ${rName} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
     tile('ult', `E · ${uName}`, sh(U.name)[0], `${sh(U.name)[1]}<div style="margin-top:4px;font-size:12px;color:#ffe8a3;line-height:1.35;opacity:0.95">${HERO_METER_EXPLAIN[c.id] || ''}</div>`, '气满', true, 'ult'),
@@ -13974,7 +13988,7 @@ function bpDetailHTML(i) {
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
     <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
     <!-- 皮肤改在角色图鉴里装配：选人是有时限的，这里只显示当前装束 -->
-    <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${st.hp || 500}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
+    <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${Math.round((st.hp || 500) * ((BAL[c.id] || {}).hp || 1))}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
     <dl><dt>被动 ${c.passiveName}</dt><dd>${c.passiveDesc}</dd>
     <dt>门派架势</dt><dd>${guardTxt}</dd>
     ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
