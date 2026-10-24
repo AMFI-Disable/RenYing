@@ -15368,6 +15368,82 @@ if (typeof renderStages === 'function' && $id('single').classList.contains('on')
 if (typeof renderTrainPick === 'function') renderTrainPick();
 return;
 }
+const DEV_SUPER_CODE = 'VG8KS7K8PYP5R36P';
+if (up === DEV_SUPER_CODE) {
+const curU = (typeof curName === 'function' ? curName() : '') || (window.CloudSave && CloudSave.getUser && CloudSave.getUser() ? CloudSave.getUser().name : '') || (typeof ACC !== 'undefined' ? ACC.name : '');
+if (String(curU || '').trim() !== 'Dev') {
+toast('仅限开发者账号 Dev 兑换');
+if ($id('tMsg')) $id('tMsg').textContent = '仅限开发者账号 Dev 兑换';
+return;
+}
+const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen'];
+const allSkins = Array.from(new Set([
+...Object.keys(typeof SKINS !== 'undefined' ? SKINS : {}),
+...(typeof ArmoryCore !== 'undefined' ? Object.keys(ArmoryCore.ITEM || {}) : []),
+...(typeof ArmoryCore !== 'undefined' ? (ArmoryCore.CS_KEYS || []) : [])
+]));
+PROF.ink = 1000000;
+PROF.owned = allHeroes.slice();
+PROF.skins = allSkins.slice();
+if (typeof ArmoryCore !== 'undefined') {
+const C = ArmoryCore;
+const arm = (PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank();
+const newInv = [];
+let nid = 1;
+for (const k of allSkins) {
+if (!C.isItem(k)) continue;
+for (const stVal of [-1, 0]) {
+for (let copy = 0; copy < 5; copy++) {
+newInv.push({ i: nid++, k, st: stVal, t: Date.now() });
+}
+}
+}
+arm.inv = newInv;
+arm.nid = nid;
+arm.via = Array.from(new Set([...(arm.via || []), ...allSkins.filter(k => C.isItem(k))]));
+arm.cases = arm.cases || {};
+for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7'])) {
+arm.cases[cid] = 1000;
+}
+PROF.armory = arm;
+}
+const sid = typeof rkSeason === 'function' ? rkSeason().id : 'S1';
+const devRk = {
+season: sid,
+owner: curU,
+pts: 25000,
+placed: 10,
+est: 25000,
+w: 999,
+l: 0,
+peak: 25000,
+streak: 50,
+hist: [],
+pending: null,
+at: Date.now()
+};
+PROF.rk = devRk;
+try {
+if (typeof rkOwner === 'function') {
+localStorage.setItem('renying-rk-' + rkOwner(), JSON.stringify(devRk));
+}
+} catch (e) {}
+DEV_SESSION_UNLOCKED = true;
+try { sessionStorage.setItem('renying-dev-unlock', '1'); } catch (e) {}
+if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+applyProfile(PROF);
+if (typeof rkSave === 'function') rkSave();
+SFX.chargeFull();
+toast('开发者神权兑换成功：最高段位、全角色、全皮肤及副本、1000个武器箱、100万墨锭！');
+if ($id('tMsg')) $id('tMsg').textContent = '开发者神权兑换成功！已全部解锁并同步。';
+if ($id('rdCode')) $id('rdCode').value = '';
+renderTasks();
+if (typeof renderCodex === 'function' && $id('codex') && $id('codex').classList.contains('on')) renderCodex();
+if (typeof renderStages === 'function' && $id('single') && $id('single').classList.contains('on')) renderStages();
+if (typeof renderTopNav === 'function') renderTopNav();
+if (typeof renderHome === 'function') renderHome();
+return;
+}
 const clientCodes = {
 'RENYING666': 300,
 'RENYING888': 500,
