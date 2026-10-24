@@ -28,8 +28,8 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 
 | Path | Size | What it is |
 | :--- | ---: | :--- |
-| `index.html` | 2.0 MB | **Generated** online build (GitHub Pages + `server.py`). Loads music and the mini-game on demand. |
-| `renying-offline.html` | 7.6 MB | **Generated** single-file build: music + mini-game inlined as base64. Double-click and play. |
+| `index.html` | 1.5 MB | **Generated** online build (GitHub Pages + `server.py`). Loads music and the mini-game on demand. |
+| `renying-offline.html` | 9.7 MB | **Generated** single-file build: music + mini-game inlined as base64. Double-click and play. |
 | `renying.html` | 0.6 KB | **Generated** redirect stub for the old URL. |
 | `src/page.html` | 85 KB | HTML skeleton with `<!--@style-->`, `<!--@music-->`, `<!--@scripts-->`, `<!--@qfx-->` build markers. |
 | `src/style.css` | 116 KB | All UI styling (ink-wash theme, responsive + touch layouts). |
@@ -306,7 +306,8 @@ Tooling (`tools/`):
 | `train-policy.mjs`, `train-heroes.mjs`, `auto-train.mjs` | Behavioral cloning / reward-weighted training pipelines. |
 | `gamemode-meta.mjs` | Per-mode tier lists. |
 | `ui-audit.mjs`, `hud-audit.mjs`, `hud-overlap-audit.mjs`, `touch-audit.mjs` | Headless Chrome layout/legibility/touch gates. |
-| `net-test.mjs`, `protocol-test.mjs` | Two-browser multiplayer regression; raw WebSocket trust tests. |
+| `ai-arena.mjs`, `ai-train.mjs` | CPU-vs-CPU win rates (`--a god --b impossible`, `AI_BAL` to try a balance table) and gene training; `--lvkey` trains one difficulty only (`lvGenes` in `models/ai-brain.json`), `--opp` trains against another difficulty. |
+| `music/` | Python sources of the nine tracks in `assets/music/` (MIDI → FluidSynth stems → numpy mix → mp3); see `tools/music/readme.md`. |
 | `combat-test.mjs` | Per-hero move/state/combo regression suite. |
 | `cloud-admin.mjs` | Firestore admin (status, unlock, get/set profiles). |
 | `export_data.py` / `import_data.py` | SQLite → JSON → SQLite migration. |
