@@ -486,8 +486,9 @@
             <span class="mm-en">2V2 TEAM & CO-OP</span>
             <span class="mm-desc">双人同袍共破天道 (P&P v C&C)，或四人组队同台切磋 (P&P v P&P)！支持联机约战与同屏开黑。</span>
             <div class="mm-2v2-actions" style="display:flex;gap:10px;margin-top:auto;padding-top:10px;flex-wrap:wrap">
-              <button class="mm-go" id="mm2v2CoopBtn" type="button" style="min-width:160px;padding:12px 18px;font-size:15px">双人共斗 (P&P v C&C)</button>
-              <button class="mm-go alt" id="mm2v2VsBtn" type="button" style="min-width:160px;padding:12px 18px;font-size:15px">四人对决 (P&P v P&P)</button>
+              <button class="mm-go" id="mm2v2CoopBtn" type="button" style="min-width:140px;padding:12px 16px;font-size:14.5px">双人共斗 (P&P v C&C)</button>
+              <button class="mm-go alt" id="mm2v2VsBtn" type="button" style="min-width:140px;padding:12px 16px;font-size:14.5px">四人对决 (P&P v P&P)</button>
+              <button class="mm-go alt" id="mm2v2WatchBtn" type="button" style="min-width:140px;padding:12px 16px;font-size:14.5px;border-color:rgba(180,120,255,0.6);color:#d4b3ff">纯观战演武 (C&C v C&C)</button>
             </div>
           </div>
         </div>
@@ -716,7 +717,7 @@
             <p class="sub" id="modal2v2Desc" style="margin:0 0 16px;text-align:left;color:rgba(236,232,225,0.85)">
               选择进入对决的方式：
             </p>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="modal2v2Options">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px" id="modal2v2Options">
               <div class="wuxia-card" id="modal2v2MatchCard" style="padding:14px;cursor:pointer;border-color:rgba(56,217,118,0.4);background:rgba(56,217,118,0.06);transition:transform .15s">
                 <h4 style="color:#38d976;margin:0 0 6px;font-size:16px;font-family:var(--title)">⚡ 全服快速匹配</h4>
                 <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2MatchDesc">全网自动撮合队友与对手，即刻切磋！</p>
@@ -731,6 +732,11 @@
                 <h4 style="color:var(--gold);margin:0 0 6px;font-size:16px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
                 <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2LocalDesc">同台电脑键盘对决（1P/2P 合作或对决）。</p>
                 <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px">本地开战</button>
+              </div>
+              <div class="wuxia-card" id="modal2v2WatchCard" style="padding:14px;cursor:pointer;border-color:rgba(180,120,255,0.4);background:rgba(180,120,255,0.06);transition:transform .15s">
+                <h4 style="color:#d4b3ff;margin:0 0 6px;font-size:16px;font-family:var(--title)">👁️ 天道纯观战演武</h4>
+                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45">C&amp;C v C&amp;C，看 4 位天道顶尖神级 AI 自动禁选互搏！</p>
+                <button class="go small alt" id="btn2v2GoWatch" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px;border-color:rgba(180,120,255,0.6);color:#d4b3ff">演武观战</button>
               </div>
             </div>
           </div>
