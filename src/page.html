@@ -42,7 +42,6 @@
       <button type="button" data-nav="codex">英雄</button>
       <button type="button" data-nav="train" class="tn-offline">木人桩</button>
       <button type="button" data-nav="tutorial" class="tn-offline">新手教学</button>
-      <button type="button" data-nav="gacha" class="tn-online">问剑阁</button>
       <button type="button" data-nav="armory" class="tn-online tn-arm">武库</button>
       <button type="button" data-nav="tasks" class="tn-online">任务</button>
       <button type="button" data-nav="community" class="tn-online">社区</button>
@@ -74,7 +73,7 @@
       </div>
       <button class="home-card home-evt" id="homeEvt" type="button" hidden>
         <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
-        <span class="hc-txt"><b>全角色全皮肤限时免费</b><small>打 3 局人机领 1000 墨锭 · 补偿自选侠客</small></span>
+        <span class="hc-txt"><b>全皮肤限时免费</b><small>打 3 局人机领 1000 墨锭</small></span>
       </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
@@ -983,28 +982,12 @@
     </div>
   </div>
 
-  <div id="gacha" class="scr">
-    <div class="panel gachap">
-      <div class="cxhead"><h2>问剑阁</h2><div class="inkbox">墨锭 <b class="gInk">0</b></div><button class="ghost" data-back>返回</button></div>
-      <div class="seg" id="gTabs"><button data-g="char" class="sel">角色祈愿</button><button data-g="skin">皮肤祈愿</button></div>
-      <p class="sub" id="gInfo"></p>
-      <div class="gres" id="gRes"></div>
-      <div class="row"><button class="go" id="gOne"></button><button class="go" id="gTen"></button><button class="ghost" id="gRates">查看概率</button></div>
-      <div class="grates hidden" id="gRateBox"></div>
-      <p class="netnote" id="gMsg"></p>
-      <h3 class="spt">我的角色</h3>
-      <div class="groster" id="gRoster"></div>
-    </div>
-  </div>
-
   <div id="armory" class="scr">
     <div class="panel armp">
       <div class="cxhead ar-head">
-        <div class="ar-title"><h2>刃影武库</h2><p class="sub">武器箱 · 江湖市场 · 汰换合同 · 江湖行动</p></div>
+        <div class="ar-title"><h2>刃影武库</h2><p class="sub">武器箱 · 终端机 · 江湖市场 · 汰换合同 · 江湖行动</p></div>
         <div class="ar-wallet">
-          <span class="ar-cur ar-ink" title="墨锭：打对局、做任务、在市场卖饰品得到"><i>墨</i><b class="gInk">0</b></span>
-          <span class="ar-cur ar-jade" title="玉珏：只用来买钥匙和改名标签"><i>玉</i><b id="arJade">0</b></span>
-          <span class="ar-cur ar-key" title="武器箱钥匙"><i>钥</i><b id="arKeys">0</b></span>
+          <span class="ar-cur ar-ink" title="墨锭：打对局、做任务、在市场卖饰品得到；用来买武器箱"><i>墨</i><b class="gInk">0</b></span>
           <button class="ghost" type="button" data-back>返回</button>
         </div>
       </div>
@@ -1098,10 +1081,10 @@
       <div id="taskTabGuide" class="task-tab-pane" style="display:none">
         <div class="task-sec-card">
           <div class="sec-head-row">
-            <h3 class="spt">墨锭经济与祈愿秘笈</h3>
+            <h3 class="spt">墨锭经济与武库秘笈</h3>
             <span class="sub-badge">系统规则全公开</span>
           </div>
-          <p class="sub" style="margin:4px 0 14px;text-align:left">《刃影》所有角色与皮肤均可通过游玩免费获得，以下为获取与消耗规则：</p>
+          <p class="sub" style="margin:4px 0 14px;text-align:left">《刃影》所有侠客都能直接用，皮肤都能靠游玩拿到。以下为获取与消耗规则：</p>
           <div class="ink-grid">
             <div class="ink-card">
               <div class="ink-card-head"><span class="ink-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><b>对战收益</b></div>
@@ -1120,11 +1103,11 @@
               </ul>
             </div>
             <div class="ink-card">
-              <div class="ink-card-head"><span class="ink-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span><b>问剑阁祈愿</b></div>
+              <div class="ink-card-head"><span class="ink-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span><b>武库开箱</b></div>
               <ul>
-                <li>角色祈愿：<b>60</b> 墨锭/次（十连 <b>540</b>，享 9 折）</li>
-                <li>专属皮肤：<b>30</b> 墨锭/次（十连 <b>270</b>，享 9 折）</li>
-                <li>重复英雄自动折算碎片，问剑阁可直接换取专属心仪英雄</li>
+                <li>武器箱：两百墨锭上下一个，每周最多买 <b>5</b> 个，开箱不用钥匙</li>
+                <li>斩数版：开出来有 <b>20%</b> 的机会，穿着它每击倒一个对手记一笔</li>
+                <li>终端机：一次报一件饰品的价，想要就买下，不要就换，最多看 <b>5</b> 件</li>
               </ul>
             </div>
           </div>

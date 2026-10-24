@@ -46,7 +46,7 @@ window.__forestDemo = () => {
   document.getElementById('feInfo').innerHTML = '残存生命 62%，共击退 18 只妖物<br><span style="font-size:13px">余 60% 以上三星，30% 以上两星</span>';
   document.getElementById('feNext').style.display = ''; showScreen('forestEnd'); };
 window.__tutdoneDemo = () => {
-  document.getElementById('tutReward').innerHTML = '该会的都会了。去找电脑或是同学，过几招吧。<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去问剑阁试试手气吧！';
+  document.getElementById('tutReward').innerHTML = '该会的都会了。去找电脑或是同学，过几招吧。<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去武库买个武器箱试试手气吧！';
   showScreen('tutdone'); };
 `;
 
@@ -55,7 +55,7 @@ const PANELS = [
   ['stage', `openScreen('stage')`], ['train', `openScreen('train')`], ['netp', `openScreen('netp')`],
   ['help', `openScreen('help')`], ['codex', `openScreen('codex')`], ['settings', `openScreen('settings')`],
   ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
-  ['welfare', `openWelfare()`], ['gacha', `openScreen('gacha')`], ['replays', `openScreen('replays')`],
+  ['welfare', `openWelfare()`], ['replays', `openScreen('replays')`],
   ['tasks', `openScreen('tasks')`], ['bp', `PROF.owned = CHARS.map(c => c.id); bpStart('cpu'); bpCpuT = 9999; bpApply(3); bpApply(6); bpCpuT = 9999; bpSel = 4; renderBP(); showScreen('bp');`], ['pause', `showScreen('pause')`],
   ['end', `__endDemo()`], ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`],
   ['tutdone', `__tutdoneDemo()`], ['armory', `openScreen('armory')`],

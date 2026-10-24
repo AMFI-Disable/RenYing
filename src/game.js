@@ -1219,7 +1219,7 @@ function musicMode() {
   const on = id => document.getElementById(id).classList.contains('on');
   if (on('bp')) return 'bp';
   if (on('end')) return 'end';
-  if (on('gacha')) return 'gacha';
+  if (on('armory')) return 'gacha';   // 武库用原来问剑阁那首
   if (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'replay' || M.mode === 'tag3') return M.ot && M.phase === 'fight' ? 'overtime' : 'fight';
   if (M.mode === 'train') return 'practice';
   return 'menu';
@@ -8726,7 +8726,6 @@ function openScreen(name, reveal = true) {
   }
   if (name === 'single') singleSec(null);
   if (name === 'tutorial') { startTutorial(); return null; }   // 开的是教学对局，没有页面要上屏
-  if (name === 'gacha') { renderGacha(); loadProfile(); }
   if (name === 'tasks') { renderTasks(); loadProfile(); }
   if (name === 'replays') renderReplays();
   if (name === 'netp') renderRankLine();
@@ -8794,7 +8793,7 @@ let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
 $id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
 // ---------- 顶部导航 ----------
-const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'gacha', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
+const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
 function navTo(name) {
   initAudio();
   if (name === 'menu') { backToMenu(); return; }
@@ -9837,7 +9836,7 @@ function renderCodex() {
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
     const has = skinOwned(k);
     const isLeg = v.rarity === 'legend';
-    const lockHint = v.exclusive ? ' · 青锋行通关' : v.cs ? ' · 武库' : ' · 预览';
+    const lockHint = v.exclusive ? ' · 青锋行 / 武库' : ' · 武库';
     return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
@@ -10040,28 +10039,10 @@ $id('cxTabs').addEventListener('click', e => {
   }
 });
 
-// ======================= 成长系统：墨锭、问剑阁、任务、皮肤、排位 =======================
+// ======================= 成长系统：墨锭、任务、皮肤、排位 =======================
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
 const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
-const DEFAULT_RATES = {
-  full: { legend: 0.015, rare: 0.035, common: 0.07 },
-  frag: { legend: 0.1584, rare: 0.2816, common: 0.44 },
-  pool: { common: ['tieshan', 'leiming'], rare: ['feiying', 'liuyun', 'lingshuang', 'zuixian', 'gouchen'], legend: ['moyu', 'yuehua', 'yanling', 'yuxiao'] },
-  craft: { common: 20, rare: 30, legend: 40 },
-  cost: 60,
-  ten: 540,
-  pity: 20,
-  dup: 90,
-  fragInk: 6,
-  skin: {
-    rate: { legend: 0.015, rare: 0.06 },
-    cost: 30,
-    ten: 270,
-    pity: 25,
-    dup: 25
-  }
-};
 function getWeeklyRotation() {
   const now = new Date();
   const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -10348,7 +10329,6 @@ const PROF = {
   tutorial: 0,
   rank: null,
   rotation: getWeeklyRotation(),
-  rates: DEFAULT_RATES,
   daily: [],
   weekly: [],
   skins: [],
@@ -10360,9 +10340,9 @@ const PROF = {
 };
 const MSTAT = { maxcombo: 0, ults: 0 };
 function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), 2600); }
-// 能用的角色：已拥有 + 本周限免；限时活动期间（和全皮肤限免同一段时间）全部角色都能用。单机离线版全部能用
-function ownsHero(id) { return (PROF.owned || []).includes(id); }   // 真正拥有（抽卡、合成、补偿按这个算）
-function heroesFree() { return freeSkinEvent(); }
+// 侠客全部直接能用：问剑阁撤掉以后，侠客不再靠抽卡、碎片解锁（皮肤从武库拿）
+function ownsHero(id) { return CHARS.some(c => c.id === id); }
+function heroesFree() { return true; }
 function availList() {
   if (OFFLINE_BUILD || DEV_SESSION_UNLOCKED || heroesFree()) return CHARS.map((c, i) => i);
   const ok = new Set([...(PROF.owned || ['qingfeng']), ...(PROF.rotation || [])]);
@@ -10451,8 +10431,7 @@ function applyProfile(p) {
       skins: skins,
       equip: equip,
       spity: p.spity || PROF.spity || 0,
-      rotation: p.rotation || PROF.rotation,
-      rates: p.rates || PROF.rates
+      rotation: p.rotation || PROF.rotation
     });
   } else {
     Object.assign(PROF, p, { guest: false });
@@ -10480,11 +10459,9 @@ function applyProfile(p) {
     if (typeof renderTrainPick === 'function') renderTrainPick();
   }
   for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
-  if ($id('gacha').classList.contains('on')) renderGacha();
   if ($id('tasks').classList.contains('on')) renderTasks();
   if ($id('netp').classList.contains('on')) renderRankLine();
-  if (!PROF.guest && !PROF.welfare && $id('menu').classList.contains('on')) openWelfare();
-  else if ($id('menu').classList.contains('on')) compMaybe();
+  if ($id('menu').classList.contains('on')) compMaybe();
 }
 // ---------- 补偿：任务能刷新重复领奖，给每位玩家补一位自选侠客（活动期内领） ----------
 let compAsked = false;
@@ -10501,8 +10478,8 @@ function compMaybe() {   // 登录后回到首页时弹一次，点了稍后再�
 function compMark() { try { localStorage.setItem(compKey(), '1'); } catch (e) {} }
 function compClaim() {
   const st = compState(); if (!st || st.claimed || PROF.guest || !curName()) return;
-  if (CHARS.every(c => ownsHero(c.id))) {   // 侠客都有了：改发墨锭
-    compMark(); PROF.ink = (PROF.ink || 0) + 500; saveProfile(); SFX.chargeFull(); toast('侠客已全部拥有，补偿改发 500 墨锭'); return;
+  if (CHARS.every(c => ownsHero(c.id))) {   // 侠客都能直接用了：改发墨锭
+    compMark(); PROF.ink = (PROF.ink || 0) + 500; saveProfile(); SFX.chargeFull(); toast('侠客现在都能直接用，补偿改发 500 墨锭'); return;
   }
   openWelfare('comp');
 }
@@ -10530,179 +10507,6 @@ $id('wGo').addEventListener('click', async () => {
   applyProfile(PROF);
   toast(`新得角色：${CHARS[wSel].name}`);
   backToMenu();
-});
-// ---------- 问剑阁 ----------
-let gTab = 'char', gBusy = false;
-function rarPct(x) { return (Math.round(x * 1000) / 10) + '%'; }
-function renderGacha() {
-  ensurePortraits();
-  for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
-  for (const b of $id('gTabs').children) b.classList.toggle('sel', b.dataset.g === gTab);
-  PROF.rates = PROF.rates || DEFAULT_RATES;
-  const R = PROF.rates;
-  const sk = gTab === 'skin', rs = R.skin;
-  $id('gOne').textContent = `抽一次 · ${sk ? rs.cost : R.cost}`; $id('gTen').textContent = `十连 · ${sk ? rs.ten : R.ten}`;
-  $id('gOne').disabled = $id('gTen').disabled = PROF.guest || gBusy;
-  $id('gInfo').textContent = PROF.guest ? '登录之后，方可抽剑' : sk
-    ? `再抽 ${Math.max(1, rs.pity + 1 - (PROF.spity || 0))} 次内必出一款新皮肤。只出你已拥有角色的皮肤——皮肤只改外观，不添战力。`
-    : `再抽 ${Math.max(1, R.pity + 1 - (PROF.pity || 0))} 次内必出一个你没有的角色。稀有度越高，特效越华丽、招式越繁复（另带进阶技巧），但强度相近。`;
-  const names = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join('、');
-  $id('gRateBox').innerHTML = sk
-    ? `传说皮肤 ${rarPct(rs.rate.legend)}　稀有皮肤 ${rarPct(rs.rate.rare)}——都只出你已拥有角色的皮肤　角色碎片 1 到 3 个 ${rarPct(1 - rs.rate.legend - rs.rate.rare)}（角色齐了便折算成 ${R.fragInk} 墨锭）<br>连抽 ${rs.pity} 次未见皮肤，下一次必出一款你尚未拥有的皮肤。重复的皮肤折算 ${rs.dup} 墨锭。`
-    : `完整角色：传说 ${rarPct(R.full.legend)}（${names(R.pool.legend)}），稀有 ${rarPct(R.full.rare)}（${names(R.pool.rare)}），普通 ${rarPct(R.full.common)}（${names(R.pool.common)}）<br>角色碎片：传说 ${rarPct(R.frag.legend)}，稀有 ${rarPct(R.frag.rare)}，普通 ${rarPct(R.frag.common)}，每次 1 到 3 个<br>合成所需碎片：普通 ${R.craft.common}，稀有 ${R.craft.rare}，传说 ${R.craft.legend}。连抽 ${R.pity} 次未见角色，下一次必出一个你尚未拥有的角色。<br>抽到已有的角色折算 ${R.dup} 墨锭；已有角色的碎片，每个折算 ${R.fragInk} 墨锭。`;
-  const rot = PROF.rotation || [];
-  $id('gRoster').innerHTML = CHARS.map((c, i) => {
-    const own = DEV_SESSION_UNLOCKED || ownsHero(c.id), rar = CHAR_RARITY[c.id], need = rar === 'starter' ? 0 : R.craft[rar], have = (PROF.frags || {})[c.id] || 0;
-    const st = own ? '已拥有' : heroesFree() ? '限时免费' : rot.includes(c.id) ? `本周限免 · 碎片 ${have}/${need}` : `碎片 ${have}/${need}`;
-    return `<div class="gr${own || heroesFree() ? '' : ' lock'}" style="border-color:rgba(${RAR_RGB[rar]},.5)"><img src="${PORTRAITS[i] || ''}" alt=""><div style="font-family:var(--title);font-size:17px;color:rgb(${c.look.slash})">${c.name}</div><div class="st">${RAR_NAME[rar]} · ${st}</div>${own ? '' : `<div class="bar"><i style="width:${Math.min(100, have / need * 100)}%"></i></div>`}${!own && have >= need && !PROF.guest ? `<button data-craft="${c.id}">合成</button>` : ''}</div>`;
-  }).join('');
-}
-function gCard(r, big) {
-  if (r.type === 'ink') return `<div class="gcard" style="--rc:${RAR_RGB.common};animation-delay:VAR"><div class="gn">墨锭</div><div class="gt">+${r.ink}</div></div>`;
-  const ci = CHAR_IDX[r.char], c = CHARS[ci], rc = RAR_RGB[r.rarity];
-  let img = PORTRAITS[ci] || '', name = c.name, tag;
-  if (r.type === 'skin') { try { img = makeCardArt(ci, 180, 240, r.skin).toDataURL(); } catch (e) {} name = SKINS[r.skin].name; tag = `${RAR_NAME[r.rarity]}皮肤 · ${c.name}${r.dup ? ` · 重复 +${r.ink}` : ' · 新！'}`; }
-  else if (r.type === 'char') tag = r.dup ? `重复 → +${r.ink} 墨锭` : `${RAR_NAME[r.rarity]}角色 · 新！`;
-  else tag = r.ink ? `碎片 ×${r.n} → +${r.ink} 墨锭` : `碎片 ×${r.n}（${r.have}/${r.need}）`;
-  return `<div class="gcard${r.type === 'frag' ? ' frag' : ''}${big ? ' big' : ''}" style="--rc:${rc};animation-delay:VAR"><img src="${img}" alt=""><div class="gn" style="color:rgb(${c.look.slash})">${name}</div><div class="gt">${tag}</div></div>`;
-}
-function clientDrawOne(sk) {
-  const R = PROF.rates || DEFAULT_RATES;
-  if (sk) {
-    const rs = R.skin;
-    const mine = Object.keys(SKINS).filter(k => ownsHero(SKINS[k].char) && !SKINS[k].cs);   // 武库的饰品不进问剑阁
-    const unowned = mine.filter(k => !(PROF.skins || []).includes(k));
-    let pick = null;
-    if ((PROF.spity || 0) >= rs.pity && unowned.length) {
-      const leg = unowned.filter(k => SKINS[k].rarity === 'legend');
-      pick = leg.length && Math.random() < 0.2 ? leg[Math.floor(Math.random() * leg.length)] : unowned[Math.floor(Math.random() * unowned.length)];
-    } else {
-      const r = Math.random();
-      const rar = r < rs.rate.legend ? 'legend' : r < rs.rate.legend + rs.rate.rare ? 'rare' : null;
-      const pool = rar ? mine.filter(k => SKINS[k].rarity === rar) : [];
-      if (pool.length) pick = pool[Math.floor(Math.random() * pool.length)];
-    }
-    if (pick) {
-      PROF.spity = 0;
-      if ((PROF.skins || []).includes(pick)) {
-        PROF.ink = (PROF.ink || 0) + rs.dup;
-        return { type: 'skin', skin: pick, char: SKINS[pick].char, rarity: SKINS[pick].rarity, dup: true, ink: rs.dup };
-      }
-      PROF.skins = PROF.skins || [];
-      PROF.skins.push(pick);
-      return { type: 'skin', skin: pick, char: SKINS[pick].char, rarity: SKINS[pick].rarity, new: true };
-    }
-    PROF.spity = (PROF.spity || 0) + 1;
-    const need = CHARS.map(c => c.id).filter(id => !ownsHero(id));
-    if (!need.length) {
-      PROF.ink = (PROF.ink || 0) + R.fragInk;
-      return { type: 'ink', ink: R.fragInk };
-    }
-    const c = need[Math.floor(Math.random() * need.length)];
-    const amt = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
-    PROF.frags = PROF.frags || {};
-    PROF.frags[c] = (PROF.frags[c] || 0) + amt;
-    return { type: 'frag', char: c, rarity: CHAR_RARITY[c], n: amt, have: PROF.frags[c], need: R.craft[CHAR_RARITY[c]] };
-  }
-
-  // 角色祈愿
-  const pool = R.pool;
-  const unownedChars = CHARS.map(c => c.id).filter(id => !ownsHero(id));
-  const fullR = Math.random();
-  const forced = (PROF.pity || 0) >= R.pity && unownedChars.length > 0;
-  const fullHit = forced || fullR < (R.full.legend + R.full.rare + R.full.common);
-
-  if (fullHit) {
-    let full = '';
-    if (forced) {
-      full = unownedChars[Math.floor(Math.random() * unownedChars.length)];
-    } else {
-      const rar = fullR < R.full.legend ? 'legend' : fullR < (R.full.legend + R.full.rare) ? 'rare' : 'common';
-      const p = pool[rar];
-      full = p[Math.floor(Math.random() * p.length)];
-    }
-    PROF.pity = 0;
-    if (ownsHero(full)) {
-      PROF.ink = (PROF.ink || 0) + R.dup;
-      return { type: 'char', char: full, rarity: CHAR_RARITY[full], dup: true, ink: R.dup };
-    }
-    PROF.owned = PROF.owned || [];
-    PROF.owned.push(full);
-    const leftFrags = (PROF.frags && PROF.frags[full]) || 0;
-    if (PROF.frags) delete PROF.frags[full];
-    const refundInk = leftFrags * R.fragInk;
-    PROF.ink = (PROF.ink || 0) + refundInk;
-    return { type: 'char', char: full, rarity: CHAR_RARITY[full], new: true, pity: forced, ink: refundInk };
-  }
-
-  // 碎片掉落
-  PROF.pity = (PROF.pity || 0) + 1;
-  const fragR = Math.random();
-  const rar = fragR < 0.18 ? 'legend' : fragR < 0.5 ? 'rare' : 'common';
-  const p = pool[rar];
-  const c = p[Math.floor(Math.random() * p.length)];
-  const n = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
-
-  if (ownsHero(c)) {
-    const ink = n * R.fragInk;
-    PROF.ink = (PROF.ink || 0) + ink;
-    return { type: 'frag', char: c, rarity: rar, n, ink };
-  }
-  PROF.frags = PROF.frags || {};
-  PROF.frags[c] = (PROF.frags[c] || 0) + n;
-  return { type: 'frag', char: c, rarity: rar, n, have: PROF.frags[c], need: R.craft[rar] };
-}
-
-function clientGacha(n, sk) {
-  const R = PROF.rates || DEFAULT_RATES;
-  const cost = sk ? (n === 10 ? R.skin.ten : R.skin.cost) : (n === 10 ? R.ten : R.cost);
-  if ((PROF.ink || 0) < cost) throw new Error(`囊中墨锭不够，需要 ${cost}`);
-  PROF.ink -= cost;
-  const results = [];
-  for (let i = 0; i < n; i++) results.push(clientDrawOne(sk));
-  if (window.CloudSave) CloudSave.saveProfile(PROF);
-  return { results, profile: PROF };
-}
-
-function clientCraft(charId) {
-  const R = PROF.rates || DEFAULT_RATES;
-  const rar = CHAR_RARITY[charId];
-  if (!rar || rar === 'starter' || ownsHero(charId)) {
-    throw new Error('这个角色不能合成（已经拥有，或本就不能合）');
-  }
-  const need = R.craft[rar];
-  const have = (PROF.frags && PROF.frags[charId]) || 0;
-  if (have < need) throw new Error(`碎片不够，合成需要 ${need} 个（当前 ${have} 个）`);
-  delete PROF.frags[charId];
-  PROF.owned = PROF.owned || [];
-  PROF.owned.push(charId);
-  if (window.CloudSave) CloudSave.saveProfile(PROF);
-  return { got: charId, profile: PROF };
-}
-
-async function doGacha(n) {
-  if (gBusy || PROF.guest) return;
-  gBusy = true; renderGacha(); $id('gMsg').textContent = '';
-  try {
-    const j = clientGacha(n, gTab === 'skin');
-    $id('gRes').innerHTML = j.results.map((r, k) => gCard(r, r.type !== 'frag' && r.type !== 'ink' && !r.dup).replace('VAR', (k * 0.14) + 's')).join('');
-    const best = j.results.find(r => (r.type === 'char' || r.type === 'skin') && r.new);
-    if (j.results.some(r => r.rarity === 'legend' && (r.type === 'char' || r.type === 'skin') && !r.dup)) playSting('legendary', true);
-    setTimeout(() => { if (best) { SFX.gong(); toast(best.type === 'skin' ? `新得皮肤：${SKINS[best.skin].name}` : `新得角色：${CHARS[CHAR_IDX[best.char]].name}`); } else SFX.slice(); }, j.results.length * 140);
-    applyProfile(j.profile || PROF);
-  } catch (e) { $id('gMsg').textContent = e.message; }
-  gBusy = false; renderGacha();
-}
-$id('gOne').addEventListener('click', () => doGacha(1));
-$id('gTen').addEventListener('click', () => doGacha(10));
-$id('gRates').addEventListener('click', () => $id('gRateBox').classList.toggle('hidden'));
-$id('gTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { gTab = b.dataset.g; $id('gRes').innerHTML = ''; renderGacha(); } });
-$id('gRoster').addEventListener('click', async e => {
-  const b = e.target.closest('button[data-craft]'); if (!b) return;
-  try {
-    const j = clientCraft(b.dataset.craft);
-    applyProfile(j.profile || PROF); SFX.gong(); toast(`合成成功：${CHARS[CHAR_IDX[b.dataset.craft]].name}`);
-  } catch (err) { $id('gMsg').textContent = err.message; }
 });
 // ---------- 任务 ----------
 function taskDest(name) {
@@ -10794,8 +10598,8 @@ function renderTasks() {
   const ev = PROF.evtTask, comp = compState();
   $id('tEvtCard').hidden = !ev && !comp;
   if (ev || comp) {
-    $id('tEvtLeft').textContent = `全角色全皮肤限免 · 剩 ${freeSkinDaysLeft()} 天`;
-    const compRow = comp ? `<div class="trow"><span>系统补偿：自选 1 位侠客</span><div class="bar"><i style="width:${comp.claimed ? 100 : 0}%"></i></div><span class="rw">自选侠客</span><div style="display:flex;align-items:center;"><button id="compBtn" ${comp.claimed || PROF.guest ? 'disabled' : ''}>${comp.claimed ? '已领取' : '去挑选'}</button></div></div>` : '';
+    $id('tEvtLeft').textContent = `全皮肤限免 · 剩 ${freeSkinDaysLeft()} 天`;
+    const compRow = comp ? `<div class="trow"><span>系统补偿：500 墨锭（侠客现在都能直接用）</span><div class="bar"><i style="width:${comp.claimed ? 100 : 0}%"></i></div><span class="rw">+500</span><div style="display:flex;align-items:center;"><button id="compBtn" ${comp.claimed || PROF.guest ? 'disabled' : ''}>${comp.claimed ? '已领取' : '领取'}</button></div></div>` : '';
     $id('tEvt').innerHTML = compRow + (ev ? row(ev) : '') + (PROF.guest ? '<p class="netnote">进度先替你记着，登录之后就能领</p>' : '');
   }
   const canClaimAny = !PROF.guest && allTasks().some(t => !t.claimed && t.prog >= t.target);
@@ -10860,7 +10664,6 @@ async function redeemCode(rawCode) {
     renderAcc();
     if (typeof BP !== 'undefined' && BP) renderBP();
     if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
-    if (typeof renderGacha === 'function' && $id('gacha').classList.contains('on')) renderGacha();
     if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
     if (typeof renderTrainPick === 'function') renderTrainPick();
     return;
@@ -11250,22 +11053,6 @@ function commitNetProgress(w, agreed, isQualifying) {
   PROF.ink = (PROF.ink || 0) + gain;
   if (won) {
     PROF.netWins = (PROF.netWins || 0) + 1;
-    // 联机十胜：累计赢得 10 场联机对战，额外解锁一位基础英雄（铁山 或 雷鸣）
-    if (PROF.netWins >= 10 && !PROF.online10Unlocked) {
-      let unlockId = '';
-      if (!(PROF.owned || []).includes('tieshan')) unlockId = 'tieshan';
-      else if (!(PROF.owned || []).includes('leiming')) unlockId = 'leiming';
-      if (unlockId) {
-        PROF.owned = PROF.owned || ['qingfeng'];
-        if (!PROF.owned.includes(unlockId)) PROF.owned.push(unlockId);
-        PROF.online10Unlocked = true;
-        const uName = CHARS[CHAR_IDX[unlockId]].name;
-        setTimeout(() => {
-          SFX.gong();
-          toast(`【十胜功成】达成联机十胜，破境解锁基础角色：${uName}！`);
-        }, 800);
-      }
-    }
   } else {
     PROF.netLosses = (PROF.netLosses || 0) + 1;
   }
@@ -11353,7 +11140,7 @@ async function tutFinish() {
       PROF.ink = (PROF.ink || 0) + 300;
       if (window.CloudSave) CloudSave.saveProfile(PROF);
       applyProfile(PROF);
-      msg += '<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去问剑阁试试手气吧！';
+      msg += '<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去武库买个武器箱试试手气吧！';
     }
   } else {
     msg += '<br>登录之后再走一遍教学，可领 300 墨锭。';
@@ -11667,7 +11454,7 @@ if (TOUCH) {
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
   const prev = currentScreen; currentScreen = id;
-  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'gacha', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
   if (id !== 'bp') { try { showPop(null); } catch (e) {} }
   if (id === 'menu') {
@@ -14094,7 +13881,6 @@ function triggerStealthDevUnlock(silent) {
   renderAcc();
   if (typeof BP !== 'undefined' && BP) renderBP();
   if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
-  if (typeof renderGacha === 'function' && $id('gacha').classList.contains('on')) renderGacha();
   if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
   if (typeof renderTrainPick === 'function') renderTrainPick();
 }
@@ -14164,7 +13950,7 @@ function renderAccPage() {
   const w = PROF.netWins || 0, l = PROF.netLosses || 0;
   const stats = [
     ['墨锭', (PROF.ink || 0).toLocaleString()],
-    ['角色', `${(PROF.owned || []).length} / ${CHARS.length}`],
+    ['角色', `${CHARS.filter(c => ownsHero(c.id)).length} / ${CHARS.length}`],
     ['皮肤', String((PROF.skins || []).length)],
     ['联机战绩', `${w} 胜 ${l} 负`, w + l ? `胜率 ${Math.round(w / (w + l) * 100)}%` : ''],
     ['本赛季排位', `${s.w} 胜 ${s.l} 负`, rkSeason().pre ? '季前赛' : SEASON.name],

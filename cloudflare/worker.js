@@ -3,19 +3,16 @@
  *
  * 部署：wrangler.toml 的 main 是 worker.bundle.js，由 python3 tools/build.py 生成（本文件 + src/armory-core.js
  *       拼成一个文件，在 Cloudflare 网页编辑器里整段粘贴也能用）。要绑定 D1 数据库 DB，表会自动建好。
- * 环境变量（Workers → Settings → Variables，密钥类选 Secret，都不设也能跑）：
- *   ECON_CODE_SECRET  玉珏兑换码的签名密钥，node tools/econ-admin.mjs codes 用同一个密钥生成兑换码
+ * 环境变量（Workers → Settings → Variables，选 Secret；不设也能跑，只是用不了管理接口）：
  *   ADMIN_SECRET      管理接口口令：查流水、查处罚、解封（node tools/econ-admin.mjs）
- *   ECON_SANDBOX      设成 1 才开放模拟充值（测试服用，正式服别设）
  *
  * 防作弊（和钱有关的都在服务器上算，客户端只负责显示）：
- *   武库：开箱、买卖、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算。存档带版本号，同时到的两个请求只有
- *         一个能改成（另一个重读再算，防双花）；每个请求带一次性编号，网络重试不会重复执行；挂单什么时候成交
- *         不告诉客户端（防撤单重挂刷成交）；对局奖励要开局领票、打够时间、每天有上限。
- *   墨锭：服务器记账。武库里赚的花的由服务器直接算；客户端本地赚的（打赢电脑、任务、问剑阁返还）按条上报，
+ *   武库：开箱、终端机、买卖、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算；武器箱每周最多用墨锭买 5 个。
+ *         存档带版本号，同时到的两个请求只有一个能改成（另一个重读再算，防双花）；每个请求带一次性编号，网络重试
+ *         不会重复执行；挂单什么时候成交不告诉客户端（防撤单重挂刷成交）；对局奖励要开局领票、打够时间、每天有上限。
+ *   墨锭：服务器记账。武库里赚的花的由服务器直接算；客户端本地赚的（打赢电脑、任务、关卡星）按条上报，
  *         每条带编号只记一次；每天先认 1500，每打完一局服务器认可的对局再多认 80，最多 6000；一次报几万的记进流水给管理员查。
- *   玉珏：只能靠兑换码（HMAC 签名，全服只能用一次）或测试服的模拟充值拿到，客户端改不了。
- *   皮肤：武库专属的 23 款只认库存里真有的；卖掉之后，旧存档也覆盖不回来。
+ *   皮肤：武库专属的 29 款只认库存里真有的；卖掉之后，旧存档也覆盖不回来。没有充值，也没有别的货币。
  *   其他：每个账号、每个 IP 限速；登录失败太多次暂时锁定；注册带上来的存档墨锭有上限；被封期间不能写存档和交易。
  */
 import '../src/armory-core.js';
@@ -45,7 +42,7 @@ function error(message, status = 400, extra) {
 }
 
 const DAY_MS = 86400e3;
-// 客户端上报的墨锭收入（打电脑、任务、关卡星、兑换码这些都在本机算）：服务器看不见本机发生了什么，只能限量。
+// 客户端上报的墨锭收入（打电脑、任务、关卡星这些都在本机算）：服务器看不见本机发生了什么，只能限量。
 // 每天先认 INK_BASE；每打完一局服务器认可的对局（开局领了票、打够了时间），当天再多认 INK_PER_MATCH；最多 INK_DAY_CAP。
 // 只在控制台里改数的人一天最多多拿 INK_BASE；正常玩家打得越多额度越高。超出额度的先记着（单条不超过 INK_OWE_ONE 的才记，
 // 最多记 INK_OWE_MAX），之后哪天额度有空余就补上，所以新手一天里领了好几样一次性奖励也不会丢。
@@ -63,9 +60,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
   `CREATE TABLE IF NOT EXISTS econ (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL, ver INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS econ_nonce (uid TEXT NOT NULL, nonce TEXT NOT NULL, at INTEGER NOT NULL, res_json TEXT NOT NULL, PRIMARY KEY (uid, nonce))`,
-  `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, jade0 INTEGER, jade1 INTEGER, detail TEXT)`,
+  `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, detail TEXT)`,
   `CREATE INDEX IF NOT EXISTS idx_econ_log_uid ON econ_log (uid, at)`,
-  `CREATE TABLE IF NOT EXISTS econ_codes (code TEXT PRIMARY KEY, uid TEXT NOT NULL, jade INTEGER NOT NULL, at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS sanctions (uid TEXT PRIMARY KEY, strikes INTEGER NOT NULL DEFAULT 0, ban_until INTEGER NOT NULL DEFAULT 0, perm INTEGER NOT NULL DEFAULT 0, log_json TEXT NOT NULL DEFAULT '[]', at INTEGER NOT NULL DEFAULT 0, pardon INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS rate (k TEXT PRIMARY KEY, n INTEGER NOT NULL, reset INTEGER NOT NULL)`,
 ];
@@ -92,7 +88,7 @@ function generateToken() {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 服务器的随机数（开箱、掉落、磨损都用它，客户端碰不到）
+// 服务器的随机数（开箱、终端机、掉落、斩数都用它，客户端碰不到）
 function rnd() {
   const a = new Uint32Array(2);
   crypto.getRandomValues(a);
@@ -169,14 +165,14 @@ async function strike(env, uid, reason, now, src) {
   await env.DB.prepare(
     'INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0) ON CONFLICT(uid) DO UPDATE SET strikes = ?2, ban_until = ?3, perm = ?4, log_json = ?5, at = ?6'
   ).bind(uid, rec.strikes, rec.banUntil, rec.perm ? 1 : 0, JSON.stringify(rec.log), now).run();
-  await logRow(env, uid, now, 'strike', 1, null, null, null, null, `${src}:${reason}`);
+  await logRow(env, uid, now, 'strike', 1, null, null, `${src}:${reason}`);
   return rec;
 }
 
 /* ---------- 流水账 ---------- */
-function logStmt(env, uid, now, act, ok, ink0, ink1, jade0, jade1, detail) {
-  return env.DB.prepare('INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, jade0, jade1, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(uid, now, act, ok ? 1 : 0, ink0, ink1, jade0, jade1, String(detail || '').slice(0, 400));
+function logStmt(env, uid, now, act, ok, ink0, ink1, detail) {
+  return env.DB.prepare('INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(uid, now, act, ok ? 1 : 0, ink0, ink1, String(detail || '').slice(0, 400));
 }
 function logRow(...a) { return logStmt(...a).run(); }
 
@@ -195,7 +191,6 @@ function cleanEquip(e) {
   if (e && typeof e === 'object' && !Array.isArray(e)) for (const [c, k] of Object.entries(e)) if (SKIN_RE.test(c) && typeof k === 'string' && (k === '' || SKIN_RE.test(k))) o[c] = k;
   return o;
 }
-const cleanOwned = a => Array.isArray(a) ? a.filter(h => typeof h === 'string' && SKIN_RE.test(h)).slice(0, 40) : ['qingfeng'];
 const clampInk = (x, hi = 1e9) => Math.max(0, Math.min(hi, Math.floor(+x || 0)));
 function srvBlank() { return { ap: {}, rv: {}, ed: 0, en: 0, ow: 0, gone: {} }; }
 function parseObj(txt) { try { const v = JSON.parse(txt); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch (e) { return null; } }
@@ -208,7 +203,7 @@ async function loadEcon(env, uid, prof, now) {
     const ink0 = clampInk(prof.ink), ink = Math.min(ink0, INK_IMPORT_CAP);
     const ins = await env.DB.prepare('INSERT OR IGNORE INTO econ (uid, state_json, srv_json, ink, ver, updated_at) VALUES (?, ?, ?, ?, 0, ?)')
       .bind(uid, JSON.stringify(C.blank()), JSON.stringify(srvBlank()), ink, now).run();
-    if (ins.meta && ins.meta.changes) await logRow(env, uid, now, 'open_account', 1, ink0, ink, 0, 0, ink < ink0 ? '老存档墨锭超过上限，按上限建账' : '');
+    if (ins.meta && ins.meta.changes) await logRow(env, uid, now, 'open_account', 1, ink0, ink, ink < ink0 ? '老存档墨锭超过上限，按上限建账' : '');
     row = await sel();
   }
   const state = parseObj(row.state_json) || C.blank();
@@ -320,23 +315,6 @@ function econWrite(env, uid, ver, now, srv, ink, stateJson) {
     .bind(stateJson, JSON.stringify(srv), ink, now, uid, ver);
 }
 
-/* ---------- 兑换码：YJ-数额-编号-签名，签名是 HMAC-SHA256，全服只能用一次 ---------- */
-const B32 = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-async function codeSig(secret, body) {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body)));
-  let out = '';
-  for (let i = 0; i < 10; i++) out += B32[mac[i] & 31];
-  return out;
-}
-async function codeValue(env, code) {
-  const m = /^YJ-(\d{1,5})-([A-Z2-9]{6})-([A-Z2-9]{10})$/.exec(code);
-  if (!m || !env.ECON_CODE_SECRET) return 0;
-  const jade = +m[1];
-  if (!(jade >= 1 && jade <= 20000)) return 0;
-  return sameStr(await codeSig(env.ECON_CODE_SECRET, `YJ|${m[1]}|${m[2]}`), m[3]) ? jade : 0;
-}
-
 /* ---------- 武库：所有动作都在服务器上算 ---------- */
 const QUIET = ['sync', 'matchStart'];   // 太频繁的动作不进流水账（有成交的除外）
 async function handleEcon(env, auth, body, now) {
@@ -350,7 +328,6 @@ async function handleEcon(env, auth, body, now) {
   if (ban) return banned(ban);
   if (!(await hit(env, 'econ:' + uid, 90, 60e3, now))) return error('操作太快了，歇一会儿再试', 429);
   if (!(await hit(env, 'econday:' + uid, 4000, DAY_MS, now))) return error('今天的操作次数用完了，明天再来', 429);
-  const info = { sandbox: env.ECON_SANDBOX === '1', codes: !!env.ECON_CODE_SECRET };
   const freshProfile = async () => {
     const r = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(uid).first();
     return parseProfile(r ? r.profile_json : '', auth.user.username);
@@ -359,38 +336,28 @@ async function handleEcon(env, auth, body, now) {
   const seen = await env.DB.prepare('SELECT res_json FROM econ_nonce WHERE uid = ? AND nonce = ?').bind(uid, nonce).first();
   if (seen) {
     const eco = await loadEcon(env, uid, await freshProfile(), now);
-    return json({ ok: true, ...JSON.parse(seen.res_json), state: C.publicState(C.normalize(eco.state, { now, uid, owned: [] })), ledger: ledgerOut(eco, now), info, replay: true });
-  }
-  let code = '', codeJade = 0;
-  if (act === 'redeem') {
-    code = String(args.code || '').trim().toUpperCase().slice(0, 40);
-    if (!(await hit(env, 'redeem:' + uid, 12, 3600e3, now))) return error('兑换码试太多次了，一小时后再试', 429);
-    codeJade = await codeValue(env, code);
-    if (codeJade) {
-      const used = await env.DB.prepare('SELECT uid FROM econ_codes WHERE code = ?').bind(code).first();
-      if (used && used.uid !== uid) codeJade = 0;
-    }
+    return json({ ok: true, ...JSON.parse(seen.res_json), state: C.publicState(C.normalize(eco.state, { now, uid })), ledger: ledgerOut(eco, now), replay: true });
   }
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
     const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
-    const E = { now, rnd, uid, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), owned: cleanOwned(prof.owned), sandbox: info.sandbox, server: true, code: codeJade };
-    const equip0 = { ...E.equip }, jade0 = Math.floor(+eco.state.jade || 0);
-    const r = C.run(eco.state, act, { ...args, ...(act === 'redeem' ? { code } : {}) }, E);
+    const E = { now, rnd, uid, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true };
+    const equip0 = { ...E.equip };
+    const r = C.run(eco.state, act, args, E);
     const res = r.res || {}, st = r.state, stJson = JSON.stringify(st);
     const add = E.skins.filter(k => !skins0.includes(k)), del = skins0.filter(k => !E.skins.includes(k));
     const eq = {};
     for (const c of new Set([...Object.keys(equip0), ...Object.keys(E.equip)])) if (equip0[c] !== E.equip[c]) eq[c] = E.equip[c] === undefined ? null : E.equip[c];
     const out = { res, sold: r.sold || [] };
     // 最后一道保险：算出来的数不对劲（不是整数、是负数、大得离谱）就整个作废，记下来查
-    const bad = [E.ink, st.jade, st.keys, st.tags, ...Object.values(st.cases)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);
+    const bad = [E.ink, st.tags, st.term, ...Object.values(st.cases), ...st.inv.map(x => x.st + 1)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);   // 斩数 -1 是普通版
     if (bad !== undefined || st.inv.length > C.INV_MAX) {
-      await logRow(env, uid, now, 'invariant', 0, eco.ink, null, jade0, null, JSON.stringify({ act, args, bad }).slice(0, 400));
+      await logRow(env, uid, now, 'invariant', 0, eco.ink, null, JSON.stringify({ act, args, bad }).slice(0, 400));
       return error('操作失败，已记录', 500);
     }
     if (!out.sold.length && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
-      return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {}, info });   // 什么都没变：不用写
+      return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {} });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
     for (const k of del) srv.gone[k] = [ver + 1, now];
@@ -399,23 +366,21 @@ async function handleEcon(env, auth, body, now) {
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
     delete p.armory; delete p.ledger;
     const quiet = QUIET.includes(act) && !out.sold.length;
-    const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i} f${res.item.f}` : res.gain || res.price || res.jade || '', s: out.sold.length || undefined }).slice(0, 400);
+    const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i}${res.item.st >= 0 ? ' st' : ''}` : res.gain || res.price || '', s: out.sold.length || undefined }).slice(0, 400);
     const stmts = [guard(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver)];
-    if (act === 'redeem' && res.ok) stmts.push(guard(env, 'INSERT INTO econ_codes (code, uid, jade, at) SELECT ?, ?, ?, ?', [code, uid, res.jade, now], uid, ver));
-    if (!quiet) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, jade0, jade1, detail) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, jade0, st.jade, detail], uid, ver));
+    if (!quiet) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver));
     stmts.push(userWrite(env, uid, p, now, ver));
     stmts.push(econWrite(env, uid, ver, now, srv, E.ink, stJson));
     let results;
     try { results = await env.DB.batch(stmts); }
     catch (e) {
       const m = String(e && e.message || e);
-      if (/econ_codes/.test(m)) return json({ ok: true, res: { err: '兑换码不对，或者已经被用过了' }, sold: [], state: C.publicState(C.normalize(eco.state, { now, uid, owned: [] })), ledger: ledgerOut(eco, now), info });
       if (/econ_nonce/.test(m)) continue;   // 同一个编号的请求正好同时到：重来一遍会走上面“已经做过”
       throw e;
     }
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 版本冲突：别的请求先改了，重读再算
     eco.ink = E.ink; eco.ver = ver + 1;
-    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq, info });
+    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq });
   }
   return error('服务器忙，请再试一次', 503);
 }
@@ -446,7 +411,7 @@ async function handleProfilePost(env, auth, body, now) {
     p.equip = fixEquip(cleanEquip(p.equip), p.skins);
     const fix = { skinsAdd: p.skins.filter(k => !sent.includes(k)), skinsDel: sent.filter(k => !p.skins.includes(k)) };
     const stmts = [userWrite(env, uid, p, now, ver)];
-    if (eco.ink !== ink0 || capped) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, jade0, jade1, detail) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?', [uid, now, forged ? 'ink_spike' : 'ledger', 1, ink0, eco.ink, null, null, [capped ? `超过今天的额度 ${allow}，没认 ${capped}` : '', paid ? `补上以前记下的 ${paid}` : '', owed ? `还记着 ${owed}` : '', forged ? `一条上报 ${forged}` : '', revoked ? `反作弊撤回 ${revoked}` : ''].filter(Boolean).join('；')], uid, ver));
+    if (eco.ink !== ink0 || capped) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, forged ? 'ink_spike' : 'ledger', 1, ink0, eco.ink, [capped ? `超过今天的额度 ${allow}，没认 ${capped}` : '', paid ? `补上以前记下的 ${paid}` : '', owed ? `还记着 ${owed}` : '', forged ? `一条上报 ${forged}` : '', revoked ? `反作弊撤回 ${revoked}` : ''].filter(Boolean).join('；')], uid, ver));
     stmts.push(econWrite(env, uid, ver, now, eco.srv, eco.ink, eco.stateJson));
     const results = await env.DB.batch(stmts);
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;
@@ -480,7 +445,7 @@ async function handleAdmin(env, request, path, now) {
     const u = await env.DB.prepare('SELECT id, username FROM users WHERE id = ? OR username = ?').bind(uid, uid).first();
     if (!u) return error('没有这个账号', 404);
     const row = await env.DB.prepare('SELECT state_json, ink, ver, updated_at FROM econ WHERE uid = ?').bind(u.id).first();
-    const log = await env.DB.prepare('SELECT at, act, ok, ink0, ink1, jade0, jade1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all();
+    const log = await env.DB.prepare('SELECT at, act, ok, ink0, ink1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all();
     return json({ ok: true, uid: u.id, username: u.username, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null, sanction: await sanctionOf(env, u.id), log: log.results || [] });
   }
   if (path === '/api/admin/pardon' && request.method === 'POST') {
@@ -489,7 +454,7 @@ async function handleAdmin(env, request, path, now) {
     const u = await env.DB.prepare('SELECT id FROM users WHERE id = ? OR username = ?').bind(uid, uid).first();
     if (!u) return error('没有这个账号', 404);
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
-    await logRow(env, u.id, now, 'pardon', 1, null, null, null, null, String(body.note || '').slice(0, 100));
+    await logRow(env, u.id, now, 'pardon', 1, null, null, String(body.note || '').slice(0, 100));
     return json({ ok: true, uid: u.id });
   }
   return error('Not found', 404);

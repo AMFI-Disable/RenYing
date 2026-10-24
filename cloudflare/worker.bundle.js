@@ -4,19 +4,16 @@
  *
  * 部署：wrangler.toml 的 main 是 worker.bundle.js，由 python3 tools/build.py 生成（本文件 + src/armory-core.js
  *       拼成一个文件，在 Cloudflare 网页编辑器里整段粘贴也能用）。要绑定 D1 数据库 DB，表会自动建好。
- * 环境变量（Workers → Settings → Variables，密钥类选 Secret，都不设也能跑）：
- *   ECON_CODE_SECRET  玉珏兑换码的签名密钥，node tools/econ-admin.mjs codes 用同一个密钥生成兑换码
+ * 环境变量（Workers → Settings → Variables，选 Secret；不设也能跑，只是用不了管理接口）：
  *   ADMIN_SECRET      管理接口口令：查流水、查处罚、解封（node tools/econ-admin.mjs）
- *   ECON_SANDBOX      设成 1 才开放模拟充值（测试服用，正式服别设）
  *
  * 防作弊（和钱有关的都在服务器上算，客户端只负责显示）：
- *   武库：开箱、买卖、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算。存档带版本号，同时到的两个请求只有
- *         一个能改成（另一个重读再算，防双花）；每个请求带一次性编号，网络重试不会重复执行；挂单什么时候成交
- *         不告诉客户端（防撤单重挂刷成交）；对局奖励要开局领票、打够时间、每天有上限。
- *   墨锭：服务器记账。武库里赚的花的由服务器直接算；客户端本地赚的（打赢电脑、任务、问剑阁返还）按条上报，
+ *   武库：开箱、终端机、买卖、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算；武器箱每周最多用墨锭买 5 个。
+ *         存档带版本号，同时到的两个请求只有一个能改成（另一个重读再算，防双花）；每个请求带一次性编号，网络重试
+ *         不会重复执行；挂单什么时候成交不告诉客户端（防撤单重挂刷成交）；对局奖励要开局领票、打够时间、每天有上限。
+ *   墨锭：服务器记账。武库里赚的花的由服务器直接算；客户端本地赚的（打赢电脑、任务、关卡星）按条上报，
  *         每条带编号只记一次；每天先认 1500，每打完一局服务器认可的对局再多认 80，最多 6000；一次报几万的记进流水给管理员查。
- *   玉珏：只能靠兑换码（HMAC 签名，全服只能用一次）或测试服的模拟充值拿到，客户端改不了。
- *   皮肤：武库专属的 23 款只认库存里真有的；卖掉之后，旧存档也覆盖不回来。
+ *   皮肤：武库专属的 29 款只认库存里真有的；卖掉之后，旧存档也覆盖不回来。没有充值，也没有别的货币。
  *   其他：每个账号、每个 IP 限速；登录失败太多次暂时锁定；注册带上来的存档墨锭有上限；被封期间不能写存档和交易。
  */
 /* === src/armory-core.js === */
@@ -24,7 +21,7 @@
    刃影武库 · 规则核心
    ---------------------------------------------------------------------
    浏览器（src/armory.js）和云端（cloudflare/worker.js）共用这一份规则：
-   收藏品和武器箱、品质与概率、磨损度、市场价格、汰换合同、对局掉落、每周补给、江湖行动。
+   收藏品和武器箱、品质与概率、斩数、终端机、市场价格、汰换合同、对局掉落、每周补给、江湖行动。
    这里不碰页面，只改传进来的存档对象 s，所以同一份代码在服务器上跑出来的结果和本机一模一样。
    连上新版云端时，开箱、买卖、汰换都由服务器算（随机数也在服务器上取），本机只负责显示。
    所有数据表都冻结了，控制台改不动概率和价格。
@@ -32,16 +29,18 @@
 (function (G) {
   'use strict';
   const C = {};
-  C.VER = 1;
+  C.VER = 2;                                   // 2：去掉磨损、图案模板、钥匙和玉珏，加终端机，六个武器箱
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
-  C.INV_MAX = 300, C.LIST_MAX = 20, C.HIST_MAX = 40, C.ORDER_MAX = 60;
+  C.INV_MAX = 300, C.LIST_MAX = 20, C.HIST_MAX = 40;
   C.FEE = 0.15;                                // 市场手续费
   // 买卖差价：在售的比市场价贵 2%~12%；直接卖出是卖给收购商，按市场价的 88% 收；自己挂单最高标到市场价的 95%。
   // 价格每天最多偏离 ±10%，所以哪天买、哪天卖都赚不到差价，汰换合同也换不出比材料更值钱的东西（见 tools/econ-test.mjs 的“套利”一节）
   C.ASK = [1.02, 1.12], C.BID = 0.88, C.LIST_MAX_R = 0.95;
+  C.CASE_WEEK = 5;                             // 每周最多用墨锭买 5 个武器箱
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
+  C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
   C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen'];
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
@@ -56,11 +55,11 @@
     gold: { n: '★ 非凡', c: '228,174,57' },
   };
   C.ODDS = { mil: 0.7992, res: 0.1598, cla: 0.032, cov: 0.0064, gold: 0.0026 };
-  C.ST_P = 0.1;                                // 出斩数版（StatTrak）的概率
-  C.WEAR = [[0.07, '崭新出厂', '崭新'], [0.15, '略有磨损', '略磨'], [0.38, '久经沙场', '久经'], [0.45, '破损不堪', '破损'], [1.0001, '战痕累累', '战痕']];
-  C.LUCKY = [1, 8, 88, 168, 520, 666, 888, 999];   // 稀有图案模板
+  C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
   C.BASE = { mil: 35, res: 160, cla: 650, cov: 2200, gold: 8800 };   // 参考价（墨锭）
-  C.WEAR_MUL = [1.55, 1.18, 1, 0.9, 0.8];
+  // 终端机（照 CS2）：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
+  // 5 件都不要终端机也没了；开封 3 天不处理就作废。报价是当天市场价的 1~1.3 倍，所以买下来转手赚不到钱
+  C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1, 1.3] };
 
   // 新涂装：只换配色的军规级饰品 [皮肤 key, 侠客, 名字, 配色]
   C.PAINTS = [
@@ -84,8 +83,12 @@
     ['ly_p2', 'liuyun', '苍山', { body: '#d4dad8', shade: '#8a9894', scarf: '#4a6a64', slash: '150,190,180', blade: '#eef6f4' }],
     ['yh_p2', 'yuehua', '鎏金', { body: '#f8f0dc', shade: '#c8b070', scarf: '#d8a830', slash: '255,215,110', blade: '#fff8e0' }],
     ['yl_p2', 'yanling', '夜鸦', { body: '#2a2a30', shade: '#121216', scarf: '#6a6a7a', slash: '190,190,210', blade: '#dcdce6' }],
+    ['my_p2', 'moyu', '青花', { body: '#eef2f8', shade: '#9aa8c4', scarf: '#2a4a9a', slash: '110,140,230', blade: '#1e2c5a', outline: '#1a2a5a', outlineA: 1 }],
+    ['gc_p2', 'gouchen', '赭石', { body: '#c8945a', shade: '#8a5a2e', scarf: '#6a3a1a', slash: '230,170,100', blade: '#f4e2c8', outline: '#2a1608' }],
+    ['yx_p2', 'yuxiao', '靛青', { body: '#dfe6f4', shade: '#8c9ac0', scarf: '#3a4fb0', slash: '120,140,240', blade: '#e8ecff' }],
+    ['zx_p2', 'zuixian', '青瓷', { body: '#cfe0d4', shade: '#8aa894', scarf: '#4a8a78', slash: '140,220,190', blade: '#eef8f2' }],
   ];
-  // ★ 非凡：三款只在武器箱里出的传说皮肤
+  // ★ 非凡：只在武器箱里出的传说皮肤（青锋行那款是游戏里原有的，也放进了江湖武器箱）
   C.STARS = {
     gc_wolf: { char: 'gouchen', name: '霜狼',
       look: { body: '#dfe9f2', shade: '#7d93ab', scarf: '#7fd4ff', slash: '140,210,255', blade: '#f0f8ff', outline: '#0a1422', outlineA: 1 },
@@ -102,39 +105,38 @@
       deco: { head: 'headband', band: '#ff3b30', robe: 'dark', breastplate: '#2a1416', shoulder: '#3a1a1c', back: 'flysword', trail: 'ink', aura: 'smoke', weapStyle: 'renying_blade' },
       fx: { th: 'ink', c: '255,80,70', c2: '12,8,8' },
       scene: { sky: ['#0c0606', '#2a0c0c', '#6a1a16', '#2a0a0a'], orb: 'bloodmoon', orbC: '255,90,70', mist: '255,90,80', mtn: ['#220a0a', '#140606'], bam: ['#0e0404', '#080202'], wx: 'ink', wxC: '40,20,20', hit: 'inksplat', hitC: '255,80,70', stars: 0.15, rays: true } },
+    lm_jiuxiao: { char: 'leiming', name: '九霄',
+      look: { body: '#2c2a4a', shade: '#16142a', scarf: '#ffd23a', slash: '255,225,110', blade: '#fffbe6', outline: '#ffe27a', outlineA: 0.9 },
+      deco: { head: 'starguan', robe: 'thunder', breastplate: '#3a3070', shoulder: '#5a48a0', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'jiuxiao_gauntlet' },
+      fx: { th: 'thunder', c: '255,225,110', c2: '170,140,255' },
+      scene: { sky: ['#07051a', '#181040', '#38246e', '#140c30'], orb: 'rift', orbC: '255,225,120', mist: '190,160,255', mtn: ['#1c1238', '#0e0a22'], bam: ['#0a0616', '#06040e'], wx: 'spark', wxC: '255,220,110', hit: 'bolt', hitC: '255,220,90', stars: 0.5, rays: true } },
+    yh_guanghan: { char: 'yuehua', name: '广寒',
+      look: { body: '#24305a', shade: '#121a3a', scarf: '#e8eeff', slash: '215,228,255', blade: '#f6f9ff', outline: '#dce6ff', outlineA: 0.9 },
+      deco: { head: 'jadepin', gem: '#cfe0ff', robe: 'starry', breastplate: '#1a2650', back: 'crescent', trail: 'snow', aura: 'cloud', weapStyle: 'guanghan_moon' },
+      fx: { th: 'star', c: '205,222,255', c2: '255,255,255' },
+      scene: { sky: ['#03061a', '#0a163a', '#1c3468', '#0a1632'], orb: 'moon', orbC: '240,246,255', mist: '190,210,255', mtn: ['#122444', '#0a162c'], bam: ['#060c1c', '#040812'], wx: 'snow', wxC: '230,240,255', hit: 'crescent', hitC: '205,222,255', stars: 0.9, rays: true } },
   };
-  // 收藏品：三个武器箱各一套，江湖行动一套（不开箱，靠行动星章和每周补给）
+  // 六个武器箱，各是一套收藏品：游戏里原有的 35 款皮肤和武库的 29 款全在里面，每款只在一个箱子里
   C.COLS = {
-    c1: { name: '初刃', price: 90, emblem: '刃', col: '200,70,60',
-      mil: ['qf_p1', 'ts_p1', 'lm_p1', 'fy_p1', 'ly_p1'], res: ['qf_frost', 'ts_bronze', 'lm_violet', 'ly_dusk'], cla: ['ts_obsidian', 'ly_sky', 'lm_sun'], cov: ['qf_gold', 'fy_blood', 'ly_fox'], gold: ['gc_wolf'] },
-    c2: { name: '霜华', price: 120, emblem: '霜', col: '90,160,230',
-      mil: ['ls_p1', 'yh_p1', 'my_p1', 'yl_p1', 'gc_p1'], res: ['ls_plum', 'yh_sakura', 'my_cinnabar', 'gc_crimson'], cla: ['yh_eclipse', 'my_gold'], cov: ['ls_aurora', 'yh_solstice', 'gc_underworld'], gold: ['zx_moon'] },
-    c3: { name: '名剑', price: 160, emblem: '剑', col: '220,170,70',
-      mil: ['yx_p1', 'zx_p1', 'qf_p2', 'ts_p2', 'ls_p2'], res: ['yx_snow', 'zx_amber', 'fy_jade'], cla: ['yx_celestial', 'yl_phoenix'], cov: ['qf_abyss', 'zx_immortal', 'ls_dragon'], gold: ['qf_renying'] },
-    op: { name: '江湖行动', price: 0, nocase: true, emblem: '行', col: '90,200,150',
-      mil: ['lm_p2', 'fy_p2', 'ly_p2', 'yh_p2', 'yl_p2'], res: ['ly_bamboo', 'yl_raven'], cla: ['fy_phantom', 'lm_asura'], cov: ['my_celestial', 'ts_crimson', 'yl_blizzard'], gold: [] },
+    c1: { name: '初刃', price: 180, emblem: '刃', col: '200,70,60',
+      mil: ['qf_p1', 'ts_p1', 'lm_p1', 'fy_p1'], res: ['qf_frost', 'ts_bronze', 'ly_dusk'], cla: ['ts_obsidian', 'ly_sky'], cov: ['qf_gold', 'fy_blood'], gold: ['gc_wolf'] },
+    c2: { name: '霜华', price: 220, emblem: '霜', col: '90,160,230',
+      mil: ['ls_p1', 'yh_p1', 'my_p1', 'gc_p1'], res: ['ls_plum', 'yh_sakura'], cla: ['yh_eclipse', 'my_gold'], cov: ['ls_aurora', 'yh_solstice'], gold: ['zx_moon'] },
+    c3: { name: '名剑', price: 260, emblem: '剑', col: '220,170,70',
+      mil: ['yx_p1', 'zx_p1', 'qf_p2', 'ts_p2'], res: ['yx_snow', 'zx_amber'], cla: ['yx_celestial', 'yl_phoenix'], cov: ['qf_abyss', 'zx_immortal'], gold: ['qf_renying'] },
+    c4: { name: '江湖', price: 220, emblem: '行', col: '90,200,150',
+      mil: ['lm_p2', 'fy_p2', 'ly_p2', 'yh_p2'], res: ['ly_bamboo', 'yl_raven'], cla: ['fy_phantom'], cov: ['my_celestial', 'ts_crimson'], gold: ['qf_qfx'] },
+    c5: { name: '惊雷', price: 240, emblem: '雷', col: '150,100,240',
+      mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
+    c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
+      mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
   };
-  C.CASES = ['c1', 'c2', 'c3'];
-  const RANGE = { mil: [0.06, 0.8], res: [0, 0.7], cla: [0, 0.65], cov: [0, 0.6], gold: [0, 0.8] };
-  const RANGE_FIX = { my_p1: [0, 0.08], gc_p1: [0.4, 1] };   // 月白只有新的，苔痕只有旧的
+  C.CASES = Object.keys(C.COLS);
   C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
   C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
 
-  // 商店（便利道具）：钥匙和改名标签，可以用玉珏，也可以用墨锭（每周限量）
-  C.STORE = [
-    { id: 'key1', name: '武器箱钥匙', give: ['keys', 1], cost: ['jade', 25] },
-    { id: 'key5', name: '武器箱钥匙 ×5', give: ['keys', 5], cost: ['jade', 120] },
-    { id: 'keyink', name: '武器箱钥匙（墨锭）', give: ['keys', 1], cost: ['ink', 300], lim: 3 },
-    { id: 'tag', name: '改名标签', give: ['tags', 1], cost: ['jade', 20] },
-    { id: 'tagink', name: '改名标签（墨锭）', give: ['tags', 1], cost: ['ink', 400], lim: 2 },
-  ];
-  C.TOPUP = [[6, 60], [30, 300], [68, 680]];
-  C.AGE = {
-    u8: { name: '未满 8 周岁', one: 0, month: 0 },
-    u16: { name: '8 到 16 周岁', one: 50, month: 200 },
-    u18: { name: '16 到 18 周岁', one: 100, month: 400 },
-    adult: { name: '已满 18 周岁', one: 0, month: 0, free: true },
-  };
+  // 商店只剩改名标签（墨锭，每周限量）；武器箱在武器箱页用墨锭买
+  C.STORE = [{ id: 'tag', name: '改名标签', give: ['tags', 1], cost: 400, lim: 2 }];
   // 江湖行动：每周四个任务（四组里各抽一个），完成得星章
   C.MISSIONS = {
     games: { g: 0, n: 5, star: 1, t: '进行 {n} 局对战' },
@@ -158,10 +160,10 @@
     { id: 'ink', cost: 1, name: '300 墨锭' },
     { id: 'case', cost: 2, name: '随机武器箱' },
     { id: 'tag', cost: 2, name: '改名标签' },
-    { id: 'key', cost: 3, name: '武器箱钥匙' },
-    { id: 'opres', cost: 5, name: '行动收藏品 · 随机受限' },
-    { id: 'opcla', cost: 9, name: '行动收藏品 · 随机保密' },
-    { id: 'opcov', cost: 15, name: '行动收藏品 · 自选隐秘' },
+    { id: 'term', cost: 3, name: '终端机' },
+    { id: 'res', cost: 5, name: '随机受限饰品' },
+    { id: 'cla', cost: 9, name: '随机保密饰品' },
+    { id: 'cov', cost: 15, name: '自选隐秘饰品' },
   ];
 
   /* ---------- 小工具 ---------- */
@@ -183,19 +185,14 @@
   C.hash32 = hash32; C.rng = rng;
   C.day = t => Math.floor((t + 8 * 3600e3) / 86400e3);
   C.week = d => Math.floor((d + 3) / 7);
-  C.monthKey = d => { const x = new Date(d * 86400e3); return x.getUTCFullYear() * 100 + x.getUTCMonth() + 1; };
   C.season = d => { const k = Math.max(0, Math.floor((d - C.DAY0) / C.SEASON_DAYS)), s = C.DAY0 + k * C.SEASON_DAYS; return { k, id: 's' + (k + 1), start: s, end: s + C.SEASON_DAYS }; };
-  C.wearIdx = f => { for (let i = 0; i < C.WEAR.length; i++) if (f < C.WEAR[i][0]) return i; return C.WEAR.length - 1; };
-  C.wearName = f => C.WEAR[C.wearIdx(f)][1];
-  C.wearShort = f => C.WEAR[C.wearIdx(f)][2];
 
-  // 每件饰品：属于哪套收藏品、什么品质、磨损范围、热门程度
+  // 每件饰品：属于哪个武器箱（收藏品）、什么品质、热门程度
   C.ITEM = Object.create(null);
-  for (const [cid, col] of Object.entries(C.COLS)) for (const t of C.TIERS) for (const k of col[t] || []) {
-    const r = RANGE_FIX[k] || RANGE[t];
-    C.ITEM[k] = { col: cid, tier: t, fmin: r[0], fmax: r[1], mul: 0.85 + (hash32('pop|' + k) % 450) / 1000 };   // 热门程度 0.85~1.3
-  }
+  for (const [cid, col] of Object.entries(C.COLS)) for (const t of C.TIERS) for (const k of col[t] || [])
+    C.ITEM[k] = { col: cid, tier: t, mul: 0.85 + (hash32('pop|' + k) % 450) / 1000 };   // 热门程度 0.85~1.3
   C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
+  C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
   const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
@@ -210,26 +207,24 @@
     };
     return 1 + oct(29, 0.06, 'a') + oct(9, 0.028, 'b') + oct(3, 0.012, 'c');   // 加起来最多 ±10%
   };
+  C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 斩数版贵多少
   C.price = (it, day) => {
     const d = C.ITEM[it.k]; if (!d) return 0;
-    let p = C.BASE[d.tier] * d.mul * C.WEAR_MUL[C.wearIdx(it.f)];
-    if (it.f < 0.01 || it.f > 0.98) p *= 1.15;
-    if (it.st >= 0) p *= d.tier === 'gold' ? 1.4 : 1.75;
-    if (C.LUCKY.includes(it.p)) p *= 1.8;
+    let p = C.BASE[d.tier] * d.mul;
+    if (it.st >= 0) p *= C.ST_MUL(d.tier);
     return Math.max(2, Math.round(p * C.trend(it.k, day)));
   };
-  C.refPrice = (k, day) => C.price({ k, f: 0.26, st: -1, p: 0 }, day);   // 走势图用：久经沙场、普通版
+  C.refPrice = (k, day) => C.price({ k, st: -1 }, day);   // 走势图用：普通版
   C.casePrice = (cid, day) => Math.max(5, Math.round(C.COLS[cid].price * C.trend('case|' + cid, day)));
   C.quick = p => Math.floor(p * C.BID * (1 - C.FEE));   // 直接卖出（饰品、武器箱）到手多少
   C.net = p => Math.floor(p * (1 - C.FEE));             // 挂单成交到手多少
   // 市场上今天在卖的几件（别的江湖人挂的单）：同一天同一件饰品，谁来看都是这几件
   C.listings = (k, day) => {
-    const d = C.isItem(k) && C.ITEM[k]; if (!d) return [];
+    if (!C.isItem(k)) return [];
     const r = rng(hash32(`ls|${k}|${day}`)), n = 3 + Math.floor(r() * 4), out = [];
     for (let j = 0; j < n; j++) {
-      const f = +(d.fmin + r() * (d.fmax - d.fmin)).toFixed(9), st = r() < 0.12 ? Math.floor(r() * 150) : -1, p = Math.floor(r() * 1000), m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
-      const it = { k, f, st, p };
-      out.push({ l: `${day}.${k}.${j}`, k, f, st, p, price: Math.round(C.price(it, day) * m) });
+      const st = r() < 0.2 ? Math.floor(r() * 150) : -1, m = C.ASK[0] + r() * (C.ASK[1] - C.ASK[0]);
+      out.push({ l: `${day}.${k}.${j}`, k, st, price: Math.round(C.price({ k, st }, day) * m) });
     }
     return out.sort((a, b) => a.price - b.price);
   };
@@ -238,21 +233,23 @@
 
   /* ---------- 存档 ---------- */
   C.blank = () => ({
-    v: C.VER, jade: 0, keys: 0, tags: 0, nid: 1, inv: [], cases: { c1: 0, c2: 0, c3: 0 }, via: [], eq: {},
-    lst: [], hist: [], bought: { d: 0, ids: [] }, drop: { w: 0, g: 0, n: 0, sup: 0 },
-    op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {}, orders: [], age: '',
-    codes: [], stat: { open: 0, trade: 0, sold: 0, bought: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
+    v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
+    lst: [], hist: [], bought: { d: 0, ids: [] }, cw: { w: 0, n: 0 }, drop: { w: 0, g: 0, n: 0, sup: 0 },
+    op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
+    stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
   });
   const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
   const int = (x, lo = 0, hi = 1e15) => { const v = Math.floor(+x); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
   const num = (x, lo = 0, hi = 1e15) => { const v = +x; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
   const str = (x, n) => typeof x === 'string' ? x.slice(0, n) : '';
+  const stOf = x => Math.floor(+x) >= 0 ? int(x, 0, 1e7) : -1;
   const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
-    i: int(x.i, 1), k: x.k, f: num(x.f, 0, 1), p: int(x.p, 0, 999), st: Math.floor(+x.st) >= 0 ? int(x.st, 0, 1e7) : -1,
-    n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
-  // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务
+    i: int(x.i, 1), k: x.k, st: stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
+  // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务。
+  // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台终端机，饰品和武器箱照旧
   C.normalize = (s, env) => {
     if (!isObj(s)) s = C.blank();
+    const oldKeys = s.v === 1 ? int(s.keys, 0, 50) : 0;
     const b = C.blank();
     for (const k of Object.keys(b)) {
       const okType = Array.isArray(b[k]) ? Array.isArray(s[k]) : isObj(b[k]) ? isObj(s[k]) : b[k] === null ? (s[k] === null || isObj(s[k])) : typeof s[k] === typeof b[k];
@@ -260,7 +257,7 @@
     }
     for (const k of Object.keys(s)) if (!(k in b)) delete s[k];
     s.v = C.VER;
-    for (const k of ['jade', 'keys', 'tags']) s[k] = int(s[k], 0, 1e9);
+    s.tags = int(s.tags, 0, 1e9); s.term = int(s.term, 0, 1e6) + oldKeys;
     s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
     const seen = new Set();
     s.inv = s.inv.map(cleanItem).filter(x => x && !seen.has(x.i) && seen.add(x.i)).slice(0, C.INV_MAX);
@@ -276,19 +273,20 @@
     s.nid = Math.max(int(s.nid, 1), top + 1);
     s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
     s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
-    s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold'].includes(h.kind) ? h.kind : 'sell',
-      ...(C.CASES.includes(h.c) ? { c: h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', f: num(h.f, 0, 1), st: Math.floor(+h.st) >= 0 ? int(h.st) : -1 }),
+    s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold', 'term'].includes(h.kind) ? h.kind : 'sell',
+      ...(C.CASES.includes(h.c) ? { c: h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),
       price: int(h.price, 0, 1e9), ...(h.gain !== undefined ? { gain: int(h.gain, 0, 1e9) } : {}) }));
-    s.orders = s.orders.filter(isObj).slice(0, C.ORDER_MAX).map(o => ({ id: str(o.id, 24).replace(/[^A-Z0-9]/g, ''), t: num(o.t), m: int(o.m), name: str(o.name, 20).replace(/[<>&"'`\\]/g, ''), yuan: int(o.yuan, 0, 1e6), sb: o.sb ? 1 : 0 }));
-    s.codes = s.codes.filter(c => typeof c === 'string').map(c => c.slice(0, 40)).slice(-200);
     s.cc = Array.from(new Set(s.cc.filter(c => own(C.COLS, c))));
     s.buys = Object.fromEntries(Object.entries(s.buys).filter(([id, v]) => C.STORE.some(g => g.id === id) && isObj(v)).map(([id, v]) => [id, { k: str(v.k, 12), n: int(v.n, 0, 1e6) }]));
     s.stat = Object.fromEntries(Object.keys(b.stat).map(k => [k, int(s.stat[k])]));
     s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
-    s.last = num(s.last); s.gift = s.gift ? 1 : 0; s.age = own(C.AGE, s.age) ? s.age : '';
+    s.last = num(s.last); s.gift = s.gift ? 1 : 0;
     s.bought = { d: int(s.bought.d), ids: Array.isArray(s.bought.ids) ? s.bought.ids.filter(x => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, 600) : [] };
+    s.cw = { w: int(s.cw.w), n: int(s.cw.n, 0, C.CASE_WEEK) };
     s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
     s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
+    const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
+    s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: o.k, st: stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
     const op = s.op, ms = Array.isArray(op.ms) && op.ms.length === 4 && op.ms.every(m => isObj(m) && own(C.MISSIONS, m.id)) ? op.ms.map(m => ({ id: m.id, n: C.MISSIONS[m.id].n, star: C.MISSIONS[m.id].star, ...(m.id === 'hero' ? { h: C.HERO_IDS.includes(m.h) ? m.h : 'qingfeng' } : {}) })) : null;
     const earned = int(op.earned, 0, 1e6);
     s.op = { s: str(op.s, 8), earned, spent: int(op.spent, 0, earned), w: ms ? int(op.w) : -1, ms: ms || [],
@@ -296,42 +294,40 @@
       done: ms && Array.isArray(op.done) ? Array.from(new Set(op.done.map(Number).filter(i => i >= 0 && i < 4 && Number.isInteger(i)))) : [] };
     const now = env.now, day = C.day(now), wk = C.week(day), se = C.season(day);
     if (s.bought.d !== day) s.bought = { d: day, ids: [] };
+    if (s.cw.w !== wk) s.cw = { w: wk, n: 0 };
     if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
     if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
-    if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk, env.owned), prog: {}, done: [] });
+    if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk), prog: {}, done: [] });
     if (s.dm.d !== day) s.dm = { d: day, n: 0 };
+    if (s.tm && !(now - s.tm.t0 < C.TERM.days * 86400e3)) s.tm = null;   // 开封超过 3 天：作废
     return s;
   };
   // 给玩家看的那份：挂单什么时候成交只有服务器知道（不然撤了重挂能刷出马上成交的单）
   C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); for (const L of o.lst) delete L.at; delete o.tk; return o; };
-  // 只在武库里出的皮肤（20 款涂装和 3 款 ★）：服务器只认库存里真有的
+  // 只在武库里出的皮肤（24 款涂装和 5 款 ★）：服务器只认库存里真有的
   C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.STARS)];
-  C.genMissions = (uid, wk, owned) => {
+  C.genMissions = (uid, wk) => {
     const r = rng(hash32(`ms|${uid}|${wk}`)), out = [];
     for (let g = 0; g < 4; g++) {
       const ids = Object.keys(C.MISSIONS).filter(id => C.MISSIONS[id].g === g), id = ids[Math.floor(r() * ids.length)], m = C.MISSIONS[id];
       const row = { id, n: m.n, star: m.star };
-      if (id === 'hero') { const pool = (owned && owned.length ? owned : ['qingfeng']).filter(h => C.HERO_IDS.includes(h)); row.h = pool[Math.floor(r() * pool.length)] || 'qingfeng'; }
+      if (id === 'hero') row.h = C.HERO_IDS[Math.floor(r() * C.HERO_IDS.length)];
       out.push(row);
     }
     return out;
   };
   C.supplyOpts = (uid, wk) => {
     const r = rng(hash32(`sup|${uid}|${wk}`)), pick = a => a[Math.floor(r() * a.length)];
-    const mils = [], ress = [];
-    for (const [k, d] of Object.entries(C.ITEM)) { if (d.tier === 'mil') mils.push(k); else if (d.tier === 'res') ress.push(k); }
-    const opts = [{ t: 'case', c: pick(C.CASES) }, { t: 'key', n: 1 }, r() < 0.3 ? { t: 'item', k: pick(ress) } : { t: 'item', k: pick(mils) }, r() < 0.5 ? { t: 'ink', n: 400 } : { t: 'tag', n: 1 }];
+    const opts = [{ t: 'case', c: pick(C.CASES) }, { t: 'term', n: 1 }, r() < 0.3 ? { t: 'item', k: pick(C.ofTier('res')) } : { t: 'item', k: pick(C.ofTier('mil')) }, r() < 0.5 ? { t: 'ink', n: 400 } : { t: 'tag', n: 1 }];
     for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
     return opts;
   };
+  C.caseLeft = s => Math.max(0, C.CASE_WEEK - s.cw.n);   // 这周还能用墨锭买几个武器箱
 
   /* ---------- 物品进出库存 ---------- */
   C.mkItem = (s, k, src, rnd, o = {}) => {
-    const d = C.ITEM[k];
-    const f = o.f !== undefined ? o.f : +(d.fmin + rnd() * (d.fmax - d.fmin)).toFixed(9);
     const st = o.st !== undefined ? o.st : (rnd() < C.ST_P ? 0 : -1);
-    const p = o.p !== undefined ? o.p : Math.floor(rnd() * 1000);
-    return { i: s.nid++, k, f, p, st, n: '', t: o.t || 0, src };
+    return { i: s.nid++, k, st, n: '', t: o.t || 0, src };
   };
   // 拿到一件：这款皮肤原来没有的话，记进“可穿的皮肤”里，并记下是靠武库才有的
   C.addItem = (s, it, env) => {
@@ -365,21 +361,15 @@
       s.op.prog[i] = Math.min(m.n, max ? Math.max(cur, v) : cur + v);
     });
   };
-  const periodKey = (lim, day) => lim ? 'w' + C.week(day) : 'all';
-  const bought = (s, id, day) => { const b = s.buys[id]; return b && b.k === periodKey(1, day) ? b.n : 0; };
-  const rollTier = rnd => { let r = rnd(), acc = 0; for (const t of C.TIERS) { acc += C.ODDS[t]; if (r < acc) return t; } return 'mil'; };
+  const bought = (s, id, day) => { const b = s.buys[id]; return b && b.k === 'w' + C.week(day) ? b.n : 0; };
+  const rollTier = (rnd, odds) => { let r = rnd(), acc = 0; for (const t of C.TIERS) { acc += odds[t]; if (r < acc) return t; } return 'mil'; };
   const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
   C.invFull = (s, n = 1) => s.inv.length + n > C.INV_MAX;
-  C.monthSpend = (s, day) => { const m = C.monthKey(day); return s.orders.filter(o => o.m === m).reduce((a, o) => a + o.yuan, 0); };
-  C.payCheck = (s, yuan, day) => {
-    const a = own(C.AGE, s.age);
-    if (!a) return { need: 'age' };
-    if (a.free) return { ok: true };
-    if (!a.one) return { err: '未满 8 周岁不能充值。钥匙也可以用墨锭买，或者靠江湖行动和每周补给拿。' };
-    if (yuan > a.one) return { err: `${a.name}单笔最多 ${a.one} 元，这一笔是 ${yuan} 元。` };
-    const used = C.monthSpend(s, day);
-    if (used + yuan > a.month) return { err: `${a.name}每月最多充值 ${a.month} 元，本月已充 ${used} 元。` };
-    return { ok: true };
+  // 终端机报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是今天市场价的 1~1.3 倍
+  C.termOffer = (rnd, day) => {
+    const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.ST_P ? 0 : -1;
+    const m = C.TERM.markup[0] + rnd() * (C.TERM.markup[1] - C.TERM.markup[0]);
+    return { k, st, price: Math.max(1, Math.round(C.price({ k, st }, day) * m)) };
   };
   // 汰换合同能出什么：每件材料平分它所在收藏品里高一档的那些饰品（和 CS 一样的算法）
   C.tradeCheck = (s, ids) => {
@@ -395,32 +385,26 @@
     if (stN && stN !== items.length) return { err: '斩数版和普通版不能混着放' };
     if (items.some(x => !(C.COLS[C.ITEM[x.k].col][up] || []).length)) return { err: '有材料的收藏品里没有更高一档的饰品' };
     const odds = {};
-    let avg = 0;
     for (const x of items) {
-      const d = C.ITEM[x.k], list = C.COLS[d.col][up];
+      const list = C.COLS[C.ITEM[x.k].col][up];
       for (const k of list) odds[k] = (odds[k] || 0) + 1 / list.length / items.length;
-      avg += x.f;
     }
-    avg /= items.length;
-    // 新饰品的磨损 = 材料磨损的平均（超出这件的磨损范围就取最近的一头）。不按范围折算：免得用窄范围的材料换出崭新的
-    const outs = Object.entries(odds).map(([k, p]) => { const d = C.ITEM[k]; return { k, p, f: +Math.min(d.fmax, Math.max(d.fmin, avg)).toFixed(9) }; }).sort((a, b) => b.p - a.p);
+    const outs = Object.entries(odds).map(([k, p]) => ({ k, p })).sort((a, b) => b.p - a.p);
     const full = items.length === C.NEED[tier];
     return { ok: full, full, err: full ? '' : `要正好 ${C.NEED[tier]} 件，现在 ${items.length} 件`, items, tier, up, outs, st: stN === items.length };
   };
   C.ctxOk = c => isObj(c) && C.MODES.includes(c.mode) && C.HERO_IDS.includes(c.char);
 
   /* ---------- 动作 ---------- */
-  // env：now 现在时间、rnd 随机数、uid、ink 墨锭（会被改）、skins 可穿的皮肤（会被改）、equip 穿着（会被改）、
-  //      owned 拥有的侠客、sandbox 能不能模拟充值、server 是不是服务器在算、code 服务器核对过的兑换码面额
+  // env：now 现在时间、rnd 随机数、uid、ink 墨锭（会被改）、skins 可穿的皮肤（会被改）、equip 穿着（会被改）、server 是不是服务器在算
   const A = {};
-  A.open = (s, a, env) => {
+  A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个
     const cid = a.c;
     if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
     if ((s.cases[cid] || 0) < 1) return { err: '没有这个武器箱了' };
-    if (s.keys < 1) return { err: '没有钥匙' };
     if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
-    s.cases[cid]--; s.keys--; s.stat.open++;
-    const tier = rollTier(env.rnd), k = pickOf(env.rnd, C.COLS[cid][tier]);
+    s.cases[cid]--; s.stat.open++;
+    const tier = rollTier(env.rnd, C.ODDS), k = pickOf(env.rnd, C.COLS[cid][tier]);
     const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd), env);
     bump(s, 'open', 1);
     return { ok: true, item: it };
@@ -429,12 +413,14 @@
     const g = C.STORE.find(x => x.id === a.id), n = Math.max(1, Math.min(10, Math.floor(+a.n || 1)));
     if (!g) return { err: '没有这件商品' };
     const day = C.day(env.now);
-    if (g.lim && bought(s, g.id, day) + n > g.lim) return { err: `本周最多买 ${g.lim} 次` };
-    const cost = g.cost[1] * n;
-    if (g.cost[0] === 'jade') { if (s.jade < cost) return { err: '玉珏不够' }; s.jade -= cost; }
-    else { if (env.ink < cost) return { err: '墨锭不够' }; giveInk(env, -cost); }
+    if (bought(s, g.id, day) + n > g.lim) return { err: `本周最多买 ${g.lim} 次` };
+    const cost = g.cost * n;
+    if (env.ink < cost) return { err: '墨锭不够' };
+    giveInk(env, -cost);
     s[g.give[0]] += g.give[1] * n;
-    if (g.lim) { const pk = periodKey(1, day); if (!s.buys[g.id] || s.buys[g.id].k !== pk) s.buys[g.id] = { k: pk, n: 0 }; s.buys[g.id].n += n; }
+    const pk = 'w' + C.week(day);
+    if (!s.buys[g.id] || s.buys[g.id].k !== pk) s.buys[g.id] = { k: pk, n: 0 };
+    s.buys[g.id].n += n;
     return { ok: true };
   };
   A.buy = (s, a, env) => {   // 买市场上的一件
@@ -447,17 +433,20 @@
     if (env.ink < L.price) return { err: `墨锭不够，要 ${L.price}` };
     giveInk(env, -L.price);
     s.bought.ids.push(a.l); s.stat.bought++;
-    const it = C.addItem(s, C.mkItem(s, L.k, 'market', env.rnd, { f: L.f, st: L.st, p: L.p }), env);
-    histPush(s, { t: env.now, kind: 'buy', k: L.k, f: L.f, st: L.st, price: L.price });
+    const it = C.addItem(s, C.mkItem(s, L.k, 'market', env.rnd, { st: L.st }), env);
+    histPush(s, { t: env.now, kind: 'buy', k: L.k, st: L.st, price: L.price });
     bump(s, 'buy', 1);
     return { ok: true, item: it, price: L.price };
   };
-  A.buyCase = (s, a, env) => {
-    const cid = a.c, n = Math.max(1, Math.min(10, Math.floor(+a.n || 1)));
+  A.buyCase = (s, a, env) => {   // 用墨锭买武器箱：每周最多 5 个
+    const cid = a.c, n = a.n === undefined ? 1 : Math.floor(+a.n);
     if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
+    if (!(n >= 1 && n <= C.CASE_WEEK)) return { err: '数量不对' };
+    const left = C.caseLeft(s);
+    if (n > left) return { err: left ? `这周还能买 ${left} 个` : `这周的 ${C.CASE_WEEK} 次已经用完了，下周一再来` };
     const p = C.casePrice(cid, C.day(env.now)) * n;
     if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
-    giveInk(env, -p); s.cases[cid] += n;
+    giveInk(env, -p); s.cases[cid] += n; s.cw.n += n;
     histPush(s, { t: env.now, kind: 'buy', c: cid, n, price: p });
     return { ok: true, price: p };
   };
@@ -474,7 +463,7 @@
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
     const p = C.quick(C.price(it, C.day(env.now)));
     C.dropItem(s, it.i, env); giveInk(env, p); s.stat.sold++;
-    histPush(s, { t: env.now, kind: 'sell', k: it.k, f: it.f, st: it.st, price: p });
+    histPush(s, { t: env.now, kind: 'sell', k: it.k, st: it.st, price: p });
     bump(s, 'sell', 1);
     return { ok: true, gain: p };
   };
@@ -504,7 +493,7 @@
       if (!L.at || env.now < L.at) return true;
       const gain = C.net(L.price);
       giveInk(env, gain); s.stat.sold++;
-      histPush(s, { t: L.at, kind: 'sold', k: L.it.k, f: L.it.f, st: L.it.st, price: L.price, gain });
+      histPush(s, { t: L.at, kind: 'sold', k: L.it.k, st: L.it.st, price: L.price, gain });
       bump(s, 'sell', 1);
       sold.push({ k: L.it.k, price: L.price, gain });
       return false;
@@ -517,7 +506,7 @@
     let r = env.rnd(), pick = chk.outs[chk.outs.length - 1];
     for (const o of chk.outs) { if (r < o.p) { pick = o; break; } r -= o.p; }
     for (const x of chk.items) C.dropItem(s, x.i, env);
-    const it = C.addItem(s, C.mkItem(s, pick.k, 'trade', env.rnd, { f: pick.f, st: chk.st ? 0 : -1 }), env);
+    const it = C.addItem(s, C.mkItem(s, pick.k, 'trade', env.rnd, { st: chk.st ? 0 : -1 }), env);
     s.stat.trade++;
     bump(s, 'trade', 1);
     return { ok: true, item: it };
@@ -542,6 +531,32 @@
     delete s.eq[char]; env.equip[char] = '';
     return { ok: true };
   };
+  // 终端机：开封给第一件；不要就换下一件（第 5 件也不要，终端机就没了）；买下就用掉
+  A.unseal = (s, a, env) => {
+    if (s.tm) return { err: '已经有一台开着的终端机，先处理完它' };
+    if (s.term < 1) return { err: '没有终端机' };
+    s.term--;
+    s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd, C.day(env.now)) };
+    return { ok: true, tm: s.tm };
+  };
+  A.termNext = (s, a, env) => {
+    if (!s.tm) return { err: '没有开着的终端机' };
+    if (a.n !== undefined && +a.n !== s.tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点得太快、请求重发：不会一下跳过两件
+    if (s.tm.n >= C.TERM.offers) { s.tm = null; return { ok: true, gone: true }; }
+    s.tm.n++; s.tm.o = C.termOffer(env.rnd, C.day(env.now));
+    return { ok: true, tm: s.tm };
+  };
+  A.termBuy = (s, a, env) => {
+    const tm = s.tm; if (!tm) return { err: '没有开着的终端机' };
+    if (a.n !== undefined && +a.n !== tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点“买下”时看到的是第几件
+    if (C.invFull(s)) return { err: '库存满了' };
+    if (env.ink < tm.o.price) return { err: `墨锭不够，要 ${tm.o.price}` };
+    giveInk(env, -tm.o.price);
+    const it = C.addItem(s, C.mkItem(s, tm.o.k, 'term', env.rnd, { st: tm.o.st }), env);
+    histPush(s, { t: env.now, kind: 'term', k: tm.o.k, st: tm.o.st, price: tm.o.price });
+    s.tm = null; s.stat.term++;
+    return { ok: true, item: it, price: tm.o.price };
+  };
   A.supply = (s, a, env) => {
     const picks = Array.isArray(a.picks) ? a.picks.map(Number).filter(Number.isInteger) : [];
     if (s.drop.sup) return { err: '这周的补给已经领过了' };
@@ -553,7 +568,7 @@
     for (const x of picks) {
       const o = opts[x];
       if (o.t === 'case') { s.cases[o.c]++; got.push(o); }
-      else if (o.t === 'key') { s.keys += o.n; got.push(o); }
+      else if (o.t === 'term') { s.term += o.n; got.push(o); }
       else if (o.t === 'tag') { s.tags += o.n; got.push(o); }
       else if (o.t === 'ink') { giveInk(env, o.n); got.push(o); }
       else if (o.t === 'item') got.push({ t: 'item', item: C.addItem(s, C.mkItem(s, o.k, 'supply', env.rnd), env) });
@@ -571,54 +586,31 @@
   A.star = (s, a, env) => {
     const g = C.STAR_SHOP.find(x => x.id === a.id); if (!g) return { err: '没有这一项' };
     if (s.op.earned - s.op.spent < g.cost) return { err: '星章不够' };
-    const op = C.COLS.op, r = env.rnd;
+    const r = env.rnd;
     let res = { ok: true };
     if (g.id === 'ink') giveInk(env, 300);
     else if (g.id === 'case') { const c = pickOf(r, C.CASES); s.cases[c]++; res.c = c; }
     else if (g.id === 'tag') s.tags++;
-    else if (g.id === 'key') s.keys++;
+    else if (g.id === 'term') s.term++;
     else {
       if (C.invFull(s)) return { err: '库存满了' };
       let k;
-      if (g.id === 'opcov') { if (!op.cov.includes(a.k)) return { err: '要从行动收藏品的隐秘级里挑一件' }; k = a.k; }
-      else k = pickOf(r, g.id === 'opres' ? op.res : op.cla);
+      if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov')) return { err: '要从隐秘级里挑一件' }; k = a.k; }
+      else k = pickOf(r, C.ofTier(g.id));
       res.item = C.addItem(s, C.mkItem(s, k, 'op', r), env);
     }
     s.op.spent += g.cost;
     return res;
   };
-  // 集齐一套收藏品的军规级：送一把钥匙和一张改名标签
+  // 集齐一套收藏品的 4 款军规级：送这个武器箱一个和一张改名标签
   A.collect = (s, a, env) => {
     const col = own(C.COLS, a.c); if (!col) return { err: '没有这套收藏品' };
     if (s.cc.includes(a.c)) return { err: '已经领过了' };
     if (!col.mil.every(k => s.inv.some(x => x.k === k))) return { err: '还没集齐' };
-    s.cc.push(a.c); s.keys++; s.tags++;
+    s.cc.push(a.c); s.cases[a.c]++; s.tags++;
     return { ok: true };
   };
-  A.age = (s, a, env) => { if (!own(C.AGE, a.age)) return { err: '请选年龄段' }; s.age = a.age; return { ok: true }; };
-  A.topup = (s, a, env) => {
-    const tier = C.TOPUP[Math.floor(+a.t)];
-    if (!tier) return { err: '没有这一档' };
-    if (!env.sandbox) return { err: '充值暂未开放' };
-    const day = C.day(env.now), chk = C.payCheck(s, tier[0], day);
-    if (chk.need) return { err: '请先选择年龄段', need: 'age' };
-    if (chk.err) return { err: chk.err };
-    const id = 'RY' + env.now.toString(36).toUpperCase() + Math.floor(env.rnd() * 1296).toString(36).toUpperCase().padStart(2, '0');
-    s.orders.unshift({ id, t: env.now, m: C.monthKey(day), name: `${tier[1]} 玉珏`, yuan: tier[0], sb: 1 });
-    if (s.orders.length > C.ORDER_MAX) s.orders.length = C.ORDER_MAX;
-    s.jade += tier[1];
-    return { ok: true, id, jade: tier[1] };
-  };
-  A.redeem = (s, a, env) => {
-    const code = String(a.code || '').trim().toUpperCase();
-    if (!env.server) return { err: '兑换码要登录云端账号才能用' };
-    if (!env.code) return { err: '兑换码不对，或者已经被用过了' };
-    if (s.codes.includes(code)) return { err: '这个兑换码你已经用过了' };
-    s.codes.push(code); if (s.codes.length > 200) s.codes.shift();
-    s.jade += env.code;
-    return { ok: true, jade: env.code };
-  };
-  // 一局打完：记补给进度、行动任务、斩数，再按概率掉一件
+  // 一局打完：记补给进度、行动任务、斩数（穿着斩数版的侠客每击倒一个对手 +1），再按概率掉一件
   A.matchEnd = (s, a, env) => {
     const c = a.ctx;
     if (!C.ctxOk(c)) return { err: '这局不算' };
@@ -629,7 +621,7 @@
       if (s.dm.n >= C.MATCH_DAY_CAP) return { err: '今天的对局奖励已经拿满了' };
     }
     s.last = env.now; s.dm.n++;
-    const win = !!c.win, rounds = Math.max(0, Math.min(5, Math.floor(+c.rounds || 0)));
+    const win = !!c.win;
     const combo = Math.max(0, Math.min(200, Math.floor(+c.combo || 0))), ults = Math.max(0, Math.min(30, Math.floor(+c.ults || 0)));
     s.drop.g++;
     bump(s, 'games', 1);
@@ -644,18 +636,19 @@
     if (c.mode === 'chaos') bump(s, 'chaos', 1);
     if (c.mode === 'tag3' && win) bump(s, 'tag3', 1);
     if (c.mode === '2v2') bump(s, 'duo', 1);
-    const res = { ok: true, notes: [] };
-    const eq = s.eq[c.char] && C.findItem(s, s.eq[c.char]);
-    if (eq && eq.st >= 0 && rounds) { eq.st += rounds; res.st = { i: eq.i, add: rounds, total: eq.st }; }
+    const res = { ok: true, st: [] };
+    let left = C.KO_MAX;
+    for (const [h, v] of Object.entries(isObj(c.ko) ? c.ko : {}).slice(0, 3)) {   // 车轮战一局最多三位侠客
+      const n = typeof v === 'number' && Number.isFinite(v) ? Math.floor(v) : 0;   // 只认正常的数字（1e400 这种会变成无穷大，不算）
+      const add = Math.min(left, Math.max(0, n)), id = C.HERO_IDS.includes(h) && s.eq[h], eq = id && C.findItem(s, id);
+      if (!add || !eq || eq.st < 0) continue;
+      left -= add; eq.st += add;
+      res.st.push({ i: eq.i, k: eq.k, add, total: eq.st });
+    }
     if (s.drop.n < C.DROP_CAP && env.rnd() < C.DROP_P && !C.invFull(s)) {
       s.drop.n++;
-      const r = env.rnd();
-      if (r < 0.3) { const cid = env.rnd() < 0.5 ? 'c1' : env.rnd() < 0.6 ? 'c2' : 'c3'; s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
-      else {
-        const tier = r < 0.85 ? 'mil' : 'res', pool = [];
-        for (const [k, d] of Object.entries(C.ITEM)) if (d.tier === tier) pool.push(k);
-        res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, pool), 'drop', env.rnd), env) };
-      }
+      if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.CASES); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
+      else res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, C.ofTier(env.rnd() < 0.85 ? 'mil' : 'res')), 'drop', env.rnd), env) };
     }
     return res;
   };
@@ -666,9 +659,9 @@
     return { ok: true };
   };
   A.sync = () => ({ ok: true });
-  A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一把钥匙
+  A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台终端机
     if (s.gift) return { err: '已经领过了' };
-    s.gift = 1; s.cases.c1++; s.keys++;
+    s.gift = 1; s.cases.c1++; s.term++;
     return { ok: true };
   };
   C.ACTIONS = Object.keys(A);
@@ -724,7 +717,7 @@ function error(message, status = 400, extra) {
 }
 
 const DAY_MS = 86400e3;
-// 客户端上报的墨锭收入（打电脑、任务、关卡星、兑换码这些都在本机算）：服务器看不见本机发生了什么，只能限量。
+// 客户端上报的墨锭收入（打电脑、任务、关卡星这些都在本机算）：服务器看不见本机发生了什么，只能限量。
 // 每天先认 INK_BASE；每打完一局服务器认可的对局（开局领了票、打够了时间），当天再多认 INK_PER_MATCH；最多 INK_DAY_CAP。
 // 只在控制台里改数的人一天最多多拿 INK_BASE；正常玩家打得越多额度越高。超出额度的先记着（单条不超过 INK_OWE_ONE 的才记，
 // 最多记 INK_OWE_MAX），之后哪天额度有空余就补上，所以新手一天里领了好几样一次性奖励也不会丢。
@@ -742,9 +735,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
   `CREATE TABLE IF NOT EXISTS econ (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL, ver INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS econ_nonce (uid TEXT NOT NULL, nonce TEXT NOT NULL, at INTEGER NOT NULL, res_json TEXT NOT NULL, PRIMARY KEY (uid, nonce))`,
-  `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, jade0 INTEGER, jade1 INTEGER, detail TEXT)`,
+  `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, detail TEXT)`,
   `CREATE INDEX IF NOT EXISTS idx_econ_log_uid ON econ_log (uid, at)`,
-  `CREATE TABLE IF NOT EXISTS econ_codes (code TEXT PRIMARY KEY, uid TEXT NOT NULL, jade INTEGER NOT NULL, at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS sanctions (uid TEXT PRIMARY KEY, strikes INTEGER NOT NULL DEFAULT 0, ban_until INTEGER NOT NULL DEFAULT 0, perm INTEGER NOT NULL DEFAULT 0, log_json TEXT NOT NULL DEFAULT '[]', at INTEGER NOT NULL DEFAULT 0, pardon INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS rate (k TEXT PRIMARY KEY, n INTEGER NOT NULL, reset INTEGER NOT NULL)`,
 ];
@@ -771,7 +763,7 @@ function generateToken() {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 服务器的随机数（开箱、掉落、磨损都用它，客户端碰不到）
+// 服务器的随机数（开箱、终端机、掉落、斩数都用它，客户端碰不到）
 function rnd() {
   const a = new Uint32Array(2);
   crypto.getRandomValues(a);
@@ -848,14 +840,14 @@ async function strike(env, uid, reason, now, src) {
   await env.DB.prepare(
     'INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0) ON CONFLICT(uid) DO UPDATE SET strikes = ?2, ban_until = ?3, perm = ?4, log_json = ?5, at = ?6'
   ).bind(uid, rec.strikes, rec.banUntil, rec.perm ? 1 : 0, JSON.stringify(rec.log), now).run();
-  await logRow(env, uid, now, 'strike', 1, null, null, null, null, `${src}:${reason}`);
+  await logRow(env, uid, now, 'strike', 1, null, null, `${src}:${reason}`);
   return rec;
 }
 
 /* ---------- 流水账 ---------- */
-function logStmt(env, uid, now, act, ok, ink0, ink1, jade0, jade1, detail) {
-  return env.DB.prepare('INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, jade0, jade1, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(uid, now, act, ok ? 1 : 0, ink0, ink1, jade0, jade1, String(detail || '').slice(0, 400));
+function logStmt(env, uid, now, act, ok, ink0, ink1, detail) {
+  return env.DB.prepare('INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(uid, now, act, ok ? 1 : 0, ink0, ink1, String(detail || '').slice(0, 400));
 }
 function logRow(...a) { return logStmt(...a).run(); }
 
@@ -874,7 +866,6 @@ function cleanEquip(e) {
   if (e && typeof e === 'object' && !Array.isArray(e)) for (const [c, k] of Object.entries(e)) if (SKIN_RE.test(c) && typeof k === 'string' && (k === '' || SKIN_RE.test(k))) o[c] = k;
   return o;
 }
-const cleanOwned = a => Array.isArray(a) ? a.filter(h => typeof h === 'string' && SKIN_RE.test(h)).slice(0, 40) : ['qingfeng'];
 const clampInk = (x, hi = 1e9) => Math.max(0, Math.min(hi, Math.floor(+x || 0)));
 function srvBlank() { return { ap: {}, rv: {}, ed: 0, en: 0, ow: 0, gone: {} }; }
 function parseObj(txt) { try { const v = JSON.parse(txt); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch (e) { return null; } }
@@ -887,7 +878,7 @@ async function loadEcon(env, uid, prof, now) {
     const ink0 = clampInk(prof.ink), ink = Math.min(ink0, INK_IMPORT_CAP);
     const ins = await env.DB.prepare('INSERT OR IGNORE INTO econ (uid, state_json, srv_json, ink, ver, updated_at) VALUES (?, ?, ?, ?, 0, ?)')
       .bind(uid, JSON.stringify(C.blank()), JSON.stringify(srvBlank()), ink, now).run();
-    if (ins.meta && ins.meta.changes) await logRow(env, uid, now, 'open_account', 1, ink0, ink, 0, 0, ink < ink0 ? '老存档墨锭超过上限，按上限建账' : '');
+    if (ins.meta && ins.meta.changes) await logRow(env, uid, now, 'open_account', 1, ink0, ink, ink < ink0 ? '老存档墨锭超过上限，按上限建账' : '');
     row = await sel();
   }
   const state = parseObj(row.state_json) || C.blank();
@@ -999,23 +990,6 @@ function econWrite(env, uid, ver, now, srv, ink, stateJson) {
     .bind(stateJson, JSON.stringify(srv), ink, now, uid, ver);
 }
 
-/* ---------- 兑换码：YJ-数额-编号-签名，签名是 HMAC-SHA256，全服只能用一次 ---------- */
-const B32 = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-async function codeSig(secret, body) {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body)));
-  let out = '';
-  for (let i = 0; i < 10; i++) out += B32[mac[i] & 31];
-  return out;
-}
-async function codeValue(env, code) {
-  const m = /^YJ-(\d{1,5})-([A-Z2-9]{6})-([A-Z2-9]{10})$/.exec(code);
-  if (!m || !env.ECON_CODE_SECRET) return 0;
-  const jade = +m[1];
-  if (!(jade >= 1 && jade <= 20000)) return 0;
-  return sameStr(await codeSig(env.ECON_CODE_SECRET, `YJ|${m[1]}|${m[2]}`), m[3]) ? jade : 0;
-}
-
 /* ---------- 武库：所有动作都在服务器上算 ---------- */
 const QUIET = ['sync', 'matchStart'];   // 太频繁的动作不进流水账（有成交的除外）
 async function handleEcon(env, auth, body, now) {
@@ -1029,7 +1003,6 @@ async function handleEcon(env, auth, body, now) {
   if (ban) return banned(ban);
   if (!(await hit(env, 'econ:' + uid, 90, 60e3, now))) return error('操作太快了，歇一会儿再试', 429);
   if (!(await hit(env, 'econday:' + uid, 4000, DAY_MS, now))) return error('今天的操作次数用完了，明天再来', 429);
-  const info = { sandbox: env.ECON_SANDBOX === '1', codes: !!env.ECON_CODE_SECRET };
   const freshProfile = async () => {
     const r = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(uid).first();
     return parseProfile(r ? r.profile_json : '', auth.user.username);
@@ -1038,38 +1011,28 @@ async function handleEcon(env, auth, body, now) {
   const seen = await env.DB.prepare('SELECT res_json FROM econ_nonce WHERE uid = ? AND nonce = ?').bind(uid, nonce).first();
   if (seen) {
     const eco = await loadEcon(env, uid, await freshProfile(), now);
-    return json({ ok: true, ...JSON.parse(seen.res_json), state: C.publicState(C.normalize(eco.state, { now, uid, owned: [] })), ledger: ledgerOut(eco, now), info, replay: true });
-  }
-  let code = '', codeJade = 0;
-  if (act === 'redeem') {
-    code = String(args.code || '').trim().toUpperCase().slice(0, 40);
-    if (!(await hit(env, 'redeem:' + uid, 12, 3600e3, now))) return error('兑换码试太多次了，一小时后再试', 429);
-    codeJade = await codeValue(env, code);
-    if (codeJade) {
-      const used = await env.DB.prepare('SELECT uid FROM econ_codes WHERE code = ?').bind(code).first();
-      if (used && used.uid !== uid) codeJade = 0;
-    }
+    return json({ ok: true, ...JSON.parse(seen.res_json), state: C.publicState(C.normalize(eco.state, { now, uid })), ledger: ledgerOut(eco, now), replay: true });
   }
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
     const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
-    const E = { now, rnd, uid, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), owned: cleanOwned(prof.owned), sandbox: info.sandbox, server: true, code: codeJade };
-    const equip0 = { ...E.equip }, jade0 = Math.floor(+eco.state.jade || 0);
-    const r = C.run(eco.state, act, { ...args, ...(act === 'redeem' ? { code } : {}) }, E);
+    const E = { now, rnd, uid, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true };
+    const equip0 = { ...E.equip };
+    const r = C.run(eco.state, act, args, E);
     const res = r.res || {}, st = r.state, stJson = JSON.stringify(st);
     const add = E.skins.filter(k => !skins0.includes(k)), del = skins0.filter(k => !E.skins.includes(k));
     const eq = {};
     for (const c of new Set([...Object.keys(equip0), ...Object.keys(E.equip)])) if (equip0[c] !== E.equip[c]) eq[c] = E.equip[c] === undefined ? null : E.equip[c];
     const out = { res, sold: r.sold || [] };
     // 最后一道保险：算出来的数不对劲（不是整数、是负数、大得离谱）就整个作废，记下来查
-    const bad = [E.ink, st.jade, st.keys, st.tags, ...Object.values(st.cases)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);
+    const bad = [E.ink, st.tags, st.term, ...Object.values(st.cases), ...st.inv.map(x => x.st + 1)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);   // 斩数 -1 是普通版
     if (bad !== undefined || st.inv.length > C.INV_MAX) {
-      await logRow(env, uid, now, 'invariant', 0, eco.ink, null, jade0, null, JSON.stringify({ act, args, bad }).slice(0, 400));
+      await logRow(env, uid, now, 'invariant', 0, eco.ink, null, JSON.stringify({ act, args, bad }).slice(0, 400));
       return error('操作失败，已记录', 500);
     }
     if (!out.sold.length && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
-      return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {}, info });   // 什么都没变：不用写
+      return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {} });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
     for (const k of del) srv.gone[k] = [ver + 1, now];
@@ -1078,23 +1041,21 @@ async function handleEcon(env, auth, body, now) {
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
     delete p.armory; delete p.ledger;
     const quiet = QUIET.includes(act) && !out.sold.length;
-    const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i} f${res.item.f}` : res.gain || res.price || res.jade || '', s: out.sold.length || undefined }).slice(0, 400);
+    const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i}${res.item.st >= 0 ? ' st' : ''}` : res.gain || res.price || '', s: out.sold.length || undefined }).slice(0, 400);
     const stmts = [guard(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver)];
-    if (act === 'redeem' && res.ok) stmts.push(guard(env, 'INSERT INTO econ_codes (code, uid, jade, at) SELECT ?, ?, ?, ?', [code, uid, res.jade, now], uid, ver));
-    if (!quiet) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, jade0, jade1, detail) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, jade0, st.jade, detail], uid, ver));
+    if (!quiet) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver));
     stmts.push(userWrite(env, uid, p, now, ver));
     stmts.push(econWrite(env, uid, ver, now, srv, E.ink, stJson));
     let results;
     try { results = await env.DB.batch(stmts); }
     catch (e) {
       const m = String(e && e.message || e);
-      if (/econ_codes/.test(m)) return json({ ok: true, res: { err: '兑换码不对，或者已经被用过了' }, sold: [], state: C.publicState(C.normalize(eco.state, { now, uid, owned: [] })), ledger: ledgerOut(eco, now), info });
       if (/econ_nonce/.test(m)) continue;   // 同一个编号的请求正好同时到：重来一遍会走上面“已经做过”
       throw e;
     }
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 版本冲突：别的请求先改了，重读再算
     eco.ink = E.ink; eco.ver = ver + 1;
-    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq, info });
+    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq });
   }
   return error('服务器忙，请再试一次', 503);
 }
@@ -1125,7 +1086,7 @@ async function handleProfilePost(env, auth, body, now) {
     p.equip = fixEquip(cleanEquip(p.equip), p.skins);
     const fix = { skinsAdd: p.skins.filter(k => !sent.includes(k)), skinsDel: sent.filter(k => !p.skins.includes(k)) };
     const stmts = [userWrite(env, uid, p, now, ver)];
-    if (eco.ink !== ink0 || capped) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, jade0, jade1, detail) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?', [uid, now, forged ? 'ink_spike' : 'ledger', 1, ink0, eco.ink, null, null, [capped ? `超过今天的额度 ${allow}，没认 ${capped}` : '', paid ? `补上以前记下的 ${paid}` : '', owed ? `还记着 ${owed}` : '', forged ? `一条上报 ${forged}` : '', revoked ? `反作弊撤回 ${revoked}` : ''].filter(Boolean).join('；')], uid, ver));
+    if (eco.ink !== ink0 || capped) stmts.push(guard(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, forged ? 'ink_spike' : 'ledger', 1, ink0, eco.ink, [capped ? `超过今天的额度 ${allow}，没认 ${capped}` : '', paid ? `补上以前记下的 ${paid}` : '', owed ? `还记着 ${owed}` : '', forged ? `一条上报 ${forged}` : '', revoked ? `反作弊撤回 ${revoked}` : ''].filter(Boolean).join('；')], uid, ver));
     stmts.push(econWrite(env, uid, ver, now, eco.srv, eco.ink, eco.stateJson));
     const results = await env.DB.batch(stmts);
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;
@@ -1159,7 +1120,7 @@ async function handleAdmin(env, request, path, now) {
     const u = await env.DB.prepare('SELECT id, username FROM users WHERE id = ? OR username = ?').bind(uid, uid).first();
     if (!u) return error('没有这个账号', 404);
     const row = await env.DB.prepare('SELECT state_json, ink, ver, updated_at FROM econ WHERE uid = ?').bind(u.id).first();
-    const log = await env.DB.prepare('SELECT at, act, ok, ink0, ink1, jade0, jade1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all();
+    const log = await env.DB.prepare('SELECT at, act, ok, ink0, ink1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all();
     return json({ ok: true, uid: u.id, username: u.username, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null, sanction: await sanctionOf(env, u.id), log: log.results || [] });
   }
   if (path === '/api/admin/pardon' && request.method === 'POST') {
@@ -1168,7 +1129,7 @@ async function handleAdmin(env, request, path, now) {
     const u = await env.DB.prepare('SELECT id FROM users WHERE id = ? OR username = ?').bind(uid, uid).first();
     if (!u) return error('没有这个账号', 404);
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
-    await logRow(env, u.id, now, 'pardon', 1, null, null, null, null, String(body.note || '').slice(0, 100));
+    await logRow(env, u.id, now, 'pardon', 1, null, null, String(body.note || '').slice(0, 100));
     return json({ ok: true, uid: u.id });
   }
   return error('Not found', 404);
