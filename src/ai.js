@@ -978,7 +978,11 @@ class AIBrain {
       if (v > bv) { bv = v; bestKey = k; }
     }
     // 出不出手：威胁值够高、而且时机合适（对手在走动/收招，没在无敌）
-    const aggr = Math.min(1, L.aggr * (0.45 + g.aggr));
+    // 动态风险收益修正（Risk-Reward & Adaptive Neutral Evaluation）：
+    // 若血量劣势，增加险招权重（不可挡蓄力 / 强抓破绽）；若血量领先，打稳抓确反
+    const hpRatio = (me.hp / Math.max(1, me.maxHp)) - (foe.hp / Math.max(1, foe.maxHp));
+    const riskMod = hpRatio < -0.2 ? 1.25 : hpRatio > 0.25 ? 0.85 : 1.0;
+    const aggr = Math.min(1, L.aggr * (0.45 + g.aggr) * riskMod);
     const foeBusy = foe.state === 'walk' || (foe.state === 'attack' && foe.t > foe.move.su) || foe.state === 'air';
     const go = bestKey && foe.invul <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
     if (go) { this.attacks++; return this.doAct(me, foe, d, to, bestKey); }
@@ -1002,16 +1006,55 @@ class AIBrain {
     }
   }
   // 对空：有对空技能就用；没有就算好落点用地面轻击，打不到就挡
+  // 进阶空气动力拦截计算（Kinematic Trajectory Interception）
   antiAir(me, foe, d, to) {
     const L = this.L, g = this.g;
-    if (d > 300 || Math.random() > L.punish * (0.3 + g.antiAir)) return false;
+    if (d > 340 || Math.random() > L.punish * (0.3 + g.antiAir)) return false;
+
+    // 1. 优先对空技反制（若对手在空中下落或扑来）
     for (const slot of ['skill', 'skill2']) {
       const id = slot === 'skill' ? me.ch.skill : me.ch.skill2, K = AI_KIT[id];
-      if (K && K.anti && (slot === 'skill' ? me.skillCD : me.skill2CD) <= 0 && aiInRange(aiFrame(me, slot), d, foe, 20)) { this.press(slot); return true; }
+      if (K && K.anti && (slot === 'skill' ? me.skillCD : me.skill2CD) <= 0) {
+        const F = aiFrame(me, slot);
+        const tHit = F.hit || 0.12;
+        const predY = foe.y + foe.vy * tHit + 0.5 * GRAV * (foe.state === 'launched' ? 0.6 : 1) * tHit * tHit;
+        const predX = foe.x + (foe.vx || 0) * tHit;
+        const predD = Math.abs(predX - me.x);
+        if (predD <= (F.max || 220) + 25 && predY > -160 && predY < -20) {
+          this.press(slot); return true;
+        }
+      }
     }
-    const F = aiFrame(me, 'l1'), t = F.hit, fy = foe.y + foe.vy * t + 0.5 * GRAV * t * t, fx = foe.x + foe.vx * t;
-    if (foe.vy > 0 && fy > -105 && Math.abs(fx - me.x) <= F.max) { this.press('light'); return true; }
-    if (Math.abs(fx - me.x) < 200) { this.holdDown = 0.2; return true; }
+
+    // 2. 预测物理抛物线落点与最佳截击帧（Parabolic Arc Extrapolation）
+    const F = aiFrame(me, 'l1'), t = F.hit || 0.08;
+    const gEff = GRAV * (foe.state === 'launched' ? 0.6 : 1);
+    const fy = foe.y + foe.vy * t + 0.5 * gEff * t * t;
+    const fx = foe.x + (foe.vx || 0) * t;
+    const predDist = Math.abs(fx - me.x);
+
+    // 抓下落/跳入顶点（提前挥刀拦截打出 Counter-hit）
+    if ((foe.vy >= -80 || fy > -120) && fy < 10 && predDist <= F.max + 15) {
+      if (Math.sign(fx - me.x) !== me.face && (fx - me.x) !== 0) {
+        this.dir = Math.sign(fx - me.x);
+      }
+      this.press('light');
+      return true;
+    }
+
+    // 3. 凌霜长枪外侧30%枪尖判定（Tip spacing control）
+    if (me.ch.id === 'lingshuang') {
+      const tipMin = F.max * 0.72, tipMax = F.max * 0.98;
+      if (predDist < tipMin) { this.dir = -to; }
+      else if (predDist > tipMax) { this.dir = to; }
+    }
+
+    // 4. 来势汹汹且不在截击范围：立回格挡 / 闪避
+    if (predDist < 220 && foe.vy > 60 && fy > -140) {
+      if (L.block > 0.6 && Math.random() < L.block) {
+        this.holdDown = 0.22; return true;
+      }
+    }
     return false;
   }
   startCharge(me, foe, d, kind) { this.chargeTo = kind; this.holdAtk = 9; this.chargeT0 = clock; this.c.atkT = clock - 0.001; }

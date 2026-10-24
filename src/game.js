@@ -2455,6 +2455,8 @@ function updateArena2v2(dt) {
 
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
+let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional screen shake)
+let debugHitbox = false;          // 试剑模式：判定框与帧优势实时透视 (F1 切换)
 let announce = null;
 const announceQueue = [];
 const comboUI = [{ n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }];
@@ -3682,6 +3684,47 @@ function hurtbox(f) {
   return [f.x - 18 * s, f.y - 112 * s, f.x + 18 * s, f.y];
 }
 const overlap = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+
+// 调试模式判定框与帧优势透视 (Hitbox & Frame Advantage Overlay)
+function drawHitboxOverlay(fighters) {
+  ctx.save();
+  for (const f of fighters) {
+    if (!f || f.hidden || f.hp <= 0) continue;
+    // 1. 受击框 (Hurtbox) - 绿色
+    const hu = hurtbox(f);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = f.invul > 0 ? 'rgba(120, 200, 255, 0.85)' : 'rgba(80, 240, 120, 0.85)';
+    ctx.fillStyle = f.invul > 0 ? 'rgba(120, 200, 255, 0.15)' : 'rgba(80, 240, 120, 0.15)';
+    ctx.fillRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
+    ctx.strokeRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
+
+    // 2. 攻击框 (Hitbox) - 红色/金色
+    if (f.state === 'attack' && f.move && f.move.box) {
+      const su = f.move.su || 0.04, ac = f.move.ac || 0.08;
+      const isAct = f.t >= su && f.t < su + ac;
+      const hb = hitbox(f, f.move.box);
+      ctx.strokeStyle = isAct ? 'rgba(255, 45, 65, 0.95)' : 'rgba(255, 180, 50, 0.55)';
+      ctx.fillStyle = isAct ? 'rgba(255, 45, 65, 0.28)' : 'rgba(255, 180, 50, 0.10)';
+      ctx.fillRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
+      ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
+
+      // 实时帧数据显示
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = isAct ? '#ff4055' : '#ffc040';
+      ctx.textAlign = 'center';
+      const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) * 60)}F]` : `前摇 [${Math.round(f.t * 60)}/${Math.round(su * 60)}F]`;
+      ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
+    }
+
+    // 角色状态与硬直显示
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#efe8d8';
+    ctx.textAlign = 'center';
+    const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${(f.stun * 60).toFixed(0)}F)` : ''}`;
+    ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
+  }
+  ctx.restore();
+}
 function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitDecoy(f, hb)) return;
@@ -4114,6 +4157,9 @@ function hitVisual(ev, quiet) {
   const feel = att.ch.hitFeel || 1;                 // 卡肉感：重武器停顿更久
   hitstop = Math.max(hitstop, ev.hs * feel);
   shake = Math.max(shake, ev.hs * 80 * feel);
+  // 方向性震颤：沿攻击朝向施加反冲冲量
+  shakeDirX = fdir * Math.min(18, ev.hs * 60 * feel);
+  shakeDirY = ev.y < -60 ? -Math.min(12, ev.hs * 35 * feel) : Math.min(12, ev.hs * 35 * feel);
   if (ev.dmg >= 8) cam.zoom *= 1 + 0.015 * feel;      // 重击时镜头轻微一顿
   hitFX(ev.x, ev.y, clamp(ev.dmg / 8, 0.5, 1.8), att.look.slash, fdir);
   if (!quiet && M.mode === 'watch2v2' && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
@@ -4815,6 +4861,8 @@ function frameBody(now) {
       if (n >= 5) acc = 0;
     }
     shake = damp(shake, 0, 10, real);
+    shakeDirX = damp(shakeDirX, 0, 14, real);
+    shakeDirY = damp(shakeDirY, 0, 14, real);
     flashA = damp(flashA, 0, 8, real);
     dimA = damp(dimA, (superFreeze > 0 || (A.state === 'special' || B.state === 'special')) ? 1 : 0, 10, real);
     if (announce) {
@@ -7541,7 +7589,7 @@ function drawTrainStats(cx, top, bh) {
     ctx.textAlign = 'right'; ctx.fillStyle = col || '#efe8d8'; ctx.fillText(v, x, startY + i * fs * 1.75);
   });
   ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(239,232,216,0.45)';
-  ctx.fillText(TOUCH ? '左上角切换木人' : '按 1 2 3 4 切换木人', x, startY + lines.length * fs * 1.75);
+  ctx.fillText(TOUCH ? '左上角切换木人' : '按 1-6 切换木人 | F1 判定框透视', x, startY + lines.length * fs * 1.75);
   ctx.restore();
 }
 function keyHint(i, k) {
@@ -8299,7 +8347,7 @@ function render() {
   const sc = worldScale();
   drawBackdrop(sc);
   const sk = shake * SETTINGS.shake;
-  const sx = rand(-sk, sk), sy = rand(-sk, sk);
+  const sx = rand(-sk, sk) + shakeDirX * SETTINGS.shake, sy = rand(-sk, sk) + shakeDirY * SETTINGS.shake;
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
   drawGround();
@@ -8332,6 +8380,7 @@ function render() {
   }
   drawParticles();
   drawComboTotals();
+  if (debugHitbox) drawHitboxOverlay(order);
   ctx.restore();
   if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
   if (FOREST.on) {
@@ -14861,6 +14910,7 @@ window.addEventListener('keydown', e => {
   initAudio();
   if (e.code === 'KeyM') { muted = !muted; return; }
   if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
+  if (e.code === 'F1') { debugHitbox = !debugHitbox; say(debugHitbox ? '判定框透视：开启' : '判定框透视：关闭', 0.8, 'go'); return; }
   if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
     const scr = e.target.closest('.scr');
     if ((scr && !scr.classList.contains('on')) || e.target.offsetParent === null) {
