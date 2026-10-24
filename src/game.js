@@ -8777,7 +8777,8 @@ function renderMenu() {
     // 人和脚下的按钮不跟着鼠标左右的视差走（只有背景在动），鼠标或触控板左右划过去时按钮不会跑开
     ctx.save(); ctx.translate(baseX - menuCam.x, 0); ctx.scale(1.4, 1.4); drawFighter(MENU_HERO); drawParticles(false); ctx.restore();   // 放大一点，站在两盏灯中间
     const hx = W / 2 + (MENU_HERO.x * 1.4 - menuCam.x) * sc, hy = groundY() + 10, el = $id('homeHero');
-    if (el && (el._x !== Math.round(hx) || el._y !== Math.round(hy))) { el._x = Math.round(hx); el._y = Math.round(hy); el.style.left = el._x + 'px'; el.style.top = el._y + 'px'; }
+    const half = el ? Math.min(W / 2, (el.offsetWidth || 0) / 2 + 12) : 0, ux = Math.max(half, Math.min(W - half, hx));   // 窄屏时侠客站得偏，按钮夹在屏幕里
+    if (el && (el._x !== Math.round(ux) || el._y !== Math.round(hy))) { el._x = Math.round(ux); el._y = Math.round(hy); el.style.left = el._x + 'px'; el.style.top = el._y + 'px'; }
   }
   menuFlies(false);
   for (const l of MENU_LEAVES) { ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(l.r); ctx.fillStyle = 'rgba(120,160,110,0.6)'; ctx.beginPath(); ctx.ellipse(0, 0, l.s, l.s * 0.35, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }

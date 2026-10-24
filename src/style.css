@@ -2491,3 +2491,247 @@
   @media (prefers-reduced-motion: reduce) {
     .home-mist { animation: none; }
   }
+
+  /* =====================================================================
+     墨金层（v5）：水墨的笔意和纸纹 + 竞技风的利落切角。放在最后，覆盖前面所有按钮、面板的写法。
+     主按钮：朱砂实底、对角切角、细纸纹、悬停时一道光扫过；大按钮右边一枚小白印，小按钮不放印（不会压字）。
+     次按钮：玄青半透明底 + 发丝边，左上、右下各一小截金色角标。
+     切角面板：沿切角补一条斜边，边框是完整的一圈（以前切角处断开，看着像两层框错位）。
+     ===================================================================== */
+  :root {
+    --x-red: #dc4147; --x-red-hi: #f0565b; --x-red-lo: #a92a33;
+    --x-jade: #2c8d7b; --x-jade-hi: #3aa891; --x-jade-lo: #1c5f53;
+    --x-violet: #6650cf; --x-violet-hi: #7d67e6; --x-violet-lo: #432f98;
+    --x-gold: #e7bf62; --x-gold-hi: #f6d683; --x-gold-lo: #b7862a;
+    --x-paper: #f3ede2; --x-line: rgba(236,226,204,.18); --x-line-hi: rgba(233,196,106,.62);
+    --x-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+    --x-cut: 10px;
+  }
+  /* ---------- 主按钮 ---------- */
+  .go, .mm-go, .mm-2v2 .mm-go, .mm-ranked .mm-go {
+    --b0: var(--x-red-hi); --b1: var(--x-red); --b2: var(--x-red-lo); --fg: #fff8f1; --sealbg: rgba(255,248,240,.94); --sealfg: #b8323a;
+    position: relative; isolation: isolate; overflow: hidden;
+    color: var(--fg) !important; border: none !important; border-radius: 0 !important;
+    filter: none !important; text-shadow: 0 1px 1px rgba(60,0,0,.35);
+    padding-right: 56px; transition: transform .16s cubic-bezier(.2,.8,.2,1), background-position .2s, opacity .15s;
+  }
+  /* 底色、切角、内描边写在这条里：:not(.zz…) 只为把优先级抬过水墨层的 .go.alt:hover 之类（那几条也带 !important），
+     颜色全走 --b0/--b1/--b2，悬停、按下、各配色只改变量 */
+  :is(.go, .mm-go):not(.zz.zz.zz.zz.zz) {
+    background: var(--x-grain), radial-gradient(120% 140% at 100% 100%, rgba(0,0,0,.26), transparent 55%), linear-gradient(160deg, var(--b0), var(--b1) 48%, var(--b2)) !important;
+    background-size: 160px 160px, 100% 100%, 100% 100% !important;
+    clip-path: polygon(0 0, calc(100% - var(--x-cut)) 0, 100% var(--x-cut), 100% 100%, var(--x-cut) 100%, 0 calc(100% - var(--x-cut))) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.26), inset 0 -2px 0 rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.08) !important;
+  }
+  :is(.go, .mm-go):not(.zz.zz.zz.zz.zz):focus-visible { outline: none; box-shadow: inset 0 0 0 2px #ffe3a3, inset 0 1px 0 rgba(255,255,255,.26) !important; }
+  .go::before, .mm-go::before {   /* 悬停时一道光从左扫到右 */
+    content: ""; position: absolute; inset: 0; z-index: -1; left: 0; top: 0; width: auto; height: auto; border-radius: 0; opacity: 1;
+    transform: translateX(-110%) skewX(-18deg); transition: none;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.26) 45%, rgba(255,255,255,.08) 60%, transparent);
+    pointer-events: none;
+  }
+  .go:hover:not(:disabled)::before, .mm-go:hover:not(:disabled)::before { transform: translateX(110%) skewX(-18deg); transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+  .go:active:not(:disabled)::before, .mm-go:active:not(:disabled)::before { transform: translateX(110%) skewX(-18deg); opacity: 0; }
+  .go::after, .mm-go::after {   /* 大按钮的白印：位置留在右边的内边距里 */
+    content: "刃"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%) rotate(-5deg);
+    display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border-radius: 2px;
+    font: 14px/1 var(--title); letter-spacing: 0; text-shadow: none;
+    color: var(--sealfg); background: var(--sealbg); box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.25); opacity: .96; pointer-events: none;
+  }
+  .go:hover:not(:disabled), .mm-go:hover:not(:disabled),
+  .mm-2v2 .mm-go:hover:not(:disabled), .mm-ranked .mm-go:hover:not(:disabled) {
+    --b0: #ff6c70; --b1: var(--x-red-hi); --b2: #bd3039;
+    transform: translateY(-1px); filter: none !important;
+  }
+  .go:active:not(:disabled), .mm-go:active:not(:disabled) { transform: translateY(1px) scale(.99); --b0: var(--x-red); --b1: #c4353d; --b2: #8f222b; }
+  .go:disabled, .mm-go:disabled { opacity: .5; filter: grayscale(.7) !important; cursor: default; }
+  .go:disabled::before, .mm-go:disabled::before { display: none; }
+  /* 小按钮、挤在一起的按钮：不放印，内边距对称 */
+  .go.small, .mm-2v2 .mm-go, .ink-card .go, .ar-box .go, .ar-insbox .go, .ar-main .go, .soc-fr .go, .iprow .go, .home-hero .hh-go { padding-right: 18px; }
+  .go.small::after, .mm-2v2 .mm-go::after, .ink-card .go::after, .ar-box .go::after, .ar-insbox .go::after, .ar-main .go::after, .soc-fr .go::after, .iprow .go::after { display: none !important; }
+  .go.small { --x-cut: 7px; }
+  .armp .go.small, .ar-modal .go.small, .ar-ins .go.small { padding: 8px 18px; letter-spacing: .12em; }
+  /* 配色：青玉（次级行动）、靛紫（观战）、金（排位） */
+  .go.alt, .mm-go.alt, .mm-2v2 .mm-go.alt { --b0: var(--x-jade-hi); --b1: var(--x-jade); --b2: var(--x-jade-lo); --sealfg: #1d6a5c; color: #effffb !important; }
+  .go.alt:hover:not(:disabled), .mm-go.alt:hover:not(:disabled), .mm-2v2 .mm-go.alt:hover:not(:disabled) { --b0: #4cc0a6; --b1: var(--x-jade-hi); --b2: #217062; transform: translateY(-1px); }
+  .go.alt::after, .mm-go.alt::after { content: "演"; background: var(--sealbg); }
+  .go.alt:active:not(:disabled), .mm-go.alt:active:not(:disabled) { --b0: var(--x-jade); --b1: #237867; --b2: #164d43; }
+  .btn-watch, .mm-2v2 .mm-go.btn-watch, .go.btn-watch { --b0: var(--x-violet-hi); --b1: var(--x-violet); --b2: var(--x-violet-lo); --sealfg: #4a35a8; color: #f3efff !important; }
+  .btn-watch:hover:not(:disabled), .mm-2v2 .mm-go.btn-watch:hover:not(:disabled), .go.btn-watch:hover:not(:disabled) { --b0: #937ff2; --b1: var(--x-violet-hi); --b2: #4e39ad; }
+  .btn-watch::after { content: "观"; background: var(--sealbg); }
+  .mm-ranked .mm-go { --b0: var(--x-gold-hi); --b1: var(--x-gold); --b2: var(--x-gold-lo); --fg: #1d1406; --sealbg: #1d1406; --sealfg: #f6d683; text-shadow: 0 1px 0 rgba(255,240,200,.35); }
+  .mm-ranked .mm-go:hover:not(:disabled) { --b0: #ffe39a; --b1: var(--x-gold-hi); --b2: #c48f2e; }
+  .mm-ranked .mm-go::after { content: "位"; background: var(--sealbg); }
+  /* ---------- 次按钮 ---------- */
+  .ghost {
+    position: relative; border-radius: 0 !important; color: #efe8da;
+    border: 1px solid var(--x-line) !important;
+    background:
+      linear-gradient(var(--x-gold), var(--x-gold)) left top / 9px 1px no-repeat,
+      linear-gradient(var(--x-gold), var(--x-gold)) left top / 1px 9px no-repeat,
+      linear-gradient(var(--x-gold), var(--x-gold)) right bottom / 9px 1px no-repeat,
+      linear-gradient(var(--x-gold), var(--x-gold)) right bottom / 1px 9px no-repeat,
+      linear-gradient(180deg, rgba(31,41,58,.78), rgba(19,26,38,.86)) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,.22) !important;
+    transition: border-color .15s, color .15s, background-color .15s, transform .12s;
+  }
+  .ghost:hover:not(:disabled) {
+    color: #fff; border-color: rgba(233,196,106,.5) !important;
+    background:
+      linear-gradient(var(--x-gold-hi), var(--x-gold-hi)) left top / 12px 1px no-repeat,
+      linear-gradient(var(--x-gold-hi), var(--x-gold-hi)) left top / 1px 12px no-repeat,
+      linear-gradient(var(--x-gold-hi), var(--x-gold-hi)) right bottom / 12px 1px no-repeat,
+      linear-gradient(var(--x-gold-hi), var(--x-gold-hi)) right bottom / 1px 12px no-repeat,
+      linear-gradient(180deg, rgba(42,55,76,.88), rgba(25,34,50,.92)) !important;
+  }
+  .ghost:active:not(:disabled) { transform: translateY(1px); }
+  .ghost:not(.zz) { color: #efe8da; }   /* 压过 .trow button 这类容器里给按钮定的深色字 */
+  /* 任务行：领取是金色切角小牌，前往是金色描边小签 */
+  .trow button:not(.ghost) { border-radius: 0; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    background: linear-gradient(160deg, var(--x-gold-hi), var(--x-gold) 55%, var(--x-gold-lo)); color: #1d1406; font-weight: 700; letter-spacing: .08em; padding: 6px 14px; }
+  .trow button:not(.ghost):hover:not(:disabled) { background: linear-gradient(160deg, #ffe7a6, var(--x-gold-hi) 55%, var(--x-gold)); }
+  .trow button:not(.ghost):disabled { background: rgba(255,255,255,.07); color: var(--dim); font-weight: 400; }
+  .trow .ghost.task-go { color: var(--x-gold-hi); padding: 5px 12px !important; font-size: 12px !important; letter-spacing: .08em;
+    border: 1px solid rgba(233,196,106,.42) !important; background: rgba(233,196,106,.07) !important; box-shadow: none !important; }
+  .trow .ghost.task-go:hover { color: #fff; border-color: var(--x-gold-hi) !important; background: rgba(233,196,106,.18) !important; }
+  .ghost:disabled { opacity: .45; cursor: default; }
+  .ghost:focus-visible { outline: 2px solid rgba(255,227,163,.8); outline-offset: 2px; }
+  .ghost.sel, .ghost.sel:hover { color: #18130a !important; border-color: var(--x-gold-hi) !important; background: linear-gradient(180deg, var(--x-gold-hi), var(--x-gold)) !important; }
+  /* ---------- 切角面板：把切掉的两个角补上斜边 ---------- */
+  body.has-nav .scr:not(.menuscr):not(#netp) > .panel {
+    --cut: 24px; --edge: rgba(233,196,106,.36);
+    background:
+      linear-gradient(45deg, transparent calc(50% - .9px), var(--edge) calc(50% - .9px), var(--edge) calc(50% + .6px), transparent calc(50% + .6px)) right top / var(--cut) var(--cut) no-repeat,
+      linear-gradient(45deg, transparent calc(50% - .6px), var(--edge) calc(50% - .6px), var(--edge) calc(50% + .9px), transparent calc(50% + .9px)) left bottom / var(--cut) var(--cut) no-repeat,
+      radial-gradient(ellipse at 50% 0%, rgba(233,196,106,.07), transparent 68%),
+      radial-gradient(circle at 95% 95%, rgba(184,57,46,.05), transparent 55%),
+      var(--x-grain) 0 0 / 160px 160px,
+      linear-gradient(180deg, rgba(22,30,44,.95), rgba(15,21,32,.97)) !important;
+    border: 1px solid var(--edge) !important;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5) !important;
+  }
+  #end .panel, #pause .panel {
+    --cut: 24px; --edge: rgba(236,226,204,.2);
+    background:
+      linear-gradient(45deg, transparent calc(50% - .9px), var(--edge) calc(50% - .9px), var(--edge) calc(50% + .6px), transparent calc(50% + .6px)) right top / var(--cut) var(--cut) no-repeat,
+      linear-gradient(45deg, transparent calc(50% - .6px), var(--edge) calc(50% - .6px), var(--edge) calc(50% + .9px), transparent calc(50% + .9px)) left bottom / var(--cut) var(--cut) no-repeat,
+      rgba(10,16,24,.92);
+    border-color: var(--edge);
+  }
+  .ar-box, .ar-insbox {
+    --cut: 20px; --edge: rgba(233,196,106,.3);
+    background:
+      linear-gradient(45deg, transparent calc(50% - .9px), var(--edge) calc(50% - .9px), var(--edge) calc(50% + .6px), transparent calc(50% + .6px)) right top / var(--cut) var(--cut) no-repeat,
+      linear-gradient(45deg, transparent calc(50% - .6px), var(--edge) calc(50% - .6px), var(--edge) calc(50% + .9px), transparent calc(50% + .9px)) left bottom / var(--cut) var(--cut) no-repeat,
+      var(--x-grain) 0 0 / 160px 160px,
+      linear-gradient(180deg, #172131, #111926);
+    border-color: var(--edge);
+  }
+  .mm-card {
+    --cut: 26px; --edge: rgba(233,196,106,.28);
+    background:
+      linear-gradient(45deg, transparent calc(50% - .9px), var(--edge) calc(50% - .9px), var(--edge) calc(50% + .6px), transparent calc(50% + .6px)) right top / var(--cut) var(--cut) no-repeat,
+      linear-gradient(45deg, transparent calc(50% - .6px), var(--edge) calc(50% - .6px), var(--edge) calc(50% + .9px), transparent calc(50% + .9px)) left bottom / var(--cut) var(--cut) no-repeat,
+      linear-gradient(145deg, rgba(24,34,48,.95), rgba(15,22,33,.97)) !important;
+    border: 1px solid var(--edge) !important;
+  }
+  .mm-card:hover { --edge: rgba(233,196,106,.55); }
+  /* ---------- 首页两块大入口 ---------- */
+  .menuscr .mcard, .menuscr .mcard.right, .menuscr .mcard.left {
+    --x-cut: 14px; overflow: hidden; isolation: isolate;
+    padding: 18px 64px 18px 26px !important;
+    clip-path: polygon(0 0, calc(100% - var(--x-cut)) 0, 100% var(--x-cut), 100% 100%, var(--x-cut) 100%, 0 calc(100% - var(--x-cut))) !important;
+    filter: none !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -2px 0 rgba(0,0,0,.25) !important;
+  }
+  .menuscr .mcard.right {
+    background: var(--x-grain) 0 0 / 160px 160px, radial-gradient(90% 160% at 100% 0%, rgba(255,255,255,.14), transparent 50%), radial-gradient(120% 160% at 100% 100%, rgba(40,0,6,.42), transparent 60%), linear-gradient(160deg, #f0585c, #d33c44 52%, #9e2630) !important;
+  }
+  .menuscr .mcard.left {
+    background:
+      linear-gradient(var(--x-jade-hi), var(--x-jade-hi)) left top / 3px 100% no-repeat,
+      var(--x-grain) 0 0 / 160px 160px, radial-gradient(100% 160% at 100% 100%, rgba(58,168,145,.2), transparent 60%), linear-gradient(160deg, rgba(31,43,58,.92), rgba(17,24,35,.94)) !important;
+    box-shadow: inset 0 0 0 1px rgba(236,226,204,.16), inset 0 1px 0 rgba(255,255,255,.08) !important;
+  }
+  .menuscr .mcard .mk { text-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .menuscr .mcard.right .ms { color: rgba(255,244,236,.86) !important; }
+  .menuscr .mcard.right::before, .menuscr .mcard.left::before {   /* 右下角一个“›”，悬停时往右走一点 */
+    content: "›"; position: absolute; right: 22px; bottom: 12px; font: 300 26px/1 var(--v-cond); color: rgba(255,255,255,.55); transition: transform .2s, color .2s; pointer-events: none;
+  }
+  .menuscr .mcard.right::after, .menuscr .mcard.left::after {
+    top: 16px !important; right: 18px !important; transform: rotate(-5deg) !important;
+    display: grid !important; place-items: center; width: 24px; height: 24px; padding: 0 !important; font: 15px/1 var(--title) !important;
+  }
+  .menuscr .mcard.right::after { background: rgba(255,248,240,.94) !important; color: #b8323a !important; box-shadow: 0 1px 3px rgba(0,0,0,.3) !important; }
+  .menuscr .mcard.left::after { background: var(--x-jade) !important; color: #effffb !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,.3) !important; }
+  .menuscr .mcard.right:hover, .menuscr .mcard.right:focus-visible, .menuscr .mcard.left:hover, .menuscr .mcard.left:focus-visible { transform: translateX(6px) !important; filter: none !important; }
+  .menuscr .mcard.right:hover { background: var(--x-grain) 0 0 / 160px 160px, radial-gradient(90% 160% at 100% 0%, rgba(255,255,255,.2), transparent 50%), radial-gradient(120% 160% at 100% 100%, rgba(40,0,6,.36), transparent 60%), linear-gradient(160deg, #ff6a6d, #e1464d 52%, #ab2b35) !important; }
+  .menuscr .mcard.left:hover { box-shadow: inset 0 0 0 1px rgba(58,168,145,.6), inset 0 1px 0 rgba(255,255,255,.1) !important; }
+  .menuscr .mcard:hover::before { transform: translateX(5px); color: #fff; }
+  /* 首页角色脚下的两颗按钮 */
+  .home-hero .hh-go {
+    --x-cut: 7px;
+    background: var(--x-grain) 0 0 / 160px 160px, linear-gradient(160deg, var(--x-red-hi), var(--x-red) 50%, var(--x-red-lo)) !important;
+    clip-path: polygon(0 0, calc(100% - var(--x-cut)) 0, 100% var(--x-cut), 100% 100%, var(--x-cut) 100%, 0 calc(100% - var(--x-cut))) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.24), inset 0 -2px 0 rgba(0,0,0,.2) !important;
+    filter: none !important; color: #fff8f1 !important; padding: 0 22px !important;
+  }
+  .home-hero .hh-go:hover { background: var(--x-grain) 0 0 / 160px 160px, linear-gradient(160deg, #ff6c70, var(--x-red-hi) 50%, #bd3039) !important; transform: translateY(-1px); filter: none !important; }
+  .home-hero .hh-swap { border-radius: 0 !important; border: 1px solid var(--x-line) !important; background: linear-gradient(var(--x-gold), var(--x-gold)) left top / 8px 1px no-repeat, linear-gradient(var(--x-gold), var(--x-gold)) left top / 1px 8px no-repeat, rgba(20,28,42,.86) !important; }
+  .home-hero .hh-swap:hover { border-color: rgba(233,196,106,.6) !important; }
+  /* ---------- 对战页：2v2 四个按钮排成两行两列，字不换行 ---------- */
+  .mm-2v2-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mm-2v2 .mm-go, .mm-2v2 .mm-go.btn-watch {
+    --x-cut: 8px; grid-column: auto; min-height: 54px; padding: 8px 12px !important; align-items: flex-start !important;
+    font: 700 14px/1.25 var(--body); letter-spacing: .04em; white-space: nowrap;
+  }
+  .mm-2v2 .mm-go > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .mm-2v2 .mm-go .go-sub { font-size: 12px; font-weight: 400; letter-spacing: 0; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  #mm2v2CoopBtn, #mm2v2VsBtn, #mm2v2WatchBtn {
+    --tile: #43c4d8; color: #eef3f6 !important; text-shadow: none;
+    background: linear-gradient(var(--tile), var(--tile)) left top / 3px 100% no-repeat,
+      radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--tile) 16%, transparent), transparent 60%),
+      linear-gradient(160deg, rgba(36,49,67,.92), rgba(19,27,39,.94)) !important;
+    box-shadow: inset 0 0 0 1px rgba(236,226,204,.13), inset 0 1px 0 rgba(255,255,255,.05) !important;
+  }
+  #mm2v2VsBtn { --tile: var(--x-gold); }
+  #mm2v2WatchBtn { --tile: #9483f5; }
+  #mm2v2CoopBtn:hover:not(:disabled), #mm2v2VsBtn:hover:not(:disabled), #mm2v2WatchBtn:hover:not(:disabled) {
+    color: #fff !important;
+    background: linear-gradient(var(--tile), var(--tile)) left top / 3px 100% no-repeat,
+      linear-gradient(90deg, color-mix(in srgb, var(--tile) 26%, transparent), transparent 80%),
+      linear-gradient(160deg, rgba(42,57,78,.94), rgba(23,32,46,.95)) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tile) 55%, transparent) !important;
+  }
+  #mm2v2CoopBtn .go-sub, #mm2v2VsBtn .go-sub, #mm2v2WatchBtn .go-sub { color: color-mix(in srgb, var(--tile) 55%, #dfe6ea); opacity: 1; }
+  #mm2v2SoloBtn { --b0: var(--x-red-hi) !important; --b1: var(--x-red) !important; --b2: var(--x-red-lo) !important; }
+  #mm2v2SoloBtn:hover:not(:disabled) { --b0: #ff6c70 !important; --b1: var(--x-red-hi) !important; --b2: #bd3039 !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .go::before, .mm-go::before { display: none; }
+    .menuscr .mcard:hover, .go:hover, .mm-go:hover { transform: none !important; }
+  }
+  /* 首页雾气：原来左右各伸出 15% 再平移，整块雾跑到屏幕外面；改成雾在屏幕里、只挪背景位置，看着一样在飘 */
+  .home-mist { left: 0; right: 0; background-size: 130% 100%; background-repeat: no-repeat; background-position: 50% 100%; animation-name: mistDriftIn; }
+  .home-mist-2 { background-size: 130% 100%; background-position: 50% 60%; animation-name: mistDriftIn2; }
+  @keyframes mistDriftIn { 0% { background-position: 36% 100%; transform: scaleY(.96); opacity: .55; } 100% { background-position: 64% 100%; transform: scaleY(1.03); opacity: .8; } }
+  @keyframes mistDriftIn2 { 0% { background-position: 36% 60%; transform: scaleY(.96); opacity: .55; } 100% { background-position: 64% 60%; transform: scaleY(1.03); opacity: .8; } }
+  /* ---------- 窄屏（手机竖屏）：不溢出、不叠字 ---------- */
+  .single-nav-deck { width: min(780px, 100%); box-sizing: border-box; }
+  @media (max-width: 760px) {
+    .home-side { display: none; }   /* 首页右侧资讯栏会压在标题和侠客身上，窄屏收起 */
+    .home-online-pill { display: none; }
+    .home-kicker { left: 16px; right: 16px; flex-wrap: wrap; gap: 6px 10px; font-size: 12px; }
+    .menuscr .mtitle, .home-tag { left: 16px; }
+    .home-tag { letter-spacing: .2em; font-size: 12px; }
+    body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { display: none !important; }   /* 顶栏有首页，浮动返回键会盖住按钮 */
+    .tn-tabs { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+    .single-cat-tabs button { font-size: 12px; gap: 4px; padding: 5px 2px; }
+    .single-tabs { justify-content: flex-start; }
+  }
+  @media (max-width: 640px) {
+    .trow { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "name rw act" "bar bar bar"; row-gap: 8px; }
+    .trow > span:first-child { grid-area: name; min-width: 0; }
+    .trow > .bar { grid-area: bar; }
+    .trow > .rw { grid-area: rw; }
+    .trow > div:last-child { grid-area: act; }
+  }
