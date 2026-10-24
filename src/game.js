@@ -77,7 +77,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, vibrate: true, autoSkin: true };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: false, vibrate: true, autoSkin: true };
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);
@@ -86,6 +86,7 @@ try {
   if (SETTINGS.bloom === undefined || SETTINGS.bloom === 1) SETTINGS.bloom = 1.6;
   const ALLOWED_FPS = [144, 120, 60, 30];
   if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
+  if (saved.aim === undefined) SETTINGS.aim = false;
 } catch (e) {}
 function saveSettings() { try { localStorage.setItem('renying-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
 
@@ -532,10 +533,15 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
   kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身一甩，四枚黑铁手里剑呈扇形激射。【无硬直击飞】，纯粹以极速密雨截断对手起手，穿透轻型投掷物。',
-    start() {},
-    update(f) {
+    start(f, foe) {
+      const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+      if (target) f.face = faceDir(f, target);
+    },
+    update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.08) {
         f.skPh = 1; SFX.slice();
+        const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+        if (target) f.face = faceDir(f, target);
         for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), w: 26, h: 14, life: 0.55, dmg: 25, kb: [80, 0], stun: 0.18, hs: 0.03, launch: false });
       }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
@@ -9143,7 +9149,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 // ======================= 设置 =======================
 let settingsBack = 'menu';
 const SETTING_ROWS = [
-  { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
+  { k: 'aim', name: '朝向', opts: [[false, '自动面向对手'], [true, '按 A / D 决定']] },
   { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
   { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
   { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
