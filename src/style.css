@@ -420,8 +420,11 @@
   .cxskins button { font: 13px var(--body); padding: 5px 11px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,.05); color: var(--ink); border: 1px solid var(--faint); white-space: nowrap; word-break: keep-all; transition: all .18s ease; }
   .cxskins button:hover { transform: translateY(-1px); border-color: rgba(233,196,106,.45); }
   .cxskins button.sel { border-color: #e9c46a; color: #e9c46a; background: rgba(233,196,106,.1); box-shadow: 0 0 14px rgba(233,196,106,.22); }
-  .cxskins button.sk-btn-legend.sel { box-shadow: 0 0 16px rgba(245,202,95,.4); border-color: #f5ca5f; color: #f5ca5f; }
-  .cxskins button.sk-btn-rare.sel { box-shadow: 0 0 16px rgba(168,213,255,.35); border-color: #a8d5ff; color: #a8d5ff; }
+  .cxskins button.sk-g { --tc: 111,168,255; display: inline-flex; align-items: center; gap: 6px; color: rgb(var(--tc)); border-color: rgba(var(--tc), .32); background: linear-gradient(180deg, rgba(var(--tc), .1), rgba(var(--tc), .03)); }
+  .cxskins button.sk-g:hover { border-color: rgba(var(--tc), .7); }
+  .cxskins button.sk-g.sel { color: rgb(var(--tc)); border-color: rgb(var(--tc)); background: rgba(var(--tc), .16); box-shadow: 0 0 0 1px rgba(var(--tc), .25) inset, 0 0 16px rgba(var(--tc), .35); }
+  .cxskins .sk-dot { width: 7px; height: 7px; border-radius: 2px; transform: rotate(45deg); background: rgb(var(--tc)); box-shadow: 0 0 6px rgba(var(--tc), .8); flex: none; }
+  .pill.sk-pill { color: rgb(var(--tc)); border-color: rgba(var(--tc), .8); background: rgba(var(--tc), .14); }
   .cxskins button.lock { opacity: .45; cursor: default; }
   .pill.sk-pill { font-weight: 600; letter-spacing: 0.5px; animation: breath 2s infinite ease-in-out; }
   .bpcard.lock img { filter: grayscale(1) brightness(.45); }

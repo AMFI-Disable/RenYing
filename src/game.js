@@ -70,7 +70,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    CHARS     8 个角色：属性、被动、Q 技能、E 大招、外观、电脑的站位习惯。
    SKILLS    Q 技能表；ULTS 大招表。想加新角色，在这三张表里各加一项就行。
    按键在 KEYS 里改；蓄力时间在 CHARGE_START / CHARGE_FULL 里调。
-   联机代码在“联机（公共部分）”和“回滚联机”两节；服务器转发在 server.py，免服务器直连在 net-p2p.js。
+   联机代码在“联机（公共部分）”和“回滚联机”两节；浏览器之间直连（WebRTC）在 net-p2p.js。
    腾空闪冷却和被挑飞的滞空时间在 BREAK_CD / LAUNCH_GRAV 里调。
    右键招式在 SKILLS 表的“右键招式”一节，每个角色用 skill2 指定。设置在 SETTINGS，音乐在 MUSIC 一节。
    刀声在 SFX 里，metal() 用几组不成倍数的泛音模拟金属振动。
@@ -1265,7 +1265,7 @@ function musicMode() {
 const MFILE = { menu: 'menu', bp: 'select', fight: 'battle', overtime: 'overtime', practice: 'practice', gacha: 'gacha' };
 const MGAIN = { menu: 1, select: 1, battle: 1, overtime: 1, practice: 1, gacha: 1, victory: 1, defeat: 1, legendary: 1 };   // 新曲子录制时已按响度拉平
 const MBUF = {}, MF = { name: null, g: null, srcs: [], tok: 0, tm: 0 };
-// 音乐文件的网址（相对网页位置，GitHub Pages 和 server.py 都能用）；双击打开本地文件时没有，改用程序生成的音乐
+// 音乐文件的网址（相对网页位置）；双击打开本地文件时没有，改用程序生成的音乐
 function musicURL(name) {
   if (TOY_BUILD) return `music/${name}.mp3`;
   if (OFFLINE_BUILD || !/^https?:$/.test(location.protocol)) return null;
@@ -1417,13 +1417,9 @@ const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越�
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 
 // ======================= 联机（公共部分） =======================
-// 两种连法，对战代码完全一样，只是消息走的路不同：
-//   1. 服务器：server.py 转发消息（WebSocket），支持快速匹配、排位、账号、断线重连。
-//   2. 直连：浏览器之间用 WebRTC 直接连（PeerJS 只负责牵线），不需要服务器，见 net-p2p.js。
+// 联机只有一种连法：浏览器之间用 WebRTC 直接连（PeerJS 只负责牵线），不需要自己的服务器，见 net-p2p.js。
 // 房主叫 host（青锋那一边），加入的人叫 client。对战用“回滚联机”（见下面 ROLL 一节）：两边每帧只交换按键。
-const NET = { role: null, ws: null, open: false, remote: new Ctrl(), out: [], presses: [] };
-// 是否是从联机服务器打开的网页（而不是双击本地文件、GitHub Pages 或在线预览）
-const SERVED = !OFFLINE_BUILD && /^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent|anthropic|github\.io/.test(location.hostname);
+const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [] };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
   if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
@@ -1438,43 +1434,17 @@ const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on;
 function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on) NET.out.push(ev); }
 function netReset() {
   ROLL.on = false;
-  rankUI(false);
   if (typeof mmStop === 'function') mmStop();
   mmUI(null);
   NET.peerQuit = false;
-  NET.matching = false; NET.hold = false; NET.awayUntil = 0; matchUI(false);
-  if (NET.ws) { const w = NET.ws; NET.ws = null; try { w.close(); } catch (e) {} }
+  NET.matching = false; NET.hold = false;
   p2pClose();
-  NET.open = false; NET.out = []; NET.presses.length = 0; NET.remote.clear();
+  NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
   if (typeof updateNetLobby === 'function') updateNetLobby(false);
   if ($id('copyCodeBtn')) $id('copyCodeBtn').classList.add('hidden');
   if ($id('postToComBtn')) $id('postToComBtn').classList.add('hidden');
 }
-let savedNetMode = null;
-try { savedNetMode = localStorage.getItem('renying-net-mode'); } catch (e) {}
-let currentNetMode = savedNetMode || 'p2p';
-
-function serverBase() {
-  let v = ($id('srvIn') && $id('srvIn').value || '').trim().replace(/\/+$/, '');
-  if (v) {
-    if (/^https:\/\//.test(v)) return 'wss://' + v.slice(8);
-    if (/^http:\/\//.test(v)) return 'ws://' + v.slice(7);
-    return (/^[\d.]+(:\d+)?$/.test(v) || /^localhost/.test(v) ? 'ws://' : 'wss://') + v;
-  }
-  if (SERVED) return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
-  return 'ws://127.0.0.1:8765';
-}
-// ---------- 断线重连用的信息，存在浏览器里（只有服务器模式能重连） ----------
-function saveResume() {
-  if (!NET.code || !NET.rt) return;
-  try { localStorage.setItem('renying-resume', JSON.stringify({ base: NET.base, code: NET.code, rt: NET.rt, v: VERSION, at: Date.now() })); } catch (e) {}
-}
-function clearResume() { NET.code = NET.rt = null; try { localStorage.removeItem('renying-resume'); } catch (e) {} }
-function loadResume() {
-  try { const r = JSON.parse(localStorage.getItem('renying-resume') || 'null'); if (r && r.v === VERSION && Date.now() - r.at < 65000) return r; } catch (e) {}
-  return null;
-}
-// 主动离开：告诉对方（或服务器）不用等我
+// 主动离开：告诉对方不用等我
 function netLeave() {
   NET.leaving = true;
   if (NET.isRanked && !NET.rkDone && rkOwner() && rkState().pending) {   // 排位打到一半自己走：判负
@@ -1482,121 +1452,15 @@ function netLeave() {
     const r = rkFinish(false, 'quit');
     if (r) toast(`中途离开排位赛，判负（${r.delta} 分）`);
   }
-  if (NET.ws && NET.ws.readyState === 1) { try { NET.ws.send('{"bye":1}'); } catch (e) {} }
   p2pSend({ sys: 'left' });
-  clearResume(); stopReconnect(); netReset();
+  netOverlay(''); netReset();
 }
-// 建房 / 加入 / 匹配：根据所选模式或服务器自动路由
-function netConnect(asHost, code, match, resume, ranked) {
-  if (resume) {
-    if (resume.base) return netConnectWS(asHost, code, match, resume, ranked);
-    return;
-  }
-  if (match || ranked) {
-    if (!SERVED) {
-      netStatus('GitHub Pages 网页版无需服务器！点上方【建房】，把房间码发给好友；或输入房间码【加入】。');
-      return;
-    }
-    if (currentNetMode !== 'server') {
-      setNetMode('server');
-      netStatus(match ? '快速匹配需用服务器，已自动切到局域网/本地服务器模式' : '排位赛需用服务器，已自动切到局域网/本地服务器模式');
-    }
-    return netConnectWS(asHost, code, match, resume, ranked);
-  }
-  if (currentNetMode === 'server') {
-    return netConnectWS(asHost, code, match, resume, ranked);
-  }
-  netConnectP2P(asHost, code);
-}
-function netConnectWS(asHost, code, match, resume, ranked) {
-  netReset();
-  if (!resume) NET.isRanked = false;
-  const base = resume ? resume.base : serverBase();
-  if (!base) { netStatus('请先填入服务器网址'); return; }
-  NET.asHost = asHost; NET.matching = !!match; NET.leaving = false; NET.base = base;
-  if (resume) NET.hold = true;
-  if (!resume) { $id('roomCode').textContent = ''; netStatus(match ? '正在寻找对手…' : asHost ? '正在建房…' : `正在加入房间 ${code}…`); }
-  const q = resume ? `resume=${resume.code}&rt=${encodeURIComponent(resume.rt)}` : ranked ? 'rank=1' : match ? 'match=1' : asHost ? 'create=1' : 'join=' + encodeURIComponent(code);
-  if (ranked) netStatus('正在寻找实力相近的对手…');
-  let ws;
-  try { ws = NET.ws = new WebSocket(`${base}/ws?${q}&v=${VERSION}&t=${encodeURIComponent(ACC.token || '')}`); }
-  catch (e) { netStatus('服务器网址格式不对'); return; }
-  ws.onmessage = e => {
-    let m; try { m = JSON.parse(e.data); } catch (err) { return; }
-    if (m.sys) onSys(m); else onNetMsg(m);
-  };
-  setTimeout(() => {   // 8 秒还没连上就放弃
-    if (NET.ws === ws && ws.readyState === 0) { NET.ws = null; ws.onclose = null; try { ws.close(); } catch (e) {} ws.onerror(); }
-  }, 8000);
-  ws.onerror = () => { if (!NET.reconnT0) netStatus('连不上服务器：请确认房主终端已运行 python3 server.py（或在上方填入房主的 IP:8765）'); };
-  ws.onclose = () => {
-    if (ws !== NET.ws) return;
-    NET.ws = null;
-    if (NET.code && NET.rt && !NET.leaving && (NET.open || NET.reconnT0)) startReconnect();   // 对战中断线：自动重连
-    else if (!NET.reconnT0) netLost();
-  };
-}
-// ---------- 断线后每 2 秒尝试回到房间，最多 60 秒 ----------
-let reconnTimer = null;
-function startReconnect() {
-  NET.open = false; NET.hold = true;
-  if (!NET.reconnT0) NET.reconnT0 = performance.now();
-  netOverlay('网络断了，正在重连…');
-  clearTimeout(reconnTimer);
-  reconnTimer = setTimeout(() => {
-    if (performance.now() - NET.reconnT0 > 60000) { stopReconnect(); clearResume(); toMenu(); selectMode('net'); netStatus('断线太久，回不去那场对战了'); return; }
-    if (!NET.ws) netConnect(false, null, false, { base: NET.base, code: NET.code, rt: NET.rt });
-  }, 2000);
-}
-function stopReconnect() { clearTimeout(reconnTimer); NET.reconnT0 = 0; netOverlay(''); }
+// 建房 / 加入（快速匹配和排位走 mmGo）
+function netConnect(asHost, code) { netConnectP2P(asHost, code); }
 function netOverlay(text) { const o = $id('netOv'); o.textContent = text; o.classList.toggle('on', !!text); }
-// 回来的一方需要的全部状态（由留下的一方发送）
-function resyncPayload() {
-  if (BP && BP.step < bpSteps().length && bpMode === 'net') return { k: 'bp', bp: BP };
-  if (M.mode === 'net' && ROLL.on) return rollResumePayload();
-  if (M.mode === 'net') return { k: 'match', ch: [A.chIdx, B.chIdx], s: snapshot(), end: M.phase === 'end' };
-  return { k: 'idle' };
-}
-function applyResync(rs) {
-  NET.hold = false; stopReconnect();
-  if (rs.k === 'bp') { ensurePortraits(); BP = rs.bp; bpMode = 'net'; bpSel = -1; chatClear(); showScreen('bp'); renderBP(); }
-  else if (rs.k === 'rmatch') rollResume(rs);
-  else if (rs.k === 'match') {
-    setChars(rs.ch[0], rs.ch[1]); setupNetMatch();
-    applySnapshot(rs.s, true);
-    BP = null; creditT = 0;
-    if (rs.end && M.koWinner >= 0) showEnd(M.koWinner); else { showScreen(null); say('重归战局', 0.8, 'go'); }
-  } else { toMenu(); selectMode('net'); netStatus('对手已退回菜单'); }
-}
 function onSys(m) {
-  if (m.sys === 'oldver') {   // 这个网页是旧版本：自动刷新成新版本
-    netReset(); netStatus(`游戏已经更新到 ${m.latest}（你这里还是 ${m.mine}），正在刷新…`);
-    if (M.mode !== 'net') setTimeout(() => location.reload(), 1500);
-    return;
-  }
-  if (m.sys === 'queue') { if (m.ranked) rankUI(true); else matchUI(true, m.n); return; }
-  if (m.sys === 'needlogin') { netStatus('排位赛需先登录'); netReset(); return; }
-  if (m.sys === 'room') { NET.code = m.code; NET.rt = m.rt; saveResume(); }
-  if (m.sys === 'room' && m.resumed) { NET.role = m.role; NET.awaitSync = true; netOverlay('已重连，正在同步战局…'); return; }
-  if (m.sys === 'ready' && m.resumed) { NET.names = m.names || {}; NET.open = true; return; }
-  if (m.sys === 'away') {
-    NET.hold = true; NET.awayUntil = performance.now() + m.t * 1000;
-    return;
-  }
-  if (m.sys === 'back') {
-    send({ rs: resyncPayload() });
-    NET.hold = false; NET.awayUntil = 0; netOverlay('');
-    say('对手已回座', 0.8, 'go');
-    return;
-  }
-  if (m.sys === 'noresume') {
-    stopReconnect(); clearResume(); netReset();
-    if (M.mode === 'net' || bpMode === 'net') { toMenu(); selectMode('net'); }
-    netStatus('方才那场对战已经结束了');
-    return;
-  }
   if (m.sys === 'room' && m.matched) {
-    NET.role = m.role; NET.matching = false; matchUI(false); rankUI(false); NET.isRanked = !!m.ranked; NET.rkDone = false;
+    NET.role = m.role; NET.matching = false; NET.isRanked = !!m.ranked; NET.rkDone = false;
     let targetRule = 'normal';
     if (m.mmKind === '2v2_coop') targetRule = 'pp_cc';
     else if (m.mmKind === '2v2_vs') targetRule = 'pp_pp';
@@ -1608,7 +1472,7 @@ function onSys(m) {
     return;
   }
   if (m.sys === 'room') {
-    NET.role = m.role;
+    NET.role = m.role; NET.code = m.code;
     if (m.role === 'host') {
       $id('roomCode').textContent = m.code;
       if ($id('copyCodeBtn')) $id('copyCodeBtn').classList.remove('hidden');
@@ -1677,16 +1541,11 @@ function onSys(m) {
     NET.consensus.gotAck = true;
     tryCommitNet(false);
   }
-  else if (m.sys === 'left') { clearResume(); netLost(); }
-  else if (m.sys === 'nf') { netStatus(NET.matching ? '这台服务器尚不支持快速匹配，请房主更新 server.py' : '找不到这个房间，请核对房间码'); netReset(); }
+  else if (m.sys === 'left') netLost();
   else if (m.sys === 'full') { netStatus('这间房已经满员'); netReset(); }
   else if (m.sys === 'version') { netStatus(`你的版本与房主不同（房主是 ${m.need}），刷新网页再试`); netReset(); }
-  else if (m.sys === 'busy') { netStatus('服务器房间已满，稍后再试'); netReset(); }
 }
-function send(o) {
-  if (NET.ws && NET.ws.readyState === 1) { try { NET.ws.send(JSON.stringify(o)); } catch (e) {} }
-  else p2pSend(o);
-}
+function send(o) { p2pSend(o); }
 function onNetOpen() {
   netStatus('已连接');
   send({ pskin: mySkinMap() });
@@ -1703,7 +1562,7 @@ function netLost() {
     if (NET.peerQuit) { const r = rkFinish(true, 'forfeit'); if (r) rkMsg = `对手中途离开，这场排位算你赢（${rkResultText(r)}）`; }
     else { rkClearPending(); rkMsg = '排位对局因网络中断，不计分'; }
   }
-  stopReconnect(); clearResume();
+  netOverlay('');
   netReset();
   if (was) { toMenu(); selectMode('net'); }
   $id('roomCode').textContent = '';
@@ -1755,7 +1614,6 @@ function onNetMsg(msg) {
   if (msg.po !== undefined) { const r = performance.now() - msg.po; NET.rtt = NET.rtt ? NET.rtt * 0.7 + r * 0.3 : r; return; }
   if (msg.spo !== undefined) { const r = performance.now() - msg.spo; NET.srtt = NET.srtt ? NET.srtt * 0.7 + r * 0.3 : r; return; }
   if (msg.chat) { chatRecv(msg.chat); return; }
-  if (msg.rs) { applyResync(msg.rs); return; }
   if (msg.i) {
     const c = NET.remote, h = msg.i.h, wasAtk = c.held.atk;
     c.held.left = !!(h & 1); c.held.right = !!(h & 2); c.held.down = !!(h & 4); c.held.atk = !!(h & 8); c.held.jump = !!(h & 16); c.held.aim = (h & 64) ? ((h & 32) ? -1 : 1) : 0;
@@ -1795,11 +1653,10 @@ function playEvent(ev) {
 }
 function netTick(dt) {
   // 排队时每 4 秒告诉服务器“我还在”，不然等久了会被当成掉线清出队列
-  if (NET.matching && NET.ws && NET.ws.readyState === 1) { NET.kqAcc = (NET.kqAcc || 0) + dt; if (NET.kqAcc >= 4) { NET.kqAcc = 0; NET.ws.send(JSON.stringify({ kq: 1 })); } }
   if (M.mode !== 'net' && bpMode !== 'net') return;
   if (!NET.open) return;
   NET.pingAcc = (NET.pingAcc || 0) + dt;
-  if (NET.pingAcc >= 1) { NET.pingAcc = 0; const now = performance.now(); send({ pg: now }); send({ sp: now }); if (NET.code) saveResume(); }
+  if (NET.pingAcc >= 1) { NET.pingAcc = 0; const now = performance.now(); send({ pg: now }); send({ sp: now }); }
   if (M.mode !== 'net' || NET.hold || ROLL.on) return;
   const h = human[0].held;
   const hb = (h.left ? 1 : 0) | (h.right ? 2 : 0) | (h.down ? 4 : 0) | (h.atk ? 8 : 0) | (h.jump ? 16 : 0) | (h.aim < 0 ? 32 : 0) | (h.aim ? 64 : 0);
@@ -2536,7 +2393,7 @@ function say(text, dur = 1.1, style = 'big', sub = '') {
 }
 function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math.random() * (CHARS.length - 1) | 0; if (b >= a) b++; return [a, b]; }
 // 还在等人进房间或在排队时开始单人模式：先关掉房间，免得有人进来把你拉去选人
-function netDropWaiting() { if (!NET.open && (NET.ws || p2pActive())) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
+function netDropWaiting() { if (!NET.open && p2pActive()) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
 function startMatch(mode, level, chars, isWatch = false) {
   if (mode !== 'demo') refocusGame();
   if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
@@ -2784,11 +2641,13 @@ function showEnd(w) {
   if (repickBtn) repickBtn.classList.toggle('hidden', M.mode !== 'net');
   if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
     again.style.display = 'none';
+  } else if (M.mode === 'net' && NET.isRanked) {   // 排位赛没有再来一场：打完回大厅，想打就重新排
+    again.style.display = 'none';
+    if (repickBtn) repickBtn.classList.add('hidden');
   } else if (M.mode === 'net') {
     again.style.display = '';
     again.disabled = false;
-    again.textContent = NET.isRanked ? '继续排位' : '再战一局 (BO3)';
-    if (repickBtn && NET.isRanked) repickBtn.classList.add('hidden');
+    again.textContent = '再战一局 (BO3)';
   } else {
     again.style.display = '';
     again.disabled = false;
@@ -4613,7 +4472,6 @@ function openQfx() {
   fr.src = EXT.url; $id('extGame').classList.remove('hidden'); EXT.on = true;
   try { if (AC) AC.suspend(); } catch (e) {}
   fr.onload = () => { try { fr.focus(); fr.contentWindow.focus(); } catch (e) {} };
-  if (SERVED) setTimeout(() => extToast('打通山门、竹林、剑冢三章，可在刃影领墨锭与专属皮肤「青锋行」', 6), 800);
 }
 function closeQfx() {
   EXT.on = false; $id('extFrame').src = 'about:blank'; $id('extGame').classList.add('hidden');
@@ -4865,24 +4723,11 @@ function extToast(msg, dur = 4.5) {
   clearTimeout(extToast.t); extToast.t = setTimeout(() => el.classList.remove('on'), dur * 1000);
 }
 function qfxNotify(msg) { if (EXT.on) extToast(msg); else toast(msg); }
-async function qfxClaim(n) {
-  if (!SERVED || !ACC.token || PROF.guest || QFX.busy || (PROF.qfx || 0) >= n) return;
-  if (!QFX_REW.some(r => r[0] > (PROF.qfx || 0) && r[0] <= n)) return;
-  QFX.busy = true;
-  try {
-    const j = await api('/api/qfx', { wave: n }); applyProfile(j.profile);
-    const parts = []; if (j.ink) parts.push(`${j.ink} 墨锭`); if (j.skin && SKINS[j.skin]) parts.push(`专属皮肤「${SKINS[j.skin].name}」`);
-    if (parts.length) { qfxNotify(`青锋行奖励到账：${parts.join('，')}`); try { SFX.chargeFull(); } catch (e) {} }
-  } catch (e) {}
-  QFX.busy = false;
-}
 function qfxCleared(n) {
   if (n > qfxBest()) try { localStorage.setItem('renying-qfx', String(n)); } catch (e) {}
   const r = QFX_REW.find(x => x[0] === n);
   const chName = { 3: '山门', 6: '竹林', 10: '剑冢' }[n];
-  if (!SERVED) { if (r) extToast(`${chName}已破！`); return; }
-  if (!ACC.token || PROF.guest) { if (r) extToast(`${chName}已破！登录刃影后就能领这一档的奖励`); return; }
-  qfxClaim(Math.max(n, qfxBest()));
+  if (r) extToast(`${chName}已破！`);
 }
 window.addEventListener('message', e => {
   const fr = $id('extFrame'); if (!fr || e.source !== fr.contentWindow) return;
@@ -4903,7 +4748,6 @@ function frameBody(now) {
   lastDraw = now - (elapsed % targetInterval);
   const real = Math.min(0.04, (now - last) / 1000); last = now; menuDt = real;
   fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
-  if (NET.awayUntil) { const left = Math.max(0, Math.ceil((NET.awayUntil - now) / 1000)); netOverlay(left > 0 ? `对手掉线了，等待重连 ${left} 秒…` : '对手没有回来'); }
   if (!paused) {
     if (slowmo > 0) slowmo -= real;
     for (const f of [A, B]) if (f.state === 'special' && f.sp === 'charge' && f.t < 0.06 && cine.t < 0) { cine.t = 0; cine.owner = f; if (f.idx === localIdx()) MSTAT.ults++; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
@@ -8930,8 +8774,9 @@ function renderMenu() {
   lantern(160, -2); lantern(-160, -2);
   if (MENU_HERO && onMenu) {   // 正中站着当前选的侠客
     animFighter(MENU_HERO);
-    ctx.save(); ctx.scale(1.4, 1.4); drawFighter(MENU_HERO); drawParticles(false); ctx.restore();   // 放大一点，站在两盏灯中间
-    const hx = W / 2 + (MENU_HERO.x - cam.x) * sc, hy = groundY() + 10, el = $id('homeHero');
+    // 人和脚下的按钮不跟着鼠标左右的视差走（只有背景在动），鼠标或触控板左右划过去时按钮不会跑开
+    ctx.save(); ctx.translate(baseX - menuCam.x, 0); ctx.scale(1.4, 1.4); drawFighter(MENU_HERO); drawParticles(false); ctx.restore();   // 放大一点，站在两盏灯中间
+    const hx = W / 2 + (MENU_HERO.x * 1.4 - menuCam.x) * sc, hy = groundY() + 10, el = $id('homeHero');
     if (el && (el._x !== Math.round(hx) || el._y !== Math.round(hy))) { el._x = Math.round(hx); el._y = Math.round(hy); el.style.left = el._x + 'px'; el.style.top = el._y + 'px'; }
   }
   menuFlies(false);
@@ -9106,7 +8951,7 @@ function singleSec(sec) {
   else if (active === 'stage') renderStages();
   else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
   else if (active === 'mayhem') renderMayhem();
-  else if (active === 'watch2v2') { if (typeof renderPlay2v2 === 'function') renderPlay2v2(); renderWatch2v2(); }
+  else if (active === 'watch2v2') renderWatch2v2();
   else if (active === 'cpu') updateAIBrief();
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
@@ -10209,26 +10054,23 @@ function renderCodex() {
   const col = `rgb(${L.slash})`;
   $id('cxTabs').innerHTML = CHARS.map((x, i) => `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`} ">${x.name}</button>`).join('');
   const cv2 = $id('cxCard'), g = cv2.getContext && cv2.getContext('2d');
-  if (g) { g.clearRect(0, 0, 600, 800); g.drawImage(makeCardArt(cxIdx, 600, 800, skin), 0, 0); }
+  if (g) { g.clearRect(0, 0, cv2.width, cv2.height); g.drawImage(makeCardArt(cxIdx, cv2.width, cv2.height, skin), 0, 0); }
   if (cv2) {
     cv2.style.boxShadow = `0 16px 48px ${col.replace('rgb', 'rgba').replace(')', ',0.35)')}`;
     cv2.style.borderColor = col;
   }
   const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
-  const skMeta = skin && SKINS[skin];
-  const skRarCol = skMeta ? (skMeta.rarity === 'legend' ? '#f5ca5f' : '#a8d5ff') : col;
-  const skRarName = skMeta ? (skMeta.rarity === 'legend' ? '传说皮肤' : '稀有皮肤') : '';
-  const skPill = skMeta ? `<span class="pill sk-pill" style="color:${skRarCol};border-color:${skRarCol};background:rgba(${skMeta.rarity === 'legend' ? '245,202,95,0.14' : '168,213,255,0.12'})">${skRarName} · ${skMeta.name}</span>` : '';
+  const skMeta = skin && SKINS[skin], skG = skMeta && skinGrade(skin);
+  const skPill = skMeta ? `<span class="pill sk-pill" style="--tc:${skG.c}">${skG.n} · ${skMeta.name}</span>` : '';
   $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span></div>`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   const skScn = skMeta && SCENES[skin];
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨专属全景天象与奥义特效' : '🌟专属灵光天色与命中特效'}）</span>` : '';
   $id('cxSkinT').innerHTML = (cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤装束') + skDesc;
   $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
-    const has = skinOwned(k);
-    const isLeg = v.rarity === 'legend';
+    const has = skinOwned(k), g = skinGrade(k);
     const lockHint = v.exclusive ? ' · 青锋行 / 武库' : ' · 武库';
-    return `<button data-sk="${k}" class="${skin === k ? 'sel' : ''}${has ? '' : ' lock'}${isLeg ? ' sk-btn-legend' : ' sk-btn-rare'}" style="color:rgb(${RAR_RGB[v.rarity]});border-color:${skin === k ? `rgb(${RAR_RGB[v.rarity]})` : ''}">${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
+    return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
   }).join('');
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
@@ -10433,6 +10275,12 @@ $id('cxTabs').addEventListener('click', e => {
 // ======================= 成长系统：墨锭、任务、皮肤、排位 =======================
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
+// 皮肤的稀有度颜色：武器箱里的饰品照武库的五档（军规级、受限、保密、隐秘、非凡），不在武器箱里的（比如青锋行）照原来的稀有 / 传说
+function skinGrade(k) {
+  const S = SKINS[k], C = window.ArmoryCore, it = S && C && C.ITEM[k];
+  if (it) return { t: it.tier, n: C.TIER[it.tier].n, c: C.TIER[it.tier].c };
+  return { t: S ? S.rarity : 'rare', n: RAR_NAME[S && S.rarity] || '稀有', c: RAR_RGB[S && S.rarity] || RAR_RGB.rare };
+}
 const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
 function getWeeklyRotation() {
   const now = new Date();
@@ -10855,10 +10703,6 @@ function applySkins() {
   pickScene();
 }
 if (typeof window !== 'undefined') window.applySkins = applySkins;
-async function loadProfile() {
-  if (!SERVED || !window.fetch) return;
-  try { const j = await api('/api/profile'); applyProfile(j.profile || j); } catch (e) {}
-}
 function flagsKey() { return 'renying-flags-' + (curName() || 'guest'); }
 function loadFlags() { try { return JSON.parse(localStorage.getItem(flagsKey()) || '{}') || {}; } catch (e) { return {}; } }
 function saveFlag(k, v) { const fl = loadFlags(); fl[k] = v; try { localStorage.setItem(flagsKey(), JSON.stringify(fl)); } catch (e) {} }
@@ -10918,7 +10762,7 @@ function applyProfile(p) {
 let compAsked = false;
 function compKey() { return 'renying-comp1022-' + curName(); }
 function compState() {
-  if (OFFLINE_BUILD || SERVED || Date.now() >= FREE_SKIN_EVENT.end) return null;
+  if (OFFLINE_BUILD || Date.now() >= FREE_SKIN_EVENT.end) return null;
   let claimed = false; try { claimed = !!curName() && localStorage.getItem(compKey()) === '1'; } catch (e) {}
   return { claimed };
 }
@@ -10993,7 +10837,7 @@ function saveTasks(s) { try { localStorage.setItem(taskKey(curName()), JSON.stri
 function taskBump(s, stat, v, max) { for (const per of [s.d, s.w]) per[stat] = max ? Math.max(per[stat] || 0, v) : (per[stat] || 0) + v; }
 // 一局打完记进度：观战、回放、木人桩不算；本地双人只算对战局数
 function taskMatchEnd(w) {
-  if (SERVED || isAiVsAi() || M.watchAi || ['replay', 'demo', 'train', 'watch2v2'].includes(M.mode)) return;
+  if (isAiVsAi() || M.watchAi || ['replay', 'demo', 'train', 'watch2v2'].includes(M.mode)) return;
   const s = loadTasks(), pvp = M.mode === 'pvp';
   taskBump(s, 'games', 1);
   if (!pvp && w >= 0 && w === localTeam()) taskBump(s, 'wins', 1);
@@ -11003,7 +10847,6 @@ function taskMatchEnd(w) {
   saveTasks(s);
 }
 function taskMarkClaimed(ids) {
-  if (SERVED) return;
   const s = loadTasks();
   for (const id of ids) {
     if (id === EVT_TASK.id) s.evt.claimed = true;
@@ -11013,27 +10856,10 @@ function taskMarkClaimed(ids) {
   saveTasks(s);
 }
 function ensureClientTasks() {
-  if (!SERVED) {
-    const s = loadTasks(), row = (x, per, cl) => ({ id: x[0], name: x[1], target: x[3], prog: Math.min(x[3], per[x[2]] || 0), reward: x[4], claimed: cl.includes(x[0]) });
-    PROF.daily = TASK_DEFS.daily.map(x => row(x, s.d, s.dc));
-    PROF.weekly = TASK_DEFS.weekly.map(x => row(x, s.w, s.wc));
-    PROF.evtTask = freeSkinEvent() ? Object.assign({}, EVT_TASK, { prog: Math.min(EVT_TASK.target, s.evt.cpu), claimed: !!s.evt.claimed }) : null;
-    return;
-  }
-  if (!Array.isArray(PROF.daily) || !PROF.daily.length) {
-    PROF.daily = [
-      { id: 'd1', name: '习武精进：进行 1 局对战', prog: 1, target: 1, reward: 30, claimed: false },
-      { id: 'd2', name: '招式纯熟：打出 5 连击', prog: 0, target: 5, reward: 40, claimed: false },
-      { id: 'd3', name: '破敌致胜：击败 1 名对手', prog: 0, target: 1, reward: 50, claimed: false }
-    ];
-  }
-  if (!Array.isArray(PROF.weekly) || !PROF.weekly.length) {
-    PROF.weekly = [
-      { id: 'w1', name: '百炼成钢：进行 5 局切磋', prog: 0, target: 5, reward: 120, claimed: false },
-      { id: 'w2', name: '名扬四海：赢得 3 场胜利', prog: 0, target: 3, reward: 180, claimed: false },
-      { id: 'w3', name: '融会贯通：施展 5 次终极奥义', prog: 0, target: 5, reward: 200, claimed: false }
-    ];
-  }
+  const s = loadTasks(), row = (x, per, cl) => ({ id: x[0], name: x[1], target: x[3], prog: Math.min(x[3], per[x[2]] || 0), reward: x[4], claimed: cl.includes(x[0]) });
+  PROF.daily = TASK_DEFS.daily.map(x => row(x, s.d, s.dc));
+  PROF.weekly = TASK_DEFS.weekly.map(x => row(x, s.w, s.wc));
+  PROF.evtTask = freeSkinEvent() ? Object.assign({}, EVT_TASK, { prog: Math.min(EVT_TASK.target, s.evt.cpu), claimed: !!s.evt.claimed }) : null;
 }
 function allTasks() { return [...(PROF.evtTask ? [PROF.evtTask] : []), ...(PROF.daily || []), ...(PROF.weekly || [])]; }
 function renderTasks() {
@@ -11517,10 +11343,8 @@ function renderRankInfo() {
 // ---------- 排位 ----------
 function renderRankLine() {
   renderLobby();
-  const rankText = !SERVED ? '单机演武' : !ACC.name ? '需登录定级' : PROF.rank ? `${PROF.rank.label}${PROF.rank.tier ? '' : ' (定级中)'}` : '暂无评定';
-  if ($id('rankLine')) {
-    $id('rankLine').textContent = !SERVED ? '离线模式：支持本地与局域网切磋' : !ACC.name ? '排位赛需先登录账户' : PROF.rank ? `你的天梯段位：${PROF.rank.label}${PROF.rank.tier ? '' : '（打满 5 场定级）'}` : '';
-  }
+  const rs = rkOwner() ? rkState() : null;
+  const rankText = !rs ? '登录后定级' : rkPlaced(rs) ? `${rkTier(rs.pts).label} · ${rkTier(rs.pts).name}` : '定级中';
   if ($id('netRankName')) $id('netRankName').textContent = rankText;
   if ($id('netWinsCount')) {
     const wins = PROF.netWins || 0, losses = PROF.netLosses || 0;
@@ -11529,20 +11353,7 @@ function renderRankLine() {
     $id('netWinsCount').textContent = `${wins} 胜 ${losses} 负${total > 0 ? ` (${rate}%)` : ''}`;
   }
 }
-function rankUI(on) { const b = $id('rankBtn'); b.classList.toggle('searching', !!on); b.textContent = on ? '排位中… 点击取消' : '排位赛'; }
-$id('rankBtn').addEventListener('click', () => {
-  initAudio();
-  if (!ACC.name) { netStatus('排位赛需先登录（右上角）'); return; }
-  if ($id('rankBtn').classList.contains('searching') || NET.matching) { netReset(); netStatus('已取消排位'); return; }
-  netConnect(false, null, true, null, true); rankUI(true);
-});
 function reportProgress(w) {
-  if (SERVED && ACC.token && window.fetch) {
-    if (M.mode === 'cpu') api('/api/progress', { mode: 'cpu', level: M.level, won: w === 0, maxcombo: MSTAT.maxcombo, ults: MSTAT.ults })
-      .then(j => { applyProfile(j.profile); if (j.gain) $id('endRank').textContent = `+${j.gain} 墨锭${PROF.daily.some(t => !t.claimed && t.prog >= t.target) ? ' · 有任务可领奖了' : ''}`; }).catch(() => {});
-    else if (M.mode === 'net') api('/api/progress', { mode: 'net', maxcombo: MSTAT.maxcombo, ults: MSTAT.ults }).then(j => applyProfile(j.profile)).catch(() => {});
-    return;
-  }
   // GitHub 站与离线模式本地结算与云端持久化
   if (M.mode === 'net') {
     NET.consensus = NET.consensus || {};
@@ -11917,30 +11728,6 @@ function rollAdopt(p) {
   restState(p.st); R.F = p.f; R.pend = Infinity;
   if (R.F < target) { RESIM = true; try { while (R.F < target) { rollFrame(R.F); R.F++; } } finally { RESIM = false; } }
 }
-// 断线重连：留下的一方把当前状态和按键记录发给回来的一方
-function rollResumePayload() {
-  const R = ROLL, li = [];
-  for (let f = R.F; f <= R.locMax; f++) { const x = R.loc[f] || EMPTY_IN; li.push([f, x.h, ...x.p]); }
-  return { k: 'rmatch', ch: [A.chIdx, B.chIdx], F: R.F, st: capState(), rl: R.remLast, ph: R.lastRemH, li, ru: R.locMax, lh: R.lastSentH, ended: R.ended, skins: mySkinMap(), mid: R.mid };
-}
-function rollResume(p) {
-  REC.on = false;
-  setChars(p.ch[0], p.ch[1]);
-  setupNetMatch();
-  ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
-  human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-  Object.assign(ROLL, { on: true, snaps: [], loc: [], rem: [], used: [], remChg: {}, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: !!p.ended, mid: p.mid, early: [] });
-  restState(p.st); ROLL.F = p.F;
-  for (let f = p.rl + 1; f < p.F + ROLL.D; f++) ROLL.loc[f] = { h: p.ph, p: [] };   // 掉线那段时间按对方猜的算
-  ROLL.locMax = p.F + ROLL.D - 1; ROLL.lastSentH = p.ph;
-  for (const r of p.li) ROLL.rem[r[0]] = { h: r[1], p: r.slice(2) };
-  ROLL.remLast = p.ru; ROLL.lastRemH = p.lh;
-  if (p.skins) NET.peerSkins = p.skins;
-  BP = null; creditT = 0; applySkins(); acc = 0;
-  if (p.ended && M.koWinner >= 0) showEnd(M.koWinner); else { showScreen(null); say('重归战局', 0.8, 'go'); }
-  rollSend();
-}
-
 // ======================= 手机和平板：触屏操作 =======================
 const TOUCH = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);   // 主要靠手指操作的设备（手机、平板）
 const TUI = { stick: null, stickUp: false, jumpHeld: false };
@@ -12320,7 +12107,7 @@ function pickEnemyTag3Team(playerTeam) {
 }
 
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
-  if (p2pActive() || NET.ws) netDropWaiting();
+  if (p2pActive()) netDropWaiting();
   refocusGame();
   human[0].rec = null;
   REC.on = false;
@@ -13174,7 +12961,7 @@ function renderBPWatch2v2() {
 
 // 禁选结束后按 [苍龙禁, 苍龙先, 苍龙次, 赤凤禁, 赤凤先, 赤凤次] 的阵容真正开打。
 function startWatch2v2(draft) {
-  if (p2pActive() || NET.ws) netDropWaiting();
+  if (p2pActive()) netDropWaiting();
   initAudio();
   refocusGame();
   paused = false;
@@ -13205,51 +12992,10 @@ const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
 if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
 
 // ======================= 2v2 演武与组队 (P&CvC&C, P&PvC&C, P&PvP&P) =======================
-let single2v2SubMode = 'play'; // 'play' (P&C v C&C) or 'watch' (C&C v C&C)
-const p2v2SlotsData = {
-  p1: 0,        // 1P 玩家
-  mate: 2,      // 电脑同袍搭档
-  foe1: 1,      // 敌方先锋
-  foe2: 3,      // 敌方次席
-  curSlot: 'p1',
-  level: 'normal'
-};
-
-function renderPlay2v2() {
-  ensurePortraits();
-  const slotsEl = document.getElementById('play2v2Slots');
-  if (slotsEl) {
-    const slots = [
-      { key: 'p1', team: 0, role: '【我方 1P 侠客】', sub: '玩家操控', idx: p2v2SlotsData.p1 },
-      { key: 'mate', team: 0, role: '【我方同袍搭档】', sub: '电脑协同', idx: p2v2SlotsData.mate },
-      { key: 'foe1', team: 1, role: '【敌方先锋】', sub: '电脑敌手', idx: p2v2SlotsData.foe1 },
-      { key: 'foe2', team: 1, role: '【敌方次席】', sub: '电脑敌手', idx: p2v2SlotsData.foe2 }
-    ];
-    slotsEl.innerHTML = slots.map(s => {
-      const isSel = p2v2SlotsData.curSlot === s.key;
-      const c = CHARS[s.idx] || CHARS[0];
-      return `<div class="play2v2-slot team${s.team}${isSel ? ' sel' : ''}" data-slot="${s.key}">
-        <div class="p2v2-role" style="color:${s.team === 0 ? 'var(--p1)' : 'var(--p2)'}">${s.role}</div>
-        <div class="p2v2-hero" style="color:rgb(${c.look.slash})">${c.name}</div>
-        <div class="p2v2-sub">${c.role} · ${s.sub}</div>
-      </div>`;
-    }).join('');
-  }
-
-  const rosterEl = document.getElementById('play2v2Roster');
-  if (rosterEl) {
-    rosterEl.innerHTML = CHARS.map((c, i) => {
-      const activeIdx = p2v2SlotsData[p2v2SlotsData.curSlot];
-      const isSel = activeIdx === i;
-      return `<button class="tcard${isSel ? ' sel' : ''}" data-i="${i}" type="button">
-        <img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div>
-      </button>`;
-    }).join('');
-  }
-}
+let solo2v2Level = 'normal';   // 对战页 2v2「单人出战」选的电脑境界
 
 function start2v2PlayerMatch(p1 = 0, mate = 2, foe1 = 1, foe2 = 3, level = 'normal') {
-  if (p2pActive() || NET.ws) netDropWaiting();
+  if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
   M.mode = '2v2';
   M.subMode = 'pc_cc';
@@ -13274,7 +13020,7 @@ function start2v2PlayerMatch(p1 = 0, mate = 2, foe1 = 1, foe2 = 3, level = 'norm
 }
 
 function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal') {
-  if (p2pActive() || NET.ws) netDropWaiting();
+  if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
   M.mode = '2v2';
   M.subMode = 'pp_cc';
@@ -13299,7 +13045,7 @@ function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal')
 }
 
 function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
-  if (p2pActive() || NET.ws) netDropWaiting();
+  if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
   M.mode = '2v2';
   M.subMode = 'pp_pp';
@@ -13323,93 +13069,6 @@ function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
   say(`2v2 四人对决 · 苍龙 vs 赤凤！`, 1.4);
 }
 
-const single2v2SegEl = document.getElementById('single2v2Seg');
-if (single2v2SegEl) {
-  single2v2SegEl.addEventListener('click', e => {
-    const b = e.target.closest('button[data-sub]');
-    if (!b) return;
-    single2v2SubMode = b.dataset.sub;
-    for (const btn of single2v2SegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
-    const playPane = document.getElementById('single2v2PlayPane');
-    const watchPane = document.getElementById('single2v2WatchPane');
-    if (playPane) playPane.style.display = single2v2SubMode === 'play' ? '' : 'none';
-    if (watchPane) watchPane.style.display = single2v2SubMode === 'watch' ? '' : 'none';
-    if (single2v2SubMode === 'play') renderPlay2v2();
-    else renderWatch2v2();
-  });
-}
-
-const play2v2SlotsEl = document.getElementById('play2v2Slots');
-if (play2v2SlotsEl) {
-  play2v2SlotsEl.addEventListener('click', e => {
-    const s = e.target.closest('[data-slot]');
-    if (!s) return;
-    p2v2SlotsData.curSlot = s.dataset.slot;
-    renderPlay2v2();
-  });
-}
-
-const play2v2RosterEl = document.getElementById('play2v2Roster');
-if (play2v2RosterEl) {
-  play2v2RosterEl.addEventListener('click', e => {
-    const c = e.target.closest('[data-i]');
-    if (!c) return;
-    const idx = parseInt(c.dataset.i, 10);
-    p2v2SlotsData[p2v2SlotsData.curSlot] = idx;
-    renderPlay2v2();
-  });
-}
-
-const btn2v2SuggestPartner = document.getElementById('btn2v2SuggestPartner');
-if (btn2v2SuggestPartner) {
-  btn2v2SuggestPartner.addEventListener('click', () => {
-    const p1Hero = CHARS[p2v2SlotsData.p1];
-    let best = (p2v2SlotsData.p1 + 2) % CHARS.length;
-    if (p1Hero && p1Hero.weakTo && p1Hero.weakTo.length) {
-      const needCover = p1Hero.weakTo;
-      const candidates = CHARS.map((c, i) => ({ i, c, score: (c.beats || []).filter(b => needCover.includes(b)).length }))
-        .filter(x => x.i !== p2v2SlotsData.p1);
-      candidates.sort((a, b) => b.score - a.score);
-      if (candidates.length && candidates[0].score > 0) best = candidates[0].i;
-    }
-    p2v2SlotsData.mate = best;
-    renderPlay2v2();
-    toast(`已推荐最佳搭档：${CHARS[best].name}`);
-  });
-}
-
-const btn2v2RandomFoes = document.getElementById('btn2v2RandomFoes');
-if (btn2v2RandomFoes) {
-  btn2v2RandomFoes.addEventListener('click', () => {
-    const used = new Set([p2v2SlotsData.p1, p2v2SlotsData.mate]);
-    const avail = CHARS.map((_, i) => i).filter(i => !used.has(i));
-    const r1 = avail[(Math.random() * avail.length) | 0];
-    const avail2 = avail.filter(i => i !== r1);
-    const r2 = avail2[(Math.random() * avail2.length) | 0];
-    p2v2SlotsData.foe1 = r1;
-    p2v2SlotsData.foe2 = r2;
-    renderPlay2v2();
-    toast(`已随机敌方阵容：${CHARS[r1].name} + ${CHARS[r2].name}`);
-  });
-}
-
-const play2v2LevelsEl = document.getElementById('play2v2Levels');
-if (play2v2LevelsEl) {
-  play2v2LevelsEl.addEventListener('click', e => {
-    const b = e.target.closest('button[data-lv]');
-    if (!b) return;
-    p2v2SlotsData.level = b.dataset.lv;
-    for (const btn of play2v2LevelsEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
-  });
-}
-
-const play2v2StartBtn = document.getElementById('play2v2StartBtn');
-if (play2v2StartBtn) {
-  play2v2StartBtn.addEventListener('click', () => {
-    bpStart('2v2', { subMode: 'pc_cc', level: p2v2SlotsData.level || 'normal' });
-  });
-}
-
 // 联机大厅 2v2 弹窗交互
 let active2v2ModalMode = 'pp_cc';
 function open2v2Modal(mode) {
@@ -13420,7 +13079,15 @@ function open2v2Modal(mode) {
   const t = document.getElementById('modal2v2Title');
   const desc = document.getElementById('modal2v2Desc');
   const ldesc = document.getElementById('modal2v2LocalDesc');
-  if (mode === 'pp_cc') {
+  const solo = mode === 'pc_cc', opts = document.getElementById('modal2v2Options'), soloEl = document.getElementById('modal2v2Solo');
+  if (opts) opts.hidden = solo;
+  if (soloEl) soloEl.hidden = !solo;
+  modal.classList.toggle('solo', solo);
+  if (solo) {
+    if (t) t.textContent = '2v2 单人出战 · 人机协同 (你 + 电脑队友 vs 双电脑)';
+    if (desc) desc.textContent = '你操控一位侠客，再配一位电脑队友，对阵两位电脑。选好电脑的境界，进点将台禁选：';
+    for (const b of document.querySelectorAll('#solo2v2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === solo2v2Level);
+  } else if (mode === 'pp_cc') {
     if (t) t.textContent = '2v2 双人破阵 · 模式选择 (双人同袍 vs 双天道)';
     if (desc) desc.textContent = '双人成行，同队迎战两名天道 AI 宗师！选择加入方式：';
     if (ldesc) ldesc.textContent = '同台电脑双人合作（1P: WASD+鼠标/J，2P: 方向键+K）。';
@@ -13430,6 +13097,23 @@ function open2v2Modal(mode) {
     if (ldesc) ldesc.textContent = '同台电脑四人对决（1P/2P 苍龙队，3P/4P 赤凤队）。';
   }
 }
+
+const mm2v2SoloBtn = document.getElementById('mm2v2SoloBtn');
+if (mm2v2SoloBtn) mm2v2SoloBtn.addEventListener('click', () => open2v2Modal('pc_cc'));
+const solo2v2LevelsEl = document.getElementById('solo2v2Levels');
+if (solo2v2LevelsEl) solo2v2LevelsEl.addEventListener('click', e => {
+  const b = e.target.closest('button[data-lv]');
+  if (!b) return;
+  solo2v2Level = b.dataset.lv;
+  for (const btn of solo2v2LevelsEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+});
+const btn2v2GoSolo = document.getElementById('btn2v2GoSolo');
+if (btn2v2GoSolo) btn2v2GoSolo.addEventListener('click', () => {
+  const modal = document.getElementById('modal2v2');
+  if (modal) modal.classList.add('hidden');
+  initAudio();
+  bpStart('2v2', { subMode: 'pc_cc', level: solo2v2Level });
+});
 
 const mm2v2CoopBtn = document.getElementById('mm2v2CoopBtn');
 if (mm2v2CoopBtn) mm2v2CoopBtn.addEventListener('click', () => open2v2Modal('pp_cc'));
@@ -13496,10 +13180,7 @@ const cpuTutBtn = document.getElementById('cpuTutBtn');
 if (cpuTutBtn) cpuTutBtn.addEventListener('click', () => { initAudio(); startTutorial(); });
 document.getElementById('againBtn').addEventListener('click', () => {
   if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
-  if (M.mode === 'net' && NET.isRanked) {   // 排位不和同一个人连打：回大厅找下一个对手
-    netLeave(); toMenu(); selectMode('net'); mmStart('ranked');
-    return;
-  }
+  if (M.mode === 'net' && NET.isRanked) return;   // 排位赛没有再来一场
   if (M.mode === 'net') {
     if (!NET.open) {
       toast('网络已断开');
@@ -13570,9 +13251,8 @@ function toMenu() {
   if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   M.stage = null;
-  if (M.mode === 'train' && !TUT && SERVED && ACC.token && TRAIN.total > 0) api('/api/progress', { mode: 'train', traindmg: TRAIN.total, maxcombo: TRAIN.best }).then(j => applyProfile(j.profile)).catch(() => {});
   if (TUT) endTutorial();
-  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net' || NET.ws) netLeave(); bpMode = 'cpu';
+  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
   M.mode = 'demo';
@@ -14640,7 +14320,7 @@ function setAcc(j) {
   else { ACC.token = ''; ACC.name = ''; }
   try { if (ACC.token) localStorage.setItem('renying-token', ACC.token); else localStorage.removeItem('renying-token'); } catch (e) {}
   const nk = (ACC.token || '') + '|' + ACC.name;
-  if (nk !== setAcc.last) { setAcc.last = nk; loadProfile(); adaptLoad(); }
+  if (nk !== setAcc.last) { setAcc.last = nk; adaptLoad(); }
   renderAcc();
 }
 function renderEvtCard() {
@@ -14662,9 +14342,6 @@ function renderAcc() {
   bar.innerHTML = u && u.name
     ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号与云存档</button><button class="ghost" id="logoutBtn">退出</button>`
     : `<button class="ghost" id="accOpen">登录 / 注册</button>`;
-  $id('accHint').textContent = u && u.name
-    ? `当前登录：【${u.name}】· 英雄与成就自动持久化保存`
-    : '单账号云端存储：登录后，英雄解锁、墨锭与成就自动同步到云端';
 
   // 开发者专享：全量备份与 Google Cloud 编辑器仅向 Dev 账号开放
   const actionBtns = $id('accActionBtns');
@@ -14749,9 +14426,6 @@ function openAcc() {
   if (!$id('accIn').classList.contains('hidden')) setTimeout(() => $id('accName').focus(), 50);
 }
 async function doLogout() {
-  if (SERVED && window.fetch) {
-    try { await api('/api/logout', { token: ACC.token }); } catch (err) {}
-  }
   if (window.CloudSave) { try { await CloudSave.syncNow(); } catch (e) {} await CloudSave.logout(); }
   setAcc(null);
   PROF.guest = true;
@@ -15338,8 +15012,6 @@ async function openLeaderboard() {
 }
 $id('lbBack').addEventListener('click', backToMenu);
 adaptLoad();
-if (SERVED && window.fetch && !ACC.token) loadProfile();
-if (SERVED && ACC.token && window.fetch) api('/api/me').then(setAcc).catch(err => { if (/失效/.test(err.message)) setAcc(null); else renderAcc(); });
 
 // 检查云端/本地已有登录并载入存档
 if (window.CloudSave) {
@@ -15364,7 +15036,7 @@ if (window.CloudSave) {
 renderAcc();
 function netStatus(t) { if ($id('netStatus')) $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
-if (!SERVED && $id('onlineLine')) $id('onlineLine').textContent = '';
+if ($id('onlineLine')) $id('onlineLine').textContent = '';
 if ($id('verLine')) $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
 // 离线单文件版：全部皮肤可用，装备记在本机；在线版拥有完整成长与解锁
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
@@ -15374,70 +15046,6 @@ if (OFFLINE_BUILD) {
   $id('mNet').innerHTML = '<span class="mk">闯关模式</span><span class="ms">六章三十关，一关一关打上去</span>';
   const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
 }
-try { $id('srvIn').value = localStorage.getItem('renying-srv') || ''; } catch (e) {}
-$id('srvIn').addEventListener('change', () => { try { localStorage.setItem('renying-srv', $id('srvIn').value.trim()); } catch (e) {} });
-function setNetMode(mode) {
-  currentNetMode = mode;
-  if (SERVED) {
-    try { localStorage.setItem('renying-net-mode', mode); } catch (e) {}
-  }
-  const isServer = mode === 'server';
-  if ($id('netModeServerBtn')) $id('netModeServerBtn').classList.toggle('sel', isServer);
-  if ($id('netModeP2PBtn')) $id('netModeP2PBtn').classList.toggle('sel', !isServer);
-  if ($id('netBannerServer')) $id('netBannerServer').classList.toggle('hidden', !isServer);
-  if ($id('netBannerP2P')) $id('netBannerP2P').classList.toggle('hidden', isServer);
-  if ($id('srvBox')) $id('srvBox').classList.toggle('hidden', !isServer || SERVED);
-  if ($id('netMatchBox')) $id('netMatchBox').classList.toggle('hidden', !isServer);
-  if ($id('diagProtoVal')) $id('diagProtoVal').textContent = isServer ? 'WebSocket (LAN)' : 'WebRTC P2P';
-}
-
-if ($id('netModeServerBtn')) {
-  $id('netModeServerBtn').addEventListener('click', () => {
-    setNetMode('server');
-    netStatus('已切换到【局域网 / 本地服务器】模式（推荐同 Wi-Fi 或离线单机开黑）');
-  });
-}
-if ($id('netModeP2PBtn')) {
-  $id('netModeP2PBtn').addEventListener('click', () => {
-    setNetMode('p2p');
-    netStatus('已切换到【WebRTC 公网直连】模式（需要双方均能连接外网）');
-  });
-}
-
-setNetMode(currentNetMode);
-
-if (SERVED && $id('serverStatusText')) {
-  $id('serverStatusText').innerHTML = `🟢 <b>已连接本地/局域网服务器</b> (<code>${escapeHTML(location.host)}</code>)，建房、加入、快速匹配畅玩无阻！`;
-}
-
-if ($id('srvConnectBtn')) {
-  $id('srvConnectBtn').addEventListener('click', () => {
-    const base = serverBase();
-    if (!base) { netStatus('请先填入服务器 IP 或网址'); return; }
-    const httpUrl = base.replace(/^ws:\/\//i, 'http://').replace(/^wss:\/\//i, 'https://') + '/health';
-    netStatus(`正在测试连接 ${base}…`);
-    const btn = $id('srvConnectBtn');
-    btn.disabled = true;
-    const t0 = performance.now();
-    fetch(httpUrl, { mode: 'cors' }).then(r => r.json()).then(data => {
-      btn.disabled = false;
-      const ms = Math.round(performance.now() - t0);
-      netStatus(`✅ 连接成功！延迟约 ${ms}ms。服务器在线：${data.online || 0} 人`);
-    }).catch(err => {
-      btn.disabled = false;
-      netStatus(`❌ 无法连接到 ${httpUrl}。\n请确认：\n1. 房主终端已运行 python3 server.py\n2. 双方电脑处于同一 Wi-Fi 或局域网\n3. IP 和端口（默认 8765）无误`);
-    });
-  });
-}
-
-if ($id('srvClearBtn')) {
-  $id('srvClearBtn').addEventListener('click', () => {
-    if ($id('srvIn')) $id('srvIn').value = '';
-    try { localStorage.removeItem('renying-srv'); } catch (e) {}
-    netStatus(SERVED ? '已重置为当前服务器：' + location.host : '已重置为本机默认地址 (127.0.0.1:8765)');
-  });
-}
-
 function updateNetDiagRtt(ms) {
   if (typeof ms !== 'number' || isNaN(ms)) return;
   const dot = $id('diagRttDot'), val = $id('diagRttVal');
@@ -15455,8 +15063,8 @@ function updateNetDiagRtt(ms) {
 let netSlowN = 0, netSlowTold = false;
 function updateNetDiagPath(kind, ms) {
   const el = $id('diagProtoVal');
-  if (!kind) { netSlowN = 0; netSlowTold = false; if (el) el.textContent = currentNetMode === 'server' ? 'WebSocket (LAN)' : 'WebRTC P2P'; return; }
-  const name = kind === 'lan' ? '局域网直连' : kind === 'relay' ? '中转' : '公网直连';
+  if (!kind) { netSlowN = 0; netSlowTold = false; if (el) el.textContent = 'WebRTC P2P'; return; }
+  const name = kind === 'lan' ? '同一网络直连' : kind === 'relay' ? '中转' : '公网直连';
   if (el) el.textContent = ms > 0 ? `${name} · 网络 ${ms}ms` : name;
   netSlowN = ms >= 250 ? netSlowN + 1 : 0;
   if (netSlowN >= 2 && !netSlowTold) {
@@ -15568,20 +15176,6 @@ function copyRoomInvite() {
 if ($id('copyCodeBtn')) $id('copyCodeBtn').addEventListener('click', copyRoomInvite);
 if ($id('roomCode')) $id('roomCode').addEventListener('click', copyRoomInvite);
 $id('hostBtn').addEventListener('click', () => { initAudio(); netConnect(true); });
-// 快速匹配：再按一次就是取消
-let matchT0 = 0, matchN = 0;
-function matchUI(on, n) {
-  const b = $id('matchBtn');
-  if (on && !b.classList.contains('searching')) matchT0 = performance.now();
-  if (n !== undefined) matchN = n;
-  b.classList.toggle('searching', !!on);
-  b.textContent = on ? '匹配中… 点击取消' : '快速匹配';
-}
-$id('matchBtn').addEventListener('click', () => {
-  initAudio();
-  if ($id('matchBtn').classList.contains('searching') || NET.matching) { netReset(); netStatus('已取消匹配'); return; }
-  netConnect(false, null, true); matchUI(true);
-});
 // ---------- 对战大厅：匹配对战 / 排位赛（免服务器） ----------
 let mmKind = null;
 function mmUI(kind) {
@@ -15624,7 +15218,6 @@ function mmGo(kind) {
   initAudio();
   if (kind === 'ranked' && !rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
   if (kind === 'ranked') rkCheckPending();
-  if (currentNetMode === 'server' && SERVED) { netConnect(false, null, true, null, kind === 'ranked'); kind === 'ranked' ? rankUI(true) : matchUI(true); return; }
   mmStart(kind);
   let statusTxt = '匹配对战：正在全服寻找对手…';
   if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
@@ -15649,13 +15242,6 @@ $id('mmRankInfoBtn').addEventListener('click', () => {
 $id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('hidden'));
 $id('rkInfo').addEventListener('click', e => { if (e.target === $id('rkInfo')) $id('rkInfo').classList.add('hidden'); });
 setTimeout(() => { try { rkCheckPending(); } catch (e) {} }, 2500);
-setInterval(() => {
-  if (NET.matching && ($id('matchBtn').classList.contains('searching') || $id('rankBtn').classList.contains('searching'))) {
-    const t = Math.floor((performance.now() - matchT0) / 1000);
-    netStatus(`正在寻找对手… ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}${matchN > 1 ? `（${matchN} 人在匹配）` : ''}`);
-    if (NET.ws && NET.ws.readyState === 1 && t % 4 === 0) send({ ping: 1 });   // 告诉服务器自己还在
-  }
-}, 1000);
 // 在线情况：多少局在打、多少人在匹配、首页全服在线人数
 function refreshOnline() {
   let count = 0;
@@ -15674,31 +15260,9 @@ function refreshOnline() {
     if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
     if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
   };
-  if (!SERVED || !window.fetch) {
-    updatePills(count);
-    return;
-  }
-  fetch('/health').then(r => r.json()).then(h => {
-    const srvOnline = h.online || ((h.playing || 0) * 2 + (h.waiting || 0));
-    updatePills(Math.max(count, srvOnline), h);
-  }).catch(() => {
-    updatePills(count);
-  });
+  updatePills(count);
 }
 setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
-if (SERVED && location.protocol === 'https:' && window.fetch) {
-  fetch('/health').then(r => r.json()).then(h => { if (h.lan) $id('lanLine').innerHTML = `和服务器电脑在同一个 Wi-Fi？用 <b style="color:var(--ink)">${escapeHTML(h.lan)}</b> 打开更流畅（要重新登录）`; }).catch(() => {});
-}
-// 刚才关掉了网页？自动回到那场对战
-setTimeout(() => {
-  const r = SERVED ? loadResume() : null;
-  if (!r) return;
-  selectMode('net');
-  NET.code = r.code; NET.rt = r.rt; NET.base = r.base;
-  NET.reconnT0 = performance.now();
-  netOverlay('正在回到刚才的对战…');
-  netConnect(false, null, false, r);
-}, 400);
 function joinByCode() {
   initAudio();
   const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -15713,11 +15277,10 @@ function checkUrlRoom() {
     const rm = (p.get('room') || p.get('code') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (rm.length === 4) {
       if ($id('codeIn')) $id('codeIn').value = rm;
-      if (!SERVED) setNetMode('p2p');
       openScreen('netp');
       netStatus(`检测到邀请房间码 ${rm}，正在自动加入…`);
       setTimeout(() => {
-        if ($id('codeIn') && $id('codeIn').value === rm && !NET.open && !NET.ws && !(typeof p2pActive === 'function' && p2pActive())) {
+        if ($id('codeIn') && $id('codeIn').value === rm && !NET.open && !(typeof p2pActive === 'function' && p2pActive())) {
           joinByCode();
         }
       }, 600);

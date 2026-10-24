@@ -43,7 +43,7 @@
 
 ## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
 
-**刃影 (RenYing)** 是一款由 **Even, Luffy, and Opus 5.5** 共同创作的快节奏水墨风格武侠格斗对战游戏。专门针对校园及多端对战场景设计，支持通过 GitHub Pages 进行免服务器的浏览器对浏览器 WebRTC 直连联机（$0 成本、无网络中转延迟），同时也完整保留了本地局域网 Python WebSocket 服务器模式。
+**刃影 (RenYing)** 是一款由 **Even, Luffy, and Opus 5.5** 共同创作的快节奏水墨风格武侠格斗对战游戏。专门针对校园及多端对战场景设计，通过 GitHub Pages 打开就能玩，联机是免服务器的浏览器对浏览器 WebRTC 直连（$0 成本、无网络中转延迟）。
 
 ---
 
@@ -52,7 +52,6 @@
 - **GitHub Pages 即开即玩**：无需安装任何环境，不需克隆代码，任意浏览器点开网页即可开始。
 - **免服务器 WebRTC P2P 联机**：两位玩家通过 4 位房间码直接建立浏览器间 UDP 通道，零中转延迟。
 - **写意水墨美术风格**：流畅的笔墨拖尾粒子、顿挫有力的打击定格、纯正武侠意境。
-- **自建 Python 独立服务器**：零依赖单文件 `server.py`，支持天梯排位、录像存储与内置社区。
 - **纯本地单机离线模式**：提供单文件离线版（`renying-offline.html`），音频全内置，随时随地畅玩。
 
 ---
@@ -88,23 +87,9 @@
 3. 玩家 2 在 **加入** 栏输入该房间码 $\rightarrow$ 点击 **加入**。
 4. 双方浏览器直接建立 WebRTC 数据连接，PeerJS 只负责让两边找到对方，然后立即开始选人对决！
 
-部分管得严的网络（某些校园 Wi-Fi 或防火墙）会拦截点对点连接。如果加入一直超时，换个网络或改用模式二。
+部分管得严的网络（某些校园 Wi-Fi 或防火墙）会拦截点对点连接。如果加入一直超时，换个网络再试。
 
-### 模式二：本地局域网服务器（经典模式）
-
-在仓库根目录运行服务器。它会提供游戏网页（`index.html`）、音乐和资源，并支持快速匹配、排位赛、账号和断线重连：
-
-```bash
-# 启动默认 8765 端口服务
-python3 server.py
-
-# 或指定自定义端口
-python3 server.py 9000
-```
-
-同一 Wi-Fi 下的同学直接访问 `http://<你的电脑局域网IP>:8765` 即可连入。如果你的服务器有 `https://` 网址（比如通过隧道），GitHub Pages 上的玩家也可以在 **使用联机服务器（可选）** 里填上它来连入；浏览器不允许 HTTPS 网页连接 `http://` 的服务器。
-
-### 模式三：单机离线游玩
+### 模式二：单机离线游玩
 
 双击打开 `renying-offline.html`，无需任何网络即可进行单人闯关、人机对战与木人桩练习。音乐和青锋行小游戏都打包在这一个文件里。
 
@@ -114,20 +99,13 @@ python3 server.py 9000
 
 ```mermaid
 flowchart TD
-    subgraph 模式一：免服务器 P2P
-        P1["玩家 1 (GitHub Pages)"] <-->|"WebRTC DataChannel (直连 UDP)"| P2["玩家 2 (GitHub Pages)"]
-    end
-    subgraph 模式二：自建中心服务器
-        C1["客户端 1"] <-->|"WebSocket JSON"| S["server.py (Python)"]
-        C2["客户端 2"] <-->|"WebSocket JSON"| S
-        S <-->|"SQLite"| DB["data/renying.db"]
-    end
+    P1["玩家 1 (GitHub Pages)"] <-->|"WebRTC DataChannel (直连 UDP)"| P2["玩家 2 (GitHub Pages)"]
 ```
 
 - **客户端引擎**：纯原生 JavaScript + HTML5 Canvas 2D，极致低输入延迟。
 - **回滚联机**：两边用同一个随机种子各自完整计算对战，每帧只交换按键；对方按键晚到时回到那一帧重算，并定期校验状态。
 - **P2P 通信**：基于 WebRTC DataChannels 与 PeerJS 握手协议，自动穿透局域网 NAT（`src/net-p2p.js`）。
-- **数据存储**：本地 LocalStorage 与可选 SQLite 3 服务端数据库。
+- **数据存储**：本地 LocalStorage，加上 Cloudflare Worker + D1 上的云端账号与存档（`cloudflare/`）。
 
 ---
 
@@ -139,7 +117,7 @@ flowchart TD
 | :--- | :--- |
 | `src/page.html` | 网页结构，带打包标记 |
 | `src/style.css` | 全部样式 |
-| `src/game.js` | 游戏引擎、12 名英雄机制、菜单、回滚联机和服务器联机 |
+| `src/game.js` | 游戏引擎、12 名英雄机制、菜单和回滚联机 |
 | `src/net-p2p.js` | 免服务器 WebRTC 直连 |
 | `src/cloud.js` | Firebase 云存档同步与本地备份导入/导出 |
 | `src/social.js` | 免服务器 P2P 江湖茶馆社区、好友与观战 |
@@ -150,7 +128,7 @@ flowchart TD
 | `tools/build.py` | 生成下面三个网页（只用 Python 自带的库） |
 | `tools/combat-test.mjs` | 12 英雄招式、状态机与 2v2 AI 回归测试套件 |
 | `tools/simulate-all.mjs` | 全模式 AI 仿真对战、克制审计与神经网络训练管线 |
-| `index.html` | 生成的联网版（GitHub Pages 和 `server.py` 都用它） |
+| `index.html` | 生成的联网版（GitHub Pages） |
 | `renying-offline.html` | 生成的单文件离线版 |
 | `renying.html` | 生成的旧网址跳转页 |
 

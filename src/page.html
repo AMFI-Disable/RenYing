@@ -448,55 +448,10 @@
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">双人同舟，驰骋阔野！擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央【天道剑坛】定时刷出神符灵丹，并伴随【天劫剑雨】！</p>
 
-        <!-- 2v2 子模式切换：玩家组队参战 vs 天道巅峰观战 -->
-        <div class="seg single-2v2-seg" id="single2v2Seg" style="display:flex;gap:8px;justify-content:center;margin:8px 0 14px">
-          <button class="sel tab-ink" id="single2v2PlayTab" data-sub="play" type="button"><span>⚔️ 亲自出战 · 人机协同</span><span class="mode-pill">● ○ vs ○ ○</span></button>
-          <button class="tab-ink" id="single2v2WatchTab" data-sub="watch" type="button"><span>👁️ 纯观战演武 · 四圣论剑</span><span class="mode-pill watch">○ ○ vs ○ ○</span></button>
-        </div>
-
-        <!-- 玩家组队参战区 -->
-        <div id="single2v2PlayPane">
-          <div class="bp-rule-banner">
-            <span class="bp-rule-seal">禁选</span>
-            <div class="bp-rule-txt">
-              <b>点将台规则 · 双方各禁 1 名侠客 + 双人轮选</b>
-              <span>选定境界后点击开战进入点将台，双方各禁 1 人，并为你与同袍搭档点选【先锋】【次锋】出战阵容。</span>
-            </div>
-          </div>
-          <div class="play2v2-slots" id="play2v2Slots" hidden></div>
-          <div class="tag3-roster" id="play2v2Roster" hidden></div>
-
-          <div class="sec-sub-label" style="margin-top:10px">敌方与同袍电脑战力境界</div>
-          <div class="levels-grid" id="play2v2Levels">
-            <button data-lv="easy" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-              <span class="lv-sub">反应迟缓 · 初学练手</span>
-            </button>
-            <button data-lv="normal" class="sel" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-              <span class="lv-sub">见招拆招 · 攻守均衡</span>
-            </button>
-            <button data-lv="hard" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-              <span class="lv-sub">凌厉反击 · 连招压制</span>
-            </button>
-            <button data-lv="impossible" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-              <span class="lv-sub">极境宗师 · 绝无破绽</span>
-            </button>
-            <button data-lv="god" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-              <span class="lv-sub">神经网络 · 协同战术</span>
-            </button>
-          </div>
-
-          <div class="single-action-row">
-            <button class="go" id="play2v2StartBtn" type="button">开启 2v2 协同实战</button>
-          </div>
-        </div>
+        <p class="netnote" style="margin:0 0 12px">想亲自上场？去「对战」页的 2v2 组队开黑，点「单人出战」：你带一位电脑队友，对阵两位电脑。</p>
 
         <!-- 观战区 (纯观战) -->
-        <div id="single2v2WatchPane" style="display:none">
+        <div id="single2v2WatchPane">
           <div class="sec-sub-label">天道神机自动禁选顺序（共 6 步 · 苍龙赤凤 2 禁 4 选 · 全局互不重复）</div>
           <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
           <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入天道演武选人：4 位天道顶尖神级 AI 依次完成 2 禁 4 选，随后苍龙赤凤 4 机协同互搏，纯观战无操作。</p>
@@ -558,8 +513,9 @@
             <span class="mm-kicker">全新玩法 · 协同决战</span>
             <span class="mm-title">2v2 组队开黑</span>
             <span class="mm-en">2V2 TEAM & CO-OP</span>
-            <span class="mm-desc">双人同袍共破天道，或四人组队同台切磋！更有四圣神机 AI 自动禁选互搏纯观战演武。</span>
+            <span class="mm-desc">一个人带电脑队友出战，双人同袍共破天道，或四人组队同台切磋；也能坐看四位天道 AI 互搏。</span>
             <div class="mm-2v2-actions">
+              <button class="mm-go" id="mm2v2SoloBtn" type="button"><span>单人出战 · 人机协同</span><span class="go-sub">你 + 电脑队友 vs 双电脑</span></button>
               <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>双人破阵 · 共斗</span><span class="go-sub">双人同袍 vs 双天道</span></button>
               <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>四方争锋 · 对决</span><span class="go-sub">2人 vs 2人 巅峰对战</span></button>
               <button class="mm-go btn-watch" id="mm2v2WatchBtn" type="button"><span>纯观战 · 天道演武</span><span class="go-sub">4神机AI神仙打架</span></button>
@@ -605,36 +561,9 @@
       </div>
 
       <div id="netPanel" class="net">
-        <div class="net-mode-bar" style="display:flex;gap:10px;justify-content:center;margin:12px 0 14px;">
-          <button id="netModeP2PBtn" class="ghost small sel" style="border-radius:20px;padding:6px 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px" type="button">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            WebRTC 免服务器直连（公网开黑）
-          </button>
-          <button id="netModeServerBtn" class="ghost small" style="border-radius:20px;padding:6px 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px" type="button">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-            局域网 / 本地服务器
-          </button>
-        </div>
-
         <div id="netBannerP2P" class="net-banner p2p">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <span><b>WebRTC 免服务器对战</b>：点击「设擂建房」生成 4 位房间码分享给好友，或输入好友的房间码加入，无需下载或配置服务器！</span>
-        </div>
-
-        <div id="netBannerServer" class="net-banner srv hidden">
-          <span id="serverStatusText" style="display:inline-flex;align-items:center;gap:6px">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="#2bd49a"><circle cx="12" cy="12" r="10"/></svg>
-            <b>局域网/离线模式</b>：同一 Wi-Fi 或离线单机开黑（房主电脑终端运行 <code>python3 server.py</code>）。
-          </span>
-        </div>
-
-        <div id="srvBox" class="hidden" style="margin-bottom:14px;">
-          <p class="netnote" style="margin-bottom:6px">若与同学不在同一台电脑，请填入房主的局域网 IP（房主终端启动时会显示）：</p>
-          <div class="iprow">
-            <input id="srvIn" placeholder="例如 192.168.1.100:8765" autocomplete="off" spellcheck="false">
-            <button class="ghost small" id="srvConnectBtn" style="white-space:nowrap" type="button">连接测试</button>
-            <button class="ghost small" id="srvClearBtn" style="white-space:nowrap" type="button">重置</button>
-          </div>
         </div>
 
         <!-- 水墨风双栏卡片：设擂建房 & 赴会应战 -->
@@ -748,29 +677,6 @@
           </div>
         </div>
 
-        <!-- 快速开战与排位卡片 (全局统一池，零碎片化) -->
-        <div class="matchbox wuxia-card match-card" id="netMatchBox">
-          <div class="match-card-head">
-            <span class="match-card-title">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#e9c46a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              即时匹配 · 论剑切磋
-            </span>
-            <span class="sub-badge" style="background:rgba(233,196,106,0.12);border-color:rgba(233,196,106,0.3);color:var(--gold);font-size:12px;padding:2px 8px">武林通则 · 标准三局两胜 (BO3) 全球直通池</span>
-          </div>
-          <div class="match-actions-row">
-            <button class="go" id="matchBtn" type="button" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              快速匹配
-            </button>
-            <button class="go rankb" id="rankBtn" type="button" style="display:inline-flex;align-items:center;justify-content:center;gap:8px">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-5-6.5 5 2-7.5L2 9h7z"/></svg>
-              天梯排位赛
-            </button>
-          </div>
-          <p class="netnote" id="rankLine" style="margin-top:10px"></p>
-          <p class="netnote" id="accHint"></p>
-          <p class="netnote" id="lanLine"></p>
-        </div>
       </div>
       </div><!-- /roomWrap -->
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
@@ -811,6 +717,34 @@
                 <h4>👁️ 天道演武 · 纯观战</h4>
                 <p>4 位天道顶尖神级 AI 自动 6 手禁选、协同互搏，坐观神仙打架！</p>
                 <button class="go small btn-watch" id="btn2v2GoWatch" type="button">开启观战</button>
+              </div>
+            </div>
+            <div id="modal2v2Solo" hidden>
+              <div class="sec-sub-label">电脑队友和对手的境界</div>
+              <div class="levels-grid" id="solo2v2Levels">
+                <button data-lv="easy" type="button">
+                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+                  <span class="lv-sub">反应迟缓 · 初学练手</span>
+                </button>
+                <button data-lv="normal" class="sel" type="button">
+                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+                  <span class="lv-sub">见招拆招 · 攻守均衡</span>
+                </button>
+                <button data-lv="hard" type="button">
+                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+                  <span class="lv-sub">凌厉反击 · 连招压制</span>
+                </button>
+                <button data-lv="impossible" type="button">
+                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+                  <span class="lv-sub">极境宗师 · 绝无破绽</span>
+                </button>
+                <button data-lv="god" type="button">
+                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+                  <span class="lv-sub">神经网络 · 协同战术</span>
+                </button>
+              </div>
+              <div class="single-action-row">
+                <button class="go" id="btn2v2GoSolo" type="button">进入点将台</button>
               </div>
             </div>
           </div>
@@ -854,7 +788,7 @@
       <div class="cxhead"><h2>角色图鉴</h2><button class="ghost" data-back>返回</button></div>
       <div class="cxtabs" id="cxTabs"></div>
       <div class="bento" id="cxBento">
-        <div class="tile t-art"><canvas id="cxCard" width="600" height="800"></canvas></div>
+        <div class="tile t-art"><canvas id="cxCard" width="900" height="1200"></canvas></div>
         <div class="tile t-name" id="cxName"></div>
         <div class="tile t-skin"><div class="th"><span class="ic" data-ic="skin"></span><span class="tl" id="cxSkinT">皮肤</span></div><div class="cxskins" id="cxSkins"></div></div>
         <div class="tile t-demo">
