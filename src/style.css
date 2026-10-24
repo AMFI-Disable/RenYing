@@ -1986,21 +1986,110 @@
   /* =====================================================================
      首页水墨山水与国风化增强层
      ===================================================================== */
+  .home-scrim {
+    background:
+      radial-gradient(circle at 72% 24%, rgba(239,230,210,.08), transparent 45%),
+      linear-gradient(90deg, rgba(6,9,16,.84) 0%, rgba(8,12,20,.48) 36%, rgba(8,12,20,.08) 65%),
+      linear-gradient(0deg, rgba(6,9,15,.72) 0%, rgba(8,12,20,0) 38%) !important;
+  }
   .home-landscape {
     position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
   }
   .home-mountains {
-    position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 38vh; opacity: .85;
-    filter: blur(1px) drop-shadow(0 -10px 30px rgba(0,0,0,.6));
+    position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 48vh; opacity: .94;
+    filter: drop-shadow(0 -12px 32px rgba(0,0,0,.65));
   }
   .home-mist {
-    position: absolute; left: -20%; right: -20%; bottom: 0; height: 26vh;
-    background: radial-gradient(ellipse at 50% 100%, rgba(239,230,210,.06), rgba(8,12,20,.6) 65%, transparent 100%);
+    position: absolute; left: -20%; right: -20%; bottom: 0; height: 28vh;
+    background: radial-gradient(ellipse at 50% 100%, rgba(239,230,210,.09), rgba(14,20,34,.55) 62%, transparent 100%);
     animation: mistDrift 18s ease-in-out infinite alternate;
   }
+  .home-mist-2 {
+    bottom: 8vh; height: 22vh;
+    background: radial-gradient(ellipse at 35% 60%, rgba(210,220,240,.06), transparent 70%);
+    animation: mistDrift 25s ease-in-out infinite alternate-reverse;
+  }
   @keyframes mistDrift {
-    0% { transform: translateX(-2%) scaleY(.95); opacity: .7; }
-    100% { transform: translateX(3%) scaleY(1.05); opacity: .95; }
+    0% { transform: translateX(-3%) scaleY(.95); opacity: .68; }
+    100% { transform: translateX(3.5%) scaleY(1.06); opacity: .96; }
+  }
+
+  /* 全页面背景（单人、联机、点将台 BP、武库、图鉴等）：宣纸墨染长卷山河底纹 */
+  .scr:not(.menuscr):not(#pause):not(#end) {
+    background:
+      radial-gradient(circle at 78% 16%, rgba(233,196,106,.07), transparent 38%),
+      radial-gradient(ellipse at 20% 85%, rgba(47,105,85,.08), transparent 48%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 360' preserveAspectRatio='none'%3E%3Cpath d='M0,360 L0,190 Q210,95 430,175 T890,115 T1290,185 L1440,140 L1440,360 Z' fill='rgba(239,230,210,0.025)'/%3E%3Cpath d='M0,360 L0,250 Q280,165 560,235 T1120,195 L1440,245 L1440,360 Z' fill='rgba(6,9,16,0.55)'/%3E%3C/svg%3E") bottom center / 100% 42vh no-repeat,
+      linear-gradient(180deg, rgba(8,12,20,.80) 0%, rgba(11,16,26,.88) 60%, rgba(6,9,15,.94) 100%) !important;
+  }
+
+  /* 各大功能面板：玄铁镶金古卷轴设计 */
+  body.has-nav .scr:not(.menuscr):not(#netp) > .panel {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(239,230,210,.07), transparent 70%),
+      radial-gradient(circle at 95% 95%, rgba(184,57,46,.05), transparent 55%),
+      linear-gradient(180deg, rgba(16,22,33,.93), rgba(11,15,24,.96)) !important;
+    border: 1px solid rgba(233,196,106,.28) !important;
+    box-shadow:
+      0 24px 64px rgba(0,0,0,.65),
+      inset 0 0 0 1px rgba(239,230,210,.06),
+      inset 0 1px 24px rgba(233,196,106,.05) !important;
+  }
+
+  /* 点将台规则提示横幅（单人各模式菜单内） */
+  .bp-rule-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 10px 0 14px;
+    padding: 12px 16px;
+    background:
+      radial-gradient(ellipse at 0% 50%, rgba(233,196,106,.10), transparent 65%),
+      rgba(10, 15, 24, 0.72);
+    border: 1px solid rgba(233,196,106,.28);
+    border-left: 3px solid var(--gold);
+    text-align: left;
+  }
+  .bp-rule-seal {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    background: #b8392e;
+    color: #fff3ea;
+    font: 15px/1 var(--title);
+    border-radius: 3px;
+    transform: rotate(-4deg);
+    box-shadow: 0 3px 10px rgba(184,57,46,.45), inset 0 0 0 1px rgba(255,255,255,.32);
+  }
+  .bp-rule-seal.pick-only {
+    background: #2f6955;
+    box-shadow: 0 3px 10px rgba(47,105,85,.45), inset 0 0 0 1px rgba(255,255,255,.32);
+  }
+  .bp-rule-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .bp-rule-txt b {
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: .04em;
+  }
+  .bp-rule-txt span {
+    font-size: 12.5px;
+    color: rgba(236,232,225,.75);
+    line-height: 1.45;
+  }
+
+  /* 点将台 (#bp) 席位栏支持 1禁 + 3选 的自适应紧凑排布 */
+  #bp .bpside .slots {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #bp .bpside .slot2 {
+    min-width: 64px;
   }
 
   /* 首页标题「刃影」：水墨晕染与朱砂印质感强化 */

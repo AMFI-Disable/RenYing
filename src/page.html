@@ -61,11 +61,52 @@
   <div id="menu" class="scr on menuscr" data-enter="run">
     <div class="home-scrim" aria-hidden="true"></div>
     <div class="home-landscape" aria-hidden="true">
-      <svg class="home-mountains" viewBox="0 0 1440 320" preserveAspectRatio="none">
-        <path d="M0,320 L0,180 Q160,80 320,160 T640,110 T960,190 T1280,120 L1440,170 L1440,320 Z" fill="rgba(10,14,24,0.45)"/>
-        <path d="M0,320 L0,220 Q220,140 440,210 T880,170 T1320,240 L1440,210 L1440,320 Z" fill="rgba(8,11,18,0.7)"/>
+      <svg class="home-mountains" viewBox="0 0 1440 380" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="mtnFar" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(36, 48, 72, 0.52)"/>
+            <stop offset="100%" stop-color="rgba(10, 14, 24, 0.08)"/>
+          </linearGradient>
+          <linearGradient id="mtnMid" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(22, 30, 48, 0.72)"/>
+            <stop offset="100%" stop-color="rgba(8, 12, 20, 0.22)"/>
+          </linearGradient>
+          <linearGradient id="mtnNear" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(12, 17, 28, 0.90)"/>
+            <stop offset="100%" stop-color="rgba(6, 9, 15, 0.96)"/>
+          </linearGradient>
+          <radialGradient id="inkMoonHalo" cx="72%" cy="22%" r="34%">
+            <stop offset="0%" stop-color="rgba(239, 230, 210, 0.16)"/>
+            <stop offset="55%" stop-color="rgba(233, 196, 106, 0.05)"/>
+            <stop offset="100%" stop-color="rgba(10, 14, 24, 0)"/>
+          </radialGradient>
+        </defs>
+        <!-- 月晕水墨天幕 -->
+        <rect x="0" y="0" width="1440" height="380" fill="url(#inkMoonHalo)"/>
+        <!-- 远黛群峰 -->
+        <path d="M0,380 L0,165 Q120,75 260,145 T540,92 T840,155 T1130,78 T1360,138 L1440,118 L1440,380 Z" fill="url(#mtnFar)"/>
+        <!-- 孤峰古塔剪影 -->
+        <g fill="rgba(18, 25, 40, 0.78)" transform="translate(1112, 40)">
+          <path d="M18,0 L20,12 L16,12 Z"/>
+          <path d="M6,16 Q18,11 30,16 L26,21 L10,21 Z"/>
+          <path d="M2,25 Q18,19 34,25 L29,31 L7,31 Z"/>
+          <path d="M-2,35 Q18,28 38,35 L32,42 L4,42 Z"/>
+          <rect x="12" y="16" width="12" height="32"/>
+        </g>
+        <!-- 中景奇峰与断崖云海 -->
+        <path d="M0,380 L0,215 Q180,128 360,198 T720,142 T1060,205 T1340,158 L1440,188 L1440,380 Z" fill="url(#mtnMid)"/>
+        <!-- 悬崖飞亭剪影 -->
+        <g fill="rgba(12, 17, 28, 0.88)" transform="translate(338, 128)">
+          <path d="M-8,14 Q16,2 40,14 L34,18 L-2,18 Z"/>
+          <rect x="4" y="18" width="3" height="16"/>
+          <rect x="25" y="18" width="3" height="16"/>
+          <rect x="0" y="32" width="32" height="5"/>
+        </g>
+        <!-- 近景苍山墨岭与崖松 -->
+        <path d="M0,380 L0,268 Q220,195 450,255 T910,218 T1320,275 L1440,248 L1440,380 Z" fill="url(#mtnNear)"/>
       </svg>
       <div class="home-mist"></div>
+      <div class="home-mist home-mist-2"></div>
     </div>
     <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 1 人在线</span></span></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
@@ -195,11 +236,15 @@
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">排定【先锋】、【中坚】与【大将】三名侠客出阵。单局击破敌将后保留残血调息，迎战敌方下一名侠客，直至一方三人全灭！</p>
 
-        <div class="sec-sub-label">排定出战席位（点击卡片指定席位，再在下方挑选侠客）</div>
-        <div class="tag3-slots" id="tag3Slots"></div>
-
-        <div class="sec-sub-label">待命侠客名册（点击入阵）</div>
-        <div class="tag3-roster" id="tag3Roster"></div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal">禁选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 双方各禁 1 名侠客 + 轮选 3 将</b>
+            <span>选定境界后点击下方开战，进入水墨点将台依次禁用强敌，并排定【先锋】【中坚】【大将】出阵顺序。</span>
+          </div>
+        </div>
+        <div class="tag3-slots" id="tag3Slots" hidden></div>
+        <div class="tag3-roster" id="tag3Roster" hidden></div>
 
         <div class="sec-sub-label" style="margin-top:10px">敌方门派战力境界</div>
         <div class="levels-grid" id="tag3Levels">
@@ -238,11 +283,17 @@
           <span class="sub-badge">剧情通关</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">六大篇章逐级挑战，前四关斩妖除魔，终局迎战守关宗师。余血越多得星越多！</p>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">直选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 单人闯关免禁用直选</b>
+            <span>点选下方任意已解锁关卡后，即刻进入水墨点将台检视招式并钦点出战大侠。</span>
+          </div>
+        </div>
       </div>
 
-      <!-- 出战角色选择（闯关与木人桩通用） -->
-      <div data-sec="stage train" style="display:none">
-        <div class="sec-sub-label">选择出战角色</div>
+      <!-- 出战角色选择（已统一移至点将台 BP 界面） -->
+      <div id="trPickWrap" style="display:none" hidden>
         <div class="trpick" id="trPick"></div>
       </div>
 
@@ -286,8 +337,14 @@
           <span class="sub-badge" id="towerRecordBadge">最高通关：第 1 层</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">挑选本命侠客登临万仞剑阁！每战胜一层守关者，顿悟三选一武林秘卷天赋（雷厉电弧、墨刃剑气、借力打力、血饮残心…）。守关 AI 境界层层递进，智谋与应对算力愈发深不可测（高层极具压制智慧，绝非数值堆砌）！</p>
-        <div class="sec-sub-label">选择本命试炼侠客</div>
-        <div class="trpick" id="towerPick"></div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">直选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 肉鸽爬塔免禁用直选</b>
+            <span>点击「开启新试炼」后进入水墨点将台，自由检视十二位侠客武学并钦点本命试炼侠客登阁。</span>
+          </div>
+        </div>
+        <div class="trpick" id="towerPick" hidden></div>
         <div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">
           <button class="go" id="towerResumeBtn" type="button" style="display:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">继续试炼</button>
           <button class="go" id="towerStartBtn" type="button">开启新试炼</button>
@@ -301,10 +358,15 @@
           <span class="sub-badge">动态随机词条 · 108天机秘令</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">天道无常，战局每隔 15 秒天降水墨异象，在超过 100 种天机词条中随机变幻！（疾风超速、月华倒转、浮空低重力、无限怒气、雷霆反震、乾坤移形…）</p>
-        <div class="sec-sub-label">选择本命出战侠客</div>
-        <div class="trpick" id="chaosPick"></div>
-        <div class="sec-sub-label" style="margin-top:10px">乱斗对手选择</div>
-        <div class="trpick" id="chaosFoePick"></div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">直选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 娱乐异变免禁用盲选</b>
+            <span>选定境界后点击开启，在点将台中自由点选本命侠客迎战天机异变。</span>
+          </div>
+        </div>
+        <div class="trpick" id="chaosPick" hidden></div>
+        <div class="trpick" id="chaosFoePick" hidden></div>
         <div class="sec-sub-label" style="margin-top:10px">乱斗电脑境界</div>
         <div class="levels-grid" id="chaosLevels">
           <button data-lv="easy" type="button">
@@ -341,10 +403,15 @@
           <span class="sub-badge">10倍真元 · 零CD · 狂暴神通</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">通天彻地，狂魔乱舞！全员真元暴涨 10 倍，小技能与终极绝学全免冷却随心倾泻，招式威能翻倍狂化，全屏水墨震颤狂澜！</p>
-        <div class="sec-sub-label">选择本命出战侠客</div>
-        <div class="trpick" id="mayhemPick"></div>
-        <div class="sec-sub-label" style="margin-top:10px">神魔对手选择</div>
-        <div class="trpick" id="mayhemFoePick"></div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">直选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 狂暴神通免禁用直选</b>
+            <span>选定电脑境界后点击开启，进入点将台点选你的神魔出战侠客。</span>
+          </div>
+        </div>
+        <div class="trpick" id="mayhemPick" hidden></div>
+        <div class="trpick" id="mayhemFoePick" hidden></div>
         <div class="sec-sub-label" style="margin-top:10px">神魔电脑境界</div>
         <div class="levels-grid" id="mayhemLevels">
           <button data-lv="easy" type="button">
@@ -389,15 +456,15 @@
 
         <!-- 玩家组队参战区 -->
         <div id="single2v2PlayPane">
-          <div class="sec-sub-label">排定两队对阵阵容（点击指定席位卡片，再在下方挑选侠客）</div>
-          <div class="play2v2-slots" id="play2v2Slots" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 12px"></div>
-          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap">
-            <button class="ghost small" id="btn2v2SuggestPartner" type="button" style="color:var(--gold);border-color:rgba(233,196,106,0.4)">✨ 推荐最佳协同搭档</button>
-            <button class="ghost small" id="btn2v2RandomFoes" type="button">🎲 随机敌方双人组</button>
+          <div class="bp-rule-banner">
+            <span class="bp-rule-seal">禁选</span>
+            <div class="bp-rule-txt">
+              <b>点将台规则 · 双方各禁 1 名侠客 + 双人轮选</b>
+              <span>选定境界后点击开战进入点将台，双方各禁 1 人，并为你与同袍搭档点选【先锋】【次锋】出战阵容。</span>
+            </div>
           </div>
-
-          <div class="sec-sub-label">待命侠客名册（点击入选当前席位）</div>
-          <div class="tag3-roster" id="play2v2Roster"></div>
+          <div class="play2v2-slots" id="play2v2Slots" hidden></div>
+          <div class="tag3-roster" id="play2v2Roster" hidden></div>
 
           <div class="sec-sub-label" style="margin-top:10px">敌方与同袍电脑战力境界</div>
           <div class="levels-grid" id="play2v2Levels">
