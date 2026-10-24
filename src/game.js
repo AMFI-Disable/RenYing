@@ -8964,7 +8964,7 @@ function openScreen(name, reveal = true) {
   }
   if (name === 'single') singleSec(null);
   if (name === 'tutorial') { startTutorial(); return null; }   // 开的是教学对局，没有页面要上屏
-  if (name === 'tasks') { renderTasks(); loadProfile(); }
+  if (name === 'tasks') renderTasks();
   if (name === 'replays') renderReplays();
   if (name === 'netp') renderRankLine();
   if (name === 'single') { renderTrainPick(); renderStages(); }
