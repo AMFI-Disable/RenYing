@@ -2520,16 +2520,21 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
             <p class="sub" id="modal2v2Desc" style="margin:0 0 16px;text-align:left;color:rgba(236,232,225,0.85)">
               选择进入对决的方式：
             </p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="modal2v2Options">
-              <div class="wuxia-card" id="modal2v2OnlineCard" style="padding:16px;cursor:pointer;border-color:rgba(70,211,234,0.4);background:rgba(70,211,234,0.06);transition:transform .15s">
-                <h4 style="color:#46d3ea;margin:0 0 6px;font-size:17px;font-family:var(--title)">🌐 在线联机开黑</h4>
-                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5">设擂建房生成 4 位房间码分享好友，跨越网络千里同袍。</p>
-                <button class="go small" id="btn2v2GoOnline" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">设擂开黑</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="modal2v2Options">
+              <div class="wuxia-card" id="modal2v2MatchCard" style="padding:14px;cursor:pointer;border-color:rgba(56,217,118,0.4);background:rgba(56,217,118,0.06);transition:transform .15s">
+                <h4 style="color:#38d976;margin:0 0 6px;font-size:16px;font-family:var(--title)">⚡ 全服快速匹配</h4>
+                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2MatchDesc">全网自动撮合队友与对手，即刻切磋！</p>
+                <button class="go small" id="btn2v2GoMatch" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px;background:#2bd49a;color:#0b0d10">快速匹配</button>
               </div>
-              <div class="wuxia-card" id="modal2v2LocalCard" style="padding:16px;cursor:pointer;border-color:rgba(233,196,106,0.4);background:rgba(233,196,106,0.06);transition:transform .15s">
-                <h4 style="color:var(--gold);margin:0 0 6px;font-size:17px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
-                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5" id="modal2v2LocalDesc">同台电脑键盘对决（1P: WASD+鼠标/J，2P: 方向键+K）。</p>
-                <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">本地开战</button>
+              <div class="wuxia-card" id="modal2v2OnlineCard" style="padding:14px;cursor:pointer;border-color:rgba(70,211,234,0.4);background:rgba(70,211,234,0.06);transition:transform .15s">
+                <h4 style="color:#46d3ea;margin:0 0 6px;font-size:16px;font-family:var(--title)">🌐 设擂密令开黑</h4>
+                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45">生成 4 位房间码分享好友，约战同袍。</p>
+                <button class="go small" id="btn2v2GoOnline" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px">设擂开黑</button>
+              </div>
+              <div class="wuxia-card" id="modal2v2LocalCard" style="padding:14px;cursor:pointer;border-color:rgba(233,196,106,0.4);background:rgba(233,196,106,0.06);transition:transform .15s">
+                <h4 style="color:var(--gold);margin:0 0 6px;font-size:16px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
+                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2LocalDesc">同台电脑键盘对决（1P/2P 合作或对决）。</p>
+                <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px">本地开战</button>
               </div>
             </div>
           </div>
@@ -6252,8 +6257,14 @@ return;
 }
 if (m.sys === 'room' && m.matched) {
 NET.role = m.role; NET.matching = false; matchUI(false); rankUI(false); NET.isRanked = !!m.ranked; NET.rkDone = false;
-if (typeof setRoomModeUI === 'function') setRoomModeUI('normal');   // 匹配和排位一律标准三局两胜
-netStatus(m.ranked ? '排位对手已找到！' : '对手已找到！'); SFX.chargeFull();
+let targetRule = 'normal';
+if (m.mmKind === '2v2_coop') targetRule = 'pp_cc';
+else if (m.mmKind === '2v2_vs') targetRule = 'pp_pp';
+if (typeof setRoomModeUI === 'function') setRoomModeUI(targetRule);
+if (m.mmKind === '2v2_coop') netStatus('2v2 双人共斗同袍已就位！');
+else if (m.mmKind === '2v2_vs') netStatus('2v2 对手已找到！');
+else netStatus(m.ranked ? '排位对手已找到！' : '对手已找到！');
+SFX.chargeFull();
 return;
 }
 if (m.sys === 'room') {
@@ -6275,7 +6286,7 @@ if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
 onNetOpen();
 } else if (m.sys === 'room_rule') {
 setRoomModeUI(m.rule);
-const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)' };
+const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (P&P v C&C)', pp_pp: '2v2 组队切磋 (P&P v P&P)' };
 toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
 } else if (m.sys === 'rematch') {
 if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -7762,7 +7773,7 @@ function strike(f, foe, spec) {
 if (f.hitDone) return false;
 const hb = hitbox(f, spec.box);
 if (hitDecoy(f, hb)) return false;
-const targets = M.mode === 'watch2v2' ? foesOf(f) : [foe];
+const targets = is2v2() ? foesOf(f) : [foe];
 for (const tf of targets) {
 if (tf.invul > 0 || tf.hp <= 0 || !overlap(hb, hurtbox(tf))) continue;
 f.hitDone = true;
@@ -7847,7 +7858,7 @@ if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math
 if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
 if (p.fx || p.dmg <= 0) continue;
 const owner = fighterByIdx(p.owner), box = projBox(p);
-const candidates = M.mode === 'watch2v2' ? foesOf(owner) : [foeOf(owner)];
+const candidates = is2v2() ? foesOf(owner) : [foeOf(owner)];
 let foe = candidates.find(ef => ef.hp > 0 && overlap(box, hurtbox(ef))) || candidates[0];
 if (!p.unbreakable && foe.state === 'attack' && foe.move && foe.t >= foe.move.su && foe.t < foe.move.su + foe.move.ac && overlap(hitbox(foe, foe.move.box), box)) {
 p.dead = true; blockFX(p.x, p.y, foe.face); SFX.block();
@@ -8330,7 +8341,7 @@ ctx.restore();
 function tryHit(f, foe, m) {
 const hb = hitbox(f, m.box);
 if (hitDecoy(f, hb)) return;
-if (M.mode === 'watch2v2') {
+if (is2v2()) {
 const matchTarget = foesOf(f).find(ef => ef.invul <= 0 && ef.hp > 0 && overlap(hb, hurtbox(ef)));
 if (matchTarget) foe = matchTarget;
 }
@@ -8736,7 +8747,7 @@ shakeDirX = fdir * Math.min(18, ev.hs * 60 * feel);
 shakeDirY = ev.y < -60 ? -Math.min(12, ev.hs * 35 * feel) : Math.min(12, ev.hs * 35 * feel);
 if (ev.dmg >= 8) cam.zoom *= 1 + 0.015 * feel;      // 重击时镜头轻微一顿
 hitFX(ev.x, ev.y, clamp(ev.dmg / 8, 0.5, 1.8), att.look.slash, fdir);
-if (!quiet && M.mode === 'watch2v2' && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
+if (!quiet && is2v2() && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
 ARENA2V2.scars.push({ x: ev.x, r: ev.ult ? 62 : 44, life: 4.0, max: 4.0, rgb: att.look.slash || '255,215,120' });
 if (ARENA2V2.scars.length > 18) ARENA2V2.scars.shift();
 }
@@ -9027,11 +9038,11 @@ if (!isClient()) updateMatch(); else M.t += STEP;
 for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
 updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
-if (M.mode === 'watch2v2') {
+if (is2v2()) {
 updateFighter(C, foeOf(C)); updateFighter(D, foeOf(D));
 updateArena2v2(STEP);
 }
-if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (M.mode === 'watch2v2' && M.phase === 'fight'))) {
+if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (is2v2() && M.phase === 'fight'))) {
 for (const f of allFighters()) {
 if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
 f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skill = null; f.airRecover = false; f.escInvul = false;
@@ -9448,12 +9459,12 @@ cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(1.15 - (hi - lo)
 cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
 return;
 }
-const tracked = M.mode === 'watch2v2' ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
+const tracked = is2v2() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
 const pool = tracked.length >= 2 ? tracked : [A, B];
 const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
 const minY = Math.min(...pool.map(f => f.y));
 const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
-const padW = M.mode === 'watch2v2' ? 680 : 340;
+const padW = is2v2() ? 680 : 340;
 const fitW = W / ((d + padW) * base);
 const top = -minY + 170;
 const fitH = (H * 0.74) / (Math.max(250, top) * base);
@@ -9466,15 +9477,15 @@ const ease = Math.sin(k * Math.PI * 0.5);
 zoomMul *= 1 + camPunch.zoom * ease;
 focus = lerp(focus, camPunch.x, 0.65 * ease);
 }
-const lf = [A, B][localIdx()];
-if (lf && lf.state === 'charge' && M.mode !== 'demo' && M.mode !== 'watch2v2') {
+const lf = allFighters()[localIdx()];
+if (lf && lf.state === 'charge' && M.mode !== 'demo' && !is2v2()) {
 const lv = clamp(lf.t / CHARGE_FULL, 0, 1); zoomMul *= 1 + 0.24 * lv; focus = lerp(mid, lf.x, 0.4 * lv);
 }
 const ce = cineEnv();
 if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
-const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
-const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
-const maxZoom = M.mode === 'watch2v2' ? 0.70 : Infinity;
+const minZoom = is2v2() ? 0.4 : 0.6;
+const wantBase = is2v2() ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
+const maxZoom = is2v2() ? 0.70 : Infinity;
 let want = Math.min(wantBase * zoomMul, fit, maxZoom);
 const pf = paperFX();
 if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
@@ -9576,7 +9587,7 @@ ctx.fillStyle = '#3a121c'; ctx.fillRect(px - 16, -900, 32, 900);
 ctx.fillStyle = 'rgba(255,120,120,0.12)'; ctx.fillRect(px - 16, -900, 6, 900);
 ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);
 }
-const lanternXs = M.mode === 'watch2v2' ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
+const lanternXs = is2v2() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
 for (const lx of lanternXs) lantern(lx, -2);
 if (ARENA2V2.scars && ARENA2V2.scars.length) {
 for (let i = ARENA2V2.scars.length - 1; i >= 0; i--) {
@@ -9595,7 +9606,7 @@ line([sc.x + k * 8, 2], [sc.x + k * (sc.r * 0.45), (k % 2 ? 7 : -4)]);
 ctx.restore();
 }
 }
-if (M.mode === 'watch2v2') {
+if (is2v2()) {
 ctx.save();
 for (const gy of ARENA2V2.geysers) {
 const ready = gy.cd <= 0;
@@ -9778,12 +9789,20 @@ ctx.save(); ctx.font = `22px ${TITLE_FONT}`; ctx.textAlign = 'center';
 ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * Math.sin(clock * 14)})`;
 ctx.fillText('腾空闪', sk.head[0], sk.head[1] - 28); ctx.restore();
 }
-if (M.mode === 'watch2v2' && f.hp > 0 && !f.hidden && sk.head) {
-const me = (typeof localIdx === 'function') ? localIdx() : 0;
-const isUser = f.idx === me;
-const isTeammate = (f.idx % 2 === me % 2) && !isUser;
-const col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : '#ff4d4d');
-const glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)');
+if (is2v2() && f.hp > 0 && !f.hidden && sk.head) {
+const isAiWatch = M.watchAi || (M.mode === 'watch2v2' && M.watchAi);
+let col = '#46d3ea', glow = 'rgba(70,211,234,0.45)';
+if (isAiWatch) {
+const isTeam0 = f.idx % 2 === 0;
+col = isTeam0 ? '#46d3ea' : '#ff4d4d';
+glow = isTeam0 ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)';
+} else {
+const isUser = (f.ctrl === human[0]) || (typeof viewerIdx === 'function' && viewerIdx() >= 0 && f.idx === viewerIdx());
+const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
+const isTeammate = (f.idx % 2 === myTeam) && !isUser;
+col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : '#ff4d4d');
+glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)');
+}
 const hx = sk.head[0];
 const bounce = Math.sin(clock * 5 + f.idx * 1.5) * 2.5;
 const tipY = sk.head[1] - 32 + bounce;
@@ -12986,7 +13005,7 @@ const pf = paperFX();
 if (pf) drawXuanzhi(pf.a);
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-const order = M.mode === 'watch2v2'
+const order = is2v2()
 ? [A, B, C, D].sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
 : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
 drawDecoys();
@@ -17407,6 +17426,14 @@ if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
 const modal = document.getElementById('modal2v2');
 if (modal) modal.classList.add('hidden');
 });
+const btn2v2GoMatch = document.getElementById('btn2v2GoMatch');
+if (btn2v2GoMatch) {
+btn2v2GoMatch.addEventListener('click', () => {
+const modal = document.getElementById('modal2v2');
+if (modal) modal.classList.add('hidden');
+mmGo(active2v2ModalMode === 'pp_cc' ? '2v2_coop' : '2v2_vs');
+});
+}
 const btn2v2GoOnline = document.getElementById('btn2v2GoOnline');
 if (btn2v2GoOnline) {
 btn2v2GoOnline.addEventListener('click', () => {
@@ -19195,9 +19222,18 @@ $id('mmRankBtn').textContent = kind === 'ranked' ? '排位中…' : '开始排�
 $id('mmQuickBtn').disabled = $id('mmRankBtn').disabled = !!kind;
 $id('mmQuickCard').classList.toggle('searching', kind === 'quick');
 $id('mmRankCard').classList.toggle('searching', kind === 'ranked');
+const c2v2 = $id('mm2v2Card');
+if (c2v2) c2v2.classList.toggle('searching', kind === '2v2_coop' || kind === '2v2_vs');
 const tp = document.querySelector('#topNav .tn-play');
 if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? (kind === 'ranked' ? '排位中' : '匹配中') : '对战'; }
-if (kind) { $id('mmSearchTitle').textContent = kind === 'ranked' ? '排位赛 · 正在寻找对手' : '匹配对战 · 正在寻找对手'; mmTick(); }
+if (kind) {
+let title = '匹配对战 · 正在寻找对手';
+if (kind === 'ranked') title = '排位赛 · 正在寻找对手';
+else if (kind === '2v2_coop') title = '2v2 双人共斗 · 正在全服寻找同袍队友与天道对手';
+else if (kind === '2v2_vs') title = '2v2 组队切磋 · 正在全服匹配队友与对手';
+$id('mmSearchTitle').textContent = title;
+mmTick();
+}
 }
 function mmTick() {
 if (!mmKind || typeof MM === 'undefined' || !MM.on) return;
@@ -19218,7 +19254,11 @@ if (kind === 'ranked' && !rkOwner()) { netStatus('排位赛需先登录（右上
 if (kind === 'ranked') rkCheckPending();
 if (currentNetMode === 'server' && SERVED) { netConnect(false, null, true, null, kind === 'ranked'); kind === 'ranked' ? rankUI(true) : matchUI(true); return; }
 mmStart(kind);
-netStatus(kind === 'ranked' ? `排位赛：${rkLabel()}` : '匹配对战：正在全服寻找对手…');
+let statusTxt = '匹配对战：正在全服寻找对手…';
+if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
+else if (kind === '2v2_coop') statusTxt = '2v2 双人共斗：正在全服寻找队友与对手…';
+else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配队友与对手…';
+netStatus(statusTxt);
 }
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
 $id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
@@ -19786,7 +19826,12 @@ function mmAvoided(uid) { return !!(uid && MM.kind === 'ranked' && MM.avoid && M
 const MM_SEATS = 3;          // 每段几个座位
 const MM_BANDS = 5;          // 排位按大段位分段：D C B A S
 const MM_PROBE = 3000;       // 多久去敲一轮门
-function mmPool() { return MM.kind === 'ranked' ? 'r' : 'q'; }
+function mmPool() {
+if (MM.kind === 'ranked') return 'r';
+if (MM.kind === '2v2_coop') return '2c';
+if (MM.kind === '2v2_vs') return '2v';
+return 'q';
+}
 function mmSeatId(band, seat) { return `${P2P.prefix}mm-${String(VERSION).replace(/\W/g, '')}-${mmPool()}-${band}-${seat}`; }
 function mmSpan() { if (MM.kind !== 'ranked') return 0; const s = (Date.now() - MM.t0) / 1000; return s < 10 ? 0 : s < 25 ? 1 : 2; }
 function mmInfo() { return MM.kind === 'ranked' && typeof rkMatchInfo === 'function' ? rkMatchInfo() : null; }
@@ -19938,7 +19983,7 @@ if (kind === 'ranked' && NET.oppUid) MM.avoid = { uid: NET.oppUid, until: Date.n
 MM.on = false; MM.busy = false; clearTimeout(MM.timer); MM.peer = null;
 NET.matching = false;
 if (typeof mmUI === 'function') mmUI(null);
-onSys({ sys: 'room', matched: true, role, ranked: kind === 'ranked' });
+onSys({ sys: 'room', matched: true, role, ranked: kind === 'ranked', mmKind: kind });
 setTimeout(() => { try { if (!peer.destroyed && !peer.disconnected) peer.disconnect(); } catch (e) {} }, 600);
 }
 window.addEventListener('pagehide', () => { if (p2pOpen()) p2pSend({ sys: 'left' }); });

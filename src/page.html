@@ -716,16 +716,21 @@
             <p class="sub" id="modal2v2Desc" style="margin:0 0 16px;text-align:left;color:rgba(236,232,225,0.85)">
               选择进入对决的方式：
             </p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="modal2v2Options">
-              <div class="wuxia-card" id="modal2v2OnlineCard" style="padding:16px;cursor:pointer;border-color:rgba(70,211,234,0.4);background:rgba(70,211,234,0.06);transition:transform .15s">
-                <h4 style="color:#46d3ea;margin:0 0 6px;font-size:17px;font-family:var(--title)">🌐 在线联机开黑</h4>
-                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5">设擂建房生成 4 位房间码分享好友，跨越网络千里同袍。</p>
-                <button class="go small" id="btn2v2GoOnline" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">设擂开黑</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="modal2v2Options">
+              <div class="wuxia-card" id="modal2v2MatchCard" style="padding:14px;cursor:pointer;border-color:rgba(56,217,118,0.4);background:rgba(56,217,118,0.06);transition:transform .15s">
+                <h4 style="color:#38d976;margin:0 0 6px;font-size:16px;font-family:var(--title)">⚡ 全服快速匹配</h4>
+                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2MatchDesc">全网自动撮合队友与对手，即刻切磋！</p>
+                <button class="go small" id="btn2v2GoMatch" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px;background:#2bd49a;color:#0b0d10">快速匹配</button>
               </div>
-              <div class="wuxia-card" id="modal2v2LocalCard" style="padding:16px;cursor:pointer;border-color:rgba(233,196,106,0.4);background:rgba(233,196,106,0.06);transition:transform .15s">
-                <h4 style="color:var(--gold);margin:0 0 6px;font-size:17px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
-                <p style="font-size:12.5px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.5" id="modal2v2LocalDesc">同台电脑键盘对决（1P: WASD+鼠标/J，2P: 方向键+K）。</p>
-                <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:14px">本地开战</button>
+              <div class="wuxia-card" id="modal2v2OnlineCard" style="padding:14px;cursor:pointer;border-color:rgba(70,211,234,0.4);background:rgba(70,211,234,0.06);transition:transform .15s">
+                <h4 style="color:#46d3ea;margin:0 0 6px;font-size:16px;font-family:var(--title)">🌐 设擂密令开黑</h4>
+                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45">生成 4 位房间码分享好友，约战同袍。</p>
+                <button class="go small" id="btn2v2GoOnline" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px">设擂开黑</button>
+              </div>
+              <div class="wuxia-card" id="modal2v2LocalCard" style="padding:14px;cursor:pointer;border-color:rgba(233,196,106,0.4);background:rgba(233,196,106,0.06);transition:transform .15s">
+                <h4 style="color:var(--gold);margin:0 0 6px;font-size:16px;font-family:var(--title)">⚔️ 同屏本地开黑</h4>
+                <p style="font-size:12px;color:rgba(236,232,225,0.7);margin:0 0 12px;line-height:1.45" id="modal2v2LocalDesc">同台电脑键盘对决（1P/2P 合作或对决）。</p>
+                <button class="go small alt" id="btn2v2GoLocal" type="button" style="width:100%;margin:0;padding:8px 0;font-size:13.5px">本地开战</button>
               </div>
             </div>
           </div>

@@ -306,7 +306,12 @@ function mmAvoided(uid) { return !!(uid && MM.kind === 'ranked' && MM.avoid && M
 const MM_SEATS = 3;          // 每段几个座位
 const MM_BANDS = 5;          // 排位按大段位分段：D C B A S
 const MM_PROBE = 3000;       // 多久去敲一轮门
-function mmPool() { return MM.kind === 'ranked' ? 'r' : 'q'; }
+function mmPool() {
+  if (MM.kind === 'ranked') return 'r';
+  if (MM.kind === '2v2_coop') return '2c';
+  if (MM.kind === '2v2_vs') return '2v';
+  return 'q';
+}
 function mmSeatId(band, seat) { return `${P2P.prefix}mm-${String(VERSION).replace(/\W/g, '')}-${mmPool()}-${band}-${seat}`; }
 // 等得越久，能接受的段位差越大：先只找同段，10 秒后放宽到相邻一段，25 秒后放宽到两段
 function mmSpan() { if (MM.kind !== 'ranked') return 0; const s = (Date.now() - MM.t0) / 1000; return s < 10 ? 0 : s < 25 ? 1 : 2; }
@@ -463,7 +468,7 @@ function mmMatched(peer, role) {
   MM.on = false; MM.busy = false; clearTimeout(MM.timer); MM.peer = null;
   NET.matching = false;
   if (typeof mmUI === 'function') mmUI(null);
-  onSys({ sys: 'room', matched: true, role, ranked: kind === 'ranked' });
+  onSys({ sys: 'room', matched: true, role, ranked: kind === 'ranked', mmKind: kind });
   setTimeout(() => { try { if (!peer.destroyed && !peer.disconnected) peer.disconnect(); } catch (e) {} }, 600);
 }
 

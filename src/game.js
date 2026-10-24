@@ -1577,8 +1577,14 @@ function onSys(m) {
   }
   if (m.sys === 'room' && m.matched) {
     NET.role = m.role; NET.matching = false; matchUI(false); rankUI(false); NET.isRanked = !!m.ranked; NET.rkDone = false;
-    if (typeof setRoomModeUI === 'function') setRoomModeUI('normal');   // 匹配和排位一律标准三局两胜
-    netStatus(m.ranked ? '排位对手已找到！' : '对手已找到！'); SFX.chargeFull();
+    let targetRule = 'normal';
+    if (m.mmKind === '2v2_coop') targetRule = 'pp_cc';
+    else if (m.mmKind === '2v2_vs') targetRule = 'pp_pp';
+    if (typeof setRoomModeUI === 'function') setRoomModeUI(targetRule);
+    if (m.mmKind === '2v2_coop') netStatus('2v2 双人共斗同袍已就位！');
+    else if (m.mmKind === '2v2_vs') netStatus('2v2 对手已找到！');
+    else netStatus(m.ranked ? '排位对手已找到！' : '对手已找到！');
+    SFX.chargeFull();
     return;
   }
   if (m.sys === 'room') {
@@ -1600,7 +1606,7 @@ function onSys(m) {
     onNetOpen();
   } else if (m.sys === 'room_rule') {
     setRoomModeUI(m.rule);
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (P&P v C&C)', pp_pp: '2v2 组队切磋 (P&P v P&P)' };
     toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
   } else if (m.sys === 'rematch') {
     if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -3143,7 +3149,7 @@ function strike(f, foe, spec) {
   if (f.hitDone) return false;
   const hb = hitbox(f, spec.box);
   if (hitDecoy(f, hb)) return false;
-  const targets = M.mode === 'watch2v2' ? foesOf(f) : [foe];
+  const targets = is2v2() ? foesOf(f) : [foe];
   for (const tf of targets) {
     if (tf.invul > 0 || tf.hp <= 0 || !overlap(hb, hurtbox(tf))) continue;
     f.hitDone = true;
@@ -3232,7 +3238,7 @@ function updateProjs() {
     if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
     if (p.fx || p.dmg <= 0) continue;
     const owner = fighterByIdx(p.owner), box = projBox(p);
-    const candidates = M.mode === 'watch2v2' ? foesOf(owner) : [foeOf(owner)];
+    const candidates = is2v2() ? foesOf(owner) : [foeOf(owner)];
     let foe = candidates.find(ef => ef.hp > 0 && overlap(box, hurtbox(ef))) || candidates[0];
     // 斩弹：对手的刀砍中飞行道具就把它打散
     if (!p.unbreakable && foe.state === 'attack' && foe.move && foe.t >= foe.move.su && foe.t < foe.move.su + foe.move.ac && overlap(hitbox(foe, foe.move.box), box)) {
@@ -3744,7 +3750,7 @@ function drawHitboxOverlay(fighters) {
 function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitDecoy(f, hb)) return;
-  if (M.mode === 'watch2v2') {
+  if (is2v2()) {
     const matchTarget = foesOf(f).find(ef => ef.invul <= 0 && ef.hp > 0 && overlap(hb, hurtbox(ef)));
     if (matchTarget) foe = matchTarget;
   }
@@ -4179,7 +4185,7 @@ function hitVisual(ev, quiet) {
   shakeDirY = ev.y < -60 ? -Math.min(12, ev.hs * 35 * feel) : Math.min(12, ev.hs * 35 * feel);
   if (ev.dmg >= 8) cam.zoom *= 1 + 0.015 * feel;      // 重击时镜头轻微一顿
   hitFX(ev.x, ev.y, clamp(ev.dmg / 8, 0.5, 1.8), att.look.slash, fdir);
-  if (!quiet && M.mode === 'watch2v2' && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
+  if (!quiet && is2v2() && (ev.big || ev.ult || ev.dmg >= 14) && ARENA2V2.scars) {   // 地面焦痕只属于 2v2 擂台，1v1 打人不该在脚下留圈
     ARENA2V2.scars.push({ x: ev.x, r: ev.ult ? 62 : 44, life: 4.0, max: 4.0, rgb: att.look.slash || '255,215,120' });
     if (ARENA2V2.scars.length > 18) ARENA2V2.scars.shift();
   }
@@ -4483,12 +4489,12 @@ function step() {
   for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
   updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
-  if (M.mode === 'watch2v2') {
+  if (is2v2()) {
     updateFighter(C, foeOf(C)); updateFighter(D, foeOf(D));
     updateArena2v2(STEP);
   }
   // 倒下的人一直躺着：落地后不管之前是什么状态（受身、被打、技能收招）都按回地上，不再站起来
-  if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (M.mode === 'watch2v2' && M.phase === 'fight'))) {
+  if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (is2v2() && M.phase === 'fight'))) {
     for (const f of allFighters()) {
       if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
         f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skill = null; f.airRecover = false; f.escInvul = false;
@@ -4916,13 +4922,13 @@ function updateCamera(dt) {
     cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
     return;
   }
-  const tracked = M.mode === 'watch2v2' ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
+  const tracked = is2v2() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
   const pool = tracked.length >= 2 ? tracked : [A, B];
   const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
   const minY = Math.min(...pool.map(f => f.y));
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
-  // 2v2 观战：四名 AI 同台，镜头再退一档，把 2600 宽的奇阵擂台框得舒服些
-  const padW = M.mode === 'watch2v2' ? 680 : 340;
+  // 2v2：四名侠客同台，镜头退一档，把 2600 宽的奇阵擂台框得舒服些
+  const padW = is2v2() ? 680 : 340;
   const fitW = W / ((d + padW) * base);
   const top = -minY + 170;
   const fitH = (H * 0.74) / (Math.max(250, top) * base);
@@ -4935,17 +4941,17 @@ function updateCamera(dt) {
     zoomMul *= 1 + camPunch.zoom * ease;
     focus = lerp(focus, camPunch.x, 0.65 * ease);
   }
-  const lf = [A, B][localIdx()];
-  if (lf && lf.state === 'charge' && M.mode !== 'demo' && M.mode !== 'watch2v2') {
+  const lf = allFighters()[localIdx()];
+  if (lf && lf.state === 'charge' && M.mode !== 'demo' && !is2v2()) {
     const lv = clamp(lf.t / CHARGE_FULL, 0, 1); zoomMul *= 1 + 0.24 * lv; focus = lerp(mid, lf.x, 0.4 * lv);
   }
   const ce = cineEnv();
   if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
-  const minZoom = M.mode === 'watch2v2' ? 0.4 : 0.6;
+  const minZoom = is2v2() ? 0.4 : 0.6;
   // 1v1 用原本的曲线；2v2 基准更小（近身也会留出擂台与灯火），并压低上限
-  const wantBase = M.mode === 'watch2v2' ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
+  const wantBase = is2v2() ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
   // 2v2 再压一个上限，近身缠斗时也不回到 1.0+ 的贴脸视角（1v1 不设上限，保持原曲线）
-  const maxZoom = M.mode === 'watch2v2' ? 0.70 : Infinity;
+  const maxZoom = is2v2() ? 0.70 : Infinity;
   let want = Math.min(wantBase * zoomMul, fit, maxZoom);
   const pf = paperFX();
   if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
@@ -5059,7 +5065,7 @@ function drawGround() {
     ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);
   }
   // 石灯笼
-  const lanternXs = M.mode === 'watch2v2' ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
+  const lanternXs = is2v2() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
   for (const lx of lanternXs) lantern(lx, -2);
   // 地面重击裂痕 / 焦痕
   if (ARENA2V2.scars && ARENA2V2.scars.length) {
@@ -5080,7 +5086,7 @@ function drawGround() {
     }
   }
   // 2v2 扩阔擂台专属交互奇阵：两侧【御风灵泉】与中央【天道剑坛】
-  if (M.mode === 'watch2v2') {
+  if (is2v2()) {
     ctx.save();
     for (const gy of ARENA2V2.geysers) {
       const ready = gy.cd <= 0;
@@ -5276,12 +5282,20 @@ function drawFighter(f) {
     ctx.fillText('腾空闪', sk.head[0], sk.head[1] - 28); ctx.restore();
   }
   // 2v2 队伍头顶指示三角（玩家绿、队友蓝、对手双红；阵亡后自动消失）
-  if (M.mode === 'watch2v2' && f.hp > 0 && !f.hidden && sk.head) {
-    const me = (typeof localIdx === 'function') ? localIdx() : 0;
-    const isUser = f.idx === me;
-    const isTeammate = (f.idx % 2 === me % 2) && !isUser;
-    const col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : '#ff4d4d');
-    const glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)');
+  if (is2v2() && f.hp > 0 && !f.hidden && sk.head) {
+    const isAiWatch = M.watchAi || (M.mode === 'watch2v2' && M.watchAi);
+    let col = '#46d3ea', glow = 'rgba(70,211,234,0.45)';
+    if (isAiWatch) {
+      const isTeam0 = f.idx % 2 === 0;
+      col = isTeam0 ? '#46d3ea' : '#ff4d4d';
+      glow = isTeam0 ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)';
+    } else {
+      const isUser = (f.ctrl === human[0]) || (typeof viewerIdx === 'function' && viewerIdx() >= 0 && f.idx === viewerIdx());
+      const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
+      const isTeammate = (f.idx % 2 === myTeam) && !isUser;
+      col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : '#ff4d4d');
+      glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)');
+    }
     const hx = sk.head[0];
     const bounce = Math.sin(clock * 5 + f.idx * 1.5) * 2.5;
     const tipY = sk.head[1] - 32 + bounce;
@@ -8592,7 +8606,7 @@ function render() {
   if (pf) drawXuanzhi(pf.a);
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-  const order = M.mode === 'watch2v2'
+  const order = is2v2()
     ? [A, B, C, D].sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
     : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
   drawDecoys();
@@ -13198,6 +13212,15 @@ if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
   if (modal) modal.classList.add('hidden');
 });
 
+const btn2v2GoMatch = document.getElementById('btn2v2GoMatch');
+if (btn2v2GoMatch) {
+  btn2v2GoMatch.addEventListener('click', () => {
+    const modal = document.getElementById('modal2v2');
+    if (modal) modal.classList.add('hidden');
+    mmGo(active2v2ModalMode === 'pp_cc' ? '2v2_coop' : '2v2_vs');
+  });
+}
+
 const btn2v2GoOnline = document.getElementById('btn2v2GoOnline');
 if (btn2v2GoOnline) {
   btn2v2GoOnline.addEventListener('click', () => {
@@ -15103,9 +15126,18 @@ function mmUI(kind) {
   $id('mmQuickBtn').disabled = $id('mmRankBtn').disabled = !!kind;
   $id('mmQuickCard').classList.toggle('searching', kind === 'quick');
   $id('mmRankCard').classList.toggle('searching', kind === 'ranked');
+  const c2v2 = $id('mm2v2Card');
+  if (c2v2) c2v2.classList.toggle('searching', kind === '2v2_coop' || kind === '2v2_vs');
   const tp = document.querySelector('#topNav .tn-play');
   if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? (kind === 'ranked' ? '排位中' : '匹配中') : '对战'; }
-  if (kind) { $id('mmSearchTitle').textContent = kind === 'ranked' ? '排位赛 · 正在寻找对手' : '匹配对战 · 正在寻找对手'; mmTick(); }
+  if (kind) {
+    let title = '匹配对战 · 正在寻找对手';
+    if (kind === 'ranked') title = '排位赛 · 正在寻找对手';
+    else if (kind === '2v2_coop') title = '2v2 双人共斗 · 正在全服寻找同袍队友与天道对手';
+    else if (kind === '2v2_vs') title = '2v2 组队切磋 · 正在全服匹配队友与对手';
+    $id('mmSearchTitle').textContent = title;
+    mmTick();
+  }
 }
 function mmTick() {
   if (!mmKind || typeof MM === 'undefined' || !MM.on) return;
@@ -15126,7 +15158,11 @@ function mmGo(kind) {
   if (kind === 'ranked') rkCheckPending();
   if (currentNetMode === 'server' && SERVED) { netConnect(false, null, true, null, kind === 'ranked'); kind === 'ranked' ? rankUI(true) : matchUI(true); return; }
   mmStart(kind);
-  netStatus(kind === 'ranked' ? `排位赛：${rkLabel()}` : '匹配对战：正在全服寻找对手…');
+  let statusTxt = '匹配对战：正在全服寻找对手…';
+  if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
+  else if (kind === '2v2_coop') statusTxt = '2v2 双人共斗：正在全服寻找队友与对手…';
+  else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配队友与对手…';
+  netStatus(statusTxt);
 }
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
 $id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
