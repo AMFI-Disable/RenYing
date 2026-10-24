@@ -934,6 +934,12 @@ class AIBrain {
     this.dir = 0;
     if (this.err()) { this.dir = Math.random() < 0.5 ? to : -to; if (Math.random() < 0.3) this.press('light'); return; }
     if (this.watch2v2(me, foe, d, to)) return;
+    // 假动作（绝顶/天道）：贴近半步骗对手出手或乱闪，再退开等它收招
+    if (this.feint && clock < this.feint.end) { this.dir = clock < this.feint.turn ? to : -to; return; }
+    if (L.bait >= 0.6 && me.onGround() && (!this.feint || clock > this.feint.end + 2.5)
+      && d < aiFrame(me, 'l1').max + 110 && d > aiFrame(me, 'l1').max - 10 && Math.random() < 0.05 * L.bait) {
+      this.feint = { turn: clock + 0.14, end: clock + 0.34 }; this.dir = to; return;
+    }
     // 大招：确定打得到就放
     if (me.meter >= 100 && this.ultWouldHit(me, foe, d, false) && Math.random() < L.ult * (1 - g.ultSave * 0.6)) { this.press('special'); return; }
     // 低难度：技能乱放
@@ -1057,7 +1063,12 @@ class AIBrain {
     }
     return false;
   }
-  startCharge(me, foe, d, kind) { this.chargeTo = kind; this.holdAtk = 9; this.chargeT0 = clock; this.c.atkT = clock - 0.001; }
+  startCharge(me, foe, d, kind) {
+    this.chargeTo = kind;
+    // 低难度蓄力前先顿一下（破绽/预兆），让新手看得出、躲得开
+    if (this.L.error >= 0.15) { this.dir = 0; this.plan([['chargeStart', 0.16 + this.L.error * 0.5]]); return; }
+    this.holdAtk = 9; this.chargeT0 = clock; this.c.atkT = clock - 0.001;
+  }
   hasZoning(f) {
     const q = AI_KIT[f.ch.skill], r = AI_KIT[f.ch.skill2];
     return (q && q.role === 'proj') || (r && r.role === 'proj') || !!f.ch.inkShot;

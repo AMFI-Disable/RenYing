@@ -1955,3 +1955,28 @@
     .go::before, .mm-go::before { display: none; }
     .go:hover, .mm-go:hover, .ink-card:hover { transform: none; }
   }
+
+  /* 墨韵界面氛围：毛笔圈点与宣纸质感 */
+  .bpcard.sel {
+    border-color: rgba(233,196,106,.85);
+    box-shadow: 0 0 0 1px rgba(233,196,106,.8), 0 0 18px rgba(233,196,106,.45), inset 0 0 12px rgba(233,196,106,.15);
+  }
+  .bpcard.sel::after {
+    content: ""; position: absolute; inset: -4px; pointer-events: none; border-radius: 12px;
+    border: 2px solid rgba(233,196,106,.65);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.08' numOctaves='3'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='6'/%3E%3C/filter%3E%3Crect x='4' y='4' width='92' height='92' rx='10' fill='none' stroke='black' stroke-width='6' filter='url(%23r)'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.08' numOctaves='3'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='6'/%3E%3C/filter%3E%3Crect x='4' y='4' width='92' height='92' rx='10' fill='none' stroke='black' stroke-width='6' filter='url(%23r)'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  }
+  /* 宣纸微噪背景与切屏墨晕渐显 */
+  .panel {
+    position: relative;
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(239,230,210,.05), transparent 75%),
+                      radial-gradient(circle at 100% 100%, rgba(184,57,46,.03), transparent 60%);
+  }
+  .scr.on > .panel {
+    animation: inkBleedIn .3s cubic-bezier(.16, 1, .3, 1) backwards;
+  }
+  @keyframes inkBleedIn {
+    0% { opacity: 0; transform: scale(.988) translateY(6px); filter: contrast(115%) brightness(1.05); }
+    100% { opacity: 1; transform: scale(1) translateY(0); filter: contrast(100%) brightness(1); }
+  }

@@ -1068,6 +1068,19 @@ function initAudio() {
 }
 // 第一次按下就把音频图建好：别让建图那几毫秒挤在按钮动画的第一帧里
 window.addEventListener('pointerdown', () => { initAudio(); }, { capture: true, once: true });
+// 水墨微声：主按钮与卡片鼠标悬停掠过时的毛笔轻拂声 (轻柔柔和，带防抖)
+let lastBrushHoverT = 0;
+document.addEventListener('pointerover', e => {
+  if (!AC || (typeof muted !== 'undefined' && muted)) return;
+  const t = performance.now();
+  if (t - lastBrushHoverT < 120) return;
+  const target = e.target;
+  if (!target || typeof target.closest !== 'function') return;
+  if (target.closest('.go, .mm-go, .ink-card, .bpcard')) {
+    lastBrushHoverT = t;
+    if (typeof SFX !== 'undefined' && typeof SFX.brush === 'function') SFX.brush();
+  }
+}, { passive: true });
 function sNoise(dur, f0, f1, q, vol, type = 'bandpass') {
   if (!AC || muted || ![dur, f0, f1, q, vol].every(Number.isFinite)) return;   // 数值不对就不播，免得浏览器报错
   const t = AC.currentTime, src = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
@@ -1119,6 +1132,7 @@ const SFX = {
     metal(f, 1.3, 0.22); metal(f * 1.62, 0.8, 0.1);
   },
   slice() { sNoise(0.02, 9000, 5000, 0.7, 0.35, 'highpass'); sNoise(0.08, 5000, 1500, 1.5, 0.22); metal(2500 + rand(-200, 200), 0.14, 0.035); },
+  brush() { sNoise(0.06, 3200, 1100, 0.8, 0.045, 'bandpass'); },
   dash() { sNoise(0.2, 400, 1600, 0.7, 0.2, 'lowpass'); },
   jump() { sNoise(0.1, 600, 1200, 1, 0.08); },
   land() { sTone(95, 50, 0.1, 0.15); },
