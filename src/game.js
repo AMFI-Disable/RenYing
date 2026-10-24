@@ -1612,7 +1612,7 @@ function onSys(m) {
     onNetOpen();
   } else if (m.sys === 'room_rule') {
     setRoomModeUI(m.rule);
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (P&P v C&C)', pp_pp: '2v2 组队切磋 (P&P v P&P)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
     toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
   } else if (m.sys === 'rematch') {
     if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -8085,13 +8085,13 @@ function drawHUD2v2() {
   ctx.fillStyle = '#46d3ea';
   ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
   const banTxt = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
-  let bTitle = `👁️ 2v2 天道演武${banTxt}`;
+  let bTitle = `👁️ 2v2 天道演武 (纯观战)${banTxt}`;
   if (!M.watchAi) {
-    if (M.subMode === 'pc_cc') bTitle = '⚔️ 2v2 侠客组队 (P&C v C&C)';
-    else if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (P&P v C&C)';
-    else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四人对决 (P&P v P&P)';
-    else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (P&P v C&C)';
-    else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 组队切磋 (P&P v P&P)';
+    if (M.subMode === 'pc_cc') bTitle = '⚔️ 2v2 协同实战 (玩家+AI vs 双AI)';
+    else if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (双人破阵 vs 双AI)';
+    else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四方争锋 (双人对决)';
+    else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
+    else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
   }
   ctx.fillText(bTitle, cx, H - 10);
   ctx.restore();
@@ -13302,11 +13302,11 @@ function open2v2Modal(mode) {
   const desc = document.getElementById('modal2v2Desc');
   const ldesc = document.getElementById('modal2v2LocalDesc');
   if (mode === 'pp_cc') {
-    if (t) t.textContent = '2v2 双人共斗 · 模式选择 (P&P v C&C)';
+    if (t) t.textContent = '2v2 双人破阵 · 模式选择 (双人同袍 vs 双天道)';
     if (desc) desc.textContent = '双人成行，同队迎战两名天道 AI 宗师！选择加入方式：';
     if (ldesc) ldesc.textContent = '同台电脑双人合作（1P: WASD+鼠标/J，2P: 方向键+K）。';
   } else {
-    if (t) t.textContent = '2v2 四人组队切磋 · 模式选择 (P&P v P&P)';
+    if (t) t.textContent = '2v2 四方争锋 · 模式选择 (2位玩家 vs 2位玩家)';
     if (desc) desc.textContent = '两队四名侠客，同台竞技对决！选择加入方式：';
     if (ldesc) ldesc.textContent = '同台电脑四人对决（1P/2P 苍龙队，3P/4P 赤凤队）。';
   }
@@ -15319,7 +15319,7 @@ if (lobbyModesSegEl) {
     netRoomMode = b.dataset.mode;
     for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
     send({ sys: 'room_rule', rule: netRoomMode });
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (P&P v C&C)', pp_pp: '2v2 组队切磋 (P&P v P&P)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
     toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
     SFX.slice();
   });
