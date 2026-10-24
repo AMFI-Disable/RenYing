@@ -1260,19 +1260,21 @@
   .menuscr .mtitle { left: 6vw; top: calc(12% + 34px); transform: none; }
   .menuscr .mtitle h1 { font-size: clamp(84px, 11vw, 150px); }
   .home-tag { position: absolute; left: 6vw; top: calc(12% + 34px + clamp(92px, 12vw, 162px)); margin: 0; font-family: var(--v-cond); font-size: 15px; letter-spacing: .32em; color: rgba(236,232,225,.7); }
-  .menuscr .mcard { left: 6vw; right: auto; bottom: auto; width: auto; min-width: 280px; text-align: left; background: var(--v-red); border: none; border-radius: 0; padding: 16px 40px 16px 26px; box-shadow: 0 10px 40px rgba(255,70,85,.25);
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%); }
+  .menuscr .mcard { left: 6vw; right: auto; bottom: auto; width: auto; min-width: 280px; text-align: left;
+    background: var(--brush-ink) center / 100% 100% no-repeat; border: none; border-radius: 0; padding: 16px 54px 16px 26px; box-shadow: none;
+    clip-path: none; color: var(--rice); }
   .menuscr .mcard.right { top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 46px); }
-  .menuscr .mcard.left { top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 46px + 112px); background: rgba(13,21,30,.82); border: 1px solid rgba(236,232,225,.22); box-shadow: none; min-width: 240px; padding: 12px 34px 12px 22px; }
-  .menuscr .mcard .mk { font-size: clamp(30px, 3vw, 40px); letter-spacing: .14em; color: #fff; }
-  .menuscr .mcard.left .mk { font-size: clamp(22px, 2.2vw, 28px); }
-  .menuscr .mcard .ms { color: rgba(255,255,255,.82); font-size: 13px; }
-  .menuscr .mcard.left .ms { color: rgba(236,232,225,.6); }
-  .menuscr .mcard.right::after { content: "PLAY  ›"; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-family: var(--v-cond); font-weight: 700; letter-spacing: .3em; font-size: 13px; color: rgba(255,255,255,.85); }
-  .menuscr .mcard.right { padding-right: 120px; }
-  .menuscr .mcard:hover, .menuscr .mcard:focus-visible { transform: translateX(6px); }
-  .menuscr .mcard.right:hover { background: #ff5d6a; box-shadow: 0 10px 44px rgba(255,70,85,.45); }
-  .menuscr .mcard.left:hover { border-color: rgba(236,232,225,.55); }
+  .menuscr .mcard.left { top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 46px + 112px); min-width: 260px; }
+  .menuscr .mcard .mk { font-size: clamp(30px, 3vw, 40px); letter-spacing: .14em; color: var(--rice); }
+  .menuscr .mcard.left .mk { font-size: clamp(24px, 2.4vw, 30px); }
+  .menuscr .mcard .ms { color: rgba(239,230,210,.75); font-size: 13px; margin-top: 2px; }
+  .menuscr .mcard.left .ms { color: rgba(239,230,210,.65); }
+  .menuscr .mcard::after { position: absolute; right: 18px; top: 50%; transform: translateY(-50%) rotate(-6deg); font: 15px/1 var(--title); letter-spacing: 0; color: #fff3ea; padding: 4px 6px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); pointer-events: none; }
+  .menuscr .mcard.right::after { content: "决"; background: #b8392e; }
+  .menuscr .mcard.left::after { content: "练"; background: #2f6955; }
+  .menuscr .mcard:hover, .menuscr .mcard:focus-visible { transform: translateX(6px) scale(1.02); }
+  .menuscr .mcard.right:hover { filter: drop-shadow(0 0 16px rgba(184,57,46,.6)) drop-shadow(0 8px 18px rgba(0,0,0,.6)); }
+  .menuscr .mcard.left:hover { filter: drop-shadow(0 0 14px rgba(47,105,85,.6)) drop-shadow(0 8px 18px rgba(0,0,0,.6)); }
   #menu.hl-single .mcard.left, #menu.hl-netp .mcard.right { transform: translateX(8px); }
   #menu.hl-single .mtitle h1 span, #menu.hl-netp .mtitle h1 span { transform: none !important; opacity: 1 !important; filter: none !important; }
   #menu.hl-single .mtitle .seal, #menu.hl-netp .mtitle .seal { transform: rotate(3deg) !important; opacity: 1 !important; }
@@ -1979,4 +1981,180 @@
   @keyframes inkBleedIn {
     0% { opacity: 0; transform: scale(.988) translateY(6px); filter: contrast(115%) brightness(1.05); }
     100% { opacity: 1; transform: scale(1) translateY(0); filter: contrast(100%) brightness(1); }
+  }
+
+  /* =====================================================================
+     首页水墨山水与国风化增强层
+     ===================================================================== */
+  .home-landscape {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  .home-mountains {
+    position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 38vh; opacity: .85;
+    filter: blur(1px) drop-shadow(0 -10px 30px rgba(0,0,0,.6));
+  }
+  .home-mist {
+    position: absolute; left: -20%; right: -20%; bottom: 0; height: 26vh;
+    background: radial-gradient(ellipse at 50% 100%, rgba(239,230,210,.06), rgba(8,12,20,.6) 65%, transparent 100%);
+    animation: mistDrift 18s ease-in-out infinite alternate;
+  }
+  @keyframes mistDrift {
+    0% { transform: translateX(-2%) scaleY(.95); opacity: .7; }
+    100% { transform: translateX(3%) scaleY(1.05); opacity: .95; }
+  }
+
+  /* 首页标题「刃影」：水墨晕染与朱砂印质感强化 */
+  .menuscr .mtitle h1 {
+    filter: drop-shadow(0 0 24px rgba(0,0,0,.9)) drop-shadow(0 8px 36px rgba(184,57,46,.25));
+    letter-spacing: .08em;
+  }
+  .menuscr .mtitle .seal {
+    box-shadow: 0 4px 18px rgba(184,57,46,.5), inset 0 0 0 1px rgba(255,255,255,.35);
+    border-radius: 3px; transform: rotate(-4deg);
+  }
+
+  /* 首页核心入口按钮：水墨令旗/古风木匾形态 */
+  .menuscr .mcard {
+    clip-path: none !important;
+    border-radius: 0 !important;
+    position: relative;
+    background: var(--brush-ink) center / 100% 100% no-repeat !important;
+    border: none !important;
+    padding: 16px 54px 16px 26px !important;
+    box-shadow: none !important;
+    transition: transform .18s, filter .18s;
+  }
+  .menuscr .mcard::after {
+    position: absolute; right: 16px; top: 50%; transform: translateY(-50%) rotate(-6deg);
+    font: 14px/1 var(--title); letter-spacing: 0; color: #fff3ea; background: var(--seal-red);
+    padding: 4px 5px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); pointer-events: none;
+  }
+  .menuscr .mcard.right::after { content: "决"; background: #b8392e; }
+  .menuscr .mcard.left::after { content: "练"; background: #2f6955; }
+  .menuscr .mcard:hover {
+    transform: translateY(-3px) scale(1.02);
+    filter: drop-shadow(0 0 14px rgba(184,57,46,.45)) drop-shadow(0 8px 18px rgba(0,0,0,.6));
+  }
+  .menuscr .mcard .ms {
+    color: rgba(239,230,210,.75);
+    font-size: 13px;
+    letter-spacing: .04em;
+  }
+
+  /* 首页右侧资讯栏：古风卷轴/素纸质感 */
+  .home-card {
+    clip-path: none !important;
+    border-radius: 2px;
+    background: radial-gradient(ellipse at 0% 0%, rgba(239,230,210,.07), transparent 70%), rgba(12,18,26,.88) !important;
+    border: 1px solid rgba(239,230,210,.18) !important;
+    border-left: 3px solid rgba(233,196,106,.6) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    position: relative;
+  }
+  .home-card::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    border-bottom: 1px solid rgba(239,230,210,.08);
+  }
+  .home-news ul li {
+    position: relative;
+    padding-left: 14px;
+    line-height: 1.6;
+  }
+  .home-news ul li::before {
+    content: "▪"; position: absolute; left: 0; color: var(--gold); opacity: .75; font-size: 12px;
+  }
+
+  /* 首页角色底座：太极飞白墨环与朱砂重印 */
+  .home-hero {
+    align-items: center;
+  }
+  .home-hero::before {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 220px; height: 60px;
+    transform: translate(-50%, -15%) rotate(-2deg);
+    border-radius: 50%; pointer-events: none; z-index: -1;
+    background: radial-gradient(ellipse at center, rgba(184,57,46,.15), rgba(20,25,35,0) 70%),
+                radial-gradient(circle at 50% 50%, rgba(239,230,210,.08), transparent 60%);
+    border: 1px dashed rgba(233,196,106,.25);
+    filter: drop-shadow(0 0 10px rgba(0,0,0,.8));
+  }
+  .home-hero .hh-go {
+    background: var(--brush-ink) center / 100% 100% no-repeat !important;
+    color: var(--rice) !important;
+    border: none !important;
+    clip-path: none !important;
+    padding: 7px 22px 7px 18px !important;
+    font-family: var(--title); font-size: 15px; letter-spacing: .16em;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,.6));
+    position: relative;
+  }
+  .home-hero .hh-go:hover {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 10px rgba(184,57,46,.5));
+  }
+  .home-hero .hh-swap {
+    background: rgba(239,230,210,.06) !important;
+    color: rgba(239,230,210,.85) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(239,230,210,.3) !important;
+    clip-path: none !important;
+    padding: 6px 14px !important;
+    font-family: var(--body);
+  }
+  .home-hero .hh-swap:hover {
+    background: rgba(239,230,210,.14) !important;
+    border-color: rgba(233,196,106,.7) !important;
+    color: #fff !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-mist { animation: none; }
+  }
+
+  /* 强力覆盖：彻底去除 mcard.right 的红块与旧版 PLAY 英文标，融入水墨浓淡体系 */
+  .menuscr .mcard.right,
+  .menuscr .mcard.left {
+    background: var(--brush-ink) center / 100% 100% no-repeat !important;
+    clip-path: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 16px 54px 16px 28px !important;
+  }
+  .menuscr .mcard.right::after {
+    content: "决" !important;
+    position: absolute !important;
+    right: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) rotate(-6deg) !important;
+    font: 15px/1 var(--title) !important;
+    letter-spacing: 0 !important;
+    color: #fff3ea !important;
+    background: #b8392e !important;
+    padding: 4px 6px !important;
+    border-radius: 2px !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.35) !important;
+  }
+  .menuscr .mcard.left::after {
+    content: "练" !important;
+    position: absolute !important;
+    right: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) rotate(-6deg) !important;
+    font: 15px/1 var(--title) !important;
+    letter-spacing: 0 !important;
+    color: #fff3ea !important;
+    background: #2f6955 !important;
+    padding: 4px 6px !important;
+    border-radius: 2px !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.35) !important;
+  }
+  .menuscr .mcard.right:hover {
+    background: var(--brush-ink) center / 100% 100% no-repeat !important;
+    filter: drop-shadow(0 0 16px rgba(184,57,46,.6)) drop-shadow(0 8px 18px rgba(0,0,0,.6)) !important;
+    box-shadow: none !important;
+  }
+  .menuscr .mcard.left:hover {
+    background: var(--brush-ink) center / 100% 100% no-repeat !important;
+    filter: drop-shadow(0 0 14px rgba(47,105,85,.6)) drop-shadow(0 8px 18px rgba(0,0,0,.6)) !important;
+    box-shadow: none !important;
   }

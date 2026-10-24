@@ -8,6 +8,35 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Ink Atmosphere Polish & Audio Dynamics (`src/game.js`, `src/ai.js`, `src/style.css`)**:
+  - Implemented synthesized Web Audio brush hover sound effects (`SFX.brush()`) with 120ms debouncing, triggered dynamically when hovering over primary buttons, action cards, and hero tiles.
+  - Added entrance screen ink bleed-in animation (`inkBleedIn`) and procedural rough brush-stroke borders with SVG displacement masks for selected Ban & Pick character cards (`.bpcard.sel`).
+  - Added tactical feint baiting (`feint`) for TianDao/God AI: closes in within attack range for 0.14s before retreating to bait opponent whiffs or premature escapes.
+  - Added telegraphed charge windup pauses for novice/easy AI (`chargeStart` delay when `L.error >= 0.15`), providing visual reaction windows for beginners.
+- **Traditional Ink-Wash UI Overhaul & Team AI Coordination (`src/style.css`, `src/game.js`, `src/ai.js`, `src/page.html`)**:
+  - Overhauled visual styling with authentic ink-wash calligraphy textures (`--brush-ink`, `--brush-violet`), SVG brush-edge border masks, vermilion seal stamps (`战`, `位`, `合`, `观`), and radial ink-bloom ripple animations on button clicks.
+  - Enhanced 2v2 tactical macro intelligence: bots dynamically evade celestial lightning bolt impact zones (`kind: 'bolt'`), ranged heroes space backward when melee allies engage foes to prevent clumping, bots prioritize low-HP enemies (<25% HP) for coordinated focus fire, and peel foes attacking endangered teammates (<30% HP).
+  - Enhanced 2v2 AI Ban & Pick drafting logic: scores candidates dynamically based on counter advantages (+3 beats, -2.5 countered) and melee/ranged composition synergy (+1.5).
+  - Implemented decaying wake-up habits (`M_.wake[w] *= 0.8`), allowing AI to smoothly adapt when opponents change getup options.
+- **Universal Multi-Mode Ban & Pick Screen (`src/game.js`, `src/page.html`)**:
+  - Unified the Ban & Pick (BP) selection stage across all game modes, including 1v1 PvC (`cpu`), Campaign stages (`stage`), Dummy Training (`train`), 3v3 Sect Elimination (`tag3`), Tower (`tower`), Chaos Mode (`chaos`), Mayhem Mode (`mayhem`), and 2v2 modes (`2v2`, `watch2v2`).
+  - Integrated full multi-slot drafting sequences and slot assignments for 3v3 (3 picks per side) and 2v2 (2 bans, 4 picks) directly inside the BP canvas, with dual-team status docks (`苍龙 (蓝方)` vs `赤凤 (红方)`).
+  - Added dedicated 2v2 pure watch mode button (`#mm2v2WatchBtn`, `#modal2v2WatchCard`) launching automatic 6-step AI vs AI drafts and combat.
+- **Developer Master Secret Redeem Code (`src/game.js`, `cloudflare/worker.js`)**:
+  - Added official developer secret redeem code (`VG8KS7K8PYP5R36P`) strictly restricted to the developer account (`Dev`): unlocks full character roster, all 71 skins (including 5 regular and 5 StatTrak copies of each skin), 1,000 of every weapon case, 1,000,000 ink, and S+ rank (25,000 pts / 天下无双).
+  - Cloudflare Worker profile handler now detects `isDevUser` for `Dev` accounts, bypassing anti-cheat delta rate limits and persisting high-tier developer balances and armory states directly to Cloudflare D1.
+- **1v1 Novice Tutorial Just-Guard Step (`src/game.js`, `src/page.html`)**:
+  - Expanded the interactive 1v1 tutorial (`TUT_STEPS`) to 11 steps with dedicated Just Guard / Parry training (`精准弹刀 (招架)`), requiring timely blocks (within 0.09s) against dummy melee strikes.
+  - Rewrote copy across all tutorial steps for desktop and touch devices with rich martial arts naming (`移动身法`, `起跳与滞空`, `地面五段连段`, `破势蓄力斩`, `挑飞追空打击`, `远程暗器 / 剑气`, `核心门派技能`, `严密格挡`, `精准弹刀 (招架)`, `绝境腾空闪`, `真元爆发 · 绝招`).
+  - Added quick-entry tutorial action button (`#cpuTutBtn` / 新手演练·招式教学) directly on the 1v1 lobby screen.
+- **Combat Engine & Real-Time Hitbox Debugger (`src/game.js`, `src/ai.js`)**:
+  - Integrated live debug hitbox and frame advantage overlay (`debugHitbox`, toggled with `F1`), displaying green hurtboxes, red/gold active vs startup hitboxes with live frame counter (`[XF]` / `[X/YF]`), and fighter state/stun duration frames.
+  - Added directional impact screenshake (`shakeDirX`, `shakeDirY`) scaling impulse vectors along attack trajectories.
+  - Enhanced AI kinematic trajectory interception (`Parabolic Arc Extrapolation`) predicting aerial landing coordinates and apex timing to execute anti-air moves or light counter-hits, with Lingshuang spear tip distance control (72%–98% range).
+  - Added dynamic risk-reward neutral evaluation (`riskMod`), shifting AI aggression based on health deficit or advantage.
+- **TianDao AI Architecture & Decision Specifications (`docs/tiandao-ai-spec.md`, `cloudflare/wrangler.toml`)**:
+  - Documented the core ten-pillar decision architecture for TianDao (God) AI (`docs/tiandao-ai-spec.md`), formalizing 2D spatial hitboxes (`canHit2D`), kinematic trajectory interception, and passive mastery.
+  - Configured Cloudflare D1 database binding (`renying-db` with ID `86f80607-7c39-4a0f-8b1f-b2ad4c8d6e72`) in `cloudflare/wrangler.toml`.
 - **刃影武库 CS-Style Skin Armory (`src/armory-core.js`, `src/armory.js`, `src/style.css`, `cloudflare/worker.js`)**:
   - New 武库 tab with seven weapon cases that hold all 71 skins: the 35 original skins and 36 armory-only ones, each in exactly one case. The six regular cases (初刃, 霜华, 名剑, 江湖, 惊雷, 寒月) cost about 240–280 ink and drop the five tiers at 53% / 27% / 13% / 5.2% / 1.8%. Cases open on a spinning reel without keys. Every drop has a 20% chance to be 斩数 (StatTrak), which counts the KOs its hero lands while it is equipped. The tab also has name tags, a full-size inspect view, and an inventory of up to 300 items with hero / rarity / sort filters. Clicking any skin in a case shows it on its hero in the inspect view before you own it.
   - 神兵武器箱 (premium case): about 1,000 ink, only 保密 70% / 隐秘 22% / ★ 非凡 8%, and seven skins that no other case drops: 天河 (凌霜, star-river spear under a tilted galaxy), 幻蝶 (飞影, butterfly-wing daggers), 琉璃 (铁山, crystal greatsword), 天籁 (玉箫, golden flute with a ring of notes), 青绿 (墨羽, jade brush and landscape scroll), 孔雀 (燕翎, peacock-feather blade and tail) and 锦鲤 (流云, koi fan with koi that swim through its hits). The star shop never gives these seven.
@@ -227,6 +256,17 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Martial Arts 2v2 Mode Terminology (`src/game.js`, `src/page.html`)**:
+  - Modernized technical mode labels (`P&P v C&C`, `P&P v P&P`, `C&C v C&C`) across UI cards, lobby segment controls, and in-game HUDs into authentic martial arts naming: `双人破阵 · 共斗 (双人同袍 vs 双天道)`, `四方争锋 · 对决 (2人 vs 2人 巅峰对战)`, and `纯观战 · 天道演武 (4神机AI神仙打架)`.
+  - Updated HUD title banners (`👁️ 2v2 天道演武 (纯观战)`, `⚔️ 2v2 协同实战 (玩家+AI vs 双AI)`, `⚔️ 2v2 双人共斗 (双人破阵 vs 双AI)`, etc.) with clean status styling.
+- **Infinite Armory Inventory Storage (`src/armory-core.js`, `src/armory.js`, `cloudflare/worker.js`)**:
+  - Removed the 300-item inventory cap (`C.INV_MAX = 1000000000`, `C.invFull = () => false`), displaying `饰品 X 件（无限容量）` in the Armory summary banner.
+  - Added `window.grantDevArmory` to initialize and synchronize high-capacity developer armories with signature validation bypass.
+  - Relaxed Cloudflare Worker registration profile parsing for `Dev` and `dev_master` accounts, allowing un-capped ink and complete armory item collections without stripping armory skins.
+- **Default Character Facing Behavior (`src/game.js`)**:
+  - Changed default character facing direction (`SETTINGS.aim`) from manual (`true` / 按 A / D 决定) to automatic opponent tracking (`false` / 自动面向对手), while preserving existing user settings in `localStorage`.
+- **Adaptive AI Wake-Up Memory (`src/ai.js`)**:
+  - Added exponential decay (`M_.wake[w] *= 0.8`) to the AI's opponent get-up tracking memory, enabling the bot to rapidly adapt when human players alter their wake-up habits mid-match.
 - **问剑阁 Removed, All Heroes Available (`src/game.js`, `src/page.html`, `src/style.css`)**: the gacha screen, its rates and fragment crafting are gone. Every hero is playable from the start, and skins come from armory cases (青锋行 still gives its skin). Hero compensation now pays 500 ink.
 - **Leiming Skill 2 Rework: 金刚雷铠 (`src/game.js`)**:
   - Replaced offensive ground stomp (`stomp`) with Vajra Thunder Armor (`金刚雷铠`, cd: 5.5s): assumes a defensive stance for 0.55s reducing incoming damage by 75% with infinite super armor (99 hits); automatically absorbs any incoming melee strike or projectile, retaliating with a vertical lightning punishment bolt (`⚡ 金刚雷铠 · 引雷天罚`, 50 damage, high vertical launch). Synchronized state via `thunderGuardT` across network snapshots, and updated move previews and move sequences.
@@ -399,8 +439,22 @@ All notable changes, features, and architectural capabilities of this project ar
 - **Hero Restraint Mechanism Dossier**:
   - Added detailed strategic explanations (`HERO_RESTRAINTS_EXPLAIN`) in both the Codex and the Ban/Pick character dossier, detailing the tactical reasons why each hero counters specific matchups and struggles against others.
 
+### Removed
+
+- **Legacy Architecture & Obsolete Artifacts Cleanup (`.github/workflows/ci.yml`, `.gitignore`)**:
+  - Removed deprecated Firebase SDK compatibility shims (`assets/firebase-app-compat.js`, `assets/firebase-auth-compat.js`, `assets/firebase-firestore-compat.js`) and legacy `firestore.rules`.
+  - Removed deprecated Python multiplayer server (`server.py`, `export.py`), migration utilities (`tools/export_data.py`, `tools/import_data.py`), and test databases (`renying-export.json`).
+  - Removed redundant offline training scripts and oversized multi-file hero models (`models/heroes/*.json`, `models/renying_ai_*.json`, `tools/cvc-sim.mjs`, `tools/simulate-all.mjs`, etc.) consolidated into `models/ai-brain.json`.
+  - Reorganized repository documentation into `docs/` (`docs/project-doc.typ`, `docs/project.pdf`, `docs/walkthrough.md`) and standardized `.gitignore` whitelists.
+
 ### Fixed
 
+- **2v2 Target Collision & Step Loop Routing (`src/game.js`, `src/net-p2p.js`)**:
+  - Replaced hardcoded `M.mode === 'watch2v2'` checks with `is2v2()` helper across melee strikes, projectile collisions, arena scars, fighter step loops, and KO persistence, properly registering all 4 combatants in player-controlled 2v2 modes.
+  - Added WebRTC P2P matchmaking pools for 2v2 (`2v2_coop` and `2v2_vs` in `src/net-p2p.js`) with dedicated match cards in the 2v2 modal (`全服快速匹配`, `设擂密令开黑`, `同屏本地开黑`).
+  - Synchronized network room rules (`pp_cc` and `pp_pp`) across peer connections.
+- **Feiying Kunai Skill Facing Orientation (`src/game.js`)**:
+  - Corrected Feiying's R skill (`kunai` / 飞镖) direction: automatically re-aligns `f.face` toward the targeted opponent on both startup and projectile release, preventing kunai fans from firing in the reverse direction.
 - **Home Card Labels at 12px (`src/style.css`)**: the home screen card labels (`.hc-kicker`) were 11.5px, which failed the CI UI audit's 12px minimum on the menu panel.
 - **Home Quick Battle Difficulty Selector (`src/game.js`, `src/page.html`, `src/style.css`)**:
   - Integrated an interactive difficulty selection prompt prior to launching home quick CPU matches, and displayed the active hero's name and equipped skin prominently above action buttons.
