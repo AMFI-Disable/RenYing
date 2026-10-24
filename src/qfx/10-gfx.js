@@ -117,7 +117,7 @@ function initGfx(canvas) {
     hemi.color.setHex(e.hemi[0]); hemi.groundColor.setHex(e.hemi[1]); hemi.intensity = e.hemi[2];
     sun.color.setHex(e.sun[0]); sun.intensity = e.sun[1]; SUN_DIR.set(e.sunDir[0], e.sunDir[1], e.sunDir[2]).normalize();
     fill.color.setHex(e.fill[0]); fill.intensity = e.fill[1]; R.toneMappingExposure = e.exp || 1.02; GFX.shaft = e.shaft || 0; if (e.shaftC) mFinal.uniforms.uShaftC.value.fromArray(e.shaftC);
-    FOGX.U.uFogH.value.fromArray(e.fogH || [0, 0, 0, 0]); FOGX.U.uFogSunC.value.fromArray(e.fogSun || [1, .8, .6]); OWU.uSkyZ.value.fromArray(e.sky.uZen); OWU.uSkyH.value.fromArray(e.sky.uHor);
+    FOGX.U.uFogH.value.fromArray(e.fogH || [0, 0, 0, 0]); FOGX.U.uFogSunC.value.fromArray(e.fogSun || [1, .8, .6]);
     for (const k in e.sky) { const u = SU[k], v = e.sky[k]; if (!u) continue; if (u.value && u.value.isColor) u.value.setRGB(v[0], v[1], v[2]); else u.value = v; }
     // 预滤波结果是一张渲染目标，换图时连目标一起释放
     const old = GFX.env, oldRT = GFX.envRT; GFX.envRT = makeEnv(e.envGrad, e.envGlow); GFX.env = GFX.envRT ? GFX.envRT.texture : null;

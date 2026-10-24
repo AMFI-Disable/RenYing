@@ -4713,7 +4713,7 @@ for (const b of document.querySelectorAll('#rpBar [data-sp]')) b.addEventListene
 });
 window.addEventListener('keydown', e => { if (REPLAY.on && e.code === 'Space' && M.phase !== 'end') { e.preventDefault(); e.stopImmediatePropagation(); $id('rpPause').click(); } }, true);
 
-// ======================= 青锋行打通：每破一章（第三、六、十关），在刃影领奖励 =======================
+// ======================= 青锋行打通：每破一章的首领，在刃影领奖励（青锋行发来 3、6、10，依次是第一、二、三章） =======================
 const QFX_REW = [[3, 200, ''], [6, 300, ''], [10, 500, 'qf_qfx']];
 const QFX = { busy: false };
 function qfxBest() { try { return +localStorage.getItem('renying-qfx') || 0; } catch (e) { return 0; } }

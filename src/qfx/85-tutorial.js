@@ -1,4 +1,4 @@
-/* ---------------- 试剑：第一次入山时在山门前走一遍 ---------------- */
+/* ---------------- 试剑：第一次开局时在山门前走一遍，走完再看路线图 ---------------- */
 const K = (pc, tc) => Input.touch ? tc : pc;
 const TUT = [
   { t: () => K('<kbd>W A S D</kbd> 走动，<kbd>鼠标</kbd> 转视角', '拖动左下摇杆走动，滑动屏幕转视角'), init() { Tut.p0 = Pl.pos.clone(); }, done: () => Pl.pos.distanceTo(Tut.p0) > 7 },
@@ -21,9 +21,11 @@ Tut.next = function () {
   this.i++; this.t = 0; if (this.i > 0) { Snd.pick(); FX.ring(Pl.pos, .4, 2.5, 0x62cdb9, .35); }
   if (this.i >= TUT.length) { this.end(true); return; } TUT[this.i].init();
 };
-Tut.end = function (done) {
+Tut.end = function (done, quiet) {
   this.on = false; tutDrop(); $('tut').hidden = true; Save.load().tut = 1; Save.write(); Pl.lock = null; Pl.hp = Pl.maxHp; Pl.mp = Pl.maxMp;
-  G.inter = 4; if (done) { UI.banner('试剑已毕', '黑风寨的人到了', 'gold'); Snd.level(); }
+  if (quiet) return;
+  if (done) { UI.banner('试剑已毕', '黑风寨的人到了', 'gold'); Snd.level(); }
+  setTimeout(() => { if (G.state === 'playing' && !Run.node) Run.showMap(); }, done ? 1600 : 300);
 };
 Tut.update = function (dt) {
   const s = TUT[this.i]; if (!s) return; this.t += dt; const f = s.fail && s.fail();

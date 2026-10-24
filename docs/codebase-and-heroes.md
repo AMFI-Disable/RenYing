@@ -37,7 +37,7 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 | `src/net-p2p.js` | 24 KB, 471 lines | Serverless WebRTC/PeerJS transport. |
 | `src/cloud.js` | 41 KB, ~1 005 lines | Firebase Auth + Firestore cloud save, local fallback, `window.CloudSave`. |
 | `src/social.js` | 35 KB, 603 lines | 江湖驿站: P2P hall chat, friends, DMs, groups, with store-and-forward outbox. |
-| `src/qfx/` | 3 380 lines (17 files) | Qingfengxing mini-game sources, numbered so filename order == load order. |
+| `src/qfx/` | 4 640 lines (20 files + `page.html`) | Qingfengxing mini-game sources, numbered so filename order == load order. |
 | `server.py` | 1 303 lines | Optional LAN server: HTTP + hand-rolled RFC 6455 WebSocket + SQLite. |
 | `assets/` | 6.4 MB | PeerJS, three.js, Firebase compat bundles, 9 MP3s, Qingfengxing build, skin artwork. |
 | `models/` | 864 KB | 12 per-hero neural nets + global/2v2 nets and dated training snapshots. |
@@ -258,23 +258,27 @@ WS:    /ws?create=1 | join=CODE | match=1 | rank=1 | resume=CODE&rt=...   (+ &v=
 
 ## 8. Qingfengxing (青锋行) — The Second Game
 
-`src/qfx/` is a standalone three.js action game, concatenated in filename order into one IIFE:
+`src/qfx/` is a standalone three.js action roguelike, concatenated in filename order into one IIFE.
+A run is three chapters; each chapter is a seven-row route map (遭遇 / 精锐 / 奇遇 / 剑庐 / 歇脚 / 藏宝 → 首领).
+Dying ends the run; 剑魄 and the 藏经阁 upgrades carry over, and clearing a run unlocks the next 劫 (ascension, up to 五劫).
 
 | File | Role |
 | :--- | :--- |
 | `00-core.js` | Constants, input, fully synthesized audio. |
 | `10-gfx.js` | Renderer, post-processing, materials, geometry cache. |
+| `12-terrain.js` | Height-map shader patch (off on the three arena maps). |
 | `20-world.js` | Map framework + Chapter 1 山门 (training yard). |
 | `21-bamboo.js` | Chapter 2 竹林 (bamboo night). |
 | `22-tomb.js` | Chapter 3 剑冢 (sword tomb). |
-| `30-rig.js` | Procedural rigs: skinned humanoid, face painting, weapons, wolf. |
+| `30-rig.js` / `31-hero.js` | Procedural rigs (skinned humanoid, weapons, wolf) and the detailed Qingfeng model. |
 | `40-fx.js` | Particles, slash arcs, telegraphs, damage numbers. |
 | `50-player.js` | Global state, camera, player controller. |
 | `55-skills.js` | Skill book: Q/E/R slots + V ultimate, upgrades. |
-| `60-enemies.js` / `62-foes.js` | Enemy types, chapter 2–3 foes, boss phases. |
-| `65-levels.js` | Three chapters, ten stages. |
+| `60-enemies.js` / `62-foes.js` | Enemy types, chapter 2–3 foes, boss phases, elite and 劫 scaling. |
+| `65-levels.js` | Chapter definitions and the wave spawner for one fight. |
+| `68-run.js` | The run: route-map generation, node types, events (奇遇), rare rewards, 劫 rules, run save. |
 | `70-game.js` | Orbs, projectiles, growth, boons, 剑庐. |
-| `75-meta.js` | Saves (`qfx2`), 剑魄 currency, permanent upgrades, settings. |
+| `75-meta.js` | Saves (`qfx2`, run in `rl`), 剑魄 currency, permanent upgrades, settings. |
 | `80-ui.js`, `85-tutorial.js`, `90-main.js` | UI, six-step tutorial, flow and loop. |
 
 The main game embeds it in an iframe; clearing chapters reports back to `server.py` (`/api/qfx`) for ink and an

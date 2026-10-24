@@ -201,13 +201,41 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .stats b{display:block;font-family:var(--f-brush);font-weight:400;font-size:36px;color:var(--paper);line-height:1.1}
 .perklist{display:flex;flex-wrap:wrap;gap:6px;max-width:560px;justify-content:center;font-size:12px}
 .perklist span{border:1px solid rgba(185,162,106,.5);padding:2px 9px;color:var(--paper2)}
-.actp{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);font-family:var(--f-brush);font-size:24px;color:#ffe9c4;white-space:nowrap;text-shadow:0 2px 8px #000;pointer-events:auto;cursor:pointer}
-.actp kbd{font:600 13px var(--f-text);border:1px solid var(--gold);padding:1px 7px;margin-right:8px;background:rgba(20,16,10,.75);vertical-align:3px}
-.region{position:absolute;left:50%;top:21%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
-.region.show{opacity:1}.region b{display:block;font-family:var(--f-brush);font-weight:400;font-size:clamp(44px,6vw,72px);letter-spacing:.35em;text-indent:.35em;color:#f3ead6;text-shadow:0 3px 18px rgba(0,0,0,.8)}
-.region i{font-style:normal;font-size:14px;letter-spacing:.6em;text-indent:.6em;color:var(--paper2)}
-#mapc{width:min(86vmin,900px);height:min(86vmin,900px);border:1px solid rgba(185,162,106,.5);box-shadow:0 0 40px rgba(0,0,0,.6);cursor:crosshair}
-.tplist{display:grid;grid-template-columns:repeat(2,minmax(0,240px));gap:10px}
+/* ---------- 路线图 ---------- */
+#rlmap{gap:12px;justify-content:flex-start;padding-top:clamp(12px,3vh,28px)}
+#rlmap h2{font-size:clamp(34px,5.5vw,56px)}
+.rm-stat{display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:center;font-size:13px;color:var(--paper2)}.rm-stat b{color:var(--paper);font-weight:600}
+.rm-body{display:flex;gap:clamp(12px,3vw,36px);align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%}
+#rmSvg{width:min(400px,92vw);height:auto;max-height:min(62vh,560px);aspect-ratio:400/600;overflow:visible;
+  background:radial-gradient(ellipse at 50% 40%,rgba(233,223,200,.07),transparent 70%);border:1px solid rgba(185,162,106,.32);box-shadow:0 0 40px rgba(0,0,0,.45)}
+#rmSvg line{stroke:rgba(233,223,200,.22);stroke-width:2;stroke-dasharray:3 6}
+#rmSvg line.walk{stroke:var(--gold);stroke-dasharray:none;stroke-width:3}
+#rmSvg line.live{stroke:rgba(233,223,200,.62);stroke-dasharray:6 5;animation:rmDash 1.1s linear infinite}
+@keyframes rmDash{to{stroke-dashoffset:-22}}
+#rmSvg .nd circle{fill:rgba(14,17,20,.94);stroke:var(--c);stroke-width:2.2}
+#rmSvg .nd .halo{fill:none;stroke:none}
+#rmSvg .nd text{fill:var(--c);text-anchor:middle;font-family:var(--f-brush);pointer-events:none}
+#rmSvg .nd{opacity:.42}
+#rmSvg .nd.done{opacity:.78}#rmSvg .nd.done circle{fill:var(--c);stroke:rgba(14,17,20,.9)}#rmSvg .nd.done text{fill:#0c0f12}
+#rmSvg .nd.ok{opacity:1;cursor:pointer;outline:none}
+#rmSvg .nd.ok .halo{stroke:var(--c);stroke-width:1.5;opacity:.7;animation:rmPulse 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+#rmSvg .nd.ok:hover circle,#rmSvg .nd.ok:focus-visible circle{fill:var(--c)}#rmSvg .nd.ok:hover text,#rmSvg .nd.ok:focus-visible text{fill:#0c0f12}
+#rmSvg .nd.cur .halo{stroke:var(--paper);stroke-width:2;opacity:1}
+@keyframes rmPulse{50%{transform:scale(1.16);opacity:.25}}
+.rm-side{display:flex;flex-direction:column;gap:12px;max-width:300px;align-items:flex-start}
+.rm-legend{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;font-size:12.5px;color:var(--paper2);align-items:center}
+.rm-legend i{font-style:normal;font-family:var(--f-brush);font-size:17px;width:26px;height:26px;display:grid;place-items:center;border:1.5px solid currentColor;border-radius:50%}
+.rm-tip{font-size:13.5px;color:var(--paper);line-height:1.7;min-height:2.6em}
+#rmPerks{justify-content:flex-start;max-width:300px}
+@media (max-width:720px){.rm-side{align-items:center;max-width:92vw}.rm-legend{grid-template-columns:repeat(4,auto 1fr)}#rmPerks{justify-content:center}}
+@media (prefers-reduced-motion:reduce){#rmSvg line.live,#rmSvg .nd.ok .halo{animation:none}}
+/* ---------- 奇遇、歇脚 ---------- */
+#event p.ev-d{max-width:520px;margin:0;text-align:center;line-height:1.95;color:var(--paper);font-size:15.5px;text-wrap:pretty}
+#event .shopgrid{grid-template-columns:minmax(0,440px)}
+#event .item .ip{border:1px solid rgba(185,162,106,.5);padding:0 7px;font-size:11px;color:var(--paper2)}
+#event .item:disabled{opacity:.45;cursor:default}
+#event .ev-r{max-width:520px;margin:0;text-align:center;color:var(--gold);font-size:15px;line-height:1.8}
+.asc-row{display:flex;flex-direction:column;gap:6px}.asc-row .seg button{font-family:var(--f-text)}.asc-d{font-size:12px;color:var(--dim);letter-spacing:.06em}
 .note{font-size:12.5px;color:var(--dim);letter-spacing:.1em;text-align:center}
 
 /* ---------- 章节过场 ---------- */
@@ -296,8 +324,6 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="lockm" id="lockm" hidden></div>
     <div class="lockinfo" id="lockInfo" hidden><span class="lb"><i id="lockHp"></i></span><span class="lb"><i id="lockPo"></i></span></div>
     <div class="execm" id="execm" hidden><kbd>F</kbd>处决</div>
-    <div class="actp" id="actp" hidden></div>
-    <div class="region" id="region"><b id="regT"></b><i id="regS"></i></div>
     <div class="tut" id="tut" hidden><div class="tn" id="tutN"></div><div class="tt" id="tutT"></div><button class="btn sm" id="btnTutSkip" type="button">跳过试剑</button></div>
   </div>
 
@@ -314,10 +340,11 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   <div id="title" class="screen">
     <div class="tname"><span>青</span><span>锋</span><span>行</span><i class="seal"><b>暮</b><b>山</b><b>试</b><b>剑</b></i></div>
     <div class="tbody">
-      <p>青云山一夜劫火，师门星散。你自山门旧址醒来，一人一剑，要走遍枫林、竹海、寒潭、古寺，直上剑冢。</p>
-      <p>满山敌营任你挑，土地庙里歇脚存档、锻剑传送；黑风寨主、竹海无相、剑魔独孤夜各据一方，先打谁随你。</p>
-      <div class="btns"><button class="btn pri" id="btnCont" type="button" hidden>续行</button><button class="btn pri" id="btnStart" type="button" disabled>入山</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
-      <div class="btns"><button class="btn sm" id="btnTrial" type="button">十关试炼</button><button class="btn sm" id="btnTrialCont" type="button" hidden>续 · 试炼</button><button class="btn sm" id="btnMeta" type="button">藏经阁</button><button class="btn sm" id="btnSet" type="button">设置</button></div>
+      <p>青云山一夜劫火，师门星散。你自山门醒来，一人一剑，要从山门杀过竹林，直上剑冢。</p>
+      <p>每一章一张路线图：遭遇、精锐、奇遇、剑庐、歇脚、藏宝，岔路自己挑，尽头是本章首领。身死这一局就结束，剑魄带回藏经阁，下一局更强。</p>
+      <div class="btns"><button class="btn pri" id="btnCont" type="button" hidden>续行</button><button class="btn pri" id="btnStart" type="button" disabled>开一局</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
+      <div class="asc-row"><div class="seg" id="ascSeg" hidden></div><div class="asc-d" id="ascD" hidden></div></div>
+      <div class="btns"><button class="btn sm" id="btnMeta" type="button">藏经阁</button><button class="btn sm" id="btnSet" type="button">设置</button></div>
       <div class="loading" id="loading">山色渐起……</div>
       <div class="best" id="best"></div>
       <div class="keys">
@@ -327,14 +354,14 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
         <kbd>空格 / L</kbd><span>闪避 · 踏雪</span><kbd>Shift</kbd><span>疾行</span>
         <kbd>Q E R</kbd><span>三槽剑技</span><kbd>V</kbd><span>绝学</span>
         <kbd>C</kbd><span>回春丹</span><kbd>Tab</kbd><span>锁定 · ← → 换人</span>
-        <kbd>G</kbd><span>拜庙 · 开箱</span><kbd>M</kbd><span>山河图</span>
+        <kbd>1 2 3</kbd><span>路线图上选路</span><kbd>Enter</kbd><span>只有一条路时直接走</span>
         <kbd>P</kbd><span>暂停</span><kbd>N</kbd><span>静音</span>
       </div>
     </div>
   </div>
 
   <div id="levelup" class="screen veil" hidden>
-    <h2>破境<small id="luSub">机缘一道，择之</small></h2>
+    <h2 id="luT">破境<small id="luSub">机缘一道，择之</small></h2>
     <div class="cards" id="cards"></div>
     <div class="btns"><button class="btn sm" id="btnReroll" type="button" hidden>重掷</button></div>
     <div class="note">按 1 / 2 / 3 或点击卷轴</div>
@@ -353,7 +380,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="perklist" id="pausePerks"></div>
     <div class="btns">
       <button class="btn pri" id="btnResume" type="button">继续</button>
-      <button class="btn" id="btnRestart" type="button">重来</button>
+      <button class="btn" id="btnRestart" type="button">放弃此局</button>
     </div>
     <div class="btns">
       <button class="btn sm" id="btnMute" type="button">声音：开</button>
@@ -367,7 +394,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="stats" id="overStats"></div>
     <div class="soulgain" id="overSoul"></div>
     <div class="perklist" id="overPerks"></div>
-    <div class="btns"><button class="btn pri" id="btnRetry" type="button">从本章重来</button><button class="btn" id="btnEndless" type="button" hidden>无尽试炼</button><button class="btn" id="btnAgain" type="button">重新入山</button><button class="btn sm" id="btnHome" type="button">回山门</button></div>
+    <div class="btns"><button class="btn pri" id="btnAgain" type="button">再来一局</button><button class="btn sm" id="btnHome" type="button">回山门</button></div>
   </div>
 
   <div id="meta" class="screen veil" hidden>
@@ -376,7 +403,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="shopgrid" id="metaGrid"></div>
     <div class="recs" id="recs"></div>
     <div class="btns"><button class="btn" id="btnMetaClose" type="button">下山</button></div>
-    <div class="note">每过一关、每斩一敌都得剑魄；身死也不散</div>
+    <div class="note">每打完一处、每斩一敌都得剑魄；身死也不散</div>
   </div>
 
   <div id="settings" class="screen veil" hidden>
@@ -396,20 +423,35 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="stats" id="ilStats"></div>
     <p class="il-next" id="ilNext"></p>
     <div class="btns"><button class="btn" id="btnIlShop" type="button">入剑庐</button><button class="btn pri" id="btnIlGo" type="button">启程</button></div>
-    <div class="note">启程即入下一章，章首自动存档</div>
+    <div class="note">启程即入下一章的路线图</div>
   </div>
 
-  <div id="shrine" class="screen veil" hidden>
-    <h2 id="shT">土地庙<small id="shS">香火未断，可歇脚</small></h2>
-    <div class="btns"><button class="btn pri" id="btnRest" type="button">歇息 · 存档</button><button class="btn" id="btnShShop" type="button">剑庐</button><button class="btn" id="btnShLeave" type="button">起身</button></div>
-    <div class="note">歇息会回满气血、补足回春丹，各处敌营也会重新聚拢</div>
-    <h2 style="font-size:28px">传送<small>只能去拜过的土地庙</small></h2>
-    <div class="tplist" id="tpList"></div>
+  <div id="rlmap" class="screen veil" hidden>
+    <h2 id="rmT">山门<small id="rmS"></small></h2>
+    <div class="rm-stat" id="rmStat"></div>
+    <div class="rm-body">
+      <svg id="rmSvg" viewBox="0 0 400 600" role="group" aria-label="路线图"></svg>
+      <div class="rm-side">
+        <div class="rm-tip" id="rmTip"></div>
+        <div class="rm-legend">
+          <i style="color:#c9b48a">战</i><span>遭遇</span><i style="color:#ef6a55">精</i><span>精锐 · 必得珍品机缘</span>
+          <i style="color:#9fc7e8">奇</i><span>奇遇</span><i style="color:#dcae55">市</i><span>剑庐</span>
+          <i style="color:#62cdb9">憩</i><span>歇脚</span><i style="color:#e8c46a">宝</i><span>藏宝</span>
+          <i style="color:#ff3a22">首</i><span>首领</span>
+        </div>
+        <div class="perklist" id="rmPerks"></div>
+        <div class="btns"><button class="btn sm" id="btnRmLeave" type="button">暂离 · 已存档</button></div>
+      </div>
+    </div>
+    <div class="note">点亮的地方才走得到 · 按 1 / 2 / 3 从左到右选路</div>
   </div>
 
-  <div id="map" class="screen veil" hidden>
-    <canvas id="mapc" width="900" height="900"></canvas>
-    <div class="note">山河图 · 金点为土地庙，红点为敌营，赤圈为强敌，绿点为未开宝箱 · 按 M 或 Esc 合上</div>
+  <div id="event" class="screen veil" hidden>
+    <h2 id="evT">奇遇<small id="evS"></small></h2>
+    <p class="ev-d" id="evD"></p>
+    <div class="shopgrid" id="evOpts"></div>
+    <p class="ev-r" id="evR" hidden></p>
+    <div class="btns"><button class="btn pri" id="evGo" type="button" hidden>上路</button></div>
   </div>
 
   <div id="travel" class="travel" hidden>

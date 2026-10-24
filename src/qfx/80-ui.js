@@ -21,12 +21,10 @@ const UI = {
     { const v = Math.round(sat(Pl.potCd / 1.5) * 100) / 100; if (this.c.potcd !== v) { this.c.potcd = v; $('sk4').style.setProperty('--cd', v); } }
     const alive = G.enemies.filter(e => e.state !== 'dead').length + G.queue.length;
     let t1, t2; const ch = CHAPTERS[G.chapter] || CHAPTERS[0];
-    if (G.mode === 'world') { const r = WS.region; t1 = r ? r.n : '青云山'; t2 = WS.fight ? '强敌当前 · 无路可退' : (r ? r.sub + ' · 凶险 ' + cnNum(r.lv) : '') + ' · M 山河图'; }
-    else if (Tut.on) { t1 = '试剑'; t2 = '山门前 · 先活动活动筋骨'; }
-    else if (G.intro) { t1 = ch.n; t2 = `整装 ${Math.ceil(G.inter)} · Enter 开战`; }
+    if (Tut.on) { t1 = '试剑'; t2 = '山门前 · 先活动活动筋骨'; }
     else if (G.clearT > 0) { t1 = ch.n; t2 = '已破'; }
-    else if (G.inter > 0) { t1 = `第${cnNum(G.stage + 1)}关`; t2 = `休整 ${Math.ceil(G.inter)} · B 入剑庐 · Enter 开战`; }
-    else { t1 = `第${cnNum(G.stage)}关`; t2 = `${G.stageName} · 残敌 ${alive}`; }
+    else if (!Run.node) { t1 = ch.n; t2 = ch.sub; }
+    else { t1 = Run.node.t === 'boss' ? ch.n + ' · 首领' : `${ch.n} · 第${cnNum(Run.step)}程`; t2 = G.rlDoneT > 0 || G.cleared ? '敌已尽 · 收拾行囊' : `${G.stageName} · 残敌 ${alive}`; }
     this.set('waveT', t1); this.set('waveS', t2);
     const b = G.boss && G.boss.state !== 'dead' ? G.boss : null; this.hide('bossBox', !b); if (b && this.c.bossTk !== b) { this.c.bossTk = b; const bb = $('bossFill').parentNode; bb.querySelectorAll('.tk').forEach(x => x.remove()); for (const ph of PHASES[b.type] || []) { const t = document.createElement('i'); t.className = 'tk'; t.style.left = (ph.at * 100) + '%'; bb.appendChild(t); } }
     if (b) { this.set('bossName', b.name); this.bar('bossFill', b.hp / b.maxHp); this.bar('bossLag', b.hp / b.maxHp); this.bar('bossPoise', b.stun > 0 ? 1 : b.poiseD / b.cfg.poise); }
@@ -38,12 +36,12 @@ const UI = {
     this.mini();
   },
   mini() {
-    const cv = $('mini'), g = this.mg || (this.mg = cv.getContext('2d')), S = cv.width, c = S / 2, k = c / (World.open ? 62 : 34), yaw = Cam.yaw, rx = -Math.cos(yaw), rz = Math.sin(yaw), fx = Math.sin(yaw), fz = Math.cos(yaw);
+    const cv = $('mini'), g = this.mg || (this.mg = cv.getContext('2d')), S = cv.width, c = S / 2, k = c / 34, yaw = Cam.yaw, rx = -Math.cos(yaw), rz = Math.sin(yaw), fx = Math.sin(yaw), fz = Math.cos(yaw);
     const P = (x, z) => { const dx = x - Pl.pos.x, dz = z - Pl.pos.z; return [c + (dx * rx + dz * rz) * k, c - (dx * fx + dz * fz) * k]; };
     g.clearRect(0, 0, S, S); g.save(); g.beginPath(); g.arc(c, c, c, 0, TAU); g.clip();
-    let p; if (World.open) owMini(g, c, k, rx, rz, fx, fz, P); else {
+    let p;
     p = P(0, 0); g.strokeStyle = 'rgba(233,223,200,.35)'; g.lineWidth = 2; g.beginPath(); g.arc(p[0], p[1], World.R * k, 0, TAU); g.stroke(); g.fillStyle = 'rgba(233,223,200,.1)'; g.beginPath(); g.arc(p[0], p[1], 20 * k, 0, TAU); g.fill();
-    g.fillStyle = 'rgba(233,223,200,.22)'; for (const c of World.colliders) { if (c.r < .8 || Math.hypot(c.x, c.z) > World.R) continue; p = P(c.x, c.z); g.beginPath(); g.arc(p[0], p[1], Math.max(1.5, c.r * k), 0, TAU); g.fill(); } }
+    g.fillStyle = 'rgba(233,223,200,.22)'; for (const c of World.colliders) { if (c.r < .8 || Math.hypot(c.x, c.z) > World.R) continue; p = P(c.x, c.z); g.beginPath(); g.arc(p[0], p[1], Math.max(1.5, c.r * k), 0, TAU); g.fill(); }
     const mp = MAPS[World.id]; if (mp && mp.mini) mp.mini(g, P, k);
     for (const o of Orbs.list) { if (o.type === 0) continue; p = P(o.x, o.z); g.fillStyle = o.type === 1 ? '#dcae55' : '#ff6b57'; g.fillRect(p[0] - 2, p[1] - 2, 4, 4); }
     for (const e of G.enemies) { if (e.state === 'dead') continue; p = P(e.pos.x, e.pos.z); g.fillStyle = e.boss ? '#ff3a22' : e.elite ? '#ffc040' : '#e8674f'; g.beginPath(); g.arc(p[0], p[1], e.boss ? 9 : e.elite ? 6 : 4.5, 0, TAU); g.fill(); }
@@ -62,16 +60,21 @@ const UI = {
     return ['card skill', `<span class="rs">${d.g}</span><span class="ct">剑谱 · ${'QER'[slot]}</span><span class="cn">${d.n}</span><span class="cdsc">${d.d(l + 1)}</span><span class="cr">内力 ${d.mp} · 调息 ${d.cd} 息</span><span class="cs"><span>${l ? `${cnNum(l)}重 → ${cnNum(l + 1)}重` : '新学，入' + 'QER'[slot] + '槽'}</span><span class="ck">${i + 1}</span></span>`];
   },
   showLevelUp() {
-    const cards = offerCards(), host = $('cards'); host.innerHTML = ''; $('luSub').textContent = `已入${cnNum(Pl.lv - Pl.pending + 1)}境 · 择其一`;
-    cards.forEach((c, i) => { const b = document.createElement('button'), [cls, html] = this.cardHtml(c, i); b.type = 'button'; b.className = cls; b.id = 'card' + i; b.innerHTML = html; b.onclick = () => Game.pickPerk(c); host.appendChild(b); });
-    this.perks = cards; $('levelup').hidden = false; const rr = $('btnReroll'); rr.hidden = !(Pl.rerolls > 0); rr.textContent = `重掷 · 余 ${Pl.rerolls}（R）`;
+    const cards = offerCards(); this.showCards(cards, '破境', `已入${cnNum(Pl.lv - Pl.pending + 1)}境 · 择其一`, c => Game.pickPerk(c));
+    this.perks = cards; const rr = $('btnReroll'); rr.hidden = !(Pl.rerolls > 0); rr.textContent = `重掷 · 余 ${Pl.rerolls}（R）`;
+  },
+  /* 三张卷轴择一：破境、精锐、藏宝、奇遇共用 */
+  showCards(cards, t, sub, onPick) {
+    const host = $('cards'); host.innerHTML = ''; $('luT').firstChild.textContent = t; $('luSub').textContent = sub; $('btnReroll').hidden = true;
+    cards.forEach((c, i) => { const b = document.createElement('button'), [cls, html] = this.cardHtml(c, i); b.type = 'button'; b.className = cls; b.id = 'card' + i; b.innerHTML = html; b.onclick = () => onPick(c); host.appendChild(b); });
+    $('levelup').hidden = false;
   },
   showMeta() {
     const d = Save.load(), host = $('metaGrid'); host.innerHTML = ''; $('metaSoul').textContent = d.soul;
     META.forEach((m, i) => { const l = up(m.id), mx = l >= m.max, cost = mx ? 0 : m.cost(l), b = document.createElement('button'); b.type = 'button'; b.className = 'item'; b.id = 'meta' + i; b.disabled = mx || d.soul < cost;
       b.innerHTML = `<span class="in">${m.n}</span><span class="ip">${mx ? '已臻圆满' : cost + ' 剑魄'}</span><span class="id">${m.d(Math.max(1, mx ? l : l + 1))}</span><span class="mlv">${cnNum(l)} / ${cnNum(m.max)} 重</span>`;
       b.onclick = () => { if (buyMeta(m)) { Snd.init(); Snd.forge(); UI.showMeta(); } }; host.appendChild(b); });
-    const r = d.rec; $('recs').innerHTML = [[r.best ? '第' + cnNum(r.best) + '关' : '—', '最远'], [r.clears, '通关'], [r.bestTime ? fmtTime(r.bestTime) : '—', '最快'], [r.maxCombo, '最高连击'], [r.kills, '总斩敌'], [r.runs, '入山'], [r.souls || 0, '累计剑魄']].map(([v, k]) => `<span><b>${v}</b>${k}</span>`).join('');
+    const r = d.rec; $('recs').innerHTML = [[r.bestCh ? (r.bestCh >= CHAPTERS.length ? '通关' : '破' + CHAPTERS[r.bestCh - 1].n) : '—', '最远'], [r.clears, '通关'], [d.asc ? ASC[Math.min(d.asc, ASC.length - 1)].n : '—', '已解劫数'], [r.bestTime ? fmtTime(r.bestTime) : '—', '最快'], [r.maxCombo, '最高连击'], [r.kills, '总斩敌'], [r.runs, '开局'], [r.souls || 0, '累计剑魄']].map(([v, k]) => `<span><b>${v}</b>${k}</span>`).join('');
     $('meta').hidden = false; $('title').hidden = true;
   },
   showSettings(from) {
