@@ -30,10 +30,10 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Validate Python Server Syntax
+      - name: Validate Build Script Syntax
         run: |
-          python3 -m py_compile server.py tools/build.py
-          echo "server.py and tools/build.py syntax valid."
+          python3 -m py_compile tools/build.py
+          echo "tools/build.py syntax valid."
 
       - name: Validate YAML Files
         run: |
@@ -62,10 +62,6 @@ jobs:
       - name: Verify Generated Pages Are Up To Date
         run: python3 tools/build.py --check
 
-      # Runs the Cloudflare Worker locally (D1 emulated with node:sqlite) and plays the
-      # armory economy both honestly and like a cheater: forged ink, forged skins, replayed
-      # and concurrent requests, junk arguments, forged redeem codes, farmed match rewards.
-      # The second run tests the bundled file that actually gets deployed.
       - name: Armory Economy & Anti-Cheat Server Tests
         run: |
           node tools/econ-test.mjs
@@ -74,47 +70,24 @@ jobs:
       - name: Run Combat & AI Regression Suite
         run: node tools/combat-test.mjs --sim
 
-      # Headless UI + multiplayer gates. Chrome is preinstalled on ubuntu-latest; set
-      # RENYING_CHROME to override the path, RENYING_URL to point at another host.
-      # The WebRTC P2P check is deliberately NOT run here: it depends on the public
-      # PeerJS signalling server and outbound UDP, which would make CI flaky.
-      # Run it locally with:  node tools/net-test.mjs p2p,errtest
-      - name: Start Local Game Server
+      - name: Start Static Web Server for Browser Audits
         run: |
-          python3 server.py 8791 > /tmp/renying-server.log 2>&1 &
+          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
           for _ in $(seq 1 20); do
-            curl -sf http://127.0.0.1:8791/health >/dev/null && break
+            curl -sf http://127.0.0.1:8791/ >/dev/null && break
             sleep 0.5
           done
-          curl -sf http://127.0.0.1:8791/health >/dev/null || { echo "server failed to start"; cat /tmp/renying-server.log; exit 1; }
-          echo "Local server is up on :8791"
+          curl -sf http://127.0.0.1:8791/ >/dev/null || { echo "http server failed to start"; cat /tmp/renying-http.log; exit 1; }
+          echo "Static web server is up on :8791"
 
-      # Fails on clipped/off-screen text or sub-12px text. Scrolling is reported but not
-      # fatal (a taller panel scrolls rather than clipping) - add RENYING_STRICT: "1"
-      # to also require every panel to fit the viewport.
       - name: UI Panel Layout Audit (all panels, 1440x900)
         run: node tools/ui-audit.mjs ci-ui 1440 900
 
-      # Instrumented canvas-text audit: drives a real match through many states and
-      # fails if any HUD label is drawn below 12px.
       - name: Canvas HUD Text Audit
         run: node tools/hud-audit.mjs ci-hud 1440 900
 
-      # Emulates phones/tablets: verifies the touch path activates, the virtual stick
-      # and thumb pad are on-screen with usable hit targets, and that synthetic touches
-      # actually move and attack.
       - name: Mobile / Touch Layout Audit
         run: node tools/touch-audit.mjs ci-touch
-
-      - name: Multiplayer Regression (LAN / dedicated server)
-        run: node tools/net-test.mjs server ci-net
-
-      # Raw-WebSocket checks on the server's client-trust properties: the chat rate
-      # limit cannot be bypassed by JSON key order, a peer cannot forge a server
-      # ("sys") message to its opponent, and claiming a win then leaving is recorded
-      # as a forfeit loss rather than a win.
-      - name: Server Protocol Hardening Tests
-        run: node tools/protocol-test.mjs
 
       - name: Verify Commit Message Conventions
         env:

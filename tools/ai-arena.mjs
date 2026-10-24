@@ -3,7 +3,7 @@
 //   node tools/ai-arena.mjs --a god --b impossible --n 4          每对角色各打 n 场（双方左右各一半）
 //   node tools/ai-arena.mjs --ladder --n 4                         各难度两两对打
 // 也被 tools/ai-train.mjs 当作库使用（runPool）。
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
@@ -42,14 +42,10 @@ export async function makeEnv(tuneFile) {
   new vm.Script(readFileSync(ROOT + 'src/net-p2p.js', 'utf8')).runInContext(w);
   new vm.Script(readFileSync(ROOT + 'src/ai.js', 'utf8'), { filename: 'ai.js' }).runInContext(w);
   new vm.Script(readFileSync(ROOT + 'src/game.js', 'utf8'), { filename: 'game.js' }).runInContext(w);
-  // 改版前的电脑 AI（对照用，'old:god' 这样写），它的神经网络模型在 models/heroes
-  w.RENYING_HERO_MODELS = {};
-  if (existsSync(ROOT + 'models/heroes')) for (const f of readdirSync(ROOT + 'models/heroes')) if (f.endsWith('.json')) w.RENYING_HERO_MODELS[f.slice(0, -5)] = JSON.parse(readFileSync(ROOT + 'models/heroes/' + f, 'utf8'));
-  new vm.Script(readFileSync(ROOT + 'tools/ai-old-baseline.js', 'utf8'), { filename: 'ai-old-baseline.js' }).runInContext(w);
   // 另一版 AI 的快照（AI_SNAP=文件路径，'snap:god' 这样写），用来对比改动前后
   if (process.env.AI_SNAP) new vm.Script('window.SnapBrain = (function () {\n' + readFileSync(process.env.AI_SNAP, 'utf8') + '\nreturn AIBrain; })();', { filename: 'snap.js' }).runInContext(w);
   const env = new vm.Script(`({ CHARS, CHAR_MOVES, SKILLS, ULTS, M, AICtrl, LEVELS, Ctrl, projs, decoys, STEP, get clock() { return clock; }, get A() { return A; }, get B() { return B; },
-    startMatch: (...a) => startMatch(...a), get OldAICtrl() { return window.OldAICtrl; }, get SnapBrain() { return window.SnapBrain; }, step: () => step(), setTune: t => { window.RENYING_AI_TUNE = t; if (typeof aiTuneReload === 'function') aiTuneReload(); } })`).runInContext(w);
+    startMatch: (...a) => startMatch(...a), get SnapBrain() { return window.SnapBrain; }, step: () => step(), setTune: t => { window.RENYING_AI_TUNE = t; if (typeof aiTuneReload === 'function') aiTuneReload(); } })`).runInContext(w);
   for (const k of ['addP', 'ring', 'dust', 'spark', 'say', 'smoke']) if (typeof w[k] === 'function') w[k] = noop;
   env.run = code => new vm.Script(code).runInContext(w);
   env.window = w;
@@ -65,7 +61,6 @@ export async function makeEnv(tuneFile) {
 }
 
 function makeCtrl(env, lv) {
-  if (typeof lv === 'string' && lv.startsWith('old:')) return new env.OldAICtrl(lv.slice(4));
   if (typeof lv === 'string' && lv.startsWith('snap:')) {
     const c = new env.Ctrl(), b = new env.SnapBrain(c, lv.slice(5));
     c.brain = b; c.think = (me, foe) => b.think(me, foe); c.updateTactic = () => b.newRound && b.newRound();
@@ -157,7 +152,7 @@ if (isMain) {
     console.log(`${la} vs ${lb}: ${(score(res) * 100).toFixed(1)}%  (${res.length} 场, 平均 ${(steps / res.length / 120).toFixed(0)} 秒/场)`);
     byHero(res).forEach((v, i) => { if (!isNaN(v)) console.log(`  ${NAMES[i]} ${(v * 100).toFixed(0)}%`); });
     if (only) for (const h of only) {   // 指定角色时再按对手拆开
-      const row = HEROES.map((_, j) => { const rs = res.filter(r => r.ha === h && r.hb === j); return rs.length ? (score(rs) * 100).toFixed(0) : '-'; });
+      const row = HEROES.map((_, j) => { const rs = res.filter(r => h === r.ha && r.hb === j); return rs.length ? (score(rs) * 100).toFixed(0) : '-'; });
       console.log(`  ${NAMES[h]} 对各角色: ` + row.map((v, j) => NAMES[j] + v).join(' '));
     }
   }

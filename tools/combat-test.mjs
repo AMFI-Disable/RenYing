@@ -167,11 +167,6 @@ async function initRunner() {
   sandbox.window.document = sandbox.document;
   sandbox.window.location = sandbox.location;
   sandbox.globalThis = sandbox.window;
-  if (existsSync('models/renying_ai_watch2v2.json')) {
-    try {
-      sandbox.window.RENYING_2V2_MODEL = JSON.parse(readFileSync('models/renying_ai_watch2v2.json', 'utf8'));
-    } catch (e) {}
-  }
   Object.assign(sandbox.window, sandbox);
   vm.createContext(sandbox.window);
 
@@ -557,19 +552,19 @@ const testSuite = [
     })()`
   },
   {
-    name: '2v2 Model: Architecture (31 in, 10 out) & quantized weights validation',
+    name: 'AI Brain Model: Frame data & evolved genes validation across all 12 heroes',
     fn: `(() => {
-      // In-process sandbox check for 2v2 model
-      const model = typeof window !== 'undefined' ? window.RENYING_2V2_MODEL : null;
-      if (!model || !model.weights) {
-        return { pass: false, error: 'window.RENYING_2V2_MODEL missing or unpopulated' };
+      const brain = typeof window !== 'undefined' ? window.RENYING_AI_BRAIN : null;
+      if (!brain || !brain.frames || !brain.genes) {
+        return { pass: false, error: 'window.RENYING_AI_BRAIN missing frames or genes' };
       }
-      if (model.arch?.in !== 31 || model.arch?.out !== 10) {
-        return { pass: false, error: 'Invalid 2v2 model architecture: ' + JSON.stringify(model.arch) };
-      }
-      const w1 = model.weights.W1;
-      if (!Array.isArray(w1) || w1.length !== 31 || w1[0].length !== 64) {
-        return { pass: false, error: 'W1 dimension mismatch for 31-dim input' };
+      for (const ch of CHARS) {
+        if (!brain.frames[ch.id] || !brain.frames[ch.id].l1) {
+          return { pass: false, error: 'Missing frame data for hero: ' + ch.id };
+        }
+        if (!brain.genes[ch.id] || typeof brain.genes[ch.id].aggr !== 'number') {
+          return { pass: false, error: 'Missing evolved genes for hero: ' + ch.id };
+        }
       }
       return { pass: true, error: null };
     })()`

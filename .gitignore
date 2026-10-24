@@ -1,19 +1,20 @@
 # ==============================================================================
 # SECTION 1: WORKING & PRESERVED FILES (Explicit Whitelists)
 # ==============================================================================
-# Whitelist active project sources, configuration definitions, and docs.
-!sources/
 !src/
 !assets/
+!cloudflare/
+!docs/
+!models/
 !tools/
 !readme*.md
 !changelog.md
+!security.md
 !license
 !.gitignore
 !.github/
 !.markdownlint.json
 !renying.html
-!server.py
 !renying-offline.html
 !index.html
 
@@ -47,6 +48,8 @@ build/
 dist/
 DerivedData/
 .build/
+.wrangler/
+cloudflare/.wrangler/
 *.pyc
 __pycache__/
 *.egg-info/
@@ -57,21 +60,25 @@ node_modules/
 # 2.4 Secrets, Environment Profiles & Diagnostics
 .env
 .env.*
-.firebase-config.json
+.dev.vars
 *service-account*.json
 *serviceAccount*.json
 *.pem
 *.key
 *.p12
 *.log
+models/*.txt
+models/*.log
 scratch/
 tmp/
 .local/
 data/
 logs/
 ci-ui/
+ci-hud/
+ci-touch/
+ci-net/
 _site/
-models/renying_ai_20*.json
 *.db
 *.sqlite
 *.sqlite3
