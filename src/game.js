@@ -11032,9 +11032,10 @@ async function redeemCode(rawCode) {
   const DEV_SUPER_CODE = 'VG8KS7K8PYP5R36P';
   if (up === DEV_SUPER_CODE) {
     const curU = (typeof curName === 'function' ? curName() : '') || (window.CloudSave && CloudSave.getUser && CloudSave.getUser() ? CloudSave.getUser().name : '') || (typeof ACC !== 'undefined' ? ACC.name : '');
-    if (String(curU || '').trim() !== 'Dev') {
-      toast('仅限开发者账号 Dev 兑换');
-      if ($id('tMsg')) $id('tMsg').textContent = '仅限开发者账号 Dev 兑换';
+    const isDev = ['dev', 'dev_master'].includes(String(curU || '').trim().toLowerCase()) || !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isDevMaster);
+    if (!isDev) {
+      toast('仅限开发者账号 Dev 兑换，请先登录 Dev 账号');
+      if ($id('tMsg')) $id('tMsg').textContent = '仅限开发者账号 Dev 兑换，请先登录 Dev 账号';
       return;
     }
     const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen'];
@@ -11051,7 +11052,6 @@ async function redeemCode(rawCode) {
     // 每一款皮肤包含所有形态和斩数各 5 件（共 10 件/皮肤），每个武器箱 1000 个
     if (typeof ArmoryCore !== 'undefined') {
       const C = ArmoryCore;
-      const arm = (PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank();
       const newInv = [];
       let nid = 1;
       for (const k of allSkins) {
@@ -11062,14 +11062,20 @@ async function redeemCode(rawCode) {
           }
         }
       }
-      arm.inv = newInv;
-      arm.nid = nid;
-      arm.via = Array.from(new Set([...(arm.via || []), ...allSkins.filter(k => C.isItem(k))]));
-      arm.cases = arm.cases || {};
+      const devCases = {};
       for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7'])) {
-        arm.cases[cid] = 1000;
+        devCases[cid] = 1000;
       }
-      PROF.armory = arm;
+      if (typeof window.grantDevArmory === 'function') {
+        window.grantDevArmory(newInv, devCases);
+      } else {
+        const arm = (PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank();
+        arm.inv = newInv;
+        arm.nid = nid;
+        arm.via = Array.from(new Set([...(arm.via || []), ...allSkins.filter(k => C.isItem(k))]));
+        arm.cases = Object.assign(arm.cases || {}, devCases);
+        PROF.armory = arm;
+      }
     }
 
     // 最高段位：S+（25000分，天下无双）

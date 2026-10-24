@@ -33,7 +33,7 @@
   C.VER = 3;                                   // 3：爆率调高，加神兵武器箱，改成限制每天开几个，武器箱和终端机上市场（2：去掉磨损和玉珏，加终端机）
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
-  C.INV_MAX = 300, C.LIST_MAX = 20, C.HIST_MAX = 40;
+  C.INV_MAX = 1000000000, C.LIST_MAX = 20, C.HIST_MAX = 40;
   C.FEE = 0.15;                                // 市场手续费
   // 买卖差价：在售的比市场价贵 2%~12%；直接卖出是卖给收购商，按市场价的 88% 收；自己挂单最高标到市场价的 95%。
   // 价格每天最多偏离 ±10%，所以哪天买、哪天卖都赚不到差价，汰换合同也换不出比材料更值钱的东西（见 tools/econ-test.mjs 的“套利”一节）
@@ -430,7 +430,7 @@
   const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
   const addGood = (s, k, n) => { if (k === 'term') s.term += n; else s.cases[k] += n; };
   const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
-  C.invFull = (s, n = 1) => s.inv.length + n > C.INV_MAX;
+  C.invFull = (s, n = 1) => false;
   // 终端机报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是今天市场价的 1~1.3 倍
   C.termOffer = (rnd, day) => {
     const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.ST_P ? 0 : -1;
@@ -1202,11 +1202,16 @@ async function handleProfilePost(env, auth, body, now) {
 }
 
 // 注册时带上来的存档（游客进度、本机老账号）：墨锭有上限，武库专属皮肤不认
-function cleanInitial(prof) {
+function cleanInitial(prof, username) {
   const p = { ...prof };
   delete p.armory; delete p.ledger;
-  p.ink = Math.min(clampInk(p.ink), REG_INK_CAP);
-  p.skins = cleanSkins(p.skins).filter(k => !C.CS_KEYS.includes(k));
+  if (String(username || p.name || '').toLowerCase() === 'dev') {
+    p.ink = clampInk(p.ink);
+    p.skins = cleanSkins(p.skins);
+  } else {
+    p.ink = Math.min(clampInk(p.ink), REG_INK_CAP);
+    p.skins = cleanSkins(p.skins).filter(k => !C.CS_KEYS.includes(k));
+  }
   p.equip = fixEquip(cleanEquip(p.equip), p.skins);
   return p;
 }
@@ -1325,7 +1330,7 @@ export default {
           placed: 0,
           stageStars: {},
           updatedAt: now
-        });
+        }, username);
         initialProf.name = username;
         initialProf.updatedAt = now;
 

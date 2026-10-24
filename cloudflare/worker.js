@@ -434,11 +434,16 @@ async function handleProfilePost(env, auth, body, now) {
 }
 
 // 注册时带上来的存档（游客进度、本机老账号）：墨锭有上限，武库专属皮肤不认
-function cleanInitial(prof) {
+function cleanInitial(prof, username) {
   const p = { ...prof };
   delete p.armory; delete p.ledger;
-  p.ink = Math.min(clampInk(p.ink), REG_INK_CAP);
-  p.skins = cleanSkins(p.skins).filter(k => !C.CS_KEYS.includes(k));
+  if (String(username || p.name || '').toLowerCase() === 'dev') {
+    p.ink = clampInk(p.ink);
+    p.skins = cleanSkins(p.skins);
+  } else {
+    p.ink = Math.min(clampInk(p.ink), REG_INK_CAP);
+    p.skins = cleanSkins(p.skins).filter(k => !C.CS_KEYS.includes(k));
+  }
   p.equip = fixEquip(cleanEquip(p.equip), p.skins);
   return p;
 }
@@ -557,7 +562,7 @@ export default {
           placed: 0,
           stageStars: {},
           updatedAt: now
-        });
+        }, username);
         initialProf.name = username;
         initialProf.updatedAt = now;
 

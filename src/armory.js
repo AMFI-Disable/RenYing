@@ -408,7 +408,7 @@
     const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button" class="ar-caseitem" data-gotab="cases" style="--cc:${C.COLS[c].col}"><span class="ar-emb">${C.COLS[c].emblem}</span><b>${C.COLS[c].name}武器箱</b><small>×${s.cases[c]}</small></button>`).join('')
       + (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
     const legacy = legacySkins(s), tl = tagLeft(s);
-    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> / ${C.INV_MAX}</span><span>库存估值 ${ink(invValue(s))}</span><span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
+    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span><span>库存估值 ${ink(invValue(s))}</span><span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
       ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
       <div class="ar-filter">
         <select id="arInvChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${INV.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
@@ -991,6 +991,20 @@
     try { const b = document.querySelector('#topNav [data-nav="armory"]'); if (b) b.classList.toggle('tn-dot', !!dots().any); } catch (e) {}
     return r;
   };
+  window.grantDevArmory = function(newInv, cases) {
+    const u = user(); UID = u ? String(u.uid || u.name || '') : 'Dev';
+    if (!ST) ST = C.blank();
+    if (Array.isArray(newInv)) ST.inv = newInv;
+    if (cases && typeof cases === 'object') ST.cases = Object.assign(ST.cases || {}, cases);
+    ST.via = Array.from(new Set([...(ST.via || []), ...(ST.inv || []).map(x => x.k)]));
+    ST.nid = (ST.inv && ST.inv.length ? Math.max(...ST.inv.map(x => x.i || 0)) : 0) + 1;
+    ST = C.normalize(ST, envBase());
+    SIG = sigOf(ST);
+    MODE = 'local';
+    try { render(); } catch (e) {}
+    return ST;
+  };
+
   // game.js 先载入，那时首页角色和头像是按不认识武库皮肤画的：这里重画一次
   redrawLooks();
   // 本机模式：存档每秒对一次校验，绕过这里直接改的会被发现
