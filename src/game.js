@@ -15451,6 +15451,20 @@ function updateNetDiagRtt(ms) {
     lping.style.color = ms > 200 ? 'var(--cinnabar)' : ms > 90 ? 'var(--gold)' : 'var(--jade)';
   }
 }
+// 直连走的是哪条路、网络本身来回多久（net-p2p.js 每 2 秒报一次，kind 为空表示断开了）。网络本身就慢时提醒一次，免得以为是游戏卡
+let netSlowN = 0, netSlowTold = false;
+function updateNetDiagPath(kind, ms) {
+  const el = $id('diagProtoVal');
+  if (!kind) { netSlowN = 0; netSlowTold = false; if (el) el.textContent = currentNetMode === 'server' ? 'WebSocket (LAN)' : 'WebRTC P2P'; return; }
+  const name = kind === 'lan' ? '局域网直连' : kind === 'relay' ? '中转' : '公网直连';
+  if (el) el.textContent = ms > 0 ? `${name} · 网络 ${ms}ms` : name;
+  netSlowN = ms >= 250 ? netSlowN + 1 : 0;
+  if (netSlowN >= 2 && !netSlowTold) {
+    netSlowTold = true;
+    netStatus(`你们之间的网络本身来回就要 ${ms}ms，游戏自己只多几十毫秒。开着 VPN 或加速器的话，关掉或改成规则模式再试；离得很远、用手机热点也会慢`);
+    toast(`网络本身就要 ${ms}ms，开着 VPN 或加速器的话关掉再试`);
+  }
+}
 window.updateNetDiagRtt = updateNetDiagRtt;
 
 function updateNetLobby(active, hostName, peerName, roomCode, peerReady) {

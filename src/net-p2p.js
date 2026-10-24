@@ -31,6 +31,7 @@ const P2P = {
   peer: null, conn: null, sess: 0, timer: 0, tries: 0, loading: null,
   opened: false,   // 房主的房间码登记成功过（之后牵线服务器断了只重连，不关房间）
   lastRx: 0,       // 最后一次收到对方消息的时间
+  openAt: 0,       // 这条直连打开的时间
 };
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
 const P2P_SYS = {
@@ -93,6 +94,7 @@ function p2pClose() {
   P2P.conn = P2P.peer = null;
   if (c) { try { c.close(); } catch (e) {} }
   if (p) { try { p.destroy(); } catch (e) {} }
+  if (typeof updateNetDiagPath === 'function') updateNetDiagPath('');
 }
 function p2pErrorText(err) {
   const t = err && err.type;
@@ -104,7 +106,7 @@ function p2pErrorText(err) {
 // 给一条数据通道挂上事件；sess 不对了说明已经换了房间，直接忽略。side 是自己这边（host / client）
 function p2pWire(conn, sess, side, onOpen, onData) {
   const live = () => sess === P2P.sess && conn === P2P.conn;
-  conn.on('open', () => { if (live()) { P2P.lastRx = Date.now(); onOpen(); } });
+  conn.on('open', () => { if (live()) { P2P.lastRx = Date.now(); P2P.openAt = performance.now(); onOpen(); } });
   conn.on('data', d => {
     if (!live()) return;
     P2P.lastRx = Date.now();
@@ -116,6 +118,7 @@ function p2pWire(conn, sess, side, onOpen, onData) {
       return;
     }
     if (m.sys === 'pong') {
+      if (performance.now() - P2P.openAt < 3000) return;   // 刚连上那几秒两边都在搭选人界面，量出来的数会虚高
       const rtt = Math.round(performance.now() - m.t);
       if (typeof updateNetDiagRtt === 'function') updateNetDiagRtt(rtt);
       return;
@@ -141,11 +144,37 @@ setInterval(() => {
   if (!p2pOpen()) return;
   lastP2pPingT = performance.now();
   p2pSend({ sys: 'ping', t: lastP2pPingT });
+  p2pPathCheck();
   if (NET.open && !NET.leaving && Date.now() - P2P.lastRx > P2P_SILENCE) {
     onSys({ sys: 'left' });
     netStatus('对方的网络断开了，可以重新建房或加入');
   }
 }, 2000);
+// 直连走的是哪条路、网络本身来回要多久。用的是 WebRTC 自己的统计，不含网页卡顿，延迟高时分得清是网络慢还是游戏慢
+function p2pPublicIp(a) {
+  a = String(a || '').toLowerCase();
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(a)) {
+    const [x, y] = a.split('.').map(Number);
+    return !(x === 10 || x === 127 || (x === 172 && y >= 16 && y < 32) || (x === 192 && y === 168) || (x === 169 && y === 254));
+  }
+  return a.includes(':') && !/^(fe[89ab]|f[cd]|::1$)/.test(a);   // IPv6：去掉本机、链路本地和内网段
+}
+async function p2pPathCheck() {
+  const conn = P2P.conn, pc = conn && conn.peerConnection;
+  if (!conn || !conn.open || !pc || !pc.getStats) return;
+  let st;
+  try { st = await pc.getStats(); } catch (e) { return; }
+  if (conn !== P2P.conn) return;
+  let pair = null;
+  st.forEach(r => { if (!pair && r.type === 'transport' && r.selectedCandidatePairId) pair = st.get(r.selectedCandidatePairId); });
+  if (!pair) st.forEach(r => { if (!pair && r.type === 'candidate-pair' && (r.selected || r.nominated) && r.state === 'succeeded') pair = r; });
+  if (!pair) return;
+  const l = st.get(pair.localCandidateId) || {}, r = st.get(pair.remoteCandidateId) || {};
+  const sec = pair.currentRoundTripTime > 0 ? pair.currentRoundTripTime : pair.responsesReceived > 0 ? pair.totalRoundTripTime / pair.responsesReceived : 0;
+  const kind = l.candidateType === 'relay' || r.candidateType === 'relay' ? 'relay'
+    : l.candidateType === 'host' && r.candidateType === 'host' && !p2pPublicIp(l.address || l.ip) && !p2pPublicIp(r.address || r.ip) ? 'lan' : 'wan';
+  if (typeof updateNetDiagPath === 'function') updateNetDiagPath(kind, Math.round(sec * 1000));
+}
 
 async function netConnectP2P(asHost, code) {
   netReset();
@@ -383,7 +412,7 @@ function mmIncoming(sess, peer, conn) {
   MM.busy = true;
   P2P.conn = conn;
   const drop = () => { if (P2P.conn === conn) P2P.conn = null; MM.busy = false; try { conn.close(); } catch (e) {} };
-  const t = setTimeout(() => { if (live() && P2P.conn === conn && !NET.open) drop(); }, 8000);
+  const t = setTimeout(() => { if (live() && P2P.conn === conn && !NET.open) drop(); }, 20000);   // 和敲门那边一样，网络慢时也等得到
   p2pWire(conn, sess, 'host', () => {}, m => {
     if (m.sys === 'hello') {
       const mine = mmInfo(), theirs = m.mm || {};
@@ -437,7 +466,14 @@ function mmKnock(sess, peer, id) {
       MM.knocking = null;
       done(r);
     };
-    const t = setTimeout(() => finish('timeout'), 5000);
+    // 座位上的人没回应（多半已经走了）5 秒就换下一个；回应了只是网络慢、还在连（来回 800ms 时要六七秒），最多等到 20 秒。
+    // 以前一律 5 秒就放弃：网络慢时房主那边刚回“ready”就被挂断，房主以为配上了、退出了排队，两边都匹配不上
+    const t0 = Date.now();
+    let t = setTimeout(function wait() {
+      const s = conn.peerConnection && conn.peerConnection.iceConnectionState;
+      if (Date.now() - t0 < 20000 && (conn.open || s === 'checking' || s === 'connected' || s === 'completed')) { t = setTimeout(wait, 1000); return; }
+      finish('timeout');
+    }, 5000);
     MM.onMiss = () => finish('empty');
     if (MM.busy || P2P.conn) return finish('busy');
     MM.busy = true; MM.knocking = conn; P2P.conn = conn;
