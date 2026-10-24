@@ -13688,16 +13688,18 @@ function makeCardArt(i, CW, CH, skin) {
     ctx.fillStyle = '#fbeee0'; ctx.font = `${Math.round(15 * u)}px ${TITLE_FONT}`; ctx.fillText(ch.role.slice(0, 2), 0, 1 * u);
     ctx.restore();
     // 金色双线边框和角花
-    if (ST) {   // 皮肤名：竖排名字下面的小字，稀有是银蓝色，传说是金色
+    // 皮肤卡：稀有度的字和边框照它自己的颜色（武库的五档：军规级、受限、保密、隐秘、非凡；不在武器箱里的照稀有 / 传说），提亮一点免得在夜色里发闷
+    const GR = skin && SKINS[skin] ? skinGrade(skin) : null, gc = GR ? rgbMix(GR.c, '255,255,255', 0.28) : '233,196,106';
+    if (ST) {   // 皮肤名：竖排名字下面的小字
       ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const sy = 70 * u + ch.name.length * 58 * u + 58 * u;
-      ctx.font = `${Math.round(13 * u)}px ${BODY_FONT}`; ctx.fillStyle = ST.legend ? '#e9c46a' : '#a8cfff';
-      ctx.fillText(ST.legend ? '传说' : '稀有', CW - 38 * u, sy);
+      ctx.font = `${Math.round(13 * u)}px ${BODY_FONT}`; ctx.fillStyle = `rgb(${gc})`;
+      ctx.fillText(GR ? GR.n.replace('★ ', '') : ST.legend ? '传说' : '稀有', CW - 38 * u, sy);
       ctx.font = `${Math.round(24 * u)}px ${TITLE_FONT}`;
       [...ST.name].forEach((t, k) => ctx.fillText(t, CW - 38 * u, sy + 26 * u + k * 27 * u));
       ctx.restore();
     }
-    const fc = ST && !ST.legend ? '168,207,255' : '233,196,106';
+    const fc = gc;
     ctx.strokeStyle = `rgba(${fc},0.85)`; ctx.lineWidth = 2 * u; ctx.strokeRect(7 * u, 7 * u, CW - 14 * u, CH - 14 * u);
     ctx.strokeStyle = `rgba(${fc},0.4)`; ctx.lineWidth = 1 * u; ctx.strokeRect(12 * u, 12 * u, CW - 24 * u, CH - 24 * u);
     if (ST && ST.legend) {   // 传说卡面：四角云纹 + 底部的主题图案
