@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS econ_log (
     detail TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_econ_log_uid ON econ_log (uid, at);
--- 管理后台查“管理员做过的事”用（act 是 admin、admin_ban、pardon、gift_new、gift_off、cfg 这些）。
+-- 管理后台查“管理员做过的事”用（act 是 admin、admin_ban、pardon、admin_pw、gift_new、gift_off、code_new、code_off、cfg 这些）。
 CREATE INDEX IF NOT EXISTS idx_econ_log_act ON econ_log (act, id);
 
 -- 处罚记录：第 1 次警告，第 2 次封 1 天，第 3 次永久封号；pardon 是管理员解封的时间。
@@ -117,6 +117,28 @@ CREATE TABLE IF NOT EXISTS gift_got (
     uid TEXT NOT NULL,
     at INTEGER NOT NULL,
     PRIMARY KEY (gid, uid)
+);
+
+-- 礼包兑换码（管理后台建）：玩家在游戏的兑换框输入，领到里面的东西（和补偿一样直接进存档和墨锭）。
+-- 每个账号只领一次（code_got）；got 是已经领走的份数，到了 uses 就领完了（CHECK 挡住多领）；过了 until、off 是 1 都领不到。
+CREATE TABLE IF NOT EXISTS code (
+    code TEXT PRIMARY KEY,
+    ink INTEGER NOT NULL DEFAULT 0,
+    items_json TEXT NOT NULL DEFAULT '{}',
+    note TEXT NOT NULL,
+    by TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    until INTEGER NOT NULL,
+    uses INTEGER NOT NULL,
+    got INTEGER NOT NULL DEFAULT 0,
+    off INTEGER NOT NULL DEFAULT 0,
+    CHECK (got <= uses)
+);
+CREATE TABLE IF NOT EXISTS code_got (
+    code TEXT NOT NULL,
+    uid TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    PRIMARY KEY (code, uid)
 );
 
 -- 在线改的经济数值（价格、爆率、每天能开几个、手续费、掉落、每天认多少本机收入）：每改一次加一行，最后一行是现在用的。

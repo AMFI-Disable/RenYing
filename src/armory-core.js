@@ -790,6 +790,8 @@
     return { ok: true };
   };
   A.sync = () => ({ ok: true });
+  // 兑换码：码在服务器上核对，里面的东西在跑这一步之前就放进存档了；本机存档没有服务器，领不了
+  A.claimCode = (s, a, env) => env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
   A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台终端机
     if (s.gift) return { err: '已经领过了' };
     s.gift = 1; s.cases.c1++; s.term++;

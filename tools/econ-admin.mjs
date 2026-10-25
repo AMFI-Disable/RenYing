@@ -18,6 +18,10 @@
  *        内容：ink=500、c1=2、term=1、tags=1。all 只发给现在已经注册的号，加 --new 之后新注册的也能领
  *   node tools/econ-admin.mjs gifts                           发过的补偿
  *   node tools/econ-admin.mjs gift-off <补偿编号> --why <原因>   停发（已经领了的不收回）
+ *   node tools/econ-admin.mjs code [兑换码] <内容…> --note <给玩家看的说明> [--uses 100] [--days 14] [--why <原因>]
+ *        建兑换码：玩家在游戏「任务 → 礼包兑换」里输入就领，每个号一次，最多 --uses 个号。不写兑换码就随机生成 10 位
+ *   node tools/econ-admin.mjs codes                           建过的兑换码、各领了多少
+ *   node tools/econ-admin.mjs code-off <兑换码> --why <原因>    停用（已经领了的不收回）
  *   node tools/econ-admin.mjs cfg                             经济数值：现在用的、默认值、范围、最近改过的版本
  *   node tools/econ-admin.mjs cfg-set <键=值…> --why <原因>    改经济数值；值写 default 就回到默认（键看 cfg 列出来的）
  *   node tools/econ-admin.mjs cfg-undo <版本号|0> --why <原因>  退回到以前的一版，0 是全部回到默认值
@@ -48,11 +52,11 @@ async function admin(method, path, body) {
   return j;
 }
 
-// 参数：--why、--note、--days 后面跟一个值（也可以写成 --why=…），--new、--create 不跟值；其余的按顺序放进 pos
+// 参数：--why、--note、--days、--uses 后面跟一个值（也可以写成 --why=…），--new、--create 不跟值；其余的按顺序放进 pos
 function parse(list) {
   const pos = [], o = {};
   for (let i = 0; i < list.length; i++) {
-    const a = list[i], m = /^--(why|note|days)(?:=(.*))?$/s.exec(a);
+    const a = list[i], m = /^--(why|note|days|uses)(?:=(.*))?$/s.exec(a);
     if (a === '--new') o.new = true;
     else if (a === '--create') o.create = true;
     else if (m) o[m[1]] = m[2] !== undefined ? m[2] : list[++i];
@@ -158,6 +162,23 @@ if (cmd === 'whoami') {
   if (!pos[0]) die('用法：node tools/econ-admin.mjs gift-off <补偿编号> --why <原因>');
   await admin('POST', '/api/admin/gift/off', { id: pos[0], why: why() });
   console.log('停发了。已经领了的不收回。');
+} else if (cmd === 'code') {
+  const named = pos[0] && !pos[0].includes('=') ? pos[0] : '', list = named ? pos.slice(1) : pos;
+  if (!list.length || !o.note) die('用法：node tools/econ-admin.mjs code [兑换码] ink=500 c1=1 --note <给玩家看的说明> [--uses 100] [--days 14] [--why <原因>]（不写兑换码就随机生成）');
+  const b = amounts(list, false);
+  const j = await admin('POST', '/api/admin/code', { code: named, ink: b.ink, cases: b.cases, term: b.term, tags: b.tags, uses: o.uses === undefined ? 100 : int(o.uses, '人数'), days: o.days === undefined ? 14 : int(o.days, '天数'), note: o.note, why: o.why || '' });
+  console.log(`兑换码建好了：${j.code}。${time(j.until)} 之前，玩家在游戏「任务 → 礼包兑换」里输入就能领，每个号一次。`);
+} else if (cmd === 'codes') {
+  const j = await admin('GET', '/api/admin/codes');
+  if (!j.codes.length) console.log('还没建过兑换码');
+  for (const c of j.codes) {
+    const state = c.off ? '停用了' : c.until <= j.now ? '过期了' : c.got >= c.uses ? '领完了' : '能领';
+    console.log(`  ${c.code}  ${state}  「${c.note}」  ${stuff({ ink: c.ink, ...c.items }) || '-'}  领了 ${c.got}/${c.uses}  ${c.by} 建于 ${time(c.at)}，截止 ${time(c.until)}`);
+  }
+} else if (cmd === 'code-off') {
+  if (!pos[0]) die('用法：node tools/econ-admin.mjs code-off <兑换码> --why <原因>');
+  await admin('POST', '/api/admin/code/off', { code: pos[0], why: why() });
+  console.log('停用了。已经领了的不收回。');
 } else if (cmd === 'cfg') {
   const j = await admin('GET', '/api/admin/cfg');
   console.log(j.id ? `现在用的是第 ${j.id} 版` : '现在用的都是默认值');
@@ -193,7 +214,7 @@ if (cmd === 'whoami') {
     let d = {};
     try { d = JSON.parse(r.detail) || {}; } catch (e) {}
     const what = r.act === 'admin' ? [stuff(d), ...(d.give || []).map(x => '发 ' + x), ...(d.take || []).map(x => '收 ' + x)].filter(Boolean).join('，')
-      : r.act === 'admin_ban' ? (d.days === 'perm' ? '永久封号' : `封 ${d.days} 天`) : r.act === 'admin_pw' ? (d.created ? '建号' : '重设密码') : r.act === 'gift_new' ? stuff(d) : r.act === 'cfg' ? (d.set ? Object.entries(d.set).map(([k, v]) => `${k}=${v === null ? 'default' : v}`).join(' ') : d.undo ? `退回到第 ${d.undo} 版` : '全部回到默认值') : '';
+      : r.act === 'admin_ban' ? (d.days === 'perm' ? '永久封号' : `封 ${d.days} 天`) : r.act === 'admin_pw' ? (d.created ? '建号' : '重设密码') : r.act === 'gift_new' ? stuff(d) : r.act === 'code_new' ? `${d.code} ${stuff(d)}，最多 ${d.uses} 个号` : r.act === 'code_off' ? `停用 ${d.code}` : r.act === 'cfg' ? (d.set ? Object.entries(d.set).map(([k, v]) => `${k}=${v === null ? 'default' : v}`).join(' ') : d.undo ? `退回到第 ${d.undo} 版` : '全部回到默认值') : '';
     console.log(`  ${time(r.at)}  ${d.by || '-'}  ${r.act}  ${r.uid === '*' ? '全服' : r.username || r.uid}${what ? '  ' + what : ''}  原因：${d.why || '-'}`);
   }
 } else {
@@ -208,6 +229,9 @@ if (cmd === 'whoami') {
   node tools/econ-admin.mjs gift <all|号> ink=500 c1=2 --note <给玩家看的说明> [--days 14] [--new] [--why <原因>]
   node tools/econ-admin.mjs gifts
   node tools/econ-admin.mjs gift-off <补偿编号> --why <原因>
+  node tools/econ-admin.mjs code [兑换码] ink=500 c1=1 --note <给玩家看的说明> [--uses 100] [--days 14] [--why <原因>]
+  node tools/econ-admin.mjs codes
+  node tools/econ-admin.mjs code-off <兑换码> --why <原因>
   node tools/econ-admin.mjs cfg
   node tools/econ-admin.mjs cfg-set price.c1=300 fee=0.1 --why <原因>
   node tools/econ-admin.mjs cfg-undo <版本号|0> --why <原因>

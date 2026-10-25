@@ -238,13 +238,14 @@
 
 <div id="app" class="hidden">
   <header class="top">
-    <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿、改经济数值</small></div></div>
+    <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿和兑换码、改经济数值</small></div></div>
     <div class="me"><span>管理员 <b id="who"></b></span><button class="btn ghost sm" data-act="logout">退出</button></div>
   </header>
   <nav class="tabs" aria-label="分页"><div role="tablist">
     <button role="tab" data-act="tab" data-tab="home">总览</button>
     <button role="tab" data-act="tab" data-tab="players">玩家</button>
     <button role="tab" data-act="tab" data-tab="gifts">补偿</button>
+    <button role="tab" data-act="tab" data-tab="codes">兑换码</button>
     <button role="tab" data-act="tab" data-tab="cfg">经济数值</button>
     <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
   </div></nav>
@@ -291,7 +292,7 @@ const parse = t => { try { const o = JSON.parse(t); return o && typeof o === 'ob
 
 /* ---------- 口令、请求 ---------- */
 const KEY = 'renying-admin';
-const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], cfg: null, seq: 0 };
+const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, seq: 0 };
 const saveTok = t => { try { if (t) sessionStorage.setItem(KEY, t); else sessionStorage.removeItem(KEY); } catch (e) {} };
 const loadTok = () => { try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
 
@@ -333,6 +334,7 @@ const ACT = {
   star: '星章兑换', collect: '集齐奖励', matchEnd: '对局结束', matchStart: '开局', sync: '同步', gift: '新手礼',
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
   admin: '管理员调整', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
+  claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码',
 };
 
 /* ---------- 流水里的详情写成人话 ---------- */
@@ -368,6 +370,9 @@ function detailText(act, raw, withWho) {
   if (act === 'gift_new') return who + [...stuff(d), d.days + ' 天内有效', d.newToo ? '之后新注册的也能领' : ''].filter(Boolean).join('，');
   if (act === 'gift_off') return who + '停发 ' + d.id;
   if (act === 'gift_got') return (d.note || '') + '：' + stuff(d).join('，');
+  if (act === 'code_new') return who + [d.code, ...stuff(d), '最多 ' + fmtN(d.uses) + ' 个号', d.days + ' 天内有效'].join('，');
+  if (act === 'code_off') return who + '停用 ' + d.code;
+  if (act === 'code_got') return d.code + '（' + (d.note || '') + '）：' + stuff(d).join('，');
   if (act === 'cfg') return who + (d.undo !== undefined ? (d.undo ? '退回到第 ' + d.undo + ' 版' : '全部回到默认值') + '（存成第 ' + d.id + ' 版）'
     : '第 ' + d.id + ' 版：' + Object.entries(d.set || {}).map(([k, v]) => cfgName(k) + (v === null ? ' 回到默认' : ' → ' + v)).join('，'));
   // 玩家自己的操作：{ a: 参数, r: 结果, s: 这次结了几单 }
@@ -445,6 +450,7 @@ async function vHome() {
     <div class="card"><h2>常用</h2><div class="row wrap">
       <button class="btn ghost" data-act="tab" data-tab="players">找玩家、加减墨锭</button>
       <button class="btn ghost" data-act="tab" data-tab="gifts">发全服补偿</button>
+      <button class="btn ghost" data-act="tab" data-tab="codes">建兑换码</button>
       <button class="btn ghost" data-act="tab" data-tab="cfg">改价格、爆率</button>
     </div></div>`;
 }
@@ -611,6 +617,36 @@ async function vGifts() {
   </div>`;
 }
 
+/* ---------- 兑换码 ---------- */
+async function vCodes() {
+  const r = await api('codes');
+  S.codes = r.codes;
+  const now = Date.now();
+  const state = c => c.off ? H`<span class="badge">停用了</span>` : c.until <= now ? H`<span class="badge">过期了</span>` : c.got >= c.uses ? H`<span class="badge">领完了</span>` : H`<span class="badge ok">能领</span>`;
+  return H`<form class="card" data-form="code" novalidate>
+    <h2>建兑换码</h2>
+    <p class="hint">玩家在游戏的「任务 → 礼包兑换」里输入就能领，要登录云端账号，每个号只领一次。码只存在服务器上，不在代码里。公开发出去的码，看到的人都能领，领满人数就停；只想给少数人的，用随机生成的码。</p>
+    <div class="grid">
+      <label class="f">兑换码（不填就随机生成）<input name="code" maxlength="20" placeholder="比如 SPRING2026" autocomplete="off" spellcheck="false"></label>
+      <label class="f">墨锭<input type="number" name="ink" min="0" max="1000000" step="1" placeholder="0"></label>
+      ${CAT.caseIds.map(c => H`<label class="f">${caseName(c)}<input type="number" name="cc_${c}" min="0" max="100" step="1" placeholder="0"></label>`)}
+      <label class="f">终端机<input type="number" name="term" min="0" max="100" step="1" placeholder="0"></label>
+      <label class="f">改名标签<input type="number" name="tags" min="0" max="100" step="1" placeholder="0"></label>
+      <label class="f">最多几个号能领<input type="number" name="uses" min="1" max="100000" step="1" value="100"></label>
+      <label class="f">几天内能领<input type="number" name="days" min="1" max="90" step="1" value="14"></label>
+    </div>
+    <label class="f" style="margin-top:8px">给玩家看的说明（2～60 个字）<input name="note" maxlength="60" placeholder="比如：新春礼包"></label>
+    <div class="row end"><button class="btn">检查并建码…</button></div>
+  </form>
+  <div class="card"><h2>建过的兑换码 <small>最近 50 个</small></h2>
+    ${r.codes.length ? H`<div class="tw"><table><thead><tr><th>兑换码</th><th>说明</th><th>内容</th><th class="num">领了 / 最多</th><th>谁建的</th><th>建于</th><th>截止</th><th>状态</th><th></th></tr></thead><tbody>
+      ${r.codes.map(c => H`<tr><td class="mono nowrap">${c.code}</td><td class="mw">${c.note}</td><td class="mw">${giftText(c)}</td>
+        <td class="num nowrap">${fmtN(c.got)} / ${fmtN(c.uses)}</td><td>${c.by}</td><td class="nowrap">${fmtT(c.at)}</td><td class="nowrap">${fmtT(c.until)}</td><td>${state(c)}</td>
+        <td>${!c.off && c.until > now ? H`<button class="btn ghost sm" data-act="codeoff" data-code="${c.code}">停用…</button>` : ''}</td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">还没建过兑换码</p>`}
+  </div>`;
+}
+
 /* ---------- 经济数值 ---------- */
 const isPct = k => /^(odds|prem)\./.test(k) || ['stP', 'dropP', 'fee'].includes(k);
 async function vCfg() {
@@ -684,7 +720,7 @@ async function vAudit() {
 }
 
 /* ---------- 换页 ---------- */
-const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, cfg: vCfg, audit: vAudit };
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, audit: vAudit };
 const AFTER = { players: drawGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 async function render() {
   const main = $('#main'), seq = ++S.seq, tab = S.tab;
@@ -748,6 +784,12 @@ const ACTS = {
     if (!g) return;
     const a = await ask({ title: '停发这份补偿', lines: ['“' + g.note + '”：' + giftText(g), '已经领了的 ' + fmtN(g.got) + ' 个账号不收回，还没领的就领不到了'], ok: '停发', danger: true });
     if (a) await busy(b, async () => { await api('gift/off', { id: g.id, why: a.why }); toast('停发了'); render(); });
+  },
+  codeoff: async b => {
+    const c = S.codes.find(x => x.code === b.dataset.code);
+    if (!c) return;
+    const a = await ask({ title: '停用兑换码 ' + c.code, lines: ['“' + c.note + '”：' + giftText(c), '已经领了的 ' + fmtN(c.got) + ' 个号不收回，还没领的就领不到了'], ok: '停用', danger: true });
+    if (a) await busy(b, async () => { await api('code/off', { code: c.code, why: a.why }); toast('停用了'); render(); });
   },
   cfgdef: b => {
     const f = b.form, row = S.cfg.info.find(x => x[0] === b.dataset.k);
@@ -832,6 +874,19 @@ const FORMS = {
       '玩家看到：开发组补偿：' + body.note, body.days + ' 天内登录或者打开武库就能领，每个账号一份'];
     const a = await ask({ title: '发补偿', lines, whyInit: body.note, ok: '发出' });
     if (a) await busy(submitBtn(f), async () => { await api('gift', { ...body, why: a.why }); toast('补偿发出去了'); render(); });
+  },
+  code: async f => {
+    const E = f.elements, raw = E.code.value.trim().toUpperCase();
+    if (raw && !/^[A-Z0-9]{4,20}$/.test(raw)) return toast('兑换码只能用 4 到 20 位英文字母和数字', true);
+    const body = { code: raw, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), uses: numIn(f, 'uses') || 100, days: numIn(f, 'days') || 14, note: E.note.value.trim() };
+    for (const c of CAT.caseIds) { const n = numIn(f, 'cc_' + c); if (n) body.cases[c] = n; }
+    if ([body.ink, body.term, body.tags, body.uses, body.days, ...Object.values(body.cases)].some(v => !Number.isInteger(v) || v < 0)) return toast('数量要填 0 或者正整数', true);
+    if (!body.ink && !body.term && !body.tags && !Object.keys(body.cases).length) return toast('兑换码里什么都没有', true);
+    if (body.note.length < 2) return toast('写一句给玩家看的说明（至少 2 个字）', true);
+    const lines = ['兑换码：' + (raw || '随机生成 10 位'), '内容：' + giftText(body), '玩家看到：兑换成功：' + body.note + '（内容）',
+      '最多 ' + fmtN(body.uses) + ' 个号能领，每个号一次；' + body.days + ' 天内有效'];
+    const a = await ask({ title: '建兑换码', lines, whyInit: body.note, ok: '建码' });
+    if (a) await busy(submitBtn(f), async () => { const r = await api('code', { ...body, why: a.why }); toast('建好了：' + r.code); render(); });
   },
   cfg: async f => {
     const { info, cfg: cur } = S.cfg, set = {}, lines = [];

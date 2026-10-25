@@ -1119,6 +1119,25 @@
     try { const b = document.querySelector('#topNav [data-nav="armory"]'); if (b) b.classList.toggle('tn-dot', !!dots().any); } catch (e) {}
     return r;
   };
+  // 礼包兑换码（管理后台建的）：码在服务器上核对，里面的东西直接进存档。game.js 的兑换框先认游戏里写死的几个码，认不出来才问这里
+  window.armoryRedeem = async function (code) {
+    const NEED = '礼包兑换码要先登录云端账号才能领';
+    if (!cloudOn() || PROF.guest) return { err: NEED };
+    if (MODE !== 'server') await connect(true);
+    if (MODE !== 'server') return { err: MODE === 'none' ? NEED : MODE === 'offline' || MODE === 'wait' ? '连不上服务器，等联网了再试' : '服务器还没开兑换码，等更新以后再试' };
+    if (BUSY) return { err: '上一步还没做完，稍等一下' };
+    BUSY = true; busyUi(true);
+    try {
+      if (FLUSH) await Promise.race([FLUSH().catch(() => {}), new Promise(r => setTimeout(r, 3000))]);   // 先把本机的存档变化报上去，免得两边对不上
+      const out = await ECON('claimCode', { code });
+      apply(out);
+      return out && out.code ? { ok: true, note: String(out.code.note || ''), text: giftText(out.code) } : { err: '兑换码无效或已过期' };
+    } catch (e) {
+      if (e && e.ban && typeof acRefresh === 'function') acRefresh();
+      if (e && e.status === 400 && e.message === '不认识的操作') return { err: '兑换码无效或已过期' };   // 服务器还是没有兑换码的旧版：那上面也就没有码
+      return { err: e && e.message ? e.message : '服务器出错了' };
+    } finally { BUSY = false; busyUi(false); }
+  };
   window.grantDevArmory = function(newInv, cases) {
     const u = user(); UID = u ? String(u.uid || u.name || '') : 'Dev';
     if (!ST) ST = C.blank();

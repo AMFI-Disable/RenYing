@@ -63,6 +63,10 @@ const INK_SPIKE = 50000;         // 一条上报超过这么多，记下来给�
 const BODY_MAX = 300000;
 const SKIN_RE = /^[a-z0-9_]{1,24}$/;
 const BAN_MS = 24 * 3600e3;
+const CODE_USES = 100000;              // 一个兑换码最多让这么多个号领
+const RDM_MAX = 10, RDM_IP_MAX = 30;   // 一小时里输错这么多次兑换码就先锁一小时（每个号、每个 IP）
+// 游戏里写死的几个码（src/game.js 的 redeemCode 先认它们）：服务器上不建同名的，不然玩家永远领不到
+const CODE_LOCAL = ['LOCK', 'RELOCK', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT'];
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
@@ -83,6 +87,9 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS gift (id TEXT PRIMARY KEY, uid TEXT NOT NULL, ink INTEGER NOT NULL DEFAULT 0, items_json TEXT NOT NULL DEFAULT '{}', note TEXT NOT NULL, by TEXT NOT NULL, at INTEGER NOT NULL, until INTEGER NOT NULL, born INTEGER NOT NULL, off INTEGER NOT NULL DEFAULT 0)`,
   `CREATE INDEX IF NOT EXISTS idx_gift_uid ON gift (uid, until)`,
   `CREATE TABLE IF NOT EXISTS gift_got (gid TEXT NOT NULL, uid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (gid, uid))`,
+  // 兑换码：玩家在游戏里输入就领到里面的东西，每个号只领一次（code_got）；got 到了 uses 就领完了（CHECK 挡住多领），until 之后、off 是 1 都领不到
+  `CREATE TABLE IF NOT EXISTS code (code TEXT PRIMARY KEY, ink INTEGER NOT NULL DEFAULT 0, items_json TEXT NOT NULL DEFAULT '{}', note TEXT NOT NULL, by TEXT NOT NULL, at INTEGER NOT NULL, until INTEGER NOT NULL, uses INTEGER NOT NULL, got INTEGER NOT NULL DEFAULT 0, off INTEGER NOT NULL DEFAULT 0, CHECK (got <= uses))`,
+  `CREATE TABLE IF NOT EXISTS code_got (code TEXT NOT NULL, uid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (code, uid))`,
   // 在线改的经济数值：每改一次加一行，最后一行是现在用的（只存和默认值不一样的项）
   `CREATE TABLE IF NOT EXISTS cfg (id INTEGER PRIMARY KEY AUTOINCREMENT, json TEXT NOT NULL, by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
 ];
@@ -365,9 +372,18 @@ function giftItems(txt) {   // 一份补偿里的东西：{ cases: { c1: 2 }, te
   return { cases, term: one(o.term), tags: one(o.tags) };
 }
 
+/* ---------- 兑换码：管理后台建，玩家在游戏里输入，服务器核对后和补偿一样放进存档和墨锭 ---------- */
+const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // 不用 0 O 1 I L，免得玩家看错
+const codeKey = x => { const k = String(x || '').trim().toUpperCase(); return /^[A-Z0-9]{4,20}$/.test(k) ? k : ''; };
+function randCode(n = 10) {   // 只收 248（31 的 8 倍）以下的字节，每个字符出现的机会一样
+  let out = '';
+  while (out.length < n) for (const b of crypto.getRandomValues(new Uint8Array(16))) if (b < 248 && out.length < n) out += CODE_ABC[b % 31];
+  return out;
+}
+
 /* ---------- 武库：所有动作都在服务器上算 ---------- */
-const QUIET = ['sync', 'matchStart'];   // 太频繁的动作不进流水账（有成交的除外）
-async function handleEcon(env, auth, body, now) {
+const QUIET = ['sync', 'matchStart', 'claimCode'];   // 太频繁的动作不进流水账（有成交的除外）；兑换码另记一条 code_got
+async function handleEcon(env, auth, body, now, ip) {
   const uid = auth.user.id;
   const act = String(body.act || ''), nonce = String(body.nonce || '');
   const args = body.args && typeof body.args === 'object' && !Array.isArray(body.args) ? body.args : {};
@@ -389,6 +405,21 @@ async function handleEcon(env, auth, body, now) {
     const eco = await loadEcon(env, uid, await freshProfile(), now);
     return json({ ok: true, ...JSON.parse(seen.res_json), state: C.publicState(C.normalize(eco.state, { now, uid })), ledger: ledgerOut(eco, now), cfg, replay: true });
   }
+  // 兑换码：先核对（输错的记一次，一小时里错太多就先锁住），对的话下面和补偿一起放进存档
+  let code = null;
+  if (act === 'claimCode') {
+    if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
+    const k = codeKey(args.code);
+    const row = k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
+    if (!row || row.off || row.until <= now) {
+      await hit(env, 'rdm:' + uid, 1e9, 3600e3, now);
+      await hit(env, 'rdmip:' + ip, 1e9, 3600e3, now);
+      return error('兑换码无效或已过期');
+    }
+    if (row.mine) return error('这个兑换码你已经领过了');
+    if (row.got >= row.uses) return error('这个兑换码已经被领完了');
+    code = { code: row.code, note: row.note, ink: clampInk(row.ink, 1e6), ...giftItems(row.items_json) };
+  }
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
@@ -404,7 +435,7 @@ async function handleEcon(env, auth, body, now) {
     // 开发组发的补偿：先放进存档和墨锭，再做这次的动作（动作没做成也照样领到）
     const gifts = await giftsFor(env, auth.user, now), got = [];
     let state0 = eco.state, ink0 = eco.ink;
-    if (gifts.length) {
+    if (gifts.length || code) {
       state0 = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid });
       for (const g of gifts) {
         const it = giftItems(g.items_json), ink = clampInk(g.ink, 1e6);
@@ -412,6 +443,11 @@ async function handleEcon(env, auth, body, now) {
         for (const [c, n] of Object.entries(it.cases)) state0.cases[c] += n;
         state0.term += it.term; state0.tags += it.tags;
         got.push({ id: g.id, note: g.note, ink, ...it });
+      }
+      if (code) {   // 兑换码里的东西也先放进去
+        ink0 += code.ink;
+        for (const [c, n] of Object.entries(code.cases)) state0.cases[c] += n;
+        state0.term += code.term; state0.tags += code.tags;
       }
     }
     const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, mkt, cfg };
@@ -422,6 +458,7 @@ async function handleEcon(env, auth, body, now) {
     const eq = {};
     for (const c of new Set([...Object.keys(equip0), ...Object.keys(E.equip)])) if (equip0[c] !== E.equip[c]) eq[c] = E.equip[c] === undefined ? null : E.equip[c];
     const out = { res, sold: r.sold || [] };
+    if (code) out.code = code;
     // 最后一道保险：算出来的数不对劲（不是整数、是负数、大得离谱）就整个作废，记下来查
     const bad = [E.ink, st.tags, st.term, ...Object.values(st.cases), ...st.inv.map(x => x.st + 1)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);   // 斩数 -1 是普通版
     if (bad !== undefined || st.inv.length > C.INV_MAX) {
@@ -455,6 +492,11 @@ async function handleEcon(env, auth, body, now) {
       stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'gift_got', 1, null, null, JSON.stringify({ id: g.id, note: g.note, ink: g.ink || undefined, cases: Object.keys(g.cases).length ? g.cases : undefined, term: g.term || undefined, tags: g.tags || undefined })], uid, ver, tx));
     }
     stmts.push(ins(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver, tx));
+    if (code) {   // 兑换码：记下这个号领过了、这个码又被领走一份（领满了 CHECK 让这一批整个作废）；流水记成 code_got
+      stmts.push(ins(env, 'INSERT INTO code_got (code, uid, at) SELECT ?, ?, ?', [code.code, uid, now], uid, ver, tx));
+      stmts.push(guard(env, 'UPDATE code SET got = got + 1 WHERE code = ? AND', [code.code], uid, ver, tx));
+      stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_got', 1, null, null, JSON.stringify({ code: code.code, note: code.note, ink: code.ink || undefined, cases: Object.keys(code.cases).length ? code.cases : undefined, term: code.term || undefined, tags: code.tags || undefined })], uid, ver, tx));
+    }
     if (!quiet) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver, tx));
     stmts.push(userWrite(env, uid, p, now, ver, tx));
     stmts.push(econWrite(env, uid, ver, now, srv, E.ink, stJson, tx));
@@ -465,6 +507,8 @@ async function handleEcon(env, auth, body, now) {
       if (/econ_nonce/.test(m)) continue;   // 同一个编号的请求正好同时到：重来一遍会走上面“已经做过”
       if (/UNIQUE/.test(m) && mo && mo.list) continue;   // 挂单编号撞上了（几乎不可能）：换一个再来
       if (/gift_got/.test(m)) continue;   // 这份补偿刚被同一个号的另一个请求领走了：重读再算
+      if (code && /code_got/.test(m)) return error('这个兑换码你已经领过了');   // 同一个号的另一个请求刚领走
+      if (code && /CHECK constraint/i.test(m)) return error('这个兑换码已经被领完了');   // 最后几份刚被别人领走
       throw e;
     }
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 版本冲突：别的请求先改了，重读再算
@@ -684,6 +728,22 @@ async function handleAdmin(env, request, path, now, ip) {
   const why = String(body.why || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 100);
   const needWhy = () => why.length >= 2 ? null : error('要写上原因（至少 2 个字），会记进流水');
   const findUser = key => key ? env.DB.prepare('SELECT id, username, created_at FROM users WHERE id = ? OR username = ?').bind(key, key).first() : null;
+  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、终端机、改名标签，还有给玩家看的说明
+    const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
+    if (ink === null) return { err: `墨锭要填 0 到 ${ADJ_INK} 的整数` };
+    if (term === null || tags === null) return { err: '终端机、改名标签每份最多 100 个' };
+    const cases = {};
+    for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
+      const n = intIn(v, 0, 100);
+      if (!C.CASES.includes(c) || n === null) return { err: `武器箱 ${c} 不对：每份每种最多 100 个` };
+      if (n) cases[c] = n;
+    }
+    if (!ink && !term && !tags && !Object.keys(cases).length) return { err: noun + '里什么都没有' };
+    const note = String(body.note || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60);
+    if (note.length < 2) return { err: `要写给玩家看的说明（至少 2 个字），比如「${eg}」` };
+    return { ink, cases, term, tags, note };
+  };
+  const bundleLog = b => ({ ink: b.ink || undefined, cases: Object.keys(b.cases).length ? b.cases : undefined, term: b.term || undefined, tags: b.tags || undefined });
   const route = (post ? 'POST ' : 'GET ') + path;
 
   if (route === 'GET /api/admin/whoami') return json({ ok: true, who, now });
@@ -723,7 +783,7 @@ async function handleAdmin(env, request, path, now, ip) {
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
   if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么）
-    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'cfg') ORDER BY l.id DESC LIMIT 100").all();
+    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg') ORDER BY l.id DESC LIMIT 100").all();
     return json({ ok: true, rows: rows.results || [] });
   }
   if (route === 'POST /api/admin/adjust') {
@@ -783,23 +843,13 @@ async function handleAdmin(env, request, path, now, ip) {
     const to = String(body.to || 'all').trim();
     let uid = '*';
     if (to !== 'all' && to !== '*') { const u = await findUser(to); if (!u) return error('没有这个账号', 404); uid = u.id; }
-    const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100), days = intIn(body.days === undefined ? 14 : body.days, 1, 90);
-    if (ink === null) return error(`墨锭要填 0 到 ${ADJ_INK} 的整数`);
-    if (term === null || tags === null) return error('终端机、改名标签每份最多 100 个');
+    const b = bundleIn('补偿', '服务器维护补偿'), days = intIn(body.days === undefined ? 14 : body.days, 1, 90);
+    if (b.err) return error(b.err);
     if (!days) return error('有效天数要填 1 到 90');
-    const cases = {};
-    for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
-      const n = intIn(v, 0, 100);
-      if (!C.CASES.includes(c) || n === null) return error(`武器箱 ${c} 不对：每份每种最多 100 个`);
-      if (n) cases[c] = n;
-    }
-    if (!ink && !term && !tags && !Object.keys(cases).length) return error('补偿里什么都没有');
-    const note = String(body.note || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60);
-    if (note.length < 2) return error('要写给玩家看的说明（至少 2 个字），比如「服务器维护补偿」');
     const id = randHex(8), until = now + days * DAY_MS, born = uid === '*' && !body.newToo ? now : until;
     await env.DB.prepare('INSERT INTO gift (id, uid, ink, items_json, note, by, at, until, born, off) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)')
-      .bind(id, uid, ink, JSON.stringify({ cases, term, tags }), note, who, now, until, born).run();
-    await logRow(env, uid, now, 'gift_new', 1, null, null, JSON.stringify({ by: who, why: why || note, id, ink: ink || undefined, cases: Object.keys(cases).length ? cases : undefined, term: term || undefined, tags: tags || undefined, days, newToo: uid === '*' ? !!body.newToo : undefined }));
+      .bind(id, uid, b.ink, JSON.stringify({ cases: b.cases, term: b.term, tags: b.tags }), b.note, who, now, until, born).run();
+    await logRow(env, uid, now, 'gift_new', 1, null, null, JSON.stringify({ by: who, why: why || b.note, id, ...bundleLog(b), days, newToo: uid === '*' ? !!body.newToo : undefined }));
     return json({ ok: true, id, until });
   }
   if (route === 'POST /api/admin/gift/off') {   // 停发：还没领的就领不到了，已经领了的不收回
@@ -808,6 +858,38 @@ async function handleAdmin(env, request, path, now, ip) {
     const w = needWhy(); if (w) return w;
     await env.DB.prepare('UPDATE gift SET off = 1 WHERE id = ?').bind(g.id).run();
     await logRow(env, g.uid, now, 'gift_off', 1, null, null, JSON.stringify({ by: who, why, id: g.id }));
+    return json({ ok: true });
+  }
+  if (route === 'GET /api/admin/codes') {
+    const rows = await env.DB.prepare('SELECT code, ink, items_json, note, by, at, until, uses, got, off FROM code ORDER BY at DESC LIMIT 50').all();
+    return json({ ok: true, now, codes: (rows.results || []).map(r => ({ ...r, items: giftItems(r.items_json), items_json: undefined })) });
+  }
+  if (route === 'POST /api/admin/code') {   // 建兑换码：code 不填就随机生成 10 位；uses 是最多几个号能领，每个号一次
+    const b = bundleIn('兑换码', '新春礼包');
+    if (b.err) return error(b.err);
+    const uses = intIn(body.uses === undefined ? 100 : body.uses, 1, CODE_USES), days = intIn(body.days === undefined ? 14 : body.days, 1, 90);
+    if (!uses) return error(`最多几个号能领要填 1 到 ${CODE_USES}`);
+    if (!days) return error('有效天数要填 1 到 90');
+    const raw = String(body.code || '').trim(), k = raw ? codeKey(raw) : randCode();
+    if (!k) return error('兑换码只能用 4 到 20 位英文字母和数字');
+    if (CODE_LOCAL.includes(k)) return error('游戏里已经有这个码了，换一个');
+    const until = now + days * DAY_MS;
+    try {
+      await env.DB.prepare('INSERT INTO code (code, ink, items_json, note, by, at, until, uses, got, off) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)')
+        .bind(k, b.ink, JSON.stringify({ cases: b.cases, term: b.term, tags: b.tags }), b.note, who, now, until, uses).run();
+    } catch (e) {
+      if (/UNIQUE|PRIMARY/i.test(String(e && e.message || e))) return error('已经有这个兑换码了，换一个', 409);
+      throw e;
+    }
+    await logRow(env, '*', now, 'code_new', 1, null, null, JSON.stringify({ by: who, why: why || b.note, code: k, ...bundleLog(b), uses, days }));
+    return json({ ok: true, code: k, until });
+  }
+  if (route === 'POST /api/admin/code/off') {   // 停用：还没领的就领不到了，已经领了的不收回
+    const k = codeKey(body.code), c = k ? await env.DB.prepare('SELECT code FROM code WHERE code = ?').bind(k).first() : null;
+    if (!c) return error('没有这个兑换码', 404);
+    const w = needWhy(); if (w) return w;
+    await env.DB.prepare('UPDATE code SET off = 1 WHERE code = ?').bind(c.code).run();
+    await logRow(env, '*', now, 'code_off', 1, null, null, JSON.stringify({ by: who, why, code: c.code }));
     return json({ ok: true });
   }
   if (route === 'GET /api/admin/cfg') {   // 现在的经济数值、每一项的范围和说明、最近改过的 30 版
@@ -1037,7 +1119,7 @@ export default {
         if (!auth) return error('未登录或登录已过期，请重新登录', 401);
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
-        return await handleEcon(env, auth, body, now);
+        return await handleEcon(env, auth, body, now, ip);
       }
 
       // 7. 玩家市场：看在卖的、最近成交（挂单、买、撤走上面的 /api/econ）

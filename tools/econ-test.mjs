@@ -1,7 +1,7 @@
 // 武库经济 + 反作弊的服务器测试：在本机把 cloudflare/worker.js 跑起来（D1 用 node:sqlite 模拟），
 // 正常流程走一遍，再按作弊的路数打一遍：改墨锭、伪造皮肤、重放请求、并发双花（同一件同时卖、同一单同时买、买和撤撞上）、
 // 乱填参数、刷开箱次数、刷终端机、乱报斩数、刷对局奖励、爆破密码……
-// 还有管理后台：管理口令、加减墨锭和东西、封号解封、全服补偿、在线改经济数值、管理网页。
+// 还有管理后台：管理口令、加减墨锭和东西、封号解封、全服补偿、兑换码、在线改经济数值、管理网页。
 // 用法：node tools/econ-test.mjs           （Node 22 以上，不用装任何包）
 //       node tools/econ-test.mjs --bundle  测打包好的 cloudflare/worker.bundle.js（真正部署上去的那个文件）
 import { DatabaseSync } from 'node:sqlite';
@@ -543,7 +543,7 @@ section('乱填参数：负数、超大数、不存在的东西、混档汰换')
   ok(nt.status === 401, '没登录不能动武库');
 }
 
-section('只有墨锭：没有充值、兑换码、玉珏和钥匙');
+section('只有墨锭：没有充值、玉珏和钥匙；兑换码只有管理后台建的免费礼包码（下面单独测）');
 {
   const u = await newUser('nopay');
   for (const act of ['topup', 'redeem', 'age', 'buyKey']) {
@@ -1105,6 +1105,99 @@ section('全服补偿：每个号只领一份，同时领也只领一份；发�
   for (const id of [tagged.id, gn.id]) await adm('POST', '/api/admin/gift/off', { id, why: '测试完了' });   // 后面的测试不要再领到
 }
 
+section('兑换码：管理后台建、玩家在游戏的兑换框输入；每个号只领一次，领完、过期、停用都领不到；同时抢也不会多领；输错太多次先锁一小时');
+{
+  const claim = (tok, code, ip = '2.2.0.1', n = nonce()) => call('POST', '/api/econ', { act: 'claimCode', args: { code }, nonce: n }, tok, ip);
+  const R1 = await newUser('redeemer1'), R2 = await newUser('redeemer2'), R3 = await newUser('redeemer3');
+  for (const u of [R1, R2, R3]) await econ(u.token, 'sync');
+  T += 1000;
+  const bad = await badInputs('/api/admin/code', { ink: 10, note: '新春礼包', why: '测试' }, [
+    [{ ink: 0 }, /什么都没有/], [{ note: 'x' }, /说明/], [{ ink: 1000001 }, /墨锭/], [{ cases: { c1: 101 } }, /武器箱/], [{ cases: { zz: 1 } }, /武器箱/],
+    [{ uses: 0 }, /几个号/], [{ uses: 100001 }, /几个号/], [{ uses: 2.5 }, /几个号/], [{ days: 91 }, /天数/],
+    [{ code: 'ab' }, /4 到 20/], [{ code: 'has space' }, /4 到 20/], [{ code: 'A'.repeat(21) }, /4 到 20/], [{ code: '新春礼包' }, /4 到 20/],
+    [{ code: 'renying666' }, /游戏里已经有/], [{ code: 'Lock' }, /游戏里已经有/],
+  ]);
+  ok(!bad.length && row('SELECT COUNT(*) AS n FROM code').n === 0, '15 种乱填的兑换码都建不出来（什么都没有、没写说明、超出范围、码太短太长、有空格或汉字、和游戏里写死的码同名）', bad);
+  const c1 = await adm('POST', '/api/admin/code', { code: ' spring2026 ', ink: 500, cases: { c2: 1 }, term: 1, tags: 1, uses: 2, note: '新春礼包', why: '新春活动' });
+  ok(c1.ok && c1.code === 'SPRING2026' && c1.until === T + 14 * 86400e3, '自己起的码：去掉空格、换成大写；默认 14 天内能领', c1);
+  ok((await adm('POST', '/api/admin/code', { code: 'Spring2026', ink: 1, note: '重复的码' })).status === 409, '同一个码不能建两次（不分大小写）');
+  const rnd = [];
+  for (let j = 0; j < 5; j++) rnd.push((await adm('POST', '/api/admin/code', { ink: 1, uses: 1, note: '随机码' })).code);
+  ok(rnd.every(k => /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{10}$/.test(k)) && new Set(rnd).size === 5, '不填码就随机生成 10 位（没有 0、O、1、I、L，免得玩家看错）', rnd);
+
+  const i1 = inkOf(R1.uid), s1 = stateOf(R1.uid);
+  const r1 = await claim(R1.token, 'spring2026');
+  ok(r1.ok && r1.res.ok && r1.code && r1.code.note === '新春礼包' && r1.code.ink === 500 && r1.code.cases.c2 === 1 && r1.code.term === 1 && r1.code.tags === 1, '玩家输入（小写也行）就领到，回复里带着说明和内容（网页弹提示用）', r1);
+  const s1b = stateOf(R1.uid);
+  ok(inkOf(R1.uid) === i1 + 500 && s1b.cases.c2 === (s1.cases.c2 || 0) + 1 && s1b.term === s1.term + 1 && s1b.tags === s1.tags + 1, '墨锭、武器箱、终端机、改名标签都进了账');
+  ok(r1.ledger && r1.ledger.ink === inkOf(R1.uid) && r1.state && r1.state.term === s1b.term, '回复里的账本和存档也是领完以后的（网页按这个显示）', r1.ledger);
+  const lg = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'code_got'", R1.uid), lgd = lg ? parseDetail(lg.detail) : {};
+  ok(lgd.code === 'SPRING2026' && lgd.ink === 500 && lgd.cases.c2 === 1 && !row("SELECT 1 AS x FROM econ_log WHERE act = 'claimCode'"), '玩家的流水里记一条 code_got：哪个码、领到了什么', lgd);
+  const again = await claim(R1.token, 'SPRING2026');
+  ok(again.status === 400 && again.error === '这个兑换码你已经领过了' && inkOf(R1.uid) === i1 + 500, '同一个号再领：已经领过了', again);
+  const n2 = nonce(), rp1 = await claim(R2.token, 'SPRING2026', '2.2.0.2', n2), i2 = inkOf(R2.uid), rp2 = await claim(R2.token, 'SPRING2026', '2.2.0.2', n2);
+  ok(rp1.ok && rp2.ok && rp2.replay && rp2.code && rp2.code.note === '新春礼包' && inkOf(R2.uid) === i2, '网络重试（同一个请求编号再发一次）：照样回“领到了”，但只领一份', rp2);
+  const full = await claim(R3.token, 'SPRING2026', '2.2.0.3');
+  ok(full.status === 400 && full.error === '这个兑换码已经被领完了', '最多 2 个号能领：第 3 个号领不到', full);
+  ok(row('SELECT got FROM code WHERE code = ?', 'SPRING2026').got === 2 && row('SELECT COUNT(*) AS n FROM code_got WHERE code = ?', 'SPRING2026').n === 2, '领过的号记下来（code_got），领走的份数对得上');
+
+  await adm('POST', '/api/admin/code', { code: 'RUSHONE', ink: 70, uses: 100, note: '并发测试' });
+  const i3 = inkOf(R3.uid), rs = await Promise.all(Array.from({ length: 6 }, (_, j) => claim(R3.token, 'RUSHONE', '2.2.1.' + j)));
+  ok(rs.filter(r => r.ok).length === 1 && inkOf(R3.uid) === i3 + 70 && rs.filter(r => !r.ok).every(r => r.error === '这个兑换码你已经领过了'), '同一个号同时发 6 个请求：只领到一份', rs.map(r => r.status + (r.error || '')));
+  await adm('POST', '/api/admin/code', { code: 'LASTTHREE', ink: 30, uses: 3, note: '抢最后几份' });
+  const many = [];
+  for (let j = 0; j < 6; j++) { const u = await newUser('rusher' + j); await econ(u.token, 'sync'); many.push(u); }
+  const ink6 = many.map(u => inkOf(u.uid)), rr = await Promise.all(many.map((u, j) => claim(u.token, 'LASTTHREE', '2.2.2.' + j)));
+  const gain6 = many.reduce((a, u, j) => a + inkOf(u.uid) - ink6[j], 0);
+  ok(rr.filter(r => r.ok).length === 3 && rr.filter(r => !r.ok).every(r => r.error === '这个兑换码已经被领完了') && gain6 === 90 && row('SELECT got FROM code WHERE code = ?', 'LASTTHREE').got === 3, '6 个号同时抢最后 3 份：正好 3 个领到，别的领不到（不会多领）', [rr.map(r => r.status + (r.error || '')), gain6]);
+
+  await adm('POST', '/api/admin/gift', { to: 'redeemer1', ink: 11, note: '顺便补偿', why: '测试' });
+  await adm('POST', '/api/admin/code', { code: 'WITHGIFT', ink: 22, note: '和补偿一起' });
+  const ig = inkOf(R1.uid), rg = await claim(R1.token, 'WITHGIFT', '2.2.3.1');
+  ok(rg.ok && rg.gifts && rg.gifts[0].note === '顺便补偿' && rg.code.note === '和补偿一起' && inkOf(R1.uid) === ig + 33, '有补偿还没领的时候兑换：补偿和兑换码一起进账', [rg.gifts, rg.code]);
+
+  await adm('POST', '/api/admin/code', { code: 'STOPME', ink: 20, note: '要停用的' });
+  ok((await adm('POST', '/api/admin/code/off', { code: 'STOPME' })).status === 400, '停用也要写原因');
+  ok((await adm('POST', '/api/admin/code/off', { code: 'NOSUCHCODE', why: '测试' })).status === 404, '停用不存在的码：404');
+  const off = await adm('POST', '/api/admin/code/off', { code: 'stopme', why: '发错了' }), ro = await claim(R2.token, 'STOPME', '2.2.3.2');
+  ok(off.ok && ro.status === 400 && ro.error === '兑换码无效或已过期', '停用以后领不到（和不存在的码说法一样）', ro);
+  const B = await newUser('bannedredeemer');
+  await econ(B.token, 'sync');
+  await adm('POST', '/api/admin/code', { code: 'BANTEST', ink: 20, note: '封号测试' });
+  await adm('POST', '/api/admin/ban', { uid: B.uid, days: 1, why: '测试封号' });
+  const rb = await claim(B.token, 'BANTEST', '2.2.3.3');
+  ok(rb.status === 403 && row('SELECT got FROM code WHERE code = ?', 'BANTEST').got === 0, '封了号的领不了', rb);
+  const loc = C.run(C.blank(), 'claimCode', { code: 'BANTEST' }, { now: T, rnd: Math.random, uid: 'local', ink: 0, skins: [], equip: {}, server: false });
+  ok(loc.res.err && /服务器/.test(loc.res.err) && C.ACTIONS.includes('claimCode'), '本机存档（没有服务器）领不了兑换码', loc.res);
+
+  const W = await newUser('guesser');
+  await econ(W.token, 'sync');
+  const st = [];
+  for (let j = 0; j < 11; j++) st.push((await claim(W.token, j === 3 ? '!!' : 'WRONG' + j, '2.2.4.' + j)).status);
+  ok(st.slice(0, 10).every(s => s === 400) && st[10] === 429, '同一个号一小时里输错 10 次（换 IP 也算）：先锁住', st);
+  await adm('POST', '/api/admin/code', { code: 'RIGHTONE', ink: 20, note: '锁住测试' });
+  ok((await claim(W.token, 'RIGHTONE', '2.2.4.99')).status === 429, '锁住期间输对了也不让领（防猜码）');
+  const G = [];
+  for (let j = 0; j < 4; j++) { const u = await newUser('ipguess' + j); await econ(u.token, 'sync'); G.push(u); }
+  const ipst = [];
+  for (let j = 0; j < 31; j++) ipst.push((await claim(G[j % 4].token, 'NOPE' + j, '2.2.5.5')).status);
+  ok(ipst.slice(0, 30).every(s => s === 400) && ipst[30] === 429, '同一个 IP 换着号输错 30 次：这个 IP 先锁住', ipst);
+  ok((await claim(R3.token, 'RIGHTONE', '2.2.5.6')).ok, '别的 IP、别的号不受影响');
+  T += 61 * 60000;
+  ok((await claim(W.token, 'RIGHTONE', '2.2.4.99')).ok && (await claim(G[0].token, 'RIGHTONE', '2.2.5.5')).ok, '一小时后自己解锁');
+  await adm('POST', '/api/admin/code', { code: 'ONEDAY', ink: 20, days: 1, note: '一天内领' });
+  const ex0 = await claim(R2.token, 'ONEDAY', '2.2.6.1');
+  T += 86400e3 + 1000;
+  const ex = await claim(R3.token, 'ONEDAY', '2.2.6.2');
+  ok(ex0.ok && ex.status === 400 && ex.error === '兑换码无效或已过期', '有效期里领得到，过了有效期领不到', ex);
+
+  const cl = await adm('GET', '/api/admin/codes'), byCode = Object.fromEntries(cl.codes.map(x => [x.code, x]));
+  const sp = byCode.SPRING2026 || {};
+  ok(cl.ok && sp.got === 2 && sp.uses === 2 && sp.items.cases.c2 === 1 && sp.items.term === 1 && sp.by === 'admin' && sp.note === '新春礼包' && byCode.STOPME.off === 1 && !('items_json' in sp), '兑换码列表：领了几份、最多几份、内容、谁建的、停用了没有', sp);
+  const au = await adm('GET', '/api/admin/audit');
+  ok(au.rows.some(r => r.act === 'code_new' && r.uid === '*' && parseDetail(r.detail).code === 'SPRING2026' && parseDetail(r.detail).why === '新春活动' && parseDetail(r.detail).uses === 2) && au.rows.some(r => r.act === 'code_off' && parseDetail(r.detail).code === 'STOPME' && parseDetail(r.detail).why === '发错了'), '操作记录里有建码和停用，写着原因');
+}
+
 section('在线改经济数值：价格、每天能开几个、手续费、爆率马上生效；乱填的不收；能退回；规则核心里写死的默认值不变');
 {
   const c0 = await adm('GET', '/api/admin/cfg');
@@ -1161,8 +1254,8 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   const cat = await adm('GET', '/api/admin/catalog');
   ok(cat.ok && cat.items.length === Object.keys(C.ITEM).length && cat.cols.length === 7 && cat.tiers.length === 5 && cat.cfg.length === C.CFG_INFO.length && cat.items.every(x => C.charOf(x.k) === x.char && C.ITEM[x.k].col === x.col), `饰品目录：${cat.items.length} 款饰品、7 个武器箱、5 档品质、能改的数值`);
   const au = await adm('GET', '/api/admin/audit'), acts = new Set(au.rows.map(r => r.act));
-  ok(au.ok && ['admin', 'admin_ban', 'pardon', 'gift_new', 'gift_off', 'cfg'].every(a => acts.has(a)) && au.rows.every(r => !!(parseDetail(r.detail).by)), '操作记录：六种管理员操作都在，每条都写着是谁', [...acts]);
-  ok(au.rows.some(r => r.uid === '*' && r.act === 'cfg') && !acts.has('open') && !acts.has('ledger') && !acts.has('gift_got'), '全服的记在“全服”名下；玩家自己的操作不混进来');
+  ok(au.ok && ['admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg'].every(a => acts.has(a)) && au.rows.every(r => !!(parseDetail(r.detail).by)), '操作记录：九种管理员操作都在，每条都写着是谁', [...acts]);
+  ok(au.rows.some(r => r.uid === '*' && r.act === 'cfg') && !acts.has('open') && !acts.has('ledger') && !acts.has('gift_got') && !acts.has('code_got'), '全服的记在“全服”名下；玩家自己的操作不混进来');
 }
 
 section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段脚本');

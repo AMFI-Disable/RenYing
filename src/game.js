@@ -11406,6 +11406,20 @@ async function redeemCode(rawCode) {
     renderTasks();
     return;
   }
+  // 管理后台建的礼包码：拿去服务器核对（armory.js 里的 armoryRedeem），领到的东西直接进存档；离线版没有服务器
+  if (!OFFLINE_BUILD && /^[A-Z0-9]{4,20}$/.test(up) && typeof window.armoryRedeem === 'function') {
+    const btn = $id('rdBtn');
+    if (btn) btn.disabled = true;
+    if ($id('tMsg')) $id('tMsg').textContent = '正在兑换…';
+    let r;
+    try { r = await window.armoryRedeem(up); } finally { if (btn) btn.disabled = false; }
+    const text = r.ok ? `兑换成功：${r.note}（${r.text}）` : r.err;
+    if (r.ok) { SFX.chargeFull(); if ($id('rdCode')) $id('rdCode').value = ''; }
+    toast(text);
+    if ($id('tMsg')) $id('tMsg').textContent = text;
+    renderTasks();
+    return;
+  }
   toast('兑换码无效或已过期');
   if ($id('tMsg')) $id('tMsg').textContent = '兑换码无效或已过期';
 }
