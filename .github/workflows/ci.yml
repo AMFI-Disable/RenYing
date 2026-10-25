@@ -67,6 +67,12 @@ jobs:
           node tools/econ-test.mjs
           node tools/econ-test.mjs --bundle
 
+      # Runs src/cloud.js in Node with a fake Worker: per-account save isolation, a pending
+      # save that must not follow an account switch, no retry storm on a 4xx refusal,
+      # non-Latin-1 passwords for local accounts, and full-profile export signatures.
+      - name: Cloud Save Client Tests
+        run: node tools/cloud-test.mjs
+
       - name: Run Combat & AI Regression Suite
         run: node tools/combat-test.mjs --sim
 
