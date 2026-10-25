@@ -131,8 +131,15 @@ loss count without a corresponding win. The rating path is server-owned, so this
 
 **O5 — The combat suite is flaky.**
 `tools/combat-test.mjs --sim` fails intermittently on "2v2 Single KO Survival: Surviving teammate did not receive
-last stand meter buff in pc_cc". Reproduced 2/3 runs on `903dfaa` and 1/3 on this branch, so it predates this work
-and is unrelated to the cloud changes. It needs a seed or a longer settle window in the test, not a fix in the game.
+last stand meter buff". Reproduced 2/3 runs on `903dfaa` and about 1/3 here, so it predates this work and is
+unrelated to the cloud changes.
+
+What the failure actually is: the check kills one fighter with a single `applyHit()` and immediately asserts that
+the survivor has `meter === 100`. Instrumenting it shows the survivor is sometimes `hidden` at that moment, with
+the round already back in `intro` and the victim's HP restored — i.e. the capture happened while the engine was
+between rounds, not mid-fight. A benched fighter cannot receive the buff, so the assertion is really testing
+timing. The fix belongs in the test (drive the match into a stable `fight` state, then assert), not in the game;
+two attempts at that from here were inconclusive and were reverted rather than left half-done.
 
 ---
 
