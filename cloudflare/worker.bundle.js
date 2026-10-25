@@ -497,6 +497,37 @@
     return { ok: full, full, err: full ? '' : `要正好 ${C.NEED[tier]} 件，现在 ${items.length} 件`, items, tier, up, outs, st: stN === items.length };
   };
   C.ctxOk = c => isObj(c) && C.MODES.includes(c.mode) && C.HERO_IDS.includes(c.char);
+  // 找出库存中的所有重复饰品，保留最高斩数/当前穿着，返回待出售列表与总墨锭估值
+  C.dupePlan = s => {
+    if (!isObj(s) || !Array.isArray(s.inv)) return { items: [], totalGain: 0, byKey: {} };
+    const groups = new Map();
+    for (const it of s.inv) {
+      if (!it || !it.k) continue;
+      if (!groups.has(it.k)) groups.set(it.k, []);
+      groups.get(it.k).push(it);
+    }
+    const toSell = [], byKey = {};
+    let totalGain = 0;
+    for (const [k, list] of groups.entries()) {
+      if (list.length <= 1) continue;
+      const sorted = list.slice().sort((a, b) => {
+        const stA = a.st >= 0 ? a.st : -1, stB = b.st >= 0 ? b.st : -1;
+        if (stB !== stA) return stB - stA;
+        const eqA = s.eq && s.eq[C.charOf(a.k)] === a.i ? 1 : 0;
+        const eqB = s.eq && s.eq[C.charOf(b.k)] === b.i ? 1 : 0;
+        if (eqB !== eqA) return eqB - eqA;
+        return b.i - a.i;
+      });
+      const kept = sorted[0], dupes = sorted.slice(1);
+      byKey[k] = { kept, dupes };
+      for (const it of dupes) {
+        const val = C.refVal(it);
+        toSell.push({ ...it, val });
+        totalGain += val;
+      }
+    }
+    return { items: toSell, totalGain, byKey };
+  };
 
   /* ---------- 动作 ---------- */
   // env：now 现在时间、rnd 随机数、uid、ink 墨锭（会被改）、skins 可穿的皮肤（会被改）、equip 穿着（会被改）、server 是不是服务器在算、
@@ -622,6 +653,22 @@
     s.stat.trade++;
     bump(s, 'trade', 1);
     return { ok: true, item: it };
+  };
+  A.sellDupes = (s, a, env) => {   // 自动出售所有重复饰品，保留最高斩数/穿着那一件
+    const plan = C.dupePlan(s);
+    if (!plan.items.length) return { err: '库存里没有重复的饰品' };
+    const sold = [];
+    for (const d of plan.items) {
+      const it = C.dropItem(s, d.i, env);
+      if (!it) continue;
+      const val = C.refVal(it);
+      giveInk(env, val);
+      s.stat.sold++;
+      histPush(s, { t: env.now, kind: 'sell', k: it.k, st: it.st, price: val, gain: val });
+      sold.push({ i: it.i, k: it.k, st: it.st, val });
+      bump(s, 'sell', 1);
+    }
+    return { ok: true, count: sold.length, totalGain: plan.totalGain, sold };
   };
   A.rename = (s, a, env) => {
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };

@@ -449,7 +449,8 @@
     const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button" class="ar-caseitem" data-gotab="cases" style="--cc:${C.COLS[c].col}"><span class="ar-emb">${C.COLS[c].emblem}</span><b>${C.COLS[c].name}武器箱</b><small>×${s.cases[c]}</small></button>`).join('')
       + (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
     const legacy = legacySkins(s), tl = tagLeft(s);
-    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
+    const dupeP = C.dupePlan(s), dupeCount = dupeP.items.length;
+    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-sell-dupes>一键出售重复（+${fmt(dupeP.totalGain)} 墨锭）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
       ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
       <div class="ar-filter">
         <select id="arInvChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${INV.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
@@ -972,10 +973,23 @@
         return;
       }
       if (d.store) { confirmBox('买改名标签', `花 ${ink(C.STORE[0].cost)} 买一张改名标签？每周最多买 ${C.STORE[0].lim} 张。`, '购买', buyTag); return; }
+      if (d.sellDupes !== undefined) { sellDupesGo(); return; }
       if (b.id === 'arGift') { const r = await act('gift', {}); if (r && r.ok) { SFX.gong && SFX.gong(); toast('新手礼：初刃武器箱 +1，终端机 +1'); render(); } return; }
       if (b.id === 'arTradeGo') { tradeGo(); return; }
       if (b.id === 'arTradeClr') { TR.sel = []; render(); return; }
       if (b.id === 'arSupGo') { const r = await act('supply', { picks: SUP.pick }); if (r && r.ok) { SUP.pick = []; SFX.gong && SFX.gong(); const it = r.got.find(x => x.t === 'item'); if (it) reveal(it.item); else toast('补给到手'); render(); } return; }
+    });
+  }
+  function sellDupesGo() {
+    const s = ST, plan = C.dupePlan(s);
+    if (!plan.items.length) { msg('没有重复的饰品可出售'); return; }
+    confirmBox('自动出售重复饰品', `将自动出售 <b>${plan.items.length}</b> 件重复饰品，共获得 ${ink(plan.totalGain)}。<br><small>系统将为您严格保留每款饰品中斩数最高（或当前穿着）的一件。</small>`, '确认出售', async () => {
+      const r = await act('sellDupes', {});
+      if (r && r.ok) {
+        SFX.wood && SFX.wood();
+        toast(`已出售 ${r.count} 件重复饰品，获得 ${r.totalGain} 墨锭`);
+        render();
+      }
     });
   }
   function tradeGo() {

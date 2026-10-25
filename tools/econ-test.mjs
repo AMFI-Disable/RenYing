@@ -613,12 +613,12 @@ section('第 3 版的武库存档：卖给系统的挂单全部退回，武器�
 
 section('不能套利：系统不定饰品的价、也不收购；墨锭只有对局、补给、星章和卖给别的玩家能拿到');
 {
-  const income = ['matchEnd', 'supply', 'star'];   // 规则里会加墨锭的动作（加上结算挂单）
+  const income = ['matchEnd', 'supply', 'star', 'sellDupes'];   // 规则里会加墨锭的动作（加上结算挂单与出售重复饰品）
   const R = C.rng(99), env = () => ({ now: T, rnd: R, uid: 'arb', ink: 1000, skins: [], equip: {}, server: true });
   const rich = () => { const s = C.blank(); s.cases = Object.fromEntries(C.CASES.map(c => [c, 3])); s.term = 3; s.tags = 3; s.gift = 0;
     for (let i = 1; i <= 12; i++) s.inv.push({ i, k: C.ofTier('mil')[i % 4], st: -1, n: '', t: T, src: 'case' }); s.nid = 13; return s; };
   let gained = [];
-  const argsOf = { open: { c: 'c1' }, buyCase: { c: 'c1', n: 1 }, buyTerm: { n: 1 }, store: { id: 'tag' }, trade: { ids: Array.from({ length: 10 }, (_, i) => i + 1) }, rename: { i: 1, name: 'x' }, equip: { i: 1 }, unequip: { char: 'qingfeng' }, unseal: {}, gift: {}, collect: { c: 'c1' }, mission: { m: 0 }, list: { i: 1, price: 5 }, buy: { l: '0123456789abcdef' }, cancel: { l: '0123456789abcdef' }, sync: {}, matchStart: { mode: 'cpu' } };
+  const argsOf = { open: { c: 'c1' }, buyCase: { c: 'c1', n: 1 }, buyTerm: { n: 1 }, store: { id: 'tag' }, trade: { ids: Array.from({ length: 10 }, (_, i) => i + 1) }, rename: { i: 1, name: 'x' }, equip: { i: 1 }, unequip: { char: 'qingfeng' }, unseal: {}, gift: {}, collect: { c: 'c1' }, mission: { m: 0 }, list: { i: 1, price: 5 }, buy: { l: '0123456789abcdef' }, cancel: { l: '0123456789abcdef' }, sync: {}, matchStart: { mode: 'cpu' }, sellDupes: {} };
   for (const a of C.ACTIONS) {
     if (income.includes(a)) continue;
     for (let k = 0; k < 20; k++) {
@@ -753,6 +753,40 @@ section('账本和武库一起动：本地收入不会把武库的钱冲掉');
   const r = await call('POST', '/api/profile', { profile: { ...p.profile, ink: 2040 }, ledger: { deltas: [{ id: 'ffffffff01', d: 40 }], ev: p.ledger.ver } }, u.token);
   ok(inkOf(u.uid) === 2000 - cost + 40, '旧存档里的墨锭数不会覆盖武库的花销', [inkOf(u.uid), 2000 - cost + 40]);
   ok(r.ledger.ink === inkOf(u.uid), '回执的墨锭对');
+}
+
+
+section('一键出售重复饰品：保留最高斩数，多余重复折算墨锭');
+{
+  const u = await newUser('duper', { ink: 500 });
+  await econ(u.token, 'sync');
+  // 注入测试库存：3 件相同饰品 qf_frost，斩数分别为 5, 20, -1；以及 2 件相同的 fy_jade（普通版）
+  const st0 = stateOf(u.uid);
+  st0.inv.push(
+    { i: 101, k: 'qf_frost', st: 5, n: '', t: T, src: 'case' },
+    { i: 102, k: 'qf_frost', st: 20, n: '', t: T, src: 'case' },
+    { i: 103, k: 'qf_frost', st: -1, n: '', t: T, src: 'case' },
+    { i: 104, k: 'fy_jade', st: -1, n: '', t: T, src: 'case' },
+    { i: 105, k: 'fy_jade', st: -1, n: '', t: T, src: 'case' }
+  );
+  st0.nid = 106;
+  ENV.DB.raw.prepare('UPDATE econ SET state_json = ? WHERE uid = ?').run(JSON.stringify(st0), u.uid);
+
+  const plan = C.dupePlan(stateOf(u.uid));
+  ok(plan.items.length === 3, 'dupePlan 找出 3 件待出售重复饰品（qf_frost 2件，fy_jade 1件）', plan.items.length);
+  ok(plan.byKey['qf_frost'].kept.i === 102 && plan.byKey['qf_frost'].kept.st === 20, 'qf_frost 保留斩数最高的第 102 号（20斩）');
+
+  const inkBefore = inkOf(u.uid);
+  const r = await econ(u.token, 'sellDupes');
+  ok(r.res.ok && r.res.count === 3, 'sellDupes 成功出售 3 件', r.res);
+  const stAfter = stateOf(u.uid);
+  ok(stAfter.inv.length === 2, '出售后库存剩余 2 件（每款仅留一件最高斩数）', stAfter.inv.length);
+  const remainingFrost = stAfter.inv.find(x => x.k === 'qf_frost');
+  ok(remainingFrost && remainingFrost.i === 102 && remainingFrost.st === 20, '剩余的 qf_frost 确实是最高斩数的那件');
+  ok(inkOf(u.uid) === inkBefore + r.res.totalGain, '出售获得相应墨锭并到账');
+
+  const rEmpty = await econ(u.token, 'sellDupes');
+  ok(rEmpty.res.err && rEmpty.res.err.includes('没有重复'), '无重复时再次出售被拒绝');
 }
 
 section('伪造皮肤：存档里塞武库皮肤没用；卖掉的皮肤旧存档加不回来');
