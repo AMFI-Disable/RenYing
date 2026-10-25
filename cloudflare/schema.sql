@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS econ_log (
     detail TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_econ_log_uid ON econ_log (uid, at);
+-- 管理后台查“管理员做过的事”用（act 是 admin、admin_ban、pardon、gift_new、gift_off、cfg 这些）。
+CREATE INDEX IF NOT EXISTS idx_econ_log_act ON econ_log (act, id);
 
 -- 处罚记录：第 1 次警告，第 2 次封 1 天，第 3 次永久封号；pardon 是管理员解封的时间。
 CREATE TABLE IF NOT EXISTS sanctions (
@@ -94,3 +96,35 @@ CREATE TABLE IF NOT EXISTS mkt (
 CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price);
 CREATE INDEX IF NOT EXISTS idx_mkt_seller ON mkt (seller, state, paid);
 CREATE INDEX IF NOT EXISTS idx_mkt_done ON mkt (state, done_at);
+
+-- 全服补偿（管理后台发）：uid 是 '*' 就发给所有人，否则只发给这一个账号。玩家下次动武库时自动领，每个账号只领一次（gift_got）。
+-- born：只有这个时间之前注册的账号能领（发补偿之后新注册的号不领）；until 之后不再发；off 是 1 就是停发了。
+CREATE TABLE IF NOT EXISTS gift (
+    id TEXT PRIMARY KEY,
+    uid TEXT NOT NULL,
+    ink INTEGER NOT NULL DEFAULT 0,
+    items_json TEXT NOT NULL DEFAULT '{}',
+    note TEXT NOT NULL,
+    by TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    until INTEGER NOT NULL,
+    born INTEGER NOT NULL,
+    off INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_gift_uid ON gift (uid, until);
+CREATE TABLE IF NOT EXISTS gift_got (
+    gid TEXT NOT NULL,
+    uid TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    PRIMARY KEY (gid, uid)
+);
+
+-- 在线改的经济数值（价格、爆率、每天能开几个、手续费、掉落、每天认多少本机收入）：每改一次加一行，最后一行是现在用的。
+-- json 只存和默认值不一样的项；能改哪些、上下限是多少看 src/armory-core.js 的 C.CFG_INFO。
+CREATE TABLE IF NOT EXISTS cfg (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    json TEXT NOT NULL,
+    by TEXT NOT NULL,
+    note TEXT NOT NULL,
+    at INTEGER NOT NULL
+);

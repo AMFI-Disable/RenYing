@@ -430,12 +430,9 @@
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
   }
 
-  // 开发者账号处理
+  // 开发者账号处理：Dev 和别的账号一样用云端的密码登录（网页里不存 Dev 的密码）。
+  // 云端的 Dev 号别人注册不了，没有的话在管理后台建；密码也只能在管理后台重设
   async function loginDev(password) {
-    if (btoa(password) !== 'SUFNQURFVkJSTw==') {
-      throw new Error('昵称或密码不对');
-    }
-    // 尝试云端登录
     try {
       let data = null;
       try {
@@ -444,20 +441,12 @@
           body: JSON.stringify({ username: 'Dev', password })
         });
       } catch (err) {
-        if (err && (err.status === 404 || (err.message && err.message.includes('未找到')))) {
-          // 未注册时尝试在云端注册 Dev 账号
-          const devInitProf = makeDevProfile();
-          data = await api('/api/register', {
-            method: 'POST',
-            body: JSON.stringify({
-              username: 'Dev',
-              password,
-              profile: toCloudData(devInitProf)
-            })
-          });
-        } else {
-          throw err;
+        if (err && err.status === 404) {
+          const e = new Error('云端还没有 Dev 账号，请先在管理后台建一个');
+          e.status = 404;
+          throw e;
         }
+        throw err;
       }
 
       setToken(data.token);
@@ -496,6 +485,7 @@
       notifyAuthChange(currentUser);
       return userObj;
     } catch (netErr) {
+      if (netErr && netErr.status) throw netErr;   // 服务器回了话（密码不对、试错太多、没有这个号）：照实说
       console.warn('Dev cloud login failed, falling back to local dev account:', netErr);
       const uid = 'dev_master';
       let devProf = null;
@@ -523,8 +513,8 @@
     if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
 
     if (name.toLowerCase() === 'dev') {
-      if (btoa(password) !== 'SUFNQURFVkJSTw==') throw new Error('该昵称已被使用');
-      return await loginDev(password);
+      try { return await loginDev(password); }
+      catch (e) { throw e && e.status === 401 ? new Error('该昵称已被使用') : e; }
     }
 
     // 读取游客进度准备同步上云
@@ -1013,17 +1003,7 @@
 
   function init() {
     getUser();
-    // 如果当前处于 Dev 开发者身份但由于此前离线降级到本地 dev_master，在云端可连接时自动无缝重登升级为云端 Dev 账号
-    try {
-      const u = getUser();
-      if (u && (u.isDevMaster || String(u.name || '').toLowerCase() === 'dev') && !u.isCloud && hasValidConfig()) {
-        loginDev('IAMADEVBRO').then(() => {
-          console.log('Dev auto-promoted to cloud session successfully');
-        }).catch(e => {
-          console.warn('Dev background cloud auto-promote skipped:', e);
-        });
-      }
-    } catch (e) {}
+    // 离线时降成本地 dev_master 的 Dev，联网后重新登录一次就回到云端（网页里不存 Dev 的密码，没法自动登录）
   }
 
   // 挂载到全局

@@ -4,7 +4,13 @@
  * 部署：wrangler.toml 的 main 是 worker.bundle.js，由 python3 tools/build.py 生成（本文件 + src/armory-core.js
  *       拼成一个文件，在 Cloudflare 网页编辑器里整段粘贴也能用）。要绑定 D1 数据库 DB，表会自动建好。
  * 环境变量（Workers → Settings → Variables，选 Secret；不设也能跑，只是用不了管理接口）：
- *   ADMIN_SECRET      管理接口口令：查流水、查处罚、解封（node tools/econ-admin.mjs）
+ *   ADMIN_SECRET      管理口令：管理网页（这个 Worker 的 /admin）和 node tools/econ-admin.mjs 都用它。
+ *                     可以只写一个口令，也可以写成「名字:口令」、几个人用逗号隔开（比如 even:口令1,lnt:口令2），
+ *                     这样流水里记得下是谁做的。口令用 openssl rand -hex 24 这种随机生成的长串，少于 16 位的不认
+ *
+ * 管理后台（/api/admin/*，要管理口令）：查账号和流水、加减墨锭、发或收武器箱 / 终端机 / 改名标签 / 饰品、封号解封、
+ *   全服补偿（玩家下次动武库时自动领）、在线改经济数值（价格、爆率、每天能开几个、手续费、掉落、每天认多少本机收入）。
+ *   每一笔都要写原因，记进 econ_log（全服的操作记在 uid = '*' 名下）。没有“dev 账号”这种特殊昵称：开发者也是普通账号
  *
  * 防作弊（和钱有关的都在服务器上算，客户端只负责显示）：
  *   武库：开箱、终端机、商店、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算。
@@ -46,10 +52,10 @@ function error(message, status = 400, extra) {
 
 const DAY_MS = 86400e3;
 // 客户端上报的墨锭收入（打电脑、任务、关卡星这些都在本机算）：服务器看不见本机发生了什么，只能限量。
-// 每天先认 INK_BASE；每打完一局服务器认可的对局（开局领了票、打够了时间），当天再多认 INK_PER_MATCH；最多 INK_DAY_CAP。
-// 只在控制台里改数的人一天最多多拿 INK_BASE；正常玩家打得越多额度越高。超出额度的先记着（单条不超过 INK_OWE_ONE 的才记，
+// 每天先认 1500；每打完一局服务器认可的对局（开局领了票、打够了时间），当天再多认 80；最多 6000。这三个数可以在线改
+// （规则核心 C.CFG_INFO 里的 ink.base / ink.match / ink.cap）。
+// 只在控制台里改数的人一天最多多拿 1500；正常玩家打得越多额度越高。超出额度的先记着（单条不超过 INK_OWE_ONE 的才记，
 // 最多记 INK_OWE_MAX），之后哪天额度有空余就补上，所以新手一天里领了好几样一次性奖励也不会丢。
-const INK_BASE = 1500, INK_PER_MATCH = 80, INK_DAY_CAP = 6000;
 const INK_OWE_ONE = 2500, INK_OWE_MAX = 4000;
 const INK_IMPORT_CAP = 100000;   // 第一次建账：老存档里的墨锭最多认这么多
 const REG_INK_CAP = 5000;        // 注册时带上来的游客 / 本机存档，墨锭最多认这么多
@@ -65,6 +71,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS econ_nonce (uid TEXT NOT NULL, nonce TEXT NOT NULL, at INTEGER NOT NULL, res_json TEXT NOT NULL, PRIMARY KEY (uid, nonce))`,
   `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, detail TEXT)`,
   `CREATE INDEX IF NOT EXISTS idx_econ_log_uid ON econ_log (uid, at)`,
+  `CREATE INDEX IF NOT EXISTS idx_econ_log_act ON econ_log (act, id)`,   // 管理后台查“管理员做过的事”用
   `CREATE TABLE IF NOT EXISTS sanctions (uid TEXT PRIMARY KEY, strikes INTEGER NOT NULL DEFAULT 0, ban_until INTEGER NOT NULL DEFAULT 0, perm INTEGER NOT NULL DEFAULT 0, log_json TEXT NOT NULL DEFAULT '[]', at INTEGER NOT NULL DEFAULT 0, pardon INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS rate (k TEXT PRIMARY KEY, n INTEGER NOT NULL, reset INTEGER NOT NULL)`,
   // 玩家市场：state 0 在卖、1 卖掉了、2 撤下了；paid 是卖家拿到钱没有；tx 是改它的那个请求（同一批写入靠它确认改成了）
@@ -72,6 +79,12 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price)`,
   `CREATE INDEX IF NOT EXISTS idx_mkt_seller ON mkt (seller, state, paid)`,
   `CREATE INDEX IF NOT EXISTS idx_mkt_done ON mkt (state, done_at)`,
+  // 全服补偿：uid 是 '*' 发给所有人（只给 born 之前注册的号），否则只发给这一个号；领过的记在 gift_got
+  `CREATE TABLE IF NOT EXISTS gift (id TEXT PRIMARY KEY, uid TEXT NOT NULL, ink INTEGER NOT NULL DEFAULT 0, items_json TEXT NOT NULL DEFAULT '{}', note TEXT NOT NULL, by TEXT NOT NULL, at INTEGER NOT NULL, until INTEGER NOT NULL, born INTEGER NOT NULL, off INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE INDEX IF NOT EXISTS idx_gift_uid ON gift (uid, until)`,
+  `CREATE TABLE IF NOT EXISTS gift_got (gid TEXT NOT NULL, uid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (gid, uid))`,
+  // 在线改的经济数值：每改一次加一行，最后一行是现在用的（只存和默认值不一样的项）
+  `CREATE TABLE IF NOT EXISTS cfg (id INTEGER PRIMARY KEY AUTOINCREMENT, json TEXT NOT NULL, by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
 ];
 let schemaReady = null;
 function ensureSchema(env) {
@@ -128,7 +141,7 @@ async function authenticate(env, request) {
   const token = getBearerToken(request);
   if (!token || token.length > 128) return null;
   const user = await env.DB.prepare(
-    'SELECT u.id AS id, u.username AS username, u.profile_json AS profile_json FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ?'
+    'SELECT u.id AS id, u.username AS username, u.profile_json AS profile_json, u.created_at AS created_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ?'
   ).bind(token, Date.now()).first();
   return user ? { token, user } : null;
 }
@@ -251,16 +264,16 @@ function ledgerOut(eco, now) {
   const acks = Object.entries(eco.srv.ap).filter(([, v]) => now - v[0] < 3 * DAY_MS).sort((a, b) => b[1][0] - a[1][0]).slice(0, 200).map(([id]) => id);
   return { ink: eco.ink, ver: eco.ver, acks };
 }
-// 今天认多少本机收入：基础额度 + 今天服务器认可的对局数 × 每局额度
-function inkAllow(eco, day) {
+// 今天认多少本机收入：基础额度 + 今天服务器认可的对局数 × 每局额度（三个数都可以在线改）
+function inkAllow(eco, day, cfg) {
   const dm = eco.state && eco.state.dm, n = dm && dm.d === day ? Math.max(0, Math.min(C.MATCH_DAY_CAP, Math.floor(+dm.n || 0))) : 0;
-  return Math.min(INK_DAY_CAP, INK_BASE + INK_PER_MATCH * n);
+  return Math.min(C.cv(cfg, 'ink.cap'), C.cv(cfg, 'ink.base') + C.cv(cfg, 'ink.match') * n);
 }
 // 客户端本地赚的墨锭：每条只记一次，收入每天有额度，花掉的照扣。
 // srv.ap 记着每条的 [到达时间, 认了多少收入, 其中先记着多少]；srv.rv 是“撤回”点名了、但还没到的收入编号
 const LID = /^[0-9a-z]{8,32}$/;
-function applyDeltas(eco, deltas, now) {
-  const day = C.day(now), srv = eco.srv, allow = inkAllow(eco, day);
+function applyDeltas(eco, deltas, now, cfg) {
+  const day = C.day(now), srv = eco.srv, allow = inkAllow(eco, day, cfg);
   if (srv.ed !== day) { srv.ed = day; srv.en = 0; }
   srv.ow = Math.max(0, Math.min(INK_OWE_MAX, Math.floor(+srv.ow || 0)));
   if (!srv.rv || typeof srv.rv !== 'object') srv.rv = {};
@@ -328,6 +341,30 @@ function econWrite(env, uid, ver, now, srv, ink, stateJson, tx) {
     .bind(stateJson, JSON.stringify(srv), ink, now, uid, ver, ...(tx || []));
 }
 
+/* ---------- 在线改的经济数值（管理员用 /api/admin/cfg 改，cfg 表的最后一行是现在用的） ---------- */
+// 每个 Worker 实例最多 30 秒重读一次：改完半分钟内各处都换成新的。读出来的再过一遍检查，坏了就当没改
+let CFG_CACHE = { at: 0, id: 0, cfg: {} };
+async function cfgNow(env, now) {
+  if (CFG_CACHE.at && now - CFG_CACHE.at < 30e3 && now >= CFG_CACHE.at) return CFG_CACHE.cfg;
+  const r = await env.DB.prepare('SELECT id, json FROM cfg ORDER BY id DESC LIMIT 1').first();
+  const c = r ? C.cleanCfg(parseObj(r.json) || {}) : { cfg: {} };
+  CFG_CACHE = { at: now, id: r ? r.id : 0, cfg: c.cfg || {} };
+  return CFG_CACHE.cfg;
+}
+
+/* ---------- 全服补偿：开发组发的墨锭、武器箱、终端机、改名标签，玩家下次动武库时自动领 ---------- */
+// 发给所有人的（uid = '*'）只给 born 之前注册的号，免得开小号来领；单发给某个号的不管注册时间。每个号每份只领一次
+async function giftsFor(env, user, now) {
+  return (await env.DB.prepare("SELECT id, ink, items_json, note FROM gift WHERE (uid = ? OR uid = '*') AND off = 0 AND at <= ? AND until > ? AND born > ? AND NOT EXISTS (SELECT 1 FROM gift_got x WHERE x.gid = gift.id AND x.uid = ?) ORDER BY at LIMIT 10")
+    .bind(user.id, now, now, Math.floor(+user.created_at || 0), user.id).all()).results || [];
+}
+function giftItems(txt) {   // 一份补偿里的东西：{ cases: { c1: 2 }, term: 1, tags: 1 }，数都夹在 0 ~ 100
+  const o = parseObj(txt) || {}, cases = {};
+  for (const c of C.CASES) { const n = Math.floor(+(o.cases && o.cases[c]) || 0); if (n > 0) cases[c] = Math.min(100, n); }
+  const one = x => Math.max(0, Math.min(100, Math.floor(+x || 0)));
+  return { cases, term: one(o.term), tags: one(o.tags) };
+}
+
 /* ---------- 武库：所有动作都在服务器上算 ---------- */
 const QUIET = ['sync', 'matchStart'];   // 太频繁的动作不进流水账（有成交的除外）
 async function handleEcon(env, auth, body, now) {
@@ -341,6 +378,7 @@ async function handleEcon(env, auth, body, now) {
   if (ban) return banned(ban);
   if (!(await hit(env, 'econ:' + uid, 90, 60e3, now))) return error('操作太快了，歇一会儿再试', 429);
   if (!(await hit(env, 'econday:' + uid, 4000, DAY_MS, now))) return error('今天的操作次数用完了，明天再来', 429);
+  const cfg = await cfgNow(env, now);
   const freshProfile = async () => {
     const r = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(uid).first();
     return parseProfile(r ? r.profile_json : '', auth.user.username);
@@ -349,7 +387,7 @@ async function handleEcon(env, auth, body, now) {
   const seen = await env.DB.prepare('SELECT res_json FROM econ_nonce WHERE uid = ? AND nonce = ?').bind(uid, nonce).first();
   if (seen) {
     const eco = await loadEcon(env, uid, await freshProfile(), now);
-    return json({ ok: true, ...JSON.parse(seen.res_json), state: C.publicState(C.normalize(eco.state, { now, uid })), ledger: ledgerOut(eco, now), replay: true });
+    return json({ ok: true, ...JSON.parse(seen.res_json), state: C.publicState(C.normalize(eco.state, { now, uid })), ledger: ledgerOut(eco, now), cfg, replay: true });
   }
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
@@ -363,9 +401,22 @@ async function handleEcon(env, auth, body, now) {
       const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state FROM mkt WHERE id = ?').bind(args.l).first();
       if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json) };
     }
-    const E = { now, rnd, uid, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, mkt };
+    // 开发组发的补偿：先放进存档和墨锭，再做这次的动作（动作没做成也照样领到）
+    const gifts = await giftsFor(env, auth.user, now), got = [];
+    let state0 = eco.state, ink0 = eco.ink;
+    if (gifts.length) {
+      state0 = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid });
+      for (const g of gifts) {
+        const it = giftItems(g.items_json), ink = clampInk(g.ink, 1e6);
+        ink0 += ink;
+        for (const [c, n] of Object.entries(it.cases)) state0.cases[c] += n;
+        state0.term += it.term; state0.tags += it.tags;
+        got.push({ id: g.id, note: g.note, ink, ...it });
+      }
+    }
+    const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, mkt, cfg };
     const equip0 = { ...E.equip };
-    const r = C.run(eco.state, act, args, E);
+    const r = C.run(state0, act, args, E);
     const res = r.res || {}, st = r.state, stJson = JSON.stringify(st);
     const add = E.skins.filter(k => !skins0.includes(k)), del = skins0.filter(k => !E.skins.includes(k));
     const eq = {};
@@ -379,7 +430,7 @@ async function handleEcon(env, auth, body, now) {
     }
     const mo = mkt.out, settled = E.settled || [];
     if (!out.sold.length && !mo && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
-      return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {} });   // 什么都没变：不用写
+      return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {}, cfg });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
     for (const k of del) srv.gone[k] = [ver + 1, now];
@@ -399,6 +450,10 @@ async function handleEcon(env, auth, body, now) {
       stmts.push(ins(env, 'INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) SELECT ?, ?, ?, ?, ?, ?, ?, 0, 0', [L.l, uid, L.it.k, L.it.st, JSON.stringify(L.it), L.price, now], uid, ver));
     }
     if (settled.length) stmts.push(guard(env, `UPDATE mkt SET paid = 1 WHERE seller = ? AND state = 1 AND paid = 0 AND id IN (${settled.map(() => '?').join(', ')}) AND`, [uid, ...settled], uid, ver, tx));
+    for (const g of got) {   // 补偿：记下领过了（同一份同时领两次，只有一次写得进去）；流水记成 gift_got（gift 是新手礼）
+      stmts.push(ins(env, 'INSERT INTO gift_got (gid, uid, at) SELECT ?, ?, ?', [g.id, uid, now], uid, ver, tx));
+      stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'gift_got', 1, null, null, JSON.stringify({ id: g.id, note: g.note, ink: g.ink || undefined, cases: Object.keys(g.cases).length ? g.cases : undefined, term: g.term || undefined, tags: g.tags || undefined })], uid, ver, tx));
+    }
     stmts.push(ins(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver, tx));
     if (!quiet) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver, tx));
     stmts.push(userWrite(env, uid, p, now, ver, tx));
@@ -409,11 +464,12 @@ async function handleEcon(env, auth, body, now) {
       const m = String(e && e.message || e);
       if (/econ_nonce/.test(m)) continue;   // 同一个编号的请求正好同时到：重来一遍会走上面“已经做过”
       if (/UNIQUE/.test(m) && mo && mo.list) continue;   // 挂单编号撞上了（几乎不可能）：换一个再来
+      if (/gift_got/.test(m)) continue;   // 这份补偿刚被同一个号的另一个请求领走了：重读再算
       throw e;
     }
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 版本冲突：别的请求先改了，重读再算
     eco.ink = E.ink; eco.ver = ver + 1;
-    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq });
+    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq, cfg, gifts: got.length ? got.map(({ id, ...g }) => g) : undefined });
   }
   return error('服务器忙，请再试一次', 503);
 }
@@ -428,6 +484,7 @@ async function handleProfilePost(env, auth, body, now) {
   if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return error('无效的存档数据');
   const ledger = body.ledger && typeof body.ledger === 'object' && Array.isArray(body.ledger.deltas) ? body.ledger : null;
   const isDevUser = auth.user && String(auth.user.username || '').toLowerCase() === 'dev';
+  const cfg = await cfgNow(env, now);
   for (let attempt = 0; attempt < 5; attempt++) {
     const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(uid).first();
     const eco = await loadEcon(env, uid, parseProfile(urow ? urow.profile_json : '', auth.user.username), now);
@@ -458,7 +515,7 @@ async function handleProfilePost(env, auth, body, now) {
     }
     // 老版本网页没有账本：拿它报的数和服务器上的差当作一条上报（一样有每日上限）
     const deltas = ledger ? ledger.deltas : [{ id: 'abs' + now.toString(36) + Math.floor(rnd() * 1e9).toString(36), d: clampInk(p.ink) - eco.ink }];
-    const { capped, forged, paid, owed, allow, revoked } = applyDeltas(eco, deltas, now);
+    const { capped, forged, paid, owed, allow, revoked } = applyDeltas(eco, deltas, now, cfg);
     p.ink = eco.ink;
     const sent = cleanSkins(p.skins), ev = ledger ? Math.floor(+ledger.ev) : -1;
     p.skins = mergeSkins(sent, eco.state, eco.srv, Number.isFinite(ev) ? ev : -1);
@@ -475,20 +532,20 @@ async function handleProfilePost(env, auth, body, now) {
   return error('服务器忙，请稍后再试', 503);
 }
 
-// 注册时带上来的存档（游客进度、本机老账号）：墨锭有上限，武库专属皮肤不认
-function cleanInitial(prof, username) {
+// 新账号的默认存档（注册时没带存档、管理后台建号）
+const newProfile = (name, now) => ({ name, ink: 100, owned: ['qingfeng'], frags: {}, pity: 0, spity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0, rating: 1100, placed: 0, stageStars: {}, updatedAt: now });
+// 注册时带上来的存档（游客进度、本机老账号）：墨锭有上限，武库专属皮肤不认。不管叫什么昵称都一样
+function cleanInitial(prof) {
   const p = { ...prof };
   delete p.armory; delete p.ledger;
-  if (String(username || p.name || '').toLowerCase() === 'dev') {
-    p.ink = clampInk(p.ink);
-    p.skins = cleanSkins(p.skins);
-  } else {
-    p.ink = Math.min(clampInk(p.ink), REG_INK_CAP);
-    p.skins = cleanSkins(p.skins).filter(k => !C.CS_KEYS.includes(k));
-  }
+  p.ink = Math.min(clampInk(p.ink), REG_INK_CAP);
+  p.skins = cleanSkins(p.skins).filter(k => !C.CS_KEYS.includes(k));
   p.equip = fixEquip(cleanEquip(p.equip), p.skins);
   return p;
 }
+// 不让注册的昵称：像是官方、开发者的。云端的 Dev 是开发组的市场账号（库存不受限，见上面的 handleProfilePost），
+// 只能在管理后台建、重设密码（POST /api/admin/password），别人注册不了
+const RESERVED = /^(dev|dev_master|admin|administrator|root|system|gm|official|staff|官方|系统|管理员|开发者|开发组|客服|刃影官方)$/i;
 async function profileOut(env, user, now) {
   const isDev = user && String(user.username || '').toLowerCase() === 'dev';
   const prof = parseProfile(user.profile_json, user.username);
@@ -514,29 +571,285 @@ async function handleMarket(env, uid, k, now) {
   return json({ ok: true, now, items });
 }
 
-/* ---------- 管理接口（要 ADMIN_SECRET） ---------- */
-async function handleAdmin(env, request, path, now) {
-  if (!env.ADMIN_SECRET || !sameStr(getBearerToken(request) || '', env.ADMIN_SECRET)) return error('没有权限', 403);
-  const url = new URL(request.url);
-  if (path === '/api/admin/econ' && request.method === 'GET') {
-    const uid = url.searchParams.get('uid') || '';
-    const u = await env.DB.prepare('SELECT id, username FROM users WHERE id = ? OR username = ?').bind(uid, uid).first();
+/* ---------- 管理后台（/api/admin/*，要管理口令，见文件开头；网页版在这个 Worker 的 /admin） ---------- */
+// 口令对的话给出是谁：「名字:口令」里的名字；只写了一个口令就是 admin
+const ADMIN_MIN = 16;   // 管理口令至少 16 位：设成 123456 这种短的不认，免得被人猜中
+function adminOf(env, request) {
+  const tok = getBearerToken(request) || '', raw = String(env.ADMIN_SECRET || '').trim();
+  if (!raw || tok.length < ADMIN_MIN || tok.length > 256) return '';
+  let who = sameStr(tok, raw) ? 'admin' : '';   // 只写了一个口令（口令里带冒号、逗号也认）
+  if (raw.includes(':')) for (const part of raw.split(/[,\n]/)) {
+    const i = part.indexOf(':'), name = part.slice(0, i).trim(), sec = part.slice(i + 1).trim();
+    if (i > 0 && sec && sameStr(tok, sec) && !who) who = name.slice(0, 20);
+  }
+  return who;
+}
+const isPlain = o => !!o && typeof o === 'object' && !Array.isArray(o);
+const intIn = (v, lo, hi) => {   // 是整数、在范围里就给这个数，不然给 null；没填当 0
+  if (v === undefined || v === null || v === '') return 0;
+  const x = typeof v === 'number' ? v : typeof v === 'string' ? +v.trim() : NaN;
+  return Number.isInteger(x) && x >= lo && x <= hi ? x : null;
+};
+const ADJ_INK = 1000000, ADJ_N = 1000;   // 一次最多加减这么多墨锭、这么多个箱子 / 终端机 / 标签
+
+// 改一个玩家：墨锭、武器箱、终端机、改名标签加减，发饰品、收饰品，一次请求里的几样要么一起改成、要么都不改。
+// 和玩家自己的操作走同一套带版本号的写入：玩家正好在开箱也不会互相覆盖。收走的皮肤记进 gone，旧存档加不回来
+async function adminAdjust(env, u, body, who, why, now) {
+  const dInk = intIn(body.ink, -ADJ_INK, ADJ_INK), dTerm = intIn(body.term, -ADJ_N, ADJ_N), dTags = intIn(body.tags, -ADJ_N, ADJ_N);
+  if (dInk === null) return error(`墨锭一次最多加减 ${ADJ_INK}，要填整数`);
+  if (dTerm === null || dTags === null) return error(`终端机、改名标签一次最多加减 ${ADJ_N} 个，要填整数`);
+  const cases = {};
+  for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
+    const n = intIn(v, -ADJ_N, ADJ_N);
+    if (!C.CASES.includes(c) || n === null) return error(`武器箱 ${c} 不对：要是 ${C.CASES.join(' / ')}，一次最多加减 ${ADJ_N} 个`);
+    if (n) cases[c] = n;
+  }
+  const give = Array.isArray(body.give) ? body.give : [], take = Array.isArray(body.take) ? body.take : [];
+  if (give.length > 50 || take.length > 200) return error('一次最多发 50 件、收 200 件');
+  const gv = [];
+  for (const g of give) {
+    const k = isPlain(g) ? String(g.k || '') : String(g || ''), st = isPlain(g) && g.st !== undefined && g.st !== null && g.st !== '' && +g.st >= 0 ? intIn(g.st, 0, 1e7) : -1;
+    if (!C.isItem(k)) return error(`没有这件饰品：${k}`);
+    if (st === null) return error('斩数要是 0 到 10000000 的整数');
+    gv.push({ k, st });
+  }
+  const tk = take.map(Number);
+  if (tk.some(i => !Number.isInteger(i) || i < 1)) return error('要收的饰品编号不对');
+  if (!dInk && !dTerm && !dTags && !Object.keys(cases).length && !gv.length && !tk.length) return error('什么都没填，没有要改的');
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first();
+    const prof = parseProfile(urow ? urow.profile_json : '', u.username);
+    const eco = await loadEcon(env, u.id, prof, now);
+    const s = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid: u.id });
+    const isDev = String(u.username || '').toLowerCase() === 'dev';   // Dev 的皮肤不按库存核对，和它自己同步时一样
+    const skins0 = isDev ? cleanSkins(prof.skins) : mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
+    const E = { now, rnd, uid: u.id, ink: eco.ink + dInk, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true };
+    if (E.ink < 0) return error(`这个号只有 ${eco.ink} 墨锭，扣不了 ${-dInk}`);
+    for (const [c, n] of Object.entries(cases)) {
+      if (s.cases[c] + n < 0) return error(`这个号只有 ${s.cases[c]} 个${C.COLS[c].name}武器箱，扣不了 ${-n} 个`);
+      s.cases[c] += n;
+    }
+    if (s.term + dTerm < 0) return error(`这个号只有 ${s.term} 台终端机`);
+    if (s.tags + dTags < 0) return error(`这个号只有 ${s.tags} 张改名标签`);
+    s.term += dTerm; s.tags += dTags;
+    const given = gv.map(g => C.addItem(s, C.mkItem(s, g.k, 'admin', rnd, { st: g.st }), E)), taken = [];
+    for (const i of tk) {
+      if (s.lst.some(L => L.it.i === i)) return error(`第 ${i} 号饰品挂在玩家市场上，要等玩家撤下或者卖掉才能收`);
+      const it = C.dropItem(s, i, E);
+      if (!it) return error(`库存里没有第 ${i} 号饰品`);
+      taken.push(it);
+    }
+    const bad = [E.ink, s.tags, s.term, ...Object.values(s.cases)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);
+    if (bad !== undefined) return error('算出来的数不对，没有改');
+    const add = E.skins.filter(k => !skins0.includes(k)), del = skins0.filter(k => !E.skins.includes(k));
+    const ver = eco.ver, srv = eco.srv;
+    for (const k of del) srv.gone[k] = [ver + 1, now];
+    for (const k of add) delete srv.gone[k];
+    pruneGone(srv, now);
+    const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
+    delete p.armory; delete p.ledger;
+    const detail = JSON.stringify({ by: who, why, ink: dInk || undefined, cases: Object.keys(cases).length ? cases : undefined, term: dTerm || undefined, tags: dTags || undefined,
+      give: given.length ? given.map(x => `${x.k}#${x.i}${x.st >= 0 ? ' st' : ''}`) : undefined, take: taken.length ? taken.map(x => `${x.k}#${x.i}`) : undefined });
+    const results = await env.DB.batch([
+      ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'admin', 1, eco.ink, E.ink, detail.slice(0, 2000)], u.id, ver),
+      userWrite(env, u.id, p, now, ver),
+      econWrite(env, u.id, ver, now, srv, E.ink, JSON.stringify(s)),
+    ]);
+    if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 玩家刚好也在动：重读再改
+    return json({ ok: true, uid: u.id, ink: E.ink, cases: s.cases, term: s.term, tags: s.tags, given, taken });
+  }
+  return error('服务器忙，请再试一次', 503);
+}
+
+async function cfgRow(env, id) {
+  const r = id ? await env.DB.prepare('SELECT id, json, by, note, at FROM cfg WHERE id = ?').bind(id).first()
+    : await env.DB.prepare('SELECT id, json, by, note, at FROM cfg ORDER BY id DESC LIMIT 1').first();
+  return r ? { id: r.id, cfg: parseObj(r.json) || {}, by: r.by, note: r.note, at: r.at } : null;
+}
+async function cfgSave(env, cfg, who, why, now) {   // 存成新的一版，这个实例马上换成新的
+  const r = await env.DB.prepare('INSERT INTO cfg (json, by, note, at) VALUES (?, ?, ?, ?)').bind(JSON.stringify(cfg), who, why, now).run();
+  const id = r.meta && r.meta.last_row_id ? Number(r.meta.last_row_id) : ((await cfgRow(env)) || {}).id || 0;
+  CFG_CACHE = { at: now, id, cfg };
+  return id;
+}
+const sameCfg = (a, b) => JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
+
+async function handleAdmin(env, request, path, now, ip) {
+  if ((await peek(env, 'admf:' + ip, now)) >= 20) return error('管理口令试错太多次了，一小时后再试', 429);
+  const who = adminOf(env, request);
+  if (!who) { await hit(env, 'admf:' + ip, 1e9, 3600e3, now); return error('没有权限', 403); }
+  const url = new URL(request.url), q = k => String(url.searchParams.get(k) || '').trim().slice(0, 64);
+  const post = request.method === 'POST', body = post ? (await readBody(request)) : {};
+  if (!body) return error('请求太大', 413);
+  const why = String(body.why || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 100);
+  const needWhy = () => why.length >= 2 ? null : error('要写上原因（至少 2 个字），会记进流水');
+  const findUser = key => key ? env.DB.prepare('SELECT id, username, created_at FROM users WHERE id = ? OR username = ?').bind(key, key).first() : null;
+  const route = (post ? 'POST ' : 'GET ') + path;
+
+  if (route === 'GET /api/admin/whoami') return json({ ok: true, who, now });
+  if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、每档品质的名字和颜色、每件饰品在哪个箱子哪一档、能改的经济数值
+    return json({ ok: true, tiers: C.TIERS.map(t => ({ id: t, n: C.TIER[t].n, c: C.TIER[t].c })),
+      cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem })),
+      items: Object.keys(C.ITEM).map(k => ({ k, col: C.ITEM[k].col, tier: C.ITEM[k].tier, char: C.charOf(k) })), cfg: C.CFG_INFO });
+  }
+  if (route === 'GET /api/admin/stats') {   // 总览
+    await cfgNow(env, now);
+    const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
+    const [users, fresh, eco, open, deals, banned] = await Promise.all([
+      one('SELECT COUNT(*) AS n FROM users'), one('SELECT COUNT(*) AS n FROM users WHERE created_at > ?', now - DAY_MS),
+      one('SELECT COUNT(*) AS n, COALESCE(SUM(ink), 0) AS ink FROM econ'), one('SELECT COUNT(*) AS n FROM mkt WHERE state = 0'),
+      one('SELECT COUNT(*) AS n, COALESCE(SUM(price), 0) AS v FROM mkt WHERE state = 1 AND done_at > ?', now - DAY_MS),
+      one('SELECT COUNT(*) AS n FROM sanctions WHERE perm = 1 OR ban_until > ?', now),
+    ]);
+    return json({ ok: true, who, now, users: users.n, newToday: fresh.n, accounts: eco.n, inkTotal: eco.ink, open: open.n, deals24: deals.n, dealInk24: deals.v, banned: banned.n, cfgId: CFG_CACHE.id });
+  }
+  if (route === 'GET /api/admin/find') {   // 按昵称开头找号；不填就列最近动过的
+    const key = q('q'), like = key.replace(/[\\%_]/g, m => '\\' + m) + '%';
+    const rows = key
+      ? await env.DB.prepare("SELECT u.id, u.username, u.created_at, e.ink, e.updated_at FROM users u LEFT JOIN econ e ON e.uid = u.id WHERE u.username LIKE ? ESCAPE '\\' OR u.id = ? ORDER BY length(u.username), u.username LIMIT 20").bind(like, key).all()
+      : await env.DB.prepare('SELECT u.id, u.username, u.created_at, e.ink, e.updated_at FROM users u LEFT JOIN econ e ON e.uid = u.id ORDER BY COALESCE(e.updated_at, u.updated_at) DESC LIMIT 20').all();
+    return json({ ok: true, users: rows.results || [] });
+  }
+  if (route === 'GET /api/admin/econ') {   // 一个号的武库存档、处罚、流水、市场记录
+    const u = await findUser(q('uid'));
     if (!u) return error('没有这个账号', 404);
     const row = await env.DB.prepare('SELECT state_json, ink, ver, updated_at FROM econ WHERE uid = ?').bind(u.id).first();
     const log = await env.DB.prepare('SELECT at, act, ok, ink0, ink1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all();
     const mk = await env.DB.prepare('SELECT id, seller, buyer, k, st, price, at, state, done_at, paid FROM mkt WHERE seller = ? OR buyer = ? ORDER BY at DESC LIMIT 60').bind(u.id, u.id).all();
-    return json({ ok: true, uid: u.id, username: u.username, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null, sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
+    const pr = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first();
+    const p = parseProfile(pr ? pr.profile_json : '', u.username);
+    return json({ ok: true, uid: u.id, username: u.username, createdAt: u.created_at, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null,
+      profile: { rating: p.rating, placed: p.placed, netWins: p.netWins, netLosses: p.netLosses, skins: cleanSkins(p.skins).length, updatedAt: p.updatedAt },
+      sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
-  if (path === '/api/admin/pardon' && request.method === 'POST') {
-    const body = await readBody(request) || {};
-    const uid = String(body.uid || '');
-    const u = await env.DB.prepare('SELECT id FROM users WHERE id = ? OR username = ?').bind(uid, uid).first();
+  if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么）
+    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'cfg') ORDER BY l.id DESC LIMIT 100").all();
+    return json({ ok: true, rows: rows.results || [] });
+  }
+  if (route === 'POST /api/admin/adjust') {
+    const u = await findUser(String(body.uid || '').trim());
     if (!u) return error('没有这个账号', 404);
+    return needWhy() || await adminAdjust(env, u, body, who, why, now);
+  }
+  if (route === 'POST /api/admin/ban') {   // 封几天或者永久；解封用 pardon
+    const u = await findUser(String(body.uid || '').trim());
+    if (!u) return error('没有这个账号', 404);
+    const w = needWhy(); if (w) return w;
+    const perm = body.perm === true, days = intIn(body.days, 1, 3650);
+    if (!perm && !days) return error('封几天要填 1 到 3650 的整数，永久封号选永久');
+    const rec = await sanctionOf(env, u.id);
+    const until = perm ? rec.banUntil : Math.max(rec.banUntil, now + days * DAY_MS), log = rec.log.concat({ r: why.slice(0, 60), at: now, src: 'admin:' + who }).slice(-20);
+    await env.DB.prepare('INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0) ON CONFLICT(uid) DO UPDATE SET ban_until = ?3, perm = ?4, log_json = ?5, at = ?6')
+      .bind(u.id, rec.strikes, until, perm || rec.perm ? 1 : 0, JSON.stringify(log), now).run();
+    await logRow(env, u.id, now, 'admin_ban', 1, null, null, JSON.stringify({ by: who, why, days: perm ? 'perm' : days }));
+    return json({ ok: true, uid: u.id, banUntil: until, perm: perm || rec.perm });
+  }
+  if (route === 'POST /api/admin/pardon') {   // 解封，清空处罚记录（玩家刷新网页后生效）
+    const u = await findUser(String(body.uid || '').trim());
+    if (!u) return error('没有这个账号', 404);
+    const note = why || String(body.note || '').trim().slice(0, 100);
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
-    await logRow(env, u.id, now, 'pardon', 1, null, null, String(body.note || '').slice(0, 100));
+    await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
     return json({ ok: true, uid: u.id });
   }
+  if (route === 'POST /api/admin/password') {   // 重设密码（新密码由管理员给，至少 12 位），这个号在别处的登录全部退出。create 为 true 时没有这个号就新建：dev 这类保留的昵称只能这样建
+    const w = needWhy(); if (w) return w;
+    const key = String(body.uid || '').trim(), pw = String(body.password || '');
+    if (pw.length < 12 || pw.length > 128) return error('新密码要 12 到 128 位');
+    const salt = crypto.randomUUID().slice(0, 12), hash = await hashPassword(pw, salt);
+    let u = await findUser(key), created = false;
+    if (!u) {
+      if (body.create !== true) return error('没有这个账号', 404);
+      if (key.length < 2 || key.length > 20 || /^u_/i.test(key) || /[\u0000-\u001f\u007f<>]/.test(key)) return error('新账号的昵称要 2 到 20 个字，不能用 u_ 开头');
+      u = { id: 'u_' + crypto.randomUUID().replace(/-/g, '').slice(0, 16), username: key };
+      await env.DB.prepare('INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .bind(u.id, key, hash, salt, JSON.stringify(newProfile(key, now)), now, now).run();
+      created = true;
+    } else {
+      await env.DB.batch([
+        env.DB.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?').bind(hash, salt, now, u.id),
+        env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
+        env.DB.prepare('DELETE FROM rate WHERE k = ?').bind('lf:' + String(u.username).toLowerCase().slice(0, 40)),
+      ]);
+    }
+    await logRow(env, u.id, now, 'admin_pw', 1, null, null, JSON.stringify({ by: who, why, created: created || undefined }));
+    return json({ ok: true, uid: u.id, username: u.username, created });
+  }
+  if (route === 'GET /api/admin/gifts') {
+    const rows = await env.DB.prepare('SELECT g.id, g.uid, u.username, g.ink, g.items_json, g.note, g.by, g.at, g.until, g.born, g.off, (SELECT COUNT(*) FROM gift_got x WHERE x.gid = g.id) AS got FROM gift g LEFT JOIN users u ON u.id = g.uid ORDER BY g.at DESC LIMIT 50').all();
+    return json({ ok: true, now, gifts: (rows.results || []).map(r => ({ ...r, items: giftItems(r.items_json), items_json: undefined })) });
+  }
+  if (route === 'POST /api/admin/gift') {   // 发补偿：to 是 all（所有人）或者一个号
+    const to = String(body.to || 'all').trim();
+    let uid = '*';
+    if (to !== 'all' && to !== '*') { const u = await findUser(to); if (!u) return error('没有这个账号', 404); uid = u.id; }
+    const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100), days = intIn(body.days === undefined ? 14 : body.days, 1, 90);
+    if (ink === null) return error(`墨锭要填 0 到 ${ADJ_INK} 的整数`);
+    if (term === null || tags === null) return error('终端机、改名标签每份最多 100 个');
+    if (!days) return error('有效天数要填 1 到 90');
+    const cases = {};
+    for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
+      const n = intIn(v, 0, 100);
+      if (!C.CASES.includes(c) || n === null) return error(`武器箱 ${c} 不对：每份每种最多 100 个`);
+      if (n) cases[c] = n;
+    }
+    if (!ink && !term && !tags && !Object.keys(cases).length) return error('补偿里什么都没有');
+    const note = String(body.note || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60);
+    if (note.length < 2) return error('要写给玩家看的说明（至少 2 个字），比如「服务器维护补偿」');
+    const id = randHex(8), until = now + days * DAY_MS, born = uid === '*' && !body.newToo ? now : until;
+    await env.DB.prepare('INSERT INTO gift (id, uid, ink, items_json, note, by, at, until, born, off) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)')
+      .bind(id, uid, ink, JSON.stringify({ cases, term, tags }), note, who, now, until, born).run();
+    await logRow(env, uid, now, 'gift_new', 1, null, null, JSON.stringify({ by: who, why: why || note, id, ink: ink || undefined, cases: Object.keys(cases).length ? cases : undefined, term: term || undefined, tags: tags || undefined, days, newToo: uid === '*' ? !!body.newToo : undefined }));
+    return json({ ok: true, id, until });
+  }
+  if (route === 'POST /api/admin/gift/off') {   // 停发：还没领的就领不到了，已经领了的不收回
+    const g = await env.DB.prepare('SELECT id, uid FROM gift WHERE id = ?').bind(String(body.id || '')).first();
+    if (!g) return error('没有这份补偿', 404);
+    const w = needWhy(); if (w) return w;
+    await env.DB.prepare('UPDATE gift SET off = 1 WHERE id = ?').bind(g.id).run();
+    await logRow(env, g.uid, now, 'gift_off', 1, null, null, JSON.stringify({ by: who, why, id: g.id }));
+    return json({ ok: true });
+  }
+  if (route === 'GET /api/admin/cfg') {   // 现在的经济数值、每一项的范围和说明、最近改过的 30 版
+    const cur = await cfgRow(env), hist = await env.DB.prepare('SELECT id, json, by, note, at FROM cfg ORDER BY id DESC LIMIT 30').all();
+    return json({ ok: true, id: cur ? cur.id : 0, cfg: cur ? cur.cfg : {}, info: C.CFG_INFO, hist: (hist.results || []).map(r => ({ id: r.id, by: r.by, note: r.note, at: r.at, cfg: parseObj(r.json) || {} })) });
+  }
+  if (route === 'POST /api/admin/cfg') {   // set 里写要改的项；填 null 回到默认值
+    const w = needWhy(); if (w) return w;
+    if (!isPlain(body.set) || !Object.keys(body.set).length) return error('没写要改哪一项');
+    const cur = await cfgRow(env), merged = { ...(cur ? cur.cfg : {}) };
+    for (const [k, v] of Object.entries(body.set)) { if (v === null || v === '') delete merged[k]; else merged[k] = v; }
+    const c = C.cleanCfg(merged);
+    if (c.err) return error(c.err);
+    if (sameCfg(c.cfg, cur ? cur.cfg : {})) return error('和现在的一样，没有要改的');
+    const id = await cfgSave(env, c.cfg, who, why, now);
+    await logRow(env, '*', now, 'cfg', 1, null, null, JSON.stringify({ by: who, why, id, set: body.set }).slice(0, 400));
+    return json({ ok: true, id, cfg: c.cfg });
+  }
+  if (route === 'POST /api/admin/cfg/undo') {   // 退回到以前的某一版（to 填 0 就是全部回到默认值），存成新的一版
+    const w = needWhy(); if (w) return w;
+    const to = intIn(body.to, 0, 1e12);
+    if (to === null) return error('要退回到第几版？');
+    const old = to ? await cfgRow(env, to) : { cfg: {} };
+    if (!old) return error('没有这一版', 404);
+    const c = C.cleanCfg(old.cfg), cur = await cfgRow(env);
+    if (c.err) return error('那一版的数值现在用不了：' + c.err);
+    if (sameCfg(c.cfg, cur ? cur.cfg : {})) return error('现在用的就是这一版');
+    const id = await cfgSave(env, c.cfg, who, (to ? `退回到第 ${to} 版：` : '全部回到默认值：') + why, now);
+    await logRow(env, '*', now, 'cfg', 1, null, null, JSON.stringify({ by: who, why, id, undo: to }));
+    return json({ ok: true, id, cfg: c.cfg });
+  }
   return error('Not found', 404);
+}
+
+// 管理网页：python3 tools/build.py 打包时把 cloudflare/admin.html 和它那段脚本的 sha256 放进来（直接跑 worker.js 时是空的）。
+// 浏览器只许跑 sha256 对得上的那一段脚本：页面里就算混进了别的脚本、onclick 这种，也跑不起来
+const ADMIN_PAGE = { html: '', sha: '' };
+function adminPage() {
+  const html = ADMIN_PAGE.html || '<!doctype html><meta charset="utf-8"><title>刃影管理后台</title><p>管理网页在打包好的 cloudflare/worker.bundle.js 里，先运行 python3 tools/build.py。</p>';
+  const script = ADMIN_PAGE.sha ? `'sha256-${ADMIN_PAGE.sha}'` : "'none'";
+  return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
+    'Content-Security-Policy': `default-src 'none'; script-src ${script}; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'` } });
 }
 
 async function cleanup(env, now) {
@@ -568,6 +881,7 @@ export default {
       if (path === '/' || path === '/health' || path === '/api/health') {
         return json({ ok: true, name: 'RenYing Cloud API', time: now, econ: C.VER });
       }
+      if (path === '/admin' || path === '/admin/') return adminPage();
 
       await ensureSchema(env);
       if (Math.random() < 0.02) {
@@ -596,6 +910,9 @@ export default {
         if (password.length > 128) {
           return error('密码太长了');
         }
+        if (RESERVED.test(username.replace(/\s+/g, ''))) {
+          return error('这个昵称不能用，换一个吧');
+        }
 
         // Check if user already exists
         const existing = await env.DB.prepare(
@@ -611,22 +928,7 @@ export default {
         const passHash = await hashPassword(password, salt);
 
         // Default or initial guest profile
-        const initialProf = cleanInitial((body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile)) ? body.profile : {
-          name: username,
-          ink: 100,
-          owned: ['qingfeng'],
-          frags: {},
-          pity: 0,
-          spity: 0,
-          skins: [],
-          equip: {},
-          netWins: 0,
-          netLosses: 0,
-          rating: 1100,
-          placed: 0,
-          stageStars: {},
-          updatedAt: now
-        }, username);
+        const initialProf = cleanInitial((body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile)) ? body.profile : newProfile(username, now));
         initialProf.name = username;
         initialProf.updatedAt = now;
 
@@ -759,7 +1061,7 @@ export default {
         }
       }
 
-      if (path.startsWith('/api/admin/')) return await handleAdmin(env, request, path, now);
+      if (path.startsWith('/api/admin/')) return await handleAdmin(env, request, path, now, ip);
 
       // 9. Logout
       if (path === '/api/logout' && request.method === 'POST') {

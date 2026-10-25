@@ -935,28 +935,8 @@
       <div id="accActionBtns" style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
         <button class="ghost small" id="exportAccBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px" title="将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>导出当前存档</button>
         <button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>云存档设置</button>
-        <button class="ghost small hidden" id="devCloudBtn" style="font-size:12px;padding:3px 10px;color:#46d3ea;border-color:rgba(70,211,234,.4);display:inline-flex;align-items:center;gap:5px" title="Google Cloud Firestore 云端档案管理与数据编辑"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloud 编辑器</button>
+        <button class="ghost small hidden" id="devAdminBtn" style="font-size:12px;padding:3px 10px;color:#46d3ea;border-color:rgba(70,211,234,.4);display:inline-flex;align-items:center;gap:5px" title="开发者管理后台：查账号、调墨锭、发补偿、改经济数值（要管理口令）"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/><path d="m9 12 2 2 4-4"/></svg>管理后台</button>
         <button class="ghost small" id="toggleImportBoxBtn" style="font-size:12px;padding:3px 10px;color:var(--gold);display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2zM9 7h6M9 11h6M9 15h4"/></svg>存档导入与继承</button>
-      </div>
-      <div id="devCloudBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.35);border-radius:8px;background:rgba(10,20,35,.85);text-align:left">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <p style="margin:0;font-size:13px;color:#46d3ea;font-weight:bold;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Google Cloud 开发者控制台</p>
-          <span id="devCloudBadge" style="font-size:12px;padding:2px 6px;border-radius:4px;background:rgba(70,211,234,.15);color:#46d3ea">云端检测中</span>
-        </div>
-        <p class="netnote" style="margin:0 0 8px;font-size:12px">读写与编辑 Google Cloud Firestore 云端档案（users/{uid}）：</p>
-        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
-          <button class="go small" id="devCloudUnlockAllBtn" style="font-size:12px;padding:4px 10px;background:#46d3ea;color:#0a0e17;display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>一键云端全解锁</button>
-          <button class="ghost small" id="devCloudPullBtn" style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>从云端拉取</button>
-          <button class="ghost small" id="devCloudPushBtn" style="font-size:12px;padding:4px 10px;color:var(--gold);display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>保存推送至云端</button>
-        </div>
-        <div style="margin-bottom:6px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;color:var(--dim)">
-            <span>云端文档 JSON（支持直接修改后推送）：</span>
-            <span id="devCloudDocRef" style="color:#46d3ea">users/uid</span>
-          </div>
-          <textarea id="devCloudJsonIn" rows="7" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.6);color:#a8ffb2;border:1px solid rgba(70,211,234,.3);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder="点击“从云端拉取”或“一键云端全解锁”载入数据..."></textarea>
-        </div>
-        <p id="devCloudMsg" class="netstatus" style="margin:4px 0 0;font-size:12px" role="status"></p>
       </div>
       <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
         <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云端账号服务配置</b>（Cloudflare Workers + D1）</p>

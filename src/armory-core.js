@@ -28,7 +28,7 @@
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
 
-  // 品质：颜色和名字照 CS 的五档
+  // 品质：从低到高五档，每档有自己的颜色和名字
   C.TIERS = ['mil', 'res', 'cla', 'cov', 'gold'];
   C.TIER = {
     mil: { n: '军规级', c: '75,105,255' },
@@ -40,7 +40,7 @@
   C.ODDS = { mil: 0.53, res: 0.27, cla: 0.13, cov: 0.052, gold: 0.018 };   // 普通武器箱；神兵武器箱的写在它自己那一项里
   C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
   C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 每档的基准价（墨锭）：只用来定终端机的报价
-  // 终端机（照 CS2）：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
+  // 终端机：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
   // 5 件都不要终端机也没了；开封 3 天不处理就作废。终端机在商店按固定价格 price 卖（不能转卖），
   // 报价是这一件基准价的 1.2~1.5 倍（按品质、热门程度、斩数定，不跟玩家市场走）
   C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1.2, 1.5], price: 500 };
@@ -156,7 +156,12 @@
   };
   C.CASES = Object.keys(C.COLS);
   C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱：对局掉落、补给、星章送的都是这几种
-  C.oddsOf = cid => C.COLS[cid].odds || C.ODDS;
+  // 爆率：cfg 是服务器上管理员改过的经济数值（见下面的 C.CFG_INFO），不传就是上面写死的
+  C.oddsOf = (cid, cfg) => {
+    if (!cfg) return C.COLS[cid].odds || C.ODDS;
+    if (C.COLS[cid].prem) return { mil: 0, res: 0, cla: C.cv(cfg, 'prem.cla'), cov: C.cv(cfg, 'prem.cov'), gold: C.cv(cfg, 'prem.gold') };
+    return Object.fromEntries(C.TIERS.map(t => [t, C.cv(cfg, 'odds.' + t)]));
+  };
   C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
   C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
 
@@ -191,6 +196,52 @@
     { id: 'cla', cost: 9, name: '随机保密饰品' },
     { id: 'cov', cost: 15, name: '自选隐秘饰品' },
   ];
+
+  /* ---------- 在线可调的经济数值 ---------- */
+  // 管理员在服务器上改（cloudflare/worker.js 的 /api/admin/cfg），没改的项用上面写死的默认值。
+  // 服务器每次算的时候把改过的那几项放进 env.cfg，网页显示用服务器发来的同一份。
+  // 每一行：[键, 默认值, 最小, 最大, 是不是整数, 分组, 说明]
+  C.CFG_INFO = [
+    ...Object.keys(C.COLS).map(c => ['price.' + c, C.COLS[c].price, 1, 100000, 1, '商店价格', C.COLS[c].name + '武器箱']),
+    ['price.term', C.TERM.price, 1, 100000, 1, '商店价格', '终端机'],
+    ['openDay', C.OPEN_DAY, 0, 50, 1, '开箱', '普通武器箱每天能开几个'],
+    ['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个'],
+    ['stP', C.ST_P, 0, 1, 0, '开箱', '开出斩数版的概率'],
+    ...C.TIERS.map(t => ['odds.' + t, C.ODDS[t], 0, 1, 0, '普通武器箱爆率', C.TIER[t].n]),
+    ...['cla', 'cov', 'gold'].map(t => ['prem.' + t, C.COLS.c7.odds[t], 0, 1, 0, '神兵武器箱爆率', C.TIER[t].n]),
+    ['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
+    ['term.lo', C.TERM.markup[0], 0.5, 5, 0, '终端机', '报价最低是基准价的几倍'],
+    ['term.hi', C.TERM.markup[1], 0.5, 5, 0, '终端机', '报价最高是基准价的几倍'],
+    ['dropP', C.DROP_P, 0, 1, 0, '对局掉落', '每局掉一件的概率'],
+    ['dropCap', C.DROP_CAP, 0, 100, 1, '对局掉落', '每周最多掉几次'],
+    ['ink.base', 1500, 0, 100000, 1, '每天认多少本机收入', '每天先认多少墨锭'],
+    ['ink.match', 80, 0, 10000, 1, '每天认多少本机收入', '每打完一局，当天多认多少'],
+    ['ink.cap', 6000, 0, 1000000, 1, '每天认多少本机收入', '一天最多认多少'],
+  ];
+  C.CFG_DEF = Object.fromEntries(C.CFG_INFO.map(r => [r[0], r[1]]));
+  C.cv = (cfg, k) => { const v = cfg && typeof cfg === 'object' ? own(cfg, k) : undefined; return v === undefined ? C.CFG_DEF[k] : v; };
+  // 检查一份配置：只认表里有的键，数要在范围里（整数项要是整数），同一组爆率加起来要正好是 1，终端机报价的最低倍数不能高过最高倍数。
+  // 和默认值一样的项、填 null 或空的项都不存（就是回到默认值）。不对时 cfg 是 null，err 写明是哪一项
+  C.cleanCfg = raw => {
+    const cfg = {}, info = Object.fromEntries(C.CFG_INFO.map(r => [r[0], r]));
+    if (!isObj(raw)) return { cfg, err: '' };
+    for (const [k, v] of Object.entries(raw)) {
+      const r = own(info, k);
+      if (!r) return { cfg: null, err: `不认识的数值：${k}` };
+      if (v === null || v === undefined || v === '') continue;
+      const x = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? +v : NaN;
+      if (!Number.isFinite(x)) return { cfg: null, err: `${r[6]}（${k}）要填数字` };
+      if (r[4] && !Number.isInteger(x)) return { cfg: null, err: `${r[6]}（${k}）要填整数` };
+      if (x < r[2] || x > r[3]) return { cfg: null, err: `${r[6]}（${k}）要在 ${r[2]} 到 ${r[3]} 之间` };
+      if (x !== r[1]) cfg[k] = x;
+    }
+    for (const [p, name] of [['odds.', '普通武器箱'], ['prem.', '神兵武器箱']]) {
+      const sum = C.CFG_INFO.filter(r => r[0].startsWith(p)).reduce((a, r) => a + C.cv(cfg, r[0]), 0);
+      if (Math.abs(sum - 1) > 1e-6) return { cfg: null, err: `${name}的几档爆率加起来要正好是 1（现在是 ${+sum.toFixed(6)}）` };
+    }
+    if (C.cv(cfg, 'term.lo') > C.cv(cfg, 'term.hi')) return { cfg: null, err: '终端机报价的最低倍数不能高过最高倍数' };
+    return { cfg, err: '' };
+  };
 
   /* ---------- 小工具 ---------- */
   function hash32(str) {
@@ -233,8 +284,8 @@
   };
   C.GOODS = [...C.CASES, 'term'];              // 武器箱和终端机：只在商店卖，不能挂到市场
   C.isGood = k => C.GOODS.includes(k);
-  C.shopPrice = k => k === 'term' ? C.TERM.price : own(C.COLS, k) ? C.COLS[k].price : 0;
-  C.net = p => Math.floor(p * (1 - C.FEE));    // 挂单卖掉，卖家到手多少
+  C.shopPrice = (k, cfg) => k === 'term' ? C.cv(cfg, 'price.term') : own(C.COLS, k) ? C.cv(cfg, 'price.' + k) : 0;
+  C.net = (p, cfg) => Math.floor(p * (1 - C.cv(cfg, 'fee')));    // 挂单卖掉，卖家到手多少
   const LID_RE = /^[0-9a-f]{16}$/;
   C.isLid = l => typeof l === 'string' && LID_RE.test(l);   // 挂单编号：服务器随机给的 16 位
 
@@ -300,8 +351,8 @@
     s.stat = Object.fromEntries(Object.keys(b.stat).map(k => [k, int(s.stat[k])]));
     s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
     s.last = num(s.last); s.gift = s.gift ? 1 : 0;
-    s.od ={ d: int(s.od.d), n: int(s.od.n, 0, C.OPEN_DAY) };
-    s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, C.PREM_WEEK) };
+    s.od = { d: int(s.od.d), n: int(s.od.n, 0, 1000) };   // 每天、每周能开几个可以在线改，这里只防乱填
+    s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, 1000) };
     s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
     s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
     const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
@@ -342,11 +393,11 @@
     return opts;
   };
   // 今天还能开几个普通武器箱、这周还能开几个神兵武器箱
-  C.openLeft = (s, cid) => cid && C.COLS[cid] && C.COLS[cid].prem ? Math.max(0, C.PREM_WEEK - s.pw.n) : Math.max(0, C.OPEN_DAY - s.od.n);
+  C.openLeft = (s, cid, cfg) => cid && C.COLS[cid] && C.COLS[cid].prem ? Math.max(0, C.cv(cfg, 'premWeek') - s.pw.n) : Math.max(0, C.cv(cfg, 'openDay') - s.od.n);
 
   /* ---------- 物品进出库存 ---------- */
   C.mkItem = (s, k, src, rnd, o = {}) => {
-    const st = o.st !== undefined ? o.st : (rnd() < C.ST_P ? 0 : -1);
+    const st = o.st !== undefined ? o.st : (rnd() < (o.stP !== undefined ? o.stP : C.ST_P) ? 0 : -1);
     return { i: s.nid++, k, st, n: '', t: o.t || 0, src };
   };
   // 拿到一件：这款皮肤原来没有的话，记进“可穿的皮肤”里，并记下是靠武库才有的
@@ -390,12 +441,12 @@
   const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
   C.invFull = (s, n = 1) => false;
   // 终端机报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是这一件基准价的 1.2~1.5 倍
-  C.termOffer = rnd => {
-    const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.ST_P ? 0 : -1;
-    const m = C.TERM.markup[0] + rnd() * (C.TERM.markup[1] - C.TERM.markup[0]);
+  C.termOffer = (rnd, cfg) => {
+    const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.cv(cfg, 'stP') ? 0 : -1;
+    const lo = C.cv(cfg, 'term.lo'), m = lo + rnd() * (C.cv(cfg, 'term.hi') - lo);
     return { k, st, price: Math.max(1, Math.round(C.refVal({ k, st }) * m)) };
   };
-  // 汰换合同能出什么：每件材料平分它所在收藏品里高一档的那些饰品（和 CS 一样的算法）
+  // 汰换合同能出什么：每件材料平分它所在收藏品里高一档的那些饰品
   C.tradeCheck = (s, ids) => {
     if (!Array.isArray(ids) || !ids.length) return { err: '还没放材料' };
     const uniq = Array.from(new Set(ids.map(Number)));
@@ -420,19 +471,23 @@
   C.ctxOk = c => isObj(c) && C.MODES.includes(c.mode) && C.HERO_IDS.includes(c.char);
 
   /* ---------- 动作 ---------- */
-  // env：now 现在时间、rnd 随机数、uid、ink 墨锭（会被改）、skins 可穿的皮肤（会被改）、equip 穿着（会被改）、server 是不是服务器在算
+  // env：now 现在时间、rnd 随机数、uid、ink 墨锭（会被改）、skins 可穿的皮肤（会被改）、equip 穿着（会被改）、server 是不是服务器在算、
+  //      cfg 管理员在线改过的经济数值（没有就用默认值）
   const A = {};
   A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个。普通武器箱每天最多开 2 个，神兵武器箱每周 1 个
     const cid = a.c;
     if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
     if ((s.cases[cid] || 0) < 1) return { err: '没有这个武器箱了' };
     const col = C.COLS[cid];
-    if (!C.openLeft(s, cid)) return { err: col.prem ? `${col.name}武器箱每周只能开 ${C.PREM_WEEK} 个，下周一再来` : `今天的 ${C.OPEN_DAY} 个武器箱已经开完了，明天再来` };
+    if (!C.openLeft(s, cid, env.cfg)) {
+      const n = C.cv(env.cfg, col.prem ? 'premWeek' : 'openDay');
+      return { err: !n ? `${col.prem ? col.name : '普通'}武器箱现在暂停开启` : col.prem ? `${col.name}武器箱每周只能开 ${n} 个，下周一再来` : `今天的 ${n} 个武器箱已经开完了，明天再来` };
+    }
     if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
     s.cases[cid]--; s.stat.open++;
     if (col.prem) s.pw.n++; else s.od.n++;
-    const tier = rollTier(env.rnd, C.oddsOf(cid)), k = pickOf(env.rnd, col[tier]);
-    const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd), env);
+    const tier = rollTier(env.rnd, C.oddsOf(cid, env.cfg)), k = pickOf(env.rnd, col[tier]);
+    const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env);
     bump(s, 'open', 1);
     return { ok: true, item: it };
   };
@@ -454,7 +509,7 @@
   const shopBuy = (s, k, a, env) => {
     const n = a.n === undefined ? 1 : +a.n;
     if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
-    const p = C.shopPrice(k) * n;
+    const p = C.shopPrice(k, env.cfg) * n;
     if (!(p > 0)) return { err: '没有这件商品' };
     if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
     giveInk(env, -p);
@@ -520,7 +575,7 @@
     for (const r of Array.isArray(env.paid) ? env.paid.slice(0, 40) : []) {
       if (!isObj(r) || !C.isLid(r.id) || env.settled.includes(r.id)) continue;
       const ix = s.lst.findIndex(L => L.l === r.id), L = ix >= 0 ? s.lst.splice(ix, 1)[0] : null;
-      const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price), k = L ? L.it.k : C.isItem(r.k) ? r.k : 'qf_p1', st = L ? L.it.st : stOf(r.st);
+      const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price, env.cfg), k = L ? L.it.k : C.isItem(r.k) ? r.k : 'qf_p1', st = L ? L.it.st : stOf(r.st);
       giveInk(env, gain); s.stat.sold++;
       histPush(s, { t: num(r.at) || env.now, kind: 'sold', k, st, price, gain });
       sold.push({ k, st, price, gain });
@@ -565,14 +620,14 @@
     if (s.tm) return { err: '已经有一台开着的终端机，先处理完它' };
     if (s.term < 1) return { err: '没有终端机' };
     s.term--;
-    s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd) };
+    s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd, env.cfg) };
     return { ok: true, tm: s.tm };
   };
   A.termNext = (s, a, env) => {
     if (!s.tm) return { err: '没有开着的终端机' };
     if (a.n !== undefined && +a.n !== s.tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点得太快、请求重发：不会一下跳过两件
     if (s.tm.n >= C.TERM.offers) { s.tm = null; return { ok: true, gone: true }; }
-    s.tm.n++; s.tm.o = C.termOffer(env.rnd);
+    s.tm.n++; s.tm.o = C.termOffer(env.rnd, env.cfg);
     return { ok: true, tm: s.tm };
   };
   A.termBuy = (s, a, env) => {
@@ -600,7 +655,7 @@
       else if (o.t === 'term') { s.term += o.n; got.push(o); }
       else if (o.t === 'tag') { s.tags += o.n; got.push(o); }
       else if (o.t === 'ink') { giveInk(env, o.n); got.push(o); }
-      else if (o.t === 'item') got.push({ t: 'item', item: C.addItem(s, C.mkItem(s, o.k, 'supply', env.rnd), env) });
+      else if (o.t === 'item') got.push({ t: 'item', item: C.addItem(s, C.mkItem(s, o.k, 'supply', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env) });
     }
     return { ok: true, got };
   };
@@ -626,7 +681,7 @@
       let k;
       if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的隐秘级里挑一件' }; k = a.k; }
       else k = pickOf(r, C.ofTierReg(g.id));
-      res.item = C.addItem(s, C.mkItem(s, k, 'op', r), env);
+      res.item = C.addItem(s, C.mkItem(s, k, 'op', r, { stP: C.cv(env.cfg, 'stP') }), env);
     }
     s.op.spent += g.cost;
     return res;
@@ -674,10 +729,10 @@
       left -= add; eq.st += add;
       res.st.push({ i: eq.i, k: eq.k, add, total: eq.st });
     }
-    if (s.drop.n < C.DROP_CAP && env.rnd() < C.DROP_P && !C.invFull(s)) {
+    if (s.drop.n < C.cv(env.cfg, 'dropCap') && env.rnd() < C.cv(env.cfg, 'dropP') && !C.invFull(s)) {
       s.drop.n++;
       if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.REG); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
-      else res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, C.ofTier(env.rnd() < 0.85 ? 'mil' : 'res')), 'drop', env.rnd), env) };
+      else res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, C.ofTier(env.rnd() < 0.85 ? 'mil' : 'res')), 'drop', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env) };
     }
     return res;
   };

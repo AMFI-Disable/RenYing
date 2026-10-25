@@ -1,10 +1,12 @@
 // 武库经济 + 反作弊的服务器测试：在本机把 cloudflare/worker.js 跑起来（D1 用 node:sqlite 模拟），
 // 正常流程走一遍，再按作弊的路数打一遍：改墨锭、伪造皮肤、重放请求、并发双花（同一件同时卖、同一单同时买、买和撤撞上）、
 // 乱填参数、刷开箱次数、刷终端机、乱报斩数、刷对局奖励、爆破密码……
+// 还有管理后台：管理口令、加减墨锭和东西、封号解封、全服补偿、在线改经济数值、管理网页。
 // 用法：node tools/econ-test.mjs           （Node 22 以上，不用装任何包）
 //       node tools/econ-test.mjs --bundle  测打包好的 cloudflare/worker.bundle.js（真正部署上去的那个文件）
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 
 const ROOT = new URL('..', import.meta.url);
 let T = Date.UTC(2026, 9, 23, 4, 0, 0);   // 测试里的“现在”，可以随意往后拨
@@ -44,7 +46,7 @@ function makeD1() {
   };
 }
 
-const ADMIN = 'admin-pass-123';
+const ADMIN = 'admin-pass-0123456789';
 const ENV = { DB: makeD1(), ADMIN_SECRET: ADMIN };
 async function call(method, path, body, token, ip = '1.2.3.4') {
   const headers = { 'Content-Type': 'application/json', 'CF-Connecting-IP': ip };
@@ -409,7 +411,10 @@ section('终端机：一次报一件，最多 5 件，买下就用掉；重发�
   ok(a.res.ok && b.replay && stateOf(u.uid).tm.n === 2, '同一个请求重发：只换一次', stateOf(u.uid).tm);
   const race = await Promise.all(Array.from({ length: 8 }, () => econ(u.token, 'termNext', { n: 2 })));
   ok(race.filter(r => r.res && r.res.ok).length === 1 && stateOf(u.uid).tm.n === 3, '8 个并发“换下一件”只换了一次', race.map(r => r.res && (r.res.err || 'ok')));
-  const o = stateOf(u.uid).tm.o, ink0 = inkOf(u.uid);
+  const o = stateOf(u.uid).tm.o;
+  // 偶尔会报到一件 5,000 墨锭买不起的（斩数版的 ★ 非凡）：让管理员先补上差的墨锭，这一段就不看运气
+  if (inkOf(u.uid) < o.price) await call('POST', '/api/admin/adjust', { uid: u.uid, ink: o.price - inkOf(u.uid), why: '测试：报价比手里的墨锭高' }, ADMIN);
+  const ink0 = inkOf(u.uid);
   const buys = await Promise.all(Array.from({ length: 6 }, () => econ(u.token, 'termBuy', { n: 3 })));
   const won = buys.filter(r => r.res && r.res.ok), s = stateOf(u.uid);
   ok(won.length === 1 && inkOf(u.uid) === ink0 - o.price && s.inv.filter(x => x.src === 'term').length === 1 && !s.tm, '6 个并发买下：只买到 1 件、只扣 1 次钱，终端机用掉了', [won.length, inkOf(u.uid) - ink0, o.price]);
@@ -451,7 +456,7 @@ section('斩数：穿着斩数版的侠客每击倒一个对手 +1；没穿、�
 const MCTX = { mode: 'cpu', level: 'hard', char: 'qingfeng', win: true, rounds: 2, flawless: false, combo: 5, ults: 1 };
 {
   T = nextNoon();
-  const u = await newUser('stattrak', { ink: 5000 });
+  const u = await newUser('zhanshu', { ink: 5000 });
   await econ(u.token, 'sync');
   const L1 = { st: 4 }, L2 = { st: 9 };
   const [it, it2, plain] = grant(u.uid, [{ k: 'qf_p1', st: L1.st }, { k: 'ts_p1', st: L2.st }, { k: 'qf_p1' }]);
@@ -487,7 +492,7 @@ const MCTX = { mode: 'cpu', level: 'hard', char: 'qingfeng', win: true, rounds: 
   await econ(u.token, 'equip', { i: plain.i });
   await play({ [h]: 4 });
   ok(itemOf(u.uid, plain.i).st === -1 && itemOf(u.uid, it.i).st === st3, '穿的是普通版：不记，也不会记到没穿的那件上');
-  const v = await newUser('stattrak2', { ink: 5000 });
+  const v = await newUser('zhanshu2', { ink: 5000 });
   await econ(v.token, 'sync');
   const li = await econ(u.token, 'list', { i: it.i, price: 99 });
   const bv = await econ(v.token, 'buy', { l: li.res.l });
@@ -847,6 +852,299 @@ section('限速、封号、登录爆破');
   let regBlocked = false;
   for (let i = 0; i < 8; i++) { const r = await call('POST', '/api/register', { username: 'bulk' + i, password: 'secret123' }, undefined, '7.7.7.7'); if (r.status === 429) regBlocked = true; }
   ok(regBlocked, '同一个 IP 一小时最多注册 6 个');
+}
+
+/* ---------- 管理后台 ---------- */
+const adm = (method, path, body, tok = ADMIN, ip = '1.2.3.4') => call(method, path, body, tok, ip);
+const parseDetail = t => { try { return JSON.parse(t) || {}; } catch (e) { return {}; } };
+const legacyUser = (id, name, prof) => ENV.DB.raw.prepare('INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+  .run(id, name, 'x', 'y', JSON.stringify({ name, ...prof }), T, T);
+async function badInputs(path, base, cases) {   // 每一种乱填都要 400、错误说明对得上；返回对不上的
+  const out = [];
+  for (const [b, re] of cases) { const r = await adm('POST', path, { ...base, ...b }); if (!(r.status === 400 && re.test(r.error))) out.push([b, r.status, r.error]); }
+  return out;
+}
+
+section('Dev 是开发组的市场账号：库存不受限；dev、官方这类昵称别人注册不了；Dev 只能在管理后台建号、重设密码');
+{
+  const names = ['dev', 'Dev', 'DEV', 'd e v', 'dev_master', 'admin', 'Administrator', 'GM', '官方', '管理员', '开发组', '刃影官方'];
+  const rs = [];
+  for (const [i, n] of names.entries()) rs.push(await call('POST', '/api/register', { username: n, password: 'secret123' }, undefined, '3.3.' + i + '.1'));
+  ok(rs.every(r => r.status === 400 && r.error === '这个昵称不能用，换一个吧'), `${names.length} 个像官方、开发者的昵称都注册不了`, rs.map(r => r.error));
+  ok((await newUser('devil')).ok, '只是名字里带 dev 的（devil）照常能注册');
+
+  const bad = await badInputs('/api/admin/password', { uid: 'Dev', password: 'dev-pass-0123456789', create: true, why: '建开发组账号' }, [
+    [{ password: 'short-pw-11' }, /12 到 128/], [{ password: 'x'.repeat(129) }, /12 到 128/], [{ why: '' }, /原因/],
+    [{ uid: 'u_fake', create: true }, /u_ 开头/], [{ uid: 'x' }, /2 到 20/], [{ uid: '<b>坏</b>' }, /2 到 20/],
+  ]);
+  ok(!bad.length, '重设密码乱填：密码太短太长、没写原因、昵称不对，都改不了', bad);
+  ok((await adm('POST', '/api/admin/password', { uid: 'Dev', password: 'dev-pass-0123456789', why: '没加 create' })).status === 404, '没有这个号、也没说要新建：不建');
+  const mk = await adm('POST', '/api/admin/password', { uid: 'Dev', password: 'dev-pass-0123456789', create: true, why: '建开发组账号' });
+  ok(mk.ok && mk.created && mk.username === 'Dev' && /^u_[0-9a-f]{16}$/.test(mk.uid), '管理后台建好了 Dev 号', mk);
+  const dev = await call('POST', '/api/login', { username: 'dev', password: 'dev-pass-0123456789' }, undefined, '3.4.0.1');
+  ok(dev.ok && dev.uid === mk.uid, 'Dev 用管理后台设的密码登录（昵称不分大小写）');
+  const log0 = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'admin_pw'", mk.uid);
+  ok(log0 && !log0.detail.includes('dev-pass') && JSON.parse(log0.detail).created === true, '流水记了建号，没记密码');
+
+  // Dev 同步上来的存档：墨锭、皮肤、武库库存都照收（给 AI 往市场上放货用）
+  const k = C.CS_KEYS[0], prof = profOf(mk.uid);
+  const up = await call('POST', '/api/profile', { profile: { ...prof, ink: 500000, skins: [...C.CS_KEYS, 'qf_frost'], armory: { inv: [{ i: 1, k, st: -1, t: T, src: 'case' }, { i: 2, k, st: 0, t: T, src: 'case' }], cases: { c1: 50 }, nid: 3 } } }, dev.token);
+  const ds = stateOf(mk.uid);
+  ok(up.ok && inkOf(mk.uid) === 500000 && ds.inv.length === 2 && ds.cases.c1 === 50, 'Dev 的墨锭、武器箱、库存照收', [inkOf(mk.uid), ds.inv.length, ds.cases.c1]);
+  ok(C.CS_KEYS.every(k => profOf(mk.uid).skins.includes(k)), 'Dev 的武库皮肤不按库存核对');
+  const L = await econ(dev.token, 'list', { i: 1, price: 777 });
+  ok(L.res && L.res.ok && mrow(L.res.l).seller === mk.uid, 'Dev 把饰品挂到玩家市场', L.res);
+  const buyer = await newUser('devbuyer', { ink: 2000 });
+  await econ(buyer.token, 'sync');
+  const by = await econ(buyer.token, 'buy', { l: L.res.l, price: 777 });
+  ok(by.res && by.res.ok && by.res.item.k === k && inkOf(buyer.uid) === 2000 - 777, '玩家从 Dev 手里买到了', by.res);
+
+  // 普通玩家同样这么报：一样都不认
+  const norm = await newUser('notdev');
+  await econ(norm.token, 'sync');
+  const up2 = await call('POST', '/api/profile', { profile: { ...profOf(norm.uid), ink: 500000, skins: [...C.CS_KEYS], armory: { inv: [{ i: 1, k, st: -1, t: T, src: 'case' }], cases: { c1: 50 }, nid: 2 } }, ledger: { deltas: [], ev: 0 } }, norm.token);
+  ok(up2.ok && inkOf(norm.uid) < 500000 && !stateOf(norm.uid).inv.length && !stateOf(norm.uid).cases.c1 && !profOf(norm.uid).skins.some(k => C.CS_KEYS.includes(k)), '普通玩家报同样的东西：墨锭、库存、武器箱、武库皮肤都不认', [inkOf(norm.uid), stateOf(norm.uid).inv.length]);
+
+  // 管理员给 Dev 加减时，也不按库存去掉它的皮肤
+  ok((await adm('POST', '/api/admin/adjust', { uid: mk.uid, ink: 1, why: '看看皮肤还在不在' })).ok && C.CS_KEYS.every(k => profOf(mk.uid).skins.includes(k)), '管理员给 Dev 加墨锭：Dev 的皮肤还在');
+
+  // 重设密码：旧的登录全部退出，旧密码不能用，新密码能用；输错太多被锁的也一起解开
+  for (let i = 0; i < 8; i++) await call('POST', '/api/login', { username: 'Dev', password: 'guess-' + i }, undefined, '3.4.1.' + i);
+  ok((await call('POST', '/api/login', { username: 'Dev', password: 'dev-pass-0123456789' }, undefined, '3.4.2.1')).status === 429, '有人猜 Dev 的密码 8 次：Dev 先锁住');
+  const rp = await adm('POST', '/api/admin/password', { uid: mk.uid, password: 'dev-pass-new-9876543210', why: '密码可能泄露了' });
+  ok(rp.ok && !rp.created, '重设了 Dev 的密码');
+  ok((await call('GET', '/api/profile', undefined, dev.token)).status === 401, '重设以后，之前登录的那个人被踢下线');
+  ok((await call('POST', '/api/login', { username: 'Dev', password: 'dev-pass-0123456789' }, undefined, '3.4.2.2')).status === 401, '旧密码不能用了');
+  ok((await call('POST', '/api/login', { username: 'Dev', password: 'dev-pass-new-9876543210' }, undefined, '3.4.2.3')).ok, '新密码能登录（被锁的也解开了）');
+  const twice = await adm('POST', '/api/admin/password', { uid: 'Dev', password: 'dev-pass-new-9876543210', create: true, why: '再建一次' });
+  ok(twice.ok && !twice.created && twice.uid === mk.uid, '已经有这个号时加了 create 也只是重设密码，不会建第二个');
+}
+
+section('管理口令：没有、不对都不行；同一个 IP 试错 20 次锁一小时；可以几个人各用一个口令，流水记得是谁');
+{
+  ok((await call('GET', '/api/admin/whoami', undefined, undefined, '4.4.0.1')).status === 403, '不带口令：不让进');
+  ok((await call('GET', '/api/admin/whoami', undefined, 'wrong-pass', '4.4.0.1')).status === 403, '口令不对：不让进');
+  const me = await adm('GET', '/api/admin/whoami');
+  ok(me.ok && me.who === 'admin', '只设了一个口令：流水里记成 admin', me);
+  const nosy = await newUser('nosy');
+  ok((await adm('GET', '/api/admin/stats', undefined, nosy.token, '4.4.0.2')).status === 403, '玩家的登录凭证当不了管理口令');
+  const viaEcon = await econ(nosy.token, 'adjust', { uid: nosy.uid, ink: 99999 });
+  ok(viaEcon.status === 400 && viaEcon.error === '不认识的操作', '管理员的操作走不了玩家的 /api/econ', viaEcon);
+  ENV.ADMIN_SECRET = 'even:e-secret-111-aaaaaa,lnt:l-secret-222-bbbbbb';
+  const ev = await adm('GET', '/api/admin/whoami', undefined, 'e-secret-111-aaaaaa'), ln = await adm('GET', '/api/admin/whoami', undefined, 'l-secret-222-bbbbbb');
+  ok(ev.who === 'even' && ln.who === 'lnt', '写成「名字:口令」的两个人：各用各的口令，认得出是谁', [ev.who, ln.who]);
+  ok((await adm('GET', '/api/admin/whoami', undefined, 'even:e-secret-111-aaaaaa', '4.4.0.3')).status === 403 && (await adm('GET', '/api/admin/whoami', undefined, ADMIN, '4.4.0.3')).status === 403, '带着名字的整段、换掉以前的口令都不行');
+  const vic = await newUser('auditee');
+  await adm('POST', '/api/admin/adjust', { uid: vic.uid, ink: 7, why: '看看记成谁' }, 'l-secret-222-bbbbbb');
+  ok(JSON.parse(row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'admin'", vic.uid).detail).by === 'lnt', '流水里记着是 lnt 改的');
+  ENV.ADMIN_SECRET = 'even:short-pass,lnt:l-secret-222-bbbbbb';
+  ok((await adm('GET', '/api/admin/whoami', undefined, 'short-pass', '4.4.0.6')).status === 403 && (await adm('GET', '/api/admin/whoami', undefined, 'l-secret-222-bbbbbb')).who === 'lnt', '少于 16 位的口令不认（同一行里够长的照样能用）');
+  ENV.ADMIN_SECRET = '';
+  ok((await adm('GET', '/api/admin/whoami', undefined, 'anything', '4.4.0.4')).status === 403 && (await adm('GET', '/api/admin/whoami', undefined, '', '4.4.0.4')).status === 403, '没设 ADMIN_SECRET：谁都进不了');
+  ENV.ADMIN_SECRET = ADMIN;
+  const st = [];
+  for (let i = 0; i < 21; i++) st.push((await adm('GET', '/api/admin/whoami', undefined, 'guess' + i, '8.8.4.4')).status);
+  ok(st.slice(0, 20).every(s => s === 403) && st[20] === 429, '同一个 IP 试错 20 次以后锁住', st);
+  ok((await adm('GET', '/api/admin/whoami', undefined, ADMIN, '8.8.4.4')).status === 429, '锁住期间口令对了也不让进（防爆破）');
+  ok((await adm('GET', '/api/admin/whoami', undefined, ADMIN, '8.8.4.5')).ok, '别的 IP 不受影响');
+  T += 61 * 60000;
+  ok((await adm('GET', '/api/admin/whoami', undefined, ADMIN, '8.8.4.4')).ok, '一小时后自己解锁');
+}
+
+section('管理员加减：墨锭、武器箱、终端机、改名标签、发饰品、收饰品；一次请求里的要么都改成、要么都不改');
+{
+  const P = await newUser('patient');
+  await econ(P.token, 'gift');   // 新手礼：初刃武器箱 1 个、终端机 1 台
+  const ink0 = inkOf(P.uid), ver = () => row('SELECT ver FROM econ WHERE uid = ?', P.uid).ver;
+  const noWhy = await adm('POST', '/api/admin/adjust', { uid: P.uid, ink: 100 });
+  ok(noWhy.status === 400 && /原因/.test(noWhy.error) && inkOf(P.uid) === ink0, '不写原因不让改', noWhy.error);
+  ok((await adm('POST', '/api/admin/adjust', { uid: 'nobody-here', ink: 1, why: '测试' })).status === 404, '没有这个号：404');
+  const a1 = await adm('POST', '/api/admin/adjust', { uid: 'patient', ink: 500, cases: { c1: 2, c7: 1 }, term: 1, tags: 2, give: [{ k: 'gc_wolf', st: 5 }, { k: 'qf_p1' }], why: '测试补偿' });
+  const s1 = stateOf(P.uid), wolf = s1.inv.find(x => x.k === 'gc_wolf'), p1 = s1.inv.find(x => x.k === 'qf_p1');
+  ok(a1.ok && a1.uid === P.uid && inkOf(P.uid) === ink0 + 500, '按昵称找到号，墨锭 +500', a1);
+  ok(s1.cases.c1 === 3 && s1.cases.c7 === 1 && s1.term === 2 && s1.tags === 2, '武器箱、终端机、改名标签都加上了', [s1.cases, s1.term, s1.tags]);
+  ok(wolf && wolf.st === 5 && wolf.src === 'admin' && p1 && p1.st === -1, '发的饰品进了库存：斩数版从 5 开始、普通版，来源记成管理员发的', s1.inv);
+  ok(profOf(P.uid).skins.includes('gc_wolf') && profOf(P.uid).ink === inkOf(P.uid), '发的武库皮肤能穿，存档里的墨锭也跟着变');
+  const lg = row("SELECT detail, ink0, ink1 FROM econ_log WHERE uid = ? AND act = 'admin' ORDER BY id DESC LIMIT 1", P.uid), d = JSON.parse(lg.detail);
+  ok(d.by === 'admin' && d.why === '测试补偿' && lg.ink1 - lg.ink0 === 500 && d.give.length === 2 && d.cases.c7 === 1, '流水记下谁改的、为什么、改了什么', d);
+  const sy = await econ(P.token, 'sync');
+  ok(sy.state.cases.c1 === 3 && sy.state.inv.some(x => x.k === 'gc_wolf') && sy.ledger.ink === ink0 + 500, '玩家下次动武库就看到了');
+  const a2 = await adm('POST', '/api/admin/adjust', { uid: P.uid, ink: -100, cases: { c1: -3 }, take: [wolf.i], why: '收回误发的' });
+  const s2 = stateOf(P.uid);
+  ok(a2.ok && inkOf(P.uid) === ink0 + 400 && s2.cases.c1 === 0 && !s2.inv.some(x => x.i === wolf.i) && a2.taken.length === 1, '扣 100 墨锭、扣 3 个武器箱、收走一件', a2);
+  ok(!profOf(P.uid).skins.includes('gc_wolf') && !s2.via.includes('gc_wolf'), '收走的武库皮肤不能穿了');
+  await call('POST', '/api/profile', { profile: { ...profOf(P.uid), skins: [...profOf(P.uid).skins, 'gc_wolf'] }, ledger: { deltas: [], ev: 0 } }, P.token);
+  ok(!profOf(P.uid).skins.includes('gc_wolf'), '拿旧存档覆盖也加不回来');
+  const v1 = ver(), i1 = inkOf(P.uid);
+  const bad = await badInputs('/api/admin/adjust', { uid: P.uid, why: '乱填测试' }, [
+    [{ ink: -(i1 + 1) }, /扣不了/], [{ cases: { c2: -1 } }, /扣不了/], [{ term: -99 }, /终端机/], [{ tags: -3 }, /改名标签/], [{ ink: 1000001 }, /最多/], [{ ink: 1.5 }, /整数/],
+    [{ ink: 'lots' }, /整数/], [{ cases: { c9: 1 } }, /武器箱/], [{ cases: { c1: 1001 } }, /武器箱/], [{ give: [{ k: 'nope' }] }, /没有这件饰品/], [{ give: ['__proto__'] }, /没有这件饰品/],
+    [{ give: [{ k: 'qf_p1', st: 2.5 }] }, /斩数/], [{ take: [99999] }, /库存里没有/], [{ take: ['x'] }, /编号不对/], [{}, /什么都没填/], [{ ink: 50, take: [99999] }, /库存里没有/],
+    [{ give: Array.from({ length: 51 }, () => ({ k: 'qf_p1' })) }, /最多/],
+  ]);
+  ok(!bad.length && ver() === v1 && inkOf(P.uid) === i1, '17 种乱填都不改（扣成负数、超上限、小数、不存在的箱子和饰品、库存里没有的）；有一项不对，整个请求都不改', bad);
+  const it = stateOf(P.uid).inv[0], l = await econ(P.token, 'list', { i: it.i, price: 99 });
+  const tl = await adm('POST', '/api/admin/adjust', { uid: P.uid, take: [it.i], why: '测试' });
+  ok(l.res.ok && tl.status === 400 && /市场/.test(tl.error), '挂在玩家市场上的收不了（要等玩家撤下或者卖掉）', tl.error);
+  await econ(P.token, 'cancel', { l: l.res.l });
+  legacyUser('u_legacyold00001', 'oldtimer', { ink: 300 });
+  const fa = await adm('POST', '/api/admin/adjust', { uid: 'oldtimer', ink: 200, why: '老号补偿' });
+  ok(fa.ok && inkOf('u_legacyold00001') === 500 && row("SELECT COUNT(*) AS n FROM econ_log WHERE uid = ? AND act = 'open_account'", 'u_legacyold00001').n === 1, '还没有武库存档的老号：先按存档建好武库（300 墨锭），再加 200');
+  const info = await adm('GET', '/api/admin/econ?uid=oldtimer');
+  ok(info.ok && info.econ.ink === 500 && info.createdAt === T && info.log.some(x => x.act === 'admin'), '一个号的详情：武库、注册时间、流水', info.econ);
+  await adm('POST', '/api/admin/adjust', { uid: P.uid, ink: 5000, why: '准备并发测试' });
+  const b0 = inkOf(P.uid), c0 = stateOf(P.uid).cases.c2;
+  const rs = await Promise.all([
+    ...Array.from({ length: 4 }, () => adm('POST', '/api/admin/adjust', { uid: P.uid, ink: 10, why: '并发测试' })),
+    ...Array.from({ length: 3 }, () => econ(P.token, 'buyCase', { c: 'c2' })),
+  ]);
+  const nA = rs.slice(0, 4).filter(r => r.ok).length, nB = rs.slice(4).filter(r => r.ok && r.res && r.res.ok).length;
+  ok(nA >= 1 && nB >= 1 && inkOf(P.uid) === b0 + 10 * nA - C.COLS.c2.price * nB && stateOf(P.uid).cases.c2 === c0 + nB, `管理员加墨锭的时候玩家正好在买箱子：成了的 ${nA} 次加、${nB} 次买一笔不丢，也没有多算`, [nA, nB, inkOf(P.uid) - b0]);
+}
+
+section('封号、解封：管理员封几天或者永久，都要写原因');
+{
+  const V = await newUser('villain');
+  ok((await adm('POST', '/api/admin/ban', { uid: V.uid, days: 2 })).status === 400, '不写原因不让封');
+  ok((await adm('POST', '/api/admin/ban', { uid: V.uid, days: 0, why: '测试' })).status === 400 && (await adm('POST', '/api/admin/ban', { uid: V.uid, days: 9999, why: '测试' })).status === 400, '天数要在 1 到 3650');
+  const b1 = await adm('POST', '/api/admin/ban', { uid: 'villain', days: 2, why: '刷屏骂人' });
+  ok(b1.ok && b1.banUntil === T + 2 * 86400e3 && !b1.perm, '封 2 天', b1);
+  ok((await econ(V.token, 'sync')).status === 403 && (await call('POST', '/api/profile', { profile: { ink: 1 } }, V.token)).status === 403, '封号期间不能动武库、不能写存档');
+  const rec = (await call('GET', '/api/ac', undefined, V.token)).rec;
+  ok(rec.log.some(x => x.src === 'admin:admin' && x.r === '刷屏骂人') && rec.strikes === 0, '处罚记录里写着是管理员封的、原因是什么（不算反作弊记过）', rec);
+  const pd = await adm('POST', '/api/admin/pardon', { uid: V.uid, why: '道歉了' });
+  ok(pd.ok && (await econ(V.token, 'sync')).ok, '解封后马上能动');
+  const pm = await adm('POST', '/api/admin/ban', { uid: V.uid, perm: true, why: '开挂' });
+  T += 5 * 86400e3;
+  ok(pm.ok && pm.perm && (await econ(V.token, 'sync')).status === 403, '永久封号过了几天也还封着');
+  await adm('POST', '/api/admin/pardon', { uid: V.uid, why: '申诉成功' });
+  ok((await econ(V.token, 'sync')).ok, '永久封号也能解');
+  const acts = ENV.DB.raw.prepare("SELECT act FROM econ_log WHERE uid = ? AND act IN ('admin_ban', 'pardon') ORDER BY id").all(V.uid).map(r => r.act);
+  ok(acts.join() === 'admin_ban,pardon,admin_ban,pardon', '封、解封都记进流水', acts);
+}
+
+section('全服补偿：每个号只领一份，同时领也只领一份；发出之后才注册的号领不到；停发、过期的领不到');
+{
+  const G1 = await newUser('giftee1'), G2 = await newUser('giftee2');
+  T += 1000;
+  const bad = await badInputs('/api/admin/gift', { to: 'all', note: '维护补偿', why: '测试' }, [
+    [{}, /什么都没有/], [{ ink: 10, note: 'x' }, /说明/], [{ ink: 1000001 }, /墨锭/], [{ ink: -5 }, /墨锭/], [{ cases: { c1: 101 } }, /武器箱/],
+    [{ cases: { zz: 1 } }, /武器箱/], [{ term: 101 }, /最多 100/], [{ ink: 10, days: 91 }, /天数/], [{ ink: 10, days: 0 }, /天数/],
+  ]);
+  ok(!bad.length && row('SELECT COUNT(*) AS n FROM gift').n === 0, '9 种乱填的补偿都发不出去', bad);
+  ok((await adm('POST', '/api/admin/gift', { to: 'nobody-x', ink: 10, note: '维护补偿' })).status === 404, '发给不存在的号：404');
+  const g = await adm('POST', '/api/admin/gift', { to: 'all', ink: 300, cases: { c2: 1 }, term: 1, note: '服务器维护补偿', why: '周六维护了两小时' });
+  ok(g.ok && /^[0-9a-f]{16}$/.test(g.id) && g.until === T + 14 * 86400e3, '发出全服补偿，默认 14 天内能领', g);
+  const i1 = inkOf(G1.uid), r1 = await econ(G1.token, 'sync');
+  ok(r1.ok && r1.gifts && r1.gifts.length === 1 && r1.gifts[0].note === '服务器维护补偿' && r1.gifts[0].ink === 300 && r1.gifts[0].cases.c2 === 1 && !('id' in r1.gifts[0]), '下次动武库就领到，回复里带着说明和内容（网页弹提示用）', r1.gifts);
+  ok(inkOf(G1.uid) === i1 + 300 && stateOf(G1.uid).cases.c2 === 1 && stateOf(G1.uid).term === 1, '墨锭、武器箱、终端机都进了账');
+  const r1b = await econ(G1.token, 'sync');
+  ok(!r1b.gifts && inkOf(G1.uid) === i1 + 300, '再动武库不会再领');
+  const i2 = inkOf(G2.uid), rs = await Promise.all(Array.from({ length: 6 }, () => econ(G2.token, 'sync')));
+  ok(inkOf(G2.uid) === i2 + 300 && rs.filter(r => r.gifts).length === 1 && rs.every(r => r.ok), '同时发 6 个请求也只领一份', [inkOf(G2.uid) - i2, rs.map(r => r.status)]);
+  ok(row('SELECT COUNT(*) AS n FROM gift_got WHERE gid = ?', g.id).n === 2 && row("SELECT COUNT(*) AS n FROM econ_log WHERE uid = ? AND act = 'gift_got'", G2.uid).n === 1, '领过的记下来，流水里一人一条（gift_got，和新手礼的 gift 分开）');
+  await adm('POST', '/api/admin/gift', { to: 'giftee1', tags: 2, note: '单独补偿', why: '测试' });
+  const o2 = await econ(G2.token, 'sync');
+  ok(!(o2.gifts || []).some(x => x.note === '单独补偿'), '单发给一个号的，别的号领不到');
+  const tags0 = stateOf(G1.uid).tags, fo = await econ(G1.token, 'open', { c: 'c5' });
+  ok(fo.ok && fo.res.err && fo.gifts && fo.gifts[0].note === '单独补偿' && stateOf(G1.uid).tags === tags0 + 2, '那个号自己领到；这次的动作没成（没有这个箱子），补偿照样领到', [fo.res, fo.gifts]);
+  T += 1000;
+  const late = await newUser('latecomer'), li = inkOf(late.uid), rl = await econ(late.token, 'sync');
+  ok(!rl.gifts && inkOf(late.uid) === li, '发补偿之后才注册的号领不到（免得开小号来领）');
+  const gn = await adm('POST', '/api/admin/gift', { to: 'all', ink: 50, newToo: true, note: '新老都有', why: '测试' });
+  T += 1000;
+  const late2 = await newUser('latecomer2'), rl2 = await econ(late2.token, 'sync');
+  ok(gn.ok && rl2.gifts && rl2.gifts.length === 1 && rl2.gifts[0].note === '新老都有', '勾了“之后新注册的也能领”的那份，新号也领到；别的那份还是领不到', rl2.gifts);
+  const goff = await adm('POST', '/api/admin/gift', { to: 'all', ink: 10, note: '要停发的', why: '测试' });
+  ok((await adm('POST', '/api/admin/gift/off', { id: goff.id })).status === 400, '停发也要写原因');
+  const off = await adm('POST', '/api/admin/gift/off', { id: goff.id, why: '发错了' }), r3 = await econ(G2.token, 'sync');
+  ok(off.ok && (r3.gifts || []).some(x => x.note === '新老都有') && !(r3.gifts || []).some(x => x.note === '要停发的'), '停发以后领不到，别的照样领', r3.gifts);
+  const gexp = await adm('POST', '/api/admin/gift', { to: 'all', ink: 10, days: 1, note: '一天内领', why: '测试' });
+  const r4a = await econ(G1.token, 'sync');
+  T += 86400e3 + 1000;
+  const r4 = await econ(G2.token, 'sync');
+  ok(gexp.ok && (r4a.gifts || []).some(x => x.note === '一天内领') && !r4.gifts, '有效期里领得到，过了有效期领不到', [r4a.gifts, r4.gifts]);
+  const gl = await adm('GET', '/api/admin/gifts'), byId = Object.fromEntries(gl.gifts.map(x => [x.id, x]));
+  ok(byId[g.id].got === 2 && byId[goff.id].off === 1 && byId[g.id].items.cases.c2 === 1 && byId[g.id].by === 'admin' && byId[g.id].uid === '*', '补偿列表：领了几个、停发了没有、内容、谁发的', byId[g.id]);
+  const tagged = await adm('POST', '/api/admin/gift', { to: 'all', ink: 1, note: '<img src=x onerror=1>维护', why: '测试' });
+  ok(tagged.ok && row('SELECT note FROM gift WHERE id = ?', tagged.id).note === 'img src=x onerror=1维护', '说明里的尖括号去掉（游戏里显示也不会出事）');
+  for (const id of [tagged.id, gn.id]) await adm('POST', '/api/admin/gift/off', { id, why: '测试完了' });   // 后面的测试不要再领到
+}
+
+section('在线改经济数值：价格、每天能开几个、手续费、爆率马上生效；乱填的不收；能退回；规则核心里写死的默认值不变');
+{
+  const c0 = await adm('GET', '/api/admin/cfg');
+  ok(c0.ok && c0.id === 0 && !Object.keys(c0.cfg).length && c0.info.length === C.CFG_INFO.length && !c0.hist.length, '一开始全是默认值', c0.id);
+  const bad = await badInputs('/api/admin/cfg', { why: '乱填测试' }, [
+    [{ set: { bogus: 1 } }, /不认识/], [{ set: { constructor: 1 } }, /不认识/], [{ set: { 'price.c1': 0 } }, /之间/], [{ set: { 'price.c1': 'abc' } }, /数字/],
+    [{ set: { openDay: 2.5 } }, /整数/], [{ set: { fee: 0.9 } }, /之间/], [{ set: { 'odds.mil': 0.6 } }, /加起来/], [{ set: { 'prem.gold': 0.5 } }, /加起来/],
+    [{ set: { 'term.lo': 2, 'term.hi': 1.5 } }, /最低/], [{ set: {} }, /没写/], [{ set: 'price.c1=1' }, /没写/], [{ set: { 'price.c1': 280 } }, /一样/],
+  ]);
+  ok(!bad.length && row('SELECT COUNT(*) AS n FROM cfg').n === 0, '12 种乱填的都存不进去（不认识的项、超出范围、不是数字、该填整数的填了小数、爆率加起来不是 1、终端机倍数反了、和现在一样）', bad);
+  ok((await adm('POST', '/api/admin/cfg', { set: { 'price.c1': 300 } })).status === 400, '不写原因不让改');
+  const E1 = await newUser('econ1'), E2 = await newUser('econ2');
+  await adm('POST', '/api/admin/adjust', { uid: E1.uid, ink: 20000, why: '测试用' });
+  await adm('POST', '/api/admin/adjust', { uid: E2.uid, ink: 5000, why: '测试用' });
+  const s1 = await adm('POST', '/api/admin/cfg', { set: { 'price.c1': 300, openDay: 3, fee: 0.1, 'odds.mil': 0.5, 'odds.res': 0.3 }, why: '周末活动' });
+  ok(s1.ok && s1.id === 1 && s1.cfg['price.c1'] === 300 && s1.cfg.fee === 0.1, '存成第 1 版', s1);
+  const ib = inkOf(E1.uid), buy = await econ(E1.token, 'buyCase', { c: 'c1', n: 4 });
+  ok(buy.res.ok && !buy.gifts && inkOf(E1.uid) === ib - 1200, '商店马上按新价格卖：4 个初刃武器箱 1200', [buy.res, ib - inkOf(E1.uid)]);
+  ok(buy.cfg && buy.cfg['price.c1'] === 300 && buy.cfg.openDay === 3, '武库的回复里带着现在的数值（网页拿来显示价格、上限）');
+  let opened = 0;
+  for (let i = 0; i < 4; i++) if ((await econ(E1.token, 'open', { c: 'c1' })).res.ok) opened++;
+  ok(opened === 3, '每天能开的普通武器箱从 2 个改成 3 个', opened);
+  ok(C.oddsOf('c1', s1.cfg).mil === 0.5 && C.oddsOf('c1', s1.cfg).res === 0.3 && C.oddsOf('c7', s1.cfg).gold === 0.08 && C.oddsOf('c1').mil === 0.53, '开箱爆率按新的算（神兵武器箱没改的照旧）');
+  const item = stateOf(E1.uid).inv[0], ls = await econ(E1.token, 'list', { i: item.i, price: 1000 }), by = await econ(E2.token, 'buy', { l: ls.res.l });
+  const sel0 = inkOf(E1.uid);
+  await econ(E1.token, 'sync');
+  ok(ls.res.ok && by.res.ok && inkOf(E1.uid) === sel0 + 900, '卖掉标价 1000 的一件：手续费改成 10%，卖家到手 900', inkOf(E1.uid) - sel0);
+  const s2 = await adm('POST', '/api/admin/cfg', { set: { fee: null }, why: '手续费改回去' });
+  ok(s2.ok && s2.id === 2 && !('fee' in s2.cfg) && s2.cfg['price.c1'] === 300, '填 null 就这一项回到默认，别的不动', s2.cfg);
+  const u1 = await adm('POST', '/api/admin/cfg/undo', { to: 1, why: '还是用第 1 版' });
+  ok(u1.ok && u1.id === 3 && u1.cfg.fee === 0.1, '退回到第 1 版（存成第 3 版）', u1);
+  ok((await adm('POST', '/api/admin/cfg/undo', { to: 1, why: '再来' })).status === 400 && (await adm('POST', '/api/admin/cfg/undo', { to: 99, why: '测试' })).status === 404, '退回到现在用的这一版、不存在的版本：都不存');
+  const h = await adm('GET', '/api/admin/cfg');
+  ok(h.id === 3 && h.hist.length === 3 && h.hist[0].note.startsWith('退回到第 1 版') && h.hist.every(x => x.by === 'admin'), '版本记录：谁改的、为什么', h.hist.map(x => x.note));
+  ok((await adm('GET', '/api/admin/stats')).cfgId === 3, '总览里看得到现在是第几版');
+  ENV.DB.raw.prepare('INSERT INTO cfg (json, by, note, at) VALUES (?, ?, ?, ?)').run('{"price.c1": -5}', 'x', '手动改坏的', T);
+  T += 31000;
+  const ib2 = inkOf(E1.uid), bb = await econ(E1.token, 'buyCase', { c: 'c1' });
+  ok(bb.res.ok && inkOf(E1.uid) === ib2 - C.COLS.c1.price && !Object.keys(bb.cfg).length, '数据库里存的数值坏了：整版不用，回到默认，照样能玩', ib2 - inkOf(E1.uid));
+  const z = await adm('POST', '/api/admin/cfg/undo', { to: 0, why: '全部回到默认' });
+  ok(z.ok && !Object.keys(z.cfg).length, '全部回到默认值');
+  ok(C.COLS.c1.price === 280 && C.FEE === 0.15 && C.OPEN_DAY === 2 && Object.isFrozen(C.CFG_DEF) && Object.isFrozen(C.CFG_INFO[0]) && C.CFG_DEF['price.c1'] === 280, '规则核心里写死的默认值一个没变（在线改的只存在数据库里）');
+}
+
+section('管理后台的查询：总览、找号、操作记录、饰品目录');
+{
+  const st = await adm('GET', '/api/admin/stats');
+  ok(st.ok && st.users === row('SELECT COUNT(*) AS n FROM users').n && st.inkTotal === row('SELECT SUM(ink) AS n FROM econ').n && st.accounts === row('SELECT COUNT(*) AS n FROM econ').n, '总览：注册数、武库存档数、全服墨锭对得上', st);
+  const f1 = await adm('GET', '/api/admin/find?q=gift');
+  ok(f1.ok && f1.users.length === 2 && f1.users.every(u => u.username.startsWith('giftee')), '按昵称开头找', f1.users.map(u => u.username));
+  const f2 = await adm('GET', '/api/admin/find?q=' + encodeURIComponent('%')), f3 = await adm('GET', '/api/admin/find?q=_');
+  ok(f2.users.length === 0 && f3.users.length === 0, '搜 % 和 _ 不会变成通配符');
+  ok((await adm('GET', '/api/admin/find')).users.length === 20, '不填就列最近动过的 20 个');
+  const cat = await adm('GET', '/api/admin/catalog');
+  ok(cat.ok && cat.items.length === Object.keys(C.ITEM).length && cat.cols.length === 7 && cat.tiers.length === 5 && cat.cfg.length === C.CFG_INFO.length && cat.items.every(x => C.charOf(x.k) === x.char && C.ITEM[x.k].col === x.col), `饰品目录：${cat.items.length} 款饰品、7 个武器箱、5 档品质、能改的数值`);
+  const au = await adm('GET', '/api/admin/audit'), acts = new Set(au.rows.map(r => r.act));
+  ok(au.ok && ['admin', 'admin_ban', 'pardon', 'gift_new', 'gift_off', 'cfg'].every(a => acts.has(a)) && au.rows.every(r => !!(parseDetail(r.detail).by)), '操作记录：六种管理员操作都在，每条都写着是谁', [...acts]);
+  ok(au.rows.some(r => r.uid === '*' && r.act === 'cfg') && !acts.has('open') && !acts.has('ledger') && !acts.has('gift_got'), '全服的记在“全服”名下；玩家自己的操作不混进来');
+}
+
+section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段脚本');
+{
+  const res = await worker.fetch(new Request('https://w.test/admin'), ENV, { waitUntil() {} });
+  const html = await res.text(), csp = res.headers.get('Content-Security-Policy') || '', scriptSrc = (/script-src ([^;]+)/.exec(csp) || [])[1] || '';
+  ok(res.status === 200 && /text\/html/.test(res.headers.get('Content-Type')) && res.headers.get('X-Frame-Options') === 'DENY' && /frame-ancestors 'none'/.test(csp) && /connect-src 'self'/.test(csp) && /default-src 'none'/.test(csp), '回一个网页：不许被嵌进别的网页，只许连自己', csp);
+  ok(scriptSrc && !scriptSrc.includes('unsafe'), '脚本不许 unsafe-inline（页面里混进来的脚本、onclick 跑不了）', scriptSrc);
+  ok(!html.includes(ADMIN) && res.headers.get('Cache-Control') === 'no-store', '网页里没有口令，也不让缓存');
+  if (FILE.includes('bundle')) {
+    const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+    const sha = scripts.length === 1 ? createHash('sha256').update(scripts[0], 'utf8').digest('base64') : '';
+    ok(scripts.length === 1 && scriptSrc === `'sha256-${sha}'`, '打包好的网页：CSP 里的 sha256 和页面里那一段脚本对得上（网页能跑）', [scripts.length, scriptSrc]);
+    const names = JSON.parse((/const NAMES = (\{.*?\});/.exec(scripts[0]) || [])[1] || '{}');
+    ok(Object.keys(C.ITEM).every(k => names.skins && names.skins[k]) && C.HERO_IDS.every(hh => names.heroes && names.heroes[hh]), '每件饰品、每个侠客在网页里都有名字');
+  } else ok(scriptSrc === "'none'", '没打包的 worker.js：回一个说明页，不跑任何脚本');
 }
 
 section('规则核心：冻结、坏存档自愈');

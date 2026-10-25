@@ -14406,18 +14406,12 @@ function renderAcc() {
     ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号与云存档</button><button class="ghost" id="logoutBtn">退出</button>`
     : `<button class="ghost" id="accOpen">登录 / 注册</button>`;
 
-  // 开发者专享：全量备份与 Google Cloud 编辑器仅向 Dev 账号开放
+  // 开发者专享：全量备份与管理后台入口仅向 Dev 账号开放（后台本身要管理口令）
   const actionBtns = $id('accActionBtns');
   if (actionBtns) {
     const isDev = !!(u && u.isDevMaster);
-    const devCloudBtn = $id('devCloudBtn');
-    if (devCloudBtn) {
-      if (isDev) devCloudBtn.classList.remove('hidden');
-      else {
-        devCloudBtn.classList.add('hidden');
-        if ($id('devCloudBox')) $id('devCloudBox').classList.add('hidden');
-      }
-    }
+    const devAdminBtn = $id('devAdminBtn');
+    if (devAdminBtn) devAdminBtn.classList.toggle('hidden', !isDev);
     let expAll = $id('exportAllBtn');
     if (isDev) {
       if (!expAll) {
@@ -14445,28 +14439,6 @@ function renderAcc() {
   }
 }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-
-function triggerStealthDevUnlock(silent) {
-  DEV_SESSION_UNLOCKED = true;
-  try {
-    sessionStorage.setItem('renying-dev-unlock', '1');
-    localStorage.setItem('renying-qfx', '10');
-  } catch (e) {}
-  if (typeof PROF !== 'undefined' && PROF) {
-    const allSkins = Object.keys(SKINS);
-    PROF.skins = Array.from(new Set([...(PROF.skins || []), ...allSkins]));
-    PROF.qfx = Math.max(PROF.qfx || 0, 10);
-    CHARS.forEach(c => {
-      if (!PROF.owned.includes(c.id)) PROF.owned.push(c.id);
-    });
-  }
-  if (!silent) SFX.chargeFull();
-  renderAcc();
-  if (typeof BP !== 'undefined' && BP) renderBP();
-  if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
-  if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
-  if (typeof renderTrainPick === 'function') renderTrainPick();
-}
 
 if ($id('exportAccBtn')) {
   $id('exportAccBtn').addEventListener('click', () => {
@@ -14641,136 +14613,12 @@ $id('regBtn').addEventListener('click', () => doAcc('register'));
 $id('accPass').addEventListener('keydown', e => { if (e.key === 'Enter') doAcc('login'); });
 $id('accBack').addEventListener('click', backToMenu);
 
-if ($id('devCloudBtn')) {
-  $id('devCloudBtn').addEventListener('click', async () => {
-    const box = $id('devCloudBox');
-    if (!box) return;
-    box.classList.toggle('hidden');
-    if (!box.classList.contains('hidden')) {
-      const u = window.CloudSave && CloudSave.getUser();
-      const isCloud = window.CloudSave && CloudSave.hasValidConfig() && u && u.isCloud;
-      const badge = $id('devCloudBadge');
-      if (badge) {
-        if (isCloud) {
-          badge.textContent = '✅ 云端已连通 (Firestore)';
-          badge.style.color = '#46d3ea';
-        } else if (window.CloudSave && CloudSave.hasValidConfig()) {
-          badge.textContent = '⚡ 云配置就绪 (可同步)';
-          badge.style.color = 'var(--gold)';
-        } else {
-          badge.textContent = '⚠️ 本地独立模式 (未配置云)';
-          badge.style.color = '#ff6b6b';
-        }
-      }
-      const docRef = $id('devCloudDocRef');
-      if (docRef) docRef.textContent = 'users/' + ((u && u.uid) || 'dev_master');
-      const inEl = $id('devCloudJsonIn');
-      if (inEl && (!inEl.value || inEl.value.trim() === '')) {
-        let p = null;
-        if (window.CloudSave) {
-          try { p = await CloudSave.loadProfile(); } catch (e) {}
-        }
-        inEl.value = JSON.stringify(p || PROF, null, 2);
-      }
-    }
-  });
-}
-
-if ($id('devCloudUnlockAllBtn')) {
-  $id('devCloudUnlockAllBtn').addEventListener('click', async () => {
-    const msg = $id('devCloudMsg');
-    if (msg) {
-      msg.style.color = 'var(--gold)';
-      msg.textContent = '正在向 Google Cloud 写入全解锁数据…';
-    }
-    try {
-      if (!window.CloudSave) throw new Error('云存档模块未加载');
-      const res = await CloudSave.unlockAllOnCloud();
-      applyProfile(res.data);
-      triggerStealthDevUnlock(true);
-      if ($id('devCloudJsonIn')) $id('devCloudJsonIn').value = JSON.stringify(res.data, null, 2);
-      if (msg) {
-        msg.style.color = res.isCloud ? '#46d3ea' : 'var(--gold)';
-        msg.textContent = res.isCloud
-          ? '✅ 成功！Google Cloud Firestore (9英雄 + 18皮肤 + 99999墨锭) 已全部云端解锁并写入！'
-          : '⚡ 本地全英雄全皮肤已解锁！请配置 Firebase 云端以便同步至 Google Cloud。';
-      }
-      toast(res.isCloud ? 'Google Cloud 全解锁成功！' : '本地全英雄皮肤全解锁已生效！');
-      renderAcc();
-    } catch (err) {
-      if (msg) {
-        msg.style.color = '#ff6b6b';
-        msg.textContent = '全解锁写入失败：' + err.message;
-      }
-    }
-  });
-}
-
-if ($id('devCloudPullBtn')) {
-  $id('devCloudPullBtn').addEventListener('click', async () => {
-    const msg = $id('devCloudMsg');
-    if (msg) {
-      msg.style.color = '#46d3ea';
-      msg.textContent = '正在从 Google Cloud Firestore 拉取…';
-    }
-    try {
-      if (!window.CloudSave) throw new Error('云存档模块未加载');
-      const u = CloudSave.getUser();
-      const p = await (CloudSave.hasValidConfig() && u && u.isCloud
-        ? CloudSave.getCloudDocument('users', u.uid)
-        : CloudSave.loadProfile());
-      if (p) {
-        applyProfile(p);
-        renderAcc();
-        if ($id('devCloudJsonIn')) $id('devCloudJsonIn').value = JSON.stringify(p, null, 2);
-        if (msg) {
-          msg.style.color = '#46d3ea';
-          msg.textContent = '✅ 已从 Google Cloud 拉取最新档案！';
-        }
-        toast('已从云端拉取最新数据');
-      } else {
-        throw new Error('未读取到云端档案或尚未创建');
-      }
-    } catch (err) {
-      if (msg) {
-        msg.style.color = '#ff6b6b';
-        msg.textContent = '拉取失败：' + err.message;
-      }
-    }
-  });
-}
-
-if ($id('devCloudPushBtn')) {
-  $id('devCloudPushBtn').addEventListener('click', async () => {
-    const msg = $id('devCloudMsg');
-    const inEl = $id('devCloudJsonIn');
-    if (!inEl || !inEl.value.trim()) {
-      if (msg) { msg.style.color = '#ff6b6b'; msg.textContent = '请输入有效的 JSON 数据'; }
-      return;
-    }
-    if (msg) {
-      msg.style.color = 'var(--gold)';
-      msg.textContent = '正在推送更新至 Google Cloud…';
-    }
-    try {
-      if (!window.CloudSave) throw new Error('云存档模块未加载');
-      const parsed = JSON.parse(inEl.value.trim());
-      const u = CloudSave.getUser();
-      const uid = (u && u.uid) || 'dev_master';
-      const saved = await CloudSave.setCloudDocument('users', uid, parsed);
-      applyProfile(saved);
-      renderAcc();
-      if (msg) {
-        msg.style.color = '#46d3ea';
-        msg.textContent = '✅ 已成功将修改保存推送至 Google Cloud！';
-      }
-      toast('云端档案已更新');
-    } catch (err) {
-      if (msg) {
-        msg.style.color = '#ff6b6b';
-        msg.textContent = '推送失败：' + err.message;
-      }
-    }
+// 管理后台在 Worker 的 /admin（查账号、调墨锭、发补偿、改经济数值），打开后输入管理口令
+if ($id('devAdminBtn')) {
+  $id('devAdminBtn').addEventListener('click', () => {
+    const base = window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '';
+    if (!base) { toast('还没有配置云端接口'); return; }
+    window.open(base + '/admin', '_blank', 'noopener');
   });
 }
 

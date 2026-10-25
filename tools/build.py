@@ -9,14 +9,16 @@
   assets/qingfengxing.html  青锋行（三维小游戏）：由 src/qfx/ 里的 page.html 和按编号排好的各个 .js 拼成。
   renying-offline.html  离线版：一个文件就能玩（音乐、青锋行都打包在里面），双击打开，不能联机。
   renying.html          旧网址，自动跳到 index.html。
-  cloudflare/worker.bundle.js  云端账号的 Cloudflare Worker：worker.js 加上武库规则（src/armory-core.js）拼成一个文件，
-                        wrangler deploy 用它，在 Cloudflare 网页编辑器里整段粘贴也能用。
+  cloudflare/worker.bundle.js  云端账号的 Cloudflare Worker：worker.js 加上武库规则（src/armory-core.js）和管理网页
+                        （cloudflare/admin.html，Worker 的 /admin）拼成一个文件，wrangler deploy 用它，
+                        在 Cloudflare 网页编辑器里整段粘贴也能用。
 
 用法：
   python3 tools/build.py          生成网页
   python3 tools/build.py --check  只检查网页是不是最新的（CI 用），不是最新就返回 1
 """
 import base64
+import hashlib
 import json
 import os
 import re
@@ -154,14 +156,46 @@ def page(offline):
 
 
 CORE_IMPORT = "import '../src/armory-core.js';\n"
+ADMIN_LINE = "const ADMIN_PAGE = { html: '', sha: '' };\n"
+NAMES_MARK = "/*@names*/null"
+
+
+def admin_names():
+    """管理网页里饰品、侠客的名字：原有皮肤和侠客从 src/game.js 读，武库的新皮肤从 src/armory-core.js 读"""
+    game, core = read(SRC, "game.js"), read(SRC, "armory-core.js")
+    a = game.index("const SKINS = {")
+    b = game.index("\n};", a)
+    skins = dict(re.findall(r"^ {2}([a-z]{2}_[a-z0-9]+): \{ char: '[a-z]+', rarity: '[a-z]+', name: '([^']+)'", game[a:b], re.M))
+    skins.update(re.findall(r"^ {4}\['([a-z]{2}_p[0-9]+)', '[a-z]+', '([^']+)'", core, re.M))
+    skins.update(re.findall(r"^ {4}([a-z]{2}_[a-z0-9]+): \{ char: '[a-z]+', name: '([^']+)'", core, re.M))
+    a = game.index("const CHARS = [")
+    heroes = dict(re.findall(r"^  \{ id: '([a-z]+)', name: '([^']+)'", game[a:game.index("\n];", a)], re.M))
+    if len(skins) < 60 or len(heroes) < 12:
+        raise SystemExit(f"管理网页要的名字没读全：皮肤 {len(skins)} 款、侠客 {len(heroes)} 个（src/game.js 的 SKINS、CHARS 或 src/armory-core.js 的写法变了？）")
+    return {"skins": skins, "heroes": heroes}
+
+
+def admin_page():
+    """管理网页：填上名字表，再算出页面里那一段脚本的 sha256（Worker 只许浏览器跑这一段）。返回 (网页, 脚本, sha256)"""
+    html = read(ROOT, "cloudflare", "admin.html")
+    if html.count(NAMES_MARK) != 1:
+        raise SystemExit("cloudflare/admin.html 里应该正好有一个 " + NAMES_MARK)
+    html = html.replace(NAMES_MARK, json.dumps(admin_names(), ensure_ascii=False, separators=(",", ":")))
+    scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
+    if len(scripts) != 1 or html.count("<script") != 1:
+        raise SystemExit("cloudflare/admin.html 里应该正好有一段 <script>（不带属性）")
+    return html, scripts[0], base64.b64encode(hashlib.sha256(scripts[0].encode("utf-8")).digest()).decode()
 
 
 def worker_bundle():
-    """Cloudflare Worker：把 worker.js 引用的武库规则原样拼进去，浏览器和服务器用的是同一份规则"""
+    """Cloudflare Worker：把 worker.js 引用的武库规则原样拼进去，浏览器和服务器用的是同一份规则；管理网页也放进去"""
     src = read(ROOT, "cloudflare", "worker.js")
-    if src.count(CORE_IMPORT) != 1:
-        raise SystemExit("cloudflare/worker.js 里应该正好有一行 " + CORE_IMPORT.strip())
-    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js 和 src/armory-core.js 再重新生成。\n"
+    for line in (CORE_IMPORT, ADMIN_LINE):
+        if src.count(line) != 1:
+            raise SystemExit("cloudflare/worker.js 里应该正好有一行 " + line.strip())
+    html, _, sha = admin_page()
+    src = src.replace(ADMIN_LINE, "const ADMIN_PAGE = { html: " + json.dumps(html, ensure_ascii=False) + ", sha: '" + sha + "' };\n")
+    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html 和 src/armory-core.js 再重新生成。\n"
     return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + read(SRC, "armory-core.js") + "\n/* === cloudflare/worker.js === */\n")
 
 
@@ -207,6 +241,10 @@ def check_js():
     r = subprocess.run([node, "--input-type=module", "--check", "-"], input=worker_bundle(), capture_output=True, text=True)
     if r.returncode:
         print(f"cloudflare/worker.bundle.js 语法错误：\n{r.stderr}")
+        ok = False
+    r = subprocess.run([node, "--check", "-"], input=admin_page()[1], capture_output=True, text=True)
+    if r.returncode:
+        print(f"cloudflare/admin.html 的脚本语法错误：\n{r.stderr}")
         ok = False
     return ok
 

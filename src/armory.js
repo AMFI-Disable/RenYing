@@ -1,5 +1,5 @@
 /* =====================================================================
-   刃影武库：CS 那样的皮肤系统
+   刃影武库：皮肤系统
    ---------------------------------------------------------------------
    库存（斩数计数、改名标签）、武器箱开箱、终端机、玩家市场（只有玩家之间买卖饰品，标价玩家自己定）、
    汰换合同、对局掉落、每周补给、江湖行动。规则都在 armory-core.js，这里只管页面和接到游戏里。
@@ -203,6 +203,9 @@
   let ST = null, MODE = 'none', UID = '', BUSY = false, TAB = 'inv', SIG = '', TK = 0, LOADING = null, OLDV = 0;
   // 玩家市场的行情（每一款在卖几件、最低多少、最近成交）：只有连上新版服务器才有；打开市场、终端机页时读，一分钟内不重读
   const MKD = { at: 0, items: null, err: '', busy: null };
+  // 管理员在服务器上改过的经济数值（价格、每天能开几个、爆率、手续费……），服务器每次回话都带着；只在连着服务器时用，本机存档用默认值
+  let CFG = null;
+  const CF = () => (MODE === 'server' ? CFG : null);
   function loadMarket(force) {   // 读到新的行情时回 true
     if (MODE !== 'server' || !MKT) return Promise.resolve(false);
     if (MKD.busy) return MKD.busy.then(() => false);
@@ -274,6 +277,8 @@
       applySkins();
     } catch (e) {}
   }
+  // 一份补偿里有什么：「500 墨锭、初刃武器箱 ×2、终端机 ×1」
+  const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : ''].filter(Boolean).join('、');
   function apply(out, quiet) {
     if (!out) return;
     if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
@@ -288,6 +293,8 @@
     if (out.skinsAdd || out.skinsDel) { const set = new Set(PROF.skins || []); for (const k of out.skinsAdd || []) set.add(k); for (const k of out.skinsDel || []) set.delete(k); PROF.skins = Array.from(set); own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own; }
     if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
     if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
+    if (out.cfg !== undefined) { const c = C.cleanCfg(out.cfg); CFG = c.cfg; }
+    if (Array.isArray(out.gifts)) for (const g of out.gifts) toast(`开发组补偿：${String(g.note || '')}（${giftText(g)}）`);
     if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
     try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
     if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -404,7 +411,7 @@
     const d = {};
     d.inv = ST.inv.some(x => x.t > seenAt());
     d.op = (ST.drop.g >= C.SUPPLY_GAMES && !ST.drop.sup) || ST.op.ms.some((m, i) => !ST.op.done.includes(i) && (ST.op.prog[i] || 0) >= m.n);
-    d.cases = !ST.gift || C.CASES.some(c => ST.cases[c] > 0 && C.openLeft(ST, c) > 0);   // 有箱子、今天（这周）还能开
+    d.cases = !ST.gift || C.CASES.some(c => ST.cases[c] > 0 && C.openLeft(ST, c, CF()) > 0);   // 有箱子、今天（这周）还能开
     d.term = ST.term > 0 || !!ST.tm;
     d.any = d.inv || d.op || d.cases || d.term;
     return d;
@@ -488,7 +495,7 @@
         <button type="button" class="ghost small" data-ins="list" ${can && mk ? '' : 'disabled'}${mk ? '' : ' title="玩家市场要连上服务器才能用"'}>挂到市场</button>
         <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
         <button type="button" class="ghost small" data-ins="market">${INS.from === 'pv' ? '去玩家市场看看' : '这款的行情'}</button><button type="button" class="ghost small" data-ins="close">关闭</button></div>
-      <p class="ar-note">${INS.from === 'pv' ? `这是预览。从${colName(it.k)}武器箱开出来、在玩家市场买到，或者汰换合同、终端机碰上了，就能穿上。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.FEE * 100)}% 手续费。武库不收购饰品。`}</p>`;
+      <p class="ar-note">${INS.from === 'pv' ? `这是预览。从${colName(it.k)}武器箱开出来、在玩家市场买到，或者汰换合同、终端机碰上了，就能穿上。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
     if (mk && !MKD.items && !MKD.err) loadMarket().then(fresh => { if (fresh && INS && INS.it === it) insInfo(); });
   }
   function closeIns() { $id('arIns').hidden = true; INS = null; }
@@ -514,13 +521,13 @@
   function listBox(it) {   // 挂到玩家市场：卖多少自己定（默认比现在最低的便宜 1，没人卖就按最近成交价）
     const m = mkInfo(it.k, it.st), sug = m && m.n && m.lo ? Math.max(1, m.lo - 1) : m && m.last ? m.last : C.refVal(it);
     const now = m ? `${m.n ? `现在在卖 ${m.n} 件，最低 ${ink(m.lo)}` : '现在没人在卖这款'}${m.last ? `，最近一次成交 ${ink(m.last)}` : ''}${it.st >= 0 ? '（都只算斩数版）' : ''}。` : '这款还没人在玩家市场上卖过，标价可以参考同一档的其他饰品。';
-    modal(`<h3>挂到玩家市场</h3><p>「${escapeHTML(itemName(it))}」卖多少由你定。别的玩家买走以后扣 ${Math.round(C.FEE * 100)}% 手续费，剩下的自动到账；挂着的时候随时能撤下。</p>
+    modal(`<h3>挂到玩家市场</h3><p>「${escapeHTML(itemName(it))}」卖多少由你定。别的玩家买走以后扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费，剩下的自动到账；挂着的时候随时能撤下。</p>
       <p class="ar-note">${now}</p>
       <div class="ar-listrow"><input id="arPrice" class="ar-input" type="number" min="1" max="${C.PRICE_MAX}" step="1" value="${sug}"><span id="arEta" class="ar-note"></span></div>
       <div class="row"><button class="go small" id="arListGo">挂上去</button><button class="ghost small" data-ar-close>取消</button></div>`);
     const eta = () => {
       const v = Math.floor(+$id('arPrice').value || 0), ok = v >= 1 && v <= C.PRICE_MAX;
-      $id('arEta').innerHTML = !ok ? `标价要在 1 到 ${fmt(C.PRICE_MAX)} 之间` : `卖掉到手 ${ink(C.net(v))}${m && m.n && m.lo && v > m.lo * 1.5 ? ' · 比在卖最便宜的贵不少，可能要等一阵' : ''}`;
+      $id('arEta').innerHTML = !ok ? `标价要在 1 到 ${fmt(C.PRICE_MAX)} 之间` : `卖掉到手 ${ink(C.net(v, CF()))}${m && m.n && m.lo && v > m.lo * 1.5 ? ' · 比在卖最便宜的贵不少，可能要等一阵' : ''}`;
       $id('arListGo').disabled = !ok;
     };
     $id('arPrice').addEventListener('input', eta); $id('arPrice').addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); }); eta();
@@ -530,9 +537,9 @@
     });
   }
   function buyBox(k) {   // 商店：武器箱、终端机按固定价格买，一次 1~10 个
-    const p = C.shopPrice(k); let n = 1;
+    const p = C.shopPrice(k, CF()); let n = 1;
     if (!p) return;
-    modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>买${goodName(k)}</h3><p class="ar-note">商店价 ${ink(p)} 一个，不限量${k === 'term' ? '' : C.COLS[k].prem ? ` · 每周能开 ${C.PREM_WEEK} 个` : ` · 普通武器箱每天一共能开 ${C.OPEN_DAY} 个`}。买来的不能转卖。</p></div></div>
+    modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>买${goodName(k)}</h3><p class="ar-note">商店价 ${ink(p)} 一个，不限量${k === 'term' ? '' : C.COLS[k].prem ? ` · 每周能开 ${C.cv(CF(), 'premWeek')} 个` : ` · 普通武器箱每天一共能开 ${C.cv(CF(), 'openDay')} 个`}。买来的不能转卖。</p></div></div>
       <div class="ar-qty"><button type="button" class="ghost small" data-q="-1" aria-label="少买一个">−</button><b id="arQty">1</b><button type="button" class="ghost small" data-q="1" aria-label="多买一个">+</button><span class="ar-qtot">合计 <span id="arTot"></span></span></div>
       <p class="ar-note">你现在有 ${ink(PROF.ink || 0)}</p>
       <div class="row"><button class="go small" id="arBuyGo">买下</button><button class="ghost small" data-ar-close>取消</button></div>`);
@@ -555,12 +562,12 @@
   const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
   const pips = (n, max) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
   function pCases() {
-    const s = blankS(), dl = C.openLeft(s, C.REG[0]), wl = C.openLeft(s, 'c7');
+    const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF());
     const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台终端机，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
-    const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.OPEN_DAY)}</span>
-      <span>本周还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.PREM_WEEK)}</span><small>普通的每天零点刷新，神兵的每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
+    const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.cv(CF(), 'openDay'))}</span>
+      <span>本周还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premWeek'))}</span><small>普通的每天零点刷新，神兵的每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
     const card = cid => {
-      const col = C.COLS[cid], O = C.oddsOf(cid), n = s.cases[cid], left = C.openLeft(s, cid);
+      const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
       const have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
       const tiers = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length).map(t => `<div class="ar-ctier" style="--tc:${C.TIER[t].c}"><span>${C.TIER[t].n} · ${pct(O[t])}</span><div class="ar-minis">${col[t].map(k => `<img src="${thumb(k)}" alt="" title="${escapeHTML(itemName({ k, st: -1 }))}" data-pv="${k}" loading="lazy">`).join('')}</div></div>`).join('');
       const openTxt = n && !left ? '今天开完了' : '开启';
@@ -572,15 +579,15 @@
       </div>`;
     };
     const premCard = cid => {   // 神兵武器箱：左边开箱、右边把 7 款饰品摆出来，点一下就能看穿上的样子
-      const col = C.COLS[cid], O = C.oddsOf(cid), n = s.cases[cid], left = C.openLeft(s, cid);
+      const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
       const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length);
       const show = ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
       return `<div class="ar-casecard prem" style="--cc:${col.col}"><div class="ar-premside">
-        <span class="ar-premtag">每周限开 ${C.PREM_WEEK} 个 · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
+        <span class="ar-premtag">每周限开 ${C.cv(CF(), 'premWeek')} 个 · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
         <div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(col.price)}</p>
           <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${n && !left ? '这周开过了' : '开启'}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
         <div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
-        <p class="ar-note">只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.OPEN_DAY} 个。点一下饰品，就能先看看穿上的样子。</p>
+        <p class="ar-note">只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个。点一下饰品，就能先看看穿上的样子。</p>
       </div><div class="ar-pshow">${show}</div></div>`;
     };
     return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem).map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
@@ -589,7 +596,7 @@
   const REEL = { on: false };
   const CW = 132;   // 每格宽 + 间隔
   function reelFill(cid, win) {   // 滚轮上的其他格子按这个箱子的爆率随便摆（好的那几档多摆一点，看着热闹）
-    const col = C.COLS[cid], O = C.oddsOf(cid), ts = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length), w = ts.map((t, i) => O[t] * (i ? 3 : 1)), sum = w.reduce((a, b) => a + b, 0), out = [];
+    const col = C.COLS[cid], O = C.oddsOf(cid, CF()), ts = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length), w = ts.map((t, i) => O[t] * (i ? 3 : 1)), sum = w.reduce((a, b) => a + b, 0), out = [];
     for (let i = 0; i < 56; i++) {
       let r = Math.random() * sum, j = 0; while (j < ts.length - 1 && r >= w[j]) r -= w[j++];
       const a = col[ts[j]]; out.push({ k: a[Math.floor(Math.random() * a.length)], st: -1 });
@@ -726,7 +733,7 @@
   function reveal(it, cid) {
     const t = tierOf(it.k), lv = C.TIERS.indexOf(t);
     sting(it.k);
-    const again = cid && ST.cases[cid] > 0 && C.openLeft(ST, cid) > 0;
+    const again = cid && ST.cases[cid] > 0 && C.openLeft(ST, cid, CF()) > 0;
     modal(`<div class="ar-reveal t-${t}" style="--tc:${tc(it.k)}">${revealFx(lv)}<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[t].n}</span><div class="ar-rvart"><img src="${bigArt(it.k)}" alt=""><i class="ar-shine"></i></div><h3>${escapeHTML(itemName(it))}</h3>
       ${it.st >= 0 ? '<p class="ar-stline">斩数版：穿着它每击倒一个对手，计数 +1</p>' : ''}<p>${colName(it.k)}武器箱 · ${charName(it.k)}</p></div>
       <div class="row"><button class="go small" id="arKeep">收下</button><button class="ghost small" id="arSee">检视</button>${again ? `<button class="ghost small" id="arAgain">再开一个</button>` : ''}</div>`, `rv t-${t}`);
@@ -735,11 +742,11 @@
     if (again) $id('arAgain').addEventListener('click', () => { closeModal(); openCase(cid); });
   }
 
-  // 终端机（照 CS2）：开封后一次报一件，买下就用掉；不要就换下一件，最多 5 件
+  // 终端机：开封后一次报一件，买下就用掉；不要就换下一件，最多 5 件
   let TERM_FX = 0;   // 新的一件刚出来：卡面播一下“解码”的动画
   function pTerm() {
     const s = blankS(), tm = s.tm, O = C.TERM.odds;
-    const odds = `<div class="ar-todds">${C.TIERS.map(t => `<span style="--tc:${C.TIER[t].c}"><i></i>${C.TIER[t].n} ${pct(O[t])}</span>`).join('')}<span class="ar-st-chip">斩数版 ${pct(C.ST_P)}</span></div>`;
+    const odds = `<div class="ar-todds">${C.TIERS.map(t => `<span style="--tc:${C.TIER[t].c}"><i></i>${C.TIER[t].n} ${pct(O[t])}</span>`).join('')}<span class="ar-st-chip">斩数版 ${pct(C.cv(CF(), 'stP'))}</span></div>`;
     let body;
     if (tm) {
       const o = tm.o, left = C.TERM.offers - tm.n, fx = NOW() - TERM_FX < 1500;
@@ -755,8 +762,8 @@
           <p class="ar-note" id="arTermLeft"></p></div></div>`;
     } else {
       body = `<div class="ar-card ar-termseal"><span class="ar-termbox"><span>终</span></span><div><h3>终端机 <small>还有 ${s.term} 台没开封</small></h3>
-        <p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : `终端机在商店按固定价格卖（一台 ${fmt(C.TERM.price)} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
-        <div class="ar-termbtns"><button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button><button type="button" class="ghost small" data-buyg="term">买一台 ${ink(C.TERM.price)}</button></div></div>`;
+        <p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : `终端机在商店按固定价格卖（一台 ${fmt(C.shopPrice('term', CF()))} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
+        <div class="ar-termbtns"><button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button><button type="button" class="ghost small" data-buyg="term">买一台 ${ink(C.shopPrice('term', CF()))}</button></div></div>`;
     }
     return `${body}<h4 class="ar-h">终端机报价的概率 <small>每件都从七个武器箱的全部饰品里抽（神兵武器箱的也有），报价按饰品的品质定，有高有低</small></h4>${odds}
       <p class="ar-note">买下一件，这台终端机就用掉了；5 件都不要，终端机也没了。开封 ${C.TERM.days} 天内不处理会作废。终端机只在商店卖，买来的不能转卖。</p>`;
@@ -826,13 +833,13 @@
         <label class="ar-chk"><input type="checkbox" id="arMkOnly" ${MK.only ? 'checked' : ''}> 只看有人在卖的</label></div>
         ${keys.length ? `<div class="ar-mklist">${keys.map(k => { const x = row(k), p = lo(k), c = cnt(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${thumb(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span><span class="ar-mkc">${c ? `在卖 ${c} 件${x.sn ? `（斩数版 ${x.sn}）` : ''}` : '没人在卖'}<small>${x.d ? `30 天成交 ${x.d} 笔` : '30 天没有成交'}${x.last ? ` · 最近 ${fmt(x.last)}` : ''}</small></span><span class="ar-mkp">${p ? `<small>最低</small>${ink(p)}` : '<small>—</small>'}</span></button>`; }).join('')}</div>` : '<p class="ar-empty">没有符合条件的饰品。</p>'}`;
     } else if (MK.view === 'mine') {
-      body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · 等别的玩家来买</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
+      body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · 等别的玩家来买</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price, CF()))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
         : `<p class="ar-empty">没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定（最多同时挂 ${C.LIST_MAX} 件）。</p>`;
     } else {
       const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出' }[h.kind] || '';
       body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : '<p class="ar-empty">还没有成交记录。</p>';
     }
-    return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.FEE * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
+    return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
   }
   let MKI = { tok: 0, k: '' };   // 正在看的那一款：读回来时弹窗还开着、还是这一款才画
   async function marketItem(k, keep) {
@@ -907,7 +914,7 @@
       <h4 class="ar-h">本周任务</h4><div class="tlist">${ms || '<p class="ar-empty">登录之后才有任务。</p>'}</div>
       <h4 class="ar-h">每周补给 <small>${ready ? '已解锁：四样里挑两样' : `这周再打 ${C.SUPPLY_GAMES - s.drop.g} 局解锁（${s.drop.g}/${C.SUPPLY_GAMES}）`}</small></h4>${live() ? sup : ''}
       <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵武器箱的那 7 款换不到</small></h4><div class="ar-grid3">${shop}</div>
-      <p class="ar-note">对局掉落：每局 ${Math.round(C.DROP_P * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.DROP_CAP} 次（本周已掉 ${s.drop.n} 次）。</p>`;
+      <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
   }
   function covPick() {
     const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换

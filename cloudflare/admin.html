@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<title>刃影管理后台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='6' fill='%23b8392e'/%3E%3Cpath d='M10 9h12M16 9v15M11 15l5 4 5-4' stroke='%23fbeee0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<!--
+  刃影管理后台：Worker 的 /admin 回这一页（python3 tools/build.py 把它打包进 cloudflare/worker.bundle.js）。
+  只连这个 Worker 自己的 /api/admin/*，要管理口令（ADMIN_SECRET）；口令只存在这个标签页的 sessionStorage 里。
+  整页只有最下面一段脚本：Worker 按它的 sha256 放行，别的脚本、onclick 这种都不会跑，所以事件一律用 addEventListener。
+  服务器给的字（昵称、原因、说明）一律经过 H`` 转义再放进网页。
+-->
+<style>
+  :root {
+    --bg: #0a0b1c; --bg2: #0e1024; --panel: #13152c; --panel2: #1a1c38;
+    --line: rgba(239, 232, 216, .11); --line2: rgba(239, 232, 216, .22);
+    --ink: #efe8d8; --dim: rgba(239, 232, 216, .66); --faint: rgba(239, 232, 216, .44);
+    --gold: #e9c46a; --gold2: #f3d690; --goldbg: rgba(233, 196, 106, .12);
+    --seal: #b8392e; --red: #ff8a80; --redbg: rgba(255, 110, 100, .12); --ok: #74d9ad; --okbg: rgba(116, 217, 173, .12);
+    --title: "STKaiti", "KaiTi", "Kaiti SC", "楷体", serif;
+    --body: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh; color: var(--ink); font: 14px/1.6 var(--body); -webkit-text-size-adjust: 100%;
+    background: var(--bg) radial-gradient(ellipse 110% 55% at 50% -12%, rgba(233, 196, 106, .09), transparent 62%) no-repeat;
+  }
+  .hidden { display: none !important; }
+  h1, h2, h3 { font-family: var(--title); font-weight: 400; letter-spacing: .04em; margin: 0; line-height: 1.25; text-wrap: balance; }
+  p { margin: 0 0 10px; text-wrap: pretty; }
+  small { color: var(--faint); font-family: var(--body); font-size: 12.5px; letter-spacing: 0; }
+  .mono { font-family: var(--mono); font-size: 12.5px; }
+  .hint { color: var(--faint); font-size: 12.5px; }
+  .empty { color: var(--faint); padding: 18px 0 6px; text-align: center; }
+  .loading { color: var(--faint); padding: 40px 0; text-align: center; }
+  .nowrap { white-space: nowrap; }
+  .up { color: var(--ok); font-weight: 600; }
+  .down { color: var(--red); font-weight: 600; }
+
+  /* 按钮和输入框 */
+  .btn {
+    appearance: none; border: 1px solid transparent; background: var(--gold); color: #1d1606; cursor: pointer;
+    font: 600 14px/1.2 var(--body); padding: 9px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;
+    transition: filter .15s, background-color .15s, border-color .15s; white-space: nowrap;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .42; cursor: not-allowed; filter: none; }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line2); font-weight: 500; }
+  .btn.ghost:hover:not(:disabled) { background: rgba(255, 255, 255, .05); border-color: rgba(239, 232, 216, .34); }
+  .btn.danger { background: var(--seal); color: #fff1ea; }
+  .btn.sm { font-size: 12.5px; padding: 5px 10px; border-radius: 6px; }
+  .btn.wide { width: 100%; justify-content: center; padding: 11px 16px; font-size: 15px; }
+  .link { appearance: none; background: none; border: 0; padding: 0; color: var(--gold2); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+  .link:hover { text-decoration: underline; text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  input, select {
+    font: inherit; color: var(--ink); background: var(--bg2); border: 1px solid var(--line2); border-radius: 7px;
+    padding: 7px 10px; width: 100%; min-width: 0; transition: border-color .15s, box-shadow .15s;
+  }
+  input::placeholder { color: rgba(239, 232, 216, .3); }
+  input:focus, select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(233, 196, 106, .16); }
+  input[type=checkbox] { width: auto; accent-color: var(--gold); margin: 0; }
+  input[type=number] { font-variant-numeric: tabular-nums; }
+  select { cursor: pointer; }
+  .f { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--dim); min-width: 0; }
+  .f .cur { color: var(--faint); font-size: 11.5px; margin-top: -3px; }
+  .chk { display: inline-flex; align-items: center; gap: 7px; color: var(--dim); font-size: 13px; cursor: pointer; }
+  .giverow .chk, .row .chk { white-space: nowrap; }
+  .grid { display: grid; gap: 10px 12px; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); margin: 6px 0 4px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row.wrap { flex-wrap: wrap; }
+  .row.between { justify-content: space-between; }
+  .row.end { justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
+  .w120 { width: 120px; }
+  .grow { flex: 1 1 14em; }
+
+  /* 登录 */
+  .login { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .login form {
+    width: min(390px, 100%); padding: 30px 24px 22px; border-radius: 16px; text-align: center;
+    background: linear-gradient(180deg, var(--panel), var(--bg2)); border: 1px solid var(--line);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+  }
+  .login h1 { font-size: 30px; margin: 14px 0 6px; }
+  .login .f { text-align: left; margin: 18px 0 12px; }
+  .login .msg { color: var(--red); min-height: 1.6em; margin: 10px 0 4px; font-size: 13px; }
+  .seal {
+    width: 34px; height: 34px; flex: none; display: grid; place-items: center; background: var(--seal); color: #fbeee0;
+    font: 20px/1 var(--title); border-radius: 6px; transform: rotate(-3deg);
+    box-shadow: inset 0 0 0 2px #8e2a21, inset 0 0 0 3.5px rgba(255, 240, 225, .45);
+  }
+  .seal.big { width: 56px; height: 56px; font-size: 32px; margin: 0 auto; border-radius: 8px; }
+
+  /* 顶栏和分页 */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 10px; max-width: 1180px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+  .brand h1 { font-size: 22px; white-space: nowrap; }
+  .brand small { display: block; margin-top: 1px; }
+  .me { display: flex; align-items: center; gap: 10px; color: var(--dim); font-size: 13px; }
+  .me b { color: var(--gold2); font-weight: 600; }
+  .tabs {
+    position: sticky; top: 0; z-index: 5; background: rgba(10, 11, 28, .9); border-bottom: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  .tabs div { display: flex; gap: 2px; overflow-x: auto; max-width: 1180px; margin: 0 auto; padding: 0 8px; scrollbar-width: none; }
+  .tabs div::-webkit-scrollbar { display: none; }
+  .tabs button {
+    flex: none; appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--dim); cursor: pointer;
+    font: 500 14.5px/1 var(--body); padding: 13px 13px 11px; transition: color .15s, border-color .15s;
+  }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected=true] { color: var(--gold); border-bottom-color: var(--gold); }
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 70px; }
+  footer { text-align: center; color: var(--faint); font-size: 12px; padding: 0 16px 28px; }
+
+  /* 卡片、数字块 */
+  .card { background: linear-gradient(180deg, var(--panel), var(--bg2)); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .card h2 { font-size: 21px; color: var(--gold2); margin-bottom: 8px; }
+  .card h3 { font-size: 17px; margin: 16px 0 8px; }
+  .card.err { color: var(--red); display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); margin-bottom: 16px; }
+  .tiles.sm { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin: 12px 0 0; }
+  .tile { background: rgba(255, 255, 255, .025); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .tile span { color: var(--dim); font-size: 12.5px; }
+  .tile b { display: block; font: 600 23px/1.25 var(--body); font-variant-numeric: tabular-nums; margin-top: 2px; overflow-wrap: anywhere; }
+  .tile b small { font-weight: 400; color: var(--dim); font-size: 13px; margin-left: 3px; }
+  .tiles.sm .tile { padding: 9px 11px; }
+  .tiles.sm .tile b { font-size: 18px; }
+  .tile i { font-style: normal; color: var(--faint); font-size: 12px; }
+  .badge { display: inline-block; font-size: 11.5px; line-height: 1.5; padding: 0 7px; border-radius: 99px; border: 1px solid var(--line2); color: var(--dim); white-space: nowrap; vertical-align: 1px; font-family: var(--body); letter-spacing: 0; }
+  .badge.gold { color: var(--gold2); border-color: rgba(233, 196, 106, .45); background: var(--goldbg); }
+  .badge.bad { color: var(--red); border-color: rgba(255, 138, 128, .45); background: var(--redbg); }
+  .badge.ok { color: var(--ok); border-color: rgba(116, 217, 173, .4); background: var(--okbg); }
+  .tier { display: inline-block; font-size: 12px; padding: 0 7px; border-radius: 4px; white-space: nowrap; color: rgb(var(--tc)); color: color-mix(in srgb, rgb(var(--tc)) 72%, #fff); background: rgba(var(--tc), .15); border: 1px solid rgba(var(--tc), .38); }
+  .it { white-space: nowrap; }
+  .it b { font-weight: 600; }
+  .it i { font-style: normal; color: var(--faint); margin-left: 6px; font-size: 12.5px; }
+  .it .st { margin-left: 6px; font-size: 11.5px; color: #ffb27a; border: 1px solid rgba(255, 178, 122, .4); border-radius: 4px; padding: 0 5px; }
+
+  /* 表格：太宽时只在表格里横向滚动 */
+  .tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 500; color: var(--dim); background: rgba(255, 255, 255, .03); padding: 8px 10px; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: rgba(255, 255, 255, .018); }
+  tr.fail td { color: var(--faint); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.detail { min-width: 200px; overflow-wrap: anywhere; color: var(--dim); }
+  td.mw { min-width: 8.5em; }
+
+  /* 玩家 */
+  .search { display: flex; gap: 8px; margin: 4px 0 8px; }
+  .search input { flex: 1; }
+  .head .who { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .head .who h2 { margin: 0; font-size: 26px; overflow-wrap: anywhere; }
+  .head .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--faint); font-size: 12.5px; margin-top: 6px; align-items: center; }
+  .crumbs { margin-bottom: 12px; }
+  .giverow { display: grid; grid-template-columns: minmax(0, 1fr) auto 90px auto; gap: 8px; align-items: center; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 2px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 99px; background: var(--goldbg); border: 1px solid rgba(233, 196, 106, .35); font-size: 13px; }
+  .chip button { appearance: none; border: 0; background: none; color: var(--dim); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 6px; border-radius: 99px; }
+  .chip button:hover { color: var(--ink); background: rgba(255, 255, 255, .08); }
+
+  /* 经济数值 */
+  fieldset.grp { border: 1px solid var(--line); border-radius: 10px; padding: 4px 12px 8px; margin: 12px 0 0; min-width: 0; }
+  fieldset.grp legend { font-family: var(--title); font-size: 16px; color: var(--gold2); padding: 0 6px; }
+  .cfgrow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(150px, 1fr) minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 8px 0 8px 10px; border-bottom: 1px dashed var(--line); border-left: 2px solid transparent; }
+  .cfgrow:last-of-type { border-bottom: 0; }
+  .cfgrow.mod { border-left-color: rgba(233, 196, 106, .55); }
+  .cfgrow.dirty { border-left-color: var(--ok); background: linear-gradient(90deg, rgba(116, 217, 173, .07), transparent 60%); }
+  .cfgrow label { font-size: 13.5px; }
+  .cfgin { display: flex; align-items: center; gap: 8px; }
+  .cfgin input { max-width: 140px; }
+  .pct { color: var(--faint); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .sum { font-size: 12.5px; padding: 6px 0 2px 12px; }
+  .sum.ok { color: var(--ok); }
+  .sum.bad { color: var(--red); font-weight: 600; }
+
+  /* 确认框、提示 */
+  dialog {
+    border: 1px solid var(--line2); border-radius: 14px; background: var(--panel2); color: var(--ink); padding: 0;
+    width: min(540px, calc(100vw - 32px)); max-height: calc(100vh - 48px); box-shadow: 0 30px 90px rgba(0, 0, 0, .65);
+  }
+  dialog::backdrop { background: rgba(4, 4, 12, .72); }
+  .dlg-b { padding: 20px 20px 4px; }
+  .dlg-b h3 { font-size: 21px; color: var(--gold2); margin-bottom: 12px; }
+  .dlg-b ul { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 5px; }
+  .dlg-b .f { margin-bottom: 6px; }
+  .dlg-f { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 18px; }
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; z-index: 50; max-width: calc(100vw - 32px); pointer-events: none;
+    background: var(--panel2); border: 1px solid var(--line2); border-radius: 10px; padding: 10px 16px; box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+    opacity: 0; transform: translate(-50%, 16px); transition: opacity .2s, transform .2s;
+  }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  #toast.err { border-color: rgba(255, 138, 128, .55); color: #ffd9d4; }
+
+  @media (max-width: 720px) {
+    .cfgrow { grid-template-columns: minmax(0, 1fr) auto; }
+    .cfgrow label { grid-column: 1 / -1; }
+    .cfgrow .hint { grid-column: 1 / -1; order: 3; }
+    .giverow { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .giverow select { grid-column: 1 / -1; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 14.5px; }
+    input, select { font-size: 16px; }
+    .top { flex-wrap: wrap; }
+    .brand small { display: none; }
+    .card { padding: 14px 12px; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .tile b { font-size: 19px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="login" class="login hidden">
+  <form id="loginForm">
+    <div class="seal big">刃</div>
+    <h1>刃影管理后台</h1>
+    <p class="hint">只给开发组用。每一笔修改都要写原因，都记在流水里。</p>
+    <input type="text" name="username" value="renying-admin" autocomplete="username" hidden>
+    <label class="f">管理口令<input id="tok" type="password" autocomplete="current-password" spellcheck="false" required></label>
+    <button class="btn wide" id="loginBtn">进入</button>
+    <p id="loginMsg" class="msg" role="alert"></p>
+    <p class="hint">口令是 Cloudflare 里 ADMIN_SECRET 的值；写成「名字:口令」的，只输入冒号后面那一段。口令只存在这个标签页里，关掉就要重新输入。</p>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿、改经济数值</small></div></div>
+    <div class="me"><span>管理员 <b id="who"></b></span><button class="btn ghost sm" data-act="logout">退出</button></div>
+  </header>
+  <nav class="tabs" aria-label="分页"><div role="tablist">
+    <button role="tab" data-act="tab" data-tab="home">总览</button>
+    <button role="tab" data-act="tab" data-tab="players">玩家</button>
+    <button role="tab" data-act="tab" data-tab="gifts">补偿</button>
+    <button role="tab" data-act="tab" data-tab="cfg">经济数值</button>
+    <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
+  </div></nav>
+  <main id="main"></main>
+  <footer>刃影 · 管理后台 · 所有修改都记在流水里，谁做的、为什么都查得到</footer>
+</div>
+
+<dialog id="dlg"></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+const NAMES = /*@names*/null;   // 打包时填上：{ skins: { 皮肤 key: 名字 }, heroes: { 侠客 id: 名字 } }
+const SKIN = (NAMES && NAMES.skins) || {}, HERO = (NAMES && NAMES.heroes) || {};
+const $ = (sel, el = document) => el.querySelector(sel);
+
+/* ---------- 拼网页：H`…${值}…` 里的值一律转义，只有 H 拼出来的才原样放进去 ---------- */
+const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const esc = v => String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, c => ESC[c]);
+class Raw { constructor(s) { this.s = s; } }
+const put = v => v instanceof Raw ? v.s : Array.isArray(v) ? v.map(put).join('') : esc(v);
+const H = (strs, ...vals) => new Raw(strs.reduce((o, s, i) => o + s + (i < vals.length ? put(vals[i]) : ''), ''));
+const paint = (el, raw) => { el.innerHTML = put(raw); };
+
+/* ---------- 数字和时间 ---------- */
+const fmtN = n => Math.round(+n || 0).toLocaleString('zh-CN');
+const sign = n => (n > 0 ? '+' : '') + fmtN(n);
+const pad = n => String(n).padStart(2, '0');
+function fmtT(ms) {
+  if (!ms) return '—';
+  const d = new Date(+ms);
+  return (d.getFullYear() !== new Date().getFullYear() ? d.getFullYear() + '年' : '') + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function ago(ms) {
+  if (!ms) return '—';
+  const s = (Date.now() - ms) / 1000;
+  if (s < 60) return '刚刚';
+  if (s < 3600) return Math.floor(s / 60) + ' 分钟前';
+  if (s < 86400) return Math.floor(s / 3600) + ' 小时前';
+  if (s < 30 * 86400) return Math.floor(s / 86400) + ' 天前';
+  return fmtT(ms);
+}
+const parse = t => { try { const o = JSON.parse(t); return o && typeof o === 'object' ? o : null; } catch (e) { return null; } };
+
+/* ---------- 口令、请求 ---------- */
+const KEY = 'renying-admin';
+const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], cfg: null, seq: 0 };
+const saveTok = t => { try { if (t) sessionStorage.setItem(KEY, t); else sessionStorage.removeItem(KEY); } catch (e) {} };
+const loadTok = () => { try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+
+async function api(path, body) {
+  const headers = { Authorization: 'Bearer ' + S.tok };
+  if (body) headers['Content-Type'] = 'application/json';
+  let r;
+  try { r = await fetch('/api/admin/' + path, { method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }); }
+  catch (e) { throw new Error('连不上服务器，检查一下网络'); }
+  let j = {};
+  try { j = await r.json(); } catch (e) {}
+  if (r.status === 403 && S.who) { logout('口令失效了（可能刚换过），请重新输入'); throw new Error('口令失效了'); }
+  if (!r.ok || !j.ok) throw new Error(j.error || '出错了（' + r.status + '）');
+  return j;
+}
+
+/* ---------- 武器箱、饰品、品质（登录后从服务器读一次） ---------- */
+const CAT = { items: {}, cols: {}, tiers: {}, order: [], caseIds: [], cfgInfo: [] };
+function useCat(c) {
+  CAT.order = c.tiers.map(t => t.id);
+  for (const t of c.tiers) CAT.tiers[t.id] = t;
+  for (const x of c.cols) CAT.cols[x.id] = x;
+  for (const x of c.items) CAT.items[x.k] = x;
+  CAT.caseIds = c.cols.map(x => x.id);
+  CAT.cfgInfo = c.cfg || [];
+}
+const itemName = k => SKIN[k] || k;
+const heroOf = k => HERO[(CAT.items[k] || {}).char] || '';
+const caseName = c => CAT.cols[c] ? CAT.cols[c].name + '武器箱' : String(c || '—');
+const tierTag = t => CAT.tiers[t] ? H`<span class="tier" style="--tc:${CAT.tiers[t].c}">${CAT.tiers[t].n}</span>` : '';
+const itemTag = (k, st) => H`<span class="it"><b>${itemName(k)}</b><i>${heroOf(k)}</i>${st >= 0 ? H`<span class="st">斩数 ${st}</span>` : ''}</span>`;
+const cfgName = k => { const x = CAT.cfgInfo.find(r => r[0] === k); return x ? x[5] + '：' + x[6] : k; };
+const unit = (n, u) => H`${fmtN(n)}<small>${u}</small>`;
+const tile = (label, v, sub) => H`<div class="tile"><span>${label}</span><b>${typeof v === 'number' ? fmtN(v) : v}</b>${sub ? H`<i>${sub}</i>` : ''}</div>`;
+const SRC = { case: '开箱', term: '终端机', trade: '汰换', supply: '补给', op: '星章兑换', admin: '管理员发的' };
+const ACT = {
+  open: '开箱', store: '商店', buyCase: '买武器箱', buyTerm: '买终端机', list: '挂单', buy: '买下', cancel: '撤单', trade: '汰换', rename: '改名',
+  equip: '穿上', unequip: '脱下', unseal: '开封终端机', termNext: '终端机换一件', termBuy: '终端机买下', supply: '领补给', mission: '领任务奖励',
+  star: '星章兑换', collect: '集齐奖励', matchEnd: '对局结束', matchStart: '开局', sync: '同步', gift: '新手礼',
+  ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
+  admin: '管理员调整', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
+};
+
+/* ---------- 流水里的详情写成人话 ---------- */
+function stuff(d) {   // 墨锭、武器箱、终端机、改名标签（调整、补偿共用）
+  const out = [];
+  if (d.ink) out.push('墨锭 ' + sign(d.ink));
+  for (const [c, n] of Object.entries(d.cases || {})) out.push(caseName(c) + ' ' + sign(n));
+  if (d.term) out.push('终端机 ' + sign(d.term));
+  if (d.tags) out.push('改名标签 ' + sign(d.tags));
+  return out;
+}
+function itemRef(s) {   // "qf_p1#12 st" → 竹影 #12（斩数版）
+  const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st)?$/.exec(String(s));
+  return m ? itemName(m[1]) + ' #' + m[2] + (m[3] ? '（斩数版）' : '') : String(s);
+}
+const giftText = g => {
+  const it = g.items || g, out = [];
+  if (g.ink) out.push('墨锭 ' + fmtN(g.ink));
+  for (const [c, n] of Object.entries(it.cases || {})) out.push(caseName(c) + ' ×' + n);
+  if (it.term) out.push('终端机 ×' + it.term);
+  if (it.tags) out.push('改名标签 ×' + it.tags);
+  return out.join('、') || '—';
+};
+const argText = (k, v) => k === 'c' ? caseName(v) : k === 'i' ? '#' + v : k === 'price' ? '标价 ' + fmtN(v) : k === 'l' ? '单号 ' + String(v).slice(0, 6) : k + ' ' + v;
+function detailText(act, raw, withWho) {
+  const d = parse(raw);
+  if (!d) return raw || '';
+  const who = withWho && d.by ? d.by + (d.why ? '：' + d.why : '') + '｜' : '';
+  if (act === 'admin') return who + [...stuff(d), ...(d.give || []).map(x => '发 ' + itemRef(x)), ...(d.take || []).map(x => '收 ' + itemRef(x))].join('，');
+  if (act === 'admin_ban') return who + (d.days === 'perm' ? '永久封号' : '封 ' + d.days + ' 天');
+  if (act === 'pardon') return who + '解封';
+  if (act === 'admin_pw') return who + (d.created ? '建号，设好密码' : '重设密码，别处的登录都退出了');
+  if (act === 'gift_new') return who + [...stuff(d), d.days + ' 天内有效', d.newToo ? '之后新注册的也能领' : ''].filter(Boolean).join('，');
+  if (act === 'gift_off') return who + '停发 ' + d.id;
+  if (act === 'gift_got') return (d.note || '') + '：' + stuff(d).join('，');
+  if (act === 'cfg') return who + (d.undo !== undefined ? (d.undo ? '退回到第 ' + d.undo + ' 版' : '全部回到默认值') + '（存成第 ' + d.id + ' 版）'
+    : '第 ' + d.id + ' 版：' + Object.entries(d.set || {}).map(([k, v]) => cfgName(k) + (v === null ? ' 回到默认' : ' → ' + v)).join('，'));
+  // 玩家自己的操作：{ a: 参数, r: 结果, s: 这次结了几单 }
+  const parts = [];
+  if (d.r !== undefined && d.r !== '') parts.push(typeof d.r === 'number' ? fmtN(d.r) : itemRef(d.r));
+  if (d.s) parts.push('结了 ' + d.s + ' 单');
+  if (d.a && typeof d.a === 'object') {
+    const a = Object.entries(d.a).filter(([, v]) => v !== '' && v !== null && typeof v !== 'object').map(([k, v]) => argText(k, v)).join(' ');
+    if (a) parts.push(a);
+  }
+  return parts.join(' · ');
+}
+const inkCell = r => r.ink0 === null || r.ink0 === undefined || r.ink1 === null || r.ink1 === undefined ? ''
+  : r.ink1 === r.ink0 ? fmtN(r.ink1) : H`${fmtN(r.ink0)} → <b class="${r.ink1 > r.ink0 ? 'up' : 'down'}">${fmtN(r.ink1)}</b>`;
+const target = r => r.uid === '*' ? '全服' : r.username ? H`<button class="link" data-act="open" data-uid="${r.uid}">${r.username}</button>` : H`<span class="mono">${r.uid}</span>`;
+
+/* ---------- 确认框：每一笔修改先给你看要改什么，再写原因 ---------- */
+function ask({ title, lines = [], whyInit = '', ok = '确定', danger = false }) {
+  const d = $('#dlg');
+  paint(d, H`<form>
+    <div class="dlg-b"><h3>${title}</h3>${lines.length ? H`<ul>${lines.map(l => H`<li>${l}</li>`)}</ul>` : ''}
+      <label class="f">原因（记进流水，至少 2 个字）<input name="why" maxlength="100" value="${whyInit}" autocomplete="off"></label></div>
+    <div class="dlg-f"><button type="button" class="btn ghost" data-x="no">取消</button><button class="btn${danger ? ' danger' : ''}">${ok}</button></div>
+  </form>`);
+  return new Promise(res => {
+    const f = $('form', d), inp = f.elements.why;
+    const done = v => { d.oncancel = null; if (d.open) d.close(); res(v); };
+    f.addEventListener('submit', e => {
+      e.preventDefault();
+      const why = inp.value.trim();
+      if (why.length < 2) { inp.focus(); inp.placeholder = '要写原因'; return; }
+      done({ why });
+    });
+    $('[data-x=no]', f).addEventListener('click', () => done(null));
+    d.oncancel = e => { e.preventDefault(); done(null); };
+    d.showModal();
+    inp.focus();
+  });
+}
+let toastT = 0;
+function toast(msg, err) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'on' + (err ? ' err' : '');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { t.className = ''; }, err ? 5000 : 2800);
+}
+async function busy(btn, fn) {
+  if (btn) btn.disabled = true;
+  try { return await fn(); }
+  catch (e) { toast(e.message, true); }
+  finally { if (btn && btn.isConnected) btn.disabled = false; }
+}
+const numIn = (f, name) => { const el = f.elements[name], v = el ? el.value.trim() : ''; return v === '' ? 0 : Number(v); };
+const submitBtn = f => $('button:not([type=button])', f);
+
+/* ---------- 总览 ---------- */
+async function vHome() {
+  const [s, a] = await Promise.all([api('stats'), api('audit')]);
+  const rows = a.rows.slice(0, 8);
+  return H`<div class="tiles">
+      ${tile('注册账号', s.users, '24 小时内新注册 ' + fmtN(s.newToday))}
+      ${tile('有武库存档的', s.accounts, '打开过武库的账号')}
+      ${tile('全服墨锭', s.inkTotal, '所有武库存档加起来')}
+      ${tile('市场在卖', unit(s.open, '单'), '玩家挂出来的')}
+      ${tile('24 小时成交', unit(s.deals24, '单'), '成交额 ' + fmtN(s.dealInk24) + ' 墨锭')}
+      ${tile('封禁中', unit(s.banned, '个号'), '包括永久封号')}
+      ${tile('经济数值', s.cfgId ? '第 ' + s.cfgId + ' 版' : '默认', s.cfgId ? '改过' : '没改过')}
+    </div>
+    <div class="card"><div class="row between"><h2>最近的操作</h2><button class="btn ghost sm" data-act="tab" data-tab="audit">全部记录</button></div>
+      ${rows.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th>内容</th></tr></thead><tbody>
+        ${rows.map(r => { const d = parse(r.detail) || {}; return H`<tr><td class="nowrap">${fmtT(r.at)}</td><td>${d.by || '—'}</td><td class="nowrap">${ACT[r.act] || r.act}</td><td>${target(r)}</td><td class="detail">${detailText(r.act, r.detail)}${d.why ? H`<div class="hint">原因：${d.why}</div>` : ''}</td></tr>`; })}
+      </tbody></table></div>` : H`<p class="empty">还没有管理员操作</p>`}
+    </div>
+    <div class="card"><h2>常用</h2><div class="row wrap">
+      <button class="btn ghost" data-act="tab" data-tab="players">找玩家、加减墨锭</button>
+      <button class="btn ghost" data-act="tab" data-tab="gifts">发全服补偿</button>
+      <button class="btn ghost" data-act="tab" data-tab="cfg">改价格、爆率</button>
+    </div></div>`;
+}
+
+/* ---------- 玩家：搜索 ---------- */
+async function vPlayers() {
+  if (S.uid) return vPlayer();
+  const r = await api('find?q=' + encodeURIComponent(S.q));
+  return H`<div class="card">
+    <h2>玩家</h2>
+    <form class="search" data-form="find"><input name="q" value="${S.q}" placeholder="昵称开头，或者账号编号（u_ 开头）" autocomplete="off" spellcheck="false" aria-label="搜索玩家"><button class="btn">搜索</button></form>
+    <p class="hint">${S.q ? '“' + S.q + '” 的结果（最多 20 个）' : '最近动过武库的 20 个账号'}</p>
+    ${r.users.length ? H`<div class="tw"><table><thead><tr><th>昵称</th><th class="num">墨锭</th><th>上次动武库</th><th>注册</th></tr></thead><tbody>
+      ${r.users.map(u => H`<tr><td><button class="link" data-act="open" data-uid="${u.id}">${u.username}</button><div class="hint mono">${u.id}</div></td>
+        <td class="num">${u.ink === null || u.ink === undefined ? '—' : fmtN(u.ink)}</td><td class="nowrap">${ago(u.updated_at)}</td><td class="nowrap">${fmtT(u.created_at)}</td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">没找到这个昵称</p>`}
+  </div>${S.q.toLowerCase() === 'dev' && !r.users.some(u => String(u.username).toLowerCase() === 'dev') ? devCard() : ''}`;
+}
+function devCard() {   // 云端还没有 Dev：只能在这里建，别人注册不了
+  return H`<form class="card" data-form="mkdev" novalidate>
+    <h2>建 Dev 账号</h2>
+    <p class="hint">云端还没有 Dev。Dev 是开发组的市场账号，库存不受限，只能在这里建。填一个密码（至少 12 位），或者点「随机生成」。</p>
+    <div class="row wrap"><label class="f grow">密码<input name="pw" type="text" maxlength="128" autocomplete="off" spellcheck="false"></label>
+      <button type="button" class="btn ghost" data-act="genpw" style="margin-top:18px">随机生成</button>
+      <button class="btn" style="margin-top:18px">建号…</button></div>
+  </form>`;
+}
+
+/* ---------- 玩家：一个号的详情、加减、封号、流水 ---------- */
+function itemOptions() {
+  return H`<option value="">选一件饰品…</option>${CAT.caseIds.map(c => H`<optgroup label="${caseName(c)}">${CAT.order
+    .flatMap(t => Object.values(CAT.items).filter(x => x.col === c && x.tier === t))
+    .map(x => H`<option value="${x.k}">${itemName(x.k)} · ${heroOf(x.k)} · ${CAT.tiers[x.tier].n}</option>`)}</optgroup>`)}`;
+}
+async function vPlayer() {
+  const p = S.p = await api('econ?uid=' + encodeURIComponent(S.uid));
+  S.give = [];
+  const e = p.econ, s = (e && e.state) || {}, now = Date.now();
+  const inv = Array.isArray(s.inv) ? s.inv : [], lst = Array.isArray(s.lst) ? s.lst : [], cases = s.cases || {};
+  const worn = new Set(Object.values(s.eq || {})), sc = p.sanction || {}, isBan = !!(sc.perm || sc.banUntil > now);
+  const nCases = CAT.caseIds.reduce((a, c) => a + (+cases[c] || 0), 0), pr = p.profile || {};
+  return H`<div class="crumbs"><button class="btn ghost sm" data-act="back">← 玩家列表</button></div>
+  <div class="card head">
+    <div class="who"><h2>${p.username}</h2>${isBan ? H`<span class="badge bad">${sc.perm ? '永久封禁' : '封禁中'}</span>` : ''}</div>
+    <div class="meta"><span class="mono">${p.uid}</span><button class="btn ghost sm" data-act="copy" data-v="${p.uid}">复制编号</button>
+      <span>注册于 ${fmtT(p.createdAt)}</span><span>上次动武库：${e ? ago(e.at) : '还没打开过'}</span></div>
+    <div class="tiles sm">
+      ${tile('墨锭', e ? e.ink : 0)}${tile('饰品', unit(inv.length, '件'))}${tile('在卖', unit(lst.length, '单'))}${tile('武器箱', unit(nCases, '个'))}
+      ${tile('终端机', unit(+s.term || 0, '台'))}${tile('改名标签', unit(+s.tags || 0, '张'))}${tile('段位分', pr.rating === undefined ? '—' : pr.rating)}${tile('联机', H`${pr.netWins || 0}<small>胜</small> ${pr.netLosses || 0}<small>负</small>`)}
+    </div>
+    ${e ? '' : H`<p class="hint" style="margin-top:10px">这个号还没打开过武库：第一次调整时会先按它的存档建好武库，再加减。</p>`}
+  </div>
+  <form data-form="adjust" novalidate>
+    <div class="card">
+      <h2>加减</h2>
+      <p class="hint">正数是加，负数是扣，空着就是不动。墨锭一次最多 ±1,000,000；武器箱、终端机、改名标签一次最多 ±1,000。扣不成负数。</p>
+      <div class="grid">
+        <label class="f">墨锭<span class="cur">现有 ${fmtN(e ? e.ink : 0)}</span><input type="number" name="ink" step="1" placeholder="0"></label>
+        ${CAT.caseIds.map(c => H`<label class="f">${caseName(c)}<span class="cur">现有 ${+cases[c] || 0}</span><input type="number" name="case_${c}" step="1" placeholder="0"></label>`)}
+        <label class="f">终端机<span class="cur">现有 ${+s.term || 0}</span><input type="number" name="term" step="1" placeholder="0"></label>
+        <label class="f">改名标签<span class="cur">现有 ${+s.tags || 0}</span><input type="number" name="tags" step="1" placeholder="0"></label>
+      </div>
+      <h3>发饰品</h3>
+      <div class="giverow">
+        <select name="gk" aria-label="选一件饰品">${itemOptions()}</select>
+        <label class="chk"><input type="checkbox" name="gst"> 斩数版</label>
+        <input type="number" name="gstn" min="0" step="1" value="0" aria-label="斩数（记了多少次击倒）">
+        <button type="button" class="btn ghost" data-act="addgive">加进清单</button>
+      </div>
+      <div id="gives" class="chips"></div>
+      <p class="hint">要收走饰品，在下面的库存里勾上。挂在市场上的收不了。</p>
+      <div class="row end"><button class="btn">检查并提交…</button></div>
+    </div>
+    <div class="card">
+      <h2>库存 <small>${inv.length} 件</small></h2>
+      ${inv.length ? H`<div class="tw"><table><thead><tr><th>收走</th><th>编号</th><th>饰品</th><th>品质</th><th>武器箱</th><th>来源</th><th>拿到</th></tr></thead><tbody>
+        ${inv.slice().sort((a, b) => b.i - a.i).map(it => { const d = CAT.items[it.k] || {}; return H`<tr>
+          <td><input type="checkbox" name="take" value="${it.i}" aria-label="收走第 ${it.i} 号"></td><td class="mono">#${it.i}</td>
+          <td>${itemTag(it.k, it.st)}${worn.has(it.i) ? H` <span class="badge ok">穿着</span>` : ''}${it.n ? H`<div class="hint">改了名：${it.n}</div>` : ''}</td>
+          <td>${tierTag(d.tier)}</td><td class="nowrap">${caseName(d.col)}</td><td class="nowrap">${SRC[it.src] || it.src || '—'}</td><td class="nowrap">${fmtT(it.t)}</td></tr>`; })}
+      </tbody></table></div>` : H`<p class="empty">库存是空的</p>`}
+      ${lst.length ? H`<h3>挂在玩家市场上的 <small>要等玩家撤下或者卖掉</small></h3><div class="tw"><table><thead><tr><th>编号</th><th>饰品</th><th>品质</th><th class="num">标价</th></tr></thead><tbody>
+        ${lst.map(L => H`<tr><td class="mono">#${L.it.i}</td><td>${itemTag(L.it.k, L.it.st)}</td><td>${tierTag((CAT.items[L.it.k] || {}).tier)}</td><td class="num">${fmtN(L.price)}</td></tr>`)}
+      </tbody></table></div>` : ''}
+    </div>
+  </form>
+  ${banCard(sc, isBan)}
+  ${pwCard(p)}
+  ${logCard(p.log || [])}
+  ${mktCard(p)}`;
+}
+function banCard(sc, isBan) {
+  return H`<form class="card" data-form="ban" novalidate>
+    <h2>封号</h2>
+    ${isBan ? H`<p>${sc.perm ? '永久封禁。' : '封禁中，到 ' + fmtT(sc.banUntil) + '。'}</p><div class="row"><button type="button" class="btn" data-act="pardon">解封…</button></div>`
+      : H`<div class="row wrap"><label class="f w120">封几天<input type="number" name="days" min="1" max="3650" step="1" value="1"></label>
+        <label class="chk" style="margin-top:18px"><input type="checkbox" name="perm"> 永久封号</label>
+        <button class="btn danger" style="margin-top:18px">封号…</button></div>`}
+    <p class="hint" style="margin-top:10px">反作弊记过 ${sc.strikes || 0} 次${sc.pardon ? '，上次解封在 ' + fmtT(sc.pardon) : ''}。封禁期间不能同步存档、不能交易；解封后玩家刷新网页就好了。</p>
+    ${(sc.log || []).length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>原因</th><th>来源</th></tr></thead><tbody>
+      ${sc.log.slice().reverse().map(x => H`<tr><td class="nowrap">${fmtT(x.at)}</td><td>${x.r}</td><td class="nowrap">${String(x.src || '').replace(/^admin:/, '管理员 ').replace(/^client$/, '网页检测').replace(/^server$/, '服务器检测')}</td></tr>`)}
+    </tbody></table></div>` : ''}
+  </form>`;
+}
+function pwCard(p) {
+  const dev = String(p.username || '').toLowerCase() === 'dev';
+  return H`<form class="card" data-form="pw" novalidate>
+    <h2>重设密码</h2>
+    <p class="hint">${dev ? 'Dev 是开发组的市场账号，它的密码只能在这里改。' : ''}填一个新密码（至少 12 位），或者点「随机生成」。重设以后，这个号在所有设备上的登录都会退出，要用新密码重新登录。</p>
+    <div class="row wrap"><label class="f grow">新密码<input id="newpw" name="pw" type="text" maxlength="128" autocomplete="off" spellcheck="false"></label>
+      <button type="button" class="btn ghost" data-act="genpw" style="margin-top:18px">随机生成</button>
+      <button class="btn danger" style="margin-top:18px">重设密码…</button></div>
+  </form>`;
+}
+function logCard(log) {
+  return H`<div class="card"><h2>流水 <small>最近 ${log.length} 条</small></h2>
+    ${log.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>操作</th><th class="num">墨锭</th><th>详情</th></tr></thead><tbody>
+      ${log.map(r => H`<tr class="${r.ok ? '' : 'fail'}"><td class="nowrap">${fmtT(r.at)}</td><td class="nowrap">${ACT[r.act] || r.act}${r.ok ? '' : H` <span class="badge bad">没成</span>`}</td>
+        <td class="num">${inkCell(r)}</td><td class="detail">${detailText(r.act, r.detail, true)}</td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">还没有流水</p>`}</div>`;
+}
+function mktCard(p) {
+  const rows = p.mkt || [];
+  if (!rows.length) return '';
+  const stText = r => r.state === 0 ? '在卖' : r.state === 2 ? '撤下了' : r.seller === p.uid ? (r.paid ? '卖掉了，已到账' : '卖掉了，下次动武库时到账') : '买到了';
+  return H`<div class="card"><h2>玩家市场 <small>最近 ${rows.length} 单</small></h2><div class="tw"><table>
+    <thead><tr><th>时间</th><th>买还是卖</th><th>饰品</th><th class="num">价格</th><th>状态</th></tr></thead><tbody>
+    ${rows.map(r => H`<tr><td class="nowrap">${fmtT(r.done_at || r.at)}</td><td>${r.seller === p.uid ? '卖' : '买'}</td><td>${itemTag(r.k, r.st)}</td><td class="num">${fmtN(r.price)}</td><td class="nowrap">${stText(r)}</td></tr>`)}
+  </tbody></table></div></div>`;
+}
+function drawGives() {
+  const el = $('#gives');
+  if (el) paint(el, S.give.map((g, i) => H`<span class="chip">${itemName(g.k)}（${heroOf(g.k)}）${g.st >= 0 ? ' 斩数 ' + g.st : ''}<button type="button" data-act="delgive" data-i="${i}" aria-label="去掉">×</button></span>`));
+}
+
+/* ---------- 补偿 ---------- */
+async function vGifts() {
+  const r = await api('gifts');
+  S.gifts = r.gifts;
+  const now = Date.now();
+  const state = g => g.off ? H`<span class="badge">停发了</span>` : g.until <= now ? H`<span class="badge">过期了</span>` : H`<span class="badge ok">发放中</span>`;
+  return H`<form class="card" data-form="gift" novalidate>
+    <h2>发补偿</h2>
+    <p class="hint">玩家下次登录或者打开武库时自动领到，每个账号只领一次；游戏里会弹出「开发组补偿：说明（内容）」。</p>
+    <div class="grid">
+      <label class="f">发给<select name="to"><option value="all">所有人</option><option value="one">一个账号</option></select></label>
+      <label class="f hidden" data-one>昵称或账号编号<input name="user" autocomplete="off" spellcheck="false"></label>
+      <label class="f">墨锭<input type="number" name="ink" min="0" max="1000000" step="1" placeholder="0"></label>
+      ${CAT.caseIds.map(c => H`<label class="f">${caseName(c)}<input type="number" name="gc_${c}" min="0" max="100" step="1" placeholder="0"></label>`)}
+      <label class="f">终端机<input type="number" name="term" min="0" max="100" step="1" placeholder="0"></label>
+      <label class="f">改名标签<input type="number" name="tags" min="0" max="100" step="1" placeholder="0"></label>
+      <label class="f">几天内能领<input type="number" name="days" min="1" max="90" step="1" value="14"></label>
+    </div>
+    <label class="f" style="margin-top:8px">给玩家看的说明（2～60 个字）<input name="note" maxlength="60" placeholder="比如：服务器维护补偿"></label>
+    <label class="chk" style="margin-top:10px" data-all><input type="checkbox" name="newToo"> 之后新注册的账号也能领（不勾就只发给现在已经注册的，免得有人开小号来领）</label>
+    <div class="row end"><button class="btn">检查并发出…</button></div>
+  </form>
+  <div class="card"><h2>发过的补偿 <small>最近 50 份</small></h2>
+    ${r.gifts.length ? H`<div class="tw"><table><thead><tr><th>说明</th><th>发给</th><th>内容</th><th class="num">领了</th><th>谁发的</th><th>发出</th><th>截止</th><th>状态</th><th></th></tr></thead><tbody>
+      ${r.gifts.map(g => H`<tr><td class="mw">${g.note}</td><td class="nowrap">${g.uid === '*' ? (g.born > g.at ? '所有人（含新号）' : '所有人') : (g.username || g.uid)}</td><td class="mw">${giftText(g)}</td>
+        <td class="num">${fmtN(g.got)}</td><td>${g.by}</td><td class="nowrap">${fmtT(g.at)}</td><td class="nowrap">${fmtT(g.until)}</td><td>${state(g)}</td>
+        <td>${!g.off && g.until > now ? H`<button class="btn ghost sm" data-act="giftoff" data-id="${g.id}">停发…</button>` : ''}</td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">还没发过补偿</p>`}
+  </div>`;
+}
+
+/* ---------- 经济数值 ---------- */
+const isPct = k => /^(odds|prem)\./.test(k) || ['stP', 'dropP', 'fee'].includes(k);
+async function vCfg() {
+  const r = S.cfg = await api('cfg');
+  const groups = [];
+  for (const [k, def, lo, hi, isInt, g, desc] of r.info) {
+    let grp = groups.find(x => x.name === g);
+    if (!grp) groups.push(grp = { name: g, rows: [] });
+    grp.rows.push({ k, def, lo, hi, isInt, desc, cur: Object.prototype.hasOwnProperty.call(r.cfg, k) ? r.cfg[k] : def });
+  }
+  const sumKey = grp => grp.rows.every(x => /^(odds|prem)\./.test(x.k)) ? grp.rows[0].k.split('.')[0] : '';
+  return H`<form class="card" data-form="cfg" novalidate>
+    <div class="row between wrap"><h2>经济数值</h2><span class="badge${r.id ? ' gold' : ''}">${r.id ? '现在用的是第 ' + r.id + ' 版' : '现在用的是默认数值'}</span></div>
+    <p class="hint">保存后半分钟内全服生效，玩家的武库下一次操作后显示新数值。这里只有经济数值，伤害、血量、技能这些在代码里改。</p>
+    ${groups.map(g => { const sk = sumKey(g); return H`<fieldset class="grp"><legend>${g.name}</legend>
+      ${g.rows.map(x => H`<div class="cfgrow${x.cur !== x.def ? ' mod' : ''}" data-row="${x.k}">
+        <label for="cfg_${x.k}">${x.desc}${x.cur !== x.def ? H` <span class="badge gold">改过</span>` : ''}</label>
+        <div class="cfgin"><input id="cfg_${x.k}" name="${x.k}" type="number" inputmode="${x.isInt ? 'numeric' : 'decimal'}" step="${x.isInt ? 1 : 'any'}" min="${x.lo}" max="${x.hi}" value="${x.cur}"><span class="pct" data-pct="${x.k}"></span></div>
+        <span class="hint">默认 ${x.def}，范围 ${x.lo}～${x.hi}</span>
+        <button type="button" class="btn ghost sm" data-act="cfgdef" data-k="${x.k}">用默认</button>
+      </div>`)}
+      ${sk ? H`<div class="sum" data-sum="${sk}"></div>` : ''}
+    </fieldset>`; })}
+    <div class="row end"><span class="hint" id="cfgDirty"></span><button class="btn" id="cfgSave" disabled>检查并保存…</button></div>
+  </form>
+  ${histCard(r)}`;
+}
+function histCard(r) {
+  const diff = c => Object.entries(c).map(([k, v]) => cfgName(k) + ' ' + v).join('，') || '全是默认值';
+  return H`<div class="card"><div class="row between wrap"><h2>改过的版本 <small>最近 30 版</small></h2>${Object.keys(r.cfg).length ? H`<button class="btn ghost sm" data-act="cfgundo" data-to="0">全部回到默认值…</button>` : ''}</div>
+    ${r.hist.length ? H`<div class="tw"><table><thead><tr><th>版本</th><th>谁</th><th>时间</th><th>原因</th><th>和默认值不一样的</th><th></th></tr></thead><tbody>
+      ${r.hist.map(h => H`<tr><td class="nowrap">第 ${h.id} 版${h.id === r.id ? H` <span class="badge gold">现在用的</span>` : ''}</td><td>${h.by}</td><td class="nowrap">${fmtT(h.at)}</td><td>${h.note}</td><td class="detail">${diff(h.cfg)}</td>
+        <td>${h.id === r.id ? '' : H`<button class="btn ghost sm" data-act="cfgundo" data-to="${h.id}">退回到这一版…</button>`}</td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">还没改过，用的都是默认值</p>`}
+  </div>`;
+}
+function cfgLive(f) {
+  const { info, cfg: cur } = S.cfg, sums = {};
+  let dirty = 0;
+  for (const [k, def] of info) {
+    const inp = f.elements[k];
+    if (!inp) continue;
+    const v = inp.value.trim() === '' ? def : Number(inp.value), was = Object.prototype.hasOwnProperty.call(cur, k) ? cur[k] : def;
+    const row = f.querySelector('[data-row="' + k + '"]'), pe = f.querySelector('[data-pct="' + k + '"]');
+    if (v !== was) dirty++;
+    row.classList.toggle('dirty', v !== was);
+    $('[data-act=cfgdef]', row).disabled = v === def;
+    if (pe) pe.textContent = isPct(k) && Number.isFinite(v) ? '= ' + +(v * 100).toFixed(2) + '%' : /^term\.(lo|hi)$/.test(k) ? '× 基准价' : '';
+    const g = k.split('.')[0];
+    if (g === 'odds' || g === 'prem') sums[g] = (sums[g] || 0) + v;
+  }
+  for (const [g, s] of Object.entries(sums)) {
+    const el = f.querySelector('[data-sum="' + g + '"]'), good = Math.abs(s - 1) <= 1e-6;
+    el.className = 'sum ' + (good ? 'ok' : 'bad');
+    el.textContent = '几档加起来是 ' + (Number.isFinite(s) ? +s.toFixed(6) : '?') + (good ? '，正好是 1' : '，要正好是 1 才能保存');
+  }
+  $('#cfgDirty').textContent = dirty ? '改了 ' + dirty + ' 项，还没保存' : '还没有改动';
+  $('#cfgSave').disabled = !dirty;
+}
+
+/* ---------- 操作记录 ---------- */
+async function vAudit() {
+  const r = await api('audit');
+  return H`<div class="card"><h2>操作记录 <small>最近 100 条</small></h2>
+    <p class="hint">管理员做过的事：加减、封号、解封、发补偿、停发、改经济数值。每个号自己的流水在「玩家」里。</p>
+    ${r.rows.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
+      ${r.rows.map(row => { const d = parse(row.detail) || {}; return H`<tr><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap">${ACT[row.act] || row.act}</td>
+        <td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || ''}</td></tr>`; })}
+    </tbody></table></div>` : H`<p class="empty">还没有管理员操作</p>`}
+  </div>`;
+}
+
+/* ---------- 换页 ---------- */
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, cfg: vCfg, audit: vAudit };
+const AFTER = { players: drawGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
+async function render() {
+  const main = $('#main'), seq = ++S.seq, tab = S.tab;
+  paint(main, H`<p class="loading">读取中…</p>`);
+  try {
+    const view = await VIEWS[tab]();
+    if (seq !== S.seq) return;   // 读的时候又换了页：不画旧的
+    paint(main, view);
+    if (AFTER[tab]) AFTER[tab]();
+  } catch (e) {
+    if (seq === S.seq && S.who) paint(main, H`<div class="card err"><span>${e.message}</span><button class="btn ghost sm" data-act="reload">再试一次</button></div>`);
+  }
+}
+function route() {
+  const m = location.hash.slice(1).split('/');
+  S.tab = VIEWS[m[0]] ? m[0] : 'home';
+  let uid = '';
+  try { uid = S.tab === 'players' && m[1] ? decodeURIComponent(m[1]) : ''; } catch (e) {}
+  if (uid !== S.uid) window.scrollTo(0, 0);
+  S.uid = uid;
+  for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === S.tab));
+  render();
+}
+function go(tab, uid) {
+  const h = '#' + tab + (uid ? '/' + encodeURIComponent(uid) : '');
+  if (location.hash === h) route(); else location.hash = h;
+}
+window.addEventListener('hashchange', () => { if (S.who) route(); });
+
+/* ---------- 按钮 ---------- */
+const ACTS = {
+  tab: b => go(b.dataset.tab),
+  open: b => go('players', b.dataset.uid),
+  back: () => go('players'),
+  reload: () => render(),
+  logout: () => logout(),
+  copy: b => { if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.v).then(() => toast('复制好了'), () => toast('复制不了，手动选一下吧', true)); },
+  addgive: () => {
+    const f = $('form[data-form=adjust]'), k = f.elements.gk.value;
+    if (!k) return toast('先选一件饰品', true);
+    if (S.give.length >= 50) return toast('一次最多发 50 件', true);
+    const n = Number(f.elements.gstn.value || 0);
+    if (f.elements.gst.checked && !(Number.isInteger(n) && n >= 0 && n <= 1e7)) return toast('斩数要填 0 到 10000000 的整数', true);
+    S.give.push({ k, st: f.elements.gst.checked ? n : -1 });
+    drawGives();
+  },
+  delgive: b => { S.give.splice(+b.dataset.i, 1); drawGives(); },
+  genpw: b => {   // 15 个随机字节 → 20 位，只用字母、数字、- 和 _
+    const a = new Uint8Array(15);
+    crypto.getRandomValues(a);
+    const el = b.form.elements.pw;
+    el.value = btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_');
+    el.select();
+  },
+  pardon: async b => {
+    const p = S.p, a = await ask({ title: '解封 ' + p.username, lines: ['清空处罚记录（记过次数归零），玩家刷新网页后就能正常同步、交易'], ok: '解封' });
+    if (a) await busy(b, async () => { await api('pardon', { uid: p.uid, why: a.why }); toast('解封了'); render(); });
+  },
+  giftoff: async b => {
+    const g = S.gifts.find(x => x.id === b.dataset.id);
+    if (!g) return;
+    const a = await ask({ title: '停发这份补偿', lines: ['“' + g.note + '”：' + giftText(g), '已经领了的 ' + fmtN(g.got) + ' 个账号不收回，还没领的就领不到了'], ok: '停发', danger: true });
+    if (a) await busy(b, async () => { await api('gift/off', { id: g.id, why: a.why }); toast('停发了'); render(); });
+  },
+  cfgdef: b => {
+    const f = b.form, row = S.cfg.info.find(x => x[0] === b.dataset.k);
+    if (!row) return;
+    f.elements[row[0]].value = row[1];
+    cfgLive(f);
+  },
+  cfgundo: async b => {
+    const to = +b.dataset.to, h = S.cfg.hist.find(x => x.id === to);
+    const what = to ? '第 ' + to + ' 版：' + (Object.entries((h || {}).cfg || {}).map(([k, v]) => cfgName(k) + ' ' + v).join('，') || '全是默认值') : '所有经济数值回到代码里写的默认值';
+    const a = await ask({ title: to ? '退回到第 ' + to + ' 版' : '全部回到默认值', lines: [what, '会存成新的一版，之后还能再退回来'], ok: '退回' });
+    if (a) await busy(b, async () => { const r = await api('cfg/undo', { to, why: a.why }); toast('退回好了，现在是第 ' + r.id + ' 版'); render(); });
+  },
+};
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled || !ACTS[b.dataset.act]) return;
+  e.preventDefault();
+  ACTS[b.dataset.act](b);
+});
+document.addEventListener('change', e => {
+  const f = e.target.form;
+  if (f && f.dataset.form === 'gift' && e.target.name === 'to') {
+    const one = e.target.value === 'one';
+    $('[data-one]', f).classList.toggle('hidden', !one);
+    $('[data-all]', f).classList.toggle('hidden', one);
+    if (one) f.elements.user.focus();
+  }
+});
+document.addEventListener('input', e => {
+  const f = e.target.form;
+  if (f && f.dataset.form === 'cfg') cfgLive(f);
+});
+
+/* ---------- 表单 ---------- */
+const FORMS = {
+  find: f => { S.q = f.elements.q.value.trim().slice(0, 64); render(); },
+  adjust: async f => {
+    const p = S.p, e = p.econ, s = (e && e.state) || {}, cases = s.cases || {}, inv = s.inv || [];
+    const body = { uid: p.uid, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), give: S.give.slice(),
+      take: [...f.querySelectorAll('input[name=take]:checked')].map(x => Number(x.value)) };
+    for (const c of CAT.caseIds) { const n = numIn(f, 'case_' + c); if (n) body.cases[c] = n; }
+    if ([body.ink, body.term, body.tags, ...Object.values(body.cases)].some(v => !Number.isInteger(v))) return toast('数量要填整数', true);
+    const ink0 = e ? e.ink : 0, lines = [];
+    if (body.ink) lines.push('墨锭 ' + sign(body.ink) + '（' + fmtN(ink0) + ' → ' + fmtN(ink0 + body.ink) + '）');
+    for (const [c, n] of Object.entries(body.cases)) lines.push(caseName(c) + ' ' + sign(n) + '（' + (+cases[c] || 0) + ' → ' + ((+cases[c] || 0) + n) + '）');
+    if (body.term) lines.push('终端机 ' + sign(body.term) + '（' + (+s.term || 0) + ' → ' + ((+s.term || 0) + body.term) + '）');
+    if (body.tags) lines.push('改名标签 ' + sign(body.tags) + '（' + (+s.tags || 0) + ' → ' + ((+s.tags || 0) + body.tags) + '）');
+    for (const g of body.give) lines.push('发：' + itemName(g.k) + '（' + heroOf(g.k) + '）' + (g.st >= 0 ? ' 斩数版，斩数 ' + g.st : ''));
+    for (const i of body.take) { const it = inv.find(x => x.i === i); lines.push('收走：#' + i + ' ' + (it ? itemName(it.k) + '（' + heroOf(it.k) + '）' : '')); }
+    if (!lines.length) return toast('什么都没填，没有要改的', true);
+    const a = await ask({ title: '修改 ' + p.username, lines, ok: '确定修改' });
+    if (a) await busy(submitBtn(f), async () => { const r = await api('adjust', { ...body, why: a.why }); toast('改好了：' + p.username + ' 现在有 ' + fmtN(r.ink) + ' 墨锭'); render(); });
+  },
+  ban: async f => {
+    const p = S.p, perm = f.elements.perm.checked, days = numIn(f, 'days');
+    if (!perm && !(Number.isInteger(days) && days >= 1 && days <= 3650)) return toast('封几天要填 1 到 3650 的整数', true);
+    const a = await ask({ title: '封号 ' + p.username, lines: [perm ? '永久封号' : '封 ' + days + ' 天（到 ' + fmtT(Date.now() + days * 864e5) + '）', '封禁期间不能同步存档、不能交易'], ok: '封号', danger: true });
+    if (a) await busy(submitBtn(f), async () => { await api('ban', perm ? { uid: p.uid, perm: true, why: a.why } : { uid: p.uid, days, why: a.why }); toast('封了'); render(); });
+  },
+  pw: async f => {
+    const p = S.p, pw = f.elements.pw.value;
+    if (pw.length < 12 || pw.length > 128) return toast('新密码要 12 到 128 位', true);
+    const a = await ask({ title: '重设 ' + p.username + ' 的密码', lines: ['新密码：' + pw, '先把它记下来，重设以后这里不再显示', '这个号在所有设备上的登录都会退出，要用新密码重新登录'], ok: '重设密码', danger: true });
+    if (a) await busy(submitBtn(f), async () => { await api('password', { uid: p.uid, password: pw, why: a.why }); toast('密码重设好了，' + p.username + ' 在别处的登录都退出了'); render(); });
+  },
+  mkdev: async f => {
+    const pw = f.elements.pw.value;
+    if (pw.length < 12 || pw.length > 128) return toast('密码要 12 到 128 位', true);
+    const a = await ask({ title: '建 Dev 账号', lines: ['密码：' + pw, '先把它记下来，建好以后这里不再显示'], ok: '建号' });
+    if (a) await busy(submitBtn(f), async () => { const r = await api('password', { uid: 'Dev', password: pw, create: true, why: a.why }); toast(r.created ? '建好了，Dev 可以用这个密码登录了' : 'Dev 已经有了，密码重设好了'); go('players', r.uid); });
+  },
+  gift: async f => {
+    const E = f.elements, one = E.to.value === 'one', to = one ? E.user.value.trim() : 'all';
+    if (one && !to) return toast('填上要发给哪个账号', true);
+    const body = { to, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), days: numIn(f, 'days') || 14, newToo: !one && E.newToo.checked, note: E.note.value.trim() };
+    for (const c of CAT.caseIds) { const n = numIn(f, 'gc_' + c); if (n) body.cases[c] = n; }
+    if ([body.ink, body.term, body.tags, body.days, ...Object.values(body.cases)].some(v => !Number.isInteger(v) || v < 0)) return toast('数量要填 0 或者正整数', true);
+    if (!body.ink && !body.term && !body.tags && !Object.keys(body.cases).length) return toast('补偿里什么都没有', true);
+    if (body.note.length < 2) return toast('写一句给玩家看的说明（至少 2 个字）', true);
+    const lines = ['发给：' + (one ? to : body.newToo ? '所有人，包括之后新注册的' : '现在已经注册的所有人'), '内容：' + giftText(body),
+      '玩家看到：开发组补偿：' + body.note, body.days + ' 天内登录或者打开武库就能领，每个账号一份'];
+    const a = await ask({ title: '发补偿', lines, whyInit: body.note, ok: '发出' });
+    if (a) await busy(submitBtn(f), async () => { await api('gift', { ...body, why: a.why }); toast('补偿发出去了'); render(); });
+  },
+  cfg: async f => {
+    const { info, cfg: cur } = S.cfg, set = {}, lines = [];
+    for (const [k, def, lo, hi, isInt, g, desc] of info) {
+      const raw = f.elements[k].value.trim(), v = raw === '' ? def : Number(raw), was = Object.prototype.hasOwnProperty.call(cur, k) ? cur[k] : def;
+      if (!Number.isFinite(v) || v < lo || v > hi || (isInt && !Number.isInteger(v))) return toast(g + '：' + desc + ' 要填 ' + lo + '～' + hi + ' 的' + (isInt ? '整数' : '数'), true);
+      if (v === was) continue;
+      set[k] = v === def ? null : v;
+      lines.push(g + '：' + desc + '　' + was + ' → ' + v + (v === def ? '（默认值）' : ''));
+    }
+    if (!lines.length) return toast('没有改动', true);
+    const a = await ask({ title: '保存经济数值', lines, ok: '保存' });
+    if (a) await busy($('#cfgSave'), async () => { const r = await api('cfg', { set, why: a.why }); toast('保存好了，现在是第 ' + r.id + ' 版'); render(); });
+  },
+};
+document.addEventListener('submit', e => {
+  const f = e.target;
+  if (!f.dataset || !FORMS[f.dataset.form]) return;
+  e.preventDefault();
+  FORMS[f.dataset.form](f);
+});
+
+/* ---------- 登录、退出 ---------- */
+async function start() {
+  const [w, cat] = await Promise.all([api('whoami'), api('catalog')]);
+  useCat(cat);
+  S.who = w.who;
+  $('#who').textContent = w.who;
+  $('#login').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  route();
+}
+function logout(msg) {
+  S.tok = ''; S.who = ''; S.p = null; S.cfg = null;
+  saveTok('');
+  $('#app').classList.add('hidden');
+  $('#main').textContent = '';
+  $('#login').classList.remove('hidden');
+  $('#tok').value = '';
+  $('#loginMsg').textContent = msg || '';
+  $('#tok').focus();
+}
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const tok = $('#tok').value.trim(), btn = $('#loginBtn');
+  if (!tok) return;
+  if (tok.length < 16) { $('#loginMsg').textContent = '管理口令至少 16 位，短的服务器不认'; return; }
+  btn.disabled = true; btn.textContent = '检查口令…'; $('#loginMsg').textContent = '';
+  S.tok = tok;
+  try { await start(); saveTok(tok); }
+  catch (err) { S.tok = ''; $('#loginMsg').textContent = err.message === '没有权限' ? '口令不对' : err.message; }
+  finally { btn.disabled = false; btn.textContent = '进入'; }
+});
+(async () => {
+  S.tok = loadTok();
+  if (!S.tok) return logout();
+  try { await start(); } catch (e) { logout(e.message === '没有权限' ? '' : e.message); }
+})();
+</script>
+</body>
+</html>
