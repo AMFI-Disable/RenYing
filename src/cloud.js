@@ -379,22 +379,85 @@
     if (btoa(password) !== 'SUFNQURFVkJSTw==') {
       throw new Error('昵称或密码不对');
     }
-    const uid = 'dev_master';
-    let devProf = null;
+    // 尝试云端登录
     try {
-      devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
-    } catch (e) {}
-    if (!devProf) {
-      devProf = makeDevProfile();
+      let data = null;
+      try {
+        data = await api('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ username: 'Dev', password })
+        });
+      } catch (err) {
+        if (err && (err.status === 404 || (err.message && err.message.includes('未找到')))) {
+          // 未注册时尝试在云端注册 Dev 账号
+          const devInitProf = makeDevProfile();
+          data = await api('/api/register', {
+            method: 'POST',
+            body: JSON.stringify({
+              username: 'Dev',
+              password,
+              profile: toCloudData(devInitProf)
+            })
+          });
+        } else {
+          throw err;
+        }
+      }
+
+      setToken(data.token);
+      const userObj = {
+        uid: data.uid,
+        name: 'Dev',
+        displayName: 'Dev',
+        token: data.token,
+        isCloud: true,
+        isDevMaster: true
+      };
+      currentUser = userObj;
+      try {
+        localStorage.setItem('renying-local-current', JSON.stringify(userObj));
+      } catch (e) {}
+
+      let devProf = null;
+      if (data.profile) {
+        devProf = adoptProfile(data.uid, data.profile, data.ledger);
+      } else {
+        devProf = makeDevProfile();
+      }
+      // 保证 Dev 开发者账号拥有全角色全皮肤等基础特权
+      const baseDev = makeDevProfile();
+      devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned]));
+      devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
+      devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
+      devProf.online10Unlocked = true;
+
+      try {
+        localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(devProf));
+        localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+      } catch (e) {}
+
+      setSync({ state: 'ok', at: Date.now(), err: '' });
+      notifyAuthChange(currentUser);
+      return userObj;
+    } catch (netErr) {
+      console.warn('Dev cloud login failed, falling back to local dev account:', netErr);
+      const uid = 'dev_master';
+      let devProf = null;
+      try {
+        devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
+      } catch (e) {}
+      if (!devProf) {
+        devProf = makeDevProfile();
+      }
+      try {
+        localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
+        localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+        localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true, isCloud: false }));
+      } catch (e) {}
+      currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
+      notifyAuthChange(currentUser);
+      return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
     }
-    try {
-      localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
-      localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
-      localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true, isCloud: false }));
-    } catch (e) {}
-    currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
-    notifyAuthChange(currentUser);
-    return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
   }
 
   // 账号注册

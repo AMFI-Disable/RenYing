@@ -4154,6 +4154,61 @@ async function loginDev(password) {
 if (btoa(password) !== 'SUFNQURFVkJSTw==') {
 throw new Error('昵称或密码不对');
 }
+try {
+let data = null;
+try {
+data = await api('/api/login', {
+method: 'POST',
+body: JSON.stringify({ username: 'Dev', password })
+});
+} catch (err) {
+if (err && (err.status === 404 || (err.message && err.message.includes('未找到')))) {
+const devInitProf = makeDevProfile();
+data = await api('/api/register', {
+method: 'POST',
+body: JSON.stringify({
+username: 'Dev',
+password,
+profile: toCloudData(devInitProf)
+})
+});
+} else {
+throw err;
+}
+}
+setToken(data.token);
+const userObj = {
+uid: data.uid,
+name: 'Dev',
+displayName: 'Dev',
+token: data.token,
+isCloud: true,
+isDevMaster: true
+};
+currentUser = userObj;
+try {
+localStorage.setItem('renying-local-current', JSON.stringify(userObj));
+} catch (e) {}
+let devProf = null;
+if (data.profile) {
+devProf = adoptProfile(data.uid, data.profile, data.ledger);
+} else {
+devProf = makeDevProfile();
+}
+const baseDev = makeDevProfile();
+devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned]));
+devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
+devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
+devProf.online10Unlocked = true;
+try {
+localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(devProf));
+localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+} catch (e) {}
+setSync({ state: 'ok', at: Date.now(), err: '' });
+notifyAuthChange(currentUser);
+return userObj;
+} catch (netErr) {
+console.warn('Dev cloud login failed, falling back to local dev account:', netErr);
 const uid = 'dev_master';
 let devProf = null;
 try {
@@ -4170,6 +4225,7 @@ localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev',
 currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
 notifyAuthChange(currentUser);
 return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
+}
 }
 async function register(username, password) {
 const name = String(username).trim();
