@@ -8,6 +8,34 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Codex Martial Realism, Range Taxonomies & Ultimate Visuals (`src/game.js`, `src/style.css`, `index.html`)**:
+  - Aligned all 12 heroes' normal attack combos (`HERO_MOVE_SEQS[id].light`) and demonstration sequences with authentic in-game martial weapon moves (`WEAPON_POSE_MODS` for spear, greatsword, fists, gourd, dual daggers, calligraphy brush, chain hammer, flute, and fan).
+  - Introduced granular attack range categories (`melee` 近战, `mid` 中距, `ranged` 远距, `fullscreen` 全图/全域, `air` 空战) with distinctive badge styling and colored bottom accent indicators on codex mini preview windows (`data-rng`).
+  - Enhanced the Codex `Puppet` visual animation director: added screen dimming, flash bursts, shockwave rings, and rich particle animations for all hero ultimates (e.g. avalanche rocks, lightning bolts, ink dragon washes, lunar lotuses, and talisman detonations) without HUD banner text obscuring the screen.
+
+- **Full Bilingual Internationalization & Onboarding (`src/i18n.js`, `src/game.js`, `src/page.html`, `index.html`)**:
+  - Implemented comprehensive English and Simplified Chinese localization system (`src/i18n.js`) with dynamic DOM text translation and attribute replacement (`title`, `placeholder`, `aria-label`).
+  - Added instant language toggle button in top navigation bar (`#tnLangBtn`) and language preference selector in settings (`SETTINGS.lang = 'zh' | 'en'`).
+  - Added first-launch language preference onboarding prompt (`#langPrompt`) for new players.
+  - Completed bilingual dictionary covering all 12 characters, martial arts move names, skill tooltips, UI controls, armory items, and game modes.
+- **Combat Audio Dynamics & Vocal SFX (`src/game.js`)**:
+  - Added procedural Web Audio vocal cues (`SFX.voiceKiai`, `SFX.voiceHurt`, `SFX.voiceUlt`) dynamically modulated by character weight and pitch.
+  - Added damage-over-time status effects: Bleed ticks (`bleedTicks`, `bleedDmg`) with blood spark particles and Frost slow (`frostSlow`) with ice crystal particles.
+  - Implemented hard-impact wall bounce mechanics (`isHardImpact`, `wallBounced`): heavy horizontal knockbacks against arena walls bounce fighters into the air for juggle follow-ups with screenshake, impact text, and persistent ink splatters.
+  - Added dynamic stage weather themes (`DEFAULT_WEATHER_THEMES`): cycles between bamboo morning rain/storm, twilight red leaves, quiet bamboo night, and classic moonlit night when fighters use standard skins.
+  - Added four new Roguelike Tower perks: 玄霜凝骨 (Frost Lock), 断脉破罡 (Bleed Rend), 墨韵共鸣 (Ink Resonance), and 天煞狂雷 (Storm Wrath).
+- **Dual-Row Skin Hierarchy in Hero Codex (`src/game.js`, `src/style.css`, `index.html`)**:
+  - Rebuilt Hero Codex skin view with dual-row classification: separates exclusive character outfits (`绑定装束`, `.cx-skin-tag.tag-bd`) and weapon cases/armory items (`武库饰品`, `.cx-skin-tag.tag-wk`).
+  - Added unified skin quality weight calculation (`skinWeight(k)`) across Military (10), Restricted (20), Classified (30), Covert (40), and Extraordinary (50) tiers, powering automatic best-skin equipping (`bestSkin(id)`).
+- **Bidirectional Profile Merging & Dev Auto-Promotion (`src/cloud.js`, `src/game.js`)**:
+  - Implemented intelligent bidirectional profile merging (`mergeProfiles(p1, p2)`): merges local storage and cloud database profiles on sync, preserving all characters, skins, stage stars, win/loss stats, and ink balances without overwriting either side.
+  - Added automatic background promotion for offline Dev sessions: automatically reconnects and re-authenticates to the cloud Dev account when cloud connectivity is restored.
+- **Exhaustive CI/CD Verification Workflows (`.github/workflows/`, `tools/ai-ladder-report.mjs`, `tools/rollback-test.mjs`)**:
+  - Added 10 specialized GitHub Actions workflows: `ai-ladder-audit.yml`, `armory-economy.yml`, `build-sync.yml`, `cloud-health-deploy.yml`, `combat-mechanics.yml`, `mobile-touch.yml`, `offline-standalone.yml`, `qfx-3d-smoke.yml`, `rollback-determinism.yml`, and `ui-hud-layout.yml`.
+  - Added deterministic rollback netcode verification tool (`tools/rollback-test.mjs`) testing state serialization, input prediction, and frame rollbacks.
+  - Added AI ladder benchmark tracking tool (`tools/ai-ladder-report.mjs`) and specification (`docs/ai-ladder-benchmark.md`) continuously monitoring AI self-play win rates.
+- **Project Wiki & Documentation Suite (`docs/wiki/`, `readme.md`, `readme.zh-cn.md`)**:
+  - Created comprehensive project wiki documentation covering Getting Started, Heroes and Combat, Architecture and Development, Armory and Marketplace, Home Navigation, and Multiplayer Netcode.
 - **Dev Market Account (`src/cloud.js`, `cloudflare/worker.js`, `cloudflare/admin.html`, `tools/econ-admin.mjs`)**: the Dev account lives in the cloud and keeps whatever ink, skins and armory it uploads, so the team (or an AI working for it) can put items on the player market. Dev signs in with its cloud password like any other account. That password is set only from the admin backend (重设密码, or `node tools/econ-admin.mjs password Dev`), which also signs Dev out everywhere and can create the account if it doesn't exist yet; nobody else can register Dev or other official-looking names. After an offline session on the local fallback, Dev signs in again to get back to the cloud. **After the Worker is redeployed, reset Dev's password once from the admin backend.**
 - **Developer Admin Backend (`cloudflare/worker.js`, `cloudflare/admin.html`, `cloudflare/schema.sql`, `src/armory-core.js`, `src/armory.js`, `tools/econ-admin.mjs`, `tools/build.py`, `docs/admin.md`)**: the Worker now serves an admin page at `/admin`, and `node tools/econ-admin.mjs` does the same things from a terminal. Both need the `ADMIN_SECRET` Worker secret. Each admin can have their own (`name:secret`, comma-separated) so every action records who did it; secrets shorter than 16 characters are ignored, and 20 wrong tries from one IP lock it out for an hour. For one player you can look up the armory, strikes, ledger and market history, add or remove ink, cases, terminals and name tags, give or take items, ban (1–3,650 days or permanently) or unban, and reset a password, which signs that account out everywhere. Compensation gifts go to every account or to one: ink, cases, terminals and name tags with a note for the player and an expiry of 1–90 days. Each account claims a gift once, the next time it logs in or opens the armory (with a toast), and a gift can be stopped. Economy values can be changed live: case and terminal prices, the daily and weekly opening limits, the 斩数 chance, the odds of both case types, the market fee, terminal markups, match drops and the daily allowance for locally earned ink. Each value has bounds and the odds must add up to 1; every change is saved as a version that can be rolled back, takes effect within 30 seconds, and the armory shows the server's prices and limits. Every change needs a reason and has caps (for example ±1,000,000 ink at a time), goes through the same versioned writes as player actions, and shows up on the audit page. The page only runs its own script (allowed by hash in a strict Content Security Policy), can't be framed and isn't cached. Combat numbers, rank points and hero unlocks aren't changed from here. `docs/admin.md` explains setup and use, and `tools/econ-test.mjs` has 103 new checks for it (389 in all). **The Worker has to be redeployed and `ADMIN_SECRET` set before this works.**
 - **青锋行 Roguelike Runs (`src/qfx/68-run.js`, `src/qfx/65-levels.js`, `src/qfx/page.html`, `assets/qingfengxing.html`)**: 青锋行 is now a roguelike. A run is three chapters (山门, 竹林, 剑冢), each a seven-row route map: pick a node on the bottom row, then move only along a path to a connected node on the next row until the chapter boss at the top. Nodes are 遭遇 (a fight), 精锐 (a harder fight that always ends with a rare pick), 奇遇 (one of ten events with choices, such as giving a pill for a sword manual, paying HP for a rare pick, a dice game or a wolf ambush), 剑庐 (the shop), 歇脚 (heal 35%, sharpen the sword one tier for free, or brew a pill), 藏宝 (one of three) and 首领. Every map has at least one shop and one elite. Dying ends the run; 剑魄 and 藏经阁 upgrades stay. Clearing a run unlocks the next 劫 (up to 五劫), and they stack: enemy HP +15%, more elites with +20% HP, enemy damage +15%, rests heal only 20%, boss HP +25% with one fewer starting pill. The run saves on the route map, so closing the page mid-fight resumes at the map before that node. 刃影 pays 200 / 300 / 500 ink (and the 青锋行 skin) the first time each chapter boss falls.
@@ -260,6 +288,12 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Competitive Snake Draft & Unified 2v2 Modes (`src/game.js`, `src/page.html`)**:
+  - Restructured 2v2 Ban & Pick drafting to standard competitive Snake Draft order (`0 Ban -> 1 Ban -> 0 Pick 1 -> 1 Pick 1 -> 1 Pick 2 -> 0 Pick 2`), balancing first-pick advantage with tactical double-pick synergy.
+  - Unified 2v2 mode selection on the single-player panel (`renderSingle2v2`): consolidated Solo 2v2 (`pc_cc`), Local Co-op (`pp_cc`), Local Versus (`pp_pp`), and AI Watch Mode (`watch`) with level selectors and direct match launch.
+- **Top Navigation Typography & Visual Polish (`src/style.css`, `index.html`)**:
+  - Upgraded top navigation typography to Google Font `Cinzel` (`--nav-serif`) combined with `Noto Serif SC` and `STZhongsong`.
+  - Refined navigation tab styling, active indicators, ink currency display, and text shadows for high contrast and readability.
 - **New Soundtrack (`assets/music/`, `src/game.js`)**: all nine tracks were rewritten, following how current wuxia and East Asian action games are scored (a solo Chinese or Japanese instrument carrying a pentatonic melody over a Western orchestra, with taiko driving the combat cues and the music building in layers). 山河入梦 (home, 72 bpm): guzheng arpeggios, a dizi theme and an erhu answer over strings, choir and bells. 点将台 (hero select, 100 bpm): a shakuhachi call and an erhu reply over a cello ostinato, pizzicato and taiko. 刃影交锋 (battle, 140 bpm, E minor pentatonic): spiccato strings, taiko, brass stabs, an erhu theme with a dizi counter-line, a suona breakdown and a full reprise; overtime is a faster cut at 156 bpm. 竹院晨练 (training dummy, 96 bpm): guzheng, dizi, temple blocks and pizzicato bass. 藏锋阁 (armory, 80 bpm): music box, celesta, harp and shakuhachi over a soft pad. Victory, defeat and legendary-drop stings are new too. Every track is rendered stem by stem from MIDI with an orchestral SoundFont, balanced per stem, given convolution reverb, bus compression and a true-peak limiter, and set to −15 to −18 LUFS. Loops are resampled as periodic signals so the loop point has no gap or click.
 - **Fixed-Price Case Shop and a Player-Only Market (`src/armory-core.js`, `src/armory.js`, `cloudflare/worker.js`, `cloudflare/schema.sql`)**: weapon cases (240–280 ink, 神兵 1,000) and terminals (500 ink) are bought from a fixed-price shop with no daily stock, resale or buyback. The market only trades between players: a seller sets any price from 1 to 999,999 ink, a buyer picks a specific listing, and the seller gets the price minus the 15% fee the next time they open the armory. Listings live in a new `mkt` table on the Worker, and a buy racing a cancel is settled atomically. Terminal offers now cost 1.2–1.5× an item's reference value instead of 1–1.3×. Listings from the old market are returned to their owners. **The Worker has to be redeployed for this to take effect** (it creates the `mkt` table itself on the first request).
 - **Solo 2v2 in 对战 (`src/page.html`, `src/game.js`)**: playing 2v2 yourself with a CPU teammate against two CPUs moved from the 单人 page to the 2v2 card on the 对战 page (单人出战, with its own difficulty picker). The 单人 page keeps the AI-vs-AI 2v2 watch mode and points to the new place.
@@ -466,6 +500,23 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Calibrated Hero Stat & Tooltip Alignment (`src/game.js`, `src/ai.js`, `tools/combat-test.mjs`)**:
+  - Aligned hero stat definitions (`CHARS.stat`), move damages, and codex skill descriptions across all 12 characters to exact calibrated combat values, embedding calibrated base damages directly and standardizing runtime multiplier hacks in `BAL` to 1.0.
+  - Expanded `tools/combat-test.mjs` test assertions to verify character roster stat consistency and tooltip accuracy.
+- **Language Selection UI Freeze (`src/i18n.js`, `index.html`)**:
+  - Fixed DOM exception during language selection caused by improper dataset property access for hyphenated attributes like `aria-label` (`orig_aria_label`).
+- **Tutorial Parry Drill Crash (`src/game.js`)**:
+  - Fixed crash during tutorial Just Guard / Parry training by using standardized attack initialization (`startAttack(B, 'l1')`) and adding defensive null-checks for `f.move` and `m.p` in pose computation and animation frames.
+- **Dev Account Skin & Armory Persistence (`cloudflare/worker.js`, `cloudflare/worker.bundle.js`)**:
+  - Fixed Cloudflare Worker profile saving for the developer (`Dev`) account to preserve custom inventory items, cases, and skins without being pruned by standard anti-cheat skin reconciliation.
+- **Codex Accessibility Tag Size (`src/style.css`)**:
+  - Adjusted codex skin row tag font size from 11px to 12px to comply with automated UI accessibility standards (`tools/ui-audit.mjs`).
+- **Strict Lowercase File Taxonomy Compliance (`docs/wiki/`)**:
+  - Renamed wiki markdown files to lowercase (`architecture-and-development.md`, `armory-and-marketplace.md`, `getting-started.md`, `heroes-and-combat.md`, `home.md`, `multiplayer-and-netcode.md`) conforming to the repository taxonomy specification.
+- **Tasks Screen Crash (`src/page.html`, `src/game.js`)**:
+  - Fixed `ReferenceError: loadProfile is not defined` when opening the Tasks modal, caused by remaining references to legacy LAN server profile loader after the lobby cleanup pass.
+- **Flaky Market Test (`tools/econ-test.mjs`)**:
+  - Resolved occasional test failures in the market economy test suite by stabilizing terminal test account top-ups and atomic buy/cancel race conditions.
 - **2v2 Target Collision & Step Loop Routing (`src/game.js`, `src/net-p2p.js`)**:
   - Replaced hardcoded `M.mode === 'watch2v2'` checks with `is2v2()` helper across melee strikes, projectile collisions, arena scars, fighter step loops, and KO persistence, properly registering all 4 combatants in player-controlled 2v2 modes.
   - Added WebRTC P2P matchmaking pools for 2v2 (`2v2_coop` and `2v2_vs` in `src/net-p2p.js`) with dedicated match cards in the 2v2 modal (`全服快速匹配`, `设擂密令开黑`, `同屏本地开黑`).
@@ -591,6 +642,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Security
 
+- **Cryptographic Randomness for Account Identifiers (`src/cloud.js`)**:
+  - Replaced pseudo-random `Math.random()` with `crypto.getRandomValues` for local account UID generation, ensuring non-predictable cryptographically secure identifiers.
+- **Hardened Script Regex in Build & Economy Verifications (`tools/build.py`, `tools/econ-test.mjs`)**:
+  - Enhanced regex pattern matching (`<script\b[^>]*>`) to prevent CSP sha256 bypasses and unauthorized script tag injection.
 - **Reserved Official Names (`cloudflare/worker.js`)**: names that look official (such as dev, admin, 官方 or 管理员) can't be registered. The Dev account is created, and its password reset, only from the admin backend.
 - **Arbitrage-Free Armory Market (`src/armory-core.js`)**: prices drift at most ±10% from their reference, sellers on the market ask 2–12% above it, instant sell pays 88% of it, and your own listings can ask at most 95% of it, with a 15% fee on every sale. Terminal offers never go below the market price, and a case's expected value is below its price. Under these spreads, buying on any day and selling on any later day, trading up items bought on the market, or reselling terminal items always loses ink. `tools/econ-test.mjs` checks the worst case from the rules and also replays a year of market listings and trade-ups.
 - **Server-Authoritative Armory Economy & Ink Ledger (`cloudflare/worker.js`, `src/cloud.js`, `src/anticheat.js`, `tools/econ-admin.mjs`, `tools/econ-test.mjs`)**:

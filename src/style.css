@@ -375,6 +375,12 @@
   .t-has-demo:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.4); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
   .t-has-demo.active-demo { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,196,106,.5), 0 8px 24px rgba(0,0,0,.45); background: rgba(233,196,106,.08); }
   .card-mini-win { width: 100%; height: 76px; border-radius: 8px; overflow: hidden; background: #070814; border: 1px solid rgba(255,255,255,.08); margin: 6px 0 8px; position: relative; }
+  .card-mini-win::after { content: ''; position: absolute; left: 0; bottom: 0; right: 0; height: 2px; background: rgba(255,255,255,.08); pointer-events: none; }
+  .card-mini-win[data-rng="melee"]::after { background: linear-gradient(90deg, #ff8a8a, transparent); }
+  .card-mini-win[data-rng="mid"]::after { background: linear-gradient(90deg, #f3cf7a, transparent); }
+  .card-mini-win[data-rng="ranged"]::after { background: linear-gradient(90deg, #46d3ea, transparent); }
+  .card-mini-win[data-rng="screen"]::after { background: linear-gradient(90deg, #d2a8ff, transparent); }
+  .card-mini-win[data-rng="air"]::after { background: linear-gradient(90deg, #7fd4ff, transparent); }
   .card-mini-win canvas { width: 100%; height: 100%; display: block; }
   .mini-tag { position: absolute; right: 5px; top: 4px; font-size: 12px; padding: 1px 5px; border-radius: 3px; background: rgba(0,0,0,.65); color: var(--gold); pointer-events: none; border: 1px solid rgba(233,196,106,.3); white-space: nowrap; }
   @media (max-width: 1100px) {
@@ -974,10 +980,20 @@
   color: #ff8a8a;
   border: 1px solid rgba(255, 107, 107, 0.35);
 }
+.type-tag.mid, .pill-type.mid {
+  background: rgba(233, 196, 106, 0.16);
+  color: #f3cf7a;
+  border: 1px solid rgba(233, 196, 106, 0.45);
+}
 .type-tag.ranged, .pill-type.ranged {
   background: rgba(70, 211, 234, 0.15);
   color: #46d3ea;
   border: 1px solid rgba(70, 211, 234, 0.35);
+}
+.type-tag.fullscreen, .pill-type.fullscreen {
+  background: rgba(181, 128, 255, 0.18);
+  color: #d2a8ff;
+  border: 1px solid rgba(181, 128, 255, 0.45);
 }
 .type-tag.dash, .pill-type.dash {
   background: rgba(233, 196, 106, 0.15);
@@ -993,6 +1009,11 @@
   background: rgba(215, 195, 255, 0.15);
   color: #d7c3ff;
   border: 1px solid rgba(215, 195, 255, 0.35);
+}
+.type-tag.air, .pill-type.air {
+  background: rgba(120, 215, 255, 0.15);
+  color: #7fd4ff;
+  border: 1px solid rgba(120, 215, 255, 0.35);
 }
 .vs-explain {
   text-align: left;

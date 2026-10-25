@@ -382,6 +382,12 @@ overflow-x: hidden;
 .t-has-demo:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.4); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
 .t-has-demo.active-demo { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,196,106,.5), 0 8px 24px rgba(0,0,0,.45); background: rgba(233,196,106,.08); }
 .card-mini-win { width: 100%; height: 76px; border-radius: 8px; overflow: hidden; background: #070814; border: 1px solid rgba(255,255,255,.08); margin: 6px 0 8px; position: relative; }
+.card-mini-win::after { content: ''; position: absolute; left: 0; bottom: 0; right: 0; height: 2px; background: rgba(255,255,255,.08); pointer-events: none; }
+.card-mini-win[data-rng="melee"]::after { background: linear-gradient(90deg, #ff8a8a, transparent); }
+.card-mini-win[data-rng="mid"]::after { background: linear-gradient(90deg, #f3cf7a, transparent); }
+.card-mini-win[data-rng="ranged"]::after { background: linear-gradient(90deg, #46d3ea, transparent); }
+.card-mini-win[data-rng="screen"]::after { background: linear-gradient(90deg, #d2a8ff, transparent); }
+.card-mini-win[data-rng="air"]::after { background: linear-gradient(90deg, #7fd4ff, transparent); }
 .card-mini-win canvas { width: 100%; height: 100%; display: block; }
 .mini-tag { position: absolute; right: 5px; top: 4px; font-size: 12px; padding: 1px 5px; border-radius: 3px; background: rgba(0,0,0,.65); color: var(--gold); pointer-events: none; border: 1px solid rgba(233,196,106,.3); white-space: nowrap; }
 @media (max-width: 1100px) {
@@ -973,10 +979,20 @@ background: rgba(255, 107, 107, 0.15);
 color: #ff8a8a;
 border: 1px solid rgba(255, 107, 107, 0.35);
 }
+.type-tag.mid, .pill-type.mid {
+background: rgba(233, 196, 106, 0.16);
+color: #f3cf7a;
+border: 1px solid rgba(233, 196, 106, 0.45);
+}
 .type-tag.ranged, .pill-type.ranged {
 background: rgba(70, 211, 234, 0.15);
 color: #46d3ea;
 border: 1px solid rgba(70, 211, 234, 0.35);
+}
+.type-tag.fullscreen, .pill-type.fullscreen {
+background: rgba(181, 128, 255, 0.18);
+color: #d2a8ff;
+border: 1px solid rgba(181, 128, 255, 0.45);
 }
 .type-tag.dash, .pill-type.dash {
 background: rgba(233, 196, 106, 0.15);
@@ -992,6 +1008,11 @@ border: 1px solid rgba(180, 140, 255, 0.35);
 background: rgba(215, 195, 255, 0.15);
 color: #d7c3ff;
 border: 1px solid rgba(215, 195, 255, 0.35);
+}
+.type-tag.air, .pill-type.air {
+background: rgba(120, 215, 255, 0.15);
+color: #7fd4ff;
+border: 1px solid rgba(120, 215, 255, 0.35);
 }
 .vs-explain {
 text-align: left;
@@ -15415,18 +15436,114 @@ zuixian: '【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉
 gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
 };
 const HERO_MOVE_TYPES = {
-qingfeng: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '突进', icon: 'melee' }, ranged: { type: 'ranged', label: '远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
-tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '通天巨浪', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
-feiying: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '背袭突进', icon: 'melee' }, ranged: { type: 'ranged', label: '暗器远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝杀' }, esc: { type: 'esc', label: '身法' } },
-liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'dash', label: '开扇冲刺', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
-leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'counter', label: '雷铠反击', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
-lingshuang: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '枪尖回刺', icon: 'melee' }, ranged: { type: 'melee', label: '枪旋近战', icon: 'melee' }, ult: { type: 'melee', label: '神技' }, esc: { type: 'esc', label: '身法' } },
-moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'counter', label: '画符蓄势', icon: 'ranged' }, ult: { type: 'ranged', label: '全图' }, esc: { type: 'esc', label: '身法' } },
-yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
-yanling: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '空战' }, skill: { type: 'melee', label: '俯冲近战', icon: 'melee' }, ranged: { type: 'ranged', label: '翎羽远程', icon: 'ranged' }, ult: { type: 'ranged', label: '天怒' }, esc: { type: 'esc', label: '身法' } },
-yuxiao: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '音波远程', icon: 'ranged' }, ranged: { type: 'counter', label: '反弹暗器', icon: 'shield_bash' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
-zuixian: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '亭落禁锢', icon: 'magic_trap' }, ranged: { type: 'ranged', label: '共饮掷坛', icon: 'ranged' }, ult: { type: 'ranged', label: '绝技' }, esc: { type: 'esc', label: '身法' } },
-gouchen: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '飞锤拉拽', icon: 'ranged' }, ranged: { type: 'melee', label: '旋锤连砸', icon: 'melee' }, ult: { type: 'melee', label: '巨锤震晕' }, esc: { type: 'esc', label: '身法' } }
+qingfeng: {
+light: { type: 'melee', label: '近战', rng: 'melee' },
+charge: { type: 'melee', label: '近战', rng: 'melee' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'dash', label: '突进', rng: 'mid', icon: 'melee' },
+ranged: { type: 'ranged', label: '远距', rng: 'ranged', icon: 'ranged' },
+ult: { type: 'melee', label: '居合绝技', rng: 'mid' },
+esc: { type: 'esc', label: '身法' }
+},
+tieshan: {
+light: { type: 'melee', label: '近战', rng: 'melee' },
+charge: { type: 'mid', label: '中距霸体', rng: 'mid' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'mid', label: '中距重震', rng: 'mid', icon: 'melee' },
+ranged: { type: 'dash', label: '突进冲阵', rng: 'mid', icon: 'shield_bash' },
+ult: { type: 'fullscreen', label: '全屏撼地', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+feiying: {
+light: { type: 'melee', label: '近战', rng: 'melee' },
+charge: { type: 'melee', label: '近战背刺', rng: 'melee' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'dash', label: '闪身突进', rng: 'mid', icon: 'melee' },
+ranged: { type: 'ranged', label: '远距暗器', rng: 'ranged', icon: 'ranged' },
+ult: { type: 'melee', label: '近身绝杀', rng: 'melee' },
+esc: { type: 'esc', label: '身法' }
+},
+liuyun: {
+light: { type: 'melee', label: '近战', rng: 'melee' },
+charge: { type: 'mid', label: '中距卷地', rng: 'mid' },
+air: { type: 'air', label: '空战御风', rng: 'air' },
+skill: { type: 'ranged', label: '远距风刃', rng: 'ranged', icon: 'ranged' },
+ranged: { type: 'mid', label: '中距退扇', rng: 'mid', icon: 'ranged' },
+ult: { type: 'fullscreen', label: '全域龙卷', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+leiming: {
+light: { type: 'melee', label: '近战', rng: 'melee' },
+charge: { type: 'melee', label: '近战破防', rng: 'melee' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'dash', label: '电光突进', rng: 'mid', icon: 'melee' },
+ranged: { type: 'counter', label: '反震雷铠', rng: 'melee', icon: 'shield_bash' },
+ult: { type: 'fullscreen', label: '全域天雷', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+lingshuang: {
+light: { type: 'mid', label: '中距枪芒', rng: 'mid' },
+charge: { type: 'mid', label: '中距穿杨', rng: 'mid' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'mid', label: '中距突刺', rng: 'mid', icon: 'melee' },
+ranged: { type: 'melee', label: '近战枪旋', rng: 'melee', icon: 'melee' },
+ult: { type: 'fullscreen', label: '全域刹那', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+moyu: {
+light: { type: 'melee', label: '近战墨痕', rng: 'melee' },
+charge: { type: 'mid', label: '中距顿笔', rng: 'mid' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'trap', label: '中距阵地', rng: 'mid', icon: 'magic_trap' },
+ranged: { type: 'ranged', label: '远距墨符', rng: 'ranged', icon: 'ranged' },
+ult: { type: 'fullscreen', label: '全图绝杀', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+yuehua: {
+light: { type: 'melee', label: '近战', rng: 'melee' },
+charge: { type: 'melee', label: '近战破防', rng: 'melee' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'counter', label: '反制月镜', rng: 'melee', icon: 'shield_bash' },
+ranged: { type: 'mid', label: '中距折返', rng: 'mid', icon: 'ranged' },
+ult: { type: 'fullscreen', label: '全屏月华', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+yanling: {
+light: { type: 'air', label: '空战回旋', rng: 'air' },
+charge: { type: 'mid', label: '中距破云', rng: 'mid' },
+air: { type: 'air', label: '自由空战', rng: 'air' },
+skill: { type: 'dash', label: '中距鹰击', rng: 'mid', icon: 'melee' },
+ranged: { type: 'ranged', label: '远距翎羽', rng: 'ranged', icon: 'ranged' },
+ult: { type: 'fullscreen', label: '全域天怒', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+yuxiao: {
+light: { type: 'mid', label: '中距音律', rng: 'mid' },
+charge: { type: 'melee', label: '近战扫击', rng: 'melee' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'ranged', label: '远距音波', rng: 'ranged', icon: 'ranged' },
+ranged: { type: 'counter', label: '中距回音', rng: 'mid', icon: 'shield_bash' },
+ult: { type: 'fullscreen', label: '全域绝响', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+zuixian: {
+light: { type: 'melee', label: '近战醉拳', rng: 'melee' },
+charge: { type: 'melee', label: '近战撞钟', rng: 'melee' },
+air: { type: 'melee', label: '近战', rng: 'melee' },
+skill: { type: 'trap', label: '中距禁锢', rng: 'mid', icon: 'magic_trap' },
+ranged: { type: 'ranged', label: '远距掷坛', rng: 'ranged', icon: 'ranged' },
+ult: { type: 'fullscreen', label: '全图墨染', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+},
+gouchen: {
+light: { type: 'mid', label: '中距链锤', rng: 'mid' },
+charge: { type: 'mid', label: '中距砸地', rng: 'mid' },
+air: { type: 'mid', label: '中距空砸', rng: 'mid' },
+skill: { type: 'ranged', label: '远距飞锤', rng: 'ranged', icon: 'ranged' },
+ranged: { type: 'mid', label: '中距旋锤', rng: 'mid', icon: 'melee' },
+ult: { type: 'fullscreen', label: '全图巨锤', rng: 'screen' },
+esc: { type: 'esc', label: '身法' }
+}
 };
 const HERO_RESTRAINTS_EXPLAIN = {
 yuxiao: {
@@ -15590,30 +15707,47 @@ esc: { name: '右键·腾空闪', badge: '🛡️ 振翅凌云', badgeCls: 'badg
 };
 const HERO_MOVE_SEQS = {
 yuxiao: {
-light: [{ p: 'idle', d: 0.1, reset: true }, { p: 'l1a', d: 0.12, dx: 10, hit: 1, lab: '普攻' }, { p: 'l2a', d: 0.12, dx: 10, hit: 1 }, { p: 'l3a', d: 0.22, dx: 14, hit: 2, launch: true, badge: '音律 +3' }, { p: 'idle', d: 0.35, reset: true }],
+light: [
+{ p: 'idle', d: 0.1, reset: true },
+{ p: 'yx_play', d: 0.08, lab: '起奏' }, { p: 'yx_push', d: 0.12, dx: 10, hit: 1 },
+{ p: 'fn_l1s', d: 0.08 }, { p: 'fn_l1a', d: 0.12, dx: 12, hit: 1 },
+{ p: 'yx_play', d: 0.08 }, { p: 'lca', d: 0.18, dx: 14, hit: 2, launch: true, badge: '音律 +3' },
+{ p: 'idle', d: 0.35, reset: true }
+],
 charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防打倒' }, { p: 'idle', d: 0.35, reset: true }],
 air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
 skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'yx_play', d: 0.14, lab: 'Q · 清音' }, { p: 'yx_push', d: 0.36, dx: 18, hit: 2, fx: 'note', launch: true, badge: '三律齐鸣' }, { p: 'idle', d: 0.35, reset: true }],
 ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'yx_play', d: 0.42, fx: 'mirror', hit: 1, lab: 'R · 回音壁', badge: '回音' }, { p: 'idle', d: 0.35, reset: true }],
-ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'yx_play', d: 0.18, lab: 'E · 广陵散' }, { p: 'yx_push', d: 0.4, fx: 'timestop', hit: 3, launch: true, badge: '曲终绝响' }, { p: 'idle', d: 0.35, reset: true }],
+ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'yx_play', d: 0.2, lab: 'E · 广陵散' }, { p: 'yx_push', d: 0.45, fx: 'guangling', hit: 3, launch: true, badge: '曲终绝响' }, { p: 'idle', d: 0.35, reset: true }],
 esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '休止符' }, { p: 'idle', d: 0.35, reset: true }]
 },
 zuixian: {
-light: [{ p: 'idle', d: 0.1, reset: true }, { p: 'lm_jab', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'zx_sway', d: 0.1 }, { p: 'lm_jab', d: 0.1, dx: 10, hit: 1 }, { p: 'zx_upper', d: 0.22, dx: 12, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
-charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防打倒' }, { p: 'idle', d: 0.35, reset: true }],
+light: [
+{ p: 'idle', d: 0.1, reset: true },
+{ p: 'zx_sway', d: 0.08, lab: '醉步连打' }, { p: 'lm_jab', d: 0.11, dx: 10, hit: 1 },
+{ p: 'zx_drink', d: 0.08 }, { p: 'zx_breath', d: 0.12, dx: 12, hit: 1 },
+{ p: 'zx_sway', d: 0.08 }, { p: 'zx_upper', d: 0.22, dx: 14, hit: 2, launch: true, badge: '醉意增伤' },
+{ p: 'idle', d: 0.35, reset: true }
+],
+charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'zx_upper', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防撞钟' }, { p: 'idle', d: 0.35, reset: true }],
 air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
 skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_sway', d: 0.15, lab: 'Q · 亭中留客' }, { p: 'gc_wind', d: 0.32, fx: 'avalanche', hit: 2, badge: '飞亭砸落' }, { p: 'idle', d: 0.35, reset: true }],
 ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_drink', d: 0.25, lab: 'R · 与民同乐' }, { p: 'gc_throw', d: 0.3, fx: 'proj', hit: 1, badge: '掷坛共饮' }, { p: 'idle', d: 0.35, reset: true }],
-ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_sway', d: 0.18, lab: 'E · 山水之间' }, { p: 'zx_upper', d: 0.45, fx: 'timestop', hit: 8, launch: true, badge: '全屏墨染' }, { p: 'idle', d: 0.35, reset: true }],
+ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'zx_drink', d: 0.2, lab: 'E · 山水之间' }, { p: 'zx_upper', d: 0.48, fx: 'shanshui', hit: 8, launch: true, badge: '全屏墨染' }, { p: 'idle', d: 0.35, reset: true }],
 esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '醉卧浮生' }, { p: 'idle', d: 0.35, reset: true }]
 },
 gouchen: {
-light: [{ p: 'idle', d: 0.1, reset: true }, { p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'gc_sweep', d: 0.2, dx: 14, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
-charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防打倒' }, { p: 'idle', d: 0.35, reset: true }],
-air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+light: [
+{ p: 'idle', d: 0.1, reset: true },
+{ p: 'gc_wind', d: 0.08, lab: '链锤连砸' }, { p: 'gc_throw', d: 0.12, dx: 12, hit: 1 },
+{ p: 'gc_pull', d: 0.08 }, { p: 'gc_sweep', d: 0.22, dx: 16, hit: 2, launch: true, badge: '长臂挥砸' },
+{ p: 'idle', d: 0.35, reset: true }
+],
+charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'gc_sweep', d: 0.32, dx: 34, hit: 3, launch: true, badge: '破防砸倒' }, { p: 'idle', d: 0.35, reset: true }],
+air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'gc_sweep', d: 0.26, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
 skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_throw', d: 0.2, fx: 'proj', lab: 'Q · 飞锤' }, { p: 'gc_pull', d: 0.3, hit: 1, badge: '震魄' }, { p: 'idle', d: 0.35, reset: true }],
 ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_spin', d: 0.4, fx: 'spin', hit: 2, lab: 'R · 旋锤' }, { p: 'gc_throw', d: 0.25, hit: 2, badge: '击飞' }, { p: 'idle', d: 0.35, reset: true }],
-ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_wind', d: 0.36, fx: 'avalanche', hit: 1, lab: 'E · 开天一锤', badge: '巨锤震晕' }, { p: 'gc_pull', d: 0.3, hit: 3, launch: true, badge: '回锤' }, { p: 'idle', d: 0.35, reset: true }],
+ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_wind', d: 0.25, lab: 'E · 开天一锤' }, { p: 'gc_sweep', d: 0.42, fx: 'skynet', hit: 3, launch: true, badge: '巨锤震晕' }, { p: 'idle', d: 0.35, reset: true }],
 esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '钩索腾云' }, { p: 'idle', d: 0.35, reset: true }]
 },
 qingfeng: {
@@ -15668,9 +15802,9 @@ esc: [
 tieshan: {
 light: [
 { p: 'idle', d: 0.12, reset: true },
-{ p: 'ts_lift', d: 0.1, lab: '普攻1' }, { p: 'ts_slam', d: 0.18, dx: 14, hit: 2 },
-{ p: 'ts_shoulder', d: 0.16, dx: 16, hit: 2 },
-{ p: 'hva', d: 0.28, dx: 18, hit: 3, launch: true },
+{ p: 'gs_l1s', d: 0.1, lab: '巨刃蓄势' }, { p: 'gs_l1a', d: 0.18, dx: 14, hit: 2 },
+{ p: 'l2s', d: 0.08 }, { p: 'l2a', d: 0.16, dx: 16, hit: 2 },
+{ p: 'ts_lift', d: 0.12 }, { p: 'ts_slam', d: 0.28, dx: 18, hit: 3, launch: true, badge: '巨刃崩地' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 charge: [
@@ -15714,10 +15848,9 @@ esc: [
 feiying: {
 light: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'l1s', d: 0.05, lab: '连刺' }, { p: 'l1a', d: 0.09, dx: 10, hit: 1 },
-{ p: 'l2s', d: 0.05 }, { p: 'l2a', d: 0.09, dx: 10, hit: 1 },
-{ p: 'lca', d: 0.09, dx: 10, hit: 1 },
-{ p: 'l3a', d: 0.18, dx: 14, hit: 2, launch: true },
+{ p: 'du_l1s', d: 0.05, lab: '双刃连舞' }, { p: 'du_l1a', d: 0.09, dx: 10, hit: 1 },
+{ p: 'du_l2s', d: 0.05 }, { p: 'du_l2a', d: 0.09, dx: 10, hit: 1 },
+{ p: 'fy_crouch', d: 0.07 }, { p: 'fy_xslash', d: 0.16, dx: 14, hit: 2, launch: true, badge: '十字双刃' },
 { p: 'idle', d: 0.3, reset: true }
 ],
 charge: [
@@ -15763,8 +15896,9 @@ esc: [
 liuyun: {
 light: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'l1a', d: 0.1, dx: 10, hit: 1 }, { p: 'l2a', d: 0.1, dx: 10, hit: 1 },
-{ p: 'ly_fanswipe', d: 0.22, dx: 16, hit: 2, launch: true },
+{ p: 'fn_l1s', d: 0.08, lab: '折扇点穴' }, { p: 'fn_l1a', d: 0.12, dx: 10, hit: 1 },
+{ p: 'ly_fanswipe', d: 0.1 }, { p: 'l2a', d: 0.12, dx: 10, hit: 1 },
+{ p: 'fn_l1s', d: 0.08 }, { p: 'ly_fanswipe', d: 0.22, dx: 16, hit: 2, launch: true, badge: '乘风回扇' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 charge: [
@@ -15807,11 +15941,12 @@ esc: [
 leiming: {
 light: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'lm_boxer', d: 0.05, lab: '六连击' }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
-{ p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
-{ p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
-{ p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
-{ p: 'lm_kick', d: 0.22, dx: 18, hit: 2, launch: true },
+{ p: 'lm_boxer', d: 0.05, lab: '快拳六连' }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+{ p: 'l2s', d: 0.04 }, { p: 'lm_jab', d: 0.06, dx: 5, hit: 1 },
+{ p: 'lm_boxer', d: 0.05 }, { p: 'lm_kick', d: 0.08, dx: 8, hit: 1 },
+{ p: 'lds', d: 0.05 }, { p: 'lm_kick', d: 0.08, dx: 8, hit: 1 },
+{ p: 'lm_boxer', d: 0.05 }, { p: 'lm_jab', d: 0.08, dx: 8, hit: 1 },
+{ p: 'lm_boxer', d: 0.06 }, { p: 'lm_kick', d: 0.22, dx: 18, hit: 2, launch: true, badge: '奔雷破空' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 charge: [
@@ -15855,8 +15990,9 @@ esc: [
 lingshuang: {
 light: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'ls_stance', d: 0.08, lab: '枪舞' }, { p: 'ls_thrust', d: 0.13, dx: 14, hit: 1 },
-{ p: 'ls_plant', d: 0.08 }, { p: 'ls_thrust', d: 0.22, dx: 18, hit: 2, launch: true },
+{ p: 'sp_l1s', d: 0.08, lab: '一线枪芒' }, { p: 'sp_l1a', d: 0.12, dx: 14, hit: 1 },
+{ p: 'sp_l2s', d: 0.08 }, { p: 'sp_l2a', d: 0.12, dx: 14, hit: 1 },
+{ p: 'ls_stance', d: 0.08 }, { p: 'ls_thrust', d: 0.22, dx: 22, hit: 2, launch: true, badge: '枪芒贯穿' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 charge: [
@@ -15901,8 +16037,9 @@ esc: [
 moyu: {
 light: [
 { p: 'idle', d: 0.1, reset: true },
-{ p: 'my_stroke', d: 0.1, lab: '挥毫' }, { p: 'my_paint', d: 0.14, dx: 12, hit: 1 },
-{ p: 'hva', d: 0.24, dx: 16, hit: 2, launch: true },
+{ p: 'my_stroke', d: 0.09, lab: '挥毫泼墨' }, { p: 'my_paint', d: 0.13, dx: 12, hit: 1 },
+{ p: 'l2s', d: 0.08 }, { p: 'my_paint', d: 0.14, dx: 14, hit: 1 },
+{ p: 'my_stroke', d: 0.09 }, { p: 'lda', d: 0.22, dx: 16, hit: 2, launch: true, badge: '墨染宣纸' },
 { p: 'idle', d: 0.35, reset: true }
 ],
 charge: [
@@ -16036,35 +16173,38 @@ esc: [
 const HERO_FULL_DEMO = {
 yuxiao: [
 { p: 'idle', d: 0.2, reset: true },
-{ p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'l3a', d: 0.2, dx: 14, hit: 2, badge: '音律 +3' },
+{ p: 'yx_play', d: 0.08, lab: '普攻' }, { p: 'yx_push', d: 0.12, dx: 10, hit: 1 },
+{ p: 'fn_l1s', d: 0.08 }, { p: 'lca', d: 0.18, dx: 14, hit: 2, badge: '音律 +3' },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'yx_play', d: 0.14, lab: 'Q · 清音' }, { p: 'yx_push', d: 0.36, fx: 'note', hit: 2, launch: true, badge: '三律齐鸣' },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'yx_play', d: 0.4, fx: 'mirror', hit: 1, lab: 'R · 回音壁', badge: '回音' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'yx_play', d: 0.18, lab: 'E · 广陵散' }, { p: 'yx_push', d: 0.4, fx: 'timestop', hit: 3, launch: true, badge: '曲终绝响' },
+{ p: 'yx_play', d: 0.2, lab: 'E · 广陵散' }, { p: 'yx_push', d: 0.45, fx: 'guangling', hit: 3, launch: true, badge: '曲终绝响' },
 { p: 'victory', d: 0.55, reset: true }
 ],
 zuixian: [
 { p: 'idle', d: 0.2, reset: true },
-{ p: 'lm_jab', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'zx_upper', d: 0.2, dx: 12, hit: 2, launch: true },
+{ p: 'zx_sway', d: 0.08, lab: '普攻' }, { p: 'lm_jab', d: 0.1, dx: 10, hit: 1 },
+{ p: 'zx_drink', d: 0.08 }, { p: 'zx_upper', d: 0.2, dx: 12, hit: 2, launch: true },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'zx_drink', d: 0.36, lab: 'Q · 豪饮', badge: '醉意 +50' }, { p: 'zx_breath', d: 0.34, fx: 'proj', hit: 2, badge: '酒火灼身' },
+{ p: 'zx_sway', d: 0.15, lab: 'Q · 亭中留客' }, { p: 'gc_wind', d: 0.32, fx: 'avalanche', hit: 2, badge: '飞亭砸落' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'zx_roll', d: 0.28, dx: 44, lab: 'R · 醉步' }, { p: 'zx_upper', d: 0.28, hit: 2, launch: true, badge: '醉打金刚' },
+{ p: 'zx_drink', d: 0.25, lab: 'R · 与民同乐' }, { p: 'gc_throw', d: 0.3, fx: 'proj', hit: 1, badge: '掷坛共饮' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'zx_roll', d: 0.18, lab: 'E · 八仙过海' }, { p: 'zx_upper', d: 0.4, fx: 'shadows', hit: 3, launch: true, badge: '醉意满盈' },
+{ p: 'zx_drink', d: 0.2, lab: 'E · 山水之间' }, { p: 'zx_upper', d: 0.48, fx: 'shanshui', hit: 8, launch: true, badge: '全屏墨染' },
 { p: 'victory', d: 0.55, reset: true }
 ],
 gouchen: [
 { p: 'idle', d: 0.2, reset: true },
-{ p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'gc_sweep', d: 0.2, dx: 14, hit: 2, launch: true },
+{ p: 'gc_wind', d: 0.08, lab: '普攻' }, { p: 'gc_throw', d: 0.12, dx: 12, hit: 1 },
+{ p: 'gc_pull', d: 0.08 }, { p: 'gc_sweep', d: 0.2, dx: 14, hit: 2, launch: true },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'gc_throw', d: 0.2, fx: 'proj', lab: 'Q · 飞锤' }, { p: 'gc_pull', d: 0.3, hit: 1, badge: '震魄' },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'gc_spin', d: 0.4, fx: 'spin', hit: 2, lab: 'R · 旋锤' }, { p: 'gc_throw', d: 0.25, hit: 2, badge: '击飞' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'gc_wind', d: 0.36, fx: 'avalanche', hit: 1, lab: 'E · 开天一锤', badge: '巨锤震晕' }, { p: 'gc_pull', d: 0.3, hit: 3, launch: true, badge: '回锤' },
+{ p: 'gc_wind', d: 0.25, lab: 'E · 开天一锤' }, { p: 'gc_sweep', d: 0.42, fx: 'skynet', hit: 3, launch: true, badge: '巨锤震晕' },
 { p: 'victory', d: 0.55, reset: true }
 ],
 qingfeng: [
@@ -16083,20 +16223,20 @@ qingfeng: [
 ],
 tieshan: [
 { p: 'idle', d: 0.2, reset: true },
-{ p: 'ts_lift', d: 0.1, lab: '普攻' }, { p: 'ts_slam', d: 0.18, dx: 12, hit: 2 },
-{ p: 'ts_shoulder', d: 0.15, dx: 14, hit: 2 }, { p: 'hva', d: 0.26, dx: 16, hit: 3, launch: true },
+{ p: 'gs_l1s', d: 0.1, lab: '普攻' }, { p: 'gs_l1a', d: 0.18, dx: 12, hit: 2 },
+{ p: 'l2s', d: 0.08 }, { p: 'ts_slam', d: 0.24, dx: 16, hit: 3, launch: true },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ts_lift', d: 0.2, lab: 'Q · 震地' }, { p: 'ts_slam', d: 0.35, hit: 2, fx: 'quake', launch: true, badge: '💥 撼地重震' },
 { p: 'idle', d: 0.25, reset: true },
-{ p: 'ts_shoulder', d: 0.14, lab: 'R · 铁壁冲' }, { p: 'ts_shoulder', d: 0.34, dx: 42, hit: 2, fx: 'ironwall', launch: true, badge: '💥 崩山破势' },
+{ p: 'ts_lift', d: 0.14, lab: 'R · 铁壁冲' }, { p: 'ts_shoulder', d: 0.34, dx: 42, hit: 2, fx: 'ironwall', launch: true, badge: '💥 崩山破势' },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ts_lift', d: 0.24, lab: 'E · 山崩' }, { p: 'ts_slam', d: 0.42, dx: 38, hit: 4, fx: 'avalanche', launch: true, badge: '💫 怒意回涌' },
 { p: 'victory', d: 0.6, reset: true }
 ],
 feiying: [
 { p: 'idle', d: 0.18, reset: true },
-{ p: 'l1s', d: 0.05, lab: '普攻' }, { p: 'l1a', d: 0.09, dx: 10, hit: 1 },
-{ p: 'l2a', d: 0.09, dx: 10, hit: 1 }, { p: 'l3a', d: 0.18, dx: 14, hit: 2, launch: true },
+{ p: 'du_l1s', d: 0.05, lab: '普攻' }, { p: 'du_l1a', d: 0.09, dx: 10, hit: 1 },
+{ p: 'du_l2s', d: 0.05 }, { p: 'fy_xslash', d: 0.18, dx: 14, hit: 2, launch: true },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'fy_seal', d: 0.14, lab: 'Q · 影遁' }, { p: 'fy_xslash', d: 0.3, dx: 50, hit: 2, fx: 'blink', badge: '🌑 背后绞杀' },
 { p: 'idle', d: 0.25, reset: true },
@@ -16108,7 +16248,7 @@ feiying: [
 ],
 liuyun: [
 { p: 'idle', d: 0.2, reset: true },
-{ p: 'l1a', d: 0.1, dx: 10, hit: 1, lab: '普攻' }, { p: 'l2a', d: 0.1, dx: 10, hit: 1 },
+{ p: 'fn_l1s', d: 0.08, lab: '普攻' }, { p: 'fn_l1a', d: 0.1, dx: 10, hit: 1 },
 { p: 'ly_fanswipe', d: 0.22, dx: 16, hit: 2, launch: true },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ly_fanswipe', d: 0.1, lab: 'Q · 风刃' }, { p: 'idle', d: 0.35, fx: 'windblade', hit: 1, badge: '🌪️ 狂风推搡' },
@@ -16133,8 +16273,9 @@ leiming: [
 ],
 lingshuang: [
 { p: 'idle', d: 0.2, reset: true },
-{ p: 'ls_stance', d: 0.08, lab: '普攻' }, { p: 'ls_thrust', d: 0.13, dx: 14, hit: 1 },
-{ p: 'ls_thrust', d: 0.2, dx: 16, hit: 2, launch: true },
+{ p: 'sp_l1s', d: 0.08, lab: '普攻' }, { p: 'sp_l1a', d: 0.13, dx: 14, hit: 1 },
+{ p: 'sp_l2a', d: 0.12, dx: 14, hit: 1 },
+{ p: 'ls_thrust', d: 0.2, dx: 18, hit: 2, launch: true },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'ls_stance', d: 0.2, dx: -22, lab: 'Q · 回马枪' }, { p: 'ls_thrust', d: 0.34, dx: 36, hit: 2, fx: 'backthrust', launch: true, badge: '枪尖穿心' },
 { p: 'idle', d: 0.25, reset: true },
@@ -16145,8 +16286,8 @@ lingshuang: [
 ],
 moyu: [
 { p: 'idle', d: 0.2, reset: true },
-{ p: 'my_stroke', d: 0.1, lab: '普攻' }, { p: 'my_paint', d: 0.13, dx: 12, hit: 1 },
-{ p: 'hva', d: 0.22, dx: 16, hit: 2, launch: true },
+{ p: 'my_stroke', d: 0.08, lab: '普攻' }, { p: 'my_paint', d: 0.13, dx: 12, hit: 1 },
+{ p: 'my_stroke', d: 0.08 }, { p: 'lda', d: 0.22, dx: 16, hit: 2, launch: true },
 { p: 'idle', d: 0.25, reset: true },
 { p: 'my_stroke', d: 0.16, lab: 'Q · 墨阵' }, { p: 'my_paint', d: 0.34, fx: 'inktrap', hit: 1, badge: '深墨禁锢' },
 { p: 'idle', d: 0.25, reset: true },
@@ -16245,25 +16386,31 @@ const sh = n => { const p = (n || '').split('·'); return p.length > 1 ? [p[0].t
 const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
 const tile = (icon, label, val, desc, cd, wide, moveKey, half) => {
 const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
-const mini = moveKey ? `<div class="card-mini-win"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
+const mType = (moveKey && mTypes[moveKey]) || null;
+const rng = (mType && mType.rng) || (moveKey === 'ult' ? 'screen' : moveKey === 'air' ? 'air' : 'melee');
+const mini = moveKey ? `<div class="card-mini-win" data-rng="${rng}"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
 const f = moveKey && fun[moveKey];
 return `<div class="tile t-m${half ? ' half' : wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${f ? `<div class="tf">“${f}”</div>` : ''}${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
 };
 const mTypes = HERO_MOVE_TYPES[c.id] || {};
-const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee' };
-const rType = mTypes.ranged || { label: '远程', icon: 'ranged', type: 'ranged' };
+const lType = mTypes.light || { label: '近战', type: 'melee', rng: 'melee' };
+const cType = mTypes.charge || { label: '近战', type: 'melee', rng: 'melee' };
+const aType = mTypes.air || { label: '近战', type: 'melee', rng: 'melee' };
+const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee', rng: 'melee' };
+const rType = mTypes.ranged || { label: '远程', icon: 'ranged', type: 'ranged', rng: 'ranged' };
+const uType = mTypes.ult || { label: '奥义', type: 'fullscreen', rng: 'screen' };
 const restr = HERO_RESTRAINTS_EXPLAIN[c.id] || { beatsWhy: `克 ${nm(c.beats)}`, weakWhy: `怕 ${nm(c.weakTo)}` };
 const qName = (skin && skinSkillName(skin, 1)) || S.name;
 const rName = (skin && skinSkillName(skin, 2)) || S2.name;
 const uName = (skin && skinUltName(skin)) || U.name;
 $id('cxMoves').innerHTML = [
 tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
-tile('light', '左键 · 连击 <small class="type-tag melee">近战</small>', sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
-tile('charge', '按住左键 · 蓄力 <small class="type-tag melee">近战</small>', `${dv(m.cs1.dmg)} / ${dv(m.cs2.dmg)}`, '满蓄破防 · 打倒', '', false, 'charge'),
-tile('air', '空中 <small class="type-tag melee">近战</small>', `${dv(m.a1.dmg)} / ${dv(m.a2.dmg)}`, '空中斩 · 下砸', '', false, 'air'),
+tile('light', `左键 · 连击 <small class="type-tag ${lType.type}">${lType.label}</small>`, sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
+tile('charge', `按住左键 · 蓄力 <small class="type-tag ${cType.type}">${cType.label}</small>`, `${dv(m.cs1.dmg)} / ${dv(m.cs2.dmg)}`, '满蓄破防 · 打倒', '', false, 'charge'),
+tile('air', `空中 <small class="type-tag ${aType.type}">${aType.label}</small>`, `${dv(m.a1.dmg)} / ${dv(m.a2.dmg)}`, '空中斩 · 下砸', '', false, 'air'),
 tile(qType.icon || 'skill', `Q · ${qName} <small class="type-tag ${qType.type}">${qType.label}</small>`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
 tile(rType.icon || 'ranged', `左键+右键 · ${rName} <small class="type-tag ${rType.type}">${rType.label}</small>`, sh(S2.name)[0], sh(S2.name)[1], `${S2.cd}s`, false, 'ranged'),
-tile('ult', `E · ${uName}`, sh(U.name)[0], `${sh(U.name)[1]}<div style="margin-top:4px;font-size:12px;color:#ffe8a3;line-height:1.35;opacity:0.95">${HERO_METER_EXPLAIN[c.id] || ''}</div>`, '气满', true, 'ult'),
+tile('ult', `E · ${uName} <small class="type-tag ${uType.type}">${uType.label}</small>`, sh(U.name)[0], `${sh(U.name)[1]}<div style="margin-top:4px;font-size:12px;color:#ffe8a3;line-height:1.35;opacity:0.95">${HERO_METER_EXPLAIN[c.id] || ''}</div>`, '气满', true, 'ult'),
 tile('esc', '右键 · 腾空闪', `${c.escCD || BREAK_CD}s`, '解除受制 · 落地前无敌', '', false, 'esc'),
 tile('chronicle', '宿命篇章 · 试炼与秘传', '', `<div style="font-size:12.5px;line-height:1.55;color:var(--dim);word-break:keep-all;overflow-wrap:break-word">${(() => {
 const chIdx = CHAPTERS.findIndex(chap => chap.boss === c.id);
@@ -19494,7 +19641,7 @@ const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s'
 ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
 ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],
 ['l1a', 0.12, 0], ['l2a', 0.12, 0], ['l1a', 0.12, 0], ['hva', 0.3, 0], ['victory', 0.9, 0]];
-const DEMO_SWING = new Set(['l1a', 'l2a', 'lca', 'lda', 'l3a', 'hva', 'a1a', 'a2a', 'spa', 'qf_thrust', 'fy_xslash', 'ts_slam', 'ts_shoulder', 'ls_thrust', 'ly_fanswipe', 'lm_jab', 'lm_kick', 'my_stroke', 'my_paint', 'yl_dive']);
+const DEMO_SWING = new Set(['l1a', 'l2a', 'lca', 'lda', 'l3a', 'hva', 'a1a', 'a2a', 'spa', 'qf_thrust', 'fy_xslash', 'ts_slam', 'ts_shoulder', 'ls_thrust', 'ly_fanswipe', 'lm_jab', 'lm_kick', 'my_stroke', 'my_paint', 'yl_dive', 'sp_l1a', 'sp_l2a', 'du_l1a', 'du_l2a', 'gs_l1a', 'fn_l1a', 'yx_push', 'zx_upper', 'gc_throw', 'gc_sweep']);
 class Puppet {
 constructor(i, skin) { this.set(i, skin); }
 playSeq(seq, lab, loop = false) {
@@ -19518,7 +19665,7 @@ const ch = CHARS[i];
 this.skin = skin === undefined ? mySkin(ch.id) : skin;
 Object.assign(this, { chIdx: i, ch, look: skinLook(i, this.skin), wlen: WEAPON_LEN[ch.look.weapon] || 54, size: ch.size || 1,
 j: {}, k: 0, t: 0, ox: 0, x: 0, y: 0, face: 1, rot: 0, trail: [], scarf: [], idx: 0, state: 'idle', flying: false,
-badges: [], projs: [], rings: [], fx: [], puddles: [], hitQ: [], dummyY: 0, dummyVy: 0, dummyShake: 0 });
+badges: [], projs: [], rings: [], fx: [], puddles: [], hitQ: [], dummyY: 0, dummyVy: 0, dummyShake: 0, flashT: 0, dimT: 0 });
 for (const k of JOINTS) this.j[k] = [...POSES.idle[k]]; this.j.sw = POSES.idle.sw;
 this.sk = skeleton(this);
 }
@@ -19559,28 +19706,33 @@ else if (st.fx === 'swordqi') { this.projs.push({ kind: 'swordqi', x: this.x + 3
 else if (st.fx === 'gale') { this.rings.push({ x: this.x + 20, y: -62, r: 18, life: 0.4 }, { x: 60, y: -62, r: 24, life: 0.4 }); this.fx.push({ x: this.x + 20, y: -62, vx: 700, vy: 0, life: 0.2, c: '120,230,255' }); }
 else if (st.fx === 'quake') { this.projs.push({ kind: 'quake', x: this.x + 20, y: 0, vx: 560, life: 0.45, col: '255,200,120' }); for (let k = 0; k < 6; k++) this.fx.push({ x: this.x + 20 + rand(-10, 10), y: 0, vx: rand(100, 300), vy: -rand(150, 350), life: 0.35, c: '200,160,100' }); }
 else if (st.fx === 'ironwall') { this.rings.push({ x: this.x + 10, y: -60, r: 30, life: 0.45 }); this.flashT = 0.15; }
-else if (st.fx === 'avalanche') { this.flashT = 0.25; this.rings.push({ x: 60, y: 0, r: 40, life: 0.5 }, { x: this.x, y: 0, r: 30, life: 0.4 }); for (let k = 0; k < 10; k++) this.fx.push({ x: 60 + rand(-20, 20), y: 0, vx: rand(-200, 200), vy: -rand(200, 450), life: 0.45, c: '220,180,120' }); }
+else if (st.fx === 'crescent') { this.flashT = 0.25; this.dimT = 0.6; this.rings.push({ x: this.x + 30, y: -60, r: 45, life: 0.45, col: this.look.slash }, { x: 60, y: -60, r: 32, life: 0.4, col: '255,255,255' }); }
+else if (st.fx === 'avalanche') { this.flashT = 0.3; this.dimT = 0.7; this.rings.push({ x: 60, y: 0, r: 50, life: 0.55, col: '255,210,140' }, { x: this.x, y: 0, r: 35, life: 0.45 }); for (let k = 0; k < 12; k++) this.fx.push({ x: 60 + rand(-25, 25), y: 0, vx: rand(-240, 240), vy: -rand(200, 480), life: 0.48, c: '220,180,120' }); }
 else if (st.fx === 'blink') { for (let k = 0; k < 10; k++) this.fx.push({ x: this.x, y: -60 + rand(-20, 20), vx: rand(-80, 80), vy: rand(-80, 80), life: 0.3, c: '40,30,50' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60, y: -62 + rand(-20, 20), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.3, c: '255,95,115' }); }
 else if (st.fx === 'kunai') { for (const a of [-0.15, 0, 0.15]) this.projs.push({ kind: 'kunai', x: this.x + 25, y: -65, vx: 1100 * Math.cos(a), vy: 1100 * Math.sin(a), life: 0.4, col: '200,200,220' }); }
-else if (st.fx === 'shadows') { this.flashT = 0.2; this.rings.push({ x: 60, y: -62, r: 35, life: 0.45 }); }
+else if (st.fx === 'shadows') { this.flashT = 0.28; this.dimT = 0.65; this.rings.push({ x: 60, y: -62, r: 42, life: 0.5, col: '255,60,80' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60 + rand(-20, 20), y: -60 + rand(-20, 20), vx: rand(-160, 160), vy: rand(-160, 160), life: 0.35, c: '255,80,100' }); }
 else if (st.fx === 'windblade') { this.projs.push({ kind: 'wind', x: this.x + 30, y: -62, vx: 1000, life: 0.45, col: '150,255,200' }); }
 else if (st.fx === 'windstep') { this.rings.push({ x: this.x + 20, y: -60, r: 32, life: 0.35 }); for (let k = 0; k < 8; k++) this.fx.push({ x: this.x + 10, y: -60 + rand(-20, 20), vx: rand(-150, 150), vy: rand(-100, 100), life: 0.25, c: '150,255,200' }); }
-else if (st.fx === 'tornado') { this.projs.push({ kind: 'tornado', x: this.x + 40, y: -70, vx: 380, life: 0.8, col: '150,255,200' }); }
+else if (st.fx === 'tornado') { this.dimT = 0.6; this.projs.push({ kind: 'tornado', x: this.x + 30, y: -70, vx: 360, life: 0.85, col: '150,255,200' }, { kind: 'tornado', x: this.x + 75, y: -70, vx: 420, life: 0.95, col: '180,255,230' }); }
 else if (st.fx === 'thunderfist') { this.rings.push({ x: this.x + 20, y: -62, r: 24, life: 0.35 }); for (let k = 0; k < 10; k++) this.fx.push({ x: this.x + rand(-10, 30), y: -62 + rand(-25, 25), vx: rand(-180, 180), vy: rand(-180, 180), life: 0.25, c: '255,230,120' }); }
 else if (st.fx === 'stomp') { this.projs.push({ kind: 'bolt', x: 60, y: -200, vx: 0, life: 0.35, col: '255,240,150' }); this.rings.push({ x: 60, y: 0, r: 25, life: 0.3 }); }
-else if (st.fx === 'thunder') { this.flashT = 0.25; this.projs.push({ kind: 'bolt', x: 60, y: -200, vx: 0, life: 0.45, col: '255,240,150' }); this.rings.push({ x: 60, y: 0, r: 35, life: 0.4 }); }
+else if (st.fx === 'thunder') { this.flashT = 0.32; this.dimT = 0.7; this.projs.push({ kind: 'bolt', x: 60, y: -220, vx: 0, life: 0.55, col: '255,240,150' }, { kind: 'bolt', x: 45, y: -220, vx: 0, life: 0.45, col: '255,255,200' }); this.rings.push({ x: 60, y: 0, r: 42, life: 0.45, col: '255,230,120' }); }
 else if (st.fx === 'backthrust') { this.rings.push({ x: 60, y: -68, r: 20, life: 0.3 }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60, y: -68, vx: rand(100, 300), vy: rand(-120, 120), life: 0.25, c: '170,220,255' }); }
 else if (st.fx === 'spin') { this.rings.push({ x: this.x + 25, y: -65, r: 28, life: 0.35 }); }
-else if (st.fx === 'timestop') { this.flashT = 0.3; this.rings.push({ x: 60, y: -65, r: 32, life: 0.4 }); }
+else if (st.fx === 'timestop') { this.flashT = 0.35; this.dimT = 0.75; this.rings.push({ x: 60, y: -65, r: 45, life: 0.45, col: '180,230,255' }, { x: this.x + 30, y: -65, r: 30, life: 0.35 }); }
 else if (st.fx === 'inktrap') { this.puddles.push({ x: 60, life: 2.5 }); }
 else if (st.fx === 'inkblob') { this.projs.push({ kind: 'inkblob', x: this.x + 25, y: -80, vx: 450, vy: -380, g: 1400, life: 0.6, col: '40,40,55' }); }
-else if (st.fx === 'inkdragon') { this.projs.push({ kind: 'dragon', x: this.x + 30, y: -65, vx: 620, life: 0.8, col: '25,25,35' }); this.flashT = 0.15; }
-else if (st.fx === 'mirror') { this.rings.push({ x: this.x + 25, y: -65, r: 24, life: 0.4 }); }
+else if (st.fx === 'inkdragon') { this.dimT = 0.8; this.projs.push({ kind: 'dragon', x: this.x + 30, y: -65, vx: 620, life: 0.85, col: '25,25,35' }); this.flashT = 0.25; this.rings.push({ x: 60, y: -65, r: 45, life: 0.5, col: '230,70,50' }); }
+else if (st.fx === 'mirror') { this.rings.push({ x: this.x + 25, y: -65, r: 24, life: 0.4, col: '215,195,255' }); }
 else if (st.fx === 'moonring') { this.projs.push({ kind: 'moonring', x: this.x + 30, y: -65, vx: 650, life: 0.7, col: '215,195,255' }); }
-else if (st.fx === 'moonflow') { this.rings.push({ x: this.x, y: -60, r: 35, life: 0.5 }); this.badges.push({ text: '+12', x: this.x, y: -105, life: 0.8, max: 0.8 }); }
-else if (st.fx === 'dive') { this.rings.push({ x: 60, y: -40, r: 22, life: 0.3 }); }
+else if (st.fx === 'moonflow') { this.dimT = 0.65; this.flashT = 0.25; this.rings.push({ x: this.x, y: -60, r: 48, life: 0.55, col: '215,195,255' }, { x: this.x, y: -60, r: 28, life: 0.45, col: '180,255,200' }); this.badges.push({ text: '+60', x: this.x, y: -105, life: 0.85, max: 0.85 }); }
+else if (st.fx === 'dive') { this.rings.push({ x: 60, y: -40, r: 22, life: 0.3, col: '140,190,255' }); }
 else if (st.fx === 'feather') { for (const dy of [-12, 0, 12]) this.projs.push({ kind: 'feather', x: this.x + 25, y: -68 + dy, vx: 950, life: 0.45, col: '160,205,255' }); }
-else if (st.fx === 'featherstorm') { this.flashT = 0.2; for (let k = 0; k < 6; k++) this.projs.push({ kind: 'feather', x: 60 + rand(-30, 30), y: -220 - k * 30, vx: rand(-30, 30), vy: 950, life: 0.4, col: '160,205,255' }); }
+else if (st.fx === 'featherstorm') { this.flashT = 0.25; this.dimT = 0.65; for (let k = 0; k < 8; k++) this.projs.push({ kind: 'feather', x: 60 + rand(-35, 35), y: -220 - k * 28, vx: rand(-30, 30), vy: 980, life: 0.42, col: '160,205,255' }); }
+else if (st.fx === 'shanshui') { this.flashT = 0.25; this.dimT = 0.8; this.rings.push({ x: 60, y: -60, r: 45, life: 0.55, col: '233,196,106' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60 + rand(-30, 30), y: -60 + rand(-30, 30), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.4, c: '20,20,30' }); }
+else if (st.fx === 'skynet') { this.flashT = 0.28; this.dimT = 0.7; this.rings.push({ x: 60, y: 0, r: 50, life: 0.55, col: '235,205,130' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60 + rand(-20, 20), y: 0, vx: rand(-150, 150), vy: -rand(120, 360), life: 0.4, c: '200,160,100' }); }
+else if (st.fx === 'note') { this.rings.push({ x: this.x + 25, y: -65, r: 24, life: 0.4, col: '150,240,200' }); this.projs.push({ kind: 'proj', x: this.x + 30, y: -65, vx: 800, life: 0.45, col: '150,240,200' }); }
+else if (st.fx === 'guangling') { this.flashT = 0.28; this.dimT = 0.7; this.rings.push({ x: 60, y: -65, r: 42, life: 0.5, col: '150,240,200' }, { x: 60, y: 0, r: 35, life: 0.45, col: '233,196,106' }); for (let k = 0; k < 6; k++) this.fx.push({ x: 60 + rand(-20, 20), y: -60 + rand(-20, 20), vx: rand(-140, 140), vy: rand(-140, 140), life: 0.35, c: '150,240,200' }); }
 }
 const st = steps[this.k], name = st.p, p = POSES[name] || POSES.idle, a = 1 - Math.exp(-(DEMO_SWING.has(name) ? 55 : 22) * dt);
 for (const k of JOINTS) { this.j[k][0] += (p[k][0] - this.j[k][0]) * a; this.j[k][1] += (p[k][1] - this.j[k][1]) * a; }
@@ -19628,10 +19780,15 @@ this.fx = this.fx.filter(f => f.life > 0);
 for (const r of this.rings) { r.r += 260 * dt; r.life -= dt; }
 this.rings = this.rings.filter(r => r.life > 0);
 this.flashT = Math.max(0, this.flashT - dt);
+this.dimT = Math.max(0, (this.dimT || 0) - dt);
 updateScarf(this);
 }
 draw(g, w, h, scale, hideLabel = false) {
 withCtx(g, () => {
+if (this.dimT > 0) {
+ctx.fillStyle = `rgba(3,3,10,${Math.min(0.65, this.dimT * 0.85)})`;
+ctx.fillRect(0, 0, w, h);
+}
 ctx.save(); ctx.translate(w / 2, h * 0.84); ctx.scale(scale, scale);
 for (const pud of this.puddles) {
 ctx.fillStyle = 'rgba(15,15,22,0.85)';
