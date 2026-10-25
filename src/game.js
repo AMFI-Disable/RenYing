@@ -1199,6 +1199,23 @@ const SFX = {
     sTone(240, 80, 0.16, 0.3 * p, 'sine');
     metal(1200, 0.18, 0.04 * p);
   },
+  // 武侠拟真呼吸吐纳与气势呼喝 (Procedural Martial Voice Shouts & Callouts)
+  voiceKiai(pitch = 1) {
+    if (!AC || muted) return;
+    sTone(220 * pitch, 140 * pitch, 0.16, 0.32, 'sawtooth');
+    sNoise(0.14, 1800, 600, 1.8, 0.22, 'bandpass');
+  },
+  voiceHurt(pitch = 1) {
+    if (!AC || muted) return;
+    sTone(160 * pitch, 85 * pitch, 0.18, 0.36, 'triangle');
+    sNoise(0.12, 1200, 300, 1.2, 0.28, 'lowpass');
+  },
+  voiceUlt(pitch = 1) {
+    if (!AC || muted) return;
+    sTone(130 * pitch, 280 * pitch, 0.35, 0.42, 'sawtooth');
+    metal(440 * pitch, 0.6, 0.15);
+    sNoise(0.35, 2400, 800, 2.4, 0.35, 'bandpass');
+  },
   // 武库的好皮肤：开出金一串往上走的铃音；非凡级命中“叮”一声，隐秘级命中“铮”一声
   sparkle() { [1318.5, 1661.2, 1975.5, 2637, 3322.4].forEach((f, i) => bellAt(f, i * 0.075, 1.2 - i * 0.1, 0.075)); },
   shine(p = 1) { bellAt(2093, 0, 0.55, 0.05 * p); bellAt(3136, 0.025, 0.4, 0.028 * p); },
@@ -2789,6 +2806,8 @@ function startSpecial(f) {
   flashA = 0.35; flashRGB = f.look.slash;
   const ultName = skinUltName(f) || ULTS[f.ch.ult].name;
   say(ultName, 0.9, 'super'); SFX.superOn();
+  const ultPitch = f.ch.stat && f.ch.stat.weight > 1.1 ? 0.8 : 1.15;
+  SFX.voiceUlt(ultPitch);
   if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
   ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
   if (M.mode === 'mayhem') {
@@ -3525,6 +3544,22 @@ function updateFighter(f, foe) {
     case 'launched': break;
     case 'held': if (f.t >= 1.25) toNeutral(f); break;
   }
+  // 试炼/爬塔持续状态衰减（流血、寒霜减速、墨爆判定）
+  if (f.bleedTicks > 0) {
+    f.bleedTimer = (f.bleedTimer || 0) + STEP;
+    if (f.bleedTimer >= 0.4) {
+      f.bleedTimer = 0;
+      f.bleedTicks--;
+      const bDmg = Math.max(1, Math.round((f.bleedDmg || 6)));
+      f.hp = Math.max(f.dummy ? 1 : 0, f.hp - bDmg);
+      addP({ type: 'dmg', text: `${bDmg}`, x: f.x + rand(-15, 15), y: f.y - 70, vx: rand(-20, 20), vy: -120, g: 200, life: 0.65, max: 0.65, s: 0.75, rgb: '255,80,80', edge: '200,30,30' });
+      for (let i = 0; i < 3; i++) addP({ type: 'spark', x: f.x, y: f.y - 50, vx: rand(-80, 80), vy: rand(-80, 50), life: 0.3, max: 0.3, rgb: '255,60,60' });
+    }
+  }
+  if (f.frostSlow > 0) {
+    f.frostSlow = Math.max(0, f.frostSlow - STEP);
+    if (Math.random() < 0.25) addP({ type: 'spark', x: f.x + rand(-20, 20), y: f.y - rand(20, 80), vx: 0, vy: rand(-15, 15), life: 0.3, max: 0.3, rgb: '160,230,255' });
+  }
   physics(f);
 }
 function physics(f) {
@@ -3559,11 +3594,30 @@ function physics(f) {
   if (f.x < WALL || f.x > STAGE_W - WALL) {
     const side = f.x < WALL ? -1 : 1;
     f.x = side < 0 ? WALL : STAGE_W - WALL;
-    if (f.state === 'launched' && Math.abs(f.vx) > 350) { f.vx *= -0.4; shake = Math.max(shake, 6); ring(f.x, f.y - 50, 50, '255,255,255', 0.3); SFX.thud(); }
+    if (f.state === 'launched' && Math.abs(f.vx) > 350) {
+      const isHardImpact = Math.abs(f.vx) > 480;
+      f.vx *= isHardImpact ? -0.55 : -0.4;
+      shake = Math.max(shake, isHardImpact ? 14 : 7);
+      ring(f.x, f.y - 50, isHardImpact ? 90 : 50, '255,255,255', 0.35);
+      SFX.thud();
+      if (isHardImpact && !f.wallBounced) {
+        f.wallBounced = true;
+        f.vy = Math.min(f.vy, -220); // 弹墙向上微微浮空，提供连段追击窗口
+        addP({ type: 'text', text: '撞墙震击', x: f.x + (side < 0 ? 40 : -40), y: f.y - 70, life: 0.6, max: 0.6, rgb: '255,220,160' });
+        if (typeof ARENA_SPLATTERS !== 'undefined') {
+          ARENA_SPLATTERS.push({ x: f.x, y: f.y - 50, rx: rand(18, 30), ry: rand(30, 55), rot: rand(-0.3, 0.3), life: 4.5, max: 4.5 });
+          if (ARENA_SPLATTERS.length > 20) ARENA_SPLATTERS.shift();
+        }
+        for (let i = 0; i < 7; i++) {
+          addP({ type: 'ink', x: f.x, y: f.y - rand(20, 80), vx: -side * rand(60, 220), vy: rand(-120, 40), g: 600, life: 0.5, max: 0.5, r: rand(2.5, 4.5), rgb: '18,18,24' });
+        }
+      }
+    }
     else if (Math.sign(f.vx) === side) f.vx = 0;
   }
 }
 function onLand(f) {
+  f.wallBounced = false;
   if (f.airRecover) {
     f.airRecover = false;
     f.state = 'getup'; f.t = 0.15; f.vx *= 0.2; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
@@ -3631,7 +3685,7 @@ function drawHitboxOverlay(fighters) {
   ctx.save();
   for (const f of fighters) {
     if (!f || f.hidden || f.hp <= 0) continue;
-    // 1. 受击框 (Hurtbox) - 绿色
+    // 1. 受击框 (Hurtbox) - 绿色 / 无敌蓝色
     const hu = hurtbox(f);
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = f.invul > 0 ? 'rgba(120, 200, 255, 0.85)' : 'rgba(80, 240, 120, 0.85)';
@@ -3639,29 +3693,39 @@ function drawHitboxOverlay(fighters) {
     ctx.fillRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
     ctx.strokeRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
 
-    // 2. 攻击框 (Hitbox) - 红色/金色
+    // 2. 攻击框 (Hitbox) - 前摇黄色 / 活跃帧红色 / 后摇收招蓝色
     if (f.state === 'attack' && f.move && f.move.box) {
-      const su = f.move.su || 0.04, ac = f.move.ac || 0.08;
+      const su = f.move.su || 0.04, ac = f.move.ac || 0.08, rec = (f.move.rec !== undefined ? f.move.rec : 0.18);
+      const isStart = f.t < su;
       const isAct = f.t >= su && f.t < su + ac;
+      const isRec = f.t >= su + ac;
       const hb = hitbox(f, f.move.box);
-      ctx.strokeStyle = isAct ? 'rgba(255, 45, 65, 0.95)' : 'rgba(255, 180, 50, 0.55)';
-      ctx.fillStyle = isAct ? 'rgba(255, 45, 65, 0.28)' : 'rgba(255, 180, 50, 0.10)';
+      ctx.strokeStyle = isAct ? 'rgba(255, 45, 65, 0.95)' : isStart ? 'rgba(255, 195, 50, 0.85)' : 'rgba(80, 160, 255, 0.75)';
+      ctx.fillStyle = isAct ? 'rgba(255, 45, 65, 0.28)' : isStart ? 'rgba(255, 195, 50, 0.12)' : 'rgba(80, 160, 255, 0.12)';
       ctx.fillRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
       ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
 
-      // 实时帧数据显示
+      // 实时帧数据显示与阶段标识
       ctx.font = 'bold 11px monospace';
-      ctx.fillStyle = isAct ? '#ff4055' : '#ffc040';
+      ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
       ctx.textAlign = 'center';
-      const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) * 60)}F]` : `前摇 [${Math.round(f.t * 60)}/${Math.round(su * 60)}F]`;
+      const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) * 60)}/${Math.round(ac * 60)}F]` : isStart ? `前摇 [${Math.round(f.t * 60)}/${Math.round(su * 60)}F]` : `收招 [${Math.round((f.t - su - ac) * 60)}/${Math.round(rec * 60)}F]`;
       ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
     }
 
-    // 角色状态与硬直显示
-    ctx.font = '10px sans-serif';
-    ctx.fillStyle = '#efe8d8';
+    // 角色状态、硬直与帧优势实时透视 (Frame Advantage)
+    ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
-    const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${(f.stun * 60).toFixed(0)}F)` : ''}`;
+    let advText = '';
+    const other = foeOf ? foeOf(f) : null;
+    if (other && f.state === 'attack' && f.move) {
+      const remainingAtk = Math.max(0, (f.move.su || 0.04) + (f.move.ac || 0.08) + (f.move.rec || 0.18) - f.t);
+      const foeStun = other.stun || 0;
+      const advFrames = Math.round((foeStun - remainingAtk) * 60);
+      advText = advFrames >= 0 ? ` +${advFrames}F 优势` : ` ${advFrames}F 劣势`;
+    }
+    const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${(f.stun * 60).toFixed(0)}F)` : ''}${advText}`;
+    ctx.fillStyle = advText.includes('+') ? '#70ff90' : advText.includes('-') ? '#ff7070' : '#efe8d8';
     ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
   }
   ctx.restore();
@@ -3959,6 +4023,35 @@ function applyHit(att, def, m, pt) {
     if (att.idx === 0 && (M.towerPerks || []).includes('air_burst') && (def.y < -2 || def.state === 'launched')) {
       dmg *= 1.35;
     }
+    // 四系元素秘卷扩展 (Frost, Bleed, Ink, Thunder)
+    if (att.idx === 0 && (M.towerPerks || []).includes('frost_lock') && !m.isProj) {
+      def.frostSlow = 2.5;
+      def.frostHits = (def.frostHits || 0) + 1;
+      if (def.frostHits >= 3) {
+        def.frostHits = 0;
+        def.state = 'hitstun'; def.t = 0; def.stun = 0.45; def.rooted = true;
+        ring(def.x, def.y - 60, 120, '140,220,255', 0.45);
+        SFX.frostHit(1.3);
+        addP({ type: 'text', text: '❄️ 极寒冻结', x: def.x, y: def.y - 120, life: 0.9, max: 0.9, rgb: '140,220,255' });
+      }
+    }
+    if (att.idx === 0 && (M.towerPerks || []).includes('bleed_rend') && (isCounter || ev.big || Math.random() < 0.4)) {
+      def.bleedTicks = 4;
+      def.bleedDmg = Math.max(4, Math.round(dmg * 0.12));
+      addP({ type: 'text', text: '🩸 裂伤流血', x: def.x, y: def.y - 95, life: 0.7, max: 0.7, rgb: '255,80,80' });
+    }
+    if (att.idx === 0 && (M.towerPerks || []).includes('ink_resonance') && !m.isProj) {
+      for (let i = 0; i < 4; i++) {
+        addP({ type: 'ink', x: def.x + rand(-25, 25), y: def.y - rand(20, 80), vx: rand(-120, 120), vy: rand(-150, 50), g: 600, life: 0.6, max: 0.6, r: rand(3, 6), rgb: '15,15,22' });
+      }
+      dmg *= 1.15;
+    }
+    if (att.idx === 0 && (M.towerPerks || []).includes('storm_wrath') && !m.isProj) {
+      SFX.thunderHit(1.1);
+      m = { ...m, kb: [m.kb[0] * 1.35, m.kb[1] * 1.25] };
+      ring(pt[0], pt[1], 110, '255,235,110', 0.35);
+      addP({ type: 'text', text: '⚡ 怒雷破势', x: pt[0], y: pt[1] - 40, life: 0.6, max: 0.6, rgb: '255,235,110' });
+    }
     if (def.idx === 0 && def.hp - dmg <= 0 && (M.towerPerks || []).includes('golden_bell') && def.goldenBellReady !== false) {
       def.hp = 1; def.invul = 1.5; def.goldenBellReady = false;
       ring(def.x, def.y - 60, 200, '255,215,0', 0.6);
@@ -4158,10 +4251,14 @@ function hitVisual(ev, quiet) {
     }
   }
   if (ev.big) { slashLine(ev.x, ev.y, rand(-0.35, 0.35), att.look.slash); flashA = Math.max(flashA, 0.35); flashRGB = att.look.slash; }
+  if (ev.dd && ev.dd >= 15 && !ev.blk) {
+    const pitch = att && att.ch && att.ch.stat && att.ch.stat.weight > 1.1 ? 0.85 : 1.1;
+    if (Math.random() < 0.45) SFX.voiceHurt(pitch);
+  }
   if (ev.ko) {
     slowmo = 1.3; hitstop = 0.28; shake = 26; flashA = 0.7; flashRGB = '255,255,255';
     camImpact(ev.x, ev.y, 0.42, 1.4);
-    say('斩', 1.6, 'ko'); SFX.ko();
+    say('斩', 1.6, 'ko'); SFX.ko(); SFX.voiceHurt(0.75);
   }
 }
 function pushApart() {
@@ -4919,6 +5016,7 @@ function drawInkClouds(gy, sc) {
   }
   ctx.restore();
 }
+const ARENA_SPLATTERS = [];
 function drawBackground(sc) {
   const T = SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'];
   const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -5033,6 +5131,21 @@ function drawGround() {
   // 石灯笼
   const lanternXs = is2v2() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
   for (const lx of lanternXs) lantern(lx, -2);
+  // 场地边界墨痕重击血迹与刀痕飞溅 (Arena Boundary Splatters)
+  if (ARENA_SPLATTERS && ARENA_SPLATTERS.length) {
+    for (let i = ARENA_SPLATTERS.length - 1; i >= 0; i--) {
+      const sp = ARENA_SPLATTERS[i];
+      sp.life -= STEP;
+      if (sp.life <= 0) { ARENA_SPLATTERS.splice(i, 1); continue; }
+      const al = clamp(sp.life / sp.max, 0, 1);
+      ctx.save();
+      ctx.fillStyle = `rgba(18,18,25,${0.65 * al})`;
+      ctx.beginPath();
+      ctx.ellipse(sp.x, sp.y, sp.rx, sp.ry, sp.rot, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
   // 地面重击裂痕 / 焦痕
   if (ARENA2V2.scars && ARENA2V2.scars.length) {
     for (let i = ARENA2V2.scars.length - 1; i >= 0; i--) {
@@ -10445,6 +10558,14 @@ const SCENES = {
   gc_underworld: { sky: ['#080312', '#1a0a32', '#3c1468', '#18082c'], orb: 'rift', orbC: '185,105,255', mist: '175,95,245', mtn: ['#200b3a', '#120522'], bam: ['#0c0318', '#06010e'], wx: 'spark', wxC: '190,115,255', hit: 'crescent', hitC: '185,105,255', stars: 0.65, rays: true },
 };
 const SCN_DEF = { mtn: ['#241f48', '#1a1636'], bam: ['#110f26', '#0b0a1c'], mist: '190,160,220' };
+// 默认擂台动态天气环境变体（清晨竹风、暮色残阳、风雨雷霆、静谧竹夜）
+const DEFAULT_WEATHER_THEMES = [
+  null, // 默认经典月夜
+  { sky: ['#0d141e', '#1c2836', '#2a3c4e', '#1a2430'], orb: 'moon', orbC: '210,235,245', mist: '160,195,215', mtn: ['#1e2c38', '#141e26'], bam: ['#0f1c16', '#08120e'], wx: 'rain', wxC: '190,225,245', hit: 'ripple', hitC: '170,220,235', storm: true },
+  { sky: ['#180c14', '#3c1a24', '#682e2c', '#301820'], orb: 'moon', orbC: '255,200,160', mist: '235,160,140', mtn: ['#321a22', '#221018'], bam: ['#180c10', '#100608'], wx: 'leaf', wxC: '255,160,110', hit: 'leaves', hitC: '240,160,120' },
+  { sky: ['#080c12', '#14202a', '#223440', '#16222a'], orb: 'moon', orbC: '220,240,250', mist: '150,180,200', mtn: ['#1c2832', '#121c24'], bam: ['#0a1812', '#06100c'], wx: 'petal', wxC: '230,240,245', hit: 'swirl', hitC: '180,220,240' }
+];
+let defaultWeatherIdx = 0;
 const WX_RISE = { ember: 1, gold: 1, lava: 1 };
 let SCN = null;   // 这一场的场景（null 是默认的月夜竹林）
 function sceneOf(k) { const T = k && SCENES[k], S = k && SKINS[k]; return T && S ? { ...T, key: k, legend: S.rarity === 'legend', name: S.name } : null; }
@@ -10456,6 +10577,10 @@ function pickScene() {
     const f = [A, B][i]; if (!f || f.dummy) continue;
     const T = sceneOf(f.skinKey);
     if (T && (!SCN || (T.legend && !SCN.legend))) SCN = T;
+  }
+  if (!SCN) {
+    defaultWeatherIdx = (defaultWeatherIdx + 1) % DEFAULT_WEATHER_THEMES.length;
+    SCN = DEFAULT_WEATHER_THEMES[defaultWeatherIdx];
   }
 }
 // ---------- 小图形：天气和命中碎片 ----------
@@ -12335,6 +12460,30 @@ const TOWER_PERKS = {
     name: '「凌霄御风」',
     icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.2 8.5 22 9.4 17 14.2 18.3 21 12 17.6 5.7 21 7 14.2 2 9.4 8.8 8.5"/></svg>',
     desc: '腾空闪滞空时间延长至 1.5 秒，且滞空期间发动下坠斩必定暴击破防！'
+  },
+  frost_lock: {
+    id: 'frost_lock',
+    name: '「玄霜凝骨」',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#8ae5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>',
+    desc: '斩击附带刺骨寒气，减速敌人脚步；每连续命中 3 击引发极寒冻结 0.45 秒！'
+  },
+  bleed_rend: {
+    id: 'bleed_rend',
+    name: '「断脉破罡」',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ff5555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13l3 3 5-5"/></svg>',
+    desc: '暴击与破招撕裂敌方脉络，使其陷入 4 段持续流血撕裂伤害。'
+  },
+  ink_resonance: {
+    id: 'ink_resonance',
+    name: '「墨韵共鸣」',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#a0a5b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 10 10 0 0 0 0-20"/></svg>',
+    desc: '刀刃激荡水墨飞溅，所有近战斩击伤害额外提升 15% 并在地面激荡墨浪！'
+  },
+  storm_wrath: {
+    id: 'storm_wrath',
+    name: '「天煞狂雷」',
+    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ffd040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    desc: '近身搏杀引九天怒雷灌注，击退与挑飞冲击力提升 35% 并伴随轰鸣雷爆！'
   }
 };
 
