@@ -2466,8 +2466,7 @@ function startRound() {
     if (M.round === 1) {
       creditT = CREDIT; creditPending = true; metal(880, 1.8, 0.05);
     } else {
-      const titles = ['', '先锋战', '中坚战', '大将决战'];
-      const txt = M.mode === 'tag3' ? (titles[M.round] || `第${CN[M.round] || M.round}局`) : `第${CN[M.round] || M.round}回合`;
+      const txt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局` : `第${CN[M.round] || M.round}回合`;
       say(txt, 1.1); SFX.gong();
     }
   }
@@ -4795,7 +4794,7 @@ function frameBody(now) {
       creditT -= real;
       if (creditT <= 0 && creditPending) {
         creditPending = false;
-        const rTxt = M.mode === 'tag3' ? '先锋战 · 开战！' : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : M.mode === 'watch2v2' && M.round === 1 ? '2v2 组队 · 开战！' : `第${CN[M.round] || M.round}回合`));
+        const rTxt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : M.mode === 'watch2v2' && M.round === 1 ? '2v2 组队 · 开战！' : `第${CN[M.round] || M.round}回合`));
         say(rTxt, 1.1);
         SFX.gong();
       }
@@ -10082,11 +10081,32 @@ function renderCodex() {
   const skScn = skMeta && SCENES[skin];
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨专属全景天象与奥义特效' : '🌟专属灵光天色与命中特效'}）</span>` : '';
   $id('cxSkinT').innerHTML = (cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤装束') + skDesc;
-  $id('cxSkins').innerHTML = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>` + skList.map(([k, v]) => {
+
+  const C_CORE = window.ArmoryCore;
+  const isWukuKey = k => (C_CORE && C_CORE.CS_KEYS && C_CORE.CS_KEYS.includes(k)) || (SKINS[k] && SKINS[k].cs);
+  const bdSkins = skList.filter(([k]) => !isWukuKey(k)).sort((a, b) => skinWeight(a[0]) - skinWeight(b[0]));
+  const wkSkins = skList.filter(([k]) => isWukuKey(k)).sort((a, b) => skinWeight(a[0]) - skinWeight(b[0]));
+
+  const renderSkinBtn = ([k, v]) => {
     const has = skinOwned(k), g = skinGrade(k);
     const lockHint = v.exclusive ? ' · 青锋行 / 武库' : ' · 武库';
     return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
-  }).join('');
+  };
+
+  const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
+  const bdHtml = defaultBtn + bdSkins.map(renderSkinBtn).join('');
+  const wkHtml = wkSkins.length ? wkSkins.map(renderSkinBtn).join('') : `<span class="cx-skin-empty">暂无武库饰品</span>`;
+
+  $id('cxSkins').innerHTML = `
+    <div class="cx-skin-row">
+      <div class="cx-skin-row-hd"><span class="cx-skin-tag tag-bd">绑定装束</span></div>
+      <div class="cx-skin-row-btns">${bdHtml}</div>
+    </div>
+    <div class="cx-skin-row">
+      <div class="cx-skin-row-hd"><span class="cx-skin-tag tag-wk">武库饰品</span></div>
+      <div class="cx-skin-row-btns">${wkHtml}</div>
+    </div>
+  `;
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
   const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10) / 10;   // 普攻、蓄力、空中按强度调整后的数
@@ -10295,7 +10315,25 @@ const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,
 function skinGrade(k) {
   const S = SKINS[k], C = window.ArmoryCore, it = S && C && C.ITEM[k];
   if (it) return { t: it.tier, n: C.TIER[it.tier].n, c: C.TIER[it.tier].c };
+  if (k === 'qf_qfx') return { t: 'gold', n: '★ 非凡', c: '228,174,57' };
   return { t: S ? S.rarity : 'rare', n: RAR_NAME[S && S.rarity] || '稀有', c: RAR_RGB[S && S.rarity] || RAR_RGB.rare };
+}
+// 统一品质综合权重：用于由低到高（最差到最好）排序及自动穿戴最高品质
+// 军规级 10 -> 受限/稀有 20 -> 保密/普通传说 30 -> 隐秘/顶级传说 40 -> ★ 非凡卓越 50
+function skinWeight(k) {
+  if (!k) return 0;
+  const C = window.ArmoryCore, it = C && C.ITEM && C.ITEM[k];
+  if (it) {
+    const tm = { mil: 10, res: 20, cla: 30, cov: 40, gold: 50 };
+    return tm[it.tier] || 10;
+  }
+  const S = SKINS[k];
+  if (S) {
+    if (k === 'qf_qfx') return 50;
+    if (S.rarity === 'legend') return 35;
+    if (S.rarity === 'rare') return 20;
+  }
+  return 10;
 }
 const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
 function getWeeklyRotation() {
@@ -10683,10 +10721,17 @@ function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start &
 function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
 // 限免活动只包括原来的皮肤；武库里的饰品（cs）要自己开出来或买到
 function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
-// 自动穿最好的皮肤：没手动选过的角色，穿已拥有里稀有度最高的那款（手动点过“默认”就记成空，不再自动换）
+// 自动穿最好的皮肤：没手动选过的角色，穿已拥有里品质综合权重最高的那款（统合绑定传说/非凡与武库顶级饰品）
 function bestSkin(id) {
-  let best = '', br = 0;
-  for (const [k, v] of Object.entries(SKINS)) { if (v.char !== id || !skinOwned(k)) continue; const r = v.rarity === 'legend' ? 2 : 1; if (r > br) { br = r; best = k; } }
+  let best = '', bw = 0;
+  for (const [k, v] of Object.entries(SKINS)) {
+    if (v.char !== id || !skinOwned(k)) continue;
+    const w = skinWeight(k);
+    if (w > bw) {
+      bw = w;
+      best = k;
+    }
+  }
   return best;
 }
 function mySkin(id) {
