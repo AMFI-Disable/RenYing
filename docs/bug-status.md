@@ -14,7 +14,7 @@
 | :--- | ---: | ---: | ---: | ---: | ---: |
 | **Fixed on this branch** | 1 | 3 | 2 | 1 | **7** |
 | **Superseded upstream** | 2 | 4 | 1 | 0 | **7** |
-| **Still open** | 0 | 0 | 2 | 3 | **5** |
+| **Still open** | 0 | 0 | 2 | 2 | **4** |
 
 Two rounds of work landed here. The first shipped against the old Firestore client and was merged as PR #2; when
 main's history was replaced by a single commit with the Worker rewrite, that work was re-applied to the new code
@@ -129,17 +129,19 @@ information is now available; surfacing it is a two-line change in the import ha
 Correct for "never lose progress", wrong for a loss that only exists on one side: merging two devices can raise the
 loss count without a corresponding win. The rating path is server-owned, so this only affects the displayed record.
 
-**O5 — The combat suite is flaky.**
-`tools/combat-test.mjs --sim` fails intermittently on "2v2 Single KO Survival: Surviving teammate did not receive
-last stand meter buff". Reproduced 2/3 runs on `903dfaa` and about 1/3 here, so it predates this work and is
-unrelated to the cloud changes.
+**Fixed during this pass — the combat suite flake (was O5).**
+`tools/combat-test.mjs --sim` used to fail intermittently on "2v2 Single KO Survival: Surviving teammate did not
+receive last stand meter buff" (reproduced 2/3 runs on `903dfaa`, so it predates this branch). It was a test bug
+with two causes, both now fixed, and the suite passes 10/10 consecutive runs:
 
-What the failure actually is: the check kills one fighter with a single `applyHit()` and immediately asserts that
-the survivor has `meter === 100`. Instrumenting it shows the survivor is sometimes `hidden` at that moment, with
-the round already back in `intro` and the victim's HP restored — i.e. the capture happened while the engine was
-between rounds, not mid-fight. A benched fighter cannot receive the buff, so the assertion is really testing
-timing. The fix belongs in the test (drive the match into a stable `fight` state, then assert), not in the game;
-two attempts at that from here were inconclusive and were reverted rather than left half-done.
+- `M.flags['buff_<idx>']` is per-match state, so the first mode that triggered the buff left the flag set and the
+  following modes short-circuited the guard — the check silently passed when it should have exercised the mechanic.
+- The check read `D.meter` **after** `step()`, by which time the AI had already spent the meter it was granted, and
+  occasionally the whole round had restarted. The assertion now clears the flag per mode and reads the meter
+  immediately after `applyHit()`, before the engine gets a frame.
+
+The game behaviour was correct all along: the last-stand buff fires once per fighter per match and grants full
+meter, which the AI is free to spend on the next frame.
 
 ---
 
@@ -164,7 +166,7 @@ Full local run:
 python3 tools/build.py --check
 node tools/cloud-test.mjs          # 20 checks
 node tools/econ-test.mjs           # 396 checks
-node tools/combat-test.mjs --sim   # 22 checks (flaky, see O5)
+node tools/combat-test.mjs --sim   # 22 checks
 ```
 
 ---

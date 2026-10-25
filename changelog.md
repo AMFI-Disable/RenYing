@@ -511,6 +511,9 @@ All notable changes, features, and architectural capabilities of this project ar
 - **Cloud Save Client Tests (`tools/cloud-test.mjs`, `.github/workflows/ci.yml`, `docs/bug-status.md`)**:
   - Added a dependency-free Node suite that runs `src/cloud.js` against a fake Worker and covers twenty behaviours: per-account save isolation, a pending save that must not follow an account switch, a 4xx refusal that must not become a retry loop (while 429 still retries), non-Latin-1 passwords for local accounts, and export signatures over the whole profile.
   - CI now runs it as **Cloud Save Client Tests**, and `docs/bug-status.md` records what is fixed, what the Worker rewrite superseded, and what is still open.
+- **Flaky 2v2 Last-Stand Check (`tools/combat-test.mjs`)**:
+  - The "Single KO Survival" check failed intermittently because it read the survivor's meter after `step()`, by which point the AI had already spent the meter the buff granted, and because the once-per-match buff flag leaked between the three modes it loops over.
+  - It now clears that flag per mode and samples the meter immediately after `applyHit()`. The suite passes 10/10 consecutive runs; the game behaviour it covers was correct.
 - **Calibrated Hero Stat & Tooltip Alignment (`src/game.js`, `src/ai.js`, `tools/combat-test.mjs`)**:
   - Aligned hero stat definitions (`CHARS.stat`), move damages, and codex skill descriptions across all 12 characters to exact calibrated combat values, embedding calibrated base damages directly and standardizing runtime multiplier hacks in `BAL` to 1.0.
   - Expanded `tools/combat-test.mjs` test assertions to verify character roster stat consistency and tooltip accuracy.

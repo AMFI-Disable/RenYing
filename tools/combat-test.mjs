@@ -563,6 +563,11 @@ const testSuite = [
 
         M.phase = 'fight';
         M.wins = [0, 0];
+        // 背水加成每个 fighter 每场只给一次，所以先清掉上一轮模式留下的标记；
+        // 另外加成给的是"立刻满怒气"，AI 下一步就可能把怒气放掉，所以要在这之前读。
+        M.flags = M.flags || {};
+        delete M.flags['buff_' + D.idx];
+        D.meter = 0;
         // Team 1: Kill B only, D is still healthy
         B.hp = 0;
         D.hp = 250;
@@ -571,6 +576,8 @@ const testSuite = [
 
         // Simulate combat hit triggering on B
         applyHit(A, B, { dmg: 50, kb: [200, -200], stun: 0.3 }, [B.x, B.y - 40]);
+        const buffed = !!M.flags['buff_' + D.idx];
+        const meterNow = D.meter;   // step() 之前读：AI 可能马上把怒气用在绝招上
         step();
 
         // Must remain in fight phase because teammate D is alive
@@ -578,9 +585,9 @@ const testSuite = [
           toMenu();
           return { pass: false, error: 'Premature KO triggered when teammate was still alive in ' + mode + ': phase=' + M.phase };
         }
-        if (D.meter !== 100 || !M.flags['buff_' + D.idx]) {
+        if (!buffed || meterNow !== 100) {
           toMenu();
-          return { pass: false, error: 'Surviving teammate did not receive last stand meter buff in ' + mode };
+          return { pass: false, error: 'Surviving teammate did not receive last stand meter buff in ' + mode + ': meter=' + meterNow + ', buff=' + buffed };
         }
 
         // Now kill the remaining teammate D
