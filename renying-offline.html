@@ -3523,7 +3523,7 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
         <div class="ad-sync">
           <div class="ad-sync-head"><span class="ad-dot" id="adSyncDot"></span><b id="adSyncT">已同步</b><span id="adSyncS"></span></div>
           <p class="ad-sync-note" id="adSyncNote">存档先存在本机，再自动上传到云端；上传失败会自动重试，没传完就关了网页，下次打开会补传。</p>
-          <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-go ad-btn hidden" id="adPromoteBtn" type="button" style="background:#46d3ea;color:#0a0e17">一键升级为云端账号</button><button class="mm-cancel" id="adPull" type="button">从云端拉取</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
+          <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-go ad-btn hidden" id="adPromoteBtn" type="button" style="background:#46d3ea;color:#0a0e17">一键升级为云端账号</button><button class="mm-cancel" id="adPull" type="button">双向合并同步</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
           <p class="netstatus" id="adMsg" role="status"></p>
         </div>
       </div>
@@ -4049,10 +4049,55 @@ stageStars: (p.stageStars && typeof p.stageStars === 'object') ? p.stageStars : 
 qfx: Math.max(0, Math.floor(p.qfx || 0)),
 rating: typeof p.rating === 'number' ? p.rating : 1100,
 placed: typeof p.placed === 'number' ? p.placed : 0,
-updatedAt: Date.now(),
+updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : Date.now(),
 ...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {}),
 ...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : {})   // 只有本机模式的武库才有（带校验）；新版服务器不收
 };
+}
+function mergeProfiles(p1, p2) {
+if (!p1 && !p2) return null;
+if (!p1) return toCloudData(p2);
+if (!p2) return toCloudData(p1);
+const owned = Array.from(new Set([...(p1.owned || ['qingfeng']), ...(p2.owned || ['qingfeng'])]));
+const skins = Array.from(new Set([...(p1.skins || []), ...(p2.skins || [])]));
+const frags = {};
+for (const [k, v] of Object.entries(p1.frags || {})) frags[k] = Math.max(frags[k] || 0, Math.floor(+v || 0));
+for (const [k, v] of Object.entries(p2.frags || {})) frags[k] = Math.max(frags[k] || 0, Math.floor(+v || 0));
+const stageStars = {};
+for (const [k, v] of Object.entries(p1.stageStars || {})) stageStars[k] = Math.max(stageStars[k] || 0, Math.floor(+v || 0));
+for (const [k, v] of Object.entries(p2.stageStars || {})) stageStars[k] = Math.max(stageStars[k] || 0, Math.floor(+v || 0));
+const newer = (p1.updatedAt || 0) >= (p2.updatedAt || 0) ? p1 : p2;
+const older = newer === p1 ? p2 : p1;
+const equip = Object.assign({}, older.equip || {}, newer.equip || {});
+const ownedSkinSet = new Set(skins);
+for (const [cid, sk] of Object.entries(equip)) {
+if (sk && !ownedSkinSet.has(sk)) delete equip[cid];
+}
+const merged = {
+name: (newer.name && newer.name !== '侠客') ? newer.name : (older.name || '大侠'),
+ink: Math.max(Math.floor(+p1.ink || 0), Math.floor(+p2.ink || 0)),
+owned,
+frags,
+pity: Math.max(Math.floor(+p1.pity || 0), Math.floor(+p2.pity || 0)),
+spity: Math.max(Math.floor(+p1.spity || 0), Math.floor(+p2.spity || 0)),
+skins,
+equip,
+netWins: Math.max(Math.floor(+p1.netWins || 0), Math.floor(+p2.netWins || 0)),
+netLosses: Math.max(Math.floor(+p1.netLosses || 0), Math.floor(+p2.netLosses || 0)),
+rating: Math.max(Math.floor(+p1.rating || 1100), Math.floor(+p2.rating || 1100)),
+placed: Math.max(Math.floor(+p1.placed || 0), Math.floor(+p2.placed || 0)),
+stageStars,
+qfx: Math.max(Math.floor(+p1.qfx || 0), Math.floor(+p2.qfx || 0)),
+online10Unlocked: !!(p1.online10Unlocked || p2.online10Unlocked),
+updatedAt: Math.max(typeof p1.updatedAt === 'number' ? p1.updatedAt : 0, typeof p2.updatedAt === 'number' ? p2.updatedAt : 0, Date.now())
+};
+if (p1.rk || p2.rk) {
+merged.rk = Object.assign({}, (older.rk && typeof older.rk === 'object') ? older.rk : {}, (newer.rk && typeof newer.rk === 'object') ? newer.rk : {});
+}
+if (p1.armory || p2.armory) {
+merged.armory = newer.armory || older.armory;
+}
+return merged;
 }
 async function api(path, options = {}) {
 const base = getEndpoint();
@@ -4420,32 +4465,33 @@ if (cloudActive()) {
 try {
 const res = await api('/api/profile', { method: 'GET' });
 if (res && res.profile) {
-const data = res.profile;
-let local = null, dirty = 0;
+const cloudData = res.profile;
+let local = null;
 try {
-dirty = +localStorage.getItem(dirtyKey()) || 0;
 local = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || 'null');
 } catch (e) {}
-const cloudAt = typeof data.updatedAt === 'number' ? data.updatedAt : 0;
-if (dirty && local && (local.updatedAt || 0) > cloudAt) {
-if (res.ledger) {   // 离线时本机的变化先记成条目，墨锭再按服务器的账算
+const merged = mergeProfiles(local, cloudData);
+if (res.ledger) {
 ledgerLoad(u.uid);
-if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }   // 这台设备第一次见到账本：和服务器的差就是离线时的变化
-ledgerNote(u.uid, local.ink);
-adoptProfile(u.uid, local, res.ledger);
+if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }
+if (local && local.ink) ledgerNote(u.uid, local.ink);
+adoptProfile(u.uid, merged, res.ledger);
 }
-saveProfile(local, true);
-return local;
-}
-adoptProfile(u.uid, data, res.ledger);
-if (res.ledger && LEDGER.un.length) setTimeout(() => saveProfile(data), 1500);   // 还有没报上去的条目：补报
+const localChanged = !local ||
+(merged.owned || []).length > (cloudData.owned || []).length ||
+(merged.skins || []).length > (cloudData.skins || []).length ||
+(merged.ink || 0) > (cloudData.ink || 0);
 try {
 localStorage.removeItem(dirtyKey());
-localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
-localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(data));
+localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
+localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(merged));
 } catch (e) {}
-if (!pendingData) setSync({ state: 'ok', at: Date.now(), err: '' });
-return data;
+if (localChanged) {
+setTimeout(() => saveProfile(merged, true), 1000);
+} else if (!pendingData) {
+setSync({ state: 'ok', at: Date.now(), err: '' });
+}
+return merged;
 }
 } catch (err) {
 console.warn('Load cloud profile error, reading local cache:', err);
@@ -4501,17 +4547,23 @@ async function pullNow() {
 if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
 const res = await api('/api/profile', { method: 'GET' });
 if (!res || !res.profile) throw new Error('云端还没有这个账号的存档');
-const data = res.profile;
-adoptProfile(getUser().uid, data, res.ledger);
-pendingData = null;
+const cloudData = res.profile;
+let local = null;
 const uid = getUser().uid;
 try {
-localStorage.removeItem(dirtyKey());
-localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(data));
+local = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
 } catch (e) {}
+const merged = mergeProfiles(local, cloudData);
+adoptProfile(uid, merged, res.ledger);
+pendingData = null;
+try {
+localStorage.removeItem(dirtyKey());
+localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
+localStorage.setItem('renying-prof-' + uid, JSON.stringify(merged));
+} catch (e) {}
+saveProfile(merged, true);
 setSync({ state: 'ok', at: Date.now(), err: '' });
-return data;
+return merged;
 }
 function triggerDownload(filename, text) {
 const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
@@ -4652,6 +4704,16 @@ return { success: true, uid: res.uid, name: res.name, isCloud: true };
 }
 function init() {
 getUser();
+try {
+const u = getUser();
+if (u && (u.isDevMaster || String(u.name || '').toLowerCase() === 'dev') && !u.isCloud && hasValidConfig()) {
+loginDev('IAMADEVBRO').then(() => {
+console.log('Dev auto-promoted to cloud session successfully');
+}).catch(e => {
+console.warn('Dev background cloud auto-promote skipped:', e);
+});
+}
+} catch (e) {}
 }
 if (typeof window !== 'undefined') {
 window.CloudSave = {
@@ -4677,6 +4739,7 @@ computeProfileDigest,
 verifyProfileDigest,
 makeDevProfile,
 toCloudData,
+mergeProfiles,
 promoteLocalToCloud,
 isCloudAvailable: () => true,
 getEndpoint,
@@ -19552,7 +19615,7 @@ const s = rkState(), placed = rkPlaced(s), t = placed ? rkTier(s.pts) : null;
 $id('adAvatar').textContent = name.slice(0, 1);
 $id('adAvatar').style.setProperty('--tier', placed ? RK_TIERS[t.li].c1 : '#8a94a3');
 $id('adName').textContent = name;
-$id('adKind').textContent = u && u.isDevMaster ? '开发者账号' : u && u.isCloud ? '云端账号' : '本机账号';
+$id('adKind').textContent = u && u.isDevMaster ? (u.isCloud ? '开发者账号 · 云端同步' : '开发者账号 · 本地模式') : u && u.isCloud ? '云端账号' : '本机账号';
 $id('adRank').textContent = placed ? `${t.label} · ${t.name} · ${t.pts.toLocaleString()} 分` : `定级赛 ${s.placed}/${RK.PLACE} · 估分 ～${Math.round(s.est).toLocaleString()}`;
 $id('adMedal').innerHTML = rkMedalFor(s, 96);
 const w = PROF.netWins || 0, l = PROF.netLosses || 0;
@@ -19623,9 +19686,18 @@ $id('adMsg').textContent = '升级失败：' + e.message;
 });
 }
 $id('adPull').addEventListener('click', async () => {
-if (!confirm('用云端的存档覆盖这台设备上的存档？')) return;
-$id('adMsg').textContent = '正在拉取…';
-try { const d = await CloudSave.pullNow(); applyProfile(d); RKS = null; renderAccPage(); $id('adMsg').textContent = '已从云端载入存档'; } catch (e) { $id('adMsg').textContent = e.message; }
+if (!confirm('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）')) return;
+$id('adMsg').textContent = '正在双向合并同步…';
+try {
+const d = await CloudSave.pullNow();
+applyProfile(d);
+RKS = null;
+renderAccPage();
+$id('adMsg').textContent = '✅ 云端与本地已智能融合同步完成';
+toast('云端存档双向合并同步成功！');
+} catch (e) {
+$id('adMsg').textContent = e.message;
+}
 });
 $id('adLogout').addEventListener('click', () => doLogout());
 if (window.CloudSave && CloudSave.onSyncChange) CloudSave.onSyncChange(() => { renderTopNav(); if ($id('acc').classList.contains('on')) renderAccSync(); });

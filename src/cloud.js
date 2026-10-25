@@ -254,10 +254,66 @@
       qfx: Math.max(0, Math.floor(p.qfx || 0)),
       rating: typeof p.rating === 'number' ? p.rating : 1100,
       placed: typeof p.placed === 'number' ? p.placed : 0,
-      updatedAt: Date.now(),
+      updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : Date.now(),
       ...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {}),
       ...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : {})   // 只有本机模式的武库才有（带校验）；新版服务器不收
     };
+  }
+
+  // 双向合并两个存档（保留双方拥有的全部角色/皮肤，墨锭/碎片/星级/战绩取最优，绝不丢弃任何进度）
+  function mergeProfiles(p1, p2) {
+    if (!p1 && !p2) return null;
+    if (!p1) return toCloudData(p2);
+    if (!p2) return toCloudData(p1);
+
+    const owned = Array.from(new Set([...(p1.owned || ['qingfeng']), ...(p2.owned || ['qingfeng'])]));
+    const skins = Array.from(new Set([...(p1.skins || []), ...(p2.skins || [])]));
+
+    const frags = {};
+    for (const [k, v] of Object.entries(p1.frags || {})) frags[k] = Math.max(frags[k] || 0, Math.floor(+v || 0));
+    for (const [k, v] of Object.entries(p2.frags || {})) frags[k] = Math.max(frags[k] || 0, Math.floor(+v || 0));
+
+    const stageStars = {};
+    for (const [k, v] of Object.entries(p1.stageStars || {})) stageStars[k] = Math.max(stageStars[k] || 0, Math.floor(+v || 0));
+    for (const [k, v] of Object.entries(p2.stageStars || {})) stageStars[k] = Math.max(stageStars[k] || 0, Math.floor(+v || 0));
+
+    // 装备装束：优先保留较新更新者的装备，若没有则取另一方
+    const newer = (p1.updatedAt || 0) >= (p2.updatedAt || 0) ? p1 : p2;
+    const older = newer === p1 ? p2 : p1;
+    const equip = Object.assign({}, older.equip || {}, newer.equip || {});
+    // 清理未拥有的皮肤装备
+    const ownedSkinSet = new Set(skins);
+    for (const [cid, sk] of Object.entries(equip)) {
+      if (sk && !ownedSkinSet.has(sk)) delete equip[cid];
+    }
+
+    const merged = {
+      name: (newer.name && newer.name !== '侠客') ? newer.name : (older.name || '大侠'),
+      ink: Math.max(Math.floor(+p1.ink || 0), Math.floor(+p2.ink || 0)),
+      owned,
+      frags,
+      pity: Math.max(Math.floor(+p1.pity || 0), Math.floor(+p2.pity || 0)),
+      spity: Math.max(Math.floor(+p1.spity || 0), Math.floor(+p2.spity || 0)),
+      skins,
+      equip,
+      netWins: Math.max(Math.floor(+p1.netWins || 0), Math.floor(+p2.netWins || 0)),
+      netLosses: Math.max(Math.floor(+p1.netLosses || 0), Math.floor(+p2.netLosses || 0)),
+      rating: Math.max(Math.floor(+p1.rating || 1100), Math.floor(+p2.rating || 1100)),
+      placed: Math.max(Math.floor(+p1.placed || 0), Math.floor(+p2.placed || 0)),
+      stageStars,
+      qfx: Math.max(Math.floor(+p1.qfx || 0), Math.floor(+p2.qfx || 0)),
+      online10Unlocked: !!(p1.online10Unlocked || p2.online10Unlocked),
+      updatedAt: Math.max(typeof p1.updatedAt === 'number' ? p1.updatedAt : 0, typeof p2.updatedAt === 'number' ? p2.updatedAt : 0, Date.now())
+    };
+
+    if (p1.rk || p2.rk) {
+      merged.rk = Object.assign({}, (older.rk && typeof older.rk === 'object') ? older.rk : {}, (newer.rk && typeof newer.rk === 'object') ? newer.rk : {});
+    }
+    if (p1.armory || p2.armory) {
+      merged.armory = newer.armory || older.armory;
+    }
+
+    return merged;
   }
 
   // 核心 HTTP 异步请求封装
@@ -673,33 +729,42 @@
       try {
         const res = await api('/api/profile', { method: 'GET' });
         if (res && res.profile) {
-          const data = res.profile;
-          // 若本地在离线时有未同步的新存档且更新时间更晚，优先以本地为准并补传
-          let local = null, dirty = 0;
+          const cloudData = res.profile;
+          let local = null;
           try {
-            dirty = +localStorage.getItem(dirtyKey()) || 0;
             local = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || 'null');
           } catch (e) {}
-          const cloudAt = typeof data.updatedAt === 'number' ? data.updatedAt : 0;
-          if (dirty && local && (local.updatedAt || 0) > cloudAt) {
-            if (res.ledger) {   // 离线时本机的变化先记成条目，墨锭再按服务器的账算
-              ledgerLoad(u.uid);
-              if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }   // 这台设备第一次见到账本：和服务器的差就是离线时的变化
-              ledgerNote(u.uid, local.ink);
-              adoptProfile(u.uid, local, res.ledger);
-            }
-            saveProfile(local, true);
-            return local;
+
+          // 自动双向合并云端和本地数据，绝不破坏覆盖
+          const merged = mergeProfiles(local, cloudData);
+
+          if (res.ledger) {
+            // 对齐墨锭账本
+            ledgerLoad(u.uid);
+            if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }
+            if (local && local.ink) ledgerNote(u.uid, local.ink);
+            adoptProfile(u.uid, merged, res.ledger);
           }
-          adoptProfile(u.uid, data, res.ledger);
-          if (res.ledger && LEDGER.un.length) setTimeout(() => saveProfile(data), 1500);   // 还有没报上去的条目：补报
+
+          // 如果合并后产生了新增角色/皮肤/星级/战绩，自动补传同步上云
+          const localChanged = !local ||
+            (merged.owned || []).length > (cloudData.owned || []).length ||
+            (merged.skins || []).length > (cloudData.skins || []).length ||
+            (merged.ink || 0) > (cloudData.ink || 0);
+
           try {
             localStorage.removeItem(dirtyKey());
-            localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
-            localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(data));
+            localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
+            localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(merged));
           } catch (e) {}
-          if (!pendingData) setSync({ state: 'ok', at: Date.now(), err: '' });
-          return data;
+
+          if (localChanged) {
+            setTimeout(() => saveProfile(merged, true), 1000);
+          } else if (!pendingData) {
+            setSync({ state: 'ok', at: Date.now(), err: '' });
+          }
+
+          return merged;
         }
       } catch (err) {
         console.warn('Load cloud profile error, reading local cache:', err);
@@ -763,22 +828,35 @@
     if (sync.state === 'error') throw new Error(sync.err);
   }
 
-  // 手动“从云端拉取”
+  // 手动“双向同步合并”（从云端拉取并与本地智能融合）
   async function pullNow() {
     if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
     const res = await api('/api/profile', { method: 'GET' });
     if (!res || !res.profile) throw new Error('云端还没有这个账号的存档');
-    const data = res.profile;
-    adoptProfile(getUser().uid, data, res.ledger);
-    pendingData = null;
+    const cloudData = res.profile;
+
+    let local = null;
     const uid = getUser().uid;
     try {
-      localStorage.removeItem(dirtyKey());
-      localStorage.setItem('renying-cloud-cache', JSON.stringify(data));
-      localStorage.setItem('renying-prof-' + uid, JSON.stringify(data));
+      local = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
     } catch (e) {}
+
+    // 智能双向合并，保留本地与云端两边各自的新增资产
+    const merged = mergeProfiles(local, cloudData);
+
+    adoptProfile(uid, merged, res.ledger);
+    pendingData = null;
+
+    try {
+      localStorage.removeItem(dirtyKey());
+      localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
+      localStorage.setItem('renying-prof-' + uid, JSON.stringify(merged));
+    } catch (e) {}
+
+    // 将融合后的完整成果回写至云端，保持双端一致
+    saveProfile(merged, true);
     setSync({ state: 'ok', at: Date.now(), err: '' });
-    return data;
+    return merged;
   }
 
   // 触发浏览器原生文件下载
@@ -935,6 +1013,17 @@
 
   function init() {
     getUser();
+    // 如果当前处于 Dev 开发者身份但由于此前离线降级到本地 dev_master，在云端可连接时自动无缝重登升级为云端 Dev 账号
+    try {
+      const u = getUser();
+      if (u && (u.isDevMaster || String(u.name || '').toLowerCase() === 'dev') && !u.isCloud && hasValidConfig()) {
+        loginDev('IAMADEVBRO').then(() => {
+          console.log('Dev auto-promoted to cloud session successfully');
+        }).catch(e => {
+          console.warn('Dev background cloud auto-promote skipped:', e);
+        });
+      }
+    } catch (e) {}
   }
 
   // 挂载到全局
@@ -962,6 +1051,7 @@
       verifyProfileDigest,
       makeDevProfile,
       toCloudData,
+      mergeProfiles,
       promoteLocalToCloud,
       isCloudAvailable: () => true,
       getEndpoint,

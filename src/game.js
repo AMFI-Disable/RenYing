@@ -14524,7 +14524,7 @@ function renderAccPage() {
   $id('adAvatar').textContent = name.slice(0, 1);
   $id('adAvatar').style.setProperty('--tier', placed ? RK_TIERS[t.li].c1 : '#8a94a3');
   $id('adName').textContent = name;
-  $id('adKind').textContent = u && u.isDevMaster ? '开发者账号' : u && u.isCloud ? '云端账号' : '本机账号';
+  $id('adKind').textContent = u && u.isDevMaster ? (u.isCloud ? '开发者账号 · 云端同步' : '开发者账号 · 本地模式') : u && u.isCloud ? '云端账号' : '本机账号';
   $id('adRank').textContent = placed ? `${t.label} · ${t.name} · ${t.pts.toLocaleString()} 分` : `定级赛 ${s.placed}/${RK.PLACE} · 估分 ～${Math.round(s.est).toLocaleString()}`;
   $id('adMedal').innerHTML = rkMedalFor(s, 96);
   const w = PROF.netWins || 0, l = PROF.netLosses || 0;
@@ -14595,9 +14595,18 @@ if ($id('adPromoteBtn')) {
   });
 }
 $id('adPull').addEventListener('click', async () => {
-  if (!confirm('用云端的存档覆盖这台设备上的存档？')) return;
-  $id('adMsg').textContent = '正在拉取…';
-  try { const d = await CloudSave.pullNow(); applyProfile(d); RKS = null; renderAccPage(); $id('adMsg').textContent = '已从云端载入存档'; } catch (e) { $id('adMsg').textContent = e.message; }
+  if (!confirm('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）')) return;
+  $id('adMsg').textContent = '正在双向合并同步…';
+  try {
+    const d = await CloudSave.pullNow();
+    applyProfile(d);
+    RKS = null;
+    renderAccPage();
+    $id('adMsg').textContent = '✅ 云端与本地已智能融合同步完成';
+    toast('云端存档双向合并同步成功！');
+  } catch (e) {
+    $id('adMsg').textContent = e.message;
+  }
 });
 $id('adLogout').addEventListener('click', () => doLogout());
 if (window.CloudSave && CloudSave.onSyncChange) CloudSave.onSyncChange(() => { renderTopNav(); if ($id('acc').classList.contains('on')) renderAccSync(); });
