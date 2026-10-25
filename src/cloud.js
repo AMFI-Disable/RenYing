@@ -51,6 +51,7 @@
   const syncListeners = [];
   let saveTimer = null;
   let pendingData = null;
+  let pendingUid = null;      // 这条待上传的存档属于哪个账号
   let retryN = 0;
 
   // sync state: local, idle, pending, syncing, ok, offline, error
@@ -138,6 +139,37 @@
   }
   function inkGrantKey() { if (grantGiven) return null; grantGiven = true; return grantAdd; }
 
+  /* 本机账号的密码散列。
+     旧版本用 btoa() 存密码：密码里有中文或任何非 Latin-1 字符就抛 InvalidCharacterError，
+     账号根本建不起来。这里改成 SHA-256（拿不到 crypto.subtle 时退到 UTF-8 安全的编码），
+     并能识别旧的 btoa 记录，登录成功后就地升级。 */
+  const PW_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
+  async function pwHash(password) {
+    const pw = String(password);
+    try {
+      if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ry_pw_v2|' + pw));
+        return 'v2$' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {}
+    return 'v2u$' + encodeURIComponent('ry_pw_v2|' + pw);   // 非加密降级，至少不会抛异常
+  }
+  function pwLegacy(password) {
+    try { return btoa(String(password)); } catch (e) { return null; }
+  }
+  async function pwMatches(rec, password) {
+    if (!rec || typeof rec !== 'object') return false;
+    if (rec.pwv === 2) return rec.pw === await pwHash(password);
+    const legacy = pwLegacy(password);
+    return !!legacy && rec.pw === legacy;
+  }
+  function tempPassword() {
+    const buf = new Uint8Array(9);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(buf);
+    else for (let i = 0; i < buf.length; i++) buf[i] = Math.floor(Math.random() * 256);
+    return Array.from(buf, b => PW_ALPHABET[b % PW_ALPHABET.length]).join('');
+  }
+
   function getToken() {
     try {
       return localStorage.getItem('renying-cloud-token') || (currentUser && currentUser.token) || '';
@@ -160,6 +192,27 @@
 
   function dirtyKey() {
     return 'renying-sync-dirty-' + (currentUser && currentUser.uid);
+  }
+  // 每个账号一份本地镜像。没有跨账号共享的键：新账号读不到上一个人的存档
+  function profKey(uid) { return 'renying-prof-' + uid; }
+  function readMirror(uid) {
+    if (!uid) return null;
+    try { const raw = localStorage.getItem(profKey(uid)); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  // 旧版本把所有账号的镜像写在同一个键里：迁到当前账号名下，再删掉共享键
+  function migrateLegacyCache() {
+    try {
+      const legacy = localStorage.getItem('renying-cloud-cache');
+      if (!legacy) return;
+      const u = getUser();
+      if (u && u.uid && !localStorage.getItem(profKey(u.uid))) {
+        JSON.parse(legacy);
+        localStorage.setItem(profKey(u.uid), legacy);
+      }
+      localStorage.removeItem('renying-cloud-cache');
+    } catch (e) {
+      try { localStorage.removeItem('renying-cloud-cache'); } catch (e2) {}
+    }
   }
 
   function setSync(patch) {
@@ -387,6 +440,10 @@
     syncHooks.forEach(fn => { try { fn(); } catch (e) { console.warn('before sync', e); } });
     const data = pendingData;
     if (!data || !cloudActive()) return;
+    if (pendingUid && pendingUid !== getUser().uid) {   // 存档不属于当前账号了：丢弃，绝不写进别人的档
+      pendingData = null; pendingUid = null;
+      return;
+    }
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       setSync({ state: 'offline' });
       return;
@@ -404,7 +461,7 @@
         ledgerListeners.forEach(fn => { try { fn(res.ledger, res.fix || null, res.capped || 0, res.owed || 0); } catch (e) { console.warn('ledger listener', e); } });
       }
       if (pendingData === data) {
-        pendingData = null;
+        pendingData = null; pendingUid = null;
         try { localStorage.removeItem(dirtyKey()); } catch (e) {}
       }
       retryN = 0;
@@ -412,6 +469,14 @@
       if (pendingData) saveTimer = setTimeout(doSync, 800);
     } catch (err) {
       console.warn('Sync profile to Cloudflare failed:', err);
+      const code = err && err.status;
+      // 4xx 是服务器明确拒绝（存档无效、被封、请求体太大）：重试多少次都一样，别无限重试
+      if (code && code >= 400 && code < 500 && code !== 429) {
+        if (pendingData === data) { pendingData = null; pendingUid = null; }
+        try { localStorage.removeItem(dirtyKey()); } catch (e) {}
+        setSync({ state: 'blocked', err: (err.message || '云端拒绝了这次存档') + '，本机存档不受影响，可先导出备份' });
+        return;
+      }
       retryN++;
       const wait = [2, 5, 15, 30, 60][Math.min(retryN, 5) - 1] * 1000;
       setSync({ state: 'error', err: `上传失败，${Math.round(wait / 1000)} 秒后自动重试` });
@@ -477,8 +542,7 @@
       devProf.online10Unlocked = true;
 
       try {
-        localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(devProf));
-        localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+        localStorage.setItem(profKey(data.uid), JSON.stringify(devProf));
       } catch (e) {}
 
       setSync({ state: 'ok', at: Date.now(), err: '' });
@@ -496,8 +560,7 @@
         devProf = makeDevProfile();
       }
       try {
-        localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
-        localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+        localStorage.setItem(profKey(uid), JSON.stringify(devProf));
         localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true, isCloud: false }));
       } catch (e) {}
       currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
@@ -548,8 +611,7 @@
       if (data.profile) {
         adoptProfile(data.uid, data.profile, data.ledger);
         try {
-          localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
-          localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
+          localStorage.setItem(profKey(data.uid), JSON.stringify(data.profile));
           localStorage.removeItem('renying-guest-profile');
         } catch (e) {}
       }
@@ -570,7 +632,7 @@
       else for (let i = 0; i < 4; i++) rndBuf[i] = (Math.random() * 256) | 0;
       const rndHex = Array.from(rndBuf, b => b.toString(16).padStart(2, '0')).join('');
       const uid = 'local_' + Date.now() + '_' + rndHex;
-      mockUsers[name] = { uid, name, pw: btoa(password), created: Date.now() };
+      mockUsers[name] = { uid, name, pw: await pwHash(password), pwv: 2, created: Date.now() };
       localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
       const userObj = { uid, name, displayName: name, isCloud: false };
       localStorage.setItem('renying-local-current', JSON.stringify(userObj));
@@ -610,8 +672,7 @@
       if (data.profile) {
         adoptProfile(data.uid, data.profile, data.ledger);
         try {
-          localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
-          localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
+          localStorage.setItem(profKey(data.uid), JSON.stringify(data.profile));
         } catch (e) {}
       }
 
@@ -623,13 +684,18 @@
       let mockUsers = {};
       try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
       const localU = mockUsers[name];
-      if (localU && localU.pw === btoa(password)) {
+      const pwOk = await pwMatches(localU, password);
+      if (localU && pwOk) {
+        if (localU.pwv !== 2) {   // 老记录：登录成功时顺手升级成散列
+          localU.pw = await pwHash(password); localU.pwv = 2;
+          mockUsers[name] = localU;
+          try { localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers)); } catch (e) {}
+        }
         // 本地老账号自动在云端注册并同步
         try {
           let localProf = null;
           try {
-            const pStr = localStorage.getItem('renying-prof-' + localU.uid) || localStorage.getItem('renying-cloud-cache');
-            if (pStr) localProf = JSON.parse(pStr);
+            localProf = readMirror(localU.uid);
           } catch (e) {}
 
           const data = await api('/api/register', {
@@ -674,6 +740,8 @@
 
   // 退出登录
   async function logout() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    pendingData = null; pendingUid = null;   // 防抖中的存档不能落到下一个登录的账号里
     try {
       await api('/api/logout', { method: 'POST' }).catch(() => {});
     } catch (e) {}
@@ -748,8 +816,7 @@
 
           try {
             localStorage.removeItem(dirtyKey());
-            localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
-            localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(merged));
+            localStorage.setItem(profKey(u.uid), JSON.stringify(merged));
           } catch (e) {}
 
           if (localChanged) {
@@ -765,13 +832,9 @@
       }
     }
 
-    // 读取本地镜像缓存
-    try {
-      const cached = localStorage.getItem('renying-cloud-cache');
-      if (cached) return JSON.parse(cached);
-      const localProf = localStorage.getItem('renying-prof-' + u.uid);
-      if (localProf) return JSON.parse(localProf);
-    } catch (e) {}
+    // 只读本账号的本地镜像：绝不回退到公共缓存，那等于把别人的存档当成自己的
+    const localProf = readMirror(u.uid);
+    if (localProf) return localProf;
     return null;
   }
 
@@ -782,18 +845,12 @@
     if (u && u.name) dataToSave.name = u.name;
 
     if (!u) {
-      try {
-        localStorage.setItem('renying-guest-profile', JSON.stringify(dataToSave));
-        localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
-      } catch (e) {}
+      try { localStorage.setItem('renying-guest-profile', JSON.stringify(dataToSave)); } catch (e) {}
       return;
     }
 
-    // 立即写入本地镜像
-    try {
-      localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
-      localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(dataToSave));
-    } catch (e) {}
+    // 立即写入本账号的本地镜像
+    try { localStorage.setItem(profKey(u.uid), JSON.stringify(dataToSave)); } catch (e) {}
 
     if (!cloudActive()) {
       setSync({ state: 'local' });
@@ -801,7 +858,7 @@
     }
 
     ledgerNote(u.uid, dataToSave.ink);   // 这次存档里墨锭的变化记成一条待上报
-    pendingData = dataToSave;
+    pendingData = dataToSave; pendingUid = u.uid;
     try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
     if (sync.state !== 'syncing') setSync({ state: 'pending' });
     if (saveTimer) clearTimeout(saveTimer);
@@ -813,13 +870,13 @@
   async function syncNow() {
     if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
     if (!pendingData) {
-      let local = null;
-      try { local = JSON.parse(localStorage.getItem('renying-prof-' + getUser().uid) || 'null'); } catch (e) {}
+      const local = readMirror(getUser().uid);
       if (!local) throw new Error('本机没有可上传的存档');
       pendingData = Object.assign(toCloudData(local), { name: getUser().name, updatedAt: Date.now() });
+      pendingUid = getUser().uid;
     }
     await doSync();
-    if (sync.state === 'error') throw new Error(sync.err);
+    if (sync.state === 'error' || sync.state === 'blocked') throw new Error(sync.err || '云端拒绝了这次存档');
   }
 
   // 手动“双向同步合并”（从云端拉取并与本地智能融合）
@@ -839,12 +896,11 @@
     const merged = mergeProfiles(local, cloudData);
 
     adoptProfile(uid, merged, res.ledger);
-    pendingData = null;
+    pendingData = null; pendingUid = null;
 
     try {
       localStorage.removeItem(dirtyKey());
-      localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
-      localStorage.setItem('renying-prof-' + uid, JSON.stringify(merged));
+      localStorage.setItem(profKey(uid), JSON.stringify(merged));
     } catch (e) {}
 
     // 将融合后的完整成果回写至云端，保持双端一致
@@ -869,7 +925,29 @@
   }
 
   // 计算存档数字校验和 (SHA-256 Digest)
+  // 存档里所有会进云端的字段都参与签名；v1 只签了六个字段（星级、碎片、装备都能改而不被发现）
+  const SIGNED_KEYS = ['name', 'ink', 'owned', 'frags', 'pity', 'spity', 'skins', 'equip',
+    'netWins', 'netLosses', 'rating', 'placed', 'online10Unlocked', 'stageStars', 'qfx', 'rk'];
+  function canonicalProfile(p) {
+    const norm = v => {
+      if (Array.isArray(v)) return v.map(norm);
+      if (v && typeof v === 'object') return Object.keys(v).sort().map(k => [k, norm(v[k])]);
+      return v === undefined ? null : v;
+    };
+    return JSON.stringify(SIGNED_KEYS.map(k => [k, norm(p[k])]));
+  }
   async function computeProfileDigest(p, salt = 'ry_sword_auth_2026') {
+    if (!p) return '';
+    const raw = `RY_V2|${canonicalProfile(p)}|${salt}`;
+    if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+      const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+      return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    // 没有 crypto.subtle（http 页面）就算不出真签名：返回空串，让调用方明确地“不声称已校验”
+    return '';
+  }
+  // v1（旧导出）的签名只覆盖六个字段；用于识别老文件，不作为安全依据
+  async function computeLegacyDigest(p, salt = 'ry_sword_auth_2026') {
     if (!p) return '';
     const ink = Math.floor(p.ink || 0);
     const wins = Math.floor(p.netWins || 0);
@@ -880,8 +958,7 @@
     const raw = `RY_V1|${name}|${ink}|${owned}|${skins}|${wins}|${losses}|${salt}`;
     try {
       if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
-        const enc = new TextEncoder().encode(raw);
-        const hashBuf = await crypto.subtle.digest('SHA-256', enc);
+        const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
         return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
       }
     } catch (e) {}
@@ -894,30 +971,32 @@
     return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
   }
 
+  /* 校验结果：'ok' 校验通过 / 'tampered' 被改过 / 'weak' 只对得上旧版弱签名 / 'unsigned' 没有签名 */
   async function verifyProfileDigest(data) {
-    if (!data || typeof data !== 'object') return false;
+    if (!data || typeof data !== 'object') return 'unsigned';
     const p = data.profile || data;
     const sig = data._sig || (data.profile && data.profile._sig);
-    if (!sig) return null;
+    if (!sig) return 'unsigned';
     const expected = await computeProfileDigest(p);
-    return expected === sig;
+    if (expected && expected === sig) return 'ok';
+    const legacy = await computeLegacyDigest(p);
+    if (legacy && legacy === sig) return 'weak';
+    return expected ? 'tampered' : 'weak';
   }
 
   // 导出单账号存档
   async function exportCurrentAccount(prof) {
     const u = getUser();
     let activeProf = prof;
-    if (!activeProf) {
-      try {
-        activeProf = JSON.parse(localStorage.getItem('renying-cloud-cache') || '{}');
-      } catch (e) {
-        activeProf = {};
-      }
-    }
+    if (!activeProf) activeProf = (u && readMirror(u.uid)) || {};
     const name = (u && u.name) || activeProf.name || '大侠';
     const profData = toCloudData(activeProf);
     profData.name = name;
     const sig = await computeProfileDigest(profData);
+    if (!sig) {
+      // http 页面拿不到 WebCrypto：老代码会在这里悄悄写一个 32 位弱签名，看起来像校验过
+      throw new Error('当前页面无法安全签名（需要 https 或 localhost）。请用 https 打开后再导出，否则备份文件无法校验');
+    }
     const payload = {
       app: 'renying',
       format: 'single-account',
@@ -928,7 +1007,8 @@
         name: name
       },
       profile: profData,
-      _sig: sig
+      _sig: sig,
+      _alg: 'sha256-v2'   // 老文件没有这个字段：只对得上 v1 弱签名的会被标成“旧版弱校验”
     };
     const safeName = String(name).replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g, '_') || 'player';
     triggerDownload(`renying-account-${safeName}.json`, JSON.stringify(payload, null, 2));
@@ -936,7 +1016,7 @@
   }
 
   // 导出全部本地账号
-  function exportAllAccounts() {
+  async function exportAllAccounts() {
     let mockUsers = {};
     try {
       mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
@@ -948,7 +1028,7 @@
         const profRaw = localStorage.getItem('renying-prof-' + u.uid);
         if (profRaw) prof = JSON.parse(profRaw);
       } catch (e) {}
-      accounts.push({ account: u, profile: prof });
+      accounts.push({ account: u, profile: prof, _sig: prof ? await computeProfileDigest(prof) : '' });
     }
     const payload = {
       app: 'renying',
@@ -966,15 +1046,14 @@
   async function importAccountData(data) {
     if (!data || typeof data !== 'object') throw new Error('无效的存档文件数据');
     if (data.format === 'single-account' && data.profile) {
-      const isSigValid = await verifyProfileDigest(data);
-      if (isSigValid === false) {
+      const sigState = await verifyProfileDigest(data);
+      if (sigState === 'tampered') {
         throw new Error('⚠️ 存档校验和不匹配：该备份文件已被外部篡改');
       }
       const p = data.profile;
       const uid = (data.account && data.account.uid) || ('imported_' + Date.now());
       const name = (data.account && data.account.name) || p.name || '大侠';
-      localStorage.setItem('renying-prof-' + uid, JSON.stringify(p));
-      localStorage.setItem('renying-cloud-cache', JSON.stringify(p));
+      localStorage.setItem(profKey(uid), JSON.stringify(p));
       localStorage.setItem('renying-local-current', JSON.stringify({ uid, name, isCloud: false }));
       currentUser = { uid, name, displayName: name, isCloud: false };
       notifyAuthChange(currentUser);
@@ -995,7 +1074,7 @@
     const name = u.name;
     let localProf = null;
     try {
-      localProf = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || localStorage.getItem('renying-cloud-cache') || '{}');
+      localProf = readMirror(u.uid) || {};
     } catch (e) {}
 
     const res = await register(name, password);
@@ -1006,6 +1085,7 @@
   }
 
   function init() {
+    migrateLegacyCache();
     getUser();
     // 离线时降成本地 dev_master 的 Dev，联网后重新登录一次就回到云端（网页里不存 Dev 的密码，没法自动登录）
   }

@@ -11049,28 +11049,31 @@ if (typeof window !== 'undefined') window.applySkins = applySkins;
 function flagsKey() { return 'renying-flags-' + (curName() || 'guest'); }
 function loadFlags() { try { return JSON.parse(localStorage.getItem(flagsKey()) || '{}') || {}; } catch (e) { return {}; } }
 function saveFlag(k, v) { const fl = loadFlags(); fl[k] = v; try { localStorage.setItem(flagsKey(), JSON.stringify(fl)); } catch (e) {} }
-function applyProfile(p) {
+function applyProfile(p, opts) {
   if (!p) return;
   if (p.guest) {
-    const owned = Array.isArray(p.owned) ? p.owned : (PROF.owned || ['qingfeng']);
-    const skins = Array.isArray(p.skins) ? p.skins : (PROF.skins || []);
-    const equip = p.equip || PROF.equip || {};
-    const ink = p.ink !== undefined ? p.ink : (PROF.ink || 0);
-    Object.assign(PROF, {
-      guest: true,
-      ink: ink,
-      owned: owned,
-      frags: p.frags || PROF.frags || {},
-      pity: p.pity || PROF.pity || 0,
-      welfare: 1,
-      rank: null,
-      daily: [],
-      weekly: [],
-      skins: skins,
-      equip: equip,
-      spity: p.spity || PROF.spity || 0,
-      rotation: p.rotation || PROF.rotation
-    });
+    // 游客答案不是一份完整存档，只是“本周轮换/概率”这类提示。
+    // 拿它覆盖角色、墨锭和奖励状态会把存档打回新手：只有明示的 reset（退出账号）才允许清档。
+    PROF.guest = true;
+    if (p.rotation) PROF.rotation = p.rotation;
+    if (p.rates) PROF.rates = p.rates;
+    if (opts && opts.reset) {
+      Object.assign(PROF, {
+        ink: p.ink !== undefined ? p.ink : 500,
+        owned: Array.isArray(p.owned) && p.owned.length ? p.owned : ['qingfeng'],
+        frags: p.frags || {},
+        pity: p.pity || 0,
+        spity: p.spity || 0,
+        skins: Array.isArray(p.skins) ? p.skins : [],
+        equip: p.equip || {},
+        netWins: p.netWins || 0,
+        netLosses: p.netLosses || 0,
+        welfare: 1,
+        rank: null,
+        daily: [],
+        weekly: []
+      });
+    }
   } else {
     Object.assign(PROF, p, { guest: false });
   }
@@ -14891,7 +14894,7 @@ async function doLogout() {
   if (window.CloudSave) { try { await CloudSave.syncNow(); } catch (e) {} await CloudSave.logout(); }
   setAcc(null);
   PROF.guest = true;
-  applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 });
+  applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 }, { reset: true });
   toast('已退出账号');
   renderAcc();
   renderAccPage();
@@ -15195,7 +15198,6 @@ function claimLegacyAccount(accData) {
   PROF.guest = false;
 
   // 9. 存储同步（本地镜像与云端）
-  try { localStorage.setItem('renying-cloud-cache', JSON.stringify(PROF)); } catch (e) {}
   if (window.CloudSave) {
     CloudSave.saveProfile(PROF, true);
   }
@@ -15248,7 +15250,7 @@ if ($id('importFileInput')) {
         // 格式 B: 全账号打包备份格式
         if (d.format === 'all-accounts-backup' && Array.isArray(d.accounts)) {
           if (!window.CloudSave) throw new Error('存档系统未就绪');
-          const res = CloudSave.importAccountData(d);
+          const res = { name: '', profile: null };   // 全备份包在这里逐个写本机，不需要走单账号导入
           const list = d.accounts.map(item => {
             const a = item.account || {};
             const p = item.profile || {};
@@ -15383,7 +15385,6 @@ if (window.CloudSave) {
 renderAcc();
 function netStatus(t) { if ($id('netStatus')) $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
-if ($id('onlineLine')) $id('onlineLine').textContent = '';
 if ($id('verLine')) $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
 // 离线单文件版：全部皮肤可用，装备记在本机；在线版拥有完整成长与解锁
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
@@ -15600,8 +15601,6 @@ function refreshOnline() {
     const parts = [];
     if (h && h.playing) parts.push(`${h.playing} 局对战`);
     if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
-    const line = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
-    if ($id('onlineLine')) $id('onlineLine').textContent = line;
     if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : `${total} 人在线 · 全网连线`;
     if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
     if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
