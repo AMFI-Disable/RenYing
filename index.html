@@ -4940,6 +4940,7 @@ const DICT_EN = {
 "一键领取全部": "Claim All",
 "万仞剑阁": "Sword Pavilion",
 "万羽": "Feather Storm",
+"上一步还没做完，稍等一下": "Still working on the last step, please wait",
 "上传中…": "Uploading…",
 "上传失败": "Upload Failed",
 "上传导出文件 (.json)": "Upload Export File (.json)",
@@ -4986,6 +4987,7 @@ const DICT_EN = {
 "俯冲": "Falcon Dive",
 "兑换": "Redeem",
 "兑换码无效或已过期": "Invalid or expired redeem code",
+"兑换码输错太多次了，一小时后再试": "Too many wrong codes. Try again in an hour",
 "入门": "Novice",
 "全套连贯": "Full Combo",
 "全新玩法 · 协同决战": "New Mode · Co-op & Team Battle",
@@ -5203,6 +5205,8 @@ const DICT_EN = {
 "月轮": "Moon Chariot",
 "月镜": "Moon Mirror",
 "月镜宗师": "Moon Mirror Master",
+"服务器出错了": "Server error",
+"服务器还没开兑换码，等更新以后再试": "Gift codes are not on the server yet. Try again after the update",
 "朝向": "Facing",
 "木人桩": "Dummy",
 "木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）": "Custom Dummy Attributes (Toggle freely or use keys 1-6 in combat)",
@@ -5228,6 +5232,7 @@ const DICT_EN = {
 "格挡穿透伤": "Guard Chip Dmg",
 "樱月": "Sakura Moon",
 "正在上传…": "Uploading…",
+"正在兑换…": "Redeeming…",
 "正在双向合并同步…": "Performing two-way merge sync…",
 "正在寻找对手": "Searching for opponent...",
 "武器箱、玩家市场、汰换合同": "Weapon cases, marketplace, trade contracts",
@@ -5285,6 +5290,7 @@ const DICT_EN = {
 "皮肤": "Skins",
 "直选": "Select",
 "碧影": "Emerald Shade",
+"礼包兑换码要先登录云端账号才能领": "Log in to a cloud account to redeem gift codes",
 "社区": "Community",
 "神兵武器箱": "Divine Arms Case",
 "神级策略": "Divine AI Strategy",
@@ -5365,10 +5371,13 @@ const DICT_EN = {
 "返回": "Back",
 "返回主菜单": "Back to Main Menu",
 "返回菜单": "Back to Menu",
+"这个兑换码你已经领过了": "You have already redeemed this code",
+"这个兑换码已经被领完了": "This code has run out",
 "这游戏得用键盘和鼠标，请在电脑上打开。": "This game requires keyboard & mouse, please open on desktop.",
 "进入选人 · 开战": "Pick Hero & Battle",
 "远程": "Ranged",
 "远程招式": "Ranged Attack",
+"连不上服务器，等联网了再试": "Can't reach the server. Try again when you're online",
 "连击": "Combo",
 "连线模式:": "Network Mode:",
 "退出登录": "Logout",
@@ -17463,6 +17472,19 @@ if ($id('rdCode')) $id('rdCode').value = '';
 renderTasks();
 return;
 }
+if (!OFFLINE_BUILD && /^[A-Z0-9]{4,20}$/.test(up) && typeof window.armoryRedeem === 'function') {
+const btn = $id('rdBtn');
+if (btn) btn.disabled = true;
+if ($id('tMsg')) $id('tMsg').textContent = '正在兑换…';
+let r;
+try { r = await window.armoryRedeem(up); } finally { if (btn) btn.disabled = false; }
+const text = r.ok ? `兑换成功：${r.note}（${r.text}）` : r.err;
+if (r.ok) { SFX.chargeFull(); if ($id('rdCode')) $id('rdCode').value = ''; }
+toast(text);
+if ($id('tMsg')) $id('tMsg').textContent = text;
+renderTasks();
+return;
+}
 toast('兑换码无效或已过期');
 if ($id('tMsg')) $id('tMsg').textContent = '兑换码无效或已过期';
 }
@@ -23495,6 +23517,7 @@ s.tk = { t0: env.now, mode };
 return { ok: true };
 };
 A.sync = () => ({ ok: true });
+A.claimCode = (s, a, env) => env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
 A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台终端机
 if (s.gift) return { err: '已经领过了' };
 s.gift = 1; s.cases.c1++; s.term++;
@@ -24585,6 +24608,24 @@ renderTopNav = function () {
 const r = baseTopNav.apply(this, arguments);
 try { const b = document.querySelector('#topNav [data-nav="armory"]'); if (b) b.classList.toggle('tn-dot', !!dots().any); } catch (e) {}
 return r;
+};
+window.armoryRedeem = async function (code) {
+const NEED = '礼包兑换码要先登录云端账号才能领';
+if (!cloudOn() || PROF.guest) return { err: NEED };
+if (MODE !== 'server') await connect(true);
+if (MODE !== 'server') return { err: MODE === 'none' ? NEED : MODE === 'offline' || MODE === 'wait' ? '连不上服务器，等联网了再试' : '服务器还没开兑换码，等更新以后再试' };
+if (BUSY) return { err: '上一步还没做完，稍等一下' };
+BUSY = true; busyUi(true);
+try {
+if (FLUSH) await Promise.race([FLUSH().catch(() => {}), new Promise(r => setTimeout(r, 3000))]);   // 先把本机的存档变化报上去，免得两边对不上
+const out = await ECON('claimCode', { code });
+apply(out);
+return out && out.code ? { ok: true, note: String(out.code.note || ''), text: giftText(out.code) } : { err: '兑换码无效或已过期' };
+} catch (e) {
+if (e && e.ban && typeof acRefresh === 'function') acRefresh();
+if (e && e.status === 400 && e.message === '不认识的操作') return { err: '兑换码无效或已过期' };   // 服务器还是没有兑换码的旧版：那上面也就没有码
+return { err: e && e.message ? e.message : '服务器出错了' };
+} finally { BUSY = false; busyUi(false); }
 };
 window.grantDevArmory = function(newInv, cases) {
 const u = user(); UID = u ? String(u.uid || u.name || '') : 'Dev';
