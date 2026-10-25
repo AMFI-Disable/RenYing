@@ -342,7 +342,7 @@ color: var(--gold); transform: translateY(-1px); outline: none;
 .menuscr .touch { position: absolute; left: 0; right: 0; top: 30%; text-align: center; }
 .accbar { position: fixed; z-index: 25; }
 .cxw { width: min(1400px, 96vw); margin: 0 auto; padding: 14px 16px; display: grid; gap: 10px; align-self: flex-start;
-max-height: min(840px, 90vh);
+max-height: min(800px, calc(100vh - var(--nav-h, 58px) - 38px));
 overflow-y: auto;
 overflow-x: hidden;
 }
@@ -2583,13 +2583,14 @@ filter: none !important; color: #fff8f1 !important; padding: 0 22px !important;
 .home-hero .hh-go:hover { background: var(--x-grain) 0 0 / 160px 160px, linear-gradient(160deg, #ff6c70, var(--x-red-hi) 50%, #bd3039) !important; transform: translateY(-1px); filter: none !important; }
 .home-hero .hh-swap { border-radius: 0 !important; border: 1px solid var(--x-line) !important; background: linear-gradient(var(--x-gold), var(--x-gold)) left top / 8px 1px no-repeat, linear-gradient(var(--x-gold), var(--x-gold)) left top / 1px 8px no-repeat, rgba(20,28,42,.86) !important; }
 .home-hero .hh-swap:hover { border-color: rgba(233,196,106,.6) !important; }
-.mm-2v2-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
+.mm-2v2-actions { grid-template-columns: 1fr 1fr; gap: 6px; }
+#mm2v2LobbyRoomBtn { grid-column: 1 / -1; }
 .mm-2v2 .mm-go, .mm-2v2 .mm-go.btn-watch {
---x-cut: 8px; grid-column: auto; min-height: 54px; padding: 8px 12px !important; align-items: flex-start !important;
+--x-cut: 8px; grid-column: auto; min-height: 54px; padding: 8px 6px !important; align-items: flex-start !important;
 font: 700 14px/1.25 var(--body); letter-spacing: .04em; white-space: nowrap;
 }
-.mm-2v2 .mm-go > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.mm-2v2 .mm-go .go-sub { font-size: 12px; font-weight: 400; letter-spacing: 0; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.mm-2v2 .mm-go > span:first-child { white-space: nowrap; max-width: 100%; }
+.mm-2v2 .mm-go .go-sub { font-size: 12px; font-weight: 400; letter-spacing: 0; opacity: .85; white-space: nowrap; max-width: 100%; }
 #mm2v2CoopBtn, #mm2v2VsBtn, #mm2v2WatchBtn {
 --tile: #43c4d8; color: #eef3f6 !important; text-shadow: none;
 background: linear-gradient(var(--tile), var(--tile)) left top / 3px 100% no-repeat,
