@@ -1,0 +1,40 @@
+name: Cloudflare Worker & D1 Schema Sync
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "cloudflare/**"
+      - "src/armory-core.js"
+      - "src/cloud.js"
+      - "tools/rollback-test.mjs"
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-schema-health:
+    name: D1 SQLite Schema & Worker Bundle Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Validate D1 Schema & Worker Bundle Syntax
+        run: |
+          node --input-type=module --check < cloudflare/worker.bundle.js
+          node tools/rollback-test.mjs --schema
+
+      - name: Probe Live Cloudflare Worker Health Endpoint
+        run: |
+          curl -sf --max-time 10 https://renying.evengao6688.workers.dev/api/health || echo "Health probe warning (non-fatal in offline/sandboxed CI)"

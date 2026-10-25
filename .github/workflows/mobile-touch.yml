@@ -1,0 +1,45 @@
+name: Mobile & Touch Controls
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/page.html"
+      - "src/style.css"
+      - "src/game.js"
+      - "tools/touch-audit.mjs"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  touch-audit:
+    name: Mobile Viewport & Virtual Joystick Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Start Static Web Server
+        run: |
+          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
+          for _ in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8791/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8791/ >/dev/null
+
+      - name: Run Mobile & Tablet Touch Audit
+        run: node tools/touch-audit.mjs ci-touch

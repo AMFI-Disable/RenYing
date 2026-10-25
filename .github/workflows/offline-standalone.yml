@@ -1,0 +1,30 @@
+name: Offline Standalone Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "renying-offline.html"
+      - "tools/build.py"
+      - "tools/rollback-test.mjs"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  offline-bundle:
+    name: Zero-Network Standalone Bundle Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Verify Standalone Offline HTML Bundle & Embedded Payloads
+        run: node tools/rollback-test.mjs --offline

@@ -1,0 +1,35 @@
+name: Armory Economy & Anti-Cheat
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/armory-core.js"
+      - "src/armory.js"
+      - "src/anticheat.js"
+      - "src/cloud.js"
+      - "cloudflare/**"
+      - "tools/econ-test.mjs"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  economy:
+    name: Armory Market, Cases & Anti-Cheat Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Run Armory Economy & Anti-Cheat Suite (Source & Bundle)
+        run: |
+          node tools/econ-test.mjs
+          node tools/econ-test.mjs --bundle

@@ -1,0 +1,31 @@
+name: Combat & Physics Engine
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/game.js"
+      - "src/ai.js"
+      - "tools/combat-test.mjs"
+      - "tools/ai-code.mjs"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  combat-suite:
+    name: 12-Hero Combat & Mode Regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Run 12-Hero Combat & 2v2 Regression Suite
+        run: node tools/combat-test.mjs --sim

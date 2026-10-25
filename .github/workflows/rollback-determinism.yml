@@ -1,0 +1,30 @@
+name: Rollback Netcode & P2P Sync
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/net-p2p.js"
+      - "src/game.js"
+      - "tools/rollback-test.mjs"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    name: Deterministic Rollback Resimulation Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Verify Rollback Snapshot & Resimulation Determinism
+        run: node tools/rollback-test.mjs --rollback

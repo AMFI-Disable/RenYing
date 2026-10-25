@@ -1,0 +1,44 @@
+name: Build & Syntax Gate
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/**"
+      - "assets/**"
+      - "cloudflare/**"
+      - "tools/build.py"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-gate:
+    name: Bundle Sync & Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Validate Build Script & Lowercase Filenames
+        run: |
+          python3 -m py_compile tools/build.py
+          if git ls-files | grep -v '^CNAME$' | grep '[A-Z]'; then
+            echo "Error: uppercase tracked files found"
+            exit 1
+          fi
+
+      - name: Verify Generated Bundles Are Up To Date
+        run: python3 tools/build.py --check

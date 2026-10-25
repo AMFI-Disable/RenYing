@@ -1,0 +1,54 @@
+name: UI Panels & Canvas HUD Layout
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/page.html"
+      - "src/style.css"
+      - "src/game.js"
+      - "src/armory.js"
+      - "src/social.js"
+      - "tools/ui-audit.mjs"
+      - "tools/hud-audit.mjs"
+      - "tools/hud-overlap-audit.mjs"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  ui-hud:
+    name: Headless Browser UI & Canvas HUD Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Start Static Web Server
+        run: |
+          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
+          for _ in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8791/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8791/ >/dev/null
+
+      - name: Run UI Panel Layout Audit (1440x900)
+        run: node tools/ui-audit.mjs ci-ui 1440 900
+
+      - name: Run Canvas HUD Text & Overlap Audit
+        run: |
+          node tools/hud-audit.mjs ci-hud 1440 900
+          node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2

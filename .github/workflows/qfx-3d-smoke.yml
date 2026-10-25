@@ -1,0 +1,32 @@
+name: QingFengXing 3D Action Mode
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/qfx/**"
+      - "assets/qingfengxing.html"
+      - "assets/three.min.js"
+      - "tools/build.py"
+      - "tools/rollback-test.mjs"
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  qfx-smoke:
+    name: QingFengXing 3D Module & Bundle Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Verify QingFengXing 3D Bundle & Modules
+        run: node tools/rollback-test.mjs --qfx
