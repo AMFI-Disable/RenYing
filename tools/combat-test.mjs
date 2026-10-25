@@ -455,6 +455,7 @@ const testSuite = [
       ARENA2V2.orb.kind = 0;
       A.hp = A.maxHp;
       A.x = cx - 70;
+      C.x = cx - 500;
       B.x = cx - 180;
       B.face = 1;
       A.face = -1;
@@ -498,7 +499,7 @@ const testSuite = [
         [[8, 9], [10, 11]]
       ];
       for (const [duoA, duoB] of testDuoPairs) {
-        startWatch2v2([0, duoA[0], duoA[1], 1, duoB[0], duoB[1]]);
+        startWatch2v2([0, 1, duoA[0], duoB[0], duoB[1], duoA[1]]);
         if (M.mode !== 'watch2v2' || STAGE_W !== 2600) {
           return { pass: false, error: 'Failed 2v2 stage initialization for duos' };
         }
@@ -644,6 +645,30 @@ const testSuite = [
       if (!cardEl || !cardEl.textContent || !cardEl.textContent.includes('位侠士在线')) {
         return { pass: false, error: 'homeOnlineCardNum element missing or not populated' };
       }
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'All 12 heroes runtime maxHp, weight, reach, fly, and passives match hero settings',
+    fn: `(() => {
+      const expectedHp = {
+        qingfeng: 510, feiying: 470, tieshan: 530, lingshuang: 480,
+        liuyun: 495, leiming: 520, moyu: 485, yuehua: 460,
+        yanling: 440, yuxiao: 455, zuixian: 520, gouchen: 490
+      };
+      for (let ci = 0; ci < CHARS.length; ci++) {
+        const ch = CHARS[ci];
+        setChars(ci, (ci + 1) % CHARS.length);
+        A.reset(200);
+        if (A.maxHp !== expectedHp[ch.id] || A.hp !== expectedHp[ch.id]) {
+          return { pass: false, error: ch.name + ' maxHp mismatch: got ' + A.maxHp + ', expected ' + expectedHp[ch.id] };
+        }
+      }
+      if (CHARS[2].stat.weight !== 1.35) return { pass: false, error: 'TieShan weight mismatch' };
+      if (CHARS[3].stat.weight !== 1.05) return { pass: false, error: 'LingShuang weight mismatch' };
+      if (CHARS[6].stat.weight !== 1.10) return { pass: false, error: 'MoYu weight mismatch' };
+      if (CHARS[8].fly !== 1.2) return { pass: false, error: 'YanLing fly duration mismatch' };
+      if (CHARS[10].stat.reach !== 0.86) return { pass: false, error: 'ZuiXian reach mismatch' };
       return { pass: true, error: null };
     })()`
   }

@@ -254,18 +254,18 @@ const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: 
 // 用 tools/ai-arena.mjs 在五个难度各打同级对局（每个难度 864 场，每个侠客 144 场），按各侠客的平均胜率迭代五轮，取最后三轮的几何平均：
 // 调之前各侠客平均胜率 28%~91%，调之后 47%~56%。铁山原来九成胜率，削得最多；它的大招“山崩”正中能回满气量连放，单独多削一些。
 const BAL = {
-  qingfeng: { normal: 0.92, skill: 0.92, ult: 0.92, cd: 1.0, hp: 0.92 },
-  feiying: { normal: 0.95, skill: 1.12, ult: 1.12, cd: 1.0, hp: 1.12 },
-  tieshan: { normal: 0.77, skill: 0.77, ult: 0.59, cd: 1.0, hp: 0.77 },
-  lingshuang: { normal: 1.15, skill: 1.15, ult: 1.15, cd: 1.0, hp: 1.15 },
-  liuyun: { normal: 0.94, skill: 0.94, ult: 0.94, cd: 1.0, hp: 0.94 },
-  leiming: { normal: 0.99, skill: 0.99, ult: 0.99, cd: 1.0, hp: 0.99 },
-  moyu: { normal: 0.88, skill: 0.88, ult: 0.88, cd: 1.0, hp: 0.88 },
-  yuehua: { normal: 1.14, skill: 1.14, ult: 1.14, cd: 1.0, hp: 1.14 },
-  yanling: { normal: 1.04, skill: 1.04, ult: 1.04, cd: 1.0, hp: 1.04 },
-  yuxiao: { normal: 1.02, skill: 1.02, ult: 1.02, cd: 1.0, hp: 1.02 },
-  zuixian: { normal: 0.95, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.95 },
-  gouchen: { normal: 1.12, skill: 1.12, ult: 1.12, cd: 1.0, hp: 1.12 },
+  qingfeng: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  feiying: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  tieshan: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  lingshuang: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  liuyun: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  leiming: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  moyu: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  yuehua: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  yanling: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  yuxiao: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  zuixian: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  gouchen: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
 };
 const balOf = f => (f && f.ch && BAL[f.ch.id]) || BAL.qingfeng;
 function balDmg(att, m) { const b = balOf(att); return m.ult ? b.ult : (m.sk || (!m.isProj && att.state === 'skill')) ? b.skill : b.normal; }
@@ -296,13 +296,13 @@ const CHARS = [
     ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   { id: 'tieshan', name: '铁山', role: '玄铁重甲', diff: 1, escCD: 8.5, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
     passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血深厚（530），体量威严（1.35）。重斩与蓄力斩自带霸体减伤20%，巨刃沉身格挡稳健（115架势/8%微伤），刚猛沉稳。',
-    stat: { hp: 530, walk: 0.82, speed: 1.15, dmg: 0.96, reach: 1.08, swing: 1.15, jump: 0.9, weight: 1.32, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
+    stat: { hp: 530, walk: 0.82, speed: 1.15, dmg: 0.96, reach: 1.08, swing: 1.15, jump: 0.9, weight: 1.35, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
     moveMods: { l1: { suAdd: 0.1 } },   // 巨刃第一刀先举起、顿 0.1 秒再砍下来
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
   { id: 'lingshuang', name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.0, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
-    passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 20% 且一挑冲天。枪长步稳（1.05体量），枪旋可拨开暗器并保持中线绝对压制。',
-    stat: { hp: 480, walk: 0.98, speed: 1.05, dmg: 1.00, reach: 1.28, swing: 1.08, jump: 1, weight: 1.04, defRating: 1.02, guardMax: 110, guardStab: 1.20, guardChip: 0.08, guardRegen: 28, poise: 0.95, size: 1.02 }, hitFeel: 1.15,
+    passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 25% 且一挑冲天。枪长步稳（1.05体量），枪旋可拨开暗器并保持中线绝对压制。',
+    stat: { hp: 480, walk: 0.98, speed: 1.05, dmg: 1.00, reach: 1.28, swing: 1.08, jump: 1, weight: 1.05, defRating: 1.02, guardMax: 110, guardStab: 1.20, guardChip: 0.08, guardRegen: 28, poise: 0.95, size: 1.02 }, hitFeel: 1.15,
     look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
     ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
   { id: 'liuyun', name: '流云', role: '御风散人', diff: 2, escCD: 8.0, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
@@ -319,7 +319,7 @@ const CHARS = [
     ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   { id: 'moyu', name: '墨羽', role: '泼墨画师', diff: 3, escCD: 8.5, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
     passiveName: '笔锋', passiveDesc: '墨韵宗师宗风深沉（1.10体量），墨阵定身强行封锁走位；墨水屏障加持架势耐力（115），蓄力挥洒自如，更有【墨韵护体】减免重创，专破铁山等钝重武夫。',
-    stat: { hp: 485, walk: 1.02, speed: 0.90, dmg: 1.08, reach: 1.15, swing: 0.95, jump: 1.02, weight: 1.04, defRating: 1.02, guardMax: 115, guardStab: 1.18, guardChip: 0.07, guardRegen: 32, poise: 0.92, size: 1.00 }, hitFeel: 1.05,
+    stat: { hp: 485, walk: 1.02, speed: 0.90, dmg: 1.08, reach: 1.15, swing: 0.95, jump: 1.02, weight: 1.10, defRating: 1.02, guardMax: 115, guardStab: 1.18, guardChip: 0.07, guardRegen: 32, poise: 0.92, size: 1.00 }, hitFeel: 1.05,
     moveMods: { l1: { dmgAbs: 15 }, l2: { dmgAbs: 15 }, l3: { dmgAbs: 17 }, l4: { dmgAbs: 17 }, l5: { dmgAbs: 22 }, cs1: { reachMul: 1.45 }, cs2: { reachMul: 1.45 } }, inkShot: true,
     look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
     ai: { range: [140, 290] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
@@ -330,7 +330,7 @@ const CHARS = [
     ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
   { id: 'yanling', name: '燕翎', role: '御空飞燕', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
     passiveName: '御空', passiveDesc: '一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（85架势），一旦被重兵器挑中需速用腾空闪化解。',
-    stat: { hp: 440, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump: 1.05, weight: 0.84, defRating: 0.95, guardMax: 85, guardStab: 0.85, guardChip: 0.13, guardRegen: 25, poise: 1.05, size: 0.95 }, fly: 1.1, hitFeel: 0.9,
+    stat: { hp: 440, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump: 1.05, weight: 0.84, defRating: 0.95, guardMax: 85, guardStab: 0.85, guardChip: 0.13, guardRegen: 25, poise: 1.05, size: 0.95 }, fly: 1.2, hitFeel: 0.9,
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
   { id: 'yuxiao', name: '玉箫', role: '箫音乐师', diff: 3, escCD: 9.0, skill: 'soundwave', skill2: 'echowall', ult: 'guangling', passive: 'rhythm',
@@ -340,7 +340,7 @@ const CHARS = [
     ai: { range: [110, 280] }, beats: ['tieshan', 'moyu'], weakTo: ['feiying', 'leiming'] },
   { id: 'zuixian', name: '醉翁', role: '山水醉翁', diff: 3, escCD: 8.5, skill: 'pavilion', skill2: 'feast', ult: 'shanshui', passive: 'drunk',
     passiveName: '酒', passiveDesc: '腰间一壶酒。放任何技能都能添 30 酒（大招也算），打中人 +4（酒 0 到 100，每秒缓慢消退），每点酒增伤 0.5%（满壶 +50%）；酒过半壶就东倒西歪，有两成几率闪开近身攻击。与民同乐至少要半壶酒，并会把酒全部倒光。拳脚短（0.86 臂展）。',
-    stat: { hp: 520, walk: 1.12, speed: 0.84, dmg: 1.00, reach: 0.92, swing: 0.8, jump: 1, weight: 1.15, defRating: 1.00, guardMax: 105, guardStab: 1.15, guardChip: 0.09, guardRegen: 30, poise: 0.92, size: 1.02 }, hitFeel: 1.0,
+    stat: { hp: 520, walk: 1.12, speed: 0.84, dmg: 1.00, reach: 0.86, swing: 0.8, jump: 1, weight: 1.15, defRating: 1.00, guardMax: 105, guardStab: 1.15, guardChip: 0.09, guardRegen: 30, poise: 0.92, size: 1.02 }, hitFeel: 1.0,
     look: { body: '#c9a882', shade: '#8a6a4a', outline: '#1a0e06', outlineA: 1, scarf: '#d8452f', slash: '255,170,90', blade: '#f2d8a8', head: 'messy', weapon: 'gourd' },
     ai: { range: [50, 140] }, beats: ['lingshuang', 'yuehua'], weakTo: ['liuyun', 'moyu'] },
   { id: 'gouchen', name: '勾陈', role: '链锤游侠', diff: 2, escCD: 9.0, skill: 'hook', skill2: 'whirl', ult: 'skynet', passive: 'bind',
@@ -413,7 +413,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 140 && d < 330 },
-  blink: { name: '影遁', cd: 11, pass: true, desc: '结印 0.3 秒后入影（结印时站着不动），影子 0.15 秒掠到对手背后施展十字绞杀（只伤血，不让对手僵直）。此后 1.5 秒内，下一击威力暴涨 30%。',
+  blink: { name: '影遁', cd: 11, pass: true, desc: '结印 0.3 秒后入影（结印时站着不动），影子 0.15 秒掠到对手背后施展十字绞杀（只伤血，不让对手僵直）。此后 1.5 秒内，下一击威力暴涨 50%。',
     start() {},
     update(f, foe) {
       const behind = () => { let nx = foe.x - foe.face * 70; if (nx < WALL || nx > STAGE_W - WALL) nx = foe.x + foe.face * 70; return clamp(nx, WALL, STAGE_W - WALL); };
@@ -449,8 +449,8 @@ const SKILLS = {
         shake = Math.max(shake, 14); dust(f.x, 0, 24); ring(f.x, 0, 140, '255,200,120', 0.35); SFX.thud(); SFX.heavy();
         for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 680, w: 84, h: 48, life: 0.8, dmg: 40, kb: [200, -740], stun: 0.40, hs: 0.08, launch: true, groundOnly: true, unbreakable: true });
         if (strike(f, foe, { box: [-40, -80, 100, 4], dmg: 45, kb: [220, -800], stun: 0.45, hs: 0.12, launch: true })) {
-          f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 15);
-          f.skill2CD = Math.max(0, f.skill2CD - 1.5);
+          f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 30);
+          f.skill2CD = Math.max(0, f.skill2CD - 2.5);
           addP({ type: 'text', text: '💥 撼地重震 · 固若金汤', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
         }
       }
@@ -506,8 +506,8 @@ const SKILLS = {
       if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; f.t = 0; f.vx = f.face * 1350; f.armorT = 0.28; f.armorHits = 1; f.hitDone = false; SFX.dash(); SFX.thunder(); }
       if (f.skPh === 1) {
         if (strike(f, foe, { box: [-20, -110, 75, -10], dmg: 40, kb: [80, 0], stun: 0.38, hs: 0.08 })) {
-          f.skill2CD = Math.max(0, f.skill2CD - 2.0);
-          addP({ type: 'text', text: '⚡ 触电麻痹 · 雷踏加速', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
+          f.skill2CD = 0;
+          addP({ type: 'text', text: '⚡ 触电麻痹 · 雷铠重置', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
         }
         if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
         const through = f.hitDone && foe && (f.x - foe.x) * f.face > 45;   // 一拳贯穿、穿过对手身后就收住，不再继续往前冲
@@ -824,8 +824,8 @@ const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, b
 // ======================= 大招（E） =======================
 // flurry 类型沿用“冲刺后乱斩”的流程，其它类型用 begin / update 自己写
 const ULTS = {
-  crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 2.5, fin: 85, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
-  shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 2.1, fin: 80, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
+  crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
+  shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
   avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
     begin(f, foe) {
       f.sp = 'leap'; f.vy = -1050; f.y = -1;
@@ -1045,7 +1045,7 @@ const ULTS = {
       }
       if (f.t >= 1.95) { if (foe.hp > 0) foe.veilT = PENGLAI_T; endSpecial(f); }
     } },
-  eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 2.3, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
+  eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 12, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
   skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 1.2 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitDone = false; SFX.superOn(); },
     update(f, foe) {
@@ -1793,11 +1793,14 @@ const ADV = {
   tieshan: '震地直击得手后，瞬时回涌 30 点架势耐力，并削减铁壁冲 2.5 秒冷却。',
   feiying: '影遁之后 1.5 秒内再按 Q——影归，瞬息退回遁走前的位置。',
   liuyun: '风刃一次扇出两道；开扇冲过去撒下的爆米花半秒后会炸。',
-  leiming: '雷闪贴地冲拳命中对手，立时重置雷踏冷却，可直接连入冲天雷柱。',
+  leiming: '雷闪贴地冲拳命中对手，立时重置金刚雷铠冷却，可瞬间转守为攻。',
   lingshuang: '回马枪得手后，枪旋余下的冷却减半。',
-  moyu: '墨阵尚在场时再按 Q——引爆，阵中之敌受 4 伤害，被墨浪掀飞。',
+  moyu: '墨阵尚在场时再按 Q——引爆，阵中之敌受 25 伤害，被墨浪掀飞。',
   yuehua: '月镜格开一击后，月轮立时冷却完毕，可顺势再放一轮。',
   yanling: '自空中起手的俯冲一旦命中，此技立时冷却完毕，落地前可再冲一次（每次落地前只刷新一次）。',
+  yuxiao: '回音壁可将暗器、剑气、风刃原路弹回，每弹回一次额外积攒一枚音律。',
+  zuixian: '酒过半壶可触发两成近战闪避，并可掷坛施展与民同乐回春80血且压制对手。',
+  gouchen: '飞锤拽敌至身前附加 1.2 秒 25% 震魄易伤，立时衔接旋锤连砸。',
 };
 function trySecondQ(f, foe) {
   if (f.skillCD <= 0 || M.phase !== 'fight' || !['idle', 'walk', 'air'].includes(f.state)) return false;
@@ -1808,7 +1811,7 @@ function trySecondQ(f, foe) {
     p.dead = true; ring(p.x, -20, 95, '30,30,40', 0.3); SFX.thud();
     for (let i = 0; i < 14; i++) addP({ type: 'ink', x: p.x + rand(-40, 40), y: -6, vx: rand(-200, 200), vy: rand(-420, -120), g: 1200, life: 0.6, max: 0.6, r: rand(2, 4), rgb: '15,15,22' });
     if (foe.invul <= 0 && foe.hp > 0 && Math.abs(foe.x - p.x) < 95 && foe.y > -130)
-      applyHit(f, foe, { dmg: 4, kb: [120, -460], stun: 0.45, hs: 0.08, launch: true, noScale: true, dir: foe.x >= p.x ? 1 : -1 }, [foe.x, foe.y - 40]);
+      applyHit(f, foe, { dmg: 25, kb: [120, -460], stun: 0.45, hs: 0.08, launch: true, noScale: true, dir: foe.x >= p.x ? 1 : -1 }, [foe.x, foe.y - 40]);
     return false;
   }
   if (f.ch.id === 'feiying' && f.bbT > 0 && c.consume('skill')) {
@@ -2257,7 +2260,7 @@ class Fighter {
     this.guard = this.maxGuard;
     this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
-      skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 20, spN: 0, spPose: null, rooted: false, slowT: 0,
+      skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 80, spN: 0, spPose: null, rooted: false, slowT: 0,
       notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
@@ -2922,7 +2925,7 @@ function attackUpdate(f, foe) {
       const n = f.moveName === 'cs2' ? 2 : 1, dx = foe.x - f.x, dy = (foe.y - 60) - (f.y - 62), a0 = Math.atan2(dy, dx);
       for (let k = 0; k < n; k++) {
         const a = a0 + (n === 2 ? (k ? 0.1 : -0.1) : 0);
-        spawnProj(f, { kind: 'wind', x: f.x + Math.cos(a) * 40, y: f.y - 62, vx: Math.cos(a) * 1150, vy: Math.sin(a) * 1150, w: 56, h: 52, life: 1.2, dmg: 7, kb: [420, 0], stun: 0.5, hs: 0.08, knock: true, unbreakable: f.moveName === 'cs2' });
+        spawnProj(f, { kind: 'wind', x: f.x + Math.cos(a) * 40, y: f.y - 62, vx: Math.cos(a) * 1150, vy: Math.sin(a) * 1150, w: 56, h: 52, life: 1.2, dmg: 28, kb: [420, 0], stun: 0.5, hs: 0.08, knock: true, unbreakable: f.moveName === 'cs2' });
       }
     }
     if (m.track) {
@@ -3227,10 +3230,10 @@ function updateProjs() {
     if (p.kind === 'moonring') {
       const returning = p.boomer && p.age > p.turn;
       if (returning) {
-        hitM = { ...p, dmg: 7, stun: 0.78, hs: 0.12, launch: true, kb: [180, -580], big: true };
+        hitM = { ...p, dmg: 38, stun: 0.78, hs: 0.12, launch: true, kb: [180, -580], big: true };
         addP({ type: 'text', text: '背袭破防', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '230,200,255' });
       } else {
-        hitM = { ...p, dmg: 5, stun: 0.25, hs: 0.04, launch: false, kb: [100, 0] };
+        hitM = { ...p, dmg: 28, stun: 0.25, hs: 0.04, launch: false, kb: [100, 0] };
       }
     } else if (p.kind === 'inkblob') {
       foe.slowT = 2.5;
@@ -3478,7 +3481,7 @@ function updateFighter(f, foe) {
   // 月华被动：3 秒没挨打缓慢回血
   f.sinceHit += STEP;
   if (f.ch.passive === 'regen' && M.phase === 'fight' && f.hp > 0 && f.hp < f.maxHp && f.sinceHit > 3 && f.regenLeft > 0) {
-    const h = Math.min(1.6 * STEP, f.regenLeft); f.hp = Math.min(f.maxHp, f.hp + h); f.regenLeft -= h;
+    const h = Math.min(8.0 * STEP, f.regenLeft); f.hp = Math.min(f.maxHp, f.hp + h); f.regenLeft -= h;
   }
   if (f.state !== 'special') f.invul = Math.max(0, f.invul - STEP);
   f.flash = Math.max(0, f.flash - STEP);
@@ -3798,23 +3801,11 @@ function tryHit(f, foe, m) {
 
   f.hitDone = true;
   const px = (Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, py = (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2;
-  if (f.ch.passive === 'tip' && /^l\d/.test(m.name || '')) {
-    const tip = Math.abs(hu[f.face > 0 ? 0 : 2] - f.x) > m.box[2] * 0.56;
-    m = { ...m, dmg: m.dmg * (tip ? 1.15 : 0.60) };   // 枪身微弱，枪尖增伤
-    if (!isClient()) addP({ type: 'text', text: tip ? '枪尖' : '枪身', x: px, y: py - 30, life: 0.5, max: 0.5, rgb: tip ? f.look.slash : '180,180,190' });
-  }
   applyHit(f, foe, m, [px, py]);
 }
 const predicted = [];
 function predictHit(att, def, m, pt) {
   if (att.idx !== localIdx() || m.isProj) return;
-  // 醉仙被动：醉意过半，两成几率闪开近身攻击
-  if (def.ch.passive === 'drunk' && (def.drunk || 0) >= 50 && !m.isProj && !m.ult && !m.unblockable && !m.hold && ['idle', 'walk', 'air'].includes(def.state) && grnd() < 0.2) {
-    def.invul = Math.max(def.invul, 0.2); def.vx = fx * 320; def.drunk = Math.max(0, def.drunk - 10);
-    addP({ type: 'text', text: '醉里乾坤', x: def.x, y: def.y - 110, life: 0.7, max: 0.7, rgb: '255,170,90' });
-    smoke(def.x, def.y - 50, 4); SFX.dash();
-    return;
-  }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
   const sx = m.srcX !== undefined ? m.srcX : att.x, fx = m.dir || att.face;
@@ -3834,6 +3825,13 @@ function applyHit(att, def, m, pt) {
   def.drinkT = 0;
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
+  // 醉仙被动：醉意过半，两成几率闪开近身攻击
+  if (def.ch.passive === 'drunk' && (def.drunk || 0) >= 50 && !m.isProj && !m.ult && !m.unblockable && !m.hold && ['idle', 'walk', 'air'].includes(def.state) && grnd() < 0.2) {
+    def.invul = Math.max(def.invul, 0.2); def.vx = fx * 320; def.drunk = Math.max(0, def.drunk - 10);
+    addP({ type: 'text', text: '醉里乾坤', x: def.x, y: def.y - 110, life: 0.7, max: 0.7, rgb: '255,170,90' });
+    smoke(def.x, def.y - 50, 4); SFX.dash();
+    return;
+  }
   // 月镜：格开近身攻击并反斩（飞行道具和大招无效）
   if (def.state === 'skill' && def.parryT > 0 && !m.isProj && !m.ult) { parry(def, att, pt); def.skill2CD = 0; return; }
   // 雷鸣：金刚雷铠招架反击（吸收近战攻击并引动天雷反制敌首）
@@ -3920,10 +3918,10 @@ function applyHit(att, def, m, pt) {
     hitVisual(ev); netEmit(ev);
     return;
   }
-  // 霸体：普通攻击打不断，只吃 60% 伤害
+  // 霸体：普通攻击打不断，减伤 20%（只吃 80% 伤害）
   const defRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
-  if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.75 > 0) {
-    const dmg = (m.dmg * 0.75) / defRating;
+  if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.80 > 0) {
+    const dmg = (m.dmg * 0.80) / defRating;
     def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
     if (--def.armorHits <= 0) def.armorT = 0;
     if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
@@ -4000,13 +3998,13 @@ function applyHit(att, def, m, pt) {
   if (att.ch.passive === 'tip' && !m.isProj && !m.ult) {
     const dist = Math.abs(def.x - att.x);
     if (dist >= 142) {
-      dmg *= 1.25; m.launch = true; ev.big = true;
+      dmg *= 1.25; m = { ...m, launch: true }; ev.big = true;
       ring(pt[0], pt[1], 100, '170,220,255', 0.35);
       camImpact(pt[0], pt[1], 0.22, 0.35);
       SFX.frostHit(1.1);
       addP({ type: 'text', text: '枪尖', x: pt[0], y: pt[1] - 40, life: 0.5, max: 0.5, rgb: '170,220,255' });
     } else if (dist < 72) {
-      dmg *= 0.38; m.launch = false;
+      dmg *= 0.38; m = { ...m, launch: false };
       addP({ type: 'text', text: '贴身', x: pt[0], y: pt[1] - 30, life: 0.4, max: 0.4, rgb: '160,170,190' });
     }
   }
@@ -9324,7 +9322,7 @@ function statRows(c) {
   const m = CHAR_MOVES[CHAR_IDX[c.id]];
   const st = c.stat, B = BAL[c.id] || BAL.qingfeng, hp = Math.round(st.hp * B.hp), dmg = +(st.dmg * B.normal).toFixed(2);
   const rows = [
-    ['生命上限', hp, 150, `${hp}`],
+    ['生命上限', hp, 550, `${hp}`],
     ['体量压制', st.weight || 1, 2.0, `${st.weight || 1}×`],
     ['防御减伤', st.defRating || 1, 1.25, `×${st.defRating || 1}`],
     ['格挡架势', st.guardMax || 100, 160, `${st.guardMax || 100}`],
@@ -9361,33 +9359,33 @@ const ICONS = {
 const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.skill}</svg></span>`;
 // 图鉴里的简短说明（数值 / 一句话）
 const SHORT = {
-  疾风斩: ['6', '突进穿身'], 影遁: ['3', '瞬移身后 · 下一击 ×1.5'], 震地: ['9', '双向地波 · 掀飞'], 回马枪: ['9', '后跃回刺 · 挑飞'],
-  风刃: ['7×2', '上下两道风刃 · 几无前摇'], 雷闪: ['6', '穿身雷光 · 僵直'], 墨阵: ['定身', '踩中定身 1.2 秒'], 月镜: ['12', '格开近战 · 自动反斩'], 俯冲: ['11', '空中俯冲 · 僵直'],
-  剑气: ['8', '半场剑气'], 飞镖: ['3×3', '三枚散射'], 铁壁冲: ['8', '霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['2×5', '向前疾冲 · 撒爆米花半秒后炸'],
-  雷踏: ['7', '前方雷柱'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['5×2', '飞出再飞回'], 翎羽: ['4×2', '射程无限'],
-  残月: ['29', '突进乱斩 · 终结回气重置'], 千影: ['31', '九影乱斩 · 绝杀分身重置'], 山崩: ['28', '砸地晕眩 · 直击回半气重置'], 刹那: ['12–22', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
-  龙卷: ['≤32', '龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['9×3', '天雷追落 · 气量回涌30%'], 符阵: ['随符数', '宣纸全图 · 按符数爆伤'], 月华如水: ['+12', '回血霸体 · 架招重置'], 万羽: ['≤31', '羽刃天降 · 飞行重置'],
+  疾风斩: ['55', '突进穿身 · 剑气重置'], 影遁: ['45', '瞬移身后 · 下一击 ×1.5'], 震地: ['45+40', '双向地波 · 掀飞'], 回马枪: ['60', '后跃回刺 · 挑飞'],
+  风刃: ['28×2', '上下两道风刃 · 几无前摇'], 雷闪: ['40', '穿身雷光 · 麻痹'], 墨阵: ['35', '踩中定身 · 二段引爆'], 月镜: ['95', '格开近战 · 自动反斩'], 俯冲: ['46', '空中俯冲 · 命中刷新'],
+  剑气: ['52', '半场弧月剑气 · 挑空'], 飞镖: ['25×4', '四枚散射'], 铁壁冲: ['56', '通天巨浪 · 霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['8×5', '向前疾冲 · 撒爆米花半秒后炸'],
+  金刚雷铠: ['50', '雷铠御守 · 引雷反震'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['28 / 38', '飞出轻削 · 折返背袭'], 翎羽: ['22×3', '三道翎羽 · 射程无限'],
+  残月: ['169', '六连居合 · 终结回气重置'], 千影: ['179', '九影乱斩 · 绝杀分身重置'], 山崩: ['185', '砸地晕眩 · 正中回满气重置'], 刹那: ['140–185', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
+  龙卷: ['16×16', '双龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['48×3', '天雷追落 · 气量回涌30%'], 符阵: ['80–280', '宣纸全图 · 按符数爆伤'], 月华如水: ['75 (+60血)', '回血霸体 · 架招重置'], 万羽: ['14×14', '羽刃天降 · 飞行重置'],
 };
-const PASSIVE_SHORT = { qingfeng: '攒气快 8%', feiying: '最快移速出手 · 脆皮(88血)', tieshan: '重斩蓄力霸体 · 气血冠绝(140血)', lingshuang: '枪尖 ×1.25 · 枪身 ×⅓',
-  liuyun: '三段跳 · 御风轻盈(92血)', leiming: '普攻六连 · 强横体魄(118血)', moyu: '普攻甩墨耗墨水 · 蓄力远 40%', yuehua: '3 秒未受伤回血', yanling: '空中按住跳跃飞 1.2 秒',
-  yuxiao: '普攻攒音律，清音随音律变强', zuixian: '醉意增伤，半醉可闪避近身攻击', gouchen: '被锤中的人 1.2 秒内受伤 +25%' };
+const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(510血)', feiying: '最快移速出手 · 身轻体巧(470血)', tieshan: '重斩蓄力霸体 · 气血冠绝(530血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(480血)',
+  liuyun: '三段跳 · 御风轻盈(495血)', leiming: '普攻六连 · 强横体魄(520血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(485血)', yuehua: '3 秒未受伤每秒回 8 血(460血)', yanling: '空中按住跳跃飞 1.2 秒(440血)',
+  yuxiao: '普攻攒音律，清音随音律变强(455血)', zuixian: '醉意增伤，半醉可闪避近身攻击(520血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(490血)' };
 const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
   feiying: '1.5 秒内再按 Q 瞬回原位',
   liuyun: '风刃两道 · 开扇撒爆米花',
-  leiming: '雷闪冲拳命中，立时重置雷踏冷却',
+  leiming: '雷闪冲拳命中，立时重置金刚雷铠冷却',
   lingshuang: '回马枪命中，枪旋冷却减半',
   moyu: '再按 Q 引爆墨阵',
   yuehua: '格反成功，月轮冷却清零',
   yanling: '空中俯冲命中，可再冲一次',
   yuxiao: '回音壁能把暗器弹回去',
-  zuixian: '醉意过半，豪饮变喷火',
+  zuixian: '酒过半壶可闪避近战，并可掷坛与民同乐回春',
   gouchen: '飞锤拽到身前，接旋锤',
 };
 // 各角色大招怒气积攒专属特性与通用规则
 const HERO_METER_EXPLAIN = {
-  qingfeng: '【聚气流转 · 极速充能】天生剑意通明，命中与受击攒气速度常驻 +8%（meterMul 1.08）。绝技「残月」终结斩落额外回涌 20% 气量。',
+  qingfeng: '【聚气流转 · 极速充能】天生剑意通明，命中与受击攒气速度常驻 +10%（meterMul 1.10）。绝技「残月」终结斩落额外回涌 20% 气量。',
   feiying: '【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。',
   tieshan: '【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」正中命中更是气量回满，可以立刻再砸一次（砸偏或砸倒地的对手只回一半）！',
   lingshuang: '【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。',
@@ -9406,7 +9404,7 @@ const HERO_MOVE_TYPES = {
   tieshan: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '重震', icon: 'melee' }, ranged: { type: 'melee', label: '通天巨浪', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
   feiying: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '背袭突进', icon: 'melee' }, ranged: { type: 'ranged', label: '暗器远程', icon: 'ranged' }, ult: { type: 'melee', label: '绝杀' }, esc: { type: 'esc', label: '身法' } },
   liuyun: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'ranged', label: '气刃远程', icon: 'ranged' }, ranged: { type: 'dash', label: '开扇冲刺', icon: 'ranged' }, ult: { type: 'ranged', label: '神通' }, esc: { type: 'esc', label: '身法' } },
-  leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'ranged', label: '引雷落击', icon: 'ranged' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
+  leiming: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '雷拳突进', icon: 'melee' }, ranged: { type: 'counter', label: '雷铠反击', icon: 'shield_bash' }, ult: { type: 'melee', label: '奥义' }, esc: { type: 'esc', label: '身法' } },
   lingshuang: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'melee', label: '枪尖回刺', icon: 'melee' }, ranged: { type: 'melee', label: '枪旋近战', icon: 'melee' }, ult: { type: 'melee', label: '神技' }, esc: { type: 'esc', label: '身法' } },
   moyu: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'trap', label: '地面陷阱', icon: 'magic_trap' }, ranged: { type: 'counter', label: '画符蓄势', icon: 'ranged' }, ult: { type: 'ranged', label: '全图' }, esc: { type: 'esc', label: '身法' } },
   yuehua: { light: { type: 'melee', label: '近战' }, charge: { type: 'melee', label: '近战' }, air: { type: 'melee', label: '近战' }, skill: { type: 'counter', label: '太阴架招', icon: 'shield_bash' }, ranged: { type: 'ranged', label: '折返飞轮', icon: 'ranged' }, ult: { type: 'counter', label: '仙术' }, esc: { type: 'esc', label: '身法' } },
@@ -9421,8 +9419,8 @@ const HERO_RESTRAINTS_EXPLAIN = {
     weakWhy: '【怕 绯影、雷鸣】绯影影遁直接闪到身后，雷鸣雷闪贴脸快拳，玉箫来不及攒音律，回音壁也挡不住连续近身。'
   },
   zuixian: {
-    beatsWhy: '【克 凌霜、月华】醉步滚翻从枪尖下穿过去，贴身后凌霜的枪施展不开；月华的月镜只格近身，醉仙可以先喷火。',
-    weakWhy: '【怕 流云、墨羽】流云风刃一直把人往外推，醉仙拳短够不着；墨羽的墨阵定住脚，醉步也滚不出去。'
+    beatsWhy: '【克 凌霜、月华】醉步身法与飞亭留客封锁中距离，贴身后凌霜的枪施展不开；月华的月镜只格近身，醉翁可掷坛共饮或飞亭砸落。',
+    weakWhy: '【怕 流云、墨羽】流云风刃一直把人往外推，醉翁拳短够不着；墨羽的墨阵定住脚，近身极其艰难。'
   },
   gouchen: {
     beatsWhy: '【克 燕翎、绯影】燕翎落地就会被旋锤卷进去；绯影血薄，被飞锤拽到身前吃满震魄增伤很快就倒。',
@@ -9468,111 +9466,111 @@ const HERO_RESTRAINTS_EXPLAIN = {
 // ======================= 全真打击数据与时序 =======================
 const HERO_HIT_DETAILS = {
   yuxiao: {
-    light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '26 (5段)', cd: '', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
-    charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '9 / 18', cd: '', desc: '旋身横扫破开防守，将对手打倒在地。' },
-    air: { name: '高音穿云斩', badge: '挑空', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '跃起凌空横箫劈点，二段把人送上云霄。' },
+    light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '95 (5段)', cd: '', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
+    charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '35.3 / 56.8', cd: '', desc: '旋身横扫破开防守，将对手打倒在地。' },
+    air: { name: '高音穿云斩', badge: '挑空', badgeCls: 'badge-buff', dmg: '17.6 / 25.5', cd: '', desc: '跃起凌空横箫劈点，二段把人送上云霄。' },
     skill: { name: '清音破空', badge: '音波穿透', badgeCls: 'badge-stun', dmg: '22~82', cd: '3.2s', desc: '将身上的音律一次吹尽，三律齐鸣时音波贯穿挑空并迟缓对手。' },
     ranged: { name: '回音壁', badge: '弹回暗器', badgeCls: 'badge-break', dmg: '18~42', cd: '6s', desc: '筑起回音屏障推开近敌，弹回期间飞来的暗器并获得音律。' },
     ult: { name: '广陵散', badge: '曲终绝响', badgeCls: 'badge-stun', dmg: '144~189', cd: '气满', desc: '六道音刃轮番穿身，曲终绝响从脚下炸开，音律回满。' },
-    esc: { name: '休止符', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+    esc: { name: '休止符', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   zuixian: {
-    light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '东倒西歪的五连拳，醉意越高越痛。' },
-    charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '11 / 20', cd: '', desc: '身如醉钟横撞，正面撞碎对手防御。' },
-    air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '7 / 9', cd: '', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
+    light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '东倒西歪的五连拳，醉意越高越痛。' },
+    charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '身如醉钟横撞，正面撞碎对手防御。' },
+    air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
     skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', cd: '16s', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割，霸体可硬抗。' },
-    ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0', cd: '6.5s', desc: '半壶酒掷向对手，自身回80血晕0.7秒，对手回50血晕1.5秒并清空酒意。' },
+    ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0 (+80血)', cd: '16s', desc: '半壶酒掷向对手，自身回80血晕0.7秒，对手回50血晕1.5秒并清空酒意。' },
     ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', cd: '气满', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
     esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   gouchen: {
-    light: { name: '链锤连打', badge: '长臂展', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '甩着链锤抡打五连击，攻击距离比常人长一截。' },
-    charge: { name: '流星坠地', badge: '破防砸倒', badgeCls: 'badge-break', dmg: '10 / 19', cd: '', desc: '铁锤绷直重重砸落，崩裂地面砸倒对手。' },
-    air: { name: '飞轮落锤', badge: '挑空下砸', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中抡圆链锤扫打，二段势大力沉压向地面。' },
+    light: { name: '链锤连打', badge: '长臂展', badgeCls: 'badge-buff', dmg: '94.1 (5段)', cd: '', desc: '甩着链锤抡打五连击，攻击距离比常人长一截。' },
+    charge: { name: '流星坠地', badge: '破防砸倒', badgeCls: 'badge-break', dmg: '34.9 / 56.3', cd: '', desc: '铁锤绷直重重砸落，崩裂地面砸倒对手。' },
+    air: { name: '飞轮落锤', badge: '挑空下砸', badgeCls: 'badge-buff', dmg: '17.5 / 25.2', cd: '', desc: '空中抡圆链锤扫打，二段势大力沉压向地面。' },
     skill: { name: '飞锤拉拽', badge: '拽至身前', badgeCls: 'badge-stun', dmg: '18', cd: '5s', desc: '甩出链锤将远处的对手一把拽到跟前，附加震魄增伤。' },
     ranged: { name: '旋锤风暴', badge: '砸碎暗器', badgeCls: 'badge-buff', dmg: '58 (5圈)', cd: '6s', desc: '头顶抡圆飞转砸碎飞镖暗器，第五圈脱手一甩把人击飞。' },
     ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', cd: '气满', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
-    esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+    esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   qingfeng: {
-    light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '27 (5段)', cd: '', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
-    charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
-    air: { name: '凌空挑斩·下砸', badge: '🌪️ 挑空击倒', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中横斩滞空，二段重坠下劈强压地面。' },
-    skill: { name: '居合·疾风斩', badge: '⚡ 斩穴定身 0.65s', badgeCls: 'badge-stun', dmg: '7', cd: '5s', desc: '身随剑走瞬间穿身，施加穴道强定身并刷新冲刺。' },
-    ranged: { name: '弧月·剑气', badge: '🌪️ 掀天挑空', badgeCls: 'badge-buff', dmg: '9', cd: '5s', desc: '半屏极速弧月剑刃，破尽暗器并挑飞空中。' },
-    ult: { name: '绝技·残月', badge: '⚡ 剑意通明', badgeCls: 'badge-stun', dmg: '29 (6连)', cd: '气满', desc: '居合连影绞杀，斩落重置全技能与绝技气量回涌。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+    light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '100.9 (5段)', cd: '', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
+    charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '37.4 / 60.3', cd: '', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
+    air: { name: '凌空挑斩·下砸', badge: '🌪️ 挑空击倒', badgeCls: 'badge-buff', dmg: '18.7 / 27', cd: '', desc: '空中横斩滞空，二段重坠下劈强压地面。' },
+    skill: { name: '居合·疾风斩', badge: '⚡ 斩穴定身 0.65s', badgeCls: 'badge-stun', dmg: '55', cd: '5s', desc: '身随剑走瞬间穿身，施加穴道强定身并刷新剑气与冲刺。' },
+    ranged: { name: '弧月·剑气', badge: '🌪️ 掀天挑空', badgeCls: 'badge-buff', dmg: '52', cd: '5s', desc: '半屏极速弧月剑刃，破尽暗器并挑飞空中。' },
+    ult: { name: '绝技·残月', badge: '⚡ 剑意通明', badgeCls: 'badge-stun', dmg: '169 (6连)', cd: '气满', desc: '居合连影绞杀，斩落重置全技能与绝技气量回涌。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   tieshan: {
-    light: { name: '重剑沉猛四斩', badge: '💥 霸体压制', badgeCls: 'badge-break', dmg: '31 (4段)', cd: '', desc: '玄铁巨剑刀刀沉重带金属火星，体量压迫。' },
-    charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '12 / 20', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
-    air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '7 / 9', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
-    skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.85s', badgeCls: 'badge-stun', dmg: '8 + 10', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
-    ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '14', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
-    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '28 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '7.0s', desc: '玄铁盾身强解受控，冷却极快（7秒）。' }
+    light: { name: '重剑沉猛五斩', badge: '💥 霸体压制', badgeCls: 'badge-break', dmg: '93.1 (5段)', cd: '', desc: '玄铁巨剑刀刀沉重带金属火星，体量压迫。' },
+    charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '34.6 / 55.7', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
+    air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '17.3 / 25', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
+    skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.45s', badgeCls: 'badge-stun', dmg: '45 + 40', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
+    ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '56', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
+    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '185 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '玄铁重甲强解受控，稳健退避重整架势。' }
   },
   feiying: {
-    light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '26 (5段)', cd: '', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
-    charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '9 / 16', cd: '', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
-    air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '5 / 7', cd: '', desc: '空中回旋双刺，下落直刺钉向地面。' },
-    skill: { name: '暗影·影遁', badge: '🌑 背后绞杀', badgeCls: 'badge-stun', dmg: '4', cd: '11s', desc: '结印化烟，0.15 秒掠到对手背后十字绞杀（不让对手僵直），之后下一击增伤。' },
-    ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '2.8×4', cd: '5s', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
-    ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '31 (9连)', cd: '气满', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', cd: '9.5s', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
+    light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '92 (5段)', cd: '', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
+    charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '40.3 / 65', cd: '', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
+    air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '20.2 / 29.1', cd: '', desc: '空中回旋双刺，下落直刺钉向地面。' },
+    skill: { name: '暗影·影遁', badge: '🌑 背后绞杀', badgeCls: 'badge-stun', dmg: '45', cd: '11s', desc: '结印化烟，0.15 秒掠到对手背后十字绞杀（不让对手僵直），之后下一击增伤50%。' },
+    ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '25×4', cd: '5s', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
+    ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '179 (9连)', cd: '气满', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
   },
   liuyun: {
-    light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '24 (3段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
-    charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '8 / 15', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
-    air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
-    skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '7×2', cd: '2s', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
-    ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '2×5', cd: '4s', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
-    ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '2×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
+    light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '114.5 (5段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
+    charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '42.5 / 68.4', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
+    air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '21.2 / 30.7', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
+    skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '28×2', cd: '3.0s', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
+    ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '8×5', cd: '4s', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
+    ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '16×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
   },
   leiming: {
     light: { name: '狂雷六连轰拳', badge: '⚡ 疾电连打', badgeCls: 'badge-buff', dmg: '132 (6段)', cd: '', desc: '六记重拳连环轰击，拳拳带雷，末拳雷暴轰天。' },
-    charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '9 / 17', cd: '', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
-    air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中重拳下砸，接连一记沉雷踏击。' },
-    skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.82s', badgeCls: 'badge-stun', dmg: '7', cd: '4s', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.82秒。' },
-    ranged: { name: '轰雷·雷踏', badge: '⚡ 通天雷柱 460px', badgeCls: 'badge-stun', dmg: '9', cd: '3.5s', desc: '踏地引落通天巨型垂直落雷，垂直冲天挑飞。' },
-    ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '9×3', cd: '气满', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
+    charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '33.8 / 54.5', cd: '', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
+    air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '16.9 / 24.4', cd: '', desc: '空中重拳下砸，接连一记沉雷踏击。' },
+    skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.38s', badgeCls: 'badge-stun', dmg: '40', cd: '5s', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.38秒并重置雷铠。' },
+    ranged: { name: '金刚·雷铠', badge: '⚡ 引雷反震 50', badgeCls: 'badge-stun', dmg: '50', cd: '5.5s', desc: '架起金刚雷铠0.55秒，受击消解攻击并引落九天玄雷反制敌首。' },
+    ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '48×3', cd: '气满', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 金刚解控', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '金刚怒吼震脱受制状态，后退步稳如磐石。' }
   },
   lingshuang: {
-    light: { name: '银枪连刺·抽枪', badge: '⚡ 枪芒连刺', badgeCls: 'badge-buff', dmg: '28 (4段)', cd: '', desc: '长枪一线连环突刺，枪尖命中伤害提升25%。' },
-    charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '11 / 19', cd: '', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
-    air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中点枪突刺，下压枪尾横扫落地。' },
-    skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.85s', badgeCls: 'badge-stun', dmg: '10', cd: '6s', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
+    light: { name: '银枪连刺·抽枪', badge: '⚡ 枪芒连刺', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '长枪一线连环突刺，枪尖命中伤害提升25%。' },
+    charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
+    air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '空中点枪突刺，下压枪尾横扫落地。' },
+    skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.48s', badgeCls: 'badge-stun', dmg: '60', cd: '6s', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
     ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '15×7+48', cd: '6s', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
-    ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '12–22', cd: '气满', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
+    ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '140–185', cd: '气满', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
   },
   moyu: {
-    light: { name: '挥毫泼墨三式', badge: '🎨 浓墨溅射', badgeCls: 'badge-buff', dmg: '25 (3段)', cd: '', desc: '狼毫大笔挥洒浓墨，附带远程墨滴额外伤害。' },
-    charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '10 / 18', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
-    air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
-    skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 1.4s', badgeCls: 'badge-stun', dmg: '5', cd: '6s', desc: '铺开125px深墨池，踏入者深陷墨中禁锢1.4秒。' },
+    light: { name: '挥毫泼墨五式', badge: '🎨 浓墨溅射', badgeCls: 'badge-buff', dmg: '86 (5段)', cd: '', desc: '狼毫大笔挥洒浓墨，附带远程墨滴额外伤害（每团24）。' },
+    charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '38.9 / 62.6', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
+    air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '19.4 / 28.1', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
+    skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 0.48s', badgeCls: 'badge-stun', dmg: '35', cd: '5.2s', desc: '铺开115px深墨池，踏入者定身0.48秒并迟缓2.8秒；二段Q引爆25伤害。' },
     ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', cd: '2.5s', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
-    ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '随符数', cd: '气满', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
+    ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '80~280', cd: '气满', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
   },
   yuehua: {
-    light: { name: '双月流水旋舞', badge: '🌙 月华流水', badgeCls: 'badge-buff', dmg: '26 (4段)', cd: '', desc: '双月短刃回旋如流水，舞姿飘逸清冷。' },
-    charge: { name: '合璧明月蓄斩', badge: '💥 双刀破防', badgeCls: 'badge-break', dmg: '9 / 16', cd: '', desc: '双刃化作满月合璧切落，斩断对手招架。' },
-    air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '5 / 7', cd: '', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
-    skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '14', cd: '7s', desc: '月镜架招反斩，触发太阴绝罚超长硬直与禁身。' },
-    ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '6×2', cd: '3.5s', desc: '双月轮飞出折返，去程轻削，返程背袭破防击飞。' },
-    ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +12HP', badgeCls: 'badge-buff', dmg: '10 (+12)', cd: '气满', desc: '月华凝露恢复12生命，月魄护体并重置月镜月轮。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
+    light: { name: '双月流水旋舞', badge: '🌙 月华流水', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '双月短刃回旋如流水，舞姿飘逸清冷。' },
+    charge: { name: '合璧明月蓄斩', badge: '💥 双刀破防', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '双刃化作满月合璧切落，斩断对手招架。' },
+    air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
+    skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '95', cd: '7s', desc: '月镜架招反斩，触发太阴绝罚95伤害、1.05秒超长硬直与禁身。' },
+    ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '28 / 38', cd: '3.5s', desc: '双月轮飞出折返，去程28轻削，返程38背袭破防击飞。' },
+    ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +60HP', badgeCls: 'badge-buff', dmg: '75 (+60血)', cd: '气满', desc: '月华凝露恢复60生命并震退近敌75伤害，月魄护体并重置月镜月轮。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
   },
   yanling: {
-    light: { name: '飞羽短刃疾斩', badge: '🪶 振羽连打', badgeCls: 'badge-buff', dmg: '27 (3段)', cd: '', desc: '羽刃翩跹迅捷凌厉，灵动逼人。' },
-    charge: { name: '破云飞翔重扑', badge: '💥 破云重扑', badgeCls: 'badge-break', dmg: '9 / 17', cd: '', desc: '双翼振起猛力前扑，切断对手阵势。' },
-    air: { name: '苍穹展翼·掠击', badge: '🪶 空中掠阵', badgeCls: 'badge-buff', dmg: '6 / 8', cd: '', desc: '空中长达1.2秒自由翱翔，自上而下俯瞰掠击。' },
-    skill: { name: '鹰扬·俯冲', badge: '⚡ 鹰击钉地 0.78s', badgeCls: 'badge-stun', dmg: '12', cd: '3.5s', desc: '收翼斜下猎杀钉地，空中击中可刷新且再次冲锋。' },
-    ranged: { name: '千机·翎羽', badge: '🪶 极速穿透', badgeCls: 'badge-buff', dmg: '3.5×3', cd: '2.5s', desc: '振翅激射三道穿透羽刃，贯穿全屏牵制打断。' },
-    ult: { name: '天怒·万羽', badge: '🪶 凌霄破虚 14枚', badgeCls: 'badge-buff', dmg: '2.2×14', cd: '气满', desc: '九霄万羽暴雨倾泻，重置技能并回满飞行耐力。' },
+    light: { name: '飞羽短刃疾斩', badge: '🪶 振羽连打', badgeCls: 'badge-buff', dmg: '100.9 (5段)', cd: '', desc: '羽刃翩跹迅捷凌厉，灵动逼人。' },
+    charge: { name: '破云飞翔重扑', badge: '💥 破云重扑', badgeCls: 'badge-break', dmg: '37.4 / 60.3', cd: '', desc: '双翼振起猛力前扑，切断对手阵势。' },
+    air: { name: '苍穹展翼·掠击', badge: '🪶 空中掠阵', badgeCls: 'badge-buff', dmg: '18.7 / 27', cd: '', desc: '空中长达1.2秒自由翱翔，自上而下俯瞰掠击。' },
+    skill: { name: '鹰扬·俯冲', badge: '⚡ 鹰击钉地 0.40s', badgeCls: 'badge-stun', dmg: '46', cd: '4.5s', desc: '收翼斜下猎杀钉地，空中击中可刷新且再次冲锋。' },
+    ranged: { name: '千机·翎羽', badge: '🪶 极速穿透', badgeCls: 'badge-buff', dmg: '22×3', cd: '2.5s', desc: '振翅激射三道穿透羽刃，贯穿全屏牵制打断。' },
+    ult: { name: '天怒·万羽', badge: '🪶 凌霄破虚 14枚', badgeCls: 'badge-buff', dmg: '14×14', cd: '气满', desc: '九霄万羽暴雨倾泻，重置技能并回满飞行耐力。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 振翅凌云', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '猛力振翅脱离受击，立刻升空开启空中制空权。' }
   }
 };

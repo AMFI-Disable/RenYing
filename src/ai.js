@@ -1138,7 +1138,7 @@ class AIBrain {
     {
       const mateF = (me.idx === 0 ? C : me.idx === 2 ? A : me.idx === 1 ? D : B);
       const role = k => (AI_KIT[k] && AI_KIT[k].role) || 'rush';
-      const ranged = r => r === 'proj' || r === 'trap' || r === 'zone';
+      const ranged = r => r === 'proj' || r === 'trap';
       if (mateF && mateF.hp > 0 && !mateF.hidden && ranged(role(me.ch.skill)) && !ranged(role(mateF.ch.skill))
         && Math.abs(mateF.x - foe.x) < 220 && d < 240 && me.onGround() && me.hp < foe.hp * 1.3 && Math.random() < 0.45) {
         this.dir = -to; return true;
@@ -1151,7 +1151,11 @@ class AIBrain {
       for (const e of foesOf(me)) if (!e.hidden && e.hp > 0) { const v = Math.abs(e.x - cx); if (v < nd) { nd = v; near = e; } }
       const wantHeal = orb.kind === 1 && (me.hp < me.maxHp * 0.75 || (mate && mate.hp <= 0));
       const want = orb.kind !== 1 || wantHeal;
-      if (near && nd < 280 && Math.abs(me.x - near.x) < aiFrame(me, 'l1').max + 90 && dAltar <= nd + 70) { this.dir = Math.sign(near.x - me.x) || to; return false; }   // 阻截：交给立回去打
+      if (near && nd < 280 && Math.abs(me.x - near.x) < aiFrame(me, 'l1').max + 90 && dAltar <= nd + 70) {
+        this.dir = Math.sign(near.x - me.x) || to;
+        if (Math.abs(me.x - near.x) <= aiFrame(me, 'l1').max) this.press('light');
+        return true;
+      }
       if (want && dAltar < nd + 140) {
         const mateRush = mate && mate.hp > 0 && Math.abs(mate.x - cx) < dAltar && (orb.kind !== 1 || mate.hp < me.hp);
         if (!mateRush) { this.dir = Math.sign(cx - me.x) || to; if (dAltar < 48 && me.onGround()) this.press('jump'); return true; }
