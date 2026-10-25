@@ -22,7 +22,7 @@
 ## Combat Mechanics / 战斗核心机制
 
 1. **Parry & Precise Parry (招架与精准弹反)**:
-   - Tapping block right as an opponent's attack lands triggers a **Precise Parry (精准招架)**:
+   - Tapping block right as an opponent's attack lands triggers a **Precise Parry (精准招架)**.
    - Stuns the attacker, nullifies incoming damage, and grants immediate counter-attack initiative.
 2. **Hit-Stun & Cancel Windows (受击硬直与取消帧)**:
    - Standard attacks can cancel into skills or dash flashes during the active recovery window.

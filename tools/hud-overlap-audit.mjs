@@ -7,11 +7,17 @@
 //   mode: watch2v2 (default) | cpu | mayhem
 // Exit code 1 when an overlap or an off-canvas box is found.
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, openSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, openSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const CHROME = process.env.RENYING_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const CHROME = process.env.RENYING_CHROME || [
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].find(p => existsSync(p));
+if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/path/to/chrome'); process.exit(1); }
 const OUT = process.argv[2] || join(tmpdir(), 'renying-hud-overlap');
 const VW = +(process.argv[3] || 1440), VH = +(process.argv[4] || 900);
 const MODE = process.argv[5] || 'watch2v2';

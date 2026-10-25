@@ -18,9 +18,12 @@ jobs:
   touch-audit:
     name: Mobile Viewport & Virtual Joystick Audit
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set Up Python
         uses: actions/setup-python@v7
@@ -39,7 +42,8 @@ jobs:
             curl -sf http://127.0.0.1:8791/ >/dev/null && break
             sleep 0.5
           done
-          curl -sf http://127.0.0.1:8791/ >/dev/null
+          curl -sf http://127.0.0.1:8791/ >/dev/null || { echo "http server failed to start"; cat /tmp/renying-http.log; exit 1; }
+          echo "Static web server is up on :8791"
 
       - name: Run Mobile & Tablet Touch Audit
         run: node tools/touch-audit.mjs ci-touch

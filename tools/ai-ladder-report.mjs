@@ -87,7 +87,7 @@ const lines = [
   `- **对局规模**: 每组相邻难度对阵 **${144 * N} 场**（12 × 12 全英雄交叉匹配，先手/后手各半，固定随机种子对齐）`,
   `- **总模拟场次**: **${144 * N * STEP_PAIRS.length} 场**（物理引擎 120Hz 完整帧模拟）`,
   '',
-  '## 1. 相邻难度阶梯总胜率 (Tier vs. Next Best Tier)',
+  '## 1. 相邻难度阶梯总胜率 (Tier Versus Next Best Tier)',
   '',
   '| 高阶难度 (Higher Tier) | 对阵下一级难度 (Next Best Tier) | 高阶胜率 (Win %) | 胜 / 负 / 平 (W-L-D) | 平均对局时长 | 核心能力跨度 |',
   '| :--- | :--- | :--- | :--- | :--- | :--- |',
@@ -99,7 +99,7 @@ for (const r of stepResults) {
 
 lines.push(
   '',
-  '## 2. 各英雄在相邻难度晋升中的胜率表现 (Per-Hero Win % vs. Next Best Tier)',
+  '## 2. 各英雄在相邻难度晋升中的胜率表现 (Per-Hero Win Rate Versus Next Best Tier)',
   '',
   '| 英雄 (Hero) | 寻常 vs 入门 | 劲敌 vs 寻常 | 绝顶 vs 劲敌 | 天道 vs 绝顶 | 四阶平均晋升胜率 |',
   '| :--- | :--- | :--- | :--- | :--- | :--- |'

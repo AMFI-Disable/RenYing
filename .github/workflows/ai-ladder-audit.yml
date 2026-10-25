@@ -22,6 +22,7 @@ jobs:
   ai-ladder:
     name: Benchmark AI Ladder & Update Markdown Report
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -40,8 +41,8 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           if ! git diff --quiet docs/ai-ladder-benchmark.md; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.name "AMFI-Disable"
+            git config user.email "evengao6688@gmail.com"
             git add docs/ai-ladder-benchmark.md
             git commit -m "chore: update ai ladder"
             git push origin HEAD:main

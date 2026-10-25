@@ -76,6 +76,7 @@ data/
 logs/
 ci-ui/
 ci-hud/
+ci-hud-ov/
 ci-touch/
 ci-net/
 tools/music/out/
