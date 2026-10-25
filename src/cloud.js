@@ -1050,6 +1050,8 @@
       if (sigState === 'tampered') {
         throw new Error('⚠️ 存档校验和不匹配：该备份文件已被外部篡改');
       }
+      // 'weak'：只对得上旧版（只签六个字段）的签名。可以导入，但别假装它是完整校验过的
+      const weakNote = sigState === 'weak' ? '旧版备份：只有墨锭与胜负经过校验' : '';
       const p = data.profile;
       const uid = (data.account && data.account.uid) || ('imported_' + Date.now());
       const name = (data.account && data.account.name) || p.name || '大侠';
@@ -1060,6 +1062,7 @@
       if (cloudActive()) {
         saveProfile(p, true);
       }
+      p._importNote = weakNote;
       return p;
     }
     throw new Error('不支持的文件格式');
