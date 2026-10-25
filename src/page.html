@@ -449,16 +449,62 @@
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">双人同舟，驰骋阔野！擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央【天道剑坛】定时刷出神符灵丹，并伴随【天劫剑雨】！</p>
 
-        <p class="netnote" style="margin:0 0 12px">想亲自上场？去「对战」页的 2v2 组队开黑，点「单人出战」：你带一位电脑队友，对阵两位电脑。</p>
+        <!-- 2v2 演武模式三大直选切槽：单人出战 / 本地同屏 / 天道观战 -->
+        <div class="sec-sub-label" style="margin-top:10px">对决模式选择</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-bottom:14px" id="single2v2Modes">
+          <button class="mcard sel" id="single2v2SoloBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid #e9c46a;background:rgba(233,196,106,0.12);text-align:left;cursor:pointer">
+            <b style="color:var(--gold);font-size:15px;display:block;margin-bottom:4px">👤 单人出战 (人机协同)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">你 + 电脑队友 vs 双电脑（进入点将台禁选）</span>
+          </button>
+          <button class="mcard" id="single2v2LocalCoopBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
+            <b style="color:#7fe0b0;font-size:15px;display:block;margin-bottom:4px">👥 本地双人破阵 (同袍共斗)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">同台电脑键盘 1P+2P 组队 vs 双天道 AI</span>
+          </button>
+          <button class="mcard" id="single2v2LocalVsBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
+            <b style="color:#ffb142;font-size:15px;display:block;margin-bottom:4px">⚔️ 本地四方争锋 (四人对决)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">同屏 4 玩家键位切磋（苍龙 1P/2P vs 赤凤 3P/4P）</span>
+          </button>
+          <button class="mcard" id="single2v2WatchTabBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
+            <b style="color:#d946ef;font-size:15px;display:block;margin-bottom:4px">👁️ 天道演武 (4 机纯观战)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">4 位天道顶尖神级 AI 自动 6 步蛇形禁选并死斗</span>
+          </button>
+        </div>
 
-        <!-- 观战区 (纯观战) -->
-        <div id="single2v2WatchPane">
-          <div class="sec-sub-label">天道神机自动禁选顺序（共 6 步 · 苍龙赤凤 2 禁 4 选 · 全局互不重复）</div>
-          <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
-          <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入天道演武选人：4 位天道顶尖神级 AI 依次完成 2 禁 4 选，随后苍龙赤凤 4 机协同互搏，纯观战无操作。</p>
-          <div class="single-action-row">
-            <button class="go btn-watch" id="watch2v2StartBtn" type="button">开启天道演武 · 纯观战 (4机对决)</button>
+        <!-- 难度境界选择（仅在单人出战与本地双人破阵生效） -->
+        <div id="single2v2LevelWrap">
+          <div class="sec-sub-label">电脑对手境界</div>
+          <div class="levels-grid" id="single2v2Levels">
+            <button data-lv="easy" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+              <span class="lv-sub">反应迟缓 · 初学练手</span>
+            </button>
+            <button data-lv="normal" class="sel" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+              <span class="lv-sub">见招拆招 · 攻守均衡</span>
+            </button>
+            <button data-lv="hard" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+              <span class="lv-sub">凌厉反击 · 连招压制</span>
+            </button>
+            <button data-lv="impossible" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+              <span class="lv-sub">极境宗师 · 绝无破绽</span>
+            </button>
+            <button data-lv="god" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+              <span class="lv-sub">神经网络 · 协同战术</span>
+            </button>
           </div>
+        </div>
+
+        <!-- 观战步骤指示区 (仅观战时展开) -->
+        <div id="single2v2WatchSteps" style="display:none;margin-top:10px">
+          <div class="sec-sub-label">天道 2v2 标准蛇形禁选顺序（共 6 步 · 全局互不重复）</div>
+          <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
+        </div>
+
+        <div class="single-action-row" style="margin-top:14px">
+          <button class="go" id="single2v2ActionBtn" type="button">进入 2v2 点将台 · 开启对决</button>
         </div>
       </div>
 
@@ -511,15 +557,17 @@
           </div>
           <div class="mm-card mm-2v2" id="mm2v2Card">
             <div class="mm-card-bg" aria-hidden="true"></div>
-            <span class="mm-kicker">全新玩法 · 协同决战</span>
-            <span class="mm-title">2v2 组队开黑</span>
-            <span class="mm-en">2V2 TEAM & CO-OP</span>
-            <span class="mm-desc">一个人带电脑队友出战，双人同袍共破天道，或四人组队同台切磋；也能坐看四位天道 AI 互搏。</span>
+            <span class="mm-kicker">全网连线 · 协同决战</span>
+            <span class="mm-title">2v2 在线开黑</span>
+            <span class="mm-en">2V2 MULTIPLAYER</span>
+            <span class="mm-desc">通过全网撮合或好友密令连线，携手真人同袍共破天道，或两队四人同台线上对决！</span>
             <div class="mm-2v2-actions">
-              <button class="mm-go" id="mm2v2SoloBtn" type="button"><span>单人出战 · 人机协同</span><span class="go-sub">你 + 电脑队友 vs 双电脑</span></button>
-              <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>双人破阵 · 共斗</span><span class="go-sub">双人同袍 vs 双天道</span></button>
-              <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>四方争锋 · 对决</span><span class="go-sub">2人 vs 2人 巅峰对战</span></button>
-              <button class="mm-go btn-watch" id="mm2v2WatchBtn" type="button"><span>纯观战 · 天道演武</span><span class="go-sub">4神机AI神仙打架</span></button>
+              <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>双人破阵 · 在线共斗</span><span class="go-sub">2人连线组队 vs 双天道 AI</span></button>
+              <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>四方争锋 · 联机对决</span><span class="go-sub">2人 vs 2人 巅峰网络对战</span></button>
+              <button class="mm-link" id="mm2v2LobbyRoomBtn" type="button" style="text-align:center;padding:6px;color:var(--gold);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:4px">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                密令建房 / 输入房间号加入
+              </button>
             </div>
           </div>
         </div>

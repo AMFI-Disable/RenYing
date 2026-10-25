@@ -9088,7 +9088,7 @@ function singleSec(sec) {
   else if (active === 'stage') renderStages();
   else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
   else if (active === 'mayhem') renderMayhem();
-  else if (active === 'watch2v2') renderWatch2v2();
+  else if (active === 'watch2v2') renderSingle2v2();
   else if (active === 'cpu') updateAIBrief();
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
@@ -13038,16 +13038,17 @@ if (tag3WatchBtn) tag3WatchBtn.addEventListener('click', () => {
 // watch2v2Draft: [ban1, team1_p1, team1_p2, ban2, team2_p1, team2_p2] -> 6 个完全不重复的英雄索引
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
 
-// 2v2 的禁选顺序：直接复用 1v1 的 #bp 选人界面，但每一手都由天道 AI 自动完成，玩家只旁观。
-// 步骤顺序严格对应 watch2v2Draft 的形状：[苍龙禁, 苍龙先锋, 苍龙次锋, 赤凤禁, 赤凤先锋, 赤凤次锋]
+// 2v2 的竞技标准蛇形禁选顺序（Snake Draft Order）：
+// 步骤：[0队禁, 1队禁, 0队首选, 1队首选, 1队次选(连选), 0队次选(终选)]
+// 先选方拥有首选优势，后选方享有二连选（Pick 2 & Pick 3）的战术组合权，杜绝先选方全包不公。
 const WATCH2V2_TEAMS = ['苍龙', '赤凤'];
 const WATCH2V2_STEPS_ORDER = [
-  { team: 0, type: 'ban', label: '苍龙禁' },
-  { team: 0, type: 'pick', label: '苍龙先锋' },
-  { team: 0, type: 'pick', label: '苍龙次锋' },
-  { team: 1, type: 'ban', label: '赤凤禁' },
-  { team: 1, type: 'pick', label: '赤凤先锋' },
-  { team: 1, type: 'pick', label: '赤凤次锋' },
+  { team: 0, type: 'ban', slot: 0, label: '苍龙禁' },
+  { team: 1, type: 'ban', slot: 0, label: '赤凤禁' },
+  { team: 0, type: 'pick', slot: 0, label: '苍龙先锋' },
+  { team: 1, type: 'pick', slot: 0, label: '赤凤先锋' },
+  { team: 1, type: 'pick', slot: 1, label: '赤凤次锋' },
+  { team: 0, type: 'pick', slot: 1, label: '苍龙次锋' },
 ];
 const WATCH2V2_STEP_DELAY = 0.75;     // 每一步停留 0.75 秒，足够看清 AI 的出手顺序
 const WATCH2V2_FINISH_DELAY = 1.15;   // 禁选完成后留一点时间给玩家看清最终阵容
@@ -13064,7 +13065,7 @@ function renderWatch2v2() {
     return `<div style="position:relative;padding:10px 8px 12px;border-radius:12px;border:1px solid ${isBan ? 'rgba(255,90,90,.5)' : 'rgba(255,255,255,.16)'};background:${isBan ? 'rgba(60,12,18,.35)' : 'rgba(255,255,255,.04)'};text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px">
       <span style="font-family:var(--title);font-size:12px;padding:1px 8px;border-radius:4px;background:${badgeBg};color:#fbeee0;letter-spacing:1px">第 ${idx + 1} 步</span>
       <span style="font-family:var(--title);font-size:20px;line-height:1.1;color:${isBan ? '#ff8a8a' : teamCol}">${s.label}</span>
-      <span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '选择侠客'}</span>
+      <span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '挑选侠客'}</span>
     </div>`;
   }).join('');
 }
@@ -13136,8 +13137,8 @@ function watch2v2ApplyStep() {
     SFX.thud();
   } else {
     const slots = st.picks[step.team];
-    const k = slots.findIndex(v => v < 0);
-    slots[k < 0 ? slots.length - 1 : k] = i;
+    const slotIdx = step.slot !== undefined ? step.slot : slots.findIndex(v => v < 0);
+    slots[slotIdx < 0 ? slots.length - 1 : slotIdx] = i;
     SFX.block();
   }
   st.last = i;
@@ -13211,7 +13212,7 @@ function renderBPWatch2v2() {
   goB.textContent = done ? '演武即将开始…' : '天道 AI 自动禁选';
 }
 
-// 禁选结束后按 [苍龙禁, 苍龙先, 苍龙次, 赤凤禁, 赤凤先, 赤凤次] 的阵容真正开打。
+// 禁选结束后按 [苍龙禁, 赤凤禁, 苍龙先, 赤凤先, 赤凤次, 苍龙次] 的阵容真正开打。
 function startWatch2v2(draft) {
   if (p2pActive()) netDropWaiting();
   initAudio();
@@ -13220,7 +13221,7 @@ function startWatch2v2(draft) {
   human[0].rec = null;
   REC.on = false;
   if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
-  const [ban0, t1a, t1b, ban1, t2a, t2b] = watch2v2Draft;
+  const [ban0, ban1, t1a, t2a, t2b, t1b] = watch2v2Draft;
   M.mode = 'watch2v2';
   M.watchAi = true;
   M.level = 'god';
@@ -13350,31 +13351,111 @@ function open2v2Modal(mode) {
   }
 }
 
-const mm2v2SoloBtn = document.getElementById('mm2v2SoloBtn');
-if (mm2v2SoloBtn) mm2v2SoloBtn.addEventListener('click', () => open2v2Modal('pc_cc'));
-const solo2v2LevelsEl = document.getElementById('solo2v2Levels');
-if (solo2v2LevelsEl) solo2v2LevelsEl.addEventListener('click', e => {
-  const b = e.target.closest('button[data-lv]');
-  if (!b) return;
-  solo2v2Level = b.dataset.lv;
-  for (const btn of solo2v2LevelsEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
-});
-const btn2v2GoSolo = document.getElementById('btn2v2GoSolo');
-if (btn2v2GoSolo) btn2v2GoSolo.addEventListener('click', () => {
-  const modal = document.getElementById('modal2v2');
-  if (modal) modal.classList.add('hidden');
-  initAudio();
-  bpStart('2v2', { subMode: 'pc_cc', level: solo2v2Level });
-});
+// 单人模式 2v2 演武子模式与境界状态
+let single2v2SubMode = 'pc_cc'; // 'pc_cc' (单人出战), 'pp_cc' (双人同袍), 'pp_pp' (四人切磋), 'watch' (天道观战)
+let single2v2Level = 'normal';
+
+function renderSingle2v2() {
+  const modesEl = document.getElementById('single2v2Modes');
+  if (modesEl) {
+    const btns = {
+      pc_cc: document.getElementById('single2v2SoloBtn'),
+      pp_cc: document.getElementById('single2v2LocalCoopBtn'),
+      pp_pp: document.getElementById('single2v2LocalVsBtn'),
+      watch: document.getElementById('single2v2WatchTabBtn')
+    };
+    for (const [k, btn] of Object.entries(btns)) {
+      if (btn) {
+        btn.classList.toggle('sel', single2v2SubMode === k);
+        btn.style.borderColor = single2v2SubMode === k ? 'var(--gold)' : 'rgba(255,255,255,0.12)';
+        btn.style.background = single2v2SubMode === k ? 'rgba(233,196,106,0.12)' : 'rgba(255,255,255,0.04)';
+      }
+    }
+  }
+  const lvWrap = document.getElementById('single2v2LevelWrap');
+  if (lvWrap) {
+    lvWrap.style.display = (single2v2SubMode === 'pc_cc' || single2v2SubMode === 'pp_cc') ? 'block' : 'none';
+    for (const b of document.querySelectorAll('#single2v2Levels button[data-lv]')) {
+      b.classList.toggle('sel', b.dataset.lv === single2v2Level);
+    }
+  }
+  const watchSteps = document.getElementById('single2v2WatchSteps');
+  if (watchSteps) {
+    watchSteps.style.display = single2v2SubMode === 'watch' ? 'block' : 'none';
+    if (single2v2SubMode === 'watch') renderWatch2v2();
+  }
+  const actBtn = document.getElementById('single2v2ActionBtn');
+  if (actBtn) {
+    if (single2v2SubMode === 'watch') {
+      actBtn.textContent = '开启天道 2v2 演武 · 纯观战 (4机对决)';
+      actBtn.className = 'go btn-watch';
+    } else if (single2v2SubMode === 'pc_cc') {
+      actBtn.textContent = '单人出战 · 进入 2v2 点将台';
+      actBtn.className = 'go';
+    } else if (single2v2SubMode === 'pp_cc') {
+      actBtn.textContent = '双人破阵 · 进入本地同袍点将台';
+      actBtn.className = 'go';
+    } else {
+      actBtn.textContent = '四人切磋 · 进入本地四方点将台';
+      actBtn.className = 'go';
+    }
+  }
+}
+
+// 绑定单人页 2v2 交互事件
+const single2v2SoloBtn = document.getElementById('single2v2SoloBtn');
+if (single2v2SoloBtn) single2v2SoloBtn.addEventListener('click', () => { single2v2SubMode = 'pc_cc'; renderSingle2v2(); SFX.slice(); });
+const single2v2LocalCoopBtn = document.getElementById('single2v2LocalCoopBtn');
+if (single2v2LocalCoopBtn) single2v2LocalCoopBtn.addEventListener('click', () => { single2v2SubMode = 'pp_cc'; renderSingle2v2(); SFX.slice(); });
+const single2v2LocalVsBtn = document.getElementById('single2v2LocalVsBtn');
+if (single2v2LocalVsBtn) single2v2LocalVsBtn.addEventListener('click', () => { single2v2SubMode = 'pp_pp'; renderSingle2v2(); SFX.slice(); });
+const single2v2WatchTabBtn = document.getElementById('single2v2WatchTabBtn');
+if (single2v2WatchTabBtn) single2v2WatchTabBtn.addEventListener('click', () => { single2v2SubMode = 'watch'; renderSingle2v2(); SFX.slice(); });
+
+const single2v2LevelsEl = document.getElementById('single2v2Levels');
+if (single2v2LevelsEl) {
+  single2v2LevelsEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-lv]');
+    if (!b) return;
+    single2v2Level = b.dataset.lv;
+    renderSingle2v2();
+    SFX.slice();
+  });
+}
+
+const single2v2ActionBtn = document.getElementById('single2v2ActionBtn');
+if (single2v2ActionBtn) {
+  single2v2ActionBtn.addEventListener('click', () => {
+    initAudio();
+    paused = false;
+    if (single2v2SubMode === 'watch') {
+      startWatch2v2Draft();
+    } else {
+      bpStart('2v2', { subMode: single2v2SubMode, level: single2v2Level });
+    }
+  });
+}
+
+const mm2v2LobbyRoomBtn = document.getElementById('mm2v2LobbyRoomBtn');
+if (mm2v2LobbyRoomBtn) {
+  mm2v2LobbyRoomBtn.addEventListener('click', () => {
+    netRoomMode = 'pp_cc';
+    setRoomModeUI(netRoomMode);
+    if ($id('roomWrap')) {
+      $id('roomWrap').classList.remove('hidden');
+      $id('mmRoomBtn').classList.add('sel');
+    }
+    const hb = $id('hostBtn');
+    if (hb) hb.click();
+    toast('已进入 2v2 联机房间');
+  });
+}
 
 const mm2v2CoopBtn = document.getElementById('mm2v2CoopBtn');
 if (mm2v2CoopBtn) mm2v2CoopBtn.addEventListener('click', () => open2v2Modal('pp_cc'));
 
 const mm2v2VsBtn = document.getElementById('mm2v2VsBtn');
 if (mm2v2VsBtn) mm2v2VsBtn.addEventListener('click', () => open2v2Modal('pp_pp'));
-
-const mm2v2WatchBtn = document.getElementById('mm2v2WatchBtn');
-if (mm2v2WatchBtn) mm2v2WatchBtn.addEventListener('click', () => startWatch2v2Draft());
 
 const modal2v2Close = document.getElementById('modal2v2Close');
 if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
@@ -14017,13 +14098,13 @@ function bpStart(mode, customOpts = null) {
     bans = [];
     picks = [-1, -1];
   } else if (mode === '2v2') {
-    // 2v2 演武 / 同屏合作或对决：双方各禁 1 人 + 轮流选 2 人 (共 6 步)
-    steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
+    // 2v2 演武 / 同屏合作或对决：双方各禁 1 人 + 蛇形轮选 4 将 (共 6 步: 0禁 -> 1禁 -> 0选1 -> 1选1 -> 1选2 -> 0选2)
+    steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
     bans = [-1, -1];
     picks = [[-1, -1], [-1, -1]];
   } else if (mode === 'net') {
     if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') {
-      steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
+      steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
       bans = [-1, -1];
       picks = [[-1, -1], [-1, -1]];
     } else if (netRoomMode === 'chaos') {

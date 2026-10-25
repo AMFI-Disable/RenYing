@@ -3056,16 +3056,62 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">双人同舟，驰骋阔野！擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央【天道剑坛】定时刷出神符灵丹，并伴随【天劫剑雨】！</p>
 
-        <p class="netnote" style="margin:0 0 12px">想亲自上场？去「对战」页的 2v2 组队开黑，点「单人出战」：你带一位电脑队友，对阵两位电脑。</p>
+        <!-- 2v2 演武模式三大直选切槽：单人出战 / 本地同屏 / 天道观战 -->
+        <div class="sec-sub-label" style="margin-top:10px">对决模式选择</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-bottom:14px" id="single2v2Modes">
+          <button class="mcard sel" id="single2v2SoloBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid #e9c46a;background:rgba(233,196,106,0.12);text-align:left;cursor:pointer">
+            <b style="color:var(--gold);font-size:15px;display:block;margin-bottom:4px">👤 单人出战 (人机协同)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">你 + 电脑队友 vs 双电脑（进入点将台禁选）</span>
+          </button>
+          <button class="mcard" id="single2v2LocalCoopBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
+            <b style="color:#7fe0b0;font-size:15px;display:block;margin-bottom:4px">👥 本地双人破阵 (同袍共斗)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">同台电脑键盘 1P+2P 组队 vs 双天道 AI</span>
+          </button>
+          <button class="mcard" id="single2v2LocalVsBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
+            <b style="color:#ffb142;font-size:15px;display:block;margin-bottom:4px">⚔️ 本地四方争锋 (四人对决)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">同屏 4 玩家键位切磋（苍龙 1P/2P vs 赤凤 3P/4P）</span>
+          </button>
+          <button class="mcard" id="single2v2WatchTabBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
+            <b style="color:#d946ef;font-size:15px;display:block;margin-bottom:4px">👁️ 天道演武 (4 机纯观战)</b>
+            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">4 位天道顶尖神级 AI 自动 6 步蛇形禁选并死斗</span>
+          </button>
+        </div>
 
-        <!-- 观战区 (纯观战) -->
-        <div id="single2v2WatchPane">
-          <div class="sec-sub-label">天道神机自动禁选顺序（共 6 步 · 苍龙赤凤 2 禁 4 选 · 全局互不重复）</div>
-          <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
-          <p class="netnote" id="watch2v2Note" style="margin:0 0 4px">点击开始后将进入天道演武选人：4 位天道顶尖神级 AI 依次完成 2 禁 4 选，随后苍龙赤凤 4 机协同互搏，纯观战无操作。</p>
-          <div class="single-action-row">
-            <button class="go btn-watch" id="watch2v2StartBtn" type="button">开启天道演武 · 纯观战 (4机对决)</button>
+        <!-- 难度境界选择（仅在单人出战与本地双人破阵生效） -->
+        <div id="single2v2LevelWrap">
+          <div class="sec-sub-label">电脑对手境界</div>
+          <div class="levels-grid" id="single2v2Levels">
+            <button data-lv="easy" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+              <span class="lv-sub">反应迟缓 · 初学练手</span>
+            </button>
+            <button data-lv="normal" class="sel" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+              <span class="lv-sub">见招拆招 · 攻守均衡</span>
+            </button>
+            <button data-lv="hard" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+              <span class="lv-sub">凌厉反击 · 连招压制</span>
+            </button>
+            <button data-lv="impossible" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+              <span class="lv-sub">极境宗师 · 绝无破绽</span>
+            </button>
+            <button data-lv="god" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+              <span class="lv-sub">神经网络 · 协同战术</span>
+            </button>
           </div>
+        </div>
+
+        <!-- 观战步骤指示区 (仅观战时展开) -->
+        <div id="single2v2WatchSteps" style="display:none;margin-top:10px">
+          <div class="sec-sub-label">天道 2v2 标准蛇形禁选顺序（共 6 步 · 全局互不重复）</div>
+          <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
+        </div>
+
+        <div class="single-action-row" style="margin-top:14px">
+          <button class="go" id="single2v2ActionBtn" type="button">进入 2v2 点将台 · 开启对决</button>
         </div>
       </div>
 
@@ -3118,15 +3164,17 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
           </div>
           <div class="mm-card mm-2v2" id="mm2v2Card">
             <div class="mm-card-bg" aria-hidden="true"></div>
-            <span class="mm-kicker">全新玩法 · 协同决战</span>
-            <span class="mm-title">2v2 组队开黑</span>
-            <span class="mm-en">2V2 TEAM & CO-OP</span>
-            <span class="mm-desc">一个人带电脑队友出战，双人同袍共破天道，或四人组队同台切磋；也能坐看四位天道 AI 互搏。</span>
+            <span class="mm-kicker">全网连线 · 协同决战</span>
+            <span class="mm-title">2v2 在线开黑</span>
+            <span class="mm-en">2V2 MULTIPLAYER</span>
+            <span class="mm-desc">通过全网撮合或好友密令连线，携手真人同袍共破天道，或两队四人同台线上对决！</span>
             <div class="mm-2v2-actions">
-              <button class="mm-go" id="mm2v2SoloBtn" type="button"><span>单人出战 · 人机协同</span><span class="go-sub">你 + 电脑队友 vs 双电脑</span></button>
-              <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>双人破阵 · 共斗</span><span class="go-sub">双人同袍 vs 双天道</span></button>
-              <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>四方争锋 · 对决</span><span class="go-sub">2人 vs 2人 巅峰对战</span></button>
-              <button class="mm-go btn-watch" id="mm2v2WatchBtn" type="button"><span>纯观战 · 天道演武</span><span class="go-sub">4神机AI神仙打架</span></button>
+              <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>双人破阵 · 在线共斗</span><span class="go-sub">2人连线组队 vs 双天道 AI</span></button>
+              <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>四方争锋 · 联机对决</span><span class="go-sub">2人 vs 2人 巅峰网络对战</span></button>
+              <button class="mm-link" id="mm2v2LobbyRoomBtn" type="button" style="text-align:center;padding:6px;color:var(--gold);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:4px">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                密令建房 / 输入房间号加入
+              </button>
             </div>
           </div>
         </div>
@@ -15063,7 +15111,7 @@ else if (active === 'chaos') renderChaos();
 else if (active === 'stage') renderStages();
 else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
 else if (active === 'mayhem') renderMayhem();
-else if (active === 'watch2v2') renderWatch2v2();
+else if (active === 'watch2v2') renderSingle2v2();
 else if (active === 'cpu') updateAIBrief();
 }
 function openScreen(name, reveal = true) {
@@ -18867,12 +18915,12 @@ bpStart('tag3', { level: tag3Level || 'god', isWatch: true });
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
 const WATCH2V2_TEAMS = ['苍龙', '赤凤'];
 const WATCH2V2_STEPS_ORDER = [
-{ team: 0, type: 'ban', label: '苍龙禁' },
-{ team: 0, type: 'pick', label: '苍龙先锋' },
-{ team: 0, type: 'pick', label: '苍龙次锋' },
-{ team: 1, type: 'ban', label: '赤凤禁' },
-{ team: 1, type: 'pick', label: '赤凤先锋' },
-{ team: 1, type: 'pick', label: '赤凤次锋' },
+{ team: 0, type: 'ban', slot: 0, label: '苍龙禁' },
+{ team: 1, type: 'ban', slot: 0, label: '赤凤禁' },
+{ team: 0, type: 'pick', slot: 0, label: '苍龙先锋' },
+{ team: 1, type: 'pick', slot: 0, label: '赤凤先锋' },
+{ team: 1, type: 'pick', slot: 1, label: '赤凤次锋' },
+{ team: 0, type: 'pick', slot: 1, label: '苍龙次锋' },
 ];
 const WATCH2V2_STEP_DELAY = 0.75;     // 每一步停留 0.75 秒，足够看清 AI 的出手顺序
 const WATCH2V2_FINISH_DELAY = 1.15;   // 禁选完成后留一点时间给玩家看清最终阵容
@@ -18888,7 +18936,7 @@ const badgeBg = isBan ? '#b8392e' : (s.team === 0 ? 'rgba(70,211,234,.22)' : 'rg
 return `<div style="position:relative;padding:10px 8px 12px;border-radius:12px;border:1px solid ${isBan ? 'rgba(255,90,90,.5)' : 'rgba(255,255,255,.16)'};background:${isBan ? 'rgba(60,12,18,.35)' : 'rgba(255,255,255,.04)'};text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px">
 <span style="font-family:var(--title);font-size:12px;padding:1px 8px;border-radius:4px;background:${badgeBg};color:#fbeee0;letter-spacing:1px">第 ${idx + 1} 步</span>
 <span style="font-family:var(--title);font-size:20px;line-height:1.1;color:${isBan ? '#ff8a8a' : teamCol}">${s.label}</span>
-<span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '选择侠客'}</span>
+<span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '挑选侠客'}</span>
 </div>`;
 }).join('');
 }
@@ -18953,8 +19001,8 @@ st.bans[step.team] = i;
 SFX.thud();
 } else {
 const slots = st.picks[step.team];
-const k = slots.findIndex(v => v < 0);
-slots[k < 0 ? slots.length - 1 : k] = i;
+const slotIdx = step.slot !== undefined ? step.slot : slots.findIndex(v => v < 0);
+slots[slotIdx < 0 ? slots.length - 1 : slotIdx] = i;
 SFX.block();
 }
 st.last = i;
@@ -19030,7 +19078,7 @@ paused = false;
 human[0].rec = null;
 REC.on = false;
 if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
-const [ban0, t1a, t1b, ban1, t2a, t2b] = watch2v2Draft;
+const [ban0, ban1, t1a, t2a, t2b, t1b] = watch2v2Draft;
 M.mode = 'watch2v2';
 M.watchAi = true;
 M.level = 'god';
@@ -19151,28 +19199,102 @@ if (desc) desc.textContent = '两队四名侠客，同台竞技对决！选择�
 if (ldesc) ldesc.textContent = '同台电脑四人对决（1P/2P 苍龙队，3P/4P 赤凤队）。';
 }
 }
-const mm2v2SoloBtn = document.getElementById('mm2v2SoloBtn');
-if (mm2v2SoloBtn) mm2v2SoloBtn.addEventListener('click', () => open2v2Modal('pc_cc'));
-const solo2v2LevelsEl = document.getElementById('solo2v2Levels');
-if (solo2v2LevelsEl) solo2v2LevelsEl.addEventListener('click', e => {
+let single2v2SubMode = 'pc_cc'; // 'pc_cc' (单人出战), 'pp_cc' (双人同袍), 'pp_pp' (四人切磋), 'watch' (天道观战)
+let single2v2Level = 'normal';
+function renderSingle2v2() {
+const modesEl = document.getElementById('single2v2Modes');
+if (modesEl) {
+const btns = {
+pc_cc: document.getElementById('single2v2SoloBtn'),
+pp_cc: document.getElementById('single2v2LocalCoopBtn'),
+pp_pp: document.getElementById('single2v2LocalVsBtn'),
+watch: document.getElementById('single2v2WatchTabBtn')
+};
+for (const [k, btn] of Object.entries(btns)) {
+if (btn) {
+btn.classList.toggle('sel', single2v2SubMode === k);
+btn.style.borderColor = single2v2SubMode === k ? 'var(--gold)' : 'rgba(255,255,255,0.12)';
+btn.style.background = single2v2SubMode === k ? 'rgba(233,196,106,0.12)' : 'rgba(255,255,255,0.04)';
+}
+}
+}
+const lvWrap = document.getElementById('single2v2LevelWrap');
+if (lvWrap) {
+lvWrap.style.display = (single2v2SubMode === 'pc_cc' || single2v2SubMode === 'pp_cc') ? 'block' : 'none';
+for (const b of document.querySelectorAll('#single2v2Levels button[data-lv]')) {
+b.classList.toggle('sel', b.dataset.lv === single2v2Level);
+}
+}
+const watchSteps = document.getElementById('single2v2WatchSteps');
+if (watchSteps) {
+watchSteps.style.display = single2v2SubMode === 'watch' ? 'block' : 'none';
+if (single2v2SubMode === 'watch') renderWatch2v2();
+}
+const actBtn = document.getElementById('single2v2ActionBtn');
+if (actBtn) {
+if (single2v2SubMode === 'watch') {
+actBtn.textContent = '开启天道 2v2 演武 · 纯观战 (4机对决)';
+actBtn.className = 'go btn-watch';
+} else if (single2v2SubMode === 'pc_cc') {
+actBtn.textContent = '单人出战 · 进入 2v2 点将台';
+actBtn.className = 'go';
+} else if (single2v2SubMode === 'pp_cc') {
+actBtn.textContent = '双人破阵 · 进入本地同袍点将台';
+actBtn.className = 'go';
+} else {
+actBtn.textContent = '四人切磋 · 进入本地四方点将台';
+actBtn.className = 'go';
+}
+}
+}
+const single2v2SoloBtn = document.getElementById('single2v2SoloBtn');
+if (single2v2SoloBtn) single2v2SoloBtn.addEventListener('click', () => { single2v2SubMode = 'pc_cc'; renderSingle2v2(); SFX.slice(); });
+const single2v2LocalCoopBtn = document.getElementById('single2v2LocalCoopBtn');
+if (single2v2LocalCoopBtn) single2v2LocalCoopBtn.addEventListener('click', () => { single2v2SubMode = 'pp_cc'; renderSingle2v2(); SFX.slice(); });
+const single2v2LocalVsBtn = document.getElementById('single2v2LocalVsBtn');
+if (single2v2LocalVsBtn) single2v2LocalVsBtn.addEventListener('click', () => { single2v2SubMode = 'pp_pp'; renderSingle2v2(); SFX.slice(); });
+const single2v2WatchTabBtn = document.getElementById('single2v2WatchTabBtn');
+if (single2v2WatchTabBtn) single2v2WatchTabBtn.addEventListener('click', () => { single2v2SubMode = 'watch'; renderSingle2v2(); SFX.slice(); });
+const single2v2LevelsEl = document.getElementById('single2v2Levels');
+if (single2v2LevelsEl) {
+single2v2LevelsEl.addEventListener('click', e => {
 const b = e.target.closest('button[data-lv]');
 if (!b) return;
-solo2v2Level = b.dataset.lv;
-for (const btn of solo2v2LevelsEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
+single2v2Level = b.dataset.lv;
+renderSingle2v2();
+SFX.slice();
 });
-const btn2v2GoSolo = document.getElementById('btn2v2GoSolo');
-if (btn2v2GoSolo) btn2v2GoSolo.addEventListener('click', () => {
-const modal = document.getElementById('modal2v2');
-if (modal) modal.classList.add('hidden');
+}
+const single2v2ActionBtn = document.getElementById('single2v2ActionBtn');
+if (single2v2ActionBtn) {
+single2v2ActionBtn.addEventListener('click', () => {
 initAudio();
-bpStart('2v2', { subMode: 'pc_cc', level: solo2v2Level });
+paused = false;
+if (single2v2SubMode === 'watch') {
+startWatch2v2Draft();
+} else {
+bpStart('2v2', { subMode: single2v2SubMode, level: single2v2Level });
+}
 });
+}
+const mm2v2LobbyRoomBtn = document.getElementById('mm2v2LobbyRoomBtn');
+if (mm2v2LobbyRoomBtn) {
+mm2v2LobbyRoomBtn.addEventListener('click', () => {
+netRoomMode = 'pp_cc';
+setRoomModeUI(netRoomMode);
+if ($id('roomWrap')) {
+$id('roomWrap').classList.remove('hidden');
+$id('mmRoomBtn').classList.add('sel');
+}
+const hb = $id('hostBtn');
+if (hb) hb.click();
+toast('已进入 2v2 联机房间');
+});
+}
 const mm2v2CoopBtn = document.getElementById('mm2v2CoopBtn');
 if (mm2v2CoopBtn) mm2v2CoopBtn.addEventListener('click', () => open2v2Modal('pp_cc'));
 const mm2v2VsBtn = document.getElementById('mm2v2VsBtn');
 if (mm2v2VsBtn) mm2v2VsBtn.addEventListener('click', () => open2v2Modal('pp_pp'));
-const mm2v2WatchBtn = document.getElementById('mm2v2WatchBtn');
-if (mm2v2WatchBtn) mm2v2WatchBtn.addEventListener('click', () => startWatch2v2Draft());
 const modal2v2Close = document.getElementById('modal2v2Close');
 if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
 const modal = document.getElementById('modal2v2');
@@ -19773,12 +19895,12 @@ steps = [[0, 'pick'], [1, 'pick']];
 bans = [];
 picks = [-1, -1];
 } else if (mode === '2v2') {
-steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
+steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
 bans = [-1, -1];
 picks = [[-1, -1], [-1, -1]];
 } else if (mode === 'net') {
 if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') {
-steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
+steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
 bans = [-1, -1];
 picks = [[-1, -1], [-1, -1]];
 } else if (netRoomMode === 'chaos') {
