@@ -427,7 +427,7 @@ overflow-x: hidden;
 .cxskins { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; width: 100%; }
 .cx-skin-row { display: flex; flex-direction: column; gap: 6px; }
 .cx-skin-row-hd { display: flex; align-items: center; }
-.cx-skin-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--dim); }
+.cx-skin-tag { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--dim); }
 .cx-skin-tag.tag-bd { color: #8ec5fc; border-color: rgba(142,197,252,.35); background: rgba(142,197,252,.1); }
 .cx-skin-tag.tag-wk { color: #e9c46a; border-color: rgba(233,196,106,.35); background: rgba(233,196,106,.1); }
 .cx-skin-row-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -3542,28 +3542,8 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
       <div id="accActionBtns" style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
         <button class="ghost small" id="exportAccBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px" title="将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>导出当前存档</button>
         <button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>云存档设置</button>
-        <button class="ghost small hidden" id="devCloudBtn" style="font-size:12px;padding:3px 10px;color:#46d3ea;border-color:rgba(70,211,234,.4);display:inline-flex;align-items:center;gap:5px" title="Google Cloud Firestore 云端档案管理与数据编辑"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloud 编辑器</button>
+        <button class="ghost small hidden" id="devAdminBtn" style="font-size:12px;padding:3px 10px;color:#46d3ea;border-color:rgba(70,211,234,.4);display:inline-flex;align-items:center;gap:5px" title="开发者管理后台：查账号、调墨锭、发补偿、改经济数值（要管理口令）"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/><path d="m9 12 2 2 4-4"/></svg>管理后台</button>
         <button class="ghost small" id="toggleImportBoxBtn" style="font-size:12px;padding:3px 10px;color:var(--gold);display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2zM9 7h6M9 11h6M9 15h4"/></svg>存档导入与继承</button>
-      </div>
-      <div id="devCloudBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.35);border-radius:8px;background:rgba(10,20,35,.85);text-align:left">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <p style="margin:0;font-size:13px;color:#46d3ea;font-weight:bold;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Google Cloud 开发者控制台</p>
-          <span id="devCloudBadge" style="font-size:12px;padding:2px 6px;border-radius:4px;background:rgba(70,211,234,.15);color:#46d3ea">云端检测中</span>
-        </div>
-        <p class="netnote" style="margin:0 0 8px;font-size:12px">读写与编辑 Google Cloud Firestore 云端档案（users/{uid}）：</p>
-        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
-          <button class="go small" id="devCloudUnlockAllBtn" style="font-size:12px;padding:4px 10px;background:#46d3ea;color:#0a0e17;display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>一键云端全解锁</button>
-          <button class="ghost small" id="devCloudPullBtn" style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>从云端拉取</button>
-          <button class="ghost small" id="devCloudPushBtn" style="font-size:12px;padding:4px 10px;color:var(--gold);display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>保存推送至云端</button>
-        </div>
-        <div style="margin-bottom:6px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;color:var(--dim)">
-            <span>云端文档 JSON（支持直接修改后推送）：</span>
-            <span id="devCloudDocRef" style="color:#46d3ea">users/uid</span>
-          </div>
-          <textarea id="devCloudJsonIn" rows="7" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.6);color:#a8ffb2;border:1px solid rgba(70,211,234,.3);border-radius:4px;resize:vertical;box-sizing:border-box" placeholder="点击“从云端拉取”或“一键云端全解锁”载入数据..."></textarea>
-        </div>
-        <p id="devCloudMsg" class="netstatus" style="margin:4px 0 0;font-size:12px" role="status"></p>
       </div>
       <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
         <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云端账号服务配置</b>（Cloudflare Workers + D1）</p>
@@ -4203,9 +4183,6 @@ window.addEventListener('pagehide', flush);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
 }
 async function loginDev(password) {
-if (btoa(password) !== 'SUFNQURFVkJSTw==') {
-throw new Error('昵称或密码不对');
-}
 try {
 let data = null;
 try {
@@ -4214,19 +4191,12 @@ method: 'POST',
 body: JSON.stringify({ username: 'Dev', password })
 });
 } catch (err) {
-if (err && (err.status === 404 || (err.message && err.message.includes('未找到')))) {
-const devInitProf = makeDevProfile();
-data = await api('/api/register', {
-method: 'POST',
-body: JSON.stringify({
-username: 'Dev',
-password,
-profile: toCloudData(devInitProf)
-})
-});
-} else {
-throw err;
+if (err && err.status === 404) {
+const e = new Error('云端还没有 Dev 账号，请先在管理后台建一个');
+e.status = 404;
+throw e;
 }
+throw err;
 }
 setToken(data.token);
 const userObj = {
@@ -4260,6 +4230,7 @@ setSync({ state: 'ok', at: Date.now(), err: '' });
 notifyAuthChange(currentUser);
 return userObj;
 } catch (netErr) {
+if (netErr && netErr.status) throw netErr;   // 服务器回了话（密码不对、试错太多、没有这个号）：照实说
 console.warn('Dev cloud login failed, falling back to local dev account:', netErr);
 const uid = 'dev_master';
 let devProf = null;
@@ -4284,8 +4255,8 @@ const name = String(username).trim();
 if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
 if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
 if (name.toLowerCase() === 'dev') {
-if (btoa(password) !== 'SUFNQURFVkJSTw==') throw new Error('该昵称已被使用');
-return await loginDev(password);
+try { return await loginDev(password); }
+catch (e) { throw e && e.status === 401 ? new Error('该昵称已被使用') : e; }
 }
 let initialProf = null;
 try {
@@ -4703,16 +4674,6 @@ return { success: true, uid: res.uid, name: res.name, isCloud: true };
 }
 function init() {
 getUser();
-try {
-const u = getUser();
-if (u && (u.isDevMaster || String(u.name || '').toLowerCase() === 'dev') && !u.isCloud && hasValidConfig()) {
-loginDev('IAMADEVBRO').then(() => {
-console.log('Dev auto-promoted to cloud session successfully');
-}).catch(e => {
-console.warn('Dev background cloud auto-promote skipped:', e);
-});
-}
-} catch (e) {}
 }
 if (typeof window !== 'undefined') {
 window.CloudSave = {
@@ -19504,14 +19465,8 @@ bar.innerHTML = u && u.name
 const actionBtns = $id('accActionBtns');
 if (actionBtns) {
 const isDev = !!(u && u.isDevMaster);
-const devCloudBtn = $id('devCloudBtn');
-if (devCloudBtn) {
-if (isDev) devCloudBtn.classList.remove('hidden');
-else {
-devCloudBtn.classList.add('hidden');
-if ($id('devCloudBox')) $id('devCloudBox').classList.add('hidden');
-}
-}
+const devAdminBtn = $id('devAdminBtn');
+if (devAdminBtn) devAdminBtn.classList.toggle('hidden', !isDev);
 let expAll = $id('exportAllBtn');
 if (isDev) {
 if (!expAll) {
@@ -19539,27 +19494,6 @@ if (expAll) expAll.remove();
 }
 }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function triggerStealthDevUnlock(silent) {
-DEV_SESSION_UNLOCKED = true;
-try {
-sessionStorage.setItem('renying-dev-unlock', '1');
-localStorage.setItem('renying-qfx', '10');
-} catch (e) {}
-if (typeof PROF !== 'undefined' && PROF) {
-const allSkins = Object.keys(SKINS);
-PROF.skins = Array.from(new Set([...(PROF.skins || []), ...allSkins]));
-PROF.qfx = Math.max(PROF.qfx || 0, 10);
-CHARS.forEach(c => {
-if (!PROF.owned.includes(c.id)) PROF.owned.push(c.id);
-});
-}
-if (!silent) SFX.chargeFull();
-renderAcc();
-if (typeof BP !== 'undefined' && BP) renderBP();
-if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
-if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
-if (typeof renderTrainPick === 'function') renderTrainPick();
-}
 if ($id('exportAccBtn')) {
 $id('exportAccBtn').addEventListener('click', () => {
 if (window.CloudSave) {
@@ -19730,133 +19664,11 @@ $id('loginBtn').addEventListener('click', () => doAcc('login'));
 $id('regBtn').addEventListener('click', () => doAcc('register'));
 $id('accPass').addEventListener('keydown', e => { if (e.key === 'Enter') doAcc('login'); });
 $id('accBack').addEventListener('click', backToMenu);
-if ($id('devCloudBtn')) {
-$id('devCloudBtn').addEventListener('click', async () => {
-const box = $id('devCloudBox');
-if (!box) return;
-box.classList.toggle('hidden');
-if (!box.classList.contains('hidden')) {
-const u = window.CloudSave && CloudSave.getUser();
-const isCloud = window.CloudSave && CloudSave.hasValidConfig() && u && u.isCloud;
-const badge = $id('devCloudBadge');
-if (badge) {
-if (isCloud) {
-badge.textContent = '✅ 云端已连通 (Firestore)';
-badge.style.color = '#46d3ea';
-} else if (window.CloudSave && CloudSave.hasValidConfig()) {
-badge.textContent = '⚡ 云配置就绪 (可同步)';
-badge.style.color = 'var(--gold)';
-} else {
-badge.textContent = '⚠️ 本地独立模式 (未配置云)';
-badge.style.color = '#ff6b6b';
-}
-}
-const docRef = $id('devCloudDocRef');
-if (docRef) docRef.textContent = 'users/' + ((u && u.uid) || 'dev_master');
-const inEl = $id('devCloudJsonIn');
-if (inEl && (!inEl.value || inEl.value.trim() === '')) {
-let p = null;
-if (window.CloudSave) {
-try { p = await CloudSave.loadProfile(); } catch (e) {}
-}
-inEl.value = JSON.stringify(p || PROF, null, 2);
-}
-}
-});
-}
-if ($id('devCloudUnlockAllBtn')) {
-$id('devCloudUnlockAllBtn').addEventListener('click', async () => {
-const msg = $id('devCloudMsg');
-if (msg) {
-msg.style.color = 'var(--gold)';
-msg.textContent = '正在向 Google Cloud 写入全解锁数据…';
-}
-try {
-if (!window.CloudSave) throw new Error('云存档模块未加载');
-const res = await CloudSave.unlockAllOnCloud();
-applyProfile(res.data);
-triggerStealthDevUnlock(true);
-if ($id('devCloudJsonIn')) $id('devCloudJsonIn').value = JSON.stringify(res.data, null, 2);
-if (msg) {
-msg.style.color = res.isCloud ? '#46d3ea' : 'var(--gold)';
-msg.textContent = res.isCloud
-? '✅ 成功！Google Cloud Firestore (9英雄 + 18皮肤 + 99999墨锭) 已全部云端解锁并写入！'
-: '⚡ 本地全英雄全皮肤已解锁！请配置 Firebase 云端以便同步至 Google Cloud。';
-}
-toast(res.isCloud ? 'Google Cloud 全解锁成功！' : '本地全英雄皮肤全解锁已生效！');
-renderAcc();
-} catch (err) {
-if (msg) {
-msg.style.color = '#ff6b6b';
-msg.textContent = '全解锁写入失败：' + err.message;
-}
-}
-});
-}
-if ($id('devCloudPullBtn')) {
-$id('devCloudPullBtn').addEventListener('click', async () => {
-const msg = $id('devCloudMsg');
-if (msg) {
-msg.style.color = '#46d3ea';
-msg.textContent = '正在从 Google Cloud Firestore 拉取…';
-}
-try {
-if (!window.CloudSave) throw new Error('云存档模块未加载');
-const u = CloudSave.getUser();
-const p = await (CloudSave.hasValidConfig() && u && u.isCloud
-? CloudSave.getCloudDocument('users', u.uid)
-: CloudSave.loadProfile());
-if (p) {
-applyProfile(p);
-renderAcc();
-if ($id('devCloudJsonIn')) $id('devCloudJsonIn').value = JSON.stringify(p, null, 2);
-if (msg) {
-msg.style.color = '#46d3ea';
-msg.textContent = '✅ 已从 Google Cloud 拉取最新档案！';
-}
-toast('已从云端拉取最新数据');
-} else {
-throw new Error('未读取到云端档案或尚未创建');
-}
-} catch (err) {
-if (msg) {
-msg.style.color = '#ff6b6b';
-msg.textContent = '拉取失败：' + err.message;
-}
-}
-});
-}
-if ($id('devCloudPushBtn')) {
-$id('devCloudPushBtn').addEventListener('click', async () => {
-const msg = $id('devCloudMsg');
-const inEl = $id('devCloudJsonIn');
-if (!inEl || !inEl.value.trim()) {
-if (msg) { msg.style.color = '#ff6b6b'; msg.textContent = '请输入有效的 JSON 数据'; }
-return;
-}
-if (msg) {
-msg.style.color = 'var(--gold)';
-msg.textContent = '正在推送更新至 Google Cloud…';
-}
-try {
-if (!window.CloudSave) throw new Error('云存档模块未加载');
-const parsed = JSON.parse(inEl.value.trim());
-const u = CloudSave.getUser();
-const uid = (u && u.uid) || 'dev_master';
-const saved = await CloudSave.setCloudDocument('users', uid, parsed);
-applyProfile(saved);
-renderAcc();
-if (msg) {
-msg.style.color = '#46d3ea';
-msg.textContent = '✅ 已成功将修改保存推送至 Google Cloud！';
-}
-toast('云端档案已更新');
-} catch (err) {
-if (msg) {
-msg.style.color = '#ff6b6b';
-msg.textContent = '推送失败：' + err.message;
-}
-}
+if ($id('devAdminBtn')) {
+$id('devAdminBtn').addEventListener('click', () => {
+const base = window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '';
+if (!base) { toast('还没有配置云端接口'); return; }
+window.open(base + '/admin', '_blank', 'noopener');
 });
 }
 if ($id('toggleCloudCfgBtn')) {
@@ -21866,7 +21678,11 @@ mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli'
 };
 C.CASES = Object.keys(C.COLS);
 C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱：对局掉落、补给、星章送的都是这几种
-C.oddsOf = cid => C.COLS[cid].odds || C.ODDS;
+C.oddsOf = (cid, cfg) => {
+if (!cfg) return C.COLS[cid].odds || C.ODDS;
+if (C.COLS[cid].prem) return { mil: 0, res: 0, cla: C.cv(cfg, 'prem.cla'), cov: C.cv(cfg, 'prem.cov'), gold: C.cv(cfg, 'prem.gold') };
+return Object.fromEntries(C.TIERS.map(t => [t, C.cv(cfg, 'odds.' + t)]));
+};
 C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
 C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
 C.STORE = [{ id: 'tag', name: '改名标签', give: ['tags', 1], cost: 400, lim: 2 }];
@@ -21897,6 +21713,45 @@ C.STAR_SHOP = [
 { id: 'cla', cost: 9, name: '随机保密饰品' },
 { id: 'cov', cost: 15, name: '自选隐秘饰品' },
 ];
+C.CFG_INFO = [
+...Object.keys(C.COLS).map(c => ['price.' + c, C.COLS[c].price, 1, 100000, 1, '商店价格', C.COLS[c].name + '武器箱']),
+['price.term', C.TERM.price, 1, 100000, 1, '商店价格', '终端机'],
+['openDay', C.OPEN_DAY, 0, 50, 1, '开箱', '普通武器箱每天能开几个'],
+['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个'],
+['stP', C.ST_P, 0, 1, 0, '开箱', '开出斩数版的概率'],
+...C.TIERS.map(t => ['odds.' + t, C.ODDS[t], 0, 1, 0, '普通武器箱爆率', C.TIER[t].n]),
+...['cla', 'cov', 'gold'].map(t => ['prem.' + t, C.COLS.c7.odds[t], 0, 1, 0, '神兵武器箱爆率', C.TIER[t].n]),
+['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
+['term.lo', C.TERM.markup[0], 0.5, 5, 0, '终端机', '报价最低是基准价的几倍'],
+['term.hi', C.TERM.markup[1], 0.5, 5, 0, '终端机', '报价最高是基准价的几倍'],
+['dropP', C.DROP_P, 0, 1, 0, '对局掉落', '每局掉一件的概率'],
+['dropCap', C.DROP_CAP, 0, 100, 1, '对局掉落', '每周最多掉几次'],
+['ink.base', 1500, 0, 100000, 1, '每天认多少本机收入', '每天先认多少墨锭'],
+['ink.match', 80, 0, 10000, 1, '每天认多少本机收入', '每打完一局，当天多认多少'],
+['ink.cap', 6000, 0, 1000000, 1, '每天认多少本机收入', '一天最多认多少'],
+];
+C.CFG_DEF = Object.fromEntries(C.CFG_INFO.map(r => [r[0], r[1]]));
+C.cv = (cfg, k) => { const v = cfg && typeof cfg === 'object' ? own(cfg, k) : undefined; return v === undefined ? C.CFG_DEF[k] : v; };
+C.cleanCfg = raw => {
+const cfg = {}, info = Object.fromEntries(C.CFG_INFO.map(r => [r[0], r]));
+if (!isObj(raw)) return { cfg, err: '' };
+for (const [k, v] of Object.entries(raw)) {
+const r = own(info, k);
+if (!r) return { cfg: null, err: `不认识的数值：${k}` };
+if (v === null || v === undefined || v === '') continue;
+const x = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? +v : NaN;
+if (!Number.isFinite(x)) return { cfg: null, err: `${r[6]}（${k}）要填数字` };
+if (r[4] && !Number.isInteger(x)) return { cfg: null, err: `${r[6]}（${k}）要填整数` };
+if (x < r[2] || x > r[3]) return { cfg: null, err: `${r[6]}（${k}）要在 ${r[2]} 到 ${r[3]} 之间` };
+if (x !== r[1]) cfg[k] = x;
+}
+for (const [p, name] of [['odds.', '普通武器箱'], ['prem.', '神兵武器箱']]) {
+const sum = C.CFG_INFO.filter(r => r[0].startsWith(p)).reduce((a, r) => a + C.cv(cfg, r[0]), 0);
+if (Math.abs(sum - 1) > 1e-6) return { cfg: null, err: `${name}的几档爆率加起来要正好是 1（现在是 ${+sum.toFixed(6)}）` };
+}
+if (C.cv(cfg, 'term.lo') > C.cv(cfg, 'term.hi')) return { cfg: null, err: '终端机报价的最低倍数不能高过最高倍数' };
+return { cfg, err: '' };
+};
 function hash32(str) {
 let h = 0x811c9dc5;
 str = String(str);
@@ -21930,8 +21785,8 @@ return Math.max(2, Math.round(C.BASE[d.tier] * d.mul * (it.st >= 0 ? C.ST_MUL(d.
 };
 C.GOODS = [...C.CASES, 'term'];              // 武器箱和终端机：只在商店卖，不能挂到市场
 C.isGood = k => C.GOODS.includes(k);
-C.shopPrice = k => k === 'term' ? C.TERM.price : own(C.COLS, k) ? C.COLS[k].price : 0;
-C.net = p => Math.floor(p * (1 - C.FEE));    // 挂单卖掉，卖家到手多少
+C.shopPrice = (k, cfg) => k === 'term' ? C.cv(cfg, 'price.term') : own(C.COLS, k) ? C.cv(cfg, 'price.' + k) : 0;
+C.net = (p, cfg) => Math.floor(p * (1 - C.cv(cfg, 'fee')));    // 挂单卖掉，卖家到手多少
 const LID_RE = /^[0-9a-f]{16}$/;
 C.isLid = l => typeof l === 'string' && LID_RE.test(l);   // 挂单编号：服务器随机给的 16 位
 C.blank = () => ({
@@ -21991,8 +21846,8 @@ s.buys = Object.fromEntries(Object.entries(s.buys).filter(([id, v]) => C.STORE.s
 s.stat = Object.fromEntries(Object.keys(b.stat).map(k => [k, int(s.stat[k])]));
 s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
 s.last = num(s.last); s.gift = s.gift ? 1 : 0;
-s.od ={ d: int(s.od.d), n: int(s.od.n, 0, C.OPEN_DAY) };
-s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, C.PREM_WEEK) };
+s.od = { d: int(s.od.d), n: int(s.od.n, 0, 1000) };   // 每天、每周能开几个可以在线改，这里只防乱填
+s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, 1000) };
 s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
 s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
 const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
@@ -22030,9 +21885,9 @@ const opts = [{ t: 'case', c: pick(C.REG) }, { t: 'term', n: 1 }, r() < 0.3 ? { 
 for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
 return opts;
 };
-C.openLeft = (s, cid) => cid && C.COLS[cid] && C.COLS[cid].prem ? Math.max(0, C.PREM_WEEK - s.pw.n) : Math.max(0, C.OPEN_DAY - s.od.n);
+C.openLeft = (s, cid, cfg) => cid && C.COLS[cid] && C.COLS[cid].prem ? Math.max(0, C.cv(cfg, 'premWeek') - s.pw.n) : Math.max(0, C.cv(cfg, 'openDay') - s.od.n);
 C.mkItem = (s, k, src, rnd, o = {}) => {
-const st = o.st !== undefined ? o.st : (rnd() < C.ST_P ? 0 : -1);
+const st = o.st !== undefined ? o.st : (rnd() < (o.stP !== undefined ? o.stP : C.ST_P) ? 0 : -1);
 return { i: s.nid++, k, st, n: '', t: o.t || 0, src };
 };
 C.addItem = (s, it, env) => {
@@ -22073,9 +21928,9 @@ return last;
 };
 const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
 C.invFull = (s, n = 1) => false;
-C.termOffer = rnd => {
-const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.ST_P ? 0 : -1;
-const m = C.TERM.markup[0] + rnd() * (C.TERM.markup[1] - C.TERM.markup[0]);
+C.termOffer = (rnd, cfg) => {
+const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.cv(cfg, 'stP') ? 0 : -1;
+const lo = C.cv(cfg, 'term.lo'), m = lo + rnd() * (C.cv(cfg, 'term.hi') - lo);
 return { k, st, price: Math.max(1, Math.round(C.refVal({ k, st }) * m)) };
 };
 C.tradeCheck = (s, ids) => {
@@ -22106,12 +21961,15 @@ const cid = a.c;
 if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
 if ((s.cases[cid] || 0) < 1) return { err: '没有这个武器箱了' };
 const col = C.COLS[cid];
-if (!C.openLeft(s, cid)) return { err: col.prem ? `${col.name}武器箱每周只能开 ${C.PREM_WEEK} 个，下周一再来` : `今天的 ${C.OPEN_DAY} 个武器箱已经开完了，明天再来` };
+if (!C.openLeft(s, cid, env.cfg)) {
+const n = C.cv(env.cfg, col.prem ? 'premWeek' : 'openDay');
+return { err: !n ? `${col.prem ? col.name : '普通'}武器箱现在暂停开启` : col.prem ? `${col.name}武器箱每周只能开 ${n} 个，下周一再来` : `今天的 ${n} 个武器箱已经开完了，明天再来` };
+}
 if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
 s.cases[cid]--; s.stat.open++;
 if (col.prem) s.pw.n++; else s.od.n++;
-const tier = rollTier(env.rnd, C.oddsOf(cid)), k = pickOf(env.rnd, col[tier]);
-const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd), env);
+const tier = rollTier(env.rnd, C.oddsOf(cid, env.cfg)), k = pickOf(env.rnd, col[tier]);
+const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env);
 bump(s, 'open', 1);
 return { ok: true, item: it };
 };
@@ -22132,7 +21990,7 @@ return { ok: true };
 const shopBuy = (s, k, a, env) => {
 const n = a.n === undefined ? 1 : +a.n;
 if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
-const p = C.shopPrice(k) * n;
+const p = C.shopPrice(k, env.cfg) * n;
 if (!(p > 0)) return { err: '没有这件商品' };
 if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
 giveInk(env, -p);
@@ -22194,7 +22052,7 @@ env.settled = [];
 for (const r of Array.isArray(env.paid) ? env.paid.slice(0, 40) : []) {
 if (!isObj(r) || !C.isLid(r.id) || env.settled.includes(r.id)) continue;
 const ix = s.lst.findIndex(L => L.l === r.id), L = ix >= 0 ? s.lst.splice(ix, 1)[0] : null;
-const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price), k = L ? L.it.k : C.isItem(r.k) ? r.k : 'qf_p1', st = L ? L.it.st : stOf(r.st);
+const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price, env.cfg), k = L ? L.it.k : C.isItem(r.k) ? r.k : 'qf_p1', st = L ? L.it.st : stOf(r.st);
 giveInk(env, gain); s.stat.sold++;
 histPush(s, { t: num(r.at) || env.now, kind: 'sold', k, st, price, gain });
 sold.push({ k, st, price, gain });
@@ -22238,14 +22096,14 @@ A.unseal = (s, a, env) => {
 if (s.tm) return { err: '已经有一台开着的终端机，先处理完它' };
 if (s.term < 1) return { err: '没有终端机' };
 s.term--;
-s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd) };
+s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd, env.cfg) };
 return { ok: true, tm: s.tm };
 };
 A.termNext = (s, a, env) => {
 if (!s.tm) return { err: '没有开着的终端机' };
 if (a.n !== undefined && +a.n !== s.tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点得太快、请求重发：不会一下跳过两件
 if (s.tm.n >= C.TERM.offers) { s.tm = null; return { ok: true, gone: true }; }
-s.tm.n++; s.tm.o = C.termOffer(env.rnd);
+s.tm.n++; s.tm.o = C.termOffer(env.rnd, env.cfg);
 return { ok: true, tm: s.tm };
 };
 A.termBuy = (s, a, env) => {
@@ -22273,7 +22131,7 @@ if (o.t === 'case') { s.cases[o.c]++; got.push(o); }
 else if (o.t === 'term') { s.term += o.n; got.push(o); }
 else if (o.t === 'tag') { s.tags += o.n; got.push(o); }
 else if (o.t === 'ink') { giveInk(env, o.n); got.push(o); }
-else if (o.t === 'item') got.push({ t: 'item', item: C.addItem(s, C.mkItem(s, o.k, 'supply', env.rnd), env) });
+else if (o.t === 'item') got.push({ t: 'item', item: C.addItem(s, C.mkItem(s, o.k, 'supply', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env) });
 }
 return { ok: true, got };
 };
@@ -22299,7 +22157,7 @@ if (C.invFull(s)) return { err: '库存满了' };
 let k;
 if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的隐秘级里挑一件' }; k = a.k; }
 else k = pickOf(r, C.ofTierReg(g.id));
-res.item = C.addItem(s, C.mkItem(s, k, 'op', r), env);
+res.item = C.addItem(s, C.mkItem(s, k, 'op', r, { stP: C.cv(env.cfg, 'stP') }), env);
 }
 s.op.spent += g.cost;
 return res;
@@ -22345,10 +22203,10 @@ if (!add || !eq || eq.st < 0) continue;
 left -= add; eq.st += add;
 res.st.push({ i: eq.i, k: eq.k, add, total: eq.st });
 }
-if (s.drop.n < C.DROP_CAP && env.rnd() < C.DROP_P && !C.invFull(s)) {
+if (s.drop.n < C.cv(env.cfg, 'dropCap') && env.rnd() < C.cv(env.cfg, 'dropP') && !C.invFull(s)) {
 s.drop.n++;
 if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.REG); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
-else res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, C.ofTier(env.rnd() < 0.85 ? 'mil' : 'res')), 'drop', env.rnd), env) };
+else res.drop = { t: 'item', item: C.addItem(s, C.mkItem(s, pickOf(env.rnd, C.ofTier(env.rnd() < 0.85 ? 'mil' : 'res')), 'drop', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env) };
 }
 return res;
 };
@@ -22576,6 +22434,8 @@ ctx.strokeStyle = '#d8483a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(g[0],
 };
 let ST = null, MODE = 'none', UID = '', BUSY = false, TAB = 'inv', SIG = '', TK = 0, LOADING = null, OLDV = 0;
 const MKD = { at: 0, items: null, err: '', busy: null };
+let CFG = null;
+const CF = () => (MODE === 'server' ? CFG : null);
 function loadMarket(force) {   // 读到新的行情时回 true
 if (MODE !== 'server' || !MKT) return Promise.resolve(false);
 if (MKD.busy) return MKD.busy.then(() => false);
@@ -22645,6 +22505,7 @@ if (menuHeroId >= 0) { MENU_HERO = null; setMenuHero(menuHeroId); }
 applySkins();
 } catch (e) {}
 }
+const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : ''].filter(Boolean).join('、');
 function apply(out, quiet) {
 if (!out) return;
 if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
@@ -22659,6 +22520,8 @@ if (Array.isArray(out.skins)) { PROF.skins = out.skins.slice(); own = true; }
 if (out.skinsAdd || out.skinsDel) { const set = new Set(PROF.skins || []); for (const k of out.skinsAdd || []) set.add(k); for (const k of out.skinsDel || []) set.delete(k); PROF.skins = Array.from(set); own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own; }
 if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
 if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
+if (out.cfg !== undefined) { const c = C.cleanCfg(out.cfg); CFG = c.cfg; }
+if (Array.isArray(out.gifts)) for (const g of out.gifts) toast(`开发组补偿：${String(g.note || '')}（${giftText(g)}）`);
 if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
 try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
 if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -22767,7 +22630,7 @@ if (!ST || MODE === 'none') return {};
 const d = {};
 d.inv = ST.inv.some(x => x.t > seenAt());
 d.op = (ST.drop.g >= C.SUPPLY_GAMES && !ST.drop.sup) || ST.op.ms.some((m, i) => !ST.op.done.includes(i) && (ST.op.prog[i] || 0) >= m.n);
-d.cases = !ST.gift || C.CASES.some(c => ST.cases[c] > 0 && C.openLeft(ST, c) > 0);   // 有箱子、今天（这周）还能开
+d.cases = !ST.gift || C.CASES.some(c => ST.cases[c] > 0 && C.openLeft(ST, c, CF()) > 0);   // 有箱子、今天（这周）还能开
 d.term = ST.term > 0 || !!ST.tm;
 d.any = d.inv || d.op || d.cases || d.term;
 return d;
@@ -22846,7 +22709,7 @@ ${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateS
 <button type="button" class="ghost small" data-ins="list" ${can && mk ? '' : 'disabled'}${mk ? '' : ' title="玩家市场要连上服务器才能用"'}>挂到市场</button>
 <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
 <button type="button" class="ghost small" data-ins="market">${INS.from === 'pv' ? '去玩家市场看看' : '这款的行情'}</button><button type="button" class="ghost small" data-ins="close">关闭</button></div>
-<p class="ar-note">${INS.from === 'pv' ? `这是预览。从${colName(it.k)}武器箱开出来、在玩家市场买到，或者汰换合同、终端机碰上了，就能穿上。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.FEE * 100)}% 手续费。武库不收购饰品。`}</p>`;
+<p class="ar-note">${INS.from === 'pv' ? `这是预览。从${colName(it.k)}武器箱开出来、在玩家市场买到，或者汰换合同、终端机碰上了，就能穿上。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
 if (mk && !MKD.items && !MKD.err) loadMarket().then(fresh => { if (fresh && INS && INS.it === it) insInfo(); });
 }
 function closeIns() { $id('arIns').hidden = true; INS = null; }
@@ -22872,13 +22735,13 @@ async function buyTag() { const r = await act('store', { id: 'tag' }); if (r && 
 function listBox(it) {   // 挂到玩家市场：卖多少自己定（默认比现在最低的便宜 1，没人卖就按最近成交价）
 const m = mkInfo(it.k, it.st), sug = m && m.n && m.lo ? Math.max(1, m.lo - 1) : m && m.last ? m.last : C.refVal(it);
 const now = m ? `${m.n ? `现在在卖 ${m.n} 件，最低 ${ink(m.lo)}` : '现在没人在卖这款'}${m.last ? `，最近一次成交 ${ink(m.last)}` : ''}${it.st >= 0 ? '（都只算斩数版）' : ''}。` : '这款还没人在玩家市场上卖过，标价可以参考同一档的其他饰品。';
-modal(`<h3>挂到玩家市场</h3><p>「${escapeHTML(itemName(it))}」卖多少由你定。别的玩家买走以后扣 ${Math.round(C.FEE * 100)}% 手续费，剩下的自动到账；挂着的时候随时能撤下。</p>
+modal(`<h3>挂到玩家市场</h3><p>「${escapeHTML(itemName(it))}」卖多少由你定。别的玩家买走以后扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费，剩下的自动到账；挂着的时候随时能撤下。</p>
 <p class="ar-note">${now}</p>
 <div class="ar-listrow"><input id="arPrice" class="ar-input" type="number" min="1" max="${C.PRICE_MAX}" step="1" value="${sug}"><span id="arEta" class="ar-note"></span></div>
 <div class="row"><button class="go small" id="arListGo">挂上去</button><button class="ghost small" data-ar-close>取消</button></div>`);
 const eta = () => {
 const v = Math.floor(+$id('arPrice').value || 0), ok = v >= 1 && v <= C.PRICE_MAX;
-$id('arEta').innerHTML = !ok ? `标价要在 1 到 ${fmt(C.PRICE_MAX)} 之间` : `卖掉到手 ${ink(C.net(v))}${m && m.n && m.lo && v > m.lo * 1.5 ? ' · 比在卖最便宜的贵不少，可能要等一阵' : ''}`;
+$id('arEta').innerHTML = !ok ? `标价要在 1 到 ${fmt(C.PRICE_MAX)} 之间` : `卖掉到手 ${ink(C.net(v, CF()))}${m && m.n && m.lo && v > m.lo * 1.5 ? ' · 比在卖最便宜的贵不少，可能要等一阵' : ''}`;
 $id('arListGo').disabled = !ok;
 };
 $id('arPrice').addEventListener('input', eta); $id('arPrice').addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); }); eta();
@@ -22888,9 +22751,9 @@ if (r && r.ok) { closeModal(); closeIns(); MKD.at = 0; SFX.wood && SFX.wood(); t
 });
 }
 function buyBox(k) {   // 商店：武器箱、终端机按固定价格买，一次 1~10 个
-const p = C.shopPrice(k); let n = 1;
+const p = C.shopPrice(k, CF()); let n = 1;
 if (!p) return;
-modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>买${goodName(k)}</h3><p class="ar-note">商店价 ${ink(p)} 一个，不限量${k === 'term' ? '' : C.COLS[k].prem ? ` · 每周能开 ${C.PREM_WEEK} 个` : ` · 普通武器箱每天一共能开 ${C.OPEN_DAY} 个`}。买来的不能转卖。</p></div></div>
+modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>买${goodName(k)}</h3><p class="ar-note">商店价 ${ink(p)} 一个，不限量${k === 'term' ? '' : C.COLS[k].prem ? ` · 每周能开 ${C.cv(CF(), 'premWeek')} 个` : ` · 普通武器箱每天一共能开 ${C.cv(CF(), 'openDay')} 个`}。买来的不能转卖。</p></div></div>
 <div class="ar-qty"><button type="button" class="ghost small" data-q="-1" aria-label="少买一个">−</button><b id="arQty">1</b><button type="button" class="ghost small" data-q="1" aria-label="多买一个">+</button><span class="ar-qtot">合计 <span id="arTot"></span></span></div>
 <p class="ar-note">你现在有 ${ink(PROF.ink || 0)}</p>
 <div class="row"><button class="go small" id="arBuyGo">买下</button><button class="ghost small" data-ar-close>取消</button></div>`);
@@ -22911,12 +22774,12 @@ const goodName = k => k === 'term' ? '终端机' : `${C.COLS[k].name}武器箱`;
 const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
 const pips = (n, max) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
 function pCases() {
-const s = blankS(), dl = C.openLeft(s, C.REG[0]), wl = C.openLeft(s, 'c7');
+const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF());
 const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台终端机，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
-const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.OPEN_DAY)}</span>
-<span>本周还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.PREM_WEEK)}</span><small>普通的每天零点刷新，神兵的每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
+const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.cv(CF(), 'openDay'))}</span>
+<span>本周还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premWeek'))}</span><small>普通的每天零点刷新，神兵的每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
 const card = cid => {
-const col = C.COLS[cid], O = C.oddsOf(cid), n = s.cases[cid], left = C.openLeft(s, cid);
+const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
 const have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
 const tiers = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length).map(t => `<div class="ar-ctier" style="--tc:${C.TIER[t].c}"><span>${C.TIER[t].n} · ${pct(O[t])}</span><div class="ar-minis">${col[t].map(k => `<img src="${thumb(k)}" alt="" title="${escapeHTML(itemName({ k, st: -1 }))}" data-pv="${k}" loading="lazy">`).join('')}</div></div>`).join('');
 const openTxt = n && !left ? '今天开完了' : '开启';
@@ -22928,15 +22791,15 @@ ${col.mil.length ? `<div class="ar-col"><span>集齐这个箱子的 ${col.mil.le
 </div>`;
 };
 const premCard = cid => {   // 神兵武器箱：左边开箱、右边把 7 款饰品摆出来，点一下就能看穿上的样子
-const col = C.COLS[cid], O = C.oddsOf(cid), n = s.cases[cid], left = C.openLeft(s, cid);
+const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
 const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length);
 const show = ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
 return `<div class="ar-casecard prem" style="--cc:${col.col}"><div class="ar-premside">
-<span class="ar-premtag">每周限开 ${C.PREM_WEEK} 个 · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
+<span class="ar-premtag">每周限开 ${C.cv(CF(), 'premWeek')} 个 · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
 <div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(col.price)}</p>
 <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${n && !left ? '这周开过了' : '开启'}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
 <div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
-<p class="ar-note">只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.OPEN_DAY} 个。点一下饰品，就能先看看穿上的样子。</p>
+<p class="ar-note">只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个。点一下饰品，就能先看看穿上的样子。</p>
 </div><div class="ar-pshow">${show}</div></div>`;
 };
 return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem).map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
@@ -22944,7 +22807,7 @@ return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem)
 const REEL = { on: false };
 const CW = 132;   // 每格宽 + 间隔
 function reelFill(cid, win) {   // 滚轮上的其他格子按这个箱子的爆率随便摆（好的那几档多摆一点，看着热闹）
-const col = C.COLS[cid], O = C.oddsOf(cid), ts = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length), w = ts.map((t, i) => O[t] * (i ? 3 : 1)), sum = w.reduce((a, b) => a + b, 0), out = [];
+const col = C.COLS[cid], O = C.oddsOf(cid, CF()), ts = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length), w = ts.map((t, i) => O[t] * (i ? 3 : 1)), sum = w.reduce((a, b) => a + b, 0), out = [];
 for (let i = 0; i < 56; i++) {
 let r = Math.random() * sum, j = 0; while (j < ts.length - 1 && r >= w[j]) r -= w[j++];
 const a = col[ts[j]]; out.push({ k: a[Math.floor(Math.random() * a.length)], st: -1 });
@@ -23078,7 +22941,7 @@ return `<div class="ar-rvfx lv${lv}" aria-hidden="true"><i class="ar-glow"></i>$
 function reveal(it, cid) {
 const t = tierOf(it.k), lv = C.TIERS.indexOf(t);
 sting(it.k);
-const again = cid && ST.cases[cid] > 0 && C.openLeft(ST, cid) > 0;
+const again = cid && ST.cases[cid] > 0 && C.openLeft(ST, cid, CF()) > 0;
 modal(`<div class="ar-reveal t-${t}" style="--tc:${tc(it.k)}">${revealFx(lv)}<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[t].n}</span><div class="ar-rvart"><img src="${bigArt(it.k)}" alt=""><i class="ar-shine"></i></div><h3>${escapeHTML(itemName(it))}</h3>
 ${it.st >= 0 ? '<p class="ar-stline">斩数版：穿着它每击倒一个对手，计数 +1</p>' : ''}<p>${colName(it.k)}武器箱 · ${charName(it.k)}</p></div>
 <div class="row"><button class="go small" id="arKeep">收下</button><button class="ghost small" id="arSee">检视</button>${again ? `<button class="ghost small" id="arAgain">再开一个</button>` : ''}</div>`, `rv t-${t}`);
@@ -23089,7 +22952,7 @@ if (again) $id('arAgain').addEventListener('click', () => { closeModal(); openCa
 let TERM_FX = 0;   // 新的一件刚出来：卡面播一下“解码”的动画
 function pTerm() {
 const s = blankS(), tm = s.tm, O = C.TERM.odds;
-const odds = `<div class="ar-todds">${C.TIERS.map(t => `<span style="--tc:${C.TIER[t].c}"><i></i>${C.TIER[t].n} ${pct(O[t])}</span>`).join('')}<span class="ar-st-chip">斩数版 ${pct(C.ST_P)}</span></div>`;
+const odds = `<div class="ar-todds">${C.TIERS.map(t => `<span style="--tc:${C.TIER[t].c}"><i></i>${C.TIER[t].n} ${pct(O[t])}</span>`).join('')}<span class="ar-st-chip">斩数版 ${pct(C.cv(CF(), 'stP'))}</span></div>`;
 let body;
 if (tm) {
 const o = tm.o, left = C.TERM.offers - tm.n, fx = NOW() - TERM_FX < 1500;
@@ -23105,8 +22968,8 @@ body = `<div class="ar-term${fx ? ' scan' : ''}" style="--tc:${tc(o.k)}">
 <p class="ar-note" id="arTermLeft"></p></div></div>`;
 } else {
 body = `<div class="ar-card ar-termseal"><span class="ar-termbox"><span>终</span></span><div><h3>终端机 <small>还有 ${s.term} 台没开封</small></h3>
-<p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : `终端机在商店按固定价格卖（一台 ${fmt(C.TERM.price)} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
-<div class="ar-termbtns"><button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button><button type="button" class="ghost small" data-buyg="term">买一台 ${ink(C.TERM.price)}</button></div></div>`;
+<p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : `终端机在商店按固定价格卖（一台 ${fmt(C.shopPrice('term', CF()))} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
+<div class="ar-termbtns"><button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button><button type="button" class="ghost small" data-buyg="term">买一台 ${ink(C.shopPrice('term', CF()))}</button></div></div>`;
 }
 return `${body}<h4 class="ar-h">终端机报价的概率 <small>每件都从七个武器箱的全部饰品里抽（神兵武器箱的也有），报价按饰品的品质定，有高有低</small></h4>${odds}
 <p class="ar-note">买下一件，这台终端机就用掉了；5 件都不要，终端机也没了。开封 ${C.TERM.days} 天内不处理会作废。终端机只在商店卖，买来的不能转卖。</p>`;
@@ -23174,13 +23037,13 @@ body = `${status}<div class="ar-filter"><select id="arMkTier" class="ar-sel"><op
 <label class="ar-chk"><input type="checkbox" id="arMkOnly" ${MK.only ? 'checked' : ''}> 只看有人在卖的</label></div>
 ${keys.length ? `<div class="ar-mklist">${keys.map(k => { const x = row(k), p = lo(k), c = cnt(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${thumb(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span><span class="ar-mkc">${c ? `在卖 ${c} 件${x.sn ? `（斩数版 ${x.sn}）` : ''}` : '没人在卖'}<small>${x.d ? `30 天成交 ${x.d} 笔` : '30 天没有成交'}${x.last ? ` · 最近 ${fmt(x.last)}` : ''}</small></span><span class="ar-mkp">${p ? `<small>最低</small>${ink(p)}` : '<small>—</small>'}</span></button>`; }).join('')}</div>` : '<p class="ar-empty">没有符合条件的饰品。</p>'}`;
 } else if (MK.view === 'mine') {
-body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · 等别的玩家来买</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
+body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · 等别的玩家来买</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price, CF()))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
 : `<p class="ar-empty">没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定（最多同时挂 ${C.LIST_MAX} 件）。</p>`;
 } else {
 const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出' }[h.kind] || '';
 body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : '<p class="ar-empty">还没有成交记录。</p>';
 }
-return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.FEE * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
+return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
 }
 let MKI = { tok: 0, k: '' };   // 正在看的那一款：读回来时弹窗还开着、还是这一款才画
 async function marketItem(k, keep) {
@@ -23251,7 +23114,7 @@ return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.
 <h4 class="ar-h">本周任务</h4><div class="tlist">${ms || '<p class="ar-empty">登录之后才有任务。</p>'}</div>
 <h4 class="ar-h">每周补给 <small>${ready ? '已解锁：四样里挑两样' : `这周再打 ${C.SUPPLY_GAMES - s.drop.g} 局解锁（${s.drop.g}/${C.SUPPLY_GAMES}）`}</small></h4>${live() ? sup : ''}
 <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵武器箱的那 7 款换不到</small></h4><div class="ar-grid3">${shop}</div>
-<p class="ar-note">对局掉落：每局 ${Math.round(C.DROP_P * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.DROP_CAP} 次（本周已掉 ${s.drop.n} 次）。</p>`;
+<p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
 }
 function covPick() {
 const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换

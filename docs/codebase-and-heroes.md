@@ -309,7 +309,8 @@ Tooling (`tools/`):
 | `ai-arena.mjs`, `ai-train.mjs` | CPU-vs-CPU win rates (`--a god --b impossible`, `AI_BAL` to try a balance table) and gene training; `--lvkey` trains one difficulty only (`lvGenes` in `models/ai-brain.json`), `--opp` trains against another difficulty. |
 | `music/` | Python sources of the nine tracks in `assets/music/` (MIDI → FluidSynth stems → numpy mix → mp3); see `tools/music/readme.md`. |
 | `combat-test.mjs` | Per-hero move/state/combo regression suite. |
-| `cloud-admin.mjs` | Firestore admin (status, unlock, get/set profiles). |
+| `econ-admin.mjs` | Admin CLI for the Worker: look up accounts, adjust ink and items, ban/unban, compensation gifts, live economy values (the same as the Worker's `/admin` page; see `docs/admin.md`). |
+| `econ-test.mjs` | Runs the Worker on an emulated D1 and checks the armory economy, anti-cheat and admin backend (`--bundle` tests `cloudflare/worker.bundle.js`). |
 | `export_data.py` / `import_data.py` | SQLite → JSON → SQLite migration. |
 
 CI (`ci.yml`) runs: Python syntax check, YAML lint, **lowercase-filename rule**, entrypoint existence,
