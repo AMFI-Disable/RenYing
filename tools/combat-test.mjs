@@ -553,6 +553,51 @@ const testSuite = [
     })()`
   },
   {
+    name: '2v2 Single KO Survival: One fighter dying does not trigger KO when teammate is alive',
+    fn: `(() => {
+      // Test player 2v2 modes: pc_cc, pp_cc, pp_pp
+      for (const mode of ['pc_cc', 'pp_cc', 'pp_pp']) {
+        if (mode === 'pc_cc') start2v2PlayerMatch(0, 2, 1, 3, 'normal');
+        else if (mode === 'pp_cc') start2v2LocalCoop(0, 2, 1, 3, 'normal');
+        else start2v2LocalVs(0, 2, 1, 3);
+
+        M.phase = 'fight';
+        M.wins = [0, 0];
+        // Team 1: Kill B only, D is still healthy
+        B.hp = 0;
+        D.hp = 250;
+        A.hp = 200;
+        C.hp = 200;
+
+        // Simulate combat hit triggering on B
+        applyHit(A, B, { dmg: 50, kb: [200, -200], stun: 0.3 }, [B.x, B.y - 40]);
+        step();
+
+        // Must remain in fight phase because teammate D is alive
+        if (M.phase !== 'fight') {
+          toMenu();
+          return { pass: false, error: 'Premature KO triggered when teammate was still alive in ' + mode + ': phase=' + M.phase };
+        }
+        if (D.meter !== 100 || !M.flags['buff_' + D.idx]) {
+          toMenu();
+          return { pass: false, error: 'Surviving teammate did not receive last stand meter buff in ' + mode };
+        }
+
+        // Now kill the remaining teammate D
+        D.hp = 0;
+        applyHit(A, D, { dmg: 50, kb: [200, -200], stun: 0.3 }, [D.x, D.y - 40]);
+        step();
+
+        if (M.phase !== 'ko' || M.koWinner !== 0) {
+          toMenu();
+          return { pass: false, error: 'Expected Team 0 KO victory after both Team 1 fighters defeated in ' + mode + ': phase=' + M.phase + ', winner=' + M.koWinner };
+        }
+        toMenu();
+      }
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'AI Brain Model: Frame data & evolved genes validation across all 12 heroes',
     fn: `(() => {
       const brain = typeof window !== 'undefined' ? window.RENYING_AI_BRAIN : null;

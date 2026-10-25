@@ -3940,7 +3940,25 @@ function applyHit(att, def, m, pt) {
     const chipDmg = m.dmg / defRating;
     def.hp = Math.max(def.dummy ? 1 : 0, def.hp - chipDmg); def.sinceHit = 0; def.lagDelay = 0.5; def.flash = 0.08;
     ev.dd = chipDmg; ev.nc = true; ev.cn = def.comboHits;
-    if (def.hp <= 0 && M.phase === 'fight') { def.state = 'launched'; def.vy = -520; def.vx = fx * 400; def.y = Math.min(def.y, -1); M.phase = 'ko'; M.t = 0; M.koWinner = att.idx; ev.ko = true; }
+    if (def.hp <= 0 && M.phase === 'fight') {
+      def.state = 'launched'; def.vy = -520; def.vx = fx * 400; def.y = Math.min(def.y, -1);
+      if (is2v2()) {
+        const mate = def === A ? C : def === C ? A : def === B ? D : B;
+        if (mate && !mate.hidden && mate.hp > 0) {
+          def.invul = 99;
+          if (!M.flags['buff_' + mate.idx]) {
+            M.flags['buff_' + mate.idx] = true;
+            mate.meter = 100; mate.buffT = 3.5; mate.hp = Math.min(mate.maxHp, mate.hp + 75); mate.lagHp = Math.max(mate.lagHp, mate.hp);
+            addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
+            addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
+          }
+        } else {
+          M.phase = 'ko'; M.t = 0; M.koWinner = att.idx % 2; ev.ko = true;
+        }
+      } else {
+        M.phase = 'ko'; M.t = 0; M.koWinner = att.idx; ev.ko = true;
+      }
+    }
     hitVisual(ev); netEmit(ev); return;
   }
   def.sinceHit = 0;
@@ -4121,13 +4139,16 @@ function applyHit(att, def, m, pt) {
   ev.cn = def.comboHits; ev.dd = dmg;
   if (def.hp <= 0 && M.phase === 'fight') {
     def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.y = Math.min(def.y, -1);
-    if (M.mode === 'watch2v2') {
+    if (is2v2()) {
       const mate = def === A ? C : def === C ? A : def === B ? D : B;
       if (mate && !mate.hidden && mate.hp > 0) {
         def.invul = 99;
-        mate.meter = 100; mate.buffT = 3.5; mate.hp = Math.min(mate.maxHp, mate.hp + 75); mate.lagHp = Math.max(mate.lagHp, mate.hp);
-        addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
-        addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
+        if (!M.flags['buff_' + mate.idx]) {
+          M.flags['buff_' + mate.idx] = true;
+          mate.meter = 100; mate.buffT = 3.5; mate.hp = Math.min(mate.maxHp, mate.hp + 75); mate.lagHp = Math.max(mate.lagHp, mate.hp);
+          addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
+          addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
+        }
       } else {
         M.phase = 'ko'; M.t = 0; M.koWinner = att.idx % 2;
         ev.ko = true;
