@@ -50,7 +50,9 @@
 ## 🚀 Key Features <a id="key-features"></a>
 
 - **GitHub Pages 即开即玩**：无需安装任何环境，不需克隆代码，任意浏览器点开网页即可开始。
-- **免服务器 WebRTC P2P 联机**：两位玩家通过 4 位房间码直接建立浏览器间 UDP 通道，零中转延迟。
+- **免服务器 WebRTC P2P 联机**：两位玩家通过 4 位房间码直接建立浏览器间 UDP 通道，配合回滚机制保障零延迟对决。
+- **神兵武库与玩家集市**：消耗对战获得的墨锭开启武器箱，获取 5 档品质的收藏品与击杀计数版皮肤；支持玩家自由挂单交易、汰换合同升级与最高品质自动装配。
+- **中英双语支持**：内置无缝中英语言切换系统，首次进游戏引导选择，偏好持久化保存。
 - **写意水墨美术风格**：流畅的笔墨拖尾粒子、顿挫有力的打击定格、纯正武侠意境。
 - **纯本地单机离线模式**：提供单文件离线版（`renying-offline.html`），音频全内置，随时随地畅玩。
 
@@ -117,16 +119,22 @@ flowchart TD
 | :--- | :--- |
 | `src/page.html` | 网页结构，带打包标记 |
 | `src/style.css` | 全部样式 |
-| `src/game.js` | 游戏引擎、12 名英雄机制、菜单和回滚联机 |
+| `src/i18n.js` | 国际化多语言翻译引擎与中英文字典 |
+| `src/game.js` | 游戏引擎、12 名英雄机制、菜单、战斗状态机和回滚联机 |
+| `src/armory-core.js` | 武库核心逻辑、武器箱配置、品质分级与饰品概率 |
+| `src/armory.js` | 武库 UI、开箱动画、汰换合同、图鉴与玩家集市 |
+| `src/anticheat.js` | 客户端防作弊状态校验、封禁防护与伤害审计 |
 | `src/net-p2p.js` | 免服务器 WebRTC 直连 |
-| `src/cloud.js` | Firebase 云存档同步与本地备份导入/导出 |
+| `src/cloud.js` | 云存档同步、合并算法与本地备份导入/导出 |
 | `src/social.js` | 免服务器 P2P 江湖茶馆社区、好友与观战 |
 | `src/qfx/` | 青锋行小游戏模块化源码 |
-| `firestore.rules` | Firestore 云存档安全与防篡改规则 |
+| `cloudflare/` | Cloudflare Worker 经济中枢、D1 数据库与管理员后台 |
 | `assets/music/` | 背景音乐（`.mp3`） |
 | `assets/qingfengxing.html` | 生成的青锋行小游戏页面 |
 | `tools/build.py` | 生成下面三个网页（只用 Python 自带的库） |
 | `tools/combat-test.mjs` | 12 英雄招式、状态机与 2v2 AI 回归测试套件 |
+| `tools/econ-test.mjs` | 经济、武库、集市与反作弊全套自动化测试（389 项通过） |
+| `tools/rollback-test.mjs` | 回滚联机确定性与帧重放测试 |
 | `tools/simulate-all.mjs` | 全模式 AI 仿真对战、克制审计与神经网络训练管线 |
 | `index.html` | 生成的联网版（GitHub Pages） |
 | `renying-offline.html` | 生成的单文件离线版 |

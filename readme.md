@@ -51,6 +51,8 @@
 
 - **Plays from a URL** — open the GitHub Pages link and start. No install, no clone, no hosting.
 - **Serverless P2P multiplayer** — share a 4-character room code and the two browsers connect directly over a WebRTC DataChannel, with rollback netcode to keep the fight responsive.
+- **Armory & Marketplace (武库与集市)** — open weapon cases with ink, trade collectibles with other players, use trade-up contracts, or equip skins tiered from Standard to Legendary with automatic highest-tier equipping.
+- **Bilingual Interface** — seamless English and Simplified Chinese support with persistent preferences and in-game toggle.
 - **Drawn in code, not sprites** — brushstroke trails, scarf motion, hit-stop, screen shake and the whole ink-wash look are drawn procedurally on a 2D canvas.
 - **Single-file offline build** — `renying-offline.html` opens by double-click, with the music and the Qingfengxing mini-game packed inside it.
 
@@ -117,16 +119,22 @@ Edit the sources; never edit the generated pages.
 | :--- | :--- |
 | `src/page.html` | Page markup with build markers |
 | `src/style.css` | All styles |
-| `src/game.js` | Game engine, 12-character roster, menus and rollback netcode |
+| `src/i18n.js` | Bilingual internationalization engine and vocabulary dictionary |
+| `src/game.js` | Game engine, 12-character roster, menus, combat states and rollback netcode |
+| `src/armory-core.js` | Weapon cases, rarity tiers, skins catalog, and inventory calculations |
+| `src/armory.js` | Armory UI, unboxing animations, trade-up contracts, and marketplace views |
+| `src/anticheat.js` | Anti-cheat state integrity, rate limiting, and damage verification |
 | `src/net-p2p.js` | Serverless WebRTC direct connection |
-| `src/cloud.js` | Firebase cloud save sync and signed local account backup/restore |
+| `src/cloud.js` | Cloud save synchronization, account merge, and signed local backup/restore |
 | `src/social.js` | Serverless WebRTC P2P community hub, friends, and live spectating |
 | `src/qfx/` | Modular source files for the Qingfengxing mini-game |
-| `firestore.rules` | Firestore security and progression rate-limit rules |
+| `cloudflare/` | Cloudflare Worker backend with D1 database for account sync, economy, and admin console |
 | `assets/music/` | Background music (`.mp3`) |
 | `assets/qingfengxing.html` | Generated Qingfengxing mini-game page |
 | `tools/build.py` | Generates the pages below (Python standard library only) |
 | `tools/combat-test.mjs` | Headless/in-process regression suite for all 12 heroes, 2v2 AI, and combat state transitions |
+| `tools/econ-test.mjs` | Economy, armory, market, drop rates, and anti-abuse test suite (389 checks) |
+| `tools/rollback-test.mjs` | Rollback determinism and frame replay verification |
 | `tools/simulate-all.mjs` | Multi-threaded simulation, counter audit, and neural policy training pipeline |
 | `tools/ui-audit.mjs` | Headless check that every panel fits, with nothing clipped or too small to read |
 | `tools/hud-audit.mjs` | Headless check that no in-match HUD text is drawn below 12px |
