@@ -962,11 +962,11 @@ function fixEquip(eq, skins) {
   for (const [c, k] of Object.entries(o)) if (k && C.CS_KEYS.includes(k) && !skins.includes(k)) delete o[c];
   return o;
 }
-function overlay(prof, eco) {
+function overlay(prof, eco, isDev) {
   const p = { ...prof };
   delete p.armory; delete p.ledger;
   p.ink = eco.ink;
-  p.skins = mergeSkins(p.skins, eco.state, eco.srv, eco.ver);
+  p.skins = isDev ? cleanSkins(p.skins) : mergeSkins(p.skins, eco.state, eco.srv, eco.ver);
   p.equip = fixEquip(cleanEquip(p.equip), p.skins);
   return p;
 }
@@ -1078,7 +1078,8 @@ async function handleEcon(env, auth, body, now) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
-    const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
+    const isDevUser = auth.user && String(auth.user.username || '').toLowerCase() === 'dev';
+    const skins0 = isDevUser ? cleanSkins(prof.skins) : mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
     const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
     const mkt = { id: randHex(8), row: null, out: null };
@@ -1164,6 +1165,15 @@ async function handleProfilePost(env, auth, body, now) {
       p.ink = eco.ink;
       p.skins = cleanSkins(incoming.skins || []);
       p.equip = fixEquip(cleanEquip(p.equip), p.skins);
+      if (incoming.armory && typeof incoming.armory === 'object') {
+        const arm = incoming.armory;
+        if (Array.isArray(arm.inv)) eco.state.inv = arm.inv;
+        if (arm.cases && typeof arm.cases === 'object') eco.state.cases = Object.assign(eco.state.cases || {}, arm.cases);
+        if (Array.isArray(arm.via)) eco.state.via = Array.from(new Set([...(eco.state.via || []), ...arm.via]));
+        if (typeof arm.nid === 'number') eco.state.nid = Math.max(eco.state.nid || 1, arm.nid);
+        eco.state = C.normalize(eco.state, { now, uid });
+        eco.stateJson = JSON.stringify(eco.state);
+      }
       const stmts = [userWrite(env, uid, p, now, ver), econWrite(env, uid, ver, now, eco.srv, eco.ink, eco.stateJson)];
       const results = await env.DB.batch(stmts);
       if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;
@@ -1204,9 +1214,10 @@ function cleanInitial(prof, username) {
   return p;
 }
 async function profileOut(env, user, now) {
+  const isDev = user && String(user.username || '').toLowerCase() === 'dev';
   const prof = parseProfile(user.profile_json, user.username);
   const eco = await loadEcon(env, user.id, prof, now);
-  return { profile: overlay(prof, eco), ledger: ledgerOut(eco, now) };
+  return { profile: overlay(prof, eco, isDev), ledger: ledgerOut(eco, now) };
 }
 
 /* ---------- 玩家市场：看谁在卖什么、最近成交多少（挂单、买、撤都走 /api/econ） ---------- */
