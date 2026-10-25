@@ -420,7 +420,7 @@
   .cxskins { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; width: 100%; }
   .cx-skin-row { display: flex; flex-direction: column; gap: 6px; }
   .cx-skin-row-hd { display: flex; align-items: center; }
-  .cx-skin-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--dim); }
+  .cx-skin-tag { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--dim); }
   .cx-skin-tag.tag-bd { color: #8ec5fc; border-color: rgba(142,197,252,.35); background: rgba(142,197,252,.1); }
   .cx-skin-tag.tag-wk { color: #e9c46a; border-color: rgba(233,196,106,.35); background: rgba(233,196,106,.1); }
   .cx-skin-row-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
