@@ -3940,6 +3940,7 @@ const authListeners = [];
 const syncListeners = [];
 let saveTimer = null;
 let pendingData = null;
+let pendingUid = null;      // 这条待上传的存档属于哪个账号
 let retryN = 0;
 const sync = { state: 'local', at: 0, err: '' };
 const LEDGER = { uid: '', s: null, v: -1, un: [] };
@@ -4010,6 +4011,32 @@ if (!g[1]) GRANTS.shift();
 return got;
 }
 function inkGrantKey() { if (grantGiven) return null; grantGiven = true; return grantAdd; }
+const PW_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
+async function pwHash(password) {
+const pw = String(password);
+try {
+if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ry_pw_v2|' + pw));
+return 'v2$' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+} catch (e) {}
+return 'v2u$' + encodeURIComponent('ry_pw_v2|' + pw);   // 非加密降级，至少不会抛异常
+}
+function pwLegacy(password) {
+try { return btoa(String(password)); } catch (e) { return null; }
+}
+async function pwMatches(rec, password) {
+if (!rec || typeof rec !== 'object') return false;
+if (rec.pwv === 2) return rec.pw === await pwHash(password);
+const legacy = pwLegacy(password);
+return !!legacy && rec.pw === legacy;
+}
+function tempPassword() {
+const buf = new Uint8Array(9);
+if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(buf);
+else for (let i = 0; i < buf.length; i++) buf[i] = Math.floor(Math.random() * 256);
+return Array.from(buf, b => PW_ALPHABET[b % PW_ALPHABET.length]).join('');
+}
 function getToken() {
 try {
 return localStorage.getItem('renying-cloud-token') || (currentUser && currentUser.token) || '';
@@ -4029,6 +4056,25 @@ return !!(hasValidConfig() && u && u.isCloud && getToken());
 }
 function dirtyKey() {
 return 'renying-sync-dirty-' + (currentUser && currentUser.uid);
+}
+function profKey(uid) { return 'renying-prof-' + uid; }
+function readMirror(uid) {
+if (!uid) return null;
+try { const raw = localStorage.getItem(profKey(uid)); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+}
+function migrateLegacyCache() {
+try {
+const legacy = localStorage.getItem('renying-cloud-cache');
+if (!legacy) return;
+const u = getUser();
+if (u && u.uid && !localStorage.getItem(profKey(u.uid))) {
+JSON.parse(legacy);
+localStorage.setItem(profKey(u.uid), legacy);
+}
+localStorage.removeItem('renying-cloud-cache');
+} catch (e) {
+try { localStorage.removeItem('renying-cloud-cache'); } catch (e2) {}
+}
 }
 function setSync(patch) {
 Object.assign(sync, patch);
@@ -4229,6 +4275,10 @@ if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
 syncHooks.forEach(fn => { try { fn(); } catch (e) { console.warn('before sync', e); } });
 const data = pendingData;
 if (!data || !cloudActive()) return;
+if (pendingUid && pendingUid !== getUser().uid) {   // 存档不属于当前账号了：丢弃，绝不写进别人的档
+pendingData = null; pendingUid = null;
+return;
+}
 if (typeof navigator !== 'undefined' && navigator.onLine === false) {
 setSync({ state: 'offline' });
 return;
@@ -4246,7 +4296,7 @@ if (res && res.ledger && getUser() && getUser().uid === uid) {
 ledgerListeners.forEach(fn => { try { fn(res.ledger, res.fix || null, res.capped || 0, res.owed || 0); } catch (e) { console.warn('ledger listener', e); } });
 }
 if (pendingData === data) {
-pendingData = null;
+pendingData = null; pendingUid = null;
 try { localStorage.removeItem(dirtyKey()); } catch (e) {}
 }
 retryN = 0;
@@ -4254,6 +4304,13 @@ setSync({ state: pendingData ? 'pending' : 'ok', at: res.updatedAt || Date.now()
 if (pendingData) saveTimer = setTimeout(doSync, 800);
 } catch (err) {
 console.warn('Sync profile to Cloudflare failed:', err);
+const code = err && err.status;
+if (code && code >= 400 && code < 500 && code !== 429) {
+if (pendingData === data) { pendingData = null; pendingUid = null; }
+try { localStorage.removeItem(dirtyKey()); } catch (e) {}
+setSync({ state: 'blocked', err: (err.message || '云端拒绝了这次存档') + '，本机存档不受影响，可先导出备份' });
+return;
+}
 retryN++;
 const wait = [2, 5, 15, 30, 60][Math.min(retryN, 5) - 1] * 1000;
 setSync({ state: 'error', err: `上传失败，${Math.round(wait / 1000)} 秒后自动重试` });
@@ -4310,8 +4367,7 @@ devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins])
 devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
 devProf.online10Unlocked = true;
 try {
-localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(devProf));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+localStorage.setItem(profKey(data.uid), JSON.stringify(devProf));
 } catch (e) {}
 setSync({ state: 'ok', at: Date.now(), err: '' });
 notifyAuthChange(currentUser);
@@ -4328,8 +4384,7 @@ if (!devProf) {
 devProf = makeDevProfile();
 }
 try {
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(devProf));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(devProf));
+localStorage.setItem(profKey(uid), JSON.stringify(devProf));
 localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true, isCloud: false }));
 } catch (e) {}
 currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
@@ -4372,8 +4427,7 @@ localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 if (data.profile) {
 adoptProfile(data.uid, data.profile, data.ledger);
 try {
-localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
+localStorage.setItem(profKey(data.uid), JSON.stringify(data.profile));
 localStorage.removeItem('renying-guest-profile');
 } catch (e) {}
 }
@@ -4392,7 +4446,7 @@ if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomVal
 else for (let i = 0; i < 4; i++) rndBuf[i] = (Math.random() * 256) | 0;
 const rndHex = Array.from(rndBuf, b => b.toString(16).padStart(2, '0')).join('');
 const uid = 'local_' + Date.now() + '_' + rndHex;
-mockUsers[name] = { uid, name, pw: btoa(password), created: Date.now() };
+mockUsers[name] = { uid, name, pw: await pwHash(password), pwv: 2, created: Date.now() };
 localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
 const userObj = { uid, name, displayName: name, isCloud: false };
 localStorage.setItem('renying-local-current', JSON.stringify(userObj));
@@ -4426,8 +4480,7 @@ localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 if (data.profile) {
 adoptProfile(data.uid, data.profile, data.ledger);
 try {
-localStorage.setItem('renying-prof-' + data.uid, JSON.stringify(data.profile));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(data.profile));
+localStorage.setItem(profKey(data.uid), JSON.stringify(data.profile));
 } catch (e) {}
 }
 setSync({ state: 'ok', at: Date.now(), err: '' });
@@ -4437,12 +4490,17 @@ return userObj;
 let mockUsers = {};
 try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
 const localU = mockUsers[name];
-if (localU && localU.pw === btoa(password)) {
+const pwOk = await pwMatches(localU, password);
+if (localU && pwOk) {
+if (localU.pwv !== 2) {   // 老记录：登录成功时顺手升级成散列
+localU.pw = await pwHash(password); localU.pwv = 2;
+mockUsers[name] = localU;
+try { localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers)); } catch (e) {}
+}
 try {
 let localProf = null;
 try {
-const pStr = localStorage.getItem('renying-prof-' + localU.uid) || localStorage.getItem('renying-cloud-cache');
-if (pStr) localProf = JSON.parse(pStr);
+localProf = readMirror(localU.uid);
 } catch (e) {}
 const data = await api('/api/register', {
 method: 'POST',
@@ -4482,6 +4540,8 @@ throw err;
 }
 }
 async function logout() {
+if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+pendingData = null; pendingUid = null;   // 防抖中的存档不能落到下一个登录的账号里
 try {
 await api('/api/logout', { method: 'POST' }).catch(() => {});
 } catch (e) {}
@@ -4544,8 +4604,7 @@ const localChanged = !local ||
 (merged.ink || 0) > (cloudData.ink || 0);
 try {
 localStorage.removeItem(dirtyKey());
-localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
-localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(merged));
+localStorage.setItem(profKey(u.uid), JSON.stringify(merged));
 } catch (e) {}
 if (localChanged) {
 setTimeout(() => saveProfile(merged, true), 1000);
@@ -4558,12 +4617,8 @@ return merged;
 console.warn('Load cloud profile error, reading local cache:', err);
 }
 }
-try {
-const cached = localStorage.getItem('renying-cloud-cache');
-if (cached) return JSON.parse(cached);
-const localProf = localStorage.getItem('renying-prof-' + u.uid);
-if (localProf) return JSON.parse(localProf);
-} catch (e) {}
+const localProf = readMirror(u.uid);
+if (localProf) return localProf;
 return null;
 }
 function saveProfile(prof, immediate) {
@@ -4571,22 +4626,16 @@ const u = getUser();
 const dataToSave = toCloudData(prof);
 if (u && u.name) dataToSave.name = u.name;
 if (!u) {
-try {
-localStorage.setItem('renying-guest-profile', JSON.stringify(dataToSave));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
-} catch (e) {}
+try { localStorage.setItem('renying-guest-profile', JSON.stringify(dataToSave)); } catch (e) {}
 return;
 }
-try {
-localStorage.setItem('renying-cloud-cache', JSON.stringify(dataToSave));
-localStorage.setItem('renying-prof-' + u.uid, JSON.stringify(dataToSave));
-} catch (e) {}
+try { localStorage.setItem(profKey(u.uid), JSON.stringify(dataToSave)); } catch (e) {}
 if (!cloudActive()) {
 setSync({ state: 'local' });
 return;
 }
 ledgerNote(u.uid, dataToSave.ink);   // 这次存档里墨锭的变化记成一条待上报
-pendingData = dataToSave;
+pendingData = dataToSave; pendingUid = u.uid;
 try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
 if (sync.state !== 'syncing') setSync({ state: 'pending' });
 if (saveTimer) clearTimeout(saveTimer);
@@ -4596,13 +4645,13 @@ else saveTimer = setTimeout(doSync, 1200);
 async function syncNow() {
 if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
 if (!pendingData) {
-let local = null;
-try { local = JSON.parse(localStorage.getItem('renying-prof-' + getUser().uid) || 'null'); } catch (e) {}
+const local = readMirror(getUser().uid);
 if (!local) throw new Error('本机没有可上传的存档');
 pendingData = Object.assign(toCloudData(local), { name: getUser().name, updatedAt: Date.now() });
+pendingUid = getUser().uid;
 }
 await doSync();
-if (sync.state === 'error') throw new Error(sync.err);
+if (sync.state === 'error' || sync.state === 'blocked') throw new Error(sync.err || '云端拒绝了这次存档');
 }
 async function pullNow() {
 if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
@@ -4616,11 +4665,10 @@ local = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
 } catch (e) {}
 const merged = mergeProfiles(local, cloudData);
 adoptProfile(uid, merged, res.ledger);
-pendingData = null;
+pendingData = null; pendingUid = null;
 try {
 localStorage.removeItem(dirtyKey());
-localStorage.setItem('renying-cloud-cache', JSON.stringify(merged));
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(merged));
+localStorage.setItem(profKey(uid), JSON.stringify(merged));
 } catch (e) {}
 saveProfile(merged, true);
 setSync({ state: 'ok', at: Date.now(), err: '' });
@@ -4639,7 +4687,26 @@ document.body.removeChild(a);
 URL.revokeObjectURL(url);
 }, 100);
 }
+const SIGNED_KEYS = ['name', 'ink', 'owned', 'frags', 'pity', 'spity', 'skins', 'equip',
+'netWins', 'netLosses', 'rating', 'placed', 'online10Unlocked', 'stageStars', 'qfx', 'rk'];
+function canonicalProfile(p) {
+const norm = v => {
+if (Array.isArray(v)) return v.map(norm);
+if (v && typeof v === 'object') return Object.keys(v).sort().map(k => [k, norm(v[k])]);
+return v === undefined ? null : v;
+};
+return JSON.stringify(SIGNED_KEYS.map(k => [k, norm(p[k])]));
+}
 async function computeProfileDigest(p, salt = 'ry_sword_auth_2026') {
+if (!p) return '';
+const raw = `RY_V2|${canonicalProfile(p)}|${salt}`;
+if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+return '';
+}
+async function computeLegacyDigest(p, salt = 'ry_sword_auth_2026') {
 if (!p) return '';
 const ink = Math.floor(p.ink || 0);
 const wins = Math.floor(p.netWins || 0);
@@ -4650,8 +4717,7 @@ const skins = Array.isArray(p.skins) ? p.skins.slice().sort().join(',') : '';
 const raw = `RY_V1|${name}|${ink}|${owned}|${skins}|${wins}|${losses}|${salt}`;
 try {
 if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
-const enc = new TextEncoder().encode(raw);
-const hashBuf = await crypto.subtle.digest('SHA-256', enc);
+const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
 return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 } catch (e) {}
@@ -4664,27 +4730,27 @@ h2 = Math.imul(h2 ^ ch, 0x5bd1e995);
 return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
 }
 async function verifyProfileDigest(data) {
-if (!data || typeof data !== 'object') return false;
+if (!data || typeof data !== 'object') return 'unsigned';
 const p = data.profile || data;
 const sig = data._sig || (data.profile && data.profile._sig);
-if (!sig) return null;
+if (!sig) return 'unsigned';
 const expected = await computeProfileDigest(p);
-return expected === sig;
+if (expected && expected === sig) return 'ok';
+const legacy = await computeLegacyDigest(p);
+if (legacy && legacy === sig) return 'weak';
+return expected ? 'tampered' : 'weak';
 }
 async function exportCurrentAccount(prof) {
 const u = getUser();
 let activeProf = prof;
-if (!activeProf) {
-try {
-activeProf = JSON.parse(localStorage.getItem('renying-cloud-cache') || '{}');
-} catch (e) {
-activeProf = {};
-}
-}
+if (!activeProf) activeProf = (u && readMirror(u.uid)) || {};
 const name = (u && u.name) || activeProf.name || '大侠';
 const profData = toCloudData(activeProf);
 profData.name = name;
 const sig = await computeProfileDigest(profData);
+if (!sig) {
+throw new Error('当前页面无法安全签名（需要 https 或 localhost）。请用 https 打开后再导出，否则备份文件无法校验');
+}
 const payload = {
 app: 'renying',
 format: 'single-account',
@@ -4695,13 +4761,14 @@ uid: (u && u.uid) || ('local_' + Date.now()),
 name: name
 },
 profile: profData,
-_sig: sig
+_sig: sig,
+_alg: 'sha256-v2'   // 老文件没有这个字段：只对得上 v1 弱签名的会被标成“旧版弱校验”
 };
 const safeName = String(name).replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g, '_') || 'player';
 triggerDownload(`renying-account-${safeName}.json`, JSON.stringify(payload, null, 2));
 return payload;
 }
-function exportAllAccounts() {
+async function exportAllAccounts() {
 let mockUsers = {};
 try {
 mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
@@ -4713,7 +4780,7 @@ try {
 const profRaw = localStorage.getItem('renying-prof-' + u.uid);
 if (profRaw) prof = JSON.parse(profRaw);
 } catch (e) {}
-accounts.push({ account: u, profile: prof });
+accounts.push({ account: u, profile: prof, _sig: prof ? await computeProfileDigest(prof) : '' });
 }
 const payload = {
 app: 'renying',
@@ -4729,15 +4796,14 @@ return payload;
 async function importAccountData(data) {
 if (!data || typeof data !== 'object') throw new Error('无效的存档文件数据');
 if (data.format === 'single-account' && data.profile) {
-const isSigValid = await verifyProfileDigest(data);
-if (isSigValid === false) {
+const sigState = await verifyProfileDigest(data);
+if (sigState === 'tampered') {
 throw new Error('⚠️ 存档校验和不匹配：该备份文件已被外部篡改');
 }
 const p = data.profile;
 const uid = (data.account && data.account.uid) || ('imported_' + Date.now());
 const name = (data.account && data.account.name) || p.name || '大侠';
-localStorage.setItem('renying-prof-' + uid, JSON.stringify(p));
-localStorage.setItem('renying-cloud-cache', JSON.stringify(p));
+localStorage.setItem(profKey(uid), JSON.stringify(p));
 localStorage.setItem('renying-local-current', JSON.stringify({ uid, name, isCloud: false }));
 currentUser = { uid, name, displayName: name, isCloud: false };
 notifyAuthChange(currentUser);
@@ -4755,7 +4821,7 @@ if (u.isCloud && getToken()) return { success: true, alreadyCloud: true, uid: u.
 const name = u.name;
 let localProf = null;
 try {
-localProf = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || localStorage.getItem('renying-cloud-cache') || '{}');
+localProf = readMirror(u.uid) || {};
 } catch (e) {}
 const res = await register(name, password);
 if (localProf) {
@@ -4764,6 +4830,7 @@ saveProfile(localProf, true);
 return { success: true, uid: res.uid, name: res.name, isCloud: true };
 }
 function init() {
+migrateLegacyCache();
 getUser();
 }
 if (typeof window !== 'undefined') {
@@ -17053,28 +17120,29 @@ if (typeof window !== 'undefined') window.applySkins = applySkins;
 function flagsKey() { return 'renying-flags-' + (curName() || 'guest'); }
 function loadFlags() { try { return JSON.parse(localStorage.getItem(flagsKey()) || '{}') || {}; } catch (e) { return {}; } }
 function saveFlag(k, v) { const fl = loadFlags(); fl[k] = v; try { localStorage.setItem(flagsKey(), JSON.stringify(fl)); } catch (e) {} }
-function applyProfile(p) {
+function applyProfile(p, opts) {
 if (!p) return;
 if (p.guest) {
-const owned = Array.isArray(p.owned) ? p.owned : (PROF.owned || ['qingfeng']);
-const skins = Array.isArray(p.skins) ? p.skins : (PROF.skins || []);
-const equip = p.equip || PROF.equip || {};
-const ink = p.ink !== undefined ? p.ink : (PROF.ink || 0);
+PROF.guest = true;
+if (p.rotation) PROF.rotation = p.rotation;
+if (p.rates) PROF.rates = p.rates;
+if (opts && opts.reset) {
 Object.assign(PROF, {
-guest: true,
-ink: ink,
-owned: owned,
-frags: p.frags || PROF.frags || {},
-pity: p.pity || PROF.pity || 0,
+ink: p.ink !== undefined ? p.ink : 500,
+owned: Array.isArray(p.owned) && p.owned.length ? p.owned : ['qingfeng'],
+frags: p.frags || {},
+pity: p.pity || 0,
+spity: p.spity || 0,
+skins: Array.isArray(p.skins) ? p.skins : [],
+equip: p.equip || {},
+netWins: p.netWins || 0,
+netLosses: p.netLosses || 0,
 welfare: 1,
 rank: null,
 daily: [],
-weekly: [],
-skins: skins,
-equip: equip,
-spity: p.spity || PROF.spity || 0,
-rotation: p.rotation || PROF.rotation
+weekly: []
 });
+}
 } else {
 Object.assign(PROF, p, { guest: false });
 }
@@ -20684,7 +20752,7 @@ async function doLogout() {
 if (window.CloudSave) { try { await CloudSave.syncNow(); } catch (e) {} await CloudSave.logout(); }
 setAcc(null);
 PROF.guest = true;
-applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 });
+applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 }, { reset: true });
 toast('已退出账号');
 renderAcc();
 renderAccPage();
@@ -20961,7 +21029,6 @@ if (!ACC.name) {
 ACC.name = name;
 }
 PROF.guest = false;
-try { localStorage.setItem('renying-cloud-cache', JSON.stringify(PROF)); } catch (e) {}
 if (window.CloudSave) {
 CloudSave.saveProfile(PROF, true);
 }
@@ -21005,7 +21072,7 @@ return;
 }
 if (d.format === 'all-accounts-backup' && Array.isArray(d.accounts)) {
 if (!window.CloudSave) throw new Error('存档系统未就绪');
-const res = CloudSave.importAccountData(d);
+const res = { name: '', profile: null };   // 全备份包在这里逐个写本机，不需要走单账号导入
 const list = d.accounts.map(item => {
 const a = item.account || {};
 const p = item.profile || {};
@@ -21131,7 +21198,6 @@ renderAcc();
 renderAcc();
 function netStatus(t) { if ($id('netStatus')) $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
-if ($id('onlineLine')) $id('onlineLine').textContent = '';
 if ($id('verLine')) $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 document.body.classList.toggle('offline', OFFLINE_BUILD);
@@ -21337,8 +21403,6 @@ const total = Math.max(1, cnt);
 const parts = [];
 if (h && h.playing) parts.push(`${h.playing} 局对战`);
 if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
-const line = parts.length ? '现在 ' + parts.join('，') : '现在没有人在玩，快速匹配会等别人加入';
-if ($id('onlineLine')) $id('onlineLine').textContent = line;
 if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : `${total} 人在线 · 全网连线`;
 if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
 if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;

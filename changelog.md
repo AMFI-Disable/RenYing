@@ -500,6 +500,14 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Cloud Save Isolation (`src/cloud.js`, `src/game.js`)**:
+  - Each account keeps its own local mirror (`renying-prof-<uid>`). The shared `renying-cloud-cache` key is gone, and boot migrates it into the current account once before deleting it, so a new account can no longer inherit the previous player's ink and heroes on a shared device.
+  - A save scheduled by the debounce is bound to the account that made it, and signing out clears it. A quick logout/login can no longer push one player's progress into another player's document.
+  - A save the server refuses (any 4xx except 429) is no longer retried forever. The client drops the pending payload, clears the dirty marker, and reports a `blocked` state in the account panel and the top-bar dot with a pointer to export a backup. Rate limits and network errors still retry with backoff.
+  - The guest profile answer is treated as a rotation/rate hint only. It no longer overwrites the roster, ink, welfare flag or task lists with starter values; an explicit sign-out still resets to a fresh profile.
+  - Local accounts hash passwords with SHA-256 instead of `btoa`. A password containing Chinese characters used to throw `InvalidCharacterError` and the account could not be created at all; existing records are upgraded on the next successful login.
+  - Exported backups sign every profile field with SHA-256 and record `_alg`, instead of signing six fields and silently degrading to a 32-bit hash when `crypto.subtle` is missing. Tampering with stage stars or fragments now fails verification, old files are reported as `weak` rather than trusted, and exporting from a plain-HTTP page says it cannot sign instead of writing a fake signature.
+  - Removed the dead `#onlineLine` writes and a stray un-awaited import call that always rejected for full-backup files.
 - **Calibrated Hero Stat & Tooltip Alignment (`src/game.js`, `src/ai.js`, `tools/combat-test.mjs`)**:
   - Aligned hero stat definitions (`CHARS.stat`), move damages, and codex skill descriptions across all 12 characters to exact calibrated combat values, embedding calibrated base damages directly and standardizing runtime multiplier hacks in `BAL` to 1.0.
   - Expanded `tools/combat-test.mjs` test assertions to verify character roster stat consistency and tooltip accuracy.
