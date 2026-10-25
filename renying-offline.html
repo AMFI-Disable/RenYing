@@ -7,13 +7,14 @@
 <title>刃影</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">   <!-- 后台加载：连不上 Google 也不会卡住页面 -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">   <!-- 后台加载：连不上 Google 也不会卡住页面 -->
 <style>
 :root {
 --bg: #0a0b1c; --ink: #efe8d8; --dim: rgba(239, 232, 216, 0.62); --faint: rgba(239, 232, 216, 0.16);
 --p1: #46d3ea; --p2: #ff4a5f; --seal: #b8392e; --gold: #e9c46a;
 --title: "Ma Shan Zheng", "STKaiti", "KaiTi", "Kaiti SC", serif;
---body: "Noto Serif SC", "Songti SC", "SimSun", serif;
+--body: "Noto Serif SC", "STZhongsong", "Songti SC", "SimSun", serif;
+--nav-serif: "Cinzel", "Noto Serif SC", "STZhongsong", "Songti SC", "SimSun", serif;
 box-sizing: border-box;
 padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -1192,19 +1193,19 @@ body.has-nav #accBar { display: none !important; }
 body.has-nav .scr { top: var(--nav-h); }
 .tn-logo { display: flex; align-items: center; gap: 10px; padding: 0 22px 0 18px; border: none; cursor: pointer; background: var(--v-red); color: #fff; clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%); }
 .tn-mark { font-family: var(--title); font-size: 28px; line-height: 1; letter-spacing: .06em; }
-.tn-en { font-family: var(--v-cond); font-weight: 700; font-size: 11px; letter-spacing: .32em; opacity: .85; }
+.tn-en { font-family: var(--nav-serif); font-weight: 700; font-size: 11px; letter-spacing: .28em; opacity: .9; }
 .tn-tabs { display: flex; align-items: stretch; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: center; }
 .tn-tabs::-webkit-scrollbar { display: none; }
-.tn-tabs button { position: relative; border: none; background: none; color: rgba(236,232,225,.62); font-family: var(--body); font-size: 15px; letter-spacing: .12em; padding: 0 16px; cursor: pointer; white-space: nowrap; transition: color .15s, background .15s; }
+.tn-tabs button { position: relative; border: none; background: none; color: rgba(236,232,225,.72); font-family: var(--nav-serif); font-weight: 600; font-size: 15.5px; letter-spacing: .14em; padding: 0 16px; cursor: pointer; white-space: nowrap; text-shadow: 0 1px 8px rgba(0,0,0,.45); transition: color .15s, background .15s, text-shadow .15s; }
 .tn-tabs button::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 3px; background: var(--v-red); transform: scaleX(0); transition: transform .2s; }
-.tn-tabs button:hover { color: #fff; background: rgba(236,232,225,.04); }
-.tn-tabs button.sel { color: #fff; }
+.tn-tabs button:hover { color: #fff; background: rgba(236,232,225,.05); text-shadow: 0 0 12px rgba(255,255,255,.28); }
+.tn-tabs button.sel { color: #fff; font-weight: 700; text-shadow: 0 0 14px rgba(255,255,255,.32); }
 .tn-tabs button.sel::after { transform: scaleX(1); }
-.tn-tabs .tn-play { margin: 8px 10px; padding: 0 30px; color: #fff; background: var(--v-red); font-family: var(--v-cond); font-weight: 700; letter-spacing: .3em; font-size: 16px;
+.tn-tabs .tn-play { margin: 8px 10px; padding: 0 30px; color: #fff; background: var(--v-red); font-family: var(--nav-serif); font-weight: 700; letter-spacing: .28em; font-size: 16px;
 clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
 .tn-tabs .tn-play::after { display: none; }
 .tn-tabs .tn-qfx { color: #e9c46a; }
-.tn-tabs .tn-qfx:hover { color: #ffd98a; }
+.tn-tabs .tn-qfx:hover { color: #ffd98a; text-shadow: 0 0 12px rgba(233,196,106,.4); }
 body.has-nav .msmall-dock { opacity: 0; pointer-events: none; visibility: hidden; transform: translateX(-50%) translateY(18px);
 transition: opacity .2s, transform .2s, visibility 0s .2s; }
 .help-tut { margin: 0 0 12px; text-align: center; }
@@ -1212,15 +1213,15 @@ transition: opacity .2s, transform .2s, visibility 0s .2s; }
 .tn-tabs .tn-play.searching { animation: tnPulse 1.2s ease-in-out infinite; }
 @keyframes tnPulse { 50% { background: #b8303d; } }
 .tn-right { display: flex; align-items: center; gap: 10px; flex: none; }
-.tn-ink { display: inline-flex; align-items: center; gap: 6px; font-family: var(--v-cond); font-size: 15px; color: var(--gold); padding: 4px 10px; background: rgba(233,196,106,.08); border: 1px solid rgba(233,196,106,.22); }
+.tn-ink { display: inline-flex; align-items: center; gap: 6px; font-family: var(--nav-serif); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px; color: var(--gold); padding: 4px 10px; background: rgba(233,196,106,.08); border: 1px solid rgba(233,196,106,.22); }
 .tn-ink svg { width: 15px; height: 15px; }
 .tn-player { position: relative; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 6px; border: 1px solid var(--line); background: rgba(236,232,225,.04); color: var(--v-white); cursor: pointer; text-align: left;
 clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); transition: border-color .15s, background .15s; }
 .tn-player:hover { border-color: rgba(255,70,85,.6); background: rgba(255,70,85,.08); }
 .tn-medal { width: 34px; height: 34px; display: grid; place-items: center; }
 .tn-who { display: flex; flex-direction: column; line-height: 1.15; max-width: 150px; }
-.tn-who b { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tn-who small { font-family: var(--v-cond); font-size: 11.5px; color: rgba(236,232,225,.58); letter-spacing: .06em; white-space: nowrap; }
+.tn-who b { font-family: var(--nav-serif); font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-who small { font-family: var(--nav-serif); font-weight: 600; font-size: 11.5px; color: rgba(236,232,225,.62); letter-spacing: .06em; white-space: nowrap; }
 .tn-sync { width: 8px; height: 8px; border-radius: 50%; position: absolute; right: 6px; top: 6px; background: transparent; }
 .tn-sync.s-ok { background: #3ddc97; box-shadow: 0 0 6px #3ddc97; }
 .tn-sync.s-pending, .tn-sync.s-syncing { background: var(--gold); animation: tnBlink 1s ease-in-out infinite; }
