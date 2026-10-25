@@ -182,8 +182,8 @@ def admin_page():
     if html.count(NAMES_MARK) != 1:
         raise SystemExit("cloudflare/admin.html 里应该正好有一个 " + NAMES_MARK)
     html = html.replace(NAMES_MARK, json.dumps(admin_names(), ensure_ascii=False, separators=(",", ":")))
-    scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
-    if len(scripts) != 1 or html.count("<script") != 1:
+    scripts = re.findall(r"(?i)<script\b[^>]*>(.*?)</script\b[^>]*>", html, re.S)
+    if len(scripts) != 1 or len(re.findall(r"(?i)<script\b", html)) != 1:
         raise SystemExit("cloudflare/admin.html 里应该正好有一段 <script>（不带属性）")
     return html, scripts[0], base64.b64encode(hashlib.sha256(scripts[0].encode("utf-8")).digest()).decode()
 

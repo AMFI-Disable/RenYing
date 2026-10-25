@@ -1139,7 +1139,7 @@ section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段
   ok(scriptSrc && !scriptSrc.includes('unsafe'), '脚本不许 unsafe-inline（页面里混进来的脚本、onclick 跑不了）', scriptSrc);
   ok(!html.includes(ADMIN) && res.headers.get('Cache-Control') === 'no-store', '网页里没有口令，也不让缓存');
   if (FILE.includes('bundle')) {
-    const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+    const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\b[^>]*>/gi)].map(m => m[1]);
     const sha = scripts.length === 1 ? createHash('sha256').update(scripts[0], 'utf8').digest('base64') : '';
     ok(scripts.length === 1 && scriptSrc === `'sha256-${sha}'`, '打包好的网页：CSP 里的 sha256 和页面里那一段脚本对得上（网页能跑）', [scripts.length, scriptSrc]);
     const names = JSON.parse((/const NAMES = (\{.*?\});/.exec(scripts[0]) || [])[1] || '{}');

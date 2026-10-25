@@ -565,7 +565,11 @@
       // 本地降级模拟
       const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
       if (mockUsers[name]) throw new Error('该昵称已在本机注册');
-      const uid = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const rndBuf = new Uint8Array(4);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(rndBuf);
+      else for (let i = 0; i < 4; i++) rndBuf[i] = (Math.random() * 256) | 0;
+      const rndHex = Array.from(rndBuf, b => b.toString(16).padStart(2, '0')).join('');
+      const uid = 'local_' + Date.now() + '_' + rndHex;
       mockUsers[name] = { uid, name, pw: btoa(password), created: Date.now() };
       localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
       const userObj = { uid, name, displayName: name, isCloud: false };
