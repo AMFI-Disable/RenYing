@@ -528,7 +528,7 @@
       ['title', 'placeholder', 'aria-label'].forEach(attr => {
         const val = node.getAttribute(attr);
         if (val) {
-          const origKey = 'orig_' + attr;
+          const origKey = 'orig_' + attr.replace(/-/g, '_');
           const orig = node.dataset[origKey] !== undefined ? node.dataset[origKey] : val;
           if (node.dataset[origKey] === undefined) {
             node.dataset[origKey] = orig;
