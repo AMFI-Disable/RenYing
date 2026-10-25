@@ -429,7 +429,7 @@ Flurry ults (`crescent`, `shadows`, `eightimm`) all start with a 9-damage dash-i
 
 ---
 
-## 12. Hero-by-Hero Detail
+## 12. Hero-By-Hero Detail
 
 Each card lists: identity, exact stats, passive, and kit with the code's own numbers. “AI spacing” is the CPU's preferred
 range. “Beats / weak to” is the in-game counter chart text.
