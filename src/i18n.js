@@ -1,0 +1,571 @@
+// 刃影 国际化多语言支持模块 (i18n)
+// 支持简体中文 (zh) 与英文 (en)，默认中文，支持设置与初次启动语言偏好引导
+
+(function() {
+  'use strict';
+
+  const DICT_EN = {
+  "刃影": "RenYing",
+  "月下一决": "Duel Under the Moon",
+  "十二位侠客 · 回滚联机 · 赛季排位": "12 Heroes · Rollback Netcode · Ranked Season",
+  "第一赛季": "Season 1",
+  "季前赛": "Pre-season",
+  "赛季已结束": "Season Ended",
+  "段位排位开启": "Ranked Mode Live",
+  "全服在线侠士": "Warriors Online",
+  "实时江湖": "Live Realm",
+  "全服连线待命中 · 随时开战": "Global servers standby · Ready to fight",
+  "全服 1 人在线": "1 warrior online globally",
+  "1 位侠士在线": "1 warrior online",
+  "限时活动": "Event",
+  "全皮肤限时免费": "All Skins Free for Limited Time",
+  "打 3 局人机领 1000 墨锭": "Play 3 AI matches to claim 1,000 Ink",
+  "我的段位": "My Rank",
+  "未定级": "Unranked",
+  "定级中": "Placing",
+  "登录后打 5 场定级赛": "Login & play 5 placement matches",
+  "版本动态": "Updates",
+  "刃影武库": "RenYing Armory",
+  "武器箱、玩家市场、汰换合同": "Weapon cases, marketplace, trade contracts",
+  "匹配对战": "Quick Match",
+  "全服随机对手，开局即打": "Global random matchmaking, instant duel",
+  "排位赛": "Competitive",
+  "D 到 S 五段，定级 5 场": "D to S tiers, 5 placement matches",
+  "流云 · 墨羽": "Liu Yun & Mo Yu",
+  "技能重做": "Skills reworked",
+  "单人练习": "Solo Practice",
+  "在习武亭和电脑过招": "Practice against AI in the pavilion",
+  "开始对战": "Battle Lobby",
+  "匹配对战 · 排位赛 · 好友房间": "Matchmaking · Ranked · Custom Room",
+  "开始人机对战": "Start AI Battle",
+  "更换角色": "Change Hero",
+  "选难度": "Difficulty",
+  "入门": "Novice",
+  "寻常": "Normal",
+  "劲敌": "Hard",
+  "绝顶": "Master",
+  "天道": "Transcendent",
+  "这游戏得用键盘和鼠标，请在电脑上打开。": "This game requires keyboard & mouse, please open on desktop.",
+  "首页": "Home",
+  "单人": "Solo",
+  "青锋行": "QingFeng Voyage",
+  "打通青锋行三章，可领刃影奖励": "Clear 3 chapters of QingFengXing for RenYing rewards",
+  "对战": "Versus",
+  "闯关": "Stages",
+  "英雄": "Heroes",
+  "木人桩": "Dummy",
+  "新手教学": "Tutorial",
+  "武库": "Armory",
+  "任务": "Tasks",
+  "社区": "Community",
+  "墨锭": "Ink",
+  "未登录": "Not logged in",
+  "登录 / 注册": "Login / Register",
+  "账号与存档": "Account & Saves",
+  "设置": "Settings",
+  "操作说明": "Controls",
+  "设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。": "Settings are saved in your current browser. Native ultra quality & 144Hz high refresh rate enabled by default.",
+  "对局回放": "Replays",
+  "完成": "Done",
+  "朝向": "Facing",
+  "自动面向对手": "Auto face opponent",
+  "按 A / D 决定": "Manual by A / D",
+  "皮肤": "Skins",
+  "自动穿最好的": "Auto-equip best",
+  "按我选的穿": "Keep selected",
+  "泛光": "Bloom",
+  "高（最佳效果）": "High (Best)",
+  "中": "Medium",
+  "低": "Low",
+  "关": "Stage",
+  "开": "On",
+  "帧率上限": "FPS Cap",
+  "画质": "Quality",
+  "极高画质（原生全像素）": "Ultra (Native Pixels)",
+  "背景虚化": "Background Blur",
+  "画面震动": "Screen Shake",
+  "暗角": "Vignette",
+  "音乐": "Music",
+  "音效": "Sound Effects",
+  "语言": "Language",
+  "语言设置": "Language",
+  "简体中文": "简体中文",
+  "English": "English",
+  "1P 键位设置": "1P Key Bindings",
+  "恢复默认": "Reset Default",
+  "向左移动": "Move Left",
+  "向右移动": "Move Right",
+  "跳跃 / 二段跳": "Jump / Double Jump",
+  "沉身格挡": "Guard / Crouch",
+  "疾步冲刺": "Dash",
+  "绝技（气满）": "Ultimate (Full Chi)",
+  "门派绝学（Q）": "Class Skill (Q)",
+  "特殊突进（R）": "Special Dash (R)",
+  "请按新键…": "Press any key…",
+  "鼠标提示：左键轻击与蓄力，右键腾空闪，左键加右键使特殊技": "Mouse: Left-click Light/Charge, Right-click Aerial Flash, Left+Right Special Move",
+  "已恢复默认键位": "Default keys restored",
+  "初学练手 · 反应迟缓": "Slow Reaction · Beginner Friendly",
+  "见招拆招 · 攻守均衡": "Balanced Offense & Defense",
+  "凌厉反击 · 4连段压制": "Fierce Counter · 4-Hit Combos",
+  "凌厉反击 · 连招压制": "Aggressive Combos & Pressure",
+  "极境宗师 · 零空隙弹反": "Grandmaster · Flawless Parries",
+  "极境宗师 · 绝无破绽": "Grandmaster · Seamless Defense",
+  "全系神经策略 · 算无遗策": "Neural AI · Perfect Predictions",
+  "神级策略": "Divine AI Strategy",
+  "AI 战术情报分析": "AI Tactical Intelligence",
+  "初学练手": "Novice Practice",
+  "标准对练": "Standard Sparring",
+  "凌厉反击": "Fierce Counter",
+  "极境宗师": "Supreme Grandmaster",
+  "天道神境 · 自我对弈": "Transcendent Realm · Self-Play AI",
+  "标准反应": "Standard Reaction",
+  "适度格挡": "Moderate Guard",
+  "3段连招": "3-Hit Combo",
+  "2 连段": "2-Hit Combo",
+  "进入选人 · 开战": "Pick Hero & Battle",
+  "AI 对决 · 演武观战": "AI vs AI · Watch Exhibition",
+  "新手演练·招式教学": "Tutorial & Moves Guide",
+  "单人模式": "Single Player",
+  "选择 AI 难度与对手境界，在实战对局中锤炼招式攻防": "Choose AI difficulty & opponent realm, polish skills in real combat",
+  "常规": "Standard",
+  "肉鸽无尽": "Rogue Endless",
+  "特别玩法": "Special Modes",
+  "人机对练": "AI Practice",
+  "闯关战役": "Campaign Stages",
+  "万仞剑阁": "Sword Pavilion (Rogue)",
+  "天机乱斗": "Chaos Mutators",
+  "3v3车轮战": "3v3 Tag Match",
+  "通天神决": "Overpowered Mayhem",
+  "2v2演武观战": "2v2 AI Exhibition",
+  "返回主菜单": "Back to Main Menu",
+  "返回菜单": "Back to Menu",
+  "3v3 门派车轮战": "3v3 Sect Tag Relay",
+  "接力对决 · 胜者守擂": "Relay Duel · Winner Stays On",
+  "排定【先锋】、【中坚】与【大将】三名侠客出阵。单局击破敌将后保留残血调息，迎战敌方下一名侠客，直至一方三人全灭！": "Deploy Vanguard, Core, and General. Winners keep remaining HP to face the next opponent until one sect is eliminated!",
+  "点将台规则 · 双方各禁 1 名侠客 + 轮选 3 将": "Altar Rules: Ban 1 hero each + Alternate pick 3",
+  "选定境界后点击下方开战，进入水墨点将台依次禁用强敌，并排定【先锋】【中坚】【大将】出阵顺序。": "Select realm and battle, enter the altar to ban rivals and set deployment order.",
+  "擂台接力 · 开启车轮战": "Start 3v3 Tag Battle",
+  "3v3 AI群英观战": "Watch 3v3 AI Exhibition",
+  "敌方门派战力境界": "Enemy Sect Realm",
+  "通天神决 · 狂暴天道": "Overpowered Mayhem · Frenzy Transcendent",
+  "开启通天神决": "Start Overpowered Mayhem",
+  "通天 AI 观战": "Watch Mayhem AI Battle",
+  "开启天机乱斗": "Start Chaos Match",
+  "天机 AI 观战": "Watch Chaos AI Battle",
+  "开启新试炼": "Start New Trial",
+  "继续试炼": "Continue Trial",
+  "月下对弈 · 联机对战": "Moonlit Duel · Online Multiplayer",
+  "全网连线 · 毫秒回滚": "Global Netplay · Millisecond Rollback",
+  "主要玩法": "Main Mode",
+  "赛季排位": "Ranked Season",
+  "段位与战绩": "Rank & Records",
+  "全新玩法 · 协同决战": "New Mode · Co-op & Team Battle",
+  "2v2 组队开黑": "2v2 Team Battle",
+  "单人出战 · 人机协同": "Solo Entry · AI Teammate",
+  "你 + 电脑队友 vs 双电脑": "You + AI vs Two AIs",
+  "双人破阵 · 共斗": "Co-op Raid",
+  "双人同袍 vs 双天道": "2 Players Co-op vs 2 Transcendent AIs",
+  "四方争锋 · 对决": "4-Player Showdown",
+  "2人 vs 2人 巅峰对战": "2 Players vs 2 Players Pinnacle Battle",
+  "纯观战 · 天道演武": "Spectate · Transcendent AI Battle",
+  "4神机AI神仙打架": "4 Divine AIs battle each other",
+  "开始匹配": "Find Match",
+  "开始排位": "Start Ranked",
+  "设擂建房": "Host Room",
+  "赴会应战": "Join Room",
+  "设擂开黑": "Host Co-op Room",
+  "快速匹配": "Quick Match",
+  "本地开战": "Local Battle",
+  "开启观战": "Spectate",
+  "摆开武林擂台，生成 4 位密令暗号": "Set up a room and get a 4-digit code",
+  "复制房间码 / 链接": "Copy Code / Link",
+  "输入好友给你的 4 位房间密令": "Enter the 4-digit room code from your friend",
+  "输入有效密令": "Enter a valid code",
+  "赴会入局": "Join Match",
+  "解散擂台 / 退出": "Leave Room",
+  "实时状态": "Realtime Status",
+  "全服待命中": "Standby Globally",
+  "正在寻找对手": "Searching for opponent...",
+  "等待加入": "Waiting for player...",
+  "静候对手入局…": "Waiting for challenger…",
+  "连线模式:": "Network Mode:",
+  "往返延迟:": "Roundtrip Ping:",
+  "回滚状态:": "Rollback Status:",
+  "段位榜": "Rank Leaderboard",
+  "战绩榜": "Win Leaderboard",
+  "云端账号": "Cloud Account",
+  "本机账号": "Local Account",
+  "开发者账号": "Developer Account",
+  "开发者账号 · 云端同步": "Developer Account · Cloud Sync",
+  "开发者账号 · 本地模式": "Developer Account · Local Mode",
+  "已同步": "Synced",
+  "等待上传": "Pending Upload",
+  "上传中…": "Uploading…",
+  "已连接云端": "Cloud Connected",
+  "断网中": "Offline",
+  "上传失败": "Upload Failed",
+  "本机存档": "Local Save",
+  "立即上传": "Upload Now",
+  "双向合并同步": "Two-Way Merge Sync",
+  "一键升级为云端账号": "Upgrade to Cloud Account",
+  "退出登录": "Log Out",
+  "登录刃影": "Login to RenYing",
+  "登录后，角色、墨锭、战绩和排位分数都跟着账号走，换电脑也能接着玩": "Characters, ink, records, and ranked stats follow your account across devices",
+  "昵称": "Nickname",
+  "密码": "Password",
+  "登录": "Log In",
+  "注册": "Register",
+  "返回": "Back",
+  "存档管理": "Save Management",
+  "导出当前存档": "Export Current Save",
+  "打包备份所有账号": "Backup All Accounts",
+  "导入本地存档": "Import Save File",
+  "云端服务设置": "Cloud Service Settings",
+  "联机战绩": "Online Record",
+  "本赛季排位": "Season Ranked",
+  "赛季最高": "Season Peak",
+  "角色": "Heroes",
+  "青锋": "Qing Feng",
+  "绯影": "Fei Ying",
+  "铁山": "Tie Shan",
+  "凌霜": "Ling Shuang",
+  "流云": "Liu Yun",
+  "雷鸣": "Lei Ming",
+  "墨羽": "Mo Yu",
+  "月华": "Yue Hua",
+  "燕翎": "Yan Ling",
+  "玉箫": "Yu Xiao",
+  "醉翁": "Zui Weng",
+  "勾陈": "Gou Chen",
+  "游龙剑客": "Wandering Swordsman",
+  "暗影刺客": "Shadow Assassin",
+  "玄铁重甲": "Heavy Iron Armor",
+  "寒枪骁将": "Frost Spear Champion",
+  "御风散人": "Wind Walker",
+  "雷拳武僧": "Thunder Monk",
+  "泼墨画师": "Ink Painter",
+  "月镜宗师": "Moon Mirror Master",
+  "御空飞燕": "Sky Swallows",
+  "箫音乐师": "Flute Musician",
+  "山水醉翁": "Drunken Hermit",
+  "链锤游侠": "Chain Hammer Wanderer",
+  "绑定装束": "Bound Attire",
+  "武库饰品": "Armory Cosmetics",
+  "生命上限": "Max HP",
+  "体量压制": "Weight Poise",
+  "防御减伤": "Defense Rating",
+  "格挡架势": "Guard Stance",
+  "格挡稳定性": "Guard Stability",
+  "格挡穿透伤": "Guard Chip Dmg",
+  "受击硬直": "Stun Duration",
+  "移动速度": "Move Speed",
+  "基础伤害": "Base Damage",
+  "攻击距离": "Attack Reach",
+  "跳跃高度": "Jump Height",
+  "卡肉感": "Hit Stop",
+  "飞行时间": "Flight Time",
+  "平局": "Draw",
+  "胜": "Victory",
+  "平手": "Tie",
+  "加时": "Overtime",
+  "连击": "Combo",
+  "已就绪": "Ready",
+  "气满": "Full Chi",
+  "身法": "Agility",
+  "普攻": "Light Atk",
+  "蓄力": "Charge Atk",
+  "绝技": "Ultimate",
+  "腾空闪": "Aerial Flash",
+  "门派技": "Class Skill",
+  "特殊技": "Special Skill",
+  "暂停": "Pause",
+  "继续": "Resume",
+  "再战一局": "Play Again",
+  "再战一场": "Battle Again",
+  "重登剑阁": "Restart Pavilion",
+  "查看回放": "View Replay",
+  "回放结束": "Replay Ended",
+  "再看一遍": "Watch Again",
+  "下一关": "Next Stage",
+  "再来一次": "Try Again",
+  "关卡列表": "Stage List",
+  "教学完成": "Tutorial Complete",
+  "继续练习": "Continue Practice",
+  "选择游戏语言": "Select Game Language",
+  "请选择您偏好的显示语言（可随时在【设置】中更改）：": "Please choose your preferred display language (changeable anytime in Settings):",
+  "保存并继续": "Save & Continue",
+  "烟雨": "Misty Rain",
+  "金乌": "Golden Crow",
+  "幽渊": "Abyssal Void",
+  "碧影": "Emerald Shade",
+  "血月": "Blood Moon",
+  "幻灵": "Phantom Spirit",
+  "青铜": "Ancient Bronze",
+  "玄武": "Black Tortoise",
+  "修罗": "Asura",
+  "红梅": "Crimson Plum",
+  "极光": "Aurora",
+  "沧龙": "Azure Dragon",
+  "晚霞": "Sunset Glow",
+  "天青": "Sky Cyan",
+  "墨竹": "Ink Bamboo",
+  "狐火": "Fox Fire",
+  "紫电": "Violet Lightning",
+  "烈阳": "Blazing Sun",
+  "金刚": "Vajra",
+  "朱砂": "Cinnabar",
+  "泥金": "Gilded Gold",
+  "星墨": "Astral Ink",
+  "樱月": "Sakura Moon",
+  "月蚀": "Lunar Eclipse",
+  "霜华": "Frost Flower",
+  "玄羽": "Black Feather",
+  "雪箫": "Snow Flute",
+  "钧天": "Heaven Sound",
+  "琥珀": "Amber",
+  "酒剑仙": "Sword Immortal",
+  "赤锤": "Crimson Sledge",
+  "冥狱": "Nether Underworld",
+  "凤羽": "Phoenix Plume",
+  "雪鸮": "Snow Owl",
+  "霜狼": "Frost Wolf",
+  "醉月": "Drunken Moon",
+  "九霄": "Nine Skies",
+  "广寒": "Guanghan Palace",
+  "天河": "Celestial River",
+  "幻蝶": "Phantom Butterfly",
+  "琉璃": "Glazed Crystal",
+  "天籁": "Heavenly Melody",
+  "青绿": "Cyan & Green",
+  "孔雀": "Peacock",
+  "锦鲤": "Lucky Koi",
+  "疾风斩": "Gale Slash",
+  "影遁": "Shadow Blink",
+  "震地": "Earthquake",
+  "回马枪": "Back Thrust",
+  "风刃": "Wind Blade",
+  "雷闪": "Thunder Fist",
+  "墨阵": "Ink Trap",
+  "俯冲": "Falcon Dive",
+  "剑气": "Sword Qi",
+  "飞镖": "Kunai Star",
+  "铁壁冲": "Iron Wall Charge",
+  "枪旋": "Spear Whirl",
+  "开扇": "Fan Flourish",
+  "金刚雷铠": "Vajra Armor",
+  "画符": "Talisman Brush",
+  "月轮": "Moon Chariot",
+  "翎羽": "Feather Darts",
+  "月镜": "Moon Mirror",
+  "清音": "Clear Tone",
+  "回音壁": "Echo Barrier",
+  "亭中留客": "Pavilion Trap",
+  "与民同乐": "Wine Feast",
+  "豪饮": "Heavy Drink",
+  "醉步": "Drunken Step",
+  "飞锤": "Chain Hook",
+  "旋锤": "Hammer Whirl",
+  "残月": "Crescent Moon",
+  "千影": "Thousand Shadows",
+  "山崩": "Avalanche",
+  "百鸟朝凤": "Phoenix Flight",
+  "刹那": "Time Freeze",
+  "龙卷": "Tornado Storm",
+  "雷霆万钧": "Thunderstruck",
+  "符阵": "Talisman Array",
+  "万羽": "Feather Storm",
+  "月华如水": "Moonlight Cascade",
+  "广陵散": "Guangling Verse",
+  "山水之间": "Landscape Domain",
+  "开天一锤": "Heavensplitter",
+  "初来乍到？": "New here?",
+  "两分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn basic moves in 2 minutes. Registered players earn 300 Ink upon completion.",
+  "开始教学": "Start Tutorial",
+  "以后再说": "Maybe Later",
+  "该会的都会了。去找电脑或是同学，过几招吧。": "You have mastered the basics. Go practice against AI or challenge friends.",
+  "登录之后再走一遍教学，可领 300 墨锭。": "Complete tutorial after login to claim 300 Ink.",
+  "恭喜通关！": "Stage Cleared!",
+  "胜利": "Victory",
+  "失败": "Defeat",
+  "大捷！": "Triumph!",
+  "惜败": "Defeat",
+  "胜败乃兵家常事": "Defeat is part of warrior growth",
+  "双雄合璧，克敌制胜": "Two heroes in harmony claim victory",
+  "已击破敌方全员侠客": "Defeated all enemy sect fighters",
+  "敌方阵线技高一筹": "Enemy sect had the upper hand",
+  "最高纪录": "Best Record",
+  "月下无敌手": "Undefeated beneath the moon",
+  "再磨一磨剑": "Sharpen your blade and try again",
+  "演武与实战专训": "Combat Training & Sparring",
+  "木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）": "Custom Dummy Attributes (Toggle freely or use keys 1-6 in combat)",
+  "木人桩自由试剑": "Free Practice Dummy",
+  "全套连贯": "Full Combo",
+  "严密格挡": "Guard Always",
+  "任打不还手": "No Counter",
+  "受击瞬闪": "Escape on Hit",
+  "全程霸体": "Super Armor",
+  "反击试炼": "Counter Sparring",
+  "切换木人": "Toggle Dummy",
+  "攻击": "Attack",
+  "跳": "Jump",
+  "远程": "Ranged",
+  "防": "Guard",
+  "闪": "Dash",
+  "技能": "Skill",
+  "大招": "Ultimate",
+  "已装配": "Equipped",
+  "已换回原本装束": "Reverted to default attire",
+  "云端存档双向合并同步成功！": "Cloud save two-way merge sync successful!",
+  "已成功升级为云端账号！": "Successfully upgraded to cloud account!",
+  "已上传到云端": "Uploaded to cloud",
+  "已从云端载入存档": "Loaded save from cloud",
+  "正在上传…": "Uploading…",
+  "正在双向合并同步…": "Performing two-way merge sync…",
+  "已退出账号": "Logged out successfully",
+  "请输入昵称": "Please enter nickname",
+  "请输入密码": "Please enter password",
+  "昵称至少需要 2 个字符": "Nickname must be at least 2 characters",
+  "密码至少需要 6 个字符": "Password must be at least 6 characters",
+  "昵称或密码不对": "Incorrect nickname or password",
+  "该昵称已被使用": "Nickname already taken",
+  "该兑换码已使用过了": "Redeem code already used",
+  "兑换码无效或已过期": "Invalid or expired redeem code",
+  "仅限开发者账号 Dev 兑换，请先登录 Dev 账号": "Restricted to Dev account, please log in as Dev first",
+  "网络已断开": "Network disconnected",
+  "排位赛需先登录": "Login required for Ranked matches",
+  "仅擂主可调整切磋模式": "Only the room host can adjust match rules",
+  "复制成功": "Copied to clipboard",
+  "复制失败": "Failed to copy"
+};
+
+  // 当前语言：'zh' 或 'en'
+  let currentLang = 'zh';
+
+  function initLang() {
+    try {
+      const saved = localStorage.getItem('renying-lang');
+      if (saved === 'en' || saved === 'zh') {
+        currentLang = saved;
+      } else {
+        // 尝试从 SETTINGS 中读取
+        const s = JSON.parse(localStorage.getItem('renying-settings') || '{}');
+        if (s.lang === 'en' || s.lang === 'zh') {
+          currentLang = s.lang;
+        } else {
+          currentLang = 'zh'; // 默认中文
+        }
+      }
+    } catch (e) {
+      currentLang = 'zh';
+    }
+  }
+
+  initLang();
+
+  function getLang() {
+    return currentLang;
+  }
+
+  function setLang(lang) {
+    if (lang !== 'en' && lang !== 'zh') lang = 'zh';
+    currentLang = lang;
+    try {
+      localStorage.setItem('renying-lang', lang);
+      const s = JSON.parse(localStorage.getItem('renying-settings') || '{}');
+      s.lang = lang;
+      localStorage.setItem('renying-settings', JSON.stringify(s));
+    } catch (e) {}
+
+    if (typeof window !== 'undefined' && window.SETTINGS) {
+      window.SETTINGS.lang = lang;
+    }
+
+    applyTranslations();
+
+    // 触发页面内各类动态组件重新渲染
+    try { if (typeof renderTopNav === 'function') renderTopNav(); } catch (e) {}
+    try { if (typeof renderHome === 'function') renderHome(); } catch (e) {}
+    try { if (typeof buildSettings === 'function') buildSettings(); } catch (e) {}
+    try { if (typeof renderTasks === 'function') renderTasks(); } catch (e) {}
+    try { if (typeof renderCodex === 'function') renderCodex(); } catch (e) {}
+    try { if (typeof renderAccPage === 'function') renderAccPage(); } catch (e) {}
+    try { if (typeof updateAIBrief === 'function') updateAIBrief(); } catch (e) {}
+    try { if (typeof singleSec === 'function' && typeof currentSingleTab !== 'undefined') singleSec(currentSingleTab); } catch (e) {}
+    try { if (typeof renderLobby === 'function') renderLobby(); } catch (e) {}
+  }
+
+  // 翻译指定文本
+  function t(text) {
+    if (currentLang === 'zh' || !text || typeof text !== 'string') return text;
+    const trimmed = text.trim();
+    if (DICT_EN[trimmed]) {
+      return text.replace(trimmed, DICT_EN[trimmed]);
+    }
+    return text;
+  }
+
+  // 递归或属性扫描翻译 DOM 节点
+  function translateNode(node) {
+    if (!node) return;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const orig = node.datasetOrigText !== undefined ? node.datasetOrigText : node.nodeValue;
+      if (node.datasetOrigText === undefined) {
+        node.datasetOrigText = orig;
+      }
+      const trimmed = orig.trim();
+      if (trimmed && DICT_EN[trimmed]) {
+        if (currentLang === 'en') {
+          node.nodeValue = orig.replace(trimmed, DICT_EN[trimmed]);
+        } else {
+          node.nodeValue = orig;
+        }
+      }
+      return;
+    }
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      // 翻译特定属性
+      ['title', 'placeholder', 'aria-label'].forEach(attr => {
+        const val = node.getAttribute(attr);
+        if (val) {
+          const origKey = 'orig_' + attr;
+          const orig = node.dataset[origKey] !== undefined ? node.dataset[origKey] : val;
+          if (node.dataset[origKey] === undefined) {
+            node.dataset[origKey] = orig;
+          }
+          const trimmed = orig.trim();
+          if (trimmed && DICT_EN[trimmed]) {
+            node.setAttribute(attr, currentLang === 'en' ? orig.replace(trimmed, DICT_EN[trimmed]) : orig);
+          }
+        }
+      });
+
+      // 递归子节点（跳过脚本与画布内部）
+      if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE' && node.tagName !== 'CANVAS' && !node.classList.contains('no-i18n')) {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          translateNode(node.childNodes[i]);
+        }
+      }
+    }
+  }
+
+  function applyTranslations(root) {
+    if (typeof document === 'undefined') return;
+    document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-CN';
+    document.body.classList.toggle('lang-en', currentLang === 'en');
+    const target = root || document.body;
+    if (target) translateNode(target);
+  }
+
+  // 挂载全局
+  if (typeof window !== 'undefined') {
+    window.I18N = {
+      getLang,
+      setLang,
+      t,
+      applyTranslations,
+      DICT_EN
+    };
+    window.t = t;
+  }
+})();

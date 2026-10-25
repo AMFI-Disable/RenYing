@@ -77,7 +77,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: false, vibrate: true, autoSkin: true };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: false, vibrate: true, autoSkin: true, lang: 'zh' };
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);
@@ -87,8 +87,18 @@ try {
   const ALLOWED_FPS = [144, 120, 60, 30];
   if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
   if (saved.aim === undefined) SETTINGS.aim = false;
+  if (saved.lang) SETTINGS.lang = saved.lang;
+  else {
+    const rawL = localStorage.getItem('renying-lang');
+    if (rawL === 'en' || rawL === 'zh') SETTINGS.lang = rawL;
+  }
 } catch (e) {}
-function saveSettings() { try { localStorage.setItem('renying-settings', JSON.stringify(SETTINGS)); } catch (e) {} }
+function saveSettings() {
+  try {
+    localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
+    if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
+  } catch (e) {}
+}
 
 // ======================= 基础 =======================
 const VERSION = '4.5';         // 每次更新改一下，联机时双方版本必须一样
@@ -4179,9 +4189,9 @@ function pushApart() {
 function targetPose(f) {
   const s = f.state;
   let p, k = 16, atkOvershoot = 0;
-  if (s === 'attack') {
+  if (s === 'attack' && f.move) {
     const m = f.move;
-    const p0 = POSES[m.p[0]] || POSES.l1s, p1 = POSES[m.p[1]] || POSES.l1a;
+    const p0 = (m.p && POSES[m.p[0]]) || POSES.l1s, p1 = (m.p && POSES[m.p[1]]) || POSES.l1a;
     if (f.t < m.su) {
       p = p0; k = 32;
       atkOvershoot = -0.08; // 蓄势微收（Anticipation coil）
@@ -4264,7 +4274,7 @@ function animFighter(f) {
   f.rot += (rotT - f.rot) * (1 - Math.exp(-10 * STEP));
   f.sk = skeleton(f);
   // 剑光拖尾
-  const swinging = (f.state === 'attack' && f.t > f.move.su * 0.45 && f.t < f.move.su + f.move.ac + 0.05)
+  const swinging = (f.state === 'attack' && f.move && f.t > f.move.su * 0.45 && f.t < f.move.su + f.move.ac + 0.05)
     || (f.state === 'special' && ['dash', 'flurry', 'final', 'thrusts', 'slam', 'sweep', 'rush'].includes(f.sp))
     || (f.state === 'skill' && (f.skPh === 1 || f.skPh === 2) && f.t < 0.22);
   if (swinging) f.trail.push({ b: f.sk.bladeMid, t: f.sk.tip, h: f.sk.guard, life: 1 });
@@ -9098,6 +9108,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 // ======================= 设置 =======================
 let settingsBack = 'menu';
 const SETTING_ROWS = [
+  { k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
   { k: 'aim', name: '朝向', opts: [[false, '自动面向对手'], [true, '按 A / D 决定']] },
   { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
   { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
@@ -9181,6 +9192,7 @@ $id('setList').addEventListener('click', e => {
   }
   const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
   const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
+  if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
   if (k === 'quality') resize();
   if (k === 'autoSkin') applySkins();
 });
@@ -11552,8 +11564,7 @@ function tutTick(dt) {
       TUT.parryShotT = 2.0;
       B.x = A.x + (A.face === 1 ? 75 : -75);
       B.face = -A.face;
-      B.state = 'attack'; B.t = 0;
-      B.move = { name: 'l1', su: 0.28, ac: 0.12, rc: 0.2, box: [10, -80, 75, 10], dmg: 10, hs: 0.08, kb: [120, 0], stun: 0.25 };
+      startAttack(B, 'l1');
     }
   }
   if (TUT.step === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
@@ -11589,11 +11600,42 @@ $id('tutMenu').addEventListener('click', () => { paused = false; toMenu(); });
 $id('tutStay').addEventListener('click', () => { paused = false; showScreen(null); });
 $id('tutYes').addEventListener('click', () => startTutorial());
 $id('tutNo').addEventListener('click', () => { try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
+// 初次进入游戏语言偏好引导弹窗
+let langPromptDone = false;
+try {
+  langPromptDone = !!localStorage.getItem('renying-lang-chosen');
+} catch (e) {}
+
+function chooseLang(l) {
+  try { localStorage.setItem('renying-lang-chosen', '1'); } catch (e) {}
+  langPromptDone = true;
+  SETTINGS.lang = l;
+  saveSettings();
+  if (window.I18N) window.I18N.setLang(l);
+  backToMenu();
+  let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (err) {}
+  if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
+}
+
+if ($id('lpPickZh')) $id('lpPickZh').addEventListener('click', () => chooseLang('zh'));
+if ($id('lpPickEn')) $id('lpPickEn').addEventListener('click', () => chooseLang('en'));
+if ($id('tnLangBtn')) $id('tnLangBtn').addEventListener('click', () => {
+  const next = (window.I18N && window.I18N.getLang() === 'en') ? 'zh' : 'en';
+  SETTINGS.lang = next;
+  saveSettings();
+  if (window.I18N) window.I18N.setLang(next);
+  toast(next === 'en' ? 'Switched to English mode' : '已切换至中文模式');
+});
+
 setTimeout(() => { if ($id('menu').classList.contains('on')) showScreen('menu'); }, 0);   // 一打开就和点返回回来的首页一个样子（顶栏在、底栏不变）
 setTimeout(() => {
+  if (!langPromptDone && $id('menu').classList.contains('on')) {
+    showScreen('langPrompt');
+    return;
+  }
   let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (e) {}
   if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
-}, 1500);
+}, 1000);
 
 // ======================= 回滚联机（v2.6） =======================
 // 两边都完整计算对战，每帧只交换按键。对方的按键没到就先猜“他还按着之前的键”，
@@ -11867,7 +11909,7 @@ if (TOUCH) {
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
   const prev = currentScreen; currentScreen = id;
-  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
   if (id !== 'bp') {
     try { showPop(null); } catch (e) {}

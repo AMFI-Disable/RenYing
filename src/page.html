@@ -54,6 +54,7 @@
         <span class="tn-sync" id="tnSync" title="存档状态"></span>
       </button>
       <button class="tn-icon" type="button" data-nav="settings" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="tn-icon" type="button" id="tnLangBtn" title="Language / 语言" aria-label="Language / 语言"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
       <button class="tn-icon" type="button" data-nav="help" title="操作说明" aria-label="操作说明"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
     </div>
   </nav>
@@ -1114,6 +1115,21 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <div id="langPrompt" class="scr">
+    <div class="panel narrowp" style="max-width:440px;text-align:center;">
+      <h2 id="lpTitle" style="font-size:26px;margin-bottom:6px;">选择语言 / Language</h2>
+      <p class="sub" id="lpSub" style="margin:0 0 20px;font-size:14px;line-height:1.6;color:rgba(239,232,216,0.8);">请选择您的偏好语言（可随时在设置中更改）<br><span style="font-size:12px;opacity:0.75;">Select your preferred language (changeable anytime in Settings)</span></p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+        <button class="go" id="lpPickZh" type="button" style="padding:12px 24px;font-size:18px;display:flex;justify-content:center;align-items:center;gap:10px;">
+          <span>🇨🇳 简体中文 (Chinese)</span>
+        </button>
+        <button class="go alt" id="lpPickEn" type="button" style="padding:12px 24px;font-size:18px;display:flex;justify-content:center;align-items:center;gap:10px;">
+          <span>🇺🇸 English (英文)</span>
+        </button>
+      </div>
     </div>
   </div>
 

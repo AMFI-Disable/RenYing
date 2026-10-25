@@ -138,6 +138,7 @@ def page(offline):
             "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_AI_BRAIN=" + json.dumps(ai_brain_data(), separators=(",", ":")) + ";</script>\n"
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "i18n.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "ai.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "game.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "net-p2p.js")) + "\n</script>\n"
@@ -220,7 +221,7 @@ def check_js():
     if not node:
         return True
     ok = True
-    for name in ("cloud.js", "ai.js", "game.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
+    for name in ("cloud.js", "i18n.js", "ai.js", "game.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
         src_path = os.path.join(SRC, name)
         r = subprocess.run([node, "--check", src_path], capture_output=True, text=True)
         if r.returncode:
