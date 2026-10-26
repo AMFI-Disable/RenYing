@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
       - "src/ai.js"
-      - "src/game.js"
+      - "src/game/**"
       - "models/ai-brain.json"
       - "tools/ai-arena.mjs"
       - "tools/ai-ladder-report.mjs"

@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
       - "src/net-p2p.js"
-      - "src/game.js"
+      - "src/game/**"
       - "tools/rollback-test.mjs"
   pull_request:
     branches: [ main ]

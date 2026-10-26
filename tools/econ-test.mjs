@@ -7,6 +7,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { gameJs } from './ai-code.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 let T = Date.UTC(2026, 9, 23, 4, 0, 0);   // 测试里的“现在”，可以随意往后拨
@@ -93,7 +94,7 @@ const mrow = id => row('SELECT * FROM mkt WHERE id = ?', id);
 /* ===================================================================== */
 section('皮肤都在箱子里：游戏里原有的皮肤和武库的新皮肤，每款正好在一个武器箱里');
 {
-  const src = readFileSync(new URL('src/game.js', ROOT), 'utf8');
+  const src = gameJs();
   const a = src.indexOf('const SKINS = {'), b = src.indexOf('\n};', a);
   const orig = [...src.slice(a, b).matchAll(/^ {2}([a-z]{2}_[a-z0-9]+): \{ char: '([a-z]+)'/gm)].map(m => [m[1], m[2]]);
   const inCases = C.CASES.flatMap(c => C.TIERS.flatMap(t => C.COLS[c][t] || []));

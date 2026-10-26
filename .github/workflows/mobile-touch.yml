@@ -6,7 +6,7 @@ on:
     paths:
       - "src/page.html"
       - "src/style.css"
-      - "src/game.js"
+      - "src/game/**"
       - "tools/touch-audit.mjs"
   pull_request:
     branches: [ main ]
