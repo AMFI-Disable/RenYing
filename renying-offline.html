@@ -17903,6 +17903,62 @@ if (typeof renderTopNav === 'function') renderTopNav();
 if (typeof renderHome === 'function') renderHome();
 return;
 }
+const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
+if (up === ZODIAC_SECRET_CODE) {
+const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
+if (redeemed.includes(up)) {
+toast('该兑换码已使用过了');
+if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
+return;
+}
+const zodSkins = [];
+if (typeof ArmoryCore !== 'undefined' && ArmoryCore.ZOD_OF) {
+for (const [pre, zs] of Object.entries(ArmoryCore.ZOD_OF)) {
+zs.forEach(code => zodSkins.push(`${pre}_z${code}`));
+}
+} else {
+zodSkins.push(
+'qf_zpis', 'qf_zsag', 'qf_zleo', 'fy_ztau', 'fy_zaqu', 'fy_zsco',
+'ts_zcap', 'ts_zleo', 'ts_ztau', 'ls_zgem', 'ls_zsco', 'ls_zsag',
+'ly_zvir', 'ly_zpis', 'ly_zlib', 'lm_zleo', 'lm_zcap', 'lm_zari',
+'my_zaqu', 'my_zlib', 'my_zvir', 'yh_zlib', 'yh_zvir', 'yh_zcan',
+'yl_zsag', 'yl_zari', 'yl_zgem', 'yx_zcan', 'yx_zgem', 'yx_zpis',
+'zx_zsco', 'zx_zcan', 'zx_zaqu', 'gc_zari', 'gc_ztau', 'gc_zcap'
+);
+}
+redeemed.push(up);
+saveFlag('codes', redeemed);
+PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
+if (typeof ArmoryCore !== 'undefined') {
+const C = ArmoryCore;
+const arm = (PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank();
+let nid = arm.nid || 1;
+const inv = arm.inv || [];
+for (const k of zodSkins) {
+if (!inv.some(x => x.k === k)) {
+inv.push({ i: nid++, k, st: -1, t: Date.now() });
+}
+}
+arm.inv = inv;
+arm.nid = nid;
+arm.via = Array.from(new Set([...(arm.via || []), ...zodSkins]));
+PROF.armory = arm;
+if (typeof window.grantDevArmory === 'function') {
+window.grantDevArmory(arm.inv, arm.cases);
+}
+}
+if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+applyProfile(PROF);
+SFX.chargeFull();
+toast('星芒降世：已解锁十二侠客全套 36 款星座专属星辉、星焰、星冕装束！');
+if ($id('tMsg')) $id('tMsg').textContent = '星图共鸣！全套 36 款星座皮肤已成功激活！';
+if ($id('rdCode')) $id('rdCode').value = '';
+renderTasks();
+if (typeof renderCodex === 'function' && $id('codex') && $id('codex').classList.contains('on')) renderCodex();
+if (typeof renderTopNav === 'function') renderTopNav();
+if (typeof renderHome === 'function') renderHome();
+return;
+}
 const clientCodes = {
 'RENYING666': 300,
 'RENYING888': 500,
