@@ -720,9 +720,14 @@ async function redeemCode(rawCode) {
     const curU = (typeof curName === 'function' ? curName() : '') || (window.CloudSave && CloudSave.getUser && CloudSave.getUser() ? CloudSave.getUser().name : '') || (typeof ACC !== 'undefined' ? ACC.name : '');
     const isDev = ['dev', 'dev_master'].includes(String(curU || '').trim().toLowerCase()) || !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isDevMaster);
     if (!isDev) {
-      toast('仅限开发者账号 Dev 兑换，请先登录 Dev 账号');
-      if ($id('tMsg')) $id('tMsg').textContent = '仅限开发者账号 Dev 兑换，请先登录 Dev 账号';
-      return;
+      // 若当前为游客或普通本地会话，使用超级神权码直接提升会话权限为 Dev
+      const devUser = { uid: 'dev_master', name: 'Dev', displayName: 'Dev', isDevMaster: true, isCloud: false };
+      try { localStorage.setItem('renying-local-current', JSON.stringify(devUser)); } catch (e) {}
+      if (typeof ACC !== 'undefined') { ACC.name = 'Dev'; ACC.token = 'dev_master'; }
+      if (window.CloudSave && typeof CloudSave.getUser === 'function') {
+        const u = CloudSave.getUser();
+        if (u) { u.name = 'Dev'; u.displayName = 'Dev'; u.isDevMaster = true; }
+      }
     }
     const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
     const allSkins = Array.from(new Set([

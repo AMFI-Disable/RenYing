@@ -378,16 +378,44 @@ function drawFighter(f) {
     ctx.save(); ctx.strokeStyle = 'rgba(235,205,130,' + (0.4 + 0.3 * Math.min(1, f.hookedT)) + ')'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
     ctx.beginPath(); ctx.ellipse(f.x, f.y - 56, 22, 34, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
-  // 凌雀雀芒印记：身周环绕粉紫悬丝印记
+  // 凌雀雀芒印记：身周环绕粉紫悬丝印记（当自身为凌雀且 R 就绪时高亮显现可重置光环）
   if ((f.needleMark || 0) > 0 && f.hp > 0) {
-    ctx.save(); ctx.strokeStyle = `rgba(235,110,210,${0.5 + 0.4 * Math.sin(clock * 10)})`; ctx.lineWidth = 1.8;
-    const a0 = clock * 5;
-    for (let k = 0; k < 3; k++) {
-      const ang = a0 + k * (Math.PI * 2 / 3);
-      const px = f.x + Math.cos(ang) * 24, py = f.y - 50 + Math.sin(ang) * 16;
-      ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 2.8, 0, Math.PI * 2); ctx.fill();
+    const isPlayerLQ = A && A.ch && A.ch.id === 'lingque';
+    const rReady = isPlayerLQ && (A.skill2CD || 0) <= 0;
+    ctx.save();
+    if (rReady) {
+      // R 可重置就绪特效：醒目的粉紫双环气旋 + 顶部雀芒菱印
+      const pulse = 0.7 + 0.3 * Math.sin(clock * 12);
+      ctx.strokeStyle = `rgba(255,140,230,${pulse})`; ctx.lineWidth = 2.4;
+      ctx.shadowColor = '#ff8ce6'; ctx.shadowBlur = 12;
+      const a0 = clock * 6;
+      for (let k = 0; k < 4; k++) {
+        const ang = a0 + k * (Math.PI / 2);
+        const px = f.x + Math.cos(ang) * 30, py = f.y - 52 + Math.sin(ang) * 20;
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.beginPath(); ctx.ellipse(f.x, f.y - 52, 32, 22, 0, 0, Math.PI * 2); ctx.stroke();
+      // 头顶雀芒击破标志 (Diamond Crest)
+      ctx.fillStyle = `rgba(255,230,250,${0.85 + 0.15 * Math.sin(clock * 14)})`;
+      ctx.beginPath();
+      const topY = f.y - 110 + Math.sin(clock * 8) * 3;
+      ctx.moveTo(f.x, topY - 14);
+      ctx.lineTo(f.x + 10, topY);
+      ctx.lineTo(f.x, topY + 14);
+      ctx.lineTo(f.x - 10, topY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#e040fb'; ctx.lineWidth = 1.5; ctx.stroke();
+    } else {
+      ctx.strokeStyle = `rgba(235,110,210,${0.5 + 0.4 * Math.sin(clock * 10)})`; ctx.lineWidth = 1.8;
+      const a0 = clock * 5;
+      for (let k = 0; k < 3; k++) {
+        const ang = a0 + k * (Math.PI * 2 / 3);
+        const px = f.x + Math.cos(ang) * 24, py = f.y - 50 + Math.sin(ang) * 16;
+        ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 2.8, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 26, 18, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 26, 18, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
   // 被连击且可以挣脱时，头顶提示

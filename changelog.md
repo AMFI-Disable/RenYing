@@ -8,6 +8,18 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Hero Lingque & Suspension Silk Mechanics (`src/game/02-heroes.js`, `src/game/03-skills.js`, `src/game/04-ults.js`, `src/game/15-skin-weapons.js`, `src/game/18-codex.js`, `src/armory-core.js`)**:
+  - Introduced the 13th playable hero: Lingque (凌雀 - 飞梭游侠), dual-wielding child-and-mother shuttles (`spindle` / 子母飞梭) linked by suspension silk.
+  - Implemented passive ability 雀芒 (`needlemark`): shuttle and suspension silk attacks mark opponents for 4 seconds; enemies carrying the mark display a pulsing pink-violet cyclone and a diamond crest when an ability reset is primed.
+  - Added primary ability 千丝引 (`spindle` / Q): casts an agile flying shuttle linked with suspension silk across long distance to strike and mark targets.
+  - Added secondary ability 移形换影 (`shadowdash` / R): initiates an instantaneous piercing thrust dash; piercing a marked enemy detonates the suspension silk true qi for heavy burst damage and instantly resets Skill 2 cooldown (`skill2CD = 0`).
+  - Added ultimate ability 暴雨千丝 / 万劫玄煞 (`needlestorm` / E): deploys an unblockable fullscreen suspension silk net and needle storm dealing multi-stage damage.
+  - Added two thematic weapon case skins: `lq_silk` (青丝, Restricted tier in Case 4 江湖) and `lq_sparrow` (玄雀, Classified tier in Case 5 惊雷) with bespoke atmospheric backdrops.
+  - Integrated complete AI evaluation profile, match-up dynamics (counters Feiying and Liuyun; countered by Tieshan and Leiming), Codex dossiers, and demo cards.
+- **Manual Aim Directional Control (`src/game/01-core.js`, `src/game/09-actions.js`, `src/game/25-keyboard-boot.js`, `tools/combat-test.mjs`)**:
+  - Defaulted combat targeting to manual directional aim (`SETTINGS.aim = true`), allowing normal attacks, skills, and charged slashes (蓄力斩 `cs1` & `cs2`) to lunge and fire in the player's held direction (A/D or left/right keys) away from or toward foes without forced auto-snapping.
+- **Automated Duplicate Market Listing (`src/armory-core.js`)**:
+  - Implemented `A.listDupes` helper to inspect duplicate armory cosmetics, retain the highest-斩数 or currently equipped item, and automatically list remaining surplus items onto the player market up to the available listing slots.
 - **Zodiac Case (`src/armory-core.js`, `src/armory.js`, `src/game.js`, `src/style.css`, `cloudflare/admin.html`)**:
   - New premium case `c8` with 36 cosmetic skins: every hero gets one Classified (星辉), one Covert (星焰) and one Extraordinary (星冕) skin, each themed on a different one of the twelve zodiac signs. Odds are 65% / 28% / 7%, price is 1,500 ink, and it can be opened once a week (separate from the Divine Arms Case).
   - Every account receives one free Zodiac Case, once.
@@ -295,6 +307,15 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Modular Game Engine Source Tree (`src/game/`, `tools/build.py`, `tools/ai-code.mjs`, `tools/ai-arena.mjs`)**:
+  - Decomposed the monolithic 16,000-line `src/game.js` into 25 numbered, modular domain files under `src/game/` (e.g. `01-core.js`, `02-heroes.js`, `03-skills.js`, `04-ults.js`, `08-fighter-match.js`, `09-actions.js`, `10-hits.js`, `11-anim-loop.js`, `12-draw-world.js`, `18-codex.js`, `19-progress.js`, `20-tutorial-rollback-touch.js`, `25-keyboard-boot.js`).
+  - Updated build pipeline (`tools/build.py`), developer tools, simulation harnesses, and CI path filters to bundle directly from the modular files while guaranteeing strict byte-for-byte distribution parity.
+- **Tieshan Counterplay & Balance Tuning (`src/game/02-heroes.js`, `src/game/03-skills.js`, `src/game/04-ults.js`, `docs/codebase-and-heroes.md`)**:
+  - Limited Iron Wall (铁壁 / wave) ceiling to 165 px so high jumps and aerial characters can clear it, shortened dash distance from 720 to 620, increased cooldown from 6.0s to 7.5s, and increased whiff recovery to 0.40s.
+  - Increased Quake (裂地) whiff recovery to 0.48s.
+  - Tuned Avalanche (山崩 / ult): reduced base damage from 185 to 140, chained second slam at 65% damage, reduced stun duration from 1.3s to 0.75s, and adjusted edge/downed hits to refund 25% meter instead of a full refund.
+- **Contribution Guidelines & AI Benchmark Ladder Updates (`CLAUDE.md`, `docs/codebase-and-heroes.md`, `docs/ai-ladder-benchmark.md`, `readme.md`, `readme.zh-cn.md`)**:
+  - Formalized pull request merge rules in `CLAUDE.md`, documented the `src/game/` modular source mapping across project readmes and architectural docs, and refreshed AI ladder benchmark win rates.
 - **Competitive Snake Draft & Unified 2v2 Modes (`src/game.js`, `src/page.html`)**:
   - Restructured 2v2 Ban & Pick drafting to standard competitive Snake Draft order (`0 Ban -> 1 Ban -> 0 Pick 1 -> 1 Pick 1 -> 1 Pick 2 -> 0 Pick 2`), balancing first-pick advantage with tactical double-pick synergy.
   - Unified 2v2 mode selection on the single-player panel (`renderSingle2v2`): consolidated Solo 2v2 (`pc_cc`), Local Co-op (`pp_cc`), Local Versus (`pp_pp`), and AI Watch Mode (`watch`) with level selectors and direct match launch.

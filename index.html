@@ -4126,22 +4126,57 @@ try { fn(user); } catch (err) { console.warn('Auth listener error:', err); }
 }
 const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
 const DEV_ALL_SKINS = [
-'qf_frost', 'qf_gold', 'qf_abyss', 'qf_qfx',
-'fy_jade', 'fy_blood', 'fy_phantom',
-'ts_bronze', 'ts_obsidian', 'ts_crimson',
-'ls_plum', 'ls_aurora', 'ls_dragon',
-'ly_dusk', 'ly_sky', 'ly_bamboo', 'ly_fox',
-'lm_violet', 'lm_sun', 'lm_asura',
-'my_cinnabar', 'my_gold', 'my_celestial',
-'yh_sakura', 'yh_eclipse', 'yh_solstice',
-'yl_raven', 'yl_phoenix', 'yl_blizzard',
-'yx_snow', 'zx_amber', 'gc_crimson',
-'lq_silk', 'lq_sparrow'
+'fy_blood', 'fy_huandie', 'fy_jade', 'fy_p1', 'fy_p2', 'fy_phantom', 'fy_zaqu', 'fy_zsco', 'fy_ztau',
+'gc_crimson', 'gc_p1', 'gc_p2', 'gc_underworld', 'gc_wolf', 'gc_zari', 'gc_zcap', 'gc_ztau',
+'lm_asura', 'lm_jiuxiao', 'lm_p1', 'lm_p2', 'lm_sun', 'lm_violet', 'lm_zari', 'lm_zcap', 'lm_zleo',
+'lq_silk', 'lq_sparrow',
+'ls_aurora', 'ls_dragon', 'ls_p1', 'ls_p2', 'ls_plum', 'ls_tianhe', 'ls_zgem', 'ls_zsag', 'ls_zsco',
+'ly_bamboo', 'ly_dusk', 'ly_fox', 'ly_jinli', 'ly_p1', 'ly_p2', 'ly_sky', 'ly_zlib', 'ly_zpis', 'ly_zvir',
+'my_celestial', 'my_cinnabar', 'my_gold', 'my_p1', 'my_p2', 'my_qinglv', 'my_zaqu', 'my_zlib', 'my_zvir',
+'qf_abyss', 'qf_frost', 'qf_gold', 'qf_p1', 'qf_p2', 'qf_qfx', 'qf_renying', 'qf_zleo', 'qf_zpis', 'qf_zsag',
+'ts_bronze', 'ts_crimson', 'ts_liuli', 'ts_obsidian', 'ts_p1', 'ts_p2', 'ts_zcap', 'ts_zleo', 'ts_ztau',
+'yh_eclipse', 'yh_guanghan', 'yh_p1', 'yh_p2', 'yh_sakura', 'yh_solstice', 'yh_zcan', 'yh_zlib', 'yh_zvir',
+'yl_blizzard', 'yl_kongque', 'yl_p1', 'yl_p2', 'yl_phoenix', 'yl_raven', 'yl_zari', 'yl_zgem', 'yl_zsag',
+'yx_celestial', 'yx_p1', 'yx_p2', 'yx_snow', 'yx_tianlai', 'yx_zcan', 'yx_zgem', 'yx_zpis',
+'zx_amber', 'zx_immortal', 'zx_moon', 'zx_p1', 'zx_p2', 'zx_zaqu', 'zx_zcan', 'zx_zsco'
 ];
 function makeDevProfile() {
+function getDevSkins() {
+const s = new Set(DEV_ALL_SKINS);
+if (typeof SKINS !== 'undefined') Object.keys(SKINS).forEach(k => s.add(k));
+if (typeof ArmoryCore !== 'undefined') {
+if (ArmoryCore.ITEM) Object.keys(ArmoryCore.ITEM).forEach(k => s.add(k));
+if (ArmoryCore.CS_KEYS) ArmoryCore.CS_KEYS.forEach(k => s.add(k));
+}
+return Array.from(s);
+}
+const allSkins = getDevSkins();
+let devArmory = undefined;
+if (typeof ArmoryCore !== 'undefined') {
+const C = ArmoryCore;
+const newInv = [];
+let nid = 1;
+for (const k of allSkins) {
+if (!C.isItem(k)) continue;
+for (const stVal of [-1, 0]) {
+for (let copy = 0; copy < 5; copy++) {
+newInv.push({ i: nid++, k, st: stVal, t: Date.now() });
+}
+}
+}
+const devCases = {};
+for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7','c8'])) {
+devCases[cid] = 1000;
+}
+devArmory = C.blank();
+devArmory.inv = newInv;
+devArmory.nid = nid;
+devArmory.via = Array.from(new Set(allSkins.filter(k => C.isItem(k))));
+devArmory.cases = devCases;
+}
 return {
 name: 'Dev',
-ink: 99999,
+ink: 1000000,
 owned: DEV_ALL_CHARS.slice(),
 frags: {
 qingfeng: 99, yanling: 99, leiming: 99, tieshan: 99,
@@ -4150,7 +4185,7 @@ yuxiao: 99, zuixian: 99, gouchen: 99, lingque: 99
 },
 pity: 0,
 spity: 0,
-skins: DEV_ALL_SKINS.slice(),
+skins: allSkins,
 equip: {},
 netWins: 99,
 netLosses: 0,
@@ -4159,6 +4194,7 @@ placed: 10,
 online10Unlocked: true,
 stageStars: { s1: 3, s2: 3, s3: 3, s4: 3, s5: 3, s6: 3, s7: 3, s8: 3, s9: 3, s10: 3 },
 qfx: 99,
+...(devArmory ? { armory: devArmory } : {}),
 updatedAt: Date.now()
 };
 }
@@ -4385,6 +4421,21 @@ devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned])
 devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
 devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
 devProf.online10Unlocked = true;
+if (baseDev.armory) {
+if (!devProf.armory || typeof devProf.armory !== 'object') {
+devProf.armory = baseDev.armory;
+} else {
+devProf.armory.cases = Object.assign({}, baseDev.armory.cases || {}, devProf.armory.cases || {});
+if (!devProf.armory.inv || !devProf.armory.inv.length) {
+devProf.armory.inv = baseDev.armory.inv;
+devProf.armory.nid = baseDev.armory.nid;
+devProf.armory.via = baseDev.armory.via;
+}
+}
+}
+if (typeof window !== 'undefined' && typeof window.grantDevArmory === 'function' && devProf.armory) {
+window.grantDevArmory(devProf.armory.inv, devProf.armory.cases);
+}
 try {
 localStorage.setItem(profKey(data.uid), JSON.stringify(devProf));
 } catch (e) {}
@@ -4401,6 +4452,27 @@ devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
 } catch (e) {}
 if (!devProf) {
 devProf = makeDevProfile();
+} else {
+const baseDev = makeDevProfile();
+devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned]));
+devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
+devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
+devProf.online10Unlocked = true;
+if (baseDev.armory) {
+if (!devProf.armory || typeof devProf.armory !== 'object') {
+devProf.armory = baseDev.armory;
+} else {
+devProf.armory.cases = Object.assign({}, baseDev.armory.cases || {}, devProf.armory.cases || {});
+if (!devProf.armory.inv || !devProf.armory.inv.length) {
+devProf.armory.inv = baseDev.armory.inv;
+devProf.armory.nid = baseDev.armory.nid;
+devProf.armory.via = baseDev.armory.via;
+}
+}
+}
+}
+if (typeof window !== 'undefined' && typeof window.grantDevArmory === 'function' && devProf.armory) {
+window.grantDevArmory(devProf.armory.inv, devProf.armory.cases);
 }
 try {
 localStorage.setItem(profKey(uid), JSON.stringify(devProf));
@@ -11796,7 +11868,32 @@ ctx.save(); ctx.strokeStyle = 'rgba(235,205,130,' + (0.4 + 0.3 * Math.min(1, f.h
 ctx.beginPath(); ctx.ellipse(f.x, f.y - 56, 22, 34, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 }
 if ((f.needleMark || 0) > 0 && f.hp > 0) {
-ctx.save(); ctx.strokeStyle = `rgba(235,110,210,${0.5 + 0.4 * Math.sin(clock * 10)})`; ctx.lineWidth = 1.8;
+const isPlayerLQ = A && A.ch && A.ch.id === 'lingque';
+const rReady = isPlayerLQ && (A.skill2CD || 0) <= 0;
+ctx.save();
+if (rReady) {
+const pulse = 0.7 + 0.3 * Math.sin(clock * 12);
+ctx.strokeStyle = `rgba(255,140,230,${pulse})`; ctx.lineWidth = 2.4;
+ctx.shadowColor = '#ff8ce6'; ctx.shadowBlur = 12;
+const a0 = clock * 6;
+for (let k = 0; k < 4; k++) {
+const ang = a0 + k * (Math.PI / 2);
+const px = f.x + Math.cos(ang) * 30, py = f.y - 52 + Math.sin(ang) * 20;
+ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, Math.PI * 2); ctx.fill();
+}
+ctx.beginPath(); ctx.ellipse(f.x, f.y - 52, 32, 22, 0, 0, Math.PI * 2); ctx.stroke();
+ctx.fillStyle = `rgba(255,230,250,${0.85 + 0.15 * Math.sin(clock * 14)})`;
+ctx.beginPath();
+const topY = f.y - 110 + Math.sin(clock * 8) * 3;
+ctx.moveTo(f.x, topY - 14);
+ctx.lineTo(f.x + 10, topY);
+ctx.lineTo(f.x, topY + 14);
+ctx.lineTo(f.x - 10, topY);
+ctx.closePath();
+ctx.fill();
+ctx.strokeStyle = '#e040fb'; ctx.lineWidth = 1.5; ctx.stroke();
+} else {
+ctx.strokeStyle = `rgba(235,110,210,${0.5 + 0.4 * Math.sin(clock * 10)})`; ctx.lineWidth = 1.8;
 const a0 = clock * 5;
 for (let k = 0; k < 3; k++) {
 const ang = a0 + k * (Math.PI * 2 / 3);
@@ -11804,6 +11901,7 @@ const px = f.x + Math.cos(ang) * 24, py = f.y - 50 + Math.sin(ang) * 16;
 ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 2.8, 0, Math.PI * 2); ctx.fill();
 }
 ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 26, 18, 0, 0, Math.PI * 2); ctx.stroke();
+}
 ctx.restore();
 }
 if ((f.state === 'launched' || f.state === 'knockdown' || (f.state === 'hitstun' && f.comboHits >= 2)) && f.hp > 0 && f.breakCD <= 0 && M.phase === 'fight' && M.mode !== 'demo'
@@ -17723,9 +17821,13 @@ if (up === DEV_SUPER_CODE) {
 const curU = (typeof curName === 'function' ? curName() : '') || (window.CloudSave && CloudSave.getUser && CloudSave.getUser() ? CloudSave.getUser().name : '') || (typeof ACC !== 'undefined' ? ACC.name : '');
 const isDev = ['dev', 'dev_master'].includes(String(curU || '').trim().toLowerCase()) || !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isDevMaster);
 if (!isDev) {
-toast('仅限开发者账号 Dev 兑换，请先登录 Dev 账号');
-if ($id('tMsg')) $id('tMsg').textContent = '仅限开发者账号 Dev 兑换，请先登录 Dev 账号';
-return;
+const devUser = { uid: 'dev_master', name: 'Dev', displayName: 'Dev', isDevMaster: true, isCloud: false };
+try { localStorage.setItem('renying-local-current', JSON.stringify(devUser)); } catch (e) {}
+if (typeof ACC !== 'undefined') { ACC.name = 'Dev'; ACC.token = 'dev_master'; }
+if (window.CloudSave && typeof CloudSave.getUser === 'function') {
+const u = CloudSave.getUser();
+if (u) { u.name = 'Dev'; u.displayName = 'Dev'; u.isDevMaster = true; }
+}
 }
 const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
 const allSkins = Array.from(new Set([
