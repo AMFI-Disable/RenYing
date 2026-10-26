@@ -185,12 +185,9 @@ function applyHit(att, def, m, pt) {
 
   if (blocking) {
     // 精准招架（Just Guard / Perfect Parry）：在受击前 0.09s 内按下格挡
-    const isJustGuard = !m.isProj && !m.unblockable && (def.blockT !== undefined && def.blockT <= 0.09);
+    const isJustGuard = !m.isProj && !m.unblockable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
     if (isJustGuard) {
-      if (M.mode === 'tower' && def.idx === 0 && (M.towerPerks || []).includes('parry_refresh')) {
-        def.skillCD = 0; def.skill2CD = 0;
-        addP({ type: 'text', text: '⚡ 借力打力 · 招式重置', x: def.x, y: def.y - 130, life: 1.0, max: 1.0, rgb: '120,230,255' });
-      }
+      if (scOn()) scFire(def, 'blk', att, true, m);
       def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
       def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
       def.vx = fx * 80;
@@ -209,10 +206,11 @@ function applyHit(att, def, m, pt) {
       return;
     }
     const chipFrac = (def.ch && def.ch.stat && def.ch.stat.guardChip) || 0.12;
-    def.hp = Math.max(1, def.hp - m.dmg * chipFrac);
+    const bm = scOn() ? scBlockMod(att, def, m) : null;   // 秘卷改格挡磨血、削架势
+    def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
 
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
-    let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1))) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+    let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
     if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'guard_stab') guardLoss *= currentChaosMutation.val;
     if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
       guardLoss = 0;
@@ -223,8 +221,10 @@ function applyHit(att, def, m, pt) {
     def.sinceBlock = 0;
 
     // 破防崩势判定（Guard Break）
+    if (def.guard <= 0 && scOn() && scAny(def, 'brk', att)) { hitVisual(ev); netEmit(ev); return; }   // 秘卷「卸力」：这次不崩
     if (def.guard <= 0) {
       def.guard = 0;
+      if (scOn()) scFire(att, 'gb', def);
       def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
       def.vx = fx * 140;
       shake = 18; flashA = 0.4; flashRGB = '255,100,80';
@@ -244,6 +244,7 @@ function applyHit(att, def, m, pt) {
     if (isDefFixed) { def.vy = 0; def.y = 0; }
     if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
     att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
+    if (scOn()) scFire(def, 'blk', att, false, m);
     hitVisual(ev); netEmit(ev);
     return;
   }
@@ -343,57 +344,12 @@ function applyHit(att, def, m, pt) {
       addP({ type: 'text', text: '贴身', x: pt[0], y: pt[1] - 30, life: 0.4, max: 0.4, rgb: '160,170,190' });
     }
   }
-  // 问剑密卷天赋与模式伤害判定
-  if (M.mode === 'tower') {
-    if (att.idx === 0 && (M.towerPerks || []).includes('blood_drink') && (isCounter || def.y < -2)) {
-      const leech = Math.round(dmg * 0.15);
-      if (leech > 0) {
-        att.hp = Math.min(att.maxHp, att.hp + leech);
-        att.lagHp = Math.min(att.maxHp, att.lagHp + leech);
-        addP({ type: 'text', text: `+${leech} 🩸`, x: att.x, y: att.y - 120, life: 0.8, max: 0.8, rgb: '255,100,100' });
-      }
-    }
-    if (att.idx === 0 && (M.towerPerks || []).includes('air_burst') && (def.y < -2 || def.state === 'launched')) {
-      dmg *= 1.35;
-    }
-    // 四系元素秘卷扩展 (Frost, Bleed, Ink, Thunder)
-    if (att.idx === 0 && (M.towerPerks || []).includes('frost_lock') && !m.isProj) {
-      def.frostSlow = 2.5;
-      def.frostHits = (def.frostHits || 0) + 1;
-      if (def.frostHits >= 3) {
-        def.frostHits = 0;
-        def.state = 'hitstun'; def.t = 0; def.stun = 0.45; def.rooted = true;
-        ring(def.x, def.y - 60, 120, '140,220,255', 0.45);
-        SFX.frostHit(1.3);
-        addP({ type: 'text', text: '❄️ 极寒冻结', x: def.x, y: def.y - 120, life: 0.9, max: 0.9, rgb: '140,220,255' });
-      }
-    }
-    if (att.idx === 0 && (M.towerPerks || []).includes('bleed_rend') && (isCounter || ev.big || Math.random() < 0.4)) {
-      def.bleedTicks = 4;
-      def.bleedDmg = Math.max(4, Math.round(dmg * 0.12));
-      addP({ type: 'text', text: '🩸 裂伤流血', x: def.x, y: def.y - 95, life: 0.7, max: 0.7, rgb: '255,80,80' });
-    }
-    if (att.idx === 0 && (M.towerPerks || []).includes('ink_resonance') && !m.isProj) {
-      for (let i = 0; i < 4; i++) {
-        addP({ type: 'ink', x: def.x + rand(-25, 25), y: def.y - rand(20, 80), vx: rand(-120, 120), vy: rand(-150, 50), g: 600, life: 0.6, max: 0.6, r: rand(3, 6), rgb: '15,15,22' });
-      }
-      dmg *= 1.15;
-    }
-    if (att.idx === 0 && (M.towerPerks || []).includes('storm_wrath') && !m.isProj) {
-      SFX.thunderHit(1.1);
-      m = { ...m, kb: [m.kb[0] * 1.35, m.kb[1] * 1.25] };
-      ring(pt[0], pt[1], 110, '255,235,110', 0.35);
-      addP({ type: 'text', text: '⚡ 怒雷破势', x: pt[0], y: pt[1] - 40, life: 0.6, max: 0.6, rgb: '255,235,110' });
-    }
-    if (def.idx === 0 && def.hp - dmg <= 0 && (M.towerPerks || []).includes('golden_bell') && def.goldenBellReady !== false) {
-      def.hp = 1; def.invul = 1.5; def.goldenBellReady = false;
-      ring(def.x, def.y - 60, 200, '255,215,0', 0.6);
-      addP({ type: 'text', text: '🔔 金钟护体 · 绝处逢生！', x: def.x, y: def.y - 140, life: 1.4, max: 1.4, rgb: '255,215,0' });
-      SFX.parry();
-      ev.dd = 0;
-      hitVisual(ev); netEmit(ev);
-      return;
-    }
+  // 问剑密卷（爬塔、天魔讨伐）：秘卷改伤害、闪避、保命，都在 22-scrolls.js
+  let scPre = null;
+  if (scOn()) {
+    scPre = scDamage(att, def, m, ev, dmg, isCounter);
+    if (scPre.cancel) { if (!scPre.dodged) { ev.dd = 0; hitVisual(ev); netEmit(ev); } return; }
+    dmg = scPre.dmg; m = scPre.m;
   }
 
   {
@@ -409,6 +365,7 @@ function applyHit(att, def, m, pt) {
     }
   }
   if (def.dummy) def.hp = Math.max(1, def.hp);
+  if (scPre) scAfterHit(att, def, m, ev, dmg, isCounter, scPre);
   att.hitConfirmed = true;
   const chaosMeterMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'meter_gain') ? currentChaosMutation.val : 1;
   if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);

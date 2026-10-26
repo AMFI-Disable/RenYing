@@ -921,6 +921,10 @@
 .tower-perk-card .tp-pick {
   width: 100%; border-radius: 999px;
 }
+.tower-perk-card .tp-tag { font-size: 12px; letter-spacing: .08em; opacity: .9; }
+.tower-perk-card.cursed { border-color: rgba(255, 120, 60, .55); background: linear-gradient(170deg, rgba(48, 20, 16, .94), rgba(18, 10, 10, .97)); }
+.tower-perk-card.legend { border-color: rgba(255, 215, 120, .8); box-shadow: 0 0 22px rgba(233, 196, 106, .35); }
+.tower-choices .tp-owned { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--dim); text-align: center; }
 
 
 

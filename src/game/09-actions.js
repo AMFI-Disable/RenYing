@@ -12,6 +12,7 @@ function startAttack(f, name) {
   f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
   const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
   f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
+  if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
   const jumpBonus = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'jump') ? currentChaosMutation.val : 1;
@@ -20,12 +21,14 @@ function doJump(f, dir) {
   f.state = 'air'; f.y = Math.min(f.y, -1);
   if (f.jumps >= 2) ring(f.x, f.y - 20, 36, f.look.slash, 0.35);
   dust(f.x, 0, 6); SFX.jump();
+  if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
   f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
   f.invul = 0.13; f.dashCD = DODGE_CD;
   if (f.onGround()) dust(f.x - dir * 20, 0, 8);
   SFX.dash();
+  if (scOn()) scFire(f, 'dash', foeOf(f));
 }
 function startSpecial(f) {
   endEscape(f);
@@ -40,6 +43,7 @@ function startSpecial(f) {
   SFX.voiceUlt(ultPitch);
   if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
   ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
+  if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
   if (M.mode === 'mayhem') {
     shake = Math.max(shake, 32);
     flashA = 0.65;
@@ -165,9 +169,6 @@ function attackUpdate(f, foe) {
       const close = Math.abs(foe.x - f.x) < 70 && Math.sign(foe.x - f.x) === f.face;
       f.vx = (m.lunge || 0) * f.face * (close ? 0.35 : 1);
     }
-    if (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('ink_blade') && /^l[1-5]$/.test(f.moveName)) {
-      spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy: 0, w: 48, h: 44, life: 0.8, dmg: 18, kb: [160, 0], stun: 0.3, hs: 0.04, pierce: true, noScale: true });
-    }
     SFX[m.snd]();
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
@@ -280,6 +281,7 @@ function startSkill(f, foe, slot) {
   f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null;
   const cd = S.cd * (balOf(f).cd || 1);
   if (slot === 2) f.skill2CD = cd; else f.skillCD = cd;
+  if (scOn()) scFire(f, 'skill', foe, slot || 1);
   f.face = faceDir(f, foe);   // 技能朝角色面向的方向放（电脑没有方向键，自动面向对手）
   const customNm = skinSkillName(f, slot);
   if (customNm && f.hp > 0 && M.phase === 'fight') {
@@ -332,6 +334,7 @@ function strike(f, foe, spec) {
 }
 // 月镜格开：对手硬直，自己准备反斩
 function parry(def, att, pt) {
+  if (scOn()) scFire(def, 'parry', att);
   def.parryT = 0; def.skPh = 2; def.t = 0; def.hitDone = false; def.invul = 0.35; def.face = att.x >= def.x ? 1 : -1;
   att.move = null; att.state = 'hitstun'; att.t = 0; att.stun = 0.55; att.vx = def.face * 120; att.skill = null;
   att.breakCD = Math.max(att.breakCD, 0.4);
@@ -380,6 +383,7 @@ const projs = [];
 let projSeq = 0;
 function spawnProj(f, o) {
   if (isClient()) return;   // 联机时由房主生成，加入方从快照同步
+  if (scOn()) { o = { src: f.state === 'skill' ? f.skill : f.state === 'special' ? 'ult' : '', ...o }; scProj(f, o); }   // 秘卷：认得出是哪一招放的，也能改它
   if (M.mode === 'mayhem') {
     o = { ...o };
     if (o.dmg) o.dmg = Math.round(o.dmg * 2.5);
@@ -527,15 +531,12 @@ function tryEscape(f, foe) {
     f.breakCD = Math.min(f.ch.escCD || BREAK_CD, 4.5);
     f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted = false; f.stun = 0;
     f.vx = 0; f.vy = 0;
-    f.airHover = (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('sky_master')) ? 1.5 : 0.85;
+    f.airHover = 0.85;
     f.escInvul = true; f.escT = 0; f.invul = f.airHover;
     f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
     delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;
     comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
-    if (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('thunder_dash')) {
-      spawnProj(f, { kind: 'bolt', x: f.x - f.face * 60, y: -260, vx: 0, w: 60, h: 520, life: 0.4, delay: 0.05, dmg: 28, kb: [60, -180], stun: 0.35, hs: 0.05, launch: true, noScale: true });
-      SFX.thunder();
-    }
+    if (scOn()) scFire(f, 'esc', foe, true);
     const c = f.look.slash;
     ring(f.x, f.y - 50, 150, c, 0.5); ring(f.x, f.y - 50, 80, '255,255,255', 0.35);
     for (let i = 0; i < 24; i++) {
@@ -555,10 +556,7 @@ function tryEscape(f, foe) {
   f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
   delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;   // 松开左键前不会开始蓄力
   comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
-  if (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('thunder_dash')) {
-    spawnProj(f, { kind: 'bolt', x: f.x - f.face * 60, y: -260, vx: 0, w: 60, h: 520, life: 0.4, delay: 0.05, dmg: 28, kb: [60, -180], stun: 0.35, hs: 0.05, launch: true, noScale: true });
-    SFX.thunder();
-  }
+  if (scOn()) scFire(f, 'esc', foe, false);
   const kind = ESC_FX[f.ch.id] || 'wind', c = f.look.slash;
   ring(f.x, f.y - 50, 100, c, 0.35); ring(f.x, f.y - 50, 50, '255,255,255', 0.25);
   for (let i = 0; i < 20; i++) { const a = rand(Math.PI * 0.15, Math.PI * 0.85), v = rand(200, 600); addP({ type: kind === 'smoke' || kind === 'ink' ? 'ink' : 'spark', x: f.x + rand(-20, 20), y: f.y - rand(10, 80), vx: Math.cos(a) * v * (Math.random() < 0.5 ? 1 : -1), vy: Math.sin(a) * v * 0.6, g: kind === 'ink' ? 900 : 0, life: 0.4, max: 0.4, r: rand(2, 4), rgb: kind === 'ink' || kind === 'smoke' ? '20,18,30' : c, w: 1.8, drag: 5 }); }
@@ -800,6 +798,7 @@ function updateFighter(f, foe) {
     f.needleMark = Math.max(0, f.needleMark - STEP);
     if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
   }
+  if (scOn()) scTick(f, foe);
   physics(f);
 }
 function physics(f) {
@@ -857,6 +856,7 @@ function physics(f) {
   }
 }
 function onLand(f) {
+  if (scOn()) scFire(f, 'land', foeOf(f), f.vy);
   f.wallBounced = false;
   if (f.airRecover) {
     f.airRecover = false;

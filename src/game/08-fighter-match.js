@@ -109,7 +109,7 @@ const foeOf = f => {
   f.target = best;
   return best;
 };
-const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1);
+const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1) * (scOn() ? scSpd(f) : 1);   // 爬塔里秘卷、霜冻会改移速
 function setChars(a, b) { A.setChar(a); B.setChar(b); }
 
 // 2v2 扩阔擂台交互机关（御风灵泉、天道剑坛、天劫剑雨）
@@ -292,6 +292,7 @@ function startRound() {
       say(txt, 1.1); SFX.gong();
     }
   }
+  scRoundStart();
   netEmit({ e: 'round', r: M.round, w: [...M.wins], ch: [A.chIdx, B.chIdx] });
 }
 // 回合规则的数值（回合时长、加时、带血 +CARRY_HEAL）都在 01-core.js 的「对战规则数值」里
@@ -492,6 +493,7 @@ function endRound() {
   if (w >= 0) M.wins[w]++;
   if (M.mode === 'tower') {
     if (w === 0) {
+      scFire(A, 'clear');
       M.phase = 'perk';
       paused = true;
       showTowerPerkModal();

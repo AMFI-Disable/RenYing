@@ -53,82 +53,8 @@ if (tag3StartBtn) {
   });
 }
 
-// ======================= 问剑密卷 (肉鸽无尽试炼) & 孤勇决死 =======================
-const TOWER_PERKS = {
-  thunder_dash: {
-    id: 'thunder_dash',
-    name: '「雷厉」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    desc: '冲刺与腾空闪拖曳雷弧电芒，对贴近之敌造成 28 点雷击伤害与短暂麻痹。'
-  },
-  ink_blade: {
-    id: 'ink_blade',
-    name: '「剑气长虹」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#46d3ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4L7 17l-3 3 1-4L18 3l2 1zM5.5 14.5l4 4M14 6l4 4"/></svg>',
-    desc: '普通攻击挥出破空墨刃剑气，向前飞旋贯穿敌人造成 18 点伤害。'
-  },
-  parry_refresh: {
-    id: 'parry_refresh',
-    name: '「借力打力」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM8 11h8M12 7v8"/></svg>',
-    desc: '精准招架（Just Guard）不仅完全免受震退，并瞬间重置所有技能冷却！'
-  },
-  blood_drink: {
-    id: 'blood_drink',
-    name: '「血饮残心」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ff4a5f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
-    desc: '打断敌方出招反击或空中终结技命中时，将 15% 伤害转化为生命自愈！'
-  },
-  flow_combo: {
-    id: 'flow_combo',
-    name: '「行云流水」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#46d3ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2-3 5-3 7 0s5 3 7 0 4-3 6 0M2 17c2-3 5-3 7 0s5 3 7 0 4-3 6 0M2 7c2-3 5-3 7 0s5 3 7 0 4-3 6 0"/></svg>',
-    desc: '连招取消窗口延长 50%，受击聚气与攻击蓄气速度大幅提升 50%。'
-  },
-  golden_bell: {
-    id: 'golden_bell',
-    name: '「金钟护体」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-    desc: '受到致命一击时触发保命金钟罩，无敌 1.5 秒免死（每 3 层刷新一次）。'
-  },
-  air_burst: {
-    id: 'air_burst',
-    name: '「浮空破灭」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#7fe0b0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20h2"/></svg>',
-    desc: '对处于浮空与挑飞状态的敌人造成的伤害提升 35%！'
-  },
-  sky_master: {
-    id: 'sky_master',
-    name: '「凌霄御风」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.2 8.5 22 9.4 17 14.2 18.3 21 12 17.6 5.7 21 7 14.2 2 9.4 8.8 8.5"/></svg>',
-    desc: '腾空闪滞空时间延长至 1.5 秒，且滞空期间发动下坠斩必定暴击破防！'
-  },
-  frost_lock: {
-    id: 'frost_lock',
-    name: '「玄霜凝骨」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#8ae5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>',
-    desc: '斩击附带刺骨寒气，减速敌人脚步；每连续命中 3 击引发极寒冻结 0.45 秒！'
-  },
-  bleed_rend: {
-    id: 'bleed_rend',
-    name: '「断脉破罡」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ff5555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13l3 3 5-5"/></svg>',
-    desc: '暴击与破招撕裂敌方脉络，使其陷入 4 段持续流血撕裂伤害。'
-  },
-  ink_resonance: {
-    id: 'ink_resonance',
-    name: '「墨韵共鸣」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#a0a5b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 10 10 0 0 0 0-20"/></svg>',
-    desc: '刀刃激荡水墨飞溅，所有近战斩击伤害额外提升 15% 并在地面激荡墨浪！'
-  },
-  storm_wrath: {
-    id: 'storm_wrath',
-    name: '「天煞狂雷」',
-    icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ffd040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    desc: '近身搏杀引九天怒雷灌注，击退与挑飞冲击力提升 35% 并伴随轰鸣雷爆！'
-  }
-};
-
+// ======================= 问剑密卷 (肉鸽无尽试炼) =======================
+// 秘卷的目录和效果都在 22-scrolls.js；这里是爬塔的流程：开局、过层抽卷、存档续玩
 const TOWER_SAVE_KEY = 'renying-tower-run';
 
 function saveTowerRun() {
@@ -137,9 +63,9 @@ function saveTowerRun() {
       hero: M.towerHero !== undefined ? M.towerHero : towerHero,
       floor: M.towerFloor || 1,
       perks: M.towerPerks ? [...M.towerPerks] : [],
+      run: M.scRun || {},
       hp: Math.max(1, Math.min(A.maxHp || 100, A.hp)),
-      maxHp: A.maxHp || 100,
-      goldenBellReady: A.goldenBellReady !== false
+      maxHp: A.maxHp || 100
     };
     try { localStorage.setItem(TOWER_SAVE_KEY, JSON.stringify(run)); } catch (e) {}
   }
@@ -183,7 +109,7 @@ function startTower(heroIdx, isWatch = false) {
   towerHero = heroIdx !== undefined ? heroIdx : towerHero;
   M.mode = 'tower';
   M.towerFloor = 1;
-  M.towerPerks = [];
+  M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
   M.towerHero = towerHero;
   M.round = 1;
   M.wins = [0, 0];
@@ -211,7 +137,7 @@ function resumeTower() {
   towerHero = run.hero !== undefined ? run.hero : towerHero;
   M.mode = 'tower';
   M.towerFloor = run.floor || 1;
-  M.towerPerks = run.perks ? [...run.perks] : [];
+  M.towerPerks = (run.perks || []).filter(id => SC_BY[id]); M.foeScrolls = []; M.scRun = run.run && typeof run.run === 'object' ? { ...run.run } : {};
   M.towerHero = towerHero;
   M.round = 1;
   M.wins = [0, 0];
@@ -234,7 +160,6 @@ function resumeTower() {
     A.hp = Math.min(A.maxHp, run.hp);
     A.lagHp = A.hp;
   }
-  if (run.goldenBellReady !== undefined) A.goldenBellReady = run.goldenBellReady;
   saveTowerRun();
   say(`问剑密卷 · 继续第 ${M.towerFloor} 层`, 1.4);
 }
@@ -246,47 +171,35 @@ function showTowerPerkModal() {
     nextTowerFloor();
     return;
   }
-  const allPerkKeys = Object.keys(TOWER_PERKS);
-  const available = allPerkKeys.filter(k => !(M.towerPerks || []).includes(k));
-  const pool = available.length >= 3 ? available : allPerkKeys;
-  const picked = [];
-  const poolCopy = [...pool];
-  for (let i = 0; i < 3 && poolCopy.length; i++) {
-    const idx = Math.floor(Math.random() * poolCopy.length);
-    picked.push(poolCopy.splice(idx, 1)[0]);
-  }
-  choicesEl.innerHTML = picked.map(k => {
-    const p = TOWER_PERKS[k];
-    return `<div class="tower-perk-card" data-perk="${p.id}">
-      <div class="tp-icon">${p.icon}</div>
-      <div class="tp-name">${p.name}</div>
-      <div class="tp-desc">${p.desc}</div>
+  const picked = scDraw(A.ch.id, M.towerPerks || [], 3);
+  if (!picked.length) { nextTowerFloor(); return; }   // 这个侠客能拿的秘卷全拿完了
+  const reso = scResoLines(M.towerPerks || []);
+  choicesEl.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}" data-perk="${p.id}">
+      <div class="tp-icon">${scIcon(p)}</div>
+      <div class="tp-name">「${p.n}」</div>
+      ${scTag(p)}
+      <div class="tp-desc">${p.d}</div>
       <button class="go small tp-pick" type="button">顿悟秘卷</button>
-    </div>`;
-  }).join('');
+    </div>`).join('') + `<p class="tp-owned">已领悟 ${(M.towerPerks || []).length} 卷${reso.length ? ' · ' + reso.join(' · ') : ''}</p>`;
   choicesEl.querySelectorAll('.tower-perk-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const pid = card.dataset.perk;
-      pickTowerPerk(pid);
-    });
+    card.addEventListener('click', () => pickTowerPerk(card.dataset.perk));
   });
   const fb = document.getElementById('towerFloorBadge');
   if (fb) fb.textContent = `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
   showScreen('towerModal');
   if (M.watchAi) {
     setTimeout(() => {
-      if (M.mode === 'tower' && M.watchAi && picked.length) {
-        pickTowerPerk(picked[Math.floor(Math.random() * picked.length)]);
-      }
+      if (M.mode === 'tower' && M.watchAi && M.phase === 'perk') pickTowerPerk(picked[Math.floor(Math.random() * picked.length)].id);
     }, 1200);
   }
 }
 
 function pickTowerPerk(perkId) {
   if (!M.towerPerks) M.towerPerks = [];
+  if (M.phase !== 'perk' || !SC_BY[perkId]) return;
   M.towerPerks.push(perkId);
-  const p = TOWER_PERKS[perkId];
-  if (p) say(`领悟${p.name}`, 1.2);
+  const p = SC_BY[perkId];
+  say(`领悟「${p.n}」`, 1.2);
   nextTowerFloor();
 }
 
@@ -309,11 +222,7 @@ function nextTowerFloor() {
   M.level = lv;
   if (M.watchAi) A.ctrl = new AICtrl('god');
   B.ctrl = new AICtrl(lv);
-  // 适度回血调息（回 20% maxHp）
-  A.hp = Math.min(A.maxHp, A.hp + Math.round(A.maxHp * 0.20));
-  A.lagHp = A.hp;
-  A.goldenBellReady = true;
-  startRound();
+  startRound();   // 每层满血开打（和其他 1v1 一样）；秘卷的开局效果在 startRound 里生效
   if (!M.watchAi) saveTowerRun();
   say(M.watchAi ? `天道爬塔 · 第 ${M.towerFloor} 层` : `万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);
 }
