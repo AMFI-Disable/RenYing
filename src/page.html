@@ -173,6 +173,7 @@
         <div class="single-tabs" id="singleTabs">
           <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>对战电脑</button>
           <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>守关挑战</button>
+          <button data-tab="saga" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>侠客列传</button>
           <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>木人试剑</button>
           <button data-tab="tower" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
           <button data-tab="chaos" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
@@ -302,6 +303,16 @@
         <div class="seg sttabs" id="stTabs"></div>
         <div class="stgrid" id="stGrid"></div>
         <p class="netnote" id="stNote"></p>
+      </div>
+
+      <!-- 侠客列传 -->
+      <div data-sec="saga" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">侠客列传</h3>
+          <span class="sub-badge">每人一条路</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">十三位侠客各有各的来路：五节故事、一个抉择、两个结局。每位侠客的进度分开存。</p>
+        <div class="saga-wrap"><div class="saga-heroes" id="sagaHeroes"></div><div class="saga-route" id="sagaRoute"></div></div>
       </div>
 
       <!-- 木人桩练习 -->
@@ -1243,6 +1254,16 @@
         <button class="ghost" id="rpWatch">看回放</button>
         <button class="ghost" id="menuBtn">返回菜单</button>
       </div>
+    </div>
+  </div>
+
+  <div id="sagaTalk" class="scr">
+    <div class="saga-talk">
+      <div class="st-place" id="stPlace"></div>
+      <div class="st-who" id="stWho"></div>
+      <div class="st-line" id="stLine"></div>
+      <div class="st-opts" id="stOpts"></div>
+      <div class="st-hint" id="stHint">点击或按空格继续 · Esc 跳过对话</div>
     </div>
   </div>
 

@@ -43,7 +43,7 @@ window.addEventListener('keydown', e => {
       return;
     }
   }
-  if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && M.phase !== 'end') {
+  if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 抽秘卷、剧情对话时不弹暂停
     paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
   }
   if (M.mode === 'demo') return;

@@ -301,7 +301,7 @@ function updateAIBrief() {
 
 // 模式所属类别映射
 const SINGLE_TAB_CATS = {
-  cpu: 'regular', stage: 'regular', train: 'regular',
+  cpu: 'regular', stage: 'regular', saga: 'regular', train: 'regular',
   tower: 'rogue', chaos: 'rogue',
   tag3: 'special', mayhem: 'special', watch2v2: 'special'
 };
@@ -345,6 +345,7 @@ function singleSec(sec) {
       tower: '挑选本命侠客登临万仞剑阁，突破层层守关者，顿悟三选一武林秘卷！',
       chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
+      saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
       train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定',
       mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
       watch2v2: '你和电脑队友两人一队，对阵两名电脑；也可以旁观四名天道 AI 同台演武'
@@ -352,6 +353,7 @@ function singleSec(sec) {
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
   if (active === 'tag3') renderTag3();
+  else if (active === 'saga') renderSaga();
   else if (active === 'tower') renderTower();
   else if (active === 'chaos') renderChaos();
   else if (active === 'stage') renderStages();
@@ -363,7 +365,7 @@ function singleSec(sec) {
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
 function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
+  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
     singleSec(name);
     if (reveal) showScreen('single');
     return 'single';

@@ -345,6 +345,7 @@ function updateMatch() {
         const ra = is2v2() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
         const rb = is2v2() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
         if (M.mode === 'boss') timeDeath(-1, '时辰已到');
+        else if (M.mode === 'saga') sagaTimeUp(ra, rb);   // 侠客列传：按这一战的胜利条件判
         else if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
         else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
       }
@@ -494,6 +495,7 @@ function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
+  if (M.mode === 'saga') { sagaEnd(w); return; }
   if (M.mode === 'tower') {
     if (w === 0) {
       scFire(A, 'clear');

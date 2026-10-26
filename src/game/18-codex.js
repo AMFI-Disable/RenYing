@@ -1133,7 +1133,7 @@ function renderCodex() {
       const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
       const clear = stars > 0 || DEV_SESSION_UNLOCKED;
       return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
-    })()}</div>`, '', true),
+    })()}${typeof sagaCodexLine === 'function' ? sagaCodexLine(c.id) : ''}</div>`, '', true),
     ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', false, null, true) : '',
     tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true, null, !!ADV_SHORT[c.id]),
   ].filter(Boolean).join('');
@@ -1190,13 +1190,15 @@ function startCodexCardsDirector() {
 }
 
 $id('cxMoves').addEventListener('click', e => {
+  const sagaBtn = e.target.closest('.cx-go-saga');
+  if (sagaBtn) { sagaPick = sagaBtn.dataset.h; openScreen('saga'); SFX.slice && SFX.slice(); return; }
   const stageBtn = e.target.closest('.cx-go-stage');
   if (stageBtn) {
     const ch = +stageBtn.dataset.c;
     stageCh = ch;
     openScreen('stage');
     renderStages();
-    SFX.click();
+    SFX.slice && SFX.slice();
     return;
   }
   const tile = e.target.closest('.tile[data-move]');
@@ -1245,7 +1247,7 @@ if (demoSpdEl) {
     cxDemoSpeed = cxDemoSpeed === 1.0 ? 0.5 : 1.0;
     demoSpdEl.textContent = cxDemoSpeed === 0.5 ? '原速 1.0x' : '慢放 0.5x';
     demoSpdEl.classList.toggle('sel', cxDemoSpeed === 0.5);
-    SFX.click();
+    SFX.slice && SFX.slice();
   });
 }
 

@@ -1054,6 +1054,7 @@ function toMenu() {
   if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
   M.mode = 'demo';
   if (prevMode === 'boss') openGboss();
+  else if (prevMode === 'saga') { singleSec('saga'); showScreen('single'); }
   else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
     singleSec(prevMode);
     showScreen('single');

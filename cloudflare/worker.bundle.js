@@ -17,6 +17,9 @@
  *   打完交一次伤害（同一张票重交只算一次，伤害按出战时长封顶）。击败或天魔遁走后按伤害发奖励（走全服补偿那一套），
  *   然后换下一代。
  *
+ * 侠客列传的江湖足迹（/api/saga）：云端账号走完一节、做了抉择、看到结局各记一笔（每个号每节只算一次，重走会改成新的选择），
+ *   列传页按侠客汇总成人数和比例。只存侠客、第几节、选了什么，不存别的。
+ *
  * 防作弊（和钱有关的都在服务器上算，客户端只负责显示）：
  *   武库：开箱、终端机、商店、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算。
  *         存档带版本号，同时到的两个请求只有一个能改成（另一个重读再算，防双花）；每个请求带一次性编号，网络重试
@@ -1024,6 +1027,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS gboss_try (id TEXT PRIMARY KEY, uid TEXT NOT NULL, gen INTEGER NOT NULL, started INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0, tx TEXT, dmg INTEGER NOT NULL DEFAULT 0, killed INTEGER NOT NULL DEFAULT 0)`,
   `CREATE INDEX IF NOT EXISTS idx_gboss_try_uid ON gboss_try (uid, started)`,
   `CREATE INDEX IF NOT EXISTS idx_gboss_try_done ON gboss_try (done, started)`,
+  // 侠客列传的江湖足迹：node 是 n1 ~ n5（走完第几节）、c3（第 3 节的抉择）、end（结局），pick 是选了什么
+  `CREATE TABLE IF NOT EXISTS saga_mark (hero TEXT NOT NULL, node TEXT NOT NULL, uid TEXT NOT NULL, pick TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (hero, node, uid))`,
 ];
 let schemaReady = null;
 function ensureSchema(env) {
@@ -2041,6 +2046,28 @@ async function gbHit(env, auth, body, now) {
   return await done({ capped: asked > cap, late });
 }
 
+/* ---------- 侠客列传：江湖足迹 ---------- */
+async function sagaFoot(env, hero) {
+  const [rows, recent] = await Promise.all([
+    env.DB.prepare('SELECT node, pick, COUNT(*) AS n FROM saga_mark WHERE hero = ? GROUP BY node, pick').bind(hero).all(),
+    env.DB.prepare("SELECT u.username AS name, m.pick, m.at FROM saga_mark m JOIN users u ON u.id = m.uid WHERE m.hero = ? AND m.node = 'end' ORDER BY m.at DESC LIMIT 5").bind(hero).all(),
+  ]);
+  const nodes = {};
+  for (const r of (rows && rows.results) || []) {
+    const x = nodes[r.node] || (nodes[r.node] = { n: 0, picks: {} });
+    x.n += r.n; x.picks[r.pick] = r.n;
+  }
+  return { ok: true, hero, nodes, recent: ((recent && recent.results) || []).map(r => ({ name: r.name, pick: r.pick, at: r.at })) };
+}
+async function sagaMarkPost(env, auth, body, now) {
+  const hero = String(body.hero || ''), node = String(body.node || ''), pick = String(body.pick || '');
+  if (!C.HERO_IDS.includes(hero) || !/^(n[1-9]|c[1-9]|end)$/.test(node) || !/^[a-z0-9_]{1,16}$/.test(pick)) return error('记录格式不对');
+  if (!(await hit(env, 'saga:' + auth.user.id, 120, 3600e3, now))) return error('记得太频繁了', 429);
+  await env.DB.prepare('INSERT INTO saga_mark (hero, node, uid, pick, at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(hero, node, uid) DO UPDATE SET pick = ?4, at = ?5')
+    .bind(hero, node, auth.user.id, pick, now).run();
+  return json({ ok: true });
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (!env.DB) {
@@ -2262,6 +2289,21 @@ export default {
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
         return await gbHit(env, auth, body, now);
+      }
+
+      // 12. 侠客列传的江湖足迹：看不用登录，记要云端账号
+      if (path === '/api/saga' && request.method === 'GET') {
+        if (!(await hit(env, 'sgg:' + ip, 120, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        const hero = String(url.searchParams.get('hero') || '');
+        if (!C.HERO_IDS.includes(hero)) return error('没有这位侠客');
+        return json(await sagaFoot(env, hero));
+      }
+      if (path === '/api/saga' && request.method === 'POST') {
+        const auth = await authenticate(env, request);
+        if (!auth) return error('未登录或登录已过期，请重新登录', 401);
+        const body = await readBody(request);
+        if (!body) return error('请求太大', 413);
+        return await sagaMarkPost(env, auth, body, now);
       }
 
       // 9. Logout

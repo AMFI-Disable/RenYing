@@ -283,7 +283,7 @@ for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
 
 // ---------- 谁有哪些秘卷 ----------
-function scOn() { return (M.mode === 'tower' || M.mode === 'boss') && M.mode !== 'net'; }
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga'; }
 function scIds(f) { return !f ? [] : f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) : []; }
 function scHas(f, id) { return scOn() && scIds(f).includes(id); }
 function scList(f) {

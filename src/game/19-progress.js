@@ -499,7 +499,9 @@ function applyProfile(p, opts) {
       });
     }
   } else {
+    const saga0 = PROF.saga;
     Object.assign(PROF, p, { guest: false });
+    if (saga0) PROF.saga = sagaMerge(saga0, p.saga);   // 列传进度和关卡星一样：本机和云端每位侠客取走得远的那份
   }
   PROF.loaded = true;
   if (!PROF.guest && p.stageStars && typeof p.stageStars === 'object') {   // 关卡星跟着账号走：取云存档和本机（退出时已清空）两边较高的

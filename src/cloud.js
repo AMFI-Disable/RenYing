@@ -346,8 +346,32 @@
       placed: typeof p.placed === 'number' ? p.placed : 0,
       updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : Date.now(),
       ...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {}),
+      ...(p.saga && typeof p.saga === 'object' ? { saga: cleanSaga(p.saga) } : {}),
       ...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : (typeof window !== 'undefined' && typeof window.getDevArmoryState === 'function' ? { armory: window.getDevArmoryState() } : {}))
     };
+  }
+
+  // 侠客列传的进度：每位侠客一份 { r 重走次数, s 走完几节, f 抉择, c 打赢还没选, e 拿到的结局, t 时间 }
+  function cleanSaga(v) {
+    const out = {};
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+    for (const [h, r] of Object.entries(v)) {
+      if (!/^[a-z]{2,16}$/.test(h) || !r || typeof r !== 'object') continue;
+      out[h] = { r: Math.max(0, Math.min(1e6, Math.floor(+r.r || 0))), s: Math.max(0, Math.min(20, Math.floor(+r.s || 0))), f: /^[a-z0-9_]{0,16}$/.test(r.f || '') ? (r.f || '') : '', c: r.c ? 1 : 0,
+        e: Array.isArray(r.e) ? Array.from(new Set(r.e.filter(x => typeof x === 'string' && /^[a-z0-9_]{1,16}$/.test(x)))).slice(0, 8) : [], t: Math.max(0, +r.t || 0) };
+    }
+    return out;
+  }
+  // 两份存档的列传进度：每位侠客取重走次数多的、再取走得远的（一样远取新的），结局合在一起
+  function mergeSaga(a, b) {
+    const A = cleanSaga(a), B = cleanSaga(b), out = {};
+    for (const h of new Set([...Object.keys(A), ...Object.keys(B)])) {
+      const x = A[h], y = B[h];
+      if (!x || !y) { out[h] = x || y; continue; }
+      const win = x.r !== y.r ? (x.r > y.r ? x : y) : x.s !== y.s ? (x.s > y.s ? x : y) : (x.t >= y.t ? x : y);
+      out[h] = { ...win, e: Array.from(new Set([...x.e, ...y.e])) };
+    }
+    return out;
   }
 
   // 双向合并两个存档（保留双方拥有的全部角色/皮肤，墨锭/碎片/星级/战绩取最优，绝不丢弃任何进度）
@@ -393,6 +417,7 @@
       stageStars,
       qfx: Math.max(Math.floor(+p1.qfx || 0), Math.floor(+p2.qfx || 0)),
       online10Unlocked: !!(p1.online10Unlocked || p2.online10Unlocked),
+      ...(p1.saga || p2.saga ? { saga: mergeSaga(p1.saga, p2.saga) } : {}),
       updatedAt: Math.max(typeof p1.updatedAt === 'number' ? p1.updatedAt : 0, typeof p2.updatedAt === 'number' ? p2.updatedAt : 0, Date.now())
     };
 
@@ -460,6 +485,12 @@
   async function gboss(act, body) {
     if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
     return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
+  }
+  // 侠客列传的江湖足迹：看一条路上大家走到哪、选了什么（不用登录）；云端账号走完一节记一笔
+  async function saga(hero) { return api('/api/saga?hero=' + encodeURIComponent(hero), { method: 'GET' }); }
+  async function sagaMark(body) {
+    if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
+    return api('/api/saga', { method: 'POST', body: JSON.stringify(body || {}) });
   }
   async function flushNow() { if (pendingData && cloudActive()) await doSync(); }
   // 反作弊记录（服务器那份只能往上加）
@@ -1204,6 +1235,8 @@
       econ,
       market,
       gboss,
+      saga,
+      sagaMark,
       flushNow,
       acGet,
       acReport,
