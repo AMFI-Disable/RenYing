@@ -819,152 +819,6 @@ gap: var(--bp-gap); width: 100%; --bp-gap: clamp(4px, 0.5vw, 7px); --bp-cols: 12
 .keyitem button:hover { border-color: #8ff0ff; }
 .keyitem button.active { color: #e9c46a; border-color: #e9c46a; background: rgba(233,196,106,.15); animation: breath 1.2s infinite; }
 .task-go:hover { color: var(--p1); border-color: var(--p1); }
-.tag3-slots {
-display: grid;
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: 12px;
-margin: 10px 0 16px;
-}
-.tag3-slot {
-position: relative;
-padding: 10px 8px 12px;
-border-radius: 12px;
-border: 1px solid var(--faint);
-background: linear-gradient(160deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .01));
-cursor: pointer;
-text-align: center;
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 4px;
-transition: all .15s ease;
-}
-.tag3-slot:hover {
-border-color: rgba(233, 196, 106, .5);
-transform: translateY(-2px);
-}
-.tag3-slot.sel {
-border-color: var(--gold);
-background: rgba(233, 196, 106, .1);
-box-shadow: 0 0 16px rgba(233, 196, 106, .25);
-}
-.tag3-slot .slot-tag {
-font-family: var(--title);
-font-size: 12px;
-color: #fbeee0;
-background: var(--seal);
-padding: 1px 8px;
-border-radius: 4px;
-letter-spacing: 1px;
-}
-.tag3-slot.sel .slot-tag {
-background: #b8392e;
-box-shadow: 0 0 8px rgba(184, 57, 46, .6);
-}
-.tag3-slot .slot-avatar {
-width: clamp(52px, 5.5vw, 68px);
-height: clamp(52px, 5.5vw, 68px);
-border-radius: 8px;
-overflow: hidden;
-border: 1px solid rgba(255, 255, 255, .15);
-background: rgba(0, 0, 0, .4);
-margin: 4px 0 2px;
-}
-.tag3-slot .slot-avatar img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-object-position: center top;
-display: block;
-}
-.tag3-slot .slot-name {
-font-family: var(--title);
-font-size: clamp(16px, 1.4vw, 20px);
-line-height: 1.1;
-}
-.tag3-slot .slot-role {
-font-size: 12px;
-color: var(--dim);
-white-space: nowrap;
-}
-.tag3-roster {
-display: grid;
-grid-template-columns: repeat(12, minmax(0, 1fr));
-gap: clamp(4px, 0.6vw, 8px);
-margin: 8px 0 14px;
-}
-@media (max-width: 1080px) {
-.tag3-roster {
-grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-}
-@media (max-width: 720px) {
-.tag3-roster {
-grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-}
-@media (max-width: 480px) {
-.tag3-roster {
-grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-}
-.tag3-hero-chip {
-position: relative;
-border: 1px solid var(--faint);
-border-radius: 8px;
-padding: 4px 4px 6px;
-background: linear-gradient(160deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .01));
-cursor: pointer;
-text-align: center;
-transition: all .15s ease;
-min-width: 0;
-color: var(--ink);
-font-family: var(--body);
-}
-.tag3-hero-chip:hover {
-transform: translateY(-2px);
-border-color: rgba(239, 232, 216, .45);
-}
-.tag3-hero-chip img {
-width: 100%;
-aspect-ratio: 1 / 1;
-object-fit: cover;
-object-position: center top;
-border-radius: 5px;
-display: block;
-}
-.tag3-hero-chip .nm {
-font-family: var(--title);
-font-size: 13px;
-margin-top: 3px;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-}
-.tag3-hero-chip .rl {
-font-size: 12px;
-color: var(--dim);
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-}
-.tag3-hero-chip.in-team {
-border-color: rgba(233, 196, 106, .6);
-background: rgba(233, 196, 106, .08);
-}
-.tag3-hero-chip .team-badge {
-position: absolute;
-top: 3px;
-right: 3px;
-font-family: var(--title);
-font-size: 12px;
-background: var(--gold);
-color: #0c0b16;
-font-weight: 700;
-border-radius: 4px;
-padding: 0 4px;
-box-shadow: 0 2px 6px rgba(0,0,0,.5);
-}
 .type-tag, .pill-type {
 display: inline-block;
 padding: 1px 6px;
@@ -1067,6 +921,10 @@ font-size: 13px; color: var(--dim); line-height: 1.5; flex: 1; margin: 6px 0 12p
 .tower-perk-card .tp-pick {
 width: 100%; border-radius: 999px;
 }
+.tower-perk-card .tp-tag { font-size: 12px; letter-spacing: .08em; opacity: .9; }
+.tower-perk-card.cursed { border-color: rgba(255, 120, 60, .55); background: linear-gradient(170deg, rgba(48, 20, 16, .94), rgba(18, 10, 10, .97)); }
+.tower-perk-card.legend { border-color: rgba(255, 215, 120, .8); box-shadow: 0 0 22px rgba(233, 196, 106, .35); }
+.tower-choices .tp-owned { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--dim); text-align: center; }
 .sic { display: inline-flex; align-items: center; justify-content: center; width: 1.42em; height: 1.42em; margin-right: .42em; font: 400 max(12px, 1em)/1 var(--title); font-size: max(12px, 1em); font-style: normal; color: #fbeee0; background: var(--seal); border-radius: 3px; box-shadow: inset 0 0 0 1.4px #8e2a21, inset 0 0 0 2.6px rgba(255,240,225,.42), 0 1px 3px rgba(0,0,0,.35); transform: rotate(-3deg); vertical-align: -.24em; flex: none; letter-spacing: 0; text-indent: 0; text-shadow: none; padding: 0 0 .06em; }
 .sic:nth-of-type(even) { transform: rotate(2.5deg); }
 button .sic, .ghost .sic { font-size: max(12px, 1em); }
@@ -2895,8 +2753,6 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
             <span>选定境界后点击下方开战，进入水墨点将台依次禁用强敌，并排定【先锋】【中坚】【大将】出阵顺序。</span>
           </div>
         </div>
-        <div class="tag3-slots" id="tag3Slots" hidden></div>
-        <div class="tag3-roster" id="tag3Roster" hidden></div>
 
         <div class="sec-sub-label" style="margin-top:10px">敌方门派战力境界</div>
         <div class="levels-grid" id="tag3Levels">
@@ -2942,11 +2798,6 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
             <span>点选下方任意已解锁关卡后，即刻进入水墨点将台检视招式并钦点出战大侠。</span>
           </div>
         </div>
-      </div>
-
-      <!-- 出战角色选择（已统一移至点将台 BP 界面） -->
-      <div id="trPickWrap" style="display:none" hidden>
-        <div class="trpick" id="trPick"></div>
       </div>
 
       <!-- 关卡选择 -->
@@ -2996,7 +2847,6 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
             <span>点击「开启新试炼」后进入水墨点将台，自由检视十二位侠客武学并钦点本命试炼侠客登阁。</span>
           </div>
         </div>
-        <div class="trpick" id="towerPick" hidden></div>
         <div class="single-action-row">
           <button class="go" id="towerResumeBtn" type="button" style="display:none;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">继续试炼</button>
           <button class="go" id="towerStartBtn" type="button">开启新试炼</button>
@@ -3017,8 +2867,6 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
             <span>选定境界后点击开启，在点将台中自由点选本命侠客迎战天机异变。</span>
           </div>
         </div>
-        <div class="trpick" id="chaosPick" hidden></div>
-        <div class="trpick" id="chaosFoePick" hidden></div>
         <div class="sec-sub-label" style="margin-top:10px">乱斗电脑境界</div>
         <div class="levels-grid" id="chaosLevels">
           <button data-lv="easy" type="button">
@@ -3062,8 +2910,6 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
             <span>选定电脑境界后点击开启，进入点将台点选你的神魔出战侠客。</span>
           </div>
         </div>
-        <div class="trpick" id="mayhemPick" hidden></div>
-        <div class="trpick" id="mayhemFoePick" hidden></div>
         <div class="sec-sub-label" style="margin-top:10px">神魔电脑境界</div>
         <div class="levels-grid" id="mayhemLevels">
           <button data-lv="easy" type="button">
@@ -3474,7 +3320,7 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
         </dl></div>
       </div>
       <p class="tips touchonly"><b>手机操作</b>：左边摇杆移动（往下推防御，往上推跳）。右边按键：<b>攻击</b>（点是普攻，按住蓄力、松开出蓄力斩）、<b>跳</b>、<b>远程</b>、<b>技能</b>、<b>闪</b>（腾空闪）、<b>大招</b>（气满时发光）。左上角暂停。</p>
-      <p class="tips">开打前双方先各禁用一个角色，再轮流选人，一共 12 个角色。在选人界面双击角色卡即可确认。<br>
+      <p class="tips">人机对战开打前双方各禁用一个角色、各选一个角色，每回合双方都满血。联机对战（房间、匹配、排位）各禁 1 人、各选 2 人：先由第一人出战，输掉一回合的一方换上第二人（满血），活下来的人只回 80 血，谁的两人都被击倒谁输。从首页点「开始人机对战」不用选人，直接用首页的角色开打。在选人界面双击角色卡即可确认。<br>
       <b>腾空闪</b>：被连击、被挑飞、倒地都能用，立刻解除受制并向上闪起；落地或出手之前，对手碰不到你。冷却 9 秒，被大招锁住时用不出。<br>
       <b>蓄力斩</b>：蓄满时角色会闪一下，松开便是满蓄力的一斩，能打穿防御。蓄力斩会把对手直接打倒，倒地期间打不到。<br><b>远程招式</b>（按住左键再点右键）：都会把对手短暂打飞，打中后可以接着连。<br>
       连招示例：五段连击的最后一下把对手打飞，马上跳起追上去，空中连点两下左键（第二下是下砸）；远程招式也会把对手短暂打飞，可以接着连。<br>
@@ -6721,7 +6567,8 @@ try {
 const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
 Object.assign(SETTINGS, saved);
 if (!SETTINGS.quality || SETTINGS.quality === 'auto') SETTINGS.quality = 'high';
-if (SETTINGS.bloom === undefined || SETTINGS.bloom === 1) SETTINGS.bloom = 1.6;
+if (SETTINGS.bloom === undefined || (SETTINGS.bloom === 1 && !saved.bloomMigrated)) SETTINGS.bloom = 1.6;
+SETTINGS.bloomMigrated = true;
 const ALLOWED_FPS = [144, 120, 60, 30];
 if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
 if (saved.aim === undefined || !saved.aimMigrated) { SETTINGS.aim = true; SETTINGS.aimMigrated = true; }
@@ -6761,6 +6608,22 @@ const STEP = 1 / 120;                 // 逻辑每秒 120 次，在高刷屏上�
 let STAGE_W = 1800;
 const WALL = 60;
 const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T = 0.2, BUF = 0.16;
+const ROUND_TIME = 50, ROUND_TIME_2V2 = 75, OT_TIME = 20, OT_DMG = 2;
+const CARRY_HEAL = 80;
+const WINS_NEEDED = 2, MAX_ROUNDS = 5;     // 先赢 2 回合的一方获胜；平局太多时第 5 回合打完就结束
+const IMPOSSIBLE_HP = 1.35;                // 绝顶难度的电脑多 35% 血
+const LAST_STAND_METER = 100, LAST_STAND_T = 3.5, LAST_STAND_HEAL = 75;   // 2v2 队友倒下后「孤军奋战」：气满、强化 3.5 秒、回 75 血
+const CREDIT = 2.4;                        // 第一回合开场署名多停留的秒数
+const PENGLAI_T = 2;                       // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
+const CINE_LEN = 1.3;                      // 大招特写镜头的秒数
+const CHAOS_INTERVAL = 15;                 // 天机乱斗每隔多少秒换一种异变
+const BP_TIME = 25, BP_CPU_DELAY = 0.85;   // 点将台每一步的时限；电脑每一步想多久
+const CHARGE_START = 0.3;   // 按住攻击多久开始蓄力
+const CHARGE_FULL = 0.75;   // 蓄力多久算满
+const DODGE_CD = 0.3;
+const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
+const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
+const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', god: '天道', adaptive: '宿敌' };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);          // 画面特效用（两边可以不一样）
@@ -8139,11 +8002,6 @@ KEYS[0][code] = realAct;
 }
 }
 applyCustomKeys();
-const CHARGE_START = 0.3;   // 按住攻击多久开始蓄力
-const CHARGE_FULL = 0.75;   // 蓄力多久算满
-const DODGE_CD = 0.3;
-const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
-const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [] };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
@@ -8324,7 +8182,7 @@ if (sn.p) { projs.length = 0; for (const q of sn.p) projs.push(q); }
 function onNetMsg(msg) {
 if (msg.mstart || msg.report) return;
 if (msg.ru !== undefined) { rollRecv(msg); return; }
-if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed); return; }
+if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo); return; }
 if (msg.rsync) { rollAdopt(msg.rsync); return; }
 if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
 if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
@@ -8387,7 +8245,7 @@ if (msg.i || msg.s || msg.ev) send(msg);
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
-M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; A.meter = B.meter = 0;
+M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0;
 human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
 if (netRoomMode === 'pp_cc') {
@@ -8516,7 +8374,6 @@ const CHAPTERS = [
 { name: '月宫', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuehua', lv: 'impossible' },
 { name: '墨渊', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'moyu', lv: 'impossible' },
 ];
-const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶' };
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 function stageInfo(c, l) {
 const C = CHAPTERS[c], id = stageId(c, l);
@@ -8925,6 +8782,7 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
+const sideFighters = side => is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]];   // 一方场上的人：1v1 一个，2v2 两个
 const allFighters = () => is2v2() ? [A, B, C, D] : [A, B];
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !is2v2() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
@@ -8967,7 +8825,7 @@ if (dist < minDist) { best = list[i]; minDist = dist; }
 f.target = best;
 return best;
 };
-const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1);
+const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1) * (scOn() ? scSpd(f) : 1);   // 爬塔里秘卷、霜冻会改移速
 function setChars(a, b) { A.setChar(a); B.setChar(b); }
 const ARENA2V2 = {
 geysers: [{ x: 460, cd: 0 }, { x: 2140, cd: 0 }],
@@ -9065,7 +8923,6 @@ let debugHitbox = false;          // 试剑模式：判定框与帧优势实时�
 let announce = null;
 const announceQueue = [];
 const comboUI = [{ n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }];
-const CREDIT = 2.4;
 let creditT = 0, creditPending = false;
 function say(text, dur = 1.1, style = 'big', sub = '') {
 if (RESIM) return;
@@ -9085,9 +8942,11 @@ if (mode !== 'demo') refocusGame();
 if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
 human[0].rec = null;
 chars = chars || randomPair();
+const duo = Array.isArray(chars[0]) ? chars : null;
+if (duo) chars = [duo[0][0], duo[1][0]];
 setChars(chars[0], chars[1]);
 if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
-M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null;
+M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false;
 M.watchAi = !!isWatch;
 A.meter = B.meter = 0;
 A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
@@ -9128,10 +8987,10 @@ if (M.mode === 'net' && netRoomMode === 'chaos') {
 if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
 if (NET.role === 'host') rollChaosMutation();
 }
-if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
+if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * IMPOSSIBLE_HP); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
 if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
 M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
-M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
+M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? ROUND_TIME_2V2 : ROUND_TIME; M.koWinner = -1; M.flags = {};
 hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
 for (const cu of comboUI) cu.t = 0;
 if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -9142,15 +9001,14 @@ const txt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局` : `第${CN[M.r
 say(txt, 1.1); SFX.gong();
 }
 }
+scRoundStart();
 netEmit({ e: 'round', r: M.round, w: [...M.wins], ch: [A.chIdx, B.chIdx] });
 }
-const ROUND_TIME = 50, OT_TIME = 20, OT_DMG = 2, CARRY_HEAL = 80;
-const PENGLAI_T = 2;   // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
 function timeDeath(winner, text) {
 M.phase = 'ko'; M.t = 0; M.koWinner = winner;
 M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
 if (winner >= 0) {
-const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+const losers = sideFighters(1 - winner);
 const winRef = [A, B][winner];
 for (const l of losers) {
 l.hp = 0; l.state = 'launched'; l.t = 0; l.vy = -380; l.vx = (l.x >= winRef.x ? 1 : -1) * 260; l.y = Math.min(l.y, -1); l.invul = 99; l.move = null; l.skill = null;
@@ -9172,7 +9030,7 @@ if (M.mode !== 'train' && (team0Out || team1Out)) {
 const winner = (team0Out && team1Out)
 ? ((A.hp + (is2v2() ? C.hp : 0)) > (B.hp + (is2v2() ? D.hp : 0)) ? 0 : 1)
 : (team0Out ? 1 : 0);
-const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+const losers = sideFighters(1 - winner);
 for (const loser of losers) {
 loser.hp = 0;
 if (loser.state !== 'launched' && loser.state !== 'knockdown') {
@@ -9198,7 +9056,7 @@ else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
 }
 }
 } else if (M.phase === 'ko') {
-const winners = M.koWinner >= 0 ? (is2v2() ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
+const winners = M.koWinner >= 0 ? sideFighters(M.koWinner) : [];
 for (const w of winners) {
 if (w && M.t > 1.2 && w.hp > 0 && w.onGround() && (w.state === 'idle' || w.state === 'walk')) { w.state = 'victory'; w.t = 0; skinVictoryFX(w); }
 }
@@ -9342,6 +9200,7 @@ const w = M.koWinner;
 if (w >= 0) M.wins[w]++;
 if (M.mode === 'tower') {
 if (w === 0) {
+scFire(A, 'clear');
 M.phase = 'perk';
 paused = true;
 showTowerPerkModal();
@@ -9396,7 +9255,7 @@ const txt = loserSide === 0
 say(txt, 1.4);
 return;
 }
-if ((w >= 0 && M.wins[w] >= 2) || M.round >= 5) {
+if ((w >= 0 && M.wins[w] >= WINS_NEEDED) || M.round >= MAX_ROUNDS) {
 if (M.mode === 'demo') return startMatch('demo');
 M.phase = 'end';
 const finalWinner = w >= 0 ? w : (M.wins[0] >= M.wins[1] ? 0 : 1);
@@ -9405,9 +9264,21 @@ if (!ROLL.on) showEnd(finalWinner);
 return;
 }
 M.round++;
-M.carry = [null, null];   // 活下来的人继承剩余血量 +CARRY_HEAL，倒下的人满血（2v2 每回合都满血重来）
-if (!is2v2()) [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
+M.carry = [null, null];   // 只有联机的两人接力带血：活下来的人继承剩余血量 +CARRY_HEAL，倒下的人换人满血。其余模式每回合双方满血
+if (isDuo()) [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
+const relay = duoRelay(w);
 startRound();
+if (relay) say(relay, 1.4);
+}
+const isDuo = () => !!(M.duo && !is2v2() && ['net', 'replay'].includes(M.mode));
+function duoRelay(w) {
+if (!isDuo() || w < 0) return '';
+const loser = 1 - w, next = M.duo[loser][Math.min(1, M.wins[w])];
+const f = [A, B][loser];
+if (next === undefined || next < 0 || next === f.chIdx) return '';
+f.setChar(next); f.meter = 0;
+if (f.ctrl && typeof f.ctrl.updateTactic === 'function') f.ctrl.updateTactic(f, [A, B][w]);
+return `${loser === localIdx() ? '' : '对方 '}${CHARS[next].name} 接力出战！`;
 }
 function toNeutral(f) {
 f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.thunderGuardT = 0; f.rooted = false;
@@ -9422,6 +9293,7 @@ if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 
 f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
 const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
 f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
+if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
 const jumpBonus = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'jump') ? currentChaosMutation.val : 1;
@@ -9430,12 +9302,14 @@ f.vx = dir ? dir * wk(f) * 1.15 : f.vx * 0.5;
 f.state = 'air'; f.y = Math.min(f.y, -1);
 if (f.jumps >= 2) ring(f.x, f.y - 20, 36, f.look.slash, 0.35);
 dust(f.x, 0, 6); SFX.jump();
+if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
 f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
 f.invul = 0.13; f.dashCD = DODGE_CD;
 if (f.onGround()) dust(f.x - dir * 20, 0, 8);
 SFX.dash();
+if (scOn()) scFire(f, 'dash', foeOf(f));
 }
 function startSpecial(f) {
 endEscape(f);
@@ -9450,6 +9324,7 @@ const ultPitch = f.ch.stat && f.ch.stat.weight > 1.1 ? 0.8 : 1.15;
 SFX.voiceUlt(ultPitch);
 if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
 ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
+if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
 if (M.mode === 'mayhem') {
 shake = Math.max(shake, 32);
 flashA = 0.65;
@@ -9570,9 +9445,6 @@ f.vx = f.face * clamp((Math.abs(foe.x - f.x) - 40) / 0.12, 150, 1300);
 const close = Math.abs(foe.x - f.x) < 70 && Math.sign(foe.x - f.x) === f.face;
 f.vx = (m.lunge || 0) * f.face * (close ? 0.35 : 1);
 }
-if (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('ink_blade') && /^l[1-5]$/.test(f.moveName)) {
-spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy: 0, w: 48, h: 44, life: 0.8, dmg: 18, kb: [160, 0], stun: 0.3, hs: 0.04, pierce: true, noScale: true });
-}
 SFX[m.snd]();
 }
 if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
@@ -9683,6 +9555,7 @@ if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) +
 f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null;
 const cd = S.cd * (balOf(f).cd || 1);
 if (slot === 2) f.skill2CD = cd; else f.skillCD = cd;
+if (scOn()) scFire(f, 'skill', foe, slot || 1);
 f.face = faceDir(f, foe);   // 技能朝角色面向的方向放（电脑没有方向键，自动面向对手）
 const customNm = skinSkillName(f, slot);
 if (customNm && f.hp > 0 && M.phase === 'fight') {
@@ -9732,6 +9605,7 @@ return true;
 return false;
 }
 function parry(def, att, pt) {
+if (scOn()) scFire(def, 'parry', att);
 def.parryT = 0; def.skPh = 2; def.t = 0; def.hitDone = false; def.invul = 0.35; def.face = att.x >= def.x ? 1 : -1;
 att.move = null; att.state = 'hitstun'; att.t = 0; att.stun = 0.55; att.vx = def.face * 120; att.skill = null;
 att.breakCD = Math.max(att.breakCD, 0.4);
@@ -9777,6 +9651,7 @@ const projs = [];
 let projSeq = 0;
 function spawnProj(f, o) {
 if (isClient()) return;   // 联机时由房主生成，加入方从快照同步
+if (scOn()) { o = { src: f.state === 'skill' ? f.skill : f.state === 'special' ? 'ult' : '', ...o }; scProj(f, o); }   // 秘卷：认得出是哪一招放的，也能改它
 if (M.mode === 'mayhem') {
 o = { ...o };
 if (o.dmg) o.dmg = Math.round(o.dmg * 2.5);
@@ -9917,15 +9792,12 @@ if (inAir && noDir) {
 f.breakCD = Math.min(f.ch.escCD || BREAK_CD, 4.5);
 f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted = false; f.stun = 0;
 f.vx = 0; f.vy = 0;
-f.airHover = (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('sky_master')) ? 1.5 : 0.85;
+f.airHover = 0.85;
 f.escInvul = true; f.escT = 0; f.invul = f.airHover;
 f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
 delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;
 comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
-if (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('thunder_dash')) {
-spawnProj(f, { kind: 'bolt', x: f.x - f.face * 60, y: -260, vx: 0, w: 60, h: 520, life: 0.4, delay: 0.05, dmg: 28, kb: [60, -180], stun: 0.35, hs: 0.05, launch: true, noScale: true });
-SFX.thunder();
-}
+if (scOn()) scFire(f, 'esc', foe, true);
 const c = f.look.slash;
 ring(f.x, f.y - 50, 150, c, 0.5); ring(f.x, f.y - 50, 80, '255,255,255', 0.35);
 for (let i = 0; i < 24; i++) {
@@ -9945,10 +9817,7 @@ f.escInvul = true; f.escT = 0; f.invul = 99;
 f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
 delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;   // 松开左键前不会开始蓄力
 comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
-if (M.mode === 'tower' && f.idx === 0 && (M.towerPerks || []).includes('thunder_dash')) {
-spawnProj(f, { kind: 'bolt', x: f.x - f.face * 60, y: -260, vx: 0, w: 60, h: 520, life: 0.4, delay: 0.05, dmg: 28, kb: [60, -180], stun: 0.35, hs: 0.05, launch: true, noScale: true });
-SFX.thunder();
-}
+if (scOn()) scFire(f, 'esc', foe, false);
 const kind = ESC_FX[f.ch.id] || 'wind', c = f.look.slash;
 ring(f.x, f.y - 50, 100, c, 0.35); ring(f.x, f.y - 50, 50, '255,255,255', 0.25);
 for (let i = 0; i < 20; i++) { const a = rand(Math.PI * 0.15, Math.PI * 0.85), v = rand(200, 600); addP({ type: kind === 'smoke' || kind === 'ink' ? 'ink' : 'spark', x: f.x + rand(-20, 20), y: f.y - rand(10, 80), vx: Math.cos(a) * v * (Math.random() < 0.5 ? 1 : -1), vy: Math.sin(a) * v * 0.6, g: kind === 'ink' ? 900 : 0, life: 0.4, max: 0.4, r: rand(2, 4), rgb: kind === 'ink' || kind === 'smoke' ? '20,18,30' : c, w: 1.8, drag: 5 }); }
@@ -10182,6 +10051,7 @@ if (f.needleMark > 0) {
 f.needleMark = Math.max(0, f.needleMark - STEP);
 if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
 }
+if (scOn()) scTick(f, foe);
 physics(f);
 }
 function physics(f) {
@@ -10239,6 +10109,7 @@ else if (Math.sign(f.vx) === side) f.vx = 0;
 }
 }
 function onLand(f) {
+if (scOn()) scFire(f, 'land', foeOf(f), f.vy);
 f.wallBounced = false;
 if (f.airRecover) {
 f.airRecover = false;
@@ -10445,12 +10316,9 @@ const attWeight = (att.ch && att.ch.stat && att.ch.stat.weight) || 1;
 const defWeight = (def.ch && def.ch.stat && def.ch.stat.weight) || 1;
 const massRatio = clamp(attWeight / defWeight, 0.45, 2.5);
 if (blocking) {
-const isJustGuard = !m.isProj && !m.unblockable && (def.blockT !== undefined && def.blockT <= 0.09);
+const isJustGuard = !m.isProj && !m.unblockable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
 if (isJustGuard) {
-if (M.mode === 'tower' && def.idx === 0 && (M.towerPerks || []).includes('parry_refresh')) {
-def.skillCD = 0; def.skill2CD = 0;
-addP({ type: 'text', text: '⚡ 借力打力 · 招式重置', x: def.x, y: def.y - 130, life: 1.0, max: 1.0, rgb: '120,230,255' });
-}
+if (scOn()) scFire(def, 'blk', att, true, m);
 def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
 def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
 def.vx = fx * 80;
@@ -10469,8 +10337,9 @@ hitVisual(ev); netEmit(ev);
 return;
 }
 const chipFrac = (def.ch && def.ch.stat && def.ch.stat.guardChip) || 0.12;
-def.hp = Math.max(1, def.hp - m.dmg * chipFrac);
-let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1))) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+const bm = scOn() ? scBlockMod(att, def, m) : null;   // 秘卷改格挡磨血、削架势
+def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
+let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
 if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'guard_stab') guardLoss *= currentChaosMutation.val;
 if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
 guardLoss = 0;
@@ -10479,8 +10348,10 @@ def.guard = def.maxGuard || 100;
 def.guard = Math.max(0, (def.guard !== undefined ? def.guard : def.maxGuard) - guardLoss);
 }
 def.sinceBlock = 0;
+if (def.guard <= 0 && scOn() && scAny(def, 'brk', att)) { hitVisual(ev); netEmit(ev); return; }   // 秘卷「卸力」：这次不崩
 if (def.guard <= 0) {
 def.guard = 0;
+if (scOn()) scFire(att, 'gb', def);
 def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
 def.vx = fx * 140;
 shake = 18; flashA = 0.4; flashRGB = '255,100,80';
@@ -10499,6 +10370,7 @@ def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(mass
 if (isDefFixed) { def.vy = 0; def.y = 0; }
 if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
 att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
+if (scOn()) scFire(def, 'blk', att, false, m);
 hitVisual(ev); netEmit(ev);
 return;
 }
@@ -10525,22 +10397,7 @@ def.hp = Math.max(def.dummy ? 1 : 0, def.hp - chipDmg); def.sinceHit = 0; def.la
 ev.dd = chipDmg; ev.nc = true; ev.cn = def.comboHits;
 if (def.hp <= 0 && M.phase === 'fight') {
 def.state = 'launched'; def.vy = -520; def.vx = fx * 400; def.y = Math.min(def.y, -1);
-if (is2v2()) {
-const mate = def === A ? C : def === C ? A : def === B ? D : B;
-if (mate && !mate.hidden && mate.hp > 0) {
-def.invul = 99;
-if (!M.flags['buff_' + mate.idx]) {
-M.flags['buff_' + mate.idx] = true;
-mate.meter = 100; mate.buffT = 3.5; mate.hp = Math.min(mate.maxHp, mate.hp + 75); mate.lagHp = Math.max(mate.lagHp, mate.hp);
-addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
-addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
-}
-} else {
-M.phase = 'ko'; M.t = 0; M.koWinner = att.idx % 2; ev.ko = true;
-}
-} else {
-M.phase = 'ko'; M.t = 0; M.koWinner = att.idx; ev.ko = true;
-}
+fighterDown(def, att, ev);
 }
 hitVisual(ev); netEmit(ev); return;
 }
@@ -10609,55 +10466,11 @@ dmg *= 0.38; m = { ...m, launch: false };
 addP({ type: 'text', text: '贴身', x: pt[0], y: pt[1] - 30, life: 0.4, max: 0.4, rgb: '160,170,190' });
 }
 }
-if (M.mode === 'tower') {
-if (att.idx === 0 && (M.towerPerks || []).includes('blood_drink') && (isCounter || def.y < -2)) {
-const leech = Math.round(dmg * 0.15);
-if (leech > 0) {
-att.hp = Math.min(att.maxHp, att.hp + leech);
-att.lagHp = Math.min(att.maxHp, att.lagHp + leech);
-addP({ type: 'text', text: `+${leech} 🩸`, x: att.x, y: att.y - 120, life: 0.8, max: 0.8, rgb: '255,100,100' });
-}
-}
-if (att.idx === 0 && (M.towerPerks || []).includes('air_burst') && (def.y < -2 || def.state === 'launched')) {
-dmg *= 1.35;
-}
-if (att.idx === 0 && (M.towerPerks || []).includes('frost_lock') && !m.isProj) {
-def.frostSlow = 2.5;
-def.frostHits = (def.frostHits || 0) + 1;
-if (def.frostHits >= 3) {
-def.frostHits = 0;
-def.state = 'hitstun'; def.t = 0; def.stun = 0.45; def.rooted = true;
-ring(def.x, def.y - 60, 120, '140,220,255', 0.45);
-SFX.frostHit(1.3);
-addP({ type: 'text', text: '❄️ 极寒冻结', x: def.x, y: def.y - 120, life: 0.9, max: 0.9, rgb: '140,220,255' });
-}
-}
-if (att.idx === 0 && (M.towerPerks || []).includes('bleed_rend') && (isCounter || ev.big || Math.random() < 0.4)) {
-def.bleedTicks = 4;
-def.bleedDmg = Math.max(4, Math.round(dmg * 0.12));
-addP({ type: 'text', text: '🩸 裂伤流血', x: def.x, y: def.y - 95, life: 0.7, max: 0.7, rgb: '255,80,80' });
-}
-if (att.idx === 0 && (M.towerPerks || []).includes('ink_resonance') && !m.isProj) {
-for (let i = 0; i < 4; i++) {
-addP({ type: 'ink', x: def.x + rand(-25, 25), y: def.y - rand(20, 80), vx: rand(-120, 120), vy: rand(-150, 50), g: 600, life: 0.6, max: 0.6, r: rand(3, 6), rgb: '15,15,22' });
-}
-dmg *= 1.15;
-}
-if (att.idx === 0 && (M.towerPerks || []).includes('storm_wrath') && !m.isProj) {
-SFX.thunderHit(1.1);
-m = { ...m, kb: [m.kb[0] * 1.35, m.kb[1] * 1.25] };
-ring(pt[0], pt[1], 110, '255,235,110', 0.35);
-addP({ type: 'text', text: '⚡ 怒雷破势', x: pt[0], y: pt[1] - 40, life: 0.6, max: 0.6, rgb: '255,235,110' });
-}
-if (def.idx === 0 && def.hp - dmg <= 0 && (M.towerPerks || []).includes('golden_bell') && def.goldenBellReady !== false) {
-def.hp = 1; def.invul = 1.5; def.goldenBellReady = false;
-ring(def.x, def.y - 60, 200, '255,215,0', 0.6);
-addP({ type: 'text', text: '🔔 金钟护体 · 绝处逢生！', x: def.x, y: def.y - 140, life: 1.4, max: 1.4, rgb: '255,215,0' });
-SFX.parry();
-ev.dd = 0;
-hitVisual(ev); netEmit(ev);
-return;
-}
+let scPre = null;
+if (scOn()) {
+scPre = scDamage(att, def, m, ev, dmg, isCounter);
+if (scPre.cancel) { if (!scPre.dodged) { ev.dd = 0; hitVisual(ev); netEmit(ev); } return; }
+dmg = scPre.dmg; m = scPre.m;
 }
 {
 if (m.exact) dmg = m.dmg;
@@ -10672,6 +10485,7 @@ addP({ type: 'text', text: `+${leech} 🩸`, x: att.x, y: att.y - 120, life: 0.7
 }
 }
 if (def.dummy) def.hp = Math.max(1, def.hp);
+if (scPre) scAfterHit(att, def, m, ev, dmg, isCounter, scPre);
 att.hitConfirmed = true;
 const chaosMeterMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'meter_gain') ? currentChaosMutation.val : 1;
 if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
@@ -10718,26 +10532,25 @@ if (att.y < -2 && att.state === 'attack') att.vy = Math.min(att.vy, -170);
 ev.cn = def.comboHits; ev.dd = dmg;
 if (def.hp <= 0 && M.phase === 'fight') {
 def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.y = Math.min(def.y, -1);
+fighterDown(def, att, ev);
+}
+hitVisual(ev); netEmit(ev);
+}
+function fighterDown(def, att, ev) {
 if (is2v2()) {
 const mate = def === A ? C : def === C ? A : def === B ? D : B;
 if (mate && !mate.hidden && mate.hp > 0) {
 def.invul = 99;
 if (!M.flags['buff_' + mate.idx]) {
 M.flags['buff_' + mate.idx] = true;
-mate.meter = 100; mate.buffT = 3.5; mate.hp = Math.min(mate.maxHp, mate.hp + 75); mate.lagHp = Math.max(mate.lagHp, mate.hp);
+mate.meter = LAST_STAND_METER; mate.buffT = LAST_STAND_T; mate.hp = Math.min(mate.maxHp, mate.hp + LAST_STAND_HEAL); mate.lagHp = Math.max(mate.lagHp, mate.hp);
 addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
 addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
 }
-} else {
-M.phase = 'ko'; M.t = 0; M.koWinner = att.idx % 2;
-ev.ko = true;
-}
-} else {
-M.phase = 'ko'; M.t = 0; M.koWinner = att.idx;
-ev.ko = true;
+return;
 }
 }
-hitVisual(ev); netEmit(ev);
+M.phase = 'ko'; M.t = 0; M.koWinner = is2v2() ? att.idx % 2 : att.idx; ev.ko = true;
 }
 function hitVisual(ev, quiet) {
 const att = fighterByIdx(ev.a), def = fighterByIdx(ev.d);
@@ -11191,7 +11004,6 @@ try { if (AC) AC.resume(); } catch (e) {}
 }
 $id('extBack').addEventListener('click', closeQfx);
 const RP_KEY = 'renying-replays', RP_MAX = 10;
-const RP_LV = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', adaptive: '宿敌' };
 function ctrlKey(c) {
 const b = c.buf;
 let s = inBits(c.held) + ':' + c.atkT;
@@ -11246,7 +11058,7 @@ return `${nm(0)} 对 ${nm(1)}`;
 }
 function rpSub(m) {
 const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-const mode = m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${RP_LV[m.level] || m.level}` : '本地双人';
+const mode = m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
 const win = m.w >= 0 ? `${(CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
 return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }
@@ -14862,12 +14674,14 @@ const pn = M.mode === 'replay' ? REPLAY.names[i] || '' : NET.names[i === 0 ? 'ho
 ctx.font = `${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.6)';
 ctx.fillText(pn, i === 0 ? x0 + cw + 10 : x0 + barW - cw - 10, top + bh + 8 + bh * 0.6);
 }
-if (M.mode === 'tag3' && M.teams && M.teams[i]) {
-const slotTitles = ['先', '中', '大'];
-for (let r = 0; r < 3; r++) {
+const roster = M.mode === 'tag3' && M.teams && M.teams[i] ? { titles: ['先', '中', '大'], out: M.teamIdx[i] }
+: isDuo() ? { titles: ['首', '接'], out: Math.min(2, M.wins[1 - i]) } : null;
+if (roster) {
+const slotTitles = roster.titles;
+for (let r = 0; r < slotTitles.length; r++) {
 const px = i === 0 ? cx - gap - 14 - r * 26 : cx + gap + 14 + r * 26, py = top + bh + 18;
-const isDead = r < M.teamIdx[i];
-const isActive = r === M.teamIdx[i];
+const isDead = r < roster.out;
+const isActive = r === roster.out;
 ctx.save();
 ctx.translate(px, py);
 if (isActive) {
@@ -15168,7 +14982,6 @@ return o;
 }
 function withCtx(c2, fn) { const main = ctx; ctx = c2; try { fn(); } finally { ctx = main; } }
 const cine = { t: -1, owner: null };
-const CINE_LEN = 1.3;
 function cineEnv() { if (cine.t < 0) return 0; return clamp(Math.min(cine.t / 0.15, (CINE_LEN - cine.t) / 0.3), 0, 1); }
 function cineSpeed() {
 const t = cine.t;
@@ -15193,15 +15006,7 @@ circle([f.x, f.y], glow ? 5 : 1.8);
 }
 }
 function drawEmissive(sc, sx, sy) {
-const mx = W * 0.68 - (cam.x - STAGE_W / 2) * 0.04 * sc, my = H * 0.26, mr = H * 0.11;
-moonGlow(mx, my, mr);
-ctx.fillStyle = '#fff';
-for (let i = 0; i < 90; i += 3) {
-const x = ((hash(i) * W * 1.4 - cam.x * 0.02 * sc) % W + W) % W, y = hash(i + 50) * H * 0.5;
-ctx.globalAlpha = 0.5 + 0.5 * Math.sin(clock * (1 + hash(i + 9) * 2) + i);
-ctx.fillRect(x - 1.5, y - 1.5, 4, 4);
-}
-ctx.globalAlpha = 1;
+withBloomScreen(sc);   // 月亮和星星
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
 for (const lx of [260, STAGE_W / 2, STAGE_W - 260]) { ctx.fillStyle = 'rgba(255,170,90,0.5)'; circle([lx, -72], 13); }
@@ -15661,7 +15466,7 @@ if (active === 'tag3') renderTag3();
 else if (active === 'tower') renderTower();
 else if (active === 'chaos') renderChaos();
 else if (active === 'stage') renderStages();
-else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
+else if (active === 'train') renderDummyFeatures();
 else if (active === 'mayhem') renderMayhem();
 else if (active === 'watch2v2') renderSingle2v2();
 else if (active === 'cpu') updateAIBrief();
@@ -15678,7 +15483,7 @@ if (name === 'tutorial') { startTutorial(); return null; }   // 开的是教学�
 if (name === 'tasks') renderTasks();
 if (name === 'replays') renderReplays();
 if (name === 'netp') renderRankLine();
-if (name === 'single') { renderTrainPick(); renderStages(); }
+if (name === 'single') renderStages();
 if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
 if (name === 'codex') openCodex();
 if (name === 'community') openCommunity();
@@ -15708,8 +15513,14 @@ if (menuLock || menuHeroId < 0) return;
 initAudio(); heroPickShow(false); heroLvShow(false);
 if (lv) { pickLevel = lv; for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x.dataset.lv === lv); }
 paused = false;
-bpStart('cpu');
-if (menuHeroId >= 0) { bpSel = menuHeroId; renderBP(); }
+const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);
+const foe = foes[Math.random() * foes.length | 0];
+netDropWaiting(); chatClear(); BP = null; bpMode = 'cpu'; bpCustomOpts = null;
+showPop(null); showScreen(null);
+MSTAT.maxcombo = 0; MSTAT.ults = 0;
+startMatch('cpu', pickLevel, [menuHeroId, foe]);
+M.quick = true;   // 「再来一局」也不进点将台
+applySkins();
 }
 function heroPickShow(on) {
 const el = $id('heroPick'); if (!el) return;
@@ -16142,121 +15953,121 @@ weakWhy: '【怕 流云、月华】流云扶摇龙卷将高空飞行强行打落
 };
 const HERO_HIT_DETAILS = {
 yuxiao: {
-light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '95 (5段)', cd: '', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
-charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '35.3 / 56.8', cd: '', desc: '旋身横扫破开防守，将对手打倒在地。' },
-air: { name: '高音穿云斩', badge: '挑空', badgeCls: 'badge-buff', dmg: '17.6 / 25.5', cd: '', desc: '跃起凌空横箫劈点，二段把人送上云霄。' },
-skill: { name: '清音破空', badge: '音波穿透', badgeCls: 'badge-stun', dmg: '22~82', cd: '3.2s', desc: '将身上的音律一次吹尽，三律齐鸣时音波贯穿挑空并迟缓对手。' },
-ranged: { name: '回音壁', badge: '弹回暗器', badgeCls: 'badge-break', dmg: '18~42', cd: '6s', desc: '筑起回音屏障推开近敌，弹回期间飞来的暗器并获得音律。' },
-ult: { name: '广陵散', badge: '曲终绝响', badgeCls: 'badge-stun', dmg: '144~189', cd: '气满', desc: '六道音刃轮番穿身，曲终绝响从脚下炸开，音律回满。' },
-esc: { name: '休止符', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '95 (5段)', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
+charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '35.3 / 56.8', desc: '旋身横扫破开防守，将对手打倒在地。' },
+air: { name: '高音穿云斩', badge: '挑空', badgeCls: 'badge-buff', dmg: '17.6 / 25.5', desc: '跃起凌空横箫劈点，二段把人送上云霄。' },
+skill: { name: '清音破空', badge: '音波穿透', badgeCls: 'badge-stun', dmg: '22~82', desc: '将身上的音律一次吹尽，三律齐鸣时音波贯穿挑空并迟缓对手。' },
+ranged: { name: '回音壁', badge: '弹回暗器', badgeCls: 'badge-break', dmg: '18~42', desc: '筑起回音屏障推开近敌，弹回期间飞来的暗器并获得音律。' },
+ult: { name: '广陵散', badge: '曲终绝响', badgeCls: 'badge-stun', dmg: '144~189', desc: '六道音刃轮番穿身，曲终绝响从脚下炸开，音律回满。' },
+esc: { name: '休止符', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
 },
 zuixian: {
-light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '东倒西歪的五连拳，醉意越高越痛。' },
-charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '身如醉钟横撞，正面撞碎对手防御。' },
-air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
-skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', cd: '16s', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割，霸体可硬抗。' },
-ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0 (+80血)', cd: '16s', desc: '半壶酒掷向对手，自身回80血晕0.7秒，对手回50血晕1.5秒并清空酒意。' },
-ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', cd: '气满', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
-esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '东倒西歪的五连拳，醉意越高越痛。' },
+charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '36 / 58', desc: '身如醉钟横撞，正面撞碎对手防御。' },
+air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
+skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割，霸体可硬抗。' },
+ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0 (+80血)', desc: '半壶酒掷向对手，自身回80血晕0.7秒，对手回50血晕1.5秒并清空酒意。' },
+ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
+esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
 },
 gouchen: {
-light: { name: '链锤连打', badge: '长臂展', badgeCls: 'badge-buff', dmg: '94.1 (5段)', cd: '', desc: '甩着链锤抡打五连击，攻击距离比常人长一截。' },
-charge: { name: '流星坠地', badge: '破防砸倒', badgeCls: 'badge-break', dmg: '34.9 / 56.3', cd: '', desc: '铁锤绷直重重砸落，崩裂地面砸倒对手。' },
-air: { name: '飞轮落锤', badge: '挑空下砸', badgeCls: 'badge-buff', dmg: '17.5 / 25.2', cd: '', desc: '空中抡圆链锤扫打，二段势大力沉压向地面。' },
-skill: { name: '飞锤拉拽', badge: '拽至身前', badgeCls: 'badge-stun', dmg: '18', cd: '5s', desc: '甩出链锤将远处的对手一把拽到跟前，附加震魄增伤。' },
-ranged: { name: '旋锤风暴', badge: '砸碎暗器', badgeCls: 'badge-buff', dmg: '58 (5圈)', cd: '6s', desc: '头顶抡圆飞转砸碎飞镖暗器，第五圈脱手一甩把人击飞。' },
-ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', cd: '气满', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
-esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+light: { name: '链锤连打', badge: '长臂展', badgeCls: 'badge-buff', dmg: '94.1 (5段)', desc: '甩着链锤抡打五连击，攻击距离比常人长一截。' },
+charge: { name: '流星坠地', badge: '破防砸倒', badgeCls: 'badge-break', dmg: '34.9 / 56.3', desc: '铁锤绷直重重砸落，崩裂地面砸倒对手。' },
+air: { name: '飞轮落锤', badge: '挑空下砸', badgeCls: 'badge-buff', dmg: '17.5 / 25.2', desc: '空中抡圆链锤扫打，二段势大力沉压向地面。' },
+skill: { name: '飞锤拉拽', badge: '拽至身前', badgeCls: 'badge-stun', dmg: '18', desc: '甩出链锤将远处的对手一把拽到跟前，附加震魄增伤。' },
+ranged: { name: '旋锤风暴', badge: '砸碎暗器', badgeCls: 'badge-buff', dmg: '58 (5圈)', desc: '头顶抡圆飞转砸碎飞镖暗器，第五圈脱手一甩把人击飞。' },
+ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
+esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
 },
 lingque: {
-light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '98 (5段)', cd: '', desc: '子母梭双持极速穿刺连击，出手迅疾如惊雀掠空。' },
-charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '38.5 / 62', cd: '', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
-air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '19 / 28', cd: '', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
-skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 4s', badgeCls: 'badge-stun', dmg: '38', cd: '6s', desc: '掷出牵丝子母梭贯穿前方，命中施加4秒雀芒印记。' },
-ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '42 (+52爆伤)', cd: '7s', desc: '踏悬丝穿刺突进；穿透带印记者引爆真气并瞬间刷新冷却！' },
-ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '188 (8段)', cd: '气满', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
-esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
+light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '98 (5段)', desc: '子母梭双持极速穿刺连击，出手迅疾如惊雀掠空。' },
+charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '38.5 / 62', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
+air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '19 / 28', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
+skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 4s', badgeCls: 'badge-stun', dmg: '38', desc: '掷出牵丝子母梭贯穿前方，命中施加4秒雀芒印记。' },
+ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '42 (+52爆伤)', desc: '踏悬丝穿刺突进；穿透带印记者引爆真气并瞬间刷新冷却！' },
+ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '188 (8段)', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
+esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
 },
 qingfeng: {
-light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '100.9 (5段)', cd: '', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
-charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '37.4 / 60.3', cd: '', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
-air: { name: '凌空挑斩·下砸', badge: '🌪️ 挑空击倒', badgeCls: 'badge-buff', dmg: '18.7 / 27', cd: '', desc: '空中横斩滞空，二段重坠下劈强压地面。' },
-skill: { name: '居合·疾风斩', badge: '⚡ 斩穴定身 0.65s', badgeCls: 'badge-stun', dmg: '55', cd: '5s', desc: '身随剑走瞬间穿身，施加穴道强定身并刷新剑气与冲刺。' },
-ranged: { name: '弧月·剑气', badge: '🌪️ 掀天挑空', badgeCls: 'badge-buff', dmg: '52', cd: '5s', desc: '半屏极速弧月剑刃，破尽暗器并挑飞空中。' },
-ult: { name: '绝技·残月', badge: '⚡ 剑意通明', badgeCls: 'badge-stun', dmg: '169 (6连)', cd: '气满', desc: '居合连影绞杀，斩落重置全技能与绝技气量回涌。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '100.9 (5段)', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
+charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '37.4 / 60.3', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
+air: { name: '凌空挑斩·下砸', badge: '🌪️ 挑空击倒', badgeCls: 'badge-buff', dmg: '18.7 / 27', desc: '空中横斩滞空，二段重坠下劈强压地面。' },
+skill: { name: '居合·疾风斩', badge: '⚡ 斩穴定身 0.65s', badgeCls: 'badge-stun', dmg: '55', desc: '身随剑走瞬间穿身，施加穴道强定身并刷新剑气与冲刺。' },
+ranged: { name: '弧月·剑气', badge: '🌪️ 掀天挑空', badgeCls: 'badge-buff', dmg: '52', desc: '半屏极速弧月剑刃，破尽暗器并挑飞空中。' },
+ult: { name: '绝技·残月', badge: '⚡ 剑意通明', badgeCls: 'badge-stun', dmg: '169 (6连)', desc: '居合连影绞杀，斩落重置全技能与绝技气量回涌。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
 },
 tieshan: {
-light: { name: '重剑沉猛五斩', badge: '💥 霸体压制', badgeCls: 'badge-break', dmg: '93.1 (5段)', cd: '', desc: '玄铁巨剑刀刀沉重带金属火星，体量压迫。' },
-charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '34.6 / 55.7', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
-air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '17.3 / 25', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
-skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.45s', badgeCls: 'badge-stun', dmg: '45 + 40', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
-ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '56', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
-ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '185 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '玄铁重甲强解受控，稳健退避重整架势。' }
+light: { name: '重剑沉猛五斩', badge: '💥 霸体压制', badgeCls: 'badge-break', dmg: '93.1 (5段)', desc: '玄铁巨剑刀刀沉重带金属火星，体量压迫。' },
+charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '34.6 / 55.7', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
+air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '17.3 / 25', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
+skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.45s', badgeCls: 'badge-stun', dmg: '45 + 40', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
+ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '56', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
+ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '185 (直击)', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '玄铁重甲强解受控，稳健退避重整架势。' }
 },
 feiying: {
-light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '92 (5段)', cd: '', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
-charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '40.3 / 65', cd: '', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
-air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '20.2 / 29.1', cd: '', desc: '空中回旋双刺，下落直刺钉向地面。' },
-skill: { name: '暗影·影遁', badge: '🌑 背后绞杀', badgeCls: 'badge-stun', dmg: '45', cd: '11s', desc: '结印化烟，0.15 秒掠到对手背后十字绞杀（不让对手僵直），之后下一击增伤50%。' },
-ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '25×4', cd: '5s', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
-ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '179 (9连)', cd: '气满', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
+light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '92 (5段)', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
+charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '40.3 / 65', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
+air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '20.2 / 29.1', desc: '空中回旋双刺，下落直刺钉向地面。' },
+skill: { name: '暗影·影遁', badge: '🌑 背后绞杀', badgeCls: 'badge-stun', dmg: '45', desc: '结印化烟，0.15 秒掠到对手背后十字绞杀（不让对手僵直），之后下一击增伤50%。' },
+ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '25×4', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
+ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '179 (9连)', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
 },
 liuyun: {
-light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '114.5 (5段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
-charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '42.5 / 68.4', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
-air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '21.2 / 30.7', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
-skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '28×2', cd: '3.0s', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
-ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '8×5', cd: '4s', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
-ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '16×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
+light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '114.5 (5段)', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
+charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '42.5 / 68.4', desc: '引动周身气流向前爆破，推开正面一切防备。' },
+air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '21.2 / 30.7', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
+skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '28×2', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
+ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '8×5', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
+ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '16×16', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
 },
 leiming: {
-light: { name: '狂雷六连轰拳', badge: '⚡ 疾电连打', badgeCls: 'badge-buff', dmg: '132 (6段)', cd: '', desc: '六记重拳连环轰击，拳拳带雷，末拳雷暴轰天。' },
-charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '33.8 / 54.5', cd: '', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
-air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '16.9 / 24.4', cd: '', desc: '空中重拳下砸，接连一记沉雷踏击。' },
-skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.38s', badgeCls: 'badge-stun', dmg: '40', cd: '5s', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.38秒并重置雷铠。' },
-ranged: { name: '金刚·雷铠', badge: '⚡ 引雷反震 50', badgeCls: 'badge-stun', dmg: '50', cd: '5.5s', desc: '架起金刚雷铠0.55秒，受击消解攻击并引落九天玄雷反制敌首。' },
-ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '48×3', cd: '气满', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 金刚解控', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '金刚怒吼震脱受制状态，后退步稳如磐石。' }
+light: { name: '狂雷六连轰拳', badge: '⚡ 疾电连打', badgeCls: 'badge-buff', dmg: '132 (6段)', desc: '六记重拳连环轰击，拳拳带雷，末拳雷暴轰天。' },
+charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '33.8 / 54.5', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
+air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '16.9 / 24.4', desc: '空中重拳下砸，接连一记沉雷踏击。' },
+skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.38s', badgeCls: 'badge-stun', dmg: '40', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.38秒并重置雷铠。' },
+ranged: { name: '金刚·雷铠', badge: '⚡ 引雷反震 50', badgeCls: 'badge-stun', dmg: '50', desc: '架起金刚雷铠0.55秒，受击消解攻击并引落九天玄雷反制敌首。' },
+ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '48×3', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 金刚解控', badgeCls: 'badge-break', dmg: '—', desc: '金刚怒吼震脱受制状态，后退步稳如磐石。' }
 },
 lingshuang: {
-light: { name: '银枪连刺·抽枪', badge: '⚡ 枪芒连刺', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '长枪一线连环突刺，枪尖命中伤害提升25%。' },
-charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
-air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '空中点枪突刺，下压枪尾横扫落地。' },
-skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.48s', badgeCls: 'badge-stun', dmg: '60', cd: '6s', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
-ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '15×7+48', cd: '6s', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
-ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '140–185', cd: '气满', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
+light: { name: '银枪连刺·抽枪', badge: '⚡ 枪芒连刺', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '长枪一线连环突刺，枪尖命中伤害提升25%。' },
+charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '36 / 58', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
+air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '空中点枪突刺，下压枪尾横扫落地。' },
+skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.48s', badgeCls: 'badge-stun', dmg: '60', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
+ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '15×7+48', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
+ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '140–185', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
 },
 moyu: {
-light: { name: '挥毫泼墨五式', badge: '🎨 浓墨溅射', badgeCls: 'badge-buff', dmg: '86 (5段)', cd: '', desc: '狼毫大笔挥洒浓墨，附带远程墨滴额外伤害（每团24）。' },
-charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '38.9 / 62.6', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
-air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '19.4 / 28.1', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
-skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 0.48s', badgeCls: 'badge-stun', dmg: '35', cd: '5.2s', desc: '铺开115px深墨池，踏入者定身0.48秒并迟缓2.8秒；二段Q引爆25伤害。' },
-ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', cd: '2.5s', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
-ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '80~280', cd: '气满', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
+light: { name: '挥毫泼墨五式', badge: '🎨 浓墨溅射', badgeCls: 'badge-buff', dmg: '86 (5段)', desc: '狼毫大笔挥洒浓墨，附带远程墨滴额外伤害（每团24）。' },
+charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '38.9 / 62.6', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
+air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '19.4 / 28.1', desc: '空中挥墨阻击，落地重笔点化画境。' },
+skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 0.48s', badgeCls: 'badge-stun', dmg: '35', desc: '铺开115px深墨池，踏入者定身0.48秒并迟缓2.8秒；二段Q引爆25伤害。' },
+ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
+ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '80~280', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
 },
 yuehua: {
-light: { name: '双月流水旋舞', badge: '🌙 月华流水', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '双月短刃回旋如流水，舞姿飘逸清冷。' },
-charge: { name: '合璧明月蓄斩', badge: '💥 双刀破防', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '双刃化作满月合璧切落，斩断对手招架。' },
-air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
-skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '95', cd: '7s', desc: '月镜架招反斩，触发太阴绝罚95伤害、1.05秒超长硬直与禁身。' },
-ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '28 / 38', cd: '3.5s', desc: '双月轮飞出折返，去程28轻削，返程38背袭破防击飞。' },
-ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +60HP', badgeCls: 'badge-buff', dmg: '75 (+60血)', cd: '气满', desc: '月华凝露恢复60生命并震退近敌75伤害，月魄护体并重置月镜月轮。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
+light: { name: '双月流水旋舞', badge: '🌙 月华流水', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '双月短刃回旋如流水，舞姿飘逸清冷。' },
+charge: { name: '合璧明月蓄斩', badge: '💥 双刀破防', badgeCls: 'badge-break', dmg: '36 / 58', desc: '双刃化作满月合璧切落，斩断对手招架。' },
+air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
+skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '95', desc: '月镜架招反斩，触发太阴绝罚95伤害、1.05秒超长硬直与禁身。' },
+ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '28 / 38', desc: '双月轮飞出折返，去程28轻削，返程38背袭破防击飞。' },
+ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +60HP', badgeCls: 'badge-buff', dmg: '75 (+60血)', desc: '月华凝露恢复60生命并震退近敌75伤害，月魄护体并重置月镜月轮。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
 },
 yanling: {
-light: { name: '飞羽短刃疾斩', badge: '🪶 振羽连打', badgeCls: 'badge-buff', dmg: '100.9 (5段)', cd: '', desc: '羽刃翩跹迅捷凌厉，灵动逼人。' },
-charge: { name: '破云飞翔重扑', badge: '💥 破云重扑', badgeCls: 'badge-break', dmg: '37.4 / 60.3', cd: '', desc: '双翼振起猛力前扑，切断对手阵势。' },
-air: { name: '苍穹展翼·掠击', badge: '🪶 空中掠阵', badgeCls: 'badge-buff', dmg: '18.7 / 27', cd: '', desc: '空中长达1.2秒自由翱翔，自上而下俯瞰掠击。' },
-skill: { name: '鹰扬·俯冲', badge: '⚡ 鹰击钉地 0.40s', badgeCls: 'badge-stun', dmg: '46', cd: '4.5s', desc: '收翼斜下猎杀钉地，空中击中可刷新且再次冲锋。' },
-ranged: { name: '千机·翎羽', badge: '🪶 极速穿透', badgeCls: 'badge-buff', dmg: '22×3', cd: '2.5s', desc: '振翅激射三道穿透羽刃，贯穿全屏牵制打断。' },
-ult: { name: '天怒·万羽', badge: '🪶 凌霄破虚 14枚', badgeCls: 'badge-buff', dmg: '14×14', cd: '气满', desc: '九霄万羽暴雨倾泻，重置技能并回满飞行耐力。' },
-esc: { name: '右键·腾空闪', badge: '🛡️ 振翅凌云', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '猛力振翅脱离受击，立刻升空开启空中制空权。' }
+light: { name: '飞羽短刃疾斩', badge: '🪶 振羽连打', badgeCls: 'badge-buff', dmg: '100.9 (5段)', desc: '羽刃翩跹迅捷凌厉，灵动逼人。' },
+charge: { name: '破云飞翔重扑', badge: '💥 破云重扑', badgeCls: 'badge-break', dmg: '37.4 / 60.3', desc: '双翼振起猛力前扑，切断对手阵势。' },
+air: { name: '苍穹展翼·掠击', badge: '🪶 空中掠阵', badgeCls: 'badge-buff', dmg: '18.7 / 27', desc: '空中长达1.2秒自由翱翔，自上而下俯瞰掠击。' },
+skill: { name: '鹰扬·俯冲', badge: '⚡ 鹰击钉地 0.40s', badgeCls: 'badge-stun', dmg: '46', desc: '收翼斜下猎杀钉地，空中击中可刷新且再次冲锋。' },
+ranged: { name: '千机·翎羽', badge: '🪶 极速穿透', badgeCls: 'badge-buff', dmg: '22×3', desc: '振翅激射三道穿透羽刃，贯穿全屏牵制打断。' },
+ult: { name: '天怒·万羽', badge: '🪶 凌霄破虚 14枚', badgeCls: 'badge-buff', dmg: '14×14', desc: '九霄万羽暴雨倾泻，重置技能并回满飞行耐力。' },
+esc: { name: '右键·腾空闪', badge: '🛡️ 振翅凌云', badgeCls: 'badge-break', dmg: '—', desc: '猛力振翅脱离受击，立刻升空开启空中制空权。' }
 }
 };
 const HERO_MOVE_SEQS = {
@@ -17643,6 +17454,11 @@ weekly: []
 Object.assign(PROF, p, { guest: false });
 }
 PROF.loaded = true;
+if (!PROF.guest && p.stageStars && typeof p.stageStars === 'object') {   // 关卡星跟着账号走：取云存档和本机（退出时已清空）两边较高的
+for (const [k, v] of Object.entries(p.stageStars)) STAGE_STARS[k] = Math.max(STAGE_STARS[k] || 0, Math.floor(+v || 0));
+PROF.stageStars = STAGE_STARS;
+try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {}
+}
 { const fl = loadFlags();   // 一次性奖励的领取记录不进云存档，按账号记在本机，刷新后还在
 if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
 if (fl.tutorial && !PROF.guest) PROF.tutorial = 1; }
@@ -17662,7 +17478,6 @@ applySkins();
 if (typeof renderTower === 'function') renderTower();
 if (typeof renderChaos === 'function') renderChaos();
 if (typeof renderTag3 === 'function') renderTag3();
-if (typeof renderTrainPick === 'function') renderTrainPick();
 }
 for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
 if ($id('tasks').classList.contains('on')) renderTasks();
@@ -17848,7 +17663,6 @@ renderAcc();
 if (typeof BP !== 'undefined' && BP) renderBP();
 if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
 if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
-if (typeof renderTrainPick === 'function') renderTrainPick();
 return;
 }
 const DEV_SUPER_CODE = 'VG8KS7K8PYP5R36P';
@@ -17893,12 +17707,12 @@ let grantedArm = null;
 if (typeof window.grantDevArmory === 'function') {
 grantedArm = window.grantDevArmory(newInv, devCases);
 }
-const arm = grantedArm || ((PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank());
-arm.inv = newInv;
-arm.nid = nid;
-arm.via = Array.from(new Set([...(arm.via || []), ...allSkins.filter(k => C.isItem(k))]));
-arm.cases = Object.assign(arm.cases || {}, devCases);
+if (!grantedArm) {   // 没有武库网页（不该发生）才走存档；grantDevArmory 已经连校验一起放好了，不要再写回去（写回去校验不过会记作弊）
+const arm = C.normalize(C.blank(), { now: Date.now(), uid: curU });
+arm.inv = newInv; arm.nid = nid; arm.cases = Object.assign(arm.cases || {}, devCases);
+arm.via = Array.from(new Set(allSkins.filter(k => C.isItem(k))));
 PROF.armory = arm;
+}
 }
 const sid = typeof rkSeason === 'function' ? rkSeason().id : 'S1';
 const devRk = {
@@ -17938,7 +17752,8 @@ if (typeof renderHome === 'function') renderHome();
 return;
 }
 const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
-if (up === ZODIAC_SECRET_CODE) {
+const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
+if (up === ZODIAC_SECRET_CODE && !cloudUser) {
 const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
 if (redeemed.includes(up)) {
 toast('该兑换码已使用过了');
@@ -17963,24 +17778,7 @@ zodSkins.push(
 redeemed.push(up);
 saveFlag('codes', redeemed);
 PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
-if (typeof ArmoryCore !== 'undefined') {
-const C = ArmoryCore;
-const arm = (PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank();
-let nid = arm.nid || 1;
-const inv = arm.inv || [];
-for (const k of zodSkins) {
-if (!inv.some(x => x.k === k)) {
-inv.push({ i: nid++, k, st: -1, t: Date.now() });
-}
-}
-arm.inv = inv;
-arm.nid = nid;
-arm.via = Array.from(new Set([...(arm.via || []), ...zodSkins]));
-PROF.armory = arm;
-if (typeof window.grantDevArmory === 'function') {
-window.grantDevArmory(arm.inv, arm.cases);
-}
-}
+if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');   // 本机账号的武库也放一件进去
 if (window.CloudSave) CloudSave.saveProfile(PROF, true);
 applyProfile(PROF);
 SFX.chargeFull();
@@ -18387,7 +18185,7 @@ const TUT_STEPS = [
 function startTutorial() {
 try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
 trainChar = 0; dummyMode = 'stand';
-startTraining();
+startTraining('dummy');
 B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
 TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
 tutNext();
@@ -18529,6 +18327,7 @@ o.tgt = f.target ? f.target.idx : -1;   // 2v2 锁定的目标会影响打谁，
 return o;
 }
 function resF(f, o) {
+if (o.chIdx !== undefined && o.chIdx !== f.chIdx) f.setChar(o.chIdx);   // 回滚跨过了换人：先换回当时的角色
 for (const k in f) if (!F_SKIP.has(k) && !(k in o)) delete f[k];
 for (const k in o) { if (k === 'hasMove' || k === 'tgt') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
 f.move = o.hasMove && f.moveName ? f.moves[f.moveName] : null;
@@ -18566,11 +18365,12 @@ if (a === 'skill2' && c.held.atk) { c.atkT = clock + 1e6; delete c.buf.light; }
 c.press(a);
 }
 }
-function rollStart(ch, seed) {
+function rollStart(ch, seed, duo) {
 refocusGame();
 setChars(ch[0], ch[1]);
 if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
 setupNetMatch();
+if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 2), duo[1].slice(0, 2)];   // 各选 2 人，输一回合换下一人
 ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
 human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
 for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
@@ -18922,154 +18722,46 @@ B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木
 applySkins();
 A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
 }
-function startTraining(targetMode = trainTargetMode, isWatch = false) {
+function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
+if (targetMode === 'watch2v2') return bpStart('2v2', { subMode: 'pc_cc', level: 'god', isWatch });
+if (targetMode === 'cpu') { pickLevel = 'god'; return bpStart(isWatch ? 'cpuWatch' : 'cpu'); }
+if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
+bpStart('train', { targetMode: 'dummy', isWatch });
+}
+function startTraining(targetMode = 'dummy', isWatch = false) {
+if (targetMode !== 'dummy') return startTrainTarget(targetMode, isWatch);
 if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
 trainChar = 0;
 }
 initAudio(); paused = false;
 M.watchAi = !!isWatch;
-const oppChar = Math.floor(Math.random() * CHARS.length);
-if (targetMode === 'cpu') {
-pickLevel = 'god';
-showScreen(null);
-startMatch('cpu', 'god', [trainChar, oppChar], isWatch);
-return;
-}
-if (targetMode === 'chaos') {
-startChaos(trainChar, oppChar, 'god', isWatch);
-showScreen(null);
-return;
-}
-if (targetMode === 'tag3') {
-const pTeam = [trainChar, (trainChar + 1) % CHARS.length, (trainChar + 2) % CHARS.length];
-const eTeam = pickEnemyTag3Team(pTeam);
-startTag3Match(pTeam, eTeam, 'god', isWatch);
-showScreen(null);
-return;
-}
-if (targetMode === 'mayhem') {
-startMayhem(trainChar, oppChar, 'god', isWatch);
-showScreen(null);
-return;
-}
-if (targetMode === 'watch2v2') {
-startWatch2v2Draft();
-return;
-}
 startDummyTraining();
 if (isWatch) {
 A.ctrl = new AICtrl('god');
 say('木人试剑 · AI 演示连招', 1.4);
 }
 }
-function renderTrainPick() {
-if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
-trainChar = 0;
-}
-const av = availList();
-const el = $id('trPick');
-if (!el) return;
-el.innerHTML = CHARS.map((c, i) => {
-const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-const skinTag = sk ? `<small style="font-size:12px;margin-left:4px;color:rgba(239,232,216,0.7)">·${sk.name}</small>` : '';
-const trialTag = av.includes(i) ? '' : '<small style="font-size:12px;margin-left:4px;color:var(--dim)">试用</small>';
-return `<button type="button" data-i="${i}" class="${i === trainChar ? 'sel' : ''}" style="color:rgb(${look.slash})">${c.name}${skinTag}${trialTag}</button>`;
-}).join('');
-}
-const trPickEl = $id('trPick');
-if (trPickEl) {
-trPickEl.addEventListener('click', e => {
-const b = e.target.closest('button');
-if (!b || b.dataset.i === undefined) return;
-const idx = parseInt(b.dataset.i, 10);
-if (!isNaN(idx) && idx >= 0 && idx < CHARS.length) {
-trainChar = idx;
-renderTrainPick();
-SFX.slice();
-}
-});
-}
 const trainBtnEl = $id('trainBtn');
-if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
-if (trainTargetMode === 'watch2v2') {
-bpStart('2v2', { subMode: 'pc_cc', level: 'god', isWatch: false });
-} else if (trainTargetMode === 'tag3') {
-bpStart('tag3', { level: 'god', isWatch: false });
-} else if (trainTargetMode === 'cpu') {
-pickLevel = 'god';
-bpStart('cpu');
-} else if (trainTargetMode === 'chaos') {
-bpStart('chaos', { level: 'god', isWatch: false });
-} else if (trainTargetMode === 'mayhem') {
-bpStart('mayhem', { level: 'god', isWatch: false });
-} else {
-bpStart('train', { targetMode: 'dummy', isWatch: false });
-}
-});
-renderTrainPick();
+if (trainBtnEl) trainBtnEl.addEventListener('click', () => startTrainTarget(trainTargetMode, false));
 renderDummyFeatures();
-let tag3Team = [0, 1, 2];
-let activeTagSlot = 0;
 let tag3Level = 'normal';
-let tag3EnemyTeam = [3, 4, 5];
 function renderTag3() {
-ensurePortraits();
-const slotLabels = ['先锋', '中坚', '大将'];
-const slotsEl = document.getElementById('tag3Slots');
-if (slotsEl) {
-slotsEl.innerHTML = [0, 1, 2].map(slotIdx => {
-const charIdx = tag3Team[slotIdx] !== undefined ? tag3Team[slotIdx] : slotIdx;
-const ch = CHARS[charIdx];
-const col = ch ? `rgb(${ch.look.slash})` : 'var(--ink)';
-return `<div class="tag3-slot${activeTagSlot === slotIdx ? ' sel' : ''}" data-slot="${slotIdx}">
-<span class="slot-tag">${slotLabels[slotIdx]}</span>
-<div class="slot-avatar">
-<img src="${PORTRAITS[charIdx] || ''}" alt="">
-</div>
-<span class="slot-name" style="color:${col}">${ch ? ch.name : '未选'}</span>
-<span class="slot-role">${ch ? ch.role : ''}</span>
-</div>`;
-}).join('');
-}
-const rosterEl = document.getElementById('tag3Roster');
-if (rosterEl) {
-rosterEl.innerHTML = CHARS.map((ch, i) => {
-const inSlot = tag3Team.indexOf(i);
-const tagText = inSlot >= 0 ? slotLabels[inSlot] : '';
-const col = `rgb(${ch.look.slash})`;
-return `<button class="tag3-hero-chip${inSlot >= 0 ? ' in-team' : ''}" data-idx="${i}" type="button">
-${tagText ? `<span class="team-badge">${tagText}</span>` : ''}
-<img src="${PORTRAITS[i] || ''}" alt="">
-<div class="nm" style="color:${col}">${ch.name}</div>
-<div class="rl">${ch.role}</div>
-</button>`;
-}).join('');
-}
-}
-function pickEnemyTag3Team(playerTeam) {
-const allIdxs = CHARS.map((_, i) => i);
-const remaining = allIdxs.filter(i => !playerTeam.includes(i));
-const pool = remaining.length >= 3 ? remaining : allIdxs;
-const shuffled = [...pool].sort(() => Math.random() - 0.5);
-return shuffled.slice(0, 3);
+for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x.dataset.lv === tag3Level);
 }
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 if (p2pActive()) netDropWaiting();
 refocusGame();
 human[0].rec = null;
 REC.on = false;
-tag3Team = [...pTeam];
-tag3EnemyTeam = [...eTeam];
 M.mode = 'tag3';
 M.level = lv || tag3Level || 'normal';
-M.teams = [ [...tag3Team], [...tag3EnemyTeam] ];
+M.teams = [[...pTeam], [...eTeam]];
 M.teamIdx = [0, 0];
 M.wins = [0, 0];
 M.round = 1;
 M.carry = null;
 M.stage = null;
+M.duo = null;
 M.watchAi = !!isWatch;
 setChars(M.teams[0][0], M.teams[1][0]);
 A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
@@ -19079,35 +18771,6 @@ human[0].clear(); human[1].clear();
 showScreen(null);
 startRound();
 if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
-}
-const tag3SlotsEl = document.getElementById('tag3Slots');
-if (tag3SlotsEl) {
-tag3SlotsEl.addEventListener('click', e => {
-const b = e.target.closest('.tag3-slot');
-if (!b) return;
-activeTagSlot = +b.dataset.slot;
-renderTag3();
-SFX.slice();
-});
-}
-const tag3RosterEl = document.getElementById('tag3Roster');
-if (tag3RosterEl) {
-tag3RosterEl.addEventListener('click', e => {
-const b = e.target.closest('.tag3-hero-chip');
-if (!b) return;
-const heroIdx = +b.dataset.idx;
-const existingSlot = tag3Team.indexOf(heroIdx);
-if (existingSlot >= 0) {
-const curHeroInActive = tag3Team[activeTagSlot];
-tag3Team[activeTagSlot] = heroIdx;
-tag3Team[existingSlot] = curHeroInActive;
-} else {
-tag3Team[activeTagSlot] = heroIdx;
-activeTagSlot = (activeTagSlot + 1) % 3;
-}
-renderTag3();
-SFX.slice();
-});
 }
 const tag3LevelsEl = document.getElementById('tag3Levels');
 if (tag3LevelsEl) {
@@ -19127,80 +18790,6 @@ paused = false;
 bpStart('tag3', { level: tag3Level, isWatch: false });
 });
 }
-const TOWER_PERKS = {
-thunder_dash: {
-id: 'thunder_dash',
-name: '「雷厉」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-desc: '冲刺与腾空闪拖曳雷弧电芒，对贴近之敌造成 28 点雷击伤害与短暂麻痹。'
-},
-ink_blade: {
-id: 'ink_blade',
-name: '「剑气长虹」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#46d3ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4L7 17l-3 3 1-4L18 3l2 1zM5.5 14.5l4 4M14 6l4 4"/></svg>',
-desc: '普通攻击挥出破空墨刃剑气，向前飞旋贯穿敌人造成 18 点伤害。'
-},
-parry_refresh: {
-id: 'parry_refresh',
-name: '「借力打力」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM8 11h8M12 7v8"/></svg>',
-desc: '精准招架（Just Guard）不仅完全免受震退，并瞬间重置所有技能冷却！'
-},
-blood_drink: {
-id: 'blood_drink',
-name: '「血饮残心」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ff4a5f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
-desc: '打断敌方出招反击或空中终结技命中时，将 15% 伤害转化为生命自愈！'
-},
-flow_combo: {
-id: 'flow_combo',
-name: '「行云流水」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#46d3ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2-3 5-3 7 0s5 3 7 0 4-3 6 0M2 17c2-3 5-3 7 0s5 3 7 0 4-3 6 0M2 7c2-3 5-3 7 0s5 3 7 0 4-3 6 0"/></svg>',
-desc: '连招取消窗口延长 50%，受击聚气与攻击蓄气速度大幅提升 50%。'
-},
-golden_bell: {
-id: 'golden_bell',
-name: '「金钟护体」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-desc: '受到致命一击时触发保命金钟罩，无敌 1.5 秒免死（每 3 层刷新一次）。'
-},
-air_burst: {
-id: 'air_burst',
-name: '「浮空破灭」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#7fe0b0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20h2"/></svg>',
-desc: '对处于浮空与挑飞状态的敌人造成的伤害提升 35%！'
-},
-sky_master: {
-id: 'sky_master',
-name: '「凌霄御风」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#e9c46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.2 8.5 22 9.4 17 14.2 18.3 21 12 17.6 5.7 21 7 14.2 2 9.4 8.8 8.5"/></svg>',
-desc: '腾空闪滞空时间延长至 1.5 秒，且滞空期间发动下坠斩必定暴击破防！'
-},
-frost_lock: {
-id: 'frost_lock',
-name: '「玄霜凝骨」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#8ae5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>',
-desc: '斩击附带刺骨寒气，减速敌人脚步；每连续命中 3 击引发极寒冻结 0.45 秒！'
-},
-bleed_rend: {
-id: 'bleed_rend',
-name: '「断脉破罡」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ff5555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13l3 3 5-5"/></svg>',
-desc: '暴击与破招撕裂敌方脉络，使其陷入 4 段持续流血撕裂伤害。'
-},
-ink_resonance: {
-id: 'ink_resonance',
-name: '「墨韵共鸣」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#a0a5b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 10 10 0 0 0 0-20"/></svg>',
-desc: '刀刃激荡水墨飞溅，所有近战斩击伤害额外提升 15% 并在地面激荡墨浪！'
-},
-storm_wrath: {
-id: 'storm_wrath',
-name: '「天煞狂雷」',
-icon: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ffd040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-desc: '近身搏杀引九天怒雷灌注，击退与挑飞冲击力提升 35% 并伴随轰鸣雷爆！'
-}
-};
 const TOWER_SAVE_KEY = 'renying-tower-run';
 function saveTowerRun() {
 if (M.mode === 'tower' && M.phase !== 'end' && A && A.hp > 0) {
@@ -19208,9 +18797,9 @@ const run = {
 hero: M.towerHero !== undefined ? M.towerHero : towerHero,
 floor: M.towerFloor || 1,
 perks: M.towerPerks ? [...M.towerPerks] : [],
+run: M.scRun || {},
 hp: Math.max(1, Math.min(A.maxHp || 100, A.hp)),
-maxHp: A.maxHp || 100,
-goldenBellReady: A.goldenBellReady !== false
+maxHp: A.maxHp || 100
 };
 try { localStorage.setItem(TOWER_SAVE_KEY, JSON.stringify(run)); } catch (e) {}
 }
@@ -19242,25 +18831,6 @@ resumeBtn.style.display = 'inline-block';
 resumeBtn.style.display = 'none';
 }
 }
-const pickEl = document.getElementById('towerPick');
-if (pickEl) {
-pickEl.innerHTML = CHARS.map((c, i) => {
-const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-return `<button class="trbtn${towerHero === i ? ' sel' : ''}" data-idx="${i}" type="button" style="color:rgb(${look.slash})">
-<span class="trn">${c.name}</span>
-<span class="trr">${sk ? sk.name : c.role}</span>
-</button>`;
-}).join('');
-pickEl.querySelectorAll('button').forEach(b => {
-b.addEventListener('click', () => {
-towerHero = +b.dataset.idx;
-renderTower();
-SFX.slice();
-});
-});
-}
 }
 function startTower(heroIdx, isWatch = false) {
 clearTowerRun();
@@ -19269,7 +18839,7 @@ paused = false;
 towerHero = heroIdx !== undefined ? heroIdx : towerHero;
 M.mode = 'tower';
 M.towerFloor = 1;
-M.towerPerks = [];
+M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
 M.towerHero = towerHero;
 M.round = 1;
 M.wins = [0, 0];
@@ -19290,13 +18860,13 @@ say(isWatch ? '问剑密卷 · 天道爬塔观战' : '问剑密卷 · 第 1 层'
 }
 function resumeTower() {
 const run = loadTowerRun();
-if (!run) { startTower(towerHero); return; }
+if (!run) { bpStart('tower', { isWatch: false }); return; }   // 没有存档就和「开启新试炼」一样先去点将台选人
 initAudio();
 paused = false;
 towerHero = run.hero !== undefined ? run.hero : towerHero;
 M.mode = 'tower';
 M.towerFloor = run.floor || 1;
-M.towerPerks = run.perks ? [...run.perks] : [];
+M.towerPerks = (run.perks || []).filter(id => SC_BY[id]); M.foeScrolls = []; M.scRun = run.run && typeof run.run === 'object' ? { ...run.run } : {};
 M.towerHero = towerHero;
 M.round = 1;
 M.wins = [0, 0];
@@ -19319,7 +18889,6 @@ if (typeof run.hp === 'number' && run.hp > 0) {
 A.hp = Math.min(A.maxHp, run.hp);
 A.lagHp = A.hp;
 }
-if (run.goldenBellReady !== undefined) A.goldenBellReady = run.goldenBellReady;
 saveTowerRun();
 say(`问剑密卷 · 继续第 ${M.towerFloor} 层`, 1.4);
 }
@@ -19330,46 +18899,34 @@ if (!modal || !choicesEl) {
 nextTowerFloor();
 return;
 }
-const allPerkKeys = Object.keys(TOWER_PERKS);
-const available = allPerkKeys.filter(k => !(M.towerPerks || []).includes(k));
-const pool = available.length >= 3 ? available : allPerkKeys;
-const picked = [];
-const poolCopy = [...pool];
-for (let i = 0; i < 3 && poolCopy.length; i++) {
-const idx = Math.floor(Math.random() * poolCopy.length);
-picked.push(poolCopy.splice(idx, 1)[0]);
-}
-choicesEl.innerHTML = picked.map(k => {
-const p = TOWER_PERKS[k];
-return `<div class="tower-perk-card" data-perk="${p.id}">
-<div class="tp-icon">${p.icon}</div>
-<div class="tp-name">${p.name}</div>
-<div class="tp-desc">${p.desc}</div>
+const picked = scDraw(A.ch.id, M.towerPerks || [], 3);
+if (!picked.length) { nextTowerFloor(); return; }   // 这个侠客能拿的秘卷全拿完了
+const reso = scResoLines(M.towerPerks || []);
+choicesEl.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}" data-perk="${p.id}">
+<div class="tp-icon">${scIcon(p)}</div>
+<div class="tp-name">「${p.n}」</div>
+${scTag(p)}
+<div class="tp-desc">${p.d}</div>
 <button class="go small tp-pick" type="button">顿悟秘卷</button>
-</div>`;
-}).join('');
+</div>`).join('') + `<p class="tp-owned">已领悟 ${(M.towerPerks || []).length} 卷${reso.length ? ' · ' + reso.join(' · ') : ''}</p>`;
 choicesEl.querySelectorAll('.tower-perk-card').forEach(card => {
-card.addEventListener('click', () => {
-const pid = card.dataset.perk;
-pickTowerPerk(pid);
-});
+card.addEventListener('click', () => pickTowerPerk(card.dataset.perk));
 });
 const fb = document.getElementById('towerFloorBadge');
 if (fb) fb.textContent = `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
 showScreen('towerModal');
 if (M.watchAi) {
 setTimeout(() => {
-if (M.mode === 'tower' && M.watchAi && picked.length) {
-pickTowerPerk(picked[Math.floor(Math.random() * picked.length)]);
-}
+if (M.mode === 'tower' && M.watchAi && M.phase === 'perk') pickTowerPerk(picked[Math.floor(Math.random() * picked.length)].id);
 }, 1200);
 }
 }
 function pickTowerPerk(perkId) {
 if (!M.towerPerks) M.towerPerks = [];
+if (M.phase !== 'perk' || !SC_BY[perkId]) return;
 M.towerPerks.push(perkId);
-const p = TOWER_PERKS[perkId];
-if (p) say(`领悟${p.name}`, 1.2);
+const p = SC_BY[perkId];
+say(`领悟「${p.n}」`, 1.2);
 nextTowerFloor();
 }
 function nextTowerFloor() {
@@ -19390,10 +18947,7 @@ else if (M.towerFloor >= 3) lv = 'normal';
 M.level = lv;
 if (M.watchAi) A.ctrl = new AICtrl('god');
 B.ctrl = new AICtrl(lv);
-A.hp = Math.min(A.maxHp, A.hp + Math.round(A.maxHp * 0.20));
-A.lagHp = A.hp;
-A.goldenBellReady = true;
-startRound();
+startRound();   // 每层满血开打（和其他 1v1 一样）；秘卷的开局效果在 startRound 里生效
 if (!M.watchAi) saveTowerRun();
 say(M.watchAi ? `天道爬塔 · 第 ${M.towerFloor} 层` : `万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);
 }
@@ -19522,7 +19076,6 @@ const CHAOS_MUTATIONS = [
 let chaosP1 = 0, chaosP2 = 1, chaosLevel = 'normal';
 let currentChaosMutation = null;
 let chaosTimer = 0;
-const CHAOS_INTERVAL = 15;
 function rollChaosMutation() {
 const mut = CHAOS_MUTATIONS[Math.floor(Math.random() * CHAOS_MUTATIONS.length)];
 currentChaosMutation = mut;
@@ -19545,44 +19098,6 @@ rollChaosMutation();
 }
 }
 function renderChaos() {
-const pick1 = document.getElementById('chaosPick');
-const pick2 = document.getElementById('chaosFoePick');
-if (pick1) {
-pick1.innerHTML = CHARS.map((c, i) => {
-const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-return '<button class="trbtn' + (chaosP1 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-'<span class="trn">' + c.name + '</span>' +
-'<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-'</button>';
-}).join('');
-pick1.querySelectorAll('button').forEach(b => {
-b.addEventListener('click', () => {
-chaosP1 = +b.dataset.idx;
-renderChaos();
-SFX.slice();
-});
-});
-}
-if (pick2) {
-pick2.innerHTML = CHARS.map((c, i) => {
-const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-return '<button class="trbtn' + (chaosP2 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-'<span class="trn">' + c.name + '</span>' +
-'<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-'</button>';
-}).join('');
-pick2.querySelectorAll('button').forEach(b => {
-b.addEventListener('click', () => {
-chaosP2 = +b.dataset.idx;
-renderChaos();
-SFX.slice();
-});
-});
-}
 const lvs = document.querySelectorAll('#chaosLevels button');
 lvs.forEach(b => {
 b.classList.toggle('sel', b.dataset.lv === chaosLevel);
@@ -19633,44 +19148,6 @@ bpStart('chaos', { level: chaosLevel || 'god', isWatch: true });
 });
 let mayhemP1 = 0, mayhemP2 = 1, mayhemLevel = 'hard';
 function renderMayhem() {
-const pick1 = document.getElementById('mayhemPick');
-const pick2 = document.getElementById('mayhemFoePick');
-if (pick1) {
-pick1.innerHTML = CHARS.map((c, i) => {
-const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-return '<button class="trbtn' + (mayhemP1 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-'<span class="trn">' + c.name + '</span>' +
-'<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-'</button>';
-}).join('');
-pick1.querySelectorAll('button').forEach(b => {
-b.addEventListener('click', () => {
-mayhemP1 = +b.dataset.idx;
-renderMayhem();
-SFX.slice();
-});
-});
-}
-if (pick2) {
-pick2.innerHTML = CHARS.map((c, i) => {
-const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-return '<button class="trbtn' + (mayhemP2 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-'<span class="trn">' + c.name + '</span>' +
-'<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-'</button>';
-}).join('');
-pick2.querySelectorAll('button').forEach(b => {
-b.addEventListener('click', () => {
-mayhemP2 = +b.dataset.idx;
-renderMayhem();
-SFX.slice();
-});
-});
-}
 const lvs = document.querySelectorAll('#mayhemLevels button');
 lvs.forEach(b => {
 b.classList.toggle('sel', b.dataset.lv === mayhemLevel);
@@ -20161,11 +19638,12 @@ toast('网络已断开');
 return;
 }
 if (NET.role === 'host') {
-const picks = (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : [A.chIdx, B.chIdx];
+const duo = M.duo ? JSON.parse(JSON.stringify(M.duo)) : null;   // 各选 2 人的对局：同阵容再战，从各自第一人打起
+const picks = (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
 const seed = (Math.random() * 2147483647) | 0;
 send({ sys: 'rematch', action: 'start' });
-send({ rstart: { ch: picks, seed } });
-rollStart(picks, seed);
+send({ rstart: duo ? { ch: picks, seed, duo } : { ch: picks, seed } });
+rollStart(picks, seed, duo);
 } else {
 send({ sys: 'rematch', action: 'ask' });
 toast('已向房主发送再战请求');
@@ -20194,6 +19672,11 @@ return;
 }
 if (M.mode === 'chaos') {
 bpStart('chaos', { level: chaosLevel, isWatch: false });
+return;
+}
+if (M.mode === 'cpu' && M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
+menuLock = false;
+heroQuickFight(M.level);
 return;
 }
 bpStart('cpu');
@@ -20283,7 +19766,7 @@ function chatSendText() { const v = $id('chatIn').value.trim(); if (!v) return; 
 $id('chatSend').addEventListener('click', chatSendText);
 $id('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') chatSendText(); });
 const BP_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']];
-const BP_CPU_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']];   // 常规人机对战同样走禁选（各禁1人、各选1人）
+const BP_DUO_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];   // 联机对战：各禁 1 人、各选 2 人
 const bpSteps = () => (BP && BP.steps) || BP_STEPS;
 const isMultiPickBP = () => !!(BP && Array.isArray(BP.picks) && Array.isArray(BP.picks[0]));
 const isLocalBothHumanBP = () => bpMode === '2v2' && !!(bpCustomOpts && bpCustomOpts.subMode === 'pp_pp');
@@ -20294,9 +19777,390 @@ if (isWatch) return false;
 if (isLocalBothHumanBP()) return true;
 return bpSteps()[BP.step][0] === bpMySide();
 };
-const BP_TIME = 25;
 let BP = null, bpMode = 'cpu', bpSel = -1, bpHover = -1, bpCpuT = 0, bpCustomOpts = null;
 const PORTRAITS = [];
+const SC_SCHOOLS = {
+lei: { n: '雷', rgb: '255,220,90' }, shuang: { n: '霜', rgb: '140,220,255' }, xue: { n: '血', rgb: '255,90,100' },
+mo: { n: '墨', rgb: '170,170,200' }, feng: { n: '风', rgb: '120,230,180' }, jin: { n: '金', rgb: '240,200,110' },
+ying: { n: '影', rgb: '200,140,255' }, qi: { n: '气', rgb: '110,200,255' }, xian: { n: '险', rgb: '255,120,60' }, hero: { n: '侠', rgb: '233,196,106' }
+};
+const SC_RARITY = { c: { n: '凡品', w: 10 }, r: { n: '精品', w: 6 }, e: { n: '绝品', w: 2.5 }, x: { n: '险卷', w: 3 }, l: { n: '天书', w: 1.5 } };
+const SC_RESONANCE = 3;   // 同一流派凑够几卷触发流派共鸣
+const SC_RESO = {
+lei: '每 8 秒自动落下一道天雷劈向对手',
+shuang: '霜寒减速加倍：被冻住的对手移速只剩一半',
+xue: '所有伤害 6% 吸血',
+mo: '伤害 +10%',
+feng: '移速 +12%，冲刺冷却 -25%',
+jin: '受到的伤害 -10%',
+ying: '8% 几率完全闪开一次攻击',
+qi: '气的获取 +25%',
+};
+const scRnd = () => Math.random();   // 秘卷只在单机模式生效，不用回滚同步的随机数
+function scTxt(f, text, rgb, dy = 0) { if (!RESIM) addP({ type: 'text', text, x: f.x, y: f.y - 125 - dy, life: 0.85, max: 0.85, rgb: rgb || '235,220,170' }); }
+function scHeal(f, n) {
+if (n <= 0 || f.hp <= 0 || scHas(f, 'no_heal')) return 0;
+const h = Math.min(Math.round(n), f.maxHp - f.hp); if (h <= 0) return 0;
+f.hp += h; f.lagHp = Math.max(f.lagHp, f.hp);
+if (!RESIM) addP({ type: 'text', text: '+' + h, x: f.x + rand(-10, 10), y: f.y - 115, life: 0.7, max: 0.7, rgb: '130,230,140' });
+return h;
+}
+function scTrue(def, n, rgb, self) {
+n = Math.round(n); if (n <= 0 || def.hp <= 0 || M.phase !== 'fight') return 0;
+const floor = self || def.dummy ? 1 : 0, d = Math.min(n, def.hp - floor); if (d <= 0) return 0;
+def.hp -= d; def.sinceHit = 0; def.lagDelay = 0.5;
+if (!RESIM) addP({ type: 'dmg', text: `${d}`, x: def.x + rand(-15, 15), y: def.y - 75, vx: rand(-20, 20), vy: -120, g: 200, life: 0.65, max: 0.65, s: 0.75, rgb: rgb || '255,200,120', edge: '120,60,20' });
+return d;
+}
+function scMeter(f, n) { f.meter = clamp(f.meter + n * (n > 0 ? scMeterMul(f) : 1), 0, 100); }
+function scMeterMul(f) { let k = 1; if (scReso(f, 'qi')) k *= 1.25; if (scHas(f, 'flow_combo')) k *= 1.5; if (scHas(f, 'all_in')) k *= 0.6; if (scHas(f, 'scorched_earth')) k *= 1.3; return k; }
+function scCdCut(f, s) { f.skillCD = Math.max(0, f.skillCD - s); f.skill2CD = Math.max(0, f.skill2CD - s); }
+function scLater(f, t, fn) { (f.sc.q || (f.sc.q = [])).push({ t, fn }); }
+function scBolt(f, x, dmg) { spawnProj(f, { kind: 'bolt', x, y: -260, vx: 0, w: 60, h: 520, life: 0.4, delay: 0.05, dmg, kb: [60, -180], stun: 0.35, hs: 0.05, launch: true, noScale: true, scFx: true }); SFX.thunder(); }
+function scWave(f, dir, dmg, o = {}) { spawnProj(f, Object.assign({ kind: 'wind', x: f.x + dir * 40, y: f.y - 62, vx: dir * 1050, vy: 0, w: 48, h: 44, life: 0.75, dmg, kb: [160, 0], stun: 0.3, hs: 0.04, pierce: true, noScale: true, scFx: true }, o)); }
+function scQuake(f, x, dmg) { spawnProj(f, { kind: 'quake', x, y: -20, vx: 0, w: 220, h: 50, life: 0.35, dmg, kb: [80, -420], stun: 0.4, hs: 0.06, launch: true, groundOnly: true, noScale: true, scFx: true }); dust(x, 0, 12); shake = Math.max(shake, 8); }
+function scSt(f) { return f.st || (f.st = {}); }
+function scPoison(def, n) { const s = scSt(def); s.poison = Math.min(8, (s.poison || 0) + n); s.poisonT = 5; }
+function scVuln(def, t, v) { const s = scSt(def); if (!s.vulnT || v >= (s.vuln || 0)) { s.vuln = v; } s.vulnT = Math.max(s.vulnT || 0, t); }
+function scWeak(def, t, v) { const s = scSt(def); s.weak = Math.max(s.weak || 0, v); s.weakT = Math.max(s.weakT || 0, t); }
+function scRoot(def, t) { if (def.hp <= 0) return; def.state = 'hitstun'; def.t = 0; def.stun = Math.max(def.stun || 0, t); def.rooted = true; def.vx = 0; def.move = null; def.skill = null; }
+function scStatuses(def) { const s = def.st || {}; return (s.poison > 0) + (s.vulnT > 0) + (s.weakT > 0) + (def.bleedTicks > 0) + (def.frostSlow > 0) + (def.burnT > 0) + ((s.static || 0) > 0); }
+const scHpPct = f => f.hp / Math.max(1, f.maxHp);
+const scMelee = c => !c.proj && !c.ult;
+const scNear = (f, o, d) => Math.abs(f.x - o.x) < d;
+const SCROLLS = [
+{ id: 'ink_resonance', n: '墨韵共鸣', s: 'mo', r: 'c', d: '近战斩击伤害 +15%，命中时在地面激起墨浪。', out(c) { if (scMelee(c)) { c.dmg *= 1.15; if (!RESIM) for (let i = 0; i < 4; i++) addP({ type: 'ink', x: c.o.x + rand(-25, 25), y: c.o.y - rand(20, 80), vx: rand(-120, 120), vy: rand(-150, 50), g: 600, life: 0.6, max: 0.6, r: rand(3, 6), rgb: '15,15,22' }); } } },
+{ id: 'storm_wrath', n: '天煞狂雷', s: 'lei', r: 'c', d: '近身攻击的击退与挑飞力度 +35%，命中伴随雷爆。', out(c) { if (scMelee(c)) { c.m = { ...c.m, kb: [c.m.kb[0] * 1.35, c.m.kb[1] * 1.25] }; if (!RESIM) ring(c.ev.x, c.ev.y, 110, '255,235,110', 0.35); } } },
+{ id: 'air_burst', n: '浮空破灭', s: 'feng', r: 'c', d: '对浮空、被挑飞的敌人伤害 +35%。', out(c) { if (c.air) c.dmg *= 1.35; } },
+{ id: 'ink_blade', n: '剑气长虹', s: 'mo', r: 'r', d: '轻击（地面一至五段）同时挥出一道贯穿的墨刃剑气，造成 18 点伤害。', atk(f, o, name) { if (/^l[1-5]$/.test(name)) scWave(f, f.face, 18); } },
+{ id: 'first_blood', n: '先声夺人', s: 'jin', r: 'c', d: '每层第一次命中伤害 +80%。', out(c) { if (!c.f.sc.fb) { c.f.sc.fb = 1; c.dmg *= 1.8; scTxt(c.o, '先声夺人', '240,200,110'); } } },
+{ id: 'executioner', n: '断魂斩', s: 'xue', r: 'r', d: '对生命低于 30% 的敌人伤害 +40%。', out(c) { if (scHpPct(c.o) < 0.3) c.dmg *= 1.4; } },
+{ id: 'giant_slayer', n: '以弱胜强', s: 'jin', r: 'c', d: '对手剩余血量比例比你高时，伤害 +25%。', out(c) { if (scHpPct(c.o) > scHpPct(c.f)) c.dmg *= 1.25; } },
+{ id: 'crescendo', n: '连珠渐强', s: 'qi', r: 'r', d: '同一套连招里每多一击伤害 +6%（最多 +48%），连招断了重新算。', out(c) { c.dmg *= 1 + Math.min(8, Math.max(0, c.o.comboHits - 1)) * 0.06; } },
+{ id: 'heavy_hand', n: '开山重手', s: 'jin', r: 'c', d: '重击与蓄力斩伤害 +30%，被格挡时削架势多一半。', out(c) { if (c.heavy) c.dmg *= 1.3; }, blkOut(c) { if (c.heavy) c.guardMul = 1.5; } },
+{ id: 'needle_rain', n: '疾风连刺', s: 'feng', r: 'c', d: '轻击伤害 +12%；每第 4 下轻击命中会追加一记 50% 伤害的连刺。', out(c) { if (c.light) c.dmg *= 1.12; }, hit(c) { if (c.light && ++c.f.sc.lc % 4 === 0) { const o = c.o, d = c.dmg * 0.5; scLater(c.f, 0.12, () => scTrue(o, d, '200,255,220')); } } },
+{ id: 'counter_master', n: '后发先至', s: 'ying', r: 'r', d: '打断对手出招的反击伤害从 1.2 倍提高到 1.8 倍。', out(c) { if (c.counter) c.dmg *= 1.5; } },
+{ id: 'backstab', n: '背刺', s: 'ying', r: 'c', d: '击中背对你的敌人伤害 +35%。', out(c) { if (c.o.face === Math.sign(c.o.x - c.f.x)) { c.dmg *= 1.35; scTxt(c.o, '背刺', '200,140,255'); } } },
+{ id: 'sniper', n: '百步穿杨', s: 'feng', r: 'c', d: '飞行道具伤害 +40%，近战伤害 -10%。', out(c) { if (c.proj) c.dmg *= 1.4; else if (!c.ult) c.dmg *= 0.9; } },
+{ id: 'brawler', n: '近身搏杀', s: 'jin', r: 'c', d: '贴身（60 距离内）近战伤害 +25%，飞行道具伤害 -20%。', out(c) { if (c.proj) c.dmg *= 0.8; else if (scNear(c.f, c.o, 90)) c.dmg *= 1.25; } },
+{ id: 'momentum', n: '势如破竹', s: 'feng', r: 'r', d: '出手时你移动得越快伤害越高，最多 +30%。', out(c) { if (!c.proj) c.dmg *= 1 + clamp(Math.abs(c.f.vx) / 1800, 0, 0.3); } },
+{ id: 'crit_eye', n: '洞若观火', s: 'ying', r: 'c', d: '12% 几率暴击，造成双倍伤害。', out(c) { if (scRnd() < 0.12) { c.dmg *= 2; c.ev.big = true; scTxt(c.o, '暴击', '255,230,120'); } } },
+{ id: 'lethal_rhythm', n: '刀起刀落', s: 'qi', r: 'r', d: '在上一次命中后 0.4~0.8 秒再命中，伤害 +30%（踩准节奏）。', out(c) { const dt = clock - (c.f.sc.lastHit || -9); if (dt >= 0.4 && dt <= 0.8) { c.dmg *= 1.3; scTxt(c.f, '合拍', '110,200,255'); } }, hit(c) { c.f.sc.lastHit = clock; } },
+{ id: 'sunder', n: '破甲', s: 'jin', r: 'r', d: '每次命中让对手受到的伤害 +3%，本层最多叠到 +30%。', hit(c) { c.f.sc.sunder = Math.min(10, (c.f.sc.sunder || 0) + 1); }, out(c) { c.dmg *= 1 + (c.f.sc.sunder || 0) * 0.03; } },
+{ id: 'double_strike', n: '二重劲', s: 'qi', r: 'e', d: '技能命中后 0.15 秒追加一记 40% 伤害的暗劲。', hit(c) { if (c.skill) { const o = c.o, d = c.dmg * 0.4; scLater(c.f, 0.15, () => { scTrue(o, d, '110,200,255'); if (!RESIM) ring(o.x, o.y - 60, 70, '110,200,255', 0.3); }); } } },
+{ id: 'shockwave', n: '地裂', s: 'jin', r: 'r', d: '重击命中时，对手脚下震起一道地裂。', hit(c) { if (c.heavy && (c.f.sc.quakeCd || 0) <= 0) { c.f.sc.quakeCd = 1.5; scQuake(c.f, c.o.x, 16); } }, tick(f) { f.sc.quakeCd = Math.max(0, (f.sc.quakeCd || 0) - STEP); } },
+{ id: 'ult_amp', n: '绝技精研', s: 'qi', r: 'c', d: '绝技伤害 +35%。', out(c) { if (c.ult) c.dmg *= 1.35; } },
+{ id: 'piercing_wind', n: '穿云', s: 'feng', r: 'c', d: '你的飞行道具变大 40%、能贯穿，飞得更远。', proj(f, p) { if (p.w) p.w *= 1.4; if (p.h) p.h *= 1.4; p.pierce = true; p.life *= 1.25; } },
+{ id: 'golden_bell', n: '金钟护体', s: 'jin', r: 'r', d: '每层第一次受到致命伤害时保住 1 点血，无敌 1.5 秒。', fatal(c) { if (c.f.sc.bell) return false; c.f.sc.bell = 1; c.f.hp = 1; c.f.invul = 1.5; if (!RESIM) ring(c.f.x, c.f.y - 60, 200, '255,215,0', 0.6); scTxt(c.f, '金钟护体 · 绝处逢生', '255,215,0', 15); SFX.parry(); return true; } },
+{ id: 'parry_refresh', n: '借力打力', s: 'ying', r: 'r', d: '精准招架瞬间重置两个技能的冷却。', blk(f, o, jg) { if (jg) { f.skillCD = 0; f.skill2CD = 0; scTxt(f, '借力打力 · 招式重置', '120,230,255', 20); } } },
+{ id: 'iron_skin', n: '铁布衫', s: 'jin', r: 'c', d: '受到的伤害 -12%。', inc(c) { c.dmg *= 0.88; } },
+{ id: 'thorns', n: '荆棘', s: 'xue', r: 'c', d: '近身打你的人反受 25% 的伤害。', hurt(c) { if (!c.proj && c.dmg > 0) scTrue(c.o, c.dmg * 0.25, '255,120,120'); } },
+{ id: 'last_stand', n: '背水', s: 'jin', r: 'r', d: '生命低于 25% 时受到的伤害 -35%。', inc(c) { if (scHpPct(c.f) < 0.25) c.dmg *= 0.65; } },
+{ id: 'guard_wall', n: '铜墙', s: 'jin', r: 'c', d: '格挡不再被磨血，架势消耗 -40%。', blkIn(c) { c.chip = 0; c.guardMul *= 0.6; } },
+{ id: 'retaliation', n: '以牙还牙', s: 'xue', r: 'c', d: '挨打后 2 秒内，你下一次命中伤害 +50%。', hurt(c) { c.f.sc.revT = 2; }, out(c) { if (c.f.sc.revT > 0) { c.dmg *= 1.5; c.f.sc.revT = 0; scTxt(c.o, '以牙还牙', '255,90,100'); } }, tick(f) { f.sc.revT = Math.max(0, (f.sc.revT || 0) - STEP); } },
+{ id: 'second_wind', n: '回气', s: 'qi', r: 'r', d: '每层第一次跌到 40% 生命以下时，回复 20% 最大生命。', hurt(c) { if (!c.f.sc.sw && scHpPct(c.f) < 0.4 && c.f.hp > 0) { c.f.sc.sw = 1; scHeal(c.f, c.f.maxHp * 0.2); scTxt(c.f, '回气', '110,200,255', 20); } } },
+{ id: 'evasion', n: '移形', s: 'ying', r: 'c', d: '10% 几率完全闪开一次非绝技攻击。', dodge(c) { return !c.ult && scRnd() < 0.10; } },
+{ id: 'stone_stance', n: '不动如山', s: 'jin', r: 'r', d: '站定不动 0.8 秒后获得一次霸体（吃一下不被打断）。', tick(f) { if (f.state === 'idle' && f.onGround() && Math.abs(f.vx) < 5) { f.sc.still = (f.sc.still || 0) + STEP; if (f.sc.still >= 0.8 && f.armorT <= 0) { f.armorT = 0.6; f.armorHits = 1; f.sc.still = 0; if (!RESIM) ring(f.x, f.y - 60, 80, '240,200,110', 0.25); } } else f.sc.still = 0; } },
+{ id: 'aegis', n: '护心镜', s: 'jin', r: 'r', d: '每 12 秒生成一层护盾，可抵挡 40 点伤害。', start(f) { f.sc.shield = 40; f.sc.shT = 0; }, tick(f) { if ((f.sc.shield || 0) <= 0) { f.sc.shT = (f.sc.shT || 0) + STEP; if (f.sc.shT >= 12) { f.sc.shT = 0; f.sc.shield = 40; scTxt(f, '护心镜', '240,200,110'); } } }, inc(c) { const s = c.f.sc.shield || 0; if (s > 0) { const a = Math.min(s, c.dmg); c.f.sc.shield = s - a; c.dmg -= a; } } },
+{ id: 'counter_guard', n: '格挡反震', s: 'jin', r: 'c', d: '普通格挡近战攻击时，30% 几率震得对手硬直。', blk(f, o, jg, m) { if (!jg && !m.isProj && o.hp > 0 && scRnd() < 0.3) { o.state = 'hitstun'; o.t = 0; o.stun = 0.35; o.vx = -o.face * 160; scTxt(o, '反震', '240,200,110'); } } },
+{ id: 'jg_window', n: '心眼', s: 'ying', r: 'r', d: '精准招架的判定时间从 0.09 秒放宽到 0.16 秒。', jg() { return 0.16; } },
+{ id: 'meditation', n: '调息', s: 'qi', r: 'c', d: '3 秒没挨打就每秒回复 4 点生命。', tick(f) { if (f.sinceHit > 3 && M.phase === 'fight' && f.hp < f.maxHp) { f.sc.medi = (f.sc.medi || 0) + 4 * STEP; if (f.sc.medi >= 1) { const n = Math.floor(f.sc.medi); f.sc.medi -= n; if (!scHas(f, 'no_heal')) { f.hp = Math.min(f.maxHp, f.hp + n); f.lagHp = Math.max(f.lagHp, f.hp); } } } } },
+{ id: 'bulwark', n: '磐石', s: 'jin', r: 'c', d: '架势上限 +50%。', start(f) { f.maxGuard = Math.round(f.maxGuard * 1.5); f.guard = f.maxGuard; } },
+{ id: 'proj_ward', n: '拨云', s: 'feng', r: 'c', d: '受到飞行道具的伤害 -40%。', inc(c) { if (c.proj) c.dmg *= 0.6; } },
+{ id: 'ult_resist', n: '定海神针', s: 'jin', r: 'c', d: '受到绝技的伤害 -40%。', inc(c) { if (c.ult) c.dmg *= 0.6; } },
+{ id: 'after_armor', n: '运功护体', s: 'qi', r: 'r', d: '放技能后 1.2 秒内霸体（吃两下不被打断）。', skill(f) { f.armorT = Math.max(f.armorT, 1.2); f.armorHits = Math.max(f.armorHits || 0, 2); } },
+{ id: 'lifeline', n: '命悬一线', s: 'ying', r: 'r', d: '生命低于一半时挨打会获得 0.4 秒无敌（每 6 秒一次）。', hurt(c) { if (scHpPct(c.f) < 0.5 && (c.f.sc.llT || 0) <= 0 && c.f.hp > 0) { c.f.sc.llT = 6; c.f.invul = Math.max(c.f.invul, 0.4); scTxt(c.f, '命悬一线', '200,140,255'); } }, tick(f) { f.sc.llT = Math.max(0, (f.sc.llT || 0) - STEP); } },
+{ id: 'recoil_guard', n: '卸力', s: 'ying', r: 'e', d: '每层第一次被破防时不会崩势，改为把对手震开并补满架势。', brk(f, o) { if (f.sc.recoil) return false; f.sc.recoil = 1; f.guard = f.maxGuard; o.vx = -o.face * 520; o.state = 'hitstun'; o.t = 0; o.stun = 0.4; scTxt(f, '卸力', '200,140,255'); return true; } },
+{ id: 'thunder_dash', n: '雷厉', s: 'lei', r: 'r', d: '腾空闪时在身后劈下一道雷，造成 28 点伤害并挑飞。', esc(f) { scBolt(f, f.x - f.face * 60, 28); } },
+{ id: 'sky_master', n: '凌霄御风', s: 'feng', r: 'r', d: '空中原地腾空闪的滞空从 0.85 秒延长到 1.5 秒。', esc(f, o, air) { if (air) { f.airHover = 1.5; f.invul = 1.5; } } },
+{ id: 'swift_feet', n: '神行', s: 'feng', r: 'c', d: '移动速度 +20%。', spd() { return 1.2; } },
+{ id: 'phantom_step', n: '幻步', s: 'ying', r: 'c', d: '冲刺的无敌时间从 0.13 秒延长到 0.3 秒。', dash(f) { f.invul = Math.max(f.invul, 0.3); } },
+{ id: 'jump_guard', n: '踏云', s: 'feng', r: 'c', d: '每次起跳获得 0.15 秒无敌，二段跳额外回 5 点架势。', jump(f) { f.invul = Math.max(f.invul, 0.15); if (f.jumps >= 2) f.guard = Math.min(f.maxGuard, f.guard + 5); } },
+{ id: 'dash_strike', n: '穿身斩', s: 'feng', r: 'r', d: '冲刺穿过敌人身边时顺手斩出 20 点伤害（每次冲刺一次）。', dash(f) { f.sc.dashHit = 0; }, tick(f, o) { if (f.state === 'dash' && !f.sc.dashHit && o.hp > 0 && o.invul <= 0 && scNear(f, o, 60) && Math.abs(f.y - o.y) < 90) { f.sc.dashHit = 1; scTrue(o, 20, '120,230,180'); if (!RESIM) slashLine(o.x, o.y - 60, 0, '120,230,180'); SFX.dash(); } } },
+{ id: 'aerial_ace', n: '鹰击', s: 'feng', r: 'c', d: '你在空中时伤害 +20%。', out(c) { if (c.f.y < -15) c.dmg *= 1.2; } },
+{ id: 'feather_fall', n: '轻身', s: 'feng', r: 'c', d: '腾空闪冷却 -30%。', esc(f) { f.breakCD *= 0.7; } },
+{ id: 'jg_blink', n: '移形换影', s: 'ying', r: 'e', d: '精准招架近战攻击后瞬移到对手身后。', blk(f, o, jg, m) { if (jg && !m.isProj) { const nx = clamp(o.x - o.face * 70, 40, STAGE_W - 40); smoke(f.x, f.y - 40, 8); f.x = nx; f.face = o.x >= f.x ? 1 : -1; smoke(f.x, f.y - 40, 8); } } },
+{ id: 'wind_runner', n: '追风', s: 'feng', r: 'c', d: '冲刺后 0.6 秒内的下一次出手伤害 +35%。', dash(f) { f.sc.wrT = 0.6 + DASH_T; }, tick(f) { f.sc.wrT = Math.max(0, (f.sc.wrT || 0) - STEP); }, out(c) { if (c.f.sc.wrT > 0 && !c.proj) { c.dmg *= 1.35; c.f.sc.wrT = 0; } } },
+{ id: 'dash_cd', n: '流光', s: 'feng', r: 'c', d: '冲刺冷却 -40%。', dash(f) { f.dashCD *= 0.6; } },
+{ id: 'slipstream', n: '借风', s: 'qi', r: 'c', d: '每次冲刺回复 4 点架势和 3 点气。', dash(f) { f.guard = Math.min(f.maxGuard, f.guard + 4); scMeter(f, 3); } },
+{ id: 'air_reset', n: '踏敌', s: 'feng', r: 'r', d: '打中浮空的敌人会刷新你的二段跳。', hit(c) { if (c.air && c.f.y < -15) c.f.jumps = 1; } },
+{ id: 'ground_slam', n: '陨星坠', s: 'jin', r: 'r', d: '从高处重重落地时震出地裂。', land(f, o, vy) { if (vy > 900) scQuake(f, f.x, 18); } },
+{ id: 'escape_meter', n: '化劲', s: 'qi', r: 'c', d: '每次腾空闪获得 15 点气。', esc(f) { scMeter(f, 15); } },
+{ id: 'sidestep', n: '闪身破绽', s: 'ying', r: 'e', d: '对手出招时贴身冲刺闪过，下一击必定暴击。', dash(f, o) { if (o.state === 'attack' && scNear(f, o, 140)) { f.sc.crit = 1; scTxt(f, '破绽', '200,140,255'); } }, out(c) { if (c.f.sc.crit) { c.f.sc.crit = 0; c.dmg *= 2; c.ev.big = true; } } },
+{ id: 'light_cdr', n: '快刀', s: 'qi', r: 'c', d: '每次轻击命中让两个技能冷却减少 0.3 秒。', hit(c) { if (c.light) scCdCut(c.f, 0.3); } },
+{ id: 'skill_echo', n: '回响', s: 'qi', r: 'r', d: '放技能时 20% 几率不进入冷却。', skill(f, o, slot) { if (scRnd() < 0.2) { if (slot === 2) f.skill2CD = 0; else f.skillCD = 0; scTxt(f, '回响', '110,200,255'); } } },
+{ id: 'haste', n: '抢先', s: 'qi', r: 'c', d: '两个技能冷却 -20%。', skill(f, o, slot) { if (slot === 2) f.skill2CD *= 0.8; else f.skillCD *= 0.8; } },
+{ id: 'ult_cdr', n: '一气呵成', s: 'qi', r: 'r', d: '放绝技会重置两个技能的冷却。', ult(f) { f.skillCD = 0; f.skill2CD = 0; } },
+{ id: 'alternate', n: '左右开弓', s: 'qi', r: 'r', d: '放一个技能会让另一个技能的剩余冷却减半。', skill(f, o, slot) { if (slot === 2) f.skillCD *= 0.5; else f.skill2CD *= 0.5; } },
+{ id: 'break_reset', n: '破势', s: 'jin', r: 'r', d: '打破对手架势时重置两个技能的冷却。', gb(f) { f.skillCD = 0; f.skill2CD = 0; scTxt(f, '破势', '240,200,110'); } },
+{ id: 'hurt_cdr', n: '愈挫愈勇', s: 'xue', r: 'c', d: '每次挨打让两个技能冷却减少 0.5 秒。', hurt(c) { scCdCut(c.f, 0.5); } },
+{ id: 'full_meter_cdr', n: '气贯周天', s: 'qi', r: 'c', d: '气满时技能冷却快一倍。', cd(f) { return f.meter >= 100 ? 1 : 0; } },
+{ id: 'low_hp_haste', n: '急中生智', s: 'xue', r: 'c', d: '生命低于一半时技能冷却快 50%。', cd(f) { return scHpPct(f) < 0.5 ? 0.5 : 0; } },
+{ id: 'patient_power', n: '厚积薄发', s: 'qi', r: 'r', d: '技能冷却 +30%，但技能伤害 +45%。', skill(f, o, slot) { if (slot === 2) f.skill2CD *= 1.3; else f.skillCD *= 1.3; }, out(c) { if (c.skill) c.dmg *= 1.45; } },
+{ id: 'jg_escape', n: '脱胎', s: 'ying', r: 'c', d: '精准招架会刷新腾空闪冷却。', blk(f, o, jg) { if (jg) f.breakCD = 0; } },
+{ id: 'combo_cdr', n: '连环', s: 'qi', r: 'r', d: '一套连招打到第 5 下时重置右键招式的冷却。', hit(c) { if (c.o.comboHits === 5) { c.f.skill2CD = 0; scTxt(c.f, '连环', '110,200,255'); } } },
+{ id: 'link_skill', n: '连携', s: 'qi', r: 'c', d: '命中后 0.5 秒内放出的技能伤害 +30%。', hit(c) { if (!c.skill) c.f.sc.linkT = 0.5; }, skill(f) { if (f.sc.linkT > 0) f.sc.linked = 1.2; }, tick(f) { f.sc.linkT = Math.max(0, (f.sc.linkT || 0) - STEP); f.sc.linked = Math.max(0, (f.sc.linked || 0) - STEP); }, out(c) { if (c.skill && c.f.sc.linked > 0) c.dmg *= 1.3; } },
+{ id: 'opening_haste', n: '先机', s: 'feng', r: 'c', d: '每层开战后 8 秒内技能冷却快 150%。', cd(f) { return M.phase === 'fight' && M.t < 8 ? 1.5 : 0; } },
+{ id: 'cd_shield', n: '蓄势', s: 'jin', r: 'c', d: '两个技能都在冷却时受到的伤害 -15%。', inc(c) { if (c.f.skillCD > 0 && c.f.skill2CD > 0) c.dmg *= 0.85; } },
+{ id: 'flow_combo', n: '行云流水', s: 'qi', r: 'r', d: '所有途径获得的气 +50%。', hit(c) { if (!c.ult) c.f.meter = Math.min(100, c.f.meter + c.m.dmg * 0.09); } },
+{ id: 'meter_start', n: '蓄气', s: 'qi', r: 'c', d: '每层开局带 40 点气。', start(f) { f.meter = Math.max(f.meter, 40); } },
+{ id: 'meter_block', n: '守中有攻', s: 'qi', r: 'c', d: '每次格挡获得 4 点气，精准招架获得 20 点。', blk(f, o, jg) { scMeter(f, jg ? 20 : 4); } },
+{ id: 'meter_drain', n: '吸星', s: 'qi', r: 'r', d: '每次命中吸走对手 5 点气，转给自己一半。', hit(c) { const d = Math.min(5, c.o.meter); c.o.meter -= d; scMeter(c.f, d / 2); } },
+{ id: 'meter_heal', n: '归元', s: 'qi', r: 'r', d: '气满时每秒回复 3 点生命。', tick(f) { if (f.meter >= 100 && M.phase === 'fight') { f.sc.mh = (f.sc.mh || 0) + 3 * STEP; if (f.sc.mh >= 1) { const n = Math.floor(f.sc.mh); f.sc.mh -= n; if (!scHas(f, 'no_heal')) { f.hp = Math.min(f.maxHp, f.hp + n); f.lagHp = Math.max(f.lagHp, f.hp); } } } } },
+{ id: 'ult_refund', n: '余韵', s: 'qi', r: 'c', d: '绝技命中后返还 30 点气（每次绝技一次）。', ult(f) { f.sc.refund = 1; }, hit(c) { if (c.ult && c.f.sc.refund) { c.f.sc.refund = 0; scLater(c.f, 0.6, () => scMeter(c.f, 30)); } } },
+{ id: 'meter_power', n: '气盛', s: 'qi', r: 'c', d: '每有 1 点气伤害 +0.25%（满气 +25%）。', out(c) { c.dmg *= 1 + c.f.meter * 0.0025; } },
+{ id: 'jg_meter', n: '借势', s: 'qi', r: 'c', d: '精准招架额外获得 20 点气。', blk(f, o, jg) { if (jg) scMeter(f, 20); } },
+{ id: 'meter_shield', n: '气墙', s: 'qi', r: 'r', d: '挨打时若有 50 点以上的气，消耗 15 点抵消 40% 伤害。', inc(c) { if (c.f.meter >= 50) { c.f.meter -= 15; c.dmg *= 0.6; } } },
+{ id: 'overflow', n: '满溢', s: 'qi', r: 'c', d: '满血时每秒获得 2 点气。', tick(f) { if (f.hp >= f.maxHp && (f.sc.ovT = (f.sc.ovT || 0) + STEP) > 1) { f.sc.ovT = 0; scMeter(f, 2); } } },
+{ id: 'meter_bank', n: '存气', s: 'qi', r: 'r', d: '每层结束时剩下的气存一半，下一层开局带上（最多 60）。', clear(f) { M.scRun.bank = Math.min(60, Math.round(f.meter / 2)); }, start(f) { if (M.scRun.bank) { f.meter = Math.max(f.meter, M.scRun.bank); M.scRun.bank = 0; } } },
+{ id: 'foe_meter_cut', n: '断气', s: 'qi', r: 'c', d: '对手获得的气 -40%。', tick(f, o) { const last = f.sc.oMeter === undefined ? o.meter : f.sc.oMeter; if (o.meter > last) o.meter = last + (o.meter - last) * 0.6; f.sc.oMeter = o.meter; } },
+{ id: 'ult_heal', n: '绝处逢春', s: 'xue', r: 'c', d: '放绝技时回复 15% 最大生命。', ult(f) { scHeal(f, f.maxHp * 0.15); } },
+{ id: 'guard_regen', n: '吐纳', s: 'qi', r: 'c', d: '架势回复速度 +60%。', tick(f) { if (f.state !== 'block' && f.state !== 'blockstun' && f.sinceBlock > 0.6) f.guard = Math.min(f.maxGuard, f.guard + 26 * 0.6 * STEP); } },
+{ id: 'fury', n: '怒气', s: 'xue', r: 'c', d: '挨打获得的气翻倍。', hurt(c) { c.f.meter = Math.min(100, c.f.meter + c.m.dmg * 0.14); } },
+{ id: 'full_hp', n: '完璧', s: 'jin', r: 'c', d: '满血时伤害 +25%。', out(c) { if (c.f.hp >= c.f.maxHp) c.dmg *= 1.25; } },
+{ id: 'berserker', n: '狂血', s: 'xue', r: 'r', d: '每损失 2% 生命伤害 +1%（最多 +40%）。', out(c) { c.dmg *= 1 + Math.min(0.4, (1 - scHpPct(c.f)) * 0.5); } },
+{ id: 'far_reach', n: '远攻', s: 'feng', r: 'c', d: '离对手越远伤害越高，400 距离时 +30%。', out(c) { c.dmg *= 1 + clamp((Math.abs(c.f.x - c.o.x) - 80) / 320, 0, 1) * 0.3; } },
+{ id: 'wall_pin', n: '背水一战', s: 'jin', r: 'c', d: '对手靠近场地边缘时伤害 +30%。', out(c) { if (c.o.x < 160 || c.o.x > STAGE_W - 160) c.dmg *= 1.3; } },
+{ id: 'clutch', n: '绝杀', s: 'xue', r: 'c', d: '回合最后 15 秒伤害 +35%。', out(c) { if (M.timer < 15) c.dmg *= 1.35; } },
+{ id: 'opener', n: '起手式', s: 'jin', r: 'c', d: '每层前 3 次命中伤害 +30%。', out(c) { if ((c.f.sc.opened || 0) < 3) c.dmg *= 1.3; }, hit(c) { c.f.sc.opened = (c.f.sc.opened || 0) + 1; } },
+{ id: 'untouched', n: '片叶不沾', s: 'ying', r: 'r', d: '5 秒没挨打时伤害 +30%。', out(c) { if (c.f.sinceHit > 5) c.dmg *= 1.3; } },
+{ id: 'juggler', n: '浮空连段', s: 'feng', r: 'r', d: '浮空连段不再衰减，反而每多一段伤害 +10%。', out(c) { if (c.air) c.dmg *= 1 + Math.min(6, c.o.juggle || 0) * 0.1; } },
+{ id: 'low_leech', n: '饮血', s: 'xue', r: 'c', d: '生命低于 30% 时，伤害的 20% 转为生命。', hit(c) { if (scHpPct(c.f) < 0.3) scHeal(c.f, c.dmg * 0.2); } },
+{ id: 'stance_switch', n: '刚柔并济', s: 'qi', r: 'c', d: '轻击和重击交替命中时伤害 +20%。', out(c) { const k = c.light ? 'l' : c.heavy ? 'h' : ''; if (k && c.f.sc.lastK && k !== c.f.sc.lastK) c.dmg *= 1.2; }, hit(c) { c.f.sc.lastK = c.light ? 'l' : c.heavy ? 'h' : c.f.sc.lastK; } },
+{ id: 'stun_bonus', n: '趁势', s: 'ying', r: 'c', d: '对手硬直中受到的伤害 +15%。', out(c) { if (c.o.state === 'hitstun' || c.o.state === 'launched') c.dmg *= 1.15; } },
+{ id: 'block_punish', n: '破绽百出', s: 'jin', r: 'r', d: '对手刚格挡完的 1 秒内伤害 +40%。', out(c) { if ((c.o.sinceBlock || 9) < 1 && c.o.state !== 'block' && c.o.state !== 'blockstun') { c.dmg *= 1.4; scTxt(c.o, '破绽', '240,200,110'); } } },
+{ id: 'full_meter_foe', n: '侠胆', s: 'jin', r: 'c', d: '对手气满时，你的伤害 +30%。', out(c) { if (c.o.meter >= 100) c.dmg *= 1.3; } },
+{ id: 'odd_even', n: '阴阳', s: 'mo', r: 'c', d: '单数层伤害 +20%，双数层受到的伤害 -20%。', out(c) { if ((M.towerFloor || 1) % 2) c.dmg *= 1.2; }, inc(c) { if (!((M.towerFloor || 1) % 2)) c.dmg *= 0.8; } },
+{ id: 'heat', n: '炽烈', s: 'xue', r: 'r', d: '1.5 秒内连续命中会积热，积满 10 层时爆发火焰让对手灼烧 4 秒。', hit(c) { const f = c.f; f.sc.heat = clock - (f.sc.heatAt || -9) < 1.5 ? (f.sc.heat || 0) + 1 : 1; f.sc.heatAt = clock; if (f.sc.heat >= 10) { f.sc.heat = 0; c.o.burnT = Math.max(c.o.burnT || 0, 4); scTxt(c.o, '炽烈', '255,140,50'); if (!RESIM) ring(c.o.x, c.o.y - 60, 120, '255,140,50', 0.4); } } },
+{ id: 'frost_lock', n: '玄霜凝骨', s: 'shuang', r: 'r', d: '近战命中让对手减速；连中 3 下冻结 0.45 秒。', hit(c) { if (c.proj) return; const o = c.o; o.frostSlow = 2.5; o.frostHits = (o.frostHits || 0) + 1; if (o.frostHits >= 3 && o.hp > 0) { o.frostHits = 0; scRoot(o, 0.45); SFX.frostHit(1.3); scTxt(o, '极寒冻结', '140,220,255'); } } },
+{ id: 'bleed_rend', n: '断脉破罡', s: 'xue', r: 'r', d: '暴击、反击，或四成几率，让对手流血 4 跳。', hit(c) { if (c.counter || c.ev.big || scRnd() < 0.4) { c.o.bleedTicks = 4; c.o.bleedDmg = Math.max(4, Math.round(c.dmg * 0.12)); } } },
+{ id: 'venom', n: '蛇毒', s: 'mo', r: 'c', d: '每次命中叠一层毒（最多 8 层），每层每秒 2 点伤害。', hit(c) { scPoison(c.o, 1); } },
+{ id: 'virulent', n: '剧毒', s: 'mo', r: 'r', d: '反击命中时对手身上的毒层数翻倍。', hit(c) { if (c.counter && scSt(c.o).poison) scPoison(c.o, scSt(c.o).poison); } },
+{ id: 'ignite', n: '引火', s: 'xue', r: 'c', d: '技能命中让对手灼烧 3 秒。', hit(c) { if (c.skill) c.o.burnT = Math.max(c.o.burnT || 0, 3); } },
+{ id: 'wildfire', n: '燎原', s: 'xue', r: 'r', d: '打中灼烧中的对手伤害 +15%，灼烧延长 1 秒。', out(c) { if (c.o.burnT > 0) c.dmg *= 1.15; }, hit(c) { if (c.o.burnT > 0) c.o.burnT = Math.min(8, c.o.burnT + 1); } },
+{ id: 'shatter', n: '碎冰', s: 'shuang', r: 'r', d: '重击打中被霜冻减速的对手，伤害 +50% 并震碎寒霜。', out(c) { if (c.heavy && c.o.frostSlow > 0) { c.dmg *= 1.5; c.o.frostSlow = 0; scTxt(c.o, '碎冰', '140,220,255'); SFX.frostHit(1.5); } } },
+{ id: 'hemorrhage', n: '血崩', s: 'xue', r: 'c', d: '流血中的对手受到的伤害 +20%。', out(c) { if (c.o.bleedTicks > 0) c.dmg *= 1.2; } },
+{ id: 'marked_prey', n: '猎印', s: 'ying', r: 'r', d: '每第 5 次命中给对手打上猎印，下一击双倍伤害。', out(c) { if (scSt(c.o).mark) { scSt(c.o).mark = 0; c.dmg *= 2; c.ev.big = true; scTxt(c.o, '猎印', '200,140,255'); } }, hit(c) { if (++c.f.sc.markN % 5 === 0) { scSt(c.o).mark = 1; scTxt(c.o, '印', '200,140,255', -20); } } },
+{ id: 'static', n: '静电', s: 'lei', r: 'c', d: '命中给对手积静电，满 6 层时引下一道天雷（28 伤害）。', hit(c) { const s = scSt(c.o); s.static = (s.static || 0) + 1; if (s.static >= 6) { s.static = 0; scBolt(c.f, c.o.x, 28); } } },
+{ id: 'weaken', n: '卸甲', s: 'mo', r: 'c', d: '命中让对手 3 秒内伤害 -15%。', hit(c) { scWeak(c.o, 3, 0.15); } },
+{ id: 'expose', n: '洞穿', s: 'jin', r: 'r', d: '打破对手架势后，对手 4 秒内受到的伤害 +30%。', gb(f, o) { scVuln(o, 4, 0.3); scTxt(o, '洞穿', '240,200,110', 20); } },
+{ id: 'root_strike', n: '钉骨', s: 'shuang', r: 'r', d: '反击命中会把对手钉在原地 0.5 秒。', hit(c) { if (c.counter && c.o.hp > 0) { scRoot(c.o, 0.5); scTxt(c.o, '钉骨', '140,220,255'); } } },
+{ id: 'plague', n: '百病缠身', s: 'mo', r: 'e', d: '对手身上同时有 3 种以上异常时，所有持续伤害快一倍。', tick(f, o) { o.scFast = scStatuses(o) >= 3; } },
+{ id: 'cauterize', n: '以火养身', s: 'xue', r: 'r', d: '对手灼烧时你每秒回复 2 点生命。', tick(f, o) { if (o.burnT > 0 && M.phase === 'fight') { f.sc.cau = (f.sc.cau || 0) + 2 * STEP; if (f.sc.cau >= 1) { f.sc.cau -= 1; scHeal(f, 1); } } } },
+{ id: 'toxic_guard', n: '蚀骨', s: 'mo', r: 'c', d: '中毒的对手每跳毒还会掉 4 点架势。', poisonTick(f, o) { o.guard = Math.max(0, o.guard - 4); } },
+{ id: 'frost_aura', n: '寒气逼人', s: 'shuang', r: 'c', d: '对手离你 120 距离内时会被持续减速。', tick(f, o) { if (scNear(f, o, 120)) o.frostSlow = Math.max(o.frostSlow || 0, 0.2); } },
+{ id: 'chill_proj', n: '冰魄', s: 'shuang', r: 'c', d: '飞行道具命中让对手减速 2 秒。', hit(c) { if (c.proj) c.o.frostSlow = Math.max(c.o.frostSlow || 0, 2); } },
+{ id: 'frost_armor', n: '霜甲', s: 'shuang', r: 'r', d: '近身打你的人会被冻得减速 1.5 秒。', hurt(c) { if (!c.proj) c.o.frostSlow = Math.max(c.o.frostSlow || 0, 1.5); } },
+{ id: 'deep_freeze', n: '冰封', s: 'shuang', r: 'e', d: '对手被减速时你的伤害 +20%；对手被冻结时 +50%。', out(c) { if (c.o.rooted && c.o.state === 'hitstun') c.dmg *= 1.5; else if (c.o.frostSlow > 0) c.dmg *= 1.2; } },
+{ id: 'chain_lightning', n: '连锁闪电', s: 'lei', r: 'r', d: '技能命中有 35% 几率在对手头顶再落一道雷。', hit(c) { if (c.skill && !c.m.scFx && scRnd() < 0.35) scBolt(c.f, c.o.x, 22); } },
+{ id: 'thunder_mark', n: '雷印', s: 'lei', r: 'c', d: '绝技命中后，对手 5 秒内每 1 秒挨一道小雷（12 伤害）。', hit(c) { if (c.ult) c.f.sc.tmT = 5; }, tick(f, o) { if (f.sc.tmT > 0) { const t0 = f.sc.tmT; f.sc.tmT -= STEP; if (Math.floor(t0) !== Math.floor(f.sc.tmT)) scBolt(f, o.x, 12); } } },
+{ id: 'overcharge', n: '雷霆万钧', s: 'lei', r: 'e', d: '气满时的普通攻击带雷，额外造成 10 点伤害并麻痹 0.2 秒。', hit(c) { if (c.f.meter >= 100 && !c.skill && !c.ult && !c.m.scFx) { scTrue(c.o, 10, '255,220,90'); if (c.o.hp > 0 && c.o.state === 'hitstun') c.o.stun += 0.2; } } },
+{ id: 'storm_guard', n: '雷盾', s: 'lei', r: 'r', d: '精准招架时在对手头顶落雷。', blk(f, o, jg) { if (jg) scBolt(f, o.x, 24); } },
+{ id: 'charge_break', n: '蓄力破军', s: 'jin', r: 'r', d: '蓄力斩命中额外削掉对手 40 点架势。', hit(c) { if (/^cs/.test(c.f.moveName || '') && c.f.state === 'attack') { c.o.guard = Math.max(0, c.o.guard - 40); scTxt(c.o, '破军', '240,200,110'); } } },
+{ id: 'proj_absorb', n: '纳气', s: 'qi', r: 'c', d: '被飞行道具打中时获得 10 点气、回复 5 点生命。', hurt(c) { if (c.proj) { scMeter(c.f, 10); scHeal(c.f, 5); } } },
+{ id: 'listen_wind', n: '听风辨位', s: 'ying', r: 'r', d: '对手放绝技时你获得 30 点气和 0.5 秒无敌。', foeUlt(f) { scMeter(f, 30); f.invul = Math.max(f.invul, 0.5); scTxt(f, '听风辨位', '200,140,255'); } },
+{ id: 'skill_heal', n: '妙手回春', s: 'xue', r: 'c', d: '每放一次技能回复 3% 最大生命。', skill(f) { scHeal(f, f.maxHp * 0.03); } },
+{ id: 'guard_crush', n: '摧坚', s: 'jin', r: 'c', d: '打在对手格挡上时磨血翻三倍、削架势多一半。', blkOut(c) { c.chip *= 3; c.guardMul *= 1.5; } },
+{ id: 'after_skill_light', n: '余劲', s: 'qi', r: 'r', d: '放完右键招式 1 秒内的下一次轻击伤害 +40%。', skill(f, o, slot) { if (slot === 2) f.sc.ask = 1 + 0.5; }, tick(f) { f.sc.ask = Math.max(0, (f.sc.ask || 0) - STEP); }, out(c) { if (c.light && c.f.sc.ask > 0) { c.f.sc.ask = 0; c.dmg *= 1.4; c.ev.big = true; } } },
+{ id: 'pressure', n: '步步紧逼', s: 'jin', r: 'c', d: '朝对手走过去时受到的伤害 -15%。', inc(c) { const f = c.f; if (f.state === 'walk' && Math.sign(f.vx) === Math.sign(c.o.x - f.x)) c.dmg *= 0.85; } },
+{ id: 'escape_strike', n: '回身斩', s: 'feng', r: 'c', d: '腾空闪后 1 秒内的空中攻击伤害 +40%。', esc(f) { f.sc.esT = 1.0; }, tick(f) { f.sc.esT = Math.max(0, (f.sc.esT || 0) - STEP); }, out(c) { if (c.f.sc.esT > 0 && c.f.y < -15 && !c.proj) c.dmg *= 1.4; } },
+{ id: 'jg_heal', n: '吐故纳新', s: 'xue', r: 'c', d: '精准招架回复 8 点生命。', blk(f, o, jg) { if (jg) scHeal(f, 8); } },
+{ id: 'glass_cannon', n: '玉石俱焚', s: 'xian', r: 'x', d: '伤害 +45%，但受到的伤害 +35%。', out(c) { c.dmg *= 1.45; }, inc(c) { c.dmg *= 1.35; } },
+{ id: 'blood_pact', n: '血契', s: 'xian', r: 'x', d: '放技能消耗当前生命的 6%，技能伤害 +60%。', skill(f) { scTrue(f, f.hp * 0.06, '255,90,100', true); }, out(c) { if (c.skill) c.dmg *= 1.6; } },
+{ id: 'scorched_earth', n: '破釜沉舟', s: 'xian', r: 'x', d: '最大生命 -30%，伤害 +35%，气的获取 +30%。', start(f) { f.maxHp = Math.round(f.maxHp * 0.7); f.hp = Math.min(f.hp, f.maxHp); f.lagHp = f.hp; }, out(c) { c.dmg *= 1.35; } },
+{ id: 'gambler', n: '孤注一掷', s: 'xian', r: 'x', d: '每次命中一半几率 1.7 倍伤害，一半几率 0.6 倍。', out(c) { c.dmg *= scRnd() < 0.5 ? 1.7 : 0.6; } },
+{ id: 'overclock', n: '走火入魔', s: 'xian', r: 'x', d: '技能冷却减半，但每放一次技能自损 6 点生命。', skill(f, o, slot) { if (slot === 2) f.skill2CD *= 0.5; else f.skillCD *= 0.5; scTrue(f, 6, '255,120,60', true); } },
+{ id: 'no_heal', n: '断情', s: 'xian', r: 'x', d: '伤害 +30%，但无法通过任何方式回复生命。', out(c) { c.dmg *= 1.3; } },
+{ id: 'time_bomb', n: '倒悬', s: 'xian', r: 'x', d: '伤害 +30%；回合计时少于 10 秒后你每秒掉 4 点血。', out(c) { c.dmg *= 1.3; }, tick(f) { if (M.phase === 'fight' && M.timer < 10) { f.sc.tb = (f.sc.tb || 0) + 4 * STEP; if (f.sc.tb >= 1) { f.sc.tb -= 1; scTrue(f, 1, '255,120,60', true); } } } },
+{ id: 'hunted', n: '众矢之的', s: 'xian', r: 'x', d: '对手伤害 +20%，但你每命中一次本层伤害永久 +2%（最多 +40%）。', inc(c) { c.dmg *= 1.2; }, out(c) { c.dmg *= 1 + Math.min(20, c.f.sc.hunt || 0) * 0.02; }, hit(c) { c.f.sc.hunt = (c.f.sc.hunt || 0) + 1; } },
+{ id: 'vampire_curse', n: '血魔', s: 'xian', r: 'x', d: '伤害的 18% 转为生命，但每秒流失 2 点生命（最多掉到 1）。', hit(c) { scHeal(c.f, c.dmg * 0.18); }, tick(f) { if (M.phase === 'fight') { f.sc.vc = (f.sc.vc || 0) + 2 * STEP; if (f.sc.vc >= 1) { f.sc.vc -= 1; scTrue(f, 1, '255,90,100', true); } } } },
+{ id: 'frail_fortress', n: '外强中干', s: 'xian', r: 'x', d: '架势上限翻倍，但最大生命 -20%。', start(f) { f.maxGuard *= 2; f.guard = f.maxGuard; f.maxHp = Math.round(f.maxHp * 0.8); f.hp = Math.min(f.hp, f.maxHp); f.lagHp = f.hp; } },
+{ id: 'all_in', n: '一招定乾坤', s: 'xian', r: 'x', d: '绝技伤害 1.8 倍，但气的获取 -40%。', out(c) { if (c.ult) c.dmg *= 1.8; } },
+{ id: 'thin_ice', n: '如履薄冰', s: 'xian', r: 'x', d: '冲刺和腾空闪冷却减半，但被反击时伤害 +50%。', dash(f) { f.dashCD *= 0.5; }, esc(f) { f.breakCD *= 0.5; }, inc(c) { if (c.f.state === 'attack' || c.f.state === 'skill') c.dmg *= 1.5; } },
+{ id: 'cursed_blade', n: '妖刀', s: 'xian', r: 'x', d: '轻击伤害 +40%，重击伤害 -30%。', out(c) { if (c.light) c.dmg *= 1.4; else if (c.heavy) c.dmg *= 0.7; } },
+{ id: 'reckless', n: '莽', s: 'xian', r: 'x', d: '再也打不出精准招架，但所有伤害 +25%、移速 +10%。', jg() { return -1; }, out(c) { c.dmg *= 1.25; }, spd() { return 1.1; } },
+{ id: 'blood_price', n: '以命换命', s: 'xian', r: 'x', d: '每次命中自损 2 点生命，但伤害 +50%。', out(c) { c.dmg *= 1.5; }, hit(c) { if (!c.m.scFx) scTrue(c.f, 2, '255,90,100', true); } },
+{ id: 'qf_intent', n: '青锋 · 剑意满盈', s: 'hero', h: 'qingfeng', r: 'r', d: '两个技能每次命中额外获得 8 点气。', hit(c) { if (c.skill) scMeter(c.f, 8); } },
+{ id: 'qf_loop', n: '青锋 · 游龙回旋', s: 'hero', h: 'qingfeng', r: 'e', d: '疾风斩命中重置剑气的冷却；剑气命中让疾风斩冷却减 2 秒。', hit(c) { if (c.src === 'gale') c.f.skill2CD = 0; else if (c.src === 'swordqi') c.f.skillCD = Math.max(0, c.f.skillCD - 2); } },
+{ id: 'fy_ambush', n: '绯影 · 影袭', s: 'hero', h: 'feiying', r: 'e', d: '瞬身后 1.2 秒内的下一击 1.8 倍伤害。', skill(f, o, slot) { if (f.skill === 'blink') f.sc.amb = 1.2; }, tick(f) { f.sc.amb = Math.max(0, (f.sc.amb || 0) - STEP); }, out(c) { if (c.f.sc.amb > 0 && c.src !== 'blink') { c.f.sc.amb = 0; c.dmg *= 1.8; c.ev.big = true; scTxt(c.o, '影袭', '200,140,255'); } } },
+{ id: 'fy_poison', n: '绯影 · 淬毒苦无', s: 'hero', h: 'feiying', r: 'r', d: '苦无命中叠 2 层毒。', hit(c) { if (c.src === 'kunai') scPoison(c.o, 2); } },
+{ id: 'ts_vajra', n: '铁山 · 金刚不坏', s: 'hero', h: 'tieshan', r: 'r', d: '重击的霸体能多吃一下。', atk(f, o, name) { if (HEAVY_MOVES.includes(name)) f.armorHits = (f.armorHits || 0) + 1; } },
+{ id: 'ts_aftershock', n: '铁山 · 震岳余波', s: 'hero', h: 'tieshan', r: 'e', d: '震地之后 0.4 秒再震一次。', skill(f) { if (f.skill === 'quake') { const x = f.x + f.face * 120; scLater(f, 0.4, () => scQuake(f, x, 20)); } } },
+{ id: 'ls_frost_tip', n: '凌霜 · 寒芒枪尖', s: 'hero', h: 'lingshuang', r: 'r', d: '枪尖（最远端）命中让对手减速 2 秒，并积一层冻结。', hit(c) { if (!c.proj && !c.ult && Math.abs(c.o.x - c.f.x) >= 142) { c.o.frostSlow = Math.max(c.o.frostSlow || 0, 2); c.o.frostHits = (c.o.frostHits || 0) + 1; if (c.o.frostHits >= 3 && c.o.hp > 0) { c.o.frostHits = 0; scRoot(c.o, 0.45); } } } },
+{ id: 'ls_turn', n: '凌霜 · 回马枪', s: 'hero', h: 'lingshuang', r: 'e', d: '回马枪命中重置旋枪的冷却，并获得 0.3 秒无敌。', hit(c) { if (c.src === 'backthrust') { c.f.skill2CD = 0; c.f.invul = Math.max(c.f.invul, 0.3); } } },
+{ id: 'ly_ride', n: '流云 · 乘风', s: 'hero', h: 'liuyun', r: 'r', d: '在空中时飞行道具伤害 +30%。', out(c) { if (c.proj && c.f.y < -15) c.dmg *= 1.3; } },
+{ id: 'ly_return', n: '流云 · 风刃回旋', s: 'hero', h: 'liuyun', r: 'e', d: '风刃放出 0.5 秒后再追加一道风刃。', skill(f) { if (f.skill === 'windblade') { const dir = f.face; scLater(f, 0.5, () => scWave(f, dir, 20, { kind: 'wind' })); } } },
+{ id: 'lm_mark', n: '雷鸣 · 雷殛', s: 'hero', h: 'leiming', r: 'r', d: '雷拳命中后 2 秒内，你的下一次命中会引下一道天雷。', hit(c) { if (c.src === 'thunderfist') c.f.sc.lmT = 2; else if (c.f.sc.lmT > 0 && !c.m.scFx) { c.f.sc.lmT = 0; scBolt(c.f, c.o.x, 26); } }, tick(f) { f.sc.lmT = Math.max(0, (f.sc.lmT || 0) - STEP); } },
+{ id: 'lm_guard', n: '雷鸣 · 金刚雷铠', s: 'hero', h: 'leiming', r: 'r', d: '雷铠的招架时间延长 0.4 秒。', skill(f) { if (f.skill === 'stomp') f.sc.tgExt = 0.4; }, tick(f) { if (f.sc.tgExt > 0 && f.state === 'skill' && f.skill === 'stomp' && f.thunderGuardT > 0 && f.thunderGuardT < 0.05) { f.thunderGuardT += f.sc.tgExt; f.sc.tgExt = 0; } } },
+{ id: 'my_pond', n: '墨羽 · 墨池', s: 'hero', h: 'moyu', r: 'r', d: '墨水回复速度 +60%。', tick(f) { if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * 0.6 * STEP); } },
+{ id: 'my_bold', n: '墨羽 · 浓墨重彩', s: 'hero', h: 'moyu', r: 'e', d: '墨水多于 50 时，每次命中消耗 5 点墨，伤害 +20%。', out(c) { if ((c.f.ink || 0) > 50) { c.f.ink -= 5; c.dmg *= 1.2; } } },
+{ id: 'yh_full', n: '月华 · 月满', s: 'hero', h: 'yuehua', r: 'r', d: '自愈的总量 +80，并且没挨打 2 秒就开始回血。', start(f) { f.regenLeft = (f.regenLeft || 0) + 80; }, tick(f) { if (f.sinceHit > 2 && f.sinceHit <= 3 && f.regenLeft > 0 && f.hp < f.maxHp && M.phase === 'fight' && !scHas(f, 'no_heal')) { const h = Math.min(8 * STEP, f.regenLeft); f.hp = Math.min(f.maxHp, f.hp + h); f.regenLeft -= h; } } },
+{ id: 'yh_mirror', n: '月华 · 镜花', s: 'hero', h: 'yuehua', r: 'e', d: '月镜格开攻击时回复 20 点生命、获得 15 点气。', parry(f) { scHeal(f, 20); scMeter(f, 15); } },
+{ id: 'yl_sky', n: '燕翎 · 御空', s: 'hero', h: 'yanling', r: 'r', d: '在空中受到的伤害 -20%。', inc(c) { if (c.f.y < -15) c.dmg *= 0.8; } },
+{ id: 'yl_chain', n: '燕翎 · 飞燕连环', s: 'hero', h: 'yanling', r: 'r', d: '飞镖命中让俯冲冷却减 1 秒。', hit(c) { if (c.src === 'darts') c.f.skillCD = Math.max(0, c.f.skillCD - 1); } },
+{ id: 'yx_echo', n: '玉箫 · 余音', s: 'hero', h: 'yuxiao', r: 'r', d: '攻击命中攒音律的速度翻倍。', hit(c) { if (!c.proj && !c.ult) c.f.notes = Math.min(3, (c.f.notes || 0) + 1); } },
+{ id: 'yx_wall', n: '玉箫 · 回音不绝', s: 'hero', h: 'yuxiao', r: 'e', d: '回音壁的反弹时间延长 0.5 秒。', skill(f) { if (f.skill === 'echowall') { f.reflectT = (f.reflectT || 0) + 0.5; f.armorT = Math.max(f.armorT, f.reflectT); } } },
+{ id: 'zx_immortal', n: '醉翁 · 酒仙', s: 'hero', h: 'zuixian', r: 'r', d: '醉意的积累速度 +50%。', hit(c) { if (!c.ult) c.f.drunk = Math.min(100, (c.f.drunk || 0) + 2); }, skill(f) { f.drunk = Math.min(100, (f.drunk || 0) + 15); } },
+{ id: 'zx_sprawl', n: '醉翁 · 醉卧', s: 'hero', h: 'zuixian', r: 'e', d: '醉意在 80 以上时受到的伤害 -25%。', inc(c) { if ((c.f.drunk || 0) >= 80) c.dmg *= 0.75; } },
+{ id: 'gc_soul', n: '勾陈 · 锁魂', s: 'hero', h: 'gouchen', r: 'r', d: '钩住对手的时间延长 1 秒。', hit(c) { if (c.o.hookedT > 0 && !c.f.sc.hooked) { c.f.sc.hooked = 1; c.o.hookedT += 1; } }, tick(f, o) { if (!(o.hookedT > 0)) f.sc.hooked = 0; } },
+{ id: 'gc_sweep', n: '勾陈 · 链锤横扫', s: 'hero', h: 'gouchen', r: 'e', d: '旋锤打中被钩住的对手伤害 +40%。', out(c) { if (c.src === 'whirl' && c.o.hookedT > 0) c.dmg *= 1.4; } },
+{ id: 'lq_thread', n: '凌雀 · 穿针引线', s: 'hero', h: 'lingque', r: 'r', d: '针印持续时间从 4 秒延长到 7 秒。', hit(c) { if (c.o.needleMark > 0 && c.o.needleMark >= 3.9) c.o.needleMark = 7; } },
+{ id: 'lq_drop', n: '凌雀 · 针落', s: 'hero', h: 'lingque', r: 'e', d: '近战打中带针印的对手时引爆针印，追加 25 点伤害。', hit(c) { if (!c.proj && c.o.needleMark > 0) { c.o.needleMark = 0; scTrue(c.o, 25, '235,110,210'); scTxt(c.o, '针落', '235,110,210'); } } },
+{ id: 'tian_thunder', n: '天书 · 九霄雷劫', s: 'lei', r: 'l', d: '每 5 秒在对手头顶落下一道 34 伤害的天雷。', tick(f, o) { if (M.phase !== 'fight') return; f.sc.tt = (f.sc.tt || 0) + STEP; if (f.sc.tt >= 5) { f.sc.tt = 0; scBolt(f, o.x, 34); } } },
+{ id: 'tian_rebirth', n: '天书 · 涅槃', s: 'xue', r: 'l', d: '每层第一次倒下时以 40% 生命复活。', fatal(c) { if (c.f.sc.reborn) return false; c.f.sc.reborn = 1; c.f.hp = Math.round(c.f.maxHp * 0.4); c.f.lagHp = c.f.hp; c.f.invul = 2; scTxt(c.f, '涅槃', '255,140,50', 15); if (!RESIM) ring(c.f.x, c.f.y - 60, 220, '255,140,50', 0.6); return true; } },
+{ id: 'tian_timeless', n: '天书 · 光阴', s: 'qi', r: 'l', d: '技能冷却永远快一倍。', cd() { return 1; } },
+{ id: 'tian_mirror', n: '天书 · 镜像', s: 'ying', r: 'l', d: '你的每次飞行道具都会再复制一发反向飞出。', proj(f, p) { if (!p.scFx && !p.scCopy && p.vx) { const q = { ...p, vx: -p.vx, x: f.x - (p.x - f.x), scCopy: true, scFx: true }; scLater(f, 0, () => { if (!isClient()) projs.push(Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, q)); }); } } },
+{ id: 'tian_frost', n: '天书 · 绝对零度', s: 'shuang', r: 'l', d: '每次命中都积一层冻结，连中 3 下冻结 0.8 秒。', hit(c) { const o = c.o; o.frostSlow = 2.5; o.tfz = (o.tfz || 0) + 1; if (o.tfz >= 3 && o.hp > 0) { o.tfz = 0; scRoot(o, 0.8); scTxt(o, '绝对零度', '140,220,255'); } } },
+{ id: 'tian_vortex', n: '天书 · 吞天', s: 'mo', r: 'l', d: '对手每秒被拉向你，靠近时每秒受 6 点伤害。', tick(f, o) { if (M.phase !== 'fight' || o.hp <= 0) return; if (!o.rooted) o.x += Math.sign(f.x - o.x) * 40 * STEP; if (scNear(f, o, 150)) { f.sc.vt = (f.sc.vt || 0) + 6 * STEP; if (f.sc.vt >= 1) { f.sc.vt -= 1; scTrue(o, 1, '170,170,200'); } } } },
+{ id: 'tian_aegis', n: '天书 · 不灭金身', s: 'jin', r: 'l', d: '受到的单次伤害最多只有你最大生命的 8%。', inc(c) { c.dmg = Math.min(c.dmg, c.f.maxHp * 0.08); } },
+{ id: 'tian_wind', n: '天书 · 逍遥游', s: 'feng', r: 'l', d: '移速 +30%，冲刺不再有冷却。', spd() { return 1.3; }, dash(f) { f.dashCD = 0.05; } },
+{ id: 'tian_blade', n: '天书 · 万剑归宗', s: 'jin', r: 'l', d: '每次轻击命中都放出一道 14 伤害的剑气。', hit(c) { if (c.light) scWave(c.f, c.f.face, 14); } },
+{ id: 'tian_heart', n: '天书 · 心如止水', s: 'qi', r: 'l', d: '气永远不低于 50。', tick(f) { if (f.meter < 50 && f.state !== 'special') f.meter = 50; } },
+];
+const BOSS_AFFIXES = [
+{ id: 'bx_enrage', n: '狂暴', d: '生命低于一半后伤害 +30%。', out(c) { if (scHpPct(c.f) < 0.5) c.dmg *= 1.3; } },
+{ id: 'bx_thunder', n: '雷霆', d: '每 7 秒在你头顶落雷。', tick(f, o) { if (M.phase !== 'fight') return; f.sc.bt = (f.sc.bt || 0) + STEP; if (f.sc.bt >= 7) { f.sc.bt = 0; scBolt(f, o.x, 30); } } },
+{ id: 'bx_regen', n: '再生', d: '4 秒没挨打就每秒回复 1% 生命。', tick(f) { if (f.sinceHit > 4 && M.phase === 'fight') { f.sc.br = (f.sc.br || 0) + f.maxHp * 0.01 * STEP; if (f.sc.br >= 1) { const n = Math.floor(f.sc.br); f.sc.br -= n; f.hp = Math.min(f.maxHp, f.hp + n); } } } },
+{ id: 'bx_thorns', n: '荆棘', d: '近身打它会反受 10% 伤害。', hurt(c) { if (!c.proj) scTrue(c.o, c.dmg * 0.1, '255,120,120', true); } },
+{ id: 'bx_armor', n: '玄甲', d: '受到的伤害 -15%，架势上限翻倍。', inc(c) { c.dmg *= 0.85; }, start(f) { f.maxGuard *= 2; f.guard = f.maxGuard; } },
+{ id: 'bx_frost', n: '寒魄', d: '打中你会让你减速。', hit(c) { c.o.frostSlow = Math.max(c.o.frostSlow || 0, 1.5); } },
+{ id: 'bx_venom', n: '瘴毒', d: '打中你会叠一层毒。', hit(c) { scPoison(c.o, 1); } },
+{ id: 'bx_haste', n: '疾行', d: '移速 +25%，技能冷却 -30%。', spd() { return 1.25; }, skill(f, o, slot) { if (slot === 2) f.skill2CD *= 0.7; else f.skillCD *= 0.7; } },
+];
+const SC_BY = {};
+for (const s of SCROLLS) SC_BY[s.id] = s;
+for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
+function scOn() { return (M.mode === 'tower' || M.mode === 'boss') && M.mode !== 'net'; }
+function scIds(f) { return !f ? [] : f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) : []; }
+function scHas(f, id) { return scOn() && scIds(f).includes(id); }
+function scList(f) {
+const ids = scIds(f);
+if (!f.sc || f.sc.key !== ids.length + ':' + ids[ids.length - 1]) { f.sc = f.sc || {}; f.sc.key = ids.length + ':' + ids[ids.length - 1]; f.sc.list = ids.map(id => SC_BY[id]).filter(Boolean); }
+return f.sc.list;
+}
+function scCount(f, school) { let n = 0; for (const s of scList(f)) if (s.s === school) n++; return n; }
+function scReso(f, school) { return scOn() && scCount(f, school) >= SC_RESONANCE; }
+function scFire(f, hook, ...a) { if (!scOn() || !f || f.idx > 1) return; for (const s of scList(f)) if (s[hook]) s[hook](f, ...a); }
+function scAny(f, hook, ...a) { if (!scOn() || !f || f.idx > 1) return false; for (const s of scList(f)) if (s[hook] && s[hook](f, ...a)) return true; return false; }
+function scFireC(f, hook, c) { if (!scOn() || !f || f.idx > 1) return; for (const s of scList(f)) if (s[hook]) s[hook](c); }
+function scRoundStart() {
+if (!scOn()) return;
+for (const f of [A, B]) {
+f.sc = { lc: 0, markN: 0 }; f.st = {}; f.scFast = false; f.spd = 1;
+scFire(f, 'start', foeOf(f));
+}
+}
+function scDamage(att, def, m, ev, dmg, counter) {
+const proj = !!m.isProj, ult = !!m.ult || att.state === 'special';
+const src = proj ? (m.src || '') : att.state === 'skill' ? att.skill : '';
+const skill = !ult && !!(m.sk || att.state === 'skill' || (proj && SKILLS[m.src]));
+const name = !proj && att.state === 'attack' ? att.moveName || '' : '';
+const c = { f: att, o: def, m, ev, dmg, counter: !!counter, proj, ult, skill, src,
+light: /^l\d|^a1$/.test(name), heavy: HEAVY_MOVES.includes(name) || name === 'a2', air: def.y < -2 || def.state === 'launched' };
+const dc = { ...c, f: def, o: att };
+if ((scReso(def, 'ying') && !ult && scRnd() < 0.08) || scAnyC(def, 'dodge', dc)) {
+if (!RESIM) { smoke(def.x, def.y - 50, 5); addP({ type: 'text', text: '闪', x: def.x, y: def.y - 120, life: 0.6, max: 0.6, rgb: '200,140,255' }); }
+def.invul = Math.max(def.invul, 0.2); c.cancel = true; c.dodged = true; return c;
+}
+scFireC(att, 'out', c);
+if (scReso(att, 'mo')) c.dmg *= 1.1;
+const sa = att.st || {};
+if (sa.weakT > 0) c.dmg *= 1 - (sa.weak || 0);
+const sd = def.st || {};
+if (sd.vulnT > 0) c.dmg *= 1 + (sd.vuln || 0);
+const ic = { ...c, f: def, o: att, dmg: c.dmg };
+scFireC(def, 'inc', ic);
+if (scReso(def, 'jin')) ic.dmg *= 0.9;
+c.dmg = Math.max(0, ic.dmg);
+if (def.hp - c.dmg <= 0 && def.hp > 0) {
+const fc = { ...ic, dmg: c.dmg };
+if (scAnyC(def, 'fatal', fc)) { c.cancel = true; ev.dd = 0; }
+}
+return c;
+}
+function scAnyC(f, hook, c) { if (!scOn() || !f || f.idx > 1) return false; for (const s of scList(f)) if (s[hook] && s[hook](c)) return true; return false; }
+function scAfterHit(att, def, m, ev, dmg, counter, pre) {
+if (!scOn()) return;
+const c = { ...pre, dmg };
+scFireC(att, 'hit', c);
+if (scReso(att, 'xue')) scHeal(att, dmg * 0.06);
+scFireC(def, 'hurt', { ...c, f: def, o: att });
+}
+function scBlockMod(att, def, m) {
+const c = { f: att, o: def, m, chip: 1, guardMul: 1, heavy: !m.isProj && att.state === 'attack' && HEAVY_MOVES.includes(att.moveName) };
+if (!scOn()) return c;
+scFireC(att, 'blkOut', c);
+scFireC(def, 'blkIn', c);
+return c;
+}
+function scJG(f) {
+let w = 0.09;
+if (!scOn() || f.idx > 1) return w;
+for (const s of scList(f)) if (s.jg) { const v = s.jg(f); if (v < 0) return -1; w = Math.max(w, v); }
+return w;
+}
+function scSpd(f) {
+let k = (f.frostSlow > 0 ? (scReso(foeOf(f), 'shuang') ? 0.5 : 0.75) : 1);
+if (!scOn() || f.idx > 1) return k;
+for (const s of scList(f)) if (s.spd) k *= s.spd(f);
+if (scReso(f, 'feng')) k *= 1.12;
+return k;
+}
+function scProj(f, p) { if (scOn() && f && f.idx <= 1) for (const s of scList(f)) if (s.proj) s.proj(f, p); }
+function scTick(f, foe) {
+if (!scOn() || f.idx > 1 || !f.sc) return;
+const st = f.st || (f.st = {}), fast = f.scFast ? 2 : 1;
+if (st.poison > 0 && M.phase === 'fight') {
+st.poisonT -= STEP; st.pT = (st.pT || 0) + STEP * fast;
+if (st.pT >= 0.5) { st.pT = 0; scTrue(f, st.poison, '150,220,110'); scFire(foe, 'poisonTick', f); }
+if (st.poisonT <= 0) st.poison = 0;
+}
+if (st.vulnT > 0) st.vulnT = Math.max(0, st.vulnT - STEP);
+if (st.weakT > 0) st.weakT = Math.max(0, st.weakT - STEP);
+if (fast > 1 && f.bleedTicks > 0) f.bleedTimer = (f.bleedTimer || 0) + STEP;
+if (f.sc.q && f.sc.q.length) {
+for (const e of f.sc.q) e.t -= STEP;
+const due = f.sc.q.filter(e => e.t <= 0); f.sc.q = f.sc.q.filter(e => e.t > 0);
+for (const e of due) e.fn();
+}
+if (M.phase !== 'fight' && M.phase !== 'intro') return;
+let cd = 0;
+for (const s of scList(f)) { if (s.tick) s.tick(f, foe); if (s.cd) cd += s.cd(f); }
+if (cd > 0) scCdCut(f, STEP * cd);
+if (scReso(f, 'lei') && M.phase === 'fight') { f.sc.rl = (f.sc.rl || 0) + STEP; if (f.sc.rl >= 8) { f.sc.rl = 0; scBolt(f, foe.x, 24); } }
+if (scReso(f, 'feng')) f.dashCD = Math.max(0, f.dashCD - STEP * 0.25);
+}
+function scLegendUnlocked() { const n = typeof gbossKills === 'function' ? gbossKills() : 0; return SCROLLS.filter(s => s.r === 'l').slice(0, n).map(s => s.id); }
+function scPool(heroId) {
+const legend = new Set(scLegendUnlocked());
+return SCROLLS.filter(s => (!s.h || s.h === heroId) && (s.r !== 'l' || legend.has(s.id)));
+}
+function scDraw(heroId, owned, n = 3) {
+const pool = scPool(heroId).filter(s => !owned.includes(s.id));
+const out = [];
+const bag = [...pool];
+while (out.length < n && bag.length) {
+const school = {}; for (const id of owned) { const s = SC_BY[id]; if (s) school[s.s] = (school[s.s] || 0) + 1; }
+const w = bag.map(s => SC_RARITY[s.r].w * (s.h ? 1.6 : 1) * (1 + Math.min(3, school[s.s] || 0) * 0.25));
+let r = scRnd() * w.reduce((a, b) => a + b, 0), i = 0;
+while (i < bag.length - 1 && (r -= w[i]) > 0) i++;
+out.push(bag.splice(i, 1)[0]);
+}
+return out;
+}
+const SC_GLYPH = {
+lei: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>', shuang: '<path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M4.9 19.1L19.1 4.9"/>',
+xue: '<path d="M12 2.7l5.7 5.7a8 8 0 1 1-11.3 0z"/>', mo: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 0 0-9 4.5 4.5 0 0 1 0-9"/>',
+feng: '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/>', jin: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+ying: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>', qi: '<path d="M12 3c4 4 4 8 0 9s-4 5 0 9M7 6c3 2 3 4 0 6M17 12c-3 2-3 4 0 6"/>',
+xian: '<path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/>', hero: '<path d="M4 20L18 6l2-4-4 2L2 18zM14 4l6 6"/>'
+};
+function scIcon(s) { const c = SC_SCHOOLS[s.s] || SC_SCHOOLS.jin; return `<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="rgb(${c.rgb})" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${SC_GLYPH[s.s] || SC_GLYPH.jin}</svg>`; }
+function scTag(s) { const c = SC_SCHOOLS[s.s] || SC_SCHOOLS.jin; return `<span class="tp-tag" style="color:rgb(${c.rgb})">${c.n} · ${SC_RARITY[s.r].n}</span>`; }
+function scResoLines(ids) {
+const n = {}; for (const id of ids) { const s = SC_BY[id]; if (s && SC_RESO[s.s]) n[s.s] = (n[s.s] || 0) + 1; }
+return Object.entries(n).map(([k, v]) => `${SC_SCHOOLS[k].n} ${Math.min(v, SC_RESONANCE)}/${SC_RESONANCE}${v >= SC_RESONANCE ? '：' + SC_RESO[k] : ''}`);
+}
 const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s', 0.08, 0], ['l2a', 0.15, 16], ['lcs', 0.08, 0], ['lca', 0.15, 16],
 ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
 ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],
@@ -20681,7 +20545,8 @@ return c;
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const bpAuth = () => bpMode === 'cpu' || bpMode === 'cpuWatch' || bpMode === 'chaos' || bpMode === 'mayhem' || bpMode === 'tag3' || bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === '2v2' || NET.role === 'host';
+const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2'];   // 不联机的点将台：本机自己推进每一步
+const bpAuth = () => LOCAL_BP_MODES.includes(bpMode) || NET.role === 'host';
 const bpSideName = side => {
 if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
 if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
@@ -20695,7 +20560,7 @@ return n ? String(n) : '对手';
 let bpFinishTimer = null;
 function bpStart(mode, customOpts = null) {
 if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
-if (mode === 'cpu' || mode === 'cpuWatch' || mode === 'chaos' || mode === 'mayhem' || mode === 'tag3' || mode === 'tower' || mode === 'stage' || mode === 'train' || mode === '2v2') netDropWaiting();
+if (LOCAL_BP_MODES.includes(mode)) netDropWaiting();
 watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
 ensurePortraits(); chatClear();
 bpMode = mode;
@@ -20724,14 +20589,13 @@ if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') {
 steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
 bans = [-1, -1];
 picks = [[-1, -1], [-1, -1]];
-} else if (netRoomMode === 'chaos') {
+} else if (netRoomMode === 'chaos' || netRoomMode === 'mayhem') {
 steps = [[0, 'pick'], [1, 'pick']];
 bans = [];
 picks = [-1, -1];
 } else {
-steps = BP_STEPS;
-bans = [-1, -1];
-picks = [-1, -1];
+steps = BP_DUO_STEPS;
+picks = [[-1, -1], [-1, -1]];
 }
 }
 BP = {
@@ -20742,7 +20606,7 @@ picks,
 t: BP_TIME,
 avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
 };
-bpSel = -1; bpCpuT = 0.85;
+bpSel = -1; bpCpuT = BP_CPU_DELAY;
 showScreen('bp'); renderBP();
 if (mode === 'net') send({ bps: BP });
 }
@@ -20751,6 +20615,7 @@ if (!BP || BP.step >= bpSteps().length || i < 0 || i >= CHARS.length) return fal
 if (Array.isArray(BP.bans) && BP.bans.includes(i)) return false;
 const stepDef = bpSteps()[BP.step];
 if (!stepDef) return false;
+if (stepDef[1] === 'ban' && isMultiPickBP() && [...BP.picks[0], ...BP.picks[1]].includes(i)) return false;   // 已经选定的人不能禁
 if (stepDef[1] === 'pick') {
 if (isMultiPickBP()) {
 const allPicked = [...(BP.picks[0] || []), ...(BP.picks[1] || [])];
@@ -20767,10 +20632,11 @@ if (av && av.length && av.some(k => !currentBans.includes(k) && !currentPicks.in
 }
 return true;
 }
+const bpValidList = () => CHARS.map((c, i) => i).filter(bpValid);   // 这一步还能点的角色
 function bpApply(i) {
 if (!BP || BP.step >= bpSteps().length) return;
 if (!bpValid(i)) {
-const fallback = CHARS.map((c, idx) => idx).find(bpValid);
+const fallback = bpValidList()[0];
 if (fallback !== undefined) i = fallback;
 else return;
 }
@@ -20787,7 +20653,7 @@ else slots[slots.length - 1] = i;
 BP.picks[side] = i;
 }
 }
-BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = 0.85;
+BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = BP_CPU_DELAY;
 if (type === 'ban') SFX.thud(); else { SFX.block(); }
 if (bpMode === 'net') send({ bps: BP });
 renderBP();
@@ -20832,7 +20698,7 @@ startTower(picks[0], !!opts.isWatch);
 startStage(opts.stageCh !== undefined ? opts.stageCh : stageCh, opts.stageL !== undefined ? opts.stageL : (STAGE ? STAGE.l : 1), !!opts.isWatch, picks[0]);
 } else if (mode === 'train') {
 trainChar = picks[0];
-startTraining(opts.targetMode || trainTargetMode, !!opts.isWatch);
+startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
 } else if (mode === '2v2') {
 const sub = opts.subMode || 'pc_cc';
 if (sub === 'pp_cc') {
@@ -20847,7 +20713,7 @@ M.bans = bans;
 applySkins();
 }
 function bpCpuChoice() {
-const valid = CHARS.map((c, i) => i).filter(bpValid);
+const valid = bpValidList();
 if (!valid.length) {
 for (let i = 0; i < CHARS.length; i++) {
 if (bpValid(i)) return i;
@@ -20893,7 +20759,7 @@ bpApply(choice);
 return;
 }
 if (BP.t <= 0) {
-const v = CHARS.map((c, i) => i).filter(bpValid);
+const v = bpValidList();
 const chosen = bpSel >= 0 && bpValid(bpSel) && isMyTurnBP() ? bpSel : (v.length ? v[Math.random() * v.length | 0] : 0);
 bpApply(chosen);
 }
@@ -21320,15 +21186,40 @@ showScreen('acc');
 renderAccPage();
 if (!$id('accIn').classList.contains('hidden')) setTimeout(() => $id('accName').focus(), 50);
 }
-async function doLogout() {
-if (window.CloudSave) { try { await CloudSave.syncNow(); } catch (e) {} await CloudSave.logout(); }
-setAcc(null);
-PROF.guest = true;
-applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 }, { reset: true });
-toast('已退出账号');
-renderAcc();
-renderAccPage();
+const LOGOUT_KEEP = ['renying-settings', 'renying-lang', 'renying-lang-chosen', 'renying-tut-seen', 'renying-tut-done', 'renying-1p-keys',
+'renying-custom-ice', 'renying-cloud-endpoint', 'renying-ac-device', 'renying-guest-name', 'renying-local-accounts'];
+function clearLocalAccountData(user, synced) {
+let localNames = [], localUids = [];
+try { const la = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); localNames = Object.keys(la); localUids = Object.values(la).map(x => x && x.uid).filter(Boolean); } catch (e) {}
+const keepUnsynced = user && user.uid && !synced ? ['renying-prof-' + user.uid, 'renying-ledger-' + user.uid, 'renying-sync-dirty-' + user.uid] : [];
+const keys = [];
+for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+for (const k of keys) {
+if (!k || !k.startsWith('renying-')) continue;
+if (LOGOUT_KEEP.includes(k) || k.startsWith('renying-social-') || keepUnsynced.includes(k)) continue;
+if (localUids.some(id => k.endsWith('-' + id)) || localNames.some(n => k.endsWith('-' + n))) continue;   // 本地账号的存档只有这一份
+try { localStorage.removeItem(k); } catch (e) {}
 }
+}
+let loggingOut = false;
+async function doLogout() {
+loggingOut = true;
+const user = window.CloudSave ? CloudSave.getUser() : null;
+let synced = !(user && user.isCloud);
+if (window.CloudSave) {
+if (user && user.isCloud) {
+try { await CloudSave.syncNow(); const ss = CloudSave.getSyncState(); synced = !!(ss && ss.state === 'ok' && !ss.pending); } catch (e) { synced = false; }
+}
+await CloudSave.logout();
+}
+clearLocalAccountData(user, synced);
+try { sessionStorage.setItem('renying-logout-note', synced ? 'ok' : 'unsynced'); } catch (e) {}
+location.reload();
+}
+try {   // 刷新之后补上退出的提示
+const note = sessionStorage.getItem('renying-logout-note');
+if (note) { sessionStorage.removeItem('renying-logout-note'); setTimeout(() => toast(note === 'ok' ? '已退出账号，本机数据已清空' : '已退出账号。云存档这次没传上去，本机先留着这个账号的存档，下次登录会合并'), 800); }
+} catch (e) {}
 $id('accBar').addEventListener('click', async e => {
 const id = e.target.id;
 if (id === 'accOpen') openAcc();
@@ -21965,24 +21856,49 @@ $id('rkInfo').classList.remove('hidden');
 $id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('hidden'));
 $id('rkInfo').addEventListener('click', e => { if (e.target === $id('rkInfo')) $id('rkInfo').classList.add('hidden'); });
 setTimeout(() => { try { rkCheckPending(); } catch (e) {} }, 2500);
-function refreshOnline() {
-let count = 0;
-if (typeof SOC !== 'undefined' && SOC.online && SOC.online.length) {
-count = Math.max(count, SOC.online.length);
+const PRES = { sid: '', srv: null, at: 0, busy: false };
+function presSid() {
+if (PRES.sid) return PRES.sid;
+try { PRES.sid = sessionStorage.getItem('renying-presence-sid') || ''; } catch (e) {}
+if (!/^[a-z0-9]{12,40}$/.test(PRES.sid)) {
+PRES.sid = Array.from(crypto.getRandomValues(new Uint8Array(12)), x => x.toString(36).padStart(2, '0')).join('').slice(0, 20);
+try { sessionStorage.setItem('renying-presence-sid', PRES.sid); } catch (e) {}
 }
-const updatePills = (cnt, h) => {
-const total = Math.max(1, cnt);
+return PRES.sid;
+}
+const presUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/presence';
+const presState = () => (M.mode === 'net' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
+async function presBeat() {
+if (PRES.busy || !window.CloudSave) return;
+PRES.busy = true;
+try {
+const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }) });
+const d = await r.json().catch(() => null);
+if (r.ok && d && typeof d.online === 'number') { PRES.srv = d; PRES.at = Date.now(); }
+} catch (e) {}
+PRES.busy = false;
+refreshOnline();
+}
+function presBye() {
+try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
+}
+window.addEventListener('pagehide', presBye);
+function refreshOnline() {
+const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;
+const srv = PRES.srv && Date.now() - PRES.at < 120e3 ? PRES.srv : null;   // 两分钟没报成功就当云端暂时连不上
+const count = Math.max(srv ? srv.online : 0, hall);
+const h = srv ? { playing: Math.ceil((srv.playing || 0) / 2), waiting: srv.waiting || 0 } : null;   // 一局联机两个人都报 match
+const total = Math.max(1, count);
 const parts = [];
 if (h && h.playing) parts.push(`${h.playing} 局对战`);
 if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
-if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : `${total} 人在线 · 全网连线`;
+if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? `${total} 人在线 · ` + parts.join(' · ') : `${total} 人在线 · 全网连线`;
 if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
 if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
 if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
-};
-updatePills(count);
 }
 setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
+setInterval(presBeat, 30000); setTimeout(presBeat, 1200);
 function joinByCode() {
 initAudio();
 const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -21995,6 +21911,11 @@ function checkUrlRoom() {
 try {
 const p = new URLSearchParams(location.search);
 const rm = (p.get('room') || p.get('code') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+if (p.has('room') || p.has('code')) {   // 邀请码只用一次：从地址栏拿掉，刷新页面就不会再去加入已经散掉的房间
+p.delete('room'); p.delete('code');
+const qs = p.toString();
+try { history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
+}
 if (rm.length === 4) {
 if ($id('codeIn')) $id('codeIn').value = rm;
 openScreen('netp');
@@ -22144,7 +22065,7 @@ cv.addEventListener('pointerdown', () => refocusGame());
 window.addEventListener('mouseup', e => { if (e.button === 0) human[0].held.atk = false; });
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
-window.addEventListener('beforeunload', () => { saveTowerRun(); });
+window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去
 window.addEventListener('blur', () => {
 human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 if (M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && M.phase !== 'end' && !paused) {
@@ -24390,12 +24311,14 @@ const live = () => !!ST && (MODE === 'server' || MODE === 'local');   // 现在�
 const OLD_MSG = '服务器还是旧版武库，等更新到新版以后才能用';
 const envBase = () => ({ now: NOW(), rnd, uid: UID, ink: Math.max(0, Math.floor(PROF.ink || 0)), skins: (PROF.skins || []).slice(), equip: { ...(PROF.equip || {}) }, server: false });
 function strike(reason) { try { if (typeof acStrike === 'function') acStrike(reason); } catch (e) {} }
+const PRE_ARMORY = Object.prototype.hasOwnProperty.call(PROF, 'armory') ? PROF.armory : undefined;
 Object.defineProperty(PROF, 'armory', {
 configurable: false, enumerable: true,
 get() { return ST && MODE === 'local' ? Object.assign(JSON.parse(JSON.stringify(ST)), { sig: SIG }) : undefined; },
 set(v) { loadLocal(v); },
 });
 let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
+if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') loadLocal(PRE_ARMORY); }, 0);
 function loadLocal(v, force) {
 const u = user(); UID = u ? String(u.uid || u.name || '') : '';
 if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
@@ -24442,7 +24365,7 @@ if (menuHeroId >= 0) { MENU_HERO = null; setMenuHero(menuHeroId); }
 applySkins();
 } catch (e) {}
 }
-const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : ''].filter(Boolean).join('、');
+const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
 function apply(out, quiet) {
 if (!out) return;
 if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
@@ -25269,6 +25192,15 @@ if (e && e.ban && typeof acRefresh === 'function') acRefresh();
 if (e && e.status === 400 && e.message === '不认识的操作') return { err: '兑换码无效或已过期' };   // 服务器还是没有兑换码的旧版：那上面也就没有码
 return { err: e && e.message ? e.message : '服务器出错了' };
 } finally { BUSY = false; busyUi(false); }
+};
+window.armoryGrantLocal = function (keys, src) {
+if (MODE !== 'local' || !ST) return 0;
+const env = envBase(); let n = 0;
+for (const k of keys) if (C.isItem(k) && !ST.inv.some(x => x.k === k) && ST.inv.length < C.INV_MAX) { C.addItem(ST, C.mkItem(ST, k, src || 'code', rnd, { st: -1 }), env); n++; }
+PROF.skins = env.skins.slice(); SIG = sigOf(ST);
+if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+try { render(); } catch (e) {}
+return n;
 };
 window.getDevArmoryState = function() {
 return ST ? JSON.parse(JSON.stringify(ST)) : undefined;

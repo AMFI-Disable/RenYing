@@ -981,6 +981,10 @@ const CODE_USES = 100000;              // 一个兑换码最多让这么多个�
 const RDM_MAX = 10, RDM_IP_MAX = 30;   // 一小时里输错这么多次兑换码就先锁一小时（每个号、每个 IP）
 // 游戏里写死的几个码（src/game.js 的 redeemCode 先认它们）：服务器上不建同名的，不然玩家永远领不到
 const CODE_LOCAL = ['LOCK', 'RELOCK', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT', 'ZODIAC2026STAR'];
+// 写在游戏里的兑换码，云端账号也要在服务器领：武库以服务器为准，只在网页里加的饰品一刷新就没了。每个号领一次（记在 code_got），不限总数
+const CODE_BUILTIN = {
+  ZODIAC2026STAR: () => ({ note: '星座专属装束', items: Object.entries(C.ZOD_OF).flatMap(([p, zs]) => zs.map(z => `${p}_z${z}`)) }),
+};
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
@@ -1327,15 +1331,23 @@ async function handleEcon(env, auth, body, now, ip) {
   if (act === 'claimCode') {
     if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
     const k = codeKey(args.code);
-    const row = k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
-    if (!row || row.off || row.until <= now) {
+    if (k && CODE_BUILTIN[k]) {
+      const mine = await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first();
+      if (mine) return error('这个兑换码你已经领过了');
+      code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...CODE_BUILTIN[k]() };
+    }
+    const row = code ? null : k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
+    if (code) { /* 游戏里自带的码，上面已经核对过 */ }
+    else if (!row || row.off || row.until <= now) {
       await hit(env, 'rdm:' + uid, 1e9, 3600e3, now);
       await hit(env, 'rdmip:' + ip, 1e9, 3600e3, now);
       return error('兑换码无效或已过期');
     }
-    if (row.mine) return error('这个兑换码你已经领过了');
-    if (row.got >= row.uses) return error('这个兑换码已经被领完了');
-    code = { code: row.code, note: row.note, ink: clampInk(row.ink, 1e6), ...giftItems(row.items_json) };
+    else {
+      if (row.mine) return error('这个兑换码你已经领过了');
+      if (row.got >= row.uses) return error('这个兑换码已经被领完了');
+      code = { code: row.code, note: row.note, ink: clampInk(row.ink, 1e6), ...giftItems(row.items_json) };
+    }
   }
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
@@ -1368,6 +1380,11 @@ async function handleEcon(env, auth, body, now, ip) {
       }
     }
     const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, mkt, cfg };
+    if (code && code.items) {   // 兑换码送的饰品：库存里没有这一款的才放一件进去（普通版）
+      let n = 0;
+      for (const k of code.items) if (C.isItem(k) && !state0.inv.some(x => x.k === k) && state0.inv.length < C.INV_MAX) { C.addItem(state0, C.mkItem(state0, k, 'code', rnd, { st: -1 }), E); n++; }
+      code.n = n;
+    }
     const equip0 = { ...E.equip };
     const r = C.run(state0, act, args, E);
     const res = r.res || {}, st = r.state, stJson = JSON.stringify(st);
@@ -1375,7 +1392,7 @@ async function handleEcon(env, auth, body, now, ip) {
     const eq = {};
     for (const c of new Set([...Object.keys(equip0), ...Object.keys(E.equip)])) if (equip0[c] !== E.equip[c]) eq[c] = E.equip[c] === undefined ? null : E.equip[c];
     const out = { res, sold: r.sold || [] };
-    if (code) out.code = code;
+    if (code) { const { items, builtin, ...c } = code; out.code = c; }
     // 最后一道保险：算出来的数不对劲（不是整数、是负数、大得离谱）就整个作废，记下来查
     const bad = [E.ink, st.tags, st.term, ...Object.values(st.cases), ...st.inv.map(x => x.st + 1)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);   // 斩数 -1 是普通版
     if (bad !== undefined || st.inv.length > C.INV_MAX) {
@@ -1416,7 +1433,7 @@ async function handleEcon(env, auth, body, now, ip) {
     stmts.push(ins(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver, tx));
     if (code) {   // 兑换码：记下这个号领过了、这个码又被领走一份（领满了 CHECK 让这一批整个作废）；流水记成 code_got
       stmts.push(ins(env, 'INSERT INTO code_got (code, uid, at) SELECT ?, ?, ?', [code.code, uid, now], uid, ver, tx));
-      stmts.push(guard(env, 'UPDATE code SET got = got + 1 WHERE code = ? AND', [code.code], uid, ver, tx));
+      if (!code.builtin) stmts.push(guard(env, 'UPDATE code SET got = got + 1 WHERE code = ? AND', [code.code], uid, ver, tx));
       stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_got', 1, null, null, JSON.stringify({ code: code.code, note: code.note, ink: code.ink || undefined, cases: Object.keys(code.cases).length ? code.cases : undefined, term: code.term || undefined, tags: code.tags || undefined })], uid, ver, tx));
     }
     if (!quiet) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver, tx));

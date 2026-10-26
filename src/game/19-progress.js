@@ -764,12 +764,12 @@ async function redeemCode(rawCode) {
       if (typeof window.grantDevArmory === 'function') {
         grantedArm = window.grantDevArmory(newInv, devCases);
       }
-      const arm = grantedArm || ((PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank());
-      arm.inv = newInv;
-      arm.nid = nid;
-      arm.via = Array.from(new Set([...(arm.via || []), ...allSkins.filter(k => C.isItem(k))]));
-      arm.cases = Object.assign(arm.cases || {}, devCases);
-      PROF.armory = arm;
+      if (!grantedArm) {   // 没有武库网页（不该发生）才走存档；grantDevArmory 已经连校验一起放好了，不要再写回去（写回去校验不过会记作弊）
+        const arm = C.normalize(C.blank(), { now: Date.now(), uid: curU });
+        arm.inv = newInv; arm.nid = nid; arm.cases = Object.assign(arm.cases || {}, devCases);
+        arm.via = Array.from(new Set(allSkins.filter(k => C.isItem(k))));
+        PROF.armory = arm;
+      }
     }
 
     // 最高段位：S+（25000分，天下无双）
@@ -814,8 +814,10 @@ async function redeemCode(rawCode) {
     return;
   }
   // 星座专属隐藏兑换码：全员可用，仅限使用一次，解锁全部十二侠客的 36 款星座皮肤
+  // 云端账号的武库以服务器为准：在网页里直接加的饰品，刷新或重开武库就会被服务器的那份盖掉，所以云端账号去服务器领（下面 armoryRedeem）
   const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
-  if (up === ZODIAC_SECRET_CODE) {
+  const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
+  if (up === ZODIAC_SECRET_CODE && !cloudUser) {
     const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
     if (redeemed.includes(up)) {
       toast('该兑换码已使用过了');
@@ -841,25 +843,7 @@ async function redeemCode(rawCode) {
     saveFlag('codes', redeemed);
 
     PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
-
-    if (typeof ArmoryCore !== 'undefined') {
-      const C = ArmoryCore;
-      const arm = (PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank();
-      let nid = arm.nid || 1;
-      const inv = arm.inv || [];
-      for (const k of zodSkins) {
-        if (!inv.some(x => x.k === k)) {
-          inv.push({ i: nid++, k, st: -1, t: Date.now() });
-        }
-      }
-      arm.inv = inv;
-      arm.nid = nid;
-      arm.via = Array.from(new Set([...(arm.via || []), ...zodSkins]));
-      PROF.armory = arm;
-      if (typeof window.grantDevArmory === 'function') {
-        window.grantDevArmory(arm.inv, arm.cases);
-      }
-    }
+    if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');   // 本机账号的武库也放一件进去
 
     if (window.CloudSave) CloudSave.saveProfile(PROF, true);
     applyProfile(PROF);

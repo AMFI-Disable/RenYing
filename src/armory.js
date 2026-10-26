@@ -227,13 +227,16 @@
   const OLD_MSG = '服务器还是旧版武库，等更新到新版以后才能用';
   const envBase = () => ({ now: NOW(), rnd, uid: UID, ink: Math.max(0, Math.floor(PROF.ink || 0)), skins: (PROF.skins || []).slice(), equip: { ...(PROF.equip || {}) }, server: false });
   function strike(reason) { try { if (typeof acStrike === 'function') acStrike(reason); } catch (e) {} }
-  // 存档里的武库数据只能通过这里读写：读出去的是一份副本（改了也没用），写进来要过校验
+  // 存档里的武库数据只能通过这里读写：读出去的是一份副本（改了也没用），写进来要过校验。
+  // 刷新时存档可能在这个文件运行之前就载入了（那时 armory 还是普通字段）：先接住，下面装好读写口再读进来，否则本机账号的武库一刷新就空了
+  const PRE_ARMORY = Object.prototype.hasOwnProperty.call(PROF, 'armory') ? PROF.armory : undefined;
   Object.defineProperty(PROF, 'armory', {
     configurable: false, enumerable: true,
     get() { return ST && MODE === 'local' ? Object.assign(JSON.parse(JSON.stringify(ST)), { sig: SIG }) : undefined; },
     set(v) { loadLocal(v); },
   });
   let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
+  if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') loadLocal(PRE_ARMORY); }, 0);
   function loadLocal(v, force) {
     const u = user(); UID = u ? String(u.uid || u.name || '') : '';
     if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
@@ -282,7 +285,7 @@
     } catch (e) {}
   }
   // 一份补偿里有什么：「500 墨锭、初刃武器箱 ×2、终端机 ×1」
-  const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : ''].filter(Boolean).join('、');
+  const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
   function apply(out, quiet) {
     if (!out) return;
     if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
@@ -1149,6 +1152,17 @@
       if (e && e.status === 400 && e.message === '不认识的操作') return { err: '兑换码无效或已过期' };   // 服务器还是没有兑换码的旧版：那上面也就没有码
       return { err: e && e.message ? e.message : '服务器出错了' };
     } finally { BUSY = false; busyUi(false); }
+  };
+  // 本机武库发饰品（游戏里自带的兑换码）：走规则核心的 addItem，校验跟着更新。
+  // 不能“读出 PROF.armory、改完再写回去”：读出来的是带旧校验的副本，写回去校验不过会被当成作弊、整个武库作废
+  window.armoryGrantLocal = function (keys, src) {
+    if (MODE !== 'local' || !ST) return 0;
+    const env = envBase(); let n = 0;
+    for (const k of keys) if (C.isItem(k) && !ST.inv.some(x => x.k === k) && ST.inv.length < C.INV_MAX) { C.addItem(ST, C.mkItem(ST, k, src || 'code', rnd, { st: -1 }), env); n++; }
+    PROF.skins = env.skins.slice(); SIG = sigOf(ST);
+    if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+    try { render(); } catch (e) {}
+    return n;
   };
   window.getDevArmoryState = function() {
     return ST ? JSON.parse(JSON.stringify(ST)) : undefined;
