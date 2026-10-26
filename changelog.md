@@ -6,6 +6,37 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+---
+
+## [1.0.0] - 2026-10-26
+
+Release pass for issue #11. Only changes that were implemented and then checked are listed: the repository suites (`build.py --check`, combat `--sim`, rollback, economy, economy `--bundle`, cloud) pass, plus browser regression scripts for each item below. **The Worker has to be redeployed** for the online count, global boss, story footprints and the zodiac code fix.
+
+### Added
+
+- **Aerial Q / R and air attacks (`src/game/01-core.js`, `src/game/02-heroes.js`, `src/game/09-actions.js`, `src/game/11-anim-loop.js`)**: every hero can use Q and R in the air. Damage, hitboxes and cooldowns are the same as on the ground; the hero switches to an air-only pose (`AIR_SKILL_POSE`) and falls slower while a ground skill plays, like an air attack. Air light attacks (`a1` / `a2`) have their own pose set for each of the 13 weapons.
+- **Global boss raid 天魔讨伐 (`src/game/22-tianmo.js`, `cloudflare/worker.js`)**: every player fights the same server-side boss. Damage is capped by fight time on the server, a refresh or lost connection resubmits the pending damage once, and rewards are paid by damage share when the boss is killed or flees. The next boss scales from the last result.
+- **Hero story routes 侠客列传 (`src/game/22-saga.js`, `src/game/22-saga-data.js`, `cloudflare/worker.js`)**: one five-chapter story per hero, each with a choice and two endings (26 endings in all), fight conditions per chapter, progress saved per hero and synced with the account, and a footprints panel showing how real players chose (asynchronous, labelled as such).
+- **Roguelike scrolls (`src/game/22-scrolls.js`)**: the tower runs on a data-driven scroll engine with 187 scrolls (151 generic across eight schools including curses, 2 per hero, 10 legend scrolls), school resonance at three of a kind, and draws that favour owned schools.
+- **Server online count (`src/game/24-account.js`, `cloudflare/worker.js`)**: clients send a heartbeat to `POST /api/presence` every 30 s and the online pill shows the larger of the server count and the P2P hall count, so players whose network blocks WebRTC no longer see "1 online".
+
+### Changed
+
+- **Unified hero selection (`src/game/08-fighter-match.js`, `src/game/22-modes.js`)**: every mode picks heroes on the shared ban/pick screen; the old per-mode pickers are gone. The home screen's quick fight starts directly with the home hero.
+- **Round HP rules (`src/game/01-core.js`, `src/game/08-fighter-match.js`)**: vs-AI and other 1v1 modes restore both fighters to full HP every round (ban 1 / pick 1). Online rooms, quick match and ranked use ban 1 / pick 2 relay: the loser's second hero enters at full HP and the survivor gets +80. The 3v3 gauntlet (tag3) keeps the survivor's HP between fights.
+- **Game version** is now `1.0.0` (`VERSION` in `src/game/01-core.js`); online peers must run the same version.
+- **Match-rule numbers in one place (`src/game/01-core.js`)**: timers, carry heal, win count and pick timers live in one block; duplicated helpers were merged without behavior changes.
+
+### Fixed
+
+- **Redeemed items disappeared**: built-in codes are now honoured by the Worker so the server armory keeps them, and local accounts no longer lose their armory on refresh.
+- **Logout left data behind**: logging out syncs, clears every `renying-*` key except device settings and offline accounts, and reloads, so two accounts no longer mix.
+- **Refresh problems**: an invite link no longer rejoins a dead room on every refresh, and the medium bloom setting is no longer reset on load.
+
+---
+
+## [4.5] - Before 1.0.0
+
 ### Added
 
 - **Hero Lingque & Suspension Silk Mechanics (`src/game/02-heroes.js`, `src/game/03-skills.js`, `src/game/04-ults.js`, `src/game/15-skin-weapons.js`, `src/game/18-codex.js`, `src/armory-core.js`)**:
@@ -708,7 +739,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ---
 
-## [1.0.0] - Production Release (Inaugural Release)
+## [Inaugural] - Production Release (first public build, originally labelled 1.0.0)
 
 Inaugural release of Ren Ying (刃影), an ink-wash martial arts action duel game.
 

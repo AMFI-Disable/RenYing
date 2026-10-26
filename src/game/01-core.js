@@ -103,7 +103,7 @@ function saveSettings() {
 }
 
 // ======================= 基础 =======================
-const VERSION = '4.5';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.0';         // 每次更新改一下，联机时双方版本必须一样
 // 打包设置由 tools/build.py 写进 window.RENYING_BUILD（直接打开 src 里的文件时为空，按联网版处理）
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
