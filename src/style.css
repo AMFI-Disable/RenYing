@@ -1710,6 +1710,26 @@
     .ar-pcard { grid-column: span 2; }
     .ar-pcard.t-gold { grid-column: span 3; }
   }
+  /* 星座武器箱：紫蓝星夜，饰品按品质分三行（非凡、隐秘、保密），每行十二位侠客 */
+  .ar-casecard.prem.zod { border-color: rgba(170,150,255,.7);
+    background: radial-gradient(120% 140% at 0% 0%, rgba(170,150,255,.24), transparent 55%), radial-gradient(80% 120% at 100% 100%, rgba(255,211,106,.1), transparent 60%), linear-gradient(160deg, rgba(40,30,90,.45), rgba(13,21,30,.6) 55%);
+    box-shadow: inset 0 0 0 1px rgba(200,190,255,.14), 0 12px 40px rgba(140,120,255,.14); }
+  .ar-casecard.prem.zod .ar-casebox { background: linear-gradient(160deg, #f2eeff, #9a86ff 45%, #3a2a8a); box-shadow: 0 0 18px rgba(170,150,255,.5); }
+  .ar-casecard.prem.zod h3 { color: #e6e0ff; text-shadow: 0 0 12px rgba(170,150,255,.55); }
+  .ar-casecard.prem.zod .ar-premtag { background: linear-gradient(90deg, #e6e0ff, #9a86ff); }
+  .ar-pips.zod i.on { background: #b4a4ff; box-shadow: 0 0 8px rgba(180,164,255,.7); }
+  .ar-pshow.zod { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+  .ar-zrow { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 10px; }
+  .ar-zlab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; font-size: 12px; font-weight: 700; color: rgb(var(--tc)); background: rgba(var(--tc), .1); border: 1px solid rgba(var(--tc), .38); }
+  .ar-zlab b { font-family: var(--v-cond); font-size: 16px; color: #fff; }
+  .ar-zgrid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; }
+  .ar-zcard { padding-bottom: 6px; gap: 1px; }
+  .ar-zcard b { padding: 3px 2px 0; font-size: 12px; }
+  .ar-zcard.t-gold b { font-size: 12px; }
+  .ar-zcard small { padding: 0 2px; font-size: 10px; }
+  .ar-zcard:hover, .ar-zcard:focus-visible { transform: translateY(-3px); }
+  @media (max-width: 900px) { .ar-zgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { .ar-pshow.zod .ar-pcard { grid-column: auto; } .ar-zrow { grid-template-columns: minmax(0, 1fr); } .ar-zlab { flex-direction: row; justify-content: center; gap: 8px; } }
   .ar-premtag { position: relative; align-self: flex-start; padding: 4px 16px 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: .1em; color: #2a1a04; background: linear-gradient(90deg, #ffe7a0, #e4ae39); clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
   /* 开箱滚轮：每格 124 宽 + 8 间隔 = armory.js 里的 CW (132) */
   .ar-reel { position: relative; height: 200px; margin: 6px 0 4px; overflow: hidden; background: #070b11; border: 1px solid var(--line); }

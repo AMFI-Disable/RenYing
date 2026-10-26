@@ -8,6 +8,12 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Zodiac Case (`src/armory-core.js`, `src/armory.js`, `src/game.js`, `src/style.css`, `cloudflare/admin.html`)**:
+  - New premium case `c8` with 36 cosmetic skins: every hero gets one Classified (星辉), one Covert (星焰) and one Extraordinary (星冕) skin, each themed on a different one of the twelve zodiac signs. Odds are 65% / 28% / 7%, price is 1,500 ink, and it can be opened once a week (separate from the Divine Arms Case).
+  - Every account receives one free Zodiac Case, once.
+  - New visuals: a constellation star map behind the hero (a rotating star dial on Extraordinary skins), a star tiara, and starlight on Extraordinary weapons.
+  - Odds, weekly limit and price are adjustable from the admin console (`zod.*`, `zodWeek`, `price.c8`).
+
 - **Codex Martial Realism, Range Taxonomies & Ultimate Visuals (`src/game.js`, `src/style.css`, `index.html`)**:
   - Aligned all 12 heroes' normal attack combos (`HERO_MOVE_SEQS[id].light`) and demonstration sequences with authentic in-game martial weapon moves (`WEAPON_POSE_MODS` for spear, greatsword, fists, gourd, dual daggers, calligraphy brush, chain hammer, flute, and fan).
   - Introduced granular attack range categories (`melee` 近战, `mid` 中距, `ranged` 远距, `fullscreen` 全图/全域, `air` 空战) with distinctive badge styling and colored bottom accent indicators on codex mini preview windows (`data-rng`).

@@ -5915,6 +5915,84 @@ function skinTierGround(f) {
 }
 // 锥形流线肢体与服饰轮廓绘制（支持重甲护胫、宽袖长袍、武僧绑腿与刺客护腕）
 // 传说背饰：每款一个自己的轮廓（金乌火翼、幻灵狐尾、沧龙盘龙、修罗战旗……），不再都是背后一个圆盘
+// 星座武器箱的十二星图：星的位置（-1~1，往下是正）、连线、最亮的那颗
+const ZODIAC_STARS = {
+  ari: { s: [[-0.9, 0.15], [-0.25, -0.2], [0.3, -0.32], [0.8, -0.08]], e: [[0, 1], [1, 2], [2, 3]], b: 2 },
+  tau: { s: [[0.05, 0.45], [-0.3, 0.12], [-0.8, -0.5], [0.3, 0.05], [0.85, -0.42], [-0.05, 0.85], [0.45, 0.8]], e: [[0, 1], [1, 2], [0, 3], [3, 4], [0, 5], [0, 6]], b: 1 },
+  gem: { s: [[-0.55, -0.8], [-0.45, -0.1], [-0.7, 0.55], [-0.3, 0.75], [0.25, -0.85], [0.3, -0.1], [0.1, 0.7], [0.55, 0.6]], e: [[0, 1], [1, 2], [1, 3], [4, 5], [5, 6], [5, 7], [0, 4], [1, 5]], b: 4 },
+  can: { s: [[0, 0], [0.05, -0.75], [-0.65, 0.6], [0.7, 0.55], [-0.1, 0.25]], e: [[1, 0], [0, 4], [4, 2], [0, 3]], b: 0 },
+  leo: { s: [[0.75, -0.75], [0.4, -0.88], [0.1, -0.62], [0.2, -0.25], [0.5, 0.05], [-0.4, -0.08], [-0.9, 0.15], [-0.45, 0.5]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [5, 6], [6, 7], [7, 4]], b: 4 },
+  vir: { s: [[-0.9, -0.55], [-0.45, -0.3], [-0.05, -0.15], [0.35, -0.5], [0.15, 0.3], [0.6, 0.78], [-0.35, 0.5]], e: [[0, 1], [1, 2], [2, 3], [2, 4], [4, 5], [4, 6]], b: 5 },
+  lib: { s: [[0, -0.78], [-0.6, -0.15], [0.58, -0.2], [-0.48, 0.62], [0.42, 0.58]], e: [[0, 1], [0, 2], [1, 2], [1, 3], [2, 4]], b: 2 },
+  sco: { s: [[0.88, -0.78], [0.72, -0.45], [0.82, -0.12], [0.38, -0.36], [0.08, -0.15], [-0.18, 0.18], [-0.28, 0.52], [-0.08, 0.82], [-0.52, 0.84], [-0.8, 0.58], [-0.72, 0.34]], e: [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10]], b: 3 },
+  sag: { s: [[-0.62, 0.42], [-0.62, -0.1], [-0.1, -0.25], [0.2, -0.62], [0.45, -0.15], [0.8, -0.3], [0.58, 0.38], [0.05, 0.42]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [2, 4], [4, 5], [5, 6], [6, 7], [7, 0], [7, 2]], b: 6 },
+  cap: { s: [[0.82, -0.58], [0.62, -0.2], [0.18, 0.48], [-0.3, 0.38], [-0.85, -0.12], [-0.25, -0.15], [0.3, -0.38]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0]], b: 4 },
+  aqu: { s: [[-0.88, -0.5], [-0.42, -0.62], [0, -0.35], [0.38, -0.62], [0.82, -0.36], [0.1, 0.1], [0.45, 0.55], [-0.2, 0.78]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [2, 5], [5, 6], [5, 7]], b: 3 },
+  pis: { s: [[0.1, 0.78], [-0.3, 0.32], [-0.62, -0.12], [-0.5, -0.58], [-0.82, -0.78], [-0.98, -0.38], [0.45, 0.48], [0.75, 0.12], [0.98, -0.12], [0.72, -0.38], [0.5, -0.12]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 2], [0, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 7]], b: 0 },
+};
+// 星座皮肤背后的星图：zt 1 只有星图和一团星光，2 加一圈星环和十二个刻度，3 是慢慢转的金色星盘（两圈环、外圈十二颗小星、一颗流星）
+function drawZodiacBack(D, sk, f, t, bc, bk, glow) {
+  const Z = ZODIAC_STARS[D.sign]; if (!Z) return;
+  const zt = D.zt || 1, c1 = D.zc || '255,220,150', c2 = D.zc2 || '255,255,255', idx = f.idx || 0;
+  const c = [bc[0] + bk * 12, bc[1] - 24], R = 30 + zt * 4, bob = Math.sin(t * 1.3 + idx) * 2;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  glow([c[0], c[1] + bob], R * 1.7, c1, 0.1 + zt * 0.05);
+  if (zt >= 2) {
+    const rot = t * 0.18 * bk;
+    ctx.strokeStyle = `rgba(${c2},${zt >= 3 ? 0.55 : 0.4})`; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.arc(c[0], c[1] + bob, R, 0, 7); ctx.stroke();
+    for (let k = 0; k < 12; k++) {
+      const a = rot + k * Math.PI / 6, ca = Math.cos(a), sa = Math.sin(a), r0 = R - 3, r1 = R + (k % 3 ? 3 : 6);
+      ctx.beginPath(); ctx.moveTo(c[0] + ca * r0, c[1] + bob + sa * r0); ctx.lineTo(c[0] + ca * r1, c[1] + bob + sa * r1); ctx.stroke();
+    }
+    if (zt >= 3) {
+      ctx.strokeStyle = `rgba(${c2},0.35)`; ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.arc(c[0], c[1] + bob, R + 10, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      for (let k = 0; k < 12; k++) {   // 外圈十二颗小星跟着星盘反着转，其中一颗最亮
+        const a = rot * -1.6 + k * Math.PI / 6, q = [c[0] + Math.cos(a) * (R + 10), c[1] + bob + Math.sin(a) * (R + 10)], hi = k === 0;
+        glint(q[0], q[1], hi ? 5.5 + Math.sin(t * 3) * 1.2 : 2.6, hi ? c2 : c1, hi ? 0.95 : 0.7);
+      }
+    }
+  }
+  const S = Z.s.map(([x, y], i) => [c[0] + bk * x * R * 0.72, c[1] + bob + y * R * 0.72 + Math.sin(t * 1.7 + i * 1.3) * 0.8]);
+  ctx.strokeStyle = `rgba(${c1},${0.45 + zt * 0.1})`; ctx.lineWidth = zt >= 3 ? 1.3 : 1;
+  ctx.beginPath(); for (const [a, b] of Z.e) { ctx.moveTo(S[a][0], S[a][1]); ctx.lineTo(S[b][0], S[b][1]); } ctx.stroke();
+  S.forEach((p, i) => {
+    const tw = 0.6 + 0.4 * Math.sin(t * 3.2 + i * 1.9 + idx), big = i === Z.b;
+    glow(p, big ? 12 : 7, big ? c2 : c1, big ? 0.45 : 0.28);
+    glint(p[0], p[1], (big ? 6 : 3.2) * (0.85 + tw * 0.3) + (zt - 1) * 0.6, big ? '255,255,255' : c1, 0.75 + tw * 0.25);
+  });
+  if (zt >= 3) {   // 一颗流星隔几秒从星盘上划过
+    const u = (t * 0.35 + idx * 0.3) % 1;
+    if (u < 0.25) {
+      const k = u / 0.25, p0 = [c[0] - bk * R * 1.1, c[1] - R * 0.9], p1 = [c[0] + bk * R * 0.9, c[1] + R * 0.5], q = [p0[0] + (p1[0] - p0[0]) * k, p0[1] + (p1[1] - p0[1]) * k];
+      const g = ctx.createLinearGradient(p0[0], p0[1], q[0], q[1]); g.addColorStop(0, `rgba(${c2},0)`); g.addColorStop(1, `rgba(${c2},${0.8 * (1 - k)})`);
+      ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(p0[0] + (q[0] - p0[0]) * 0.4, p0[1] + (q[1] - p0[1]) * 0.4); ctx.lineTo(q[0], q[1]); ctx.stroke();
+      glint(q[0], q[1], 3.5, '255,255,255', 1 - k);
+    }
+  }
+  ctx.restore();
+}
+// 星冕：兵器上缀着几颗一闪一闪的星，刃尖一点星光；拳、葫芦、流星锤的星绕在手上
+function drawZodiacGleam(sk, L) {
+  const t = typeof clock === 'number' ? clock : 0, D = L.deco, c = D.zc || L.slash, w = L.weapon;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  if (w === 'fists' || w === 'gourd' || w === 'hammer') {
+    for (const [h, ph] of [[sk.hf, 0], [sk.hb, 2.1]]) for (let k = 0; k < 3; k++) {
+      const a = t * 2.2 + ph + k * 2.09, q = [h[0] + Math.cos(a) * 10, h[1] + Math.sin(a) * 6];
+      glint(q[0], q[1], 2.6 + Math.sin(t * 5 + k) * 0.8, k ? c : '255,240,200', 0.85);
+    }
+  } else {
+    const a = sk.hilt, b = sk.tip;
+    for (let k = 0; k < 4; k++) {
+      const u = 0.32 + k * 0.17, tw = Math.max(0, Math.sin(t * 3.4 + k * 1.7));
+      glint(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, 1.6 + tw * 2.8, k % 2 ? c : '255,240,200', 0.4 + tw * 0.6);
+    }
+    const tw = 0.7 + 0.3 * Math.sin(t * 4.2);
+    glint(b[0], b[1], 5 * tw + 2, '255,250,230', 0.9);
+  }
+  ctx.restore();
+}
 function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
   const bk = -sk.face, sh = sk.sh, hip = sk.hip, idx = f.idx || 0;
   const bez = (p0, p1, p2, u) => [(1 - u) * (1 - u) * p0[0] + 2 * (1 - u) * u * p1[0] + u * u * p2[0], (1 - u) * (1 - u) * p0[1] + 2 * (1 - u) * u * p1[1] + u * u * p2[1]];
@@ -5934,6 +6012,7 @@ function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
   const lg = (a, b, stops) => { const g = ctx.createLinearGradient(a[0], a[1], b[0], b[1]); for (const [o, c] of stops) g.addColorStop(o, c); return g; };
   const glow = (c, r, col, a) => { const g = ctx.createRadialGradient(c[0], c[1], 0, c[0], c[1], r); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.fillRect(c[0] - r, c[1] - r, r * 2, r * 2); };
   switch (kind) {
+    case 'zodiac': drawZodiacBack(D, sk, f, t, bc, bk, glow); break;
     case 'crowwings': {   // 金乌：两扇金红火羽翼，羽尖跳动的火苗
       const flap = Math.sin(t * 3.2 + idx) * 0.12;
       glow([bc[0] + bk * 18, bc[1] - 14], 62, '255,170,60', 0.28);
@@ -6533,6 +6612,20 @@ function drawDeco(sk, f, L, layer) {
       line(b0, m1); line(m1, t1); line(m1, br);
     }
     ctx.fillStyle = '#80d4ff'; circle(P(8, 5), 2.4);
+  } else if (hd === 'startiara') {   // 星座·星焰 / 星冕：额上一道星冠，三（五）枚星芒，中间一颗星宝石；星冕的头顶还绕着一颗小星
+    const tc = D.tiaraC || '#ffd36a', zt = D.zt || 2, gc = D.zc || '255,220,150';
+    ctx.strokeStyle = tc; ctx.lineWidth = 2; line(P(-9, 6), P(9, 6));
+    ctx.fillStyle = tc;
+    for (const [a, h] of zt >= 3 ? [[-7, 4], [-3.5, 7], [0, 10], [3.5, 7], [7, 4]] : [[-4.5, 5], [0, 8.5], [4.5, 5]]) {
+      const b0 = P(a - 1.8, 6.5), b1 = P(a + 1.8, 6.5), tp = P(a, 6.5 + h);
+      ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(b1[0], b1[1]); ctx.closePath(); ctx.fill();
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const gp = P(0, 9.5), tw = 0.75 + 0.25 * Math.sin(t * 3.5);
+    ctx.fillStyle = D.gem || '#fff'; circle(gp, 2.2);
+    glint(gp[0], gp[1], 4.5 * tw + 1.5, gc, 0.9);
+    if (zt >= 3) { const a = t * 1.6, q = P(Math.cos(a) * 13, 14 + Math.sin(a) * 4); glint(q[0], q[1], 3.2, '255,240,200', 0.9); }
+    ctx.restore();
   } else if (hd === 'starguan') {   // 墨羽·星墨 / 玉箫·钧天：太虚星官高冠
     ctx.fillStyle = '#14244a'; ctx.strokeStyle = '#6fd6ff'; ctx.lineWidth = 1.4;
     const g0 = P(-6, 9), g1 = P(-4, 21), g2 = P(5, 21), g3 = P(6, 9);
@@ -6629,7 +6722,7 @@ function drawDeco(sk, f, L, layer) {
     ctx.strokeStyle = `rgba(${L.slash},0.7)`; ctx.lineWidth = 1; line(a0, a1);
   }
   if (D.robe) {   // 独有服饰下摆 / 战袍长裾
-    const rbCol = D.robe === 'ice' ? '#b8d8ff' : D.robe === 'gold' ? '#e5b842' : D.robe === 'dark' ? '#321650'
+    const rbCol = D.robeC ? D.robeC : D.robe === 'ice' ? '#b8d8ff' : D.robe === 'gold' ? '#e5b842' : D.robe === 'dark' ? '#321650'
       : D.robe === 'leaf' ? '#1f8f68' : D.robe === 'crimson' ? '#781420' : D.robe === 'spirit' ? '#105577'
       : D.robe === 'bronze' ? '#8a6838' : D.robe === 'heavy' ? '#242030' : D.robe === 'shura' ? '#5a1212'
       : D.robe === 'plum' ? '#c02a4a' : D.robe === 'aurora' ? '#287766' : D.robe === 'ocean' ? '#12406e'
@@ -6770,6 +6863,7 @@ function drawBody(sk, f, o) {
   if (!hideBaseHead) headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
   weapon(sk, L, false, o.flash);
   if (L.fx && !o.flash) { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
+  if (L.deco && L.deco.zw && !o.flash) drawZodiacGleam(sk, L);
   // 前手臂（在剑柄之上）
   for (const s of arm) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : L.body);
   if (!o.flash && !isRobed) {

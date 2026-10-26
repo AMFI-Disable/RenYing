@@ -648,7 +648,8 @@ async function vCodes() {
 }
 
 /* ---------- 经济数值 ---------- */
-const isPct = k => /^(odds|prem)\./.test(k) || ['stP', 'dropP', 'fee'].includes(k);
+const ODDS_RE = /^(odds|prem|zod)\./;   // 几组爆率：普通、神兵、星座武器箱，各自加起来要是 1
+const isPct = k => ODDS_RE.test(k) || ['stP', 'dropP', 'fee'].includes(k);
 async function vCfg() {
   const r = S.cfg = await api('cfg');
   const groups = [];
@@ -657,7 +658,7 @@ async function vCfg() {
     if (!grp) groups.push(grp = { name: g, rows: [] });
     grp.rows.push({ k, def, lo, hi, isInt, desc, cur: Object.prototype.hasOwnProperty.call(r.cfg, k) ? r.cfg[k] : def });
   }
-  const sumKey = grp => grp.rows.every(x => /^(odds|prem)\./.test(x.k)) ? grp.rows[0].k.split('.')[0] : '';
+  const sumKey = grp => grp.rows.every(x => ODDS_RE.test(x.k)) ? grp.rows[0].k.split('.')[0] : '';
   return H`<form class="card" data-form="cfg" novalidate>
     <div class="row between wrap"><h2>经济数值</h2><span class="badge${r.id ? ' gold' : ''}">${r.id ? '现在用的是第 ' + r.id + ' 版' : '现在用的是默认数值'}</span></div>
     <p class="hint">保存后半分钟内全服生效，玩家的武库下一次操作后显示新数值。这里只有经济数值，伤害、血量、技能这些在代码里改。</p>
@@ -696,7 +697,7 @@ function cfgLive(f) {
     $('[data-act=cfgdef]', row).disabled = v === def;
     if (pe) pe.textContent = isPct(k) && Number.isFinite(v) ? '= ' + +(v * 100).toFixed(2) + '%' : /^term\.(lo|hi)$/.test(k) ? '× 基准价' : '';
     const g = k.split('.')[0];
-    if (g === 'odds' || g === 'prem') sums[g] = (sums[g] || 0) + v;
+    if (ODDS_RE.test(k)) sums[g] = (sums[g] || 0) + v;
   }
   for (const [g, s] of Object.entries(sums)) {
     const el = f.querySelector('[data-sum="' + g + '"]'), good = Math.abs(s - 1) <= 1e-6;

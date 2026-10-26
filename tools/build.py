@@ -169,6 +169,15 @@ def admin_names():
     skins = dict(re.findall(r"^ {2}([a-z]{2}_[a-z0-9]+): \{ char: '[a-z]+', rarity: '[a-z]+', name: '([^']+)'", game[a:b], re.M))
     skins.update(re.findall(r"^ {4}\['([a-z]{2}_p[0-9]+)', '[a-z]+', '([^']+)'", core, re.M))
     skins.update(re.findall(r"^ {4}([a-z]{2}_[a-z0-9]+): \{ char: '[a-z]+', name: '([^']+)'", core, re.M))
+    # 星座武器箱的 36 款是照表生成的：星座名在 C.ZODIAC，档位名在 C.ZOD_TIERS，谁分到哪三个星座在 C.ZOD_OF
+    zod = dict(re.findall(r"^ {4}\['([a-z]{3})', '([^']+)', '#", core, re.M))
+    tiers = re.findall(r"\['[a-z]+', '([^']+)'\]", re.search(r"C\.ZOD_TIERS = \[(.*?)\];", core).group(1))
+    zof = re.findall(r"([a-z]{2}): \['([a-z]{3})', '([a-z]{3})', '([a-z]{3})'\]", re.search(r"C\.ZOD_OF = \{(.*?)\};", core, re.S).group(1))
+    if len(zod) != 12 or len(tiers) != 3 or len(zof) != 12:
+        raise SystemExit(f"星座皮肤的名字没读全：星座 {len(zod)} 个、档位 {len(tiers)} 个、侠客 {len(zof)} 个（src/armory-core.js 的 C.ZODIAC / C.ZOD_TIERS / C.ZOD_OF 写法变了？）")
+    for pre, *codes in zof:
+        for i, code in enumerate(codes):
+            skins[f"{pre}_z{code}"] = f"{zod[code]}·{tiers[i]}"
     a = game.index("const CHARS = [")
     heroes = dict(re.findall(r"^  \{ id: '([a-z]+)', name: '([^']+)'", game[a:game.index("\n];", a)], re.M))
     if len(skins) < 60 or len(heroes) < 12:

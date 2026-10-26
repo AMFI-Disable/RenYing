@@ -8,7 +8,7 @@
  *   node tools/econ-admin.mjs find [昵称开头]                  找账号；不填就列最近动过武库的
  *   node tools/econ-admin.mjs log <号>                        武库存档、处罚记录、市场记录、最近 100 条流水
  *   node tools/econ-admin.mjs adjust <号> <改动…> --why <原因>
- *        改动：ink=+500 或 ink=-200（墨锭）、c1=+2（武器箱 c1～c7）、term=+1（终端机）、tags=+1（改名标签）、
+ *        改动：ink=+500 或 ink=-200（墨锭）、c1=+2（武器箱 c1～c8）、term=+1（终端机）、tags=+1（改名标签）、
  *              give=qf_p1（发一件饰品）、give=gc_wolf@0（发斩数版，斩数从 0 开始）、take=12（收走库存里第 12 号）
  *   node tools/econ-admin.mjs ban <号> <天数|perm> --why <原因>
  *   node tools/econ-admin.mjs unban <号> --why <原因>
@@ -82,7 +82,7 @@ function amounts(list, withItems) {
     else if (/^c[0-9]+$/.test(k)) b.cases[k] = (b.cases[k] || 0) + int(v, k);
     else if (withItems && k === 'give') { const [key, st] = v.split('@'); b.give.push({ k: key, st: st === undefined ? -1 : int(st, '斩数') }); }
     else if (withItems && k === 'take') b.take.push(int(v.replace(/^#/, ''), '饰品编号'));
-    else die(`不认识「${k}」：能写 ink、c1～c7、term、tags${withItems ? '、give、take' : ''}`);
+    else die(`不认识「${k}」：能写 ink、c1～c8、term、tags${withItems ? '、give、take' : ''}`);
   }
   return b;
 }
@@ -105,7 +105,7 @@ if (cmd === 'whoami') {
   if (j.econ) {
     const s = j.econ.state || {};
     const cases = Object.entries(s.cases || {}).filter(([, n]) => n > 0).map(([c, n]) => `${c}×${n}`).join(' ') || '没有';
-    console.log(`墨锭 ${j.econ.ink} · 武器箱 ${cases}（今天开了 ${(s.od && s.od.n) || 0} 个，本周开了 ${(s.pw && s.pw.n) || 0} 个神兵武器箱）· 终端机 ${(s.term || 0) + (s.tm ? 1 : 0)} 台 · 改名标签 ${s.tags || 0} · 挂单 ${(s.lst || []).length} 个 · 存档版本 ${j.econ.ver} · 最后改动 ${time(j.econ.at)}`);
+    console.log(`墨锭 ${j.econ.ink} · 武器箱 ${cases}（今天开了 ${(s.od && s.od.n) || 0} 个，本周开了 ${(s.pw && s.pw.n) || 0} 个神兵、${(s.zw && s.zw.n) || 0} 个星座武器箱）· 终端机 ${(s.term || 0) + (s.tm ? 1 : 0)} 台 · 改名标签 ${s.tags || 0} · 挂单 ${(s.lst || []).length} 个 · 存档版本 ${j.econ.ver} · 最后改动 ${time(j.econ.at)}`);
     const inv = s.inv || [];
     console.log(`饰品 ${inv.length} 件${inv.length ? '：' + inv.map(x => `#${x.i} ${x.k}${x.st >= 0 ? `（斩数 ${x.st}）` : ''}`).join('，') : ''}`);
   } else console.log('还没有武库存档（没打开过武库，也没同步过存档）');
