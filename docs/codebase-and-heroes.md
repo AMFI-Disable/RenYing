@@ -413,7 +413,7 @@ moonblade 58, wing 48, flute 50, gourd 16, hammer 56.
 | :--- | :--- | ---: | ---: | ---: | :--- | :--- | :--- | :--- |
 | Qingfeng | 16 / 17.2 / 20.6 / 25.2 / 32.1 | 111.1 | 43.5 | 20.6 | 41.2 / 66.4 | 疾风斩 55 (5 s) | 剑气 52 (5 s) | 残月 9 + 6×2.5 + 85 |
 | Feiying | 14 / 15 / 17 / 20 / 26 | 92.0 | 46.4 | 22.0 | 43.9 / 70.8 | 影遁 45 (11 s) | 飞镖 4×25 (5 s) | 千影 9 + 9×2.1 + 80 |
-| Tieshan | 12.7 / 13.7 / 16.4 / 20 / 25.5 | 88.3 | 34.6 | 16.4 | 32.8 / 52.8 | 震地 40+45 (8 s) | 铁壁冲 56 (6 s) | 山崩 185 (+6×35 rocks) |
+| Tieshan | 12.7 / 13.7 / 16.4 / 20 / 25.5 | 88.3 | 34.6 | 16.4 | 32.8 / 52.8 | 震地 40+45 (8 s) | 铁壁冲 56 (7.5 s) | 山崩 140 (+6×35 rocks) |
 | Lingshuang | 15.6 / 16.7 / 20.1 / 24.6 / 31.2 | 108.2 | 42.4 | 20.1 | 40.2 / 64.7 | 回马枪 60 (45 on 4th) (6 s) | 枪旋 7×12 + 38 (6 s) | 刹那 140–185 |
 | Liuyun | 16.7 / 17.8 / 21.4 / 26.2 / 33.3 | 115.4 | 45.2 | 21.4 | 42.8 / 69 | 风刃 2×28 (**2 s**) | 开扇 5×8 (+24 landing) (4 s) | 龙卷 2×(16, up to 8 hits) |
 | Leiming | 19 / 19 / 20 / 20 / 22 | 100.0 | 37.7 | 17.8 | 35.7 / 57.5 | 雷闪 40 (5 s) | 雷踏 48 (4.5 s) | 雷霆万钧 3×48 |
@@ -474,11 +474,13 @@ range. “Beats / weak to” is the in-game counter chart text.
   taking 75 % damage with no hitstun; each armored hit refunds 2.5 meter and shaves 0.4 s off both cooldowns.
 * **Normals:** total 88.3 raw — but **59.2 after BAL**, by far the lowest in the game; heavy 34.6.
 * **Q 震地 (Quake)** — 8 s. 0.28 s armor, then two ground shockwaves (`40` each, ground-only) plus a direct `45`
-  that launches; direct hit refunds **15 guard** and **1.5 s** of R cooldown.
-* **R 铁壁冲 (Iron Wall Charge)** — 6 s. 0.38 s armor, full-height wave (box to y −2200), **56** damage,
-  ×1.5 guard break, slams airborne targets down.
-* **E 山崩 (Avalanche)** — steerable leap, then **185** unblockable slam (crushes even ground-ult armor) +
-  up to 6 rocks × 35. On hit: 1.3 s stun, meter refilled (second cast only +50 %), Q/R reset.
+  that launches; direct hit refunds **15 guard** and **1.5 s** of R cooldown. Whiffed direct slam recovers in 0.48 s (0.40 s on hit).
+* **R 铁壁冲 (Iron Wall Charge)** — 7.5 s. 0.38 s armor, dash 620 px/s, wave box up to y −165 (catches grounded and
+  low-hop targets; high double-jumps and flyers clear it), **56** damage, ×1.5 guard break, slams airborne targets down.
+  Whiff recovery 0.40 s (0.28 s on hit).
+* **E 山崩 (Avalanche)** — steerable leap, then **140** unblockable slam (crushes even ground-ult armor) +
+  up to 6 rocks × 35. Sweet-spot hit: 0.75 s stun, meter refilled, Q/R reset. The chained second slam deals 65 %
+  (91) and refunds +50 % on a sweet-spot hit; edge or knocked-down hits refund only +25 %.
 * **Playstyle:** the “wall” is guard + armor + mass, not HP. Needs to land the ult or he loses on damage output.
 
 ### 12.4 凌霜 Lingshuang — 寒枪骁将 (Frost Lancer)

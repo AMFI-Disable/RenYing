@@ -6985,7 +6985,7 @@ f.skill2CD = Math.max(0, f.skill2CD - 2.5);
 addP({ type: 'text', text: '💥 撼地重震 · 固若金汤', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
 }
 }
-if (f.skPh === 1 && f.t >= 0.40) toNeutral(f);
+if (f.skPh === 1 && f.t >= (f.hitDone ? 0.40 : 0.48)) toNeutral(f);   // 砸空收招更慢，给拉开距离的角色反打的机会
 },
 pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
 ai: (me, foe, d) => d < 420 && foe.onGround() },
@@ -7100,11 +7100,11 @@ for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x
 if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '狂暴冲锋掀起通天巨浪（通天判定，彻底封锁空中跳跃与腾空位移）。携千钧重势巨浪拍岸，对空中敌人强行下砸截落，双倍瓦解一切格挡！',
+ironwall: { name: '铁壁冲', cd: 7.5, nofric: true, desc: '霸体肩撞冲锋，掀起巨浪拍岸，击退极重，1.5 倍瓦解格挡。巨浪能截住地面和低跳的敌人并砸落在地，但二段跳高高跃起或飞在空中的敌人可以越过。撞空收招较慢。',
 start(f) { f.armorT = 0.38; f.armorHits = 1; f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.16) {
-f.skPh = 1; f.t = 0; f.vx = f.face * 720; f.hitDone = false; SFX.dash(); SFX.thud();
+f.skPh = 1; f.t = 0; f.vx = f.face * 620; f.hitDone = false; SFX.dash(); SFX.thud();
 shake = Math.max(shake, 12);
 }
 if (f.skPh === 1) {
@@ -7126,7 +7126,7 @@ addP({ type: 'spark', x: wx, y: wy, vx: f.face * rand(140, 360), vy: rand(-180, 
 dust(f.x + f.face * 35, 0, 4);
 }
 if (strike(f, foe, {
-box: [-10, -2200, 135, 0],
+box: [-10, -165, 135, 0],
 dmg: 56,
 kb: foeInAir ? [Math.round(260 * wRatio), Math.round(520 * wRatio)] : [Math.round(420 * wRatio), -180],
 stun: 0.45,
@@ -7147,7 +7147,7 @@ f.vx *= 0.2;
 }
 if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
 }
-if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
+if (f.skPh === 2 && f.t >= (f.hitDone ? 0.28 : 0.40)) toNeutral(f);   // 撞空收招更慢
 },
 pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
 spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（48 伤害）扫飞贴身之敌（对地面敌人仅平推硬直，仅浮空敌人会被击落地面）！',
@@ -7348,7 +7348,7 @@ const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, b
 const ULTS = {
 crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
 shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
-avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
+avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（140 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（0.75 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次只有 65% 伤害、正中回 50% 气量；只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 25% 气量。',
 begin(f, foe) {
 f.sp = 'leap'; f.vy = -1050; f.y = -1;
 const c = f.ctrl, dir = (c && c.held && c.held.right ? 1 : 0) - (c && c.held && c.held.left ? 1 : 0);
@@ -7386,21 +7386,23 @@ const dx = Math.abs(foe.x - f.x), foeDown = foe.state === 'knockdown' || foe.sta
 if (dx < 185 && foe.y > -80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
 const dir = foe.x >= f.x ? 1 : -1;
 const full = dx < 92.5 && !foeDown;
+const avaDmg = f.avaChain ? Math.round(140 * 0.65) : 140;   // 连放的第二下只有 65% 伤害，不至于两下秒人
 if (foeDown) {
-applyHit(f, foe, { dmg: 185, kb: [0, 0], stun: 0, hs: 0.25, unblockable: true, ult: true, noScale: true, noStun: true, dir, big: true }, [foe.x, foe.y - 20]);   // 只掉血，人还躺着
+applyHit(f, foe, { dmg: avaDmg, kb: [0, 0], stun: 0, hs: 0.25, unblockable: true, ult: true, noScale: true, noStun: true, dir, big: true }, [foe.x, foe.y - 20]);   // 只掉血，人还躺着
 } else {
 const isLeiMingUlt = foe.ch && foe.ch.id === 'leiming' && foe.state === 'special';
-applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 1.3, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
-foe.state = 'hitstun'; foe.stun = 1.3; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
+applyHit(f, foe, { dmg: avaDmg, kb: [dir * 140, 0], stun: 0.75, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
+foe.state = 'hitstun'; foe.stun = 0.75; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
 if (!isLeiMingUlt && foe.state === 'special') {
 foe.sp = null; // 打断地面常规绝技蓄势
 }
 }
-const free = full && !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次、砸偏或砸倒地的人只回 50%
-f.meter = free ? 100 : Math.min(100, f.meter + 50); f.avaFree = free;
+const free = full && !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次正中回 50%，砸偏或砸倒地的人只回 25%
+const back = free ? 100 : full ? 50 : 25;
+f.meter = Math.min(100, f.meter + back); f.avaFree = free;
 f.skillCD = 0; f.skill2CD = 0;
 ring(f.x, f.y - 60, 220, '255,200,120', 0.6);
-addP({ type: 'text', text: free ? '⚡ 怒意回涌 · 再来一次' : '⚡ 怒意回涌 +50% 气量', x: f.x, y: f.y - 130, life: 1.2, max: 1.2, rgb: '255,200,100' });
+addP({ type: 'text', text: free ? '⚡ 怒意回涌 · 再来一次' : `⚡ 怒意回涌 +${back}% 气量`, x: f.x, y: f.y - 130, life: 1.2, max: 1.2, rgb: '255,200,100' });
 if (!foeDown) addP({ type: 'text', text: '💫 震荡晕眩 · 破灭万法', x: foe.x, y: foe.y - 110, life: 1.3, max: 1.3, rgb: '255,220,120' });
 SFX.chargeFull();
 }
@@ -15646,9 +15648,9 @@ const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 2
 const SHORT = {
 疾风斩: ['55', '突进穿身 · 剑气重置'], 影遁: ['45', '瞬移身后 · 下一击 ×1.5'], 震地: ['45+40', '双向地波 · 掀飞'], 回马枪: ['60', '后跃回刺 · 挑飞'],
 风刃: ['28×2', '上下两道风刃 · 几无前摇'], 雷闪: ['40', '穿身雷光 · 麻痹'], 墨阵: ['35', '踩中定身 · 二段引爆'], 月镜: ['95', '格开近战 · 自动反斩'], 俯冲: ['46', '空中俯冲 · 命中刷新'],
-剑气: ['52', '半场弧月剑气 · 挑空'], 飞镖: ['25×4', '四枚散射'], 铁壁冲: ['56', '通天巨浪 · 霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['8×5', '向前疾冲 · 撒爆米花半秒后炸'],
+剑气: ['52', '半场弧月剑气 · 挑空'], 飞镖: ['25×4', '四枚散射'], 铁壁冲: ['56', '巨浪截低空 · 霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['8×5', '向前疾冲 · 撒爆米花半秒后炸'],
 金刚雷铠: ['50', '雷铠御守 · 引雷反震'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['28 / 38', '飞出轻削 · 折返背袭'], 翎羽: ['22×3', '三道翎羽 · 射程无限'],
-残月: ['169', '六连居合 · 终结回气重置'], 千影: ['179', '九影乱斩 · 绝杀分身重置'], 山崩: ['185', '砸地晕眩 · 正中回满气重置'], 刹那: ['140–185', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
+残月: ['169', '六连居合 · 终结回气重置'], 千影: ['179', '九影乱斩 · 绝杀分身重置'], 山崩: ['140', '砸地晕眩 · 正中回满气重置'], 刹那: ['140–185', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
 龙卷: ['16×16', '双龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['48×3', '天雷追落 · 气量回涌30%'], 符阵: ['80–280', '宣纸全图 · 按符数爆伤'], 月华如水: ['75 (+60血)', '回血霸体 · 架招重置'], 万羽: ['14×14', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(510血)', feiying: '最快移速出手 · 身轻体巧(470血)', tieshan: '重斩蓄力霸体 · 气血冠绝(530血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(480血)',
@@ -15884,8 +15886,8 @@ light: { name: '重剑沉猛五斩', badge: '💥 霸体压制', badgeCls: 'badg
 charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '34.6 / 55.7', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
 air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '17.3 / 25', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
 skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.45s', badgeCls: 'badge-stun', dmg: '45 + 40', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
-ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '56', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
-ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '185 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
+ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 巨浪拍岸', badgeCls: 'badge-break', dmg: '56', cd: '7.5s', desc: '霸体肩撞冲锋，巨浪截住地面和低跳的敌人并砸落，1.5 倍瓦解防御；高跳和飞行可以越过，撞空收招较慢。' },
+ult: { name: '奥义·山崩', badge: '💫 怒意回涌 0.75s', badgeCls: 'badge-stun', dmg: '140 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩0.75s并回满气重置CD；连放的第二下只有 65% 伤害；砸偏或砸倒地的对手只回 25% 气。' },
 esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '玄铁重甲强解受控，稳健退避重整架势。' }
 },
 feiying: {
@@ -16570,7 +16572,7 @@ yanling: [
 const SKILL_FUN = {
 qingfeng: { passive: '师父说他悟性一般，攒气倒是一绝。', light: '五剑连刺，每一剑都在心里喊招式名。', charge: '憋了半天就为这一下，憋不住就是普通一刀。', air: '跳起来砍人，是剑客的基本修养。', skill: '一步过去，对手还没回头就定住了。', ranged: '剑气出鞘，隔空也要把你挑上天。', ult: '残月一出，月亮都得往旁边让让。', esc: '打不过就飞，这叫战术性腾空。' },
 feiying: { passive: '血条薄如纸，跑得比消息还快。', light: '刀快到连自己都看不清。', charge: '蓄力背刺，专治站桩选手。', air: '从天而降的不只有惊喜。', skill: '“我在你身后。”经典台词，屡试不爽。', ranged: '四枚飞镖，总有一枚能中。', ult: '九个分身，哪个是真的？都是。', esc: '留下一缕烟，人早溜了。' },
-tieshan: { passive: '出门从不带伞，雨点打在身上算挠痒。', light: '慢是慢了点，挨一下你就知道了。', charge: '蓄满这一刀，连地板都害怕。', air: '他能跳起来，本身就是奇迹。', skill: '砸地之前，请确认脚下不是自家院子。', ranged: '掀起通天巨浪，飞得再高也得被拍下来。', ult: '跳起来砸你，落点还能自己挑。', esc: '一百八十斤腾空，地面松了口气。' },
+tieshan: { passive: '出门从不带伞，雨点打在身上算挠痒。', light: '慢是慢了点，挨一下你就知道了。', charge: '蓄满这一刀，连地板都害怕。', air: '他能跳起来，本身就是奇迹。', skill: '砸地之前，请确认脚下不是自家院子。', ranged: '巨浪拍岸，跳得不够高就得被拍下来。', ult: '跳起来砸你，落点还能自己挑。', esc: '一百八十斤腾空，地面松了口气。' },
 lingshuang: { passive: '一寸长一寸强，贴脸了一寸也不强。', light: '枪出如龙，每一下都戳在节奏上。', charge: '一枪捅穿防御，顺便捅穿你的心态。', air: '空中挑枪，专挑跳得高的。', skill: '先退半步，是为了捅得更远。', ranged: '转起来像风车，暗器都绕道走。', ult: '时间停一下，够她把话说完。', esc: '枪往地上一撑，人就弹出去了。' },
 liuyun: { passive: '三段跳是基本操作，落地才算失误。', light: '扇子不是用来扇风的，是用来扇人的。', charge: '蓄一口大风，把人吹到地图那头。', air: '他在天上的时间比在地上多。', skill: '一扇子风刃，顺手吹散飞镖。', ranged: '后翻一下原地起风，优雅退场。', ult: '今日天气：平地龙卷，有人起飞。', esc: '风往哪吹，他就往哪飘。' },
 leiming: { passive: '出家人不打诳语，只打六连。', light: '六连重拳，数到第四下你就晕了。', charge: '蓄力一拳，阿弥陀佛。', air: '跳起来的和尚最危险。', skill: '带电冲拳，碰一下全身发麻。', ranged: '一脚跺出雷柱，邻居以为要下雨。', ult: '三道天雷，师父说这招不许在庙里用。', esc: '金刚一吼，震开一切。' },
