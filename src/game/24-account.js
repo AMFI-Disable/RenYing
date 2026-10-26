@@ -94,15 +94,44 @@ function openAcc() {
   renderAccPage();
   if (!$id('accIn').classList.contains('hidden')) setTimeout(() => $id('accName').focus(), 50);
 }
-async function doLogout() {
-  if (window.CloudSave) { try { await CloudSave.syncNow(); } catch (e) {} await CloudSave.logout(); }
-  setAcc(null);
-  PROF.guest = true;
-  applyProfile({ guest: true, ink: 500, owned: ['qingfeng'], frags: {}, pity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0 }, { reset: true });
-  toast('已退出账号');
-  renderAcc();
-  renderAccPage();
+// 退出账号：先把存档传上云，再清掉本机记着的这个账号的东西，最后刷新网页，内存里的进度（关卡星、爬塔、皮肤装配……）
+// 也一起清空，免得下一个登录的账号接着用上一个人的数据。
+// 留下的只有本机设置（画面、语言、按键、新手引导、云端地址、设备号）、驿站的好友和聊天（按名字分开存，不会串）、
+// 以及纯本地账号（没上云，数据只在这台机器上）的存档。云存档没传上去时也保留这个账号的本地副本，下次登录还能合并回去。
+const LOGOUT_KEEP = ['renying-settings', 'renying-lang', 'renying-lang-chosen', 'renying-tut-seen', 'renying-tut-done', 'renying-1p-keys',
+  'renying-custom-ice', 'renying-cloud-endpoint', 'renying-ac-device', 'renying-guest-name', 'renying-local-accounts'];
+function clearLocalAccountData(user, synced) {
+  let localNames = [], localUids = [];
+  try { const la = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); localNames = Object.keys(la); localUids = Object.values(la).map(x => x && x.uid).filter(Boolean); } catch (e) {}
+  const keepUnsynced = user && user.uid && !synced ? ['renying-prof-' + user.uid, 'renying-ledger-' + user.uid, 'renying-sync-dirty-' + user.uid] : [];
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+  for (const k of keys) {
+    if (!k || !k.startsWith('renying-')) continue;
+    if (LOGOUT_KEEP.includes(k) || k.startsWith('renying-social-') || keepUnsynced.includes(k)) continue;
+    if (localUids.some(id => k.endsWith('-' + id)) || localNames.some(n => k.endsWith('-' + n))) continue;   // 本地账号的存档只有这一份
+    try { localStorage.removeItem(k); } catch (e) {}
+  }
 }
+let loggingOut = false;
+async function doLogout() {
+  loggingOut = true;
+  const user = window.CloudSave ? CloudSave.getUser() : null;
+  let synced = !(user && user.isCloud);
+  if (window.CloudSave) {
+    if (user && user.isCloud) {
+      try { await CloudSave.syncNow(); const ss = CloudSave.getSyncState(); synced = !!(ss && ss.state === 'ok' && !ss.pending); } catch (e) { synced = false; }
+    }
+    await CloudSave.logout();
+  }
+  clearLocalAccountData(user, synced);
+  try { sessionStorage.setItem('renying-logout-note', synced ? 'ok' : 'unsynced'); } catch (e) {}
+  location.reload();
+}
+try {   // 刷新之后补上退出的提示
+  const note = sessionStorage.getItem('renying-logout-note');
+  if (note) { sessionStorage.removeItem('renying-logout-note'); setTimeout(() => toast(note === 'ok' ? '已退出账号，本机数据已清空' : '已退出账号。云存档这次没传上去，本机先留着这个账号的存档，下次登录会合并'), 800); }
+} catch (e) {}
 $id('accBar').addEventListener('click', async e => {
   const id = e.target.id;
   if (id === 'accOpen') openAcc();

@@ -136,7 +136,7 @@ cv.addEventListener('pointerdown', () => refocusGame());
 window.addEventListener('mouseup', e => { if (e.button === 0) human[0].held.atk = false; });
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
-window.addEventListener('beforeunload', () => { saveTowerRun(); });
+window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去
 window.addEventListener('blur', () => {
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   if (M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && M.phase !== 'end' && !paused) {

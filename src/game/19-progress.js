@@ -502,6 +502,11 @@ function applyProfile(p, opts) {
     Object.assign(PROF, p, { guest: false });
   }
   PROF.loaded = true;
+  if (!PROF.guest && p.stageStars && typeof p.stageStars === 'object') {   // 关卡星跟着账号走：取云存档和本机（退出时已清空）两边较高的
+    for (const [k, v] of Object.entries(p.stageStars)) STAGE_STARS[k] = Math.max(STAGE_STARS[k] || 0, Math.floor(+v || 0));
+    PROF.stageStars = STAGE_STARS;
+    try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {}
+  }
   { const fl = loadFlags();   // 一次性奖励的领取记录不进云存档，按账号记在本机，刷新后还在
     if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
     if (fl.tutorial && !PROF.guest) PROF.tutorial = 1; }
