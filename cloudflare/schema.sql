@@ -150,3 +150,12 @@ CREATE TABLE IF NOT EXISTS cfg (
     note TEXT NOT NULL,
     at INTEGER NOT NULL
 );
+
+-- 在线人数：每个打开的网页（按标签页）每 30 秒报一次到，90 秒内报过的算在线；ip 只存哈希
+CREATE TABLE IF NOT EXISTS presence (
+    sid TEXT PRIMARY KEY,
+    ip TEXT NOT NULL,
+    st TEXT NOT NULL,
+    seen INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_presence_seen ON presence (seen);

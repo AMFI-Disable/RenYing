@@ -92,6 +92,9 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS code_got (code TEXT NOT NULL, uid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (code, uid))`,
   // 在线改的经济数值：每改一次加一行，最后一行是现在用的（只存和默认值不一样的项）
   `CREATE TABLE IF NOT EXISTS cfg (id INTEGER PRIMARY KEY AUTOINCREMENT, json TEXT NOT NULL, by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
+  // 在线人数：每个打开的网页（按标签页，刷新不算新人）每 30 秒报一次到；PRESENCE_WINDOW 内报过的算在线。ip 只存哈希
+  `CREATE TABLE IF NOT EXISTS presence (sid TEXT PRIMARY KEY, ip TEXT NOT NULL, st TEXT NOT NULL, seen INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS idx_presence_seen ON presence (seen)`,
 ];
 let schemaReady = null;
 function ensureSchema(env) {
@@ -946,7 +949,35 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
     env.DB.prepare('DELETE FROM mkt WHERE state = 2 AND done_at < ?').bind(now - 7 * DAY_MS),               // 撤下的单留一周
     env.DB.prepare('DELETE FROM mkt WHERE state = 1 AND paid = 1 AND done_at < ?').bind(now - 120 * DAY_MS),   // 成交记录留四个月（价格走势用）
+    env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - 10 * 60e3),
   ]);
+}
+
+/* ---------- 在线人数 ----------
+ * 大厅名单靠浏览器之间直连，连不上别人的网页（有的防火墙、网络会挡 WebRTC）就只能看到自己，所以人数以这里为准。
+ * 每个标签页带一个随机 sid（存在 sessionStorage，刷新还是同一个），30 秒报一次状态：menu 在逛、queue 在匹配、match 在联机对战。
+ * 关网页时发 bye 立刻下线。同一个 IP 最多算 PRESENCE_PER_IP 个，防止有人刷人数（同一个校园网、家里几台机器都还够用）。 */
+const PRESENCE_WINDOW = 90e3, PRESENCE_PER_IP = 16, PRESENCE_ST = ['menu', 'queue', 'match'];
+async function ipTag(ip) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('renying-presence:' + ip));
+  return Array.from(new Uint8Array(d).slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function presence(env, body, ip, now) {
+  const sid = String(body.sid || '');
+  if (!/^[a-z0-9]{12,40}$/.test(sid)) return error('sid 不对');
+  const tag = await ipTag(ip);
+  if (body.bye) {
+    await env.DB.prepare('DELETE FROM presence WHERE sid = ? AND ip = ?').bind(sid, tag).run();
+  } else {
+    const st = PRESENCE_ST.includes(body.st) ? body.st : 'menu';
+    const mine = await env.DB.prepare('SELECT (SELECT ip FROM presence WHERE sid = ?1) AS owner, (SELECT COUNT(*) FROM presence WHERE ip = ?2 AND seen > ?3) AS n').bind(sid, tag, now - PRESENCE_WINDOW).first();
+    if (mine && mine.owner && mine.owner !== tag) return error('sid 不对');   // 别人的 sid：不让顶替
+    if ((mine && mine.owner) || !mine || mine.n < PRESENCE_PER_IP) {
+      await env.DB.prepare('INSERT INTO presence (sid, ip, st, seen) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(sid) DO UPDATE SET st = ?3, seen = ?4').bind(sid, tag, st, now).run();
+    }
+  }
+  const c = await env.DB.prepare("SELECT COUNT(*) AS online, SUM(st = 'match') AS playing, SUM(st = 'queue') AS waiting FROM presence WHERE seen > ?").bind(now - PRESENCE_WINDOW).first();
+  return json({ ok: true, online: (c && c.online) || 0, playing: (c && c.playing) || 0, waiting: (c && c.waiting) || 0, every: 30 });
 }
 
 export default {
@@ -1149,6 +1180,13 @@ export default {
       }
 
       if (path.startsWith('/api/admin/')) return await handleAdmin(env, request, path, now, ip);
+
+      // 10. 在线人数（不用登录，游客也算）
+      if (path === '/api/presence' && request.method === 'POST') {
+        const body = await readBody(request);
+        if (!body) return error('请求太大', 413);
+        return await presence(env, body, ip, now);
+      }
 
       // 9. Logout
       if (path === '/api/logout' && request.method === 'POST') {

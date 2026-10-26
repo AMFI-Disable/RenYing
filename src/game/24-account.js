@@ -795,24 +795,52 @@ $id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('
 $id('rkInfo').addEventListener('click', e => { if (e.target === $id('rkInfo')) $id('rkInfo').classList.add('hidden'); });
 setTimeout(() => { try { rkCheckPending(); } catch (e) {} }, 2500);
 // 在线情况：多少局在打、多少人在匹配、首页全服在线人数
-function refreshOnline() {
-  let count = 0;
-  if (typeof SOC !== 'undefined' && SOC.online && SOC.online.length) {
-    count = Math.max(count, SOC.online.length);
+// 在线人数：以云端的到场记录为准（每个标签页 30 秒报一次，刷新还是同一个人）。大厅名单是浏览器之间直连的，
+// 连不上别人（有的防火墙、网络挡 WebRTC）就只能看到自己，以前人数会一直停在 1；云端连不上时才退回用大厅名单。
+const PRES = { sid: '', srv: null, at: 0, busy: false };
+function presSid() {
+  if (PRES.sid) return PRES.sid;
+  try { PRES.sid = sessionStorage.getItem('renying-presence-sid') || ''; } catch (e) {}
+  if (!/^[a-z0-9]{12,40}$/.test(PRES.sid)) {
+    PRES.sid = Array.from(crypto.getRandomValues(new Uint8Array(12)), x => x.toString(36).padStart(2, '0')).join('').slice(0, 20);
+    try { sessionStorage.setItem('renying-presence-sid', PRES.sid); } catch (e) {}
   }
-  const updatePills = (cnt, h) => {
-    const total = Math.max(1, cnt);
-    const parts = [];
-    if (h && h.playing) parts.push(`${h.playing} 局对战`);
-    if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
-    if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? parts.join(' · ') : `${total} 人在线 · 全网连线`;
-    if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
-    if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
-    if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
-  };
-  updatePills(count);
+  return PRES.sid;
+}
+const presUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/presence';
+const presState = () => (M.mode === 'net' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
+async function presBeat() {
+  if (PRES.busy || !window.CloudSave) return;
+  PRES.busy = true;
+  try {
+    // text/plain 不用先发 OPTIONS 预检，关网页时的 sendBeacon 也是这个格式
+    const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }) });
+    const d = await r.json().catch(() => null);
+    if (r.ok && d && typeof d.online === 'number') { PRES.srv = d; PRES.at = Date.now(); }
+  } catch (e) {}
+  PRES.busy = false;
+  refreshOnline();
+}
+function presBye() {
+  try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
+}
+window.addEventListener('pagehide', presBye);
+function refreshOnline() {
+  const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;
+  const srv = PRES.srv && Date.now() - PRES.at < 120e3 ? PRES.srv : null;   // 两分钟没报成功就当云端暂时连不上
+  const count = Math.max(srv ? srv.online : 0, hall);
+  const h = srv ? { playing: Math.ceil((srv.playing || 0) / 2), waiting: srv.waiting || 0 } : null;   // 一局联机两个人都报 match
+  const total = Math.max(1, count);
+  const parts = [];
+  if (h && h.playing) parts.push(`${h.playing} 局对战`);
+  if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
+  if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? `${total} 人在线 · ` + parts.join(' · ') : `${total} 人在线 · 全网连线`;
+  if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
+  if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
+  if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
 }
 setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
+setInterval(presBeat, 30000); setTimeout(presBeat, 1200);
 function joinByCode() {
   initAudio();
   const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
