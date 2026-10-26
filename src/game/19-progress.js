@@ -521,7 +521,6 @@ function applyProfile(p, opts) {
     if (typeof renderTower === 'function') renderTower();
     if (typeof renderChaos === 'function') renderChaos();
     if (typeof renderTag3 === 'function') renderTag3();
-    if (typeof renderTrainPick === 'function') renderTrainPick();
   }
   for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
   if ($id('tasks').classList.contains('on')) renderTasks();
@@ -712,7 +711,6 @@ async function redeemCode(rawCode) {
     if (typeof BP !== 'undefined' && BP) renderBP();
     if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
     if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
-    if (typeof renderTrainPick === 'function') renderTrainPick();
     return;
   }
   const DEV_SUPER_CODE = 'VG8KS7K8PYP5R36P';

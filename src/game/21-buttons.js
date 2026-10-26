@@ -163,92 +163,27 @@ function startDummyTraining() {
   applySkins();
   A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
 }
-function startTraining(targetMode = trainTargetMode, isWatch = false) {
+// 木人试剑：木人桩直接开练；各模式的最高境界专项训练和正常开局一样先去点将台选人
+function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
+  if (targetMode === 'watch2v2') return bpStart('2v2', { subMode: 'pc_cc', level: 'god', isWatch });
+  if (targetMode === 'cpu') { pickLevel = 'god'; return bpStart(isWatch ? 'cpuWatch' : 'cpu'); }
+  if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
+  bpStart('train', { targetMode: 'dummy', isWatch });
+}
+function startTraining(targetMode = 'dummy', isWatch = false) {
+  if (targetMode !== 'dummy') return startTrainTarget(targetMode, isWatch);
   if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
     trainChar = 0;
   }
   initAudio(); paused = false;
   M.watchAi = !!isWatch;
-  const oppChar = Math.floor(Math.random() * CHARS.length);
-  if (targetMode === 'cpu') {
-    pickLevel = 'god';
-    showScreen(null);
-    startMatch('cpu', 'god', [trainChar, oppChar], isWatch);
-    return;
-  }
-  if (targetMode === 'chaos') {
-    startChaos(trainChar, oppChar, 'god', isWatch);
-    showScreen(null);
-    return;
-  }
-  if (targetMode === 'tag3') {
-    const pTeam = [trainChar, (trainChar + 1) % CHARS.length, (trainChar + 2) % CHARS.length];
-    const eTeam = pickEnemyTag3Team(pTeam);
-    startTag3Match(pTeam, eTeam, 'god', isWatch);
-    showScreen(null);
-    return;
-  }
-  if (targetMode === 'mayhem') {
-    startMayhem(trainChar, oppChar, 'god', isWatch);
-    showScreen(null);
-    return;
-  }
-  if (targetMode === 'watch2v2') {
-    startWatch2v2Draft();
-    return;
-  }
   startDummyTraining();
   if (isWatch) {
     A.ctrl = new AICtrl('god');
     say('木人试剑 · AI 演示连招', 1.4);
   }
 }
-function renderTrainPick() {
-  if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
-    trainChar = 0;
-  }
-  const av = availList();
-  const el = $id('trPick');
-  if (!el) return;
-  el.innerHTML = CHARS.map((c, i) => {
-    const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-    const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-    const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-    const skinTag = sk ? `<small style="font-size:12px;margin-left:4px;color:rgba(239,232,216,0.7)">·${sk.name}</small>` : '';
-    const trialTag = av.includes(i) ? '' : '<small style="font-size:12px;margin-left:4px;color:var(--dim)">试用</small>';
-    return `<button type="button" data-i="${i}" class="${i === trainChar ? 'sel' : ''}" style="color:rgb(${look.slash})">${c.name}${skinTag}${trialTag}</button>`;
-  }).join('');
-}
-const trPickEl = $id('trPick');
-if (trPickEl) {
-  trPickEl.addEventListener('click', e => {
-    const b = e.target.closest('button');
-    if (!b || b.dataset.i === undefined) return;
-    const idx = parseInt(b.dataset.i, 10);
-    if (!isNaN(idx) && idx >= 0 && idx < CHARS.length) {
-      trainChar = idx;
-      renderTrainPick();
-      SFX.slice();
-    }
-  });
-}
 const trainBtnEl = $id('trainBtn');
-if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
-  if (trainTargetMode === 'watch2v2') {
-    bpStart('2v2', { subMode: 'pc_cc', level: 'god', isWatch: false });
-  } else if (trainTargetMode === 'tag3') {
-    bpStart('tag3', { level: 'god', isWatch: false });
-  } else if (trainTargetMode === 'cpu') {
-    pickLevel = 'god';
-    bpStart('cpu');
-  } else if (trainTargetMode === 'chaos') {
-    bpStart('chaos', { level: 'god', isWatch: false });
-  } else if (trainTargetMode === 'mayhem') {
-    bpStart('mayhem', { level: 'god', isWatch: false });
-  } else {
-    bpStart('train', { targetMode: 'dummy', isWatch: false });
-  }
-});
-renderTrainPick();
+if (trainBtnEl) trainBtnEl.addEventListener('click', () => startTrainTarget(trainTargetMode, false));
 renderDummyFeatures();
 

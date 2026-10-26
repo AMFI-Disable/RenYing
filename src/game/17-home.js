@@ -355,7 +355,7 @@ function singleSec(sec) {
   else if (active === 'tower') renderTower();
   else if (active === 'chaos') renderChaos();
   else if (active === 'stage') renderStages();
-  else if (active === 'train') { renderTrainPick(); renderDummyFeatures(); }
+  else if (active === 'train') renderDummyFeatures();
   else if (active === 'mayhem') renderMayhem();
   else if (active === 'watch2v2') renderSingle2v2();
   else if (active === 'cpu') updateAIBrief();
@@ -373,7 +373,7 @@ function openScreen(name, reveal = true) {
   if (name === 'tasks') renderTasks();
   if (name === 'replays') renderReplays();
   if (name === 'netp') renderRankLine();
-  if (name === 'single') { renderTrainPick(); renderStages(); }
+  if (name === 'single') renderStages();
   if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
   if (name === 'codex') openCodex();
   if (name === 'community') openCommunity();
@@ -411,6 +411,7 @@ function heroQuickFight(lv) {
   showPop(null); showScreen(null);
   MSTAT.maxcombo = 0; MSTAT.ults = 0;
   startMatch('cpu', pickLevel, [menuHeroId, foe]);
+  M.quick = true;   // 「再来一局」也不进点将台
   applySkins();
 }
 function heroPickShow(on) {

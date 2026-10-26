@@ -1,51 +1,9 @@
 // ======================= 3v3 门派车轮战 =======================
-let tag3Team = [0, 1, 2];
-let activeTagSlot = 0;
 let tag3Level = 'normal';
-let tag3EnemyTeam = [3, 4, 5];
 
+// 车轮战设置页只剩难度按钮：选人统一在点将台里做（各禁 1 选 3）
 function renderTag3() {
-  ensurePortraits();
-  const slotLabels = ['先锋', '中坚', '大将'];
-  const slotsEl = document.getElementById('tag3Slots');
-  if (slotsEl) {
-    slotsEl.innerHTML = [0, 1, 2].map(slotIdx => {
-      const charIdx = tag3Team[slotIdx] !== undefined ? tag3Team[slotIdx] : slotIdx;
-      const ch = CHARS[charIdx];
-      const col = ch ? `rgb(${ch.look.slash})` : 'var(--ink)';
-      return `<div class="tag3-slot${activeTagSlot === slotIdx ? ' sel' : ''}" data-slot="${slotIdx}">
-        <span class="slot-tag">${slotLabels[slotIdx]}</span>
-        <div class="slot-avatar">
-          <img src="${PORTRAITS[charIdx] || ''}" alt="">
-        </div>
-        <span class="slot-name" style="color:${col}">${ch ? ch.name : '未选'}</span>
-        <span class="slot-role">${ch ? ch.role : ''}</span>
-      </div>`;
-    }).join('');
-  }
-
-  const rosterEl = document.getElementById('tag3Roster');
-  if (rosterEl) {
-    rosterEl.innerHTML = CHARS.map((ch, i) => {
-      const inSlot = tag3Team.indexOf(i);
-      const tagText = inSlot >= 0 ? slotLabels[inSlot] : '';
-      const col = `rgb(${ch.look.slash})`;
-      return `<button class="tag3-hero-chip${inSlot >= 0 ? ' in-team' : ''}" data-idx="${i}" type="button">
-        ${tagText ? `<span class="team-badge">${tagText}</span>` : ''}
-        <img src="${PORTRAITS[i] || ''}" alt="">
-        <div class="nm" style="color:${col}">${ch.name}</div>
-        <div class="rl">${ch.role}</div>
-      </button>`;
-    }).join('');
-  }
-}
-
-function pickEnemyTag3Team(playerTeam) {
-  const allIdxs = CHARS.map((_, i) => i);
-  const remaining = allIdxs.filter(i => !playerTeam.includes(i));
-  const pool = remaining.length >= 3 ? remaining : allIdxs;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 3);
+  for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x.dataset.lv === tag3Level);
 }
 
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
@@ -54,11 +12,9 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   human[0].rec = null;
   REC.on = false;
 
-  tag3Team = [...pTeam];
-  tag3EnemyTeam = [...eTeam];
   M.mode = 'tag3';
   M.level = lv || tag3Level || 'normal';
-  M.teams = [ [...tag3Team], [...tag3EnemyTeam] ];
+  M.teams = [[...pTeam], [...eTeam]];
   M.teamIdx = [0, 0];
   M.wins = [0, 0];
   M.round = 1;
@@ -78,35 +34,6 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
 }
 
-const tag3SlotsEl = document.getElementById('tag3Slots');
-if (tag3SlotsEl) {
-  tag3SlotsEl.addEventListener('click', e => {
-    const b = e.target.closest('.tag3-slot');
-    if (!b) return;
-    activeTagSlot = +b.dataset.slot;
-    renderTag3();
-    SFX.slice();
-  });
-}
-const tag3RosterEl = document.getElementById('tag3Roster');
-if (tag3RosterEl) {
-  tag3RosterEl.addEventListener('click', e => {
-    const b = e.target.closest('.tag3-hero-chip');
-    if (!b) return;
-    const heroIdx = +b.dataset.idx;
-    const existingSlot = tag3Team.indexOf(heroIdx);
-    if (existingSlot >= 0) {
-      const curHeroInActive = tag3Team[activeTagSlot];
-      tag3Team[activeTagSlot] = heroIdx;
-      tag3Team[existingSlot] = curHeroInActive;
-    } else {
-      tag3Team[activeTagSlot] = heroIdx;
-      activeTagSlot = (activeTagSlot + 1) % 3;
-    }
-    renderTag3();
-    SFX.slice();
-  });
-}
 const tag3LevelsEl = document.getElementById('tag3Levels');
 if (tag3LevelsEl) {
   tag3LevelsEl.addEventListener('click', e => {
@@ -247,25 +174,6 @@ function renderTower() {
       resumeBtn.style.display = 'none';
     }
   }
-  const pickEl = document.getElementById('towerPick');
-  if (pickEl) {
-    pickEl.innerHTML = CHARS.map((c, i) => {
-      const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-      const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-      const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-      return `<button class="trbtn${towerHero === i ? ' sel' : ''}" data-idx="${i}" type="button" style="color:rgb(${look.slash})">
-        <span class="trn">${c.name}</span>
-        <span class="trr">${sk ? sk.name : c.role}</span>
-      </button>`;
-    }).join('');
-    pickEl.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        towerHero = +b.dataset.idx;
-        renderTower();
-        SFX.slice();
-      });
-    });
-  }
 }
 
 function startTower(heroIdx, isWatch = false) {
@@ -297,7 +205,7 @@ function startTower(heroIdx, isWatch = false) {
 
 function resumeTower() {
   const run = loadTowerRun();
-  if (!run) { startTower(towerHero); return; }
+  if (!run) { bpStart('tower', { isWatch: false }); return; }   // 没有存档就和「开启新试炼」一样先去点将台选人
   initAudio();
   paused = false;
   towerHero = run.hero !== undefined ? run.hero : towerHero;
@@ -560,27 +468,7 @@ function updateChaos(dt) {
   }
 }
 
-// 乱斗 / 神决设置页里的一排侠客按钮（显示当前皮肤的名字和颜色），点哪个就选哪个
-function heroPickRow(el, sel, onPick) {
-  if (!el) return;
-  el.innerHTML = CHARS.map((c, i) => {
-    const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-    const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-    const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-    return '<button class="trbtn' + (sel === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-      '<span class="trn">' + c.name + '</span>' +
-      '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-    '</button>';
-  }).join('');
-  el.querySelectorAll('button').forEach(b => {
-    b.addEventListener('click', () => { onPick(+b.dataset.idx); SFX.slice(); });
-  });
-}
 function renderChaos() {
-  const pick1 = document.getElementById('chaosPick');
-  const pick2 = document.getElementById('chaosFoePick');
-  heroPickRow(pick1, chaosP1, i => { chaosP1 = i; renderChaos(); });
-  heroPickRow(pick2, chaosP2, i => { chaosP2 = i; renderChaos(); });
   const lvs = document.querySelectorAll('#chaosLevels button');
   lvs.forEach(b => {
     b.classList.toggle('sel', b.dataset.lv === chaosLevel);
@@ -637,10 +525,6 @@ if (chaosWatchBtn) chaosWatchBtn.addEventListener('click', () => {
 
 let mayhemP1 = 0, mayhemP2 = 1, mayhemLevel = 'hard';
 function renderMayhem() {
-  const pick1 = document.getElementById('mayhemPick');
-  const pick2 = document.getElementById('mayhemFoePick');
-  heroPickRow(pick1, mayhemP1, i => { mayhemP1 = i; renderMayhem(); });
-  heroPickRow(pick2, mayhemP2, i => { mayhemP2 = i; renderMayhem(); });
   const lvs = document.querySelectorAll('#mayhemLevels button');
   lvs.forEach(b => {
     b.classList.toggle('sel', b.dataset.lv === mayhemLevel);
@@ -1216,6 +1100,11 @@ document.getElementById('againBtn').addEventListener('click', () => {
   }
   if (M.mode === 'chaos') {
     bpStart('chaos', { level: chaosLevel, isWatch: false });
+    return;
+  }
+  if (M.mode === 'cpu' && M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
+    menuLock = false;
+    heroQuickFight(M.level);
     return;
   }
   bpStart('cpu');

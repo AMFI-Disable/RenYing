@@ -569,7 +569,7 @@ function bpFinish() {
     startStage(opts.stageCh !== undefined ? opts.stageCh : stageCh, opts.stageL !== undefined ? opts.stageL : (STAGE ? STAGE.l : 1), !!opts.isWatch, picks[0]);
   } else if (mode === 'train') {
     trainChar = picks[0];
-    startTraining(opts.targetMode || trainTargetMode, !!opts.isWatch);
+    startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
   } else if (mode === '2v2') {
     const sub = opts.subMode || 'pc_cc';
     if (sub === 'pp_cc') {

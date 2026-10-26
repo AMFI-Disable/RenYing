@@ -237,7 +237,7 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (duo) chars = [duo[0][0], duo[1][0]];
   setChars(chars[0], chars[1]);
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
-  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo;
+  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false;
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];

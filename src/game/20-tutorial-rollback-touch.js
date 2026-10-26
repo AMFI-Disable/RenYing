@@ -18,7 +18,7 @@ const TUT_STEPS = [
 function startTutorial() {
   try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
   trainChar = 0; dummyMode = 'stand';
-  startTraining();
+  startTraining('dummy');
   B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
   TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
   tutNext();
