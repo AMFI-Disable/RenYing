@@ -408,7 +408,8 @@ function makeCardArt(i, CW, CH, skin) {
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const bpAuth = () => bpMode === 'cpu' || bpMode === 'cpuWatch' || bpMode === 'chaos' || bpMode === 'mayhem' || bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === '2v2' || NET.role === 'host';
+const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tower', 'stage', 'train', '2v2'];   // 不联机的点将台：本机自己推进每一步
+const bpAuth = () => LOCAL_BP_MODES.includes(bpMode) || NET.role === 'host';
 const bpSideName = side => {
   if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
   if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
@@ -422,7 +423,7 @@ const bpSideName = side => {
 let bpFinishTimer = null;
 function bpStart(mode, customOpts = null) {
   if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
-  if (mode === 'cpu' || mode === 'cpuWatch' || mode === 'chaos' || mode === 'mayhem' || mode === 'tower' || mode === 'stage' || mode === 'train' || mode === '2v2') netDropWaiting();
+  if (LOCAL_BP_MODES.includes(mode)) netDropWaiting();
   watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
   ensurePortraits(); chatClear();
   bpMode = mode;
@@ -474,7 +475,7 @@ function bpStart(mode, customOpts = null) {
     t: BP_TIME,
     avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
   };
-  bpSel = -1; bpCpuT = 0.85;
+  bpSel = -1; bpCpuT = BP_CPU_DELAY;
   showScreen('bp'); renderBP();
   if (mode === 'net') send({ bps: BP });
 }
@@ -500,10 +501,11 @@ function bpValid(i) {
   }
   return true;
 }
+const bpValidList = () => CHARS.map((c, i) => i).filter(bpValid);   // 这一步还能点的角色
 function bpApply(i) {
   if (!BP || BP.step >= bpSteps().length) return;
   if (!bpValid(i)) {
-    const fallback = CHARS.map((c, idx) => idx).find(bpValid);
+    const fallback = bpValidList()[0];
     if (fallback !== undefined) i = fallback;
     else return;
   }
@@ -520,7 +522,7 @@ function bpApply(i) {
       BP.picks[side] = i;
     }
   }
-  BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = 0.85;
+  BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = BP_CPU_DELAY;
   if (type === 'ban') SFX.thud(); else { SFX.block(); }
   if (bpMode === 'net') send({ bps: BP });
   renderBP();
@@ -581,7 +583,7 @@ function bpFinish() {
 }
 // 电脑选人：禁掉一个随机角色；选人时六成概率挑能克制你的角色
 function bpCpuChoice() {
-  const valid = CHARS.map((c, i) => i).filter(bpValid);
+  const valid = bpValidList();
   if (!valid.length) {
     // 终极保底：任何未禁未选的角色
     for (let i = 0; i < CHARS.length; i++) {
@@ -628,7 +630,7 @@ function bpTick(dt) {
     return;
   }
   if (BP.t <= 0) {
-    const v = CHARS.map((c, i) => i).filter(bpValid);
+    const v = bpValidList();
     const chosen = bpSel >= 0 && bpValid(bpSel) && isMyTurnBP() ? bpSel : (v.length ? v[Math.random() * v.length | 0] : 0);
     bpApply(chosen);
   }

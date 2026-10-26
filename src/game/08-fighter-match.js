@@ -64,6 +64,7 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
+const sideFighters = side => is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]];   // 一方场上的人：1v1 一个，2v2 两个
 const allFighters = () => is2v2() ? [A, B, C, D] : [A, B];
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !is2v2() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
@@ -210,8 +211,7 @@ let announce = null;
 const announceQueue = [];
 const comboUI = [{ n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }];
 
-// 开场署名
-const CREDIT = 2.4;
+// 开场署名（停留时长 CREDIT 在 01-core.js）
 let creditT = 0, creditPending = false;
 function say(text, dur = 1.1, style = 'big', sub = '') {
   if (RESIM) return;
@@ -278,10 +278,10 @@ function startRound() {
     if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
     if (NET.role === 'host') rollChaosMutation();
   }
-  if ((M.mode === 'cpu' || M.mode === 'replay') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
+  if ((M.mode === 'cpu' || M.mode === 'replay') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * IMPOSSIBLE_HP); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
-  M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
+  M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? ROUND_TIME_2V2 : ROUND_TIME; M.koWinner = -1; M.flags = {};
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -294,15 +294,12 @@ function startRound() {
   }
   netEmit({ e: 'round', r: M.round, w: [...M.wins], ch: [A.chIdx, B.chIdx] });
 }
-// 回合规则：50 秒内击倒对手才算赢；到时没人倒下就进 20 秒加时，加时里所有伤害 ×2；加时也结束时血量比例低的败北。
-// 回合结束后活下来的人带着剩下的血量 +80 进下一回合（不超过上限），倒下的人满血再来；三人接力赛里守擂的人同样带血迎战下一位
-const ROUND_TIME = 50, OT_TIME = 20, OT_DMG = 2, CARRY_HEAL = 80;
-const PENGLAI_T = 2;   // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
+// 回合规则的数值（回合时长、加时、带血 +CARRY_HEAL）都在 01-core.js 的「对战规则数值」里
 function timeDeath(winner, text) {
   M.phase = 'ko'; M.t = 0; M.koWinner = winner;
   M.pre = [A.hp / A.maxHp, B.hp / B.maxHp];           // 记下“生前”的血量
   if (winner >= 0) {
-    const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+    const losers = sideFighters(1 - winner);
     const winRef = [A, B][winner];
     for (const l of losers) {
       l.hp = 0; l.state = 'launched'; l.t = 0; l.vy = -380; l.vx = (l.x >= winRef.x ? 1 : -1) * 260; l.y = Math.min(l.y, -1); l.invul = 99; l.move = null; l.skill = null;
@@ -324,7 +321,7 @@ function updateMatch() {
       const winner = (team0Out && team1Out)
         ? ((A.hp + (is2v2() ? C.hp : 0)) > (B.hp + (is2v2() ? D.hp : 0)) ? 0 : 1)
         : (team0Out ? 1 : 0);
-      const losers = is2v2() ? (winner === 0 ? [B, D] : [A, C]) : [[A, B][1 - winner]];
+      const losers = sideFighters(1 - winner);
       for (const loser of losers) {
         loser.hp = 0;
         if (loser.state !== 'launched' && loser.state !== 'knockdown') {
@@ -350,7 +347,7 @@ function updateMatch() {
       }
     }
   } else if (M.phase === 'ko') {
-    const winners = M.koWinner >= 0 ? (is2v2() ? (M.koWinner === 0 ? [A, C] : [B, D]) : [[A, B][M.koWinner]]) : [];
+    const winners = M.koWinner >= 0 ? sideFighters(M.koWinner) : [];
     for (const w of winners) {
       if (w && M.t > 1.2 && w.hp > 0 && w.onGround() && (w.state === 'idle' || w.state === 'walk')) { w.state = 'victory'; w.t = 0; skinVictoryFX(w); }
     }
@@ -488,7 +485,7 @@ function endRound() {
       return;
     }
   }
-  if ((w >= 0 && M.wins[w] >= 2) || M.round >= 5) {
+  if ((w >= 0 && M.wins[w] >= WINS_NEEDED) || M.round >= MAX_ROUNDS) {
     if (M.mode === 'demo') return startMatch('demo');
     M.phase = 'end';
     const finalWinner = w >= 0 ? w : (M.wins[0] >= M.wins[1] ? 0 : 1);

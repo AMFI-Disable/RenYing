@@ -128,6 +128,27 @@ const STEP = 1 / 120;                 // 逻辑每秒 120 次，在高刷屏上�
 let STAGE_W = 1800;
 const WALL = 60;
 const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T = 0.2, BUF = 0.16;
+// ---------- 对战规则数值：改规则、调手感都在这里改 ----------
+// 回合：50 秒内击倒对手才算赢；到时没人倒下就进 20 秒加时，加时里所有伤害 ×OT_DMG；加时也结束时血量比例低的败北。2v2 一回合 75 秒
+const ROUND_TIME = 50, ROUND_TIME_2V2 = 75, OT_TIME = 20, OT_DMG = 2;
+// 活下来的人带着剩下的血量 +CARRY_HEAL 进下一回合（不超过上限），倒下的人满血再来；各选 2 人的对战里输的一方换第二人
+const CARRY_HEAL = 80;
+const WINS_NEEDED = 2, MAX_ROUNDS = 5;     // 先赢 2 回合的一方获胜；平局太多时第 5 回合打完就结束
+const IMPOSSIBLE_HP = 1.35;                // 绝顶难度的电脑多 35% 血
+const LAST_STAND_METER = 100, LAST_STAND_T = 3.5, LAST_STAND_HEAL = 75;   // 2v2 队友倒下后「孤军奋战」：气满、强化 3.5 秒、回 75 血
+const CREDIT = 2.4;                        // 第一回合开场署名多停留的秒数
+const PENGLAI_T = 2;                       // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
+const CINE_LEN = 1.3;                      // 大招特写镜头的秒数
+const CHAOS_INTERVAL = 15;                 // 天机乱斗每隔多少秒换一种异变
+const BP_TIME = 25, BP_CPU_DELAY = 0.85;   // 点将台每一步的时限；电脑每一步想多久
+// 操作手感
+const CHARGE_START = 0.3;   // 按住攻击多久开始蓄力
+const CHARGE_FULL = 0.75;   // 蓄力多久算满
+const DODGE_CD = 0.3;
+const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
+const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
+// 难度的中文名（关卡、回放列表都用这一份）
+const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', god: '天道', adaptive: '宿敌' };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);          // 画面特效用（两边可以不一样）

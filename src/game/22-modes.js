@@ -408,7 +408,6 @@ const CHAOS_MUTATIONS = [
 let chaosP1 = 0, chaosP2 = 1, chaosLevel = 'normal';
 let currentChaosMutation = null;
 let chaosTimer = 0;
-const CHAOS_INTERVAL = 15;
 
 function rollChaosMutation() {
   const mut = CHAOS_MUTATIONS[Math.floor(Math.random() * CHAOS_MUTATIONS.length)];
@@ -433,45 +432,27 @@ function updateChaos(dt) {
   }
 }
 
+// 乱斗 / 神决设置页里的一排侠客按钮（显示当前皮肤的名字和颜色），点哪个就选哪个
+function heroPickRow(el, sel, onPick) {
+  if (!el) return;
+  el.innerHTML = CHARS.map((c, i) => {
+    const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
+    const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
+    const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
+    return '<button class="trbtn' + (sel === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
+      '<span class="trn">' + c.name + '</span>' +
+      '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
+    '</button>';
+  }).join('');
+  el.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => { onPick(+b.dataset.idx); SFX.slice(); });
+  });
+}
 function renderChaos() {
   const pick1 = document.getElementById('chaosPick');
   const pick2 = document.getElementById('chaosFoePick');
-  if (pick1) {
-    pick1.innerHTML = CHARS.map((c, i) => {
-      const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-      const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-      const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-      return '<button class="trbtn' + (chaosP1 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-        '<span class="trn">' + c.name + '</span>' +
-        '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-      '</button>';
-    }).join('');
-    pick1.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        chaosP1 = +b.dataset.idx;
-        renderChaos();
-        SFX.slice();
-      });
-    });
-  }
-  if (pick2) {
-    pick2.innerHTML = CHARS.map((c, i) => {
-      const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-      const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-      const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-      return '<button class="trbtn' + (chaosP2 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-        '<span class="trn">' + c.name + '</span>' +
-        '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-      '</button>';
-    }).join('');
-    pick2.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        chaosP2 = +b.dataset.idx;
-        renderChaos();
-        SFX.slice();
-      });
-    });
-  }
+  heroPickRow(pick1, chaosP1, i => { chaosP1 = i; renderChaos(); });
+  heroPickRow(pick2, chaosP2, i => { chaosP2 = i; renderChaos(); });
   const lvs = document.querySelectorAll('#chaosLevels button');
   lvs.forEach(b => {
     b.classList.toggle('sel', b.dataset.lv === chaosLevel);
@@ -530,42 +511,8 @@ let mayhemP1 = 0, mayhemP2 = 1, mayhemLevel = 'hard';
 function renderMayhem() {
   const pick1 = document.getElementById('mayhemPick');
   const pick2 = document.getElementById('mayhemFoePick');
-  if (pick1) {
-    pick1.innerHTML = CHARS.map((c, i) => {
-      const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-      const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-      const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-      return '<button class="trbtn' + (mayhemP1 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-        '<span class="trn">' + c.name + '</span>' +
-        '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-      '</button>';
-    }).join('');
-    pick1.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        mayhemP1 = +b.dataset.idx;
-        renderMayhem();
-        SFX.slice();
-      });
-    });
-  }
-  if (pick2) {
-    pick2.innerHTML = CHARS.map((c, i) => {
-      const skKey = typeof mySkin === 'function' ? mySkin(c.id) : '';
-      const sk = skKey && typeof SKINS !== 'undefined' ? SKINS[skKey] : null;
-      const look = typeof skinLook === 'function' ? skinLook(i, skKey) : c.look;
-      return '<button class="trbtn' + (mayhemP2 === i ? ' sel' : '') + '" data-idx="' + i + '" type="button" style="color:rgb(' + look.slash + ')">' +
-        '<span class="trn">' + c.name + '</span>' +
-        '<span class="trr">' + (sk ? sk.name : c.role) + '</span>' +
-      '</button>';
-    }).join('');
-    pick2.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        mayhemP2 = +b.dataset.idx;
-        renderMayhem();
-        SFX.slice();
-      });
-    });
-  }
+  heroPickRow(pick1, mayhemP1, i => { mayhemP1 = i; renderMayhem(); });
+  heroPickRow(pick2, mayhemP2, i => { mayhemP2 = i; renderMayhem(); });
   const lvs = document.querySelectorAll('#mayhemLevels button');
   lvs.forEach(b => {
     b.classList.toggle('sel', b.dataset.lv === mayhemLevel);
@@ -1238,6 +1185,5 @@ const isMyTurnBP = () => {
   if (isLocalBothHumanBP()) return true;
   return bpSteps()[BP.step][0] === bpMySide();
 };
-const BP_TIME = 25;
 let BP = null, bpMode = 'cpu', bpSel = -1, bpHover = -1, bpCpuT = 0, bpCustomOpts = null;
 const PORTRAITS = [];

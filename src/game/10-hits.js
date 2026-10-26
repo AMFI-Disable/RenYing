@@ -271,22 +271,7 @@ function applyHit(att, def, m, pt) {
     ev.dd = chipDmg; ev.nc = true; ev.cn = def.comboHits;
     if (def.hp <= 0 && M.phase === 'fight') {
       def.state = 'launched'; def.vy = -520; def.vx = fx * 400; def.y = Math.min(def.y, -1);
-      if (is2v2()) {
-        const mate = def === A ? C : def === C ? A : def === B ? D : B;
-        if (mate && !mate.hidden && mate.hp > 0) {
-          def.invul = 99;
-          if (!M.flags['buff_' + mate.idx]) {
-            M.flags['buff_' + mate.idx] = true;
-            mate.meter = 100; mate.buffT = 3.5; mate.hp = Math.min(mate.maxHp, mate.hp + 75); mate.lagHp = Math.max(mate.lagHp, mate.hp);
-            addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
-            addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
-          }
-        } else {
-          M.phase = 'ko'; M.t = 0; M.koWinner = att.idx % 2; ev.ko = true;
-        }
-      } else {
-        M.phase = 'ko'; M.t = 0; M.koWinner = att.idx; ev.ko = true;
-      }
+      fighterDown(def, att, ev);
     }
     hitVisual(ev); netEmit(ev); return;
   }
@@ -471,26 +456,26 @@ function applyHit(att, def, m, pt) {
   ev.cn = def.comboHits; ev.dd = dmg;
   if (def.hp <= 0 && M.phase === 'fight') {
     def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.y = Math.min(def.y, -1);
-    if (is2v2()) {
-      const mate = def === A ? C : def === C ? A : def === B ? D : B;
-      if (mate && !mate.hidden && mate.hp > 0) {
-        def.invul = 99;
-        if (!M.flags['buff_' + mate.idx]) {
-          M.flags['buff_' + mate.idx] = true;
-          mate.meter = 100; mate.buffT = 3.5; mate.hp = Math.min(mate.maxHp, mate.hp + 75); mate.lagHp = Math.max(mate.lagHp, mate.hp);
-          addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
-          addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
-        }
-      } else {
-        M.phase = 'ko'; M.t = 0; M.koWinner = att.idx % 2;
-        ev.ko = true;
-      }
-    } else {
-      M.phase = 'ko'; M.t = 0; M.koWinner = att.idx;
-      ev.ko = true;
-    }
+    fighterDown(def, att, ev);
   }
   hitVisual(ev); netEmit(ev);
+}
+// 有人被打倒：1v1 直接判这回合；2v2 队友还站着时只是倒下一人，队友进入「孤军奋战」（数值见 01-core.js）
+function fighterDown(def, att, ev) {
+  if (is2v2()) {
+    const mate = def === A ? C : def === C ? A : def === B ? D : B;
+    if (mate && !mate.hidden && mate.hp > 0) {
+      def.invul = 99;
+      if (!M.flags['buff_' + mate.idx]) {
+        M.flags['buff_' + mate.idx] = true;
+        mate.meter = LAST_STAND_METER; mate.buffT = LAST_STAND_T; mate.hp = Math.min(mate.maxHp, mate.hp + LAST_STAND_HEAL); mate.lagHp = Math.max(mate.lagHp, mate.hp);
+        addP({ type: 'callout', text: '击破', x: def.x, y: def.y - 80, life: 0.9, max: 0.9, rgb: att.look.slash, scale: 2.2 });
+        addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: mate.y - 125, life: 1.2, max: 1.2, rgb: '255,210,80' });
+      }
+      return;
+    }
+  }
+  M.phase = 'ko'; M.t = 0; M.koWinner = is2v2() ? att.idx % 2 : att.idx; ev.ko = true;
 }
 // 命中的画面和声音（联机时两边都会播放）
 function hitVisual(ev, quiet) {

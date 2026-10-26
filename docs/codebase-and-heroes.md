@@ -147,6 +147,17 @@ Classes: `Ctrl` (human input), `DummyCtrl`, `AICtrl`, `Fighter`, `Puppet` (menu 
 | `BUF` | `0.16 s` | Input buffer window. |
 | `INK_MAX/COST/REGEN/DMG` | `100 / 15 / 10/s / 24` | Moyu's ink resource. |
 | `FU_MAX/INK/BASE/PER` | `5 / 3 ink / 80 / 40` | Moyu's talismans and ult scaling. |
+| `ROUND_TIME` / `ROUND_TIME_2V2` | `50 / 75 s` | Round timer; then `OT_TIME = 20 s` overtime with damage ×`OT_DMG = 2`. |
+| `CARRY_HEAL` | `80` | Round survivor carries HP + 80 into the next round. |
+| `WINS_NEEDED` / `MAX_ROUNDS` | `2 / 5` | Round wins to take the match; hard cap on rounds. |
+| `IMPOSSIBLE_HP` | `1.35` | HP multiplier for the 绝顶 CPU. |
+| `LAST_STAND_*` | `100 meter / 3.5 s / +75 HP` | 2v2 孤军奋战 buff when a teammate falls. |
+| `BP_TIME` / `BP_CPU_DELAY` | `25 / 0.85 s` | Pick-screen step timer; CPU thinking time per step. |
+
+All match-rule numbers (the rows above from `ROUND_TIME` down, plus `CREDIT`, `PENGLAI_T`, `CINE_LEN`, `CHAOS_INTERVAL`,
+`CHARGE_*`, `DODGE_CD`, `BREAK_CD`, `LAUNCH_GRAV` and the `LV_NAME` difficulty names) live in one block, 「对战规则数值」,
+at the top of `src/game/01-core.js`. Skill cooldowns are read from `SKILLS[..].cd` / `escCD` only; the codex card table
+`HERO_HIT_DETAILS` no longer carries its own copy.
 
 Determinism: gameplay randomness uses the seeded `GRNG`/`grnd()`/`grand()`; cosmetic randomness uses `Math.random()`
 and is explicitly excluded from rollback snapshots (`F_SKIP`).

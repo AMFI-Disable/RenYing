@@ -258,123 +258,124 @@ const HERO_RESTRAINTS_EXPLAIN = {
   }
 };
 // ======================= 全真打击数据与时序 =======================
+// 招式卡片的名字、标签、伤害说明。冷却不写在这里：图鉴和选人页直接读 SKILLS[..].cd 和 escCD，免得两边数字对不上
 const HERO_HIT_DETAILS = {
   yuxiao: {
-    light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '95 (5段)', cd: '', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
-    charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '35.3 / 56.8', cd: '', desc: '旋身横扫破开防守，将对手打倒在地。' },
-    air: { name: '高音穿云斩', badge: '挑空', badgeCls: 'badge-buff', dmg: '17.6 / 25.5', cd: '', desc: '跃起凌空横箫劈点，二段把人送上云霄。' },
-    skill: { name: '清音破空', badge: '音波穿透', badgeCls: 'badge-stun', dmg: '22~82', cd: '3.2s', desc: '将身上的音律一次吹尽，三律齐鸣时音波贯穿挑空并迟缓对手。' },
-    ranged: { name: '回音壁', badge: '弹回暗器', badgeCls: 'badge-break', dmg: '18~42', cd: '6s', desc: '筑起回音屏障推开近敌，弹回期间飞来的暗器并获得音律。' },
-    ult: { name: '广陵散', badge: '曲终绝响', badgeCls: 'badge-stun', dmg: '144~189', cd: '气满', desc: '六道音刃轮番穿身，曲终绝响从脚下炸开，音律回满。' },
-    esc: { name: '休止符', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+    light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '95 (5段)', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
+    charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '35.3 / 56.8', desc: '旋身横扫破开防守，将对手打倒在地。' },
+    air: { name: '高音穿云斩', badge: '挑空', badgeCls: 'badge-buff', dmg: '17.6 / 25.5', desc: '跃起凌空横箫劈点，二段把人送上云霄。' },
+    skill: { name: '清音破空', badge: '音波穿透', badgeCls: 'badge-stun', dmg: '22~82', desc: '将身上的音律一次吹尽，三律齐鸣时音波贯穿挑空并迟缓对手。' },
+    ranged: { name: '回音壁', badge: '弹回暗器', badgeCls: 'badge-break', dmg: '18~42', desc: '筑起回音屏障推开近敌，弹回期间飞来的暗器并获得音律。' },
+    ult: { name: '广陵散', badge: '曲终绝响', badgeCls: 'badge-stun', dmg: '144~189', desc: '六道音刃轮番穿身，曲终绝响从脚下炸开，音律回满。' },
+    esc: { name: '休止符', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   zuixian: {
-    light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '东倒西歪的五连拳，醉意越高越痛。' },
-    charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '身如醉钟横撞，正面撞碎对手防御。' },
-    air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
-    skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', cd: '16s', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割，霸体可硬抗。' },
-    ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0 (+80血)', cd: '16s', desc: '半壶酒掷向对手，自身回80血晕0.7秒，对手回50血晕1.5秒并清空酒意。' },
-    ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', cd: '气满', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
-    esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+    light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '东倒西歪的五连拳，醉意越高越痛。' },
+    charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '36 / 58', desc: '身如醉钟横撞，正面撞碎对手防御。' },
+    air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
+    skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割，霸体可硬抗。' },
+    ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0 (+80血)', desc: '半壶酒掷向对手，自身回80血晕0.7秒，对手回50血晕1.5秒并清空酒意。' },
+    ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
+    esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   gouchen: {
-    light: { name: '链锤连打', badge: '长臂展', badgeCls: 'badge-buff', dmg: '94.1 (5段)', cd: '', desc: '甩着链锤抡打五连击，攻击距离比常人长一截。' },
-    charge: { name: '流星坠地', badge: '破防砸倒', badgeCls: 'badge-break', dmg: '34.9 / 56.3', cd: '', desc: '铁锤绷直重重砸落，崩裂地面砸倒对手。' },
-    air: { name: '飞轮落锤', badge: '挑空下砸', badgeCls: 'badge-buff', dmg: '17.5 / 25.2', cd: '', desc: '空中抡圆链锤扫打，二段势大力沉压向地面。' },
-    skill: { name: '飞锤拉拽', badge: '拽至身前', badgeCls: 'badge-stun', dmg: '18', cd: '5s', desc: '甩出链锤将远处的对手一把拽到跟前，附加震魄增伤。' },
-    ranged: { name: '旋锤风暴', badge: '砸碎暗器', badgeCls: 'badge-buff', dmg: '58 (5圈)', cd: '6s', desc: '头顶抡圆飞转砸碎飞镖暗器，第五圈脱手一甩把人击飞。' },
-    ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', cd: '气满', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
-    esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+    light: { name: '链锤连打', badge: '长臂展', badgeCls: 'badge-buff', dmg: '94.1 (5段)', desc: '甩着链锤抡打五连击，攻击距离比常人长一截。' },
+    charge: { name: '流星坠地', badge: '破防砸倒', badgeCls: 'badge-break', dmg: '34.9 / 56.3', desc: '铁锤绷直重重砸落，崩裂地面砸倒对手。' },
+    air: { name: '飞轮落锤', badge: '挑空下砸', badgeCls: 'badge-buff', dmg: '17.5 / 25.2', desc: '空中抡圆链锤扫打，二段势大力沉压向地面。' },
+    skill: { name: '飞锤拉拽', badge: '拽至身前', badgeCls: 'badge-stun', dmg: '18', desc: '甩出链锤将远处的对手一把拽到跟前，附加震魄增伤。' },
+    ranged: { name: '旋锤风暴', badge: '砸碎暗器', badgeCls: 'badge-buff', dmg: '58 (5圈)', desc: '头顶抡圆飞转砸碎飞镖暗器，第五圈脱手一甩把人击飞。' },
+    ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
+    esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   lingque: {
-    light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '98 (5段)', cd: '', desc: '子母梭双持极速穿刺连击，出手迅疾如惊雀掠空。' },
-    charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '38.5 / 62', cd: '', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
-    air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '19 / 28', cd: '', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
-    skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 4s', badgeCls: 'badge-stun', dmg: '38', cd: '6s', desc: '掷出牵丝子母梭贯穿前方，命中施加4秒雀芒印记。' },
-    ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '42 (+52爆伤)', cd: '7s', desc: '踏悬丝穿刺突进；穿透带印记者引爆真气并瞬间刷新冷却！' },
-    ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '188 (8段)', cd: '气满', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
-    esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
+    light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '98 (5段)', desc: '子母梭双持极速穿刺连击，出手迅疾如惊雀掠空。' },
+    charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '38.5 / 62', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
+    air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '19 / 28', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
+    skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 4s', badgeCls: 'badge-stun', dmg: '38', desc: '掷出牵丝子母梭贯穿前方，命中施加4秒雀芒印记。' },
+    ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '42 (+52爆伤)', desc: '踏悬丝穿刺突进；穿透带印记者引爆真气并瞬间刷新冷却！' },
+    ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '188 (8段)', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
+    esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
   },
   qingfeng: {
-    light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '100.9 (5段)', cd: '', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
-    charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '37.4 / 60.3', cd: '', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
-    air: { name: '凌空挑斩·下砸', badge: '🌪️ 挑空击倒', badgeCls: 'badge-buff', dmg: '18.7 / 27', cd: '', desc: '空中横斩滞空，二段重坠下劈强压地面。' },
-    skill: { name: '居合·疾风斩', badge: '⚡ 斩穴定身 0.65s', badgeCls: 'badge-stun', dmg: '55', cd: '5s', desc: '身随剑走瞬间穿身，施加穴道强定身并刷新剑气与冲刺。' },
-    ranged: { name: '弧月·剑气', badge: '🌪️ 掀天挑空', badgeCls: 'badge-buff', dmg: '52', cd: '5s', desc: '半屏极速弧月剑刃，破尽暗器并挑飞空中。' },
-    ult: { name: '绝技·残月', badge: '⚡ 剑意通明', badgeCls: 'badge-stun', dmg: '169 (6连)', cd: '气满', desc: '居合连影绞杀，斩落重置全技能与绝技气量回涌。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+    light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '100.9 (5段)', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
+    charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '37.4 / 60.3', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
+    air: { name: '凌空挑斩·下砸', badge: '🌪️ 挑空击倒', badgeCls: 'badge-buff', dmg: '18.7 / 27', desc: '空中横斩滞空，二段重坠下劈强压地面。' },
+    skill: { name: '居合·疾风斩', badge: '⚡ 斩穴定身 0.65s', badgeCls: 'badge-stun', dmg: '55', desc: '身随剑走瞬间穿身，施加穴道强定身并刷新剑气与冲刺。' },
+    ranged: { name: '弧月·剑气', badge: '🌪️ 掀天挑空', badgeCls: 'badge-buff', dmg: '52', desc: '半屏极速弧月剑刃，破尽暗器并挑飞空中。' },
+    ult: { name: '绝技·残月', badge: '⚡ 剑意通明', badgeCls: 'badge-stun', dmg: '169 (6连)', desc: '居合连影绞杀，斩落重置全技能与绝技气量回涌。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   tieshan: {
-    light: { name: '重剑沉猛五斩', badge: '💥 霸体压制', badgeCls: 'badge-break', dmg: '93.1 (5段)', cd: '', desc: '玄铁巨剑刀刀沉重带金属火星，体量压迫。' },
-    charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '34.6 / 55.7', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
-    air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '17.3 / 25', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
-    skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.45s', badgeCls: 'badge-stun', dmg: '45 + 40', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
-    ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '56', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
-    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '185 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '玄铁重甲强解受控，稳健退避重整架势。' }
+    light: { name: '重剑沉猛五斩', badge: '💥 霸体压制', badgeCls: 'badge-break', dmg: '93.1 (5段)', desc: '玄铁巨剑刀刀沉重带金属火星，体量压迫。' },
+    charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '34.6 / 55.7', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
+    air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '17.3 / 25', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
+    skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.45s', badgeCls: 'badge-stun', dmg: '45 + 40', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
+    ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '56', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
+    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '185 (直击)', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '玄铁重甲强解受控，稳健退避重整架势。' }
   },
   feiying: {
-    light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '92 (5段)', cd: '', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
-    charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '40.3 / 65', cd: '', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
-    air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '20.2 / 29.1', cd: '', desc: '空中回旋双刺，下落直刺钉向地面。' },
-    skill: { name: '暗影·影遁', badge: '🌑 背后绞杀', badgeCls: 'badge-stun', dmg: '45', cd: '11s', desc: '结印化烟，0.15 秒掠到对手背后十字绞杀（不让对手僵直），之后下一击增伤50%。' },
-    ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '25×4', cd: '5s', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
-    ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '179 (9连)', cd: '气满', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
+    light: { name: '迅疾双刃刺杀', badge: '⚡ 疾风连打', badgeCls: 'badge-buff', dmg: '92 (5段)', desc: '出刀极疾，近身密雨连刺，末段暗影穿刺。' },
+    charge: { name: '疾影背刺斩', badge: '💥 破防背袭', badgeCls: 'badge-break', dmg: '40.3 / 65', desc: '侧闪蓄力直取后背，大幅破除正面架势。' },
+    air: { name: '回旋空刃·落刺', badge: '🌪️ 滞空穿刺', badgeCls: 'badge-buff', dmg: '20.2 / 29.1', desc: '空中回旋双刺，下落直刺钉向地面。' },
+    skill: { name: '暗影·影遁', badge: '🌑 背后绞杀', badgeCls: 'badge-stun', dmg: '45', desc: '结印化烟，0.15 秒掠到对手背后十字绞杀（不让对手僵直），之后下一击增伤50%。' },
+    ranged: { name: '飞星·手里剑', badge: '⚡ 极速截击', badgeCls: 'badge-buff', dmg: '25×4', desc: '扇形四枚暗铁手里剑，极速打断对手起手动作。' },
+    ult: { name: '绝杀·千影', badge: '⚡ 暗影绝杀', badgeCls: 'badge-stun', dmg: '179 (9连)', desc: '九道猩红残影错落绞杀，终结重置影遁并化分身。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 影遁化解', badgeCls: 'badge-break', dmg: '—', desc: '替身化烟脱困，身轻如燕迅速拉开安全身位。' }
   },
   liuyun: {
-    light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '114.5 (5段)', cd: '', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
-    charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '42.5 / 68.4', cd: '', desc: '引动周身气流向前爆破，推开正面一切防备。' },
-    air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '21.2 / 30.7', cd: '', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
-    skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '28×2', cd: '3.0s', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
-    ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '8×5', cd: '4s', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
-    ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '16×16', cd: '气满', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
+    light: { name: '折扇翻飞连舞', badge: '🌪️ 击退推搡', badgeCls: 'badge-buff', dmg: '114.5 (5段)', desc: '轻扇翻转随风而动，动作轻盈且多段推退。' },
+    charge: { name: '旋风拂柳蓄斩', badge: '💥 破防卷地', badgeCls: 'badge-break', dmg: '42.5 / 68.4', desc: '引动周身气流向前爆破，推开正面一切防备。' },
+    air: { name: '御风凌云·挥风', badge: '🌪️ 浮空风切', badgeCls: 'badge-buff', dmg: '21.2 / 30.7', desc: '空中三段跳滞空扇击，下扫带风刃压制。' },
+    skill: { name: '惊涛·风刃', badge: '🌪️ 双刃齐发', badgeCls: 'badge-buff', dmg: '28×2', desc: '挥扇一次扇出上下两道风刃，几无硬直，击退极强。' },
+    ranged: { name: '开扇·米花', badge: '🍿 半秒后爆', badgeCls: 'badge-buff', dmg: '8×5', desc: '张开折扇朝前疾冲，一路撒下爆米花，半秒后噼啪炸开。' },
+    ult: { name: '神通·龙卷', badge: '🌪️ 扶摇万里', badgeCls: 'badge-buff', dmg: '16×16', desc: '召出接天双龙卷横扫，卷入高空，跳跃次数回满。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 乘风化解', badgeCls: 'badge-break', dmg: '—', desc: '御风乘气向后腾跃，完美契合三段跳身法。' }
   },
   leiming: {
-    light: { name: '狂雷六连轰拳', badge: '⚡ 疾电连打', badgeCls: 'badge-buff', dmg: '132 (6段)', cd: '', desc: '六记重拳连环轰击，拳拳带雷，末拳雷暴轰天。' },
-    charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '33.8 / 54.5', cd: '', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
-    air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '16.9 / 24.4', cd: '', desc: '空中重拳下砸，接连一记沉雷踏击。' },
-    skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.38s', badgeCls: 'badge-stun', dmg: '40', cd: '5s', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.38秒并重置雷铠。' },
-    ranged: { name: '金刚·雷铠', badge: '⚡ 引雷反震 50', badgeCls: 'badge-stun', dmg: '50', cd: '5.5s', desc: '架起金刚雷铠0.55秒，受击消解攻击并引落九天玄雷反制敌首。' },
-    ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '48×3', cd: '气满', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 金刚解控', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '金刚怒吼震脱受制状态，后退步稳如磐石。' }
+    light: { name: '狂雷六连轰拳', badge: '⚡ 疾电连打', badgeCls: 'badge-buff', dmg: '132 (6段)', desc: '六记重拳连环轰击，拳拳带雷，末拳雷暴轰天。' },
+    charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '33.8 / 54.5', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
+    air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '16.9 / 24.4', desc: '空中重拳下砸，接连一记沉雷踏击。' },
+    skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.38s', badgeCls: 'badge-stun', dmg: '40', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.38秒并重置雷铠。' },
+    ranged: { name: '金刚·雷铠', badge: '⚡ 引雷反震 50', badgeCls: 'badge-stun', dmg: '50', desc: '架起金刚雷铠0.55秒，受击消解攻击并引落九天玄雷反制敌首。' },
+    ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '48×3', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 金刚解控', badgeCls: 'badge-break', dmg: '—', desc: '金刚怒吼震脱受制状态，后退步稳如磐石。' }
   },
   lingshuang: {
-    light: { name: '银枪连刺·抽枪', badge: '⚡ 枪芒连刺', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '长枪一线连环突刺，枪尖命中伤害提升25%。' },
-    charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
-    air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '空中点枪突刺，下压枪尾横扫落地。' },
-    skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.48s', badgeCls: 'badge-stun', dmg: '60', cd: '6s', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
-    ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '15×7+48', cd: '6s', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
-    ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '140–185', cd: '气满', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
+    light: { name: '银枪连刺·抽枪', badge: '⚡ 枪芒连刺', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '长枪一线连环突刺，枪尖命中伤害提升25%。' },
+    charge: { name: '百步穿杨远刺', badge: '💥 远距破防', badgeCls: 'badge-break', dmg: '36 / 58', desc: '极远距离枪尖猛刺，直接破除远处格挡防御。' },
+    air: { name: '寒芒点水·挑刺', badge: '🌪️ 空中穿云', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '空中点枪突刺，下压枪尾横扫落地。' },
+    skill: { name: '绝技·回马枪', badge: '⚡ 枪尖穿心 0.48s', badgeCls: 'badge-stun', dmg: '60', desc: '后跃避开敌势，235px极限回刺穿心定身+挑空。' },
+    ranged: { name: '乾坤·枪旋', badge: '🛡️ 弹飞投掷 125px', badgeCls: 'badge-break', dmg: '15×7+48', desc: '枪如风车拨落飞行道具，末段大横扫全额击飞。' },
+    ult: { name: '神技·刹那', badge: '❄️ 寒芒贯日 4.0s', badgeCls: 'badge-stun', dmg: '140–185', desc: '漫天枪影化为一线寒芒贯穿，重置技能并减速40%。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 游龙脱困', badgeCls: 'badge-break', dmg: '—', desc: '身化游龙向后挑跃，拉开枪客最强打击身位。' }
   },
   moyu: {
-    light: { name: '挥毫泼墨五式', badge: '🎨 浓墨溅射', badgeCls: 'badge-buff', dmg: '86 (5段)', cd: '', desc: '狼毫大笔挥洒浓墨，附带远程墨滴额外伤害（每团24）。' },
-    charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '38.9 / 62.6', cd: '', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
-    air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '19.4 / 28.1', cd: '', desc: '空中挥墨阻击，落地重笔点化画境。' },
-    skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 0.48s', badgeCls: 'badge-stun', dmg: '35', cd: '5.2s', desc: '铺开115px深墨池，踏入者定身0.48秒并迟缓2.8秒；二段Q引爆25伤害。' },
-    ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', cd: '2.5s', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
-    ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '80~280', cd: '气满', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
+    light: { name: '挥毫泼墨五式', badge: '🎨 浓墨溅射', badgeCls: 'badge-buff', dmg: '86 (5段)', desc: '狼毫大笔挥洒浓墨，附带远程墨滴额外伤害（每团24）。' },
+    charge: { name: '墨宝万钧重印', badge: '💥 破防顿笔', badgeCls: 'badge-break', dmg: '38.9 / 62.6', desc: '蓄墨如山大印落下，墨意四溢击倒受击者。' },
+    air: { name: '临空写意·泼洒', badge: '🎨 空中泼彩', badgeCls: 'badge-buff', dmg: '19.4 / 28.1', desc: '空中挥墨阻击，落地重笔点化画境。' },
+    skill: { name: '画地·墨阵', badge: '⚡ 深墨禁锢 0.48s', badgeCls: 'badge-stun', dmg: '35', desc: '铺开115px深墨池，踏入者定身0.48秒并迟缓2.8秒；二段Q引爆25伤害。' },
+    ranged: { name: '提笔·画符', badge: '📜 符 +1', badgeCls: 'badge-buff', dmg: '—', desc: '花 3 格墨水画一张符，最多攒 5 张，留给大招。' },
+    ult: { name: '宣纸·符阵', badge: '📜 全图符爆', badgeCls: 'badge-stun', dmg: '80~280', desc: '整张图化作宣纸，对手染红，头顶的符炸开；符越多伤害越高。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 墨韵遁形', badgeCls: 'badge-break', dmg: '—', desc: '借墨遁身向后飘退，重组挥毫阵地。' }
   },
   yuehua: {
-    light: { name: '双月流水旋舞', badge: '🌙 月华流水', badgeCls: 'badge-buff', dmg: '97 (5段)', cd: '', desc: '双月短刃回旋如流水，舞姿飘逸清冷。' },
-    charge: { name: '合璧明月蓄斩', badge: '💥 双刀破防', badgeCls: 'badge-break', dmg: '36 / 58', cd: '', desc: '双刃化作满月合璧切落，斩断对手招架。' },
-    air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '18 / 26', cd: '', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
-    skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '95', cd: '7s', desc: '月镜架招反斩，触发太阴绝罚95伤害、1.05秒超长硬直与禁身。' },
-    ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '28 / 38', cd: '3.5s', desc: '双月轮飞出折返，去程28轻削，返程38背袭破防击飞。' },
-    ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +60HP', badgeCls: 'badge-buff', dmg: '75 (+60血)', cd: '气满', desc: '月华凝露恢复60生命并震退近敌75伤害，月魄护体并重置月镜月轮。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
+    light: { name: '双月流水旋舞', badge: '🌙 月华流水', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '双月短刃回旋如流水，舞姿飘逸清冷。' },
+    charge: { name: '合璧明月蓄斩', badge: '💥 双刀破防', badgeCls: 'badge-break', dmg: '36 / 58', desc: '双刃化作满月合璧切落，斩断对手招架。' },
+    air: { name: '清辉凌波·双刃', badge: '🌙 踏月凌空', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '月刃凌空双分旋转，顺势飘然下斩。' },
+    skill: { name: '神镜·月镜', badge: '🌙 太阴绝罚 1.05s', badgeCls: 'badge-stun', dmg: '95', desc: '月镜架招反斩，触发太阴绝罚95伤害、1.05秒超长硬直与禁身。' },
+    ranged: { name: '飞轮·月轮', badge: '🌙 背袭破防 0.78s', badgeCls: 'badge-break', dmg: '28 / 38', desc: '双月轮飞出折返，去程28轻削，返程38背袭破防击飞。' },
+    ult: { name: '仙术·月华如水', badge: '🌙 月魄霸体 +60HP', badgeCls: 'badge-buff', dmg: '75 (+60血)', desc: '月华凝露恢复60生命并震退近敌75伤害，月魄护体并重置月镜月轮。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 踏月退避', badgeCls: 'badge-break', dmg: '—', desc: '月光幻化身法退后，脱离危险贴身缠斗。' }
   },
   yanling: {
-    light: { name: '飞羽短刃疾斩', badge: '🪶 振羽连打', badgeCls: 'badge-buff', dmg: '100.9 (5段)', cd: '', desc: '羽刃翩跹迅捷凌厉，灵动逼人。' },
-    charge: { name: '破云飞翔重扑', badge: '💥 破云重扑', badgeCls: 'badge-break', dmg: '37.4 / 60.3', cd: '', desc: '双翼振起猛力前扑，切断对手阵势。' },
-    air: { name: '苍穹展翼·掠击', badge: '🪶 空中掠阵', badgeCls: 'badge-buff', dmg: '18.7 / 27', cd: '', desc: '空中长达1.2秒自由翱翔，自上而下俯瞰掠击。' },
-    skill: { name: '鹰扬·俯冲', badge: '⚡ 鹰击钉地 0.40s', badgeCls: 'badge-stun', dmg: '46', cd: '4.5s', desc: '收翼斜下猎杀钉地，空中击中可刷新且再次冲锋。' },
-    ranged: { name: '千机·翎羽', badge: '🪶 极速穿透', badgeCls: 'badge-buff', dmg: '22×3', cd: '2.5s', desc: '振翅激射三道穿透羽刃，贯穿全屏牵制打断。' },
-    ult: { name: '天怒·万羽', badge: '🪶 凌霄破虚 14枚', badgeCls: 'badge-buff', dmg: '14×14', cd: '气满', desc: '九霄万羽暴雨倾泻，重置技能并回满飞行耐力。' },
-    esc: { name: '右键·腾空闪', badge: '🛡️ 振翅凌云', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '猛力振翅脱离受击，立刻升空开启空中制空权。' }
+    light: { name: '飞羽短刃疾斩', badge: '🪶 振羽连打', badgeCls: 'badge-buff', dmg: '100.9 (5段)', desc: '羽刃翩跹迅捷凌厉，灵动逼人。' },
+    charge: { name: '破云飞翔重扑', badge: '💥 破云重扑', badgeCls: 'badge-break', dmg: '37.4 / 60.3', desc: '双翼振起猛力前扑，切断对手阵势。' },
+    air: { name: '苍穹展翼·掠击', badge: '🪶 空中掠阵', badgeCls: 'badge-buff', dmg: '18.7 / 27', desc: '空中长达1.2秒自由翱翔，自上而下俯瞰掠击。' },
+    skill: { name: '鹰扬·俯冲', badge: '⚡ 鹰击钉地 0.40s', badgeCls: 'badge-stun', dmg: '46', desc: '收翼斜下猎杀钉地，空中击中可刷新且再次冲锋。' },
+    ranged: { name: '千机·翎羽', badge: '🪶 极速穿透', badgeCls: 'badge-buff', dmg: '22×3', desc: '振翅激射三道穿透羽刃，贯穿全屏牵制打断。' },
+    ult: { name: '天怒·万羽', badge: '🪶 凌霄破虚 14枚', badgeCls: 'badge-buff', dmg: '14×14', desc: '九霄万羽暴雨倾泻，重置技能并回满飞行耐力。' },
+    esc: { name: '右键·腾空闪', badge: '🛡️ 振翅凌云', badgeCls: 'badge-break', dmg: '—', desc: '猛力振翅脱离受击，立刻升空开启空中制空权。' }
   }
 };
 

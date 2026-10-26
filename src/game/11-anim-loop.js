@@ -331,7 +331,6 @@ $id('extBack').addEventListener('click', closeQfx);
 // ======================= 对战回放 =======================
 // 对战的逻辑完全由“开场状态 + 每一帧双方的操作”决定，所以只记操作，回放时重新算一遍
 const RP_KEY = 'renying-replays', RP_MAX = 10;
-const RP_LV = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', adaptive: '宿敌' };
 function ctrlKey(c) {
   const b = c.buf;
   let s = inBits(c.held) + ':' + c.atkT;
@@ -388,7 +387,7 @@ function rpTitle(m) {
 }
 function rpSub(m) {
   const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-  const mode = m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${RP_LV[m.level] || m.level}` : '本地双人';
+  const mode = m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
   const win = m.w >= 0 ? `${(CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
   return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }

@@ -89,7 +89,6 @@ const CHAPTERS = [
   { name: '月宫', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuehua', lv: 'impossible' },
   { name: '墨渊', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'moyu', lv: 'impossible' },
 ];
-const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶' };
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 // 一关的内容：妖物关每一波出哪些妖物是固定的（每次打都一样）
 function stageInfo(c, l) {

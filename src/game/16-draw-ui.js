@@ -694,7 +694,6 @@ function offCanvas(name, w, h) {
 function withCtx(c2, fn) { const main = ctx; ctx = c2; try { fn(); } finally { ctx = main; } }
 // ---------- 大招电影镜头：先慢后快 ----------
 const cine = { t: -1, owner: null };
-const CINE_LEN = 1.3;
 function cineEnv() { if (cine.t < 0) return 0; return clamp(Math.min(cine.t / 0.15, (CINE_LEN - cine.t) / 0.3), 0, 1); }
 function cineSpeed() {
   const t = cine.t;
@@ -721,15 +720,7 @@ function drawFireflies(glow) {
 }
 // ---------- 发光层：只画会发光的东西，再模糊叠加 ----------
 function drawEmissive(sc, sx, sy) {
-  const mx = W * 0.68 - (cam.x - STAGE_W / 2) * 0.04 * sc, my = H * 0.26, mr = H * 0.11;
-  moonGlow(mx, my, mr);
-  ctx.fillStyle = '#fff';
-  for (let i = 0; i < 90; i += 3) {
-    const x = ((hash(i) * W * 1.4 - cam.x * 0.02 * sc) % W + W) % W, y = hash(i + 50) * H * 0.5;
-    ctx.globalAlpha = 0.5 + 0.5 * Math.sin(clock * (1 + hash(i + 9) * 2) + i);
-    ctx.fillRect(x - 1.5, y - 1.5, 4, 4);
-  }
-  ctx.globalAlpha = 1;
+  withBloomScreen(sc);   // 月亮和星星
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
   for (const lx of [260, STAGE_W / 2, STAGE_W - 260]) { ctx.fillStyle = 'rgba(255,170,90,0.5)'; circle([lx, -72], 13); }

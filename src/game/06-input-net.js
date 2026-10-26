@@ -42,11 +42,6 @@ function applyCustomKeys() {
   }
 }
 applyCustomKeys();
-const CHARGE_START = 0.3;   // 按住攻击多久开始蓄力
-const CHARGE_FULL = 0.75;   // 蓄力多久算满
-const DODGE_CD = 0.3;
-const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
-const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 
 // ======================= 联机（公共部分） =======================
