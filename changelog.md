@@ -314,8 +314,8 @@ All notable changes, features, and architectural capabilities of this project ar
   - Limited Iron Wall (铁壁 / wave) ceiling to 165 px so high jumps and aerial characters can clear it, shortened dash distance from 720 to 620, increased cooldown from 6.0s to 7.5s, and increased whiff recovery to 0.40s.
   - Increased Quake (裂地) whiff recovery to 0.48s.
   - Tuned Avalanche (山崩 / ult): reduced base damage from 185 to 140, chained second slam at 65% damage, reduced stun duration from 1.3s to 0.75s, and adjusted edge/downed hits to refund 25% meter instead of a full refund.
-- **Contribution Guidelines & AI Benchmark Ladder Updates (`CLAUDE.md`, `docs/codebase-and-heroes.md`, `docs/ai-ladder-benchmark.md`, `readme.md`, `readme.zh-cn.md`)**:
-  - Formalized pull request merge rules in `CLAUDE.md`, documented the `src/game/` modular source mapping across project readmes and architectural docs, and refreshed AI ladder benchmark win rates.
+- **Contribution Guidelines & AI Benchmark Ladder Updates (`claude.md`, `docs/codebase-and-heroes.md`, `docs/ai-ladder-benchmark.md`, `readme.md`, `readme.zh-cn.md`)**:
+  - Formalized pull request merge rules in `claude.md`, documented the `src/game/` modular source mapping across project readmes and architectural docs, and refreshed AI ladder benchmark win rates.
 - **Competitive Snake Draft & Unified 2v2 Modes (`src/game.js`, `src/page.html`)**:
   - Restructured 2v2 Ban & Pick drafting to standard competitive Snake Draft order (`0 Ban -> 1 Ban -> 0 Pick 1 -> 1 Pick 1 -> 1 Pick 2 -> 0 Pick 2`), balancing first-pick advantage with tactical double-pick synergy.
   - Unified 2v2 mode selection on the single-player panel (`renderSingle2v2`): consolidated Solo 2v2 (`pc_cc`), Local Co-op (`pp_cc`), Local Versus (`pp_pp`), and AI Watch Mode (`watch`) with level selectors and direct match launch.
