@@ -442,17 +442,48 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
-  shadowdash: { name: '移形换影', cd: 7, pass: true, nofric: true, desc: '踏悬丝瞬息穿刺突进。若穿刺带【雀芒】印记之敌，引爆悬丝真气造成 52 爆炸伤害与挑空，并立即清零移形换影冷却！',
-    start(f) { f.vx = 0; },
+  shadowdash: { name: '移形换影', cd: 7, pass: true, air: true, nofric: true, desc: '踏悬丝瞬息穿刺突进（自动索敌导向流转直奔对手）。若穿刺带【雀芒】印记之敌，引爆悬丝真气造成 52 爆炸伤害与挑空，并立即清零移形换影冷却！',
+    start(f, foe) {
+      f.vx = 0; f.vy = 0;
+      const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+      if (target) f.face = target.x >= f.x ? 1 : -1;
+    },
     update(f, foe) {
+      const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+      if (target) f.face = target.x >= f.x ? 1 : -1;
       if (f.skPh === 0 && f.t >= 0.08) {
-        f.skPh = 1; f.t = 0; f.vx = f.face * 1550; f.invul = 0.12; f.hitDone = false; SFX.dash();
+        f.skPh = 1; f.t = 0; f.invul = 0.14; f.hitDone = false; SFX.dash();
+        if (target) {
+          const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
+          const dist = Math.hypot(dx, dy);
+          const spd = 1650;
+          if (dist > 10) {
+            f.vx = (dx / dist) * spd;
+            f.vy = (dy / dist) * spd;
+          } else {
+            f.vx = f.face * spd;
+            f.vy = 0;
+          }
+        } else {
+          f.vx = f.face * 1650;
+          f.vy = 0;
+        }
       }
       if (f.skPh === 1) {
+        // 持续导向流向对手位置（动态追踪）
+        if (target && !f.hitDone) {
+          const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
+          const dist = Math.hypot(dx, dy);
+          const spd = 1650;
+          if (dist > 10) {
+            f.vx = damp(f.vx, (dx / dist) * spd, 22, STEP);
+            f.vy = damp(f.vy, (dy / dist) * spd, 22, STEP);
+          }
+        }
         if (!RESIM && Math.random() < 0.6) {
           addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(50, 150), vy: rand(-40, 40), rgb: '235,110,210', life: 0.25, max: 0.25 });
         }
-        if (strike(f, foe, { box: [-20, -110, 100, 0], dmg: 42, kb: [200, -80], stun: 0.40, hs: 0.08 })) {
+        if (strike(f, foe, { box: [-30, -110, 110, 20], dmg: 42, kb: [200, -80], stun: 0.40, hs: 0.08 })) {
           if ((foe.needleMark || 0) > 0) {
             foe.needleMark = 0;
             f.skill2CD = 0;
@@ -467,8 +498,9 @@ const SKILLS = {
             addP({ type: 'text', text: '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
           }
           f.vx *= 0.3;
+          f.vy *= 0.3;
         }
-        if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
+        if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.vy *= 0.2; }
       }
       if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
     },
