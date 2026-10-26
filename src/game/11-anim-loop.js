@@ -261,14 +261,27 @@ function camImpact(x, y, zoomBoost, duration) {
 let acc = 0, last = performance.now(), FPS = 0, fpsN = 0, fpsT = 0;
 let lastDraw = 0, bgLast = 0;
 // 鼠标朝向：角色面朝鼠标所在的一侧（按住防御时仍然自动面向对手）
-// 朝向：面向最后按下的方向键（A 朝左，D 朝右）；设置里关掉就自动面向对手
+// 朝向：默认面向自己的方向（A 朝左，D 朝右）；开启自动面向对手时才自动转向对手
 function updateAim() {
-  for (const h of human) if (h && (!SETTINGS.aim || M.mode === 'demo')) h.held.aim = 0;
+  for (let i = 0; i < human.length; i++) {
+    const h = human[i];
+    if (!h) continue;
+    if (!SETTINGS.aim || M.mode === 'demo') h.held.aim = 0;
+    else if (h.held.left && !h.held.right) h.held.aim = -1;
+    else if (h.held.right && !h.held.left) h.held.aim = 1;
+    else if (!h.held.aim) {
+      const f = [A, B, C, D].find(x => x && x.ctrl === h);
+      h.held.aim = (f && f.face) ? f.face : (i % 2 === 0 ? 1 : -1);
+    }
+  }
 }
 function faceDir(f, foe) {
-  const h = f.ctrl && f.ctrl.held, a = h && h.aim;
+  const h = f.ctrl && f.ctrl.held;
+  const dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0;
+  const a = dir || (h && h.aim);
   const on = a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl));   // 对手的设置由对手那边决定
   if (on) return a;
+  if (h && !h.down && human.includes(f.ctrl) && SETTINGS.aim) return f.face;
   const dx = foe.x - f.x;
   return Math.abs(dx) > 3 ? (dx > 0 ? 1 : -1) : f.face;
 }

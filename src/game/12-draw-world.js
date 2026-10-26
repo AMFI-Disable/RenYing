@@ -378,6 +378,18 @@ function drawFighter(f) {
     ctx.save(); ctx.strokeStyle = 'rgba(235,205,130,' + (0.4 + 0.3 * Math.min(1, f.hookedT)) + ')'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
     ctx.beginPath(); ctx.ellipse(f.x, f.y - 56, 22, 34, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
+  // 凌雀雀芒印记：身周环绕粉紫悬丝印记
+  if ((f.needleMark || 0) > 0 && f.hp > 0) {
+    ctx.save(); ctx.strokeStyle = `rgba(235,110,210,${0.5 + 0.4 * Math.sin(clock * 10)})`; ctx.lineWidth = 1.8;
+    const a0 = clock * 5;
+    for (let k = 0; k < 3; k++) {
+      const ang = a0 + k * (Math.PI * 2 / 3);
+      const px = f.x + Math.cos(ang) * 24, py = f.y - 50 + Math.sin(ang) * 16;
+      ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 2.8, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 26, 18, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
   // 被连击且可以挣脱时，头顶提示
   if ((f.state === 'launched' || f.state === 'knockdown' || (f.state === 'hitstun' && f.comboHits >= 2)) && f.hp > 0 && f.breakCD <= 0 && M.phase === 'fight' && M.mode !== 'demo'
       && !(f.ctrl instanceof AICtrl) && !f.dummy && f.ctrl !== NET.remote) {

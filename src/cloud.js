@@ -250,7 +250,7 @@
     });
   }
 
-  const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen'];
+  const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
   const DEV_ALL_SKINS = [
     'qf_frost', 'qf_gold', 'qf_abyss', 'qf_qfx',
     'fy_jade', 'fy_blood', 'fy_phantom',
@@ -261,7 +261,8 @@
     'my_cinnabar', 'my_gold', 'my_celestial',
     'yh_sakura', 'yh_eclipse', 'yh_solstice',
     'yl_raven', 'yl_phoenix', 'yl_blizzard',
-    'yx_snow', 'zx_amber', 'gc_crimson'
+    'yx_snow', 'zx_amber', 'gc_crimson',
+    'lq_silk', 'lq_sparrow'
   ];
 
   function makeDevProfile() {
@@ -272,7 +273,7 @@
       frags: {
         qingfeng: 99, yanling: 99, leiming: 99, tieshan: 99,
         liuyun: 99, lingshuang: 99, moyu: 99, feiying: 99, yuehua: 99,
-        yuxiao: 99, zuixian: 99, gouchen: 99
+        yuxiao: 99, zuixian: 99, gouchen: 99, lingque: 99
       },
       pity: 0,
       spity: 0,
@@ -309,7 +310,7 @@
       placed: typeof p.placed === 'number' ? p.placed : 0,
       updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : Date.now(),
       ...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {}),
-      ...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : {})   // 只有本机模式的武库才有（带校验）；新版服务器不收
+      ...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : (typeof window !== 'undefined' && typeof window.getDevArmoryState === 'function' ? { armory: window.getDevArmoryState() } : {}))
     };
   }
 

@@ -625,6 +625,25 @@ function weapon(sk, L, outline, flash) {
       ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 4.5; line(hl, sk.hf);   // 手里一小截握把
       return;
     }
+    case 'spindle': {  // 凌雀：双手子母飞梭，梭身牵引粉紫悬丝
+      const b2 = [sk.hb[0] + ux * 34, sk.hb[1] + uy * 34];
+      const spinDraw = (pt, ang) => {
+        ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang);
+        if (outline) { ctx.fillStyle = L.outline; ctx.beginPath(); ctx.ellipse(0, 0, 16, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
+        ctx.fillStyle = blade; ctx.beginPath(); ctx.ellipse(0, 0, 14, 3.8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = L.metal || '#e056b0'; ctx.fillRect(-3, -2, 6, 4);
+        ctx.strokeStyle = `rgba(${L.slash},0.85)`; ctx.lineWidth = 1.2;
+        line([-14, 0], [14, 0]);
+        ctx.restore();
+      };
+      spinDraw(g, Math.atan2(uy, ux));
+      spinDraw(sk.hb, Math.atan2(uy, ux));
+      if (!outline) {
+        ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(sk.hf[0], sk.hf[1]); ctx.quadraticCurveTo((sk.hf[0] + sk.hb[0]) / 2, (sk.hf[1] + sk.hb[1]) / 2 + 8, sk.hb[0], sk.hb[1]); ctx.stroke();
+      }
+      return;
+    }
     default: {  // sword / moonblade
       if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.2; line(hl, g); return; }
       ctx.strokeStyle = blade; ctx.lineWidth = 3.4; line(g, t);
@@ -946,6 +965,15 @@ function drawProjs(glowOnly) {
       ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx) - Math.PI / 2);
       ctx.fillStyle = `rgba(${L.slash},0.9)`; ctx.beginPath(); ctx.ellipse(0, 0, 5, 18, 0, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, 18); ctx.stroke();
+    } else if (p.kind === 'spindle') {  // 凌雀：子母飞梭与悬丝
+      ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx));
+      ctx.fillStyle = L.blade || '#ffe8fa'; ctx.beginPath(); ctx.ellipse(0, 0, 15, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = L.metal || '#e056b0'; ctx.fillRect(-3, -2.5, 6, 5);
+      ctx.strokeStyle = `rgba(${L.slash},0.85)`; ctx.lineWidth = 1.5;
+      line([-15, 0], [15, 0]);
+      // 尾部牵引丝线
+      ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1.2;
+      line([-15, 0], [-45, 0]);
     } else if (p.kind === 'trap') {
       const armed = p.delay <= 0, r = (p.w || 84) * 0.48;
       ctx.translate(p.x, 0); ctx.scale(1, 0.28);

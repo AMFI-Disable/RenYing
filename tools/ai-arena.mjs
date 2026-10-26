@@ -8,7 +8,6 @@ import { readFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
-import { gameJs } from './ai-code.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -43,7 +42,7 @@ export async function makeEnv(tuneFile) {
   vm.createContext(w);
   new vm.Script(readFileSync(ROOT + 'src/net-p2p.js', 'utf8')).runInContext(w);
   new vm.Script(readFileSync(ROOT + 'src/ai.js', 'utf8'), { filename: 'ai.js' }).runInContext(w);
-  new vm.Script(gameJs(), { filename: 'game.js' }).runInContext(w);
+  new vm.Script(readFileSync(ROOT + 'src/game.js', 'utf8'), { filename: 'game.js' }).runInContext(w);
   // 试改平衡（AI_BAL=文件路径，{ "tieshan": { "normal": 0.9, "hp": 0.95 } }，写法和 game.js 的 BAL 一样）：调平衡时不用改 game.js 就能比较
   if (process.env.AI_BAL) new vm.Script(`for (const [id, s] of Object.entries(${readFileSync(process.env.AI_BAL, 'utf8')})) if (BAL[id]) Object.assign(BAL[id], s);`).runInContext(w);
   // 另一版 AI 的快照（AI_SNAP=文件路径，'snap:god' 这样写），用来对比改动前后
@@ -118,8 +117,8 @@ export class Pool {
   close() { for (const w of this.workers) w.terminate(); }
 }
 
-export const HEROES = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen'];
-export const NAMES = ['青锋', '绯影', '铁山', '凌霜', '流云', '雷鸣', '墨羽', '月华', '燕翎', '玉箫', '醉翁', '勾陈'];
+export const HEROES = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
+export const NAMES = ['青锋', '绯影', '铁山', '凌霜', '流云', '雷鸣', '墨羽', '月华', '燕翎', '玉箫', '醉翁', '勾陈', '凌雀'];
 
 // 每个角色对每个角色：la 用 a 角色、lb 用 b 角色，左右互换各一半
 export function matchupGames(la, lb, n, heroes = HEROES.map((_, i) => i)) {

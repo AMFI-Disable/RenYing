@@ -25,7 +25,7 @@
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
   C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
-  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen'];
+  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
 
@@ -169,9 +169,9 @@
     c3: { name: '名剑', price: 260, emblem: '剑', col: '220,170,70',
       mil: ['yx_p1', 'zx_p1', 'qf_p2', 'ts_p2'], res: ['yx_snow', 'zx_amber'], cla: ['yx_celestial', 'yl_phoenix'], cov: ['qf_abyss', 'zx_immortal'], gold: ['qf_renying'] },
     c4: { name: '江湖', price: 250, emblem: '行', col: '90,200,150',
-      mil: ['lm_p2', 'fy_p2', 'ly_p2', 'yh_p2'], res: ['ly_bamboo', 'yl_raven'], cla: ['fy_phantom'], cov: ['my_celestial', 'ts_crimson'], gold: ['qf_qfx'] },
+      mil: ['lm_p2', 'fy_p2', 'ly_p2', 'yh_p2'], res: ['ly_bamboo', 'yl_raven', 'lq_silk'], cla: ['fy_phantom'], cov: ['my_celestial', 'ts_crimson'], gold: ['qf_qfx'] },
     c5: { name: '惊雷', price: 280, emblem: '雷', col: '150,100,240',
-      mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
+      mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura', 'lq_sparrow'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
     c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
       mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
     c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, ok: 'prem.', lim: 'premWeek', cnt: 'pw', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
@@ -298,7 +298,7 @@
   C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
   C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
   C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、终端机、汰换
-  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen' };
+  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
   // 星座武器箱的 36 款：按 C.ZODIAC 的配色和 C.ZOD_OF 的分配生成。
@@ -701,6 +701,32 @@
       bump(s, 'sell', 1);
     }
     return { ok: true, count: sold.length, totalGain: plan.totalGain, sold };
+  };
+  A.listDupes = (s, a, env) => {   // 一键自动挂牌市场：保留最高斩数/穿着那一件，其余挂牌出售
+    const m = env.mkt;
+    if (!m || (!C.isLid(m.id) && !Array.isArray(m.ids))) return { err: NO_MKT };
+    const plan = C.dupePlan(s);
+    if (!plan.items.length) return { err: '库存里没有重复的饰品' };
+    const freeSlots = Math.max(0, C.LIST_MAX - s.lst.length);
+    if (freeSlots <= 0) return { err: `市场挂单已满（最多 ${C.LIST_MAX} 件），请先撤回或等待售出` };
+    const toList = plan.items.slice(0, freeSlots);
+    const listed = [];
+    const ids = Array.isArray(m.ids) ? m.ids.slice() : [m.id];
+    for (let idx = 0; idx < toList.length; idx++) {
+      const d = toList[idx];
+      const it = C.dropItem(s, d.i, env);
+      if (!it) continue;
+      const lid = ids[idx] || (C.isLid(m.id) && idx === 0 ? m.id : null);
+      if (!lid || !C.isLid(lid)) continue;
+      const price = Math.max(1, Math.min(C.PRICE_MAX, +d.price || C.refVal(it)));
+      const L = { l: lid, it: { ...it, n: '' }, price, t: env.now };
+      s.lst.push(L);
+      listed.push(L);
+    }
+    if (!listed.length) return { err: '未能成功挂牌任何饰品' };
+    if (listed.length === 1) m.out = { list: listed[0] };
+    else m.out = { lists: listed };
+    return { ok: true, count: listed.length, totalListed: listed.length, skipped: plan.items.length - listed.length, listings: listed };
   };
   A.rename = (s, a, env) => {
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };

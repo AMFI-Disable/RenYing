@@ -3,7 +3,7 @@
 const ULTS = {
   crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
   shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
-  avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（140 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（0.75 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次只有 65% 伤害、正中回 50% 气量；只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 25% 气量。',
+  avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
     begin(f, foe) {
       f.sp = 'leap'; f.vy = -1050; f.y = -1;
       const c = f.ctrl, dir = (c && c.held && c.held.right ? 1 : 0) - (c && c.held && c.held.left ? 1 : 0);
@@ -43,23 +43,21 @@ const ULTS = {
             const dir = foe.x >= f.x ? 1 : -1;
             // 正中（落点 92 像素以内、对手站着）才算打满；砸到边缘或砸倒地的人只回一半气量
             const full = dx < 92.5 && !foeDown;
-            const avaDmg = f.avaChain ? Math.round(140 * 0.65) : 140;   // 连放的第二下只有 65% 伤害，不至于两下秒人
             if (foeDown) {
-              applyHit(f, foe, { dmg: avaDmg, kb: [0, 0], stun: 0, hs: 0.25, unblockable: true, ult: true, noScale: true, noStun: true, dir, big: true }, [foe.x, foe.y - 20]);   // 只掉血，人还躺着
+              applyHit(f, foe, { dmg: 185, kb: [0, 0], stun: 0, hs: 0.25, unblockable: true, ult: true, noScale: true, noStun: true, dir, big: true }, [foe.x, foe.y - 20]);   // 只掉血，人还躺着
             } else {
               const isLeiMingUlt = foe.ch && foe.ch.id === 'leiming' && foe.state === 'special';
-              applyHit(f, foe, { dmg: avaDmg, kb: [dir * 140, 0], stun: 0.75, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
-              foe.state = 'hitstun'; foe.stun = 0.75; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
+              applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 1.3, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
+              foe.state = 'hitstun'; foe.stun = 1.3; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
               if (!isLeiMingUlt && foe.state === 'special') {
                 foe.sp = null; // 打断地面常规绝技蓄势
               }
             }
-            const free = full && !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次正中回 50%，砸偏或砸倒地的人只回 25%
-            const back = free ? 100 : full ? 50 : 25;
-            f.meter = Math.min(100, f.meter + back); f.avaFree = free;
+            const free = full && !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次、砸偏或砸倒地的人只回 50%
+            f.meter = free ? 100 : Math.min(100, f.meter + 50); f.avaFree = free;
             f.skillCD = 0; f.skill2CD = 0;
             ring(f.x, f.y - 60, 220, '255,200,120', 0.6);
-            addP({ type: 'text', text: free ? '⚡ 怒意回涌 · 再来一次' : `⚡ 怒意回涌 +${back}% 气量`, x: f.x, y: f.y - 130, life: 1.2, max: 1.2, rgb: '255,200,100' });
+            addP({ type: 'text', text: free ? '⚡ 怒意回涌 · 再来一次' : '⚡ 怒意回涌 +50% 气量', x: f.x, y: f.y - 130, life: 1.2, max: 1.2, rgb: '255,200,100' });
             if (!foeDown) addP({ type: 'text', text: '💫 震荡晕眩 · 破灭万法', x: foe.x, y: foe.y - 110, life: 1.3, max: 1.3, rgb: '255,220,120' });
             SFX.chargeFull();
           }
@@ -91,7 +89,7 @@ const ULTS = {
         for (let k = 0; k < 8; k++) slashLine(f.x, f.y - 60, k * Math.PI / 8, f.look.slash);
         ring(f.x, f.y - 60, 160, f.look.slash, 0.4); ring(f.x, f.y - 60, 90, '255,255,255', 0.3); SFX.slice(); metal(1800, 0.8, 0.1);
       }
-      if (f.sp === 'sweep' && f.t >= 0.8) { f.sp = 'rush'; f.t = 0; f.spPose = 'ls_thrust'; f.face = foe.x >= f.x ? 1 : -1; f.spX = f.x; SFX.dash(); }
+      if (f.sp === 'sweep' && f.t >= 0.8) { f.sp = 'rush'; f.t = 0; f.spPose = 'ls_thrust'; f.face = faceDir(f, foe); f.spX = f.x; SFX.dash(); }
       if (f.sp === 'rush') {
         f.vx = f.face * 1700;
         if (!f.hitDone && foe.hp > 0 && overlap(hitbox(f, [0, -120, 90, 4]), hurtbox(foe))) {
@@ -244,6 +242,37 @@ const ULTS = {
         } else f.spPose = 'idle';
       }
       if (f.t >= 1.3) endSpecial(f);
+    } },
+  needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人，附加【雀芒】印记并重置换影冷却。',
+    begin(f, foe) {
+      f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.45; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
+    },
+    update(f, foe) {
+      f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
+      if (f.spN < 7 && f.t >= 0.15 + f.spN * 0.08) {
+        f.spN++;
+        SFX.slice();
+        const sd = (f.spN % 2 === 0) ? 1 : -1;
+        const ang = (f.spN * 0.6) % 3.14;
+        slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
+        ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
+        if (foe.hp > 0 && foe.invul <= 0) {
+          applyHit(f, foe, { dmg: 16, exact: true, kb: [sd * 60, -40], stun: 0.28, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
+        }
+      }
+      if (f.spN === 7 && f.t >= 0.78) {
+        f.spN = 8;
+        f.y = 0; f.vy = 0;
+        shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
+        ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
+        if (foe.hp > 0 && foe.invul <= 0) {
+          applyHit(f, foe, { dmg: 76, kb: [f.face * 320, -740], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
+          foe.needleMark = 4.0;
+          f.skill2CD = 0;
+          addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
+        }
+      }
+      if (f.t >= 1.15) endSpecial(f);
     } },
 };
 

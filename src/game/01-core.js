@@ -77,7 +77,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: false, vibrate: true, autoSkin: true, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, lang: 'zh' };
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);
@@ -86,7 +86,7 @@ try {
   if (SETTINGS.bloom === undefined || SETTINGS.bloom === 1) SETTINGS.bloom = 1.6;
   const ALLOWED_FPS = [144, 120, 60, 30];
   if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
-  if (saved.aim === undefined) SETTINGS.aim = false;
+  if (saved.aim === undefined || !saved.aimMigrated) { SETTINGS.aim = true; SETTINGS.aimMigrated = true; }
   if (saved.lang) SETTINGS.lang = saved.lang;
   else {
     const rawL = localStorage.getItem('renying-lang');

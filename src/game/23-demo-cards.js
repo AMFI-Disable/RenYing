@@ -230,6 +230,9 @@ class Puppet {
         } else if (p.kind === 'feather') {
           ctx.strokeStyle = `rgba(${col},0.9)`; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.moveTo(p.x - 8, p.y); ctx.lineTo(p.x + 8, p.y); ctx.stroke();
+        } else if (p.kind === 'spindle') {
+          ctx.fillStyle = `rgba(${col},0.95)`; ctx.beginPath(); ctx.ellipse(p.x, p.y, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x - 14, p.y); ctx.lineTo(p.x + 14, p.y); ctx.stroke();
         } else if (p.kind === 'kunai') {
           ctx.fillStyle = '#eee'; ctx.beginPath(); ctx.moveTo(p.x + 8, p.y); ctx.lineTo(p.x - 6, p.y - 4); ctx.lineTo(p.x - 6, p.y + 4); ctx.fill();
         } else {
@@ -310,7 +313,7 @@ function demoLoop(canvas, getIdx, isOn, getSkin, getMoveKey) {
   requestAnimationFrame(tick);
 }
 // ======================= 立绘卡面 =======================
-const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a' };
+const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a' };
 function makeCardArt(i, CW, CH, skin) {
   const c = document.createElement('canvas'); c.width = CW; c.height = CH;
   const g = c.getContext && c.getContext('2d'); if (!g) return c;

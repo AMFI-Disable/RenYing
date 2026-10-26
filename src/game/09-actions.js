@@ -10,7 +10,8 @@ function startAttack(f, name) {
   if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
   if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'armor') { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
   f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
-  f.face = f.onGround() ? (foeOf(f).x >= f.x ? 1 : -1) : f.face;
+  const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
+  f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
 }
 function doJump(f, dir) {
   const jumpBonus = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'jump') ? currentChaosMutation.val : 1;
@@ -29,6 +30,7 @@ function startDash(f, dir) {
 function startSpecial(f) {
   endEscape(f);
   if (f.ch.passive === 'drunk') f.drunk = Math.min(100, (f.drunk || 0) + 30);
+  f.face = faceDir(f, foeOf(f));
   f.meter = 0; f.state = 'special'; f.sp = 'charge'; f.t = 0; f.invul = 99; f.vx = 0; f.spFace = f.face;
   superFreeze = 0.5; superOwner = f; dimA = 1;
   flashA = 0.35; flashRGB = f.look.slash;
@@ -144,10 +146,13 @@ function attackUpdate(f, foe) {
     if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线飞向对手（要有墨水）
       f.ink -= INK_COST;
       const T = 0.42, G = 1500, sx = f.x + f.face * 40, sy = f.y - 90;
-      spawnProj(f, { kind: 'inkblob', x: sx, y: sy, vx: (foe.x - sx) / T, vy: ((foe.y - 60) - sy - 0.5 * G * T * T) / T, g: G, lob: true, w: 30, h: 30, life: 1.2, dmg: INK_DMG, kb: [80, 0], stun: 0.3, hs: 0.04, noScale: true });
+      const towardFoe = Math.sign(foe.x - f.x) === f.face;
+      const tx = towardFoe ? foe.x : f.x + f.face * 240, ty = towardFoe ? (foe.y - 60) : -60;
+      spawnProj(f, { kind: 'inkblob', x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * G * T * T) / T, g: G, lob: true, w: 30, h: 30, life: 1.2, dmg: INK_DMG, kb: [80, 0], stun: 0.3, hs: 0.04, noScale: true });
     }
     if (f.ch.id === 'liuyun' && (f.moveName === 'cs1' || f.moveName === 'cs2')) {
-      const n = f.moveName === 'cs2' ? 2 : 1, dx = foe.x - f.x, dy = (foe.y - 60) - (f.y - 62), a0 = Math.atan2(dy, dx);
+      const n = f.moveName === 'cs2' ? 2 : 1, towardFoe = Math.sign(foe.x - f.x) === f.face;
+      const dx = towardFoe ? (foe.x - f.x) : f.face * 300, dy = towardFoe ? ((foe.y - 60) - (f.y - 62)) : 0, a0 = Math.atan2(dy, dx);
       for (let k = 0; k < n; k++) {
         const a = a0 + (n === 2 ? (k ? 0.1 : -0.1) : 0);
         spawnProj(f, { kind: 'wind', x: f.x + Math.cos(a) * 40, y: f.y - 62, vx: Math.cos(a) * 1150, vy: Math.sin(a) * 1150, w: 56, h: 52, life: 1.2, dmg: 28, kb: [420, 0], stun: 0.5, hs: 0.08, knock: true, unbreakable: f.moveName === 'cs2' });
@@ -174,7 +179,7 @@ function attackUpdate(f, foe) {
     if (f.hitConfirmed) {
       if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
       if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-      if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = foe.x >= f.x ? 1 : -1; return doJump(f, f.face); }
+      if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = faceDir(f, foe); return doJump(f, f.face); }
     }
   }
   if (t >= act1 + m.rc) {
@@ -466,6 +471,9 @@ function updateProjs() {
     } else if (p.kind === 'note' && p.notes >= 3) {
       foe.slowT = 2.2;
       addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
+    } else if (p.kind === 'spindle' || p.mark) {
+      foe.needleMark = 4.0;
+      addP({ type: 'text', text: '✦ 雀芒入体', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
     }
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
     const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
@@ -787,6 +795,10 @@ function updateFighter(f, foe) {
   if (f.frostSlow > 0) {
     f.frostSlow = Math.max(0, f.frostSlow - STEP);
     if (Math.random() < 0.25) addP({ type: 'spark', x: f.x + rand(-20, 20), y: f.y - rand(20, 80), vx: 0, vy: rand(-15, 15), life: 0.3, max: 0.3, rgb: '160,230,255' });
+  }
+  if (f.needleMark > 0) {
+    f.needleMark = Math.max(0, f.needleMark - STEP);
+    if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
   }
   physics(f);
 }

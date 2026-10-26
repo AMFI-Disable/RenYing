@@ -65,7 +65,7 @@ const SKILLS = {
           addP({ type: 'text', text: '💥 撼地重震 · 固若金汤', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
         }
       }
-      if (f.skPh === 1 && f.t >= (f.hitDone ? 0.40 : 0.48)) toNeutral(f);   // 砸空收招更慢，给拉开距离的角色反打的机会
+      if (f.skPh === 1 && f.t >= 0.40) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
     ai: (me, foe, d) => d < 420 && foe.onGround() },
@@ -181,11 +181,11 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-  ironwall: { name: '铁壁冲', cd: 7.5, nofric: true, desc: '霸体肩撞冲锋，掀起巨浪拍岸，击退极重，1.5 倍瓦解格挡。巨浪能截住地面和低跳的敌人并砸落在地，但二段跳高高跃起或飞在空中的敌人可以越过。撞空收招较慢。',
+  ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '狂暴冲锋掀起通天巨浪（通天判定，彻底封锁空中跳跃与腾空位移）。携千钧重势巨浪拍岸，对空中敌人强行下砸截落，双倍瓦解一切格挡！',
     start(f) { f.armorT = 0.38; f.armorHits = 1; f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.16) {
-        f.skPh = 1; f.t = 0; f.vx = f.face * 620; f.hitDone = false; SFX.dash(); SFX.thud();
+        f.skPh = 1; f.t = 0; f.vx = f.face * 720; f.hitDone = false; SFX.dash(); SFX.thud();
         shake = Math.max(shake, 12);
       }
       if (f.skPh === 1) {
@@ -209,9 +209,9 @@ const SKILLS = {
           dust(f.x + f.face * 35, 0, 4);
         }
 
-        // 巨浪判定只到 165 像素高：截得住地面和低跳，二段跳高跳或飞行可以越过
+        // 通天巨浪判定：高度直贯云霄（-2200px），封杀一切空中与腾空位移
         if (strike(f, foe, {
-          box: [-10, -165, 135, 0],
+          box: [-10, -2200, 135, 0],
           dmg: 56,
           kb: foeInAir ? [Math.round(260 * wRatio), Math.round(520 * wRatio)] : [Math.round(420 * wRatio), -180],
           stun: 0.45,
@@ -232,7 +232,7 @@ const SKILLS = {
         }
         if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
       }
-      if (f.skPh === 2 && f.t >= (f.hitDone ? 0.28 : 0.40)) toNeutral(f);   // 撞空收招更慢
+      if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
   spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（48 伤害）扫飞贴身之敌（对地面敌人仅平推硬直，仅浮空敌人会被击落地面）！',
@@ -375,7 +375,8 @@ const SKILLS = {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.05) {
         f.skPh = 1; SFX.swing();
-        const tx = clamp(foe.x, WALL + 40, STAGE_W - WALL - 40);
+        const towardFoe = Math.sign(foe.x - f.x) === f.face;
+        const tx = clamp(towardFoe ? foe.x : f.x + f.face * 260, WALL + 40, STAGE_W - WALL - 40);
         if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.35, w: 150, h: 560, life: 0.85, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
         else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
       }
@@ -413,7 +414,7 @@ const SKILLS = {
     update(f, foe) {
       const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
       f.vx = damp(f.vx, dir * wk(f) * 0.45, 10, STEP);
-      if (Math.abs(foe.x - f.x) > 3) f.face = foe.x > f.x ? 1 : -1;
+      f.face = faceDir(f, foe);
       if (f.t > 0.1 && f.t < 1.0) for (const p of projs) {
         if (p.owner === foe.idx && !p.dead && !p.unbreakable && !p.ult && Math.abs(p.x - f.x) < 150 && Math.abs(p.y - (f.y - 90)) < 100) { p.dead = true; blockFX(p.x, p.y, f.face); SFX.block(); }
       }
@@ -429,6 +430,50 @@ const SKILLS = {
     },
     pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
     ai: (me, foe, d) => d < 170 },
+  spindle: { name: '穿叶飞梭', cd: 6, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 4 秒【雀芒】印记并造成 38 伤害。',
+    start(f) { f.vx = 0; },
+    update(f, foe) {
+      if (f.skPh === 0 && f.t >= 0.12) {
+        f.skPh = 1; f.t = 0;
+        SFX.slice(); SFX.dash();
+        spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1150, vy: 0, w: 48, h: 28, life: 0.65, dmg: 38, kb: [160, 0], stun: 0.32, hs: 0.05, mark: true, pierce: true, maxHits: 3 });
+      }
+      if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
+    ai: (me, foe, d) => d > 110 && d < 460 },
+  shadowdash: { name: '移形换影', cd: 7, pass: true, nofric: true, desc: '踏悬丝瞬息穿刺突进。若穿刺带【雀芒】印记之敌，引爆悬丝真气造成 52 爆炸伤害与挑空，并立即清零移形换影冷却！',
+    start(f) { f.vx = 0; },
+    update(f, foe) {
+      if (f.skPh === 0 && f.t >= 0.08) {
+        f.skPh = 1; f.t = 0; f.vx = f.face * 1550; f.invul = 0.12; f.hitDone = false; SFX.dash();
+      }
+      if (f.skPh === 1) {
+        if (!RESIM && Math.random() < 0.6) {
+          addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(50, 150), vy: rand(-40, 40), rgb: '235,110,210', life: 0.25, max: 0.25 });
+        }
+        if (strike(f, foe, { box: [-20, -110, 100, 0], dmg: 42, kb: [200, -80], stun: 0.40, hs: 0.08 })) {
+          if ((foe.needleMark || 0) > 0) {
+            foe.needleMark = 0;
+            f.skill2CD = 0;
+            shake = Math.max(shake, 14);
+            SFX.heavy(); SFX.slice();
+            applyHit(f, foe, { dmg: 52, kb: [260, -680], stun: 0.65, hs: 0.16, launch: true, big: true, unblockable: true, noScale: true }, [foe.x, foe.y - 60]);
+            ring(foe.x, foe.y - 60, 110, '235,110,210', 0.4);
+            for (let k = 0; k < 12; k++) {
+              const a = rand(0, 6.28), v = rand(120, 320);
+              addP({ type: 'spark', x: foe.x, y: foe.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: '255,160,230', life: 0.35, max: 0.35 });
+            }
+            addP({ type: 'text', text: '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
+          }
+          f.vx *= 0.3;
+        }
+        if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
+      }
+      if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? ['dash', 60] : ['idle', 14],
+    ai: (me, foe, d) => (foe.needleMark > 0 && d < 380) || (d > 100 && d < 280) },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 

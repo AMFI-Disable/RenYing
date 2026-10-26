@@ -39,6 +39,7 @@ const BAL = {
   yuxiao: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
   zuixian: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
   gouchen: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  lingque: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
 };
 const balOf = f => (f && f.ch && BAL[f.ch.id]) || BAL.qingfeng;
 function balDmg(att, m) { const b = balOf(att); return m.ult ? b.ult : (m.sk || (!m.isProj && att.state === 'skill')) ? b.skill : b.normal; }
@@ -121,13 +122,18 @@ const CHARS = [
     stat: { hp: 490, walk: 1.10, speed: 1.0, dmg: 0.97, reach: 1.25, swing: 1.0, jump: 1, weight: 0.98, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, hitFeel: 1.0,
     look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, scarf: '#c8a24a', slash: '235,205,130', blade: '#e8e8ee', head: 'mask', weapon: 'hammer' },
     ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
+  { id: 'lingque', name: '凌雀', role: '飞梭游侠', diff: 3, escCD: 8.0, skill: 'spindle', skill2: 'shadowdash', ult: 'needlestorm', passive: 'needlemark',
+    passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。飞梭与悬丝技能击中敌人附加【雀芒】印记（持续4秒）；移形换影冲刺穿刺带印记者，瞬间引爆悬丝真气重创敌人并清零技能冷却；雀步凌波可灵活穿梭战场。',
+    stat: { hp: 465, walk: 1.15, speed: 0.85, dmg: 1.02, reach: 1.08, swing: 0.82, jump: 1.05, weight: 0.86, defRating: 0.98, guardMax: 95, guardStab: 1.05, guardChip: 0.09, guardRegen: 30, poise: 0.98, size: 0.94 }, hitFeel: 0.85,
+    look: { body: '#2a1a2e', shade: '#160c1c', outline: '#e07ac8', outlineA: .85, scarf: '#e056b0', slash: '235,110,210', blade: '#ffe8fa', head: 'topknot', weapon: 'spindle' },
+    ai: { range: [70, 220] }, beats: ['feiying', 'liuyun'], weakTo: ['tieshan', 'leiming'] },
 ];
 const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
 // 墨羽的墨水：每甩一团墨消耗 INK_COST，每秒恢复 INK_REGEN
 const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 // 墨羽的符：R 画一张花 FU_INK 格墨水，最多 FU_MAX 张；大招全部烧掉，伤害 FU_BASE + FU_PER × 张数
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
-const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56 };
+const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56, spindle: 42 };
 // 按兵器流派定制专属普攻武学动作映射
 const WEAPON_POSE_MODS = {
   spear: { l1: ['sp_l1s', 'sp_l1a'], l2: ['sp_l2s', 'sp_l2a'], l3: ['ls_stance', 'ls_thrust'], l5: ['ls_stance', 'ls_thrust'] },
@@ -139,6 +145,7 @@ const WEAPON_POSE_MODS = {
   flute: { l1: ['yx_play', 'yx_push'], l2: ['fn_l1s', 'fn_l1a'], l3: ['yx_play', 'lca'] },
   brush: { l1: ['my_stroke', 'my_paint'], l2: ['l2s', 'my_paint'], l4: ['my_stroke', 'lda'] },
   hammer: { l1: ['gc_wind', 'gc_throw'], l2: ['gc_pull', 'gc_sweep'], l3: ['gc_wind', 'gc_throw'] },
+  spindle: { l1: ['du_l1s', 'du_l1a'], l2: ['du_l2s', 'du_l2a'], l3: ['du_l1s', 'lca'], hv: ['du_l1s', 'hva'] },
 };
 // 按角色属性生成每个角色自己的招式表
 function buildMoves(ch) {

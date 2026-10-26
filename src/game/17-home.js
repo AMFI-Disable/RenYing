@@ -491,7 +491,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 let settingsBack = 'menu';
 const SETTING_ROWS = [
   { k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
-  { k: 'aim', name: '朝向', opts: [[false, '自动面向对手'], [true, '按 A / D 决定']] },
+  { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
   { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
   { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
   { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },

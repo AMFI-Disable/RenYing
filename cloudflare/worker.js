@@ -423,11 +423,11 @@ async function handleEcon(env, auth, body, now, ip) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
-    const isDevUser = auth.user && String(auth.user.username || '').toLowerCase() === 'dev';
+    const isDevUser = auth.user && ['dev', 'dev_master'].includes(String(auth.user.username || '').toLowerCase());
     const skins0 = isDevUser ? cleanSkins(prof.skins) : mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
     const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
-    const mkt = { id: randHex(8), row: null, out: null };
+    const mkt = { id: randHex(8), ids: Array.from({ length: 20 }, () => randHex(8)), row: null, out: null };
     if ((act === 'buy' || act === 'cancel') && C.isLid(args.l)) {
       const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state FROM mkt WHERE id = ?').bind(args.l).first();
       if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json) };
@@ -486,6 +486,11 @@ async function handleEcon(env, auth, body, now, ip) {
       const L = mo.list;
       stmts.push(ins(env, 'INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) SELECT ?, ?, ?, ?, ?, ?, ?, 0, 0', [L.l, uid, L.it.k, L.it.st, JSON.stringify(L.it), L.price, now], uid, ver));
     }
+    if (mo && Array.isArray(mo.lists)) {
+      for (const L of mo.lists) {
+        stmts.push(ins(env, 'INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) SELECT ?, ?, ?, ?, ?, ?, ?, 0, 0', [L.l, uid, L.it.k, L.it.st, JSON.stringify(L.it), L.price, now], uid, ver));
+      }
+    }
     if (settled.length) stmts.push(guard(env, `UPDATE mkt SET paid = 1 WHERE seller = ? AND state = 1 AND paid = 0 AND id IN (${settled.map(() => '?').join(', ')}) AND`, [uid, ...settled], uid, ver, tx));
     for (const g of got) {   // 补偿：记下领过了（同一份同时领两次，只有一次写得进去）；流水记成 gift_got（gift 是新手礼）
       stmts.push(ins(env, 'INSERT INTO gift_got (gid, uid, at) SELECT ?, ?, ?', [g.id, uid, now], uid, ver, tx));
@@ -527,7 +532,7 @@ async function handleProfilePost(env, auth, body, now) {
   const incoming = body.profile || body;
   if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return error('无效的存档数据');
   const ledger = body.ledger && typeof body.ledger === 'object' && Array.isArray(body.ledger.deltas) ? body.ledger : null;
-  const isDevUser = auth.user && String(auth.user.username || '').toLowerCase() === 'dev';
+  const isDevUser = auth.user && ['dev', 'dev_master'].includes(String(auth.user.username || '').toLowerCase());
   const cfg = await cfgNow(env, now);
   for (let attempt = 0; attempt < 5; attempt++) {
     const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(uid).first();
@@ -591,7 +596,7 @@ function cleanInitial(prof) {
 // 只能在管理后台建、重设密码（POST /api/admin/password），别人注册不了
 const RESERVED = /^(dev|dev_master|admin|administrator|root|system|gm|official|staff|官方|系统|管理员|开发者|开发组|客服|刃影官方)$/i;
 async function profileOut(env, user, now) {
-  const isDev = user && String(user.username || '').toLowerCase() === 'dev';
+  const isDev = user && ['dev', 'dev_master'].includes(String(user.username || '').toLowerCase());
   const prof = parseProfile(user.profile_json, user.username);
   const eco = await loadEcon(env, user.id, prof, now);
   return { profile: overlay(prof, eco, isDev), ledger: ledgerOut(eco, now) };

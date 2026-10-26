@@ -25,7 +25,7 @@ function skinWeight(k) {
   }
   return 10;
 }
-const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
+const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', lingque: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
 function getWeeklyRotation() {
   const now = new Date();
   const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -80,6 +80,8 @@ const SKINS = {
   zx_immortal: { char: 'zuixian', rarity: 'legend', name: '酒剑仙', look: { body: '#e6f9ff', shade: '#78b0c8', scarf: '#38e8ff', slash: '90,235,255', blade: '#eaffff' }, deco: { head: 'plume', plumeC: ['#e0ffff', '#56d8ff'], robe: 'jade_master', breastplate: '#2a6f82', back: 'gourdback', trail: 'cloud', aura: 'cloud', weapStyle: 'jade_gourd' }, fx: { th: 'water', c: '90,230,255', c2: '230,255,255' } },
   gc_crimson: { char: 'gouchen', rarity: 'rare', name: '赤锤', look: { body: '#3a1a1e', shade: '#220c10', scarf: '#d83a3a', slash: '255,120,110', blade: '#ffe0dc' }, deco: { head: 'ironvisage', hideBaseHead: true, robe: 'shura', shoulder: '#6a1a1e', trail: 'smoke', weapStyle: 'crimson_hammer' }, fx: { th: 'metal', c: '255,140,90' } },
   gc_underworld: { char: 'gouchen', rarity: 'legend', name: '冥狱', look: { body: '#241834', shade: '#120a1e', scarf: '#a855f7', slash: '185,105,255', blade: '#f0e0ff' }, deco: { head: 'voidhorns', hideBaseHead: true, robe: 'dark', breastplate: '#3b1d5e', shoulder: '#4c2478', back: 'ghostchains', trail: 'smoke', aura: 'smoke', weapStyle: 'underworld_hammer' }, fx: { th: 'void', c: '185,105,255', c2: '28,0,56' } },
+  lq_silk: { char: 'lingque', rarity: 'rare', name: '素丝', look: { body: '#2d1b32', shade: '#180d1c', scarf: '#f06292', slash: '240,98,146', blade: '#fff0f5' }, deco: { head: 'ribbon', robe: 'silk', shoulder: '#880e4f', trail: 'petal', weapStyle: 'silk_spindle' }, fx: { th: 'petal', c: '240,98,146' } },
+  lq_sparrow: { char: 'lingque', rarity: 'legend', name: '惊雀', look: { body: '#1a1028', shade: '#0d0616', scarf: '#e040fb', slash: '224,64,251', blade: '#f3e5f5' }, deco: { head: 'tiara', robe: 'nightingale', breastplate: '#4a148c', back: 'featherwings', trail: 'spark', aura: 'smoke', weapStyle: 'nightingale_spindle' }, fx: { th: 'void', c: '224,64,251', c2: '74,20,140' } },
   yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { back: 'phoenixtail', head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], robe: 'phoenix', breastplate: '#b84414', cape: '#e8552a', trail: 'ember', aura: 'ember', weapStyle: 'phoenix_feather' }, fx: { th: 'flame', c: '255,145,50', c2: '255,60,20', part: 'feather' } },
   yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'owlhood', hideBaseHead: true, hoodC: '#1c2838', robe: 'blizzard', breastplate: '#385878', back: 'wings', trail: 'feather', featherC: '220,240,255', aura: 'snow', weapStyle: 'owl_feather' }, fx: { th: 'frost', c: '150,210,255', c2: '235,245,255', part: 'feather' } },
 };
@@ -121,6 +123,8 @@ const SCENES = {
   zx_immortal: { sky: ['#061624', '#123854', '#266c94', '#143c58'], orb: 'cloudsun', orbC: '160,245,255', mist: '140,235,255', mtn: ['#143a56', '#0c2438'], bam: ['#081828', '#040e18'], wx: 'spark', wxC: '150,245,255', hit: 'swirl', hitC: '90,235,255', stars: 0.4, rays: true },
   gc_crimson: { sky: ['#160608', '#381014', '#7a1e28', '#380e14'], orb: 'bloodmoon', orbC: '255,110,110', mist: '230,80,90', mtn: ['#300c12', '#1e060a'], bam: ['#140406', '#0a0204'], wx: 'ash', wxC: '255,100,100', hit: 'shards', hitC: '255,120,110', stars: 0.3 },
   gc_underworld: { sky: ['#080312', '#1a0a32', '#3c1468', '#18082c'], orb: 'rift', orbC: '185,105,255', mist: '175,95,245', mtn: ['#200b3a', '#120522'], bam: ['#0c0318', '#06010e'], wx: 'spark', wxC: '190,115,255', hit: 'crescent', hitC: '185,105,255', stars: 0.65, rays: true },
+  lq_silk: { sky: ['#160a18', '#34143a', '#682270', '#34123c'], orb: 'moon', orbC: '255,200,240', mist: '240,140,210', mtn: ['#2e1236', '#1c0822'], bam: ['#140618', '#0a020e'], wx: 'petal', wxC: '255,160,220', hit: 'flower', hitC: '240,110,210' },
+  lq_sparrow: { sky: ['#0a0418', '#200a3e', '#521288', '#220840'], orb: 'rift', orbC: '230,120,255', mist: '210,100,255', mtn: ['#280c48', '#16042a'], bam: ['#100220', '#080112'], wx: 'spark', wxC: '230,130,255', hit: 'crescent', hitC: '224,64,251', stars: 0.7, rays: true },
 };
 const SCN_DEF = { mtn: ['#241f48', '#1a1636'], bam: ['#110f26', '#0b0a1c'], mist: '190,160,220' };
 // 默认擂台动态天气环境变体（清晨竹风、暮色残阳、风雨雷霆、静谧竹夜）
@@ -720,7 +724,7 @@ async function redeemCode(rawCode) {
       if ($id('tMsg')) $id('tMsg').textContent = '仅限开发者账号 Dev 兑换，请先登录 Dev 账号';
       return;
     }
-    const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen'];
+    const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
     const allSkins = Array.from(new Set([
       ...Object.keys(typeof SKINS !== 'undefined' ? SKINS : {}),
       ...(typeof ArmoryCore !== 'undefined' ? Object.keys(ArmoryCore.ITEM || {}) : []),
@@ -745,19 +749,19 @@ async function redeemCode(rawCode) {
         }
       }
       const devCases = {};
-      for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7'])) {
+      for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7','c8'])) {
         devCases[cid] = 1000;
       }
+      let grantedArm = null;
       if (typeof window.grantDevArmory === 'function') {
-        window.grantDevArmory(newInv, devCases);
-      } else {
-        const arm = (PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank();
-        arm.inv = newInv;
-        arm.nid = nid;
-        arm.via = Array.from(new Set([...(arm.via || []), ...allSkins.filter(k => C.isItem(k))]));
-        arm.cases = Object.assign(arm.cases || {}, devCases);
-        PROF.armory = arm;
+        grantedArm = window.grantDevArmory(newInv, devCases);
       }
+      const arm = grantedArm || ((PROF.armory && typeof PROF.armory === 'object') ? PROF.armory : C.blank());
+      arm.inv = newInv;
+      arm.nid = nid;
+      arm.via = Array.from(new Set([...(arm.via || []), ...allSkins.filter(k => C.isItem(k))]));
+      arm.cases = Object.assign(arm.cases || {}, devCases);
+      PROF.armory = arm;
     }
 
     // 最高段位：S+（25000分，天下无双）

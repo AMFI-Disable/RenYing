@@ -176,9 +176,10 @@ section('星座武器箱：十二星座 36 款，65% / 28% / 7%，每个号送 1
   const Z = C.COLS.c8, codes = C.ZODIAC.map(z => z[0]);
   ok(Z.prem && !Z.mil.length && !Z.res.length && ['cla', 'cov', 'gold'].every(t => Z[t].length === 12) && Z.odds.cla === 0.65 && Z.odds.cov === 0.28 && Z.odds.gold === 0.07 && Z.price > C.COLS.c7.price,
     '保密、隐秘、非凡各 12 款，爆率 65 / 28 / 7，比神兵武器箱贵', [Z.price, Z.odds]);
-  ok(['cla', 'cov', 'gold'].every(t => C.HERO_IDS.every(h => Z[t].filter(k => C.charOf(k) === h).length === 1)), '每位侠客粉、红、金各一款');
+  const ZOD_HERO_IDS = Object.keys(C.ZOD_OF).map(pre => C.charOf(pre + '_x'));
+  ok(['cla', 'cov', 'gold'].every(t => ZOD_HERO_IDS.every(h => Z[t].filter(k => C.charOf(k) === h).length === 1)), '每位侠客粉、红、金各一款');
   ok(['cla', 'cov', 'gold'].every(t => codes.every(c => Z[t].filter(k => C.FULL[k].deco.sign === c).length === 1)), '每一档里十二星座正好各一款');
-  ok(C.HERO_IDS.every(h => new Set(['cla', 'cov', 'gold'].map(t => C.FULL[Z[t].find(k => C.charOf(k) === h)].deco.sign)).size === 3), '同一位侠客的三款是三个不同的星座');
+  ok(ZOD_HERO_IDS.every(h => new Set(['cla', 'cov', 'gold'].map(t => C.FULL[Z[t].find(k => C.charOf(k) === h)].deco.sign)).size === 3), '同一位侠客的三款是三个不同的星座');
   const all = ['cla', 'cov', 'gold'].flatMap(t => Z[t]);
   ok(all.every(k => C.CS_KEYS.includes(k) && C.ITEM[k].col === 'c8' && C.FULL[k].char === C.charOf(k) && k.length <= 24 && /^[a-z0-9_]+$/.test(k)) && !C.REG.some(c => C.TIERS.some(t => C.COLS[c][t].some(k => all.includes(k)))),
     '36 款都是武库皮肤，只在星座武器箱里出，名字合规');
@@ -830,6 +831,18 @@ section('一键出售重复饰品：保留最高斩数，多余重复折算墨�
 
   const rEmpty = await econ(u.token, 'sellDupes');
   ok(rEmpty.res.err && rEmpty.res.err.includes('没有重复'), '无重复时再次出售被拒绝');
+
+  // 测试自动挂牌到市场 listDupes
+  const stFresh = stateOf(u.uid);
+  stFresh.inv.push(
+    { i: 201, k: 'qf_frost', st: 10, n: '', t: T, src: 'case' },
+    { i: 202, k: 'qf_frost', st: -1, n: '', t: T, src: 'case' }
+  );
+  ENV.DB.raw.prepare('UPDATE econ SET state_json = ? WHERE uid = ?').run(JSON.stringify(stFresh), u.uid);
+  const rList = await econ(u.token, 'listDupes');
+  ok(rList.res.ok && rList.res.count === 2, 'listDupes 成功将 2 件重复饰品挂牌到市场', rList.res);
+  const stListed = stateOf(u.uid);
+  ok(stListed.lst.length === 2 && stListed.lst.every(x => x.it.k === 'qf_frost'), '市场上出现自动挂牌的饰品单');
 }
 
 section('伪造皮肤：存档里塞武库皮肤没用；卖掉的皮肤旧存档加不回来');

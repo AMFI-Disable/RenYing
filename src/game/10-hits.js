@@ -332,6 +332,9 @@ function applyHit(att, def, m, pt) {
   if (att.ch.passive === 'bind' && def.hookedT > 0 && !m.ult) { dmg *= 1.25; ev.big = true; }
   if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack') att.notes = Math.min(3, (att.notes || 0) + 1);
   if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
+  if (att.ch.passive === 'needlemark' && (m.isProj || m.sk || att.state === 'skill' || att.sp)) {
+    def.needleMark = 4.0;
+  }
   // 墨羽被动：墨韵护体（Ink Barrier）—— 当墨羽墨水 >= 25 时，受击消耗 12 墨水抵消 20% 伤害并激荡墨雾
   if (def.ch && def.ch.id === 'moyu' && (def.ink || 0) >= 25 && !m.hold && dmg > 8) {
     def.ink = Math.max(0, def.ink - 12);

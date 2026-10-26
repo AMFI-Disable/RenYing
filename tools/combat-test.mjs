@@ -605,7 +605,7 @@ const testSuite = [
     })()`
   },
   {
-    name: 'AI Brain Model: Frame data & evolved genes validation across all 12 heroes',
+    name: 'AI Brain Model: Frame data & evolved genes validation across all heroes',
     fn: `(() => {
       const brain = typeof window !== 'undefined' ? window.RENYING_AI_BRAIN : null;
       if (!brain || !brain.frames || !brain.genes) {
@@ -701,12 +701,13 @@ const testSuite = [
     })()`
   },
   {
-    name: 'All 12 heroes runtime maxHp, weight, reach, fly, and passives match hero settings',
+    name: 'All heroes runtime maxHp, weight, reach, fly, and passives match hero settings',
     fn: `(() => {
       const expectedHp = {
         qingfeng: 510, feiying: 470, tieshan: 530, lingshuang: 480,
         liuyun: 495, leiming: 520, moyu: 485, yuehua: 460,
-        yanling: 440, yuxiao: 455, zuixian: 520, gouchen: 490
+        yanling: 440, yuxiao: 455, zuixian: 520, gouchen: 490,
+        lingque: 465
       };
       for (let ci = 0; ci < CHARS.length; ci++) {
         const ch = CHARS[ci];
@@ -721,6 +722,50 @@ const testSuite = [
       if (CHARS[6].stat.weight !== 1.10) return { pass: false, error: 'MoYu weight mismatch' };
       if (CHARS[8].fly !== 1.2) return { pass: false, error: 'YanLing fly duration mismatch' };
       if (CHARS[10].stat.reach !== 0.86) return { pass: false, error: 'ZuiXian reach mismatch' };
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Manual aim default: Attacks, skills, and XuLiZhan (cs1/cs2) aim in player direction away from opponent',
+    fn: `(() => {
+      if (SETTINGS.aim !== true) return { pass: false, error: 'Expected SETTINGS.aim default to be true (manual aim by A/D)' };
+      startMatch('train', 'stand', [0, 1]);
+      M.phase = 'fight';
+      A.x = 700; B.x = 1000; // Opponent B is to the right (+1)
+      const c = A.ctrl;
+      c.held.left = false; c.held.right = false; c.held.down = false;
+      c.held.aim = -1; // Player aims left (-1), away from opponent B
+
+      // 1. Normal attack aims in player direction (-1)
+      toNeutral(A);
+      startAttack(A, 'l1');
+      if (A.face !== -1) return { pass: false, error: 'Normal attack l1 snapped to opponent instead of manual aim (-1)' };
+
+      // 2. Skill aims in player direction (-1)
+      toNeutral(A);
+      A.skillCD = 0;
+      startSkill(A, B, 1);
+      if (A.face !== -1) return { pass: false, error: 'Skill 1 snapped to opponent instead of manual aim (-1)' };
+
+      // 3. XuLiZhan (cs1 & cs2) aims and lunges away from opponent (-1)
+      toNeutral(A);
+      A.x = 700;
+      c.held.atk = true;
+      c.atkT = clock - (CHARGE_START + 0.1);
+      neutral(A, B);
+      A.t = CHARGE_FULL + 0.1;
+      A.chargeFull = true;
+      c.held.atk = false;
+      updateFighter(A, B); // releases cs2
+      if (A.moveName !== 'cs2' || A.face !== -1) {
+        return { pass: false, error: 'XuLiZhan cs2 failed to keep manual aim (-1): move=' + A.moveName + ', face=' + A.face };
+      }
+      for (let i = 0; i < 8; i++) updateFighter(A, B);
+      if (!(A.vx < -500)) {
+        return { pass: false, error: 'XuLiZhan cs2 did not lunge away from opponent (vx=' + A.vx + ')' };
+      }
+      toNeutral(A);
+      c.held.aim = 1;
       return { pass: true, error: null };
     })()`
   }

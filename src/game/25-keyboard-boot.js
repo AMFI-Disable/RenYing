@@ -106,7 +106,11 @@ window.addEventListener('keyup', e => {
     } else {
       c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
     }
-    if (act === 'left' || act === 'right' || act === 'down') c.held[act] = false;
+    if (act === 'left' || act === 'right' || act === 'down') {
+      c.held[act] = false;
+      if (c.held.left && !c.held.right) c.held.aim = -1;
+      else if (c.held.right && !c.held.left) c.held.aim = 1;
+    }
     if (act === 'atk') c.held.atk = false;
     if (act === 'jump') c.held.jump = false;
   }

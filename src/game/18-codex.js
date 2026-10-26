@@ -44,14 +44,14 @@ const ic = (k, c) => `<span class="ic" style="color:${c}"><svg viewBox="0 0 24 2
 const SHORT = {
   疾风斩: ['55', '突进穿身 · 剑气重置'], 影遁: ['45', '瞬移身后 · 下一击 ×1.5'], 震地: ['45+40', '双向地波 · 掀飞'], 回马枪: ['60', '后跃回刺 · 挑飞'],
   风刃: ['28×2', '上下两道风刃 · 几无前摇'], 雷闪: ['40', '穿身雷光 · 麻痹'], 墨阵: ['35', '踩中定身 · 二段引爆'], 月镜: ['95', '格开近战 · 自动反斩'], 俯冲: ['46', '空中俯冲 · 命中刷新'],
-  剑气: ['52', '半场弧月剑气 · 挑空'], 飞镖: ['25×4', '四枚散射'], 铁壁冲: ['56', '巨浪截低空 · 霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['8×5', '向前疾冲 · 撒爆米花半秒后炸'],
+  剑气: ['52', '半场弧月剑气 · 挑空'], 飞镖: ['25×4', '四枚散射'], 铁壁冲: ['56', '通天巨浪 · 霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['8×5', '向前疾冲 · 撒爆米花半秒后炸'],
   金刚雷铠: ['50', '雷铠御守 · 引雷反震'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['28 / 38', '飞出轻削 · 折返背袭'], 翎羽: ['22×3', '三道翎羽 · 射程无限'],
-  残月: ['169', '六连居合 · 终结回气重置'], 千影: ['179', '九影乱斩 · 绝杀分身重置'], 山崩: ['140', '砸地晕眩 · 正中回满气重置'], 刹那: ['140–185', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
+  残月: ['169', '六连居合 · 终结回气重置'], 千影: ['179', '九影乱斩 · 绝杀分身重置'], 山崩: ['185', '砸地晕眩 · 正中回满气重置'], 刹那: ['140–185', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
   龙卷: ['16×16', '双龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['48×3', '天雷追落 · 气量回涌30%'], 符阵: ['80–280', '宣纸全图 · 按符数爆伤'], 月华如水: ['75 (+60血)', '回血霸体 · 架招重置'], 万羽: ['14×14', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(510血)', feiying: '最快移速出手 · 身轻体巧(470血)', tieshan: '重斩蓄力霸体 · 气血冠绝(530血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(480血)',
   liuyun: '三段跳 · 御风轻盈(495血)', leiming: '普攻六连 · 强横体魄(520血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(485血)', yuehua: '3 秒未受伤每秒回 8 血(460血)', yanling: '空中按住跳跃飞 1.2 秒(440血)',
-  yuxiao: '普攻攒音律，清音随音律变强(455血)', zuixian: '醉意增伤，半醉可闪避近身攻击(520血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(490血)' };
+  yuxiao: '普攻攒音律，清音随音律变强(455血)', zuixian: '醉意增伤，半醉可闪避近身攻击(520血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(490血)', lingque: '子母梭挂雀芒，换影穿刺引爆重置(465血)' };
 const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
@@ -65,6 +65,7 @@ const ADV_SHORT = {
   yuxiao: '回音壁能把暗器弹回去',
   zuixian: '酒过半壶可闪避近战，并可掷坛与民同乐回春',
   gouchen: '飞锤拽到身前，接旋锤',
+  lingque: '雀芒印记配合换影穿刺，瞬发引爆清空冷却',
 };
 // 各角色大招怒气积攒专属特性与通用规则
 const HERO_METER_EXPLAIN = {
@@ -80,9 +81,19 @@ const HERO_METER_EXPLAIN = {
   yuxiao: '【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。',
   zuixian: '【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「山水之间」全屏墨染八段重创并令醉意飙升！',
   gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
+  lingque: '【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！',
 };
 // ======================= 招式类型与克制详解 =======================
 const HERO_MOVE_TYPES = {
+  lingque: {
+    light: { type: 'melee', label: '近战飞梭', rng: 'melee' },
+    charge: { type: 'melee', label: '近战突刺', rng: 'melee' },
+    air: { type: 'melee', label: '近战', rng: 'melee' },
+    skill: { type: 'ranged', label: '远距飞梭', rng: 'ranged', icon: 'ranged' },
+    ranged: { type: 'dash', label: '突进换影', rng: 'mid', icon: 'melee' },
+    ult: { type: 'fullscreen', label: '全域悬丝', rng: 'screen' },
+    esc: { type: 'esc', label: '身法' }
+  },
   qingfeng: {
     light: { type: 'melee', label: '近战', rng: 'melee' },
     charge: { type: 'melee', label: '近战', rng: 'melee' },
@@ -205,6 +216,10 @@ const HERO_RESTRAINTS_EXPLAIN = {
     beatsWhy: '【克 燕翎、绯影】燕翎落地就会被旋锤卷进去；绯影血薄，被飞锤拽到身前吃满震魄增伤很快就倒。',
     weakWhy: '【怕 铁山、月华】铁山霸体直接硬吃飞锤，带不动；月华月镜格开锤子后的反斩极痛。'
   },
+  lingque: {
+    beatsWhy: '【克 绯影、流云】飞梭与悬丝远端穿刺直克脆皮近身；移形换影高速多角穿梭令流云风刃与爆米花频频落空。',
+    weakWhy: '【怕 铁山、雷鸣】铁山厚重霸体硬抗飞梭穿刺反手重震；雷鸣雷铠与电光冲拳极易在换影突进瞬间反制重击。'
+  },
   qingfeng: {
     beatsWhy: '【克 墨羽】疾风斩高速穿身无视墨阵禁锢，半场剑气可对撞消融墨团，拔剑速攻直接打断挥毫。',
     weakWhy: '【怕 月华】疾风斩正面突击必触发月镜太阴绝罚反制，月华脱战凝露使青锋换血消耗优势荡然无存。'
@@ -271,6 +286,15 @@ const HERO_HIT_DETAILS = {
     ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', cd: '气满', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
     esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '9.0s', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
+  lingque: {
+    light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '98 (5段)', cd: '', desc: '子母梭双持极速穿刺连击，出手迅疾如惊雀掠空。' },
+    charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '38.5 / 62', cd: '', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
+    air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '19 / 28', cd: '', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
+    skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 4s', badgeCls: 'badge-stun', dmg: '38', cd: '6s', desc: '掷出牵丝子母梭贯穿前方，命中施加4秒雀芒印记。' },
+    ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '42 (+52爆伤)', cd: '7s', desc: '踏悬丝穿刺突进；穿透带印记者引爆真气并瞬间刷新冷却！' },
+    ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '188 (8段)', cd: '气满', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
+    esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', cd: '8.0s', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
+  },
   qingfeng: {
     light: { name: '五段快剑连斩', badge: '🌪️ 击飞浮空', badgeCls: 'badge-buff', dmg: '100.9 (5段)', cd: '', desc: '行云流水五连斩，末段挑空，青蓝弧光残影。' },
     charge: { name: '破防蓄力大劈', badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '37.4 / 60.3', cd: '', desc: '长蓄后重剑崩地，无视常规格挡，正面击倒。' },
@@ -285,8 +309,8 @@ const HERO_HIT_DETAILS = {
     charge: { name: '裂地狂怒崩山', badge: '💥 破防轰飞', badgeCls: 'badge-break', dmg: '34.6 / 55.7', cd: '', desc: '双足踏裂地面，满蓄霸体强攻，双倍瓦解架势。' },
     air: { name: '重剑空击·碎石', badge: '💥 沉重砸地', badgeCls: 'badge-break', dmg: '17.3 / 25', cd: '', desc: '高空举刃重砸，重力势能造成剧烈下坠冲击。' },
     skill: { name: '撼地·震地波', badge: '💥 撼地重震 0.45s', badgeCls: 'badge-stun', dmg: '45 + 40', cd: '8s', desc: '双手托刃砸裂地面，双向土石裂地波掀飞穹顶。' },
-    ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 巨浪拍岸', badgeCls: 'badge-break', dmg: '56', cd: '7.5s', desc: '霸体肩撞冲锋，巨浪截住地面和低跳的敌人并砸落，1.5 倍瓦解防御；高跳和飞行可以越过，撞空收招较慢。' },
-    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 0.75s', badgeCls: 'badge-stun', dmg: '140 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩0.75s并回满气重置CD；连放的第二下只有 65% 伤害；砸偏或砸倒地的对手只回 25% 气。' },
+    ranged: { name: '焚血狂突·玄甲巨浪', badge: '🌊 通天巨浪', badgeCls: 'badge-break', dmg: '56', cd: '6s', desc: '掀起通天巨浪呼啸冲锋，通天高度彻底封杀空中与腾空，巨浪拍岸瓦解防御。' },
+    ult: { name: '奥义·山崩', badge: '💫 怒意回涌 1.3s', badgeCls: 'badge-stun', dmg: '185 (直击)', cd: '气满', desc: '一跃擎天泰山压顶，正中晕眩1.3s并回满气重置CD；砸偏或砸倒地的对手只回半气。' },
     esc: { name: '右键·腾空闪', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', cd: '8.5s', desc: '玄铁重甲强解受控，稳健退避重整架势。' }
   },
   feiying: {
@@ -398,6 +422,21 @@ const HERO_MOVE_SEQS = {
     ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_spin', d: 0.4, fx: 'spin', hit: 2, lab: 'R · 旋锤' }, { p: 'gc_throw', d: 0.25, hit: 2, badge: '击飞' }, { p: 'idle', d: 0.35, reset: true }],
     ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_wind', d: 0.25, lab: 'E · 开天一锤' }, { p: 'gc_sweep', d: 0.42, fx: 'skynet', hit: 3, launch: true, badge: '巨锤震晕' }, { p: 'idle', d: 0.35, reset: true }],
     esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '钩索腾云' }, { p: 'idle', d: 0.35, reset: true }]
+  },
+  lingque: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'du_l1s', d: 0.07, lab: '飞梭速刺' }, { p: 'du_l1a', d: 0.11, dx: 12, hit: 1 },
+      { p: 'du_l2s', d: 0.07 }, { p: 'du_l2a', d: 0.11, dx: 14, hit: 1 },
+      { p: 'du_l1s', d: 0.07 }, { p: 'lca', d: 0.18, dx: 16, hit: 2, launch: true, badge: '击飞' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 32, hit: 3, launch: true, badge: '破防突刺' }, { p: 'idle', d: 0.35, reset: true }],
+    air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'du_l1s', d: 0.12, lab: 'Q · 穿叶飞梭' }, { p: 'du_l1a', d: 0.24, fx: 'proj', hit: 1, badge: '雀芒印记' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'du_l1s', d: 0.08, lab: 'R · 移形换影' }, { p: 'dash', d: 0.22, dx: 45, hit: 2, launch: true, badge: '雀芒引爆' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'du_l1s', d: 0.15, lab: 'E · 万线归宗' }, { p: 'du_l2a', d: 0.45, fx: 'needlestorm', hit: 8, launch: true, badge: '全域悬丝' }, { p: 'idle', d: 0.35, reset: true }],
+    esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '雀步凌波' }, { p: 'idle', d: 0.35, reset: true }]
   },
   qingfeng: {
     light: [
@@ -857,6 +896,18 @@ const HERO_FULL_DEMO = {
     { p: 'gc_wind', d: 0.25, lab: 'E · 开天一锤' }, { p: 'gc_sweep', d: 0.42, fx: 'skynet', hit: 3, launch: true, badge: '巨锤震晕' },
     { p: 'victory', d: 0.55, reset: true }
   ],
+  lingque: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'du_l1s', d: 0.07, lab: '普攻' }, { p: 'du_l1a', d: 0.11, dx: 12, hit: 1 },
+    { p: 'du_l2s', d: 0.07 }, { p: 'lca', d: 0.16, dx: 14, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'du_l1s', d: 0.12, lab: 'Q · 穿叶飞梭' }, { p: 'du_l1a', d: 0.24, fx: 'proj', hit: 1, badge: '雀芒印记' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'du_l1s', d: 0.08, lab: 'R · 移形换影' }, { p: 'dash', d: 0.22, dx: 45, hit: 2, launch: true, badge: '雀芒引爆' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'du_l1s', d: 0.15, lab: 'E · 万线归宗' }, { p: 'du_l2a', d: 0.45, fx: 'needlestorm', hit: 8, launch: true, badge: '全域悬丝' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
   qingfeng: [
     { p: 'idle', d: 0.2, reset: true },
     { p: 'l1s', d: 0.08, lab: '普攻' }, { p: 'l1a', d: 0.12, dx: 10, hit: 1 },
@@ -974,7 +1025,7 @@ const HERO_FULL_DEMO = {
 const SKILL_FUN = {
   qingfeng: { passive: '师父说他悟性一般，攒气倒是一绝。', light: '五剑连刺，每一剑都在心里喊招式名。', charge: '憋了半天就为这一下，憋不住就是普通一刀。', air: '跳起来砍人，是剑客的基本修养。', skill: '一步过去，对手还没回头就定住了。', ranged: '剑气出鞘，隔空也要把你挑上天。', ult: '残月一出，月亮都得往旁边让让。', esc: '打不过就飞，这叫战术性腾空。' },
   feiying: { passive: '血条薄如纸，跑得比消息还快。', light: '刀快到连自己都看不清。', charge: '蓄力背刺，专治站桩选手。', air: '从天而降的不只有惊喜。', skill: '“我在你身后。”经典台词，屡试不爽。', ranged: '四枚飞镖，总有一枚能中。', ult: '九个分身，哪个是真的？都是。', esc: '留下一缕烟，人早溜了。' },
-  tieshan: { passive: '出门从不带伞，雨点打在身上算挠痒。', light: '慢是慢了点，挨一下你就知道了。', charge: '蓄满这一刀，连地板都害怕。', air: '他能跳起来，本身就是奇迹。', skill: '砸地之前，请确认脚下不是自家院子。', ranged: '巨浪拍岸，跳得不够高就得被拍下来。', ult: '跳起来砸你，落点还能自己挑。', esc: '一百八十斤腾空，地面松了口气。' },
+  tieshan: { passive: '出门从不带伞，雨点打在身上算挠痒。', light: '慢是慢了点，挨一下你就知道了。', charge: '蓄满这一刀，连地板都害怕。', air: '他能跳起来，本身就是奇迹。', skill: '砸地之前，请确认脚下不是自家院子。', ranged: '掀起通天巨浪，飞得再高也得被拍下来。', ult: '跳起来砸你，落点还能自己挑。', esc: '一百八十斤腾空，地面松了口气。' },
   lingshuang: { passive: '一寸长一寸强，贴脸了一寸也不强。', light: '枪出如龙，每一下都戳在节奏上。', charge: '一枪捅穿防御，顺便捅穿你的心态。', air: '空中挑枪，专挑跳得高的。', skill: '先退半步，是为了捅得更远。', ranged: '转起来像风车，暗器都绕道走。', ult: '时间停一下，够她把话说完。', esc: '枪往地上一撑，人就弹出去了。' },
   liuyun: { passive: '三段跳是基本操作，落地才算失误。', light: '扇子不是用来扇风的，是用来扇人的。', charge: '蓄一口大风，把人吹到地图那头。', air: '他在天上的时间比在地上多。', skill: '一扇子风刃，顺手吹散飞镖。', ranged: '后翻一下原地起风，优雅退场。', ult: '今日天气：平地龙卷，有人起飞。', esc: '风往哪吹，他就往哪飘。' },
   leiming: { passive: '出家人不打诳语，只打六连。', light: '六连重拳，数到第四下你就晕了。', charge: '蓄力一拳，阿弥陀佛。', air: '跳起来的和尚最危险。', skill: '带电冲拳，碰一下全身发麻。', ranged: '一脚跺出雷柱，邻居以为要下雨。', ult: '三道天雷，师父说这招不许在庙里用。', esc: '金刚一吼，震开一切。' },
@@ -983,7 +1034,8 @@ const SKILL_FUN = {
   yanling: { passive: '恐高？不存在的。', light: '翅膀扇人，羽毛乱飞。', charge: '振翅一扑，落地像只大鹅。', air: '天上就是她的主场。', skill: '鹰击长空，专啄脑门。', ranged: '三根翎羽，一根比一根快。', ult: '漫天羽毛，下雨天记得带伞。', esc: '振翅一飞，你够不着了。' },
   yuxiao: { passive: '打人也讲节奏，三拍一小节。', light: '箫管敲头，咚咚咚，是节拍。', charge: '横扫一记，音符都震飞了。', air: '跳起来吹一个高音。', skill: '攒满三个音符再吹，伤害翻倍不是梦。', ranged: '你的暗器我收下了，原样奉还。', ult: '广陵散于今绝矣？今天再奏一遍。', esc: '一个休止符，人先撤了。' },
   zuixian: { passive: '酒量即战力，放招添酒打中添酒，东倒西歪能闪避。', light: '东倒西歪五连拳，步法虚实难测。', charge: '蓄力一撞，重若巨石倾覆。', air: '醉步腾跃，飘忽不定难预测。', skill: '亭中留客，飞亭砸落禁锢两秒任你痛揍。', ranged: '与民同乐，半壶酒掷向对手，共醉回春。', ult: '山水之间，水墨泼染全屏八段重创。', esc: '醉意腾身，踏风撤步。' },
-  gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' }
+  gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' },
+  lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子母飞梭刺得比针还快。', charge: '蓄力一梭子，隔着衣服都疼。', air: '凌波踏空，身法灵巧似惊雀。', skill: '飞梭脱手，丝线连着千里之外。', ranged: '印记一亮，瞬身穿刺直接清空CD！', ult: '万线归宗，漫天悬丝罗网避无可避。', esc: '悬丝一荡，人已在数丈之外。' }
 };
 
 let cxPrev = null;   // 正在预览的皮肤（null = 用自己装备的）
