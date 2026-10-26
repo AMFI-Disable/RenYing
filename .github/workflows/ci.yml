@@ -89,7 +89,18 @@ jobs:
           echo "Static web server is up on :8791"
 
       - name: UI Panel Layout Audit (all panels, 1440x900)
-        run: node tools/ui-audit.mjs ci-ui 1440 900
+        run: |
+          set +e
+          node tools/ui-audit.mjs ci-ui 1440 900 2>&1 | tee /tmp/ui-audit.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            # Surface the audit's own verdict as check annotations: this audit is timing sensitive, so the
+            # next failure should say which panel and which measurement, not just "exit code 1".
+            grep -E 'FAIL|ERROR|overflow|^     ' /tmp/ui-audit.log | head -25 | while IFS= read -r line; do
+              printf '::error::%s\n' "$line"
+            done
+          fi
+          exit "$status"
 
       - name: Canvas HUD Text Audit
         run: node tools/hud-audit.mjs ci-hud 1440 900

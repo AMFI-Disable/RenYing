@@ -129,6 +129,25 @@ const PROBE = `(() => {
   out.tiny = out.tiny.slice(0,10); out.probs = out.probs.slice(0,25); out.scrollX = out.scrollX.slice(0,8);
   return out; })()`;
 
+// Wait for the panel to stop moving before measuring it: a pending portrait decode or a
+// still-running entrance animation makes the same build measure differently run to run
+// (an empty .bpdetail reads as "mostly empty" and an un-finished .mtitle slide reads as
+// "off-screen"). Finite animations only — the pulsing slots loop forever on purpose.
+const SETTLE = `(() => new Promise(res => {
+  const imgs = [...document.images].filter(i => !i.complete && i.loading !== 'lazy');
+  const anims = (document.getAnimations ? document.getAnimations() : []).filter(a => {
+    if (a.playState !== 'running') return false;
+    const t = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
+    return !!t && t.iterations !== Infinity;
+  });
+  const waits = [
+    ...imgs.map(i => new Promise(r => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); })),
+    ...anims.map(a => a.finished.catch(() => {}))
+  ];
+  if (!waits.length) return res(true);
+  Promise.race([Promise.all(waits).then(() => true), new Promise(r => setTimeout(() => r(false), 1200))]).then(res);
+}))()`;
+
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.events = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);
@@ -198,6 +217,7 @@ for (const [name, js] of PANELS) {
   if (process.env.RENYING_EXTRA_JS) {   // audit a panel in a specific state, e.g. a different codex character
     await cdp.send('Runtime.evaluate', { expression: process.env.RENYING_EXTRA_JS }, S); await sleep(300); }
   await sleep(name === 'menu' ? 400 : 950);
+  await cdp.send('Runtime.evaluate', { expression: SETTLE, awaitPromise: true }, S);
   const r = await cdp.send('Runtime.evaluate', { expression: PROBE, returnByValue: true }, S);
   audit.push(r.result.value);
   const shot = await cdp.send('Page.captureScreenshot', { format: 'png' }, S);
