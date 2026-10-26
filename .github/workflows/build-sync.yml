@@ -38,7 +38,8 @@ jobs:
       - name: Validate Build Script & Lowercase Filenames
         run: |
           python3 -m py_compile tools/build.py
-          if git ls-files | grep -v '^CNAME$' | grep '[A-Z]'; then
+          # CNAME (GitHub Pages) and CLAUDE.md (Claude Code) are the two names that must stay in capitals.
+          if git ls-files | grep -vE '^(CNAME|CLAUDE\.md)$' | grep '[A-Z]'; then
             echo "Error: uppercase tracked files found"
             exit 1
           fi
