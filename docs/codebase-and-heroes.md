@@ -3,6 +3,7 @@
 > [!NOTE]
 > Generated from the working tree at commit `351e61b` (`fix: resilient spawn runner`), game `VERSION = '4.5'`.
 > Every number below was read out of the source — `src/game.js` line references are given so you can check them.
+> Since the refactor, `src/game.js` is split into numbered files under `src/game/` (concatenated in order they are the old file), so old line numbers are approximate; the table in §14 names the new files.
 
 ---
 
@@ -653,16 +654,16 @@ These are worth knowing before you touch balance or the codex UI:
 
 | Task | File / location |
 | :--- | :--- |
-| Tweak a hero's raw stats | `CHARS` — `src/game.js:261`, `stat` block |
-| Global damage/HP/cooldown tuning | `BAL` — `src/game.js:242` |
-| Change a normal attack's frames/damage | `MOVES` — `src/game.js:218` (global) or `moveMods` (per hero) |
-| Change a Q/R ability | `SKILLS` — `src/game.js:366` |
-| Change an ultimate | `ULTS` — `src/game.js:775` |
+| Tweak a hero's raw stats | `CHARS` — `src/game/02-heroes.js`, `stat` block |
+| Global damage/HP/cooldown tuning | `BAL` — `src/game/02-heroes.js` |
+| Change a normal attack's frames/damage | `MOVES` — `src/game/02-heroes.js` (global) or `moveMods` (per hero) |
+| Change a Q/R ability | `SKILLS` — `src/game/03-skills.js` |
+| Change an ultimate | `ULTS` — `src/game/04-ults.js` |
 | Change reach/hitbox | move `box` + `stat.reach` (and `reachMul` in `moveMods`) |
 | Add a hero | `CHARS` + `SKILLS`/`ULTS` entries + `SKINS`/`CHAR_RARITY` + pose data |
-| Add a skin | `SKINS` — `src/game.js:8967` (plus `SCENES` for legendary sky/FX) |
-| UI copy / numbers shown in codex | `statRows` (7828), `HERO_HIT_DETAILS` (7976), `PASSIVE_SHORT` (7879) |
-| Netcode | `src/game.js:10249`, transport in `src/net-p2p.js` |
+| Add a skin | `SKINS` — `src/game/19-progress.js` (plus `SCENES` there for legendary sky/FX; drawing in `13-skins.js`–`15-skin-weapons.js`) |
+| UI copy / numbers shown in codex | `statRows`, `HERO_HIT_DETAILS`, `PASSIVE_SHORT` — `src/game/18-codex.js` |
+| Netcode | rollback in `src/game/20-tutorial-rollback-touch.js`, shared net code in `06-input-net.js`, transport in `src/net-p2p.js` |
 | Server features | `server.py` (`routes` dict at ~1200) |
 | Cloud save | `src/cloud.js`, `firestore.rules` |
 | Mini-game | `src/qfx/NN-*.js` + `src/qfx/page.html` |

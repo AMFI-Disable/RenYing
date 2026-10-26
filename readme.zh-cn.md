@@ -120,7 +120,7 @@ flowchart TD
 | `src/page.html` | 网页结构，带打包标记 |
 | `src/style.css` | 全部样式 |
 | `src/i18n.js` | 国际化多语言翻译引擎与中英文字典 |
-| `src/game.js` | 游戏引擎、12 名英雄机制、菜单、战斗状态机和回滚联机 |
+| `src/game/` | 游戏引擎、12 名英雄机制、菜单、战斗状态机和回滚联机，按功能拆成 25 个带编号的文件（`02-heroes.js`、`03-skills.js`、`10-hits.js` 等），build.py 按编号顺序拼起来 |
 | `src/armory-core.js` | 武库核心逻辑、武器箱配置、品质分级与饰品概率 |
 | `src/armory.js` | 武库 UI、开箱动画、汰换合同、图鉴与玩家集市 |
 | `src/anticheat.js` | 客户端防作弊状态校验、封禁防护与伤害审计 |

@@ -120,7 +120,7 @@ Edit the sources; never edit the generated pages.
 | `src/page.html` | Page markup with build markers |
 | `src/style.css` | All styles |
 | `src/i18n.js` | Bilingual internationalization engine and vocabulary dictionary |
-| `src/game.js` | Game engine, 12-character roster, menus, combat states and rollback netcode |
+| `src/game/` | Game engine, 12-character roster, menus, combat states and rollback netcode, split into 25 numbered files (`02-heroes.js`, `03-skills.js`, `10-hits.js` …) that build.py concatenates in order |
 | `src/armory-core.js` | Weapon cases, rarity tiers, skins catalog, and inventory calculations |
 | `src/armory.js` | Armory UI, unboxing animations, trade-up contracts, and marketplace views |
 | `src/anticheat.js` | Anti-cheat state integrity, rate limiting, and damage verification |
