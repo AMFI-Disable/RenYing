@@ -120,8 +120,8 @@ function neutral(f, foe) {
         SFX.dash();
         return;
       }
-      if (SKILLS[f.ch.skill].air && f.skillCD <= 0 && c.consume('skill')) { f.airHover = 0; endEscape(f); return startSkill(f, foe); }
-      if (SKILLS[f.ch.skill2].air && f.skill2CD <= 0 && c.consume('skill2')) { f.airHover = 0; endEscape(f); return startSkill(f, foe, 2); }
+      if (f.skillCD <= 0 && c.consume('skill')) { f.airHover = 0; endEscape(f); return startSkill(f, foe); }
+      if (f.skill2CD <= 0 && c.consume('skill2')) { f.airHover = 0; endEscape(f); return startSkill(f, foe, 2); }
       return;
     }
     if (c.consume('light')) return startAttack(f, 'a1');
@@ -135,8 +135,9 @@ function neutral(f, foe) {
       if (Math.random() < 0.3) addP({ type: 'spark', x: f.x - f.face * 18, y: f.y - 70, vx: -f.face * 60, vy: rand(20, 80), life: 0.3, max: 0.3, rgb: f.look.slash, w: 1.2 });
       return;
     }
-    if (SKILLS[f.ch.skill].air && f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
-    if (SKILLS[f.ch.skill2].air && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+    // 空中也能放 Q / R：效果和地上一样，动作换成空中的（见 AIR_SKILL_POSE）
+    if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
+    if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
     f.vx = clamp(f.vx + dir * 1700 * STEP, -wk(f) * 1.2, wk(f) * 1.2);
   }
 }
@@ -172,7 +173,7 @@ function attackUpdate(f, foe) {
     SFX[m.snd]();
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
-  if (M.phase === 'fight' && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && (f.onGround() || SKILLS[f.ch.skill2].air) && c.consume('skill2')) return startSkill(f, foe, 2);
+  if (M.phase === 'fight' && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
   if (M.phase === 'fight' && (t >= act0 + m.ac * 0.6 || (f.hitConfirmed && f.moveName === 'dl'))) {
     if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
     if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
@@ -278,7 +279,7 @@ function startSkill(f, foe, slot) {
   if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
   endEscape(f);
   if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
-  f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null;
+  f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null; f.skAir = !f.onGround();
   const cd = S.cd * (balOf(f).cd || 1);
   if (slot === 2) f.skill2CD = cd; else f.skillCD = cd;
   if (scOn()) scFire(f, 'skill', foe, slot || 1);
@@ -815,6 +816,7 @@ function physics(f) {
   if (f.flying) g = 0;
   if (f.state === 'dash' || f.state === 'held' || f.state === 'special' || f.airHover > 0) g = 0;
   else if (f.state === 'attack' && f.move.air) g *= 0.45;
+  else if (f.state === 'skill' && f.skAir && SKILLS[f.skill] && !SKILLS[f.skill].air) g *= 0.45;   // 地面技能在空中放：和空中普攻一样下落变慢
   else if (f.state === 'launched') {
     const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
     g *= LAUNCH_GRAV * (1 + f.juggle * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow(w, 0.35)));

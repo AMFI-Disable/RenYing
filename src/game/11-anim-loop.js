@@ -1,4 +1,33 @@
 // ======================= 姿势动画 =======================
+// 空中放技能：地面姿势换成空中专属姿势（伤害判定不变）；没列出的收招姿势用下落姿势
+const AIR_SKILL_POSE = {
+  gale: { qf_charge: 'ak_gale0', qf_thrust: 'ak_gale1' },
+  swordqi: { qf_charge: 'ak_swordqi0', qf_thrust: 'ak_swordqi1' },
+  blink: { fy_seal: 'ak_blink0', dash: 'ak_blink1', fy_xslash: 'ak_blink2' },
+  kunai: { fy_seal: 'ak_kunai0', fy_crouch: 'ak_kunai1' },
+  quake: { ts_lift: 'ak_quake0', ts_slam: 'ak_quake1' },
+  ironwall: { ts_shoulder: 'ak_ironwall0' },
+  backthrust: { ls_stance: 'ak_backthrust0', ls_thrust: 'ak_backthrust1' },
+  spin: { ls_stance: 'ak_spin0' },
+  windblade: { ly_fanswipe: 'ak_windblade0', idle: 'ak_windblade1' },
+  windstep: { ly_fanswipe: 'ak_windstep0', a2: 'ak_windstep1' },
+  thunderfist: { lm_boxer: 'ak_thunderfist0', lm_jab: 'ak_thunderfist1' },
+  stomp: { lm_boxer: 'ak_stomp0', ts_slam: 'ak_stomp1' },
+  inktrap: { my_stroke: 'ak_inktrap0', my_paint: 'ak_inktrap1' },
+  inksplash: { my_stroke: 'ak_inksplash0', my_paint: 'ak_inksplash1' },
+  mirror: { yh_mirror: 'ak_mirror0', hva: 'ak_mirror1' },
+  moonring: { yh_mirror: 'ak_moonring0', l2a: 'ak_moonring1' },
+  dive: { jump: 'ak_dive0', yl_dive: 'ak_dive1' },
+  darts: { yl_wings: 'ak_darts0', a1a: 'ak_darts1' },
+  soundwave: { yx_play: 'ak_soundwave0', yx_push: 'ak_soundwave1' },
+  echowall: { yx_play: 'ak_echowall0' },
+  pavilion: { zx_sway: 'ak_pavilion0', gc_wind: 'ak_pavilion1' },
+  feast: { gc_wind: 'ak_feast0', gc_throw: 'ak_feast1', zx_drink: 'ak_feast2' },
+  hook: { gc_wind: 'ak_hook0', gc_throw: 'ak_hook1', gc_pull: 'ak_hook2' },
+  whirl: { gc_spin: 'ak_whirl0', gc_throw: 'ak_whirl1' },
+  spindle: { du_l1s: 'ak_spindle0', du_l1a: 'ak_spindle1' },
+  shadowdash: { du_l1s: 'ak_shadowdash0', dash: 'ak_shadowdash1' }
+};
 function targetPose(f) {
   const s = f.state;
   let p, k = 16, atkOvershoot = 0;
@@ -33,7 +62,10 @@ function targetPose(f) {
       p = POSES[f.spPose || 'spa'] || POSES.spa; k = 60;
     }
   } else if (s === 'skill') {
-    const pr = SKILLS[f.skill] ? SKILLS[f.skill].pose(f) : ['idle', 14]; p = POSES[pr[0]] || POSES.idle; k = pr[1];
+    const pr = SKILLS[f.skill] ? SKILLS[f.skill].pose(f) : ['idle', 14]; k = pr[1];
+    let pn = pr[0];
+    if (f.skAir && f.y < -4) pn = (AIR_SKILL_POSE[f.skill] || {})[pn] || (pn === 'idle' || pn === 'getup' ? 'fall' : pn);
+    p = POSES[pn] || POSES.idle;
   } else if (s === 'dash') { p = POSES[f.dashDir === f.face ? 'dash' : 'bdash']; k = 30; }
   else if (s === 'air') { p = POSES[f.vy < 0 ? 'jump' : 'fall']; k = 14; }
   else if (s === 'block' || s === 'blockstun') { p = POSES.block; k = 30; }
