@@ -342,7 +342,7 @@ const TUI = { stick: null, stickUp: false, jumpHeld: false };
 function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
   if (!TOUCH) return;
-  const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train') && !paused && !document.querySelector('.scr.on');
+  const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train' || M.mode === 'tag3') && !paused && !document.querySelector('.scr.on');
   $id('touchUI').classList.toggle('hidden', !inFight);
   if (!inFight) return;
   const me = [A, B][localIdx()];

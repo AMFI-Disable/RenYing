@@ -52,7 +52,7 @@
   C.ZOD_WEEK = 1;                              // 星座武器箱也是每周 1 个，和神兵的分开算；每个号送 1 个
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
-  C.KO_MAX = 12;                               // 一局最多记 12 斩（各选 2 人的对战也够了）
+  C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
   C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
@@ -234,7 +234,7 @@
     net: { g: 2, n: 2, star: 2, t: '联机对战 {n} 局' },
     tower: { g: 2, n: 1, star: 1, t: '打 {n} 局问剑密卷' },
     chaos: { g: 2, n: 1, star: 1, t: '打 {n} 局天机乱斗' },
-    tag3: { g: 9, n: 1, star: 2, t: '赢下 {n} 局 3v3 车轮战' },   // 车轮战已移除：不再抽到，留着定义让已经抽到的旧任务还能读
+    tag3: { g: 2, n: 1, star: 2, t: '赢下 {n} 局 3v3 车轮战' },
     duo: { g: 2, n: 1, star: 1, t: '打 {n} 局 2v2' },
     open: { g: 3, n: 2, star: 1, t: '开启 {n} 个武器箱' },
     trade: { g: 3, n: 1, star: 1, t: '签 {n} 份汰换合同' },
@@ -883,7 +883,7 @@
     if (c.mode === '2v2') bump(s, 'duo', 1);
     const res = { ok: true, st: [] };
     let left = C.KO_MAX;
-    for (const [h, v] of Object.entries(isObj(c.ko) ? c.ko : {}).slice(0, 3)) {   // 一局最多三位侠客（旧版车轮战的记录也能读）
+    for (const [h, v] of Object.entries(isObj(c.ko) ? c.ko : {}).slice(0, 3)) {   // 车轮战一局最多三位侠客
       const n = typeof v === 'number' && Number.isFinite(v) ? Math.floor(v) : 0;   // 只认正常的数字（1e400 这种会变成无穷大，不算）
       const add = Math.min(left, Math.max(0, n)), id = C.HERO_IDS.includes(h) && s.eq[h], eq = id && C.findItem(s, id);
       if (!add || !eq || eq.st < 0) continue;

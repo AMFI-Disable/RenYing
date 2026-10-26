@@ -226,7 +226,7 @@ function musicMode() {
   if (on('bp')) return 'bp';
   if (on('end')) return 'end';
   if (on('armory')) return 'gacha';   // 武库：藏锋阁
-  if (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'replay') return M.ot && M.phase === 'fight' ? 'overtime' : 'fight';
+  if (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'replay' || M.mode === 'tag3') return M.ot && M.phase === 'fight' ? 'overtime' : 'fight';
   if (M.mode === 'train') return 'practice';
   return 'menu';
 }

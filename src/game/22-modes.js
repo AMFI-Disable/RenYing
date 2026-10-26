@@ -1,3 +1,131 @@
+// ======================= 3v3 门派车轮战 =======================
+let tag3Team = [0, 1, 2];
+let activeTagSlot = 0;
+let tag3Level = 'normal';
+let tag3EnemyTeam = [3, 4, 5];
+
+function renderTag3() {
+  ensurePortraits();
+  const slotLabels = ['先锋', '中坚', '大将'];
+  const slotsEl = document.getElementById('tag3Slots');
+  if (slotsEl) {
+    slotsEl.innerHTML = [0, 1, 2].map(slotIdx => {
+      const charIdx = tag3Team[slotIdx] !== undefined ? tag3Team[slotIdx] : slotIdx;
+      const ch = CHARS[charIdx];
+      const col = ch ? `rgb(${ch.look.slash})` : 'var(--ink)';
+      return `<div class="tag3-slot${activeTagSlot === slotIdx ? ' sel' : ''}" data-slot="${slotIdx}">
+        <span class="slot-tag">${slotLabels[slotIdx]}</span>
+        <div class="slot-avatar">
+          <img src="${PORTRAITS[charIdx] || ''}" alt="">
+        </div>
+        <span class="slot-name" style="color:${col}">${ch ? ch.name : '未选'}</span>
+        <span class="slot-role">${ch ? ch.role : ''}</span>
+      </div>`;
+    }).join('');
+  }
+
+  const rosterEl = document.getElementById('tag3Roster');
+  if (rosterEl) {
+    rosterEl.innerHTML = CHARS.map((ch, i) => {
+      const inSlot = tag3Team.indexOf(i);
+      const tagText = inSlot >= 0 ? slotLabels[inSlot] : '';
+      const col = `rgb(${ch.look.slash})`;
+      return `<button class="tag3-hero-chip${inSlot >= 0 ? ' in-team' : ''}" data-idx="${i}" type="button">
+        ${tagText ? `<span class="team-badge">${tagText}</span>` : ''}
+        <img src="${PORTRAITS[i] || ''}" alt="">
+        <div class="nm" style="color:${col}">${ch.name}</div>
+        <div class="rl">${ch.role}</div>
+      </button>`;
+    }).join('');
+  }
+}
+
+function pickEnemyTag3Team(playerTeam) {
+  const allIdxs = CHARS.map((_, i) => i);
+  const remaining = allIdxs.filter(i => !playerTeam.includes(i));
+  const pool = remaining.length >= 3 ? remaining : allIdxs;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
+}
+
+function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
+  if (p2pActive()) netDropWaiting();
+  refocusGame();
+  human[0].rec = null;
+  REC.on = false;
+
+  tag3Team = [...pTeam];
+  tag3EnemyTeam = [...eTeam];
+  M.mode = 'tag3';
+  M.level = lv || tag3Level || 'normal';
+  M.teams = [ [...tag3Team], [...tag3EnemyTeam] ];
+  M.teamIdx = [0, 0];
+  M.wins = [0, 0];
+  M.round = 1;
+  M.carry = null;
+  M.stage = null;
+  M.duo = null;
+  M.watchAi = !!isWatch;
+
+  setChars(M.teams[0][0], M.teams[1][0]);
+  A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+  B.ctrl = new AICtrl(M.level || 'god');
+  A.meter = B.meter = 0;
+  human[0].clear(); human[1].clear();
+
+  showScreen(null);
+  startRound();
+  if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
+}
+
+const tag3SlotsEl = document.getElementById('tag3Slots');
+if (tag3SlotsEl) {
+  tag3SlotsEl.addEventListener('click', e => {
+    const b = e.target.closest('.tag3-slot');
+    if (!b) return;
+    activeTagSlot = +b.dataset.slot;
+    renderTag3();
+    SFX.slice();
+  });
+}
+const tag3RosterEl = document.getElementById('tag3Roster');
+if (tag3RosterEl) {
+  tag3RosterEl.addEventListener('click', e => {
+    const b = e.target.closest('.tag3-hero-chip');
+    if (!b) return;
+    const heroIdx = +b.dataset.idx;
+    const existingSlot = tag3Team.indexOf(heroIdx);
+    if (existingSlot >= 0) {
+      const curHeroInActive = tag3Team[activeTagSlot];
+      tag3Team[activeTagSlot] = heroIdx;
+      tag3Team[existingSlot] = curHeroInActive;
+    } else {
+      tag3Team[activeTagSlot] = heroIdx;
+      activeTagSlot = (activeTagSlot + 1) % 3;
+    }
+    renderTag3();
+    SFX.slice();
+  });
+}
+const tag3LevelsEl = document.getElementById('tag3Levels');
+if (tag3LevelsEl) {
+  tag3LevelsEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.lv) return;
+    tag3Level = b.dataset.lv;
+    for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x === b);
+    SFX.slice();
+  });
+}
+const tag3StartBtn = document.getElementById('tag3StartBtn');
+if (tag3StartBtn) {
+  tag3StartBtn.addEventListener('click', () => {
+    initAudio();
+    paused = false;
+    bpStart('tag3', { level: tag3Level, isWatch: false });
+  });
+}
+
 // ======================= 问剑密卷 (肉鸽无尽试炼) & 孤勇决死 =======================
 const TOWER_PERKS = {
   thunder_dash: {
@@ -563,6 +691,11 @@ if (cpuWatchBtn) cpuWatchBtn.addEventListener('click', () => {
   bpStart('cpuWatch');
 });
 
+const tag3WatchBtn = document.getElementById('tag3WatchBtn');
+if (tag3WatchBtn) tag3WatchBtn.addEventListener('click', () => {
+  bpStart('tag3', { level: tag3Level || 'god', isWatch: true });
+});
+
 // ======================= 2v2 天道演武观战 (Watch AI vs AI 2v2) =======================
 // watch2v2Draft: [ban1, team1_p1, team1_p2, ban2, team2_p1, team2_p2] -> 6 个完全不重复的英雄索引
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
@@ -1073,6 +1206,10 @@ document.getElementById('againBtn').addEventListener('click', () => {
     bpStart('mayhem', { level: mayhemLevel, isWatch: false });
     return;
   }
+  if (M.mode === 'tag3') {
+    bpStart('tag3', { level: tag3Level, isWatch: false });
+    return;
+  }
   if (M.mode === 'tower') {
     bpStart('tower', { isWatch: false });
     return;
@@ -1115,7 +1252,7 @@ function toMenu() {
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
   M.mode = 'demo';
-  if (prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
+  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
     singleSec(prevMode);
     showScreen('single');
   } else {
@@ -1174,7 +1311,7 @@ $id('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') chatSend
 // ======================= 禁用与选人 =======================
 // 顺序：1P 禁用 → 2P 禁用 → 1P 选人 → 2P 选人。联机时由房主记录结果并同步。
 const BP_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']];
-const BP_DUO_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];   // 常规对战：各禁 1 人、各选 2 人
+const BP_DUO_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];   // 联机对战：各禁 1 人、各选 2 人
 const bpSteps = () => (BP && BP.steps) || BP_STEPS;
 const isMultiPickBP = () => !!(BP && Array.isArray(BP.picks) && Array.isArray(BP.picks[0]));
 const isLocalBothHumanBP = () => bpMode === '2v2' && !!(bpCustomOpts && bpCustomOpts.subMode === 'pp_pp');

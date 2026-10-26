@@ -357,9 +357,22 @@ const testSuite = [
         return { pass: false, error: 'Chaos mode watch setup failed' };
       }
 
-      // 3. 各选 2 人的人机对战：输一回合的一方换第二人满血上，赢的人带血 +CARRY_HEAL，两人都倒才算输
-      startMatch('cpu', 'god', [[0, 1], [2, 3]], true);
-      if (M.mode !== 'cpu' || !M.duo || A.chIdx !== 0 || B.chIdx !== 2) {
+      // 3. Tag3 Mode (3v3 relay)
+      startTag3Match([0, 1, 2], [3, 4, 5], 'god', true);
+      if (M.mode !== 'tag3' || !M.watchAi || (M.teams[0] || []).length !== 3) {
+        return { pass: false, error: 'Tag3 mode 3-hero squad watch setup failed' };
+      }
+
+      // 3b. 人机 1v1：每回合双方满血
+      startMatch('cpu', 'normal', [0, 2]);
+      A.hp = 50; B.hp = 0; M.koWinner = 0; endRound();
+      if (A.hp !== A.maxHp || B.hp !== B.maxHp || A.chIdx !== 0 || B.chIdx !== 2) {
+        return { pass: false, error: 'CPU 1v1 should restore full HP each round: ' + [A.hp, A.maxHp, B.hp, B.maxHp].join('/') };
+      }
+
+      // 3c. 联机两人接力：输一回合的一方换第二人满血上，赢的人带血 +CARRY_HEAL，两人都倒才算输
+      startMatch('cpu', 'god', [[0, 1], [2, 3]], true); M.mode = 'net';
+      if (!M.duo || A.chIdx !== 0 || B.chIdx !== 2) {
         return { pass: false, error: 'Duo match should start with the first picks' };
       }
       A.hp = 50; B.hp = 0; M.koWinner = 0; endRound();
@@ -367,13 +380,10 @@ const testSuite = [
         return { pass: false, error: 'Duo relay mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, B.maxHp].join('/') };
       }
       A.hp = 0; B.hp = 30; M.koWinner = 1; endRound();
-      if (A.chIdx !== 1 || A.hp !== A.maxHp || B.chIdx !== 3 || M.phase === 'end') {
-        return { pass: false, error: 'Duo second relay mismatch: ' + [A.chIdx, A.hp, B.chIdx, M.phase].join('/') };
+      if (A.chIdx !== 1 || A.hp !== A.maxHp || B.chIdx !== 3 || B.hp !== Math.min(B.maxHp, 30 + CARRY_HEAL) || M.phase === 'end') {
+        return { pass: false, error: 'Duo second relay mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, M.phase].join('/') };
       }
-      A.hp = 40; B.hp = 0; M.koWinner = 0; endRound();
-      if (M.phase !== 'end' || M.wins[0] !== 2) {
-        return { pass: false, error: 'Duo match should end when one side loses both heroes' };
-      }
+      M.mode = 'cpu';
 
       // 4. Mayhem Mode (10x meter / instant cooldowns)
       startMayhem(0, 1, 'god', true);

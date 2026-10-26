@@ -40,7 +40,7 @@ function keyHint(i, k) {
   const skKey = keyLabel(custom1PKeys.skill);
   const p1 = { sp: ` 按 ${spKey}`, sk: ` ${skKey}`, sk2: ' 左+右', esc: ' 右键' }, p2 = { sp: ' 按 I', sk: '', sk2: '', esc: '' };
   if (M.mode === 'pvp') return (i === 0 ? p1 : p2)[k];
-  if (M.mode === 'cpu' || M.mode === 'train') return i === 0 ? p1[k] : '';
+  if (M.mode === 'cpu' || M.mode === 'train' || M.mode === 'tag3') return i === 0 ? p1[k] : '';
   if (M.mode === 'net') return i === localIdx() ? p1[k] : '';
   return '';
 }
@@ -374,12 +374,15 @@ function drawHUD() {
       ctx.font = `${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.6)';
       ctx.fillText(pn, i === 0 ? x0 + cw + 10 : x0 + barW - cw - 10, top + bh + 8 + bh * 0.6);
     }
-    if (isDuo()) {   // 各选 2 人：名字旁边两个圆点，首发和接力，被击倒的打叉
-      const slotTitles = ['首', '接'], out = Math.min(2, M.wins[1 - i]);
-      for (let r = 0; r < 2; r++) {
+    // 车轮战三人、联机接力两人：名字旁边一排圆点，正在打的亮起，被击倒的打叉
+    const roster = M.mode === 'tag3' && M.teams && M.teams[i] ? { titles: ['先', '中', '大'], out: M.teamIdx[i] }
+      : isDuo() ? { titles: ['首', '接'], out: Math.min(2, M.wins[1 - i]) } : null;
+    if (roster) {
+      const slotTitles = roster.titles;
+      for (let r = 0; r < slotTitles.length; r++) {
         const px = i === 0 ? cx - gap - 14 - r * 26 : cx + gap + 14 + r * 26, py = top + bh + 18;
-        const isDead = r < out;
-        const isActive = r === out;
+        const isDead = r < roster.out;
+        const isActive = r === roster.out;
         ctx.save();
         ctx.translate(px, py);
         if (isActive) {
