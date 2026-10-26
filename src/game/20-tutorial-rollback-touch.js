@@ -171,6 +171,7 @@ function capF(f) {
   return o;
 }
 function resF(f, o) {
+  if (o.chIdx !== undefined && o.chIdx !== f.chIdx) f.setChar(o.chIdx);   // 回滚跨过了换人：先换回当时的角色
   for (const k in f) if (!F_SKIP.has(k) && !(k in o)) delete f[k];
   for (const k in o) { if (k === 'hasMove' || k === 'tgt') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
   f.move = o.hasMove && f.moveName ? f.moves[f.moveName] : null;
@@ -208,11 +209,12 @@ function applyInput(c, inp) {
     c.press(a);
   }
 }
-function rollStart(ch, seed) {
+function rollStart(ch, seed, duo) {
   refocusGame();
   setChars(ch[0], ch[1]);
   if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
   setupNetMatch();
+  if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 2), duo[1].slice(0, 2)];   // 各选 2 人，输一回合换下一人
   ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
   human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
@@ -340,7 +342,7 @@ const TUI = { stick: null, stickUp: false, jumpHeld: false };
 function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
   if (!TOUCH) return;
-  const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train' || M.mode === 'tag3') && !paused && !document.querySelector('.scr.on');
+  const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train') && !paused && !document.querySelector('.scr.on');
   $id('touchUI').classList.toggle('hidden', !inFight);
   if (!inFight) return;
   const me = [A, B][localIdx()];

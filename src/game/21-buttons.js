@@ -181,13 +181,6 @@ function startTraining(targetMode = trainTargetMode, isWatch = false) {
     showScreen(null);
     return;
   }
-  if (targetMode === 'tag3') {
-    const pTeam = [trainChar, (trainChar + 1) % CHARS.length, (trainChar + 2) % CHARS.length];
-    const eTeam = pickEnemyTag3Team(pTeam);
-    startTag3Match(pTeam, eTeam, 'god', isWatch);
-    showScreen(null);
-    return;
-  }
   if (targetMode === 'mayhem') {
     startMayhem(trainChar, oppChar, 'god', isWatch);
     showScreen(null);
@@ -236,8 +229,6 @@ const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
   if (trainTargetMode === 'watch2v2') {
     bpStart('2v2', { subMode: 'pc_cc', level: 'god', isWatch: false });
-  } else if (trainTargetMode === 'tag3') {
-    bpStart('tag3', { level: 'god', isWatch: false });
   } else if (trainTargetMode === 'cpu') {
     pickLevel = 'god';
     bpStart('cpu');

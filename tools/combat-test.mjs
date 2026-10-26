@@ -357,10 +357,22 @@ const testSuite = [
         return { pass: false, error: 'Chaos mode watch setup failed' };
       }
 
-      // 3. Tag3 Mode (3v3 relay)
-      startTag3Match([0, 1, 2], [3, 4, 5], 'god', true);
-      if (M.mode !== 'tag3' || !M.watchAi || (M.teams[0] || []).length !== 3) {
-        return { pass: false, error: 'Tag3 mode 3-hero squad watch setup failed' };
+      // 3. 各选 2 人的人机对战：输一回合的一方换第二人满血上，赢的人带血 +CARRY_HEAL，两人都倒才算输
+      startMatch('cpu', 'god', [[0, 1], [2, 3]], true);
+      if (M.mode !== 'cpu' || !M.duo || A.chIdx !== 0 || B.chIdx !== 2) {
+        return { pass: false, error: 'Duo match should start with the first picks' };
+      }
+      A.hp = 50; B.hp = 0; M.koWinner = 0; endRound();
+      if (B.chIdx !== 3 || B.hp !== B.maxHp || A.chIdx !== 0 || A.hp !== Math.min(A.maxHp, 50 + CARRY_HEAL)) {
+        return { pass: false, error: 'Duo relay mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, B.maxHp].join('/') };
+      }
+      A.hp = 0; B.hp = 30; M.koWinner = 1; endRound();
+      if (A.chIdx !== 1 || A.hp !== A.maxHp || B.chIdx !== 3 || M.phase === 'end') {
+        return { pass: false, error: 'Duo second relay mismatch: ' + [A.chIdx, A.hp, B.chIdx, M.phase].join('/') };
+      }
+      A.hp = 40; B.hp = 0; M.koWinner = 0; endRound();
+      if (M.phase !== 'end' || M.wins[0] !== 2) {
+        return { pass: false, error: 'Duo match should end when one side loses both heroes' };
       }
 
       // 4. Mayhem Mode (10x meter / instant cooldowns)

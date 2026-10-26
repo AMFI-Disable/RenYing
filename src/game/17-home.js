@@ -303,7 +303,7 @@ function updateAIBrief() {
 const SINGLE_TAB_CATS = {
   cpu: 'regular', stage: 'regular', train: 'regular',
   tower: 'rogue', chaos: 'rogue',
-  tag3: 'special', mayhem: 'special', watch2v2: 'special'
+  mayhem: 'special', watch2v2: 'special'
 };
 
 // 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
@@ -341,7 +341,6 @@ function singleSec(sec) {
   if (subEl) {
     const subs = {
       cpu: '选择 AI 难度与对手境界，在实战对局中锤炼招式攻防',
-      tag3: '挑选三位豪杰排定出战顺序，胜者保留残血守擂，直至一方全灭！',
       tower: '挑选本命侠客登临万仞剑阁，突破层层守关者，顿悟三选一武林秘卷！',
       chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
@@ -351,7 +350,6 @@ function singleSec(sec) {
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
-  if (active === 'tag3') renderTag3();
   else if (active === 'tower') renderTower();
   else if (active === 'chaos') renderChaos();
   else if (active === 'stage') renderStages();
@@ -363,7 +361,7 @@ function singleSec(sec) {
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
 function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
+  if (name === 'cpu' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
     singleSec(name);
     if (reveal) showScreen('single');
     return 'single';
@@ -404,8 +402,7 @@ function heroQuickFight(lv) {
   initAudio(); heroPickShow(false); heroLvShow(false);
   if (lv) { pickLevel = lv; for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x.dataset.lv === lv); }
   paused = false;
-  bpStart('cpu');
-  if (menuHeroId >= 0) { bpSel = menuHeroId; renderBP(); }
+  bpStart('cpu', { lockFirst: menuHeroId });   // 首页选的角色直接当第一名出战角色，不用再选一次
 }
 function heroPickShow(on) {
   const el = $id('heroPick'); if (!el) return;

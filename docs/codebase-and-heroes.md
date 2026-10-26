@@ -124,7 +124,6 @@ python3 tools/build.py --check   # what CI does
 | 10160 | Tutorial | |
 | 10249 | Rollback netcode v2.6 | `ROLL`, snapshots, resimulation, checksums. |
 | 10466 | Touch controls | Virtual stick + buttons. |
-| 10750 | 3v3 tag mode | |
 | 10878 | Roguelike / endless | 问剑密卷. |
 | 11469 | 2v2 AI spectator | Watch AI vs AI. |
 | 11757+ | Character select, demo, card art, net UI, accounts, legacy import | |
@@ -319,8 +318,14 @@ CI (`ci.yml`) runs: Python syntax check, YAML lint, **lowercase-filename rule**,
 pattern (`^[a-z]+: [a-z0-9]+ [a-z0-9]+ [a-z0-9]+$`). `pages.yml` publishes the repo root to GitHub Pages.
 
 Game modes present in the code: `cpu` (1v1 vs AI), `net` (PvP), `train` (dummy), `demo`, `replay`, `tower`
-(问剑密卷 roguelike), `chaos` (天机乱斗 mutations), `mayhem` (神魔乱斗 10× everything), `tag3` (3v3), `watch2v2`
-(2v2 AI spectacle), `fixed` (training presets).
+(问剑密卷 roguelike), `chaos` (天机乱斗 mutations), `mayhem` (神魔乱斗 10× everything), `watch2v2`
+(2v2 AI spectacle), `fixed` (training presets). The 3v3 `tag3` mode was removed; its name stays in the armory mode list so
+old match records still validate.
+
+Regular 1v1 matches (`cpu`, AI watch, net rooms, quick match, ranked) use `BP_DUO_STEPS`: each side bans 1 and picks 2.
+The first picks fight; whoever loses a round swaps in their second pick at full HP, the survivor keeps its HP + `CARRY_HEAL`
+(80). Two round wins end the match, so a side loses once both its heroes are down (`M.duo`, `duoRelay()` in
+`08-fighter-match.js`). The hero picked on the home screen is pre-locked as the first pick (`bpStart('cpu', { lockFirst })`).
 
 ---
 

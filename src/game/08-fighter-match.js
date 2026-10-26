@@ -232,9 +232,12 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
   human[0].rec = null;
   chars = chars || randomPair();
+  // 常规对战各选 2 人：chars 是 [[我方第一人, 第二人], [对方第一人, 第二人]]，先由各自的第一人出战
+  const duo = Array.isArray(chars[0]) ? chars : null;
+  if (duo) chars = [duo[0][0], duo[1][0]];
   setChars(chars[0], chars[1]);
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
-  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null;
+  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo;
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
@@ -275,7 +278,7 @@ function startRound() {
     if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
     if (NET.role === 'host') rollChaosMutation();
   }
-  if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
+  if ((M.mode === 'cpu' || M.mode === 'replay') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * 1.35); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
   M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? 75 : ROUND_TIME; M.koWinner = -1; M.flags = {};
@@ -285,7 +288,7 @@ function startRound() {
     if (M.round === 1) {
       creditT = CREDIT; creditPending = true; metal(880, 1.8, 0.05);
     } else {
-      const txt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局` : `第${CN[M.round] || M.round}回合`;
+      const txt = `第${CN[M.round] || M.round}回合`;
       say(txt, 1.1); SFX.gong();
     }
   }
@@ -409,24 +412,6 @@ function showEnd(w) {
     setTimeout(() => showScreen('end'), 300);
     return;
   }
-  if (M.mode === 'tag3') {
-    const win = w === 0;
-    if (win) {
-      PROF.ink = (PROF.ink || 0) + 60;
-      saveProfile();
-    }
-    playSting(win ? 'victory' : 'defeat');
-    const t = document.getElementById('endTitle');
-    t.textContent = win ? '门派车轮战 · 大捷！' : '门派车轮战 · 惜败';
-    t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
-    document.getElementById('endSub').textContent = win ? `三阵连克，斩获 60 墨锭！（击破比分 ${M.wins[0]} : ${M.wins[1]}）` : `胜败乃兵家常事，重整旗鼓再战（击破比分 ${M.wins[0]} : ${M.wins[1]}）`;
-    $id('endRank').textContent = win ? '已击破敌方全员侠客' : '敌方阵线技高一筹';
-    const again = document.getElementById('againBtn');
-    if (isAiVsAi() || M.watchAi) { again.style.display = 'none'; }
-    else { again.style.display = ''; again.disabled = false; again.textContent = '再战一场'; }
-    setTimeout(() => showScreen('end'), 300);
-    return;
-  }
   if (M.mode === 'tower') {
     const win = w === 0;
     playSting(win ? 'victory' : 'defeat');
@@ -503,51 +488,6 @@ function endRound() {
       return;
     }
   }
-  if (M.mode === 'tag3') {
-    if (w < 0) {
-      M.round++;
-      if (M.round >= 10) {
-        M.phase = 'end';
-        const finalWinner = M.teamIdx[0] < M.teamIdx[1] ? 0 : (M.teamIdx[1] < M.teamIdx[0] ? 1 : (M.wins[0] >= M.wins[1] ? 0 : 1));
-        showEnd(finalWinner);
-        return;
-      }
-      startRound();
-      return;
-    }
-    const loserSide = 1 - w;
-    M.teamIdx[loserSide]++;
-    if (M.teamIdx[loserSide] >= 3) {
-      M.phase = 'end';
-      showEnd(w);
-      return;
-    }
-    const winnerFighter = [A, B][w];
-    const recoverHp = CARRY_HEAL;
-    const survHp = clamp(winnerFighter.hp + recoverHp, 1, winnerFighter.maxHp);
-    const survRatio = survHp / winnerFighter.maxHp;
-    M.carry = [null, null];
-    M.carry[w] = survRatio;
-    M.carry[loserSide] = 1.0;
-
-    const nextHeroIdx = M.teams[loserSide][M.teamIdx[loserSide]];
-    const loserFighter = [A, B][loserSide];
-    loserFighter.setChar(nextHeroIdx);
-    loserFighter.meter = 0;
-    if (loserSide === 0 && M.watchAi) loserFighter.ctrl = new AICtrl(M.level || 'god');
-    if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
-    if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
-
-    M.round++;
-    startRound();
-    const heroName = CHARS[nextHeroIdx].name;
-    const isMid = M.teamIdx[loserSide] === 1;
-    const txt = loserSide === 0
-      ? (isMid ? `中坚 ${heroName} 接力出阵！` : `大将 ${heroName} 背水一战！`)
-      : (isMid ? `敌方中坚 ${heroName} 出阵！` : `敌方大将 ${heroName} 亲征！`);
-    say(txt, 1.4);
-    return;
-  }
   if ((w >= 0 && M.wins[w] >= 2) || M.round >= 5) {
     if (M.mode === 'demo') return startMatch('demo');
     M.phase = 'end';
@@ -559,6 +499,19 @@ function endRound() {
   M.round++;
   M.carry = [null, null];   // 活下来的人继承剩余血量 +CARRY_HEAL，倒下的人满血（2v2 每回合都满血重来）
   if (!is2v2()) [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
+  const relay = duoRelay(w);
   startRound();
+  if (relay) say(relay, 1.4);
+}
+// 各选 2 人的对战：输掉这回合的一方换上第二名角色（满血），赢的人带血 +CARRY_HEAL 继续守擂；谁的两人都被击倒谁输
+const isDuo = () => !!(M.duo && !is2v2() && ['cpu', 'net', 'replay', 'pvp'].includes(M.mode));
+function duoRelay(w) {
+  if (!isDuo() || w < 0) return '';
+  const loser = 1 - w, next = M.duo[loser][Math.min(1, M.wins[w])];
+  const f = [A, B][loser];
+  if (next === undefined || next < 0 || next === f.chIdx) return '';
+  f.setChar(next); f.meter = 0;
+  if (f.ctrl && typeof f.ctrl.updateTactic === 'function') f.ctrl.updateTactic(f, [A, B][w]);
+  return `${loser === localIdx() ? '' : '对方 '}${CHARS[next].name} 接力出战！`;
 }
 

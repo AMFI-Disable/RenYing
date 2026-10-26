@@ -461,7 +461,7 @@ function applySkins() {
         if (charSkins.length) k = charSkins[(f.idx + f.chIdx) % charSkins.length];
       }
     } else {
-      // 无论是 cpu、tag3、tower、stage、train、pvp 还是 demo，均显示已装备的皮肤
+      // 无论是 cpu、tower、stage、train、pvp 还是 demo，均显示已装备的皮肤
       k = mySkin(f.ch.id);
     }
     if (!f.dummy) f.look = skinLook(f.chIdx, k);
@@ -520,7 +520,6 @@ function applyProfile(p, opts) {
     applySkins();
     if (typeof renderTower === 'function') renderTower();
     if (typeof renderChaos === 'function') renderChaos();
-    if (typeof renderTag3 === 'function') renderTag3();
     if (typeof renderTrainPick === 'function') renderTrainPick();
   }
   for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;

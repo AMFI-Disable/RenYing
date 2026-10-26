@@ -408,35 +408,31 @@ function makeCardArt(i, CW, CH, skin) {
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const bpAuth = () => bpMode === 'cpu' || bpMode === 'cpuWatch' || bpMode === 'chaos' || bpMode === 'mayhem' || bpMode === 'tag3' || bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === '2v2' || NET.role === 'host';
+const bpAuth = () => bpMode === 'cpu' || bpMode === 'cpuWatch' || bpMode === 'chaos' || bpMode === 'mayhem' || bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === '2v2' || NET.role === 'host';
 const bpSideName = side => {
   if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
   if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
   if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
   if (side === bpMySide()) return (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'))) ? '我方战队' : '你';
   if (bpMode === 'cpu' || bpMode === 'chaos' || bpMode === 'mayhem') return '电脑';
-  if (bpMode === 'tag3' || bpMode === '2v2') return '敌方战队';
+  if (bpMode === '2v2') return '敌方战队';
   const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
   return n ? String(n) : '对手';
 };
 let bpFinishTimer = null;
 function bpStart(mode, customOpts = null) {
   if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
-  if (mode === 'cpu' || mode === 'cpuWatch' || mode === 'chaos' || mode === 'mayhem' || mode === 'tag3' || mode === 'tower' || mode === 'stage' || mode === 'train' || mode === '2v2') netDropWaiting();
+  if (mode === 'cpu' || mode === 'cpuWatch' || mode === 'chaos' || mode === 'mayhem' || mode === 'tower' || mode === 'stage' || mode === 'train' || mode === '2v2') netDropWaiting();
   watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
   ensurePortraits(); chatClear();
   bpMode = mode;
   bpCustomOpts = customOpts;
-  let steps = BP_STEPS;
+  // 常规对战（人机、演武观战、联机房间、匹配、排位）：各禁 1 人、各选 2 人，蛇形顺序 0禁 → 1禁 → 0选 → 1选 → 1选 → 0选
+  let steps = BP_DUO_STEPS;
   let bans = [-1, -1];
-  let picks = [-1, -1];
+  let picks = [[-1, -1], [-1, -1]];
 
-  if (mode === 'tag3') {
-    // 3v3 门派车轮战：双方各禁 1 人 + 轮流选 3 人 (共 8 步)
-    steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
-    bans = [-1, -1];
-    picks = [[-1, -1, -1], [-1, -1, -1]];
-  } else if (mode === 'tower' || mode === 'stage' || mode === 'train') {
+  if (mode === 'tower' || mode === 'stage' || mode === 'train') {
     // 单人闯塔 / 守关挑战 / 木人试剑：免禁用直接自选出战角色 (1 步)
     steps = [[0, 'pick']];
     bans = [];
@@ -456,15 +452,18 @@ function bpStart(mode, customOpts = null) {
       steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
       bans = [-1, -1];
       picks = [[-1, -1], [-1, -1]];
-    } else if (netRoomMode === 'chaos') {
+    } else if (netRoomMode === 'chaos' || netRoomMode === 'mayhem') {
       steps = [[0, 'pick'], [1, 'pick']];
       bans = [];
       picks = [-1, -1];
-    } else {
-      steps = BP_STEPS;
-      bans = [-1, -1];
-      picks = [-1, -1];
     }
+  }
+  // 首页已经选好了出战角色：直接占住我方第一个位置（对面也禁不掉它），选人界面只剩禁用和第二人
+  const lock = customOpts && customOpts.lockFirst;
+  if ((mode === 'cpu' || mode === 'cpuWatch') && typeof lock === 'number' && lock >= 0 && lock < CHARS.length) {
+    picks[0][0] = lock;
+    const k = steps.findIndex(s => s[0] === 0 && s[1] === 'pick');
+    steps = steps.filter((s, i) => i !== k);
   }
 
   BP = {
@@ -484,6 +483,7 @@ function bpValid(i) {
   if (Array.isArray(BP.bans) && BP.bans.includes(i)) return false;
   const stepDef = bpSteps()[BP.step];
   if (!stepDef) return false;
+  if (stepDef[1] === 'ban' && isMultiPickBP() && [...BP.picks[0], ...BP.picks[1]].includes(i)) return false;   // 已经选定的人不能禁
   if (stepDef[1] === 'pick') {
     if (isMultiPickBP()) {
       const allPicked = [...(BP.picks[0] || []), ...(BP.picks[1] || [])];
@@ -549,17 +549,16 @@ function bpFinish() {
   } else if (mode === 'net') {
     if (NET.role === 'host') {
       const seed = (Math.random() * 2147483647) | 0;
-      const flatCh = Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]] : picks;
-      send({ rstart: { ch: flatCh, seed } });
-      rollStart(flatCh, seed);
+      const team = netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp';
+      const duo = Array.isArray(picks[0]) && !team ? picks : null;   // 1v1 各选 2 人：先由第一人出战
+      const flatCh = !Array.isArray(picks[0]) ? picks : team ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]] : [picks[0][0], picks[1][0]];
+      send({ rstart: duo ? { ch: flatCh, seed, duo } : { ch: flatCh, seed } });
+      rollStart(flatCh, seed, duo);
     }
   } else if (mode === 'chaos') {
     startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
   } else if (mode === 'mayhem') {
     startMayhem(picks[0], picks[1], opts.level || mayhemLevel, !!opts.isWatch);
-  } else if (mode === 'tag3') {
-    startTag3Match(picks[0], picks[1], opts.level || tag3Level, !!opts.isWatch);
-    M.bans = bans;
   } else if (mode === 'tower') {
     startTower(picks[0], !!opts.isWatch);
   } else if (mode === 'stage') {
@@ -791,23 +790,18 @@ function renderBP() {
   else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
   else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
   else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
-  else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
   else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';
   else if (bpMode === 'stage') modePrefix = '守关挑战 · ';
   else if (bpMode === 'train') modePrefix = '木人试剑 · ';
   else if (bpMode === '2v2') modePrefix = '2v2演武 · ';
 
-  const TAG3_ROLES = ['先锋', '中坚', '大将'];
-  const TEAM2_ROLES = ['先锋', '次锋'];
+  const TEAM2_ROLES = (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'))) ? ['先锋', '次锋'] : ['首发', '接力'];   // 1v1 各选 2 人：先首发，输一回合换接力的人
 
   let stepTitle = '';
   if (done) {
     stepTitle = isWatch ? '点将完成 · 演武即将开战' : '点将完成 · 准备开战';
   } else if (type === 'ban') {
     stepTitle = `${bpSideName(side)}禁用一名侠客`;
-  } else if (bpMode === 'tag3') {
-    const idxNum = (BP.picks[side] || []).filter(x => x >= 0).length;
-    stepTitle = `${bpSideName(side)}钦点【${TAG3_ROLES[idxNum] || '大将'}】出战`;
   } else if (multiPick) {
     const idxNum = (BP.picks[side] || []).filter(x => x >= 0).length;
     stepTitle = `${bpSideName(side)}钦点【${TEAM2_ROLES[idxNum] || '次锋'}】出战`;
@@ -848,15 +842,6 @@ function renderBP() {
         el.innerHTML = `<div class="who" style="color:var(--p1)">出战大侠</div>
           <div class="slots">${slot}</div>`;
       }
-    } else if (bpMode === 'tag3') {
-      const picks = BP.picks[sd] || [-1, -1, -1];
-      const slotsHtml = [0, 1, 2].map(slotIdx => {
-        const idx = picks[slotIdx];
-        const isActive = !done && side === sd && type === 'pick' && (BP.picks[sd].filter(x => x >= 0).length === slotIdx);
-        return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${TAG3_ROLES[slotIdx]} ${CHARS[idx].name}</span>` : TAG3_ROLES[slotIdx]}</div>`;
-      }).join('');
-      el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))}阵线</div>
-        <div class="slots">${banSlotHtml}${slotsHtml}</div>`;
     } else if (multiPick) {
       const picks = BP.picks[sd] || [-1, -1];
       const slotsHtml = [0, 1].map(slotIdx => {

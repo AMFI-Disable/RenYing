@@ -240,7 +240,7 @@ function applySnapshot(sn, exact) {
 function onNetMsg(msg) {
   if (msg.mstart || msg.report) return;
   if (msg.ru !== undefined) { rollRecv(msg); return; }
-  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed); return; }
+  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo); return; }
   if (msg.rsync) { rollAdopt(msg.rsync); return; }
   if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
@@ -304,7 +304,7 @@ function netTick(dt) {
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
-  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; A.meter = B.meter = 0;
+  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   if (netRoomMode === 'pp_cc') {
