@@ -83,7 +83,9 @@ try {
   Object.assign(SETTINGS, saved);
   // 消除任何旧配置里的自动/优化降级默认值，默认全部保持极高原生画质与 144 帧高刷
   if (!SETTINGS.quality || SETTINGS.quality === 'auto') SETTINGS.quality = 'high';
-  if (SETTINGS.bloom === undefined || SETTINGS.bloom === 1) SETTINGS.bloom = 1.6;
+  // 旧版默认泛光是 1，只迁移一次；之后玩家自己选的「中」（也是 1）刷新后要留着
+  if (SETTINGS.bloom === undefined || (SETTINGS.bloom === 1 && !saved.bloomMigrated)) SETTINGS.bloom = 1.6;
+  SETTINGS.bloomMigrated = true;
   const ALLOWED_FPS = [144, 120, 60, 30];
   if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
   if (saved.aim === undefined || !saved.aimMigrated) { SETTINGS.aim = true; SETTINGS.aimMigrated = true; }

@@ -882,6 +882,11 @@ function checkUrlRoom() {
   try {
     const p = new URLSearchParams(location.search);
     const rm = (p.get('room') || p.get('code') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (p.has('room') || p.has('code')) {   // 邀请码只用一次：从地址栏拿掉，刷新页面就不会再去加入已经散掉的房间
+      p.delete('room'); p.delete('code');
+      const qs = p.toString();
+      try { history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
+    }
     if (rm.length === 4) {
       if ($id('codeIn')) $id('codeIn').value = rm;
       openScreen('netp');
