@@ -316,6 +316,7 @@ function updateMatch() {
     if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
+    if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
     const team0Out = is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
     const team1Out = is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
     if (M.mode !== 'train' && (team0Out || team1Out)) {
@@ -343,7 +344,8 @@ function updateMatch() {
       if (M.timer <= 0) {
         const ra = is2v2() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
         const rb = is2v2() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
-        if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
+        if (M.mode === 'boss') timeDeath(-1, '时辰已到');
+        else if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
         else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
       }
     }
@@ -491,6 +493,7 @@ function showEnd(w) {
 function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
+  if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
   if (M.mode === 'tower') {
     if (w === 0) {
       scFire(A, 'clear');

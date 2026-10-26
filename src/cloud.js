@@ -456,6 +456,11 @@
     if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
     return api('/api/market' + (k ? '?k=' + encodeURIComponent(k) : ''), { method: 'GET' });
   }
+  // 天魔讨伐：不带 body 是看天魔（不登录也能看）；start 领出战票、hit 交伤害要云端账号
+  async function gboss(act, body) {
+    if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
+    return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
+  }
   async function flushNow() { if (pendingData && cloudActive()) await doSync(); }
   // 反作弊记录（服务器那份只能往上加）
   async function acGet() { if (!cloudActive()) return null; const r = await api('/api/ac', { method: 'GET' }); return r && r.rec ? r : null; }
@@ -1198,6 +1203,7 @@
       setEndpoint,
       econ,
       market,
+      gboss,
       flushNow,
       acGet,
       acReport,

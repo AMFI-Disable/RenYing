@@ -124,6 +124,11 @@
         <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
         <span class="hc-txt"><b>全皮肤限时免费</b><small>打 3 局人机领 1000 墨锭</small></span>
       </button>
+      <button class="home-card home-gboss tn-online" id="homeGboss" type="button" hidden>
+        <span class="hc-kicker">天魔讨伐 · 全服共斗</span>
+        <span class="hc-txt"><b id="homeGbossT"></b><small id="homeGbossS"></small></span>
+        <span class="hc-hp"><i id="homeGbossBar"></i></span>
+      </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
         <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
@@ -1008,6 +1013,16 @@
     </div>
   </div>
 
+  <div id="gboss" class="scr">
+    <div class="panel gbp">
+      <h2>天魔讨伐</h2>
+      <p class="sub">全服侠客各自出战，伤害累计在同一只天魔身上</p>
+      <div id="gbBody"></div>
+      <div class="row"><button class="go" id="gbGo" type="button" disabled>出战</button><button class="ghost" type="button" data-back>返回</button></div>
+      <p class="netnote" id="gbMsg"></p>
+    </div>
+  </div>
+
   <div id="welfare" class="scr">
     <div class="panel">
       <h2 id="wTitle">新手福利</h2>
@@ -1233,7 +1248,7 @@
 
   <div id="towerModal" class="scr">
     <div class="panel" style="max-width:700px">
-      <h2 style="color:var(--gold);font-family:var(--title)">问剑悟道 · 秘卷三选一</h2>
+      <h2 id="towerTitle" style="color:var(--gold);font-family:var(--title)">问剑悟道 · 秘卷三选一</h2>
       <p class="sub" id="towerFloorBadge" style="margin-bottom:14px">突破守关者 · 顿悟绝学</p>
       <div class="tower-choices" id="towerChoices"></div>
     </div>

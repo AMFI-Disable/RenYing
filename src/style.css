@@ -925,6 +925,35 @@
 .tower-perk-card.cursed { border-color: rgba(255, 120, 60, .55); background: linear-gradient(170deg, rgba(48, 20, 16, .94), rgba(18, 10, 10, .97)); }
 .tower-perk-card.legend { border-color: rgba(255, 215, 120, .8); box-shadow: 0 0 22px rgba(233, 196, 106, .35); }
 .tower-choices .tp-owned { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--dim); text-align: center; }
+/* 天魔讨伐 */
+.home-gboss { border-color: rgba(200,60,80,.55); background: linear-gradient(120deg, rgba(200,60,80,.16), var(--panel) 60%); }
+.home-gboss .hc-kicker { color: #ff6b7a; }
+.home-gboss .hc-hp { display: block; height: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.home-gboss .hc-hp i { display: block; height: 100%; background: linear-gradient(90deg, #ff4655, #e9c46a); transition: width .6s; }
+.gbp { max-width: 860px; text-align: left; }
+.gbp h2, .gbp > .sub { text-align: center; }
+.gb-boss { padding: 12px 14px; border: 1px solid rgba(200,60,80,.45); border-radius: 10px; background: rgba(200,60,80,.08); }
+.gb-name { font-family: var(--title); font-size: 22px; }
+.gb-name span { color: rgb(var(--hc)); }
+.gb-bar { position: relative; height: 20px; margin: 8px 0; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
+.gb-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #b8392e, #ff4655); transition: width .6s; }
+.gb-bar span { position: relative; display: block; text-align: center; font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; }
+.gb-meta { font-size: 13px; color: var(--dim); }
+.gb-meta b { color: #2bd49a; font-weight: 400; }
+.gb-affixes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.gb-affix { font-size: 12px; padding: 3px 8px; border: 1px solid rgba(255,107,122,.45); border-radius: 4px; color: var(--dim); }
+.gb-affix b { color: #ff6b7a; font-weight: 400; margin-right: 6px; }
+.gb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.gb-cols h3 { margin: 0 0 6px; font-size: 14px; color: var(--gold); font-weight: 400; }
+.gb-top td { padding: 6px 8px; font-size: 14px; }
+.gb-feed { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.gb-feed li { padding: 5px 0; border-top: 1px solid var(--faint); }
+.gb-feed small { float: right; color: var(--dim); }
+.gb-feed em { color: var(--gold); font-style: normal; }
+.gb-none { color: var(--dim); text-align: center; }
+.gb-last, .gb-rule { font-size: 12px; color: var(--dim); }
+.gb-me { margin: 10px 0 0; font-size: 14px; }
+@media (max-width: 720px) { .gb-cols { grid-template-columns: 1fr; } }
 
 
 

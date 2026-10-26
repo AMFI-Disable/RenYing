@@ -184,6 +184,7 @@ function showTowerPerkModal() {
   choicesEl.querySelectorAll('.tower-perk-card').forEach(card => {
     card.addEventListener('click', () => pickTowerPerk(card.dataset.perk));
   });
+  $id('towerTitle').textContent = '问剑悟道 · 秘卷三选一';
   const fb = document.getElementById('towerFloorBadge');
   if (fb) fb.textContent = `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
   showScreen('towerModal');
@@ -967,6 +968,7 @@ document.getElementById('goBtn').addEventListener('click', go);
 const cpuTutBtn = document.getElementById('cpuTutBtn');
 if (cpuTutBtn) cpuTutBtn.addEventListener('click', () => { initAudio(); startTutorial(); });
 document.getElementById('againBtn').addEventListener('click', () => {
+  if (M.mode === 'boss') { M.mode = 'demo'; openGboss(); startMatch('demo'); return; }   // 天魔讨伐：回讨伐页看结果
   if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
   if (M.mode === 'net' && NET.isRanked) return;   // 排位赛没有再来一场
   if (M.mode === 'net') {
@@ -1049,8 +1051,10 @@ function toMenu() {
   paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
+  if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
   M.mode = 'demo';
-  if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
+  if (prevMode === 'boss') openGboss();
+  else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
     singleSec(prevMode);
     showScreen('single');
   } else {

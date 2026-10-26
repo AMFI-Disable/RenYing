@@ -202,7 +202,7 @@ function renderMenu() {
   if (dim > 0.01) { ctx.fillStyle = `rgba(4,4,12,${dim})`; ctx.fillRect(0, 0, W, H); }
 }
 // 有自己顶栏（标题 + 返回）的页面不显示右上角账号栏，免得返回按钮和登录/退出叠在一起
-const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare'];
+const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare', 'gboss'];
 // 首页动效：一次按压只走一条时间线 —— 镜头推进、首页散场、新页面入场都在这里排好
 const MENU_DOLLY = 520;                 // 推进镜头的时长，和 CSS 里 .scr 的交接收尾对齐
 let menuLock = false;                   // 按下之后锁住悬停和连点，回到首页才解锁
@@ -378,6 +378,7 @@ function openScreen(name, reveal = true) {
   if (name === 'codex') openCodex();
   if (name === 'community') openCommunity();
   if (name === 'armory' && typeof window.openArmory === 'function') window.openArmory();
+  if (name === 'gboss') { renderGboss(); gbLoad(); gbFlush(); }
   if (reveal) showScreen(name);
   return name;
 }
@@ -442,7 +443,7 @@ let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
 $id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
 // ---------- 顶部导航 ----------
-const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
+const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
   initAudio();
   if (name === 'menu') { backToMenu(); return; }

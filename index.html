@@ -925,6 +925,34 @@ width: 100%; border-radius: 999px;
 .tower-perk-card.cursed { border-color: rgba(255, 120, 60, .55); background: linear-gradient(170deg, rgba(48, 20, 16, .94), rgba(18, 10, 10, .97)); }
 .tower-perk-card.legend { border-color: rgba(255, 215, 120, .8); box-shadow: 0 0 22px rgba(233, 196, 106, .35); }
 .tower-choices .tp-owned { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--dim); text-align: center; }
+.home-gboss { border-color: rgba(200,60,80,.55); background: linear-gradient(120deg, rgba(200,60,80,.16), var(--panel) 60%); }
+.home-gboss .hc-kicker { color: #ff6b7a; }
+.home-gboss .hc-hp { display: block; height: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.home-gboss .hc-hp i { display: block; height: 100%; background: linear-gradient(90deg, #ff4655, #e9c46a); transition: width .6s; }
+.gbp { max-width: 860px; text-align: left; }
+.gbp h2, .gbp > .sub { text-align: center; }
+.gb-boss { padding: 12px 14px; border: 1px solid rgba(200,60,80,.45); border-radius: 10px; background: rgba(200,60,80,.08); }
+.gb-name { font-family: var(--title); font-size: 22px; }
+.gb-name span { color: rgb(var(--hc)); }
+.gb-bar { position: relative; height: 20px; margin: 8px 0; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
+.gb-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #b8392e, #ff4655); transition: width .6s; }
+.gb-bar span { position: relative; display: block; text-align: center; font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; }
+.gb-meta { font-size: 13px; color: var(--dim); }
+.gb-meta b { color: #2bd49a; font-weight: 400; }
+.gb-affixes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.gb-affix { font-size: 12px; padding: 3px 8px; border: 1px solid rgba(255,107,122,.45); border-radius: 4px; color: var(--dim); }
+.gb-affix b { color: #ff6b7a; font-weight: 400; margin-right: 6px; }
+.gb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.gb-cols h3 { margin: 0 0 6px; font-size: 14px; color: var(--gold); font-weight: 400; }
+.gb-top td { padding: 6px 8px; font-size: 14px; }
+.gb-feed { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.gb-feed li { padding: 5px 0; border-top: 1px solid var(--faint); }
+.gb-feed small { float: right; color: var(--dim); }
+.gb-feed em { color: var(--gold); font-style: normal; }
+.gb-none { color: var(--dim); text-align: center; }
+.gb-last, .gb-rule { font-size: 12px; color: var(--dim); }
+.gb-me { margin: 10px 0 0; font-size: 14px; }
+@media (max-width: 720px) { .gb-cols { grid-template-columns: 1fr; } }
 .sic { display: inline-flex; align-items: center; justify-content: center; width: 1.42em; height: 1.42em; margin-right: .42em; font: 400 max(12px, 1em)/1 var(--title); font-size: max(12px, 1em); font-style: normal; color: #fbeee0; background: var(--seal); border-radius: 3px; box-shadow: inset 0 0 0 1.4px #8e2a21, inset 0 0 0 2.6px rgba(255,240,225,.42), 0 1px 3px rgba(0,0,0,.35); transform: rotate(-3deg); vertical-align: -.24em; flex: none; letter-spacing: 0; text-indent: 0; text-shadow: none; padding: 0 0 .06em; }
 .sic:nth-of-type(even) { transform: rotate(2.5deg); }
 button .sic, .ghost .sic { font-size: max(12px, 1em); }
@@ -2633,6 +2661,11 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
         <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
         <span class="hc-txt"><b>全皮肤限时免费</b><small>打 3 局人机领 1000 墨锭</small></span>
       </button>
+      <button class="home-card home-gboss tn-online" id="homeGboss" type="button" hidden>
+        <span class="hc-kicker">天魔讨伐 · 全服共斗</span>
+        <span class="hc-txt"><b id="homeGbossT"></b><small id="homeGbossS"></small></span>
+        <span class="hc-hp"><i id="homeGbossBar"></i></span>
+      </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
         <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
@@ -3517,6 +3550,16 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
     </div>
   </div>
 
+  <div id="gboss" class="scr">
+    <div class="panel gbp">
+      <h2>天魔讨伐</h2>
+      <p class="sub">全服侠客各自出战，伤害累计在同一只天魔身上</p>
+      <div id="gbBody"></div>
+      <div class="row"><button class="go" id="gbGo" type="button" disabled>出战</button><button class="ghost" type="button" data-back>返回</button></div>
+      <p class="netnote" id="gbMsg"></p>
+    </div>
+  </div>
+
   <div id="welfare" class="scr">
     <div class="panel">
       <h2 id="wTitle">新手福利</h2>
@@ -3742,7 +3785,7 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
 
   <div id="towerModal" class="scr">
     <div class="panel" style="max-width:700px">
-      <h2 style="color:var(--gold);font-family:var(--title)">问剑悟道 · 秘卷三选一</h2>
+      <h2 id="towerTitle" style="color:var(--gold);font-family:var(--title)">问剑悟道 · 秘卷三选一</h2>
       <p class="sub" id="towerFloorBadge" style="margin-bottom:14px">突破守关者 · 顿悟绝学</p>
       <div class="tower-choices" id="towerChoices"></div>
     </div>
@@ -4160,6 +4203,10 @@ const e = new Error('连不上服务器，等联网了再试'); e.status = 0; e.
 async function market(k) {
 if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
 return api('/api/market' + (k ? '?k=' + encodeURIComponent(k) : ''), { method: 'GET' });
+}
+async function gboss(act, body) {
+if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
+return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
 }
 async function flushNow() { if (pendingData && cloudActive()) await doSync(); }
 async function acGet() { if (!cloudActive()) return null; const r = await api('/api/ac', { method: 'GET' }); return r && r.rec ? r : null; }
@@ -4806,6 +4853,7 @@ getEndpoint,
 setEndpoint,
 econ,
 market,
+gboss,
 flushNow,
 acGet,
 acReport,
@@ -9023,6 +9071,7 @@ const go = M.mode === 'demo' || M.mode === 'train' ? 0.3 : 1.25 + (M.round === 1
 if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
 if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
 } else if (M.phase === 'fight') {
+if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
 const team0Out = is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
 const team1Out = is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
 if (M.mode !== 'train' && (team0Out || team1Out)) {
@@ -9050,7 +9099,8 @@ M.timer = Math.max(0, M.timer - STEP);
 if (M.timer <= 0) {
 const ra = is2v2() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
 const rb = is2v2() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
-if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
+if (M.mode === 'boss') timeDeath(-1, '时辰已到');
+else if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
 else timeDeath(ra > rb ? 0 : rb > ra ? 1 : -1, '时间到');
 }
 }
@@ -9197,6 +9247,7 @@ setTimeout(() => showScreen('end'), 300);
 function endRound() {
 const w = M.koWinner;
 if (w >= 0) M.wins[w]++;
+if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
 if (M.mode === 'tower') {
 if (w === 0) {
 scFire(A, 'clear');
@@ -15322,7 +15373,7 @@ ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
 const dim = clamp(dz / 0.9, 0, 1) * 0.22;
 if (dim > 0.01) { ctx.fillStyle = `rgba(4,4,12,${dim})`; ctx.fillRect(0, 0, W, H); }
 }
-const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare'];
+const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb', 'welfare', 'gboss'];
 const MENU_DOLLY = 520;                 // 推进镜头的时长，和 CSS 里 .scr 的交接收尾对齐
 let menuLock = false;                   // 按下之后锁住悬停和连点，回到首页才解锁
 let menuEntered = false;                // 首页入场动画是否已经播过
@@ -15487,6 +15538,7 @@ if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
 if (name === 'codex') openCodex();
 if (name === 'community') openCommunity();
 if (name === 'armory' && typeof window.openArmory === 'function') window.openArmory();
+if (name === 'gboss') { renderGboss(); gbLoad(); gbFlush(); }
 if (reveal) showScreen(name);
 return name;
 }
@@ -15547,7 +15599,7 @@ document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) { 
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
 $id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
-const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare'];
+const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
 initAudio();
 if (name === 'menu') { backToMenu(); return; }
@@ -18562,7 +18614,7 @@ document.addEventListener('touchstart', () => initAudio(), { passive: true });
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
 const prev = currentScreen; currentScreen = id;
-for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
 $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
 if (id !== 'bp') {
 try { showPop(null); } catch (e) {}
@@ -18911,6 +18963,7 @@ ${scTag(p)}
 choicesEl.querySelectorAll('.tower-perk-card').forEach(card => {
 card.addEventListener('click', () => pickTowerPerk(card.dataset.perk));
 });
+$id('towerTitle').textContent = '问剑悟道 · 秘卷三选一';
 const fb = document.getElementById('towerFloorBadge');
 if (fb) fb.textContent = `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
 showScreen('towerModal');
@@ -19629,6 +19682,7 @@ document.getElementById('goBtn').addEventListener('click', go);
 const cpuTutBtn = document.getElementById('cpuTutBtn');
 if (cpuTutBtn) cpuTutBtn.addEventListener('click', () => { initAudio(); startTutorial(); });
 document.getElementById('againBtn').addEventListener('click', () => {
+if (M.mode === 'boss') { M.mode = 'demo'; openGboss(); startMatch('demo'); return; }   // 天魔讨伐：回讨伐页看结果
 if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
 if (M.mode === 'net' && NET.isRanked) return;   // 排位赛没有再来一场
 if (M.mode === 'net') {
@@ -19710,8 +19764,10 @@ if (TUT) endTutorial();
 paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
 const prevMode = M.mode;
 if (prevMode === 'tower') saveTowerRun();
+if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
 M.mode = 'demo';
-if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
+if (prevMode === 'boss') openGboss();
+else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
 singleSec(prevMode);
 showScreen('single');
 } else {
@@ -20160,6 +20216,212 @@ function scResoLines(ids) {
 const n = {}; for (const id of ids) { const s = SC_BY[id]; if (s && SC_RESO[s.s]) n[s.s] = (n[s.s] || 0) + 1; }
 return Object.entries(n).map(([k, v]) => `${SC_SCHOOLS[k].n} ${Math.min(v, SC_RESONANCE)}/${SC_RESONANCE}${v >= SC_RESONANCE ? '：' + SC_RESO[k] : ''}`);
 }
+const GB_PENDING_KEY = 'renying-gboss-pending', GB_KILLS_KEY = 'renying-gboss-kills';
+const GB_FIGHT = 90, GB_HP_MUL = 4, GB_DRAFT = 3;
+const GB = { st: null, at: 0, err: '', loading: false, ticket: null, dmg: 0, lastHp: 0, phase: 1, saveT: 0, picks: [], result: null, sending: false, retry: null };
+function gbossKills() {
+if (GB.st) return GB.st.kills | 0;
+try { return Math.max(0, parseInt(localStorage.getItem(GB_KILLS_KEY) || '0', 10) || 0); } catch (e) { return 0; }
+}
+const gbCloud = () => !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
+const gbUid = () => { const u = gbCloud() && CloudSave.getUser(); return (u && u.uid) || ''; };
+const gbHeroIdx = id => Math.max(0, CHARS.findIndex(c => c.id === id));
+const gbAffix = st => ((st && st.boss && st.boss.affix) || []).filter(id => SC_BY[id]);
+function gbAgo(t, now) {
+const s = Math.max(0, Math.round((now - t) / 1000));
+return s < 60 ? '刚刚' : s < 3600 ? `${Math.floor(s / 60)} 分钟前` : s < 86400 ? `${Math.floor(s / 3600)} 小时前` : `${Math.floor(s / 86400)} 天前`;
+}
+function gbLeft(ms) {
+const h = Math.max(0, Math.floor(ms / 3600e3));
+return h >= 24 ? `${Math.floor(h / 24)} 天 ${h % 24} 小时` : h >= 1 ? `${h} 小时` : `${Math.max(1, Math.ceil(ms / 60e3))} 分钟`;
+}
+function gbAdopt(st) {
+if (!st || !st.boss) return;
+GB.st = st; GB.at = Date.now(); GB.err = '';
+try { localStorage.setItem(GB_KILLS_KEY, String(st.kills | 0)); } catch (e) {}
+gbHome();
+if (currentScreen === 'gboss') renderGboss();
+}
+async function gbLoad() {
+if (OFFLINE_BUILD || !window.CloudSave || !CloudSave.gboss || GB.loading) return;
+GB.loading = true;
+try { gbAdopt(await CloudSave.gboss()); }
+catch (e) { GB.err = e.status === 429 ? '刷新太快了，稍后再看' : '连不上服务器，天魔的情况暂时看不到'; if (currentScreen === 'gboss') renderGboss(); }
+GB.loading = false;
+}
+function gbHome() {
+const el = $id('homeGboss'); if (!el) return;
+const st = GB.st;
+if (!st || OFFLINE_BUILD) { el.hidden = true; return; }
+const b = st.boss, pct = Math.ceil(b.hp / b.maxHp * 100);
+el.hidden = false;
+$id('homeGbossT').textContent = `第 ${b.gen} 代天魔 · ${CHARS[gbHeroIdx(b.hero)].name}`;
+$id('homeGbossS').textContent = `剩 ${pct}% 血 · ${st.players} 人参战` + (st.fighting ? ` · ${st.fighting} 人正在出战` : '');
+$id('homeGbossBar').style.width = pct + '%';
+}
+function openGboss() { showScreen('gboss'); renderGboss(); gbLoad(); gbFlush(); }
+function renderGboss() {
+const body = $id('gbBody'); if (!body) return;
+const st = GB.st, now = Date.now(), esc = escapeHTML;
+const pend = gbPending();
+$id('gbMsg').textContent = pend && pend.uid === gbUid() ? (GB.sending ? '正在补交上次出战的伤害…' : '上次出战的伤害还没交上去，联网后会自动补交') : '';
+if (!st) { body.innerHTML = `<p class="sub">${esc(GB.err || '正在查看天魔的情况…')}</p>`; $id('gbGo').disabled = true; return; }
+const b = st.boss, hero = CHARS[gbHeroIdx(b.hero)], pct = b.hp / b.maxHp * 100;
+const off = now - GB.at;   // 服务器时间换成本机时间
+const affix = gbAffix(st).map(id => `<span class="gb-affix" title="${esc(SC_BY[id].d)}"><b>${esc(SC_BY[id].n)}</b>${esc(SC_BY[id].d)}</span>`).join('');
+const top = st.top.length ? st.top.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${esc(r.name)}</td><td class="n">${r.dmg.toLocaleString()}</td><td class="n">${r.runs} 次</td></tr>`).join('')
+: '<tr><td colspan="4" class="gb-none">这一代还没有人出战，第一刀等你来砍</td></tr>';
+const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> 造成 ${r.dmg.toLocaleString()} 伤害${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : '<li class="gb-none">还没有战报</li>';
+const last = st.last ? `上一代（${esc(CHARS[gbHeroIdx(st.last.hero)].name)}）${st.last.killed ? `被 <b>${esc(st.last.killer)}</b> 斩杀` : '没被打死，遁走了'}` : '';
+const me = !gbCloud() ? '登录云端账号才能出战（游客和本机存档只能观战）'
+: st.me && st.me.runs ? `你这一代造成 ${st.me.dmg.toLocaleString()} 伤害（出战 ${st.me.runs} 次）` : '你这一代还没出战';
+body.innerHTML = `
+<div class="gb-boss" style="--hc:${hero.look.slash}">
+<div class="gb-name">第 ${b.gen} 代天魔 · <span>${esc(hero.name)}</span></div>
+<div class="gb-bar"><i style="width:${pct.toFixed(2)}%"></i><span>${b.hp.toLocaleString()} / ${b.maxHp.toLocaleString()}</span></div>
+<div class="gb-meta">${st.players} 人参战${st.fighting ? ` · <b>${st.fighting} 人正在出战</b>` : ''} · ${gbLeft(b.until - st.now - off)}后遁走 · 全服已斩杀 ${st.kills} 代（解锁 ${Math.min(st.kills, 10)} 卷天书）</div>
+<div class="gb-affixes">${affix}</div>
+</div>
+<div class="gb-cols">
+<div><h3>伤害榜</h3><table class="lbt gb-top">${top}</table></div>
+<div><h3>最近战报</h3><ul class="gb-feed">${feed}</ul>${last ? `<p class="gb-last">${last}</p>` : ''}</div>
+</div>
+<p class="gb-me">${me}</p>
+<p class="gb-rule">大家各自出战（不是同场联机），伤害都扣在这一只天魔身上。一次出战先抽三卷秘卷，再打 ${GB_FIGHT} 秒，天魔倒下会再站起来。天魔被斩杀或遁走后，按伤害发墨锭，伤害前三和斩杀者另得一个武器箱，下次打开武库自动领取。</p>`;
+$id('gbGo').disabled = !gbCloud() || !!(pend && pend.uid === gbUid());
+}
+function gbPending() { try { const p = JSON.parse(localStorage.getItem(GB_PENDING_KEY) || 'null'); return p && /^[0-9a-f]{20}$/.test(p.id) ? p : null; } catch (e) { return null; } }
+function gbSavePending(p) { try { if (p) localStorage.setItem(GB_PENDING_KEY, JSON.stringify(p)); else localStorage.removeItem(GB_PENDING_KEY); } catch (e) {} }
+async function gbFlush(n = 0) {
+const p = gbPending();
+if (!p || GB.sending || !gbCloud() || p.uid !== gbUid()) return null;
+if (GB.ticket && GB.ticket.id === p.id && M.mode === 'boss' && M.phase !== 'end') return null;   // 还在打这一场
+GB.sending = true; clearTimeout(GB.retry);
+let res = null;
+try {
+res = await CloudSave.gboss('hit', { id: p.id, dmg: Math.max(0, Math.round(p.dmg || 0)) });
+gbSavePending(null);
+GB.result = res; gbAdopt(res);
+} catch (e) {
+if (e.status >= 400 && e.status < 500 && e.status !== 429 && e.status !== 401) gbSavePending(null);   // 票不对、找不到：交不上了
+else if (n < 4) GB.retry = setTimeout(() => gbFlush(n + 1), [2e3, 5e3, 10e3, 20e3][n]);
+res = { err: e };
+}
+GB.sending = false; GB.res = res;
+if (currentScreen === 'gboss') renderGboss();
+if (M.mode === 'boss' && M.phase === 'end') gbEndText();
+return res;
+}
+async function gbossGo() {
+if (!gbCloud()) { $id('gbMsg').textContent = '登录云端账号才能出战'; return; }
+if (menuHeroId < 0) setMenuHero(menuHeroPick());
+$id('gbGo').disabled = true; $id('gbMsg').textContent = '正在领出战令…';
+let st;
+try { st = await CloudSave.gboss('start'); }
+catch (e) { $id('gbMsg').textContent = e.message || '出战失败'; $id('gbGo').disabled = false; return; }
+gbAdopt(st);
+initAudio(); paused = false;
+GB.ticket = { id: st.ticket, gen: st.boss.gen, hero: st.boss.hero, maxHp: st.boss.maxHp };
+GB.dmg = 0; GB.phase = 1; GB.picks = []; GB.result = null; GB.res = null; GB.saveT = 0;
+gbSavePending({ id: st.ticket, uid: gbUid(), gen: st.boss.gen, dmg: 0, at: Date.now() });
+M.mode = 'boss'; M.round = 1; M.wins = [0, 0]; M.level = 'hard'; M.stage = null; M.watchAi = false; M.duo = null; M.carry = null; M.quick = false;
+M.towerPerks = []; M.foeScrolls = gbAffix(st); M.scRun = {};
+setChars(menuHeroId, gbHeroIdx(st.boss.hero));
+A.ctrl = human[0]; B.ctrl = new AICtrl('hard');
+A.meter = B.meter = 0;
+human[0].clear(); human[1].clear();
+showScreen(null);
+startRound();
+M.phase = 'draft'; paused = true;
+gbDraft();
+}
+function gbDraft() {
+const picked = scDraw(A.ch.id, M.towerPerks, 3);
+if (GB.picks.length >= GB_DRAFT || !picked.length) { gbFight(); return; }
+const reso = scResoLines(M.towerPerks);
+$id('towerTitle').textContent = '天魔讨伐 · 出战前抽秘卷';
+$id('towerFloorBadge').textContent = `第 ${GB.picks.length + 1} / ${GB_DRAFT} 卷 · 天魔词缀：${M.foeScrolls.map(id => SC_BY[id].n).join('、') || '无'}`;
+const el = $id('towerChoices');
+el.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}" data-perk="${p.id}">
+<div class="tp-icon">${scIcon(p)}</div>
+<div class="tp-name">「${p.n}」</div>
+${scTag(p)}
+<div class="tp-desc">${p.d}</div>
+<button class="go small tp-pick" type="button">带上这卷</button>
+</div>`).join('') + (M.towerPerks.length ? `<p class="tp-owned">已带 ${M.towerPerks.length} 卷${reso.length ? ' · ' + reso.join(' · ') : ''}</p>` : '');
+el.querySelectorAll('.tower-perk-card').forEach(card => card.addEventListener('click', () => gbPick(card.dataset.perk)));
+showScreen('towerModal');
+}
+function gbPick(id) {
+if (M.mode !== 'boss' || M.phase !== 'draft' || !SC_BY[id] || M.towerPerks.includes(id)) return;
+M.towerPerks.push(id); GB.picks.push(id);
+gbDraft();
+}
+function gbFight() {
+showScreen(null);
+paused = false;
+startRound();   // 秘卷和天魔词缀的开局效果在这里生效
+B.maxHp = Math.round(B.maxHp * GB_HP_MUL); B.hp = B.lagHp = B.maxHp;
+GB.lastHp = B.hp;
+M.timer = GB_FIGHT;
+say(`天魔讨伐 · 第 ${GB.ticket.gen} 代`, 1.4);
+}
+function gbossStep() {
+const d = GB.lastHp - Math.max(0, B.hp);
+if (d > 0) GB.dmg += d;
+if (B.hp <= 0 && A.hp > 0) {
+GB.phase++;
+B.hp = B.lagHp = B.maxHp; B.invul = 1.2; B.st = {};
+B.ctrl = new AICtrl(GB.phase >= 4 ? 'god' : GB.phase >= 3 ? 'impossible' : 'hard');
+if (!RESIM) ring(B.x, B.y - 60, 260, '200,60,80', 0.7);
+say(`天魔 · 第${CN[GB.phase] || GB.phase}重`, 1.2);
+}
+GB.lastHp = Math.max(0, B.hp);
+GB.saveT += STEP;
+if (GB.saveT >= 1) { GB.saveT = 0; gbKeep(); }
+}
+function gbKeep() {
+const p = gbPending();
+if (p && GB.ticket && p.id === GB.ticket.id) { p.dmg = Math.round(GB.dmg); gbSavePending(p); }
+}
+function gbossFinish(why) {
+if (!GB.ticket) return;
+M.phase = 'end';
+gbKeep();
+GB.why = why;
+if (why !== 'quit') {
+playSting(why === 'time' ? 'victory' : 'defeat');
+const again = $id('againBtn');
+again.style.display = ''; again.disabled = false; again.textContent = '回到天魔讨伐';
+$id('netRepickBtn').classList.add('hidden');
+$id('endTitle').textContent = why === 'time' ? '时辰已到 · 撑满全场' : '力竭倒下';
+$id('endTitle').className = ''; $id('endTitle').style.color = 'var(--gold)';
+gbEndText();
+setTimeout(() => showScreen('end'), 300);
+}
+gbFlush();
+}
+function gbEndText() {
+const res = GB.res;
+const dmg = Math.round(GB.dmg);
+$id('endSub').textContent = `这一战对天魔造成 ${dmg.toLocaleString()} 伤害，打倒它 ${GB.phase - 1} 次`;
+let t = '正在把伤害交给服务器…';
+if (res && res.err) t = res.err.status >= 400 && res.err.status < 500 && res.err.status !== 429 ? `交不上：${res.err.message}` : '网络断了：伤害已存在本机，联网后自动补交';
+else if (res && res.credited !== undefined) {
+const lateGen = res.tryGen && res.boss && res.tryGen !== res.boss.gen;
+t = res.killed ? `计入全服 ${res.credited.toLocaleString()} 伤害，最后一击斩杀了第 ${res.tryGen} 代天魔！奖励下次打开武库自动领取`
+: res.late ? '出战太久没交，这次不计入'
+: res.credited <= 0 && lateGen ? `你出战时第 ${res.tryGen} 代天魔已被别人斩杀，这次伤害没有计入`
+: `已计入全服：${res.credited.toLocaleString()} 伤害${res.capped ? '（超过这次出战时长能打出的上限，按上限算）' : ''}`;
+}
+$id('endRank').textContent = t;
+}
+function gbossQuit() { if (M.mode === 'boss' && M.phase !== 'end') gbossFinish('quit'); }
+$id('gbGo').addEventListener('click', () => { SFX.slice && SFX.slice(); gbossGo(); });
+$id('homeGboss').addEventListener('click', () => { SFX.slice && SFX.slice(); navTo('gboss'); });
+setTimeout(() => { gbLoad(); gbFlush(); }, 1500);
+window.addEventListener('pagehide', () => { if (M.mode === 'boss' && M.phase !== 'end') gbKeep(); });   // 关网页、刷新前把最后这一秒的伤害也存上
+setInterval(() => { if (currentScreen === 'gboss' || currentScreen === 'menu') gbLoad(); }, 30000);
 const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s', 0.08, 0], ['l2a', 0.15, 16], ['lcs', 0.08, 0], ['lca', 0.15, 16],
 ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
 ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],
