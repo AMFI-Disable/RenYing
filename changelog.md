@@ -6,6 +6,14 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Added
+
+- **Keyboard-only play, issue #4 (`src/game/26-kbnav.js`)**: every menu, dialog, the ban/pick screen, pause, settings, results, story choices and tower scrolls work without a mouse. Arrow keys or WASD move a gold selection frame by screen position, Enter / Space press the selected item, Esc closes the dialog or goes back, Tab walks in order. Clicking or touching hides the frame; mouse and touch work as before. On the ban/pick screen, Enter on a card selects it and Enter again confirms. 1P gets a keyboard attack key, `X` by default (hold to charge), rebindable in settings; no other player's layout uses it.
+
+### Changed
+
+- **2v2 is two players per team (`src/game/22-modes.js`, `src/page.html`)**: the formats are two players vs two computers and two players vs two players; the player + computer teammate format is removed. 2v2 has one entry, the 2v2 card on the battle page (the single-player page in the offline build), which opens one dialog: pick the format, then same computer, server matchmaking or a friend room. The separate 2v2 page in single-player mode is gone. Spectating four AIs stays as a link in the dialog. Gameplay, hero stats and balance are unchanged.
+
 ---
 
 ## [1.0.0] - 2026-10-26

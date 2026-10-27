@@ -585,10 +585,9 @@ const testSuite = [
   {
     name: '2v2 Single KO Survival: One fighter dying does not trigger KO when teammate is alive',
     fn: `(() => {
-      // Test player 2v2 modes: pc_cc, pp_cc, pp_pp
-      for (const mode of ['pc_cc', 'pp_cc', 'pp_pp']) {
-        if (mode === 'pc_cc') start2v2PlayerMatch(0, 2, 1, 3, 'normal');
-        else if (mode === 'pp_cc') start2v2LocalCoop(0, 2, 1, 3, 'normal');
+      // Test player 2v2 modes: pp_cc, pp_pp
+      for (const mode of ['pp_cc', 'pp_pp']) {
+        if (mode === 'pp_cc') start2v2LocalCoop(0, 2, 1, 3, 'normal');
         else start2v2LocalVs(0, 2, 1, 3);
 
         M.phase = 'fight';
@@ -653,28 +652,16 @@ const testSuite = [
     })()`
   },
   {
-    name: '2v2 P&CvC&C Mode: 1P player controls A, AI teammate controls C, 2 AI opponents control B & D',
+    name: '2v2 is only P&PvC&C or P&PvP&P: the player + AI teammate mode is gone, 2v2 runs on the 2600 arena',
     fn: `(() => {
-      start2v2PlayerMatch(0, 2, 1, 3, 'normal');
-      if (M.mode !== '2v2' || M.subMode !== 'pc_cc' || M.watchAi) {
-        return { pass: false, error: 'P&CvC&C mode state flags mismatch' };
+      if (typeof start2v2PlayerMatch !== 'undefined') return { pass: false, error: 'player + AI teammate 2v2 (pc_cc) should be removed' };
+      for (const sub of ['pp_cc', 'pp_pp']) {
+        if (sub === 'pp_cc') start2v2LocalCoop(0, 2, 1, 3, 'normal'); else start2v2LocalVs(0, 2, 1, 3);
+        if (STAGE_W !== 2600) return { pass: false, error: 'Expected 2600 stage width in 2v2 ' + sub + ', got: ' + STAGE_W };
+        if (A.ctrl !== human[0] || C.ctrl !== human[1]) return { pass: false, error: sub + ': 1P and 2P should control A and C' };
+        if (isAiVsAi()) return { pass: false, error: sub + ': isAiVsAi() should be false when players participate' };
+        toMenu();
       }
-      if (STAGE_W !== 2600) {
-        return { pass: false, error: 'Expected 2600 stage width in 2v2, got: ' + STAGE_W };
-      }
-      if (A.ctrl !== human[0]) {
-        return { pass: false, error: 'Player 1 should control fighter A via human[0]' };
-      }
-      if (!(C.ctrl instanceof AICtrl)) {
-        return { pass: false, error: 'Teammate C should be controlled by AICtrl' };
-      }
-      if (!(B.ctrl instanceof AICtrl) || !(D.ctrl instanceof AICtrl)) {
-        return { pass: false, error: 'Opponents B and D should be controlled by AICtrl' };
-      }
-      if (isAiVsAi()) {
-        return { pass: false, error: 'isAiVsAi() should be false when player participates' };
-      }
-      toMenu();
       return { pass: true, error: null };
     })()`
   },

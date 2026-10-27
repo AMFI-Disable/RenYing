@@ -2582,6 +2582,24 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
 .trow > .rw { grid-area: rw; }
 .trow > div:last-child { grid-area: act; }
 }
+.m2-panel { max-width: 640px; }
+.m2-body { padding: 4px 4px 6px; }
+.m2-seg { display: flex; margin: 4px 0 10px; }
+.m2-seg button { flex: 1; }
+.m2-desc { margin: 0 0 12px; text-align: left; color: rgba(236,232,225,.85); }
+#m2LvWrap[hidden] { display: none; }
+.m2-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 6px 0 12px; }
+.m2-way { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px 14px; cursor: pointer;
+color: var(--ink); background: linear-gradient(160deg, rgba(36,49,67,.92), rgba(19,27,39,.94)); border: 1px solid var(--x-line, rgba(236,226,204,.18)); font-family: var(--body); transition: border-color .15s, background .15s; }
+.m2-way b { font: 400 17px/1.2 var(--title); color: var(--gold); letter-spacing: .06em; }
+.m2-way span { font-size: 12px; line-height: 1.45; color: rgba(236,232,225,.75); }
+.m2-way:hover { border-color: rgba(233,196,106,.6); background: linear-gradient(160deg, rgba(46,61,82,.94), rgba(23,32,46,.95)); }
+.m2-foot { text-align: center; }
+body.kbnav :focus, body.kbnav :focus-visible { outline: none !important; }
+#kbRing { position: fixed; z-index: 9999; pointer-events: none; display: none; border: 2px solid var(--gold); border-radius: 4px;
+box-shadow: 0 0 0 3px rgba(233,196,106,.22), 0 0 18px rgba(233,196,106,.45); transition: left .09s ease-out, top .09s ease-out, width .09s ease-out, height .09s ease-out; }
+body.kbnav #kbRing.on { display: block; }
+@media (prefers-reduced-motion: reduce) { #kbRing { transition: none; } }
 </style>
 </head>
 <body>
@@ -2718,7 +2736,7 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
       </div>
     </div>
     <button class="mcard left" id="mSingle" data-go="single"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
-    <button class="mcard right" id="mNet" data-go="netp"><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
+    <button class="mcard right" id="mNet" data-go="netp" data-kb-default><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走 -->
       <div class="hh-name" id="heroName"></div>
       <button class="hh-go" id="heroGo" type="button">开始人机对战</button>
@@ -2753,7 +2771,7 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
           <button data-tab="chaos" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
           <button data-tab="tag3" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
           <button data-tab="mayhem" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
-          <button data-tab="watch2v2" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 演武</button>
+          <button data-tab="watch2v2" data-cat="special" class="tn-offline" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 组队</button>
         </div>
       </div>
 
@@ -2903,7 +2921,7 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
           <button data-tmode="chaos" type="button">天机乱斗 · 突变天道</button>
           <button data-tmode="tag3" type="button">3v3车轮 · 绝境天道</button>
           <button data-tmode="mayhem" type="button">通天神决 · 狂暴天道</button>
-          <button data-tmode="watch2v2" type="button">2v2演武 · 天道同台</button>
+          <button data-tmode="watch2v2" type="button">2v2 双人 · 对天道</button>
         </div>
         <div id="dummyFeatWrap">
           <div class="sec-sub-label">木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）</div>
@@ -3020,72 +3038,6 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
         </div>
       </div>
 
-      <div data-sec="watch2v2" class="single-sec-pane" style="display:none">
-        <div class="sec-head-row">
-          <h3 class="spt">2v2 巅峰演武 · 阔野奇阵</h3>
-          <span class="sub-badge">双人协同 · 2600尺阔野战场 · 灵泉神坛</span>
-        </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">双人同舟，驰骋阔野！擂台扩阔至 2600 尺，两侧设【御风灵泉】，中央【天道剑坛】定时刷出神符灵丹，并伴随【天劫剑雨】！</p>
-
-        <!-- 2v2 演武模式三大直选切槽：单人出战 / 本地同屏 / 天道观战 -->
-        <div class="sec-sub-label" style="margin-top:10px">对决模式选择</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-bottom:14px" id="single2v2Modes">
-          <button class="mcard sel" id="single2v2SoloBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid #e9c46a;background:rgba(233,196,106,0.12);text-align:left;cursor:pointer">
-            <b style="color:var(--gold);font-size:15px;display:block;margin-bottom:4px">👤 单人出战 (人机协同)</b>
-            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">你 + 电脑队友 vs 双电脑（进入点将台禁选）</span>
-          </button>
-          <button class="mcard" id="single2v2LocalCoopBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
-            <b style="color:#7fe0b0;font-size:15px;display:block;margin-bottom:4px">👥 本地双人破阵 (同袍共斗)</b>
-            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">同台电脑键盘 1P+2P 组队 vs 双天道 AI</span>
-          </button>
-          <button class="mcard" id="single2v2LocalVsBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
-            <b style="color:#ffb142;font-size:15px;display:block;margin-bottom:4px">⚔️ 本地四方争锋 (四人对决)</b>
-            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">同屏 4 玩家键位切磋（苍龙 1P/2P vs 赤凤 3P/4P）</span>
-          </button>
-          <button class="mcard" id="single2v2WatchTabBtn" type="button" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);text-align:left;cursor:pointer">
-            <b style="color:#d946ef;font-size:15px;display:block;margin-bottom:4px">👁️ 天道演武 (4 机纯观战)</b>
-            <span style="font-size:12px;color:rgba(239,232,216,0.7);line-height:1.4;display:block">4 位天道顶尖神级 AI 自动 6 步蛇形禁选并死斗</span>
-          </button>
-        </div>
-
-        <!-- 难度境界选择（仅在单人出战与本地双人破阵生效） -->
-        <div id="single2v2LevelWrap">
-          <div class="sec-sub-label">电脑对手境界</div>
-          <div class="levels-grid" id="single2v2Levels">
-            <button data-lv="easy" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-              <span class="lv-sub">反应迟缓 · 初学练手</span>
-            </button>
-            <button data-lv="normal" class="sel" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-              <span class="lv-sub">见招拆招 · 攻守均衡</span>
-            </button>
-            <button data-lv="hard" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-              <span class="lv-sub">凌厉反击 · 连招压制</span>
-            </button>
-            <button data-lv="impossible" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-              <span class="lv-sub">极境宗师 · 绝无破绽</span>
-            </button>
-            <button data-lv="god" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-              <span class="lv-sub">神经网络 · 协同战术</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 观战步骤指示区 (仅观战时展开) -->
-        <div id="single2v2WatchSteps" style="display:none;margin-top:10px">
-          <div class="sec-sub-label">天道 2v2 标准蛇形禁选顺序（共 6 步 · 全局互不重复）</div>
-          <div id="watch2v2Slots" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:10px 0 14px"></div>
-        </div>
-
-        <div class="single-action-row" style="margin-top:14px">
-          <button class="go" id="single2v2ActionBtn" type="button">进入 2v2 点将台 · 开启对决</button>
-        </div>
-      </div>
-
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
     </div>
   </div>
@@ -3136,16 +3088,12 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
           <div class="mm-card mm-2v2" id="mm2v2Card">
             <div class="mm-card-bg" aria-hidden="true"></div>
             <span class="mm-kicker">全网连线 · 协同决战</span>
-            <span class="mm-title">2v2 在线开黑</span>
+            <span class="mm-title">2v2 组队</span>
             <span class="mm-en">2V2 MULTIPLAYER</span>
-            <span class="mm-desc">通过全网撮合或好友密令连线，携手真人同袍共破天道，或两队四人同台线上对决！</span>
+            <span class="mm-desc">同一台电脑、全服匹配、好友房间都从这里进。两人一队，打两个电脑或者打另外两个玩家。</span>
             <div class="mm-2v2-actions">
-              <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>双人破阵 · 在线共斗</span><span class="go-sub">2人连线组队 vs 双天道 AI</span></button>
-              <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>四方争锋 · 联机对决</span><span class="go-sub">2人 vs 2人 巅峰网络对战</span></button>
-              <button class="mm-link" id="mm2v2LobbyRoomBtn" type="button" style="text-align:center;padding:6px;color:var(--gold);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:4px">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                密令建房 / 输入房间号加入
-              </button>
+              <button class="mm-go" id="mm2v2CoopBtn" type="button"><span>两人 vs 两电脑</span><span class="go-sub">和队友一起打两个电脑</span></button>
+              <button class="mm-go alt" id="mm2v2VsBtn" type="button"><span>两人 vs 两人</span><span class="go-sub">两队四个玩家对打</span></button>
             </div>
           </div>
         </div>
@@ -3313,70 +3261,6 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
           <div id="rkInfoBody"></div>
         </div>
       </div>
-      <!-- 2v2 玩法选择模态弹窗 -->
-      <div class="rk-info hidden" id="modal2v2" role="dialog" aria-modal="true" aria-label="2v2 玩法模式选择">
-        <div class="rk-info-panel" style="max-width:580px">
-          <div class="rk-info-head">
-            <b id="modal2v2Title">2v2 协同决战 · 模式选择</b>
-            <button class="mm-cancel" id="modal2v2Close" type="button">关闭</button>
-          </div>
-          <div style="padding:16px 20px 20px" id="modal2v2Body">
-            <p class="sub" id="modal2v2Desc" style="margin:0 0 16px;text-align:left;color:rgba(236,232,225,0.85)">
-              选择进入对决的方式：
-            </p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px" id="modal2v2Options">
-              <div class="ink-card" id="modal2v2MatchCard" style="--card-c:rgb(56,217,118)">
-                <h4>⚡ 全服快速匹配</h4>
-                <p id="modal2v2MatchDesc">全网自动撮合队友与对手，即刻切磋！</p>
-                <button class="go small" id="btn2v2GoMatch" type="button">快速匹配</button>
-              </div>
-              <div class="ink-card" id="modal2v2OnlineCard" style="--card-c:rgb(70,211,234)">
-                <h4>🌐 设擂密令开黑</h4>
-                <p>生成 4 位房间码分享好友，约战同袍。</p>
-                <button class="go small" id="btn2v2GoOnline" type="button">设擂开黑</button>
-              </div>
-              <div class="ink-card" id="modal2v2LocalCard" style="--card-c:rgb(233,196,106)">
-                <h4>⚔️ 同屏本地开黑</h4>
-                <p id="modal2v2LocalDesc">同台电脑键盘对决（1P/2P 合作或对决）。</p>
-                <button class="go small" id="btn2v2GoLocal" type="button">本地开战</button>
-              </div>
-              <div class="ink-card" id="modal2v2WatchCard" style="--card-c:rgb(180,120,255)">
-                <h4>👁️ 天道演武 · 纯观战</h4>
-                <p>4 位天道顶尖神级 AI 自动 6 手禁选、协同互搏，坐观神仙打架！</p>
-                <button class="go small btn-watch" id="btn2v2GoWatch" type="button">开启观战</button>
-              </div>
-            </div>
-            <div id="modal2v2Solo" hidden>
-              <div class="sec-sub-label">电脑队友和对手的境界</div>
-              <div class="levels-grid" id="solo2v2Levels">
-                <button data-lv="easy" type="button">
-                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-                  <span class="lv-sub">反应迟缓 · 初学练手</span>
-                </button>
-                <button data-lv="normal" class="sel" type="button">
-                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-                  <span class="lv-sub">见招拆招 · 攻守均衡</span>
-                </button>
-                <button data-lv="hard" type="button">
-                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-                  <span class="lv-sub">凌厉反击 · 连招压制</span>
-                </button>
-                <button data-lv="impossible" type="button">
-                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-                  <span class="lv-sub">极境宗师 · 绝无破绽</span>
-                </button>
-                <button data-lv="god" type="button">
-                  <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-                  <span class="lv-sub">神经网络 · 协同战术</span>
-                </button>
-              </div>
-              <div class="single-action-row">
-                <button class="go" id="btn2v2GoSolo" type="button">进入点将台</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -3389,8 +3273,8 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
           <dt>移动</dt><dd><kbd>A</kbd> <kbd>D</kbd></dd>
           <dt>跳跃</dt><dd><kbd>W</kbd> 或 <kbd>空格</kbd>，可二段跳；燕翎在空中按住可以飞</dd>
           <dt>防御</dt><dd><kbd>S</kbd> 按住</dd>
-          <dt>攻击</dt><dd>鼠标左键，连点五段</dd>
-          <dt>蓄力斩</dt><dd>按住左键蓄力，松开便出；蓄力时能缓步挪动</dd>
+          <dt>攻击</dt><dd>鼠标左键或 <kbd>X</kbd>，连点五段</dd>
+          <dt>蓄力斩</dt><dd>按住左键（或 <kbd>X</kbd>）蓄力，松开便出；蓄力时能缓步挪动</dd>
           <dt>远程招式</dt><dd>按住左键再点右键（或 <kbd>R</kbd>），各家不同</dd>
           <dt>腾空闪</dt><dd>点一下鼠标右键（或 <kbd>左 Shift</kbd>），任何状态都能用</dd>
           <dt>朝向</dt><dd>最后按的是 <kbd>A</kbd> 就朝左，是 <kbd>D</kbd> 就朝右；按住防御时自动面向对手（设置里可以改成一直自动面向对手）</dd>
@@ -3398,6 +3282,7 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
           <dt>大招</dt><dd><kbd>E</kbd>，气满时</dd>
           <dt>回合</dt><dd>50 秒内击倒对手才算赢；没分出胜负就进 20 秒加时，加时里伤害翻倍。活下来的人带着剩余血量 +80 进下一回合，倒下的人满血再来</dd>
           <dt>木人桩</dt><dd>练习时按 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 切换：任打不还手 / 一味死守 / 被连便闪 / 钉在原地</dd>
+          <dt>只用键盘</dt><dd>菜单、选人、暂停和结算页：方向键或 <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> 移动金色选中框，<kbd>Enter</kbd> 或 <kbd>空格</kbd> 确认，<kbd>Esc</kbd> 返回；对局里用 <kbd>X</kbd> 攻击，全程不用鼠标</dd>
         </dl></div>
       </div>
       <p class="tips touchonly"><b>手机操作</b>：左边摇杆移动（往下推防御，往上推跳）。右边按键：<b>攻击</b>（点是普攻，按住蓄力、松开出蓄力斩）、<b>跳</b>、<b>远程</b>、<b>技能</b>、<b>闪</b>（腾空闪）、<b>大招</b>（气满时发光）。左上角暂停。</p>
@@ -3797,6 +3682,55 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
   <div class="tutbox hidden" id="tutBox"><div class="tn" id="tutN"></div><div class="tt" id="tutT"></div><div class="td" id="tutD"></div></div>
   <div class="toast" id="toast"></div>
   <div class="rk-reveal hidden" id="rkReveal" role="dialog" aria-modal="true" aria-label="段位"></div>
+  <!-- 2v2 组队：唯一的 2v2 入口（对战页的 2v2 卡片打开它；离线版从单人页打开）。先选对阵，再选在哪打 -->
+  <div class="rk-info hidden" id="modal2v2" role="dialog" aria-modal="true" aria-label="2v2 组队">
+    <div class="rk-info-panel m2-panel">
+      <div class="rk-info-head">
+        <b id="modal2v2Title">2v2 组队</b>
+        <button class="mm-cancel" id="modal2v2Close" type="button">关闭</button>
+      </div>
+      <div class="m2-body" id="modal2v2Body">
+        <div class="sec-sub-label">对阵</div>
+        <div class="seg m2-seg" id="modal2v2Seg">
+          <button data-m="pp_cc" class="sel" type="button">两人 vs 两电脑</button>
+          <button data-m="pp_pp" type="button">两人 vs 两人</button>
+        </div>
+        <p class="sub m2-desc" id="modal2v2Desc"></p>
+        <div id="m2LvWrap">
+          <div class="sec-sub-label">电脑的境界</div>
+          <div class="levels-grid" id="m2Levels">
+            <button data-lv="easy" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+              <span class="lv-sub">反应迟缓 · 初学练手</span>
+            </button>
+            <button data-lv="normal" class="sel" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+              <span class="lv-sub">见招拆招 · 攻守均衡</span>
+            </button>
+            <button data-lv="hard" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+              <span class="lv-sub">凌厉反击 · 连招压制</span>
+            </button>
+            <button data-lv="impossible" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+              <span class="lv-sub">极境宗师 · 绝无破绽</span>
+            </button>
+            <button data-lv="god" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+              <span class="lv-sub">神经网络 · 协同战术</span>
+            </button>
+          </div>
+        </div>
+        <div class="sec-sub-label">在哪打</div>
+        <div class="m2-ways" id="modal2v2Options">
+          <button class="m2-way" id="btn2v2GoLocal" type="button" data-kb-default><b>同一台电脑</b><span id="modal2v2LocalDesc"></span></button>
+          <button class="m2-way tn-online" id="btn2v2GoMatch" type="button"><b>全服匹配</b><span id="modal2v2MatchDesc"></span></button>
+          <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
+        </div>
+        <div class="m2-foot"><button class="mm-link" id="btn2v2GoWatch" type="button">旁观四个天道电脑打 2v2</button></div>
+      </div>
+    </div>
+  </div>
   <div id="touchUI" class="hidden">
     <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>
     <button class="tbtn tdummy hidden" id="tDummy">切换木人</button>
@@ -4464,7 +4398,7 @@ notifyAuthChange(currentUser);
 return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
 }
 }
-async function register(username, password) {
+async function register(username, password, carryProf) {
 const name = String(username).trim();
 if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
 if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
@@ -4472,9 +4406,9 @@ if (name.toLowerCase() === 'dev') {
 try { return await loginDev(password); }
 catch (e) { throw e && e.status === 401 ? new Error('该昵称已被使用') : e; }
 }
-let initialProf = null;
+let initialProf = carryProf || null;   // 本机账号升级时带上它自己的存档；否则带游客进度
 try {
-const guestRaw = localStorage.getItem('renying-guest-profile');
+const guestRaw = initialProf ? null : localStorage.getItem('renying-guest-profile');
 if (guestRaw) initialProf = JSON.parse(guestRaw);
 } catch (e) {}
 try {
@@ -4897,10 +4831,7 @@ let localProf = null;
 try {
 localProf = readMirror(u.uid) || {};
 } catch (e) {}
-const res = await register(name, password);
-if (localProf) {
-saveProfile(localProf, true);
-}
+const res = await register(name, password, localProf && Object.keys(localProf).length ? localProf : null);
 return { success: true, uid: res.uid, name: res.name, isCloud: true };
 }
 function init() {
@@ -8210,7 +8141,7 @@ consume(a) { const t = this.buf[a]; if (t !== undefined && clock - t <= BUF) { d
 clear() { this.buf = {}; this.held.left = this.held.right = this.held.down = this.held.atk = this.held.jump = false; this.held.aim = 0; }
 }
 const DEFAULT_1P_KEYS = {
-left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR'
+left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS', atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR'
 };
 let custom1PKeys = { ...DEFAULT_1P_KEYS };
 try {
@@ -8250,7 +8181,6 @@ const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
 if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
 if (M.subMode === 'pp_cc' || (M.mode === 'net' && netRoomMode === 'pp_cc')) return 0;
-if (M.subMode === 'pc_cc') return 0;
 if (M.mode === 'net') return NET.role === 'client' ? 1 : 0;
 return 0;
 }
@@ -9350,7 +9280,7 @@ const again = document.getElementById('againBtn');
 again.style.display = 'none';
 } else {
 inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, !iWon);
-const modeNames = { pc_cc: '2v2 侠客组队', pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
+const modeNames = { pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
 const modeName = modeNames[M.subMode] || '2v2 组队演武';
 document.getElementById('endSub').textContent = `${modeName} · ${iWon ? '凯旋大捷！' : '惜败，择日再战！'} 比分 ${M.wins[0]} : ${M.wins[1]}`;
 $id('endRank').textContent = iWon ? '双雄合璧，克敌制胜' : '胜败乃兵家常事';
@@ -14871,8 +14801,7 @@ ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
 const banTxt = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
 let bTitle = `👁️ 2v2 天道演武 (纯观战)${banTxt}`;
 if (!M.watchAi) {
-if (M.subMode === 'pc_cc') bTitle = '⚔️ 2v2 协同实战 (玩家+AI vs 双AI)';
-else if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (双人破阵 vs 双AI)';
+if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (双人破阵 vs 双AI)';
 else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四方争锋 (双人对决)';
 else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
 else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
@@ -15708,7 +15637,7 @@ adaptEl.style.display = 'none';
 const SINGLE_TAB_CATS = {
 cpu: 'regular', stage: 'regular', saga: 'regular', train: 'regular',
 tower: 'rogue', chaos: 'rogue',
-tag3: 'special', mayhem: 'special', watch2v2: 'special'
+tag3: 'special', mayhem: 'special'
 };
 let currentSingleTab = 'cpu';
 let currentSingleCat = 'regular';
@@ -15747,8 +15676,7 @@ chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘
 stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
 saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
 train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定',
-mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
-watch2v2: '你和电脑队友两人一队，对阵两名电脑；也可以旁观四名天道 AI 同台演武'
+mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！'
 };
 subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
 }
@@ -15759,12 +15687,12 @@ else if (active === 'chaos') renderChaos();
 else if (active === 'stage') renderStages();
 else if (active === 'train') renderDummyFeatures();
 else if (active === 'mayhem') renderMayhem();
-else if (active === 'watch2v2') renderSingle2v2();
 else if (active === 'cpu') updateAIBrief();
 }
 function openScreen(name, reveal = true) {
 if (OFFLINE_BUILD && name === 'netp') name = 'stage';
-if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
+if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
+if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem') {
 singleSec(name);
 if (reveal) showScreen('single');
 return 'single';
@@ -15910,6 +15838,7 @@ const KEY_ACTIONS = [
 ['right', '向右移动'],
 ['jump', '跳跃 / 二段跳'],
 ['down', '沉身格挡'],
+['atk', '攻击（按住蓄力）'],
 ['dash', '疾步冲刺'],
 ['special', '绝技（气满）'],
 ['skill', '门派绝学（Q）'],
@@ -15952,7 +15881,7 @@ ${rebindingKey === act ? '请按新键…' : keyLabel(custom1PKeys[act])}
 </div>
 `).join('')}
 </div>
-<p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标提示：左键轻击与蓄力，右键腾空闪，左键加右键使特殊技</p>
+<p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标也能用：左键轻击与蓄力，右键腾空闪，左键加右键使远程招式</p>
 </div>
 `;
 $id('setList').innerHTML = baseHtml + keyHtml;
@@ -18956,6 +18885,7 @@ if (singleTabsEl) {
 singleTabsEl.addEventListener('click', e => {
 const b = e.target.closest('button');
 if (!b || !b.dataset.tab) return;
+if (b.dataset.tab === 'watch2v2') { open2v2Modal(); SFX.slice(); return; }   // 离线版的 2v2 入口：打开组队弹窗，不换页
 singleSec(b.dataset.tab);
 SFX.slice();
 });
@@ -19035,7 +18965,7 @@ applySkins();
 A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
 }
 function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
-if (targetMode === 'watch2v2') return bpStart('2v2', { subMode: 'pc_cc', level: 'god', isWatch });
+if (targetMode === 'watch2v2') return isWatch ? startWatch2v2Draft() : bpStart('2v2', { subMode: 'pp_cc', level: 'god' });
 if (targetMode === 'cpu') { pickLevel = 'god'; return bpStart(isWatch ? 'cpuWatch' : 'cpu'); }
 if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
 bpStart('train', { targetMode: 'dummy', isWatch });
@@ -19523,21 +19453,6 @@ const WATCH2V2_STEPS_ORDER = [
 const WATCH2V2_STEP_DELAY = 0.75;     // 每一步停留 0.75 秒，足够看清 AI 的出手顺序
 const WATCH2V2_FINISH_DELAY = 1.15;   // 禁选完成后留一点时间给玩家看清最终阵容
 let watch2v2Bp = null;                // 2v2 专属禁选状态；1v1 仍然使用 BP / bpMode，互不干扰
-function renderWatch2v2() {
-ensurePortraits();
-const el = document.getElementById('watch2v2Slots');
-if (!el) return;
-el.innerHTML = WATCH2V2_STEPS_ORDER.map((s, idx) => {
-const isBan = s.type === 'ban';
-const teamCol = s.team === 0 ? '#46d3ea' : '#ffb142';
-const badgeBg = isBan ? '#b8392e' : (s.team === 0 ? 'rgba(70,211,234,.22)' : 'rgba(255,177,66,.2)');
-return `<div style="position:relative;padding:10px 8px 12px;border-radius:12px;border:1px solid ${isBan ? 'rgba(255,90,90,.5)' : 'rgba(255,255,255,.16)'};background:${isBan ? 'rgba(60,12,18,.35)' : 'rgba(255,255,255,.04)'};text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px">
-<span style="font-family:var(--title);font-size:12px;padding:1px 8px;border-radius:4px;background:${badgeBg};color:#fbeee0;letter-spacing:1px">第 ${idx + 1} 步</span>
-<span style="font-family:var(--title);font-size:20px;line-height:1.1;color:${isBan ? '#ff8a8a' : teamCol}">${s.label}</span>
-<span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '挑选侠客'}</span>
-</div>`;
-}).join('');
-}
 function startWatch2v2Draft() {
 initAudio();
 ensurePortraits();
@@ -19695,33 +19610,6 @@ showScreen(null);
 startRound();
 say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
 }
-const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
-if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
-let solo2v2Level = 'normal';   // 对战页 2v2「单人出战」选的电脑境界
-function start2v2PlayerMatch(p1 = 0, mate = 2, foe1 = 1, foe2 = 3, level = 'normal') {
-if (p2pActive()) netDropWaiting();
-initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
-M.mode = '2v2';
-M.subMode = 'pc_cc';
-M.watchAi = false;
-M.level = level;
-M.bans = [];
-M.wins = [0, 0];
-M.round = 1;
-M.carry = null;
-M.stage = null;
-A.setChar(p1); C.setChar(mate);
-B.setChar(foe1); D.setChar(foe2);
-A.ctrl = human[0];
-C.ctrl = new AICtrl(level);
-B.ctrl = new AICtrl(level);
-D.ctrl = new AICtrl(level);
-A.meter = B.meter = C.meter = D.meter = 35;
-human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
-showScreen(null);
-startRound();
-say(`2v2 组队 · 【${CHARS[p1].name} + ${CHARS[mate].name}】开战！`, 1.4);
-}
 function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal') {
 if (p2pActive()) netDropWaiting();
 initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
@@ -19771,154 +19659,54 @@ startRound();
 say(`2v2 四人对决 · 苍龙 vs 赤凤！`, 1.4);
 }
 let active2v2ModalMode = 'pp_cc';
-function open2v2Modal(mode) {
-active2v2ModalMode = mode;
-const modal = document.getElementById('modal2v2');
-if (!modal) return;
-modal.classList.remove('hidden');
-const t = document.getElementById('modal2v2Title');
-const desc = document.getElementById('modal2v2Desc');
-const ldesc = document.getElementById('modal2v2LocalDesc');
-const solo = mode === 'pc_cc', opts = document.getElementById('modal2v2Options'), soloEl = document.getElementById('modal2v2Solo');
-if (opts) opts.hidden = solo;
-if (soloEl) soloEl.hidden = !solo;
-modal.classList.toggle('solo', solo);
-if (solo) {
-if (t) t.textContent = '2v2 单人出战 · 人机协同 (你 + 电脑队友 vs 双电脑)';
-if (desc) desc.textContent = '你操控一位侠客，再配一位电脑队友，对阵两位电脑。选好电脑的境界，进点将台禁选：';
-for (const b of document.querySelectorAll('#solo2v2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === solo2v2Level);
-} else if (mode === 'pp_cc') {
-if (t) t.textContent = '2v2 双人破阵 · 模式选择 (双人同袍 vs 双天道)';
-if (desc) desc.textContent = '双人成行，同队迎战两名天道 AI 宗师！选择加入方式：';
-if (ldesc) ldesc.textContent = '同台电脑双人合作（1P: WASD+鼠标/J，2P: 方向键+K）。';
-} else {
-if (t) t.textContent = '2v2 四方争锋 · 模式选择 (2位玩家 vs 2位玩家)';
-if (desc) desc.textContent = '两队四名侠客，同台竞技对决！选择加入方式：';
-if (ldesc) ldesc.textContent = '同台电脑四人对决（1P/2P 苍龙队，3P/4P 赤凤队）。';
-}
-}
-let single2v2SubMode = 'pc_cc'; // 'pc_cc' (单人出战), 'pp_cc' (双人同袍), 'pp_pp' (四人切磋), 'watch' (天道观战)
-let single2v2Level = 'normal';
-function renderSingle2v2() {
-const modesEl = document.getElementById('single2v2Modes');
-if (modesEl) {
-const btns = {
-pc_cc: document.getElementById('single2v2SoloBtn'),
-pp_cc: document.getElementById('single2v2LocalCoopBtn'),
-pp_pp: document.getElementById('single2v2LocalVsBtn'),
-watch: document.getElementById('single2v2WatchTabBtn')
+let m2Level = 'normal';   // 两人 vs 两电脑时电脑的境界
+const M2_TEXT = {
+pp_cc: { desc: '你和队友一队，对阵两个电脑。', local: '1P 用 WASD，2P 用方向键 + K 攻击', match: '全服找一位队友，一起打两个电脑' },
+pp_pp: { desc: '两队各两人对打：你们两个对另外两个玩家。', local: '四人一台电脑：1P、2P 一队，3P、4P 一队', match: '全服找一位队友和两位对手' }
 };
-for (const [k, btn] of Object.entries(btns)) {
-if (btn) {
-btn.classList.toggle('sel', single2v2SubMode === k);
-btn.style.borderColor = single2v2SubMode === k ? 'var(--gold)' : 'rgba(255,255,255,0.12)';
-btn.style.background = single2v2SubMode === k ? 'rgba(233,196,106,0.12)' : 'rgba(255,255,255,0.04)';
+function render2v2Modal() {
+const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
+for (const b of document.querySelectorAll('#m2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === m2Level);
+$id('m2LvWrap').hidden = mode !== 'pp_cc';
+$id('modal2v2Desc').textContent = tx.desc;
+$id('modal2v2LocalDesc').textContent = tx.local;
+$id('modal2v2MatchDesc').textContent = tx.match;
 }
+function open2v2Modal(mode) {
+if (mode === 'pp_cc' || mode === 'pp_pp') active2v2ModalMode = mode;
+$id('modal2v2').classList.remove('hidden');
+render2v2Modal();
 }
+function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一页（离线版没有对战页，回单人页），再打开弹窗
+const scr = openScreen(OFFLINE_BUILD ? 'single' : 'netp', reveal);
+open2v2Modal(mode);
+return scr;
 }
-const lvWrap = document.getElementById('single2v2LevelWrap');
-if (lvWrap) {
-lvWrap.style.display = (single2v2SubMode === 'pc_cc' || single2v2SubMode === 'pp_cc') ? 'block' : 'none';
-for (const b of document.querySelectorAll('#single2v2Levels button[data-lv]')) {
-b.classList.toggle('sel', b.dataset.lv === single2v2Level);
-}
-}
-const watchSteps = document.getElementById('single2v2WatchSteps');
-if (watchSteps) {
-watchSteps.style.display = single2v2SubMode === 'watch' ? 'block' : 'none';
-if (single2v2SubMode === 'watch') renderWatch2v2();
-}
-const actBtn = document.getElementById('single2v2ActionBtn');
-if (actBtn) {
-if (single2v2SubMode === 'watch') {
-actBtn.textContent = '开启天道 2v2 演武 · 纯观战 (4机对决)';
-actBtn.className = 'go btn-watch';
-} else if (single2v2SubMode === 'pc_cc') {
-actBtn.textContent = '单人出战 · 进入 2v2 点将台';
-actBtn.className = 'go';
-} else if (single2v2SubMode === 'pp_cc') {
-actBtn.textContent = '双人破阵 · 进入本地同袍点将台';
-actBtn.className = 'go';
-} else {
-actBtn.textContent = '四人切磋 · 进入本地四方点将台';
-actBtn.className = 'go';
-}
-}
-}
-const single2v2SoloBtn = document.getElementById('single2v2SoloBtn');
-if (single2v2SoloBtn) single2v2SoloBtn.addEventListener('click', () => { single2v2SubMode = 'pc_cc'; renderSingle2v2(); SFX.slice(); });
-const single2v2LocalCoopBtn = document.getElementById('single2v2LocalCoopBtn');
-if (single2v2LocalCoopBtn) single2v2LocalCoopBtn.addEventListener('click', () => { single2v2SubMode = 'pp_cc'; renderSingle2v2(); SFX.slice(); });
-const single2v2LocalVsBtn = document.getElementById('single2v2LocalVsBtn');
-if (single2v2LocalVsBtn) single2v2LocalVsBtn.addEventListener('click', () => { single2v2SubMode = 'pp_pp'; renderSingle2v2(); SFX.slice(); });
-const single2v2WatchTabBtn = document.getElementById('single2v2WatchTabBtn');
-if (single2v2WatchTabBtn) single2v2WatchTabBtn.addEventListener('click', () => { single2v2SubMode = 'watch'; renderSingle2v2(); SFX.slice(); });
-const single2v2LevelsEl = document.getElementById('single2v2Levels');
-if (single2v2LevelsEl) {
-single2v2LevelsEl.addEventListener('click', e => {
-const b = e.target.closest('button[data-lv]');
-if (!b) return;
-single2v2Level = b.dataset.lv;
-renderSingle2v2();
-SFX.slice();
+function close2v2Modal() { $id('modal2v2').classList.add('hidden'); }
+$id('modal2v2Seg').addEventListener('click', e => {
+const b = e.target.closest('button[data-m]'); if (!b) return;
+active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
 });
-}
-const single2v2ActionBtn = document.getElementById('single2v2ActionBtn');
-if (single2v2ActionBtn) {
-single2v2ActionBtn.addEventListener('click', () => {
-initAudio();
-paused = false;
-if (single2v2SubMode === 'watch') {
-startWatch2v2Draft();
-} else {
-bpStart('2v2', { subMode: single2v2SubMode, level: single2v2Level });
-}
+$id('m2Levels').addEventListener('click', e => {
+const b = e.target.closest('button[data-lv]'); if (!b) return;
+m2Level = b.dataset.lv; SFX.slice(); render2v2Modal();
 });
-}
-const mm2v2LobbyRoomBtn = document.getElementById('mm2v2LobbyRoomBtn');
-if (mm2v2LobbyRoomBtn) {
-mm2v2LobbyRoomBtn.addEventListener('click', () => {
-netRoomMode = 'pp_cc';
-setRoomModeUI(netRoomMode);
-if ($id('roomWrap')) {
-$id('roomWrap').classList.remove('hidden');
-$id('mmRoomBtn').classList.add('sel');
-}
-const hb = $id('hostBtn');
-if (hb) hb.click();
-toast('已进入 2v2 联机房间');
+$id('mm2v2CoopBtn').addEventListener('click', () => open2v2Modal('pp_cc'));
+$id('mm2v2VsBtn').addEventListener('click', () => open2v2Modal('pp_pp'));
+$id('modal2v2Close').addEventListener('click', close2v2Modal);
+$id('btn2v2GoLocal').addEventListener('click', () => {
+close2v2Modal();
+bpStart('2v2', { subMode: active2v2ModalMode, level: m2Level });
 });
-}
-const mm2v2CoopBtn = document.getElementById('mm2v2CoopBtn');
-if (mm2v2CoopBtn) mm2v2CoopBtn.addEventListener('click', () => open2v2Modal('pp_cc'));
-const mm2v2VsBtn = document.getElementById('mm2v2VsBtn');
-if (mm2v2VsBtn) mm2v2VsBtn.addEventListener('click', () => open2v2Modal('pp_pp'));
-const modal2v2Close = document.getElementById('modal2v2Close');
-if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
-const modal = document.getElementById('modal2v2');
-if (modal) modal.classList.add('hidden');
-});
-const btn2v2GoMatch = document.getElementById('btn2v2GoMatch');
-if (btn2v2GoMatch) {
-btn2v2GoMatch.addEventListener('click', () => {
-const modal = document.getElementById('modal2v2');
-if (modal) modal.classList.add('hidden');
+$id('btn2v2GoMatch').addEventListener('click', () => {
+close2v2Modal();
+if (!$id('netp').classList.contains('on')) openScreen('netp');
 mmGo(active2v2ModalMode === 'pp_cc' ? '2v2_coop' : '2v2_vs');
 });
-}
-const btn2v2GoWatch = document.getElementById('btn2v2GoWatch');
-if (btn2v2GoWatch) {
-btn2v2GoWatch.addEventListener('click', () => {
-const modal = document.getElementById('modal2v2');
-if (modal) modal.classList.add('hidden');
-startWatch2v2Draft();
-});
-}
-const btn2v2GoOnline = document.getElementById('btn2v2GoOnline');
-if (btn2v2GoOnline) {
-btn2v2GoOnline.addEventListener('click', () => {
-const modal = document.getElementById('modal2v2');
-if (modal) modal.classList.add('hidden');
+$id('btn2v2GoOnline').addEventListener('click', () => {
+close2v2Modal();
+if (!$id('netp').classList.contains('on')) openScreen('netp');
 netRoomMode = active2v2ModalMode;
 setRoomModeUI(netRoomMode);
 if ($id('roomWrap')) {
@@ -19927,17 +19715,12 @@ $id('mmRoomBtn').classList.add('sel');
 }
 const hb = $id('hostBtn');
 if (hb) hb.click();
-toast(`已创建 ${active2v2ModalMode === 'pp_cc' ? '双人共斗' : '2v2 组队'} 房间，请将 4 位密令分享给好友`);
+toast(`已建好${active2v2ModalMode === 'pp_cc' ? '两人 vs 两电脑' : '两人 vs 两人'}的房间，把房间号发给朋友`);
 });
-}
-const btn2v2GoLocal = document.getElementById('btn2v2GoLocal');
-if (btn2v2GoLocal) {
-btn2v2GoLocal.addEventListener('click', () => {
-const modal = document.getElementById('modal2v2');
-if (modal) modal.classList.add('hidden');
-bpStart('2v2', { subMode: active2v2ModalMode || 'pp_cc', level: 'normal' });
+$id('btn2v2GoWatch').addEventListener('click', () => {
+close2v2Modal();
+startWatch2v2Draft();
 });
-}
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 const cpuTutBtn = document.getElementById('cpuTutBtn');
@@ -19965,7 +19748,7 @@ toast('已向房主发送再战请求');
 return;
 }
 if (M.mode === '2v2' || (M.mode === 'watch2v2' && !M.watchAi)) {
-bpStart('2v2', { subMode: M.subMode || 'pc_cc', level: M.level || 'normal' });
+bpStart('2v2', { subMode: M.subMode || 'pp_cc', level: M.level || 'normal' });
 return;
 }
 if (M.mode === 'watch2v2') {
@@ -20029,7 +19812,8 @@ if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的�
 M.mode = 'demo';
 if (prevMode === 'boss') openGboss();
 else if (prevMode === 'saga') { singleSec('saga'); showScreen('single'); }
-else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
+else if (prevMode === 'watch2v2' || prevMode === '2v2') open2v2Hub();
+else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem') {
 singleSec(prevMode);
 showScreen('single');
 } else {
@@ -20576,7 +20360,8 @@ sagaNext(false);
 });
 window.addEventListener('keydown', e => {
 if (currentScreen !== 'sagaTalk') return;
-if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); sagaNext(false); }
+const choosing = SG.opts && SG.li >= SG.lines.length - 1;   // 到了抉择：Enter / 空格按键盘选中的那个选项（26-kbnav.js）
+if ((e.code === 'Space' || e.code === 'Enter') && !choosing) { e.preventDefault(); e.stopImmediatePropagation(); sagaNext(false); }
 else if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); sagaNext(true); }
 }, true);
 function sagaPlay(h, i) {
@@ -21794,14 +21579,8 @@ startStage(opts.stageCh !== undefined ? opts.stageCh : stageCh, opts.stageL !== 
 trainChar = picks[0];
 startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
 } else if (mode === '2v2') {
-const sub = opts.subMode || 'pc_cc';
-if (sub === 'pp_cc') {
-start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
-} else if (sub === 'pp_pp') {
-start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
-} else {
-start2v2PlayerMatch(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
-}
+if (opts.subMode === 'pp_pp') start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
+else start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
 M.bans = bans;
 }
 applySkins();
@@ -22086,6 +21865,7 @@ el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--
 }
 for (const b of keep) el.appendChild(b);
 }
+const focusI = document.activeElement && document.activeElement.closest && document.activeElement.closest('#bpGrid .bpcard') ? +document.activeElement.dataset.i : -1;   // 重画后键盘选中框留在同一张卡上
 document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
 let banned = false, pickedBy = -1;
 if (Array.isArray(BP.bans)) banned = BP.bans.includes(i);
@@ -22105,6 +21885,7 @@ const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}$
 return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
 <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
 }).join('');
+if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }
 const show = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);
 setDetail(show);
 const goB = document.getElementById('bpGo');
@@ -22120,6 +21901,7 @@ document.getElementById('bpGrid').addEventListener('click', e => {
 const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= bpSteps().length) return;
 const i = +b.dataset.i;
 if (!isMyTurnBP() || !bpValid(i)) return;
+if (e.detail === 0 && bpSel === i) { bpConfirm(); return; }   // 键盘（Enter / 空格）对已选中的卡再按一次：确认
 bpSel = i; SFX.slice(); renderBP();
 });
 let lastCardClick = { i: -1, t: 0 };
@@ -22156,21 +21938,6 @@ renderBP();
 return;
 }
 }
-if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown') return;
-if (!BP || BP.step >= bpSteps().length) return;
-if (!cards.length) return;
-const rows = new Map();
-cards.forEach((c, i) => { const t = Math.round(c.getBoundingClientRect().top); if (!rows.has(t)) rows.set(t, []); rows.get(t).push(i); });
-const rowList = [...rows.values()];
-const cur = cards.indexOf(document.activeElement);
-let idx = cur < 0 ? 0 : cur;
-const r = Math.max(0, rowList.findIndex(list => list.includes(idx)));
-const row = rowList[r], pos = row.indexOf(idx);
-if (k === 'ArrowLeft') idx = row[Math.max(0, pos - 1)];
-else if (k === 'ArrowRight') idx = row[Math.min(row.length - 1, pos + 1)];
-else if (k === 'ArrowUp' && r > 0) idx = rowList[r - 1][Math.min(pos, rowList[r - 1].length - 1)];
-else if (k === 'ArrowDown' && r < rowList.length - 1) idx = rowList[r + 1][Math.min(pos, rowList[r + 1].length - 1)];
-if (idx !== cur) { e.preventDefault(); cards[idx].focus(); }
 });
 let popIdx = -1;
 function showPop(card) {
@@ -22185,6 +21952,11 @@ demoLoop($id('bpPopCv'), () => popIdx, () => false);
 document.getElementById('bpGrid').addEventListener('pointerover', e => {
 const b = e.target.closest('.bpcard'); const i = b ? +b.dataset.i : -1;
 if (i !== bpHover) { bpHover = i; setDetail(i >= 0 ? i : bpSel); showPop(b); }
+});
+document.getElementById('bpGrid').addEventListener('focusin', e => {   // 键盘移到哪张卡，下面就显示谁的招式（和鼠标悬停一样）
+const b = e.target.closest('.bpcard'); if (!b) return;
+const i = +b.dataset.i;
+if (i !== bpHover) { bpHover = i; setDetail(i); showPop(b); }
 });
 document.getElementById('bpGrid').addEventListener('pointerleave', () => { bpHover = -1; setDetail(bpSel); showPop(null); });
 function bpConfirm() {
@@ -22404,6 +22176,8 @@ $id('adMsg').textContent = '正在升级同步至云端…';
 try {
 const res = await CloudSave.promoteLocalToCloud(pw);
 ACC.token = res.uid;
+const loaded = await CloudSave.loadProfile();   // 换成服务器认的那份（墨锭以服务器为准）
+if (loaded) applyProfile(loaded);
 renderAccPage();
 $id('adMsg').textContent = '✅ 已成功升级为云端账号并同步！';
 toast('已成功升级为云端账号！');
@@ -23043,8 +22817,9 @@ if (e.target && e.target.tagName === 'BUTTON' && M.mode !== 'demo' && !paused &&
 try { e.target.blur(); } catch (err) {}
 refocusGame();
 }
+const onBtn = (scr) => e.target && e.target.tagName === 'BUTTON' && e.target.closest('#' + scr);   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
 if (paused && document.getElementById('pause').classList.contains('on')) {
-if (e.code === 'KeyP' || e.code === 'Escape' || e.code === 'Space' || e.code === 'Enter') {
+if (e.code === 'KeyP' || e.code === 'Escape' || ((e.code === 'Space' || e.code === 'Enter') && !onBtn('pause'))) {
 e.preventDefault();
 paused = false;
 showScreen(null);
@@ -23058,7 +22833,7 @@ e.preventDefault();
 toMenu();
 return;
 }
-if (e.code === 'Space' || e.code === 'Enter') {
+if ((e.code === 'Space' || e.code === 'Enter') && !onBtn('end')) {
 e.preventDefault();
 if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
 toMenu();
@@ -23230,6 +23005,198 @@ for (let i = 0; i < 4; i++) { animFighter(A); animFighter(B); }
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 refocusGame();
 window.addEventListener('load', () => refocusGame());
+const KBN = { on: false, root: null, key: '', rect: null, mem: new Map() };
+const KBN_FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+const KBN_DIR = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' };
+const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden])';
+const KBN_BACK = { bp: 'bpQuit', acc: 'accBack', lb: 'lbBack', replays: 'rpBack', settings: 'setDone', towerModal: '' };   // 各页的返回键；空串表示这一页 Esc 不返回
+const kbnRing = document.createElement('div');
+kbnRing.id = 'kbRing'; kbnRing.setAttribute('aria-hidden', 'true');
+document.body.appendChild(kbnRing);
+function kbnShown(el) {
+if (!el || !el.isConnected || el.closest('[hidden], .hidden')) return false;
+const r = el.getBoundingClientRect();
+if (r.width < 2 || r.height < 2) return false;
+return getComputedStyle(el).visibility !== 'hidden';
+}
+function kbnRoots() {
+const dlg = [...document.querySelectorAll(KBN_DIALOGS)].filter(d => { const s = d.closest('.scr'); return (!s || s.classList.contains('on')) && kbnShown(d); }).pop();
+if (dlg) return [dlg];
+const scr = [...document.querySelectorAll('.scr.on')].pop();
+if (!scr) return REPLAY.on && kbnShown($id('rpBar')) ? [$id('rpBar')] : null;
+const roots = [scr];
+for (const id of ['topNav', 'accBar']) if (kbnShown($id(id))) roots.push($id(id));
+return roots;
+}
+function kbnCands(roots) {
+const out = [];
+for (const r of roots) for (const el of r.querySelectorAll(KBN_FOCUSABLE)) if (!el.disabled && el.tabIndex >= 0 && kbnShown(el)) out.push(el);
+return out;
+}
+function kbnKey(el) {
+if (el.id) return '#' + CSS.escape(el.id);
+let s = '';
+for (const a of el.attributes) if (a.name.startsWith('data-') && a.name !== 'data-kb-default' && a.value.length < 60) s += `[${a.name}="${CSS.escape(a.value)}"]`;
+if (!s) return '';
+const p = el.parentElement && el.parentElement.closest('[id]');
+return (p ? '#' + CSS.escape(p.id) + ' ' : '') + el.tagName.toLowerCase() + s;
+}
+function kbnFocus(el) {
+if (!el) return;
+try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
+kbnRemember(el);
+kbnRingDraw();
+}
+function kbnRemember(el) {
+const roots = kbnRoots(); if (!roots) return;
+const root = roots.find(r => r.contains(el)); if (!root) return;
+KBN.root = roots[0]; KBN.key = kbnKey(el); KBN.rect = el.getBoundingClientRect();
+KBN.mem.set(roots[0], el);
+}
+function kbnDefault(roots, cands) {
+const main = roots[0], mine = cands.filter(el => main.contains(el));
+const prev = KBN.mem.get(main);
+if (prev && mine.includes(prev)) return prev;
+if (main.id === 'bp') {
+const card = main.querySelector('#bpGrid .bpcard.sel') || main.querySelector('#bpGrid .bpcard:not([aria-disabled])');
+if (card && mine.includes(card)) return card;
+}
+return mine.find(el => el.hasAttribute('data-kb-default')) || mine.find(el => el.matches('.go, .mm-go')) || mine.find(el => !el.matches('[data-back]')) || mine[0] || cands[0] || null;
+}
+function kbnRestore(roots, cands) {
+if (KBN.root === roots[0] && KBN.key) {
+const same = cands.find(el => el.matches(KBN.key));
+if (same) return same;
+}
+if (KBN.root === roots[0] && KBN.rect) {   // 原来那个没了（列表重画、按钮藏起来）：选离原位置最近的
+const cx = KBN.rect.left + KBN.rect.width / 2, cy = KBN.rect.top + KBN.rect.height / 2;
+let best = null, bd = Infinity;
+for (const el of cands) { const r = el.getBoundingClientRect(), d = Math.hypot(r.left + r.width / 2 - cx, r.top + r.height / 2 - cy); if (d < bd) { bd = d; best = el; } }
+if (best) return best;
+}
+return kbnDefault(roots, cands);
+}
+function kbnPick(cands, cur, dir) {
+const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2, horiz = dir === 'l' || dir === 'r';
+let best = null, bs = Infinity;
+for (const el of cands) {
+if (el === cur || el.contains(cur) || cur.contains(el)) continue;
+const b = el.getBoundingClientRect(), bx = b.left + b.width / 2, by = b.top + b.height / 2;
+const ahead = dir === 'r' ? bx - ax : dir === 'l' ? ax - bx : dir === 'd' ? by - ay : ay - by;
+if (ahead <= 2) continue;
+const beyond = dir === 'r' ? b.left >= a.right - 8 : dir === 'l' ? b.right <= a.left + 8 : dir === 'd' ? b.top >= a.bottom - 8 : b.bottom <= a.top + 8;
+const gap = Math.max(0, dir === 'r' ? b.left - a.right : dir === 'l' ? a.left - b.right : dir === 'd' ? b.top - a.bottom : a.top - b.bottom);
+const overlap = horiz ? Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) : Math.min(a.right, b.right) - Math.max(a.left, b.left);
+const off = horiz ? Math.abs(by - ay) : Math.abs(bx - ax);
+const s = gap + (overlap > 0 ? off * 0.25 : 40 + off * 2) + (beyond ? 0 : 200);
+if (s < bs) { bs = s; best = el; }
+}
+return best;
+}
+function kbnOn() {
+if (KBN.on) return;
+KBN.on = true; document.body.classList.add('kbnav');
+requestAnimationFrame(kbnRingLoop);
+}
+function kbnOff() {
+if (!KBN.on) return;
+KBN.on = false; document.body.classList.remove('kbnav'); kbnRing.classList.remove('on');
+}
+function kbnRingDraw() {
+const el = document.activeElement, roots = KBN.on && kbnRoots();
+if (!roots || !el || el === document.body || !roots.some(r => r.contains(el)) || !kbnShown(el)) { kbnRing.classList.remove('on'); return; }
+const r = el.getBoundingClientRect();
+Object.assign(kbnRing.style, { left: `${r.left - 4}px`, top: `${r.top - 4}px`, width: `${r.width + 8}px`, height: `${r.height + 8}px` });
+kbnRing.classList.add('on');
+}
+function kbnRingLoop() { if (!KBN.on) return; kbnRingDraw(); requestAnimationFrame(kbnRingLoop); }
+function kbnTick() {
+if (!KBN.on) return;
+const roots = kbnRoots(); if (!roots) return;
+const ae = document.activeElement;
+if (ae && ae !== document.body && roots.some(r => r.contains(ae)) && kbnShown(ae)) return;
+const cands = kbnCands(roots);
+if (cands.length) kbnFocus(kbnRestore(roots, cands));
+}
+setInterval(kbnTick, 120);
+function kbnBack(roots) {
+const main = roots[0];
+if (main.id === 'arModal' || main.id === 'arIns') return false;   // 武库自己会用 Esc 收起弹窗和检视
+const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, .mm-cancel, [data-close]')].find(kbnShown);
+if (close) { close.click(); return true; }
+if (!main.classList.contains('scr')) return false;
+const id = main.id;
+if (id === 'pause' || id === 'end' || id === 'sagaTalk' || id === 'menu') return false;   // 暂停、结算、剧情对话有自己的 Esc
+if (id === 'bp' && bpMode === 'net') return false;   // 联机禁选时按 Esc 不会把人带出房间
+const btn = KBN_BACK[id] !== undefined ? (KBN_BACK[id] && $id(KBN_BACK[id])) : [...main.querySelectorAll('[data-back]')].find(kbnShown);
+if (KBN_BACK[id] === '') return true;
+if (btn && kbnShown(btn)) { btn.click(); return true; }
+if (MENU_SCREENS.includes(id) || NAV_SCREENS.includes(id)) { backToMenu(); return true; }
+return false;
+}
+window.addEventListener('keydown', e => {
+if (typeof rebindingKey !== 'undefined' && rebindingKey) return;   // 设置里正在改键，按键全给它
+if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+const roots = kbnRoots();
+if (!roots) { if (e.isTrusted && e.code !== 'KeyM') kbnOn(); return; }   // 对局中用键盘打的人，暂停、结算页一出来就有选中框
+const t = e.target, tag = t && t.tagName, type = t && t.type;
+const typing = tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(button|checkbox|radio|range|submit|reset|color|file)$/i.test(type));
+const cands = kbnCands(roots), inside = cands.includes(document.activeElement);
+const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+const dir = KBN_DIR[e.code];
+if (e.code === 'Escape') {
+if (typing) {   // 先离开输入框，再按一次才返回
+const next = kbnPick(cands, t, 'd') || kbnPick(cands, t, 'u');
+t.blur(); kbnOn(); stop(); if (next) kbnFocus(next);
+return;
+}
+if (kbnBack(roots)) { kbnOn(); stop(); }
+return;
+}
+if (e.code === 'Tab') {
+if (!cands.length) return;
+kbnOn(); stop();
+const i = cands.indexOf(document.activeElement);
+kbnFocus(i < 0 ? kbnRestore(roots, cands) : cands[(i + (e.shiftKey ? -1 : 1) + cands.length) % cands.length]);
+return;
+}
+if (dir) {
+if (typing && !(e.code === 'ArrowUp' || e.code === 'ArrowDown')) return;   // 输入框里左右键、WASD 是打字
+if (tag === 'INPUT' && type === 'range' && (dir === 'l' || dir === 'r')) {   // 滑块：左右调大小
+if (e.code.startsWith('Key')) { if (dir === 'l') t.stepDown(); else t.stepUp(); t.dispatchEvent(new Event('input', { bubbles: true })); t.dispatchEvent(new Event('change', { bubbles: true })); stop(); }
+kbnOn(); return;
+}
+if (tag === 'SELECT' && (dir === 'l' || dir === 'r')) {   // 下拉框：左右换选项，上下照常走开
+const n = t.selectedIndex + (dir === 'l' ? -1 : 1);
+if (n >= 0 && n < t.options.length) { t.selectedIndex = n; t.dispatchEvent(new Event('change', { bubbles: true })); }
+kbnOn(); stop(); return;
+}
+if (!cands.length) return;
+kbnOn(); stop();
+if (!inside) { kbnFocus(kbnRestore(roots, cands)); return; }
+const next = kbnPick(cands, document.activeElement, dir);
+if (next) kbnFocus(next);
+else kbnRingDraw();
+return;
+}
+if (e.code === 'Enter' || e.code === 'Space' || e.code === 'NumpadEnter') {
+if (typing) return;
+if (!inside) {   // 还没选中任何东西：这一下先把选中框亮出来（暂停、结算页的快捷键照旧）
+const scr = roots[0].id;
+if (scr === 'pause' || scr === 'end' || scr === 'rpBar' || !cands.length) return;
+kbnOn(); stop(); kbnFocus(kbnRestore(roots, cands)); return;
+}
+kbnOn();
+e.stopImmediatePropagation();   // 按下的是选中的按钮，别再被当成游戏快捷键
+if (e.repeat) { e.preventDefault(); return; }   // 按住不放不连点
+const el = document.activeElement;
+const native = el.matches('button, a[href], summary, select, input[type="button"], input[type="submit"], input[type="reset"]') || (e.code === 'Space' && el.matches('input[type="checkbox"], input[type="radio"]'));
+if (!native) { e.preventDefault(); el.click(); }
+}
+}, true);
+document.addEventListener('focusin', e => { if (KBN.on) kbnRemember(e.target); });
+window.addEventListener('pointerdown', e => { if (e.isTrusted) kbnOff(); }, true);
 </script>
 <script>
 'use strict';

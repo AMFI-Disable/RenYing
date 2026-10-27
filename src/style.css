@@ -2711,3 +2711,23 @@
     .trow > .rw { grid-area: rw; }
     .trow > div:last-child { grid-area: act; }
   }
+  /* ---------- 2v2 组队弹窗：先选对阵，再选在哪打 ---------- */
+  .m2-panel { max-width: 640px; }
+  .m2-body { padding: 4px 4px 6px; }
+  .m2-seg { display: flex; margin: 4px 0 10px; }
+  .m2-seg button { flex: 1; }
+  .m2-desc { margin: 0 0 12px; text-align: left; color: rgba(236,232,225,.85); }
+  #m2LvWrap[hidden] { display: none; }
+  .m2-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 6px 0 12px; }
+  .m2-way { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px 14px; cursor: pointer;
+    color: var(--ink); background: linear-gradient(160deg, rgba(36,49,67,.92), rgba(19,27,39,.94)); border: 1px solid var(--x-line, rgba(236,226,204,.18)); font-family: var(--body); transition: border-color .15s, background .15s; }
+  .m2-way b { font: 400 17px/1.2 var(--title); color: var(--gold); letter-spacing: .06em; }
+  .m2-way span { font-size: 12px; line-height: 1.45; color: rgba(236,232,225,.75); }
+  .m2-way:hover { border-color: rgba(233,196,106,.6); background: linear-gradient(160deg, rgba(46,61,82,.94), rgba(23,32,46,.95)); }
+  .m2-foot { text-align: center; }
+  /* ---------- 纯键盘：一个统一的选中框，跟着焦点走（按钮有 clip-path、外层有 overflow 时，描边会被裁掉，所以单独画一层） ---------- */
+  body.kbnav :focus, body.kbnav :focus-visible { outline: none !important; }
+  #kbRing { position: fixed; z-index: 9999; pointer-events: none; display: none; border: 2px solid var(--gold); border-radius: 4px;
+    box-shadow: 0 0 0 3px rgba(233,196,106,.22), 0 0 18px rgba(233,196,106,.45); transition: left .09s ease-out, top .09s ease-out, width .09s ease-out, height .09s ease-out; }
+  body.kbnav #kbRing.on { display: block; }
+  @media (prefers-reduced-motion: reduce) { #kbRing { transition: none; } }

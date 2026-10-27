@@ -85,6 +85,7 @@ if (singleTabsEl) {
   singleTabsEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || !b.dataset.tab) return;
+    if (b.dataset.tab === 'watch2v2') { open2v2Modal(); SFX.slice(); return; }   // 离线版的 2v2 入口：打开组队弹窗，不换页
     singleSec(b.dataset.tab);
     SFX.slice();
   });
@@ -165,7 +166,7 @@ function startDummyTraining() {
 }
 // 木人试剑：木人桩直接开练；各模式的最高境界专项训练和正常开局一样先去点将台选人
 function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
-  if (targetMode === 'watch2v2') return bpStart('2v2', { subMode: 'pc_cc', level: 'god', isWatch });
+  if (targetMode === 'watch2v2') return isWatch ? startWatch2v2Draft() : bpStart('2v2', { subMode: 'pp_cc', level: 'god' });
   if (targetMode === 'cpu') { pickLevel = 'god'; return bpStart(isWatch ? 'cpuWatch' : 'cpu'); }
   if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
   bpStart('train', { targetMode: 'dummy', isWatch });

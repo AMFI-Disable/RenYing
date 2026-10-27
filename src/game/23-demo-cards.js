@@ -575,14 +575,8 @@ function bpFinish() {
     trainChar = picks[0];
     startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
   } else if (mode === '2v2') {
-    const sub = opts.subMode || 'pc_cc';
-    if (sub === 'pp_cc') {
-      start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
-    } else if (sub === 'pp_pp') {
-      start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
-    } else {
-      start2v2PlayerMatch(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
-    }
+    if (opts.subMode === 'pp_pp') start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
+    else start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
     M.bans = bans;
   }
   applySkins();
@@ -884,6 +878,7 @@ function renderBP() {
     for (const b of keep) el.appendChild(b);
   }
 
+  const focusI = document.activeElement && document.activeElement.closest && document.activeElement.closest('#bpGrid .bpcard') ? +document.activeElement.dataset.i : -1;   // 重画后键盘选中框留在同一张卡上
   document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
     let banned = false, pickedBy = -1;
     if (Array.isArray(BP.bans)) banned = BP.bans.includes(i);
@@ -903,6 +898,7 @@ function renderBP() {
     return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
       <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
+  if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }
   const show = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);
   setDetail(show);
   const goB = document.getElementById('bpGo');
@@ -918,6 +914,7 @@ document.getElementById('bpGrid').addEventListener('click', e => {
   const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= bpSteps().length) return;
   const i = +b.dataset.i;
   if (!isMyTurnBP() || !bpValid(i)) return;
+  if (e.detail === 0 && bpSel === i) { bpConfirm(); return; }   // 键盘（Enter / 空格）对已选中的卡再按一次：确认
   bpSel = i; SFX.slice(); renderBP();
 });
 let lastCardClick = { i: -1, t: 0 };
@@ -937,8 +934,8 @@ document.getElementById('bpGrid').addEventListener('dblclick', e => {
   if (!isMyTurnBP() || !bpValid(i)) return;
   bpSel = i; bpConfirm();
 });
-// 方向键在角色卡之间移动焦点（Enter 触发 click：第一次选中，400 毫秒内再按一次即确认），
-// 按实际行分组，窄屏换成多行时上下键依然正确
+// 数字键 1～9 直接选人；方向键移动由纯键盘导航（26-kbnav.js）统一处理。
+// Enter / 空格：第一次选中这张卡，对已选中的卡再按一次就确认
 document.getElementById('bpGrid').addEventListener('keydown', e => {
   if (!BP) return;   // 2v2 观战禁选没有玩家操作，按键不参与
   const k = e.key;
@@ -956,21 +953,6 @@ document.getElementById('bpGrid').addEventListener('keydown', e => {
       return;
     }
   }
-  if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown') return;
-  if (!BP || BP.step >= bpSteps().length) return;
-  if (!cards.length) return;
-  const rows = new Map();
-  cards.forEach((c, i) => { const t = Math.round(c.getBoundingClientRect().top); if (!rows.has(t)) rows.set(t, []); rows.get(t).push(i); });
-  const rowList = [...rows.values()];
-  const cur = cards.indexOf(document.activeElement);
-  let idx = cur < 0 ? 0 : cur;
-  const r = Math.max(0, rowList.findIndex(list => list.includes(idx)));
-  const row = rowList[r], pos = row.indexOf(idx);
-  if (k === 'ArrowLeft') idx = row[Math.max(0, pos - 1)];
-  else if (k === 'ArrowRight') idx = row[Math.min(row.length - 1, pos + 1)];
-  else if (k === 'ArrowUp' && r > 0) idx = rowList[r - 1][Math.min(pos, rowList[r - 1].length - 1)];
-  else if (k === 'ArrowDown' && r < rowList.length - 1) idx = rowList[r + 1][Math.min(pos, rowList[r + 1].length - 1)];
-  if (idx !== cur) { e.preventDefault(); cards[idx].focus(); }
 });
 // 悬停：更新下部检视视窗
 let popIdx = -1;
@@ -986,6 +968,11 @@ demoLoop($id('bpPopCv'), () => popIdx, () => false);
 document.getElementById('bpGrid').addEventListener('pointerover', e => {
   const b = e.target.closest('.bpcard'); const i = b ? +b.dataset.i : -1;
   if (i !== bpHover) { bpHover = i; setDetail(i >= 0 ? i : bpSel); showPop(b); }
+});
+document.getElementById('bpGrid').addEventListener('focusin', e => {   // 键盘移到哪张卡，下面就显示谁的招式（和鼠标悬停一样）
+  const b = e.target.closest('.bpcard'); if (!b) return;
+  const i = +b.dataset.i;
+  if (i !== bpHover) { bpHover = i; setDetail(i); showPop(b); }
 });
 document.getElementById('bpGrid').addEventListener('pointerleave', () => { bpHover = -1; setDetail(bpSel); showPop(null); });
 function bpConfirm() {

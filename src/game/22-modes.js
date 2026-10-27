@@ -510,22 +510,6 @@ const WATCH2V2_STEP_DELAY = 0.75;     // 每一步停留 0.75 秒，足够看清
 const WATCH2V2_FINISH_DELAY = 1.15;   // 禁选完成后留一点时间给玩家看清最终阵容
 let watch2v2Bp = null;                // 2v2 专属禁选状态；1v1 仍然使用 BP / bpMode，互不干扰
 
-function renderWatch2v2() {
-  ensurePortraits();
-  const el = document.getElementById('watch2v2Slots');
-  if (!el) return;
-  el.innerHTML = WATCH2V2_STEPS_ORDER.map((s, idx) => {
-    const isBan = s.type === 'ban';
-    const teamCol = s.team === 0 ? '#46d3ea' : '#ffb142';
-    const badgeBg = isBan ? '#b8392e' : (s.team === 0 ? 'rgba(70,211,234,.22)' : 'rgba(255,177,66,.2)');
-    return `<div style="position:relative;padding:10px 8px 12px;border-radius:12px;border:1px solid ${isBan ? 'rgba(255,90,90,.5)' : 'rgba(255,255,255,.16)'};background:${isBan ? 'rgba(60,12,18,.35)' : 'rgba(255,255,255,.04)'};text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px">
-      <span style="font-family:var(--title);font-size:12px;padding:1px 8px;border-radius:4px;background:${badgeBg};color:#fbeee0;letter-spacing:1px">第 ${idx + 1} 步</span>
-      <span style="font-family:var(--title);font-size:20px;line-height:1.1;color:${isBan ? '#ff8a8a' : teamCol}">${s.label}</span>
-      <span style="font-size:12px;color:var(--dim);white-space:nowrap">${WATCH2V2_TEAMS[s.team]}队 · ${isBan ? '禁用侠客' : '挑选侠客'}</span>
-    </div>`;
-  }).join('');
-}
-
 // 进入 2v2 禁选：切到 #bp 选人界面，由 bpTick 驱动的天道 AI 逐步完成 6 手禁选。
 function startWatch2v2Draft() {
   initAudio();
@@ -697,37 +681,8 @@ function startWatch2v2(draft) {
   say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
 }
 
-const watch2v2StartBtn = document.getElementById('watch2v2StartBtn');
-if (watch2v2StartBtn) watch2v2StartBtn.addEventListener('click', () => startWatch2v2Draft());
 
-// ======================= 2v2 演武与组队 (P&CvC&C, P&PvC&C, P&PvP&P) =======================
-let solo2v2Level = 'normal';   // 对战页 2v2「单人出战」选的电脑境界
-
-function start2v2PlayerMatch(p1 = 0, mate = 2, foe1 = 1, foe2 = 3, level = 'normal') {
-  if (p2pActive()) netDropWaiting();
-  initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
-  M.mode = '2v2';
-  M.subMode = 'pc_cc';
-  M.watchAi = false;
-  M.level = level;
-  M.bans = [];
-  M.wins = [0, 0];
-  M.round = 1;
-  M.carry = null;
-  M.stage = null;
-  A.setChar(p1); C.setChar(mate);
-  B.setChar(foe1); D.setChar(foe2);
-  A.ctrl = human[0];
-  C.ctrl = new AICtrl(level);
-  B.ctrl = new AICtrl(level);
-  D.ctrl = new AICtrl(level);
-  A.meter = B.meter = C.meter = D.meter = 35;
-  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
-  showScreen(null);
-  startRound();
-  say(`2v2 组队 · 【${CHARS[p1].name} + ${CHARS[mate].name}】开战！`, 1.4);
-}
-
+// ======================= 2v2 组队：两人 vs 两电脑（pp_cc）、两人 vs 两人（pp_pp） =======================
 function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal') {
   if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
@@ -778,190 +733,70 @@ function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
   say(`2v2 四人对决 · 苍龙 vs 赤凤！`, 1.4);
 }
 
-// 联机大厅 2v2 弹窗交互
+// 2v2 只有这一个入口：对战页的 2v2 卡片（离线版是单人页的「2v2 组队」）打开这个弹窗，先选对阵，再选同一台电脑 / 全服匹配 / 好友房间
 let active2v2ModalMode = 'pp_cc';
+let m2Level = 'normal';   // 两人 vs 两电脑时电脑的境界
+const M2_TEXT = {
+  pp_cc: { desc: '你和队友一队，对阵两个电脑。', local: '1P 用 WASD，2P 用方向键 + K 攻击', match: '全服找一位队友，一起打两个电脑' },
+  pp_pp: { desc: '两队各两人对打：你们两个对另外两个玩家。', local: '四人一台电脑：1P、2P 一队，3P、4P 一队', match: '全服找一位队友和两位对手' }
+};
+function render2v2Modal() {
+  const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+  for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
+  for (const b of document.querySelectorAll('#m2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === m2Level);
+  $id('m2LvWrap').hidden = mode !== 'pp_cc';
+  $id('modal2v2Desc').textContent = tx.desc;
+  $id('modal2v2LocalDesc').textContent = tx.local;
+  $id('modal2v2MatchDesc').textContent = tx.match;
+}
 function open2v2Modal(mode) {
-  active2v2ModalMode = mode;
-  const modal = document.getElementById('modal2v2');
-  if (!modal) return;
-  modal.classList.remove('hidden');
-  const t = document.getElementById('modal2v2Title');
-  const desc = document.getElementById('modal2v2Desc');
-  const ldesc = document.getElementById('modal2v2LocalDesc');
-  const solo = mode === 'pc_cc', opts = document.getElementById('modal2v2Options'), soloEl = document.getElementById('modal2v2Solo');
-  if (opts) opts.hidden = solo;
-  if (soloEl) soloEl.hidden = !solo;
-  modal.classList.toggle('solo', solo);
-  if (solo) {
-    if (t) t.textContent = '2v2 单人出战 · 人机协同 (你 + 电脑队友 vs 双电脑)';
-    if (desc) desc.textContent = '你操控一位侠客，再配一位电脑队友，对阵两位电脑。选好电脑的境界，进点将台禁选：';
-    for (const b of document.querySelectorAll('#solo2v2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === solo2v2Level);
-  } else if (mode === 'pp_cc') {
-    if (t) t.textContent = '2v2 双人破阵 · 模式选择 (双人同袍 vs 双天道)';
-    if (desc) desc.textContent = '双人成行，同队迎战两名天道 AI 宗师！选择加入方式：';
-    if (ldesc) ldesc.textContent = '同台电脑双人合作（1P: WASD+鼠标/J，2P: 方向键+K）。';
-  } else {
-    if (t) t.textContent = '2v2 四方争锋 · 模式选择 (2位玩家 vs 2位玩家)';
-    if (desc) desc.textContent = '两队四名侠客，同台竞技对决！选择加入方式：';
-    if (ldesc) ldesc.textContent = '同台电脑四人对决（1P/2P 苍龙队，3P/4P 赤凤队）。';
-  }
+  if (mode === 'pp_cc' || mode === 'pp_pp') active2v2ModalMode = mode;
+  $id('modal2v2').classList.remove('hidden');
+  render2v2Modal();
 }
-
-// 单人模式 2v2 演武子模式与境界状态
-let single2v2SubMode = 'pc_cc'; // 'pc_cc' (单人出战), 'pp_cc' (双人同袍), 'pp_pp' (四人切磋), 'watch' (天道观战)
-let single2v2Level = 'normal';
-
-function renderSingle2v2() {
-  const modesEl = document.getElementById('single2v2Modes');
-  if (modesEl) {
-    const btns = {
-      pc_cc: document.getElementById('single2v2SoloBtn'),
-      pp_cc: document.getElementById('single2v2LocalCoopBtn'),
-      pp_pp: document.getElementById('single2v2LocalVsBtn'),
-      watch: document.getElementById('single2v2WatchTabBtn')
-    };
-    for (const [k, btn] of Object.entries(btns)) {
-      if (btn) {
-        btn.classList.toggle('sel', single2v2SubMode === k);
-        btn.style.borderColor = single2v2SubMode === k ? 'var(--gold)' : 'rgba(255,255,255,0.12)';
-        btn.style.background = single2v2SubMode === k ? 'rgba(233,196,106,0.12)' : 'rgba(255,255,255,0.04)';
-      }
-    }
-  }
-  const lvWrap = document.getElementById('single2v2LevelWrap');
-  if (lvWrap) {
-    lvWrap.style.display = (single2v2SubMode === 'pc_cc' || single2v2SubMode === 'pp_cc') ? 'block' : 'none';
-    for (const b of document.querySelectorAll('#single2v2Levels button[data-lv]')) {
-      b.classList.toggle('sel', b.dataset.lv === single2v2Level);
-    }
-  }
-  const watchSteps = document.getElementById('single2v2WatchSteps');
-  if (watchSteps) {
-    watchSteps.style.display = single2v2SubMode === 'watch' ? 'block' : 'none';
-    if (single2v2SubMode === 'watch') renderWatch2v2();
-  }
-  const actBtn = document.getElementById('single2v2ActionBtn');
-  if (actBtn) {
-    if (single2v2SubMode === 'watch') {
-      actBtn.textContent = '开启天道 2v2 演武 · 纯观战 (4机对决)';
-      actBtn.className = 'go btn-watch';
-    } else if (single2v2SubMode === 'pc_cc') {
-      actBtn.textContent = '单人出战 · 进入 2v2 点将台';
-      actBtn.className = 'go';
-    } else if (single2v2SubMode === 'pp_cc') {
-      actBtn.textContent = '双人破阵 · 进入本地同袍点将台';
-      actBtn.className = 'go';
-    } else {
-      actBtn.textContent = '四人切磋 · 进入本地四方点将台';
-      actBtn.className = 'go';
-    }
-  }
+function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一页（离线版没有对战页，回单人页），再打开弹窗
+  const scr = openScreen(OFFLINE_BUILD ? 'single' : 'netp', reveal);
+  open2v2Modal(mode);
+  return scr;
 }
-
-// 绑定单人页 2v2 交互事件
-const single2v2SoloBtn = document.getElementById('single2v2SoloBtn');
-if (single2v2SoloBtn) single2v2SoloBtn.addEventListener('click', () => { single2v2SubMode = 'pc_cc'; renderSingle2v2(); SFX.slice(); });
-const single2v2LocalCoopBtn = document.getElementById('single2v2LocalCoopBtn');
-if (single2v2LocalCoopBtn) single2v2LocalCoopBtn.addEventListener('click', () => { single2v2SubMode = 'pp_cc'; renderSingle2v2(); SFX.slice(); });
-const single2v2LocalVsBtn = document.getElementById('single2v2LocalVsBtn');
-if (single2v2LocalVsBtn) single2v2LocalVsBtn.addEventListener('click', () => { single2v2SubMode = 'pp_pp'; renderSingle2v2(); SFX.slice(); });
-const single2v2WatchTabBtn = document.getElementById('single2v2WatchTabBtn');
-if (single2v2WatchTabBtn) single2v2WatchTabBtn.addEventListener('click', () => { single2v2SubMode = 'watch'; renderSingle2v2(); SFX.slice(); });
-
-const single2v2LevelsEl = document.getElementById('single2v2Levels');
-if (single2v2LevelsEl) {
-  single2v2LevelsEl.addEventListener('click', e => {
-    const b = e.target.closest('button[data-lv]');
-    if (!b) return;
-    single2v2Level = b.dataset.lv;
-    renderSingle2v2();
-    SFX.slice();
-  });
-}
-
-const single2v2ActionBtn = document.getElementById('single2v2ActionBtn');
-if (single2v2ActionBtn) {
-  single2v2ActionBtn.addEventListener('click', () => {
-    initAudio();
-    paused = false;
-    if (single2v2SubMode === 'watch') {
-      startWatch2v2Draft();
-    } else {
-      bpStart('2v2', { subMode: single2v2SubMode, level: single2v2Level });
-    }
-  });
-}
-
-const mm2v2LobbyRoomBtn = document.getElementById('mm2v2LobbyRoomBtn');
-if (mm2v2LobbyRoomBtn) {
-  mm2v2LobbyRoomBtn.addEventListener('click', () => {
-    netRoomMode = 'pp_cc';
-    setRoomModeUI(netRoomMode);
-    if ($id('roomWrap')) {
-      $id('roomWrap').classList.remove('hidden');
-      $id('mmRoomBtn').classList.add('sel');
-    }
-    const hb = $id('hostBtn');
-    if (hb) hb.click();
-    toast('已进入 2v2 联机房间');
-  });
-}
-
-const mm2v2CoopBtn = document.getElementById('mm2v2CoopBtn');
-if (mm2v2CoopBtn) mm2v2CoopBtn.addEventListener('click', () => open2v2Modal('pp_cc'));
-
-const mm2v2VsBtn = document.getElementById('mm2v2VsBtn');
-if (mm2v2VsBtn) mm2v2VsBtn.addEventListener('click', () => open2v2Modal('pp_pp'));
-
-const modal2v2Close = document.getElementById('modal2v2Close');
-if (modal2v2Close) modal2v2Close.addEventListener('click', () => {
-  const modal = document.getElementById('modal2v2');
-  if (modal) modal.classList.add('hidden');
+function close2v2Modal() { $id('modal2v2').classList.add('hidden'); }
+$id('modal2v2Seg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-m]'); if (!b) return;
+  active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
 });
-
-const btn2v2GoMatch = document.getElementById('btn2v2GoMatch');
-if (btn2v2GoMatch) {
-  btn2v2GoMatch.addEventListener('click', () => {
-    const modal = document.getElementById('modal2v2');
-    if (modal) modal.classList.add('hidden');
-    mmGo(active2v2ModalMode === 'pp_cc' ? '2v2_coop' : '2v2_vs');
-  });
-}
-
-const btn2v2GoWatch = document.getElementById('btn2v2GoWatch');
-if (btn2v2GoWatch) {
-  btn2v2GoWatch.addEventListener('click', () => {
-    const modal = document.getElementById('modal2v2');
-    if (modal) modal.classList.add('hidden');
-    startWatch2v2Draft();
-  });
-}
-
-const btn2v2GoOnline = document.getElementById('btn2v2GoOnline');
-if (btn2v2GoOnline) {
-  btn2v2GoOnline.addEventListener('click', () => {
-    const modal = document.getElementById('modal2v2');
-    if (modal) modal.classList.add('hidden');
-    netRoomMode = active2v2ModalMode;
-    setRoomModeUI(netRoomMode);
-    if ($id('roomWrap')) {
-      $id('roomWrap').classList.remove('hidden');
-      $id('mmRoomBtn').classList.add('sel');
-    }
-    const hb = $id('hostBtn');
-    if (hb) hb.click();
-    toast(`已创建 ${active2v2ModalMode === 'pp_cc' ? '双人共斗' : '2v2 组队'} 房间，请将 4 位密令分享给好友`);
-  });
-}
-
-const btn2v2GoLocal = document.getElementById('btn2v2GoLocal');
-if (btn2v2GoLocal) {
-  btn2v2GoLocal.addEventListener('click', () => {
-    const modal = document.getElementById('modal2v2');
-    if (modal) modal.classList.add('hidden');
-    bpStart('2v2', { subMode: active2v2ModalMode || 'pp_cc', level: 'normal' });
-  });
-}
+$id('m2Levels').addEventListener('click', e => {
+  const b = e.target.closest('button[data-lv]'); if (!b) return;
+  m2Level = b.dataset.lv; SFX.slice(); render2v2Modal();
+});
+$id('mm2v2CoopBtn').addEventListener('click', () => open2v2Modal('pp_cc'));
+$id('mm2v2VsBtn').addEventListener('click', () => open2v2Modal('pp_pp'));
+$id('modal2v2Close').addEventListener('click', close2v2Modal);
+$id('btn2v2GoLocal').addEventListener('click', () => {
+  close2v2Modal();
+  bpStart('2v2', { subMode: active2v2ModalMode, level: m2Level });
+});
+$id('btn2v2GoMatch').addEventListener('click', () => {
+  close2v2Modal();
+  if (!$id('netp').classList.contains('on')) openScreen('netp');
+  mmGo(active2v2ModalMode === 'pp_cc' ? '2v2_coop' : '2v2_vs');
+});
+$id('btn2v2GoOnline').addEventListener('click', () => {
+  close2v2Modal();
+  if (!$id('netp').classList.contains('on')) openScreen('netp');
+  netRoomMode = active2v2ModalMode;
+  setRoomModeUI(netRoomMode);
+  if ($id('roomWrap')) {
+    $id('roomWrap').classList.remove('hidden');
+    $id('mmRoomBtn').classList.add('sel');
+  }
+  const hb = $id('hostBtn');
+  if (hb) hb.click();
+  toast(`已建好${active2v2ModalMode === 'pp_cc' ? '两人 vs 两电脑' : '两人 vs 两人'}的房间，把房间号发给朋友`);
+});
+$id('btn2v2GoWatch').addEventListener('click', () => {
+  close2v2Modal();
+  startWatch2v2Draft();
+});
 
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
@@ -990,7 +825,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
     return;
   }
   if (M.mode === '2v2' || (M.mode === 'watch2v2' && !M.watchAi)) {
-    bpStart('2v2', { subMode: M.subMode || 'pc_cc', level: M.level || 'normal' });
+    bpStart('2v2', { subMode: M.subMode || 'pp_cc', level: M.level || 'normal' });
     return;
   }
   if (M.mode === 'watch2v2') {
@@ -1055,7 +890,8 @@ function toMenu() {
   M.mode = 'demo';
   if (prevMode === 'boss') openGboss();
   else if (prevMode === 'saga') { singleSec('saga'); showScreen('single'); }
-  else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'watch2v2') {
+  else if (prevMode === 'watch2v2' || prevMode === '2v2') open2v2Hub();
+  else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem') {
     singleSec(prevMode);
     showScreen('single');
   } else {

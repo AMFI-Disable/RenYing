@@ -17,8 +17,9 @@ window.addEventListener('keydown', e => {
     try { e.target.blur(); } catch (err) {}
     refocusGame();
   }
+  const onBtn = (scr) => e.target && e.target.tagName === 'BUTTON' && e.target.closest('#' + scr);   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
   if (paused && document.getElementById('pause').classList.contains('on')) {
-    if (e.code === 'KeyP' || e.code === 'Escape' || e.code === 'Space' || e.code === 'Enter') {
+    if (e.code === 'KeyP' || e.code === 'Escape' || ((e.code === 'Space' || e.code === 'Enter') && !onBtn('pause'))) {
       e.preventDefault();
       paused = false;
       showScreen(null);
@@ -32,7 +33,7 @@ window.addEventListener('keydown', e => {
       toMenu();
       return;
     }
-    if (e.code === 'Space' || e.code === 'Enter') {
+    if ((e.code === 'Space' || e.code === 'Enter') && !onBtn('end')) {
       e.preventDefault();
       if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
         toMenu();

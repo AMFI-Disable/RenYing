@@ -153,7 +153,8 @@ $id('sagaTalk').addEventListener('click', e => {
 });
 window.addEventListener('keydown', e => {
   if (currentScreen !== 'sagaTalk') return;
-  if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); sagaNext(false); }
+  const choosing = SG.opts && SG.li >= SG.lines.length - 1;   // 到了抉择：Enter / 空格按键盘选中的那个选项（26-kbnav.js）
+  if ((e.code === 'Space' || e.code === 'Enter') && !choosing) { e.preventDefault(); e.stopImmediatePropagation(); sagaNext(false); }
   else if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); sagaNext(true); }
 }, true);
 

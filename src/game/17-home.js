@@ -303,7 +303,7 @@ function updateAIBrief() {
 const SINGLE_TAB_CATS = {
   cpu: 'regular', stage: 'regular', saga: 'regular', train: 'regular',
   tower: 'rogue', chaos: 'rogue',
-  tag3: 'special', mayhem: 'special', watch2v2: 'special'
+  tag3: 'special', mayhem: 'special'
 };
 
 // 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
@@ -347,8 +347,7 @@ function singleSec(sec) {
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
       saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
       train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定',
-      mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
-      watch2v2: '你和电脑队友两人一队，对阵两名电脑；也可以旁观四名天道 AI 同台演武'
+      mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！'
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
@@ -359,13 +358,13 @@ function singleSec(sec) {
   else if (active === 'stage') renderStages();
   else if (active === 'train') renderDummyFeatures();
   else if (active === 'mayhem') renderMayhem();
-  else if (active === 'watch2v2') renderSingle2v2();
   else if (active === 'cpu') updateAIBrief();
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
 function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'watch2v2') {
+  if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
+  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem') {
     singleSec(name);
     if (reveal) showScreen('single');
     return 'single';
@@ -517,6 +516,7 @@ const KEY_ACTIONS = [
   ['right', '向右移动'],
   ['jump', '跳跃 / 二段跳'],
   ['down', '沉身格挡'],
+  ['atk', '攻击（按住蓄力）'],
   ['dash', '疾步冲刺'],
   ['special', '绝技（气满）'],
   ['skill', '门派绝学（Q）'],
@@ -559,7 +559,7 @@ function buildSettings() {
           </div>
         `).join('')}
       </div>
-      <p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标提示：左键轻击与蓄力，右键腾空闪，左键加右键使特殊技</p>
+      <p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标也能用：左键轻击与蓄力，右键腾空闪，左键加右键使远程招式</p>
     </div>
   `;
   $id('setList').innerHTML = baseHtml + keyHtml;

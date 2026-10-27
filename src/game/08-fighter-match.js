@@ -401,7 +401,7 @@ function showEnd(w) {
       again.style.display = 'none';
     } else {
       inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, !iWon);
-      const modeNames = { pc_cc: '2v2 侠客组队', pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
+      const modeNames = { pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
       const modeName = modeNames[M.subMode] || '2v2 组队演武';
       document.getElementById('endSub').textContent = `${modeName} · ${iWon ? '凯旋大捷！' : '惜败，择日再战！'} 比分 ${M.wins[0]} : ${M.wins[1]}`;
       $id('endRank').textContent = iWon ? '双雄合璧，克敌制胜' : '胜败乃兵家常事';
