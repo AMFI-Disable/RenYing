@@ -250,82 +250,6 @@
     });
   }
 
-  const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
-  const DEV_ALL_SKINS = [
-    'fy_blood', 'fy_huandie', 'fy_jade', 'fy_p1', 'fy_p2', 'fy_phantom', 'fy_zaqu', 'fy_zsco', 'fy_ztau',
-    'gc_crimson', 'gc_p1', 'gc_p2', 'gc_underworld', 'gc_wolf', 'gc_zari', 'gc_zcap', 'gc_ztau',
-    'lm_asura', 'lm_jiuxiao', 'lm_p1', 'lm_p2', 'lm_sun', 'lm_violet', 'lm_zari', 'lm_zcap', 'lm_zleo',
-    'lq_silk', 'lq_sparrow',
-    'ls_aurora', 'ls_dragon', 'ls_p1', 'ls_p2', 'ls_plum', 'ls_tianhe', 'ls_zgem', 'ls_zsag', 'ls_zsco',
-    'ly_bamboo', 'ly_dusk', 'ly_fox', 'ly_jinli', 'ly_p1', 'ly_p2', 'ly_sky', 'ly_zlib', 'ly_zpis', 'ly_zvir',
-    'my_celestial', 'my_cinnabar', 'my_gold', 'my_p1', 'my_p2', 'my_qinglv', 'my_zaqu', 'my_zlib', 'my_zvir',
-    'qf_abyss', 'qf_frost', 'qf_gold', 'qf_p1', 'qf_p2', 'qf_qfx', 'qf_renying', 'qf_zleo', 'qf_zpis', 'qf_zsag',
-    'ts_bronze', 'ts_crimson', 'ts_liuli', 'ts_obsidian', 'ts_p1', 'ts_p2', 'ts_zcap', 'ts_zleo', 'ts_ztau',
-    'yh_eclipse', 'yh_guanghan', 'yh_p1', 'yh_p2', 'yh_sakura', 'yh_solstice', 'yh_zcan', 'yh_zlib', 'yh_zvir',
-    'yl_blizzard', 'yl_kongque', 'yl_p1', 'yl_p2', 'yl_phoenix', 'yl_raven', 'yl_zari', 'yl_zgem', 'yl_zsag',
-    'yx_celestial', 'yx_p1', 'yx_p2', 'yx_snow', 'yx_tianlai', 'yx_zcan', 'yx_zgem', 'yx_zpis',
-    'zx_amber', 'zx_immortal', 'zx_moon', 'zx_p1', 'zx_p2', 'zx_zaqu', 'zx_zcan', 'zx_zsco'
-  ];
-
-  function makeDevProfile() {
-    function getDevSkins() {
-      const s = new Set(DEV_ALL_SKINS);
-      if (typeof SKINS !== 'undefined') Object.keys(SKINS).forEach(k => s.add(k));
-      if (typeof ArmoryCore !== 'undefined') {
-        if (ArmoryCore.ITEM) Object.keys(ArmoryCore.ITEM).forEach(k => s.add(k));
-        if (ArmoryCore.CS_KEYS) ArmoryCore.CS_KEYS.forEach(k => s.add(k));
-      }
-      return Array.from(s);
-    }
-    const allSkins = getDevSkins();
-    let devArmory = undefined;
-    if (typeof ArmoryCore !== 'undefined') {
-      const C = ArmoryCore;
-      const newInv = [];
-      let nid = 1;
-      for (const k of allSkins) {
-        if (!C.isItem(k)) continue;
-        for (const stVal of [-1, 0]) {
-          for (let copy = 0; copy < 5; copy++) {
-            newInv.push({ i: nid++, k, st: stVal, t: Date.now() });
-          }
-        }
-      }
-      const devCases = {};
-      for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7','c8'])) {
-        devCases[cid] = 1000;
-      }
-      devArmory = C.blank();
-      devArmory.inv = newInv;
-      devArmory.nid = nid;
-      devArmory.via = Array.from(new Set(allSkins.filter(k => C.isItem(k))));
-      devArmory.cases = devCases;
-    }
-    return {
-      name: 'Dev',
-      ink: 1000000,
-      owned: DEV_ALL_CHARS.slice(),
-      frags: {
-        qingfeng: 99, yanling: 99, leiming: 99, tieshan: 99,
-        liuyun: 99, lingshuang: 99, moyu: 99, feiying: 99, yuehua: 99,
-        yuxiao: 99, zuixian: 99, gouchen: 99, lingque: 99
-      },
-      pity: 0,
-      spity: 0,
-      skins: allSkins,
-      equip: {},
-      netWins: 99,
-      netLosses: 0,
-      rating: 2000,
-      placed: 10,
-      online10Unlocked: true,
-      stageStars: { s1: 3, s2: 3, s3: 3, s4: 3, s5: 3, s6: 3, s7: 3, s8: 3, s9: 3, s10: 3 },
-      qfx: 99,
-      ...(devArmory ? { armory: devArmory } : {}),
-      updatedAt: Date.now()
-    };
-  }
-
   function toCloudData(prof) {
     const p = prof || {};
     return {
@@ -347,7 +271,7 @@
       updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : Date.now(),
       ...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {}),
       ...(p.saga && typeof p.saga === 'object' ? { saga: cleanSaga(p.saga) } : {}),
-      ...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : (typeof window !== 'undefined' && typeof window.getDevArmoryState === 'function' ? { armory: window.getDevArmoryState() } : {}))
+      ...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : {})
     };
   }
 
@@ -586,126 +510,11 @@
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(true); });
   }
 
-  // 开发者账号处理：Dev 和别的账号一样用云端的密码登录（网页里不存 Dev 的密码）。
-  // 云端的 Dev 号别人注册不了，没有的话在管理后台建；密码也只能在管理后台重设
-  async function loginDev(password) {
-    try {
-      let data = null;
-      try {
-        data = await api('/api/login', {
-          method: 'POST',
-          body: JSON.stringify({ username: 'Dev', password })
-        });
-      } catch (err) {
-        if (err && err.status === 404) {
-          const e = new Error('云端还没有 Dev 账号，请先在管理后台建一个');
-          e.status = 404;
-          throw e;
-        }
-        throw err;
-      }
-
-      setToken(data.token);
-      const userObj = {
-        uid: data.uid,
-        name: 'Dev',
-        displayName: 'Dev',
-        token: data.token,
-        isCloud: true,
-        isDevMaster: true
-      };
-      currentUser = userObj;
-      try {
-        localStorage.setItem('renying-local-current', JSON.stringify(userObj));
-      } catch (e) {}
-
-      let devProf = null;
-      if (data.profile) {
-        devProf = adoptProfile(data.uid, data.profile, data.ledger);
-      } else {
-        devProf = makeDevProfile();
-      }
-      // 保证 Dev 开发者账号拥有全角色全皮肤等基础特权
-      const baseDev = makeDevProfile();
-      devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned]));
-      devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
-      devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
-      devProf.online10Unlocked = true;
-      if (baseDev.armory) {
-        if (!devProf.armory || typeof devProf.armory !== 'object') {
-          devProf.armory = baseDev.armory;
-        } else {
-          devProf.armory.cases = Object.assign({}, baseDev.armory.cases || {}, devProf.armory.cases || {});
-          if (!devProf.armory.inv || !devProf.armory.inv.length) {
-            devProf.armory.inv = baseDev.armory.inv;
-            devProf.armory.nid = baseDev.armory.nid;
-            devProf.armory.via = baseDev.armory.via;
-          }
-        }
-      }
-      if (typeof window !== 'undefined' && typeof window.grantDevArmory === 'function' && devProf.armory) {
-        window.grantDevArmory(devProf.armory.inv, devProf.armory.cases);
-      }
-
-      try {
-        localStorage.setItem(profKey(data.uid), JSON.stringify(devProf));
-      } catch (e) {}
-
-      setSync({ state: 'ok', at: Date.now(), err: '' });
-      notifyAuthChange(currentUser);
-      return userObj;
-    } catch (netErr) {
-      if (netErr && netErr.status) throw netErr;   // 服务器回了话（密码不对、试错太多、没有这个号）：照实说
-      console.warn('Dev cloud login failed, falling back to local dev account:', netErr);
-      const uid = 'dev_master';
-      let devProf = null;
-      try {
-        devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
-      } catch (e) {}
-      if (!devProf) {
-        devProf = makeDevProfile();
-      } else {
-        const baseDev = makeDevProfile();
-        devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned]));
-        devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
-        devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
-        devProf.online10Unlocked = true;
-        if (baseDev.armory) {
-          if (!devProf.armory || typeof devProf.armory !== 'object') {
-            devProf.armory = baseDev.armory;
-          } else {
-            devProf.armory.cases = Object.assign({}, baseDev.armory.cases || {}, devProf.armory.cases || {});
-            if (!devProf.armory.inv || !devProf.armory.inv.length) {
-              devProf.armory.inv = baseDev.armory.inv;
-              devProf.armory.nid = baseDev.armory.nid;
-              devProf.armory.via = baseDev.armory.via;
-            }
-          }
-        }
-      }
-      if (typeof window !== 'undefined' && typeof window.grantDevArmory === 'function' && devProf.armory) {
-        window.grantDevArmory(devProf.armory.inv, devProf.armory.cases);
-      }
-      try {
-        localStorage.setItem(profKey(uid), JSON.stringify(devProf));
-        localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true, isCloud: false }));
-      } catch (e) {}
-      currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
-      notifyAuthChange(currentUser);
-      return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
-    }
-  }
-
   // 账号注册
   async function register(username, password, carryProf) {
     const name = String(username).trim();
     if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
     if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
-
-    if (name.toLowerCase() === 'dev') {
-      try { return await loginDev(password); }
-      catch (e) { throw e && e.status === 401 ? new Error('该昵称已被使用') : e; }
-    }
 
     // 读取游客进度准备同步上云
     let initialProf = carryProf || null;   // 本机账号升级时带上它自己的存档；否则带游客进度
@@ -750,6 +559,7 @@
       if (err.message && err.message.includes('已') && err.message.includes('注册')) {
         throw err;
       }
+      if (err && err.status >= 400 && err.status < 500 && err.status !== 404) throw err;   // 服务器回了话（昵称不能用、太频繁）：照实说，不偷偷建本机账号
       console.warn('Cloudflare Worker register failed, falling back to local account:', err);
       // 本地降级模拟
       const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
@@ -774,10 +584,6 @@
     const name = String(username).trim();
     if (!name) throw new Error('请输入昵称');
     if (!password) throw new Error('请输入密码');
-
-    if (name.toLowerCase() === 'dev') {
-      return await loginDev(password);
-    }
 
     try {
       const data = await api('/api/login', {
@@ -882,12 +688,10 @@
   // 获取当前用户
   function getUser() {
     if (currentUser) {
-      const isDev = !!currentUser.isDevMaster;
       return {
         uid: currentUser.uid,
         name: currentUser.displayName || currentUser.name || '大侠',
         isCloud: !!(currentUser.isCloud && currentUser.token),
-        isDevMaster: isDev,
         token: currentUser.token || getToken()
       };
     }
@@ -896,8 +700,8 @@
       if (local && local.uid) {
         const token = getToken();
         const isCloud = !!(token && local.isCloud !== false);
-        const isDev = !!local.isDevMaster;
-        currentUser = { ...local, token, isCloud, displayName: local.name, isDevMaster: isDev };
+        const { isDevMaster, ...rest } = local;
+        currentUser = { ...rest, token, isCloud, displayName: local.name };
         return currentUser;
       }
     } catch (e) {}
@@ -1213,9 +1017,22 @@
 
   function init() {
     migrateLegacyCache();
+    dropDevSession();
     getUser();
-    // 离线时降成本地 dev_master 的 Dev，联网后重新登录一次就回到云端（网页里不存 Dev 的密码，没法自动登录）
   }
+  // 以前的 Dev 有特殊处理：登录时塞满全角色、全皮肤、一百万墨锭，离线时还会降成本机的 dev_master 号，兑换码也能把任何号变成它。
+  // 现在 Dev 和别人一样：本机的 dev_master 登录状态退出（它的本机存档留着不删），云端 Dev 去掉旧的标记、照常登录
+  function dropDevSession() {
+    try {
+      const cur = JSON.parse(localStorage.getItem('renying-local-current') || 'null');
+      if (!cur || typeof cur !== 'object') return;
+      if (cur.uid === 'dev_master' || (cur.isDevMaster && !cur.isCloud)) { localStorage.removeItem('renying-local-current'); return; }
+      if ('isDevMaster' in cur) { delete cur.isDevMaster; localStorage.setItem('renying-local-current', JSON.stringify(cur)); }
+    } catch (e) {}
+    try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
+  }
+
+  dropDevSession();   // 网页一载入就做（init 不一定有人调），要赶在第一次 getUser() 之前
 
   // 挂载到全局
   if (typeof window !== 'undefined') {
@@ -1240,7 +1057,6 @@
       importAccountData,
       computeProfileDigest,
       verifyProfileDigest,
-      makeDevProfile,
       toCloudData,
       mergeProfiles,
       promoteLocalToCloud,

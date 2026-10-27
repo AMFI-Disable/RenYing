@@ -955,7 +955,7 @@ async function badInputs(path, base, cases) {   // 每一种乱填都要 400、�
   return out;
 }
 
-section('Dev 是开发组的市场账号：库存不受限；dev、官方这类昵称别人注册不了；Dev 只能在管理后台建号、重设密码');
+section('Dev 和普通玩家一样记账；dev、官方这类昵称别人注册不了；Dev 只能在管理后台建号、重设密码');
 {
   const names = ['dev', 'Dev', 'DEV', 'd e v', 'dev_master', 'admin', 'Administrator', 'GM', '官方', '管理员', '开发组', '刃影官方'];
   const rs = [];
@@ -976,27 +976,30 @@ section('Dev 是开发组的市场账号：库存不受限；dev、官方这类�
   const log0 = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'admin_pw'", mk.uid);
   ok(log0 && !log0.detail.includes('dev-pass') && JSON.parse(log0.detail).created === true, '流水记了建号，没记密码');
 
-  // Dev 同步上来的存档：墨锭、皮肤、武库库存都照收（给 AI 往市场上放货用）
+  // Dev 和普通玩家一样：同步上来的墨锭、皮肤、武库库存都不认；要给它东西走管理后台
   const k = C.CS_KEYS[0], prof = profOf(mk.uid);
-  const up = await call('POST', '/api/profile', { profile: { ...prof, ink: 500000, skins: [...C.CS_KEYS, 'qf_frost'], armory: { inv: [{ i: 1, k, st: -1, t: T, src: 'case' }, { i: 2, k, st: 0, t: T, src: 'case' }], cases: { c1: 50 }, nid: 3 } } }, dev.token);
+  await econ(dev.token, 'sync');
+  const devInk0 = inkOf(mk.uid);
+  const up = await call('POST', '/api/profile', { profile: { ...prof, ink: 500000, skins: [...C.CS_KEYS, 'qf_frost'], armory: { inv: [{ i: 1, k, st: -1, t: T, src: 'case' }, { i: 2, k, st: 0, t: T, src: 'case' }], cases: { c1: 50 }, nid: 3 } }, ledger: { deltas: [], ev: 0 } }, dev.token);
   const ds = stateOf(mk.uid);
-  ok(up.ok && inkOf(mk.uid) === 500000 && ds.inv.length === 2 && ds.cases.c1 === 50, 'Dev 的墨锭、武器箱、库存照收', [inkOf(mk.uid), ds.inv.length, ds.cases.c1]);
-  ok(C.CS_KEYS.every(k => profOf(mk.uid).skins.includes(k)), 'Dev 的武库皮肤不按库存核对');
-  const L = await econ(dev.token, 'list', { i: 1, price: 777 });
+  ok(up.ok && inkOf(mk.uid) === devInk0 && !ds.inv.length && !ds.cases.c1 && !profOf(mk.uid).skins.some(x => C.CS_KEYS.includes(x)), 'Dev 报上来的墨锭、库存、武器箱、武库皮肤一样都不认（和普通玩家一样）', [inkOf(mk.uid), ds.inv.length, ds.cases.c1]);
+  const give = await adm('POST', '/api/admin/adjust', { uid: mk.uid, give: [k], why: '给 Dev 放货' });
+  const dItem = stateOf(mk.uid).inv.find(x => x.k === k);
+  ok(give.ok && dItem && profOf(mk.uid).skins.includes(k), '管理后台给 Dev 发的饰品进了库存，能穿', give);
+  const L = await econ(dev.token, 'list', { i: dItem.i, price: 777 });
   ok(L.res && L.res.ok && mrow(L.res.l).seller === mk.uid, 'Dev 把饰品挂到玩家市场', L.res);
   const buyer = await newUser('devbuyer', { ink: 2000 });
   await econ(buyer.token, 'sync');
   const by = await econ(buyer.token, 'buy', { l: L.res.l, price: 777 });
   ok(by.res && by.res.ok && by.res.item.k === k && inkOf(buyer.uid) === 2000 - 777, '玩家从 Dev 手里买到了', by.res);
+  await econ(dev.token, 'sync');
+  ok(!profOf(mk.uid).skins.includes(k) && !stateOf(mk.uid).inv.some(x => x.k === k), 'Dev 卖掉最后一件以后就穿不了了（和普通玩家一样）');
 
   // 普通玩家同样这么报：一样都不认
   const norm = await newUser('notdev');
   await econ(norm.token, 'sync');
   const up2 = await call('POST', '/api/profile', { profile: { ...profOf(norm.uid), ink: 500000, skins: [...C.CS_KEYS], armory: { inv: [{ i: 1, k, st: -1, t: T, src: 'case' }], cases: { c1: 50 }, nid: 2 } }, ledger: { deltas: [], ev: 0 } }, norm.token);
   ok(up2.ok && inkOf(norm.uid) < 500000 && !stateOf(norm.uid).inv.length && !stateOf(norm.uid).cases.c1 && !profOf(norm.uid).skins.some(k => C.CS_KEYS.includes(k)), '普通玩家报同样的东西：墨锭、库存、武器箱、武库皮肤都不认', [inkOf(norm.uid), stateOf(norm.uid).inv.length]);
-
-  // 管理员给 Dev 加减时，也不按库存去掉它的皮肤
-  ok((await adm('POST', '/api/admin/adjust', { uid: mk.uid, ink: 1, why: '看看皮肤还在不在' })).ok && C.CS_KEYS.every(k => profOf(mk.uid).skins.includes(k)), '管理员给 Dev 加墨锭：Dev 的皮肤还在');
 
   // 重设密码：旧的登录全部退出，旧密码不能用，新密码能用；输错太多被锁的也一起解开
   for (let i = 0; i < 8; i++) await call('POST', '/api/login', { username: 'Dev', password: 'guess-' + i }, undefined, '3.4.1.' + i);
@@ -1339,6 +1342,54 @@ section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段
     const names = JSON.parse((/const NAMES = (\{.*?\});/.exec(scripts[0]) || [])[1] || '{}');
     ok(Object.keys(C.ITEM).every(k => names.skins && names.skins[k]) && C.HERO_IDS.every(hh => names.heroes && names.heroes[hh]), '每件饰品、每个侠客在网页里都有名字');
   } else ok(scriptSrc === "'none'", '没打包的 worker.js：回一个说明页，不跑任何脚本');
+}
+
+section('以前的绑定皮肤：老号第一次动武库时换成库存里的饰品（只换一次），能卖；之后建的号、之后报上来的不换；星座码每个号只领一次');
+{
+  T = nextNoon();
+  const old = await newUser('bindold', { skins: ['qf_gold', 'ts_bronze', 'qf_p1'], equip: { qingfeng: 'qf_gold' } });
+  ok(profOf(old.uid).skins.includes('qf_gold') && !profOf(old.uid).skins.includes('qf_p1'), '注册带上来的：原版皮肤留着（绑定），武库专属的不认');
+  ENV.DB.raw.prepare('UPDATE users SET created_at = ? WHERE id = ?').run(Date.UTC(2026, 9, 1), old.uid);   // 截止日之前建的号
+  await econ(old.token, 'sync');
+  const s1 = stateOf(old.uid), lg = s1.inv.filter(x => x.src === 'legacy');
+  ok(lg.length === 2 && lg.every(x => x.st === -1 && s1.via.includes(x.k)) && ['qf_gold', 'ts_bronze'].every(k => lg.some(x => x.k === k)), '两款绑定皮肤各换成一件普通版饰品，记进 via', s1.inv);
+  ok(profOf(old.uid).skins.includes('qf_gold') && profOf(old.uid).equip.qingfeng === 'qf_gold', '换完照样能穿，穿着的不变');
+  ok(row("SELECT COUNT(*) AS n FROM econ_log WHERE uid = ? AND act = 'legacy'", old.uid).n === 1, '流水记了一笔 legacy');
+  await econ(old.token, 'sync');
+  ok(stateOf(old.uid).inv.length === 2, '再动武库不会再换（每个号只换一次）');
+  const up = await call('POST', '/api/profile', { profile: { ...profOf(old.uid), skins: [...profOf(old.uid).skins, 'yh_sakura'] }, ledger: { deltas: [], ev: 0 } }, old.token);
+  await econ(old.token, 'sync');
+  ok(up.ok && profOf(old.uid).skins.includes('yh_sakura') && !stateOf(old.uid).inv.some(x => x.k === 'yh_sakura'), '换过以后网页再报上来的皮肤不进库存（服务器核对不了，只能穿不能卖）');
+  const gold = stateOf(old.uid).inv.find(x => x.k === 'qf_gold');
+  const L = await econ(old.token, 'list', { i: gold.i, price: 321 });
+  ok(L.res && L.res.ok, '换来的饰品能挂到玩家市场', L.res);
+  const buyer = await newUser('bindbuyer', { ink: 2000 });
+  await econ(buyer.token, 'sync');
+  const by = await econ(buyer.token, 'buy', { l: L.res.l, price: 321 });
+  ok(by.res && by.res.ok && stateOf(buyer.uid).inv.some(x => x.k === 'qf_gold') && profOf(buyer.uid).skins.includes('qf_gold'), '别的玩家买到了，能穿', by.res);
+  await econ(old.token, 'sync');
+  ok(!profOf(old.uid).skins.includes('qf_gold') && !profOf(old.uid).equip.qingfeng, '卖掉以后原来的号就穿不了了（不会卖了还留着）');
+
+  const fresh = await newUser('bindnew', { skins: ['lm_violet'] });
+  ENV.DB.raw.prepare('UPDATE users SET created_at = ? WHERE id = ?').run(Date.UTC(2026, 10, 1), fresh.uid);
+  await econ(fresh.token, 'sync');
+  ok(!stateOf(fresh.uid).inv.length && profOf(fresh.uid).skins.includes('lm_violet'), '截止日以后建的号不换：皮肤照样能穿，库存里没有');
+
+  const z = await newUser('zodone', { ink: 100 });
+  await econ(z.token, 'sync');
+  const zr = await econ(z.token, 'claimCode', { code: 'ZODIAC2026STAR' });
+  const zs = stateOf(z.uid), zk = Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
+  ok(zr.ok && zk.every(k => zs.inv.some(x => x.k === k) && profOf(z.uid).skins.includes(k)), '星座码：36 款各一件进库存，能穿', zr.error);
+  const zi = zs.inv.find(x => x.k === zk[0]);
+  const ZL = await econ(z.token, 'list', { i: zi.i, price: 500 });
+  const zb = await econ(buyer.token, 'buy', { l: ZL.res.l, price: 500 });
+  ok(zb.res && zb.res.ok, '卖掉一件', zb.res);
+  const again = await econ(z.token, 'claimCode', { code: 'ZODIAC2026STAR' });
+  ok(again.status === 400 && again.error === '这个兑换码你已经领过了' && !stateOf(z.uid).inv.some(x => x.k === zk[0]), '卖掉以后再输一次：已经领过了，不补（不然卖了再领就是凭空变墨锭）', again);
+  const z2 = await newUser('zodrace', { ink: 100 });
+  await econ(z2.token, 'sync');
+  const zrs = await Promise.all(Array.from({ length: 4 }, () => econ(z2.token, 'claimCode', { code: 'ZODIAC2026STAR' })));
+  ok(zrs.filter(r => r.ok).length === 1 && stateOf(z2.uid).inv.length === zk.length, '同一个号同时领 4 次：只领到一份', zrs.map(r => r.status + (r.error || '')));
 }
 
 section('规则核心：冻结、坏存档自愈');

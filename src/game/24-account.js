@@ -40,10 +40,10 @@ function renderAcc() {
     ? `<span class="who">${escapeHTML(u.name)}</span>${cloudBadge}<span class="ink">墨锭 ${PROF.ink || 0}</span><button class="ghost" id="accOpen">账号与云存档</button><button class="ghost" id="logoutBtn">退出</button>`
     : `<button class="ghost" id="accOpen">登录 / 注册</button>`;
 
-  // 开发者专享：全量备份与管理后台入口仅向 Dev 账号开放（后台本身要管理口令）
+  // 管理后台入口和全量备份只在云端的 Dev 号上显示（只是两个按钮，后台本身要管理口令；Dev 的存档、武库和别人一样）
   const actionBtns = $id('accActionBtns');
   if (actionBtns) {
-    const isDev = !!(u && u.isDevMaster);
+    const isDev = isDevName(u);
     const devAdminBtn = $id('devAdminBtn');
     if (devAdminBtn) devAdminBtn.classList.toggle('hidden', !isDev);
     let expAll = $id('exportAllBtn');
@@ -72,6 +72,7 @@ function renderAcc() {
     }
   }
 }
+function isDevName(u) { return !!(u && u.isCloud && String(u.name || '').toLowerCase() === 'dev'); }   // 云端的 Dev 这个名字只能在管理后台建
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 if ($id('exportAccBtn')) {
@@ -159,7 +160,7 @@ function renderAccPage() {
   $id('adAvatar').textContent = name.slice(0, 1);
   $id('adAvatar').style.setProperty('--tier', placed ? RK_TIERS[t.li].c1 : '#8a94a3');
   $id('adName').textContent = name;
-  $id('adKind').textContent = u && u.isDevMaster ? (u.isCloud ? '开发者账号 · 云端同步' : '开发者账号 · 本地模式') : u && u.isCloud ? '云端账号' : '本机账号';
+  $id('adKind').textContent = isDevName(u) ? '开发者账号 · 云端同步' : u && u.isCloud ? '云端账号' : '本机账号';
   $id('adRank').textContent = placed ? `${t.label} · ${t.name} · ${t.pts.toLocaleString()} 分` : `定级赛 ${s.placed}/${RK.PLACE} · 估分 ～${Math.round(s.est).toLocaleString()}`;
   $id('adMedal').innerHTML = rkMedalFor(s, 96);
   const w = PROF.netWins || 0, l = PROF.netLosses || 0;
@@ -416,7 +417,7 @@ function claimLegacyAccount(accData) {
   const rawEquip = Object.assign({}, accData.equip || {}, PROF.equip || {});
   PROF.equip = {};
   for (const [cid, sk] of Object.entries(rawEquip)) {
-    if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent())) {
+    if (sk && (validSkins.has(sk) || OFFLINE_BUILD || freeSkinEvent())) {
       PROF.equip[cid] = sk;
     }
   }

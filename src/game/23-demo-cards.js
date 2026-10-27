@@ -890,8 +890,8 @@ function renderBP() {
     }
     const can = myTurn && bpValid(i);
     const myAv = BP.avail && BP.avail[my];
-    const lock = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && myAv && !myAv.includes(i);
-    const free = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
+    const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
+    const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
     const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
     const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
     const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;

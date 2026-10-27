@@ -109,7 +109,7 @@ function nextStage(S) { return S.l < 4 ? [S.c, S.l + 1] : S.c < CHAPTERS.length 
 // 进度：每关拿到的最多星数，存在本机浏览器里
 let STAGE_STARS = {};
 try { STAGE_STARS = JSON.parse(localStorage.getItem('renying-stage') || '{}') || {}; } catch (e) {}
-function stageOpen(c, l) { return DEV_SESSION_UNLOCKED || (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
+function stageOpen(c, l) { return (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
 let STAGE = null, stageCh = -1;
 function renderStages() {
   if (stageCh < 0) { stageCh = 0; for (let c = 0; c < CHAPTERS.length; c++) if (stageOpen(c, 0)) stageCh = c; }   // 默认翻到最新解锁的一章
@@ -445,6 +445,11 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 class AICtrl extends Ctrl {
   constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
   updateTactic() { this.brain.newRound(); }
-  think(me, foe) { this.brain.think(me, foe); }
+  think(me, foe) {
+    // 联机回滚时两边各跑一份电脑，必须掷出同样的骰子：想招这一下借用对局随机数（会进存档），想完换回来
+    if (!(ROLL.on && M.mode === 'net')) return this.brain.think(me, foe);
+    const r0 = Math.random; Math.random = grnd;
+    try { this.brain.think(me, foe); } finally { Math.random = r0; }
+  }
 }
 

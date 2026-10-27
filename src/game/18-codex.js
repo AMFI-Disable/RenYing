@@ -90,7 +90,7 @@ const HERO_MOVE_TYPES = {
     charge: { type: 'melee', label: '近战突刺', rng: 'melee' },
     air: { type: 'melee', label: '近战', rng: 'melee' },
     skill: { type: 'ranged', label: '远距飞梭', rng: 'ranged', icon: 'ranged' },
-    ranged: { type: 'dash', label: '突进换影', rng: 'mid', icon: 'melee' },
+    ranged: { type: 'dash', label: '追踪换影', rng: 'ranged', icon: 'melee' },
     ult: { type: 'fullscreen', label: '全域悬丝', rng: 'screen' },
     esc: { type: 'esc', label: '身法' }
   },
@@ -292,7 +292,7 @@ const HERO_HIT_DETAILS = {
     charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '34.6 / 55.7', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
     air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '17.3 / 25', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
     skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 3.5s', badgeCls: 'badge-stun', dmg: '30', desc: '掷出牵丝子母梭贯穿前方，命中施加3.5秒雀芒印记。' },
-    ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '34 (+38爆伤)', desc: '踏悬丝穿刺突进；穿透已带印记者引爆真气并瞬间刷新冷却！' },
+    ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '34 (+38爆伤)', desc: '化作流光追着对手飞过去穿刺（最多追 0.8 秒），只有腾空闪这类无敌身法躲得开；穿透已带印记者引爆真气并瞬间刷新冷却！' },
     ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '140 (8段)', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
     esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
   },
@@ -1052,7 +1052,7 @@ function renderCodex() {
     cv2.style.boxShadow = `0 16px 48px ${col.replace('rgb', 'rgba').replace(')', ',0.35)')}`;
     cv2.style.borderColor = col;
   }
-  const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
+  const rar = CHAR_RARITY[c.id], own = ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
   const skMeta = skin && SKINS[skin], skG = skMeta && skinGrade(skin);
   const skPill = skMeta ? `<span class="pill sk-pill" style="--tc:${skG.c}">${skG.n} · ${skMeta.name}</span>` : '';
   $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>`;
@@ -1069,7 +1069,7 @@ function renderCodex() {
   const renderSkinBtn = ([k, v]) => {
     const has = skinOwned(k), g = skinGrade(k);
     const lockHint = v.exclusive ? ' · 青锋行 / 武库' : ' · 武库';
-    return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
+    return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD ? '' : ' · 限免') : lockHint}</button>`;
   };
 
   const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
@@ -1129,9 +1129,9 @@ function renderCodex() {
       const ch = CHAPTERS[chIdx];
       const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar', yuxiao: 'yx_snow', zuixian: 'zx_amber', gouchen: 'gc_crimson' })[c.id];
       const rSkin = rSkinKey && SKINS[rSkinKey];
-      const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+      const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD;
       const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
-      const clear = stars > 0 || DEV_SESSION_UNLOCKED;
+      const clear = stars > 0;
       return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
     })()}${typeof sagaCodexLine === 'function' ? sagaCodexLine(c.id) : ''}</div>`, '', true),
     ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', false, null, true) : '',

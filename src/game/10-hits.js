@@ -434,17 +434,20 @@ function fighterDown(def, att, ev) {
   }
   M.phase = 'ko'; M.t = 0; M.koWinner = is2v2() ? att.idx % 2 : att.idx; ev.ko = true;
 }
+// 命中的顿帧会影响对战（顿帧里谁都不动），回滚重算和第一次算必须一模一样：两条路都只走这一个函数
+function hitStopOf(ev, att) {
+  if (ev.guardBreak) { hitstop = Math.max(hitstop, 0.22); return; }
+  if (ev.blk) { hitstop = ev.hs * 0.7; return; }
+  if (ev.armor) { hitstop = Math.max(hitstop, ev.hs * 0.6); return; }
+  if (ev.counter) hitstop = Math.max(hitstop, 0.18);
+  hitstop = Math.max(hitstop, ev.hs * (att.ch.hitFeel || 1));
+  if (ev.ko) hitstop = 0.28;
+}
 // 命中的画面和声音（联机时两边都会播放）
 function hitVisual(ev, quiet) {
   const att = fighterByIdx(ev.a), def = fighterByIdx(ev.d);
-  if (RESIM) {   // 重算：只保留影响对战的顿帧
-    if (ev.guardBreak) hitstop = 0.22;
-    else if (ev.blk) hitstop = ev.hs * 0.7;
-    else if (ev.armor) hitstop = Math.max(hitstop, ev.hs * 0.6);
-    else hitstop = Math.max(hitstop, ev.hs * (att.ch.hitFeel || 1));
-    if (ev.ko && !ev.blk && !ev.armor) hitstop = 0.28;   // 击杀的顿帧也会影响对战，重算时不能漏掉
-    return;
-  }
+  if (RESIM) { hitStopOf(ev, att); return; }   // 重算：只保留影响对战的顿帧
+  if (!quiet) hitStopOf(ev, att);
   if (quiet) {   // 效果已经提前播过了，只更新连击数
     if (!ev.blk && !ev.armor && !ev.nc) { const cu = comboUI[ev.a]; if (cu.t <= 0 || ev.cn === 1) { cu.n = 0; cu.dmg = 0; } cu.n = ev.cn; cu.dmg += ev.dd; cu.t = 1.4; }
     def.lagDelay = 0.5; return;
@@ -454,24 +457,23 @@ function hitVisual(ev, quiet) {
     ring(ev.x, ev.y, 160, '255,120,80', 0.45);
     addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
     SFX.heavy();
-    hitstop = Math.max(hitstop, 0.22);
     return;
   }
   if (ev.wb) { ring(ev.x, ev.y, 80, '255,255,255', 0.3); SFX.block(); }
   const fdir = ev.f || att.face;
   if (ev.blk) {
-    hitstop = ev.hs * 0.7; shake = Math.max(shake, 3);
+    shake = Math.max(shake, 3);
     blockFX(ev.x, ev.y, fdir); SFX.block();
     return;
   }
   if (ev.armor) {
-    def.flash = 0.06; def.lagDelay = 0.5; hitstop = Math.max(hitstop, ev.hs * 0.6); shake = Math.max(shake, 4);
+    def.flash = 0.06; def.lagDelay = 0.5; shake = Math.max(shake, 4);
     ring(ev.x, ev.y, 46, '255,215,120', 0.22); blockFX(ev.x, ev.y, fdir); SFX.block();
     addP({ type: 'text', text: '霸体', x: def.x, y: def.y - 130 * def.size, life: 0.55, max: 0.55, rgb: '255,215,120' });
     return;
   }
   if (ev.counter && !quiet) {
-    flashA = Math.max(flashA, 0.38); flashRGB = '255,60,50'; shake = Math.max(shake, 14); hitstop = Math.max(hitstop, 0.18);
+    flashA = Math.max(flashA, 0.38); flashRGB = '255,60,50'; shake = Math.max(shake, 14);
     camImpact(ev.x, ev.y, 0.24, 0.40);
     addP({ type: 'callout', text: '破', x: ev.x, y: ev.y - 85, life: 0.75, max: 0.75, rgb: '255,75,55', scale: 2.4 });
     ring(ev.x, ev.y, 65, '255,75,55', 0.28);
@@ -483,7 +485,6 @@ function hitVisual(ev, quiet) {
   }
   def.flash = 0.09; def.lagDelay = 0.5;
   const feel = att.ch.hitFeel || 1;                 // 卡肉感：重武器停顿更久
-  hitstop = Math.max(hitstop, ev.hs * feel);
   shake = Math.max(shake, ev.hs * 80 * feel);
   // 方向性震颤：沿攻击朝向施加反冲冲量
   shakeDirX = fdir * Math.min(18, ev.hs * 60 * feel);
@@ -549,7 +550,7 @@ function hitVisual(ev, quiet) {
     if (Math.random() < 0.45) SFX.voiceHurt(pitch);
   }
   if (ev.ko) {
-    slowmo = 1.3; hitstop = 0.28; shake = 26; flashA = 0.7; flashRGB = '255,255,255';
+    slowmo = 1.3; shake = 26; flashA = 0.7; flashRGB = '255,255,255';
     camImpact(ev.x, ev.y, 0.42, 1.4);
     say('斩', 1.6, 'ko'); SFX.ko(); SFX.voiceHurt(0.75);
   }

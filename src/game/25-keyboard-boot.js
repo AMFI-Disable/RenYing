@@ -75,7 +75,7 @@ window.addEventListener('keydown', e => {
       c = human[p] || human[0];
     } else if (M.mode === '2v2' || is2v2()) {
       if (M.subMode === 'pp_cc') {
-        c = p === 1 ? human[1] : human[0];
+        c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
       } else if (M.subMode === 'pp_pp') {
         c = human[p] || human[0];
       } else {
@@ -98,7 +98,7 @@ window.addEventListener('keyup', e => {
       c = human[p] || human[0];
     } else if (M.mode === '2v2' || is2v2()) {
       if (M.subMode === 'pp_cc') {
-        c = p === 1 ? human[1] : human[0];
+        c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
       } else if (M.subMode === 'pp_pp') {
         c = human[p] || human[0];
       } else {

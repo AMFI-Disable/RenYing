@@ -320,6 +320,41 @@ const testSuite = [
     })()`
   },
   {
+    name: 'Lingque R (shadowdash) homes in: hits a far, fleeing or jumping target; only 腾空闪 dodges it',
+    fn: `(() => {
+      const run = (setup, perFrame) => {
+        startMatch('train', 'stand', [CHAR_IDX.lingque, 0]);
+        showScreen(null); paused = false; M.phase = 'fight';
+        for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; f.needleMark = 0; }
+        A.x = STAGE_W / 2 - 380; B.x = STAGE_W / 2 + 380; A.face = 1; B.face = -1;
+        if (setup) setup();
+        const hp0 = B.hp; A.skill2CD = 0; startSkill(A, B, 2);
+        if (A.skill !== 'shadowdash') return { err: 'R did not start shadowdash: ' + A.skill };
+        let hitAt = -1, maxGap = 0;
+        for (let i = 0; i < 120 && A.state === 'skill'; i++) {
+          if (perFrame) perFrame(i);
+          step();
+          if (hitAt < 0 && B.hp < hp0) hitAt = i;
+        }
+        return { hit: hitAt >= 0, hitAt, dist: Math.round(Math.abs(B.x - A.x)), lqState: A.state };
+      };
+      const far = run();
+      if (!far.hit) return { pass: false, error: 'missed a standing target 760 px away: ' + JSON.stringify(far) };
+      const flee = run(null, i => { if (B.state !== 'hitstun' && B.state !== 'launched') { B.x = Math.min(STAGE_W - WALL, B.x + 4); } });
+      if (!flee.hit) return { pass: false, error: 'missed a target running away: ' + JSON.stringify(flee) };
+      const jump = run(() => { B.state = 'air'; B.vy = -1100; B.y = -2; });
+      if (!jump.hit) return { pass: false, error: 'missed a jumping target: ' + JSON.stringify(jump) };
+      const side = run(null, i => { if (i === 24) { B.x = Math.max(WALL, A.x - 300); } });
+      if (!side.hit) return { pass: false, error: 'did not turn around to a target that got behind it: ' + JSON.stringify(side) };
+      const esc = run(null, i => { if (i === 10) { B.ctrl.buf.dash = clock; } });
+      if (esc.hit) return { pass: false, error: '腾空闪 did not dodge the homing dash: ' + JSON.stringify(esc) };
+      const late = run(null, i => { if (i === far.hitAt + 2) { B.ctrl.buf.dash = clock; } });
+      if (!late.hit) return { pass: false, error: 'a 腾空闪 after the hit should not undo it: ' + JSON.stringify(late) };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'Air attacks (a1, a2) execution for all characters',
     fn: `(() => {
       for (let ci = 0; ci < CHARS.length; ci++) {

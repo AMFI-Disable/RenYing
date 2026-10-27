@@ -48,7 +48,7 @@ const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 // ======================= 联机（公共部分） =======================
 // 联机只有一种连法：浏览器之间用 WebRTC 直接连（PeerJS 只负责牵线），不需要自己的服务器，见 net-p2p.js。
 // 房主叫 host（青锋那一边），加入的人叫 client。对战用“回滚联机”（见下面 ROLL 一节）：两边每帧只交换按键。
-const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [] };
+const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [] };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
   if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {

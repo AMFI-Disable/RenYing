@@ -402,7 +402,7 @@ function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.ad
 function ownsHero(id) { return CHARS.some(c => c.id === id); }
 function heroesFree() { return true; }
 function availList() {
-  if (OFFLINE_BUILD || DEV_SESSION_UNLOCKED || heroesFree()) return CHARS.map((c, i) => i);
+  if (OFFLINE_BUILD || heroesFree()) return CHARS.map((c, i) => i);
   const ok = new Set([...(PROF.owned || ['qingfeng']), ...(PROF.rotation || [])]);
   return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 }
@@ -426,7 +426,7 @@ function skinUltName(fOrKey) {
 function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start && now < FREE_SKIN_EVENT.end; }
 function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
 // 限免活动只包括原来的皮肤；武库里的饰品（cs）要自己开出来或买到
-function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
+function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
 // 自动穿最好的皮肤：没手动选过的角色，穿已拥有里品质综合权重最高的那款（统合绑定传说/非凡与武库顶级饰品）
 function bestSkin(id) {
   let best = '', bw = 0;
@@ -512,12 +512,8 @@ function applyProfile(p, opts) {
   { const fl = loadFlags();   // 一次性奖励的领取记录不进云存档，按账号记在本机，刷新后还在
     if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
     if (fl.tutorial && !PROF.guest) PROF.tutorial = 1;
-    if ((PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) {
-      const zk = getZodiacSkinKeys();
-      PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zk]));
-    }
   }
-  if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !freeSkinEvent() && PROF.equip) {
+  if (!OFFLINE_BUILD && !freeSkinEvent() && PROF.equip) {
     const ownedSkins = new Set(PROF.skins || []);
     for (const [cid, sk] of Object.entries(PROF.equip)) {
       if (sk && !ownedSkins.has(sk)) delete PROF.equip[cid];
@@ -732,135 +728,30 @@ async function redeemCode(rawCode) {
   const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
   if (!code) return;
   const up = code.toUpperCase();
-  if (['LOCK', 'RELOCK'].includes(up)) {
-    DEV_SESSION_UNLOCKED = false;
-    try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
-    if ($id('rdCode')) $id('rdCode').value = '';
-    SFX.thud();
-    renderAcc();
-    if (typeof BP !== 'undefined' && BP) renderBP();
-    if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
-    if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
-    return;
-  }
-  const DEV_SUPER_CODE = 'VG8KS7K8PYP5R36P';
-  if (up === DEV_SUPER_CODE) {
-    const curU = (typeof curName === 'function' ? curName() : '') || (window.CloudSave && CloudSave.getUser && CloudSave.getUser() ? CloudSave.getUser().name : '') || (typeof ACC !== 'undefined' ? ACC.name : '');
-    const isDev = ['dev', 'dev_master'].includes(String(curU || '').trim().toLowerCase()) || !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isDevMaster);
-    if (!isDev) {
-      // 若当前为游客或普通本地会话，使用超级神权码直接提升会话权限为 Dev
-      const devUser = { uid: 'dev_master', name: 'Dev', displayName: 'Dev', isDevMaster: true, isCloud: false };
-      try { localStorage.setItem('renying-local-current', JSON.stringify(devUser)); } catch (e) {}
-      if (typeof ACC !== 'undefined') { ACC.name = 'Dev'; ACC.token = 'dev_master'; }
-      if (window.CloudSave && typeof CloudSave.getUser === 'function') {
-        const u = CloudSave.getUser();
-        if (u) { u.name = 'Dev'; u.displayName = 'Dev'; u.isDevMaster = true; }
-      }
-    }
-    const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
-    const allSkins = Array.from(new Set([
-      ...Object.keys(typeof SKINS !== 'undefined' ? SKINS : {}),
-      ...(typeof ArmoryCore !== 'undefined' ? Object.keys(ArmoryCore.ITEM || {}) : []),
-      ...(typeof ArmoryCore !== 'undefined' ? (ArmoryCore.CS_KEYS || []) : [])
-    ]));
-
-    PROF.ink = 1000000;
-    PROF.owned = allHeroes.slice();
-    PROF.skins = allSkins.slice();
-
-    // 每一款皮肤包含所有形态和斩数各 5 件（共 10 件/皮肤），每个武器箱 1000 个
-    if (typeof ArmoryCore !== 'undefined') {
-      const C = ArmoryCore;
-      const newInv = [];
-      let nid = 1;
-      for (const k of allSkins) {
-        if (!C.isItem(k)) continue;
-        for (const stVal of [-1, 0]) {
-          for (let copy = 0; copy < 5; copy++) {
-            newInv.push({ i: nid++, k, st: stVal, t: Date.now() });
-          }
-        }
-      }
-      const devCases = {};
-      for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7','c8'])) {
-        devCases[cid] = 1000;
-      }
-      let grantedArm = null;
-      if (typeof window.grantDevArmory === 'function') {
-        grantedArm = window.grantDevArmory(newInv, devCases);
-      }
-      if (!grantedArm) {   // 没有武库网页（不该发生）才走存档；grantDevArmory 已经连校验一起放好了，不要再写回去（写回去校验不过会记作弊）
-        const arm = C.normalize(C.blank(), { now: Date.now(), uid: curU });
-        arm.inv = newInv; arm.nid = nid; arm.cases = Object.assign(arm.cases || {}, devCases);
-        arm.via = Array.from(new Set(allSkins.filter(k => C.isItem(k))));
-        PROF.armory = arm;
-      }
-    }
-
-    // 最高段位：S+（25000分，天下无双）
-    const sid = typeof rkSeason === 'function' ? rkSeason().id : 'S1';
-    const devRk = {
-      season: sid,
-      owner: curU,
-      pts: 25000,
-      placed: 10,
-      est: 25000,
-      w: 999,
-      l: 0,
-      peak: 25000,
-      streak: 50,
-      hist: [],
-      pending: null,
-      at: Date.now()
-    };
-    PROF.rk = devRk;
-    try {
-      if (typeof rkOwner === 'function') {
-        localStorage.setItem('renying-rk-' + rkOwner(), JSON.stringify(devRk));
-      }
-    } catch (e) {}
-
-    DEV_SESSION_UNLOCKED = true;
-    try { sessionStorage.setItem('renying-dev-unlock', '1'); } catch (e) {}
-
-    if (window.CloudSave) CloudSave.saveProfile(PROF, true);
-    applyProfile(PROF);
-    if (typeof rkSave === 'function') rkSave();
-
-    SFX.chargeFull();
-    toast('开发者神权兑换成功：最高段位、全角色、全皮肤及副本、1000个武器箱、100万墨锭！');
-    if ($id('tMsg')) $id('tMsg').textContent = '开发者神权兑换成功！已全部解锁并同步。';
-    if ($id('rdCode')) $id('rdCode').value = '';
-    renderTasks();
-    if (typeof renderCodex === 'function' && $id('codex') && $id('codex').classList.contains('on')) renderCodex();
-    if (typeof renderStages === 'function' && $id('single') && $id('single').classList.contains('on')) renderStages();
-    if (typeof renderTopNav === 'function') renderTopNav();
-    if (typeof renderHome === 'function') renderHome();
-    return;
-  }
-  // 星座专属隐藏兑换码：全员可用，解锁全部十二侠客的 36 款星座皮肤（若此前领过但皮肤缺失，允许补齐）
+  // 星座专属隐藏兑换码：全员可用，三十六款星座皮肤每款一件，进武库库存（能穿、能卖、能汰换）。
+  // 云端账号在服务器上领（每个号一次，卖掉的不补）；本机账号进本机武库；游客没有武库，只在这台电脑上能穿
   const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
   if (up === ZODIAC_SECRET_CODE) {
     const zodSkins = getZodiacSkinKeys();
     const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
-    const hasAllSkins = zodSkins.every(k => (PROF.skins || []).includes(k));
-    const hasAllArmory = typeof window.armoryHasAll === 'function' ? window.armoryHasAll(zodSkins) : true;
-    if (redeemed.includes(up) && hasAllSkins && hasAllArmory) {
-      toast('该兑换码已使用过了');
-      if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
-      return;
-    }
+    const say = t => { toast(t); if ($id('tMsg')) $id('tMsg').textContent = t; };
     const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
-    if (cloudUser && typeof window.armoryRedeem === 'function') {
+    if (cloudUser) {
+      if (typeof window.armoryRedeem !== 'function') return;
       const btn = $id('rdBtn');
       if (btn) btn.disabled = true;
-      try { await window.armoryRedeem(up); } catch (e) {} finally { if (btn) btn.disabled = false; }
+      let r = null;
+      try { r = await window.armoryRedeem(up); } catch (e) {} finally { if (btn) btn.disabled = false; }
+      if (!r || r.err) { say((r && r.err) || '兑换没成功，稍后再试'); return; }
+    } else if (PROF.guest) {
+      if (zodSkins.every(k => (PROF.skins || []).includes(k))) { say('该兑换码已使用过了'); return; }
+      PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
+    } else {
+      if (redeemed.includes(up) && typeof window.armoryHasAll === 'function' && window.armoryHasAll(zodSkins)) { say('该兑换码已使用过了'); return; }
+      if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');
     }
     if (!redeemed.includes(up)) redeemed.push(up);
     saveFlag('codes', redeemed);
-
-    PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
-    if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');
 
     if (window.CloudSave) CloudSave.saveProfile(PROF, true);
     applyProfile(PROF);
