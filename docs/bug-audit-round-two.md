@@ -240,3 +240,27 @@ listing rows are escaped when drawn); WebRTC peer names are reduced to
 letters, digits, underscore and CJK by `p2pName`; admin auth uses a length-independent compare plus a 20-try-per-hour
 lockout; market buy/cancel runs inside an optimistic transaction keyed on the listing still being on sale; replay
 storage trims on quota failure; and a click sweep of all thirteen panels produced no uncaught exceptions.
+
+## What Changed In The Fix Round
+
+All seven are fixed on top of this audit. Each fix was re-checked in a headless browser against the rebuilt `index.html`;
+the node suites (combat 25, cloud 29, econ 458, netplay) and the ui/hud audits stayed green.
+
+| # | Fix | Files |
+| :-- | :--- | :--- |
+| 1 | The guest flag is restored by `loadProfile` (`{ ...blob, guest: true }`), the boot path marks a signed-out player a guest, and `applyProfile` derives the flag from `CloudSave.getUser()` instead of trusting the stored blob. Offline single-file builds keep working as before (no account system, so not a guest). | `src/cloud.js`, `src/game/24-account.js`, `src/game/19-progress.js` |
+| 2 | A `MutationObserver` on `document.body` re-translates nodes added after the switch (childList only, so writing `nodeValue` cannot feed back into it; measured ~5 records/s during a live match). Numbered strings go through a pattern table (`剩余 25 天 6 小时`, `全服 12 人在线`, `剩 9 天`, `N 个样本`, …), and ~90 missing panel headings, task rows and buttons were added to the dictionary. | `src/i18n.js` |
+| 3 | The recorder now samples every 4th frame of a real match: 19 normalised state values plus both players' held-key bitmasks. `训AI` exports those real samples with a reward computed from health/guard deltas and the final result, and says so plainly when a replay has no trace instead of fabricating one. | `src/game/11-anim-loop.js`, `src/page.html` |
+| 4 | `.jsonl` import parses line by line into a training set stored in `localStorage`, reports how many samples were added and how many lines were skipped, and the panel shows the set with export and clear buttons. | `src/game/11-anim-loop.js`, `src/page.html` |
+| 5 | `taskDest` routes forest-flavoured tasks to the campaign screen, and the handler still guards `startForest` for old saves. | `src/game/19-progress.js` |
+| 6 | The dead `qfxClaim` call is replaced by a direct `PROF.qfx` update from `qfxBest()`. | `src/game/19-progress.js` |
+| 7 | `acPack` packs `log.slice(-20)`, so the hash is computed over exactly the lines that are stored and re-read. | `src/anticheat.js` |
+
+Measured after the fixes: signed-out reload gives `guest: true` with the login note and a disabled claim button (ink
+unchanged); English survives a panel switch and reverts cleanly; a 21-line record round-trips as `strikes 1, perm false`;
+a 7-second CPU match produced 222 samples with 85 distinct positions and a real terminal reward; a 21-sample `.jsonl`
+import reports `added 21`, and a malformed line is skipped and counted.
+
+Known leftovers, not part of this round: the dictionary still lacks long prose (help text, armory descriptions, account
+blurbs), so English mode shows those paragraphs in Chinese. The task rows, panel headings, buttons and counted strings
+are covered.
