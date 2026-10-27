@@ -532,6 +532,8 @@ function handleKeyRebind(e) {
     buildSettings();
     return;
   }
+  const taken = Object.keys(custom1PKeys).find(a => a !== rebindingKey && custom1PKeys[a] === e.code);
+  if (taken) custom1PKeys[taken] = custom1PKeys[rebindingKey];   // 这个键已经给了别的动作：两个对调，别让那个动作没键可按
   custom1PKeys[rebindingKey] = e.code;
   try { localStorage.setItem('renying-1p-keys', JSON.stringify(custom1PKeys)); } catch (err) {}
   applyCustomKeys();
@@ -593,6 +595,11 @@ $id('setList').addEventListener('input', e => {
   SETTINGS[k] = +e.target.value; $id('sv_' + k).textContent = Math.round(SETTINGS[k] * 100) + '%'; saveSettings();
   if (k === 'music' || k === 'sfx') applyVolumes();
 });
+function cancelKeyRebind() {   // 点了改键又直接离开设置：别让监听留着吞掉对局里按下的第一个键
+  if (!rebindingKey) return;
+  rebindingKey = null;
+  window.removeEventListener('keydown', handleKeyRebind, true);
+}
 $id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') showScreen('pause'); else backToMenu(); });
 $id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
 

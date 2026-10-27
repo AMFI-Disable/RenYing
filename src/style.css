@@ -504,7 +504,7 @@
   @media (max-width: 560px) { .stgrid { grid-template-columns: repeat(3, 1fr); } }
   .setp { max-width: min(1360px, 96vw); }
   .setlist { display: grid; gap: 12px; margin: 12px 0; text-align: left; }
-  @media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; column-gap: 36px; } .setlist > .keypanel { grid-column: 1 / -1; grid-row: 6; } }
+  @media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(6, auto); grid-auto-flow: column; column-gap: 36px; } .setlist > .keypanel { grid-column: 1 / -1; grid-row: 7; } }   /* 11 行设置：两列各 6 行，否则「音效」被挤到第三列跑出屏幕 */
   .setrow { display: grid; grid-template-columns: minmax(90px, max-content) 1fr minmax(48px, auto); gap: 10px; align-items: center; font-size: 13.5px; }
   .setrow > span:first-child { white-space: nowrap; }
   .setrow .seg { margin: 0; }
@@ -699,7 +699,7 @@
   .bpgrid { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; align-items: stretch;
     gap: var(--bp-gap); width: 100%; --bp-gap: clamp(4px, 0.5vw, 7px); --bp-cols: 12; }
   .bpgrid > .bpcard { flex: 0 0 calc((100% - (var(--bp-cols) - 1) * var(--bp-gap)) / var(--bp-cols) - 0.02px); }
-  @media (max-width: 1080px) { .bpgrid { --bp-cols: 6; } }
+  @media (max-width: 1080px) { .bpgrid { --bp-cols: 7; } }   /* 13 位侠客排两行；6 列会排成三行，把下面的侠客介绍挤没 */
   .bpcard { position: relative; border: 1px solid var(--faint); border-radius: 10px; padding: clamp(3px, 0.5vw, 5px) clamp(3px, 0.5vw, 5px) clamp(4px, 0.6vw, 6px); background: linear-gradient(170deg, rgba(255,255,255,.07), rgba(255,255,255,.01)); cursor: pointer; color: var(--ink); font-family: var(--body); text-align: center; transition: transform .15s, border-color .15s, box-shadow .15s; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
   .bpcard:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.55); box-shadow: 0 0 0 1px rgba(233,196,106,.26), 0 8px 24px rgba(0,0,0,.4); }
   .bpcard.sel { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,196,106,.6), 0 8px 28px rgba(233,196,106,.25); background: linear-gradient(170deg, rgba(233,196,106,.15), rgba(255,255,255,.02)); }

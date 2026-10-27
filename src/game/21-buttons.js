@@ -4,6 +4,7 @@ function showScreen(id) {
   const prev = currentScreen; currentScreen = id;
   for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
+  if (id !== 'settings') cancelKeyRebind();
   if (id !== 'bp') {
     try { showPop(null); } catch (e) {}
     if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }

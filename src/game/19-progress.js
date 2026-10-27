@@ -667,7 +667,7 @@ function renderTasks() {
   }
 }
 for (const id of ['tEvt', 'tDaily', 'tWeekly']) $id(id).addEventListener('click', async e => {
-  if (e.target.closest('#compBtn')) { compClaim(); return; }
+  if (e.target.closest('#compBtn')) { compClaim(); renderTasks(); return; }   // 领完马上把按钮变成「已领取」
   const go = e.target.closest('.task-go');
   if (go && go.dataset.go) {
     const dest = go.dataset.go;
