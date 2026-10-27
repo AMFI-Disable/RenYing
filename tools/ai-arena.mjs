@@ -46,6 +46,9 @@ export async function makeEnv(tuneFile) {
   new vm.Script(gameJs(), { filename: 'game.js' }).runInContext(w);
   // 试改平衡（AI_BAL=文件路径，{ "tieshan": { "normal": 0.9, "hp": 0.95 } }，写法和 game.js 的 BAL 一样）：调平衡时不用改 game.js 就能比较
   if (process.env.AI_BAL) new vm.Script(`for (const [id, s] of Object.entries(${readFileSync(process.env.AI_BAL, 'utf8')})) if (BAL[id]) Object.assign(BAL[id], s);`).runInContext(w);
+  // 试改机制（AI_EXP=文件路径）：在沙盒里先跑一段代码（比如包一层 applyHit / spawnProj），不用改游戏就能比较规则改动
+  if (process.env.TWEAKS) w.__TWEAKS = process.env.TWEAKS.split(',');
+  if (process.env.AI_EXP) new vm.Script(readFileSync(process.env.AI_EXP, 'utf8'), { filename: 'exp.js' }).runInContext(w);
   // 另一版 AI 的快照（AI_SNAP=文件路径，'snap:god' 这样写），用来对比改动前后
   if (process.env.AI_SNAP) new vm.Script('window.SnapBrain = (function () {\n' + readFileSync(process.env.AI_SNAP, 'utf8') + '\nreturn AIBrain; })();', { filename: 'snap.js' }).runInContext(w);
   const env = new vm.Script(`({ CHARS, CHAR_MOVES, SKILLS, ULTS, M, AICtrl, LEVELS, Ctrl, projs, decoys, STEP, get clock() { return clock; }, get A() { return A; }, get B() { return B; },
