@@ -249,7 +249,7 @@ function step() {
     rpPoint(); updateFighter(superOwner, foeOf(superOwner)); rpPost(); if (!RESIM) { animFighter(superOwner); updateFX(STEP); }
     return;
   }
-  if (!isClient()) updateMatch(); else M.t += STEP;
+  if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
   for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
   updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
@@ -781,6 +781,7 @@ function frameBody(now) {
   touchUIUpdate();
 }
 function updateCamera(dt) {
+  if (WORLD.on) { worldCamera(dt); return; }
   if (FOREST.on) {   // 闯关打妖物：镜头框住同袍小队与附近的妖物
     const allies = sideFighters(0).filter(f => !f.hidden && f.hp > 0);
     const allyXs = allies.length ? allies.map(f => f.x) : [A.x];

@@ -75,6 +75,11 @@ jobs:
       - name: Cloud Save Client Tests
         run: node tools/cloud-test.mjs
 
+      # Runs the open world line (WorldLine Durable Object) in Node with fake sockets: 40-player cap,
+      # view-range filtering, damage caps, world boss, restart re-hello and idle timer shutdown.
+      - name: Open World Server Tests
+        run: node tools/world-test.mjs
+
       - name: Run Combat & AI Regression Suite
         run: node tools/combat-test.mjs --sim
 

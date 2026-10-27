@@ -515,7 +515,7 @@ function drawHUD() {
         }
         ctx.restore();
       }
-    } else {
+    } else if (M.mode !== 'world') {
       for (let r = 0; r < 2; r++) {
         const px = i === 0 ? cx - gap - 12 - r * 20 : cx + gap + 12 + r * 20, py = top + bh + 18;
         ctx.save(); ctx.translate(px, py); ctx.rotate(Math.PI / 4);
@@ -628,7 +628,7 @@ function drawHUD() {
   ctx.font = `700 ${Math.round(bh * 2.3)}px ${BODY_FONT}`;
   ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
   if (M.ot && M.mode !== 'train') ctx.fillStyle = '#ff6a5a';
-  ctx.fillText(M.mode === 'train' ? '∞' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
+  ctx.fillText(M.mode === 'train' || M.mode === 'world' ? '∞' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
   if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); ctx.restore(); }
   if (M.mode === 'tower') {
     ctx.save();
@@ -890,6 +890,7 @@ function render() {
   if (SCN) drawWeather(SCN, sc); else drawPetals();
   drawFireflies(false);
   if (FOREST.on) drawForest();
+  if (WORLD.on) drawWorld();
   ctx.restore();
   if (SCN) {   // 地面映出场景的颜色
     const gy = groundY(), gg = ctx.createLinearGradient(0, gy, 0, H);
@@ -906,6 +907,7 @@ function render() {
     : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
   drawDecoys();
   drawProjs();
+  if (WORLD.on) drawWorldGhosts();
   for (const f of order) {
     if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
       const keep = f.look;
@@ -940,6 +942,7 @@ function render() {
   ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
   if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
   drawHUD();
+  if (WORLD.on) drawWorldHUD();
   drawAnnounce();
   drawCredit();
   drawStats();

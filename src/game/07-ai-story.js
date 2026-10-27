@@ -643,7 +643,11 @@ function drawForest() {
   const F = FOREST;
   // 竹林深处的眼睛
   for (let k = 0; k < 9; k++) { const x = hash(k * 7) * STAGE_W, y = -120 - hash(k * 3) * 260, on = Math.sin(clock * 0.7 + k * 2.1) > 0.6; if (on) { ctx.fillStyle = 'rgba(255,60,60,0.5)'; circle([x - 5, y], 2); circle([x + 5, y], 2); } }
-  for (const q of F.shots) {
+  drawMons(F.mons, F.shots);
+}
+// 妖物和它们的箭、定身阵、火柱（斩妖列传和开放世界共用）
+function drawMons(mons, shots) {
+  for (const q of shots) {
     if (q.trap || q.fire) {
       const k = q.done ? q.life / 0.35 : clamp(1 - q.t / 0.9, 0, 1), c = q.fire ? '255,150,60' : '200,120,255';
       ctx.strokeStyle = `rgba(${c},${0.35 + 0.5 * k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(q.x, -2, q.r, 12, 0, 0, Math.PI * 2); ctx.stroke();
@@ -651,7 +655,7 @@ function drawForest() {
       if (q.done && q.trap) { ctx.strokeStyle = `rgba(200,120,255,${k})`; ctx.lineWidth = 2; for (let a = 0; a < 6; a++) { ctx.beginPath(); ctx.moveTo(q.x + Math.cos(a) * 50, -4); ctx.lineTo(q.x, -60); ctx.stroke(); } }
     } else { ctx.strokeStyle = '#b8f5c4'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q.x - Math.sign(q.vx) * 16, q.y); ctx.lineTo(q.x + Math.sign(q.vx) * 10, q.y); ctx.stroke(); }
   }
-  for (const m of F.mons) {
+  for (const m of mons) {
     const T = m.T, x = m.x, y = m.y, f = m.face, bob = Math.sin(m.ph * 4) * 3, warn = m.wind > 0 || m.act === 'swoop';
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x, 2, 24, 5, 0, 0, Math.PI * 2); ctx.fill();

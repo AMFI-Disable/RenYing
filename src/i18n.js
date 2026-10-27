@@ -5,6 +5,10 @@
   'use strict';
 
   const DICT_EN = {
+  "江湖共斗 · 开放世界": "Open World Co-op",
+  "一张大地图，谁都能随时加入，人数不设上限": "One big map anyone can join at any time, with no player limit",
+  "找朋友：填对方的线号": "Join a friend: enter their line number",
+  "自动": "Auto",
   "+150 墨锭": "+150 Ink",
   "+300 墨锭": "+300 Ink",
   "+500 墨锭": "+500 Ink",

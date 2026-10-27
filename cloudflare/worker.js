@@ -16,6 +16,9 @@
  *   打完交一次伤害（同一张票重交只算一次，伤害按出战时长封顶）。击败或天魔遁走后按伤害发奖励（走全服补偿那一套），
  *   然后换下一代。
  *
+ * 江湖共斗 · 开放世界（/api/world/line/N，WebSocket）：一条分线一个 Durable Object（WorldLine，wrangler.toml 里的 WORLD 绑定），
+ *   服务器模拟妖物和妖王、转发附近侠客的位置；每线 40 人，满了网页自动去下一线，总人数不设上限。不用 D1。
+ *
  * 侠客列传的江湖足迹（/api/saga）：云端账号走完一节、做了抉择、看到结局各记一笔（每个号每节只算一次，重走会改成新的选择），
  *   列传页按侠客汇总成人数和比例。只存侠客、第几节、选了什么，不存别的。
  *
@@ -1144,6 +1147,267 @@ async function sagaMarkPost(env, auth, body, now) {
   return json({ ok: true });
 }
 
+/* ---------- 江湖共斗 · 开放世界（/api/world/line/N，WebSocket） ----------
+   一条分线 = 一个 Durable Object（WorldLine）。妖物和妖王由服务器每秒模拟 10 次；每位侠客只在自己的网页里模拟，
+   服务器只收「我在哪、在做什么、打中了哪只妖物多少伤害」，伤害按距离和每秒上限封顶，改网页也刷不动。
+   妖物出招时广播一条攻击，打没打中由挨打的那个网页自己判定（跟斩妖列传里一样能格挡、能闪）。
+   每线最多 WL.CAP 人，满了网页自动去下一线，线数不设上限；每次只发视野内（左右 WL.AOI）最近的 WL.NEAR 位侠客。
+   免费额度：网页发上来的消息 20 条算一次请求，发下去的不算；没人时停掉定时器，Durable Object 自动休眠不计时。 */
+const WL = {
+  CAP: 40, W: 8000, WALL: 60, TICK: 100, AOI: 2000, NEAR: 24, AGGRO: 700, IDLE: 15e3,
+  HIT_MAX: 160, HIT_RANGE: 420, DPS: 320, BURST: 900,   // 单次伤害上限、离妖物多远还算打得到、每秒伤害上限和攒着的上限
+  BOSS_EVERY: 40, BOSS_LIFE: 360,                         // 全线每斩 40 只妖物，魔窟里出一次妖王；6 分钟没打死就遁走
+  ZONES: [
+    { a: 60, b: 2000, hp: 1, dk: 1, keys: ['blade', 'archer', 'owl'] },                          // 竹林
+    { a: 2000, b: 4000, hp: 1.5, dk: 1.25, keys: ['blade', 'archer', 'owl', 'binder'] },         // 古道
+    { a: 4000, b: 6000, hp: 2.2, dk: 1.5, keys: ['blade', 'archer', 'binder', 'caster'] },       // 山寨
+    { a: 6000, b: 7940, hp: 3, dk: 1.8, keys: ['blade', 'archer', 'owl', 'binder', 'caster'] },  // 魔窟
+  ],
+  MON: { blade: { hp: 40, spd: 150, keep: 70 }, archer: { hp: 30, spd: 120, keep: 380 }, binder: { hp: 34, spd: 90, keep: 260 }, caster: { hp: 32, spd: 100, keep: 320 }, owl: { hp: 24, spd: 220, keep: 0 } },
+};
+const wlNum = (v, lo, hi, d = 0) => { v = +v; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
+const wlStr = v => (typeof v === 'string' && /^[a-z0-9_]{0,16}$/i.test(v) ? v : '');
+const wlName = (v, id) => (String(v || '').match(/[\w\u4e00-\u9fff]/g) || []).join('').slice(0, 12) || `游侠${id}`;   // 没登录的显示成「游侠 + 编号」，好分清
+const r1 = v => Math.round(v * 10) / 10;
+
+class WorldSim {
+  constructor(rnd = Math.random) {
+    this.rnd = rnd; this.t = 0; this.players = new Map(); this.mons = []; this.nid = 1; this.mid = 1;
+    this.kills = 0; this.sinceBoss = 0; this.boss = null; this.spawnT = 0; this.events = [];
+  }
+  get count() { return this.players.size; }
+  join(meta) {
+    if (this.players.size >= WL.CAP) return 0;
+    const id = this.nid++;
+    const ch = C.HERO_IDS.includes(meta && meta.ch) ? meta.ch : 'qingfeng';
+    const skin = typeof (meta && meta.skin) === 'string' && /^[a-z]{2}_[a-z0-9]{1,20}$/.test(meta.skin) ? meta.skin : '';
+    this.players.set(id, { id, name: wlName(meta && meta.name, id), ch, skin, x: 200 + this.rnd() * 400, y: 0, vx: 0, f: 1, st: 'idle', tt: 0, mv: '', sk: '', sp: '', ph: 0,
+      hp: 100, mh: 100, seen: this.t, budget: WL.BURST, bt: this.t });
+    return id;
+  }
+  leave(id) { this.players.delete(id); if (this.boss && this.boss.dmg) delete this.boss.dmg[id]; }
+  meta(p) { return [p.id, p.name, p.ch, p.skin]; }
+  state(id, s) {
+    const p = this.players.get(id); if (!p || !s) return false;
+    p.x = wlNum(s.x, 0, WL.W, p.x); p.y = wlNum(s.y, -3000, 0, 0); p.vx = wlNum(s.vx, -3000, 3000); p.f = s.f < 0 ? -1 : 1;
+    p.st = wlStr(s.st) || 'idle'; p.tt = wlNum(s.tt, 0, 60); p.mv = wlStr(s.mv); p.sk = wlStr(s.sk); p.sp = wlStr(s.sp); p.ph = wlNum(s.ph, 0, 9) | 0;
+    p.mh = wlNum(s.mh, 1, 9999, 100); p.hp = wlNum(s.hp, 0, p.mh, p.mh);
+    if (C.HERO_IDS.includes(s.ch) && s.ch !== p.ch) { p.ch = s.ch; p.skin = ''; this.events.push({ t: 'j', p: this.meta(p), x: p.x }); }
+    p.seen = this.t;
+    return true;
+  }
+  // 侠客说自己打中了哪只妖物：要离得够近，伤害单次封顶，再按每秒上限扣掉攒着的额度
+  hit(id, mid, d) {
+    const p = this.players.get(id); d = +d;
+    if (!p || !(d > 0)) return 0;
+    const m = (this.boss && this.boss.id === mid) ? this.boss : this.mons.find(q => q.id === mid);
+    if (!m || m.hp <= 0 || Math.abs(p.x - m.x) > WL.HIT_RANGE + (m.boss ? 160 : 0)) return 0;
+    p.budget = Math.min(WL.BURST, p.budget + (this.t - p.bt) * WL.DPS); p.bt = this.t;
+    d = Math.min(d, WL.HIT_MAX, p.budget); if (d <= 0) return 0;
+    p.budget -= d; m.hp -= d;
+    if (m.boss) m.dmg[id] = (m.dmg[id] || 0) + d;
+    else { m.stag = Math.max(m.stag, 0.3); m.wind = 0; m.act = null; m.vx = (m.x >= p.x ? 1 : -1) * 140; }
+    if (m.hp <= 0) this.kill(m, p);
+    return d;
+  }
+  kill(m, p) {
+    m.hp = 0; this.kills++;
+    if (m.boss) {
+      const top = Object.entries(m.dmg).sort((a, b) => b[1] - a[1]).slice(0, 5)
+        .map(([pid, n]) => [(this.players.get(+pid) || { name: '已离开的侠客' }).name, Math.round(n)]);
+      this.events.push({ t: 'bk', by: p.name, top, all: true });
+      this.boss = null; this.sinceBoss = 0;
+    } else {
+      this.sinceBoss++;
+      this.events.push({ t: 'x', m: m.id, by: p.id, x: m.x });
+    }
+  }
+  zoneOf(x) { const i = WL.ZONES.findIndex(z => x < z.b); return i < 0 ? WL.ZONES.length - 1 : i; }
+  spawn() {
+    const want = Math.min(70, 10 + 3 * this.players.size);
+    if (this.mons.length >= want) return;
+    // 哪一段有人就多刷在哪一段，没人的地方也留几只
+    const w = WL.ZONES.map(() => 1);
+    for (const p of this.players.values()) w[this.zoneOf(p.x)] += 2;
+    let r = this.rnd() * w.reduce((s, v) => s + v, 0), zi = 0;
+    while (zi < w.length - 1 && r >= w[zi]) { r -= w[zi]; zi++; }
+    const z = WL.ZONES[zi], key = z.keys[(this.rnd() * z.keys.length) | 0], T = WL.MON[key];
+    let x = 0;
+    for (let k = 0; k < 5; k++) {   // 别刷在侠客脸上
+      x = z.a + 80 + this.rnd() * (z.b - z.a - 160);
+      let near = false; for (const p of this.players.values()) if (Math.abs(p.x - x) < 450) near = true;
+      if (!near) break;
+    }
+    const hp = Math.round(T.hp * z.hp);
+    this.mons.push({ id: this.mid++, key, x, y: key === 'owl' ? -230 : 0, vx: 0, vy: 0, hp, mh: hp, f: 1, cd: 1 + this.rnd(), wind: 0, act: null, stag: 0,
+      home: x, ph: this.rnd() * 6, zi, dk: z.dk, spd: T.spd, keep: T.keep });
+  }
+  spawnBoss() {
+    const hp = 1500 + 600 * this.players.size, x = 6970;
+    this.boss = { id: this.mid++, key: 'king', boss: true, x, y: 0, vx: 0, hp, mh: hp, f: -1, cd: 2.5, wind: 0, act: null, life: WL.BOSS_LIFE, dmg: {}, dk: 2, zi: 3 };
+    this.events.push({ t: 'bs', all: true });
+  }
+  target(x, range) {
+    let best = null, bd = range;
+    for (const p of this.players.values()) { const d = Math.abs(p.x - x); if (p.hp > 0 && d < bd) { bd = d; best = p; } }
+    return best;
+  }
+  step(dt) {
+    this.t += dt;
+    for (const p of [...this.players.values()]) if (this.t - p.seen > WL.IDLE / 1000) this.leave(p.id);
+    this.spawnT -= dt;
+    if (this.spawnT <= 0 && this.players.size) { this.spawn(); this.spawnT = 0.5; }
+    if (!this.boss && this.sinceBoss >= WL.BOSS_EVERY && this.players.size) this.spawnBoss();
+    for (const m of this.mons) this.monStep(m, dt);
+    this.mons = this.mons.filter(m => m.hp > 0);
+    if (this.boss) this.bossStep(this.boss, dt);
+  }
+  monStep(m, dt) {
+    m.ph += dt;
+    const tgt = this.target(m.x, WL.AGGRO), dx = tgt ? tgt.x - m.x : m.home - m.x, d = Math.abs(dx), dir = Math.sign(dx) || m.f;
+    if (m.stag > 0) { m.stag -= dt; m.vx *= 0.7; }
+    else if (m.key === 'owl') {
+      if (m.act === 'dive') { m.x += m.vx * dt; m.y += m.vy * dt; if (m.y > -30 || m.y < -320) { m.act = null; m.vx = 0; m.vy = 0; m.y = Math.min(-40, m.y); } }
+      else {
+        const tx = (tgt ? tgt.x : m.home) + Math.sin(m.ph * 0.8) * 200;
+        m.vx = Math.max(-m.spd, Math.min(m.spd, (tx - m.x) * 2)); m.y += (-230 - m.y) * Math.min(1, 3 * dt); m.f = dir;
+        if (m.wind > 0) { m.wind -= dt; m.vx *= 0.3; if (m.wind <= 0 && tgt) { const ty = tgt.y - 60 - m.y, l = Math.hypot(dx, ty) || 1; m.vx = dx / l * 760; m.vy = ty / l * 760; m.act = 'dive'; this.attack(m, { k: 'dive', vx: r1(m.vx), vy: r1(m.vy) }); } }
+        else if (tgt && (m.cd -= dt) <= 0) { m.wind = 0.45; m.cd = 2.6 + this.rnd(); }
+      }
+    } else if (m.wind > 0) {
+      m.wind -= dt; m.vx *= 0.5;
+      if (m.wind <= 0) {
+        if (m.key === 'blade') this.attack(m, { k: 'blade' });
+        if (m.key === 'archer') this.attack(m, { k: 'shot', vx: m.f * 620 });
+        if (m.key === 'binder') this.attack(m, { k: 'trap', at: r1(m.mark), delay: 0.8 });
+        if (m.key === 'caster') this.attack(m, { k: 'fire', at: r1(m.mark), delay: 0.9 });
+      }
+    } else {
+      m.f = dir;
+      const want = !tgt ? (d > 60 ? dir * 0.35 : 0) : m.key === 'blade' ? (d > m.keep ? dir : 0) : (d > m.keep + 60 ? dir : d < m.keep - 60 ? -dir : 0);
+      m.vx += (want * m.spd - m.vx) * Math.min(1, 6 * dt);
+      if (tgt && (m.cd -= dt) <= 0 && (m.key !== 'blade' || d < 110) && d < 600) {
+        m.wind = { blade: 0.5, archer: 0.4, binder: 0.5, caster: 0.5 }[m.key]; m.cd = { blade: 2.2, archer: 2.8, binder: 4.5, caster: 4.5 }[m.key] * (0.8 + 0.4 * this.rnd());
+        m.mark = tgt.x;
+      }
+    }
+    if (m.act !== 'dive') m.x += m.vx * dt;
+    const z = WL.ZONES[m.zi];   // 妖物守着自己那一段，不会追出去
+    m.x = Math.max(z.a, Math.min(z.b, m.x));
+  }
+  bossStep(b, dt) {
+    b.life -= dt;
+    if (b.life <= 0) { this.boss = null; this.sinceBoss = 0; this.events.push({ t: 'bg', all: true }); return; }
+    const tgt = this.target(b.x, 1400);
+    if (b.act === 'charge') {
+      b.x += b.vx * dt; b.ct -= dt;
+      if (b.ct <= 0 || b.x < 6000 || b.x > 7940) { b.act = null; b.vx = 0; b.x = Math.max(6000, Math.min(7940, b.x)); }
+      return;
+    }
+    if (b.wind > 0) {
+      b.wind -= dt;
+      if (b.wind <= 0) {
+        if (b.act === 'slam') this.attack(b, { k: 'slam', r: 300 });
+        if (b.act === 'rain') for (const p of this.players.values()) if (p.hp > 0 && Math.abs(p.x - b.x) < 1400) this.attack(b, { k: 'fire', at: r1(p.x), delay: 0.9 });
+        if (b.act === 'chargeW') { b.act = 'charge'; b.ct = 0.7; b.vx = b.f * 900; this.attack(b, { k: 'charge', vx: b.vx, len: 0.7 }); return; }
+        b.act = null;
+      }
+      return;
+    }
+    if (!tgt) { b.vx = 0; return; }
+    const dx = tgt.x - b.x; b.f = Math.sign(dx) || b.f;
+    b.vx = Math.abs(dx) > 200 ? b.f * 110 : 0; b.x = Math.max(6000, Math.min(7940, b.x + b.vx * dt));
+    if ((b.cd -= dt) <= 0) {
+      const r = this.rnd();
+      if (Math.abs(dx) < 320 && r < 0.5) { b.act = 'slam'; b.wind = 0.9; }
+      else if (r < 0.75) { b.act = 'chargeW'; b.wind = 0.6; }
+      else { b.act = 'rain'; b.wind = 0.7; }
+      b.cd = 2.6 + this.rnd() * 1.2;
+      this.events.push({ t: 'bw', a: b.act, x: r1(b.x), f: b.f, w: b.wind });
+    }
+  }
+  attack(m, o) { this.events.push({ t: 'a', m: m.id, x: r1(m.x), y: r1(m.y), f: m.f, dk: m.dk, ...o }); }
+  // 发给一位侠客的一帧：附近的侠客、附近的妖物、妖王（全线都看得到血条）
+  frameFor(id) {
+    const me = this.players.get(id); if (!me) return null;
+    const ps = [];
+    for (const p of this.players.values()) if (p.id !== id && Math.abs(p.x - me.x) <= WL.AOI) ps.push(p);
+    if (ps.length > WL.NEAR) { ps.sort((a, b) => Math.abs(a.x - me.x) - Math.abs(b.x - me.x)); ps.length = WL.NEAR; }
+    const b = this.boss;
+    return {
+      t: 'k', n: this.players.size, kills: this.kills, nb: Math.max(0, WL.BOSS_EVERY - this.sinceBoss),
+      p: ps.map(p => [p.id, r1(p.x), r1(p.y), r1(p.vx), p.f, p.st, r1(p.tt), p.mv, p.sk, p.sp, p.ph, Math.round(p.hp), Math.round(p.mh)]),
+      m: this.mons.filter(m => Math.abs(m.x - me.x) <= WL.AOI + 300).map(m => [m.id, m.key, r1(m.x), r1(m.y), Math.ceil(m.hp), m.mh, m.f, m.wind > 0 || m.act === 'dive' ? 1 : 0, m.zi]),
+      b: b ? [b.id, r1(b.x), Math.ceil(b.hp), b.mh, b.f, b.act || '', Math.round(b.life)] : null,
+    };
+  }
+  // 这一拍的事件谁该收到：全线播报的人人都收，其余只发给附近的侠客
+  takeEvents() { const e = this.events; this.events = []; return e; }
+  wants(id, ev) { const me = this.players.get(id); return !!me && (ev.all || ev.x === undefined || Math.abs(ev.x - me.x) <= WL.AOI + 300); }
+}
+
+export class WorldLine {
+  constructor(ctx, env) {
+    this.ctx = ctx; this.env = env; this.sim = new WorldSim(); this.timer = 0;
+  }
+  async fetch(request) {
+    if (request.headers.get('Upgrade') !== 'websocket') return new Response('expected websocket', { status: 426 });
+    const line = wlNum(new URL(request.url).pathname.split('/').pop(), 1, 9999, 1) | 0;
+    const pair = new WebSocketPair(), client = pair[0], server = pair[1];
+    this.ctx.acceptWebSocket(server);
+    server.serializeAttachment({ line, id: 0 });
+    if (this.ctx.getWebSockets().length > WL.CAP) { this.send(server, { t: 'full', line }); server.close(4001, 'full'); }
+    return new Response(null, { status: 101, webSocket: client });
+  }
+  send(ws, o) { try { ws.send(JSON.stringify(o)); } catch (e) {} }
+  sockOf(id) { for (const ws of this.ctx.getWebSockets()) { const a = ws.deserializeAttachment(); if (a && a.id === id) return ws; } return null; }
+  async webSocketMessage(ws, data) {
+    if (typeof data !== 'string' || data.length > 2000) return;
+    let o; try { o = JSON.parse(data); } catch (e) { return; }
+    if (!o || typeof o !== 'object') return;
+    const a = ws.deserializeAttachment() || { line: 1, id: 0 }, sim = this.sim;
+    const now = Date.now();   // 一个连接每秒最多认 25 条，多的直接丢
+    if (now - (a.rt || 0) > 1000) { a.rt = now; a.rn = 0; }
+    if (++a.rn > 25) { ws.serializeAttachment(a); return; }
+    if (o.t === 'hi') {
+      if (a.id && sim.players.has(a.id)) { ws.serializeAttachment(a); return; }
+      const id = sim.join(o);
+      if (!id) { this.send(ws, { t: 'full', line: a.line }); ws.close(4001, 'full'); return; }
+      a.id = id; ws.serializeAttachment(a);
+      const roster = [...sim.players.values()].map(p => sim.meta(p));
+      this.send(ws, { t: 'w', id, line: a.line, cap: WL.CAP, w: WL.W, roster });
+      sim.events.push({ t: 'j', p: sim.meta(sim.players.get(id)), all: true });
+      this.ensureTimer();
+      return;
+    }
+    ws.serializeAttachment(a);
+    if (!a.id || !sim.players.has(a.id)) { this.send(ws, { t: 're' }); return; }   // 服务器重启过：请网页重新打个招呼
+    if (o.t === 's') sim.state(a.id, o);   // 位置和这一拍打出的伤害一起上报（h: [[妖物编号, 伤害], ...]），省一半消息
+    if ((o.t === 's' || o.t === 'h') && Array.isArray(o.h)) for (const h of o.h.slice(0, 12)) if (Array.isArray(h)) sim.hit(a.id, +h[0], +h[1]);
+  }
+  async webSocketClose(ws) { this.drop(ws); }
+  async webSocketError(ws) { this.drop(ws); }
+  drop(ws) {
+    const a = ws.deserializeAttachment();
+    if (a && a.id && this.sim.players.has(a.id)) { this.sim.leave(a.id); this.sim.events.push({ t: 'l', id: a.id, all: true }); }
+  }
+  ensureTimer() { if (!this.timer) this.timer = setInterval(() => this.tick(), WL.TICK); }
+  tick() {
+    const sim = this.sim;
+    sim.step(WL.TICK / 1000);
+    const evs = sim.takeEvents();
+    for (const ws of this.ctx.getWebSockets()) {
+      const a = ws.deserializeAttachment(); if (!a || !a.id) continue;
+      if (!sim.players.has(a.id)) { this.send(ws, { t: 're' }); continue; }
+      const fr = sim.frameFor(a.id), mine = evs.filter(e => sim.wants(a.id, e));
+      if (mine.length) fr.e = mine;
+      this.send(ws, fr);
+    }
+    if (!sim.players.size) { clearInterval(this.timer); this.timer = 0; }   // 没人了：停表，让它休眠
+  }
+}
+globalThis.RenyingWorldSim = { WorldSim, WL };
+
 export default {
   async fetch(request, env, ctx) {
     if (!env.DB) {
@@ -1159,6 +1423,15 @@ export default {
     const now = Date.now();
 
     try {
+      // 江湖共斗 · 开放世界：交给这一线的 Durable Object（不碰 D1）。没部署 WORLD 绑定时回 503，网页会提示服务器还没更新
+      const wm = path.match(/^\/api\/world\/line\/(\d{1,4})$/);
+      if (wm) {
+        if (!env.WORLD) return error('开放世界还没部署', 503);
+        if (request.headers.get('Upgrade') !== 'websocket') return json({ ok: true, world: true, cap: WL.CAP });
+        const n = Math.max(1, Math.min(9999, +wm[1] || 1));
+        return env.WORLD.get(env.WORLD.idFromName('line-' + n)).fetch(request);
+      }
+
       // 1. Health & ping check
       if (path === '/' || path === '/health' || path === '/api/health') {
         return json({ ok: true, name: 'RenYing Cloud API', time: now, econ: C.VER });

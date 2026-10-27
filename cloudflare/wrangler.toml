@@ -6,3 +6,12 @@ compatibility_date = "2024-10-01"
 binding = "DB"
 database_name = "renying-db"
 database_id = "86f80607-7c39-4a0f-8b1f-b2ad4c8d6e72"
+
+# 江湖共斗 · 开放世界：一条分线一个 Durable Object（免费版只能用 SQLite 存储的 Durable Object）
+[[durable_objects.bindings]]
+name = "WORLD"
+class_name = "WorldLine"
+
+[[migrations]]
+tag = "v1-world"
+new_sqlite_classes = ["WorldLine"]

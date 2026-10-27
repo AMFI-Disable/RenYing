@@ -1173,6 +1173,7 @@ function toMenu() {
   ROLL.on = false; REC.on = false;
   if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
+  if (WORLD.on) worldLeave();
   M.stage = null;
   if (TUT) endTutorial();
   paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';

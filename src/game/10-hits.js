@@ -149,6 +149,7 @@ function predictHit(att, def, m, pt) {
 function applyHit(att, def, m, pt) {
   if (M.mode === 'net') NET.matchHits = (NET.matchHits || 0) + 1;
   if (def.forestProxy) { forestHit(att, m, pt); return; }
+  if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
   if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
   if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
   def.drinkT = 0;

@@ -267,7 +267,7 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-  STAGE_W = isMulti() ? 2600 : 1800;
+  STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
   if (typeof applySkins === 'function') applySkins();
   if (isRaid()) {
     const sq = M.raidSquadSize || 3;

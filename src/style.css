@@ -2746,6 +2746,8 @@
   .m2-way span { font-size: 12px; line-height: 1.45; color: rgba(236,232,225,.75); }
   .m2-way:hover { border-color: rgba(233,196,106,.6); background: linear-gradient(160deg, rgba(46,61,82,.94), rgba(23,32,46,.95)); }
   .m2-foot { text-align: center; }
+  .world-line { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; font-size: 13px; opacity: .85; }
+  .world-line input { width: 72px; text-align: center; color: var(--ink); background: rgba(19,27,39,.94); border: 1px solid rgba(236,226,204,.25); padding: 4px 6px; }
   /* ---------- 纯键盘：一个统一的选中框，跟着焦点走（按钮有 clip-path、外层有 overflow 时，描边会被裁掉，所以单独画一层） ---------- */
   body.kbnav :focus, body.kbnav :focus-visible { outline: none !important; }
   #kbRing { position: fixed; z-index: 9999; pointer-events: none; display: none; border: 2px solid var(--gold); border-radius: 4px;

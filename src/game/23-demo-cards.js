@@ -408,7 +408,7 @@ function makeCardArt(i, CW, CH, skin) {
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2', 'raid'];   // 不联机的点将台：本机自己推进每一步
+const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2', 'raid', 'world'];   // 不联机的点将台：本机自己推进每一步
 const bpAuth = () => LOCAL_BP_MODES.includes(bpMode) || NET.role === 'host';
 const bpSideName = side => {
   if (bpMode === 'raid') return side === 0 ? '同袍义军' : '融魂魔首';
@@ -438,7 +438,7 @@ function bpStart(mode, customOpts = null) {
     steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
     bans = [-1, -1];
     picks = [[-1, -1, -1], [-1, -1, -1]];
-  } else if (mode === 'tower' || mode === 'stage' || mode === 'train') {
+  } else if (mode === 'tower' || mode === 'stage' || mode === 'train' || mode === 'world') {
     // 单人闯塔 / 守关挑战 / 木人试剑：免禁用直接自选出战角色 (1 步)
     steps = [[0, 'pick']];
     bans = [];
@@ -581,6 +581,8 @@ function bpFinish() {
   } else if (mode === 'train') {
     trainChar = picks[0];
     startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
+  } else if (mode === 'world') {
+    worldStart(picks[0]);
   } else if (mode === 'raid') {
     startRaidMatch(picks[0], opts.squadSize || (picks[0] ? picks[0].length : 3), opts);
   } else if (mode === '2v2') {
@@ -807,6 +809,7 @@ function renderBP() {
   else if (bpMode === 'train') modePrefix = '木人试剑 · ';
   else if (bpMode === '2v2') modePrefix = '2v2演武 · ';
   else if (bpMode === 'raid') modePrefix = '同袍肉鸽 · ';
+  else if (bpMode === 'world') modePrefix = '江湖共斗 · ';
 
   const TAG3_ROLES = ['先锋', '中坚', '大将'];
   const TEAM2_ROLES = ['先锋', '次锋'];
@@ -824,7 +827,7 @@ function renderBP() {
   } else if (multiPick) {
     const idxNum = (BP.picks[side] || []).filter(x => x >= 0).length;
     stepTitle = `${bpSideName(side)}钦点【${TEAM2_ROLES[idxNum] || '次锋'}】出战`;
-  } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train') {
+  } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === 'world') {
     stepTitle = '挑选你的本命首发出战侠客（免禁用直选）';
   } else {
     stepTitle = `${bpSideName(side)}选择出战侠客`;
@@ -852,7 +855,7 @@ function renderBP() {
       const bossTitle = rb ? `六技魔首：${rb.heroNames.join('·')}` : '三侠六技·融魂魔首';
       el.innerHTML = `<div class="who" style="color:var(--p2)">秘境魔首 (3xHP · 1.25x伤)</div>
         <div class="slots"><div class="slot2">${bossTitle}</div></div>`;
-    } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train') {
+    } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === 'world') {
       if (sd === 1) {
         // 单人模式右侧显示对位/关卡信息
         let rightInfo = '木人桩试剑';
