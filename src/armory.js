@@ -309,7 +309,7 @@
     } catch (e) {}
   }
   // 一份补偿里有什么：「500 墨锭、初刃武器箱 ×2、终端机 ×1」
-  const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
+  const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
   function apply(out, quiet) {
     if (!out) return;
     if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
@@ -331,7 +331,7 @@
     if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
     if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
     if (out.cfg !== undefined) { const c = C.cleanCfg(out.cfg); CFG = c.cfg; }
-    if (Array.isArray(out.gifts)) for (const g of out.gifts) toast(`开发组补偿：${String(g.note || '')}（${giftText(g)}）`);
+    if (Array.isArray(out.gifts)) for (const g of out.gifts) toast(`${g.skin ? '全服肉鸽奖励' : '开发组补偿'}：${String(g.note || '')}（${giftText(g)}）`);
     if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
     try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
     if (window.CloudSave) CloudSave.saveProfile(PROF);

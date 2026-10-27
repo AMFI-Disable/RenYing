@@ -808,13 +808,13 @@ let rougeSquadSize = 3;
 let rougeStoryChapter = 0;
 let rougePhaseMode = 'story';   // 'story': 先打小怪剧情波次再战六技魔首；'boss': 直接迎战六技魔首
 let pendingRaidBoss = null;
-function rollRaidBoss(wave = 1) {
+function rollRaidBoss(wave = 1, fixed = null) {   // fixed：指定三名侠客（全服肉鸽由服务器定，全线同一只）
   const pool = CHARS.map((_, i) => i);
   for (let i = pool.length - 1; i > 0; i--) {
     const j = (Math.random() * (i + 1)) | 0;
     const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
   }
-  const heroes = pool.slice(0, 3);
+  const heroes = Array.isArray(fixed) && fixed.length >= 3 ? fixed.slice(0, 3) : pool.slice(0, 3);
   const skills = [];
   const ults = [];
   for (const hIdx of heroes) {
@@ -1174,6 +1174,7 @@ function toMenu() {
   if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   if (WORLD.on) worldLeave();
+  M.worldKey = null;
   M.stage = null;
   if (TUT) endTutorial();
   paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';

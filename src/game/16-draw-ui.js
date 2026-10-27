@@ -285,7 +285,7 @@ function drawHUD2v2() {
 }
 function drawHUDRaid() {
   const u = clamp(W / 1280, 0.72, 1.25);
-  const pad = Math.round(24 * u), topY = Math.round((touchOn ? 50 : 16) * u);
+  const pad = Math.round(24 * u), topY = Math.round((TOUCH ? 50 : 16) * u);
   const totalW = Math.min(Math.round(W - pad * 2), Math.round(1260 * u));
   const centerGap = Math.round(128 * u);
   const teamW = Math.floor((totalW - centerGap) / 2);
@@ -371,7 +371,7 @@ function drawHUDRaid() {
   const perkCount = (M.towerPerks || []).length;
   ctx.fillStyle = '#7fe0b0';
   ctx.textAlign = 'left';
-  ctx.fillText(`全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
+  ctx.fillText(M.worldKey ? `全服共享秘卷：${perkCount} 卷 · 魔首血量全线共享` : `全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
   ctx.restore();
   ctx.save();
   ctx.textAlign = 'center';

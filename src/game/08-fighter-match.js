@@ -410,6 +410,7 @@ function inkTitle(name, lost) {
 }
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
+  if (M.worldKey) { worldKeyRound(w); return; }
   if (REC.on) recSave(w);
   taskMatchEnd(w);
   $id('endKicker').textContent = '';
@@ -563,6 +564,7 @@ function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
+  if (M.worldKey) { worldKeyRound(w); return; }   // 全服肉鸽的关键战：结果和奖励都以服务器为准，这里不加墨锭
   if (M.mode === 'saga') { sagaEnd(w); return; }
   if (isRaid()) {
     if (w === 0) {

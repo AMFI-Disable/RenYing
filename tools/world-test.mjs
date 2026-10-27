@@ -1,5 +1,6 @@
 // 江湖共斗 · 开放世界的服务器测试：用假的 WebSocket 跑 cloudflare/worker.bundle.js 里的 WorldLine（不用联网，不用 wrangler）
 //   node tools/world-test.mjs
+// 全服肉鸽：投票选秘卷全线同步、中途进来的人拿到同一套秘卷、真人够 3 位开天道 Boss、Boss 伤害封顶、谁能拿星座皮肤、进度存档
 // 查：每线 40 人封顶、满了回 full；打招呼拿到编号和名单；视野外的人不发；伤害按距离和每秒上限封顶；
 //     斩够数出妖王、打死后全线播报；服务器重启过会请网页重新打招呼；没人了停表
 import { fileURLToPath } from 'node:url';
@@ -8,7 +9,8 @@ import path from 'node:path';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const mod = await import(path.join(root, 'cloudflare', 'worker.bundle.js'));
 const { WorldLine } = mod;
-const { WorldSim, WL } = globalThis.RenyingWorldSim;
+const { WorldSim, WL, RG } = globalThis.RenyingWorldSim;
+import fs from 'node:fs';
 
 let fails = 0;
 const ok = (cond, msg) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${msg}`); if (!cond) fails++; };
@@ -132,6 +134,130 @@ const st = (dobj, s, x, extra = {}) => dobj.webSocketMessage(s, JSON.stringify({
   for (let i = 0; i < 60; i++) { fresh.sim.t += 0.001; await st(fresh, b, 100 + i); }
   spam = fresh.sim.players.get(bid).x;
   ok(spam < 100 + 30 && before >= 0, '一秒内发太多条的多余部分直接丢掉');
+}
+
+// ---------- 全服肉鸽：秘卷编号都是游戏里真有的 ----------
+{
+  const src = fs.readFileSync(path.join(root, 'src', 'game', '22-scrolls.js'), 'utf8');
+  const ids = new Set([...src.matchAll(/\{ id: '([a-z0-9_]+)', n: /g)].map(m => m[1]));
+  ok(RG.PERKS.length >= 30 && RG.PERKS.every(id => ids.has(id)), `服务器秘卷池 ${RG.PERKS.length} 卷都在 22-scrolls.js 里`);
+  ok(new Set(RG.PERKS).size === RG.PERKS.length, '秘卷池没有重复');
+}
+
+// ---------- 全服肉鸽：斩妖、投票、秘卷全线同步、中途加入 ----------
+const fillJie = s => { const R = s.run; R.got = R.need - 1; s.mons.length = 0;
+  s.mons.push({ id: 5000 + R.jie * 10 + R.cyc, key: 'blade', x: 600, y: 0, vx: 0, vy: 0, hp: 1, mh: 1, f: 1, cd: 9, wind: 0, act: null, stag: 0, home: 600, ph: 0, zi: 0, dk: 1, spd: 0, keep: 70 }); };
+const killIt = (s, id) => { s.t += 5; const p = s.players.get(id); p.x = 590; p.budget = WL.BURST; const m = s.mons[s.mons.length - 1]; s.hit(id, m.id, 50); s.step(0.05); };
+const keep = (s) => { for (const p of s.players.values()) { p.seen = s.t; } };
+{
+  const s = new WorldSim(() => 0.4);
+  const a = s.join({ name: '甲' }), b = s.join({ name: '乙' });
+  s.state(a, { x: 590, hp: 100, mh: 100 }); s.state(b, { x: 620, hp: 100, mh: 100 });
+  ok(s.run.cyc === 1 && s.run.jie === 1 && s.run.perks.length === 0, '新开的线：第 1 轮第 1 劫，没有秘卷');
+  ok(s.run.need === RG.NEED0 + RG.NEED_PER * 0 || s.run.need === RG.NEED0, `第一劫要斩 ${s.run.need} 只`);
+  fillJie(s); killIt(s, a);
+  const v = s.run.vote;
+  ok(v && v.opts.length === 3 && s.takeEvents().some(e => e.t === 'rv' && e.all), '斩够数：全线弹出三选一投票');
+  ok(s.frameFor(a).r.v && s.frameFor(b).r.v.o.join() === s.frameFor(a).r.v.o.join(), '两人看到同一组选项');
+  ok(!s.vote(a, 7) && !s.vote(a, 1.5) && !s.vote(999, 0), '乱投（越界、小数、不在线）不算');
+  s.vote(a, 2); s.vote(b, 2); keep(s); s.step(0.05);
+  ok(!s.run.vote && s.run.perks[0] === v.opts[2] && s.run.jie === 2, '人都投了马上结算，选中的秘卷进共享列表，进第 2 劫');
+  ok(s.frameFor(b).r.pk[0] === v.opts[2], '帧里带着共享秘卷');
+  const c = s.join({ name: '丙' }); s.state(c, { x: 600, hp: 100, mh: 100 });
+  ok(s.frameFor(c).r.pk.join() === s.run.perks.join() && s.frameFor(c).r.j === 2, '中途进来的人直接拿到同一套秘卷和进度');
+  // 投票超时：没投的不算，平票随机
+  fillJie(s); killIt(s, a); s.vote(c, 0);
+  const o2 = s.run.vote.opts; s.t += RG.VOTE_T + 1; keep(s); s.step(0.05);
+  ok(s.run.perks[1] === o2[0] && s.run.jie === 3, '超时按已投的票数结算');
+  s.leave(c);
+  ok(s.real() === 2, '走了一个人还剩 2 个真人');
+  // 满了顶掉最早的
+  const t = new WorldSim(() => 0.1); t.join({ name: 'x' });
+  t.run.perks = RG.PERKS.slice(0, RG.PERK_MAX); t.startVote(); t.endVote();
+  ok(t.run.perks.length === RG.PERK_MAX && t.run.perks[0] === RG.PERKS[1], `秘卷最多 ${RG.PERK_MAX} 卷，满了最早那卷让位`);
+}
+
+// ---------- 全服肉鸽：真人不足 3 位先等、够了开天道 Boss、伤害封顶、奖励资格 ----------
+{
+  const s = new WorldSim(() => 0.3);
+  const old = Date.now() - 48 * 3600e3;
+  const a = s.join({ name: '甲' }), b = s.join({ name: '乙' }), a2 = s.join({ name: '甲小号' });
+  s.setAuth(a, 'u1', old); s.setAuth(a2, 'u1', old); s.setAuth(b, 'u2', old);
+  ok(s.real() === 2, '同一个账号开两个网页只算一个真人');
+  for (const id of [a, b, a2]) s.state(id, { x: 600, hp: 100, mh: 100 });
+  s.run.jie = RG.JIE; s.run.perks = ['ink_resonance']; for (const p of s.players.values()) p.jies = RG.MIN_JIE - 1;
+  fillJie(s); killIt(s, a);
+  {
+    ok(s.run.wait && !s.run.key && s.takeEvents().some(e => e.t === 'rw'), `真人不到 ${RG.BOSS_MIN} 位：天道 Boss 先等着`);
+  }
+  const c = s.join({ name: '丙' }); s.setAuth(c, 'u3', old); s.state(c, { x: 600, hp: 100, mh: 100 });
+  const d = s.join({ name: '丁' }); s.state(d, { x: 600, hp: 100, mh: 100 });   // 游客
+  const newbie = s.join({ name: '新号' }); s.setAuth(newbie, 'u9', Date.now() - 3600e3); s.state(newbie, { x: 600, hp: 100, mh: 100 });
+  keep(s); s.step(0.05);
+  const k = s.run.key;
+  ok(k && k.kind === 'boss' && k.heroes.length === 3 && k.mh === RG.BOSS_HP * s.real(), '真人够了：开天道 Boss，三位侠客融魂，血量按真人数');
+  ok(s.mons.length === 0 && s.frameFor(c).r.k.s === k.seq, '关键战期间清掉小怪，帧里带着这一场');
+  ok(s.players.get(c).jies === 0 && s.players.get(a).jies === RG.MIN_JIE, '只有斩过前面几劫的人才记了劫数');
+  ok(s.keyHit(a, k.seq, 500) === 0, '开战 3 秒内交的伤害不算');
+  s.t += 2; ok(s.keyHit(a, k.seq + 1, 100) === 0, '不是这一场的伤害不算');
+  s.t += 3; const got = s.keyHit(a, k.seq, 5000);
+  ok(got <= RG.KEY_HIT_MAX && got <= 2 * RG.KEY_DPS + 1, `伤害按开战秒数封顶（${Math.round(got)}）`);
+  ok(s.keyHit(a, k.seq, 5000) === 0, '额度用完了再交也不算');
+  ok(s.keyHit(d, k.seq, -50) === 0 && s.keyHit(d, k.seq, NaN) === 0, '负数、乱填的伤害不算');
+  // 打死它
+  for (let i = 0; i < 400 && s.run.key; i++) { s.t += 1; keep(s); for (const id of [a, b, c, d, newbie]) s.keyHit(id, k.seq, 200); }
+  const ke = s.takeEvents().find(e => e.t === 'ke');
+  ok(ke && ke.win && ke.top.length >= 3, '天道 Boss 被打死，全线播报输出榜');
+  const uids = s.rewards.map(r => r.uid).sort();
+  ok(uids.join() === 'u1,u2', `星座皮肤只发给够资格的账号（拿到：${uids.join() || '无'}）：游客、新注册、劫数不够的没有`);
+  ok(s.run.cyc === 2 && s.run.jie === 1 && s.run.perks.join() === 'ink_resonance' && !s.run.key, '打完进下一轮，秘卷保留');
+  // 开战时刻不是整数秒（真服务器每拍 0.1 秒）：第一下伤害照样算
+  const f = new WorldSim(() => 0.3); const fids = [1, 2, 3].map(i => f.join({ name: 'f' + i }));
+  f.t = 2.3; f.run.jie = RG.JIE; f.jieDone(); const fk = f.run.key;
+  f.t += 4.1; ok(f.keyHit(fids[0], fk.seq, 50) === 50, '开战时刻带小数也不会把第一下伤害吞掉');
+  // 超时遁走：没奖励
+  const t = new WorldSim(() => 0.3); const ids = [1, 2, 3].map(i => t.join({ name: 'p' + i }));
+  ids.forEach((id, i) => { t.setAuth(id, 'v' + i, old); t.players.get(id).jies = 9; });
+  t.run.jie = RG.JIE; t.jieDone(); ok(!!t.run.key, '三个真人直接开打');
+  t.t += RG.BOSS_T + 1; keep(t); t.step(0.05);
+  ok(!t.run.key && t.rewards.length === 0 && t.takeEvents().some(e => e.t === 'ke' && !e.win), '超时没打死：遁走，不发奖励');
+}
+
+// ---------- 全服肉鸽：进度存档、读回、太旧的不认、乱填的被夹住 ----------
+{
+  const s = new WorldSim(); s.run.cyc = 4; s.run.jie = 3; s.run.perks = ['ink_resonance', 'storm_wrath']; s.run.seq = 7;
+  const saved = JSON.parse(JSON.stringify(s.saveRun()));
+  const t = new WorldSim(); t.loadRun(saved);
+  ok(t.run.cyc === 4 && t.run.jie === 3 && t.run.perks.join() === 'ink_resonance,storm_wrath' && t.run.seq === 7, '服务器重启后读回同一轮进度和秘卷');
+  const u = new WorldSim(); u.loadRun({ ...saved, at: Date.now() - RG.EMPTY_RESET - 1000 });
+  ok(u.run.cyc === 1 && u.run.perks.length === 0, '空了太久的存档不认，从头开始');
+  const v = new WorldSim(); v.loadRun({ cyc: -3, jie: 99, perks: ['hack', 'ink_resonance', 5], at: Date.now() });
+  ok(v.run.cyc === 1 && v.run.jie === RG.JIE && v.run.perks.join() === 'ink_resonance', '乱填的存档被夹住、不认识的秘卷丢掉');
+}
+
+// ---------- 全服肉鸽：WorldLine 上的投票消息、断线重连拿回进度 ----------
+{
+  const store = new Map();
+  const ctx = new FakeCtx(); ctx.storage = { get: async k => store.get(k), put: async (k, v) => { store.set(k, JSON.parse(JSON.stringify(v))); } };
+  ctx.blockConcurrencyWhile = async f => f();
+  const dobj = new WorldLine(ctx, {});
+  const a = await connect(5, ctx, dobj); await hi(dobj, a, '甲');
+  clearInterval(dobj.timer); dobj.timer = 0;
+  dobj.sim.run.got = dobj.sim.run.need; dobj.sim.jieDone();
+  await dobj.webSocketMessage(a, JSON.stringify({ t: 'v', i: 1 }));
+  const pick = dobj.sim.run.vote.opts[1];
+  dobj.tick();
+  ok(dobj.sim.run.perks[0] === pick && a.last('k').r.pk[0] === pick, '网页发的投票会算，帧里马上带着新秘卷');
+  ok(store.get('run') && store.get('run').perks[0] === pick, '进度变了就存进 Durable Object 存储');
+  await dobj.webSocketClose(a); a.closed = 1000; dobj.tick();
+  const again = new WorldLine(ctx, {}); await Promise.resolve();
+  ok(again.sim.run.perks[0] === pick && again.sim.run.jie === 2, '人都走了、服务器回收后再建出来：进度还在');
+  const b = await connect(5, ctx, again); await hi(again, b, '甲'); clearInterval(again.timer); again.timer = 0; again.tick();
+  ok(b.last('k').r.pk[0] === pick, '刷新网页重新进来：拿回同一套秘卷');
+  again.emptyAt = Date.now() - RG.EMPTY_RESET - 1;
+  await again.webSocketClose(b); b.closed = 1000;
+  const c = await connect(5, ctx, again); await hi(again, c, '乙'); clearInterval(again.timer); again.timer = 0;
+  ok(again.sim.run.perks.length === 0 && again.sim.run.jie === 1, '整条线空了超过 10 分钟再有人来：从头开始');
 }
 
 console.log(fails ? `\n${fails} 项没过` : '\n开放世界服务器测试全部通过');

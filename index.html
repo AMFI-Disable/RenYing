@@ -2625,6 +2625,19 @@ body.kbnav :focus, body.kbnav :focus-visible { outline: none !important; }
 box-shadow: 0 0 0 3px rgba(233,196,106,.22), 0 0 18px rgba(233,196,106,.45); transition: left .09s ease-out, top .09s ease-out, width .09s ease-out, height .09s ease-out; }
 body.kbnav #kbRing.on { display: block; }
 @media (prefers-reduced-motion: reduce) { #kbRing { transition: none; } }
+.home-wrouge { padding-top: 10px; padding-bottom: 10px; gap: 4px; border-color: rgba(170,150,255,.6); background: linear-gradient(125deg, rgba(170,150,255,.2), rgba(43,212,154,.1) 58%, var(--panel)); }
+.home-wrouge .hc-kicker { color: #b9a8ff; }
+.world-vote { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: calc(100vw - 24px); pointer-events: auto; }
+.world-vote .wv-h { font-size: 12px; color: #e9c46a; background: rgba(10,10,16,.78); padding: 3px 10px; border-radius: 10px; }
+.world-vote .wv-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.world-vote button { width: 150px; min-height: 64px; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background: rgba(14,14,22,.88); color: #eee; font-size: 12px; text-align: left; cursor: pointer; }
+.world-vote button b { display: block; font-size: 13px; margin-bottom: 2px; }
+.world-vote button span { display: block; opacity: .75; line-height: 1.3; }
+.world-vote button i { display: block; font-style: normal; margin-top: 2px; color: #2bd49a; font-weight: 700; }
+.world-vote button.sel { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; }
+@media (max-width: 520px) { .world-vote button { width: 31vw; min-height: 58px; font-size: 11px; } }
+@media (max-height: 900px) { .home-side .home-news { display: none; } }
+@media (max-height: 680px) { .home-side .home-rank { display: none; } }
 </style>
 </head>
 <body>
@@ -2749,6 +2762,10 @@ body.kbnav #kbRing.on { display: block; }
       <button class="home-card home-rouge" id="homeRouge" type="button">
         <span class="hc-kicker">同袍肉鸽 · 斩妖列传</span>
         <span class="hc-txt"><b>多人剧情肉鸽 · 斩妖战魔首</b><small>十三侠客专属剧情 · 2–3人共享秘卷斩小怪 · 决战六技魔首赢墨锭</small></span>
+      </button>
+      <button class="home-card home-rouge home-wrouge tn-online" id="homeWorldRouge" type="button">
+        <span class="hc-kicker">全服肉鸽 · 随时加入</span>
+        <span class="hc-txt"><b>全服共享秘卷 · 齐心讨天道</b><small>随时进 · 3 人开天道 Boss 掉星座皮肤</small></span>
       </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
@@ -4886,6 +4903,7 @@ promoteLocalToCloud,
 isCloudAvailable: () => true,
 getEndpoint,
 setEndpoint,
+worldToken: () => { const u = getUser(); return u && u.isCloud ? (getToken() || '') : ''; },
 econ,
 market,
 gboss,
@@ -4913,6 +4931,14 @@ init();
 (function() {
 'use strict';
 const DICT_EN = {
+"全服肉鸽 · 随时加入": "Server Roguelike · Join Anytime",
+"全服共享秘卷 · 齐心讨天道": "Shared Scrolls · Take Down the Tiandao Boss",
+"随时进 · 3 人开天道 Boss 掉星座皮肤": "Join anytime · 3 players open the Tiandao Boss for a Zodiac skin",
+"全服肉鸽": "Server Roguelike",
+"全线共选秘卷": "Line-wide Scroll Vote",
+"共享秘卷": "Shared Scrolls",
+"关键战": "Key Fight",
+"本劫斩妖": "Trial Kills",
 "江湖共斗 · 开放世界": "Open World Co-op",
 "一张大地图，谁都能随时加入，人数不设上限": "One big map anyone can join at any time, with no player limit",
 "找朋友：填对方的线号": "Join a friend: enter their line number",
@@ -9858,6 +9884,7 @@ t.innerHTML = `<span class="it-name">${escapeHTML(name)}</span><span class="it-c
 }
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
+if (M.worldKey) { worldKeyRound(w); return; }
 if (REC.on) recSave(w);
 taskMatchEnd(w);
 $id('endKicker').textContent = '';
@@ -10011,6 +10038,7 @@ function endRound() {
 const w = M.koWinner;
 if (w >= 0) M.wins[w]++;
 if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
+if (M.worldKey) { worldKeyRound(w); return; }   // 全服肉鸽的关键战：结果和奖励都以服务器为准，这里不加墨锭
 if (M.mode === 'saga') { sagaEnd(w); return; }
 if (isRaid()) {
 if (w === 0) {
@@ -11816,6 +11844,7 @@ superFreeze -= STEP;
 rpPoint(); updateFighter(superOwner, foeOf(superOwner)); rpPost(); if (!RESIM) { animFighter(superOwner); updateFX(STEP); }
 return;
 }
+if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
 if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
 for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
@@ -15607,7 +15636,7 @@ ctx.restore();
 }
 function drawHUDRaid() {
 const u = clamp(W / 1280, 0.72, 1.25);
-const pad = Math.round(24 * u), topY = Math.round((touchOn ? 50 : 16) * u);
+const pad = Math.round(24 * u), topY = Math.round((TOUCH ? 50 : 16) * u);
 const totalW = Math.min(Math.round(W - pad * 2), Math.round(1260 * u));
 const centerGap = Math.round(128 * u);
 const teamW = Math.floor((totalW - centerGap) / 2);
@@ -15693,7 +15722,7 @@ ctx.fillText(`六技轮转：${skNames}`, rx + teamW - 4, topY + bossH + Math.ro
 const perkCount = (M.towerPerks || []).length;
 ctx.fillStyle = '#7fe0b0';
 ctx.textAlign = 'left';
-ctx.fillText(`全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
+ctx.fillText(M.worldKey ? `全服共享秘卷：${perkCount} 卷 · 魔首血量全线共享` : `全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
 ctx.restore();
 ctx.save();
 ctx.textAlign = 'center';
@@ -20540,13 +20569,13 @@ let rougeSquadSize = 3;
 let rougeStoryChapter = 0;
 let rougePhaseMode = 'story';   // 'story': 先打小怪剧情波次再战六技魔首；'boss': 直接迎战六技魔首
 let pendingRaidBoss = null;
-function rollRaidBoss(wave = 1) {
+function rollRaidBoss(wave = 1, fixed = null) {   // fixed：指定三名侠客（全服肉鸽由服务器定，全线同一只）
 const pool = CHARS.map((_, i) => i);
 for (let i = pool.length - 1; i > 0; i--) {
 const j = (Math.random() * (i + 1)) | 0;
 const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
 }
-const heroes = pool.slice(0, 3);
+const heroes = Array.isArray(fixed) && fixed.length >= 3 ? fixed.slice(0, 3) : pool.slice(0, 3);
 const skills = [];
 const ults = [];
 for (const hIdx of heroes) {
@@ -20899,6 +20928,7 @@ ROLL.on = false; REC.on = false;
 if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
 if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
 if (WORLD.on) worldLeave();
+M.worldKey = null;
 M.stage = null;
 if (TUT) endTutorial();
 paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
@@ -21810,7 +21840,7 @@ const BOSS_AFFIXES = [
 const SC_BY = {};
 for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || (typeof isRaid === 'function' && isRaid()); }
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()); }
 const scEligible = f => !!(f && (f.idx <= 1 || (typeof isRaid === 'function' && isRaid())));
 function scIds(f) {
 if (!f) return [];
@@ -22173,7 +22203,10 @@ const base = (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint(
 return base.replace(/^http/, 'ws') + '/api/world/line/' + line;
 }
 function worldSend(o) { const ws = WORLD.ws; if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(o)); } catch (e) {} } }
-function worldHello() { worldSend({ t: 'hi', v: VERSION, name: rkOwner() || '', ch: A.ch.id, skin: A.skinKey || '' }); }
+function worldHello() {
+const tk = window.CloudSave && CloudSave.worldToken ? CloudSave.worldToken() : '';   // 云端账号的登录令牌：服务器用它认人发奖励，游客不带
+worldSend({ t: 'hi', v: VERSION, name: rkOwner() || '', ch: CHARS[WORLD.hero] ? CHARS[WORLD.hero].id : A.ch.id, skin: WORLD.skin || A.skinKey || '', tk });
+}
 function worldConnect(line) {
 worldClose();
 const sess = ++WORLD.sess;
@@ -22238,6 +22271,7 @@ if (W_.boss) { smoke(W_.boss.x, -100, 30); ring(W_.boss.x, -90, 160, '255,80,80'
 W_.boss = null;
 } else if (e.t === 'bg') { say('妖王遁走', 1.4, 'big', '没能在时限内拿下，下回再战'); W_.boss = null; }
 else if (e.t === 'bw' && W_.boss) { W_.boss.warn = e.w; W_.boss.act = e.a; }
+else rgEvent(e);
 }
 function worldHp(m, srv) {
 const h = WORLD.hits.find(q => q[0] === m.id), pend = h ? h[1] : 0;
@@ -22279,6 +22313,7 @@ const [id, x, hp, mh, f, act, life] = o.b;
 if (!W_.boss || W_.boss.id !== id) W_.boss = { id, x, y: 0, hp, ph: 0, flash: 0, warn: 0 };
 const b = W_.boss; b.tx = x; b.hp = worldHp(b, hp); b.maxHp = mh; b.face = f; b.act = act; b.life = life;
 } else W_.boss = null;
+if (o.r) rgFrame(o.r);
 for (const e of o.e || []) worldEvent(e);
 }
 function worldAttack(e) {
@@ -22334,16 +22369,22 @@ hitFX(x, y, clamp(dmg / 8, 0.5, 1.6), att.look.slash, dir); hitstop = Math.max(h
 addP({ type: 'text', text: String(Math.round(dmg * 10) / 10), x: mon.x, y: (mon.T ? mon.y - mon.T.h : -230) - 20, life: 0.5, max: 0.5, rgb: '255,240,220' });
 comboUI[0].n++; comboUI[0].dmg += dmg; comboUI[0].t = 1.6;
 }
-function worldStart(heroIdx) {
-if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }
-if (typeof heroIdx !== 'number' || heroIdx < 0 || heroIdx >= CHARS.length) heroIdx = 0;
-FOREST.on = false; B.forestProxy = false;
+function worldEnterMode(heroIdx, x) {
+FOREST.on = false; B.forestProxy = false; M.worldKey = null;
 initAudio(); paused = false; showScreen(null);
 startMatch('world', 'normal', [heroIdx, 0]);
 M.phase = 'fight'; M.t = 0; creditT = 0; creditPending = false;
 B.ctrl = new Ctrl(); B.worldProxy = true; B.hidden = true; B.invul = 99; B.look = { ...B.look, name: '妖物' };
-Object.assign(WORLD, { on: true, n: 0, kills: 0, myKills: 0, shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, tries: 0, full: false, sendT: 0 });
-A.x = worldShrineX(0) + 80; A.face = 1; cam.x = A.x;
+Object.assign(WORLD, { shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, sendT: 0 });
+A.x = x; A.face = 1; cam.x = A.x;
+}
+function worldStart(heroIdx) {
+if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }
+if (typeof heroIdx !== 'number' || heroIdx < 0 || heroIdx >= CHARS.length) heroIdx = 0;
+WORLD.hero = heroIdx; WORLD.on = true;
+worldEnterMode(heroIdx, worldShrineX(0) + 80);
+WORLD.skin = A.skinKey || '';
+Object.assign(WORLD, { n: 0, kills: 0, myKills: 0, tries: 0, full: false, run: null, keySeq: 0 });
 let line = 1;
 try { line = Math.max(1, Math.min(9999, +localStorage.getItem('renying-world-line') || 1)); } catch (e) {}
 if (WORLD.wantLine) { line = WORLD.wantLine; WORLD.wantLine = 0; }
@@ -22351,7 +22392,7 @@ worldConnect(line);
 }
 function worldLeave() {
 if (!WORLD.on) return;
-WORLD.on = false; worldClose();
+WORLD.on = false; worldClose(); M.worldKey = null; rgVoteUI();
 B.worldProxy = false; B.hidden = false; B.invul = 0;
 }
 function worldUpdate() {
@@ -22485,6 +22526,7 @@ const rows = WORLD.status ? [['状态', WORLD.status]] : [
 ['本线侠客', `${WORLD.n} 人`],
 ['本线斩妖', `${WORLD.kills} 只（你 ${WORLD.myKills}）`],
 [WORLD.boss ? '妖王' : '妖王现世', WORLD.boss ? `魔窟 · 余 ${WORLD.boss.life || 0} 秒` : `还差 ${WORLD.nb} 只`],
+...rgHudRows(),
 ];
 ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
 const hh = (rows.length + 1) * fs * 1.65 + 12;
@@ -22519,6 +22561,115 @@ WORLD.wantLine = n >= 1 && n <= 9999 ? Math.floor(n) : 0;
 bpStart('world');
 });
 }
+const RG_JIE = 5;
+const rgRun = () => WORLD.run || null;
+function rgFrame(r) {
+const W_ = WORLD; W_.run = r;
+rgVoteUI();
+const K = M.worldKey;
+if (r.k && r.k.s !== W_.keySeq && !K && W_.on && W_.deadT <= 0 && !paused) worldKeyEnter(r.k);   // 关键战开了（或进来时正在打）：进场
+if (K && K.kind === 'boss' && r.k && r.k.s === K.seq) {   // 魔首的血以服务器为准；自己刚打的还没交上去的先扣着
+if (B.hp < W_.kLastB) { W_.kPend += W_.kLastB - B.hp; W_.kHitAt = clock; }   // 上一步刚打掉的先记上，不然会被服务器的数盖掉
+const v = r.k.hp - W_.kPend;
+B.maxHp = r.k.mh;
+if (!K.won) B.hp = Math.max(1, clock - (W_.kHitAt || -9) < 0.6 ? Math.min(B.hp, v) : v);
+W_.kLastB = B.hp; M.timer = r.k.u;
+}
+}
+function rgEvent(e) {
+const W_ = WORLD;
+if (e.t === 'rv') { say('全线共选秘卷', 1.2, 'go', '本劫斩妖完成，15 秒内投票'); SFX.gong(); }
+else if (e.t === 'rp') {
+const s = SC_BY[e.pick];
+say(`全线共享「${s ? s.n : e.pick}」`, 1.4, 'big', `第 ${e.j} / ${RG_JIE} 劫 · 已有 ${e.perks.length} 卷秘卷`);
+} else if (e.t === 'rw') say('天道 Boss 待命', 1.6, 'big', `线上真人够 ${e.need} 位才能开战，先继续斩妖`);
+else if (e.t === 'ks') { say('天道 Boss 降世', 1.6, 'big', '全线侠客共讨融魂魔首'); SFX.gong(); }
+else if (e.t === 'ke') rgKeyOver(e);
+}
+function rgVoteUI() {
+const v = WORLD.on && !M.worldKey && rgRun() && rgRun().v;
+let el = $id('worldVote');
+if (!v) { if (el) el.remove(); return; }
+if (!el) {
+el = document.createElement('div'); el.id = 'worldVote'; el.className = 'world-vote';
+el.addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (!b) return; worldSend({ t: 'v', i: +b.dataset.i }); SFX.slice(); refocusGame(); });
+document.body.appendChild(el);
+}
+const key = [v.o.join(), v.my, v.n.join(), v.u].join('|');
+if (el.dataset.k === key) return;
+el.dataset.k = key;
+el.innerHTML = `<div class="wv-h">全线共选秘卷 · 还剩 ${v.u} 秒</div><div class="wv-row">` + v.o.map((id, i) => {
+const s = SC_BY[id];
+return `<button type="button" data-i="${i}" class="${v.my === i ? 'sel' : ''}"><b>${s ? s.n : id}</b><span>${s ? s.d : ''}</span><i>${v.n[i]} 票</i></button>`;
+}).join('') + '</div>';
+}
+function rgHudRows() {
+const r = rgRun(); if (!r) return [];
+const st = r.k ? (r.k.kind === 'boss' ? `天道 Boss · 余 ${r.k.u} 秒` : `天道车轮 · 余 ${r.k.u} 秒`)
+: r.v ? '全线投票中' : r.w ? `等真人 ${r.n}/${r.w} 位` : `${r.g} / ${r.nd} 只`;
+return [['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`], [r.k ? '关键战' : '本劫斩妖', st], ['共享秘卷', `${(r.pk || []).length} 卷`]];
+}
+function rgMates(me) { const out = []; for (let k = 2; out.length < 2; k += 2) { const i = (me + k) % CHARS.length; if (i !== me && !out.includes(i)) out.push(i); } return out; }
+function worldKeyEnter(k) {
+const W_ = WORLD;
+W_.keySeq = k.s; W_.back = W_.back && W_.back.seq === k.s ? W_.back : { x: A.x, seq: k.s };
+W_.kPend = 0; W_.kSendT = 0; W_.kHitAt = -9; rgVoteUI();
+if (k.kind === 'boss') {
+const heroes = (k.h || []).map(id => CHAR_IDX[id]).filter(i => i !== undefined);
+pendingRaidBoss = rollRaidBoss(1, heroes);
+M.worldKey = { kind: 'boss', seq: k.s };
+B.worldProxy = false; B.hidden = false; B.invul = 0;   // B 不再是妖物的代理，换成真打的魔首
+startRaidMatch([W_.hero, ...rgMates(W_.hero)], 3);
+M.towerPerks = (rgRun().pk || []).slice(); scRoundStart();
+B.maxHp = k.mh; B.hp = B.lagHp = Math.max(1, k.hp); W_.kLastB = B.hp; M.timer = k.u;
+say('天道 Boss · 全线共讨', 1.5, 'big', `融魂魔首【${M.raidBoss && M.raidBoss.heroNames ? M.raidBoss.heroNames.join('·') : ''}】· 共享 ${M.towerPerks.length} 卷秘卷`);
+}
+}
+function worldKeyStep() {
+const W_ = WORLD, K = M.worldKey; if (!K || !W_.on) return;
+if (K.kind === 'boss') {
+if (B.hp < W_.kLastB) { W_.kPend += W_.kLastB - B.hp; W_.kHitAt = clock; }
+if (!K.won && B.hp <= 0) B.hp = 1;   // 服务器说打空了才算倒
+W_.kLastB = B.hp;
+}
+if ((W_.kSendT -= STEP) <= 0) {
+W_.kSendT = 0.25;
+worldSend({ t: 's', x: Math.round((W_.back && W_.back.x) || A.x), y: 0, vx: 0, f: 1, st: 'idle', tt: 0, hp: Math.round(A.hp), mh: A.maxHp, kf: 1 });
+if (W_.kPend > 0) { worldSend({ t: 'kd', s: K.seq, d: Math.round(W_.kPend * 10) / 10 }); W_.kPend = 0; }
+}
+}
+function worldKeyRound(w) {
+const K = M.worldKey; if (!K) return;
+M.phase = 'end';
+if (K.kind === 'boss') {
+if (K.won) { K.done = true; setTimeout(() => { if (M.worldKey === K) worldResume(); }, 2600); return; }
+say('同袍全倒', 1.2, 'big', '3 秒后重新入战，魔首的血不回');
+setTimeout(() => {
+if (M.worldKey !== K) return;
+const k = rgRun() && rgRun().k;
+if (k && k.s === K.seq) { M.worldKey = null; WORLD.keySeq = 0; worldKeyEnter(k); } else worldResume();
+}, 3000);
+}
+}
+function rgKeyOver(e) {
+const K = M.worldKey;
+const top = (e.top || []).map((r, i) => `${i + 1}. ${r[0]} ${r[1]}`).join('  ');
+const cloud = !!(window.CloudSave && CloudSave.worldToken && CloudSave.worldToken());
+if (e.kind === 'boss') {
+if (e.win) { toast(`天道 Boss 伏诛！${top}${cloud ? ' · 够资格的话，星座皮肤会在下次打开武库时到账' : ' · 登录云端账号才能领星座皮肤'}`); SFX.gong(); }
+else toast('天道 Boss 遁走，下一轮再战');
+}
+if (!K) return;
+if (K.kind === 'boss' && e.win && !K.won) { K.won = true; B.hp = 0; say('天道 Boss 伏诛', 1.8, 'big', top); return; }   // 本机的魔首这才倒下，走正常的击倒流程
+if (!(K.kind === 'boss' && e.win)) { say(e.kind === 'boss' ? '天道 Boss 遁走' : '关键战结束', 1.4, 'big'); setTimeout(() => { if (M.worldKey === K) worldResume(); }, 1800); }
+}
+function worldResume() {
+const b = WORLD.back; M.worldKey = null; WORLD.back = null;
+if (!WORLD.on) return;
+worldEnterMode(WORLD.hero, b ? b.x : worldShrineX(3));
+say('回到江湖', 1, 'go', '秘卷保留，下一轮开始');
+}
+if ($id('homeWorldRouge')) $id('homeWorldRouge').addEventListener('click', () => { SFX.slice(); WORLD.wantLine = 0; bpStart('world'); });
 const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s', 0.08, 0], ['l2a', 0.15, 16], ['lcs', 0.08, 0], ['lca', 0.15, 16],
 ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
 ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],
@@ -27003,7 +27154,7 @@ if (menuHeroId >= 0) { MENU_HERO = null; setMenuHero(menuHeroId); }
 applySkins();
 } catch (e) {}
 }
-const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
+const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
 function apply(out, quiet) {
 if (!out) return;
 if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
@@ -27025,7 +27176,7 @@ own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own;
 if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
 if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
 if (out.cfg !== undefined) { const c = C.cleanCfg(out.cfg); CFG = c.cfg; }
-if (Array.isArray(out.gifts)) for (const g of out.gifts) toast(`开发组补偿：${String(g.note || '')}（${giftText(g)}）`);
+if (Array.isArray(out.gifts)) for (const g of out.gifts) toast(`${g.skin ? '全服肉鸽奖励' : '开发组补偿'}：${String(g.note || '')}（${giftText(g)}）`);
 if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
 try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
 if (window.CloudSave) CloudSave.saveProfile(PROF);

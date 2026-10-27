@@ -5,6 +5,14 @@
   'use strict';
 
   const DICT_EN = {
+  "全服肉鸽 · 随时加入": "Server Roguelike · Join Anytime",
+  "全服共享秘卷 · 齐心讨天道": "Shared Scrolls · Take Down the Tiandao Boss",
+  "随时进 · 3 人开天道 Boss 掉星座皮肤": "Join anytime · 3 players open the Tiandao Boss for a Zodiac skin",
+  "全服肉鸽": "Server Roguelike",
+  "全线共选秘卷": "Line-wide Scroll Vote",
+  "共享秘卷": "Shared Scrolls",
+  "关键战": "Key Fight",
+  "本劫斩妖": "Trial Kills",
   "江湖共斗 · 开放世界": "Open World Co-op",
   "一张大地图，谁都能随时加入，人数不设上限": "One big map anyone can join at any time, with no player limit",
   "找朋友：填对方的线号": "Join a friend: enter their line number",

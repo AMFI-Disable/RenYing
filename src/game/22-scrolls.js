@@ -299,7 +299,7 @@ for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
 
 // ---------- 谁有哪些秘卷 ----------
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || (typeof isRaid === 'function' && isRaid()); }
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()); }
 const scEligible = f => !!(f && (f.idx <= 1 || (typeof isRaid === 'function' && isRaid())));
 function scIds(f) {
   if (!f) return [];

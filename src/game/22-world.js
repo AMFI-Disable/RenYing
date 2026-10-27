@@ -3,6 +3,7 @@
 // 别的侠客画成「同道」，按服务器每秒 10 帧插值；妖物出招时服务器广播一次，打没打中自己由本机判定（能格挡、能闪）。
 // 自己打中妖物：本机先显示伤害，再跟着下一次上报一起交给服务器（服务器按距离和每秒上限封顶）。
 // 每线 40 人，满了自动去下一线；可以在弹窗里输入线号去找朋友。
+// 全服肉鸽：每条线一份共享进程（第几轮、第几劫、全线投票选出的秘卷、关键战），都以服务器为准，见文件末尾那一节。
 const WORLD_W = 8000;
 const WORLD_ZONES = [
   { n: '竹林', a: 0, b: 2000, tint: '60,120,80', d: '刀鬼、弓妖、夜枭出没' },
@@ -24,7 +25,10 @@ function worldUrl(line) {
   return base.replace(/^http/, 'ws') + '/api/world/line/' + line;
 }
 function worldSend(o) { const ws = WORLD.ws; if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(o)); } catch (e) {} } }
-function worldHello() { worldSend({ t: 'hi', v: VERSION, name: rkOwner() || '', ch: A.ch.id, skin: A.skinKey || '' }); }
+function worldHello() {
+  const tk = window.CloudSave && CloudSave.worldToken ? CloudSave.worldToken() : '';   // 云端账号的登录令牌：服务器用它认人发奖励，游客不带
+  worldSend({ t: 'hi', v: VERSION, name: rkOwner() || '', ch: CHARS[WORLD.hero] ? CHARS[WORLD.hero].id : A.ch.id, skin: WORLD.skin || A.skinKey || '', tk });
+}
 function worldConnect(line) {
   worldClose();
   const sess = ++WORLD.sess;
@@ -91,6 +95,7 @@ function worldEvent(e) {
     W_.boss = null;
   } else if (e.t === 'bg') { say('妖王遁走', 1.4, 'big', '没能在时限内拿下，下回再战'); W_.boss = null; }
   else if (e.t === 'bw' && W_.boss) { W_.boss.warn = e.w; W_.boss.act = e.a; }
+  else rgEvent(e);
 }
 // 服务器的血量减去自己还没交上去的伤害；刚打过的 0.6 秒内只降不升，免得血条来回跳（服务器没认的伤害之后会补回来）
 function worldHp(m, srv) {
@@ -133,6 +138,7 @@ function worldFrame(o) {
     if (!W_.boss || W_.boss.id !== id) W_.boss = { id, x, y: 0, hp, ph: 0, flash: 0, warn: 0 };
     const b = W_.boss; b.tx = x; b.hp = worldHp(b, hp); b.maxHp = mh; b.face = f; b.act = act; b.life = life;
   } else W_.boss = null;
+  if (o.r) rgFrame(o.r);
   for (const e of o.e || []) worldEvent(e);
 }
 // 服务器说某只妖物出招了：本机把这一招放出来，只判定会不会打到自己
@@ -191,16 +197,23 @@ function worldHit(att, mv, pt, target) {
   addP({ type: 'text', text: String(Math.round(dmg * 10) / 10), x: mon.x, y: (mon.T ? mon.y - mon.T.h : -230) - 20, life: 0.5, max: 0.5, rgb: '255,240,220' });
   comboUI[0].n++; comboUI[0].dmg += dmg; comboUI[0].t = 1.6;
 }
-function worldStart(heroIdx) {
-  if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }
-  if (typeof heroIdx !== 'number' || heroIdx < 0 || heroIdx >= CHARS.length) heroIdx = 0;
-  FOREST.on = false; B.forestProxy = false;
+// 进大地图（刚进来，或打完关键战回来）：本机的对局换成开放世界，B 当妖物的代理
+function worldEnterMode(heroIdx, x) {
+  FOREST.on = false; B.forestProxy = false; M.worldKey = null;
   initAudio(); paused = false; showScreen(null);
   startMatch('world', 'normal', [heroIdx, 0]);
   M.phase = 'fight'; M.t = 0; creditT = 0; creditPending = false;
   B.ctrl = new Ctrl(); B.worldProxy = true; B.hidden = true; B.invul = 99; B.look = { ...B.look, name: '妖物' };
-  Object.assign(WORLD, { on: true, n: 0, kills: 0, myKills: 0, shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, tries: 0, full: false, sendT: 0 });
-  A.x = worldShrineX(0) + 80; A.face = 1; cam.x = A.x;
+  Object.assign(WORLD, { shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, sendT: 0 });
+  A.x = x; A.face = 1; cam.x = A.x;
+}
+function worldStart(heroIdx) {
+  if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }
+  if (typeof heroIdx !== 'number' || heroIdx < 0 || heroIdx >= CHARS.length) heroIdx = 0;
+  WORLD.hero = heroIdx; WORLD.on = true;
+  worldEnterMode(heroIdx, worldShrineX(0) + 80);
+  WORLD.skin = A.skinKey || '';
+  Object.assign(WORLD, { n: 0, kills: 0, myKills: 0, tries: 0, full: false, run: null, keySeq: 0 });
   let line = 1;
   try { line = Math.max(1, Math.min(9999, +localStorage.getItem('renying-world-line') || 1)); } catch (e) {}
   if (WORLD.wantLine) { line = WORLD.wantLine; WORLD.wantLine = 0; }
@@ -208,7 +221,7 @@ function worldStart(heroIdx) {
 }
 function worldLeave() {
   if (!WORLD.on) return;
-  WORLD.on = false; worldClose();
+  WORLD.on = false; worldClose(); M.worldKey = null; rgVoteUI();
   B.worldProxy = false; B.hidden = false; B.invul = 0;
 }
 // 每个逻辑步（1/120 秒）：插值同道和妖物、处理本机这边的妖物攻击、复活、上报
@@ -349,6 +362,7 @@ function drawWorldHUD() {
     ['本线侠客', `${WORLD.n} 人`],
     ['本线斩妖', `${WORLD.kills} 只（你 ${WORLD.myKills}）`],
     [WORLD.boss ? '妖王' : '妖王现世', WORLD.boss ? `魔窟 · 余 ${WORLD.boss.life || 0} 秒` : `还差 ${WORLD.nb} 只`],
+    ...rgHudRows(),
   ];
   ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
   const hh = (rows.length + 1) * fs * 1.65 + 12;
@@ -385,3 +399,123 @@ if ($id('btnRougeGoWorld')) {
     bpStart('world');
   });
 }
+
+// ======================= 全服肉鸽：每条分线共享的肉鸽进程 =======================
+// 一轮 5 劫：每劫全线一起斩够妖物 → 全线投票选一卷秘卷（人人都得到，服务器记着，中途进来、刷新、重连都还在）→ 第 5 劫斩够后开关键战。
+// 关键战：线上真人够 3 个就打天道 Boss——每人在自己网页里打一场同袍肉鸽（自己 + 2 名天道同袍 vs 服务器指定的同一只融魂魔首），
+// 魔首的血全线共享，以服务器为准。打赢后够资格的云端账号由服务器发星座皮肤（下次打开武库自动领），网页里不加任何东西。
+const RG_JIE = 5;
+const rgRun = () => WORLD.run || null;
+function rgFrame(r) {
+  const W_ = WORLD; W_.run = r;
+  rgVoteUI();
+  const K = M.worldKey;
+  if (r.k && r.k.s !== W_.keySeq && !K && W_.on && W_.deadT <= 0 && !paused) worldKeyEnter(r.k);   // 关键战开了（或进来时正在打）：进场
+  if (K && K.kind === 'boss' && r.k && r.k.s === K.seq) {   // 魔首的血以服务器为准；自己刚打的还没交上去的先扣着
+    if (B.hp < W_.kLastB) { W_.kPend += W_.kLastB - B.hp; W_.kHitAt = clock; }   // 上一步刚打掉的先记上，不然会被服务器的数盖掉
+    const v = r.k.hp - W_.kPend;
+    B.maxHp = r.k.mh;
+    if (!K.won) B.hp = Math.max(1, clock - (W_.kHitAt || -9) < 0.6 ? Math.min(B.hp, v) : v);
+    W_.kLastB = B.hp; M.timer = r.k.u;
+  }
+}
+function rgEvent(e) {
+  const W_ = WORLD;
+  if (e.t === 'rv') { say('全线共选秘卷', 1.2, 'go', '本劫斩妖完成，15 秒内投票'); SFX.gong(); }
+  else if (e.t === 'rp') {
+    const s = SC_BY[e.pick];
+    say(`全线共享「${s ? s.n : e.pick}」`, 1.4, 'big', `第 ${e.j} / ${RG_JIE} 劫 · 已有 ${e.perks.length} 卷秘卷`);
+  } else if (e.t === 'rw') say('天道 Boss 待命', 1.6, 'big', `线上真人够 ${e.need} 位才能开战，先继续斩妖`);
+  else if (e.t === 'ks') { say('天道 Boss 降世', 1.6, 'big', '全线侠客共讨融魂魔首'); SFX.gong(); }
+  else if (e.t === 'ke') rgKeyOver(e);
+}
+// 投票：屏幕下方三张秘卷，点一下就投；不挡战斗，可以边打边投
+function rgVoteUI() {
+  const v = WORLD.on && !M.worldKey && rgRun() && rgRun().v;
+  let el = $id('worldVote');
+  if (!v) { if (el) el.remove(); return; }
+  if (!el) {
+    el = document.createElement('div'); el.id = 'worldVote'; el.className = 'world-vote';
+    el.addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (!b) return; worldSend({ t: 'v', i: +b.dataset.i }); SFX.slice(); refocusGame(); });
+    document.body.appendChild(el);
+  }
+  const key = [v.o.join(), v.my, v.n.join(), v.u].join('|');
+  if (el.dataset.k === key) return;
+  el.dataset.k = key;
+  el.innerHTML = `<div class="wv-h">全线共选秘卷 · 还剩 ${v.u} 秒</div><div class="wv-row">` + v.o.map((id, i) => {
+    const s = SC_BY[id];
+    return `<button type="button" data-i="${i}" class="${v.my === i ? 'sel' : ''}"><b>${s ? s.n : id}</b><span>${s ? s.d : ''}</span><i>${v.n[i]} 票</i></button>`;
+  }).join('') + '</div>';
+}
+function rgHudRows() {
+  const r = rgRun(); if (!r) return [];
+  const st = r.k ? (r.k.kind === 'boss' ? `天道 Boss · 余 ${r.k.u} 秒` : `天道车轮 · 余 ${r.k.u} 秒`)
+    : r.v ? '全线投票中' : r.w ? `等真人 ${r.n}/${r.w} 位` : `${r.g} / ${r.nd} 只`;
+  return [['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`], [r.k ? '关键战' : '本劫斩妖', st], ['共享秘卷', `${(r.pk || []).length} 卷`]];
+}
+// 进关键战：天道 Boss = 同袍肉鸽（自己 + 2 名天道同袍）打服务器指定的融魂魔首，血量全线共享
+function rgMates(me) { const out = []; for (let k = 2; out.length < 2; k += 2) { const i = (me + k) % CHARS.length; if (i !== me && !out.includes(i)) out.push(i); } return out; }
+function worldKeyEnter(k) {
+  const W_ = WORLD;
+  W_.keySeq = k.s; W_.back = W_.back && W_.back.seq === k.s ? W_.back : { x: A.x, seq: k.s };
+  W_.kPend = 0; W_.kSendT = 0; W_.kHitAt = -9; rgVoteUI();
+  if (k.kind === 'boss') {
+    const heroes = (k.h || []).map(id => CHAR_IDX[id]).filter(i => i !== undefined);
+    pendingRaidBoss = rollRaidBoss(1, heroes);
+    M.worldKey = { kind: 'boss', seq: k.s };
+    B.worldProxy = false; B.hidden = false; B.invul = 0;   // B 不再是妖物的代理，换成真打的魔首
+    startRaidMatch([W_.hero, ...rgMates(W_.hero)], 3);
+    M.towerPerks = (rgRun().pk || []).slice(); scRoundStart();
+    B.maxHp = k.mh; B.hp = B.lagHp = Math.max(1, k.hp); W_.kLastB = B.hp; M.timer = k.u;
+    say('天道 Boss · 全线共讨', 1.5, 'big', `融魂魔首【${M.raidBoss && M.raidBoss.heroNames ? M.raidBoss.heroNames.join('·') : ''}】· 共享 ${M.towerPerks.length} 卷秘卷`);
+  }
+}
+// 关键战里每一步：记下自己这边打掉魔首多少血，每 0.25 秒交一次；顺便报个平安，免得服务器以为掉线
+function worldKeyStep() {
+  const W_ = WORLD, K = M.worldKey; if (!K || !W_.on) return;
+  if (K.kind === 'boss') {
+    if (B.hp < W_.kLastB) { W_.kPend += W_.kLastB - B.hp; W_.kHitAt = clock; }
+    if (!K.won && B.hp <= 0) B.hp = 1;   // 服务器说打空了才算倒
+    W_.kLastB = B.hp;
+  }
+  if ((W_.kSendT -= STEP) <= 0) {
+    W_.kSendT = 0.25;
+    worldSend({ t: 's', x: Math.round((W_.back && W_.back.x) || A.x), y: 0, vx: 0, f: 1, st: 'idle', tt: 0, hp: Math.round(A.hp), mh: A.maxHp, kf: 1 });
+    if (W_.kPend > 0) { worldSend({ t: 'kd', s: K.seq, d: Math.round(W_.kPend * 10) / 10 }); W_.kPend = 0; }
+  }
+}
+// 本机这一场打完了（endRound / showEnd 交过来的）：赢了等服务器的结果，输了几秒后再进场
+function worldKeyRound(w) {
+  const K = M.worldKey; if (!K) return;
+  M.phase = 'end';
+  if (K.kind === 'boss') {
+    if (K.won) { K.done = true; setTimeout(() => { if (M.worldKey === K) worldResume(); }, 2600); return; }
+    say('同袍全倒', 1.2, 'big', '3 秒后重新入战，魔首的血不回');
+    setTimeout(() => {
+      if (M.worldKey !== K) return;
+      const k = rgRun() && rgRun().k;
+      if (k && k.s === K.seq) { M.worldKey = null; WORLD.keySeq = 0; worldKeyEnter(k); } else worldResume();
+    }, 3000);
+  }
+}
+function rgKeyOver(e) {
+  const K = M.worldKey;
+  const top = (e.top || []).map((r, i) => `${i + 1}. ${r[0]} ${r[1]}`).join('  ');
+  const cloud = !!(window.CloudSave && CloudSave.worldToken && CloudSave.worldToken());
+  if (e.kind === 'boss') {
+    if (e.win) { toast(`天道 Boss 伏诛！${top}${cloud ? ' · 够资格的话，星座皮肤会在下次打开武库时到账' : ' · 登录云端账号才能领星座皮肤'}`); SFX.gong(); }
+    else toast('天道 Boss 遁走，下一轮再战');
+  }
+  if (!K) return;
+  if (K.kind === 'boss' && e.win && !K.won) { K.won = true; B.hp = 0; say('天道 Boss 伏诛', 1.8, 'big', top); return; }   // 本机的魔首这才倒下，走正常的击倒流程
+  if (!(K.kind === 'boss' && e.win)) { say(e.kind === 'boss' ? '天道 Boss 遁走' : '关键战结束', 1.4, 'big'); setTimeout(() => { if (M.worldKey === K) worldResume(); }, 1800); }
+}
+// 打完关键战回大地图（回到进场前站的地方）
+function worldResume() {
+  const b = WORLD.back; M.worldKey = null; WORLD.back = null;
+  if (!WORLD.on) return;
+  worldEnterMode(WORLD.hero, b ? b.x : worldShrineX(3));
+  say('回到江湖', 1, 'go', '秘卷保留，下一轮开始');
+}
+// 首页「全服肉鸽」卡片：直接进点将台选侠客，选完进分线，不用排队
+if ($id('homeWorldRouge')) $id('homeWorldRouge').addEventListener('click', () => { SFX.slice(); WORLD.wantLine = 0; bpStart('world'); });

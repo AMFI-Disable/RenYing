@@ -1,6 +1,7 @@
 // 武库经济 + 反作弊的服务器测试：在本机把 cloudflare/worker.js 跑起来（D1 用 node:sqlite 模拟），
 // 正常流程走一遍，再按作弊的路数打一遍：改墨锭、伪造皮肤、重放请求、并发双花（同一件同时卖、同一单同时买、买和撤撞上）、
 // 乱填参数、刷开箱次数、刷终端机、乱报斩数、刷对局奖励、爆破密码……
+// 全服肉鸽的星座皮肤：服务器写 gift 表、下次动武库领到；游客、新号、伤害不够的没有；每号每天一件；同时领、同时发都不会多。
 // 还有管理后台：管理口令、加减墨锭和东西、封号解封、全服补偿、兑换码、在线改经济数值、管理网页。
 // 用法：node tools/econ-test.mjs           （Node 22 以上，不用装任何包）
 //       node tools/econ-test.mjs --bundle  测打包好的 cloudflare/worker.bundle.js（真正部署上去的那个文件）
@@ -15,7 +16,7 @@ const realNow = Date.now;
 Date.now = () => T;
 
 const FILE = process.argv.includes('--bundle') ? 'cloudflare/worker.bundle.js' : 'cloudflare/worker.js';
-const { default: worker } = await import(new URL(FILE, ROOT));
+const { default: worker, WorldLine } = await import(new URL(FILE, ROOT));
 const C = globalThis.ArmoryCore;
 
 /* ---------- 用 node:sqlite 模拟 D1（接口和 Cloudflare 的一样：prepare/bind/first/all/run/batch） ---------- */
@@ -1462,6 +1463,63 @@ section('规则核心：冻结、坏存档自愈');
   const t2 = C.normalize({ tm: { t0: T, n: 99, o: { k: 'qf_p1', st: 3, price: -9 } } }, { now: T, uid: 'x' });
   ok(t2.tm && t2.tm.n === C.TERM.offers && t2.tm.o.price >= 1, '终端机报到第几件、价格都夹在范围里', t2.tm);
   ok(s.nid > 3, '新编号不会和已有的撞');
+}
+
+section('全服肉鸽 · 天道 Boss 的星座皮肤：服务器核对账号后写进 gift 表，下次动武库领到；游客、新号、伤害不够、被封的没有；每号每天一件，同时发、同时领都不多');
+{
+  const { RG } = globalThis.RenyingWorldSim;
+  const zod = k => !!C.ITEM[k] && C.ITEM[k].col === 'c8';
+  const Z1 = await newUser('rouge1'), Z2 = await newUser('rouge2'), Z3 = await newUser('rouge3'), ZB = await newUser('rougebad');
+  for (const u of [Z1, Z2, Z3, ZB]) await econ(u.token, 'sync');
+  T += (RG.MIN_AGE_H + 1) * 3600e3;
+  const Zn = await newUser('rougenew'); await econ(Zn.token, 'sync');   // 刚注册的号
+  await adm('POST', '/api/admin/ban', { uid: ZB.uid, days: 2, why: '测试全服肉鸽' });
+  const ctx = { socks: new Set(), acceptWebSocket() {}, getWebSockets() { return []; } };
+  const line = new WorldLine(ctx, ENV), sim = line.sim;
+  const join = async (name, tok) => { const id = sim.join({ name }); if (tok) await line.auth(id, tok); sim.players.get(id).jies = RG.JIE; return id; };
+  const p1 = await join('甲', Z1.token), p2 = await join('乙', Z2.token), p3 = await join('丙', Z3.token), pn = await join('新', Zn.token),
+    pb = await join('坏', ZB.token), pg = await join('游客'), pf = await join('乱填', 'not-a-token');
+  ok(sim.players.get(p1).uid === Z1.uid && sim.players.get(pn).uid === Zn.uid, '登录令牌核对成云端账号');
+  ok(!sim.players.get(pb).uid && !sim.players.get(pg).uid && !sim.players.get(pf).uid, '被封的号、游客、乱填的令牌都不认账号');
+  const win = async (hits) => {
+    sim.run.jie = RG.JIE; sim.run.key = null; sim.run.wait = false; sim.startKey();
+    const k = sim.run.key; sim.t += 4;
+    for (let i = 0; i < 2000 && sim.run.key; i++) { sim.t += 1; for (const [id, d] of hits) sim.keyHit(id, k.seq, d); }
+    const list = sim.rewards; sim.rewards = []; await line.pay(list); return { k, list };
+  };
+  const { list } = await win([[p1, 200], [p2, 200], [p3, 5], [pn, 200], [pg, 200], [pb, 200]]);
+  ok(list.map(r => r.uid).sort().join() === [Z1.uid, Z2.uid].sort().join(), '只有伤害够份额、注册满 24 小时的云端账号够资格（伤害太少的、新号、游客、被封的没有）', list);
+  const g1 = ENV.DB.raw.prepare("SELECT * FROM gift WHERE uid = ? AND by = 'rouge'").all(Z1.uid);
+  ok(g1.length === 1 && zod(JSON.parse(g1[0].items_json).skin) && g1[0].ink === RG.INK, `gift 表里写了一件星座饰品 + ${RG.INK} 墨锭`, g1);
+  ok(ENV.DB.raw.prepare("SELECT COUNT(*) AS n FROM gift WHERE by = 'rouge' AND uid IN (?, ?, ?)").get(Z3.uid, Zn.uid, ZB.uid).n === 0, '不够资格的号 gift 表里没有');
+  ok(row("SELECT COUNT(*) AS n FROM econ_log WHERE uid = ? AND act = 'rouge_zod'", Z1.uid).n === 1, '发奖记进流水（rouge_zod）');
+  const inv0 = stateOf(Z1.uid).inv.length, ink0 = inkOf(Z1.uid);
+  const rs = await Promise.all(Array.from({ length: 6 }, () => econ(Z1.token, 'sync')));
+  const st1 = stateOf(Z1.uid), mine = st1.inv.filter(x => x.src === 'rouge');
+  ok(rs.every(r => r.ok) && rs.filter(r => r.gifts).length === 1 && mine.length === 1 && st1.inv.length === inv0 + 1 && inkOf(Z1.uid) === ink0 + RG.INK, '同时发 6 个请求：只领到一件星座饰品和一份墨锭', [mine, inkOf(Z1.uid) - ink0]);
+  ok(zod(mine[0].k) && mine[0].k === JSON.parse(g1[0].items_json).skin, '领到的就是写进 gift 表的那一件');
+  ok(rs.find(r => r.gifts).gifts[0].skin === mine[0].k, '回复里带着是哪一件（网页弹提示用）');
+  ok(!(await econ(Z1.token, 'sync')).gifts && stateOf(Z1.uid).inv.filter(x => x.src === 'rouge').length === 1, '再动武库不会再领');
+  // 同一天再赢一次、两条线同时发：都不多
+  await win([[p1, 200], [p2, 200]]);
+  await Promise.all([line.pay([{ uid: Z2.uid, dmg: 1, cyc: 9 }]), line.pay([{ uid: Z2.uid, dmg: 1, cyc: 9 }]), line.pay([{ uid: Z1.uid, dmg: 1, cyc: 9 }])]);
+  const n1 = ENV.DB.raw.prepare("SELECT COUNT(*) AS n FROM gift WHERE uid = ? AND by = 'rouge'").get(Z1.uid).n, n2 = ENV.DB.raw.prepare("SELECT COUNT(*) AS n FROM gift WHERE uid = ? AND by = 'rouge'").get(Z2.uid).n;
+  ok(n1 === RG.ZOD_PER_DAY && n2 === RG.ZOD_PER_DAY, `同一天再赢、几条线同时发：每号每天还是只有 ${RG.ZOD_PER_DAY} 件`, [n1, n2]);
+  T += 86400e3;
+  await line.pay([{ uid: Z1.uid, dmg: 1, cyc: 10 }]);
+  const r2 = await econ(Z1.token, 'sync'), mine2 = stateOf(Z1.uid).inv.filter(x => x.src === 'rouge');
+  ok(r2.gifts && r2.gifts.length === 1 && mine2.length === 2 && mine2[0].k !== mine2[1].k, '第二天再赢：再领一件，优先给还没有的款', mine2.map(x => x.k));
+  // 伤害封顶：一个人狂报伤害也打不死，3 秒后每秒最多算 RG.KEY_DPS
+  sim.run.jie = RG.JIE; sim.startKey();
+  const k = sim.run.key; sim.t += 3.5;
+  let dealt = 0; for (let i = 0; i < 50; i++) dealt += sim.keyHit(p1, k.seq, 99999);
+  ok(dealt <= RG.KEY_DPS && k.hp > k.mh - RG.KEY_DPS - 1, `一个人一口气狂报伤害，最多只算 ${RG.KEY_DPS}（算了 ${Math.round(dealt)}）`);
+  sim.endKey(false);
+  ok(!sim.rewards.length, '没打死就没有奖励');
+  // 伪造：gift 里的 skin 不是星座款的不认
+  ENV.DB.raw.prepare("INSERT INTO gift (id, uid, ink, items_json, note, by, at, until, born) VALUES ('fake1', ?, 0, ?, 'x', 'rouge', ?, ?, ?)").run(Z2.uid, JSON.stringify({ skin: 'qf_p1' }), T, T + 86400e3, T);
+  const r3 = await econ(Z2.token, 'sync');
+  ok(!stateOf(Z2.uid).inv.some(x => x.k === 'qf_p1' && x.src === 'rouge') && stateOf(Z2.uid).inv.filter(x => x.src === 'rouge').length === 1, '不是星座武器箱的款不会当奖励发出去', r3.gifts);
 }
 
 console.log(`\n${pass} 项通过，${fail} 项失败`);

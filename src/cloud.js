@@ -1216,6 +1216,8 @@
       isCloudAvailable: () => true,
       getEndpoint,
       setEndpoint,
+      // 全服肉鸽进分线时带上的登录令牌（服务器用它认云端账号发奖励）；游客、本机账号是空的
+      worldToken: () => { const u = getUser(); return u && u.isCloud ? (getToken() || '') : ''; },
       econ,
       market,
       gboss,
