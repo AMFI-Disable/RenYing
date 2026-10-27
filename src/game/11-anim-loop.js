@@ -781,11 +781,13 @@ function frameBody(now) {
   touchUIUpdate();
 }
 function updateCamera(dt) {
-  if (FOREST.on) {   // 闯关打妖物：镜头只跟着你，妖物离得近才一起框进来
-    const near = FOREST.mons.filter(m => Math.abs(m.x - A.x) < 650);
-    const xs = [A.x, ...near.map(m => m.x)], lo = Math.min(...xs), hi = Math.max(...xs);
-    const fx = clamp((lo + hi) / 2, A.x - 260, A.x + 260);
-    cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(1.15 - (hi - lo) / 1400, 0.72, 1.1), 3, dt);
+  if (FOREST.on) {   // 闯关打妖物：镜头框住同袍小队与附近的妖物
+    const allies = sideFighters(0).filter(f => !f.hidden && f.hp > 0);
+    const allyXs = allies.length ? allies.map(f => f.x) : [A.x];
+    const near = FOREST.mons.filter(m => Math.abs(m.x - A.x) < 750);
+    const xs = [...allyXs, ...near.map(m => m.x)], lo = Math.min(...xs), hi = Math.max(...xs);
+    const fx = clamp((lo + hi) / 2, A.x - 320, A.x + 320);
+    cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(1.12 - (hi - lo) / 1600, 0.64, 1.05), 3, dt);
     cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
     return;
   }

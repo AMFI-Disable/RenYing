@@ -348,6 +348,7 @@ function updateMatch() {
     if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
+    if (FOREST.on) return;   // 斩妖波次由 forestUpdate 独立推进，清完群妖再衔接六技魔首或结算
     if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
     if (isRaid() && typeof updateRaidBoss === 'function') updateRaidBoss(STEP);
     const team0Out = isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));

@@ -920,6 +920,25 @@ const testSuite = [
       if (!subTxt.includes('600') || !subTxt.includes('墨锭')) {
         return { pass: false, error: 'Victory screen did not announce Ink reward: ' + subTxt };
       }
+      // Verify all 13 heroes have dedicated stories in HERO_FOREST_STORIES & CHAPTERS, and unified storyWaves -> Raid Boss works
+      if (typeof HERO_FOREST_STORIES !== 'object' || CHAPTERS.length !== CHARS.length) {
+        return { pass: false, error: 'Expected 13 CHAPTERS matching CHARS.length, got ' + CHAPTERS.length };
+      }
+      for (const ch of CHARS) {
+        const st = HERO_FOREST_STORIES[ch.id];
+        if (!st || !st.title || !st.synopsis || !Array.isArray(st.waveDialogues) || st.waveDialogues.length < 4 || !st.bossIntro) {
+          return { pass: false, error: 'Missing or incomplete story for hero: ' + ch.id };
+        }
+      }
+      startRaidMatch([0, 2, 3], 3, { chapterIdx: 0, storyWaves: true });
+      if (!FOREST.on || !FOREST.raidStory || !isRaid() || !FOREST.storyLine) {
+        return { pass: false, error: 'Unified Raid Story Waves did not activate FOREST.on with storyLine in raid mode' };
+      }
+      // Transition from clearing small monsters to the 6-skill Chimera Boss climax
+      stageClear();
+      if (FOREST.on || B.hidden || !B.bossSkills || B.bossSkills.length !== 6) {
+        return { pass: false, error: 'stageClear() in unified raidStory mode did not transition to 6-skill Chimera Boss' };
+      }
       toMenu();
       return { pass: true, error: null };
     })()`

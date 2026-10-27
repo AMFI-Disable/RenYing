@@ -803,8 +803,10 @@ $id('btn2v2GoWatch').addEventListener('click', () => {
   startWatch2v2Draft();
 });
 
-// ======================= 同袍肉鸽 · 众志破魔（首页专属多人共斗 Boss 模式） =======================
+// ======================= 同袍肉鸽 · 十三侠客斩妖列传（打小怪剧情 + 肉鸽秘卷 + 六技魔首合一多人模式） =======================
 let rougeSquadSize = 3;
+let rougeStoryChapter = 0;
+let rougePhaseMode = 'story';   // 'story': 先打小怪剧情波次再战六技魔首；'boss': 直接迎战六技魔首
 let pendingRaidBoss = null;
 function rollRaidBoss(wave = 1) {
   const pool = CHARS.map((_, i) => i);
@@ -878,17 +880,24 @@ function updateRaidBoss(dt) {
     if (B.bossUlts && B.bossUlts.length) B.ch.ult = B.bossUlts[(B.bossSkillCursor >> 1) % B.bossUlts.length];
   }
 }
-function startRaidMatch(squadPicks, squadSize = 3) {
+function startRaidMatch(squadPicks, squadSize = 3, opts = null) {
   if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
   const sq = squadSize === 2 ? 2 : 3;
   const picks = Array.isArray(squadPicks) && squadPicks.length >= sq ? squadPicks.slice(0, sq) : [0, 2, 3].slice(0, sq);
+  const chIdx = (opts && opts.chapterIdx !== undefined) ? opts.chapterIdx : (CHAPTERS.findIndex(c => c.hero === CHARS[picks[0]].id));
+  const validCh = chIdx >= 0 ? chIdx : (rougeStoryChapter || 0);
+  const chObj = CHAPTERS[validCh] || CHAPTERS[0];
+  const story = HERO_FOREST_STORIES[chObj.hero] || HERO_FOREST_STORIES[CHARS[picks[0]].id] || HERO_FOREST_STORIES.qingfeng;
   M.mode = 'raid';
   M.raidSquadSize = sq;
   M.raidWave = 1;
   M.raidInkEarned = 0;
   M.raidLastReward = 600;
   M.raidConsoled = false;
+  M.raidStoryHero = story.hero;
+  M.raidStoryChapter = validCh;
+  M.raidStory = story;
   M.raidBoss = pendingRaidBoss || rollRaidBoss(1);
   pendingRaidBoss = null;
   // 开局即赠送 2 卷全队共享的随机秘卷，全员共享增益
@@ -914,9 +923,27 @@ function startRaidMatch(squadPicks, squadSize = 3) {
   A.meter = C.meter = D.meter = 45;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   showScreen(null);
+  if (opts && opts.storyWaves) {
+    // 先进入该侠客的斩妖剧情波次（2~3 人同屏打小怪 + 每波感悟共享肉鸽秘卷），清完小怪无缝迎战六技融魂魔首！
+    const S = STAGE = stageInfo(validCh, 0);
+    startRound();
+    const initLine = (story.waveDialogues && story.waveDialogues[0]) || story.synopsis;
+    Object.assign(FOREST, {
+      on: true, mons: [], shots: [], spawnT: 0.9, kills: {}, total: 0, t: 0, hurtT: 9, wave: 0, toSpawn: [], breakT: 1.2,
+      over: false, overT: 0, shown: false, prot: S.K.prot, result: null,
+      storyTitle: `${story.title} · ${S.stgName}`,
+      storyLine: initLine,
+      raidStory: true
+    });
+    B.forestProxy = true; B.hidden = true; B.x = STAGE_W / 2 + 360; B.invul = 99;
+    M.phase = 'fight';
+    say(`${story.title} · 同袍斩妖开启`, 1.5, 'big', initLine);
+    return;
+  }
+  FOREST.on = false; B.forestProxy = false; B.hidden = false;
   startRound();
   const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
-  say(`同袍肉鸽 · 迎战三侠六技【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享');
+  say(`${story.title} · 决战【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', story.bossIntro || (perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享'));
 }
 function nextRaidWave() {
   paused = false;
@@ -938,6 +965,26 @@ function renderRougeModal() {
   for (const b of document.querySelectorAll('#rougeSquadSeg button')) {
     b.classList.toggle('sel', +b.dataset.sq === rougeSquadSize);
   }
+  for (const b of document.querySelectorAll('#rougePhaseSeg button')) {
+    b.classList.toggle('sel', b.dataset.ph === rougePhaseMode);
+  }
+  const tabsEl = $id('rougeStoryTabs');
+  if (tabsEl && typeof CHAPTERS !== 'undefined') {
+    tabsEl.innerHTML = CHAPTERS.map((ch, idx) => {
+      const st = HERO_FOREST_STORIES[ch.hero];
+      return `<button type="button" data-ch="${idx}" class="${idx === rougeStoryChapter ? 'sel' : ''}">${st ? st.heroName : ch.name}</button>`;
+    }).join('');
+  }
+  const sBox = $id('rougeStoryBox');
+  if (sBox && typeof CHAPTERS !== 'undefined') {
+    const ch = CHAPTERS[rougeStoryChapter] || CHAPTERS[0];
+    const st = HERO_FOREST_STORIES[ch.hero] || HERO_FOREST_STORIES.qingfeng;
+    sBox.innerHTML = `
+      <b>📖 ${st.title}（${st.place} · 五幕斩妖列传）</b>
+      <div>${st.synopsis}</div>
+      <div style="margin-top:4px;color:#7fe0b0;font-size:12px">章节流程：${st.stageNames.slice(0, 4).join(' → ')}（同袍斩小怪+每波共享秘卷） → <b>终幕【${st.stageNames[4]}】迎战六技魔首</b></div>
+    `;
+  }
   const box = $id('rougeBossPreview');
   if (box) {
     const rb = pendingRaidBoss;
@@ -948,7 +995,7 @@ function renderRougeModal() {
     }).join('');
     box.innerHTML = `
       <div class="mr-boss-head">
-        <span class="mr-boss-title">👹 当期融魂魔首：${rb.heroNames.join(' · ')}</span>
+        <span class="mr-boss-title">👹 终幕六技融魂魔首：${rb.heroNames.join(' · ')}</span>
         <div class="mr-boss-tags">
           <span class="mr-boss-tag">300% 气血 (3x HP)</span>
           <span class="mr-boss-tag">125% 伤害</span>
@@ -959,7 +1006,8 @@ function renderRougeModal() {
     `;
   }
 }
-function openRougeModal() {
+function openRougeModal(chIdx) {
+  if (typeof chIdx === 'number' && chIdx >= 0 && chIdx < CHAPTERS.length) rougeStoryChapter = chIdx;
   if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
   const m = $id('modalRouge');
   if (m) m.classList.remove('hidden');
@@ -975,10 +1023,24 @@ if ($id('homeRouge')) {
 if ($id('modalRougeClose')) {
   $id('modalRougeClose').addEventListener('click', closeRougeModal);
 }
+if ($id('rougeStoryTabs')) {
+  $id('rougeStoryTabs').addEventListener('click', e => {
+    const b = e.target.closest('button[data-ch]'); if (!b) return;
+    rougeStoryChapter = +b.dataset.ch || 0;
+    SFX.slice(); renderRougeModal();
+  });
+}
 if ($id('rougeSquadSeg')) {
   $id('rougeSquadSeg').addEventListener('click', e => {
     const b = e.target.closest('button[data-sq]'); if (!b) return;
     rougeSquadSize = +b.dataset.sq === 2 ? 2 : 3;
+    SFX.slice(); renderRougeModal();
+  });
+}
+if ($id('rougePhaseSeg')) {
+  $id('rougePhaseSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-ph]'); if (!b) return;
+    rougePhaseMode = b.dataset.ph === 'boss' ? 'boss' : 'story';
     SFX.slice(); renderRougeModal();
   });
 }
@@ -991,7 +1053,7 @@ if ($id('btnRougeReroll')) {
 if ($id('btnRougeGoLocal')) {
   $id('btnRougeGoLocal').addEventListener('click', () => {
     closeRougeModal();
-    bpStart('raid', { squadSize: rougeSquadSize });
+    bpStart('raid', { squadSize: rougeSquadSize, chapterIdx: rougeStoryChapter, storyWaves: rougePhaseMode === 'story' });
   });
 }
 if ($id('btnRougeGoMatch')) {

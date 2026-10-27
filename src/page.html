@@ -130,8 +130,8 @@
         <span class="hc-hp"><i id="homeGbossBar"></i></span>
       </button>
       <button class="home-card home-rouge" id="homeRouge" type="button">
-        <span class="hc-kicker">同袍肉鸽 · 众志破魔</span>
-        <span class="hc-txt"><b>多人共斗秘境 · 三侠战魔首</b><small>2–3人共享秘卷 · 迎战六技融魂首领 · 赢取海量墨锭</small></span>
+        <span class="hc-kicker">同袍肉鸽 · 斩妖列传</span>
+        <span class="hc-txt"><b>多人剧情肉鸽 · 斩妖战魔首</b><small>十三侠客专属剧情 · 2–3人共享秘卷斩小怪 · 决战六技魔首赢墨锭</small></span>
       </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
@@ -285,25 +285,19 @@
         </div>
       </div>
 
-      <!-- 闯关模式 -->
+      <!-- 闯关模式（已与同袍肉鸽多人模式深度融合：十三侠客专属斩妖列传） -->
       <div data-sec="stage" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">六章守关挑战</h3>
-          <span class="sub-badge">剧情通关</span>
+          <h3 class="spt">十三侠客斩妖传 · 同袍肉鸽共斗</h3>
+          <span class="sub-badge">每位侠客专属剧情 · 多人肉鸽合一</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">六大篇章逐级挑战，前四关斩妖除魔，终局迎战守关宗师。余血越多得星越多！</p>
-        <div class="bp-rule-banner">
-          <span class="bp-rule-seal pick-only">直选</span>
-          <div class="bp-rule-txt">
-            <b>点将台规则 · 单人闯关免禁用直选</b>
-            <span>点选下方任意已解锁关卡后，即刻进入水墨点将台检视招式并钦点出战大侠。</span>
-          </div>
-        </div>
+        <p class="sub" style="margin:2px 0 8px;text-align:left">十三位侠客各有一卷斩妖除魔的专属故事！前四幕迎战刀鬼、弓妖、缚灵、咒师、夜枭并感悟共享秘卷，终幕决战三侠六技融魂魔首！</p>
+        <div class="st-story-box" id="stStoryBox"></div>
       </div>
 
       <!-- 关卡选择 -->
       <div data-sec="stage" style="display:none">
-        <div class="sec-sub-label">选择挑战篇章与关卡</div>
+        <div class="sec-sub-label">选择侠客剧情篇章与关卡（点击关卡即刻携同袍出征）</div>
         <div class="seg sttabs" id="stTabs"></div>
         <div class="stgrid" id="stGrid"></div>
         <p class="netnote" id="stNote"></p>
@@ -1143,18 +1137,25 @@
       </div>
     </div>
   </div>
-  <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 众志破魔">
+  <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 斩妖列传">
     <div class="rk-info-box m2-box">
       <div class="rk-info-head">
-        <h3 id="modalRougeTitle">同袍肉鸽 · 众志破魔</h3>
+        <h3 id="modalRougeTitle">同袍肉鸽 · 十三侠客斩妖列传</h3>
         <button class="go small" id="modalRougeClose" type="button">关闭</button>
       </div>
       <div class="m2-body">
-        <p class="m2-desc" id="modalRougeDesc">全员皆可加入共斗秘境！2–3 名侠客同心并肩、<b>全队共享秘卷增益与回血气劲</b>，迎战拥有<b>随机三名侠客共 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，讨伐大捷全员共享海量墨锭！</p>
-        <div class="sec-sub-label">共斗人数</div>
+        <p class="m2-desc" id="modalRougeDesc">斩妖剧情闯关与多人肉鸽合二为一！2–3 名侠客并肩体验<b>十三侠客专属斩妖故事</b>、横扫群妖波次、<b>全队共享秘卷与回血增益</b>，终幕迎战<b>随机三侠 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，大捷全员共享海量墨锭！</p>
+        <div class="sec-sub-label">选择侠客斩妖列传篇章（每位侠客专属故事）</div>
+        <div class="mr-story-tabs" id="rougeStoryTabs"></div>
+        <div class="mr-story-box" id="rougeStoryBox"></div>
+        <div class="sec-sub-label">共斗人数与征讨流程</div>
         <div class="m2-seg" id="rougeSquadSeg" role="tablist">
           <button class="sel" data-sq="3" type="button">3人同袍破魔 (推荐)</button>
           <button data-sq="2" type="button">2人精锐共斗</button>
+        </div>
+        <div class="m2-seg" id="rougePhaseSeg" role="tablist" style="margin-top:6px">
+          <button class="sel" data-ph="story" type="button">完整斩妖列传 (群妖剧情波次 + 共享秘卷 + 六技魔首)</button>
+          <button data-ph="boss" type="button">直讨终幕魔首 (直接迎战三侠六技融魂首领)</button>
         </div>
         <div class="mr-boss-box" id="rougeBossPreview"></div>
         <div class="sec-sub-label">结阵方式</div>

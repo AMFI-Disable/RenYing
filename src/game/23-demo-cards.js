@@ -582,7 +582,7 @@ function bpFinish() {
     trainChar = picks[0];
     startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
   } else if (mode === 'raid') {
-    startRaidMatch(picks[0], opts.squadSize || (picks[0] ? picks[0].length : 3));
+    startRaidMatch(picks[0], opts.squadSize || (picks[0] ? picks[0].length : 3), opts);
   } else if (mode === '2v2') {
     if (opts.subMode === 'pp_pp') start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
     else start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
