@@ -685,12 +685,11 @@ function drawStats() {
   let t = `帧率 ${FPS}`;
   ctx.fillText(t, x, y);
   if (M.mode === 'net' && NET.rtt) {
-    // 分开显示：到对手（整个来回）和到服务器，方便看出慢在哪一段
+    // 到对手的一个来回（点对点，没有服务器这一段）
     const ms = Math.round(NET.rtt), w = ctx.measureText(t + '   ').width;
     ctx.fillStyle = ms < 80 ? '#8fe0a0' : ms < 160 ? '#e9c46a' : '#ff8a78';
     const tx = `延迟 对手 ${ms}ms`;
     ctx.fillText(tx, x + w, y);
-    if (NET.srtt) { const sm = Math.round(NET.srtt); ctx.fillStyle = 'rgba(239,232,216,0.55)'; ctx.fillText(`· 服务器 ${sm}ms`, x + w + ctx.measureText(tx + ' ').width, y); }
   }
   // 回滚与联机遥测 HUD (按 ~ 或 F2 切换)
   if (NET_HUD) {

@@ -138,7 +138,7 @@ function predictHit(att, def, m, pt) {
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
   const sx = m.srcX !== undefined ? m.srcX : att.x, fx = m.dir || att.face;
-  const isCs2 = (m && m.name === 'cs2') || (att && att.moveName === 'cs2');
+  const isCs2 = !!(m && m.name === 'cs2');   // 只认这一招本身：moveName 收招后不清，之后的技能、暗器、大招不能被当成蓄力斩
   if (wasBlocking && (!m.unblockable || isCs2)) {
     const atkDir = Math.sign(sx - def.x) || -fx || def.face;
     def.face = atkDir;
@@ -173,7 +173,7 @@ function applyHit(att, def, m, pt) {
   }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
-  const isCs2 = (m && m.name === 'cs2') || (att && att.moveName === 'cs2');
+  const isCs2 = !!(m && m.name === 'cs2');   // 只认这一招本身：moveName 收招后不清，之后的技能、暗器、大招不能被当成蓄力斩
   if (wasBlocking && (!m.unblockable || isCs2)) {
     const atkDir = Math.sign(sx - def.x) || -fx || def.face;
     def.face = atkDir;
@@ -290,7 +290,8 @@ function applyHit(att, def, m, pt) {
     }
   }
   def.comboHits++;
-  const isCounter = !m.isProj && def.moveName !== 'dl' && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
+  // 打在对手出手前摇上算“破”（下劈 dl 不算）。moveName 是上一记普攻的名字，收招后不清，只在出普攻时才看它
+  const isCounter = !m.isProj && ((def.state === 'attack' && def.move && def.moveName !== 'dl' && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
   let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
   if (isBlockedCs2) {
@@ -492,17 +493,18 @@ function hitVisual(ev, quiet) {
   }
   if (ev.wb) { ring(ev.x, ev.y, 80, '255,255,255', 0.3); SFX.block(); }
   const fdir = ev.f || att.face;
-  if (ev.blk) {
-    shake = Math.max(shake, 3);
-    blockFX(ev.x, ev.y, fdir); SFX.block();
-    return;
-  }
-  if (ev.blockedCs2) {
+  if (ev.blockedCs2) {   // 挡住满蓄力斩也带 blk：要在下面的格挡分支提前返回之前播
     shake = Math.max(shake, 12);
     ring(ev.x, ev.y, 110, '170,220,255', 0.35);
     blockFX(ev.x, ev.y, fdir);
     SFX.block();
     SFX.heavy();
+    return;
+  }
+  if (ev.blk) {
+    shake = Math.max(shake, 3);
+    blockFX(ev.x, ev.y, fdir); SFX.block();
+    return;
   }
   if (ev.armor) {
     def.flash = 0.06; def.lagDelay = 0.5; shake = Math.max(shake, 4);

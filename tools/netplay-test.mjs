@@ -45,7 +45,7 @@ function makePeer(outbox) {
 // 本测试自己的伪随机数（不用 Math.random，好复现）
 function rng(s) { return () => { s = (Math.imul(s ^ (s >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) | 0; return ((s >>> 0) % 1e6) / 1e6; }; }
 
-function runCase(mode, chars, seed, frames, lag) {
+function runCase(mode, chars, seed, frames, lag, duo) {
   now = 0;
   const box = [[], []];   // box[0]：房主发出的，box[1]：加入的人发出的
   const P = [makePeer(box[0]), makePeer(box[1])];
@@ -55,7 +55,7 @@ function runCase(mode, chars, seed, frames, lag) {
   const dice = [rng(seed * 13 + 3), rng(seed * 13 + 4)];
   const errs = [];
   const G = P.map(w => ({ human: vm.runInContext('human', w), rollTick: vm.runInContext('rollTick', w), onNetMsg: vm.runInContext('onNetMsg', w) }));
-  for (const w of P) vm.runInContext(`rollStart(${JSON.stringify(chars)}, ${seed});`, w);
+  for (const w of P) vm.runInContext(`rollStart(${JSON.stringify(chars)}, ${seed}${duo ? ', ' + JSON.stringify(duo) : ''});`, w);
   const wire = [[], []];
   const PRESS = ['light', 'jump', 'dash', 'skill', 'skill2', 'special'];
   for (let t = 0; t < frames + 600; t++) {
@@ -90,7 +90,7 @@ function runCase(mode, chars, seed, frames, lag) {
   if (h && c) walk(h, c, '');
   // 中途校验对不上也算失败：游戏会让房主发存档纠正，玩家看到的是角色突然一闪
   if (info[0].desyncs || info[1].desyncs) diff.push(`对局中校验对不上 ${info[0].desyncs}/${info[1].desyncs} 次`);
-  return { errs, diff, F: info.map(x => x.F), desyncs: info.map(x => x.desyncs), rollbacks: info.map(x => x.rollbacks), fighters: info[0].n, frame: f };
+  return { errs, diff, F: info.map(x => x.F), desyncs: info.map(x => x.desyncs), rollbacks: info.map(x => x.rollbacks), fighters: info[0].n, frame: f, round: h && h.M ? `第${h.M.round}回合 比分${h.M.wins} ${h.M.phase}` : '' };
 }
 
 let fail = 0;
@@ -98,14 +98,16 @@ const argF = process.argv.indexOf('--frames');
 const FRAMES = argF > 0 ? +process.argv[argF + 1] : 3600;
 const CASES = [
   ['normal', [0, 3]], ['normal', [5, 9]], ['normal', [2, 7]], ['normal', [10, 11]], ['normal', [4, 6]], ['normal', [1, 8]],
+  ['normal', [12, 0]], ['normal', [7, 12]],
+  ['normal', [2, 3], [[2, 5, 12], [3, 4, 7]]],   // 3v3 车轮：输一回合换下一人
   ['chaos', [3, 9]], ['mayhem', [6, 2]],
   ['pp_cc', [0, 3, 5, 9]], ['pp_pp', [2, 7, 4, 6]],
 ];
-for (const [mode, ch] of CASES) for (const lag of [1, 6]) {
-  const r = runCase(mode, ch, SEED0 + ch[0] * 31 + lag, FRAMES, lag);
+for (const [mode, ch, duo] of CASES) for (const lag of [1, 6]) {
+  const r = runCase(mode, ch, SEED0 + ch[0] * 31 + lag, FRAMES, lag, duo);
   const ok = !r.errs.length && !r.diff.length;
   if (!ok) fail++;
-  console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${JSON.stringify(ch)} 延迟${lag}帧  帧=${r.F} 回滚=${r.rollbacks} 校验不一致=${r.desyncs}`);
+  console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${JSON.stringify(duo || ch)} 延迟${lag}帧  帧=${r.F} 回滚=${r.rollbacks} 校验不一致=${r.desyncs}  ${r.round}`);
   for (const e of r.errs) console.log('        报错 ' + e);
   for (const d of r.diff) console.log('        不一致 ' + d);
 }

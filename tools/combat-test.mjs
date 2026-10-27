@@ -1029,6 +1029,53 @@ const testSuite = [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Blocked cs2 rule only applies to cs2 itself: a later blockable hit or ult after a cs2 is not turned into a quick knockdown',
+    fn: `(() => {
+      startMatch('train', 'stand', [0, 1]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      const setup = () => {
+        toNeutral(A); toNeutral(B);
+        A.x = STAGE_W / 2 - 40; B.x = STAGE_W / 2 + 40; A.face = 1; B.face = -1;
+        A.y = B.y = 0; A.vy = B.vy = A.vx = B.vx = 0; A.invul = B.invul = 0;
+        B.hp = B.maxHp; B.guard = B.maxGuard; B.quickGetup = false; delete B.knockdownDur;
+        A.moveName = 'cs2';   // 刚放完一记蓄力斩：收招后 moveName 还留着
+        B.ctrl.held.down = true; B.state = 'block';
+      };
+      // 1. 挡得住的暗器：应该是普通格挡
+      setup();
+      applyHit(A, B, { dmg: 20, kb: [200, 0], stun: 0.3, hs: 0.06, isProj: true }, [B.x, B.y - 60]);
+      if (B.state !== 'blockstun' || B.quickGetup) { toMenu(); return { pass: false, error: 'blockable hit after cs2 became ' + B.state + (B.quickGetup ? ' (quickGetup)' : '') }; }
+      // 2. 不可挡的大招：应该照常挑飞、打满伤害，而不是按挡住蓄力斩打 45% 再快速起身
+      setup();
+      const ult = { dmg: 75, kb: [480, -700], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true };
+      applyHit(A, B, ult, [B.x, B.y - 60]);
+      const ultDmg = B.maxHp - B.hp;
+      if (B.state === 'knockdown' || B.quickGetup) { toMenu(); return { pass: false, error: 'unblockable ult after cs2 was treated as blocked cs2: state=' + B.state + ' dmg=' + ultDmg }; }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Counter hit (破) on a skill wind-up does not depend on the last normal attack being a down attack',
+    fn: `(() => {
+      startMatch('train', 'stand', [0, 1]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      const hitSkillStartup = lastMove => {
+        toNeutral(A); toNeutral(B);
+        A.x = STAGE_W / 2 - 40; B.x = STAGE_W / 2 + 40; A.face = 1; B.face = -1;
+        A.y = B.y = 0; A.vy = B.vy = A.vx = B.vx = 0; A.invul = B.invul = 0;
+        B.hp = B.maxHp; B.comboHits = 0; B.armorT = 0;
+        B.moveName = lastMove; B.state = 'skill'; B.skill = B.ch.skill; B.t = 0.05;   // 技能刚起手
+        applyHit(A, B, { dmg: 20, kb: [200, -100], stun: 0.3, hs: 0.06 }, [B.x, B.y - 60]);
+        return B.maxHp - B.hp;
+      };
+      const afterL1 = hitSkillStartup('l1'), afterDl = hitSkillStartup('dl');
+      toMenu();
+      if (Math.abs(afterL1 - afterDl) > 0.01) return { pass: false, error: 'skill wind-up counter damage differs by last attack: after l1=' + afterL1 + ' after dl=' + afterDl };
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

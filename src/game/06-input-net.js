@@ -240,7 +240,6 @@ function onNetMsg(msg) {
   if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
   if (msg.po !== undefined) { const r = performance.now() - msg.po; NET.rtt = NET.rtt ? NET.rtt * 0.7 + r * 0.3 : r; return; }
-  if (msg.spo !== undefined) { const r = performance.now() - msg.spo; NET.srtt = NET.srtt ? NET.srtt * 0.7 + r * 0.3 : r; return; }
   if (msg.chat) { chatRecv(msg.chat); return; }
   if (msg.i) {
     const c = NET.remote, h = msg.i.h, wasAtk = c.held.atk;
@@ -284,7 +283,7 @@ function netTick(dt) {
   if (M.mode !== 'net' && bpMode !== 'net') return;
   if (!NET.open) return;
   NET.pingAcc = (NET.pingAcc || 0) + dt;
-  if (NET.pingAcc >= 1) { NET.pingAcc = 0; const now = performance.now(); send({ pg: now }); send({ sp: now }); }
+  if (NET.pingAcc >= 1) { NET.pingAcc = 0; const now = performance.now(); send({ pg: now }); }   // 只量和对手之间的延迟：联机是点对点，没有服务器可量
   if (M.mode !== 'net' || NET.hold || ROLL.on) return;
   const h = human[0].held;
   const hb = (h.left ? 1 : 0) | (h.right ? 2 : 0) | (h.down ? 4 : 0) | (h.atk ? 8 : 0) | (h.jump ? 16 : 0) | (h.aim < 0 ? 32 : 0) | (h.aim ? 64 : 0);
