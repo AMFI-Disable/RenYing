@@ -1245,6 +1245,18 @@
   .home-rank .hc-kicker { color: var(--gold); }
   .home-evt { border-color: rgba(233,196,106,.55); background: linear-gradient(120deg, rgba(233,196,106,.16), rgba(255,70,85,.10) 60%, var(--panel)); }
   .home-evt .hc-kicker { color: var(--gold); }
+  .home-rouge { border-color: rgba(255,110,90,.65); background: linear-gradient(125deg, rgba(255,70,85,.22), rgba(233,196,106,.14) 58%, var(--panel)); box-shadow: 0 6px 22px rgba(255,70,85,.14); }
+  .home-rouge .hc-kicker { color: #ff9e6e; font-weight: 700; }
+  .home-rouge:hover { border-color: #ffd166 !important; box-shadow: 0 8px 26px rgba(233,196,106,.26); }
+  .mr-boss-box { background: rgba(14,16,30,.78); border: 1px solid rgba(255,110,90,.42); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .mr-boss-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mr-boss-title { font-family: var(--v-cond); font-size: 16px; color: #ffd166; font-weight: 700; }
+  .mr-boss-tags { display: flex; gap: 6px; flex-wrap: wrap; font-size: 11.5px; }
+  .mr-boss-tag { padding: 2px 7px; border-radius: 4px; background: rgba(255,70,85,.18); border: 1px solid rgba(255,110,90,.4); color: #ffb4a2; font-weight: 600; }
+  .mr-boss-tag.gold { background: rgba(233,196,106,.18); border-color: rgba(233,196,106,.45); color: var(--gold); }
+  .mr-skills-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .mr-skill-chip { padding: 4px 7px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); font-size: 11.5px; color: var(--v-white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mr-skill-chip b { color: var(--gold); margin-right: 4px; }
   .home-card[hidden], .task-sec-card[hidden] { display: none; }
   .evt-card { border-color: rgba(233,196,106,.5); background: linear-gradient(120deg, rgba(233,196,106,.12), rgba(12,14,26,.7) 55%); }
   .evt-card .trow .rw { font-weight: 700; }

@@ -170,7 +170,7 @@ function acLocalAttacker(att) {
 function acCheckHit(att, def, m, before) {
   if (!def || !m || typeof before !== 'number' || typeof def.hp !== 'number' || !acLocalAttacker(att)) return;
   const dealt = before - def.hp, base = m.dmgAbs !== undefined ? m.dmgAbs : (m.dmg || 0);
-  const wild = M.mode === 'mayhem' || M.mode === 'chaos' ? 6 : 1;
+  const wild = M.mode === 'mayhem' || M.mode === 'chaos' || M.mode === 'raid' ? 6 : 1;
   if (dealt <= 150 || dealt <= Math.max(base, 20) * 12 * wild) return;
   if (ACH.hitSeq !== M.rseq) { ACH.hitSeq = M.rseq; ACH.hits = 0; }
   if (++ACH.hits >= 2) acStrike(`一下打出 ${Math.round(dealt)} 伤害，远超招式上限`);

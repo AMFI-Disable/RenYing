@@ -408,13 +408,14 @@ function makeCardArt(i, CW, CH, skin) {
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2'];   // 不联机的点将台：本机自己推进每一步
+const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2', 'raid'];   // 不联机的点将台：本机自己推进每一步
 const bpAuth = () => LOCAL_BP_MODES.includes(bpMode) || NET.role === 'host';
 const bpSideName = side => {
+  if (bpMode === 'raid') return side === 0 ? '同袍义军' : '融魂魔首';
   if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
   if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
   if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
-  if (side === bpMySide()) return (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'))) ? '我方战队' : '你';
+  if (side === bpMySide()) return (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid'))) ? '我方战队' : '你';
   if (bpMode === 'cpu' || bpMode === 'chaos' || bpMode === 'mayhem') return '电脑';
   if (bpMode === 'tag3' || bpMode === '2v2') return '敌方战队';
   const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
@@ -447,13 +448,19 @@ function bpStart(mode, customOpts = null) {
     steps = [[0, 'pick'], [1, 'pick']];
     bans = [];
     picks = [-1, -1];
+  } else if (mode === 'raid') {
+    // 同袍肉鸽：2~3 名同袍结阵直选，共同迎战六技融魂首领
+    const sq = (customOpts && customOpts.squadSize === 2) ? 2 : 3;
+    steps = sq === 2 ? [[0, 'pick'], [0, 'pick']] : [[0, 'pick'], [0, 'pick'], [0, 'pick']];
+    bans = [];
+    picks = [Array(sq).fill(-1), []];
   } else if (mode === '2v2') {
     // 2v2 演武 / 同屏合作或对决：双方各禁 1 人 + 蛇形轮选 4 将 (共 6 步: 0禁 -> 1禁 -> 0选1 -> 1选1 -> 1选2 -> 0选2)
     steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
     bans = [-1, -1];
     picks = [[-1, -1], [-1, -1]];
   } else if (mode === 'net') {
-    if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') {
+    if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid') {
       steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
       bans = [-1, -1];
       picks = [[-1, -1], [-1, -1]];
@@ -574,6 +581,8 @@ function bpFinish() {
   } else if (mode === 'train') {
     trainChar = picks[0];
     startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
+  } else if (mode === 'raid') {
+    startRaidMatch(picks[0], opts.squadSize || (picks[0] ? picks[0].length : 3));
   } else if (mode === '2v2') {
     if (opts.subMode === 'pp_pp') start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
     else start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
@@ -797,6 +806,7 @@ function renderBP() {
   else if (bpMode === 'stage') modePrefix = '守关挑战 · ';
   else if (bpMode === 'train') modePrefix = '木人试剑 · ';
   else if (bpMode === '2v2') modePrefix = '2v2演武 · ';
+  else if (bpMode === 'raid') modePrefix = '同袍肉鸽 · ';
 
   const TAG3_ROLES = ['先锋', '中坚', '大将'];
   const TEAM2_ROLES = ['先锋', '次锋'];
@@ -837,7 +847,12 @@ function renderBP() {
           return `<div class="slot2 ban${bActive ? ' on' : ''}">${bIdx >= 0 ? `<img src="${PORTRAITS[bIdx] || ''}" alt=""><span class="lab">禁 ${CHARS[bIdx].name}</span>` : '禁用'}</div>`;
         })()
       : '';
-    if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train') {
+    if (bpMode === 'raid' && sd === 1) {
+      const rb = typeof pendingRaidBoss !== 'undefined' && pendingRaidBoss ? pendingRaidBoss : null;
+      const bossTitle = rb ? `六技魔首：${rb.heroNames.join('·')}` : '三侠六技·融魂魔首';
+      el.innerHTML = `<div class="who" style="color:var(--p2)">秘境魔首 (3xHP · 1.25x伤)</div>
+        <div class="slots"><div class="slot2">${bossTitle}</div></div>`;
+    } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train') {
       if (sd === 1) {
         // 单人模式右侧显示对位/关卡信息
         let rightInfo = '木人桩试剑';

@@ -865,6 +865,64 @@ const testSuite = [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Multiplayer Co-op Roguelike (同袍肉鸽 · 众志破魔): Home-only entry, 6-skill 3-hero Boss (3x HP, 1.25x dmg), shared gains & Ink reward',
+    fn: `(() => {
+      const homeBtn = document.getElementById('homeRouge');
+      const modalRouge = document.getElementById('modalRouge');
+      if (!homeBtn || !modalRouge) {
+        return { pass: false, error: '#homeRouge or #modalRouge missing in DOM' };
+      }
+      openRougeModal();
+      if (modalRouge.classList.contains('hidden')) {
+        return { pass: false, error: 'openRougeModal() did not open #modalRouge' };
+      }
+      closeRougeModal();
+      startRaidMatch([0, 2, 3], 3);
+      if (M.mode !== 'raid' || !isRaid()) {
+        return { pass: false, error: 'startRaidMatch did not activate raid mode' };
+      }
+      if (sideFighters(0).length !== 3 || sideFighters(1).length !== 1 || sideFighters(1)[0] !== B) {
+        return { pass: false, error: 'Raid teams should be 3 allies vs 1 Boss B' };
+      }
+      if (!B.bossHeroes || B.bossHeroes.length !== 3 || new Set(B.bossHeroes).size !== 3) {
+        return { pass: false, error: 'Boss B must combine 3 distinct random characters: ' + JSON.stringify(B.bossHeroes) };
+      }
+      if (!B.bossSkills || B.bossSkills.length !== 6) {
+        return { pass: false, error: 'Boss B must have 6 skills from 3 characters: ' + JSON.stringify(B.bossSkills) };
+      }
+      const baseHp = Math.round(CHARS[B.chIdx].stat.hp * ((BAL[CHARS[B.chIdx].id] || {}).hp || 1));
+      if (B.maxHp !== Math.round(baseHp * 3.0)) {
+        return { pass: false, error: 'Boss B should have 3x HP (' + Math.round(baseHp * 3.0) + '), got ' + B.maxHp };
+      }
+      if (B.bossDmgMul !== 1.25) {
+        return { pass: false, error: 'Boss B should have 1.25x damage multiplier, got ' + B.bossDmgMul };
+      }
+      // Verify shared perks across all 3 squad members (A, C, D)
+      if (!scIds(A).length || scIds(A).join(',') !== scIds(C).join(',') || scIds(A).join(',') !== scIds(D).join(',')) {
+        return { pass: false, error: 'Allies A, C, D must share M.towerPerks' };
+      }
+      // Verify shared healing across allies
+      A.hp = 100; C.hp = 100; D.hp = 100;
+      scHeal(A, 40);
+      if (C.hp <= 100 || D.hp <= 100) {
+        return { pass: false, error: 'scHeal on A did not share healing with teammates C and D' };
+      }
+      // Verify Boss victory grants generous Ink reward and announces it
+      const inkBefore = PROF.ink || 0;
+      B.hp = 0; M.koWinner = 0; endRound();
+      const inkAfter = PROF.ink || 0;
+      if (inkAfter - inkBefore < 600) {
+        return { pass: false, error: 'Boss defeat did not award +600 Ink: before=' + inkBefore + ', after=' + inkAfter };
+      }
+      const subTxt = document.getElementById('endSub').textContent || '';
+      if (!subTxt.includes('600') || !subTxt.includes('墨锭')) {
+        return { pass: false, error: 'Victory screen did not announce Ink reward: ' + subTxt };
+      }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

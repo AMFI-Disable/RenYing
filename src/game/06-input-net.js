@@ -302,10 +302,16 @@ function setupNetMatch() {
   M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-  if (netRoomMode === 'pp_cc') {
-    M.subMode = 'pp_cc';
+  if (netRoomMode === 'pp_cc' || netRoomMode === 'raid') {
+    M.subMode = netRoomMode;
     M.level = 'god';
     M.watchAi = false;
+    if (netRoomMode === 'raid') {
+      M.raidSquadSize = 3;
+      M.raidWave = M.raidWave || 1;
+      M.towerPerks = M.towerPerks && M.towerPerks.length ? M.towerPerks : scDraw(A.ch.id, [], 2).map(s => s.id);
+      M.foeScrolls = ['bx_armor', 'bx_haste'];
+    }
     if (NET.role === 'host') {
       A.ctrl = human[0];
       C.ctrl = NET.remote;

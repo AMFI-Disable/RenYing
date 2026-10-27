@@ -65,7 +65,7 @@ function drawHitboxOverlay(fighters) {
 function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitDecoy(f, hb)) return;
-  if (is2v2()) {
+  if (isMulti()) {
     const matchTarget = foesOf(f).find(ef => ef.invul <= 0 && ef.hp > 0 && overlap(hb, hurtbox(ef)));
     if (matchTarget) foe = matchTarget;
   }
@@ -299,6 +299,9 @@ function applyHit(att, def, m, pt) {
   }
   if (M.mode === 'mayhem') {
     dmg *= (m.ult ? 5.2 : (m.skill || m.isProj ? 4.5 : 3.8));
+  }
+  if (isRaid() && att === B && att.bossDmgMul) {
+    dmg *= att.bossDmgMul;   // 融魂首领伤害小幅提高 (1.25x)
   }
   // 现实相向冲锋迎击动能加成（Relative Velocity Impact）：双方相向冲锋或飞冲碰撞时，伤害自然放大 5%~25%
   if (!m.isProj && !m.ult) {

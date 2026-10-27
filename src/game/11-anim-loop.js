@@ -253,12 +253,13 @@ function step() {
   for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
   updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
-  if (is2v2()) {
-    updateFighter(C, foeOf(C)); updateFighter(D, foeOf(D));
+  if (isMulti()) {
+    if (!C.hidden) updateFighter(C, foeOf(C));
+    if (!D.hidden) updateFighter(D, foeOf(D));
     updateArena2v2(STEP);
   }
   // 倒下的人一直躺着：落地后不管之前是什么状态（受身、被打、技能收招）都按回地上，不再站起来
-  if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (is2v2() && M.phase === 'fight'))) {
+  if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
     for (const f of allFighters()) {
       if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
         f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skill = null; f.airRecover = false; f.escInvul = false;
@@ -671,7 +672,7 @@ function frameBody(now) {
       creditT -= real;
       if (creditT <= 0 && creditPending) {
         creditPending = false;
-        const rTxt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : M.mode === 'watch2v2' && M.round === 1 ? '2v2 组队 · 开战！' : `第${CN[M.round] || M.round}回合`));
+        const rTxt = isRaid() ? `同袍肉鸽 · 第 ${M.raidWave || 1} 重魔劫！` : (M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : `第${CN[M.round] || M.round}回合`)));
         say(rTxt, 1.1);
         SFX.gong();
       }
@@ -693,13 +694,13 @@ function updateCamera(dt) {
     cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
     return;
   }
-  const tracked = is2v2() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
+  const tracked = isMulti() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
   const pool = tracked.length >= 2 ? tracked : [A, B];
   const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
   const minY = Math.min(...pool.map(f => f.y));
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
-  // 2v2：四名侠客同台，镜头退一档，把 2600 宽的奇阵擂台框得舒服些
-  const padW = is2v2() ? 680 : 340;
+  // 2v2 / 同袍肉鸽：多名侠客同台，镜头退一档，把 2600 宽的奇阵擂台框得舒服些
+  const padW = isMulti() ? 680 : 340;
   const fitW = W / ((d + padW) * base);
   const top = -minY + 170;
   const fitH = (H * 0.74) / (Math.max(250, top) * base);

@@ -184,9 +184,9 @@ function showTowerPerkModal() {
   choicesEl.querySelectorAll('.tower-perk-card').forEach(card => {
     card.addEventListener('click', () => pickTowerPerk(card.dataset.perk));
   });
-  $id('towerTitle').textContent = '问剑悟道 · 秘卷三选一';
+  $id('towerTitle').textContent = isRaid() ? '同袍肉鸽 · 全队共享秘卷三选一' : '问剑悟道 · 秘卷三选一';
   const fb = document.getElementById('towerFloorBadge');
-  if (fb) fb.textContent = `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
+  if (fb) fb.textContent = isRaid() ? `讨伐第 ${M.raidWave || 1} 劫大捷 · 全员共享秘卷增益` : `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
   showScreen('towerModal');
   if (M.watchAi) {
     setTimeout(() => {
@@ -200,6 +200,11 @@ function pickTowerPerk(perkId) {
   if (M.phase !== 'perk' || !SC_BY[perkId]) return;
   M.towerPerks.push(perkId);
   const p = SC_BY[perkId];
+  if (isRaid()) {
+    say(`全队共享领悟「${p.n}」`, 1.2);
+    nextRaidWave();
+    return;
+  }
   say(`领悟「${p.n}」`, 1.2);
   nextTowerFloor();
 }
@@ -798,6 +803,221 @@ $id('btn2v2GoWatch').addEventListener('click', () => {
   startWatch2v2Draft();
 });
 
+// ======================= 同袍肉鸽 · 众志破魔（首页专属多人共斗 Boss 模式） =======================
+let rougeSquadSize = 3;
+let pendingRaidBoss = null;
+function rollRaidBoss(wave = 1) {
+  const pool = CHARS.map((_, i) => i);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+  }
+  const heroes = pool.slice(0, 3);
+  const skills = [];
+  const ults = [];
+  for (const hIdx of heroes) {
+    const c = CHARS[hIdx];
+    if (c.skill && !skills.includes(c.skill)) skills.push(c.skill);
+    if (c.skill2 && !skills.includes(c.skill2)) skills.push(c.skill2);
+    if (c.ult && !ults.includes(c.ult)) ults.push(c.ult);
+  }
+  return {
+    wave,
+    heroes,
+    heroNames: heroes.map(i => CHARS[i].name),
+    skills,
+    skillNames: skills.map(id => (SKILLS[id] && SKILLS[id].name) || id),
+    ults
+  };
+}
+function applyRaidBossToB() {
+  if (!M.raidBoss || !Array.isArray(M.raidBoss.heroes) || M.raidBoss.heroes.length < 3) {
+    M.raidBoss = rollRaidBoss(M.raidWave || 1);
+  }
+  const rb = M.raidBoss;
+  const h1 = rb.heroes[0], h2 = rb.heroes[1], h3 = rb.heroes[2];
+  B.setChar(h1);
+  // 浅拷贝 ch，不改动全局 CHARS（保证反作弊签名一致），挂载 3 名随机侠客的 6 项绝技
+  B.ch = {
+    ...CHARS[h1],
+    skill: rb.skills[0],
+    skill2: rb.skills[1],
+    ult: rb.ults[0]
+  };
+  B.bossHeroes = [...rb.heroes];
+  B.bossSkills = [...rb.skills];
+  B.bossUlts = [...rb.ults];
+  B.bossSkillCursor = 0;
+  B.bossRotTimer = 2.4;
+  // 三倍气血（波次递进额外微增）+ 1.25 倍伤害 + 霸王体魄
+  const waveMul = 1 + ((M.raidWave || 1) - 1) * 0.15;
+  B.maxHp = Math.round(B.maxHp * 3.0 * waveMul);
+  B.hp = B.lagHp = B.maxHp;
+  B.bossDmgMul = 1.25;
+  B.size = 1.18;
+  B.maxGuard = 220;
+  B.guard = 220;
+  B.meter = 45;
+  B.ink = INK_MAX;
+  B.drunk = 65;
+  B.look = {
+    ...B.look,
+    name: `${CHARS[h1].name}·${CHARS[h2].name}·${CHARS[h3].name} 融魂魔首`
+  };
+}
+function updateRaidBoss(dt) {
+  if (!isRaid() || B.hp <= 0 || !B.bossSkills || B.bossSkills.length < 6) return;
+  B.ink = INK_MAX;
+  B.drunk = Math.max(B.drunk || 0, 60);
+  B.bossRotTimer = (B.bossRotTimer || 2.4) - dt;
+  if (B.bossRotTimer <= 0 && B.state !== 'skill' && B.state !== 'special') {
+    B.bossRotTimer = 2.6;
+    B.bossSkillCursor = ((B.bossSkillCursor || 0) + 2) % 6;
+    B.ch.skill = B.bossSkills[B.bossSkillCursor];
+    B.ch.skill2 = B.bossSkills[(B.bossSkillCursor + 1) % 6];
+    if (B.bossUlts && B.bossUlts.length) B.ch.ult = B.bossUlts[(B.bossSkillCursor >> 1) % B.bossUlts.length];
+  }
+}
+function startRaidMatch(squadPicks, squadSize = 3) {
+  if (p2pActive()) netDropWaiting();
+  initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+  const sq = squadSize === 2 ? 2 : 3;
+  const picks = Array.isArray(squadPicks) && squadPicks.length >= sq ? squadPicks.slice(0, sq) : [0, 2, 3].slice(0, sq);
+  M.mode = 'raid';
+  M.raidSquadSize = sq;
+  M.raidWave = 1;
+  M.raidInkEarned = 0;
+  M.raidLastReward = 600;
+  M.raidConsoled = false;
+  M.raidBoss = pendingRaidBoss || rollRaidBoss(1);
+  pendingRaidBoss = null;
+  // 开局即赠送 2 卷全队共享的随机秘卷，全员共享增益
+  const initPerks = scDraw(CHARS[picks[0]].id, [], 2).map(s => s.id);
+  M.towerPerks = initPerks;
+  M.foeScrolls = ['bx_armor', 'bx_haste'];
+  M.scRun = {};
+  M.watchAi = false;
+  M.level = 'god';
+  M.bans = [];
+  M.wins = [0, 0];
+  M.round = 1;
+  M.carry = null;
+  M.stage = null;
+  A.setChar(picks[0]);
+  C.setChar(picks[1] !== undefined ? picks[1] : ((picks[0] + 1) % CHARS.length));
+  if (sq >= 3) D.setChar(picks[2] !== undefined ? picks[2] : ((picks[0] + 2) % CHARS.length));
+  A.ctrl = human[0];
+  // 2P / 3P 默认由高配合度天道同袍协战，本机第 2/3 名玩家随时按键即可无缝接管！
+  C.ctrl = new AICtrl('god');
+  D.ctrl = new AICtrl('god');
+  B.ctrl = new AICtrl('god');
+  A.meter = C.meter = D.meter = 45;
+  human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+  showScreen(null);
+  startRound();
+  const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
+  say(`同袍肉鸽 · 迎战三侠六技【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享');
+}
+function nextRaidWave() {
+  paused = false;
+  M.phase = 'intro';
+  M.raidWave = (M.raidWave || 1) + 1;
+  M.raidConsoled = false;
+  M.wins = [0, 0];
+  M.round = 1;
+  M.raidBoss = rollRaidBoss(M.raidWave);
+  showScreen(null);
+  B.ctrl = new AICtrl('god');
+  startRound();
+  const lastPerkId = (M.towerPerks || [])[M.towerPerks.length - 1];
+  const pName = lastPerkId && SC_BY[lastPerkId] ? `全员共享「${SC_BY[lastPerkId].n}」` : '全队秘卷共鸣';
+  say(`同袍肉鸽 · 第 ${M.raidWave} 劫【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', pName);
+}
+function renderRougeModal() {
+  if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
+  for (const b of document.querySelectorAll('#rougeSquadSeg button')) {
+    b.classList.toggle('sel', +b.dataset.sq === rougeSquadSize);
+  }
+  const box = $id('rougeBossPreview');
+  if (box) {
+    const rb = pendingRaidBoss;
+    const chips = rb.skills.map((skId, idx) => {
+      const sk = SKILLS[skId];
+      const hName = rb.heroNames[(idx / 2) | 0] || '';
+      return `<div class="mr-skill-chip"><b>${hName}</b>${sk ? sk.name : skId}</div>`;
+    }).join('');
+    box.innerHTML = `
+      <div class="mr-boss-head">
+        <span class="mr-boss-title">👹 当期融魂魔首：${rb.heroNames.join(' · ')}</span>
+        <div class="mr-boss-tags">
+          <span class="mr-boss-tag">300% 气血 (3x HP)</span>
+          <span class="mr-boss-tag">125% 伤害</span>
+          <span class="mr-boss-tag gold">讨伐大捷全员共享：+600 墨锭</span>
+        </div>
+      </div>
+      <div class="mr-skills-grid">${chips}</div>
+    `;
+  }
+}
+function openRougeModal() {
+  if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
+  const m = $id('modalRouge');
+  if (m) m.classList.remove('hidden');
+  renderRougeModal();
+}
+function closeRougeModal() {
+  const m = $id('modalRouge');
+  if (m) m.classList.add('hidden');
+}
+if ($id('homeRouge')) {
+  $id('homeRouge').addEventListener('click', () => { SFX.slice(); openRougeModal(); });
+}
+if ($id('modalRougeClose')) {
+  $id('modalRougeClose').addEventListener('click', closeRougeModal);
+}
+if ($id('rougeSquadSeg')) {
+  $id('rougeSquadSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-sq]'); if (!b) return;
+    rougeSquadSize = +b.dataset.sq === 2 ? 2 : 3;
+    SFX.slice(); renderRougeModal();
+  });
+}
+if ($id('btnRougeReroll')) {
+  $id('btnRougeReroll').addEventListener('click', () => {
+    pendingRaidBoss = rollRaidBoss(1);
+    SFX.slice(); renderRougeModal();
+  });
+}
+if ($id('btnRougeGoLocal')) {
+  $id('btnRougeGoLocal').addEventListener('click', () => {
+    closeRougeModal();
+    bpStart('raid', { squadSize: rougeSquadSize });
+  });
+}
+if ($id('btnRougeGoMatch')) {
+  $id('btnRougeGoMatch').addEventListener('click', () => {
+    closeRougeModal();
+    if (!$id('netp').classList.contains('on')) openScreen('netp');
+    mmGo('2v2_coop');
+    toast('正在全服匹配同袍肉鸽共斗队友…');
+  });
+}
+if ($id('btnRougeGoOnline')) {
+  $id('btnRougeGoOnline').addEventListener('click', () => {
+    closeRougeModal();
+    if (!$id('netp').classList.contains('on')) openScreen('netp');
+    netRoomMode = 'raid';
+    setRoomModeUI('pp_cc');
+    if ($id('roomWrap')) {
+      $id('roomWrap').classList.remove('hidden');
+      $id('mmRoomBtn').classList.add('sel');
+    }
+    const hb = $id('hostBtn');
+    if (hb) hb.click();
+    toast('已建好同袍肉鸽共斗房间，把房间号发给好友即可并肩讨伐魔首！');
+  });
+}
+
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 const cpuTutBtn = document.getElementById('cpuTutBtn');
@@ -838,6 +1058,16 @@ document.getElementById('againBtn').addEventListener('click', () => {
   }
   if (M.mode === 'tag3') {
     bpStart('tag3', { level: tag3Level, isWatch: false });
+    return;
+  }
+  if (isRaid()) {
+    if (M.koWinner === 0) {
+      M.phase = 'perk';
+      paused = true;
+      showTowerPerkModal();
+    } else {
+      bpStart('raid', { squadSize: M.raidSquadSize || rougeSquadSize || 3 });
+    }
     return;
   }
   if (M.mode === 'tower') {

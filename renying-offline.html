@@ -1220,6 +1220,18 @@ button.home-card:hover { border-color: rgba(233,196,106,.6); transform: translat
 .home-rank .hc-kicker { color: var(--gold); }
 .home-evt { border-color: rgba(233,196,106,.55); background: linear-gradient(120deg, rgba(233,196,106,.16), rgba(255,70,85,.10) 60%, var(--panel)); }
 .home-evt .hc-kicker { color: var(--gold); }
+.home-rouge { border-color: rgba(255,110,90,.65); background: linear-gradient(125deg, rgba(255,70,85,.22), rgba(233,196,106,.14) 58%, var(--panel)); box-shadow: 0 6px 22px rgba(255,70,85,.14); }
+.home-rouge .hc-kicker { color: #ff9e6e; font-weight: 700; }
+.home-rouge:hover { border-color: #ffd166 !important; box-shadow: 0 8px 26px rgba(233,196,106,.26); }
+.mr-boss-box { background: rgba(14,16,30,.78); border: 1px solid rgba(255,110,90,.42); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.mr-boss-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mr-boss-title { font-family: var(--v-cond); font-size: 16px; color: #ffd166; font-weight: 700; }
+.mr-boss-tags { display: flex; gap: 6px; flex-wrap: wrap; font-size: 11.5px; }
+.mr-boss-tag { padding: 2px 7px; border-radius: 4px; background: rgba(255,70,85,.18); border: 1px solid rgba(255,110,90,.4); color: #ffb4a2; font-weight: 600; }
+.mr-boss-tag.gold { background: rgba(233,196,106,.18); border-color: rgba(233,196,106,.45); color: var(--gold); }
+.mr-skills-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.mr-skill-chip { padding: 4px 7px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); font-size: 11.5px; color: var(--v-white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mr-skill-chip b { color: var(--gold); margin-right: 4px; }
 .home-card[hidden], .task-sec-card[hidden] { display: none; }
 .evt-card { border-color: rgba(233,196,106,.5); background: linear-gradient(120deg, rgba(233,196,106,.12), rgba(12,14,26,.7) 55%); }
 .evt-card .trow .rw { font-weight: 700; }
@@ -2721,6 +2733,10 @@ body.kbnav #kbRing.on { display: block; }
         <span class="hc-txt"><b id="homeGbossT"></b><small id="homeGbossS"></small></span>
         <span class="hc-hp"><i id="homeGbossBar"></i></span>
       </button>
+      <button class="home-card home-rouge" id="homeRouge" type="button">
+        <span class="hc-kicker">同袍肉鸽 · 众志破魔</span>
+        <span class="hc-txt"><b>多人共斗秘境 · 三侠战魔首</b><small>2–3人共享秘卷 · 迎战六技融魂首领 · 赢取海量墨锭</small></span>
+      </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
         <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
@@ -3728,6 +3744,30 @@ body.kbnav #kbRing.on { display: block; }
           <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
         </div>
         <div class="m2-foot"><button class="mm-link" id="btn2v2GoWatch" type="button">旁观四个天道电脑打 2v2</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 众志破魔">
+    <div class="rk-info-box m2-box">
+      <div class="rk-info-head">
+        <h3 id="modalRougeTitle">同袍肉鸽 · 众志破魔</h3>
+        <button class="go small" id="modalRougeClose" type="button">关闭</button>
+      </div>
+      <div class="m2-body">
+        <p class="m2-desc" id="modalRougeDesc">全员皆可加入共斗秘境！2–3 名侠客同心并肩、<b>全队共享秘卷增益与回血气劲</b>，迎战拥有<b>随机三名侠客共 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，讨伐大捷全员共享海量墨锭！</p>
+        <div class="sec-sub-label">共斗人数</div>
+        <div class="m2-seg" id="rougeSquadSeg" role="tablist">
+          <button class="sel" data-sq="3" type="button">3人同袍破魔 (推荐)</button>
+          <button data-sq="2" type="button">2人精锐共斗</button>
+        </div>
+        <div class="mr-boss-box" id="rougeBossPreview"></div>
+        <div class="sec-sub-label">结阵方式</div>
+        <div class="m2-ways" id="modalRougeOptions">
+          <button class="m2-way" id="btnRougeGoLocal" type="button" data-kb-default><b>同屏/单机集结</b><span id="modalRougeLocalDesc">1P 键盘主控，2P/3P 随时按键参战或由天道同袍协战</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoMatch" type="button"><b>全服匹配集结</b><span>全服招募同袍侠士，共享秘卷合力破魔</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoOnline" type="button"><b>好友共斗房间</b><span>建房拿到房间号，呼朋引伴共讨魔首</span></button>
+        </div>
+        <div class="m2-foot"><button class="mm-link" id="btnRougeReroll" type="button">🎲 重新卜算当期融魂首领（切换三侠六技）</button></div>
       </div>
     </div>
   </div>
@@ -5477,6 +5517,8 @@ pavilion: { role: 'trap', combo: true, jail: true, use: (m, o, d, B) => ['attack
 feast: { role: 'self', combo: false, use: (m, o, d) => (m.drunk || 0) >= 50 && d > 160 && m.hp < m.maxHp * 0.72 && o.hp > m.hp * 0.7 },
 hook: { role: 'proj', combo: true, pull: true },
 whirl: { role: 'zone', combo: true, reflect: true },
+spindle: { role: 'proj', combo: true },
+shadowdash: { role: 'rush', combo: true, invul: true },
 };
 const AI_ULT = {
 crescent: { contact: true }, shadows: { contact: true }, eightimm: { contact: true },
@@ -5524,7 +5566,16 @@ return Object.assign(aiDefaultGenes(), g || {}, o || {});
 }
 const AI_FRAME_DEFAULT = { min: 0, max: 0, hit: 0.3, dmg: 0, dur: 0.6, move: 0, blockable: true, adv: -0.2 };
 function aiFrame(f, key) {
-const t = aiBrainData().frames, F = t && t[f.ch.id];
+const t = aiBrainData().frames;
+if ((key === 'skill' || key === 'skill2') && f && f.bossSkills && f.ch) {
+const skId = f.ch[key];
+const owner = CHARS.find(c => c.skill === skId || c.skill2 === skId);
+if (owner && t && t[owner.id]) {
+const oKey = owner.skill2 === skId ? 'skill2' : 'skill';
+if (t[owner.id][oKey]) return t[owner.id][oKey];
+}
+}
+const F = t && t[f.ch.id];
 if (F && F[key]) return F[key];
 if (key === 'l1' || key === 'dl') { const m = f.moves[key]; return { min: 0, max: m.box[2] + 18, hit: m.su, dmg: m.dmg, dur: m.su + m.ac + m.rc, blockable: true, adv: -0.13 }; }
 return AI_FRAME_DEFAULT;
@@ -5861,7 +5912,8 @@ return false;
 incomingProj(me) {
 let best = null;
 for (const p of projs) {
-if (p.dead || p.fx || p.dmg <= 0 || (p.owner % 2) === (me.idx % 2) || p.kind === 'trap') continue;
+const sameTeam = typeof fighterTeam === 'function' ? fighterTeam(fighterByIdx(p.owner)) === fighterTeam(me) : (p.owner % 2) === (me.idx % 2);
+if (p.dead || p.fx || p.dmg <= 0 || sameTeam || p.kind === 'trap') continue;
 if (p.delay > 0) continue;
 const dx = me.x - p.x, vx = p.vx || 0;
 if (Math.abs(dx) > 520) continue;
@@ -5901,7 +5953,8 @@ return null;
 }
 dangerZone(me) {
 for (const p of projs) {
-if (p.dead || (p.owner % 2) === (me.idx % 2) || p.dmg <= 0) continue;
+const sameTeam = typeof fighterTeam === 'function' ? fighterTeam(fighterByIdx(p.owner)) === fighterTeam(me) : (p.owner % 2) === (me.idx % 2);
+if (p.dead || sameTeam || p.dmg <= 0) continue;
 const half = (p.w || 60) / 2 + 22;
 if (Math.abs(p.x - me.x) > half) continue;
 const stuck = p.delay > 0 && (half - Math.abs(p.x - me.x)) / wk(me) > p.delay;
@@ -8271,10 +8324,16 @@ function setupNetMatch() {
 M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0;
 human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-if (netRoomMode === 'pp_cc') {
-M.subMode = 'pp_cc';
+if (netRoomMode === 'pp_cc' || netRoomMode === 'raid') {
+M.subMode = netRoomMode;
 M.level = 'god';
 M.watchAi = false;
+if (netRoomMode === 'raid') {
+M.raidSquadSize = 3;
+M.raidWave = M.raidWave || 1;
+M.towerPerks = M.towerPerks && M.towerPerks.length ? M.towerPerks : scDraw(A.ch.id, [], 2).map(s => s.id);
+M.foeScrolls = ['bx_armor', 'bx_haste'];
+}
 if (NET.role === 'host') {
 A.ctrl = human[0];
 C.ctrl = NET.remote;
@@ -8788,6 +8847,10 @@ this.size = this.ch.stat.size || this.ch.size || 1;
 this.maxGuard = this.ch.stat.guardMax || 100;
 this.guard = this.maxGuard;
 this.sinceBlock = 0;
+delete this.bossSkills;
+delete this.bossUlts;
+delete this.bossHeroes;
+delete this.bossDmgMul;
 }
 reset(x) {
 this.maxHp = Math.round(this.ch.stat.hp * ((BAL[this.ch.id] || {}).hp || 1));
@@ -8809,22 +8872,34 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
-const sideFighters = side => is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]];   // 一方场上的人：1v1 一个，2v2 两个
-const allFighters = () => is2v2() ? [A, B, C, D] : [A, B];
-const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !is2v2() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
+const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && netRoomMode === 'raid');
+const isMulti = () => is2v2() || isRaid();
+const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
+const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
+const allFighters = () => isRaid() ? [A, B, C, D].filter(f => !f.hidden) : (is2v2() ? [A, B, C, D] : [A, B]);
+const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
 const foesOf = f => {
+if (isRaid()) {
+if (f === B) {
+const list = [A, C, D].filter(e => !e.hidden);
+const alive = list.filter(e => e.hp > 0);
+return alive.length ? alive : list;
+}
+return [B];
+}
 if (!is2v2()) return [f === A ? B : A];
 const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
 const alive = list.filter(e => !e.hidden && e.hp > 0);
 return alive.length ? alive : list;
 };
 const foeOf = f => {
-if (!is2v2()) return f === A ? B : A;
+if (!isMulti()) return f === A ? B : A;
+if (isRaid() && f !== B) { f.target = B; return B; }
 const list = foesOf(f);
 if (!list.length) return A;
 if (list.length === 1) { f.target = list[0]; return list[0]; }
-if (f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net) {   // 联机里玩家的操控是回滚用的 Ctrl（带 net 标记），不是电脑
+if (!isRaid() && f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net) {   // 联机里玩家的操控是回滚用的 Ctrl（带 net 标记），不是电脑
 const mate = fighterByIdx(f.idx ^ 2);
 const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
 if (low) { f.target = low; return low; }
@@ -8910,20 +8985,23 @@ if (Math.abs(f.x - cx) < 56 && Math.abs((f.y - 50) - (-60)) < 65) {
 const k = ARENA2V2.orb.kind;
 ARENA2V2.orb.active = false;
 ARENA2V2.altarTimer = 8.5;
+const shareList = (isRaid() && fighterTeam(f) === 0) ? sideFighters(0).filter(m => m.hp > 0) : [f];
+for (const mf of shareList) {
 if (k === 0) {
-f.buffT = 4.5; f.skillCD = 0; f.skill2CD = 0;
-ring(f.x, f.y - 55, 170, '255,120,70', 0.45);
-addP({ type: 'text', text: '🔥 朱雀战魂 · 狂暴破招', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '255,130,80' });
+mf.buffT = 4.5; mf.skillCD = 0; mf.skill2CD = 0;
+ring(mf.x, mf.y - 55, 170, '255,120,70', 0.45);
+addP({ type: 'text', text: shareList.length > 1 ? '🔥 同袍共享 · 朱雀狂暴' : '🔥 朱雀战魂 · 狂暴破招', x: mf.x, y: mf.y - 125, life: 1.1, max: 1.1, rgb: '255,130,80' });
 } else if (k === 1) {
-f.hp = Math.min(f.maxHp, f.hp + 45);
-f.lagHp = Math.max(f.lagHp, f.hp);
-f.guard = Math.min(f.maxGuard, (f.guard || 0) + 25);
-ring(f.x, f.y - 55, 170, '120,245,190', 0.45);
-addP({ type: 'text', text: '🌕 太阴灵丹 +45', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '120,245,190' });
+mf.hp = Math.min(mf.maxHp, mf.hp + 45);
+mf.lagHp = Math.max(mf.lagHp, mf.hp);
+mf.guard = Math.min(mf.maxGuard, (mf.guard || 0) + 25);
+ring(mf.x, mf.y - 55, 170, '120,245,190', 0.45);
+addP({ type: 'text', text: shareList.length > 1 ? '🌕 同袍共享 · 灵丹 +45' : '🌕 太阴灵丹 +45', x: mf.x, y: mf.y - 125, life: 1.1, max: 1.1, rgb: '120,245,190' });
 } else {
-f.meter = 100; f.armorT = 2.2; f.armorHits = 3;
-ring(f.x, f.y - 55, 170, '190,140,255', 0.45);
-addP({ type: 'text', text: '⚡ 紫微星魄 · 绝技满盈', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '195,145,255' });
+mf.meter = 100; mf.armorT = 2.2; mf.armorHits = 3;
+ring(mf.x, mf.y - 55, 170, '190,140,255', 0.45);
+addP({ type: 'text', text: shareList.length > 1 ? '⚡ 同袍共享 · 绝技满盈' : '⚡ 紫微星魄 · 绝技满盈', x: mf.x, y: mf.y - 125, life: 1.1, max: 1.1, rgb: '195,145,255' });
+}
 }
 SFX.parry();
 break;
@@ -8984,9 +9062,22 @@ startRound();
 if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-STAGE_W = is2v2() ? 2600 : 1800;
+STAGE_W = isMulti() ? 2600 : 1800;
 if (typeof applySkins === 'function') applySkins();
-if (is2v2()) {
+if (isRaid()) {
+const sq = M.raidSquadSize || 3;
+C.hidden = false;
+D.hidden = sq < 3;
+A.reset(STAGE_W / 2 - 440); A.face = 1;
+C.reset(STAGE_W / 2 - 260); C.face = 1;
+if (!D.hidden) { D.reset(STAGE_W / 2 - 110); D.face = 1; }
+B.reset(STAGE_W / 2 + 300); B.face = -1;
+if (typeof applyRaidBossToB === 'function') applyRaidBossToB();
+initArena2v2();
+for (const f of allFighters()) {
+if (f.ctrl && typeof f.ctrl.updateTactic === 'function') f.ctrl.updateTactic(f, foeOf(f));
+}
+} else if (is2v2()) {
 C.hidden = false; D.hidden = false;
 A.reset(STAGE_W / 2 - 420); C.reset(STAGE_W / 2 - 210);
 B.reset(STAGE_W / 2 + 210); D.reset(STAGE_W / 2 + 420);
@@ -9017,7 +9108,7 @@ if (NET.role === 'host') rollChaosMutation();
 if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * IMPOSSIBLE_HP); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
 if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
 M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
-M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? ROUND_TIME_2V2 : ROUND_TIME; M.koWinner = -1; M.flags = {};
+M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
 hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
 for (const cu of comboUI) cu.t = 0;
 if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -9052,11 +9143,13 @@ if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mod
 if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
 } else if (M.phase === 'fight') {
 if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
-const team0Out = is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
-const team1Out = is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
+if (isRaid() && typeof updateRaidBoss === 'function') updateRaidBoss(STEP);
+const team0Out = isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));
+const team1Out = isRaid() ? (B.hp <= 0) : (is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0));
 if (M.mode !== 'train' && (team0Out || team1Out)) {
+const sumHp = sd => sideFighters(sd).reduce((s, f) => s + Math.max(0, f.hp), 0);
 const winner = (team0Out && team1Out)
-? ((A.hp + (is2v2() ? C.hp : 0)) > (B.hp + (is2v2() ? D.hp : 0)) ? 0 : 1)
+? (sumHp(0) >= sumHp(1) ? 0 : 1)
 : (team0Out ? 1 : 0);
 const losers = sideFighters(1 - winner);
 for (const loser of losers) {
@@ -9077,8 +9170,9 @@ if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
 }
 M.timer = Math.max(0, M.timer - STEP);
 if (M.timer <= 0) {
-const ra = is2v2() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
-const rb = is2v2() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
+const s0 = sideFighters(0), s1 = sideFighters(1);
+const ra = s0.reduce((s, f) => s + Math.max(0, f.hp), 0) / Math.max(1, s0.reduce((s, f) => s + f.maxHp, 0));
+const rb = s1.reduce((s, f) => s + Math.max(0, f.hp), 0) / Math.max(1, s1.reduce((s, f) => s + f.maxHp, 0));
 if (M.mode === 'boss') timeDeath(-1, '时辰已到');
 else if (M.mode === 'saga') sagaTimeUp(ra, rb);   // 侠客列传：按这一战的胜利条件判
 else if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
@@ -9165,6 +9259,35 @@ else { again.style.display = ''; again.disabled = false; again.textContent = '�
 setTimeout(() => showScreen('end'), 300);
 return;
 }
+if (isRaid()) {
+const win = w === 0;
+playSting(win ? 'victory' : 'defeat');
+const wave = M.raidWave || 1;
+const rewardInk = win ? (M.raidLastReward || 600) : 120;
+if (!win && !M.raidConsoled) {
+M.raidConsoled = true;
+PROF.ink = (PROF.ink || 0) + rewardInk;
+saveProfile();
+toast(`同袍肉鸽虽败犹荣 · 全员共享抚恤 +${rewardInk} 墨锭`);
+}
+const squadNames = sideFighters(0).map(f => f.look.name).join(' · ');
+const bossNames = (M.raidBoss && M.raidBoss.heroNames) ? M.raidBoss.heroNames.join('·') : B.look.name;
+$id('endKicker').textContent = `同袍肉鸽 · 第 ${wave} 重魔劫 · 全员收益共享`;
+inkTitle(win ? `${squadNames}` : `${bossNames} 融魂首领`, !win);
+const perkCount = (M.towerPerks || []).length;
+document.getElementById('endSub').textContent = win
+? `🎉 讨伐大捷！全员共享斩获 +${rewardInk} 墨锭（累计收获 ${M.raidInkEarned || rewardInk} 墨锭 · 全队共鸣 ${perkCount} 卷秘卷）`
+: `惜败于六技融魂首领【${bossNames}】！全员仍获共享赏金 +${rewardInk} 墨锭（本趟累计 ${M.raidInkEarned || rewardInk} 墨锭）`;
+$id('endRank').textContent = win
+? `已击破拥有 300% 气血、125% 伤害与六项绝技的融魂魔首！点击下方顿悟全队共享秘卷，迎战下一尊魔首`
+: `融魂首领身负三侠六技、三倍气血，召集 2–3 名精锐同袍善用闪避与合击定能破敌！`;
+const again = document.getElementById('againBtn');
+again.style.display = '';
+again.disabled = false;
+again.textContent = win ? '顿悟共享秘卷 · 迎战下一魔首' : '重整旗鼓 · 再战同袍肉鸽';
+setTimeout(() => showScreen('end'), 300);
+return;
+}
 if (M.mode === 'tower') {
 const win = w === 0;
 playSting(win ? 'victory' : 'defeat');
@@ -9230,6 +9353,21 @@ const w = M.koWinner;
 if (w >= 0) M.wins[w]++;
 if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
 if (M.mode === 'saga') { sagaEnd(w); return; }
+if (isRaid()) {
+if (w === 0) {
+for (const f of sideFighters(0)) scFire(f, 'clear');
+const wave = M.raidWave || 1;
+const gain = 600 + (wave - 1) * 200;
+M.raidLastReward = gain;
+M.raidInkEarned = (M.raidInkEarned || 0) + gain;
+PROF.ink = (PROF.ink || 0) + gain;
+saveProfile();
+toast(`🎉 众志破魔大捷！全员共享丰厚悬赏 +${gain} 墨锭！`);
+}
+M.phase = 'end';
+showEnd(w);
+return;
+}
 if (M.mode === 'tower') {
 if (w === 0) {
 scFire(A, 'clear');
@@ -9723,7 +9861,7 @@ if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math
 if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
 if (p.fx || p.dmg <= 0) continue;
 const owner = fighterByIdx(p.owner), box = projBox(p);
-const candidates = is2v2() ? foesOf(owner) : [foeOf(owner)];
+const candidates = isMulti() ? foesOf(owner) : [foeOf(owner)];
 let foe = candidates.find(ef => ef.hp > 0 && overlap(box, hurtbox(ef))) || candidates[0];
 if (!p.unbreakable && foe.state === 'attack' && foe.move && foe.t >= foe.move.su && foe.t < foe.move.su + foe.move.ac && overlap(hitbox(foe, foe.move.box), box)) {
 p.dead = true; blockFX(p.x, p.y, foe.face); SFX.block();
@@ -10254,7 +10392,7 @@ ctx.restore();
 function tryHit(f, foe, m) {
 const hb = hitbox(f, m.box);
 if (hitDecoy(f, hb)) return;
-if (is2v2()) {
+if (isMulti()) {
 const matchTarget = foesOf(f).find(ef => ef.invul <= 0 && ef.hp > 0 && overlap(hb, hurtbox(ef)));
 if (matchTarget) foe = matchTarget;
 }
@@ -10467,6 +10605,9 @@ dmg *= currentChaosMutation.val;
 }
 if (M.mode === 'mayhem') {
 dmg *= (m.ult ? 5.2 : (m.skill || m.isProj ? 4.5 : 3.8));
+}
+if (isRaid() && att === B && att.bossDmgMul) {
+dmg *= att.bossDmgMul;   // 融魂首领伤害小幅提高 (1.25x)
 }
 if (!m.isProj && !m.ult) {
 const vAtt = att.vx * att.face; // 朝向正向速度
@@ -10975,11 +11116,12 @@ if (!isClient()) updateMatch(); else M.t += STEP;
 for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
 updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
-if (is2v2()) {
-updateFighter(C, foeOf(C)); updateFighter(D, foeOf(D));
+if (isMulti()) {
+if (!C.hidden) updateFighter(C, foeOf(C));
+if (!D.hidden) updateFighter(D, foeOf(D));
 updateArena2v2(STEP);
 }
-if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (is2v2() && M.phase === 'fight'))) {
+if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
 for (const f of allFighters()) {
 if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
 f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skill = null; f.airRecover = false; f.escInvul = false;
@@ -11379,7 +11521,7 @@ if (creditT > 0) {
 creditT -= real;
 if (creditT <= 0 && creditPending) {
 creditPending = false;
-const rTxt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : M.mode === 'watch2v2' && M.round === 1 ? '2v2 组队 · 开战！' : `第${CN[M.round] || M.round}回合`));
+const rTxt = isRaid() ? `同袍肉鸽 · 第 ${M.raidWave || 1} 重魔劫！` : (M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : `第${CN[M.round] || M.round}回合`)));
 say(rTxt, 1.1);
 SFX.gong();
 }
@@ -11401,12 +11543,12 @@ cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(1.15 - (hi - lo)
 cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
 return;
 }
-const tracked = is2v2() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
+const tracked = isMulti() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
 const pool = tracked.length >= 2 ? tracked : [A, B];
 const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
 const minY = Math.min(...pool.map(f => f.y));
 const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
-const padW = is2v2() ? 680 : 340;
+const padW = isMulti() ? 680 : 340;
 const fitW = W / ((d + padW) * base);
 const top = -minY + 170;
 const fitH = (H * 0.74) / (Math.max(250, top) * base);
@@ -11586,7 +11728,7 @@ ctx.fillStyle = '#3a121c'; ctx.fillRect(px - 16, -900, 32, 900);
 ctx.fillStyle = 'rgba(255,120,120,0.12)'; ctx.fillRect(px - 16, -900, 6, 900);
 ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);
 }
-const lanternXs = is2v2() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
+const lanternXs = isMulti() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
 for (const lx of lanternXs) lantern(lx, -2);
 if (ARENA_SPLATTERS && ARENA_SPLATTERS.length) {
 for (let i = ARENA_SPLATTERS.length - 1; i >= 0; i--) {
@@ -11619,7 +11761,7 @@ line([sc.x + k * 8, 2], [sc.x + k * (sc.r * 0.45), (k % 2 ? 7 : -4)]);
 ctx.restore();
 }
 }
-if (is2v2()) {
+if (isMulti()) {
 ctx.save();
 for (const gy of ARENA2V2.geysers) {
 const ready = gy.cd <= 0;
@@ -11839,19 +11981,19 @@ ctx.save(); ctx.font = `22px ${TITLE_FONT}`; ctx.textAlign = 'center';
 ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * Math.sin(clock * 14)})`;
 ctx.fillText('腾空闪', sk.head[0], sk.head[1] - 28); ctx.restore();
 }
-if (is2v2() && f.hp > 0 && !f.hidden && sk.head) {
+if (isMulti() && f.hp > 0 && !f.hidden && sk.head) {
 const isAiWatch = M.watchAi || (M.mode === 'watch2v2' && M.watchAi);
 let col = '#46d3ea', glow = 'rgba(70,211,234,0.45)';
 if (isAiWatch) {
-const isTeam0 = f.idx % 2 === 0;
+const isTeam0 = fighterTeam(f) === 0;
 col = isTeam0 ? '#46d3ea' : '#ff4d4d';
 glow = isTeam0 ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)';
 } else {
 const isUser = (f.ctrl === human[0]) || (typeof viewerIdx === 'function' && viewerIdx() >= 0 && f.idx === viewerIdx());
 const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
-const isTeammate = (f.idx % 2 === myTeam) && !isUser;
-col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : '#ff4d4d');
-glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)');
+const isTeammate = (fighterTeam(f) === myTeam) && !isUser;
+col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : (isRaid() ? '#ffd166' : '#ff4d4d'));
+glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.55)');
 }
 const hx = sk.head[0];
 const bounce = Math.sin(clock * 5 + f.idx * 1.5) * 2.5;
@@ -14672,8 +14814,109 @@ else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人�
 ctx.fillText(bTitle, cx, H - 10);
 ctx.restore();
 }
+function drawHUDRaid() {
+const u = clamp(W / 1280, 0.72, 1.25);
+const pad = Math.round(24 * u), topY = Math.round((touchOn ? 50 : 16) * u);
+const totalW = Math.min(Math.round(W - pad * 2), Math.round(1260 * u));
+const centerGap = Math.round(128 * u);
+const teamW = Math.floor((totalW - centerGap) / 2);
+const lx = Math.round(W / 2 - centerGap / 2 - teamW);
+const rx = Math.round(W / 2 + centerGap / 2);
+const allies = sideFighters(0);
+const barH = Math.round((allies.length >= 3 ? 13 : 16) * u);
+const rowGap = Math.round((allies.length >= 3 ? 21 : 28) * u);
+const drawSubRow = (f, x, y, w, left, roleTag) => {
+const dead = f.hp <= 0;
+const ratio = clamp(f.hp / f.maxHp, 0, 1), lag = clamp(f.lagHp / f.maxHp, 0, 1);
+ctx.save();
+if (dead) ctx.globalAlpha = 0.42;
+ctx.fillStyle = 'rgba(10,10,20,0.78)';
+ctx.fillRect(x, y, w, barH);
+const fill = (r, c) => {
+const fw = Math.max(0, (w - 2) * r);
+ctx.fillStyle = c;
+ctx.fillRect(left ? x + 1 : x + w - 1 - fw, y + 1, fw, barH - 2);
+};
+fill(lag, 'rgba(255,110,90,0.45)');
+const g = ctx.createLinearGradient(x, y, x, y + barH);
+g.addColorStop(0, `rgb(${f.look.slash})`);
+g.addColorStop(1, `rgba(${f.look.slash},0.62)`);
+fill(ratio, g);
+ctx.strokeStyle = 'rgba(233,196,106,0.52)';
+ctx.lineWidth = 1.1;
+ctx.strokeRect(x, y, w, barH);
+const gRatio = clamp((f.guard !== undefined ? f.guard : f.maxGuard) / (f.maxGuard || 100), 0, 1);
+const mRatio = clamp(f.meter / 100, 0, 1);
+const gW = Math.floor(w * 0.48), mW = w - gW - 4;
+ctx.fillStyle = 'rgba(0,0,0,0.55)';
+ctx.fillRect(x, y + barH + 2, gW, 3);
+ctx.fillStyle = gRatio < 0.28 ? '#ff5e5e' : '#7ec8ff';
+ctx.fillRect(left ? x : x + gW * (1 - gRatio), y + barH + 2, gW * gRatio, 3);
+const mx = x + gW + 4;
+ctx.fillStyle = 'rgba(0,0,0,0.55)';
+ctx.fillRect(mx, y + barH + 2, mW, 3);
+ctx.fillStyle = f.meter >= 100 ? '#ffd25a' : '#d49b38';
+ctx.fillRect(left ? mx : mx + mW * (1 - mRatio), y + barH + 2, mW * mRatio, 3);
+ctx.font = `600 ${Math.round(11.5 * u)}px ${BODY_FONT}`;
+ctx.fillStyle = dead ? '#ff7676' : '#f4efe6';
+ctx.textAlign = left ? 'left' : 'right';
+const tx = left ? x + 6 : x + w - 6;
+const statusTxt = dead ? '【重伤倒地】' : `${Math.ceil(f.hp)}/${f.maxHp}`;
+ctx.fillText(`${roleTag} · ${f.look.name}  ${statusTxt}`, tx, y + barH - 3);
+ctx.restore();
+};
+allies.forEach((f, idx) => {
+const tag = idx === 0 ? '同袍·壹(1P)' : idx === 1 ? '同袍·贰(2P)' : '同袍·叁(3P)';
+drawSubRow(f, lx, topY + idx * rowGap, teamW, true, tag);
+});
+const bossH = Math.round(24 * u);
+const bRatio = clamp(B.hp / B.maxHp, 0, 1), bLag = clamp(B.lagHp / B.maxHp, 0, 1);
+ctx.save();
+ctx.fillStyle = 'rgba(18,8,16,0.85)';
+ctx.fillRect(rx, topY, teamW, bossH);
+const fillB = (r, c) => {
+const fw = Math.max(0, (teamW - 2) * r);
+ctx.fillStyle = c;
+ctx.fillRect(rx + teamW - 1 - fw, topY + 1, fw, bossH - 2);
+};
+fillB(bLag, 'rgba(255,180,90,0.45)');
+const bg = ctx.createLinearGradient(rx, topY, rx, topY + bossH);
+bg.addColorStop(0, '#ff4d5a');
+bg.addColorStop(1, '#a81c2e');
+fillB(bRatio, bg);
+ctx.strokeStyle = '#ffd166';
+ctx.lineWidth = 1.5;
+ctx.strokeRect(rx, topY, teamW, bossH);
+ctx.font = `bold ${Math.round(12.5 * u)}px ${BODY_FONT}`;
+ctx.fillStyle = '#fff5e4';
+ctx.textAlign = 'right';
+ctx.fillText(`👹 ${B.look.name} (3xHP · 1.25x伤)  ${Math.ceil(B.hp)}/${B.maxHp}`, rx + teamW - 8, topY + bossH - 6);
+const sks = B.bossSkills || [B.ch.skill, B.ch.skill2];
+const skNames = sks.map(id => {
+const n = (SKILLS[id] && SKILLS[id].name) || id;
+return (id === B.ch.skill || id === B.ch.skill2) ? `【${n}】` : n;
+}).join(' · ');
+ctx.font = `600 ${Math.round(11 * u)}px ${BODY_FONT}`;
+ctx.fillStyle = '#ffd166';
+ctx.fillText(`六技轮转：${skNames}`, rx + teamW - 4, topY + bossH + Math.round(16 * u));
+const perkCount = (M.towerPerks || []).length;
+ctx.fillStyle = '#7fe0b0';
+ctx.textAlign = 'left';
+ctx.fillText(`全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
+ctx.restore();
+ctx.save();
+ctx.textAlign = 'center';
+ctx.fillStyle = '#ffd166';
+ctx.font = `700 ${Math.round(12 * u)}px ${TITLE_FONT}`;
+ctx.fillText(`同袍肉鸽 · 第${M.raidWave || 1}劫`, W / 2, topY + Math.round(14 * u));
+ctx.fillStyle = M.timer <= 15 ? '#ff6464' : '#f5ebd6';
+ctx.font = `bold ${Math.round(24 * u)}px ${TITLE_FONT}`;
+ctx.fillText(Math.ceil(M.timer).toString(), W / 2, topY + Math.round(38 * u));
+ctx.restore();
+}
 function drawHUD() {
 if (M.mode === 'demo') return;
+if (isRaid()) { drawHUDRaid(); return; }
 if (is2v2()) { drawHUD2v2(); return; }
 const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
 [A, B].forEach((f, i) => {
@@ -15165,8 +15408,8 @@ const pf = paperFX();
 if (pf) drawXuanzhi(pf.a);
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-const order = is2v2()
-? [A, B, C, D].sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
+const order = isMulti()
+? allFighters().slice().sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
 : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
 drawDecoys();
 drawProjs();
@@ -18976,9 +19219,9 @@ ${scTag(p)}
 choicesEl.querySelectorAll('.tower-perk-card').forEach(card => {
 card.addEventListener('click', () => pickTowerPerk(card.dataset.perk));
 });
-$id('towerTitle').textContent = '问剑悟道 · 秘卷三选一';
+$id('towerTitle').textContent = isRaid() ? '同袍肉鸽 · 全队共享秘卷三选一' : '问剑悟道 · 秘卷三选一';
 const fb = document.getElementById('towerFloorBadge');
-if (fb) fb.textContent = `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
+if (fb) fb.textContent = isRaid() ? `讨伐第 ${M.raidWave || 1} 劫大捷 · 全员共享秘卷增益` : `突破第 ${M.towerFloor} 层 · 顿悟秘卷`;
 showScreen('towerModal');
 if (M.watchAi) {
 setTimeout(() => {
@@ -18991,6 +19234,11 @@ if (!M.towerPerks) M.towerPerks = [];
 if (M.phase !== 'perk' || !SC_BY[perkId]) return;
 M.towerPerks.push(perkId);
 const p = SC_BY[perkId];
+if (isRaid()) {
+say(`全队共享领悟「${p.n}」`, 1.2);
+nextRaidWave();
+return;
+}
 say(`领悟「${p.n}」`, 1.2);
 nextTowerFloor();
 }
@@ -19543,6 +19791,215 @@ $id('btn2v2GoWatch').addEventListener('click', () => {
 close2v2Modal();
 startWatch2v2Draft();
 });
+let rougeSquadSize = 3;
+let pendingRaidBoss = null;
+function rollRaidBoss(wave = 1) {
+const pool = CHARS.map((_, i) => i);
+for (let i = pool.length - 1; i > 0; i--) {
+const j = (Math.random() * (i + 1)) | 0;
+const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+}
+const heroes = pool.slice(0, 3);
+const skills = [];
+const ults = [];
+for (const hIdx of heroes) {
+const c = CHARS[hIdx];
+if (c.skill && !skills.includes(c.skill)) skills.push(c.skill);
+if (c.skill2 && !skills.includes(c.skill2)) skills.push(c.skill2);
+if (c.ult && !ults.includes(c.ult)) ults.push(c.ult);
+}
+return {
+wave,
+heroes,
+heroNames: heroes.map(i => CHARS[i].name),
+skills,
+skillNames: skills.map(id => (SKILLS[id] && SKILLS[id].name) || id),
+ults
+};
+}
+function applyRaidBossToB() {
+if (!M.raidBoss || !Array.isArray(M.raidBoss.heroes) || M.raidBoss.heroes.length < 3) {
+M.raidBoss = rollRaidBoss(M.raidWave || 1);
+}
+const rb = M.raidBoss;
+const h1 = rb.heroes[0], h2 = rb.heroes[1], h3 = rb.heroes[2];
+B.setChar(h1);
+B.ch = {
+...CHARS[h1],
+skill: rb.skills[0],
+skill2: rb.skills[1],
+ult: rb.ults[0]
+};
+B.bossHeroes = [...rb.heroes];
+B.bossSkills = [...rb.skills];
+B.bossUlts = [...rb.ults];
+B.bossSkillCursor = 0;
+B.bossRotTimer = 2.4;
+const waveMul = 1 + ((M.raidWave || 1) - 1) * 0.15;
+B.maxHp = Math.round(B.maxHp * 3.0 * waveMul);
+B.hp = B.lagHp = B.maxHp;
+B.bossDmgMul = 1.25;
+B.size = 1.18;
+B.maxGuard = 220;
+B.guard = 220;
+B.meter = 45;
+B.ink = INK_MAX;
+B.drunk = 65;
+B.look = {
+...B.look,
+name: `${CHARS[h1].name}·${CHARS[h2].name}·${CHARS[h3].name} 融魂魔首`
+};
+}
+function updateRaidBoss(dt) {
+if (!isRaid() || B.hp <= 0 || !B.bossSkills || B.bossSkills.length < 6) return;
+B.ink = INK_MAX;
+B.drunk = Math.max(B.drunk || 0, 60);
+B.bossRotTimer = (B.bossRotTimer || 2.4) - dt;
+if (B.bossRotTimer <= 0 && B.state !== 'skill' && B.state !== 'special') {
+B.bossRotTimer = 2.6;
+B.bossSkillCursor = ((B.bossSkillCursor || 0) + 2) % 6;
+B.ch.skill = B.bossSkills[B.bossSkillCursor];
+B.ch.skill2 = B.bossSkills[(B.bossSkillCursor + 1) % 6];
+if (B.bossUlts && B.bossUlts.length) B.ch.ult = B.bossUlts[(B.bossSkillCursor >> 1) % B.bossUlts.length];
+}
+}
+function startRaidMatch(squadPicks, squadSize = 3) {
+if (p2pActive()) netDropWaiting();
+initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
+const sq = squadSize === 2 ? 2 : 3;
+const picks = Array.isArray(squadPicks) && squadPicks.length >= sq ? squadPicks.slice(0, sq) : [0, 2, 3].slice(0, sq);
+M.mode = 'raid';
+M.raidSquadSize = sq;
+M.raidWave = 1;
+M.raidInkEarned = 0;
+M.raidLastReward = 600;
+M.raidConsoled = false;
+M.raidBoss = pendingRaidBoss || rollRaidBoss(1);
+pendingRaidBoss = null;
+const initPerks = scDraw(CHARS[picks[0]].id, [], 2).map(s => s.id);
+M.towerPerks = initPerks;
+M.foeScrolls = ['bx_armor', 'bx_haste'];
+M.scRun = {};
+M.watchAi = false;
+M.level = 'god';
+M.bans = [];
+M.wins = [0, 0];
+M.round = 1;
+M.carry = null;
+M.stage = null;
+A.setChar(picks[0]);
+C.setChar(picks[1] !== undefined ? picks[1] : ((picks[0] + 1) % CHARS.length));
+if (sq >= 3) D.setChar(picks[2] !== undefined ? picks[2] : ((picks[0] + 2) % CHARS.length));
+A.ctrl = human[0];
+C.ctrl = new AICtrl('god');
+D.ctrl = new AICtrl('god');
+B.ctrl = new AICtrl('god');
+A.meter = C.meter = D.meter = 45;
+human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
+showScreen(null);
+startRound();
+const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
+say(`同袍肉鸽 · 迎战三侠六技【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享');
+}
+function nextRaidWave() {
+paused = false;
+M.phase = 'intro';
+M.raidWave = (M.raidWave || 1) + 1;
+M.raidConsoled = false;
+M.wins = [0, 0];
+M.round = 1;
+M.raidBoss = rollRaidBoss(M.raidWave);
+showScreen(null);
+B.ctrl = new AICtrl('god');
+startRound();
+const lastPerkId = (M.towerPerks || [])[M.towerPerks.length - 1];
+const pName = lastPerkId && SC_BY[lastPerkId] ? `全员共享「${SC_BY[lastPerkId].n}」` : '全队秘卷共鸣';
+say(`同袍肉鸽 · 第 ${M.raidWave} 劫【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', pName);
+}
+function renderRougeModal() {
+if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
+for (const b of document.querySelectorAll('#rougeSquadSeg button')) {
+b.classList.toggle('sel', +b.dataset.sq === rougeSquadSize);
+}
+const box = $id('rougeBossPreview');
+if (box) {
+const rb = pendingRaidBoss;
+const chips = rb.skills.map((skId, idx) => {
+const sk = SKILLS[skId];
+const hName = rb.heroNames[(idx / 2) | 0] || '';
+return `<div class="mr-skill-chip"><b>${hName}</b>${sk ? sk.name : skId}</div>`;
+}).join('');
+box.innerHTML = `
+<div class="mr-boss-head">
+<span class="mr-boss-title">👹 当期融魂魔首：${rb.heroNames.join(' · ')}</span>
+<div class="mr-boss-tags">
+<span class="mr-boss-tag">300% 气血 (3x HP)</span>
+<span class="mr-boss-tag">125% 伤害</span>
+<span class="mr-boss-tag gold">讨伐大捷全员共享：+600 墨锭</span>
+</div>
+</div>
+<div class="mr-skills-grid">${chips}</div>
+`;
+}
+}
+function openRougeModal() {
+if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
+const m = $id('modalRouge');
+if (m) m.classList.remove('hidden');
+renderRougeModal();
+}
+function closeRougeModal() {
+const m = $id('modalRouge');
+if (m) m.classList.add('hidden');
+}
+if ($id('homeRouge')) {
+$id('homeRouge').addEventListener('click', () => { SFX.slice(); openRougeModal(); });
+}
+if ($id('modalRougeClose')) {
+$id('modalRougeClose').addEventListener('click', closeRougeModal);
+}
+if ($id('rougeSquadSeg')) {
+$id('rougeSquadSeg').addEventListener('click', e => {
+const b = e.target.closest('button[data-sq]'); if (!b) return;
+rougeSquadSize = +b.dataset.sq === 2 ? 2 : 3;
+SFX.slice(); renderRougeModal();
+});
+}
+if ($id('btnRougeReroll')) {
+$id('btnRougeReroll').addEventListener('click', () => {
+pendingRaidBoss = rollRaidBoss(1);
+SFX.slice(); renderRougeModal();
+});
+}
+if ($id('btnRougeGoLocal')) {
+$id('btnRougeGoLocal').addEventListener('click', () => {
+closeRougeModal();
+bpStart('raid', { squadSize: rougeSquadSize });
+});
+}
+if ($id('btnRougeGoMatch')) {
+$id('btnRougeGoMatch').addEventListener('click', () => {
+closeRougeModal();
+if (!$id('netp').classList.contains('on')) openScreen('netp');
+mmGo('2v2_coop');
+toast('正在全服匹配同袍肉鸽共斗队友…');
+});
+}
+if ($id('btnRougeGoOnline')) {
+$id('btnRougeGoOnline').addEventListener('click', () => {
+closeRougeModal();
+if (!$id('netp').classList.contains('on')) openScreen('netp');
+netRoomMode = 'raid';
+setRoomModeUI('pp_cc');
+if ($id('roomWrap')) {
+$id('roomWrap').classList.remove('hidden');
+$id('mmRoomBtn').classList.add('sel');
+}
+const hb = $id('hostBtn');
+if (hb) hb.click();
+toast('已建好同袍肉鸽共斗房间，把房间号发给好友即可并肩讨伐魔首！');
+});
+}
 function go() { initAudio(); paused = false; bpStart('cpu'); }
 document.getElementById('goBtn').addEventListener('click', go);
 const cpuTutBtn = document.getElementById('cpuTutBtn');
@@ -19583,6 +20040,16 @@ return;
 }
 if (M.mode === 'tag3') {
 bpStart('tag3', { level: tag3Level, isWatch: false });
+return;
+}
+if (isRaid()) {
+if (M.koWinner === 0) {
+M.phase = 'perk';
+paused = true;
+showTowerPerkModal();
+} else {
+bpStart('raid', { squadSize: M.raidSquadSize || rougeSquadSize || 3 });
+}
 return;
 }
 if (M.mode === 'tower') {
@@ -20289,11 +20756,18 @@ qi: '气的获取 +25%',
 };
 const scRnd = () => Math.random();   // 秘卷只在单机模式生效，不用回滚同步的随机数
 function scTxt(f, text, rgb, dy = 0) { if (!RESIM) addP({ type: 'text', text, x: f.x, y: f.y - 125 - dy, life: 0.85, max: 0.85, rgb: rgb || '235,220,170' }); }
-function scHeal(f, n) {
+function scHeal(f, n, _shared = false) {
 if (n <= 0 || f.hp <= 0 || scHas(f, 'no_heal')) return 0;
-const h = Math.min(Math.round(n), f.maxHp - f.hp); if (h <= 0) return 0;
+const h = Math.min(Math.round(n), f.maxHp - f.hp);
+if (h > 0) {
 f.hp += h; f.lagHp = Math.max(f.lagHp, f.hp);
 if (!RESIM) addP({ type: 'text', text: '+' + h, x: f.x + rand(-10, 10), y: f.y - 115, life: 0.7, max: 0.7, rgb: '130,230,140' });
+}
+if (!_shared && typeof isRaid === 'function' && isRaid() && fighterTeam(f) === 0) {
+for (const mate of sideFighters(0)) {
+if (mate !== f && mate.hp > 0) scHeal(mate, Math.max(1, Math.round(n * 0.65)), true);
+}
+}
 return h;
 }
 function scTrue(def, n, rgb, self) {
@@ -20303,7 +20777,15 @@ def.hp -= d; def.sinceHit = 0; def.lagDelay = 0.5;
 if (!RESIM) addP({ type: 'dmg', text: `${d}`, x: def.x + rand(-15, 15), y: def.y - 75, vx: rand(-20, 20), vy: -120, g: 200, life: 0.65, max: 0.65, s: 0.75, rgb: rgb || '255,200,120', edge: '120,60,20' });
 return d;
 }
-function scMeter(f, n) { f.meter = clamp(f.meter + n * (n > 0 ? scMeterMul(f) : 1), 0, 100); }
+function scMeter(f, n, _shared = false) {
+const gain = n * (n > 0 ? scMeterMul(f) : 1);
+f.meter = clamp(f.meter + gain, 0, 100);
+if (!_shared && n > 0 && typeof isRaid === 'function' && isRaid() && fighterTeam(f) === 0) {
+for (const mate of sideFighters(0)) {
+if (mate !== f && mate.hp > 0) scMeter(mate, n * 0.6, true);
+}
+}
+}
 function scMeterMul(f) { let k = 1; if (scReso(f, 'qi')) k *= 1.25; if (scHas(f, 'flow_combo')) k *= 1.5; if (scHas(f, 'all_in')) k *= 0.6; if (scHas(f, 'scorched_earth')) k *= 1.3; return k; }
 function scCdCut(f, s) { f.skillCD = Math.max(0, f.skillCD - s); f.skill2CD = Math.max(0, f.skill2CD - s); }
 function scLater(f, t, fn) { (f.sc.q || (f.sc.q = [])).push({ t, fn }); }
@@ -20521,8 +21003,13 @@ const BOSS_AFFIXES = [
 const SC_BY = {};
 for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga'; }
-function scIds(f) { return !f ? [] : f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) : []; }
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || (typeof isRaid === 'function' && isRaid()); }
+const scEligible = f => !!(f && (f.idx <= 1 || (typeof isRaid === 'function' && isRaid())));
+function scIds(f) {
+if (!f) return [];
+if (typeof isRaid === 'function' && isRaid()) return f.idx === 1 ? (M.foeScrolls || []) : (M.towerPerks || []);
+return f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) : [];
+}
 function scHas(f, id) { return scOn() && scIds(f).includes(id); }
 function scList(f) {
 const ids = scIds(f);
@@ -20531,12 +21018,12 @@ return f.sc.list;
 }
 function scCount(f, school) { let n = 0; for (const s of scList(f)) if (s.s === school) n++; return n; }
 function scReso(f, school) { return scOn() && scCount(f, school) >= SC_RESONANCE; }
-function scFire(f, hook, ...a) { if (!scOn() || !f || f.idx > 1) return; for (const s of scList(f)) if (s[hook]) s[hook](f, ...a); }
-function scAny(f, hook, ...a) { if (!scOn() || !f || f.idx > 1) return false; for (const s of scList(f)) if (s[hook] && s[hook](f, ...a)) return true; return false; }
-function scFireC(f, hook, c) { if (!scOn() || !f || f.idx > 1) return; for (const s of scList(f)) if (s[hook]) s[hook](c); }
+function scFire(f, hook, ...a) { if (!scOn() || !scEligible(f)) return; for (const s of scList(f)) if (s[hook]) s[hook](f, ...a); }
+function scAny(f, hook, ...a) { if (!scOn() || !scEligible(f)) return false; for (const s of scList(f)) if (s[hook] && s[hook](f, ...a)) return true; return false; }
+function scFireC(f, hook, c) { if (!scOn() || !scEligible(f)) return; for (const s of scList(f)) if (s[hook]) s[hook](c); }
 function scRoundStart() {
 if (!scOn()) return;
-for (const f of [A, B]) {
+for (const f of allFighters()) {
 f.sc = { lc: 0, markN: 0 }; f.st = {}; f.scFast = false; f.spd = 1;
 scFire(f, 'start', foeOf(f));
 }
@@ -20569,7 +21056,7 @@ if (scAnyC(def, 'fatal', fc)) { c.cancel = true; ev.dd = 0; }
 }
 return c;
 }
-function scAnyC(f, hook, c) { if (!scOn() || !f || f.idx > 1) return false; for (const s of scList(f)) if (s[hook] && s[hook](c)) return true; return false; }
+function scAnyC(f, hook, c) { if (!scOn() || !scEligible(f)) return false; for (const s of scList(f)) if (s[hook] && s[hook](c)) return true; return false; }
 function scAfterHit(att, def, m, ev, dmg, counter, pre) {
 if (!scOn()) return;
 const c = { ...pre, dmg };
@@ -20586,20 +21073,20 @@ return c;
 }
 function scJG(f) {
 let w = 0.09;
-if (!scOn() || f.idx > 1) return w;
+if (!scOn() || !scEligible(f)) return w;
 for (const s of scList(f)) if (s.jg) { const v = s.jg(f); if (v < 0) return -1; w = Math.max(w, v); }
 return w;
 }
 function scSpd(f) {
 let k = (f.frostSlow > 0 ? (scReso(foeOf(f), 'shuang') ? 0.5 : 0.75) : 1);
-if (!scOn() || f.idx > 1) return k;
+if (!scOn() || !scEligible(f)) return k;
 for (const s of scList(f)) if (s.spd) k *= s.spd(f);
 if (scReso(f, 'feng')) k *= 1.12;
 return k;
 }
-function scProj(f, p) { if (scOn() && f && f.idx <= 1) for (const s of scList(f)) if (s.proj) s.proj(f, p); }
+function scProj(f, p) { if (scOn() && scEligible(f)) for (const s of scList(f)) if (s.proj) s.proj(f, p); }
 function scTick(f, foe) {
-if (!scOn() || f.idx > 1 || !f.sc) return;
+if (!scOn() || !scEligible(f) || !f.sc) return;
 const st = f.st || (f.st = {}), fast = f.scFast ? 2 : 1;
 if (st.poison > 0 && M.phase === 'fight') {
 st.poisonT -= STEP; st.pT = (st.pT || 0) + STEP * fast;
@@ -21242,13 +21729,14 @@ return c;
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2'];   // 不联机的点将台：本机自己推进每一步
+const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2', 'raid'];   // 不联机的点将台：本机自己推进每一步
 const bpAuth = () => LOCAL_BP_MODES.includes(bpMode) || NET.role === 'host';
 const bpSideName = side => {
+if (bpMode === 'raid') return side === 0 ? '同袍义军' : '融魂魔首';
 if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
 if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
 if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
-if (side === bpMySide()) return (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'))) ? '我方战队' : '你';
+if (side === bpMySide()) return (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid'))) ? '我方战队' : '你';
 if (bpMode === 'cpu' || bpMode === 'chaos' || bpMode === 'mayhem') return '电脑';
 if (bpMode === 'tag3' || bpMode === '2v2') return '敌方战队';
 const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
@@ -21277,12 +21765,17 @@ picks = [-1];
 steps = [[0, 'pick'], [1, 'pick']];
 bans = [];
 picks = [-1, -1];
+} else if (mode === 'raid') {
+const sq = (customOpts && customOpts.squadSize === 2) ? 2 : 3;
+steps = sq === 2 ? [[0, 'pick'], [0, 'pick']] : [[0, 'pick'], [0, 'pick'], [0, 'pick']];
+bans = [];
+picks = [Array(sq).fill(-1), []];
 } else if (mode === '2v2') {
 steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
 bans = [-1, -1];
 picks = [[-1, -1], [-1, -1]];
 } else if (mode === 'net') {
-if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') {
+if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid') {
 steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
 bans = [-1, -1];
 picks = [[-1, -1], [-1, -1]];
@@ -21400,6 +21893,8 @@ startStage(opts.stageCh !== undefined ? opts.stageCh : stageCh, opts.stageL !== 
 } else if (mode === 'train') {
 trainChar = picks[0];
 startTraining('dummy', !!opts.isWatch);   // 点将台里的「木人试剑」只会是木人桩，专项训练在 startTrainTarget 里直接去对应模式的点将台
+} else if (mode === 'raid') {
+startRaidMatch(picks[0], opts.squadSize || (picks[0] ? picks[0].length : 3));
 } else if (mode === '2v2') {
 if (opts.subMode === 'pp_pp') start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
 else start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
@@ -21614,6 +22109,7 @@ else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';
 else if (bpMode === 'stage') modePrefix = '守关挑战 · ';
 else if (bpMode === 'train') modePrefix = '木人试剑 · ';
 else if (bpMode === '2v2') modePrefix = '2v2演武 · ';
+else if (bpMode === 'raid') modePrefix = '同袍肉鸽 · ';
 const TAG3_ROLES = ['先锋', '中坚', '大将'];
 const TEAM2_ROLES = ['先锋', '次锋'];
 const isTag3BP = bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3);
@@ -21648,7 +22144,12 @@ const bActive = !done && side === sd && type === 'ban';
 return `<div class="slot2 ban${bActive ? ' on' : ''}">${bIdx >= 0 ? `<img src="${PORTRAITS[bIdx] || ''}" alt=""><span class="lab">禁 ${CHARS[bIdx].name}</span>` : '禁用'}</div>`;
 })()
 : '';
-if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train') {
+if (bpMode === 'raid' && sd === 1) {
+const rb = typeof pendingRaidBoss !== 'undefined' && pendingRaidBoss ? pendingRaidBoss : null;
+const bossTitle = rb ? `六技魔首：${rb.heroNames.join('·')}` : '三侠六技·融魂魔首';
+el.innerHTML = `<div class="who" style="color:var(--p2)">秘境魔首 (3xHP · 1.25x伤)</div>
+<div class="slots"><div class="slot2">${bossTitle}</div></div>`;
+} else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train') {
 if (sd === 1) {
 let rightInfo = '木人桩试剑';
 if (bpMode === 'tower') rightInfo = '万仞剑阁守关者';
@@ -22734,6 +23235,10 @@ e.preventDefault();
 let c = human[0];
 if (M.mode === 'pvp') {
 c = human[p] || human[0];
+} else if (isRaid()) {
+if (p === 1 && !C.hidden) { if (C.ctrl !== human[1]) C.ctrl = human[1]; c = human[1]; }
+else if (p === 2 && !D.hidden && human[2]) { if (D.ctrl !== human[2]) D.ctrl = human[2]; c = human[2]; }
+else c = human[0];
 } else if (M.mode === '2v2' || is2v2()) {
 if (M.subMode === 'pp_cc') {
 c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
@@ -22757,6 +23262,8 @@ const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
 let c = human[0];
 if (M.mode === 'pvp') {
 c = human[p] || human[0];
+} else if (isRaid()) {
+c = (p === 1 && !C.hidden) ? human[1] : (p === 2 && !D.hidden && human[2]) ? human[2] : human[0];
 } else if (M.mode === '2v2' || is2v2()) {
 if (M.subMode === 'pp_cc') {
 c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
@@ -26315,7 +26822,7 @@ return M.mode === 'net' ? att.idx === localIdx() : att.ctrl === human[0];
 function acCheckHit(att, def, m, before) {
 if (!def || !m || typeof before !== 'number' || typeof def.hp !== 'number' || !acLocalAttacker(att)) return;
 const dealt = before - def.hp, base = m.dmgAbs !== undefined ? m.dmgAbs : (m.dmg || 0);
-const wild = M.mode === 'mayhem' || M.mode === 'chaos' ? 6 : 1;
+const wild = M.mode === 'mayhem' || M.mode === 'chaos' || M.mode === 'raid' ? 6 : 1;
 if (dealt <= 150 || dealt <= Math.max(base, 20) * 12 * wild) return;
 if (ACH.hitSeq !== M.rseq) { ACH.hitSeq = M.rseq; ACH.hits = 0; }
 if (++ACH.hits >= 2) acStrike(`一下打出 ${Math.round(dealt)} 伤害，远超招式上限`);

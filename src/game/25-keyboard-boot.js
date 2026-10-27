@@ -73,6 +73,10 @@ window.addEventListener('keydown', e => {
     let c = human[0];
     if (M.mode === 'pvp') {
       c = human[p] || human[0];
+    } else if (isRaid()) {
+      if (p === 1 && !C.hidden) { if (C.ctrl !== human[1]) C.ctrl = human[1]; c = human[1]; }
+      else if (p === 2 && !D.hidden && human[2]) { if (D.ctrl !== human[2]) D.ctrl = human[2]; c = human[2]; }
+      else c = human[0];
     } else if (M.mode === '2v2' || is2v2()) {
       if (M.subMode === 'pp_cc') {
         c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
@@ -96,6 +100,8 @@ window.addEventListener('keyup', e => {
     let c = human[0];
     if (M.mode === 'pvp') {
       c = human[p] || human[0];
+    } else if (isRaid()) {
+      c = (p === 1 && !C.hidden) ? human[1] : (p === 2 && !D.hidden && human[2]) ? human[2] : human[0];
     } else if (M.mode === '2v2' || is2v2()) {
       if (M.subMode === 'pp_cc') {
         c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P

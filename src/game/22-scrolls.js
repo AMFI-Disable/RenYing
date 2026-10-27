@@ -32,11 +32,19 @@ const SC_RESO = {
 // ---------- 小工具 ----------
 const scRnd = () => Math.random();   // 秘卷只在单机模式生效，不用回滚同步的随机数
 function scTxt(f, text, rgb, dy = 0) { if (!RESIM) addP({ type: 'text', text, x: f.x, y: f.y - 125 - dy, life: 0.85, max: 0.85, rgb: rgb || '235,220,170' }); }
-function scHeal(f, n) {
+function scHeal(f, n, _shared = false) {
   if (n <= 0 || f.hp <= 0 || scHas(f, 'no_heal')) return 0;
-  const h = Math.min(Math.round(n), f.maxHp - f.hp); if (h <= 0) return 0;
-  f.hp += h; f.lagHp = Math.max(f.lagHp, f.hp);
-  if (!RESIM) addP({ type: 'text', text: '+' + h, x: f.x + rand(-10, 10), y: f.y - 115, life: 0.7, max: 0.7, rgb: '130,230,140' });
+  const h = Math.min(Math.round(n), f.maxHp - f.hp);
+  if (h > 0) {
+    f.hp += h; f.lagHp = Math.max(f.lagHp, f.hp);
+    if (!RESIM) addP({ type: 'text', text: '+' + h, x: f.x + rand(-10, 10), y: f.y - 115, life: 0.7, max: 0.7, rgb: '130,230,140' });
+  }
+  // 同袍肉鸽：一名侠客触发秘卷回血，同队所有存活队友共享 65% 的治疗收益
+  if (!_shared && typeof isRaid === 'function' && isRaid() && fighterTeam(f) === 0) {
+    for (const mate of sideFighters(0)) {
+      if (mate !== f && mate.hp > 0) scHeal(mate, Math.max(1, Math.round(n * 0.65)), true);
+    }
+  }
   return h;
 }
 // 真实伤害：不打断、不吃招架；打到 0 由回合流程判定击倒。self 为 true 时（秘卷的代价）最多扣到 1
@@ -47,7 +55,15 @@ function scTrue(def, n, rgb, self) {
   if (!RESIM) addP({ type: 'dmg', text: `${d}`, x: def.x + rand(-15, 15), y: def.y - 75, vx: rand(-20, 20), vy: -120, g: 200, life: 0.65, max: 0.65, s: 0.75, rgb: rgb || '255,200,120', edge: '120,60,20' });
   return d;
 }
-function scMeter(f, n) { f.meter = clamp(f.meter + n * (n > 0 ? scMeterMul(f) : 1), 0, 100); }
+function scMeter(f, n, _shared = false) {
+  const gain = n * (n > 0 ? scMeterMul(f) : 1);
+  f.meter = clamp(f.meter + gain, 0, 100);
+  if (!_shared && n > 0 && typeof isRaid === 'function' && isRaid() && fighterTeam(f) === 0) {
+    for (const mate of sideFighters(0)) {
+      if (mate !== f && mate.hp > 0) scMeter(mate, n * 0.6, true);
+    }
+  }
+}
 function scMeterMul(f) { let k = 1; if (scReso(f, 'qi')) k *= 1.25; if (scHas(f, 'flow_combo')) k *= 1.5; if (scHas(f, 'all_in')) k *= 0.6; if (scHas(f, 'scorched_earth')) k *= 1.3; return k; }
 function scCdCut(f, s) { f.skillCD = Math.max(0, f.skillCD - s); f.skill2CD = Math.max(0, f.skill2CD - s); }
 function scLater(f, t, fn) { (f.sc.q || (f.sc.q = [])).push({ t, fn }); }
@@ -283,8 +299,13 @@ for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
 
 // ---------- 谁有哪些秘卷 ----------
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga'; }
-function scIds(f) { return !f ? [] : f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) : []; }
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || (typeof isRaid === 'function' && isRaid()); }
+const scEligible = f => !!(f && (f.idx <= 1 || (typeof isRaid === 'function' && isRaid())));
+function scIds(f) {
+  if (!f) return [];
+  if (typeof isRaid === 'function' && isRaid()) return f.idx === 1 ? (M.foeScrolls || []) : (M.towerPerks || []);
+  return f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) : [];
+}
 function scHas(f, id) { return scOn() && scIds(f).includes(id); }
 function scList(f) {
   const ids = scIds(f);
@@ -293,14 +314,14 @@ function scList(f) {
 }
 function scCount(f, school) { let n = 0; for (const s of scList(f)) if (s.s === school) n++; return n; }
 function scReso(f, school) { return scOn() && scCount(f, school) >= SC_RESONANCE; }
-function scFire(f, hook, ...a) { if (!scOn() || !f || f.idx > 1) return; for (const s of scList(f)) if (s[hook]) s[hook](f, ...a); }
-function scAny(f, hook, ...a) { if (!scOn() || !f || f.idx > 1) return false; for (const s of scList(f)) if (s[hook] && s[hook](f, ...a)) return true; return false; }
-function scFireC(f, hook, c) { if (!scOn() || !f || f.idx > 1) return; for (const s of scList(f)) if (s[hook]) s[hook](c); }
+function scFire(f, hook, ...a) { if (!scOn() || !scEligible(f)) return; for (const s of scList(f)) if (s[hook]) s[hook](f, ...a); }
+function scAny(f, hook, ...a) { if (!scOn() || !scEligible(f)) return false; for (const s of scList(f)) if (s[hook] && s[hook](f, ...a)) return true; return false; }
+function scFireC(f, hook, c) { if (!scOn() || !scEligible(f)) return; for (const s of scList(f)) if (s[hook]) s[hook](c); }
 
 // ---------- 接进对战的地方 ----------
 function scRoundStart() {
   if (!scOn()) return;
-  for (const f of [A, B]) {
+  for (const f of allFighters()) {
     f.sc = { lc: 0, markN: 0 }; f.st = {}; f.scFast = false; f.spd = 1;
     scFire(f, 'start', foeOf(f));
   }
@@ -335,7 +356,7 @@ function scDamage(att, def, m, ev, dmg, counter) {
   }
   return c;
 }
-function scAnyC(f, hook, c) { if (!scOn() || !f || f.idx > 1) return false; for (const s of scList(f)) if (s[hook] && s[hook](c)) return true; return false; }
+function scAnyC(f, hook, c) { if (!scOn() || !scEligible(f)) return false; for (const s of scList(f)) if (s[hook] && s[hook](c)) return true; return false; }
 // 扣血之后
 function scAfterHit(att, def, m, ev, dmg, counter, pre) {
   if (!scOn()) return;
@@ -354,21 +375,21 @@ function scBlockMod(att, def, m) {
 }
 function scJG(f) {
   let w = 0.09;
-  if (!scOn() || f.idx > 1) return w;
+  if (!scOn() || !scEligible(f)) return w;
   for (const s of scList(f)) if (s.jg) { const v = s.jg(f); if (v < 0) return -1; w = Math.max(w, v); }
   return w;
 }
 function scSpd(f) {
   let k = (f.frostSlow > 0 ? (scReso(foeOf(f), 'shuang') ? 0.5 : 0.75) : 1);
-  if (!scOn() || f.idx > 1) return k;
+  if (!scOn() || !scEligible(f)) return k;
   for (const s of scList(f)) if (s.spd) k *= s.spd(f);
   if (scReso(f, 'feng')) k *= 1.12;
   return k;
 }
-function scProj(f, p) { if (scOn() && f && f.idx <= 1) for (const s of scList(f)) if (s.proj) s.proj(f, p); }
+function scProj(f, p) { if (scOn() && scEligible(f)) for (const s of scList(f)) if (s.proj) s.proj(f, p); }
 // 每帧：异常状态结算、延迟效果、秘卷的 tick、冷却额外流速
 function scTick(f, foe) {
-  if (!scOn() || f.idx > 1 || !f.sc) return;
+  if (!scOn() || !scEligible(f) || !f.sc) return;
   const st = f.st || (f.st = {}), fast = f.scFast ? 2 : 1;
   if (st.poison > 0 && M.phase === 'fight') {
     st.poisonT -= STEP; st.pT = (st.pT || 0) + STEP * fast;

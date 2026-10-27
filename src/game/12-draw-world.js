@@ -154,7 +154,7 @@ function drawGround() {
     ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);
   }
   // 石灯笼
-  const lanternXs = is2v2() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
+  const lanternXs = isMulti() ? [260, 780, STAGE_W / 2, STAGE_W - 780, STAGE_W - 260] : [260, STAGE_W / 2, STAGE_W - 260];
   for (const lx of lanternXs) lantern(lx, -2);
   // 场地边界墨痕重击血迹与刀痕飞溅 (Arena Boundary Splatters)
   if (ARENA_SPLATTERS && ARENA_SPLATTERS.length) {
@@ -189,8 +189,8 @@ function drawGround() {
       ctx.restore();
     }
   }
-  // 2v2 扩阔擂台专属交互奇阵：两侧【御风灵泉】与中央【天道剑坛】
-  if (is2v2()) {
+  // 2v2 / 同袍肉鸽 扩阔擂台专属交互奇阵：两侧【御风灵泉】与中央【天道剑坛】
+  if (isMulti()) {
     ctx.save();
     for (const gy of ARENA2V2.geysers) {
       const ready = gy.cd <= 0;
@@ -425,20 +425,20 @@ function drawFighter(f) {
     ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * Math.sin(clock * 14)})`;
     ctx.fillText('腾空闪', sk.head[0], sk.head[1] - 28); ctx.restore();
   }
-  // 2v2 队伍头顶指示三角（玩家绿、队友蓝、对手双红；阵亡后自动消失）
-  if (is2v2() && f.hp > 0 && !f.hidden && sk.head) {
+  // 2v2 / 同袍肉鸽 队伍头顶指示三角（玩家绿、队友蓝、对手/魔首红金；阵亡后自动消失）
+  if (isMulti() && f.hp > 0 && !f.hidden && sk.head) {
     const isAiWatch = M.watchAi || (M.mode === 'watch2v2' && M.watchAi);
     let col = '#46d3ea', glow = 'rgba(70,211,234,0.45)';
     if (isAiWatch) {
-      const isTeam0 = f.idx % 2 === 0;
+      const isTeam0 = fighterTeam(f) === 0;
       col = isTeam0 ? '#46d3ea' : '#ff4d4d';
       glow = isTeam0 ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)';
     } else {
       const isUser = (f.ctrl === human[0]) || (typeof viewerIdx === 'function' && viewerIdx() >= 0 && f.idx === viewerIdx());
       const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
-      const isTeammate = (f.idx % 2 === myTeam) && !isUser;
-      col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : '#ff4d4d');
-      glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)');
+      const isTeammate = (fighterTeam(f) === myTeam) && !isUser;
+      col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : (isRaid() ? '#ffd166' : '#ff4d4d'));
+      glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.55)');
     }
     const hx = sk.head[0];
     const bounce = Math.sin(clock * 5 + f.idx * 1.5) * 2.5;

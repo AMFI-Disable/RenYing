@@ -42,6 +42,10 @@ class Fighter {
     this.maxGuard = this.ch.stat.guardMax || 100;
     this.guard = this.maxGuard;
     this.sinceBlock = 0;
+    delete this.bossSkills;
+    delete this.bossUlts;
+    delete this.bossHeroes;
+    delete this.bossDmgMul;
   }
   reset(x) {
     this.maxHp = Math.round(this.ch.stat.hp * ((BAL[this.ch.id] || {}).hp || 1));
@@ -64,23 +68,35 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
-const sideFighters = side => is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]];   // 一方场上的人：1v1 一个，2v2 两个
-const allFighters = () => is2v2() ? [A, B, C, D] : [A, B];
-const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !is2v2() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
+const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && netRoomMode === 'raid');
+const isMulti = () => is2v2() || isRaid();
+const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
+const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
+const allFighters = () => isRaid() ? [A, B, C, D].filter(f => !f.hidden) : (is2v2() ? [A, B, C, D] : [A, B]);
+const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => [A, B, C, D][idx] || A;
 const foesOf = f => {
+  if (isRaid()) {
+    if (f === B) {
+      const list = [A, C, D].filter(e => !e.hidden);
+      const alive = list.filter(e => e.hp > 0);
+      return alive.length ? alive : list;
+    }
+    return [B];
+  }
   if (!is2v2()) return [f === A ? B : A];
   const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
   const alive = list.filter(e => !e.hidden && e.hp > 0);
   return alive.length ? alive : list;
 };
 const foeOf = f => {
-  if (!is2v2()) return f === A ? B : A;
+  if (!isMulti()) return f === A ? B : A;
+  if (isRaid() && f !== B) { f.target = B; return B; }
   const list = foesOf(f);
   if (!list.length) return A;
   if (list.length === 1) { f.target = list[0]; return list[0]; }
   // 电脑侠客的团队意识：残血的敌人两人一起收割；队友残血被缠住就过去解围（只影响电脑，玩家的朝向不变）
-  if (f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net) {   // 联机里玩家的操控是回滚用的 Ctrl（带 net 标记），不是电脑
+  if (!isRaid() && f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net) {   // 联机里玩家的操控是回滚用的 Ctrl（带 net 标记），不是电脑
     const mate = fighterByIdx(f.idx ^ 2);
     const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
     if (low) { f.target = low; return low; }
@@ -169,20 +185,23 @@ function updateArena2v2(dt) {
         const k = ARENA2V2.orb.kind;
         ARENA2V2.orb.active = false;
         ARENA2V2.altarTimer = 8.5;
-        if (k === 0) {
-          f.buffT = 4.5; f.skillCD = 0; f.skill2CD = 0;
-          ring(f.x, f.y - 55, 170, '255,120,70', 0.45);
-          addP({ type: 'text', text: '🔥 朱雀战魂 · 狂暴破招', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '255,130,80' });
-        } else if (k === 1) {
-          f.hp = Math.min(f.maxHp, f.hp + 45);
-          f.lagHp = Math.max(f.lagHp, f.hp);
-          f.guard = Math.min(f.maxGuard, (f.guard || 0) + 25);
-          ring(f.x, f.y - 55, 170, '120,245,190', 0.45);
-          addP({ type: 'text', text: '🌕 太阴灵丹 +45', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '120,245,190' });
-        } else {
-          f.meter = 100; f.armorT = 2.2; f.armorHits = 3;
-          ring(f.x, f.y - 55, 170, '190,140,255', 0.45);
-          addP({ type: 'text', text: '⚡ 紫微星魄 · 绝技满盈', x: f.x, y: f.y - 125, life: 1.1, max: 1.1, rgb: '195,145,255' });
+        const shareList = (isRaid() && fighterTeam(f) === 0) ? sideFighters(0).filter(m => m.hp > 0) : [f];
+        for (const mf of shareList) {
+          if (k === 0) {
+            mf.buffT = 4.5; mf.skillCD = 0; mf.skill2CD = 0;
+            ring(mf.x, mf.y - 55, 170, '255,120,70', 0.45);
+            addP({ type: 'text', text: shareList.length > 1 ? '🔥 同袍共享 · 朱雀狂暴' : '🔥 朱雀战魂 · 狂暴破招', x: mf.x, y: mf.y - 125, life: 1.1, max: 1.1, rgb: '255,130,80' });
+          } else if (k === 1) {
+            mf.hp = Math.min(mf.maxHp, mf.hp + 45);
+            mf.lagHp = Math.max(mf.lagHp, mf.hp);
+            mf.guard = Math.min(mf.maxGuard, (mf.guard || 0) + 25);
+            ring(mf.x, mf.y - 55, 170, '120,245,190', 0.45);
+            addP({ type: 'text', text: shareList.length > 1 ? '🌕 同袍共享 · 灵丹 +45' : '🌕 太阴灵丹 +45', x: mf.x, y: mf.y - 125, life: 1.1, max: 1.1, rgb: '120,245,190' });
+          } else {
+            mf.meter = 100; mf.armorT = 2.2; mf.armorHits = 3;
+            ring(mf.x, mf.y - 55, 170, '190,140,255', 0.45);
+            addP({ type: 'text', text: shareList.length > 1 ? '⚡ 同袍共享 · 绝技满盈' : '⚡ 紫微星魄 · 绝技满盈', x: mf.x, y: mf.y - 125, life: 1.1, max: 1.1, rgb: '195,145,255' });
+          }
         }
         SFX.parry();
         break;
@@ -248,9 +267,22 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-  STAGE_W = is2v2() ? 2600 : 1800;
+  STAGE_W = isMulti() ? 2600 : 1800;
   if (typeof applySkins === 'function') applySkins();
-  if (is2v2()) {
+  if (isRaid()) {
+    const sq = M.raidSquadSize || 3;
+    C.hidden = false;
+    D.hidden = sq < 3;
+    A.reset(STAGE_W / 2 - 440); A.face = 1;
+    C.reset(STAGE_W / 2 - 260); C.face = 1;
+    if (!D.hidden) { D.reset(STAGE_W / 2 - 110); D.face = 1; }
+    B.reset(STAGE_W / 2 + 300); B.face = -1;
+    if (typeof applyRaidBossToB === 'function') applyRaidBossToB();
+    initArena2v2();
+    for (const f of allFighters()) {
+      if (f.ctrl && typeof f.ctrl.updateTactic === 'function') f.ctrl.updateTactic(f, foeOf(f));
+    }
+  } else if (is2v2()) {
     C.hidden = false; D.hidden = false;
     A.reset(STAGE_W / 2 - 420); C.reset(STAGE_W / 2 - 210);
     B.reset(STAGE_W / 2 + 210); D.reset(STAGE_W / 2 + 420);
@@ -281,7 +313,7 @@ function startRound() {
   if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * IMPOSSIBLE_HP); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
-  M.phase = 'intro'; M.t = 0; M.timer = is2v2() ? ROUND_TIME_2V2 : ROUND_TIME; M.koWinner = -1; M.flags = {};
+  M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -317,11 +349,13 @@ function updateMatch() {
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
     if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
-    const team0Out = is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0);
-    const team1Out = is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0);
+    if (isRaid() && typeof updateRaidBoss === 'function') updateRaidBoss(STEP);
+    const team0Out = isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));
+    const team1Out = isRaid() ? (B.hp <= 0) : (is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0));
     if (M.mode !== 'train' && (team0Out || team1Out)) {
+      const sumHp = sd => sideFighters(sd).reduce((s, f) => s + Math.max(0, f.hp), 0);
       const winner = (team0Out && team1Out)
-        ? ((A.hp + (is2v2() ? C.hp : 0)) > (B.hp + (is2v2() ? D.hp : 0)) ? 0 : 1)
+        ? (sumHp(0) >= sumHp(1) ? 0 : 1)
         : (team0Out ? 1 : 0);
       const losers = sideFighters(1 - winner);
       for (const loser of losers) {
@@ -342,8 +376,9 @@ function updateMatch() {
       }
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
-        const ra = is2v2() ? (A.hp + C.hp) / (A.maxHp + C.maxHp) : A.hp / A.maxHp;
-        const rb = is2v2() ? (B.hp + D.hp) / (B.maxHp + D.maxHp) : B.hp / B.maxHp;
+        const s0 = sideFighters(0), s1 = sideFighters(1);
+        const ra = s0.reduce((s, f) => s + Math.max(0, f.hp), 0) / Math.max(1, s0.reduce((s, f) => s + f.maxHp, 0));
+        const rb = s1.reduce((s, f) => s + Math.max(0, f.hp), 0) / Math.max(1, s1.reduce((s, f) => s + f.maxHp, 0));
         if (M.mode === 'boss') timeDeath(-1, '时辰已到');
         else if (M.mode === 'saga') sagaTimeUp(ra, rb);   // 侠客列传：按这一战的胜利条件判
         else if (!M.ot) { M.ot = true; M.timer = OT_TIME; sayNet('加时 · 伤害翻倍', 1.4, 'big', 'gong'); }
@@ -431,6 +466,35 @@ function showEnd(w) {
     setTimeout(() => showScreen('end'), 300);
     return;
   }
+  if (isRaid()) {
+    const win = w === 0;
+    playSting(win ? 'victory' : 'defeat');
+    const wave = M.raidWave || 1;
+    const rewardInk = win ? (M.raidLastReward || 600) : 120;
+    if (!win && !M.raidConsoled) {
+      M.raidConsoled = true;
+      PROF.ink = (PROF.ink || 0) + rewardInk;
+      saveProfile();
+      toast(`同袍肉鸽虽败犹荣 · 全员共享抚恤 +${rewardInk} 墨锭`);
+    }
+    const squadNames = sideFighters(0).map(f => f.look.name).join(' · ');
+    const bossNames = (M.raidBoss && M.raidBoss.heroNames) ? M.raidBoss.heroNames.join('·') : B.look.name;
+    $id('endKicker').textContent = `同袍肉鸽 · 第 ${wave} 重魔劫 · 全员收益共享`;
+    inkTitle(win ? `${squadNames}` : `${bossNames} 融魂首领`, !win);
+    const perkCount = (M.towerPerks || []).length;
+    document.getElementById('endSub').textContent = win
+      ? `🎉 讨伐大捷！全员共享斩获 +${rewardInk} 墨锭（累计收获 ${M.raidInkEarned || rewardInk} 墨锭 · 全队共鸣 ${perkCount} 卷秘卷）`
+      : `惜败于六技融魂首领【${bossNames}】！全员仍获共享赏金 +${rewardInk} 墨锭（本趟累计 ${M.raidInkEarned || rewardInk} 墨锭）`;
+    $id('endRank').textContent = win
+      ? `已击破拥有 300% 气血、125% 伤害与六项绝技的融魂魔首！点击下方顿悟全队共享秘卷，迎战下一尊魔首`
+      : `融魂首领身负三侠六技、三倍气血，召集 2–3 名精锐同袍善用闪避与合击定能破敌！`;
+    const again = document.getElementById('againBtn');
+    again.style.display = '';
+    again.disabled = false;
+    again.textContent = win ? '顿悟共享秘卷 · 迎战下一魔首' : '重整旗鼓 · 再战同袍肉鸽';
+    setTimeout(() => showScreen('end'), 300);
+    return;
+  }
   if (M.mode === 'tower') {
     const win = w === 0;
     playSting(win ? 'victory' : 'defeat');
@@ -496,6 +560,21 @@ function endRound() {
   if (w >= 0) M.wins[w]++;
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
   if (M.mode === 'saga') { sagaEnd(w); return; }
+  if (isRaid()) {
+    if (w === 0) {
+      for (const f of sideFighters(0)) scFire(f, 'clear');
+      const wave = M.raidWave || 1;
+      const gain = 600 + (wave - 1) * 200;
+      M.raidLastReward = gain;
+      M.raidInkEarned = (M.raidInkEarned || 0) + gain;
+      PROF.ink = (PROF.ink || 0) + gain;
+      saveProfile();
+      toast(`🎉 众志破魔大捷！全员共享丰厚悬赏 +${gain} 墨锭！`);
+    }
+    M.phase = 'end';
+    showEnd(w);
+    return;
+  }
   if (M.mode === 'tower') {
     if (w === 0) {
       scFire(A, 'clear');

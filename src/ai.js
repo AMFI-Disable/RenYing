@@ -60,6 +60,8 @@ const AI_KIT = {
   feast: { role: 'self', combo: false, use: (m, o, d) => (m.drunk || 0) >= 50 && d > 160 && m.hp < m.maxHp * 0.72 && o.hp > m.hp * 0.7 },
   hook: { role: 'proj', combo: true, pull: true },
   whirl: { role: 'zone', combo: true, reflect: true },
+  spindle: { role: 'proj', combo: true },
+  shadowdash: { role: 'rush', combo: true, invul: true },
 };
 // 大招：hit 按打击数据判断打不打得到；sure(me, foe, d) 额外条件
 const AI_ULT = {
@@ -116,7 +118,16 @@ function aiGenes(heroId, lv) {
 // 每招：min/max 打得到的距离（对手身宽为 1 时），hit 按键到打中的秒数，dur 打空后多久能再动，blockable 能否格挡，adv 被挡后自己比对手早动多少秒
 const AI_FRAME_DEFAULT = { min: 0, max: 0, hit: 0.3, dmg: 0, dur: 0.6, move: 0, blockable: true, adv: -0.2 };
 function aiFrame(f, key) {
-  const t = aiBrainData().frames, F = t && t[f.ch.id];
+  const t = aiBrainData().frames;
+  if ((key === 'skill' || key === 'skill2') && f && f.bossSkills && f.ch) {
+    const skId = f.ch[key];
+    const owner = CHARS.find(c => c.skill === skId || c.skill2 === skId);
+    if (owner && t && t[owner.id]) {
+      const oKey = owner.skill2 === skId ? 'skill2' : 'skill';
+      if (t[owner.id][oKey]) return t[owner.id][oKey];
+    }
+  }
+  const F = t && t[f.ch.id];
   if (F && F[key]) return F[key];
   // 没测过（比如直接打开 src）：普攻按招式表估算，技能当作打不到
   if (key === 'l1' || key === 'dl') { const m = f.moves[key]; return { min: 0, max: m.box[2] + 18, hit: m.su, dmg: m.dmg, dur: m.su + m.ac + m.rc, blockable: true, adv: -0.13 }; }
@@ -526,7 +537,8 @@ class AIBrain {
   incomingProj(me) {
     let best = null;
     for (const p of projs) {
-      if (p.dead || p.fx || p.dmg <= 0 || (p.owner % 2) === (me.idx % 2) || p.kind === 'trap') continue;
+      const sameTeam = typeof fighterTeam === 'function' ? fighterTeam(fighterByIdx(p.owner)) === fighterTeam(me) : (p.owner % 2) === (me.idx % 2);
+      if (p.dead || p.fx || p.dmg <= 0 || sameTeam || p.kind === 'trap') continue;
       if (p.delay > 0) continue;
       const dx = me.x - p.x, vx = p.vx || 0;
       if (Math.abs(dx) > 520) continue;
@@ -568,7 +580,8 @@ class AIBrain {
   }
   dangerZone(me) {
     for (const p of projs) {
-      if (p.dead || (p.owner % 2) === (me.idx % 2) || p.dmg <= 0) continue;
+      const sameTeam = typeof fighterTeam === 'function' ? fighterTeam(fighterByIdx(p.owner)) === fighterTeam(me) : (p.owner % 2) === (me.idx % 2);
+      if (p.dead || sameTeam || p.dmg <= 0) continue;
       const half = (p.w || 60) / 2 + 22;
       if (Math.abs(p.x - me.x) > half) continue;
       // 从天上落下、还没落地的（雷、亭子、天网、琴音）：走得出去就走，走不出去就在落地前闪

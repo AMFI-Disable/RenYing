@@ -414,7 +414,7 @@ function updateProjs() {
     if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
     if (p.fx || p.dmg <= 0) continue;
     const owner = fighterByIdx(p.owner), box = projBox(p);
-    const candidates = is2v2() ? foesOf(owner) : [foeOf(owner)];
+    const candidates = isMulti() ? foesOf(owner) : [foeOf(owner)];
     let foe = candidates.find(ef => ef.hp > 0 && overlap(box, hurtbox(ef))) || candidates[0];
     // 斩弹：对手的刀砍中飞行道具就把它打散
     if (!p.unbreakable && foe.state === 'attack' && foe.move && foe.t >= foe.move.su && foe.t < foe.move.su + foe.move.ac && overlap(hitbox(foe, foe.move.box), box)) {

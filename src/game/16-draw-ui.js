@@ -283,8 +283,109 @@ function drawHUD2v2() {
   ctx.fillText(bTitle, cx, H - 10);
   ctx.restore();
 }
+function drawHUDRaid() {
+  const u = clamp(W / 1280, 0.72, 1.25);
+  const pad = Math.round(24 * u), topY = Math.round((touchOn ? 50 : 16) * u);
+  const totalW = Math.min(Math.round(W - pad * 2), Math.round(1260 * u));
+  const centerGap = Math.round(128 * u);
+  const teamW = Math.floor((totalW - centerGap) / 2);
+  const lx = Math.round(W / 2 - centerGap / 2 - teamW);
+  const rx = Math.round(W / 2 + centerGap / 2);
+  const allies = sideFighters(0);
+  const barH = Math.round((allies.length >= 3 ? 13 : 16) * u);
+  const rowGap = Math.round((allies.length >= 3 ? 21 : 28) * u);
+  const drawSubRow = (f, x, y, w, left, roleTag) => {
+    const dead = f.hp <= 0;
+    const ratio = clamp(f.hp / f.maxHp, 0, 1), lag = clamp(f.lagHp / f.maxHp, 0, 1);
+    ctx.save();
+    if (dead) ctx.globalAlpha = 0.42;
+    ctx.fillStyle = 'rgba(10,10,20,0.78)';
+    ctx.fillRect(x, y, w, barH);
+    const fill = (r, c) => {
+      const fw = Math.max(0, (w - 2) * r);
+      ctx.fillStyle = c;
+      ctx.fillRect(left ? x + 1 : x + w - 1 - fw, y + 1, fw, barH - 2);
+    };
+    fill(lag, 'rgba(255,110,90,0.45)');
+    const g = ctx.createLinearGradient(x, y, x, y + barH);
+    g.addColorStop(0, `rgb(${f.look.slash})`);
+    g.addColorStop(1, `rgba(${f.look.slash},0.62)`);
+    fill(ratio, g);
+    ctx.strokeStyle = 'rgba(233,196,106,0.52)';
+    ctx.lineWidth = 1.1;
+    ctx.strokeRect(x, y, w, barH);
+    const gRatio = clamp((f.guard !== undefined ? f.guard : f.maxGuard) / (f.maxGuard || 100), 0, 1);
+    const mRatio = clamp(f.meter / 100, 0, 1);
+    const gW = Math.floor(w * 0.48), mW = w - gW - 4;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(x, y + barH + 2, gW, 3);
+    ctx.fillStyle = gRatio < 0.28 ? '#ff5e5e' : '#7ec8ff';
+    ctx.fillRect(left ? x : x + gW * (1 - gRatio), y + barH + 2, gW * gRatio, 3);
+    const mx = x + gW + 4;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(mx, y + barH + 2, mW, 3);
+    ctx.fillStyle = f.meter >= 100 ? '#ffd25a' : '#d49b38';
+    ctx.fillRect(left ? mx : mx + mW * (1 - mRatio), y + barH + 2, mW * mRatio, 3);
+    ctx.font = `600 ${Math.round(11.5 * u)}px ${BODY_FONT}`;
+    ctx.fillStyle = dead ? '#ff7676' : '#f4efe6';
+    ctx.textAlign = left ? 'left' : 'right';
+    const tx = left ? x + 6 : x + w - 6;
+    const statusTxt = dead ? '【重伤倒地】' : `${Math.ceil(f.hp)}/${f.maxHp}`;
+    ctx.fillText(`${roleTag} · ${f.look.name}  ${statusTxt}`, tx, y + barH - 3);
+    ctx.restore();
+  };
+  allies.forEach((f, idx) => {
+    const tag = idx === 0 ? '同袍·壹(1P)' : idx === 1 ? '同袍·贰(2P)' : '同袍·叁(3P)';
+    drawSubRow(f, lx, topY + idx * rowGap, teamW, true, tag);
+  });
+  const bossH = Math.round(24 * u);
+  const bRatio = clamp(B.hp / B.maxHp, 0, 1), bLag = clamp(B.lagHp / B.maxHp, 0, 1);
+  ctx.save();
+  ctx.fillStyle = 'rgba(18,8,16,0.85)';
+  ctx.fillRect(rx, topY, teamW, bossH);
+  const fillB = (r, c) => {
+    const fw = Math.max(0, (teamW - 2) * r);
+    ctx.fillStyle = c;
+    ctx.fillRect(rx + teamW - 1 - fw, topY + 1, fw, bossH - 2);
+  };
+  fillB(bLag, 'rgba(255,180,90,0.45)');
+  const bg = ctx.createLinearGradient(rx, topY, rx, topY + bossH);
+  bg.addColorStop(0, '#ff4d5a');
+  bg.addColorStop(1, '#a81c2e');
+  fillB(bRatio, bg);
+  ctx.strokeStyle = '#ffd166';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(rx, topY, teamW, bossH);
+  ctx.font = `bold ${Math.round(12.5 * u)}px ${BODY_FONT}`;
+  ctx.fillStyle = '#fff5e4';
+  ctx.textAlign = 'right';
+  ctx.fillText(`👹 ${B.look.name} (3xHP · 1.25x伤)  ${Math.ceil(B.hp)}/${B.maxHp}`, rx + teamW - 8, topY + bossH - 6);
+  const sks = B.bossSkills || [B.ch.skill, B.ch.skill2];
+  const skNames = sks.map(id => {
+    const n = (SKILLS[id] && SKILLS[id].name) || id;
+    return (id === B.ch.skill || id === B.ch.skill2) ? `【${n}】` : n;
+  }).join(' · ');
+  ctx.font = `600 ${Math.round(11 * u)}px ${BODY_FONT}`;
+  ctx.fillStyle = '#ffd166';
+  ctx.fillText(`六技轮转：${skNames}`, rx + teamW - 4, topY + bossH + Math.round(16 * u));
+  const perkCount = (M.towerPerks || []).length;
+  ctx.fillStyle = '#7fe0b0';
+  ctx.textAlign = 'left';
+  ctx.fillText(`全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
+  ctx.restore();
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffd166';
+  ctx.font = `700 ${Math.round(12 * u)}px ${TITLE_FONT}`;
+  ctx.fillText(`同袍肉鸽 · 第${M.raidWave || 1}劫`, W / 2, topY + Math.round(14 * u));
+  ctx.fillStyle = M.timer <= 15 ? '#ff6464' : '#f5ebd6';
+  ctx.font = `bold ${Math.round(24 * u)}px ${TITLE_FONT}`;
+  ctx.fillText(Math.ceil(M.timer).toString(), W / 2, topY + Math.round(38 * u));
+  ctx.restore();
+}
 function drawHUD() {
   if (M.mode === 'demo') return;
+  if (isRaid()) { drawHUDRaid(); return; }
   if (is2v2()) { drawHUD2v2(); return; }
   const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
   [A, B].forEach((f, i) => {
@@ -800,8 +901,8 @@ function render() {
   if (pf) drawXuanzhi(pf.a);
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-  const order = is2v2()
-    ? [A, B, C, D].sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
+  const order = isMulti()
+    ? allFighters().slice().sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
     : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
   drawDecoys();
   drawProjs();

@@ -129,6 +129,10 @@
         <span class="hc-txt"><b id="homeGbossT"></b><small id="homeGbossS"></small></span>
         <span class="hc-hp"><i id="homeGbossBar"></i></span>
       </button>
+      <button class="home-card home-rouge" id="homeRouge" type="button">
+        <span class="hc-kicker">同袍肉鸽 · 众志破魔</span>
+        <span class="hc-txt"><b>多人共斗秘境 · 三侠战魔首</b><small>2–3人共享秘卷 · 迎战六技融魂首领 · 赢取海量墨锭</small></span>
+      </button>
       <button class="home-card home-rank" id="homeRank" type="button">
         <span class="hc-kicker">我的段位</span>
         <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
@@ -1136,6 +1140,30 @@
           <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
         </div>
         <div class="m2-foot"><button class="mm-link" id="btn2v2GoWatch" type="button">旁观四个天道电脑打 2v2</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 众志破魔">
+    <div class="rk-info-box m2-box">
+      <div class="rk-info-head">
+        <h3 id="modalRougeTitle">同袍肉鸽 · 众志破魔</h3>
+        <button class="go small" id="modalRougeClose" type="button">关闭</button>
+      </div>
+      <div class="m2-body">
+        <p class="m2-desc" id="modalRougeDesc">全员皆可加入共斗秘境！2–3 名侠客同心并肩、<b>全队共享秘卷增益与回血气劲</b>，迎战拥有<b>随机三名侠客共 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，讨伐大捷全员共享海量墨锭！</p>
+        <div class="sec-sub-label">共斗人数</div>
+        <div class="m2-seg" id="rougeSquadSeg" role="tablist">
+          <button class="sel" data-sq="3" type="button">3人同袍破魔 (推荐)</button>
+          <button data-sq="2" type="button">2人精锐共斗</button>
+        </div>
+        <div class="mr-boss-box" id="rougeBossPreview"></div>
+        <div class="sec-sub-label">结阵方式</div>
+        <div class="m2-ways" id="modalRougeOptions">
+          <button class="m2-way" id="btnRougeGoLocal" type="button" data-kb-default><b>同屏/单机集结</b><span id="modalRougeLocalDesc">1P 键盘主控，2P/3P 随时按键参战或由天道同袍协战</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoMatch" type="button"><b>全服匹配集结</b><span>全服招募同袍侠士，共享秘卷合力破魔</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoOnline" type="button"><b>好友共斗房间</b><span>建房拿到房间号，呼朋引伴共讨魔首</span></button>
+        </div>
+        <div class="m2-foot"><button class="mm-link" id="btnRougeReroll" type="button">🎲 重新卜算当期融魂首领（切换三侠六技）</button></div>
       </div>
     </div>
   </div>
