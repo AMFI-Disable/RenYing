@@ -56,9 +56,3 @@ Object.entries(dealt).sort((a, b) => b[1] - a[1]).slice(0, 5).forEach(([s]) => {
   const o = dealtSt[s], t = tot(o);
   console.log(`  ${s}：` + Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${(v / t * 100).toFixed(0)}%`).join('，'));
 });
-// 主要伤害来源打中对手时，对手在干什么（走路/发呆被打中多，说明对手 AI 不会躲或挡这一招）
-console.log(`\n${NAMES[HERO]} 前 5 个伤害来源打中时，对手的状态`);
-Object.entries(dealt).sort((a, b) => b[1] - a[1]).slice(0, 5).forEach(([s]) => {
-  const o = dealtSt[s], t = tot(o);
-  console.log(`  ${s}：` + Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${(v / t * 100).toFixed(0)}%`).join('，'));
-});
