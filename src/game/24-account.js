@@ -2,20 +2,13 @@
 function $id(id) { return document.getElementById(id); }
 
 // ======================= 账号和排行榜 =======================
+// ACC.token 只是当前账号的 uid（登录凭证只由 CloudSave 保管）。以前的联机房间服务器会往 renying-token 里写一份凭证，
+// 现在没人读它了，开网页时顺手删掉，别让一份 30 天有效的凭证一直躺在本机
 const ACC = { token: '', name: '', wins: 0, losses: 0 };
-try { ACC.token = localStorage.getItem('renying-token') || ''; } catch (e) {}
-async function api(path, body) {
-  const hd = ACC.token ? { Authorization: 'Bearer ' + ACC.token } : {};
-  const opt = body ? { method: 'POST', headers: { ...hd, 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { headers: hd };
-  const r = await fetch(path, opt);
-  let j = {}; try { j = await r.json(); } catch (e) {}
-  if (!r.ok) throw new Error(j.err || '服务器出错了');
-  return j;
-}
+try { localStorage.removeItem('renying-token'); } catch (e) {}
 function setAcc(j) {
-  if (j && j.name) { Object.assign(ACC, { name: j.name, wins: j.wins, losses: j.losses, cwins: j.cwins || 0, closses: j.closses || 0 }); if (j.token) ACC.token = j.token; }
+  if (j && j.name) Object.assign(ACC, { name: j.name, wins: j.wins, losses: j.losses, cwins: j.cwins || 0, closses: j.closses || 0 });
   else { ACC.token = ''; ACC.name = ''; }
-  try { if (ACC.token) localStorage.setItem('renying-token', ACC.token); else localStorage.removeItem('renying-token'); } catch (e) {}
   const nk = (ACC.token || '') + '|' + ACC.name;
   if (nk !== setAcc.last) { setAcc.last = nk; adaptLoad(); }
   renderAcc();
@@ -261,6 +254,7 @@ async function doAcc(kind) {
       ACC.name = res.name;
       ACC.token = res.uid;
       PROF.guest = false;
+      setAcc.last = ACC.token + '|' + ACC.name; adaptLoad();   // 电脑的自适应难度按账号存：换了号要读这个号自己的，不能把上一个人的带过来
       const loaded = await CloudSave.loadProfile();
       if (loaded) {
         applyProfile(loaded);
@@ -268,10 +262,15 @@ async function doAcc(kind) {
         CloudSave.saveProfile(PROF, true);
       }
       renderAcc();
+      $id('accPass').value = '';
+      backToMenu();
+      // 连不上云端时建的、登的是本机账号：照实说，别让玩家以为进度在云端
+      if (res.note) toast(res.note, 6);
+      else toast(kind === 'login' ? `欢迎归来，${res.name}！已载入存档` : `注册成功！大侠 ${res.name}，已开启专属存档`);
+      return;
     }
     $id('accPass').value = '';
     backToMenu();
-    toast(kind === 'login' ? `欢迎归来，${name}！已载入存档` : `注册成功！大侠 ${name}，已开启专属存档`);
   } catch (err) {
     $id('accMsg').textContent = err.message;
   }
@@ -473,15 +472,19 @@ if ($id('importFileInput')) {
           if (!window.CloudSave) throw new Error('存档系统未就绪');
           const res = await CloudSave.importAccountData(d);
           ACC.name = res.name;
+          ACC.token = res.uid;
           PROF.guest = false;
+          setAcc.last = ACC.token + '|' + ACC.name; adaptLoad();
           applyProfile(res.profile);
           renderAcc();
           if ($id('importFileStatus')) $id('importFileStatus').textContent = `已成功导入【${res.name}】`;
+          // 导入就是切换到这个账号（本机账号），要说出来；旧版备份只校验了一部分，也要说
+          const sw = `已切换到导入的本机账号【${res.name}】`;
           if ($id('importMsg')) {
-            $id('importMsg').style.color = '#46d3ea';
-            $id('importMsg').textContent = `成功恢复账号【${res.name}】！拥有 ${res.profile.owned ? res.profile.owned.length : 1} 位英雄、${res.profile.ink || 0} 墨锭！`;
+            $id('importMsg').style.color = res.note ? '#e9c46a' : '#46d3ea';
+            $id('importMsg').textContent = `${sw}：${(res.profile.owned || ['qingfeng']).length} 位英雄、${res.profile.ink || 0} 墨锭。${res.note ? res.note + '。' : ''}`;
           }
-          toast(`成功恢复账号【${res.name}】！`);
+          toast(`${sw}${res.note ? '（' + res.note + '）' : ''}`, 5);
           return;
         }
 
@@ -579,21 +582,21 @@ async function openLeaderboard() {
   menuCam.tz = 1.35; showScreen('lb'); $id('lbSub').textContent = '加载中…'; $id('lbTable').innerHTML = '';
   for (const b of $id('lbTabs').children) b.classList.toggle('sel', b.dataset.k === lbKind);
   if (lbKind === 'rank') {
+    // 以前这里请求的是网页自己所在网站的 /api/ranklb，GitHub Pages 上没有这个接口，榜单永远“读取失败”；现在走云端 Worker
     try {
-      const j = await api('/api/ranklb');
-      $id('lbSub').textContent = j.list.length ? '打满 5 场定级赛后上榜。段位从低到高：砺锋、出鞘、破竹、惊鸿、踏月、刃影' : '还没有人完成定级赛。排位赛打满 5 场就能上榜！';
-      $id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">等级分</th></tr>' + j.list.map((r, i) =>
-        `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${r.label}</td><td class="n">${r.rating}</td></tr>`).join('') : '';
+      const j = await CloudSave.leaderboard('rank', rkSeason().id);
+      $id('lbSub').textContent = j.list.length ? `本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}` : '还没有人完成定级赛。排位赛打满 5 场就能上榜！';
+      $id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
+        `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join('') : '';
     } catch (err) { $id('lbSub').textContent = '读取失败：' + err.message; }
     return;
   }
   try {
-    const j = await api('/api/leaderboard');
-    if (j.me) setAcc(j.me);
-    $id('lbSub').textContent = j.list.length ? `已注册玩家 ${j.players} 位。正式：双方皆登录；切磋：对手为游客` : '还没有人打过联机——去赢下第一场吧！';
-    $id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th><th class="n">切磋</th></tr>' + j.list.map((r, i) => {
+    const j = await CloudSave.leaderboard('wins');
+    $id('lbSub').textContent = j.list.length ? `已注册玩家 ${j.players} 位，按联机胜场排` : '还没有人打过联机——去赢下第一场吧！';
+    $id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
       const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';
-      return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td><td class="n" style="color:var(--dim)">${r.cwins} 胜 ${r.closses} 负</td></tr>`;
+      return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td></tr>`;
     }).join('') : '';
   } catch (err) { $id('lbSub').textContent = '读取失败：' + err.message; }
 }

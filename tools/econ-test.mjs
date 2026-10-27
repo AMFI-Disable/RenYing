@@ -1312,6 +1312,37 @@ section('两个人同时注册同一个昵称：只成一个，另一个看到�
   }
 }
 
+section('排行榜：段位榜只列本赛季打满定级赛的，战绩榜按胜场；被封的号不上榜；guest、游客不能注册');
+{
+  const mk = async (name, rk, w, l) => {
+    const u = await newUser(name);
+    const r = await call('POST', '/api/profile', { profile: { ...profOf(u.uid), rk, netWins: w, netLosses: l }, ledger: { deltas: [], ev: 0 } }, u.token);
+    if (!r.ok) throw new Error('profile ' + JSON.stringify(r));
+    return u;
+  };
+  const a = await mk('lbAlpha', { season: 'S1', pts: 9000, placed: 5 }, 12, 3);
+  await mk('lbBeta', { season: 'S1', pts: 99999, placed: 7 }, 30, 1);
+  await mk('lbGamma', { season: 'S1', pts: 20000, placed: 3 }, 0, 2);
+  await mk('lbDelta', { season: 'S0', pts: 24000, placed: 9 }, 5, 5);
+  const bad = await mk('lbEvil', { season: 'S1', pts: 24000, placed: 9 }, 99, 0);
+  await adm('POST', '/api/admin/ban', { uid: bad.uid, days: 2, why: '测试排行榜' });
+  const rk = await call('GET', '/api/leaderboard?k=rank&s=S1', undefined, a.token, '8.8.1.1');
+  const names = (rk.list || []).map(r => r.name);
+  ok(rk.ok && names.includes('lbAlpha') && names.includes('lbBeta') && !names.includes('lbGamma') && !names.includes('lbDelta') && !names.includes('lbEvil'),
+    '段位榜：本赛季打满 5 场的上榜；没打满、上赛季、被封的不上', names);
+  ok(names.indexOf('lbBeta') < names.indexOf('lbAlpha') && rk.list.find(r => r.name === 'lbBeta').pts === 25000, '按段位分排，报上来的离谱分数夹到最高 25000', rk.list.slice(0, 3));
+  ok(rk.list.find(r => r.name === 'lbAlpha').me && !rk.list.find(r => r.name === 'lbBeta').me, '带登录凭证看，自己那一行标出来');
+  const wn = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.1.2');
+  const wl = (wn.list || []).map(r => r.name);
+  ok(wn.ok && wn.players > 0 && wl.indexOf('lbBeta') < wl.indexOf('lbAlpha') && !wl.includes('lbGamma') && !wl.includes('lbEvil'), '战绩榜：按胜场排，没赢过的、被封的不上', wl);
+  ok((await call('GET', '/api/leaderboard?k=rank&s=bad', undefined, undefined, '8.8.1.3')).list.length === 0, '赛季乱填：空榜');
+  let lim = null;
+  for (let i = 0; i < 31; i++) lim = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.1.9');
+  ok(lim.status === 429, '同一个 IP 一分钟最多看 30 次');
+  const g = await Promise.all(['guest', 'GUEST', '游客'].map((n, i) => call('POST', '/api/register', { username: n, password: 'secret123' }, undefined, '8.8.2.' + i)));
+  ok(g.every(r => r.status === 400 && r.error === '这个昵称不能用，换一个吧'), 'guest、游客不能注册（没登录时的进度记在这个名字下）', g.map(r => r.error));
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');

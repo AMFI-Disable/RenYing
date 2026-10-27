@@ -21,7 +21,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function makeWorker() {
   const users = new Map();   // username -> { uid, password, profile }
   const posts = [];          // 每次 POST /api/profile
-  const state = { nextStatus: 0, token: '' };
+  const state = { nextStatus: 0, token: '', down: false };   // down：注册、登录都回 500（服务器出错）
   const json = (obj, status = 200) => ({ ok: status < 400, status, json: async () => obj });
   const uidOf = tok => String(tok).replace(/^Bearer /, '').replace('tok_', '');
   const byUid = uid => [...users.entries()].find(([, v]) => v.uid === uid);
@@ -30,6 +30,7 @@ function makeWorker() {
     const method = (opts.method || 'GET').toUpperCase();
     const auth = (opts.headers && opts.headers.Authorization) || '';
     const body = opts.body ? JSON.parse(opts.body) : {};
+    if (state.down && (route === '/api/register' || route === '/api/login')) return json({ error: '服务器内部错误' }, 500);
     if (route === '/api/register' && method === 'POST') {
       if (users.has(body.username)) return json({ error: '该昵称已注册' }, 400);
       const uid = 'u' + users.size;
@@ -233,6 +234,47 @@ ok(sig !== await CloudSave.computeProfileDigest({ ...base, frags: { moyu: 99 } }
 ok(await CloudSave.verifyProfileDigest({ profile: base, _sig: sig }) === 'ok', 'a good signature verifies');
 ok(await CloudSave.verifyProfileDigest({ profile: { ...base, stageStars: { s1: 1 } }, _sig: sig }) === 'tampered', 'a tampered file is rejected');
 ok(await CloudSave.verifyProfileDigest({ profile: base }) === 'unsigned', 'an unsigned file is reported as unsigned');
+
+console.log('\nsign-up and sign-in fallbacks say what they did');
+const isErr = e => !!e && typeof e.message === 'string' && !e.uid;   // vm 里抛出来的 Error 不是这边的 Error，instanceof 不成立
+await CloudSave.logout();
+const rsv = await CloudSave.register('Guest', 'guestpass1').catch(e => e);
+ok(isErr(rsv) && /不能用/.test(rsv.message), 'the nickname guest is refused before anything is created', rsv && rsv.message);
+const rsv2 = await CloudSave.register('游 客', 'guestpass1').catch(e => e);
+ok(isErr(rsv2) && /不能用/.test(rsv2.message), 'and so is 游客, spaces or not');
+worker.state.down = true;
+const down = await CloudSave.register('Dora', 'dorapass1');
+ok(down && !down.isCloud && /连不上云端/.test(down.note || ''), 'a 500 on sign-up gives a local account and says so', JSON.stringify(down));
+await CloudSave.logout();
+const dup = await CloudSave.register('DORA', 'dorapass1').catch(e => e);
+ok(isErr(dup) && /本机注册/.test(dup.message), 'local nicknames are not case-sensitive (DORA = Dora)', dup && dup.message);
+const back = await CloudSave.login('dora', 'dorapass1').catch(e => e);
+ok(back && back.name === 'Dora' && /本机账号/.test(back.note || ''), 'signing in as dora reaches the local Dora account', JSON.stringify(back));
+await CloudSave.logout();
+worker.state.down = false;
+const mismatch = await CloudSave.login('Alice', 'wrong-but-local').catch(e => e);
+ok(isErr(mismatch), 'a wrong cloud password with no local account still fails');
+store.set('renying-local-accounts', '{"broken');
+worker.state.down = true;
+const afterCorrupt = await CloudSave.register('Erin', 'erinpass1').catch(e => e);
+worker.state.down = false;
+ok(!(isErr(afterCorrupt) && afterCorrupt.name === 'SyntaxError'), 'a corrupted local account table does not crash sign-up', afterCorrupt && afterCorrupt.message);
+await CloudSave.logout();
+
+console.log('\nimporting a backup says which account it switched to');
+const bk = { format: 'single-account', account: { uid: 'local_x', name: 'Fay' }, profile: { ...base, name: 'Fay' } };
+bk._sig = await CloudSave.computeProfileDigest(bk.profile);
+const imp = await CloudSave.importAccountData(bk);
+ok(imp && imp.name === 'Fay' && imp.profile && imp.profile.ink === 100 && imp.note === '', 'import returns the account name and its profile', JSON.stringify(imp));
+ok(CloudSave.getUser() && CloudSave.getUser().name === 'Fay', 'and that account is now the current one');
+const bare = await CloudSave.importAccountData({ ...base, name: 'Gus' }).catch(e => e);
+ok(bare && bare.profile && bare.name === 'Gus', 'a bare profile file is accepted, as the import screen promises', bare && bare.message);
+await CloudSave.logout();
+
+console.log('\nthe old shared cache is not thrown away while nobody is signed in');
+store.set('renying-cloud-cache', JSON.stringify({ ink: 1 }));
+CloudSave.init();
+ok(store.get('renying-cloud-cache') !== undefined, 'signed out: the legacy cache is kept');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

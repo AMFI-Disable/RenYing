@@ -3988,6 +3988,15 @@ if (rec.pwv === 2) return rec.pw === await pwHash(password);
 const legacy = pwLegacy(password);
 return !!legacy && rec.pw === legacy;
 }
+function localAccounts() {
+try { const v = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (e) { return {}; }
+}
+function localKeyOf(table, name) {
+if (Object.prototype.hasOwnProperty.call(table, name)) return name;
+const low = String(name).toLowerCase();
+return Object.keys(table).find(k => k.toLowerCase() === low) || '';
+}
+const RESERVED_NAME = /^(dev|dev_master|admin|administrator|root|system|gm|official|staff|guest|官方|系统|管理员|开发者|开发组|客服|刃影官方|游客)$/i;
 function tempPassword() {
 const buf = new Uint8Array(9);
 if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(buf);
@@ -4024,7 +4033,8 @@ try {
 const legacy = localStorage.getItem('renying-cloud-cache');
 if (!legacy) return;
 const u = getUser();
-if (u && u.uid && !localStorage.getItem(profKey(u.uid))) {
+if (!u || !u.uid) return;   // 没人登录：先留着，等有人登录再交给他，别直接删掉
+if (!localStorage.getItem(profKey(u.uid))) {
 JSON.parse(legacy);
 localStorage.setItem(profKey(u.uid), legacy);
 }
@@ -4210,6 +4220,9 @@ async function gboss(act, body) {
 if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
 return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
 }
+async function leaderboard(k, season) {
+return api('/api/leaderboard?k=' + encodeURIComponent(k) + (season ? '&s=' + encodeURIComponent(season) : ''), { method: 'GET' });
+}
 async function saga(hero) { return api('/api/saga?hero=' + encodeURIComponent(hero), { method: 'GET' }); }
 async function sagaMark(body) {
 if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
@@ -4294,6 +4307,7 @@ async function register(username, password, carryProf) {
 const name = String(username).trim();
 if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
 if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
+if (RESERVED_NAME.test(name.replace(/\s+/g, ''))) throw new Error('这个昵称不能用，换一个吧');
 let initialProf = carryProf || null;   // 本机账号升级时带上它自己的存档；否则带游客进度
 try {
 const guestRaw = initialProf ? null : localStorage.getItem('renying-guest-profile');
@@ -4334,8 +4348,8 @@ throw err;
 }
 if (err && err.status >= 400 && err.status < 500 && err.status !== 404) throw err;   // 服务器回了话（昵称不能用、太频繁）：照实说，不偷偷建本机账号
 console.warn('Cloudflare Worker register failed, falling back to local account:', err);
-const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-if (mockUsers[name]) throw new Error('该昵称已在本机注册');
+const mockUsers = localAccounts();
+if (localKeyOf(mockUsers, name)) throw new Error('该昵称已在本机注册');
 const rndBuf = new Uint8Array(4);
 if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(rndBuf);
 else for (let i = 0; i < 4; i++) rndBuf[i] = (Math.random() * 256) | 0;
@@ -4347,7 +4361,7 @@ const userObj = { uid, name, displayName: name, isCloud: false };
 localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 currentUser = userObj;
 notifyAuthChange(currentUser);
-return userObj;
+return { ...userObj, note: hasValidConfig() ? '连不上云端服务器，账号先建在这台设备上：进度只存在这里，联网后可在账号页一键升级为云端账号' : '' };
 }
 }
 async function login(username, password) {
@@ -4379,14 +4393,15 @@ setSync({ state: 'ok', at: Date.now(), err: '' });
 notifyAuthChange(currentUser);
 return userObj;
 } catch (err) {
-let mockUsers = {};
-try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
-const localU = mockUsers[name];
+const mockUsers = localAccounts();
+const localName = localKeyOf(mockUsers, name);
+const localU = localName ? mockUsers[localName] : null;
 const pwOk = await pwMatches(localU, password);
+const cloudHasName = err && err.status === 401;
 if (localU && pwOk) {
 if (localU.pwv !== 2) {   // 老记录：登录成功时顺手升级成散列
 localU.pw = await pwHash(password); localU.pwv = 2;
-mockUsers[name] = localU;
+mockUsers[localName] = localU;
 try { localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers)); } catch (e) {}
 }
 try {
@@ -4414,18 +4429,20 @@ migrated: true
 currentUser = userObj;
 localU.uid = data.uid;
 localU.migratedToCloud = true;
-mockUsers[name] = localU;
+mockUsers[localName] = localU;
 localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
 localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 setSync({ state: 'ok', at: Date.now(), err: '' });
 notifyAuthChange(currentUser);
 return userObj;
 } catch (regErr) {
-const userObj = { uid: localU.uid, name, displayName: name, isCloud: false };
+const userObj = { uid: localU.uid, name: localName, displayName: localName, isCloud: false };
 localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 currentUser = userObj;
 notifyAuthChange(currentUser);
-return userObj;
+const note = cloudHasName ? '已登录这台设备上的本机账号。云端也有一个叫这个名字的号，但密码不一样，两个号没有合并'
+: hasValidConfig() ? '连不上云端服务器，先登录这台设备上的本机账号，进度只存在这里' : '';
+return { ...userObj, note };
 }
 }
 throw err;
@@ -4684,6 +4701,7 @@ return payload;
 }
 async function importAccountData(data) {
 if (!data || typeof data !== 'object') throw new Error('无效的存档文件数据');
+if (Array.isArray(data.owned) && !data.profile) data = { format: 'single-account', profile: data };   // 裸存档（只有 profile 本身）：按没签名的单账号文件处理
 if (data.format === 'single-account' && data.profile) {
 const sigState = await verifyProfileDigest(data);
 if (sigState === 'tampered') {
@@ -4700,8 +4718,7 @@ notifyAuthChange(currentUser);
 if (cloudActive()) {
 saveProfile(p, true);
 }
-p._importNote = weakNote;
-return p;
+return { uid, name, profile: p, note: weakNote };
 }
 throw new Error('不支持的文件格式');
 }
@@ -4752,6 +4769,7 @@ onAuthChange,
 exportCurrentAccount,
 exportAllAccounts,
 importAccountData,
+leaderboard,
 computeProfileDigest,
 verifyProfileDigest,
 toCloudData,
@@ -18323,7 +18341,7 @@ netLosses: 0,
 online10Unlocked: false
 };
 const MSTAT = { maxcombo: 0, ults: 0 };
-function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), 2600); }
+function toast(t, sec) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), (sec || 2.6) * 1000); }   // sec：长一点的说明多留几秒
 function ownsHero(id) { return CHARS.some(c => c.id === id); }
 function heroesFree() { return true; }
 function availList() {
@@ -23306,19 +23324,10 @@ document.getElementById('bpGo').addEventListener('click', bpConfirm);
 document.getElementById('bpQuit').addEventListener('click', () => toMenu());
 function $id(id) { return document.getElementById(id); }
 const ACC = { token: '', name: '', wins: 0, losses: 0 };
-try { ACC.token = localStorage.getItem('renying-token') || ''; } catch (e) {}
-async function api(path, body) {
-const hd = ACC.token ? { Authorization: 'Bearer ' + ACC.token } : {};
-const opt = body ? { method: 'POST', headers: { ...hd, 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { headers: hd };
-const r = await fetch(path, opt);
-let j = {}; try { j = await r.json(); } catch (e) {}
-if (!r.ok) throw new Error(j.err || '服务器出错了');
-return j;
-}
+try { localStorage.removeItem('renying-token'); } catch (e) {}
 function setAcc(j) {
-if (j && j.name) { Object.assign(ACC, { name: j.name, wins: j.wins, losses: j.losses, cwins: j.cwins || 0, closses: j.closses || 0 }); if (j.token) ACC.token = j.token; }
+if (j && j.name) Object.assign(ACC, { name: j.name, wins: j.wins, losses: j.losses, cwins: j.cwins || 0, closses: j.closses || 0 });
 else { ACC.token = ''; ACC.name = ''; }
-try { if (ACC.token) localStorage.setItem('renying-token', ACC.token); else localStorage.removeItem('renying-token'); } catch (e) {}
 const nk = (ACC.token || '') + '|' + ACC.name;
 if (nk !== setAcc.last) { setAcc.last = nk; adaptLoad(); }
 renderAcc();
@@ -23555,6 +23564,7 @@ const res = await (kind === 'login' ? CloudSave.login(name, pass) : CloudSave.re
 ACC.name = res.name;
 ACC.token = res.uid;
 PROF.guest = false;
+setAcc.last = ACC.token + '|' + ACC.name; adaptLoad();   // 电脑的自适应难度按账号存：换了号要读这个号自己的，不能把上一个人的带过来
 const loaded = await CloudSave.loadProfile();
 if (loaded) {
 applyProfile(loaded);
@@ -23562,10 +23572,14 @@ applyProfile(loaded);
 CloudSave.saveProfile(PROF, true);
 }
 renderAcc();
+$id('accPass').value = '';
+backToMenu();
+if (res.note) toast(res.note, 6);
+else toast(kind === 'login' ? `欢迎归来，${res.name}！已载入存档` : `注册成功！大侠 ${res.name}，已开启专属存档`);
+return;
 }
 $id('accPass').value = '';
 backToMenu();
-toast(kind === 'login' ? `欢迎归来，${name}！已载入存档` : `注册成功！大侠 ${name}，已开启专属存档`);
 } catch (err) {
 $id('accMsg').textContent = err.message;
 }
@@ -23734,15 +23748,18 @@ if (d.format === 'single-account' || (d.profile && d.account) || Array.isArray(d
 if (!window.CloudSave) throw new Error('存档系统未就绪');
 const res = await CloudSave.importAccountData(d);
 ACC.name = res.name;
+ACC.token = res.uid;
 PROF.guest = false;
+setAcc.last = ACC.token + '|' + ACC.name; adaptLoad();
 applyProfile(res.profile);
 renderAcc();
 if ($id('importFileStatus')) $id('importFileStatus').textContent = `已成功导入【${res.name}】`;
+const sw = `已切换到导入的本机账号【${res.name}】`;
 if ($id('importMsg')) {
-$id('importMsg').style.color = '#46d3ea';
-$id('importMsg').textContent = `成功恢复账号【${res.name}】！拥有 ${res.profile.owned ? res.profile.owned.length : 1} 位英雄、${res.profile.ink || 0} 墨锭！`;
+$id('importMsg').style.color = res.note ? '#e9c46a' : '#46d3ea';
+$id('importMsg').textContent = `${sw}：${(res.profile.owned || ['qingfeng']).length} 位英雄、${res.profile.ink || 0} 墨锭。${res.note ? res.note + '。' : ''}`;
 }
-toast(`成功恢复账号【${res.name}】！`);
+toast(`${sw}${res.note ? '（' + res.note + '）' : ''}`, 5);
 return;
 }
 if (d.format === 'all-accounts-backup' && Array.isArray(d.accounts)) {
@@ -23833,20 +23850,19 @@ menuCam.tz = 1.35; showScreen('lb'); $id('lbSub').textContent = '加载中…'; 
 for (const b of $id('lbTabs').children) b.classList.toggle('sel', b.dataset.k === lbKind);
 if (lbKind === 'rank') {
 try {
-const j = await api('/api/ranklb');
-$id('lbSub').textContent = j.list.length ? '打满 5 场定级赛后上榜。段位从低到高：砺锋、出鞘、破竹、惊鸿、踏月、刃影' : '还没有人完成定级赛。排位赛打满 5 场就能上榜！';
-$id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">等级分</th></tr>' + j.list.map((r, i) =>
-`<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${r.label}</td><td class="n">${r.rating}</td></tr>`).join('') : '';
+const j = await CloudSave.leaderboard('rank', rkSeason().id);
+$id('lbSub').textContent = j.list.length ? `本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}` : '还没有人完成定级赛。排位赛打满 5 场就能上榜！';
+$id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
+`<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join('') : '';
 } catch (err) { $id('lbSub').textContent = '读取失败：' + err.message; }
 return;
 }
 try {
-const j = await api('/api/leaderboard');
-if (j.me) setAcc(j.me);
-$id('lbSub').textContent = j.list.length ? `已注册玩家 ${j.players} 位。正式：双方皆登录；切磋：对手为游客` : '还没有人打过联机——去赢下第一场吧！';
-$id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th><th class="n">切磋</th></tr>' + j.list.map((r, i) => {
+const j = await CloudSave.leaderboard('wins');
+$id('lbSub').textContent = j.list.length ? `已注册玩家 ${j.players} 位，按联机胜场排` : '还没有人打过联机——去赢下第一场吧！';
+$id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
 const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';
-return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td><td class="n" style="color:var(--dim)">${r.cwins} 胜 ${r.closses} 负</td></tr>`;
+return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td></tr>`;
 }).join('') : '';
 } catch (err) { $id('lbSub').textContent = '读取失败：' + err.message; }
 }

@@ -163,6 +163,18 @@
     const legacy = pwLegacy(password);
     return !!legacy && rec.pw === legacy;
   }
+  // 本机账号表：坏了（存的时候空间满了被截断、老版本写的）当成空表，不让注册、登录直接抛 JSON 错误
+  function localAccounts() {
+    try { const v = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (e) { return {}; }
+  }
+  // 本机账号按昵称找，不分大小写（云端的昵称也不分大小写，Abc 和 abc 是同一个号）
+  function localKeyOf(table, name) {
+    if (Object.prototype.hasOwnProperty.call(table, name)) return name;
+    const low = String(name).toLowerCase();
+    return Object.keys(table).find(k => k.toLowerCase() === low) || '';
+  }
+  // 和服务器一样不让用的昵称：像官方、开发者的，还有没登录时用的 guest / 游客
+  const RESERVED_NAME = /^(dev|dev_master|admin|administrator|root|system|gm|official|staff|guest|官方|系统|管理员|开发者|开发组|客服|刃影官方|游客)$/i;
   function tempPassword() {
     const buf = new Uint8Array(9);
     if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(buf);
@@ -205,7 +217,8 @@
       const legacy = localStorage.getItem('renying-cloud-cache');
       if (!legacy) return;
       const u = getUser();
-      if (u && u.uid && !localStorage.getItem(profKey(u.uid))) {
+      if (!u || !u.uid) return;   // 没人登录：先留着，等有人登录再交给他，别直接删掉
+      if (!localStorage.getItem(profKey(u.uid))) {
         JSON.parse(legacy);
         localStorage.setItem(profKey(u.uid), legacy);
       }
@@ -420,6 +433,10 @@
     return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
   }
   // 侠客列传的江湖足迹：看一条路上大家走到哪、选了什么（不用登录）；云端账号走完一节记一笔
+  // 排行榜（不用登录）：k 是 rank（段位榜，s 是赛季）或 wins（战绩榜）
+  async function leaderboard(k, season) {
+    return api('/api/leaderboard?k=' + encodeURIComponent(k) + (season ? '&s=' + encodeURIComponent(season) : ''), { method: 'GET' });
+  }
   async function saga(hero) { return api('/api/saga?hero=' + encodeURIComponent(hero), { method: 'GET' }); }
   async function sagaMark(body) {
     if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
@@ -515,6 +532,7 @@
     const name = String(username).trim();
     if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
     if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
+    if (RESERVED_NAME.test(name.replace(/\s+/g, ''))) throw new Error('这个昵称不能用，换一个吧');
 
     // 读取游客进度准备同步上云
     let initialProf = carryProf || null;   // 本机账号升级时带上它自己的存档；否则带游客进度
@@ -561,9 +579,9 @@
       }
       if (err && err.status >= 400 && err.status < 500 && err.status !== 404) throw err;   // 服务器回了话（昵称不能用、太频繁）：照实说，不偷偷建本机账号
       console.warn('Cloudflare Worker register failed, falling back to local account:', err);
-      // 本地降级模拟
-      const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
-      if (mockUsers[name]) throw new Error('该昵称已在本机注册');
+      // 连不上服务器（断网、服务器出错）：先在这台设备上建本机账号，返回时带上说明，界面要照实告诉玩家
+      const mockUsers = localAccounts();
+      if (localKeyOf(mockUsers, name)) throw new Error('该昵称已在本机注册');
       const rndBuf = new Uint8Array(4);
       if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(rndBuf);
       else for (let i = 0; i < 4; i++) rndBuf[i] = (Math.random() * 256) | 0;
@@ -575,7 +593,7 @@
       localStorage.setItem('renying-local-current', JSON.stringify(userObj));
       currentUser = userObj;
       notifyAuthChange(currentUser);
-      return userObj;
+      return { ...userObj, note: hasValidConfig() ? '连不上云端服务器，账号先建在这台设备上：进度只存在这里，联网后可在账号页一键升级为云端账号' : '' };
     }
   }
 
@@ -615,14 +633,16 @@
       return userObj;
     } catch (err) {
       // 检查是否有本地历史账号
-      let mockUsers = {};
-      try { mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); } catch (e) {}
-      const localU = mockUsers[name];
+      const mockUsers = localAccounts();
+      const localName = localKeyOf(mockUsers, name);
+      const localU = localName ? mockUsers[localName] : null;
       const pwOk = await pwMatches(localU, password);
+      // 云端有这个昵称、密码却对不上（401）：本机同名账号是另一个号，登进去要说清楚，不然玩家以为在用云端那个
+      const cloudHasName = err && err.status === 401;
       if (localU && pwOk) {
         if (localU.pwv !== 2) {   // 老记录：登录成功时顺手升级成散列
           localU.pw = await pwHash(password); localU.pwv = 2;
-          mockUsers[name] = localU;
+          mockUsers[localName] = localU;
           try { localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers)); } catch (e) {}
         }
         // 本地老账号自动在云端注册并同步
@@ -653,7 +673,7 @@
           currentUser = userObj;
           localU.uid = data.uid;
           localU.migratedToCloud = true;
-          mockUsers[name] = localU;
+          mockUsers[localName] = localU;
           localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
           localStorage.setItem('renying-local-current', JSON.stringify(userObj));
           setSync({ state: 'ok', at: Date.now(), err: '' });
@@ -661,11 +681,13 @@
           return userObj;
         } catch (regErr) {
           // 本地单机登录
-          const userObj = { uid: localU.uid, name, displayName: name, isCloud: false };
+          const userObj = { uid: localU.uid, name: localName, displayName: localName, isCloud: false };
           localStorage.setItem('renying-local-current', JSON.stringify(userObj));
           currentUser = userObj;
           notifyAuthChange(currentUser);
-          return userObj;
+          const note = cloudHasName ? '已登录这台设备上的本机账号。云端也有一个叫这个名字的号，但密码不一样，两个号没有合并'
+            : hasValidConfig() ? '连不上云端服务器，先登录这台设备上的本机账号，进度只存在这里' : '';
+          return { ...userObj, note };
         }
       }
       throw err;
@@ -978,6 +1000,7 @@
   // 导入账号数据
   async function importAccountData(data) {
     if (!data || typeof data !== 'object') throw new Error('无效的存档文件数据');
+    if (Array.isArray(data.owned) && !data.profile) data = { format: 'single-account', profile: data };   // 裸存档（只有 profile 本身）：按没签名的单账号文件处理
     if (data.format === 'single-account' && data.profile) {
       const sigState = await verifyProfileDigest(data);
       if (sigState === 'tampered') {
@@ -995,8 +1018,8 @@
       if (cloudActive()) {
         saveProfile(p, true);
       }
-      p._importNote = weakNote;
-      return p;
+      // 导入会切换到这个账号（本机账号），界面要说清楚：name 是切过去的账号，note 是旧版备份的提醒
+      return { uid, name, profile: p, note: weakNote };
     }
     throw new Error('不支持的文件格式');
   }
@@ -1058,6 +1081,7 @@
       exportCurrentAccount,
       exportAllAccounts,
       importAccountData,
+      leaderboard,
       computeProfileDigest,
       verifyProfileDigest,
       toCloudData,

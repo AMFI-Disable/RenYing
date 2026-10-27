@@ -397,7 +397,7 @@ const PROF = {
   online10Unlocked: false
 };
 const MSTAT = { maxcombo: 0, ults: 0 };
-function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), 2600); }
+function toast(t, sec) { const el = $id('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('on'), (sec || 2.6) * 1000); }   // sec：长一点的说明多留几秒
 // 侠客全部直接能用：问剑阁撤掉以后，侠客不再靠抽卡、碎片解锁（皮肤从武库拿）
 function ownsHero(id) { return CHARS.some(c => c.id === id); }
 function heroesFree() { return true; }

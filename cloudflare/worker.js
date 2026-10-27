@@ -643,7 +643,8 @@ function cleanInitial(prof) {
 }
 // 不让注册的昵称：像是官方、开发者的。云端的 Dev 账号和别人一样按规则记账，只是这个名字只能在管理后台建、
 // 重设密码（POST /api/admin/password），别人注册不了
-const RESERVED = /^(dev|dev_master|admin|administrator|root|system|gm|official|staff|官方|系统|管理员|开发者|开发组|客服|刃影官方)$/i;
+// guest、游客：没登录时网页里的进度、任务都记在这个名字下面，注册成真账号会和没登录的状态串在一起
+const RESERVED = /^(dev|dev_master|admin|administrator|root|system|gm|official|staff|guest|官方|系统|管理员|开发者|开发组|客服|刃影官方|游客)$/i;
 async function profileOut(env, user, now) {
   const prof = parseProfile(user.profile_json, user.username);
   const eco = await loadEcon(env, user.id, prof, now);
@@ -1141,6 +1142,30 @@ async function gbHit(env, auth, body, now) {
   await env.DB.batch(stmts);
   if (asked > cap) await logRow(env, uid, now, 'gboss_cap', 1, null, null, JSON.stringify({ id, asked, cap, gen: t.gen }));
   return await done({ capped: asked > cap, late });
+}
+
+/* ---------- 排行榜 ----------
+ * 段位分、胜负场都是玩家自己的网页算好存进存档的（rk、netWins / netLosses），服务器只负责排序和挡掉被封的号，
+ * 所以这里的数只用来展示，不拿去发奖励。 */
+const LB_N = 100, RK_PLACE = 5, RK_MIN = 1000, RK_MAX = 25000;
+async function leaderboard(env, kind, season, me, now) {
+  const notBanned = 'id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)';
+  if (kind === 'rank') {
+    if (!/^S\d{1,3}$/.test(season)) return { ok: true, kind, list: [] };
+    const rows = (await env.DB.prepare(
+      `SELECT id, username, json_extract(profile_json, '$.rk.pts') AS pts FROM users WHERE ${notBanned}
+       AND json_extract(profile_json, '$.rk.season') = ?2 AND json_extract(profile_json, '$.rk.placed') >= ?3
+       ORDER BY pts DESC, updated_at LIMIT ?4`).bind(now, season, RK_PLACE, LB_N).all()).results || [];
+    return { ok: true, kind, list: rows.map(r => ({ name: r.username, pts: Math.max(RK_MIN, Math.min(RK_MAX, Math.round(+r.pts || 0))), me: r.id === me })) };
+  }
+  const [rows, cnt] = await Promise.all([
+    env.DB.prepare(
+      `SELECT id, username, json_extract(profile_json, '$.netWins') AS w, json_extract(profile_json, '$.netLosses') AS l FROM users WHERE ${notBanned}
+       AND json_extract(profile_json, '$.netWins') > 0 ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N).all(),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM users').first(),
+  ]);
+  const n = v => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));
+  return { ok: true, kind, players: (cnt && cnt.n) || 0, list: (rows.results || []).map(r => ({ name: r.username, wins: n(r.w), losses: n(r.l), me: r.id === me })) };
 }
 
 /* ---------- 侠客列传：江湖足迹 ---------- */
@@ -1677,6 +1702,14 @@ export default {
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
         return await sagaMarkPost(env, auth, body, now);
+      }
+
+      // 13. 排行榜（不用登录）：段位榜是这个赛季打满定级赛的，按段位分排；战绩榜按联机胜场排。被封的号不上榜
+      if (path === '/api/leaderboard' && request.method === 'GET') {
+        if (!(await hit(env, 'lbg:' + ip, 30, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        const auth = await authenticate(env, request);
+        const kind = url.searchParams.get('k') === 'wins' ? 'wins' : 'rank';
+        return json(await leaderboard(env, kind, String(url.searchParams.get('s') || ''), auth && auth.user.id, now));
       }
 
       // 9. Logout
