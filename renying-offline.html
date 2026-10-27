@@ -2701,7 +2701,7 @@ body.kbnav #kbRing.on { display: block; }
       <div class="home-mist"></div>
       <div class="home-mist home-mist-2"></div>
     </div>
-    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 1 人在线</span></span></div>
+    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
     <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
@@ -2709,7 +2709,7 @@ body.kbnav #kbRing.on { display: block; }
         <span class="hc-kicker" style="color:#2bd49a">实时江湖</span>
         <div class="hc-row">
           <span class="home-online-dot"></span>
-          <span class="hc-txt"><b id="homeOnlineCardNum">1 位侠士在线</b><small id="homeOnlineCardSub">全服连线待命中 · 随时开战</small></span>
+          <span class="hc-txt"><b id="homeOnlineCardNum">— 位侠士在线</b><small id="homeOnlineCardSub">全服连线待命中 · 随时开战</small></span>
         </div>
       </div>
       <button class="home-card home-evt" id="homeEvt" type="button" hidden>
@@ -5380,9 +5380,9 @@ return text;
 function translateNode(node) {
 if (!node) return;
 if (node.nodeType === Node.TEXT_NODE) {
-const orig = node.datasetOrigText !== undefined ? node.datasetOrigText : node.nodeValue;
-if (node.datasetOrigText === undefined) {
-node.datasetOrigText = orig;
+const orig = node.__origText !== undefined ? node.__origText : node.nodeValue;
+if (node.__origText === undefined) {
+node.__origText = orig;
 }
 const trimmed = orig.trim();
 if (trimmed && DICT_EN[trimmed]) {
@@ -22537,7 +22537,7 @@ $id('rkInfo').classList.remove('hidden');
 $id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('hidden'));
 $id('rkInfo').addEventListener('click', e => { if (e.target === $id('rkInfo')) $id('rkInfo').classList.add('hidden'); });
 setTimeout(() => { try { rkCheckPending(); } catch (e) {} }, 2500);
-const PRES = { sid: '', srv: null, at: 0, busy: false };
+const PRES = { sid: '', srv: null, at: 0, busy: false, fail: 0, last: 0, timer: 0, again: false, burst: 0 };
 function presSid() {
 if (PRES.sid) return PRES.sid;
 try { PRES.sid = sessionStorage.getItem('renying-presence-sid') || ''; } catch (e) {}
@@ -22547,29 +22547,60 @@ try { sessionStorage.setItem('renying-presence-sid', PRES.sid); } catch (e) {}
 }
 return PRES.sid;
 }
+function presRotateSid() {
+PRES.sid = '';
+try { sessionStorage.removeItem('renying-presence-sid'); } catch (e) {}
+return presSid();
+}
 const presUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/presence';
 const presState = () => (M.mode === 'net' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
-async function presBeat() {
-if (PRES.busy || !window.CloudSave) return;
-PRES.busy = true;
+const presLive = () => typeof SOC !== 'undefined' && SOC.state === 'on';
+function presGap() {
+if (typeof document !== 'undefined' && document.hidden) return 60000;
+if (PRES.fail >= 3) return 60000;
+if (presLive()) return 30000;
+if (PRES.burst > Date.now()) return 3000;
+return 10000;
+}
+function presSchedule(ms) { clearTimeout(PRES.timer); PRES.timer = setTimeout(() => presBeat(), ms); }
+async function presBeat(again) {
+if (PRES.busy) { PRES.again = true; return; }
+PRES.busy = true; PRES.last = Date.now();
+const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+const cut = ctl ? setTimeout(() => { try { ctl.abort(); } catch (e) {} }, 8000) : 0;
+let rotate = false;
 try {
-const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }) });
+const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }), signal: ctl ? ctl.signal : undefined });
 const d = await r.json().catch(() => null);
-if (r.ok && d && typeof d.online === 'number') { PRES.srv = d; PRES.at = Date.now(); }
-} catch (e) {}
+if (r.ok && d && typeof d.online === 'number') {
+if (PRES.srv && d.online !== PRES.srv.online) PRES.burst = Date.now() + 30000;   // 人数刚变过：加密一轮
+PRES.srv = d; PRES.at = Date.now(); PRES.fail = 0;
+}
+else if (d && !d.ok && d.error === 'sid 不对') rotate = true;
+else PRES.fail++;
+} catch (e) { PRES.fail++; }
+clearTimeout(cut);
 PRES.busy = false;
+if (rotate && !again) { presRotateSid(); return presBeat(true); }
 refreshOnline();
+if (PRES.again) { PRES.again = false; presSchedule(500); } else presSchedule(presGap());
+}
+function presKick() {
+if (PRES.busy) { PRES.again = true; return; }
+const wait = 2000 - (Date.now() - PRES.last);
+if (wait > 0) { presSchedule(wait); return; }
+presBeat();
 }
 function presBye() {
 try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
 }
 window.addEventListener('pagehide', presBye);
 function refreshOnline() {
+const live = presLive();
 const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;
 const srv = PRES.srv && Date.now() - PRES.at < 120e3 ? PRES.srv : null;   // 两分钟没报成功就当云端暂时连不上
-const count = Math.max(srv ? srv.online : 0, hall);
 const h = srv ? { playing: Math.ceil((srv.playing || 0) / 2), waiting: srv.waiting || 0 } : null;   // 一局联机两个人都报 match
-const total = Math.max(1, count);
+const total = (srv || live) ? Math.max(1, srv ? srv.online : 0, hall) : '—';
 const parts = [];
 if (h && h.playing) parts.push(`${h.playing} 局对战`);
 if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
@@ -22578,8 +22609,13 @@ if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total
 if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
 if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
 }
-setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
-setInterval(presBeat, 30000); setTimeout(presBeat, 1200);
+setInterval(refreshOnline, 1000);
+setTimeout(refreshOnline, 300);
+setTimeout(() => presBeat(), 1200);
+let presSt = '';
+setInterval(() => { const st = presState(); if (st !== presSt) { presSt = st; presKick(); } }, 2000);
+['focus', 'pageshow'].forEach(ev => window.addEventListener(ev, () => { presKick(); refreshOnline(); }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) presKick(); else presSchedule(presGap()); refreshOnline(); });
 function joinByCode() {
 initAudio();
 const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -23610,7 +23646,7 @@ c.on('close', () => { clearTimeout(giveUp); socHallLost(c); });
 function socHallLost(c) {
 if (SOC.hall !== c) return;
 try { c.close(); } catch (e) {}
-SOC.hall = null; SOC.online = []; SOC.state = 'connecting'; socRenderAll();
+SOC.hall = null; SOC.online = []; SOC.state = 'connecting'; socRenderAll(); socPresence();
 clearTimeout(SOC.joinT);
 SOC.joinT = setTimeout(() => socJoinHall(), 600 + Math.random() * 2400);
 }
@@ -23715,17 +23751,18 @@ socHubCast({ t: 'msg', m: msg });
 c.on('close', () => { clearTimeout(kick); const had = st.name; SOC.hubConns.delete(c); if (had) socHubCast({ t: 'online', online: socHubOnline() }); });
 c.on('error', () => {});
 }
+function socPresence() { try { if (typeof refreshOnline === 'function') refreshOnline(); } catch (e) {} }
 function socHallRx(m) {
 if (!m) return;
 if (m.t === 'welcome') {
 SOC.state = 'on'; delete SOC.dead[SOC.slot];
 for (const x of (Array.isArray(m.hist) ? m.hist : [])) socHallAdd(x, true);
 SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : [];
-socSave(); socRenderAll(); socFlushAll(); return;
+socSave(); socRenderAll(); socFlushAll(); socPresence(); return;
 }
 if (m.t === 'bye') { socHallLost(SOC.hall); return; }
 if (m.t === 'move') { const s = +m.slot; if (s >= 0 && s < SOC_SLOTS && s !== SOC.slot) { SOC.slot = s; delete SOC.dead[s]; socHallLost(SOC.hall); } return; }
-if (m.t === 'online') { SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : []; socRenderList(); socRenderHead(); socFlushAll(); return; }
+if (m.t === 'online') { SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : []; socRenderList(); socRenderHead(); socFlushAll(); socPresence(); return; }
 if (m.t === 'msg' && m.m) {
 if (socHallAdd(m.m)) { socSave(); if (SOC.cur === 'hall') socRenderLog(true); }
 }
@@ -24123,15 +24160,17 @@ if (!(window.RENYING_BUILD && window.RENYING_BUILD.offline)) {
 setTimeout(socStart, 2500);
 setInterval(() => {
 const p = SOC.peer, t = ++SOC.tick;
-const inFight = typeof M !== 'undefined' && M && M.phase === 'fight' && !socVisible();
-if (inFight) return;
+const busy = typeof M !== 'undefined' && M && M.phase === 'fight' && !socVisible();
+if (!busy) {
 if ((p && SOC.me !== socWho()) || ((!p || p.destroyed) && t % 15 === 0)) socStart();
 else if (p && t % 5 === 0) {   // 断网恢复后自己重连、重新进大厅
 if (p.disconnected && !p.destroyed) { try { p.reconnect(); } catch (e) {} }
 else if (p.open && !(SOC.hall && SOC.hall.open) && !SOC.hubPeer) socJoinHall();
 }
+}
 if (SOC.hall && SOC.hall.open) { if (Date.now() - (SOC.hallRx || 0) > 12000) socHallLost(SOC.hall); else if (t % 2 === 0) socSend(SOC.hall, { t: 'ping' }); }
 if (SOC.hubPeer && t % 3 === 0) socHubSweep();
+if (busy) return;
 if (SOC.hubPeer && SOC.slot && t % 15 === 0) socProbe();
 if (SOC.state !== 'on' && SOC.data) { socRenderStatus(); if (t % 3 === 0) socRenderList(); }
 if (SOC.data && t % 10 === 0) socFlushAll();

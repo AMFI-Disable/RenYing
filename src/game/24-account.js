@@ -829,9 +829,14 @@ $id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('
 $id('rkInfo').addEventListener('click', e => { if (e.target === $id('rkInfo')) $id('rkInfo').classList.add('hidden'); });
 setTimeout(() => { try { rkCheckPending(); } catch (e) {} }, 2500);
 // 在线情况：多少局在打、多少人在匹配、首页全服在线人数
-// 在线人数：以云端的到场记录为准（每个标签页 30 秒报一次，刷新还是同一个人）。大厅名单是浏览器之间直连的，
-// 连不上别人（有的防火墙、网络挡 WebRTC）就只能看到自己，以前人数会一直停在 1；云端连不上时才退回用大厅名单。
-const PRES = { sid: '', srv: null, at: 0, busy: false };
+// 人数有两个来源，谁大用谁：
+//   1. 云端到场表：每个标签页 30 秒报一次，90 秒内报过的算在线。算所有开着网页的人，
+//      但只有自己那一报成功时才拿得到新数字，所以它慢。
+//   2. 江湖驿站的大厅名单：浏览器之间直连，谁进来谁出去立刻广播，秒级。只算连得上大厅的人。
+// 以前两个来源都没数时用 Math.max(1, …) 兜底，于是人再多、只要自己那一报没拿到就显示“1 人”。
+// 现在没数就显示“—”；大厅接得上时靠它秒级同步、云端 30 秒一报就够；大厅接不上才加密到 10 秒，
+// 补上“别人进来了”这件事（大厅被防火墙挡掉、或者 WebRTC 连不上别人时就是这条路）。
+const PRES = { sid: '', srv: null, at: 0, busy: false, fail: 0, last: 0, timer: 0, again: false, burst: 0 };
 function presSid() {
   if (PRES.sid) return PRES.sid;
   try { PRES.sid = sessionStorage.getItem('renying-presence-sid') || ''; } catch (e) {}
@@ -841,30 +846,71 @@ function presSid() {
   }
   return PRES.sid;
 }
+// 换过网络（手机切流量、VPN 开关、IPv6 地址轮换）之后云端会认为这个 sid 是别人顶替的，
+// 一直回“sid 不对”。这时换个 sid 重新登记，不然这个标签页再也不会出现在在线人数里。
+function presRotateSid() {
+  PRES.sid = '';
+  try { sessionStorage.removeItem('renying-presence-sid'); } catch (e) {}
+  return presSid();
+}
 const presUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/presence';
 const presState = () => (M.mode === 'net' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
-async function presBeat() {
-  if (PRES.busy || !window.CloudSave) return;
-  PRES.busy = true;
+const presLive = () => typeof SOC !== 'undefined' && SOC.state === 'on';
+// 大厅直连能秒级推名单，这时候云端 30 秒一报就够；网页挂后台没人看，60 秒保个到场就行；
+// 连续几次报不上去（云端挂了、额度用完了）也别硬刷，退到 60 秒。
+function presGap() {
+  if (typeof document !== 'undefined' && document.hidden) return 60000;
+  if (PRES.fail >= 3) return 60000;
+  if (presLive()) return 30000;
+  // 刚发现人数变过（有人进来了/走了）：接着 30 秒加密到 3 秒，抓住紧接着跟进来的人；
+  // 平时不这么报，不然一天的请求额度几下就用光了。
+  if (PRES.burst > Date.now()) return 3000;
+  return 10000;
+}
+function presSchedule(ms) { clearTimeout(PRES.timer); PRES.timer = setTimeout(() => presBeat(), ms); }
+async function presBeat(again) {
+  if (PRES.busy) { PRES.again = true; return; }
+  PRES.busy = true; PRES.last = Date.now();
+  // 以前没有超时：一条请求卡住，busy 就一直开着，后面的心跳全被吞掉，人数停在旧值上
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const cut = ctl ? setTimeout(() => { try { ctl.abort(); } catch (e) {} }, 8000) : 0;
+  let rotate = false;
   try {
     // text/plain 不用先发 OPTIONS 预检，关网页时的 sendBeacon 也是这个格式
-    const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }) });
+    const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }), signal: ctl ? ctl.signal : undefined });
     const d = await r.json().catch(() => null);
-    if (r.ok && d && typeof d.online === 'number') { PRES.srv = d; PRES.at = Date.now(); }
-  } catch (e) {}
+    if (r.ok && d && typeof d.online === 'number') {
+      if (PRES.srv && d.online !== PRES.srv.online) PRES.burst = Date.now() + 30000;   // 人数刚变过：加密一轮
+      PRES.srv = d; PRES.at = Date.now(); PRES.fail = 0;
+    }
+    else if (d && !d.ok && d.error === 'sid 不对') rotate = true;
+    else PRES.fail++;
+  } catch (e) { PRES.fail++; }
+  clearTimeout(cut);
   PRES.busy = false;
+  if (rotate && !again) { presRotateSid(); return presBeat(true); }
   refreshOnline();
+  if (PRES.again) { PRES.again = false; presSchedule(500); } else presSchedule(presGap());
+}
+// 有“可能变了”的事就立刻报一次（切回窗口、对局状态变了、别人进出大厅），最多每 2 秒一次
+function presKick() {
+  if (PRES.busy) { PRES.again = true; return; }
+  const wait = 2000 - (Date.now() - PRES.last);
+  if (wait > 0) { presSchedule(wait); return; }
+  presBeat();
 }
 function presBye() {
   try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
 }
 window.addEventListener('pagehide', presBye);
 function refreshOnline() {
+  const live = presLive();
   const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;
   const srv = PRES.srv && Date.now() - PRES.at < 120e3 ? PRES.srv : null;   // 两分钟没报成功就当云端暂时连不上
-  const count = Math.max(srv ? srv.online : 0, hall);
   const h = srv ? { playing: Math.ceil((srv.playing || 0) / 2), waiting: srv.waiting || 0 } : null;   // 一局联机两个人都报 match
-  const total = Math.max(1, count);
+  // 两个来源都只可能暂时少算（云端要等自己那一报，大厅只算连得上大厅的人），所以谁大用谁；
+  // 两个都没有可靠数据时说“—”，不再拿 Math.max(1, …) 硬报 1 —— 那正是“人很多却显示 1”的来源。
+  const total = (srv || live) ? Math.max(1, srv ? srv.online : 0, hall) : '—';
   const parts = [];
   if (h && h.playing) parts.push(`${h.playing} 局对战`);
   if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
@@ -873,8 +919,15 @@ function refreshOnline() {
   if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
   if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
 }
-setInterval(refreshOnline, 5000); setTimeout(refreshOnline, 300);
-setInterval(presBeat, 30000); setTimeout(presBeat, 1200);
+setInterval(refreshOnline, 1000);
+setTimeout(refreshOnline, 300);
+setTimeout(() => presBeat(), 1200);
+// 进了对局、进了匹配、回到菜单：状态变了就立刻报一次，别等下一个 30 秒
+let presSt = '';
+setInterval(() => { const st = presState(); if (st !== presSt) { presSt = st; presKick(); } }, 2000);
+// 切回窗口、从后台回来：立刻要一次最新数字（这也是“两个人各开一个窗口”时最常用的场景）
+['focus', 'pageshow'].forEach(ev => window.addEventListener(ev, () => { presKick(); refreshOnline(); }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) presKick(); else presSchedule(presGap()); refreshOnline(); });
 function joinByCode() {
   initAudio();
   const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');

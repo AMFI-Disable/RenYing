@@ -157,7 +157,7 @@ function socJoinHall() {
 function socHallLost(c) {
   if (SOC.hall !== c) return;
   try { c.close(); } catch (e) {}
-  SOC.hall = null; SOC.online = []; SOC.state = 'connecting'; socRenderAll();
+  SOC.hall = null; SOC.online = []; SOC.state = 'connecting'; socRenderAll(); socPresence();
   clearTimeout(SOC.joinT);
   SOC.joinT = setTimeout(() => socJoinHall(), 600 + Math.random() * 2400);
 }
@@ -265,17 +265,19 @@ function socHubWire(c) {
   c.on('close', () => { clearTimeout(kick); const had = st.name; SOC.hubConns.delete(c); if (had) socHubCast({ t: 'online', online: socHubOnline() }); });
   c.on('error', () => {});
 }
+// 大厅名单一变就让首页的人数立刻跟着变：以前要等 5 秒一次的定时刷新，别人进来半天还显示 1
+function socPresence() { try { if (typeof refreshOnline === 'function') refreshOnline(); } catch (e) {} }
 function socHallRx(m) {
   if (!m) return;
   if (m.t === 'welcome') {
     SOC.state = 'on'; delete SOC.dead[SOC.slot];
     for (const x of (Array.isArray(m.hist) ? m.hist : [])) socHallAdd(x, true);
     SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : [];
-    socSave(); socRenderAll(); socFlushAll(); return;
+    socSave(); socRenderAll(); socFlushAll(); socPresence(); return;
   }
   if (m.t === 'bye') { socHallLost(SOC.hall); return; }
   if (m.t === 'move') { const s = +m.slot; if (s >= 0 && s < SOC_SLOTS && s !== SOC.slot) { SOC.slot = s; delete SOC.dead[s]; socHallLost(SOC.hall); } return; }
-  if (m.t === 'online') { SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : []; socRenderList(); socRenderHead(); socFlushAll(); return; }
+  if (m.t === 'online') { SOC.online = Array.isArray(m.online) ? m.online.slice(0, 500) : []; socRenderList(); socRenderHead(); socFlushAll(); socPresence(); return; }
   if (m.t === 'msg' && m.m) {
     if (socHallAdd(m.m)) { socSave(); if (SOC.cur === 'hall') socRenderLog(true); }
   }
@@ -687,15 +689,20 @@ if (!(window.RENYING_BUILD && window.RENYING_BUILD.offline)) {
   setTimeout(socStart, 2500);
   setInterval(() => {
     const p = SOC.peer, t = ++SOC.tick;
-    const inFight = typeof M !== 'undefined' && M && M.phase === 'fight' && !socVisible();
-    if (inFight) return;
-    if ((p && SOC.me !== socWho()) || ((!p || p.destroyed) && t % 15 === 0)) socStart();
-    else if (p && t % 5 === 0) {   // 断网恢复后自己重连、重新进大厅
-      if (p.disconnected && !p.destroyed) { try { p.reconnect(); } catch (e) {} }
-      else if (p.open && !(SOC.hall && SOC.hall.open) && !SOC.hubPeer) socJoinHall();
+    // 打架的时候以前是整段 return：一进对局就不发心跳，15 秒后被主持从名单里清掉，
+    // 别人看在线人数就只剩自己（“明明一堆人在打，却显示 1 人”）。现在只停掉重连、聊天，
+    // 心跳和名单清理照做——一个 ping 几十字节，不影响手感。
+    const busy = typeof M !== 'undefined' && M && M.phase === 'fight' && !socVisible();
+    if (!busy) {
+      if ((p && SOC.me !== socWho()) || ((!p || p.destroyed) && t % 15 === 0)) socStart();
+      else if (p && t % 5 === 0) {   // 断网恢复后自己重连、重新进大厅
+        if (p.disconnected && !p.destroyed) { try { p.reconnect(); } catch (e) {} }
+        else if (p.open && !(SOC.hall && SOC.hall.open) && !SOC.hubPeer) socJoinHall();
+      }
     }
     if (SOC.hall && SOC.hall.open) { if (Date.now() - (SOC.hallRx || 0) > 12000) socHallLost(SOC.hall); else if (t % 2 === 0) socSend(SOC.hall, { t: 'ping' }); }
     if (SOC.hubPeer && t % 3 === 0) socHubSweep();
+    if (busy) return;
     if (SOC.hubPeer && SOC.slot && t % 15 === 0) socProbe();
     if (SOC.state !== 'on' && SOC.data) { socRenderStatus(); if (t % 3 === 0) socRenderList(); }
     if (SOC.data && t % 10 === 0) socFlushAll();

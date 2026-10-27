@@ -668,9 +668,12 @@
   function translateNode(node) {
     if (!node) return;
     if (node.nodeType === Node.TEXT_NODE) {
-      const orig = node.datasetOrigText !== undefined ? node.datasetOrigText : node.nodeValue;
-      if (node.datasetOrigText === undefined) {
-        node.datasetOrigText = orig;
+      // 文本节点没有 dataset 属性：原来这里读 node.datasetOrigText 会在第一个文本节点上抛 TypeError，
+      // 整段翻译走不到底（切成英文等于没反应，还顺带把 chooseLang 后面的 backToMenu 也带崩）。
+      // 原文记在节点自己的属性上，不写进 DOM。
+      const orig = node.__origText !== undefined ? node.__origText : node.nodeValue;
+      if (node.__origText === undefined) {
+        node.__origText = orig;
       }
       const trimmed = orig.trim();
       if (trimmed && DICT_EN[trimmed]) {
