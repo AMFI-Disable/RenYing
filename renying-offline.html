@@ -511,7 +511,7 @@ html, body { overscroll-behavior: none; }
 @media (max-width: 560px) { .stgrid { grid-template-columns: repeat(3, 1fr); } }
 .setp { max-width: min(1360px, 96vw); }
 .setlist { display: grid; gap: 12px; margin: 12px 0; text-align: left; }
-@media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; column-gap: 36px; } .setlist > .keypanel { grid-column: 1 / -1; grid-row: 6; } }
+@media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(6, auto); grid-auto-flow: column; column-gap: 36px; } .setlist > .keypanel { grid-column: 1 / -1; grid-row: 7; } }
 .setrow { display: grid; grid-template-columns: minmax(90px, max-content) 1fr minmax(48px, auto); gap: 10px; align-items: center; font-size: 13.5px; }
 .setrow > span:first-child { white-space: nowrap; }
 .setrow .seg { margin: 0; }
@@ -705,7 +705,7 @@ display: grid; gap: clamp(6px, 1vh, 10px); grid-template-rows: auto auto minmax(
 .bpgrid { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; align-items: stretch;
 gap: var(--bp-gap); width: 100%; --bp-gap: clamp(4px, 0.5vw, 7px); --bp-cols: 12; }
 .bpgrid > .bpcard { flex: 0 0 calc((100% - (var(--bp-cols) - 1) * var(--bp-gap)) / var(--bp-cols) - 0.02px); }
-@media (max-width: 1080px) { .bpgrid { --bp-cols: 6; } }
+@media (max-width: 1080px) { .bpgrid { --bp-cols: 7; } }
 .bpcard { position: relative; border: 1px solid var(--faint); border-radius: 10px; padding: clamp(3px, 0.5vw, 5px) clamp(3px, 0.5vw, 5px) clamp(4px, 0.6vw, 6px); background: linear-gradient(170deg, rgba(255,255,255,.07), rgba(255,255,255,.01)); cursor: pointer; color: var(--ink); font-family: var(--body); text-align: center; transition: transform .15s, border-color .15s, box-shadow .15s; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
 .bpcard:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.55); box-shadow: 0 0 0 1px rgba(233,196,106,.26), 0 8px 24px rgba(0,0,0,.4); }
 .bpcard.sel { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,196,106,.6), 0 8px 28px rgba(233,196,106,.25); background: linear-gradient(170deg, rgba(233,196,106,.15), rgba(255,255,255,.02)); }
@@ -15874,6 +15874,8 @@ window.removeEventListener('keydown', handleKeyRebind, true);
 buildSettings();
 return;
 }
+const taken = Object.keys(custom1PKeys).find(a => a !== rebindingKey && custom1PKeys[a] === e.code);
+if (taken) custom1PKeys[taken] = custom1PKeys[rebindingKey];   // 这个键已经给了别的动作：两个对调，别让那个动作没键可按
 custom1PKeys[rebindingKey] = e.code;
 try { localStorage.setItem('renying-1p-keys', JSON.stringify(custom1PKeys)); } catch (err) {}
 applyCustomKeys();
@@ -15935,6 +15937,11 @@ const k = e.target.dataset.k; if (!k) return;
 SETTINGS[k] = +e.target.value; $id('sv_' + k).textContent = Math.round(SETTINGS[k] * 100) + '%'; saveSettings();
 if (k === 'music' || k === 'sfx') applyVolumes();
 });
+function cancelKeyRebind() {   // 点了改键又直接离开设置：别让监听留着吞掉对局里按下的第一个键
+if (!rebindingKey) return;
+rebindingKey = null;
+window.removeEventListener('keydown', handleKeyRebind, true);
+}
 $id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') showScreen('pause'); else backToMenu(); });
 $id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
 let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
@@ -17857,7 +17864,7 @@ $id('claimAllBtn').disabled = !canClaimAny;
 }
 }
 for (const id of ['tEvt', 'tDaily', 'tWeekly']) $id(id).addEventListener('click', async e => {
-if (e.target.closest('#compBtn')) { compClaim(); return; }
+if (e.target.closest('#compBtn')) { compClaim(); renderTasks(); return; }   // 领完马上把按钮变成「已领取」
 const go = e.target.closest('.task-go');
 if (go && go.dataset.go) {
 const dest = go.dataset.go;
@@ -18826,6 +18833,7 @@ function showScreen(id) {
 const prev = currentScreen; currentScreen = id;
 for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
 $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
+if (id !== 'settings') cancelKeyRebind();
 if (id !== 'bp') {
 try { showPop(null); } catch (e) {}
 if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
