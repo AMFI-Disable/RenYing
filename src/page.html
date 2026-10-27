@@ -940,13 +940,13 @@
       <div class="cxhead">
         <h2>对战回放</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          <button class="go small" id="rpTrainUploadBtn" type="button" style="padding:4px 14px;font-size:13px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">上传战局训AI</button>
+          <button class="go small" id="rpTrainUploadBtn" type="button" style="padding:4px 14px;font-size:13px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">导入训练集</button>
           <button class="ghost small" id="rpImportBtn" type="button" style="padding:4px 14px;font-size:13px">导入回放</button>
           <button class="ghost" id="rpBack" type="button">返回</button>
         </div>
       </div>
       <div class="tlist" id="rpList"></div>
-      <p class="tips" style="margin-top:10px">自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。</p>
+      <p class="tips" style="margin-top:10px">自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。<br>「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。</p>
     </div>
   </div>
 

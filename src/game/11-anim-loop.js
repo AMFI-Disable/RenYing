@@ -271,6 +271,7 @@ function step() {
   if (!RESIM) { for (const f of allFighters()) if (!f.hidden) animFighter(f); }
   updateDecoys();
   updateProjs();
+  trSample();
   if (FOREST.on) forestUpdate();
   if (!RESIM) updateFX(STEP);
   if (!RESIM) for (const p of petals) {
@@ -374,6 +375,10 @@ $id('extBack').addEventListener('click', closeQfx);
 // ======================= 对战回放 =======================
 // 对战的逻辑完全由“开场状态 + 每一帧双方的操作”决定，所以只记操作，回放时重新算一遍
 const RP_KEY = 'renying-replays', RP_MAX = 10;
+// 训AI 用的真实轨迹：录这一局时每 TR_EVERY 帧采一条「状态 + 双方操作」，一局最多留 TR_PER_MATCH 条。
+// 以前这里导出的是写死的常量数组（同一个假状态、同一个动作、奖励只看输赢），拿这种数据训练只会学到乱按。
+const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 6, TR_PER_MATCH = 480;
+
 function ctrlKey(c) {
   const b = c.buf;
   let s = inBits(c.held) + ':' + c.atkT;
@@ -381,7 +386,7 @@ function ctrlKey(c) {
   return s;
 }
 function recBegin(kind) {
-  Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], post: ['', ''], last: [-1, -1],
+  Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
     meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
 }
 // 本地对战：在角色读操作之前记下双方控制器的状态（只记变化）
@@ -411,14 +416,101 @@ function rpList() { try { const l = JSON.parse(localStorage.getItem(RP_KEY) || '
 function rpStore(list) {
   for (;;) {
     try { localStorage.setItem(RP_KEY, JSON.stringify(list)); return; }
-    catch (e) { if (list.length <= 1) return; list.pop(); }
+    catch (e) {
+      // 空间不够：先丢最旧的训练轨迹（几十 KB 一条），再丢最旧的整场回放
+      const fat = list.find(m => m && Array.isArray(m.tr) && m.tr.length);
+      if (fat) { delete fat.tr; continue; }
+      if (list.length <= 1) return;
+      list.pop();
+    }
   }
+}
+// 一帧的状态特征（18 维：血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、正对与否）。
+// 数值全部来自这一局真实的角色对象，不是编的。
+function trFeat(f, o) {
+  const r3 = v => Math.round(v * 100) / 100;
+  return [
+    r3(f.hp / (f.maxHp || 1)), r3(o.hp / (o.maxHp || 1)),
+    r3((f.guard || 0) / (f.maxGuard || 100)), r3((o.guard || 0) / (o.maxGuard || 100)),
+    r3((f.ink || 0) / (INK_MAX || 1)), r3((o.ink || 0) / (INK_MAX || 1)),
+    r3((f.meter || 0) / 100), r3((o.meter || 0) / 100),
+    r3(f.x / STAGE_W), r3(o.x / STAGE_W),
+    r3(f.y / 400), r3(o.y / 400),
+    f.face || 0, o.face || 0,
+    f.onGround() ? 1 : 0, o.onGround() ? 1 : 0,
+    r3(Math.min(1, (f.stun || 0) / 30)), r3(Math.min(1, (o.stun || 0) / 30)),
+    f.face === (o.x > f.x ? 1 : -1) ? 1 : 0
+  ];
+}
+function trSample() {
+  if (RESIM || !REC.on || REC.bad || !REC.meta || !A || !B || A.hidden || B.hidden) return;   // RESIM 是回滚重算，同一帧会再走一遍
+  if (M.stage || FOREST.on || REPLAY.on) return;   // 闯关、竹林、看回放都不是训练局
+  try { if (is2v2()) return; } catch (e) {}
+  const tf = REC.kind === 'net' && typeof ROLL !== 'undefined' ? ROLL.F : REC.f;
+  if (tf % TR_EVERY) return;
+  if (!A.ctrl || !B.ctrl) return;
+  REC.tr.push([...trFeat(A, B), inBits(A.ctrl.held), inBits(B.ctrl.held)]);
+  if (REC.tr.length > TR_PER_MATCH) REC.tr.shift();
+}
+// 样本记录的格式：s 是上面 18 维状态，a 是玩家这一帧按住的键（位掩码），r 由血量/护甲变化和胜负算出来
+const TR_STATE_DIM = 19;
+function trSamples(m) {
+  const rows = Array.isArray(m && m.tr) ? m.tr : [], out = [];
+  let prev = null;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!Array.isArray(row) || row.length < TR_STATE_DIM + 2) continue;
+    const s = row.slice(0, TR_STATE_DIM), a = row[TR_STATE_DIM];
+    let r = 0;
+    if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
+    prev = s;
+    out.push({
+      hero: (CHARS[(m.ch || [0, 1])[0]] || {}).id || 'hero',
+      heroIdx: (m.ch || [0, 1])[0],
+      s, a, r: Math.round(r * 1000) / 1000,
+      mode: m.mode || 'cpu', frame: i * TR_EVERY, source: 'user_replay'
+    });
+  }
+  if (out.length) {   // 最后一帧给终局奖励：赢了才对，输了就是负的
+    const last = out[out.length - 1];
+    last.r = Math.round((last.r + (m.w === 0 ? 1 : m.w === 1 ? -1 : 0)) * 1000) / 1000;
+    last.done = 1;
+  }
+  return out;
+}
+function trSet() { try { const l = JSON.parse(localStorage.getItem(TR_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+function trSetSave(list) {
+  try { localStorage.setItem(TR_KEY, JSON.stringify(list.slice(-TR_SET_MAX))); return true; } catch (e) { return false; }
+}
+function trDownload(rows, name) {
+  if (!rows.length) return false;
+  const blob = new Blob([rows.map(s => JSON.stringify(s)).join('\n') + '\n'], { type: 'application/x-jsonlines' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+// 逐行解析训练集文件：一行一个样本，坏行跳过并报行号（返回 { added, bad, total }）
+function trImportText(txt) {
+  const rows = [], bad = [];
+  String(txt || '').split(/\r?\n/).forEach((line, i) => {
+    const t2 = line.trim();
+    if (!t2) return;
+    try {
+      const o = JSON.parse(t2);
+      if (!o || !Array.isArray(o.s) || o.s.length < 8 || typeof o.a !== 'number') throw new Error('bad');
+      rows.push(o);
+    } catch (e) { bad.push(i + 1); }
+  });
+  if (!rows.length) return { added: 0, bad, total: trSet().length };
+  const set = trSet().concat(rows);
+  return { added: rows.length, bad, total: Math.min(set.length, TR_SET_MAX), ok: trSetSave(set) };
 }
 function recSave(w) {
   REC.on = false;
   if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
   const m = REC.meta;
-  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, skins: [A.skinKey || '', B.skinKey || ''],
+  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, skins: [A.skinKey || '', B.skinKey || ''],
     names: M.mode === 'net' ? [(NET.names || {}).host || '游客', (NET.names || {}).client || '游客'] : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
   RP.last = m;
   const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
@@ -435,41 +527,39 @@ function rpSub(m) {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }
 function renderReplays() {
-  const list = rpList();
-  $id('rpList').innerHTML = list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
-    : '<p class="netnote">还没有回放。打完一场人机或联机对战，这里会自动保存。</p>';
+  const list = rpList(), setN = trSet().length;
+  // 训练集是本机攒下来的样本（导入的 .jsonl 并在这里），能整包导出、也能清掉
+  const trRow = setN ? `<div class="rprow"><div class="rpm"><div class="rpt">训练集</div><div class="rps">${setN} 个样本</div></div><div style="display:flex;gap:6px;"><button class="ghost" data-trdl="1">导出</button><button class="ghost" data-trclear="1">清空</button></div></div>` : '';
+  $id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
+    : '<p class="netnote">还没有回放。打完一场人机或联机对战，这里会自动保存。</p>') + trRow;
 }
 $id('rpList').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const list = rpList();
+  if (b.dataset.trdl !== undefined) {
+    const set = trSet();
+    if (trDownload(set, `renying-train-set_${Date.now()}.jsonl`)) toast(`已导出训练集：${set.length} 个样本`);
+    return;
+  }
+  if (b.dataset.trclear !== undefined) {
+    try { localStorage.removeItem(TR_KEY); } catch (e) {}
+    renderReplays(); toast('训练集已清空');
+    return;
+  }
   if (b.dataset.rp !== undefined) { const m = list[+b.dataset.rp]; if (m) startReplay(m); }
   else if (b.dataset.rpdel !== undefined) { list.splice(+b.dataset.rpdel, 1); rpStore(list); renderReplays(); }
   else if (b.dataset.rptrain !== undefined) {
     const m = list[+b.dataset.rptrain];
     if (!m) return;
-    const samples = [];
-    const ch = m.ch || [0, 1];
-    const frames = m.frames || 600;
-    const isWin0 = m.w === 0;
-    for (let f = 0; f < frames; f += 2) {
-      samples.push({
-        hero: (CHARS[ch[0]] || {}).id || 'hero',
-        heroIdx: ch[0],
-        s: [0, 0, 0.25, 1, 1, 1, 1, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        a: 5,
-        r: isWin0 ? 1.5 : -0.2,
-        mode: m.mode || 'cpu',
-        source: 'user_replay'
-      });
+    const samples = trSamples(m);
+    if (!samples.length) {
+      // 老版本录的回放、或从别处导入的回放里没有逐帧状态：说清楚，别再造一份假的出来
+      toast('这局没有采集到逐帧状态（旧版本录的或导入的回放），没法生成训练轨迹');
+      return;
     }
-    const blob = new Blob([samples.map(s => JSON.stringify(s)).join('\n') + '\n'], { type: 'application/x-jsonlines' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `user_fight_${m.t || Date.now()}.jsonl`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast(`已将战局转录为 AI 训练轨迹 (${samples.length} 样本) · 放入 data/ 即可学习`);
+    if (trDownload(samples, `user_fight_${m.t || Date.now()}.jsonl`)) {
+      toast(`已导出这一局的真实轨迹：${samples.length} 个样本（s = 19 维状态，a = 按键位掩码，r = 本帧回血/掉血与终局胜负）`);
+    }
   }
   else if (b.dataset.rpexp !== undefined) {
     const m = list[+b.dataset.rpexp];
@@ -497,7 +587,12 @@ if ($id('rpTrainUploadBtn')) {
         try {
           const txt = evt.target.result;
           if (file.name.endsWith('.jsonl')) {
-            toast('已载入自定义战局轨迹 · 神经策略将同步蒸馏学习');
+            // 逐行真的读进来，并进训练集；坏行报数字，不再只是弹个提示然后把文件丢掉
+            const r = trImportText(txt);
+            if (!r.added) throw new Error(r.bad.length ? `没有可用的样本（第 ${r.bad.slice(0, 3).join('、')} 行格式不对）` : '文件里没有样本');
+            if (r.ok === false) throw new Error('本机空间不够，训练集没存下');
+            renderReplays();
+            toast(`已加入 ${r.added} 个样本${r.bad.length ? `（跳过 ${r.bad.length} 行格式不对的）` : ''} · 训练集共 ${r.total} 个`);
           } else {
             const m = JSON.parse(txt);
             if (!m || !Array.isArray(m.ch)) throw new Error('无效战局录像');
