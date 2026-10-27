@@ -596,6 +596,122 @@
   "高（最佳效果）": "High (Best)",
   "鼠标提示：左键轻击与蓄力，右键腾空闪，左键加右键使特殊技": "Mouse: Left-click Light/Charge, Right-click Aerial Flash, Left+Right Special Move",
   "龙卷": "Tornado Storm",
+  // 任务面板：整块是 renderTasks 现拼的，词条漏一个就整句留中文
+  "登录之后，方可领任务": "Log in to claim tasks",
+  "进度先替你记着，登录之后就能领": "Progress is kept; log in to claim it",
+  "领取": "Claim",
+  "已领取": "Claimed",
+  "前往": "Go",
+  "系统补偿：500 墨锭（侠客现在都能直接用）": "Compensation: 500 Ink (every hero is playable now)",
+  "习武精进：进行 1 局对战": "Sharpen Up: play 1 match",
+  "招式纯熟：一局里打出 5 连击": "Combo Drill: land a 5-hit combo in one match",
+  "破敌致胜：击败 1 名对手": "Win: defeat 1 opponent",
+  "百炼成钢：进行 5 局对战": "Steel Yourself: play 5 matches",
+  "名扬四海：赢得 3 场胜利": "Renown: win 3 matches",
+  "融会贯通：施展 5 次终极奥义": "Mastery: use 5 ultimates",
+  "打满 3 局人机（输赢都算）": "Play 3 CPU matches (win or lose)",
+  // 回放面板
+  "对战回放": "Replays",
+  "播放": "Play",
+  "导出": "Export",
+  "删除": "Delete",
+  "训AI": "Train",
+  "新增训练集": "Add Training Set",
+  "导入回放": "Import Replay",
+  "还没有回放。打完一场人机或联机对战，这里会自动保存。": "No replays yet. Play a CPU or network match and it will be saved here.",
+  "清空": "Clear",
+  "导入训练集": "Import Training Set",
+  "训练集": "Training Set",
+  "挑战任务": "Quests",
+  "每日挑战": "Daily Challenges",
+  "每周任务": "Weekly Tasks",
+  "每天 0 点刷新": "Resets at midnight",
+  "每周一 0 点刷新": "Resets Monday midnight",
+  "限时福利": "Limited Event",
+  "礼包兑换": "Redeem",
+  // 各面板的标题、标签和按钮（正文长句还没翻，留着以后补）
+  "天魔讨伐 · 全服共斗": "Demon Raid · Server-wide",
+  "常规演武": "Standard Duel",
+  "秘宝异变": "Relic Mutation",
+  "特殊决战": "Special Showdown",
+  "对战电脑": "Vs CPU",
+  "守关挑战": "Stage Challenge",
+  "侠客列传": "Hero Chronicles",
+  "木人试剑": "Dummy Training",
+  "问剑密卷 (肉鸽)": "Sword Scrolls (Roguelike)",
+  "2v2 组队": "2v2 Team",
+  "对手境界选择": "Opponent Realm",
+  "离线人机演练": "Offline CPU Practice",
+  "未解锁": "Locked",
+  "剧情通关": "Story Clear",
+  "开启专精演武": "Start Specialized Duel",
+  "各模式最高境界": "Top Realm per Mode",
+  "登录后开启排位": "Log in to play ranked",
+  "天梯段位": "Ladder Rank",
+  "登录后定级": "Log in to place",
+  "联机胜绩": "Online Record",
+  "关闭": "Close",
+  "发约战到驿站": "Send challenge to the lounge",
+  "武林擂台 · 候战厅": "Arena · Waiting Hall",
+  "延迟检测中": "Checking latency",
+  "礼包码兑换": "Redeem Code",
+  "墨锭经济与武库秘笈": "Ink Economy & Armory Guide",
+  "系统规则全公开": "All Rules Open",
+  "对战收益": "Match Rewards",
+  "成长与首胜": "Growth & First Win",
+  "武库开箱": "Armory Cases",
+  "攻击（按住蓄力）": "Attack (hold to charge)",
+  "管理后台": "Admin Console",
+  "存档导入与继承": "Save Import & Transfer",
+  "排行榜": "Leaderboard",
+  "加载中…": "Loading…",
+  "新手福利": "New Player Gift",
+  "就选这个": "Pick This One",
+  "稍后再选": "Choose Later",
+  "天魔讨伐": "Demon Raid",
+  "出战": "Fight",
+  "全服侠客各自出战，伤害累计在同一只天魔身上": "Every warrior fights; damage adds up on the same demon",
+  "连不上服务器，天魔的情况暂时看不到": "Cannot reach the server; the demon's state is unavailable",
+  "角色图鉴": "Hero Codex",
+  "初始": "Starter",
+  "已拥有": "Owned",
+  "皮肤装束": "Skins & Outfits",
+  "默认": "Default",
+  "空中": "Air",
+  "属性": "Stats",
+  "江湖驿站": "Jianghu Lounge",
+  "连接中…": "Connecting…",
+  "江湖大厅": "Jianghu Hall",
+  "好友": "Friends",
+  "群聊": "Groups",
+  "还没有群": "No groups yet",
+  "加好友": "Add Friend",
+  "发送": "Send",
+  "登录后可以加好友": "Log in to add friends",
+  "库存": "Inventory",
+  "武器箱": "Cases",
+  "武器箱 · 终端机 · 玩家市场 · 汰换合同 · 江湖行动": "Cases · Terminal · Player Market · Trade-In · Jianghu Ops",
+  "新手教学 · 两分钟学会基本招式": "Tutorial · Learn the basics in two minutes",
+  "终端机": "Terminal",
+  "玩家市场": "Player Market",
+  "江湖行动": "Jianghu Ops",
+  "饰品": "Accessories",
+  "改名标签": "Rename Tag",
+  "全部侠客": "All heroes",
+  "全部品质": "All tiers",
+  "最新获得": "Newest",
+  "品质最高": "Highest tier",
+  "斩数最多": "Most kills",
+  "去开箱": "Open Cases",
+  "说明": "Guide",
+  "移动": "Move",
+  "跳跃": "Jump",
+  "防御": "Guard",
+  "蓄力斩": "Charged Slash",
+  "只用键盘": "Keyboard Only",
+  "手机操作": "Mobile Controls",
+  "自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。": "The last 10 matches (CPU and network) are saved in this browser. Replays can be paused, slowed, fast-forwarded, and exported or imported to share.",
+  "「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。": "\"Train\" exports the frames actually captured in that match: s is a 19-value state (both sides' health, guard, inner force, ultimate gauge, position, facing, airborne, stun, facing each other), a is the keys held that frame (bitmask), r comes from that frame's health/guard change plus the final result. .jsonl training sets can be imported, merged, and exported as one file.",
 };
 
   // 当前语言：'zh' 或 'en'
@@ -654,14 +770,41 @@
     try { if (typeof renderLobby === 'function') renderLobby(); } catch (e) {}
   }
 
+  // 数字是拼进去的句子（"剩余 25 天 6 小时"、"全服 12 人在线"），整句查表永远查不到，
+  // 这里按模板换：$1 之类照常可用，也可以直接给一个替换函数。
+  const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
+  const PATTERNS_EN = [
+    [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
+    [/^剩\s*(\d+)\s*天$/, (m0, d) => `${d}d left`],
+    [/^全服\s*(.+?)\s*人在线$/, (m0, n) => `Global · ${n} online`],
+    [/^(.+?)\s*人在线\s*·\s*(.+)$/, (m0, n, rest) => `${n} online · ${rest}`],
+    [/^(.+?)\s*人在线$/, (m0, n) => `${n} online`],
+    [/^(\d+\.\d+\s*[–-]\s*\d+\.\d+)\s*·\s*剩余\s*(.+)$/, (m0, span, left) => `${span} · ${EN_DUR(left)} left`],
+    [/^剩余\s*(\d.*)$/, (m0, left) => `${EN_DUR(left)} left`],
+    [/^第一赛季\s*(\d.*?)\s*后开启(（[^）]*）)?$/, (m0, left, tail) => `Season 1 starts in ${EN_DUR(left)}${tail ? ' (preseason rating resets)' : ''}`],
+    [/^全皮肤限免\s*·\s*剩\s*(\d+)\s*天$/, (m0, d) => `All skins free · ${d}d left`],
+    [/^赛季已结束$/, () => 'Season over'],
+    [/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
+    [/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
+    [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`]
+  ];
+  // 一处查表：先查固定词条，再试模板；返回空串表示“没有这句的译文”
+  function lookup(text) {
+    if (!text) return '';
+    if (DICT_EN[text]) return DICT_EN[text];
+    for (let i = 0; i < PATTERNS_EN.length; i++) {
+      const re = PATTERNS_EN[i][0];
+      if (re.test(text)) return text.replace(re, PATTERNS_EN[i][1]);
+    }
+    return '';
+  }
+
   // 翻译指定文本
   function t(text) {
     if (currentLang === 'zh' || !text || typeof text !== 'string') return text;
     const trimmed = text.trim();
-    if (DICT_EN[trimmed]) {
-      return text.replace(trimmed, DICT_EN[trimmed]);
-    }
-    return text;
+    const out = lookup(trimmed);
+    return out ? text.replace(trimmed, out) : text;
   }
 
   // 递归或属性扫描翻译 DOM 节点
@@ -676,12 +819,13 @@
         node.__origText = orig;
       }
       const trimmed = orig.trim();
-      if (trimmed && DICT_EN[trimmed]) {
-        if (currentLang === 'en') {
-          node.nodeValue = orig.replace(trimmed, DICT_EN[trimmed]);
-        } else {
-          node.nodeValue = orig;
-        }
+      const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
+      // 值没变就不写：一写就是一次 DOM 变更，能省则省（这些节点每帧都可能被重排）
+      if (out) {
+        const next = trimmed === orig ? out : orig.replace(trimmed, out);
+        if (node.nodeValue !== next) node.nodeValue = next;
+      } else if (node.nodeValue !== orig) {
+        node.nodeValue = orig;
       }
       return;
     }
@@ -697,9 +841,9 @@
             node.dataset[origKey] = orig;
           }
           const trimmed = orig.trim();
-          if (trimmed && DICT_EN[trimmed]) {
-            node.setAttribute(attr, currentLang === 'en' ? orig.replace(trimmed, DICT_EN[trimmed]) : orig);
-          }
+          const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
+          const next = out ? orig.replace(trimmed, out) : orig;
+          if (node.getAttribute(attr) !== next) node.setAttribute(attr, next);
         }
       });
 
@@ -718,6 +862,26 @@
     document.body.classList.toggle('lang-en', currentLang === 'en');
     const target = root || document.body;
     if (target) translateNode(target);
+  }
+
+  // 每个页面打开时都是现拼 innerHTML，切完语言之后再画出来的那批文本没人翻译（英文模式下
+  // 打开单人模式、任务、图鉴……全是中文）。盯住 body 的新增节点补一遍；只观察 childList，
+  // 自己写 nodeValue 是 characterData，不会反过来再触发，也就不存在来回翻译的死循环。
+  let trMO = null;
+  function trWatch() {
+    if (trMO || typeof MutationObserver === 'undefined' || typeof document === 'undefined' || !document.body) return;
+    trMO = new MutationObserver(recs => {
+      if (currentLang !== 'en') return;
+      for (const r of recs) for (const n of r.addedNodes) {
+        if (n.nodeType === 1 || n.nodeType === 3) translateNode(n);
+      }
+    });
+    trMO.observe(document.body, { childList: true, subtree: true });
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.body) trWatch();
+    else if (document.addEventListener) document.addEventListener('DOMContentLoaded', trWatch, { once: true });
   }
 
   // 挂载全局

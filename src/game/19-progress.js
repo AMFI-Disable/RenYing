@@ -500,7 +500,11 @@ function applyProfile(p, opts) {
     }
   } else {
     const saga0 = PROF.saga;
-    Object.assign(PROF, p, { guest: false });
+    Object.assign(PROF, p);
+    // 游客身份只认“有没有登录”：云端字段白名单里没有 guest，存回来的存档不带这个标记，
+    // 以前这里直接写 false，重载一次就把任务、系统补偿的登录门全打开了。
+    // 游客身份只看有没有登录（离线单文件版没有账号体系，从来不拦任务和补偿）
+    PROF.guest = OFFLINE_BUILD ? false : !(window.CloudSave && CloudSave.getUser && CloudSave.getUser());
     if (saga0) PROF.saga = sagaMerge(saga0, p.saga);   // 列传进度和关卡星一样：本机和云端每位侠客取走得远的那份
   }
   PROF.loaded = true;
@@ -520,7 +524,8 @@ function applyProfile(p, opts) {
     }
   }
   renderAcc(); updateTutBtn();
-  if (!PROF.guest && typeof qfxClaim === 'function' && qfxBest() > (PROF.qfx || 0)) setTimeout(() => qfxClaim(qfxBest()), 0);
+  // 青锋行的最高分直接写进 PROF.qfx：以前这里调一个从来没定义过的 qfxClaim，这个分支永远是死的
+  if (!PROF.guest && typeof qfxBest === 'function') { const qb = qfxBest(); if (qb > (PROF.qfx || 0)) PROF.qfx = qb; }
   const eq = JSON.stringify(PROF.equip || {});
   if (eq !== applyProfile.eq) {
     applyProfile.eq = eq;
@@ -583,7 +588,7 @@ $id('wGo').addEventListener('click', async () => {
 // ---------- 任务 ----------
 function taskDest(name) {
   if (/排位|匹配|联机|好友/.test(name)) return 'netp';
-  if (/青锋行|秘境|竹林/.test(name)) return 'forest';
+  if (/青锋行|秘境|竹林/.test(name)) return 'stage';   // 竹林秘境在主线的闯关模式里
   if (/人机|关卡/.test(name)) return 'cpu';
   if (/试炼|木人/.test(name)) return 'train';
   if (/图鉴|招式/.test(name)) return 'codex';
@@ -667,7 +672,7 @@ for (const id of ['tEvt', 'tDaily', 'tWeekly']) $id(id).addEventListener('click'
   const go = e.target.closest('.task-go');
   if (go && go.dataset.go) {
     const dest = go.dataset.go;
-    if (dest === 'forest') startForest();
+    if (dest === 'forest') { if (typeof startForest === 'function') startForest(); else openScreen('stage'); }   // 旧存档里的任务还可能指到森林
     else if (dest === 'cpu') openScreen('cpu');
     else if (dest === 'train') openScreen('train');
     else menuGo(dest);

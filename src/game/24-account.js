@@ -613,6 +613,7 @@ if (window.CloudSave) {
       renderAcc();
     }).catch(() => {});
   } else {
+    PROF.guest = !OFFLINE_BUILD;   // 没登录就是游客：身份看账号，不看存档里那个会丢的标记（离线单文件版没有账号，不算游客）
     CloudSave.loadProfile().then(p => {
       if (p) applyProfile(p);
       renderAcc();

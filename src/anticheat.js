@@ -31,7 +31,9 @@ function acHash(s) {
   return (a >>> 0).toString(36) + (b >>> 0).toString(36);
 }
 const acBlank = () => ({ strikes: 0, banUntil: 0, perm: false, log: [], at: 0, pardon: 0 });
-function acPack(r) { return JSON.stringify({ s: r.strikes, b: r.banUntil, p: r.perm ? 1 : 0, l: r.log, a: r.at, d: r.pardon || 0 }); }
+// 只留最近 20 条：acLoadLocal 读回来也是先裁到 20 条再算校验，两边必须裁得一样，
+// 否则记录里一旦有 21 条，自己写的存档自己就认不出来，直接被判成“篡改”→ 三次 → 永久封。
+function acPack(r) { return JSON.stringify({ s: r.strikes, b: r.banUntil, p: r.perm ? 1 : 0, l: (r.log || []).slice(-20), a: r.at, d: r.pardon || 0 }); }
 function acLoadLocal() {
   let raw = null; try { raw = JSON.parse(localStorage.getItem(acKey()) || 'null'); } catch (e) {}
   if (!raw || !raw.d) return acBlank();

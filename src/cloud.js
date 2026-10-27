@@ -714,7 +714,10 @@
     if (!u) {
       try {
         const guest = localStorage.getItem('renying-guest-profile');
-        if (guest) return JSON.parse(guest);
+        // 游客存档是按云端字段白名单裁过的，里面没有 guest 这一项：读回来时补上。
+        // 不补的话重载之后 applyProfile 会把它当成正式账号的存档，把游客标记（任务、补偿的门）一并清掉。
+        const p = guest ? JSON.parse(guest) : null;
+        if (p && typeof p === 'object') return { ...p, guest: true };
       } catch (e) {}
       return null;
     }

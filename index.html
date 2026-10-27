@@ -3528,13 +3528,13 @@ body.kbnav #kbRing.on { display: block; }
       <div class="cxhead">
         <h2>对战回放</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          <button class="go small" id="rpTrainUploadBtn" type="button" style="padding:4px 14px;font-size:13px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">上传战局训AI</button>
+          <button class="go small" id="rpTrainUploadBtn" type="button" style="padding:4px 14px;font-size:13px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">导入训练集</button>
           <button class="ghost small" id="rpImportBtn" type="button" style="padding:4px 14px;font-size:13px">导入回放</button>
           <button class="ghost" id="rpBack" type="button">返回</button>
         </div>
       </div>
       <div class="tlist" id="rpList"></div>
-      <p class="tips" style="margin-top:10px">自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。</p>
+      <p class="tips" style="margin-top:10px">自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。<br>「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。</p>
     </div>
   </div>
 
@@ -4413,7 +4413,8 @@ const u = getUser();
 if (!u) {
 try {
 const guest = localStorage.getItem('renying-guest-profile');
-if (guest) return JSON.parse(guest);
+const p = guest ? JSON.parse(guest) : null;
+if (p && typeof p === 'object') return { ...p, guest: true };
 } catch (e) {}
 return null;
 }
@@ -5322,6 +5323,119 @@ const DICT_EN = {
 "高（最佳效果）": "High (Best)",
 "鼠标提示：左键轻击与蓄力，右键腾空闪，左键加右键使特殊技": "Mouse: Left-click Light/Charge, Right-click Aerial Flash, Left+Right Special Move",
 "龙卷": "Tornado Storm",
+"登录之后，方可领任务": "Log in to claim tasks",
+"进度先替你记着，登录之后就能领": "Progress is kept; log in to claim it",
+"领取": "Claim",
+"已领取": "Claimed",
+"前往": "Go",
+"系统补偿：500 墨锭（侠客现在都能直接用）": "Compensation: 500 Ink (every hero is playable now)",
+"习武精进：进行 1 局对战": "Sharpen Up: play 1 match",
+"招式纯熟：一局里打出 5 连击": "Combo Drill: land a 5-hit combo in one match",
+"破敌致胜：击败 1 名对手": "Win: defeat 1 opponent",
+"百炼成钢：进行 5 局对战": "Steel Yourself: play 5 matches",
+"名扬四海：赢得 3 场胜利": "Renown: win 3 matches",
+"融会贯通：施展 5 次终极奥义": "Mastery: use 5 ultimates",
+"打满 3 局人机（输赢都算）": "Play 3 CPU matches (win or lose)",
+"对战回放": "Replays",
+"播放": "Play",
+"导出": "Export",
+"删除": "Delete",
+"训AI": "Train",
+"新增训练集": "Add Training Set",
+"导入回放": "Import Replay",
+"还没有回放。打完一场人机或联机对战，这里会自动保存。": "No replays yet. Play a CPU or network match and it will be saved here.",
+"清空": "Clear",
+"导入训练集": "Import Training Set",
+"训练集": "Training Set",
+"挑战任务": "Quests",
+"每日挑战": "Daily Challenges",
+"每周任务": "Weekly Tasks",
+"每天 0 点刷新": "Resets at midnight",
+"每周一 0 点刷新": "Resets Monday midnight",
+"限时福利": "Limited Event",
+"礼包兑换": "Redeem",
+"天魔讨伐 · 全服共斗": "Demon Raid · Server-wide",
+"常规演武": "Standard Duel",
+"秘宝异变": "Relic Mutation",
+"特殊决战": "Special Showdown",
+"对战电脑": "Vs CPU",
+"守关挑战": "Stage Challenge",
+"侠客列传": "Hero Chronicles",
+"木人试剑": "Dummy Training",
+"问剑密卷 (肉鸽)": "Sword Scrolls (Roguelike)",
+"2v2 组队": "2v2 Team",
+"对手境界选择": "Opponent Realm",
+"离线人机演练": "Offline CPU Practice",
+"未解锁": "Locked",
+"剧情通关": "Story Clear",
+"开启专精演武": "Start Specialized Duel",
+"各模式最高境界": "Top Realm per Mode",
+"登录后开启排位": "Log in to play ranked",
+"天梯段位": "Ladder Rank",
+"登录后定级": "Log in to place",
+"联机胜绩": "Online Record",
+"关闭": "Close",
+"发约战到驿站": "Send challenge to the lounge",
+"武林擂台 · 候战厅": "Arena · Waiting Hall",
+"延迟检测中": "Checking latency",
+"礼包码兑换": "Redeem Code",
+"墨锭经济与武库秘笈": "Ink Economy & Armory Guide",
+"系统规则全公开": "All Rules Open",
+"对战收益": "Match Rewards",
+"成长与首胜": "Growth & First Win",
+"武库开箱": "Armory Cases",
+"攻击（按住蓄力）": "Attack (hold to charge)",
+"管理后台": "Admin Console",
+"存档导入与继承": "Save Import & Transfer",
+"排行榜": "Leaderboard",
+"加载中…": "Loading…",
+"新手福利": "New Player Gift",
+"就选这个": "Pick This One",
+"稍后再选": "Choose Later",
+"天魔讨伐": "Demon Raid",
+"出战": "Fight",
+"全服侠客各自出战，伤害累计在同一只天魔身上": "Every warrior fights; damage adds up on the same demon",
+"连不上服务器，天魔的情况暂时看不到": "Cannot reach the server; the demon's state is unavailable",
+"角色图鉴": "Hero Codex",
+"初始": "Starter",
+"已拥有": "Owned",
+"皮肤装束": "Skins & Outfits",
+"默认": "Default",
+"空中": "Air",
+"属性": "Stats",
+"江湖驿站": "Jianghu Lounge",
+"连接中…": "Connecting…",
+"江湖大厅": "Jianghu Hall",
+"好友": "Friends",
+"群聊": "Groups",
+"还没有群": "No groups yet",
+"加好友": "Add Friend",
+"发送": "Send",
+"登录后可以加好友": "Log in to add friends",
+"库存": "Inventory",
+"武器箱": "Cases",
+"武器箱 · 终端机 · 玩家市场 · 汰换合同 · 江湖行动": "Cases · Terminal · Player Market · Trade-In · Jianghu Ops",
+"新手教学 · 两分钟学会基本招式": "Tutorial · Learn the basics in two minutes",
+"终端机": "Terminal",
+"玩家市场": "Player Market",
+"江湖行动": "Jianghu Ops",
+"饰品": "Accessories",
+"改名标签": "Rename Tag",
+"全部侠客": "All heroes",
+"全部品质": "All tiers",
+"最新获得": "Newest",
+"品质最高": "Highest tier",
+"斩数最多": "Most kills",
+"去开箱": "Open Cases",
+"说明": "Guide",
+"移动": "Move",
+"跳跃": "Jump",
+"防御": "Guard",
+"蓄力斩": "Charged Slash",
+"只用键盘": "Keyboard Only",
+"手机操作": "Mobile Controls",
+"自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。": "The last 10 matches (CPU and network) are saved in this browser. Replays can be paused, slowed, fast-forwarded, and exported or imported to share.",
+"「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。": "\"Train\" exports the frames actually captured in that match: s is a 19-value state (both sides' health, guard, inner force, ultimate gauge, position, facing, airborne, stun, facing each other), a is the keys held that frame (bitmask), r comes from that frame's health/guard change plus the final result. .jsonl training sets can be imported, merged, and exported as one file.",
 };
 let currentLang = 'zh';
 function initLang() {
@@ -5368,13 +5482,36 @@ try { if (typeof updateAIBrief === 'function') updateAIBrief(); } catch (e) {}
 try { if (typeof singleSec === 'function' && typeof currentSingleTab !== 'undefined') singleSec(currentSingleTab); } catch (e) {}
 try { if (typeof renderLobby === 'function') renderLobby(); } catch (e) {}
 }
+const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
+const PATTERNS_EN = [
+[/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
+[/^剩\s*(\d+)\s*天$/, (m0, d) => `${d}d left`],
+[/^全服\s*(.+?)\s*人在线$/, (m0, n) => `Global · ${n} online`],
+[/^(.+?)\s*人在线\s*·\s*(.+)$/, (m0, n, rest) => `${n} online · ${rest}`],
+[/^(.+?)\s*人在线$/, (m0, n) => `${n} online`],
+[/^(\d+\.\d+\s*[–-]\s*\d+\.\d+)\s*·\s*剩余\s*(.+)$/, (m0, span, left) => `${span} · ${EN_DUR(left)} left`],
+[/^剩余\s*(\d.*)$/, (m0, left) => `${EN_DUR(left)} left`],
+[/^第一赛季\s*(\d.*?)\s*后开启(（[^）]*）)?$/, (m0, left, tail) => `Season 1 starts in ${EN_DUR(left)}${tail ? ' (preseason rating resets)' : ''}`],
+[/^全皮肤限免\s*·\s*剩\s*(\d+)\s*天$/, (m0, d) => `All skins free · ${d}d left`],
+[/^赛季已结束$/, () => 'Season over'],
+[/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
+[/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
+[/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`]
+];
+function lookup(text) {
+if (!text) return '';
+if (DICT_EN[text]) return DICT_EN[text];
+for (let i = 0; i < PATTERNS_EN.length; i++) {
+const re = PATTERNS_EN[i][0];
+if (re.test(text)) return text.replace(re, PATTERNS_EN[i][1]);
+}
+return '';
+}
 function t(text) {
 if (currentLang === 'zh' || !text || typeof text !== 'string') return text;
 const trimmed = text.trim();
-if (DICT_EN[trimmed]) {
-return text.replace(trimmed, DICT_EN[trimmed]);
-}
-return text;
+const out = lookup(trimmed);
+return out ? text.replace(trimmed, out) : text;
 }
 function translateNode(node) {
 if (!node) return;
@@ -5384,12 +5521,12 @@ if (node.__origText === undefined) {
 node.__origText = orig;
 }
 const trimmed = orig.trim();
-if (trimmed && DICT_EN[trimmed]) {
-if (currentLang === 'en') {
-node.nodeValue = orig.replace(trimmed, DICT_EN[trimmed]);
-} else {
+const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
+if (out) {
+const next = trimmed === orig ? out : orig.replace(trimmed, out);
+if (node.nodeValue !== next) node.nodeValue = next;
+} else if (node.nodeValue !== orig) {
 node.nodeValue = orig;
-}
 }
 return;
 }
@@ -5403,9 +5540,9 @@ if (node.dataset[origKey] === undefined) {
 node.dataset[origKey] = orig;
 }
 const trimmed = orig.trim();
-if (trimmed && DICT_EN[trimmed]) {
-node.setAttribute(attr, currentLang === 'en' ? orig.replace(trimmed, DICT_EN[trimmed]) : orig);
-}
+const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
+const next = out ? orig.replace(trimmed, out) : orig;
+if (node.getAttribute(attr) !== next) node.setAttribute(attr, next);
 }
 });
 if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE' && node.tagName !== 'CANVAS' && !node.classList.contains('no-i18n')) {
@@ -5421,6 +5558,21 @@ document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-CN';
 document.body.classList.toggle('lang-en', currentLang === 'en');
 const target = root || document.body;
 if (target) translateNode(target);
+}
+let trMO = null;
+function trWatch() {
+if (trMO || typeof MutationObserver === 'undefined' || typeof document === 'undefined' || !document.body) return;
+trMO = new MutationObserver(recs => {
+if (currentLang !== 'en') return;
+for (const r of recs) for (const n of r.addedNodes) {
+if (n.nodeType === 1 || n.nodeType === 3) translateNode(n);
+}
+});
+trMO.observe(document.body, { childList: true, subtree: true });
+}
+if (typeof document !== 'undefined') {
+if (document.body) trWatch();
+else if (document.addEventListener) document.addEventListener('DOMContentLoaded', trWatch, { once: true });
 }
 if (typeof window !== 'undefined') {
 window.I18N = {
@@ -10976,6 +11128,7 @@ pushApart();
 if (!RESIM) { for (const f of allFighters()) if (!f.hidden) animFighter(f); }
 updateDecoys();
 updateProjs();
+trSample();
 if (FOREST.on) forestUpdate();
 if (!RESIM) updateFX(STEP);
 if (!RESIM) for (const p of petals) {
@@ -11071,6 +11224,7 @@ try { if (AC) AC.resume(); } catch (e) {}
 }
 $id('extBack').addEventListener('click', closeQfx);
 const RP_KEY = 'renying-replays', RP_MAX = 10;
+const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 4, TR_PER_MATCH = 600;
 function ctrlKey(c) {
 const b = c.buf;
 let s = inBits(c.held) + ':' + c.atkT;
@@ -11078,7 +11232,7 @@ for (const k in b) s += ';' + k + '=' + b[k];
 return s;
 }
 function recBegin(kind) {
-Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], post: ['', ''], last: [-1, -1],
+Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
 meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
 }
 function rpPoint() {
@@ -11106,14 +11260,96 @@ function rpList() { try { const l = JSON.parse(localStorage.getItem(RP_KEY) || '
 function rpStore(list) {
 for (;;) {
 try { localStorage.setItem(RP_KEY, JSON.stringify(list)); return; }
-catch (e) { if (list.length <= 1) return; list.pop(); }
+catch (e) {
+const fat = list.find(m => m && Array.isArray(m.tr) && m.tr.length);
+if (fat) { delete fat.tr; continue; }
+if (list.length <= 1) return;
+list.pop();
 }
+}
+}
+function trFeat(f, o) {
+const r3 = v => Math.round(v * 1000) / 1000;
+return [
+r3(f.hp / (f.maxHp || 1)), r3(o.hp / (o.maxHp || 1)),
+r3((f.guard || 0) / (f.maxGuard || 100)), r3((o.guard || 0) / (o.maxGuard || 100)),
+r3((f.ink || 0) / (INK_MAX || 1)), r3((o.ink || 0) / (INK_MAX || 1)),
+r3((f.meter || 0) / 100), r3((o.meter || 0) / 100),
+r3(f.x / STAGE_W), r3(o.x / STAGE_W),
+r3(f.y / 400), r3(o.y / 400),
+f.face || 0, o.face || 0,
+f.onGround() ? 1 : 0, o.onGround() ? 1 : 0,
+r3(Math.min(1, (f.stun || 0) / 30)), r3(Math.min(1, (o.stun || 0) / 30)),
+f.face === (o.x > f.x ? 1 : -1) ? 1 : 0
+];
+}
+function trSample() {
+if (RESIM || !REC.on || REC.bad || !REC.meta || !A || !B || A.hidden || B.hidden) return;   // RESIM 是回滚重算，同一帧会再走一遍
+if (M.stage || FOREST.on || REPLAY.on) return;   // 闯关、竹林、看回放都不是训练局
+try { if (is2v2()) return; } catch (e) {}
+const tf = REC.kind === 'net' && typeof ROLL !== 'undefined' ? ROLL.F : REC.f;
+if (tf % TR_EVERY) return;
+if (!A.ctrl || !B.ctrl) return;
+REC.tr.push([...trFeat(A, B), inBits(A.ctrl.held), inBits(B.ctrl.held)]);
+if (REC.tr.length > TR_PER_MATCH) REC.tr.shift();
+}
+const TR_STATE_DIM = 19;
+function trSamples(m) {
+const rows = Array.isArray(m && m.tr) ? m.tr : [], out = [];
+let prev = null;
+for (let i = 0; i < rows.length; i++) {
+const row = rows[i];
+if (!Array.isArray(row) || row.length < TR_STATE_DIM + 2) continue;
+const s = row.slice(0, TR_STATE_DIM), a = row[TR_STATE_DIM];
+let r = 0;
+if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
+prev = s;
+out.push({
+hero: (CHARS[(m.ch || [0, 1])[0]] || {}).id || 'hero',
+heroIdx: (m.ch || [0, 1])[0],
+s, a, r: Math.round(r * 1000) / 1000,
+mode: m.mode || 'cpu', frame: i * TR_EVERY, source: 'user_replay'
+});
+}
+if (out.length) {   // 最后一帧给终局奖励：赢了才对，输了就是负的
+const last = out[out.length - 1];
+last.r = Math.round((last.r + (m.w === 0 ? 1 : m.w === 1 ? -1 : 0)) * 1000) / 1000;
+last.done = 1;
+}
+return out;
+}
+function trSet() { try { const l = JSON.parse(localStorage.getItem(TR_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+function trSetSave(list) {
+try { localStorage.setItem(TR_KEY, JSON.stringify(list.slice(-TR_SET_MAX))); return true; } catch (e) { return false; }
+}
+function trDownload(rows, name) {
+if (!rows.length) return false;
+const blob = new Blob([rows.map(s => JSON.stringify(s)).join('\n') + '\n'], { type: 'application/x-jsonlines' });
+const url = URL.createObjectURL(blob), a = document.createElement('a');
+a.href = url; a.download = name; a.click();
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+return true;
+}
+function trImportText(txt) {
+const rows = [], bad = [];
+String(txt || '').split(/\r?\n/).forEach((line, i) => {
+const t2 = line.trim();
+if (!t2) return;
+try {
+const o = JSON.parse(t2);
+if (!o || !Array.isArray(o.s) || o.s.length < 8 || typeof o.a !== 'number') throw new Error('bad');
+rows.push(o);
+} catch (e) { bad.push(i + 1); }
+});
+if (!rows.length) return { added: 0, bad, total: trSet().length };
+const set = trSet().concat(rows);
+return { added: rows.length, bad, total: Math.min(set.length, TR_SET_MAX), ok: trSetSave(set) };
 }
 function recSave(w) {
 REC.on = false;
 if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
 const m = REC.meta;
-Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, skins: [A.skinKey || '', B.skinKey || ''],
+Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, skins: [A.skinKey || '', B.skinKey || ''],
 names: M.mode === 'net' ? [(NET.names || {}).host || '游客', (NET.names || {}).client || '游客'] : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
 RP.last = m;
 const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
@@ -11130,41 +11366,37 @@ const win = m.w >= 0 ? `${(CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
 return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }
 function renderReplays() {
-const list = rpList();
-$id('rpList').innerHTML = list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
-: '<p class="netnote">还没有回放。打完一场人机或联机对战，这里会自动保存。</p>';
+const list = rpList(), setN = trSet().length;
+const trRow = setN ? `<div class="rprow"><div class="rpm"><div class="rpt">训练集</div><div class="rps">${setN} 个样本</div></div><div style="display:flex;gap:6px;"><button class="ghost" data-trdl="1">导出</button><button class="ghost" data-trclear="1">清空</button></div></div>` : '';
+$id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
+: '<p class="netnote">还没有回放。打完一场人机或联机对战，这里会自动保存。</p>') + trRow;
 }
 $id('rpList').addEventListener('click', e => {
 const b = e.target.closest('button'); if (!b) return;
 const list = rpList();
+if (b.dataset.trdl !== undefined) {
+const set = trSet();
+if (trDownload(set, `renying-train-set_${Date.now()}.jsonl`)) toast(`已导出训练集：${set.length} 个样本`);
+return;
+}
+if (b.dataset.trclear !== undefined) {
+try { localStorage.removeItem(TR_KEY); } catch (e) {}
+renderReplays(); toast('训练集已清空');
+return;
+}
 if (b.dataset.rp !== undefined) { const m = list[+b.dataset.rp]; if (m) startReplay(m); }
 else if (b.dataset.rpdel !== undefined) { list.splice(+b.dataset.rpdel, 1); rpStore(list); renderReplays(); }
 else if (b.dataset.rptrain !== undefined) {
 const m = list[+b.dataset.rptrain];
 if (!m) return;
-const samples = [];
-const ch = m.ch || [0, 1];
-const frames = m.frames || 600;
-const isWin0 = m.w === 0;
-for (let f = 0; f < frames; f += 2) {
-samples.push({
-hero: (CHARS[ch[0]] || {}).id || 'hero',
-heroIdx: ch[0],
-s: [0, 0, 0.25, 1, 1, 1, 1, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-a: 5,
-r: isWin0 ? 1.5 : -0.2,
-mode: m.mode || 'cpu',
-source: 'user_replay'
-});
+const samples = trSamples(m);
+if (!samples.length) {
+toast('这局没有采集到逐帧状态（旧版本录的或导入的回放），没法生成训练轨迹');
+return;
 }
-const blob = new Blob([samples.map(s => JSON.stringify(s)).join('\n') + '\n'], { type: 'application/x-jsonlines' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = `user_fight_${m.t || Date.now()}.jsonl`;
-a.click();
-setTimeout(() => URL.revokeObjectURL(url), 1000);
-toast(`已将战局转录为 AI 训练轨迹 (${samples.length} 样本) · 放入 data/ 即可学习`);
+if (trDownload(samples, `user_fight_${m.t || Date.now()}.jsonl`)) {
+toast(`已导出这一局的真实轨迹：${samples.length} 个样本（s = 19 维状态，a = 按键位掩码，r = 本帧回血/掉血与终局胜负）`);
+}
 }
 else if (b.dataset.rpexp !== undefined) {
 const m = list[+b.dataset.rpexp];
@@ -11192,7 +11424,11 @@ reader.onload = evt => {
 try {
 const txt = evt.target.result;
 if (file.name.endsWith('.jsonl')) {
-toast('已载入自定义战局轨迹 · 神经策略将同步蒸馏学习');
+const r = trImportText(txt);
+if (!r.added) throw new Error(r.bad.length ? `没有可用的样本（第 ${r.bad.slice(0, 3).join('、')} 行格式不对）` : '文件里没有样本');
+if (r.ok === false) throw new Error('本机空间不够，训练集没存下');
+renderReplays();
+toast(`已加入 ${r.added} 个样本${r.bad.length ? `（跳过 ${r.bad.length} 行格式不对的）` : ''} · 训练集共 ${r.total} 个`);
 } else {
 const m = JSON.parse(txt);
 if (!m || !Array.isArray(m.ch)) throw new Error('无效战局录像');
@@ -17530,7 +17766,8 @@ weekly: []
 }
 } else {
 const saga0 = PROF.saga;
-Object.assign(PROF, p, { guest: false });
+Object.assign(PROF, p);
+PROF.guest = OFFLINE_BUILD ? false : !(window.CloudSave && CloudSave.getUser && CloudSave.getUser());
 if (saga0) PROF.saga = sagaMerge(saga0, p.saga);   // 列传进度和关卡星一样：本机和云端每位侠客取走得远的那份
 }
 PROF.loaded = true;
@@ -17550,7 +17787,7 @@ if (sk && !ownedSkins.has(sk)) delete PROF.equip[cid];
 }
 }
 renderAcc(); updateTutBtn();
-if (!PROF.guest && typeof qfxClaim === 'function' && qfxBest() > (PROF.qfx || 0)) setTimeout(() => qfxClaim(qfxBest()), 0);
+if (!PROF.guest && typeof qfxBest === 'function') { const qb = qfxBest(); if (qb > (PROF.qfx || 0)) PROF.qfx = qb; }
 const eq = JSON.stringify(PROF.equip || {});
 if (eq !== applyProfile.eq) {
 applyProfile.eq = eq;
@@ -17610,7 +17847,7 @@ backToMenu();
 });
 function taskDest(name) {
 if (/排位|匹配|联机|好友/.test(name)) return 'netp';
-if (/青锋行|秘境|竹林/.test(name)) return 'forest';
+if (/青锋行|秘境|竹林/.test(name)) return 'stage';   // 竹林秘境在主线的闯关模式里
 if (/人机|关卡/.test(name)) return 'cpu';
 if (/试炼|木人/.test(name)) return 'train';
 if (/图鉴|招式/.test(name)) return 'codex';
@@ -17692,7 +17929,7 @@ if (e.target.closest('#compBtn')) { compClaim(); renderTasks(); return; }   // �
 const go = e.target.closest('.task-go');
 if (go && go.dataset.go) {
 const dest = go.dataset.go;
-if (dest === 'forest') startForest();
+if (dest === 'forest') { if (typeof startForest === 'function') startForest(); else openScreen('stage'); }   // 旧存档里的任务还可能指到森林
 else if (dest === 'cpu') openScreen('cpu');
 else if (dest === 'train') openScreen('train');
 else menuGo(dest);
@@ -22332,6 +22569,7 @@ else CloudSave.saveProfile(PROF, true);
 renderAcc();
 }).catch(() => {});
 } else {
+PROF.guest = !OFFLINE_BUILD;   // 没登录就是游客：身份看账号，不看存档里那个会丢的标记（离线单文件版没有账号，不算游客）
 CloudSave.loadProfile().then(p => {
 if (p) applyProfile(p);
 renderAcc();
@@ -26172,7 +26410,7 @@ for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); a = Math.imul(a 
 return (a >>> 0).toString(36) + (b >>> 0).toString(36);
 }
 const acBlank = () => ({ strikes: 0, banUntil: 0, perm: false, log: [], at: 0, pardon: 0 });
-function acPack(r) { return JSON.stringify({ s: r.strikes, b: r.banUntil, p: r.perm ? 1 : 0, l: r.log, a: r.at, d: r.pardon || 0 }); }
+function acPack(r) { return JSON.stringify({ s: r.strikes, b: r.banUntil, p: r.perm ? 1 : 0, l: (r.log || []).slice(-20), a: r.at, d: r.pardon || 0 }); }
 function acLoadLocal() {
 let raw = null; try { raw = JSON.parse(localStorage.getItem(acKey()) || 'null'); } catch (e) {}
 if (!raw || !raw.d) return acBlank();
