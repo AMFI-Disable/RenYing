@@ -221,6 +221,8 @@ if ($id('adPromoteBtn')) {
     try {
       const res = await CloudSave.promoteLocalToCloud(pw);
       ACC.token = res.uid;
+      const loaded = await CloudSave.loadProfile();   // 换成服务器认的那份（墨锭以服务器为准）
+      if (loaded) applyProfile(loaded);
       renderAccPage();
       $id('adMsg').textContent = '✅ 已成功升级为云端账号并同步！';
       toast('已成功升级为云端账号！');

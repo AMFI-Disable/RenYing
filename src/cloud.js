@@ -679,7 +679,7 @@
   }
 
   // 账号注册
-  async function register(username, password) {
+  async function register(username, password, carryProf) {
     const name = String(username).trim();
     if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
     if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
@@ -690,9 +690,9 @@
     }
 
     // 读取游客进度准备同步上云
-    let initialProf = null;
+    let initialProf = carryProf || null;   // 本机账号升级时带上它自己的存档；否则带游客进度
     try {
-      const guestRaw = localStorage.getItem('renying-guest-profile');
+      const guestRaw = initialProf ? null : localStorage.getItem('renying-guest-profile');
       if (guestRaw) initialProf = JSON.parse(guestRaw);
     } catch (e) {}
 
@@ -1189,10 +1189,8 @@
       localProf = readMirror(u.uid) || {};
     } catch (e) {}
 
-    const res = await register(name, password);
-    if (localProf) {
-      saveProfile(localProf, true);
-    }
+    // 本机存档跟着注册一起交上去（墨锭服务器最多认 REG_INK_CAP），别等注册完再存：那时墨锭已经以服务器为准，本机的就丢了
+    const res = await register(name, password, localProf && Object.keys(localProf).length ? localProf : null);
     return { success: true, uid: res.uid, name: res.name, isCloud: true };
   }
 
