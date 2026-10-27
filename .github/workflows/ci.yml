@@ -91,6 +91,9 @@ jobs:
       - name: Run Combat & AI Regression Suite
         run: node tools/combat-test.mjs --sim
 
+      - name: Lingque AI Combo Checks
+        run: node tools/ai-lingque-test.mjs
+
       - name: Start Static Web Server for Browser Audits
         run: |
           python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &

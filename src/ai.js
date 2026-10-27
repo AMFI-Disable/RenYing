@@ -62,7 +62,7 @@ const AI_KIT = {
   whirl: { role: 'zone', combo: true, reflect: true },
   // 凌雀：飞梭打中挂【雀芒】，带印记时换影穿刺会引爆并清零冷却；换影一路追踪，只有腾空闪躲得开
   spindle: { role: 'proj', combo: true },
-  shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o) => (o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state) },
+  shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, B) => !(B && B.lqHold > clock) && ((o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state)) },
 };
 // 大招：hit 按打击数据判断打不打得到；sure(me, foe, d) 额外条件
 const AI_ULT = {
@@ -77,7 +77,8 @@ const AI_ULT = {
   guangling: { far: true },
   shanshui: { far: true },
   skynet: { far: true },
-  needlestorm: { far: true },
+  // 万线归宗全场必中、挂印记、清零换影：留着续连段用（换影在冷却、对手身上没印记时放最值），对手残血就直接放
+  needlestorm: { far: true, sure: (m, o) => o.hp < 150 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
   moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
 };
 
@@ -604,6 +605,8 @@ class AIBrain {
   // ======================= 战术 =======================
   tactic(me, foe, d, to) {
     const L = this.L;
+    // 凌雀：换影途中印记没了 = 刚引爆（不管是哪段打法放的换影），记下时间给追击用
+    if (me.ch.id === 'lingque') { const mk = foe.needleMark || 0; if (me.state === 'skill' && me.skill === 'shadowdash' && this.lqMark > 0 && mk <= 0) this.lqBurst = clock; this.lqMark = mk; }
     // 自己正在出招：连段、取消、蓄力
     if (me.state === 'attack') return this.inAttack(me, foe, d, to);
     if (me.state === 'charge') return this.inCharge(me, foe, d, to);
@@ -616,6 +619,8 @@ class AIBrain {
 
     // 对手关在醉翁亭里（动不了、打不飞）：冲过去一直普攻，能打多少打多少
     if (foe.jailT > 0.1 && foe.hp > 0 && AI_FREE.includes(me.state) && me.onGround()) return this.beatJailed(me, foe, d, to);
+    // 凌雀：飞梭挂印记 → 换影引爆（重置换影）→ 追击 / 大招再挂印记，按难度决定会打到哪一步
+    if (me.ch.id === 'lingque' && this.lingqueRoute(me, foe, d, to)) return;
     // 局势
     this.updateMode(me, foe, d);
     // 抓破绽（对手收招、落地、被打僵直）
@@ -714,7 +719,7 @@ class AIBrain {
     else if (id === 'blink') this.plan([['light', 0.5], ['light', 0.68, 'hit'], ['light', 0.86, 'hit']]);   // 影遁后下一击加伤
     else if (id === 'hook') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit'], ['light', 0.76, 'hit']]);
     else if (id === 'thunderfist') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit']]);
-    else if (id === 'spindle') this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆
+    else if (id === 'spindle' && this.L.combo >= 3) this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆（寻常以上）
   }
   shouldBait(me, foe, hits) {
     const L = this.L, g = this.g;
@@ -1136,6 +1141,45 @@ class AIBrain {
     if (t <= 0.08 && me.breakCD <= 0) { this.press('dash'); return true; }
     this.dir = -to;   // 还早：先往外走，等时机再跳
     return true;
+  }
+
+  // ----- 凌雀的连段路线 -----
+  // 印记（雀芒，3.5 秒）由飞梭和大招挂上；带印记时换影穿刺会引爆、挑空，并把换影冷却清零，所以能接第二次换影追击。
+  // 难度越高会的越多：寻常只会“有印记就引爆”；劲敌会等对手闪不了再引爆、引爆后接换影追击；
+  // 绝顶 / 天道再用大招（全场必中、重新挂印记、清零换影）续上第二轮引爆，并且会等对手先把腾空闪交掉。
+  lingqueRoute(me, foe, d, to) {
+    const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
+    if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;
+    if (clock < (this.lqNext || 0)) return false;
+    const mark = foe.needleMark || 0, rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0;
+    const fly = d / SD_SPD + 0.1;                                 // 换影起手 + 飞到对手身边要多久
+    const stuck = AI_HURT.includes(foe.state) || foe.jailT > 0 || foe.rooted;   // 对手正在挨打，闪不了也挡不了
+    const canEsc = foe.breakCD <= fly && !stuck;                  // 对手的腾空闪能躲开换影
+    const roll = p => Math.random() < p;
+    const act = (k, wait = 0.25) => { this.stopAll(); this.press(k, 'lingque'); this.lqNext = clock + wait; return true; };
+    if (L.combo < 3) return false;                               // 入门：不会刻意打连段，交给通用打法
+    // 1. 对手被换影引爆挑飞、换影刚清零：大招再挂一层印记（续下一轮），没气就直接换影追击
+    if (rReady && foe.state === 'launched' && this.lqBurst && clock - this.lqBurst < 0.9) {
+      if (me.meter >= 100 && L.ult >= 0.9 && roll(L.ult)) { this.lqBurst = 0; return act('special', 1.2); }
+      if (L.combo >= 5 && roll(L.skill)) { this.lqBurst = 0; return act('skill2', 0.4); }
+    }
+    // 2. 有印记、换影好了：引爆
+    if (mark > fly + 0.05 && rReady && d < 700) {
+      const hurry = mark < fly + 0.6;                             // 印记快没了，不等了
+      if (L.read >= 0.3 && canEsc && !hurry) {
+        // 劲敌以上：对手还留着腾空闪就先不放，等它交掉闪（绝顶 / 天道往前压逼闪，劲敌只是等）
+        if (L.read >= 0.7) this.dir = d > 160 ? to : 0;
+        this.lqHold = clock + 0.1;                                // 通用打法这一下也别放换影
+        return false;
+      }
+      if (roll(Math.max(0.5, L.skill))) return act('skill2', 0.12);
+    }
+    // 3. 没印记：飞梭去挂。对手正在挨打、收招或者不在格挡时才扔（被挡住挂不上）
+    if (qReady && mark <= 0 && me.onGround() && d > 60 && d < 460 && foe.y > -90) {
+      const open = stuck || ['attack', 'skill', 'charge', 'getup', 'idle', 'walk'].includes(foe.state);
+      if (open && foe.state !== 'block' && roll(L.skill * (L.read >= 0.3 ? 1 : 0.6))) return act('skill', 0.35);
+    }
+    return false;
   }
 
   // ----- 铁山山崩：空中对准对手落下 -----

@@ -5816,7 +5816,7 @@ feast: { role: 'self', combo: false, use: (m, o, d) => (m.drunk || 0) >= 50 && d
 hook: { role: 'proj', combo: true, pull: true },
 whirl: { role: 'zone', combo: true, reflect: true },
 spindle: { role: 'proj', combo: true },
-shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o) => (o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state) },
+shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, B) => !(B && B.lqHold > clock) && ((o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state)) },
 };
 const AI_ULT = {
 crescent: { contact: true }, shadows: { contact: true }, eightimm: { contact: true },
@@ -5830,7 +5830,7 @@ featherstorm: { far: true },
 guangling: { far: true },
 shanshui: { far: true },
 skynet: { far: true },
-needlestorm: { far: true },
+needlestorm: { far: true, sure: (m, o) => o.hp < 150 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
 moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
 };
 const AI_GENE_DEF = {
@@ -6270,6 +6270,7 @@ return null;
 }
 tactic(me, foe, d, to) {
 const L = this.L;
+if (me.ch.id === 'lingque') { const mk = foe.needleMark || 0; if (me.state === 'skill' && me.skill === 'shadowdash' && this.lqMark > 0 && mk <= 0) this.lqBurst = clock; this.lqMark = mk; }
 if (me.state === 'attack') return this.inAttack(me, foe, d, to);
 if (me.state === 'charge') return this.inCharge(me, foe, d, to);
 if (me.state === 'skill') { this.dir = (me.skill === 'spin' || me.skill === 'whirl') ? to : 0; return; }
@@ -6278,6 +6279,7 @@ if (me.state === 'dash') return;
 if (this.holdAtk > 0 && AI_FREE.includes(me.state) && clock - (this.chargeT0 || 0) < 0.42) return;   // 正在按住攻击等着进蓄力
 if (this.afterBlock && AI_FREE.includes(me.state)) { this.afterBlock = false; if (this.punish(me, foe, d, to, true)) return; }
 if (foe.jailT > 0.1 && foe.hp > 0 && AI_FREE.includes(me.state) && me.onGround()) return this.beatJailed(me, foe, d, to);
+if (me.ch.id === 'lingque' && this.lingqueRoute(me, foe, d, to)) return;
 this.updateMode(me, foe, d);
 if (this.punish(me, foe, d, to, false)) return;
 if (this.mode === 'oki') return this.oki(me, foe, d, to);
@@ -6359,7 +6361,7 @@ if (id === 'gale') this.plan([['skill2', 0.42, 'hit']]);   // 疾风斩中了剑
 else if (id === 'blink') this.plan([['light', 0.5], ['light', 0.68, 'hit'], ['light', 0.86, 'hit']]);   // 影遁后下一击加伤
 else if (id === 'hook') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit'], ['light', 0.76, 'hit']]);
 else if (id === 'thunderfist') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit']]);
-else if (id === 'spindle') this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆
+else if (id === 'spindle' && this.L.combo >= 3) this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆（寻常以上）
 }
 shouldBait(me, foe, hits) {
 const L = this.L, g = this.g;
@@ -6715,6 +6717,36 @@ if (free && t < 0.5 && t > 0.08) { this.press('jump'); this.dir = -to; return tr
 if (t <= 0.08 && me.breakCD <= 0) { this.press('dash'); return true; }
 this.dir = -to;   // 还早：先往外走，等时机再跳
 return true;
+}
+lingqueRoute(me, foe, d, to) {
+const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
+if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;
+if (clock < (this.lqNext || 0)) return false;
+const mark = foe.needleMark || 0, rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0;
+const fly = d / SD_SPD + 0.1;                                 // 换影起手 + 飞到对手身边要多久
+const stuck = AI_HURT.includes(foe.state) || foe.jailT > 0 || foe.rooted;   // 对手正在挨打，闪不了也挡不了
+const canEsc = foe.breakCD <= fly && !stuck;                  // 对手的腾空闪能躲开换影
+const roll = p => Math.random() < p;
+const act = (k, wait = 0.25) => { this.stopAll(); this.press(k, 'lingque'); this.lqNext = clock + wait; return true; };
+if (L.combo < 3) return false;                               // 入门：不会刻意打连段，交给通用打法
+if (rReady && foe.state === 'launched' && this.lqBurst && clock - this.lqBurst < 0.9) {
+if (me.meter >= 100 && L.ult >= 0.9 && roll(L.ult)) { this.lqBurst = 0; return act('special', 1.2); }
+if (L.combo >= 5 && roll(L.skill)) { this.lqBurst = 0; return act('skill2', 0.4); }
+}
+if (mark > fly + 0.05 && rReady && d < 700) {
+const hurry = mark < fly + 0.6;                             // 印记快没了，不等了
+if (L.read >= 0.3 && canEsc && !hurry) {
+if (L.read >= 0.7) this.dir = d > 160 ? to : 0;
+this.lqHold = clock + 0.1;                                // 通用打法这一下也别放换影
+return false;
+}
+if (roll(Math.max(0.5, L.skill))) return act('skill2', 0.12);
+}
+if (qReady && mark <= 0 && me.onGround() && d > 60 && d < 460 && foe.y > -90) {
+const open = stuck || ['attack', 'skill', 'charge', 'getup', 'idle', 'walk'].includes(foe.state);
+if (open && foe.state !== 'block' && roll(L.skill * (L.read >= 0.3 ? 1 : 0.6))) return act('skill', 0.35);
+}
+return false;
 }
 steerAvalanche(me, foe) {
 this.dir = Math.abs(me.x - foe.x) > 30 ? Math.sign(foe.x - me.x) : 0;
