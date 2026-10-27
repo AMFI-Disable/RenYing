@@ -60,8 +60,9 @@ const AI_KIT = {
   feast: { role: 'self', combo: false, use: (m, o, d) => (m.drunk || 0) >= 50 && d > 160 && m.hp < m.maxHp * 0.72 && o.hp > m.hp * 0.7 },
   hook: { role: 'proj', combo: true, pull: true },
   whirl: { role: 'zone', combo: true, reflect: true },
+  // 凌雀：飞梭打中挂【雀芒】，带印记时换影穿刺会引爆并清零冷却；换影一路追踪，只有腾空闪躲得开
   spindle: { role: 'proj', combo: true },
-  shadowdash: { role: 'rush', combo: true, invul: true },
+  shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o) => (o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state) },
 };
 // 大招：hit 按打击数据判断打不打得到；sure(me, foe, d) 额外条件
 const AI_ULT = {
@@ -76,6 +77,7 @@ const AI_ULT = {
   guangling: { far: true },
   shanshui: { far: true },
   skynet: { far: true },
+  needlestorm: { far: true },
   moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
 };
 
@@ -501,6 +503,11 @@ class AIBrain {
     }
     const out = F2.max + 40 - d;
     if (out <= 0) return { how: 'hold' };
+    // 跑不出蓄满冲斩的范围、腾空闪也没好：迎上去，赶在蓄满前打断（以前只会站着“挡”一个挡不住的招）
+    if (free && me.breakCD > left && left > 0.15) {
+      const f1 = aiFrame(me, 'l1'), close = Math.max(0, d - f1.max + 10) / wk(me);
+      if (out / wk(me) >= left + 0.12 && close + f1.hit < left - 0.04) return { how: 'approach' };
+    }
     const wallBehind = to > 0 ? me.x - WALL < out + 20 : STAGE_W - WALL - me.x < out + 20;
     if (!wallBehind && out / wk(me) < left + 0.12) return { how: 'back' };
     if (left > 0.06) return { how: 'back' };
@@ -515,6 +522,7 @@ class AIBrain {
       case 'counter': if (free) { this.stopAll(); this.press(p.slot); } return true;
       case 'jump': if (me.onGround() && free) { this.stopAll(); this.press('jump'); this.dir = -to; } return true;
       case 'back': this.stopAll(); this.dir = -to; this.holdDown = 0; return true;
+      case 'approach': this.stopAll(); this.dir = to; this.holdDown = 0; return true;
       case 'escape': if (th.t < 0.12 || th.kind === 'charge') { this.stopAll(); this.press('dash'); } return true;
       case 'ult': if (me.meter >= 100 && th.t < 0.3) { this.stopAll(); this.press('special'); } else if (me.breakCD <= 0 && th.t < 0.1) this.press('dash'); return true;
       case 'interrupt': if (free) { this.stopAll(); if (p.key === 'dl') { this.holdDown = 0.06; this.press('light'); } else { this.holdDown = 0; this.press('light'); } p.how = 'block'; } return true;
@@ -706,6 +714,7 @@ class AIBrain {
     else if (id === 'blink') this.plan([['light', 0.5], ['light', 0.68, 'hit'], ['light', 0.86, 'hit']]);   // 影遁后下一击加伤
     else if (id === 'hook') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit'], ['light', 0.76, 'hit']]);
     else if (id === 'thunderfist') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit']]);
+    else if (id === 'spindle') this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆
   }
   shouldBait(me, foe, hits) {
     const L = this.L, g = this.g;
