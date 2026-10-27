@@ -12,7 +12,7 @@ const MOVES = {
   l5: { p: ['l3s', 'l3a'], su: .1, ac: .09, rc: .28, dmg: 28, kb: [560, -240], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 300, launch: true, next: {}, snd: 'heavy' },
   hv: { p: ['hvs', 'hva'], su: .14, ac: .09, rc: .3, dmg: 38, kb: [80, -1020], stun: .6, hs: .11, box: [0, -150, 84, -8], lunge: 130, launch: true, jumpCancel: true, next: {}, snd: 'heavy' },
   a1: { p: ['a1s', 'a1a'], air: true, su: .06, ac: .09, rc: .14, dmg: 18, kb: [150, -430], stun: .4, hs: .065, box: [0, -84, 86, 6], next: { light: 'a2' }, snd: 'swing' },
-  cs1: { p: ['charge', 'spa'], su: .04, ac: .12, rc: .06, knock: true, dmg: 36, kb: [620, -300], stun: .5, hs: .12, box: [0, -112, 112, -18], lunge: 900, launch: true, next: {}, snd: 'heavy' },
+  cs1: { p: ['charge', 'spa'], su: .04, ac: .12, rc: .06, dmg: 36, kb: [540, 0], stun: .5, hs: .12, box: [0, -112, 112, -18], lunge: 900, next: {}, snd: 'heavy' },
   cs2: { p: ['charge', 'spa'], su: .04, ac: .16, rc: .08, knock: true, dmg: 58, kb: [720, -720], stun: .6, hs: .2, box: [0, -120, 124, -10], lunge: 1350, launch: true, unblockable: true, big: true, next: {}, snd: 'heavy' },
   cf: { p: ['hvs', 'hva'], su: .05, ac: .1, rc: .26, dmg: 22, kb: [320, -420], stun: .45, hs: .08, box: [-6, -160, 104, -6], track: true, launch: true, next: {}, snd: 'swing' },
   a2: { p: ['a2s', 'a2a'], air: true, su: .08, ac: .09, rc: .22, dmg: 26, kb: [240, 1000], stun: .5, hs: .11, box: [-4, -70, 80, 24], spike: true, next: {}, snd: 'heavy' },

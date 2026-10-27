@@ -138,12 +138,14 @@ function predictHit(att, def, m, pt) {
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
   const sx = m.srcX !== undefined ? m.srcX : att.x, fx = m.dir || att.face;
-  if (wasBlocking && !m.unblockable) {
+  const isCs2 = (m && m.name === 'cs2') || (att && att.moveName === 'cs2');
+  if (wasBlocking && (!m.unblockable || isCs2)) {
     const atkDir = Math.sign(sx - def.x) || -fx || def.face;
     def.face = atkDir;
   }
-  const blocking = wasBlocking && !m.unblockable;
-  hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, blk: blocking, f: fx, nc: true });
+  const isBlockedCs2 = isCs2 && wasBlocking;
+  const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+  hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: isBlockedCs2 ? m.dmg * 0.45 : m.dmg, hs: m.hs, big: !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx, nc: true });
   predicted.push(performance.now());
 }
 function applyHit(att, def, m, pt) {
@@ -171,12 +173,14 @@ function applyHit(att, def, m, pt) {
   }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
-  if (wasBlocking && !m.unblockable) {
+  const isCs2 = (m && m.name === 'cs2') || (att && att.moveName === 'cs2');
+  if (wasBlocking && (!m.unblockable || isCs2)) {
     const atkDir = Math.sign(sx - def.x) || -fx || def.face;
     def.face = atkDir;
   }
-  const blocking = wasBlocking && !m.unblockable;
-  const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking, f: fx };
+  const isBlockedCs2 = isCs2 && wasBlocking;
+  const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+  const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
   const mm = att.ch.meterMul || 1;
 
   // 体量压制与动量碰撞比 (Kinetic Impact Ratio)
@@ -289,6 +293,10 @@ function applyHit(att, def, m, pt) {
   const isCounter = !m.isProj && def.moveName !== 'dl' && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
   let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
+  if (isBlockedCs2) {
+    dmg *= 0.45; // 格挡满蓄力斩：伤害大幅降低（较非格挡减少55%）
+    if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 35);
+  }
   if (isCounter) {
     ev.counter = true;
     const critMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'crit') ? currentChaosMutation.val : 1.2;
@@ -375,7 +383,26 @@ function applyHit(att, def, m, pt) {
   if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
   if (!m.noStun || def.hp <= 0) def.move = null;
-  if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
+  if (isBlockedCs2 && def.hp > 0) {
+    // 格挡满蓄力斩：强制被压倒在地（带来击倒），但伤害减轻且快速起身
+    def.state = 'knockdown';
+    def.t = 0;
+    def.vx = fx * 280 * Math.sqrt(massRatio);
+    def.vy = 0;
+    def.y = 0;
+    def.rot = 0;
+    def.invul = 0.45;
+    def.spiked = false;
+    def.juggle = 0;
+    def.comboHits = 0;
+    def.quickGetup = true;
+    def.knockdownDur = 0.22;
+    dust(def.x, 0, 12);
+    shake = Math.max(shake, 12);
+    SFX.thud();
+    addP({ type: 'text', text: '格挡卸力 · 快速起身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '170,220,255' });
+  }
+  else if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
   else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
   else if (m.hold) { def.state = 'held'; }
@@ -469,6 +496,13 @@ function hitVisual(ev, quiet) {
     shake = Math.max(shake, 3);
     blockFX(ev.x, ev.y, fdir); SFX.block();
     return;
+  }
+  if (ev.blockedCs2) {
+    shake = Math.max(shake, 12);
+    ring(ev.x, ev.y, 110, '170,220,255', 0.35);
+    blockFX(ev.x, ev.y, fdir);
+    SFX.block();
+    SFX.heavy();
   }
   if (ev.armor) {
     def.flash = 0.06; def.lagDelay = 0.5; shake = Math.max(shake, 4);

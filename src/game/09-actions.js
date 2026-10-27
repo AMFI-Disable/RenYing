@@ -763,9 +763,19 @@ function updateFighter(f, foe) {
         }
       }
       break;
-    case 'knockdown': if (f.t >= 0.6 && f.hp > 0 && M.phase !== 'end') { f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0; } break;
-    case 'getup':
-      if (f.t >= 0.3) {
+    case 'knockdown': {
+      const kdDur = (f.knockdownDur !== undefined) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
+      if (f.t >= kdDur && f.hp > 0 && M.phase !== 'end') {
+        f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
+        if (f.quickGetup) f.quickGetupPhase = true;
+        f.quickGetup = false; delete f.knockdownDur;
+      }
+      break;
+    }
+    case 'getup': {
+      const getupDur = f.quickGetupPhase ? 0.16 : 0.3;
+      if (f.t >= getupDur) {
+        f.quickGetupPhase = false;
         if (f.ctrl && f.ctrl.held && f.ctrl.held.down) {
           f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face;
         } else {
@@ -773,6 +783,7 @@ function updateFighter(f, foe) {
         }
       }
       break;
+    }
     case 'special': specialUpdate(f, foe); break;
     case 'charge': chargeUpdate(f, foe); break;
     case 'skill': if (SKILLS[f.skill]) SKILLS[f.skill].update(f, foe); else toNeutral(f); break;

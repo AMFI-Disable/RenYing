@@ -6974,7 +6974,7 @@ l10: { p: ['l3s', 'l3a'], su: .09, ac: .08, rc: .24, dmg: 12, kb: [520, -260], s
 l5: { p: ['l3s', 'l3a'], su: .1, ac: .09, rc: .28, dmg: 28, kb: [560, -240], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 300, launch: true, next: {}, snd: 'heavy' },
 hv: { p: ['hvs', 'hva'], su: .14, ac: .09, rc: .3, dmg: 38, kb: [80, -1020], stun: .6, hs: .11, box: [0, -150, 84, -8], lunge: 130, launch: true, jumpCancel: true, next: {}, snd: 'heavy' },
 a1: { p: ['a1s', 'a1a'], air: true, su: .06, ac: .09, rc: .14, dmg: 18, kb: [150, -430], stun: .4, hs: .065, box: [0, -84, 86, 6], next: { light: 'a2' }, snd: 'swing' },
-cs1: { p: ['charge', 'spa'], su: .04, ac: .12, rc: .06, knock: true, dmg: 36, kb: [620, -300], stun: .5, hs: .12, box: [0, -112, 112, -18], lunge: 900, launch: true, next: {}, snd: 'heavy' },
+cs1: { p: ['charge', 'spa'], su: .04, ac: .12, rc: .06, dmg: 36, kb: [540, 0], stun: .5, hs: .12, box: [0, -112, 112, -18], lunge: 900, next: {}, snd: 'heavy' },
 cs2: { p: ['charge', 'spa'], su: .04, ac: .16, rc: .08, knock: true, dmg: 58, kb: [720, -720], stun: .6, hs: .2, box: [0, -120, 124, -10], lunge: 1350, launch: true, unblockable: true, big: true, next: {}, snd: 'heavy' },
 cf: { p: ['hvs', 'hva'], su: .05, ac: .1, rc: .26, dmg: 22, kb: [320, -420], stun: .45, hs: .08, box: [-6, -160, 104, -6], track: true, launch: true, next: {}, snd: 'swing' },
 a2: { p: ['a2s', 'a2a'], air: true, su: .08, ac: .09, rc: .22, dmg: 26, kb: [240, 1000], stun: .5, hs: .11, box: [-4, -70, 80, 24], spike: true, next: {}, snd: 'heavy' },
@@ -9359,7 +9359,7 @@ notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, burnT: 0, 
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
-breakCD: 0 });
+breakCD: 0, quickGetup: false, quickGetupPhase: false });
 this.scarf = []; this.trail = []; this.ghosts = [];
 }
 onGround() { return this.y >= 0 && this.vy >= 0; }
@@ -10693,9 +10693,19 @@ f.state = 'block';
 }
 }
 break;
-case 'knockdown': if (f.t >= 0.6 && f.hp > 0 && M.phase !== 'end') { f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0; } break;
-case 'getup':
-if (f.t >= 0.3) {
+case 'knockdown': {
+const kdDur = (f.knockdownDur !== undefined) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
+if (f.t >= kdDur && f.hp > 0 && M.phase !== 'end') {
+f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
+if (f.quickGetup) f.quickGetupPhase = true;
+f.quickGetup = false; delete f.knockdownDur;
+}
+break;
+}
+case 'getup': {
+const getupDur = f.quickGetupPhase ? 0.16 : 0.3;
+if (f.t >= getupDur) {
+f.quickGetupPhase = false;
 if (f.ctrl && f.ctrl.held && f.ctrl.held.down) {
 f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face;
 } else {
@@ -10703,6 +10713,7 @@ toNeutral(f);
 }
 }
 break;
+}
 case 'special': specialUpdate(f, foe); break;
 case 'charge': chargeUpdate(f, foe); break;
 case 'skill': if (SKILLS[f.skill]) SKILLS[f.skill].update(f, foe); else toNeutral(f); break;
@@ -10954,12 +10965,14 @@ if (att.idx !== localIdx() || m.isProj) return;
 const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
 const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
 const sx = m.srcX !== undefined ? m.srcX : att.x, fx = m.dir || att.face;
-if (wasBlocking && !m.unblockable) {
+const isCs2 = (m && m.name === 'cs2') || (att && att.moveName === 'cs2');
+if (wasBlocking && (!m.unblockable || isCs2)) {
 const atkDir = Math.sign(sx - def.x) || -fx || def.face;
 def.face = atkDir;
 }
-const blocking = wasBlocking && !m.unblockable;
-hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, blk: blocking, f: fx, nc: true });
+const isBlockedCs2 = isCs2 && wasBlocking;
+const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: isBlockedCs2 ? m.dmg * 0.45 : m.dmg, hs: m.hs, big: !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx, nc: true });
 predicted.push(performance.now());
 }
 function applyHit(att, def, m, pt) {
@@ -10984,12 +10997,14 @@ return;
 }
 const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
 const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
-if (wasBlocking && !m.unblockable) {
+const isCs2 = (m && m.name === 'cs2') || (att && att.moveName === 'cs2');
+if (wasBlocking && (!m.unblockable || isCs2)) {
 const atkDir = Math.sign(sx - def.x) || -fx || def.face;
 def.face = atkDir;
 }
-const blocking = wasBlocking && !m.unblockable;
-const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking, f: fx };
+const isBlockedCs2 = isCs2 && wasBlocking;
+const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
 const mm = att.ch.meterMul || 1;
 const attWeight = (att.ch && att.ch.stat && att.ch.stat.weight) || 1;
 const defWeight = (def.ch && def.ch.stat && def.ch.stat.weight) || 1;
@@ -11092,6 +11107,10 @@ def.comboHits++;
 const isCounter = !m.isProj && def.moveName !== 'dl' && ((def.state === 'attack' && def.move && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
 const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
 let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
+if (isBlockedCs2) {
+dmg *= 0.45; // 格挡满蓄力斩：伤害大幅降低（较非格挡减少55%）
+if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 35);
+}
 if (isCounter) {
 ev.counter = true;
 const critMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'crit') ? currentChaosMutation.val : 1.2;
@@ -11173,7 +11192,25 @@ const chaosMeterMul = (M.mode === 'chaos' && currentChaosMutation && currentChao
 if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
 def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
 if (!m.noStun || def.hp <= 0) def.move = null;
-if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
+if (isBlockedCs2 && def.hp > 0) {
+def.state = 'knockdown';
+def.t = 0;
+def.vx = fx * 280 * Math.sqrt(massRatio);
+def.vy = 0;
+def.y = 0;
+def.rot = 0;
+def.invul = 0.45;
+def.spiked = false;
+def.juggle = 0;
+def.comboHits = 0;
+def.quickGetup = true;
+def.knockdownDur = 0.22;
+dust(def.x, 0, 12);
+shake = Math.max(shake, 12);
+SFX.thud();
+addP({ type: 'text', text: '格挡卸力 · 快速起身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '170,220,255' });
+}
+else if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
 else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
 else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
 else if (m.hold) { def.state = 'held'; }
@@ -11263,6 +11300,13 @@ if (ev.blk) {
 shake = Math.max(shake, 3);
 blockFX(ev.x, ev.y, fdir); SFX.block();
 return;
+}
+if (ev.blockedCs2) {
+shake = Math.max(shake, 12);
+ring(ev.x, ev.y, 110, '170,220,255', 0.35);
+blockFX(ev.x, ev.y, fdir);
+SFX.block();
+SFX.heavy();
 }
 if (ev.armor) {
 def.flash = 0.06; def.lagDelay = 0.5; shake = Math.max(shake, 4);

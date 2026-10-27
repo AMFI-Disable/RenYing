@@ -955,6 +955,79 @@ const testSuite = [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'XuLiZhan (蓄力斩) mechanics: Partial charge (cs1) does not knock down; Blocked max charge (cs2) knocks down with reduced damage and quicker getup',
+    fn: `(() => {
+      startMatch('train', 'stand', [0, 1]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      
+      // 1. Partial charge (cs1): Opponent on ground takes damage & hitstun, but does NOT fall down (not launched or knockdown)
+      toNeutral(A); toNeutral(B);
+      A.x = STAGE_W / 2 - 40; B.x = STAGE_W / 2 + 40; A.face = 1; B.face = -1;
+      A.y = 0; A.vy = 0; A.vx = 0; A.invul = 0;
+      B.y = 0; B.vy = 0; B.vx = 0; B.invul = 0;
+      A.hp = A.maxHp; B.hp = B.maxHp;
+      startAttack(A, 'cs1');
+      A.t = A.move.su + 0.01;
+      tryHit(A, B, A.move);
+      if (B.state === 'knockdown' || B.state === 'launched') {
+        return { pass: false, error: 'Partial charge cs1 should NOT bring opponent to the ground, but state was ' + B.state };
+      }
+      if (B.hp >= B.maxHp) {
+        return { pass: false, error: 'cs1 failed to deal damage' };
+      }
+
+      // 2. Max charge (cs2) unblocked: Deals full damage and brings opponent to the ground with normal getup duration (0.6s)
+      toNeutral(A); toNeutral(B);
+      A.x = STAGE_W / 2 - 40; B.x = STAGE_W / 2 + 40; A.face = 1; B.face = -1;
+      A.y = 0; A.vy = 0; A.vx = 0; A.invul = 0;
+      B.y = 0; B.vy = 0; B.vx = 0; B.invul = 0;
+      B.hp = B.maxHp;
+      startAttack(A, 'cs2');
+      A.t = A.move.su + 0.01;
+      tryHit(A, B, A.move);
+      const unblockedDmg = B.maxHp - B.hp;
+      if (B.state !== 'launched' && B.state !== 'knockdown') {
+        return { pass: false, error: 'Unblocked cs2 should bring opponent to the ground, but state was ' + B.state };
+      }
+      if (B.quickGetup) {
+        return { pass: false, error: 'Unblocked cs2 should have normal getup speed, not quickGetup' };
+      }
+
+      // 3. Max charge (cs2) when blocking: Brings opponent to ground (knockdown), deals less damage than non-blocked, and stands up quicker (0.22s)
+      toNeutral(A); toNeutral(B);
+      A.x = STAGE_W / 2 - 40; B.x = STAGE_W / 2 + 40; A.face = 1; B.face = -1;
+      A.y = 0; A.vy = 0; A.vx = 0; A.invul = 0;
+      B.y = 0; B.vy = 0; B.vx = 0; B.invul = 0;
+      B.hp = B.maxHp;
+      B.ctrl.held.down = true;
+      B.state = 'block';
+      startAttack(A, 'cs2');
+      A.t = A.move.su + 0.01;
+      tryHit(A, B, A.move);
+      const blockedDmg = B.maxHp - B.hp;
+      
+      if (B.state !== 'knockdown') {
+        return { pass: false, error: 'Blocked cs2 should bring opponent to the ground (knockdown), got ' + B.state };
+      }
+      if (blockedDmg >= unblockedDmg * 0.7) {
+        return { pass: false, error: 'Blocked cs2 should deal less damage than unblocked: blocked=' + blockedDmg + ' vs unblocked=' + unblockedDmg };
+      }
+      if (!B.quickGetup || B.knockdownDur > 0.3) {
+        return { pass: false, error: 'Blocked cs2 should set quickGetup / shorter knockdown duration: quickGetup=' + B.quickGetup + ', dur=' + B.knockdownDur };
+      }
+
+      // Verify that standing up occurs quicker than normal (0.6s)
+      B.t = 0.23;
+      updateFighter(B, A);
+      if (B.state !== 'getup') {
+        return { pass: false, error: 'Expected quick getup transition at t=0.23s, but state is ' + B.state };
+      }
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

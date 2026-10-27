@@ -58,7 +58,7 @@ class Fighter {
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
-      breakCD: 0 });
+      breakCD: 0, quickGetup: false, quickGetupPhase: false });
     this.scarf = []; this.trail = []; this.ghosts = [];
   }
   onGround() { return this.y >= 0 && this.vy >= 0; }
