@@ -2604,6 +2604,8 @@ body.has-nav #single button[data-back], body.has-nav #netp button[data-back] { d
 .trow > div:last-child { grid-area: act; }
 }
 .m2-panel { max-width: 640px; }
+.mr-panel { width: min(980px, 100%); }
+.mr-panel .rk-info-head { justify-content: space-between; }
 .m2-body { padding: 4px 4px 6px; }
 .m2-seg { display: flex; margin: 4px 0 10px; }
 .m2-seg button { flex: 1; }
@@ -3753,10 +3755,10 @@ body.kbnav #kbRing.on { display: block; }
     </div>
   </div>
   <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 斩妖列传">
-    <div class="rk-info-box m2-box">
+    <div class="rk-info-panel mr-panel">
       <div class="rk-info-head">
-        <h3 id="modalRougeTitle">同袍肉鸽 · 十三侠客斩妖列传</h3>
-        <button class="go small" id="modalRougeClose" type="button">关闭</button>
+        <b id="modalRougeTitle">同袍肉鸽 · 十三侠客斩妖列传</b>
+        <button class="mm-cancel" id="modalRougeClose" type="button">关闭</button>
       </div>
       <div class="m2-body">
         <p class="m2-desc" id="modalRougeDesc">斩妖剧情闯关与多人肉鸽合二为一！2–3 名侠客并肩体验<b>十三侠客专属斩妖故事</b>、横扫群妖波次、<b>全队共享秘卷与回血增益</b>，终幕迎战<b>随机三侠 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，大捷全员共享海量墨锭！</p>
@@ -3764,11 +3766,11 @@ body.kbnav #kbRing.on { display: block; }
         <div class="mr-story-tabs" id="rougeStoryTabs"></div>
         <div class="mr-story-box" id="rougeStoryBox"></div>
         <div class="sec-sub-label">共斗人数与征讨流程</div>
-        <div class="m2-seg" id="rougeSquadSeg" role="tablist">
+        <div class="seg m2-seg" id="rougeSquadSeg" role="tablist">
           <button class="sel" data-sq="3" type="button">3人同袍破魔 (推荐)</button>
           <button data-sq="2" type="button">2人精锐共斗</button>
         </div>
-        <div class="m2-seg" id="rougePhaseSeg" role="tablist" style="margin-top:6px">
+        <div class="seg m2-seg" id="rougePhaseSeg" role="tablist" style="margin-top:6px">
           <button class="sel" data-ph="story" type="button">完整斩妖列传 (群妖剧情波次 + 共享秘卷 + 六技魔首)</button>
           <button data-ph="boss" type="button">直讨终幕魔首 (直接迎战三侠六技融魂首领)</button>
         </div>
@@ -9829,6 +9831,7 @@ if (REC.on) recSave(w);
 taskMatchEnd(w);
 $id('endKicker').textContent = '';
 $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
+$id('netRepickBtn').classList.add('hidden');   // 「换人再战」只给联机局；上一局是联机时别带到肉鸽、剑阁、车轮战的结算里
 $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
 if (M.stage) {
 const win = w === 0;
@@ -9872,6 +9875,7 @@ saveProfile();
 }
 playSting(win ? 'victory' : 'defeat');
 const t = document.getElementById('endTitle');
+t.className = '';   // 上一局留下的毛笔大字样式会把这行长标题撑出屏幕
 t.textContent = win ? '门派车轮战 · 大捷！' : '门派车轮战 · 惜败';
 t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
 document.getElementById('endSub').textContent = win ? `三阵连克，斩获 60 墨锭！（击破比分 ${M.wins[0]} : ${M.wins[1]}）` : `胜败乃兵家常事，重整旗鼓再战（击破比分 ${M.wins[0]} : ${M.wins[1]}）`;
@@ -9915,6 +9919,7 @@ if (M.mode === 'tower') {
 const win = w === 0;
 playSting(win ? 'victory' : 'defeat');
 const t = document.getElementById('endTitle');
+t.className = '';   // 上一局留下的毛笔大字样式会把这行长标题撑出屏幕
 t.textContent = win ? '剑阁大捷！' : '试炼止步';
 t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
 document.getElementById('endSub').textContent = `止步于万仞剑阁第 ${M.towerFloor} 层，共领悟 ${(M.towerPerks || []).length} 卷武林秘籍！`;
@@ -24638,7 +24643,7 @@ setInterval(kbnTick, 120);
 function kbnBack(roots) {
 const main = roots[0];
 if (main.id === 'arModal' || main.id === 'arIns') return false;   // 武库自己会用 Esc 收起弹窗和检视
-const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, .mm-cancel, [data-close]')].find(kbnShown);
+const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, #modalRougeClose, .mm-cancel, [data-close]')].find(kbnShown);
 if (close) { close.click(); return true; }
 if (!main.classList.contains('scr')) return false;
 const id = main.id;

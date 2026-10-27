@@ -128,7 +128,7 @@ setInterval(kbnTick, 120);
 function kbnBack(roots) {
   const main = roots[0];
   if (main.id === 'arModal' || main.id === 'arIns') return false;   // 武库自己会用 Esc 收起弹窗和检视
-  const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, .mm-cancel, [data-close]')].find(kbnShown);
+  const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, #modalRougeClose, .mm-cancel, [data-close]')].find(kbnShown);
   if (close) { close.click(); return true; }
   if (!main.classList.contains('scr')) return false;
   const id = main.id;

@@ -414,6 +414,7 @@ function showEnd(w) {
   taskMatchEnd(w);
   $id('endKicker').textContent = '';
   $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
+  $id('netRepickBtn').classList.add('hidden');   // 「换人再战」只给联机局；上一局是联机时别带到肉鸽、剑阁、车轮战的结算里
   $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
   if (M.stage) {
     const win = w === 0;
@@ -457,6 +458,7 @@ function showEnd(w) {
     }
     playSting(win ? 'victory' : 'defeat');
     const t = document.getElementById('endTitle');
+    t.className = '';   // 上一局留下的毛笔大字样式会把这行长标题撑出屏幕
     t.textContent = win ? '门派车轮战 · 大捷！' : '门派车轮战 · 惜败';
     t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
     document.getElementById('endSub').textContent = win ? `三阵连克，斩获 60 墨锭！（击破比分 ${M.wins[0]} : ${M.wins[1]}）` : `胜败乃兵家常事，重整旗鼓再战（击破比分 ${M.wins[0]} : ${M.wins[1]}）`;
@@ -500,6 +502,7 @@ function showEnd(w) {
     const win = w === 0;
     playSting(win ? 'victory' : 'defeat');
     const t = document.getElementById('endTitle');
+    t.className = '';   // 上一局留下的毛笔大字样式会把这行长标题撑出屏幕
     t.textContent = win ? '剑阁大捷！' : '试炼止步';
     t.style.color = win ? 'var(--gold)' : 'rgb(255,107,107)';
     document.getElementById('endSub').textContent = `止步于万仞剑阁第 ${M.towerFloor} 层，共领悟 ${(M.towerPerks || []).length} 卷武林秘籍！`;

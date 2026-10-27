@@ -2734,6 +2734,8 @@
   }
   /* ---------- 2v2 组队弹窗：先选对阵，再选在哪打 ---------- */
   .m2-panel { max-width: 640px; }
+  .mr-panel { width: min(980px, 100%); }   /* 同袍肉鸽弹窗：内容比 2v2 多，放宽一些；关闭键靠右 */
+  .mr-panel .rk-info-head { justify-content: space-between; }
   .m2-body { padding: 4px 4px 6px; }
   .m2-seg { display: flex; margin: 4px 0 10px; }
   .m2-seg button { flex: 1; }
