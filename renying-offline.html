@@ -3660,14 +3660,14 @@ body.kbnav #kbRing.on { display: block; }
 
   <div id="langPrompt" class="scr">
     <div class="panel narrowp" style="max-width:440px;text-align:center;">
-      <h2 id="lpTitle" style="font-size:26px;margin-bottom:6px;">选择语言 / Language</h2>
-      <p class="sub" id="lpSub" style="margin:0 0 20px;font-size:14px;line-height:1.6;color:rgba(239,232,216,0.8);">请选择您的偏好语言（可随时在设置中更改）<br><span style="font-size:12px;opacity:0.75;">Select your preferred language (changeable anytime in Settings)</span></p>
+      <h2 id="lpTitle" style="font-size:26px;margin-bottom:6px;">选择语言</h2>
+      <p class="sub" id="lpSub" style="margin:0 0 20px;font-size:14px;line-height:1.6;color:rgba(239,232,216,0.8);">请选择您的偏好语言（可随时在设置中更改）<br><span style="font-size:12px;opacity:0.75;">选择你惯用的语言，之后可在「设置」里随时更改</span></p>
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
         <button class="go" id="lpPickZh" type="button" style="padding:12px 56px 12px 32px;font-size:18px;letter-spacing:.12em;display:flex;justify-content:center;align-items:center;gap:10px;">
-          <span>🇨🇳 简体中文 (Chinese)</span>
+          <span>🇨🇳 简体中文</span>
         </button>
         <button class="go alt" id="lpPickEn" type="button" style="padding:12px 56px 12px 32px;font-size:18px;letter-spacing:.12em;display:flex;justify-content:center;align-items:center;gap:10px;">
-          <span>🇺🇸 English (英文)</span>
+          <span>🇬🇧 英文</span>
         </button>
       </div>
     </div>
@@ -8844,13 +8844,13 @@ startStage(stageCh, l, false, hIdx);
 }
 });
 function startStage(c, l, isWatch = false, heroIdx = trainChar) {
-const C = CHAPTERS[c] || CHAPTERS[0];
+const CHAP = CHAPTERS[c] || CHAPTERS[0];
 if (typeof heroIdx !== 'number' || heroIdx < 0 || heroIdx >= CHARS.length) {
-heroIdx = CHAR_IDX[C.hero] !== undefined ? CHAR_IDX[C.hero] : 0;
+heroIdx = CHAR_IDX[CHAP.hero] !== undefined ? CHAR_IDX[CHAP.hero] : 0;
 }
 trainChar = heroIdx;
 const S = STAGE = stageInfo(c, l); stageCh = c;
-const story = S.story || HERO_FOREST_STORIES[C.hero] || HERO_FOREST_STORIES.qingfeng;
+const story = S.story || HERO_FOREST_STORIES[CHAP.hero] || HERO_FOREST_STORIES.qingfeng;
 M.watchAi = !!isWatch;
 if (S.boss) {   // 第五幕：与同袍肉鸽合流，迎战三侠六技融魂魔首（或守关宗师）
 FOREST.on = false; B.forestProxy = false; B.hidden = false; B.dummy = false;
@@ -8873,7 +8873,7 @@ startDummyTraining();
 M.mode = 'raid';
 M.raidSquadSize = 3;
 M.raidWave = l + 1;
-M.raidStoryHero = C.hero;
+M.raidStoryHero = CHAP.hero;
 M.raidStoryChapter = c;
 if (!M.towerPerks || !M.towerPerks.length) {
 M.towerPerks = scDraw(CHARS[heroIdx].id, [], 2).map(s => s.id);
@@ -15783,16 +15783,16 @@ ctx.fillRect(hx, hy, hw, hh);
 ctx.strokeRect(hx, hy, hw, hh);
 ctx.font = `bold ${hudFs}px ${BODY_FONT}`;
 ctx.fillStyle = '#46d3ea';
-ctx.fillText('📡 联机回滚遥测 (NET_HUD)', hx + 10, hy + 22);
+ctx.fillText('📡 联机回滚遥测（按 ~ 或 F2 收起）', hx + 10, hy + 22);
 ctx.font = `${hudFs}px ${BODY_FONT}`;
 ctx.fillStyle = 'rgba(239,232,216,0.85)';
 const rttVal = (M.mode === 'net' && NET.rtt) ? `${Math.round(NET.rtt)}ms` : '本地';
 const advVal = ROLL.on ? `${ROLL.peerAdv}帧` : '0';
-const fVal = ROLL.on ? `${ROLL.F}/${ROLL.remLast}` : `${clock.toFixed(1)}s`;
-ctx.fillText(`RTT: ${rttVal} | 模式: ${M.mode}`, hx + 10, hy + 44);
+const fVal = ROLL.on ? `${ROLL.F}/${ROLL.remLast}` : `${Math.floor(clock / 60)}:${String(Math.floor(clock % 60)).padStart(2, '0')}`;
+ctx.fillText(`延迟: ${rttVal} | 模式: ${M.mode}`, hx + 10, hy + 44);
 ctx.fillText(`帧进度: ${fVal} | 优势: ${advVal}`, hx + 10, hy + 66);
 ctx.fillText(`回滚: ${ROLL.rollbacks || 0}次 | 顿帧: ${ROLL.stall ? '是' : '否'}`, hx + 10, hy + 88);
-ctx.fillText(`状态: ${ROLL.on ? '回滚中' : '单机'} (按~或F2收起)`, hx + 10, hy + 110);
+ctx.fillText(`状态: ${ROLL.on ? '回滚中' : '单机'}（按 ~ 或 F2 收起）`, hx + 10, hy + 110);
 }
 ctx.restore();
 }
@@ -15811,12 +15811,12 @@ ctx.fillRect(cx - lw / 2, cy - bh / 2 + 6, lw, 1.5); ctx.fillRect(cx - lw / 2, c
 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 ctx.font = `italic ${s1}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.72)';
 if ('letterSpacing' in ctx) ctx.letterSpacing = `${Math.round(s1 * 0.3)}px`;
-ctx.fillText('Created by', cx, cy - s2 * 0.55);
+ctx.fillText('制作', cx, cy - s2 * 0.55);
 if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 const lift = (1 - clamp(t / 0.5, 0, 1)) * 12;
 ctx.font = `700 ${s2}px ${BODY_FONT}`;
 ctx.shadowColor = 'rgba(120,230,255,0.45)'; ctx.shadowBlur = 24; ctx.fillStyle = '#f4ecd8';
-ctx.fillText('Even, Luffy, and Opus 5.5', cx, cy + s2 * 0.3 + lift);
+ctx.fillText('Even、Luffy、半闲', cx, cy + s2 * 0.3 + lift);
 ctx.restore();
 }
 function drawAnnounce() {
@@ -23486,7 +23486,7 @@ renderAcc();
 renderAcc();
 function netStatus(t) { if ($id('netStatus')) $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
-if ($id('verLine')) $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　Created by Even, Luffy, and Opus 5.5`;
+if ($id('verLine')) $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　制作：Even、Luffy、半闲`;
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 document.body.classList.toggle('offline', OFFLINE_BUILD);
 if (OFFLINE_BUILD) {

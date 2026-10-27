@@ -704,17 +704,17 @@ function drawStats() {
 
     ctx.font = `bold ${hudFs}px ${BODY_FONT}`;
     ctx.fillStyle = '#46d3ea';
-    ctx.fillText('📡 联机回滚遥测 (NET_HUD)', hx + 10, hy + 22);
+    ctx.fillText('📡 联机回滚遥测（按 ~ 或 F2 收起）', hx + 10, hy + 22);
 
     ctx.font = `${hudFs}px ${BODY_FONT}`;
     ctx.fillStyle = 'rgba(239,232,216,0.85)';
     const rttVal = (M.mode === 'net' && NET.rtt) ? `${Math.round(NET.rtt)}ms` : '本地';
     const advVal = ROLL.on ? `${ROLL.peerAdv}帧` : '0';
-    const fVal = ROLL.on ? `${ROLL.F}/${ROLL.remLast}` : `${clock.toFixed(1)}s`;
-    ctx.fillText(`RTT: ${rttVal} | 模式: ${M.mode}`, hx + 10, hy + 44);
+    const fVal = ROLL.on ? `${ROLL.F}/${ROLL.remLast}` : `${Math.floor(clock / 60)}:${String(Math.floor(clock % 60)).padStart(2, '0')}`;
+    ctx.fillText(`延迟: ${rttVal} | 模式: ${M.mode}`, hx + 10, hy + 44);
     ctx.fillText(`帧进度: ${fVal} | 优势: ${advVal}`, hx + 10, hy + 66);
     ctx.fillText(`回滚: ${ROLL.rollbacks || 0}次 | 顿帧: ${ROLL.stall ? '是' : '否'}`, hx + 10, hy + 88);
-    ctx.fillText(`状态: ${ROLL.on ? '回滚中' : '单机'} (按~或F2收起)`, hx + 10, hy + 110);
+    ctx.fillText(`状态: ${ROLL.on ? '回滚中' : '单机'}（按 ~ 或 F2 收起）`, hx + 10, hy + 110);
   }
   ctx.restore();
 }
@@ -733,12 +733,12 @@ function drawCredit() {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `italic ${s1}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.72)';
   if ('letterSpacing' in ctx) ctx.letterSpacing = `${Math.round(s1 * 0.3)}px`;
-  ctx.fillText('Created by', cx, cy - s2 * 0.55);
+  ctx.fillText('制作', cx, cy - s2 * 0.55);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
   const lift = (1 - clamp(t / 0.5, 0, 1)) * 12;
   ctx.font = `700 ${s2}px ${BODY_FONT}`;
   ctx.shadowColor = 'rgba(120,230,255,0.45)'; ctx.shadowBlur = 24; ctx.fillStyle = '#f4ecd8';
-  ctx.fillText('Even, Luffy, and Opus 5.5', cx, cy + s2 * 0.3 + lift);
+  ctx.fillText('Even、Luffy、半闲', cx, cy + s2 * 0.3 + lift);
   ctx.restore();
 }
 function drawAnnounce() {

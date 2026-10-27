@@ -318,13 +318,13 @@ $id('stGrid').addEventListener('click', e => {
   }
 });
 function startStage(c, l, isWatch = false, heroIdx = trainChar) {
-  const C = CHAPTERS[c] || CHAPTERS[0];
+  const CHAP = CHAPTERS[c] || CHAPTERS[0];
   if (typeof heroIdx !== 'number' || heroIdx < 0 || heroIdx >= CHARS.length) {
-    heroIdx = CHAR_IDX[C.hero] !== undefined ? CHAR_IDX[C.hero] : 0;
+    heroIdx = CHAR_IDX[CHAP.hero] !== undefined ? CHAR_IDX[CHAP.hero] : 0;
   }
   trainChar = heroIdx;
   const S = STAGE = stageInfo(c, l); stageCh = c;
-  const story = S.story || HERO_FOREST_STORIES[C.hero] || HERO_FOREST_STORIES.qingfeng;
+  const story = S.story || HERO_FOREST_STORIES[CHAP.hero] || HERO_FOREST_STORIES.qingfeng;
   M.watchAi = !!isWatch;
   if (S.boss) {   // 第五幕：与同袍肉鸽合流，迎战三侠六技融魂魔首（或守关宗师）
     FOREST.on = false; B.forestProxy = false; B.hidden = false; B.dummy = false;
@@ -348,7 +348,7 @@ function startStage(c, l, isWatch = false, heroIdx = trainChar) {
   M.mode = 'raid';
   M.raidSquadSize = 3;
   M.raidWave = l + 1;
-  M.raidStoryHero = C.hero;
+  M.raidStoryHero = CHAP.hero;
   M.raidStoryChapter = c;
   if (!M.towerPerks || !M.towerPerks.length) {
     M.towerPerks = scDraw(CHARS[heroIdx].id, [], 2).map(s => s.id);
