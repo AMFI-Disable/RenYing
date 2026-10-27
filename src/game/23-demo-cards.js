@@ -462,9 +462,9 @@ function bpStart(mode, customOpts = null) {
       bans = [];
       picks = [-1, -1];
     } else {
-      // 联机对战（房间、匹配、排位）：各禁 1 人、各选 2 人接力，蛇形顺序 0禁 → 1禁 → 0选 → 1选 → 1选 → 0选
-      steps = BP_DUO_STEPS;
-      picks = [[-1, -1], [-1, -1]];
+      // 联机对战（房间、匹配、排位）：各禁 1 人、各选 3 人车轮接力，蛇形顺序 0禁 → 1禁 → 0选 → 1选 → 1选 → 0选 → 0选 → 1选
+      steps = BP_TAG3_STEPS;
+      picks = [[-1, -1, -1], [-1, -1, -1]];
     }
   }
 
@@ -552,9 +552,13 @@ function bpFinish() {
   } else if (mode === 'net') {
     if (NET.role === 'host') {
       const seed = (Math.random() * 2147483647) | 0;
-      const flatCh = Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]] : picks;
-      send({ rstart: { ch: flatCh, seed } });
-      rollStart(flatCh, seed);
+      const is2v2Net = netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp';
+      const duo = !is2v2Net && Array.isArray(picks[0]) ? picks : null;
+      const flatCh = is2v2Net && Array.isArray(picks[0])
+        ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
+        : (duo ? [duo[0][0], duo[1][0]] : picks);
+      send({ rstart: duo ? { ch: flatCh, seed, duo } : { ch: flatCh, seed } });
+      rollStart(flatCh, seed, duo);
     }
   } else if (mode === 'chaos') {
     startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
@@ -803,12 +807,14 @@ function renderBP() {
   const TAG3_ROLES = ['先锋', '中坚', '大将'];
   const TEAM2_ROLES = ['先锋', '次锋'];
 
+  const isTag3BP = bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3);
+
   let stepTitle = '';
   if (done) {
     stepTitle = isWatch ? '点将完成 · 演武即将开战' : '点将完成 · 准备开战';
   } else if (type === 'ban') {
     stepTitle = `${bpSideName(side)}禁用一名侠客`;
-  } else if (bpMode === 'tag3') {
+  } else if (isTag3BP) {
     const idxNum = (BP.picks[side] || []).filter(x => x >= 0).length;
     stepTitle = `${bpSideName(side)}钦点【${TAG3_ROLES[idxNum] || '大将'}】出战`;
   } else if (multiPick) {
@@ -851,14 +857,15 @@ function renderBP() {
         el.innerHTML = `<div class="who" style="color:var(--p1)">出战大侠</div>
           <div class="slots">${slot}</div>`;
       }
-    } else if (bpMode === 'tag3') {
+    } else if (isTag3BP) {
       const picks = BP.picks[sd] || [-1, -1, -1];
       const slotsHtml = [0, 1, 2].map(slotIdx => {
         const idx = picks[slotIdx];
         const isActive = !done && side === sd && type === 'pick' && (BP.picks[sd].filter(x => x >= 0).length === slotIdx);
         return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${TAG3_ROLES[slotIdx]} ${CHARS[idx].name}</span>` : TAG3_ROLES[slotIdx]}</div>`;
       }).join('');
-      el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))}阵线</div>
+      const sideLabel = bpMode === 'tag3' ? `${escapeHTML(bpSideName(sd))}阵线` : escapeHTML(bpSideName(sd));
+      el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${sideLabel}</div>
         <div class="slots">${banSlotHtml}${slotsHtml}</div>`;
     } else if (multiPick) {
       const picks = BP.picks[sd] || [-1, -1];

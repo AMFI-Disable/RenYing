@@ -214,7 +214,7 @@ function rollStart(ch, seed, duo) {
   setChars(ch[0], ch[1]);
   if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
   setupNetMatch();
-  if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 2), duo[1].slice(0, 2)];   // 各选 2 人，输一回合换下一人
+  if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
   ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
   human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];

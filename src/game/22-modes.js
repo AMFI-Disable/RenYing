@@ -1114,7 +1114,8 @@ $id('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') chatSend
 // ======================= 禁用与选人 =======================
 // 顺序：1P 禁用 → 2P 禁用 → 1P 选人 → 2P 选人。联机时由房主记录结果并同步。
 const BP_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']];
-const BP_DUO_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];   // 联机对战：各禁 1 人、各选 2 人
+const BP_DUO_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];   // 2v2 对战：各禁 1 人、各选 2 人
+const BP_TAG3_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']];   // 联机 1v1 车轮接力：各禁 1 人、各选 3 人
 const bpSteps = () => (BP && BP.steps) || BP_STEPS;
 const isMultiPickBP = () => !!(BP && Array.isArray(BP.picks) && Array.isArray(BP.picks[0]));
 const isLocalBothHumanBP = () => bpMode === '2v2' && !!(bpCustomOpts && bpCustomOpts.subMode === 'pp_pp');

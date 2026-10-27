@@ -555,7 +555,9 @@ function endRound() {
     say(txt, 1.4);
     return;
   }
-  if ((w >= 0 && M.wins[w] >= WINS_NEEDED) || M.round >= MAX_ROUNDS) {
+  const needWins = isDuo() ? (M.duo[0].length || 3) : WINS_NEEDED;
+  const maxRnds = isDuo() ? Math.max(MAX_ROUNDS, needWins * 2 + 1) : MAX_ROUNDS;
+  if ((w >= 0 && M.wins[w] >= needWins) || M.round >= maxRnds) {
     if (M.mode === 'demo') return startMatch('demo');
     M.phase = 'end';
     const finalWinner = w >= 0 ? w : (M.wins[0] >= M.wins[1] ? 0 : 1);
@@ -564,21 +566,29 @@ function endRound() {
     return;
   }
   M.round++;
-  M.carry = [null, null];   // 只有联机的两人接力带血：活下来的人继承剩余血量 +CARRY_HEAL，倒下的人换人满血。其余模式每回合双方满血
+  M.carry = [null, null];   // 联机车轮接力带血：活下来的人继承剩余血量 +CARRY_HEAL，倒下的人换下一名角色满血。其余模式每回合双方满血
   if (isDuo()) [A, B].forEach((f, i) => { if (f.hp > 0 && (w < 0 || i === w)) M.carry[i] = Math.min(1, (f.hp + CARRY_HEAL) / f.maxHp); });
   const relay = duoRelay(w);
   startRound();
   if (relay) say(relay, 1.4);
 }
-// 联机各选 2 人的对战：输掉这回合的一方换上第二名角色（满血），赢的人带血 +CARRY_HEAL 继续守擂；谁的两人都被击倒谁输
+// 联机车轮接力对战（各选 3 人）：输掉这回合的一方换上下一名角色（满血），赢的人带血 +CARRY_HEAL 继续守擂；谁的全员都被击倒谁输
 const isDuo = () => !!(M.duo && !is2v2() && ['net', 'replay'].includes(M.mode));
 function duoRelay(w) {
   if (!isDuo() || w < 0) return '';
-  const loser = 1 - w, next = M.duo[loser][Math.min(1, M.wins[w])];
+  const loser = 1 - w, team = M.duo[loser] || [];
+  const idx = Math.min(team.length - 1, M.wins[w]);
+  const next = team[idx];
   const f = [A, B][loser];
   if (next === undefined || next < 0 || next === f.chIdx) return '';
   f.setChar(next); f.meter = 0;
   if (f.ctrl && typeof f.ctrl.updateTactic === 'function') f.ctrl.updateTactic(f, [A, B][w]);
+  if (team.length >= 3) {
+    const isMid = idx === 1;
+    return loser === localIdx()
+      ? (isMid ? `中坚 ${CHARS[next].name} 接力出阵！` : `大将 ${CHARS[next].name} 背水一战！`)
+      : (isMid ? `对方中坚 ${CHARS[next].name} 出阵！` : `对方大将 ${CHARS[next].name} 亲征！`);
+  }
   return `${loser === localIdx() ? '' : '对方 '}${CHARS[next].name} 接力出战！`;
 }
 

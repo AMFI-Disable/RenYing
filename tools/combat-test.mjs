@@ -370,18 +370,26 @@ const testSuite = [
         return { pass: false, error: 'CPU 1v1 should restore full HP each round: ' + [A.hp, A.maxHp, B.hp, B.maxHp].join('/') };
       }
 
-      // 3c. 联机两人接力：输一回合的一方换第二人满血上，赢的人带血 +CARRY_HEAL，两人都倒才算输
-      startMatch('cpu', 'god', [[0, 1], [2, 3]], true); M.mode = 'net';
+      // 3c. 联机三人车轮接力：输一回合的一方换下一名侠客满血上，赢的人带血 +CARRY_HEAL，三人都倒才算输
+      startMatch('cpu', 'god', [[0, 1, 4], [2, 3, 5]], true); M.mode = 'net';
       if (!M.duo || A.chIdx !== 0 || B.chIdx !== 2) {
         return { pass: false, error: 'Duo match should start with the first picks' };
       }
       A.hp = 50; B.hp = 0; M.koWinner = 0; endRound();
       if (B.chIdx !== 3 || B.hp !== B.maxHp || A.chIdx !== 0 || A.hp !== Math.min(A.maxHp, 50 + CARRY_HEAL)) {
-        return { pass: false, error: 'Duo relay mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, B.maxHp].join('/') };
+        return { pass: false, error: 'Duo relay 1 mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, B.maxHp].join('/') };
       }
       A.hp = 0; B.hp = 30; M.koWinner = 1; endRound();
       if (A.chIdx !== 1 || A.hp !== A.maxHp || B.chIdx !== 3 || B.hp !== Math.min(B.maxHp, 30 + CARRY_HEAL) || M.phase === 'end') {
-        return { pass: false, error: 'Duo second relay mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, M.phase].join('/') };
+        return { pass: false, error: 'Duo relay 2 mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, M.phase].join('/') };
+      }
+      A.hp = 0; B.hp = 40; M.koWinner = 1; endRound();
+      if (A.chIdx !== 4 || A.hp !== A.maxHp || B.chIdx !== 3 || B.hp !== Math.min(B.maxHp, 40 + CARRY_HEAL) || M.phase === 'end') {
+        return { pass: false, error: 'Duo relay 3 mismatch: ' + [A.chIdx, A.hp, B.chIdx, B.hp, M.phase].join('/') };
+      }
+      A.hp = 0; B.hp = 20; M.koWinner = 1; endRound();
+      if (M.phase !== 'end' || M.wins[1] !== 3) {
+        return { pass: false, error: 'Duo 3v3 tag match should end after 3 wins: ' + [M.phase, M.wins].join('/') };
       }
       M.mode = 'cpu';
 
@@ -788,6 +796,51 @@ const testSuite = [
       }
       toNeutral(A);
       c.held.aim = 1;
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Net 1v1 BP chooses 3 heroes per side (BP_TAG3_STEPS) and passes duo to rollStart for 3v3 tag relay',
+    fn: `(() => {
+      const prevRole = NET.role, prevRoomMode = netRoomMode;
+      NET.role = 'host';
+      netRoomMode = 'normal';
+      bpStart('net');
+      if (!BP || BP.steps.length !== 8 || BP.picks[0].length !== 3 || BP.picks[1].length !== 3) {
+        return { pass: false, error: 'Net 1v1 BP did not initialize 8-step 3-pick draft' };
+      }
+      // Execute all 8 steps (2 bans + 6 picks)
+      const seq = [0, 1, 2, 3, 4, 5, 6, 7];
+      for (const ch of seq) bpApply(ch);
+      if (BP.step !== 8 || BP.picks[0].join(',') !== '2,5,6' || BP.picks[1].join(',') !== '3,4,7') {
+        return { pass: false, error: 'Net 1v1 BP snake picks mismatch: ' + JSON.stringify(BP.picks) };
+      }
+      currentScreen = 'bp';
+      bpFinish();
+      if (!M.duo || M.duo[0].join(',') !== '2,5,6' || M.duo[1].join(',') !== '3,4,7') {
+        return { pass: false, error: 'bpFinish(net) did not pass 3-hero duo to rollStart: ' + JSON.stringify(M.duo) };
+      }
+      if (A.chIdx !== 2 || B.chIdx !== 3) {
+        return { pass: false, error: 'Initial fighters mismatch: ' + A.chIdx + ' vs ' + B.chIdx };
+      }
+      // Simulate Round 1 win for Side 0 -> Side 1 relays to 2nd hero (4)
+      A.hp = 100; B.hp = 0; M.koWinner = 0; endRound();
+      if (B.chIdx !== 4 || A.chIdx !== 2 || M.phase === 'end') {
+        return { pass: false, error: 'Net 1v1 failed to relay to 2nd hero after Round 1: B=' + B.chIdx };
+      }
+      // Simulate Round 2 win for Side 0 -> Side 1 relays to 3rd hero (7)
+      A.hp = 80; B.hp = 0; M.koWinner = 0; endRound();
+      if (B.chIdx !== 7 || A.chIdx !== 2 || M.phase === 'end') {
+        return { pass: false, error: 'Net 1v1 failed to relay to 3rd hero after Round 2: B=' + B.chIdx };
+      }
+      // Simulate Round 3 win for Side 0 -> Match ends after all 3 heroes defeated
+      A.hp = 60; B.hp = 0; M.koWinner = 0; endRound();
+      if (M.phase !== 'end' || M.wins[0] !== 3) {
+        return { pass: false, error: 'Net 1v1 did not end after defeating all 3 heroes: phase=' + M.phase + ', wins=' + M.wins };
+      }
+      NET.role = prevRole;
+      netRoomMode = prevRoomMode;
+      toMenu();
       return { pass: true, error: null };
     })()`
   }

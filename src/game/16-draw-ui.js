@@ -374,9 +374,9 @@ function drawHUD() {
       ctx.font = `${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.6)';
       ctx.fillText(pn, i === 0 ? x0 + cw + 10 : x0 + barW - cw - 10, top + bh + 8 + bh * 0.6);
     }
-    // 车轮战三人、联机接力两人：名字旁边一排圆点，正在打的亮起，被击倒的打叉
+    // 车轮战三人、联机接力三人（或两人）：名字旁边一排圆点，正在打的亮起，被击倒的打叉
     const roster = M.mode === 'tag3' && M.teams && M.teams[i] ? { titles: ['先', '中', '大'], out: M.teamIdx[i] }
-      : isDuo() ? { titles: ['首', '接'], out: Math.min(2, M.wins[1 - i]) } : null;
+      : isDuo() ? { titles: M.duo[i].length >= 3 ? ['先', '中', '大'] : ['首', '接'], out: Math.min(M.duo[i].length, M.wins[1 - i]) } : null;
     if (roster) {
       const slotTitles = roster.titles;
       for (let r = 0; r < slotTitles.length; r++) {
