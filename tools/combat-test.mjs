@@ -765,8 +765,9 @@ const testSuite = [
         const ch = CHARS[ci];
         setChars(ci, (ci + 1) % CHARS.length);
         A.reset(200);
-        if (A.maxHp !== expectedHp[ch.id] || A.hp !== expectedHp[ch.id]) {
-          return { pass: false, error: ch.name + ' maxHp mismatch: got ' + A.maxHp + ', expected ' + expectedHp[ch.id] };
+        const wantHp = Math.round(expectedHp[ch.id] * ((BAL[ch.id] || {}).hp || 1));   // 设定气血 × 强度调整（BAL）
+        if (A.maxHp !== wantHp || A.hp !== wantHp) {
+          return { pass: false, error: ch.name + ' maxHp mismatch: got ' + A.maxHp + ', expected ' + wantHp };
         }
       }
       if (CHARS[2].stat.weight !== 1.35) return { pass: false, error: 'TieShan weight mismatch' };

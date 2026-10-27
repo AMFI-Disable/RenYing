@@ -24,22 +24,22 @@ const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: 
 // ======================= 角色 =======================
 // 全英雄基础属性与战斗配置（严格遵循英雄设定）
 // 强度：伤害（普攻 normal、技能 skill、大招 ult）、冷却 cd、气血 hp 的倍率。
-// 用 tools/ai-arena.mjs 在五个难度各打同级对局（每个难度 864 场，每个侠客 144 场），按各侠客的平均胜率迭代五轮，取最后三轮的几何平均：
-// 调之前各侠客平均胜率 28%~91%，调之后 47%~56%。铁山原来九成胜率，削得最多；它的大招“山崩”正中能回满气量连放，单独多削一些。
+// 2026-10-27 按 tools/trainer.mjs 方案 B 调过：天道、劲敌两档各打一遍，先改 7 项技能冷却和墨团瞄准，再按胜率迭代倍率（伤害和气血乘同一个数）。
+// 调之前各侠客平均胜率 24%~83%，换一组随机种子复核 44%~54%。详见 docs/trainer/plan.md。
 const BAL = {
-  qingfeng: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  feiying: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  tieshan: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  lingshuang: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  liuyun: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  leiming: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  moyu: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  yuehua: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  yanling: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  yuxiao: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  zuixian: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  gouchen: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-  lingque: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  qingfeng: { normal: 0.915, skill: 0.915, ult: 0.915, cd: 1.0, hp: 0.915 },
+  feiying: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
+  tieshan: { normal: 1.076, skill: 1.076, ult: 1.076, cd: 1.0, hp: 1.076 },
+  lingshuang: { normal: 1.066, skill: 1.066, ult: 1.066, cd: 1.0, hp: 1.066 },
+  liuyun: { normal: 0.959, skill: 0.959, ult: 0.959, cd: 1.0, hp: 0.959 },
+  leiming: { normal: 1.067, skill: 1.067, ult: 1.067, cd: 1.0, hp: 1.067 },
+  moyu: { normal: 0.882, skill: 0.882, ult: 0.882, cd: 1.0, hp: 0.882 },
+  yuehua: { normal: 0.926, skill: 0.926, ult: 0.926, cd: 1.0, hp: 0.926 },
+  yanling: { normal: 1.068, skill: 1.068, ult: 1.068, cd: 1.0, hp: 1.068 },
+  yuxiao: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
+  zuixian: { normal: 1.026, skill: 1.026, ult: 1.026, cd: 1.0, hp: 1.026 },
+  gouchen: { normal: 1.08, skill: 1.08, ult: 1.08, cd: 1.0, hp: 1.08 },
+  lingque: { normal: 1.108, skill: 1.108, ult: 1.108, cd: 1.0, hp: 1.108 },
 };
 const balOf = f => (f && f.ch && BAL[f.ch.id]) || BAL.qingfeng;
 function balDmg(att, m) { const b = balOf(att); return m.ult ? b.ult : (m.sk || (!m.isProj && att.state === 'skill')) ? b.skill : b.normal; }
