@@ -425,40 +425,111 @@ function drawFighter(f) {
     ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * Math.sin(clock * 14)})`;
     ctx.fillText('腾空闪', sk.head[0], sk.head[1] - 28); ctx.restore();
   }
-  // 2v2 / 同袍肉鸽 队伍头顶指示三角（玩家绿、队友蓝、对手/魔首红金；阵亡后自动消失）
-  if (isMulti() && f.hp > 0 && !f.hidden && sk.head) {
-    const isAiWatch = M.watchAi || (M.mode === 'watch2v2' && M.watchAi);
-    let col = '#46d3ea', glow = 'rgba(70,211,234,0.45)';
-    if (isAiWatch) {
-      const isTeam0 = fighterTeam(f) === 0;
-      col = isTeam0 ? '#46d3ea' : '#ff4d4d';
-      glow = isTeam0 ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)';
-    } else {
-      const isUser = (f.ctrl === human[0]) || (typeof viewerIdx === 'function' && viewerIdx() >= 0 && f.idx === viewerIdx());
-      const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
-      const isTeammate = (fighterTeam(f) === myTeam) && !isUser;
-      col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : (isRaid() ? '#ffd166' : '#ff4d4d'));
-      glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.55)');
-    }
-    const hx = sk.head[0];
-    const bounce = Math.sin(clock * 5 + f.idx * 1.5) * 2.5;
-    const tipY = sk.head[1] - 32 + bounce;
-    const topY = tipY - 12;
-    const halfW = 7;
+}
+// ======================= 多人同屏：一眼找到自己和队友 =======================
+// 2v2、同袍肉鸽、全服肉鸽的关键战和开放世界里，人一多、特效一密就找不到自己。
+// 自己：脚下金色双圈 + 头顶金色箭头和「你」（同屏几个人一起玩时写 1P / 2P …，各用各的颜色）；
+// 队友：脚下一道队色细圈 + 头顶名字；对手只留一个红色小三角；魔首有自己的血条，不另加。
+// 跑出画面时在屏幕左右边缘留一个指向他的箭头。字号按屏幕像素算，窄屏、拉远镜头都一样大。
+const ID_SELF = ['233,196,106', '190,150,255', '255,140,200', '170,230,120'];   // 1P 金、2P 紫、3P 粉、4P 青柠（都和队友的青色、对手的红色分得开）
+const ID_ALLY = '70,211,234', ID_FOE = '255,77,77';
+function idHumans() { return allFighters().filter(f => !f.hidden && human.includes(f.ctrl)); }
+// 这个人对我来说是谁：{ kind: 'self' | 'ally' | 'foe', rgb, label }，不用标的返回 null
+function idRole(f) {
+  if (!f || f.hidden || f.dummy || !f.sk) return null;
+  if (M.mode === 'world' && !isMulti()) return f === A ? { kind: 'self', rgb: ID_SELF[0], label: '你' } : null;
+  if (!isMulti() || M.mode === 'demo' || M.mode === 'replay') return null;
+  if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: f.look.name } : { kind: 'foe', rgb: ID_FOE };   // 旁观：只分两队
+  const k = human.indexOf(f.ctrl);
+  if (k >= 0) return { kind: 'self', rgb: ID_SELF[k] || ID_SELF[0], label: idHumans().length > 1 ? `${k + 1}P` : '你' };
+  if (fighterTeam(f) === localTeam()) return { kind: 'ally', rgb: ID_ALLY, label: String(f.ctrl === NET.remote ? ((NET.names || {})[NET.role === 'host' ? 'client' : 'host'] || f.look.name) : f.look.name).slice(0, 6) };   // 名字太长就截到 6 个字，别把旁边的名牌挤走
+  return isRaid() ? null : { kind: 'foe', rgb: ID_FOE };
+}
+// 脚下的圈：在画人之前画，身体会压在上面，不挡招式
+function drawIdentityGround(list) {
+  const px = 1 / worldScale();
+  for (const f of list) {
+    const r = f.hp > 0 && idRole(f); if (!r || r.kind === 'foe') continue;
+    const hgt = clamp(-f.y / 300, 0, 1), rx = 40 * (1 - hgt * 0.35), ry = 8 * (1 - hgt * 0.35);
     ctx.save();
-    ctx.shadowColor = glow;
-    ctx.shadowBlur = 5;
-    ctx.fillStyle = col;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.4;
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(hx, tipY);
-    ctx.lineTo(hx - halfW, topY);
-    ctx.lineTo(hx + halfW, topY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    if (r.kind === 'self') {
+      const pulse = 0.5 + 0.5 * Math.sin(clock * 4), hurt = f.flash > 0 ? 1 : 0;
+      ctx.fillStyle = `rgba(${r.rgb},${0.16 + 0.08 * pulse})`;
+      ctx.beginPath(); ctx.ellipse(f.x, 2, rx + 6, ry + 2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = hurt ? 'rgba(255,90,80,0.95)' : `rgba(${r.rgb},0.95)`; ctx.lineWidth = 2.6 * px;
+      ctx.beginPath(); ctx.ellipse(f.x, 2, rx + 6, ry + 2, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = `rgba(${r.rgb},${0.35 + 0.35 * pulse})`; ctx.lineWidth = 1.4 * px;
+      ctx.beginPath(); ctx.ellipse(f.x, 2, rx + 14 + pulse * 4, ry + 4 + pulse, 0, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      ctx.strokeStyle = `rgba(${r.rgb},0.8)`; ctx.lineWidth = 1.6 * px; ctx.setLineDash([7 * px, 5 * px]);
+      ctx.beginPath(); ctx.ellipse(f.x, 2, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+// 头顶小箭头 + 脚下名牌：都画在粒子和特效之后，不会被刀光盖掉。
+// 头顶上方留给连击数和「腾空闪」提示，所以字写在脚下的地面上（跳起来也留在落脚处，和金圈连在一起）
+function drawIdentityTags(list) {
+  const px = 1 / worldScale(), fs = Math.max(13, Math.round(H * 0.019)), tags = [];
+  for (const f of list) {
+    const r = f.hp > 0 && idRole(f); if (!r) continue;
+    const sz = f.size || 1, hx = f.x + (f.sk.head[0] - f.x) * sz, hy = f.y + (f.sk.head[1] - f.y) * sz;   // 变大变小的人：头的位置跟着缩放
+    tags.push({ f, r, hx, hy: hy - 32 * sz, x: f.x, row: 0 });
+  }
+  tags.sort((a, b) => (a.r.kind === 'self') - (b.r.kind === 'self') || a.f.idx - b.f.idx);   // 自己的最后画，叠在最上面
+  // 名牌挤在一起时：1P 的不动，其余的按 自己人 → 队友 的顺序找一个空位：先往下一行，屏幕矮放不下就往左右让
+  const sc = worldScale(), ph = fs * 1.35, fitRow1 = groundY() + 14 + ph * 2 + 6 < H - 34;
+  const spots = fitRow1 ? [[0, 0], [0, 1], [-1, 0], [1, 0], [-1, 1], [1, 1], [-2, 0], [2, 0]] : [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0]];
+  const prio = t => t.f.ctrl === human[0] ? 0 : t.r.kind === 'self' ? 1 : 2, placed = [], GAP = 78;
+  for (const t of tags.filter(t => t.r.label && t.r.kind !== 'foe').sort((a, b) => prio(a) - prio(b))) {
+    const sx = t.x * sc;
+    const free = ([c, r]) => !placed.some(o => o.row === r && Math.abs(o.x * sc + o.col * GAP - (sx + c * GAP)) < GAP);
+    const [c, r] = spots.find(free) || [0, 0];
+    t.col = c; t.row = r; placed.push(t);
+  }
+  for (const { f, r, hx, hy, x, row, col } of tags) {
+    const self = r.kind === 'self', bob = Math.sin(clock * 5 + f.idx * 1.5) * 2.5 * px;
+    // 头顶箭头（原来的三角位置）：自己大一号、金色带黑边，队友和对手小一号
+    const aw = self ? 10 : 7, ah = self ? 13 : 10;
+    ctx.save(); ctx.translate(hx, hy + bob); ctx.scale(px, px); ctx.lineJoin = 'round';
+    ctx.fillStyle = `rgb(${r.rgb})`; ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-aw, -ah); ctx.lineTo(aw, -ah); ctx.closePath(); ctx.stroke(); ctx.fill();
+    ctx.restore();
+    if (!r.label || r.kind === 'foe') continue;
+    // 脚下名牌：自己是实心金牌黑字，队友是深色底队色字
+    ctx.save(); ctx.translate(x, 0); ctx.scale(px, px);
+    if (col) { ctx.strokeStyle = `rgba(${r.rgb},0.6)`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(col * GAP, 14 + row * (ph + 4)); ctx.stroke(); }   // 让到旁边的名牌：拉一根细线连回脚下
+    ctx.translate((col || 0) * GAP, 0);
+    ctx.font = `${self ? 'bold ' : ''}${fs}px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(r.label).width, pw = tw + fs * 0.9, py = 14 + ph / 2 + row * (ph + 4);
+    ctx.fillStyle = self ? `rgba(${r.rgb},0.95)` : 'rgba(8,10,20,0.78)';
+    ctx.strokeStyle = self ? 'rgba(0,0,0,0.6)' : `rgba(${r.rgb},0.8)`; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-pw / 2, py - ph / 2, pw, ph, ph / 2) : ctx.rect(-pw / 2, py - ph / 2, pw, ph); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = self ? '#14110a' : `rgb(${r.rgb})`; ctx.fillText(r.label, 0, py + 1);
+    ctx.restore();
+  }
+}
+// 跑出画面的自己和队友：在屏幕左右边缘（避开上下的血条和技能栏）留一个指过去的箭头
+function drawIdentityEdges(list, sx, sy) {
+  const sc = worldScale(), fs = Math.max(12, Math.round(H * 0.016)), m = 26, top = H * 0.28, bot = H * 0.7;
+  for (const f of list) {
+    const r = f.hp > 0 && idRole(f); if (!r || r.kind === 'foe') continue;
+    const x = W / 2 + sx + (f.x - cam.x) * sc, y = groundY() + sy + (f.y - 60) * sc;
+    const off = x < -10 ? -1 : x > W + 10 ? 1 : 0, above = y < 0;
+    if (!off && !above) continue;
+    const ex = off ? (off < 0 ? m : W - m) : clamp(x, m, W - m), ey = off ? clamp(y, top, bot) : top;
+    const ang = off ? (off < 0 ? Math.PI : 0) : -Math.PI / 2;
+    ctx.save(); ctx.translate(ex, ey);
+    ctx.fillStyle = 'rgba(8,8,20,0.7)'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgb(${r.rgb})`; ctx.lineWidth = 2; ctx.stroke();
+    ctx.save(); ctx.rotate(ang); ctx.fillStyle = `rgb(${r.rgb})`;
+    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-4, -7); ctx.lineTo(-4, 7); ctx.closePath(); ctx.fill(); ctx.restore();
+    if (r.label) {
+      ctx.font = `${fs}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = off < 0 ? 'left' : off > 0 ? 'right' : 'center';
+      const lx = off < 0 ? 20 : off > 0 ? -20 : 0, ly = off ? 0 : 26;
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.strokeText(r.label, lx, ly);
+      ctx.fillStyle = `rgb(${r.rgb})`; ctx.fillText(r.label, lx, ly);
+    }
     ctx.restore();
   }
 }

@@ -12806,39 +12806,98 @@ ctx.save(); ctx.font = `22px ${TITLE_FONT}`; ctx.textAlign = 'center';
 ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * Math.sin(clock * 14)})`;
 ctx.fillText('腾空闪', sk.head[0], sk.head[1] - 28); ctx.restore();
 }
-if (isMulti() && f.hp > 0 && !f.hidden && sk.head) {
-const isAiWatch = M.watchAi || (M.mode === 'watch2v2' && M.watchAi);
-let col = '#46d3ea', glow = 'rgba(70,211,234,0.45)';
-if (isAiWatch) {
-const isTeam0 = fighterTeam(f) === 0;
-col = isTeam0 ? '#46d3ea' : '#ff4d4d';
-glow = isTeam0 ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.45)';
-} else {
-const isUser = (f.ctrl === human[0]) || (typeof viewerIdx === 'function' && viewerIdx() >= 0 && f.idx === viewerIdx());
-const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
-const isTeammate = (fighterTeam(f) === myTeam) && !isUser;
-col = isUser ? '#38d976' : (isTeammate ? '#46d3ea' : (isRaid() ? '#ffd166' : '#ff4d4d'));
-glow = isUser ? 'rgba(56,217,118,0.45)' : (isTeammate ? 'rgba(70,211,234,0.45)' : 'rgba(255,77,77,0.55)');
 }
-const hx = sk.head[0];
-const bounce = Math.sin(clock * 5 + f.idx * 1.5) * 2.5;
-const tipY = sk.head[1] - 32 + bounce;
-const topY = tipY - 12;
-const halfW = 7;
+const ID_SELF = ['233,196,106', '190,150,255', '255,140,200', '170,230,120'];   // 1P 金、2P 紫、3P 粉、4P 青柠（都和队友的青色、对手的红色分得开）
+const ID_ALLY = '70,211,234', ID_FOE = '255,77,77';
+function idHumans() { return allFighters().filter(f => !f.hidden && human.includes(f.ctrl)); }
+function idRole(f) {
+if (!f || f.hidden || f.dummy || !f.sk) return null;
+if (M.mode === 'world' && !isMulti()) return f === A ? { kind: 'self', rgb: ID_SELF[0], label: '你' } : null;
+if (!isMulti() || M.mode === 'demo' || M.mode === 'replay') return null;
+if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: f.look.name } : { kind: 'foe', rgb: ID_FOE };   // 旁观：只分两队
+const k = human.indexOf(f.ctrl);
+if (k >= 0) return { kind: 'self', rgb: ID_SELF[k] || ID_SELF[0], label: idHumans().length > 1 ? `${k + 1}P` : '你' };
+if (fighterTeam(f) === localTeam()) return { kind: 'ally', rgb: ID_ALLY, label: String(f.ctrl === NET.remote ? ((NET.names || {})[NET.role === 'host' ? 'client' : 'host'] || f.look.name) : f.look.name).slice(0, 6) };   // 名字太长就截到 6 个字，别把旁边的名牌挤走
+return isRaid() ? null : { kind: 'foe', rgb: ID_FOE };
+}
+function drawIdentityGround(list) {
+const px = 1 / worldScale();
+for (const f of list) {
+const r = f.hp > 0 && idRole(f); if (!r || r.kind === 'foe') continue;
+const hgt = clamp(-f.y / 300, 0, 1), rx = 40 * (1 - hgt * 0.35), ry = 8 * (1 - hgt * 0.35);
 ctx.save();
-ctx.shadowColor = glow;
-ctx.shadowBlur = 5;
-ctx.fillStyle = col;
-ctx.strokeStyle = '#ffffff';
-ctx.lineWidth = 1.4;
-ctx.lineJoin = 'round';
-ctx.beginPath();
-ctx.moveTo(hx, tipY);
-ctx.lineTo(hx - halfW, topY);
-ctx.lineTo(hx + halfW, topY);
-ctx.closePath();
-ctx.fill();
-ctx.stroke();
+if (r.kind === 'self') {
+const pulse = 0.5 + 0.5 * Math.sin(clock * 4), hurt = f.flash > 0 ? 1 : 0;
+ctx.fillStyle = `rgba(${r.rgb},${0.16 + 0.08 * pulse})`;
+ctx.beginPath(); ctx.ellipse(f.x, 2, rx + 6, ry + 2, 0, 0, Math.PI * 2); ctx.fill();
+ctx.strokeStyle = hurt ? 'rgba(255,90,80,0.95)' : `rgba(${r.rgb},0.95)`; ctx.lineWidth = 2.6 * px;
+ctx.beginPath(); ctx.ellipse(f.x, 2, rx + 6, ry + 2, 0, 0, Math.PI * 2); ctx.stroke();
+ctx.strokeStyle = `rgba(${r.rgb},${0.35 + 0.35 * pulse})`; ctx.lineWidth = 1.4 * px;
+ctx.beginPath(); ctx.ellipse(f.x, 2, rx + 14 + pulse * 4, ry + 4 + pulse, 0, 0, Math.PI * 2); ctx.stroke();
+} else {
+ctx.strokeStyle = `rgba(${r.rgb},0.8)`; ctx.lineWidth = 1.6 * px; ctx.setLineDash([7 * px, 5 * px]);
+ctx.beginPath(); ctx.ellipse(f.x, 2, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+}
+ctx.restore();
+}
+}
+function drawIdentityTags(list) {
+const px = 1 / worldScale(), fs = Math.max(13, Math.round(H * 0.019)), tags = [];
+for (const f of list) {
+const r = f.hp > 0 && idRole(f); if (!r) continue;
+const sz = f.size || 1, hx = f.x + (f.sk.head[0] - f.x) * sz, hy = f.y + (f.sk.head[1] - f.y) * sz;   // 变大变小的人：头的位置跟着缩放
+tags.push({ f, r, hx, hy: hy - 32 * sz, x: f.x, row: 0 });
+}
+tags.sort((a, b) => (a.r.kind === 'self') - (b.r.kind === 'self') || a.f.idx - b.f.idx);   // 自己的最后画，叠在最上面
+const sc = worldScale(), ph = fs * 1.35, fitRow1 = groundY() + 14 + ph * 2 + 6 < H - 34;
+const spots = fitRow1 ? [[0, 0], [0, 1], [-1, 0], [1, 0], [-1, 1], [1, 1], [-2, 0], [2, 0]] : [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0]];
+const prio = t => t.f.ctrl === human[0] ? 0 : t.r.kind === 'self' ? 1 : 2, placed = [], GAP = 78;
+for (const t of tags.filter(t => t.r.label && t.r.kind !== 'foe').sort((a, b) => prio(a) - prio(b))) {
+const sx = t.x * sc;
+const free = ([c, r]) => !placed.some(o => o.row === r && Math.abs(o.x * sc + o.col * GAP - (sx + c * GAP)) < GAP);
+const [c, r] = spots.find(free) || [0, 0];
+t.col = c; t.row = r; placed.push(t);
+}
+for (const { f, r, hx, hy, x, row, col } of tags) {
+const self = r.kind === 'self', bob = Math.sin(clock * 5 + f.idx * 1.5) * 2.5 * px;
+const aw = self ? 10 : 7, ah = self ? 13 : 10;
+ctx.save(); ctx.translate(hx, hy + bob); ctx.scale(px, px); ctx.lineJoin = 'round';
+ctx.fillStyle = `rgb(${r.rgb})`; ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 3;
+ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-aw, -ah); ctx.lineTo(aw, -ah); ctx.closePath(); ctx.stroke(); ctx.fill();
+ctx.restore();
+if (!r.label || r.kind === 'foe') continue;
+ctx.save(); ctx.translate(x, 0); ctx.scale(px, px);
+if (col) { ctx.strokeStyle = `rgba(${r.rgb},0.6)`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(col * GAP, 14 + row * (ph + 4)); ctx.stroke(); }   // 让到旁边的名牌：拉一根细线连回脚下
+ctx.translate((col || 0) * GAP, 0);
+ctx.font = `${self ? 'bold ' : ''}${fs}px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+const tw = ctx.measureText(r.label).width, pw = tw + fs * 0.9, py = 14 + ph / 2 + row * (ph + 4);
+ctx.fillStyle = self ? `rgba(${r.rgb},0.95)` : 'rgba(8,10,20,0.78)';
+ctx.strokeStyle = self ? 'rgba(0,0,0,0.6)' : `rgba(${r.rgb},0.8)`; ctx.lineWidth = 1.5;
+ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-pw / 2, py - ph / 2, pw, ph, ph / 2) : ctx.rect(-pw / 2, py - ph / 2, pw, ph); ctx.fill(); ctx.stroke();
+ctx.fillStyle = self ? '#14110a' : `rgb(${r.rgb})`; ctx.fillText(r.label, 0, py + 1);
+ctx.restore();
+}
+}
+function drawIdentityEdges(list, sx, sy) {
+const sc = worldScale(), fs = Math.max(12, Math.round(H * 0.016)), m = 26, top = H * 0.28, bot = H * 0.7;
+for (const f of list) {
+const r = f.hp > 0 && idRole(f); if (!r || r.kind === 'foe') continue;
+const x = W / 2 + sx + (f.x - cam.x) * sc, y = groundY() + sy + (f.y - 60) * sc;
+const off = x < -10 ? -1 : x > W + 10 ? 1 : 0, above = y < 0;
+if (!off && !above) continue;
+const ex = off ? (off < 0 ? m : W - m) : clamp(x, m, W - m), ey = off ? clamp(y, top, bot) : top;
+const ang = off ? (off < 0 ? Math.PI : 0) : -Math.PI / 2;
+ctx.save(); ctx.translate(ex, ey);
+ctx.fillStyle = 'rgba(8,8,20,0.7)'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill();
+ctx.strokeStyle = `rgb(${r.rgb})`; ctx.lineWidth = 2; ctx.stroke();
+ctx.save(); ctx.rotate(ang); ctx.fillStyle = `rgb(${r.rgb})`;
+ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-4, -7); ctx.lineTo(-4, 7); ctx.closePath(); ctx.fill(); ctx.restore();
+if (r.label) {
+ctx.font = `${fs}px ${BODY_FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = off < 0 ? 'left' : off > 0 ? 'right' : 'center';
+const lx = off < 0 ? 20 : off > 0 ? -20 : 0, ly = off ? 0 : 26;
+ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.strokeText(r.label, lx, ly);
+ctx.fillStyle = `rgb(${r.rgb})`; ctx.fillText(r.label, lx, ly);
+}
 ctx.restore();
 }
 }
@@ -16239,6 +16298,7 @@ const order = isMulti()
 drawDecoys();
 drawProjs();
 if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
+drawIdentityGround(order);
 for (const f of order) {
 if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
 const keep = f.look;
@@ -16249,6 +16309,7 @@ if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.s
 }
 drawParticles();
 drawComboTotals();
+drawIdentityTags(order);
 if (debugHitbox) drawHitboxOverlay(order);
 ctx.restore();
 if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
@@ -16271,6 +16332,7 @@ const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (0.36 - 0.08 *
 v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * SETTINGS.vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, (0.66 + 0.2 * ce) * SETTINGS.vig)})`);
 ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
 if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
+drawIdentityEdges(order, sx, sy);
 drawHUD();
 if (WORLD.on) drawWorldHUD();
 drawAnnounce();
@@ -22513,6 +22575,7 @@ function drawWorldGhosts() {
 const vw = W / worldScale(), l = cam.x - vw / 2 - 200, r = cam.x + vw / 2 + 200;
 for (const g of WORLD.ghosts.values()) {
 if (g.x < l || g.x > r) continue;
+if (g.hp > 0) { ctx.save(); ctx.strokeStyle = `rgba(${ID_ALLY},0.55)`; ctx.lineWidth = 1.4 / worldScale(); ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.ellipse(g.x, 2, 36, 7, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }   // 同道：脚下一道淡淡的虚线圈，和自己的金圈分开
 drawFighter(g);
 if (!g.sk) continue;
 ctx.save(); ctx.font = `15px ${BODY_FONT}`; ctx.textAlign = 'center';

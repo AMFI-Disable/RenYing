@@ -344,6 +344,7 @@ function drawWorldGhosts() {
   const vw = W / worldScale(), l = cam.x - vw / 2 - 200, r = cam.x + vw / 2 + 200;
   for (const g of WORLD.ghosts.values()) {
     if (g.x < l || g.x > r) continue;
+    if (g.hp > 0) { ctx.save(); ctx.strokeStyle = `rgba(${ID_ALLY},0.55)`; ctx.lineWidth = 1.4 / worldScale(); ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.ellipse(g.x, 2, 36, 7, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }   // 同道：脚下一道淡淡的虚线圈，和自己的金圈分开
     drawFighter(g);
     if (!g.sk) continue;
     ctx.save(); ctx.font = `15px ${BODY_FONT}`; ctx.textAlign = 'center';

@@ -907,6 +907,7 @@ function render() {
   drawDecoys();
   drawProjs();
   if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
+  drawIdentityGround(order);
   for (const f of order) {
     if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
       const keep = f.look;
@@ -917,6 +918,7 @@ function render() {
   }
   drawParticles();
   drawComboTotals();
+  drawIdentityTags(order);
   if (debugHitbox) drawHitboxOverlay(order);
   ctx.restore();
   if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
@@ -940,6 +942,7 @@ function render() {
   v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * SETTINGS.vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, (0.66 + 0.2 * ce) * SETTINGS.vig)})`);
   ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
   if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
+  drawIdentityEdges(order, sx, sy);
   drawHUD();
   if (WORLD.on) drawWorldHUD();
   drawAnnounce();
