@@ -1,0 +1,93 @@
+{
+  "qingfeng": {
+    "normal": 0.912,
+    "skill": 0.912,
+    "ult": 0.912,
+    "cd": 1,
+    "hp": 0.912
+  },
+  "feiying": {
+    "normal": 1.015,
+    "skill": 1.015,
+    "ult": 1.015,
+    "cd": 1,
+    "hp": 1.015
+  },
+  "tieshan": {
+    "normal": 1.065,
+    "skill": 1.065,
+    "ult": 1.065,
+    "cd": 1,
+    "hp": 1.065
+  },
+  "lingshuang": {
+    "normal": 1.053,
+    "skill": 1.053,
+    "ult": 1.053,
+    "cd": 1,
+    "hp": 1.053
+  },
+  "liuyun": {
+    "normal": 0.905,
+    "skill": 0.905,
+    "ult": 0.905,
+    "cd": 1,
+    "hp": 0.905
+  },
+  "leiming": {
+    "normal": 1.064,
+    "skill": 1.064,
+    "ult": 1.064,
+    "cd": 1,
+    "hp": 1.064
+  },
+  "moyu": {
+    "normal": 0.848,
+    "skill": 0.848,
+    "ult": 0.848,
+    "cd": 1,
+    "hp": 0.848
+  },
+  "yuehua": {
+    "normal": 0.92,
+    "skill": 0.92,
+    "ult": 0.92,
+    "cd": 1,
+    "hp": 0.92
+  },
+  "yanling": {
+    "normal": 1.077,
+    "skill": 1.077,
+    "ult": 1.077,
+    "cd": 1,
+    "hp": 1.077
+  },
+  "yuxiao": {
+    "normal": 1.023,
+    "skill": 1.023,
+    "ult": 1.023,
+    "cd": 1,
+    "hp": 1.023
+  },
+  "zuixian": {
+    "normal": 1.035,
+    "skill": 1.035,
+    "ult": 1.035,
+    "cd": 1,
+    "hp": 1.035
+  },
+  "gouchen": {
+    "normal": 1.106,
+    "skill": 1.106,
+    "ult": 1.106,
+    "cd": 1,
+    "hp": 1.106
+  },
+  "lingque": {
+    "normal": 1.178,
+    "skill": 1.178,
+    "ult": 1.178,
+    "cd": 1,
+    "hp": 1.178
+  }
+}
