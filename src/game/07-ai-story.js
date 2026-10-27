@@ -109,7 +109,7 @@ function nextStage(S) { return S.l < 4 ? [S.c, S.l + 1] : S.c < CHAPTERS.length 
 // 进度：每关拿到的最多星数，存在本机浏览器里
 let STAGE_STARS = {};
 try { STAGE_STARS = JSON.parse(localStorage.getItem('renying-stage') || '{}') || {}; } catch (e) {}
-function stageOpen(c, l) { return DEV_SESSION_UNLOCKED || (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
+function stageOpen(c, l) { return (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
 let STAGE = null, stageCh = -1;
 function renderStages() {
   if (stageCh < 0) { stageCh = 0; for (let c = 0; c < CHAPTERS.length; c++) if (stageOpen(c, 0)) stageCh = c; }   // 默认翻到最新解锁的一章

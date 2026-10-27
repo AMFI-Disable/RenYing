@@ -1,5 +1,16 @@
 // ======================= 技能（Q） =======================
 // 每个技能：cd 冷却，start 开始时，update 每一帧，pose 用哪个姿势，ai 电脑什么时候用
+// 凌雀「移形换影」的追踪：飞行速度、每秒最多转多少弧度、最长飞多久（最远约 1400 像素，一般不到半秒就追上）
+const SD_SPD = 1750, SD_TURN = 16, SD_TIME = 0.8;
+function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
+  if (typeof is2v2 === 'function' && is2v2()) {
+    let best = null, bd = Infinity;
+    for (const o of foesOf(f)) { if (o.hp <= 0) continue; const d = Math.hypot(o.x - f.x, o.y - f.y); if (d < bd) { bd = d; best = o; } }
+    if (best) return best;
+  }
+  return foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+}
+const sdAim = (f, t) => Math.atan2(t.y - f.y, t.x - f.x);   // 两人都按身体中间（脚下往上 50）算，高度差就是 y 差
 const SKILLS = {
   gale: { name: '疾风斩', cd: 5, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
     start(f) { f.vx = 0; },
@@ -442,71 +453,66 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
-  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝瞬息穿刺突进（自动索敌导向流转直奔对手）。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
+  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
-      const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+      const target = sdTarget(f, foe);
       if (target) f.face = target.x >= f.x ? 1 : -1;
     },
     update(f, foe) {
-      const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
-      if (target) f.face = target.x >= f.x ? 1 : -1;
-      if (f.skPh === 0 && f.t >= 0.08) {
-        f.skPh = 1; f.t = 0; f.invul = 0.12; f.hitDone = false; SFX.dash();
-        if (target) {
-          const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
-          const dist = Math.hypot(dx, dy);
-          const spd = 1520;
-          if (dist > 10) {
-            f.vx = (dx / dist) * spd;
-            f.vy = (dy / dist) * spd;
-          } else {
-            f.vx = f.face * spd;
-            f.vy = 0;
-          }
-        } else {
-          f.vx = f.face * 1520;
-          f.vy = 0;
+      const target = sdTarget(f, foe);
+      if (f.skPh === 0) {
+        if (target) f.face = target.x >= f.x ? 1 : -1;
+        if (f.t >= 0.08) {
+          f.skPh = 1; f.t = 0; f.invul = 0.12; f.hitDone = false; SFX.dash();
+          const a = target ? sdAim(f, target) : (f.face > 0 ? 0 : Math.PI);
+          f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
         }
       }
       if (f.skPh === 1) {
-        // 持续导向流向对手位置（适度追踪）
-        if (target && !f.hitDone) {
-          const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
-          const dist = Math.hypot(dx, dy);
-          const spd = 1520;
-          if (dist > 10) {
-            f.vx = damp(f.vx, (dx / dist) * spd, 14, STEP);
-            f.vy = damp(f.vy, (dy / dist) * spd, 14, STEP);
-          }
+        // 追踪：每一帧把飞行方向往对手现在的位置转（每秒最多转 SD_TURN 弧度），速度不变。
+        // 对手无敌（腾空闪、闪身之类）时悬丝断开，照原方向直飞，不再转向
+        if (target && target.invul <= 0) {
+          const cur = Math.atan2(f.vy, f.vx), want = sdAim(f, target);
+          let d = want - cur;
+          while (d > Math.PI) d -= Math.PI * 2;
+          while (d < -Math.PI) d += Math.PI * 2;
+          if (f.y >= 0 && Math.sin(cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP)) > Math.max(0.001, Math.sin(cur))) d -= Math.sign(d) * Math.PI * 2;   // 贴着地面掉头：从上面绕过去，不往地里转
+          const a = cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP);
+          f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
+        } else {
+          const v = Math.hypot(f.vx, f.vy) || 1;
+          f.vx = f.vx / v * SD_SPD; f.vy = f.vy / v * SD_SPD;
         }
+        if (f.vx) f.face = f.vx > 0 ? 1 : -1;
+        if (f.y >= 0 && f.vy > 0) f.vy = 0;   // 贴地飞，不往地里钻
         if (!RESIM && Math.random() < 0.6) {
           addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(50, 150), vy: rand(-40, 40), rgb: '235,110,210', life: 0.25, max: 0.25 });
         }
-        const wasMarked = (foe.needleMark || 0) > 0;
-        if (strike(f, foe, { box: [-24, -108, 102, 18], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
+        const hitFoe = target || foe;
+        const wasMarked = (hitFoe.needleMark || 0) > 0;
+        // 判定框前后都留够：追踪时可能从上、从下扑过去
+        if (strike(f, hitFoe, { box: [-40, -120, 104, 24], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
           if (wasMarked) {
-            foe.needleMark = 0;
+            hitFoe.needleMark = 0;
             f.skill2CD = 0;
             shake = Math.max(shake, 14);
             SFX.heavy(); SFX.slice();
-            applyHit(f, foe, { dmg: 38, kb: [240, -640], stun: 0.55, hs: 0.14, launch: true, big: true, unblockable: true }, [foe.x, foe.y - 60]);
-            ring(foe.x, foe.y - 60, 110, '235,110,210', 0.4);
+            applyHit(f, hitFoe, { dmg: 38, kb: [240, -640], stun: 0.55, hs: 0.14, launch: true, big: true, unblockable: true }, [hitFoe.x, hitFoe.y - 60]);
+            ring(hitFoe.x, hitFoe.y - 60, 110, '235,110,210', 0.4);
             for (let k = 0; k < 12; k++) {
               const a = rand(0, 6.28), v = rand(120, 320);
-              addP({ type: 'spark', x: foe.x, y: foe.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: '255,160,230', life: 0.35, max: 0.35 });
+              addP({ type: 'spark', x: hitFoe.x, y: hitFoe.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: '255,160,230', life: 0.35, max: 0.35 });
             }
             addP({ type: 'text', text: '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
           }
-          f.vx *= 0.3;
-          f.vy *= 0.3;
-        }
-        if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.vy *= 0.2; }
+          f.skPh = 2; f.t = 0; f.vx *= 0.06; f.vy *= 0.06;
+        } else if (f.t >= SD_TIME) { f.skPh = 2; f.t = 0; f.vx *= 0.12; f.vy *= 0.12; }
       }
       if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? ['dash', 60] : ['idle', 14],
-    ai: (me, foe, d) => (foe.needleMark > 0 && d < 360) || (d > 100 && d < 260) },
+    ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 

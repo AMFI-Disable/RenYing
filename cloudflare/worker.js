@@ -74,6 +74,9 @@ const CODE_USES = 100000;              // 一个兑换码最多让这么多个�
 const RDM_MAX = 10, RDM_IP_MAX = 30;   // 一小时里输错这么多次兑换码就先锁一小时（每个号、每个 IP）
 // 游戏里写死的几个码（src/game.js 的 redeemCode 先认它们）：服务器上不建同名的，不然玩家永远领不到
 const CODE_LOCAL = ['LOCK', 'RELOCK', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT', 'ZODIAC2026STAR'];
+// 以前不进库存的“绑定”皮肤（关卡奖励、老账号带过来的）：这一天之前建的号，第一次动武库时一次性换成库存里的饰品，
+// 之后能卖能汰换。之后建的号不换：网页报上来的皮肤服务器核对不了，换成能卖的饰品就等于能凭空变出墨锭
+const LEGACY_CUTOFF = Date.UTC(2026, 9, 31);
 // 写在游戏里的兑换码，云端账号也要在服务器领：武库以服务器为准，只在网页里加的饰品一刷新就没了。每个号领一次（记在 code_got），不限总数
 const CODE_BUILTIN = {
   ZODIAC2026STAR: () => ({ note: '星座专属装束', items: Object.entries(C.ZOD_OF).flatMap(([p, zs]) => zs.map(z => `${p}_z${z}`)) }),
@@ -281,11 +284,11 @@ function fixEquip(eq, skins) {
   for (const [c, k] of Object.entries(o)) if (k && C.CS_KEYS.includes(k) && !skins.includes(k)) delete o[c];
   return o;
 }
-function overlay(prof, eco, isDev) {
+function overlay(prof, eco) {
   const p = { ...prof };
   delete p.armory; delete p.ledger;
   p.ink = eco.ink;
-  p.skins = isDev ? cleanSkins(p.skins) : mergeSkins(p.skins, eco.state, eco.srv, eco.ver);
+  p.skins = mergeSkins(p.skins, eco.state, eco.srv, eco.ver);
   p.equip = fixEquip(cleanEquip(p.equip), p.skins);
   return p;
 }
@@ -434,14 +437,9 @@ async function handleEcon(env, auth, body, now, ip) {
     if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
     const k = codeKey(args.code);
     if (k && CODE_BUILTIN[k]) {
-      const mine = await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first();
-      const b = CODE_BUILTIN[k]();
-      if (mine) {
-        const eco0 = await loadEcon(env, uid, await freshProfile(), now);
-        const hasAll = !Array.isArray(b.items) || b.items.every(ik => (eco0.state.inv || []).some(x => x.k === ik));
-        if (hasAll) return error('这个兑换码你已经领过了');
-      }
-      code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...b };
+      // 每个号只领一次：领过以后卖掉、汰换掉的不再补（不然卖了再领就是凭空变墨锭）
+      if (await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first()) return error('这个兑换码你已经领过了');
+      code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...CODE_BUILTIN[k]() };
     }
     const row = code ? null : k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
     if (code) { /* 游戏里自带的码，上面已经核对过 */ }
@@ -459,8 +457,7 @@ async function handleEcon(env, auth, body, now, ip) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
-    const isDevUser = auth.user && ['dev', 'dev_master'].includes(String(auth.user.username || '').toLowerCase());
-    const skins0 = isDevUser ? cleanSkins(prof.skins) : mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
+    const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
     const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
     const mkt = { id: randHex(8), ids: Array.from({ length: 20 }, () => randHex(8)), row: null, out: null };
@@ -487,6 +484,15 @@ async function handleEcon(env, auth, body, now, ip) {
       }
     }
     const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, mkt, cfg };
+    // 绑定皮肤换成饰品（每个号只做一次，记在 srv.lg）：库存里没有这一款的放一件普通版，并记进 via，卖掉最后一件就穿不了，和开箱得到的一样
+    let legacy = null;
+    if (!eco.srv.lg && Math.floor(+auth.user.created_at || 0) < LEGACY_CUTOFF) {
+      legacy = skins0.filter(k => C.isItem(k) && !eco.state.inv.some(x => x.k === k) && !(eco.state.via || []).includes(k));
+      if (legacy.length) {
+        if (state0 === eco.state) state0 = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid });
+        for (const k of legacy) { C.addItem(state0, C.mkItem(state0, k, 'legacy', rnd, { st: -1 }), E); if (!state0.via.includes(k)) state0.via.push(k); }
+      }
+    }
     if (code && code.items) {   // 兑换码送的饰品：库存里没有这一款的才放一件进去（普通版）
       let n = 0;
       for (const k of code.items) if (C.isItem(k) && !state0.inv.some(x => x.k === k) && state0.inv.length < C.INV_MAX) { C.addItem(state0, C.mkItem(state0, k, 'code', rnd, { st: -1 }), E); n++; }
@@ -507,10 +513,11 @@ async function handleEcon(env, auth, body, now, ip) {
       return error('操作失败，已记录', 500);
     }
     const mo = mkt.out, settled = E.settled || [];
-    if (!out.sold.length && !mo && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
+    if (!legacy && !code && !out.sold.length && !mo && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
       return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {}, cfg });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
+    if (legacy) srv.lg = now;
     for (const k of del) srv.gone[k] = [ver + 1, now];
     for (const k of add) delete srv.gone[k];
     pruneGone(srv, now);
@@ -539,10 +546,11 @@ async function handleEcon(env, auth, body, now, ip) {
     }
     stmts.push(ins(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver, tx));
     if (code) {   // 兑换码：记下这个号领过了、这个码又被领走一份（领满了 CHECK 让这一批整个作废）；流水记成 code_got
-      stmts.push(ins(env, `INSERT${code.builtin ? ' OR IGNORE' : ''} INTO code_got (code, uid, at) SELECT ?, ?, ?`, [code.code, uid, now], uid, ver, tx));
+      stmts.push(ins(env, `INSERT INTO code_got (code, uid, at) SELECT ?, ?, ?`, [code.code, uid, now], uid, ver, tx));
       if (!code.builtin) stmts.push(guard(env, 'UPDATE code SET got = got + 1 WHERE code = ? AND', [code.code], uid, ver, tx));
       stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_got', 1, null, null, JSON.stringify({ code: code.code, note: code.note, ink: code.ink || undefined, cases: Object.keys(code.cases).length ? code.cases : undefined, term: code.term || undefined, tags: code.tags || undefined })], uid, ver, tx));
     }
+    if (legacy && legacy.length) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'legacy', 1, null, null, JSON.stringify({ k: legacy }).slice(0, 400)], uid, ver, tx));
     if (!quiet) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver, tx));
     stmts.push(userWrite(env, uid, p, now, ver, tx));
     stmts.push(econWrite(env, uid, ver, now, srv, E.ink, stJson, tx));
@@ -573,7 +581,6 @@ async function handleProfilePost(env, auth, body, now) {
   const incoming = body.profile || body;
   if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return error('无效的存档数据');
   const ledger = body.ledger && typeof body.ledger === 'object' && Array.isArray(body.ledger.deltas) ? body.ledger : null;
-  const isDevUser = auth.user && ['dev', 'dev_master'].includes(String(auth.user.username || '').toLowerCase());
   const cfg = await cfgNow(env, now);
   for (let attempt = 0; attempt < 5; attempt++) {
     const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(uid).first();
@@ -583,26 +590,6 @@ async function handleProfilePost(env, auth, body, now) {
     delete p.armory; delete p.ledger;
     p.name = auth.user.username;
     p.updatedAt = now;
-    if (isDevUser) {
-      if (typeof incoming.ink === 'number') eco.ink = Math.max(eco.ink, clampInk(incoming.ink));
-      p.ink = eco.ink;
-      p.skins = cleanSkins(incoming.skins || []);
-      p.equip = fixEquip(cleanEquip(p.equip), p.skins);
-      if (incoming.armory && typeof incoming.armory === 'object') {
-        const arm = incoming.armory;
-        if (Array.isArray(arm.inv)) eco.state.inv = arm.inv;
-        if (arm.cases && typeof arm.cases === 'object') eco.state.cases = Object.assign(eco.state.cases || {}, arm.cases);
-        if (Array.isArray(arm.via)) eco.state.via = Array.from(new Set([...(eco.state.via || []), ...arm.via]));
-        if (typeof arm.nid === 'number') eco.state.nid = Math.max(eco.state.nid || 1, arm.nid);
-        eco.state = C.normalize(eco.state, { now, uid });
-        eco.stateJson = JSON.stringify(eco.state);
-      }
-      const stmts = [userWrite(env, uid, p, now, ver), econWrite(env, uid, ver, now, eco.srv, eco.ink, eco.stateJson)];
-      const results = await env.DB.batch(stmts);
-      if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;
-      eco.ver = ver + 1;
-      return json({ ok: true, updatedAt: now, ledger: ledgerOut(eco, now) });
-    }
     // 老版本网页没有账本：拿它报的数和服务器上的差当作一条上报（一样有每日上限）
     const deltas = ledger ? ledger.deltas : [{ id: 'abs' + now.toString(36) + Math.floor(rnd() * 1e9).toString(36), d: clampInk(p.ink) - eco.ink }];
     const { capped, forged, paid, owed, allow, revoked } = applyDeltas(eco, deltas, now, cfg);
@@ -633,14 +620,13 @@ function cleanInitial(prof) {
   p.equip = fixEquip(cleanEquip(p.equip), p.skins);
   return p;
 }
-// 不让注册的昵称：像是官方、开发者的。云端的 Dev 是开发组的市场账号（库存不受限，见上面的 handleProfilePost），
-// 只能在管理后台建、重设密码（POST /api/admin/password），别人注册不了
+// 不让注册的昵称：像是官方、开发者的。云端的 Dev 账号和别人一样按规则记账，只是这个名字只能在管理后台建、
+// 重设密码（POST /api/admin/password），别人注册不了
 const RESERVED = /^(dev|dev_master|admin|administrator|root|system|gm|official|staff|官方|系统|管理员|开发者|开发组|客服|刃影官方)$/i;
 async function profileOut(env, user, now) {
-  const isDev = user && ['dev', 'dev_master'].includes(String(user.username || '').toLowerCase());
   const prof = parseProfile(user.profile_json, user.username);
   const eco = await loadEcon(env, user.id, prof, now);
-  return { profile: overlay(prof, eco, isDev), ledger: ledgerOut(eco, now) };
+  return { profile: overlay(prof, eco), ledger: ledgerOut(eco, now) };
 }
 
 /* ---------- 玩家市场：看谁在卖什么、最近成交多少（挂单、买、撤都走 /api/econ） ---------- */
@@ -711,8 +697,7 @@ async function adminAdjust(env, u, body, who, why, now) {
     const prof = parseProfile(urow ? urow.profile_json : '', u.username);
     const eco = await loadEcon(env, u.id, prof, now);
     const s = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid: u.id });
-    const isDev = String(u.username || '').toLowerCase() === 'dev';   // Dev 的皮肤不按库存核对，和它自己同步时一样
-    const skins0 = isDev ? cleanSkins(prof.skins) : mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
+    const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     const E = { now, rnd, uid: u.id, ink: eco.ink + dInk, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true };
     if (E.ink < 0) return error(`这个号只有 ${eco.ink} 墨锭，扣不了 ${-dInk}`);
     for (const [c, n] of Object.entries(cases)) {

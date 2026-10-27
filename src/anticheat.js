@@ -23,7 +23,6 @@ const AC_TAKE = window.CloudSave && CloudSave.inkGrantTake, AC_GET = window.Clou
 const AC_REVERT = window.CloudSave && CloudSave.ledgerRevert, AC_BEFORE_SYNC = window.CloudSave && CloudSave.onBeforeSync;
 
 function acUser() { try { return (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null; } catch (e) { return null; } }
-function acExempt() { const u = acUser(); return !!(u && (u.isDevMaster || u.uid === 'dev_master' || String(u.name || '').toLowerCase() === 'dev')); }
 function acKey() { const u = acUser(); return 'renying-ac-' + (u && u.uid ? u.uid : 'device'); }
 function acHash(s) {
   let a = 0x811c9dc5, b = 0x9e3779b9;
@@ -65,12 +64,12 @@ async function acRefresh() {
   let r = acLoadLocal();
   r = acMerge(r, await acLoadCloud());
   ACH.rec = r; acSaveLocal(r);
-  if (acBanned(r) && !acExempt()) acShow(r); else acHide();
+  if (acBanned(r)) acShow(r); else acHide();
 }
 
 /* ---------- 处罚 ---------- */
 async function acStrike(reason) {
-  if (acExempt() || ACH.busy) return;
+  if (ACH.busy) return;
   ACH.busy = true;
   const r = ACH.rec || acLoadLocal(), now = Date.now();
   r.strikes += 1; r.at = now; r.log = (r.log || []).concat({ r: reason, at: now }).slice(-20);
@@ -109,7 +108,7 @@ function acTickLeft() {
   el.textContent = h ? `${h} 小时 ${m} 分` : `${m + 1} 分钟`;
 }
 // 被封时挡住所有键盘输入（遮罩已经挡住了鼠标）
-window.addEventListener('keydown', e => { if (ACH.rec && acBanned(ACH.rec) && !acExempt()) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+window.addEventListener('keydown', e => { if (ACH.rec && acBanned(ACH.rec)) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
 
 /* ---------- 刷墨锭 ---------- */
 const acLoading = () => Date.now() < ACH.loadT;
@@ -117,7 +116,7 @@ function acInkTick() {
   if (typeof PROF === 'undefined') return;
   const ink = +PROF.ink || 0, now = Date.now(), since = ACH.baseT;
   ACH.baseT = now;
-  if (ACH.base === null || acLoading() || acExempt()) { ACH.base = ink; return; }
+  if (ACH.base === null || acLoading()) { ACH.base = ink; return; }
   let d = ink - ACH.base;
   if (d <= 0) { ACH.base = ink; return; }
   if (typeof AC_TAKE === 'function') d -= AC_TAKE(d);   // 服务器确认的、武库结算的入账：对得上的部分不算
@@ -189,7 +188,7 @@ function acHookHits() {
   ACH.sig = acTableSig();
 }
 function acCodeTick() {
-  if (!ACH.fns || acExempt()) return;
+  if (!ACH.fns) return;
   if (applyHit !== ACH.fns.applyHit || balDmg !== ACH.fns.balDmg) {
     applyHit = ACH.fns.applyHit; balDmg = ACH.fns.balDmg;   // 换回原来的函数
     acStrike('伤害计算被篡改');
@@ -208,7 +207,7 @@ function acStart() {
     ACH.tick++;
     acInkTick();
     if (ACH.tick % 3 === 0) acCodeTick();
-    if (ACH.rec && acBanned(ACH.rec) && !acExempt()) { const el = $id('acMask'); if (!el || el.hidden) acShow(ACH.rec); else acTickLeft(); }
+    if (ACH.rec && acBanned(ACH.rec)) { const el = $id('acMask'); if (!el || el.hidden) acShow(ACH.rec); else acTickLeft(); }
     else if (ACH.rec && $id('acMask') && !$id('acMask').hidden && $id('acMask').classList.contains('ban')) acHide();
     if (acKey() !== ACH.recKey) acRefresh();   // 换了账号
   }, 1000);

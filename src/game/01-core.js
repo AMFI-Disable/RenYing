@@ -109,13 +109,8 @@ const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
 let NET_HUD = false;                     // 回滚与联机遥测 HUD 开关（按 ~ 或 F2 切换）
-// 开发者临时全解锁特权（仅限当前窗口会话有效，关闭或新建窗口后自动恢复锁定，不污染真实云端存档）
-let DEV_SESSION_UNLOCKED = false;
 // 限免活动：北京时间 10.22 0:00 起 14 天，所有玩家所有皮肤都能穿
 const FREE_SKIN_EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };
-try {
-  DEV_SESSION_UNLOCKED = sessionStorage.getItem('renying-dev-unlock') === '1';
-} catch (e) {}
 const cv = document.getElementById('c');
 function refocusGame() {
   if (document.activeElement && document.activeElement !== cv && document.activeElement !== document.body) {

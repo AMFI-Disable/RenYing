@@ -236,7 +236,7 @@
     set(v) { loadLocal(v); },
   });
   let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
-  if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') loadLocal(PRE_ARMORY); }, 0);
+  if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') { loadLocal(PRE_ARMORY); migrateLocal(); } }, 0);
   function loadLocal(v, force) {
     const u = user(); UID = u ? String(u.uid || u.name || '') : '';
     if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
@@ -255,11 +255,22 @@
     SIG = sigOf(ST);
     MODE = 'local';
   }
+  // 以前不进库存的“绑定”皮肤：本机账号直接换成库存里的饰品（普通版），记进 via，之后和开箱得到的一样能卖能汰换。
+  // 要等这个账号的存档整个放好以后再做（applyProfile 之后），不然 PROF.skins 还是上一个账号的
+  function migrateLocal() {
+    if (MODE !== 'local' || !ST || PROF.guest || OFFLINE_BUILD || cloudOn()) return;
+    const lg = (PROF.skins || []).filter(k => C.isItem(k) && !ST.via.includes(k) && !ST.inv.some(x => x.k === k));
+    if (!lg.length) return;
+    const env = envBase();
+    for (const k of lg) { C.addItem(ST, C.mkItem(ST, k, 'legacy', rnd, { st: -1 }), env); ST.via.push(k); }
+    SIG = sigOf(ST);
+    if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+  }
   async function connect(force) {   // 云端账号先问服务器支不支持武库；支持就由服务器管
     const u = user();
     if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
     UID = String(u.uid || u.name || '');
-    if (!cloudOn()) { if (!ST) loadLocal(undefined); MODE = 'local'; return; }
+    if (!cloudOn()) { if (!ST) loadLocal(undefined); MODE = 'local'; migrateLocal(); return; }
     if (MODE === 'server' && !force) return;
     if (LOADING) return LOADING;
     LOADING = (async () => {
@@ -268,6 +279,7 @@
         if (out && out.state && out.state.v < C.VER) { MODE = 'old'; OLDV = out.state.v; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是旧版的武库：先只给看，等服务器更新
         if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
         MODE = 'server'; apply(out, true);
+        setTimeout(zodFix, 0);
       } catch (e) {
         if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还没有武库：先用本机规则
         else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
@@ -275,6 +287,16 @@
       } finally { LOADING = null; }
     })();
     return LOADING;
+  }
+  // 以前在网页里兑换的星座码（那时只加在网页里，一刷新就没了）：连上服务器后按服务器的规矩补领一次。
+  // 服务器上已经领过的不会再给（卖掉了也不补），这时什么都不提示
+  let ZFIX = '';
+  function zodFix() {
+    if (MODE !== 'server' || !ST || ZFIX === UID || !(PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) return;
+    ZFIX = UID;
+    const zk = Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
+    if (zk.every(k => ST.inv.some(x => x.k === k))) return;
+    window.armoryRedeem('ZODIAC2026STAR').then(r => { if (r && r.ok) toast('星座装束已补进武库：' + r.text); }).catch(() => {});
   }
   // 动作结果落地：存档、墨锭、可穿的皮肤、穿着
   function redrawLooks() {   // 首页角色、头像、场上侠客按现在穿的重画一遍
@@ -296,17 +318,11 @@
     if (ink1 > ink0) GRANT(ink1 - ink0);
     PROF.ink = ink1;
     let own = false;
-    const keepZod = (PROF.redeemedCodes || []).includes('ZODIAC2026STAR');
-    const isZodKey = k => C.ITEM[k] && C.ITEM[k].col === 'c8';
-    if (Array.isArray(out.skins)) {
-      const prevZod = keepZod ? (PROF.skins || []).filter(isZodKey) : [];
-      PROF.skins = Array.from(new Set([...out.skins, ...prevZod]));
-      own = true;
-    }
+    if (Array.isArray(out.skins)) { PROF.skins = out.skins.slice(); own = true; }
     if (out.skinsAdd || out.skinsDel) {
       const set = new Set(PROF.skins || []);
       for (const k of out.skinsAdd || []) set.add(k);
-      for (const k of out.skinsDel || []) { if (keepZod && isZodKey(k)) continue; set.delete(k); }
+      for (const k of out.skinsDel || []) set.delete(k);
       PROF.skins = Array.from(set);
       own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own;
     }
@@ -458,7 +474,7 @@
 
   // 库存
   const INV = { char: '', tier: '', sort: 'new' };
-  function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !(OFFLINE_BUILD || DEV_SESSION_UNLOCKED)); }
+  function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !OFFLINE_BUILD); }
   function pInv() {
     const s = blankS();
     let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier));
@@ -506,7 +522,7 @@
   function insInfo() {
     const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i);
     const worn = own && ST.eq[C.charOf(it.k)] === it.i, can = live(), mk = MODE === 'server';
-    const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', trade: '汰换合同', supply: '每周补给', op: '江湖行动', term: '终端机' }[it.src] || '';
+    const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '汰换合同', supply: '每周补给', op: '江湖行动', term: '终端机' }[it.src] || '';
     $id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[tierOf(it.k)].n}</span>
       <h3>${escapeHTML(itemName(it))}</h3>${it.n ? `<p class="ar-tagname">‘${escapeHTML(it.n)}’</p>` : ''}
       <dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}武器箱</dd>
@@ -1065,12 +1081,9 @@
     if (v > before) GRANT(v - before);
     PROF.ink = v;
     if (fix) {
-      const keepZod = (PROF.redeemedCodes || []).includes('ZODIAC2026STAR');
-      const isZodKey = k => C.ITEM[k] && C.ITEM[k].col === 'c8';
       const set = new Set(PROF.skins || []);
       for (const k of fix.skinsAdd || []) set.add(k);
       for (const k of fix.skinsDel || []) {
-        if (keepZod && isZodKey(k)) continue;
         set.delete(k);
         for (const [c, x] of Object.entries(PROF.equip || {})) if (x === k) delete PROF.equip[c];
       }
@@ -1093,6 +1106,7 @@
       if (!p.guest && !('armory' in p) && MODE !== 'server') loadLocal(undefined);
     }
     const r = baseApply.apply(this, arguments);
+    if (p && p !== PROF) migrateLocal();
     if (p && p !== PROF && !PROF.guest && cloudOn() && MODE !== 'server') connect(false).then(() => { if ($id('armory').classList.contains('on')) render(); });
     try { if (p && p !== PROF && $id('armory').classList.contains('on')) render(); } catch (e) {}
     return r;
@@ -1178,33 +1192,17 @@
   // 本机武库发饰品（游戏里自带的兑换码）：走规则核心的 addItem，校验跟着更新。
   // 不能“读出 PROF.armory、改完再写回去”：读出来的是带旧校验的副本，写回去校验不过会被当成作弊、整个武库作废
   window.armoryGrantLocal = function (keys, src) {
-    if (!ST && !PROF.guest && MODE !== 'server') loadLocal(LOCAL_V, true);
+    if (MODE === 'server' || cloudOn()) return 0;   // 云端账号的武库只有服务器能改：网页里加的一刷新就没了
+    if (!ST && !PROF.guest) loadLocal(LOCAL_V, true);
     if (!ST) return 0;
     const env = envBase(); let n = 0;
-    for (const k of keys) if (C.isItem(k) && !ST.inv.some(x => x.k === k) && ST.inv.length < C.INV_MAX) { C.addItem(ST, C.mkItem(ST, k, src || 'code', rnd, { st: -1 }), env); n++; }
+    for (const k of keys) if (C.isItem(k) && !ST.inv.some(x => x.k === k) && ST.inv.length < C.INV_MAX) { C.addItem(ST, C.mkItem(ST, k, src || 'code', rnd, { st: -1 }), env); if (!ST.via.includes(k)) ST.via.push(k); n++; }
     PROF.skins = Array.from(new Set([...(PROF.skins || []), ...env.skins]));
     SIG = sigOf(ST);
     if (window.CloudSave) CloudSave.saveProfile(PROF, true);
     try { render(); } catch (e) {}
     return n;
   };
-  window.getDevArmoryState = function() {
-    return ST ? JSON.parse(JSON.stringify(ST)) : undefined;
-  };
-  window.grantDevArmory = function(newInv, cases) {
-    const u = user(); UID = u ? String(u.uid || u.name || '') : 'Dev';
-    if (!ST) ST = C.blank();
-    if (Array.isArray(newInv)) ST.inv = newInv;
-    if (cases && typeof cases === 'object') ST.cases = Object.assign(ST.cases || {}, cases);
-    ST.via = Array.from(new Set([...(ST.via || []), ...(ST.inv || []).map(x => x.k)]));
-    ST.nid = (ST.inv && ST.inv.length ? Math.max(...ST.inv.map(x => x.i || 0)) : 0) + 1;
-    ST = C.normalize(ST, envBase());
-    SIG = sigOf(ST);
-    MODE = 'local';
-    try { render(); } catch (e) {}
-    return ST;
-  };
-
   // game.js 先载入，那时首页角色和头像是按不认识武库皮肤画的：这里重画一次
   redrawLooks();
   // 本机模式：存档每秒对一次校验，绕过这里直接改的会被发现

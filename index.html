@@ -4008,80 +4008,6 @@ authListeners.forEach(fn => {
 try { fn(user); } catch (err) { console.warn('Auth listener error:', err); }
 });
 }
-const DEV_ALL_CHARS = ['qingfeng', 'yanling', 'leiming', 'tieshan', 'liuyun', 'lingshuang', 'moyu', 'feiying', 'yuehua', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
-const DEV_ALL_SKINS = [
-'fy_blood', 'fy_huandie', 'fy_jade', 'fy_p1', 'fy_p2', 'fy_phantom', 'fy_zaqu', 'fy_zsco', 'fy_ztau',
-'gc_crimson', 'gc_p1', 'gc_p2', 'gc_underworld', 'gc_wolf', 'gc_zari', 'gc_zcap', 'gc_ztau',
-'lm_asura', 'lm_jiuxiao', 'lm_p1', 'lm_p2', 'lm_sun', 'lm_violet', 'lm_zari', 'lm_zcap', 'lm_zleo',
-'lq_silk', 'lq_sparrow',
-'ls_aurora', 'ls_dragon', 'ls_p1', 'ls_p2', 'ls_plum', 'ls_tianhe', 'ls_zgem', 'ls_zsag', 'ls_zsco',
-'ly_bamboo', 'ly_dusk', 'ly_fox', 'ly_jinli', 'ly_p1', 'ly_p2', 'ly_sky', 'ly_zlib', 'ly_zpis', 'ly_zvir',
-'my_celestial', 'my_cinnabar', 'my_gold', 'my_p1', 'my_p2', 'my_qinglv', 'my_zaqu', 'my_zlib', 'my_zvir',
-'qf_abyss', 'qf_frost', 'qf_gold', 'qf_p1', 'qf_p2', 'qf_qfx', 'qf_renying', 'qf_zleo', 'qf_zpis', 'qf_zsag',
-'ts_bronze', 'ts_crimson', 'ts_liuli', 'ts_obsidian', 'ts_p1', 'ts_p2', 'ts_zcap', 'ts_zleo', 'ts_ztau',
-'yh_eclipse', 'yh_guanghan', 'yh_p1', 'yh_p2', 'yh_sakura', 'yh_solstice', 'yh_zcan', 'yh_zlib', 'yh_zvir',
-'yl_blizzard', 'yl_kongque', 'yl_p1', 'yl_p2', 'yl_phoenix', 'yl_raven', 'yl_zari', 'yl_zgem', 'yl_zsag',
-'yx_celestial', 'yx_p1', 'yx_p2', 'yx_snow', 'yx_tianlai', 'yx_zcan', 'yx_zgem', 'yx_zpis',
-'zx_amber', 'zx_immortal', 'zx_moon', 'zx_p1', 'zx_p2', 'zx_zaqu', 'zx_zcan', 'zx_zsco'
-];
-function makeDevProfile() {
-function getDevSkins() {
-const s = new Set(DEV_ALL_SKINS);
-if (typeof SKINS !== 'undefined') Object.keys(SKINS).forEach(k => s.add(k));
-if (typeof ArmoryCore !== 'undefined') {
-if (ArmoryCore.ITEM) Object.keys(ArmoryCore.ITEM).forEach(k => s.add(k));
-if (ArmoryCore.CS_KEYS) ArmoryCore.CS_KEYS.forEach(k => s.add(k));
-}
-return Array.from(s);
-}
-const allSkins = getDevSkins();
-let devArmory = undefined;
-if (typeof ArmoryCore !== 'undefined') {
-const C = ArmoryCore;
-const newInv = [];
-let nid = 1;
-for (const k of allSkins) {
-if (!C.isItem(k)) continue;
-for (const stVal of [-1, 0]) {
-for (let copy = 0; copy < 5; copy++) {
-newInv.push({ i: nid++, k, st: stVal, t: Date.now() });
-}
-}
-}
-const devCases = {};
-for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7','c8'])) {
-devCases[cid] = 1000;
-}
-devArmory = C.blank();
-devArmory.inv = newInv;
-devArmory.nid = nid;
-devArmory.via = Array.from(new Set(allSkins.filter(k => C.isItem(k))));
-devArmory.cases = devCases;
-}
-return {
-name: 'Dev',
-ink: 1000000,
-owned: DEV_ALL_CHARS.slice(),
-frags: {
-qingfeng: 99, yanling: 99, leiming: 99, tieshan: 99,
-liuyun: 99, lingshuang: 99, moyu: 99, feiying: 99, yuehua: 99,
-yuxiao: 99, zuixian: 99, gouchen: 99, lingque: 99
-},
-pity: 0,
-spity: 0,
-skins: allSkins,
-equip: {},
-netWins: 99,
-netLosses: 0,
-rating: 2000,
-placed: 10,
-online10Unlocked: true,
-stageStars: { s1: 3, s2: 3, s3: 3, s4: 3, s5: 3, s6: 3, s7: 3, s8: 3, s9: 3, s10: 3 },
-qfx: 99,
-...(devArmory ? { armory: devArmory } : {}),
-updatedAt: Date.now()
-};
-}
 function toCloudData(prof) {
 const p = prof || {};
 return {
@@ -4103,7 +4029,7 @@ placed: typeof p.placed === 'number' ? p.placed : 0,
 updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : Date.now(),
 ...(p.rk && typeof p.rk === 'object' ? { rk: JSON.parse(JSON.stringify(p.rk)) } : {}),
 ...(p.saga && typeof p.saga === 'object' ? { saga: cleanSaga(p.saga) } : {}),
-...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : (typeof window !== 'undefined' && typeof window.getDevArmoryState === 'function' ? { armory: window.getDevArmoryState() } : {}))
+...(p.armory && typeof p.armory === 'object' ? { armory: p.armory } : {})
 };
 }
 function cleanSaga(v) {
@@ -4309,116 +4235,10 @@ window.addEventListener('offline', () => { if (pendingData) setSync({ state: 'of
 window.addEventListener('pagehide', () => flush(true));
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(true); });
 }
-async function loginDev(password) {
-try {
-let data = null;
-try {
-data = await api('/api/login', {
-method: 'POST',
-body: JSON.stringify({ username: 'Dev', password })
-});
-} catch (err) {
-if (err && err.status === 404) {
-const e = new Error('云端还没有 Dev 账号，请先在管理后台建一个');
-e.status = 404;
-throw e;
-}
-throw err;
-}
-setToken(data.token);
-const userObj = {
-uid: data.uid,
-name: 'Dev',
-displayName: 'Dev',
-token: data.token,
-isCloud: true,
-isDevMaster: true
-};
-currentUser = userObj;
-try {
-localStorage.setItem('renying-local-current', JSON.stringify(userObj));
-} catch (e) {}
-let devProf = null;
-if (data.profile) {
-devProf = adoptProfile(data.uid, data.profile, data.ledger);
-} else {
-devProf = makeDevProfile();
-}
-const baseDev = makeDevProfile();
-devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned]));
-devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
-devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
-devProf.online10Unlocked = true;
-if (baseDev.armory) {
-if (!devProf.armory || typeof devProf.armory !== 'object') {
-devProf.armory = baseDev.armory;
-} else {
-devProf.armory.cases = Object.assign({}, baseDev.armory.cases || {}, devProf.armory.cases || {});
-if (!devProf.armory.inv || !devProf.armory.inv.length) {
-devProf.armory.inv = baseDev.armory.inv;
-devProf.armory.nid = baseDev.armory.nid;
-devProf.armory.via = baseDev.armory.via;
-}
-}
-}
-if (typeof window !== 'undefined' && typeof window.grantDevArmory === 'function' && devProf.armory) {
-window.grantDevArmory(devProf.armory.inv, devProf.armory.cases);
-}
-try {
-localStorage.setItem(profKey(data.uid), JSON.stringify(devProf));
-} catch (e) {}
-setSync({ state: 'ok', at: Date.now(), err: '' });
-notifyAuthChange(currentUser);
-return userObj;
-} catch (netErr) {
-if (netErr && netErr.status) throw netErr;   // 服务器回了话（密码不对、试错太多、没有这个号）：照实说
-console.warn('Dev cloud login failed, falling back to local dev account:', netErr);
-const uid = 'dev_master';
-let devProf = null;
-try {
-devProf = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
-} catch (e) {}
-if (!devProf) {
-devProf = makeDevProfile();
-} else {
-const baseDev = makeDevProfile();
-devProf.owned = Array.from(new Set([...(devProf.owned || []), ...baseDev.owned]));
-devProf.skins = Array.from(new Set([...(devProf.skins || []), ...baseDev.skins]));
-devProf.ink = Math.max(devProf.ink || 0, baseDev.ink);
-devProf.online10Unlocked = true;
-if (baseDev.armory) {
-if (!devProf.armory || typeof devProf.armory !== 'object') {
-devProf.armory = baseDev.armory;
-} else {
-devProf.armory.cases = Object.assign({}, baseDev.armory.cases || {}, devProf.armory.cases || {});
-if (!devProf.armory.inv || !devProf.armory.inv.length) {
-devProf.armory.inv = baseDev.armory.inv;
-devProf.armory.nid = baseDev.armory.nid;
-devProf.armory.via = baseDev.armory.via;
-}
-}
-}
-}
-if (typeof window !== 'undefined' && typeof window.grantDevArmory === 'function' && devProf.armory) {
-window.grantDevArmory(devProf.armory.inv, devProf.armory.cases);
-}
-try {
-localStorage.setItem(profKey(uid), JSON.stringify(devProf));
-localStorage.setItem('renying-local-current', JSON.stringify({ uid, name: 'Dev', isDevMaster: true, isCloud: false }));
-} catch (e) {}
-currentUser = { uid, displayName: 'Dev', name: 'Dev', isDevMaster: true, isCloud: false };
-notifyAuthChange(currentUser);
-return { uid, name: 'Dev', isCloud: false, isDevMaster: true };
-}
-}
 async function register(username, password, carryProf) {
 const name = String(username).trim();
 if (!name || name.length < 2) throw new Error('昵称至少需要 2 个字符');
 if (!password || password.length < 6) throw new Error('密码至少需要 6 个字符');
-if (name.toLowerCase() === 'dev') {
-try { return await loginDev(password); }
-catch (e) { throw e && e.status === 401 ? new Error('该昵称已被使用') : e; }
-}
 let initialProf = carryProf || null;   // 本机账号升级时带上它自己的存档；否则带游客进度
 try {
 const guestRaw = initialProf ? null : localStorage.getItem('renying-guest-profile');
@@ -4457,6 +4277,7 @@ return userObj;
 if (err.message && err.message.includes('已') && err.message.includes('注册')) {
 throw err;
 }
+if (err && err.status >= 400 && err.status < 500 && err.status !== 404) throw err;   // 服务器回了话（昵称不能用、太频繁）：照实说，不偷偷建本机账号
 console.warn('Cloudflare Worker register failed, falling back to local account:', err);
 const mockUsers = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}');
 if (mockUsers[name]) throw new Error('该昵称已在本机注册');
@@ -4478,9 +4299,6 @@ async function login(username, password) {
 const name = String(username).trim();
 if (!name) throw new Error('请输入昵称');
 if (!password) throw new Error('请输入密码');
-if (name.toLowerCase() === 'dev') {
-return await loginDev(password);
-}
 try {
 const data = await api('/api/login', {
 method: 'POST',
@@ -4571,12 +4389,10 @@ notifyAuthChange(null);
 }
 function getUser() {
 if (currentUser) {
-const isDev = !!currentUser.isDevMaster;
 return {
 uid: currentUser.uid,
 name: currentUser.displayName || currentUser.name || '大侠',
 isCloud: !!(currentUser.isCloud && currentUser.token),
-isDevMaster: isDev,
 token: currentUser.token || getToken()
 };
 }
@@ -4585,8 +4401,8 @@ const local = JSON.parse(localStorage.getItem('renying-local-current') || 'null'
 if (local && local.uid) {
 const token = getToken();
 const isCloud = !!(token && local.isCloud !== false);
-const isDev = !!local.isDevMaster;
-currentUser = { ...local, token, isCloud, displayName: local.name, isDevMaster: isDev };
+const { isDevMaster, ...rest } = local;
+currentUser = { ...rest, token, isCloud, displayName: local.name };
 return currentUser;
 }
 } catch (e) {}
@@ -4847,8 +4663,19 @@ return { success: true, uid: res.uid, name: res.name, isCloud: true };
 }
 function init() {
 migrateLegacyCache();
+dropDevSession();
 getUser();
 }
+function dropDevSession() {
+try {
+const cur = JSON.parse(localStorage.getItem('renying-local-current') || 'null');
+if (!cur || typeof cur !== 'object') return;
+if (cur.uid === 'dev_master' || (cur.isDevMaster && !cur.isCloud)) { localStorage.removeItem('renying-local-current'); return; }
+if ('isDevMaster' in cur) { delete cur.isDevMaster; localStorage.setItem('renying-local-current', JSON.stringify(cur)); }
+} catch (e) {}
+try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
+}
+dropDevSession();   // 网页一载入就做（init 不一定有人调），要赶在第一次 getUser() 之前
 if (typeof window !== 'undefined') {
 window.CloudSave = {
 init,
@@ -4871,7 +4698,6 @@ exportAllAccounts,
 importAccountData,
 computeProfileDigest,
 verifyProfileDigest,
-makeDevProfile,
 toCloudData,
 mergeProfiles,
 promoteLocalToCloud,
@@ -6665,11 +6491,7 @@ const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
 let NET_HUD = false;                     // 回滚与联机遥测 HUD 开关（按 ~ 或 F2 切换）
-let DEV_SESSION_UNLOCKED = false;
 const FREE_SKIN_EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };
-try {
-DEV_SESSION_UNLOCKED = sessionStorage.getItem('renying-dev-unlock') === '1';
-} catch (e) {}
 const cv = document.getElementById('c');
 function refocusGame() {
 if (document.activeElement && document.activeElement !== cv && document.activeElement !== document.body) {
@@ -7051,6 +6873,16 @@ return out;
 }
 const CHAR_MOVES = CHARS.map(buildMoves);
 const HEAVY_MOVES = ['hv', 'cs1', 'cs2'];
+const SD_SPD = 1750, SD_TURN = 16, SD_TIME = 0.8;
+function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
+if (typeof is2v2 === 'function' && is2v2()) {
+let best = null, bd = Infinity;
+for (const o of foesOf(f)) { if (o.hp <= 0) continue; const d = Math.hypot(o.x - f.x, o.y - f.y); if (d < bd) { bd = d; best = o; } }
+if (best) return best;
+}
+return foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+}
+const sdAim = (f, t) => Math.atan2(t.y - f.y, t.x - f.x);   // 两人都按身体中间（脚下往上 50）算，高度差就是 y 差
 const SKILLS = {
 gale: { name: '疾风斩', cd: 5, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
 start(f) { f.vx = 0; },
@@ -7486,70 +7318,63 @@ if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
 ai: (me, foe, d) => d > 110 && d < 460 },
-shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝瞬息穿刺突进（自动索敌导向流转直奔对手）。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
+shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
 start(f, foe) {
 f.vx = 0; f.vy = 0;
-const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+const target = sdTarget(f, foe);
 if (target) f.face = target.x >= f.x ? 1 : -1;
 },
 update(f, foe) {
-const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
+const target = sdTarget(f, foe);
+if (f.skPh === 0) {
 if (target) f.face = target.x >= f.x ? 1 : -1;
-if (f.skPh === 0 && f.t >= 0.08) {
+if (f.t >= 0.08) {
 f.skPh = 1; f.t = 0; f.invul = 0.12; f.hitDone = false; SFX.dash();
-if (target) {
-const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
-const dist = Math.hypot(dx, dy);
-const spd = 1520;
-if (dist > 10) {
-f.vx = (dx / dist) * spd;
-f.vy = (dy / dist) * spd;
-} else {
-f.vx = f.face * spd;
-f.vy = 0;
-}
-} else {
-f.vx = f.face * 1520;
-f.vy = 0;
+const a = target ? sdAim(f, target) : (f.face > 0 ? 0 : Math.PI);
+f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
 }
 }
 if (f.skPh === 1) {
-if (target && !f.hitDone) {
-const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
-const dist = Math.hypot(dx, dy);
-const spd = 1520;
-if (dist > 10) {
-f.vx = damp(f.vx, (dx / dist) * spd, 14, STEP);
-f.vy = damp(f.vy, (dy / dist) * spd, 14, STEP);
+if (target && target.invul <= 0) {
+const cur = Math.atan2(f.vy, f.vx), want = sdAim(f, target);
+let d = want - cur;
+while (d > Math.PI) d -= Math.PI * 2;
+while (d < -Math.PI) d += Math.PI * 2;
+if (f.y >= 0 && Math.sin(cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP)) > Math.max(0.001, Math.sin(cur))) d -= Math.sign(d) * Math.PI * 2;   // 贴着地面掉头：从上面绕过去，不往地里转
+const a = cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP);
+f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
+} else {
+const v = Math.hypot(f.vx, f.vy) || 1;
+f.vx = f.vx / v * SD_SPD; f.vy = f.vy / v * SD_SPD;
 }
-}
+if (f.vx) f.face = f.vx > 0 ? 1 : -1;
+if (f.y >= 0 && f.vy > 0) f.vy = 0;   // 贴地飞，不往地里钻
 if (!RESIM && Math.random() < 0.6) {
 addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(50, 150), vy: rand(-40, 40), rgb: '235,110,210', life: 0.25, max: 0.25 });
 }
-const wasMarked = (foe.needleMark || 0) > 0;
-if (strike(f, foe, { box: [-24, -108, 102, 18], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
+const hitFoe = target || foe;
+const wasMarked = (hitFoe.needleMark || 0) > 0;
+if (strike(f, hitFoe, { box: [-40, -120, 104, 24], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
 if (wasMarked) {
-foe.needleMark = 0;
+hitFoe.needleMark = 0;
 f.skill2CD = 0;
 shake = Math.max(shake, 14);
 SFX.heavy(); SFX.slice();
-applyHit(f, foe, { dmg: 38, kb: [240, -640], stun: 0.55, hs: 0.14, launch: true, big: true, unblockable: true }, [foe.x, foe.y - 60]);
-ring(foe.x, foe.y - 60, 110, '235,110,210', 0.4);
+applyHit(f, hitFoe, { dmg: 38, kb: [240, -640], stun: 0.55, hs: 0.14, launch: true, big: true, unblockable: true }, [hitFoe.x, hitFoe.y - 60]);
+ring(hitFoe.x, hitFoe.y - 60, 110, '235,110,210', 0.4);
 for (let k = 0; k < 12; k++) {
 const a = rand(0, 6.28), v = rand(120, 320);
-addP({ type: 'spark', x: foe.x, y: foe.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: '255,160,230', life: 0.35, max: 0.35 });
+addP({ type: 'spark', x: hitFoe.x, y: hitFoe.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: '255,160,230', life: 0.35, max: 0.35 });
 }
 addP({ type: 'text', text: '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
 }
-f.vx *= 0.3;
-f.vy *= 0.3;
-}
-if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.vy *= 0.2; }
+f.skPh = 2; f.t = 0; f.vx *= 0.06; f.vy *= 0.06;
+} else if (f.t >= SD_TIME) { f.skPh = 2; f.t = 0; f.vx *= 0.12; f.vy *= 0.12; }
 }
 if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? ['dash', 60] : ['idle', 14],
-ai: (me, foe, d) => (foe.needleMark > 0 && d < 360) || (d > 100 && d < 260) },
+ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 const ULTS = {
@@ -8575,7 +8400,7 @@ return { c, l, id, C, boss: false, waves, K: waveK(1 + g * 0.45) };
 function nextStage(S) { return S.l < 4 ? [S.c, S.l + 1] : S.c < CHAPTERS.length - 1 ? [S.c + 1, 0] : null; }
 let STAGE_STARS = {};
 try { STAGE_STARS = JSON.parse(localStorage.getItem('renying-stage') || '{}') || {}; } catch (e) {}
-function stageOpen(c, l) { return DEV_SESSION_UNLOCKED || (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
+function stageOpen(c, l) { return (c === 0 && l === 0) || !!STAGE_STARS[l > 0 ? stageId(c, l - 1) : stageId(c - 1, 4)]; }
 let STAGE = null, stageCh = -1;
 function renderStages() {
 if (stageCh < 0) { stageCh = 0; for (let c = 0; c < CHAPTERS.length; c++) if (stageOpen(c, 0)) stageCh = c; }   // 默认翻到最新解锁的一章
@@ -16031,7 +15856,7 @@ light: { type: 'melee', label: '近战飞梭', rng: 'melee' },
 charge: { type: 'melee', label: '近战突刺', rng: 'melee' },
 air: { type: 'melee', label: '近战', rng: 'melee' },
 skill: { type: 'ranged', label: '远距飞梭', rng: 'ranged', icon: 'ranged' },
-ranged: { type: 'dash', label: '突进换影', rng: 'mid', icon: 'melee' },
+ranged: { type: 'dash', label: '追踪换影', rng: 'ranged', icon: 'melee' },
 ult: { type: 'fullscreen', label: '全域悬丝', rng: 'screen' },
 esc: { type: 'esc', label: '身法' }
 },
@@ -16231,7 +16056,7 @@ light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge
 charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '34.6 / 55.7', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
 air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '17.3 / 25', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
 skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 3.5s', badgeCls: 'badge-stun', dmg: '30', desc: '掷出牵丝子母梭贯穿前方，命中施加3.5秒雀芒印记。' },
-ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '34 (+38爆伤)', desc: '踏悬丝穿刺突进；穿透已带印记者引爆真气并瞬间刷新冷却！' },
+ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '34 (+38爆伤)', desc: '化作流光追着对手飞过去穿刺（最多追 0.8 秒），只有腾空闪这类无敌身法躲得开；穿透已带印记者引爆真气并瞬间刷新冷却！' },
 ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '140 (8段)', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
 esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
 },
@@ -16987,7 +16812,7 @@ if (cv2) {
 cv2.style.boxShadow = `0 16px 48px ${col.replace('rgb', 'rgba').replace(')', ',0.35)')}`;
 cv2.style.borderColor = col;
 }
-const rar = CHAR_RARITY[c.id], own = DEV_SESSION_UNLOCKED || ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
+const rar = CHAR_RARITY[c.id], own = ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
 const skMeta = skin && SKINS[skin], skG = skMeta && skinGrade(skin);
 const skPill = skMeta ? `<span class="pill sk-pill" style="--tc:${skG.c}">${skG.n} · ${skMeta.name}</span>` : '';
 $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>`;
@@ -17002,7 +16827,7 @@ const wkSkins = skList.filter(([k]) => isWukuKey(k)).sort((a, b) => skinWeight(a
 const renderSkinBtn = ([k, v]) => {
 const has = skinOwned(k), g = skinGrade(k);
 const lockHint = v.exclusive ? ' · 青锋行 / 武库' : ' · 武库';
-return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED ? '' : ' · 限免') : lockHint}</button>`;
+return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD ? '' : ' · 限免') : lockHint}</button>`;
 };
 const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
 const bdHtml = defaultBtn + bdSkins.map(renderSkinBtn).join('');
@@ -17060,9 +16885,9 @@ return `<b>青锋传 · 月下起意</b><br>青锋行打通第三章「剑冢」
 const ch = CHAPTERS[chIdx];
 const rSkinKey = ({ tieshan: 'ts_bronze', liuyun: 'ly_dusk', lingshuang: 'ls_plum', feiying: 'fy_jade', leiming: 'lm_violet', yanling: 'yl_raven', yuehua: 'yh_sakura', moyu: 'my_cinnabar', yuxiao: 'yx_snow', zuixian: 'zx_amber', gouchen: 'gc_crimson' })[c.id];
 const rSkin = rSkinKey && SKINS[rSkinKey];
-const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED;
+const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD;
 const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
-const clear = stars > 0 || DEV_SESSION_UNLOCKED;
+const clear = stars > 0;
 return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
 })()}${typeof sagaCodexLine === 'function' ? sagaCodexLine(c.id) : ''}</div>`, '', true),
 ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', false, null, true) : '',
@@ -17608,7 +17433,7 @@ function toast(t) { const el = $id('toast'); el.textContent = t; el.classList.ad
 function ownsHero(id) { return CHARS.some(c => c.id === id); }
 function heroesFree() { return true; }
 function availList() {
-if (OFFLINE_BUILD || DEV_SESSION_UNLOCKED || heroesFree()) return CHARS.map((c, i) => i);
+if (OFFLINE_BUILD || heroesFree()) return CHARS.map((c, i) => i);
 const ok = new Set([...(PROF.owned || ['qingfeng']), ...(PROF.rotation || [])]);
 return CHARS.map((c, i) => i).filter(i => ok.has(CHARS[i].id));
 }
@@ -17631,7 +17456,7 @@ return (sk && sk.skillNames && sk.skillNames.ult) || '';
 }
 function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start && now < FREE_SKIN_EVENT.end; }
 function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
-function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
+function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
 function bestSkin(id) {
 let best = '', bw = 0;
 for (const [k, v] of Object.entries(SKINS)) {
@@ -17713,12 +17538,8 @@ try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catc
 { const fl = loadFlags();   // 一次性奖励的领取记录不进云存档，按账号记在本机，刷新后还在
 if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
 if (fl.tutorial && !PROF.guest) PROF.tutorial = 1;
-if ((PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) {
-const zk = getZodiacSkinKeys();
-PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zk]));
 }
-}
-if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !freeSkinEvent() && PROF.equip) {
+if (!OFFLINE_BUILD && !freeSkinEvent() && PROF.equip) {
 const ownedSkins = new Set(PROF.skins || []);
 for (const [cid, sk] of Object.entries(PROF.equip)) {
 if (sk && !ownedSkins.has(sk)) delete PROF.equip[cid];
@@ -17928,124 +17749,28 @@ async function redeemCode(rawCode) {
 const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
 if (!code) return;
 const up = code.toUpperCase();
-if (['LOCK', 'RELOCK'].includes(up)) {
-DEV_SESSION_UNLOCKED = false;
-try { sessionStorage.removeItem('renying-dev-unlock'); } catch (e) {}
-if ($id('rdCode')) $id('rdCode').value = '';
-SFX.thud();
-renderAcc();
-if (typeof BP !== 'undefined' && BP) renderBP();
-if (typeof renderCodex === 'function' && $id('codex').classList.contains('on')) renderCodex();
-if (typeof renderStages === 'function' && $id('single').classList.contains('on')) renderStages();
-return;
-}
-const DEV_SUPER_CODE = 'VG8KS7K8PYP5R36P';
-if (up === DEV_SUPER_CODE) {
-const curU = (typeof curName === 'function' ? curName() : '') || (window.CloudSave && CloudSave.getUser && CloudSave.getUser() ? CloudSave.getUser().name : '') || (typeof ACC !== 'undefined' ? ACC.name : '');
-const isDev = ['dev', 'dev_master'].includes(String(curU || '').trim().toLowerCase()) || !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isDevMaster);
-if (!isDev) {
-const devUser = { uid: 'dev_master', name: 'Dev', displayName: 'Dev', isDevMaster: true, isCloud: false };
-try { localStorage.setItem('renying-local-current', JSON.stringify(devUser)); } catch (e) {}
-if (typeof ACC !== 'undefined') { ACC.name = 'Dev'; ACC.token = 'dev_master'; }
-if (window.CloudSave && typeof CloudSave.getUser === 'function') {
-const u = CloudSave.getUser();
-if (u) { u.name = 'Dev'; u.displayName = 'Dev'; u.isDevMaster = true; }
-}
-}
-const allHeroes = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque'];
-const allSkins = Array.from(new Set([
-...Object.keys(typeof SKINS !== 'undefined' ? SKINS : {}),
-...(typeof ArmoryCore !== 'undefined' ? Object.keys(ArmoryCore.ITEM || {}) : []),
-...(typeof ArmoryCore !== 'undefined' ? (ArmoryCore.CS_KEYS || []) : [])
-]));
-PROF.ink = 1000000;
-PROF.owned = allHeroes.slice();
-PROF.skins = allSkins.slice();
-if (typeof ArmoryCore !== 'undefined') {
-const C = ArmoryCore;
-const newInv = [];
-let nid = 1;
-for (const k of allSkins) {
-if (!C.isItem(k)) continue;
-for (const stVal of [-1, 0]) {
-for (let copy = 0; copy < 5; copy++) {
-newInv.push({ i: nid++, k, st: stVal, t: Date.now() });
-}
-}
-}
-const devCases = {};
-for (const cid of (C.CASES || ['c1','c2','c3','c4','c5','c6','c7','c8'])) {
-devCases[cid] = 1000;
-}
-let grantedArm = null;
-if (typeof window.grantDevArmory === 'function') {
-grantedArm = window.grantDevArmory(newInv, devCases);
-}
-if (!grantedArm) {   // 没有武库网页（不该发生）才走存档；grantDevArmory 已经连校验一起放好了，不要再写回去（写回去校验不过会记作弊）
-const arm = C.normalize(C.blank(), { now: Date.now(), uid: curU });
-arm.inv = newInv; arm.nid = nid; arm.cases = Object.assign(arm.cases || {}, devCases);
-arm.via = Array.from(new Set(allSkins.filter(k => C.isItem(k))));
-PROF.armory = arm;
-}
-}
-const sid = typeof rkSeason === 'function' ? rkSeason().id : 'S1';
-const devRk = {
-season: sid,
-owner: curU,
-pts: 25000,
-placed: 10,
-est: 25000,
-w: 999,
-l: 0,
-peak: 25000,
-streak: 50,
-hist: [],
-pending: null,
-at: Date.now()
-};
-PROF.rk = devRk;
-try {
-if (typeof rkOwner === 'function') {
-localStorage.setItem('renying-rk-' + rkOwner(), JSON.stringify(devRk));
-}
-} catch (e) {}
-DEV_SESSION_UNLOCKED = true;
-try { sessionStorage.setItem('renying-dev-unlock', '1'); } catch (e) {}
-if (window.CloudSave) CloudSave.saveProfile(PROF, true);
-applyProfile(PROF);
-if (typeof rkSave === 'function') rkSave();
-SFX.chargeFull();
-toast('开发者神权兑换成功：最高段位、全角色、全皮肤及副本、1000个武器箱、100万墨锭！');
-if ($id('tMsg')) $id('tMsg').textContent = '开发者神权兑换成功！已全部解锁并同步。';
-if ($id('rdCode')) $id('rdCode').value = '';
-renderTasks();
-if (typeof renderCodex === 'function' && $id('codex') && $id('codex').classList.contains('on')) renderCodex();
-if (typeof renderStages === 'function' && $id('single') && $id('single').classList.contains('on')) renderStages();
-if (typeof renderTopNav === 'function') renderTopNav();
-if (typeof renderHome === 'function') renderHome();
-return;
-}
 const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
 if (up === ZODIAC_SECRET_CODE) {
 const zodSkins = getZodiacSkinKeys();
 const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
-const hasAllSkins = zodSkins.every(k => (PROF.skins || []).includes(k));
-const hasAllArmory = typeof window.armoryHasAll === 'function' ? window.armoryHasAll(zodSkins) : true;
-if (redeemed.includes(up) && hasAllSkins && hasAllArmory) {
-toast('该兑换码已使用过了');
-if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
-return;
-}
+const say = t => { toast(t); if ($id('tMsg')) $id('tMsg').textContent = t; };
 const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
-if (cloudUser && typeof window.armoryRedeem === 'function') {
+if (cloudUser) {
+if (typeof window.armoryRedeem !== 'function') return;
 const btn = $id('rdBtn');
 if (btn) btn.disabled = true;
-try { await window.armoryRedeem(up); } catch (e) {} finally { if (btn) btn.disabled = false; }
+let r = null;
+try { r = await window.armoryRedeem(up); } catch (e) {} finally { if (btn) btn.disabled = false; }
+if (!r || r.err) { say((r && r.err) || '兑换没成功，稍后再试'); return; }
+} else if (PROF.guest) {
+if (zodSkins.every(k => (PROF.skins || []).includes(k))) { say('该兑换码已使用过了'); return; }
+PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
+} else {
+if (redeemed.includes(up) && typeof window.armoryHasAll === 'function' && window.armoryHasAll(zodSkins)) { say('该兑换码已使用过了'); return; }
+if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');
 }
 if (!redeemed.includes(up)) redeemed.push(up);
 saveFlag('codes', redeemed);
-PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
-if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');
 if (window.CloudSave) CloudSave.saveProfile(PROF, true);
 applyProfile(PROF);
 SFX.chargeFull();
@@ -21904,8 +21629,8 @@ pickedBy = BP.picks.indexOf(i);
 }
 const can = myTurn && bpValid(i);
 const myAv = BP.avail && BP.avail[my];
-const lock = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && myAv && !myAv.includes(i);
-const free = !OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
+const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
+const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
 const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
 const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
 const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
@@ -22032,7 +21757,7 @@ bar.innerHTML = u && u.name
 : `<button class="ghost" id="accOpen">登录 / 注册</button>`;
 const actionBtns = $id('accActionBtns');
 if (actionBtns) {
-const isDev = !!(u && u.isDevMaster);
+const isDev = isDevName(u);
 const devAdminBtn = $id('devAdminBtn');
 if (devAdminBtn) devAdminBtn.classList.toggle('hidden', !isDev);
 let expAll = $id('exportAllBtn');
@@ -22061,6 +21786,7 @@ if (expAll) expAll.remove();
 }
 }
 }
+function isDevName(u) { return !!(u && u.isCloud && String(u.name || '').toLowerCase() === 'dev'); }   // 云端的 Dev 这个名字只能在管理后台建
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 if ($id('exportAccBtn')) {
 $id('exportAccBtn').addEventListener('click', () => {
@@ -22141,7 +21867,7 @@ const s = rkState(), placed = rkPlaced(s), t = placed ? rkTier(s.pts) : null;
 $id('adAvatar').textContent = name.slice(0, 1);
 $id('adAvatar').style.setProperty('--tier', placed ? RK_TIERS[t.li].c1 : '#8a94a3');
 $id('adName').textContent = name;
-$id('adKind').textContent = u && u.isDevMaster ? (u.isCloud ? '开发者账号 · 云端同步' : '开发者账号 · 本地模式') : u && u.isCloud ? '云端账号' : '本机账号';
+$id('adKind').textContent = isDevName(u) ? '开发者账号 · 云端同步' : u && u.isCloud ? '云端账号' : '本机账号';
 $id('adRank').textContent = placed ? `${t.label} · ${t.name} · ${t.pts.toLocaleString()} 分` : `定级赛 ${s.placed}/${RK.PLACE} · 估分 ～${Math.round(s.est).toLocaleString()}`;
 $id('adMedal').innerHTML = rkMedalFor(s, 96);
 const w = PROF.netWins || 0, l = PROF.netLosses || 0;
@@ -22378,7 +22104,7 @@ const validSkins = new Set(PROF.skins || []);
 const rawEquip = Object.assign({}, accData.equip || {}, PROF.equip || {});
 PROF.equip = {};
 for (const [cid, sk] of Object.entries(rawEquip)) {
-if (sk && (validSkins.has(sk) || OFFLINE_BUILD || DEV_SESSION_UNLOCKED || freeSkinEvent())) {
+if (sk && (validSkins.has(sk) || OFFLINE_BUILD || freeSkinEvent())) {
 PROF.equip[cid] = sk;
 }
 }
@@ -25410,7 +25136,7 @@ get() { return ST && MODE === 'local' ? Object.assign(JSON.parse(JSON.stringify(
 set(v) { loadLocal(v); },
 });
 let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
-if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') loadLocal(PRE_ARMORY); }, 0);
+if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') { loadLocal(PRE_ARMORY); migrateLocal(); } }, 0);
 function loadLocal(v, force) {
 const u = user(); UID = u ? String(u.uid || u.name || '') : '';
 if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
@@ -25429,11 +25155,20 @@ ST = C.normalize(s || C.blank(), envBase());
 SIG = sigOf(ST);
 MODE = 'local';
 }
+function migrateLocal() {
+if (MODE !== 'local' || !ST || PROF.guest || OFFLINE_BUILD || cloudOn()) return;
+const lg = (PROF.skins || []).filter(k => C.isItem(k) && !ST.via.includes(k) && !ST.inv.some(x => x.k === k));
+if (!lg.length) return;
+const env = envBase();
+for (const k of lg) { C.addItem(ST, C.mkItem(ST, k, 'legacy', rnd, { st: -1 }), env); ST.via.push(k); }
+SIG = sigOf(ST);
+if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+}
 async function connect(force) {   // 云端账号先问服务器支不支持武库；支持就由服务器管
 const u = user();
 if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
 UID = String(u.uid || u.name || '');
-if (!cloudOn()) { if (!ST) loadLocal(undefined); MODE = 'local'; return; }
+if (!cloudOn()) { if (!ST) loadLocal(undefined); MODE = 'local'; migrateLocal(); return; }
 if (MODE === 'server' && !force) return;
 if (LOADING) return LOADING;
 LOADING = (async () => {
@@ -25442,6 +25177,7 @@ const out = await ECON('sync', {});
 if (out && out.state && out.state.v < C.VER) { MODE = 'old'; OLDV = out.state.v; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是旧版的武库：先只给看，等服务器更新
 if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
 MODE = 'server'; apply(out, true);
+setTimeout(zodFix, 0);
 } catch (e) {
 if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还没有武库：先用本机规则
 else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
@@ -25449,6 +25185,14 @@ else { if (MODE !== 'server') { ST = null; MODE = 'offline'; } msg('连不上服
 } finally { LOADING = null; }
 })();
 return LOADING;
+}
+let ZFIX = '';
+function zodFix() {
+if (MODE !== 'server' || !ST || ZFIX === UID || !(PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) return;
+ZFIX = UID;
+const zk = Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
+if (zk.every(k => ST.inv.some(x => x.k === k))) return;
+window.armoryRedeem('ZODIAC2026STAR').then(r => { if (r && r.ok) toast('星座装束已补进武库：' + r.text); }).catch(() => {});
 }
 function redrawLooks() {   // 首页角色、头像、场上侠客按现在穿的重画一遍
 try {
@@ -25468,17 +25212,11 @@ else if (MODE !== 'server' && typeof out.ink === 'number') ink1 = out.ink;
 if (ink1 > ink0) GRANT(ink1 - ink0);
 PROF.ink = ink1;
 let own = false;
-const keepZod = (PROF.redeemedCodes || []).includes('ZODIAC2026STAR');
-const isZodKey = k => C.ITEM[k] && C.ITEM[k].col === 'c8';
-if (Array.isArray(out.skins)) {
-const prevZod = keepZod ? (PROF.skins || []).filter(isZodKey) : [];
-PROF.skins = Array.from(new Set([...out.skins, ...prevZod]));
-own = true;
-}
+if (Array.isArray(out.skins)) { PROF.skins = out.skins.slice(); own = true; }
 if (out.skinsAdd || out.skinsDel) {
 const set = new Set(PROF.skins || []);
 for (const k of out.skinsAdd || []) set.add(k);
-for (const k of out.skinsDel || []) { if (keepZod && isZodKey(k)) continue; set.delete(k); }
+for (const k of out.skinsDel || []) set.delete(k);
 PROF.skins = Array.from(set);
 own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own;
 }
@@ -25620,7 +25358,7 @@ let seenTm = 0;
 function markSeenSoon() { clearTimeout(seenTm); seenTm = setTimeout(() => { if (TAB === 'inv' && $id('armory').classList.contains('on')) markSeen(); }, 2500); }
 function blankS() { return ST || C.normalize(C.blank(), { now: NOW(), uid: '' }); }
 const INV = { char: '', tier: '', sort: 'new' };
-function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !(OFFLINE_BUILD || DEV_SESSION_UNLOCKED)); }
+function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !OFFLINE_BUILD); }
 function pInv() {
 const s = blankS();
 let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier));
@@ -25665,7 +25403,7 @@ return `在卖 ${m.n} 件，最低 ${ink(m.lo)}${m.last ? ` · 最近成交 ${in
 function insInfo() {
 const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i);
 const worn = own && ST.eq[C.charOf(it.k)] === it.i, can = live(), mk = MODE === 'server';
-const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', trade: '汰换合同', supply: '每周补给', op: '江湖行动', term: '终端机' }[it.src] || '';
+const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '汰换合同', supply: '每周补给', op: '江湖行动', term: '终端机' }[it.src] || '';
 $id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[tierOf(it.k)].n}</span>
 <h3>${escapeHTML(itemName(it))}</h3>${it.n ? `<p class="ar-tagname">‘${escapeHTML(it.n)}’</p>` : ''}
 <dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}武器箱</dd>
@@ -26201,12 +25939,9 @@ const before = Math.floor(PROF.ink || 0), v = LSYNC(L, before);
 if (v > before) GRANT(v - before);
 PROF.ink = v;
 if (fix) {
-const keepZod = (PROF.redeemedCodes || []).includes('ZODIAC2026STAR');
-const isZodKey = k => C.ITEM[k] && C.ITEM[k].col === 'c8';
 const set = new Set(PROF.skins || []);
 for (const k of fix.skinsAdd || []) set.add(k);
 for (const k of fix.skinsDel || []) {
-if (keepZod && isZodKey(k)) continue;
 set.delete(k);
 for (const [c, x] of Object.entries(PROF.equip || {})) if (x === k) delete PROF.equip[c];
 }
@@ -26229,6 +25964,7 @@ if (uid !== UID || p.guest) { ST = null; MODE = 'none'; UID = uid; }
 if (!p.guest && !('armory' in p) && MODE !== 'server') loadLocal(undefined);
 }
 const r = baseApply.apply(this, arguments);
+if (p && p !== PROF) migrateLocal();
 if (p && p !== PROF && !PROF.guest && cloudOn() && MODE !== 'server') connect(false).then(() => { if ($id('armory').classList.contains('on')) render(); });
 try { if (p && p !== PROF && $id('armory').classList.contains('on')) render(); } catch (e) {}
 return r;
@@ -26308,31 +26044,16 @@ if (!ST || !Array.isArray(ST.inv)) return false;
 return keys.every(k => ST.inv.some(x => x.k === k));
 };
 window.armoryGrantLocal = function (keys, src) {
-if (!ST && !PROF.guest && MODE !== 'server') loadLocal(LOCAL_V, true);
+if (MODE === 'server' || cloudOn()) return 0;   // 云端账号的武库只有服务器能改：网页里加的一刷新就没了
+if (!ST && !PROF.guest) loadLocal(LOCAL_V, true);
 if (!ST) return 0;
 const env = envBase(); let n = 0;
-for (const k of keys) if (C.isItem(k) && !ST.inv.some(x => x.k === k) && ST.inv.length < C.INV_MAX) { C.addItem(ST, C.mkItem(ST, k, src || 'code', rnd, { st: -1 }), env); n++; }
+for (const k of keys) if (C.isItem(k) && !ST.inv.some(x => x.k === k) && ST.inv.length < C.INV_MAX) { C.addItem(ST, C.mkItem(ST, k, src || 'code', rnd, { st: -1 }), env); if (!ST.via.includes(k)) ST.via.push(k); n++; }
 PROF.skins = Array.from(new Set([...(PROF.skins || []), ...env.skins]));
 SIG = sigOf(ST);
 if (window.CloudSave) CloudSave.saveProfile(PROF, true);
 try { render(); } catch (e) {}
 return n;
-};
-window.getDevArmoryState = function() {
-return ST ? JSON.parse(JSON.stringify(ST)) : undefined;
-};
-window.grantDevArmory = function(newInv, cases) {
-const u = user(); UID = u ? String(u.uid || u.name || '') : 'Dev';
-if (!ST) ST = C.blank();
-if (Array.isArray(newInv)) ST.inv = newInv;
-if (cases && typeof cases === 'object') ST.cases = Object.assign(ST.cases || {}, cases);
-ST.via = Array.from(new Set([...(ST.via || []), ...(ST.inv || []).map(x => x.k)]));
-ST.nid = (ST.inv && ST.inv.length ? Math.max(...ST.inv.map(x => x.i || 0)) : 0) + 1;
-ST = C.normalize(ST, envBase());
-SIG = sigOf(ST);
-MODE = 'local';
-try { render(); } catch (e) {}
-return ST;
 };
 redrawLooks();
 setInterval(() => {
@@ -26349,7 +26070,6 @@ const ACH = { base: null, baseT: 0, gains: [], loadT: 0, sig: '', fns: null, hit
 const AC_TAKE = window.CloudSave && CloudSave.inkGrantTake, AC_GET = window.CloudSave && CloudSave.acGet, AC_REPORT = window.CloudSave && CloudSave.acReport;
 const AC_REVERT = window.CloudSave && CloudSave.ledgerRevert, AC_BEFORE_SYNC = window.CloudSave && CloudSave.onBeforeSync;
 function acUser() { try { return (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null; } catch (e) { return null; } }
-function acExempt() { const u = acUser(); return !!(u && (u.isDevMaster || u.uid === 'dev_master' || String(u.name || '').toLowerCase() === 'dev')); }
 function acKey() { const u = acUser(); return 'renying-ac-' + (u && u.uid ? u.uid : 'device'); }
 function acHash(s) {
 let a = 0x811c9dc5, b = 0x9e3779b9;
@@ -26390,10 +26110,10 @@ ACH.recKey = acKey();
 let r = acLoadLocal();
 r = acMerge(r, await acLoadCloud());
 ACH.rec = r; acSaveLocal(r);
-if (acBanned(r) && !acExempt()) acShow(r); else acHide();
+if (acBanned(r)) acShow(r); else acHide();
 }
 async function acStrike(reason) {
-if (acExempt() || ACH.busy) return;
+if (ACH.busy) return;
 ACH.busy = true;
 const r = ACH.rec || acLoadLocal(), now = Date.now();
 r.strikes += 1; r.at = now; r.log = (r.log || []).concat({ r: reason, at: now }).slice(-20);
@@ -26431,13 +26151,13 @@ if (ms <= 0) { acHide(); return; }
 const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60;
 el.textContent = h ? `${h} 小时 ${m} 分` : `${m + 1} 分钟`;
 }
-window.addEventListener('keydown', e => { if (ACH.rec && acBanned(ACH.rec) && !acExempt()) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+window.addEventListener('keydown', e => { if (ACH.rec && acBanned(ACH.rec)) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
 const acLoading = () => Date.now() < ACH.loadT;
 function acInkTick() {
 if (typeof PROF === 'undefined') return;
 const ink = +PROF.ink || 0, now = Date.now(), since = ACH.baseT;
 ACH.baseT = now;
-if (ACH.base === null || acLoading() || acExempt()) { ACH.base = ink; return; }
+if (ACH.base === null || acLoading()) { ACH.base = ink; return; }
 let d = ink - ACH.base;
 if (d <= 0) { ACH.base = ink; return; }
 if (typeof AC_TAKE === 'function') d -= AC_TAKE(d);   // 服务器确认的、武库结算的入账：对得上的部分不算
@@ -26504,7 +26224,7 @@ ACH.fns = { applyHit: wrapped, balDmg };
 ACH.sig = acTableSig();
 }
 function acCodeTick() {
-if (!ACH.fns || acExempt()) return;
+if (!ACH.fns) return;
 if (applyHit !== ACH.fns.applyHit || balDmg !== ACH.fns.balDmg) {
 applyHit = ACH.fns.applyHit; balDmg = ACH.fns.balDmg;   // 换回原来的函数
 acStrike('伤害计算被篡改');
@@ -26521,7 +26241,7 @@ setInterval(() => {
 ACH.tick++;
 acInkTick();
 if (ACH.tick % 3 === 0) acCodeTick();
-if (ACH.rec && acBanned(ACH.rec) && !acExempt()) { const el = $id('acMask'); if (!el || el.hidden) acShow(ACH.rec); else acTickLeft(); }
+if (ACH.rec && acBanned(ACH.rec)) { const el = $id('acMask'); if (!el || el.hidden) acShow(ACH.rec); else acTickLeft(); }
 else if (ACH.rec && $id('acMask') && !$id('acMask').hidden && $id('acMask').classList.contains('ban')) acHide();
 if (acKey() !== ACH.recKey) acRefresh();   // 换了账号
 }, 1000);
