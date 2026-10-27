@@ -6985,19 +6985,19 @@ dl: { p: ['fy_crouch', 'fy_crouch'], su: .055, ac: .06, rc: .12, dmg: 5, kb: [45
 const FINAL = { ult: true, noScale: true, dmg: 85, kb: [520, -900], stun: .6, hs: .24, launch: true, unblockable: true };
 const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: .035, unblockable: true, hold: true };
 const BAL = {
-qingfeng: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-feiying: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-tieshan: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-lingshuang: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-liuyun: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-leiming: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-moyu: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-yuehua: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-yanling: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-yuxiao: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-zuixian: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-gouchen: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
-lingque: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+qingfeng: { normal: 0.915, skill: 0.915, ult: 0.915, cd: 1.0, hp: 0.915 },
+feiying: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
+tieshan: { normal: 1.076, skill: 1.076, ult: 1.076, cd: 1.0, hp: 1.076 },
+lingshuang: { normal: 1.066, skill: 1.066, ult: 1.066, cd: 1.0, hp: 1.066 },
+liuyun: { normal: 0.959, skill: 0.959, ult: 0.959, cd: 1.0, hp: 0.959 },
+leiming: { normal: 1.067, skill: 1.067, ult: 1.067, cd: 1.0, hp: 1.067 },
+moyu: { normal: 0.882, skill: 0.882, ult: 0.882, cd: 1.0, hp: 0.882 },
+yuehua: { normal: 0.926, skill: 0.926, ult: 0.926, cd: 1.0, hp: 0.926 },
+yanling: { normal: 1.068, skill: 1.068, ult: 1.068, cd: 1.0, hp: 1.068 },
+yuxiao: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
+zuixian: { normal: 1.026, skill: 1.026, ult: 1.026, cd: 1.0, hp: 1.026 },
+gouchen: { normal: 1.08, skill: 1.08, ult: 1.08, cd: 1.0, hp: 1.08 },
+lingque: { normal: 1.108, skill: 1.108, ult: 1.108, cd: 1.0, hp: 1.108 },
 };
 const balOf = f => (f && f.ch && BAL[f.ch.id]) || BAL.qingfeng;
 function balDmg(att, m) { const b = balOf(att); return m.ult ? b.ult : (m.sk || (!m.isProj && att.state === 'skill')) ? b.skill : b.normal; }
@@ -7130,7 +7130,7 @@ return foe || (typeof foeOf === 'function' ? foeOf(f) : null);
 }
 const sdAim = (f, t) => Math.atan2(t.y - f.y, t.x - f.x);   // 两人都按身体中间（脚下往上 50）算，高度差就是 y 差
 const SKILLS = {
-gale: { name: '疾风斩', cd: 5, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
+gale: { name: '疾风斩', cd: 6, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
@@ -7228,7 +7228,7 @@ if (f.t >= 0.34) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
 ai: (me, foe, d) => d < 120 },
-windblade: { name: '风刃', cd: 3.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
+windblade: { name: '风刃', cd: 4.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
 start() {},
 update(f) {
 if (f.skPh === 0 && f.t >= 0.04) {
@@ -7427,7 +7427,7 @@ addP({ type: 'text', text: `画符 · ${f.fu}/${FU_MAX}`, x: f.x, y: f.y - 140, 
 if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
-moonring: { name: '月轮', cd: 3.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
+moonring: { name: '月轮', cd: 4.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
 start(f) { f.vx = 0; },
 update(f) {
 if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'moonring', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 740, w: 56, h: 56, life: 1.8, dmg: 28, kb: [100, 0], stun: 0.25, launch: false, hs: 0.04, pierce: true, rehit: 0.3, maxHits: 2, boomer: true, turn: 0.38 }); }
@@ -7523,7 +7523,7 @@ pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.skPh === 1 ? ['gc_throw', 60] : ['
 ai: (me, foe, d) => (me.drunk || 0) >= 50 && d > 120 && d < 800 && me.hp < me.maxHp * 0.85 },
 drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.3) toNeutral(f); }, pose: () => ['zx_drink', 24], ai: () => false },
 drunkstep: { name: '醉步', cd: 4.5, desc: '东倒西歪一个滚翻。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.36) toNeutral(f); }, pose: () => ['zx_roll', 40], ai: () => false },
-hook: { name: '飞锤', cd: 5, air: true, desc: '把链锤朝对手甩出去（射程约 495），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
+hook: { name: '飞锤', cd: 4, air: true, desc: '把链锤朝对手甩出去（射程约 495），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
 start(f) { f.vx *= 0.2; },
 update(f) {
 if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.heavy(); spawnProj(f, { kind: 'hook', x: f.x + f.face * 40, y: f.y - 72, vx: f.face * 1500, w: 44, h: 40, life: 0.33, dmg: 18, kb: [0, 0], stun: 0.35, hs: 0.06, hook: true }); }
@@ -7531,7 +7531,7 @@ if (f.skPh === 1 && f.t >= 0.36) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.t < 0.18 ? ['gc_throw', 60] : ['gc_pull', 40],
 ai: (me, foe, d) => d > 160 && d < 500 },
-whirl: { name: '旋锤', cd: 6, nofric: true, desc: '把链锤拎过头顶抡圆了转（约 1 秒，半径约 150），转圈时能慢慢挪步：前四圈每圈砸一下（每下 7 伤害），第五圈松手一甩把人砸飞（30 伤害）。锤风还能砸碎飞来的暗器。',
+whirl: { name: '旋锤', cd: 5, nofric: true, desc: '把链锤拎过头顶抡圆了转（约 1 秒，半径约 150），转圈时能慢慢挪步：前四圈每圈砸一下（每下 7 伤害），第五圈松手一甩把人砸飞（30 伤害）。锤风还能砸碎飞来的暗器。',
 start(f) { f.vx = 0; f.spN = 0; f.hitDone = false; },
 update(f, foe) {
 const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
@@ -7552,7 +7552,7 @@ if (f.t >= 1.2) toNeutral(f);
 },
 pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
 ai: (me, foe, d) => d < 170 },
-spindle: { name: '穿叶飞梭', cd: 6.5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 3.5 秒【雀芒】印记并造成 30 伤害。',
+spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 3.5 秒【雀芒】印记并造成 30 伤害。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) {
@@ -10102,11 +10102,10 @@ const act0 = m.su, act1 = m.su + m.ac;
 if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
 if (t >= act0 && !f.lunged) {
 f.lunged = true;
-if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线飞向对手（要有墨水）
+if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线甩向身前（要有墨水）
 f.ink -= INK_COST;
 const T = 0.42, G = 1500, sx = f.x + f.face * 40, sy = f.y - 90;
-const towardFoe = Math.sign(foe.x - f.x) === f.face;
-const tx = towardFoe ? foe.x : f.x + f.face * 240, ty = towardFoe ? (foe.y - 60) : -60;
+const tx = f.x + f.face * 220, ty = -60;   // 固定落在身前约 220 像素，不自动追着对手飞（远处要自己找角度）
 spawnProj(f, { kind: 'inkblob', x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * G * T * T) / T, g: G, lob: true, w: 30, h: 30, life: 1.2, dmg: INK_DMG, kb: [80, 0], stun: 0.3, hs: 0.04, noScale: true });
 }
 if (f.ch.id === 'liuyun' && (f.moveName === 'cs1' || f.moveName === 'cs2')) {
