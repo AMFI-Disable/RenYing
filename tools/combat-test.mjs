@@ -867,6 +867,19 @@ const testSuite = [
     })()`
   },
   {
+    name: 'Stage mode (闯关斩妖) starts with both AI companions on the field',
+    fn: `(() => {
+      let err = null;
+      try { startStage(0, 0, false, 0); } catch (e) { err = e.message; }
+      if (err) { toMenu(); return { pass: false, error: 'startStage threw: ' + err }; }
+      const ok = M.mode === 'raid' && FOREST.on && !C.hidden && !D.hidden && C.chIdx === 2 && D.chIdx === 4
+        && C.ctrl instanceof AICtrl && D.ctrl instanceof AICtrl;
+      const info = 'mode=' + M.mode + ' forest=' + FOREST.on + ' C=' + C.chIdx + (C.hidden ? '(hidden)' : '') + ' D=' + D.chIdx + (D.hidden ? '(hidden)' : '');
+      FOREST.on = false; toMenu();
+      return ok ? { pass: true, error: null } : { pass: false, error: 'companions not set up: ' + info };
+    })()`
+  },
+  {
     name: 'Multiplayer Co-op Roguelike (同袍肉鸽 · 众志破魔): Home-only entry, 6-skill 3-hero Boss (3x HP, 1.25x dmg), shared gains & Ink reward',
     fn: `(() => {
       const homeBtn = document.getElementById('homeRouge');
