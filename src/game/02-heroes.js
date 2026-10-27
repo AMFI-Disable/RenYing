@@ -122,9 +122,9 @@ const CHARS = [
     stat: { hp: 490, walk: 1.10, speed: 1.0, dmg: 0.97, reach: 1.25, swing: 1.0, jump: 1, weight: 0.98, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, hitFeel: 1.0,
     look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, scarf: '#c8a24a', slash: '235,205,130', blade: '#e8e8ee', head: 'mask', weapon: 'hammer' },
     ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
-  { id: 'lingque', name: '凌雀', role: '飞梭游侠', diff: 3, escCD: 8.0, skill: 'spindle', skill2: 'shadowdash', ult: 'needlestorm', passive: 'needlemark',
-    passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。飞梭与悬丝技能击中敌人附加【雀芒】印记（持续4秒）；移形换影冲刺穿刺带印记者，瞬间引爆悬丝真气重创敌人并清零技能冷却；雀步凌波可灵活穿梭战场。',
-    stat: { hp: 465, walk: 1.15, speed: 0.85, dmg: 1.02, reach: 1.08, swing: 0.82, jump: 1.05, weight: 0.86, defRating: 0.98, guardMax: 95, guardStab: 1.05, guardChip: 0.09, guardRegen: 30, poise: 0.98, size: 0.94 }, hitFeel: 0.85,
+  { id: 'lingque', name: '凌雀', role: '飞梭游侠', diff: 3, escCD: 8.5, skill: 'spindle', skill2: 'shadowdash', ult: 'needlestorm', passive: 'needlemark',
+    passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。穿叶飞梭与万线归宗击中敌人附加【雀芒】印记（持续3.5秒）；移形换影冲刺穿刺带印记者，引爆悬丝真气重创敌人并大幅返还冷却；雀步凌波可灵活穿梭战场。',
+    stat: { hp: 465, walk: 1.10, speed: 0.88, dmg: 0.96, reach: 1.00, swing: 0.86, jump: 1.04, weight: 0.86, defRating: 0.96, guardMax: 92, guardStab: 1.00, guardChip: 0.10, guardRegen: 28, poise: 0.98, size: 0.94 }, hitFeel: 0.85,
     look: { body: '#2a1a2e', shade: '#160c1c', outline: '#e07ac8', outlineA: .85, scarf: '#e056b0', slash: '235,110,210', blade: '#ffe8fa', head: 'topknot', weapon: 'spindle' },
     ai: { range: [70, 220] }, beats: ['feiying', 'liuyun'], weakTo: ['tieshan', 'leiming'] },
 ];

@@ -243,9 +243,9 @@ const ULTS = {
       }
       if (f.t >= 1.3) endSpecial(f);
     } },
-  needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人，附加【雀芒】印记并重置换影冷却。',
+  needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。',
     begin(f, foe) {
-      f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.45; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
+      f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
     },
     update(f, foe) {
       f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
@@ -257,7 +257,7 @@ const ULTS = {
         slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
         ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
         if (foe.hp > 0 && foe.invul <= 0) {
-          applyHit(f, foe, { dmg: 16, exact: true, kb: [sd * 60, -40], stun: 0.28, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
+          applyHit(f, foe, { dmg: 12, exact: true, kb: [sd * 60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
         }
       }
       if (f.spN === 7 && f.t >= 0.78) {
@@ -266,8 +266,8 @@ const ULTS = {
         shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
         ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
         if (foe.hp > 0 && foe.invul <= 0) {
-          applyHit(f, foe, { dmg: 76, kb: [f.face * 320, -740], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
-          foe.needleMark = 4.0;
+          applyHit(f, foe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
+          foe.needleMark = 3.5;
           f.skill2CD = 0;
           addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
         }

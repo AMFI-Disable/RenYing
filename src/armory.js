@@ -296,8 +296,20 @@
     if (ink1 > ink0) GRANT(ink1 - ink0);
     PROF.ink = ink1;
     let own = false;
-    if (Array.isArray(out.skins)) { PROF.skins = out.skins.slice(); own = true; }
-    if (out.skinsAdd || out.skinsDel) { const set = new Set(PROF.skins || []); for (const k of out.skinsAdd || []) set.add(k); for (const k of out.skinsDel || []) set.delete(k); PROF.skins = Array.from(set); own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own; }
+    const keepZod = (PROF.redeemedCodes || []).includes('ZODIAC2026STAR');
+    const isZodKey = k => C.ITEM[k] && C.ITEM[k].col === 'c8';
+    if (Array.isArray(out.skins)) {
+      const prevZod = keepZod ? (PROF.skins || []).filter(isZodKey) : [];
+      PROF.skins = Array.from(new Set([...out.skins, ...prevZod]));
+      own = true;
+    }
+    if (out.skinsAdd || out.skinsDel) {
+      const set = new Set(PROF.skins || []);
+      for (const k of out.skinsAdd || []) set.add(k);
+      for (const k of out.skinsDel || []) { if (keepZod && isZodKey(k)) continue; set.delete(k); }
+      PROF.skins = Array.from(set);
+      own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own;
+    }
     if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
     if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
     if (out.cfg !== undefined) { const c = C.cleanCfg(out.cfg); CFG = c.cfg; }
@@ -1053,9 +1065,15 @@
     if (v > before) GRANT(v - before);
     PROF.ink = v;
     if (fix) {
+      const keepZod = (PROF.redeemedCodes || []).includes('ZODIAC2026STAR');
+      const isZodKey = k => C.ITEM[k] && C.ITEM[k].col === 'c8';
       const set = new Set(PROF.skins || []);
       for (const k of fix.skinsAdd || []) set.add(k);
-      for (const k of fix.skinsDel || []) { set.delete(k); for (const [c, x] of Object.entries(PROF.equip || {})) if (x === k) delete PROF.equip[c]; }
+      for (const k of fix.skinsDel || []) {
+        if (keepZod && isZodKey(k)) continue;
+        set.delete(k);
+        for (const [c, x] of Object.entries(PROF.equip || {})) if (x === k) delete PROF.equip[c];
+      }
       PROF.skins = Array.from(set);
       if (PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
       try { applySkins(); } catch (e) {}
@@ -1153,13 +1171,19 @@
       return { err: e && e.message ? e.message : '服务器出错了' };
     } finally { BUSY = false; busyUi(false); }
   };
+  window.armoryHasAll = function (keys) {
+    if (!ST || !Array.isArray(ST.inv)) return false;
+    return keys.every(k => ST.inv.some(x => x.k === k));
+  };
   // 本机武库发饰品（游戏里自带的兑换码）：走规则核心的 addItem，校验跟着更新。
   // 不能“读出 PROF.armory、改完再写回去”：读出来的是带旧校验的副本，写回去校验不过会被当成作弊、整个武库作废
   window.armoryGrantLocal = function (keys, src) {
-    if (MODE !== 'local' || !ST) return 0;
+    if (!ST && !PROF.guest && MODE !== 'server') loadLocal(LOCAL_V, true);
+    if (!ST) return 0;
     const env = envBase(); let n = 0;
     for (const k of keys) if (C.isItem(k) && !ST.inv.some(x => x.k === k) && ST.inv.length < C.INV_MAX) { C.addItem(ST, C.mkItem(ST, k, src || 'code', rnd, { st: -1 }), env); n++; }
-    PROF.skins = env.skins.slice(); SIG = sigOf(ST);
+    PROF.skins = Array.from(new Set([...(PROF.skins || []), ...env.skins]));
+    SIG = sigOf(ST);
     if (window.CloudSave) CloudSave.saveProfile(PROF, true);
     try { render(); } catch (e) {}
     return n;

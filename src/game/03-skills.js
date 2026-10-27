@@ -430,19 +430,19 @@ const SKILLS = {
     },
     pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
     ai: (me, foe, d) => d < 170 },
-  spindle: { name: '穿叶飞梭', cd: 6, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 4 秒【雀芒】印记并造成 38 伤害。',
+  spindle: { name: '穿叶飞梭', cd: 6.5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 3.5 秒【雀芒】印记并造成 30 伤害。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.12) {
         f.skPh = 1; f.t = 0;
         SFX.slice(); SFX.dash();
-        spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1150, vy: 0, w: 48, h: 28, life: 0.65, dmg: 38, kb: [160, 0], stun: 0.32, hs: 0.05, mark: true, pierce: true, maxHits: 3 });
+        spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, mark: true, pierce: true, maxHits: 2 });
       }
       if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
-  shadowdash: { name: '移形换影', cd: 7, pass: true, air: true, nofric: true, desc: '踏悬丝瞬息穿刺突进（自动索敌导向流转直奔对手）。若穿刺带【雀芒】印记之敌，引爆悬丝真气造成 52 爆炸伤害与挑空，并立即清零移形换影冷却！',
+  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝瞬息穿刺突进（自动索敌导向流转直奔对手）。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
       const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
@@ -452,11 +452,11 @@ const SKILLS = {
       const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
       if (target) f.face = target.x >= f.x ? 1 : -1;
       if (f.skPh === 0 && f.t >= 0.08) {
-        f.skPh = 1; f.t = 0; f.invul = 0.14; f.hitDone = false; SFX.dash();
+        f.skPh = 1; f.t = 0; f.invul = 0.12; f.hitDone = false; SFX.dash();
         if (target) {
           const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
           const dist = Math.hypot(dx, dy);
-          const spd = 1650;
+          const spd = 1520;
           if (dist > 10) {
             f.vx = (dx / dist) * spd;
             f.vy = (dy / dist) * spd;
@@ -465,31 +465,32 @@ const SKILLS = {
             f.vy = 0;
           }
         } else {
-          f.vx = f.face * 1650;
+          f.vx = f.face * 1520;
           f.vy = 0;
         }
       }
       if (f.skPh === 1) {
-        // 持续导向流向对手位置（动态追踪）
+        // 持续导向流向对手位置（适度追踪）
         if (target && !f.hitDone) {
           const dx = target.x - f.x, dy = (target.y - 50) - (f.y - 50);
           const dist = Math.hypot(dx, dy);
-          const spd = 1650;
+          const spd = 1520;
           if (dist > 10) {
-            f.vx = damp(f.vx, (dx / dist) * spd, 22, STEP);
-            f.vy = damp(f.vy, (dy / dist) * spd, 22, STEP);
+            f.vx = damp(f.vx, (dx / dist) * spd, 14, STEP);
+            f.vy = damp(f.vy, (dy / dist) * spd, 14, STEP);
           }
         }
         if (!RESIM && Math.random() < 0.6) {
           addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(50, 150), vy: rand(-40, 40), rgb: '235,110,210', life: 0.25, max: 0.25 });
         }
-        if (strike(f, foe, { box: [-30, -110, 110, 20], dmg: 42, kb: [200, -80], stun: 0.40, hs: 0.08 })) {
-          if ((foe.needleMark || 0) > 0) {
+        const wasMarked = (foe.needleMark || 0) > 0;
+        if (strike(f, foe, { box: [-24, -108, 102, 18], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
+          if (wasMarked) {
             foe.needleMark = 0;
             f.skill2CD = 0;
             shake = Math.max(shake, 14);
             SFX.heavy(); SFX.slice();
-            applyHit(f, foe, { dmg: 52, kb: [260, -680], stun: 0.65, hs: 0.16, launch: true, big: true, unblockable: true, noScale: true }, [foe.x, foe.y - 60]);
+            applyHit(f, foe, { dmg: 38, kb: [240, -640], stun: 0.55, hs: 0.14, launch: true, big: true, unblockable: true }, [foe.x, foe.y - 60]);
             ring(foe.x, foe.y - 60, 110, '235,110,210', 0.4);
             for (let k = 0; k < 12; k++) {
               const a = rand(0, 6.28), v = rand(120, 320);
@@ -505,7 +506,7 @@ const SKILLS = {
       if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? ['dash', 60] : ['idle', 14],
-    ai: (me, foe, d) => (foe.needleMark > 0 && d < 380) || (d > 100 && d < 280) },
+    ai: (me, foe, d) => (foe.needleMark > 0 && d < 360) || (d > 100 && d < 260) },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 

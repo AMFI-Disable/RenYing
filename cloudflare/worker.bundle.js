@@ -1349,8 +1349,13 @@ async function handleEcon(env, auth, body, now, ip) {
     const k = codeKey(args.code);
     if (k && CODE_BUILTIN[k]) {
       const mine = await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first();
-      if (mine) return error('这个兑换码你已经领过了');
-      code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...CODE_BUILTIN[k]() };
+      const b = CODE_BUILTIN[k]();
+      if (mine) {
+        const eco0 = await loadEcon(env, uid, await freshProfile(), now);
+        const hasAll = !Array.isArray(b.items) || b.items.every(ik => (eco0.state.inv || []).some(x => x.k === ik));
+        if (hasAll) return error('这个兑换码你已经领过了');
+      }
+      code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...b };
     }
     const row = code ? null : k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
     if (code) { /* 游戏里自带的码，上面已经核对过 */ }
@@ -1448,7 +1453,7 @@ async function handleEcon(env, auth, body, now, ip) {
     }
     stmts.push(ins(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver, tx));
     if (code) {   // 兑换码：记下这个号领过了、这个码又被领走一份（领满了 CHECK 让这一批整个作废）；流水记成 code_got
-      stmts.push(ins(env, 'INSERT INTO code_got (code, uid, at) SELECT ?, ?, ?', [code.code, uid, now], uid, ver, tx));
+      stmts.push(ins(env, `INSERT${code.builtin ? ' OR IGNORE' : ''} INTO code_got (code, uid, at) SELECT ?, ?, ?`, [code.code, uid, now], uid, ver, tx));
       if (!code.builtin) stmts.push(guard(env, 'UPDATE code SET got = got + 1 WHERE code = ? AND', [code.code], uid, ver, tx));
       stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_got', 1, null, null, JSON.stringify({ code: code.code, note: code.note, ink: code.ink || undefined, cases: Object.keys(code.cases).length ? code.cases : undefined, term: code.term || undefined, tags: code.tags || undefined })], uid, ver, tx));
     }

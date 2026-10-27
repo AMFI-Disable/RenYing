@@ -511,7 +511,12 @@ function applyProfile(p, opts) {
   }
   { const fl = loadFlags();   // 一次性奖励的领取记录不进云存档，按账号记在本机，刷新后还在
     if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
-    if (fl.tutorial && !PROF.guest) PROF.tutorial = 1; }
+    if (fl.tutorial && !PROF.guest) PROF.tutorial = 1;
+    if ((PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) {
+      const zk = getZodiacSkinKeys();
+      PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zk]));
+    }
+  }
   if (!OFFLINE_BUILD && !DEV_SESSION_UNLOCKED && !freeSkinEvent() && PROF.equip) {
     const ownedSkins = new Set(PROF.skins || []);
     for (const [cid, sk] of Object.entries(PROF.equip)) {
@@ -705,6 +710,24 @@ if ($id('claimAllBtn')) {
     renderTasks();
   });
 }
+function getZodiacSkinKeys() {
+  const zodSkins = [];
+  if (typeof ArmoryCore !== 'undefined' && ArmoryCore.ZOD_OF) {
+    for (const [pre, zs] of Object.entries(ArmoryCore.ZOD_OF)) {
+      zs.forEach(code => zodSkins.push(`${pre}_z${code}`));
+    }
+  } else {
+    zodSkins.push(
+      'qf_zpis', 'qf_zsag', 'qf_zleo', 'fy_ztau', 'fy_zaqu', 'fy_zsco',
+      'ts_zcap', 'ts_zleo', 'ts_ztau', 'ls_zgem', 'ls_zsco', 'ls_zsag',
+      'ly_zvir', 'ly_zpis', 'ly_zlib', 'lm_zleo', 'lm_zcap', 'lm_zari',
+      'my_zaqu', 'my_zlib', 'my_zvir', 'yh_zlib', 'yh_zvir', 'yh_zcan',
+      'yl_zsag', 'yl_zari', 'yl_zgem', 'yx_zcan', 'yx_zgem', 'yx_zpis',
+      'zx_zsco', 'zx_zcan', 'zx_zaqu', 'gc_zari', 'gc_ztau', 'gc_zcap'
+    );
+  }
+  return zodSkins;
+}
 async function redeemCode(rawCode) {
   const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
   if (!code) return;
@@ -815,37 +838,29 @@ async function redeemCode(rawCode) {
     if (typeof renderHome === 'function') renderHome();
     return;
   }
-  // 星座专属隐藏兑换码：全员可用，仅限使用一次，解锁全部十二侠客的 36 款星座皮肤
-  // 云端账号的武库以服务器为准：在网页里直接加的饰品，刷新或重开武库就会被服务器的那份盖掉，所以云端账号去服务器领（下面 armoryRedeem）
+  // 星座专属隐藏兑换码：全员可用，解锁全部十二侠客的 36 款星座皮肤（若此前领过但皮肤缺失，允许补齐）
   const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
-  const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
-  if (up === ZODIAC_SECRET_CODE && !cloudUser) {
+  if (up === ZODIAC_SECRET_CODE) {
+    const zodSkins = getZodiacSkinKeys();
     const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
-    if (redeemed.includes(up)) {
+    const hasAllSkins = zodSkins.every(k => (PROF.skins || []).includes(k));
+    const hasAllArmory = typeof window.armoryHasAll === 'function' ? window.armoryHasAll(zodSkins) : true;
+    if (redeemed.includes(up) && hasAllSkins && hasAllArmory) {
       toast('该兑换码已使用过了');
       if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
       return;
     }
-    const zodSkins = [];
-    if (typeof ArmoryCore !== 'undefined' && ArmoryCore.ZOD_OF) {
-      for (const [pre, zs] of Object.entries(ArmoryCore.ZOD_OF)) {
-        zs.forEach(code => zodSkins.push(`${pre}_z${code}`));
-      }
-    } else {
-      zodSkins.push(
-        'qf_zpis', 'qf_zsag', 'qf_zleo', 'fy_ztau', 'fy_zaqu', 'fy_zsco',
-        'ts_zcap', 'ts_zleo', 'ts_ztau', 'ls_zgem', 'ls_zsco', 'ls_zsag',
-        'ly_zvir', 'ly_zpis', 'ly_zlib', 'lm_zleo', 'lm_zcap', 'lm_zari',
-        'my_zaqu', 'my_zlib', 'my_zvir', 'yh_zlib', 'yh_zvir', 'yh_zcan',
-        'yl_zsag', 'yl_zari', 'yl_zgem', 'yx_zcan', 'yx_zgem', 'yx_zpis',
-        'zx_zsco', 'zx_zcan', 'zx_zaqu', 'gc_zari', 'gc_ztau', 'gc_zcap'
-      );
+    const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
+    if (cloudUser && typeof window.armoryRedeem === 'function') {
+      const btn = $id('rdBtn');
+      if (btn) btn.disabled = true;
+      try { await window.armoryRedeem(up); } catch (e) {} finally { if (btn) btn.disabled = false; }
     }
-    redeemed.push(up);
+    if (!redeemed.includes(up)) redeemed.push(up);
     saveFlag('codes', redeemed);
 
     PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
-    if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');   // 本机账号的武库也放一件进去
+    if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');
 
     if (window.CloudSave) CloudSave.saveProfile(PROF, true);
     applyProfile(PROF);

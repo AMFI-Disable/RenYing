@@ -288,12 +288,12 @@ const HERO_HIT_DETAILS = {
     esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
   lingque: {
-    light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '98 (5段)', desc: '子母梭双持极速穿刺连击，出手迅疾如惊雀掠空。' },
-    charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '38.5 / 62', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
-    air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '19 / 28', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
-    skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 4s', badgeCls: 'badge-stun', dmg: '38', desc: '掷出牵丝子母梭贯穿前方，命中施加4秒雀芒印记。' },
-    ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '42 (+52爆伤)', desc: '踏悬丝穿刺突进；穿透带印记者引爆真气并瞬间刷新冷却！' },
-    ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '188 (8段)', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
+    light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '93.1 (5段)', desc: '子母梭双持穿刺连击，出手灵巧如惊雀掠空。' },
+    charge: { name: '梭芒贯日蓄斩', badge: '💥 破防突刺', badgeCls: 'badge-break', dmg: '34.6 / 55.7', desc: '悬丝真气贯注双梭猛刺，强行贯通正面格挡。' },
+    air: { name: '凌波空刺·掠地', badge: '✦ 空中回旋', badgeCls: 'badge-buff', dmg: '17.3 / 25', desc: '空中旋身飞梭点刺，二段凌波斜下掠击。' },
+    skill: { name: '穿叶飞梭', badge: '✦ 雀芒印记 3.5s', badgeCls: 'badge-stun', dmg: '30', desc: '掷出牵丝子母梭贯穿前方，命中施加3.5秒雀芒印记。' },
+    ranged: { name: '移形换影', badge: '✦ 雀芒引爆', badgeCls: 'badge-buff', dmg: '34 (+38爆伤)', desc: '踏悬丝穿刺突进；穿透已带印记者引爆真气并瞬间刷新冷却！' },
+    ult: { name: '万线归宗', badge: '✦ 全域悬丝', badgeCls: 'badge-stun', dmg: '140 (8段)', desc: '漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。' },
     esc: { name: '雀步凌波', badge: '🛡️ 悬丝脱困', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，牵引悬丝腾空退避，落地前无敌。' }
   },
   qingfeng: {

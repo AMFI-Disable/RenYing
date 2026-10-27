@@ -477,7 +477,7 @@ function updateProjs() {
       foe.slowT = 2.2;
       addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
     } else if (p.kind === 'spindle' || p.mark) {
-      foe.needleMark = 4.0;
+      foe.needleMark = 3.5;
       addP({ type: 'text', text: '✦ 雀芒入体', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
     }
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);

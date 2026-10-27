@@ -253,7 +253,7 @@ const SCROLLS = [
   { id: 'zx_sprawl', n: '醉翁 · 醉卧', s: 'hero', h: 'zuixian', r: 'e', d: '醉意在 80 以上时受到的伤害 -25%。', inc(c) { if ((c.f.drunk || 0) >= 80) c.dmg *= 0.75; } },
   { id: 'gc_soul', n: '勾陈 · 锁魂', s: 'hero', h: 'gouchen', r: 'r', d: '钩住对手的时间延长 1 秒。', hit(c) { if (c.o.hookedT > 0 && !c.f.sc.hooked) { c.f.sc.hooked = 1; c.o.hookedT += 1; } }, tick(f, o) { if (!(o.hookedT > 0)) f.sc.hooked = 0; } },
   { id: 'gc_sweep', n: '勾陈 · 链锤横扫', s: 'hero', h: 'gouchen', r: 'e', d: '旋锤打中被钩住的对手伤害 +40%。', out(c) { if (c.src === 'whirl' && c.o.hookedT > 0) c.dmg *= 1.4; } },
-  { id: 'lq_thread', n: '凌雀 · 穿针引线', s: 'hero', h: 'lingque', r: 'r', d: '针印持续时间从 4 秒延长到 7 秒。', hit(c) { if (c.o.needleMark > 0 && c.o.needleMark >= 3.9) c.o.needleMark = 7; } },
+  { id: 'lq_thread', n: '凌雀 · 穿针引线', s: 'hero', h: 'lingque', r: 'r', d: '针印持续时间从 3.5 秒延长到 6.5 秒。', hit(c) { if (c.o.needleMark > 0 && c.o.needleMark >= 3.4) c.o.needleMark = 6.5; } },
   { id: 'lq_drop', n: '凌雀 · 针落', s: 'hero', h: 'lingque', r: 'e', d: '近战打中带针印的对手时引爆针印，追加 25 点伤害。', hit(c) { if (!c.proj && c.o.needleMark > 0) { c.o.needleMark = 0; scTrue(c.o, 25, '235,110,210'); scTxt(c.o, '针落', '235,110,210'); } } },
   // ===== 天书：全服讨伐天魔，每击败一代解锁一卷 =====
   { id: 'tian_thunder', n: '天书 · 九霄雷劫', s: 'lei', r: 'l', d: '每 5 秒在对手头顶落下一道 34 伤害的天雷。', tick(f, o) { if (M.phase !== 'fight') return; f.sc.tt = (f.sc.tt || 0) + STEP; if (f.sc.tt >= 5) { f.sc.tt = 0; scBolt(f, o.x, 34); } } },
