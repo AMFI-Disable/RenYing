@@ -1229,9 +1229,15 @@ export default {
         initialProf.name = username;
         initialProf.updatedAt = now;
 
-        await env.DB.prepare(
-          'INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(userId, username, passHash, salt, JSON.stringify(initialProf), now, now).run();
+        try {
+          await env.DB.prepare(
+            'INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(userId, username, passHash, salt, JSON.stringify(initialProf), now, now).run();
+        } catch (e) {
+          // 两个人同时注册同一个昵称：上面的查询都没查到，后到的那个在这里撞上唯一约束
+          if (/UNIQUE/i.test(String(e && e.message))) return error('该昵称已被注册，请直接点击“登录”');
+          throw e;
+        }
 
         // Generate session token (valid for 30 days)
         const token = generateToken();

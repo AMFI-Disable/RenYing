@@ -1180,7 +1180,7 @@ clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 
 .tn-sync.s-ok { background: #3ddc97; box-shadow: 0 0 6px #3ddc97; }
 .tn-sync.s-pending, .tn-sync.s-syncing { background: var(--gold); animation: tnBlink 1s ease-in-out infinite; }
 .tn-sync.s-offline, .tn-sync.s-local { background: #8a94a3; }
-.tn-sync.s-error { background: var(--v-red); box-shadow: 0 0 6px var(--v-red); }
+.tn-sync.s-error, .tn-sync.s-blocked, .tn-sync.s-expired { background: var(--v-red); box-shadow: 0 0 6px var(--v-red); }
 @keyframes tnBlink { 50% { opacity: .3; } }
 .tn-icon { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--line); background: transparent; color: rgba(236,232,225,.7); cursor: pointer; }
 .tn-icon svg { width: 18px; height: 18px; }
@@ -1350,7 +1350,7 @@ border: 2px solid var(--tier); box-shadow: 0 0 18px color-mix(in srgb, var(--tie
 .ad-dot { width: 10px; height: 10px; border-radius: 50%; background: #8a94a3; flex: none; }
 .ad-dot.s-ok { background: #3ddc97; box-shadow: 0 0 8px #3ddc97; }
 .ad-dot.s-pending, .ad-dot.s-syncing { background: var(--gold); animation: tnBlink 1s infinite; }
-.ad-dot.s-error { background: var(--v-red); box-shadow: 0 0 8px var(--v-red); }
+.ad-dot.s-error, .ad-dot.s-blocked, .ad-dot.s-expired { background: var(--v-red); box-shadow: 0 0 8px var(--v-red); }
 .ad-sync-note { font-size: 12.5px; color: rgba(236,232,225,.55); margin: 8px 0 10px; line-height: 1.6; }
 .ad-sync-btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .ad-btn { margin-top: 0; min-width: 0; padding: 10px 26px; font-size: 15px; letter-spacing: .2em; }
@@ -3644,10 +3644,10 @@ body.kbnav #kbRing.on { display: block; }
       <h2 id="lpTitle" style="font-size:26px;margin-bottom:6px;">选择语言 / Language</h2>
       <p class="sub" id="lpSub" style="margin:0 0 20px;font-size:14px;line-height:1.6;color:rgba(239,232,216,0.8);">请选择您的偏好语言（可随时在设置中更改）<br><span style="font-size:12px;opacity:0.75;">Select your preferred language (changeable anytime in Settings)</span></p>
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
-        <button class="go" id="lpPickZh" type="button" style="padding:12px 24px;font-size:18px;display:flex;justify-content:center;align-items:center;gap:10px;">
+        <button class="go" id="lpPickZh" type="button" style="padding:12px 56px 12px 32px;font-size:18px;letter-spacing:.12em;display:flex;justify-content:center;align-items:center;gap:10px;">
           <span>🇨🇳 简体中文 (Chinese)</span>
         </button>
-        <button class="go alt" id="lpPickEn" type="button" style="padding:12px 24px;font-size:18px;display:flex;justify-content:center;align-items:center;gap:10px;">
+        <button class="go alt" id="lpPickEn" type="button" style="padding:12px 56px 12px 32px;font-size:18px;letter-spacing:.12em;display:flex;justify-content:center;align-items:center;gap:10px;">
           <span>🇺🇸 English (英文)</span>
         </button>
       </div>
@@ -4127,6 +4127,13 @@ out[h] = { ...win, e: Array.from(new Set([...x.e, ...y.e])) };
 }
 return out;
 }
+function progressKey(p) {
+const o = toCloudData(p);
+delete o.ink; delete o.updatedAt; delete o.name; delete o.armory;
+const canon = v => Array.isArray(v) ? (v.every(x => typeof x !== 'object') ? v.slice().sort() : v.map(canon))
+: v && typeof v === 'object' ? Object.keys(v).sort().reduce((a, k) => (a[k] = canon(v[k]), a), {}) : v;
+return JSON.stringify(canon(o));
+}
 function mergeProfiles(p1, p2) {
 if (!p1 && !p2) return null;
 if (!p1) return toCloudData(p2);
@@ -4241,7 +4248,7 @@ ledgerSave();
 profile.ink = Math.max(0, LEDGER.s + pendSum());
 return profile;
 }
-async function doSync() {
+async function doSync(leaving) {
 if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
 syncHooks.forEach(fn => { try { fn(); } catch (e) { console.warn('before sync', e); } });
 const data = pendingData;
@@ -4259,9 +4266,11 @@ const uid = getUser().uid;
 ledgerLoad(uid);
 const ledger = LEDGER.s !== null ? { deltas: LEDGER.un.slice(0, 60).map(x => x.r ? { id: x.id, d: 0, r: x.r } : { id: x.id, d: x.d }), ev: LEDGER.v } : undefined;
 try {
+const body = JSON.stringify({ profile: data, ledger });
 const res = await api('/api/profile', {
 method: 'POST',
-body: JSON.stringify({ profile: data, ledger })
+body,
+...(leaving === true && body.length < 60000 ? { keepalive: true } : {})
 });
 if (res && res.ledger && getUser() && getUser().uid === uid) {
 ledgerListeners.forEach(fn => { try { fn(res.ledger, res.fix || null, res.capped || 0, res.owed || 0); } catch (e) { console.warn('ledger listener', e); } });
@@ -4276,6 +4285,10 @@ if (pendingData) saveTimer = setTimeout(doSync, 800);
 } catch (err) {
 console.warn('Sync profile to Cloudflare failed:', err);
 const code = err && err.status;
+if (code === 401) {
+setSync({ state: 'expired', err: '登录已过期，请重新登录，登录后会自动补传这次存档' });
+return;
+}
 if (code && code >= 400 && code < 500 && code !== 429) {
 if (pendingData === data) { pendingData = null; pendingUid = null; }
 try { localStorage.removeItem(dirtyKey()); } catch (e) {}
@@ -4288,14 +4301,14 @@ setSync({ state: 'error', err: `上传失败，${Math.round(wait / 1000)} 秒后
 saveTimer = setTimeout(doSync, wait);
 }
 }
-function flush() {
-if (pendingData && cloudActive()) doSync();
+function flush(leaving) {
+if (pendingData && cloudActive()) doSync(leaving === true);
 }
 if (typeof window !== 'undefined') {
-window.addEventListener('online', flush);
+window.addEventListener('online', () => flush());
 window.addEventListener('offline', () => { if (pendingData) setSync({ state: 'offline' }); });
-window.addEventListener('pagehide', flush);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+window.addEventListener('pagehide', () => flush(true));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(true); });
 }
 async function loginDev(password) {
 try {
@@ -4486,7 +4499,7 @@ currentUser = userObj;
 localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 if (data.profile) {
 adoptProfile(data.uid, data.profile, data.ledger);
-try {
+if (!readMirror(data.uid)) try {
 localStorage.setItem(profKey(data.uid), JSON.stringify(data.profile));
 } catch (e) {}
 }
@@ -4605,10 +4618,8 @@ if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }
 if (local && local.ink) ledgerNote(u.uid, local.ink);
 adoptProfile(u.uid, merged, res.ledger);
 }
-const localChanged = !local ||
-(merged.owned || []).length > (cloudData.owned || []).length ||
-(merged.skins || []).length > (cloudData.skins || []).length ||
-(merged.ink || 0) > (cloudData.ink || 0);
+const localChanged = !local || progressKey(merged) !== progressKey(cloudData) ||
+(res.ledger ? LEDGER.un.length > 0 : (merged.ink || 0) > (cloudData.ink || 0));
 try {
 localStorage.removeItem(dirtyKey());
 localStorage.setItem(profKey(u.uid), JSON.stringify(merged));
@@ -4658,7 +4669,7 @@ pendingData = Object.assign(toCloudData(local), { name: getUser().name, updatedA
 pendingUid = getUser().uid;
 }
 await doSync();
-if (sync.state === 'error' || sync.state === 'blocked') throw new Error(sync.err || '云端拒绝了这次存档');
+if (sync.state === 'error' || sync.state === 'blocked' || sync.state === 'expired') throw new Error(sync.err || '云端拒绝了这次存档');
 }
 async function pullNow() {
 if (!cloudActive()) throw new Error('当前是本地存档，未连接云端');
@@ -11192,14 +11203,22 @@ let n = 0;
 while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
 if (n >= 5) acc = 0;
 }
+let bgWorker = null, bgUrl = '';
+function bgWorkerSet(on) {
+if (!on) { if (bgWorker) { bgWorker.terminate(); bgWorker = null; } bgLast = 0; return; }
+if (bgWorker) return;
 try {
-const wk = new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},8)'], { type: 'text/javascript' })));
-wk.onmessage = () => {
+bgUrl = bgUrl || URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},8)'], { type: 'text/javascript' }));
+bgWorker = new Worker(bgUrl);
+bgWorker.onmessage = () => {
 if (!document.hidden || M.mode !== 'net') { bgLast = 0; return; }
 const now = performance.now(), real = bgLast ? Math.min(0.05, (now - bgLast) / 1000) : 0; bgLast = now;
 if (real > 0 && !paused) { simTick(real); netTick(real); }
 };
-} catch (e) {}
+} catch (e) { bgWorker = null; }
+}
+document.addEventListener('visibilitychange', () => bgWorkerSet(document.hidden));
+if (document.hidden) bgWorkerSet(true);
 const EXT = { on: false, url: '' };
 function openQfx() {
 initAudio();
@@ -15797,7 +15816,7 @@ $id('tnMedal').innerHTML = rkMedalSVG(null, 34, { placed: 0 });
 }
 const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
 $id('tnSync').className = 'tn-sync s-' + (name ? st.state : 'none');
-$id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败' }[st.state] || '';
+$id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败', blocked: '云端拒绝了存档', expired: '登录已过期，请重新登录' }[st.state] || '';
 }
 function renderHome() {
 const sea = rkSeason();
@@ -22147,6 +22166,8 @@ pending: ['等待上传', '有新进度，马上自动上传'],
 syncing: ['上传中…', ''],
 offline: ['断网中', '联网后自动补传，进度不会丢'],
 error: ['上传失败', st.err || ''],
+blocked: ['云端拒绝了存档', st.err || ''],
+expired: ['登录已过期', st.err || '请重新登录，登录后会自动补传'],
 }[st.state] || ['本机存档', ''];
 $id('adSyncDot').className = 'ad-dot s-' + st.state;
 $id('adSyncT').textContent = M_[0];

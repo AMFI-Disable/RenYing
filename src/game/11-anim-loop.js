@@ -327,14 +327,24 @@ function simTick(real) {
   while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
   if (n >= 5) acc = 0;
 }
-try {
-  const wk = new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},8)'], { type: 'text/javascript' })));
-  wk.onmessage = () => {
-    if (!document.hidden || M.mode !== 'net') { bgLast = 0; return; }
-    const now = performance.now(), real = bgLast ? Math.min(0.05, (now - bgLast) / 1000) : 0; bgLast = now;
-    if (real > 0 && !paused) { simTick(real); netTick(real); }
-  };
-} catch (e) {}
+// 切到后台时浏览器会停掉 requestAnimationFrame，联机对局靠这个小 Worker 接着算。
+// 只在网页藏起来的时候开着：回到前台就关掉，不然每 8 毫秒唤醒一次主线程，白白费电
+let bgWorker = null, bgUrl = '';
+function bgWorkerSet(on) {
+  if (!on) { if (bgWorker) { bgWorker.terminate(); bgWorker = null; } bgLast = 0; return; }
+  if (bgWorker) return;
+  try {
+    bgUrl = bgUrl || URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},8)'], { type: 'text/javascript' }));
+    bgWorker = new Worker(bgUrl);
+    bgWorker.onmessage = () => {
+      if (!document.hidden || M.mode !== 'net') { bgLast = 0; return; }
+      const now = performance.now(), real = bgLast ? Math.min(0.05, (now - bgLast) / 1000) : 0; bgLast = now;
+      if (real > 0 && !paused) { simTick(real); netTick(real); }
+    };
+  } catch (e) { bgWorker = null; }
+}
+document.addEventListener('visibilitychange', () => bgWorkerSet(document.hidden));
+if (document.hidden) bgWorkerSet(true);
 // ======================= 青锋行：同一个文件里的第二个游戏（放在独立的 iframe 里运行，两边互不干扰） =======================
 const EXT = { on: false, url: '' };
 function openQfx() {

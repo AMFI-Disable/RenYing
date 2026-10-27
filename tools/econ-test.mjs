@@ -1298,6 +1298,17 @@ section('在线改经济数值：价格、每天能开几个、手续费、爆�
   ok(C.COLS.c1.price === 280 && C.FEE === 0.15 && C.OPEN_DAY === 2 && Object.isFrozen(C.CFG_DEF) && Object.isFrozen(C.CFG_INFO[0]) && C.CFG_DEF['price.c1'] === 280, '规则核心里写死的默认值一个没变（在线改的只存在数据库里）');
 }
 
+section('两个人同时注册同一个昵称：只成一个，另一个看到“已被注册”而不是服务器错误');
+{
+  for (let round = 0; round < 6; round++) {
+    const name = 'twin' + round;
+    const rs = await Promise.all([0, 1, 2].map(i => call('POST', '/api/register', { username: i === 1 ? name.toUpperCase() : name, password: 'secret123' }, undefined, `4.4.${round}.${i}`)));
+    const okN = rs.filter(r => r.ok).length, dup = rs.filter(r => r.status === 400 && /已被注册/.test(r.error || '')).length;
+    if (okN !== 1 || dup !== 2) { ok(false, '同时注册同名', rs.map(r => r.status + ' ' + (r.error || 'ok'))); break; }
+    if (round === 5) ok(true, '六轮、每轮三个请求同时注册同一个昵称（大小写不同也算同名）：每轮只成一个，其余都提示已被注册');
+  }
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');

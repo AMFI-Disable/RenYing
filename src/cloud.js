@@ -54,7 +54,7 @@
   let pendingUid = null;      // 这条待上传的存档属于哪个账号
   let retryN = 0;
 
-  // sync state: local, idle, pending, syncing, ok, offline, error
+  // sync state: local, idle, pending, syncing, ok, offline, error, blocked（服务器拒收）, expired（登录过期）
   const sync = { state: 'local', at: 0, err: '' };
 
   /* ---------- 墨锭账本 ----------
@@ -374,6 +374,15 @@
     return out;
   }
 
+  // 比较两份存档的进度用：墨锭走账本、时间和名字不算；对象按键排序，字符串数组不看顺序
+  function progressKey(p) {
+    const o = toCloudData(p);
+    delete o.ink; delete o.updatedAt; delete o.name; delete o.armory;
+    const canon = v => Array.isArray(v) ? (v.every(x => typeof x !== 'object') ? v.slice().sort() : v.map(canon))
+      : v && typeof v === 'object' ? Object.keys(v).sort().reduce((a, k) => (a[k] = canon(v[k]), a), {}) : v;
+    return JSON.stringify(canon(o));
+  }
+
   // 双向合并两个存档（保留双方拥有的全部角色/皮肤，墨锭/碎片/星级/战绩取最优，绝不丢弃任何进度）
   function mergeProfiles(p1, p2) {
     if (!p1 && !p2) return null;
@@ -508,7 +517,8 @@
     return profile;
   }
 
-  async function doSync() {
+  // leaving 为真：网页正在关闭或切到后台，请求要带 keepalive，不然浏览器关页面时会把它掐掉
+  async function doSync(leaving) {
     if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     syncHooks.forEach(fn => { try { fn(); } catch (e) { console.warn('before sync', e); } });
     const data = pendingData;
@@ -526,9 +536,12 @@
     ledgerLoad(uid);
     const ledger = LEDGER.s !== null ? { deltas: LEDGER.un.slice(0, 60).map(x => x.r ? { id: x.id, d: 0, r: x.r } : { id: x.id, d: x.d }), ev: LEDGER.v } : undefined;
     try {
+      const body = JSON.stringify({ profile: data, ledger });
       const res = await api('/api/profile', {
         method: 'POST',
-        body: JSON.stringify({ profile: data, ledger })
+        body,
+        // keepalive 的请求体最多 64KB，超过了浏览器会直接拒绝发送，所以只给小存档加
+        ...(leaving === true && body.length < 60000 ? { keepalive: true } : {})
       });
       if (res && res.ledger && getUser() && getUser().uid === uid) {
         ledgerListeners.forEach(fn => { try { fn(res.ledger, res.fix || null, res.capped || 0, res.owed || 0); } catch (e) { console.warn('ledger listener', e); } });
@@ -543,6 +556,11 @@
     } catch (err) {
       console.warn('Sync profile to Cloudflare failed:', err);
       const code = err && err.status;
+      // 401 是登录过期：存档没问题，留着待上传的标记，重新登录后会补传
+      if (code === 401) {
+        setSync({ state: 'expired', err: '登录已过期，请重新登录，登录后会自动补传这次存档' });
+        return;
+      }
       // 4xx 是服务器明确拒绝（存档无效、被封、请求体太大）：重试多少次都一样，别无限重试
       if (code && code >= 400 && code < 500 && code !== 429) {
         if (pendingData === data) { pendingData = null; pendingUid = null; }
@@ -557,15 +575,15 @@
     }
   }
 
-  function flush() {
-    if (pendingData && cloudActive()) doSync();
+  function flush(leaving) {
+    if (pendingData && cloudActive()) doSync(leaving === true);
   }
 
   if (typeof window !== 'undefined') {
-    window.addEventListener('online', flush);
+    window.addEventListener('online', () => flush());
     window.addEventListener('offline', () => { if (pendingData) setSync({ state: 'offline' }); });
-    window.addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+    window.addEventListener('pagehide', () => flush(true));
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(true); });
   }
 
   // 开发者账号处理：Dev 和别的账号一样用云端的密码登录（网页里不存 Dev 的密码）。
@@ -780,7 +798,8 @@
 
       if (data.profile) {
         adoptProfile(data.uid, data.profile, data.ledger);
-        try {
+        // 本机已有这个号的镜像就留着：里面可能有登录过期期间没传上去的进度，接下来 loadProfile 会和云端合并再补传
+        if (!readMirror(data.uid)) try {
           localStorage.setItem(profKey(data.uid), JSON.stringify(data.profile));
         } catch (e) {}
       }
@@ -917,11 +936,9 @@
             adoptProfile(u.uid, merged, res.ledger);
           }
 
-          // 如果合并后产生了新增角色/皮肤/星级/战绩，自动补传同步上云
-          const localChanged = !local ||
-            (merged.owned || []).length > (cloudData.owned || []).length ||
-            (merged.skins || []).length > (cloudData.skins || []).length ||
-            (merged.ink || 0) > (cloudData.ink || 0);
+          // 合并后和云端那份不一样（本机多了角色、皮肤、关卡星、列传、碎片……），或者还有没报上去的墨锭，就补传
+          const localChanged = !local || progressKey(merged) !== progressKey(cloudData) ||
+            (res.ledger ? LEDGER.un.length > 0 : (merged.ink || 0) > (cloudData.ink || 0));
 
           try {
             localStorage.removeItem(dirtyKey());
@@ -985,7 +1002,7 @@
       pendingUid = getUser().uid;
     }
     await doSync();
-    if (sync.state === 'error' || sync.state === 'blocked') throw new Error(sync.err || '云端拒绝了这次存档');
+    if (sync.state === 'error' || sync.state === 'blocked' || sync.state === 'expired') throw new Error(sync.err || '云端拒绝了这次存档');
   }
 
   // 手动“双向同步合并”（从云端拉取并与本地智能融合）

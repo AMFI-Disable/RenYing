@@ -23,7 +23,7 @@ function makeWorker() {
   const posts = [];          // 每次 POST /api/profile
   const state = { nextStatus: 0, token: '' };
   const json = (obj, status = 200) => ({ ok: status < 400, status, json: async () => obj });
-  const uidOf = tok => String(tok).replace('tok_', '');
+  const uidOf = tok => String(tok).replace(/^Bearer /, '').replace('tok_', '');
   const byUid = uid => [...users.entries()].find(([, v]) => v.uid === uid);
   async function fetch(url, opts = {}) {
     const route = String(url).replace(/^https?:\/\/[^/]+/, '');
@@ -46,14 +46,15 @@ function makeWorker() {
     if (route === '/api/profile' && method === 'POST') {
       if (state.nextStatus) {
         const status = state.nextStatus; state.nextStatus = 0;
-        posts.push({ status });
+        posts.push({ status, keepalive: !!opts.keepalive });
         return json({ error: '服务器拒绝' }, status);
       }
       const uid = uidOf(auth);
       const rec = byUid(uid);
-      posts.push({ uid, ink: body.profile && body.profile.ink });
+      posts.push({ uid, ink: body.profile && body.profile.ink, stars: body.profile && body.profile.stageStars, keepalive: !!opts.keepalive });
       if (rec) rec[1].profile = body.profile;
-      return json({ ok: true, updatedAt: Date.now(), ledger: { ink: body.profile && body.profile.ink, ver: 1, acks: [] } });
+      const acks = body.ledger && Array.isArray(body.ledger.deltas) ? body.ledger.deltas.map(d => d.id) : [];
+      return json({ ok: true, updatedAt: Date.now(), ledger: { ink: body.profile && body.profile.ink, ver: 1, acks } });
     }
     if (route === '/api/profile' && method === 'GET') {
       const rec = byUid(uidOf(auth));
@@ -76,7 +77,7 @@ function makeEnv(worker) {
     clear: () => store.clear(),
   };
   const g = {
-    console: { log: console.log, warn: () => {}, error: console.error },
+    console: { log: console.log, warn: process.env.CT_DEBUG ? console.warn : () => {}, error: console.error },
     setTimeout, clearTimeout, setInterval, clearInterval,
     navigator: { onLine: true, userAgent: 'cloud-test' },
     localStorage,
@@ -95,7 +96,8 @@ function makeEnv(worker) {
       body: { appendChild: () => {}, removeChild: () => {} },
     },
   };
-  g.addEventListener = () => {};
+  g.listeners = {};
+  g.addEventListener = (type, fn) => { (g.listeners[type] = g.listeners[type] || []).push(fn); };
   g.removeEventListener = () => {};
   g.window = g;
   g.self = g;
@@ -161,6 +163,50 @@ worker.state.nextStatus = 429;
 CloudSave.saveProfile({ name: 'Carol', ink: 124, owned: ['qingfeng'], skins: [], frags: {}, equip: {} }, true);
 await sleep(80);
 ok(CloudSave.getSyncState().state === 'error', '429 is still retried', CloudSave.getSyncState().state);
+
+console.log('\nclosing the page still sends the last save');
+await sleep(1600);   // 让上面 429 的重试先跑完
+worker.state.nextStatus = 0;
+const leaveBefore = worker.posts.length;
+CloudSave.saveProfile({ name: 'Carol', ink: 130, owned: ['qingfeng'], skins: [], frags: {}, equip: {} }, false);
+g.listeners.pagehide.forEach(fn => fn());
+await sleep(40);
+const leavePosts = worker.posts.slice(leaveBefore);
+ok(leavePosts.length === 1 && leavePosts[0].keepalive, 'pagehide flushes the debounced save with keepalive', JSON.stringify(leavePosts));
+const normalBefore = worker.posts.length;
+CloudSave.saveProfile({ name: 'Carol', ink: 131, owned: ['qingfeng'], skins: [], frags: {}, equip: {} }, true);
+await sleep(40);
+ok(worker.posts.slice(normalBefore).every(p => !p.keepalive), 'an ordinary save does not use keepalive');
+
+console.log('\nan expired session keeps the save for after re-login');
+const starsProf = { name: 'Carol', ink: 131, owned: ['qingfeng'], skins: [], frags: {}, equip: {}, stageStars: { s1: 3, s2: 2 } };
+worker.state.nextStatus = 401;
+CloudSave.saveProfile(starsProf, true);
+await sleep(60);
+ok(CloudSave.getSyncState().state === 'expired', 'a 401 reports expired, not blocked', CloudSave.getSyncState().state);
+ok(store.get('renying-sync-dirty-' + carolUid) !== undefined, 'the dirty marker is kept');
+await sleep(1400);
+ok(worker.posts.slice(-1)[0].status === 401, 'and it is not retried in a loop');
+await CloudSave.login('Carol', 'carolpass1');
+const relogBefore = worker.posts.length;
+const reloaded = await CloudSave.loadProfile();
+ok(reloaded && reloaded.stageStars && reloaded.stageStars.s2 === 2, 'logging back in keeps the unsynced stage stars', reloaded && JSON.stringify(reloaded.stageStars));
+await sleep(1200);
+ok(worker.posts.slice(relogBefore).some(p => p.stars && p.stars.s2 === 2), 'and uploads them', JSON.stringify(worker.posts.slice(relogBefore)));
+
+console.log('\nloading an up-to-date profile does not upload again');
+await sleep(200);
+const quietBefore = worker.posts.length;
+await CloudSave.loadProfile();
+await sleep(1200);
+ok(worker.posts.length === quietBefore, 'no write when nothing changed', worker.posts.length - quietBefore);
+const offlineStars = JSON.parse(store.get('renying-prof-' + carolUid));
+offlineStars.stageStars = { ...offlineStars.stageStars, s3: 1 };
+store.set('renying-prof-' + carolUid, JSON.stringify(offlineStars));
+const starBefore = worker.posts.length;
+await CloudSave.loadProfile();
+await sleep(1200);
+ok(worker.posts.slice(starBefore).some(p => p.stars && p.stars.s3 === 1), 'a stage star earned offline is uploaded on load');
 
 console.log('\nlocal accounts accept non-Latin-1 passwords');
 await CloudSave.logout();

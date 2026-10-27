@@ -472,7 +472,7 @@ function renderTopNav() {
   }
   const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };
   $id('tnSync').className = 'tn-sync s-' + (name ? st.state : 'none');
-  $id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败' }[st.state] || '';
+  $id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败', blocked: '云端拒绝了存档', expired: '登录已过期，请重新登录' }[st.state] || '';
 }
 function renderHome() {
   const sea = rkSeason();

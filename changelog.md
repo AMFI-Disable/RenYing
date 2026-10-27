@@ -14,6 +14,15 @@ All notable changes, features, and architectural capabilities of this project ar
 
 - **2v2 is two players per team (`src/game/22-modes.js`, `src/page.html`)**: the formats are two players vs two computers and two players vs two players; the player + computer teammate format is removed. 2v2 has one entry, the 2v2 card on the battle page (the single-player page in the offline build), which opens one dialog: pick the format, then same computer, server matchmaking or a friend room. The separate 2v2 page in single-player mode is gone. Spectating four AIs stays as a link in the dialog. Gameplay, hero stats and balance are unchanged.
 
+### Fixed
+
+- **Last save lost when closing the tab (`src/cloud.js`)**: the debounced save flushed on `pagehide` / tab hide is now sent with `keepalive`, so the browser no longer cancels it as the page closes.
+- **Expired login silently stopped cloud saves (`src/cloud.js`, `src/game/24-account.js`, `src/game/17-home.js`)**: a 401 used to be treated as a refused save, which cleared the pending marker. It now shows "登录已过期" and keeps the marker; logging back in keeps the local mirror instead of overwriting it with the server copy, so the unsynced progress is merged and uploaded. The "blocked" and "expired" sync states now have labels in the account panel and top bar.
+- **Offline progress not uploaded on load (`src/cloud.js`)**: loading compared only roster, skin and ink counts against the cloud copy, so stage stars, story progress and fragments earned offline stayed local, while a small ink difference triggered an extra write on every start. It now compares the whole progress and checks the ink ledger for unreported entries.
+- **Background timer always running (`src/game/11-anim-loop.js`)**: the 8 ms worker that keeps an online match running in a hidden tab is now only started while the tab is hidden, instead of waking the main thread 125 times a second all the time.
+- **Same nickname registered twice at once (`cloudflare/worker.js`)**: the second request hit the unique constraint and got "服务器内部错误"; it now gets "该昵称已被注册". **Needs a Worker redeploy.**
+- **Language picker labels clipped (`src/page.html`)**: the closing bracket was hidden under the seal icon.
+
 ---
 
 ## [1.0.0] - 2026-10-26

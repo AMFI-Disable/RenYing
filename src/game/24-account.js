@@ -191,6 +191,8 @@ function renderAccSync() {
     syncing: ['上传中…', ''],
     offline: ['断网中', '联网后自动补传，进度不会丢'],
     error: ['上传失败', st.err || ''],
+    blocked: ['云端拒绝了存档', st.err || ''],
+    expired: ['登录已过期', st.err || '请重新登录，登录后会自动补传'],
   }[st.state] || ['本机存档', ''];
   $id('adSyncDot').className = 'ad-dot s-' + st.state;
   $id('adSyncT').textContent = M_[0];
