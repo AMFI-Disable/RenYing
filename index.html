@@ -5715,6 +5715,7 @@ const L = this.L, g = this.g;
 const free = me.onGround() && AI_FREE.includes(me.state);
 const canBlock = free || (me.onGround() && me.state === 'attack' && me.move && me.t < me.move.su * 0.6 && me.moveName !== 'dl');
 const inAir = !me.onGround();
+if (foe.state === 'special' && foe.sp === 'leap' && foe.ch.ult === 'avalanche' && this.seen) return this.dodgeAvalanche(me, foe, to, free);
 const th = this.threat(me, foe, d);
 if (th) {
 if (!this.seen && L.react[0] > 0.03) return th.t < 0.02 && this.holdDown > 0;   // 还没反应过来：保持原样
@@ -6342,6 +6343,19 @@ if (d < 200 && foe.state === 'attack') this.holdDown = 0.25;
 if (this.hasZoning(me) && Math.random() < 0.4) { const ps = this.projSlot(me); if (ps && d > 200) { this.press(ps); return; } if (me.ch.inkShot && (me.ink || 0) > 40 && d > 200) { this.press('light'); return; } }
 const cornered = (me.x < WALL + 140 && to > 0) || (me.x > STAGE_W - WALL - 140 && to < 0);
 if (cornered && d < 260 && me.onGround()) { this.dir = to; this.plan([['jump', 0], ['jump', 0.24]]); }
+}
+dodgeAvalanche(me, foe, to, free) {
+if (this.avaKey !== this.ev) { this.avaKey = this.ev; this.avaRoll = Math.random(); }
+if (this.avaRoll > this.L.block) return false;   // 这次没看出来该跳
+let y = foe.y, vy = foe.vy, t = 0;
+const fast = Math.abs(me.x - foe.x) < 90 && foe.t > 0.18;   // 铁山对准了会按下加速
+while (t < 1.5 && !(t > 0.15 - foe.t && y >= 0)) { if (fast && vy > -300) vy += 1400 * STEP; vy += GRAV * STEP; y += vy * STEP; t += STEP; }
+this.stopAll(); this.holdDown = 0;
+if (!me.onGround()) { this.dir = -to; return true; }   // 已经在空中：别落下来
+if (free && t < 0.5 && t > 0.08) { this.press('jump'); this.dir = -to; return true; }
+if (t <= 0.08 && me.breakCD <= 0) { this.press('dash'); return true; }
+this.dir = -to;   // 还早：先往外走，等时机再跳
+return true;
 }
 steerAvalanche(me, foe) {
 this.dir = Math.abs(me.x - foe.x) > 30 ? Math.sign(foe.x - me.x) : 0;
