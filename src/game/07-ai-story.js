@@ -353,6 +353,7 @@ function startStage(c, l, isWatch = false, heroIdx = trainChar) {
   if (!M.towerPerks || !M.towerPerks.length) {
     M.towerPerks = scDraw(CHARS[heroIdx].id, [], 2).map(s => s.id);
   }
+  if (!M.scRun) M.scRun = {};   // 秘卷「存气」这类要跨关记东西的会读它；没打过爬塔/肉鸽时还没有
   C_ALLY: {
     const m1 = (heroIdx + 2) % CHARS.length;
     const m2 = (heroIdx + 4) % CHARS.length;

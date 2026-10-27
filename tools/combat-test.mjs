@@ -873,6 +873,10 @@ const testSuite = [
       let err = null;
       try { startStage(0, 0, false, 0); } catch (e) { err = e.message; }
       if (err) { toMenu(); return { pass: false, error: 'startStage threw: ' + err }; }
+      // 开局就带着要跨关记东西的秘卷（存气），而且之前从没开过一趟爬塔/肉鸽
+      toMenu(); delete M.scRun; M.towerPerks = ['meter_bank'];
+      try { startStage(0, 0, false, 0); } catch (e) { err = e.message; }
+      if (err) { toMenu(); return { pass: false, error: 'startStage with 存气 threw: ' + err }; }
       const ok = M.mode === 'raid' && FOREST.on && !C.hidden && !D.hidden && C.chIdx === 2 && D.chIdx === 4
         && C.ctrl instanceof AICtrl && D.ctrl instanceof AICtrl;
       const info = 'mode=' + M.mode + ' forest=' + FOREST.on + ' C=' + C.chIdx + (C.hidden ? '(hidden)' : '') + ' D=' + D.chIdx + (D.hidden ? '(hidden)' : '');
@@ -917,7 +921,8 @@ const testSuite = [
       if (!scIds(A).length || scIds(A).join(',') !== scIds(C).join(',') || scIds(A).join(',') !== scIds(D).join(',')) {
         return { pass: false, error: 'Allies A, C, D must share M.towerPerks' };
       }
-      // Verify shared healing across allies
+      // Verify shared healing across allies（开局随机送的秘卷可能抽到「断情」：不能回血，这里去掉它，免得测试随机失败）
+      M.towerPerks = M.towerPerks.filter(id => id !== 'no_heal');
       A.hp = 100; C.hp = 100; D.hp = 100;
       scHeal(A, 40);
       if (C.hp <= 100 || D.hp <= 100) {
