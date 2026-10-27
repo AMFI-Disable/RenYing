@@ -376,7 +376,8 @@ $id('extBack').addEventListener('click', closeQfx);
 const RP_KEY = 'renying-replays', RP_MAX = 10;
 // 训AI 用的真实轨迹：录这一局时每 TR_EVERY 帧采一条「状态 + 双方操作」，一局最多留 TR_PER_MATCH 条。
 // 以前这里导出的是写死的常量数组（同一个假状态、同一个动作、奖励只看输赢），拿这种数据训练只会学到乱按。
-const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 4, TR_PER_MATCH = 600;
+const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 6, TR_PER_MATCH = 480;
+
 function ctrlKey(c) {
   const b = c.buf;
   let s = inBits(c.held) + ':' + c.atkT;
@@ -426,7 +427,7 @@ function rpStore(list) {
 // 一帧的状态特征（18 维：血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、正对与否）。
 // 数值全部来自这一局真实的角色对象，不是编的。
 function trFeat(f, o) {
-  const r3 = v => Math.round(v * 1000) / 1000;
+  const r3 = v => Math.round(v * 100) / 100;
   return [
     r3(f.hp / (f.maxHp || 1)), r3(o.hp / (o.maxHp || 1)),
     r3((f.guard || 0) / (f.maxGuard || 100)), r3((o.guard || 0) / (o.maxGuard || 100)),

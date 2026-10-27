@@ -1148,9 +1148,9 @@ body.has-nav .scr { top: var(--nav-h); }
 .tn-logo { display: flex; align-items: center; gap: 10px; padding: 0 22px 0 18px; border: none; cursor: pointer; background: var(--v-red); color: #fff; clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%); }
 .tn-mark { font-family: var(--title); font-size: 28px; line-height: 1; letter-spacing: .06em; }
 .tn-en { font-family: var(--nav-serif); font-weight: 700; font-size: 11px; letter-spacing: .28em; opacity: .9; }
-.tn-tabs { display: flex; align-items: stretch; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: center; }
+.tn-tabs { display: flex; align-items: stretch; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: safe center; }
 .tn-tabs::-webkit-scrollbar { display: none; }
-.tn-tabs button { position: relative; border: none; background: none; color: rgba(236,232,225,.72); font-family: var(--nav-serif); font-weight: 600; font-size: 15.5px; letter-spacing: .14em; padding: 0 16px; cursor: pointer; white-space: nowrap; text-shadow: 0 1px 8px rgba(0,0,0,.45); transition: color .15s, background .15s, text-shadow .15s; }
+.tn-tabs button { flex: none; position: relative; border: none; background: none; color: rgba(236,232,225,.72); font-family: var(--nav-serif); font-weight: 600; font-size: 15.5px; letter-spacing: .14em; padding: 0 16px; cursor: pointer; white-space: nowrap; text-shadow: 0 1px 8px rgba(0,0,0,.45); transition: color .15s, background .15s, text-shadow .15s; }
 .tn-tabs button::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 3px; background: var(--v-red); transform: scaleX(0); transition: transform .2s; }
 .tn-tabs button:hover { color: #fff; background: rgba(236,232,225,.05); text-shadow: 0 0 12px rgba(255,255,255,.28); }
 .tn-tabs button.sel { color: #fff; font-weight: 700; text-shadow: 0 0 14px rgba(255,255,255,.32); }
@@ -11225,7 +11225,7 @@ try { if (AC) AC.resume(); } catch (e) {}
 }
 $id('extBack').addEventListener('click', closeQfx);
 const RP_KEY = 'renying-replays', RP_MAX = 10;
-const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 4, TR_PER_MATCH = 600;
+const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 6, TR_PER_MATCH = 480;
 function ctrlKey(c) {
 const b = c.buf;
 let s = inBits(c.held) + ':' + c.atkT;
@@ -11270,7 +11270,7 @@ list.pop();
 }
 }
 function trFeat(f, o) {
-const r3 = v => Math.round(v * 1000) / 1000;
+const r3 = v => Math.round(v * 100) / 100;
 return [
 r3(f.hp / (f.maxHp || 1)), r3(o.hp / (o.maxHp || 1)),
 r3((f.guard || 0) / (f.maxGuard || 100)), r3((o.guard || 0) / (o.maxGuard || 100)),
