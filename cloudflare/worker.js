@@ -593,6 +593,87 @@ async function handleEcon(env, auth, body, now, ip) {
   return error('服务器忙，请再试一次', 503);
 }
 
+/* ---------- 进度计数（胜场、负场、侠客碎片）：和墨锭一样按条记账 ----------
+ * 两台设备各自打了几局，云端要的是两边新增的加起来，不是谁大要谁、也不是后传的覆盖先传的。
+ * 所以网页把“这次比上次多了几”记成一条条带编号的增量（prog.deltas），服务器每条只加一次（编号记在 srv.pg），
+ * 存档里报上来的绝对数不认。网页重试、刷新后重报、两台设备同时报，都不会重复加。
+ * 老版本网页没有 prog：照旧用它报的绝对数（等它刷新成新网页就走账了）。 */
+const PG_KEY = /^(netWins|netLosses|frags\.[a-z]{2,16})$/, PG_MAX = 1e6, PG_STEP = 10000, PG_KEEP = 10 * DAY_MS;
+function clampPg(x) { return Math.max(0, Math.min(PG_MAX, Math.floor(+x || 0))); }
+function pgVals(p) {
+  const v = { netWins: clampPg(p.netWins), netLosses: clampPg(p.netLosses) };
+  if (p.frags && typeof p.frags === 'object' && !Array.isArray(p.frags)) for (const [h, n] of Object.entries(p.frags)) if (PG_KEY.test('frags.' + h) && clampPg(n)) v['frags.' + h] = clampPg(n);
+  return v;
+}
+function pgPut(p, v) {
+  p.netWins = v.netWins || 0; p.netLosses = v.netLosses || 0;
+  const frags = {};
+  for (const [k, n] of Object.entries(v)) if (k.startsWith('frags.') && n > 0) frags[k.slice(6)] = n;
+  p.frags = frags;
+}
+// 把还没记过的增量加到 vals 上；返回这次请求里所有已经记过的编号（新记的和以前记过的都算，网页据此划掉）
+function pgApply(srv, vals, deltas, now) {
+  const pg = srv.pg && typeof srv.pg === 'object' && !Array.isArray(srv.pg) ? srv.pg : (srv.pg = {});
+  const acks = [];
+  for (const e of (Array.isArray(deltas) ? deltas : []).slice(0, 60)) {
+    if (!e || typeof e.id !== 'string' || !/^[0-9a-f]{8,32}$/.test(e.id) || !e.d || typeof e.d !== 'object') continue;
+    if (pg[e.id]) { acks.push(e.id); continue; }
+    for (const [k, d] of Object.entries(e.d)) {
+      const n = Math.trunc(+d);
+      if (!PG_KEY.test(k) || !Number.isFinite(n) || Math.abs(n) > PG_STEP) continue;
+      vals[k] = clampPg((vals[k] || 0) + n);
+    }
+    pg[e.id] = now; acks.push(e.id);
+  }
+  for (const [id, at] of Object.entries(pg)) if (now - at > PG_KEEP) delete pg[id];
+  const ids = Object.keys(pg);
+  if (ids.length > 3000) ids.sort((a, b) => pg[a] - pg[b]).slice(0, ids.length - 3000).forEach(id => delete pg[id]);
+  return acks;
+}
+// 给网页的计数：现在的数，和最近 10 天记过的编号（网页刷新后据此划掉已经记上的，不会把它们再算一遍）
+function pgOut(prof, srv, now) {
+  const pg = srv.pg && typeof srv.pg === 'object' ? srv.pg : {};
+  const acks = Object.keys(pg).filter(id => now - pg[id] <= PG_KEEP).sort((a, b) => pg[b] - pg[a]).slice(0, 500);
+  return { vals: pgVals(prof), acks };
+}
+// 存档里不是计数的部分，两份怎么合（确定的规则，谁先到谁后到结果都一样）：
+//   侠客：两边有的都算；关卡星、青锋行最高波数：每一项取较高的（这是“最好成绩”，不是累计量）；
+//   列传：每位侠客取重走次数多的、再取走得远的，结局合在一起；排位：按 at 取新的那份；online10Unlocked：有一边解锁就算
+function mergeStored(stored, inc) {
+  const out = {};
+  const own = new Set([...(Array.isArray(stored.owned) ? stored.owned : []), ...(Array.isArray(inc.owned) ? inc.owned : [])].filter(h => typeof h === 'string' && /^[a-z]{2,16}$/.test(h)));
+  out.owned = own.size ? [...own] : ['qingfeng'];
+  const stars = {};
+  for (const src of [stored.stageStars, inc.stageStars]) if (src && typeof src === 'object' && !Array.isArray(src)) for (const [k, v] of Object.entries(src)) if (/^[\w-]{1,32}$/.test(k)) stars[k] = Math.max(stars[k] || 0, Math.max(0, Math.min(3, Math.floor(+v || 0))));
+  out.stageStars = stars;
+  out.qfx = Math.max(clampPg(stored.qfx), clampPg(inc.qfx));
+  out.online10Unlocked = !!(stored.online10Unlocked || inc.online10Unlocked);
+  if (stored.saga || inc.saga) out.saga = mergeSagaSrv(stored.saga, inc.saga);
+  const sr = stored.rk && typeof stored.rk === 'object' ? stored.rk : null, ir = inc.rk && typeof inc.rk === 'object' ? inc.rk : null;
+  if (sr || ir) out.rk = !ir ? sr : !sr ? ir : ((+sr.at || 0) > (+ir.at || 0) ? sr : ir);
+  return out;
+}
+function cleanSagaSrv(v) {
+  const out = {};
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+  for (const [h, r] of Object.entries(v)) {
+    if (!/^[a-z]{2,16}$/.test(h) || !r || typeof r !== 'object') continue;
+    out[h] = { r: Math.max(0, Math.min(1e6, Math.floor(+r.r || 0))), s: Math.max(0, Math.min(20, Math.floor(+r.s || 0))), f: /^[a-z0-9_]{0,16}$/.test(r.f || '') ? (r.f || '') : '', c: r.c ? 1 : 0,
+      e: Array.isArray(r.e) ? Array.from(new Set(r.e.filter(x => typeof x === 'string' && /^[a-z0-9_]{1,16}$/.test(x)))).slice(0, 8) : [], t: Math.max(0, +r.t || 0) };
+  }
+  return out;
+}
+function mergeSagaSrv(a, b) {
+  const A = cleanSagaSrv(a), B = cleanSagaSrv(b), out = {};
+  for (const h of new Set([...Object.keys(A), ...Object.keys(B)])) {
+    const x = A[h], y = B[h];
+    if (!x || !y) { out[h] = x || y; continue; }
+    const win = x.r !== y.r ? (x.r > y.r ? x : y) : x.s !== y.s ? (x.s > y.s ? x : y) : (x.t >= y.t ? x : y);
+    out[h] = { ...win, e: Array.from(new Set([...x.e, ...y.e])) };
+  }
+  return out;
+}
+
 /* ---------- 存档同步：墨锭走账本，皮肤以武库库存为准 ---------- */
 async function handleProfilePost(env, auth, body, now) {
   const uid = auth.user.id;
@@ -602,15 +683,25 @@ async function handleProfilePost(env, auth, body, now) {
   const incoming = body.profile || body;
   if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return error('无效的存档数据');
   const ledger = body.ledger && typeof body.ledger === 'object' && Array.isArray(body.ledger.deltas) ? body.ledger : null;
+  const prog = body.prog && typeof body.prog === 'object' && Array.isArray(body.prog.deltas) ? body.prog : null;
   const cfg = await cfgNow(env, now);
   for (let attempt = 0; attempt < 5; attempt++) {
     const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(uid).first();
-    const eco = await loadEcon(env, uid, parseProfile(urow ? urow.profile_json : '', auth.user.username), now);
+    const stored = parseProfile(urow ? urow.profile_json : '', auth.user.username);
+    const eco = await loadEcon(env, uid, stored, now);
     const ink0 = eco.ink, ver = eco.ver;
     const p = { ...incoming };
-    delete p.armory; delete p.ledger;
+    delete p.armory; delete p.ledger; delete p.prog;
     p.name = auth.user.username;
     p.updatedAt = now;
+    // 计数走增量账；其余进度和服务器上那份按确定的规则合并，不让后到的一份把另一台设备的进度盖掉
+    let pgAcks = [];
+    if (prog) {
+      const vals = pgVals(stored);
+      pgAcks = pgApply(eco.srv, vals, prog.deltas, now);
+      pgPut(p, vals);
+      Object.assign(p, mergeStored(stored, incoming));
+    }
     // 老版本网页没有账本：拿它报的数和服务器上的差当作一条上报（一样有每日上限）
     const deltas = ledger ? ledger.deltas : [{ id: 'abs' + now.toString(36) + Math.floor(rnd() * 1e9).toString(36), d: clampInk(p.ink) - eco.ink }];
     const { capped, forged, paid, owed, allow, revoked } = applyDeltas(eco, deltas, now, cfg);
@@ -625,7 +716,7 @@ async function handleProfilePost(env, auth, body, now) {
     const results = await env.DB.batch(stmts);
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;
     eco.ver = ver + 1;
-    return json({ ok: true, updatedAt: now, ledger: ledgerOut(eco, now), capped, owed, fix: fix.skinsAdd.length || fix.skinsDel.length ? fix : undefined });
+    return json({ ok: true, updatedAt: now, ledger: ledgerOut(eco, now), capped, owed, fix: fix.skinsAdd.length || fix.skinsDel.length ? fix : undefined, prog: prog ? { vals: pgVals(p), acks: pgAcks } : undefined });
   }
   return error('服务器忙，请稍后再试', 503);
 }
@@ -648,7 +739,7 @@ const RESERVED = /^(dev|dev_master|admin|administrator|root|system|gm|official|s
 async function profileOut(env, user, now) {
   const prof = parseProfile(user.profile_json, user.username);
   const eco = await loadEcon(env, user.id, prof, now);
-  return { profile: overlay(prof, eco), ledger: ledgerOut(eco, now) };
+  return { profile: overlay(prof, eco), ledger: ledgerOut(eco, now), prog: pgOut(prof, eco.srv, now) };
 }
 
 /* ---------- 玩家市场：看谁在卖什么、最近成交多少（挂单、买、撤都走 /api/econ） ---------- */
@@ -1554,7 +1645,8 @@ export default {
           username,
           token,
           profile: out.profile,
-          ledger: out.ledger
+          ledger: out.ledger,
+          prog: out.prog
         });
       }
 
@@ -1604,7 +1696,8 @@ export default {
           username: user.username,
           token,
           profile: out.profile,
-          ledger: out.ledger
+          ledger: out.ledger,
+          prog: out.prog
         });
       }
 
@@ -1620,7 +1713,8 @@ export default {
           uid: auth.user.id,
           username: auth.user.username,
           profile: out.profile,
-          ledger: out.ledger
+          ledger: out.ledger,
+          prog: out.prog
         });
       }
 

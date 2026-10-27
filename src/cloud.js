@@ -115,6 +115,122 @@
     return Math.max(0, LEDGER.s + pendSum());
   }
   const ledgerListeners = [], syncHooks = [];
+
+  /* ---------- 进度计数账本（胜场、负场、侠客碎片） ----------
+     和墨锭账本一个思路：两台设备各自新增的要加起来，所以不传“现在是几”，传“比上次多了几”。
+     seen：上次记账时本机存档里的数；每次存档把 (现在 - seen) 记成一条带编号的增量，seen 跟上。
+     s：服务器认的数；un：还没被服务器记上的增量。显示的数 = s + un 的合计。
+     服务器每个编号只加一次，所以重试、刷新、断线重连、两台设备同时报都不会重复加。
+     seen 为 null 表示这个号在这台设备上还没和新版服务器对过账（第一次加载时建，见 progAdopt）；
+     服务器是老版本时一直是 null，存档照旧传绝对数。 */
+  const PROG = { uid: '', seen: null, s: null, un: [] };
+  const progKey = uid => 'renying-prog-' + uid;
+  const progListeners = [];
+  const PROG_KEY = /^(netWins|netLosses|frags\.[a-z]{2,16})$/;
+  function progLoad(uid) {
+    if (PROG.uid === uid) return PROG;
+    let o = null;
+    try { o = JSON.parse(localStorage.getItem(progKey(uid)) || 'null'); } catch (e) {}
+    const map = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
+    PROG.uid = uid; PROG.dropped = new Set(); PROG.seen = map(o && o.seen); PROG.s = map(o && o.s);
+    PROG.un = o && Array.isArray(o.un) ? o.un.filter(x => x && typeof x.id === 'string' && x.d && typeof x.d === 'object' && Number.isFinite(x.t)) : [];
+    return PROG;
+  }
+  // 存的时候把本机别的标签页新记的条目也并进来（按编号），免得两个标签页互相覆盖掉对方还没报的增量
+  function progSave() {
+    try {
+      const o = JSON.parse(localStorage.getItem(progKey(PROG.uid)) || 'null'), have = new Set(PROG.un.map(x => x.id)), dropped = PROG.dropped || new Set();
+      if (o && Array.isArray(o.un)) for (const x of o.un) if (x && typeof x.id === 'string' && !have.has(x.id) && !dropped.has(x.id) && x.d && Number.isFinite(x.t)) PROG.un.push(x);
+    } catch (e) {}
+    try { localStorage.setItem(progKey(PROG.uid), JSON.stringify({ seen: PROG.seen, s: PROG.s, un: PROG.un })); } catch (e) {}
+  }
+  const progNum = x => Math.max(0, Math.floor(+x || 0));
+  // 存档里要记账的那几个数，摊平成 { netWins, netLosses, 'frags.moyu' … }
+  function progFlat(p) {
+    const v = { netWins: progNum(p && p.netWins), netLosses: progNum(p && p.netLosses) };
+    if (p && p.frags && typeof p.frags === 'object') for (const [h, n] of Object.entries(p.frags)) if (PROG_KEY.test('frags.' + h) && progNum(n)) v['frags.' + h] = progNum(n);
+    return v;
+  }
+  function progPend() {
+    const t = {};
+    for (const x of PROG.un) for (const [k, d] of Object.entries(x.d)) t[k] = (t[k] || 0) + (Math.trunc(+d) || 0);
+    return t;
+  }
+  function progView() {
+    const v = { ...(PROG.s || {}) };
+    for (const [k, d] of Object.entries(progPend())) v[k] = Math.max(0, (v[k] || 0) + d);
+    return v;
+  }
+  // 把摊平的数写回存档（碎片整个换掉，0 的不留）
+  function progPut(p, v) {
+    p.netWins = v.netWins || 0; p.netLosses = v.netLosses || 0;
+    const frags = {};
+    for (const [k, n] of Object.entries(v)) if (k.startsWith('frags.') && n > 0) frags[k.slice(6)] = n;
+    p.frags = frags;
+    return p;
+  }
+  // 存档时：本机比上次多（少）了的，记成一条
+  function progNote(uid, prof) {
+    progLoad(uid);
+    if (PROG.seen === null) return;
+    const cur = progFlat(prof), d = {};
+    for (const k of new Set([...Object.keys(cur), ...Object.keys(PROG.seen)])) {
+      const x = (cur[k] || 0) - (PROG.seen[k] || 0);
+      if (x) d[k] = x;
+    }
+    if (Object.keys(d).length) { PROG.un.push({ id: rhex(8), d, t: Date.now() }); PROG.seen = cur; progSave(); }
+  }
+  // 划掉服务器已经记上的；acks 只是“记过了”，不会让数变
+  function progDrop(acks) {
+    const set = new Set(Array.isArray(acks) ? acks : []), now = Date.now(), gone = [];
+    PROG.dropped = PROG.dropped || new Set();
+    PROG.un = PROG.un.filter(x => { const keep = !set.has(x.id) && now - x.t < 10 * 86400e3; if (!keep) { PROG.dropped.add(x.id); if (set.has(x.id)) gone.push(x); } return keep; });
+    return gone;
+  }
+  // 加载、登录时：拿服务器的数和本机没报的增量对账，返回该显示的数（服务器不支持时返回 null）
+  function progAdopt(uid, P, local) {
+    if (!P || !P.vals || typeof P.vals !== 'object') return null;
+    progLoad(uid);
+    progDrop(P.acks);
+    if (PROG.seen === null) {
+      // 第一次在这台设备上对账：之前没有基线，分不清本机的数里哪些已经传过。为了不丢进度也不重复加，
+      // 只把本机比云端多出来的部分记成一条增量（只加不减）；以后每次都按增量走
+      PROG.s = { ...P.vals };
+      PROG.un.forEach(x => PROG.dropped.add(x.id));
+      PROG.un = [];
+      if (local) {
+        const L = progFlat(local), d = {};
+        for (const [k, n] of Object.entries(L)) if (n > (P.vals[k] || 0)) d[k] = n - (P.vals[k] || 0);
+        if (Object.keys(d).length) PROG.un.push({ id: rhex(8), d, t: Date.now(), m: 1 });
+      }
+    } else {
+      PROG.s = { ...P.vals };
+    }
+    PROG.seen = progView();
+    progSave();
+    return PROG.seen;
+  }
+  // 上传成功时：服务器回了新的数和记过的编号。新的数里除了本机这几条以外多出来的，是别的设备加的，告诉游戏一起加上
+  function progAck(uid, P) {
+    if (!P || !P.vals) return;
+    progLoad(uid);
+    if (PROG.seen === null) return;
+    const old = PROG.s || {}, mine = {};
+    for (const x of progDrop(P.acks)) for (const [k, d] of Object.entries(x.d)) mine[k] = (mine[k] || 0) + (Math.trunc(+d) || 0);
+    const other = {};
+    for (const k of new Set([...Object.keys(old), ...Object.keys(P.vals), ...Object.keys(mine)])) {
+      const x = (P.vals[k] || 0) - (old[k] || 0) - (mine[k] || 0);
+      if (x) other[k] = x;
+    }
+    PROG.s = { ...P.vals };
+    if (Object.keys(other).length && progListeners.length) {
+      progListeners.forEach(fn => { try { fn(other); } catch (e) { console.warn('progress listener', e); } });
+      for (const [k, x] of Object.entries(other)) PROG.seen[k] = Math.max(0, (PROG.seen[k] || 0) + x);
+    }
+    progSave();
+  }
+  // 游戏登记：别的设备新增的胜负、碎片（一个 { netWins: +2 … } 的增量），请加到当前存档上
+  function onProgress(fn) { if (typeof fn === 'function') progListeners.push(fn); }
   function onLedger(fn) { if (typeof fn === 'function') ledgerListeners.push(fn); }
   // 每次把账本报上去之前先叫一遍（反作弊在这里先对一下墨锭，凭空多出来的那条就不会被报上去）
   function onBeforeSync(fn) { if (typeof fn === 'function') syncHooks.push(fn); }
@@ -432,11 +548,11 @@
     if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
     return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
   }
-  // 侠客列传的江湖足迹：看一条路上大家走到哪、选了什么（不用登录）；云端账号走完一节记一笔
   // 排行榜（不用登录）：k 是 rank（段位榜，s 是赛季）或 wins（战绩榜）
   async function leaderboard(k, season) {
     return api('/api/leaderboard?k=' + encodeURIComponent(k) + (season ? '&s=' + encodeURIComponent(season) : ''), { method: 'GET' });
   }
+  // 侠客列传的江湖足迹：看一条路上大家走到哪、选了什么（不用登录）；云端账号走完一节记一笔
   async function saga(hero) { return api('/api/saga?hero=' + encodeURIComponent(hero), { method: 'GET' }); }
   async function sagaMark(body) {
     if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
@@ -477,13 +593,16 @@
     ledgerLoad(uid);
     const ledger = LEDGER.s !== null ? { deltas: LEDGER.un.slice(0, 60).map(x => x.r ? { id: x.id, d: 0, r: x.r } : { id: x.id, d: x.d }), ev: LEDGER.v } : undefined;
     try {
-      const body = JSON.stringify({ profile: data, ledger });
+      progLoad(uid);
+      const prog = PROG.seen !== null ? { deltas: PROG.un.slice(0, 60).map(x => ({ id: x.id, d: x.d })) } : undefined;
+      const body = JSON.stringify({ profile: data, ledger, prog });
       const res = await api('/api/profile', {
         method: 'POST',
         body,
         // keepalive 的请求体最多 64KB，超过了浏览器会直接拒绝发送，所以只给小存档加
         ...(leaving === true && body.length < 60000 ? { keepalive: true } : {})
       });
+      if (res && res.prog && getUser() && getUser().uid === uid) progAck(uid, res.prog);
       if (res && res.ledger && getUser() && getUser().uid === uid) {
         ledgerListeners.forEach(fn => { try { fn(res.ledger, res.fix || null, res.capped || 0, res.owed || 0); } catch (e) { console.warn('ledger listener', e); } });
       }
@@ -756,6 +875,9 @@
 
           // 自动双向合并云端和本地数据，绝不破坏覆盖
           const merged = mergeProfiles(local, cloudData);
+          // 胜负、碎片按账本算：服务器的数 + 本机还没报上去的增量（新版服务器才有 res.prog）
+          const pv = progAdopt(u.uid, res.prog, local);
+          if (pv) progPut(merged, pv);
 
           if (res.ledger) {
             // 对齐墨锭账本
@@ -813,6 +935,7 @@
     }
 
     ledgerNote(u.uid, dataToSave.ink);   // 这次存档里墨锭的变化记成一条待上报
+    progNote(u.uid, dataToSave);          // 胜负、碎片的变化也记成一条
     pendingData = dataToSave; pendingUid = u.uid;
     try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
     if (sync.state !== 'syncing') setSync({ state: 'pending' });
@@ -849,6 +972,8 @@
 
     // 智能双向合并，保留本地与云端两边各自的新增资产
     const merged = mergeProfiles(local, cloudData);
+    const pv = progAdopt(uid, res.prog, local);
+    if (pv) progPut(merged, pv);
 
     adoptProfile(uid, merged, res.ledger);
     pendingData = null; pendingUid = null;
@@ -1082,6 +1207,7 @@
       exportAllAccounts,
       importAccountData,
       leaderboard,
+      onProgress,
       computeProfileDigest,
       verifyProfileDigest,
       toCloudData,

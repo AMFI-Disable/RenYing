@@ -3950,6 +3950,104 @@ ledgerSave();
 return Math.max(0, LEDGER.s + pendSum());
 }
 const ledgerListeners = [], syncHooks = [];
+const PROG = { uid: '', seen: null, s: null, un: [] };
+const progKey = uid => 'renying-prog-' + uid;
+const progListeners = [];
+const PROG_KEY = /^(netWins|netLosses|frags\.[a-z]{2,16})$/;
+function progLoad(uid) {
+if (PROG.uid === uid) return PROG;
+let o = null;
+try { o = JSON.parse(localStorage.getItem(progKey(uid)) || 'null'); } catch (e) {}
+const map = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
+PROG.uid = uid; PROG.dropped = new Set(); PROG.seen = map(o && o.seen); PROG.s = map(o && o.s);
+PROG.un = o && Array.isArray(o.un) ? o.un.filter(x => x && typeof x.id === 'string' && x.d && typeof x.d === 'object' && Number.isFinite(x.t)) : [];
+return PROG;
+}
+function progSave() {
+try {
+const o = JSON.parse(localStorage.getItem(progKey(PROG.uid)) || 'null'), have = new Set(PROG.un.map(x => x.id)), dropped = PROG.dropped || new Set();
+if (o && Array.isArray(o.un)) for (const x of o.un) if (x && typeof x.id === 'string' && !have.has(x.id) && !dropped.has(x.id) && x.d && Number.isFinite(x.t)) PROG.un.push(x);
+} catch (e) {}
+try { localStorage.setItem(progKey(PROG.uid), JSON.stringify({ seen: PROG.seen, s: PROG.s, un: PROG.un })); } catch (e) {}
+}
+const progNum = x => Math.max(0, Math.floor(+x || 0));
+function progFlat(p) {
+const v = { netWins: progNum(p && p.netWins), netLosses: progNum(p && p.netLosses) };
+if (p && p.frags && typeof p.frags === 'object') for (const [h, n] of Object.entries(p.frags)) if (PROG_KEY.test('frags.' + h) && progNum(n)) v['frags.' + h] = progNum(n);
+return v;
+}
+function progPend() {
+const t = {};
+for (const x of PROG.un) for (const [k, d] of Object.entries(x.d)) t[k] = (t[k] || 0) + (Math.trunc(+d) || 0);
+return t;
+}
+function progView() {
+const v = { ...(PROG.s || {}) };
+for (const [k, d] of Object.entries(progPend())) v[k] = Math.max(0, (v[k] || 0) + d);
+return v;
+}
+function progPut(p, v) {
+p.netWins = v.netWins || 0; p.netLosses = v.netLosses || 0;
+const frags = {};
+for (const [k, n] of Object.entries(v)) if (k.startsWith('frags.') && n > 0) frags[k.slice(6)] = n;
+p.frags = frags;
+return p;
+}
+function progNote(uid, prof) {
+progLoad(uid);
+if (PROG.seen === null) return;
+const cur = progFlat(prof), d = {};
+for (const k of new Set([...Object.keys(cur), ...Object.keys(PROG.seen)])) {
+const x = (cur[k] || 0) - (PROG.seen[k] || 0);
+if (x) d[k] = x;
+}
+if (Object.keys(d).length) { PROG.un.push({ id: rhex(8), d, t: Date.now() }); PROG.seen = cur; progSave(); }
+}
+function progDrop(acks) {
+const set = new Set(Array.isArray(acks) ? acks : []), now = Date.now(), gone = [];
+PROG.dropped = PROG.dropped || new Set();
+PROG.un = PROG.un.filter(x => { const keep = !set.has(x.id) && now - x.t < 10 * 86400e3; if (!keep) { PROG.dropped.add(x.id); if (set.has(x.id)) gone.push(x); } return keep; });
+return gone;
+}
+function progAdopt(uid, P, local) {
+if (!P || !P.vals || typeof P.vals !== 'object') return null;
+progLoad(uid);
+progDrop(P.acks);
+if (PROG.seen === null) {
+PROG.s = { ...P.vals };
+PROG.un.forEach(x => PROG.dropped.add(x.id));
+PROG.un = [];
+if (local) {
+const L = progFlat(local), d = {};
+for (const [k, n] of Object.entries(L)) if (n > (P.vals[k] || 0)) d[k] = n - (P.vals[k] || 0);
+if (Object.keys(d).length) PROG.un.push({ id: rhex(8), d, t: Date.now(), m: 1 });
+}
+} else {
+PROG.s = { ...P.vals };
+}
+PROG.seen = progView();
+progSave();
+return PROG.seen;
+}
+function progAck(uid, P) {
+if (!P || !P.vals) return;
+progLoad(uid);
+if (PROG.seen === null) return;
+const old = PROG.s || {}, mine = {};
+for (const x of progDrop(P.acks)) for (const [k, d] of Object.entries(x.d)) mine[k] = (mine[k] || 0) + (Math.trunc(+d) || 0);
+const other = {};
+for (const k of new Set([...Object.keys(old), ...Object.keys(P.vals), ...Object.keys(mine)])) {
+const x = (P.vals[k] || 0) - (old[k] || 0) - (mine[k] || 0);
+if (x) other[k] = x;
+}
+PROG.s = { ...P.vals };
+if (Object.keys(other).length && progListeners.length) {
+progListeners.forEach(fn => { try { fn(other); } catch (e) { console.warn('progress listener', e); } });
+for (const [k, x] of Object.entries(other)) PROG.seen[k] = Math.max(0, (PROG.seen[k] || 0) + x);
+}
+progSave();
+}
+function onProgress(fn) { if (typeof fn === 'function') progListeners.push(fn); }
 function onLedger(fn) { if (typeof fn === 'function') ledgerListeners.push(fn); }
 function onBeforeSync(fn) { if (typeof fn === 'function') syncHooks.push(fn); }
 const GRANTS = [];
@@ -4259,12 +4357,15 @@ const uid = getUser().uid;
 ledgerLoad(uid);
 const ledger = LEDGER.s !== null ? { deltas: LEDGER.un.slice(0, 60).map(x => x.r ? { id: x.id, d: 0, r: x.r } : { id: x.id, d: x.d }), ev: LEDGER.v } : undefined;
 try {
-const body = JSON.stringify({ profile: data, ledger });
+progLoad(uid);
+const prog = PROG.seen !== null ? { deltas: PROG.un.slice(0, 60).map(x => ({ id: x.id, d: x.d })) } : undefined;
+const body = JSON.stringify({ profile: data, ledger, prog });
 const res = await api('/api/profile', {
 method: 'POST',
 body,
 ...(leaving === true && body.length < 60000 ? { keepalive: true } : {})
 });
+if (res && res.prog && getUser() && getUser().uid === uid) progAck(uid, res.prog);
 if (res && res.ledger && getUser() && getUser().uid === uid) {
 ledgerListeners.forEach(fn => { try { fn(res.ledger, res.fix || null, res.capped || 0, res.owed || 0); } catch (e) { console.warn('ledger listener', e); } });
 }
@@ -4500,6 +4601,8 @@ try {
 local = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || 'null');
 } catch (e) {}
 const merged = mergeProfiles(local, cloudData);
+const pv = progAdopt(u.uid, res.prog, local);
+if (pv) progPut(merged, pv);
 if (res.ledger) {
 ledgerLoad(u.uid);
 if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }
@@ -4541,6 +4644,7 @@ setSync({ state: 'local' });
 return;
 }
 ledgerNote(u.uid, dataToSave.ink);   // 这次存档里墨锭的变化记成一条待上报
+progNote(u.uid, dataToSave);          // 胜负、碎片的变化也记成一条
 pendingData = dataToSave; pendingUid = u.uid;
 try { localStorage.setItem(dirtyKey(), String(dataToSave.updatedAt)); } catch (e) {}
 if (sync.state !== 'syncing') setSync({ state: 'pending' });
@@ -4570,6 +4674,8 @@ try {
 local = JSON.parse(localStorage.getItem('renying-prof-' + uid) || 'null');
 } catch (e) {}
 const merged = mergeProfiles(local, cloudData);
+const pv = progAdopt(uid, res.prog, local);
+if (pv) progPut(merged, pv);
 adoptProfile(uid, merged, res.ledger);
 pendingData = null; pendingUid = null;
 try {
@@ -4770,6 +4876,7 @@ exportCurrentAccount,
 exportAllAccounts,
 importAccountData,
 leaderboard,
+onProgress,
 computeProfileDigest,
 verifyProfileDigest,
 toCloudData,
@@ -23408,7 +23515,7 @@ const LOGOUT_KEEP = ['renying-settings', 'renying-lang', 'renying-lang-chosen', 
 function clearLocalAccountData(user, synced) {
 let localNames = [], localUids = [];
 try { const la = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); localNames = Object.keys(la); localUids = Object.values(la).map(x => x && x.uid).filter(Boolean); } catch (e) {}
-const keepUnsynced = user && user.uid && !synced ? ['renying-prof-' + user.uid, 'renying-ledger-' + user.uid, 'renying-sync-dirty-' + user.uid] : [];
+const keepUnsynced = user && user.uid && !synced ? ['renying-prof-' + user.uid, 'renying-ledger-' + user.uid, 'renying-prog-' + user.uid, 'renying-sync-dirty-' + user.uid] : [];
 const keys = [];
 for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
 for (const k of keys) {
@@ -23418,6 +23525,13 @@ if (localUids.some(id => k.endsWith('-' + id)) || localNames.some(n => k.endsWit
 try { localStorage.removeItem(k); } catch (e) {}
 }
 }
+if (window.CloudSave && CloudSave.onProgress) CloudSave.onProgress(d => {
+for (const [k, x] of Object.entries(d)) {
+if (k === 'netWins' || k === 'netLosses') PROF[k] = Math.max(0, (PROF[k] || 0) + x);
+else if (k.startsWith('frags.')) { const h = k.slice(6); PROF.frags = PROF.frags || {}; PROF.frags[h] = Math.max(0, (PROF.frags[h] || 0) + x); if (!PROF.frags[h]) delete PROF.frags[h]; }
+}
+if ($id('acc').classList.contains('on')) renderAccPage();
+});
 let loggingOut = false;
 async function doLogout() {
 loggingOut = true;

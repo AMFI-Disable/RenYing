@@ -97,7 +97,7 @@ const LOGOUT_KEEP = ['renying-settings', 'renying-lang', 'renying-lang-chosen', 
 function clearLocalAccountData(user, synced) {
   let localNames = [], localUids = [];
   try { const la = JSON.parse(localStorage.getItem('renying-local-accounts') || '{}'); localNames = Object.keys(la); localUids = Object.values(la).map(x => x && x.uid).filter(Boolean); } catch (e) {}
-  const keepUnsynced = user && user.uid && !synced ? ['renying-prof-' + user.uid, 'renying-ledger-' + user.uid, 'renying-sync-dirty-' + user.uid] : [];
+  const keepUnsynced = user && user.uid && !synced ? ['renying-prof-' + user.uid, 'renying-ledger-' + user.uid, 'renying-prog-' + user.uid, 'renying-sync-dirty-' + user.uid] : [];
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
   for (const k of keys) {
@@ -107,6 +107,14 @@ function clearLocalAccountData(user, synced) {
     try { localStorage.removeItem(k); } catch (e) {}
   }
 }
+// 同一个号在别的设备上新增的胜负、碎片：上传时服务器把总数带回来，这里加到当前存档上（不是覆盖：本机刚打的还在）
+if (window.CloudSave && CloudSave.onProgress) CloudSave.onProgress(d => {
+  for (const [k, x] of Object.entries(d)) {
+    if (k === 'netWins' || k === 'netLosses') PROF[k] = Math.max(0, (PROF[k] || 0) + x);
+    else if (k.startsWith('frags.')) { const h = k.slice(6); PROF.frags = PROF.frags || {}; PROF.frags[h] = Math.max(0, (PROF.frags[h] || 0) + x); if (!PROF.frags[h]) delete PROF.frags[h]; }
+  }
+  if ($id('acc').classList.contains('on')) renderAccPage();
+});
 let loggingOut = false;
 async function doLogout() {
   loggingOut = true;

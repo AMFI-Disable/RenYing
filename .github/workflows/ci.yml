@@ -75,6 +75,14 @@ jobs:
       - name: Cloud Save Client Tests
         run: node tools/cloud-test.mjs
 
+      # Real Worker (node:sqlite as D1) plus several simulated devices: progress added on two devices
+      # is summed in the cloud, retries, reloads, re-login and reconnects never count twice, an old save
+      # migrates without loss, and nothing crosses between accounts.
+      - name: Cloud Sync Merge Tests
+        run: |
+          node tools/sync-test.mjs
+          node tools/sync-test.mjs --bundle
+
       # Runs the open world line (WorldLine Durable Object) in Node with fake sockets: 40-player cap,
       # view-range filtering, damage caps, world boss, restart re-hello and idle timer shutdown.
       - name: Open World Server Tests
