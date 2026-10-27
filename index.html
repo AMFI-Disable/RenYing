@@ -5687,7 +5687,7 @@ feast: { role: 'self', combo: false, use: (m, o, d) => (m.drunk || 0) >= 50 && d
 hook: { role: 'proj', combo: true, pull: true },
 whirl: { role: 'zone', combo: true, reflect: true },
 spindle: { role: 'proj', combo: true },
-shadowdash: { role: 'rush', combo: true, invul: true },
+shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o) => (o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state) },
 };
 const AI_ULT = {
 crescent: { contact: true }, shadows: { contact: true }, eightimm: { contact: true },
@@ -5701,6 +5701,7 @@ featherstorm: { far: true },
 guangling: { far: true },
 shanshui: { far: true },
 skynet: { far: true },
+needlestorm: { far: true },
 moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
 };
 const AI_GENE_DEF = {
@@ -6049,6 +6050,10 @@ if (best && this.L.punish > 0.5) return { how: 'interrupt', key: best.key };
 }
 const out = F2.max + 40 - d;
 if (out <= 0) return { how: 'hold' };
+if (free && me.breakCD > left && left > 0.15) {
+const f1 = aiFrame(me, 'l1'), close = Math.max(0, d - f1.max + 10) / wk(me);
+if (out / wk(me) >= left + 0.12 && close + f1.hit < left - 0.04) return { how: 'approach' };
+}
 const wallBehind = to > 0 ? me.x - WALL < out + 20 : STAGE_W - WALL - me.x < out + 20;
 if (!wallBehind && out / wk(me) < left + 0.12) return { how: 'back' };
 if (left > 0.06) return { how: 'back' };
@@ -6062,6 +6067,7 @@ case 'hold': this.dir = d < aiFrame(foe, 'cs2').max + 80 ? -to : 0; this.holdDow
 case 'counter': if (free) { this.stopAll(); this.press(p.slot); } return true;
 case 'jump': if (me.onGround() && free) { this.stopAll(); this.press('jump'); this.dir = -to; } return true;
 case 'back': this.stopAll(); this.dir = -to; this.holdDown = 0; return true;
+case 'approach': this.stopAll(); this.dir = to; this.holdDown = 0; return true;
 case 'escape': if (th.t < 0.12 || th.kind === 'charge') { this.stopAll(); this.press('dash'); } return true;
 case 'ult': if (me.meter >= 100 && th.t < 0.3) { this.stopAll(); this.press('special'); } else if (me.breakCD <= 0 && th.t < 0.1) this.press('dash'); return true;
 case 'interrupt': if (free) { this.stopAll(); if (p.key === 'dl') { this.holdDown = 0.06; this.press('light'); } else { this.holdDown = 0; this.press('light'); } p.how = 'block'; } return true;
@@ -6224,6 +6230,7 @@ if (id === 'gale') this.plan([['skill2', 0.42, 'hit']]);   // 疾风斩中了剑
 else if (id === 'blink') this.plan([['light', 0.5], ['light', 0.68, 'hit'], ['light', 0.86, 'hit']]);   // 影遁后下一击加伤
 else if (id === 'hook') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit'], ['light', 0.76, 'hit']]);
 else if (id === 'thunderfist') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit']]);
+else if (id === 'spindle') this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆
 }
 shouldBait(me, foe, hits) {
 const L = this.L, g = this.g;
