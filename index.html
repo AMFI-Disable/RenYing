@@ -8012,7 +8012,7 @@ KEYS[0][code] = realAct;
 }
 applyCustomKeys();
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
-const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [] };
+const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [] };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
 if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
@@ -8724,7 +8724,11 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 class AICtrl extends Ctrl {
 constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
 updateTactic() { this.brain.newRound(); }
-think(me, foe) { this.brain.think(me, foe); }
+think(me, foe) {
+if (!(ROLL.on && M.mode === 'net')) return this.brain.think(me, foe);
+const r0 = Math.random; Math.random = grnd;
+try { this.brain.think(me, foe); } finally { Math.random = r0; }
+}
 }
 class Fighter {
 constructor(idx) {
@@ -8805,7 +8809,7 @@ if (!is2v2()) return f === A ? B : A;
 const list = foesOf(f);
 if (!list.length) return A;
 if (list.length === 1) { f.target = list[0]; return list[0]; }
-if (f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1]) {
+if (f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net) {   // 联机里玩家的操控是回滚用的 Ctrl（带 net 标记），不是电脑
 const mate = fighterByIdx(f.idx ^ 2);
 const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
 if (low) { f.target = low; return low; }
@@ -10576,16 +10580,18 @@ return;
 }
 M.phase = 'ko'; M.t = 0; M.koWinner = is2v2() ? att.idx % 2 : att.idx; ev.ko = true;
 }
+function hitStopOf(ev, att) {
+if (ev.guardBreak) { hitstop = Math.max(hitstop, 0.22); return; }
+if (ev.blk) { hitstop = ev.hs * 0.7; return; }
+if (ev.armor) { hitstop = Math.max(hitstop, ev.hs * 0.6); return; }
+if (ev.counter) hitstop = Math.max(hitstop, 0.18);
+hitstop = Math.max(hitstop, ev.hs * (att.ch.hitFeel || 1));
+if (ev.ko) hitstop = 0.28;
+}
 function hitVisual(ev, quiet) {
 const att = fighterByIdx(ev.a), def = fighterByIdx(ev.d);
-if (RESIM) {   // 重算：只保留影响对战的顿帧
-if (ev.guardBreak) hitstop = 0.22;
-else if (ev.blk) hitstop = ev.hs * 0.7;
-else if (ev.armor) hitstop = Math.max(hitstop, ev.hs * 0.6);
-else hitstop = Math.max(hitstop, ev.hs * (att.ch.hitFeel || 1));
-if (ev.ko && !ev.blk && !ev.armor) hitstop = 0.28;   // 击杀的顿帧也会影响对战，重算时不能漏掉
-return;
-}
+if (RESIM) { hitStopOf(ev, att); return; }   // 重算：只保留影响对战的顿帧
+if (!quiet) hitStopOf(ev, att);
 if (quiet) {   // 效果已经提前播过了，只更新连击数
 if (!ev.blk && !ev.armor && !ev.nc) { const cu = comboUI[ev.a]; if (cu.t <= 0 || ev.cn === 1) { cu.n = 0; cu.dmg = 0; } cu.n = ev.cn; cu.dmg += ev.dd; cu.t = 1.4; }
 def.lagDelay = 0.5; return;
@@ -10595,24 +10601,23 @@ shake = Math.max(shake, 18); flashA = Math.max(flashA, 0.4); flashRGB = '255,100
 ring(ev.x, ev.y, 160, '255,120,80', 0.45);
 addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
 SFX.heavy();
-hitstop = Math.max(hitstop, 0.22);
 return;
 }
 if (ev.wb) { ring(ev.x, ev.y, 80, '255,255,255', 0.3); SFX.block(); }
 const fdir = ev.f || att.face;
 if (ev.blk) {
-hitstop = ev.hs * 0.7; shake = Math.max(shake, 3);
+shake = Math.max(shake, 3);
 blockFX(ev.x, ev.y, fdir); SFX.block();
 return;
 }
 if (ev.armor) {
-def.flash = 0.06; def.lagDelay = 0.5; hitstop = Math.max(hitstop, ev.hs * 0.6); shake = Math.max(shake, 4);
+def.flash = 0.06; def.lagDelay = 0.5; shake = Math.max(shake, 4);
 ring(ev.x, ev.y, 46, '255,215,120', 0.22); blockFX(ev.x, ev.y, fdir); SFX.block();
 addP({ type: 'text', text: '霸体', x: def.x, y: def.y - 130 * def.size, life: 0.55, max: 0.55, rgb: '255,215,120' });
 return;
 }
 if (ev.counter && !quiet) {
-flashA = Math.max(flashA, 0.38); flashRGB = '255,60,50'; shake = Math.max(shake, 14); hitstop = Math.max(hitstop, 0.18);
+flashA = Math.max(flashA, 0.38); flashRGB = '255,60,50'; shake = Math.max(shake, 14);
 camImpact(ev.x, ev.y, 0.24, 0.40);
 addP({ type: 'callout', text: '破', x: ev.x, y: ev.y - 85, life: 0.75, max: 0.75, rgb: '255,75,55', scale: 2.4 });
 ring(ev.x, ev.y, 65, '255,75,55', 0.28);
@@ -10624,7 +10629,6 @@ cu.n = ev.cn; cu.dmg += ev.dd; cu.t = 1.4;
 }
 def.flash = 0.09; def.lagDelay = 0.5;
 const feel = att.ch.hitFeel || 1;                 // 卡肉感：重武器停顿更久
-hitstop = Math.max(hitstop, ev.hs * feel);
 shake = Math.max(shake, ev.hs * 80 * feel);
 shakeDirX = fdir * Math.min(18, ev.hs * 60 * feel);
 shakeDirY = ev.y < -60 ? -Math.min(12, ev.hs * 35 * feel) : Math.min(12, ev.hs * 35 * feel);
@@ -10689,7 +10693,7 @@ const pitch = att && att.ch && att.ch.stat && att.ch.stat.weight > 1.1 ? 0.85 : 
 if (Math.random() < 0.45) SFX.voiceHurt(pitch);
 }
 if (ev.ko) {
-slowmo = 1.3; hitstop = 0.28; shake = 26; flashA = 0.7; flashRGB = '255,255,255';
+slowmo = 1.3; shake = 26; flashA = 0.7; flashRGB = '255,255,255';
 camImpact(ev.x, ev.y, 0.42, 1.4);
 say('斩', 1.6, 'ko'); SFX.ko(); SFX.voiceHurt(0.75);
 }
@@ -18325,24 +18329,53 @@ for (const k in o) { if (k === 'hasMove' || k === 'tgt') continue; const v = o[k
 f.move = o.hasMove && f.moveName ? f.moves[f.moveName] : null;
 f.target = o.tgt >= 0 ? fighterByIdx(o.tgt) : null;
 }
-function capC(c) { return { h: { ...c.held }, b: { ...c.buf }, a: c.atkT }; }
-function resC(c, o) { c.held = { ...o.h }; c.buf = { ...o.b }; c.atkT = o.a; }
+const BRAIN_SKIP = new Set(['c', 'me', 'foe', 'L', 'debug', 'geneOverride']);
+function brainOut(v) {
+if (v === null || typeof v !== 'object') return v;
+if (v instanceof Fighter) return { __f: v.idx };
+if (v.isProj) return { __p: v.id };
+if (ArrayBuffer.isView(v)) return { __ta: Array.from(v) };
+if (Array.isArray(v)) return v.map(brainOut);
+const o = {}; for (const k in v) if (typeof v[k] !== 'function') o[k] = brainOut(v[k]); return o;
+}
+function brainIn(v) {
+if (v === null || typeof v !== 'object') return v;
+if (Array.isArray(v)) return v.map(brainIn);
+if ('__f' in v) return fighterByIdx(v.__f);
+if ('__p' in v) return projs.find(q => q.id === v.__p) || { isProj: true, id: v.__p, gone: true };   // 那颗已经没了：留个同编号的空壳，谁都不等于它
+if ('__ta' in v) return Float32Array.from(v.__ta);
+const o = {}; for (const k in v) o[k] = brainIn(v[k]); return o;
+}
+function capBrain(br) {
+const o = {};
+for (const k in br) { if (BRAIN_SKIP.has(k) || typeof br[k] === 'function') continue; o[k] = brainOut(br[k]); }
+return o;
+}
+function resBrain(br, o) {
+for (const k in br) if (!BRAIN_SKIP.has(k) && typeof br[k] !== 'function' && !(k in o)) delete br[k];
+for (const k in o) { const v = brainIn(o[k]); if (k === 'model') Object.assign(br.model, v); else br[k] = v; }
+}
+function capC(c) { const o = { h: { ...c.held }, b: { ...c.buf }, a: c.atkT }; if (c.brain) o.br = capBrain(c.brain); return o; }
+function resC(c, o) { c.held = { ...o.h }; c.buf = { ...o.b }; c.atkT = o.a; if (c.brain && o.br) resBrain(c.brain, o.br); }
 function capState() {
+const fs = allFighters();
 const st = { clock, hitstop, superFreeze, so: superOwner ? superOwner.idx : -1, projSeq, rng: GRNG.s,
-a: capF(A), b: capF(B), projs: jclone(projs), decoys: jclone(decoys), M: jclone(M), c: [capC(A.ctrl), capC(B.ctrl)] };
+f: fs.map(capF), projs: jclone(projs), decoys: jclone(decoys), M: jclone(M), c: fs.map(f => capC(f.ctrl)) };
+if (fs.length > 2) { const { scars, ...arena } = ARENA2V2; st.arena = jclone(arena); }   // 地上焦痕只是画面（颜色跟着各自看到的皮肤）
 return st;
 }
 function restState(st) {
 clock = st.clock; hitstop = st.hitstop; superFreeze = st.superFreeze; superOwner = st.so >= 0 ? fighterByIdx(st.so) : null;
 projSeq = st.projSeq; GRNG.s = st.rng;
-resF(A, st.a); resF(B, st.b);
+st.f.forEach((o, i) => resF(fighterByIdx(i), o));
 projs.length = 0; for (const q of jclone(st.projs)) projs.push(q);
 decoys.length = 0; for (const q of jclone(st.decoys)) decoys.push(q);
 for (const k of Object.keys(M)) delete M[k]; Object.assign(M, jclone(st.M));
-resC(A.ctrl, st.c[0]); resC(B.ctrl, st.c[1]);
+st.c.forEach((o, i) => resC(fighterByIdx(i).ctrl, o));
+if (st.arena) Object.assign(ARENA2V2, jclone(st.arena));
 }
 function hashState(st) {
-const txt = JSON.stringify(st, (k, v) => typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
+const txt = JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);   // sk 是画面上的骨架（残影里也带着），不算
 let h = 2166136261; for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
 return h >>> 0;
 }
@@ -18357,15 +18390,36 @@ if (a === 'skill2' && c.held.atk) { c.atkT = clock + 1e6; delete c.buf.light; }
 c.press(a);
 }
 }
+function netSlots() {
+if (netRoomMode === 'pp_cc') return [[0], [2]];
+if (netRoomMode === 'pp_pp') return [[0, 2], [1, 3]];
+return [[0], [1]];
+}
+function slotInput(inp, k) {
+if (!k) return inp.p.some(a => a[0] === '2') ? { h: inp.h & 255, p: inp.p.filter(a => a[0] !== '2') } : (inp.h > 255 ? { h: inp.h & 255, p: inp.p } : inp);
+return { h: (inp.h >> 8) & 255, p: inp.p.filter(a => a[0] === '2').map(a => a.slice(1)) };
+}
+function localInput() {
+let h = inBits(human[0].held), pr = NET.presses.splice(0);
+if (ROLL.slots && ROLL.slots[NET.role === 'client' ? 1 : 0].length > 1) {
+h |= inBits(human[1].held) << 8;
+pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
+} else NET.presses2.length = 0;
+return { h, p: pr };
+}
 function rollStart(ch, seed, duo) {
 refocusGame();
 setChars(ch[0], ch[1]);
 if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
 setupNetMatch();
 if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
-ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
-human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
+ROLL.slots = netSlots(); ROLL.ctrls = [];
+for (const f of allFighters()) {
+if (ROLL.slots[0].includes(f.idx) || ROLL.slots[1].includes(f.idx)) { const c = new Ctrl(); c.net = true; ROLL.ctrls[f.idx] = c; f.ctrl = c; }
+else f.ctrl = new AICtrl(M.level || 'god');
+}
+human[0].clear(); human[1].clear(); NET.presses.length = 0; NET.presses2.length = 0; human[0].rec = NET.presses; human[1].rec = NET.presses2;
+for (const f of allFighters()) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
 clock = 0; projSeq = 0; GRNG.s = seed | 0;
 ROLL.lastMid = ROLL.mid;
 Object.assign(ROLL, { on: true, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
@@ -18385,20 +18439,21 @@ const R = ROLL;
 R.snaps[f % R.N] = { f, st: capState() };
 const li = R.loc[f] || EMPTY_IN, ri = f <= R.remLast ? (R.rem[f] || { h: R.lastRemH, p: [] }) : { h: R.lastRemH, p: [] };
 R.used[f] = ri;
-const me = localIdx();
-applyInput([A, B][me].ctrl, li); applyInput([A, B][1 - me].ctrl, ri);
+const side = NET.role === 'client' ? 1 : 0;
+R.slots[side].forEach((idx, k) => applyInput(R.ctrls[idx], slotInput(li, k)));
+R.slots[1 - side].forEach((idx, k) => applyInput(R.ctrls[idx], slotInput(ri, k)));
 step();
 }
 function rollResim() {
 const R = ROLL, from = R.pend; R.pend = Infinity;
 const sn = R.snaps[from % R.N];
 if (!sn || sn.f !== from) { if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1, m: R.mid }); return; }
-const pre = [A.x, A.y, B.x, B.y];
+const fs = allFighters(), pre = fs.map(f => [f.x, f.y]);
 restState(sn.st);
 RESIM = true;
 try { for (let f = from; f < R.F; f++) rollFrame(f); } finally { RESIM = false; }
 R.rollbacks++; R.rbFrames += R.F - from;
-[A, B].forEach((f, i) => { const dx = pre[i * 2] - f.x, dy = pre[i * 2 + 1] - f.y; if (Math.abs(dx) < 140 && Math.abs(dy) < 140) { f.vox = (f.vox || 0) + dx; f.voy = (f.voy || 0) + dy; } });
+fs.forEach((f, i) => { const dx = pre[i][0] - f.x, dy = pre[i][1] - f.y; if (Math.abs(dx) < 140 && Math.abs(dy) < 140) { f.vox = (f.vox || 0) + dx; f.voy = (f.voy || 0) + dy; } });
 }
 function rollAdvance() {
 const R = ROLL;
@@ -18410,7 +18465,7 @@ R.stall = 0;
 if (R.pend < R.F) rollResim();
 const fi = R.F + R.D;
 if (fi > R.locMax) {                                                      // 记录本地按键（D 帧后生效）
-const h = inBits(human[0].held), pr = NET.presses.splice(0);
+const { h, p: pr } = localInput();
 for (let x = R.locMax + 1; x < fi; x++) R.loc[x] = { h: R.lastSentH, p: [] };
 R.loc[fi] = { h, p: pr }; R.locMax = fi;
 if (h !== R.lastSentH || pr.length) { R.out.push([fi, h, ...pr]); R.lastSentH = h; }
@@ -22630,7 +22685,7 @@ if (M.mode === 'pvp') {
 c = human[p] || human[0];
 } else if (M.mode === '2v2' || is2v2()) {
 if (M.subMode === 'pp_cc') {
-c = p === 1 ? human[1] : human[0];
+c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
 } else if (M.subMode === 'pp_pp') {
 c = human[p] || human[0];
 } else {
@@ -22653,7 +22708,7 @@ if (M.mode === 'pvp') {
 c = human[p] || human[0];
 } else if (M.mode === '2v2' || is2v2()) {
 if (M.subMode === 'pp_cc') {
-c = p === 1 ? human[1] : human[0];
+c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
 } else if (M.subMode === 'pp_pp') {
 c = human[p] || human[0];
 } else {

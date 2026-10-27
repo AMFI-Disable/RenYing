@@ -177,24 +177,56 @@ function resF(f, o) {
   f.move = o.hasMove && f.moveName ? f.moves[f.moveName] : null;
   f.target = o.tgt >= 0 ? fighterByIdx(o.tgt) : null;
 }
-function capC(c) { return { h: { ...c.held }, b: { ...c.buf }, a: c.atkT }; }
-function resC(c, o) { c.held = { ...o.h }; c.buf = { ...o.b }; c.atkT = o.a; }
+// 电脑侠客的“脑子”也得进存档（2v2 联机里有电脑）：回滚重算时它得想出和第一次一模一样的招
+// 它记着的人和飞行道具按序号存（不然存档会把整个对手连同对手的脑子一起拷一遍，还会绕圈），对位图的数字表照原样拷
+const BRAIN_SKIP = new Set(['c', 'me', 'foe', 'L', 'debug', 'geneOverride']);
+function brainOut(v) {
+  if (v === null || typeof v !== 'object') return v;
+  if (v instanceof Fighter) return { __f: v.idx };
+  if (v.isProj) return { __p: v.id };
+  if (ArrayBuffer.isView(v)) return { __ta: Array.from(v) };
+  if (Array.isArray(v)) return v.map(brainOut);
+  const o = {}; for (const k in v) if (typeof v[k] !== 'function') o[k] = brainOut(v[k]); return o;
+}
+function brainIn(v) {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(brainIn);
+  if ('__f' in v) return fighterByIdx(v.__f);
+  if ('__p' in v) return projs.find(q => q.id === v.__p) || { isProj: true, id: v.__p, gone: true };   // 那颗已经没了：留个同编号的空壳，谁都不等于它
+  if ('__ta' in v) return Float32Array.from(v.__ta);
+  const o = {}; for (const k in v) o[k] = brainIn(v[k]); return o;
+}
+function capBrain(br) {
+  const o = {};
+  for (const k in br) { if (BRAIN_SKIP.has(k) || typeof br[k] === 'function') continue; o[k] = brainOut(br[k]); }
+  return o;
+}
+function resBrain(br, o) {
+  for (const k in br) if (!BRAIN_SKIP.has(k) && typeof br[k] !== 'function' && !(k in o)) delete br[k];
+  for (const k in o) { const v = brainIn(o[k]); if (k === 'model') Object.assign(br.model, v); else br[k] = v; }
+}
+function capC(c) { const o = { h: { ...c.held }, b: { ...c.buf }, a: c.atkT }; if (c.brain) o.br = capBrain(c.brain); return o; }
+function resC(c, o) { c.held = { ...o.h }; c.buf = { ...o.b }; c.atkT = o.a; if (c.brain && o.br) resBrain(c.brain, o.br); }
+// 2v2 联机时场上四个人、擂台机关都要进存档，1v1 只存两个人
 function capState() {
+  const fs = allFighters();
   const st = { clock, hitstop, superFreeze, so: superOwner ? superOwner.idx : -1, projSeq, rng: GRNG.s,
-    a: capF(A), b: capF(B), projs: jclone(projs), decoys: jclone(decoys), M: jclone(M), c: [capC(A.ctrl), capC(B.ctrl)] };
+    f: fs.map(capF), projs: jclone(projs), decoys: jclone(decoys), M: jclone(M), c: fs.map(f => capC(f.ctrl)) };
+  if (fs.length > 2) { const { scars, ...arena } = ARENA2V2; st.arena = jclone(arena); }   // 地上焦痕只是画面（颜色跟着各自看到的皮肤）
   return st;
 }
 function restState(st) {
   clock = st.clock; hitstop = st.hitstop; superFreeze = st.superFreeze; superOwner = st.so >= 0 ? fighterByIdx(st.so) : null;
   projSeq = st.projSeq; GRNG.s = st.rng;
-  resF(A, st.a); resF(B, st.b);
+  st.f.forEach((o, i) => resF(fighterByIdx(i), o));
   projs.length = 0; for (const q of jclone(st.projs)) projs.push(q);
   decoys.length = 0; for (const q of jclone(st.decoys)) decoys.push(q);
   for (const k of Object.keys(M)) delete M[k]; Object.assign(M, jclone(st.M));
-  resC(A.ctrl, st.c[0]); resC(B.ctrl, st.c[1]);
+  st.c.forEach((o, i) => resC(fighterByIdx(i).ctrl, o));
+  if (st.arena) Object.assign(ARENA2V2, jclone(st.arena));
 }
 function hashState(st) {
-  const txt = JSON.stringify(st, (k, v) => typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
+  const txt = JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);   // sk 是画面上的骨架（残影里也带着），不算
   let h = 2166136261; for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
   return h >>> 0;
 }
@@ -209,15 +241,39 @@ function applyInput(c, inp) {
     c.press(a);
   }
 }
+// 每台电脑操控哪几个人（fighter 序号）：[房主, 加入的人]。四人切磋一台电脑两个人（1P 键位和 2P 键位）
+function netSlots() {
+  if (netRoomMode === 'pp_cc') return [[0], [2]];
+  if (netRoomMode === 'pp_pp') return [[0, 2], [1, 3]];
+  return [[0], [1]];
+}
+// 一帧的按键里拆出第 k 个人的：按住的键每人 8 位，按下的键第二个人带前缀 "2"
+function slotInput(inp, k) {
+  if (!k) return inp.p.some(a => a[0] === '2') ? { h: inp.h & 255, p: inp.p.filter(a => a[0] !== '2') } : (inp.h > 255 ? { h: inp.h & 255, p: inp.p } : inp);
+  return { h: (inp.h >> 8) & 255, p: inp.p.filter(a => a[0] === '2').map(a => a.slice(1)) };
+}
+function localInput() {
+  let h = inBits(human[0].held), pr = NET.presses.splice(0);
+  if (ROLL.slots && ROLL.slots[NET.role === 'client' ? 1 : 0].length > 1) {
+    h |= inBits(human[1].held) << 8;
+    pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
+  } else NET.presses2.length = 0;
+  return { h, p: pr };
+}
 function rollStart(ch, seed, duo) {
   refocusGame();
   setChars(ch[0], ch[1]);
   if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
   setupNetMatch();
   if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
-  ROLL.ctrls = [new Ctrl(), new Ctrl()]; A.ctrl = ROLL.ctrls[0]; B.ctrl = ROLL.ctrls[1];
-  human[0].clear(); NET.presses.length = 0; human[0].rec = NET.presses;
-  for (const f of [A, B]) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
+  // 两边用同一套操控：玩家的人只听回滚记下的按键，其余的人（2v2 里）是两边各跑一份、一模一样的电脑
+  ROLL.slots = netSlots(); ROLL.ctrls = [];
+  for (const f of allFighters()) {
+    if (ROLL.slots[0].includes(f.idx) || ROLL.slots[1].includes(f.idx)) { const c = new Ctrl(); c.net = true; ROLL.ctrls[f.idx] = c; f.ctrl = c; }
+    else f.ctrl = new AICtrl(M.level || 'god');
+  }
+  human[0].clear(); human[1].clear(); NET.presses.length = 0; NET.presses2.length = 0; human[0].rec = NET.presses; human[1].rec = NET.presses2;
+  for (const f of allFighters()) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
   clock = 0; projSeq = 0; GRNG.s = seed | 0;
   ROLL.lastMid = ROLL.mid;
   Object.assign(ROLL, { on: true, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
@@ -237,21 +293,22 @@ function rollFrame(f) {
   R.snaps[f % R.N] = { f, st: capState() };
   const li = R.loc[f] || EMPTY_IN, ri = f <= R.remLast ? (R.rem[f] || { h: R.lastRemH, p: [] }) : { h: R.lastRemH, p: [] };
   R.used[f] = ri;
-  const me = localIdx();
-  applyInput([A, B][me].ctrl, li); applyInput([A, B][1 - me].ctrl, ri);
+  const side = NET.role === 'client' ? 1 : 0;
+  R.slots[side].forEach((idx, k) => applyInput(R.ctrls[idx], slotInput(li, k)));
+  R.slots[1 - side].forEach((idx, k) => applyInput(R.ctrls[idx], slotInput(ri, k)));
   step();
 }
 function rollResim() {
   const R = ROLL, from = R.pend; R.pend = Infinity;
   const sn = R.snaps[from % R.N];
   if (!sn || sn.f !== from) { if (NET.role === 'host') rollSendSync(); else send({ rdesync: 1, m: R.mid }); return; }
-  const pre = [A.x, A.y, B.x, B.y];
+  const fs = allFighters(), pre = fs.map(f => [f.x, f.y]);
   restState(sn.st);
   RESIM = true;
   try { for (let f = from; f < R.F; f++) rollFrame(f); } finally { RESIM = false; }
   R.rollbacks++; R.rbFrames += R.F - from;
   // 画面上从旧位置平滑滑到新位置
-  [A, B].forEach((f, i) => { const dx = pre[i * 2] - f.x, dy = pre[i * 2 + 1] - f.y; if (Math.abs(dx) < 140 && Math.abs(dy) < 140) { f.vox = (f.vox || 0) + dx; f.voy = (f.voy || 0) + dy; } });
+  fs.forEach((f, i) => { const dx = pre[i][0] - f.x, dy = pre[i][1] - f.y; if (Math.abs(dx) < 140 && Math.abs(dy) < 140) { f.vox = (f.vox || 0) + dx; f.voy = (f.voy || 0) + dy; } });
 }
 function rollAdvance() {
   const R = ROLL;
@@ -263,7 +320,7 @@ function rollAdvance() {
   if (R.pend < R.F) rollResim();
   const fi = R.F + R.D;
   if (fi > R.locMax) {                                                      // 记录本地按键（D 帧后生效）
-    const h = inBits(human[0].held), pr = NET.presses.splice(0);
+    const { h, p: pr } = localInput();
     for (let x = R.locMax + 1; x < fi; x++) R.loc[x] = { h: R.lastSentH, p: [] };
     R.loc[fi] = { h, p: pr }; R.locMax = fi;
     if (h !== R.lastSentH || pr.length) { R.out.push([fi, h, ...pr]); R.lastSentH = h; }

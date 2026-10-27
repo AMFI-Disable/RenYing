@@ -445,6 +445,11 @@ const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
 class AICtrl extends Ctrl {
   constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
   updateTactic() { this.brain.newRound(); }
-  think(me, foe) { this.brain.think(me, foe); }
+  think(me, foe) {
+    // 联机回滚时两边各跑一份电脑，必须掷出同样的骰子：想招这一下借用对局随机数（会进存档），想完换回来
+    if (!(ROLL.on && M.mode === 'net')) return this.brain.think(me, foe);
+    const r0 = Math.random; Math.random = grnd;
+    try { this.brain.think(me, foe); } finally { Math.random = r0; }
+  }
 }
 
