@@ -906,7 +906,7 @@ function render() {
     : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
   drawDecoys();
   drawProjs();
-  if (WORLD.on) drawWorldGhosts();
+  if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
   for (const f of order) {
     if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
       const keep = f.look;

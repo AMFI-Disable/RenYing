@@ -1312,12 +1312,13 @@ const RG = {
   JIE: 5, VOTE_T: 15, PERK_MAX: 8, EMPTY_RESET: 10 * 60e3,
   NEED0: 20, NEED_PER: 5, NEED_MAX: 150, CYC_HP: 0.15, CYC_HP_MAX: 3,   // 每劫要斩几只：20 + 每人 5 只；每过一轮妖物血量 +15%
   BOSS_MIN: 3, BOSS_HP: 1500, BOSS_T: 180,                              // 几个真人打 Boss、Boss 每人份的血、限时（秒）
+  TRIO_T: 420,                                                          // 真人不够时改打 3 位天道 AI 的车轮战，限时（秒）
   KEY_DPS: 90, KEY_HIT_MAX: 600,                                        // 关键战伤害封顶：开战秒数 × 每秒上限，一次最多交多少
   ZOD_PER_DAY: 1, MIN_AGE_H: 24, MIN_JIE: 3, MIN_SHARE: 0.25, INK: 200, // 星座皮肤：每号每天几件、注册满几小时、这一轮至少在场几劫、伤害至少平均份额的几成、附带墨锭
   // 可以抽到的秘卷：src/game/22-scrolls.js 里不分侠客的凡品、精品、绝品（tools/world-test.mjs 会核对这些编号都还在）
   PERKS: ['ink_resonance', 'storm_wrath', 'air_burst', 'ink_blade', 'first_blood', 'executioner', 'giant_slayer', 'crescendo', 'heavy_hand', 'needle_rain', 'counter_master', 'backstab', 'sniper', 'brawler', 'momentum', 'crit_eye', 'lethal_rhythm', 'sunder', 'double_strike', 'shockwave', 'ult_amp', 'piercing_wind', 'golden_bell', 'parry_refresh', 'iron_skin', 'thorns', 'last_stand', 'guard_wall', 'retaliation', 'second_wind', 'evasion', 'stone_stance', 'aegis', 'counter_guard', 'jg_window', 'meditation', 'bulwark', 'proj_ward', 'ult_resist', 'after_armor', 'lifeline', 'recoil_guard', 'thunder_dash', 'sky_master', 'swift_feet', 'phantom_step', 'jump_guard', 'dash_strike', 'aerial_ace', 'feather_fall', 'jg_blink', 'wind_runner', 'dash_cd', 'slipstream', 'air_reset', 'ground_slam', 'escape_meter', 'sidestep', 'light_cdr', 'skill_echo', 'haste', 'ult_cdr', 'alternate', 'break_reset', 'hurt_cdr', 'full_meter_cdr', 'low_hp_haste', 'patient_power', 'jg_escape', 'combo_cdr', 'link_skill', 'opening_haste', 'cd_shield', 'flow_combo', 'meter_start', 'meter_block', 'meter_drain', 'meter_heal', 'ult_refund', 'meter_power', 'jg_meter', 'meter_shield', 'overflow', 'meter_bank', 'foe_meter_cut', 'ult_heal', 'guard_regen', 'fury', 'full_hp', 'berserker', 'far_reach', 'wall_pin', 'clutch', 'opener', 'untouched', 'juggler', 'low_leech', 'stance_switch', 'stun_bonus', 'block_punish', 'full_meter_foe', 'odd_even', 'heat', 'frost_lock', 'bleed_rend', 'venom', 'virulent', 'ignite', 'wildfire', 'shatter', 'hemorrhage', 'marked_prey', 'static', 'weaken', 'expose', 'root_strike', 'plague', 'cauterize', 'toxic_guard', 'frost_aura', 'chill_proj', 'frost_armor', 'deep_freeze', 'chain_lightning', 'thunder_mark', 'overcharge', 'storm_guard', 'charge_break', 'proj_absorb', 'listen_wind', 'skill_heal', 'guard_crush', 'after_skill_light', 'pressure', 'escape_strike', 'jg_heal'],
 };
-const rgNew = () => ({ cyc: 1, jie: 1, got: 0, need: RG.NEED0, perks: [], vote: null, key: null, wait: false, seq: 0 });
+const rgNew = () => ({ cyc: 1, jie: 1, got: 0, need: RG.NEED0, perks: [], vote: null, key: null, seq: 0 });
 const ZOD_KEYS = () => Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
 const wlNum = (v, lo, hi, d = 0) => { v = +v; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
 const wlStr = v => (typeof v === 'string' && /^[a-z0-9_]{0,16}$/i.test(v) ? v : '');
@@ -1353,6 +1354,7 @@ class WorldSim {
     p.st = wlStr(s.st) || 'idle'; p.tt = wlNum(s.tt, 0, 60); p.mv = wlStr(s.mv); p.sk = wlStr(s.sk); p.sp = wlStr(s.sp); p.ph = wlNum(s.ph, 0, 9) | 0;
     p.mh = wlNum(s.mh, 1, 9999, 100); p.hp = wlNum(s.hp, 0, p.mh, p.mh);
     p.inKey = !!(s.kf && this.run.key);   // 在打关键战：妖物不追他
+    if (p.inKey) this.run.key.in[id] = 1;
     if (C.HERO_IDS.includes(s.ch) && s.ch !== p.ch) { p.ch = s.ch; p.skin = ''; this.events.push({ t: 'j', p: this.meta(p), x: p.x }); }
     p.seen = this.t;
     return true;
@@ -1382,7 +1384,7 @@ class WorldSim {
       this.sinceBoss++;
       this.events.push({ t: 'x', m: m.id, by: p.id, x: m.x });
       const R = this.run;
-      if (!R.vote && !R.key && !R.wait && R.got < R.need) { R.got++; if (R.got >= R.need) this.jieDone(); }
+      if (!R.vote && !R.key && R.got < R.need) { R.got++; if (R.got >= R.need) this.jieDone(); }
     }
   }
   zoneOf(x) { const i = WL.ZONES.findIndex(z => x < z.b); return i < 0 ? WL.ZONES.length - 1 : i; }
@@ -1512,7 +1514,7 @@ class WorldSim {
   rgView(id) {
     const R = this.run, v = R.vote, k = R.key, me = this.players.get(id);
     return {
-      c: R.cyc, j: R.jie, g: R.got, nd: R.need, pk: R.perks, n: this.real(), w: R.wait ? RG.BOSS_MIN : 0,
+      c: R.cyc, j: R.jie, g: R.got, nd: R.need, pk: R.perks, n: this.real(),
       v: v ? { o: v.opts, u: Math.max(0, Math.ceil(v.until - this.t)), n: v.opts.map((_, i) => Object.values(v.votes).filter(x => x === i).length), my: v.votes[id] === undefined ? -1 : v.votes[id] } : null,
       k: k ? { kind: k.kind, s: k.seq, h: k.heroes, hp: Math.ceil(k.hp), mh: k.mh, u: Math.max(0, Math.ceil(k.until - this.t)), my: me ? Math.round(me.keyDmg) : 0 } : null,
     };
@@ -1547,18 +1549,27 @@ class WorldSim {
     this.events.push({ t: 'rp', pick, perks: R.perks, j: R.jie, all: true });
     this.dirty = true;
   }
+  // 最后一劫斩完开关键战：线上真人够 RG.BOSS_MIN 位打天道 Boss（血量全线共享，赢了发星座皮肤）；
+  // 不够就各自打一场 3v3 车轮战，对面是 3 位天道 AI（不发皮肤）。两种打完秘卷都保留，进下一轮
   startKey() {
-    const R = this.run, n = this.real();
-    if (n < RG.BOSS_MIN) { if (!R.wait) { R.wait = true; this.events.push({ t: 'rw', need: RG.BOSS_MIN, all: true }); } return; }
-    R.wait = false;
+    const R = this.run, n = this.real(), boss = n >= RG.BOSS_MIN;
     const bag = C.HERO_IDS.slice(), heroes = [];
     while (heroes.length < 3) heroes.push(bag.splice((this.rnd() * bag.length) | 0, 1)[0]);
-    const mh = RG.BOSS_HP * n;
-    R.key = { kind: 'boss', seq: ++R.seq, heroes, mh, hp: mh, t0: this.t, until: this.t + RG.BOSS_T, dmg: {} };
+    const mh = boss ? RG.BOSS_HP * n : 0, T = boss ? RG.BOSS_T : RG.TRIO_T;
+    R.key = { kind: boss ? 'boss' : 'trio', seq: ++R.seq, heroes, mh, hp: mh, t0: this.t, until: this.t + T, dmg: {}, in: {}, rep: {} };
     for (const p of this.players.values()) { p.keyDmg = 0; p.keyIn = this.t; }
     this.mons.length = 0; this.boss = null;
-    this.events.push({ t: 'ks', all: true });
+    this.events.push({ t: 'ks', kind: R.key.kind, all: true });
     this.dirty = true;
+  }
+  // 车轮战打完了：网页报输赢。进过场的人都报了（走了的不等）就收场，有一个人赢了就算赢
+  keyReport(id, seq, w) {
+    const k = this.run.key;
+    if (!k || k.kind !== 'trio' || k.seq !== +seq || !this.players.has(id) || id in k.rep) return false;
+    k.rep[id] = w ? 1 : 0; k.in[id] = 1;
+    const left = Object.keys(k.in).filter(x => this.players.has(+x) && !(x in k.rep));
+    if (!left.length) this.endKey(Object.values(k.rep).some(Boolean));
+    return true;
   }
   // 关键战里交伤害：要是这一场、开战（或进场）三秒后才算，总数不超过 (进场秒数 - 3) × 每秒上限
   keyHit(id, seq, d) {
@@ -1581,7 +1592,7 @@ class WorldSim {
         const p = [...this.players.values()].find(q => (q.uid || 'g' + q.id) === w); return [p ? p.name : '已离开的侠客', Math.round(n)];
       });
       if (win) this.payout(k);
-    }
+    } else top = Object.entries(k.rep).filter(([, w]) => w).slice(0, 5).map(([id]) => { const p = this.players.get(+id); return [p ? p.name : '已离开的侠客', 1]; });
     this.events.push({ t: 'ke', kind: k.kind, win: !!win, top, all: true });
     R.key = null; R.cyc++; R.jie = 1; R.got = 0; R.need = this.needOf();   // 秘卷保留，下一轮
     for (const p of this.players.values()) { p.jies = 0; p.keyDmg = 0; }
@@ -1601,8 +1612,9 @@ class WorldSim {
   rgStep() {
     const R = this.run;
     if (R.vote && this.t >= R.vote.until) this.endVote();
-    if (R.wait && this.real() >= RG.BOSS_MIN) this.startKey();
-    if (R.key && this.t >= R.key.until) this.endKey(false);
+    const k = R.key;
+    if (k && k.kind === 'trio' && Object.keys(k.rep).length && Object.keys(k.in).every(x => x in k.rep || !this.players.has(+x))) this.endKey(Object.values(k.rep).some(Boolean));   // 没报的人走了
+    else if (k && this.t >= k.until) this.endKey(false);
   }
   // 存进 Durable Object 存储 / 从存储读回来（关键战不存：重启就算这一场没打完）
   saveRun() { const R = this.run; return { cyc: R.cyc, jie: R.jie, got: R.got, need: R.need, perks: R.perks.slice(), seq: R.seq, at: Date.now() }; }
@@ -1610,6 +1622,7 @@ class WorldSim {
     if (!o || Date.now() - (+o.at || 0) > RG.EMPTY_RESET) return;
     const R = this.run;
     R.cyc = wlNum(o.cyc, 1, 1e6, 1) | 0; R.jie = wlNum(o.jie, 1, RG.JIE, 1) | 0; R.got = wlNum(o.got, 0, RG.NEED_MAX, 0) | 0; R.need = wlNum(o.need, 1, RG.NEED_MAX, RG.NEED0) | 0;
+    if (R.got >= R.need) R.got = R.need - 1;   // 存档时正在打关键战（关键战不存）：再斩一只就重开
     R.perks = Array.isArray(o.perks) ? o.perks.filter(id => RG.PERKS.includes(id)).slice(-RG.PERK_MAX) : []; R.seq = wlNum(o.seq, 0, 1e9, 0) | 0;
   }
   // 这一拍的事件谁该收到：全线播报的人人都收，其余只发给附近的侠客
@@ -1660,6 +1673,7 @@ export class WorldLine {
     if ((o.t === 's' || o.t === 'h') && Array.isArray(o.h)) for (const h of o.h.slice(0, 12)) if (Array.isArray(h)) sim.hit(a.id, +h[0], +h[1]);
     if (o.t === 'v') sim.vote(a.id, o.i);
     if (o.t === 'kd') sim.keyHit(a.id, o.s, o.d);
+    if (o.t === 'kr') sim.keyReport(a.id, o.s, o.w);
   }
   // 登录令牌 → 云端账号（和 HTTP 接口同一张 sessions 表）；被封的号不认
   async auth(id, tk) {

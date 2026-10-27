@@ -564,7 +564,7 @@ function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
-  if (M.worldKey) { worldKeyRound(w); return; }   // 全服肉鸽的关键战：结果和奖励都以服务器为准，这里不加墨锭
+  if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
   if (M.mode === 'saga') { sagaEnd(w); return; }
   if (isRaid()) {
     if (w === 0) {

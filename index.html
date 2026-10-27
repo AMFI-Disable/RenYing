@@ -4931,6 +4931,10 @@ init();
 (function() {
 'use strict';
 const DICT_EN = {
+"全服肉鸽 · 关键战": "Server Roguelike · Key Fight",
+"天道车轮战": "Tiandao Relay",
+"车轮战告捷": "Relay Won",
+"车轮战落败": "Relay Lost",
 "全服肉鸽 · 随时加入": "Server Roguelike · Join Anytime",
 "全服共享秘卷 · 齐心讨天道": "Shared Scrolls · Take Down the Tiandao Boss",
 "随时进 · 3 人开天道 Boss 掉星座皮肤": "Join anytime · 3 players open the Tiandao Boss for a Zodiac skin",
@@ -10038,7 +10042,7 @@ function endRound() {
 const w = M.koWinner;
 if (w >= 0) M.wins[w]++;
 if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
-if (M.worldKey) { worldKeyRound(w); return; }   // 全服肉鸽的关键战：结果和奖励都以服务器为准，这里不加墨锭
+if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
 if (M.mode === 'saga') { sagaEnd(w); return; }
 if (isRaid()) {
 if (w === 0) {
@@ -16233,7 +16237,7 @@ const order = isMulti()
 : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
 drawDecoys();
 drawProjs();
-if (WORLD.on) drawWorldGhosts();
+if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
 for (const f of order) {
 if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
 const keep = f.look;
@@ -22519,9 +22523,9 @@ ctx.restore();
 }
 }
 function drawWorldHUD() {
-const fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + 84, w = fs * 13;
+const key = !!M.worldKey, fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + (key ? 150 : 84), w = fs * 13;
 const zi = worldZoneAt(A.x), z = WORLD_ZONES[zi];
-const rows = WORLD.status ? [['状态', WORLD.status]] : [
+const rows = WORLD.status ? [['状态', WORLD.status]] : key ? rgHudRows() : [
 ['所在', `${WORLD.line} 线 · ${z.n}`],
 ['本线侠客', `${WORLD.n} 人`],
 ['本线斩妖', `${WORLD.kills} 只（你 ${WORLD.myKills}）`],
@@ -22532,12 +22536,13 @@ ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
 const hh = (rows.length + 1) * fs * 1.65 + 12;
 ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(x - w - 12, y - 10, w + 24, hh);
 ctx.strokeStyle = 'rgba(233,196,106,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(x - w - 12, y - 10, w + 24, hh);
-ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText('江湖共斗 · 开放世界', x - w, y);
+ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(key ? '全服肉鸽 · 关键战' : '江湖共斗 · 开放世界', x - w, y);
 rows.forEach(([kk, v], i) => {
 const yy = y + (i + 1) * fs * 1.65;
 ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(239,232,216,0.65)'; ctx.fillText(kk, x - w, yy);
 ctx.textAlign = 'right'; ctx.fillStyle = '#efe8d8'; ctx.fillText(v, x, yy);
 });
+if (key) { ctx.restore(); return; }   // 关键战里只留肉鸽这几行，挪到血条下面，不挡技能栏
 const my = y + hh + 6, mw = w + 24, mx = x - w - 12;
 ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(mx, my, mw, 14);
 for (const zz of WORLD_ZONES) { ctx.fillStyle = `rgba(${zz.tint},0.45)`; ctx.fillRect(mx + mw * zz.a / WORLD_W, my + 4, mw * (zz.b - zz.a) / WORLD_W - 1, 6); }
@@ -22582,8 +22587,7 @@ if (e.t === 'rv') { say('全线共选秘卷', 1.2, 'go', '本劫斩妖完成，1
 else if (e.t === 'rp') {
 const s = SC_BY[e.pick];
 say(`全线共享「${s ? s.n : e.pick}」`, 1.4, 'big', `第 ${e.j} / ${RG_JIE} 劫 · 已有 ${e.perks.length} 卷秘卷`);
-} else if (e.t === 'rw') say('天道 Boss 待命', 1.6, 'big', `线上真人够 ${e.need} 位才能开战，先继续斩妖`);
-else if (e.t === 'ks') { say('天道 Boss 降世', 1.6, 'big', '全线侠客共讨融魂魔首'); SFX.gong(); }
+} else if (e.t === 'ks') { if (e.kind === 'boss') say('天道 Boss 降世', 1.6, 'big', '全线侠客共讨融魂魔首'); else say('天道车轮战', 1.6, 'big', '线上真人不足 3 位：各自迎战 3 位天道侠客'); SFX.gong(); }
 else if (e.t === 'ke') rgKeyOver(e);
 }
 function rgVoteUI() {
@@ -22606,7 +22610,7 @@ return `<button type="button" data-i="${i}" class="${v.my === i ? 'sel' : ''}"><
 function rgHudRows() {
 const r = rgRun(); if (!r) return [];
 const st = r.k ? (r.k.kind === 'boss' ? `天道 Boss · 余 ${r.k.u} 秒` : `天道车轮 · 余 ${r.k.u} 秒`)
-: r.v ? '全线投票中' : r.w ? `等真人 ${r.n}/${r.w} 位` : `${r.g} / ${r.nd} 只`;
+: r.v ? '全线投票中' : `${r.g} / ${r.nd} 只`;
 return [['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`], [r.k ? '关键战' : '本劫斩妖', st], ['共享秘卷', `${(r.pk || []).length} 卷`]];
 }
 function rgMates(me) { const out = []; for (let k = 2; out.length < 2; k += 2) { const i = (me + k) % CHARS.length; if (i !== me && !out.includes(i)) out.push(i); } return out; }
@@ -22620,9 +22624,19 @@ pendingRaidBoss = rollRaidBoss(1, heroes);
 M.worldKey = { kind: 'boss', seq: k.s };
 B.worldProxy = false; B.hidden = false; B.invul = 0;   // B 不再是妖物的代理，换成真打的魔首
 startRaidMatch([W_.hero, ...rgMates(W_.hero)], 3);
+creditT = 0; creditPending = false;
 M.towerPerks = (rgRun().pk || []).slice(); scRoundStart();
 B.maxHp = k.mh; B.hp = B.lagHp = Math.max(1, k.hp); W_.kLastB = B.hp; M.timer = k.u;
 say('天道 Boss · 全线共讨', 1.5, 'big', `融魂魔首【${M.raidBoss && M.raidBoss.heroNames ? M.raidBoss.heroNames.join('·') : ''}】· 共享 ${M.towerPerks.length} 卷秘卷`);
+} else {   // 真人不够：自己 + 2 名同袍车轮战 3 位天道侠客，秘卷照样带着，对面不带
+const foes = (k.h || []).map(id => CHAR_IDX[id]).filter(i => i !== undefined);
+while (foes.length < 3) foes.push((W_.hero + 5 + foes.length * 3) % CHARS.length);
+M.worldKey = { kind: 'trio', seq: k.s };
+B.worldProxy = false; B.hidden = false; B.invul = 0;
+M.towerPerks = (rgRun().pk || []).slice(); M.foeScrolls = []; M.scRun = {};
+startTag3Match([W_.hero, ...rgMates(W_.hero)], foes, 'god');
+creditT = 0; creditPending = false;
+say('天道车轮战', 1.5, 'big', `对阵【${foes.map(i => CHARS[i].name).join('·')}】· 带着 ${M.towerPerks.length} 卷共享秘卷`);
 }
 }
 function worldKeyStep() {
@@ -22649,6 +22663,11 @@ if (M.worldKey !== K) return;
 const k = rgRun() && rgRun().k;
 if (k && k.s === K.seq) { M.worldKey = null; WORLD.keySeq = 0; worldKeyEnter(k); } else worldResume();
 }, 3000);
+} else if (!K.done) {   // 车轮战：报个输赢，回大地图等别人打完
+K.done = true;
+worldSend({ t: 'kr', s: K.seq, w: w === 0 ? 1 : 0 });
+say(w === 0 ? '车轮战告捷' : '车轮战落败', 1.4, 'big', '秘卷保留，回到江湖');
+setTimeout(() => { if (M.worldKey === K) worldResume(); }, 2600);
 }
 }
 function rgKeyOver(e) {
@@ -22658,7 +22677,7 @@ const cloud = !!(window.CloudSave && CloudSave.worldToken && CloudSave.worldToke
 if (e.kind === 'boss') {
 if (e.win) { toast(`天道 Boss 伏诛！${top}${cloud ? ' · 够资格的话，星座皮肤会在下次打开武库时到账' : ' · 登录云端账号才能领星座皮肤'}`); SFX.gong(); }
 else toast('天道 Boss 遁走，下一轮再战');
-}
+} else toast(e.win ? `天道车轮战收场 · 告捷：${(e.top || []).map(r => r[0]).join('、')}` : '天道车轮战收场 · 这一轮没人赢下，秘卷照样保留');
 if (!K) return;
 if (K.kind === 'boss' && e.win && !K.won) { K.won = true; B.hp = 0; say('天道 Boss 伏诛', 1.8, 'big', top); return; }   // 本机的魔首这才倒下，走正常的击倒流程
 if (!(K.kind === 'boss' && e.win)) { say(e.kind === 'boss' ? '天道 Boss 遁走' : '关键战结束', 1.4, 'big'); setTimeout(() => { if (M.worldKey === K) worldResume(); }, 1800); }

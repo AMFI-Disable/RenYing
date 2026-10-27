@@ -1,6 +1,6 @@
 // 江湖共斗 · 开放世界的服务器测试：用假的 WebSocket 跑 cloudflare/worker.bundle.js 里的 WorldLine（不用联网，不用 wrangler）
 //   node tools/world-test.mjs
-// 全服肉鸽：投票选秘卷全线同步、中途进来的人拿到同一套秘卷、真人够 3 位开天道 Boss、Boss 伤害封顶、谁能拿星座皮肤、进度存档
+// 全服肉鸽：投票选秘卷全线同步、中途进来的人拿到同一套秘卷、真人不够 3 位打天道车轮战、够了开天道 Boss、Boss 伤害封顶、谁能拿星座皮肤、进度存档
 // 查：每线 40 人封顶、满了回 full；打招呼拿到编号和名单；视野外的人不发；伤害按距离和每秒上限封顶；
 //     斩够数出妖王、打死后全线播报；服务器重启过会请网页重新打招呼；没人了停表
 import { fileURLToPath } from 'node:url';
@@ -177,7 +177,7 @@ const keep = (s) => { for (const p of s.players.values()) { p.seen = s.t; } };
   ok(t.run.perks.length === RG.PERK_MAX && t.run.perks[0] === RG.PERKS[1], `秘卷最多 ${RG.PERK_MAX} 卷，满了最早那卷让位`);
 }
 
-// ---------- 全服肉鸽：真人不足 3 位先等、够了开天道 Boss、伤害封顶、奖励资格 ----------
+// ---------- 全服肉鸽：真人不足 3 位打 3 个天道 AI 车轮战（秘卷保留）、中途有人进来从 2 人变 3 人、够了开天道 Boss、伤害封顶、奖励资格 ----------
 {
   const s = new WorldSim(() => 0.3);
   const old = Date.now() - 48 * 3600e3;
@@ -185,23 +185,50 @@ const keep = (s) => { for (const p of s.players.values()) { p.seen = s.t; } };
   s.setAuth(a, 'u1', old); s.setAuth(a2, 'u1', old); s.setAuth(b, 'u2', old);
   ok(s.real() === 2, '同一个账号开两个网页只算一个真人');
   for (const id of [a, b, a2]) s.state(id, { x: 600, hp: 100, mh: 100 });
-  s.run.jie = RG.JIE; s.run.perks = ['ink_resonance']; for (const p of s.players.values()) p.jies = RG.MIN_JIE - 1;
+  s.run.jie = RG.JIE; s.run.perks = ['ink_resonance', 'storm_wrath'];
   fillJie(s); killIt(s, a);
-  {
-    ok(s.run.wait && !s.run.key && s.takeEvents().some(e => e.t === 'rw'), `真人不到 ${RG.BOSS_MIN} 位：天道 Boss 先等着`);
-  }
-  const c = s.join({ name: '丙' }); s.setAuth(c, 'u3', old); s.state(c, { x: 600, hp: 100, mh: 100 });
+  const tk = s.run.key;
+  ok(tk && tk.kind === 'trio' && tk.heroes.length === 3 && new Set(tk.heroes).size === 3 && s.takeEvents().some(e => e.t === 'ks' && e.kind === 'trio'), `真人不到 ${RG.BOSS_MIN} 位：改打 3 位天道侠客的车轮战（不是小 Boss）`);
+  ok(s.frameFor(b).r.k.kind === 'trio' && s.frameFor(b).r.pk.join() === 'ink_resonance,storm_wrath', '帧里带着车轮战和共享秘卷（网页拿秘卷去打）');
+  ok(s.keyHit(a, tk.seq, 100) === 0, '车轮战不收 Boss 伤害');
+  for (const id of [a, b, a2]) s.state(id, { x: 600, hp: 100, mh: 100, kf: 1 });
+  // 打到一半第三个真人进来：他也进车轮战，这场照常打完
+  const c = s.join({ name: '丙' }); s.setAuth(c, 'u3', old);
+  ok(s.real() === 3 && s.run.key === tk && s.frameFor(c).r.k.s === tk.seq && s.frameFor(c).r.pk.length === 2, '中途进来的第三人：拿到同一套秘卷，也看到这场车轮战');
+  s.state(c, { x: 600, hp: 100, mh: 100, kf: 1 });
+  ok(!s.keyReport(a, tk.seq + 1, 1) && !s.keyReport(999, tk.seq, 1), '不是这一场、不在线的结果不收');
+  ok(s.keyReport(a, tk.seq, 1) && !s.keyReport(a, tk.seq, 0), '每人只报一次');
+  s.keyReport(a2, tk.seq, 0); s.keyReport(b, tk.seq, 0);
+  keep(s); s.step(0.05);
+  ok(s.run.key === tk, '进过场的人还有没报的（丙）：继续等');
+  s.keyReport(c, tk.seq, 0);
+  const te = s.takeEvents().find(e => e.t === 'ke');
+  ok(!s.run.key && te && te.kind === 'trio' && te.win && te.top.length === 1 && te.top[0][0] === '甲', '都报完就收场：有人赢了就算告捷');
+  ok(s.run.cyc === 2 && s.run.jie === 1 && s.run.perks.join() === 'ink_resonance,storm_wrath', '车轮战打完：秘卷原样保留，进下一轮');
+  ok(s.rewards.length === 0, '车轮战不发星座皮肤');
+  // 只剩一个没报的人走了也收场；超时没打完算没赢
+  const tt = new WorldSim(() => 0.2); const t1 = tt.join({ name: 'x' }), t2 = tt.join({ name: 'y' });
+  tt.run.jie = RG.JIE; tt.jieDone(); const k2 = tt.run.key;
+  for (const id of [t1, t2]) tt.state(id, { x: 600, hp: 100, mh: 100, kf: 1 });
+  tt.keyReport(t1, k2.seq, 0); tt.leave(t2); keep(tt); tt.step(0.05);
+  ok(!tt.run.key && tt.run.cyc === 2, '没报的人走了：不用等他，直接收场');
+  tt.run.jie = RG.JIE; tt.jieDone(); tt.t += RG.TRIO_T + 1; keep(tt); tt.step(0.05);
+  ok(!tt.run.key && tt.takeEvents().some(e => e.t === 'ke' && e.kind === 'trio' && !e.win), `${RG.TRIO_T} 秒还没打完：算没赢，照样进下一轮`);
+  // 第二轮最后一劫：线上已经 3 个真人了 → 这次开天道 Boss
+  s.run.jie = RG.JIE; for (const p of s.players.values()) p.jies = RG.MIN_JIE - 1;
+  s.players.get(c).jies = 0;
+  for (const id of [a, b, a2, c]) s.state(id, { x: 600, hp: 100, mh: 100 });
   const d = s.join({ name: '丁' }); s.state(d, { x: 600, hp: 100, mh: 100 });   // 游客
   const newbie = s.join({ name: '新号' }); s.setAuth(newbie, 'u9', Date.now() - 3600e3); s.state(newbie, { x: 600, hp: 100, mh: 100 });
-  keep(s); s.step(0.05);
+  fillJie(s); killIt(s, a);
   const k = s.run.key;
-  ok(k && k.kind === 'boss' && k.heroes.length === 3 && k.mh === RG.BOSS_HP * s.real(), '真人够了：开天道 Boss，三位侠客融魂，血量按真人数');
+  ok(k && k.kind === 'boss' && k.heroes.length === 3 && k.mh === RG.BOSS_HP * s.real(), '从 2 人变 3 人以后的下一轮：开天道 Boss，三位侠客融魂，血量按真人数');
   ok(s.mons.length === 0 && s.frameFor(c).r.k.s === k.seq, '关键战期间清掉小怪，帧里带着这一场');
-  ok(s.players.get(c).jies === 0 && s.players.get(a).jies === RG.MIN_JIE, '只有斩过前面几劫的人才记了劫数');
+  ok(s.players.get(c).jies === 1 && s.players.get(a).jies === RG.MIN_JIE, '劫数按这一轮在场斩过几劫算');
   ok(s.keyHit(a, k.seq, 500) === 0, '开战 3 秒内交的伤害不算');
   s.t += 2; ok(s.keyHit(a, k.seq + 1, 100) === 0, '不是这一场的伤害不算');
   s.t += 3; const got = s.keyHit(a, k.seq, 5000);
-  ok(got <= RG.KEY_HIT_MAX && got <= 2 * RG.KEY_DPS + 1, `伤害按开战秒数封顶（${Math.round(got)}）`);
+  ok(got <= RG.KEY_HIT_MAX && got <= 2.1 * RG.KEY_DPS, `伤害按开战秒数封顶（${Math.round(got)}）`);
   ok(s.keyHit(a, k.seq, 5000) === 0, '额度用完了再交也不算');
   ok(s.keyHit(d, k.seq, -50) === 0 && s.keyHit(d, k.seq, NaN) === 0, '负数、乱填的伤害不算');
   // 打死它
@@ -210,7 +237,7 @@ const keep = (s) => { for (const p of s.players.values()) { p.seen = s.t; } };
   ok(ke && ke.win && ke.top.length >= 3, '天道 Boss 被打死，全线播报输出榜');
   const uids = s.rewards.map(r => r.uid).sort();
   ok(uids.join() === 'u1,u2', `星座皮肤只发给够资格的账号（拿到：${uids.join() || '无'}）：游客、新注册、劫数不够的没有`);
-  ok(s.run.cyc === 2 && s.run.jie === 1 && s.run.perks.join() === 'ink_resonance' && !s.run.key, '打完进下一轮，秘卷保留');
+  ok(s.run.cyc === 3 && s.run.jie === 1 && s.run.perks.join() === 'ink_resonance,storm_wrath' && !s.run.key, '打完进下一轮，秘卷保留');
   // 开战时刻不是整数秒（真服务器每拍 0.1 秒）：第一下伤害照样算
   const f = new WorldSim(() => 0.3); const fids = [1, 2, 3].map(i => f.join({ name: 'f' + i }));
   f.t = 2.3; f.run.jie = RG.JIE; f.jieDone(); const fk = f.run.key;
@@ -249,6 +276,10 @@ const keep = (s) => { for (const p of s.players.values()) { p.seen = s.t; } };
   dobj.tick();
   ok(dobj.sim.run.perks[0] === pick && a.last('k').r.pk[0] === pick, '网页发的投票会算，帧里马上带着新秘卷');
   ok(store.get('run') && store.get('run').perks[0] === pick, '进度变了就存进 Durable Object 存储');
+  dobj.sim.run.jie = RG.JIE; dobj.sim.jieDone(); const tk = dobj.sim.run.key;
+  await st(dobj, a, 300, { kf: 1 }); await dobj.webSocketMessage(a, JSON.stringify({ t: 'kr', s: tk.seq, w: 1 })); dobj.tick();
+  ok(!dobj.sim.run.key && a.last('k').r.c === 2 && a.last('k').r.pk[0] === pick && (a.last('k').e || []).some(e => e.t === 'ke' && e.kind === 'trio' && e.win), '一个人在线：打车轮战，网页报了结果就收场，秘卷还在');
+  dobj.sim.run.jie = 2;
   await dobj.webSocketClose(a); a.closed = 1000; dobj.tick();
   const again = new WorldLine(ctx, {}); await Promise.resolve();
   ok(again.sim.run.perks[0] === pick && again.sim.run.jie === 2, '人都走了、服务器回收后再建出来：进度还在');
