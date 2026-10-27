@@ -359,6 +359,8 @@ class AIBrain {
     const free = me.onGround() && AI_FREE.includes(me.state);
     const canBlock = free || (me.onGround() && me.state === 'attack' && me.move && me.t < me.move.su * 0.6 && me.moveName !== 'dl');
     const inAir = !me.onGround();
+    // 铁山山崩：落地那一刻离地 80 像素以上就砸不到，算好落地时间起跳（来不及就腾空闪）
+    if (foe.state === 'special' && foe.sp === 'leap' && foe.ch.ult === 'avalanche' && this.seen) return this.dodgeAvalanche(me, foe, to, free);
     // 对手的近身招 / 技能 / 大招
     const th = this.threat(me, foe, d);
     if (th) {
@@ -1097,6 +1099,21 @@ class AIBrain {
     // 被逼到墙角：跳过去
     const cornered = (me.x < WALL + 140 && to > 0) || (me.x > STAGE_W - WALL - 140 && to < 0);
     if (cornered && d < 260 && me.onGround()) { this.dir = to; this.plan([['jump', 0], ['jump', 0.24]]); }
+  }
+
+  // ----- 躲山崩：模拟铁山下落算出落地时间，原地起跳的高度在 0.1~0.6 秒之间都超过 80 像素 -----
+  dodgeAvalanche(me, foe, to, free) {
+    if (this.avaKey !== this.ev) { this.avaKey = this.ev; this.avaRoll = Math.random(); }
+    if (this.avaRoll > this.L.block) return false;   // 这次没看出来该跳
+    let y = foe.y, vy = foe.vy, t = 0;
+    const fast = Math.abs(me.x - foe.x) < 90 && foe.t > 0.18;   // 铁山对准了会按下加速
+    while (t < 1.5 && !(t > 0.15 - foe.t && y >= 0)) { if (fast && vy > -300) vy += 1400 * STEP; vy += GRAV * STEP; y += vy * STEP; t += STEP; }
+    this.stopAll(); this.holdDown = 0;
+    if (!me.onGround()) { this.dir = -to; return true; }   // 已经在空中：别落下来
+    if (free && t < 0.5 && t > 0.08) { this.press('jump'); this.dir = -to; return true; }
+    if (t <= 0.08 && me.breakCD <= 0) { this.press('dash'); return true; }
+    this.dir = -to;   // 还早：先往外走，等时机再跳
+    return true;
   }
 
   // ----- 铁山山崩：空中对准对手落下 -----
