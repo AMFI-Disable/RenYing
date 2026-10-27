@@ -5281,6 +5281,7 @@ const DICT_EN = {
 "设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。": "Settings are saved in your current browser. Native ultra quality & 144Hz high refresh rate enabled by default.",
 "该会的都会了。去找电脑或是同学，过几招吧。": "You have mastered the basics. Go challenge the AI or a friend!",
 "该兑换码已使用过了": "Redeem code already used",
+"该兑换码已作废": "This redeem code has been revoked",
 "该昵称已被使用": "Nickname already taken",
 "语言": "Language",
 "语言设置": "Language",
@@ -18434,6 +18435,10 @@ try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catc
 if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
 if (fl.tutorial && !PROF.guest) PROF.tutorial = 1;
 }
+if (PROF.guest && (PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) {   // 作废的星座码：游客以前领到的装束只记在本机皮肤里，收回
+const zod = new Set(getZodiacSkinKeys());
+PROF.skins = (PROF.skins || []).filter(k => !zod.has(k));
+}
 if (!OFFLINE_BUILD && !freeSkinEvent() && PROF.equip) {
 const ownedSkins = new Set(PROF.skins || []);
 for (const [cid, sk] of Object.entries(PROF.equip)) {
@@ -18640,67 +18645,14 @@ zodSkins.push(
 }
 return zodSkins;
 }
+const VOID_CODES = ['ZODIAC2026STAR', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT'];
 async function redeemCode(rawCode) {
 const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
 if (!code) return;
 const up = code.toUpperCase();
-const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
-if (up === ZODIAC_SECRET_CODE) {
-const zodSkins = getZodiacSkinKeys();
-const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
-const say = t => { toast(t); if ($id('tMsg')) $id('tMsg').textContent = t; };
-const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
-if (cloudUser) {
-if (typeof window.armoryRedeem !== 'function') return;
-const btn = $id('rdBtn');
-if (btn) btn.disabled = true;
-let r = null;
-try { r = await window.armoryRedeem(up); } catch (e) {} finally { if (btn) btn.disabled = false; }
-if (!r || r.err) { say((r && r.err) || '兑换没成功，稍后再试'); return; }
-} else if (PROF.guest) {
-if (zodSkins.every(k => (PROF.skins || []).includes(k))) { say('该兑换码已使用过了'); return; }
-PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
-} else {
-if (redeemed.includes(up) && typeof window.armoryHasAll === 'function' && window.armoryHasAll(zodSkins)) { say('该兑换码已使用过了'); return; }
-if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');
-}
-if (!redeemed.includes(up)) redeemed.push(up);
-saveFlag('codes', redeemed);
-if (window.CloudSave) CloudSave.saveProfile(PROF, true);
-applyProfile(PROF);
-SFX.chargeFull();
-toast('星芒降世：已解锁十二侠客全套 36 款星座专属星辉、星焰、星冕装束！');
-if ($id('tMsg')) $id('tMsg').textContent = '星图共鸣！全套 36 款星座皮肤已成功激活！';
-if ($id('rdCode')) $id('rdCode').value = '';
-renderTasks();
-if (typeof renderCodex === 'function' && $id('codex') && $id('codex').classList.contains('on')) renderCodex();
-if (typeof renderTopNav === 'function') renderTopNav();
-if (typeof renderHome === 'function') renderHome();
-return;
-}
-const clientCodes = {
-'RENYING666': 300,
-'RENYING888': 500,
-'SWORD2026': 600,
-'MOYUGIFT': 400
-};
-if (clientCodes[up]) {
-const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
-if (redeemed.includes(up)) {
-toast('该兑换码已使用过了');
-if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
-return;
-}
-redeemed.push(up); saveFlag('codes', redeemed);
-const inkGain = clientCodes[up];
-PROF.ink = (PROF.ink || 0) + inkGain;
-if (window.CloudSave) CloudSave.saveProfile(PROF);
-applyProfile(PROF);
-SFX.chargeFull();
-toast(`兑换成功：+${inkGain} 墨锭！`);
-if ($id('tMsg')) $id('tMsg').textContent = `兑换成功：+${inkGain} 墨锭！`;
-if ($id('rdCode')) $id('rdCode').value = '';
-renderTasks();
+if (VOID_CODES.includes(up)) {
+toast('该兑换码已作废');
+if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已作废';
 return;
 }
 if (!OFFLINE_BUILD && /^[A-Z0-9]{4,20}$/.test(up) && typeof window.armoryRedeem === 'function') {
@@ -26838,11 +26790,23 @@ SIG = sigOf(ST);
 MODE = 'local';
 }
 function migrateLocal() {
-if (MODE !== 'local' || !ST || PROF.guest || OFFLINE_BUILD || cloudOn()) return;
+if (MODE !== 'local' || !ST || PROF.guest || cloudOn()) return;
+voidLocal();
+if (OFFLINE_BUILD) return;
 const lg = (PROF.skins || []).filter(k => C.isItem(k) && !ST.via.includes(k) && !ST.inv.some(x => x.k === k));
 if (!lg.length) return;
 const env = envBase();
 for (const k of lg) { C.addItem(ST, C.mkItem(ST, k, 'legacy', rnd, { st: -1 }), env); ST.via.push(k); }
+SIG = sigOf(ST);
+if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+}
+function voidLocal() {
+if (!(PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) return;
+const ids = ST.inv.filter(x => x.src === 'code' && C.ITEM[x.k] && C.ITEM[x.k].col === 'c8').map(x => x.i);
+if (!ids.length) return;
+const env = envBase();
+for (const id of ids) C.dropItem(ST, id, env);
+PROF.skins = env.skins; PROF.equip = env.equip;
 SIG = sigOf(ST);
 if (window.CloudSave) CloudSave.saveProfile(PROF, true);
 }
@@ -26859,7 +26823,6 @@ const out = await ECON('sync', {});
 if (out && out.state && out.state.v < C.VER) { MODE = 'old'; OLDV = out.state.v; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是旧版的武库：先只给看，等服务器更新
 if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
 MODE = 'server'; apply(out, true);
-setTimeout(zodFix, 0);
 } catch (e) {
 if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还没有武库：先用本机规则
 else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
@@ -26867,14 +26830,6 @@ else { if (MODE !== 'server') { ST = null; MODE = 'offline'; } msg('连不上服
 } finally { LOADING = null; }
 })();
 return LOADING;
-}
-let ZFIX = '';
-function zodFix() {
-if (MODE !== 'server' || !ST || ZFIX === UID || !(PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) return;
-ZFIX = UID;
-const zk = Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
-if (zk.every(k => ST.inv.some(x => x.k === k))) return;
-window.armoryRedeem('ZODIAC2026STAR').then(r => { if (r && r.ok) toast('星座装束已补进武库：' + r.text); }).catch(() => {});
 }
 function redrawLooks() {   // 首页角色、头像、场上侠客按现在穿的重画一遍
 try {

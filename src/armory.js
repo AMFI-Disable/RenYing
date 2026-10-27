@@ -258,11 +258,24 @@
   // 以前不进库存的“绑定”皮肤：本机账号直接换成库存里的饰品（普通版），记进 via，之后和开箱得到的一样能卖能汰换。
   // 要等这个账号的存档整个放好以后再做（applyProfile 之后），不然 PROF.skins 还是上一个账号的
   function migrateLocal() {
-    if (MODE !== 'local' || !ST || PROF.guest || OFFLINE_BUILD || cloudOn()) return;
+    if (MODE !== 'local' || !ST || PROF.guest || cloudOn()) return;
+    voidLocal();
+    if (OFFLINE_BUILD) return;
     const lg = (PROF.skins || []).filter(k => C.isItem(k) && !ST.via.includes(k) && !ST.inv.some(x => x.k === k));
     if (!lg.length) return;
     const env = envBase();
     for (const k of lg) { C.addItem(ST, C.mkItem(ST, k, 'legacy', rnd, { st: -1 }), env); ST.via.push(k); }
+    SIG = sigOf(ST);
+    if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+  }
+  // 写在源码里的星座码已作废：本机账号以前领到的（src 'code' 的星座饰品）收回，云端账号由服务器收回
+  function voidLocal() {
+    if (!(PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) return;
+    const ids = ST.inv.filter(x => x.src === 'code' && C.ITEM[x.k] && C.ITEM[x.k].col === 'c8').map(x => x.i);
+    if (!ids.length) return;
+    const env = envBase();
+    for (const id of ids) C.dropItem(ST, id, env);
+    PROF.skins = env.skins; PROF.equip = env.equip;
     SIG = sigOf(ST);
     if (window.CloudSave) CloudSave.saveProfile(PROF, true);
   }
@@ -279,7 +292,6 @@
         if (out && out.state && out.state.v < C.VER) { MODE = 'old'; OLDV = out.state.v; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是旧版的武库：先只给看，等服务器更新
         if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
         MODE = 'server'; apply(out, true);
-        setTimeout(zodFix, 0);
       } catch (e) {
         if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还没有武库：先用本机规则
         else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
@@ -287,16 +299,6 @@
       } finally { LOADING = null; }
     })();
     return LOADING;
-  }
-  // 以前在网页里兑换的星座码（那时只加在网页里，一刷新就没了）：连上服务器后按服务器的规矩补领一次。
-  // 服务器上已经领过的不会再给（卖掉了也不补），这时什么都不提示
-  let ZFIX = '';
-  function zodFix() {
-    if (MODE !== 'server' || !ST || ZFIX === UID || !(PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) return;
-    ZFIX = UID;
-    const zk = Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
-    if (zk.every(k => ST.inv.some(x => x.k === k))) return;
-    window.armoryRedeem('ZODIAC2026STAR').then(r => { if (r && r.ok) toast('星座装束已补进武库：' + r.text); }).catch(() => {});
   }
   // 动作结果落地：存档、墨锭、可穿的皮肤、穿着
   function redrawLooks() {   // 首页角色、头像、场上侠客按现在穿的重画一遍

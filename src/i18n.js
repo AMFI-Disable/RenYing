@@ -500,6 +500,7 @@
   "设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。": "Settings are saved in your current browser. Native ultra quality & 144Hz high refresh rate enabled by default.",
   "该会的都会了。去找电脑或是同学，过几招吧。": "You have mastered the basics. Go challenge the AI or a friend!",
   "该兑换码已使用过了": "Redeem code already used",
+  "该兑换码已作废": "This redeem code has been revoked",
   "该昵称已被使用": "Nickname already taken",
   "语言": "Language",
   "语言设置": "Language",

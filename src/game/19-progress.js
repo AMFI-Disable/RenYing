@@ -517,6 +517,10 @@ function applyProfile(p, opts) {
     if (fl.codes) PROF.redeemedCodes = Array.from(new Set([...(PROF.redeemedCodes || []), ...fl.codes]));
     if (fl.tutorial && !PROF.guest) PROF.tutorial = 1;
   }
+  if (PROF.guest && (PROF.redeemedCodes || []).includes('ZODIAC2026STAR')) {   // 作废的星座码：游客以前领到的装束只记在本机皮肤里，收回
+    const zod = new Set(getZodiacSkinKeys());
+    PROF.skins = (PROF.skins || []).filter(k => !zod.has(k));
+  }
   if (!OFFLINE_BUILD && !freeSkinEvent() && PROF.equip) {
     const ownedSkins = new Set(PROF.skins || []);
     for (const [cid, sk] of Object.entries(PROF.equip)) {
@@ -729,70 +733,15 @@ function getZodiacSkinKeys() {
   }
   return zodSkins;
 }
+const VOID_CODES = ['ZODIAC2026STAR', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT'];
 async function redeemCode(rawCode) {
   const code = (rawCode !== undefined ? String(rawCode) : ($id('rdCode') ? $id('rdCode').value : '')).trim();
   if (!code) return;
   const up = code.toUpperCase();
-  // 星座专属隐藏兑换码：全员可用，三十六款星座皮肤每款一件，进武库库存（能穿、能卖、能汰换）。
-  // 云端账号在服务器上领（每个号一次，卖掉的不补）；本机账号进本机武库；游客没有武库，只在这台电脑上能穿
-  const ZODIAC_SECRET_CODE = 'ZODIAC2026STAR';
-  if (up === ZODIAC_SECRET_CODE) {
-    const zodSkins = getZodiacSkinKeys();
-    const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
-    const say = t => { toast(t); if ($id('tMsg')) $id('tMsg').textContent = t; };
-    const cloudUser = !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud);
-    if (cloudUser) {
-      if (typeof window.armoryRedeem !== 'function') return;
-      const btn = $id('rdBtn');
-      if (btn) btn.disabled = true;
-      let r = null;
-      try { r = await window.armoryRedeem(up); } catch (e) {} finally { if (btn) btn.disabled = false; }
-      if (!r || r.err) { say((r && r.err) || '兑换没成功，稍后再试'); return; }
-    } else if (PROF.guest) {
-      if (zodSkins.every(k => (PROF.skins || []).includes(k))) { say('该兑换码已使用过了'); return; }
-      PROF.skins = Array.from(new Set([...(PROF.skins || []), ...zodSkins]));
-    } else {
-      if (redeemed.includes(up) && typeof window.armoryHasAll === 'function' && window.armoryHasAll(zodSkins)) { say('该兑换码已使用过了'); return; }
-      if (typeof window.armoryGrantLocal === 'function') window.armoryGrantLocal(zodSkins, 'code');
-    }
-    if (!redeemed.includes(up)) redeemed.push(up);
-    saveFlag('codes', redeemed);
-
-    if (window.CloudSave) CloudSave.saveProfile(PROF, true);
-    applyProfile(PROF);
-    SFX.chargeFull();
-    toast('星芒降世：已解锁十二侠客全套 36 款星座专属星辉、星焰、星冕装束！');
-    if ($id('tMsg')) $id('tMsg').textContent = '星图共鸣！全套 36 款星座皮肤已成功激活！';
-    if ($id('rdCode')) $id('rdCode').value = '';
-    renderTasks();
-    if (typeof renderCodex === 'function' && $id('codex') && $id('codex').classList.contains('on')) renderCodex();
-    if (typeof renderTopNav === 'function') renderTopNav();
-    if (typeof renderHome === 'function') renderHome();
-    return;
-  }
-  const clientCodes = {
-    'RENYING666': 300,
-    'RENYING888': 500,
-    'SWORD2026': 600,
-    'MOYUGIFT': 400
-  };
-  if (clientCodes[up]) {
-    const redeemed = (PROF.redeemedCodes = PROF.redeemedCodes || []);
-    if (redeemed.includes(up)) {
-      toast('该兑换码已使用过了');
-      if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已使用过了';
-      return;
-    }
-    redeemed.push(up); saveFlag('codes', redeemed);
-    const inkGain = clientCodes[up];
-    PROF.ink = (PROF.ink || 0) + inkGain;
-    if (window.CloudSave) CloudSave.saveProfile(PROF);
-    applyProfile(PROF);
-    SFX.chargeFull();
-    toast(`兑换成功：+${inkGain} 墨锭！`);
-    if ($id('tMsg')) $id('tMsg').textContent = `兑换成功：+${inkGain} 墨锭！`;
-    if ($id('rdCode')) $id('rdCode').value = '';
-    renderTasks();
+  // 写在源码里的兑换码（源码公开，等于人人都能领）已全部作废；以前领到的星座装束也收回，见 applyProfile 和武库
+  if (VOID_CODES.includes(up)) {
+    toast('该兑换码已作废');
+    if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已作废';
     return;
   }
   // 管理后台建的礼包码：拿去服务器核对（armory.js 里的 armoryRedeem），领到的东西直接进存档；离线版没有服务器

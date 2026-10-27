@@ -1375,21 +1375,43 @@ section('以前的绑定皮肤：老号第一次动武库时换成库存里的�
   await econ(fresh.token, 'sync');
   ok(!stateOf(fresh.uid).inv.length && profOf(fresh.uid).skins.includes('lm_violet'), '截止日以后建的号不换：皮肤照样能穿，库存里没有');
 
+  // 写在源码里的星座码已作废：领不到；以前领过的号，码送的饰品第一次动武库时收回
+  const zk = Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
   const z = await newUser('zodone', { ink: 100 });
   await econ(z.token, 'sync');
   const zr = await econ(z.token, 'claimCode', { code: 'ZODIAC2026STAR' });
-  const zs = stateOf(z.uid), zk = Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
-  ok(zr.ok && zk.every(k => zs.inv.some(x => x.k === k) && profOf(z.uid).skins.includes(k)), '星座码：36 款各一件进库存，能穿', zr.error);
-  const zi = zs.inv.find(x => x.k === zk[0]);
-  const ZL = await econ(z.token, 'list', { i: zi.i, price: 500 });
-  const zb = await econ(buyer.token, 'buy', { l: ZL.res.l, price: 500 });
-  ok(zb.res && zb.res.ok, '卖掉一件', zb.res);
-  const again = await econ(z.token, 'claimCode', { code: 'ZODIAC2026STAR' });
-  ok(again.status === 400 && again.error === '这个兑换码你已经领过了' && !stateOf(z.uid).inv.some(x => x.k === zk[0]), '卖掉以后再输一次：已经领过了，不补（不然卖了再领就是凭空变墨锭）', again);
-  const z2 = await newUser('zodrace', { ink: 100 });
-  await econ(z2.token, 'sync');
-  const zrs = await Promise.all(Array.from({ length: 4 }, () => econ(z2.token, 'claimCode', { code: 'ZODIAC2026STAR' })));
-  ok(zrs.filter(r => r.ok).length === 1 && stateOf(z2.uid).inv.length === zk.length, '同一个号同时领 4 次：只领到一份', zrs.map(r => r.status + (r.error || '')));
+  ok(zr.status === 400 && zr.error === '兑换码无效或已过期' && !stateOf(z.uid).inv.some(x => zk.includes(x.k)), '公开过的星座码已作废：领不到', zr);
+  // 按作废前的样子摆好一个领过的号：code_got 有记录，库存里 3 件码送的、1 件开箱开的，还有 1 件码送的挂在市场上
+  const zv = await newUser('zodvoid', { ink: 100 });
+  await econ(zv.token, 'sync');
+  const seed = (uid, items, lst) => {
+    const st = stateOf(uid);
+    for (const it of items) { st.inv.push({ i: st.nid++, k: it.k, st: -1, n: '', t: T, src: it.src }); if (!st.via.includes(it.k)) st.via.push(it.k); }
+    for (const L of lst) { const it = { i: st.nid++, k: L.k, st: -1, n: '', t: T, src: 'code' }; st.lst.push({ l: L.l, it, price: 500, t: T });   // 挂出去的那件和正常挂单一样，不在可穿的皮肤里
+      ENV.DB.raw.prepare('INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)').run(L.l, uid, L.k, -1, JSON.stringify(it), 500, T); }
+    const srv = JSON.parse(row('SELECT srv_json FROM econ WHERE uid = ?', uid).srv_json); delete srv.zv;
+    ENV.DB.raw.prepare('UPDATE econ SET state_json = ?, srv_json = ? WHERE uid = ?').run(JSON.stringify(st), JSON.stringify(srv), uid);
+    const pf = profOf(uid); pf.skins = Array.from(new Set([...(pf.skins || []), ...items.map(x => x.k)]));
+    ENV.DB.raw.prepare('UPDATE users SET profile_json = ? WHERE id = ?').run(JSON.stringify(pf), uid);
+  };
+  const zl = 'abcdef0123456789';
+  seed(zv.uid, [{ k: zk[0], src: 'code' }, { k: zk[1], src: 'code' }, { k: zk[2], src: 'code' }, { k: zk[3], src: 'case' }], [{ k: zk[4], l: zl }]);
+  ENV.DB.raw.prepare('INSERT INTO code_got (code, uid, at) VALUES (?, ?, ?)').run('ZODIAC2026STAR', zv.uid, T);
+  const zs0 = await econ(zv.token, 'sync');
+  const zst = stateOf(zv.uid), zpf = profOf(zv.uid);
+  ok(zs0.ok && !zst.inv.some(x => x.src === 'code' && zk.includes(x.k)) && zst.inv.some(x => x.k === zk[3] && x.src === 'case'), '领过的号：码送的星座饰品收回，开箱开的留着', zst.inv);
+  ok(!zst.lst.some(L => L.l === zl) && row('SELECT state FROM mkt WHERE id = ?', zl).state === 2, '码送的饰品挂在市场上还没卖的：撤下来', zst.lst);
+  ok(![zk[0], zk[1], zk[2], zk[4]].some(k => zpf.skins.includes(k)) && zpf.skins.includes(zk[3]), '收回的皮肤穿不了了，开箱的照样能穿', zpf.skins);
+  const zlog = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'code_void'", zv.uid), zld = zlog ? parseDetail(zlog.detail) : {};
+  ok(zld.code && zld.code[0] === 'ZODIAC2026STAR' && zld.inv && zld.inv.length === 3 && zld.lst && zld.lst[0] === zl, '收回记一条 code_void 流水', zld);
+  await econ(zv.token, 'sync');
+  ok(row("SELECT COUNT(*) AS n FROM econ_log WHERE uid = ? AND act = 'code_void'", zv.uid).n === 1 && JSON.parse(row('SELECT srv_json FROM econ WHERE uid = ?', zv.uid).srv_json).zv, '只收一次（记在 srv.zv）');
+  // 没领过这个码的号：后台礼包码送的星座饰品（也是 src 'code'）不动
+  const zn = await newUser('zodnone', { ink: 100 });
+  await econ(zn.token, 'sync');
+  seed(zn.uid, [{ k: zk[5], src: 'code' }], []);
+  await econ(zn.token, 'sync');
+  ok(stateOf(zn.uid).inv.some(x => x.k === zk[5] && x.src === 'code') && !row("SELECT 1 AS x FROM econ_log WHERE uid = ? AND act = 'code_void'", zn.uid), '没领过星座码的号：别的码送的星座饰品不动');
 }
 
 section('规则核心：冻结、坏存档自愈');
