@@ -251,6 +251,8 @@ function step() {
   }
   if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
   if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
+  // 多人对局：每帧开头所有人先选一次目标（foeOf 会记住目标）。以前只有电脑在想招时选，回放里没人想招，目标换得晚一帧就走样了
+  if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);
   for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
   updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
@@ -389,7 +391,8 @@ function ctrlKey(c) {
 function recBegin(kind) {
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
     meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
-  if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] }); REC.post = ['', '', '', '']; }
+  // pl：哪几个人按玩家的规则选目标。回放里大家都是普通 Ctrl，不记的话玩家会被当成电脑去配合队友，回放就走样了
+  if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
   // 联机：按键是按“每台电脑”记的（一台可能管两个人），回放时要知道每台电脑管哪几个人；2v2 里没人管的是电脑，回放时照样让它想
   if (kind === 'net') {
     Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
@@ -670,6 +673,7 @@ function startReplay(m) {
     f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
     if (net && mine.has(f.idx)) f.ctrl.net = true;   // 和对局里一样标成玩家：2v2 里玩家锁定谁的规则和电脑不同
   }
+  if (!net && m.four && Array.isArray(m.pl)) rpFighters(m).forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
   restState(m.st0);
   M.mode = 'replay';
   Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, names: m.names || null });

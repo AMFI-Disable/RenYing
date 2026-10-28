@@ -11444,13 +11444,14 @@ const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
 const alive = list.filter(e => !e.hidden && e.hp > 0);
 return alive.length ? alive : list;
 };
+const cpuTeamwork = f => !!(f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net);
 const foeOf = f => {
 if (!isMulti()) return f === A ? B : A;
 if (isRaid() && f !== B) { f.target = B; return B; }
 const list = foesOf(f);
 if (!list.length) return A;
 if (list.length === 1) { f.target = list[0]; return list[0]; }
-if (!isRaid() && f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net) {   // 联机里玩家的操控是回滚用的 Ctrl（带 net 标记），不是电脑
+if (!isRaid() && cpuTeamwork(f)) {
 const mate = fighterByIdx(f.idx ^ 2);
 const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
 if (low) { f.target = low; return low; }
@@ -13717,6 +13718,7 @@ return;
 }
 if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
 if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
+if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);
 for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
 updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
@@ -13843,7 +13845,7 @@ return s;
 function recBegin(kind) {
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
 meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
-if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] }); REC.post = ['', '', '', '']; }
+if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
 if (kind === 'net') {
 Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
 if (allFighters().length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
@@ -14109,6 +14111,7 @@ for (const f of rpFighters(m)) {
 f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
 if (net && mine.has(f.idx)) f.ctrl.net = true;   // 和对局里一样标成玩家：2v2 里玩家锁定谁的规则和电脑不同
 }
+if (!net && m.four && Array.isArray(m.pl)) rpFighters(m).forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
 restState(m.st0);
 M.mode = 'replay';
 Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, names: m.names || null });

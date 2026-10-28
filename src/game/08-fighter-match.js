@@ -95,6 +95,8 @@ const foesOf = f => {
   const alive = list.filter(e => !e.hidden && e.hp > 0);
   return alive.length ? alive : list;
 };
+// 2v2 里谁算电脑（会配合队友选目标）。联机和本地回放里玩家的操控是普通 Ctrl，带 net 标记，不是电脑
+const cpuTeamwork = f => !!(f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net);
 const foeOf = f => {
   if (!isMulti()) return f === A ? B : A;
   if (isRaid() && f !== B) { f.target = B; return B; }
@@ -102,7 +104,7 @@ const foeOf = f => {
   if (!list.length) return A;
   if (list.length === 1) { f.target = list[0]; return list[0]; }
   // 电脑侠客的团队意识：残血的敌人两人一起收割；队友残血被缠住就过去解围（只影响电脑，玩家的朝向不变）
-  if (!isRaid() && f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net) {   // 联机里玩家的操控是回滚用的 Ctrl（带 net 标记），不是电脑
+  if (!isRaid() && cpuTeamwork(f)) {
     const mate = fighterByIdx(f.idx ^ 2);
     const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
     if (low) { f.target = low; return low; }
