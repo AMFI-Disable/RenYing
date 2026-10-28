@@ -440,10 +440,10 @@ function idRole(f) {
   if (!f || f.hidden || f.dummy || !f.sk) return null;
   if (M.mode === 'world' && !isMulti()) return f === A ? { kind: 'self', rgb: ID_SELF[0], label: youLabel() } : null;
   if (!isMulti() || M.mode === 'demo' || M.mode === 'replay') return null;
-  if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: f.look.name } : { kind: 'foe', rgb: ID_FOE };   // 旁观：只分两队
+  if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: cvT(f.look.name) } : { kind: 'foe', rgb: ID_FOE };   // 旁观：只分两队
   const k = human.indexOf(f.ctrl);
   if (k >= 0) return { kind: 'self', rgb: ID_SELF[k] || ID_SELF[0], label: idHumans().length > 1 ? `${k + 1}P` : youLabel() };
-  if (fighterTeam(f) === localTeam()) return { kind: 'ally', rgb: ID_ALLY, label: String(f.ctrl === NET.remote ? ((NET.names || {})[NET.role === 'host' ? 'client' : 'host'] || f.look.name) : f.look.name).slice(0, 6) };   // 名字太长就截到 6 个字，别把旁边的名牌挤走
+  if (fighterTeam(f) === localTeam()) return { kind: 'ally', rgb: ID_ALLY, label: (f.ctrl === NET.remote && (NET.names || {})[NET.role === 'host' ? 'client' : 'host']) ? String(NET.names[NET.role === 'host' ? 'client' : 'host']).slice(0, 6) : cvT(f.look.name) };   // 玩家名太长就截到 6 个字，别把旁边的名牌挤走；侠客名是固定的，英文也不截
   return isRaid() ? null : { kind: 'foe', rgb: ID_FOE };
 }
 // 脚下的圈：在画人之前画，身体会压在上面，不挡招式

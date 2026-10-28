@@ -5476,7 +5476,7 @@ const PATTERNS_EN = [
 [/^禁 (.+)$/, (m0, n) => `Ban · ${lookup(n) || n}`],
 [/^没找到名字里同时有「(.+)」这几个字的人，按回车按全名加$/, (m0, q) => `No one's name contains “${q}”. Press Enter to add by full name`],
 [/^(.+?) · (限免|武库|青锋行 \/ 武库)$/, (m0, n, t) => `${lookup(n) || n} · ${{ 限免: 'Free trial', 武库: 'Armory', '青锋行 / 武库': 'Qingfeng Quest / Armory' }[t]}`],
-[/^(受限|隐秘|保密|军规级|★ 非凡|非凡) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
+[/^(受限|隐秘|保密|军规级|★ 非凡|非凡|传说|精英) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
 [/^难度 ([●○]+)$/, (m0, d) => `Difficulty ${d}`],
 [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
 [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],
@@ -7490,6 +7490,11 @@ const UI_COPY_EN = {
 "剑阁大捷！": "Sword Pavilion cleared!",
 "试炼止步": "Trial over",
 "喘息休整": "Catching breath",
+"势": "Guard",
+"游客": "Guest",
+"帧率": "FPS",
+"延迟 对手": "Ping",
+"精英": "Elite",
 "同袍·壹(1P)": "Ally 1 (1P)",
 "同袍·贰(2P)": "Ally 2 (2P)",
 "同袍·叁(3P)": "Ally 3 (3P)",
@@ -15174,10 +15179,10 @@ function idRole(f) {
 if (!f || f.hidden || f.dummy || !f.sk) return null;
 if (M.mode === 'world' && !isMulti()) return f === A ? { kind: 'self', rgb: ID_SELF[0], label: youLabel() } : null;
 if (!isMulti() || M.mode === 'demo' || M.mode === 'replay') return null;
-if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: f.look.name } : { kind: 'foe', rgb: ID_FOE };   // 旁观：只分两队
+if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: cvT(f.look.name) } : { kind: 'foe', rgb: ID_FOE };   // 旁观：只分两队
 const k = human.indexOf(f.ctrl);
 if (k >= 0) return { kind: 'self', rgb: ID_SELF[k] || ID_SELF[0], label: idHumans().length > 1 ? `${k + 1}P` : youLabel() };
-if (fighterTeam(f) === localTeam()) return { kind: 'ally', rgb: ID_ALLY, label: String(f.ctrl === NET.remote ? ((NET.names || {})[NET.role === 'host' ? 'client' : 'host'] || f.look.name) : f.look.name).slice(0, 6) };   // 名字太长就截到 6 个字，别把旁边的名牌挤走
+if (fighterTeam(f) === localTeam()) return { kind: 'ally', rgb: ID_ALLY, label: (f.ctrl === NET.remote && (NET.names || {})[NET.role === 'host' ? 'client' : 'host']) ? String(NET.names[NET.role === 'host' ? 'client' : 'host']).slice(0, 6) : cvT(f.look.name) };   // 玩家名太长就截到 6 个字，别把旁边的名牌挤走；侠客名是固定的，英文也不截
 return isRaid() ? null : { kind: 'foe', rgb: ID_FOE };
 }
 function drawIdentityGround(list) {
@@ -17560,7 +17565,8 @@ ctx.fillStyle = `rgba(${p.rgb},${k * 0.9})`; circle([p.x, p.y], p.r * (p.y >= 0 
 } else if (p.type === 'text') {
 ctx.save(); ctx.font = `28px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 ctx.globalAlpha = k; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-const yy = p.y - (1 - k) * 30; ctx.strokeText(p.text, p.x, yy); ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, p.x, yy); ctx.restore();
+const txt = typeof p.text === 'string' && p.text.length > 1 ? cvT(p.text) : p.text;   // 单个字（闪、破、斩）是印章式的字眼，英文也照原样
+const yy = p.y - (1 - k) * 30; ctx.strokeText(txt, p.x, yy); ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(txt, p.x, yy); ctx.restore();
 } else if (p.type === 'callout') {
 const pop = 1 + Math.max(0, (p.life - p.max + 0.15) / 0.15) * 0.75;
 const sc = (p.scale || 2) * pop;
@@ -17993,7 +17999,7 @@ const maxG = f.maxGuard || 100;
 const curG = Math.round(clamp(f.guard !== undefined ? f.guard : maxG, 0, maxG));
 const gLow = curG < maxG * 0.3;
 const hpTxt = `${Math.max(0, Math.round(f.hp))}/${f.maxHp}`;
-const gTxt = `势 ${curG}`;
+const gTxt = `${cvT('势')} ${curG}`;
 let fTag = '';
 if (f.ctrl === human[0]) fTag = ' [1P]';
 else if (f.ctrl === human[1] && (M.subMode === 'pp_cc' || M.subMode === 'pp_pp')) fTag = ' [2P]';
@@ -18007,7 +18013,7 @@ fTag = (f === A || f === C) ? (f.ctrl === human[0] ? ' [我]' : ' [队友]') : '
 fTag = (f === A || f === C) ? (NET.role === 'host' ? ' [我方]' : ' [敌方]') : (NET.role === 'client' ? ' [我方]' : ' [敌方]');
 }
 }
-const dispName = f.look.name + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag);   // 英文界面：[队友] 这类标签也换成英文
+const dispName = cvT(f.look.name) + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag);   // 英文界面：[队友] 这类标签也换成英文
 ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(dispName).width;
 ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
 const total = nameW + hpW + gW + txtGap * 2;
@@ -18239,9 +18245,10 @@ ctx.font = `${Math.round(fh * 1.2)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,2
 ctx.font = `${Math.round(bh * 2)}px ${TITLE_FONT}`; ctx.textBaseline = 'top';
 ctx.fillStyle = `rgb(${f.look.slash})`;
 ctx.textAlign = i === 0 ? 'left' : 'right';
-ctx.fillText(f.look.name, i === 0 ? x0 : x0 + barW, top + bh + 8);
+const nm = cvT(f.look.name);
+ctx.fillText(nm, i === 0 ? x0 : x0 + barW, top + bh + 8);
 if ((M.mode === 'net' && NET.names) || (M.mode === 'replay' && REPLAY.names)) {
-const pn = M.mode === 'replay' ? REPLAY.names[i] || '' : NET.names[i === 0 ? 'host' : 'client'] || '游客', cw = ctx.measureText(f.look.name).width;
+const pn = M.mode === 'replay' ? REPLAY.names[i] || '' : NET.names[i === 0 ? 'host' : 'client'] || cvT('游客'), cw = ctx.measureText(nm).width;
 ctx.font = `${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.6)';
 ctx.fillText(pn, i === 0 ? x0 + cw + 10 : x0 + barW - cw - 10, top + bh + 8 + bh * 0.6);
 }
@@ -18445,12 +18452,12 @@ if (M.mode === 'demo') return;
 const fs = Math.max(12, Math.round(H * 0.016)), x = 14, y = H - 12;
 ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
 ctx.fillStyle = 'rgba(239,232,216,0.55)';
-let t = `帧率 ${FPS}`;
+let t = `${cvT('帧率')} ${FPS}`;
 ctx.fillText(t, x, y);
 if (M.mode === 'net' && NET.rtt) {
 const ms = Math.round(NET.rtt), w = ctx.measureText(t + '   ').width;
 ctx.fillStyle = ms < 80 ? '#8fe0a0' : ms < 160 ? '#e9c46a' : '#ff8a78';
-const tx = `延迟 对手 ${ms}ms`;
+const tx = `${cvT('延迟 对手')} ${ms}ms`;
 ctx.fillText(tx, x + w, y);
 }
 if (NET_HUD) {

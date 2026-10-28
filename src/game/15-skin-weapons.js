@@ -766,7 +766,8 @@ function drawParticles(glowOnly) {
     } else if (p.type === 'text') {
       ctx.save(); ctx.font = `28px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.globalAlpha = k; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-      const yy = p.y - (1 - k) * 30; ctx.strokeText(p.text, p.x, yy); ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, p.x, yy); ctx.restore();
+      const txt = typeof p.text === 'string' && p.text.length > 1 ? cvT(p.text) : p.text;   // 单个字（闪、破、斩）是印章式的字眼，英文也照原样
+      const yy = p.y - (1 - k) * 30; ctx.strokeText(txt, p.x, yy); ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(txt, p.x, yy); ctx.restore();
     } else if (p.type === 'callout') {
       const pop = 1 + Math.max(0, (p.life - p.max + 0.15) / 0.15) * 0.75;
       const sc = (p.scale || 2) * pop;

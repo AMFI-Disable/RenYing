@@ -215,7 +215,7 @@ function drawHUD2v2() {
       const curG = Math.round(clamp(f.guard !== undefined ? f.guard : maxG, 0, maxG));
       const gLow = curG < maxG * 0.3;
       const hpTxt = `${Math.max(0, Math.round(f.hp))}/${f.maxHp}`;
-      const gTxt = `势 ${curG}`;
+      const gTxt = `${cvT('势')} ${curG}`;
       let fTag = '';
       if (f.ctrl === human[0]) fTag = ' [1P]';
       else if (f.ctrl === human[1] && (M.subMode === 'pp_cc' || M.subMode === 'pp_pp')) fTag = ' [2P]';
@@ -229,7 +229,7 @@ function drawHUD2v2() {
           fTag = (f === A || f === C) ? (NET.role === 'host' ? ' [我方]' : ' [敌方]') : (NET.role === 'client' ? ' [我方]' : ' [敌方]');
         }
       }
-      const dispName = f.look.name + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag);   // 英文界面：[队友] 这类标签也换成英文
+      const dispName = cvT(f.look.name) + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag);   // 英文界面：[队友] 这类标签也换成英文
       ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(dispName).width;
       ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
       const total = nameW + hpW + gW + txtGap * 2;
@@ -471,9 +471,10 @@ function drawHUD() {
     ctx.font = `${Math.round(bh * 2)}px ${TITLE_FONT}`; ctx.textBaseline = 'top';
     ctx.fillStyle = `rgb(${f.look.slash})`;
     ctx.textAlign = i === 0 ? 'left' : 'right';
-    ctx.fillText(f.look.name, i === 0 ? x0 : x0 + barW, top + bh + 8);
+    const nm = cvT(f.look.name);
+    ctx.fillText(nm, i === 0 ? x0 : x0 + barW, top + bh + 8);
     if ((M.mode === 'net' && NET.names) || (M.mode === 'replay' && REPLAY.names)) {
-      const pn = M.mode === 'replay' ? REPLAY.names[i] || '' : NET.names[i === 0 ? 'host' : 'client'] || '游客', cw = ctx.measureText(f.look.name).width;
+      const pn = M.mode === 'replay' ? REPLAY.names[i] || '' : NET.names[i === 0 ? 'host' : 'client'] || cvT('游客'), cw = ctx.measureText(nm).width;
       ctx.font = `${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.6)';
       ctx.fillText(pn, i === 0 ? x0 + cw + 10 : x0 + barW - cw - 10, top + bh + 8 + bh * 0.6);
     }
@@ -685,13 +686,13 @@ function drawStats() {
   const fs = Math.max(12, Math.round(H * 0.016)), x = 14, y = H - 12;
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
   ctx.fillStyle = 'rgba(239,232,216,0.55)';
-  let t = `帧率 ${FPS}`;
+  let t = `${cvT('帧率')} ${FPS}`;
   ctx.fillText(t, x, y);
   if (M.mode === 'net' && NET.rtt) {
     // 到对手的一个来回（点对点，没有服务器这一段）
     const ms = Math.round(NET.rtt), w = ctx.measureText(t + '   ').width;
     ctx.fillStyle = ms < 80 ? '#8fe0a0' : ms < 160 ? '#e9c46a' : '#ff8a78';
-    const tx = `延迟 对手 ${ms}ms`;
+    const tx = `${cvT('延迟 对手')} ${ms}ms`;
     ctx.fillText(tx, x + w, y);
   }
   // 回滚与联机遥测 HUD (按 ~ 或 F2 切换)
