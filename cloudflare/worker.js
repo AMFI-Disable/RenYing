@@ -38,12 +38,39 @@ import '../src/armory-core.js';
 
 const C = globalThis.ArmoryCore;
 
+/* ---------- 跨域（CORS）----------
+ * 只有游戏网页（GitHub Pages）和本机开发（localhost、127.0.0.1）能从浏览器里调接口；要加别的网址，在 Worker 的变量 CORS_ORIGINS 里写，逗号分开。
+ * 离线版（双击打开，Origin 是 null）本来就不连服务器，不放行。命令行、curl 这种不带 Origin 的照常处理（跨域只管浏览器）。
+ * /api/admin/* 只给这个 Worker 自己的 /admin 网页用：从来不带跨域头，带着别的网站的 Origin 来的直接 403。 */
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
 };
+const CORS_ORIGINS = ['https://amfi-disable.github.io'];
+const DEV_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d{1,5})?$/;
+function corsOrigin(env, origin) {
+  if (!origin) return '';
+  const extra = String((env && env.CORS_ORIGINS) || '').split(',').map(o => o.trim().replace(/\/+$/, '')).filter(Boolean);
+  return CORS_ORIGINS.includes(origin) || extra.includes(origin) || DEV_ORIGIN.test(origin) ? origin : '';
+}
+async function withCors(request, env, ctx) {
+  const url = new URL(request.url), origin = request.headers.get('Origin') || '';
+  if (url.pathname.startsWith('/api/admin/')) {
+    if (origin && origin !== url.origin) return error('管理接口只能从管理网页用', 403);
+    return request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : route(request, env, ctx);
+  }
+  const allow = corsOrigin(env, origin);
+  const res = request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : await route(request, env, ctx);
+  if (res.status === 101 || res.webSocket) return res;
+  const out = new Response(res.body, res);
+  out.headers.append('Vary', 'Origin');
+  if (allow) {
+    out.headers.set('Access-Control-Allow-Origin', allow);
+    for (const [k, v] of Object.entries(CORS_HEADERS)) out.headers.set(k, v);
+  }
+  return out;
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -51,7 +78,6 @@ function json(data, status = 200) {
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
-      ...CORS_HEADERS,
     },
   });
 }
@@ -1863,13 +1889,12 @@ export class WorldLine {
 globalThis.RenyingWorldSim = { WorldSim, WL, RG };
 
 export default {
-  async fetch(request, env, ctx) {
+  fetch: withCors,
+};
+
+async function route(request, env, ctx) {
     if (!env.DB) {
       return error('D1 Database binding "DB" is missing in Worker configuration.', 500);
-    }
-
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
     const url = new URL(request.url);
@@ -2148,5 +2173,4 @@ export default {
       console.error('Worker error:', err);
       return error('服务器内部错误', 500);
     }
-  }
-};
+}

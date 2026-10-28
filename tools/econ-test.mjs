@@ -1452,6 +1452,48 @@ section('密码用 PBKDF2 存；老号照样能登录，登录成功时换成 PB
   ok(r3.ok, '再登录一次也没问题');
 }
 
+section('跨域：只放行游戏网页和本机开发；管理接口只给自己的管理网页');
+{
+  const raw = async (method, path, origin, extra = {}, env = ENV) => {
+    const headers = { 'CF-Connecting-IP': '8.8.7.' + Math.floor(Math.random() * 250), ...extra };
+    if (origin) headers.Origin = origin;
+    return worker.fetch(new Request('https://w.test' + path, { method, headers }), env, { waitUntil() {} });
+  };
+  const acao = r => r.headers.get('Access-Control-Allow-Origin');
+  const gh = await raw('GET', '/api/health', 'https://amfi-disable.github.io');
+  ok(gh.status === 200 && acao(gh) === 'https://amfi-disable.github.io' && /Origin/.test(gh.headers.get('Vary') || ''), '游戏网页（GitHub Pages）：放行，回的是它自己的网址，带 Vary: Origin');
+  const pf = await raw('OPTIONS', '/api/profile', 'https://amfi-disable.github.io', { 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type,authorization' });
+  ok(pf.status === 204 && acao(pf) === 'https://amfi-disable.github.io' && /Authorization/.test(pf.headers.get('Access-Control-Allow-Headers') || '') && /POST/.test(pf.headers.get('Access-Control-Allow-Methods') || ''), '预检：放行 POST 和 Authorization');
+  const devs = ['http://localhost:8000', 'http://127.0.0.1:5500', 'http://localhost', 'https://localhost:8443', 'http://[::1]:8080'];
+  const dr = await Promise.all(devs.map(o => raw('GET', '/api/health', o)));
+  ok(dr.every((r, i) => acao(r) === devs[i]), '本机开发的地址（localhost、127.0.0.1，什么端口都行）：放行', dr.map(acao));
+  const bads = ['https://evil.example', 'https://amfi-disable.github.io.evil.example', 'http://amfi-disable.github.io', 'https://localhost.evil.example', 'http://127.0.0.1.nip.io', 'null', '*'];
+  const br = await Promise.all(bads.map(o => raw('GET', '/api/health', o)));
+  ok(br.every(r => r.status === 200 && acao(r) === null && !r.headers.get('Access-Control-Allow-Methods')), '别的网站、长得像的网址、离线版（null）：不带跨域头（浏览器读不到）', br.map(acao));
+  const bp = await raw('OPTIONS', '/api/login', 'https://evil.example', { 'Access-Control-Request-Method': 'POST' });
+  ok(acao(bp) === null, '别的网站的预检也不放行');
+  const no = await raw('GET', '/api/health');
+  ok(no.status === 200 && acao(no) === null, '不带 Origin（命令行、curl）：照常处理');
+  const ex = await raw('GET', '/api/health', 'https://renying.example.org', {}, { ...ENV, CORS_ORIGINS: 'https://renying.example.org/, https://x.example' });
+  ok(acao(ex) === 'https://renying.example.org', 'Worker 变量 CORS_ORIGINS 里写的网址也放行');
+  const lb = await raw('GET', '/api/leaderboard?k=wins', 'https://amfi-disable.github.io');
+  ok(lb.status === 200 && acao(lb) === 'https://amfi-disable.github.io', '排行榜这样的普通接口也带上');
+  const er = await raw('GET', '/api/nope', 'https://amfi-disable.github.io');
+  ok(er.status === 404 && acao(er) === 'https://amfi-disable.github.io', '404、报错也带（网页才看得到错误信息）');
+  const A = { Authorization: 'Bearer ' + ADMIN };
+  const a1 = await raw('GET', '/api/admin/whoami', 'https://amfi-disable.github.io', A);
+  ok(a1.status === 403 && acao(a1) === null, '管理接口：游戏网页来的也 403，不带跨域头');
+  ok((await raw('GET', '/api/admin/whoami', 'http://localhost:8000', A)).status === 403 && (await raw('POST', '/api/admin/flags', 'https://evil.example', A)).status === 403, '本机开发、别的网站来的：403');
+  const a2 = await raw('GET', '/api/admin/whoami', 'https://w.test', A);
+  ok(a2.status === 200 && acao(a2) === null, '自己的 /admin 网页（同一个网址）：能用，也不带跨域头');
+  const a3 = await raw('GET', '/api/admin/whoami', undefined, A);
+  ok(a3.status === 200, '命令行（tools/econ-admin.mjs，不带 Origin）：能用');
+  const a4 = await raw('OPTIONS', '/api/admin/flags', 'https://amfi-disable.github.io', { 'Access-Control-Request-Method': 'POST' });
+  ok(a4.status === 403 && acao(a4) === null, '管理接口的跨域预检：不放行');
+  const pg = await raw('GET', '/admin', 'https://evil.example');
+  ok(pg.status === 200 && acao(pg) === null, '管理网页本身不带跨域头');
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');
