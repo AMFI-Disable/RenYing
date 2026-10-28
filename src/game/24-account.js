@@ -927,19 +927,15 @@ function onlineNow() {
 }
 function refreshOnline() {
   const o = onlineNow(), set = (id, t) => { const el = $id(id); if (el && el.textContent !== t) el.textContent = t; };
-  for (const id of ['homeOnlinePill', 'homeOnlineCard']) { const el = $id(id); if (el) el.classList.toggle('online-unknown', !o); }   // 不知道人数时绿点变灰
+  const pill = $id('homeOnlinePill'); if (pill) pill.classList.toggle('online-unknown', !o);   // 不知道人数时绿点变灰
   if (!o) {
     set('netOnlineOverview', '在线人数未知 · 连不上服务器');
     set('homeOnlineCount', '全服在线人数未知');
-    set('homeOnlineCardNum', '在线人数未知');
-    set('homeOnlineCardSub', '连不上服务器，稍后自动重试');
     return;
   }
   const parts = [`对局中 ${o.playing} 人`]; if (o.waiting) parts.push(`匹配中 ${o.waiting} 人`);
   set('netOnlineOverview', `${o.total} 人在线 · ` + parts.join(' · '));
   set('homeOnlineCount', `全服 ${o.total} 人在线`);
-  set('homeOnlineCardNum', `${o.total} 位侠士在线`);
-  set('homeOnlineCardSub', o.playing || o.waiting ? parts.join(' · ') : '全服连线待命中 · 随时开战');
 }
 setInterval(refreshOnline, 1000);
 setTimeout(refreshOnline, 300);
