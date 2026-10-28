@@ -2184,7 +2184,8 @@ section('数据库迁移：cloudflare/migrations/ 按编号跑，记在 schema_m
     INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES ('u_old1', 2, 99, 0, '[{"r":"x"}]', 8, 0);
     INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('u_old1', 9, 'sync', 1, '{}');`);
   const before2 = { econ: d2.prepare("SELECT * FROM econ WHERE uid = 'u_old1'").get(), mkt: d2.prepare("SELECT * FROM mkt WHERE id IN ('mk1', 'mk2') ORDER BY id").all(), sanc: d2.prepare('SELECT * FROM sanctions').all(), log: d2.prepare('SELECT * FROM econ_log').all(), users: d2.prepare('SELECT * FROM users').all() };
-  const r2 = await hit1(await fresh(), e2);
+  const rnd = Math.random; Math.random = () => 0.5;   // 2% 的请求会顺手清理过期的流水和挂单，这里的老数据时间戳很早，别让它被清掉
+  const r2 = await hit1(await fresh(), e2, '6.6.6.2').finally(() => { Math.random = rnd; });
   ok(r2.status === 200 && applied(d2).length === MIGRATIONS.length, '老库：第一次请求把迁移全跑完（以前加过的列跳过，不报错）', applied(d2).map(m => m.name));
   sameAsRef(d2, '老库');
   const after2 = { econ: d2.prepare("SELECT * FROM econ WHERE uid = 'u_old1'").get(), mkt: d2.prepare("SELECT * FROM mkt WHERE id IN ('mk1', 'mk2') ORDER BY id").all(), sanc: d2.prepare('SELECT * FROM sanctions').all(), log: d2.prepare('SELECT * FROM econ_log').all(), users: d2.prepare('SELECT * FROM users').all().map(({ deleted_at, ...r }) => r) };
