@@ -32,9 +32,14 @@ const Input = {
   endFrame() { this.hits = {}; this.mdx = 0; this.mdy = 0; }
 };
 const GAME_KEYS = new Set(['Space', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyW', 'KeyA', 'KeyS', 'KeyD']);
+const typingIn = el => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+const pressingUi = (el, code) => (code === 'Enter' || code === 'Space') && !!el && !!el.closest && !!el.closest('button, a, [role="button"], [tabindex]:not(#c)');
+// 只有在打的时候才把游戏键拦下来；面板里（菜单、暂停、设置、商店……）键盘照常用：Tab 换焦点、方向键调滑块、空格回车按按钮
 addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey) return;
-  if (GAME_KEYS.has(e.code)) e.preventDefault();
+  const playing = G.state === 'playing';
+  if (!playing && e.code !== 'Escape' && (typingIn(e.target) || pressingUi(e.target, e.code))) return;   // 这一下是给面板的，不当游戏输入
+  if (playing && GAME_KEYS.has(e.code)) e.preventDefault();
   if (!e.repeat) Input.hits[e.code] = true;
   Input.keys[e.code] = true;
 });
