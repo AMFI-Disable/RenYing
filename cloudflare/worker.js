@@ -56,18 +56,38 @@ function corsOrigin(env, origin) {
 }
 async function withCors(request, env, ctx) {
   const url = new URL(request.url), origin = request.headers.get('Origin') || '';
+  const rid = reqId(), t0 = Date.now();
   if (url.pathname.startsWith('/api/admin/')) {
     if (origin && origin !== url.origin) return error('管理接口只能从管理网页用', 403);
-    return request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : route(request, env, ctx);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
+    return tagged(await route(request, env, ctx, rid), request, url, env, ctx, rid, t0);
   }
   const allow = corsOrigin(env, origin);
-  const res = request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : await route(request, env, ctx);
+  const res = request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : await route(request, env, ctx, rid);
   if (res.status === 101 || res.webSocket) return res;
-  const out = new Response(res.body, res);
+  const out = tagged(res, request, url, env, ctx, rid, t0);
   out.headers.append('Vary', 'Origin');
   if (allow) {
     out.headers.set('Access-Control-Allow-Origin', allow);
     for (const [k, v] of Object.entries(CORS_HEADERS)) out.headers.set(k, v);
+  }
+  return out;
+}
+
+/* ---------- 请求编号、慢请求 ----------
+ * 每个回应都带 X-Request-Id（8 位），服务器出错时错误信息里也带上，玩家报问题时说这个编号就能在「错误」页找到。
+ * 超过 SLOW_MS 的请求按“方法 + 路径”合成一行记进 errs（kind = slow），记最慢一次和总耗时。
+ * Workers 里 Date.now() 只在等网络、等数据库之后才往前走，量出来的正好是花在 D1 和外部请求上的时间。 */
+const SLOW_MS = 1000;
+const reqId = () => Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('');
+function tagged(res, request, url, env, ctx, rid, t0) {
+  if (res.status === 101 || res.webSocket) return res;
+  const out = new Response(res.body, res);
+  out.headers.set('X-Request-Id', rid);
+  const ms = Date.now() - t0;
+  if (ms >= SLOW_MS && env.DB) {
+    const p = errRecord(env, 'slow', { msg: request.method + ' ' + url.pathname.replace(/\d+/g, ':n'), meta: { status: res.status, rid }, ms }, Date.now()).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(p);
   }
   return out;
 }
@@ -82,8 +102,11 @@ function json(data, status = 200) {
   });
 }
 
+// 出错时的回应都是这个样子：{ ok: false, error: 给人看的话, code: 给程序看的类别, ...extra }
+const ERR_CODE = { 400: 'bad_request', 401: 'unauthorized', 403: 'forbidden', 404: 'not_found', 409: 'conflict', 413: 'too_large',
+  426: 'upgrade_required', 429: 'rate_limited', 500: 'internal', 503: 'unavailable' };
 function error(message, status = 400, extra) {
-  return json({ ok: false, error: message, ...(extra || {}) }, status);
+  return json({ ok: false, error: message, code: ERR_CODE[status] || (status >= 500 ? 'internal' : 'bad_request'), ...(extra || {}) }, status);
 }
 
 const ICE_STUN = ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'];
@@ -170,7 +193,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS saga_mark (hero TEXT NOT NULL, node TEXT NOT NULL, uid TEXT NOT NULL, pick TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (hero, node, uid))`,
   // 功能开关：mode 是 off（关）、dev（只对 Dev 账号开）、all（所有人开）；没有这一行就用代码里 FLAGS 写的默认值
   `CREATE TABLE IF NOT EXISTS flags (k TEXT PRIMARY KEY, mode TEXT NOT NULL CHECK (mode IN ('off', 'dev', 'all')), by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
-  // 错误记录：同一种错（kind + 消息 + 位置）合成一行，n 是出现了几次。kind：client 网页报上来的。不存 IP、账号
+  // 错误记录：同一种错（kind + 消息 + 位置）合成一行，n 是出现了几次。kind：client 网页报上来的、server 服务器自己出的错、slow 慢请求。不存 IP、账号
   `CREATE TABLE IF NOT EXISTS errs (sig TEXT PRIMARY KEY, kind TEXT NOT NULL, msg TEXT NOT NULL, src TEXT NOT NULL, stack TEXT NOT NULL, meta TEXT NOT NULL, n INTEGER NOT NULL, first_at INTEGER NOT NULL, last_at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS idx_errs_last ON errs (kind, last_at)`,
 ];
@@ -179,6 +202,8 @@ let schemaReady = null;
 const SCHEMA_COLS = [
   `ALTER TABLE users ADD COLUMN password_algo TEXT NOT NULL DEFAULT 'sha256-v1'`,
   `ALTER TABLE users ADD COLUMN password_updated_at INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE errs ADD COLUMN ms INTEGER NOT NULL DEFAULT 0`,       // 慢请求：最慢一次多少毫秒
+  `ALTER TABLE errs ADD COLUMN ms_sum INTEGER NOT NULL DEFAULT 0`,   // 慢请求：加起来多少毫秒（除以 n 是平均）
 ];
 function ensureSchema(env) {
   if (!schemaReady) schemaReady = (async () => {
@@ -1063,7 +1088,7 @@ async function handleAdmin(env, request, path, now, ip) {
   if (route === 'GET /api/admin/errors') {   // 错误记录：最近出现的在前；kind 不填就全部
     const kind = q('kind'), days = Math.max(1, Math.min(30, +q('days') || 7));
     const rows = (await env.DB.prepare(
-      `SELECT sig, kind, msg, src, stack, meta, n, first_at, last_at FROM errs WHERE last_at > ?1 ${kind ? 'AND kind = ?2' : ''} ORDER BY last_at DESC LIMIT 200`
+      `SELECT sig, kind, msg, src, stack, meta, n, first_at, last_at, ms, ms_sum FROM errs WHERE last_at > ?1 ${kind ? 'AND kind = ?2' : ''} ORDER BY last_at DESC LIMIT 200`
     ).bind(...(kind ? [now - days * DAY_MS, kind] : [now - days * DAY_MS])).all()).results || [];
     return json({ ok: true, days, rows });
   }
@@ -1268,7 +1293,8 @@ async function cleanup(env, now) {
 
 /* ---------- 错误记录 ----------
  * 网页出了没接住的错，src/errlog.js 脱敏以后报到 POST /api/err；这里再洗一遍（不信网页），同一种错合成一行计数。
- * 每个 IP 一小时最多 30 条，全服一小时最多 2000 条，多出来的直接丢（错误记录不能把数据库写爆）。管理网页「错误」页看。 */
+ * 每个 IP 一小时最多 30 条，全服一小时最多 2000 条，多出来的直接丢（错误记录不能把数据库写爆）。管理网页「错误」页看。
+ * 服务器自己没接住的错（kind = server）和慢请求（kind = slow）也记在这里。 */
 const ERR_KINDS = ['client'];
 function errScrub(s, cap) {
   return String(s == null ? '' : s)
@@ -1283,13 +1309,14 @@ async function errRecord(env, kind, e, now) {
   const msg = errScrub(e.msg, 300) || '未知错误', src = errScrub(e.src, 200), stack = errScrub(e.stack, 1500);
   const meta = {};
   for (const [k, v] of Object.entries(isPlain(e.meta) ? e.meta : {}).slice(0, 12)) {
-    if (/^[a-z]{1,8}$/i.test(k) && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean')) meta[k] = typeof v === 'string' ? errScrub(v, 60) : v;
+    if (/^[a-z]{1,8}$/i.test(k) && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean')) meta[k] = typeof v === 'string' ? (kind === 'client' ? errScrub(v, 60) : v.slice(0, 60)) : v;   // 网页报的才要洗，服务器自己记的（请求编号这种）原样留
   }
-  const sig = (await sha256Hex(kind + '|' + msg + '|' + src)).slice(0, 32);
+  const sig = (await sha256Hex(kind + '|' + msg + '|' + src)).slice(0, 32), ms = Math.max(0, Math.round(+e.ms || 0));
+  await ensureSchema(env);
   await env.DB.prepare(
-    'INSERT INTO errs (sig, kind, msg, src, stack, meta, n, first_at, last_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, ?7, ?7) ' +
-    'ON CONFLICT(sig) DO UPDATE SET n = errs.n + 1, last_at = ?7, meta = ?6, stack = CASE WHEN ?5 = \'\' THEN errs.stack ELSE ?5 END'
-  ).bind(sig, kind, msg, src, stack, JSON.stringify(meta), now).run();
+    'INSERT INTO errs (sig, kind, msg, src, stack, meta, n, first_at, last_at, ms, ms_sum) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, ?7, ?7, ?8, ?8) ' +
+    'ON CONFLICT(sig) DO UPDATE SET n = errs.n + 1, last_at = ?7, meta = ?6, stack = CASE WHEN ?5 = \'\' THEN errs.stack ELSE ?5 END, ms = MAX(errs.ms, ?8), ms_sum = errs.ms_sum + ?8'
+  ).bind(sig, kind, msg, src, stack, JSON.stringify(meta), now, ms).run();
 }
 async function errReport(env, request, ip, now) {
   const txt = await request.text().catch(() => '');
@@ -1938,7 +1965,7 @@ export default {
   fetch: withCors,
 };
 
-async function route(request, env, ctx) {
+async function route(request, env, ctx, rid = reqId()) {
     if (!env.DB) {
       return error('D1 Database binding "DB" is missing in Worker configuration.', 500);
     }
@@ -2219,7 +2246,9 @@ async function route(request, env, ctx) {
 
       return error('Not found', 404);
     } catch (err) {
-      console.error('Worker error:', err);
-      return error('服务器内部错误', 500);
+      console.error('Worker error:', rid, err);
+      const p = errRecord(env, 'server', { msg: (err && (err.message || err.name)) || String(err), src: request.method + ' ' + path.replace(/\d+/g, ':n'), stack: err && err.stack, meta: { rid } }, Date.now()).catch(() => {});
+      if (ctx && ctx.waitUntil) ctx.waitUntil(p);
+      return error(`服务器内部错误（编号 ${rid}）`, 500, { rid });
     }
 }

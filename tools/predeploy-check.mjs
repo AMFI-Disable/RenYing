@@ -7,7 +7,8 @@
 //   2. 管理网页 /admin 的安全头：CSP 只放行一段 sha256 对得上的脚本，没有 unsafe-inline / unsafe-eval，
 //      页面里没有 onclick 这种行内事件、没有外链脚本；
 //   3. 关键接口冒烟测试（Worker 在本机跑，D1 用 node:sqlite 模拟）：健康检查、注册、登录、读写存档、
-//      管理口令、退出后旧 token 失效、未知路径 404、OPTIONS 预检、没有开放世界绑定时回 503 而不是崩掉、网页报错的收集和脱敏。
+//      管理口令、退出后旧 token 失效、未知路径 404、OPTIONS 预检、没有开放世界绑定时回 503 而不是崩掉、网页报错的收集和脱敏、
+//      统一的错误格式和请求编号、服务器错误和慢请求的记录。
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -78,11 +79,13 @@ const ADMIN = 'predeploy-admin-0123456789abcdef';
 const ENV = { DB: makeD1(), ADMIN_SECRET: ADMIN };   // 故意不给 WORLD：线上没部署开放世界时也不能崩
 const { default: worker } = await import(pathToFileURL(FILE));
 let ipN = 0;
-async function call(method, route, { body, token, headers = {} } = {}) {
+const pend = [];   // Worker 交给 ctx.waitUntil 的活（记慢请求、记服务器错误）：查结果前先等它们做完
+const settle = async () => { while (pend.length) await Promise.all(pend.splice(0)); };
+async function call(method, route, { body, token, headers = {}, env = ENV } = {}) {
   const h = { 'CF-Connecting-IP': '10.7.0.' + (ipN++ % 250), ...headers };
   if (body !== undefined) h['Content-Type'] = 'application/json';
   if (token) h.Authorization = 'Bearer ' + token;
-  const res = await worker.fetch(new Request('https://w.test' + route, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body) }), ENV, { waitUntil() {} });
+  const res = await worker.fetch(new Request('https://w.test' + route, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body) }), env, { waitUntil(p) { pend.push(p); } });
   const text = await res.text();
   let json = null;
   try { json = JSON.parse(text); } catch {}
@@ -167,6 +170,29 @@ section('关键接口');
   const meta = row ? JSON.parse(row.meta) : {};
   ok(meta.scr === 'armory' && meta.nick.length <= 60 && !('bad key' in meta), '附带信息只留短字段', row && row.meta);
   ok((await call('GET', '/api/admin/errors')).status >= 400, '不带管理口令看不了错误');
+
+  // 统一的错误格式：{ ok: false, error, code }，每个回应都带请求编号
+  const nf = await call('GET', '/api/nope'), na = await call('GET', '/api/profile');
+  ok(nf.json && nf.json.ok === false && nf.json.code === 'not_found' && typeof nf.json.error === 'string', '404 的格式是 { ok: false, error, code: not_found }', nf.text);
+  ok(na.json && na.json.code === 'unauthorized', '401 的 code 是 unauthorized', na.text);
+  ok(/^[0-9a-f]{8}$/.test(nf.headers.get('X-Request-Id') || '') && /^[0-9a-f]{8}$/.test((await call('GET', '/api/health')).headers.get('X-Request-Id') || ''), '每个回应都带 X-Request-Id');
+  // 服务器自己出错：回 500 带编号，错误页查得到同一个编号
+  const brokenDB = { ...ENV.DB, prepare: sql => { if (/FROM users WHERE username/.test(sql)) throw new Error('模拟数据库坏了'); return ENV.DB.prepare(sql); } };
+  const boom = await call('POST', '/api/login', { body: { username: user, password: pw }, env: { ...ENV, DB: brokenDB } });
+  await settle();
+  ok(boom.status === 500 && boom.json.code === 'internal' && boom.json.rid && boom.json.error.includes(boom.json.rid) && boom.headers.get('X-Request-Id') === boom.json.rid, '服务器出错回 500，错误信息里带请求编号', boom.text);
+  const se = await call('GET', '/api/admin/errors?kind=server', { token: ADMIN });
+  const srow = se.json && se.json.rows[0];
+  ok(srow && srow.msg === '模拟数据库坏了' && srow.src === 'POST /api/login' && JSON.parse(srow.meta).rid === boom.json.rid, '服务器错误记进「错误」页，按编号找得到', se.text.slice(0, 200));
+  // 慢请求：超过 1 秒的按“方法 + 路径”合成一行，记最慢一次
+  const slowDB = { ...ENV.DB, prepare: sql => { const st = ENV.DB.prepare(sql); if (!/FROM users u|ORDER BY/.test(sql)) return st; const wrap = s0 => ({ bind: (...a) => wrap(s0.bind(...a)), first: async c => { await new Promise(r => setTimeout(r, 1100)); return s0.first(c); }, all: async () => { await new Promise(r => setTimeout(r, 1100)); return s0.all(); }, run: () => s0.run(), sql: s0.sql, params: s0.params }); return wrap(st); } };
+  const slow = await call('GET', '/api/leaderboard?k=wins', { env: { ...ENV, DB: slowDB } });
+  await call('GET', '/api/leaderboard?k=wins');   // 快的那次不记
+  await settle();
+  const sl = await call('GET', '/api/admin/errors?kind=slow', { token: ADMIN });
+  const lrow = sl.json && sl.json.rows.find(r => r.msg === 'GET /api/leaderboard');
+  ok(slow.status === 200 && lrow && lrow.n === 1 && lrow.ms >= 1000 && lrow.ms_sum === lrow.ms, '慢请求记进「错误」页（最慢多少毫秒）', sl.text.slice(0, 200));
+  ok(sl.json && sl.json.rows.every(r => r.kind === 'slow'), '错误页能只看一类');
 
   ok((await call('POST', '/api/logout', { token: tok })).status === 200, '退出登录');
   ok((await call('GET', '/api/profile', { token: tok })).status === 401, '退出后旧 token 失效');
