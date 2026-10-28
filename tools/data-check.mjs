@@ -276,11 +276,11 @@ function checkPatterns() {
   });
 }
 
-// ---------- 词条有没有过期（先只提醒，不算错） ----------
+// ---------- 词条有没有过期（本机提醒，CI 里算错） ----------
 // 30-ui-copy.js / 31-hero-copy.js 的中文键在 src/ 和 cloudflare/ 的源码里都找不到，多半是中文改了、英文没跟着改，
 // 这条英文已经用不上，界面上那句会退回中文。运行时拼出来的句子（星座皮肤「双子·星冕」、带数字的提示）
 // 不会原样出现在源码里：把键按非汉字切开，每一段（两个字以上）都找得到就算还在用。
-// 确认没有误报以后，加 --strict-copy 就当成错误。
+// 加 --strict-copy 就当成错误；CI 里 tools/build.py 会自动加上（环境变量 CI），本机只提醒。
 function staleCopy() {
   const COPY = ['src/data/30-ui-copy.js', 'src/data/31-hero-copy.js'], SKIP = [...COPY, 'src/i18n.js', 'cloudflare/worker.bundle.js'];
   const walk = d => readdirSync(ROOT + d).flatMap(f => { const p = d + '/' + f; return statSync(ROOT + p).isDirectory() ? walk(p) : [p]; });

@@ -316,7 +316,9 @@ def check_js():
         print(f"src/data/ + src/game/ 拼起来压缩后语法错误：\n{rc.stderr}")
         ok = False
     # src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用存在（tools/data-check.mjs），有错就不生成网页
-    r = subprocess.run([node, os.path.join(ROOT, "tools", "data-check.mjs")], capture_output=True, text=True)
+    # CI 里再加 --strict-copy：英文词条的中文在源码里找不到也算错；本机只提醒
+    strict = ["--strict-copy"] if os.environ.get("CI") else []
+    r = subprocess.run([node, os.path.join(ROOT, "tools", "data-check.mjs"), *strict], capture_output=True, text=True)
     if r.returncode:
         print(r.stdout + r.stderr)
         ok = False
