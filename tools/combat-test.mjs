@@ -1133,7 +1133,7 @@ const testSuite = [
       showScreen(null); paused = false; M.phase = 'fight';
       const reset = () => {
         toNeutral(A); A.x = STAGE_W / 2 - 200; A.y = 0; A.vx = A.vy = 0; A.invul = 0; A.escInvul = false; A.escMode = ''; A.airHover = 0;
-        A.breakCD = 0; A.jailT = 0; A.drinkT = 0; A.hp = A.maxHp; A.stun = 0; A.rooted = false; human[0].clear(); M.phase = 'fight';
+        A.breakCD = 0; A.jailT = 0; A.drinkT = 0; A.hp = A.maxHp; A.stun = 0; A.rooted = false; A.airRecover = false; human[0].clear(); M.phase = 'fight';
       };
       const esc = () => { human[0].press('dash'); return tryEscape(A, B); };
       const cd = A.ch.escCD || BREAK_CD;
@@ -1145,6 +1145,16 @@ const testSuite = [
       let landed = false;
       for (let i = 0; i < 240 && !landed; i++) { step(); if (A.onGround() && A.state === 'getup') landed = true; else if (!A.escInvul) return { pass: false, error: 'rise invulnerability ended in the air at frame ' + i }; }
       if (!landed || A.escInvul || A.invul > 0 || A.escMode) return { pass: false, error: 'landing did not end the escape with landing lag' };
+      // 空中第三下被震飞（带受身）时闪：落地照样结束腾空闪，不会顶着腾空闪的无敌走受身那条路
+      for (const mode of ['rise', 'hover']) {
+        reset(); A.y = -200; A.state = 'launched'; A.airRecover = true; A.vy = -180;
+        if (mode === 'rise') human[0].held.right = true;
+        if (!esc() || A.escMode !== mode || A.airRecover) return { pass: false, error: mode + ' escape out of an air-recovery launch kept airRecover' };
+        human[0].held.right = false;
+        let ok = false;
+        for (let i = 0; i < 300 && !ok; i++) { step(); ok = A.onGround() && A.state !== 'air'; }
+        if (!ok || A.escInvul || A.invul > 0 || A.escMode) return { pass: false, error: mode + ' escape out of an air-recovery launch: landing kept the escape ' + JSON.stringify({ ok, e: A.escInvul, i: A.invul, m: A.escMode }) };
+      }
       // rise 的无敌最长 ESC.riseMax 秒
       reset(); A.state = 'hitstun'; esc(); A.escT = ESC.riseMax - 0.001; escapeTick(A);
       if (A.escInvul) return { pass: false, error: 'rise invulnerability lasted past ESC.riseMax' };

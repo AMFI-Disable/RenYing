@@ -11700,6 +11700,7 @@ f.vx = 0; f.vy = 0;
 f.airHover = ESC.hover;
 f.escInvul = true; f.escMode = 'hover'; f.escT = 0; f.invul = f.airHover;
 f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
+f.airRecover = false;   // 腾空闪接管这次下落：不然落地会走受身那条路，腾空闪的无敌不会结束
 delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;
 comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
 if (scOn()) scFire(f, 'esc', foe, true);
@@ -11720,6 +11721,7 @@ f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted =
 f.vy = -ESC.riseVy * (f.ch.id === 'yanling' ? 1.15 : f.ch.id === 'tieshan' ? 0.9 : 1); f.vx = away * ESC.riseVx; f.y = Math.min(f.y, -2);
 f.escInvul = true; f.escMode = 'rise'; f.escT = 0; f.invul = 99;
 f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
+f.airRecover = false;
 delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;   // 松开左键前不会开始蓄力
 comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
 if (scOn()) scFire(f, 'esc', foe, false);
