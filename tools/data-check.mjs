@@ -41,7 +41,12 @@ const lines = (where, ls) => { if (!Array.isArray(ls) || !ls.length) err(where, 
 const STAT = { hp: 'pos', walk: 'pos', speed: 'pos', dmg: 'pos', reach: 'pos', swing: 'pos', jump: 'pos', weight: 'pos', defRating: 'pos', guardMax: 'pos', guardStab: 'pos', guardChip: 'num', guardRegen: 'pos', poise: 'pos', size: 'pos' };
 const LOOK = { body: 'str', shade: 'str', outline: 'str', outlineA: 'num', scarf: 'str', slash: 'str', blade: 'str', head: 'str', weapon: 'str' };
 const CHAR = { id: 'str', name: 'str', role: 'str', diff: 'int', escCD: 'pos', skill: 'str', skill2: 'str', ult: 'str', passive: 'str', passiveName: 'str', passiveDesc: 'str',
-  stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool' };
+  stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj' };
+const CANCEL_SPEC = { blockEarly: 'num', chainAt: 'num', skill2FromLight: 'bool', skillOnHit: 'bool' };
+// 一招普攻（src/data/01-moves.js 的 MOVES）；侠客的 moveMods 每项都是选填，另外可以写 dmgAbs、suAdd、reachMul
+const MOVE = { p: 'arr', su: 'num', ac: 'pos', rc: 'num', dmg: 'num', kb: 'arr', stun: 'num', hs: 'num', box: 'arr', next: 'obj',
+  'lunge?': 'num', 'snd?': 'str', 'launch?': 'bool', 'jumpCancel?': 'bool', 'air?': 'bool', 'knock?': 'bool', 'unblockable?': 'bool', 'big?': 'bool', 'track?': 'bool', 'spike?': 'bool', 'hitNext?': 'obj' };
+const MOVE_MOD = { ...Object.fromEntries(Object.entries(MOVE).map(([k, t]) => [k.endsWith('?') ? k : k + '?', t])), 'dmgAbs?': 'num', 'suAdd?': 'num', 'reachMul?': 'pos' };
 const FOREST = { hero: 'str', heroName: 'str', title: 'str', place: 'str', synopsis: 'str', stageNames: 'arr', waveDialogues: 'arr', bossIntro: 'str' };
 const FIGHT = { foe: 'str', lv: 'str', goal: 'str', 'time?': 'pos', 'hp?': 'pos', 'foeHp?': 'pos', 'mySc?': 'arr', 'foeSc?': 'arr' };
 
@@ -92,6 +97,27 @@ function checkSaga(where, s, env, ids) {
     if (shape(`${w}.end.${f}`, e, { title: 'str', text: 'arr' })) lines(`${w}.end.${f}.text`, e.text);
   }
 }
+// base：侠客的 cancel 已经并上了通用的 CANCEL，只查他自己改过的项（和 base 不一样的），通用那份的错在 CANCEL 报一次就够
+function checkCancel(w, c, base) {
+  if (!shape(w, c, base ? Object.fromEntries(Object.entries(CANCEL_SPEC).map(([k, t]) => [k + '?', t])) : CANCEL_SPEC)) return;
+  for (const k of ['blockEarly', 'chainAt']) if (k in c && (!base || c[k] !== base[k]) && !(c[k] >= 0 && c[k] <= 1)) err(w, `${k} 是 0~1 的比例，现在是 ${c[k]}`);
+}
+// 一招里引用别的东西：连段接的招要存在，音效要有，判定框四个数、击退两个数
+function checkMove(w, m, env) {
+  for (const k of ['next', 'hitNext']) for (const [btn, to] of Object.entries(m[k] || {})) {
+    if (!['light', 'heavy'].includes(btn)) err(w, `${k} 只能写 light / heavy，现在有 ${btn}`);
+    else if (!env.MOVES[to]) err(w, `${k}.${btn} 接的招 ${to} 在 MOVES 里没有`);
+  }
+  if (m.snd !== undefined && typeof env.SFX[m.snd] !== 'function') err(w, `音效 ${m.snd} 在 SFX 里没有`);
+  if (m.box !== undefined && !(m.box.length === 4 && m.box.every(TYPES.num) && m.box[0] < m.box[2] && m.box[1] < m.box[3])) err(w, `box 要写成 [左, 上, 右, 下]，现在是 ${JSON.stringify(m.box)}`);
+  if (m.kb !== undefined && !(m.kb.length === 2 && m.kb.every(TYPES.num))) err(w, `kb 要写成 [横, 竖]，现在是 ${JSON.stringify(m.kb)}`);
+  if (m.p !== undefined && !(m.p.length === 2 && m.p.every(TYPES.str))) err(w, `p 要写成 [起手动作, 出手动作]`);
+  for (const k of ['su', 'rc']) if (m[k] !== undefined && m[k] < 0) err(w, `${k} 不能是负数`);
+}
+function checkMoves(env) {
+  for (const [k, m] of Object.entries(env.MOVES)) if (shape(`src/data/01-moves.js MOVES.${k}`, m, MOVE)) checkMove(`src/data/01-moves.js MOVES.${k}`, m, env);
+  checkCancel('src/data/01-moves.js CANCEL', env.CANCEL, null);
+}
 function checkHeroes(env) {
   // 每个文件单独跑一遍，看它登记了哪位侠客，好对上文件名
   const ctx = vm.createContext({});
@@ -131,7 +157,11 @@ function checkHeroes(env) {
       if (!env.ULTS[c.ult]) err(w + ' char', `大招 ${c.ult} 在 ULTS 里没有`);
       if (!(c.look.weapon in env.WEAPON_LEN)) err(w + ' char.look', `兵器 ${c.look.weapon} 在 WEAPON_LEN 里没有`);
       for (const k of ['beats', 'weakTo']) for (const o of c[k]) if (!ids.includes(o) || o === h.id) err(w + ' char', `${k} 里的 ${o} 不是别的侠客`);
-      for (const [mv, mod] of Object.entries(c.moveMods || {})) if (!env.MOVES[mv] && !(mod && mod.p)) err(w + ' char.moveMods', `${mv} 不是已有招式（新招式要写 p 动作）`);
+      for (const [mv, mod] of Object.entries(c.moveMods || {})) {
+        if (!env.MOVES[mv] && !(mod && mod.p)) err(w + ' char.moveMods', `${mv} 不是已有招式（新招式要写 p 动作）`);
+        if (shape(`${w} char.moveMods.${mv}`, mod, MOVE_MOD)) checkMove(`${w} char.moveMods.${mv}`, mod, env);
+      }
+      if (c.cancel) checkCancel(w + ' char.cancel', c.cancel, env.CANCEL);
     }
     const f = h.forest;
     if (shape(w + ' forest', f, FOREST)) {
@@ -201,6 +231,7 @@ function checkUiCopy(env) {
 }
 
 const TABLES = [
+  { name: 'MOVES', check: checkMoves },
   { name: 'HEROES', check: checkHeroes },
   { name: 'BP_ORDERS', check: checkModes },
   { name: 'UI_COPY_EN', check: checkUiCopy },
@@ -208,7 +239,7 @@ const TABLES = [
 
 const env = await makeEnv();
 const get = name => env.run(`typeof ${name} === 'undefined' ? undefined : ${name}`);
-const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN'].map(k => [k, get(k)]));
+const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN', 'CANCEL', 'SFX'].map(k => [k, get(k)]));
 for (const t of TABLES) if (get(t.name) !== undefined) t.check(refs);
 if (errors.length) {
   console.log(`src/data/ 的数据表有 ${errors.length} 处不对：`);

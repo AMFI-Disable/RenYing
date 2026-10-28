@@ -6341,10 +6341,32 @@ return false;
 <script>
 const HEROES = [];
 function defHero(h) {
-h.char = { id: h.id, ...h.char };
+h.char = { id: h.id, ...h.char, cancel: { ...CANCEL, ...(h.char && h.char.cancel) } };   // 取消规则：通用的 CANCEL（src/data/01-moves.js）加上这位侠客自己改的
 h.forest = { hero: h.id, heroName: h.char.name, ...h.forest };
 HEROES.push(h);
 }
+const MOVES = {
+l1: { p: ['l1s', 'l1a'], su: .075, ac: .07, rc: .17, dmg: 14, kb: [170, 0], stun: .32, hs: .055, box: [8, -112, 82, -28], lunge: 150, next: { light: 'l2', heavy: 'hv' }, snd: 'swing' },
+l2: { p: ['l2s', 'l2a'], su: .07, ac: .07, rc: .18, dmg: 15, kb: [170, 0], stun: .32, hs: .055, box: [8, -108, 84, -36], lunge: 160, next: { light: 'l3', heavy: 'hv' }, snd: 'swing' },
+l3: { p: ['lcs', 'lca'], su: .075, ac: .075, rc: .18, dmg: 18, kb: [170, 0], stun: .34, hs: .06, box: [8, -96, 90, -10], lunge: 170, next: { light: 'l4', heavy: 'hv' }, snd: 'swing' },
+l4: { p: ['lds', 'lda'], su: .09, ac: .08, rc: .2, dmg: 22, kb: [180, 0], stun: .36, hs: .07, box: [6, -120, 92, -8], lunge: 180, next: { light: 'l5', heavy: 'hv' }, snd: 'heavy' },
+l6: { p: ['l1s', 'l1a'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .32, hs: .05, box: [8, -112, 82, -28], lunge: 120, next: { light: 'l7' }, snd: 'swing' },
+l7: { p: ['l2s', 'l2a'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .32, hs: .05, box: [8, -108, 84, -36], lunge: 120, next: { light: 'l8' }, snd: 'swing' },
+l8: { p: ['lcs', 'lca'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .32, hs: .05, box: [8, -96, 90, -10], lunge: 120, next: { light: 'l9' }, snd: 'swing' },
+l9: { p: ['lds', 'lda'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .34, hs: .06, box: [6, -120, 92, -8], lunge: 120, next: { light: 'l10' }, snd: 'swing' },
+l10: { p: ['l3s', 'l3a'], su: .09, ac: .08, rc: .24, dmg: 12, kb: [520, -260], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 260, launch: true, next: {}, snd: 'heavy' },
+l5: { p: ['l3s', 'l3a'], su: .1, ac: .09, rc: .28, dmg: 28, kb: [560, -240], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 300, launch: true, next: {}, snd: 'heavy' },
+hv: { p: ['hvs', 'hva'], su: .14, ac: .09, rc: .3, dmg: 38, kb: [80, -1020], stun: .6, hs: .11, box: [0, -150, 84, -8], lunge: 130, launch: true, jumpCancel: true, next: {}, snd: 'heavy' },
+a1: { p: ['a1s', 'a1a'], air: true, su: .06, ac: .09, rc: .14, dmg: 18, kb: [150, -430], stun: .4, hs: .065, box: [0, -84, 86, 6], next: { light: 'a2' }, snd: 'swing' },
+cs1: { p: ['charge', 'spa'], su: .04, ac: .12, rc: .06, dmg: 36, kb: [540, 0], stun: .5, hs: .12, box: [0, -112, 112, -18], lunge: 900, next: {}, snd: 'heavy' },
+cs2: { p: ['charge', 'spa'], su: .04, ac: .16, rc: .08, knock: true, dmg: 58, kb: [720, -720], stun: .6, hs: .2, box: [0, -120, 124, -10], lunge: 1350, launch: true, unblockable: true, big: true, next: {}, snd: 'heavy' },
+cf: { p: ['hvs', 'hva'], su: .05, ac: .1, rc: .26, dmg: 22, kb: [320, -420], stun: .45, hs: .08, box: [-6, -160, 104, -6], track: true, launch: true, next: {}, snd: 'swing' },
+a2: { p: ['a2s', 'a2a'], air: true, su: .08, ac: .09, rc: .22, dmg: 26, kb: [240, 1000], stun: .5, hs: .11, box: [-4, -70, 80, 24], spike: true, next: {}, snd: 'heavy' },
+dl: { p: ['fy_crouch', 'fy_crouch'], su: .055, ac: .06, rc: .12, dmg: 5, kb: [45, 0], stun: .28, hs: .03, box: [12, -45, 82, 0], lunge: 60, next: { light: 'l1', heavy: 'hv' }, hitNext: { light: 'l1', heavy: 'hv' }, snd: 'swing' },
+};
+const FINAL = { ult: true, noScale: true, dmg: 85, kb: [520, -900], stun: .6, hs: .24, launch: true, unblockable: true };
+const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: .035, unblockable: true, hold: true };
+const CANCEL = { blockEarly: 0.6, chainAt: 0.6, skill2FromLight: true, skillOnHit: true };
 const MODES = {
 cpu: { bp: 'duel', local: true, foe: '电脑' },
 cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
@@ -8135,27 +8157,6 @@ ak_shadowdash0: { hip: [0, -60], neck: [14, -98], hf: [-10, -86], hb: [24, -96],
 ak_shadowdash1: { hip: [8, -56], neck: [36, -78], hf: [60, -74], hb: [-20, -66], ff: [-16, -40], fb: [-30, -34], sw: 0.1 },
 };
 const JOINTS = ['hip', 'neck', 'hf', 'hb', 'ff', 'fb'];
-const MOVES = {
-l1: { p: ['l1s', 'l1a'], su: .075, ac: .07, rc: .17, dmg: 14, kb: [170, 0], stun: .32, hs: .055, box: [8, -112, 82, -28], lunge: 150, next: { light: 'l2', heavy: 'hv' }, snd: 'swing' },
-l2: { p: ['l2s', 'l2a'], su: .07, ac: .07, rc: .18, dmg: 15, kb: [170, 0], stun: .32, hs: .055, box: [8, -108, 84, -36], lunge: 160, next: { light: 'l3', heavy: 'hv' }, snd: 'swing' },
-l3: { p: ['lcs', 'lca'], su: .075, ac: .075, rc: .18, dmg: 18, kb: [170, 0], stun: .34, hs: .06, box: [8, -96, 90, -10], lunge: 170, next: { light: 'l4', heavy: 'hv' }, snd: 'swing' },
-l4: { p: ['lds', 'lda'], su: .09, ac: .08, rc: .2, dmg: 22, kb: [180, 0], stun: .36, hs: .07, box: [6, -120, 92, -8], lunge: 180, next: { light: 'l5', heavy: 'hv' }, snd: 'heavy' },
-l6: { p: ['l1s', 'l1a'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .32, hs: .05, box: [8, -112, 82, -28], lunge: 120, next: { light: 'l7' }, snd: 'swing' },
-l7: { p: ['l2s', 'l2a'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .32, hs: .05, box: [8, -108, 84, -36], lunge: 120, next: { light: 'l8' }, snd: 'swing' },
-l8: { p: ['lcs', 'lca'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .32, hs: .05, box: [8, -96, 90, -10], lunge: 120, next: { light: 'l9' }, snd: 'swing' },
-l9: { p: ['lds', 'lda'], su: .07, ac: .07, rc: .17, dmg: 10, kb: [110, 0], stun: .34, hs: .06, box: [6, -120, 92, -8], lunge: 120, next: { light: 'l10' }, snd: 'swing' },
-l10: { p: ['l3s', 'l3a'], su: .09, ac: .08, rc: .24, dmg: 12, kb: [520, -260], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 260, launch: true, next: {}, snd: 'heavy' },
-l5: { p: ['l3s', 'l3a'], su: .1, ac: .09, rc: .28, dmg: 28, kb: [560, -240], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 300, launch: true, next: {}, snd: 'heavy' },
-hv: { p: ['hvs', 'hva'], su: .14, ac: .09, rc: .3, dmg: 38, kb: [80, -1020], stun: .6, hs: .11, box: [0, -150, 84, -8], lunge: 130, launch: true, jumpCancel: true, next: {}, snd: 'heavy' },
-a1: { p: ['a1s', 'a1a'], air: true, su: .06, ac: .09, rc: .14, dmg: 18, kb: [150, -430], stun: .4, hs: .065, box: [0, -84, 86, 6], next: { light: 'a2' }, snd: 'swing' },
-cs1: { p: ['charge', 'spa'], su: .04, ac: .12, rc: .06, dmg: 36, kb: [540, 0], stun: .5, hs: .12, box: [0, -112, 112, -18], lunge: 900, next: {}, snd: 'heavy' },
-cs2: { p: ['charge', 'spa'], su: .04, ac: .16, rc: .08, knock: true, dmg: 58, kb: [720, -720], stun: .6, hs: .2, box: [0, -120, 124, -10], lunge: 1350, launch: true, unblockable: true, big: true, next: {}, snd: 'heavy' },
-cf: { p: ['hvs', 'hva'], su: .05, ac: .1, rc: .26, dmg: 22, kb: [320, -420], stun: .45, hs: .08, box: [-6, -160, 104, -6], track: true, launch: true, next: {}, snd: 'swing' },
-a2: { p: ['a2s', 'a2a'], air: true, su: .08, ac: .09, rc: .22, dmg: 26, kb: [240, 1000], stun: .5, hs: .11, box: [-4, -70, 80, 24], spike: true, next: {}, snd: 'heavy' },
-dl: { p: ['fy_crouch', 'fy_crouch'], su: .055, ac: .06, rc: .12, dmg: 5, kb: [45, 0], stun: .28, hs: .03, box: [12, -45, 82, 0], lunge: 60, next: { light: 'l1', heavy: 'hv' }, hitNext: { light: 'l1', heavy: 'hv' }, snd: 'swing' },
-};
-const FINAL = { ult: true, noScale: true, dmg: 85, kb: [520, -900], stun: .6, hs: .24, launch: true, unblockable: true };
-const SP_SLASH = { ult: true, noScale: true, dmg: 16, kb: [0, 0], stun: .3, hs: .035, unblockable: true, hold: true };
 const BAL = Object.fromEntries(HEROES.map(x => [x.id, x.bal]));
 const balOf = f => (f && f.ch && BAL[f.ch.id]) || BAL.qingfeng;
 function balDmg(att, m) { const b = balOf(att); return m.ult ? b.ult : (m.sk || (!m.isProj && att.state === 'skill')) ? b.skill : b.normal; }
@@ -11049,9 +11050,9 @@ f.vx = clamp(f.vx + dir * 1700 * STEP, -wk(f) * 1.2, wk(f) * 1.2);
 }
 }
 function attackUpdate(f, foe) {
-const m = f.move, c = f.ctrl, t = f.t;
+const m = f.move, c = f.ctrl, t = f.t, cx = f.ch.cancel || CANCEL;   // 取消规则见 src/data/01-moves.js 的 CANCEL
 const act0 = m.su, act1 = m.su + m.ac;
-if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
+if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * cx.blockEarly || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
 if (t >= act0 && !f.lunged) {
 f.lunged = true;
 if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线甩向身前（要有墨水）
@@ -11078,14 +11079,14 @@ f.vx = (m.lunge || 0) * f.face * (close ? 0.35 : 1);
 SFX[m.snd]();
 }
 if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
-if (M.phase === 'fight' && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-if (M.phase === 'fight' && (t >= act0 + m.ac * 0.6 || (f.hitConfirmed && f.moveName === 'dl'))) {
+if (M.phase === 'fight' && cx.skill2FromLight && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
 if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
 if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
 if (m.next.heavy && c.consume('heavy')) return startAttack(f, m.next.heavy);
 if (f.hitConfirmed) {
-if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
-if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+if (cx.skillOnHit && f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
+if (cx.skillOnHit && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
 if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = faceDir(f, foe); return doJump(f, f.face); }
 }
 }

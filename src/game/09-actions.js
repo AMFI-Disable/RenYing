@@ -142,10 +142,10 @@ function neutral(f, foe) {
   }
 }
 function attackUpdate(f, foe) {
-  const m = f.move, c = f.ctrl, t = f.t;
+  const m = f.move, c = f.ctrl, t = f.t, cx = f.ch.cancel || CANCEL;   // 取消规则见 src/data/01-moves.js 的 CANCEL
   const act0 = m.su, act1 = m.su + m.ac;
   // 格挡更灵活：出招前段、或打完判定之后的收招，按住 S 都能立刻转成格挡（下蹲试探轻攻击 dl 不自取消）
-  if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * 0.6 || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
+  if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * cx.blockEarly || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
   if (t >= act0 && !f.lunged) {
     f.lunged = true;
     if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线甩向身前（要有墨水）
@@ -172,14 +172,14 @@ function attackUpdate(f, foe) {
     SFX[m.snd]();
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
-  if (M.phase === 'fight' && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-  if (M.phase === 'fight' && (t >= act0 + m.ac * 0.6 || (f.hitConfirmed && f.moveName === 'dl'))) {
+  if (M.phase === 'fight' && cx.skill2FromLight && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+  if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
     if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
     if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
     if (m.next.heavy && c.consume('heavy')) return startAttack(f, m.next.heavy);
     if (f.hitConfirmed) {
-      if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
-      if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+      if (cx.skillOnHit && f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
+      if (cx.skillOnHit && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
       if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = faceDir(f, foe); return doJump(f, f.face); }
     }
   }

@@ -14,7 +14,8 @@
 //   char    基础设定（就是 CHARS 里的一项，id 自动补上）：
 //           name 名字，role 称号，diff 上手难度，escCD 腾空闪冷却，skill 是 Q 技能，skill2 是右键招式，ult 是 E 大招，passive 是被动。
 //           stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率，其余是体量和架势。
-//           moveMods 改这位侠客的普攻招式，look 画法和配色，ai.range 电脑喜欢站的距离。beats/weakTo 只是给玩家看的克制关系说明。
+//           moveMods 改这位侠客的普攻招式（前摇、判定、后摇、连段，字段见 src/data/01-moves.js），cancel 改取消规则（只写要改的项），
+//           look 画法和配色，ai.range 电脑喜欢站的距离。beats/weakTo 只是给玩家看的克制关系说明。
 //   forest  斩妖列传（打小怪剧情）：title、place、synopsis、stageNames 五关名字、waveDialogues 四波台词、bossIntro 魔首登场
 //           （hero、heroName 自动从 id 和 char.name 补上）
 //   saga    侠客列传（引擎在 src/game/22-saga.js）。每条路 5 节：前四节按顺序打，第 3 节打完要做一个抉择（记成 flag），
@@ -26,7 +27,7 @@
 //             第 5 节的 pre / fight / post 可以写成 { 抉择的 flag: 内容 }，end 是两个结局。
 const HEROES = [];
 function defHero(h) {
-  h.char = { id: h.id, ...h.char };
+  h.char = { id: h.id, ...h.char, cancel: { ...CANCEL, ...(h.char && h.char.cancel) } };   // 取消规则：通用的 CANCEL（src/data/01-moves.js）加上这位侠客自己改的
   h.forest = { hero: h.id, heroName: h.char.name, ...h.forest };
   HEROES.push(h);
 }
