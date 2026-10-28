@@ -4,12 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>刃影</title>
+<meta name="referrer" content="no-referrer">
+<title>刃影 · 已搬到新地址</title>
 <link rel="canonical" href="./">
-<script>location.replace('./' + location.search + location.hash);</script>
-<meta http-equiv="refresh" content="0; url=./">
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0a0b1c; color: #efe8d8; font: 18px/1.7 "Noto Serif SC", "Songti SC", serif; text-align: center; padding: 16px; box-sizing: border-box; }
+  a.go { display: inline-block; margin: 14px 0 6px; padding: 12px 34px; color: #0a0b1c; background: #e9c46a; text-decoration: none; font-size: 20px; letter-spacing: .1em; }
+  a.go:focus-visible { outline: 3px solid #46d3ea; outline-offset: 3px; }
+  .later { opacity: 0; animation: show .4s 3s forwards; color: rgba(239,232,216,.7); font-size: 15px; }
+  @keyframes show { to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .later { opacity: 1; animation: none; } }
+</style>
 </head>
-<body style="background:#0a0b1c;color:#efe8d8;font-family:serif;text-align:center;padding-top:30vh">
-<p>刃影已经搬到 <a href="./" style="color:#46d3ea">新地址</a>，正在跳转…</p>
+<body>
+<main>
+<h1 style="font-size:26px;margin:0">刃影已经搬到新地址</h1>
+<a class="go" id="go" href="./">进入刃影</a>
+<p class="later" role="status">旧地址不再自动跳转，请点上面的「进入刃影」，以后直接收藏新地址就好。</p>
+</main>
+<!-- 不自动跳转；有 JS 时只把邀请链接里的房间号（?… 和 #…）带到按钮上，关掉 JS 也能点进去 -->
+<script>document.getElementById('go').href = './' + location.search + location.hash;</script>
 </body>
 </html>
