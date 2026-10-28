@@ -104,6 +104,13 @@
     [/^(.+?)钦点【(.+?)】出战$/, (m0, w, r) => `${lookup(w) || w} · Pick the ${lookup(r) || r}`],
     [/^禁 (.+)$/, (m0, n) => `Ban · ${lookup(n) || n}`],
     [/^没找到名字里同时有「(.+)」这几个字的人，按回车按全名加$/, (m0, q) => `No one's name contains “${q}”. Press Enter to add by full name`],
+    // 英雄页皮肤按钮和皮肤牌：「名字 · 限免 / 武库 / 青锋行 / 武库」「品级 · 名字」
+    [/^(.+?) · (限免|武库|青锋行 \/ 武库)$/, (m0, n, t) => `${lookup(n) || n} · ${{ 限免: 'Free trial', 武库: 'Armory', '青锋行 / 武库': 'Qingfeng Quest / Armory' }[t]}`],
+    [/^(受限|隐秘|保密|军规级|★ 非凡|非凡) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
+    [/^难度 ([●○]+)$/, (m0, d) => `Difficulty ${d}`],
+    [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
+    [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],
+    [/^慢放 ([\d.]+)x$/, (m0, n) => `Slow ${n}x`],
     // 天魔讨伐（src/game/22-tianmo.js）：页面、首页小卡片、出战提示和结算
     [/^第 (\d+) 代天魔$/, (m0, n) => `Demon · Gen ${n}`],
     [/^第 (\d+) 代天魔 · (.+)$/, (m0, n, h) => `Demon · Gen ${n} · ${lookup(h) || h}`],
