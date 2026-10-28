@@ -38,7 +38,9 @@ function keyHint(i, k) {
   if (TOUCH) return '';
   const spKey = keyLabel(custom1PKeys.special);
   const skKey = keyLabel(custom1PKeys.skill);
-  const p1 = { sp: ` 按 ${spKey}`, sk: ` ${skKey}`, sk2: ' 左+右', esc: ' 右键' }, p2 = { sp: ' 按 I', sk: '', sk2: '', esc: '' };
+  const en = window.I18N && I18N.getLang() === 'en';
+  const p1 = en ? { sp: ` · ${spKey}`, sk: ` ${skKey}`, sk2: ' L+R', esc: ' RMB' } : { sp: ` 按 ${spKey}`, sk: ` ${skKey}`, sk2: ' 左+右', esc: ' 右键' };
+  const p2 = { sp: en ? ' · I' : ' 按 I', sk: '', sk2: '', esc: '' };
   if (M.mode === 'pvp') return (i === 0 ? p1 : p2)[k];
   if (M.mode === 'cpu' || M.mode === 'train' || M.mode === 'tag3') return i === 0 ? p1[k] : '';
   if (M.mode === 'net') return i === localIdx() ? p1[k] : '';
@@ -580,7 +582,7 @@ function drawHUD() {
       ctx.fillStyle = '#fff'; ctx.textAlign = i === 0 ? 'left' : 'right';
       ctx.shadowColor = `rgba(${f.look.slash}, 0.9)`; ctx.shadowBlur = 8;
       const ultNm = skinUltName(f) || ULTS[f.ch.ult].name;
-      ctx.fillText(`⚡ ${ultNm} 绝技就绪${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 11);
+      ctx.fillText(`⚡ ${cvT(ultNm)} ${cvT('绝技就绪')}${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 11);
       ctx.shadowBlur = 0;
     } else {
       ctx.fillStyle = `rgba(${f.look.slash}, 0.75)`;
@@ -592,23 +594,30 @@ function drawHUD() {
       const ry = my + (full ? 9 + bh * 1.3 : 12), fs = bh * 0.85;
       const S = SKILLS[f.ch.skill];
       const S2 = SKILLS[f.ch.skill2];
-      const s1Nm = skinSkillName(f, 1) || S.name;
-      const s2Nm = skinSkillName(f, 2) || S2.name;
-      const items = [[s1Nm + keyHint(i, 'sk'), f.skillCD, S.cd], [s2Nm + keyHint(i, 'sk2'), f.skill2CD, S2.cd], ['腾空闪' + keyHint(i, 'esc'), f.breakCD, f.ch.escCD || BREAK_CD]];
-      if (f.ch.fly) items.push(['飞行', f.ch.fly - f.flyT, f.ch.fly]);
+      const s1Nm = cvT(skinSkillName(f, 1) || S.name);
+      const s2Nm = cvT(skinSkillName(f, 2) || S2.name);
+      const items = [[s1Nm + keyHint(i, 'sk'), f.skillCD, S.cd], [s2Nm + keyHint(i, 'sk2'), f.skill2CD, S2.cd], [cvT('腾空闪') + keyHint(i, 'esc'), f.breakCD, f.ch.escCD || BREAK_CD]];
+      if (f.ch.fly) items.push([cvT('飞行'), f.ch.fly - f.flyT, f.ch.fly]);
       const widths = items.map(it => ctx.measureText(it[0]).width + 8 + 46 + 16);
-      const total = widths.reduce((a, b) => a + b, 0);
-      let x = i === 0 ? mx : mx + mw - total;
-      for (const [k, [name, cd, max]] of items.entries()) {
-        const ready = cd <= 0;
-        ctx.fillStyle = ready ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.4)';
-        ctx.fillText(name, x, ry);
-        const bx = x + ctx.measureText(name).width + 8, by = ry + fs * 0.45;
-        ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(bx, by, 46, 3);
-        ctx.fillStyle = ready ? `rgb(${f.look.slash})` : 'rgba(255,255,255,0.5)';
-        ctx.fillRect(bx, by, 46 * (1 - clamp(cd / max, 0, 1)), 3);
-        x += widths[k];
-      }
+      // 一行放到场地中线还放不下（英文名字长、窄屏）就折到下一行，别和对面那一排撞上
+      const room = i === 0 ? cx - gap / 2 - mx : mx + mw - (cx + gap / 2);
+      const rows = [[]]; let rowW = 0;
+      for (const k of items.keys()) { if (rows[rows.length - 1].length && rowW + widths[k] - 16 > room) { rows.push([]); rowW = 0; } rows[rows.length - 1].push(k); rowW += widths[k]; }
+      rows.forEach((row, r) => {
+        const total = row.reduce((a, k) => a + widths[k], 0);
+        let x = i === 0 ? mx : mx + mw - total;
+        const yy = ry + r * fs * 1.35;
+        for (const k of row) {
+          const [name, cd, max] = items[k], ready = cd <= 0;
+          ctx.fillStyle = ready ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.4)';
+          ctx.fillText(name, x, yy);
+          const bx = x + ctx.measureText(name).width + 8, by = yy + fs * 0.45;
+          ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(bx, by, 46, 3);
+          ctx.fillStyle = ready ? `rgb(${f.look.slash})` : 'rgba(255,255,255,0.5)';
+          ctx.fillRect(bx, by, 46 * (1 - clamp(cd / max, 0, 1)), 3);
+          x += widths[k];
+        }
+      });
     }
     // 连击
     const cu = comboUI[i];
