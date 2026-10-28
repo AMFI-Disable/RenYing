@@ -10242,7 +10242,7 @@ class AICtrl extends Ctrl {
 constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
 updateTactic() { this.brain.newRound(); }
 think(me, foe) {
-if (!(ROLL.on && M.mode === 'net')) return this.brain.think(me, foe);
+if (!((ROLL.on && M.mode === 'net') || (REPLAY.on && REPLAY.kind === 'net'))) return this.brain.think(me, foe);
 const r0 = Math.random; Math.random = grnd;
 try { this.brain.think(me, foe); } finally { Math.random = r0; }
 }
@@ -12740,6 +12740,10 @@ function recBegin(kind) {
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
 meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
 if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] }); REC.post = ['', '', '', '']; }
+if (kind === 'net') {
+REC.meta.slots = ROLL.slots.map(s => s.slice());
+if (allFighters().length > 2) Object.assign(REC.meta, { four: true, sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
+}
 }
 const rpFighters = m => (m && m.four) ? [A, B, C, D] : [A, B];
 function rpPoint() {
@@ -12857,11 +12861,15 @@ REC.on = false;
 if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
 const m = REC.meta;
 Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, skins: rpFighters(m).map(f => f.skinKey || ''),
-names: m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤'])
-: M.mode === 'net' ? [(NET.names || {}).host || '游客', (NET.names || {}).client || '游客'] : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
+names: M.mode === 'net' ? rpNetNames(m)
+: m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
 RP.last = m;
 const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
 rpStore(list);
+}
+function rpNetNames(m) {
+const h = (NET.names || {}).host || '游客', c = (NET.names || {}).client || '游客';
+return m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
 }
 function rpTitle(m) {
 const nm = i => (CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?';
@@ -12869,7 +12877,7 @@ return m.four ? `${nm(0)} · ${nm(2)} 对 ${nm(1)} · ${nm(3)}` : `${nm(0)} 对 
 }
 function rpSub(m) {
 const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-const mode = m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
+const mode = m.four && m.mode === 'net' ? '联机 2v2' : m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
 const win = m.w >= 0 ? `${m.four ? (m.names || [])[m.w] || '' : (CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
 return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }
@@ -12992,7 +13000,11 @@ if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.fores
 ROLL.on = false; REC.on = false; paused = false; BP = null; B.dummy = false; M.stage = null;
 setChars(m.ch[0], m.ch[1]);
 if (m.four) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
-for (const f of rpFighters(m)) f.ctrl = new Ctrl();   // 回放只照着录下来的按键按，电脑也不再自己想
+const net = m.kind === 'net', mine = new Set(net ? rpSlots(m).flat() : []);
+for (const f of rpFighters(m)) {
+f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
+if (net && mine.has(f.idx)) f.ctrl.net = true;   // 和对局里一样标成玩家：2v2 里玩家锁定谁的规则和电脑不同
+}
 restState(m.st0);
 M.mode = 'replay';
 Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, names: m.names || null });
@@ -13007,11 +13019,12 @@ $id('rpBar').classList.remove('hidden');
 rpInfo();
 }
 function rpInfo() { if (REPLAY.on) $id('rpInfo').textContent = `回放 · 第${CN[M.round] || M.round}回合${REPLAY.paused ? ' · 已暂停' : ''}`; }
+const rpSlots = m => (m && Array.isArray(m.slots) && m.slots.length === 2) ? m.slots : [[0], [1]];
 function replayFrame() {
 if (REPLAY.kind === 'net') {
 const ev = REPLAY.ev, cur = [{ h: REPLAY.lh[0], p: [] }, { h: REPLAY.lh[1], p: [] }];
 while (REPLAY.p < ev.length && ev[REPLAY.p][0] <= REPLAY.nf) { const e = ev[REPLAY.p++]; cur[e[1]] = { h: e[2], p: e.slice(3) }; REPLAY.lh[e[1]] = e[2]; }
-applyInput(A.ctrl, cur[0]); applyInput(B.ctrl, cur[1]);
+rpSlots(REPLAY.m).forEach((slot, side) => slot.forEach((idx, k) => applyInput(fighterByIdx(idx).ctrl, slotInput(cur[side], k))));
 REPLAY.nf++;
 }
 step();

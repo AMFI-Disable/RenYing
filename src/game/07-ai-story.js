@@ -617,8 +617,9 @@ class AICtrl extends Ctrl {
   constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
   updateTactic() { this.brain.newRound(); }
   think(me, foe) {
-    // 联机回滚时两边各跑一份电脑，必须掷出同样的骰子：想招这一下借用对局随机数（会进存档），想完换回来
-    if (!(ROLL.on && M.mode === 'net')) return this.brain.think(me, foe);
+    // 联机回滚时两边各跑一份电脑，必须掷出同样的骰子：想招这一下借用对局随机数（会进存档），想完换回来。
+    // 放联机录像时也一样，电脑才会想出和当时一模一样的招
+    if (!((ROLL.on && M.mode === 'net') || (REPLAY.on && REPLAY.kind === 'net'))) return this.brain.think(me, foe);
     const r0 = Math.random; Math.random = grnd;
     try { this.brain.think(me, foe); } finally { Math.random = r0; }
   }

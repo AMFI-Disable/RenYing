@@ -42,9 +42,33 @@ function makePeer(outbox) {
   return w;
 }
 
+// 联机录像在一台新的“电脑”上放一遍，在记下的那几帧和原局比：位置、血量、电脑的想法都得一模一样
+function replayDiff(m, checks) {
+  const w = makePeer([]);
+  w.Math.random = rng(99);   // 放录像的这台随机数和对局时都不一样
+  vm.runInContext(`netRoomMode = 'normal'; startReplay(${JSON.stringify(m)});`, w);
+  const strip = j => { const o = JSON.parse(j); delete o.M.mode; return JSON.stringify(o); };
+  let k = 0;
+  for (const [f, want] of checks) {
+    if (f > m.frames) break;
+    while (k < f) { vm.runInContext('replayFrame()', w); k++; }
+    const got = vm.runInContext('JSON.stringify(capState())', w);
+    if (strip(STJSON(JSON.parse(got))) !== strip(want)) {
+      const a = JSON.parse(strip(want)), b = JSON.parse(strip(STJSON(JSON.parse(got)))), out = [];
+      const walk = (x, y, p) => { if (out.length > 2) return; if (x && y && typeof x === 'object' && typeof y === 'object') { for (const key of new Set([...Object.keys(x), ...Object.keys(y)])) walk(x[key], y[key], p + '.' + key); } else if (JSON.stringify(x) !== JSON.stringify(y)) out.push(`${p} 原局=${JSON.stringify(x)} 回放=${JSON.stringify(y)}`); };
+      walk(a, b, '');
+      return `第 ${f} 帧：${out.join('；')}`;
+    }
+  }
+  return '';
+}
+
 // 本测试自己的伪随机数（不用 Math.random，好复现）
 function rng(s) { return () => { s = (Math.imul(s ^ (s >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) | 0; return ((s >>> 0) % 1e6) / 1e6; }; }
 
+// 这几种房间的联机录像要能原样放出来。神决（mayhem）的随机词条和同袍肉鸽（raid）回放时还不认房间规则，暂时不比
+const REPLAY_OK = ['normal', 'chaos', 'pp_cc', 'pp_pp'];
+const STJSON = st => JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
 function runCase(mode, chars, seed, frames, lag, duo) {
   now = 0;
   const box = [[], []];   // box[0]：房主发出的，box[1]：加入的人发出的
@@ -56,7 +80,7 @@ function runCase(mode, chars, seed, frames, lag, duo) {
   const errs = [];
   const G = P.map(w => ({ human: vm.runInContext('human', w), rollTick: vm.runInContext('rollTick', w), onNetMsg: vm.runInContext('onNetMsg', w) }));
   for (const w of P) vm.runInContext(`rollStart(${JSON.stringify(chars)}, ${seed}${duo ? ', ' + JSON.stringify(duo) : ''});`, w);
-  const wire = [[], []];
+  const wire = [[], []], checks = [];
   const PRESS = ['light', 'jump', 'dash', 'skill', 'skill2', 'special'];
   for (let t = 0; t < frames + 600; t++) {
     now += 1000 / 60;
@@ -74,7 +98,10 @@ function runCase(mode, chars, seed, frames, lag, duo) {
       while (box[i].length) wire[i].push([t + lag, box[i].shift()]);
     }
     for (let i = 0; i < 2; i++) while (wire[i].length && wire[i][0][0] <= t) G[1 - i].onNetMsg(JSON.parse(wire[i].shift()[1]));
+    // 回放对照：每 300 帧记下房主这边一帧两边都确认过的状态
+    if (t % 300 === 299) { const x = vm.runInContext(`(() => { const f = Math.min(ROLL.F, ROLL.remLast + 1) - 1, sn = ROLL.snaps[f % ROLL.N]; return sn && sn.f === f && ROLL.pend > f ? [f, sn.st] : null; })()`, P[0]); if (x) checks.push([x[0], STJSON(x[1])]); }
   }
+  const rp = REPLAY_OK.includes(mode) && replayDiff(JSON.parse(vm.runInContext('recNet(); JSON.stringify({ ...REC.meta, ev: REC.ev, frames: REC.nf })', P[0])), checks);
   // 两边停的帧可能差一两帧：比较双方都确认过的同一帧存档（和游戏里自己校验用的是同一份）
   const info = P.map(w => JSON.parse(vm.runInContext('JSON.stringify({ F: ROLL.F, last: ROLL.remLast, desyncs: ROLL.desyncs, rollbacks: ROLL.rollbacks, n: allFighters().length })', w)));
   const f = Math.min(...info.map(x => Math.min(x.F, x.last + 1))) - 1;
@@ -90,6 +117,7 @@ function runCase(mode, chars, seed, frames, lag, duo) {
   if (h && c) walk(h, c, '');
   // 中途校验对不上也算失败：游戏会让房主发存档纠正，玩家看到的是角色突然一闪
   if (info[0].desyncs || info[1].desyncs) diff.push(`对局中校验对不上 ${info[0].desyncs}/${info[1].desyncs} 次`);
+  if (rp) diff.push('回放和原局不一样：' + rp);
   return { errs, diff, F: info.map(x => x.F), desyncs: info.map(x => x.desyncs), rollbacks: info.map(x => x.rollbacks), fighters: info[0].n, frame: f, round: h && h.M ? `第${h.M.round}回合 比分${h.M.wins} ${h.M.phase}` : '' };
 }
 
@@ -256,7 +284,7 @@ for (const [mode, ch, duo] of CASES) for (const lag of [1, 6]) {
   const r = runCase(mode, ch, SEED0 + ch[0] * 31 + lag, FRAMES, lag, duo);
   const ok = !r.errs.length && !r.diff.length;
   if (!ok) fail++;
-  console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${JSON.stringify(duo || ch)} 延迟${lag}帧  帧=${r.F} 回滚=${r.rollbacks} 校验不一致=${r.desyncs}  ${r.round}`);
+  console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${JSON.stringify(duo || ch)} 延迟${lag}帧${REPLAY_OK.includes(mode) ? '（含回放）' : ''}  帧=${r.F} 回滚=${r.rollbacks} 校验不一致=${r.desyncs}  ${r.round}`);
   for (const e of r.errs) console.log('        报错 ' + e);
   for (const d of r.diff) console.log('        不一致 ' + d);
 }
