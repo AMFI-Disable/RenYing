@@ -135,6 +135,7 @@ Edit the sources; never edit the generated pages.
 | `tools/combat-test.mjs` | Headless/in-process regression suite for all 12 heroes, 2v2 AI, and combat state transitions |
 | `tools/econ-test.mjs` | Economy, armory, market, drop rates, and anti-abuse test suite (389 checks) |
 | `tools/rollback-test.mjs` | Rollback determinism and frame replay verification |
+| `tools/predeploy-check.mjs` | Pre-deploy checks: wrangler.toml, admin page CSP, key API smoke test on a local Worker |
 | `tools/simulate-all.mjs` | Multi-threaded simulation, counter audit, and neural policy training pipeline |
 | `tools/ui-audit.mjs` | Headless check that every panel fits, with nothing clipped or too small to read |
 | `tools/hud-audit.mjs` | Headless check that no in-match HUD text is drawn below 12px |
@@ -151,6 +152,46 @@ python3 tools/build.py
 ```
 
 CI runs `python3 tools/build.py --check` and fails if the generated pages are out of date. It also runs the economy tests, the combat and AI regression suite, and the panel, HUD and touch audits.
+
+### Entry Points
+
+| Entry | What it is |
+| :--- | :--- |
+| `index.html` | Online edition served by GitHub Pages (<https://amfi-disable.github.io/RenYing/>) |
+| `renying-offline.html` | Single-file offline edition: download and open, no network needed |
+| `renying.html` | Old address, forwards to `index.html` |
+| `assets/qingfengxing.html` | Qingfengxing mini-game page |
+| `cloudflare/worker.bundle.js` | Cloudflare Worker (accounts, cloud saves, armory economy, open world); `cloudflare/wrangler.toml` points at it |
+| Worker `/admin` | Admin console, served by the Worker itself |
+
+### Build Commands
+
+| Command | When |
+| :--- | :--- |
+| `python3 tools/build.py` | After any change in `src/`, `assets/` or `cloudflare/` (regenerates every page and the Worker bundle) |
+| `python3 tools/build.py --check` | Before committing: fails if a generated file is stale |
+| `node tools/predeploy-check.mjs` | Before deploying the Worker: wrangler.toml, admin CSP and key API smoke tests |
+| `npx wrangler deploy --dry-run --env=""` | Run inside `cloudflare/`: bundles the Worker as a deploy would, without uploading |
+
+### Test Matrix
+
+Everything runs with plain Node 22 (no `npm install`). The browser audits need a local server first: `python3 -m http.server 8791`.
+
+| Area | Command | What it covers | CI workflow |
+| :--- | :--- | :--- | :--- |
+| combat | `node tools/combat-test.mjs --sim` | Every hero, combat states, 2v2 AI | CI, Combat |
+| netplay | `node tools/netplay-test.mjs` | Two game copies over a laggy link end every match identically | Rollback |
+| rollback | `node tools/rollback-test.mjs --rollback` | Snapshot, restore and resimulation determinism | Rollback |
+| econ | `node tools/econ-test.mjs` (add `--bundle` for the built Worker) | Armory, market, drop rates, anti-abuse | CI, Armory |
+| cloud | `node tools/cloud-test.mjs` | Cloud save client: per-account isolation, retries | CI |
+| sync | `node tools/sync-test.mjs` (add `--bundle`) | Real Worker with several devices: merges never double count | CI |
+| world | `node tools/world-test.mjs` | Open world server: caps, view range, world boss | CI |
+| ai-lingque | `node tools/ai-lingque-test.mjs` | Lingque AI combo checks | CI |
+| ui | `node tools/ui-audit.mjs ci-ui 1440 900` | Every panel fits, nothing clipped or too small | CI, UI |
+| touch | `node tools/touch-audit.mjs ci-touch` | Phone and tablet touch controls | CI, Mobile |
+| hud | `node tools/hud-audit.mjs ci-hud 1440 900` | No in-match HUD text below 12px | CI, UI |
+| hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD text and bars never overlap or leave the canvas | UI |
+| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml, admin CSP, API smoke test | Cloudflare Worker |
 
 ---
 

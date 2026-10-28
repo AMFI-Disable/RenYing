@@ -135,6 +135,7 @@ flowchart TD
 | `tools/combat-test.mjs` | 12 英雄招式、状态机与 2v2 AI 回归测试套件 |
 | `tools/econ-test.mjs` | 经济、武库、集市与反作弊全套自动化测试（389 项通过） |
 | `tools/rollback-test.mjs` | 回滚联机确定性与帧重放测试 |
+| `tools/predeploy-check.mjs` | 部署前检查：wrangler.toml、管理后台 CSP、本机 Worker 关键接口冒烟测试 |
 | `tools/simulate-all.mjs` | 全模式 AI 仿真对战、克制审计与神经网络训练管线 |
 | `index.html` | 生成的联网版（GitHub Pages） |
 | `renying-offline.html` | 生成的单文件离线版 |
@@ -147,6 +148,46 @@ python3 tools/build.py
 ```
 
 CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就会失败。
+
+### Entry Points
+
+| 入口 | 是什么 |
+| :--- | :--- |
+| `index.html` | 联网版，GitHub Pages 上的网址 <https://amfi-disable.github.io/RenYing/> |
+| `renying-offline.html` | 单文件离线版，下载后直接打开，不用联网 |
+| `renying.html` | 旧网址，转到 `index.html` |
+| `assets/qingfengxing.html` | 青锋行小游戏 |
+| `cloudflare/worker.bundle.js` | Cloudflare Worker（账号、云存档、武库经济、开放世界），`cloudflare/wrangler.toml` 指向它 |
+| Worker 的 `/admin` | 管理后台，由 Worker 自己提供 |
+
+### Build Commands
+
+| 命令 | 什么时候用 |
+| :--- | :--- |
+| `python3 tools/build.py` | 改了 `src/`、`assets/` 或 `cloudflare/` 之后（重新生成所有网页和 Worker 打包文件） |
+| `python3 tools/build.py --check` | 提交前：生成的文件不是最新就报错 |
+| `node tools/predeploy-check.mjs` | 部署 Worker 前：检查 wrangler.toml、管理后台 CSP，冒烟测试关键接口 |
+| `npx wrangler deploy --dry-run --env=""` | 在 `cloudflare/` 里运行：按部署的方式打包一遍，但不上传 |
+
+### Test Matrix
+
+全部用 Node 22 直接运行，不用 `npm install`。浏览器类检查要先开本地服务器：`python3 -m http.server 8791`。
+
+| 范围 | 命令 | 测什么 | 在哪个 CI 工作流 |
+| :--- | :--- | :--- | :--- |
+| combat | `node tools/combat-test.mjs --sim` | 所有侠客、战斗状态、2v2 AI | CI、Combat |
+| netplay | `node tools/netplay-test.mjs` | 两份游戏隔着有延迟的假网线对打，每一局两边算得一样 | Rollback |
+| rollback | `node tools/rollback-test.mjs --rollback` | 存档、读档、重算的确定性 | Rollback |
+| econ | `node tools/econ-test.mjs`（加 `--bundle` 测打包后的 Worker） | 武库、市场、爆率、防刷 | CI、Armory |
+| cloud | `node tools/cloud-test.mjs` | 云存档客户端：按账号隔离、重试 | CI |
+| sync | `node tools/sync-test.mjs`（可加 `--bundle`） | 真 Worker 加多台设备：合并时不会重复计算 | CI |
+| world | `node tools/world-test.mjs` | 开放世界服务器：人数上限、视野、世界首领 | CI |
+| ai-lingque | `node tools/ai-lingque-test.mjs` | 凌雀 AI 连招检查 | CI |
+| ui | `node tools/ui-audit.mjs ci-ui 1440 900` | 每个面板放得下，没有被裁掉或字太小 | CI、UI |
+| touch | `node tools/touch-audit.mjs ci-touch` | 手机和平板的触屏操作 | CI、Mobile |
+| hud | `node tools/hud-audit.mjs ci-hud 1440 900` | 对局里的 HUD 文字不小于 12px | CI、UI |
+| hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD 文字和血条不重叠、不出画布 | UI |
+| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml、管理后台 CSP、接口冒烟测试 | Cloudflare Worker |
 
 ---
 

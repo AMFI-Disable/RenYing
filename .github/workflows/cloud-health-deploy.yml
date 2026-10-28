@@ -8,6 +8,8 @@ on:
       - "src/armory-core.js"
       - "src/cloud.js"
       - "tools/rollback-test.mjs"
+      - "tools/predeploy-check.mjs"
+      - "tools/build.py"
   pull_request:
     branches: [ main ]
   schedule:
@@ -41,3 +43,41 @@ jobs:
       - name: Probe Live Cloudflare Worker Health Endpoint
         run: |
           curl -sf --max-time 10 https://renying.evengao6688.workers.dev/api/health || echo "Health probe warning (non-fatal in offline/sandboxed CI)"
+
+  predeploy:
+    name: Pre-Deploy Checks (Build, Admin CSP, API Smoke, Wrangler Dry Run)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set Up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      # The bundle that gets deployed must match its sources (worker.js, admin.html, armory-core.js).
+      - name: Verify Generated Worker Bundle Is Up To Date
+        run: python3 tools/build.py --check
+
+      # wrangler.toml sanity, /admin CSP (one script, sha256 matches, no inline handlers),
+      # then the key API routes against the real Worker running locally with node:sqlite as D1.
+      - name: Admin CSP And API Smoke Test (Bundle)
+        run: node tools/predeploy-check.mjs
+
+      - name: Admin CSP And API Smoke Test (Source)
+        run: node tools/predeploy-check.mjs --source
+
+      # Parses wrangler.toml and bundles the Worker exactly as a deploy would, without uploading.
+      # No Cloudflare credentials are used; production and staging are both checked.
+      - name: Wrangler Dry Run (Production And Staging)
+        working-directory: cloudflare
+        run: |
+          npx --yes wrangler@4.154.0 deploy --dry-run --env="" --outdir "$RUNNER_TEMP/wrangler-prod"
+          npx --yes wrangler@4.154.0 deploy --dry-run --env staging --outdir "$RUNNER_TEMP/wrangler-staging"
