@@ -1031,6 +1031,7 @@ width: 100%; border-radius: 999px;
 .saga-foot p { margin: 3px 0; }
 .saga-foot b { color: var(--gold); font-weight: 400; }
 .saga-dim { color: var(--dim); }
+.saga-foot .ui-state.saga-state { justify-content: flex-start; padding: 4px 0; font-size: 13px; }
 #sagaTalk { align-items: flex-end; justify-content: center; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(5,5,12,.75)); cursor: pointer; }
 .saga-talk { width: min(860px, 94vw); margin-bottom: 6vh; padding: 16px 22px; background: rgba(14,13,26,.92); border: 1px solid rgba(233,196,106,.4); border-radius: 10px; text-align: left; }
 .st-place { font-size: 12px; color: var(--dim); letter-spacing: .1em; }
@@ -7430,6 +7431,12 @@ const UI_COPY_EN = {
 "出战": "Fight",
 "全服侠客各自出战，伤害累计在同一只天魔身上": "Every warrior fights; damage adds up on the same demon",
 "连不上服务器，天魔的情况暂时看不到": "Cannot reach the server; the demon's state is unavailable",
+"江湖足迹": "Footprints",
+"其他玩家各自走这条路留下的记录，不是实时联机": "What other players left on this path, not live play",
+"登录云端账号后，你的选择也会记进江湖足迹": "Log in with a cloud account and your choices are added to Footprints too",
+"正在查看江湖足迹…": "Loading Footprints…",
+"江湖足迹暂时连不上": "Footprints can't be loaded right now",
+"还没有人走过这条路，你会是第一个": "No one has walked this path yet. You could be the first.",
 "暂无武库饰品": "No armory cosmetics yet",
 "正在查看天魔的情况…": "Checking on the demon…",
 "刷新太快了，稍后再看": "Refreshing too fast. Check back in a moment.",
@@ -23077,11 +23084,11 @@ const el = $id('sagaFoot'); if (!el) return;
 if (OFFLINE_BUILD) { el.innerHTML = ''; return; }
 const h = sagaPick, S = SAGA[h], F = SAGA_FOOT[h], d = F && F.data, esc = escapeHTML;
 const head = '<h4>江湖足迹 <small>其他玩家各自走这条路留下的记录，不是实时联机</small></h4>';
-if (!d) { el.innerHTML = head + `<p class="saga-dim">${F && F.err ? esc(F.err) : '正在查看…'}</p>`; return; }
+if (!d) { el.innerHTML = head + (F && F.err ? uiState('error', F.err, 'saga-state') : uiState('loading', '正在查看江湖足迹…', 'saga-state')); return; }
 const N = d.nodes || {}, cnt = k => (N[k] && N[k].n) || 0;
 const ci = S.nodes.findIndex(n => n.choice), ch = ci >= 0 ? S.nodes[ci].choice : null, last = S.nodes.length - 1;
 const rows = [];
-rows.push(cnt('n1') ? `走上这条路的：<b>${cnt('n1')}</b> 人 · 走完的：<b>${cnt('end')}</b> 人` : '还没有人走过这条路，你会是第一个');
+if (cnt('n1')) rows.push(`走上这条路的：<b>${cnt('n1')}</b> 人 · 走完的：<b>${cnt('end')}</b> 人`);
 if (ch && cnt('c' + (ci + 1))) {
 const P = N['c' + (ci + 1)].picks || {}, tot = cnt('c' + (ci + 1));
 rows.push('在「' + esc(S.nodes[ci].name) + '」：' + ch.opts.map(o => `${esc(o.t)} <b>${Math.round((P[o.f] || 0) / tot * 100)}%</b>`).join(' · '));
@@ -23090,7 +23097,7 @@ if (cnt('end')) { const P = N.end.picks || {}; rows.push('结局：' + Object.en
 if (d.recent && d.recent.length) rows.push('最近走完的：' + d.recent.map(x => `${esc(x.name)}（${esc((S.nodes[last].end[x.pick] || {}).title || '')}）`).join('、'));
 const me = window.CloudSave && CloudSave.getUser && CloudSave.getUser();
 if (!(me && me.isCloud)) rows.push('<span class="saga-dim">登录云端账号后，你的选择也会记进江湖足迹</span>');
-el.innerHTML = head + rows.map(x => `<p>${x}</p>`).join('');
+el.innerHTML = head + (cnt('n1') ? '' : uiState('empty', '还没有人走过这条路，你会是第一个', 'saga-state')) + rows.map(x => `<p>${x}</p>`).join('');
 }
 function sagaMark(h, node, pick) {
 if (OFFLINE_BUILD || !window.CloudSave || !CloudSave.sagaMark) return;

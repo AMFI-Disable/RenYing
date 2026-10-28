@@ -96,11 +96,11 @@ function renderSagaFoot() {
   if (OFFLINE_BUILD) { el.innerHTML = ''; return; }
   const h = sagaPick, S = SAGA[h], F = SAGA_FOOT[h], d = F && F.data, esc = escapeHTML;
   const head = '<h4>江湖足迹 <small>其他玩家各自走这条路留下的记录，不是实时联机</small></h4>';
-  if (!d) { el.innerHTML = head + `<p class="saga-dim">${F && F.err ? esc(F.err) : '正在查看…'}</p>`; return; }
+  if (!d) { el.innerHTML = head + (F && F.err ? uiState('error', F.err, 'saga-state') : uiState('loading', '正在查看江湖足迹…', 'saga-state')); return; }
   const N = d.nodes || {}, cnt = k => (N[k] && N[k].n) || 0;
   const ci = S.nodes.findIndex(n => n.choice), ch = ci >= 0 ? S.nodes[ci].choice : null, last = S.nodes.length - 1;
   const rows = [];
-  rows.push(cnt('n1') ? `走上这条路的：<b>${cnt('n1')}</b> 人 · 走完的：<b>${cnt('end')}</b> 人` : '还没有人走过这条路，你会是第一个');
+  if (cnt('n1')) rows.push(`走上这条路的：<b>${cnt('n1')}</b> 人 · 走完的：<b>${cnt('end')}</b> 人`);
   if (ch && cnt('c' + (ci + 1))) {
     const P = N['c' + (ci + 1)].picks || {}, tot = cnt('c' + (ci + 1));
     rows.push('在「' + esc(S.nodes[ci].name) + '」：' + ch.opts.map(o => `${esc(o.t)} <b>${Math.round((P[o.f] || 0) / tot * 100)}%</b>`).join(' · '));
@@ -109,7 +109,7 @@ function renderSagaFoot() {
   if (d.recent && d.recent.length) rows.push('最近走完的：' + d.recent.map(x => `${esc(x.name)}（${esc((S.nodes[last].end[x.pick] || {}).title || '')}）`).join('、'));
   const me = window.CloudSave && CloudSave.getUser && CloudSave.getUser();
   if (!(me && me.isCloud)) rows.push('<span class="saga-dim">登录云端账号后，你的选择也会记进江湖足迹</span>');
-  el.innerHTML = head + rows.map(x => `<p>${x}</p>`).join('');
+  el.innerHTML = head + (cnt('n1') ? '' : uiState('empty', '还没有人走过这条路，你会是第一个', 'saga-state')) + rows.map(x => `<p>${x}</p>`).join('');
 }
 function sagaMark(h, node, pick) {
   if (OFFLINE_BUILD || !window.CloudSave || !CloudSave.sagaMark) return;
