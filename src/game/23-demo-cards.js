@@ -522,10 +522,11 @@ function bpFinish() {
   } else if (mode === 'net') {
     if (NET.role === 'host') {
       const seed = (Math.random() * 2147483647) | 0;
-      const is2v2Net = !!roomDef().four;
-      const duo = !is2v2Net && Array.isArray(picks[0]) ? picks : null;
-      const flatCh = is2v2Net && Array.isArray(picks[0])
-        ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
+      const is2v2Net = !!roomDef().four, raidNet = !!roomDef().raid;
+      const duo = !is2v2Net && !raidNet && Array.isArray(picks[0]) ? picks : null;
+      // 同袍肉鸽：A 房主、C 好友、D 房主替电脑同袍选的；B 先放房主的人占位，开打时换成魔首
+      const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
+        : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
         : (duo ? [duo[0][0], duo[1][0]] : picks);
       send({ rstart: duo ? { ch: flatCh, seed, duo } : { ch: flatCh, seed } });
       rollStart(flatCh, seed, duo);

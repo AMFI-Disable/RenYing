@@ -179,7 +179,8 @@ function checkModes(env) {
     const ok = md.slots.length === 2 && md.slots.every(s => Array.isArray(s) && s.length && s.every(i => [0, 1, 2, 3].includes(i)));
     if (!ok) { err(w, 'slots 要写成 [[房主控制的编号…], [加入的人控制的编号…]]，编号 0~3'); continue; }
     unique(w + ' slots', md.slots.flat(), '侠客编号');
-    if (!md.four && md.slots.flat().some(i => i > 1)) err(w, '不是四人模式（four）就只能控制 0 和 1');
+    if (!md.four && !md.raid && md.slots.flat().some(i => i > 1)) err(w, '不是四人模式（four）或同袍肉鸽（raid）就只能控制 0 和 1');
+    if (md.raid && md.slots.flat().includes(1)) err(w, '同袍肉鸽里 1 号（B）是魔首，玩家不能控制');
   }
 }
 

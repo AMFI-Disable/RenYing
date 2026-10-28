@@ -112,6 +112,30 @@ let fail = 0;
   if (!okA || !okB) fail++;
   console.log(`${okA && okB ? '  PASS' : '  FAIL'}  ICE 列表：服务器给了 TURN 就加上（${turns.length} 条），连不上就只用固定 STUN（${b.length} 条）`);
 }
+// 同袍肉鸽 · 好友联机：房间规则要一直是 raid（以前被改回了双人共斗），点将完开的是三人打魔首
+{
+  const w = makePeer([]);
+  const run = code => vm.runInContext(code, w);
+  const r = JSON.parse(run(`(() => {
+    NET.role = 'host'; NET.open = true; setRoomModeUI('raid');
+    const rule = netRoomMode;
+    bpStart('net');
+    const order = JSON.stringify(BP.steps);
+    for (const i of [4, 7, 9]) bpApply(i);
+    currentScreen = 'bp'; bpFinish();
+    const ink0 = PROF.ink || 0;
+    const r = { rule, order, raid: isRaid(), slots: JSON.stringify(ROLL.slots), A: A.chIdx, C: C.chIdx, D: D.chIdx, boss: (B.bossSkills || []).length, bossHp: B.maxHp, heroes: M.raidBoss && M.raidBoss.heroes.length };
+    B.hp = 0; M.koWinner = 0; endRound();
+    r.endPhase = M.phase; r.paidEarly = (PROF.ink || 0) - ink0;
+    showEnd(0); showEnd(0);
+    r.paid = (PROF.ink || 0) - ink0;
+    return JSON.stringify(r);
+  })()`));
+  const ok = r.rule === 'raid' && r.order === JSON.stringify([[0, 'pick'], [1, 'pick'], [0, 'pick']]) && r.raid && r.slots === '[[0],[2]]'
+    && r.A === 4 && r.C === 7 && r.D === 9 && r.boss === 6 && r.heroes === 3 && r.endPhase === 'end' && r.paidEarly === 0 && r.paid === 600;
+  if (!ok) fail++;
+  console.log(`${ok ? '  PASS' : '  FAIL'}  同袍肉鸽 · 好友联机：规则 ${r.rule}，A/C/D=${r.A}/${r.C}/${r.D}，魔首 ${r.boss} 技 ${r.bossHp} 血，确认打完才发墨锭（先 ${r.paidEarly}，后 ${r.paid}）`);
+}
 const argF = process.argv.indexOf('--frames');
 const FRAMES = argF > 0 ? +process.argv[argF + 1] : 3600;
 const CASES = [
@@ -120,6 +144,7 @@ const CASES = [
   ['normal', [2, 3], [[2, 5, 12], [3, 4, 7]]],   // 3v3 车轮：输一回合换下一人
   ['chaos', [3, 9]], ['mayhem', [6, 2]],
   ['pp_cc', [0, 3, 5, 9]], ['pp_pp', [2, 7, 4, 6]],
+  ['raid', [1, 1, 4, 8]], ['raid', [11, 11, 6, 2]],   // 同袍肉鸽：房主 A、好友 C、电脑同袍 D 打魔首 B（魔首和秘卷两边按种子抽）
 ];
 for (const [mode, ch, duo] of CASES) for (const lag of [1, 6]) {
   const r = runCase(mode, ch, SEED0 + ch[0] * 31 + lag, FRAMES, lag, duo);

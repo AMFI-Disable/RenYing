@@ -875,10 +875,16 @@ function updateRaidBoss(dt) {
   if (B.bossRotTimer <= 0 && B.state !== 'skill' && B.state !== 'special') {
     B.bossRotTimer = 2.6;
     B.bossSkillCursor = ((B.bossSkillCursor || 0) + 2) % 6;
-    B.ch.skill = B.bossSkills[B.bossSkillCursor];
-    B.ch.skill2 = B.bossSkills[(B.bossSkillCursor + 1) % 6];
-    if (B.bossUlts && B.bossUlts.length) B.ch.ult = B.bossUlts[(B.bossSkillCursor >> 1) % B.bossUlts.length];
   }
+  raidBossSkills();
+}
+// 魔首当前用哪两招、哪个大招：B.ch 不进回滚存档，所以每帧（和回滚恢复后）都按存档里的游标重新对上
+function raidBossSkills() {
+  if (!B.bossSkills || B.bossSkills.length < 6 || !B.ch) return;
+  const c = B.bossSkillCursor || 0;
+  B.ch.skill = B.bossSkills[c];
+  B.ch.skill2 = B.bossSkills[(c + 1) % 6];
+  if (B.bossUlts && B.bossUlts.length) B.ch.ult = B.bossUlts[(c >> 1) % B.bossUlts.length];
 }
 function startRaidMatch(squadPicks, squadSize = 3, opts = null) {
   if (p2pActive()) netDropWaiting();
@@ -944,6 +950,14 @@ function startRaidMatch(squadPicks, squadSize = 3, opts = null) {
   startRound();
   const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
   say(`${story.title} · 决战【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', story.bossIntro || (perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享'));
+}
+// 联机同袍肉鸽：魔首是谁、开局送哪两卷秘卷，两边按同一个种子抽（各自的 Math.random 会抽得不一样）
+function netRaidSetup() {
+  const rnd = Math.random; Math.random = grnd;
+  try { M.raidBoss = rollRaidBoss(1); M.towerPerks = scDraw(A.ch.id, [], 2).map(s => s.id); } finally { Math.random = rnd; }
+  Object.assign(M, { raidSquadSize: 3, raidWave: 1, raidInkEarned: 0, raidLastReward: 600, raidConsoled: false, raidPaid: false,
+    foeScrolls: ['bx_armor', 'bx_haste'], scRun: {}, level: 'god', bans: [], stage: null });
+  FOREST.on = false; B.forestProxy = false; B.hidden = false;
 }
 function nextRaidWave() {
   paused = false;
@@ -1068,8 +1082,7 @@ if ($id('btnRougeGoOnline')) {
   $id('btnRougeGoOnline').addEventListener('click', () => {
     closeRougeModal();
     if (!$id('netp').classList.contains('on')) openScreen('netp');
-    netRoomMode = 'raid';
-    setRoomModeUI('pp_cc');
+    setRoomModeUI('raid');
     if ($id('roomWrap')) {
       $id('roomWrap').classList.remove('hidden');
       $id('mmRoomBtn').classList.add('sel');

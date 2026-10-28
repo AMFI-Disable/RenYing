@@ -477,6 +477,7 @@ function showEnd(w) {
     playSting(win ? 'victory' : 'defeat');
     const wave = M.raidWave || 1;
     const rewardInk = win ? (M.raidLastReward || 600) : 120;
+    if (win && M.mode === 'net' && !M.raidPaid) { M.raidPaid = true; raidPay(rewardInk); }
     if (!win && !M.raidConsoled) {
       M.raidConsoled = true;
       PROF.ink = (PROF.ink || 0) + rewardInk;
@@ -497,7 +498,7 @@ function showEnd(w) {
     const again = document.getElementById('againBtn');
     again.style.display = '';
     again.disabled = false;
-    again.textContent = win ? '顿悟共享秘卷 · 迎战下一魔首' : '重整旗鼓 · 再战同袍肉鸽';
+    again.textContent = M.mode === 'net' ? '再战一场' : (win ? '顿悟共享秘卷 · 迎战下一魔首' : '重整旗鼓 · 再战同袍肉鸽');   // 联机的再战是两边重新点将
     setTimeout(() => showScreen('end'), 300);
     return;
   }
@@ -562,6 +563,11 @@ function showEnd(w) {
   }
   setTimeout(() => showScreen('end'), 300);
 }
+function raidPay(gain) {
+  PROF.ink = (PROF.ink || 0) + gain;
+  saveProfile();
+  toast(`🎉 众志破魔大捷！全员共享丰厚悬赏 +${gain} 墨锭！`);
+}
 function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
@@ -575,12 +581,10 @@ function endRound() {
       const gain = 600 + (wave - 1) * 200;
       M.raidLastReward = gain;
       M.raidInkEarned = (M.raidInkEarned || 0) + gain;
-      PROF.ink = (PROF.ink || 0) + gain;
-      saveProfile();
-      toast(`🎉 众志破魔大捷！全员共享丰厚悬赏 +${gain} 墨锭！`);
+      if (!ROLL.on) raidPay(gain);   // 联机时这一帧还可能被回滚改掉：等两边都确认打完（showEnd）再发墨锭
     }
     M.phase = 'end';
-    showEnd(w);
+    if (!ROLL.on) showEnd(w);   // 联机由回滚确认这一帧之后统一弹结算
     return;
   }
   if (M.mode === 'tower') {

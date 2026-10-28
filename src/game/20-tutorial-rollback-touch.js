@@ -224,6 +224,7 @@ function restState(st) {
   for (const k of Object.keys(M)) delete M[k]; Object.assign(M, jclone(st.M));
   st.c.forEach((o, i) => resC(fighterByIdx(i).ctrl, o));
   if (st.arena) Object.assign(ARENA2V2, jclone(st.arena));
+  if (isRaid()) raidBossSkills();
 }
 function hashState(st) {
   const txt = JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);   // sk 是画面上的骨架（残影里也带着），不算
@@ -271,6 +272,7 @@ function rollStart(ch, seed, duo) {
   human[0].clear(); human[1].clear(); NET.presses.length = 0; NET.presses2.length = 0; human[0].rec = NET.presses; human[1].rec = NET.presses2;
   for (const f of allFighters()) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
   clock = 0; projSeq = 0; GRNG.s = seed | 0;
+  if (isRaid()) netRaidSetup();
   ROLL.lastMid = ROLL.mid;
   Object.assign(ROLL, { on: true, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
     locMax: ROLL.D - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0, mid: seed | 0 });

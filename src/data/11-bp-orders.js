@@ -6,6 +6,7 @@ const BP_ORDERS = {
   solo: [[0, 'pick']],                                                          // 闯塔、守关、木人、开放世界：只选自己
   squad2: [[0, 'pick'], [0, 'pick']],                                           // 同袍肉鸽 2 人小队
   squad3: [[0, 'pick'], [0, 'pick'], [0, 'pick']],                              // 同袍肉鸽 3 人小队
+  squadNet: [[0, 'pick'], [1, 'pick'], [0, 'pick']],                            // 联机同袍肉鸽：房主、好友各选自己，房主再给电脑同袍选一个
   duo: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']],   // 2v2：各禁 1 人，蛇形各选 2 人
   trio: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']],        // 本机车轮战：各禁 1 人，轮流各选 3 人
   trioSnake: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],   // 联机车轮接力：各禁 1 人，蛇形各选 3 人

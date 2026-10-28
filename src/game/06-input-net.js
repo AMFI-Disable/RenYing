@@ -118,7 +118,7 @@ function onSys(m) {
     onNetOpen();
   } else if (m.sys === 'room_rule') {
     setRoomModeUI(m.rule);
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)', raid: '同袍肉鸽 (并肩讨伐魔首)' };
     toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
   } else if (m.sys === 'rematch') {
     if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -305,12 +305,7 @@ function setupNetMatch() {
     M.subMode = netRoomMode;
     M.level = 'god';
     M.watchAi = false;
-    if (netRoomMode === 'raid') {
-      M.raidSquadSize = 3;
-      M.raidWave = M.raidWave || 1;
-      M.towerPerks = M.towerPerks && M.towerPerks.length ? M.towerPerks : scDraw(A.ch.id, [], 2).map(s => s.id);
-      M.foeScrolls = ['bx_armor', 'bx_haste'];
-    }
+    if (netRoomMode === 'raid') { M.raidSquadSize = 3; C.hidden = D.hidden = B.hidden = false; }   // 魔首和开局秘卷要两边一样，在 rollStart 里按种子定（netRaidSetup）
     if (NET.role === 'host') {
       A.ctrl = human[0];
       C.ctrl = NET.remote;

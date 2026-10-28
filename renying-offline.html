@@ -6256,7 +6256,7 @@ chaos: { bp: 'open', slots: [[0], [1]], rule: 'chaos' },
 mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
 pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
 pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
-raid: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [1]], raid: true },
+raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
 };
 const BP_ORDERS = {
 duel: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']],                     // 1v1：各禁 1 人、各选 1 人
@@ -6264,6 +6264,7 @@ open: [[0, 'pick'], [1, 'pick']],                                             //
 solo: [[0, 'pick']],                                                          // 闯塔、守关、木人、开放世界：只选自己
 squad2: [[0, 'pick'], [0, 'pick']],                                           // 同袍肉鸽 2 人小队
 squad3: [[0, 'pick'], [0, 'pick'], [0, 'pick']],                              // 同袍肉鸽 3 人小队
+squadNet: [[0, 'pick'], [1, 'pick'], [0, 'pick']],                            // 联机同袍肉鸽：房主、好友各选自己，房主再给电脑同袍选一个
 duo: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']],   // 2v2：各禁 1 人，蛇形各选 2 人
 trio: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']],        // 本机车轮战：各禁 1 人，轮流各选 3 人
 trioSnake: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],   // 联机车轮接力：各禁 1 人，蛇形各选 3 人
@@ -9295,7 +9296,7 @@ if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
 onNetOpen();
 } else if (m.sys === 'room_rule') {
 setRoomModeUI(m.rule);
-const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
+const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)', raid: '同袍肉鸽 (并肩讨伐魔首)' };
 toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
 } else if (m.sys === 'rematch') {
 if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -9474,12 +9475,7 @@ if (netRoomMode === 'pp_cc' || netRoomMode === 'raid') {
 M.subMode = netRoomMode;
 M.level = 'god';
 M.watchAi = false;
-if (netRoomMode === 'raid') {
-M.raidSquadSize = 3;
-M.raidWave = M.raidWave || 1;
-M.towerPerks = M.towerPerks && M.towerPerks.length ? M.towerPerks : scDraw(A.ch.id, [], 2).map(s => s.id);
-M.foeScrolls = ['bx_armor', 'bx_haste'];
-}
+if (netRoomMode === 'raid') { M.raidSquadSize = 3; C.hidden = D.hidden = B.hidden = false; }   // 魔首和开局秘卷要两边一样，在 rollStart 里按种子定（netRaidSetup）
 if (NET.role === 'host') {
 A.ctrl = human[0];
 C.ctrl = NET.remote;
@@ -10580,6 +10576,7 @@ const win = w === 0;
 playSting(win ? 'victory' : 'defeat');
 const wave = M.raidWave || 1;
 const rewardInk = win ? (M.raidLastReward || 600) : 120;
+if (win && M.mode === 'net' && !M.raidPaid) { M.raidPaid = true; raidPay(rewardInk); }
 if (!win && !M.raidConsoled) {
 M.raidConsoled = true;
 PROF.ink = (PROF.ink || 0) + rewardInk;
@@ -10600,7 +10597,7 @@ $id('endRank').textContent = win
 const again = document.getElementById('againBtn');
 again.style.display = '';
 again.disabled = false;
-again.textContent = win ? '顿悟共享秘卷 · 迎战下一魔首' : '重整旗鼓 · 再战同袍肉鸽';
+again.textContent = M.mode === 'net' ? '再战一场' : (win ? '顿悟共享秘卷 · 迎战下一魔首' : '重整旗鼓 · 再战同袍肉鸽');   // 联机的再战是两边重新点将
 setTimeout(() => showScreen('end'), 300);
 return;
 }
@@ -10665,6 +10662,11 @@ again.textContent = '再战';
 }
 setTimeout(() => showScreen('end'), 300);
 }
+function raidPay(gain) {
+PROF.ink = (PROF.ink || 0) + gain;
+saveProfile();
+toast(`🎉 众志破魔大捷！全员共享丰厚悬赏 +${gain} 墨锭！`);
+}
 function endRound() {
 const w = M.koWinner;
 if (w >= 0) M.wins[w]++;
@@ -10678,12 +10680,10 @@ const wave = M.raidWave || 1;
 const gain = 600 + (wave - 1) * 200;
 M.raidLastReward = gain;
 M.raidInkEarned = (M.raidInkEarned || 0) + gain;
-PROF.ink = (PROF.ink || 0) + gain;
-saveProfile();
-toast(`🎉 众志破魔大捷！全员共享丰厚悬赏 +${gain} 墨锭！`);
+if (!ROLL.on) raidPay(gain);   // 联机时这一帧还可能被回滚改掉：等两边都确认打完（showEnd）再发墨锭
 }
 M.phase = 'end';
-showEnd(w);
+if (!ROLL.on) showEnd(w);   // 联机由回滚确认这一帧之后统一弹结算
 return;
 }
 if (M.mode === 'tower') {
@@ -20067,6 +20067,7 @@ decoys.length = 0; for (const q of jclone(st.decoys)) decoys.push(q);
 for (const k of Object.keys(M)) delete M[k]; Object.assign(M, jclone(st.M));
 st.c.forEach((o, i) => resC(fighterByIdx(i).ctrl, o));
 if (st.arena) Object.assign(ARENA2V2, jclone(st.arena));
+if (isRaid()) raidBossSkills();
 }
 function hashState(st) {
 const txt = JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);   // sk 是画面上的骨架（残影里也带着），不算
@@ -20111,6 +20112,7 @@ else f.ctrl = new AICtrl(M.level || 'god');
 human[0].clear(); human[1].clear(); NET.presses.length = 0; NET.presses2.length = 0; human[0].rec = NET.presses; human[1].rec = NET.presses2;
 for (const f of allFighters()) for (const k of ['moveName', 'lunged', 'hitConfirmed', 'chargeFull', 'homeX', 'dummy', 'spFace', 'spX', 'slashN', 'spinN', 'vox', 'voy']) delete f[k];
 clock = 0; projSeq = 0; GRNG.s = seed | 0;
+if (isRaid()) netRaidSetup();
 ROLL.lastMid = ROLL.mid;
 Object.assign(ROLL, { on: true, F: 0, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: ROLL.D - 1, lastRemH: 0, lastSentH: 0,
 locMax: ROLL.D - 1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false, rollbacks: 0, rbFrames: 0, desyncs: 0, mid: seed | 0 });
@@ -21350,10 +21352,15 @@ B.bossRotTimer = (B.bossRotTimer || 2.4) - dt;
 if (B.bossRotTimer <= 0 && B.state !== 'skill' && B.state !== 'special') {
 B.bossRotTimer = 2.6;
 B.bossSkillCursor = ((B.bossSkillCursor || 0) + 2) % 6;
-B.ch.skill = B.bossSkills[B.bossSkillCursor];
-B.ch.skill2 = B.bossSkills[(B.bossSkillCursor + 1) % 6];
-if (B.bossUlts && B.bossUlts.length) B.ch.ult = B.bossUlts[(B.bossSkillCursor >> 1) % B.bossUlts.length];
 }
+raidBossSkills();
+}
+function raidBossSkills() {
+if (!B.bossSkills || B.bossSkills.length < 6 || !B.ch) return;
+const c = B.bossSkillCursor || 0;
+B.ch.skill = B.bossSkills[c];
+B.ch.skill2 = B.bossSkills[(c + 1) % 6];
+if (B.bossUlts && B.bossUlts.length) B.ch.ult = B.bossUlts[(c >> 1) % B.bossUlts.length];
 }
 function startRaidMatch(squadPicks, squadSize = 3, opts = null) {
 if (p2pActive()) netDropWaiting();
@@ -21416,6 +21423,13 @@ FOREST.on = false; B.forestProxy = false; B.hidden = false;
 startRound();
 const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
 say(`${story.title} · 决战【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', story.bossIntro || (perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享'));
+}
+function netRaidSetup() {
+const rnd = Math.random; Math.random = grnd;
+try { M.raidBoss = rollRaidBoss(1); M.towerPerks = scDraw(A.ch.id, [], 2).map(s => s.id); } finally { Math.random = rnd; }
+Object.assign(M, { raidSquadSize: 3, raidWave: 1, raidInkEarned: 0, raidLastReward: 600, raidConsoled: false, raidPaid: false,
+foeScrolls: ['bx_armor', 'bx_haste'], scRun: {}, level: 'god', bans: [], stage: null });
+FOREST.on = false; B.forestProxy = false; B.hidden = false;
 }
 function nextRaidWave() {
 paused = false;
@@ -21540,8 +21554,7 @@ if ($id('btnRougeGoOnline')) {
 $id('btnRougeGoOnline').addEventListener('click', () => {
 closeRougeModal();
 if (!$id('netp').classList.contains('on')) openScreen('netp');
-netRoomMode = 'raid';
-setRoomModeUI('pp_cc');
+setRoomModeUI('raid');
 if ($id('roomWrap')) {
 $id('roomWrap').classList.remove('hidden');
 $id('mmRoomBtn').classList.add('sel');
@@ -21966,7 +21979,7 @@ jin: '受到的伤害 -10%',
 ying: '8% 几率完全闪开一次攻击',
 qi: '气的获取 +25%',
 };
-const scRnd = () => Math.random();   // 秘卷只在单机模式生效，不用回滚同步的随机数
+const scRnd = () => ROLL.on ? grnd() : Math.random();   // 联机同袍肉鸽也有秘卷：回滚时两边得抽到同一个数
 function scTxt(f, text, rgb, dy = 0) { if (!RESIM) addP({ type: 'text', text, x: f.x, y: f.y - 125 - dy, life: 0.85, max: 0.85, rgb: rgb || '235,220,170' }); }
 function scHeal(f, n, _shared = false) {
 if (n <= 0 || f.hp <= 0 || scHas(f, 'no_heal')) return 0;
@@ -23570,10 +23583,10 @@ startMatch('cpu', pickLevel || 'god', picks, true);
 } else if (mode === 'net') {
 if (NET.role === 'host') {
 const seed = (Math.random() * 2147483647) | 0;
-const is2v2Net = !!roomDef().four;
-const duo = !is2v2Net && Array.isArray(picks[0]) ? picks : null;
-const flatCh = is2v2Net && Array.isArray(picks[0])
-? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
+const is2v2Net = !!roomDef().four, raidNet = !!roomDef().raid;
+const duo = !is2v2Net && !raidNet && Array.isArray(picks[0]) ? picks : null;
+const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
+: is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
 : (duo ? [duo[0][0], duo[1][0]] : picks);
 send({ rstart: duo ? { ch: flatCh, seed, duo } : { ch: flatCh, seed } });
 rollStart(flatCh, seed, duo);
