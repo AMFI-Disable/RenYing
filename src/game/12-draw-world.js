@@ -229,7 +229,7 @@ function drawGround() {
       ctx.strokeStyle = `rgba(${oc},0.9)`; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(ax, oy, 18, clock * 3, clock * 3 + Math.PI * 1.5); ctx.stroke();
       ctx.font = `bold 13px ${BODY_FONT}`; ctx.fillStyle = `rgb(${oc})`; ctx.textAlign = 'center';
-      ctx.fillText(labels[ARENA2V2.orb.kind], ax, oy - 26);
+      ctx.fillText(cvT(labels[ARENA2V2.orb.kind]), ax, oy - 26);
     }
     ctx.restore();
   }

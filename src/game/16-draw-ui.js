@@ -196,7 +196,7 @@ function drawHUD2v2() {
   ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
   if (M.ot) ctx.fillStyle = '#ff6a5a';
   ctx.fillText(Math.ceil(M.timer), cx, top + bh / 2 + 2);
-  if (M.ot) { ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); }
+  if (M.ot) { ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText(cvT('加时'), cx, top - bh * 0.75); }
   ctx.restore();
 
   // 通用条：黑底 + 残影 + 填充；rev 表示从右端开始填充（右队）
@@ -534,7 +534,7 @@ function drawHUD() {
     let resH = 0;
     if (f.ch.passive === 'rhythm' || f.ch.passive === 'drunk') {
       resH = 9;
-      const ry0 = my + 8, lab = f.ch.passive === 'rhythm' ? '音律' : '醉意';
+      const ry0 = my + 8, lab = cvT(f.ch.passive === 'rhythm' ? '音律' : '醉意');
       ctx.save();
       ctx.font = Math.round(bh * 0.7) + 'px ' + BODY_FONT; ctx.textBaseline = 'middle';
       const lw = ctx.measureText(lab).width + 6, bw = mw - lw;
@@ -630,9 +630,9 @@ function drawHUD() {
       ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 20;
       ctx.fillText(cu.n, 0, 0); ctx.shadowBlur = 0;
       ctx.font = `${Math.round(H * 0.028)}px ${TITLE_FONT}`; ctx.fillStyle = `rgb(${f.look.slash})`;
-      ctx.fillText('连击', 0, H * 0.036);
+      ctx.fillText(cvT('连击'), 0, H * 0.036);
       ctx.font = `${Math.round(H * 0.02)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.7)';
-      ctx.fillText(`${Math.round(cu.dmg)} 伤害`, 0, H * 0.075);
+      ctx.fillText(`${Math.round(cu.dmg)} ${cvT('伤害')}`, 0, H * 0.075);
       ctx.restore();
     }
   });
@@ -642,7 +642,7 @@ function drawHUD() {
   ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
   if (M.ot && M.mode !== 'train') ctx.fillStyle = '#ff6a5a';
   ctx.fillText(M.mode === 'train' || M.mode === 'world' ? '∞' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
-  if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); ctx.restore(); }
+  if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText(cvT('加时'), cx, top - bh * 0.75); ctx.restore(); }
   if (M.mode === 'tower') {
     ctx.save();
     ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;

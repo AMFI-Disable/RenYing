@@ -774,9 +774,10 @@ function drawParticles(glowOnly) {
       ctx.save(); ctx.translate(p.x, p.y - (1 - k) * 22); ctx.scale(sc, sc);
       ctx.globalAlpha = Math.min(1, k * 1.8);
       ctx.font = `900 36px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(8,6,12,0.92)'; ctx.strokeText(p.text, 0, 0);
+      const txt = typeof p.text === 'string' && p.text.length > 1 ? cvT(p.text) : p.text;
+      ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(8,6,12,0.92)'; ctx.strokeText(txt, 0, 0);
       ctx.shadowColor = `rgba(${p.rgb},0.95)`; ctx.shadowBlur = 18;
-      ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, 0, 0);
+      ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(txt, 0, 0);
       ctx.restore();
     } else if (p.type === 'smoke') {
       ctx.fillStyle = `rgba(215,210,232,${k * 0.32})`; circle([p.x, p.y], p.r * (1.8 - k * 0.8));
@@ -802,7 +803,7 @@ function drawComboTotals() {
     ctx.font = `800 30px ${BODY_FONT}`; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(10,8,20,0.85)';
     const t = String(Math.round(cu.dmg));
     ctx.strokeText(t, 0, 0); ctx.shadowColor = `rgba(${atk.look.slash},0.95)`; ctx.shadowBlur = 16; ctx.fillStyle = '#ffe9b0'; ctx.fillText(t, 0, 0);
-    ctx.shadowBlur = 0; ctx.font = `13px ${TITLE_FONT}`; ctx.lineWidth = 3.5; ctx.strokeText(`${cu.n} 连击`, 0, 24); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(`${cu.n} 连击`, 0, 24);
+    ctx.shadowBlur = 0; ctx.font = `13px ${TITLE_FONT}`; ctx.lineWidth = 3.5; const hits = cvT(`${cu.n} 连击`); ctx.strokeText(hits, 0, 24); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(hits, 0, 24);
     ctx.restore();
   }
 }

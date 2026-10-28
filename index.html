@@ -5531,6 +5531,11 @@ const PATTERNS_EN = [
 [/^讨伐第 (\d+) 劫大捷 · 全员共享秘卷增益$/, (m0, n) => `Trial ${n} won · A shared scroll for everyone`],
 [/^(\S) (\d+)\/(\d+)(?:：(.+))?$/, (m0, g, a, b, x) => `${g} ${a}/${b}${x ? `: ${lookup(x) || x}` : ''}`],
 [/^(已领悟|已带) (\d+) 卷(?: · (.+))?$/, (m0, w, n, x) => `${w === '已带' ? 'Taking' : 'Learned'} ${n} scroll${n === '1' ? '' : 's'}${x ? ' · ' + x.split(' · ').map(r => lookup(r) || r).join(' · ') : ''}`],
+[/^画符 · (\d+)\/(\d+)$/, (m0, a, b) => `Talisman · ${a}/${b}`],
+[/^符爆 ×(\d+)$/, (m0, n) => `Talisman Burst ×${n}`],
+[/^枪尖穿心 \((\d+)\/(\d+)\)$/, (m0, a, b) => `Spear to the Heart (${a}/${b})`],
+[/^剑坛赐福：(.+)$/, (m0, x) => `Arena blessing: ${lookup(x) || x}`],
+[/^(\d+) 连击$/, (m0, n) => `${n} Hits`],
 [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
 [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],
 [/^全员共享「(.+)」$/, (m0, n) => `Everyone shares “${lookup(n) || n}”`],
@@ -7516,6 +7521,9 @@ const UI_COPY_EN = {
 "妖王": "Demon King",
 "妖王 · 全线共讨": "Demon King · all lines fight together",
 "势": "Guard",
+"音律": "Melody",
+"醉意": "Drunk",
+"伤害": "dmg",
 "绝技就绪": "ready",
 "飞行": "Flight",
 "八仙过海": "Eight Immortals Cross the Sea",
@@ -8294,6 +8302,95 @@ const UI_COPY_EN = {
 "受到的伤害 -10%": "Damage taken -10%",
 "8% 几率完全闪开一次攻击": "8% chance to fully dodge an attack",
 "气的获取 +25%": "Qi gain +25%",
+"⚔️ 拼刀": "⚔️ Clash",
+"⚡ 千钧下坠": "⚡ Crushing Drop",
+"⚡ 同袍共享 · 绝技满盈": "⚡ Shared · Special full",
+"⚡ 天劫落雷": "⚡ Heavenly Thunder",
+"⚡ 怒意回涌 +50% 气量": "⚡ Rage Surge +50% Qi",
+"⚡ 怒意回涌 · 再来一次": "⚡ Rage Surge · Once more",
+"⚡ 破势荡刃": "⚡ Guard-Breaking Sweep",
+"⚡ 紫微星魄 · 绝技满盈": "⚡ Purple Star Soul · Special full",
+"⚡ 触电麻痹 · 雷铠重置": "⚡ Shocked · Thunder Armor reset",
+"⚡ 金刚雷铠 · 引雷天罚": "⚡ Vajra Armor · Thunder Punishment",
+"⚡ 雷帝灌顶 · 拳劲重置": "⚡ Thunder Emperor · Fist reset",
+"✦ 雀芒入体": "✦ Needle in",
+"✦ 雀芒入魂 · 悬丝归宗 ✦": "✦ Needle to the soul · Threads return ✦",
+"✦ 雀芒引爆 · 换影重置 ✦": "✦ Needles burst · Shadow Swap reset ✦",
+"✨ 腾空·凌空凝势": "✨ Airborne · Poise in the air",
+"❄️ 冰冻减速": "❄️ Frozen · Slowed",
+"❄️ 寒芒贯日 · 回马枪重置": "❄️ Frost Pierce · Back Thrust reset",
+"与民同乐 · 干！": "Wine Feast · Cheers!",
+"借力打力 · 招式重置": "Borrowed Force · Moves reset",
+"八仙醉 · 醉意满盈": "Eight Immortals · Fully drunk",
+"击破": "Break!",
+"反震": "Recoil",
+"受身": "Tech Roll",
+"合拍": "On Beat",
+"回锤 · 飞锤重置": "Recall · Hammer Throw reset",
+"墨不够": "Not enough ink",
+"墨韵护体 -20%": "Ink Ward -20%",
+"客在远方": "Guest far away",
+"居合斩穴 · 剑气重置": "Iai Pin · Sword Qi reset",
+"影袭": "Shadow Ambush",
+"撞墙震击": "Wall Slam",
+"暴击": "Crit",
+"曲终绝响 · 音律回满": "Final Note · Melody refilled",
+"极寒冻结": "Deep Freeze",
+"格挡卸力 · 快速起身": "Block Release · Quick Rise",
+"涅槃": "Nirvana",
+"破军": "Breaker",
+"破绽": "Opening",
+"破阵": "Formation Break",
+"空符一张": "Empty talisman",
+"符已画满": "Talismans full",
+"绕梁 · 失律": "Lingering Tune · Off-beat",
+"绝对零度": "Absolute Zero",
+"背袭破防": "Backstab Guard Break",
+"脱手一甩": "Throw Away",
+"贴身": "Point Blank",
+"迎锋破阵": "Head-on Break",
+"还不能用": "Not ready yet",
+"酒不够": "Not enough wine",
+"酒火灼身": "Wine Fire Burn",
+"醉翁亭 · 留客片刻": "Drunkard's Pavilion · Stay a while",
+"醉里乾坤": "Drunken World",
+"金钟护体 · 绝处逢生": "Golden Bell · Back from the brink",
+"针落": "Needle Drop",
+"音浪": "Sound Wave",
+"🌊 巨浪翻江 · 撼坠": "🌊 Tidal Wave · Crash Down",
+"🌊 巨浪裂空 · 崩山": "🌊 Tidal Wave · Mountain Break",
+"🌕 同袍共享 · 灵丹 +45": "🌕 Shared · Elixir +45",
+"🌕 太阴灵丹 +45": "🌕 Moon Elixir +45",
+"🌙 剑气归元 · 瞬步重置": "🌙 Sword Qi Returns · Dash reset",
+"🌙 太阴绝罚 · 禁身锁定": "🌙 Lunar Judgment · Locked down",
+"🌙 月魄霸体 · 架招重置": "🌙 Moon Soul Armor · Parry reset",
+"🌪️ 御风灵泉 · 凌空": "🌪️ Wind Spring · Airborne",
+"🌪️ 扶摇万里 · 开扇重置": "🌪️ Soaring Wind · Fan reset",
+"💥 撼地重震 · 固若金汤": "💥 Earthshaker · Rock Solid",
+"💥 破防崩势": "💥 Guard Broken",
+"💨 枪劲震退 · 浮空脱离": "💨 Spear Push · Air Escape",
+"💨 浮空脱离": "💨 Air Escape",
+"💫 震荡晕眩 · 破灭万法": "💫 Stunned · All Arts Broken",
+"🔥 同袍共享 · 朱雀狂暴": "🔥 Shared · Vermilion Fury",
+"🔥 孤军奋战 · 怒气满盈": "🔥 Last One Standing · Full Rage",
+"🔥 朱雀战魂 · 狂暴破招": "🔥 Vermilion Spirit · Fury Break",
+"🗡️ 影遁无形 · 苦无重置": "🗡️ Shadow Vanish · Kunai reset",
+"🛡️ 精准招架": "🛡️ Perfect Parry",
+"🪶 凌霄破虚 · 俯冲重置": "🪶 Sky Breaker · Dive reset",
+"🔥 朱雀神火 · 破军": "🔥 Vermilion Fire · Breaker",
+"🌕 太阴灵丹 · 固本": "🌕 Moon Elixir · Fortify",
+"⚡ 紫微星魄 · 满怒": "⚡ Purple Star Soul · Full Rage",
+"破军神火": "Breaker Fire",
+"太阴灵丹": "Moon Elixir",
+"紫微星魄": "Purple Star Soul",
+"汉钟离": "Zhongli Quan",
+"吕洞宾": "Lü Dongbin",
+"张果老": "Zhang Guolao",
+"曹国舅": "Cao Guojiu",
+"铁拐李": "Iron-Crutch Li",
+"韩湘子": "Han Xiangzi",
+"何仙姑": "He Xiangu",
+"蓝采和": "Lan Caihe",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -15404,7 +15501,7 @@ ctx.fillStyle = og; circle([ax, oy], 46);
 ctx.strokeStyle = `rgba(${oc},0.9)`; ctx.lineWidth = 2;
 ctx.beginPath(); ctx.arc(ax, oy, 18, clock * 3, clock * 3 + Math.PI * 1.5); ctx.stroke();
 ctx.font = `bold 13px ${BODY_FONT}`; ctx.fillStyle = `rgb(${oc})`; ctx.textAlign = 'center';
-ctx.fillText(labels[ARENA2V2.orb.kind], ax, oy - 26);
+ctx.fillText(cvT(labels[ARENA2V2.orb.kind]), ax, oy - 26);
 }
 ctx.restore();
 }
@@ -17988,9 +18085,10 @@ const sc = (p.scale || 2) * pop;
 ctx.save(); ctx.translate(p.x, p.y - (1 - k) * 22); ctx.scale(sc, sc);
 ctx.globalAlpha = Math.min(1, k * 1.8);
 ctx.font = `900 36px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(8,6,12,0.92)'; ctx.strokeText(p.text, 0, 0);
+const txt = typeof p.text === 'string' && p.text.length > 1 ? cvT(p.text) : p.text;
+ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(8,6,12,0.92)'; ctx.strokeText(txt, 0, 0);
 ctx.shadowColor = `rgba(${p.rgb},0.95)`; ctx.shadowBlur = 18;
-ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(p.text, 0, 0);
+ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(txt, 0, 0);
 ctx.restore();
 } else if (p.type === 'smoke') {
 ctx.fillStyle = `rgba(215,210,232,${k * 0.32})`; circle([p.x, p.y], p.r * (1.8 - k * 0.8));
@@ -18016,7 +18114,7 @@ ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 ctx.font = `800 30px ${BODY_FONT}`; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(10,8,20,0.85)';
 const t = String(Math.round(cu.dmg));
 ctx.strokeText(t, 0, 0); ctx.shadowColor = `rgba(${atk.look.slash},0.95)`; ctx.shadowBlur = 16; ctx.fillStyle = '#ffe9b0'; ctx.fillText(t, 0, 0);
-ctx.shadowBlur = 0; ctx.font = `13px ${TITLE_FONT}`; ctx.lineWidth = 3.5; ctx.strokeText(`${cu.n} 连击`, 0, 24); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(`${cu.n} 连击`, 0, 24);
+ctx.shadowBlur = 0; ctx.font = `13px ${TITLE_FONT}`; ctx.lineWidth = 3.5; const hits = cvT(`${cu.n} 连击`); ctx.strokeText(hits, 0, 24); ctx.fillStyle = `rgb(${atk.look.slash})`; ctx.fillText(hits, 0, 24);
 ctx.restore();
 }
 }
@@ -18398,7 +18496,7 @@ ctx.font = `700 ${Math.round(bh * 2.3)}px ${BODY_FONT}`;
 ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
 if (M.ot) ctx.fillStyle = '#ff6a5a';
 ctx.fillText(Math.ceil(M.timer), cx, top + bh / 2 + 2);
-if (M.ot) { ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); }
+if (M.ot) { ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText(cvT('加时'), cx, top - bh * 0.75); }
 ctx.restore();
 const bar = (x, y, w, h, ratio, style, rev, lag) => {
 ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
@@ -18720,7 +18818,7 @@ const mw = barW * 0.55, my = top + bh + 44, mx = i === 0 ? x0 : x0 + barW - mw;
 let resH = 0;
 if (f.ch.passive === 'rhythm' || f.ch.passive === 'drunk') {
 resH = 9;
-const ry0 = my + 8, lab = f.ch.passive === 'rhythm' ? '音律' : '醉意';
+const ry0 = my + 8, lab = cvT(f.ch.passive === 'rhythm' ? '音律' : '醉意');
 ctx.save();
 ctx.font = Math.round(bh * 0.7) + 'px ' + BODY_FONT; ctx.textBaseline = 'middle';
 const lw = ctx.measureText(lab).width + 6, bw = mw - lw;
@@ -18811,9 +18909,9 @@ ctx.font = `700 ${Math.round(H * 0.058)}px ${BODY_FONT}`; ctx.fillStyle = '#fff'
 ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 20;
 ctx.fillText(cu.n, 0, 0); ctx.shadowBlur = 0;
 ctx.font = `${Math.round(H * 0.028)}px ${TITLE_FONT}`; ctx.fillStyle = `rgb(${f.look.slash})`;
-ctx.fillText('连击', 0, H * 0.036);
+ctx.fillText(cvT('连击'), 0, H * 0.036);
 ctx.font = `${Math.round(H * 0.02)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.7)';
-ctx.fillText(`${Math.round(cu.dmg)} 伤害`, 0, H * 0.075);
+ctx.fillText(`${Math.round(cu.dmg)} ${cvT('伤害')}`, 0, H * 0.075);
 ctx.restore();
 }
 });
@@ -18822,7 +18920,7 @@ ctx.font = `700 ${Math.round(bh * 2.3)}px ${BODY_FONT}`;
 ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
 if (M.ot && M.mode !== 'train') ctx.fillStyle = '#ff6a5a';
 ctx.fillText(M.mode === 'train' || M.mode === 'world' ? '∞' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
-if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText('加时', cx, top - bh * 0.75); ctx.restore(); }
+if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText(cvT('加时'), cx, top - bh * 0.75); ctx.restore(); }
 if (M.mode === 'tower') {
 ctx.save();
 ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;

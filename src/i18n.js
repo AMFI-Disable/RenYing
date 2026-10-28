@@ -167,6 +167,12 @@
     // 已领悟 / 已带 N 卷 · 雷 3/3：共鸣效果 · 墨 1/3（流派是印章式单字，照原样）
     [/^(\S) (\d+)\/(\d+)(?:：(.+))?$/, (m0, g, a, b, x) => `${g} ${a}/${b}${x ? `: ${lookup(x) || x}` : ''}`],
     [/^(已领悟|已带) (\d+) 卷(?: · (.+))?$/, (m0, w, n, x) => `${w === '已带' ? 'Taking' : 'Learned'} ${n} scroll${n === '1' ? '' : 's'}${x ? ' · ' + x.split(' · ').map(r => lookup(r) || r).join(' · ') : ''}`],
+    // 打斗中飘的字（带数字的）
+    [/^画符 · (\d+)\/(\d+)$/, (m0, a, b) => `Talisman · ${a}/${b}`],
+    [/^符爆 ×(\d+)$/, (m0, n) => `Talisman Burst ×${n}`],
+    [/^枪尖穿心 \((\d+)\/(\d+)\)$/, (m0, a, b) => `Spear to the Heart (${a}/${b})`],
+    [/^剑坛赐福：(.+)$/, (m0, x) => `Arena blessing: ${lookup(x) || x}`],
+    [/^(\d+) 连击$/, (m0, n) => `${n} Hits`],
     // 拿到秘卷时的大字（src/game/22-modes.js、07-ai-story.js、22-world.js 的 say）
     [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
     [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],
