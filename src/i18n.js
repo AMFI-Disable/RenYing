@@ -135,6 +135,10 @@
     [/^（守关：(.+?) · 难度：(.+?)）$/, (m0, h, lv) => ` (Guardian: ${lookup(h) || h} · Difficulty: ${lookup(lv) || lv})`],
     [/^已破关 \(★(\d)\)$/, (m0, n) => `Cleared (★${n})`],
     [/^前往第 (\d+) 章试炼$/, (m0, n) => `Go to the Chapter ${n} trial`],
+    // 天机乱斗的异变（src/game/22-modes.js）：「疾风·天罡」、「效果 · 星宿句」两半分别查表；要排在通用的「…」之前
+    [/^「([^·」]+)·([^·」]+)」$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); if (x && y) return `“${x} · ${y}”`; const t = lookup(`${a}·${b}`); return t ? `“${t}”` : ''; }],
+    [/^(.+) · ((?:天罡北斗|地煞幽冥|青龙出海|白虎啸风|朱雀振羽|玄武镇岳|破晓晨光|孤月映水|狂雷贯顶|炽火焚天)，.+)$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); return x && y ? `${x} · ${y}` : ''; }],
+    [/^天机异变 · (.+)$/, (m0, n) => `Mutation · ${lookup(n) || n}`],
     [/^「(.+)」$/, (m0, n) => { const t = lookup(n); return t ? `“${t}”` : ''; }],
     [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
     [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],

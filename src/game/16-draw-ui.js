@@ -654,18 +654,22 @@ function drawHUD() {
     ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
     ctx.fillStyle = '#e9c46a';
     const remSec = chaosLeft(), currentChaosMutation = chaosNow();
-    const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + currentChaosMutation.name + ' (' + remSec + 's)') : '🎲 乾坤异变';
+    const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + cvT(currentChaosMutation.name) + ' (' + remSec + 's)') : cvT('🎲 乾坤异变');
     ctx.fillText(mutTxt, cx, top + bh + 18);
     if (currentChaosMutation && currentChaosMutation.desc) {
       ctx.font = `${Math.max(12, Math.round(bh * 0.68))}px ${BODY_FONT}`;
       ctx.fillStyle = 'rgba(239,232,216,0.88)';
-      ctx.fillText(currentChaosMutation.desc, cx, top + bh + 34);
+      let md = cvT(currentChaosMutation.desc);
+      if (ctx.measureText(md).width > W * 0.94) md = md.split(' · ')[0];   // 英文太长放不下：只留效果，星宿那半句省掉
+      ctx.fillText(md, cx, top + bh + 34);
     }
     if (currentChaosMutation && (!announce || announce.text !== ('天机异变 · ' + currentChaosMutation.name))) {
-      const badgeTxt = `${currentChaosMutation.icon} ${currentChaosMutation.name}：${currentChaosMutation.desc}`;
+      const mn = cvT(currentChaosMutation.name), md = cvT(currentChaosMutation.desc), head = `${currentChaosMutation.icon} ${mn}${mn !== currentChaosMutation.name ? ': ' : '：'}`;
       const bFs = Math.max(12, Math.round(bh * 0.65));
       ctx.font = `${bFs}px ${BODY_FONT}`;
-      const tw = ctx.measureText(badgeTxt).width;
+      let badgeTxt = head + md, tw = ctx.measureText(badgeTxt).width;
+      if (tw + 28 > W * 0.92) { badgeTxt = head + md.split(' · ')[0]; tw = ctx.measureText(badgeTxt).width; }   // 窄屏放不下：星宿那半句省掉
+      if (tw + 28 > W * 0.92) { badgeTxt = `${currentChaosMutation.icon} ${mn}`; tw = ctx.measureText(badgeTxt).width; }   // 还放不下就只留名字（效果在计时下面那行）
       const padX = 14, bw = Math.min(W * 0.92, tw + padX * 2), bhBadge = Math.max(20, Math.round(bh * 1.05));
       const bx = cx - bw / 2, by = Math.max(2, top - bhBadge - 4);
       ctx.fillStyle = 'rgba(6,5,14,0.78)';

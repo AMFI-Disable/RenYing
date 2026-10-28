@@ -377,7 +377,7 @@ function rollChaosMutation() {
   SFX.gong();
   say('天机异变 · ' + mut.name, 1.8, 'big', mut.desc);
   if (typeof addP === 'function' && typeof A !== 'undefined') {
-    addP({ type: 'text', text: mut.icon + ' ' + mut.name, x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
+    addP({ type: 'text', text: mut.icon + ' ' + cvT(mut.name), x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
   }
   return mut;
 }

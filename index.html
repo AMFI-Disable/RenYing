@@ -5503,6 +5503,9 @@ const PATTERNS_EN = [
 [/^（守关：(.+?) · 难度：(.+?)）$/, (m0, h, lv) => ` (Guardian: ${lookup(h) || h} · Difficulty: ${lookup(lv) || lv})`],
 [/^已破关 \(★(\d)\)$/, (m0, n) => `Cleared (★${n})`],
 [/^前往第 (\d+) 章试炼$/, (m0, n) => `Go to the Chapter ${n} trial`],
+[/^「([^·」]+)·([^·」]+)」$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); if (x && y) return `“${x} · ${y}”`; const t = lookup(`${a}·${b}`); return t ? `“${t}”` : ''; }],
+[/^(.+) · ((?:天罡北斗|地煞幽冥|青龙出海|白虎啸风|朱雀振羽|玄武镇岳|破晓晨光|孤月映水|狂雷贯顶|炽火焚天)，.+)$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); return x && y ? `${x} · ${y}` : ''; }],
+[/^天机异变 · (.+)$/, (m0, n) => `Mutation · ${lookup(n) || n}`],
 [/^「(.+)」$/, (m0, n) => { const t = lookup(n); return t ? `“${t}”` : ''; }],
 [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
 [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],
@@ -8452,6 +8455,48 @@ const UI_COPY_EN = {
 "离线版没有江湖共斗，请用联网版": "The offline version has no Open World; use the online version",
 "天道 Boss 遁走，下一轮再战": "Tiandao Boss escaped. Next round!",
 "天道车轮战收场 · 这一轮没人赢下，秘卷照样保留": "Tiandao Relay over · No one won this round; scrolls are kept",
+"疾风": "Gale",
+"迅影": "Swift Shadow",
+"千钧": "Mighty Force",
+"重浪": "Heavy Wave",
+"踏虚": "Void Step",
+"凌霄": "Sky Leap",
+"狂涌": "Surge",
+"神通": "Mystic Power",
+"血煞": "Bloodlust",
+"天罡": "Tiangang",
+"地煞": "Disha",
+"青龙": "Azure Dragon",
+"白虎": "White Tiger",
+"朱雀": "Vermilion Bird",
+"破晓": "Dawn",
+"奔雷": "Rushing Thunder",
+"离火": "Blazing Fire",
+"身法迅疾，移动速度提升45%": "Swift footwork: move speed +45%",
+"轻功拔群，冲刺冷却缩减60%": "Superb lightness: dash cooldown -60%",
+"力拔千钧，招式伤害提升40%": "Mighty strength: move damage +40%",
+"惊涛裂岸，攻击击退力提升100%": "Crashing waves: knockback +100%",
+"御风凌虚，重力减半滞空延长": "Riding the wind: half gravity, longer hang time",
+"凌云蹑虚，起跳高度提升45%": "Cloud leap: jump height +45%",
+"真气狂涌，聚气速度翻倍": "Surging Qi: Qi builds twice as fast",
+"招意通灵，技能冷却缩减60%": "Inspired moves: skill cooldowns -60%",
+"金石铸身，出招附带强韧霸体": "Body of stone: attacks carry tough Super Armor",
+"不动如山，架势防御强度翻倍": "Unmoving: guard strength doubled",
+"饮血淬锋，命中吸血25%": "Blood-tempered blade: 25% lifesteal on hit",
+"锋芒毕露，破招破防暴伤提升50%": "Bare edge: counter, guard-break and crit damage +50%",
+"天罡北斗，刚劲无俦": "The Big Dipper's unmatched might",
+"地煞幽冥，出奇制胜": "Shadows of the underworld win by surprise",
+"青龙出海，威动乾坤": "The Azure Dragon rises and shakes the world",
+"白虎啸风，势不可挡": "The White Tiger roars, unstoppable",
+"朱雀振羽，生生不息": "The Vermilion Bird spreads its wings, ever reborn",
+"玄武镇岳，坚固磐石": "The Black Tortoise holds firm as rock",
+"破晓晨光，势如长虹": "Dawn breaks like a rainbow",
+"孤月映水，来去无痕": "A lone moon on water leaves no trace",
+"狂雷贯顶，迅若闪电": "Raging thunder, fast as lightning",
+"炽火焚天，烽烟万里": "Blazing fire sets the sky alight",
+"🎲 乾坤异变": "🎲 Celestial Shift",
+"天机乱斗 · 乾坤异变": "Chaos Mutators · Celestial Shift",
+"天机乱斗 · 乾坤异变观战": "Chaos Mutators · Watch the AI",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -18993,18 +19038,22 @@ ctx.save();
 ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
 ctx.fillStyle = '#e9c46a';
 const remSec = chaosLeft(), currentChaosMutation = chaosNow();
-const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + currentChaosMutation.name + ' (' + remSec + 's)') : '🎲 乾坤异变';
+const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + cvT(currentChaosMutation.name) + ' (' + remSec + 's)') : cvT('🎲 乾坤异变');
 ctx.fillText(mutTxt, cx, top + bh + 18);
 if (currentChaosMutation && currentChaosMutation.desc) {
 ctx.font = `${Math.max(12, Math.round(bh * 0.68))}px ${BODY_FONT}`;
 ctx.fillStyle = 'rgba(239,232,216,0.88)';
-ctx.fillText(currentChaosMutation.desc, cx, top + bh + 34);
+let md = cvT(currentChaosMutation.desc);
+if (ctx.measureText(md).width > W * 0.94) md = md.split(' · ')[0];   // 英文太长放不下：只留效果，星宿那半句省掉
+ctx.fillText(md, cx, top + bh + 34);
 }
 if (currentChaosMutation && (!announce || announce.text !== ('天机异变 · ' + currentChaosMutation.name))) {
-const badgeTxt = `${currentChaosMutation.icon} ${currentChaosMutation.name}：${currentChaosMutation.desc}`;
+const mn = cvT(currentChaosMutation.name), md = cvT(currentChaosMutation.desc), head = `${currentChaosMutation.icon} ${mn}${mn !== currentChaosMutation.name ? ': ' : '：'}`;
 const bFs = Math.max(12, Math.round(bh * 0.65));
 ctx.font = `${bFs}px ${BODY_FONT}`;
-const tw = ctx.measureText(badgeTxt).width;
+let badgeTxt = head + md, tw = ctx.measureText(badgeTxt).width;
+if (tw + 28 > W * 0.92) { badgeTxt = head + md.split(' · ')[0]; tw = ctx.measureText(badgeTxt).width; }   // 窄屏放不下：星宿那半句省掉
+if (tw + 28 > W * 0.92) { badgeTxt = `${currentChaosMutation.icon} ${mn}`; tw = ctx.measureText(badgeTxt).width; }   // 还放不下就只留名字（效果在计时下面那行）
 const padX = 14, bw = Math.min(W * 0.92, tw + padX * 2), bhBadge = Math.max(20, Math.round(bh * 1.05));
 const bx = cx - bw / 2, by = Math.max(2, top - bhBadge - 4);
 ctx.fillStyle = 'rgba(6,5,14,0.78)';
@@ -23234,7 +23283,7 @@ shake = Math.max(shake, 8);
 SFX.gong();
 say('天机异变 · ' + mut.name, 1.8, 'big', mut.desc);
 if (typeof addP === 'function' && typeof A !== 'undefined') {
-addP({ type: 'text', text: mut.icon + ' ' + mut.name, x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
+addP({ type: 'text', text: mut.icon + ' ' + cvT(mut.name), x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
 }
 return mut;
 }
