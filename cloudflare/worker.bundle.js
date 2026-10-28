@@ -55,6 +55,7 @@
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
   C.INV_MAX = 1000000000, C.LIST_MAX = 20, C.HIST_MAX = 40;
+  C.MKT_DAYS = 14;   // 挂单默认挂几天：过期没卖出去的自动撤回，饰品回到卖家库存（管理员可以在线改 mktDays）
   C.FEE = 0.15;                                // 玩家市场成交扣的手续费（墨锭从这里流出去，免得越攒越多）
   C.PRICE_MAX = 999999;                        // 挂单标价 1 ~ 999999 墨锭，多少由玩家自己定，系统不定价、也不收购
   C.OPEN_DAY = 2;                            // 普通武器箱每天最多开 2 个（北京时间零点刷新）
@@ -275,6 +276,7 @@
     ...C.TIERS.map(t => ['odds.' + t, C.ODDS[t], 0, 1, 0, '普通武器箱爆率', C.TIER[t].n]),
     ...C.CASES.filter(c => C.COLS[c].prem).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
     ['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
+    ['mktDays', C.MKT_DAYS, 1, 90, 1, '玩家市场', '挂单几天没卖出就自动撤回'],
     ['term.lo', C.TERM.markup[0], 0.5, 5, 0, '终端机', '报价最低是基准价的几倍'],
     ['term.hi', C.TERM.markup[1], 0.5, 5, 0, '终端机', '报价最高是基准价的几倍'],
     ['dropP', C.DROP_P, 0, 1, 0, '对局掉落', '每局掉一件的概率'],
@@ -656,7 +658,7 @@
     if (!m || !C.isLid(m.id)) return { err: NO_MKT };
     if (a.c !== undefined) return { err: '武器箱和终端机只在商店按固定价格卖，不能挂到市场' };
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
-    if (s.lst.length >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };
+    if (Math.max(s.lst.length, m.open | 0) >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };   // m.open：服务器 mkt 表里这个号还在卖的单数，存档里的对不上也按多的算
     const price = +a.price;
     if (!(Number.isInteger(price) && price >= 1 && price <= C.PRICE_MAX)) return { err: `标价要是 1 到 ${C.PRICE_MAX} 之间的整数` };
     C.dropItem(s, it.i, env);
@@ -671,6 +673,7 @@
     if (!r || r.id !== a.l) return { err: '没有这件挂单，刷新看看' };
     if (r.state !== 0) return { err: r.state === 1 ? '这件已经被别人买走了' : '这件已经撤下了' };
     if (r.seller === env.uid) return { err: '这是你自己挂的，要拿回来就撤下' };
+    if (r.expired) return { err: '这件挂单已经到期撤下了，刷新看看' };
     if (a.price !== undefined && +a.price !== r.price) return { err: '标价变了，刷新看看' };
     const it0 = cleanItem(r.item);
     if (!it0 || it0.k !== r.k) return { err: '这件挂单坏了' };
@@ -713,6 +716,19 @@
     }
     return sold;
   };
+  // 撤回的挂单退回库存：服务器把“存档里还挂着、市场上已经不在卖”（到期撤回、被撤下，或者那一单已经清理掉了）的编号放在 env.back。
+  // 已经卖掉的单不会在这里（卖掉的走上面的结账）。退回的记在 env.returned，服务器在流水里记下
+  C.unlist = (s, env) => {
+    const out = [];
+    for (const id of Array.isArray(env.back) ? env.back.slice(0, C.LIST_MAX * 2) : []) {
+      const ix = s.lst.findIndex(L => L.l === id); if (ix < 0) continue;
+      const L = s.lst.splice(ix, 1)[0];
+      C.addItem(s, L.it, env);
+      out.push({ l: L.l, i: L.it.i, k: L.it.k, st: L.it.st });
+    }
+    env.returned = out;
+    return out;
+  };
   A.trade = (s, a, env) => {
     const chk = C.tradeCheck(s, a.ids);
     if (!chk.ok) return { err: chk.err };
@@ -745,7 +761,7 @@
     if (!m || (!C.isLid(m.id) && !Array.isArray(m.ids))) return { err: NO_MKT };
     const plan = C.dupePlan(s);
     if (!plan.items.length) return { err: '库存里没有重复的饰品' };
-    const freeSlots = Math.max(0, C.LIST_MAX - s.lst.length);
+    const freeSlots = Math.max(0, C.LIST_MAX - Math.max(s.lst.length, m.open | 0));
     if (freeSlots <= 0) return { err: `市场挂单已满（最多 ${C.LIST_MAX} 件），请先撤回或等待售出` };
     const toList = plan.items.slice(0, freeSlots);
     const listed = [];
@@ -922,12 +938,12 @@
     return { ok: true };
   };
   C.ACTIONS = Object.keys(A);
-  // 跑一个动作：先整理存档、结掉卖出去的挂单，再做动作。出错时存档原样不动（先在副本上做）
+  // 跑一个动作：先整理存档、结掉卖出去的挂单、把撤回的挂单退回库存，再做动作。出错时存档原样不动（先在副本上做）
   C.run = (state, name, args, env) => {
     if (!own(A, name)) return { res: { err: '不认识的操作' }, state };
     const s = C.normalize(JSON.parse(JSON.stringify(state || C.blank())), env);
     const ink0 = env.ink, skins0 = env.skins.slice(), equip0 = JSON.parse(JSON.stringify(env.equip));
-    const sold = C.settle(s, env);
+    const sold = C.settle(s, env), back = C.unlist(s, env);
     let res;
     try { res = A[name](s, args || {}, env); } catch (e) { res = { err: '操作失败' }; }
     if (!res || res.err) {   // 失败了：动作本身改的全部撤回，只留下结算挂单的结果
@@ -936,10 +952,10 @@
       Object.keys(env.equip).forEach(k => delete env.equip[k]); Object.assign(env.equip, equip0);
       env.inkGain = 0;
       if (env.mkt) env.mkt.out = null;
-      const sold2 = C.settle(s2, env);
-      return { res: res || { err: '操作失败' }, state: s2, sold: sold2 };
+      const sold2 = C.settle(s2, env), back2 = C.unlist(s2, env);
+      return { res: res || { err: '操作失败' }, state: s2, sold: sold2, back: back2 };
     }
-    return { res, state: s, sold };
+    return { res, state: s, sold, back };
   };
 
   // 冻结所有数据表：控制台里改概率、价格、收藏品都没用
@@ -1546,16 +1562,28 @@ async function handleEcon(env, auth, body, now, ip) {
       code = { code: row.code, note: row.note, ink: clampInk(row.ink, 1e6), ...giftItems(row.items_json) };
     }
   }
+  // 自己挂了太久没卖出的单：先撤下（只改还在卖的那几单；同一刻被别人买走的照常算卖掉）。饰品在下面退回库存
+  const ttl = C.cv(cfg, 'mktDays') * DAY_MS;
+  await env.DB.prepare('UPDATE mkt SET state = 2, done_at = ? WHERE seller = ? AND state = 0 AND at < ?').bind(now, uid, now - ttl).run();
   for (let attempt = 0; attempt < 5; attempt++) {
     const prof = await freshProfile();
     const eco = await loadEcon(env, uid, prof, now);
     const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
     const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
-    const mkt = { id: randHex(8), ids: Array.from({ length: 20 }, () => randHex(8)), row: null, out: null };
+    const mkt = { id: randHex(8), ids: Array.from({ length: 20 }, () => randHex(8)), row: null, out: null, open: 0 };
     if ((act === 'buy' || act === 'cancel') && C.isLid(args.l)) {
-      const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state FROM mkt WHERE id = ?').bind(args.l).first();
-      if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json) };
+      const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state, at FROM mkt WHERE id = ?').bind(args.l).first();
+      if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json), expired: r0.state === 0 && r0.at < now - ttl };
+    }
+    if (act === 'list' || act === 'listDupes') mkt.open = ((await env.DB.prepare('SELECT COUNT(*) AS n FROM mkt WHERE seller = ? AND state = 0').bind(uid).first()) || {}).n || 0;
+    // 存档里还挂着、市场上已经不在卖的（到期撤下、被撤下，或者那一单已经清理掉了）：这次退回库存。卖掉的不算，卖掉的走上面的结账
+    const lst0 = (Array.isArray(eco.state.lst) ? eco.state.lst : []).filter(L => L && C.isLid(L.l)).slice(0, 40);
+    let back = [];
+    if (lst0.length) {
+      const rows = (await env.DB.prepare(`SELECT id, state FROM mkt WHERE id IN (${lst0.map(() => '?').join(', ')})`).bind(...lst0.map(L => L.l)).all()).results || [];
+      const stOf = new Map(rows.map(r => [r.id, r.state]));
+      back = lst0.filter(L => !stOf.has(L.l) || stOf.get(L.l) === 2).map(L => L.l);
     }
     // 开发组发的补偿：先放进存档和墨锭，再做这次的动作（动作没做成也照样领到）
     const gifts = await giftsFor(env, auth.user, now), got = [];
@@ -1577,7 +1605,7 @@ async function handleEcon(env, auth, body, now, ip) {
         state0.term += code.term; state0.tags += code.tags;
       }
     }
-    const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, mkt, cfg };
+    const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, back, mkt, cfg };
     // 绑定皮肤换成饰品（每个号只做一次，记在 srv.lg）：库存里没有这一款的放一件普通版，并记进 via，卖掉最后一件就穿不了，和开箱得到的一样
     let legacy = null;
     if (!eco.srv.lg && Math.floor(+auth.user.created_at || 0) < LEGACY_CUTOFF) {
@@ -1613,6 +1641,7 @@ async function handleEcon(env, auth, body, now, ip) {
     const eq = {};
     for (const c of new Set([...Object.keys(equip0), ...Object.keys(E.equip)])) if (equip0[c] !== E.equip[c]) eq[c] = E.equip[c] === undefined ? null : E.equip[c];
     const out = { res, sold: r.sold || [] };
+    if (r.back && r.back.length) out.back = r.back.map(({ k, st }) => ({ k, st }));
     if (code) { const { items, builtin, ...c } = code; out.code = c; }
     // 最后一道保险：算出来的数不对劲（不是整数、是负数、大得离谱）就整个作废，记下来查
     const bad = [E.ink, st.tags, st.term, ...Object.values(st.cases), ...st.inv.map(x => x.st + 1)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);   // 斩数 -1 是普通版
@@ -1621,7 +1650,7 @@ async function handleEcon(env, auth, body, now, ip) {
       return error('操作失败，已记录', 500);
     }
     const mo = mkt.out, settled = E.settled || [];
-    if (!legacy && !code && !out.sold.length && !mo && !(voided && voided.lst.length) && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
+    if (!legacy && !code && !out.sold.length && !out.back && !mo && !(voided && voided.lst.length) && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
       return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {}, cfg });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
@@ -1632,12 +1661,12 @@ async function handleEcon(env, auth, body, now, ip) {
     pruneGone(srv, now);
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
     delete p.armory; delete p.ledger;
-    const quiet = QUIET.includes(act) && !out.sold.length;
-    const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i}${res.item.st >= 0 ? ' st' : ''}` : res.gain || res.price || '', s: out.sold.length || undefined }).slice(0, 400);
+    const quiet = QUIET.includes(act) && !out.sold.length && !out.back;
+    const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i}${res.item.st >= 0 ? ' st' : ''}` : res.gain || res.price || '', s: out.sold.length || undefined, b: out.back ? out.back.length : undefined }).slice(0, 400);
     // 买、撤：先把那一单从“在卖”改掉（只有它还在卖、版本号也没变才改得动），后面每一条都要看到这一改才生效
     const id = mo && (mo.buy || mo.cancel), tx = id ? [id, nonce.slice(0, 24) + '.' + attempt] : null;
     const stmts = [];
-    if (mo && mo.buy) stmts.push(guard(env, 'UPDATE mkt SET state = 1, buyer = ?, done_at = ?, tx = ? WHERE id = ? AND state = 0 AND seller <> ? AND', [uid, now, tx[1], id, uid], uid, ver));
+    if (mo && mo.buy) stmts.push(guard(env, 'UPDATE mkt SET state = 1, buyer = ?, done_at = ?, tx = ? WHERE id = ? AND state = 0 AND seller <> ? AND at >= ? AND', [uid, now, tx[1], id, uid, now - ttl], uid, ver));   // 到期的单买不了
     if (mo && mo.cancel) stmts.push(guard(env, 'UPDATE mkt SET state = 2, done_at = ?, tx = ? WHERE id = ? AND seller = ? AND state = 0 AND', [now, tx[1], id, uid], uid, ver));
     if (mo && mo.list) {
       const L = mo.list;
@@ -1836,15 +1865,17 @@ async function profileOut(env, user, now) {
 
 /* ---------- 玩家市场：看谁在卖什么、最近成交多少（挂单、买、撤都走 /api/econ） ---------- */
 // 不给卖家是谁：只告诉看的人哪几单是他自己挂的
+const mktTtl = () => C.cv(CFG_CACHE.cfg, 'mktDays') * DAY_MS;   // 挂单挂几天（管理员在线改过就按改过的）
 async function handleMarket(env, uid, k, now) {
+  await cfgNow(env, now);
   if (k) {
     if (!C.isItem(k)) return error('没有这件饰品', 404);
-    const open = (await env.DB.prepare('SELECT id, st, price, at, seller = ? AS mine FROM mkt WHERE k = ? AND state = 0 ORDER BY price, at LIMIT 80').bind(uid, k).all()).results || [];
+    const open = (await env.DB.prepare('SELECT id, st, price, at, seller = ? AS mine FROM mkt WHERE k = ? AND state = 0 AND at >= ? ORDER BY price, at LIMIT 80').bind(uid, k, now - mktTtl()).all()).results || [];
     const deals = (await env.DB.prepare('SELECT st, price, done_at AS at FROM mkt WHERE k = ? AND state = 1 ORDER BY done_at DESC LIMIT 120').bind(k).all()).results || [];
     return json({ ok: true, now, k, open: open.map(r => ({ l: r.id, st: r.st, price: r.price, at: r.at, mine: !!r.mine })), deals: deals.map(r => ({ st: r.st, price: r.price, at: r.at })) });
   }
   // 每一款：在卖几件、最低多少（普通版 n / lo，斩数版 sn / slo），最近一次成交（last / slast），30 天成交几次（d）
-  const open = (await env.DB.prepare('SELECT k, st >= 0 AS s, COUNT(*) AS n, MIN(price) AS lo FROM mkt WHERE state = 0 GROUP BY k, st >= 0').all()).results || [];
+  const open = (await env.DB.prepare('SELECT k, st >= 0 AS s, COUNT(*) AS n, MIN(price) AS lo FROM mkt WHERE state = 0 AND at >= ? GROUP BY k, st >= 0').bind(now - mktTtl()).all()).results || [];
   const deals = (await env.DB.prepare('SELECT k, st >= 0 AS s, price FROM mkt WHERE state = 1 AND done_at > ? ORDER BY done_at DESC LIMIT 3000').bind(now - 30 * DAY_MS).all()).results || [];
   const items = {}, of = k => items[k] || (items[k] = { n: 0, lo: 0, sn: 0, slo: 0, last: 0, slast: 0, d: 0 });
   for (const r of open) { if (!C.isItem(r.k)) continue; const x = of(r.k); if (r.s) { x.sn = r.n; x.slo = r.lo; } else { x.n = r.n; x.lo = r.lo; } }
@@ -2198,7 +2229,8 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM econ_nonce WHERE at < ?').bind(now - 2 * DAY_MS),
     env.DB.prepare('DELETE FROM rate WHERE reset < ?').bind(now - DAY_MS),
     env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
-    env.DB.prepare('DELETE FROM mkt WHERE state = 2 AND done_at < ?').bind(now - 7 * DAY_MS),               // 撤下的单留一周
+    env.DB.prepare('UPDATE mkt SET state = 2, done_at = ? WHERE state = 0 AND at < ?').bind(now, now - mktTtl()),   // 到期没卖出的撤下；饰品在卖家下次动武库时退回
+    env.DB.prepare('DELETE FROM mkt WHERE state = 2 AND done_at < ?').bind(now - 7 * DAY_MS),               // 撤下的单留一周（删了也没关系：存档里还挂着、表里找不到的一样退回）
     env.DB.prepare('DELETE FROM mkt WHERE state = 1 AND paid = 1 AND done_at < ?').bind(now - 120 * DAY_MS),   // 成交记录留四个月（价格走势用）
     env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - 10 * 60e3),
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),

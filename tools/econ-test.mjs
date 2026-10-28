@@ -1672,6 +1672,50 @@ section('全服肉鸽 · 天道 Boss 的星座皮肤：服务器核对账号后�
   ok(!stateOf(Z2.uid).inv.some(x => x.k === 'qf_p1' && x.src === 'rouge') && stateOf(Z2.uid).inv.filter(x => x.src === 'rouge').length === 1, '不是星座武器箱的款不会当奖励发出去', r3.gifts);
 }
 
+section('玩家市场挂单到期：挂太久没卖出的自动撤下，饰品退回卖家；到期的买不了；同时挂的单数以服务器为准');
+{
+  T = nextNoon();
+  const days = C.cv((await adm('GET', '/api/admin/cfg')).cfg, 'mktDays');
+  ok(days >= 1 && days <= 90, `挂单挂 ${days} 天（默认 ${C.MKT_DAYS} 天，后台能改）`, days);
+  const S = await newUser('xseller'), B = await newUser('xbuyer', { ink: 5000 });
+  for (const x of [S, B]) await econ(x.token, 'sync');
+  const [a, b, c] = grant(S.uid, [{ k: 'gc_wolf' }, { k: 'qf_p1', st: 3 }, { k: 'yh_p1' }]);
+  await econ(S.token, 'sync');
+  const l1 = await econ(S.token, 'list', { i: a.i, price: 100 });
+  const l2 = await econ(S.token, 'list', { i: b.i, price: 200 });
+  const l3 = await econ(S.token, 'list', { i: c.i, price: 50 });
+  ok([l1, l2, l3].every(r => r.res.ok), '挂了 3 单');
+  T += (days - 1) * 86400e3;
+  const bought = await econ(B.token, 'buy', { l: l3.res.l });
+  ok(bought.res.ok, `第 ${days - 1} 天还在卖，买得到`, bought.res);
+  ok((await market(B.token, 'gc_wolf')).open.length === 1, '行情里还看得到');
+  T += 2 * 86400e3;
+  const m = await market(B.token, 'gc_wolf');
+  ok(m.ok && !m.open.length && !(m.items && m.items.gc_wolf), '过了期限：行情里看不到了（卖家还没回来也一样）', m.open);
+  const ink0 = inkOf(B.uid), late = await econ(B.token, 'buy', { l: l1.res.l });
+  ok(late.res.err && /到期|撤下/.test(late.res.err) && inkOf(B.uid) === ink0 && mrow(l1.res.l).state !== 1, '到期的单买不了，墨锭不动', late.res);
+  ENV.DB.raw.prepare('DELETE FROM mkt WHERE id = ?').run(l2.res.l);   // 这一单已经被清理掉了（撤下一周后会删）
+  const sy = await econ(S.token, 'sync');
+  const st = stateOf(S.uid);
+  ok(mrow(l1.res.l).state === 2, '卖家回来：到期那一单标成撤下');
+  ok(!st.lst.length && st.inv.some(x => x.i === a.i) && st.inv.some(x => x.i === b.i && x.st === 3), '到期的、表里已经找不到的都退回库存（斩数跟着回来）', st);
+  ok(!st.inv.some(x => x.i === c.i) && sy.sold.length === 1 && sy.sold[0].k === 'yh_p1', '到期前卖掉的照常结账，不会退回', sy.sold);
+  ok(sy.back && sy.back.length === 2 && profOf(S.uid).skins.includes('gc_wolf'), '告诉网页退回了 2 件，皮肤又能穿了', sy.back);
+  const lg = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'sync' ORDER BY id DESC LIMIT 1", S.uid);
+  ok(lg && parseDetail(lg.detail).b === 2, '流水里记下退回了几件', lg);
+  const again = await econ(S.token, 'sync');
+  ok(!again.back && stateOf(S.uid).inv.filter(x => x.i === a.i).length === 1, '只退一次，不会多出一件');
+  // 挂单上限按服务器的市场表算：存档里的挂单对不上（比如旧存档覆盖了）也挂不出第 21 件
+  const fake = Array.from({ length: C.LIST_MAX }, (_, i) => ('f' + String(i).padStart(15, '0')));
+  for (const id of fake) ENV.DB.raw.prepare('INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)').run(id, S.uid, 'qf_p1', -1, JSON.stringify({ i: 90000, k: 'qf_p1', st: -1 }), 10, T);
+  const over = await econ(S.token, 'list', { i: a.i, price: 10 });
+  ok(over.res.err && /最多同时挂/.test(over.res.err) && stateOf(S.uid).inv.some(x => x.i === a.i), `市场表里已经有 ${C.LIST_MAX} 单在卖：存档里没挂也不让再挂`, over.res);
+  const overD = await econ(S.token, 'listDupes');
+  ok(overD.res.err, '一键挂重复的也一样', overD.res);
+  ENV.DB.raw.prepare("DELETE FROM mkt WHERE id LIKE 'f%' AND seller = ?").run(S.uid);
+  ok((await econ(S.token, 'list', { i: a.i, price: 10 })).res.ok, '腾出位置以后照常能挂');
+}
+
 section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭据；拿凭据失败也照样回 STUN');
 {
   const realFetch = globalThis.fetch;

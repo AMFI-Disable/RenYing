@@ -330,6 +330,7 @@
     }
     if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
     if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
+    if (out.back && out.back.length) { MKD.at = 0; toast(out.back.length > 1 ? `${out.back.length} 件挂单到期没卖出，退回库存了` : `挂单到期没卖出，退回库存了：${itemName({ k: out.back[0].k, st: out.back[0].st })}`); }
     if (out.cfg !== undefined) { const c = C.cleanCfg(out.cfg); CFG = c.cfg; }
     if (Array.isArray(out.gifts)) for (const g of out.gifts) toast(`${g.skin ? '全服肉鸽奖励' : '开发组补偿'}：${String(g.note || '')}（${giftText(g)}）`);
     if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
@@ -874,7 +875,7 @@
         <label class="ar-chk"><input type="checkbox" id="arMkOnly" ${MK.only ? 'checked' : ''}> 只看有人在卖的</label></div>
         ${keys.length ? `<div class="ar-mklist">${keys.map(k => { const x = row(k), p = lo(k), c = cnt(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${thumb(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span><span class="ar-mkc">${c ? `在卖 ${c} 件${x.sn ? `（斩数版 ${x.sn}）` : ''}` : '没人在卖'}<small>${x.d ? `30 天成交 ${x.d} 笔` : '30 天没有成交'}${x.last ? ` · 最近 ${fmt(x.last)}` : ''}</small></span><span class="ar-mkp">${p ? `<small>最低</small>${ink(p)}` : '<small>—</small>'}</span></button>`; }).join('')}</div>` : '<p class="ar-empty">没有符合条件的饰品。</p>'}`;
     } else if (MK.view === 'mine') {
-      body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · 等别的玩家来买</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price, CF()))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
+      body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · ${new Date(L.t + C.cv(CF(), 'mktDays') * 864e5).toLocaleDateString()} 前没人买就退回库存</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price, CF()))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
         : `<p class="ar-empty">没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定（最多同时挂 ${C.LIST_MAX} 件）。</p>`;
     } else {
       const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出' }[h.kind] || '';

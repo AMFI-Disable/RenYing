@@ -17,6 +17,7 @@
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
   C.INV_MAX = 1000000000, C.LIST_MAX = 20, C.HIST_MAX = 40;
+  C.MKT_DAYS = 14;   // 挂单默认挂几天：过期没卖出去的自动撤回，饰品回到卖家库存（管理员可以在线改 mktDays）
   C.FEE = 0.15;                                // 玩家市场成交扣的手续费（墨锭从这里流出去，免得越攒越多）
   C.PRICE_MAX = 999999;                        // 挂单标价 1 ~ 999999 墨锭，多少由玩家自己定，系统不定价、也不收购
   C.OPEN_DAY = 2;                            // 普通武器箱每天最多开 2 个（北京时间零点刷新）
@@ -237,6 +238,7 @@
     ...C.TIERS.map(t => ['odds.' + t, C.ODDS[t], 0, 1, 0, '普通武器箱爆率', C.TIER[t].n]),
     ...C.CASES.filter(c => C.COLS[c].prem).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
     ['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
+    ['mktDays', C.MKT_DAYS, 1, 90, 1, '玩家市场', '挂单几天没卖出就自动撤回'],
     ['term.lo', C.TERM.markup[0], 0.5, 5, 0, '终端机', '报价最低是基准价的几倍'],
     ['term.hi', C.TERM.markup[1], 0.5, 5, 0, '终端机', '报价最高是基准价的几倍'],
     ['dropP', C.DROP_P, 0, 1, 0, '对局掉落', '每局掉一件的概率'],
@@ -618,7 +620,7 @@
     if (!m || !C.isLid(m.id)) return { err: NO_MKT };
     if (a.c !== undefined) return { err: '武器箱和终端机只在商店按固定价格卖，不能挂到市场' };
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
-    if (s.lst.length >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };
+    if (Math.max(s.lst.length, m.open | 0) >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };   // m.open：服务器 mkt 表里这个号还在卖的单数，存档里的对不上也按多的算
     const price = +a.price;
     if (!(Number.isInteger(price) && price >= 1 && price <= C.PRICE_MAX)) return { err: `标价要是 1 到 ${C.PRICE_MAX} 之间的整数` };
     C.dropItem(s, it.i, env);
@@ -633,6 +635,7 @@
     if (!r || r.id !== a.l) return { err: '没有这件挂单，刷新看看' };
     if (r.state !== 0) return { err: r.state === 1 ? '这件已经被别人买走了' : '这件已经撤下了' };
     if (r.seller === env.uid) return { err: '这是你自己挂的，要拿回来就撤下' };
+    if (r.expired) return { err: '这件挂单已经到期撤下了，刷新看看' };
     if (a.price !== undefined && +a.price !== r.price) return { err: '标价变了，刷新看看' };
     const it0 = cleanItem(r.item);
     if (!it0 || it0.k !== r.k) return { err: '这件挂单坏了' };
@@ -675,6 +678,19 @@
     }
     return sold;
   };
+  // 撤回的挂单退回库存：服务器把“存档里还挂着、市场上已经不在卖”（到期撤回、被撤下，或者那一单已经清理掉了）的编号放在 env.back。
+  // 已经卖掉的单不会在这里（卖掉的走上面的结账）。退回的记在 env.returned，服务器在流水里记下
+  C.unlist = (s, env) => {
+    const out = [];
+    for (const id of Array.isArray(env.back) ? env.back.slice(0, C.LIST_MAX * 2) : []) {
+      const ix = s.lst.findIndex(L => L.l === id); if (ix < 0) continue;
+      const L = s.lst.splice(ix, 1)[0];
+      C.addItem(s, L.it, env);
+      out.push({ l: L.l, i: L.it.i, k: L.it.k, st: L.it.st });
+    }
+    env.returned = out;
+    return out;
+  };
   A.trade = (s, a, env) => {
     const chk = C.tradeCheck(s, a.ids);
     if (!chk.ok) return { err: chk.err };
@@ -707,7 +723,7 @@
     if (!m || (!C.isLid(m.id) && !Array.isArray(m.ids))) return { err: NO_MKT };
     const plan = C.dupePlan(s);
     if (!plan.items.length) return { err: '库存里没有重复的饰品' };
-    const freeSlots = Math.max(0, C.LIST_MAX - s.lst.length);
+    const freeSlots = Math.max(0, C.LIST_MAX - Math.max(s.lst.length, m.open | 0));
     if (freeSlots <= 0) return { err: `市场挂单已满（最多 ${C.LIST_MAX} 件），请先撤回或等待售出` };
     const toList = plan.items.slice(0, freeSlots);
     const listed = [];
@@ -884,12 +900,12 @@
     return { ok: true };
   };
   C.ACTIONS = Object.keys(A);
-  // 跑一个动作：先整理存档、结掉卖出去的挂单，再做动作。出错时存档原样不动（先在副本上做）
+  // 跑一个动作：先整理存档、结掉卖出去的挂单、把撤回的挂单退回库存，再做动作。出错时存档原样不动（先在副本上做）
   C.run = (state, name, args, env) => {
     if (!own(A, name)) return { res: { err: '不认识的操作' }, state };
     const s = C.normalize(JSON.parse(JSON.stringify(state || C.blank())), env);
     const ink0 = env.ink, skins0 = env.skins.slice(), equip0 = JSON.parse(JSON.stringify(env.equip));
-    const sold = C.settle(s, env);
+    const sold = C.settle(s, env), back = C.unlist(s, env);
     let res;
     try { res = A[name](s, args || {}, env); } catch (e) { res = { err: '操作失败' }; }
     if (!res || res.err) {   // 失败了：动作本身改的全部撤回，只留下结算挂单的结果
@@ -898,10 +914,10 @@
       Object.keys(env.equip).forEach(k => delete env.equip[k]); Object.assign(env.equip, equip0);
       env.inkGain = 0;
       if (env.mkt) env.mkt.out = null;
-      const sold2 = C.settle(s2, env);
-      return { res: res || { err: '操作失败' }, state: s2, sold: sold2 };
+      const sold2 = C.settle(s2, env), back2 = C.unlist(s2, env);
+      return { res: res || { err: '操作失败' }, state: s2, sold: sold2, back: back2 };
     }
-    return { res, state: s, sold };
+    return { res, state: s, sold, back };
   };
 
   // 冻结所有数据表：控制台里改概率、价格、收藏品都没用
