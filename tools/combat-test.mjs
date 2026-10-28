@@ -1125,6 +1125,54 @@ const testSuite = [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Escape (腾空闪) state machine: rise / hover invulnerability, cooldown, landing lag, and what blocks it (cooldown, held, own ult, jail, drunk, not fighting)',
+    fn: `(() => {
+      startMatch('train', 'stand', [0, 1]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      const reset = () => {
+        toNeutral(A); A.x = STAGE_W / 2 - 200; A.y = 0; A.vx = A.vy = 0; A.invul = 0; A.escInvul = false; A.escMode = ''; A.airHover = 0;
+        A.breakCD = 0; A.jailT = 0; A.drinkT = 0; A.hp = A.maxHp; A.stun = 0; A.rooted = false; human[0].clear(); M.phase = 'fight';
+      };
+      const esc = () => { human[0].press('dash'); return tryEscape(A, B); };
+      const cd = A.ch.escCD || BREAK_CD;
+      // rise：从硬直里闪出来
+      reset(); A.state = 'hitstun'; A.stun = 0.5; A.rooted = true;
+      if (!esc()) return { pass: false, error: 'could not escape from hitstun' };
+      if (A.escMode !== 'rise' || !A.escInvul || !(A.invul > 0) || A.state !== 'air' || A.rooted || A.stun) return { pass: false, error: 'rise escape state wrong: ' + JSON.stringify({ m: A.escMode, e: A.escInvul, i: A.invul, s: A.state, r: A.rooted }) };
+      if (Math.abs(A.breakCD - cd) > 1e-9) return { pass: false, error: 'rise cooldown ' + A.breakCD + ' != escCD ' + cd };
+      let landed = false;
+      for (let i = 0; i < 240 && !landed; i++) { step(); if (A.onGround() && A.state === 'getup') landed = true; else if (!A.escInvul) return { pass: false, error: 'rise invulnerability ended in the air at frame ' + i }; }
+      if (!landed || A.escInvul || A.invul > 0 || A.escMode) return { pass: false, error: 'landing did not end the escape with landing lag' };
+      // rise 的无敌最长 ESC.riseMax 秒
+      reset(); A.state = 'hitstun'; esc(); A.escT = ESC.riseMax - 0.001; escapeTick(A);
+      if (A.escInvul) return { pass: false, error: 'rise invulnerability lasted past ESC.riseMax' };
+      // 自己出手就结束无敌
+      reset(); A.state = 'hitstun'; esc(); startAttack(A, 'a1');
+      if (A.escInvul || A.invul > 0) return { pass: false, error: 'attacking out of an escape kept invulnerability' };
+      // hover：空中不按方向
+      reset(); A.y = -220; A.state = 'air';
+      if (!esc() || A.escMode !== 'hover' || A.airHover !== ESC.hover || !(A.invul > 0)) return { pass: false, error: 'air escape did not hover: ' + A.escMode + ' ' + A.airHover };
+      if (Math.abs(A.breakCD - Math.min(cd, ESC.hoverCdCap)) > 1e-9) return { pass: false, error: 'hover cooldown ' + A.breakCD };
+      // 秘卷把悬停拉到 1.5 秒时，过了 riseMax 也还无敌，悬停结束才结束
+      A.airHover = A.invul = 1.5; A.escT = ESC.riseMax + 0.05; escapeTick(A);
+      if (!A.escInvul) return { pass: false, error: 'long hover lost invulnerability before the hover ended' };
+      for (let i = 0; i < 200 && A.airHover > 0; i++) physics(A);
+      if (A.escInvul || A.escMode) return { pass: false, error: 'hover end did not end the escape' };
+      // 用不了的情况
+      const blocked = [
+        ['cd', () => { A.breakCD = 2; }], ['held', () => { A.state = 'held'; }], ['ult', () => { A.state = 'special'; }],
+        ['jail', () => { A.jailT = 1; }], ['drink', () => { A.drinkT = 1; }], ['phase', () => { M.phase = 'ko'; }], ['dead', () => { A.hp = 0; }],
+      ];
+      for (const [why, set] of blocked) {
+        reset(); A.state = 'hitstun'; set();
+        if (escapeBlock(A) !== why) return { pass: false, error: 'expected escape to be blocked by ' + why + ', got ' + escapeBlock(A) };
+        if (esc()) return { pass: false, error: 'escaped although blocked by ' + why };
+      }
+      reset(); toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

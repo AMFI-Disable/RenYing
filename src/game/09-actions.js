@@ -519,20 +519,44 @@ function updateProjs() {
   for (let i = projs.length - 1; i >= 0; i--) if (projs[i].dead) projs.splice(i, 1);
 }
 function boltFX(p) { shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35); flashRGB = '255,245,200'; dust(p.x, 0, 12); ring(p.x, 0, 90, '255,240,150', 0.3); SFX.thunder(); }
-// 腾空闪：任何状态都能用（被大招锁住时除外）。解除硬直、倒地、定身，向上闪起；落地或自己出手之前无敌
+// ======================= 腾空闪状态机 =======================
+// 按冲刺键（左键 + 右键）触发，有两种：
+//   rise  地上或挨打时：解除硬直、倒地、定身，向后上方闪起。无敌到落地、自己出手、开始飞，最长 ESC.riseMax 秒；落地有 ESC.landLag 秒落地硬直
+//   hover 在空中不按方向：原地凝住 ESC.hover 秒（秘卷「凌霄御风」1.5 秒），悬停期间无敌，悬停结束或自己出手就结束
+// 用不了的情况都在 escapeBlock 里：冷却没好、被抓住（投技、扯链、大招锁定）、自己在放大招、被关进醉翁亭、被灌醉（挨一下就醒）
+// 冷却：rise 用侠客的 escCD（没写就是 BREAK_CD），hover 最多 ESC.hoverCdCap 秒；秘卷「轻身」「如履薄冰」在 esc 时机改冷却
+// 被月华太阴绝罚、被月镜格开会把冷却顶到一个下限（见 03-skills.js 的 mirror、本文件的 parry）
+const ESC = { riseMax: 1.1, hover: 0.85, hoverCdCap: 4.5, landLag: 0.15, riseVy: 1000, riseVx: 150 };
+function escapeBlock(f) {
+  if (f.hp <= 0) return 'dead';
+  if (M.phase !== 'fight') return 'phase';
+  if (f.breakCD > 0) return 'cd';
+  if (f.state === 'held') return 'held';
+  if (f.state === 'special') return 'ult';
+  if (f.state === 'victory') return 'victory';
+  if (f.jailT > 0) return 'jail';
+  if (f.drinkT > 0) return 'drink';
+  return '';
+}
+// 每帧：rise 的无敌最长 ESC.riseMax 秒，开始飞（燕翎）也结束；hover 的无敌跟着悬停走（physics 里悬停结束就 endEscape）
+function escapeTick(f) {
+  if (!f.escInvul) return;
+  f.escT += STEP;
+  if (f.flying || (f.escMode !== 'hover' && f.escT > ESC.riseMax)) endEscape(f);
+}
 const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke' };
 function tryEscape(f, foe) {
-  if (f.hp <= 0 || f.breakCD > 0 || M.phase !== 'fight' || ['held', 'special', 'victory'].includes(f.state) || f.jailT > 0 || f.drinkT > 0) return false;
+  if (escapeBlock(f)) return false;
   if (!f.ctrl.consume('dash')) return false;
   const noDir = !f.ctrl.held.left && !f.ctrl.held.right && !f.ctrl.held.down;
   const inAir = f.y < -15 || !f.onGround();
   if (inAir && noDir) {
     // 腾空·凌空凝势 (TengKong Air Freeze / Hover)
-    f.breakCD = Math.min(f.ch.escCD || BREAK_CD, 4.5);
+    f.breakCD = Math.min(f.ch.escCD || BREAK_CD, ESC.hoverCdCap);
     f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted = false; f.stun = 0;
     f.vx = 0; f.vy = 0;
-    f.airHover = 0.85;
-    f.escInvul = true; f.escT = 0; f.invul = f.airHover;
+    f.airHover = ESC.hover;
+    f.escInvul = true; f.escMode = 'hover'; f.escT = 0; f.invul = f.airHover;
     f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
     delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;
     comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
@@ -551,8 +575,8 @@ function tryEscape(f, foe) {
   const away = f.x >= foe.x ? 1 : -1;
   f.breakCD = f.ch.escCD || BREAK_CD;
   f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted = false; f.stun = 0;
-  f.vy = -1000 * (f.ch.id === 'yanling' ? 1.15 : f.ch.id === 'tieshan' ? 0.9 : 1); f.vx = away * 150; f.y = Math.min(f.y, -2);
-  f.escInvul = true; f.escT = 0; f.invul = 99;
+  f.vy = -ESC.riseVy * (f.ch.id === 'yanling' ? 1.15 : f.ch.id === 'tieshan' ? 0.9 : 1); f.vx = away * ESC.riseVx; f.y = Math.min(f.y, -2);
+  f.escInvul = true; f.escMode = 'rise'; f.escT = 0; f.invul = 99;
   f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
   delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;   // 松开左键前不会开始蓄力
   comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
@@ -566,26 +590,8 @@ function tryEscape(f, foe) {
   SFX.escape();
   return true;
 }
-function endEscape(f) { if (f.escInvul) { f.escInvul = false; f.invul = 0; } }
+function endEscape(f) { if (f.escInvul) { f.escInvul = false; f.invul = 0; } f.escMode = ''; }
 const decoys = [];
-function breakOut(f, foe) {
-  const away = f.x >= foe.x ? 1 : -1;
-  f.breakCD = f.ch.escCD || BREAK_CD;
-  decoys.push({ owner: f.idx, sk: f.sk, x0: f.x, y0: f.y, x: f.x, y: f.y, vx: f.vx * 0.4, vy: Math.min(f.vy, 0) * 0.5, rot: 0, vr: away * -3, life: 1.1, landed: f.y >= -1, age: 0 });
-  smoke(f.x, f.y - 50, 16);
-  f.x = clamp(f.x + away * 110, WALL, STAGE_W - WALL);
-  const air = f.y < -1;
-  f.state = air ? 'air' : 'idle'; f.t = 0; f.move = null;
-  f.vx = 0; f.vy = air ? -220 : 0; f.invul = 0.4; f.rot = 0;
-  f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.airDash = 1; f.huiMaHits = 0;
-  f.face = foe.x >= f.x ? 1 : -1;
-  f.trail.length = 0; f.scarf = []; f.ghosts = [];
-  f.j = {}; for (const k of JOINTS) f.j[k] = [...POSES.fall[k]]; f.j.sw = POSES.fall.sw;
-  smoke(f.x, f.y - 50, 10);
-  comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
-  hitstop = Math.max(hitstop, 0.04);
-  SFX.poof();
-}
 function updateDecoys() {
   for (const d of decoys) {
     d.life -= STEP;
@@ -655,7 +661,7 @@ function updateFighter(f, foe) {
   f.bbT = Math.max(0, (f.bbT || 0) - STEP); f.twinT = Math.max(0, (f.twinT || 0) - STEP);
   if (f.onGround()) f.diveChained = false;
   trySecondQ(f, foe);
-  if (f.escInvul) { f.escT += STEP; if (f.escT > 1.1 || f.flying) endEscape(f); }
+  escapeTick(f);
   if (tryEscape(f, foe)) { physics(f); return; }
   f.skillCD = Math.max(0, f.skillCD - STEP);
   f.flying = false;
@@ -877,8 +883,8 @@ function onLand(f) {
     return;
   }
   if (f.escInvul) {   // 腾空闪落地：无敌结束，短暂落地硬直
-    f.escInvul = false; f.invul = 0; f.jumps = 0; f.airDash = 1;
-    f.state = 'getup'; f.t = 0.15; f.vx *= 0.3; dust(f.x, 0, 6); SFX.land();
+    endEscape(f); f.jumps = 0; f.airDash = 1;
+    f.state = 'getup'; f.t = ESC.landLag; f.vx *= 0.3; dust(f.x, 0, 6); SFX.land();
     return;
   }
   if (f.state === 'launched') {

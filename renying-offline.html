@@ -9510,7 +9510,7 @@ NET.lastResult = '';
 }
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir'];
+'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 const VICTIM = ['hitstun', 'launched', 'knockdown', 'getup', 'held', 'blockstun'];
 function applyF(f, arr, exact) {
@@ -10298,7 +10298,7 @@ this.maxGuard = (this.ch && this.ch.stat && this.ch.stat.guardMax) || 100;
 this.guard = this.maxGuard;
 this.sinceBlock = 0;
 Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
-skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 80, spN: 0, spPose: null, rooted: false, slowT: 0,
+skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 80, spN: 0, spPose: null, rooted: false, slowT: 0,
 notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
@@ -11413,18 +11413,35 @@ break;
 for (let i = projs.length - 1; i >= 0; i--) if (projs[i].dead) projs.splice(i, 1);
 }
 function boltFX(p) { shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35); flashRGB = '255,245,200'; dust(p.x, 0, 12); ring(p.x, 0, 90, '255,240,150', 0.3); SFX.thunder(); }
+const ESC = { riseMax: 1.1, hover: 0.85, hoverCdCap: 4.5, landLag: 0.15, riseVy: 1000, riseVx: 150 };
+function escapeBlock(f) {
+if (f.hp <= 0) return 'dead';
+if (M.phase !== 'fight') return 'phase';
+if (f.breakCD > 0) return 'cd';
+if (f.state === 'held') return 'held';
+if (f.state === 'special') return 'ult';
+if (f.state === 'victory') return 'victory';
+if (f.jailT > 0) return 'jail';
+if (f.drinkT > 0) return 'drink';
+return '';
+}
+function escapeTick(f) {
+if (!f.escInvul) return;
+f.escT += STEP;
+if (f.flying || (f.escMode !== 'hover' && f.escT > ESC.riseMax)) endEscape(f);
+}
 const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke' };
 function tryEscape(f, foe) {
-if (f.hp <= 0 || f.breakCD > 0 || M.phase !== 'fight' || ['held', 'special', 'victory'].includes(f.state) || f.jailT > 0 || f.drinkT > 0) return false;
+if (escapeBlock(f)) return false;
 if (!f.ctrl.consume('dash')) return false;
 const noDir = !f.ctrl.held.left && !f.ctrl.held.right && !f.ctrl.held.down;
 const inAir = f.y < -15 || !f.onGround();
 if (inAir && noDir) {
-f.breakCD = Math.min(f.ch.escCD || BREAK_CD, 4.5);
+f.breakCD = Math.min(f.ch.escCD || BREAK_CD, ESC.hoverCdCap);
 f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted = false; f.stun = 0;
 f.vx = 0; f.vy = 0;
-f.airHover = 0.85;
-f.escInvul = true; f.escT = 0; f.invul = f.airHover;
+f.airHover = ESC.hover;
+f.escInvul = true; f.escMode = 'hover'; f.escT = 0; f.invul = f.airHover;
 f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
 delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;
 comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
@@ -11443,8 +11460,8 @@ return true;
 const away = f.x >= foe.x ? 1 : -1;
 f.breakCD = f.ch.escCD || BREAK_CD;
 f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted = false; f.stun = 0;
-f.vy = -1000 * (f.ch.id === 'yanling' ? 1.15 : f.ch.id === 'tieshan' ? 0.9 : 1); f.vx = away * 150; f.y = Math.min(f.y, -2);
-f.escInvul = true; f.escT = 0; f.invul = 99;
+f.vy = -ESC.riseVy * (f.ch.id === 'yanling' ? 1.15 : f.ch.id === 'tieshan' ? 0.9 : 1); f.vx = away * ESC.riseVx; f.y = Math.min(f.y, -2);
+f.escInvul = true; f.escMode = 'rise'; f.escT = 0; f.invul = 99;
 f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
 delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;   // 松开左键前不会开始蓄力
 comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
@@ -11458,26 +11475,8 @@ if (kind === 'bolt') { flashA = Math.max(flashA, 0.15); flashRGB = c; }
 SFX.escape();
 return true;
 }
-function endEscape(f) { if (f.escInvul) { f.escInvul = false; f.invul = 0; } }
+function endEscape(f) { if (f.escInvul) { f.escInvul = false; f.invul = 0; } f.escMode = ''; }
 const decoys = [];
-function breakOut(f, foe) {
-const away = f.x >= foe.x ? 1 : -1;
-f.breakCD = f.ch.escCD || BREAK_CD;
-decoys.push({ owner: f.idx, sk: f.sk, x0: f.x, y0: f.y, x: f.x, y: f.y, vx: f.vx * 0.4, vy: Math.min(f.vy, 0) * 0.5, rot: 0, vr: away * -3, life: 1.1, landed: f.y >= -1, age: 0 });
-smoke(f.x, f.y - 50, 16);
-f.x = clamp(f.x + away * 110, WALL, STAGE_W - WALL);
-const air = f.y < -1;
-f.state = air ? 'air' : 'idle'; f.t = 0; f.move = null;
-f.vx = 0; f.vy = air ? -220 : 0; f.invul = 0.4; f.rot = 0;
-f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.airDash = 1; f.huiMaHits = 0;
-f.face = foe.x >= f.x ? 1 : -1;
-f.trail.length = 0; f.scarf = []; f.ghosts = [];
-f.j = {}; for (const k of JOINTS) f.j[k] = [...POSES.fall[k]]; f.j.sw = POSES.fall.sw;
-smoke(f.x, f.y - 50, 10);
-comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
-hitstop = Math.max(hitstop, 0.04);
-SFX.poof();
-}
 function updateDecoys() {
 for (const d of decoys) {
 d.life -= STEP;
@@ -11544,7 +11543,7 @@ if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);
 f.bbT = Math.max(0, (f.bbT || 0) - STEP); f.twinT = Math.max(0, (f.twinT || 0) - STEP);
 if (f.onGround()) f.diveChained = false;
 trySecondQ(f, foe);
-if (f.escInvul) { f.escT += STEP; if (f.escT > 1.1 || f.flying) endEscape(f); }
+escapeTick(f);
 if (tryEscape(f, foe)) { physics(f); return; }
 f.skillCD = Math.max(0, f.skillCD - STEP);
 f.flying = false;
@@ -11761,8 +11760,8 @@ dust(f.x, 0, 10); SFX.land();
 return;
 }
 if (f.escInvul) {   // 腾空闪落地：无敌结束，短暂落地硬直
-f.escInvul = false; f.invul = 0; f.jumps = 0; f.airDash = 1;
-f.state = 'getup'; f.t = 0.15; f.vx *= 0.3; dust(f.x, 0, 6); SFX.land();
+endEscape(f); f.jumps = 0; f.airDash = 1;
+f.state = 'getup'; f.t = ESC.landLag; f.vx *= 0.3; dust(f.x, 0, 6); SFX.land();
 return;
 }
 if (f.state === 'launched') {
