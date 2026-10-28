@@ -13,6 +13,8 @@ on:
       - "tools/ui-audit.mjs"
       - "tools/hud-audit.mjs"
       - "tools/hud-overlap-audit.mjs"
+      - "tools/perf-audit.mjs"
+      - "tools/perf-budget.json"
   pull_request:
     branches: [ main ]
 
@@ -68,3 +70,8 @@ jobs:
         run: |
           node tools/hud-audit.mjs ci-hud 1440 900
           node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2
+
+      # Load to main menu, panel switch to next frame, and AI-vs-AI 1v1 / 2v2 frame rate,
+      # checked against tools/perf-budget.json (measured, then loosened about 3x).
+      - name: Performance Budget Audit
+        run: node tools/perf-audit.mjs ci-perf

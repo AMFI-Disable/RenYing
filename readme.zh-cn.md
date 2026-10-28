@@ -188,6 +188,7 @@ CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就�
 | hud | `node tools/hud-audit.mjs ci-hud 1440 900` | 对局里的 HUD 文字不小于 12px | CI、UI |
 | hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD 文字和血条不重叠、不出画布 | UI |
 | predeploy | `node tools/predeploy-check.mjs` | wrangler.toml、管理后台 CSP、接口冒烟测试 | Cloudflare Worker |
+| perf | `node tools/perf-audit.mjs` | 首页加载到主菜单、面板切换、电脑对战帧率，不超过 `tools/perf-budget.json` 的预算 | UI |
 
 ---
 

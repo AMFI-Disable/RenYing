@@ -192,6 +192,7 @@ Everything runs with plain Node 22 (no `npm install`). The browser audits need a
 | hud | `node tools/hud-audit.mjs ci-hud 1440 900` | No in-match HUD text below 12px | CI, UI |
 | hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD text and bars never overlap or leave the canvas | UI |
 | predeploy | `node tools/predeploy-check.mjs` | wrangler.toml, admin CSP, API smoke test | Cloudflare Worker |
+| perf | `node tools/perf-audit.mjs` | Load to main menu, panel switching, AI-vs-AI frame rate within `tools/perf-budget.json` | UI |
 
 ---
 

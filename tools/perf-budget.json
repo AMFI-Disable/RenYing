@@ -1,0 +1,9 @@
+{
+  "about": "tools/perf-audit.mjs 的性能预算。2026-10-28 在 4 核无 GPU 的无头 Chromium 上实测：主菜单约 240 ms，最慢的面板（武库）约 130 ms，观战 1v1 / 2v2 约 23-26 fps、95% 帧间隔 50-67 ms。预算按实测放宽约 3 倍（帧率放宽一半），只拦明显变慢的改动；改预算要在提交说明里写清原因。",
+  "load": { "menuMs": 1500 },
+  "panels": { "default": 500, "armory": 600 },
+  "match": {
+    "watch1v1": { "fps": 12, "p95Ms": 150 },
+    "watch2v2": { "fps": 10, "p95Ms": 180 }
+  }
+}
