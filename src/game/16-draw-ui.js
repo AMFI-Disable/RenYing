@@ -16,14 +16,16 @@ function drawTrainStats(cx, top, bh) {
     ['每秒伤害（DPS）', dps.toFixed(1), '#8ff0ff']
   ];
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
-  const pw = fs * 17;
+  for (const l of lines) { l[0] = cvT(l[0]); l[1] = cvT(l[1]); }
+  const hint = cvT(TOUCH ? '左上角切换木人' : '按 1-6 切换木人 | F1 判定框透视');
+  const pw = Math.min(fs * 22, Math.max(fs * 17, ctx.measureText(hint).width, ...lines.map(([k, v]) => ctx.measureText(k).width + ctx.measureText(v).width + fs * 1.5)));   // 英文长：卡片跟着变宽（不超过 fs * 22）
   const cardH = (lines.length + 2) * fs * 1.75 + 16;
   ctx.fillStyle = 'rgba(10,10,24,0.68)'; ctx.fillRect(x - pw - 14, y - 12, pw + 28, cardH);
   ctx.strokeStyle = 'rgba(233,196,106,0.35)'; ctx.lineWidth = 1;
   ctx.strokeRect(x - pw - 14, y - 12, pw + 28, cardH);
   ctx.font = `600 ${Math.round(fs * 1.05)}px ${TITLE_FONT}`;
   ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  ctx.fillText('试剑数据', x - pw, y - 4);
+  ctx.fillText(cvT('试剑数据'), x - pw, y - 4);
   const startY = y + fs * 1.8;
   ctx.font = `${fs}px ${BODY_FONT}`;
   lines.forEach(([k, v, col], i) => {
@@ -31,7 +33,7 @@ function drawTrainStats(cx, top, bh) {
     ctx.textAlign = 'right'; ctx.fillStyle = col || '#efe8d8'; ctx.fillText(v, x, startY + i * fs * 1.75);
   });
   ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(239,232,216,0.45)';
-  ctx.fillText(TOUCH ? '左上角切换木人' : '按 1-6 切换木人 | F1 判定框透视', x, startY + lines.length * fs * 1.75);
+  ctx.fillText(hint, x, startY + lines.length * fs * 1.75);
   ctx.restore();
 }
 function keyHint(i, k) {

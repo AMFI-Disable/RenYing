@@ -201,6 +201,8 @@
     [/^(\d+) 秒后重新入战，魔首的血不回$/, (m0, n) => `Back in the fight in ${n}s; the boss doesn't heal`],
     [/^天道 Boss 伏诛！(.*?)( · 够资格的话，星座皮肤会在下次打开武库时到账| · 登录云端账号才能领星座皮肤)$/, (m0, x, t) => `Tiandao Boss slain! ${x}${t.includes('登录') ? ' · Log in to a cloud account to earn Zodiac skins' : ' · If you qualify, the Zodiac skin arrives next time you open the Armory'}`],
     [/^天道车轮战收场 · 告捷：(.+)$/, (m0, x) => `Tiandao Relay over · Winners: ${x.split('、').join(', ')}`],
+    // 木人桩的试剑数据卡（src/game/16-draw-ui.js drawTrainStats）
+    [/^(\d+) 段 · (\d+) 伤$/, (m0, n, d) => `${n} hit${n === '1' ? '' : 's'} · ${d} dmg`],
     // 拿到秘卷时的大字（src/game/22-modes.js、07-ai-story.js、22-world.js 的 say）
     [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
     [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],

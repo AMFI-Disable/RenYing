@@ -1648,4 +1648,15 @@ const UI_COPY_EN = {
   "🎲 乾坤异变": "🎲 Celestial Shift",
   "天机乱斗 · 乾坤异变": "Chaos Mutators · Celestial Shift",
   "天机乱斗 · 乾坤异变观战": "Chaos Mutators · Watch the AI",
+  // 木人桩的试剑数据卡（src/game/16-draw-ui.js drawTrainStats、07-ai-story.js DUMMY_MODES）
+  "当前连击": "Current combo",
+  "最高连击": "Best combo",
+  "累计伤害": "Total damage",
+  "每秒伤害（DPS）": "DPS",
+  "试剑数据": "Training Stats",
+  "左上角切换木人": "Switch dummy at top left",
+  "按 1-6 切换木人 | F1 判定框透视": "1-6 switch dummy · F1 hitboxes",
+  "一味死守": "Always Block",
+  "被连便闪": "Escapes Combos",
+  "钉在原地": "Rooted",
 };
