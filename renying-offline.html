@@ -3635,8 +3635,8 @@ body.kb-only.has-nav .kb-hint { display: block; }
     <div class="panel">
       <h2>排行榜</h2>
       <div class="seg" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button></div>
-      <p class="sub" id="lbSub">加载中…</p>
-      <div class="lbwrap"><table class="lbt" id="lbTable"></table></div>
+      <p class="sub" id="lbSub"></p>
+      <div class="lbwrap"><div id="lbState"></div><table class="lbt" id="lbTable"></table></div>
       <div class="row"><button class="ghost" id="lbBack">返回</button></div>
     </div>
   </div>
@@ -5467,6 +5467,8 @@ const PATTERNS_EN = [
 [/^(.+?)选择出战侠客$/, (m0, w) => `${lookup(w) || w} · Pick a hero`],
 [/^(.+?)钦点【(.+?)】出战$/, (m0, w, r) => `${lookup(w) || w} · Pick the ${lookup(r) || r}`],
 [/^禁 (.+)$/, (m0, n) => `Ban · ${lookup(n) || n}`],
+[/^本赛季打满 (\d+) 场定级赛后上榜。段位从低到高：(.+)$/, (m0, n, ts) => `Finish ${n} placement matches this season to get on the board. Tiers, low to high: ${ts.split('、').map(t => { const m = t.match(/^(\S+) (.+)$/); return m ? `${m[1]} ${lookup(m[2]) || m[2]}` : t; }).join(', ')}`],
+[/^已注册玩家 (\d+) 位，按联机胜场排$/, (m0, n) => `${n} registered players, ranked by online wins`],
 [/^选择 (.+)$/, (m0, n) => `Pick ${lookup(n) || n}`],
 [/^禁用 (.+)$/, (m0, n) => `Ban ${lookup(n) || n}`],
 [/^\+(\d+) 墨锭$/, (m0, n) => `+${n} Ink`],
@@ -7414,6 +7416,10 @@ const UI_COPY_EN = {
 "管理后台": "Admin Console",
 "存档导入与继承": "Save Import & Transfer",
 "排行榜": "Leaderboard",
+"正在读取排行榜…": "Loading the leaderboard…",
+"排行榜暂时读不到，稍后再试": "The leaderboard can't be loaded right now. Try again later.",
+"还没有人完成定级赛。排位赛打满 5 场就能上榜！": "No one has finished placements yet. Play 5 ranked matches to get on the board!",
+"还没有人打过联机——去赢下第一场吧！": "No one has played online yet. Go win the first match!",
 "加载中…": "Loading…",
 "新手福利": "New Player Gift",
 "就选这个": "Pick This One",
@@ -25820,28 +25826,38 @@ alert(trMsg('文件解析失败：' + err.message));
 reader.readAsText(file);
 });
 }
-let lbKind = 'rank';
+let lbKind = 'rank', lbTok = 0;
 $id('lbTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { lbKind = b.dataset.k; openLeaderboard(); } });
+function lbShow(sub, state, rows) {
+$id('lbSub').textContent = sub; $id('lbSub').hidden = !sub;
+$id('lbState').innerHTML = state; $id('lbTable').innerHTML = rows;
+}
 async function openLeaderboard() {
-menuCam.tz = 1.35; showScreen('lb'); $id('lbSub').textContent = '加载中…'; $id('lbTable').innerHTML = '';
-for (const b of $id('lbTabs').children) b.classList.toggle('sel', b.dataset.k === lbKind);
-if (lbKind === 'rank') {
+menuCam.tz = 1.35; showScreen('lb');
+const tok = ++lbTok, kind = lbKind;
+for (const b of $id('lbTabs').children) b.classList.toggle('sel', b.dataset.k === kind);
+lbShow('', uiState('loading', '正在读取排行榜…'), '');
+const fail = err => { if (tok === lbTok) lbShow('', uiState('error', (err && err.message) || '排行榜暂时读不到，稍后再试'), ''); };
+if (kind === 'rank') {
 try {
 const j = await CloudSave.leaderboard('rank', rkSeason().id);
-$id('lbSub').textContent = j.list.length ? `本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}` : '还没有人完成定级赛。排位赛打满 5 场就能上榜！';
-$id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
-`<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join('') : '';
-} catch (err) { $id('lbSub').textContent = '读取失败：' + err.message; }
+if (tok !== lbTok) return;   // 读的时候换了标签：这份结果不要了
+if (!j.list.length) { lbShow('', uiState('empty', '还没有人完成定级赛。排位赛打满 5 场就能上榜！'), ''); return; }
+lbShow(`本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`, '',
+'<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
+`<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join(''));
+} catch (err) { fail(err); }
 return;
 }
 try {
 const j = await CloudSave.leaderboard('wins');
-$id('lbSub').textContent = j.list.length ? `已注册玩家 ${j.players} 位，按联机胜场排` : '还没有人打过联机——去赢下第一场吧！';
-$id('lbTable').innerHTML = j.list.length ? '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
+if (tok !== lbTok) return;
+if (!j.list.length) { lbShow('', uiState('empty', '还没有人打过联机——去赢下第一场吧！'), ''); return; }
+lbShow(`已注册玩家 ${j.players} 位，按联机胜场排`, '', '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
 const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';
 return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td></tr>`;
-}).join('') : '';
-} catch (err) { $id('lbSub').textContent = '读取失败：' + err.message; }
+}).join(''));
+} catch (err) { fail(err); }
 }
 $id('lbBack').addEventListener('click', backToMenu);
 adaptLoad();

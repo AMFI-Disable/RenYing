@@ -103,6 +103,9 @@
     [/^(.+?)选择出战侠客$/, (m0, w) => `${lookup(w) || w} · Pick a hero`],
     [/^(.+?)钦点【(.+?)】出战$/, (m0, w, r) => `${lookup(w) || w} · Pick the ${lookup(r) || r}`],
     [/^禁 (.+)$/, (m0, n) => `Ban · ${lookup(n) || n}`],
+    // 排行榜说明
+    [/^本赛季打满 (\d+) 场定级赛后上榜。段位从低到高：(.+)$/, (m0, n, ts) => `Finish ${n} placement matches this season to get on the board. Tiers, low to high: ${ts.split('、').map(t => { const m = t.match(/^(\S+) (.+)$/); return m ? `${m[1]} ${lookup(m[2]) || m[2]}` : t; }).join(', ')}`],
+    [/^已注册玩家 (\d+) 位，按联机胜场排$/, (m0, n) => `${n} registered players, ranked by online wins`],
     [/^选择 (.+)$/, (m0, n) => `Pick ${lookup(n) || n}`],
     [/^禁用 (.+)$/, (m0, n) => `Ban ${lookup(n) || n}`],
     [/^\+(\d+) 墨锭$/, (m0, n) => `+${n} Ink`],
