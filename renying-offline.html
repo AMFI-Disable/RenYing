@@ -524,6 +524,8 @@ html, body { overscroll-behavior: none; }
 .ui-confirm-box { width: min(420px, 100%); background: linear-gradient(160deg, #142130, #0d151e); border: 1px solid rgba(236,232,225,.14); box-shadow: var(--sh-pop); padding: var(--sp-5) var(--sp-5) var(--sp-4); text-align: center; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
 .ui-confirm-box h3 { margin: 0 0 var(--sp-3); font-size: var(--fs-xl); letter-spacing: .06em; color: #fff; }
 .ui-confirm-box p { margin: 0 0 var(--sp-4); white-space: pre-line; font-size: var(--fs-md); line-height: 1.7; }
+.ui-confirm-in { display: block; width: 100%; box-sizing: border-box; margin: 0 0 var(--sp-4); font: 16px var(--body); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); -webkit-user-select: text; user-select: text; }
+.ui-confirm-in:focus-visible { outline: 2px solid var(--p1); outline-offset: 1px; }
 .ui-confirm-box .row { display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap; }
 :is(.rk-info, .rk-reveal, .ar-modal, .ar-ins):focus { outline: none; }
 .spt { font-family: var(--title); font-weight: 400; font-size: 26px; margin: 16px 0 6px; color: #e9c46a; }
@@ -7810,6 +7812,7 @@ const UI_COPY_EN = {
 "确定": "OK",
 "全部退出": "Sign out all",
 "合并同步": "Merge",
+"升级": "Upgrade",
 "云端已连": "Cloud Connected",
 "账号与云存档": "Account & Cloud Save",
 "将本机所有账号与数据打包备份": "Pack every account and its data on this device into one backup",
@@ -22261,27 +22264,31 @@ const prev = document.activeElement;
 const wrap = document.createElement('div');
 wrap.className = 'ui-confirm'; wrap.setAttribute('role', 'alertdialog'); wrap.setAttribute('aria-modal', 'true');
 wrap.setAttribute('aria-labelledby', 'uiConfirmMsg');
-wrap.innerHTML = `<div class="ui-confirm-box">${opt.title ? `<h3>${escapeHTML(opt.title)}</h3>` : ''}<p id="uiConfirmMsg"></p><div class="row">
+const io = opt.input;
+wrap.innerHTML = `<div class="ui-confirm-box">${opt.title ? `<h3>${escapeHTML(opt.title)}</h3>` : ''}<p id="uiConfirmMsg"></p>${io ? `<input class="ui-confirm-in" aria-labelledby="uiConfirmMsg" type="${io.type === 'password' ? 'password' : 'text'}" autocomplete="${escapeHTML(io.autocomplete || 'off')}" placeholder="${escapeHTML(io.placeholder || '')}">` : ''}<div class="row">
 <button type="button" class="ghost" data-v="0">${escapeHTML(opt.cancel || '取消')}</button>
 <button type="button" class="go${opt.danger ? ' danger' : ''}" data-v="1">${escapeHTML(opt.ok || '确定')}</button></div></div>`;
 if (opt.html) wrap.querySelector('p').innerHTML = opt.html; else wrap.querySelector('p').textContent = msg;
+const inp = wrap.querySelector('.ui-confirm-in');
 const done = v => {
+const out = inp ? (v ? inp.value : null) : v;
 wrap.remove(); window.removeEventListener('keydown', key, true);
 try { if (prev && prev.isConnected) prev.focus({ preventScroll: true }); } catch (e) {}
-resolve(v);
+resolve(out);
 };
 const key = e => {
 if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); }
-else if (e.code === 'Tab') {   // 焦点只在两个按钮之间转
+else if (inp && document.activeElement === inp && (e.code === 'Enter' || e.code === 'NumpadEnter') && !e.isComposing) { e.preventDefault(); e.stopImmediatePropagation(); done(true); }
+else if (e.code === 'Tab') {   // 焦点只在弹窗里转（输入框和两个按钮）
 e.preventDefault(); e.stopImmediatePropagation();
-const bs = [...wrap.querySelectorAll('button')], i = bs.indexOf(document.activeElement);
+const bs = [...wrap.querySelectorAll('input, button')], i = bs.indexOf(document.activeElement);
 bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
 }
 };
 wrap.addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) done(b.dataset.v === '1'); else if (e.target === wrap) done(false); });
 window.addEventListener('keydown', key, true);
 document.body.appendChild(wrap);
-wrap.querySelector('button[data-v="0"]').focus({ preventScroll: true });
+(inp || wrap.querySelector('button[data-v="0"]')).focus({ preventScroll: true });
 });
 }
 const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'modalWorld', 'arModal', 'arIns'];
@@ -26024,7 +26031,7 @@ if (u && mockUsers[u.name] && mockUsers[u.name].pw) {
 try { pw = atob(mockUsers[u.name].pw); } catch (e) {}
 }
 if (!pw) {
-pw = prompt(trMsg('请输入当前本地账号密码以同步升级至云端：')) || '';
+pw = await uiConfirm('请输入当前本地账号密码以同步升级至云端：', { input: { type: 'password', autocomplete: 'current-password' }, ok: '升级' }) || '';
 }
 if (!pw) return;
 $id('adMsg').textContent = '正在升级同步至云端…';
@@ -27070,7 +27077,7 @@ const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
 const dir = KBN_DIR[e.code];
 if ((e.code === 'F1' || (e.key === '?' && !typing)) && !e.repeat) { stop(); kbOnly() && kbnOn(); kbHelpShow($id('kbHelp').hidden); return; }
 if (e.code === 'Escape') {
-if (typing) {   // 先离开输入框，再按一次才返回
+if (typing && !t.closest('.ui-confirm')) {   // 先离开输入框，再按一次才返回（确认框里的输入框例外：Esc 直接取消，交给 uiConfirm）
 const next = kbnPick(cands, t, 'd') || kbnPick(cands, t, 'u');
 t.blur(); kbnOn(); stop(); if (next) kbnFocus(next);
 return;

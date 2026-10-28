@@ -1014,6 +1014,7 @@ const UI_COPY_EN = {
   "确定": "OK",
   "全部退出": "Sign out all",
   "合并同步": "Merge",
+  "升级": "Upgrade",
   "云端已连": "Cloud Connected",
   "账号与云存档": "Account & Cloud Save",
   "将本机所有账号与数据打包备份": "Pack every account and its data on this device into one backup",

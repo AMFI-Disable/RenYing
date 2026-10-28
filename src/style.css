@@ -537,6 +537,8 @@
   .ui-confirm-box { width: min(420px, 100%); background: linear-gradient(160deg, #142130, #0d151e); border: 1px solid rgba(236,232,225,.14); box-shadow: var(--sh-pop); padding: var(--sp-5) var(--sp-5) var(--sp-4); text-align: center; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
   .ui-confirm-box h3 { margin: 0 0 var(--sp-3); font-size: var(--fs-xl); letter-spacing: .06em; color: #fff; }
   .ui-confirm-box p { margin: 0 0 var(--sp-4); white-space: pre-line; font-size: var(--fs-md); line-height: 1.7; }
+  .ui-confirm-in { display: block; width: 100%; box-sizing: border-box; margin: 0 0 var(--sp-4); font: 16px var(--body); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(0,0,0,.35); color: var(--ink); -webkit-user-select: text; user-select: text; }
+  .ui-confirm-in:focus-visible { outline: 2px solid var(--p1); outline-offset: 1px; }
   .ui-confirm-box .row { display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap; }
   :is(.rk-info, .rk-reveal, .ar-modal, .ar-ins):focus { outline: none; }
   .spt { font-family: var(--title); font-weight: 400; font-size: 26px; margin: 16px 0 6px; color: #e9c46a; }

@@ -153,7 +153,7 @@ window.addEventListener('keydown', e => {
   const dir = KBN_DIR[e.code];
   if ((e.code === 'F1' || (e.key === '?' && !typing)) && !e.repeat) { stop(); kbOnly() && kbnOn(); kbHelpShow($id('kbHelp').hidden); return; }
   if (e.code === 'Escape') {
-    if (typing) {   // 先离开输入框，再按一次才返回
+    if (typing && !t.closest('.ui-confirm')) {   // 先离开输入框，再按一次才返回（确认框里的输入框例外：Esc 直接取消，交给 uiConfirm）
       const next = kbnPick(cands, t, 'd') || kbnPick(cands, t, 'u');
       t.blur(); kbnOn(); stop(); if (next) kbnFocus(next);
       return;

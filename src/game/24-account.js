@@ -266,7 +266,7 @@ if ($id('adPromoteBtn')) {
       try { pw = atob(mockUsers[u.name].pw); } catch (e) {}
     }
     if (!pw) {
-      pw = prompt(trMsg('请输入当前本地账号密码以同步升级至云端：')) || '';
+      pw = await uiConfirm('请输入当前本地账号密码以同步升级至云端：', { input: { type: 'password', autocomplete: 'current-password' }, ok: '升级' }) || '';
     }
     if (!pw) return;
     $id('adMsg').textContent = '正在升级同步至云端…';
