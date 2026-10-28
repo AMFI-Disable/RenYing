@@ -999,6 +999,7 @@ width: 100%; border-radius: 999px;
 .gb-feed small { float: right; color: var(--dim); }
 .gb-feed em { color: var(--gold); font-style: normal; }
 .gb-none { color: var(--dim); text-align: center; }
+.gb-none .ui-state { padding: var(--sp-2) 0; }
 .gb-last, .gb-rule { font-size: 12px; color: var(--dim); }
 .gb-me { margin: 10px 0 0; font-size: 14px; }
 @media (max-width: 720px) { .gb-cols { grid-template-columns: 1fr; } }
@@ -7428,6 +7429,10 @@ const UI_COPY_EN = {
 "出战": "Fight",
 "全服侠客各自出战，伤害累计在同一只天魔身上": "Every warrior fights; damage adds up on the same demon",
 "连不上服务器，天魔的情况暂时看不到": "Cannot reach the server; the demon's state is unavailable",
+"正在查看天魔的情况…": "Checking on the demon…",
+"刷新太快了，稍后再看": "Refreshing too fast. Check back in a moment.",
+"这一代还没有人出战，第一刀等你来砍": "No one has fought this generation yet. The first strike is yours.",
+"还没有战报": "No battle reports yet",
 "角色图鉴": "Hero Codex",
 "初始": "Starter",
 "已拥有": "Owned",
@@ -23669,8 +23674,8 @@ const b = st.boss, hero = CHARS[gbHeroIdx(b.hero)], pct = b.hp / b.maxHp * 100;
 const off = now - GB.at;   // 服务器时间换成本机时间
 const affix = gbAffix(st).map(id => `<span class="gb-affix" title="${esc(SC_BY[id].d)}"><b>${esc(SC_BY[id].n)}</b>${esc(SC_BY[id].d)}</span>`).join('');
 const top = st.top.length ? st.top.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${esc(r.name)}</td><td class="n">${r.dmg.toLocaleString()}</td><td class="n">${r.runs} 次</td></tr>`).join('')
-: '<tr><td colspan="4" class="gb-none">这一代还没有人出战，第一刀等你来砍</td></tr>';
-const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> 造成 ${r.dmg.toLocaleString()} 伤害${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : '<li class="gb-none">还没有战报</li>';
+: `<tr><td colspan="4" class="gb-none">${uiState('empty', '这一代还没有人出战，第一刀等你来砍')}</td></tr>`;
+const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> 造成 ${r.dmg.toLocaleString()} 伤害${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : `<li class="gb-none">${uiState('empty', '还没有战报')}</li>`;
 const last = st.last ? `上一代（${esc(CHARS[gbHeroIdx(st.last.hero)].name)}）${st.last.killed ? `被 <b>${esc(st.last.killer)}</b> 斩杀` : '没被打死，遁走了'}` : '';
 const me = !gbCloud() ? '登录云端账号才能出战（游客和本机存档只能观战）'
 : st.me && st.me.runs ? `你这一代造成 ${st.me.dmg.toLocaleString()} 伤害（出战 ${st.me.runs} 次）` : '你这一代还没出战';

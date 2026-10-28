@@ -64,8 +64,8 @@ function renderGboss() {
   const off = now - GB.at;   // 服务器时间换成本机时间
   const affix = gbAffix(st).map(id => `<span class="gb-affix" title="${esc(SC_BY[id].d)}"><b>${esc(SC_BY[id].n)}</b>${esc(SC_BY[id].d)}</span>`).join('');
   const top = st.top.length ? st.top.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${esc(r.name)}</td><td class="n">${r.dmg.toLocaleString()}</td><td class="n">${r.runs} 次</td></tr>`).join('')
-    : '<tr><td colspan="4" class="gb-none">这一代还没有人出战，第一刀等你来砍</td></tr>';
-  const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> 造成 ${r.dmg.toLocaleString()} 伤害${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : '<li class="gb-none">还没有战报</li>';
+    : `<tr><td colspan="4" class="gb-none">${uiState('empty', '这一代还没有人出战，第一刀等你来砍')}</td></tr>`;
+  const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> 造成 ${r.dmg.toLocaleString()} 伤害${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : `<li class="gb-none">${uiState('empty', '还没有战报')}</li>`;
   const last = st.last ? `上一代（${esc(CHARS[gbHeroIdx(st.last.hero)].name)}）${st.last.killed ? `被 <b>${esc(st.last.killer)}</b> 斩杀` : '没被打死，遁走了'}` : '';
   const me = !gbCloud() ? '登录云端账号才能出战（游客和本机存档只能观战）'
     : st.me && st.me.runs ? `你这一代造成 ${st.me.dmg.toLocaleString()} 伤害（出战 ${st.me.runs} 次）` : '你这一代还没出战';
