@@ -866,7 +866,8 @@ function presRotateSid() {
   return presSid();
 }
 const presUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/presence';
-const presState = () => (M.mode === 'net' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
+// 对局中：正在打任何一局（联机、开放世界、人机、爬塔……都算），回到主菜单或打完停在结算页就不算；排队匹配算 queue
+const presState = () => (M.mode !== 'demo' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
 const presLive = () => typeof SOC !== 'undefined' && SOC.state === 'on';
 // 大厅直连能秒级推名单，这时候云端 30 秒一报就够；网页挂后台没人看，60 秒保个到场就行；
 // 连续几次报不上去（云端挂了、额度用完了）也别硬刷，退到 60 秒。
@@ -915,21 +916,30 @@ function presBye() {
   try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
 }
 window.addEventListener('pagehide', presBye);
+// 首页和联机页的人数：总在线 / 对局中 / 匹配中 都以云端的统计为准。
+// 云端连不上（断网、两次没报成功、两分钟没有新数）就写「未知」，不拿本机或大厅的零碎数字凑一个假数。
+function onlineNow() {
+  const fresh = PRES.srv && Date.now() - PRES.at < 120e3 && PRES.fail < 2 && !(typeof navigator !== 'undefined' && navigator.onLine === false);
+  if (!fresh) return null;
+  const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;   // 大厅那边只可能少算：比云端多就说明云端那一报还没到
+  const s = PRES.srv;
+  return { total: Math.max(s.online || 0, hall), playing: s.playing || 0, waiting: s.waiting || 0 };
+}
 function refreshOnline() {
-  const live = presLive();
-  const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;
-  const srv = PRES.srv && Date.now() - PRES.at < 120e3 ? PRES.srv : null;   // 两分钟没报成功就当云端暂时连不上
-  const h = srv ? { playing: Math.ceil((srv.playing || 0) / 2), waiting: srv.waiting || 0 } : null;   // 一局联机两个人都报 match
-  // 两个来源都只可能暂时少算（云端要等自己那一报，大厅只算连得上大厅的人），所以谁大用谁；
-  // 两个都没有可靠数据时说“—”，不再拿 Math.max(1, …) 硬报 1 —— 那正是“人很多却显示 1”的来源。
-  const total = (srv || live) ? Math.max(1, srv ? srv.online : 0, hall) : '—';
-  const parts = [];
-  if (h && h.playing) parts.push(`${h.playing} 局对战`);
-  if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
-  if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? `${total} 人在线 · ` + parts.join(' · ') : `${total} 人在线 · 全网连线`;
-  if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
-  if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
-  if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
+  const o = onlineNow(), set = (id, t) => { const el = $id(id); if (el && el.textContent !== t) el.textContent = t; };
+  for (const id of ['homeOnlinePill', 'homeOnlineCard']) { const el = $id(id); if (el) el.classList.toggle('online-unknown', !o); }   // 不知道人数时绿点变灰
+  if (!o) {
+    set('netOnlineOverview', '在线人数未知 · 连不上服务器');
+    set('homeOnlineCount', '全服在线人数未知');
+    set('homeOnlineCardNum', '在线人数未知');
+    set('homeOnlineCardSub', '连不上服务器，稍后自动重试');
+    return;
+  }
+  const parts = [`对局中 ${o.playing} 人`]; if (o.waiting) parts.push(`匹配中 ${o.waiting} 人`);
+  set('netOnlineOverview', `${o.total} 人在线 · ` + parts.join(' · '));
+  set('homeOnlineCount', `全服 ${o.total} 人在线`);
+  set('homeOnlineCardNum', `${o.total} 位侠士在线`);
+  set('homeOnlineCardSub', o.playing || o.waiting ? parts.join(' · ') : '全服连线待命中 · 随时开战');
 }
 setInterval(refreshOnline, 1000);
 setTimeout(refreshOnline, 300);
@@ -938,7 +948,8 @@ setTimeout(() => presBeat(), 1200);
 let presSt = '';
 setInterval(() => { const st = presState(); if (st !== presSt) { presSt = st; presKick(); } }, 2000);
 // 切回窗口、从后台回来：立刻要一次最新数字（这也是“两个人各开一个窗口”时最常用的场景）
-['focus', 'pageshow'].forEach(ev => window.addEventListener(ev, () => { presKick(); refreshOnline(); }));
+['focus', 'pageshow', 'online'].forEach(ev => window.addEventListener(ev, () => { presKick(); refreshOnline(); }));
+window.addEventListener('offline', refreshOnline);   // 断网：马上改成「未知」
 document.addEventListener('visibilitychange', () => { if (!document.hidden) presKick(); else presSchedule(presGap()); refreshOnline(); });
 function joinByCode() {
   initAudio();

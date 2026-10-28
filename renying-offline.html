@@ -1296,6 +1296,8 @@ width: 8px; height: 8px; border-radius: 50%; background: #2bd49a; box-shadow: 0 
 animation: homePulseDot 2s infinite ease-in-out; flex: none;
 }
 @keyframes homePulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+.online-unknown .home-online-dot { background: #8a8f98; box-shadow: none; animation: none; }
+.home-online-pill.online-unknown { background: rgba(138,143,152,0.14); border-color: rgba(138,143,152,0.35); color: #b7bcc4; }
 .play2v2-slots { margin: 10px 0 14px; }
 .play2v2-slot {
 padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
@@ -4948,6 +4950,10 @@ init();
 (function() {
 'use strict';
 const DICT_EN = {
+"全服在线人数未知": "Players online: unknown",
+"在线人数未知": "Players online: unknown",
+"连不上服务器，稍后自动重试": "Can't reach the server, retrying soon",
+"在线人数未知 · 连不上服务器": "Players online: unknown · server unreachable",
 "全服肉鸽 · 关键战": "Server Roguelike · Key Fight",
 "天道车轮战": "Tiandao Relay",
 "车轮战告捷": "Relay Won",
@@ -5720,7 +5726,8 @@ const PATTERNS_EN = [
 [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
 [/^剩\s*(\d+)\s*天$/, (m0, d) => `${d}d left`],
 [/^全服\s*(.+?)\s*人在线$/, (m0, n) => `Global · ${n} online`],
-[/^(.+?)\s*人在线\s*·\s*(.+)$/, (m0, n, rest) => `${n} online · ${rest}`],
+[/^(\d+)\s*人在线\s*·\s*(.+)$/, (m0, n, rest) => `${n} online · ${lookup(rest) || rest}`],
+[/^对局中\s*(\d+)\s*人(?:\s*·\s*匹配中\s*(\d+)\s*人)?$/, (m0, p, w) => `${p} in matches` + (w ? ` · ${w} queuing` : '')],
 [/^(.+?)\s*人在线$/, (m0, n) => `${n} online`],
 [/^(\d+\.\d+\s*[–-]\s*\d+\.\d+)\s*·\s*剩余\s*(.+)$/, (m0, span, left) => `${span} · ${EN_DUR(left)} left`],
 [/^剩余\s*(\d.*)$/, (m0, left) => `${EN_DUR(left)} left`],
@@ -24602,7 +24609,7 @@ try { sessionStorage.removeItem('renying-presence-sid'); } catch (e) {}
 return presSid();
 }
 const presUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/presence';
-const presState = () => (M.mode === 'net' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
+const presState = () => (M.mode !== 'demo' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
 const presLive = () => typeof SOC !== 'undefined' && SOC.state === 'on';
 function presGap() {
 if (typeof document !== 'undefined' && document.hidden) return 60000;
@@ -24644,26 +24651,36 @@ function presBye() {
 try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
 }
 window.addEventListener('pagehide', presBye);
+function onlineNow() {
+const fresh = PRES.srv && Date.now() - PRES.at < 120e3 && PRES.fail < 2 && !(typeof navigator !== 'undefined' && navigator.onLine === false);
+if (!fresh) return null;
+const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;   // 大厅那边只可能少算：比云端多就说明云端那一报还没到
+const s = PRES.srv;
+return { total: Math.max(s.online || 0, hall), playing: s.playing || 0, waiting: s.waiting || 0 };
+}
 function refreshOnline() {
-const live = presLive();
-const hall = (typeof SOC !== 'undefined' && SOC.online) ? SOC.online.length : 0;
-const srv = PRES.srv && Date.now() - PRES.at < 120e3 ? PRES.srv : null;   // 两分钟没报成功就当云端暂时连不上
-const h = srv ? { playing: Math.ceil((srv.playing || 0) / 2), waiting: srv.waiting || 0 } : null;   // 一局联机两个人都报 match
-const total = (srv || live) ? Math.max(1, srv ? srv.online : 0, hall) : '—';
-const parts = [];
-if (h && h.playing) parts.push(`${h.playing} 局对战`);
-if (h && h.waiting) parts.push(`${h.waiting} 人匹配`);
-if ($id('netOnlineOverview')) $id('netOnlineOverview').textContent = parts.length ? `${total} 人在线 · ` + parts.join(' · ') : `${total} 人在线 · 全网连线`;
-if ($id('homeOnlineCount')) $id('homeOnlineCount').textContent = `全服 ${total} 人在线`;
-if ($id('homeOnlineCardNum')) $id('homeOnlineCardNum').textContent = `${total} 位侠士在线`;
-if ($id('homeOnlineCardSub')) $id('homeOnlineCardSub').textContent = (h && h.playing) ? `正在进行 ${h.playing} 局对战` : '全服连线待命中 · 随时开战';
+const o = onlineNow(), set = (id, t) => { const el = $id(id); if (el && el.textContent !== t) el.textContent = t; };
+for (const id of ['homeOnlinePill', 'homeOnlineCard']) { const el = $id(id); if (el) el.classList.toggle('online-unknown', !o); }   // 不知道人数时绿点变灰
+if (!o) {
+set('netOnlineOverview', '在线人数未知 · 连不上服务器');
+set('homeOnlineCount', '全服在线人数未知');
+set('homeOnlineCardNum', '在线人数未知');
+set('homeOnlineCardSub', '连不上服务器，稍后自动重试');
+return;
+}
+const parts = [`对局中 ${o.playing} 人`]; if (o.waiting) parts.push(`匹配中 ${o.waiting} 人`);
+set('netOnlineOverview', `${o.total} 人在线 · ` + parts.join(' · '));
+set('homeOnlineCount', `全服 ${o.total} 人在线`);
+set('homeOnlineCardNum', `${o.total} 位侠士在线`);
+set('homeOnlineCardSub', o.playing || o.waiting ? parts.join(' · ') : '全服连线待命中 · 随时开战');
 }
 setInterval(refreshOnline, 1000);
 setTimeout(refreshOnline, 300);
 setTimeout(() => presBeat(), 1200);
 let presSt = '';
 setInterval(() => { const st = presState(); if (st !== presSt) { presSt = st; presKick(); } }, 2000);
-['focus', 'pageshow'].forEach(ev => window.addEventListener(ev, () => { presKick(); refreshOnline(); }));
+['focus', 'pageshow', 'online'].forEach(ev => window.addEventListener(ev, () => { presKick(); refreshOnline(); }));
+window.addEventListener('offline', refreshOnline);   // 断网：马上改成「未知」
 document.addEventListener('visibilitychange', () => { if (!document.hidden) presKick(); else presSchedule(presGap()); refreshOnline(); });
 function joinByCode() {
 initAudio();

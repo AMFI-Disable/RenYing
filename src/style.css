@@ -1341,6 +1341,8 @@
     animation: homePulseDot 2s infinite ease-in-out; flex: none;
   }
   @keyframes homePulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+  .online-unknown .home-online-dot { background: #8a8f98; box-shadow: none; animation: none; }   /* 连不上服务器：人数未知 */
+  .home-online-pill.online-unknown { background: rgba(138,143,152,0.14); border-color: rgba(138,143,152,0.35); color: #b7bcc4; }
   .play2v2-slots { margin: 10px 0 14px; }
   .play2v2-slot {
     padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);

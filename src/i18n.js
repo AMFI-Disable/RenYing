@@ -5,6 +5,10 @@
   'use strict';
 
   const DICT_EN = {
+  "全服在线人数未知": "Players online: unknown",
+  "在线人数未知": "Players online: unknown",
+  "连不上服务器，稍后自动重试": "Can't reach the server, retrying soon",
+  "在线人数未知 · 连不上服务器": "Players online: unknown · server unreachable",
   "全服肉鸽 · 关键战": "Server Roguelike · Key Fight",
   "天道车轮战": "Tiandao Relay",
   "车轮战告捷": "Relay Won",
@@ -794,7 +798,8 @@
     [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
     [/^剩\s*(\d+)\s*天$/, (m0, d) => `${d}d left`],
     [/^全服\s*(.+?)\s*人在线$/, (m0, n) => `Global · ${n} online`],
-    [/^(.+?)\s*人在线\s*·\s*(.+)$/, (m0, n, rest) => `${n} online · ${rest}`],
+    [/^(\d+)\s*人在线\s*·\s*(.+)$/, (m0, n, rest) => `${n} online · ${lookup(rest) || rest}`],
+    [/^对局中\s*(\d+)\s*人(?:\s*·\s*匹配中\s*(\d+)\s*人)?$/, (m0, p, w) => `${p} in matches` + (w ? ` · ${w} queuing` : '')],
     [/^(.+?)\s*人在线$/, (m0, n) => `${n} online`],
     [/^(\d+\.\d+\s*[–-]\s*\d+\.\d+)\s*·\s*剩余\s*(.+)$/, (m0, span, left) => `${span} · ${EN_DUR(left)} left`],
     [/^剩余\s*(\d.*)$/, (m0, left) => `${EN_DUR(left)} left`],

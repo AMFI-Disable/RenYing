@@ -738,17 +738,20 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Home page live online count display updates correctly',
+    name: 'Home page online count: total / in-match from the server, "unknown" when the server is unreachable',
     fn: `(() => {
-      refreshOnline();
-      const el = document.getElementById('homeOnlineCount');
-      if (!el || !el.textContent || !el.textContent.includes('人在线')) {
-        return { pass: false, error: 'homeOnlineCount element missing or not populated' };
-      }
-      const cardEl = document.getElementById('homeOnlineCardNum');
-      if (!cardEl || !cardEl.textContent || !cardEl.textContent.includes('位侠士在线')) {
-        return { pass: false, error: 'homeOnlineCardNum element missing or not populated' };
-      }
+      const txt = id => (document.getElementById(id) || {}).textContent || '';
+      const keep = { srv: PRES.srv, at: PRES.at, fail: PRES.fail };
+      PRES.srv = null; refreshOnline();
+      if (!txt('homeOnlineCount').includes('未知') || !txt('homeOnlineCardNum').includes('未知')) return { pass: false, error: 'no server data should read 未知, got ' + txt('homeOnlineCount') };
+      PRES.srv = { online: 7, playing: 2, waiting: 1 }; PRES.at = Date.now(); PRES.fail = 0; refreshOnline();
+      if (txt('homeOnlineCount') !== '全服 7 人在线' || txt('homeOnlineCardNum') !== '7 位侠士在线') return { pass: false, error: 'total wrong: ' + txt('homeOnlineCount') };
+      if (txt('homeOnlineCardSub') !== '对局中 2 人 · 匹配中 1 人') return { pass: false, error: 'in-match wrong: ' + txt('homeOnlineCardSub') };
+      PRES.fail = 2; refreshOnline();
+      if (!txt('homeOnlineCount').includes('未知')) return { pass: false, error: 'two failed reports should read 未知' };
+      PRES.fail = 0; PRES.at = Date.now() - 130e3; refreshOnline();
+      if (!txt('homeOnlineCount').includes('未知')) return { pass: false, error: 'stale data should read 未知' };
+      Object.assign(PRES, keep); refreshOnline();
       return { pass: true, error: null };
     })()`
   },
