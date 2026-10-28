@@ -9630,7 +9630,7 @@ Object.assign(UI_COPY_EN, {
 "结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。": "Form a seal for 0.2s (standing still, and the target double is visible), then appear at that mist double's spot, using it up. R alone goes to the double nearest the enemy (always ringed); hold ← or → and press R for the nearest one on that side; hold ↓ and press R for the oldest. After arriving you can't attack for 0.15s (you can block), facing the way you traveled. No invincibility: get hit during the seal and it fails.",
 "破影": "Shattered",
 "万影归一": "Myriad Mists",
-"场上每个雾身同时朝对手斩出一道刀光（每道 34 伤害），然后全部散掉；本体最后瞬移到对手身前补一刀（45 伤害，挑空）。雾身越多刀越多，最多三刀。没有雾身时只有本体那一刀。全程没有无敌，可以被格挡。": "Every mist double on the field slashes a blade light at the enemy at once (34 damage each), then they all fade; finally she blinks in front of the enemy for one more cut (45 damage, launch). More doubles, more cuts, up to three. With no doubles there is only her own cut. No invincibility at any point, and it can be blocked.",
+"场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多三刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。": "Every mist double on the field slashes a blade light at the enemy at once (40 damage each), then they all fade; 0.3 seconds later she blinks in front of the enemy for one more cut (60 damage, launch), and she follows them into the air if they jumped. More doubles, more cuts, up to three. With no doubles there is only her own cut. The blade lights and the cut cannot be blocked, but there is no invincibility at any point: getting hit before the cut or an enemy dodge makes it miss. Landing the cut resets the cooldown of Mist Mark.",
 "先留影再出手：只按 R 渡到离对手最近的雾身，按住 ← / → 再按 R 去那一边，按住 ↓ 去最早的那个。": "Mark first, then strike: R alone crosses to the double nearest the enemy, hold ← / → and press R for that side, hold ↓ for the oldest one.",
 "最多 2 个雾身，碰到就碎 · 只有一段跳(815血)": "Up to 2 mist doubles, shatter on touch · single jump (815 HP)",
 "R 加方向选雾身：← → 选那一边，↓ 选最早留下的": "R plus a direction picks the double: ← → for that side, ↓ for the oldest",
@@ -11779,26 +11779,27 @@ addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.
 }
 if (f.t >= 1.15) endSpecial(f);
 } },
-mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 34 伤害），然后全部散掉；本体最后瞬移到对手身前补一刀（45 伤害，挑空）。雾身越多刀越多，最多三刀。没有雾身时只有本体那一刀。全程没有无敌，可以被格挡。',
+mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多三刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
 begin(f, foe) {
 f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
 for (const c of (f.clones || []).slice()) {
 const d = foe.x >= c.x ? 1 : -1;
-spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 34, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unbreakable: true });   // 刀光先到，本体后到
+spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 40, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 刀光先到，本体后到
 if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
 }
 clearClones(f);
 SFX.swing();
 },
 update(f, foe) {
-if (f.spN === 0 && f.t >= 0.45) {
+if (f.spN === 0 && f.t >= 0.3) {
 f.spN = 1;
 const side = foe.x >= f.x ? 1 : -1;
 if (!RESIM) smoke(f.x, f.y - 50, 10);
-f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.vy = 0; mapPutOn(f, foe.plat); f.face = side;   // 对手站在平台上就落到那个平台
+f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.vy = 0; f.face = side;
+if (foe.onGround()) mapPutOn(f, foe.plat); else { f.y = foe.y; f.plat = -1; }   // 对手站在平台上就落到那个平台；跳起来了就追到半空，砍完自己落下
 f.snap = true; f.trail.length = 0; f.scarf = [];
 f.spPose = 'l2a'; f.hitDone = false;
-strike(f, foe, { box: [0, -118, 110, 0], dmg: 45, kb: [240, -720], stun: 0.5, hs: 0.12, launch: true, ult: true });
+if (strike(f, foe, { box: [0, -118, 110, 0], dmg: 60, kb: [240, -720], stun: 0.5, hs: 0.12, launch: true, ult: true, unblockable: true, noScale: true })) f.skillCD = 0;   // 补刀砍中：留影冷却清零，马上能再留雾身
 SFX.slice();
 }
 if (f.t >= 0.8) endSpecial(f);

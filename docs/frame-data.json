@@ -1087,7 +1087,7 @@
    "skill2": null,
    "ult": {
     "id": "mistarray",
-    "hit": 45,
+    "hit": 27,
     "total": 88
    }
   }

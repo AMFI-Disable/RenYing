@@ -39,5 +39,5 @@
 | 醉翁 | pavilion -1 / 33 | feast -1 / 127 | shanshui 33 / 226 |
 | 勾陈 | hook 18 / 44 | whirl 18 / 145 | skynet 40 / 148 |
 | 凌雀 | spindle 19 / 35 | shadowdash 10 / 30 | needlestorm 9 / 130 |
-| 离影 | mistmark 15 / 57 | - | mistarray 45 / 88 |
+| 离影 | mistmark 15 / 57 | - | mistarray 27 / 88 |
 | 磁仙 | - | magfield 17 / 46 | sandwich 66 / 130 |
