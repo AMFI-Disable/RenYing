@@ -374,6 +374,8 @@
   }
 
   function notifyAuthChange(user) {
+    srvFlags = null;   // 换了人，开关可能不一样（只开 Dev 的），重新读
+    if (typeof window !== 'undefined' && window.CloudSave) loadFlags();
     authListeners.forEach(fn => {
       try { fn(user); } catch (err) { console.warn('Auth listener error:', err); }
     });
@@ -548,6 +550,28 @@
     if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
     return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
   }
+  // 功能开关：服务器管理后台按功能打开 / 关上（可以只对 Dev 账号开）。开局、登录、退出时读一次；
+  // 读不到（断网、老版本服务器）就用上次读到的；从来没读到过就全当关着，和没有这个开关时一模一样
+  const FLAG_CACHE_KEY = 'renying-srvflags';
+  let srvFlags = null;
+  function flagCache() {
+    if (srvFlags) return srvFlags;
+    try { const o = JSON.parse(localStorage.getItem(FLAG_CACHE_KEY) || 'null'); const u = getUser(); if (o && o.flags && o.uid === ((u && u.uid) || '')) srvFlags = o.flags; } catch (e) {}
+    return srvFlags || {};
+  }
+  async function loadFlags() {
+    const u = getUser(), uid = (u && u.uid) || '';
+    try {
+      const r = await api('/api/flags', { method: 'GET' });
+      if (r && r.flags && typeof r.flags === 'object') {
+        srvFlags = r.flags;
+        try { localStorage.setItem(FLAG_CACHE_KEY, JSON.stringify({ uid, flags: r.flags })); } catch (e) {}
+      }
+    } catch (e) {}
+    return flagCache();
+  }
+  function flag(k) { return flagCache()[k] === true; }
+
   // 排行榜（不用登录）：k 是 rank（段位榜，s 是赛季）或 wins（战绩榜）
   async function leaderboard(k, season) {
     return api('/api/leaderboard?k=' + encodeURIComponent(k) + (season ? '&s=' + encodeURIComponent(season) : ''), { method: 'GET' });
@@ -1170,6 +1194,7 @@
     migrateLegacyCache();
     dropDevSession();
     getUser();
+    loadFlags();
   }
   // 以前的 Dev 有特殊处理：登录时塞满全角色、全皮肤、一百万墨锭，离线时还会降成本机的 dev_master 号，兑换码也能把任何号变成它。
   // 现在 Dev 和别人一样：本机的 dev_master 登录状态退出（它的本机存档留着不删），云端 Dev 去掉旧的标记、照常登录
@@ -1208,6 +1233,8 @@
       importAccountData,
       leaderboard,
       onProgress,
+      loadFlags,
+      flag,
       computeProfileDigest,
       verifyProfileDigest,
       toCloudData,

@@ -159,3 +159,13 @@ CREATE TABLE IF NOT EXISTS presence (
     seen INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_presence_seen ON presence (seen);
+
+-- 功能开关：只存在管理后台改过的；能有哪些开关、默认是什么看 cloudflare/worker.js 的 FLAGS。
+-- mode：off 关，dev 只开 Dev 账号，all 所有人
+CREATE TABLE IF NOT EXISTS flags (
+    k TEXT PRIMARY KEY,
+    mode TEXT NOT NULL CHECK (mode IN ('off', 'dev', 'all')),
+    by TEXT NOT NULL,
+    note TEXT NOT NULL,
+    at INTEGER NOT NULL
+);

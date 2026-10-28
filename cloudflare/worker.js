@@ -142,6 +142,8 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS idx_gboss_try_done ON gboss_try (done, started)`,
   // 侠客列传的江湖足迹：node 是 n1 ~ n5（走完第几节）、c3（第 3 节的抉择）、end（结局），pick 是选了什么
   `CREATE TABLE IF NOT EXISTS saga_mark (hero TEXT NOT NULL, node TEXT NOT NULL, uid TEXT NOT NULL, pick TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (hero, node, uid))`,
+  // 功能开关：mode 是 off（关）、dev（只对 Dev 账号开）、all（所有人开）；没有这一行就用代码里 FLAGS 写的默认值
+  `CREATE TABLE IF NOT EXISTS flags (k TEXT PRIMARY KEY, mode TEXT NOT NULL CHECK (mode IN ('off', 'dev', 'all')), by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
 ];
 let schemaReady = null;
 function ensureSchema(env) {
@@ -407,6 +409,34 @@ async function cfgNow(env, now) {
   const c = r ? C.cleanCfg(parseObj(r.json) || {}) : { cfg: {} };
   CFG_CACHE = { at: now, id: r ? r.id : 0, cfg: c.cfg || {} };
   return CFG_CACHE.cfg;
+}
+
+/* ---------- 功能开关 ----------
+ * 大改动先做成开关，管理后台（/admin 的「功能开关」）按功能打开或关上，可以先只对 Dev 账号开，有问题一键关回去。
+ * 不做按百分比放量。登记表在下面 FLAGS：[默认值, 说明, 网页要不要知道]。网页开局读 GET /api/flags，只拿得到“网页要知道”的那些。
+ * 数据库里只存改过的；每个 Worker 实例最多 30 秒重读一次。 */
+export const FLAGS = {};
+const FLAG_MODES = ['off', 'dev', 'all'];
+let FLAG_CACHE = { db: null, at: 0, rows: {} };
+async function flagRows(env, now) {
+  const c = FLAG_CACHE;
+  if (c.db === env.DB && c.at && now - c.at < 30e3 && now >= c.at) return c.rows;
+  const rows = {};
+  for (const r of (await env.DB.prepare('SELECT k, mode, by, note, at FROM flags').all()).results || []) rows[r.k] = r;
+  FLAG_CACHE = { db: env.DB, at: now, rows };
+  return rows;
+}
+const isDevUser = user => !!user && String(user.username || '').toLowerCase() === 'dev';
+function flagMode(rows, k) { const r = rows[k]; return r && FLAG_MODES.includes(r.mode) ? r.mode : (FLAGS[k] ? FLAGS[k][0] : 'off'); }
+// 这个开关对这个人开没开（user 可以是空：游客）
+async function flagOn(env, k, user, now) {
+  const m = flagMode(await flagRows(env, now), k);
+  return m === 'all' || (m === 'dev' && isDevUser(user));
+}
+async function flagsFor(env, user, now) {
+  const rows = await flagRows(env, now), out = {};
+  for (const [k, [, , client]] of Object.entries(FLAGS)) if (client) { const m = flagMode(rows, k); out[k] = m === 'all' || (m === 'dev' && isDevUser(user)); }
+  return out;
 }
 
 /* ---------- 全服补偿：开发组发的墨锭、武器箱、终端机、改名标签，玩家下次动武库时自动领 ---------- */
@@ -953,7 +983,7 @@ async function handleAdmin(env, request, path, now, ip) {
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
   if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么）
-    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg') ORDER BY l.id DESC LIMIT 100").all();
+    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag') ORDER BY l.id DESC LIMIT 100").all();
     return json({ ok: true, rows: rows.results || [] });
   }
   if (route === 'POST /api/admin/adjust') {
@@ -1065,6 +1095,21 @@ async function handleAdmin(env, request, path, now, ip) {
   if (route === 'GET /api/admin/cfg') {   // 现在的经济数值、每一项的范围和说明、最近改过的 30 版
     const cur = await cfgRow(env), hist = await env.DB.prepare('SELECT id, json, by, note, at FROM cfg ORDER BY id DESC LIMIT 30').all();
     return json({ ok: true, id: cur ? cur.id : 0, cfg: cur ? cur.cfg : {}, info: C.CFG_INFO, hist: (hist.results || []).map(r => ({ id: r.id, by: r.by, note: r.note, at: r.at, cfg: parseObj(r.json) || {} })) });
+  }
+  if (route === 'GET /api/admin/flags') {   // 所有登记过的开关：现在是什么、默认是什么、谁什么时候改的
+    const rows = await flagRows(env, 0);
+    return json({ ok: true, flags: Object.entries(FLAGS).map(([k, [def, desc, client]]) => ({ k, mode: flagMode(rows, k), def, desc, client: !!client, by: rows[k] ? rows[k].by : '', note: rows[k] ? rows[k].note : '', at: rows[k] ? rows[k].at : 0 })) });
+  }
+  if (route === 'POST /api/admin/flags') {   // k 是开关名，mode 是 off / dev / all
+    const w = needWhy(); if (w) return w;
+    const k = String(body.k || ''), mode = String(body.mode || '');
+    if (!FLAGS[k]) return error('没有这个开关');
+    if (!FLAG_MODES.includes(mode)) return error('mode 要是 off（关）、dev（只开 Dev 账号）或 all（所有人）');
+    const before = flagMode(await flagRows(env, 0), k);
+    await env.DB.prepare('INSERT INTO flags (k, mode, by, note, at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(k) DO UPDATE SET mode = ?2, by = ?3, note = ?4, at = ?5').bind(k, mode, who, why, now).run();
+    FLAG_CACHE = { db: null, at: 0, rows: {} };
+    await logRow(env, '*', now, 'flag', 1, null, null, JSON.stringify({ by: who, why, k, from: before, to: mode }));
+    return json({ ok: true, k, mode });
   }
   if (route === 'POST /api/admin/cfg') {   // set 里写要改的项；填 null 回到默认值
     const w = needWhy(); if (w) return w;
@@ -2010,6 +2055,13 @@ export default {
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
         return await sagaMarkPost(env, auth, body, now);
+      }
+
+      // 14. 功能开关（不用登录；带登录凭证时 Dev 账号能看到“只开 Dev”的）
+      if (path === '/api/flags' && request.method === 'GET') {
+        if (!(await hit(env, 'flg:' + ip, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        const auth = await authenticate(env, request);
+        return json({ ok: true, flags: await flagsFor(env, auth && auth.user, now) });
       }
 
       // 13. 排行榜（不用登录）：段位榜是这个赛季打满定级赛的，按段位分排；战绩榜按联机胜场排。被封的号不上榜

@@ -247,6 +247,7 @@
     <button role="tab" data-act="tab" data-tab="gifts">补偿</button>
     <button role="tab" data-act="tab" data-tab="codes">兑换码</button>
     <button role="tab" data-act="tab" data-tab="cfg">经济数值</button>
+    <button role="tab" data-act="tab" data-tab="flags">功能开关</button>
     <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
   </div></nav>
   <main id="main"></main>
@@ -292,7 +293,7 @@ const parse = t => { try { const o = JSON.parse(t); return o && typeof o === 'ob
 
 /* ---------- 口令、请求 ---------- */
 const KEY = 'renying-admin';
-const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, seq: 0 };
+const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, flags: [], seq: 0 };
 const saveTok = t => { try { if (t) sessionStorage.setItem(KEY, t); else sessionStorage.removeItem(KEY); } catch (e) {} };
 const loadTok = () => { try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
 
@@ -334,8 +335,9 @@ const ACT = {
   star: '星章兑换', collect: '集齐奖励', matchEnd: '对局结束', matchStart: '开局', sync: '同步', gift: '新手礼',
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
   admin: '管理员调整', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
-  claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码',
+  claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码', flag: '改功能开关',
 };
+const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
 
 /* ---------- 流水里的详情写成人话 ---------- */
 function stuff(d) {   // 墨锭、武器箱、终端机、改名标签（调整、补偿共用）
@@ -375,6 +377,7 @@ function detailText(act, raw, withWho) {
   if (act === 'code_got') return d.code + '（' + (d.note || '') + '）：' + stuff(d).join('，');
   if (act === 'cfg') return who + (d.undo !== undefined ? (d.undo ? '退回到第 ' + d.undo + ' 版' : '全部回到默认值') + '（存成第 ' + d.id + ' 版）'
     : '第 ' + d.id + ' 版：' + Object.entries(d.set || {}).map(([k, v]) => cfgName(k) + (v === null ? ' 回到默认' : ' → ' + v)).join('，'));
+  if (act === 'flag') return who + d.k + '：' + (FLAG_MODE[d.from] || d.from) + ' → ' + (FLAG_MODE[d.to] || d.to);
   // 玩家自己的操作：{ a: 参数, r: 结果, s: 这次结了几单 }
   const parts = [];
   if (d.r !== undefined && d.r !== '') parts.push(typeof d.r === 'number' ? fmtN(d.r) : itemRef(d.r));
@@ -721,7 +724,22 @@ async function vAudit() {
 }
 
 /* ---------- 换页 ---------- */
-const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, audit: vAudit };
+/* ---------- 功能开关 ---------- */
+async function vFlags() {
+  const r = await api('flags');
+  S.flags = r.flags;
+  return H`<div class="card"><h2>功能开关</h2>
+    <p class="hint">大改动先做成开关：可以先只对 Dev 账号打开试，没问题再对所有人开，出了问题一键关回去。改完 30 秒内各处生效；网页那边的开关要玩家刷新网页才换。</p>
+    ${r.flags.length ? H`<div class="tw"><table><thead><tr><th>开关</th><th>说明</th><th>现在</th><th>默认</th><th>最后改动</th><th></th></tr></thead><tbody>
+      ${r.flags.map(f => H`<tr><td class="mono nowrap">${f.k}${f.client ? H` <span class="badge">网页</span>` : ''}</td><td class="mw">${f.desc}</td>
+        <td class="nowrap"><span class="badge${f.mode === 'all' ? ' ok' : f.mode === 'dev' ? ' gold' : ''}">${FLAG_MODE[f.mode]}</span></td><td class="nowrap">${FLAG_MODE[f.def]}</td>
+        <td class="mw">${f.at ? H`${f.by} · ${fmtT(f.at)}<br><small>${f.note}</small>` : '没改过'}</td>
+        <td class="nowrap">${['off', 'dev', 'all'].filter(m => m !== f.mode).map(m => H`<button class="btn ghost sm" data-act="flagset" data-k="${f.k}" data-mode="${m}">改成${FLAG_MODE[m]}…</button> `)}</td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">现在没有登记的开关</p>`}
+  </div>`;
+}
+
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, audit: vAudit };
 const AFTER = { players: drawGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 async function render() {
   const main = $('#main'), seq = ++S.seq, tab = S.tab;
@@ -797,6 +815,12 @@ const ACTS = {
     if (!row) return;
     f.elements[row[0]].value = row[1];
     cfgLive(f);
+  },
+  flagset: async b => {
+    const f = S.flags.find(x => x.k === b.dataset.k), mode = b.dataset.mode;
+    if (!f) return;
+    const a = await ask({ title: '改功能开关 ' + f.k, lines: [f.desc, FLAG_MODE[f.mode] + ' → ' + FLAG_MODE[mode]], ok: '改', danger: mode === 'all' });
+    if (a) await busy(b, async () => { await api('flags', { k: f.k, mode, why: a.why }); toast('改好了'); render(); });
   },
   cfgundo: async b => {
     const to = +b.dataset.to, h = S.cfg.hist.find(x => x.id === to);

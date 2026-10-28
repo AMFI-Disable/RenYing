@@ -16,7 +16,7 @@ const realNow = Date.now;
 Date.now = () => T;
 
 const FILE = process.argv.includes('--bundle') ? 'cloudflare/worker.bundle.js' : 'cloudflare/worker.js';
-const { default: worker, WorldLine } = await import(new URL(FILE, ROOT));
+const { default: worker, WorldLine, FLAGS } = await import(new URL(FILE, ROOT));
 const C = globalThis.ArmoryCore;
 
 /* ---------- 用 node:sqlite 模拟 D1（接口和 Cloudflare 的一样：prepare/bind/first/all/run/batch） ---------- */
@@ -1342,6 +1342,41 @@ section('排行榜：段位榜只列本赛季打满定级赛的，战绩榜按�
   ok(lim.status === 429, '同一个 IP 一分钟最多看 30 次');
   const g = await Promise.all(['guest', 'GUEST', '游客'].map((n, i) => call('POST', '/api/register', { username: n, password: 'secret123' }, undefined, '8.8.2.' + i)));
   ok(g.every(r => r.status === 400 && r.error === '这个昵称不能用，换一个吧'), 'guest、游客不能注册（没登录时的进度记在这个名字下）', g.map(r => r.error));
+}
+
+section('功能开关：管理后台按功能开关，可以只开 Dev 账号；网页只看得到它该知道的');
+{
+  FLAGS['test.page'] = ['off', '测试用：网页的开关', true];
+  FLAGS['test.srv'] = ['all', '测试用：只有服务器知道的开关', false];
+  const pub = (tok, ip = '8.8.3.1') => call('GET', '/api/flags', undefined, tok, ip);
+  const a0 = await pub();
+  ok(a0.ok && a0.flags['test.page'] === false && !('test.srv' in a0.flags), '没登录：拿到默认值，只看得到网页要知道的', a0.flags);
+  const ls = await adm('GET', '/api/admin/flags');
+  const tp = (ls.flags || []).find(f => f.k === 'test.page');
+  ok(ls.ok && tp && tp.mode === 'off' && tp.def === 'off' && tp.client && (ls.flags || []).some(f => f.k === 'test.srv' && !f.client), '管理后台列出所有开关和默认值', ls.flags);
+  ok((await adm('POST', '/api/admin/flags', { k: 'test.page', mode: 'dev' })).status === 400, '不写为什么不让改');
+  ok((await adm('POST', '/api/admin/flags', { k: 'nope', mode: 'all', why: '测试' })).status === 400 && (await adm('POST', '/api/admin/flags', { k: 'test.page', mode: 'half', why: '测试' })).status === 400, '没有的开关、乱填的 mode 都不收');
+  ok((await adm('POST', '/api/admin/flags', { k: 'test.page', mode: 'all', why: '测试' }, 'wrong-token-000000000', '8.8.3.9')).status === 403, '口令不对：403');
+  ok((await pub(undefined, '8.8.3.2')).flags['test.page'] === false, '被拒的请求什么都没改');
+  const d = await adm('POST', '/api/admin/flags', { k: 'test.page', mode: 'dev', why: '先给 Dev 试' });
+  ok(d.ok && d.mode === 'dev', '改成只开 Dev 账号');
+  const dev = await call('POST', '/api/login', { username: 'Dev', password: 'dev-pass-new-9876543210' }, undefined, '8.8.3.3');
+  const other = await newUser('flagUser');
+  ok(dev.ok && (await pub(dev.token, '8.8.3.4')).flags['test.page'] === true, 'Dev 账号：开了');
+  ok((await pub(other.token, '8.8.3.5')).flags['test.page'] === false && (await pub(undefined, '8.8.3.6')).flags['test.page'] === false, '别的玩家、没登录的：还关着');
+  await adm('POST', '/api/admin/flags', { k: 'test.page', mode: 'all', why: '全开' });
+  ok((await pub(other.token, '8.8.3.7')).flags['test.page'] === true && (await pub(undefined, '8.8.3.8')).flags['test.page'] === true, '改成所有人：马上所有人都开了');
+  const au = await adm('GET', '/api/admin/audit');
+  const lr = (au.rows || au.list || []).find(r => r.act === 'flag');
+  const det = lr ? (typeof lr.detail === 'string' ? JSON.parse(lr.detail) : lr.detail) : null;
+  ok(det && det.k === 'test.page' && det.from === 'dev' && det.to === 'all' && det.why === '全开', '操作记录里有谁、为什么、从什么改成什么', lr);
+  await adm('POST', '/api/admin/flags', { k: 'test.page', mode: 'off', why: '关回去' });
+  ok((await pub(dev.token, '8.8.3.10')).flags['test.page'] === false, '一键关回去：Dev 也关了');
+  let lim = null;
+  for (let i = 0; i < 61; i++) lim = await pub(undefined, '8.8.3.20');
+  ok(lim.status === 429, '同一个 IP 一分钟最多问 60 次');
+  delete FLAGS['test.page']; delete FLAGS['test.srv'];
+  ENV.DB.raw.prepare("DELETE FROM flags WHERE k LIKE 'test.%'").run();
 }
 
 section('管理后台的查询：总览、找号、操作记录、饰品目录');

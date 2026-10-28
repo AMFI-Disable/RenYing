@@ -63,6 +63,10 @@ function makeWorker() {
       return json({ profile: rec[1].profile, ledger: { ink: (rec[1].profile || {}).ink || 0, ver: 1, acks: [] } });
     }
     if (route === '/api/logout') return json({ ok: true });
+    if (route === '/api/flags') {
+      if (state.flagsDown) return json({ error: '服务器内部错误' }, 500);
+      return json({ ok: true, flags: { 'x.page': uidOf(auth) === 'u0' } });   // 只对 u0 开，看缓存是不是按账号分开
+    }
     return json({ error: 'not found' }, 404);
   }
   return { fetch, posts, state, users };
@@ -275,6 +279,21 @@ console.log('\nthe old shared cache is not thrown away while nobody is signed in
 store.set('renying-cloud-cache', JSON.stringify({ ink: 1 }));
 CloudSave.init();
 ok(store.get('renying-cloud-cache') !== undefined, 'signed out: the legacy cache is kept');
+
+console.log('\nfeature flags from the server');
+await CloudSave.logout();
+await sleep(20);
+ok(CloudSave.flag('x.page') === false && CloudSave.flag('nope') === false, 'signed out: flags are off');
+await CloudSave.login('Alice', 'alicepass1');
+await sleep(30);
+ok(CloudSave.getUser().uid === 'u0' && CloudSave.flag('x.page') === true, 'signing in reloads the flags for that account');
+worker.state.flagsDown = true;
+await CloudSave.loadFlags();
+ok(CloudSave.flag('x.page') === true, 'a failed refresh keeps the last known flags');
+await CloudSave.logout();
+await sleep(30);
+ok(CloudSave.flag('x.page') === false, 'another account (signed out) does not inherit them from the cache');
+worker.state.flagsDown = false;
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
