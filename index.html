@@ -4320,17 +4320,92 @@ if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomVal
 else for (let i = 0; i < buf.length; i++) buf[i] = Math.floor(Math.random() * 256);
 return Array.from(buf, b => PW_ALPHABET[b % PW_ALPHABET.length]).join('');
 }
+const TOKEN_KEY = 'renying-cloud-token', REFRESH_KEY = 'renying-cloud-refresh', EXP_KEY = 'renying-cloud-exp';
 function getToken() {
 try {
-return localStorage.getItem('renying-cloud-token') || (currentUser && currentUser.token) || '';
+return localStorage.getItem(TOKEN_KEY) || (currentUser && currentUser.token) || '';
 } catch (e) {
 return '';
 }
 }
+function getRefresh() {
+try { return localStorage.getItem(REFRESH_KEY) || ''; } catch (e) { return ''; }
+}
 function setToken(tok) {
 try {
-if (tok) localStorage.setItem('renying-cloud-token', tok);
-else localStorage.removeItem('renying-cloud-token');
+if (tok) localStorage.setItem(TOKEN_KEY, tok);
+else { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(REFRESH_KEY); localStorage.removeItem(EXP_KEY); }
+} catch (e) {}
+if (currentUser) currentUser.token = tok || '';
+if (!tok && refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+}
+function setSession(data) {
+setToken(data.token);
+try {
+if (data.refresh) {
+localStorage.setItem(REFRESH_KEY, data.refresh);
+localStorage.setItem(EXP_KEY, String(Date.now() + (+data.expiresIn || 1800) * 1000));
+} else { localStorage.removeItem(REFRESH_KEY); localStorage.removeItem(EXP_KEY); }
+} catch (e) {}
+scheduleRefresh();
+}
+let refreshTimer = null, refreshing = null;
+function tokenExp() {
+try { return +localStorage.getItem(EXP_KEY) || 0; } catch (e) { return 0; }
+}
+function tokenFresh() {
+return !getRefresh() || tokenExp() - Date.now() > 60e3;
+}
+function scheduleRefresh() {
+if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+if (!getRefresh()) return;
+const wait = Math.min(Math.max(5e3, tokenExp() - Date.now() - 2 * 60e3), 2147483647);
+refreshTimer = setTimeout(() => { refreshTimer = null; refreshNow(false).then(ok => { if (ok) scheduleRefresh(); }); }, wait);
+if (refreshTimer && refreshTimer.unref) refreshTimer.unref();
+}
+function refreshNow(force, used) {
+if (refreshing) return refreshing;
+const run = async () => {
+const r0 = getRefresh(), u = getUser();
+if (!r0 || !u || !hasValidConfig()) return false;
+if (force ? getToken() !== used : tokenFresh()) return true;   // 别的标签页已经换好了
+const post = async insist => {
+const res = await fetch(getEndpoint() + '/api/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(insist ? { refresh: r0, insist: true } : { refresh: r0 }) });
+return { status: res.status, data: await res.json().catch(() => ({})) };
+};
+let r;
+try {
+r = await post(false);
+if (r.status === 409) {
+for (let i = 0; i < 6 && getRefresh() === r0; i++) await new Promise(ok => setTimeout(ok, 250));
+if (getRefresh() !== r0) return !!getRefresh();
+r = await post(true);
+}
+} catch (e) { return false; }   // 断网：留着，下次再换
+if (!getUser() || getUser().uid !== u.uid || getRefresh() !== r0) return false;   // 换的期间退出、换号了
+if (r.status === 200 && r.data.token) { setSession(r.data); return true; }
+if (r.status === 401) authLost(r.data.error);
+return false;
+};
+const go = (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) ? navigator.locks.request('renying-refresh', run) : run();
+refreshing = Promise.resolve(go).catch(() => false).finally(() => { refreshing = null; });
+return refreshing;
+}
+function authLost(msg) {
+try { localStorage.removeItem(REFRESH_KEY); localStorage.removeItem(EXP_KEY); } catch (e) {}
+if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+setSync({ state: 'expired', err: (msg || '登录已过期') + '，重新登录后会自动补传存档' });
+}
+let upgraded = false;
+async function upgradeLegacy() {
+if (upgraded) return;
+upgraded = true;
+const u = getUser(), tok = getToken();
+if (!u || !u.isCloud || !tok || getRefresh() || !hasValidConfig()) return;
+try {
+const res = await fetch(getEndpoint() + '/api/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` }, body: '{}' });
+const data = await res.json().catch(() => ({}));
+if (res.ok && data.token && data.refresh && getUser() && getUser().uid === u.uid && getToken() === tok) setSession(data);
 } catch (e) {}
 }
 function cloudActive() {
@@ -4489,9 +4564,11 @@ merged.armory = newer.armory || older.armory;
 }
 return merged;
 }
-async function api(path, options = {}) {
+async function api(path, options = {}, retried) {
 const base = getEndpoint();
 const url = base + path;
+const authed = !/^\/api\/(login|register|refresh)$/.test(path);
+if (authed && !options.keepalive && !tokenFresh()) await refreshNow(false);
 const token = getToken();
 const headers = {
 'Content-Type': 'application/json',
@@ -4500,6 +4577,7 @@ const headers = {
 };
 const res = await fetch(url, { ...options, headers });
 const data = await res.json().catch(() => ({}));
+if (res.status === 401 && authed && token && !retried && !options.keepalive && getRefresh() && await refreshNow(true, token)) return api(path, options, true);
 if (!res.ok) {
 const err = new Error(data.error || `请求失败 (${res.status})`);
 err.status = res.status;
@@ -4512,12 +4590,15 @@ async function econ(act, args) {
 const u = getUser();
 if (!cloudActive() || !u) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
 const nonce = rhex(16);
+let renewed = false;
 for (let i = 0; i < 3; i++) {
 let res = null, data = {};
+if (!tokenFresh()) await refreshNow(false);
+const tok = getToken();
 try {
 res = await fetch(getEndpoint() + '/api/econ', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
 body: JSON.stringify({ act, args: args || {}, nonce })
 });
 data = await res.json().catch(() => ({}));
@@ -4526,6 +4607,7 @@ await new Promise(r => setTimeout(r, 500 * (i + 1)));
 continue;
 }
 if (!getUser() || getUser().uid !== u.uid) { const e = new Error('账号已切换'); e.status = 409; throw e; }
+if (res.status === 401 && !renewed && getRefresh()) { renewed = true; if (await refreshNow(true, tok)) { i--; continue; } }
 if (!res.ok) { const e = new Error(data.error || `请求失败 (${res.status})`); e.status = res.status; if (data.ban) e.ban = data.ban; throw e; }
 return data;
 }
@@ -4660,10 +4742,11 @@ method: 'POST',
 body: JSON.stringify({
 username: name,
 password: password,
-profile: initialProf ? toCloudData(initialProf) : null
+profile: initialProf ? toCloudData(initialProf) : null,
+rt: 1
 })
 });
-setToken(data.token);
+setSession(data);
 const userObj = {
 uid: data.uid,
 name: data.username,
@@ -4712,9 +4795,9 @@ if (!password) throw new Error('请输入密码');
 try {
 const data = await api('/api/login', {
 method: 'POST',
-body: JSON.stringify({ username: name, password: password })
+body: JSON.stringify({ username: name, password: password, rt: 1 })
 });
-setToken(data.token);
+setSession(data);
 const userObj = {
 uid: data.uid,
 name: data.username,
@@ -4755,10 +4838,11 @@ method: 'POST',
 body: JSON.stringify({
 username: name,
 password: password,
-profile: localProf ? toCloudData(localProf) : null
+profile: localProf ? toCloudData(localProf) : null,
+rt: 1
 })
 });
-setToken(data.token);
+setSession(data);
 const userObj = {
 uid: data.uid,
 name: data.username,
@@ -4806,7 +4890,7 @@ return {
 uid: currentUser.uid,
 name: currentUser.displayName || currentUser.name || '大侠',
 isCloud: !!(currentUser.isCloud && currentUser.token),
-token: currentUser.token || getToken()
+token: getToken() || currentUser.token
 };
 }
 try {
@@ -5085,6 +5169,8 @@ migrateLegacyCache();
 dropDevSession();
 getUser();
 loadFlags();
+scheduleRefresh();
+upgradeLegacy();
 }
 function dropDevSession() {
 try {

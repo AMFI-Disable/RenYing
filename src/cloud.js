@@ -298,18 +298,103 @@
     return Array.from(buf, b => PW_ALPHABET[b % PW_ALPHABET.length]).join('');
   }
 
+  // 登录凭证：token 每个请求都带。新服务器发的只管 30 分钟，refresh 用来换新的，exp 是 token 什么时候过期（本机时间）。
+  // 老服务器、开关没开时只有 30 天的老式 token，没有 refresh
+  const TOKEN_KEY = 'renying-cloud-token', REFRESH_KEY = 'renying-cloud-refresh', EXP_KEY = 'renying-cloud-exp';
   function getToken() {
     try {
-      return localStorage.getItem('renying-cloud-token') || (currentUser && currentUser.token) || '';
+      return localStorage.getItem(TOKEN_KEY) || (currentUser && currentUser.token) || '';
     } catch (e) {
       return '';
     }
   }
+  function getRefresh() {
+    try { return localStorage.getItem(REFRESH_KEY) || ''; } catch (e) { return ''; }
+  }
 
   function setToken(tok) {
     try {
-      if (tok) localStorage.setItem('renying-cloud-token', tok);
-      else localStorage.removeItem('renying-cloud-token');
+      if (tok) localStorage.setItem(TOKEN_KEY, tok);
+      else { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(REFRESH_KEY); localStorage.removeItem(EXP_KEY); }
+    } catch (e) {}
+    if (currentUser) currentUser.token = tok || '';
+    if (!tok && refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+  }
+  // 登录、注册、换新令牌的回包：存好令牌；有 refresh 就记下过期时间，快到点时自己换
+  function setSession(data) {
+    setToken(data.token);
+    try {
+      if (data.refresh) {
+        localStorage.setItem(REFRESH_KEY, data.refresh);
+        localStorage.setItem(EXP_KEY, String(Date.now() + (+data.expiresIn || 1800) * 1000));
+      } else { localStorage.removeItem(REFRESH_KEY); localStorage.removeItem(EXP_KEY); }
+    } catch (e) {}
+    scheduleRefresh();
+  }
+  let refreshTimer = null, refreshing = null;
+  function tokenExp() {
+    try { return +localStorage.getItem(EXP_KEY) || 0; } catch (e) { return 0; }
+  }
+  // token 还能用至少一分钟（老式 token 没有 exp，算一直能用，过期了靠 401 知道）
+  function tokenFresh() {
+    return !getRefresh() || tokenExp() - Date.now() > 60e3;
+  }
+  function scheduleRefresh() {
+    if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+    if (!getRefresh()) return;
+    const wait = Math.min(Math.max(5e3, tokenExp() - Date.now() - 2 * 60e3), 2147483647);
+    refreshTimer = setTimeout(() => { refreshTimer = null; refreshNow(false).then(ok => { if (ok) scheduleRefresh(); }); }, wait);
+    if (refreshTimer && refreshTimer.unref) refreshTimer.unref();
+  }
+  // 用 refresh 换一套新的。force：服务器刚回了 401（used 是那次带的 token）。
+  // 同一个网页同时只换一次；几个标签页抢着换时用 navigator.locks 排队，排到了先看看别的标签页是不是已经换好了。
+  // 返回 true 表示现在手里的 token 能用了
+  function refreshNow(force, used) {
+    if (refreshing) return refreshing;
+    const run = async () => {
+      const r0 = getRefresh(), u = getUser();
+      if (!r0 || !u || !hasValidConfig()) return false;
+      if (force ? getToken() !== used : tokenFresh()) return true;   // 别的标签页已经换好了
+      const post = async insist => {
+        const res = await fetch(getEndpoint() + '/api/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(insist ? { refresh: r0, insist: true } : { refresh: r0 }) });
+        return { status: res.status, data: await res.json().catch(() => ({})) };
+      };
+      let r;
+      try {
+        r = await post(false);
+        // 409：上一个刚被换掉。多半是另一个标签页换的，它会把新的写进 localStorage；等一下还没有，就说明是被别人换的
+        if (r.status === 409) {
+          for (let i = 0; i < 6 && getRefresh() === r0; i++) await new Promise(ok => setTimeout(ok, 250));
+          if (getRefresh() !== r0) return !!getRefresh();
+          r = await post(true);
+        }
+      } catch (e) { return false; }   // 断网：留着，下次再换
+      if (!getUser() || getUser().uid !== u.uid || getRefresh() !== r0) return false;   // 换的期间退出、换号了
+      if (r.status === 200 && r.data.token) { setSession(r.data); return true; }
+      if (r.status === 401) authLost(r.data.error);
+      return false;
+    };
+    const go = (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) ? navigator.locks.request('renying-refresh', run) : run();
+    refreshing = Promise.resolve(go).catch(() => false).finally(() => { refreshing = null; });
+    return refreshing;
+  }
+  // 登录失效（refresh 也换不到了）：本机存档和待上传的都留着，重新登录后补传
+  function authLost(msg) {
+    try { localStorage.removeItem(REFRESH_KEY); localStorage.removeItem(EXP_KEY); } catch (e) {}
+    if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+    setSync({ state: 'expired', err: (msg || '登录已过期') + '，重新登录后会自动补传存档' });
+  }
+  // 以前登录拿到的老式 30 天 token：换成新的一套（服务器没开这个功能、老服务器就算了，照旧用）
+  let upgraded = false;
+  async function upgradeLegacy() {
+    if (upgraded) return;
+    upgraded = true;
+    const u = getUser(), tok = getToken();
+    if (!u || !u.isCloud || !tok || getRefresh() || !hasValidConfig()) return;
+    try {
+      const res = await fetch(getEndpoint() + '/api/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` }, body: '{}' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.token && data.refresh && getUser() && getUser().uid === u.uid && getToken() === tok) setSession(data);
     } catch (e) {}
   }
 
@@ -496,9 +581,12 @@
   }
 
   // 核心 HTTP 异步请求封装
-  async function api(path, options = {}) {
+  async function api(path, options = {}, retried) {
     const base = getEndpoint();
     const url = base + path;
+    const authed = !/^\/api\/(login|register|refresh)$/.test(path);
+    // token 快过期了先换（网页关闭时发的 keepalive 来不及，直接发）
+    if (authed && !options.keepalive && !tokenFresh()) await refreshNow(false);
     const token = getToken();
     const headers = {
       'Content-Type': 'application/json',
@@ -507,6 +595,8 @@
     };
     const res = await fetch(url, { ...options, headers });
     const data = await res.json().catch(() => ({}));
+    // 401：token 过期了。有 refresh 就换一次再试一次
+    if (res.status === 401 && authed && token && !retried && !options.keepalive && getRefresh() && await refreshNow(true, token)) return api(path, options, true);
     if (!res.ok) {
       const err = new Error(data.error || `请求失败 (${res.status})`);
       err.status = res.status;
@@ -521,12 +611,15 @@
     const u = getUser();
     if (!cloudActive() || !u) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
     const nonce = rhex(16);
+    let renewed = false;
     for (let i = 0; i < 3; i++) {
       let res = null, data = {};
+      if (!tokenFresh()) await refreshNow(false);
+      const tok = getToken();
       try {
         res = await fetch(getEndpoint() + '/api/econ', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
           body: JSON.stringify({ act, args: args || {}, nonce })
         });
         data = await res.json().catch(() => ({}));
@@ -535,6 +628,8 @@
         continue;
       }
       if (!getUser() || getUser().uid !== u.uid) { const e = new Error('账号已切换'); e.status = 409; throw e; }
+      // token 过期：换一次再用同一个编号重发（服务器只会执行一次）
+      if (res.status === 401 && !renewed && getRefresh()) { renewed = true; if (await refreshNow(true, tok)) { i--; continue; } }
       if (!res.ok) { const e = new Error(data.error || `请求失败 (${res.status})`); e.status = res.status; if (data.ban) e.ban = data.ban; throw e; }
       return data;
     }
@@ -690,11 +785,12 @@
         body: JSON.stringify({
           username: name,
           password: password,
-          profile: initialProf ? toCloudData(initialProf) : null
+          profile: initialProf ? toCloudData(initialProf) : null,
+          rt: 1
         })
       });
 
-      setToken(data.token);
+      setSession(data);
       const userObj = {
         uid: data.uid,
         name: data.username,
@@ -749,10 +845,10 @@
     try {
       const data = await api('/api/login', {
         method: 'POST',
-        body: JSON.stringify({ username: name, password: password })
+        body: JSON.stringify({ username: name, password: password, rt: 1 })
       });
 
-      setToken(data.token);
+      setSession(data);
       const userObj = {
         uid: data.uid,
         name: data.username,
@@ -800,11 +896,12 @@
             body: JSON.stringify({
               username: name,
               password: password,
-              profile: localProf ? toCloudData(localProf) : null
+              profile: localProf ? toCloudData(localProf) : null,
+              rt: 1
             })
           });
 
-          setToken(data.token);
+          setSession(data);
           const userObj = {
             uid: data.uid,
             name: data.username,
@@ -857,7 +954,7 @@
         uid: currentUser.uid,
         name: currentUser.displayName || currentUser.name || '大侠',
         isCloud: !!(currentUser.isCloud && currentUser.token),
-        token: currentUser.token || getToken()
+        token: getToken() || currentUser.token
       };
     }
     try {
@@ -1195,6 +1292,8 @@
     dropDevSession();
     getUser();
     loadFlags();
+    scheduleRefresh();
+    upgradeLegacy();
   }
   // 以前的 Dev 有特殊处理：登录时塞满全角色、全皮肤、一百万墨锭，离线时还会降成本机的 dev_master 号，兑换码也能把任何号变成它。
   // 现在 Dev 和别人一样：本机的 dev_master 登录状态退出（它的本机存档留着不删），云端 Dev 去掉旧的标记、照常登录

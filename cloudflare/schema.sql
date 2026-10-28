@@ -22,7 +22,30 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_id TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     expires_at INTEGER NOT NULL,
+    dev TEXT NOT NULL DEFAULT '',   -- 属于哪台设备（devices.id）；老式 30 天令牌是空的
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 一台设备（一个浏览器）一行：refresh 是续期令牌的哈希，prev 是上一个（刚换完 1 分钟内拿它来换算两个标签页同时换）
+CREATE TABLE IF NOT EXISTS devices (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    refresh TEXT NOT NULL UNIQUE,
+    prev TEXT NOT NULL DEFAULT '',
+    rotated_at INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    last_seen INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_dev ON sessions(dev);
+-- 换掉的续期令牌（哈希）：再被拿来用就是被偷了
+CREATE TABLE IF NOT EXISTS refresh_used (
+    h TEXT PRIMARY KEY,
+    dev TEXT NOT NULL,
+    at INTEGER NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);

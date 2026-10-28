@@ -1494,6 +1494,66 @@ section('跨域：只放行游戏网页和本机开发；管理接口只给自�
   ok(pg.status === 200 && acao(pg) === null, '管理网页本身不带跨域头');
 }
 
+section('短效令牌 + 续期令牌：30 分钟过期，续期令牌用一次就换；偷来的旧续期令牌一用，整台设备退出');
+{
+  const sha = t => 'h1:' + createHash('sha256').update(t).digest('hex');
+  const rf = (body, tok, ip = '8.8.8.' + Math.floor(Math.random() * 250)) => call('POST', '/api/refresh', body, tok, ip);
+  await newUser('rtUser');
+  const legacy = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123', rt: 1 }, undefined, '8.8.8.1');
+  ok(legacy.ok && legacy.token && !legacy.refresh, '开关默认只开 Dev：别的号还是老式的 30 天令牌（老网页、新网页都一样）', legacy);
+  const dv = await call('POST', '/api/login', { username: 'Dev', password: 'dev-pass-new-9876543210', rt: 1 }, undefined, '8.8.8.2');
+  ok(dv.ok && dv.refresh && dv.expiresIn === 1800 && /^d_[0-9a-f]{16}$/.test(dv.device), 'Dev 号：拿到 30 分钟的令牌和续期令牌', dv);
+  await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'all', why: '测试：所有人开' });
+  const old = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123' }, undefined, '8.8.8.3');
+  ok(old.ok && old.token && !old.refresh && row('SELECT expires_at - created_at AS t FROM sessions WHERE token = ?', sha(old.token)).t === 30 * 86400e3, '开关全开、老网页（不带 rt）登录：还是老式 30 天令牌，老网页不会 30 分钟就掉线');
+  const a = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123', rt: 1 }, undefined, '8.8.8.4');
+  ok(a.ok && a.refresh && row('SELECT expires_at - created_at AS t FROM sessions WHERE token = ?', sha(a.token)).t === 1800e3, '新网页登录：令牌 30 分钟过期');
+  ok(!row('SELECT 1 AS x FROM devices WHERE refresh = ?', a.refresh) && row('SELECT id FROM devices WHERE refresh = ?', sha(a.refresh)).id === a.device, '续期令牌在库里也只存哈希');
+  ok((await call('GET', '/api/profile', undefined, a.token)).ok, '令牌能用');
+  T += 31 * 60e3;
+  ok((await call('GET', '/api/profile', undefined, a.token)).status === 401, '31 分钟后：令牌过期');
+  const b = await rf({ refresh: a.refresh });
+  ok(b.ok && b.token && b.refresh && b.refresh !== a.refresh && b.device === a.device, '用续期令牌换到新的一套', b);
+  ok((await call('GET', '/api/profile', undefined, b.token)).ok, '新令牌能用');
+  const race = await rf({ refresh: a.refresh });
+  ok(race.status === 409 && race.race, '刚换完又拿上一个来换（两个标签页同时换）：409，让网页去读新的，不退出', race);
+  ok((await call('GET', '/api/profile', undefined, b.token)).ok, '409 之后新令牌照样能用');
+  T += 2 * 60e3;
+  const c = await rf({ refresh: b.refresh });
+  ok(c.ok, '再换一次');
+  const r2 = await rf({ refresh: c.refresh });
+  ok(r2.ok, '正常用的人一直换下去都没问题');
+  T += 2 * 60e3;
+  const stolen = await rf({ refresh: a.refresh });
+  ok(stolen.status === 401 && stolen.reused, '偷来的旧续期令牌（早就换掉了）被拿来用：401', stolen);
+  ok((await call('GET', '/api/profile', undefined, r2.token)).status === 401 && (await rf({ refresh: r2.refresh })).status === 401 && !row('SELECT 1 AS x FROM devices WHERE id = ?', a.device), '整台设备退出：本人手里最新的令牌和续期令牌也不能用了，得重新登录');
+  ok((await call('GET', '/api/profile', undefined, old.token)).ok, '别的设备（老式令牌那个）不受影响');
+  const e = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123', rt: 1 }, undefined, '8.8.8.5');
+  const f = await rf({ refresh: e.refresh });
+  const ins = await rf({ refresh: e.refresh, insist: true });
+  ok(ins.status === 401 && ins.reused && (await call('GET', '/api/profile', undefined, f.token)).status === 401, '网页说 localStorage 里读到的还是旧的（insist）：不是别的标签页换的，按被偷处理，整组退出');
+  const g = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123', rt: 1 }, undefined, '8.8.8.6');
+  const [p1, p2] = await Promise.all([rf({ refresh: g.refresh }), rf({ refresh: g.refresh })]);
+  ok([p1, p2].filter(x => x.ok).length === 1 && [p1, p2].some(x => x.status === 409), '两个请求同时拿同一个续期令牌来换：一个换到，另一个 409，不会两个都换到', [p1.status, p2.status]);
+  ok((await rf({ refresh: 'f'.repeat(64) })).status === 401 && (await rf({})).status === 401 && (await rf({ refresh: 'x'.repeat(200) })).status === 401, '乱填的、没填的、太长的：401');
+  const last = (p1.ok ? p1 : p2).refresh;   // 不拨时间（拨 31 天会顺手清掉后面要用的老令牌）：把到期时间改到现在之前
+  ENV.DB.raw.prepare('UPDATE devices SET expires_at = ? WHERE refresh = ?').run(T - 1, sha(last));
+  ok((await rf({ refresh: last })).status === 401, '30 天没用：续期令牌过期');
+  const up = await rf({}, old.token);
+  ok(up.ok && up.refresh && up.token !== old.token, '老式 30 天令牌能换成新的一套（老玩家不用重新登录）', up);
+  ok((await call('GET', '/api/profile', undefined, old.token)).status === 401 && (await call('GET', '/api/profile', undefined, up.token)).ok, '换完老令牌就作废了，新令牌能用');
+  ok((await rf({}, up.token)).status === 401, '新式令牌不能再走这条路（只能用续期令牌换）');
+  const lo = await call('POST', '/api/logout', undefined, up.token);
+  ok(lo.ok && (await rf({ refresh: up.refresh })).status === 401 && !row('SELECT 1 AS x FROM devices WHERE id = ?', up.device), '退出登录：这台设备的续期令牌一起作废');
+  const h = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123', rt: 1 }, undefined, '8.8.8.7');
+  await adm('POST', '/api/admin/password', { uid: 'rtUser', password: 'new-pass-12345678', why: '测试：重设密码退出所有设备' });
+  ok((await rf({ refresh: h.refresh })).status === 401 && (await call('GET', '/api/profile', undefined, h.token)).status === 401, '管理员重设密码：所有设备的续期令牌也作废');
+  await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'off', why: '测试：关掉' });
+  const k = await call('POST', '/api/login', { username: 'rtUser', password: 'new-pass-12345678', rt: 1 }, undefined, '8.8.8.8');
+  ok(k.ok && !k.refresh && (await call('GET', '/api/profile', undefined, k.token)).ok, '开关关掉：新网页也拿到老式令牌，照样能用');
+  await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');

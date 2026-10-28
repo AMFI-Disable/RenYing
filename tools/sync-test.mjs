@@ -52,7 +52,7 @@ const row = (sql, ...p) => ENV.DB.raw.prepare(sql).get(...p);
 const cloudProf = name => JSON.parse(row('SELECT profile_json FROM users WHERE username = ?', name).profile_json);
 
 /* ---------- 网络：所有设备共用一个 Worker；可以断网、可以“服务器做完了但回包丢了”、可以假装是老版本服务器 ---------- */
-const NET = { down: false, loseReply: 0, oldServer: false, posts: 0 };
+const NET = { down: false, loseReply: 0, oldServer: false, posts: 0, refresh: 0 };
 let ipN = 0;
 async function netFetch(url, opts = {}) {
   if (NET.down) throw new TypeError('Failed to fetch');
@@ -60,6 +60,7 @@ async function netFetch(url, opts = {}) {
   const headers = { ...(opts.headers || {}), 'CF-Connecting-IP': '10.0.' + (ipN++ % 250) + '.1' };
   const req = new Request('https://w.test' + u.pathname + u.search, { method: opts.method || 'GET', headers, body: opts.body });
   if (u.pathname === '/api/profile' && (opts.method || 'GET') === 'POST') NET.posts++;
+  if (u.pathname === '/api/refresh') NET.refresh++;
   const res = await worker.fetch(req, ENV, { waitUntil() {} });
   if (NET.loseReply > 0 && u.pathname === '/api/profile' && opts.method === 'POST') { NET.loseReply--; throw new TypeError('connection reset'); }
   if (!NET.oldServer) return res;
@@ -69,8 +70,7 @@ async function netFetch(url, opts = {}) {
 }
 
 /* ---------- 一台设备：一份 localStorage；reload() 换一份新的 cloud.js，存储不变（等于刷新网页） ---------- */
-function makeDevice(label) {
-  const store = new Map();
+function makeDevice(label, store = new Map()) {   // 传同一个 store：同一个浏览器的两个标签页
   const localStorage = {
     getItem: k => (store.has(k) ? store.get(k) : null),
     setItem: (k, v) => store.set(k, String(v)),
@@ -210,6 +210,62 @@ ok(['qingfeng', 'moyu', 'yanling'].every(h => c.owned.includes(h)), '两边的�
 ok(c.saga.moyu && c.saga.yanling && c.saga.yanling.e.includes('good'), '两边的列传进度都在', Object.keys(c.saga));
 ok(c.rk.pts === 3000, '排位：B 传的那份更旧（at 小），云端留 A 的', c.rk);
 ok(c.netWins === 12, '胜场在这期间没被绝对数覆盖：还是 12', c.netWins);
+
+section('短效令牌 + 续期令牌：过期了网页自己换，几个标签页一起换也不掉线；偷来的续期令牌一用，这台设备整组退出');
+const admin = (path, body) => worker.fetch(new Request('https://w.test' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ENV.ADMIN_SECRET, 'CF-Connecting-IP': '10.8.0.1' }, body: JSON.stringify(body) }), ENV).then(r => r.json());
+const L = makeDevice('L');
+await L.CS.register('Lao', 'laopass123'); await L.load();   // 开关没开：老式令牌
+const legacyTok = L.store.get('renying-cloud-token');
+ok(legacyTok && !L.store.has('renying-cloud-refresh'), '开关没开：老式 30 天令牌，没有续期令牌');
+ok((await admin('/api/admin/flags', { k: 'auth.refresh', mode: 'all', why: '测试' })).ok, '开关改成所有人');
+L.reload(); L.CS.init(); await sleep(50);
+ok(L.store.has('renying-cloud-refresh') && L.store.get('renying-cloud-token') !== legacyTok, '刷新网页：老令牌自动换成新的一套，不用重新登录');
+await L.load(); await L.play(p => { p.netWins = 3; });
+ok(cloudProf('Lao').netWins === 3, '换完照常存档', cloudProf('Lao').netWins);
+const R = makeDevice('R');
+await R.CS.register('Ren', 'renpass123'); await R.load();
+const r0 = R.store.get('renying-cloud-refresh'), t0 = R.store.get('renying-cloud-token');
+ok(r0 && t0 && +R.store.get('renying-cloud-exp') - Date.now() > 29 * 60e3, '新登录：30 分钟的令牌加续期令牌');
+ENV.DB.raw.prepare("UPDATE sessions SET expires_at = 1 WHERE user_id = (SELECT id FROM users WHERE username = 'Ren')").run();   // 令牌在服务器那边过期了，网页还不知道
+NET.refresh = 0;
+await R.play(p => { p.netWins = 5; });
+await sleep(50);
+ok(cloudProf('Ren').netWins === 5 && NET.refresh === 1 && R.store.get('renying-cloud-token') !== t0 && R.store.get('renying-cloud-refresh') !== r0, '存档时服务器回 401：网页换一次令牌再传，进度没丢', [cloudProf('Ren').netWins, NET.refresh]);
+ok(R.CS.getSyncState().state === 'ok', '同步状态是正常，不是“登录过期”', R.CS.getSyncState());
+R.store.set('renying-cloud-exp', String(Date.now() + 20e3));   // 快过期了
+NET.refresh = 0;
+const r1 = R.store.get('renying-cloud-refresh');
+await R.play(p => { p.netWins += 1; });
+await sleep(50);
+ok(NET.refresh === 1 && R.store.get('renying-cloud-refresh') !== r1 && cloudProf('Ren').netWins === 6, '快过期时：先换再传，不等 401', NET.refresh);
+// 同一个浏览器两个标签页（共用 localStorage）同时发现过期
+const R2 = makeDevice('R2', R.store);
+await R2.load();
+ENV.DB.raw.prepare("UPDATE sessions SET expires_at = 1 WHERE user_id = (SELECT id FROM users WHERE username = 'Ren')").run();
+R.store.set('renying-cloud-exp', '1');
+NET.refresh = 0;
+await Promise.all([R.play(p => { p.netWins += 1; }), R2.play(p => { p.frags = { moyu: 2 }; })]);
+await sleep(1500);
+const dRen = row("SELECT COUNT(*) AS n FROM devices d JOIN users u ON u.id = d.user_id WHERE u.username = 'Ren'").n;
+ok(cloudProf('Ren').netWins === 7 && (cloudProf('Ren').frags || {}).moyu === 2, '两个标签页同时换令牌：两边的存档都传上去了', [cloudProf('Ren').netWins, cloudProf('Ren').frags, NET.refresh]);
+ok(dRen === 1 && R.CS.getSyncState().state !== 'expired' && R2.CS.getSyncState().state !== 'expired', '没有被当成偷用：设备还在，两个标签页都没掉线', [dRen, R.CS.getSyncState().state, R2.CS.getSyncState().state]);
+// 有人偷走了续期令牌：本人先换了，偷的人再拿旧的来用
+const stolen = R.store.get('renying-cloud-refresh');
+ENV.DB.raw.prepare("UPDATE sessions SET expires_at = 1 WHERE user_id = (SELECT id FROM users WHERE username = 'Ren')").run();
+await R.play(p => { p.netWins += 1; });
+await sleep(50);
+ok(cloudProf('Ren').netWins === 8 && R.store.get('renying-cloud-refresh') !== stolen, '本人照常用，令牌换过了');
+const thief = await worker.fetch(new Request('https://w.test/api/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '6.6.6.6' }, body: JSON.stringify({ refresh: stolen, insist: true }) }), ENV).then(r => r.json());
+ok(!thief.ok && thief.reused, '偷的人拿旧的来换：不给，这台设备整组退出', thief);
+await R.play(p => { p.netWins += 1; });
+await sleep(50);
+ok(R.CS.getSyncState().state === 'expired' && !R.store.has('renying-cloud-refresh') && cloudProf('Ren').netWins === 8, '本人下次存档：提示登录过期，进度留在本机等重新登录', [R.CS.getSyncState(), cloudProf('Ren').netWins]);
+await R.CS.login('Ren', 'renpass123'); await R.load();
+await sleep(1500);
+ok(cloudProf('Ren').netWins === 9 && wins(R.PROF) === 9, '重新登录：没传上去的那 1 场补传了', [cloudProf('Ren').netWins, R.PROF.netWins]);
+await R.CS.logout();
+ok(!R.store.has('renying-cloud-refresh') && !R.store.has('renying-cloud-token') && !R.store.has('renying-cloud-exp'), '退出登录：令牌和续期令牌都清掉');
+await admin('/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
 
 section('乱报的增量：编号不对、键不认识、一次加太多，都不认');
 const tok = A.CS.getUser().token;

@@ -1087,7 +1087,10 @@ const CODE_VOID = { ZODIAC2026STAR: it => it && it.src === 'code' && !!C.ITEM[it
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, password_algo TEXT NOT NULL DEFAULT 'sha256-v1', password_updated_at INTEGER NOT NULL DEFAULT 0)`,
-  `CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, dev TEXT NOT NULL DEFAULT '', FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
+  `CREATE TABLE IF NOT EXISTS devices (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, refresh TEXT NOT NULL UNIQUE, prev TEXT NOT NULL DEFAULT '', rotated_at INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, label TEXT NOT NULL DEFAULT '', last_seen INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
+  `CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id)`,
+  `CREATE TABLE IF NOT EXISTS refresh_used (h TEXT PRIMARY KEY, dev TEXT NOT NULL, at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS econ (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL, ver INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS econ_nonce (uid TEXT NOT NULL, nonce TEXT NOT NULL, at INTEGER NOT NULL, res_json TEXT NOT NULL, PRIMARY KEY (uid, nonce))`,
   `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, detail TEXT)`,
@@ -1134,6 +1137,11 @@ const SCHEMA_COLS = [
   `ALTER TABLE users ADD COLUMN password_updated_at INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE errs ADD COLUMN ms INTEGER NOT NULL DEFAULT 0`,       // 慢请求：最慢一次多少毫秒
   `ALTER TABLE errs ADD COLUMN ms_sum INTEGER NOT NULL DEFAULT 0`,   // 慢请求：加起来多少毫秒（除以 n 是平均）
+  `ALTER TABLE sessions ADD COLUMN dev TEXT NOT NULL DEFAULT ''`,
+];
+// 要等上面的列加好才能建的
+const SCHEMA_POST = [
+  `CREATE INDEX IF NOT EXISTS idx_sessions_dev ON sessions(dev)`,
 ];
 function ensureSchema(env) {
   if (!schemaReady) schemaReady = (async () => {
@@ -1141,6 +1149,7 @@ function ensureSchema(env) {
     for (const sql of SCHEMA_COLS) {
       try { await env.DB.prepare(sql).run(); } catch (e) { if (!/duplicate column/i.test(String(e && e.message))) throw e; }
     }
+    await env.DB.batch(SCHEMA_POST.map(s => env.DB.prepare(s)));
   })().catch(e => { schemaReady = null; throw e; });
   return schemaReady;
 }
@@ -1203,12 +1212,81 @@ async function sessionOf(env, token, cols, now) {
   if (r && r.stok !== key && await flagOn(env, 'auth.token_hash', r, now)) await env.DB.prepare('UPDATE sessions SET token = ?1 WHERE token = ?2').bind(key, token).run();
   return r;
 }
-// 新登录：写一行 sessions，返回给玩家的令牌原文
-async function newSession(env, user, now) {
+// 新登录：写一行 sessions，返回给玩家的令牌原文。dev 是这个令牌属于哪台设备（老式的 30 天令牌没有）
+async function newSession(env, user, now, dev = '', ttl = REFRESH_TTL) {
   const token = generateToken();
   const stored = (await flagOn(env, 'auth.token_hash', user, now)) ? await tokenKey(token) : token;
-  await env.DB.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').bind(stored, user.id, now, now + 30 * 24 * 3600 * 1000).run();
+  await env.DB.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at, dev) VALUES (?, ?, ?, ?, ?)').bind(stored, user.id, now, now + ttl, dev).run();
   return token;
+}
+
+/* ---------- 短效令牌 + 续期令牌（开关 auth.refresh）----------
+ * 登录拿到两样：token（30 分钟就过期，每个请求都带）和 refresh（只用来换新的，30 天没用就过期）。
+ * 一台设备（一个浏览器）一行 devices，refresh 只存哈希。每换一次，旧的 refresh 记进 refresh_used 就作废了。
+ * 作废的 refresh 又被拿来用，说明它被人偷了（或者是两个标签页同时换）：
+ *   刚换完 1 分钟内拿上一个来换，回 409，网页去 localStorage 里读别的标签页换好的那个；
+ *   别的情况（或者网页说读到的还是这个，insist）就把这台设备整组退出：它的 refresh 和所有令牌都不能用了，偷的人和本人都得重新登录。
+ * 网页登录时带 rt: 1 才发这一套；老网页、开关关着时还是发老式的 30 天令牌。老式令牌拿到 /api/refresh 能换成新的一套。 */
+const ACCESS_TTL = 30 * 60e3, REFRESH_TTL = 30 * 24 * 3600e3, REFRESH_RACE = 60e3;
+// 设备名：只留系统和浏览器（不存完整的 User-Agent）
+function deviceLabel(request) {
+  const ua = String(request.headers.get('User-Agent') || '');
+  const os = /iPhone|iPod/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : /CrOS/.test(ua) ? 'ChromeOS' : /Linux/.test(ua) ? 'Linux' : '';
+  const br = /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '';
+  return [os, br].filter(Boolean).join(' · ') || '未知设备';
+}
+async function newDevice(env, user, now, request) {
+  const id = 'd_' + randHex(8), refresh = generateToken();
+  await env.DB.prepare('INSERT INTO devices (id, user_id, refresh, created_at, expires_at, label, last_seen) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(id, user.id, await tokenKey(refresh), now, now + REFRESH_TTL, deviceLabel(request), now).run();
+  const token = await newSession(env, user, now, id, ACCESS_TTL);
+  return { token, refresh, expiresIn: ACCESS_TTL / 1000, device: id };
+}
+// 登录、注册发哪种令牌：网页说它会续期（rt: 1）、开关也开着，就发短效 + 续期；不然发老式的 30 天令牌
+async function issueLogin(env, user, now, request, body) {
+  if (body && body.rt === 1 && await flagOn(env, 'auth.refresh', user, now)) return newDevice(env, user, now, request);
+  return { token: await newSession(env, user, now) };
+}
+// 整台设备退出：refresh 和它发过的令牌一起删
+function dropDevice(env, id) {
+  return env.DB.batch([
+    env.DB.prepare('DELETE FROM sessions WHERE dev = ?').bind(id),
+    env.DB.prepare('DELETE FROM devices WHERE id = ?').bind(id),
+  ]);
+}
+async function handleRefresh(env, request, body, now) {
+  const refresh = String(body.refresh || '');
+  if (!refresh) {   // 老式的 30 天令牌换成新的一套（换完老令牌就删掉）
+    const token = getBearerToken(request);
+    const r = await sessionOf(env, token, 'u.id AS id, u.username AS username, s.dev AS dev', now);
+    if (!r || r.dev) return error('登录已过期，请重新登录', 401);
+    if (!(await flagOn(env, 'auth.refresh', r, now))) return error('服务器还没开这个功能', 400);
+    const out = await newDevice(env, r, now, request);
+    await env.DB.prepare('DELETE FROM sessions WHERE token = ?').bind(r.stok).run();
+    return json({ ok: true, ...out });
+  }
+  if (refresh.length > 128) return error('登录已过期，请重新登录', 401);
+  const h = await tokenKey(refresh);
+  const d = await env.DB.prepare('SELECT d.id, d.user_id, u.username FROM devices d JOIN users u ON u.id = d.user_id WHERE d.refresh = ? AND d.expires_at > ?').bind(h, now).first();
+  if (d) {
+    const next = generateToken(), nh = await tokenKey(next);
+    const up = await env.DB.prepare('UPDATE devices SET refresh = ?, prev = ?, rotated_at = ?, expires_at = ?, last_seen = ? WHERE id = ? AND refresh = ?')
+      .bind(nh, h, now, now + REFRESH_TTL, now, d.id, h).run();
+    if (!up.meta || !up.meta.changes) return error('别的标签页刚换过，读一下新的', 409, { race: true });
+    await env.DB.batch([
+      env.DB.prepare('INSERT OR IGNORE INTO refresh_used (h, dev, at) VALUES (?, ?, ?)').bind(h, d.id, now),
+      env.DB.prepare('DELETE FROM sessions WHERE dev = ? AND expires_at < ?').bind(d.id, now),
+    ]);
+    const token = await newSession(env, { id: d.user_id, username: d.username }, now, d.id, ACCESS_TTL);
+    return json({ ok: true, token, refresh: next, expiresIn: ACCESS_TTL / 1000, device: d.id });
+  }
+  const used = await env.DB.prepare('SELECT dev FROM refresh_used WHERE h = ?').bind(h).first();
+  if (!used) return error('登录已过期，请重新登录', 401);
+  const cur = await env.DB.prepare('SELECT id, user_id, prev, rotated_at FROM devices WHERE id = ?').bind(used.dev).first();
+  if (!cur) return error('登录已过期，请重新登录', 401);
+  if (cur.prev === h && now - cur.rotated_at < REFRESH_RACE && body.insist !== true) return error('别的标签页刚换过，读一下新的', 409, { race: true });
+  await dropDevice(env, cur.id);   // 作废的 refresh 又来了：这台设备整组退出
+  return error('这个账号在这台设备上的登录已失效，请重新登录', 401, { reused: true });
 }
 
 // Generate crypto-secure token
@@ -1465,6 +1543,7 @@ async function cfgNow(env, now) {
  * 不做按百分比放量。登记表在下面 FLAGS：[默认值, 说明, 网页要不要知道]。网页开局读 GET /api/flags，只拿得到“网页要知道”的那些。
  * 数据库里只存改过的；每个 Worker 实例最多 30 秒重读一次。 */
 export const FLAGS = {
+  'auth.refresh': ['dev', '登录令牌 30 分钟过期，网页用续期令牌自己换新的；偷来的续期令牌一用，整台设备退出（关掉：发老式的 30 天令牌，已经发出去的照样能用）', false],
   'auth.pbkdf2': ['all', '新密码用 PBKDF2 存，老号登录成功时换成 PBKDF2（关掉：新密码用老办法存；两种照样都认）', false],
   'auth.token_hash': ['all', '新登录的令牌在数据库里只存哈希，旧的用到时换成哈希（关掉：新令牌存原文；两种照样都认）', false],
 };
@@ -2213,6 +2292,7 @@ async function handleAdmin(env, request, path, now, ip) {
       await env.DB.batch([
         env.DB.prepare('UPDATE users SET password_hash = ?, salt = ?, password_algo = ?, password_updated_at = ?, updated_at = ? WHERE id = ?').bind(pwr.hash, pwr.salt, pwr.algo, now, now, u.id),
         env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
+        env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(u.id),
         env.DB.prepare('DELETE FROM rate WHERE k = ?').bind('lf:' + String(u.username).toLowerCase().slice(0, 40)),
       ]);
     }
@@ -2341,6 +2421,8 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
     env.DB.prepare('UPDATE mkt SET state = 2, done_at = ? WHERE state = 0 AND at < ?').bind(now, now - mktTtl()),   // 到期没卖出的撤下；饰品在卖家下次动武库时退回
     env.DB.prepare('DELETE FROM mkt WHERE state = 2 AND done_at < ?').bind(now - 7 * DAY_MS),               // 撤下的单留一周（删了也没关系：存档里还挂着、表里找不到的一样退回）
+    env.DB.prepare('DELETE FROM devices WHERE expires_at < ?').bind(now),
+    env.DB.prepare('DELETE FROM refresh_used WHERE at < ?').bind(now - REFRESH_TTL),
     env.DB.prepare('DELETE FROM mkt WHERE state = 1 AND paid = 1 AND done_at < ?').bind(now - 120 * DAY_MS),   // 成交记录留四个月（价格走势用）
     env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - 10 * 60e3),
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),
@@ -3111,14 +3193,14 @@ async function route(request, env, ctx, rid = reqId()) {
           throw e;
         }
 
-        const token = await newSession(env, { id: userId, username }, now);   // 30 天有效
+        const tok = await issueLogin(env, { id: userId, username }, now, request, body);
 
         const out = await profileOut(env, { id: userId, username, profile_json: JSON.stringify(initialProf) }, now);
         return json({
           ok: true,
           uid: userId,
           username,
-          token,
+          ...tok,
           profile: out.profile,
           ledger: out.ledger,
           prog: out.prog
@@ -3162,14 +3244,14 @@ async function route(request, env, ctx, rid = reqId()) {
             .bind(pwr.hash, pwr.salt, pwr.algo, now, user.id, user.password_hash).run();
         }
 
-        const token = await newSession(env, user, now);
+        const tok = await issueLogin(env, user, now, request, body);
 
         const out = await profileOut(env, user, now);
         return json({
           ok: true,
           uid: user.id,
           username: user.username,
-          token,
+          ...tok,
           profile: out.profile,
           ledger: out.ledger,
           prog: out.prog
@@ -3294,10 +3376,20 @@ async function route(request, env, ctx, rid = reqId()) {
       // 9. Logout
       if (path === '/api/logout' && request.method === 'POST') {
         const token = getBearerToken(request);
-        if (token) {
+        if (token) {   // 这台设备整组退出（它的 refresh 也作废）；老式令牌只删这一个
+          const r = await sessionOf(env, token, 'u.id AS id, s.dev AS dev', now);
+          if (r && r.dev) await dropDevice(env, r.dev);
           await env.DB.prepare('DELETE FROM sessions WHERE token IN (?, ?)').bind(await tokenKey(token), PLAIN_TOKEN.test(token) ? token : '-').run();
         }
         return json({ ok: true });
+      }
+
+      // 用续期令牌换一套新的（见 handleRefresh）
+      if (path === '/api/refresh' && request.method === 'POST') {
+        if (!(await hit(env, 'rfs:' + ip, 60, 60e3, now))) return error('请求太频繁，稍后再试', 429);
+        const body = await readBody(request);
+        if (!body) return error('请求太大', 413);
+        return await handleRefresh(env, request, body, now);
       }
 
       return error('Not found', 404);
