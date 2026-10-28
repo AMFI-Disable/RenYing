@@ -57,6 +57,9 @@ const AI_KIT = {
   // 离影：留影（在脚下留雾身、顺手斩一刀）当成准备动作；渡影不走通用打法，由 liyingRoute 决定什么时候、去哪个雾身
   mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 2 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
   mistswap: { role: 'self', combo: false, use: () => false },
+  // 磁仙：Q 换极性（不花时间、清零 R）——R 在冷却、身边的人想换种打法时用；R 正极贴身弹开，负极把中距离的人吸过来接负极连段
+  polarswap: { role: 'self', combo: true, air: true, use: (m, o, d) => (m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150)) },
+  magfield: { role: 'zone', combo: true, use: (m, o, d) => o.invul <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
 };
 // 离影：用「不按方向 / 按那一边」能不能正好选到雾身 c（和游戏里 pickClone 的规则一样）
 function pickCloneDir(me, foe, c) {
@@ -81,6 +84,8 @@ const AI_ULT = {
   skynet: { far: true },
   // 万线归宗全场必中、挂印记、清零换影：留着续连段用（换影在冷却、对手身上没印记时放最值），对手残血就直接放
   needlestorm: { far: true, sure: (m, o) => o.hp < 150 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
+  // 天地磁合全场都夹得到，只怕对手正在无敌里：等对手的腾空闪用掉、或者正在挨打 / 收招时放
+  sandwich: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.6 || AI_HURT.includes(o.state) || o.hp < 125) },
   moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
   // 万影归一：雾身越多刀越多，至少攒一个雾身再放（对手残血就直接放）
   mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp < 60 },

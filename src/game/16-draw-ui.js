@@ -477,8 +477,13 @@ function drawHUD() {
     ctx.textAlign = i === 0 ? 'left' : 'right';
     const nm = cvT(f.look.name);
     ctx.fillText(nm, i === 0 ? x0 : x0 + barW, top + bh + 8);
+    let badgeW = 0;
+    if (f.ch.passive === 'magnet') {   // 磁仙：名字旁边一个大的红 ⊕ / 蓝 ⊖，一眼看出现在是哪一极
+      const r = bh * 0.85, nw = ctx.measureText(nm).width; badgeW = r * 2 + 8;
+      drawMagSym(i === 0 ? x0 + nw + 8 + r : x0 + barW - nw - 8 - r, top + bh + 8 + bh, r, f.pol || 1, 1, false);
+    }
     if ((M.mode === 'net' && NET.names) || (M.mode === 'replay' && REPLAY.names)) {
-      const pn = M.mode === 'replay' ? REPLAY.names[i] || '' : NET.names[i === 0 ? 'host' : 'client'] || cvT('游客'), cw = ctx.measureText(nm).width;
+      const pn = M.mode === 'replay' ? REPLAY.names[i] || '' : NET.names[i === 0 ? 'host' : 'client'] || cvT('游客'), cw = ctx.measureText(nm).width + badgeW;
       ctx.font = `${Math.round(bh * 0.95)}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.6)';
       ctx.fillText(pn, i === 0 ? x0 + cw + 10 : x0 + barW - cw - 10, top + bh + 8 + bh * 0.6);
     }
@@ -534,9 +539,9 @@ function drawHUD() {
     const mw = barW * 0.55, my = top + bh + 44, mx = i === 0 ? x0 : x0 + barW - mw;
     // 角色资源条（玉箫·音律 / 醉翁·醉意）：紧贴在大招气槽下面
     let resH = 0;
-    if (f.ch.passive === 'rhythm' || f.ch.passive === 'drunk') {
+    if (f.ch.passive === 'rhythm' || f.ch.passive === 'drunk' || f.ch.passive === 'magnet') {
       resH = 9;
-      const ry0 = my + 8, lab = cvT(f.ch.passive === 'rhythm' ? '音律' : '醉意');
+      const ry0 = my + 8, lab = cvT(f.ch.passive === 'rhythm' ? '音律' : f.ch.passive === 'magnet' ? '磁极' : '醉意');
       ctx.save();
       ctx.font = Math.round(bh * 0.7) + 'px ' + BODY_FONT; ctx.textBaseline = 'middle';
       const lw = ctx.measureText(lab).width + 6, bw = mw - lw;
@@ -550,6 +555,16 @@ function drawHUD() {
           ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(sx - 1, ry0 - 1, sw + 2, 5);
           if (k < n) { ctx.fillStyle = n >= 3 ? 'rgba(150,240,200,' + (0.8 + 0.2 * Math.sin(clock * 9)) + ')' : 'rgb(150,240,200)'; ctx.fillRect(sx, ry0, sw, 3); }
           else if (k === n) { ctx.fillStyle = 'rgba(150,240,200,0.35)'; ctx.fillRect(sx, ry0, sw * clamp((f.noteT || 0) / 2.5, 0, 1), 3); }
+        }
+      } else if (f.ch.passive === 'magnet') {   // 磁仙：当前极性（红 ⊕ / 蓝 ⊖），负极后面一条细条是负极普攻离消磁还差几下
+        const pol = f.pol || 1, rgb = magRGB(pol), sx = i === 0 ? bx0 : bx0 + bw;
+        ctx.fillStyle = `rgb(${rgb})`; ctx.textAlign = i === 0 ? 'left' : 'right';
+        const txt = cvT(magName(pol)); ctx.fillText(txt, sx, ry0 + 1.5);
+        if (pol < 0) {
+          const tw = ctx.measureText(txt).width + 8, cw = Math.max(0, bw - tw), c = clamp((f.mChain || 0) / MAG.chainCap, 0, 1);
+          const cx0 = i === 0 ? bx0 + tw : bx0;
+          ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(cx0 - 1, ry0 - 1, cw + 2, 5);
+          ctx.fillStyle = c >= 1 ? 'rgba(200,210,230,0.9)' : `rgb(${rgb})`; ctx.fillRect(i === 0 ? cx0 : cx0 + cw - cw * c, ry0, cw * c, 3);
         }
       } else {
         const d = clamp((f.drunk || 0) / 100, 0, 1), dw = bw * d;

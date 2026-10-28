@@ -317,7 +317,7 @@ function demoLoop(canvas, getIdx, isOn, getSkin, getMoveKey) {
   requestAnimationFrame(tick);
 }
 // ======================= 立绘卡面 =======================
-const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a', liying: 'fy_seal' };
+const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', cixian: 'yx_push', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a', liying: 'fy_seal' };
 function makeCardArt(i, CW, CH, skin) {
   const c = document.createElement('canvas'); c.width = CW; c.height = CH;
   const g = c.getContext && c.getContext('2d'); if (!g) return c;

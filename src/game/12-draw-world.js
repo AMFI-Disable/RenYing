@@ -320,6 +320,32 @@ function drawTrainDummy(f) {
   }
   ctx.restore();
 }
+// 磁极记号：一个圆圈，里面是 + 或 −，正极红、负极蓝。big 是按 Q 时身上那个大圈（粗一点、带光）
+function drawMagSym(x, y, r, pol, a, big) {
+  const rgb = magRGB(pol), w = big ? Math.max(4, r * 0.11) : Math.max(1.6, r * 0.22);
+  ctx.save(); ctx.globalAlpha = a; ctx.lineCap = 'round';
+  if (big) { ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = `rgb(${rgb})`; ctx.shadowBlur = 18; }
+  else { ctx.fillStyle = 'rgba(10,10,18,0.7)'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+  ctx.strokeStyle = `rgb(${rgb})`; ctx.lineWidth = w;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+  const l = r * 0.55;
+  ctx.beginPath(); ctx.moveTo(x - l, y); ctx.lineTo(x + l, y);
+  if (pol > 0) { ctx.moveTo(x, y - l); ctx.lineTo(x, y + l); }
+  ctx.stroke(); ctx.restore();
+}
+// 磁仙大招的磁石板：负极在地上、正极在天上，板面朝着对方
+function drawMagPlate(x, y, pol) {
+  const rgb = magRGB(pol), w = 170, h = 28;
+  ctx.save();
+  const g = ctx.createLinearGradient(0, y - h / 2, 0, y + h / 2);
+  g.addColorStop(0, pol > 0 ? '#ff8a7a' : '#8ab8ff'); g.addColorStop(1, pol > 0 ? '#9a2a22' : '#22468a');
+  ctx.fillStyle = g; ctx.strokeStyle = 'rgba(10,10,18,0.85)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.rect(x - w / 2, y - h / 2, w, h); ctx.fill(); ctx.stroke();
+  ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = `rgb(${rgb})`; ctx.shadowBlur = 16;
+  ctx.strokeStyle = `rgba(${rgb},0.7)`; ctx.lineWidth = 2; ctx.strokeRect(x - w / 2 + 4, y - h / 2 + 4, w - 8, h - 8);
+  ctx.restore();
+  for (const dx of [-50, 0, 50]) drawMagSym(x + dx, y, 9, pol, 1);
+}
 function drawFighter(f) {
   if (f.hidden) return;
   if (f.dummy) return drawTrainDummy(f);
@@ -371,8 +397,9 @@ function drawFighter(f) {
   // 腾空闪无敌时的光圈
   if (f.escInvul) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${f.look.slash},${0.4 + 0.3 * Math.sin(clock * 30)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, f.y - 55, 34, 60, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
   // 残影
-  const big = f.size !== 1;
-  if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size, f.size); ctx.translate(-f.x, -f.y); }
+  const sq = f.squashT > 0 ? clamp(f.squashT / 0.25, 0, 1) : 0;   // 被磁仙大招夹扁：先扁着，最后 0.25 秒弹回来
+  const big = f.size !== 1 || sq > 0;
+  if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size * (1 + 0.4 * sq), f.size * (1 - 0.62 * sq)); ctx.translate(-f.x, -f.y); }
   const gt = tierRank(L) >= 3 ? L.fx : null;   // 隐秘、非凡：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
   for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
   skinTierMotes(f, false);
@@ -465,6 +492,15 @@ function drawFighter(f) {
     }
     ctx.restore();
   }
+  // 磁仙：头顶小极性记号；按 Q 换极性时身上亮一个大圈 ⊕ / ⊖；大招时天上、地上两块磁石
+  if (f.ch && f.ch.passive === 'magnet' && f.hp > 0 && f.pol) {
+    drawMagSym(sk.head[0], sk.head[1] - 30, 9, f.pol, 0.92);
+    if (f.polT > 0) {
+      const k = clamp(f.polT / 0.6, 0, 1), r = 62 + (1 - k) * 22;
+      drawMagSym(f.x, f.y - 62, r, f.pol, Math.min(1, k * 1.6), true);
+    }
+  }
+  if (f.sw) { drawMagPlate(f.sw.x, -6, -1); drawMagPlate(f.sw.x, f.sw.top, 1); }
   // 被连击且可以挣脱时，头顶提示
   if ((f.state === 'launched' || f.state === 'knockdown' || (f.state === 'hitstun' && f.comboHits >= 2)) && f.hp > 0 && f.breakCD <= 0 && M.phase === 'fight' && M.mode !== 'demo'
       && !(f.ctrl instanceof AICtrl) && !f.dummy && f.ctrl !== NET.remote) {

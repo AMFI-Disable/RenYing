@@ -293,7 +293,8 @@ const testSuite = [
         A.y = 0; A.vy = 0; toNeutral(A);   // 站在地上放（离影的留影只能在地上用）
         A.skillCD = 0;
         startSkill(A, B, 1);
-        if (A.state !== 'skill' && A.state !== 'attack') {
+        const inst1 = SKILLS[CHARS[ci].skill].instant && A.skillCD > 0;   // 磁仙换极性：不花出招时间，放完冷却开始走就算放出来了
+        if (A.state !== 'skill' && A.state !== 'attack' && !inst1) {
           return { pass: false, error: CHARS[ci].name + ' failed skill 1 activation' };
         }
         toNeutral(A);
@@ -351,6 +352,78 @@ const testSuite = [
       if (esc.hit) return { pass: false, error: '腾空闪 did not dodge the homing dash: ' + JSON.stringify(esc) };
       const late = run(null, i => { if (i === far.hitAt + 2) { B.ctrl.buf.dash = clock; } });
       if (!late.hit) return { pass: false, error: 'a 腾空闪 after the hit should not undo it: ' + JSON.stringify(late) };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Cixian (磁仙): seeded pole each round, Q swap clears R, ⊖ normals pull and demagnetize after 15, R blasts / pulls by distance, ult clamps',
+    fn: `(() => {
+      const setup = (pol, gap) => {
+        startMatch('train', 'stand', [CHAR_IDX.cixian, 0]);
+        showScreen(null); paused = false; M.phase = 'fight';
+        for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; f.comboHits = 0; }
+        A.x = STAGE_W / 2 - gap / 2; B.x = STAGE_W / 2 + gap / 2; A.face = 1; B.face = -1;
+        A.pol = pol; A.mChain = 0; A.mT = 0; A.skillCD = 0; A.skill2CD = 0;
+      };
+      const run = (n, cond) => { for (let i = 0; i < n; i++) { step(); if (cond && cond()) return i; } return -1; };
+      // 1. 极性：同一个种子抽到的一样，换种子两种都抽得到
+      const roll = seed => { setChars(CHAR_IDX.cixian, 0); GRNG.s = seed; M.mode = 'cpu'; startRound(); return A.pol; };
+      const seen = new Set();
+      for (let sd = 1; sd <= 12; sd++) { const p1 = roll(sd * 7919), p2 = roll(sd * 7919); if (p1 !== p2) return { pass: false, error: 'same seed gave different poles' }; seen.add(p1); }
+      if (!(seen.has(1) && seen.has(-1))) return { pass: false, error: 'pole roll never gave both poles: ' + [...seen] };
+      // 2. Q：换极性、清零 R、不花出招时间、圈的动画计时
+      setup(1, 300); A.skill2CD = 4; startSkill(A, B, 1);
+      if (A.pol !== -1 || A.skill2CD !== 0 || A.state === 'skill' || !(A.polT > 0) || !(A.skillCD > 7)) return { pass: false, error: 'Q swap wrong: ' + JSON.stringify({ pol: A.pol, cd2: A.skill2CD, st: A.state, polT: A.polT, cd: A.skillCD }) };
+      // 3. 负极普攻：打中往身边吸、四段循环；连中 15 下消磁（不再吸、推开），停手 1 秒恢复
+      setup(-1, 150);
+      let pulled = 0, hits = 0, last = B.hp, chainSeen = [];
+      for (let i = 0; i < 900 && hits < 18; i++) {
+        if (A.state === 'idle' || A.state === 'walk' || (A.state === 'attack' && A.hitConfirmed)) A.ctrl.press ? A.ctrl.press('light') : (A.ctrl.buf.light = clock);
+        const bx = B.x; step();
+        if (B.hp < last) { hits++; last = B.hp; chainSeen.push(A.mChain); if (hits <= 10 && B.vx < 0 && B.x <= bx + 1) pulled++; if (hits <= 10 && B.x - A.x < 110) B.x = A.x + 110; }   // 每下都从中距离打，才看得出吸
+      }
+      if (A.moves.l4.next.light !== 'l1') return { pass: false, error: 'l4 does not loop back to l1' };
+      if (pulled < 5) return { pass: false, error: 'negative normals did not pull: ' + pulled + ' of ' + hits };
+      if (!chainSeen.includes(MAG.chainCap) || A.mChain !== MAG.chainCap) return { pass: false, error: 'no demagnetize at 15: ' + chainSeen.join(',') };
+      const mm = magHit(A, B, { ...A.moves.l1 });
+      if (!(mm.kb[0] > 0) || !(mm.stun < A.moves.l1.stun)) return { pass: false, error: 'demagnetized hit still pulls or keeps full stun: ' + JSON.stringify(mm.kb) };
+      toNeutral(A); A.mT = 0; run(Math.ceil(MAG.demagRest / STEP) + 10);
+      if (A.mChain !== 0) return { pass: false, error: 'demagnetize did not recover after resting: ' + A.mChain };
+      A.mChain = MAG.chainCap; A.skillCD = 0; startSkill(A, B, 1);
+      if (A.mChain !== 0) return { pass: false, error: 'Q did not clear demagnetize' };
+      // 4. 正极普攻：伤害更高、地上轻攻击击飞
+      setup(1, 120); const pm = magHit(A, B, { ...A.moves.l1 });
+      if (!(pm.dmg > A.moves.l1.dmg) || !pm.launch) return { pass: false, error: 'positive normal not stronger / not launching' };
+      // 5. R 正极：弹开，越近越远
+      const blast = gap => { setup(1, gap); startSkill(A, B, 2); run(40); return { vx: Math.abs(B.vx), st: B.state, dx: B.x - A.x, hit: B.hp < B.maxHp }; };
+      const near = blast(70), far = blast(160);
+      if (!near.hit || !far.hit) return { pass: false, error: 'R+ did not hit: ' + JSON.stringify([near, far]) };
+      setup(1, 70); startSkill(A, B, 2); let nearV = 0; run(20, () => { nearV = Math.max(nearV, B.vx * Math.sign(B.x - A.x)); return false; });
+      setup(1, 160); startSkill(A, B, 2); let farV = 0; run(20, () => { farV = Math.max(farV, B.vx * Math.sign(B.x - A.x)); return false; });
+      if (!(nearV > farV && farV > 0)) return { pass: false, error: 'R+ should push away harder when closer: ' + nearV + ' vs ' + farV };
+      // 6. R 负极：从 450 像素外吸到身前，定住 0.5 秒，不倒地
+      setup(-1, 450); startSkill(A, B, 2);
+      let rooted = -1; run(120, () => { if (B.rooted && B.state === 'hitstun') { rooted = clock; return true; } return false; });
+      if (rooted < 0 || Math.abs(B.x - A.x) > 90 || B.y < -2) return { pass: false, error: 'R- did not pull in and root: ' + JSON.stringify({ d: B.x - A.x, st: B.state, y: B.y }) };
+      if (Math.abs(B.stun - MAG.rMinusStun) > 0.01) return { pass: false, error: 'R- root time is ' + B.stun };
+      let down = false; run(40, () => { if (['launched', 'knockdown'].includes(B.state)) down = true; return false; });
+      if (down) return { pass: false, error: 'R- knocked the target down' };
+      // 7. 大招：夹住、125 伤害、夹扁定身；对手无敌时夹不到
+      setup(1, 400); A.meter = 100; B.hp = B.maxHp; const h0 = B.hp; startSpecial(A); run(200, () => A.state !== 'special');
+      if (h0 - B.hp < 100 || !(B.squashT > 0 || B.state === 'hitstun')) return { pass: false, error: 'ult did not clamp: ' + JSON.stringify({ dmg: h0 - B.hp, st: B.state, sq: B.squashT }) };
+      setup(1, 400); A.meter = 100; startSpecial(A); B.invul = 3; const h1 = B.hp; run(200, () => A.state !== 'special');
+      if (B.hp < h1) return { pass: false, error: 'ult hit an invincible target' };
+      if (B.state === 'held') return { pass: false, error: 'ult left the target held' };
+      // 8. 断崖台：磁力直接挪人（负极 R、大招）也过不了崖边，不算坠崖
+      mapVote = 'cliff'; startMapsMode(CHAR_IDX.cixian, 0, 'easy', true); M.phase = 'fight';
+      if (M.map !== 'cliff') return { pass: false, error: 'map ' + M.map };
+      B.state = 'held'; B.mapFalls = 0; magMove(B, WALL - 150);
+      if (B.x !== WALL || B.mapFalls) return { pass: false, error: 'magnet moved a fighter past the cliff edge: ' + JSON.stringify({ x: B.x, falls: B.mapFalls }) };
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.invul = 0; }
+      A.x = STAGE_W - WALL - 20; B.x = A.x - 420; A.face = -1; A.pol = -1; A.skill2CD = 0; B.mapFalls = 0; startSkill(A, B, 2);
+      run(120, () => A.state !== 'skill');
+      if (B.mapFalls || B.x < WALL || B.x > STAGE_W - WALL) return { pass: false, error: 'R- on the cliff map: ' + JSON.stringify({ x: B.x, falls: B.mapFalls }) };
       toMenu();
       return { pass: true, error: null };
     })()`
@@ -763,7 +836,7 @@ const testSuite = [
         qingfeng: 870, feiying: 800, tieshan: 900, lingshuang: 815,
         liuyun: 840, leiming: 885, moyu: 825, yuehua: 780,
         yanling: 750, yuxiao: 775, zuixian: 885, gouchen: 835,
-        lingque: 790, liying: 815
+        lingque: 790, liying: 815, cixian: 815
       };
       for (let ci = 0; ci < CHARS.length; ci++) {
         const ch = CHARS[ci];

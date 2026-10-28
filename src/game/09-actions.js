@@ -548,7 +548,7 @@ function escapeTick(f) {
   f.escT += STEP;
   if (f.flying || (f.escMode !== 'hover' && f.escT > ESC.riseMax)) endEscape(f);
 }
-const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke' };
+const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke', cixian: 'bolt' };
 function tryEscape(f, foe) {
   if (escapeBlock(f)) return false;
   if (!f.ctrl.consume('dash')) return false;
@@ -751,6 +751,8 @@ function updateFighter(f, foe) {
   f.buffT = Math.max(0, f.buffT - STEP);
   f.reflectT = Math.max(0, (f.reflectT || 0) - STEP);
   f.hookedT = Math.max(0, (f.hookedT || 0) - STEP);
+  if (f.squashT > 0) f.squashT = Math.max(0, f.squashT - STEP);   // 被磁仙大招夹扁
+  if (f.ch.passive === 'magnet') magTick(f);
   if (f.veilT > 0) f.veilT = f.hp > 0 ? Math.max(0, f.veilT - STEP) : 0;
   if (f.ch.passive === 'drunk') f.drunk = Math.max(0, (f.drunk || 0) - STEP);
   if (f.drinkT > 0) f.drinkT = Math.max(0, f.drinkT - STEP);

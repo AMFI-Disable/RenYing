@@ -497,6 +497,16 @@ function weapon(sk, L, outline, flash) {
         ctx.fillStyle = `rgb(${L.slash})`; circle(sk.hf, 3.2); circle(sk.hb, 2.8);
       }
       return;
+    case 'magnet': {  // 磁仙：两手各托一块磁石，颜色跟着正负极走（正极红、负极蓝）
+      if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 9.5); circle(sk.hb, 8.5); return; }
+      const pol = sk.pol || 1;
+      for (const [p, r] of [[sk.hf, 7.5], [sk.hb, 6.5]]) {
+        ctx.fillStyle = flash ? '#fff' : (pol > 0 ? '#c8382e' : '#2e5ec8'); circle(p, r);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)'; circle([p[0] - r * 0.3, p[1] - r * 0.3], r * 0.35);
+      }
+      drawMagSym(sk.hf[0], sk.hf[1], 4.6, pol, 0.95);
+      return;
+    }
     case 'spear': {
       const back = [g[0] - ux * 36, g[1] - uy * 36];
       if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.5; line(back, t); return; }
@@ -768,6 +778,11 @@ function drawParticles(glowOnly) {
       ctx.globalAlpha = k; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,0.7)';
       const txt = typeof p.text === 'string' && p.text.length > 1 ? cvT(p.text) : p.text;   // 单个字（闪、破、斩）是印章式的字眼，英文也照原样
       const yy = p.y - (1 - k) * 30; ctx.strokeText(txt, p.x, yy); ctx.fillStyle = `rgb(${p.rgb})`; ctx.fillText(txt, p.x, yy); ctx.restore();
+    } else if (p.type === 'mag') {   // 磁仙的小磁石
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0); ctx.globalAlpha = Math.min(1, k * 1.5);
+      ctx.fillStyle = p.pol > 0 ? '#c8382e' : '#2e5ec8'; ctx.strokeStyle = 'rgba(10,10,18,0.8)'; ctx.lineWidth = 2;
+      ctx.fillRect(-p.r, -p.r * 0.6, p.r * 2, p.r * 1.2); ctx.strokeRect(-p.r, -p.r * 0.6, p.r * 2, p.r * 1.2); ctx.restore();
+      drawMagSym(p.x, p.y, p.r * 0.5, p.pol, Math.min(1, k * 1.5));
     } else if (p.type === 'callout') {
       const pop = 1 + Math.max(0, (p.life - p.max + 0.15) / 0.15) * 0.75;
       const sc = (p.scale || 2) * pop;

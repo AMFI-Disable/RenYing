@@ -154,6 +154,7 @@ function applyHit(att, def, m, pt) {
   if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
   if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
   if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
+  if (att.ch.passive === 'magnet' && att.state === 'attack' && att.pol && !m.isProj && !m.ult) m = magHit(att, def, m);   // 磁仙的普攻按正负极改（03-skills.js）
   def.drinkT = 0;
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;

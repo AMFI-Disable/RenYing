@@ -11,6 +11,58 @@ function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
   return foe || (typeof foeOf === 'function' ? foeOf(f) : null);
 }
 const sdAim = (f, t) => Math.atan2(t.y - f.y, t.x - f.x);   // 两人都按身体中间（脚下往上 50）算，高度差就是 y 差
+// 磁仙的磁极（极性 f.pol：1 正极 ⊕，-1 负极 ⊖；每回合开局由 magRoll 用对局随机数抽）
+// 吸和弹都按真磁铁来：离得越近力越大（力 ∝ 1 / 距离²，再夹在上下限之间）。
+//   普攻   正极：伤害 ×plusDmg，地上轻攻击每下都击飞；负极：伤害 ×minusDmg，每下把对手往身边吸一下
+//          负极四段循环能一直连，但负极普攻连中 chainCap 下就「消磁」：之后的负极普攻不再吸、硬直只剩 capStun 倍，还把人推开，连段就断了。
+//          消磁只管负极普攻（不是角色状态，Q、R、大招不受影响）；停手 demagRest 秒没再用负极普攻打中人，或者按 Q 换极性，就恢复
+//   R      正极：身边一圈磁石炸开，把半径 rPlusR 里的敌人用力弹走，离得越近弹得越远；rPlusDir = 1 弹开、-1 改成吸到身边（只改这一个数）
+//          负极：把 rMinusRange 以内的对手吸过来，越近吸得越快，到身前定住 rMinusStun 秒（不倒地）
+const MAG = { plusDmg: 1.35, plusKb: [300, -620], minusDmg: 0.55, pullK: 2.6e6, pullMax: 320, chainCap: 15, capStun: 0.3, demagRest: 1.0,
+  rPlusDir: 1, rPlusR: 175, rPlusDmg: 48, rPlusKb: [360, 900], rMinusRange: 560, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
+const magRGB = pol => pol > 0 ? '255,96,84' : '96,156,255';
+const magName = pol => pol > 0 ? '⊕ 正极' : '⊖ 负极';
+const magForce = (k, d, lo, hi) => clamp(k / Math.max(40, d) ** 2, lo, hi);   // 磁力：离得越近越大
+// 普攻打中时按极性改这一下（applyHit 一开头调用；只管普攻，技能、大招、飞行道具不走这里）
+function magHit(att, def, m) {
+  if (att.pol > 0) {
+    const light = /^l\d/.test(m.name || '');
+    return light ? { ...m, dmg: m.dmg * MAG.plusDmg, launch: true, kb: MAG.plusKb, big: true } : { ...m, dmg: m.dmg * MAG.plusDmg };
+  }
+  if (m.launch || m.spike || m.knock) return { ...m, dmg: m.dmg * MAG.minusDmg };
+  att.mT = 0;
+  if (att.mChain >= MAG.chainCap) return { ...m, dmg: m.dmg * MAG.minusDmg, kb: [220, 0], stun: m.stun * MAG.capStun };   // 消磁了：不吸，推开
+  att.mChain = (att.mChain || 0) + 1;
+  if (att.mChain === MAG.chainCap) {
+    addP({ type: 'text', text: '消磁', x: att.x, y: att.y - 125, life: 0.8, max: 0.8, rgb: '200,210,230' });
+    ring(att.x, att.y - 60, 70, '200,210,230', 0.3);
+    return { ...m, dmg: m.dmg * MAG.minusDmg, kb: [220, 0], stun: m.stun * MAG.capStun };
+  }
+  const dist = Math.abs(att.x - def.x);
+  for (let k = 0; k < 3; k++) addP({ type: 'spark', x: def.x, y: def.y - 60 + rand(-25, 25), vx: Math.sign(att.x - def.x) * rand(160, 320), vy: rand(-30, 30), rgb: magRGB(-1), life: 0.22, max: 0.22, w: 1.6 });
+  return { ...m, dmg: m.dmg * MAG.minusDmg, kb: [dist > 58 ? -magForce(MAG.pullK, dist, 60, MAG.pullMax) : 0, 0] };
+}
+// 磁力直接把人挪到 x（负极 R、大招）：断崖台上走 mapEdge，吸不穿崖边；别的场地夹在两边墙里。普攻和正极 R 是给速度，物理那边已经按 mapGrip / mapEdge 算
+function magMove(tg, x) {
+  const cl = (mapNow() || {}).cliff;
+  tg.x = x;
+  if (cl) mapEdge(tg, cl); else tg.x = clamp(tg.x, WALL, STAGE_W - WALL);
+}
+// 大招收尾：磁石收掉，还被吸着的人放开
+function magRelease(f) {
+  const S = f.sw; f.sw = null;
+  if (S && S.hit) { const v = fighterByIdx(S.v); if (v.state === 'held') toNeutral(v); }
+}
+// 每帧：消磁计时、Q 圆圈的计时
+function magTick(f) {
+  if (f.magTg >= 0 && !(f.state === 'skill' && f.skill === 'magfield')) {   // 吸人吸到一半被打断：把人放开
+    const tg = fighterByIdx(f.magTg); f.magTg = -1;
+    if (tg.state === 'held') toNeutral(tg);
+  }
+  if (f.sw && f.state !== 'special') magRelease(f);   // 大招被打断（回合结束之类）：磁石收掉，夹住的人放开
+  if (f.polT > 0) f.polT = Math.max(0, f.polT - STEP);
+  if (f.mChain > 0) { f.mT = (f.mT || 0) + STEP; if (f.mT >= MAG.demagRest) { f.mChain = 0; f.mT = 0; } }
+}
 const SKILLS = {
   gale: { name: '疾风斩', cd: 6, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
     start(f) { f.vx = 0; },
@@ -551,6 +603,58 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 50] : ['idle', 20],
     ai: () => false },
+  polarswap: { name: '极性反转', cd: 8, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
+    start(f) {
+      f.pol = f.pol > 0 ? -1 : 1; f.polT = 0.6; f.skill2CD = 0; f.mChain = 0; f.mT = 0;   // 换极性也顺便恢复消磁
+      ring(f.x, f.y - 60, 90, magRGB(f.pol), 0.3); SFX.parry();
+      addP({ type: 'text', text: magName(f.pol), x: f.x, y: f.y - 125, life: 0.7, max: 0.7, rgb: magRGB(f.pol) });
+      toNeutral(f);
+    },
+    update(f) { toNeutral(f); },
+    pose: () => ['idle', 14],
+    ai: () => false },
+  magfield: { name: '磁极', cd: 6, desc: `正极：身边生出一圈磁石，把周围的敌人用力弹走，离得越近弹得越远（${MAG.rPlusDmg} 伤害）。负极：把中距离的对手吸过来，越近吸得越快，吸到身前定住 ${MAG.rMinusStun} 秒，不会倒地（${MAG.rMinusDmg} 伤害，挡不住）。`,
+    start(f) { f.vx = 0; f.magN = f.pol; f.magTg = -1; },   // 按起手那一刻的极性放
+    update(f, foe) {
+      const plus = f.magN > 0;
+      if (f.skPh === 0 && f.t >= (plus ? 0.14 : 0.16)) {
+        f.skPh = 1; f.t = 0; f.hitDone = false;
+        const tg = sdTarget(f, foe) || foe, rgb = magRGB(f.magN);
+        if (plus) {
+          for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; addP({ type: 'mag', pol: 1, x: f.x + Math.cos(a) * 40, y: f.y - 60 + Math.sin(a) * 30, vx: Math.cos(a) * 520, vy: Math.sin(a) * 300, rot: a, r: 11, life: 0.32, max: 0.32, drag: 3 }); }
+          ring(f.x, f.y - 60, MAG.rPlusR, rgb, 0.35); shake = Math.max(shake, 10); SFX.heavy();
+          const d = Math.hypot(tg.x - f.x, tg.y - f.y), near = clamp(1 - d / MAG.rPlusR, 0, 1);   // 越近越大
+          const dir = (Math.sign(tg.x - f.x) || f.face) * MAG.rPlusDir;
+          strike(f, tg, { box: [-MAG.rPlusR, -150, MAG.rPlusR, 20], dmg: MAG.rPlusDmg, kb: [MAG.rPlusKb[0] + MAG.rPlusKb[1] * near, -360 - 260 * near], stun: 0.5, hs: 0.1, launch: true, big: true, dir });
+        } else {
+          ring(f.x, f.y - 60, 70, rgb, 0.3); SFX.dash();
+          addP({ type: 'mag', pol: -1, x: f.x + f.face * 34, y: f.y - 62, vx: 0, vy: 0, rot: 0, r: 13, life: 0.45, max: 0.45 });
+          const dx = tg.x - f.x;
+          if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= MAG.rMinusRange && Math.abs(tg.y - f.y) < 260) {
+            f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
+            tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;
+          }
+        }
+      }
+      if (f.skPh === 1 && f.magTg >= 0) {   // 负极：一帧一帧吸过来，越近越快
+        const tg = fighterByIdx(f.magTg), dx = f.x + f.face * 72 - tg.x, d = Math.abs(tg.x - f.x);
+        if (tg.state !== 'held' || tg.hp <= 0) f.magTg = -1;
+        else {
+          const v = magForce(MAG.rMinusK, d, MAG.rMinusV[0], MAG.rMinusV[1]), stepX = Math.sign(dx) * Math.min(Math.abs(dx), v * STEP);
+          magMove(tg, tg.x + stepX); tg.y = damp(tg.y, 0, 18, STEP);
+          if (!RESIM && Math.random() < 0.7) addP({ type: 'spark', x: tg.x, y: tg.y - 60 + rand(-20, 20), vx: Math.sign(dx) * rand(300, 600), vy: rand(-30, 30), rgb: magRGB(-1), life: 0.2, max: 0.2, w: 2 });
+          if (Math.abs(dx) < 2 || f.t >= MAG.rMinusTime) {
+            f.magTg = -1; tg.y = 0;
+            applyHit(f, tg, { dmg: MAG.rMinusDmg, kb: [0, 0], stun: MAG.rMinusStun, hs: 0.08, root: true, unblockable: true, dir: f.face }, [tg.x, tg.y - 60]);
+            if (tg.state === 'held') toNeutral(tg);
+            ring(tg.x, tg.y - 60, 60, magRGB(-1), 0.25); SFX.thud();
+          }
+        }
+      }
+      if (f.skPh === 1 && f.magTg < 0 && f.t >= 0.24) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['lm_boxer', 26] : [f.magN > 0 ? 'hva' : 'yx_push', 56],
+    ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinusRange - 40 },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 

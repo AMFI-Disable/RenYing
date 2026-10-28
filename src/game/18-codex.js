@@ -49,11 +49,12 @@ const SHORT = {
   残月: ['169', '六连居合 · 终结回气重置'], 千影: ['179', '九影乱斩 · 绝杀分身重置'], 山崩: ['185', '砸地晕眩 · 正中回满气重置'], 刹那: ['140–185', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
   留影: ['40', '脚下留雾身 · 踏步一刀'], 渡影: ['—', '换到雾身处 · 方向选身'], 万影归一: ['45–113', '雾身齐斩 · 本体补刀'],
   龙卷: ['16×16', '双龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['48×3', '天雷追落 · 气量回涌30%'], 符阵: ['80–280', '宣纸全图 · 按符数爆伤'], 月华如水: ['75 (+100血)', '回血霸体 · 架招重置'], 万羽: ['14×14', '羽刃天降 · 飞行重置'],
+  极性反转: ['—', '换正负极 · 清零 R'], 磁极: ['48 / 16', '正极弹开 · 负极吸来定身'], 天地磁合: ['125', '天地两块磁石 · 夹成肉饼']
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(870血)', feiying: '最快移速出手 · 身轻体巧(800血)', tieshan: '重斩蓄力霸体 · 气血冠绝(900血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(815血)',
   liuyun: '三段跳 · 御风轻盈(840血)', leiming: '普攻六连 · 强横体魄(885血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(825血)', yuehua: '3 秒未受伤每秒回 14 血(780血)', yanling: '空中按住跳跃飞 1.2 秒(750血)',
   yuxiao: '普攻攒音律，清音随音律变强(775血)', zuixian: '醉意增伤，半醉可闪避近身攻击(885血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(835血)', lingque: '子母梭挂雀芒，换影穿刺引爆重置(790血)',
-  liying: '最多 2 个雾身，碰到就碎 · 只有一段跳(815血)' };
+  liying: '最多 2 个雾身，碰到就碎 · 只有一段跳(815血)', cixian: '开局随机正负极，负极普攻最多 15 连(815血)' };
 const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
@@ -67,6 +68,7 @@ const ADV_SHORT = {
   yuxiao: '回音壁能把暗器弹回去',
   zuixian: '酒过半壶可闪避近战，并可掷坛与民同乐回春',
   gouchen: '飞锤拽到身前，接旋锤',
+  cixian: 'Q 换极性立刻清零 R：先弹开，再吸回来',
   lingque: '雀芒印记配合换影穿刺，瞬发引爆清空冷却',
   liying: 'R 加方向选雾身：← → 选那一边，↓ 选最早留下的',
 };
@@ -84,6 +86,7 @@ const HERO_METER_EXPLAIN = {
   yuxiao: '【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。',
   zuixian: '【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「山水之间」全屏墨染八段重创并令醉意飙升！',
   gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
+  cixian: '【两极磁力 · 一弹一吸】正极普攻伤害高、每下击飞，负极普攻轻吸对手、四段循环连个不停；绝技「天地磁合」天上正极、地上负极，把对手夹成肉饼！',
   lingque: '【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！',
   liying: '【雾身换位 · 碎影成本】留影一刀与普攻攒气；雾身被打碎时对手回 10 点气，留得太随便等于给对手送气。万影归一按雾身数量出刀。',
 };
@@ -96,6 +99,15 @@ const HERO_MOVE_TYPES = {
     skill: { type: 'dash', label: '留身踏斩', rng: 'melee', icon: 'melee' },
     ranged: { type: 'esc', label: '换位', rng: 'screen', icon: 'esc' },
     ult: { type: 'ranged', label: '雾身齐斩', rng: 'ranged', icon: 'ranged' },
+    esc: { type: 'esc', label: '身法' }
+  },
+  cixian: {
+    light: { type: 'melee', label: '近战磁掌', rng: 'melee' },
+    charge: { type: 'melee', label: '近战', rng: 'melee' },
+    air: { type: 'melee', label: '近战', rng: 'melee' },
+    skill: { type: 'buff', label: '换极性', rng: 'self', icon: 'skill' },
+    ranged: { type: 'mid', label: '弹开 / 吸来', rng: 'mid', icon: 'melee' },
+    ult: { type: 'fullscreen', label: '天地夹击', rng: 'screen' },
     esc: { type: 'esc', label: '身法' }
   },
   lingque: {
@@ -233,6 +245,10 @@ const HERO_RESTRAINTS_EXPLAIN = {
     beatsWhy: '【克 燕翎、绯影】燕翎落地就会被旋锤卷进去；绯影血薄，被飞锤拽到身前吃满震魄增伤很快就倒。',
     weakWhy: '【怕 铁山、月华】铁山霸体直接硬吃飞锤，带不动；月华月镜格开锤子后的反斩极痛。'
   },
+  cixian: {
+    beatsWhy: '【克 燕翎、凌雀】负极 R 隔着半个场地把飞在空中、来回穿梭的人吸到身前定住，身法再快也逃不出磁力。',
+    weakWhy: '【怕 铁山、月华】铁山霸体硬吃正极击飞照样砸下来；月华月镜格开近身磁掌，负极连段一断就被反斩。'
+  },
   lingque: {
     beatsWhy: '【克 绯影、流云】飞梭与悬丝远端穿刺直克脆皮近身；移形换影高速多角穿梭令流云风刃与爆米花频频落空。',
     weakWhy: '【怕 铁山、雷鸣】铁山厚重霸体硬抗飞梭穿刺反手重震；雷鸣雷铠与电光冲拳极易在换影突进瞬间反制重击。'
@@ -312,6 +328,15 @@ const HERO_HIT_DETAILS = {
     ranged: { name: '旋锤风暴', badge: '砸碎暗器', badgeCls: 'badge-buff', dmg: '58 (5圈)', desc: '头顶抡圆飞转砸碎飞镖暗器，第五圈脱手一甩把人击飞。' },
     ult: { name: '开天一锤', badge: '巨锤震晕', badgeCls: 'badge-stun', dmg: '120', desc: '将链锤甩上天化作百倍巨锤砸落震晕，回锤再抡一击。' },
     esc: { name: '钩索腾云', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+  },
+  cixian: {
+    light: { name: '两极磁掌', badge: '⊕ 击飞 / ⊖ 轻吸', badgeCls: 'badge-buff', dmg: '⊕ ×1.35 / ⊖ ×0.55', desc: '正极每掌击飞，伤害高；负极每掌把人吸近一点，四段循环可以一直连，连中 15 下消磁。' },
+    charge: { name: '磁暴蓄掌', badge: '💥 破防推掌', badgeCls: 'badge-break', dmg: '36 / 58', desc: '蓄满一掌推出，强行贯穿正面格挡。' },
+    air: { name: '凌空磁掌', badge: '✦ 空中连击', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '空中拍掌，二段向下压地。' },
+    skill: { name: '极性反转', badge: '⊕ ⇄ ⊖', badgeCls: 'badge-buff', dmg: '—', desc: '正负极互换，不花出招时间，身上亮起红色 ⊕ 或蓝色 ⊖，立刻清零 R 的冷却。' },
+    ranged: { name: '磁极', badge: '⊕ 弹开 / ⊖ 吸来', badgeCls: 'badge-stun', dmg: '48 / 16', desc: '正极身边磁石炸开把人用力弹走，越近越远；负极把中距离的人吸到身前定住 0.5 秒。' },
+    ult: { name: '天地磁合', badge: '✦ 夹成肉饼', badgeCls: 'badge-stun', dmg: '125', desc: '天上的正极和地上的负极把对手夹在中间，合拢后定住 1 秒。' },
+    esc: { name: '磁浮腾空', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，借磁力腾空退避，落地前无敌。' }
   },
   lingque: {
     light: { name: '飞梭快影连刺', badge: '✦ 飞梭速刺', badgeCls: 'badge-buff', dmg: '93.1 (5段)', desc: '子母梭双持穿刺连击，出手灵巧如惊雀掠空。' },
@@ -464,6 +489,22 @@ const HERO_MOVE_SEQS = {
     ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_spin', d: 0.4, fx: 'spin', hit: 2, lab: 'R · 旋锤' }, { p: 'gc_throw', d: 0.25, hit: 2, badge: '击飞' }, { p: 'idle', d: 0.35, reset: true }],
     ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'gc_wind', d: 0.25, lab: 'E · 开天一锤' }, { p: 'gc_sweep', d: 0.42, fx: 'skynet', hit: 3, launch: true, badge: '巨锤震晕' }, { p: 'idle', d: 0.35, reset: true }],
     esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '钩索腾云' }, { p: 'idle', d: 0.35, reset: true }]
+  },
+  cixian: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'lm_boxer', d: 0.07, lab: '负极磁掌' }, { p: 'lm_jab', d: 0.11, dx: 8, hit: 1 },
+      { p: 'l2s', d: 0.07 }, { p: 'lm_jab', d: 0.11, dx: 8, hit: 1 },
+      { p: 'fn_l1s', d: 0.07 }, { p: 'fn_l1a', d: 0.11, dx: 8, hit: 1 },
+      { p: 'lds', d: 0.07 }, { p: 'lm_kick', d: 0.14, dx: 8, hit: 1, badge: '接回第一掌' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'spa', d: 0.3, dx: 32, hit: 3, launch: true, badge: '破防推掌' }, { p: 'idle', d: 0.35, reset: true }],
+    air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'aj_fists_1a', d: 0.16, hit: 1 }, { p: 'aj_fists_2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'idle', d: 0.3, fx: 'ironwall', lab: 'Q · 极性反转', badge: '⊕ ⇄ ⊖' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'lm_boxer', d: 0.15, lab: 'R · 磁极' }, { p: 'hva', d: 0.25, fx: 'ironwall', hit: 2, launch: true, badge: '弹开' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'lm_boxer', d: 0.15, lab: 'E · 天地磁合' }, { p: 'victory', d: 0.5, fx: 'crescent', hit: 1, badge: '夹成肉饼' }, { p: 'idle', d: 0.35, reset: true }],
+    esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '磁浮腾空' }, { p: 'idle', d: 0.35, reset: true }]
   },
   lingque: {
     light: [
@@ -950,6 +991,18 @@ const HERO_FULL_DEMO = {
     { p: 'gc_wind', d: 0.25, lab: 'E · 开天一锤' }, { p: 'gc_sweep', d: 0.42, fx: 'skynet', hit: 3, launch: true, badge: '巨锤震晕' },
     { p: 'victory', d: 0.55, reset: true }
   ],
+  cixian: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'lm_boxer', d: 0.07, lab: '普攻' }, { p: 'lm_jab', d: 0.11, dx: 8, hit: 1 },
+    { p: 'l2s', d: 0.07 }, { p: 'lm_jab', d: 0.12, dx: 8, hit: 1 },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'idle', d: 0.3, fx: 'ironwall', lab: 'Q · 极性反转', badge: '⊕ ⇄ ⊖' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'lm_boxer', d: 0.15, lab: 'R · 磁极' }, { p: 'hva', d: 0.25, fx: 'ironwall', hit: 2, launch: true, badge: '弹开' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'lm_boxer', d: 0.15, lab: 'E · 天地磁合' }, { p: 'victory', d: 0.5, fx: 'crescent', hit: 1, badge: '夹成肉饼' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
   lingque: [
     { p: 'idle', d: 0.2, reset: true },
     { p: 'du_l1s', d: 0.07, lab: '普攻' }, { p: 'du_l1a', d: 0.11, dx: 12, hit: 1 },
@@ -1090,6 +1143,7 @@ const SKILL_FUN = {
   zuixian: { passive: '酒量即战力，放招添酒打中添酒，东倒西歪能闪避。', light: '东倒西歪五连拳，步法虚实难测。', charge: '蓄力一撞，重若巨石倾覆。', air: '醉步腾跃，飘忽不定难预测。', skill: '亭中留客，飞亭砸落禁锢两秒任你痛揍。', ranged: '与民同乐，半壶酒掷向对手，共醉回春。', ult: '山水之间，水墨泼染全屏八段重创。', esc: '醉意腾身，踏风撤步。' },
   gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' },
   liying: { passive: '一缕魂留在原地，碰一下就散。', light: '单刀五连，干净利落。', charge: '雾里藏着的那一刀最重。', air: '只有一段跳，跳之前先想好落点。', skill: '人往前走，魂留在后面。', ranged: '结个印，人就到了雾身那里。', ult: '雾身一起出刀，本体最后补上。', esc: '雾一散，人已退开。' },
+  cixian: { passive: '一会儿正极一会儿负极，脾气说变就变。', light: '负极一掌一吸，越打越近。', charge: '蓄满一掌，磁力把格挡都推开。', air: '跳起来拍一掌，像拍苍蝇。', skill: '红圈变蓝圈，R 也跟着刷新。', ranged: '正极弹飞，负极吸回，来回都是我说了算。', ult: '天一块地一块，中间夹着你。', esc: '磁力一托，人就飘起来了。' },
   lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子母飞梭刺得比针还快。', charge: '蓄力一梭子，隔着衣服都疼。', air: '凌波踏空，身法灵巧似惊雀。', skill: '飞梭脱手，丝线连着千里之外。', ranged: '印记一亮，瞬身穿刺直接清空CD！', ult: '万线归宗，漫天悬丝罗网避无可避。', esc: '悬丝一荡，人已在数丈之外。' }
 };
 
@@ -1141,7 +1195,7 @@ function renderCodex() {
     </div>
   `;
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
-  const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : ['l1', 'l2', 'l3', 'l4', 'l5'];
+  const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : c.id === 'cixian' ? ['l1', 'l2', 'l3', 'l4'] : ['l1', 'l2', 'l3', 'l4', 'l5'];   // 磁仙四段循环
   const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10) / 10;   // 普攻、蓄力、空中按强度调整后的数
   const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * bn * 10) / 10;
   const fun = (typeof SKILL_FUN !== 'undefined' && SKILL_FUN[c.id]) || {};
@@ -1168,7 +1222,7 @@ function renderCodex() {
   const uName = (skin && skinUltName(skin)) || U.name;
   $id('cxMoves').innerHTML = [
     tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
-    tile('light', `左键 · 连击 <small class="type-tag ${lType.type}">${lType.label}</small>`, sum, `${lk.length} 段 · 末段击飞${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
+    tile('light', `左键 · 连击 <small class="type-tag ${lType.type}">${lType.label}</small>`, sum, `${lk.length} 段${c.id === 'cixian' ? '循环 · 负极能一直连' : ' · 末段击飞'}${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
     tile('charge', `按住左键 · 蓄力 <small class="type-tag ${cType.type}">${cType.label}</small>`, `${dv(m.cs1.dmg)} / ${dv(m.cs2.dmg)}`, '满蓄破防 · 打倒', '', false, 'charge'),
     tile('air', `空中 <small class="type-tag ${aType.type}">${aType.label}</small>`, `${dv(m.a1.dmg)} / ${dv(m.a2.dmg)}`, '空中斩 · 下砸', '', false, 'air'),
     tile(qType.icon || 'skill', `Q · ${qName} <small class="type-tag ${qType.type}">${qType.label}</small>`, sh(S.name)[0], sh(S.name)[1], `${S.cd}s`, false, 'skill'),
