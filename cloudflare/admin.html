@@ -9,7 +9,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='6' fill='%23b8392e'/%3E%3Cpath d='M10 9h12M16 9v15M11 15l5 4 5-4' stroke='%23fbeee0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <!--
   刃影管理后台：Worker 的 /admin 回这一页（python3 tools/build.py 把它打包进 cloudflare/worker.bundle.js）。
-  只连这个 Worker 自己的 /api/admin/*，要管理口令（ADMIN_SECRET）；口令只存在这个标签页的 sessionStorage 里。
+  只连这个 Worker 自己的 /api/admin/*。先用管理员账号（名字 + 密码）或者 ADMIN_SECRET 口令登录，换一个 30 分钟的管理令牌；
+  令牌只放在内存里（不写 sessionStorage / localStorage），刷新网页、过期都要重新登录。管理员账号分四种角色，服务器按角色放行。
   整页只有最下面一段脚本：Worker 按它的 sha256 放行，别的脚本、onclick 这种都不会跑，所以事件一律用 addEventListener。
   服务器给的字（昵称、原因、说明）一律经过 H`` 转义再放进网页。
 -->
@@ -235,18 +236,18 @@
     <div class="seal big">刃</div>
     <h1>刃影管理后台</h1>
     <p class="hint">只给开发组用。每一笔修改都要写原因，都记在流水里。</p>
-    <input type="text" name="username" value="renying-admin" autocomplete="username" hidden>
-    <label class="f">管理口令<input id="tok" type="password" autocomplete="current-password" spellcheck="false" required></label>
+    <label class="f">管理员名字<input id="admName" type="text" autocomplete="username" spellcheck="false" maxlength="20" placeholder="用 ADMIN_SECRET 口令登录就不填"></label>
+    <label class="f">密码<input id="tok" type="password" autocomplete="current-password" spellcheck="false" required></label>
     <button class="btn wide" id="loginBtn">进入</button>
     <p id="loginMsg" class="msg" role="alert"></p>
-    <p class="hint">口令是 Cloudflare 里 ADMIN_SECRET 的值；写成「名字:口令」的，只输入冒号后面那一段。口令只存在这个标签页里，关掉就要重新输入。</p>
+    <p class="hint">有管理员账号就填名字和密码。没有的话名字留空，密码填 Cloudflare 里 ADMIN_SECRET 的值（写成「名字:口令」的，只输入冒号后面那一段），用它建管理员账号。登录 30 分钟有效，刷新网页也要重新登录。</p>
   </form>
 </div>
 
 <div id="app" class="hidden">
   <header class="top">
     <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿和兑换码、改经济数值</small></div></div>
-    <div class="me"><span>管理员 <b id="who"></b></span><button class="btn ghost sm" data-act="logout">退出</button></div>
+    <div class="me"><span>管理员 <b id="who"></b> <span class="badge" id="role"></span></span><button class="btn ghost sm" data-act="logout">退出</button></div>
   </header>
   <nav class="tabs" aria-label="分页"><div role="tablist">
     <button role="tab" data-act="tab" data-tab="home">总览</button>
@@ -258,6 +259,7 @@
     <button role="tab" data-act="tab" data-tab="auth">登录记录</button>
     <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
     <button role="tab" data-act="tab" data-tab="errors">错误</button>
+    <button role="tab" data-act="tab" data-tab="admins" data-need="all">管理员</button>
   </div></nav>
   <main id="main"></main>
   <footer>刃影 · 管理后台 · 所有修改都记在流水里，谁做的、为什么都查得到</footer>
@@ -300,11 +302,10 @@ function ago(ms) {
 }
 const parse = t => { try { const o = JSON.parse(t); return o && typeof o === 'object' ? o : null; } catch (e) { return null; } };
 
-/* ---------- 口令、请求 ---------- */
-const KEY = 'renying-admin';
-const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, flags: [], aq: '', aact: '', seq: 0 };
-const saveTok = t => { try { if (t) sessionStorage.setItem(KEY, t); else sessionStorage.removeItem(KEY); } catch (e) {} };
-const loadTok = () => { try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+/* ---------- 登录令牌、请求 ---------- */
+const S = { tok: '', who: '', role: '', exp: 0, tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, flags: [], aq: '', aact: '', seq: 0 };
+const ROLE = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
+try { sessionStorage.removeItem('renying-admin'); } catch (e) {}   // 以前的版本把口令存在这里，清掉
 
 async function api(path, body) {
   const headers = { Authorization: 'Bearer ' + S.tok };
@@ -314,7 +315,8 @@ async function api(path, body) {
   catch (e) { throw new Error('连不上服务器，检查一下网络'); }
   let j = {};
   try { j = await r.json(); } catch (e) {}
-  if (r.status === 403 && S.who) { logout('口令失效了（可能刚换过），请重新输入'); throw new Error('口令失效了'); }
+  // 401：管理登录过期了（30 分钟、被停用、改了密码），重新登录；403 只是这个角色不能做这件事，提示一下就行
+  if (r.status === 401 && S.who) { logout('管理登录过期了，请重新登录'); throw new Error('管理登录过期了'); }
   if (!r.ok || !j.ok) throw new Error(j.error || '出错了（' + r.status + '）');
   return j;
 }
@@ -345,6 +347,7 @@ const ACT = {
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
   admin: '管理员调整', restore: '找回饰品', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
   claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码', flag: '改功能开关',
+  adm_login: '管理员登录', adm_acct: '改管理员账号',
 };
 const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
 
@@ -387,6 +390,8 @@ function detailText(act, raw, withWho) {
   if (act === 'code_got') return d.code + '（' + (d.note || '') + '）：' + stuff(d).join('，');
   if (act === 'cfg') return who + (d.undo !== undefined ? (d.undo ? '退回到第 ' + d.undo + ' 版' : '全部回到默认值') + '（存成第 ' + d.id + ' 版）'
     : '第 ' + d.id + ' 版：' + Object.entries(d.set || {}).map(([k, v]) => cfgName(k) + (v === null ? ' 回到默认' : ' → ' + v)).join('，'));
+  if (act === 'adm_login') return (withWho && d.by ? d.by + '｜' : '') + (d.how === 'secret' ? '用 ADMIN_SECRET 口令' : '用管理员账号') + '，角色：' + (ROLE[d.role] || d.role);
+  if (act === 'adm_acct') return who + (d.created ? '新建 ' : '改 ') + d.name + '：角色 ' + (d.from && d.from !== d.role ? (ROLE[d.from] || d.from) + ' → ' : '') + (ROLE[d.role] || d.role) + (d.pw ? '，' + (d.created ? '设了密码' : '改了密码') : '') + (d.disabled ? '，停用' : '');
   if (act === 'flag') return who + d.k + '：' + (FLAG_MODE[d.from] || d.from) + ' → ' + (FLAG_MODE[d.to] || d.to);
   // 玩家自己的操作：{ a: 参数, r: 结果, s: 这次结了几单 }
   const parts = [];
@@ -803,7 +808,34 @@ async function vFlags() {
   </div>`;
 }
 
-const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, auth: vAuth, audit: vAudit, errors: vErrors };
+/* ---------- 管理员账号（只有「全部」角色能看） ---------- */
+async function vAdmins() {
+  const r = await api('admins');
+  S.admins = r.admins;
+  return H`<div class="card"><h2>管理员账号</h2>
+    <p class="hint">四种角色：只能看（所有页面都能看，不能改）；经济（还能改墨锭、补偿、兑换码、经济数值、找回饰品）；封禁和账号（还能封号、解封、重设玩家密码）；全部（还能改功能开关、管理员账号）。
+      改密码、停用以后，那个管理员已经登录的网页马上失效。ADMIN_SECRET 口令登录算「全部」，建好管理员账号以后平时尽量用账号登录。</p>
+    ${r.admins.length ? H`<div class="tw"><table><thead><tr><th>名字</th><th>角色</th><th>状态</th><th>最近登录</th><th>谁建的</th><th></th></tr></thead><tbody>
+      ${r.admins.map(a => H`<tr><td><b>${a.name}</b>${a.name.toLowerCase() === S.who.toLowerCase() ? H` <small>（你）</small>` : ''}</td>
+        <td class="nowrap"><span class="badge${a.role === 'all' ? ' gold' : ''}">${ROLE[a.role] || a.role}</span></td>
+        <td class="nowrap">${a.disabled ? H`<span class="badge bad">停用了</span>` : H`<span class="badge ok">能用</span>`}</td>
+        <td class="nowrap">${a.last_login ? fmtT(a.last_login) : '没登录过'}</td><td class="nowrap">${a.created_by} · ${fmtT(a.created_at)}</td>
+        <td class="nowrap"><button class="btn ghost sm" data-act="admedit" data-name="${a.name}">改…</button></td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">还没有管理员账号，先在下面建一个</p>`}
+    ${r.secrets.length ? H`<p class="hint">ADMIN_SECRET 里的名字：${r.secrets.join('、')}（这些名字不能再用来建账号）</p>` : ''}
+  </div>
+  <div class="card"><h2>${S.admEdit ? '改管理员 ' + S.admEdit : '建管理员账号'}</h2>
+    <form data-form="admin"><div class="grid">
+      <label class="f">名字<input name="name" value="${S.admEdit || ''}" maxlength="20" autocomplete="off" spellcheck="false" required${S.admEdit ? ' readonly' : ''}></label>
+      <label class="f">角色<select name="role">${Object.entries(ROLE).map(([k, v]) => H`<option value="${k}"${(S.admins.find(a => a.name === S.admEdit) || { role: 'view' }).role === k ? ' selected' : ''}>${v}</option>`)}</select></label>
+      <label class="f">${S.admEdit ? '新密码（不改就留空）' : '密码'}<input name="pw" type="text" minlength="12" maxlength="128" autocomplete="new-password" spellcheck="false"${S.admEdit ? '' : ' required'}></label>
+      ${S.admEdit ? H`<label class="chk"><input type="checkbox" name="off"${(S.admins.find(a => a.name === S.admEdit) || {}).disabled ? ' checked' : ''}> 停用这个账号</label>` : ''}
+      </div><div class="row"><button type="button" class="btn ghost" data-act="genpw">随机生成密码</button><button class="btn">${S.admEdit ? '保存' : '建账号'}</button>${S.admEdit ? H` <button type="button" class="btn ghost" data-act="admnew">不改了</button>` : ''}</div>
+    </form>
+  </div>`;
+}
+
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
 const AFTER = { players: drawGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 async function render() {
   const main = $('#main'), seq = ++S.seq, tab = S.tab;
@@ -819,7 +851,7 @@ async function render() {
 }
 function route() {
   const m = location.hash.slice(1).split('/');
-  S.tab = VIEWS[m[0]] ? m[0] : 'home';
+  S.tab = VIEWS[m[0]] && (m[0] !== 'admins' || S.role === 'all') ? m[0] : 'home';
   let uid = '';
   try { uid = S.tab === 'players' && m[1] ? decodeURIComponent(m[1]) : ''; } catch (e) {}
   if (uid !== S.uid) window.scrollTo(0, 0);
@@ -840,7 +872,9 @@ const ACTS = {
   back: () => go('players'),
   reload: () => render(),
   errkind: b => { S.errKind = b.dataset.k; render(); },
-  logout: () => logout(),
+  logout: () => { api('logout', {}).catch(() => {}); logout(); },
+  admedit: b => { S.admEdit = b.dataset.name; render(); },
+  admnew: () => { S.admEdit = ''; render(); },
   copy: b => { if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.v).then(() => toast('复制好了'), () => toast('复制不了，手动选一下吧', true)); },
   addgive: () => {
     const f = $('form[data-form=adjust]'), k = f.elements.gk.value;
@@ -917,6 +951,25 @@ document.addEventListener('input', e => {
 
 /* ---------- 表单 ---------- */
 const FORMS = {
+  admin: async f => {
+    const E = f.elements, name = E.name.value.trim(), role = E.role.value, pw = E.pw.value, old = S.admins.find(a => a.name === S.admEdit);
+    if (!/^[A-Za-z0-9_\-\u4e00-\u9fa5]{2,20}$/.test(name)) return toast('名字要 2 到 20 个字（字母、数字、汉字、_、-）', true);
+    if ((!old || pw) && (pw.length < 12 || pw.length > 128)) return toast('密码要 12 到 128 位', true);
+    const body = { name, role }, lines = [];
+    if (old) {
+      const off = E.off.checked;
+      if (role !== old.role) lines.push('角色：' + ROLE[old.role] + ' → ' + ROLE[role]);
+      if (pw) { body.password = pw; lines.push('新密码：' + pw, '先把它记下来，保存以后这里不再显示'); }
+      if (off !== !!old.disabled) { body.disabled = off; lines.push(off ? '停用这个账号' : '重新启用这个账号'); }
+      if (!lines.length) return toast('没有改动', true);
+      if (pw || off) lines.push(name + ' 已经登录的网页会马上失效');
+    } else {
+      body.password = pw;
+      lines.push('角色：' + ROLE[role], '密码：' + pw, '先把它记下来，建好以后这里不再显示');
+    }
+    const a = await ask({ title: old ? '改管理员 ' + name : '建管理员账号 ' + name, lines, ok: old ? '保存' : '建账号', danger: role === 'all' && (!old || old.role !== 'all') });
+    if (a) await busy(submitBtn(f), async () => { await api('admins', { ...body, why: a.why }); toast(old ? '改好了' : '建好了，' + name + ' 可以登录了'); S.admEdit = ''; render(); });
+  },
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); render(); },
   authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
   adjust: async f => {
@@ -1013,15 +1066,17 @@ document.addEventListener('submit', e => {
 async function start() {
   const [w, cat] = await Promise.all([api('whoami'), api('catalog')]);
   useCat(cat);
-  S.who = w.who;
+  S.who = w.who; S.role = w.role || 'view';
   $('#who').textContent = w.who;
+  $('#role').textContent = ROLE[S.role];
+  for (const b of document.querySelectorAll('.tabs [data-need]')) b.classList.toggle('hidden', S.role !== b.dataset.need);
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
   route();
 }
 function logout(msg) {
-  S.tok = ''; S.who = ''; S.p = null; S.cfg = null;
-  saveTok('');
+  S.tok = ''; S.who = ''; S.role = ''; S.p = null; S.cfg = null; S.admEdit = '';
+  clearTimeout(S.expT);
   $('#app').classList.add('hidden');
   $('#main').textContent = '';
   $('#login').classList.remove('hidden');
@@ -1031,20 +1086,24 @@ function logout(msg) {
 }
 $('#loginForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const tok = $('#tok').value.trim(), btn = $('#loginBtn');
-  if (!tok) return;
-  if (tok.length < 16) { $('#loginMsg').textContent = '管理口令至少 16 位，短的服务器不认'; return; }
-  btn.disabled = true; btn.textContent = '检查口令…'; $('#loginMsg').textContent = '';
-  S.tok = tok;
-  try { await start(); saveTok(tok); }
-  catch (err) { S.tok = ''; $('#loginMsg').textContent = err.message === '没有权限' ? '口令不对' : err.message; }
+  const name = $('#admName').value.trim(), pw = $('#tok').value, btn = $('#loginBtn');
+  if (!pw) return;
+  if (!name && pw.trim().length < 16) { $('#loginMsg').textContent = 'ADMIN_SECRET 口令至少 16 位；有管理员账号的话把名字也填上'; return; }
+  btn.disabled = true; btn.textContent = '登录中…'; $('#loginMsg').textContent = '';
+  try {
+    let r, j = {};
+    try { r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, password: name ? pw : pw.trim() }), cache: 'no-store' }); }
+    catch (err) { throw new Error('连不上服务器，检查一下网络'); }
+    try { j = await r.json(); } catch (err) {}
+    if (!r.ok || !j.token) throw new Error(j.error || '出错了（' + r.status + '）');
+    S.tok = j.token;
+    $('#tok').value = '';
+    S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, j.expiresIn * 1000);
+    await start();
+  } catch (err) { S.tok = ''; $('#loginMsg').textContent = err.message; }
   finally { btn.disabled = false; btn.textContent = '进入'; }
 });
-(async () => {
-  S.tok = loadTok();
-  if (!S.tok) return logout();
-  try { await start(); } catch (e) { logout(e.message === '没有权限' ? '' : e.message); }
-})();
+logout();
 </script>
 </body>
 </html>

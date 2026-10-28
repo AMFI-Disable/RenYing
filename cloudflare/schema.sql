@@ -211,3 +211,25 @@ CREATE TABLE IF NOT EXISTS auth_log (
 );
 CREATE INDEX IF NOT EXISTS idx_auth_log_uid ON auth_log(uid, at);
 CREATE INDEX IF NOT EXISTS idx_auth_log_at ON auth_log(at);
+
+-- 管理员账号：名字 + 密码（PBKDF2，和玩家一样），四种角色。ADMIN_SECRET 口令登录不在这张表里
+CREATE TABLE IF NOT EXISTS admins (
+    name TEXT PRIMARY KEY COLLATE NOCASE,
+    role TEXT NOT NULL CHECK (role IN ('view', 'econ', 'ban', 'all')),
+    password_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    password_algo TEXT NOT NULL,
+    disabled INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    created_by TEXT NOT NULL,
+    last_login INTEGER NOT NULL DEFAULT 0
+);
+
+-- 管理网页的登录：30 分钟，token 只存哈希（h1: + sha256）。改密码、停用、退出时删掉
+CREATE TABLE IF NOT EXISTS admin_sessions (
+    token TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+);

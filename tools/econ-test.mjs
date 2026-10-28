@@ -1948,6 +1948,88 @@ section('找回饰品：管理后台按流水查出“拿到过、现在没有�
   ok(aud.ok && aud.rows.some(r => r.act === 'restore' && r.uid === R.uid), '操作记录里看得到这次找回', aud.rows && aud.rows.slice(0, 3));
 }
 
+section('管理员账号和角色：先登录换 30 分钟的管理令牌；四种角色按接口放行；停用、改密码马上踢下线；都记进操作记录');
+{
+  const login = (body, ip = '5.6.0.1') => call('POST', '/api/admin/login', body, undefined, ip);
+  const s0 = await login({ password: ADMIN });
+  ok(s0.ok && s0.token.startsWith('as_') && s0.who === 'admin' && s0.role === 'all' && s0.expiresIn === 1800, '用 ADMIN_SECRET 口令登录：拿到 30 分钟的管理令牌，角色是全部', s0);
+  ok(!row('SELECT 1 AS x FROM admin_sessions WHERE token = ?', s0.token) && row("SELECT COUNT(*) AS n FROM admin_sessions WHERE token LIKE 'h1:%'").n >= 1, '数据库里只存管理令牌的哈希');
+  const w0 = await adm('GET', '/api/admin/whoami', undefined, s0.token);
+  ok(w0.ok && w0.who === 'admin' && w0.role === 'all', '用管理令牌调接口', w0);
+  ok((await adm('GET', '/api/admin/whoami')).role === 'all', '命令行直接带 ADMIN_SECRET 照旧能用（角色是全部）');
+  ok((await login({ password: 'wrong-pass-0000000000' }, '5.6.0.2')).status === 403, '口令不对：登录不了');
+
+  const mk = (name, role, pw, tok = s0.token) => adm('POST', '/api/admin/admins', { name, role, password: pw, why: '建管理员' }, tok);
+  ok((await adm('POST', '/api/admin/admins', { name: 'viewer', role: 'view', password: 'viewer-pass-0001' }, s0.token)).status === 400, '建管理员也要写原因');
+  ok((await mk('viewer', 'view', 'short')).status === 400, '密码少于 12 位不收');
+  ok((await mk('admin', 'view', 'viewer-pass-0001')).status === 400, '名字不能和 ADMIN_SECRET 口令的名字重');
+  ok((await mk('boss', 'god', 'viewer-pass-0001')).status === 400, '不认识的角色不收');
+  const c1 = await mk('viewer', 'view', 'viewer-pass-0001');
+  await mk('banker', 'econ', 'banker-pass-0002'); await mk('judge', 'ban', 'judge-pass-00003'); await mk('chief', 'all', 'chief-pass-00004');
+  ok(c1.ok && c1.created && row("SELECT COUNT(*) AS n FROM admins").n === 4, '建了四个管理员账号', c1);
+  const a1 = row("SELECT * FROM admins WHERE name = 'viewer'");
+  ok(a1.password_algo.startsWith('pbkdf2') && !a1.password_hash.includes('viewer-pass') && a1.created_by === 'admin', '密码用 PBKDF2 存，记着是谁建的', a1);
+  const list = await adm('GET', '/api/admin/admins', undefined, s0.token);
+  ok(list.ok && list.admins.length === 4 && list.admins.every(a => !('password_hash' in a) && !('salt' in a)), '列表里没有密码', list.admins);
+
+  const L = {};
+  for (const [n, pw] of [['viewer', 'viewer-pass-0001'], ['banker', 'banker-pass-0002'], ['judge', 'judge-pass-00003'], ['chief', 'chief-pass-00004']]) L[n] = await login({ name: n, password: pw });
+  ok(['viewer', 'banker', 'judge', 'chief'].every(n => L[n].ok && L[n].who === n), '四个账号都能用名字和密码登录', Object.values(L).map(x => x.role));
+  ok((await login({ name: 'VIEWER', password: 'viewer-pass-0001' })).who === 'viewer', '名字不分大小写');
+  ok((await login({ name: 'viewer', password: 'banker-pass-0002' }, '5.6.0.3')).status === 403 && (await login({ name: 'nobody', password: 'viewer-pass-0001' }, '5.6.0.3')).status === 403, '密码不对、没有这个人：都登录不了');
+  ok(row("SELECT last_login FROM admins WHERE name = 'judge'").last_login === T, '记下最近登录的时间');
+
+  const vic = await newUser('roletest');
+  const can = async (n, method, path, body) => (await adm(method, path, body, L[n].token)).status;
+  const adj = { uid: vic.uid, ink: 5, why: '角色测试' };
+  ok(await can('viewer', 'GET', '/api/admin/stats') === 200 && await can('viewer', 'GET', '/api/admin/econ?uid=' + vic.uid) === 200, '只能看：所有查询都能看');
+  const v403 = await adm('POST', '/api/admin/adjust', adj, L.viewer.token);
+  ok(v403.status === 403 && v403.role === 'view' && inkOf(vic.uid) === inkOf(vic.uid), '只能看：加墨锭被拒（403，说明缺什么角色）', v403);
+  ok(await can('viewer', 'POST', '/api/admin/ban', { uid: vic.uid, days: 1, why: 'x' }) === 403 && await can('viewer', 'POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'all', why: 'x' }) === 403, '只能看：封号、改开关都不行');
+  const ink0 = inkOf(vic.uid);
+  ok(await can('banker', 'POST', '/api/admin/adjust', adj) === 200 && inkOf(vic.uid) === ink0 + 5, '经济：能加墨锭');
+  ok(await can('banker', 'POST', '/api/admin/ban', { uid: vic.uid, days: 1, why: 'x' }) === 403, '经济：不能封号');
+  ok(await can('judge', 'POST', '/api/admin/adjust', adj) === 403, '封禁和账号：不能加墨锭');
+  ok(await can('judge', 'POST', '/api/admin/ban', { uid: vic.uid, days: 1, why: '角色测试' }) === 200 && await can('judge', 'POST', '/api/admin/pardon', { uid: vic.uid, why: '角色测试' }) === 200, '封禁和账号：能封号、解封');
+  ok(await can('judge', 'POST', '/api/admin/password', { uid: vic.uid, password: 'judge-set-pass-1', why: '角色测试' }) === 200, '封禁和账号：能重设玩家密码');
+  ok(await can('judge', 'POST', '/api/admin/password', { uid: 'Dev', password: 'judge-set-pass-1', create: true, why: '角色测试' }) === 403 && await can('judge', 'POST', '/api/admin/password', { uid: 'Newbie9', password: 'judge-set-pass-1', create: true, why: '角色测试' }) === 403, '封禁和账号：不能建号、不能动 Dev（库存不受限）');
+  ok(await can('judge', 'POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: 'x' }) === 403 && await can('banker', 'GET', '/api/admin/admins') === 403 && await can('judge', 'POST', '/api/admin/admins', { name: 'x1', role: 'all', password: 'xxxxxxxxxxxxxx', why: 'x' }) === 403, '功能开关、管理员账号只有「全部」能动');
+  ok(await can('chief', 'POST', '/api/admin/adjust', adj) === 200 && await can('chief', 'GET', '/api/admin/admins') === 200, '全部：都能做');
+  const byBanker = parseDetail(row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'admin' ORDER BY id LIMIT 1", vic.uid).detail);
+  ok(byBanker.by === 'banker', '操作记录里记的是管理员账号的名字', byBanker);
+
+  ok((await adm('POST', '/api/admin/admins', { name: 'chief', role: 'econ', why: '降自己' }, L.chief.token)).status === 400 && (await adm('POST', '/api/admin/admins', { name: 'chief', disabled: true, why: '停自己' }, L.chief.token)).status === 400, '不能给自己降角色、不能停用自己');
+  const re = await adm('POST', '/api/admin/admins', { name: 'banker', role: 'view', why: '降级' }, L.chief.token);
+  ok(re.ok && !re.created && (await adm('GET', '/api/admin/whoami', undefined, L.banker.token)).role === 'view', '改了角色：已经登录的马上按新角色算');
+  ok(await can('banker', 'POST', '/api/admin/adjust', adj) === 403, '降成只能看以后不能加墨锭了');
+  const pwc = await adm('POST', '/api/admin/admins', { name: 'judge', password: 'judge-new-pass-9', why: '换密码' }, L.chief.token);
+  ok(pwc.ok && pwc.role === 'ban' && (await adm('GET', '/api/admin/whoami', undefined, L.judge.token)).status === 401, '改了密码：已经登录的马上失效（401），角色不变');
+  ok((await login({ name: 'judge', password: 'judge-pass-00003' }, '5.6.0.4')).status === 403 && (await login({ name: 'judge', password: 'judge-new-pass-9' })).ok, '旧密码不能用了，新密码能登录');
+  await adm('POST', '/api/admin/admins', { name: 'viewer', disabled: true, why: '离职' }, L.chief.token);
+  ok((await adm('GET', '/api/admin/whoami', undefined, L.viewer.token)).status === 401 && (await login({ name: 'viewer', password: 'viewer-pass-0001' }, '5.6.0.5')).status === 403, '停用了：已经登录的失效，也登录不了');
+  await adm('POST', '/api/admin/admins', { name: 'viewer', disabled: false, why: '回来了' }, L.chief.token);
+  ok((await login({ name: 'viewer', password: 'viewer-pass-0001' })).ok, '重新启用以后又能登录');
+
+  const out = await adm('POST', '/api/admin/logout', {}, L.chief.token);
+  ok(out.ok && (await adm('GET', '/api/admin/whoami', undefined, L.chief.token)).status === 401, '退出以后管理令牌就没用了');
+  const s1 = await login({ name: 'chief', password: 'chief-pass-00004' });
+  T += 29 * 60000;
+  ok((await adm('GET', '/api/admin/whoami', undefined, s1.token)).ok, '29 分钟时还能用');
+  T += 2 * 60000;
+  const exp = await adm('GET', '/api/admin/whoami', undefined, s1.token);
+  ok(exp.status === 401 && /重新登录/.test(exp.error), '30 分钟过了：401，要重新登录', exp);
+  ok((await adm('GET', '/api/admin/whoami', undefined, 'as_' + 'f'.repeat(64))).status === 401, '编造的管理令牌不行');
+
+  const logs = ENV.DB.raw.prepare("SELECT act, detail FROM econ_log WHERE act IN ('adm_login', 'adm_acct') ORDER BY id").all().map(r => ({ act: r.act, ...parseDetail(r.detail) }));
+  ok(logs.some(l => l.act === 'adm_login' && l.by === 'admin' && l.how === 'secret') && logs.some(l => l.act === 'adm_login' && l.by === 'judge' && l.how === 'account'), '每次登录都记进流水（口令登录、账号登录分开写）');
+  ok(logs.some(l => l.act === 'adm_acct' && l.name === 'banker' && l.from === 'econ' && l.role === 'view' && l.by === 'chief') && logs.some(l => l.act === 'adm_acct' && l.name === 'judge' && l.pw === 1) && !logs.some(l => JSON.stringify(l).includes('judge-new-pass')), '改管理员账号记进流水（谁改的、从什么改成什么），不记密码');
+  const audit = await adm('GET', '/api/admin/audit');
+  ok(audit.ok && audit.rows.some(r => r.act === 'adm_acct') && audit.rows.some(r => r.act === 'adm_login'), '管理后台「操作记录」里看得到这些');
+  const fails = [];
+  for (let i = 0; i < 21; i++) fails.push((await login({ name: 'chief', password: 'guess-guess-' + i }, '5.6.9.9')).status);
+  ok(fails.slice(0, 20).every(s => s === 403) && fails[20] === 429 && (await login({ name: 'chief', password: 'chief-pass-00004' }, '5.6.9.9')).status === 429, '登录试错 20 次也锁一小时，和口令一样', fails.slice(-3));
+}
+
 section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭据；拿凭据失败也照样回 STUN');
 {
   const realFetch = globalThis.fetch;

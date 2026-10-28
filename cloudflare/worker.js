@@ -161,6 +161,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS devices (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, refresh TEXT NOT NULL UNIQUE, prev TEXT NOT NULL DEFAULT '', rotated_at INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, label TEXT NOT NULL DEFAULT '', last_seen INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
   `CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id)`,
   `CREATE TABLE IF NOT EXISTS refresh_used (h TEXT PRIMARY KEY, dev TEXT NOT NULL, at INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS admins (name TEXT PRIMARY KEY COLLATE NOCASE, role TEXT NOT NULL CHECK (role IN ('view', 'econ', 'ban', 'all')), password_hash TEXT NOT NULL, salt TEXT NOT NULL, password_algo TEXT NOT NULL, disabled INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, created_by TEXT NOT NULL, last_login INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE TABLE IF NOT EXISTS admin_sessions (token TEXT PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS auth_log (id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, uid TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', act TEXT NOT NULL, ip TEXT NOT NULL DEFAULT '', dev TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')`,
   `CREATE INDEX IF NOT EXISTS idx_auth_log_uid ON auth_log(uid, at)`,
   `CREATE INDEX IF NOT EXISTS idx_auth_log_at ON auth_log(at)`,
@@ -1114,6 +1116,67 @@ function adminOf(env, request) {
   }
   return who;
 }
+/* ---------- 管理员账号和角色 ----------
+ * 管理网页先登录（POST /api/admin/login）换一个 30 分钟的管理令牌（as_ 开头），网页只放在内存里，刷新、过期就要重新登录。
+ * 两种登录：管理员账号（名字 + 密码，存在 admins 表，密码和玩家一样用 PBKDF2），或者 ADMIN_SECRET 里的口令（角色是“全部”，
+ * 用来建第一批管理员账号；命令行 tools/econ-admin.mjs 也还是直接带口令）。
+ * 角色：view 只能看；econ 还能改墨锭、补偿、兑换码、经济数值、找回饰品；ban 还能封号、解封、重设玩家密码；all 什么都能做（功能开关、管理员账号）。
+ * 每次登录、每次改管理员账号都记进 econ_log，和别的管理操作一样在「操作记录」里看得到。 */
+const ADMIN_TTL = 30 * 60e3;
+const ADMIN_ROLES = ['view', 'econ', 'ban', 'all'];
+const ADMIN_ROLE_NAME = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
+// 不写在这里的：GET 是 view，POST 是 all（管理员账号列表也只给 all 看）
+const ADMIN_NEED = {
+  'POST /api/admin/adjust': 'econ', 'POST /api/admin/restore': 'econ', 'POST /api/admin/gift': 'econ', 'POST /api/admin/gift/off': 'econ',
+  'POST /api/admin/code': 'econ', 'POST /api/admin/code/off': 'econ', 'POST /api/admin/cfg': 'econ', 'POST /api/admin/cfg/undo': 'econ',
+  'POST /api/admin/ban': 'ban', 'POST /api/admin/pardon': 'ban', 'POST /api/admin/password': 'ban',
+  'POST /api/admin/logout': 'view', 'GET /api/admin/admins': 'all',
+};
+const adminCan = (role, need) => role === 'all' || need === 'view' || role === need;
+// ADMIN_SECRET 里写了名字的那些（只要名字）
+function secretNames(env) {
+  const raw = String(env.ADMIN_SECRET || '');
+  return raw.includes(':') ? raw.split(/[,\n]/).map(p => p.slice(0, Math.max(0, p.indexOf(':'))).trim().toLowerCase()).filter(Boolean) : [];
+}
+// 这次请求是哪个管理员：{ who, role }；管理令牌过期、被停用是 { expired: true }；都不是就 null
+async function adminAuth(env, request, now) {
+  const tok = getBearerToken(request) || '';
+  if (tok.startsWith('as_')) {
+    if (tok.length > 80) return null;
+    const r = await env.DB.prepare('SELECT s.name, COALESCE(a.role, s.role) AS role, s.expires_at, a.disabled FROM admin_sessions s LEFT JOIN admins a ON a.name = s.name WHERE s.token = ?').bind(await tokenKey(tok)).first();
+    if (!r || r.expires_at <= now || r.disabled) return { expired: true };
+    return { who: r.name, role: ADMIN_ROLES.includes(r.role) ? r.role : 'view', tok };
+  }
+  const who = adminOf(env, request);
+  return who ? { who, role: 'all' } : null;
+}
+async function adminLogin(env, request, now, ip) {
+  if ((await peek(env, 'admf:' + ip, now)) >= 20) return error('管理口令试错太多次了，一小时后再试', 429);
+  const body = await readBody(request);
+  if (!body) return error('请求太大', 413);
+  const name = String(body.name || '').trim().slice(0, 20), pw = String(body.password || '');
+  let who = '', role = '';
+  if (name) {
+    const a = await env.DB.prepare('SELECT name, role, password_hash, salt, password_algo, disabled FROM admins WHERE name = ?').bind(name).first();
+    if (a && !a.disabled && pw.length <= 128 && await checkPassword(a, pw)) { who = a.name; role = a.role; }
+  } else {
+    const fake = new Request(request.url, { headers: { Authorization: 'Bearer ' + pw } });
+    who = adminOf(env, fake); role = who ? 'all' : '';
+  }
+  if (!who) {
+    await hit(env, 'admf:' + ip, 1e9, 3600e3, now);
+    return error(name ? '名字或密码不对（或者这个管理员账号停用了）' : '口令不对', 403);
+  }
+  const token = 'as_' + randHex(32);
+  await env.DB.batch([
+    env.DB.prepare('INSERT INTO admin_sessions (token, name, role, created_at, expires_at) VALUES (?, ?, ?, ?, ?)').bind(await tokenKey(token), who, role, now, now + ADMIN_TTL),
+    env.DB.prepare('UPDATE admins SET last_login = ? WHERE name = ?').bind(now, who),
+    env.DB.prepare('DELETE FROM admin_sessions WHERE expires_at < ?').bind(now),
+  ]);
+  await logRow(env, '*', now, 'adm_login', 1, null, null, JSON.stringify({ by: who, role, how: name ? 'account' : 'secret' }));
+  return json({ ok: true, token, who, role, expiresIn: ADMIN_TTL / 1000 });
+}
+
 const isPlain = o => !!o && typeof o === 'object' && !Array.isArray(o);
 const intIn = (v, lo, hi) => {   // 是整数、在范围里就给这个数，不然给 null；没填当 0
   if (v === undefined || v === null || v === '') return 0;
@@ -1279,9 +1342,12 @@ async function cfgSave(env, cfg, who, why, now) {   // 存成新的一版，这�
 const sameCfg = (a, b) => JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
 
 async function handleAdmin(env, request, path, now, ip) {
+  if (path === '/api/admin/login' && request.method === 'POST') return adminLogin(env, request, now, ip);
   if ((await peek(env, 'admf:' + ip, now)) >= 20) return error('管理口令试错太多次了，一小时后再试', 429);
-  const who = adminOf(env, request);
-  if (!who) { await hit(env, 'admf:' + ip, 1e9, 3600e3, now); return error('没有权限', 403); }
+  const me = await adminAuth(env, request, now);
+  if (me && me.expired) return error('管理登录过期了，请重新登录', 401);
+  if (!me) { await hit(env, 'admf:' + ip, 1e9, 3600e3, now); return error('没有权限', 403); }
+  const who = me.who, role = me.role;
   const url = new URL(request.url), q = k => String(url.searchParams.get(k) || '').trim().slice(0, 64);
   const post = request.method === 'POST', body = post ? (await readBody(request)) : {};
   if (!body) return error('请求太大', 413);
@@ -1305,8 +1371,40 @@ async function handleAdmin(env, request, path, now, ip) {
   };
   const bundleLog = b => ({ ink: b.ink || undefined, cases: Object.keys(b.cases).length ? b.cases : undefined, term: b.term || undefined, tags: b.tags || undefined });
   const route = (post ? 'POST ' : 'GET ') + path;
+  const need = ADMIN_NEED[route] || (post ? 'all' : 'view');
+  if (!adminCan(role, need)) return error(`你的管理员角色（${ADMIN_ROLE_NAME[role]}）不能做这件事，要「${ADMIN_ROLE_NAME[need]}」`, 403, { role });
 
-  if (route === 'GET /api/admin/whoami') return json({ ok: true, who, now });
+  if (route === 'GET /api/admin/whoami') return json({ ok: true, who, role, now });
+  if (route === 'POST /api/admin/logout') {
+    if (me.tok) await env.DB.prepare('DELETE FROM admin_sessions WHERE token = ?').bind(await tokenKey(me.tok)).run();
+    return json({ ok: true });
+  }
+  if (route === 'GET /api/admin/admins') {   // 管理员账号（不含密码）；ADMIN_SECRET 里写了名字的也列出来（只有名字）
+    const rows = (await env.DB.prepare('SELECT name, role, disabled, created_at, created_by, last_login FROM admins ORDER BY created_at').all()).results || [];
+    return json({ ok: true, admins: rows, secrets: secretNames(env) });
+  }
+  if (route === 'POST /api/admin/admins') {   // 建管理员账号，或者改它的角色、密码、停用 / 启用
+    const w = needWhy(); if (w) return w;
+    const name = String(body.name || '').trim();
+    if (!/^[A-Za-z0-9_\-\u4e00-\u9fa5]{2,20}$/.test(name)) return error('名字要 2 到 20 个字（字母、数字、汉字、_、-）');
+    if (name.toLowerCase() === 'admin' || secretNames(env).includes(name.toLowerCase())) return error('这个名字是 ADMIN_SECRET 口令用的，换一个');
+    const old = await env.DB.prepare('SELECT name, role, disabled FROM admins WHERE name = ?').bind(name).first();
+    const r = body.role === undefined && old ? old.role : String(body.role || '');
+    if (!ADMIN_ROLES.includes(r)) return error('角色要是 view（只能看）、econ（经济）、ban（封禁和账号）或 all（全部）');
+    const pw = body.password === undefined ? '' : String(body.password);
+    if ((!old || pw) && (pw.length < 12 || pw.length > 128)) return error('密码要 12 到 128 位');
+    const off = body.disabled === undefined ? (old ? old.disabled : 0) : (body.disabled ? 1 : 0);
+    if (old && old.name.toLowerCase() === who.toLowerCase() && (off || r !== 'all')) return error('不能停用自己、也不能给自己降角色');
+    const salt = randHex(16), hash = pw ? await pbkdf2(pw, salt, PW_ITER) : '';
+    const st = [];
+    if (!old) st.push(env.DB.prepare('INSERT INTO admins (name, role, password_hash, salt, password_algo, disabled, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(name, r, hash, salt, PW_ALGO, off, now, who));
+    else if (pw) st.push(env.DB.prepare('UPDATE admins SET role = ?, disabled = ?, password_hash = ?, salt = ?, password_algo = ? WHERE name = ?').bind(r, off, hash, salt, PW_ALGO, name));
+    else st.push(env.DB.prepare('UPDATE admins SET role = ?, disabled = ? WHERE name = ?').bind(r, off, name));
+    if (old && (pw || off)) st.push(env.DB.prepare('DELETE FROM admin_sessions WHERE name = ?').bind(name));   // 改了密码、停用了：已经登录的马上失效
+    await env.DB.batch(st);
+    await logRow(env, '*', now, 'adm_acct', 1, null, null, JSON.stringify({ by: who, why, name, role: r, from: old ? old.role : undefined, disabled: off || undefined, pw: pw ? 1 : undefined, created: old ? undefined : 1 }));
+    return json({ ok: true, name, role: r, disabled: off, created: !old });
+  }
   if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、每档品质的名字和颜色、每件饰品在哪个箱子哪一档、能改的经济数值
     return json({ ok: true, tiers: C.TIERS.map(t => ({ id: t, n: C.TIER[t].n, c: C.TIER[t].c })),
       cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem })),
@@ -1350,7 +1448,7 @@ async function handleAdmin(env, request, path, now, ip) {
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
   if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么）
-    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag') ORDER BY l.id DESC LIMIT 100").all();
+    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct') ORDER BY l.id DESC LIMIT 100").all();
     return json({ ok: true, rows: rows.results || [] });
   }
   if (route === 'POST /api/admin/adjust') {
@@ -1394,6 +1492,8 @@ async function handleAdmin(env, request, path, now, ip) {
     const key = String(body.uid || '').trim(), pw = String(body.password || '');
     if (pw.length < 12 || pw.length > 128) return error('新密码要 12 到 128 位');
     let u = await findUser(key), created = false;
+    // Dev 的库存不受限，建号、改它的密码只给「全部」
+    if (role !== 'all' && (u ? isDevUser(u) : body.create === true)) return error('建号、改 Dev 的密码要「全部」角色', 403, { role });
     const pwr = await makePassword(env, u || { username: key }, pw, now);
     if (!u) {
       if (body.create !== true) return error('没有这个账号', 404);
@@ -1548,6 +1648,7 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM devices WHERE expires_at < ?').bind(now),
     env.DB.prepare('DELETE FROM refresh_used WHERE at < ?').bind(now - REFRESH_TTL),
     env.DB.prepare('DELETE FROM auth_log WHERE at < ?').bind(now - AUTH_LOG_DAYS * DAY_MS),
+    env.DB.prepare('DELETE FROM admin_sessions WHERE expires_at < ?').bind(now),
     env.DB.prepare('DELETE FROM mkt WHERE state = 1 AND paid = 1 AND done_at < ?').bind(now - 120 * DAY_MS),   // 成交记录留四个月（价格走势用）
     env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - 10 * 60e3),
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),
