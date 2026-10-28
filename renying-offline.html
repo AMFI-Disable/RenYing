@@ -5507,6 +5507,7 @@ const PATTERNS_EN = [
 [/^「([^·」]+)·([^·」]+)」$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); if (x && y) return `“${x} · ${y}”`; const t = lookup(`${a}·${b}`); return t ? `“${t}”` : ''; }],
 [/^(.+) · ((?:天罡北斗|地煞幽冥|青龙出海|白虎啸风|朱雀振羽|玄武镇岳|破晓晨光|孤月映水|狂雷贯顶|炽火焚天)，.+)$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); return x && y ? `${x} · ${y}` : ''; }],
 [/^天机异变 · (.+)$/, (m0, n) => `Mutation · ${lookup(n) || n}`],
+[/^坠崖 -(\d+)$/, (m0, n) => `Fell -${n}`],
 [/^「(.+)」$/, (m0, n) => { const t = lookup(n); return t ? `“${t}”` : ''; }],
 [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
 [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],
@@ -6822,6 +6823,13 @@ duo: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']
 trio: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']],        // 本机车轮战：各禁 1 人，轮流各选 3 人
 trioSnake: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],   // 联机车轮接力：各禁 1 人，蛇形各选 3 人
 };
+const MAPS = {
+cliff: { n: '断崖台', d: '两侧没有墙。被击飞出崖边会坠崖，扣一点气血后弹回台上。', w: 1500,
+cliff: { dmg: 0.06, push: 320, back: 30, vy: -820, invul: 0.9 } },
+ice: { n: '寒潭冰面', d: '中间是一片冰面：起步和停下都会打滑，越重滑得越远。',
+ice: { from: 0.3, to: 0.7, grip: 0.3, dash: 0.7 } },
+};
+const MAP_POOL = ['cliff', 'ice'];   // 投票页上的顺序
 const DIFFICULTIES = [
 {
 id: 'easy', name: '入门',
@@ -12678,6 +12686,46 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
+const mapsOn = () => M.mode === 'maps' || (netRoom() || {}).rule === 'maps' || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'loc' && !!REPLAY.m && REPLAY.m.mode === 'maps');
+const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
+function mapOdds(votes) {
+const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
+return MAP_POOL.map((id, i) => sum ? n[i] / sum : 1 / MAP_POOL.length);
+}
+function mapPick(votes, r) {
+const odds = mapOdds(votes);
+let acc = 0;
+for (let i = 0; i < odds.length; i++) { acc += odds[i]; if (r < acc) return MAP_POOL[i]; }
+return MAP_POOL[odds.length - 1];
+}
+const mapSeedRand = seed => (Math.imul((seed | 0) ^ 0x5bd1e995, 2654435761) >>> 0) / 4294967296;
+function mapGrip(f) {
+const mp = mapNow(), ice = mp && mp.ice;
+if (!ice || f.y < 0) return 1;
+const u = f.x / STAGE_W;
+if (u < ice.from || u > ice.to) return 1;
+const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
+return clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
+}
+const mapIceX = () => { const ice = (mapNow() || {}).ice; return ice ? [ice.from * STAGE_W, ice.to * STAGE_W] : null; };
+function mapEdge(f, cl) {
+if (f.x >= WALL && f.x <= STAGE_W - WALL) return;
+const side = f.x < WALL ? -1 : 1;
+const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > cl.push);
+f.x = side < 0 ? WALL : STAGE_W - WALL;
+if (!flung || f.hp <= 0) { if (Math.sign(f.vx) === side) f.vx = 0; return; }
+const dmg = Math.round(f.maxHp * cl.dmg);
+f.hp = Math.max(1, f.hp - dmg);
+f.x -= side * cl.back; f.y = Math.min(f.y, -40); f.vy = cl.vy; f.vx = -side * 120;
+f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul);
+f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.wallBounced = true;
+f.mapFalls = (f.mapFalls || 0) + 1;
+if (RESIM) return;
+shake = Math.max(shake, 10); SFX.thud();
+ring(f.x, f.y - 40, 90, '170,200,255', 0.4);
+for (let i = 0; i < 10; i++) addP({ type: 'spark', x: f.x + rand(-20, 20), y: rand(-30, 10), vx: -side * rand(40, 200), vy: -rand(120, 420), life: 0.5, max: 0.5, rgb: '190,210,255', w: 2 });
+addP({ type: 'text', text: '坠崖 -' + dmg, x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '190,210,255' });
+}
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional screen shake)
@@ -12708,7 +12756,7 @@ const duo = Array.isArray(chars[0]) ? chars : null;
 if (duo) chars = [duo[0][0], duo[1][0]];
 setChars(chars[0], chars[1]);
 if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
-M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false;
+M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = null;
 M.watchAi = !!isWatch;
 A.meter = B.meter = 0;
 A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
@@ -12720,6 +12768,7 @@ if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
 STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
 if (typeof applySkins === 'function') applySkins();
 if (isRaid()) {
 const sq = M.raidSquadSize || 3;
@@ -13215,7 +13264,7 @@ if (c.consume('jump')) return doJump(f, dir);
 if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
 if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
 const sp = dir === f.face ? wk(f) : wk(f) * 0.78;
-f.vx = damp(f.vx, dir * sp, 16, STEP);
+f.vx = damp(f.vx, dir * sp, 16 * mapGrip(f), STEP);   // 冰面上起步、停下都慢
 f.state = Math.abs(f.vx) > 25 ? 'walk' : 'idle';
 } else {
 f.state = 'air';
@@ -13821,7 +13870,7 @@ if (M.phase === 'fight' && f.t > 0.07) {
 if (f.ctrl.consume('light')) { startAttack(f, f.onGround() ? 'l3' : 'a1'); break; }
 if (f.ctrl.consume('heavy')) { startAttack(f, f.onGround() ? 'hv' : 'a2'); break; }
 }
-if (f.t >= DASH_T) { f.vx *= 0.35; toNeutral(f); }
+if (f.t >= DASH_T) { const ice = mapGrip(f) < 1 && mapNow().ice; f.vx *= ice ? ice.dash : 0.35; toNeutral(f); }   // 冰上闪步收尾还滑着
 break;
 case 'hitstun':
 if (f.t >= f.stun) { f.comboHits = 0; toNeutral(f); }
@@ -13935,10 +13984,12 @@ if (f.y >= 0) { f.y = 0; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
 const onG = f.y >= 0;
 const slide = f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].nofric;
 const fw = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
-const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12);
+const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12) * mapGrip(f);
 if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, dampK, STEP);
 if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? (dampK * 0.75) : (dampK * 1.5), STEP);
-if (f.x < WALL || f.x > STAGE_W - WALL) {
+const cliff = (mapNow() || {}).cliff;
+if (cliff) mapEdge(f, cliff);   // 断崖台：两侧是崖边，没有墙可撞
+else if (f.x < WALL || f.x > STAGE_W - WALL) {
 const side = f.x < WALL ? -1 : 1;
 f.x = side < 0 ? WALL : STAGE_W - WALL;
 if (f.state === 'launched' && Math.abs(f.vx) > 350) {
@@ -15529,6 +15580,48 @@ ctx.beginPath(); ctx.ellipse(dir * 22 * s, 0, 22 * s, 4 * s, 0, 0, Math.PI * 2);
 }
 }
 }
+function drawMapGround() {
+const mp = mapNow();
+if (!mp) return;
+if (mp.cliff) {
+for (const side of [-1, 1]) {
+const ex = side < 0 ? WALL : STAGE_W - WALL, x0 = side < 0 ? ex - 3000 : ex;
+const g = ctx.createLinearGradient(0, -40, 0, 420);
+g.addColorStop(0, 'rgba(6,6,16,0.2)'); g.addColorStop(0.15, '#05050d'); g.addColorStop(1, '#020206');
+ctx.fillStyle = g; ctx.fillRect(x0, -2, 3000, 820);
+ctx.fillStyle = '#2a2440';
+ctx.beginPath(); ctx.moveTo(ex, -2);
+for (let k = 0; k <= 8; k++) ctx.lineTo(ex - side * (10 + hash(k * 13 + (side > 0 ? 7 : 0)) * 26), k * 34);
+ctx.lineTo(ex, 300); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = 'rgba(190,210,255,0.45)'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(ex - side * 60, 0); ctx.lineTo(ex, 0); ctx.stroke();
+for (let k = 0; k < 4; k++) {
+const mx = ex + side * (120 + k * 170) + Math.sin(clock * 0.3 + k) * 30;
+const mg = ctx.createRadialGradient(mx, 120 + k * 30, 10, mx, 120 + k * 30, 180);
+mg.addColorStop(0, 'rgba(150,170,220,0.13)'); mg.addColorStop(1, 'rgba(150,170,220,0)');
+ctx.fillStyle = mg; ctx.fillRect(mx - 180, -60 + k * 30, 360, 360);
+}
+}
+}
+const ix = mapIceX();
+if (ix) {
+const [x0, x1] = ix;
+const g = ctx.createLinearGradient(0, 0, 0, 60);
+g.addColorStop(0, 'rgba(170,220,255,0.38)'); g.addColorStop(1, 'rgba(120,180,230,0.05)');
+ctx.fillStyle = g; ctx.fillRect(x0, 0, x1 - x0, 60);
+ctx.strokeStyle = 'rgba(210,240,255,0.75)'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x1, 0); ctx.stroke();
+ctx.strokeStyle = 'rgba(230,248,255,0.22)'; ctx.lineWidth = 1;
+for (let k = 0; k < 9; k++) {
+const cx = x0 + (k + 0.5) * (x1 - x0) / 9, len = 16 + hash(k * 5) * 30;
+ctx.beginPath(); ctx.moveTo(cx - len, 6 + hash(k) * 30); ctx.lineTo(cx + len, 2 + hash(k * 3) * 26); ctx.stroke();
+}
+const sx = x0 + ((clock * 90) % (x1 - x0));
+const sg = ctx.createLinearGradient(sx - 60, 0, sx + 60, 0);
+sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.16)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+ctx.fillStyle = sg; ctx.fillRect(sx - 60, 0, 120, 40);
+}
+}
 function drawGround() {
 const g = ctx.createLinearGradient(0, 0, 0, 260);
 g.addColorStop(0, '#221c38'); g.addColorStop(1, '#0a0816');
@@ -15540,7 +15633,8 @@ for (let x = -600; x < STAGE_W + 600; x += 90) { ctx.beginPath(); ctx.moveTo(x, 
 const rg = ctx.createRadialGradient(cam.x + 200, 40, 10, cam.x + 200, 40, 400);
 rg.addColorStop(0, 'rgba(255,236,210,0.1)'); rg.addColorStop(1, 'rgba(255,236,210,0)');
 ctx.fillStyle = rg; ctx.fillRect(cam.x - 400, 0, 1200, 200);
-for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
+drawMapGround();
+if (!(mapNow() || {}).cliff) for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
 ctx.fillStyle = '#3a121c'; ctx.fillRect(px - 16, -900, 32, 900);
 ctx.fillStyle = 'rgba(255,120,120,0.12)'; ctx.fillRect(px - 16, -900, 6, 900);
 ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);

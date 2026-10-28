@@ -230,6 +230,54 @@ function updateArena2v2(dt) {
   }
 }
 
+// ---------- 山河异境的地图（src/data/12-maps.js）----------
+// 这一局在哪张图记在 M.map，跟着 M 进回滚存档和录像（st0），两边、回放里都一样。普通对战、排位没有 M.map，就是原来的平地
+const mapsOn = () => M.mode === 'maps' || (netRoom() || {}).rule === 'maps' || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'loc' && !!REPLAY.m && REPLAY.m.mode === 'maps');
+const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
+// 按票数选图：votes 是每位玩家投的地图 id（没投是 null），r 是 0~1 的随机数。没人投票时每张图一样
+function mapOdds(votes) {
+  const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
+  return MAP_POOL.map((id, i) => sum ? n[i] / sum : 1 / MAP_POOL.length);
+}
+function mapPick(votes, r) {
+  const odds = mapOdds(votes);
+  let acc = 0;
+  for (let i = 0; i < odds.length; i++) { acc += odds[i]; if (r < acc) return MAP_POOL[i]; }
+  return MAP_POOL[odds.length - 1];
+}
+// 联机用对局种子算出选图的随机数：两边种子一样，选出来的图就一样；不动对局随机数（GRNG），后面的对局照旧
+const mapSeedRand = seed => (Math.imul((seed | 0) ^ 0x5bd1e995, 2654435761) >>> 0) / 4294967296;
+// 脚下的抓地力：1 是普通地面；站在冰面上小于 1，越重越小（滑得越远）。离影的雾身（分身）站在地上也按这个算
+function mapGrip(f) {
+  const mp = mapNow(), ice = mp && mp.ice;
+  if (!ice || f.y < 0) return 1;
+  const u = f.x / STAGE_W;
+  if (u < ice.from || u > ice.to) return 1;
+  const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
+  return clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
+}
+const mapIceX = () => { const ice = (mapNow() || {}).ice; return ice ? [ice.from * STAGE_W, ice.to * STAGE_W] : null; };
+// 断崖台的崖边（代替两侧的墙）：自己走、跳、闪都过不去；被击飞，或硬直中被打得很快，越过崖边就坠崖：
+// 扣一点气血（不会扣死）、弹回同一侧的崖边，弹回途中无敌。雾身越过崖边怎么处理留给离影自己定（传进来的 f 只要有 x、vx）
+function mapEdge(f, cl) {
+  if (f.x >= WALL && f.x <= STAGE_W - WALL) return;
+  const side = f.x < WALL ? -1 : 1;
+  const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > cl.push);
+  f.x = side < 0 ? WALL : STAGE_W - WALL;
+  if (!flung || f.hp <= 0) { if (Math.sign(f.vx) === side) f.vx = 0; return; }
+  const dmg = Math.round(f.maxHp * cl.dmg);
+  f.hp = Math.max(1, f.hp - dmg);
+  f.x -= side * cl.back; f.y = Math.min(f.y, -40); f.vy = cl.vy; f.vx = -side * 120;
+  f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul);
+  f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.wallBounced = true;
+  f.mapFalls = (f.mapFalls || 0) + 1;
+  if (RESIM) return;
+  shake = Math.max(shake, 10); SFX.thud();
+  ring(f.x, f.y - 40, 90, '170,200,255', 0.4);
+  for (let i = 0; i < 10; i++) addP({ type: 'spark', x: f.x + rand(-20, 20), y: rand(-30, 10), vx: -side * rand(40, 200), vy: -rand(120, 420), life: 0.5, max: 0.5, rgb: '190,210,255', w: 2 });
+  addP({ type: 'text', text: '坠崖 -' + dmg, x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '190,210,255' });
+}
+
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional screen shake)
@@ -264,7 +312,7 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (duo) chars = [duo[0][0], duo[1][0]];
   setChars(chars[0], chars[1]);
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
-  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false;
+  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = null;
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
@@ -276,6 +324,7 @@ function startMatch(mode, level, chars, isWatch = false) {
 }
 function startRound() {
   STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+  const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
   if (typeof applySkins === 'function') applySkins();
   if (isRaid()) {
     const sq = M.raidSquadSize || 3;

@@ -94,7 +94,7 @@ function neutral(f, foe) {
     if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
     if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
     const sp = dir === f.face ? wk(f) : wk(f) * 0.78;
-    f.vx = damp(f.vx, dir * sp, 16, STEP);
+    f.vx = damp(f.vx, dir * sp, 16 * mapGrip(f), STEP);   // 冰面上起步、停下都慢
     f.state = Math.abs(f.vx) > 25 ? 'walk' : 'idle';
   } else {
     f.state = 'air';
@@ -732,7 +732,7 @@ function updateFighter(f, foe) {
         if (f.ctrl.consume('light')) { startAttack(f, f.onGround() ? 'l3' : 'a1'); break; }
         if (f.ctrl.consume('heavy')) { startAttack(f, f.onGround() ? 'hv' : 'a2'); break; }
       }
-      if (f.t >= DASH_T) { f.vx *= 0.35; toNeutral(f); }
+      if (f.t >= DASH_T) { const ice = mapGrip(f) < 1 && mapNow().ice; f.vx *= ice ? ice.dash : 0.35; toNeutral(f); }   // 冰上闪步收尾还滑着
       break;
     case 'hitstun':
       if (f.t >= f.stun) { f.comboHits = 0; toNeutral(f); }
@@ -847,10 +847,12 @@ function physics(f) {
   const onG = f.y >= 0;
   const slide = f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].nofric;
   const fw = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
-  const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12);
+  const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12) * mapGrip(f);
   if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, dampK, STEP);
   if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? (dampK * 0.75) : (dampK * 1.5), STEP);
-  if (f.x < WALL || f.x > STAGE_W - WALL) {
+  const cliff = (mapNow() || {}).cliff;
+  if (cliff) mapEdge(f, cliff);   // 断崖台：两侧是崖边，没有墙可撞
+  else if (f.x < WALL || f.x > STAGE_W - WALL) {
     const side = f.x < WALL ? -1 : 1;
     f.x = side < 0 ? WALL : STAGE_W - WALL;
     if (f.state === 'launched' && Math.abs(f.vx) > 350) {

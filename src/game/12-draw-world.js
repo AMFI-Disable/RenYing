@@ -134,6 +134,52 @@ function bamboo(par, sc, gy, color, spacing, scale) {
     }
   }
 }
+// 山河异境的地面：断崖台两侧画成深谷，寒潭冰面画出冰的范围（画在柱子、灯笼前面）
+function drawMapGround() {
+  const mp = mapNow();
+  if (!mp) return;
+  if (mp.cliff) {
+    for (const side of [-1, 1]) {
+      const ex = side < 0 ? WALL : STAGE_W - WALL, x0 = side < 0 ? ex - 3000 : ex;
+      const g = ctx.createLinearGradient(0, -40, 0, 420);
+      g.addColorStop(0, 'rgba(6,6,16,0.2)'); g.addColorStop(0.15, '#05050d'); g.addColorStop(1, '#020206');
+      ctx.fillStyle = g; ctx.fillRect(x0, -2, 3000, 820);
+      // 崖壁：一道参差的石边
+      ctx.fillStyle = '#2a2440';
+      ctx.beginPath(); ctx.moveTo(ex, -2);
+      for (let k = 0; k <= 8; k++) ctx.lineTo(ex - side * (10 + hash(k * 13 + (side > 0 ? 7 : 0)) * 26), k * 34);
+      ctx.lineTo(ex, 300); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(190,210,255,0.45)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(ex - side * 60, 0); ctx.lineTo(ex, 0); ctx.stroke();
+      // 谷底的雾
+      for (let k = 0; k < 4; k++) {
+        const mx = ex + side * (120 + k * 170) + Math.sin(clock * 0.3 + k) * 30;
+        const mg = ctx.createRadialGradient(mx, 120 + k * 30, 10, mx, 120 + k * 30, 180);
+        mg.addColorStop(0, 'rgba(150,170,220,0.13)'); mg.addColorStop(1, 'rgba(150,170,220,0)');
+        ctx.fillStyle = mg; ctx.fillRect(mx - 180, -60 + k * 30, 360, 360);
+      }
+    }
+  }
+  const ix = mapIceX();
+  if (ix) {
+    const [x0, x1] = ix;
+    const g = ctx.createLinearGradient(0, 0, 0, 60);
+    g.addColorStop(0, 'rgba(170,220,255,0.38)'); g.addColorStop(1, 'rgba(120,180,230,0.05)');
+    ctx.fillStyle = g; ctx.fillRect(x0, 0, x1 - x0, 60);
+    ctx.strokeStyle = 'rgba(210,240,255,0.75)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x1, 0); ctx.stroke();
+    // 冰上的反光和裂纹
+    ctx.strokeStyle = 'rgba(230,248,255,0.22)'; ctx.lineWidth = 1;
+    for (let k = 0; k < 9; k++) {
+      const cx = x0 + (k + 0.5) * (x1 - x0) / 9, len = 16 + hash(k * 5) * 30;
+      ctx.beginPath(); ctx.moveTo(cx - len, 6 + hash(k) * 30); ctx.lineTo(cx + len, 2 + hash(k * 3) * 26); ctx.stroke();
+    }
+    const sx = x0 + ((clock * 90) % (x1 - x0));
+    const sg = ctx.createLinearGradient(sx - 60, 0, sx + 60, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.16)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sg; ctx.fillRect(sx - 60, 0, 120, 40);
+  }
+}
 function drawGround() {
   // 世界坐标里画地面、柱子、灯笼
   const g = ctx.createLinearGradient(0, 0, 0, 260);
@@ -147,8 +193,9 @@ function drawGround() {
   const rg = ctx.createRadialGradient(cam.x + 200, 40, 10, cam.x + 200, 40, 400);
   rg.addColorStop(0, 'rgba(255,236,210,0.1)'); rg.addColorStop(1, 'rgba(255,236,210,0)');
   ctx.fillStyle = rg; ctx.fillRect(cam.x - 400, 0, 1200, 200);
-  // 两侧朱红柱子（场地边界）
-  for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
+  drawMapGround();
+  // 两侧朱红柱子（场地边界）；断崖台两侧是崖，没有柱子
+  if (!(mapNow() || {}).cliff) for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
     ctx.fillStyle = '#3a121c'; ctx.fillRect(px - 16, -900, 32, 900);
     ctx.fillStyle = 'rgba(255,120,120,0.12)'; ctx.fillRect(px - 16, -900, 6, 900);
     ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);

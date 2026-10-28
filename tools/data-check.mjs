@@ -228,12 +228,28 @@ function checkModes(env) {
     if (!shape(w, md, { ...MODE, slots: 'arr', 'four?': 'bool', 'raid?': 'bool', 'rule?': 'str' })) continue;
     order(w, md);
     if (md.local) err(w, '联机房间不能写 local');
-    if (md.rule && !['chaos', 'mayhem'].includes(md.rule)) err(w, `rule 只能是 chaos 或 mayhem，现在是 ${md.rule}`);
+    if (md.rule && !['chaos', 'mayhem', 'maps'].includes(md.rule)) err(w, `rule 只能是 chaos、mayhem 或 maps，现在是 ${md.rule}`);
     const ok = md.slots.length === 2 && md.slots.every(s => Array.isArray(s) && s.length && s.every(i => [0, 1, 2, 3].includes(i)));
     if (!ok) { err(w, 'slots 要写成 [[房主控制的编号…], [加入的人控制的编号…]]，编号 0~3'); continue; }
     unique(w + ' slots', md.slots.flat(), '侠客编号');
     if (!md.four && !md.raid && md.slots.flat().some(i => i > 1)) err(w, '不是四人模式（four）或同袍肉鸽（raid）就只能控制 0 和 1');
     if (md.raid && md.slots.flat().includes(1)) err(w, '同袍肉鸽里 1 号（B）是魔首，玩家不能控制');
+  }
+}
+
+// ---------- 山河异境的地图 ----------
+function checkMaps(env) {
+  const { MAPS, MAP_POOL } = env, w0 = 'src/data/12-maps.js';
+  const num = (w, o, k, lo, hi) => { if (typeof o[k] !== 'number' || !(o[k] >= lo && o[k] <= hi)) err(w, `${k} 要是 ${lo}~${hi} 之间的数，现在是 ${JSON.stringify(o[k])}`); };
+  if (!Array.isArray(MAP_POOL) || !MAP_POOL.length) err(w0 + ' MAP_POOL', '要至少一张图');
+  else { unique(w0 + ' MAP_POOL', MAP_POOL, '地图'); for (const id of MAP_POOL) if (!MAPS[id]) err(w0 + ' MAP_POOL', `${id} 在 MAPS 里没有`); }
+  for (const [k, mp] of Object.entries(MAPS)) {
+    const w = `${w0} MAPS.${k}`;
+    if (!shape(w, mp, { n: 'str', d: 'str', 'w?': 'num', 'cliff?': 'obj', 'ice?': 'obj' })) continue;
+    if (!(MAP_POOL || []).includes(k)) err(w, '不在 MAP_POOL 里，投票页上看不到');
+    if (mp.w !== undefined) num(w, mp, 'w', 1000, 2600);
+    if (mp.cliff) { const c = mp.cliff; num(w + '.cliff', c, 'dmg', 0, 0.3); num(w + '.cliff', c, 'push', 0, 2000); num(w + '.cliff', c, 'back', 0, 300); num(w + '.cliff', c, 'vy', -2000, 0); num(w + '.cliff', c, 'invul', 0, 3); }
+    if (mp.ice) { const c = mp.ice; num(w + '.ice', c, 'from', 0, 1); num(w + '.ice', c, 'to', 0, 1); num(w + '.ice', c, 'grip', 0.05, 1); num(w + '.ice', c, 'dash', 0, 1); if (c.from >= c.to) err(w + '.ice', 'from 要小于 to'); }
   }
 }
 
@@ -300,11 +316,12 @@ const TABLES = [
   { name: 'HEROES', check: checkHeroes },
   { name: 'BP_ORDERS', check: checkModes },
   { name: 'UI_COPY_EN', check: checkUiCopy },
+  { name: 'MAPS', check: checkMaps },
 ];
 
 const env = await makeEnv();
 const get = name => env.run(`typeof ${name} === 'undefined' ? undefined : ${name}`);
-const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN', 'CANCEL', 'SFX'].map(k => [k, get(k)]));
+const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN', 'CANCEL', 'SFX', 'MAPS', 'MAP_POOL'].map(k => [k, get(k)]));
 for (const t of TABLES) if (get(t.name) !== undefined) t.check(refs);
 checkPatterns();
 const stale = staleCopy();
