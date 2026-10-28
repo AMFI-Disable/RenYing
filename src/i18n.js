@@ -139,6 +139,16 @@
     [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
     [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],
     [/^结局 ((?:「[^」]+」)+)$/, (m0, x) => `Endings: ${x.slice(1, -1).split('」「').map(n => lookup(n) || n).join(', ')}`],
+    // 守关挑战（src/game/07-ai-story.js）：故事标题 · 关名、角色台词、结算页
+    [/^(\S+?)传 · (.+?)(?: · (.+))?$/, (m0, h, t, st) => { const a = lookup(t); return a ? `Tale of ${lookup(h) || h} · ${a}${st ? ` · ${lookup(st) || st}` : ''}` : ''; }],
+    [/^(\S{2,3})：「([\s\S]+)」$/, (m0, h, x) => { const t = lookup(x); return t ? `${lookup(h) || h}: “${t}”` : ''; }],
+    [/^第 (\d+) 幕$/, (m0, n) => `Act ${n}`],
+    [/^(\d+\.\d+) (破关|折戟)$/, (m0, id, r) => `${id} ${r === '破关' ? 'Cleared' : 'Failed'}`],
+    [/^折在第 (\d+) \/ (\d+) 波，共击退 (\d+) 只妖物$/, (m0, a, b, n) => `Fell on wave ${a} / ${b} after driving off ${n} demons`],
+    [/^同袍残存气血 (\d+)%，共斩灭 (\d+) 只妖物 ·$/, (m0, p, n) => `Team HP left ${p}%, ${n} demons slain ·`],
+    [/^全员共享斩妖赏金 \+(\d+) 墨锭！$/, (m0, g) => `Everyone shares a +${g} Ink bounty!`],
+    [/^(?:🎉 )?宿命通关奖励：已解锁【(.+?)】专属皮肤「(.+?)」！$/, (m0, h, k) => `Destiny reward: unlocked ${lookup(h) || h}'s exclusive skin “${lookup(k) || k}”!`],
+    [/^比分 (\d+) : (\d+)，再磨一磨剑$/, (m0, a, b) => `Score ${a} : ${b}. Sharpen your sword and try again`],
     // 天魔讨伐（src/game/22-tianmo.js）：页面、首页小卡片、出战提示和结算
     [/^第 (\d+) 代天魔$/, (m0, n) => `Demon · Gen ${n}`],
     [/^第 (\d+) 代天魔 · (.+)$/, (m0, n, h) => `Demon · Gen ${n} · ${lookup(h) || h}`],
