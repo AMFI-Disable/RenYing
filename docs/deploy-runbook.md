@@ -66,7 +66,7 @@ npx wrangler d1 execute renying-db --remote --command "SELECT id, name, applied_
 > `--env=""` 表示部署生产。不写也是部署生产，只是 wrangler 会提醒「有多个环境但没指定」，写上更不容易弄错。
 > `--config cloudflare/wrangler.toml` 让命令在仓库根目录就能跑；也可以先 `cd cloudflare` 再去掉这一段。
 
-## 先上 staging
+## 先上 Staging
 
 账号、存档、经济、迁移这类大改动，先在 staging 试一遍。staging 是独立的 Worker `renying-staging` 和独立的数据库，和生产完全分开。
 
@@ -139,7 +139,7 @@ npx wrangler rollback <版本号> --config cloudflare/wrangler.toml
 - 按迁移文件末尾的回滚 SQL，用 `npx wrangler d1 execute renying-db --remote --file=<回滚文件>` 执行。回滚 SQL 最后一句会删掉 `schema_migrations` 里这一行。执行前先导出一次备份。
 - 或者按「备份与恢复」恢复到部署前的时间点。
 
-### compatibility_date 出问题
+### `compatibility_date` 出问题
 
 把 `cloudflare/wrangler.toml` 里的 `compatibility_date` 改回旧日期，重新部署。
 

@@ -823,7 +823,7 @@ Release pass for issue #11. Only changes that were implemented and then checked 
 
 ---
 
-## [Inaugural] - Production Release (first public build, originally labelled 1.0.0)
+## [Inaugural] - Production Release (First Public Build, Originally Labelled 1.0.0)
 
 Inaugural release of Ren Ying (刃影), an ink-wash martial arts action duel game.
 
