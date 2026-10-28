@@ -2415,6 +2415,16 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
     box-shadow: 0 4px 18px rgba(184,57,46,.5), inset 0 0 0 1px rgba(255,255,255,.35);
     border-radius: 3px; transform: rotate(-4deg);
   }
+  /* 英文印章「Duel Under the Moon」竖排比「刃影」高，高多少还要看字体：后备字体时 214px，网络字体到了变 164px，
+     标题跟着居中就上下跳一下（首屏布局跳动）。英文时上下负外边距让印章不撑高标题行，印章仍对着「刃影」居中 */
+  body.lang-en .menuscr .mtitle .seal { margin-top: -50vh; margin-bottom: -50vh; }   /* 印章是竖排，margin-block 会是左右，这里要写上下 */
+  /* 首页右侧的任务、版本动态卡片：行高原来是 normal，跟着字体走（后备字体约 1.2 倍，网络字体约 1.45 倍），英文的版本动态
+     还会从一行折成两行，卡片变高、整栏往上跳。英文时把行高定成网络字体下的 1.45，版本动态那行先留好两行的高度 */
+  /* 以前选过英文的人打开网页：第一次绘制就给顶栏留出位置。不然首页先画在最上面，等翻译完、顶栏出来再往下挪 58px，
+     英文要多翻一遍整页，这一下挪得比中文更集中，首屏布局跳动超过 0.1（见 page.html 开头和 src/game/01-core.js 开头） */
+  html.boot-en .scr { top: var(--nav-h); }
+  body.lang-en .home-side { line-height: 1.45; }
+  body.lang-en .home-side .hn-line { min-height: 2.9em; }
 
   /* 首页核心入口按钮（#mNet 开始对战 & #mSingle 单人练习）：严格左对齐、同宽同高、玄青描金木匾形态 */
   .menuscr .mcard,

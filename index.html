@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="author" content="Even, Luffy, and Opus 5.5">
 <title>刃影</title>
+<script>try { if (localStorage.getItem('renying-lang') === 'en') document.documentElement.classList.add('boot-en'); } catch (e) {}</script>   <!-- 以前选过英文：首页一开始就给顶栏留位置（style.css 的 html.boot-en） -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600..700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400..700&family=Oswald:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">   <!-- 后台加载：连不上 Google 也不会卡住页面 -->
@@ -2288,6 +2289,10 @@ letter-spacing: .08em;
 box-shadow: 0 4px 18px rgba(184,57,46,.5), inset 0 0 0 1px rgba(255,255,255,.35);
 border-radius: 3px; transform: rotate(-4deg);
 }
+body.lang-en .menuscr .mtitle .seal { margin-top: -50vh; margin-bottom: -50vh; }
+html.boot-en .scr { top: var(--nav-h); }
+body.lang-en .home-side { line-height: 1.45; }
+body.lang-en .home-side .hn-line { min-height: 2.9em; }
 .menuscr .mcard,
 .menuscr .mcard.right,
 .menuscr .mcard.left {
@@ -10134,7 +10139,10 @@ end: { home: { title: '千针图', text: [['', '大师姐输了，凌雀却把�
 unravel: { title: '一根线', text: [['勾陈', '……你的线，比我的链子还难缠。我回去跟买家说，图烧了。'], ['', '凌雀把拆下来的线收进了一个小匣子。线有几万根，每一根都是一段路。'], ['', '后来她用这些线织了很多小手帕，送给了一路上帮过她的人。每块手帕上，只绣一条回家的路。']] } } },
 ] },
 });
-if (window.I18N && I18N.getLang() === 'en') I18N.applyTranslations();
+if (window.I18N && I18N.getLang() === 'en') {
+I18N.applyTranslations();
+setTimeout(() => document.documentElement.classList.remove('boot-en'), 1000);
+}
 const EMO_ICON = {'⚔':'战','🔥':'烈','🌲':'关','🥋':'练','🌱':'初','⚡':'疾','👑':'绝','🧠':'谋','🟢':'dot','💾':'存','☁':'云','📜':'卷','📥':'取','📤':'传','📂':'匣','🎁':'礼','💎':'墨','🏆':'胜','🎋':'签','⚠':'警','✅':'成','❌':'否','🔒':'锁','🎉':'贺','📦':'匣','💥':'破','🌪':'风','🌙':'月','🛡':'守','🪶':'羽','❄':'霜','💫':'震','🐉':'龙','🎨':'墨','🗡':'刃','✨':'灵','💨':'遁','★':'starf','☆':'star'};   // emoji → 印章字
 const EMO_RE = new RegExp('(' + Object.keys(EMO_ICON).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')️?\\s?', 'gu');
 const EMO_STRIP = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]\s?/gu;
