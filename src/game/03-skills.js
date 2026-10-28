@@ -178,15 +178,10 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
   kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身一甩，四枚黑铁手里剑呈扇形激射。【无硬直击飞】，纯粹以极速密雨截断对手起手，穿透轻型投掷物。',
-    start(f, foe) {
-      const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
-      if (target) f.face = faceDir(f, target);
-    },
-    update(f, foe) {
+    start() {},
+    update(f) {
       if (f.skPh === 0 && f.t >= 0.08) {
         f.skPh = 1; SFX.slice();
-        const target = foe || (typeof foeOf === 'function' ? foeOf(f) : null);
-        if (target) f.face = faceDir(f, target);
         for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), w: 26, h: 14, life: 0.55, dmg: 25, kb: [80, 0], stun: 0.18, hs: 0.03, launch: false });
       }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
@@ -250,7 +245,8 @@ const SKILLS = {
     start(f) { f.vx = 0; f.spinN = 0; },
     update(f, foe) {
       const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
-      f.vx = damp(f.vx, dir * wk(f) * 0.6, 10, STEP); f.face = faceDir(f, foe);
+      f.vx = damp(f.vx, dir * wk(f) * 0.6, 10, STEP);
+      if (dir !== 0) f.face = dir;
       // 弹开前方常规飞行道具
       for (const p of projs) {
         if (p.owner === foe.idx && !p.dead && !p.unbreakable) {
@@ -425,7 +421,7 @@ const SKILLS = {
     update(f, foe) {
       const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
       f.vx = damp(f.vx, dir * wk(f) * 0.45, 10, STEP);
-      f.face = faceDir(f, foe);
+      if (dir !== 0) f.face = dir;
       if (f.t > 0.1 && f.t < 1.0) for (const p of projs) {
         if (p.owner === foe.idx && !p.dead && !p.unbreakable && !p.ult && Math.abs(p.x - f.x) < 150 && Math.abs(p.y - (f.y - 90)) < 100) { p.dead = true; blockFX(p.x, p.y, f.face); SFX.block(); }
       }
@@ -456,23 +452,23 @@ const SKILLS = {
   shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
-      const target = sdTarget(f, foe);
-      if (target) f.face = target.x >= f.x ? 1 : -1;
+      f.sdTrack = false;
     },
     update(f, foe) {
       const target = sdTarget(f, foe);
       if (f.skPh === 0) {
-        if (target) f.face = target.x >= f.x ? 1 : -1;
         if (f.t >= 0.08) {
           f.skPh = 1; f.t = 0; f.invul = 0.12; f.hitDone = false; SFX.dash();
-          const a = target ? sdAim(f, target) : (f.face > 0 ? 0 : Math.PI);
+          const toward = target && (Math.sign(target.x - f.x) === f.face || Math.abs(target.x - f.x) <= 15);
+          f.sdTrack = !!toward;
+          const a = toward ? sdAim(f, target) : (f.face > 0 ? 0 : Math.PI);
           f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
         }
       }
       if (f.skPh === 1) {
         // 追踪：每一帧把飞行方向往对手现在的位置转（每秒最多转 SD_TURN 弧度），速度不变。
         // 对手无敌（腾空闪、闪身之类）时悬丝断开，照原方向直飞，不再转向
-        if (target && target.invul <= 0) {
+        if (target && target.invul <= 0 && f.sdTrack) {
           const cur = Math.atan2(f.vy, f.vx), want = sdAim(f, target);
           let d = want - cur;
           while (d > Math.PI) d -= Math.PI * 2;
