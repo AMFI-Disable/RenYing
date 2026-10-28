@@ -216,7 +216,7 @@ function applyHit(att, def, m, pt) {
 
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
     let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
-    if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'guard_stab') guardLoss *= currentChaosMutation.val;
+    if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
     if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
       guardLoss = 0;
       def.guard = def.maxGuard || 100;
@@ -300,12 +300,12 @@ function applyHit(att, def, m, pt) {
   }
   if (isCounter) {
     ev.counter = true;
-    const critMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'crit') ? currentChaosMutation.val : 1.2;
+    const critMul = (chaosNow('crit') || { val: 1.2 }).val;
     dmg *= critMul;
     ev.big = true;
   }
-  if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'dmg') {
-    dmg *= currentChaosMutation.val;
+  if (chaosNow('dmg')) {
+    dmg *= chaosNow('dmg').val;
   }
   if (M.mode === 'mayhem') {
     dmg *= (m.ult ? 5.2 : (m.skill || m.isProj ? 4.5 : 3.8));
@@ -368,8 +368,8 @@ function applyHit(att, def, m, pt) {
   {
     if (m.exact) dmg = m.dmg;
     def.hp = Math.max(m.hold ? 1 : 0, def.hp - dmg);
-    if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'vamp' && att.hp > 0 && !m.chip) {
-      const leech = Math.round(dmg * currentChaosMutation.val);
+    if (chaosNow('vamp') && att.hp > 0 && !m.chip) {
+      const leech = Math.round(dmg * chaosNow('vamp').val);
       if (leech > 0) {
         att.hp = Math.min(att.maxHp, att.hp + leech);
         att.lagHp = Math.min(att.maxHp, att.lagHp + leech);
@@ -380,7 +380,7 @@ function applyHit(att, def, m, pt) {
   if (def.dummy) def.hp = Math.max(1, def.hp);
   if (scPre) scAfterHit(att, def, m, ev, dmg, isCounter, scPre);
   att.hitConfirmed = true;
-  const chaosMeterMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'meter_gain') ? currentChaosMutation.val : 1;
+  const chaosMeterMul = (chaosNow('meter_gain') || { val: 1 }).val;
   if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
   if (!m.noStun || def.hp <= 0) def.move = null;
@@ -425,7 +425,7 @@ function applyHit(att, def, m, pt) {
       } else {
         const js = Math.max(0.45, 1 - 0.1 * (def.juggle - 1));
         def.state = 'launched'; def.t = 0;
-        const chaosKb = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'kb') ? currentChaosMutation.val : 1;
+        const chaosKb = (chaosNow('kb') || { val: 1 }).val;
         def.vx = m.kb[0] * fx * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
         const baseVy = m.spike ? m.kb[1] : (m.kb[1] === 0 ? -320 * js : m.kb[1] * js);
         def.vy = baseVy * (m.spike ? 1 : Math.min(1.25, Math.max(0.82, 1 / Math.cbrt(defWeight))));
@@ -436,7 +436,7 @@ function applyHit(att, def, m, pt) {
       const comboDecay = m.noScale ? 1 : Math.max(0.48, 1 - 0.075 * (def.comboHits - 1));
       const hitStunDur = m.stun * comboDecay * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1) * Math.min(1.22, Math.max(0.85, Math.pow(massRatio, 0.25)));
       const kbMul = m.noScale ? 1 : Math.min(1.45, 1 + 0.05 * (def.comboHits - 1));
-      const chaosKb = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'kb') ? currentChaosMutation.val : 1;
+      const chaosKb = (chaosNow('kb') || { val: 1 }).val;
       def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * kbMul * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
     }
   }

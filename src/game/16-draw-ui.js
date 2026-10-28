@@ -638,11 +638,11 @@ function drawHUD() {
     ctx.fillStyle = '#e9c46a';
     ctx.fillText(`问剑 · 第 ${M.towerFloor || 1} 层`, cx, top + bh + 18);
     ctx.restore();
-  } else if (M.mode === 'chaos') {
+  } else if (chaosOn()) {
     ctx.save();
     ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
     ctx.fillStyle = '#e9c46a';
-    const remSec = Math.max(0, Math.ceil(CHAOS_INTERVAL - chaosTimer));
+    const remSec = chaosLeft(), currentChaosMutation = chaosNow();
     const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + currentChaosMutation.name + ' (' + remSec + 's)') : '🎲 乾坤异变';
     ctx.fillText(mutTxt, cx, top + bh + 18);
     if (currentChaosMutation && currentChaosMutation.desc) {

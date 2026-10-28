@@ -11457,10 +11457,7 @@ A.guard = A.maxGuard = 500;
 B.guard = B.maxGuard = 500;
 A.meter = B.meter = 100;
 }
-if (M.mode === 'net' && roomDef().rule === 'chaos') {
-if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
-if (NET.role === 'host') rollChaosMutation();
-}
+if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
 const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
 if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
 if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
@@ -11523,9 +11520,7 @@ M.phase = 'ko';
 M.t = 0;
 M.koWinner = winner;
 } else if (M.mode !== 'demo' && M.mode !== 'train') {
-if (M.mode === 'chaos' || (M.mode === 'net' && roomDef().rule === 'chaos')) {
-if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
-}
+if (chaosOn()) updateChaos(STEP);   // 联机两边都算（以前只有房主抽，异变也只认本地模式，联机等于没有）
 M.timer = Math.max(0, M.timer - STEP);
 if (M.timer <= 0) {
 const s0 = sideFighters(0), s1 = sideFighters(1);
@@ -11836,14 +11831,14 @@ function startAttack(f, name) {
 endEscape(f);
 f.state = 'attack'; f.move = f.moves[name]; f.moveName = name; f.t = 0;
 if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
-if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'armor') { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
+if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
 f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
 const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
 f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
 if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
-const jumpBonus = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'jump') ? currentChaosMutation.val : 1;
+const jumpBonus = (chaosNow('jump') || { val: 1 }).val;
 f.vy = (f.jumps === 0 ? -JUMP_V : -DJUMP_V) * (f.ch.stat.jump || 1) * jumpBonus; f.jumps++;
 f.vx = dir ? dir * wk(f) * 1.15 : f.vx * 0.5;
 f.state = 'air'; f.y = Math.min(f.y, -1);
@@ -12631,7 +12626,7 @@ else if (f.state === 'launched') {
 const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
 g *= LAUNCH_GRAV * (1 + f.juggle * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow(w, 0.35)));
 }
-const chaosGrav = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'grav') ? currentChaosMutation.val : 1;
+const chaosGrav = (chaosNow('grav') || { val: 1 }).val;
 if (wasAir) f.vy += g * chaosGrav * STEP;
 if (f.state === 'held') { f.vx = 0; f.vy = 0; }
 f.x += f.vx * STEP; f.y += f.vy * STEP;
@@ -12904,7 +12899,7 @@ const chipFrac = (def.ch && def.ch.stat && def.ch.stat.guardChip) || 0.12;
 const bm = scOn() ? scBlockMod(att, def, m) : null;   // 秘卷改格挡磨血、削架势
 def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
 let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
-if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'guard_stab') guardLoss *= currentChaosMutation.val;
+if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
 if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
 guardLoss = 0;
 def.guard = def.maxGuard || 100;
@@ -12983,12 +12978,12 @@ if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 35);
 }
 if (isCounter) {
 ev.counter = true;
-const critMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'crit') ? currentChaosMutation.val : 1.2;
+const critMul = (chaosNow('crit') || { val: 1.2 }).val;
 dmg *= critMul;
 ev.big = true;
 }
-if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'dmg') {
-dmg *= currentChaosMutation.val;
+if (chaosNow('dmg')) {
+dmg *= chaosNow('dmg').val;
 }
 if (M.mode === 'mayhem') {
 dmg *= (m.ult ? 5.2 : (m.skill || m.isProj ? 4.5 : 3.8));
@@ -13046,8 +13041,8 @@ dmg = scPre.dmg; m = scPre.m;
 {
 if (m.exact) dmg = m.dmg;
 def.hp = Math.max(m.hold ? 1 : 0, def.hp - dmg);
-if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'vamp' && att.hp > 0 && !m.chip) {
-const leech = Math.round(dmg * currentChaosMutation.val);
+if (chaosNow('vamp') && att.hp > 0 && !m.chip) {
+const leech = Math.round(dmg * chaosNow('vamp').val);
 if (leech > 0) {
 att.hp = Math.min(att.maxHp, att.hp + leech);
 att.lagHp = Math.min(att.maxHp, att.lagHp + leech);
@@ -13058,7 +13053,7 @@ addP({ type: 'text', text: `+${leech} 🩸`, x: att.x, y: att.y - 120, life: 0.7
 if (def.dummy) def.hp = Math.max(1, def.hp);
 if (scPre) scAfterHit(att, def, m, ev, dmg, isCounter, scPre);
 att.hitConfirmed = true;
-const chaosMeterMul = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'meter_gain') ? currentChaosMutation.val : 1;
+const chaosMeterMul = (chaosNow('meter_gain') || { val: 1 }).val;
 if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
 def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
 if (!m.noStun || def.hp <= 0) def.move = null;
@@ -13101,7 +13096,7 @@ ring(def.x, def.y - 50, 140, '200,230,255', 0.35);
 } else {
 const js = Math.max(0.45, 1 - 0.1 * (def.juggle - 1));
 def.state = 'launched'; def.t = 0;
-const chaosKb = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'kb') ? currentChaosMutation.val : 1;
+const chaosKb = (chaosNow('kb') || { val: 1 }).val;
 def.vx = m.kb[0] * fx * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
 const baseVy = m.spike ? m.kb[1] : (m.kb[1] === 0 ? -320 * js : m.kb[1] * js);
 def.vy = baseVy * (m.spike ? 1 : Math.min(1.25, Math.max(0.82, 1 / Math.cbrt(defWeight))));
@@ -13112,7 +13107,7 @@ def.y = Math.min(def.y, -1);
 const comboDecay = m.noScale ? 1 : Math.max(0.48, 1 - 0.075 * (def.comboHits - 1));
 const hitStunDur = m.stun * comboDecay * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1) * Math.min(1.22, Math.max(0.85, Math.pow(massRatio, 0.25)));
 const kbMul = m.noScale ? 1 : Math.min(1.45, 1 + 0.05 * (def.comboHits - 1));
-const chaosKb = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'kb') ? currentChaosMutation.val : 1;
+const chaosKb = (chaosNow('kb') || { val: 1 }).val;
 def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * kbMul * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
 }
 }
@@ -17733,11 +17728,11 @@ ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;
 ctx.fillStyle = '#e9c46a';
 ctx.fillText(`问剑 · 第 ${M.towerFloor || 1} 层`, cx, top + bh + 18);
 ctx.restore();
-} else if (M.mode === 'chaos') {
+} else if (chaosOn()) {
 ctx.save();
 ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
 ctx.fillStyle = '#e9c46a';
-const remSec = Math.max(0, Math.ceil(CHAOS_INTERVAL - chaosTimer));
+const remSec = chaosLeft(), currentChaosMutation = chaosNow();
 const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + currentChaosMutation.name + ' (' + remSec + 's)') : '🎲 乾坤异变';
 ctx.fillText(mutTxt, cx, top + bh + 18);
 if (currentChaosMutation && currentChaosMutation.desc) {
@@ -21950,12 +21945,16 @@ const CHAOS_MUTATIONS = [
 { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
 let chaosP1 = 0, chaosP2 = 1, chaosLevel = 'normal';
-let currentChaosMutation = null;
-let chaosTimer = 0;
+const chaosOn = () => M.mode === 'chaos' || (netRoom() || {}).rule === 'chaos';
+function chaosNow(type) {
+const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
+return mut && (!type || mut.type === type) ? mut : null;
+}
+const chaosLeft = () => Math.max(0, Math.ceil(CHAOS_INTERVAL - ((M.chaos && M.chaos.t) || 0)));   // 这条还剩几秒
 function rollChaosMutation() {
-const mut = CHAOS_MUTATIONS[Math.floor(Math.random() * CHAOS_MUTATIONS.length)];
-currentChaosMutation = mut;
-chaosTimer = 0;
+const i = Math.floor((netSim() ? grnd() : Math.random()) * CHAOS_MUTATIONS.length) % CHAOS_MUTATIONS.length, mut = CHAOS_MUTATIONS[i];
+M.chaos = { i, t: 0 };
+if (RESIM) return mut;   // 回滚重算时只改状态，提示已经出过了
 flashA = Math.max(flashA, 0.3);
 flashRGB = '233,196,106';
 shake = Math.max(shake, 8);
@@ -21967,11 +21966,10 @@ addP({ type: 'text', text: mut.icon + ' ' + mut.name, x: STAGE_W / 2, y: -160, l
 return mut;
 }
 function updateChaos(dt) {
-if (M.mode !== 'chaos' || M.phase !== 'fight') return;
-chaosTimer += dt;
-if (!currentChaosMutation || chaosTimer >= CHAOS_INTERVAL) {
-rollChaosMutation();
-}
+if (!chaosOn() || M.phase !== 'fight') return;
+if (!M.chaos) M.chaos = { i: -1, t: 0 };
+M.chaos.t += dt;
+if (M.chaos.i < 0 || M.chaos.t >= CHAOS_INTERVAL) rollChaosMutation();
 }
 function renderChaos() {
 const lvs = document.querySelectorAll('#chaosLevels button');
@@ -21996,8 +21994,7 @@ M.round = 1;
 M.wins = [0, 0];
 M.stage = null;
 M.watchAi = !!isWatch;
-currentChaosMutation = null;
-chaosTimer = 0;
+M.chaos = { i: -1, t: 0 };
 setChars(chaosP1, chaosP2);
 A.ctrl = isWatch ? new AICtrl(chaosLevel || 'god') : human[0];
 B.ctrl = new AICtrl(chaosLevel || 'god');

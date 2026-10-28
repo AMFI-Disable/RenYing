@@ -357,13 +357,20 @@ const CHAOS_MUTATIONS = [
 ];
 
 let chaosP1 = 0, chaosP2 = 1, chaosLevel = 'normal';
-let currentChaosMutation = null;
-let chaosTimer = 0;
+// 天机乱斗正在生效的异变记在 M.chaos：{ i: CHAOS_MUTATIONS 里第几条（-1 还没抽）, t: 这条生效了几秒 }。
+// 放在 M 里，联机回滚的存档、录像都带着它；联机时两边（和放录像时）用对局随机数抽，抽到的是同一条，两边都生效
+const chaosOn = () => M.mode === 'chaos' || (netRoom() || {}).rule === 'chaos';
+// 现在生效的异变；给了 type 就只在是这一种时返回
+function chaosNow(type) {
+  const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
+  return mut && (!type || mut.type === type) ? mut : null;
+}
+const chaosLeft = () => Math.max(0, Math.ceil(CHAOS_INTERVAL - ((M.chaos && M.chaos.t) || 0)));   // 这条还剩几秒
 
 function rollChaosMutation() {
-  const mut = CHAOS_MUTATIONS[Math.floor(Math.random() * CHAOS_MUTATIONS.length)];
-  currentChaosMutation = mut;
-  chaosTimer = 0;
+  const i = Math.floor((netSim() ? grnd() : Math.random()) * CHAOS_MUTATIONS.length) % CHAOS_MUTATIONS.length, mut = CHAOS_MUTATIONS[i];
+  M.chaos = { i, t: 0 };
+  if (RESIM) return mut;   // 回滚重算时只改状态，提示已经出过了
   flashA = Math.max(flashA, 0.3);
   flashRGB = '233,196,106';
   shake = Math.max(shake, 8);
@@ -376,11 +383,10 @@ function rollChaosMutation() {
 }
 
 function updateChaos(dt) {
-  if (M.mode !== 'chaos' || M.phase !== 'fight') return;
-  chaosTimer += dt;
-  if (!currentChaosMutation || chaosTimer >= CHAOS_INTERVAL) {
-    rollChaosMutation();
-  }
+  if (!chaosOn() || M.phase !== 'fight') return;
+  if (!M.chaos) M.chaos = { i: -1, t: 0 };
+  M.chaos.t += dt;
+  if (M.chaos.i < 0 || M.chaos.t >= CHAOS_INTERVAL) rollChaosMutation();
 }
 
 function renderChaos() {
@@ -407,8 +413,7 @@ function startChaos(p1, p2, lv, isWatch = false) {
   M.wins = [0, 0];
   M.stage = null;
   M.watchAi = !!isWatch;
-  currentChaosMutation = null;
-  chaosTimer = 0;
+  M.chaos = { i: -1, t: 0 };
   setChars(chaosP1, chaosP2);
   A.ctrl = isWatch ? new AICtrl(chaosLevel || 'god') : human[0];
   B.ctrl = new AICtrl(chaosLevel || 'god');

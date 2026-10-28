@@ -8,14 +8,14 @@ function startAttack(f, name) {
   endEscape(f);
   f.state = 'attack'; f.move = f.moves[name]; f.moveName = name; f.t = 0;
   if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
-  if (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'armor') { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
+  if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
   f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
   const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
   f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
   if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
-  const jumpBonus = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'jump') ? currentChaosMutation.val : 1;
+  const jumpBonus = (chaosNow('jump') || { val: 1 }).val;
   f.vy = (f.jumps === 0 ? -JUMP_V : -DJUMP_V) * (f.ch.stat.jump || 1) * jumpBonus; f.jumps++;
   f.vx = dir ? dir * wk(f) * 1.15 : f.vx * 0.5;
   f.state = 'air'; f.y = Math.min(f.y, -1);
@@ -839,7 +839,7 @@ function physics(f) {
     const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
     g *= LAUNCH_GRAV * (1 + f.juggle * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow(w, 0.35)));
   }
-  const chaosGrav = (M.mode === 'chaos' && currentChaosMutation && currentChaosMutation.type === 'grav') ? currentChaosMutation.val : 1;
+  const chaosGrav = (chaosNow('grav') || { val: 1 }).val;
   if (wasAir) f.vy += g * chaosGrav * STEP;
   if (f.state === 'held') { f.vx = 0; f.vy = 0; }
   f.x += f.vx * STEP; f.y += f.vy * STEP;

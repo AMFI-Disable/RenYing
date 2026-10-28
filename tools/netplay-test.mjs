@@ -123,6 +123,11 @@ function runCase(mode, chars, seed, frames, lag, duo) {
   // 中途校验对不上也算失败：游戏会让房主发存档纠正，玩家看到的是角色突然一闪
   if (info[0].desyncs || info[1].desyncs) diff.push(`对局中校验对不上 ${info[0].desyncs}/${info[1].desyncs} 次`);
   if (rp) diff.push('回放和原局不一样：' + rp);
+  // 天机乱斗：两边都抽到了同一条异变，而且两边都在生效（以前只有房主抽，效果只认本地模式）
+  if (mode === 'chaos') {
+    const on = P.map(w => vm.runInContext('JSON.stringify({ i: M.chaos ? M.chaos.i : -1, live: typeof chaosNow === "function" ? !!chaosNow() : false })', w)).map(JSON.parse);
+    if (!(h && h.M.chaos && h.M.chaos.i >= 0) || !on.every(x => x.live && x.i === on[0].i)) diff.push('天机乱斗的异变没有在两边一起生效：' + JSON.stringify(on));
+  }
   return { errs, diff, F: info.map(x => x.F), desyncs: info.map(x => x.desyncs), rollbacks: info.map(x => x.rollbacks), fighters: info[0].n, frame: f, round: h && h.M ? `第${h.M.round}回合 比分${h.M.wins} ${h.M.phase}` : '' };
 }
 
@@ -219,6 +224,19 @@ let fail = 0;
   if (bad.length) fail++;
   console.log(`${bad.length ? '  FAIL' : '  PASS'}  连接状态机：${checks.length} 项（大小上限、ICE 失败和恢复、心跳、离开、房间过期）`);
   for (const [n] of bad) console.log('        没通过 ' + n);
+}
+
+// 本地天机乱斗照旧：开打就抽一条异变，15 秒换一条，效果只在乱斗里生效
+{
+  const w = makePeer([]);
+  const r = JSON.parse(vm.runInContext(`(() => { startChaos(0, 1, 'normal', true); M.phase = 'fight'; let rolls = M.chaos.i >= 0 ? 1 : 0;
+    for (let i = 0; i < Math.round(31 / STEP); i++) { updateChaos(STEP); if (M.chaos.t === 0) rolls++; }
+    const live = !!chaosNow(); M.mode = 'cpu'; const off = !chaosNow();
+    return JSON.stringify({ rolls, live, off }); })()`, w));
+  const ok = r.rolls === 3 && r.live && r.off;
+  if (!ok) fail++;
+  console.log(`${ok ? '  PASS' : '  FAIL'}  本地天机乱斗：31 秒里抽了 ${r.rolls} 次异变（开打一次，之后每 15 秒一次），只在乱斗里生效`);
+  if (!ok) console.log('        ' + JSON.stringify(r));
 }
 
 // 2v2、3v3 打到一半对方掉线（房主掉线也算）：留下的这台接着打完，对方的人交给电脑

@@ -312,10 +312,7 @@ function startRound() {
     B.guard = B.maxGuard = 500;
     A.meter = B.meter = 100;
   }
-  if (M.mode === 'net' && roomDef().rule === 'chaos') {
-    if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
-    if (NET.role === 'host') rollChaosMutation();
-  }
+  if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
   const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
   if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
@@ -379,9 +376,7 @@ function updateMatch() {
       M.t = 0;
       M.koWinner = winner;
     } else if (M.mode !== 'demo' && M.mode !== 'train') {
-      if (M.mode === 'chaos' || (M.mode === 'net' && roomDef().rule === 'chaos')) {
-        if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
-      }
+      if (chaosOn()) updateChaos(STEP);   // 联机两边都算（以前只有房主抽，异变也只认本地模式，联机等于没有）
       M.timer = Math.max(0, M.timer - STEP);
       if (M.timer <= 0) {
         const s0 = sideFighters(0), s1 = sideFighters(1);
