@@ -261,7 +261,6 @@ function step() {
     if (!D.hidden) updateFighter(D, foeOf(D));
     updateArena2v2(STEP);
   }
-  if (typeof updateMapEnv === 'function') updateMapEnv(STEP);
   // 倒下的人一直躺着：落地后不管之前是什么状态（受身、被打、技能收招）都按回地上，不再站起来
   if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
     for (const f of allFighters()) {

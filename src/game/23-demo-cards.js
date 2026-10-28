@@ -439,11 +439,7 @@ function bpStart(mode, customOpts = null) {
   const count = side => steps.filter(st => st[0] === side && st[1] === 'pick').length;
   const picks = md.team ? [count(0), count(1)].map(n => Array(n).fill(-1)) : [0, 1].filter(count).map(() => -1);
 
-  const mapId = (customOpts && customOpts.mapId) || (BP && BP.mapId) || (typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo');
-  if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(mapId);
-
   BP = {
-    mapId,
     step: 0,
     steps,
     bans,
@@ -633,15 +629,10 @@ function bpDetailHTML(i) {
   const S2 = SKILLS[c.skill2];
   const specialMove = S2 ? `<span>${S2.name}</span> · <span>${S2.desc || ''}</span>` : '';
 
-  const curMap = (typeof getMapById === 'function') ? getMapById((typeof BP !== 'undefined' && BP && BP.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id)) : null;
-  const isFavored = curMap && (curMap.favored || []).includes(c.id);
-  const affinityHtml = isFavored ? `<div class="bpdetail-affinity"><span class="bpa-title">★ 本局地利：</span><span>${curMap.favoredDesc[c.id] || ''}</span></div>` : '';
-
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
     <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
     <!-- 皮肤改在角色图鉴里装配：选人是有时限的，这里只显示当前装束 -->
     <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${Math.round((st.hp || 850) * ((BAL[c.id] || {}).hp || 1))}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
-    ${affinityHtml}
     <dl><dt><span>被动</span> <span>${c.passiveName}</span></dt><dd>${c.passiveDesc}</dd>
     <dt>门派架势</dt><dd>${guardTxt}</dd>
     ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
@@ -652,11 +643,9 @@ function bpDetailHTML(i) {
 }
 function buildDetails(force) {
   const box = document.getElementById('bpDetail');
-  const mapKey = (typeof BP !== 'undefined' && BP && BP.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id) || '';
-  if (!force && box.dataset.built === String(PORTRAITS.length) && box.dataset.builtMap === mapKey) return;
+  if (!force && box.dataset.built === String(PORTRAITS.length)) return;
   box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
   box.dataset.built = String(PORTRAITS.length);
-  box.dataset.builtMap = mapKey;
 }
 let bpDeckMove = 'light';
 function updateBPDeck(i) {
@@ -765,25 +754,6 @@ function renderBP() {
   // 2v2 专属天道演武禁选走独立状态与独立渲染
   if (bpMode === 'watch2v2') { if (watch2v2Bp) renderBPWatch2v2(); return; }
   if (!BP) return;
-  const curMap = (typeof getMapById === 'function') ? getMapById((BP && BP.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id)) : null;
-  const banner = document.getElementById('bpMapBanner');
-  if (banner && curMap) {
-    banner.classList.remove('hidden');
-    const nameEl = document.getElementById('bpMapName');
-    const subEl = document.getElementById('bpMapSub');
-    const descEl = document.getElementById('bpMapDesc');
-    const favEl = document.getElementById('bpMapFavList');
-    if (nameEl) nameEl.textContent = curMap.name;
-    if (subEl) subEl.textContent = curMap.sub;
-    if (descEl) descEl.textContent = curMap.desc;
-    if (favEl) {
-      const favNames = (curMap.favored || []).map(id => {
-        const c = CHARS.find(x => x.id === id);
-        return c ? c.name : id;
-      }).join('、');
-      favEl.textContent = `${favNames} (点将席位流金高亮)`;
-    }
-  }
   $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
   const my = bpMySide(), done = BP.step >= bpSteps().length;
   const [side, type] = done ? [-1, ''] : bpSteps()[BP.step];
@@ -902,17 +872,15 @@ function renderBP() {
     } else if (Array.isArray(BP.picks)) {
       pickedBy = BP.picks.indexOf(i);
     }
-    const isFavored = curMap && (curMap.favored || []).includes(c.id);
-    const affinityTag = isFavored ? '<span class="tag affinity">★ 地利</span>' : '';
     const can = myTurn && bpValid(i);
     const myAv = BP.avail && BP.avail[my];
     const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
     const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
     const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
-    const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : (isFavored ? '，本局地利' : '');
+    const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
     const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
-    return `<button class="bpcard${isFavored ? ' affinity-gold' : ''}${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
-      <span class="bp-shortcut">${i + 1}</span>${tag}${affinityTag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
+    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
+      <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
   if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }
   const show = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);

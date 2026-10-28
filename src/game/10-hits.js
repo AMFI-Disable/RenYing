@@ -331,29 +331,8 @@ function applyHit(att, def, m, pt) {
   if (att.ch.passive === 'bind' && def.hookedT > 0 && !m.ult) { dmg *= 1.25; ev.big = true; }
   if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack') att.notes = Math.min(3, (att.notes || 0) + 1);
   if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
-  if (att.ch.passive === 'needlemark') {
-    // 凌雀雀芒印记叠加机制：两次普攻、任意蓄力斩、Q或E命中均可施加印记（最多叠3层）
-    const isNormal = att.state === 'attack' && !m.isProj && !m.ult;
-    const isCharged = isNormal && att.moveName === 'cs2';
-    const isQorE = (m.isProj && m.kind === 'spindle') || (att.state === 'skill' && att.skill === 'shadowdash');
-
-    if (isCharged || isQorE) {
-      // 蓄力斩、Q、E：直接添加1层印记
-      def.needleMark = Math.min(3, (def.needleMark || 0) + 1);
-      def.needleMarkT = 3.5;
-      addP({ type: 'text', text: def.needleMark === 1 ? '✦ 雀芒入体' : `✦ 雀芒 ×${def.needleMark}`, x: def.x, y: def.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
-    } else if (isNormal) {
-      // 普通攻击：连续两次命中才施加印记
-      const now = M.t || 0;
-      const lastHit = att.lastNormalHit || 0;
-      if (now - lastHit < 1.5) {
-        // 1.5秒内的第二次普攻命中
-        def.needleMark = Math.min(3, (def.needleMark || 0) + 1);
-        def.needleMarkT = 3.5;
-        addP({ type: 'text', text: `✦ 雀芒 ×${def.needleMark}`, x: def.x, y: def.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
-      }
-      att.lastNormalHit = now;
-    }
+  if (att.ch.passive === 'needlemark' && (m.isProj || m.mark)) {
+    def.needleMark = 3.5;
   }
   // 墨羽被动：墨韵护体（Ink Barrier）—— 当墨羽墨水 >= 25 时，受击消耗 12 墨水抵消 20% 伤害并激荡墨雾
   if (def.ch && def.ch.id === 'moyu' && (def.ink || 0) >= 25 && !m.hold && dmg > 8) {

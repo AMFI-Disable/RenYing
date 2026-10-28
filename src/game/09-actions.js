@@ -407,13 +407,6 @@ function updateProjs() {
       if (Math.abs(dx) < 34 && p.age > p.turn + 0.15) { p.dead = true; continue; }
     }
     p.x += p.vx * STEP; p.y += p.vy * STEP;
-    if (typeof MAP_ENV !== 'undefined' && MAP_ENV.windActive > 0 && p.vx !== 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'bamboo') {
-      if (Math.sign(p.vx) === MAP_ENV.windDir) {
-        const ownerF = fighterByIdx(p.owner);
-        const boost = (ownerF && ownerF.ch && ownerF.ch.id === 'qingfeng') ? 180 : 90;
-        p.x += MAP_ENV.windDir * boost * STEP;
-      }
-    }
     if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
     if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
     if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math.random() < 0.6) addP({ type: 'ink', x: p.x - Math.sign(p.vx) * p.w * 0.4, y: p.y + rand(-p.h / 3, p.h / 3), vx: -p.vx * 0.1, vy: rand(-40, 40), life: 0.5, max: 0.5, r: rand(2, 5), rgb: p.kind === 'dragon' ? '20,20,28' : CHARS[fighterByIdx(p.owner).chIdx].look.slash }); }
@@ -482,6 +475,9 @@ function updateProjs() {
     } else if (p.kind === 'note' && p.notes >= 3) {
       foe.slowT = 2.2;
       addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
+    } else if (p.kind === 'spindle' || p.mark) {
+      foe.needleMark = 3.5;
+      addP({ type: 'text', text: '✦ 雀芒入体', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
     }
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
     const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
@@ -817,10 +813,9 @@ function updateFighter(f, foe) {
     f.frostSlow = Math.max(0, f.frostSlow - STEP);
     if (Math.random() < 0.25) addP({ type: 'spark', x: f.x + rand(-20, 20), y: f.y - rand(20, 80), vx: 0, vy: rand(-15, 15), life: 0.3, max: 0.3, rgb: '160,230,255' });
   }
-  if (f.needleMarkT > 0) {
-    f.needleMarkT = Math.max(0, f.needleMarkT - STEP);
-    if (f.needleMarkT <= 0) f.needleMark = 0;
-    if (f.needleMark > 0 && Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
+  if (f.needleMark > 0) {
+    f.needleMark = Math.max(0, f.needleMark - STEP);
+    if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
   }
   if (scOn()) scTick(f, foe);
   physics(f);
@@ -847,64 +842,18 @@ function physics(f) {
   const chaosGrav = (chaosNow('grav') || { val: 1 }).val;
   if (wasAir) f.vy += g * chaosGrav * STEP;
   if (f.state === 'held') { f.vx = 0; f.vy = 0; }
-  if (f.dropThrough > 0) f.dropThrough = Math.max(0, f.dropThrough - STEP);
-  if (f.curPlat && (f.ctrl && f.ctrl.held && f.ctrl.held.down && (f.ctrl.consume('jump') || f.ctrl.consume('dash')))) {
-    f.dropThrough = 0.28;
-    f.curPlat = null;
-    f.y += 6;
-    f.vy = Math.max(f.vy, 180);
-    f.state = 'air';
-  }
   f.x += f.vx * STEP; f.y += f.vy * STEP;
-  if (f.y >= 0) {
-    f.y = 0;
-    f.curPlat = null;
-    if (wasAir) onLand(f);
-    if (f.vy > 0) f.vy = 0;
-  } else {
-    let landedPlat = null;
-    if (f.vy >= 0 && f.dropThrough <= 0 && typeof ARENA_PLATFORMS !== 'undefined' && ARENA_PLATFORMS.length) {
-      const oldY = f.y - f.vy * STEP;
-      for (const plat of ARENA_PLATFORMS) {
-        const halfW = plat.w / 2;
-        if (f.x >= plat.x - halfW && f.x <= plat.x + halfW) {
-          if (oldY <= plat.y + 6 && f.y >= plat.y - 3) {
-            landedPlat = plat;
-            break;
-          }
-        }
-      }
-    }
-    if (landedPlat) {
-      f.y = landedPlat.y;
-      f.curPlat = landedPlat;
-      if (wasAir) onLand(f);
-      if (f.vy > 0) f.vy = 0;
-    } else if (f.curPlat) {
-      const halfW = f.curPlat.w / 2;
-      if (f.x < f.curPlat.x - halfW || f.x > f.curPlat.x + halfW) {
-        f.curPlat = null;
-        f.state = 'air';
-      }
-    }
-  }
-  const onG = f.onGround();
+  if (f.y >= 0) { f.y = 0; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
+  const onG = f.y >= 0;
   const slide = f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].nofric;
   const fw = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
-  const isIceMap = typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'ice';
-  const iceMul = isIceMap ? (f.ch.id === 'tieshan' ? 0.9 : (f.ch.id === 'lingshuang' ? 0.8 : 0.6)) : 1.0;
-  const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12) * iceMul;
+  const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12);
   if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, dampK, STEP);
   if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? (dampK * 0.75) : (dampK * 1.5), STEP);
-  if (typeof MAP_ENV !== 'undefined' && MAP_ENV.windActive > 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'bamboo') {
-    const windPush = MAP_ENV.windDir * (f.ch.id === 'yanling' ? 90 : 45);
-    if (!onG || f.state === 'dash' || f.state === 'walk') f.vx += windPush * STEP;
-  }
   if (f.x < WALL || f.x > STAGE_W - WALL) {
     const side = f.x < WALL ? -1 : 1;
     f.x = side < 0 ? WALL : STAGE_W - WALL;
-    const isPagoda = typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'pagoda';
-    if (!isPagoda && f.state === 'launched' && Math.abs(f.vx) > 350) {
+    if (f.state === 'launched' && Math.abs(f.vx) > 350) {
       const isHardImpact = Math.abs(f.vx) > 480;
       f.vx *= isHardImpact ? -0.55 : -0.4;
       shake = Math.max(shake, isHardImpact ? 14 : 7);

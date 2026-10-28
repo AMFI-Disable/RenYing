@@ -143,9 +143,6 @@ let ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const STEP = 1 / 120;                 // 逻辑每秒 120 次，在高刷屏上更顺
 let STAGE_W = 1800;
-let ACTIVE_MAP = null;
-let ARENA_PLATFORMS = [];
-const MAP_ENV = { windDir: 1, windTimer: 0, windActive: 0, thunderTimer: 24, thunderWarn: 0, thunderX: 0 };
 const WALL = 60;
 const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T = 0.2, BUF = 0.16;
 // ---------- 对战规则数值：改规则、调手感都在这里改 ----------

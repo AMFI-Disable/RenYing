@@ -243,98 +243,36 @@ const ULTS = {
       }
       if (f.t >= 1.3) endSpecial(f);
     } },
-  needlestorm: { name: '万线归宗', desc: '凌雀化作流光直扑对手（若背对则远离），飞行追踪。命中带【雀芒】印记之敌，消耗印记层数并连续穿刺绞杀（每层印记1段12伤害），终结斩56伤害。命中有印记者立即重置大招冷却（可连续施放），重置换影冷却。',
+  needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。',
     begin(f, foe) {
-      const target = sdTarget(f, foe);
-      const facingCorrect = target && (Math.sign(target.x - f.x) === f.face || Math.abs(target.x - f.x) <= 20);
-
-      f.sp = 'dash'; f.spN = 0; f.spPose = 'dash'; f.invul = 0.16; f.hitDone = false;
-      f.sdTrack = !!facingCorrect; f.y = Math.min(f.y, -1);
-
-      if (facingCorrect && target) {
-        const a = Math.atan2((target.y - 50) - f.y, target.x - f.x);
-        f.vx = Math.cos(a) * 2100; f.vy = Math.sin(a) * 2100;
-      } else {
-        f.vx = -f.face * 1400; f.vy = -520;
-      }
-      SFX.superOn(); SFX.dash();
+      f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
     },
     update(f, foe) {
-      const target = sdTarget(f, foe);
-
-      if (f.sp === 'dash') {
-        if (target && target.invul <= 0 && f.sdTrack) {
-          const cur = Math.atan2(f.vy, f.vx);
-          const want = Math.atan2((target.y - 50) - f.y, target.x - f.x);
-          let d = want - cur;
-          while (d > Math.PI) d -= Math.PI * 2;
-          while (d < -Math.PI) d += Math.PI * 2;
-          if (f.y >= 0 && Math.sin(cur + clamp(d, -20 * STEP, 20 * STEP)) > Math.max(0.001, Math.sin(cur))) d -= Math.sign(d) * Math.PI * 2;
-          const a = cur + clamp(d, -20 * STEP, 20 * STEP);
-          f.vx = Math.cos(a) * 2100; f.vy = Math.sin(a) * 2100;
-        }
-        if (f.vx) f.face = f.vx > 0 ? 1 : -1;
-        if (f.y >= 0 && f.vy > 0) f.vy = 0;
-
-        if (!RESIM && Math.random() < 0.7) {
-          addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(80, 180), vy: rand(-50, 50), rgb: '235,110,210', life: 0.28, max: 0.28 });
-        }
-
-        const hitFoe = target || foe;
-        const marks = hitFoe.needleMark || 0;
-
-        if (!f.hitDone && hitFoe.hp > 0 && overlap(hitbox(f, [-40, -120, 104, 24]), hurtbox(hitFoe))) {
-          f.hitDone = true;
-          f.sp = 'flurry'; f.t = 0; f.spN = 0; f.vx = 0; f.vy = 0;
-          f.storedMarks = marks;
-          if (marks > 0) {
-            hitFoe.needleMark = 0;
-            hitFoe.needleMarkT = 0;
-          }
-        } else if (f.t >= 0.9) {
-          f.sp = 'miss'; f.t = 0; f.vx *= 0.15; f.vy *= 0.15;
+      f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
+      if (f.spN < 7 && f.t >= 0.15 + f.spN * 0.08) {
+        f.spN++;
+        SFX.slice();
+        const sd = (f.spN % 2 === 0) ? 1 : -1;
+        const ang = (f.spN * 0.6) % 3.14;
+        slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
+        ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
+        if (foe.hp > 0 && foe.invul <= 0) {
+          applyHit(f, foe, { dmg: 12, exact: true, kb: [sd * 60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
         }
       }
-
-      if (f.sp === 'flurry') {
-        f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
-        const hitFoe = target || foe;
-        const marks = f.storedMarks || 0;
-        const totalHits = marks > 0 ? marks : 1;
-
-        if (f.spN < totalHits && f.t >= f.spN * 0.10) {
-          f.spN++;
-          SFX.slice();
-          const sd = (f.spN % 2 === 0) ? 1 : -1;
-          const ang = (f.spN * 0.6) % 3.14;
-          slashLine(hitFoe.x + rand(-30, 30), hitFoe.y - 50 + rand(-25, 25), ang, '235,110,210');
-          ring(hitFoe.x, hitFoe.y - 50, 60 + f.spN * 12, '235,110,210', 0.28);
-          if (hitFoe.hp > 0) {
-            applyHit(f, hitFoe, { dmg: 12, exact: true, kb: [sd * 50, -30], stun: 0.24, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [hitFoe.x, hitFoe.y - 50]);
-          }
+      if (f.spN === 7 && f.t >= 0.78) {
+        f.spN = 8;
+        f.y = 0; f.vy = 0;
+        shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
+        ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
+        if (foe.hp > 0 && foe.invul <= 0) {
+          applyHit(f, foe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
+          foe.needleMark = 3.5;
+          f.skill2CD = 0;
+          addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
         }
-
-        if (f.spN === totalHits && f.t >= totalHits * 0.10 + 0.15) {
-          f.spN = totalHits + 1;
-          f.y = 0; f.vy = 0;
-          shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
-          ring(hitFoe.x, hitFoe.y - 50, 150, '255,140,225', 0.45);
-          if (hitFoe.hp > 0) {
-            applyHit(f, hitFoe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [hitFoe.x, hitFoe.y - 50]);
-            f.skill2CD = 0;
-            if (marks > 0) {
-              f.meter = 100;
-              addP({ type: 'text', text: '✦ 雀芒归宗 · 大招重置 ✦', x: f.x, y: f.y - 120, life: 1.2, max: 1.2, rgb: '255,140,225' });
-            } else {
-              addP({ type: 'text', text: '✦ 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
-            }
-          }
-        }
-
-        if (f.t >= totalHits * 0.10 + 0.50) endSpecial(f);
       }
-
-      if (f.sp === 'miss' && f.t >= 0.35) endSpecial(f);
+      if (f.t >= 1.15) endSpecial(f);
     } },
 };
 

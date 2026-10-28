@@ -816,21 +816,6 @@ gap: var(--bp-gap); width: 100%; --bp-gap: clamp(4px, 0.5vw, 7px); --bp-cols: 12
 .badge-buff { background: rgba(70,211,234,.2); color: #46d3ea; border: 1px solid rgba(70,211,234,.4); }
 .badge-break { background: rgba(233,196,106,.2); color: #e9c46a; border: 1px solid rgba(233,196,106,.4); }
 .dhitdesc { font-size: 12px; color: var(--dim); line-height: 1.35; }
-.bp-map-banner { background: linear-gradient(135deg, rgba(20,24,45,.95), rgba(12,14,28,.98)); border: 1px solid rgba(233,196,106,.45); box-shadow: 0 4px 18px rgba(0,0,0,.5), inset 0 0 15px rgba(233,196,106,.06); border-radius: 8px; padding: 7px 14px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
-.bpm-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.bpm-pin { font-size: 12px; font-weight: 700; color: #121008; background: linear-gradient(135deg, #e9c46a, #d4a343); padding: 1px 7px; border-radius: 4px; letter-spacing: .05em; }
-.bpm-name { font-family: var(--title); font-size: clamp(15px, 1.3vw, 19px); color: #f7eedb; letter-spacing: .06em; }
-.bpm-sub { font-size: 12px; color: rgba(233,196,106,.85); }
-.bpm-desc { font-size: 12px; color: #c9d1df; line-height: 1.35; }
-.bpm-fav { display: flex; align-items: center; gap: 6px; font-size: 12px; flex-wrap: wrap; }
-.bpm-fav-tag { color: #e9c46a; font-weight: 700; }
-.bpm-fav-list { color: #efe8d8; }
-.bpcard.affinity-gold { border-color: rgba(233,196,106,.9) !important; box-shadow: 0 0 0 1.5px rgba(233,196,106,.65), 0 0 14px rgba(233,196,106,.4) !important; background: linear-gradient(170deg, rgba(233,196,106,.15), rgba(20,24,45,.65)) !important; position: relative; }
-.bpcard.affinity-gold::before { content: ''; position: absolute; inset: -2px; border-radius: 11px; border: 1.5px solid rgba(233,196,106,.8); pointer-events: none; animation: affinityPulse 2.2s ease-in-out infinite alternate; }
-@keyframes affinityPulse { 0% { box-shadow: 0 0 4px rgba(233,196,106,.3); opacity: .7; } 100% { box-shadow: 0 0 15px rgba(233,196,106,.85); opacity: 1; } }
-.bpcard .tag.affinity { position: absolute; top: 4px; right: 4px; font-family: var(--title); font-size: clamp(11px, 1vw, 13px); background: linear-gradient(135deg, #e9c46a, #c69429) !important; color: #14110a !important; font-weight: 700 !important; border: 1px solid rgba(255,240,200,.6); box-shadow: 0 0 8px rgba(233,196,106,.7); z-index: 2; }
-.bpdetail-affinity { background: linear-gradient(135deg, rgba(233,196,106,.14), rgba(20,24,45,.55)); border: 1px solid rgba(233,196,106,.5); border-radius: 6px; padding: 6px 10px; margin-top: 6px; font-size: 12px; color: #efe8d8; display: flex; gap: 6px; align-items: flex-start; }
-.bpdetail-affinity .bpa-title { color: #e9c46a; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
 .bpact { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding: 6px 0 0; flex: none; }
 .bpact .go { margin: 0; font-size: clamp(15px, 1.3vw, 18px); min-width: min(220px, 36vw); white-space: nowrap; padding: 0 24px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
 .bpact .ghost { padding: 0 18px; font-size: clamp(12px, 1vw, 14px); min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
@@ -3545,15 +3530,6 @@ body.kb-only.has-nav .kb-hint { display: block; }
 
   <div id="bp" class="scr bpscr">
     <div class="bpw">
-      <div class="bp-map-banner" id="bpMapBanner">
-        <div class="bpm-top">
-          <span class="bpm-pin">📍 决战之地</span>
-          <span class="bpm-name" id="bpMapName">竹海悬岩</span>
-          <span class="bpm-sub" id="bpMapSub">两端竹台高悬 · 疾风呼啸</span>
-        </div>
-        <div class="bpm-desc" id="bpMapDesc">两侧架设竹楼高台，全员可借力攀空；每 18 秒刮起强风，顺风冲刺 +20% 冲力，飞行道具沿风加速。</div>
-        <div class="bpm-fav" id="bpMapFav"><span class="bpm-fav-tag">★ 地利侠客：</span><span class="bpm-fav-list" id="bpMapFavList">青锋、燕翎 (点将席位流金高亮)</span></div>
-      </div>
       <div class="bph">
         <div class="bps" id="bpS0"></div>
         <div class="bpc0"><div class="bpstep" id="bpStep" role="status" aria-live="polite"></div><div class="bptime" id="bpTime"></div></div>
@@ -6846,97 +6822,6 @@ duo: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']
 trio: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']],        // 本机车轮战：各禁 1 人，轮流各选 3 人
 trioSnake: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],   // 联机车轮接力：各禁 1 人，蛇形各选 3 人
 };
-const MAPS = {
-bamboo: {
-id: 'bamboo',
-name: '竹海悬岩',
-sub: '两端竹台高悬 · 疾风呼啸',
-desc: '两侧架设竹楼高台，全员可借力攀空；每 18 秒刮起强风，顺风冲刺 +20% 冲力，飞行道具沿风加速。',
-width: { normal: 1800, multi: 2600 },
-theme: 'bamboo',
-platforms: [
-{ id: 'bamboo_l', x: 420, y: -115, w: 240, h: 12, kind: 'bamboo' },
-{ id: 'bamboo_r', x: 1380, y: -115, w: 240, h: 12, kind: 'bamboo' }
-],
-favored: ['qingfeng', 'yanling'],
-favoredDesc: {
-qingfeng: '剑气借风势呼啸：破空斩与蓄力剑气顺风释放时飞行速度提升 25% 且附带额外击退。',
-yanling: '乘风御空：高台凌空滑翔及空中腾挪时长提升 25%，浮空受击硬直轻微减弱。'
-}
-},
-thunder: {
-id: 'thunder',
-name: '雷泽石坛',
-sub: '中央石坛耸峙 · 孤峰引雷',
-desc: '中央耸立远古石坛；每 24 秒九天雷云聚顶，雷霆轰击石坛最高点，被击中者破防浮空。',
-width: { normal: 1800, multi: 2600 },
-theme: 'thunder',
-platforms: [
-{ id: 'thunder_mid', x: 900, y: -120, w: 320, h: 14, kind: 'stone' }
-],
-favored: ['leiming', 'gouchen'],
-favoredDesc: {
-leiming: '引雷淬体：身处中央雷击范围免受雷罚，更直接蓄满 +35 怒气并进入电弧充能状态。',
-gouchen: '巨力踏石：重击地裂及千钧坠砸在石坛或水洼时，震荡波定力穿透额外提高 15 点。'
-}
-},
-ice: {
-id: 'ice',
-name: '凌霜冻潭',
-sub: '极寒玄冰如镜 · 步法滑行',
-desc: '极寒玄冰地面摩擦力降低 40%，冲刺回旋滑行更远；格挡重击时受力后滑，立回变幻莫测。',
-width: { normal: 1800, multi: 2600 },
-theme: 'ice',
-platforms: [],
-favored: ['lingshuang', 'tieshan'],
-favoredDesc: {
-lingshuang: '玄冰如履平地：冲刺轻击滑步距离延长 30% 且后摇减免，闪身如极光掠影。',
-tieshan: '千斤神力镇压：庞大体量不受冰面失稳干扰，肩撞与蓄力猛击冲撞速度更上一层楼。'
-}
-},
-pagoda: {
-id: 'pagoda',
-name: '皇城飞檐',
-sub: '三重殿宇飞檐 · 凌空绝壁',
-desc: '三层飞檐殿顶错落；两端为开阔悬空绝壁（无红柱撞墙硬直），将对手击落飞檐使其硬直更久。',
-width: { normal: 1800, multi: 2600 },
-theme: 'pagoda',
-platforms: [
-{ id: 'pagoda_l', x: 380, y: -105, w: 220, h: 12, kind: 'wood' },
-{ id: 'pagoda_mid', x: 900, y: -180, w: 260, h: 12, kind: 'wood' },
-{ id: 'pagoda_r', x: 1420, y: -105, w: 220, h: 12, kind: 'wood' }
-],
-favored: ['feiying', 'lingque'],
-favoredDesc: {
-feiying: '飞檐隐匿：瞬身突刺越过殿檐落差时身法如魅，获得 0.25 秒额外残影无敌判定。',
-lingque: '绝壁雀影：高低檐台穿梭时雀影突刺跟踪角度扩大，击中高处敌人破绽倍增。'
-}
-},
-wine: {
-id: 'wine',
-name: '醉翁墨阁',
-sub: '水榭亭台酒肆 · 墨香酒雾',
-desc: '中央水榭亭台林立；击碎酒坛升腾醉雾，身处雾中每秒恢复定力，但转身略微迟缓。',
-width: { normal: 1800, multi: 2600 },
-theme: 'wine',
-platforms: [
-{ id: 'wine_l', x: 520, y: -110, w: 240, h: 12, kind: 'wood' },
-{ id: 'wine_r', x: 1280, y: -110, w: 240, h: 12, kind: 'wood' }
-],
-favored: ['zuixian', 'moyu'],
-favoredDesc: {
-zuixian: '酒香浸染：酒肆环境使醉意自然增长加快，与民同乐消耗减免 20%。',
-moyu: '水榭湿润：地面画符与墨池陷阱蔓延范围扩大 35%，对敌缠足迟缓效果更为持久。'
-}
-}
-};
-const MAP_KEYS = Object.keys(MAPS);
-function getRandomMapId() {
-return MAP_KEYS[(Math.random() * MAP_KEYS.length) | 0];
-}
-function getMapById(id) {
-return (id && MAPS[id]) ? MAPS[id] : MAPS.bamboo;
-}
 const DIFFICULTIES = [
 {
 id: 'easy', name: '入门',
@@ -10266,9 +10151,6 @@ let ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const STEP = 1 / 120;                 // 逻辑每秒 120 次，在高刷屏上更顺
 let STAGE_W = 1800;
-let ACTIVE_MAP = null;
-let ARENA_PLATFORMS = [];
-const MAP_ENV = { windDir: 1, windTimer: 0, windActive: 0, thunderTimer: 24, thunderWarn: 0, thunderX: 0 };
 const WALL = 60;
 const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T = 0.2, BUF = 0.16;
 const ROUND_TIME = 80, ROUND_TIME_2V2 = 110, OT_TIME = 20, OT_DMG = 2;
@@ -10970,13 +10852,13 @@ update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) {
 f.skPh = 1; f.t = 0;
 SFX.slice(); SFX.dash();
-spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, pierce: true, maxHits: 2 });
+spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, mark: true, pierce: true, maxHits: 2 });
 }
 if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
 ai: (me, foe, d) => d > 110 && d < 460 },
-shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）并施加【雀芒】印记。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，消耗1层印记，并立即清零移形换影冷却！',
+shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
 start(f, foe) {
 f.vx = 0; f.vy = 0;
 f.sdTrack = false;
@@ -11014,8 +10896,7 @@ const hitFoe = target || foe;
 const wasMarked = (hitFoe.needleMark || 0) > 0;
 if (strike(f, hitFoe, { box: [-40, -120, 104, 24], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
 if (wasMarked) {
-hitFoe.needleMark = Math.max(0, hitFoe.needleMark - 1);
-if (hitFoe.needleMark === 0) hitFoe.needleMarkT = 0;
+hitFoe.needleMark = 0;
 f.skill2CD = 0;
 shake = Math.max(shake, 14);
 SFX.heavy(); SFX.slice();
@@ -11276,87 +11157,36 @@ addP({ type: 'text', text: '回锤 · 飞锤重置', x: f.x, y: f.y - 120, life:
 }
 if (f.t >= 1.3) endSpecial(f);
 } },
-needlestorm: { name: '万线归宗', desc: '凌雀化作流光直扑对手（若背对则远离），飞行追踪。命中带【雀芒】印记之敌，消耗印记层数并连续穿刺绞杀（每层印记1段12伤害），终结斩56伤害。命中有印记者立即重置大招冷却（可连续施放），重置换影冷却。',
+needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。',
 begin(f, foe) {
-const target = sdTarget(f, foe);
-const facingCorrect = target && (Math.sign(target.x - f.x) === f.face || Math.abs(target.x - f.x) <= 20);
-f.sp = 'dash'; f.spN = 0; f.spPose = 'dash'; f.invul = 0.16; f.hitDone = false;
-f.sdTrack = !!facingCorrect; f.y = Math.min(f.y, -1);
-if (facingCorrect && target) {
-const a = Math.atan2((target.y - 50) - f.y, target.x - f.x);
-f.vx = Math.cos(a) * 2100; f.vy = Math.sin(a) * 2100;
-} else {
-f.vx = -f.face * 1400; f.vy = -520;
-}
-SFX.superOn(); SFX.dash();
+f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
 },
 update(f, foe) {
-const target = sdTarget(f, foe);
-if (f.sp === 'dash') {
-if (target && target.invul <= 0 && f.sdTrack) {
-const cur = Math.atan2(f.vy, f.vx);
-const want = Math.atan2((target.y - 50) - f.y, target.x - f.x);
-let d = want - cur;
-while (d > Math.PI) d -= Math.PI * 2;
-while (d < -Math.PI) d += Math.PI * 2;
-if (f.y >= 0 && Math.sin(cur + clamp(d, -20 * STEP, 20 * STEP)) > Math.max(0.001, Math.sin(cur))) d -= Math.sign(d) * Math.PI * 2;
-const a = cur + clamp(d, -20 * STEP, 20 * STEP);
-f.vx = Math.cos(a) * 2100; f.vy = Math.sin(a) * 2100;
-}
-if (f.vx) f.face = f.vx > 0 ? 1 : -1;
-if (f.y >= 0 && f.vy > 0) f.vy = 0;
-if (!RESIM && Math.random() < 0.7) {
-addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(80, 180), vy: rand(-50, 50), rgb: '235,110,210', life: 0.28, max: 0.28 });
-}
-const hitFoe = target || foe;
-const marks = hitFoe.needleMark || 0;
-if (!f.hitDone && hitFoe.hp > 0 && overlap(hitbox(f, [-40, -120, 104, 24]), hurtbox(hitFoe))) {
-f.hitDone = true;
-f.sp = 'flurry'; f.t = 0; f.spN = 0; f.vx = 0; f.vy = 0;
-f.storedMarks = marks;
-if (marks > 0) {
-hitFoe.needleMark = 0;
-hitFoe.needleMarkT = 0;
-}
-} else if (f.t >= 0.9) {
-f.sp = 'miss'; f.t = 0; f.vx *= 0.15; f.vy *= 0.15;
-}
-}
-if (f.sp === 'flurry') {
 f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
-const hitFoe = target || foe;
-const marks = f.storedMarks || 0;
-const totalHits = marks > 0 ? marks : 1;
-if (f.spN < totalHits && f.t >= f.spN * 0.10) {
+if (f.spN < 7 && f.t >= 0.15 + f.spN * 0.08) {
 f.spN++;
 SFX.slice();
 const sd = (f.spN % 2 === 0) ? 1 : -1;
 const ang = (f.spN * 0.6) % 3.14;
-slashLine(hitFoe.x + rand(-30, 30), hitFoe.y - 50 + rand(-25, 25), ang, '235,110,210');
-ring(hitFoe.x, hitFoe.y - 50, 60 + f.spN * 12, '235,110,210', 0.28);
-if (hitFoe.hp > 0) {
-applyHit(f, hitFoe, { dmg: 12, exact: true, kb: [sd * 50, -30], stun: 0.24, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [hitFoe.x, hitFoe.y - 50]);
+slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
+ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
+if (foe.hp > 0 && foe.invul <= 0) {
+applyHit(f, foe, { dmg: 12, exact: true, kb: [sd * 60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
 }
 }
-if (f.spN === totalHits && f.t >= totalHits * 0.10 + 0.15) {
-f.spN = totalHits + 1;
+if (f.spN === 7 && f.t >= 0.78) {
+f.spN = 8;
 f.y = 0; f.vy = 0;
 shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
-ring(hitFoe.x, hitFoe.y - 50, 150, '255,140,225', 0.45);
-if (hitFoe.hp > 0) {
-applyHit(f, hitFoe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [hitFoe.x, hitFoe.y - 50]);
+ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
+if (foe.hp > 0 && foe.invul <= 0) {
+applyHit(f, foe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
+foe.needleMark = 3.5;
 f.skill2CD = 0;
-if (marks > 0) {
-f.meter = 100;
-addP({ type: 'text', text: '✦ 雀芒归宗 · 大招重置 ✦', x: f.x, y: f.y - 120, life: 1.2, max: 1.2, rgb: '255,140,225' });
-} else {
-addP({ type: 'text', text: '✦ 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
+addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
 }
 }
-}
-if (f.t >= totalHits * 0.10 + 0.50) endSpecial(f);
-}
-if (f.sp === 'miss' && f.t >= 0.35) endSpecial(f);
+if (f.t >= 1.15) endSpecial(f);
 } },
 };
 let AC = null, master = null, noiseBuf = null, muted = false;
@@ -12682,15 +12512,14 @@ this.guard = this.maxGuard;
 this.sinceBlock = 0;
 Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
 skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 135, spN: 0, spPose: null, rooted: false, slowT: 0,
-notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lastNormalHit: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
+notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
 breakCD: 0, quickGetup: false, quickGetupPhase: false });
 this.scarf = []; this.trail = []; this.ghosts = [];
-this.curPlat = null; this.dropThrough = 0;
 }
-onGround() { return (this.y >= 0 || !!this.curPlat) && this.vy >= 0; }
+onGround() { return this.y >= 0 && this.vy >= 0; }
 }
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
@@ -12849,73 +12678,6 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
-function updateMapEnv(dt) {
-if (M.phase !== 'fight') return;
-const map = ACTIVE_MAP || (typeof MAPS !== 'undefined' && MAPS.bamboo);
-if (!map) return;
-if (map.id === 'bamboo') {
-if (MAP_ENV.windActive > 0) {
-MAP_ENV.windActive -= dt;
-if (MAP_ENV.windActive <= 0) {
-MAP_ENV.windTimer = 18;
-}
-} else {
-MAP_ENV.windTimer -= dt;
-if (MAP_ENV.windTimer <= 0) {
-MAP_ENV.windActive = 6.0;
-MAP_ENV.windDir = Math.random() < 0.5 ? 1 : -1;
-const dirName = MAP_ENV.windDir > 0 ? '东风呼啸' : '西风烈烈';
-addP({ type: 'text', text: `🍃 疾风阵起 · ${dirName}`, x: STAGE_W / 2, y: -150, life: 1.2, max: 1.2, rgb: '140,245,190' });
-SFX.dash();
-}
-}
-} else if (map.id === 'thunder') {
-if (MAP_ENV.thunderWarn > 0) {
-MAP_ENV.thunderWarn -= dt;
-if (MAP_ENV.thunderWarn <= 0) {
-const tx = MAP_ENV.thunderX || (STAGE_W / 2);
-ring(tx, -120, 160, '255,230,120', 0.5);
-shake = Math.max(shake, 18);
-flashA = Math.max(flashA, 0.45);
-flashRGB = '255,240,150';
-SFX.thunder(); SFX.thunderHit(1.2);
-const alive = allFighters().filter(f => !f.hidden && f.hp > 0);
-for (const f of alive) {
-if (Math.abs(f.x - tx) < 170 && f.y < -60) {
-if (f.ch.id === 'leiming') {
-f.meter = Math.min(100, f.meter + 35);
-f.thunderGuardT = 3.0;
-ring(f.x, f.y - 60, 140, '255,230,120', 0.5);
-addP({ type: 'text', text: '⚡ 天雷淬体 · 怒气满盈', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,230,120' });
-} else {
-applyHit(f, f, { dmg: 38, kb: [0, -680], stun: 0.55, hs: 0.1, launch: true, knock: true }, [f.x, f.y - 50]);
-addP({ type: 'text', text: '⚡ 孤峰天雷 · 破定震飞', x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,210,90' });
-}
-}
-}
-MAP_ENV.thunderTimer = 24.0;
-}
-} else {
-MAP_ENV.thunderTimer -= dt;
-if (MAP_ENV.thunderTimer <= 0) {
-MAP_ENV.thunderWarn = 1.3;
-MAP_ENV.thunderX = STAGE_W / 2;
-ring(MAP_ENV.thunderX, -120, 180, '255,215,90', 1.3);
-addP({ type: 'text', text: '⚡ 九天雷云汇聚 · 天雷将至', x: MAP_ENV.thunderX, y: -190, life: 1.2, max: 1.2, rgb: '255,220,100' });
-}
-}
-} else if (map.id === 'wine') {
-for (const f of allFighters()) {
-if (f.hidden || f.hp <= 0) continue;
-if (f.y >= -15 && Math.abs(f.x - STAGE_W / 2) < 450) {
-if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + 2.5 * dt);
-if (f.ch.id === 'zuixian') {
-f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
-}
-}
-}
-}
-}
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional screen shake)
@@ -12945,9 +12707,7 @@ chars = chars || randomPair();
 const duo = Array.isArray(chars[0]) ? chars : null;
 if (duo) chars = [duo[0][0], duo[1][0]];
 setChars(chars[0], chars[1]);
-M.mapId = (typeof BP !== 'undefined' && BP && BP.mapId) || M.mapId || (typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo');
-if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(M.mapId);
-if (mode === 'net') { setupNetMatch(); send({ mstart: 1, mapId: M.mapId }); startRound(); return; }
+if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
 M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false;
 M.watchAi = !!isWatch;
 A.meter = B.meter = 0;
@@ -12959,28 +12719,7 @@ startRound();
 if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-const curMap = (typeof getMapById === 'function') ? getMapById(M.mapId || (typeof BP !== 'undefined' && BP && BP.mapId)) : null;
-if (curMap) ACTIVE_MAP = curMap;
-if (M.mode === 'world') STAGE_W = WORLD_W;
-else if (ACTIVE_MAP) STAGE_W = isMulti() ? (ACTIVE_MAP.width.multi || 2600) : (ACTIVE_MAP.width.normal || 1800);
-else STAGE_W = isMulti() ? 2600 : 1800;
-if (ACTIVE_MAP && ACTIVE_MAP.platforms) {
-const baseW = ACTIVE_MAP.width.normal || 1800;
-ARENA_PLATFORMS = ACTIVE_MAP.platforms.map(p => ({
-...p,
-x: isMulti() ? (STAGE_W / 2 + (p.x - baseW / 2) * 1.25) : p.x
-}));
-} else {
-ARENA_PLATFORMS = [];
-}
-if (typeof MAP_ENV !== 'undefined') {
-MAP_ENV.windDir = 1;
-MAP_ENV.windTimer = 18;
-MAP_ENV.windActive = 0;
-MAP_ENV.thunderTimer = 24;
-MAP_ENV.thunderWarn = 0;
-MAP_ENV.thunderX = STAGE_W / 2;
-}
+STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
 if (typeof applySkins === 'function') applySkins();
 if (isRaid()) {
 const sq = M.raidSquadSize || 3;
@@ -13030,7 +12769,6 @@ for (const cu of comboUI) cu.t = 0;
 if (M.mode !== 'demo' && M.mode !== 'train') {
 if (M.round === 1) {
 creditT = CREDIT; creditPending = true; metal(880, 1.8, 0.05);
-if (ACTIVE_MAP) say(`${ACTIVE_MAP.name} · ${ACTIVE_MAP.sub}`, 1.4);
 } else {
 const txt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局` : `第${CN[M.round] || M.round}回合`;
 say(txt, 1.1); SFX.gong();
@@ -13779,13 +13517,6 @@ p.vx = damp(p.vx, Math.sign(dx) * 860, 7, STEP); p.vy = damp(p.vy, (o.y - 65 - p
 if (Math.abs(dx) < 34 && p.age > p.turn + 0.15) { p.dead = true; continue; }
 }
 p.x += p.vx * STEP; p.y += p.vy * STEP;
-if (typeof MAP_ENV !== 'undefined' && MAP_ENV.windActive > 0 && p.vx !== 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'bamboo') {
-if (Math.sign(p.vx) === MAP_ENV.windDir) {
-const ownerF = fighterByIdx(p.owner);
-const boost = (ownerF && ownerF.ch && ownerF.ch.id === 'qingfeng') ? 180 : 90;
-p.x += MAP_ENV.windDir * boost * STEP;
-}
-}
 if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
 if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
 if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math.random() < 0.6) addP({ type: 'ink', x: p.x - Math.sign(p.vx) * p.w * 0.4, y: p.y + rand(-p.h / 3, p.h / 3), vx: -p.vx * 0.1, vy: rand(-40, 40), life: 0.5, max: 0.5, r: rand(2, 5), rgb: p.kind === 'dragon' ? '20,20,28' : CHARS[fighterByIdx(p.owner).chIdx].look.slash }); }
@@ -13850,6 +13581,9 @@ addP({ type: 'text', text: '墨迹遮目', x: foe.x, y: foe.y - 100, life: 0.9, 
 } else if (p.kind === 'note' && p.notes >= 3) {
 foe.slowT = 2.2;
 addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
+} else if (p.kind === 'spindle' || p.mark) {
+foe.needleMark = 3.5;
+addP({ type: 'text', text: '✦ 雀芒入体', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
 }
 applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
 const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
@@ -14167,10 +13901,9 @@ if (f.frostSlow > 0) {
 f.frostSlow = Math.max(0, f.frostSlow - STEP);
 if (Math.random() < 0.25) addP({ type: 'spark', x: f.x + rand(-20, 20), y: f.y - rand(20, 80), vx: 0, vy: rand(-15, 15), life: 0.3, max: 0.3, rgb: '160,230,255' });
 }
-if (f.needleMarkT > 0) {
-f.needleMarkT = Math.max(0, f.needleMarkT - STEP);
-if (f.needleMarkT <= 0) f.needleMark = 0;
-if (f.needleMark > 0 && Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
+if (f.needleMark > 0) {
+f.needleMark = Math.max(0, f.needleMark - STEP);
+if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
 }
 if (scOn()) scTick(f, foe);
 physics(f);
@@ -14197,64 +13930,18 @@ g *= LAUNCH_GRAV * (1 + f.juggle * 0.12) * Math.min(1.25, Math.max(0.85, Math.po
 const chaosGrav = (chaosNow('grav') || { val: 1 }).val;
 if (wasAir) f.vy += g * chaosGrav * STEP;
 if (f.state === 'held') { f.vx = 0; f.vy = 0; }
-if (f.dropThrough > 0) f.dropThrough = Math.max(0, f.dropThrough - STEP);
-if (f.curPlat && (f.ctrl && f.ctrl.held && f.ctrl.held.down && (f.ctrl.consume('jump') || f.ctrl.consume('dash')))) {
-f.dropThrough = 0.28;
-f.curPlat = null;
-f.y += 6;
-f.vy = Math.max(f.vy, 180);
-f.state = 'air';
-}
 f.x += f.vx * STEP; f.y += f.vy * STEP;
-if (f.y >= 0) {
-f.y = 0;
-f.curPlat = null;
-if (wasAir) onLand(f);
-if (f.vy > 0) f.vy = 0;
-} else {
-let landedPlat = null;
-if (f.vy >= 0 && f.dropThrough <= 0 && typeof ARENA_PLATFORMS !== 'undefined' && ARENA_PLATFORMS.length) {
-const oldY = f.y - f.vy * STEP;
-for (const plat of ARENA_PLATFORMS) {
-const halfW = plat.w / 2;
-if (f.x >= plat.x - halfW && f.x <= plat.x + halfW) {
-if (oldY <= plat.y + 6 && f.y >= plat.y - 3) {
-landedPlat = plat;
-break;
-}
-}
-}
-}
-if (landedPlat) {
-f.y = landedPlat.y;
-f.curPlat = landedPlat;
-if (wasAir) onLand(f);
-if (f.vy > 0) f.vy = 0;
-} else if (f.curPlat) {
-const halfW = f.curPlat.w / 2;
-if (f.x < f.curPlat.x - halfW || f.x > f.curPlat.x + halfW) {
-f.curPlat = null;
-f.state = 'air';
-}
-}
-}
-const onG = f.onGround();
+if (f.y >= 0) { f.y = 0; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
+const onG = f.y >= 0;
 const slide = f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].nofric;
 const fw = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
-const isIceMap = typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'ice';
-const iceMul = isIceMap ? (f.ch.id === 'tieshan' ? 0.9 : (f.ch.id === 'lingshuang' ? 0.8 : 0.6)) : 1.0;
-const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12) * iceMul;
+const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12);
 if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, dampK, STEP);
 if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? (dampK * 0.75) : (dampK * 1.5), STEP);
-if (typeof MAP_ENV !== 'undefined' && MAP_ENV.windActive > 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'bamboo') {
-const windPush = MAP_ENV.windDir * (f.ch.id === 'yanling' ? 90 : 45);
-if (!onG || f.state === 'dash' || f.state === 'walk') f.vx += windPush * STEP;
-}
 if (f.x < WALL || f.x > STAGE_W - WALL) {
 const side = f.x < WALL ? -1 : 1;
 f.x = side < 0 ? WALL : STAGE_W - WALL;
-const isPagoda = typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'pagoda';
-if (!isPagoda && f.state === 'launched' && Math.abs(f.vx) > 350) {
+if (f.state === 'launched' && Math.abs(f.vx) > 350) {
 const isHardImpact = Math.abs(f.vx) > 480;
 f.vx *= isHardImpact ? -0.55 : -0.4;
 shake = Math.max(shake, isHardImpact ? 14 : 7);
@@ -14622,24 +14309,8 @@ if (att.ch.passive === 'drunk') dmg *= 1 + (att.drunk || 0) * 0.005;
 if (att.ch.passive === 'bind' && def.hookedT > 0 && !m.ult) { dmg *= 1.25; ev.big = true; }
 if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack') att.notes = Math.min(3, (att.notes || 0) + 1);
 if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
-if (att.ch.passive === 'needlemark') {
-const isNormal = att.state === 'attack' && !m.isProj && !m.ult;
-const isCharged = isNormal && att.moveName === 'cs2';
-const isQorE = (m.isProj && m.kind === 'spindle') || (att.state === 'skill' && att.skill === 'shadowdash');
-if (isCharged || isQorE) {
-def.needleMark = Math.min(3, (def.needleMark || 0) + 1);
-def.needleMarkT = 3.5;
-addP({ type: 'text', text: def.needleMark === 1 ? '✦ 雀芒入体' : `✦ 雀芒 ×${def.needleMark}`, x: def.x, y: def.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
-} else if (isNormal) {
-const now = M.t || 0;
-const lastHit = att.lastNormalHit || 0;
-if (now - lastHit < 1.5) {
-def.needleMark = Math.min(3, (def.needleMark || 0) + 1);
-def.needleMarkT = 3.5;
-addP({ type: 'text', text: `✦ 雀芒 ×${def.needleMark}`, x: def.x, y: def.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
-}
-att.lastNormalHit = now;
-}
+if (att.ch.passive === 'needlemark' && (m.isProj || m.mark)) {
+def.needleMark = 3.5;
 }
 if (def.ch && def.ch.id === 'moyu' && (def.ink || 0) >= 25 && !m.hold && dmg > 8) {
 def.ink = Math.max(0, def.ink - 12);
@@ -15161,7 +14832,6 @@ if (!C.hidden) updateFighter(C, foeOf(C));
 if (!D.hidden) updateFighter(D, foeOf(D));
 updateArena2v2(STEP);
 }
-if (typeof updateMapEnv === 'function') updateMapEnv(STEP);
 if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
 for (const f of allFighters()) {
 if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
@@ -15951,95 +15621,6 @@ ctx.fillText(cvT(labels[ARENA2V2.orb.kind]), ax, oy - 26);
 }
 ctx.restore();
 }
-if (typeof ARENA_PLATFORMS !== 'undefined' && ARENA_PLATFORMS.length) {
-for (const plat of ARENA_PLATFORMS) {
-const halfW = plat.w / 2;
-const left = plat.x - halfW, top = plat.y, w = plat.w, h = plat.h || 12;
-ctx.save();
-if (plat.kind === 'bamboo') {
-ctx.fillStyle = '#2d3b26';
-ctx.fillRect(left, top, w, h);
-ctx.fillStyle = '#415735';
-ctx.fillRect(left, top + 2, w, h - 4);
-ctx.strokeStyle = '#182414';
-ctx.lineWidth = 1.5;
-for (let bx = left + 15; bx < left + w; bx += 22) {
-ctx.beginPath(); ctx.moveTo(bx, top); ctx.lineTo(bx, top + h); ctx.stroke();
-}
-ctx.fillStyle = '#9e814a';
-for (const rx of [left + 35, left + w - 35]) {
-ctx.fillRect(rx - 4, top - 1, 8, h + 2);
-}
-ctx.fillStyle = '#212d1b';
-ctx.fillRect(left + 28, top + h, 8, -top - h);
-ctx.fillRect(left + w - 36, top + h, 8, -top - h);
-} else if (plat.kind === 'stone') {
-ctx.fillStyle = '#1c2130';
-ctx.fillRect(left, top, w, h);
-ctx.strokeStyle = 'rgba(233,196,106,0.7)';
-ctx.lineWidth = 2;
-ctx.strokeRect(left, top, w, h);
-ctx.fillStyle = '#141824';
-ctx.beginPath();
-ctx.moveTo(left + 20, top + h);
-ctx.lineTo(left + 45, 0);
-ctx.lineTo(left + w - 45, 0);
-ctx.lineTo(left + w - 20, top + h);
-ctx.closePath();
-ctx.fill();
-ctx.stroke();
-} else {
-ctx.fillStyle = '#3a161e';
-ctx.fillRect(left, top, w, h);
-ctx.fillStyle = '#6e2732';
-ctx.fillRect(left, top, w, 3);
-ctx.strokeStyle = 'rgba(233,196,106,0.85)';
-ctx.lineWidth = 2;
-ctx.beginPath();
-ctx.moveTo(left - 8, top - 4);
-ctx.quadraticCurveTo(left, top + 3, left + 14, top + 3);
-ctx.moveTo(left + w + 8, top - 4);
-ctx.quadraticCurveTo(left + w, top + 3, left + w - 14, top + 3);
-ctx.stroke();
-ctx.fillStyle = '#2a0e14';
-ctx.fillRect(left + 24, top + h, 6, -top - h);
-ctx.fillRect(left + w - 30, top + h, 6, -top - h);
-}
-ctx.restore();
-}
-}
-if (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'ice') {
-const ig = ctx.createLinearGradient(0, 0, 0, 45);
-ig.addColorStop(0, 'rgba(160,225,255,0.22)');
-ig.addColorStop(1, 'rgba(160,225,255,0)');
-ctx.fillStyle = ig;
-ctx.fillRect(-3000, 0, STAGE_W + 6000, 45);
-}
-if (typeof MAP_ENV !== 'undefined' && MAP_ENV.windActive > 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'bamboo') {
-ctx.save();
-ctx.fillStyle = 'rgba(140,245,190,0.45)';
-for (let i = 0; i < 9; i++) {
-const lx = ((clock * 680 * MAP_ENV.windDir + i * 210) % (STAGE_W + 400) + (STAGE_W + 400)) % (STAGE_W + 400) - 200;
-const ly = -30 - ((i * 35) % 190);
-ctx.beginPath();
-ctx.ellipse(lx, ly, 13, 3.2, MAP_ENV.windDir * 0.35, 0, Math.PI * 2);
-ctx.fill();
-}
-ctx.restore();
-}
-if (typeof MAP_ENV !== 'undefined' && MAP_ENV.thunderWarn > 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'thunder') {
-const tx = MAP_ENV.thunderX || (STAGE_W / 2);
-const pulse = 0.6 + 0.4 * Math.sin(clock * 25);
-ctx.save();
-ctx.strokeStyle = `rgba(255,220,110,${pulse})`;
-ctx.lineWidth = 2.5;
-ctx.beginPath(); ctx.ellipse(tx, -120, 160, 24, 0, 0, Math.PI * 2); ctx.stroke();
-ctx.beginPath(); ctx.ellipse(tx, -120, 100, 15, 0, 0, Math.PI * 2); ctx.stroke();
-ctx.setLineDash([8, 6]);
-ctx.strokeStyle = `rgba(255,240,160,${pulse * 0.7})`;
-ctx.beginPath(); ctx.moveTo(tx, -500); ctx.lineTo(tx, -120); ctx.stroke();
-ctx.restore();
-}
 }
 function lantern(x, y) {
 const flick = 0.85 + Math.sin(clock * 9 + x) * 0.08 + Math.sin(clock * 23 + x) * 0.05;
@@ -16109,10 +15690,9 @@ addP({ type: 'spark', x: f.x + rand(-30, 30), y: f.y - rand(10, 100), vx: rand(-
 }
 if (f.look.legend && f.look.fx) skinGround(f);
 if (f.look.tier && f.look.fx) skinTierGround(f);
-const gY = f.curPlat ? f.curPlat.y : 0;
-const hgt = clamp((gY - f.y) / 300, 0, 1);
+const hgt = clamp(-f.y / 300, 0, 1);
 ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
-ctx.beginPath(); ctx.ellipse(f.x, gY + 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
+ctx.beginPath(); ctx.ellipse(f.x, 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
 if (f.state === 'charge') {
 const lv = clamp(f.t / CHARGE_FULL, 0, 1), full = f.t >= CHARGE_FULL;
 const r = 40 + lv * 55 + (full ? Math.sin(clock * 30) * 6 : 0);
@@ -23843,10 +23423,7 @@ initAudio();
 ensurePortraits();
 chatClear();
 BP = null;
-const mapId = typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo';
-if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(mapId);
 watch2v2Bp = {
-mapId,
 step: 0,
 bans: [-1, -1],
 picks: [[-1, -1], [-1, -1]],
@@ -23955,36 +23532,15 @@ const slotsHtml = slot(st.bans[sd], 'ban', banActive, '禁 ')
 $id('bpS' + sd).innerHTML = `<div class="who" style="color:${teamCol(sd)}">${WATCH2V2_TEAMS[sd]}队${active(sd) ? ' · 行动中' : ''}</div>
 <div class="slots">${slotsHtml}</div>`;
 }
-const curMap = (typeof getMapById === 'function') ? getMapById((st && st.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id)) : null;
-const banner = document.getElementById('bpMapBanner');
-if (banner && curMap) {
-banner.classList.remove('hidden');
-const nameEl = document.getElementById('bpMapName');
-const subEl = document.getElementById('bpMapSub');
-const descEl = document.getElementById('bpMapDesc');
-const favEl = document.getElementById('bpMapFavList');
-if (nameEl) nameEl.textContent = curMap.name;
-if (subEl) subEl.textContent = curMap.sub;
-if (descEl) descEl.textContent = curMap.desc;
-if (favEl) {
-const favNames = (curMap.favored || []).map(id => {
-const c = CHARS.find(x => x.id === id);
-return c ? c.name : id;
-}).join('、');
-favEl.textContent = `${favNames} (点将席位流金高亮)`;
-}
-}
 $id('bpGrid').innerHTML = CHARS.map((c, i) => {
 const banned = st.bans.includes(i);
 const pickedBy = st.picks.findIndex(p => p.includes(i));
 const isLast = st.last === i;
-const isFavored = curMap && (curMap.favored || []).includes(c.id);
-const affinityTag = isFavored ? '<span class="tag affinity">★ 地利</span>' : '';
 const tag = banned ? '<span class="tag">禁</span>'
 : pickedBy >= 0 ? `<span class="tag p" style="background:${pickedBy === 0 ? '#2b6f86' : '#8a5a1e'}">${WATCH2V2_TEAMS[pickedBy]}</span>` : '';
-const state = banned ? '，已禁用' : pickedBy >= 0 ? `，已被${WATCH2V2_TEAMS[pickedBy]}队选择` : (isFavored ? '，本局地利' : '，等待天道 AI 选择');
-return `<button class="bpcard${isFavored ? ' affinity-gold' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${isLast ? ' sel' : ''}" data-i="${i}" type="button" aria-label="${c.name}，${c.role}${state}" aria-disabled="true"${isLast ? ' style="opacity:1"' : ''}>
-${tag}${affinityTag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
+const state = banned ? '，已禁用' : pickedBy >= 0 ? `，已被${WATCH2V2_TEAMS[pickedBy]}队选择` : '，等待天道 AI 选择';
+return `<button class="bpcard${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${isLast ? ' sel' : ''}" data-i="${i}" type="button" aria-label="${c.name}，${c.role}${state}" aria-disabled="true"${isLast ? ' style="opacity:1"' : ''}>
+${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
 }).join('');
 const show = bpHover >= 0 ? bpHover : (st.last >= 0 ? st.last : 0);
 setDetail(show);
@@ -24001,8 +23557,6 @@ human[0].rec = null;
 REC.on = false;
 if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
 const [ban0, ban1, t1a, t2a, t2b, t1b] = watch2v2Draft;
-M.mapId = (watch2v2Bp && watch2v2Bp.mapId) || M.mapId || (typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo');
-if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(M.mapId);
 M.mode = 'watch2v2';
 M.watchAi = true;
 M.level = 'god';
@@ -26357,10 +25911,7 @@ const steps = BP_ORDERS[(md.squadBp && md.squadBp[squad]) || md.bp].map(st => st
 const bans = steps.some(st => st[1] === 'ban') ? [-1, -1] : [];
 const count = side => steps.filter(st => st[0] === side && st[1] === 'pick').length;
 const picks = md.team ? [count(0), count(1)].map(n => Array(n).fill(-1)) : [0, 1].filter(count).map(() => -1);
-const mapId = (customOpts && customOpts.mapId) || (BP && BP.mapId) || (typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo');
-if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(mapId);
 BP = {
-mapId,
 step: 0,
 steps,
 bans,
@@ -26545,14 +26096,10 @@ const hits = HERO_HIT_DETAILS[c.id] || {};
 const comboFlow = hits.light ? `<span>${hits.light.name}</span>（<span>${hits.light.badge || '连击'}</span>） · <span>蓄力</span>：<span>${hits.charge ? hits.charge.name : '蓄力重斩'}</span>` : '';   // 每段单独一个节点，英文界面才能逐段查表
 const S2 = SKILLS[c.skill2];
 const specialMove = S2 ? `<span>${S2.name}</span> · <span>${S2.desc || ''}</span>` : '';
-const curMap = (typeof getMapById === 'function') ? getMapById((typeof BP !== 'undefined' && BP && BP.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id)) : null;
-const isFavored = curMap && (curMap.favored || []).includes(c.id);
-const affinityHtml = isFavored ? `<div class="bpdetail-affinity"><span class="bpa-title">★ 本局地利：</span><span>${curMap.favoredDesc[c.id] || ''}</span></div>` : '';
 return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
 <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
 <!-- 皮肤改在角色图鉴里装配：选人是有时限的，这里只显示当前装束 -->
 <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${Math.round((st.hp || 850) * ((BAL[c.id] || {}).hp || 1))}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
-${affinityHtml}
 <dl><dt><span>被动</span> <span>${c.passiveName}</span></dt><dd>${c.passiveDesc}</dd>
 <dt>门派架势</dt><dd>${guardTxt}</dd>
 ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
@@ -26563,11 +26110,9 @@ ${restrHtml}</div>`;
 }
 function buildDetails(force) {
 const box = document.getElementById('bpDetail');
-const mapKey = (typeof BP !== 'undefined' && BP && BP.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id) || '';
-if (!force && box.dataset.built === String(PORTRAITS.length) && box.dataset.builtMap === mapKey) return;
+if (!force && box.dataset.built === String(PORTRAITS.length)) return;
 box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
 box.dataset.built = String(PORTRAITS.length);
-box.dataset.builtMap = mapKey;
 }
 let bpDeckMove = 'light';
 function updateBPDeck(i) {
@@ -26671,25 +26216,6 @@ updateBPDeck(i);
 function renderBP() {
 if (bpMode === 'watch2v2') { if (watch2v2Bp) renderBPWatch2v2(); return; }
 if (!BP) return;
-const curMap = (typeof getMapById === 'function') ? getMapById((BP && BP.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id)) : null;
-const banner = document.getElementById('bpMapBanner');
-if (banner && curMap) {
-banner.classList.remove('hidden');
-const nameEl = document.getElementById('bpMapName');
-const subEl = document.getElementById('bpMapSub');
-const descEl = document.getElementById('bpMapDesc');
-const favEl = document.getElementById('bpMapFavList');
-if (nameEl) nameEl.textContent = curMap.name;
-if (subEl) subEl.textContent = curMap.sub;
-if (descEl) descEl.textContent = curMap.desc;
-if (favEl) {
-const favNames = (curMap.favored || []).map(id => {
-const c = CHARS.find(x => x.id === id);
-return c ? c.name : id;
-}).join('、');
-favEl.textContent = `${favNames} (点将席位流金高亮)`;
-}
-}
 $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
 const my = bpMySide(), done = BP.step >= bpSteps().length;
 const [side, type] = done ? [-1, ''] : bpSteps()[BP.step];
@@ -26798,17 +26324,15 @@ else if (BP.picks[1] && BP.picks[1].includes(i)) pickedBy = 1;
 } else if (Array.isArray(BP.picks)) {
 pickedBy = BP.picks.indexOf(i);
 }
-const isFavored = curMap && (curMap.favored || []).includes(c.id);
-const affinityTag = isFavored ? '<span class="tag affinity">★ 地利</span>' : '';
 const can = myTurn && bpValid(i);
 const myAv = BP.avail && BP.avail[my];
 const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
 const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
 const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
-const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : (isFavored ? '，本局地利' : '');
+const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
 const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
-return `<button class="bpcard${isFavored ? ' affinity-gold' : ''}${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
-<span class="bp-shortcut">${i + 1}</span>${tag}${affinityTag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
+return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
+<span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
 }).join('');
 if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }
 const show = bpHover >= 0 ? bpHover : (bpSel >= 0 ? bpSel : 0);
