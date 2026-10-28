@@ -1667,6 +1667,8 @@ const UI_COPY_EN = {
   "开启山河异境": "Start Terrain Clash",
   "异境 AI 观战": "Watch Terrain AI Battle",
   "换一处战场：投票选地图，断崖、冰面都会改变侠客的打法": "A new battlefield: vote for the map. Cliffs and ice change how every hero fights",
+  "山河异境 (地图投票)": "Terrain Clash (map vote)",
+  "地图投票：双方各一票，按票数决定选到哪张图": "Map vote: one vote each, and the votes decide the odds",
   "得票": "Votes",
   "概率": "Chance",
   "断崖台": "Cliffside",

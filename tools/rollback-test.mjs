@@ -83,6 +83,38 @@ if (runAll || args.includes('--rollback')) {
     return { back, gone, saved: st1.f[0].lastComboHits };
   })()`).runInContext(w);
   assert(ai.saved === 5 && ai.back === 5 && ai.gone, 'AI-written fighter field (lastComboHits) is saved, restored and cleared by rollback', JSON.stringify(ai));
+
+  // 山河异境：两边用同一组票和同一个种子选出同一张图；地图（M.map）进存档，坠崖、冰面上的回滚重算和第一次一模一样
+  const maps = new vm.Script(`(() => {
+    netRoomMode = 'maps';
+    const out = {};
+    for (const [mv, seed] of [[['cliff', null], 777], [[null, 'ice'], 778], [['cliff', 'ice'], 991]]) {
+      rollStart([2, 5], seed, null, mv);
+      const host = M.map;
+      rollStart([2, 5], seed, null, mv.slice());
+      if (M.map !== host) return { err: 'two starts with the same votes and seed picked ' + host + ' and ' + M.map };
+      out[seed] = M.map;
+    }
+    rollStart([2, 5], 4242, null, ['cliff', 'cliff']);
+    M.phase = 'fight';
+    const w0 = STAGE_W, rf = rollFrame;
+    rollFrame = f => { if (f === 100) { B.x = STAGE_W - WALL - 2; B.y = -40; B.vx = 800; B.vy = -100; B.state = 'launched'; } rf(f); };   // 第 100 帧把 B 打下崖（重算时也一样）
+    for (let f = 0; f < 240; f++) {
+      ROLL.loc[f] = { h: f < 120 ? 2 : (f % 20 < 10 ? 2 : 1), p: f % 9 === 0 ? ['heavy'] : (f % 31 === 0 ? ['skill'] : []) };
+      ROLL.rem[f] = { h: f % 40 < 25 ? 1 : 2, p: f % 13 === 0 ? ['light'] : [] };
+      ROLL.remLast = 240;
+      rollFrame(f);
+      ROLL.F = f + 1;
+    }
+    const before = hashState(capState()), falls = B.mapFalls || 0;
+    ROLL.pend = 90;   // 回滚到坠崖之前，重算 150 帧
+    rollResim();
+    const after = hashState(capState());
+    rollFrame = rf; netRoomMode = 'normal';
+    return { picks: out, w0, map: M.map, falls, match: before === after, stays: STAGE_W === w0 && M.map === 'cliff' };
+  })()`).runInContext(w);
+  assert(!maps.err && maps.picks[777] === 'cliff' && maps.picks[778] === 'ice' && ['cliff', 'ice'].includes(maps.picks[991]), 'Maps room: both sides pick the same map from the same votes and seed', JSON.stringify(maps));
+  assert(maps.map === 'cliff' && maps.w0 === 1500 && maps.falls >= 1 && maps.match && maps.stays, 'Maps room: a cliff fall resimulates to the identical state hash after a 150-frame rollback', JSON.stringify(maps));
 }
 
 // 2. QingFengXing (青锋行) 3D Action Mode Verification

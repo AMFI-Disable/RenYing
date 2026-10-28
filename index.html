@@ -3436,9 +3436,16 @@ body.kb-only.has-nav .kb-hint { display: block; }
             <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px;flex-wrap:wrap">
               <button class="ghost small sel" data-mode="normal" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">标准论剑 (BO3)</button>
               <button class="ghost small" data-mode="chaos" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">天机乱斗 (随机词条)</button>
+              <button class="ghost small" data-mode="maps" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">山河异境 (地图投票)</button>
               <button class="ghost small" data-mode="pp_cc" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">双人共斗 (双人破阵 vs AI)</button>
               <button class="ghost small" data-mode="pp_pp" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">四人切磋 (2v2 玩家对决)</button>
             </div>
+          </div>
+
+          <!-- 山河异境：两边各投一票 -->
+          <div class="lobby-map-vote hidden" id="lobbyMapVote">
+            <div class="sec-sub-label">地图投票：双方各一票，按票数决定选到哪张图</div>
+            <div class="map-vote" id="lobbyMapCards"></div>
           </div>
 
           <!-- 擂台操作 -->
@@ -6863,6 +6870,7 @@ const ROOM_MODES = {
 normal: { bp: 'trioSnake', team: true, slots: [[0], [1]] },
 chaos: { bp: 'open', slots: [[0], [1]], rule: 'chaos' },
 mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
+maps: { bp: 'open', slots: [[0], [1]], rule: 'maps' },   // 山河异境：两边各投一票选地图
 pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
 pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
 raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
@@ -8579,6 +8587,8 @@ const UI_COPY_EN = {
 "开启山河异境": "Start Terrain Clash",
 "异境 AI 观战": "Watch Terrain AI Battle",
 "换一处战场：投票选地图，断崖、冰面都会改变侠客的打法": "A new battlefield: vote for the map. Cliffs and ice change how every hero fights",
+"山河异境 (地图投票)": "Terrain Clash (map vote)",
+"地图投票：双方各一票，按票数决定选到哪张图": "Map vote: one vote each, and the votes decide the odds",
 "得票": "Votes",
 "概率": "Chance",
 "断崖台": "Cliffside",
@@ -11695,10 +11705,13 @@ netStatus('入局成功，正在同步战局…');
 NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
 updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
 if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
+NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
 onNetOpen();
+} else if (m.sys === 'map_vote') {
+netMapVoteRecv(m.v);
 } else if (m.sys === 'room_rule') {
 setRoomModeUI(m.rule);
-const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)', raid: '同袍肉鸽 (并肩讨伐魔首)' };
+const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', maps: '山河异境 (地图投票)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)', raid: '同袍肉鸽 (并肩讨伐魔首)' };
 toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
 } else if (m.sys === 'rematch') {
 if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -11828,7 +11841,7 @@ if (sn.p) { projs.length = 0; for (const q of sn.p) projs.push(q); }
 function onNetMsg(msg) {
 if (msg.mstart || msg.report) return;
 if (msg.ru !== undefined) { rollRecv(msg); return; }
-if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo); return; }
+if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv); return; }
 if (msg.rsync) { rollAdopt(msg.rsync); return; }
 if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
 if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
@@ -11890,7 +11903,7 @@ if (msg.i || msg.s || msg.ev) send(msg);
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
-M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0; NET.solo = false;
+M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
 human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
 if (netRoomMode === 'pp_cc' || netRoomMode === 'raid') {
@@ -22660,11 +22673,12 @@ pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
 } else NET.presses2.length = 0;
 return { h, p: pr };
 }
-function rollStart(ch, seed, duo) {
+function rollStart(ch, seed, duo, mv) {
 refocusGame();
 setChars(ch[0], ch[1]);
 if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
 setupNetMatch();
+if (roomDef().rule === 'maps') M.map = mapPick(Array.isArray(mv) ? mv : [], mapSeedRand(seed));   // 山河异境：房主把两边的票随开局一起发来，按种子选图
 if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
 ROLL.slots = netSlots(); ROLL.ctrls = [];
 for (const f of allFighters()) {
@@ -24209,9 +24223,10 @@ if (NET.role === 'host') {
 const duo = M.duo ? JSON.parse(JSON.stringify(M.duo)) : null;   // 各选 2 人的对局：同阵容再战，从各自第一人打起
 const picks = roomDef().four ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
 const seed = (Math.random() * 2147483647) | 0;
+const mv = netMapVotes();
 send({ sys: 'rematch', action: 'start' });
-send({ rstart: duo ? { ch: picks, seed, duo } : { ch: picks, seed } });
-rollStart(picks, seed, duo);
+send({ rstart: duo ? { ch: picks, seed, duo, mv } : { ch: picks, seed, mv } });
+rollStart(picks, seed, duo, mv);
 } else {
 send({ sys: 'rematch', action: 'ask' });
 toast('已向房主发送再战请求');
@@ -26224,8 +26239,9 @@ const duo = !is2v2Net && !raidNet && Array.isArray(picks[0]) ? picks : null;
 const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
 : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
 : (duo ? [duo[0][0], duo[1][0]] : picks);
-send({ rstart: duo ? { ch: flatCh, seed, duo } : { ch: flatCh, seed } });
-rollStart(flatCh, seed, duo);
+const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
+send({ rstart: duo ? { ch: flatCh, seed, duo, mv } : { ch: flatCh, seed, mv } });
+rollStart(flatCh, seed, duo, mv);
 }
 } else if (mode === 'chaos') {
 startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
@@ -27338,7 +27354,7 @@ return;
 netRoomMode = b.dataset.mode;
 for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
 send({ sys: 'room_rule', rule: netRoomMode });
-const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
+const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', maps: '山河异境 (地图投票)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
 toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
 SFX.slice();
 });
@@ -27351,6 +27367,26 @@ btn.classList.toggle('sel', btn.dataset.mode === netRoomMode);
 btn.disabled = NET.role !== 'host';
 }
 }
+renderLobbyMaps();
+}
+const NET_MAPV = { host: null, client: null };
+const netMapVotes = () => roomDef().rule === 'maps' ? [NET_MAPV.host, NET_MAPV.client] : undefined;
+function netMapVoteSend() {
+NET_MAPV[NET.role === 'client' ? 'client' : 'host'] = mapVote;
+if (NET.open) send({ sys: 'map_vote', v: mapVote });
+}
+function netMapVoteRecv(v) {
+NET_MAPV[NET.role === 'client' ? 'host' : 'client'] = MAPS[v] ? v : null;
+renderLobbyMaps();
+}
+function renderLobbyMaps() {
+const wrap = $id('lobbyMapVote');
+if (!wrap) return;
+const on = netRoomMode === 'maps';
+wrap.classList.toggle('hidden', !on);
+if (!on) return;
+NET_MAPV[NET.role === 'client' ? 'client' : 'host'] = mapVote;
+mapVoteCards($id('lobbyMapCards'), [NET_MAPV.host, NET_MAPV.client], mapVote, id => { setMapVote(mapVote === id ? null : id); netMapVoteSend(); renderLobbyMaps(); });
 }
 if ($id('lobbyCancelBtn')) $id('lobbyCancelBtn').addEventListener('click', () => {
 netLeave();
@@ -28058,8 +28094,8 @@ sigTries: 0,     // 和牵线服务器断开后已经重连了几次
 dropped: 0,      // 因为太大没发出去的消息数
 };
 const P2P_SYS = {
-host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule'],
-client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule']
+host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote'],
+client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 const P2P_T = {

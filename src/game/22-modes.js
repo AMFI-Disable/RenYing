@@ -1179,9 +1179,10 @@ document.getElementById('againBtn').addEventListener('click', () => {
       const duo = M.duo ? JSON.parse(JSON.stringify(M.duo)) : null;   // 各选 2 人的对局：同阵容再战，从各自第一人打起
       const picks = roomDef().four ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
       const seed = (Math.random() * 2147483647) | 0;
+      const mv = netMapVotes();
       send({ sys: 'rematch', action: 'start' });
-      send({ rstart: duo ? { ch: picks, seed, duo } : { ch: picks, seed } });
-      rollStart(picks, seed, duo);
+      send({ rstart: duo ? { ch: picks, seed, duo, mv } : { ch: picks, seed, mv } });
+      rollStart(picks, seed, duo, mv);
     } else {
       send({ sys: 'rematch', action: 'ask' });
       toast('已向房主发送再战请求');

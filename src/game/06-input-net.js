@@ -116,10 +116,13 @@ function onSys(m) {
     NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
     updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
     if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
+    NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
     onNetOpen();
+  } else if (m.sys === 'map_vote') {
+    netMapVoteRecv(m.v);
   } else if (m.sys === 'room_rule') {
     setRoomModeUI(m.rule);
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)', raid: '同袍肉鸽 (并肩讨伐魔首)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', maps: '山河异境 (地图投票)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)', raid: '同袍肉鸽 (并肩讨伐魔首)' };
     toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
   } else if (m.sys === 'rematch') {
     if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
@@ -258,7 +261,7 @@ function applySnapshot(sn, exact) {
 function onNetMsg(msg) {
   if (msg.mstart || msg.report) return;
   if (msg.ru !== undefined) { rollRecv(msg); return; }
-  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo); return; }
+  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv); return; }
   if (msg.rsync) { rollAdopt(msg.rsync); return; }
   if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
@@ -321,7 +324,7 @@ function netTick(dt) {
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
-  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0; NET.solo = false;
+  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   if (netRoomMode === 'pp_cc' || netRoomMode === 'raid') {

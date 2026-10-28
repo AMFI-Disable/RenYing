@@ -659,9 +659,16 @@
             <div class="lobby-modes-seg" id="lobbyModesSeg" style="display:inline-flex;gap:4px;flex-wrap:wrap">
               <button class="ghost small sel" data-mode="normal" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">标准论剑 (BO3)</button>
               <button class="ghost small" data-mode="chaos" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">天机乱斗 (随机词条)</button>
+              <button class="ghost small" data-mode="maps" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">山河异境 (地图投票)</button>
               <button class="ghost small" data-mode="pp_cc" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">双人共斗 (双人破阵 vs AI)</button>
               <button class="ghost small" data-mode="pp_pp" type="button" style="padding:3px 12px;font-size:12px;border-radius:6px">四人切磋 (2v2 玩家对决)</button>
             </div>
+          </div>
+
+          <!-- 山河异境：两边各投一票 -->
+          <div class="lobby-map-vote hidden" id="lobbyMapVote">
+            <div class="sec-sub-label">地图投票：双方各一票，按票数决定选到哪张图</div>
+            <div class="map-vote" id="lobbyMapCards"></div>
           </div>
 
           <!-- 擂台操作 -->

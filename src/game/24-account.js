@@ -766,7 +766,7 @@ if (lobbyModesSegEl) {
     netRoomMode = b.dataset.mode;
     for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
     send({ sys: 'room_rule', rule: netRoomMode });
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
+    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', maps: '山河异境 (地图投票)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
     toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
     SFX.slice();
   });
@@ -780,6 +780,27 @@ function setRoomModeUI(rule) {
       btn.disabled = NET.role !== 'host';
     }
   }
+  renderLobbyMaps();
+}
+// 山河异境的联机投票：两边各一票（默认是自己在单人页上投的那张），改票时发给对面；房主开局时把两票一起发出去
+const NET_MAPV = { host: null, client: null };
+const netMapVotes = () => roomDef().rule === 'maps' ? [NET_MAPV.host, NET_MAPV.client] : undefined;
+function netMapVoteSend() {
+  NET_MAPV[NET.role === 'client' ? 'client' : 'host'] = mapVote;
+  if (NET.open) send({ sys: 'map_vote', v: mapVote });
+}
+function netMapVoteRecv(v) {
+  NET_MAPV[NET.role === 'client' ? 'host' : 'client'] = MAPS[v] ? v : null;
+  renderLobbyMaps();
+}
+function renderLobbyMaps() {
+  const wrap = $id('lobbyMapVote');
+  if (!wrap) return;
+  const on = netRoomMode === 'maps';
+  wrap.classList.toggle('hidden', !on);
+  if (!on) return;
+  NET_MAPV[NET.role === 'client' ? 'client' : 'host'] = mapVote;
+  mapVoteCards($id('lobbyMapCards'), [NET_MAPV.host, NET_MAPV.client], mapVote, id => { setMapVote(mapVote === id ? null : id); netMapVoteSend(); renderLobbyMaps(); });
 }
 
 if ($id('lobbyCancelBtn')) $id('lobbyCancelBtn').addEventListener('click', () => {

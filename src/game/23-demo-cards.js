@@ -529,8 +529,9 @@ function bpFinish() {
       const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
         : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
         : (duo ? [duo[0][0], duo[1][0]] : picks);
-      send({ rstart: duo ? { ch: flatCh, seed, duo } : { ch: flatCh, seed } });
-      rollStart(flatCh, seed, duo);
+      const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
+      send({ rstart: duo ? { ch: flatCh, seed, duo, mv } : { ch: flatCh, seed, mv } });
+      rollStart(flatCh, seed, duo, mv);
     }
   } else if (mode === 'chaos') {
     startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
