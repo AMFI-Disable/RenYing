@@ -67,8 +67,9 @@ class Fighter {
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
-const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && netRoomMode === 'raid');
+const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && !!roomDef().four);
+const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && !!roomDef().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
 const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
@@ -296,7 +297,7 @@ function startRound() {
     if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
     if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
   }
-  const isMayhem = M.mode === 'mayhem' || (M.mode === 'net' && netRoomMode === 'mayhem');
+  const isMayhem = M.mode === 'mayhem' || (M.mode === 'net' && roomDef().rule === 'mayhem');
   if (isMayhem) {
     A.maxHp = Math.round(A.maxHp * 10);
     B.maxHp = Math.round(B.maxHp * 10);
@@ -306,7 +307,7 @@ function startRound() {
     B.guard = B.maxGuard = 500;
     A.meter = B.meter = 100;
   }
-  if (M.mode === 'net' && netRoomMode === 'chaos') {
+  if (M.mode === 'net' && roomDef().rule === 'chaos') {
     if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
     if (NET.role === 'host') rollChaosMutation();
   }
@@ -373,7 +374,7 @@ function updateMatch() {
       M.t = 0;
       M.koWinner = winner;
     } else if (M.mode !== 'demo' && M.mode !== 'train') {
-      if (M.mode === 'chaos' || (M.mode === 'net' && netRoomMode === 'chaos')) {
+      if (M.mode === 'chaos' || (M.mode === 'net' && roomDef().rule === 'chaos')) {
         if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
       }
       M.timer = Math.max(0, M.timer - STEP);

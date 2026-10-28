@@ -1095,7 +1095,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
     }
     if (NET.role === 'host') {
       const duo = M.duo ? JSON.parse(JSON.stringify(M.duo)) : null;   // 各选 2 人的对局：同阵容再战，从各自第一人打起
-      const picks = (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
+      const picks = roomDef().four ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
       const seed = (Math.random() * 2147483647) | 0;
       send({ sys: 'rematch', action: 'start' });
       send({ rstart: duo ? { ch: picks, seed, duo } : { ch: picks, seed } });
@@ -1243,9 +1243,7 @@ $id('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') chatSend
 
 // ======================= 禁用与选人 =======================
 // 顺序：1P 禁用 → 2P 禁用 → 1P 选人 → 2P 选人。联机时由房主记录结果并同步。
-const BP_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']];
-const BP_DUO_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];   // 2v2 对战：各禁 1 人、各选 2 人
-const BP_TAG3_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']];   // 联机 1v1 车轮接力：各禁 1 人、各选 3 人
+const BP_STEPS = BP_ORDERS.duel;   // 各模式的点将台顺序在 src/data/11-bp-orders.js，哪个模式用哪个在 src/data/10-modes.js
 const bpSteps = () => (BP && BP.steps) || BP_STEPS;
 const isMultiPickBP = () => !!(BP && Array.isArray(BP.picks) && Array.isArray(BP.picks[0]));
 const isLocalBothHumanBP = () => bpMode === '2v2' && !!(bpCustomOpts && bpCustomOpts.subMode === 'pp_pp');

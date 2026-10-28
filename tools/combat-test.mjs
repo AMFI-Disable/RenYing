@@ -826,7 +826,7 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Net 1v1 BP chooses 3 heroes per side (BP_TAG3_STEPS) and passes duo to rollStart for 3v3 tag relay',
+    name: 'Net 1v1 BP chooses 3 heroes per side (BP_ORDERS.trioSnake) and passes duo to rollStart for 3v3 tag relay',
     fn: `(() => {
       const prevRole = NET.role, prevRoomMode = netRoomMode;
       NET.role = 'host';

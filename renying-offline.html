@@ -6886,6 +6886,38 @@ function defHero(h) {
 h.char = { id: h.id, ...h.char };
 HEROES.push(h);
 }
+const MODES = {
+cpu: { bp: 'duel', local: true, foe: '电脑' },
+cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
+chaos: { bp: 'open', local: true, foe: '电脑' },
+mayhem: { bp: 'open', local: true, foe: '电脑' },
+tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
+tower: { bp: 'solo', local: true },
+stage: { bp: 'solo', local: true },
+train: { bp: 'solo', local: true },
+world: { bp: 'solo', local: true },
+raid: { bp: 'squad3', squadBp: { 2: 'squad2' }, team: true, local: true, sides: ['同袍义军', '融魂魔首'] },
+'2v2': { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },
+};
+const MODE_DEFAULT = { bp: 'duel' };   // 不在表里的模式
+const ROOM_MODES = {
+normal: { bp: 'trioSnake', team: true, slots: [[0], [1]] },
+chaos: { bp: 'open', slots: [[0], [1]], rule: 'chaos' },
+mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
+pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
+pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
+raid: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [1]], raid: true },
+};
+const BP_ORDERS = {
+duel: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']],                     // 1v1：各禁 1 人、各选 1 人
+open: [[0, 'pick'], [1, 'pick']],                                             // 乱斗 / 神决：不禁人，你先选、对面后选
+solo: [[0, 'pick']],                                                          // 闯塔、守关、木人、开放世界：只选自己
+squad2: [[0, 'pick'], [0, 'pick']],                                           // 同袍肉鸽 2 人小队
+squad3: [[0, 'pick'], [0, 'pick'], [0, 'pick']],                              // 同袍肉鸽 3 人小队
+duo: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']],   // 2v2：各禁 1 人，蛇形各选 2 人
+trio: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']],        // 本机车轮战：各禁 1 人，轮流各选 3 人
+trioSnake: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],   // 联机车轮接力：各禁 1 人，蛇形各选 3 人
+};
 const DIFFICULTIES = [
 {
 id: 'easy', name: '入门',
@@ -10023,8 +10055,9 @@ onGround() { return this.y >= 0 && this.vy >= 0; }
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp'));
-const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && netRoomMode === 'raid');
+const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && !!roomDef().four);
+const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && !!roomDef().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
 const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
@@ -10243,7 +10276,7 @@ A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
 if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
 if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 }
-const isMayhem = M.mode === 'mayhem' || (M.mode === 'net' && netRoomMode === 'mayhem');
+const isMayhem = M.mode === 'mayhem' || (M.mode === 'net' && roomDef().rule === 'mayhem');
 if (isMayhem) {
 A.maxHp = Math.round(A.maxHp * 10);
 B.maxHp = Math.round(B.maxHp * 10);
@@ -10253,7 +10286,7 @@ A.guard = A.maxGuard = 500;
 B.guard = B.maxGuard = 500;
 A.meter = B.meter = 100;
 }
-if (M.mode === 'net' && netRoomMode === 'chaos') {
+if (M.mode === 'net' && roomDef().rule === 'chaos') {
 if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
 if (NET.role === 'host') rollChaosMutation();
 }
@@ -10319,7 +10352,7 @@ M.phase = 'ko';
 M.t = 0;
 M.koWinner = winner;
 } else if (M.mode !== 'demo' && M.mode !== 'train') {
-if (M.mode === 'chaos' || (M.mode === 'net' && netRoomMode === 'chaos')) {
+if (M.mode === 'chaos' || (M.mode === 'net' && roomDef().rule === 'chaos')) {
 if (M.mode !== 'net' || NET.role === 'host') updateChaos(STEP);
 }
 M.timer = Math.max(0, M.timer - STEP);
@@ -19918,11 +19951,7 @@ if (a === 'skill2' && c.held.atk) { c.atkT = clock + 1e6; delete c.buf.light; }
 c.press(a);
 }
 }
-function netSlots() {
-if (netRoomMode === 'pp_cc') return [[0], [2]];
-if (netRoomMode === 'pp_pp') return [[0, 2], [1, 3]];
-return [[0], [1]];
-}
+function netSlots() { return roomDef().slots.map(s => s.slice()); }
 function slotInput(inp, k) {
 if (!k) return inp.p.some(a => a[0] === '2') ? { h: inp.h & 255, p: inp.p.filter(a => a[0] !== '2') } : (inp.h > 255 ? { h: inp.h & 255, p: inp.p } : inp);
 return { h: (inp.h >> 8) & 255, p: inp.p.filter(a => a[0] === '2').map(a => a.slice(1)) };
@@ -21404,7 +21433,7 @@ return;
 }
 if (NET.role === 'host') {
 const duo = M.duo ? JSON.parse(JSON.stringify(M.duo)) : null;   // 各选 2 人的对局：同阵容再战，从各自第一人打起
-const picks = (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp') ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
+const picks = roomDef().four ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
 const seed = (Math.random() * 2147483647) | 0;
 send({ sys: 'rematch', action: 'start' });
 send({ rstart: duo ? { ch: picks, seed, duo } : { ch: picks, seed } });
@@ -21546,9 +21575,7 @@ $id('emoBar').addEventListener('click', e => { const b = e.target.closest('butto
 function chatSendText() { const v = $id('chatIn').value.trim(); if (!v) return; $id('chatIn').value = ''; chatSend({ k: 't', v: v.slice(0, 40) }); }
 $id('chatSend').addEventListener('click', chatSendText);
 $id('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') chatSendText(); });
-const BP_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']];
-const BP_DUO_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];   // 2v2 对战：各禁 1 人、各选 2 人
-const BP_TAG3_STEPS = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']];   // 联机 1v1 车轮接力：各禁 1 人、各选 3 人
+const BP_STEPS = BP_ORDERS.duel;   // 各模式的点将台顺序在 src/data/11-bp-orders.js，哪个模式用哪个在 src/data/10-modes.js
 const bpSteps = () => (BP && BP.steps) || BP_STEPS;
 const isMultiPickBP = () => !!(BP && Array.isArray(BP.picks) && Array.isArray(BP.picks[0]));
 const isLocalBothHumanBP = () => bpMode === '2v2' && !!(bpCustomOpts && bpCustomOpts.subMode === 'pp_pp');
@@ -23285,65 +23312,33 @@ return c;
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2', 'raid', 'world'];   // 不联机的点将台：本机自己推进每一步
-const bpAuth = () => LOCAL_BP_MODES.includes(bpMode) || NET.role === 'host';
+const bpModeDef = (mode = bpMode) => mode === 'net' ? roomDef() : (MODES[mode] || MODE_DEFAULT);
+const isLocalBp = mode => !!bpModeDef(mode).local;   // 不联机的点将台：本机自己推进每一步
+const bpAuth = () => isLocalBp(bpMode) || NET.role === 'host';
 const bpSideName = side => {
-if (bpMode === 'raid') return side === 0 ? '同袍义军' : '融魂魔首';
-if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
+const md = bpModeDef();
+if (md.sides) return md.sides[side];
 if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
 if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
-if (side === bpMySide()) return (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid'))) ? '我方战队' : '你';
-if (bpMode === 'cpu' || bpMode === 'chaos' || bpMode === 'mayhem') return '电脑';
-if (bpMode === 'tag3' || bpMode === '2v2') return '敌方战队';
+if (side === bpMySide()) return md.us || '你';
+if (md.foe) return md.foe;
 const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
 return n ? String(n) : '对手';
 };
 let bpFinishTimer = null;
 function bpStart(mode, customOpts = null) {
 if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
-if (LOCAL_BP_MODES.includes(mode)) netDropWaiting();
+if (isLocalBp(mode)) netDropWaiting();
 watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
 ensurePortraits(); chatClear();
 bpMode = mode;
 bpCustomOpts = customOpts;
-let steps = BP_STEPS;
-let bans = [-1, -1];
-let picks = [-1, -1];
-if (mode === 'tag3') {
-steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
-bans = [-1, -1];
-picks = [[-1, -1, -1], [-1, -1, -1]];
-} else if (mode === 'tower' || mode === 'stage' || mode === 'train' || mode === 'world') {
-steps = [[0, 'pick']];
-bans = [];
-picks = [-1];
-} else if (mode === 'chaos' || mode === 'mayhem') {
-steps = [[0, 'pick'], [1, 'pick']];
-bans = [];
-picks = [-1, -1];
-} else if (mode === 'raid') {
-const sq = (customOpts && customOpts.squadSize === 2) ? 2 : 3;
-steps = sq === 2 ? [[0, 'pick'], [0, 'pick']] : [[0, 'pick'], [0, 'pick'], [0, 'pick']];
-bans = [];
-picks = [Array(sq).fill(-1), []];
-} else if (mode === '2v2') {
-steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
-bans = [-1, -1];
-picks = [[-1, -1], [-1, -1]];
-} else if (mode === 'net') {
-if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid') {
-steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
-bans = [-1, -1];
-picks = [[-1, -1], [-1, -1]];
-} else if (netRoomMode === 'chaos' || netRoomMode === 'mayhem') {
-steps = [[0, 'pick'], [1, 'pick']];
-bans = [];
-picks = [-1, -1];
-} else {
-steps = BP_TAG3_STEPS;
-picks = [[-1, -1, -1], [-1, -1, -1]];
-}
-}
+const md = bpModeDef(mode);
+const squad = customOpts && customOpts.squadSize === 2 ? 2 : 3;
+const steps = BP_ORDERS[(md.squadBp && md.squadBp[squad]) || md.bp].map(st => st.slice());
+const bans = steps.some(st => st[1] === 'ban') ? [-1, -1] : [];
+const count = side => steps.filter(st => st[0] === side && st[1] === 'pick').length;
+const picks = md.team ? [count(0), count(1)].map(n => Array(n).fill(-1)) : [0, 1].filter(count).map(() => -1);
 BP = {
 step: 0,
 steps,
@@ -23427,7 +23422,7 @@ startMatch('cpu', pickLevel || 'god', picks, true);
 } else if (mode === 'net') {
 if (NET.role === 'host') {
 const seed = (Math.random() * 2147483647) | 0;
-const is2v2Net = netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp';
+const is2v2Net = !!roomDef().four;
 const duo = !is2v2Net && Array.isArray(picks[0]) ? picks : null;
 const flatCh = is2v2Net && Array.isArray(picks[0])
 ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
@@ -23658,7 +23653,7 @@ const multiPick = isMultiPickBP();
 const hasBans = bpSteps().some(x => x[1] === 'ban');
 let modePrefix = '';
 if (bpMode === 'net' && NET.isRanked) modePrefix = '排位赛 · ';
-else if (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp')) modePrefix = '联机2v2 · ';
+else if (bpMode === 'net' && roomDef().four) modePrefix = '联机2v2 · ';
 else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
 else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
 else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';

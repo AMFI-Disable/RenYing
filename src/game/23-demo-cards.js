@@ -408,72 +408,35 @@ function makeCardArt(i, CW, CH, skin) {
 function makePortrait(i) { try { return makeCardArt(i, 240, 320, typeof mySkin === 'function' ? mySkin(CHARS[i].id) : '').toDataURL(); } catch (e) { return ''; } }
 function ensurePortraits() { if (!PORTRAITS.length) for (let i = 0; i < CHARS.length; i++) PORTRAITS.push(makePortrait(i)); }
 const bpMySide = () => bpMode === 'net' ? (NET.role === 'host' ? 0 : 1) : 0;
-const LOCAL_BP_MODES = ['cpu', 'cpuWatch', 'chaos', 'mayhem', 'tag3', 'tower', 'stage', 'train', '2v2', 'raid', 'world'];   // 不联机的点将台：本机自己推进每一步
-const bpAuth = () => LOCAL_BP_MODES.includes(bpMode) || NET.role === 'host';
+// 点将台模式的设定：联机看房间规则，本机看模式表（都在 src/data/10-modes.js）
+const bpModeDef = (mode = bpMode) => mode === 'net' ? roomDef() : (MODES[mode] || MODE_DEFAULT);
+const isLocalBp = mode => !!bpModeDef(mode).local;   // 不联机的点将台：本机自己推进每一步
+const bpAuth = () => isLocalBp(bpMode) || NET.role === 'host';
 const bpSideName = side => {
-  if (bpMode === 'raid') return side === 0 ? '同袍义军' : '融魂魔首';
-  if (bpMode === 'cpuWatch') return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
+  const md = bpModeDef();
+  if (md.sides) return md.sides[side];
   if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
   if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
-  if (side === bpMySide()) return (bpMode === '2v2' || (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid'))) ? '我方战队' : '你';
-  if (bpMode === 'cpu' || bpMode === 'chaos' || bpMode === 'mayhem') return '电脑';
-  if (bpMode === 'tag3' || bpMode === '2v2') return '敌方战队';
+  if (side === bpMySide()) return md.us || '你';
+  if (md.foe) return md.foe;
   const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
   return n ? String(n) : '对手';
 };
 let bpFinishTimer = null;
 function bpStart(mode, customOpts = null) {
   if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
-  if (LOCAL_BP_MODES.includes(mode)) netDropWaiting();
+  if (isLocalBp(mode)) netDropWaiting();
   watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
   ensurePortraits(); chatClear();
   bpMode = mode;
   bpCustomOpts = customOpts;
-  let steps = BP_STEPS;
-  let bans = [-1, -1];
-  let picks = [-1, -1];
-
-  if (mode === 'tag3') {
-    // 3v3 门派车轮战：双方各禁 1 人 + 轮流选 3 人 (共 8 步)
-    steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']];
-    bans = [-1, -1];
-    picks = [[-1, -1, -1], [-1, -1, -1]];
-  } else if (mode === 'tower' || mode === 'stage' || mode === 'train' || mode === 'world') {
-    // 单人闯塔 / 守关挑战 / 木人试剑：免禁用直接自选出战角色 (1 步)
-    steps = [[0, 'pick']];
-    bans = [];
-    picks = [-1];
-  } else if (mode === 'chaos' || mode === 'mayhem') {
-    // 乱斗 / 神决：娱乐异变免禁用直选 (玩家先选，电脑后选)
-    steps = [[0, 'pick'], [1, 'pick']];
-    bans = [];
-    picks = [-1, -1];
-  } else if (mode === 'raid') {
-    // 同袍肉鸽：2~3 名同袍结阵直选，共同迎战六技融魂首领
-    const sq = (customOpts && customOpts.squadSize === 2) ? 2 : 3;
-    steps = sq === 2 ? [[0, 'pick'], [0, 'pick']] : [[0, 'pick'], [0, 'pick'], [0, 'pick']];
-    bans = [];
-    picks = [Array(sq).fill(-1), []];
-  } else if (mode === '2v2') {
-    // 2v2 演武 / 同屏合作或对决：双方各禁 1 人 + 蛇形轮选 4 将 (共 6 步: 0禁 -> 1禁 -> 0选1 -> 1选1 -> 1选2 -> 0选2)
-    steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
-    bans = [-1, -1];
-    picks = [[-1, -1], [-1, -1]];
-  } else if (mode === 'net') {
-    if (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp' || netRoomMode === 'raid') {
-      steps = [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']];
-      bans = [-1, -1];
-      picks = [[-1, -1], [-1, -1]];
-    } else if (netRoomMode === 'chaos' || netRoomMode === 'mayhem') {
-      steps = [[0, 'pick'], [1, 'pick']];
-      bans = [];
-      picks = [-1, -1];
-    } else {
-      // 联机对战（房间、匹配、排位）：各禁 1 人、各选 3 人车轮接力，蛇形顺序 0禁 → 1禁 → 0选 → 1选 → 1选 → 0选 → 0选 → 1选
-      steps = BP_TAG3_STEPS;
-      picks = [[-1, -1, -1], [-1, -1, -1]];
-    }
-  }
+  // 顺序和每边选几个人都按模式表来（src/data/10-modes.js、11-bp-orders.js）
+  const md = bpModeDef(mode);
+  const squad = customOpts && customOpts.squadSize === 2 ? 2 : 3;
+  const steps = BP_ORDERS[(md.squadBp && md.squadBp[squad]) || md.bp].map(st => st.slice());
+  const bans = steps.some(st => st[1] === 'ban') ? [-1, -1] : [];
+  const count = side => steps.filter(st => st[0] === side && st[1] === 'pick').length;
+  const picks = md.team ? [count(0), count(1)].map(n => Array(n).fill(-1)) : [0, 1].filter(count).map(() => -1);
 
   BP = {
     step: 0,
@@ -559,7 +522,7 @@ function bpFinish() {
   } else if (mode === 'net') {
     if (NET.role === 'host') {
       const seed = (Math.random() * 2147483647) | 0;
-      const is2v2Net = netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp';
+      const is2v2Net = !!roomDef().four;
       const duo = !is2v2Net && Array.isArray(picks[0]) ? picks : null;
       const flatCh = is2v2Net && Array.isArray(picks[0])
         ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
@@ -799,7 +762,7 @@ function renderBP() {
 
   let modePrefix = '';
   if (bpMode === 'net' && NET.isRanked) modePrefix = '排位赛 · ';
-  else if (bpMode === 'net' && (netRoomMode === 'pp_cc' || netRoomMode === 'pp_pp')) modePrefix = '联机2v2 · ';
+  else if (bpMode === 'net' && roomDef().four) modePrefix = '联机2v2 · ';
   else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
   else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
   else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';

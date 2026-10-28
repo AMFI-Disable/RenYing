@@ -242,11 +242,7 @@ function applyInput(c, inp) {
   }
 }
 // 每台电脑操控哪几个人（fighter 序号）：[房主, 加入的人]。四人切磋一台电脑两个人（1P 键位和 2P 键位）
-function netSlots() {
-  if (netRoomMode === 'pp_cc') return [[0], [2]];
-  if (netRoomMode === 'pp_pp') return [[0, 2], [1, 3]];
-  return [[0], [1]];
-}
+function netSlots() { return roomDef().slots.map(s => s.slice()); }
 // 一帧的按键里拆出第 k 个人的：按住的键每人 8 位，按下的键第二个人带前缀 "2"
 function slotInput(inp, k) {
   if (!k) return inp.p.some(a => a[0] === '2') ? { h: inp.h & 255, p: inp.p.filter(a => a[0] !== '2') } : (inp.h > 255 ? { h: inp.h & 255, p: inp.p } : inp);
