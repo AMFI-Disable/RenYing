@@ -332,8 +332,8 @@ function drawHUDRaid() {
     ctx.fillStyle = dead ? '#ff7676' : '#f4efe6';
     ctx.textAlign = left ? 'left' : 'right';
     const tx = left ? x + 6 : x + w - 6;
-    const statusTxt = dead ? '【重伤倒地】' : `${Math.ceil(f.hp)}/${f.maxHp}`;
-    ctx.fillText(`${roleTag} · ${f.look.name}  ${statusTxt}`, tx, y + barH - 3);
+    const statusTxt = dead ? cvT('【重伤倒地】') : `${Math.ceil(f.hp)}/${f.maxHp}`;
+    ctx.fillText(`${cvT(roleTag)} · ${cvT(f.look.name)}  ${statusTxt}`, tx, y + barH - 3);
     ctx.restore();
   };
   allies.forEach((f, idx) => {
@@ -361,25 +361,26 @@ function drawHUDRaid() {
   ctx.font = `bold ${Math.round(12.5 * u)}px ${BODY_FONT}`;
   ctx.fillStyle = '#fff5e4';
   ctx.textAlign = 'right';
-  ctx.fillText(`👹 ${B.look.name} (3xHP · 1.25x伤)  ${Math.ceil(B.hp)}/${B.maxHp}`, rx + teamW - 8, topY + bossH - 6);
+  ctx.fillText(`👹 ${cvT(B.look.name)} ${cvT('(3xHP · 1.25x伤)')}  ${Math.ceil(B.hp)}/${B.maxHp}`, rx + teamW - 8, topY + bossH - 6);
   const sks = B.bossSkills || [B.ch.skill, B.ch.skill2];
+  const en = cvT('六技轮转') !== '六技轮转';
   const skNames = sks.map(id => {
-    const n = (SKILLS[id] && SKILLS[id].name) || id;
-    return (id === B.ch.skill || id === B.ch.skill2) ? `【${n}】` : n;
+    const n = cvT((SKILLS[id] && SKILLS[id].name) || id);
+    return (id === B.ch.skill || id === B.ch.skill2) ? (en ? `[${n}]` : `【${n}】`) : n;
   }).join(' · ');
   ctx.font = `600 ${Math.round(11 * u)}px ${BODY_FONT}`;
   ctx.fillStyle = '#ffd166';
-  ctx.fillText(`六技轮转：${skNames}`, rx + teamW - 4, topY + bossH + Math.round(16 * u));
+  ctx.fillText(`${cvT('六技轮转')}${en ? ': ' : '：'}${skNames}`, rx + teamW - 4, topY + bossH + Math.round(16 * u));
   const perkCount = (M.towerPerks || []).length;
   ctx.fillStyle = '#7fe0b0';
   ctx.textAlign = 'left';
-  ctx.fillText(M.worldKey ? `全服共享秘卷：${perkCount} 卷 · 魔首血量全线共享` : `全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
+  ctx.fillText(cvT(M.worldKey ? `全服共享秘卷：${perkCount} 卷 · 魔首血量全线共享` : `全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`), lx, topY + allies.length * rowGap + Math.round(6 * u));
   ctx.restore();
   ctx.save();
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffd166';
   ctx.font = `700 ${Math.round(12 * u)}px ${TITLE_FONT}`;
-  ctx.fillText(`同袍肉鸽 · 第${M.raidWave || 1}劫`, W / 2, topY + Math.round(14 * u));
+  ctx.fillText(cvT(`同袍肉鸽 · 第${M.raidWave || 1}劫`), W / 2, topY + Math.round(14 * u));
   ctx.fillStyle = M.timer <= 15 ? '#ff6464' : '#f5ebd6';
   ctx.font = `bold ${Math.round(24 * u)}px ${TITLE_FONT}`;
   ctx.fillText(Math.ceil(M.timer).toString(), W / 2, topY + Math.round(38 * u));

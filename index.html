@@ -5525,6 +5525,10 @@ const PATTERNS_EN = [
 [/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
 [/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
 [/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
+[/^全队共享秘卷：(\d+) 卷 · 破魔悬赏 \+(\d+) 墨锭$/, (m0, n, g) => `Shared scrolls: ${n} · Boss bounty +${g} Ink`],
+[/^全服共享秘卷：(\d+) 卷 · 魔首血量全线共享$/, (m0, n) => `Server-shared scrolls: ${n} · Boss HP shared across all lines`],
+[/^同袍肉鸽 · 第(\d+)劫$/, (m0, n) => `Co-op Roguelike · Trial ${n}`],
+[/^(.+) 融魂魔首$/, (m0, h) => `Fused Demon Lord of ${h.split('·').map(n => lookup(n) || n).join(' · ')}`],
 [/^全队共享秘卷：(.+)$/, (m0, x) => `Shared scrolls: ${x.split('、').map(n => { const m = n.match(/^「(.+)」$/); return m ? `“${lookup(m[1]) || m[1]}”` : n; }).join(', ')}`],
 [/^第 (\d+) 代天魔$/, (m0, n) => `Demon · Gen ${n}`],
 [/^第 (\d+) 代天魔 · (.+)$/, (m0, n, h) => `Demon · Gen ${n} · ${lookup(h) || h}`],
@@ -7486,6 +7490,12 @@ const UI_COPY_EN = {
 "剑阁大捷！": "Sword Pavilion cleared!",
 "试炼止步": "Trial over",
 "喘息休整": "Catching breath",
+"同袍·壹(1P)": "Ally 1 (1P)",
+"同袍·贰(2P)": "Ally 2 (2P)",
+"同袍·叁(3P)": "Ally 3 (3P)",
+"【重伤倒地】": "[Down]",
+"(3xHP · 1.25x伤)": "(3x HP · 1.25x DMG)",
+"六技轮转": "Skill rotation",
 "全队已斩妖物": "Demons slain",
 "同袍共享秘卷": "Shared scrolls",
 "同袍斩妖开启": "The hunt begins",
@@ -9398,7 +9408,13 @@ const EMO_ICON = {'⚔':'战','🔥':'烈','🌲':'关','🥋':'练','🌱':'初
 const EMO_RE = new RegExp('(' + Object.keys(EMO_ICON).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')️?\\s?', 'gu');
 const EMO_STRIP = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]\s?/gu;
 function stripEmo(t) { return typeof t === 'string' ? t.replace(EMO_STRIP, '').trim() : t; }
-function cvT(s) { return s && window.I18N && I18N.getLang() === 'en' ? I18N.t(s) : s; }
+const CVT_MEMO = new Map();
+function cvT(s) {
+if (!s || !window.I18N || I18N.getLang() !== 'en') return s;
+let r = CVT_MEMO.get(s);
+if (r === undefined) { if (CVT_MEMO.size > 2000) CVT_MEMO.clear(); r = I18N.t(s); CVT_MEMO.set(s, r); }
+return r;
+}
 function cvFit(text, maxW, size, font) {
 for (let s = Math.round(size); s >= 12; s--) { ctx.font = font(s); if (ctx.measureText(text).width <= maxW) return { size: s, lines: [text] }; }
 ctx.font = font(12);
@@ -18091,8 +18107,8 @@ ctx.font = `600 ${Math.round(11.5 * u)}px ${BODY_FONT}`;
 ctx.fillStyle = dead ? '#ff7676' : '#f4efe6';
 ctx.textAlign = left ? 'left' : 'right';
 const tx = left ? x + 6 : x + w - 6;
-const statusTxt = dead ? '【重伤倒地】' : `${Math.ceil(f.hp)}/${f.maxHp}`;
-ctx.fillText(`${roleTag} · ${f.look.name}  ${statusTxt}`, tx, y + barH - 3);
+const statusTxt = dead ? cvT('【重伤倒地】') : `${Math.ceil(f.hp)}/${f.maxHp}`;
+ctx.fillText(`${cvT(roleTag)} · ${cvT(f.look.name)}  ${statusTxt}`, tx, y + barH - 3);
 ctx.restore();
 };
 allies.forEach((f, idx) => {
@@ -18120,25 +18136,26 @@ ctx.strokeRect(rx, topY, teamW, bossH);
 ctx.font = `bold ${Math.round(12.5 * u)}px ${BODY_FONT}`;
 ctx.fillStyle = '#fff5e4';
 ctx.textAlign = 'right';
-ctx.fillText(`👹 ${B.look.name} (3xHP · 1.25x伤)  ${Math.ceil(B.hp)}/${B.maxHp}`, rx + teamW - 8, topY + bossH - 6);
+ctx.fillText(`👹 ${cvT(B.look.name)} ${cvT('(3xHP · 1.25x伤)')}  ${Math.ceil(B.hp)}/${B.maxHp}`, rx + teamW - 8, topY + bossH - 6);
 const sks = B.bossSkills || [B.ch.skill, B.ch.skill2];
+const en = cvT('六技轮转') !== '六技轮转';
 const skNames = sks.map(id => {
-const n = (SKILLS[id] && SKILLS[id].name) || id;
-return (id === B.ch.skill || id === B.ch.skill2) ? `【${n}】` : n;
+const n = cvT((SKILLS[id] && SKILLS[id].name) || id);
+return (id === B.ch.skill || id === B.ch.skill2) ? (en ? `[${n}]` : `【${n}】`) : n;
 }).join(' · ');
 ctx.font = `600 ${Math.round(11 * u)}px ${BODY_FONT}`;
 ctx.fillStyle = '#ffd166';
-ctx.fillText(`六技轮转：${skNames}`, rx + teamW - 4, topY + bossH + Math.round(16 * u));
+ctx.fillText(`${cvT('六技轮转')}${en ? ': ' : '：'}${skNames}`, rx + teamW - 4, topY + bossH + Math.round(16 * u));
 const perkCount = (M.towerPerks || []).length;
 ctx.fillStyle = '#7fe0b0';
 ctx.textAlign = 'left';
-ctx.fillText(M.worldKey ? `全服共享秘卷：${perkCount} 卷 · 魔首血量全线共享` : `全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`, lx, topY + allies.length * rowGap + Math.round(6 * u));
+ctx.fillText(cvT(M.worldKey ? `全服共享秘卷：${perkCount} 卷 · 魔首血量全线共享` : `全队共享秘卷：${perkCount} 卷 · 破魔悬赏 +${600 + ((M.raidWave || 1) - 1) * 200} 墨锭`), lx, topY + allies.length * rowGap + Math.round(6 * u));
 ctx.restore();
 ctx.save();
 ctx.textAlign = 'center';
 ctx.fillStyle = '#ffd166';
 ctx.font = `700 ${Math.round(12 * u)}px ${TITLE_FONT}`;
-ctx.fillText(`同袍肉鸽 · 第${M.raidWave || 1}劫`, W / 2, topY + Math.round(14 * u));
+ctx.fillText(cvT(`同袍肉鸽 · 第${M.raidWave || 1}劫`), W / 2, topY + Math.round(14 * u));
 ctx.fillStyle = M.timer <= 15 ? '#ff6464' : '#f5ebd6';
 ctx.font = `bold ${Math.round(24 * u)}px ${TITLE_FONT}`;
 ctx.fillText(Math.ceil(M.timer).toString(), W / 2, topY + Math.round(38 * u));

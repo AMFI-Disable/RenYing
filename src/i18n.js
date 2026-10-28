@@ -159,6 +159,11 @@
     [/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
     [/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
     [/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
+    // 同袍肉鸽的画布 HUD（src/game/16-draw-ui.js drawHUDRaid）：要排在上面「全队共享秘卷：…」之前
+    [/^全队共享秘卷：(\d+) 卷 · 破魔悬赏 \+(\d+) 墨锭$/, (m0, n, g) => `Shared scrolls: ${n} · Boss bounty +${g} Ink`],
+    [/^全服共享秘卷：(\d+) 卷 · 魔首血量全线共享$/, (m0, n) => `Server-shared scrolls: ${n} · Boss HP shared across all lines`],
+    [/^同袍肉鸽 · 第(\d+)劫$/, (m0, n) => `Co-op Roguelike · Trial ${n}`],
+    [/^(.+) 融魂魔首$/, (m0, h) => `Fused Demon Lord of ${h.split('·').map(n => lookup(n) || n).join(' · ')}`],
     [/^全队共享秘卷：(.+)$/, (m0, x) => `Shared scrolls: ${x.split('、').map(n => { const m = n.match(/^「(.+)」$/); return m ? `“${lookup(m[1]) || m[1]}”` : n; }).join(', ')}`],
     // 天魔讨伐（src/game/22-tianmo.js）：页面、首页小卡片、出战提示和结算
     [/^第 (\d+) 代天魔$/, (m0, n) => `Demon · Gen ${n}`],

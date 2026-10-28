@@ -4,7 +4,14 @@ const EMO_RE = new RegExp('(' + Object.keys(EMO_ICON).map(k => k.replace(/[.*+?^
 const EMO_STRIP = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]\s?/gu;
 function stripEmo(t) { return typeof t === 'string' ? t.replace(EMO_STRIP, '').trim() : t; }
 // 画在画布上的字不经过 DOM，i18n.js 翻不到：英文界面画之前自己查一遍词条
-function cvT(s) { return s && window.I18N && I18N.getLang() === 'en' ? I18N.t(s) : s; }
+// HUD 每帧都画，查过的句子记下来（只记英文界面的；记满 2000 条清空一次，带数字的句子别整句传进来）
+const CVT_MEMO = new Map();
+function cvT(s) {
+  if (!s || !window.I18N || I18N.getLang() !== 'en') return s;
+  let r = CVT_MEMO.get(s);
+  if (r === undefined) { if (CVT_MEMO.size > 2000) CVT_MEMO.clear(); r = I18N.t(s); CVT_MEMO.set(s, r); }
+  return r;
+}
 // 一行字放不下 maxW：先缩字号（不小于 12px，HUD 审计的下限），还放不下就按词折行。font(s) 给出字号 s 时的 ctx.font
 function cvFit(text, maxW, size, font) {
   for (let s = Math.round(size); s >= 12; s--) { ctx.font = font(s); if (ctx.measureText(text).width <= maxW) return { size: s, lines: [text] }; }
