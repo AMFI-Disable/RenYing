@@ -133,6 +133,7 @@ cv.addEventListener('mousedown', e => {
   }
   if (M.mode === 'demo') return;
   e.preventDefault();
+  if (SETTINGS.kbOnly === true) return;   // 纯键盘模式：鼠标不出招，1P 只用键盘的攻击键
   const c = human[0];
   if (e.button === 0) { c.held.atk = true; c.atkT = clock; c.press('light'); }
   else if (e.button === 2) {   // 右键单点：腾空闪；按住左键时点右键：远程招式

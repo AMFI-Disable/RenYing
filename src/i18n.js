@@ -70,6 +70,7 @@
   // 这里按模板换：$1 之类照常可用，也可以直接给一个替换函数。
   const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
   const PATTERNS_EN = [
+    [/^今日\s*(\d+)\/(\d+)(?:\s*·\s*可领\s*(\d+)\s*墨锭)?$/, (m0, a, b, c) => `Today ${a}/${b}` + (c ? ` · ${c} Ink to claim` : '')],
     [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
     [/^剩\s*(\d+)\s*天$/, (m0, d) => `${d}d left`],
     [/^全服\s*(.+?)\s*人在线$/, (m0, n) => `Global · ${n} online`],

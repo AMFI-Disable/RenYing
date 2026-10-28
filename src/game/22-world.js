@@ -392,13 +392,29 @@ function drawWorldHUD() {
     ctx.fillText(`妖王 · 全线共讨  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
   }
 }
-// 入口：同袍肉鸽弹窗里的「江湖共斗 · 开放世界」，先在点将台选侠客
+// 入口：首页「开放世界」打开一个小弹窗，直接进或者填线号找朋友；肉鸽弹窗里的「全服肉鸽」直接进（自动分线）。都先在点将台选侠客
+function worldEnter(line) {
+  WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
+  bpStart('world');
+}
+function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
+function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
+if ($id('mWorld')) $id('mWorld').addEventListener('click', () => { SFX.slice(); openWorldModal(); });
+if ($id('modalWorldClose')) $id('modalWorldClose').addEventListener('click', closeWorldModal);
+if ($id('btnWorldGo')) $id('btnWorldGo').addEventListener('click', () => { closeWorldModal(); worldEnter(0); });
+if ($id('btnWorldLine')) {
+  const goLine = () => {
+    const n = +(($id('worldLineIn') && $id('worldLineIn').value) || 0);
+    if (!(n >= 1 && n <= 9999)) { toast('线号是 1 到 9999 的数字'); return; }
+    closeWorldModal(); worldEnter(n);
+  };
+  $id('btnWorldLine').addEventListener('click', goLine);
+  $id('worldLineIn').addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); goLine(); } });
+}
 if ($id('btnRougeGoWorld')) {
   $id('btnRougeGoWorld').addEventListener('click', () => {
     if (typeof closeRougeModal === 'function') closeRougeModal();
-    const n = +(($id('worldLineIn') && $id('worldLineIn').value) || 0);
-    WORLD.wantLine = n >= 1 && n <= 9999 ? Math.floor(n) : 0;
-    bpStart('world');
+    worldEnter(0);
   });
 }
 
@@ -533,5 +549,3 @@ function worldResume() {
   worldEnterMode(WORLD.hero, b ? b.x : worldShrineX(3));
   say('回到江湖', 1, 'go', '秘卷保留，下一轮开始');
 }
-// 首页「全服肉鸽」卡片：直接进点将台选侠客，选完进分线，不用排队
-if ($id('homeWorldRouge')) $id('homeWorldRouge').addEventListener('click', () => { SFX.slice(); WORLD.wantLine = 0; bpStart('world'); });

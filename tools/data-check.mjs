@@ -184,14 +184,30 @@ function checkModes(env) {
 }
 
 // 以后的表在这里加一项（表还没写进 src/data/ 时会跳过）
+// ---------- 界面文案（中文 → 英文） ----------
+// 键、值都要是非空字符串；同一句中文写了两遍的话，后一行会悄悄盖掉前一行，所以按源码逐行查重
+function checkUiCopy(env) {
+  const where = 'src/data/30-ui-copy.js';
+  const t = env.UI_COPY_EN;
+  if (!TYPES.obj(t)) { err(where, 'UI_COPY_EN 应该是一个对象 { 中文: 英文 }'); return; }
+  for (const [k, v] of Object.entries(t)) {
+    if (!TYPES.str(k) || k !== k.trim()) err(where, `键 ${JSON.stringify(k)} 要是非空、首尾没有空白的中文原文`);
+    if (!TYPES.str(v)) err(where, `「${k}」的译文应该是非空字符串，现在是 ${JSON.stringify(v)}`);
+  }
+  const keys = [];
+  for (const m of readFileSync(ROOT + where, 'utf8').matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:/gm)) keys.push(JSON.parse(m[1]));
+  unique(where, keys, '键');
+}
+
 const TABLES = [
   { name: 'HEROES', check: checkHeroes },
   { name: 'BP_ORDERS', check: checkModes },
+  { name: 'UI_COPY_EN', check: checkUiCopy },
 ];
 
 const env = await makeEnv();
 const get = name => env.run(`typeof ${name} === 'undefined' ? undefined : ${name}`);
-const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT'].map(k => [k, get(k)]));
+const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN'].map(k => [k, get(k)]));
 for (const t of TABLES) if (get(t.name) !== undefined) t.check(refs);
 if (errors.length) {
   console.log(`src/data/ 的数据表有 ${errors.length} 处不对：`);

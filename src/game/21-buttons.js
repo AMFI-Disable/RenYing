@@ -229,7 +229,7 @@ function uiConfirm(msg, opt = {}) {
   });
 }
 // 弹窗焦点：弹窗一出来就把焦点放进去（读屏和键盘都从弹窗里开始），关掉以后回到打开它的那个按钮
-const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'arModal', 'arIns'];
+const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'modalWorld', 'arModal', 'arIns'];
 const uiDlgOpen = el => el.isConnected && !el.hidden && !el.classList.contains('hidden');
 const uiDlgPrev = new Map();
 function uiDlgWatch(el) {

@@ -347,7 +347,7 @@ function openScreen(name, reveal = true) {
   return name;
 }
 function backToMenu() { menuLock = false; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
-// ---------- 首页正中的展示角色：下面一个「开始人机对战」直接用他开打，一个「更换角色」 ----------
+// ---------- 首页正中的展示角色：下面一个「快速开打」直接用他和电脑打，一个「更换角色」 ----------
 let MENU_HERO = null, menuHeroId = -1;
 function menuHeroPick() {   // 记住上次展示的角色；现在用不了就换成第一个能用的
   const av = availList();
@@ -389,7 +389,7 @@ function heroPickShow(on) {
   el.hidden = !on;
   if (on) heroLvShow(false);
 }
-function heroLvShow(on) {   // 点「开始人机对战」先弹一排难度，点哪个就用哪个开打
+function heroLvShow(on) {   // 点「快速开打」先弹一排难度，点哪个就用哪个开打
   const el = $id('heroLv'); if (!el) return;
   if (on) { heroPickShow(false); for (const b of el.querySelectorAll('button')) b.classList.toggle('sel', b.dataset.lv === pickLevel); }
   el.hidden = !on;
@@ -441,17 +441,22 @@ function renderHome() {
   const sea = rkSeason();
   $id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
   $id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
-  const name = curName();
-  if (!name) { $id('homeMedal').innerHTML = rkMedalSVG(null, 56, { placed: 0 }); $id('homeRankL').textContent = '未定级'; $id('homeRankS').textContent = '登录后打 5 场定级赛'; return; }
-  const s = rkState();
-  $id('homeMedal').innerHTML = rkMedalFor(s, 56);
-  if (rkPlaced(s)) { const t = rkTier(s.pts); $id('homeRankL').textContent = `${t.label} · ${t.name}`; $id('homeRankS').textContent = `${t.pts.toLocaleString()} 分 · ${s.w} 胜 ${s.l} 负`; }
-  else { $id('homeRankL').textContent = `定级赛 ${s.placed}/${RK.PLACE}`; $id('homeRankS').textContent = `估分 ～${Math.round(s.est).toLocaleString()}`; }
+  renderHomeTasks();
 }
-$id('homeRank').addEventListener('click', () => navTo('netp'));
+// 右边「今日任务」：做完几个、有几个能领（段位在顶栏账号按钮上，不再单独一张卡）
+function renderHomeTasks() {
+  const el = $id('homeTasks'); if (!el) return;
+  if (PROF.guest || !curName()) { $id('homeTasksT').textContent = '登录后领每日任务'; $id('homeTasksS').textContent = '打对战、连击、赢一场都有墨锭'; return; }
+  ensureClientTasks();
+  const d = PROF.daily || [], done = d.filter(t => t.prog >= t.target).length, ready = d.filter(t => t.prog >= t.target && !t.claimed);
+  $id('homeTasksT').textContent = `今日 ${done}/${d.length}` + (ready.length ? ` · 可领 ${ready.reduce((n, t) => n + t.reward, 0)} 墨锭` : '');
+  $id('homeTasksS').textContent = ready.length ? '点开任务页领取' : done >= d.length ? '今天的都做完了' : '点开任务页看看';
+}
+$id('homeTasks').addEventListener('click', () => navTo('tasks'));
 for (const b of document.querySelectorAll('#menu [data-go]')) {
   b.addEventListener('click', () => {
     if (menuLock) return;                                  // 连点只算一次
+    if (b.dataset.go === 'qfx') { navTo('qfx'); return; }  // 青锋行是另一个网页，不走镜头推进
     b.classList.add('pressed');
     setTimeout(() => b.classList.remove('pressed'), 900);
     menuGo(b.dataset.go);
@@ -463,6 +468,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 let settingsBack = 'menu';
 const SETTING_ROWS = [
   { k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
+  { k: 'kbOnly', name: '纯键盘模式', opts: [[false, '不用'], [true, '开启']] },
   { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
   { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
   { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
@@ -550,6 +556,7 @@ $id('setList').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
   const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
   if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
+  if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
   if (k === 'quality') resize();
   if (k === 'autoSkin') applySkins();
 });
@@ -563,6 +570,7 @@ function cancelKeyRebind() {   // 点了改键又直接离开设置：别让监�
   rebindingKey = null;
   window.removeEventListener('keydown', handleKeyRebind, true);
 }
+$id('setHelp').addEventListener('click', () => navTo('help'));
 $id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') showScreen('pause'); else backToMenu(); });
 $id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
 

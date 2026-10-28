@@ -743,10 +743,10 @@ const testSuite = [
       const txt = id => (document.getElementById(id) || {}).textContent || '';
       const keep = { srv: PRES.srv, at: PRES.at, fail: PRES.fail };
       PRES.srv = null; refreshOnline();
-      if (!txt('homeOnlineCount').includes('未知') || !txt('homeOnlineCardNum').includes('未知')) return { pass: false, error: 'no server data should read 未知, got ' + txt('homeOnlineCount') };
+      if (!txt('homeOnlineCount').includes('未知') || !txt('netOnlineOverview').includes('未知')) return { pass: false, error: 'no server data should read 未知, got ' + txt('homeOnlineCount') };
       PRES.srv = { online: 7, playing: 2, waiting: 1 }; PRES.at = Date.now(); PRES.fail = 0; refreshOnline();
-      if (txt('homeOnlineCount') !== '全服 7 人在线' || txt('homeOnlineCardNum') !== '7 位侠士在线') return { pass: false, error: 'total wrong: ' + txt('homeOnlineCount') };
-      if (txt('homeOnlineCardSub') !== '对局中 2 人 · 匹配中 1 人') return { pass: false, error: 'in-match wrong: ' + txt('homeOnlineCardSub') };
+      if (txt('homeOnlineCount') !== '全服 7 人在线') return { pass: false, error: 'total wrong: ' + txt('homeOnlineCount') };
+      if (txt('netOnlineOverview') !== '7 人在线 · 对局中 2 人 · 匹配中 1 人') return { pass: false, error: 'in-match wrong: ' + txt('netOnlineOverview') };
       PRES.fail = 2; refreshOnline();
       if (!txt('homeOnlineCount').includes('未知')) return { pass: false, error: 'two failed reports should read 未知' };
       PRES.fail = 0; PRES.at = Date.now() - 130e3; refreshOnline();

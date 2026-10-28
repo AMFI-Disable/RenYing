@@ -2654,8 +2654,75 @@ body.kbnav #kbRing.on { display: block; }
 .world-vote button i { display: block; font-style: normal; margin-top: 2px; color: #2bd49a; font-weight: 700; }
 .world-vote button.sel { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; }
 @media (max-width: 520px) { .world-vote button { width: 31vw; min-height: 58px; font-size: 11px; } }
-@media (max-height: 900px) { .home-side .home-news { display: none; } }
-@media (max-height: 680px) { .home-side .home-rank { display: none; } }
+.home-entries { position: absolute; left: 6vw; top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 40px); z-index: 2;
+display: flex; flex-direction: column; gap: 10px; width: 340px; max-width: calc(100vw - 32px); }
+.menuscr .home-entries .mcard.mcard { position: relative !important; left: auto !important; top: auto !important; width: 100% !important; min-width: 0 !important; max-width: none !important; }
+.menuscr .home-entries .mcard.left { padding-top: 12px !important; padding-bottom: 12px !important; }
+.menuscr .home-entries .mcard.left .mk { font-size: clamp(22px, 2vw, 28px) !important; }
+.menuscr .home-entries .mcard.left .ms { font-size: var(--fs-xs) !important; }
+body.offline .home-entries .tn-online { display: none !important; }
+.menuscr .mcard.hm-rouge { --x-jade-hi: #e9a15a; }
+.menuscr .mcard.hm-world { --x-jade-hi: #46d3ea; }
+.menuscr .mcard.hm-rouge::after { content: "鸽" !important; background: #a8552e !important; }
+.menuscr .mcard.hm-world::after { content: "游" !important; background: #2a6a86 !important; }
+.home-sub { display: flex; flex-wrap: wrap; gap: 6px; }
+.hs-btn { font: inherit; font-size: var(--fs-sm); letter-spacing: .02em; min-height: 32px; padding: 5px 10px; cursor: pointer; color: rgba(244,236,220,.9);
+background: rgba(13,21,30,.74); border: 1px solid rgba(236,226,204,.22); border-radius: var(--r-sm); transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast); }
+.hs-btn:hover { border-color: rgba(233,196,106,.6); background: rgba(22,32,44,.92); }
+.hs-btn .mk { font: inherit; } .hs-btn .ms { display: none; }
+.hs-btn.hs-kb[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); background: rgba(233,196,106,.12); }
+.home-evt-pill { font: inherit; font-size: var(--fs-sm); letter-spacing: .04em; padding: 3px 12px; cursor: pointer; color: var(--gold);
+background: rgba(233,196,106,.12); border: 1px solid rgba(233,196,106,.5); border-radius: var(--r-pill); }
+.home-evt-pill:hover { background: rgba(233,196,106,.2); }
+.home-evt-pill[hidden] { display: none; }
+.home-tasks .hc-kicker { color: var(--gold); }
+.home-news summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.home-news summary::-webkit-details-marker { display: none; }
+.home-news .hn-line { font-size: var(--fs-sm); color: rgba(236,232,225,.78); }
+.home-news .hn-line::after { content: " ›"; color: var(--gold); }
+.home-news[open] .hn-line { display: none; }
+.home-news ul { margin-top: 6px; }
+#menu[data-enter="run"] #homeRouge { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .22s backwards; }
+#menu[data-enter="run"] #mWorld { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .26s backwards; }
+#menu[data-enter="run"] .home-sub { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .3s backwards; }
+#menu[data-phase] .home-sub, #menu[data-phase] .home-evt-pill { opacity: 0; transition: opacity .18s; }
+.mw-panel { width: min(480px, calc(100vw - 32px)); }
+.mw-ways { grid-template-columns: 1fr; }
+.mw-panel .rk-info-head { justify-content: space-between; gap: 12px; }
+.world-line button { padding: 4px 12px; font-size: var(--fs-sm); }
+@media (max-height: 700px) { .home-side .home-news { display: none; } }
+@media (max-height: 700px) { .menuscr .ver { left: auto; right: 16px; text-align: right; } }
+@media (max-height: 700px) and (min-height: 521px) {
+.home-entries { top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 30px); gap: 8px; }
+.menuscr .home-entries .mcard.mcard { padding-top: 12px !important; padding-bottom: 12px !important; }
+.menuscr .home-entries .mcard.left { padding-top: 9px !important; padding-bottom: 9px !important; }
+}
+@media (max-height: 520px) {
+.menuscr .mtitle, .home-tag, .home-sub { display: none; }
+.home-kicker { top: 10px; left: 16px; right: 16px; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
+.home-entries { left: 16px; top: 52px; width: 230px; gap: 8px; }
+.menuscr .home-entries .mcard.mcard, .menuscr .home-entries .mcard.left { padding: 12px 46px 12px 16px !important; }
+.menuscr .home-entries .mcard.mcard .mk { font-size: 22px !important; }
+.menuscr .home-entries .mcard.mcard .ms { display: none !important; }
+.menuscr .home-entries .mcard.mcard::before { display: none; }
+.menuscr .home-entries .mcard.mcard::after { top: 10px !important; right: 12px !important; width: 20px; height: 20px; font-size: 13px !important; }
+.home-hero { top: auto !important; bottom: 8px; }
+}
+.kb-help { position: fixed; inset: 0; z-index: var(--z-modal); display: grid; place-items: center; padding: 16px; background: var(--scrim); }
+.kb-help[hidden] { display: none; }
+.kb-help-box { width: min(680px, 100%); max-height: calc(100vh - 32px); overflow: auto; padding: 18px 22px; background: var(--panel2); border: 1px solid rgba(233,196,106,.35); border-radius: var(--r-md); box-shadow: var(--sh-pop); }
+.kb-help-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.kb-help-head b { font-family: var(--title); font-size: var(--fs-xl); color: var(--gold); letter-spacing: .1em; }
+.kb-help-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 24px; }
+.kb-help dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: baseline; font-size: var(--fs-sm); }
+.kb-help dt { color: rgba(236,232,225,.7); }
+.kb-help dt.kb-help-h { grid-column: 1 / -1; color: var(--v-white); font-weight: 700; margin-bottom: 2px; }
+.kb-help dd { margin: 0; }
+.kb-help kbd { display: inline-block; min-width: 1.6em; padding: 1px 6px; text-align: center; font: inherit; font-size: var(--fs-xs); border: 1px solid rgba(236,226,204,.35); border-bottom-width: 2px; border-radius: var(--r-sm); background: rgba(255,255,255,.05); }
+.kb-help-foot { margin: 12px 0 0; font-size: var(--fs-xs); color: rgba(236,232,225,.65); }
+.kb-hint { display: none; position: fixed; left: 12px; bottom: 12px; z-index: var(--z-toast); font: inherit; font-size: var(--fs-xs); padding: 4px 10px; cursor: pointer;
+color: var(--gold); background: rgba(13,21,30,.82); border: 1px solid rgba(233,196,106,.45); border-radius: var(--r-pill); }
+body.kb-only.has-nav .kb-hint { display: block; }
 </style>
 </head>
 <body>
@@ -2702,8 +2769,6 @@ body.kbnav #kbRing.on { display: block; }
         <span class="tn-sync" id="tnSync" title="存档状态"></span>
       </button>
       <button class="tn-icon" type="button" data-nav="settings" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-      <button class="tn-icon" type="button" id="tnLangBtn" title="Language / 语言" aria-label="Language / 语言"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
-      <button class="tn-icon" type="button" data-nav="help" title="操作说明" aria-label="操作说明"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
     </div>
   </nav>
 
@@ -2757,53 +2822,45 @@ body.kbnav #kbRing.on { display: block; }
       <div class="home-mist"></div>
       <div class="home-mist home-mist-2"></div>
     </div>
-    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span></div>
+    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span><button class="home-evt-pill" id="homeEvt" type="button" hidden>活动：全皮肤限免 · <span id="homeEvtLeft"></span></button></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
     <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
-      <div class="home-card home-online-card" id="homeOnlineCard">
-        <span class="hc-kicker" style="color:#2bd49a">实时江湖</span>
-        <div class="hc-row">
-          <span class="home-online-dot"></span>
-          <span class="hc-txt"><b id="homeOnlineCardNum">— 位侠士在线</b><small id="homeOnlineCardSub">全服连线待命中 · 随时开战</small></span>
-        </div>
-      </div>
-      <button class="home-card home-evt" id="homeEvt" type="button" hidden>
-        <span class="hc-kicker">限时活动 · <span id="homeEvtLeft"></span></span>
-        <span class="hc-txt"><b>全皮肤限时免费</b><small>打 3 局人机领 1000 墨锭</small></span>
-      </button>
       <button class="home-card home-gboss tn-online" id="homeGboss" type="button" hidden>
         <span class="hc-kicker">天魔讨伐 · 全服共斗</span>
         <span class="hc-txt"><b id="homeGbossT"></b><small id="homeGbossS"></small></span>
         <span class="hc-hp"><i id="homeGbossBar"></i></span>
       </button>
-      <button class="home-card home-rouge" id="homeRouge" type="button">
-        <span class="hc-kicker">同袍肉鸽 · 斩妖列传</span>
-        <span class="hc-txt"><b>多人剧情肉鸽 · 斩妖战魔首</b><small>十三侠客专属剧情 · 2–3人共享秘卷斩小怪 · 决战六技魔首赢墨锭</small></span>
+      <button class="home-card home-tasks tn-online" id="homeTasks" type="button">
+        <span class="hc-kicker">今日任务</span>
+        <span class="hc-txt"><b id="homeTasksT">每日任务</b><small id="homeTasksS">点开任务页</small></span>
       </button>
-      <button class="home-card home-rouge home-wrouge tn-online" id="homeWorldRouge" type="button">
-        <span class="hc-kicker">全服肉鸽 · 随时加入</span>
-        <span class="hc-txt"><b>全服共享秘卷 · 齐心讨天道</b><small>随时进 · 3 人开天道 Boss 掉星座皮肤</small></span>
-      </button>
-      <button class="home-card home-rank" id="homeRank" type="button">
-        <span class="hc-kicker">我的段位</span>
-        <span class="hc-row"><span class="hc-medal" id="homeMedal"></span><span class="hc-txt"><b id="homeRankL">未定级</b><small id="homeRankS">登录后打 5 场定级赛</small></span></span>
-      </button>
-      <div class="home-card home-news">
-        <span class="hc-kicker">版本动态</span>
+      <details class="home-card home-news">
+        <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 匹配对战 · 排位赛 · 技能重做</span></summary>
         <ul>
           <li><b>刃影武库</b>武器箱、玩家市场、汰换合同</li>
           <li><b>匹配对战</b>全服随机对手，开局即打</li>
           <li><b>排位赛</b>D 到 S 五段，定级 5 场</li>
           <li><b>流云 · 墨羽</b>技能重做</li>
         </ul>
+      </details>
+    </div>
+    <!-- 首页入口：三大入口（对战、肉鸽、开放世界），下面一排次入口 -->
+    <div class="home-entries" id="homeEntries">
+      <button class="mcard right" id="mNet" data-go="netp" data-kb-default><span class="mk">对战</span><span class="ms">匹配 · 排位 · 好友房 · 2v2</span></button>
+      <button class="mcard left hm-rouge" id="homeRouge" type="button"><span class="mk">肉鸽</span><span class="ms">同袍剧情肉鸽 · 全服肉鸽随时加入</span></button>
+      <button class="mcard left hm-world tn-online" id="mWorld" type="button"><span class="mk">开放世界</span><span class="ms">江湖共斗 · 一张大地图 · 填线号找朋友</span></button>
+      <div class="home-sub" id="homeSub">
+        <button class="hs-btn" id="mSingle" data-go="single" type="button"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
+        <button class="hs-btn" data-go="qfx" type="button">青锋行</button>
+        <button class="hs-btn" data-go="tutorial" type="button">教程</button>
+        <button class="hs-btn" data-go="train" type="button">木人桩</button>
+        <button class="hs-btn hs-kb" id="mKbOnly" type="button" aria-pressed="false" title="只用键盘操作：选中框一直显示，按 ? 看快捷键">纯键盘</button>
       </div>
     </div>
-    <button class="mcard left" id="mSingle" data-go="single"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
-    <button class="mcard right" id="mNet" data-go="netp" data-kb-default><span class="mk">开始对战</span><span class="ms">匹配对战 · 排位赛 · 好友房间</span></button>
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走 -->
       <div class="hh-name" id="heroName"></div>
-      <button class="hh-go" id="heroGo" type="button">开始人机对战</button>
+      <button class="hh-go" id="heroGo" type="button">快速开打</button>
       <button class="hh-swap" id="heroSwap" type="button">更换角色</button>
       <div class="hh-pick" id="heroPick" hidden></div>
       <div class="hh-lv" id="heroLv" hidden><span>选难度</span><button type="button" data-lv="easy">入门</button><button type="button" data-lv="normal">寻常</button><button type="button" data-lv="hard">劲敌</button><button type="button" data-lv="impossible">绝顶</button><button type="button" data-lv="god">天道</button></div>
@@ -3387,7 +3444,7 @@ body.kbnav #kbRing.on { display: block; }
       <h2>设置</h2>
       <div class="setlist" id="setList"></div>
       <p class="netnote">设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。</p>
-      <div class="row"><button class="ghost small" id="setReplays" type="button">对局回放</button><button class="go small" id="setDone">完成</button></div>
+      <div class="row"><button class="ghost small" id="setHelp" type="button">操作说明</button><button class="ghost small" id="setReplays" type="button">对局回放</button><button class="go small" id="setDone">完成</button></div>
     </div>
   </div>
 
@@ -3815,10 +3872,24 @@ body.kbnav #kbRing.on { display: block; }
           <button class="m2-way" id="btnRougeGoLocal" type="button" data-kb-default><b>同屏/单机集结</b><span id="modalRougeLocalDesc">1P 键盘主控，2P/3P 随时按键参战或由天道同袍协战</span></button>
           <button class="m2-way tn-online" id="btnRougeGoMatch" type="button"><b>全服匹配集结</b><span>全服招募同袍侠士，共享秘卷合力破魔</span></button>
           <button class="m2-way tn-online" id="btnRougeGoOnline" type="button"><b>好友共斗房间</b><span>建房拿到房间号，呼朋引伴共讨魔首</span></button>
-          <button class="m2-way tn-online" id="btnRougeGoWorld" type="button"><b>江湖共斗 · 开放世界</b><span>一张大地图，谁都能随时加入，人数不设上限</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoWorld" type="button"><b>全服肉鸽 · 随时加入</b><span>全服共享秘卷，3 人开天道 Boss 掉星座皮肤</span></button>
         </div>
-        <div class="m2-foot tn-online world-line"><label for="worldLineIn">找朋友：填对方的线号</label><input id="worldLineIn" type="number" min="1" max="9999" inputmode="numeric" placeholder="自动" autocomplete="off"></div>
         <div class="m2-foot"><button class="mm-link" id="btnRougeReroll" type="button">🎲 重新卜算当期融魂首领（切换三侠六技）</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="rk-info hidden" id="modalWorld" role="dialog" aria-modal="true" aria-label="开放世界 · 江湖共斗">
+    <div class="rk-info-panel mw-panel">
+      <div class="rk-info-head">
+        <b>开放世界 · 江湖共斗</b>
+        <button class="mm-cancel" id="modalWorldClose" type="button">关闭</button>
+      </div>
+      <div class="m2-body">
+        <p class="m2-desc">一张大地图，谁都能随时加入，人数不设上限。先在点将台选好侠客，再进分线。</p>
+        <div class="m2-ways mw-ways">
+          <button class="m2-way" id="btnWorldGo" type="button" data-kb-default><b>直接进入</b><span>自动分到一条线</span></button>
+        </div>
+        <div class="m2-foot world-line"><label for="worldLineIn">找朋友：填对方的线号</label><input id="worldLineIn" type="number" min="1" max="9999" inputmode="numeric" placeholder="线号" autocomplete="off"><button class="ghost" id="btnWorldLine" type="button">进这条线</button></div>
       </div>
     </div>
   </div>
@@ -5022,6 +5093,7 @@ try { if (typeof renderLobby === 'function') renderLobby(); } catch (e) {}
 }
 const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
 const PATTERNS_EN = [
+[/^今日\s*(\d+)\/(\d+)(?:\s*·\s*可领\s*(\d+)\s*墨锭)?$/, (m0, a, b, c) => `Today ${a}/${b}` + (c ? ` · ${c} Ink to claim` : '')],
 [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
 [/^剩\s*(\d+)\s*天$/, (m0, d) => `${d}d left`],
 [/^全服\s*(.+?)\s*人在线$/, (m0, n) => `Global · ${n} online`],
@@ -6968,6 +7040,55 @@ const UI_COPY_EN = {
 "手机操作": "Mobile Controls",
 "自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。": "The last 10 matches (CPU and network) are saved in this browser. Replays can be paused, slowed, fast-forwarded, and exported or imported to share.",
 "「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。": "\"Train\" exports the frames actually captured in that match: s is a 19-value state (both sides' health, guard, inner force, ultimate gauge, position, facing, airborne, stun, facing each other), a is the keys held that frame (bitmask), r comes from that frame's health/guard change plus the final result. .jsonl training sets can be imported, merged, and exported as one file.",
+"肉鸽": "Roguelike",
+"开放世界": "Open World",
+"匹配 · 排位 · 好友房 · 2v2": "Match · Ranked · Friend Room · 2v2",
+"同袍剧情肉鸽 · 全服肉鸽随时加入": "Co-op Story Roguelike · Server Roguelike, join anytime",
+"江湖共斗 · 一张大地图 · 填线号找朋友": "Shared world · one big map · join a friend by line number",
+"教程": "Tutorial",
+"纯键盘": "Keyboard Only",
+"只用键盘操作：选中框一直显示，按 ? 看快捷键": "Keyboard only: the selection box stays on, press ? for shortcuts",
+"活动：全皮肤限免 ·": "Event: all skins free ·",
+"今日任务": "Today's Tasks",
+"每日任务": "Daily Tasks",
+"点开任务页": "Open the task page",
+"登录后领每日任务": "Log in for daily tasks",
+"打对战、连击、赢一场都有墨锭": "Earn Ink for playing, combos and wins",
+"点开任务页领取": "Open the task page to claim",
+"今天的都做完了": "All done for today",
+"点开任务页看看": "Open the task page",
+"刃影武库 · 匹配对战 · 排位赛 · 技能重做": "Armory · Matchmaking · Ranked · Skill reworks",
+"快速开打": "Quick Fight",
+"开放世界 · 江湖共斗": "Open World · Shared Map",
+"一张大地图，谁都能随时加入，人数不设上限。先在点将台选好侠客，再进分线。": "One big map anyone can join at any time, with no player limit. Pick your hero first, then enter a line.",
+"直接进入": "Enter Now",
+"自动分到一条线": "Placed on a line automatically",
+"线号": "Line #",
+"进这条线": "Join This Line",
+"线号是 1 到 9999 的数字": "Line numbers go from 1 to 9999",
+"全服共享秘卷，3 人开天道 Boss 掉星座皮肤": "Shared scrolls server-wide; 3 players open the Tiandao Boss for a Zodiac skin",
+"纯键盘模式": "Keyboard-Only Mode",
+"不用": "Off",
+"开启": "On",
+"快捷键": "Shortcuts",
+"? 快捷键": "? Shortcuts",
+"菜单和弹窗": "Menus and dialogs",
+"移动选中框": "Move selection",
+"按下": "Press",
+"返回 / 关弹窗": "Back / close dialog",
+"按顺序走": "Step in order",
+"滑块、下拉框": "Sliders, dropdowns",
+"调": "adjust",
+"这张说明": "This sheet",
+"对局（1P）": "In a match (1P)",
+"攻击 / 蓄力": "Attack / charge",
+"暂停 / 静音": "Pause / mute",
+"或": "or",
+"空格": "Space",
+"纯键盘模式开着：选中框一直亮，对局里鼠标不出招。键位在设置里改。": "Keyboard-only mode is on: the selection box stays lit and the mouse doesn't attack in matches. Change keys in Settings.",
+"在设置里打开「纯键盘模式」，选中框会一直亮着，对局里鼠标不出招。键位在设置里改。": "Turn on Keyboard-Only Mode in Settings to keep the selection box lit and stop the mouse from attacking in matches. Change keys in Settings.",
+"纯键盘模式已打开：方向键走、Enter 按下、Esc 返回，按 ? 看快捷键": "Keyboard-only mode on: arrows move, Enter presses, Esc goes back, ? shows shortcuts",
+"纯键盘模式已关闭": "Keyboard-only mode off",
 };
 defHero({
 id: 'qingfeng', skin: 'qf', en: 'Qing Feng',
@@ -17214,7 +17335,7 @@ el.innerHTML = av.map(i => `<button type="button" data-i="${i}" class="${i === m
 el.hidden = !on;
 if (on) heroLvShow(false);
 }
-function heroLvShow(on) {   // 点「开始人机对战」先弹一排难度，点哪个就用哪个开打
+function heroLvShow(on) {   // 点「快速开打」先弹一排难度，点哪个就用哪个开打
 const el = $id('heroLv'); if (!el) return;
 if (on) { heroPickShow(false); for (const b of el.querySelectorAll('button')) b.classList.toggle('sel', b.dataset.lv === pickLevel); }
 el.hidden = !on;
@@ -17264,17 +17385,21 @@ function renderHome() {
 const sea = rkSeason();
 $id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
 $id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
-const name = curName();
-if (!name) { $id('homeMedal').innerHTML = rkMedalSVG(null, 56, { placed: 0 }); $id('homeRankL').textContent = '未定级'; $id('homeRankS').textContent = '登录后打 5 场定级赛'; return; }
-const s = rkState();
-$id('homeMedal').innerHTML = rkMedalFor(s, 56);
-if (rkPlaced(s)) { const t = rkTier(s.pts); $id('homeRankL').textContent = `${t.label} · ${t.name}`; $id('homeRankS').textContent = `${t.pts.toLocaleString()} 分 · ${s.w} 胜 ${s.l} 负`; }
-else { $id('homeRankL').textContent = `定级赛 ${s.placed}/${RK.PLACE}`; $id('homeRankS').textContent = `估分 ～${Math.round(s.est).toLocaleString()}`; }
+renderHomeTasks();
 }
-$id('homeRank').addEventListener('click', () => navTo('netp'));
+function renderHomeTasks() {
+const el = $id('homeTasks'); if (!el) return;
+if (PROF.guest || !curName()) { $id('homeTasksT').textContent = '登录后领每日任务'; $id('homeTasksS').textContent = '打对战、连击、赢一场都有墨锭'; return; }
+ensureClientTasks();
+const d = PROF.daily || [], done = d.filter(t => t.prog >= t.target).length, ready = d.filter(t => t.prog >= t.target && !t.claimed);
+$id('homeTasksT').textContent = `今日 ${done}/${d.length}` + (ready.length ? ` · 可领 ${ready.reduce((n, t) => n + t.reward, 0)} 墨锭` : '');
+$id('homeTasksS').textContent = ready.length ? '点开任务页领取' : done >= d.length ? '今天的都做完了' : '点开任务页看看';
+}
+$id('homeTasks').addEventListener('click', () => navTo('tasks'));
 for (const b of document.querySelectorAll('#menu [data-go]')) {
 b.addEventListener('click', () => {
 if (menuLock) return;                                  // 连点只算一次
+if (b.dataset.go === 'qfx') { navTo('qfx'); return; }  // 青锋行是另一个网页，不走镜头推进
 b.classList.add('pressed');
 setTimeout(() => b.classList.remove('pressed'), 900);
 menuGo(b.dataset.go);
@@ -17284,6 +17409,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 let settingsBack = 'menu';
 const SETTING_ROWS = [
 { k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
+{ k: 'kbOnly', name: '纯键盘模式', opts: [[false, '不用'], [true, '开启']] },
 { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
 { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
 { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
@@ -17371,6 +17497,7 @@ return;
 const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
 const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
 if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
+if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
 if (k === 'quality') resize();
 if (k === 'autoSkin') applySkins();
 });
@@ -17384,6 +17511,7 @@ if (!rebindingKey) return;
 rebindingKey = null;
 window.removeEventListener('keydown', handleKeyRebind, true);
 }
+$id('setHelp').addEventListener('click', () => navTo('help'));
 $id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') showScreen('pause'); else backToMenu(); });
 $id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
 let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
@@ -20387,7 +20515,7 @@ document.body.appendChild(wrap);
 wrap.querySelector('button[data-v="0"]').focus({ preventScroll: true });
 });
 }
-const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'arModal', 'arIns'];
+const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'modalWorld', 'arModal', 'arIns'];
 const uiDlgOpen = el => el.isConnected && !el.hidden && !el.classList.contains('hidden');
 const uiDlgPrev = new Map();
 function uiDlgWatch(el) {
@@ -22801,12 +22929,28 @@ ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline =
 ctx.fillText(`妖王 · 全线共讨  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
 }
 }
+function worldEnter(line) {
+WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
+bpStart('world');
+}
+function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
+function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
+if ($id('mWorld')) $id('mWorld').addEventListener('click', () => { SFX.slice(); openWorldModal(); });
+if ($id('modalWorldClose')) $id('modalWorldClose').addEventListener('click', closeWorldModal);
+if ($id('btnWorldGo')) $id('btnWorldGo').addEventListener('click', () => { closeWorldModal(); worldEnter(0); });
+if ($id('btnWorldLine')) {
+const goLine = () => {
+const n = +(($id('worldLineIn') && $id('worldLineIn').value) || 0);
+if (!(n >= 1 && n <= 9999)) { toast('线号是 1 到 9999 的数字'); return; }
+closeWorldModal(); worldEnter(n);
+};
+$id('btnWorldLine').addEventListener('click', goLine);
+$id('worldLineIn').addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); goLine(); } });
+}
 if ($id('btnRougeGoWorld')) {
 $id('btnRougeGoWorld').addEventListener('click', () => {
 if (typeof closeRougeModal === 'function') closeRougeModal();
-const n = +(($id('worldLineIn') && $id('worldLineIn').value) || 0);
-WORLD.wantLine = n >= 1 && n <= 9999 ? Math.floor(n) : 0;
-bpStart('world');
+worldEnter(0);
 });
 }
 const RG_JIE = 5;
@@ -22931,7 +23075,6 @@ if (!WORLD.on) return;
 worldEnterMode(WORLD.hero, b ? b.x : worldShrineX(3));
 say('回到江湖', 1, 'go', '秘卷保留，下一轮开始');
 }
-if ($id('homeWorldRouge')) $id('homeWorldRouge').addEventListener('click', () => { SFX.slice(); WORLD.wantLine = 0; bpStart('world'); });
 const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s', 0.08, 0], ['l2a', 0.15, 16], ['lcs', 0.08, 0], ['lca', 0.15, 16],
 ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
 ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],
@@ -24868,6 +25011,7 @@ return;
 }
 if (M.mode === 'demo') return;
 e.preventDefault();
+if (SETTINGS.kbOnly === true) return;   // 纯键盘模式：鼠标不出招，1P 只用键盘的攻击键
 const c = human[0];
 if (e.button === 0) { c.held.atk = true; c.atkT = clock; c.press('light'); }
 else if (e.button === 2) {   // 右键单点：腾空闪；按住左键时点右键：远程招式
@@ -24950,7 +25094,7 @@ window.addEventListener('load', () => refocusGame());
 const KBN = { on: false, root: null, key: '', rect: null, mem: new Map() };
 const KBN_FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 const KBN_DIR = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' };
-const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm';
+const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
 const KBN_BACK = { bp: 'bpQuit', acc: 'accBack', lb: 'lbBack', replays: 'rpBack', settings: 'setDone', towerModal: '' };   // 各页的返回键；空串表示这一页 Esc 不返回
 const kbnRing = document.createElement('div');
 kbnRing.id = 'kbRing'; kbnRing.setAttribute('aria-hidden', 'true');
@@ -25042,7 +25186,7 @@ KBN.on = true; document.body.classList.add('kbnav');
 requestAnimationFrame(kbnRingLoop);
 }
 function kbnOff() {
-if (!KBN.on) return;
+if (!KBN.on || kbOnly()) return;   // 纯键盘模式：鼠标点了选中框也不收
 KBN.on = false; document.body.classList.remove('kbnav'); kbnRing.classList.remove('on');
 }
 function kbnRingDraw() {
@@ -25065,6 +25209,7 @@ setInterval(kbnTick, 120);
 function kbnBack(roots) {
 const main = roots[0];
 if (main.id === 'arModal' || main.id === 'arIns') return false;   // 武库自己会用 Esc 收起弹窗和检视
+if (main.id === 'kbHelp') { kbHelpShow(false); return true; }
 const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, #modalRougeClose, .mm-cancel, [data-close]')].find(kbnShown);
 if (close) { close.click(); return true; }
 if (!main.classList.contains('scr')) return false;
@@ -25087,6 +25232,7 @@ const typing = tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(button|checkbox|rad
 const cands = kbnCands(roots), inside = cands.includes(document.activeElement);
 const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
 const dir = KBN_DIR[e.code];
+if ((e.code === 'F1' || (e.key === '?' && !typing)) && !e.repeat) { stop(); kbOnly() && kbnOn(); kbHelpShow($id('kbHelp').hidden); return; }
 if (e.code === 'Escape') {
 if (typing) {   // 先离开输入框，再按一次才返回
 const next = kbnPick(cands, t, 'd') || kbnPick(cands, t, 'u');
@@ -25139,6 +25285,48 @@ if (!native) { e.preventDefault(); el.click(); }
 }, true);
 document.addEventListener('focusin', e => { if (KBN.on) kbnRemember(e.target); });
 window.addEventListener('pointerdown', e => { if (e.isTrusted) kbnOff(); }, true);
+if (SETTINGS.kbOnly === undefined) SETTINGS.kbOnly = false;
+function kbOnly() { return SETTINGS.kbOnly === true; }
+function kbOnlyApply() {
+try { document.body.classList.toggle('kb-only', kbOnly()); } catch (e) {}
+const b = $id('mKbOnly'); if (b && b.setAttribute) b.setAttribute('aria-pressed', kbOnly() ? 'true' : 'false');
+if (kbOnly()) kbnOn();
+}
+function kbOnlySet(on) {
+SETTINGS.kbOnly = !!on; saveSettings(); kbOnlyApply();
+toast(on ? '纯键盘模式已打开：方向键走、Enter 按下、Esc 返回，按 ? 看快捷键' : '纯键盘模式已关闭', on ? 4 : 2.6);
+}
+const kbHelp = document.createElement('div');
+kbHelp.id = 'kbHelp'; kbHelp.className = 'kb-help'; kbHelp.hidden = true;
+if (kbHelp.setAttribute) { kbHelp.setAttribute('role', 'dialog'); kbHelp.setAttribute('aria-modal', 'true'); kbHelp.setAttribute('aria-label', '快捷键'); }
+document.body.appendChild(kbHelp);
+const kbHint = document.createElement('button');
+kbHint.id = 'kbHint'; kbHint.type = 'button'; kbHint.className = 'kb-hint'; kbHint.textContent = '? 快捷键';
+document.body.appendChild(kbHint);
+if (kbHint.addEventListener) kbHint.addEventListener('click', () => kbHelpShow(true));
+let kbHelpFrom = null;
+function kbHelpShow(on) {
+if (on) {
+const k = a => escapeHTML(keyLabel(custom1PKeys[a]));
+const row = (t, d) => `<dt>${t}</dt><dd>${d}</dd>`;
+kbHelp.innerHTML = `<div class="kb-help-box"><div class="kb-help-head"><b>快捷键</b><button class="ghost small" type="button" data-close>关闭</button></div>
+<div class="kb-help-cols"><dl><dt class="kb-help-h">菜单和弹窗</dt>${row('移动选中框', '<kbd>↑↓←→</kbd> 或 <kbd>WASD</kbd>')}${row('按下', '<kbd>Enter</kbd> 或 <kbd>空格</kbd>')}${row('返回 / 关弹窗', '<kbd>Esc</kbd>')}${row('按顺序走', '<kbd>Tab</kbd>')}${row('滑块、下拉框', '<kbd>←</kbd> <kbd>→</kbd> 调')}${row('这张说明', '<kbd>?</kbd> 或 <kbd>F1</kbd>')}</dl>
+<dl><dt class="kb-help-h">对局（1P）</dt>${row('移动', `<kbd>${k('left')}</kbd> <kbd>${k('right')}</kbd>`)}${row('跳跃', `<kbd>${k('jump')}</kbd>`)}${row('防御', `<kbd>${k('down')}</kbd>`)}${row('攻击 / 蓄力', `<kbd>${k('atk')}</kbd>`)}${row('腾空闪', `<kbd>${k('dash')}</kbd>`)}${row('技能', `<kbd>${k('skill')}</kbd>`)}${row('远程招式', `<kbd>${k('skill2')}</kbd>`)}${row('大招', `<kbd>${k('special')}</kbd>`)}${row('暂停 / 静音', '<kbd>P</kbd> / <kbd>M</kbd>')}</dl></div>
+<p class="kb-help-foot">${kbOnly() ? '纯键盘模式开着：选中框一直亮，对局里鼠标不出招。' : '在设置里打开「纯键盘模式」，选中框会一直亮着，对局里鼠标不出招。'}键位在设置里改。</p></div>`;
+kbHelpFrom = document.activeElement;
+kbHelp.hidden = false;
+const c = kbHelp.querySelector('[data-close]');
+c.addEventListener('click', () => kbHelpShow(false));
+kbnFocus(c);
+} else if (!kbHelp.hidden) {
+kbHelp.hidden = true;
+if (kbHelpFrom && kbHelpFrom.isConnected && kbHelpFrom.focus) kbnFocus(kbHelpFrom);
+kbHelpFrom = null;
+}
+}
+if (kbHelp.addEventListener) kbHelp.addEventListener('click', e => { if (e.target === kbHelp) kbHelpShow(false); });
+if ($id('mKbOnly')) $id('mKbOnly').addEventListener('click', () => kbOnlySet(!kbOnly()));
+kbOnlyApply();
 </script>
 <script>
 'use strict';

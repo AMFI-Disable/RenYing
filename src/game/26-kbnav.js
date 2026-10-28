@@ -5,7 +5,7 @@
 const KBN = { on: false, root: null, key: '', rect: null, mem: new Map() };
 const KBN_FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 const KBN_DIR = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' };
-const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm';
+const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
 const KBN_BACK = { bp: 'bpQuit', acc: 'accBack', lb: 'lbBack', replays: 'rpBack', settings: 'setDone', towerModal: '' };   // 各页的返回键；空串表示这一页 Esc 不返回
 const kbnRing = document.createElement('div');
 kbnRing.id = 'kbRing'; kbnRing.setAttribute('aria-hidden', 'true');
@@ -103,7 +103,7 @@ function kbnOn() {
   requestAnimationFrame(kbnRingLoop);
 }
 function kbnOff() {
-  if (!KBN.on) return;
+  if (!KBN.on || kbOnly()) return;   // 纯键盘模式：鼠标点了选中框也不收
   KBN.on = false; document.body.classList.remove('kbnav'); kbnRing.classList.remove('on');
 }
 function kbnRingDraw() {
@@ -128,6 +128,7 @@ setInterval(kbnTick, 120);
 function kbnBack(roots) {
   const main = roots[0];
   if (main.id === 'arModal' || main.id === 'arIns') return false;   // 武库自己会用 Esc 收起弹窗和检视
+  if (main.id === 'kbHelp') { kbHelpShow(false); return true; }
   const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, #modalRougeClose, .mm-cancel, [data-close]')].find(kbnShown);
   if (close) { close.click(); return true; }
   if (!main.classList.contains('scr')) return false;
@@ -150,6 +151,7 @@ window.addEventListener('keydown', e => {
   const cands = kbnCands(roots), inside = cands.includes(document.activeElement);
   const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
   const dir = KBN_DIR[e.code];
+  if ((e.code === 'F1' || (e.key === '?' && !typing)) && !e.repeat) { stop(); kbOnly() && kbnOn(); kbHelpShow($id('kbHelp').hidden); return; }
   if (e.code === 'Escape') {
     if (typing) {   // 先离开输入框，再按一次才返回
       const next = kbnPick(cands, t, 'd') || kbnPick(cands, t, 'u');
@@ -202,3 +204,49 @@ window.addEventListener('keydown', e => {
 }, true);
 document.addEventListener('focusin', e => { if (KBN.on) kbnRemember(e.target); });
 window.addEventListener('pointerdown', e => { if (e.isTrusted) kbnOff(); }, true);
+
+// ======================= 纯键盘模式：设置里的开关（首页次入口也有一个） =======================
+// 打开后选中框一直亮着，用鼠标点了也不收；按 ? 或 F1 看快捷键；对局里鼠标不再出招，1P 只用键盘的攻击键。记在本机设置里。
+if (SETTINGS.kbOnly === undefined) SETTINGS.kbOnly = false;
+function kbOnly() { return SETTINGS.kbOnly === true; }
+function kbOnlyApply() {
+  try { document.body.classList.toggle('kb-only', kbOnly()); } catch (e) {}
+  const b = $id('mKbOnly'); if (b && b.setAttribute) b.setAttribute('aria-pressed', kbOnly() ? 'true' : 'false');
+  if (kbOnly()) kbnOn();
+}
+function kbOnlySet(on) {
+  SETTINGS.kbOnly = !!on; saveSettings(); kbOnlyApply();
+  toast(on ? '纯键盘模式已打开：方向键走、Enter 按下、Esc 返回，按 ? 看快捷键' : '纯键盘模式已关闭', on ? 4 : 2.6);
+}
+// 快捷键说明：菜单里的走法，加上 1P 对局按键（跟着设置里改过的键走）
+const kbHelp = document.createElement('div');
+kbHelp.id = 'kbHelp'; kbHelp.className = 'kb-help'; kbHelp.hidden = true;
+if (kbHelp.setAttribute) { kbHelp.setAttribute('role', 'dialog'); kbHelp.setAttribute('aria-modal', 'true'); kbHelp.setAttribute('aria-label', '快捷键'); }
+document.body.appendChild(kbHelp);
+const kbHint = document.createElement('button');
+kbHint.id = 'kbHint'; kbHint.type = 'button'; kbHint.className = 'kb-hint'; kbHint.textContent = '? 快捷键';
+document.body.appendChild(kbHint);
+if (kbHint.addEventListener) kbHint.addEventListener('click', () => kbHelpShow(true));
+let kbHelpFrom = null;
+function kbHelpShow(on) {
+  if (on) {
+    const k = a => escapeHTML(keyLabel(custom1PKeys[a]));
+    const row = (t, d) => `<dt>${t}</dt><dd>${d}</dd>`;
+    kbHelp.innerHTML = `<div class="kb-help-box"><div class="kb-help-head"><b>快捷键</b><button class="ghost small" type="button" data-close>关闭</button></div>
+      <div class="kb-help-cols"><dl><dt class="kb-help-h">菜单和弹窗</dt>${row('移动选中框', '<kbd>↑↓←→</kbd> 或 <kbd>WASD</kbd>')}${row('按下', '<kbd>Enter</kbd> 或 <kbd>空格</kbd>')}${row('返回 / 关弹窗', '<kbd>Esc</kbd>')}${row('按顺序走', '<kbd>Tab</kbd>')}${row('滑块、下拉框', '<kbd>←</kbd> <kbd>→</kbd> 调')}${row('这张说明', '<kbd>?</kbd> 或 <kbd>F1</kbd>')}</dl>
+      <dl><dt class="kb-help-h">对局（1P）</dt>${row('移动', `<kbd>${k('left')}</kbd> <kbd>${k('right')}</kbd>`)}${row('跳跃', `<kbd>${k('jump')}</kbd>`)}${row('防御', `<kbd>${k('down')}</kbd>`)}${row('攻击 / 蓄力', `<kbd>${k('atk')}</kbd>`)}${row('腾空闪', `<kbd>${k('dash')}</kbd>`)}${row('技能', `<kbd>${k('skill')}</kbd>`)}${row('远程招式', `<kbd>${k('skill2')}</kbd>`)}${row('大招', `<kbd>${k('special')}</kbd>`)}${row('暂停 / 静音', '<kbd>P</kbd> / <kbd>M</kbd>')}</dl></div>
+      <p class="kb-help-foot">${kbOnly() ? '纯键盘模式开着：选中框一直亮，对局里鼠标不出招。' : '在设置里打开「纯键盘模式」，选中框会一直亮着，对局里鼠标不出招。'}键位在设置里改。</p></div>`;
+    kbHelpFrom = document.activeElement;
+    kbHelp.hidden = false;
+    const c = kbHelp.querySelector('[data-close]');
+    c.addEventListener('click', () => kbHelpShow(false));
+    kbnFocus(c);
+  } else if (!kbHelp.hidden) {
+    kbHelp.hidden = true;
+    if (kbHelpFrom && kbHelpFrom.isConnected && kbHelpFrom.focus) kbnFocus(kbHelpFrom);
+    kbHelpFrom = null;
+  }
+}
+if (kbHelp.addEventListener) kbHelp.addEventListener('click', e => { if (e.target === kbHelp) kbHelpShow(false); });
+if ($id('mKbOnly')) $id('mKbOnly').addEventListener('click', () => kbOnlySet(!kbOnly()));
+kbOnlyApply();
