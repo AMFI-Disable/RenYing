@@ -389,21 +389,24 @@ function ctrlKey(c) {
 function recBegin(kind) {
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
     meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
+  if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] }); REC.post = ['', '', '', '']; }
 }
+// 本地回放要记的人：1v1 是 A、B，2v2 四个人都记（顺序 A B C D，和 fighterByIdx 一样）
+const rpFighters = m => (m && m.four) ? [A, B, C, D] : [A, B];
 // 本地对战：在角色读操作之前记下双方控制器的状态（只记变化）
 function rpPoint() {
   if (REC.on && REC.kind === 'loc') {
-    [A, B].forEach((f, i) => { if (ctrlKey(f.ctrl) !== REC.post[i]) REC.ev.push([REC.f, i, inBits(f.ctrl.held), f.ctrl.atkT, { ...f.ctrl.buf }]); });
+    rpFighters(REC.meta).forEach((f, i) => { if (ctrlKey(f.ctrl) !== REC.post[i]) REC.ev.push([REC.f, i, inBits(f.ctrl.held), f.ctrl.atkT, { ...f.ctrl.buf }]); });
   } else if (REPLAY.on && REPLAY.kind === 'loc') {
     const ev = REPLAY.ev;
     while (REPLAY.p < ev.length && ev[REPLAY.p][0] <= REPLAY.f) {
-      const e = ev[REPLAY.p++], c = [A, B][e[1]].ctrl, b = e[2];
+      const e = ev[REPLAY.p++], c = rpFighters(REPLAY.m)[e[1]].ctrl, b = e[2];
       c.held.left = !!(b & 1); c.held.right = !!(b & 2); c.held.down = !!(b & 4); c.held.atk = !!(b & 8); c.held.jump = !!(b & 16);
       c.held.aim = (b & 64) ? ((b & 32) ? -1 : 1) : 0; c.atkT = e[3]; c.buf = { ...e[4] };
     }
   }
 }
-function rpPost() { if (REC.on && REC.kind === 'loc') REC.post = [ctrlKey(A.ctrl), ctrlKey(B.ctrl)]; }
+function rpPost() { if (REC.on && REC.kind === 'loc') REC.post = rpFighters(REC.meta).map(f => ctrlKey(f.ctrl)); }
 // 联机：只记两边都确认过的帧
 function recNet() {
   if (!REC.on || REC.kind !== 'net') return;
@@ -511,20 +514,21 @@ function recSave(w) {
   REC.on = false;
   if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
   const m = REC.meta;
-  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, skins: [A.skinKey || '', B.skinKey || ''],
-    names: M.mode === 'net' ? [(NET.names || {}).host || '游客', (NET.names || {}).client || '游客'] : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
+  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, skins: rpFighters(m).map(f => f.skinKey || ''),
+    names: m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤'])
+      : M.mode === 'net' ? [(NET.names || {}).host || '游客', (NET.names || {}).client || '游客'] : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
   RP.last = m;
   const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
   rpStore(list);
 }
 function rpTitle(m) {
-  const nm = i => (CHARS[m.ch[i]] || {}).name || '?';
-  return `${nm(0)} 对 ${nm(1)}`;
+  const nm = i => (CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?';
+  return m.four ? `${nm(0)} · ${nm(2)} 对 ${nm(1)} · ${nm(3)}` : `${nm(0)} 对 ${nm(1)}`;
 }
 function rpSub(m) {
   const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-  const mode = m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
-  const win = m.w >= 0 ? `${(CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
+  const mode = m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
+  const win = m.w >= 0 ? `${m.four ? (m.names || [])[m.w] || '' : (CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
   return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }
 function renderReplays() {
@@ -648,14 +652,15 @@ function startReplay(m) {
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   ROLL.on = false; REC.on = false; paused = false; BP = null; B.dummy = false; M.stage = null;
   setChars(m.ch[0], m.ch[1]);
-  A.ctrl = new Ctrl(); B.ctrl = new Ctrl();
+  if (m.four) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
+  for (const f of rpFighters(m)) f.ctrl = new Ctrl();   // 回放只照着录下来的按键按，电脑也不再自己想
   restState(m.st0);
   M.mode = 'replay';
   Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, names: m.names || null });
   acc = 0; creditT = 0; particles.length = 0;
   showScreen(null);
   startRound();
-  [A, B].forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
+  rpFighters(m).forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
   pickScene();
   $id('rpPause').textContent = '暂停';
   for (const x of document.querySelectorAll('#rpBar [data-sp]')) x.classList.toggle('sel', x.dataset.sp === '1');
@@ -682,8 +687,8 @@ function replayTick(real) {
 }
 function replayEnd(w) {
   $id('rpBar').classList.add('hidden');
-  const t = $id('endTitle'), wf = [A, B][w];
-  if (wf) { t.textContent = `${wf.look.name} 胜`; t.style.color = `rgb(${wf.look.slash})`; } else { t.textContent = '平局'; t.style.color = ''; }
+  const t = $id('endTitle'), wf = [A, B][w], mate = REPLAY.m && REPLAY.m.four ? [C, D][w] : null;
+  if (wf) { t.textContent = `${wf.look.name}${mate ? ' · ' + mate.look.name : ''} 胜`; t.style.color = `rgb(${wf.look.slash})`; } else { t.textContent = '平局'; t.style.color = ''; }
   $id('endSub').textContent = `回放结束，比分 ${M.wins[0]} : ${M.wins[1]}`;
   $id('endRank').textContent = '';
   $id('againBtn').style.display = 'none';

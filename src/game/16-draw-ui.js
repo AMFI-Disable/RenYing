@@ -219,6 +219,7 @@ function drawHUD2v2() {
       let fTag = '';
       if (f.ctrl === human[0]) fTag = ' [1P]';
       else if (f.ctrl === human[1] && (M.subMode === 'pp_cc' || M.subMode === 'pp_pp')) fTag = ' [2P]';
+      else if (f === C && M.subMode === 'p_cc') fTag = ' [队友]';
       else if (f.ctrl === human[2]) fTag = ' [3P]';
       else if (f.ctrl === human[3]) fTag = ' [4P]';
       else if (M.mode === 'net') {
@@ -275,7 +276,8 @@ function drawHUD2v2() {
   const banTxt = (M.bans && M.bans.length === 2 && CHARS[M.bans[0]] && CHARS[M.bans[1]]) ? ` · 禁选：${CHARS[M.bans[0]].name} / ${CHARS[M.bans[1]].name}` : '';
   let bTitle = `👁️ 2v2 天道演武 (纯观战)${banTxt}`;
   if (!M.watchAi) {
-    if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (双人破阵 vs 双AI)';
+    if (M.subMode === 'p_cc') bTitle = '⚔️ 2v2 携手共斗 (你 + 电脑队友 vs 双AI)';
+    else if (M.subMode === 'pp_cc') bTitle = '⚔️ 2v2 双人共斗 (双人破阵 vs 双AI)';
     else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四方争锋 (双人对决)';
     else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
     else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';

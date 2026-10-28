@@ -68,7 +68,7 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && !!roomDef().four);
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && !!roomDef().four) || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.four));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && !!roomDef().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
@@ -441,7 +441,7 @@ function showEnd(w) {
       again.style.display = 'none';
     } else {
       inkTitle(win ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`, !iWon);
-      const modeNames = { pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
+      const modeNames = { p_cc: '2v2 携手共斗', pp_cc: '2v2 双人共斗', pp_pp: '2v2 四人对决' };
       const modeName = modeNames[M.subMode] || '2v2 组队演武';
       document.getElementById('endSub').textContent = `${modeName} · ${iWon ? '凯旋大捷！' : '惜败，择日再战！'} 比分 ${M.wins[0]} : ${M.wins[1]}`;
       $id('endRank').textContent = iWon ? '双雄合璧，克敌制胜' : '胜败乃兵家常事';

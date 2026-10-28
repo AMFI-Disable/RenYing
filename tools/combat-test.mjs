@@ -1084,6 +1084,47 @@ const testSuite = [
       if (Math.abs(afterL1 - afterDl) > 0.01) return { pass: false, error: 'skill wind-up counter damage differs by last attack: after l1=' + afterL1 + ' after dl=' + afterDl };
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: '2v2 has three local variants (you + AI ally, two players vs two AIs, two vs two): each starts, ends and replays frame-for-frame',
+    fn: `(() => {
+      const snap = () => JSON.stringify([A, B, C, D].map(f => [f.chIdx, f.state, Math.round(f.x), Math.round(f.y), Math.round(f.hp * 10)]));
+      const out = [];
+      for (const sub of ['p_cc', 'pp_cc', 'pp_pp']) {
+        toMenu();
+        bpStart('2v2', { subMode: sub, level: 'hard' });
+        if (BP.steps.length !== 6) return { pass: false, error: sub + ': 2v2 BP should have 6 steps, got ' + BP.steps.length };
+        for (const i of [0, 1, 2, 3, 4, 5]) bpApply(i);
+        currentScreen = 'bp'; bpFinish();
+        if (M.mode !== '2v2' || M.subMode !== sub) return { pass: false, error: sub + ': started ' + M.mode + '/' + M.subMode };
+        const ai = f => f.ctrl instanceof AICtrl;
+        const want = { p_cc: [false, true, true, true], pp_cc: [false, true, false, true], pp_pp: [false, false, false, false] }[sub];
+        const got = [A, B, C, D].map(ai);
+        if (sub !== 'pp_pp' && JSON.stringify(got) !== JSON.stringify(want)) return { pass: false, error: sub + ': who is AI (A B C D) = ' + got };
+        if (sub === 'p_cc' && A.ctrl !== human[0]) return { pass: false, error: 'p_cc: you should control A' };
+        if (!REC.on || !REC.meta || !REC.meta.four || REC.meta.sub !== sub) return { pass: false, error: sub + ': 2v2 match is not being recorded' };
+        // 让电脑代替玩家出手，打一段，记下每一帧的局面
+        for (const f of [A, B, C, D]) if (!ai(f)) f.ctrl = new AICtrl('hard');
+        const frames = [];
+        for (let i = 0; i < 1500; i++) { step(); if (i % 50 === 49) frames.push(snap()); }
+        const m = { ...REC.meta, ev: REC.ev.slice(), skins: ['', '', '', ''], names: ['a', 'b'] };
+        // 打到分出胜负，看能不能结算
+        B.hp = D.hp = 0; M.koWinner = 0; M.wins = [1, 0];
+        for (let i = 0; i < 600 && M.phase !== 'end'; i++) step();
+        for (let i = 0; i < 600 && M.phase !== 'end'; i++) { B.hp = D.hp = 0; step(); }
+        if (M.phase !== 'end') return { pass: false, error: sub + ': match did not end (phase ' + M.phase + ')' };
+        startReplay(m);
+        if (!is2v2() || C.hidden || D.hidden) return { pass: false, error: sub + ': replay is not shown as 2v2' };
+        const again = [];
+        for (let i = 0; i < 1500; i++) { replayFrame(); if (i % 50 === 49) again.push(snap()); }
+        const bad = frames.findIndex((x, i) => x !== again[i]);
+        if (bad >= 0) return { pass: false, error: sub + ': replay drifts at frame ' + (bad + 1) * 50 + ': ' + frames[bad] + ' vs ' + again[bad] };
+        out.push(sub);
+        REPLAY.on = false;
+      }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

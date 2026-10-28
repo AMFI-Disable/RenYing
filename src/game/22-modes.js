@@ -687,12 +687,13 @@ function startWatch2v2(draft) {
 }
 
 
-// ======================= 2v2 组队：两人 vs 两电脑（pp_cc）、两人 vs 两人（pp_pp） =======================
-function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal') {
+// ======================= 2v2 组队：你 + 电脑队友 vs 两电脑（p_cc）、两人 vs 两电脑（pp_cc）、两人 vs 两人（pp_pp） =======================
+// ally：队友 C 交给电脑（p_cc），不然是同一台电脑上的 2P
+function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal', ally = false) {
   if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
   M.mode = '2v2';
-  M.subMode = 'pp_cc';
+  M.subMode = ally ? 'p_cc' : 'pp_cc';
   M.watchAi = false;
   M.level = level;
   M.bans = [];
@@ -703,14 +704,15 @@ function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal')
   A.setChar(p1); C.setChar(p2);
   B.setChar(foe1); D.setChar(foe2);
   A.ctrl = human[0]; // 1P
-  C.ctrl = human[1]; // 2P
+  C.ctrl = ally ? new AICtrl(level) : human[1]; // 2P，或者电脑队友
   B.ctrl = new AICtrl(level);
   D.ctrl = new AICtrl(level);
   A.meter = B.meter = C.meter = D.meter = 35;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   showScreen(null);
+  recBegin('loc');   // 2v2 也录回放：四个人每帧的按键（电脑的也记下来），回放时照着按
   startRound();
-  say(`双人共斗 · 【${CHARS[p1].name} & ${CHARS[p2].name}】同心破天道！`, 1.4);
+  say(ally ? `携手共斗 · 【${CHARS[p1].name}】与电脑队友【${CHARS[p2].name}】并肩！` : `双人共斗 · 【${CHARS[p1].name} & ${CHARS[p2].name}】同心破天道！`, 1.4);
 }
 
 function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
@@ -734,14 +736,16 @@ function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
   A.meter = B.meter = C.meter = D.meter = 35;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   showScreen(null);
+  recBegin('loc');
   startRound();
   say(`2v2 四人对决 · 苍龙 vs 赤凤！`, 1.4);
 }
 
 // 2v2 只有这一个入口：对战页的 2v2 卡片（离线版是单人页的「2v2 组队」）打开这个弹窗，先选对阵，再选同一台电脑 / 全服匹配 / 好友房间
 let active2v2ModalMode = 'pp_cc';
-let m2Level = 'normal';   // 两人 vs 两电脑时电脑的境界
+let m2Level = 'normal';   // 对阵电脑时（你 + 电脑队友、两人 vs 两电脑）电脑的境界，队友和对手一样
 const M2_TEXT = {
+  p_cc: { desc: '你和一个电脑队友一队，对阵两个电脑。', local: '你用 WASD 或方向键，队友由电脑操控', match: '' },
   pp_cc: { desc: '你和队友一队，对阵两个电脑。', local: '1P 用 WASD，2P 用方向键 + K 攻击', match: '全服找一位队友，一起打两个电脑' },
   pp_pp: { desc: '两队各两人对打：你们两个对另外两个玩家。', local: '四人一台电脑：1P、2P 一队，3P、4P 一队', match: '全服找一位队友和两位对手' }
 };
@@ -749,13 +753,14 @@ function render2v2Modal() {
   const mode = active2v2ModalMode, tx = M2_TEXT[mode];
   for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
   for (const b of document.querySelectorAll('#m2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === m2Level);
-  $id('m2LvWrap').hidden = mode !== 'pp_cc';
+  $id('m2LvWrap').hidden = mode === 'pp_pp';
+  for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) $id(id).style.display = mode === 'p_cc' ? 'none' : '';   // 一个人带电脑队友，不用联网（.m2-way 自带 display，hidden 属性压不住）
   $id('modal2v2Desc').textContent = tx.desc;
   $id('modal2v2LocalDesc').textContent = tx.local;
   $id('modal2v2MatchDesc').textContent = tx.match;
 }
 function open2v2Modal(mode) {
-  if (mode === 'pp_cc' || mode === 'pp_pp') active2v2ModalMode = mode;
+  if (M2_TEXT[mode]) active2v2ModalMode = mode;
   $id('modal2v2').classList.remove('hidden');
   render2v2Modal();
 }

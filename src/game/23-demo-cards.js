@@ -551,7 +551,7 @@ function bpFinish() {
     startRaidMatch(picks[0], opts.squadSize || (picks[0] ? picks[0].length : 3), opts);
   } else if (mode === '2v2') {
     if (opts.subMode === 'pp_pp') start2v2LocalVs(picks[0][0], picks[0][1], picks[1][0], picks[1][1]);
-    else start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal');
+    else start2v2LocalCoop(picks[0][0], picks[0][1], picks[1][0], picks[1][1], opts.level || 'normal', opts.subMode === 'p_cc');
     M.bans = bans;
   }
   applySkins();
