@@ -253,7 +253,8 @@
       setLang,
       t,
       applyTranslations,
-      get DICT_EN() { return dictEn(); }
+      get DICT_EN() { return dictEn(); },
+      get PATTERNS_EN() { return PATTERNS_EN; }   // tools/data-check.mjs 检查每一项的形状
     };
     window.t = t;
   }

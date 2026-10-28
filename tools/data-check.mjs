@@ -253,6 +253,29 @@ function checkUiCopy(env) {
   unique('src/data/30-ui-copy.js + 31-hero-copy.js', keys, '键');
 }
 
+// ---------- 英文模板（src/i18n.js 的 PATTERNS_EN） ----------
+// 每一项都要是 [正则, 替换函数或字符串]。两段模板合并时少一个逗号，[a, b] [c, d] 会被当成取下标，
+// 悄悄变成 undefined，英文界面一查表就报错；同一个正则写了两遍，后一条永远用不上。
+function checkPatterns() {
+  const where = 'src/i18n.js PATTERNS_EN';
+  const ctx = vm.createContext({ window: {}, console });
+  try { new vm.Script(readFileSync(ROOT + 'src/i18n.js', 'utf8'), { filename: 'src/i18n.js' }).runInContext(ctx); }
+  catch (e) { err('src/i18n.js', `载入出错：${e.message}`); return; }
+  const P = vm.runInContext('window.I18N && window.I18N.PATTERNS_EN', ctx);
+  if (!Array.isArray(P) || !P.length) { err(where, '取不到模板表（window.I18N.PATTERNS_EN）'); return; }
+  const seen = new Map();
+  P.forEach((p, i) => {
+    const isRe = p && Array.isArray(p) && Object.prototype.toString.call(p[0]) === '[object RegExp]';
+    if (!Array.isArray(p) || p.length !== 2 || !isRe || !(typeof p[1] === 'function' || typeof p[1] === 'string')) {
+      err(where, `第 ${i + 1} 项应该是 [正则, 函数或字符串]，现在是 ${p === undefined ? 'undefined（多半是上一行少了逗号）' : Array.isArray(p) ? `长度 ${p.length} 的数组：${p.map(x => Object.prototype.toString.call(x)).join(', ')}` : typeof p}`);
+      return;
+    }
+    const key = p[0].source + '/' + p[0].flags;
+    if (seen.has(key)) err(where, `第 ${i + 1} 项的正则和第 ${seen.get(key) + 1} 项一模一样（/${p[0].source}/），后一条永远用不上`);
+    else seen.set(key, i);
+  });
+}
+
 const TABLES = [
   { name: 'MOVES', check: checkMoves },
   { name: 'HEROES', check: checkHeroes },
@@ -264,6 +287,7 @@ const env = await makeEnv();
 const get = name => env.run(`typeof ${name} === 'undefined' ? undefined : ${name}`);
 const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN', 'CANCEL', 'SFX'].map(k => [k, get(k)]));
 for (const t of TABLES) if (get(t.name) !== undefined) t.check(refs);
+checkPatterns();
 if (errors.length) {
   console.log(`src/data/ 的数据表有 ${errors.length} 处不对：`);
   for (const e of errors) console.log('  ' + e);
