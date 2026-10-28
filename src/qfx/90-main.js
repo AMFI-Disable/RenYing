@@ -63,11 +63,11 @@ const Game = {
       // 过场至少停留两秒半，让章名和题记读得完；第一次开局先在山门前试剑
       setTimeout(() => {
         travelHide();
-        if (ci === 0 && !resume && !Save.load().tut && !window.__noTut) { $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; canvas.focus(); UI.banner(ch.n, ch.idx + ' · ' + ch.sub, ''); Snd.gong(); Tut.begin(); }
+        if (ci === 0 && !resume && !Save.load().tut && !dbg('noTut')) { $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; canvas.focus(); UI.banner(ch.n, ch.idx + ' · ' + ch.sub, ''); Snd.gong(); Tut.begin(); }
         else Run.showMap();
-      }, window.__instant ? 0 : Math.max(0, 2600 - (performance.now() - t0)));
+      }, dbg('instant') ? 0 : Math.max(0, 2600 - (performance.now() - t0)));
     };
-    if (window.__instant) go(); else setTimeout(go, 650);
+    if (dbg('instant')) go(); else setTimeout(go, 650);
   },
   pause() { if (G.state !== 'playing') return; G.state = 'paused'; UI.perkList('pausePerks'); $('pause').hidden = false; unlock(); },
   resume() { if (G.state !== 'paused') return; $('pause').hidden = true; G.state = 'playing'; canvas.focus(); },
@@ -122,7 +122,7 @@ function handleKeys() {
 
 let last = 0, slowAcc = 0, fN = 0, fT = 0;
 function frame(now) {
-  if (!window.__manual) requestAnimationFrame(frame);
+  if (!dbg('manual')) requestAnimationFrame(frame);
   let rdt = Math.min(.05, (now - last) / 1000); last = now; if (!(rdt > 0)) rdt = .001;
   GFX.time.value += rdt; handleKeys(); let dt = 0; const U = GFX.final.uniforms;
   if (G.state === 'playing') {
@@ -144,14 +144,14 @@ function frame(now) {
   const low = Pl.hp / Pl.maxHp < .3 && Pl.state !== 'dead' && G.state !== 'title' ? (.3 + Math.sin(GFX.time.value * 5) * .12) : 0;
   U.uHurt.value = Math.max(Pl.hurtV * .75, low); U.uFlash.value = Math.max(0, U.uFlash.value - rdt * 1.6); U.uFocus.value = damp(U.uFocus.value, G.state === 'playing' && G.enemyTS < 1 && Pl.state !== 'dead' ? 1 : 0, 8, rdt);
   FX.updateNums(G.state === 'playing' ? rdt : 0, GFX.camera, root.clientWidth, root.clientHeight);
-  if (!window.__norender && G.state !== 'travel') GFX.render(); Input.endFrame();
+  if (!dbg('noRender') && G.state !== 'travel') GFX.render(); Input.endFrame();
   // 自适应画质
   fN++; fT += rdt; if (fT >= 1) { const fps = fN / fT; fN = 0; fT = 0; if (G.state === 'playing' && fps < 38) { if (++slowAcc >= 3 && GFX.quality > 0) { GFX.quality--; applyQuality(); slowAcc = 0; UI.toast('画面已自动调低，可在暂停菜单更改', 3); } } else slowAcc = 0; }
 }
 
 function bindUI() {
-  $('btnStart').onclick = () => { if (Save.rl() && !window.__instant && !confirm('重开会放弃存着的那一局（剑魄和藏经阁不受影响），确定吗？')) return; Game.start(); }; $('btnCont').onclick = () => Game.cont();
-  $('btnResume').onclick = () => Game.resume(); $('btnRestart').onclick = () => { if (!window.__instant && !confirm('放弃这一局？剑魄照样留着。')) return; $('pause').hidden = true; Game.over(false); };
+  $('btnStart').onclick = () => { if (Save.rl() && !dbg('instant') && !confirm('重开会放弃存着的那一局（剑魄和藏经阁不受影响），确定吗？')) return; Game.start(); }; $('btnCont').onclick = () => Game.cont();
+  $('btnResume').onclick = () => Game.resume(); $('btnRestart').onclick = () => { if (!dbg('instant') && !confirm('放弃这一局？剑魄照样留着。')) return; $('pause').hidden = true; Game.over(false); };
   $('btnRmLeave').onclick = () => Game.home(); $('evGo').onclick = () => Run.closeEvent();
   $('btnAgain').onclick = () => Game.start(); $('btnHome').onclick = () => Game.home(); $('btnShopClose').onclick = () => Game.closeShop();
   $('btnIlShop').onclick = () => Game.openShop(); $('btnIlGo').onclick = () => Game.nextChapter();
@@ -168,7 +168,7 @@ function bindUI() {
   setupPointer(canvas, () => G.state === 'playing' && !Input.touch); setupTouchUI();
 }
 async function boot() {
-  const q0 = setting('q'); if (typeof window.__QUALITY !== 'number') GFX.quality = q0 >= 0 ? q0 : (matchMedia('(pointer:coarse)').matches || Math.min(innerWidth, innerHeight) < 500 ? 1 : 2);
+  const q0 = setting('q'); if (typeof dbg('quality') !== 'number') GFX.quality = q0 >= 0 ? q0 : (matchMedia('(pointer:coarse)').matches || Math.min(innerWidth, innerHeight) < 500 ? 1 : 2);
   bindUI(); showBest();
   try { if (document.fonts && document.fonts.load) await Promise.race([Promise.all([document.fonts.load('80px "Ma Shan Zheng"', '青云剑宗试坪'), document.fonts.load('900 20px "Noto Serif SC"', '0123456789')]), new Promise(r => setTimeout(r, 2500))]); } catch (_) {}
   await new Promise(r => setTimeout(r, 30));
@@ -177,7 +177,7 @@ async function boot() {
     GFX.renderer.compile(GFX.scene, GFX.camera);
     last = performance.now(); requestAnimationFrame(frame);
     $('btnStart').disabled = false; $('loading').hidden = true;
-    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise, Tut, TERR, gH, Run, NODE, EVENTS, genMap, genWaves, rareCards, ascApply, ASC };
+    if (DBG) DBG.game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise, Tut, TERR, gH, Run, NODE, EVENTS, genMap, genWaves, rareCards, ascApply, ASC };
   } catch (err) { console.error(err && err.stack || err); $('loading').textContent = '无法启动 3D 画面：' + (err && err.message ? err.message : err) + '。请换用支持 WebGL 的桌面浏览器。'; }
 }
 boot();

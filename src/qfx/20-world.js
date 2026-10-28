@@ -18,7 +18,7 @@ World.clear = () => {
 World.build = id => {
   World.clear(); const m = MAPS[id]; World.id = id; World.R = m.R;
   const root = World.root = new T.Group(); GFX.scene.add(root); GFX.setEnv(m.env); GFX.camera.far = m.far || 1400; GFX.camera.updateProjectionMatrix();
-  if (window.__NOWORLD) { const gp = new T.Mesh(new T.CircleGeometry(m.R, 48).rotateX(-PI / 2), stdMat(0x8a857b)); gp.receiveShadow = true; root.add(gp); }
+  if (dbg('noWorld')) { const gp = new T.Mesh(new T.CircleGeometry(m.R, 48).rotateX(-PI / 2), stdMat(0x8a857b)); gp.receiveShadow = true; root.add(gp); }
   else m.build(root);
 };
 

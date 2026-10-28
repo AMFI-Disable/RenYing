@@ -475,6 +475,11 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 /* === 00-core.js === */
 const T = THREE, V3 = T.Vector3, PI = Math.PI, TAU = PI * 2;
 const $ = id => document.getElementById(id);
+/* 调试开关：默认全关。只有页面加载前设了 window.__QFX_DEBUG = { ... } 才生效（测试、截图用），平常玩家碰不到：
+   quality 画质档（0–3）、noWorld 不建地图只铺地面、cam 固定镜头 { p, t, fov }、manual 不自动跑帧、noRender 不画、
+   instant 跳过过场和确认框、noTut 不进试剑。生效时把内部对象挂到 window.__QFX_DEBUG.game 上 */
+const DBG = window.__QFX_DEBUG && typeof window.__QFX_DEBUG === 'object' ? window.__QFX_DEBUG : null;
+const dbg = k => DBG ? DBG[k] : undefined;
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const sat = v => v < 0 ? 0 : v > 1 ? 1 : v;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -636,7 +641,7 @@ const Snd = {
 
 /* === 10-gfx.js === */
 /* ---------------- 渲染器 / 后期 / 材质 ---------------- */
-const GFX = { time: { value: 0 }, quality: typeof window.__QUALITY === 'number' ? window.__QUALITY : 2 };
+const GFX = { time: { value: 0 }, quality: typeof dbg('quality') === 'number' ? dbg('quality') : 2 };
 const SUN_DIR = new V3(-.72, .36, -.6).normalize();
 const FOG_COL = new T.Color(0xb9a2a8);
 /* 颜色管线（一处说清）：渲染器输出 sRGB；贴图里的颜色一律当 sRGB（canvasTex 默认打上 sRGBEncoding，法线、星点这类数据贴图传 false）；
@@ -1005,7 +1010,7 @@ World.clear = () => {
 World.build = id => {
   World.clear(); const m = MAPS[id]; World.id = id; World.R = m.R;
   const root = World.root = new T.Group(); GFX.scene.add(root); GFX.setEnv(m.env); GFX.camera.far = m.far || 1400; GFX.camera.updateProjectionMatrix();
-  if (window.__NOWORLD) { const gp = new T.Mesh(new T.CircleGeometry(m.R, 48).rotateX(-PI / 2), stdMat(0x8a857b)); gp.receiveShadow = true; root.add(gp); }
+  if (dbg('noWorld')) { const gp = new T.Mesh(new T.CircleGeometry(m.R, 48).rotateX(-PI / 2), stdMat(0x8a857b)); gp.receiveShadow = true; root.add(gp); }
   else m.build(root);
 };
 
@@ -3268,7 +3273,7 @@ function updatePlayer(dt) {
 
 function updateCamera(dt, rdt) {
   const cam = GFX.camera;
-  if (window.__cam) { const c = window.__cam; cam.position.set(c.p[0], c.p[1], c.p[2]); cam.lookAt(c.t[0], c.t[1], c.t[2]); cam.fov = c.fov || 52; cam.updateProjectionMatrix(); return; }
+  if (dbg('cam')) { const c = dbg('cam'); cam.position.set(c.p[0], c.p[1], c.p[2]); cam.lookAt(c.t[0], c.t[1], c.t[2]); cam.fov = c.fov || 52; cam.updateProjectionMatrix(); return; }
   if (G.state === 'title') {
     Cam.tOrbit += rdt * .05; const a = Math.sin(Cam.tOrbit) * .55 - .15; Cam.pos.set(Pl.pos.x + Math.sin(a) * 4.3, 1.75 + Math.sin(Cam.tOrbit * 2) * .25, Pl.pos.z + Math.cos(a) * 4.3); Cam.look.set(Pl.pos.x - Math.sin(a + 1.15) * 1.25, 1.32, Pl.pos.z - Math.cos(a + 1.15) * 1.25);
     const gy = gH(Pl.pos.x, Pl.pos.z); cam.position.set(Cam.pos.x, Cam.pos.y + gy, Cam.pos.z); cam.lookAt(Cam.look.x, Cam.look.y + gy, Cam.look.z); cam.fov = 44; cam.updateProjectionMatrix(); return;
@@ -4470,14 +4475,15 @@ const UI = {
 /* === 85-tutorial.js === */
 /* ---------------- 试剑：第一次开局时在山门前走一遍，走完再看路线图 ---------------- */
 const K = (pc, tc) => Input.touch ? tc : pc;
+/* 每一步：id、提示 t、开始时 init、做到了 done；fail 返回 null（没失败）或 { retryTo: 退回哪一步的 id, hint?: 提示 } */
 const TUT = [
-  { t: () => K('<kbd>W A S D</kbd> 走动，<kbd>鼠标</kbd> 转视角', '拖动左下摇杆走动，滑动屏幕转视角'), init() { Tut.p0 = Pl.pos.clone(); }, done: () => Pl.pos.distanceTo(Tut.p0) > 7 },
-  { t: () => K('<kbd>左键</kbd> 或 <kbd>J</kbd> 连砍木人', '连点「斩」砍木人') + ` · ${Math.min(5, Tut.hits)}/5`, init() { Tut.hits = 0; Tut.foe = tutFoe('dummy'); }, done: () => Tut.hits >= 5 },
-  { t: () => K('<kbd>空格</kbd> 闪避，闪避时刀枪不入', '点「闪」闪避，闪避时刀枪不入'), init() { Tut.dodged = false; }, done: () => Tut.dodged },
-  { t: () => K('陪练出手前刀上一闪寒光，此时按 <kbd>F</kbd> 弹反', '陪练刀上一闪寒光时点「格」弹反'), init() { tutDrop(); Tut.foe = tutFoe('spar'); Tut.p0n = Pl.parries; }, done: () => Pl.parries > Tut.p0n,
-    fail: () => Pl.parries <= Tut.p0n && Tut.foe && Tut.foe.state === 'dead' ? (UI.toast('先等他出手，寒光一闪再按格', 2.4), 3) : -1 },
-  { t: () => K('弹开后陪练露出破绽，靠近按 <kbd>F</kbd> 处决', '弹开后陪练露出破绽，靠近点「决」处决'), init() { }, done: () => !Tut.foe || Tut.foe.state === 'dead', fail: () => Tut.foe && Tut.foe.state !== 'dead' && Tut.foe.stun <= 0 && Tut.foe.state !== 'stagger' ? 3 : -1 },
-  { t: () => K('按住 <kbd>K</kbd> 或右键蓄满再松开，使出「破山」', '按住「旋」蓄满再松开，使出「破山」'), init() { tutDrop(); Tut.foe = tutFoe('dummy'); }, done: () => Pl.state === 'attack' && Pl.atkDef === PISHAN },
+  { id: 'move', t: () => K('<kbd>W A S D</kbd> 走动，<kbd>鼠标</kbd> 转视角', '拖动左下摇杆走动，滑动屏幕转视角'), init() { Tut.p0 = Pl.pos.clone(); }, done: () => Pl.pos.distanceTo(Tut.p0) > 7 },
+  { id: 'combo', t: () => K('<kbd>左键</kbd> 或 <kbd>J</kbd> 连砍木人', '连点「斩」砍木人') + ` · ${Math.min(5, Tut.hits)}/5`, init() { Tut.hits = 0; Tut.foe = tutFoe('dummy'); }, done: () => Tut.hits >= 5 },
+  { id: 'dodge', t: () => K('<kbd>空格</kbd> 闪避，闪避时刀枪不入', '点「闪」闪避，闪避时刀枪不入'), init() { Tut.dodged = false; }, done: () => Tut.dodged },
+  { id: 'parry', t: () => K('陪练出手前刀上一闪寒光，此时按 <kbd>F</kbd> 弹反', '陪练刀上一闪寒光时点「格」弹反'), init() { tutDrop(); Tut.foe = tutFoe('spar'); Tut.p0n = Pl.parries; }, done: () => Pl.parries > Tut.p0n,
+    fail: () => Pl.parries <= Tut.p0n && Tut.foe && Tut.foe.state === 'dead' ? { retryTo: 'parry', hint: '先等他出手，寒光一闪再按格' } : null },
+  { id: 'exec', t: () => K('弹开后陪练露出破绽，靠近按 <kbd>F</kbd> 处决', '弹开后陪练露出破绽，靠近点「决」处决'), init() { }, done: () => !Tut.foe || Tut.foe.state === 'dead', fail: () => Tut.foe && Tut.foe.state !== 'dead' && Tut.foe.stun <= 0 && Tut.foe.state !== 'stagger' ? { retryTo: 'parry' } : null },
+  { id: 'charge', t: () => K('按住 <kbd>K</kbd> 或右键蓄满再松开，使出「破山」', '按住「旋」蓄满再松开，使出「破山」'), init() { tutDrop(); Tut.foe = tutFoe('dummy'); }, done: () => Pl.state === 'attack' && Pl.atkDef === PISHAN },
 ];
 const Tut = { on: false, i: 0, t: 0 };
 function tutFoe(kind) {
@@ -4498,8 +4504,8 @@ Tut.end = function (done, quiet) {
   setTimeout(() => { if (G.state === 'playing' && !Run.node) Run.showMap(); }, done ? 1600 : 300);
 };
 Tut.update = function (dt) {
-  const s = TUT[this.i]; if (!s) return; this.t += dt; const f = s.fail && s.fail();
-  if (f >= 0) { this.i = f - 1; this.next(); return; }
+  const s = TUT[this.i]; if (!s) return; this.t += dt; const f = s.fail ? s.fail() : null;
+  if (f) { const to = TUT.findIndex(x => x.id === f.retryTo); if (f.hint) UI.toast(f.hint, 2.4); this.i = (to >= 0 ? to : this.i) - 1; this.next(); return; }
   if (this.t > .4 && s.done()) { this.next(); return; }
   const h = s.t(); if (this.html !== h) { this.html = h; $('tutT').innerHTML = h; } UI.set('tutN', `试剑 ${cnNum(this.i + 1)} / ${cnNum(TUT.length)}`);
 };
@@ -4569,11 +4575,11 @@ const Game = {
       // 过场至少停留两秒半，让章名和题记读得完；第一次开局先在山门前试剑
       setTimeout(() => {
         travelHide();
-        if (ci === 0 && !resume && !Save.load().tut && !window.__noTut) { $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; canvas.focus(); UI.banner(ch.n, ch.idx + ' · ' + ch.sub, ''); Snd.gong(); Tut.begin(); }
+        if (ci === 0 && !resume && !Save.load().tut && !dbg('noTut')) { $('hud').hidden = false; $('touch').hidden = !Input.touch; G.state = 'playing'; canvas.focus(); UI.banner(ch.n, ch.idx + ' · ' + ch.sub, ''); Snd.gong(); Tut.begin(); }
         else Run.showMap();
-      }, window.__instant ? 0 : Math.max(0, 2600 - (performance.now() - t0)));
+      }, dbg('instant') ? 0 : Math.max(0, 2600 - (performance.now() - t0)));
     };
-    if (window.__instant) go(); else setTimeout(go, 650);
+    if (dbg('instant')) go(); else setTimeout(go, 650);
   },
   pause() { if (G.state !== 'playing') return; G.state = 'paused'; UI.perkList('pausePerks'); $('pause').hidden = false; unlock(); },
   resume() { if (G.state !== 'paused') return; $('pause').hidden = true; G.state = 'playing'; canvas.focus(); },
@@ -4628,7 +4634,7 @@ function handleKeys() {
 
 let last = 0, slowAcc = 0, fN = 0, fT = 0;
 function frame(now) {
-  if (!window.__manual) requestAnimationFrame(frame);
+  if (!dbg('manual')) requestAnimationFrame(frame);
   let rdt = Math.min(.05, (now - last) / 1000); last = now; if (!(rdt > 0)) rdt = .001;
   GFX.time.value += rdt; handleKeys(); let dt = 0; const U = GFX.final.uniforms;
   if (G.state === 'playing') {
@@ -4650,14 +4656,14 @@ function frame(now) {
   const low = Pl.hp / Pl.maxHp < .3 && Pl.state !== 'dead' && G.state !== 'title' ? (.3 + Math.sin(GFX.time.value * 5) * .12) : 0;
   U.uHurt.value = Math.max(Pl.hurtV * .75, low); U.uFlash.value = Math.max(0, U.uFlash.value - rdt * 1.6); U.uFocus.value = damp(U.uFocus.value, G.state === 'playing' && G.enemyTS < 1 && Pl.state !== 'dead' ? 1 : 0, 8, rdt);
   FX.updateNums(G.state === 'playing' ? rdt : 0, GFX.camera, root.clientWidth, root.clientHeight);
-  if (!window.__norender && G.state !== 'travel') GFX.render(); Input.endFrame();
+  if (!dbg('noRender') && G.state !== 'travel') GFX.render(); Input.endFrame();
   // 自适应画质
   fN++; fT += rdt; if (fT >= 1) { const fps = fN / fT; fN = 0; fT = 0; if (G.state === 'playing' && fps < 38) { if (++slowAcc >= 3 && GFX.quality > 0) { GFX.quality--; applyQuality(); slowAcc = 0; UI.toast('画面已自动调低，可在暂停菜单更改', 3); } } else slowAcc = 0; }
 }
 
 function bindUI() {
-  $('btnStart').onclick = () => { if (Save.rl() && !window.__instant && !confirm('重开会放弃存着的那一局（剑魄和藏经阁不受影响），确定吗？')) return; Game.start(); }; $('btnCont').onclick = () => Game.cont();
-  $('btnResume').onclick = () => Game.resume(); $('btnRestart').onclick = () => { if (!window.__instant && !confirm('放弃这一局？剑魄照样留着。')) return; $('pause').hidden = true; Game.over(false); };
+  $('btnStart').onclick = () => { if (Save.rl() && !dbg('instant') && !confirm('重开会放弃存着的那一局（剑魄和藏经阁不受影响），确定吗？')) return; Game.start(); }; $('btnCont').onclick = () => Game.cont();
+  $('btnResume').onclick = () => Game.resume(); $('btnRestart').onclick = () => { if (!dbg('instant') && !confirm('放弃这一局？剑魄照样留着。')) return; $('pause').hidden = true; Game.over(false); };
   $('btnRmLeave').onclick = () => Game.home(); $('evGo').onclick = () => Run.closeEvent();
   $('btnAgain').onclick = () => Game.start(); $('btnHome').onclick = () => Game.home(); $('btnShopClose').onclick = () => Game.closeShop();
   $('btnIlShop').onclick = () => Game.openShop(); $('btnIlGo').onclick = () => Game.nextChapter();
@@ -4674,7 +4680,7 @@ function bindUI() {
   setupPointer(canvas, () => G.state === 'playing' && !Input.touch); setupTouchUI();
 }
 async function boot() {
-  const q0 = setting('q'); if (typeof window.__QUALITY !== 'number') GFX.quality = q0 >= 0 ? q0 : (matchMedia('(pointer:coarse)').matches || Math.min(innerWidth, innerHeight) < 500 ? 1 : 2);
+  const q0 = setting('q'); if (typeof dbg('quality') !== 'number') GFX.quality = q0 >= 0 ? q0 : (matchMedia('(pointer:coarse)').matches || Math.min(innerWidth, innerHeight) < 500 ? 1 : 2);
   bindUI(); showBest();
   try { if (document.fonts && document.fonts.load) await Promise.race([Promise.all([document.fonts.load('80px "Ma Shan Zheng"', '青云剑宗试坪'), document.fonts.load('900 20px "Noto Serif SC"', '0123456789')]), new Promise(r => setTimeout(r, 2500))]); } catch (_) {}
   await new Promise(r => setTimeout(r, 30));
@@ -4683,7 +4689,7 @@ async function boot() {
     GFX.renderer.compile(GFX.scene, GFX.camera);
     last = performance.now(); requestAnimationFrame(frame);
     $('btnStart').disabled = false; $('loading').hidden = true;
-    window.__game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise, Tut, TERR, gH, Run, NODE, EVENTS, genMap, genWaves, rareCards, ascApply, ASC };
+    if (DBG) DBG.game = { G, Pl, Game, Input, GFX, Cam, spawnEnemy, UI, ET, frame, FX, gainXp, Orbs, setSwordTier, World, Save, CHAPTERS, MAPS, killEnemy, damageEnemy, hurtPlayer, SK, ULT, PERKS, SCHOOLS, reso, learnSkill, offerCards, findExec, startExec, parriedBy, breakPoise, Tut, TERR, gH, Run, NODE, EVENTS, genMap, genWaves, rareCards, ascApply, ASC };
   } catch (err) { console.error(err && err.stack || err); $('loading').textContent = '无法启动 3D 画面：' + (err && err.message ? err.message : err) + '。请换用支持 WebGL 的桌面浏览器。'; }
 }
 boot();

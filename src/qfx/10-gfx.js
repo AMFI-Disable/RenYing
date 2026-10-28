@@ -1,5 +1,5 @@
 /* ---------------- 渲染器 / 后期 / 材质 ---------------- */
-const GFX = { time: { value: 0 }, quality: typeof window.__QUALITY === 'number' ? window.__QUALITY : 2 };
+const GFX = { time: { value: 0 }, quality: typeof dbg('quality') === 'number' ? dbg('quality') : 2 };
 const SUN_DIR = new V3(-.72, .36, -.6).normalize();
 const FOG_COL = new T.Color(0xb9a2a8);
 /* 颜色管线（一处说清）：渲染器输出 sRGB；贴图里的颜色一律当 sRGB（canvasTex 默认打上 sRGBEncoding，法线、星点这类数据贴图传 false）；

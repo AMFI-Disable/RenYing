@@ -1,5 +1,10 @@
 const T = THREE, V3 = T.Vector3, PI = Math.PI, TAU = PI * 2;
 const $ = id => document.getElementById(id);
+/* 调试开关：默认全关。只有页面加载前设了 window.__QFX_DEBUG = { ... } 才生效（测试、截图用），平常玩家碰不到：
+   quality 画质档（0–3）、noWorld 不建地图只铺地面、cam 固定镜头 { p, t, fov }、manual 不自动跑帧、noRender 不画、
+   instant 跳过过场和确认框、noTut 不进试剑。生效时把内部对象挂到 window.__QFX_DEBUG.game 上 */
+const DBG = window.__QFX_DEBUG && typeof window.__QFX_DEBUG === 'object' ? window.__QFX_DEBUG : null;
+const dbg = k => DBG ? DBG[k] : undefined;
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const sat = v => v < 0 ? 0 : v > 1 ? 1 : v;
 const lerp = (a, b, t) => a + (b - a) * t;
