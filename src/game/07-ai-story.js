@@ -534,31 +534,34 @@ function drawMons(mons, shots) {
 function drawForestHUD() {
   const S = STAGE, F = FOREST; if (!S || S.boss) return;
   if (isRaid()) drawHUDRaid();
-  const fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + 84, w = fs * 12;
+  const fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + 84;
   const left = F.toSpawn.length + F.mons.filter(m => m.hp > 0).length;
   const perkCnt = (M.towerPerks || []).length;
   const rows = [
     [`第 ${Math.max(1, F.wave)} / ${S.waves.length} 波妖潮`, F.breakT > 0 ? '喘息休整' : `尚余 ${left} 妖`],
     ['全队已斩妖物', `${F.total} 只`],
     ['同袍共享秘卷', `${perkCnt} 卷`]
-  ];
+  ].map(r => r.map(cvT));   // 画布上的字 i18n.js 翻不到，英文界面在这里查词条
+  const title = cvT(F.storyTitle || `关卡 ${S.id} · ${S.C.name}`);
   ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
+  const w = Math.min(x - 24, Math.max(fs * 12, ctx.measureText(title).width, ...rows.map(([n, v]) => ctx.measureText(n).width + ctx.measureText(v).width + fs * 1.5)));
   ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(x - w - 12, y - 10, w + 24, (rows.length + 1) * fs * 1.65 + 12);
   ctx.strokeStyle = 'rgba(233,196,106,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(x - w - 12, y - 10, w + 24, (rows.length + 1) * fs * 1.65 + 12);
-  ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(`${F.storyTitle || (`关卡 ${S.id} · ${S.C.name}`)}`, x - w, y);
+  ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(title, x - w, y);
   rows.forEach(([n, v], i) => { ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText(n, x - w, y + (i + 1) * fs * 1.65); ctx.textAlign = 'right'; ctx.fillStyle = '#efe8d8'; ctx.fillText(v, x, y + (i + 1) * fs * 1.65); });
   // 底部显示当前侠客斩妖剧情台词条幅
-  if (F.storyLine) {
-    const bw = Math.min(W - 60, 760), bx = (W - bw) / 2, by = H - 54;
+  if (F.storyLine) {   // 英文台词比中文长：缩字号，还放不下就折成两三行，条幅往上长
+    const bw = Math.min(W - 60, 760), bx = (W - bw) / 2;
+    const fit = cvFit(cvT(F.storyLine), bw - 24, Math.max(12, fs - 1), s => `600 ${s}px ${BODY_FONT}`), lh = fit.size * 1.35;
+    const bh = 36 + (fit.lines.length - 1) * lh, by = H - 18 - bh;
     ctx.fillStyle = 'rgba(10,12,24,0.82)';
-    ctx.fillRect(bx, by, bw, 36);
+    ctx.fillRect(bx, by, bw, bh);
     ctx.strokeStyle = 'rgba(233,196,106,0.55)';
-    ctx.strokeRect(bx, by, bw, 36);
+    ctx.strokeRect(bx, by, bw, bh);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = `600 ${Math.max(12, fs - 1)}px ${BODY_FONT}`;
     ctx.fillStyle = '#ffd166';
-    ctx.fillText(F.storyLine, W / 2, by + 18);
+    fit.lines.forEach((l, i) => ctx.fillText(l, W / 2, by + 18 + i * lh));
   }
   ctx.restore();
 }

@@ -3,6 +3,18 @@ const EMO_ICON = {'⚔':'战','🔥':'烈','🌲':'关','🥋':'练','🌱':'初
 const EMO_RE = new RegExp('(' + Object.keys(EMO_ICON).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')️?\\s?', 'gu');
 const EMO_STRIP = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]\s?/gu;
 function stripEmo(t) { return typeof t === 'string' ? t.replace(EMO_STRIP, '').trim() : t; }
+// 画在画布上的字不经过 DOM，i18n.js 翻不到：英文界面画之前自己查一遍词条
+function cvT(s) { return s && window.I18N && I18N.getLang() === 'en' ? I18N.t(s) : s; }
+// 一行字放不下 maxW：先缩字号（不小于 12px，HUD 审计的下限），还放不下就按词折行。font(s) 给出字号 s 时的 ctx.font
+function cvFit(text, maxW, size, font) {
+  for (let s = Math.round(size); s >= 12; s--) { ctx.font = font(s); if (ctx.measureText(text).width <= maxW) return { size: s, lines: [text] }; }
+  ctx.font = font(12);
+  const parts = /\s/.test(text) ? text.split(/(\s+)/) : [...text], lines = [];
+  let cur = '';
+  for (const w of parts) { if (cur.trim() && ctx.measureText(cur + w).width > maxW) { lines.push(cur.trim()); cur = w.trimStart(); } else cur += w; }
+  if (cur.trim()) lines.push(cur.trim());
+  return { size: 12, lines };
+}
 function sealEl(ch, label) {   // 一枚印章图标；星星和在线状态画成圆点；label 是要直接刻进印章的 2-4 个字
   const e = document.createElement('i'); e.setAttribute('aria-hidden', 'true');
   if (ch === 'starf' || ch === 'star') e.className = 'sdot' + (ch === 'starf' ? ' f' : '');

@@ -756,9 +756,17 @@ function drawAnnounce() {
   const sc = a.style === 'ko' ? lerp(2.2, 1, Math.pow(inK, 0.5)) : lerp(1.4, 1, inK);
   const cyRatio = a.style === 'super' ? 0.3 : (creditT > 0 ? 0.54 : 0.42);
   ctx.save(); ctx.translate(W / 2, H * cyRatio); ctx.scale(sc, sc); ctx.globalAlpha = al;
-  const size = H * (a.style === 'ko' ? 0.26 : a.style === 'super' ? 0.12 : 0.13);
+  // 英文界面：大字和副标题查词条（KO 那一枚方印只放得下一个字，不翻）；译文长了就缩字号、副标题折行
+  const lang = window.I18N ? I18N.getLang() : 'zh';
+  if (a.lang !== lang) { a.lang = lang; a.tText = a.style === 'ko' ? a.text : cvT(a.text); a.tSub = cvT(a.sub); }
+  const text = a.tText, maxW = W * 0.9;
+  let size = H * (a.style === 'ko' ? 0.26 : a.style === 'super' ? 0.12 : 0.13);
   ctx.font = `${Math.round(size)}px ${TITLE_FONT}`;
-  const tw = ctx.measureText(a.text).width;
+  if (a.style !== 'ko' && ctx.measureText(text).width > maxW) { size *= maxW / ctx.measureText(text).width; ctx.font = `${Math.round(size)}px ${TITLE_FONT}`; }
+  const tw = ctx.measureText(text).width;
+  const subFit = a.tSub ? cvFit(a.tSub, maxW, Math.max(12, Math.round(H * (a.style === 'super' ? 0.12 : 0.13) * 0.27)), s => `${s}px ${BODY_FONT}`) : null;
+  const subW = subFit ? Math.max(...subFit.lines.map(l => ctx.measureText(l).width)) : 0, subH = subFit ? subFit.size * 1.3 : 0;
+  ctx.font = `${Math.round(size)}px ${TITLE_FONT}`;
   if (a.style === 'ko') {
     ctx.fillStyle = '#b8392e'; ctx.rotate(-0.04);
     ctx.fillRect(-size * 0.62, -size * 0.62, size * 1.24, size * 1.24);
@@ -768,8 +776,8 @@ function drawAnnounce() {
     // 墨迹笔刷底
     ctx.fillStyle = 'rgba(6,5,14,0.82)';
     ctx.beginPath();
-    const w = Math.max(tw, a.sub ? ctx.measureText(a.sub).width : 0) + size * 1.2;
-    const h = a.sub ? size * 1.35 : size * 0.95;
+    const w = Math.min(W, Math.max(tw, subW) + size * 1.2);
+    const h = !a.sub ? size * 0.95 : lang === 'en' ? size * 1.15 + subFit.lines.length * subH : size * 1.35 + (subFit.lines.length - 1) * subH;
     ctx.moveTo(-w / 2, -h / 2);
     for (let i = 0; i <= 12; i++) ctx.lineTo(-w / 2 + w * i / 12, -h / 2 + (hash(a.seed + i) - 0.5) * size * 0.14);
     for (let i = 12; i >= 0; i--) ctx.lineTo(-w / 2 + w * i / 12 + (i === 12 ? size * 0.25 : 0), h / 2 + (hash(a.seed + i + 30) - 0.5) * size * 0.14);
@@ -777,12 +785,15 @@ function drawAnnounce() {
     ctx.fillStyle = a.style === 'go' ? '#ff8a78' : a.style === 'super' ? '#fff' : '#efe8d8';
   }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const textY = a.sub ? -size * 0.14 : size * 0.05;
-  ctx.fillText(a.text, 0, textY);
-  if (a.sub) {
-    ctx.font = `${Math.max(12, Math.round(size * 0.27))}px ${BODY_FONT}`;
+  // 中文照旧：大字偏上、副标题压在下沿；英文的标题字体上下伸得长，副标题整块挪到大字下面
+  const extra = subFit ? (subFit.lines.length - (lang === 'en' ? 0 : 1)) * subH : 0;
+  const textY = lang === 'en' && subFit ? -(size * 0.9 + extra) / 2 + size * 0.42 : (a.sub ? -size * 0.14 : size * 0.05) - extra / 2;
+  const subY = lang === 'en' && subFit ? textY + size * 0.5 + subH * 0.55 : size * 0.24 - extra / 2;
+  ctx.fillText(text, 0, textY);
+  if (subFit) {
+    ctx.font = `${subFit.size}px ${BODY_FONT}`;
     ctx.fillStyle = '#efe8d8';
-    ctx.fillText(a.sub, 0, size * 0.24);
+    subFit.lines.forEach((l, i) => ctx.fillText(l, 0, subY + i * subH));
   }
   ctx.restore();
 }

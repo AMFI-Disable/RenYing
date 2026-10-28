@@ -149,6 +149,17 @@
     [/^全员共享斩妖赏金 \+(\d+) 墨锭！$/, (m0, g) => `Everyone shares a +${g} Ink bounty!`],
     [/^(?:🎉 )?宿命通关奖励：已解锁【(.+?)】专属皮肤「(.+?)」！$/, (m0, h, k) => `Destiny reward: unlocked ${lookup(h) || h}'s exclusive skin “${lookup(k) || k}”!`],
     [/^比分 (\d+) : (\d+)，再磨一磨剑$/, (m0, a, b) => `Score ${a} : ${b}. Sharpen your sword and try again`],
+    // 守关关卡里画在画布上的字（src/game/07-ai-story.js、22-modes.js 的同袍斩妖）：大字、HUD、条幅
+    [/^第 (\d+) \/ (\d+) 波妖潮$/, (m0, a, b) => `Wave ${a} / ${b}`],
+    [/^尚余 (\d+) 妖$/, (m0, n) => `${n} left`],
+    [/^(\d+) 只$/, (m0, n) => n],
+    [/^(\d+) 卷$/, (m0, n) => n],
+    [/^关卡 (\d+\.\d+) · (.+)$/, (m0, id, n) => `Stage ${id} · ${lookup(n) || n}`],
+    [/^终幕魔首降临 · (.+)$/, (m0, n) => `The final boss arrives · ${lookup(n) || n}`],
+    [/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
+    [/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
+    [/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
+    [/^全队共享秘卷：(.+)$/, (m0, x) => `Shared scrolls: ${x.split('、').map(n => { const m = n.match(/^「(.+)」$/); return m ? `“${lookup(m[1]) || m[1]}”` : n; }).join(', ')}`],
     // 天魔讨伐（src/game/22-tianmo.js）：页面、首页小卡片、出战提示和结算
     [/^第 (\d+) 代天魔$/, (m0, n) => `Demon · Gen ${n}`],
     [/^第 (\d+) 代天魔 · (.+)$/, (m0, n, h) => `Demon · Gen ${n} · ${lookup(h) || h}`],

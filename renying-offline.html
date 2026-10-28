@@ -5517,6 +5517,16 @@ const PATTERNS_EN = [
 [/^全员共享斩妖赏金 \+(\d+) 墨锭！$/, (m0, g) => `Everyone shares a +${g} Ink bounty!`],
 [/^(?:🎉 )?宿命通关奖励：已解锁【(.+?)】专属皮肤「(.+?)」！$/, (m0, h, k) => `Destiny reward: unlocked ${lookup(h) || h}'s exclusive skin “${lookup(k) || k}”!`],
 [/^比分 (\d+) : (\d+)，再磨一磨剑$/, (m0, a, b) => `Score ${a} : ${b}. Sharpen your sword and try again`],
+[/^第 (\d+) \/ (\d+) 波妖潮$/, (m0, a, b) => `Wave ${a} / ${b}`],
+[/^尚余 (\d+) 妖$/, (m0, n) => `${n} left`],
+[/^(\d+) 只$/, (m0, n) => n],
+[/^(\d+) 卷$/, (m0, n) => n],
+[/^关卡 (\d+\.\d+) · (.+)$/, (m0, id, n) => `Stage ${id} · ${lookup(n) || n}`],
+[/^终幕魔首降临 · (.+)$/, (m0, n) => `The final boss arrives · ${lookup(n) || n}`],
+[/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
+[/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
+[/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
+[/^全队共享秘卷：(.+)$/, (m0, x) => `Shared scrolls: ${x.split('、').map(n => { const m = n.match(/^「(.+)」$/); return m ? `“${lookup(m[1]) || m[1]}”` : n; }).join(', ')}`],
 [/^第 (\d+) 代天魔$/, (m0, n) => `Demon · Gen ${n}`],
 [/^第 (\d+) 代天魔 · (.+)$/, (m0, n, h) => `Demon · Gen ${n} · ${lookup(h) || h}`],
 [/^剩 (\d+)% 血 · (\d+) 人参战(?: · (\d+) 人正在出战)?$/, (m0, p, n, f) => `${p}% HP left · ${n} fighters${f ? ` · ${f} fighting now` : ''}`],
@@ -7554,6 +7564,14 @@ const UI_COPY_EN = {
 "重整旗鼓 · 再战同袍肉鸽": "Regroup · Play Co-op Roguelike again",
 "剑阁大捷！": "Sword Pavilion cleared!",
 "试炼止步": "Trial over",
+"喘息休整": "Catching breath",
+"全队已斩妖物": "Demons slain",
+"同袍共享秘卷": "Shared scrolls",
+"同袍斩妖开启": "The hunt begins",
+"群妖肃清 · 决战六技融魂魔首！": "Demons cleared · Face the six-art fused boss!",
+"力竭": "Exhausted",
+"斩妖破关": "Stage Cleared",
+"全员收益共享": "Rewards shared by all",
 "斩杀": "Final blow",
 "伤害榜": "Damage Ranking",
 "最近战报": "Recent Battles",
@@ -9461,6 +9479,16 @@ const EMO_ICON = {'⚔':'战','🔥':'烈','🌲':'关','🥋':'练','🌱':'初
 const EMO_RE = new RegExp('(' + Object.keys(EMO_ICON).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')️?\\s?', 'gu');
 const EMO_STRIP = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]\s?/gu;
 function stripEmo(t) { return typeof t === 'string' ? t.replace(EMO_STRIP, '').trim() : t; }
+function cvT(s) { return s && window.I18N && I18N.getLang() === 'en' ? I18N.t(s) : s; }
+function cvFit(text, maxW, size, font) {
+for (let s = Math.round(size); s >= 12; s--) { ctx.font = font(s); if (ctx.measureText(text).width <= maxW) return { size: s, lines: [text] }; }
+ctx.font = font(12);
+const parts = /\s/.test(text) ? text.split(/(\s+)/) : [...text], lines = [];
+let cur = '';
+for (const w of parts) { if (cur.trim() && ctx.measureText(cur + w).width > maxW) { lines.push(cur.trim()); cur = w.trimStart(); } else cur += w; }
+if (cur.trim()) lines.push(cur.trim());
+return { size: 12, lines };
+}
 function sealEl(ch, label) {   // 一枚印章图标；星星和在线状态画成圆点；label 是要直接刻进印章的 2-4 个字
 const e = document.createElement('i'); e.setAttribute('aria-hidden', 'true');
 if (ch === 'starf' || ch === 'star') e.className = 'sdot' + (ch === 'starf' ? ' f' : '');
@@ -11776,30 +11804,33 @@ ctx.restore();
 function drawForestHUD() {
 const S = STAGE, F = FOREST; if (!S || S.boss) return;
 if (isRaid()) drawHUDRaid();
-const fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + 84, w = fs * 12;
+const fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + 84;
 const left = F.toSpawn.length + F.mons.filter(m => m.hp > 0).length;
 const perkCnt = (M.towerPerks || []).length;
 const rows = [
 [`第 ${Math.max(1, F.wave)} / ${S.waves.length} 波妖潮`, F.breakT > 0 ? '喘息休整' : `尚余 ${left} 妖`],
 ['全队已斩妖物', `${F.total} 只`],
 ['同袍共享秘卷', `${perkCnt} 卷`]
-];
+].map(r => r.map(cvT));   // 画布上的字 i18n.js 翻不到，英文界面在这里查词条
+const title = cvT(F.storyTitle || `关卡 ${S.id} · ${S.C.name}`);
 ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
+const w = Math.min(x - 24, Math.max(fs * 12, ctx.measureText(title).width, ...rows.map(([n, v]) => ctx.measureText(n).width + ctx.measureText(v).width + fs * 1.5)));
 ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(x - w - 12, y - 10, w + 24, (rows.length + 1) * fs * 1.65 + 12);
 ctx.strokeStyle = 'rgba(233,196,106,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(x - w - 12, y - 10, w + 24, (rows.length + 1) * fs * 1.65 + 12);
-ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(`${F.storyTitle || (`关卡 ${S.id} · ${S.C.name}`)}`, x - w, y);
+ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(title, x - w, y);
 rows.forEach(([n, v], i) => { ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(239,232,216,0.7)'; ctx.fillText(n, x - w, y + (i + 1) * fs * 1.65); ctx.textAlign = 'right'; ctx.fillStyle = '#efe8d8'; ctx.fillText(v, x, y + (i + 1) * fs * 1.65); });
-if (F.storyLine) {
-const bw = Math.min(W - 60, 760), bx = (W - bw) / 2, by = H - 54;
+if (F.storyLine) {   // 英文台词比中文长：缩字号，还放不下就折成两三行，条幅往上长
+const bw = Math.min(W - 60, 760), bx = (W - bw) / 2;
+const fit = cvFit(cvT(F.storyLine), bw - 24, Math.max(12, fs - 1), s => `600 ${s}px ${BODY_FONT}`), lh = fit.size * 1.35;
+const bh = 36 + (fit.lines.length - 1) * lh, by = H - 18 - bh;
 ctx.fillStyle = 'rgba(10,12,24,0.82)';
-ctx.fillRect(bx, by, bw, 36);
+ctx.fillRect(bx, by, bw, bh);
 ctx.strokeStyle = 'rgba(233,196,106,0.55)';
-ctx.strokeRect(bx, by, bw, 36);
+ctx.strokeRect(bx, by, bw, bh);
 ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
-ctx.font = `600 ${Math.max(12, fs - 1)}px ${BODY_FONT}`;
 ctx.fillStyle = '#ffd166';
-ctx.fillText(F.storyLine, W / 2, by + 18);
+fit.lines.forEach((l, i) => ctx.fillText(l, W / 2, by + 18 + i * lh));
 }
 ctx.restore();
 }
@@ -18546,9 +18577,16 @@ const inK = clamp(a.t / 0.15, 0, 1), outK = clamp((a.dur - a.t) / 0.25, 0, 1), a
 const sc = a.style === 'ko' ? lerp(2.2, 1, Math.pow(inK, 0.5)) : lerp(1.4, 1, inK);
 const cyRatio = a.style === 'super' ? 0.3 : (creditT > 0 ? 0.54 : 0.42);
 ctx.save(); ctx.translate(W / 2, H * cyRatio); ctx.scale(sc, sc); ctx.globalAlpha = al;
-const size = H * (a.style === 'ko' ? 0.26 : a.style === 'super' ? 0.12 : 0.13);
+const lang = window.I18N ? I18N.getLang() : 'zh';
+if (a.lang !== lang) { a.lang = lang; a.tText = a.style === 'ko' ? a.text : cvT(a.text); a.tSub = cvT(a.sub); }
+const text = a.tText, maxW = W * 0.9;
+let size = H * (a.style === 'ko' ? 0.26 : a.style === 'super' ? 0.12 : 0.13);
 ctx.font = `${Math.round(size)}px ${TITLE_FONT}`;
-const tw = ctx.measureText(a.text).width;
+if (a.style !== 'ko' && ctx.measureText(text).width > maxW) { size *= maxW / ctx.measureText(text).width; ctx.font = `${Math.round(size)}px ${TITLE_FONT}`; }
+const tw = ctx.measureText(text).width;
+const subFit = a.tSub ? cvFit(a.tSub, maxW, Math.max(12, Math.round(H * (a.style === 'super' ? 0.12 : 0.13) * 0.27)), s => `${s}px ${BODY_FONT}`) : null;
+const subW = subFit ? Math.max(...subFit.lines.map(l => ctx.measureText(l).width)) : 0, subH = subFit ? subFit.size * 1.3 : 0;
+ctx.font = `${Math.round(size)}px ${TITLE_FONT}`;
 if (a.style === 'ko') {
 ctx.fillStyle = '#b8392e'; ctx.rotate(-0.04);
 ctx.fillRect(-size * 0.62, -size * 0.62, size * 1.24, size * 1.24);
@@ -18557,8 +18595,8 @@ ctx.fillStyle = '#fbeee0';
 } else {
 ctx.fillStyle = 'rgba(6,5,14,0.82)';
 ctx.beginPath();
-const w = Math.max(tw, a.sub ? ctx.measureText(a.sub).width : 0) + size * 1.2;
-const h = a.sub ? size * 1.35 : size * 0.95;
+const w = Math.min(W, Math.max(tw, subW) + size * 1.2);
+const h = !a.sub ? size * 0.95 : lang === 'en' ? size * 1.15 + subFit.lines.length * subH : size * 1.35 + (subFit.lines.length - 1) * subH;
 ctx.moveTo(-w / 2, -h / 2);
 for (let i = 0; i <= 12; i++) ctx.lineTo(-w / 2 + w * i / 12, -h / 2 + (hash(a.seed + i) - 0.5) * size * 0.14);
 for (let i = 12; i >= 0; i--) ctx.lineTo(-w / 2 + w * i / 12 + (i === 12 ? size * 0.25 : 0), h / 2 + (hash(a.seed + i + 30) - 0.5) * size * 0.14);
@@ -18566,12 +18604,14 @@ ctx.closePath(); ctx.fill();
 ctx.fillStyle = a.style === 'go' ? '#ff8a78' : a.style === 'super' ? '#fff' : '#efe8d8';
 }
 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-const textY = a.sub ? -size * 0.14 : size * 0.05;
-ctx.fillText(a.text, 0, textY);
-if (a.sub) {
-ctx.font = `${Math.max(12, Math.round(size * 0.27))}px ${BODY_FONT}`;
+const extra = subFit ? (subFit.lines.length - (lang === 'en' ? 0 : 1)) * subH : 0;
+const textY = lang === 'en' && subFit ? -(size * 0.9 + extra) / 2 + size * 0.42 : (a.sub ? -size * 0.14 : size * 0.05) - extra / 2;
+const subY = lang === 'en' && subFit ? textY + size * 0.5 + subH * 0.55 : size * 0.24 - extra / 2;
+ctx.fillText(text, 0, textY);
+if (subFit) {
+ctx.font = `${subFit.size}px ${BODY_FONT}`;
 ctx.fillStyle = '#efe8d8';
-ctx.fillText(a.sub, 0, size * 0.24);
+subFit.lines.forEach((l, i) => ctx.fillText(l, 0, subY + i * subH));
 }
 ctx.restore();
 }
