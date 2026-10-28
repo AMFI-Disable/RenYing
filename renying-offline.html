@@ -3924,7 +3924,6 @@ body.kb-only.has-nav .kb-hint { display: block; }
           <button class="m2-way" id="btnRougeGoLocal" type="button" data-kb-default><b>同屏/单机集结</b><span id="modalRougeLocalDesc">1P 键盘主控，2P/3P 随时按键参战或由天道同袍协战</span></button>
           <button class="m2-way tn-online" id="btnRougeGoMatch" type="button"><b>全服匹配集结</b><span>全服招募同袍侠士，共享秘卷合力破魔</span></button>
           <button class="m2-way tn-online" id="btnRougeGoOnline" type="button"><b>好友共斗房间</b><span>建房拿到房间号，呼朋引伴共讨魔首</span></button>
-          <button class="m2-way tn-online" id="btnRougeGoWorld" type="button"><b>全服肉鸽 · 随时加入</b><span>全服共享秘卷，3 人开天道 Boss 掉星座皮肤</span></button>
         </div>
         <div class="m2-foot"><button class="mm-link" id="btnRougeReroll" type="button">🎲 重新卜算当期融魂首领（切换三侠六技）</button></div>
       </div>
@@ -25360,23 +25359,9 @@ ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline =
 ctx.fillText(`${cvT('妖王 · 全线共讨')}  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
 }
 }
-function worldEnter(line, skipBP) {
+function worldEnter(line) {
 WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
-if (skipBP) {
-let heroIdx = menuHeroId >= 0 ? menuHeroId : 0;   // 用当前主菜单选中的侠客
-const avail = availList();
-if (!avail.includes(heroIdx)) {
-try {
-const last = localStorage.getItem('renying-world-last-hero');
-const lastIdx = last ? +last : -1;
-if (lastIdx >= 0 && lastIdx < CHARS.length && avail.includes(lastIdx)) heroIdx = lastIdx;
-else heroIdx = avail[0] || 0;
-} catch (e) { heroIdx = avail[0] || 0; }
-}
-worldStart(heroIdx);
-} else {
 bpStart('world');
-}
 }
 function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
 function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
@@ -25391,12 +25376,6 @@ closeWorldModal(); worldEnter(n);
 };
 $id('btnWorldLine').addEventListener('click', goLine);
 $id('worldLineIn').addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); goLine(); } });
-}
-if ($id('btnRougeGoWorld')) {
-$id('btnRougeGoWorld').addEventListener('click', () => {
-if (typeof closeRougeModal === 'function') closeRougeModal();
-worldEnter(0, true);   // 全服肉鸽：跳过点将台，直接进
-});
 }
 const RG_JIE = 5;
 const rgRun = () => WORLD.run || null;
