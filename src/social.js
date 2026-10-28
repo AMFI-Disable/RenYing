@@ -448,7 +448,7 @@ function socRenderFind() {
     const tag = D.friends[n] ? '好友' : D.reqOut[n] ? '已申请' : D.reqIn[n] ? '想加你' : on.has(n) ? '在线' : '';
     const btn = D.friends[n] ? '聊天' : D.reqIn[n] ? '同意' : D.reqOut[n] ? '' : '加好友';
     return `<div class="soc-fr"><span class="soc-on${on.has(n) ? ' y' : ''}"></span><b>${escapeHTML(n)}</b>${tag ? `<small>${tag}</small>` : ''}${btn ? `<button type="button" class="go small" data-fadd="${escapeHTML(n)}">${btn}</button>` : ''}</div>`;
-  }).join('') : `<p class="soc-empty">没找到名字里同时有「${escapeHTML(q)}」这几个字的人，按回车按全名加</p>`;
+  }).join('') : uiState('empty', `没找到名字里同时有「${q}」这几个字的人，按回车按全名加`, 'soc-empty');
 }
 function socAddTyped() {
   const q = $id('socAddIn').value.trim(); if (!q) return;
