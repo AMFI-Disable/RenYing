@@ -80,6 +80,7 @@ ci-hud/
 ci-hud-ov/
 ci-touch/
 ci-net/
+ci-perf/
 tools/music/out/
 _site/
 *.db
