@@ -8,7 +8,7 @@ defHero({
     look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
     ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
   forest: {
-    hero: 'lingshuang', heroName: '凌霜', title: '凌霜传 · 雪岭寒枪', place: '北境雪岭',
+    title: '凌霜传 · 雪岭寒枪', place: '北境雪岭',
     synopsis: '北境冰原封印松动，缚灵与寒妖倾巢而出。凌霜单枪匹马深入暴风雪，以一寸枪尖的极寒锋芒重定边疆。',
     stageNames: ['风雪巡边', '冰谷缚灵', '寒梅泣血', '回马破阵', '冰原斩魔'],
     waveDialogues: [

@@ -9,7 +9,7 @@ defHero({
     look: { body: '#2d2336', shade: '#1b1422', outline: '#ff4a5f', outlineA: .85, scarf: '#ff3b52', slash: '255,95,115', blade: '#ffe6ea', head: 'hood', weapon: 'dual' },
     ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   forest: {
-    hero: 'feiying', heroName: '绯影', title: '绯影传 · 血月夜行', place: '血月幽谷',
+    title: '绯影传 · 血月夜行', place: '血月幽谷',
     synopsis: '叛出影楼之夜，满谷咒师与刀鬼奉命截杀。绯影握紧双刃，在血月之下斩断过去的枷锁，杀出一条自由之路。',
     stageNames: ['影楼追杀', '咒火迷踪', '双刃饮血', '影归绝境', '焚楼断命'],
     waveDialogues: [

@@ -8,7 +8,7 @@ defHero({
     look: { body: '#e9eef6', shade: '#9aa6bd', outline: '#070914', outlineA: 1, scarf: '#46d3ea', slash: '120,230,255', blade: '#effcff', head: 'topknot', weapon: 'sword' },
     ai: { range: [70, 170] }, beats: ['moyu'], weakTo: ['yuehua'] },
   forest: {
-    hero: 'qingfeng', heroName: '青锋', title: '青锋传 · 竹海断剑', place: '苍竹林',
+    title: '青锋传 · 竹海断剑', place: '苍竹林',
     synopsis: '师父殒命前留下半截断剑与剑冢密语。青锋踏入妖雾弥漫的苍竹林，一路斩尽拦路刀鬼与弓妖，寻回断剑遗落的剑魂。',
     stageNames: ['竹径初逢', '冷雨惊弓', '断碑残剑', '竹海破阵', '剑冢魔影'],
     waveDialogues: [

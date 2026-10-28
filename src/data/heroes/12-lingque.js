@@ -8,7 +8,7 @@ defHero({
     look: { body: '#2a1a2e', shade: '#160c1c', outline: '#e07ac8', outlineA: .85, scarf: '#e056b0', slash: '235,110,210', blade: '#ffe8fa', head: 'topknot', weapon: 'spindle' },
     ai: { range: [70, 220] }, beats: ['feiying', 'liuyun'], weakTo: ['tieshan', 'leiming'] },
   forest: {
-    hero: 'lingque', heroName: '灵雀', title: '灵雀传 · 幽谷织锦', place: '锦屏幽谷',
+    title: '灵雀传 · 幽谷织锦', place: '锦屏幽谷',
     synopsis: '幽谷灵脉遭群妖窃据，传世云锦被魔气撕裂。灵雀手捏金梭，穿花度柳般在妖群中织就天罗地网。',
     stageNames: ['断锦寻踪', '金梭穿云', '幽影掠步', '百鸟朝凤', '织天伏魔'],
     waveDialogues: [

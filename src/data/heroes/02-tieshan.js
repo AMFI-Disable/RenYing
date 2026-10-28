@@ -9,7 +9,7 @@ defHero({
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
   forest: {
-    hero: 'tieshan', heroName: '铁山', title: '铁山传 · 孤关镇岳', place: '铁门关',
+    title: '铁山传 · 孤关镇岳', place: '铁门关',
     synopsis: '老将军临终托付「关在人在」。十二年后妖潮再临铁门关，铁山横刀立马，以血肉之躯在万妖冲阵中筑起不破铁壁。',
     stageNames: ['烽火重燃', '箭雨孤城', '不动如山', '血染残旗', '镇岳破魔'],
     waveDialogues: [

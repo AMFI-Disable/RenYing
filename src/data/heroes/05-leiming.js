@@ -10,7 +10,7 @@ defHero({
     look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
     ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
   forest: {
-    hero: 'leiming', heroName: '雷鸣', title: '雷鸣传 · 雷音伏魔', place: '雷音绝顶',
+    title: '雷鸣传 · 雷音伏魔', place: '雷音绝顶',
     synopsis: '妖邪侵染雷音宝刹，妄图夺取舍利金身。武僧雷鸣怒目金刚，引九天狂雷入双拳，以刚猛拳意荡涤群魔。',
     stageNames: ['石阶破戒', '金钟抗箭', '狂雷踏地', '金刚怒目', '雷音诛魔'],
     waveDialogues: [

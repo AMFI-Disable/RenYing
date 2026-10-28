@@ -9,7 +9,7 @@ defHero({
     look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
     ai: { range: [140, 290] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
   forest: {
-    hero: 'moyu', heroName: '墨羽', title: '墨羽传 · 墨渊画魂', place: '无底墨渊',
+    title: '墨羽传 · 墨渊画魂', place: '无底墨渊',
     synopsis: '墨渊画卷被妖血浸染，画中恶鬼破纸而出。墨羽提笔蘸墨，布墨阵、泼浓墨，以山河为卷将百鬼重新封印。',
     stageNames: ['画卷惊魂', '墨阵困妖', '浓墨重彩', '点睛破壁', '山河封魔'],
     waveDialogues: [

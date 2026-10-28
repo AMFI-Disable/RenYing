@@ -8,7 +8,7 @@ defHero({
     look: { body: '#c9a882', shade: '#8a6a4a', outline: '#1a0e06', outlineA: 1, scarf: '#d8452f', slash: '255,170,90', blade: '#f2d8a8', head: 'messy', weapon: 'gourd' },
     ai: { range: [50, 140] }, beats: ['lingshuang', 'yuehua'], weakTo: ['liuyun', 'moyu'] },
   forest: {
-    hero: 'zuixian', heroName: '醉仙', title: '醉仙传 · 醉翁梦蝶', place: '杏花醉翁亭',
+    title: '醉仙传 · 醉翁梦蝶', place: '杏花醉翁亭',
     synopsis: '千年佳酿引来百妖觊觎，醉翁亭外群魔乱舞。醉仙仰头饮尽半壶陈酿，步履踉跄却招招致命，请群妖共赴黄泉酒局。',
     stageNames: ['偷酒小妖', '步步生莲', '与民同乐', '醉眼看剑', '一梦乾坤'],
     waveDialogues: [

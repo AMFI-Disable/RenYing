@@ -8,7 +8,7 @@ defHero({
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
   forest: {
-    hero: 'yanling', heroName: '燕翎', title: '燕翎传 · 云雀穿云', place: '万仞云雀崖',
+    title: '燕翎传 · 云雀穿云', place: '万仞云雀崖',
     synopsis: '黑风遮蔽云雀崖，夜枭妖群截断飞鸽传书。燕翎展翅腾空，以漫天羽镖与凌空俯冲夺回苍穹。',
     stageNames: ['折翼迷雾', '羽镖追风', '鹰击长空', '万里传书', '苍穹破魔'],
     waveDialogues: [

@@ -8,6 +8,7 @@ on:
       - "assets/**"
       - "cloudflare/**"
       - "tools/build.py"
+      - "tools/data-check.mjs"
   pull_request:
     branches: [ main ]
 

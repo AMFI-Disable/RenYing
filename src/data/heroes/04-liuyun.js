@@ -8,7 +8,7 @@ defHero({
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
   forest: {
-    hero: 'liuyun', heroName: '流云', title: '流云传 · 古寺听风', place: '栖霞古寺',
+    title: '流云传 · 古寺听风', place: '栖霞古寺',
     synopsis: '尘封古寺夜半钟声自鸣，夜枭与刀鬼窃据佛堂。流云摇扇踏月而来，于談笑风生间借八面来风涤荡妖氛。',
     stageNames: ['山门落叶', '夜枭啼月', '风卷残香', '爆竹惊邪', '听风伏魔'],
     waveDialogues: [

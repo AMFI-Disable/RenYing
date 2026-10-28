@@ -8,7 +8,7 @@ defHero({
     look: { body: '#f4eefc', shade: '#b3a6c9', outline: '#15102a', outlineA: 1, scarf: '#c9b6ff', slash: '215,195,255', blade: '#f6f0ff', head: 'moon', weapon: 'moonblade' },
     ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
   forest: {
-    hero: 'yuehua', heroName: '月华', title: '月华传 · 广寒镜影', place: '太阴月宫',
+    title: '月华传 · 广寒镜影', place: '太阴月宫',
     synopsis: '朔月之夜妖邪侵袭月宫，妄图污染太阴宝镜。月华执月轮迎敌，镜花水月间将一切邪祟攻势尽数反斩。',
     stageNames: ['朔月妖氛', '明镜止水', '月轮回旋', '清辉遍照', '太阴诛邪'],
     waveDialogues: [

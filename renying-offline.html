@@ -6884,6 +6884,7 @@ return false;
 const HEROES = [];
 function defHero(h) {
 h.char = { id: h.id, ...h.char };
+h.forest = { hero: h.id, heroName: h.char.name, ...h.forest };
 HEROES.push(h);
 }
 const MODES = {
@@ -6974,7 +6975,7 @@ stat: { hp: 510, walk: 1.02, speed: 0.96, dmg: 1.04, reach: 1.02, swing: 0.95, j
 look: { body: '#e9eef6', shade: '#9aa6bd', outline: '#070914', outlineA: 1, scarf: '#46d3ea', slash: '120,230,255', blade: '#effcff', head: 'topknot', weapon: 'sword' },
 ai: { range: [70, 170] }, beats: ['moyu'], weakTo: ['yuehua'] },
 forest: {
-hero: 'qingfeng', heroName: '青锋', title: '青锋传 · 竹海断剑', place: '苍竹林',
+title: '青锋传 · 竹海断剑', place: '苍竹林',
 synopsis: '师父殒命前留下半截断剑与剑冢密语。青锋踏入妖雾弥漫的苍竹林，一路斩尽拦路刀鬼与弓妖，寻回断剑遗落的剑魂。',
 stageNames: ['竹径初逢', '冷雨惊弓', '断碑残剑', '竹海破阵', '剑冢魔影'],
 waveDialogues: [
@@ -7022,7 +7023,7 @@ moveMods: { l1: { dmgAbs: 14 }, l2: { dmgAbs: 15 }, l3: { dmgAbs: 17 }, l4: { dm
 look: { body: '#2d2336', shade: '#1b1422', outline: '#ff4a5f', outlineA: .85, scarf: '#ff3b52', slash: '255,95,115', blade: '#ffe6ea', head: 'hood', weapon: 'dual' },
 ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
 forest: {
-hero: 'feiying', heroName: '绯影', title: '绯影传 · 血月夜行', place: '血月幽谷',
+title: '绯影传 · 血月夜行', place: '血月幽谷',
 synopsis: '叛出影楼之夜，满谷咒师与刀鬼奉命截杀。绯影握紧双刃，在血月之下斩断过去的枷锁，杀出一条自由之路。',
 stageNames: ['影楼追杀', '咒火迷踪', '双刃饮血', '影归绝境', '焚楼断命'],
 waveDialogues: [
@@ -7070,7 +7071,7 @@ moveMods: { l1: { suAdd: 0.1 } },   // 巨刃第一刀先举起、顿 0.1 秒再
 look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
 ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
 forest: {
-hero: 'tieshan', heroName: '铁山', title: '铁山传 · 孤关镇岳', place: '铁门关',
+title: '铁山传 · 孤关镇岳', place: '铁门关',
 synopsis: '老将军临终托付「关在人在」。十二年后妖潮再临铁门关，铁山横刀立马，以血肉之躯在万妖冲阵中筑起不破铁壁。',
 stageNames: ['烽火重燃', '箭雨孤城', '不动如山', '血染残旗', '镇岳破魔'],
 waveDialogues: [
@@ -7117,7 +7118,7 @@ stat: { hp: 480, walk: 0.98, speed: 1.05, dmg: 1.00, reach: 1.28, swing: 1.08, j
 look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
 ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
 forest: {
-hero: 'lingshuang', heroName: '凌霜', title: '凌霜传 · 雪岭寒枪', place: '北境雪岭',
+title: '凌霜传 · 雪岭寒枪', place: '北境雪岭',
 synopsis: '北境冰原封印松动，缚灵与寒妖倾巢而出。凌霜单枪匹马深入暴风雪，以一寸枪尖的极寒锋芒重定边疆。',
 stageNames: ['风雪巡边', '冰谷缚灵', '寒梅泣血', '回马破阵', '冰原斩魔'],
 waveDialogues: [
@@ -7164,7 +7165,7 @@ stat: { hp: 495, walk: 1.15, speed: 0.85, dmg: 1.18, reach: 1.06, swing: 0.90, j
 look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
 ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
 forest: {
-hero: 'liuyun', heroName: '流云', title: '流云传 · 古寺听风', place: '栖霞古寺',
+title: '流云传 · 古寺听风', place: '栖霞古寺',
 synopsis: '尘封古寺夜半钟声自鸣，夜枭与刀鬼窃据佛堂。流云摇扇踏月而来，于談笑风生间借八面来风涤荡妖氛。',
 stageNames: ['山门落叶', '夜枭啼月', '风卷残香', '爆竹惊邪', '听风伏魔'],
 waveDialogues: [
@@ -7213,7 +7214,7 @@ l6: { p: ['l3s', 'l3a'], su: .09, ac: .08, rc: .24, dmgAbs: 32, kb: [520, -260],
 look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
 ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
 forest: {
-hero: 'leiming', heroName: '雷鸣', title: '雷鸣传 · 雷音伏魔', place: '雷音绝顶',
+title: '雷鸣传 · 雷音伏魔', place: '雷音绝顶',
 synopsis: '妖邪侵染雷音宝刹，妄图夺取舍利金身。武僧雷鸣怒目金刚，引九天狂雷入双拳，以刚猛拳意荡涤群魔。',
 stageNames: ['石阶破戒', '金钟抗箭', '狂雷踏地', '金刚怒目', '雷音诛魔'],
 waveDialogues: [
@@ -7261,7 +7262,7 @@ moveMods: { l1: { dmgAbs: 15 }, l2: { dmgAbs: 15 }, l3: { dmgAbs: 17 }, l4: { dm
 look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
 ai: { range: [140, 290] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },
 forest: {
-hero: 'moyu', heroName: '墨羽', title: '墨羽传 · 墨渊画魂', place: '无底墨渊',
+title: '墨羽传 · 墨渊画魂', place: '无底墨渊',
 synopsis: '墨渊画卷被妖血浸染，画中恶鬼破纸而出。墨羽提笔蘸墨，布墨阵、泼浓墨，以山河为卷将百鬼重新封印。',
 stageNames: ['画卷惊魂', '墨阵困妖', '浓墨重彩', '点睛破壁', '山河封魔'],
 waveDialogues: [
@@ -7308,7 +7309,7 @@ stat: { hp: 460, walk: 1.02, speed: 0.86, dmg: 1.00, reach: 1.02, swing: 0.84, j
 look: { body: '#f4eefc', shade: '#b3a6c9', outline: '#15102a', outlineA: 1, scarf: '#c9b6ff', slash: '215,195,255', blade: '#f6f0ff', head: 'moon', weapon: 'moonblade' },
 ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
 forest: {
-hero: 'yuehua', heroName: '月华', title: '月华传 · 广寒镜影', place: '太阴月宫',
+title: '月华传 · 广寒镜影', place: '太阴月宫',
 synopsis: '朔月之夜妖邪侵袭月宫，妄图污染太阴宝镜。月华执月轮迎敌，镜花水月间将一切邪祟攻势尽数反斩。',
 stageNames: ['朔月妖氛', '明镜止水', '月轮回旋', '清辉遍照', '太阴诛邪'],
 waveDialogues: [
@@ -7355,7 +7356,7 @@ stat: { hp: 440, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump
 look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
 ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
 forest: {
-hero: 'yanling', heroName: '燕翎', title: '燕翎传 · 云雀穿云', place: '万仞云雀崖',
+title: '燕翎传 · 云雀穿云', place: '万仞云雀崖',
 synopsis: '黑风遮蔽云雀崖，夜枭妖群截断飞鸽传书。燕翎展翅腾空，以漫天羽镖与凌空俯冲夺回苍穹。',
 stageNames: ['折翼迷雾', '羽镖追风', '鹰击长空', '万里传书', '苍穹破魔'],
 waveDialogues: [
@@ -7402,7 +7403,7 @@ stat: { hp: 455, walk: 1.04, speed: 0.88, dmg: 0.98, reach: 1.12, swing: 0.86, j
 look: { body: '#eef4ec', shade: '#9fb7a6', outline: '#0d1a14', outlineA: 1, scarf: '#5fcf9a', slash: '150,240,200', blade: '#d8f5e4', head: 'jade', weapon: 'flute' },
 ai: { range: [110, 280] }, beats: ['tieshan', 'moyu'], weakTo: ['feiying', 'leiming'] },
 forest: {
-hero: 'yuxiao', heroName: '玉箫', title: '玉箫传 · 清音绝响', place: '潇湘清音筑',
+title: '玉箫传 · 清音绝响', place: '潇湘清音筑',
 synopsis: '魔音入竹林，百鬼循声噬人。玉箫横吹碧玉箫，以三叠清音化作无形气刃与回音壁，涤清天地浊气。',
 stageNames: ['竹露初凝', '回音反弹', '三叠惊鸿', '曲终人散', '清音破障'],
 waveDialogues: [
@@ -7449,7 +7450,7 @@ stat: { hp: 520, walk: 1.12, speed: 0.84, dmg: 1.00, reach: 0.86, swing: 0.8, ju
 look: { body: '#c9a882', shade: '#8a6a4a', outline: '#1a0e06', outlineA: 1, scarf: '#d8452f', slash: '255,170,90', blade: '#f2d8a8', head: 'messy', weapon: 'gourd' },
 ai: { range: [50, 140] }, beats: ['lingshuang', 'yuehua'], weakTo: ['liuyun', 'moyu'] },
 forest: {
-hero: 'zuixian', heroName: '醉仙', title: '醉仙传 · 醉翁梦蝶', place: '杏花醉翁亭',
+title: '醉仙传 · 醉翁梦蝶', place: '杏花醉翁亭',
 synopsis: '千年佳酿引来百妖觊觎，醉翁亭外群魔乱舞。醉仙仰头饮尽半壶陈酿，步履踉跄却招招致命，请群妖共赴黄泉酒局。',
 stageNames: ['偷酒小妖', '步步生莲', '与民同乐', '醉眼看剑', '一梦乾坤'],
 waveDialogues: [
@@ -7496,7 +7497,7 @@ stat: { hp: 490, walk: 1.10, speed: 1.0, dmg: 0.97, reach: 1.25, swing: 1.0, jum
 look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, scarf: '#c8a24a', slash: '235,205,130', blade: '#e8e8ee', head: 'mask', weapon: 'hammer' },
 ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
 forest: {
-hero: 'gouchen', heroName: '勾陈', title: '勾陈传 · 陨星锁魂', place: '陨星深渊',
+title: '勾陈传 · 陨星锁魂', place: '陨星深渊',
 synopsis: '陨星渊底锁妖铁链崩裂，上古恶灵咆哮而出。守墓人勾陈抡起千斤飞锤，将逃逸的群妖一一拽回深渊。',
 stageNames: ['断链惊变', '飞锤索命', '旋锤碎骨', '深渊镇魂', '天谴封魔'],
 waveDialogues: [
@@ -7543,7 +7544,7 @@ stat: { hp: 465, walk: 1.10, speed: 0.88, dmg: 0.96, reach: 1.00, swing: 0.86, j
 look: { body: '#2a1a2e', shade: '#160c1c', outline: '#e07ac8', outlineA: .85, scarf: '#e056b0', slash: '235,110,210', blade: '#ffe8fa', head: 'topknot', weapon: 'spindle' },
 ai: { range: [70, 220] }, beats: ['feiying', 'liuyun'], weakTo: ['tieshan', 'leiming'] },
 forest: {
-hero: 'lingque', heroName: '灵雀', title: '灵雀传 · 幽谷织锦', place: '锦屏幽谷',
+title: '灵雀传 · 幽谷织锦', place: '锦屏幽谷',
 synopsis: '幽谷灵脉遭群妖窃据，传世云锦被魔气撕裂。灵雀手捏金梭，穿花度柳般在妖群中织就天罗地网。',
 stageNames: ['断锦寻踪', '金梭穿云', '幽影掠步', '百鸟朝凤', '织天伏魔'],
 waveDialogues: [

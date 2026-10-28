@@ -2,6 +2,7 @@
 // 每位侠客一个文件：src/data/heroes/NN-<id>.js，NN 是选人界面和 CHARS 里的顺序（00 青锋 … 12 凌雀）。
 // 改一位侠客的数值、属性、招式或故事，只改他自己那个文件；游戏里的 CHARS、BAL、HERO_FOREST_STORIES、SAGA 都是从这里拼出来的。
 // 加一位侠客：新建一个文件（编号接着往后排），再在 src/game/ 里补上他的技能、大招、皮肤和动作。
+// 构建时 tools/data-check.mjs 会按下面的写法逐项检查（少字段、多了不认识的字段、编号重复、引用不存在都会让构建失败）。
 //
 // defHero({ id, skin, en, bal, char, forest, saga })
 //   id      英文编号，存档、皮肤、对手都用它，定了就别改
@@ -14,7 +15,8 @@
 //           name 名字，role 称号，diff 上手难度，escCD 腾空闪冷却，skill 是 Q 技能，skill2 是右键招式，ult 是 E 大招，passive 是被动。
 //           stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率，其余是体量和架势。
 //           moveMods 改这位侠客的普攻招式，look 画法和配色，ai.range 电脑喜欢站的距离。beats/weakTo 只是给玩家看的克制关系说明。
-//   forest  斩妖列传（打小怪剧情）：title、place、synopsis、stageNames 五关名字、waveDialogues 每波台词、bossIntro 魔首登场
+//   forest  斩妖列传（打小怪剧情）：title、place、synopsis、stageNames 五关名字、waveDialogues 四波台词、bossIntro 魔首登场
+//           （hero、heroName 自动从 id 和 char.name 补上）
 //   saga    侠客列传（引擎在 src/game/22-saga.js）。每条路 5 节：前四节按顺序打，第 3 节打完要做一个抉择（记成 flag），
 //           第 5 节的对话、对手和结局跟着这个抉择走。
 //           一节：place 地点、name 标题、pre 开打前的对话、fight 这一战、post 打赢后的对话、choice 抉择（只有一节有）。
@@ -25,5 +27,6 @@
 const HEROES = [];
 function defHero(h) {
   h.char = { id: h.id, ...h.char };
+  h.forest = { hero: h.id, heroName: h.char.name, ...h.forest };
   HEROES.push(h);
 }

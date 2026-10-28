@@ -7,5 +7,5 @@
 
 ## 代码结构
 
-- 游戏主体在 `src/game/`，按文件名的编号顺序拼起来就是整个游戏（以前的 `src/game.js`）。新代码放进对应功能的文件，不要另起顶层文件。侠客的数据（强度、属性、故事）在 `src/data/heroes/`，一位一个文件；模式和点将台顺序在 `src/data/10-modes.js`、`11-bp-orders.js`。`src/data/` 构建时排在 `src/game/` 前面。
+- 游戏主体在 `src/game/`，按文件名的编号顺序拼起来就是整个游戏（以前的 `src/game.js`）。新代码放进对应功能的文件，不要另起顶层文件。侠客的数据（强度、属性、故事）在 `src/data/heroes/`，一位一个文件；模式和点将台顺序在 `src/data/10-modes.js`、`11-bp-orders.js`。`src/data/` 构建时排在 `src/game/` 前面，并由 `tools/data-check.mjs` 检查（写错字段构建会失败）。
 - `index.html` 和 `renying-offline.html` 是 `python3 tools/build.py` 生成的，不要手改；改完源码要重新生成，提交前用 `python3 tools/build.py --check` 确认是最新的。

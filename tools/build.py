@@ -284,6 +284,11 @@ def check_js():
     if rc.returncode:
         print(f"src/data/ + src/game/ 拼起来压缩后语法错误：\n{rc.stderr}")
         ok = False
+    # src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用存在（tools/data-check.mjs），有错就不生成网页
+    r = subprocess.run([node, os.path.join(ROOT, "tools", "data-check.mjs")], capture_output=True, text=True)
+    if r.returncode:
+        print(r.stdout + r.stderr)
+        ok = False
     # 青锋行的各个文件共用一个闭包，拼起来再查
     game = "".join(read(QFX, n) for n in qfx_modules())
     r = subprocess.run([node, "--check", "-"], input="(function(){\n'use strict';\n" + game + "\n})();", capture_output=True, text=True)

@@ -8,7 +8,7 @@ defHero({
     look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, scarf: '#c8a24a', slash: '235,205,130', blade: '#e8e8ee', head: 'mask', weapon: 'hammer' },
     ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
   forest: {
-    hero: 'gouchen', heroName: '勾陈', title: '勾陈传 · 陨星锁魂', place: '陨星深渊',
+    title: '勾陈传 · 陨星锁魂', place: '陨星深渊',
     synopsis: '陨星渊底锁妖铁链崩裂，上古恶灵咆哮而出。守墓人勾陈抡起千斤飞锤，将逃逸的群妖一一拽回深渊。',
     stageNames: ['断链惊变', '飞锤索命', '旋锤碎骨', '深渊镇魂', '天谴封魔'],
     waveDialogues: [

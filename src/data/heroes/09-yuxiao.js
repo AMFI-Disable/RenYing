@@ -8,7 +8,7 @@ defHero({
     look: { body: '#eef4ec', shade: '#9fb7a6', outline: '#0d1a14', outlineA: 1, scarf: '#5fcf9a', slash: '150,240,200', blade: '#d8f5e4', head: 'jade', weapon: 'flute' },
     ai: { range: [110, 280] }, beats: ['tieshan', 'moyu'], weakTo: ['feiying', 'leiming'] },
   forest: {
-    hero: 'yuxiao', heroName: '玉箫', title: '玉箫传 · 清音绝响', place: '潇湘清音筑',
+    title: '玉箫传 · 清音绝响', place: '潇湘清音筑',
     synopsis: '魔音入竹林，百鬼循声噬人。玉箫横吹碧玉箫，以三叠清音化作无形气刃与回音壁，涤清天地浊气。',
     stageNames: ['竹露初凝', '回音反弹', '三叠惊鸿', '曲终人散', '清音破障'],
     waveDialogues: [
