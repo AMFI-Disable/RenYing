@@ -1197,6 +1197,61 @@ const testSuite = [
       reset(); toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    // 山河异境：每张图被选中的概率 = 得票 / 总票数，没人投票时一样；联机用种子算出的随机数两边相同
+    name: 'Map vote odds follow the vote count',
+    fn: `(() => {
+      const near = (a, b) => Math.abs(a - b) < 1e-9;
+      const o = mapOdds(['cliff', 'cliff', 'ice']);
+      if (!near(o[MAP_POOL.indexOf('cliff')], 2 / 3) || !near(o[MAP_POOL.indexOf('ice')], 1 / 3)) return { pass: false, error: 'two votes to one should be 2/3 and 1/3, got ' + o };
+      if (!mapOdds([null, null]).every(x => near(x, 1 / MAP_POOL.length))) return { pass: false, error: 'no votes should be equal odds' };
+      if (mapPick(['ice'], 0.999) !== 'ice' || mapPick(['cliff'], 0) !== 'cliff') return { pass: false, error: 'a single vote must always win' };
+      const n = { cliff: 0, ice: 0 };
+      for (let s = 1; s <= 3000; s++) n[mapPick(['cliff', 'cliff', 'ice'], mapSeedRand(s * 7919))]++;
+      if (Math.abs(n.cliff / 3000 - 2 / 3) > 0.04) return { pass: false, error: 'seeded picks should land near 2/3, got ' + n.cliff / 3000 };
+      if (mapSeedRand(12345) !== mapSeedRand(12345)) return { pass: false, error: 'seeded random is not stable' };
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    // 断崖台：自己走不下崖；被击飞越过崖边坠崖，扣 6% 气血（不会扣死）、弹回台上、途中无敌
+    name: 'Cliffside: walking stops at the edge, a launched fighter falls and comes back',
+    fn: `(() => {
+      mapVote = 'cliff'; startMapsMode(0, 1, 'easy', true); M.phase = 'fight';
+      if (M.map !== 'cliff' || STAGE_W !== MAPS.cliff.w) return { pass: false, error: 'map ' + M.map + ' width ' + STAGE_W };
+      A.x = WALL + 1; A.y = 0; A.vx = -400; A.state = 'walk'; physics(A);
+      if (A.x !== WALL || A.mapFalls) return { pass: false, error: 'walking should stop at the edge: x ' + A.x + ' falls ' + A.mapFalls };
+      const hp0 = A.hp; A.x = WALL + 1; A.y = -60; A.vx = -700; A.vy = 0; A.state = 'launched'; physics(A);
+      const lost = hp0 - A.hp;
+      if (A.mapFalls !== 1 || lost !== Math.round(A.maxHp * MAPS.cliff.cliff.dmg)) return { pass: false, error: 'fall should cost ' + Math.round(A.maxHp * MAPS.cliff.cliff.dmg) + ', lost ' + lost };
+      if (!(A.x >= WALL) || A.vx <= 0 || A.vy >= 0 || A.invul < 0.5) return { pass: false, error: 'should bounce back inward and up with invulnerability' };
+      A.hp = 2; A.x = STAGE_W - WALL - 1; A.state = 'launched'; A.vx = 700; physics(A);
+      if (A.hp !== 1) return { pass: false, error: 'a fall must never finish a fighter, hp ' + A.hp };
+      A.x = WALL + 1; A.vx = -900; A.state = 'blockstun'; A.mapFalls = 0; physics(A);
+      if (A.mapFalls) return { pass: false, error: 'blocking at the edge must not fall' };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    // 寒潭冰面：冰上停得慢，越重滑得越远；冰外和其他模式照旧
+    name: 'Frozen Pond: ice slows stopping, heavier fighters slide further, other modes unchanged',
+    fn: `(() => {
+      const slide = (ci, x) => { setChars(ci, (ci + 1) % CHARS.length); A.x = x; A.y = 0; A.vx = 500; A.vy = 0; A.state = 'hitstun'; A.t = 0; A.stun = 9; const x0 = A.x; for (let i = 0; i < 30; i++) physics(A); return A.x - x0; };
+      const heavy = CHARS.findIndex(c => c.stat.weight >= 1.3), light = CHARS.findIndex(c => c.stat.weight <= 0.85);
+      mapVote = 'ice'; startMapsMode(0, 1, 'easy', true); M.phase = 'fight';
+      if (M.map !== 'ice') return { pass: false, error: 'map ' + M.map };
+      const mid = STAGE_W / 2, onIce = slide(heavy, mid), offIce = slide(heavy, WALL + 100);
+      if (!(onIce > offIce * 1.5)) return { pass: false, error: 'ice should slide further: ice ' + onIce + ' vs ground ' + offIce };
+      const lightIce = slide(light, mid);
+      if (!(onIce > lightIce)) return { pass: false, error: 'heavier should slide further: heavy ' + onIce + ' vs light ' + lightIce };
+      startMatch('cpu', 'easy', [heavy, 1]); M.map = 'ice'; M.phase = 'fight';
+      const cpuMid = slide(heavy, STAGE_W / 2);
+      if (Math.abs(cpuMid - offIce) > 1e-6) return { pass: false, error: 'maps must not apply outside the maps mode: ' + cpuMid + ' vs ' + offIce };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

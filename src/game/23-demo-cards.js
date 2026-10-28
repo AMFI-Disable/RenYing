@@ -536,6 +536,8 @@ function bpFinish() {
     startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
   } else if (mode === 'mayhem') {
     startMayhem(picks[0], picks[1], opts.level || mayhemLevel, !!opts.isWatch);
+  } else if (mode === 'maps') {
+    startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch);
   } else if (mode === 'tag3') {
     startTag3Match(picks[0], picks[1], opts.level || tag3Level, !!opts.isWatch);
     M.bans = bans;
@@ -767,6 +769,7 @@ function renderBP() {
   else if (bpMode === 'net' && roomDef().four) modePrefix = '联机2v2 · ';
   else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
   else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
+  else if (bpMode === 'maps') modePrefix = '山河异境 · ';
   else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
   else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
   else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';

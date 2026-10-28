@@ -182,6 +182,21 @@ box-shadow: 0 0 0 1px #ffd84a, 0 4px 20px rgba(255, 216, 74, .3);
 .levels-grid button[data-lv="god"].sel .lv-name { color: #ffd84a; text-shadow: 0 0 12px rgba(255, 216, 74, 0.5); }
 .levels-grid .lv-sub { font-size: 12px; color: var(--dim); line-height: 1.25; text-align: center; white-space: nowrap; }
 .levels-grid button.sel .lv-sub { color: rgba(239, 232, 216, 0.9); }
+.map-vote { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin: 6px 0 4px; }
+.map-card {
+display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; min-width: 0;
+padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--ink); font-family: var(--body);
+background: linear-gradient(170deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
+border: 1px solid rgba(255, 255, 255, .08); transition: border-color .15s ease, background .15s ease;
+}
+.map-card:hover { border-color: rgba(233, 196, 106, .45); background: rgba(255, 255, 255, .08); }
+.map-card.sel { border-color: var(--gold); background: linear-gradient(170deg, rgba(233, 196, 106, .22), rgba(233, 196, 106, .06)); box-shadow: 0 0 0 1px var(--gold); }
+.map-card .map-n { font-family: var(--title); font-size: 18px; letter-spacing: .5px; }
+.map-card.sel .map-n { color: var(--gold); }
+.map-card .map-d { font-size: 12.5px; line-height: 1.45; color: var(--dim); }
+.map-card .map-v { font-size: 12.5px; color: var(--dim); }
+.map-card .map-v b { color: var(--ink); font-weight: 700; }
+.lobby-map-vote { margin: 0 0 12px; text-align: left; }
 .ai-brief-card {
 border: 1px solid rgba(233, 196, 106, .26); border-radius: 12px;
 background: linear-gradient(165deg, rgba(14, 16, 32, .88), rgba(8, 9, 20, .92));
@@ -2938,6 +2953,7 @@ body.kb-only.has-nav .kb-hint { display: block; }
           <button data-tab="tower" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
           <button data-tab="chaos" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
           <button data-tab="tag3" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
+          <button data-tab="maps" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-12 4 7 3-4 5 9z"/><path d="M3 20h18"/></svg></span>山河异境</button>
           <button data-tab="mayhem" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
           <button data-tab="watch2v2" data-cat="special" class="tn-offline" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 组队</button>
         </div>
@@ -3154,6 +3170,44 @@ body.kb-only.has-nav .kb-hint { display: block; }
         <div class="single-action-row">
           <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
           <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
+        </div>
+      </div>
+
+      <!-- 山河异境 · 投票选地图 -->
+      <div data-sec="maps" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">山河异境 · 投票选地图</h3>
+          <span class="sub-badge">特殊地形 · 不计排位</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">换一处战场比试：每张图的地形会改变侠客的走位和招式。开打前投一票，每张图被选中的概率按票数算，没人投票时每张图机会一样。</p>
+        <div class="sec-sub-label">投出你的一票（再按一次收回）</div>
+        <div class="map-vote" id="mapVote"></div>
+        <div class="sec-sub-label" style="margin-top:10px">电脑境界</div>
+        <div class="levels-grid" id="mapsLevels">
+          <button data-lv="easy" type="button">
+            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+            <span class="lv-sub">初学试练</span>
+          </button>
+          <button data-lv="normal" type="button">
+            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+            <span class="lv-sub">见招拆招</span>
+          </button>
+          <button data-lv="hard" class="sel" type="button">
+            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+            <span class="lv-sub">凌厉出招</span>
+          </button>
+          <button data-lv="impossible" type="button">
+            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+            <span class="lv-sub">零瑕闪避</span>
+          </button>
+          <button data-lv="god" type="button">
+            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+            <span class="lv-sub">神级策略</span>
+          </button>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="mapsStartBtn" type="button">开启山河异境</button>
+          <button class="go alt" id="mapsWatchBtn" type="button">异境 AI 观战</button>
         </div>
       </div>
 
@@ -5506,6 +5560,7 @@ const PATTERNS_EN = [
 [/^「([^·」]+)·([^·」]+)」$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); if (x && y) return `“${x} · ${y}”`; const t = lookup(`${a}·${b}`); return t ? `“${t}”` : ''; }],
 [/^(.+) · ((?:天罡北斗|地煞幽冥|青龙出海|白虎啸风|朱雀振羽|玄武镇岳|破晓晨光|孤月映水|狂雷贯顶|炽火焚天)，.+)$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); return x && y ? `${x} · ${y}` : ''; }],
 [/^天机异变 · (.+)$/, (m0, n) => `Mutation · ${lookup(n) || n}`],
+[/^山河异境 · (.+)$/, (m0, n) => `Terrain Clash · ${lookup(n) || n}`],
 [/^坠崖 -(\d+)$/, (m0, n) => `Fell -${n}`],
 [/^「(.+)」$/, (m0, n) => { const t = lookup(n); return t ? `“${t}”` : ''; }],
 [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
@@ -6794,6 +6849,7 @@ cpu: { bp: 'duel', local: true, foe: '电脑' },
 cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
 chaos: { bp: 'open', local: true, foe: '电脑' },
 mayhem: { bp: 'open', local: true, foe: '电脑' },
+maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
 tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
 tower: { bp: 'solo', local: true },
 stage: { bp: 'solo', local: true },
@@ -8514,6 +8570,21 @@ const UI_COPY_EN = {
 "一味死守": "Always Block",
 "被连便闪": "Escapes Combos",
 "钉在原地": "Rooted",
+"山河异境": "Terrain Clash",
+"山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",
+"特殊地形 · 不计排位": "Special terrain · Unranked",
+"换一处战场比试：每张图的地形会改变侠客的走位和招式。开打前投一票，每张图被选中的概率按票数算，没人投票时每张图机会一样。": "Fight somewhere new: each map's terrain changes how heroes move and use their skills. Cast a vote before the match; each map's chance is its share of the votes, and with no votes every map is equally likely.",
+"投出你的一票（再按一次收回）": "Cast your vote (press again to take it back)",
+"电脑境界": "AI Tier",
+"开启山河异境": "Start Terrain Clash",
+"异境 AI 观战": "Watch Terrain AI Battle",
+"换一处战场：投票选地图，断崖、冰面都会改变侠客的打法": "A new battlefield: vote for the map. Cliffs and ice change how every hero fights",
+"得票": "Votes",
+"概率": "Chance",
+"断崖台": "Cliffside",
+"两侧没有墙。被击飞出崖边会坠崖，扣一点气血后弹回台上。": "No walls on either side. Get knocked over the edge and you fall, lose a little health and bounce back up.",
+"寒潭冰面": "Frozen Pond",
+"中间是一片冰面：起步和停下都会打滑，越重滑得越远。": "Ice in the middle: you slip when starting and stopping, and heavier heroes slide further.",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -19710,7 +19781,7 @@ adaptEl.style.display = 'none';
 const SINGLE_TAB_CATS = {
 cpu: 'regular', stage: 'regular', saga: 'regular', train: 'regular',
 tower: 'rogue', chaos: 'rogue',
-tag3: 'special', mayhem: 'special'
+tag3: 'special', mayhem: 'special', maps: 'special'
 };
 let currentSingleTab = 'cpu';
 let currentSingleCat = 'regular';
@@ -19749,7 +19820,8 @@ chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘
 stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
 saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
 train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定',
-mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！'
+mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
+maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法'
 };
 subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
 }
@@ -19760,12 +19832,13 @@ else if (active === 'chaos') renderChaos();
 else if (active === 'stage') renderStages();
 else if (active === 'train') renderDummyFeatures();
 else if (active === 'mayhem') renderMayhem();
+else if (active === 'maps') renderMaps();
 else if (active === 'cpu') updateAIBrief();
 }
 function openScreen(name, reveal = true) {
 if (OFFLINE_BUILD && name === 'netp') name = 'stage';
 if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
-if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem') {
+if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps') {
 singleSec(name);
 if (reveal) showScreen('single');
 return 'single';
@@ -23488,6 +23561,61 @@ const mayhemWatchBtn = document.getElementById('mayhemWatchBtn');
 if (mayhemWatchBtn) mayhemWatchBtn.addEventListener('click', () => {
 bpStart('mayhem', { level: mayhemLevel || 'god', isWatch: true });
 });
+let mapsLevel = 'hard', mapsP1 = 0, mapsP2 = 1;
+let mapVote = null;
+try { const v = localStorage.getItem('renying-map-vote'); if (MAPS[v]) mapVote = v; } catch (e) {}
+function setMapVote(id) {
+mapVote = MAPS[id] ? id : null;
+try { if (mapVote) localStorage.setItem('renying-map-vote', mapVote); else localStorage.removeItem('renying-map-vote'); } catch (e) {}
+}
+function mapVoteCards(box, votes, mine, onPick) {
+if (!box) return;
+const odds = mapOdds(votes);
+box.innerHTML = MAP_POOL.map((id, i) => {
+const n = votes.filter(v => v === id).length;
+return `<button type="button" class="map-card${mine === id ? ' sel' : ''}" data-map="${id}" aria-pressed="${mine === id}">`
++ `<span class="map-n">${MAPS[id].n}</span><span class="map-d">${MAPS[id].d}</span>`
++ `<span class="map-v"><span>得票</span> <b>${n}</b> · <span>概率</span> <b>${Math.round(odds[i] * 100)}%</b></span></button>`;
+}).join('');
+for (const b of box.querySelectorAll('button[data-map]')) b.onclick = () => { onPick(b.dataset.map); SFX.slice(); };
+}
+function renderMaps() {
+mapVoteCards($id('mapVote'), mapVote ? [mapVote] : [], mapVote, id => { setMapVote(mapVote === id ? null : id); renderMaps(); });
+const lvs = document.querySelectorAll('#mapsLevels button');
+lvs.forEach(b => {
+b.classList.toggle('sel', b.dataset.lv === mapsLevel);
+b.onclick = () => { mapsLevel = b.dataset.lv; lvs.forEach(x => x.classList.toggle('sel', x === b)); SFX.slice(); };
+});
+}
+function startMapsMode(p1, p2, lv, isWatch = false) {
+initAudio();
+paused = false;
+mapsP1 = p1 !== undefined ? p1 : mapsP1;
+mapsP2 = p2 !== undefined ? p2 : mapsP2;
+mapsLevel = lv !== undefined ? lv : mapsLevel;
+M.mode = 'maps';
+M.level = mapsLevel;
+M.round = 1;
+M.wins = [0, 0];
+M.carry = null;
+M.stage = null;
+M.duo = null;
+M.watchAi = !!isWatch;
+M.map = mapPick(mapVote ? [mapVote] : [], Math.random());
+setChars(mapsP1, mapsP2);
+A.ctrl = isWatch ? new AICtrl(mapsLevel || 'god') : human[0];
+B.ctrl = new AICtrl(mapsLevel || 'god');
+A.meter = B.meter = 0;
+human[0].clear(); human[1].clear();
+showScreen(null);
+REC.on = false; if (!isWatch) recBegin('loc');
+startRound();
+say('山河异境 · ' + MAPS[M.map].n, 1.4, 'big', MAPS[M.map].d);
+}
+const mapsStartBtn = document.getElementById('mapsStartBtn');
+if (mapsStartBtn) mapsStartBtn.addEventListener('click', () => bpStart('maps', { level: mapsLevel, isWatch: false }));
+const mapsWatchBtn = document.getElementById('mapsWatchBtn');
+if (mapsWatchBtn) mapsWatchBtn.addEventListener('click', () => bpStart('maps', { level: mapsLevel || 'god', isWatch: true }));
 const cpuWatchBtn = document.getElementById('cpuWatchBtn');
 if (cpuWatchBtn) cpuWatchBtn.addEventListener('click', () => {
 initAudio();
@@ -24100,6 +24228,10 @@ return;
 }
 if (M.mode === 'mayhem') {
 bpStart('mayhem', { level: mayhemLevel, isWatch: false });
+return;
+}
+if (M.mode === 'maps') {   // 再来一局：按现在的票重新选图
+bpStart('maps', { level: mapsLevel, isWatch: false });
 return;
 }
 if (M.mode === 'tag3') {
@@ -26099,6 +26231,8 @@ rollStart(flatCh, seed, duo);
 startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
 } else if (mode === 'mayhem') {
 startMayhem(picks[0], picks[1], opts.level || mayhemLevel, !!opts.isWatch);
+} else if (mode === 'maps') {
+startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch);
 } else if (mode === 'tag3') {
 startTag3Match(picks[0], picks[1], opts.level || tag3Level, !!opts.isWatch);
 M.bans = bans;
@@ -26321,6 +26455,7 @@ if (bpMode === 'net' && NET.isRanked) modePrefix = '排位赛 · ';
 else if (bpMode === 'net' && roomDef().four) modePrefix = '联机2v2 · ';
 else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
 else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
+else if (bpMode === 'maps') modePrefix = '山河异境 · ';
 else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
 else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
 else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';

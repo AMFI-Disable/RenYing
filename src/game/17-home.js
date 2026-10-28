@@ -266,7 +266,7 @@ function updateAIBrief() {
 const SINGLE_TAB_CATS = {
   cpu: 'regular', stage: 'regular', saga: 'regular', train: 'regular',
   tower: 'rogue', chaos: 'rogue',
-  tag3: 'special', mayhem: 'special'
+  tag3: 'special', mayhem: 'special', maps: 'special'
 };
 
 // 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
@@ -310,7 +310,8 @@ function singleSec(sec) {
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
       saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
       train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定',
-      mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！'
+      mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
+      maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法'
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
@@ -321,13 +322,14 @@ function singleSec(sec) {
   else if (active === 'stage') renderStages();
   else if (active === 'train') renderDummyFeatures();
   else if (active === 'mayhem') renderMayhem();
+  else if (active === 'maps') renderMaps();
   else if (active === 'cpu') updateAIBrief();
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
 function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
   if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem') {
+  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps') {
     singleSec(name);
     if (reveal) showScreen('single');
     return 'single';

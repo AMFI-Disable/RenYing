@@ -14,6 +14,7 @@ const MODES = {
   cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
   chaos: { bp: 'open', local: true, foe: '电脑' },
   mayhem: { bp: 'open', local: true, foe: '电脑' },
+  maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
   tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
   tower: { bp: 'solo', local: true },
   stage: { bp: 'solo', local: true },

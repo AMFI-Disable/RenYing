@@ -4,7 +4,8 @@
 // Every step is driven by trusted key events through DevTools (arrow keys / Tab to move the
 // selection ring, Enter to press, Esc to go back, A/D/X to fight). A pointer listener fails the
 // run if any mouse or touch event reaches the page.
-// Usage: node tools/kb-flow-test.mjs [outdir] [width] [height] [--en]
+// --maps runs the same flow through the Terrain Clash mode instead (special tab -> vote for a map -> start).
+// Usage: node tools/kb-flow-test.mjs [outdir] [width] [height] [--en] [--maps]
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -20,6 +21,7 @@ if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/pa
 
 const args = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const EN = process.argv.includes('--en');
+const MAPS_FLOW = process.argv.includes('--maps');
 const OUT = args[0] || join(tmpdir(), 'renying-kb-flow');
 const VW = +(args[1] || 1440), VH = +(args[2] || 900);
 const PORT = +(process.env.RENYING_CDP_PORT || 9385);
@@ -186,10 +188,22 @@ await activate('open single mode', SINGLE, 'single');
 await press('Escape');
 ok('Esc returns home', (await waitScreen(['menu'], 3000)) === 'menu');
 await activate('reopen single mode', SINGLE, 'single');
-await activate('choose easy', '#levels [data-lv="easy"]');
-ok('easy selected', await ev(`!!document.querySelector('#levels [data-lv="easy"].sel')`));
-await shot('02-single');
-await activate('start against the computer', '#goBtn', 'bp');
+if (MAPS_FLOW) {
+  await activate('special modes tab', '#singleCatTabs [data-cat="special"]');
+  await activate('terrain clash tab', '#singleTabs [data-tab="maps"]');
+  ok('terrain clash pane shown', await ev(`!!document.querySelector('[data-sec="maps"]') && document.querySelector('[data-sec="maps"]').style.display !== 'none'`));
+  if (await ev(`!!document.querySelector('#mapVote .map-card.sel')`)) await activate('take back an old vote', '#mapVote .map-card.sel');
+  await activate('vote for Frozen Pond', '#mapVote [data-map="ice"]');
+  ok('vote counted', await ev(`mapVote === 'ice' && !!document.querySelector('#mapVote [data-map="ice"].sel')`), await ev(`document.querySelector('#mapVote [data-map="ice"] .map-v').textContent`));
+  await activate('choose easy', '#mapsLevels [data-lv="easy"]');
+  await shot('02-maps');
+  await activate('start terrain clash', '#mapsStartBtn', 'bp');
+} else {
+  await activate('choose easy', '#levels [data-lv="easy"]');
+  ok('easy selected', await ev(`!!document.querySelector('#levels [data-lv="easy"].sel')`));
+  await shot('02-single');
+  await activate('start against the computer', '#goBtn', 'bp');
+}
 
 // 3. draft: walk the grid, pick a fighter, confirm (bans and picks alike)
 await sleep(500);
@@ -215,6 +229,7 @@ const inMatch = await waitScreen([null], 15000);
 if (inMatch !== null) await fatal('match starts', `still on screen ${inMatch}`);
 ok('draft finished', picks > 0, `${picks} picks`);
 ok('match starts', await ev(`typeof M !== 'undefined' && !!A && !!B`), await ev(`M.mode`));
+if (MAPS_FLOW) ok('match is on the voted map', await ev(`M.mode === 'maps' && M.map === 'ice' && !!mapNow()`), await ev(`M.mode + ' ' + M.map`));
 ok('selection ring hidden in the match', await ev(`!document.getElementById('kbRing').classList.contains('on')`));
 
 // 4. fight with the 1P keyboard keys only: walk at the opponent, attack, jump now and then
