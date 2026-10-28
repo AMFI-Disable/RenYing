@@ -124,6 +124,10 @@ jobs:
       - name: Mobile / Touch Layout Audit
         run: node tools/touch-audit.mjs ci-touch
 
+      # A fresh player with no mouse: language prompt, home, single mode, draft, a real match, results, home.
+      - name: Keyboard-Only Flow Test (1440x900)
+        run: node tools/kb-flow-test.mjs ci-kb 1440 900
+
       - name: Verify Commit Message Conventions
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}

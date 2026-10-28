@@ -81,6 +81,7 @@ ci-hud-ov/
 ci-touch/
 ci-net/
 ci-perf/
+ci-kb/
 tools/music/out/
 _site/
 *.db

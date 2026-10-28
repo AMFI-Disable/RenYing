@@ -13,6 +13,7 @@ on:
       - "tools/ui-audit.mjs"
       - "tools/hud-audit.mjs"
       - "tools/hud-overlap-audit.mjs"
+      - "tools/kb-flow-test.mjs"
       - "tools/perf-audit.mjs"
       - "tools/perf-budget.json"
   pull_request:
@@ -65,6 +66,11 @@ jobs:
             done
           fi
           exit "$status"
+
+      # Keyboard-only flow (home, single mode, draft, match, results, home) on a short landscape window in English;
+      # ci.yml runs it at 1440x900 in Chinese.
+      - name: Keyboard-Only Flow Test (844x390, English)
+        run: node tools/kb-flow-test.mjs ci-kb 844 390 --en
 
       - name: Run Canvas HUD Text & Overlap Audit
         run: |
