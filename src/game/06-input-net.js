@@ -80,7 +80,7 @@ function netLeave() {
     const r = rkFinish(false, 'quit');
     if (r) toast(`中途离开排位赛，判负（${r.delta} 分）`);
   }
-  p2pSend({ sys: 'left' });
+  p2pBye();
   netOverlay(''); netReset();
 }
 // 建房 / 加入（快速匹配和排位走 mmGo）

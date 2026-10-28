@@ -10,6 +10,11 @@
      host → client  { sys: 'ready', names, tiers }   版本不同时回 { sys: 'version', need }
      任何一方离开   { sys: 'left' }（关网页时也会尽量发）
 
+   连接状态（P2P.state）：
+     idle 没在连 → signal 正在连牵线服务器 → wait 房间码已登记、等人（房主）
+     → ice 找到对方、正在打通直连 → open 直连已通
+     → unstable 对方几秒没动静或 ICE 断了一下（浏览器会自己恢复），恢复了回到 open，等不回来就 closed
+
    想用自己的牵线服务器（比如局域网里跑 peerjs），在打开网页前设置
    window.RENYING_P2P = { host, port, path, secure }，会合并进 PeerJS 的选项。
    ===================================================================== */
@@ -32,6 +37,12 @@ const P2P = {
   opened: false,   // 房主的房间码登记成功过（之后牵线服务器断了只重连，不关房间）
   lastRx: 0,       // 最后一次收到对方消息的时间
   openAt: 0,       // 这条直连打开的时间
+  state: 'idle', stateAt: 0,   // 连接状态，见文件开头
+  roomAt: 0,       // 房间最后一次空下来（登记成功或上一个人走了）的时间，等太久就过期
+  graceUntil: 0,   // ICE 断了一下：到这个时间还没恢复就算断线
+  drop: null,      // 当前直连的“断线”处理（心跳发现对方没了时调用）
+  sigTries: 0,     // 和牵线服务器断开后已经重连了几次
+  dropped: 0,      // 因为太大没发出去的消息数
 };
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
 const P2P_SYS = {
@@ -39,6 +50,23 @@ const P2P_SYS = {
   client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
+const P2P_T = {
+  signal: 45000,     // 牵线服务器多久没回应算超时（建房、加入）
+  ice: 15000,        // 房主这边：有人来了但多久还没打通直连
+  unstable: 5000,    // 对方多久没动静先显示“网络不稳”
+  grace: 8000,       // ICE 断了以后等它自己恢复的时间
+  room: 30 * 60e3,   // 房间没人来，30 分钟后自动关闭（牵线服务器上的房间码也让出来）
+  sigRetry: [2000, 4000, 8000, 16000, 30000],   // 和牵线服务器断开后的重连间隔，用完就放弃
+};
+const P2P_MAX = 60000;   // 单条消息最多多少字符：Safari、Firefox 的数据通道一条消息只保证 64KB，再大会整条丢掉甚至断线
+function p2pState(s) {
+  if (P2P.state === s) return;
+  const was = P2P.state;
+  P2P.state = s; P2P.stateAt = Date.now();
+  if (typeof NET === 'undefined' || !NET.open || typeof netOverlay !== 'function') return;
+  if (s === 'unstable') netOverlay('对方网络不稳，正在等待重连…');
+  else if (was === 'unstable' && s === 'open') netOverlay('');
+}
 
 function p2pOptions() {
   let customIce = [];
@@ -109,11 +137,28 @@ function p2pLoad() {
 function p2pName(n, dflt) { return (String(n || '').match(/[\w\u4e00-\u9fff]/g) || []).join('').slice(0, 12) || dflt; }
 function p2pOpen() { return !!(P2P.conn && P2P.conn.open); }
 function p2pActive() { return !!(P2P.peer || P2P.conn); }
-function p2pSend(o) { if (p2pOpen()) { try { P2P.conn.send(o); } catch (e) {} } }
+// 发出去返回 true。太大的消息不发（发了对方也收不全），记一笔
+function p2pSend(o) {
+  if (!p2pOpen()) return false;
+  let n = 0;
+  try { n = JSON.stringify(o).length; } catch (e) { return false; }
+  if (n > P2P_MAX) { P2P.dropped++; console.warn('联机消息太大，没有发送：' + n + ' 字符'); return false; }
+  try { P2P.conn.send(o); return true; } catch (e) { return false; }
+}
+// 主动离开：先把 left 发出去，过一会儿再关直连和牵线（立刻关的话 left 多半还没发出去，对方只能干等 20 秒）
+function p2pBye() {
+  const c = P2P.conn, p = P2P.peer;
+  if (c && c.open) { try { c.send({ sys: 'left' }); } catch (e) {} }
+  P2P.conn = P2P.peer = null; P2P.drop = null;
+  p2pState('closed');
+  if (c || p) setTimeout(() => { if (c) { try { c.close(); } catch (e) {} } if (p) { try { p.destroy(); } catch (e) {} } }, 300);
+}
 // 关掉当前的直连。sess 加一，旧连接迟到的事件就不会再影响新的房间
 function p2pClose() {
   P2P.sess++; P2P.opened = false;
   clearTimeout(P2P.timer);
+  P2P.graceUntil = 0; P2P.drop = null; P2P.sigTries = 0; P2P.roomAt = 0;
+  p2pState('idle');
   const c = P2P.conn, p = P2P.peer;
   P2P.conn = P2P.peer = null;
   if (c) { try { c.close(); } catch (e) {} }
@@ -128,12 +173,16 @@ function p2pErrorText(err) {
   return '直连出错：' + ((err && (err.message || err.type)) || '未知错误');
 }
 // 给一条数据通道挂上事件；sess 不对了说明已经换了房间，直接忽略。side 是自己这边（host / client）
-function p2pWire(conn, sess, side, onOpen, onData) {
+// onIceFail：还没连通就确定打不通（ICE failed）时调用，不用干等超时
+function p2pWire(conn, sess, side, onOpen, onData, onIceFail) {
   const live = () => sess === P2P.sess && conn === P2P.conn;
-  conn.on('open', () => { if (live()) { P2P.lastRx = Date.now(); P2P.openAt = performance.now(); onOpen(); } });
+  p2pState('ice');
+  conn.on('open', () => { if (live()) { P2P.lastRx = Date.now(); P2P.openAt = performance.now(); P2P.graceUntil = 0; p2pState('open'); onOpen(); } });
   conn.on('data', d => {
     if (!live()) return;
+    if (typeof d === 'string' && d.length > P2P_MAX) return;   // 正常的网页不会发这么大的消息
     P2P.lastRx = Date.now();
+    if (P2P.state === 'unstable' && !P2P.graceUntil) p2pState('open');
     let m = d;
     if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return; } }
     if (!m || typeof m !== 'object') return;
@@ -148,32 +197,69 @@ function p2pWire(conn, sess, side, onOpen, onData) {
       return;
     }
     if (m.sys === 'hb') return;
-    if (m.sys === 'left') NET.peerQuit = true;   // 对方主动离开（不是网络断了）
+    if (m.sys === 'left') { NET.peerQuit = true; p2pState('closed'); }   // 对方主动离开（不是网络断了）
     if (m.sys !== undefined && !P2P_SYS[side].includes(m.sys)) return;
     onData(m);
   });
   const gone = () => {
     if (!live()) return;
     const wasOpen = NET.open;
-    P2P.conn = null;
-    if (!NET.leaving && wasOpen) onSys({ sys: 'left' });
-    else if (NET.role === 'host' && !NET.open) netStatus('刚才的人断开了。房间还开着，把上面的房间码告诉朋友，等他加入…');
+    P2P.conn = null; P2P.drop = null; P2P.graceUntil = 0;
+    try { conn.close(); } catch (e) {}   // 心跳判断断线时通道可能还“开着”，关掉免得两边各留半条
+    if (!NET.leaving && wasOpen) { p2pState('closed'); onSys({ sys: 'left' }); }
+    else if (NET.role === 'host' && !NET.open && P2P.opened) {
+      p2pState('wait'); P2P.roomAt = Date.now();
+      netStatus('刚才的人断开了。房间还开着，把上面的房间码告诉朋友，等他加入…');
+    } else p2pState('closed');
   };
+  P2P.drop = gone;
   conn.on('close', gone);
   conn.on('error', () => { if (!conn.open) gone(); });   // 连通以后的单条消息出错（比如太大）不算断线
+  // ICE（打洞）状态：没连通前 failed 就是打不通，马上报；连通后 disconnected 先等它自己恢复，failed 或等太久才算断线
+  const watchIce = n => {
+    if (!live()) return;
+    const pc = conn.peerConnection;
+    if (!pc || !pc.addEventListener) { if (n < 40) setTimeout(() => watchIce(n + 1), 250); return; }   // PeerJS 收到对方的握手后才建它
+    pc.addEventListener('iceconnectionstatechange', () => {
+      if (!live()) return;
+      const s = pc.iceConnectionState;
+      if (!conn.open) { if (s === 'failed') { P2P.conn = null; P2P.drop = null; try { conn.close(); } catch (e) {} if (onIceFail) onIceFail(); } return; }
+      if (s === 'disconnected') { if (!P2P.graceUntil) P2P.graceUntil = Date.now() + P2P_T.grace; p2pState('unstable'); }
+      else if (s === 'failed') gone();
+      else if (s === 'connected' || s === 'completed') { P2P.graceUntil = 0; if (P2P.state === 'unstable') p2pState('open'); }
+    });
+  };
+  watchIce(0);
 }
-// 心跳与延迟测定：每 2 秒发一次；对方太久没动静（断网、合上电脑）就结束对战，不用一直干等
+// 心跳与延迟测定：每 2 秒一次。对方几秒没动静先提示网络不稳，太久没动静（断网、合上电脑）或 ICE 断了恢复不了就算断线，不用一直干等。
+// 房主的房间一直没人来，到时间就关掉
 let lastP2pPingT = 0;
-setInterval(() => {
+function p2pBeat() {
+  const now = Date.now();
+  if (P2P.state === 'wait' && !P2P.conn && P2P.roomAt && now - P2P.roomAt > P2P_T.room) {
+    if (typeof netReset === 'function') netReset(); else p2pClose();
+    if (typeof $id === 'function' && $id('roomCode')) $id('roomCode').textContent = '';
+    netStatus('房间等了 30 分钟没人加入，已经自动关闭。想继续就重新建房');
+    return;
+  }
   if (!p2pOpen()) return;
   lastP2pPingT = performance.now();
   p2pSend({ sys: 'ping', t: lastP2pPingT });
   p2pPathCheck();
-  if (NET.open && !NET.leaving && Date.now() - P2P.lastRx > P2P_SILENCE) {
-    onSys({ sys: 'left' });
+  if (!NET.open || NET.leaving) return;
+  const quiet = now - P2P.lastRx;
+  if (quiet > P2P_SILENCE || (P2P.graceUntil && now > P2P.graceUntil)) {
+    if (P2P.drop) P2P.drop(); else { p2pState('closed'); onSys({ sys: 'left' }); }
     netStatus('对方的网络断开了，可以重新建房或加入');
-  }
-}, 2000);
+  } else if (quiet > P2P_T.unstable) p2pState('unstable');
+}
+setInterval(p2pBeat, 2000);
+// 和牵线服务器断开后按 2、4、8、16、30 秒的间隔重连（房间码不变），都失败就放弃
+function p2pRelink(peer, live, ok) {
+  const wait = P2P_T.sigRetry[P2P.sigTries++];
+  if (wait === undefined) { netStatus('牵线服务器一直连不上，房间已关闭。检查一下网络后重新建房'); p2pClose(); return; }
+  setTimeout(() => { if (live() && ok() && peer.disconnected && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } }, wait);
+}
 // 直连走的是哪条路、网络本身来回要多久。用的是 WebRTC 自己的统计，不含网页卡顿，延迟高时分得清是网络慢还是游戏慢
 function p2pPublicIp(a) {
   a = String(a || '').toLowerCase();
@@ -219,6 +305,7 @@ function p2pHost(sess) {
   try { peer = P2P.peer = new Peer(P2P.prefix + code.toLowerCase(), p2pOptions()); }
   catch (e) { netStatus(p2pErrorText(e)); return; }
   const live = () => sess === P2P.sess && peer === P2P.peer;
+  p2pState('signal');
   let t1 = setTimeout(() => {
     if (live() && !P2P.opened) {
       netStatus('正在连接公网信令服务器生成房间码…（网络较慢时请稍候，无需本地服务）');
@@ -235,13 +322,14 @@ function p2pHost(sess) {
       netStatus('连接公网信令服务器超时，请检查网络后重新点击【建房】重试');
       p2pClose();
     }
-  }, 45000);
+  }, P2P_T.signal);
   peer.on('open', () => {
     clearTimeout(t1);
     clearTimeout(t2);
     clearTimeout(P2P.timer);
     if (!live()) return;
-    P2P.opened = true;
+    P2P.opened = true; P2P.sigTries = 0;
+    if (!P2P.conn) { p2pState('wait'); if (!P2P.roomAt) P2P.roomAt = Date.now(); }
     onSys({ sys: 'room', role: 'host', code });        // 显示房间码（重连成功也会再来一次，房间码不变）
   });
   peer.on('connection', conn => {
@@ -253,15 +341,16 @@ function p2pHost(sess) {
     if (P2P.conn) { const old = P2P.conn; P2P.conn = null; try { old.close(); } catch (e) {} }   // 上一个人还没连通：多半是他在重试，换成新的
     P2P.conn = conn;
     clearTimeout(P2P.timer);
+    const noRoute = () => { if (!live()) return; p2pState('wait'); P2P.roomAt = Date.now(); netStatus(p2pNoRouteText() + '。房间还开着，可以让他再试一次'); };
     P2P.timer = setTimeout(() => {                      // 有人来了但 15 秒还没连通：多半是网络不允许直连
-      if (live() && P2P.conn === conn && !conn.open) { P2P.conn = null; try { conn.close(); } catch (e) {} netStatus(p2pNoRouteText() + '。房间还开着，可以让他再试一次'); }
-    }, 15000);
+      if (live() && P2P.conn === conn && !conn.open) { P2P.conn = null; P2P.drop = null; try { conn.close(); } catch (e) {} noRoute(); }
+    }, P2P_T.ice);
     p2pWire(conn, sess, 'host', () => { clearTimeout(P2P.timer); netStatus('对手已连入，正在核对版本…'); }, m => {
       if (m.sys === 'hello') {
         if (m.v !== VERSION) {
           try { conn.send({ sys: 'version', need: VERSION }); } catch (e) {}
           setTimeout(() => { try { conn.close(); } catch (e) {} }, 400);
-          P2P.conn = null;
+          P2P.conn = null; P2P.drop = null; p2pState('wait'); P2P.roomAt = Date.now();
           netStatus(`对手使用旧版本（${m.v || '未知'}）加入，已拒绝。房间仍处于等候中`);
           return;
         }
@@ -271,12 +360,10 @@ function p2pHost(sess) {
         return;
       }
       if (m.sys) onSys(m); else onNetMsg(m);
-    });
+    }, () => { clearTimeout(P2P.timer); noRoute(); });
   });
-  // 和牵线服务器断开：还没开打就过两秒重新登记（房间码不变）；已经直连上了就不用管
-  const relink = () => setTimeout(() => {
-    if (live() && !NET.open && peer.disconnected && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} }
-  }, 2000);
+  // 和牵线服务器断开：还没开打就按间隔重新登记（房间码不变）；已经直连上了就不用管
+  const relink = () => p2pRelink(peer, live, () => !NET.open);
   peer.on('disconnected', () => { if (live() && !NET.open) { netStatus('和牵线服务器断开了，正在重连，房间码不变…'); relink(); } });
   peer.on('error', err => {
     clearTimeout(t1); clearTimeout(t2);                 // 别让“正在连接…”的提示盖掉真正的错误
@@ -307,6 +394,7 @@ function p2pJoin(sess, code) {
   catch (e) { netStatus(p2pErrorText(e)); return; }
   const live = () => sess === P2P.sess && peer === P2P.peer;
   const fail = text => { if (!live()) return; netStatus(text); p2pClose(); };
+  p2pState('signal');
   let t1 = setTimeout(() => {
     if (live() && !NET.open) {
       netStatus(`正在连接信令服务器寻找房间 ${code}…（网络较慢时请稍候）`);
@@ -322,7 +410,7 @@ function p2pJoin(sess, code) {
     if (live() && !NET.open) fail(P2P.conn && P2P.conn.peerConnection && P2P.conn.peerConnection.iceConnectionState === 'failed'
       ? p2pNoRouteText()   // 找到房主了，但网络打不通
       : `连接超时：确认房间码 ${code} 没错且房主还在等候。若网络较慢可稍后再试一次`);
-  }, 45000);
+  }, P2P_T.signal);
   peer.on('open', () => {
     clearTimeout(t1);
     clearTimeout(t2);
@@ -336,7 +424,7 @@ function p2pJoin(sess, code) {
     }, m => {
       if (m.sys === 'ready') { clearTimeout(P2P.timer); m.names = { host: p2pName(m.names && m.names.host, '房主'), client: p2pName(m.names && m.names.client, '对手') }; m.tiers = {}; }
       if (m.sys) onSys(m); else onNetMsg(m);
-    });
+    }, () => { clearTimeout(P2P.timer); fail(p2pNoRouteText()); });
   });
   peer.on('error', err => {
     clearTimeout(t1);

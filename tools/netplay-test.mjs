@@ -136,6 +136,58 @@ let fail = 0;
   if (!ok) fail++;
   console.log(`${ok ? '  PASS' : '  FAIL'}  同袍肉鸽 · 好友联机：规则 ${r.rule}，A/C/D=${r.A}/${r.C}/${r.D}，魔首 ${r.boss} 技 ${r.bossHp} 血，确认打完才发墨锭（先 ${r.paidEarly}，后 ${r.paid}）`);
 }
+// 连接状态机（不用真的网络：假的数据通道和 ICE 事件）
+{
+  const w = makePeer([]);
+  const run = code => vm.runInContext(code, w);
+  run(`globalThis.fakeConn = () => { const h = {}, ph = {};
+    return { open: false, sent: [], on(e, f) { (h[e] = h[e] || []).push(f); }, emit(e, x) { (h[e] || []).forEach(f => f(x)); },
+      send(o) { this.sent.push(o); }, close() { this.open = false; },
+      peerConnection: { iceConnectionState: 'new', addEventListener(e, f) { (ph[e] = ph[e] || []).push(f); },
+        to(s) { this.iceConnectionState = s; (ph.iceconnectionstatechange || []).forEach(f => f()); } } }; };
+    globalThis.lefts = 0; const s0 = onSys; onSys = m => { if (m.sys === 'left') lefts++; else s0(m); };`);
+  const checks = [];
+  const ok = (name, v) => { checks.push([name, !!v]); };
+  // 消息大小上限
+  const n0 = w.__out.length;
+  ok('太大的消息不发', run(`p2pSend({ big: 'x'.repeat(70000) })`) === false && w.__out.length === n0 && run('P2P.dropped') === 1);
+  ok('正常的消息照发', run(`p2pSend({ ru: 1 })`) === true && w.__out.length === n0 + 1);
+  // 还没连通就 ICE failed：马上报打不通，不用等 45 秒
+  run(`P2P.conn = fakeConn(); globalThis.iceFail = 0; p2pWire(P2P.conn, P2P.sess, 'client', () => {}, () => {}, () => iceFail++); P2P.conn.peerConnection.to('failed');`);
+  ok('没连通时 ICE 失败立刻报', run('iceFail') === 1 && run('P2P.conn') === null);
+  // 连通以后：ICE 断一下先等，恢复了回到 open；超过宽限还没恢复就算断线
+  run(`NET.open = true; NET.leaving = false; P2P.conn = fakeConn(); globalThis.c1 = P2P.conn; p2pWire(c1, P2P.sess, 'client', () => {}, () => {}); c1.open = true; c1.emit('open');`);
+  ok('连通后状态是 open', run('P2P.state') === 'open');
+  run(`c1.peerConnection.to('disconnected')`);
+  ok('ICE 断一下：网络不稳、先不判断线', run('P2P.state') === 'unstable' && run('lefts') === 0 && run('P2P.graceUntil') > 0);
+  run(`c1.peerConnection.to('connected')`);
+  ok('ICE 自己恢复：回到 open', run('P2P.state') === 'open' && run('P2P.graceUntil') === 0);
+  run(`c1.peerConnection.to('disconnected'); P2P.graceUntil = Date.now() - 1; p2pBeat();`);
+  ok('宽限期过了还没恢复：算断线', run('lefts') === 1 && run('P2P.conn') === null && run('P2P.state') === 'closed');
+  // 心跳：5 秒没动静提示网络不稳，收到消息恢复；20 秒没动静算断线
+  run(`NET.open = true; P2P.conn = fakeConn(); globalThis.c2 = P2P.conn; p2pWire(c2, P2P.sess, 'host', () => {}, () => {}); c2.open = true; c2.emit('open');
+    P2P.lastRx = Date.now() - 6000; p2pBeat();`);
+  ok('心跳：5 秒没动静是网络不稳', run('P2P.state') === 'unstable' && run('lefts') === 1 && run('c2.sent.some(m => m.sys === "ping")'));
+  run(`c2.emit('data', { sys: 'pong', t: 0 })`);
+  ok('心跳：又收到消息就恢复', run('P2P.state') === 'open');
+  run(`P2P.lastRx = Date.now() - 21000; p2pBeat();`);
+  ok('心跳：20 秒没动静算断线', run('lefts') === 2 && run('P2P.conn') === null);
+  // 主动离开：先发 left 再关；对方收到 left 记成“主动离开”
+  run(`NET.open = true; P2P.conn = fakeConn(); globalThis.c3 = P2P.conn; p2pWire(c3, P2P.sess, 'host', () => {}, m => { if (m.sys) onSys(m); }); c3.open = true; c3.emit('open'); NET.peerQuit = false; c3.emit('data', { sys: 'left' });`);
+  ok('收到 left：记成主动离开', run('NET.peerQuit') === true && run('lefts') === 3);
+  run(`P2P.conn = fakeConn(); globalThis.c4 = P2P.conn; c4.open = true; p2pBye();`);
+  ok('自己离开：先把 left 发出去', run('c4.sent.some(m => m.sys === "left")') && run('P2P.conn') === null);
+  // 房间过期：没人来的房间 30 分钟后关掉
+  run(`P2P.conn = null; P2P.opened = true; p2pState('wait'); P2P.roomAt = Date.now() - 31 * 60e3; p2pBeat();`);
+  ok('没人来的房间 30 分钟后关闭', run('P2P.state') === 'idle' && run('P2P.opened') === false);
+  run(`p2pState('wait'); P2P.roomAt = Date.now() - 10 * 60e3; p2pBeat();`);
+  ok('10 分钟的房间还开着', run('P2P.state') === 'wait');
+  const bad = checks.filter(x => !x[1]);
+  if (bad.length) fail++;
+  console.log(`${bad.length ? '  FAIL' : '  PASS'}  连接状态机：${checks.length} 项（大小上限、ICE 失败和恢复、心跳、离开、房间过期）`);
+  for (const [n] of bad) console.log('        没通过 ' + n);
+}
+
 const argF = process.argv.indexOf('--frames');
 const FRAMES = argF > 0 ? +process.argv[argF + 1] : 3600;
 const CASES = [
