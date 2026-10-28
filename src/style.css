@@ -2783,6 +2783,14 @@
     .single-cat-tabs button { font-size: 12px; gap: 4px; padding: 5px 2px; }
     .single-tabs { justify-content: flex-start; }
   }
+  @media (max-width: 640px) {   /* 窄屏单人页：模式标签折行，不横向滚动；标题徽标和剧情框的按钮不撑破卡片 */
+    .single-tabs { flex-wrap: wrap; overflow: visible; justify-content: center; row-gap: 6px; }
+    .sec-head-row { flex-wrap: wrap; }
+    .sec-head-row h3.spt { white-space: normal; }
+    .sub-badge { white-space: normal; }
+    .st-story-box { flex-direction: column; align-items: stretch; }
+    .st-story-box .go { white-space: normal; font-size: 15px; letter-spacing: .1em; }
+  }
   @media (max-width: 640px) {
     .trow { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "name rw act" "bar bar bar"; row-gap: 8px; }
     .trow > span:first-child { grid-area: name; min-width: 0; }
