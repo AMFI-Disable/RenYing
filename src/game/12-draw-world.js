@@ -233,6 +233,103 @@ function drawGround() {
     }
     ctx.restore();
   }
+
+  // 战场多层穿透高台 (Arena Platforms)
+  if (typeof ARENA_PLATFORMS !== 'undefined' && ARENA_PLATFORMS.length) {
+    for (const plat of ARENA_PLATFORMS) {
+      const halfW = plat.w / 2;
+      const left = plat.x - halfW, top = plat.y, w = plat.w, h = plat.h || 12;
+      ctx.save();
+      if (plat.kind === 'bamboo') {
+        ctx.fillStyle = '#2d3b26';
+        ctx.fillRect(left, top, w, h);
+        ctx.fillStyle = '#415735';
+        ctx.fillRect(left, top + 2, w, h - 4);
+        ctx.strokeStyle = '#182414';
+        ctx.lineWidth = 1.5;
+        for (let bx = left + 15; bx < left + w; bx += 22) {
+          ctx.beginPath(); ctx.moveTo(bx, top); ctx.lineTo(bx, top + h); ctx.stroke();
+        }
+        ctx.fillStyle = '#9e814a';
+        for (const rx of [left + 35, left + w - 35]) {
+          ctx.fillRect(rx - 4, top - 1, 8, h + 2);
+        }
+        ctx.fillStyle = '#212d1b';
+        ctx.fillRect(left + 28, top + h, 8, -top - h);
+        ctx.fillRect(left + w - 36, top + h, 8, -top - h);
+      } else if (plat.kind === 'stone') {
+        ctx.fillStyle = '#1c2130';
+        ctx.fillRect(left, top, w, h);
+        ctx.strokeStyle = 'rgba(233,196,106,0.7)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(left, top, w, h);
+        ctx.fillStyle = '#141824';
+        ctx.beginPath();
+        ctx.moveTo(left + 20, top + h);
+        ctx.lineTo(left + 45, 0);
+        ctx.lineTo(left + w - 45, 0);
+        ctx.lineTo(left + w - 20, top + h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = '#3a161e';
+        ctx.fillRect(left, top, w, h);
+        ctx.fillStyle = '#6e2732';
+        ctx.fillRect(left, top, w, 3);
+        ctx.strokeStyle = 'rgba(233,196,106,0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(left - 8, top - 4);
+        ctx.quadraticCurveTo(left, top + 3, left + 14, top + 3);
+        ctx.moveTo(left + w + 8, top - 4);
+        ctx.quadraticCurveTo(left + w, top + 3, left + w - 14, top + 3);
+        ctx.stroke();
+        ctx.fillStyle = '#2a0e14';
+        ctx.fillRect(left + 24, top + h, 6, -top - h);
+        ctx.fillRect(left + w - 30, top + h, 6, -top - h);
+      }
+      ctx.restore();
+    }
+  }
+
+  // 凌霜冻潭：冰面反光
+  if (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'ice') {
+    const ig = ctx.createLinearGradient(0, 0, 0, 45);
+    ig.addColorStop(0, 'rgba(160,225,255,0.22)');
+    ig.addColorStop(1, 'rgba(160,225,255,0)');
+    ctx.fillStyle = ig;
+    ctx.fillRect(-3000, 0, STAGE_W + 6000, 45);
+  }
+
+  // 竹海强风飞叶视觉
+  if (typeof MAP_ENV !== 'undefined' && MAP_ENV.windActive > 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'bamboo') {
+    ctx.save();
+    ctx.fillStyle = 'rgba(140,245,190,0.45)';
+    for (let i = 0; i < 9; i++) {
+      const lx = ((clock * 680 * MAP_ENV.windDir + i * 210) % (STAGE_W + 400) + (STAGE_W + 400)) % (STAGE_W + 400) - 200;
+      const ly = -30 - ((i * 35) % 190);
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, 13, 3.2, MAP_ENV.windDir * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 雷泽落雷预警地标
+  if (typeof MAP_ENV !== 'undefined' && MAP_ENV.thunderWarn > 0 && typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id === 'thunder') {
+    const tx = MAP_ENV.thunderX || (STAGE_W / 2);
+    const pulse = 0.6 + 0.4 * Math.sin(clock * 25);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,220,110,${pulse})`;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(tx, -120, 160, 24, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(tx, -120, 100, 15, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = `rgba(255,240,160,${pulse * 0.7})`;
+    ctx.beginPath(); ctx.moveTo(tx, -500); ctx.lineTo(tx, -120); ctx.stroke();
+    ctx.restore();
+  }
 }
 function lantern(x, y) {
   const flick = 0.85 + Math.sin(clock * 9 + x) * 0.08 + Math.sin(clock * 23 + x) * 0.05;
@@ -305,9 +402,10 @@ function drawFighter(f) {
   if (f.look.legend && f.look.fx) skinGround(f);
   if (f.look.tier && f.look.fx) skinTierGround(f);
   // 影子
-  const hgt = clamp(-f.y / 300, 0, 1);
+  const gY = f.curPlat ? f.curPlat.y : 0;
+  const hgt = clamp((gY - f.y) / 300, 0, 1);
   ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
-  ctx.beginPath(); ctx.ellipse(f.x, 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(f.x, gY + 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
   // 蓄力光环
   if (f.state === 'charge') {
     const lv = clamp(f.t / CHARGE_FULL, 0, 1), full = f.t >= CHARGE_FULL;

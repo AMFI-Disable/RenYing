@@ -443,13 +443,13 @@ const SKILLS = {
       if (f.skPh === 0 && f.t >= 0.12) {
         f.skPh = 1; f.t = 0;
         SFX.slice(); SFX.dash();
-        spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, mark: true, pierce: true, maxHits: 2 });
+        spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, pierce: true, maxHits: 2 });
       }
       if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
-  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
+  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）并施加【雀芒】印记。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，消耗1层印记，并立即清零移形换影冷却！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
       f.sdTrack = false;
@@ -490,7 +490,8 @@ const SKILLS = {
         // 判定框前后都留够：追踪时可能从上、从下扑过去
         if (strike(f, hitFoe, { box: [-40, -120, 104, 24], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
           if (wasMarked) {
-            hitFoe.needleMark = 0;
+            hitFoe.needleMark = Math.max(0, hitFoe.needleMark - 1);
+            if (hitFoe.needleMark === 0) hitFoe.needleMarkT = 0;
             f.skill2CD = 0;
             shake = Math.max(shake, 14);
             SFX.heavy(); SFX.slice();

@@ -1197,6 +1197,71 @@ const testSuite = [
       reset(); toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Dynamic Map System: Universal 5-map registry, BP screen announcement banner, and favored hero golden border tags',
+    fn: `(() => {
+      if (typeof MAPS === 'undefined' || !MAP_KEYS || MAP_KEYS.length !== 5) {
+        return { pass: false, error: 'MAPS registry missing or not 5 maps' };
+      }
+      for (const k of ['bamboo', 'thunder', 'ice', 'pagoda', 'wine']) {
+        const m = MAPS[k];
+        if (!m || !m.name || !m.sub || !m.desc || !m.favored || m.favored.length !== 2) {
+          return { pass: false, error: 'Map definition incomplete: ' + k };
+        }
+      }
+      // Test BP screen initialization on specific map
+      bpStart('cpu', { mapId: 'bamboo' });
+      if (!BP || BP.mapId !== 'bamboo') {
+        return { pass: false, error: 'BP failed to bind bamboo mapId' };
+      }
+      const banner = document.getElementById('bpMapBanner');
+      if (!banner) return { pass: false, error: 'Missing #bpMapBanner element' };
+      const mapName = (document.getElementById('bpMapName') || {}).textContent || '';
+      if (!mapName.includes('竹海悬岩')) {
+        return { pass: false, error: 'Banner did not display map name, got: ' + mapName };
+      }
+      const gridHtml = (document.getElementById('bpGrid') || {}).innerHTML || '';
+      if (!gridHtml.includes('affinity-gold')) {
+        return { pass: false, error: 'bpGrid HTML missing affinity-gold class' };
+      }
+      if (!gridHtml.includes('★ 地利')) {
+        return { pass: false, error: 'bpGrid HTML missing ★ 地利 tag' };
+      }
+      // Ensure favored heroes Qingfeng and Yanling receive affinity-gold
+      const qfName = CHARS[CHAR_IDX.qingfeng].name;
+      const ylName = CHARS[CHAR_IDX.yanling].name;
+      if (!gridHtml.includes(qfName) || !gridHtml.includes(ylName)) {
+        return { pass: false, error: 'bpGrid HTML missing hero names' };
+      }
+
+      // Test combat platform physics
+      startMatch('cpu', 'stand', [0, 1]);
+      M.mapId = 'bamboo';
+      startRound();
+      if (!ARENA_PLATFORMS || ARENA_PLATFORMS.length !== 2) {
+        return { pass: false, error: 'Bamboo platforms not initialized in arena' };
+      }
+      // Position A above left platform and simulate falling
+      const plat = ARENA_PLATFORMS[0];
+      A.x = plat.x; A.y = plat.y - 20; A.vy = 200;
+      for (let s = 0; s < 30 && !A.curPlat; s++) {
+        updateFighter(A, B);
+      }
+      if (A.y !== plat.y || A.curPlat !== plat || !A.onGround()) {
+        return { pass: false, error: 'Fighter failed to land on platform: y=' + A.y + ', plat.y=' + plat.y + ', onG=' + A.onGround() };
+      }
+      // Drop through with down + jump
+      A.ctrl.held.down = true;
+      A.ctrl.buf.jump = clock;
+      updateFighter(A, B);
+      if (A.curPlat || A.y <= plat.y) {
+        return { pass: false, error: 'Fighter failed to drop through platform: curPlat=' + A.curPlat + ', y=' + A.y };
+      }
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

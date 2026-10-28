@@ -54,14 +54,15 @@ class Fighter {
     this.sinceBlock = 0;
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 135, spN: 0, spPose: null, rooted: false, slowT: 0,
-      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
+      notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lastNormalHit: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
       breakCD: 0, quickGetup: false, quickGetupPhase: false });
     this.scarf = []; this.trail = []; this.ghosts = [];
+    this.curPlat = null; this.dropThrough = 0;
   }
-  onGround() { return this.y >= 0 && this.vy >= 0; }
+  onGround() { return (this.y >= 0 || !!this.curPlat) && this.vy >= 0; }
 }
 // ======================= 比赛流程 =======================
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
@@ -230,6 +231,74 @@ function updateArena2v2(dt) {
   }
 }
 
+function updateMapEnv(dt) {
+  if (M.phase !== 'fight') return;
+  const map = ACTIVE_MAP || (typeof MAPS !== 'undefined' && MAPS.bamboo);
+  if (!map) return;
+  if (map.id === 'bamboo') {
+    if (MAP_ENV.windActive > 0) {
+      MAP_ENV.windActive -= dt;
+      if (MAP_ENV.windActive <= 0) {
+        MAP_ENV.windTimer = 18;
+      }
+    } else {
+      MAP_ENV.windTimer -= dt;
+      if (MAP_ENV.windTimer <= 0) {
+        MAP_ENV.windActive = 6.0;
+        MAP_ENV.windDir = Math.random() < 0.5 ? 1 : -1;
+        const dirName = MAP_ENV.windDir > 0 ? '东风呼啸' : '西风烈烈';
+        addP({ type: 'text', text: `🍃 疾风阵起 · ${dirName}`, x: STAGE_W / 2, y: -150, life: 1.2, max: 1.2, rgb: '140,245,190' });
+        SFX.dash();
+      }
+    }
+  } else if (map.id === 'thunder') {
+    if (MAP_ENV.thunderWarn > 0) {
+      MAP_ENV.thunderWarn -= dt;
+      if (MAP_ENV.thunderWarn <= 0) {
+        const tx = MAP_ENV.thunderX || (STAGE_W / 2);
+        ring(tx, -120, 160, '255,230,120', 0.5);
+        shake = Math.max(shake, 18);
+        flashA = Math.max(flashA, 0.45);
+        flashRGB = '255,240,150';
+        SFX.thunder(); SFX.thunderHit(1.2);
+        const alive = allFighters().filter(f => !f.hidden && f.hp > 0);
+        for (const f of alive) {
+          if (Math.abs(f.x - tx) < 170 && f.y < -60) {
+            if (f.ch.id === 'leiming') {
+              f.meter = Math.min(100, f.meter + 35);
+              f.thunderGuardT = 3.0;
+              ring(f.x, f.y - 60, 140, '255,230,120', 0.5);
+              addP({ type: 'text', text: '⚡ 天雷淬体 · 怒气满盈', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,230,120' });
+            } else {
+              applyHit(f, f, { dmg: 38, kb: [0, -680], stun: 0.55, hs: 0.1, launch: true, knock: true }, [f.x, f.y - 50]);
+              addP({ type: 'text', text: '⚡ 孤峰天雷 · 破定震飞', x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,210,90' });
+            }
+          }
+        }
+        MAP_ENV.thunderTimer = 24.0;
+      }
+    } else {
+      MAP_ENV.thunderTimer -= dt;
+      if (MAP_ENV.thunderTimer <= 0) {
+        MAP_ENV.thunderWarn = 1.3;
+        MAP_ENV.thunderX = STAGE_W / 2;
+        ring(MAP_ENV.thunderX, -120, 180, '255,215,90', 1.3);
+        addP({ type: 'text', text: '⚡ 九天雷云汇聚 · 天雷将至', x: MAP_ENV.thunderX, y: -190, life: 1.2, max: 1.2, rgb: '255,220,100' });
+      }
+    }
+  } else if (map.id === 'wine') {
+    for (const f of allFighters()) {
+      if (f.hidden || f.hp <= 0) continue;
+      if (f.y >= -15 && Math.abs(f.x - STAGE_W / 2) < 450) {
+        if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + 2.5 * dt);
+        if (f.ch.id === 'zuixian') {
+          f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
+        }
+      }
+    }
+  }
+}
+
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional screen shake)
@@ -263,7 +332,9 @@ function startMatch(mode, level, chars, isWatch = false) {
   const duo = Array.isArray(chars[0]) ? chars : null;
   if (duo) chars = [duo[0][0], duo[1][0]];
   setChars(chars[0], chars[1]);
-  if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
+  M.mapId = (typeof BP !== 'undefined' && BP && BP.mapId) || M.mapId || (typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo');
+  if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(M.mapId);
+  if (mode === 'net') { setupNetMatch(); send({ mstart: 1, mapId: M.mapId }); startRound(); return; }
   M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false;
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
@@ -275,7 +346,28 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function startRound() {
-  STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+  const curMap = (typeof getMapById === 'function') ? getMapById(M.mapId || (typeof BP !== 'undefined' && BP && BP.mapId)) : null;
+  if (curMap) ACTIVE_MAP = curMap;
+  if (M.mode === 'world') STAGE_W = WORLD_W;
+  else if (ACTIVE_MAP) STAGE_W = isMulti() ? (ACTIVE_MAP.width.multi || 2600) : (ACTIVE_MAP.width.normal || 1800);
+  else STAGE_W = isMulti() ? 2600 : 1800;
+  if (ACTIVE_MAP && ACTIVE_MAP.platforms) {
+    const baseW = ACTIVE_MAP.width.normal || 1800;
+    ARENA_PLATFORMS = ACTIVE_MAP.platforms.map(p => ({
+      ...p,
+      x: isMulti() ? (STAGE_W / 2 + (p.x - baseW / 2) * 1.25) : p.x
+    }));
+  } else {
+    ARENA_PLATFORMS = [];
+  }
+  if (typeof MAP_ENV !== 'undefined') {
+    MAP_ENV.windDir = 1;
+    MAP_ENV.windTimer = 18;
+    MAP_ENV.windActive = 0;
+    MAP_ENV.thunderTimer = 24;
+    MAP_ENV.thunderWarn = 0;
+    MAP_ENV.thunderX = STAGE_W / 2;
+  }
   if (typeof applySkins === 'function') applySkins();
   if (isRaid()) {
     const sq = M.raidSquadSize || 3;
@@ -325,6 +417,7 @@ function startRound() {
   if (M.mode !== 'demo' && M.mode !== 'train') {
     if (M.round === 1) {
       creditT = CREDIT; creditPending = true; metal(880, 1.8, 0.05);
+      if (ACTIVE_MAP) say(`${ACTIVE_MAP.name} · ${ACTIVE_MAP.sub}`, 1.4);
     } else {
       const txt = M.mode === 'tag3' ? `第${CN[M.round] || M.round}局` : `第${CN[M.round] || M.round}回合`;
       say(txt, 1.1); SFX.gong();

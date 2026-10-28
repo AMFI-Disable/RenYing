@@ -526,7 +526,10 @@ function startWatch2v2Draft() {
   ensurePortraits();
   chatClear();
   BP = null;
+  const mapId = typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo';
+  if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(mapId);
   watch2v2Bp = {
+    mapId,
     step: 0,
     bans: [-1, -1],
     picks: [[-1, -1], [-1, -1]],
@@ -645,15 +648,36 @@ function renderBPWatch2v2() {
     $id('bpS' + sd).innerHTML = `<div class="who" style="color:${teamCol(sd)}">${WATCH2V2_TEAMS[sd]}队${active(sd) ? ' · 行动中' : ''}</div>
       <div class="slots">${slotsHtml}</div>`;
   }
+  const curMap = (typeof getMapById === 'function') ? getMapById((st && st.mapId) || (typeof ACTIVE_MAP !== 'undefined' && ACTIVE_MAP && ACTIVE_MAP.id)) : null;
+  const banner = document.getElementById('bpMapBanner');
+  if (banner && curMap) {
+    banner.classList.remove('hidden');
+    const nameEl = document.getElementById('bpMapName');
+    const subEl = document.getElementById('bpMapSub');
+    const descEl = document.getElementById('bpMapDesc');
+    const favEl = document.getElementById('bpMapFavList');
+    if (nameEl) nameEl.textContent = curMap.name;
+    if (subEl) subEl.textContent = curMap.sub;
+    if (descEl) descEl.textContent = curMap.desc;
+    if (favEl) {
+      const favNames = (curMap.favored || []).map(id => {
+        const c = CHARS.find(x => x.id === id);
+        return c ? c.name : id;
+      }).join('、');
+      favEl.textContent = `${favNames} (点将席位流金高亮)`;
+    }
+  }
   $id('bpGrid').innerHTML = CHARS.map((c, i) => {
     const banned = st.bans.includes(i);
     const pickedBy = st.picks.findIndex(p => p.includes(i));
     const isLast = st.last === i;
+    const isFavored = curMap && (curMap.favored || []).includes(c.id);
+    const affinityTag = isFavored ? '<span class="tag affinity">★ 地利</span>' : '';
     const tag = banned ? '<span class="tag">禁</span>'
       : pickedBy >= 0 ? `<span class="tag p" style="background:${pickedBy === 0 ? '#2b6f86' : '#8a5a1e'}">${WATCH2V2_TEAMS[pickedBy]}</span>` : '';
-    const state = banned ? '，已禁用' : pickedBy >= 0 ? `，已被${WATCH2V2_TEAMS[pickedBy]}队选择` : '，等待天道 AI 选择';
-    return `<button class="bpcard${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${isLast ? ' sel' : ''}" data-i="${i}" type="button" aria-label="${c.name}，${c.role}${state}" aria-disabled="true"${isLast ? ' style="opacity:1"' : ''}>
-      ${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
+    const state = banned ? '，已禁用' : pickedBy >= 0 ? `，已被${WATCH2V2_TEAMS[pickedBy]}队选择` : (isFavored ? '，本局地利' : '，等待天道 AI 选择');
+    return `<button class="bpcard${isFavored ? ' affinity-gold' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${isLast ? ' sel' : ''}" data-i="${i}" type="button" aria-label="${c.name}，${c.role}${state}" aria-disabled="true"${isLast ? ' style="opacity:1"' : ''}>
+      ${tag}${affinityTag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
   const show = bpHover >= 0 ? bpHover : (st.last >= 0 ? st.last : 0);
   setDetail(show);
@@ -672,6 +696,8 @@ function startWatch2v2(draft) {
   REC.on = false;
   if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
   const [ban0, ban1, t1a, t2a, t2b, t1b] = watch2v2Draft;
+  M.mapId = (watch2v2Bp && watch2v2Bp.mapId) || M.mapId || (typeof getRandomMapId === 'function' ? getRandomMapId() : 'bamboo');
+  if (typeof getMapById === 'function') ACTIVE_MAP = getMapById(M.mapId);
   M.mode = 'watch2v2';
   M.watchAi = true;
   M.level = 'god';
