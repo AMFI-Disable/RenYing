@@ -1343,6 +1343,14 @@
   @keyframes homePulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
   .online-unknown .home-online-dot { background: #8a8f98; box-shadow: none; animation: none; }   /* 连不上服务器：人数未知 */
   .home-online-pill.online-unknown { background: rgba(138,143,152,0.14); border-color: rgba(138,143,152,0.35); color: #b7bcc4; }
+  /* 页面出错时的兜底提示（src/errlog.js）：盖在出错的那一页正中，可以重试或回首页 */
+  .err-fallback {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 90;
+    width: min(420px, calc(100vw - 32px)); padding: 20px 22px; border-radius: 12px; text-align: center;
+    background: rgba(10, 11, 28, 0.95); border: 1px solid rgba(184, 57, 46, 0.6); color: var(--ink); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  }
+  .err-fallback p { margin: 0 0 14px; line-height: 1.6; }
+  .err-fallback .ghost { margin: 4px 6px; }
   .play2v2-slots { margin: 10px 0 14px; }
   .play2v2-slot {
     padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);

@@ -784,4 +784,8 @@ const UI_COPY_EN = {
   "在设置里打开「纯键盘模式」，选中框会一直亮着，对局里鼠标不出招。键位在设置里改。": "Turn on Keyboard-Only Mode in Settings to keep the selection box lit and stop the mouse from attacking in matches. Change keys in Settings.",
   "纯键盘模式已打开：方向键走、Enter 按下、Esc 返回，按 ? 看快捷键": "Keyboard-only mode on: arrows move, Enter presses, Esc goes back, ? shows shortcuts",
   "纯键盘模式已关闭": "Keyboard-only mode off",
+  "这个页面出了点问题，已经记录下来了。": "Something went wrong on this page. It has been logged.",
+  "重试": "Retry",
+  "回到首页": "Back to home",
+  "刷新网页": "Reload page",
 };

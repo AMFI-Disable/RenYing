@@ -169,6 +169,7 @@ def page(offline):
         "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
             "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_AI_BRAIN=" + json.dumps(ai_brain_data(), separators=(",", ":")) + ";</script>\n"
+            + "<script>\n" + compact_js(read(SRC, "errlog.js")) + "\n</script>\n"
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "i18n.js")) + "\n</script>\n"

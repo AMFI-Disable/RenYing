@@ -7,7 +7,7 @@
 //   2. 管理网页 /admin 的安全头：CSP 只放行一段 sha256 对得上的脚本，没有 unsafe-inline / unsafe-eval，
 //      页面里没有 onclick 这种行内事件、没有外链脚本；
 //   3. 关键接口冒烟测试（Worker 在本机跑，D1 用 node:sqlite 模拟）：健康检查、注册、登录、读写存档、
-//      管理口令、退出后旧 token 失效、未知路径 404、OPTIONS 预检、没有开放世界绑定时回 503 而不是崩掉。
+//      管理口令、退出后旧 token 失效、未知路径 404、OPTIONS 预检、没有开放世界绑定时回 503 而不是崩掉、网页报错的收集和脱敏。
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -152,6 +152,21 @@ section('关键接口');
   ok(who.status === 200 && who.json && who.json.who === 'admin', '对的管理口令能进管理接口', who.text.slice(0, 120));
   const stats = await call('GET', '/api/admin/stats', { token: ADMIN });
   ok(stats.status === 200 && stats.json && stats.json.ok, '管理总览能读', stats.text.slice(0, 120));
+
+  // 网页报错：text/plain 发上来（不用预检），脱敏后同一种错合成一行计数，管理网页能查到
+  const errBody = { k: 'client', msg: 'boom at https://x.test/p?token=abc for a@b.com key 0123456789abcdef0123456789', src: 'https://x.test/index.html?v=3:12:5', stack: 'Error: boom\n at f (https://x.test/index.html?v=3:12:5)', meta: { scr: 'armory', ver: '1.0.0', nick: 'x'.repeat(200), 'bad key': 1 } };
+  const sendErr = b => worker.fetch(new Request('https://w.test/api/err', { method: 'POST', headers: { 'CF-Connecting-IP': '10.9.0.1', 'Content-Type': 'text/plain' }, body: typeof b === 'string' ? b : JSON.stringify(b) }), ENV, { waitUntil() {} });
+  const e1 = await sendErr(errBody), e2 = await sendErr(errBody);
+  ok(e1.status === 200 && e2.status === 200, '网页报错能收下', e1.status);
+  ok((await sendErr({ k: 'nope', msg: 'x' })).status === 400, '不认识的错误来源回 400');
+  ok((await sendErr('x'.repeat(9000))).status === 413, '太大的报错回 413');
+  const errs = await call('GET', '/api/admin/errors', { token: ADMIN });
+  const row = errs.json && errs.json.rows && errs.json.rows[0];
+  ok(errs.status === 200 && errs.json.rows.length === 1 && row.n === 2, '管理网页查得到，同一种错合成一行计了 2 次', errs.text.slice(0, 200));
+  ok(row && !/token=|abc|a@b\.com|0123456789abcdef|x\.test|\?v=/.test(row.msg + row.src + row.stack) && /index\.html:12:5/.test(row.src), '存下来的已经脱敏（网址只留文件名、去掉参数、邮箱、长串）', row && row.msg + ' | ' + row.src);
+  const meta = row ? JSON.parse(row.meta) : {};
+  ok(meta.scr === 'armory' && meta.nick.length <= 60 && !('bad key' in meta), '附带信息只留短字段', row && row.meta);
+  ok((await call('GET', '/api/admin/errors')).status >= 400, '不带管理口令看不了错误');
 
   ok((await call('POST', '/api/logout', { token: tok })).status === 200, '退出登录');
   ok((await call('GET', '/api/profile', { token: tok })).status === 401, '退出后旧 token 失效');
