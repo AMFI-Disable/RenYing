@@ -458,12 +458,63 @@
     if (typeof fn === 'function') authListeners.push(fn);
   }
 
-  function notifyAuthChange(user) {
+  // fromTab：是别的标签页登录、退出了，这边跟着变（不用再告诉别人）
+  function notifyAuthChange(user, fromTab) {
     srvFlags = null;   // 换了人，开关可能不一样（只开 Dev 的），重新读
     if (typeof window !== 'undefined' && window.CloudSave) loadFlags();
+    if (!fromTab) tellTabs(user && user.uid);
     authListeners.forEach(fn => {
-      try { fn(user); } catch (err) { console.warn('Auth listener error:', err); }
+      try { fn(user, !!fromTab); } catch (err) { console.warn('Auth listener error:', err); }
     });
+  }
+
+  /* ---------- 同一个浏览器的几个标签页 ----------
+   * 登录凭证和当前账号都在 localStorage 里，几个标签页共用；但每个标签页的内存里还记着自己的“当前账号”和待上传的存档。
+   * 一个标签页退出、换号以后，别的标签页要是还按内存里的旧账号上传，就会把旧账号的存档写进新登录的号里。
+   * 所以：变了就用 BroadcastChannel 告诉别的标签页（没有它的浏览器靠 storage 事件），收到的一方丢掉内存里的旧状态，
+   * 再通知游戏（onOtherTab），游戏回到菜单时刷新网页。 */
+  const TAB_ID = rhex(8);
+  const otherTabListeners = [];
+  let tabChan = null;
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      tabChan = new BroadcastChannel('renying-auth');
+      tabChan.onmessage = e => { if (e.data && e.data.from !== TAB_ID) fromOtherTab(); };
+    }
+  } catch (e) { tabChan = null; }
+  function tellTabs(uid) {
+    try { if (tabChan) tabChan.postMessage({ from: TAB_ID, uid: uid || '' }); } catch (e) {}
+  }
+  function storedUid() {
+    try { const o = JSON.parse(localStorage.getItem('renying-local-current') || 'null'); return (o && o.uid) || ''; } catch (e) { return ''; }
+  }
+  function fromOtherTab() {
+    const mine = (currentUser && currentUser.uid) || '', now = storedUid();
+    if (mine === now) return;   // 还是这个号（别的标签页只是换了一下令牌）
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    pendingData = null; pendingUid = null;   // 旧账号没传完的存档留在它自己的本机镜像里，下次登录那个号会补传
+    if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+    currentUser = null;
+    const u = getUser();
+    scheduleRefresh();
+    setSync({ state: u && u.isCloud ? 'idle' : 'local', err: '' });
+    const info = { type: now ? 'login' : 'logout', uid: now, was: mine };
+    otherTabListeners.forEach(fn => { try { fn(info); } catch (err) { console.warn('other tab listener', err); } });
+    notifyAuthChange(u, true);
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', e => { if (e.key === 'renying-local-current' || e.key === null) fromOtherTab(); });
+  }
+  function onOtherTab(fn) { if (typeof fn === 'function') otherTabListeners.push(fn); }
+
+  /* ---------- 401 / 403 统一处理 ----------
+   * 401：令牌过期了，换一次（refreshNow）还不行就是登录失效：同步状态变成「登录过期」，本机存档留着。
+   * 403：被封（带 ban）或者没有权限。两种都告诉游戏（onAuthError），游戏决定怎么提示。 */
+  const authErrListeners = [];
+  function onAuthError(fn) { if (typeof fn === 'function') authErrListeners.push(fn); }
+  function authError(kind, data) {
+    if (kind === 'expired') authLost(data && data.error);
+    authErrListeners.forEach(fn => { try { fn({ kind, error: (data && data.error) || '', ban: data && data.ban }); } catch (err) { console.warn('auth error listener', err); } });
   }
 
   function toCloudData(prof) {
@@ -585,6 +636,7 @@
     const base = getEndpoint();
     const url = base + path;
     const authed = !/^\/api\/(login|register|refresh)$/.test(path);
+    const quiet = path === '/api/logout';   // 退出时 401 很正常，不算登录过期
     // token 快过期了先换（网页关闭时发的 keepalive 来不及，直接发）
     if (authed && !options.keepalive && !tokenFresh()) await refreshNow(false);
     const token = getToken();
@@ -597,6 +649,10 @@
     const data = await res.json().catch(() => ({}));
     // 401：token 过期了。有 refresh 就换一次再试一次
     if (res.status === 401 && authed && token && !retried && !options.keepalive && getRefresh() && await refreshNow(true, token)) return api(path, options, true);
+    if (authed && token && !quiet && getToken() === token) {
+      if (res.status === 401) authError('expired', data);
+      else if (res.status === 403) authError(data.ban ? 'banned' : 'forbidden', data);
+    }
     if (!res.ok) {
       const err = new Error(data.error || `请求失败 (${res.status})`);
       err.status = res.status;
@@ -630,6 +686,7 @@
       if (!getUser() || getUser().uid !== u.uid) { const e = new Error('账号已切换'); e.status = 409; throw e; }
       // token 过期：换一次再用同一个编号重发（服务器只会执行一次）
       if (res.status === 401 && !renewed && getRefresh()) { renewed = true; if (await refreshNow(true, tok)) { i--; continue; } }
+      if (getToken() === tok && (res.status === 401 || res.status === 403)) authError(res.status === 401 ? 'expired' : data.ban ? 'banned' : 'forbidden', data);
       if (!res.ok) { const e = new Error(data.error || `请求失败 (${res.status})`); e.status = res.status; if (data.ban) e.ban = data.ban; throw e; }
       return data;
     }
@@ -699,6 +756,7 @@
     syncHooks.forEach(fn => { try { fn(); } catch (e) { console.warn('before sync', e); } });
     const data = pendingData;
     if (!data || !cloudActive()) return;
+    if (storedUid() !== getUser().uid) { fromOtherTab(); return; }   // 别的标签页刚换了号、这边还没收到通知：先跟上，不传
     if (pendingUid && pendingUid !== getUser().uid) {   // 存档不属于当前账号了：丢弃，绝不写进别人的档
       pendingData = null; pendingUid = null;
       return;
@@ -1330,6 +1388,8 @@
       register,
       login,
       logout,
+      onOtherTab,
+      onAuthError,
       devices,
       logoutDevice,
       getUser,

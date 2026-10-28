@@ -85,7 +85,7 @@ function makeDevice(label, store = new Map()) {   // 传同一个 store：同一
       setTimeout, clearTimeout, setInterval, clearInterval,
       navigator: { onLine: true, userAgent: 'sync-test' },
       localStorage, sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
-      fetch: netFetch, crypto: globalThis.crypto, TextEncoder, TextDecoder,
+      fetch: netFetch, crypto: globalThis.crypto, TextEncoder, TextDecoder, BroadcastChannel,
       Blob: class {}, URL: { createObjectURL: () => '', revokeObjectURL() {} },
       btoa: s => Buffer.from(s, 'binary').toString('base64'), atob: s => Buffer.from(s, 'base64').toString('binary'),
       document: { readyState: 'complete', visibilityState: 'visible', addEventListener() {}, createElement: () => ({}), body: { appendChild() {}, removeChild() {} } },
@@ -281,6 +281,32 @@ ok(cloudProf('Dui').netWins === 1, 'A 照常用');
 await DA.CS.logoutDevice('all'); await DA.CS.logout();
 ok((await DA.CS.login('Dui', 'duipass123')) && row("SELECT COUNT(*) AS n FROM devices d JOIN users u ON u.id = d.user_id WHERE u.username = 'Dui'").n === 1, '所有设备都退出以后：只剩重新登录的这一台');
 await admin('/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
+
+section('同一个浏览器的几个标签页：一个退出、换号，别的跟着变；不会把旧账号的存档写进新登录的号');
+{
+  const T1 = makeDevice('T1'), T2 = makeDevice('T2', T1.store);
+  const heardT2 = []; T2.CS.onOtherTab(m => heardT2.push(m));
+  await T1.CS.register('Tab1', 'tabpass123'); await T1.CS.logout();
+  await T1.CS.register('Tab2', 'tabpass123');
+  await sleep(50);
+  ok(T2.CS.getUser() && T2.CS.getUser().name === 'Tab2' && heardT2.some(m => m.type === 'login'), '标签页 1 登录：标签页 2 跟着变成这个号，游戏收到通知', [T2.CS.getUser(), heardT2]);
+  await T2.load();
+  T2.CS.saveProfile({ ...T2.PROF, netWins: 77 }, false);   // 标签页 2 有一份还没传的存档（防抖中）
+  await T1.CS.logout(); await T1.CS.login('Tab1', 'tabpass123');
+  await sleep(1500);
+  ok(cloudProf('Tab1').netWins === 0 && cloudProf('Tab2').netWins === 0, '标签页 1 换成别的号：标签页 2 那份旧账号的存档不会写进新号（也不会这时候再传）', [cloudProf('Tab1').netWins, cloudProf('Tab2').netWins]);
+  ok(T2.CS.getUser().name === 'Tab1', '标签页 2 现在也是新号');
+  heardT2.length = 0;
+  await T1.CS.logout();
+  await sleep(50);
+  ok(!T2.CS.getUser() && heardT2.length === 1 && heardT2[0].type === 'logout', '标签页 1 退出：标签页 2 也退出了', heardT2);
+  const errs = []; const T3 = makeDevice('T3'); T3.CS.onAuthError(e => errs.push(e.kind));
+  await T3.CS.register('Tab3', 'tabpass123'); await T3.load();
+  ENV.DB.raw.prepare("DELETE FROM sessions WHERE user_id = (SELECT id FROM users WHERE username = 'Tab3')").run();
+  await T3.play(p => { p.netWins = 1; });
+  await sleep(50);
+  ok(errs.includes('expired') && T3.CS.getSyncState().state === 'expired', '登录失效：统一告诉游戏（expired），同步状态是登录过期', errs);
+}
 
 section('乱报的增量：编号不对、键不认识、一次加太多，都不认');
 const tok = A.CS.getUser().token;

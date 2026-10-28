@@ -116,6 +116,26 @@ if (window.CloudSave && CloudSave.onProgress) CloudSave.onProgress(d => {
   if ($id('acc').classList.contains('on')) renderAccPage();
 });
 let loggingOut = false;
+// 同一个浏览器的别的标签页退出、换了号：这边的账号已经跟着换了，界面和存档要刷新网页才对得上。
+// 正在对战、在武库里就等回到菜单再刷新，不打断
+if (window.CloudSave && CloudSave.onOtherTab) CloudSave.onOtherTab(m => {
+  if (loggingOut) return;
+  toast(m.type === 'logout' ? '这个账号在别的标签页退出了，马上刷新' : '别的标签页换了账号，马上刷新');
+  const go = () => { if (document.visibilityState === 'hidden' || MENU_SCREENS.includes(currentScreen) || ['langPrompt', 'codex', 'community', 'replays', 'tasks'].includes(currentScreen)) location.reload(); else setTimeout(go, 2000); };
+  setTimeout(go, 1500);
+});
+// 服务器说登录失效（换令牌也不行）、被封、没有权限：每种只提示一次，详细的在账号页
+const authErrSeen = new Set();
+if (window.CloudSave && CloudSave.onAuthChange) CloudSave.onAuthChange(() => authErrSeen.clear());   // 重新登录以后再失效还要提示
+if (window.CloudSave && CloudSave.onAuthError) CloudSave.onAuthError(e => {
+  if (loggingOut) return;
+  if (e.kind === 'banned' && typeof acRefresh === 'function') acRefresh();
+  if (authErrSeen.has(e.kind)) return;
+  authErrSeen.add(e.kind);
+  toast(e.kind === 'expired' ? '登录已过期，请重新登录（进度先存在这台设备上，登录后补传）' : e.kind === 'banned' ? (e.error || '这个账号暂时被限制了') : (e.error || '没有权限做这件事'));
+  renderTopNav();
+  if ($id('acc').classList.contains('on')) renderAccSync();
+});
 async function doLogout() {
   loggingOut = true;
   const user = window.CloudSave ? CloudSave.getUser() : null;
