@@ -2133,6 +2133,117 @@ section('删除账号（软删除）：登录不了、不上榜、挂单看不�
   await batch({ op: 'restore', uids: [ids[1]], why: '收尾' });
 }
 
+section('数据库迁移：cloudflare/migrations/ 按编号跑，记在 schema_migrations；空库、以前的库都能升到一样的结构；同时跑不重复；出错整个退回');
+{
+  const fresh = async () => (await import(new URL(FILE, ROOT).href + '?m=' + Math.random())).default;   // 新的模块 = 新的 Worker 实例
+  const { MIGRATIONS } = await import(new URL('cloudflare/migrations.gen.js', ROOT));
+  const hit1 = (w, env, ip = '6.6.6.' + Math.floor(Math.random() * 250)) => w.fetch(new Request('https://w.test/api/flags', { headers: { 'CF-Connecting-IP': ip } }), env, { waitUntil() {} });
+  const cols = (db, t) => db.prepare(`SELECT name, type, "notnull" AS nn, dflt_value AS d, pk FROM pragma_table_info('${t}')`).all().map(r => [r.name, r.type, r.nn, r.d, r.pk].join('|')).sort();
+  const tables = db => db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r => r.name);
+  const indexes = db => db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r => r.name);
+  const tsql = (db, t) => db.prepare("SELECT sql FROM sqlite_master WHERE name = ?").get(t).sql;
+  const ref = new DatabaseSync(':memory:');
+  ref.exec(readFileSync(new URL('cloudflare/schema.sql', ROOT), 'utf8'));
+  const applied = db => db.prepare('SELECT id, name, sum FROM schema_migrations ORDER BY id').all().map(r => ({ ...r }));
+  const sameAsRef = (db, label) => {
+    const want = tables(ref), have = tables(db).filter(t => t !== 'schema_migrations');
+    ok(JSON.stringify(want) === JSON.stringify(have), label + '：表和 cloudflare/schema.sql 一样', { missing: want.filter(t => !have.includes(t)), extra: have.filter(t => !want.includes(t)) });
+    const diff = want.filter(t => have.includes(t) && JSON.stringify(cols(ref, t)) !== JSON.stringify(cols(db, t)));
+    ok(!diff.length, label + '：每张表的列（类型、非空、默认值、主键）都一样', diff.map(t => ({ t, ref: cols(ref, t), db: cols(db, t) })));
+    ok(JSON.stringify(indexes(ref)) === JSON.stringify(indexes(db)), label + '：索引一样', { ref: indexes(ref), db: indexes(db) });
+    const checks = ['econ', 'mkt', 'sanctions'].filter(t => (tsql(db, t).match(/CHECK/g) || []).length !== (tsql(ref, t).match(/CHECK/g) || []).length);
+    ok(!checks.length, label + '：武库存档、市场、处罚三张表带着 CHECK 约束', checks);
+  };
+
+  // 1. 空库
+  const e1 = { DB: makeD1(), ADMIN_SECRET: ADMIN };
+  e1.DB.raw.exec('PRAGMA foreign_keys = ON');   // D1 默认开着外键
+  const r1 = await hit1(await fresh(), e1);
+  const ap1 = applied(e1.DB.raw);
+  ok(r1.status === 200 && ap1.length === MIGRATIONS.length && ap1.every((m, i) => m.id === i + 1 && m.name === MIGRATIONS[i].name && m.sum === MIGRATIONS[i].sum), '空库：第一次请求把迁移按编号全跑了，记在 schema_migrations', ap1.map(m => m.name));
+  ok(MIGRATIONS.length >= 6 && MIGRATIONS.every((m, i) => /^\d{4}_[a-z0-9_]+$/.test(m.name) && +m.name.slice(0, 4) === i + 1), '迁移文件从 0001 连续编号', MIGRATIONS.map(m => m.name));
+  sameAsRef(e1.DB.raw, '空库');
+  const reg1 = await e1.DB.batch([e1.DB.prepare("INSERT INTO econ (uid, state_json, srv_json, ink, ver, updated_at) VALUES ('u1', '{}', '{}', 5, 0, 0)")]);
+  const bad = sql => { try { e1.DB.raw.exec(sql); return false; } catch (e) { return /CHECK/i.test(e.message); } };
+  ok(reg1 && bad("UPDATE econ SET ink = -1 WHERE uid = 'u1'") && bad("INSERT INTO mkt (id, seller, k, st, item_json, price, at, state) VALUES ('m1', 'u1', 'qf_p1', -1, '{}', 10, 0, 7)")
+    && bad("INSERT INTO mkt (id, seller, k, st, item_json, price, at) VALUES ('m2', 'u1', 'qf_p1', -1, '{}', 0, 0)") && bad("INSERT INTO sanctions (uid, strikes) VALUES ('u1', -2)"),
+    'CHECK 挡得住：负墨锭、不认识的挂单状态、0 标价、负的记过次数都存不进去');
+  const r1b = await hit1(await fresh(), e1);
+  ok(r1b.status === 200 && applied(e1.DB.raw).length === MIGRATIONS.length, '再来一个 Worker 实例：没有要跑的，不重跑');
+
+  // 2. 迁移文件出现以前的库：以前的 Worker 启动时建的表（0001）和后来加的列（0002 ~ 0004），没有 schema_migrations；里面有数据
+  const e2 = { DB: makeD1(), ADMIN_SECRET: ADMIN }, d2 = e2.DB.raw;
+  d2.exec('PRAGMA foreign_keys = ON');
+  for (const m of MIGRATIONS.slice(0, 4)) for (const sql of m.sql) { try { d2.exec(sql); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
+  const pr = await (await fresh()).fetch(new Request('https://w.test/api/health'), e2, { waitUntil() {} });   // 健康检查不碰数据库
+  ok(pr.status === 200 && !tables(d2).includes('schema_migrations'), '准备：一个老库（没有 schema_migrations）');
+  d2.exec(`INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES ('u_old1', 'oldtimer', 'h', 's', '{"name":"oldtimer"}', 1, 2);
+    INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES ('${'a'.repeat(64)}', 'u_old1', ${T}, ${T + 86400e3});
+    INSERT INTO econ (uid, state_json, srv_json, ink, ver, updated_at) VALUES ('u_old1', '{"v":1}', '{}', 1234, 7, 3), ('u_neg', '{}', '{}', -5, 1, 3);
+    INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, buyer, done_at, paid, tx) VALUES ('mk1', 'u_old1', 'qf_p1', -1, '{"i":1}', 50, 4, 0, NULL, NULL, 0, 't1'), ('mk2', 'u_old1', 'qf_p1', 3, '{"i":2}', 80, 5, 1, 'u_x', 6, 1, 't2'), ('mk3', 'u_old1', 'qf_p1', -1, '{"i":3}', 80, 5, 9, NULL, NULL, 2, NULL);
+    INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES ('u_old1', 2, 99, 0, '[{"r":"x"}]', 8, 0);
+    INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('u_old1', 9, 'sync', 1, '{}');`);
+  const before2 = { econ: d2.prepare("SELECT * FROM econ WHERE uid = 'u_old1'").get(), mkt: d2.prepare("SELECT * FROM mkt WHERE id IN ('mk1', 'mk2') ORDER BY id").all(), sanc: d2.prepare('SELECT * FROM sanctions').all(), log: d2.prepare('SELECT * FROM econ_log').all(), users: d2.prepare('SELECT * FROM users').all() };
+  const r2 = await hit1(await fresh(), e2);
+  ok(r2.status === 200 && applied(d2).length === MIGRATIONS.length, '老库：第一次请求把迁移全跑完（以前加过的列跳过，不报错）', applied(d2).map(m => m.name));
+  sameAsRef(d2, '老库');
+  const after2 = { econ: d2.prepare("SELECT * FROM econ WHERE uid = 'u_old1'").get(), mkt: d2.prepare("SELECT * FROM mkt WHERE id IN ('mk1', 'mk2') ORDER BY id").all(), sanc: d2.prepare('SELECT * FROM sanctions').all(), log: d2.prepare('SELECT * FROM econ_log').all(), users: d2.prepare('SELECT * FROM users').all().map(({ deleted_at, ...r }) => r) };
+  ok(JSON.stringify(after2) === JSON.stringify(before2), '老库的数据一行没丢、一个字没变（武库、市场、处罚、流水、账号）');
+  ok(d2.prepare('SELECT deleted_at FROM users').get().deleted_at === 0, '新加的 deleted_at 列，老号都是 0（没删）');
+  ok(d2.prepare('SELECT COUNT(*) AS n FROM sessions').get().n === 1, '重建三张表没有连带删掉登录（外键开着也没事）');
+  ok(d2.prepare("SELECT ink FROM econ WHERE uid = 'u_neg'").get().ink === 0 && d2.prepare("SELECT state, paid FROM mkt WHERE id = 'mk3'").get().state === 2 && d2.prepare("SELECT paid FROM mkt WHERE id = 'mk3'").get().paid === 1, '不合规的老数据夹回范围里：负墨锭当 0、不认识的挂单状态当撤下');
+  const pf = await (await fresh()).fetch(new Request('https://w.test/api/profile', { headers: { Authorization: 'Bearer ' + 'a'.repeat(64), 'CF-Connecting-IP': '6.6.7.1' } }), e2, { waitUntil() {} });
+  ok(pf.status === 200 && (await pf.json()).uid === 'u_old1', '升级以后老号的登录照样能用');
+
+  // 3. 更早的库：users 没有密码那两列，errs 没有耗时，sessions 没有设备
+  const e3 = { DB: makeD1(), ADMIN_SECRET: ADMIN }, d3 = e3.DB.raw;
+  d3.exec(`CREATE TABLE users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+    CREATE TABLE sessions (token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+    CREATE TABLE errs (sig TEXT PRIMARY KEY, kind TEXT NOT NULL, msg TEXT NOT NULL, src TEXT NOT NULL, stack TEXT NOT NULL, meta TEXT NOT NULL, n INTEGER NOT NULL, first_at INTEGER NOT NULL, last_at INTEGER NOT NULL);
+    INSERT INTO users VALUES ('u_anc', 'ancient', 'h', 's', '{}', 1, 1);`);
+  const r3 = await hit1(await fresh(), e3);
+  ok(r3.status === 200 && applied(d3).length === MIGRATIONS.length, '更早的库：缺的列一个个补上');
+  sameAsRef(d3, '更早的库');
+  ok(d3.prepare('SELECT password_algo, deleted_at FROM users').get().password_algo === 'sha256-v1', '老号的密码存法记成 sha256-v1（下次登录换成 PBKDF2）');
+
+  // 3b. 读不了表结构（万一 D1 不让用 pragma_table_info）：ALTER 单独试，已经有的列照样跳过
+  const e3b = { DB: makeD1(), ADMIN_SECRET: ADMIN }, d3b = e3b.DB.raw, prep = e3b.DB.prepare;
+  e3b.DB.prepare = sql => { if (/pragma_table_info/.test(sql)) throw new Error('not authorized'); return prep(sql); };
+  for (const m of MIGRATIONS.slice(0, 4)) for (const sql of m.sql) { try { d3b.exec(sql); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
+  const r3b = await hit1(await fresh(), e3b);
+  ok(r3b.status === 200 && applied(d3b).length === MIGRATIONS.length, '读不了表结构也能升级（ALTER 单独试，重复的列跳过）');
+  sameAsRef(d3b, '读不了表结构');
+
+  // 4. 两个 Worker 实例同时碰到空库：每个迁移只跑一次，两个请求都成功
+  const e4 = { DB: makeD1(), ADMIN_SECRET: ADMIN };
+  const [wa, wb, wc] = [await fresh(), await fresh(), await fresh()];
+  const rs = await Promise.all([hit1(wa, e4), hit1(wb, e4), hit1(wc, e4)]);
+  ok(rs.every(r => r.status === 200) && applied(e4.DB.raw).length === MIGRATIONS.length, '三个实例同时跑：都成功，每个迁移只记一次', rs.map(r => r.status));
+  sameAsRef(e4.DB.raw, '同时跑');
+
+  // 5. 中途出错：整个迁移退回，什么都不改；修好以后下一次请求接着跑
+  const e5 = { DB: makeD1(), ADMIN_SECRET: ADMIN }, d5 = e5.DB.raw;
+  for (const m of MIGRATIONS.slice(0, 5)) for (const sql of m.sql) { try { d5.exec(sql); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
+  d5.exec("INSERT INTO econ (uid, state_json, srv_json, ink, ver, updated_at) VALUES ('u5', '{}', '{}', 9, 0, 0); CREATE TABLE mkt_new (x INTEGER)");   // 占住 0006 要用的表名
+  const w5 = await fresh(), warn0 = console.error, warn1 = console.warn;
+  console.error = () => {}; console.warn = () => {};
+  const r5 = await hit1(w5, e5);
+  console.error = warn0; console.warn = warn1;
+  ok(r5.status >= 500 && applied(d5).length === 5 && !applied(d5).some(m => m.id === 6), '0006 出错：这次请求报错，0001 ~ 0005 记上了，0006 没记', { status: r5.status, ap: applied(d5).map(m => m.id) });
+  ok(!/CHECK/.test(tsql(d5, 'econ')) && tables(d5).includes('econ') && d5.prepare("SELECT ink FROM econ WHERE uid = 'u5'").get().ink === 9 && !tables(d5).includes('econ_new'), '0006 整个退回：econ 还是原来那张表，数据都在，没有留下半截');
+  d5.exec('DROP TABLE mkt_new');
+  const r5b = await hit1(w5, e5);
+  ok(r5b.status === 200 && applied(d5).length === MIGRATIONS.length && /CHECK/.test(tsql(d5, 'econ')), '修好以后同一个实例下一次请求接着跑完');
+
+  // 6. 跑过的文件又改了：不重跑，日志里提示
+  e1.DB.raw.exec("UPDATE schema_migrations SET sum = 'changed' WHERE id = 1");
+  const warns = [], ow = console.warn;
+  console.warn = (...a) => warns.push(a.join(' '));
+  const r6 = await hit1(await fresh(), e1);
+  console.warn = ow;
+  ok(r6.status === 200 && warns.some(w => /0001_init/.test(w) && /新的迁移文件/.test(w)), '改过跑过的迁移文件：照常服务，日志提示要加新文件', warns);
+}
+
 section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭据；拿凭据失败也照样回 STUN');
 {
   const realFetch = globalThis.fetch;

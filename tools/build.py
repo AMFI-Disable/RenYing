@@ -12,6 +12,8 @@
   cloudflare/worker.bundle.js  云端账号的 Cloudflare Worker：worker.js 加上武库规则（src/armory-core.js）和管理网页
                         （cloudflare/admin.html，Worker 的 /admin）拼成一个文件，wrangler deploy 用它，
                         在 Cloudflare 网页编辑器里整段粘贴也能用。
+  cloudflare/migrations.gen.js  D1 迁移：cloudflare/migrations/ 里的 .sql 拆成一句一句，worker.js 引用它，
+                        Worker 第一次收到请求时把还没跑过的按编号跑完（记在 schema_migrations 表里）。
 
 用法：
   python3 tools/build.py          生成网页
@@ -191,6 +193,7 @@ def page(offline):
 
 
 CORE_IMPORT = "import '../src/armory-core.js';\n"
+MIG_IMPORT = "import { MIGRATIONS } from './migrations.gen.js';\n"
 ADMIN_LINE = "const ADMIN_PAGE = { html: '', sha: '' };\n"
 NAMES_MARK = "/*@names*/null"
 
@@ -230,15 +233,41 @@ def admin_page():
     return html, scripts[0], base64.b64encode(hashlib.sha256(scripts[0].encode("utf-8")).digest()).decode()
 
 
+def migrations():
+    """cloudflare/migrations/0001_xxx.sql …：去掉 -- 注释（包括文件末尾写的回滚 SQL），按分号拆成一句一句。sum 是这些句子的 sha256 前 16 位，改了跑过的文件 Worker 会提示"""
+    d = os.path.join(ROOT, "cloudflare", "migrations")
+    files = sorted(f for f in os.listdir(d) if f.endswith(".sql"))
+    out = []
+    for i, f in enumerate(files, 1):
+        m = re.fullmatch(r"(\d{4})_([a-z0-9_]+)\.sql", f)
+        if not m or int(m.group(1)) != i:
+            raise SystemExit(f"cloudflare/migrations/{f}：文件名要是 0001_xxx.sql 这样，从 0001 开始连续编号")
+        sql = "\n".join(re.sub(r"--.*$", "", line) for line in read(d, f).split("\n"))
+        if re.search(r"'[^'\n]*;[^'\n]*'", sql):
+            raise SystemExit(f"cloudflare/migrations/{f}：字符串里不要写分号（按分号拆句子）")
+        stmts = [" ".join(x.split()) for x in sql.split(";") if x.strip()]
+        if not stmts:
+            raise SystemExit(f"cloudflare/migrations/{f} 是空的")
+        out.append({"id": i, "name": f[:-4], "sum": hashlib.sha256("\n".join(stmts).encode("utf-8")).hexdigest()[:16], "sql": stmts})
+    return out
+
+
+def migrations_js():
+    body = ",\n".join("  " + json.dumps(m, ensure_ascii=False) for m in migrations())
+    return ("// 由 python3 tools/build.py 从 cloudflare/migrations/*.sql 生成，不要直接改：改 .sql（或者加新的）再重新生成。\n"
+            "export const MIGRATIONS = [\n" + body + "\n];\n")
+
+
 def worker_bundle():
     """Cloudflare Worker：把 worker.js 引用的武库规则原样拼进去，浏览器和服务器用的是同一份规则；管理网页也放进去"""
     src = read(ROOT, "cloudflare", "worker.js")
-    for line in (CORE_IMPORT, ADMIN_LINE):
+    for line in (CORE_IMPORT, ADMIN_LINE, MIG_IMPORT):
         if src.count(line) != 1:
             raise SystemExit("cloudflare/worker.js 里应该正好有一行 " + line.strip())
     html, _, sha = admin_page()
     src = src.replace(ADMIN_LINE, "const ADMIN_PAGE = { html: " + json.dumps(html, ensure_ascii=False) + ", sha: '" + sha + "' };\n")
-    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html 和 src/armory-core.js 再重新生成。\n"
+    src = src.replace(MIG_IMPORT, migrations_js().split("\n", 1)[1].replace("export const", "const", 1))
+    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html、cloudflare/migrations/*.sql 和 src/armory-core.js 再重新生成。\n"
     return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + read(SRC, "armory-core.js") + "\n/* === cloudflare/worker.js === */\n")
 
 
@@ -249,6 +278,7 @@ def outputs():
         "renying.html": REDIRECT,
         "assets/qingfengxing.html": qfx_page(),
         "cloudflare/worker.bundle.js": worker_bundle(),
+        "cloudflare/migrations.gen.js": migrations_js(),
     }
 
 

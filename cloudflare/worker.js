@@ -2,7 +2,7 @@
  * 刃影 Cloudflare Worker：云端账号、存档同步、武库经济、反作弊
  *
  * 部署：wrangler.toml 的 main 是 worker.bundle.js，由 python3 tools/build.py 生成（本文件 + src/armory-core.js
- *       拼成一个文件，在 Cloudflare 网页编辑器里整段粘贴也能用）。要绑定 D1 数据库 DB，表会自动建好。
+ *       拼成一个文件，在 Cloudflare 网页编辑器里整段粘贴也能用）。要绑定 D1 数据库 DB，表结构在 cloudflare/migrations/，第一次请求时自动跑完。
  * 环境变量（Workers → Settings → Variables，选 Secret；不设也能跑，只是用不了管理接口）：
  *   ADMIN_SECRET      管理口令：管理网页（这个 Worker 的 /admin）和 node tools/econ-admin.mjs 都用它。
  *                     可以只写一个口令，也可以写成「名字:口令」、几个人用逗号隔开（比如 even:口令1,lnt:口令2），
@@ -35,6 +35,7 @@
  *   其他：每个账号、每个 IP 限速；登录失败太多次暂时锁定；注册带上来的存档墨锭有上限；被封期间不能写存档和交易。
  */
 import '../src/armory-core.js';
+import { MIGRATIONS } from './migrations.gen.js';
 
 const C = globalThis.ArmoryCore;
 
@@ -155,79 +156,49 @@ const CODE_BUILTIN = {};
 // 作废以前领过的号：码送的饰品（src 'code'）在库存里的、挂在市场上还没卖出的，第一次动武库时收回（记在 srv.zv）
 const CODE_VOID = { ZODIAC2026STAR: it => it && it.src === 'code' && !!C.ITEM[it.k] && C.ITEM[it.k].col === 'c8' };
 
-const SCHEMA = [
-  `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, password_algo TEXT NOT NULL DEFAULT 'sha256-v1', password_updated_at INTEGER NOT NULL DEFAULT 0)`,
-  `CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, dev TEXT NOT NULL DEFAULT '', FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
-  `CREATE TABLE IF NOT EXISTS devices (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, refresh TEXT NOT NULL UNIQUE, prev TEXT NOT NULL DEFAULT '', rotated_at INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, label TEXT NOT NULL DEFAULT '', last_seen INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
-  `CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id)`,
-  `CREATE TABLE IF NOT EXISTS refresh_used (h TEXT PRIMARY KEY, dev TEXT NOT NULL, at INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS admins (name TEXT PRIMARY KEY COLLATE NOCASE, role TEXT NOT NULL CHECK (role IN ('view', 'econ', 'ban', 'all')), password_hash TEXT NOT NULL, salt TEXT NOT NULL, password_algo TEXT NOT NULL, disabled INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, created_by TEXT NOT NULL, last_login INTEGER NOT NULL DEFAULT 0)`,
-  `CREATE TABLE IF NOT EXISTS admin_sessions (token TEXT PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS auth_log (id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, uid TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', act TEXT NOT NULL, ip TEXT NOT NULL DEFAULT '', dev TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')`,
-  `CREATE INDEX IF NOT EXISTS idx_auth_log_uid ON auth_log(uid, at)`,
-  `CREATE INDEX IF NOT EXISTS idx_auth_log_at ON auth_log(at)`,
-  `CREATE TABLE IF NOT EXISTS econ (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL, ver INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS econ_nonce (uid TEXT NOT NULL, nonce TEXT NOT NULL, at INTEGER NOT NULL, res_json TEXT NOT NULL, PRIMARY KEY (uid, nonce))`,
-  `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, detail TEXT)`,
-  `CREATE INDEX IF NOT EXISTS idx_econ_log_uid ON econ_log (uid, at)`,
-  `CREATE INDEX IF NOT EXISTS idx_econ_log_act ON econ_log (act, id)`,   // 管理后台查“管理员做过的事”用
-  `CREATE TABLE IF NOT EXISTS sanctions (uid TEXT PRIMARY KEY, strikes INTEGER NOT NULL DEFAULT 0, ban_until INTEGER NOT NULL DEFAULT 0, perm INTEGER NOT NULL DEFAULT 0, log_json TEXT NOT NULL DEFAULT '[]', at INTEGER NOT NULL DEFAULT 0, pardon INTEGER NOT NULL DEFAULT 0)`,
-  `CREATE TABLE IF NOT EXISTS rate (k TEXT PRIMARY KEY, n INTEGER NOT NULL, reset INTEGER NOT NULL)`,
-  // 玩家市场：state 0 在卖、1 卖掉了、2 撤下了；paid 是卖家拿到钱没有；tx 是改它的那个请求（同一批写入靠它确认改成了）
-  `CREATE TABLE IF NOT EXISTS mkt (id TEXT PRIMARY KEY, seller TEXT NOT NULL, k TEXT NOT NULL, st INTEGER NOT NULL, item_json TEXT NOT NULL, price INTEGER NOT NULL, at INTEGER NOT NULL, state INTEGER NOT NULL DEFAULT 0, buyer TEXT, done_at INTEGER, paid INTEGER NOT NULL DEFAULT 0, tx TEXT)`,
-  `CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price)`,
-  `CREATE INDEX IF NOT EXISTS idx_mkt_seller ON mkt (seller, state, paid)`,
-  `CREATE INDEX IF NOT EXISTS idx_mkt_done ON mkt (state, done_at)`,
-  // 全服补偿：uid 是 '*' 发给所有人（只给 born 之前注册的号），否则只发给这一个号；领过的记在 gift_got
-  `CREATE TABLE IF NOT EXISTS gift (id TEXT PRIMARY KEY, uid TEXT NOT NULL, ink INTEGER NOT NULL DEFAULT 0, items_json TEXT NOT NULL DEFAULT '{}', note TEXT NOT NULL, by TEXT NOT NULL, at INTEGER NOT NULL, until INTEGER NOT NULL, born INTEGER NOT NULL, off INTEGER NOT NULL DEFAULT 0)`,
-  `CREATE INDEX IF NOT EXISTS idx_gift_uid ON gift (uid, until)`,
-  `CREATE TABLE IF NOT EXISTS gift_got (gid TEXT NOT NULL, uid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (gid, uid))`,
-  // 兑换码：玩家在游戏里输入就领到里面的东西，每个号只领一次（code_got）；got 到了 uses 就领完了（CHECK 挡住多领），until 之后、off 是 1 都领不到
-  `CREATE TABLE IF NOT EXISTS code (code TEXT PRIMARY KEY, ink INTEGER NOT NULL DEFAULT 0, items_json TEXT NOT NULL DEFAULT '{}', note TEXT NOT NULL, by TEXT NOT NULL, at INTEGER NOT NULL, until INTEGER NOT NULL, uses INTEGER NOT NULL, got INTEGER NOT NULL DEFAULT 0, off INTEGER NOT NULL DEFAULT 0, CHECK (got <= uses))`,
-  `CREATE TABLE IF NOT EXISTS code_got (code TEXT NOT NULL, uid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (code, uid))`,
-  // 在线改的经济数值：每改一次加一行，最后一行是现在用的（只存和默认值不一样的项）
-  `CREATE TABLE IF NOT EXISTS cfg (id INTEGER PRIMARY KEY AUTOINCREMENT, json TEXT NOT NULL, by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
-  // 在线人数：每个打开的网页（按标签页，刷新不算新人）每 30 秒报一次到；PRESENCE_WINDOW 内报过的算在线。ip 只存哈希
-  `CREATE TABLE IF NOT EXISTS presence (sid TEXT PRIMARY KEY, ip TEXT NOT NULL, st TEXT NOT NULL, seen INTEGER NOT NULL)`,
-  `CREATE INDEX IF NOT EXISTS idx_presence_seen ON presence (seen)`,
-  // 天魔讨伐：每一代一行（hp 到 0 或 until 到了就 ended；killer 为空表示遁走了；paid 是奖励发了没有）；last / last_tx 是最近一次扣血扣了多少、是哪个请求
-  `CREATE TABLE IF NOT EXISTS gboss (gen INTEGER PRIMARY KEY, hero TEXT NOT NULL, affix TEXT NOT NULL, max_hp INTEGER NOT NULL, hp INTEGER NOT NULL, started INTEGER NOT NULL, until INTEGER NOT NULL, ended INTEGER NOT NULL DEFAULT 0, killer TEXT, paid INTEGER NOT NULL DEFAULT 0, last INTEGER NOT NULL DEFAULT 0, last_tx TEXT)`,
-  `CREATE TABLE IF NOT EXISTS gboss_hit (gen INTEGER NOT NULL, uid TEXT NOT NULL, dmg INTEGER NOT NULL, runs INTEGER NOT NULL, last INTEGER NOT NULL, PRIMARY KEY (gen, uid))`,
-  // 一次出战一张票：done 是交过伤害没有，dmg 是最后算进去多少（天魔已经倒了就是 0），killed 是这一下打死的
-  `CREATE TABLE IF NOT EXISTS gboss_try (id TEXT PRIMARY KEY, uid TEXT NOT NULL, gen INTEGER NOT NULL, started INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0, tx TEXT, dmg INTEGER NOT NULL DEFAULT 0, killed INTEGER NOT NULL DEFAULT 0)`,
-  `CREATE INDEX IF NOT EXISTS idx_gboss_try_uid ON gboss_try (uid, started)`,
-  `CREATE INDEX IF NOT EXISTS idx_gboss_try_done ON gboss_try (done, started)`,
-  // 侠客列传的江湖足迹：node 是 n1 ~ n5（走完第几节）、c3（第 3 节的抉择）、end（结局），pick 是选了什么
-  `CREATE TABLE IF NOT EXISTS saga_mark (hero TEXT NOT NULL, node TEXT NOT NULL, uid TEXT NOT NULL, pick TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (hero, node, uid))`,
-  // 功能开关：mode 是 off（关）、dev（只对 Dev 账号开）、all（所有人开）；没有这一行就用代码里 FLAGS 写的默认值
-  `CREATE TABLE IF NOT EXISTS flags (k TEXT PRIMARY KEY, mode TEXT NOT NULL CHECK (mode IN ('off', 'dev', 'all')), by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
-  // 错误记录：同一种错（kind + 消息 + 位置）合成一行，n 是出现了几次。kind：client 网页报上来的、server 服务器自己出的错、slow 慢请求。不存 IP、账号
-  `CREATE TABLE IF NOT EXISTS errs (sig TEXT PRIMARY KEY, kind TEXT NOT NULL, msg TEXT NOT NULL, src TEXT NOT NULL, stack TEXT NOT NULL, meta TEXT NOT NULL, n INTEGER NOT NULL, first_at INTEGER NOT NULL, last_at INTEGER NOT NULL)`,
-  `CREATE INDEX IF NOT EXISTS idx_errs_last ON errs (kind, last_at)`,
-];
+/* ---------- 数据库迁移 ----------
+ * 表结构都在 cloudflare/migrations/0001_xxx.sql 里（python3 tools/build.py 拆成 migrations.gen.js，打包进 worker.bundle.js）。
+ * 每个 Worker 实例第一次收到请求时：建 schema_migrations（跑过哪些），把没跑过的按编号一个一个跑。
+ * 一个迁移是一个 batch（D1 里就是一个事务）：第一句先往 schema_migrations 插这一行，两个实例同时跑，后到的插不进去、整个退回，
+ * 再读一次发现别人跑完了就接着往下；中途出错也是整个退回，什么都不改，这次请求报错，下次请求再试。
+ * 迁移文件出现以前的库：表都在（0001 全是 IF NOT EXISTS），以前加过的列也在，所以 ALTER TABLE … ADD COLUMN 遇到已经有的列就跳过这一句。
+ * 跑过的文件不要再改（改了会在日志里提示 sum 对不上），要改表就加一个新文件。 */
 let schemaReady = null;
-// 以前建的表后来加的列：已经有了 SQLite 会报 duplicate column，跳过就行
-const SCHEMA_COLS = [
-  `ALTER TABLE users ADD COLUMN password_algo TEXT NOT NULL DEFAULT 'sha256-v1'`,
-  `ALTER TABLE users ADD COLUMN password_updated_at INTEGER NOT NULL DEFAULT 0`,
-  `ALTER TABLE errs ADD COLUMN ms INTEGER NOT NULL DEFAULT 0`,       // 慢请求：最慢一次多少毫秒
-  `ALTER TABLE errs ADD COLUMN ms_sum INTEGER NOT NULL DEFAULT 0`,   // 慢请求：加起来多少毫秒（除以 n 是平均）
-  `ALTER TABLE sessions ADD COLUMN dev TEXT NOT NULL DEFAULT ''`,
-  `ALTER TABLE users ADD COLUMN deleted_at INTEGER NOT NULL DEFAULT 0`,   // 管理后台删除的号：0 是没删；删了不动任何数据，恢复就是改回 0
-];
-// 要等上面的列加好才能建的
-const SCHEMA_POST = [
-  `CREATE INDEX IF NOT EXISTS idx_sessions_dev ON sessions(dev)`,
-  `CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted_at) WHERE deleted_at > 0`,
-];
-function ensureSchema(env) {
-  if (!schemaReady) schemaReady = (async () => {
-    await env.DB.batch(SCHEMA.map(s => env.DB.prepare(s)));
-    for (const sql of SCHEMA_COLS) {
-      try { await env.DB.prepare(sql).run(); } catch (e) { if (!/duplicate column/i.test(String(e && e.message))) throw e; }
+// 这一列已经有了吗（读不了表结构时返回 null，由调用的地方单独试一次 ALTER）
+async function hasColumn(env, table, col) {
+  try {
+    const rows = (await env.DB.prepare('SELECT name FROM pragma_table_info(?)').bind(table).all()).results || [];
+    return rows.some(r => String(r.name).toLowerCase() === col.toLowerCase());
+  } catch (e) { return null; }
+}
+async function migrate(env) {
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, name TEXT NOT NULL, sum TEXT NOT NULL, applied_at INTEGER NOT NULL)').run();
+  const done = new Map(((await env.DB.prepare('SELECT id, sum FROM schema_migrations').all()).results || []).map(r => [r.id, r.sum]));
+  for (const m of MIGRATIONS) {
+    if (done.has(m.id)) {
+      if (done.get(m.id) !== m.sum) console.warn(`迁移 ${m.name} 跑过以后又改了（sum ${done.get(m.id)} → ${m.sum}），不会重跑；要改表请加新的迁移文件`);
+      continue;
     }
-    await env.DB.batch(SCHEMA_POST.map(s => env.DB.prepare(s)));
-  })().catch(e => { schemaReady = null; throw e; });
+    const st = [env.DB.prepare('INSERT INTO schema_migrations (id, name, sum, applied_at) VALUES (?, ?, ?, ?)').bind(m.id, m.name, m.sum, Date.now())];
+    for (const sql of m.sql) {
+      const add = /^ALTER TABLE (\w+) ADD COLUMN (\w+)/i.exec(sql);
+      const has = add ? await hasColumn(env, add[1], add[2]) : false;
+      if (has) continue;   // 以前的 Worker 已经加过这一列
+      if (has === null) {   // 读不了表结构：单独加一次，已经有了 SQLite 会说 duplicate column
+        try { await env.DB.prepare(sql).run(); } catch (e) { if (!/duplicate column/i.test(String(e && e.message))) throw e; }
+        continue;
+      }
+      st.push(env.DB.prepare(sql));
+    }
+    try { await env.DB.batch(st); }
+    catch (e) {
+      // 别的实例同时在跑、已经跑完了这一个：算成功
+      if (!(await env.DB.prepare('SELECT id FROM schema_migrations WHERE id = ?').bind(m.id).first())) throw e;
+    }
+  }
+}
+function ensureSchema(env) {
+  if (!schemaReady) schemaReady = migrate(env).catch(e => { schemaReady = null; throw e; });
   return schemaReady;
 }
 

@@ -20,7 +20,7 @@ head_sampling_rate = 1
 binding = "DB"
 database_name = "renying-db"
 database_id = "86f80607-7c39-4a0f-8b1f-b2ad4c8d6e72"
-migrations_dir = "migrations"   # cloudflare/migrations/，用 npx wrangler d1 migrations apply renying-db --remote 执行
+migrations_dir = "migrations"   # cloudflare/migrations/：Worker 第一次收到请求时自己跑（记在 schema_migrations），不要用 wrangler d1 migrations apply，见那里的 readme.md
 
 # 江湖共斗 · 开放世界：一条分线一个 Durable Object（免费版只能用 SQLite 存储的 Durable Object）
 [[durable_objects.bindings]]

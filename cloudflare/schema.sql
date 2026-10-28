@@ -1,6 +1,6 @@
 -- Cloudflare D1 Database Schema for RenYing (刃影)
--- Run this in Cloudflare Dashboard -> Storage & Databases -> D1 -> Console,
--- or via CLI: npx wrangler d1 execute renying-db --file=./cloudflare/schema.sql
+-- 这是 cloudflare/migrations/ 里所有迁移跑完以后的样子，方便一次看全；表结构以迁移文件为准，改表要加新的迁移文件，再同步改这里
+-- （tools/econ-test.mjs 会核对两边一样）。Worker 第一次收到请求时自己跑迁移，记在 schema_migrations 表里，平时不用手动执行这个文件。
 
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -11,10 +11,10 @@ CREATE TABLE IF NOT EXISTS users (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     -- 密码怎么存的：'pbkdf2-sha256:次数' 或以前的 'sha256-v1'（老号登录成功时自动换成 PBKDF2）。
-    -- 以前建的库没有这两列，worker 第一次收到请求时会自动 ALTER 加上
+    -- 以前建的库没有这两列，迁移 0002 会加上
     password_algo TEXT NOT NULL DEFAULT 'sha256-v1',
     password_updated_at INTEGER NOT NULL DEFAULT 0,
-    -- 管理后台删除的号：0 是没删，否则是删除时间。删除不动别的数据，恢复就是改回 0（以前的库也是自动加）
+    -- 管理后台删除的号：0 是没删，否则是删除时间。删除不动别的数据，恢复就是改回 0（迁移 0005）
     deleted_at INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted_at) WHERE deleted_at > 0;
@@ -51,18 +51,15 @@ CREATE TABLE IF NOT EXISTS refresh_used (
     at INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-
--- 刃影武库（经济）和反作弊。worker 第一次收到请求时会自动建这些表，这里列出来方便查看和手动建。
+-- 刃影武库（经济）和反作弊。
 -- 武库存档：state_json 是库存、武器箱、终端机、改名标签这些；srv_json 是只有服务器看的账（墨锭入账编号、每天入账额、卖掉的皮肤）。
 -- ver 每改一次加 1，两个请求同时改时只有一个能成（防双花）。
 CREATE TABLE IF NOT EXISTS econ (
     uid TEXT PRIMARY KEY,
     state_json TEXT NOT NULL,
     srv_json TEXT NOT NULL,
-    ink INTEGER NOT NULL,
-    ver INTEGER NOT NULL,
+    ink INTEGER NOT NULL CHECK (ink >= 0),
+    ver INTEGER NOT NULL CHECK (ver >= 0),
     updated_at INTEGER NOT NULL
 );
 
@@ -93,9 +90,9 @@ CREATE INDEX IF NOT EXISTS idx_econ_log_act ON econ_log (act, id);
 -- 处罚记录：第 1 次警告，第 2 次封 1 天，第 3 次永久封号；pardon 是管理员解封的时间。
 CREATE TABLE IF NOT EXISTS sanctions (
     uid TEXT PRIMARY KEY,
-    strikes INTEGER NOT NULL DEFAULT 0,
+    strikes INTEGER NOT NULL DEFAULT 0 CHECK (strikes >= 0),
     ban_until INTEGER NOT NULL DEFAULT 0,
-    perm INTEGER NOT NULL DEFAULT 0,
+    perm INTEGER NOT NULL DEFAULT 0 CHECK (perm IN (0, 1)),
     log_json TEXT NOT NULL DEFAULT '[]',
     at INTEGER NOT NULL DEFAULT 0,
     pardon INTEGER NOT NULL DEFAULT 0
@@ -114,14 +111,14 @@ CREATE TABLE IF NOT EXISTS mkt (
     id TEXT PRIMARY KEY,
     seller TEXT NOT NULL,
     k TEXT NOT NULL,
-    st INTEGER NOT NULL,
+    st INTEGER NOT NULL CHECK (st >= -1),
     item_json TEXT NOT NULL,
-    price INTEGER NOT NULL,
+    price INTEGER NOT NULL CHECK (price >= 1),
     at INTEGER NOT NULL,
-    state INTEGER NOT NULL DEFAULT 0,
+    state INTEGER NOT NULL DEFAULT 0 CHECK (state IN (0, 1, 2)),
     buyer TEXT,
     done_at INTEGER,
-    paid INTEGER NOT NULL DEFAULT 0,
+    paid INTEGER NOT NULL DEFAULT 0 CHECK (paid IN (0, 1)),
     tx TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price);
@@ -235,4 +232,68 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
     role TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     expires_at INTEGER NOT NULL
+);
+
+-- 错误记录：同一种错（kind + 消息 + 位置）合成一行，n 是出现了几次。kind：client 网页报上来的、server 服务器自己出的错、slow 慢请求。
+-- ms 是慢请求最慢一次多少毫秒，ms_sum 是加起来多少毫秒（除以 n 是平均）。不存 IP、账号
+CREATE TABLE IF NOT EXISTS errs (
+    sig TEXT PRIMARY KEY,
+    kind TEXT NOT NULL,
+    msg TEXT NOT NULL,
+    src TEXT NOT NULL,
+    stack TEXT NOT NULL,
+    meta TEXT NOT NULL,
+    n INTEGER NOT NULL,
+    first_at INTEGER NOT NULL,
+    last_at INTEGER NOT NULL,
+    ms INTEGER NOT NULL DEFAULT 0,
+    ms_sum INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_errs_last ON errs (kind, last_at);
+
+-- 天魔讨伐：每一代一行（hp 到 0 或 until 到了就 ended；killer 为空表示遁走了；paid 是奖励发了没有）；last / last_tx 是最近一次扣血扣了多少、是哪个请求
+CREATE TABLE IF NOT EXISTS gboss (
+    gen INTEGER PRIMARY KEY,
+    hero TEXT NOT NULL,
+    affix TEXT NOT NULL,
+    max_hp INTEGER NOT NULL,
+    hp INTEGER NOT NULL,
+    started INTEGER NOT NULL,
+    until INTEGER NOT NULL,
+    ended INTEGER NOT NULL DEFAULT 0,
+    killer TEXT,
+    paid INTEGER NOT NULL DEFAULT 0,
+    last INTEGER NOT NULL DEFAULT 0,
+    last_tx TEXT
+);
+CREATE TABLE IF NOT EXISTS gboss_hit (
+    gen INTEGER NOT NULL,
+    uid TEXT NOT NULL,
+    dmg INTEGER NOT NULL,
+    runs INTEGER NOT NULL,
+    last INTEGER NOT NULL,
+    PRIMARY KEY (gen, uid)
+);
+-- 一次出战一张票：done 是交过伤害没有，dmg 是最后算进去多少（天魔已经倒了就是 0），killed 是这一下打死的
+CREATE TABLE IF NOT EXISTS gboss_try (
+    id TEXT PRIMARY KEY,
+    uid TEXT NOT NULL,
+    gen INTEGER NOT NULL,
+    started INTEGER NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0,
+    tx TEXT,
+    dmg INTEGER NOT NULL DEFAULT 0,
+    killed INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_gboss_try_uid ON gboss_try (uid, started);
+CREATE INDEX IF NOT EXISTS idx_gboss_try_done ON gboss_try (done, started);
+
+-- 侠客列传的江湖足迹：node 是 n1 ~ n5（走完第几节）、c3（第 3 节的抉择）、end（结局），pick 是选了什么
+CREATE TABLE IF NOT EXISTS saga_mark (
+    hero TEXT NOT NULL,
+    node TEXT NOT NULL,
+    uid TEXT NOT NULL,
+    pick TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    PRIMARY KEY (hero, node, uid)
 );
