@@ -586,6 +586,29 @@ function randCode(n = 10) {   // 只收 248（31 的 8 倍）以下的字节，�
 }
 
 /* ---------- 武库：所有动作都在服务器上算 ---------- */
+// 流水里的一件饰品：「qf_p1#12 st3」（编号 12，斩数版，斩数 3；老流水只写 st）
+const itemRef = it => `${it.k}#${it.i}${+it.st >= 0 ? ' st' + (+it.st | 0) : ''}`;   // 带斩数，找回时能还原
+// 一次操作前后库存里少了哪几件、多了哪几件（库存加挂单一起算：挂上市场、撤回来都不算进出）
+function itemDiff(a, b) {
+  const ids = x => { const m = new Map(); for (const it of Array.isArray(x && x.inv) ? x.inv : []) if (it && Number.isInteger(+it.i)) m.set(+it.i, it);
+    for (const L of Array.isArray(x && x.lst) ? x.lst : []) if (L && L.it && Number.isInteger(+L.it.i)) m.set(+L.it.i, L.it); return m; };
+  const m0 = ids(a), m1 = ids(b);
+  const rm = [...m0.values()].filter(it => !m1.has(+it.i)).map(itemRef), ad = [...m1.values()].filter(it => !m0.has(+it.i)).map(itemRef);
+  return { rm: rm.length ? rm : undefined, ad: ad.length ? ad : undefined };
+}
+// 流水的 detail 最多 2000 字：放不下的话进出清单只留前面几件，另记总数（rmN、adN），保证存下来的还是完整的 JSON
+function logDetail(d) {
+  const n = k => Array.isArray(d[k]) ? d[k].length : undefined;
+  let txt = JSON.stringify(d);
+  for (const keep of [60, 20, 5, 0]) {
+    if (txt.length <= 2000) return txt;
+    const o = { ...d };
+    for (const k of ['rm', 'ad']) if (Array.isArray(d[k]) && d[k].length > keep) { o[k] = d[k].slice(0, keep); o[k + 'N'] = d[k].length; }
+    if (!keep) o.a = undefined;   // 参数也太长：不记参数
+    txt = JSON.stringify(o);
+  }
+  return txt.length <= 2000 ? txt : JSON.stringify({ r: String(d.r).slice(0, 200), rmN: n('rm'), adN: n('ad') });
+}
 const QUIET = ['sync', 'matchStart', 'claimCode'];   // 太频繁的动作不进流水账（有成交的除外）；兑换码另记一条 code_got
 async function handleEcon(env, auth, body, now, ip) {
   const uid = auth.user.id;
@@ -732,7 +755,9 @@ async function handleEcon(env, auth, body, now, ip) {
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
     delete p.armory; delete p.ledger;
     const quiet = QUIET.includes(act) && !out.sold.length && !out.back;
-    const detail = JSON.stringify({ a: args, r: res.err ? res.err : res.item ? `${res.item.k}#${res.item.i}${res.item.st >= 0 ? ' st' : ''}` : res.gain || res.price || '', s: out.sold.length || undefined, b: out.back ? out.back.length : undefined }).slice(0, 400);
+    // 流水里记下这一次进出库存的每一件（rm 出去的、ad 进来的，挂到市场上不算出去）：哪件饰品是哪一步没的，后台找回工具按这个查
+    const moved = itemDiff(eco.state, st);
+    const detail = logDetail({ a: args, r: res.err ? res.err : res.item ? itemRef(res.item) : res.gain || res.price || '', s: out.sold.length || undefined, b: out.back ? out.back.length : undefined, ...moved });
     // 买、撤：先把那一单从“在卖”改掉（只有它还在卖、版本号也没变才改得动），后面每一条都要看到这一改才生效
     const id = mo && (mo.buy || mo.cancel), tx = id ? [id, nonce.slice(0, 24) + '.' + attempt] : null;
     const stmts = [];
@@ -1030,7 +1055,7 @@ async function adminAdjust(env, u, body, who, why, now) {
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
     delete p.armory; delete p.ledger;
     const detail = JSON.stringify({ by: who, why, ink: dInk || undefined, cases: Object.keys(cases).length ? cases : undefined, term: dTerm || undefined, tags: dTags || undefined,
-      give: given.length ? given.map(x => `${x.k}#${x.i}${x.st >= 0 ? ' st' : ''}`) : undefined, take: taken.length ? taken.map(x => `${x.k}#${x.i}`) : undefined });
+      give: given.length ? given.map(itemRef) : undefined, take: taken.length ? taken.map(itemRef) : undefined });
     const results = await env.DB.batch([
       ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'admin', 1, eco.ink, E.ink, detail.slice(0, 2000)], u.id, ver),
       userWrite(env, u.id, p, now, ver),
@@ -1038,6 +1063,81 @@ async function adminAdjust(env, u, body, who, why, now) {
     ]);
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 玩家刚好也在动：重读再改
     return json({ ok: true, uid: u.id, ink: E.ink, cases: s.cases, term: s.term, tags: s.tags, given, taken });
+  }
+  return error('服务器忙，请再试一次', 503);
+}
+
+// ---------- 找回饰品：按流水查“拿到过、现在库存和挂单里都没有”的饰品，管理员确认后放回去 ----------
+// 正常的去向（汰换掉、一键卖掉重复的、在玩家市场卖掉）只列出来，不能找回（找回就是凭空多一件）；
+// 去向不明的（某一步操作里突然没了、旧流水没记去向）和管理员收走的可以找回。找回过的会标出来，不能再找回第二次
+const LOST_WHY = { trade: '汰换掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
+const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(m[1]) ? { k: m[1], i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined } : null; };   // 老流水只记了 st，没有斩数
+async function lostItems(env, uid) {
+  const row = await env.DB.prepare('SELECT state_json FROM econ WHERE uid = ?').bind(uid).first();
+  const st = parseObj(row && row.state_json) || C.blank(), here = new Set();
+  for (const it of Array.isArray(st.inv) ? st.inv : []) if (it) here.add(+it.i);
+  for (const L of Array.isArray(st.lst) ? st.lst : []) if (L && L.it) here.add(+L.it.i);
+  const sold = new Set();
+  for (const r of (await env.DB.prepare('SELECT item_json FROM mkt WHERE seller = ? AND state = 1').bind(uid).all()).results || []) { const it = parseObj(r.item_json); if (it) sold.add(+it.i); }
+  const log = (await env.DB.prepare('SELECT at, act, ok, detail FROM econ_log WHERE uid = ? ORDER BY id LIMIT 20000').bind(uid).all()).results || [];
+  const seen = new Map();
+  const one = (x, fresh) => { let o = seen.get(x.i); if (!o) seen.set(x.i, o = { i: x.i, k: x.k, st: x.st }); else if (fresh || x.n) { o.k = x.k; o.st = x.st; } return o; };   // 记了斩数的以最近一次为准；老流水没记斩数，以拿到时的为准
+  const got = (t, r) => { const x = parseItemRef(t); if (x) { const o = one(x, true); if (!o.got) o.got = { at: r.at, act: r.act }; } };
+  const gone = (t, r, why) => { const x = typeof t === 'number' ? seen.get(t) : parseItemRef(t); if (!x) return; const o = one(x); o.gone = { at: r.at, act: r.act, why }; o.restored = null; };
+  for (const r of log) {
+    const d = parseObj(r.detail); if (!d) continue;
+    if (r.act === 'restore') { for (const x of Array.isArray(d.items) ? d.items : []) { const o = seen.get(+x.from); if (o) o.restored = { at: r.at, to: x.to }; } for (const t of d.ad || []) got(t, r); continue; }
+    if (r.act === 'admin') { for (const t of d.give || []) got(t, r); for (const t of d.take || []) gone(t, r, 'admin'); continue; }
+    if (!r.ok && !d.rm && !d.ad) continue;
+    if (typeof d.r === 'string') got(d.r, r);   // 开箱、汰换、终端机、买到的那一件
+    for (const t of Array.isArray(d.ad) ? d.ad : []) got(t, r);
+    for (const t of Array.isArray(d.rm) ? d.rm : []) gone(t, r);
+    if (r.act === 'trade' && r.ok && !d.rm && d.a && Array.isArray(d.a.ids)) for (const i of d.a.ids) gone(+i, r);   // 旧流水没记进出：汰换按参数里的编号算
+  }
+  const out = [];
+  for (const o of seen.values()) {
+    if (here.has(o.i)) continue;
+    const g = o.gone, why = o.restored ? 'restored' : sold.has(o.i) ? 'sold' : g && g.why === 'admin' ? 'admin' : g && LOST_WHY[g.act] ? g.act : g ? 'odd' : 'unknown';
+    out.push({ i: o.i, k: o.k, st: o.st, got: o.got || null, gone: g || null, why, can: ['admin', 'odd', 'unknown'].includes(why) });
+  }
+  out.sort((a, b) => ((b.gone && b.gone.at) || 0) - ((a.gone && a.gone.at) || 0) || b.i - a.i);
+  return out.slice(0, 300);
+}
+async function adminRestore(env, u, body, who, why, now) {
+  const ids = Array.isArray(body.ids) ? [...new Set(body.ids.map(Number))] : [];
+  if (!ids.length || ids.length > 50 || ids.some(i => !Number.isInteger(i) || i < 1)) return error('要找回的饰品编号不对（一次最多 50 件）');
+  const lost = new Map((await lostItems(env, u.id)).map(x => [x.i, x]));
+  for (const i of ids) {
+    const x = lost.get(i);
+    if (!x) return error(`第 ${i} 号饰品不在“找不到的饰品”里（可能还在库存里，或者流水里没有它）`);
+    if (!x.can) return error(`第 ${i} 号饰品${x.why === 'restored' ? '已经找回过了' : LOST_WHY[x.why] || '是正常没的'}，不能找回`);
+  }
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first();
+    const prof = parseProfile(urow ? urow.profile_json : '', u.username);
+    const eco = await loadEcon(env, u.id, prof, now);
+    const s = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid: u.id });
+    const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
+    const E = { now, rnd, uid: u.id, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true };
+    const taken = new Set([...s.inv.map(x => x.i), ...s.lst.map(L => L.it.i)]), items = [];
+    for (const i of ids) {
+      const x = lost.get(i), to = taken.has(i) ? s.nid++ : i;   // 原来的编号空着就用原来的，流水里好对上
+      taken.add(to); s.nid = Math.max(s.nid, to + 1);
+      C.addItem(s, { i: to, k: x.k, st: x.st, n: '', t: now, src: 'restore' }, E);
+      items.push({ from: i, to, k: x.k, st: x.st });
+    }
+    const add = E.skins.filter(k => !skins0.includes(k)), ver = eco.ver, srv = eco.srv;
+    for (const k of add) delete srv.gone[k];
+    const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
+    delete p.armory; delete p.ledger;
+    const detail = JSON.stringify({ by: who, why, items, ad: items.map(x => itemRef({ k: x.k, i: x.to, st: x.st })) });
+    const results = await env.DB.batch([
+      ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'restore', 1, eco.ink, E.ink, detail.slice(0, 2000)], u.id, ver),
+      userWrite(env, u.id, p, now, ver),
+      econWrite(env, u.id, ver, now, srv, E.ink, JSON.stringify(s)),
+    ]);
+    if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 玩家刚好也在动：重读再改
+    return json({ ok: true, uid: u.id, items });
   }
   return error('服务器忙，请再试一次', 503);
 }
@@ -1127,13 +1227,23 @@ async function handleAdmin(env, request, path, now, ip) {
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
   if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么）
-    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag') ORDER BY l.id DESC LIMIT 100").all();
+    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag') ORDER BY l.id DESC LIMIT 100").all();
     return json({ ok: true, rows: rows.results || [] });
   }
   if (route === 'POST /api/admin/adjust') {
     const u = await findUser(String(body.uid || '').trim());
     if (!u) return error('没有这个账号', 404);
     return needWhy() || await adminAdjust(env, u, body, who, why, now);
+  }
+  if (route === 'GET /api/admin/lost') {   // 找回饰品：这个号拿到过、现在没有的饰品，各自是哪一步没的
+    const u = await findUser(q('uid'));
+    if (!u) return error('没有这个账号', 404);
+    return json({ ok: true, uid: u.id, username: u.username, items: await lostItems(env, u.id) });
+  }
+  if (route === 'POST /api/admin/restore') {   // 把找不到的饰品放回库存（只认去向不明、管理员收走的）
+    const u = await findUser(String(body.uid || '').trim());
+    if (!u) return error('没有这个账号', 404);
+    return needWhy() || await adminRestore(env, u, body, who, why, now);
   }
   if (route === 'POST /api/admin/ban') {   // 封几天或者永久；解封用 pardon
     const u = await findUser(String(body.uid || '').trim());

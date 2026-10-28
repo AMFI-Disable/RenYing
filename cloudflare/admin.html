@@ -151,6 +151,7 @@
   tbody tr:last-child td { border-bottom: 0; }
   tbody tr:hover td { background: rgba(255, 255, 255, .018); }
   tr.fail td { color: var(--faint); }
+  tr.mute td { color: var(--faint); }
   .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   td.detail { min-width: 200px; overflow-wrap: anywhere; color: var(--dim); }
   td.mw { min-width: 8.5em; }
@@ -334,13 +335,13 @@ const itemTag = (k, st) => H`<span class="it"><b>${itemName(k)}</b><i>${heroOf(k
 const cfgName = k => { const x = CAT.cfgInfo.find(r => r[0] === k); return x ? x[5] + '：' + x[6] : k; };
 const unit = (n, u) => H`${fmtN(n)}<small>${u}</small>`;
 const tile = (label, v, sub) => H`<div class="tile"><span>${label}</span><b>${typeof v === 'number' ? fmtN(v) : v}</b>${sub ? H`<i>${sub}</i>` : ''}</div>`;
-const SRC = { case: '开箱', term: '终端机', trade: '汰换', supply: '补给', op: '星章兑换', admin: '管理员发的' };
+const SRC = { case: '开箱', term: '终端机', trade: '汰换', supply: '补给', op: '星章兑换', admin: '管理员发的', restore: '找回的', market: '市场买的' };
 const ACT = {
   open: '开箱', store: '商店', buyCase: '买武器箱', buyTerm: '买终端机', list: '挂单', buy: '买下', cancel: '撤单', trade: '汰换', rename: '改名',
   equip: '穿上', unequip: '脱下', unseal: '开封终端机', termNext: '终端机换一件', termBuy: '终端机买下', supply: '领补给', mission: '领任务奖励',
   star: '星章兑换', collect: '集齐奖励', matchEnd: '对局结束', matchStart: '开局', sync: '同步', gift: '新手礼',
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
-  admin: '管理员调整', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
+  admin: '管理员调整', restore: '找回饰品', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
   claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码', flag: '改功能开关',
 };
 const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
@@ -372,6 +373,7 @@ function detailText(act, raw, withWho) {
   if (!d) return raw || '';
   const who = withWho && d.by ? d.by + (d.why ? '：' + d.why : '') + '｜' : '';
   if (act === 'admin') return who + [...stuff(d), ...(d.give || []).map(x => '发 ' + itemRef(x)), ...(d.take || []).map(x => '收 ' + itemRef(x))].join('，');
+  if (act === 'restore') return who + '找回 ' + (d.items || []).map(x => itemRef(x.k + '#' + x.to + (x.st >= 0 ? ' st' : '')) + (x.to !== x.from ? '（原 #' + x.from + '）' : '')).join('、');
   if (act === 'admin_ban') return who + (d.days === 'perm' ? '永久封号' : '封 ' + d.days + ' 天');
   if (act === 'pardon') return who + '解封';
   if (act === 'admin_pw') return who + (d.created ? '建号，设好密码' : '重设密码，别处的登录都退出了');
@@ -388,6 +390,9 @@ function detailText(act, raw, withWho) {
   const parts = [];
   if (d.r !== undefined && d.r !== '') parts.push(typeof d.r === 'number' ? fmtN(d.r) : itemRef(d.r));
   if (d.s) parts.push('结了 ' + d.s + ' 单');
+  if (d.b) parts.push('到期退回 ' + d.b + ' 件');
+  if (Array.isArray(d.rm) && d.rm.length) parts.push('出去：' + d.rm.map(itemRef).join('、') + (d.rmN > d.rm.length ? ' 等 ' + d.rmN + ' 件' : ''));
+  if (Array.isArray(d.ad) && d.ad.length && d.ad.join() !== String(d.r)) parts.push('进来：' + d.ad.map(itemRef).join('、') + (d.adN > d.ad.length ? ' 等 ' + d.adN + ' 件' : ''));
   if (d.a && typeof d.a === 'object') {
     const a = Object.entries(d.a).filter(([, v]) => v !== '' && v !== null && typeof v !== 'object').map(([k, v]) => argText(k, v)).join(' ');
     if (a) parts.push(a);
@@ -546,10 +551,27 @@ async function vPlayer() {
       </tbody></table></div>` : ''}
     </div>
   </form>
+  ${lostCard(p)}
   ${banCard(sc, isBan)}
   ${pwCard(p)}
   ${logCard(p.log || [])}
   ${mktCard(p)}`;
+}
+// 找回饰品：按流水查这个号拿到过、现在没有的饰品。正常没的（汰换、一键卖掉、市场卖掉）只列出来，去向不明和管理员收走的可以勾上找回
+const LOST_TEXT = { trade: '汰换掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了', odd: '在这一步里不见了', unknown: '去向不明（流水里没记）', restored: '已经找回过了' };
+function lostCard(p) {
+  const L = S.lost && S.lost.uid === p.uid ? S.lost.items : null;
+  if (!L) return H`<div class="card"><div class="row between wrap"><h2>找回饰品</h2><button type="button" class="btn ghost" data-act="lost">查一查丢了什么</button></div>
+    <p class="hint">按这个号的流水，列出拿到过、现在库存和挂单里都没有的饰品，写明是哪一步没的。去向不明的、管理员收走的可以找回，每件只能找回一次。</p></div>`;
+  const can = L.filter(x => x.can);
+  return H`<form class="card" data-form="restore" novalidate><div class="row between wrap"><h2>找回饰品 <small>${L.length} 件不在了，${can.length} 件能找回</small></h2><button type="button" class="btn ghost sm" data-act="lost">重新查</button></div>
+    ${L.length ? H`<div class="tw"><table><thead><tr><th>找回</th><th>编号</th><th>饰品</th><th>拿到</th><th>没了</th><th>去向</th></tr></thead><tbody>
+      ${L.map(x => H`<tr class="${x.can ? '' : 'mute'}"><td>${x.can ? H`<input type="checkbox" name="restore" value="${x.i}" aria-label="找回第 ${x.i} 号">` : ''}</td><td class="mono">#${x.i}</td><td>${itemTag(x.k, x.st)}</td>
+        <td class="nowrap">${x.got ? fmtT(x.got.at) + ' ' + (ACT[x.got.act] || x.got.act) : '—'}</td><td class="nowrap">${x.gone ? fmtT(x.gone.at) + ' ' + (ACT[x.gone.act] || x.gone.act) : '—'}</td>
+        <td>${x.why === 'restored' ? H`<span class="badge ok">${LOST_TEXT.restored}</span>` : x.can ? H`<span class="badge bad">${LOST_TEXT[x.why]}</span>` : LOST_TEXT[x.why] || x.why}</td></tr>`)}
+    </tbody></table></div>
+    ${can.length ? H`<div class="row end"><button class="btn">找回勾上的…</button></div>` : ''}` : H`<p class="empty">流水里拿到过的饰品都还在</p>`}
+  </form>`;
 }
 function banCard(sc, isBan) {
   return H`<form class="card" data-form="ban" novalidate>
@@ -811,6 +833,7 @@ const ACTS = {
     drawGives();
   },
   delgive: b => { S.give.splice(+b.dataset.i, 1); drawGives(); },
+  lost: b => busy(b, async () => { const r = await api('lost?uid=' + encodeURIComponent(S.p.uid)); S.lost = { uid: S.p.uid, items: r.items }; render(); }),
   genpw: b => {   // 15 个随机字节 → 20 位，只用字母、数字、- 和 _
     const a = new Uint8Array(15);
     crypto.getRandomValues(a);
@@ -892,6 +915,14 @@ const FORMS = {
     if (!lines.length) return toast('什么都没填，没有要改的', true);
     const a = await ask({ title: '修改 ' + p.username, lines, ok: '确定修改' });
     if (a) await busy(submitBtn(f), async () => { const r = await api('adjust', { ...body, why: a.why }); toast('改好了：' + p.username + ' 现在有 ' + fmtN(r.ink) + ' 墨锭'); render(); });
+  },
+  restore: async f => {
+    const p = S.p, ids = [...f.querySelectorAll('input[name=restore]:checked')].map(x => Number(x.value));
+    if (!ids.length) return toast('先勾上要找回的饰品', true);
+    if (ids.length > 50) return toast('一次最多找回 50 件', true);
+    const L = S.lost.items, lines = ids.map(i => { const x = L.find(y => y.i === i) || {}; return '找回：#' + i + ' ' + itemName(x.k) + '（' + heroOf(x.k) + '）' + (x.st >= 0 ? ' 斩数版' : '') + '，' + (LOST_TEXT[x.why] || ''); });
+    const a = await ask({ title: '给 ' + p.username + ' 找回饰品', lines: [...lines, '放回库存，原来的编号空着就用原来的；每件只能找回一次'], ok: '确定找回' });
+    if (a) await busy(submitBtn(f), async () => { const r = await api('restore', { uid: p.uid, ids, why: a.why }); S.lost = null; toast('找回了 ' + r.items.length + ' 件'); render(); });
   },
   ban: async f => {
     const p = S.p, perm = f.elements.perm.checked, days = numIn(f, 'days');

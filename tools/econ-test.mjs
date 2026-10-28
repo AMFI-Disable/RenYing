@@ -1716,6 +1716,60 @@ section('玩家市场挂单到期：挂太久没卖出的自动撤下，饰品�
   ok((await econ(S.token, 'list', { i: a.i, price: 10 })).res.ok, '腾出位置以后照常能挂');
 }
 
+section('找回饰品：管理后台按流水查出“拿到过、现在没有”的饰品，写明是哪一步没的；只有去向不明、管理员收走的能找回，找回一次');
+{
+  T = nextNoon();
+  const R = await newUser('restoree'), Bx = await newUser('rbuyer', { ink: 5000 });
+  for (const x of [R, Bx]) await econ(x.token, 'sync');
+  const mil = C.COLS.c1.mil[0];
+  const g = await adm('POST', '/api/admin/adjust', { uid: R.uid, give: [{ k: 'gc_wolf' }, { k: 'qf_p1', st: 4 }, { k: 'yh_p1' }, { k: 'ts_p1' }, { k: 'ts_p1' }, ...Array.from({ length: 10 }, () => ({ k: mil }))], why: '找回演练：先发东西' });
+  ok(g.ok && g.given.length === 15, '发了 15 件', g.error);
+  const [wolf, bamboo, yh, ts1, ts2] = g.given, mils = g.given.slice(5);
+  // 正常没的：汰换掉、一键卖掉重复的、在玩家市场卖掉、管理员收走
+  const tr = await econ(R.token, 'trade', { ids: mils.map(x => x.i) });
+  ok(tr.res.ok, '汰换掉 10 件', tr.res);
+  const lg = parseDetail(row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'trade' ORDER BY id DESC LIMIT 1", R.uid).detail);
+  ok(Array.isArray(lg.rm) && lg.rm.length === 10 && Array.isArray(lg.ad) && lg.ad.length === 1, '流水里记下了这一步出去的 10 件、进来的 1 件', lg);
+  const sd = await econ(R.token, 'sellDupes');
+  ok(sd.res.ok && sd.res.count === 1, '一键卖掉 1 件重复的', sd.res);
+  const li = await econ(R.token, 'list', { i: yh.i, price: 30 });
+  await econ(Bx.token, 'buy', { l: li.res.l });
+  await econ(R.token, 'sync');
+  const tk = await adm('POST', '/api/admin/adjust', { uid: R.uid, take: [bamboo.i], why: '找回演练：误收' });
+  ok(tk.ok, '管理员收走斩数版竹影', tk.error);
+  // 异常：存档出错，狼皮直接没了（流水里没有它的去向）
+  const s0 = stateOf(R.uid); s0.inv = s0.inv.filter(x => x.i !== wolf.i);
+  ENV.DB.raw.prepare('UPDATE econ SET state_json = ?, ver = ver + 1 WHERE uid = ?').run(JSON.stringify(s0), R.uid);
+  ok(!stateOf(R.uid).inv.some(x => x.i === wolf.i), '演练：删掉一件（狼皮）');
+  const L = await adm('GET', '/api/admin/lost?uid=' + R.uid);
+  const by = i => L.items.find(x => x.i === i);
+  ok(L.ok && by(wolf.i) && by(wolf.i).why === 'unknown' && by(wolf.i).can && by(wolf.i).k === 'gc_wolf', '狼皮：去向不明，可以找回', by(wolf.i));
+  ok(by(bamboo.i) && by(bamboo.i).why === 'admin' && by(bamboo.i).can && by(bamboo.i).st === 4, '管理员收走的：写明是谁收的那一步，可以找回（斩数照旧是 4）', by(bamboo.i));
+  ok(by(yh.i) && by(yh.i).why === 'sold' && !by(yh.i).can, '在玩家市场卖掉的：不能找回', by(yh.i));
+  ok(mils.every(x => by(x.i) && by(x.i).why === 'trade' && !by(x.i).can), '汰换掉的 10 件：不能找回');
+  const sold1 = [ts1, ts2].map(x => by(x.i)).filter(Boolean);
+  ok(sold1.length === 1 && sold1[0].why === 'sellDupes' && !sold1[0].can, '一键卖掉的那件重复的：不能找回', sold1);
+  ok(!by(ts1.i) !== !by(ts2.i) && !L.items.some(x => x.i === tr.res.item.i), '还在库存里的不列出来');
+  ok((await adm('POST', '/api/admin/restore', { uid: R.uid, ids: [wolf.i] })).status === 400, '不写原因不让找回');
+  const bad1 = await adm('POST', '/api/admin/restore', { uid: R.uid, ids: [yh.i], why: '想多要一件' });
+  ok(bad1.status === 400 && /不能找回/.test(bad1.error), '卖掉的不让找回', bad1.error);
+  const bad2 = await adm('POST', '/api/admin/restore', { uid: R.uid, ids: [tr.res.item.i], why: '还在库存里' });
+  ok(bad2.status === 400, '还在库存里的不让找回', bad2.error);
+  const rs = await adm('POST', '/api/admin/restore', { uid: R.uid, ids: [wolf.i, bamboo.i], why: '找回演练：存档出错丢的' });
+  ok(rs.ok && rs.items.length === 2 && rs.items.every(x => x.from === x.to), '找回 2 件，用回原来的编号', rs);
+  const st = stateOf(R.uid);
+  ok(st.inv.some(x => x.i === wolf.i && x.k === 'gc_wolf' && x.src === 'restore') && st.inv.some(x => x.i === bamboo.i && x.st === 4), '狼皮、斩数版竹影（斩数 4）回到库存', st.inv.map(x => x.i));
+  ok(profOf(R.uid).skins.includes('gc_wolf'), '皮肤又能穿了');
+  const rl = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'restore' ORDER BY id DESC LIMIT 1", R.uid);
+  ok(rl && parseDetail(rl.detail).why === '找回演练：存档出错丢的' && parseDetail(rl.detail).items.length === 2, '流水记下谁、为什么、找回了哪几件', rl);
+  const twice = await adm('POST', '/api/admin/restore', { uid: R.uid, ids: [wolf.i], why: '再找一次' });
+  ok(twice.status === 400 && stateOf(R.uid).inv.filter(x => x.k === 'gc_wolf').length === 1, '同一件找回不了第二次', twice.error);
+  const L2 = await adm('GET', '/api/admin/lost?uid=' + R.uid);
+  ok(!L2.items.some(x => x.i === wolf.i || x.i === bamboo.i), '找回以后不再列为找不到');
+  const aud = await adm('GET', '/api/admin/audit');
+  ok(aud.ok && aud.rows.some(r => r.act === 'restore' && r.uid === R.uid), '操作记录里看得到这次找回', aud.rows && aud.rows.slice(0, 3));
+}
+
 section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭据；拿凭据失败也照样回 STUN');
 {
   const realFetch = globalThis.fetch;
