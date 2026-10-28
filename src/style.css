@@ -1005,6 +1005,7 @@
 .gb-boss { padding: 12px 14px; border: 1px solid rgba(200,60,80,.45); border-radius: 10px; background: rgba(200,60,80,.08); }
 .gb-name { font-family: var(--title); font-size: 22px; }
 .gb-name span { color: rgb(var(--hc)); }
+.gb-name i { font-style: normal; }
 .gb-bar { position: relative; height: 20px; margin: 8px 0; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
 .gb-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #b8392e, #ff4655); transition: width .6s; }
 .gb-bar span { position: relative; display: block; text-align: center; font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; }

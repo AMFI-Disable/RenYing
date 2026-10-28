@@ -63,17 +63,17 @@ function renderGboss() {
   const b = st.boss, hero = CHARS[gbHeroIdx(b.hero)], pct = b.hp / b.maxHp * 100;
   const off = now - GB.at;   // 服务器时间换成本机时间
   const affix = gbAffix(st).map(id => `<span class="gb-affix" title="${esc(SC_BY[id].d)}"><b>${esc(SC_BY[id].n)}</b>${esc(SC_BY[id].d)}</span>`).join('');
-  const top = st.top.length ? st.top.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${esc(r.name)}</td><td class="n">${r.dmg.toLocaleString()}</td><td class="n">${r.runs} 次</td></tr>`).join('')
+  const top = st.top.length ? st.top.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${esc(r.name)}</td><td class="n">${r.dmg.toLocaleString()}</td><td class="n">出战 ${r.runs} 次</td></tr>`).join('')
     : `<tr><td colspan="4" class="gb-none">${uiState('empty', '这一代还没有人出战，第一刀等你来砍')}</td></tr>`;
-  const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> 造成 ${r.dmg.toLocaleString()} 伤害${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : `<li class="gb-none">${uiState('empty', '还没有战报')}</li>`;
-  const last = st.last ? `上一代（${esc(CHARS[gbHeroIdx(st.last.hero)].name)}）${st.last.killed ? `被 <b>${esc(st.last.killer)}</b> 斩杀` : '没被打死，遁走了'}` : '';
+  const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> <span>造成 ${r.dmg.toLocaleString()} 伤害</span>${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : `<li class="gb-none">${uiState('empty', '还没有战报')}</li>`;
+  const last = st.last ? esc(`上一代（${CHARS[gbHeroIdx(st.last.hero)].name}）${st.last.killed ? `被 ${st.last.killer} 斩杀` : '没被打死，遁走了'}`) : '';   // 整句一个文本节点，英文模板才对得上
   const me = !gbCloud() ? '登录云端账号才能出战（游客和本机存档只能观战）'
     : st.me && st.me.runs ? `你这一代造成 ${st.me.dmg.toLocaleString()} 伤害（出战 ${st.me.runs} 次）` : '你这一代还没出战';
   body.innerHTML = `
     <div class="gb-boss" style="--hc:${hero.look.slash}">
-      <div class="gb-name">第 ${b.gen} 代天魔 · <span>${esc(hero.name)}</span></div>
+      <div class="gb-name"><i>第 ${b.gen} 代天魔</i> · <span>${esc(hero.name)}</span></div>
       <div class="gb-bar"><i style="width:${pct.toFixed(2)}%"></i><span>${b.hp.toLocaleString()} / ${b.maxHp.toLocaleString()}</span></div>
-      <div class="gb-meta">${st.players} 人参战${st.fighting ? ` · <b>${st.fighting} 人正在出战</b>` : ''} · ${gbLeft(b.until - st.now - off)}后遁走 · 全服已斩杀 ${st.kills} 代（解锁 ${Math.min(st.kills, 10)} 卷天书）</div>
+      <div class="gb-meta"><span>${st.players} 人参战</span>${st.fighting ? ` · <b>${st.fighting} 人正在出战</b>` : ''} · <span>${gbLeft(b.until - st.now - off)}后遁走</span> · <span>全服已斩杀 ${st.kills} 代（解锁 ${Math.min(st.kills, 10)} 卷天书）</span></div>
       <div class="gb-affixes">${affix}</div>
     </div>
     <div class="gb-cols">

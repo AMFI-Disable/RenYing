@@ -984,6 +984,7 @@ width: 100%; border-radius: 999px;
 .gb-boss { padding: 12px 14px; border: 1px solid rgba(200,60,80,.45); border-radius: 10px; background: rgba(200,60,80,.08); }
 .gb-name { font-family: var(--title); font-size: 22px; }
 .gb-name span { color: rgb(var(--hc)); }
+.gb-name i { font-style: normal; }
 .gb-bar { position: relative; height: 20px; margin: 8px 0; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
 .gb-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #b8392e, #ff4655); transition: width .6s; }
 .gb-bar span { position: relative; display: block; text-align: center; font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; }
@@ -5473,6 +5474,28 @@ const PATTERNS_EN = [
 [/^(.+?)钦点【(.+?)】出战$/, (m0, w, r) => `${lookup(w) || w} · Pick the ${lookup(r) || r}`],
 [/^禁 (.+)$/, (m0, n) => `Ban · ${lookup(n) || n}`],
 [/^没找到名字里同时有「(.+)」这几个字的人，按回车按全名加$/, (m0, q) => `No one's name contains “${q}”. Press Enter to add by full name`],
+[/^第 (\d+) 代天魔$/, (m0, n) => `Demon · Gen ${n}`],
+[/^第 (\d+) 代天魔 · (.+)$/, (m0, n, h) => `Demon · Gen ${n} · ${lookup(h) || h}`],
+[/^剩 (\d+)% 血 · (\d+) 人参战(?: · (\d+) 人正在出战)?$/, (m0, p, n, f) => `${p}% HP left · ${n} fighters${f ? ` · ${f} fighting now` : ''}`],
+[/^(\d+) 人参战$/, (m0, n) => `${n} fighters`],
+[/^(\d+) 人正在出战$/, (m0, n) => `${n} fighting now`],
+[/^(\d.*?)后遁走$/, (m0, t) => `Escapes in ${EN_DUR(t).replace(/\s+/g, ' ')}`],
+[/^全服已斩杀 (\d+) 代（解锁 (\d+) 卷天书）$/, (m0, a, b) => `The server has slain ${a} generation${a === '1' ? '' : 's'} (${b} Heavenly Tome${b === '1' ? '' : 's'} unlocked)`],
+[/^出战 (\d+) 次$/, (m0, n) => `${n} run${n === '1' ? '' : 's'}`],
+[/^造成 ([\d,]+) 伤害$/, (m0, n) => `dealt ${n} damage`],
+[/^(\d+) 天前$/, (m0, n) => `${n} d ago`],
+[/^上一代（(.+?)）被 (.+) 斩杀$/, (m0, h, k) => `The last demon (${lookup(h) || h}) was slain by ${k}`],
+[/^上一代（(.+?)）没被打死，遁走了$/, (m0, h) => `The last demon (${lookup(h) || h}) escaped alive`],
+[/^你这一代造成 ([\d,]+) 伤害（出战 (\d+) 次）$/, (m0, d, n) => `You dealt ${d} damage to this generation (${n} run${n === '1' ? '' : 's'})`],
+[/^大家各自出战（不是同场联机），伤害都扣在这一只天魔身上。一次出战先抽三卷秘卷，再打 (\d+) 秒，天魔倒下会再站起来。天魔被斩杀或遁走后，按伤害发墨锭，伤害前三和斩杀者另得一个武器箱，下次打开武库自动领取。$/,
+(m0, n) => `Everyone fights on their own (not live together), and all damage lands on this one demon. Each run you draw three scrolls, then fight for ${n} seconds; the demon gets back up when it falls. When it is slain or escapes, Ink is paid out by damage, and the top three and the slayer each get a weapon case, collected the next time you open the Armory.`],
+[/^第 (\d+) \/ (\d+) 卷 · 天魔词缀：(.+)$/, (m0, a, b, x) => `Scroll ${a} / ${b} · Demon affixes: ${x === '无' ? 'none' : x.split('、').map(n => lookup(n) || n).join(', ')}`],
+[/^天魔讨伐 · 第 (\d+) 代$/, (m0, n) => `Demon Raid · Gen ${n}`],
+[/^这一战对天魔造成 ([\d,]+) 伤害，打倒它 (\d+) 次$/, (m0, d, n) => `You dealt ${d} damage to the demon and knocked it down ${n} time${n === '1' ? '' : 's'}`],
+[/^交不上：(.+)$/, (m0, x) => `Couldn't submit: ${lookup(x) || x}`],
+[/^计入全服 ([\d,]+) 伤害，最后一击斩杀了第 (\d+) 代天魔！奖励下次打开武库自动领取$/, (m0, d, n) => `${d} damage counted, and your last hit slew the Gen ${n} demon! Rewards are collected the next time you open the Armory`],
+[/^你出战时第 (\d+) 代天魔已被别人斩杀，这次伤害没有计入$/, (m0, n) => `The Gen ${n} demon was slain by someone else during your run, so this damage didn't count`],
+[/^已计入全服：([\d,]+) 伤害(（超过这次出战时长能打出的上限，按上限算）)?$/, (m0, d, cap) => `Counted for the server: ${d} damage${cap ? ' (above the most this run could deal, so capped)' : ''}`],
 [/^本赛季打满 (\d+) 场定级赛后上榜。段位从低到高：(.+)$/, (m0, n, ts) => `Finish ${n} placement matches this season to get on the board. Tiers, low to high: ${ts.split('、').map(t => { const m = t.match(/^(\S+) (.+)$/); return m ? `${m[1]} ${lookup(m[2]) || m[2]}` : t; }).join(', ')}`],
 [/^已注册玩家 (\d+) 位，按联机胜场排$/, (m0, n) => `${n} registered players, ranked by online wins`],
 [/^选择 (.+)$/, (m0, n) => `Pick ${lookup(n) || n}`],
@@ -7442,6 +7465,39 @@ const UI_COPY_EN = {
 "江湖足迹暂时连不上": "Footprints can't be loaded right now",
 "还没有人走过这条路，你会是第一个": "No one has walked this path yet. You could be the first.",
 "暂无武库饰品": "No armory cosmetics yet",
+"斩杀": "Final blow",
+"伤害榜": "Damage Ranking",
+"最近战报": "Recent Battles",
+"出战失败": "Couldn't start the fight",
+"正在领出战令…": "Getting a fight ticket…",
+"登录云端账号才能出战（游客和本机存档只能观战）": "Log in with a cloud account to fight (guests and local saves can only watch)",
+"你这一代还没出战": "You haven't fought this generation yet",
+"正在补交上次出战的伤害…": "Submitting damage from your last fight…",
+"上次出战的伤害还没交上去，联网后会自动补交": "Damage from your last fight hasn't been submitted yet. It will be sent once you're online",
+"天魔讨伐 · 出战前抽秘卷": "Demon Raid · Draw scrolls before the fight",
+"带上这卷": "Take this scroll",
+"回到天魔讨伐": "Back to Demon Raid",
+"时辰已到 · 撑满全场": "Time's up · You lasted the whole fight",
+"力竭倒下": "Fell exhausted",
+"正在把伤害交给服务器…": "Sending damage to the server…",
+"网络断了：伤害已存在本机，联网后自动补交": "Offline: damage is saved on this device and will be sent once you're online",
+"出战太久没交，这次不计入": "Submitted too late, so this fight doesn't count",
+"狂暴": "Enrage",
+"生命低于一半后伤害 +30%。": "Damage +30% below half HP.",
+"雷霆": "Thunder",
+"每 7 秒在你头顶落雷。": "Calls lightning on you every 7 seconds.",
+"再生": "Regeneration",
+"4 秒没挨打就每秒回复 1% 生命。": "Regains 1% HP per second after 4 seconds without being hit.",
+"荆棘": "Thorns",
+"近身打它会反受 10% 伤害。": "Melee hits on it reflect 10% damage back.",
+"玄甲": "Dark Armor",
+"受到的伤害 -15%，架势上限翻倍。": "Damage taken -15%, guard limit doubled.",
+"寒魄": "Frost",
+"打中你会让你减速。": "Its hits slow you.",
+"瘴毒": "Miasma",
+"打中你会叠一层毒。": "Each hit stacks poison on you.",
+"疾行": "Swiftness",
+"移速 +25%，技能冷却 -30%。": "Move speed +25%, skill cooldowns -30%.",
 "正在查看天魔的情况…": "Checking on the demon…",
 "刷新太快了，稍后再看": "Refreshing too fast. Check back in a moment.",
 "这一代还没有人出战，第一刀等你来砍": "No one has fought this generation yet. The first strike is yours.",
@@ -23689,17 +23745,17 @@ if (!st) { body.innerHTML = GB.err ? uiState('error', GB.err) : uiState('loading
 const b = st.boss, hero = CHARS[gbHeroIdx(b.hero)], pct = b.hp / b.maxHp * 100;
 const off = now - GB.at;   // 服务器时间换成本机时间
 const affix = gbAffix(st).map(id => `<span class="gb-affix" title="${esc(SC_BY[id].d)}"><b>${esc(SC_BY[id].n)}</b>${esc(SC_BY[id].d)}</span>`).join('');
-const top = st.top.length ? st.top.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${esc(r.name)}</td><td class="n">${r.dmg.toLocaleString()}</td><td class="n">${r.runs} 次</td></tr>`).join('')
+const top = st.top.length ? st.top.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${esc(r.name)}</td><td class="n">${r.dmg.toLocaleString()}</td><td class="n">出战 ${r.runs} 次</td></tr>`).join('')
 : `<tr><td colspan="4" class="gb-none">${uiState('empty', '这一代还没有人出战，第一刀等你来砍')}</td></tr>`;
-const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> 造成 ${r.dmg.toLocaleString()} 伤害${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : `<li class="gb-none">${uiState('empty', '还没有战报')}</li>`;
-const last = st.last ? `上一代（${esc(CHARS[gbHeroIdx(st.last.hero)].name)}）${st.last.killed ? `被 <b>${esc(st.last.killer)}</b> 斩杀` : '没被打死，遁走了'}` : '';
+const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> <span>造成 ${r.dmg.toLocaleString()} 伤害</span>${r.killed ? ' · <em>斩杀</em>' : ''}<small>${gbAgo(r.at, st.now)}</small></li>`).join('') : `<li class="gb-none">${uiState('empty', '还没有战报')}</li>`;
+const last = st.last ? esc(`上一代（${CHARS[gbHeroIdx(st.last.hero)].name}）${st.last.killed ? `被 ${st.last.killer} 斩杀` : '没被打死，遁走了'}`) : '';   // 整句一个文本节点，英文模板才对得上
 const me = !gbCloud() ? '登录云端账号才能出战（游客和本机存档只能观战）'
 : st.me && st.me.runs ? `你这一代造成 ${st.me.dmg.toLocaleString()} 伤害（出战 ${st.me.runs} 次）` : '你这一代还没出战';
 body.innerHTML = `
 <div class="gb-boss" style="--hc:${hero.look.slash}">
-<div class="gb-name">第 ${b.gen} 代天魔 · <span>${esc(hero.name)}</span></div>
+<div class="gb-name"><i>第 ${b.gen} 代天魔</i> · <span>${esc(hero.name)}</span></div>
 <div class="gb-bar"><i style="width:${pct.toFixed(2)}%"></i><span>${b.hp.toLocaleString()} / ${b.maxHp.toLocaleString()}</span></div>
-<div class="gb-meta">${st.players} 人参战${st.fighting ? ` · <b>${st.fighting} 人正在出战</b>` : ''} · ${gbLeft(b.until - st.now - off)}后遁走 · 全服已斩杀 ${st.kills} 代（解锁 ${Math.min(st.kills, 10)} 卷天书）</div>
+<div class="gb-meta"><span>${st.players} 人参战</span>${st.fighting ? ` · <b>${st.fighting} 人正在出战</b>` : ''} · <span>${gbLeft(b.until - st.now - off)}后遁走</span> · <span>全服已斩杀 ${st.kills} 代（解锁 ${Math.min(st.kills, 10)} 卷天书）</span></div>
 <div class="gb-affixes">${affix}</div>
 </div>
 <div class="gb-cols">
