@@ -526,7 +526,7 @@ function drawHUD() {
     }
     // 气槽
     const mw = barW * 0.55, my = top + bh + 44, mx = i === 0 ? x0 : x0 + barW - mw;
-    // 角色资源条（玉箫·音律 / 醉仙·醉意）：紧贴在大招气槽下面
+    // 角色资源条（玉箫·音律 / 醉翁·醉意）：紧贴在大招气槽下面
     let resH = 0;
     if (f.ch.passive === 'rhythm' || f.ch.passive === 'drunk') {
       resH = 9;

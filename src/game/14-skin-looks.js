@@ -561,7 +561,7 @@ function headAcc(sk, grow, color, L) {
       }
       break;
     }
-    case 'messy': {  // 醉仙：乱发几撮，红布条扎额，带子飘在脑后
+    case 'messy': {  // 醉翁：乱发几撮，红布条扎额，带子飘在脑后
       if (!outline) ctx.fillStyle = L.hair || '#3a2a1e';
       for (const k of [-1, 0, 1]) {
         const b = [h[0] + ux * 8 + px * k * 6, h[1] + uy * 8 + py * k * 6], tp = [h[0] + ux * (16 + grow) + px * k * 10 + bk * 4, h[1] + uy * (16 + grow) + py * k * 10];

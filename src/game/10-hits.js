@@ -157,7 +157,7 @@ function applyHit(att, def, m, pt) {
   def.drinkT = 0;
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
-  // 醉仙被动：醉意过半，两成几率闪开近身攻击
+  // 醉翁被动：醉意过半，两成几率闪开近身攻击
   if (def.ch.passive === 'drunk' && (def.drunk || 0) >= 50 && !m.isProj && !m.ult && !m.unblockable && !m.hold && ['idle', 'walk', 'air'].includes(def.state) && grnd() < 0.2) {
     def.invul = Math.max(def.invul, 0.2); def.vx = fx * 320; def.drunk = Math.max(0, def.drunk - 10);
     addP({ type: 'text', text: '醉里乾坤', x: def.x, y: def.y - 110, life: 0.7, max: 0.7, rgb: '255,170,90' });

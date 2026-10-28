@@ -97,6 +97,28 @@ function checkSaga(where, s, env, ids) {
     if (shape(`${w}.end.${f}`, e, { title: 'str', text: 'arr' })) lines(`${w}.end.${f}.text`, e.text);
   }
 }
+// 故事的统一写法（字段齐不齐上面已经查过，这里查写法；模板写在 src/data/00-heroes.js 的说明里）
+function checkStory(w, h) {
+  const n = h.char.name, f = h.forest, s = h.saga;
+  const title = (k, t) => { if (!new RegExp(`^${n}传 · [^ ·]{2,8}$`).test(t)) err(w, `${k} 要写成「${n}传 · 两到八个字」，现在是「${t}」`); };
+  const say = (k, t) => { if (!new RegExp(`^${n}：「[^「」]+」$`).test(t)) err(w, `${k} 要写成「${n}：「台词」」，现在是「${t.slice(0, 16)}…」`); };
+  title('forest.title', f.title);
+  title('saga.title', s.title);
+  if (!f.synopsis.includes(n)) err(w, `forest.synopsis 里要出现侠客的名字「${n}」`);
+  if (!/[。！]$/.test(f.synopsis)) err(w, 'forest.synopsis 要以句号或叹号结尾');
+  f.stageNames.forEach((t, i) => { if (typeof t === 'string' && [...t].length !== 4) err(w, `forest.stageNames[${i}]「${t}」要是四个字`); });
+  unique(w + ' forest.stageNames', f.stageNames, '关卡名');
+  f.waveDialogues.forEach((t, i) => typeof t === 'string' && say(`forest.waveDialogues[${i}]`, t));
+  say('forest.bossIntro', f.bossIntro);
+  if (!/[。！？]$/.test(s.motive)) err(w, 'saga.motive 要以句号结尾');
+  if (!Array.isArray(s.nodes) || s.nodes.length !== 5) return;
+  const ci = s.nodes.findIndex(x => x && x.choice);
+  if (ci !== 1 && ci !== 2) err(w, `saga 的抉择要放在第 2 或第 3 节（前面至少打过一场，后面还有一节铺垫结局），现在在第 ${ci + 1} 节`);
+  s.nodes.slice(0, 4).forEach((x, i) => { if (Array.isArray(x.pre) && !(Array.isArray(x.pre[0]) && x.pre[0][0] === '')) err(w, `saga.nodes[${i}].pre 第一行要是旁白（说话的人写 ''），先交代场景`); });
+  unique(w + ' saga.nodes', s.nodes.map(x => x.name), '节标题');
+  const ends = Object.values(s.nodes[4].end || {}).map(e => e && e.title);
+  unique(w + ' saga.nodes[4].end', ends, '结局标题');
+}
 // base：侠客的 cancel 已经并上了通用的 CANCEL，只查他自己改过的项（和 base 不一样的），通用那份的错在 CANCEL 报一次就够
 function checkCancel(w, c, base) {
   if (!shape(w, c, base ? Object.fromEntries(Object.entries(CANCEL_SPEC).map(([k, t]) => [k + '?', t])) : CANCEL_SPEC)) return;
@@ -169,6 +191,7 @@ function checkHeroes(env) {
       if (f.waveDialogues.length !== 4 || !f.waveDialogues.every(TYPES.str)) err(w + ' forest', 'waveDialogues 要正好 4 句台词');
     }
     checkSaga(w + ' saga', h.saga, env, ids);
+    if (TYPES.obj(f) && TYPES.str(f.title) && TYPES.str(f.synopsis) && TYPES.str(f.bossIntro) && Array.isArray(f.stageNames) && Array.isArray(f.waveDialogues) && TYPES.obj(h.saga) && TYPES.str(h.saga.title) && TYPES.str(h.saga.motive)) checkStory(w, h);
   });
   // 皮肤：<前缀>_xxx 的皮肤要属于这个前缀的侠客
   const bySkin = Object.fromEntries(H.map(h => [h.skin, h.id]));

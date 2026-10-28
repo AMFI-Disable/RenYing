@@ -565,7 +565,7 @@ function weapon(sk, L, outline, flash) {
       line(hl, [hl[0] - ux * 4 + sway, hl[1] - uy * 4 + 12]); line(hl, [hl[0] - ux * 4 + sway + 3, hl[1] - uy * 4 + 11]);
       return;
     }
-    case 'gourd': {  // 醉仙：缠布的拳头，另一只手拎着酒葫芦
+    case 'gourd': {  // 醉翁：缠布的拳头，另一只手拎着酒葫芦
       const up = sk.hb[1] < sk.neck[1] + 4, gp = up ? [sk.hb[0] + sk.face * 6, sk.hb[1] - 2] : [sk.hb[0], sk.hb[1] + 10];
       const top = up ? [gp[0] + sk.face * 5, gp[1] - 4] : [gp[0], gp[1] - 5], bot = up ? [gp[0] - sk.face * 6, gp[1] + 6] : [gp[0], gp[1] + 7];
       if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 8); circle(top, 7.5); circle(bot, 10.5); return; }

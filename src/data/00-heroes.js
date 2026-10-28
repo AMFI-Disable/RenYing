@@ -25,6 +25,15 @@
 //             fight：foe 对手、lv 电脑难度、goal 胜利条件（ko 打倒对手 / survive 撑到时间结束 / fast 时限内打倒）、time 秒数、
 //                    hp 开局自己剩几成血、foeHp 对手血量倍数、mySc 自己身上的秘卷、foeSc 对手身上的秘卷（都是 22-scrolls.js 里的编号）。
 //             第 5 节的 pre / fight / post 可以写成 { 抉择的 flag: 内容 }，end 是两个结局。
+//
+// 故事的统一模板（tools/data-check.mjs 逐项检查，名字一律用 char.name，不用别称）：
+//   forest.title、saga.title  「名字传 · 两到八个字」，比如「青锋传 · 竹海断剑」
+//   forest.synopsis           一两句交代起因，里面要出现名字，以句号或叹号结尾
+//   forest.stageNames         五关，每关四个字，不重复
+//   forest.waveDialogues      四句，forest.bossIntro 一句，都写成「名字：「台词」」
+//   saga.motive               一句话的起因，以句号结尾
+//   saga.nodes                五节，节标题不重复；前四节的 pre 第一行是旁白（先交代场景）；
+//                             抉择放在第 2 或第 3 节；第 5 节的两个结局标题不一样
 const HEROES = [];
 function defHero(h) {
   h.char = { id: h.id, ...h.char, cancel: { ...CANCEL, ...(h.char && h.char.cancel) } };   // 取消规则：通用的 CANCEL（src/data/01-moves.js）加上这位侠客自己改的
