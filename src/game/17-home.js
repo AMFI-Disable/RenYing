@@ -242,44 +242,7 @@ function menuGo(name) {
     setTimeout(() => document.body.classList.remove('menu-handoff'), 320);
   }, prefersReduced() ? 0 : (spot !== undefined ? MENU_DOLLY : 220));
 }
-const AI_PROFILES = {
-  easy: {
-    name: '入门',
-    badge: '初学练手',
-    badgeCol: '#46d3ea',
-    desc: '反应很慢（0.42~0.7 秒），很少格挡（15%），一套最多打 2 下，技能常常乱放，三成动作会失误。适合熟悉移动、按键手感和技能命中。',
-    traits: ['反应 0.4 秒以上', '很少格挡 (15%)', '2 连段']
-  },
-  normal: {
-    name: '寻常',
-    badge: '标准对练',
-    badgeCol: '#2bd49a',
-    desc: '反应 0.26~0.42 秒，会格挡（40%）、偶尔确反，能打 3 连段、偶尔取消接技能，被连多了会腾空闪。适合练常规走位和破招时机。',
-    traits: ['反应约 0.3 秒', '格挡 40%', '3 连段']
-  },
-  hard: {
-    name: '劲敌',
-    badge: '凌厉反击',
-    badgeCol: '#e9c46a',
-    desc: '反应 0.15~0.25 秒，格挡 68% 并偶尔精准招架，挡住就确反，5 连段接技能，会压起身、偶尔骗闪，血量领先会拉开距离，并按双方角色调整站位。',
-    traits: ['挡后确反', '压起身', '按角色针对']
-  },
-  impossible: {
-    name: '绝顶',
-    badge: '极境宗师',
-    badgeCol: '#ff6b6b',
-    desc: '反应 0.08~0.13 秒，格挡 88%、四成精准招架，记住你被连几下会闪并停手骗闪，算好起身时机压起身，用自我对弈训练出的角色打法。本难度电脑多 35% 血。',
-    traits: ['骗闪', '读你的起身习惯', '训练出的角色打法']
-  },
-  god: {
-    name: '天道',
-    badge: '天道神境 · 自我对弈',
-    badgeCol: '#d946ef',
-    desc: '反应只有 0.025~0.05 秒，几乎每招都防、九成精准招架，蓄力斩没蓄满就打断，躲大招、骗闪、压起身、针对角色特性全开；每个角色的打法都是 AI 和 AI 自我对弈进化出来的。',
-    traits: ['自我对弈训练', '九成精准招架', '骗闪与压起身']
-  }
-};
-
+// AI_PROFILES（每档难度的标签、介绍、关键词）从 src/data/20-levels.js 来，见 src/game/01-core.js
 function updateAIBrief() {
   const lv = pickLevel || 'normal';
   const p = AI_PROFILES[lv] || AI_PROFILES.normal;

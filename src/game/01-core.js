@@ -131,7 +131,6 @@ const ROUND_TIME = 50, ROUND_TIME_2V2 = 75, OT_TIME = 20, OT_DMG = 2;
 // 联机两人接力和车轮战：活下来的人带着剩下的血量 +CARRY_HEAL 进下一回合（不超过上限），换上来的人满血；其余模式每回合双方满血
 const CARRY_HEAL = 80;
 const WINS_NEEDED = 2, MAX_ROUNDS = 5;     // 先赢 2 回合的一方获胜；平局太多时第 5 回合打完就结束
-const IMPOSSIBLE_HP = 1.35;                // 绝顶难度的电脑多 35% 血
 const LAST_STAND_METER = 100, LAST_STAND_T = 3.5, LAST_STAND_HEAL = 75;   // 2v2 队友倒下后「孤军奋战」：气满、强化 3.5 秒、回 75 血
 const CREDIT = 2.4;                        // 第一回合开场署名多停留的秒数
 const PENGLAI_T = 2;                       // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
@@ -144,8 +143,12 @@ const CHARGE_FULL = 0.75;   // 蓄力多久算满
 const DODGE_CD = 0.3;
 const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
 const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
-// 难度的中文名（关卡、回放列表都用这一份）
-const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', god: '天道', adaptive: '宿敌' };
+// 电脑难度：表在 src/data/20-levels.js，这里拆成各处要用的样子
+const LEVEL_BY_ID = Object.fromEntries(DIFFICULTIES.map(d => [d.id, d]));
+const LEVELS = Object.fromEntries(DIFFICULTIES.filter(d => d.ai).map(d => [d.id, { ...d.ai }]));   // AIBrain 用的参数（宿敌对局时由 aiBlendLevel 补上）
+const AI_LEVEL_KEYS = DIFFICULTIES.filter(d => d.ai).map(d => d.id);
+const LV_NAME = Object.fromEntries(DIFFICULTIES.map(d => [d.id, d.name]));   // 难度的中文名（关卡、回放列表都用这一份）
+const AI_PROFILES = Object.fromEntries(DIFFICULTIES.filter(d => d.desc).map(d => [d.id, { name: d.name, badge: d.badge, badgeCol: d.badgeCol, desc: d.desc, traits: d.traits }]));   // 选难度界面的介绍
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);          // 画面特效用（两边可以不一样）

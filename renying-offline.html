@@ -5820,16 +5820,9 @@ window.t = t;
 })();
 </script>
 <script>
-const LEVELS = {
-easy: { react: [0.42, 0.7], think: [0.34, 0.62], block: 0.15, jg: 0, punish: 0.08, combo: 2, cancel: 0, tech: 0.1, breaker: 0.05, oki: 0, bait: 0, read: 0, lead: 0, error: 0.3, skill: 0.3, ult: 0.25, aggr: 0.42, genes: false, matchup: false },
-normal: { react: [0.26, 0.42], think: [0.2, 0.42], block: 0.4, jg: 0, punish: 0.3, combo: 3, cancel: 0.2, tech: 0.35, breaker: 0.3, oki: 0.15, bait: 0, read: 0, lead: 0, error: 0.15, skill: 0.55, ult: 0.5, aggr: 0.55, genes: false, matchup: false },
-hard: { react: [0.15, 0.25], think: [0.1, 0.24], block: 0.68, jg: 0.1, punish: 0.62, combo: 5, cancel: 0.55, tech: 0.7, breaker: 0.6, oki: 0.45, bait: 0.2, read: 0.3, lead: 0.4, error: 0.06, skill: 0.8, ult: 0.75, aggr: 0.68, genes: false, matchup: true },
-impossible: { react: [0.075, 0.13], think: [0.04, 0.1], block: 0.88, jg: 0.4, punish: 0.88, combo: 6, cancel: 0.85, tech: 0.92, breaker: 0.85, oki: 0.8, bait: 0.6, read: 0.7, lead: 0.8, error: 0.02, skill: 0.95, ult: 0.92, aggr: 0.78, genes: true, matchup: true },
-god: { react: [0.025, 0.05], think: [0.016, 0.04], block: 0.99, jg: 0.9, punish: 1, combo: 6, cancel: 1, tech: 1, breaker: 1, oki: 1, bait: 1, read: 1, lead: 1, error: 0, skill: 1, ult: 1, aggr: 0.85, genes: true, matchup: true },
-};
-const AI_LEVEL_KEYS = ['easy', 'normal', 'hard', 'impossible', 'god'];
 function aiBlendLevel(k) {
-const a = LEVELS.hard, b = LEVELS.impossible, t = Math.max(0, Math.min(1, (k - 0.55) / 0.9)), out = {};
+const [lo, hi] = (DIFFICULTIES.find(d => d.id === 'adaptive') || {}).blend || ['hard', 'impossible'];
+const a = LEVELS[lo], b = LEVELS[hi], t = Math.max(0, Math.min(1, (k - 0.55) / 0.9)), out = {};
 for (const key in a) {
 const x = a[key], y = b[key];
 out[key] = Array.isArray(x) ? [x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t] : typeof x === 'number' ? x + (y - x) * t : t > 0.5 ? y : x;
@@ -6862,6 +6855,53 @@ function defHero(h) {
 h.char = { id: h.id, ...h.char };
 HEROES.push(h);
 }
+const DIFFICULTIES = [
+{
+id: 'easy', name: '入门',
+ai: { react: [0.42, 0.7], think: [0.34, 0.62], block: 0.15, jg: 0, punish: 0.08, combo: 2, cancel: 0, tech: 0.1, breaker: 0.05, oki: 0, bait: 0, read: 0, lead: 0, error: 0.3, skill: 0.3, ult: 0.25, aggr: 0.42, genes: false, matchup: false },
+badge: '初学练手', badgeCol: '#46d3ea',
+desc: '反应很慢（0.42~0.7 秒），很少格挡（15%），一套最多打 2 下，技能常常乱放，三成动作会失误。适合熟悉移动、按键手感和技能命中。',
+traits: ['反应 0.4 秒以上', '很少格挡 (15%)', '2 连段'],
+reward: 10,
+},
+{
+id: 'normal', name: '寻常',
+ai: { react: [0.26, 0.42], think: [0.2, 0.42], block: 0.4, jg: 0, punish: 0.3, combo: 3, cancel: 0.2, tech: 0.35, breaker: 0.3, oki: 0.15, bait: 0, read: 0, lead: 0, error: 0.15, skill: 0.55, ult: 0.5, aggr: 0.55, genes: false, matchup: false },
+badge: '标准对练', badgeCol: '#2bd49a',
+desc: '反应 0.26~0.42 秒，会格挡（40%）、偶尔确反，能打 3 连段、偶尔取消接技能，被连多了会腾空闪。适合练常规走位和破招时机。',
+traits: ['反应约 0.3 秒', '格挡 40%', '3 连段'],
+reward: 20,
+},
+{
+id: 'hard', name: '劲敌',
+ai: { react: [0.15, 0.25], think: [0.1, 0.24], block: 0.68, jg: 0.1, punish: 0.62, combo: 5, cancel: 0.55, tech: 0.7, breaker: 0.6, oki: 0.45, bait: 0.2, read: 0.3, lead: 0.4, error: 0.06, skill: 0.8, ult: 0.75, aggr: 0.68, genes: false, matchup: true },
+badge: '凌厉反击', badgeCol: '#e9c46a',
+desc: '反应 0.15~0.25 秒，格挡 68% 并偶尔精准招架，挡住就确反，5 连段接技能，会压起身、偶尔骗闪，血量领先会拉开距离，并按双方角色调整站位。',
+traits: ['挡后确反', '压起身', '按角色针对'],
+reward: 40,
+},
+{
+id: 'adaptive', name: '宿敌',
+blend: ['hard', 'impossible'],
+reward: 40,
+},
+{
+id: 'impossible', name: '绝顶',
+ai: { react: [0.075, 0.13], think: [0.04, 0.1], block: 0.88, jg: 0.4, punish: 0.88, combo: 6, cancel: 0.85, tech: 0.92, breaker: 0.85, oki: 0.8, bait: 0.6, read: 0.7, lead: 0.8, error: 0.02, skill: 0.95, ult: 0.92, aggr: 0.78, genes: true, matchup: true },
+badge: '极境宗师', badgeCol: '#ff6b6b',
+desc: '反应 0.08~0.13 秒，格挡 88%、四成精准招架，记住你被连几下会闪并停手骗闪，算好起身时机压起身，用自我对弈训练出的角色打法。本难度电脑多 35% 血。',
+traits: ['骗闪', '读你的起身习惯', '训练出的角色打法'],
+foeHp: 1.35,
+reward: 60,
+},
+{
+id: 'god', name: '天道',
+ai: { react: [0.025, 0.05], think: [0.016, 0.04], block: 0.99, jg: 0.9, punish: 1, combo: 6, cancel: 1, tech: 1, breaker: 1, oki: 1, bait: 1, read: 1, lead: 1, error: 0, skill: 1, ult: 1, aggr: 0.85, genes: true, matchup: true },
+badge: '天道神境 · 自我对弈', badgeCol: '#d946ef',
+desc: '反应只有 0.025~0.05 秒，几乎每招都防、九成精准招架，蓄力斩没蓄满就打断，躲大招、骗闪、压起身、针对角色特性全开；每个角色的打法都是 AI 和 AI 自我对弈进化出来的。',
+traits: ['自我对弈训练', '九成精准招架', '骗闪与压起身'],
+},
+];
 defHero({
 id: 'qingfeng', skin: 'qf', en: 'Qing Feng',
 bal: { normal: 0.915, skill: 0.915, ult: 0.915, cd: 1.0, hp: 0.915 },
@@ -7581,7 +7621,6 @@ const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T
 const ROUND_TIME = 50, ROUND_TIME_2V2 = 75, OT_TIME = 20, OT_DMG = 2;
 const CARRY_HEAL = 80;
 const WINS_NEEDED = 2, MAX_ROUNDS = 5;     // 先赢 2 回合的一方获胜；平局太多时第 5 回合打完就结束
-const IMPOSSIBLE_HP = 1.35;                // 绝顶难度的电脑多 35% 血
 const LAST_STAND_METER = 100, LAST_STAND_T = 3.5, LAST_STAND_HEAL = 75;   // 2v2 队友倒下后「孤军奋战」：气满、强化 3.5 秒、回 75 血
 const CREDIT = 2.4;                        // 第一回合开场署名多停留的秒数
 const PENGLAI_T = 2;                       // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
@@ -7593,7 +7632,11 @@ const CHARGE_FULL = 0.75;   // 蓄力多久算满
 const DODGE_CD = 0.3;
 const BREAK_CD = 9;         // 腾空闪（按住左键再按右键）的冷却秒数
 const LAUNCH_GRAV = 0.6;    // 被挑飞时的重力倍率，越小在空中越久
-const LV_NAME = { easy: '入门', normal: '寻常', hard: '劲敌', impossible: '绝顶', god: '天道', adaptive: '宿敌' };
+const LEVEL_BY_ID = Object.fromEntries(DIFFICULTIES.map(d => [d.id, d]));
+const LEVELS = Object.fromEntries(DIFFICULTIES.filter(d => d.ai).map(d => [d.id, { ...d.ai }]));   // AIBrain 用的参数（宿敌对局时由 aiBlendLevel 补上）
+const AI_LEVEL_KEYS = DIFFICULTIES.filter(d => d.ai).map(d => d.id);
+const LV_NAME = Object.fromEntries(DIFFICULTIES.map(d => [d.id, d.name]));   // 难度的中文名（关卡、回放列表都用这一份）
+const AI_PROFILES = Object.fromEntries(DIFFICULTIES.filter(d => d.desc).map(d => [d.id, { name: d.name, badge: d.badge, badgeCol: d.badgeCol, desc: d.desc, traits: d.traits }]));   // 选难度界面的介绍
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);          // 画面特效用（两边可以不一样）
@@ -10183,7 +10226,8 @@ if (M.mode === 'net' && netRoomMode === 'chaos') {
 if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
 if (NET.role === 'host') rollChaosMutation();
 }
-if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * IMPOSSIBLE_HP); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
+const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
+if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
 if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
 M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
 M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
@@ -16966,43 +17010,6 @@ showScreen(target);
 setTimeout(() => document.body.classList.remove('menu-handoff'), 320);
 }, prefersReduced() ? 0 : (spot !== undefined ? MENU_DOLLY : 220));
 }
-const AI_PROFILES = {
-easy: {
-name: '入门',
-badge: '初学练手',
-badgeCol: '#46d3ea',
-desc: '反应很慢（0.42~0.7 秒），很少格挡（15%），一套最多打 2 下，技能常常乱放，三成动作会失误。适合熟悉移动、按键手感和技能命中。',
-traits: ['反应 0.4 秒以上', '很少格挡 (15%)', '2 连段']
-},
-normal: {
-name: '寻常',
-badge: '标准对练',
-badgeCol: '#2bd49a',
-desc: '反应 0.26~0.42 秒，会格挡（40%）、偶尔确反，能打 3 连段、偶尔取消接技能，被连多了会腾空闪。适合练常规走位和破招时机。',
-traits: ['反应约 0.3 秒', '格挡 40%', '3 连段']
-},
-hard: {
-name: '劲敌',
-badge: '凌厉反击',
-badgeCol: '#e9c46a',
-desc: '反应 0.15~0.25 秒，格挡 68% 并偶尔精准招架，挡住就确反，5 连段接技能，会压起身、偶尔骗闪，血量领先会拉开距离，并按双方角色调整站位。',
-traits: ['挡后确反', '压起身', '按角色针对']
-},
-impossible: {
-name: '绝顶',
-badge: '极境宗师',
-badgeCol: '#ff6b6b',
-desc: '反应 0.08~0.13 秒，格挡 88%、四成精准招架，记住你被连几下会闪并停手骗闪，算好起身时机压起身，用自我对弈训练出的角色打法。本难度电脑多 35% 血。',
-traits: ['骗闪', '读你的起身习惯', '训练出的角色打法']
-},
-god: {
-name: '天道',
-badge: '天道神境 · 自我对弈',
-badgeCol: '#d946ef',
-desc: '反应只有 0.025~0.05 秒，几乎每招都防、九成精准招架，蓄力斩没蓄满就打断，躲大招、骗闪、压起身、针对角色特性全开；每个角色的打法都是 AI 和 AI 自我对弈进化出来的。',
-traits: ['自我对弈训练', '九成精准招架', '骗闪与压起身']
-}
-};
 function updateAIBrief() {
 const lv = pickLevel || 'normal';
 const p = AI_PROFILES[lv] || AI_PROFILES.normal;
@@ -19601,8 +19608,7 @@ if (!tryCommitNet(false)) setTimeout(() => tryCommitNet(true), 5000);
 } else if (M.mode === 'cpu') {
 const won = w === 0;
 if (won) {
-const rewardMap = { easy: 10, normal: 20, hard: 40, adaptive: 40, impossible: 60 };
-const gain = rewardMap[M.level] || 20;
+const gain = (LEVEL_BY_ID[M.level] || {}).reward || 20;   // 打赢给的墨锭写在难度表里
 PROF.ink = (PROF.ink || 0) + gain;
 $id('endRank').textContent = `+${gain} 墨锭`;
 if (window.CloudSave) CloudSave.saveProfile(PROF);

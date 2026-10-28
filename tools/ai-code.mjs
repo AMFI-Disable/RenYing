@@ -22,6 +22,11 @@ export function heroData() {
   return Function(dataFiles().map(p => readFileSync(ROOT + p, 'utf8')).join('\n') + '\nreturn HEROES;')();
 }
 
+// 只读电脑难度表（不跑游戏）：返回 DIFFICULTIES，每项是 { id, name, ai | blend, badge, badgeCol, desc, traits, foeHp, reward }
+export function levelData() {
+  return Function(dataFiles().map(p => readFileSync(ROOT + p, 'utf8')).join('\n') + '\nreturn DIFFICULTIES;')();
+}
+
 export function gameSource() {
   const brain = existsSync(ROOT + 'models/ai-brain.json') ? readFileSync(ROOT + 'models/ai-brain.json', 'utf8') : '{}';
   return `(typeof window !== 'undefined' ? window : globalThis).RENYING_AI_BRAIN = ${brain};\n`

@@ -1,6 +1,6 @@
 // ======================= 电脑 AI（人机） =======================
 // 这个文件在 game.js 之前加载，只定义数据和函数；用到的游戏变量（clock、projs、SKILLS……）都在调用时才读。
-//   1. LEVELS        五个难度的“手速与见识”：反应多快、会不会确反、压起身、骗闪、避战……
+//   1. LEVELS        五个难度的“手速与见识”：反应多快、会不会确反、压起身、骗闪、避战……（数据在 src/data/20-levels.js）
 //   2. AI_KIT        每个角色的技能该怎么用（什么时候放、打中后接什么）
 //   3. 打法基因      每个角色可以训练的打法参数。天道与绝顶用 tools/ai-train.mjs 自我对弈进化出来的基因
 //   4. 打击数据      tools/ai-framedata.mjs 实测的每招距离、出手时间、收招时间，存在 models/ai-brain.json
@@ -8,21 +8,12 @@
 //   6. AIBrain       每帧决策：本能（受身、破连、格挡、精准招架、躲暗器）→ 战术（连招、确反、压起身、骗闪、立回、避战）
 
 // ---------- 1. 难度 ----------
-// react 看到对手出招到能反应的秒数   think 立回时多久想一次   block 看到来招时防住的几率   jg 精准招架几率
-// punish 抓破绽几率   combo 一套最多打几下   cancel 连招取消接技能几率   tech 落地受身几率   breaker 腾空闪用得多好
-// oki 压起身几率   bait 骗闪几率   read 记对手习惯的本事   lead 领先后避战   error 失误几率   skill 技能用得准不准
-// ult 大招用得准不准   aggr 主动程度   genes 是否用训练出来的角色打法   matchup 是否按双方角色针对
-const LEVELS = {
-  easy: { react: [0.42, 0.7], think: [0.34, 0.62], block: 0.15, jg: 0, punish: 0.08, combo: 2, cancel: 0, tech: 0.1, breaker: 0.05, oki: 0, bait: 0, read: 0, lead: 0, error: 0.3, skill: 0.3, ult: 0.25, aggr: 0.42, genes: false, matchup: false },
-  normal: { react: [0.26, 0.42], think: [0.2, 0.42], block: 0.4, jg: 0, punish: 0.3, combo: 3, cancel: 0.2, tech: 0.35, breaker: 0.3, oki: 0.15, bait: 0, read: 0, lead: 0, error: 0.15, skill: 0.55, ult: 0.5, aggr: 0.55, genes: false, matchup: false },
-  hard: { react: [0.15, 0.25], think: [0.1, 0.24], block: 0.68, jg: 0.1, punish: 0.62, combo: 5, cancel: 0.55, tech: 0.7, breaker: 0.6, oki: 0.45, bait: 0.2, read: 0.3, lead: 0.4, error: 0.06, skill: 0.8, ult: 0.75, aggr: 0.68, genes: false, matchup: true },
-  impossible: { react: [0.075, 0.13], think: [0.04, 0.1], block: 0.88, jg: 0.4, punish: 0.88, combo: 6, cancel: 0.85, tech: 0.92, breaker: 0.85, oki: 0.8, bait: 0.6, read: 0.7, lead: 0.8, error: 0.02, skill: 0.95, ult: 0.92, aggr: 0.78, genes: true, matchup: true },
-  god: { react: [0.025, 0.05], think: [0.016, 0.04], block: 0.99, jg: 0.9, punish: 1, combo: 6, cancel: 1, tech: 1, breaker: 1, oki: 1, bait: 1, read: 1, lead: 1, error: 0, skill: 1, ult: 1, aggr: 0.85, genes: true, matchup: true },
-};
-const AI_LEVEL_KEYS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+// 每档难度的参数（反应、格挡、连段、骗闪……）在 src/data/20-levels.js 的 DIFFICULTIES 里，src/game/01-core.js 拆成 LEVELS 和 AI_LEVEL_KEYS。
+// 这个文件比数据表先加载，所以只在函数里用 LEVELS，不在加载时读。
 // 个性化“宿敌”难度：在劲敌和绝顶之间按 k（0.55~1.45）插值
 function aiBlendLevel(k) {
-  const a = LEVELS.hard, b = LEVELS.impossible, t = Math.max(0, Math.min(1, (k - 0.55) / 0.9)), out = {};
+  const [lo, hi] = (DIFFICULTIES.find(d => d.id === 'adaptive') || {}).blend || ['hard', 'impossible'];
+  const a = LEVELS[lo], b = LEVELS[hi], t = Math.max(0, Math.min(1, (k - 0.55) / 0.9)), out = {};
   for (const key in a) {
     const x = a[key], y = b[key];
     out[key] = Array.isArray(x) ? [x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t] : typeof x === 'number' ? x + (y - x) * t : t > 0.5 ? y : x;

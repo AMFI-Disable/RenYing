@@ -1061,8 +1061,7 @@ function reportProgress(w) {
   } else if (M.mode === 'cpu') {
     const won = w === 0;
     if (won) {
-      const rewardMap = { easy: 10, normal: 20, hard: 40, adaptive: 40, impossible: 60 };
-      const gain = rewardMap[M.level] || 20;
+      const gain = (LEVEL_BY_ID[M.level] || {}).reward || 20;   // 打赢给的墨锭写在难度表里
       PROF.ink = (PROF.ink || 0) + gain;
       $id('endRank').textContent = `+${gain} 墨锭`;
       if (window.CloudSave) CloudSave.saveProfile(PROF);

@@ -310,7 +310,8 @@ function startRound() {
     if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
     if (NET.role === 'host') rollChaosMutation();
   }
-  if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && M.level === 'impossible') { B.maxHp = Math.round(B.maxHp * IMPOSSIBLE_HP); B.hp = B.lagHp = B.maxHp; }   // 绝顶：多 35% 血
+  const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
+  if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
   M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
