@@ -3,6 +3,7 @@
 //   RENYING_URL=…     换网址（默认 http://127.0.0.1:8791/，先在仓库根目录 python3 -m http.server 8791）
 //   RENYING_CHROME=…  指定浏览器；RENYING_PROXY=http://host:port  浏览器走代理（沙盒里连 Google Fonts 用）
 //   RENYING_BLOCK_FONTS=1  拦掉 Google Fonts，看连不上字体时首屏是什么样（只用后备字体）
+//   RENYING_LANG=en  当作以前选过英文的玩家打开（先在本地存好语言设置）
 // 报告：
 //   FCP、LCP、CLS（布局跳动）、主菜单标题文字第一次画出来的时间、最后一个字体文件下载完的时间；
 //   字体请求数和传输大小（字体 CSS、字体文件分开算）、失败的请求；
@@ -89,6 +90,7 @@ async function oneRun(i) {
     await cdp.send('Page.enable', {}, S);
     await cdp.send('Runtime.enable', {}, S);
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: VW, height: VH, deviceScaleFactor: 1, mobile: false }, S);
+    if (process.env.RENYING_LANG === 'en') await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: `try { if (location.protocol.startsWith('http')) { localStorage.setItem('renying-lang', 'en'); localStorage.setItem('renying-lang-chosen', '1'); localStorage.setItem('renying-settings', JSON.stringify({ lang: 'en' })); } } catch (e) {}` }, S);
     await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: PROBE }, S);
     await cdp.send('Page.navigate', { url: URL }, S);
     await sleep(SETTLE_MS);
