@@ -161,6 +161,9 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS devices (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, refresh TEXT NOT NULL UNIQUE, prev TEXT NOT NULL DEFAULT '', rotated_at INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, label TEXT NOT NULL DEFAULT '', last_seen INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
   `CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id)`,
   `CREATE TABLE IF NOT EXISTS refresh_used (h TEXT PRIMARY KEY, dev TEXT NOT NULL, at INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS auth_log (id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, uid TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', act TEXT NOT NULL, ip TEXT NOT NULL DEFAULT '', dev TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')`,
+  `CREATE INDEX IF NOT EXISTS idx_auth_log_uid ON auth_log(uid, at)`,
+  `CREATE INDEX IF NOT EXISTS idx_auth_log_at ON auth_log(at)`,
   `CREATE TABLE IF NOT EXISTS econ (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL, ver INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS econ_nonce (uid TEXT NOT NULL, nonce TEXT NOT NULL, at INTEGER NOT NULL, res_json TEXT NOT NULL, PRIMARY KEY (uid, nonce))`,
   `CREATE TABLE IF NOT EXISTS econ_log (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, at INTEGER NOT NULL, act TEXT NOT NULL, ok INTEGER NOT NULL, ink0 INTEGER, ink1 INTEGER, detail TEXT)`,
@@ -324,6 +327,25 @@ function dropDevice(env, id) {
     env.DB.prepare('DELETE FROM devices WHERE id = ?').bind(id),
   ]);
 }
+/* ---------- 登录记录 ----------
+ * 注册、登录（成功、密码不对、没有这个号、被锁住）、退出、退出别的设备、续期令牌被偷用、管理员重设密码，各记一条，留 90 天。
+ * IP 只存 HMAC 后的前 16 位：同一个 IP 看得出是同一个，倒推不出 IP（key 是 Worker 变量 LOG_SALT，没设就用固定的）。
+ * 记不上不影响登录本身。管理后台「登录记录」按账号查。 */
+const AUTH_LOG_DAYS = 90;
+const AUTH_ACTS = ['register', 'login', 'login_fail', 'logout', 'device_out', 'device_all', 'refresh_reuse', 'pw_admin'];
+async function authIp(env, ip) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(String(env.LOG_SALT || 'renying-auth-log')), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(String(ip || '')));
+  return Array.from(new Uint8Array(sig).slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function authLog(env, request, act, o = {}) {
+  try {
+    await env.DB.prepare('INSERT INTO auth_log (at, uid, name, act, ip, dev, note) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind(Date.now(), o.uid || '', String(o.name || '').slice(0, 24), act, await authIp(env, clientIp(request)), o.dev || '', String(o.note || '').slice(0, 100)).run();
+  } catch (e) { console.warn('auth_log', e && e.message); }
+}
+
 async function handleRefresh(env, request, body, now) {
   const refresh = String(body.refresh || '');
   if (!refresh) {   // 老式的 30 天令牌换成新的一套（换完老令牌就删掉）
@@ -356,6 +378,7 @@ async function handleRefresh(env, request, body, now) {
   if (!cur) return error('登录已过期，请重新登录', 401);
   if (cur.prev === h && now - cur.rotated_at < REFRESH_RACE && body.insist !== true) return error('别的标签页刚换过，读一下新的', 409, { race: true });
   await dropDevice(env, cur.id);   // 作废的 refresh 又来了：这台设备整组退出
+  await authLog(env, request, 'refresh_reuse', { uid: cur.user_id, dev: cur.id, note: body.insist === true ? '网页说本机没有更新的' : '' });
   return error('这个账号在这台设备上的登录已失效，请重新登录', 401, { reused: true });
 }
 
@@ -1369,6 +1392,7 @@ async function handleAdmin(env, request, path, now, ip) {
       ]);
     }
     await logRow(env, u.id, now, 'admin_pw', 1, null, null, JSON.stringify({ by: who, why, created: created || undefined }));
+    await authLog(env, request, 'pw_admin', { uid: u.id, name: u.username, note: who });
     return json({ ok: true, uid: u.id, username: u.username, created });
   }
   if (route === 'GET /api/admin/gifts') {
@@ -1431,6 +1455,15 @@ async function handleAdmin(env, request, path, now, ip) {
   if (route === 'GET /api/admin/cfg') {   // 现在的经济数值、每一项的范围和说明、最近改过的 30 版
     const cur = await cfgRow(env), hist = await env.DB.prepare('SELECT id, json, by, note, at FROM cfg ORDER BY id DESC LIMIT 30').all();
     return json({ ok: true, id: cur ? cur.id : 0, cfg: cur ? cur.cfg : {}, info: C.CFG_INFO, hist: (hist.results || []).map(r => ({ id: r.id, by: r.by, note: r.note, at: r.at, cfg: parseObj(r.json) || {} })) });
+  }
+  if (route === 'GET /api/admin/authlog') {   // 登录记录：q 是昵称或账号编号（不填就是全部最近的），act 只看某一种
+    const key = q('q'), act = q('act'), u = key ? await findUser(key) : null;
+    const where = [], args = [];
+    if (u) { where.push("(l.uid = ? OR (l.uid = '' AND l.name = ? COLLATE NOCASE))"); args.push(u.id, u.username); }   // 没有这个号时输的昵称也算上
+    else if (key) { where.push('l.name = ? COLLATE NOCASE'); args.push(key); }
+    if (AUTH_ACTS.includes(act)) { where.push('l.act = ?'); args.push(act); }
+    const rows = (await env.DB.prepare(`SELECT l.id, l.at, l.uid, l.name, u.username, l.act, l.ip, l.dev, l.note FROM auth_log l LEFT JOIN users u ON u.id = l.uid ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY l.id DESC LIMIT 200`).bind(...args).all()).results || [];
+    return json({ ok: true, uid: u ? u.id : '', rows });
   }
   if (route === 'GET /api/admin/flags') {   // 所有登记过的开关：现在是什么、默认是什么、谁什么时候改的
     const rows = await flagRows(env, 0);
@@ -1495,6 +1528,7 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM mkt WHERE state = 2 AND done_at < ?').bind(now - 7 * DAY_MS),               // 撤下的单留一周（删了也没关系：存档里还挂着、表里找不到的一样退回）
     env.DB.prepare('DELETE FROM devices WHERE expires_at < ?').bind(now),
     env.DB.prepare('DELETE FROM refresh_used WHERE at < ?').bind(now - REFRESH_TTL),
+    env.DB.prepare('DELETE FROM auth_log WHERE at < ?').bind(now - AUTH_LOG_DAYS * DAY_MS),
     env.DB.prepare('DELETE FROM mkt WHERE state = 1 AND paid = 1 AND done_at < ?').bind(now - 120 * DAY_MS),   // 成交记录留四个月（价格走势用）
     env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - 10 * 60e3),
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),
@@ -2266,6 +2300,7 @@ async function route(request, env, ctx, rid = reqId()) {
         }
 
         const tok = await issueLogin(env, { id: userId, username }, now, request, body);
+        await authLog(env, request, 'register', { uid: userId, name: username, dev: tok.device });
 
         const out = await profileOut(env, { id: userId, username, profile_json: JSON.stringify(initialProf) }, now);
         return json({
@@ -2291,6 +2326,7 @@ async function route(request, env, ctx, rid = reqId()) {
         }
         const nameKey = 'lf:' + username.toLowerCase().slice(0, 40), ipKey = 'lfip:' + ip;
         if ((await peek(env, nameKey, now)) >= 8 || (await peek(env, ipKey, now)) >= 40) {
+          await authLog(env, request, 'login_fail', { name: username, note: 'locked' });
           return error('密码输错太多次了，请 15 分钟后再试', 429);
         }
         const fail = async () => { await hit(env, nameKey, 1e9, 15 * 60e3, now); await hit(env, ipKey, 1e9, 15 * 60e3, now); };
@@ -2301,11 +2337,13 @@ async function route(request, env, ctx, rid = reqId()) {
 
         if (!user) {
           await hit(env, ipKey, 1e9, 15 * 60e3, now);
+          await authLog(env, request, 'login_fail', { name: username, note: 'noacct' });
           return error('未找到该账号，请先点击“注册”', 404);
         }
 
         if (!(await checkPassword(user, password))) {
           await fail();
+          await authLog(env, request, 'login_fail', { uid: user.id, name: username, note: 'pw' });
           return error('昵称或密码不对', 401);
         }
         await env.DB.prepare('DELETE FROM rate WHERE k = ?').bind(nameKey).run();
@@ -2317,6 +2355,7 @@ async function route(request, env, ctx, rid = reqId()) {
         }
 
         const tok = await issueLogin(env, user, now, request, body);
+        await authLog(env, request, 'login', { uid: user.id, name: user.username, dev: tok.device });
 
         const out = await profileOut(env, user, now);
         return json({
@@ -2451,6 +2490,7 @@ async function route(request, env, ctx, rid = reqId()) {
         if (token) {   // 这台设备整组退出（它的 refresh 也作废）；老式令牌只删这一个
           const r = await sessionOf(env, token, 'u.id AS id, s.dev AS dev', now);
           if (r && r.dev) await dropDevice(env, r.dev);
+          if (r) await authLog(env, request, 'logout', { uid: r.id, dev: r.dev });
           await env.DB.prepare('DELETE FROM sessions WHERE token IN (?, ?)').bind(await tokenKey(token), PLAIN_TOKEN.test(token) ? token : '-').run();
         }
         return json({ ok: true });
@@ -2474,16 +2514,19 @@ async function route(request, env, ctx, rid = reqId()) {
               env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(uid),
               env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(uid),
             ]);
+            await authLog(env, request, 'device_all', { uid, dev: auth.dev });
             return json({ ok: true, all: true });
           }
           const id = String(body.id || '');
           if (id === 'legacy') {
             await env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND dev = ''").bind(uid).run();
+            await authLog(env, request, 'device_out', { uid, dev: auth.dev, note: 'legacy' });
             return json({ ok: true, id });
           }
           const d = await env.DB.prepare('SELECT id FROM devices WHERE id = ? AND user_id = ?').bind(id, uid).first();
           if (!d) return error('没有这台设备', 404);
           await dropDevice(env, d.id);
+          await authLog(env, request, 'device_out', { uid, dev: auth.dev, note: d.id });
           return json({ ok: true, id: d.id, current: d.id === auth.dev });
         }
       }

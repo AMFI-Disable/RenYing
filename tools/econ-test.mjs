@@ -1590,6 +1590,45 @@ section('登录的设备：列出来、退出一台、退出全部；最近在�
   await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
 }
 
+section('登录记录：注册、登录、失败、退出、改密码都记；IP 只存打乱后的；管理后台按账号查');
+{
+  await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'all', why: '测试：登录记录' });
+  const u = await call('POST', '/api/register', { username: 'logUser', password: 'secret123', rt: 1 }, undefined, '77.7.7.1');
+  await call('POST', '/api/login', { username: 'logUser', password: 'wrong-pass' }, undefined, '77.7.7.2');
+  await call('POST', '/api/login', { username: 'logUserX', password: 'whatever1' }, undefined, '77.7.7.2');
+  const li = await call('POST', '/api/login', { username: 'LOGUSER', password: 'secret123', rt: 1 }, undefined, '77.7.7.3');
+  await call('POST', '/api/devices', { id: u.device }, li.token, '77.7.7.3');
+  await call('POST', '/api/logout', undefined, li.token, '77.7.7.3');
+  await adm('POST', '/api/admin/password', { uid: 'logUser', password: 'admin-set-pass-123', why: '测试登录记录' });
+  const r = await adm('GET', '/api/admin/authlog?q=logUser');
+  const acts = (r.rows || []).map(x => x.act).reverse();
+  ok(r.ok && r.uid === u.uid && JSON.stringify(acts) === JSON.stringify(['register', 'login_fail', 'login', 'device_out', 'logout', 'pw_admin']), '按账号查：注册、输错密码、登录、退出别的设备、退出、管理员重设密码，按顺序都在', acts);
+  const fail = r.rows.find(x => x.act === 'login_fail');
+  ok(fail.note === 'pw' && fail.uid === u.uid && r.rows.find(x => x.act === 'login').dev === li.device && r.rows.find(x => x.act === 'device_out').note === u.device, '记着为什么失败、哪台设备、退出的是哪台');
+  ok(r.rows.every(x => /^[0-9a-f]{16}$/.test(x.ip)) && !JSON.stringify(r).includes('77.7.7'), 'IP 只存 16 位打乱后的，原来的 IP 查不到');
+  ok(r.rows.find(x => x.act === 'register').ip !== fail.ip && r.rows.find(x => x.act === 'login').ip === r.rows.find(x => x.act === 'logout').ip, '同一个 IP 打乱后一样，不同 IP 不一样');
+  const nx = await adm('GET', '/api/admin/authlog?q=logUserX');
+  ok(nx.rows.length === 1 && nx.rows[0].note === 'noacct' && !nx.rows[0].uid, '没有这个号的也记着输的昵称');
+  const f = await adm('GET', '/api/admin/authlog?q=logUser&act=login_fail');
+  ok(f.rows.length === 1 && f.rows[0].act === 'login_fail', '可以只看某一种');
+  const all = await adm('GET', '/api/admin/authlog');
+  ok(all.ok && all.rows.length > 6 && all.rows.length <= 200, '不填账号：所有人最近的');
+  ok((await call('GET', '/api/admin/authlog', undefined, u.token)).status === 403, '玩家的令牌看不了');
+  ENV.LOG_SALT = 'another-salt-for-test';
+  await call('POST', '/api/login', { username: 'logUser', password: 'admin-set-pass-123' }, undefined, '77.7.7.3');
+  delete ENV.LOG_SALT;
+  const r2 = await adm('GET', '/api/admin/authlog?q=logUser&act=login');
+  ok(r2.rows[0].ip !== r2.rows[1].ip, '设了 LOG_SALT 打乱的结果就不一样（别人拿着代码也算不出来）');
+  T += 91 * 86400e3;
+  const rnd = Math.random; Math.random = () => 0;   // 清理是每个请求 2% 的机会顺手做：这次让它一定做
+  await call('GET', '/api/flags', undefined, undefined, '77.7.8.1');
+  Math.random = rnd;
+  await new Promise(r => setTimeout(r, 100));
+  ok(row('SELECT COUNT(*) AS n FROM auth_log WHERE at < ?', T - 90 * 86400e3).n === 0, '90 天前的会被清理掉');
+  T -= 91 * 86400e3;
+  await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');

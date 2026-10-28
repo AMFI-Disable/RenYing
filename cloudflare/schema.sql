@@ -197,3 +197,17 @@ CREATE TABLE IF NOT EXISTS flags (
     note TEXT NOT NULL,
     at INTEGER NOT NULL
 );
+
+-- 登录记录：注册、登录、失败、退出、改密码…各一条，留 90 天。ip 是 HMAC 后的前 16 位（倒推不出 IP）
+CREATE TABLE IF NOT EXISTS auth_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    at INTEGER NOT NULL,
+    uid TEXT NOT NULL DEFAULT '',
+    name TEXT NOT NULL DEFAULT '',
+    act TEXT NOT NULL,
+    ip TEXT NOT NULL DEFAULT '',
+    dev TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_auth_log_uid ON auth_log(uid, at);
+CREATE INDEX IF NOT EXISTS idx_auth_log_at ON auth_log(at);

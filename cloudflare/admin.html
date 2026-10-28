@@ -164,6 +164,7 @@
   /* 玩家 */
   .search { display: flex; gap: 8px; margin: 4px 0 8px; }
   .search input { flex: 1; }
+  .search select { width: auto; flex: none; }
   .head .who { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .head .who h2 { margin: 0; font-size: 26px; overflow-wrap: anywhere; }
   .head .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--faint); font-size: 12.5px; margin-top: 6px; align-items: center; }
@@ -254,6 +255,7 @@
     <button role="tab" data-act="tab" data-tab="codes">兑换码</button>
     <button role="tab" data-act="tab" data-tab="cfg">经济数值</button>
     <button role="tab" data-act="tab" data-tab="flags">功能开关</button>
+    <button role="tab" data-act="tab" data-tab="auth">登录记录</button>
     <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
     <button role="tab" data-act="tab" data-tab="errors">错误</button>
   </div></nav>
@@ -300,7 +302,7 @@ const parse = t => { try { const o = JSON.parse(t); return o && typeof o === 'ob
 
 /* ---------- 口令、请求 ---------- */
 const KEY = 'renying-admin';
-const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, flags: [], seq: 0 };
+const S = { tok: '', who: '', tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, flags: [], aq: '', aact: '', seq: 0 };
 const saveTok = t => { try { if (t) sessionStorage.setItem(KEY, t); else sessionStorage.removeItem(KEY); } catch (e) {} };
 const loadTok = () => { try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
 
@@ -768,6 +770,23 @@ async function vErrors() {
   </div>`;
 }
 
+/* ---------- 登录记录 ---------- */
+const AUTH_ACT = { register: '注册', login: '登录', login_fail: '登录失败', logout: '退出', device_out: '退出别的设备', device_all: '所有设备退出', refresh_reuse: '续期令牌被偷用', pw_admin: '管理员重设密码' };
+const AUTH_NOTE = { pw: '密码不对', noacct: '没有这个号', locked: '输错太多次，被锁住', legacy: '以前的老式登录' };
+async function vAuth() {
+  const r = await api('authlog?q=' + encodeURIComponent(S.aq) + '&act=' + encodeURIComponent(S.aact));
+  return H`<div class="card"><h2>登录记录 <small>最近 200 条，留 90 天</small></h2>
+    <form class="search" data-form="authq"><input name="q" value="${S.aq}" placeholder="昵称或账号编号（不填就是所有人）" autocomplete="off" spellcheck="false" aria-label="按账号查">
+      <select name="act" aria-label="只看哪一种"><option value="">全部</option>${Object.entries(AUTH_ACT).map(([k, v]) => H`<option value="${k}"${k === S.aact ? ' selected' : ''}>${v}</option>`)}</select><button class="btn">查</button></form>
+    <p class="hint">IP 只存了打乱后的一段：同一段就是同一个 IP，倒推不出原来的 IP。一个号短时间里「登录失败」很多、IP 又各不相同，多半是有人在猜密码；「续期令牌被偷用」说明那台设备的登录被人拿走过，已经自动退出了。</p>
+    ${r.rows.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>账号</th><th>做了什么</th><th>设备</th><th>IP</th><th>备注</th></tr></thead><tbody>
+      ${r.rows.map(x => H`<tr><td class="nowrap">${fmtT(x.at)}</td><td>${x.uid ? H`<button class="link" data-act="open" data-uid="${x.uid}">${x.username || x.name || x.uid}</button>` : (x.name || '—')}</td>
+        <td class="nowrap"><span class="badge${x.act === 'login_fail' || x.act === 'refresh_reuse' ? ' bad' : x.act === 'login' || x.act === 'register' ? ' ok' : ''}">${AUTH_ACT[x.act] || x.act}</span></td>
+        <td class="mono">${x.dev || ''}</td><td class="mono">${x.ip}</td><td>${AUTH_NOTE[x.note] || x.note}</td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">${S.aq ? '这个账号没有登录记录' : '还没有登录记录'}</p>`}
+  </div>`;
+}
+
 /* ---------- 换页 ---------- */
 /* ---------- 功能开关 ---------- */
 async function vFlags() {
@@ -784,7 +803,7 @@ async function vFlags() {
   </div>`;
 }
 
-const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, audit: vAudit, errors: vErrors };
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, auth: vAuth, audit: vAudit, errors: vErrors };
 const AFTER = { players: drawGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 async function render() {
   const main = $('#main'), seq = ++S.seq, tab = S.tab;
@@ -899,6 +918,7 @@ document.addEventListener('input', e => {
 /* ---------- 表单 ---------- */
 const FORMS = {
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); render(); },
+  authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
   adjust: async f => {
     const p = S.p, e = p.econ, s = (e && e.state) || {}, cases = s.cases || {}, inv = s.inv || [];
     const body = { uid: p.uid, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), give: S.give.slice(),
