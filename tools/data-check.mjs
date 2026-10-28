@@ -2,7 +2,7 @@
 // 构建时检查 src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用的东西存在。有一处不对就退出码 1，tools/build.py 会停下来。
 //   node tools/data-check.mjs
 // 加一张新表：在下面 TABLES 里加一项 { name, check(t, env, err) }，name 是表的全局名字。
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import vm from 'node:vm';
 import { dataFiles } from './ai-code.mjs';
 import { makeEnv } from './ai-arena.mjs';
@@ -276,6 +276,25 @@ function checkPatterns() {
   });
 }
 
+// ---------- 词条有没有过期（先只提醒，不算错） ----------
+// 30-ui-copy.js / 31-hero-copy.js 的中文键在 src/ 和 cloudflare/ 的源码里都找不到，多半是中文改了、英文没跟着改，
+// 这条英文已经用不上，界面上那句会退回中文。运行时拼出来的句子（星座皮肤「双子·星冕」、带数字的提示）
+// 不会原样出现在源码里：把键按非汉字切开，每一段（两个字以上）都找得到就算还在用。
+// 确认没有误报以后，加 --strict-copy 就当成错误。
+function staleCopy() {
+  const COPY = ['src/data/30-ui-copy.js', 'src/data/31-hero-copy.js'], SKIP = [...COPY, 'src/i18n.js', 'cloudflare/worker.bundle.js'];
+  const walk = d => readdirSync(ROOT + d).flatMap(f => { const p = d + '/' + f; return statSync(ROOT + p).isDirectory() ? walk(p) : [p]; });
+  const hay = [...walk('src'), ...walk('cloudflare')].filter(p => /\.(js|mjs|html)$/.test(p) && !SKIP.includes(p)).map(p => readFileSync(ROOT + p, 'utf8')).join('\n');
+  const has = t => hay.includes(t) || hay.includes(JSON.stringify(t).slice(1, -1));
+  const parts = k => k.split(/[^一-鿿]+/).filter(x => x.length >= 2);
+  const out = [];
+  for (const f of COPY) for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:/gm)) {
+    const k = JSON.parse(m[1]), ps = parts(k);
+    if (!has(k) && !(ps.length && ps.every(has))) out.push(`${f}：「${k}」`);
+  }
+  return out;
+}
+
 const TABLES = [
   { name: 'MOVES', check: checkMoves },
   { name: 'HEROES', check: checkHeroes },
@@ -288,9 +307,15 @@ const get = name => env.run(`typeof ${name} === 'undefined' ? undefined : ${name
 const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN', 'CANCEL', 'SFX'].map(k => [k, get(k)]));
 for (const t of TABLES) if (get(t.name) !== undefined) t.check(refs);
 checkPatterns();
+const stale = staleCopy();
+if (stale.length && process.argv.includes('--strict-copy')) for (const x of stale) err(x, '源码里已经找不到这句中文（改过中文没改英文？），这条英文用不上了');
 if (errors.length) {
   console.log(`src/data/ 的数据表有 ${errors.length} 处不对：`);
   for (const e of errors) console.log('  ' + e);
   process.exit(1);
+}
+if (stale.length) {
+  console.log(`提醒：${stale.length} 条英文词条的中文在 src/、cloudflare/ 里找不到（多半是中文改过、英文没跟上，或者这句已经删了）：`);
+  for (const x of stale) console.log('  ' + x);
 }
 console.log('数据表检查通过');
