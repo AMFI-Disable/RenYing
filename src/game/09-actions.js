@@ -70,6 +70,7 @@ function neutral(f, foe) {
   const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
   if (onG) {
     if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
+    if (f.plat >= 0 && (c.consume('drop') || (c.held.down && c.consume('jump')))) return mapDrop(f);   // 站在平台上：↓ + 跳落下去
     if (c.held.down) {
       if (c.consume('light')) return startAttack(f, 'dl');
       if (f.skill2CD <= 0 && (SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) return startSkill(f, foe, 2);   // 离影 ↓+R：换到最早的雾身
@@ -94,7 +95,7 @@ function neutral(f, foe) {
     if (c.consume('jump')) return doJump(f, dir);
     if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
     if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-    const sp = dir === f.face ? wk(f) : wk(f) * 0.78;
+    const sp = (dir === f.face ? wk(f) : wk(f) * 0.78) * mapWalk(f);
     f.vx = damp(f.vx, dir * sp, 16 * mapGrip(f), STEP);   // 冰面上起步、停下都慢
     f.state = Math.abs(f.vx) > 25 ? 'walk' : 'idle';
   } else {
@@ -410,6 +411,7 @@ function updateProjs() {
       if (Math.abs(dx) < 34 && p.age > p.turn + 0.15) { p.dead = true; continue; }
     }
     p.x += p.vx * STEP; p.y += p.vy * STEP;
+    mapWindProj(p);   // 竹海悬岩的风
     if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
     if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
     if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math.random() < 0.6) addP({ type: 'ink', x: p.x - Math.sign(p.vx) * p.w * 0.4, y: p.y + rand(-p.h / 3, p.h / 3), vx: -p.vx * 0.1, vy: rand(-40, 40), life: 0.5, max: 0.5, r: rand(2, 5), rgb: p.kind === 'dragon' ? '20,20,28' : CHARS[fighterByIdx(p.owner).chIdx].look.slash }); }
@@ -553,7 +555,7 @@ function tryEscape(f, foe) {
   if (escapeBlock(f)) return false;
   if (!f.ctrl.consume('dash')) return false;
   const noDir = !f.ctrl.held.left && !f.ctrl.held.right && !f.ctrl.held.down;
-  const inAir = f.y < -15 || !f.onGround();
+  const inAir = airH(f) > 15 || !f.onGround();
   if (inAir && noDir) {
     // 腾空·凌空凝势 (TengKong Air Freeze / Hover)
     f.breakCD = Math.min(f.ch.escCD || BREAK_CD, ESC.hoverCdCap);
@@ -629,25 +631,25 @@ function hitDecoyBox(box, attIdx) {
 // ======================= 雾身（离影） =======================
 // 雾身存在主人身上（f.clones = [{ id, x, t }]，t 是已经存在了几秒），回滚存档跟着侠客一起存、一起回；全程不用随机数。
 // 规则的数都在 char.clone（src/data/heroes/13-liying.js）：最多 max 个，存在 life 秒，离本体超过 leash 像素自己散，
-// 任何攻击碰到就碎、攻击照常往下走（不像木偶替身那样把刀吃掉），打碎的人回 breakMeter 点气。雾身只在地上，不会动也不出招。
-const cloneBox = c => [c.x - 22, -100, c.x + 22, 2];
+// 任何攻击碰到就碎、攻击照常往下走（不像木偶替身那样把刀吃掉），打碎的人回 breakMeter 点气。雾身站在留下它的那一层（地上，或山河异境的平台：y、p），不会动也不出招。
+const cloneBox = c => [c.x - 22, (c.y || 0) - 100, c.x + 22, (c.y || 0) + 2];
 function plantClone(f, x) {
   const C = f.ch.clone; if (!C) return;
   if (!f.clones) f.clones = [];
   while (f.clones.length >= C.max) cloneGone(f, f.clones[0], false);   // 满了：最早的那个散掉
   f.cloneN = (f.cloneN || 0) + 1;
-  const c = { id: f.cloneN, x: clamp(x, WALL, STAGE_W - WALL), t: 0 };
+  const c = { id: f.cloneN, x: clamp(x, WALL, STAGE_W - WALL), y: f.plat >= 0 ? gndY(f) : 0, p: f.plat, t: 0 };
   f.clones.push(c);
   if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + c.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: c.x - f.x };
-  if (!RESIM) { smoke(c.x, -40, 6); ring(c.x, -10, 46, f.look.slash, 0.3); }
+  if (!RESIM) { smoke(c.x, c.y - 40, 6); ring(c.x, c.y - 10, 46, f.look.slash, 0.3); }
 }
 function cloneGone(f, c, broken) {
   const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
   f.clones.splice(i, 1);
   delete CLONE_SK[f.idx + ':' + c.id];
   if (RESIM) return;
-  smoke(c.x, -50, broken ? 12 : 7);
-  if (broken) { addP({ type: 'text', text: '破影', x: c.x, y: -120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
+  smoke(c.x, (c.y || 0) - 50, broken ? 12 : 7);
+  if (broken) { addP({ type: 'text', text: '破影', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
 }
 function clearClones(f) { for (const c of (f.clones || []).slice()) cloneGone(f, c, false); }
 function cloneTick(f) {
@@ -888,7 +890,9 @@ function updateFighter(f, foe) {
   physics(f);
 }
 function physics(f) {
-  const wasAir = f.y < 0 || f.vy < 0;
+  mapPlatKeep(f);
+  if (f.dropT > 0) f.dropT = Math.max(0, f.dropT - STEP);
+  const wasAir = (f.y < 0 && f.plat < 0) || f.vy < 0;   // 站在平台上不算在空中
   let g = GRAV;
   if (f.airHover > 0) {
     f.airHover -= STEP;
@@ -909,20 +913,23 @@ function physics(f) {
   const chaosGrav = (chaosNow('grav') || { val: 1 }).val;
   if (wasAir) f.vy += g * chaosGrav * STEP;
   if (f.state === 'held') { f.vx = 0; f.vy = 0; }
+  const oldY = f.y;
   f.x += f.vx * STEP; f.y += f.vy * STEP;
-  if (f.y >= 0) { f.y = 0; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
-  const onG = f.y >= 0;
+  if (f.y >= 0) { f.y = 0; f.plat = -1; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
+  else mapPlatLand(f, oldY, wasAir);   // 山河异境的平台
+  const onG = f.y >= 0 || f.plat >= 0;
   const slide = f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].nofric;
   const fw = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
   const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12) * mapGrip(f);
   if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, dampK, STEP);
   if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? (dampK * 0.75) : (dampK * 1.5), STEP);
+  mapWind(f, onG);
   const cliff = (mapNow() || {}).cliff;
   if (cliff) mapEdge(f, cliff);   // 断崖台：两侧是崖边，没有墙可撞
   else if (f.x < WALL || f.x > STAGE_W - WALL) {
     const side = f.x < WALL ? -1 : 1;
     f.x = side < 0 ? WALL : STAGE_W - WALL;
-    if (f.state === 'launched' && Math.abs(f.vx) > 350) {
+    if (f.state === 'launched' && Math.abs(f.vx) > 350 && !(mapNow() || {}).nobounce) {   // 皇城飞檐两侧没有红柱：不弹墙
       const isHardImpact = Math.abs(f.vx) > 480;
       f.vx *= isHardImpact ? -0.55 : -0.4;
       shake = Math.max(shake, isHardImpact ? 14 : 7);
@@ -959,7 +966,7 @@ function onLand(f) {
     return;
   }
   if (f.state === 'launched') {
-    if (f.spiked && !f.bounced) { f.vy = -560; f.bounced = true; f.y = -1; shake = Math.max(shake, 8); dust(f.x, 0, 14); ring(f.x, 0, 70, '255,255,255', 0.35); SFX.thud(); return; }
+    if (f.spiked && !f.bounced) { f.vy = -560; f.bounced = true; f.y = gndY(f) - 1; shake = Math.max(shake, 8); dust(f.x, 0, 14); ring(f.x, 0, 70, '255,255,255', 0.35); SFX.thud(); return; }
 
     // 落地受身翻滚判定（Tech Roll / Ukemi）：按闪避或跳跃瞬间滚身脱困
     const c = f.ctrl;

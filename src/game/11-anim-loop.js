@@ -64,7 +64,7 @@ function targetPose(f) {
   } else if (s === 'skill') {
     const pr = SKILLS[f.skill] ? SKILLS[f.skill].pose(f) : ['idle', 14]; k = pr[1];
     let pn = pr[0];
-    if (f.skAir && f.y < -4) pn = (AIR_SKILL_POSE[f.skill] || {})[pn] || (pn === 'idle' || pn === 'getup' ? 'fall' : pn);
+    if (f.skAir && airH(f) > 4) pn = (AIR_SKILL_POSE[f.skill] || {})[pn] || (pn === 'idle' || pn === 'getup' ? 'fall' : pn);
     p = POSES[pn] || POSES.idle;
   } else if (s === 'dash') { p = POSES[f.dashDir === f.face ? 'dash' : 'bdash']; k = 30; }
   else if (s === 'air') { p = POSES[f.vy < 0 ? 'jump' : 'fall']; k = 14; }
@@ -261,6 +261,7 @@ function step() {
     if (!D.hidden) updateFighter(D, foeOf(D));
     updateArena2v2(STEP);
   }
+  mapTick(STEP);   // 山河异境：风、天雷、酒雾（不在山河异境就什么都不做）
   // 倒下的人一直躺着：落地后不管之前是什么状态（受身、被打、技能收招）都按回地上，不再站起来
   if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
     for (const f of allFighters()) {

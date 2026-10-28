@@ -74,7 +74,7 @@ function rng(s) { return () => { s = (Math.imul(s ^ (s >>> 15), 0x2c1b3c6d) + 0x
 // 这几种房间的联机录像要能原样放出来（以前神决和同袍肉鸽回放时不认房间规则：神决的十倍气血、魔首都没了）
 const REPLAY_OK = ['normal', 'chaos', 'mayhem', 'maps', 'pp_cc', 'pp_pp', 'raid'];
 const STJSON = st => JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
-function runCase(mode, chars, seed, frames, lag, duo, mv) {
+function runCase(mode, chars, seed, frames, lag, duo, mv, map) {
   now = 0;
   const box = [[], []];   // box[0]：房主发出的，box[1]：加入的人发出的
   const P = [makePeer(box[0]), makePeer(box[1])];
@@ -84,7 +84,7 @@ function runCase(mode, chars, seed, frames, lag, duo, mv) {
   const dice = [rng(seed * 13 + 3), rng(seed * 13 + 4)];
   const errs = [];
   const G = P.map(w => ({ human: vm.runInContext('human', w), rollTick: vm.runInContext('rollTick', w), onNetMsg: vm.runInContext('onNetMsg', w) }));
-  for (const w of P) vm.runInContext(`rollStart(${JSON.stringify(chars)}, ${seed}, ${JSON.stringify(duo || null)}, ${JSON.stringify(mv || null)});`, w);   // mv：山河异境两边的票
+  for (const w of P) vm.runInContext(`rollStart(${JSON.stringify(chars)}, ${seed}, ${JSON.stringify(duo || null)}, ${JSON.stringify(mv || null)}, ${JSON.stringify(map || null)});`, w);   // mv：山河异境两边的票；map：点将台上房主选好的图
   const wire = [[], []], checks = [];
   const PRESS = ['light', 'jump', 'dash', 'skill', 'skill2', 'special'];
   for (let t = 0; t < frames + 600; t++) {
@@ -131,7 +131,7 @@ function runCase(mode, chars, seed, frames, lag, duo, mv) {
   // 山河异境：两边选到同一张图，而且两边的地形都在生效
   if (mode === 'maps') {
     const on = P.map(w => vm.runInContext('JSON.stringify({ map: M.map, live: !!mapNow(), w: STAGE_W })', w)).map(JSON.parse);
-    if (!on[0].map || !on.every(x => x.live && x.map === on[0].map && x.w === on[0].w)) diff.push('山河异境的地图两边不一样或没生效：' + JSON.stringify(on));
+    if (!on[0].map || !on.every(x => x.live && x.map === on[0].map && x.w === on[0].w) || (map && on[0].map !== map)) diff.push('山河异境的地图两边不一样或没生效：' + JSON.stringify(on));
   }
   return { errs, diff, F: info.map(x => x.F), desyncs: info.map(x => x.desyncs), rollbacks: info.map(x => x.rollbacks), fighters: info[0].n, frame: f, round: h && h.M ? `第${h.M.round}回合 比分${h.M.wins} ${h.M.phase}` : '' };
 }
@@ -307,14 +307,15 @@ const CASES = [
   ['normal', [2, 3], [[2, 5, 12], [3, 4, 7]]],   // 3v3 车轮：输一回合换下一人
   ['chaos', [3, 9]], ['mayhem', [6, 2]],
   ['maps', [3, 8], null, ['cliff', null]], ['maps', [9, 2], null, ['ice', 'ice']], ['maps', [6, 1], null, ['cliff', 'ice']],   // 山河异境：两边的票随开局发
+  ['maps', [13, 14], null, null, 'bamboo'], ['maps', [14, 5], null, null, 'thunder'], ['maps', [13, 1], null, null, 'pagoda'], ['maps', [10, 6], null, null, 'wine'],   // 点将台上选好的图：平台、风、天雷、酒雾，离影和磁仙在平台上
   ['pp_cc', [0, 3, 5, 9]], ['pp_cc', [13, 3, 5, 13]], ['pp_pp', [2, 7, 4, 6]],
   ['raid', [1, 1, 4, 8]], ['raid', [11, 11, 6, 2]],   // 同袍肉鸽：房主 A、好友 C、电脑同袍 D 打魔首 B（魔首和秘卷两边按种子抽）
 ];
-for (const [mode, ch, duo, mv] of CASES) for (const lag of [1, 6]) {
-  const r = runCase(mode, ch, SEED0 + ch[0] * 31 + lag, FRAMES, lag, duo, mv);
+for (const [mode, ch, duo, mv, map] of CASES) for (const lag of [1, 6]) {
+  const r = runCase(mode, ch, SEED0 + ch[0] * 31 + lag, FRAMES, lag, duo, mv, map);
   const ok = !r.errs.length && !r.diff.length;
   if (!ok) fail++;
-  console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${JSON.stringify(duo || ch)}${mv ? ' ' + JSON.stringify(mv) : ''} 延迟${lag}帧${REPLAY_OK.includes(mode) ? '（含回放）' : ''}  帧=${r.F} 回滚=${r.rollbacks} 校验不一致=${r.desyncs}  ${r.round}`);
+  console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${JSON.stringify(duo || ch)}${mv ? ' ' + JSON.stringify(mv) : ''}${map ? ' ' + map : ''} 延迟${lag}帧${REPLAY_OK.includes(mode) ? '（含回放）' : ''}  帧=${r.F} 回滚=${r.rollbacks} 校验不一致=${r.desyncs}  ${r.round}`);
   for (const e of r.errs) console.log('        报错 ' + e);
   for (const d of r.diff) console.log('        不一致 ' + d);
 }

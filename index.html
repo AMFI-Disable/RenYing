@@ -790,6 +790,17 @@ gap: var(--bp-gap); width: 100%; --bp-gap: clamp(4px, 0.5vw, 7px); --bp-cols: 12
 .bpcard.picked { opacity: .45; }
 .bpcard .tag { position: absolute; top: 4px; right: 4px; font-family: var(--title); font-size: clamp(12px, 1.1vw, 15px); color: #fbeee0; background: var(--seal); padding: 1px 5px; border-radius: 4px; transform: rotate(6deg); }
 .bpcard .tag.p { background: #2b6f86; }
+.bpw.has-map { grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; }
+@media (max-width: 760px) { .bpw.has-map { grid-template-rows: none; } }
+@media (max-height: 500px) { .bp-map .bpm-d { display: none; } }
+.bp-map { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; flex: none; padding: 5px 12px; margin-bottom: 6px; border: 1px solid rgba(233,196,106,.45); border-radius: 8px; background: rgba(20,24,45,.85); font-size: 12px; line-height: 1.35; color: #c9d1df; }
+.bp-map .bpm-n { font-family: var(--title); font-size: clamp(14px, 1.2vw, 17px); color: #f7eedb; letter-spacing: .06em; }
+.bp-map .bpm-f { color: #e9c46a; } .bp-map .bpm-f span:first-child { font-weight: 700; }
+.bp-map .bpm-f span + span { color: #efe8d8; }
+.bpcard.fav { border-color: rgba(233,196,106,.9); box-shadow: 0 0 0 1px rgba(233,196,106,.6), 0 0 12px rgba(233,196,106,.35); }
+.bpcard .tag.fav { background: #c69429; color: #14110a; }
+.bp-fav { margin: 4px 0; padding: 4px 8px; border: 1px solid rgba(233,196,106,.5); border-radius: 6px; background: rgba(233,196,106,.1); font-size: 12px; color: #efe8d8; }
+.bp-fav b { color: #e9c46a; margin-right: 4px; }
 .bpcard:focus-visible { outline: 2px solid var(--p1); outline-offset: 2px; }
 .bpbot { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.15fr); gap: clamp(8px, 1.2vw, 14px); align-items: stretch; min-height: 0; height: 100%; overflow: hidden; }
 .bpdetail { border: 1px solid var(--faint); border-radius: 12px; padding: 0; background: rgba(0,0,0,.25); display: grid; font-size: 12px; line-height: 1.45; overflow-y: auto; min-height: 0; height: 100%; }
@@ -3596,6 +3607,7 @@ body.kb-only.has-nav .kb-hint { display: block; }
 
   <div id="bp" class="scr bpscr">
     <div class="bpw">
+      <div class="bp-map hidden" id="bpMap" role="note" aria-live="polite"></div>   <!-- 山河异境：这局的地图和地利侠客（renderBP 里的 bpMapBanner 填；别的点将台藏着） -->
       <div class="bph">
         <div class="bps" id="bpS0"></div>
         <div class="bpc0"><div class="bpstep" id="bpStep" role="status" aria-live="polite"></div><div class="bptime" id="bpTime"></div></div>
@@ -5574,6 +5586,7 @@ const PATTERNS_EN = [
 [/^天机异变 · (.+)$/, (m0, n) => `Mutation · ${lookup(n) || n}`],
 [/^山河异境 · (.+)$/, (m0, n) => `Terrain Clash · ${lookup(n) || n}`],
 [/^坠崖 -(\d+)$/, (m0, n) => `Fell -${n}`],
+[/^天雷 -(\d+)$/, (m0, n) => `Lightning -${n}`],
 [/^「(.+)」$/, (m0, n) => { const t = lookup(n); return t ? `“${t}”` : ''; }],
 [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
 [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],
@@ -6002,6 +6015,11 @@ if (typeof mapNow === 'function' && (mapNow() || {}).cliff && me.onGround() && A
 const edge = Math.min(me.x - WALL, STAGE_W - WALL - me.x), out = me.x < STAGE_W / 2 ? -1 : 1;
 if (edge < 170 && this.dir === out) this.dir = this.chance(0.5 + 0.5 * this.L.read) ? -out : 0;
 if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
+}
+if (typeof mapPlats === 'function' && mapPlats() && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length) {
+const dx = Math.abs(foe.x - me.x);
+if (me.plat >= 0 && foe.plat !== me.plat && foe.y > me.y + 40 && dx < 360 && this.chance(0.05)) this.press('drop');
+else if (foe.plat >= 0 && foe.plat !== me.plat && foe.y < me.y - 40 && dx < 240 && this.chance(0.04)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
 }
 if (me.state === 'special' && me.ch.ult === 'avalanche') this.steerAvalanche(me, foe);
 if (this.holdAtk > 0 && me.state !== 'charge' && clock - (this.chargeT0 || 0) > 0.42) this.holdAtk = 0;   // 蓄力被打断了：松手
@@ -6934,9 +6952,26 @@ const MAPS = {
 cliff: { n: '断崖台', d: '两侧没有墙。被击飞出崖边会坠崖，扣一点气血后弹回台上。', w: 1500,
 cliff: { dmg: 0.06, push: 320, back: 30, vy: -820, invul: 0.9 } },
 ice: { n: '寒潭冰面', d: '中间是一片冰面：起步和停下都会打滑，越重滑得越远。',
-ice: { from: 0.3, to: 0.7, grip: 0.3, dash: 0.7 } },
+ice: { from: 0.3, to: 0.7, grip: 0.3, dash: 0.7, sure: { lingshuang: 0.8, tieshan: 0.9 } },
+fav: { lingshuang: '冰上如履平地：抓地力至少是平地的八成。', tieshan: '千斤坠地：冰上抓地力至少是平地的九成。' } },
+bamboo: { n: '竹海悬岩', d: '两侧竹台高悬，跳得上去，按住 ↓ 再跳落下。每 18 秒刮 6 秒强风，顺风走得快、飞行道具飞得快。',
+plats: [{ x: 420, y: -115, w: 240, k: 'bamboo' }, { x: 1380, y: -115, w: 240, k: 'bamboo' }],
+wind: { every: 18, last: 6, push: 45, proj: 90 },
+fav: { qingfeng: '剑气借风：顺风的飞行道具多飞一倍。', yanling: '乘风而行：顺风时风推得快一倍，逆风不受阻。' } },
+thunder: { n: '雷泽石坛', d: '中央一座石坛。每 24 秒天雷落在石坛上空（提前 1.3 秒预警），站在坛上或在它上空的人被劈飞。',
+plats: [{ x: 900, y: -120, w: 320, k: 'stone' }],
+thunder: { every: 24, warn: 1.3, x: 0.5, r: 170, dmg: 38, vy: -680 },
+fav: { leiming: '引雷淬体：不怕天雷，被劈中反而回 35 点气，并得到 3 秒雷护。', gouchen: '巨力镇坛：不怕天雷，劈中不伤也不浮空。' } },
+pagoda: { n: '皇城飞檐', d: '三重飞檐错落，跳得上去，按住 ↓ 再跳落下。两侧没有红柱，被击飞撞到边上不会弹墙。',
+plats: [{ x: 380, y: -105, w: 220, k: 'wood' }, { x: 900, y: -180, w: 260, k: 'wood' }, { x: 1420, y: -105, w: 220, k: 'wood' }],
+nobounce: true,
+fav: { feiying: '飞檐走壁：站在飞檐上走得快 15%。', lingque: '檐上穿梭：站在飞檐上时，移形换影的冷却快 30%。' } },
+wine: { n: '醉翁墨阁', d: '水榭两侧有亭台，中间一半飘着酒雾：站在雾里的地上，每秒回 2.5 点定力。',
+plats: [{ x: 520, y: -110, w: 240, k: 'wood' }, { x: 1280, y: -110, w: 240, k: 'wood' }],
+fog: { from: 0.25, to: 0.75, guard: 2.5 },
+fav: { zuixian: '酒香浸染：在酒雾里醉意每秒涨 12。', moyu: '水榭湿润：在酒雾里定力回得快一倍。' } },
 };
-const MAP_POOL = ['cliff', 'ice'];   // 投票页上的顺序
+const MAP_POOL = ['cliff', 'ice', 'bamboo', 'thunder', 'pagoda', 'wine'];   // 投票页上的顺序
 const DIFFICULTIES = [
 {
 id: 'easy', name: '入门',
@@ -8643,6 +8678,31 @@ const UI_COPY_EN = {
 "两侧没有墙。被击飞出崖边会坠崖，扣一点气血后弹回台上。": "No walls on either side. Get knocked over the edge and you fall, lose a little health and bounce back up.",
 "寒潭冰面": "Frozen Pond",
 "中间是一片冰面：起步和停下都会打滑，越重滑得越远。": "Ice in the middle: you slip when starting and stopping, and heavier heroes slide further.",
+"冰上如履平地：抓地力至少是平地的八成。": "Sure-footed on ice: grip never drops below 80% of normal ground.",
+"千斤坠地：冰上抓地力至少是平地的九成。": "Rooted stance: grip on ice never drops below 90% of normal ground.",
+"竹海悬岩": "Bamboo Heights",
+"两侧竹台高悬，跳得上去，按住 ↓ 再跳落下。每 18 秒刮 6 秒强风，顺风走得快、飞行道具飞得快。": "Bamboo platforms hang on both sides: jump up, hold ↓ and jump to drop down. Every 18 seconds a gale blows for 6 seconds, speeding up movement and projectiles going with it.",
+"剑气借风：顺风的飞行道具多飞一倍。": "Wind-borne blade: projectiles going with the wind gain twice the boost.",
+"乘风而行：顺风时风推得快一倍，逆风不受阻。": "Riding the wind: a tailwind pushes twice as hard, and a headwind does not slow you.",
+"雷泽石坛": "Thunder Altar",
+"中央一座石坛。每 24 秒天雷落在石坛上空（提前 1.3 秒预警），站在坛上或在它上空的人被劈飞。": "A stone altar in the centre. Every 24 seconds lightning strikes above it (with a 1.3 second warning), launching anyone standing on the altar or in the air above it.",
+"引雷淬体：不怕天雷，被劈中反而回 35 点气，并得到 3 秒雷护。": "Lightning tempered: immune to the strike, and being hit gives 35 meter and 3 seconds of thunder guard.",
+"巨力镇坛：不怕天雷，劈中不伤也不浮空。": "Unshakable: immune to the strike, taking no damage and staying grounded.",
+"皇城飞檐": "Palace Eaves",
+"三重飞檐错落，跳得上去，按住 ↓ 再跳落下。两侧没有红柱，被击飞撞到边上不会弹墙。": "Three tiers of eaves: jump up, hold ↓ and jump to drop down. No red pillars at the sides, so heroes knocked into the edge do not bounce off a wall.",
+"飞檐走壁：站在飞檐上走得快 15%。": "Rooftop runner: 15% faster movement while standing on the eaves.",
+"檐上穿梭：站在飞檐上时，移形换影的冷却快 30%。": "Eave darter: Shadow Swap recovers 30% faster while standing on the eaves.",
+"醉翁墨阁": "Drunken Ink Pavilion",
+"水榭两侧有亭台，中间一半飘着酒雾：站在雾里的地上，每秒回 2.5 点定力。": "Pavilions on both sides, and wine mist over the middle half: standing on the ground in the mist restores 2.5 guard per second.",
+"酒香浸染：在酒雾里醉意每秒涨 12。": "Steeped in wine: drunkenness rises by 12 per second in the mist.",
+"水榭湿润：在酒雾里定力回得快一倍。": "Damp pavilion: guard comes back twice as fast in the mist.",
+"地利侠客": "Home ground",
+"本局地利": "Home ground this match",
+"地利": "Home",
+"疾风 · 东风": "Gale · East wind",
+"疾风 · 西风": "Gale · West wind",
+"天雷将至": "Lightning incoming",
+"引雷淬体": "Lightning tempered",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -11051,7 +11111,7 @@ if (f.skPh === 1) {
 const attWeight = (f.ch.stat && f.ch.stat.weight) || 1.50;
 const defWeight = (foe.ch.stat && foe.ch.stat.weight) || 1.0;
 const wRatio = attWeight / defWeight;
-const foeInAir = !foe.onGround() || foe.y < -2;
+const foeInAir = !foe.onGround() || airH(foe) > 2;
 const isCrimson = f.skinKey === 'ts_crimson';
 const waveRGB = isCrimson ? '255,60,70' : '255,200,100';
 if (!RESIM) {
@@ -11108,7 +11168,7 @@ const n = Math.floor(f.t / 0.25);
 if (n >= f.spinN && f.spinN < 8) {
 f.spinN++; f.hitDone = false; SFX.swing();
 const last = f.spinN === 8;
-const foeInAir = !foe.onGround() || foe.y < -2;
+const foeInAir = !foe.onGround() || airH(foe) > 2;
 strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 48, kb: foeInAir ? [420, -640] : [440, 0], stun: 0.50, hs: 0.12, launch: foeInAir, big: true }
 : { box: [20, -126, 142, -14], dmg: 15, kb: [40, 0], stun: 0.18, hs: 0.03, launch: false, noScale: true });
 }
@@ -11116,7 +11176,7 @@ if (f.t >= 2) toNeutral(f);
 },
 pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
 windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。在空中开扇会斜着俯冲下去，落地炸开一圈风爆（24 伤害，挑起），再崩出 5 颗爆米花。',
-start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (f.y < -40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
+start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (airH(f) > 40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
 update(f, foe) {
 if (f.skPh >= 10) { windDive(f, foe); return; }
 if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗
@@ -11172,7 +11232,7 @@ start() {},
 update(f) {
 if (f.skPh === 0 && f.t >= 0.08) {
 f.skPh = 1; SFX.slice();
-const air = f.y < -30;
+const air = airH(f) > 30;
 for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
 }
 if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
@@ -11380,10 +11440,10 @@ if (!c) { toNeutral(f); return; }   // 结印时雾身被打碎或散了：这�
 if (f.t >= C.swapSeal) {
 const x0 = f.x;
 cloneGone(f, c, false);
-f.x = c.x; f.y = 0; f.vy = 0; f.jumps = 0; f.airDash = 1;
+f.x = c.x; f.vy = 0; mapPutOn(f, c.p !== undefined ? c.p : -1); f.jumps = 0; f.airDash = 1;   // 雾身在平台上就站到平台上
 if (c.x !== x0) f.face = c.x > x0 ? 1 : -1;   // 朝向是来的方向：换到对手身后时是背对着他的
 f.snap = true; f.trail.length = 0; f.scarf = [];
-if (!RESIM) { smoke(x0, -50, 10); ring(f.x, -50, 70, f.look.slash, 0.3); SFX.poof(); }
+if (!RESIM) { smoke(x0, -50, 10); ring(f.x, f.y - 50, 70, f.look.slash, 0.3); SFX.poof(); }
 f.skPh = 1; f.t = 0;
 }
 return;
@@ -11431,10 +11491,10 @@ const tg = fighterByIdx(f.magTg), dx = f.x + f.face * 72 - tg.x, d = Math.abs(tg
 if (tg.state !== 'held' || tg.hp <= 0) f.magTg = -1;
 else {
 const v = magForce(MAG.rMinusK, d, MAG.rMinusV[0], MAG.rMinusV[1]), stepX = Math.sign(dx) * Math.min(Math.abs(dx), v * STEP);
-magMove(tg, tg.x + stepX); tg.y = damp(tg.y, 0, 18, STEP);
+magMove(tg, tg.x + stepX); tg.y = damp(tg.y, gndY(f), 18, STEP);   // 吸到磁仙脚下那一层
 if (!RESIM && Math.random() < 0.7) addP({ type: 'spark', x: tg.x, y: tg.y - 60 + rand(-20, 20), vx: Math.sign(dx) * rand(300, 600), vy: rand(-30, 30), rgb: magRGB(-1), life: 0.2, max: 0.2, w: 2 });
 if (Math.abs(dx) < 2 || f.t >= MAG.rMinusTime) {
-f.magTg = -1; tg.y = 0;
+f.magTg = -1; mapPutOn(tg, f.plat);
 applyHit(f, tg, { dmg: MAG.rMinusDmg, kb: [0, 0], stun: MAG.rMinusStun, hs: 0.08, root: true, unblockable: true, dir: f.face }, [tg.x, tg.y - 60]);
 if (tg.state === 'held') toNeutral(tg);
 ring(tg.x, tg.y - 60, 60, magRGB(-1), 0.25); SFX.thud();
@@ -11477,7 +11537,7 @@ if (Math.random() < 0.35) {
 addP({ type: 'spark', x: f.x - f.face * 18, y: f.y - 65, vx: -f.face * rand(60, 160), vy: rand(-40, 40), life: 0.22, max: 0.22, rgb: '255,200,120', w: 2 });
 }
 f.vy += GRAV * STEP;
-if (f.t > 0.15 && f.y >= 0) {
+if (f.t > 0.15 && (f.y >= 0 || f.plat >= 0)) {   // 落在山河异境的平台上也算砸到地
 f.sp = 'slam'; f.t = 0; f.vx = 0; f.spPose = 'ts_slam'; f.snap = true;
 shake = 26; flashA = 0.4; flashRGB = '255,210,150'; dust(f.x, 0, 30); ring(f.x, 0, 240, '255,210,150', 0.4); ring(f.x, 0, 150, '255,255,255', 0.3); SFX.ko();
 for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 40, y: -22, vx: sd * 500, w: 80, h: 44, life: 0.3, dmg: 0, kb: [0, 0], stun: 0, hs: 0, fx: true, unbreakable: true, groundOnly: true });
@@ -11485,7 +11545,7 @@ const foeIsFlying = foe.flying || (foe.ch && foe.ch.id === 'yanling' && foe.y < 
 const foeIsDashUlt = foe.state === 'special' && ['dash', 'rush', 'sweep'].includes(foe.sp);
 const canCrushUlt = foe.state === 'special' && !foeIsFlying && !foeIsDashUlt;
 const dx = Math.abs(foe.x - f.x), foeDown = foe.state === 'knockdown' || foe.state === 'getup';   // 倒在地上的人也砸得到
-if (dx < 185 && foe.y > -80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
+if (dx < 185 && airH(foe) < 80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
 const dir = foe.x >= f.x ? 1 : -1;
 const full = dx < 92.5 && !foeDown;
 if (foeDown) {
@@ -11723,8 +11783,8 @@ begin(f, foe) {
 f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
 for (const c of (f.clones || []).slice()) {
 const d = foe.x >= c.x ? 1 : -1;
-spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: -62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 34, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unbreakable: true });   // 刀光先到，本体后到
-if (!RESIM) slashLine(c.x, -60, d > 0 ? 0 : Math.PI, f.look.slash);
+spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 34, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unbreakable: true });   // 刀光先到，本体后到
+if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
 }
 clearClones(f);
 SFX.swing();
@@ -11734,7 +11794,7 @@ if (f.spN === 0 && f.t >= 0.45) {
 f.spN = 1;
 const side = foe.x >= f.x ? 1 : -1;
 if (!RESIM) smoke(f.x, f.y - 50, 10);
-f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.y = 0; f.vy = 0; f.face = side;
+f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.vy = 0; mapPutOn(f, foe.plat); f.face = side;   // 对手站在平台上就落到那个平台
 f.snap = true; f.trail.length = 0; f.scarf = [];
 f.spPose = 'l2a'; f.hitDone = false;
 strike(f, foe, { box: [0, -118, 110, 0], dmg: 45, kb: [240, -720], stun: 0.5, hs: 0.12, launch: true, ult: true });
@@ -12346,7 +12406,7 @@ if (sn.p) { projs.length = 0; for (const q of sn.p) projs.push(q); }
 function onNetMsg(msg) {
 if (msg.mstart || msg.report) return;
 if (msg.ru !== undefined) { rollRecv(msg); return; }
-if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv); return; }
+if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map); return; }
 if (msg.rsync) { rollAdopt(msg.rsync); return; }
 if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
 if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
@@ -13121,11 +13181,11 @@ notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, burnT: 0, 
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
-breakCD: 0, quickGetup: false, quickGetupPhase: false });
+breakCD: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
 this.scarf = []; this.trail = []; this.ghosts = [];
 if (this.ch.passive === 'magnet') this.pol = 1;   // 磁仙的极性：真正开局时 startRound 用对局随机数再抽（magRoll）
 }
-onGround() { return this.y >= 0 && this.vy >= 0; }
+onGround() { return (this.y >= 0 || this.plat >= 0) && this.vy >= 0; }
 }
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
@@ -13302,8 +13362,8 @@ const mp = mapNow(), ice = mp && mp.ice;
 if (!ice || f.y < 0) return 1;
 const u = f.x / STAGE_W;
 if (u < ice.from || u > ice.to) return 1;
-const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
-return clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
+const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1, g = clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
+return ice.sure && ice.sure[f.ch.id] ? Math.max(g, ice.sure[f.ch.id]) : g;   // 凌霜、铁山（地利）站得稳
 }
 const mapIceX = () => { const ice = (mapNow() || {}).ice; return ice ? [ice.from * STAGE_W, ice.to * STAGE_W] : null; };
 function mapEdge(f, cl) {
@@ -13323,6 +13383,105 @@ shake = Math.max(shake, 10); SFX.thud();
 ring(f.x, f.y - 40, 90, '170,200,255', 0.4);
 for (let i = 0; i < 10; i++) addP({ type: 'spark', x: f.x + rand(-20, 20), y: rand(-30, 10), vx: -side * rand(40, 200), vy: -rand(120, 420), life: 0.5, max: 0.5, rgb: '190,210,255', w: 2 });
 addP({ type: 'text', text: '坠崖 -' + dmg, x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '190,210,255' });
+}
+const mapPlats = () => (mapNow() || {}).plats || null;
+function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? P.y : 0; }
+const airH = f => gndY(f) - f.y;
+function mapPutOn(f, plat) {
+const P = plat >= 0 && (mapPlats() || [])[plat];
+if (P && Math.abs(f.x - P.x) <= P.w / 2) { f.y = P.y; f.plat = plat; } else { f.y = 0; f.plat = -1; }
+}
+function mapPlatKeep(f) {
+if (f.plat < 0) return;
+const P = (mapPlats() || [])[f.plat];
+if (!P || f.vy < 0 || Math.abs(f.y - P.y) > 0.5) f.plat = -1;
+}
+function mapPlatLand(f, oldY, wasAir) {
+const ps = mapPlats(); if (!ps) return;
+if (f.plat >= 0) {
+const P = ps[f.plat];
+if (Math.abs(f.x - P.x) > P.w / 2) f.plat = -1; else { f.y = P.y; if (f.vy > 0) f.vy = 0; }
+return;
+}
+if (f.vy <= 0 || f.dropT > 0 || f.state === 'held') return;
+for (let i = 0; i < ps.length; i++) {
+const P = ps[i];
+if (Math.abs(f.x - P.x) <= P.w / 2 && oldY <= P.y && f.y >= P.y) {
+f.y = P.y; f.plat = i;
+if (wasAir) onLand(f);
+if (f.vy > 0) f.vy = 0;
+return;
+}
+}
+}
+function mapDrop(f) {
+f.plat = -1; f.dropT = 0.25; f.y += 2; f.vy = Math.max(f.vy, 160); f.state = 'air';
+}
+const mapFavOn = f => !!(f && f.ch && ((mapNow() || {}).fav || {})[f.ch.id]);
+const mapWalk = f => f.plat >= 0 && f.ch.id === 'feiying' && mapFavOn(f) ? 1.15 : 1;
+function mapWind(f, onG) {
+const E = M.mapEnv, W = (mapNow() || {}).wind;
+if (!E || !W || E.wOn <= 0 || (onG && f.state !== 'dash' && f.state !== 'walk')) return;
+let push = W.push;
+if (f.ch.id === 'yanling' && mapFavOn(f)) push = Math.sign(f.vx) === E.wDir ? W.push * 2 : 0;
+f.vx += E.wDir * push * STEP;
+}
+function mapWindProj(p) {
+const E = M.mapEnv, W = (mapNow() || {}).wind;
+if (!E || !W || E.wOn <= 0 || Math.sign(p.vx) !== E.wDir) return;
+const o = fighterByIdx(p.owner), k = o && o.ch.id === 'qingfeng' && mapFavOn(o) ? 2 : 1;
+p.x += E.wDir * W.proj * k * STEP;
+}
+function mapThunder(T) {
+const tx = T.x * STAGE_W;
+for (const f of allFighters()) {
+if (f.hidden || f.hp <= 0 || Math.abs(f.x - tx) >= T.r || f.y > -60) continue;
+if (mapFavOn(f) && (f.ch.id === 'leiming' || f.ch.id === 'gouchen')) {
+if (f.ch.id === 'leiming') { f.meter = Math.min(100, (f.meter || 0) + 35); f.thunderGuardT = Math.max(f.thunderGuardT || 0, 3); }
+if (!RESIM) addP({ type: 'text', text: '引雷淬体', x: f.x, y: f.y - 120, life: 1, max: 1, rgb: '255,230,120' });
+continue;
+}
+if (f.invul > 0 || f.escInvul || f.state === 'special' || f.state === 'held' || (f.magTg !== undefined && f.magTg >= 0)) continue;
+toNeutral(f);
+f.hp = Math.max(1, f.hp - T.dmg);
+f.vy = T.vy; f.vx = (Math.sign(f.x - tx) || 1) * 200; f.plat = -1;
+f.state = 'launched'; f.t = 0; f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false;
+if (!RESIM) addP({ type: 'text', text: '天雷 -' + T.dmg, x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,210,90' });
+}
+if (RESIM) return;
+ring(tx, -120, 160, '255,230,120', 0.5); shake = Math.max(shake, 18); flashA = Math.max(flashA, 0.45); flashRGB = '255,240,150';
+SFX.thunder(); SFX.thunderHit(1.2);
+}
+function mapTick(dt) {
+const mp = mapNow(), E = M.mapEnv;
+if (!mp || !E || M.phase !== 'fight') return;
+if (mp.wind) {
+if (E.wOn > 0) { E.wOn -= dt; if (E.wOn <= 0) { E.wOn = 0; E.wT = mp.wind.every; } }
+else if ((E.wT -= dt) <= 0) {
+E.wOn = mp.wind.last; E.wDir = (E.wN + M.round) % 2 ? -1 : 1; E.wN++;   // 东西风轮流，每回合换一个起头
+if (!RESIM) { addP({ type: 'text', text: E.wDir > 0 ? '疾风 · 东风' : '疾风 · 西风', x: STAGE_W / 2, y: -230, life: 1.2, max: 1.2, rgb: '140,245,190' }); SFX.dash(); }
+}
+}
+if (mp.thunder) {
+const T = mp.thunder;
+if (E.tWarn > 0) { E.tWarn -= dt; if (E.tWarn <= 0) { E.tWarn = 0; E.tT = T.every; mapThunder(T); } }
+else if ((E.tT -= dt) <= 0) {
+E.tWarn = T.warn;
+if (!RESIM) addP({ type: 'text', text: '天雷将至', x: T.x * STAGE_W, y: -260, life: 1.2, max: 1.2, rgb: '255,220,100' });
+}
+}
+for (const f of allFighters()) {
+if (f.hidden || f.hp <= 0) continue;
+if (mp.fog && f.y >= 0) {
+const u = f.x / STAGE_W;
+if (u >= mp.fog.from && u <= mp.fog.to) {
+const fav = mapFavOn(f);
+if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * dt);
+if (fav && f.ch.id === 'zuixian') f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
+}
+}
+if (f.plat >= 0 && f.ch.id === 'lingque' && mapFavOn(f) && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
+}
 }
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
@@ -13368,6 +13527,7 @@ function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet
 function startRound() {
 STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
+M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
 if (typeof applySkins === 'function') applySkins();
 if (isRaid()) {
 const sq = M.raidSquadSize || 3;
@@ -13843,6 +14003,7 @@ return;
 const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
 if (onG) {
 if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
+if (f.plat >= 0 && (c.consume('drop') || (c.held.down && c.consume('jump')))) return mapDrop(f);   // 站在平台上：↓ + 跳落下去
 if (c.held.down) {
 if (c.consume('light')) return startAttack(f, 'dl');
 if (f.skill2CD <= 0 && (SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) return startSkill(f, foe, 2);   // 离影 ↓+R：换到最早的雾身
@@ -13864,7 +14025,7 @@ if (c.consume('heavy')) return startAttack(f, 'hv');
 if (c.consume('jump')) return doJump(f, dir);
 if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
 if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-const sp = dir === f.face ? wk(f) : wk(f) * 0.78;
+const sp = (dir === f.face ? wk(f) : wk(f) * 0.78) * mapWalk(f);
 f.vx = damp(f.vx, dir * sp, 16 * mapGrip(f), STEP);   // 冰面上起步、停下都慢
 f.state = Math.abs(f.vx) > 25 ? 'walk' : 'idle';
 } else {
@@ -14168,6 +14329,7 @@ p.vx = damp(p.vx, Math.sign(dx) * 860, 7, STEP); p.vy = damp(p.vy, (o.y - 65 - p
 if (Math.abs(dx) < 34 && p.age > p.turn + 0.15) { p.dead = true; continue; }
 }
 p.x += p.vx * STEP; p.y += p.vy * STEP;
+mapWindProj(p);   // 竹海悬岩的风
 if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
 if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
 if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math.random() < 0.6) addP({ type: 'ink', x: p.x - Math.sign(p.vx) * p.w * 0.4, y: p.y + rand(-p.h / 3, p.h / 3), vx: -p.vx * 0.1, vy: rand(-40, 40), life: 0.5, max: 0.5, r: rand(2, 5), rgb: p.kind === 'dragon' ? '20,20,28' : CHARS[fighterByIdx(p.owner).chIdx].look.slash }); }
@@ -14298,7 +14460,7 @@ function tryEscape(f, foe) {
 if (escapeBlock(f)) return false;
 if (!f.ctrl.consume('dash')) return false;
 const noDir = !f.ctrl.held.left && !f.ctrl.held.right && !f.ctrl.held.down;
-const inAir = f.y < -15 || !f.onGround();
+const inAir = airH(f) > 15 || !f.onGround();
 if (inAir && noDir) {
 f.breakCD = Math.min(f.ch.escCD || BREAK_CD, ESC.hoverCdCap);
 f.state = 'air'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.rooted = false; f.stun = 0;
@@ -14369,24 +14531,24 @@ return true;
 }
 return false;
 }
-const cloneBox = c => [c.x - 22, -100, c.x + 22, 2];
+const cloneBox = c => [c.x - 22, (c.y || 0) - 100, c.x + 22, (c.y || 0) + 2];
 function plantClone(f, x) {
 const C = f.ch.clone; if (!C) return;
 if (!f.clones) f.clones = [];
 while (f.clones.length >= C.max) cloneGone(f, f.clones[0], false);   // 满了：最早的那个散掉
 f.cloneN = (f.cloneN || 0) + 1;
-const c = { id: f.cloneN, x: clamp(x, WALL, STAGE_W - WALL), t: 0 };
+const c = { id: f.cloneN, x: clamp(x, WALL, STAGE_W - WALL), y: f.plat >= 0 ? gndY(f) : 0, p: f.plat, t: 0 };
 f.clones.push(c);
 if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + c.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: c.x - f.x };
-if (!RESIM) { smoke(c.x, -40, 6); ring(c.x, -10, 46, f.look.slash, 0.3); }
+if (!RESIM) { smoke(c.x, c.y - 40, 6); ring(c.x, c.y - 10, 46, f.look.slash, 0.3); }
 }
 function cloneGone(f, c, broken) {
 const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
 f.clones.splice(i, 1);
 delete CLONE_SK[f.idx + ':' + c.id];
 if (RESIM) return;
-smoke(c.x, -50, broken ? 12 : 7);
-if (broken) { addP({ type: 'text', text: '破影', x: c.x, y: -120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
+smoke(c.x, (c.y || 0) - 50, broken ? 12 : 7);
+if (broken) { addP({ type: 'text', text: '破影', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
 }
 function clearClones(f) { for (const c of (f.clones || []).slice()) cloneGone(f, c, false); }
 function cloneTick(f) {
@@ -14618,7 +14780,9 @@ if (scOn()) scTick(f, foe);
 physics(f);
 }
 function physics(f) {
-const wasAir = f.y < 0 || f.vy < 0;
+mapPlatKeep(f);
+if (f.dropT > 0) f.dropT = Math.max(0, f.dropT - STEP);
+const wasAir = (f.y < 0 && f.plat < 0) || f.vy < 0;   // 站在平台上不算在空中
 let g = GRAV;
 if (f.airHover > 0) {
 f.airHover -= STEP;
@@ -14639,20 +14803,23 @@ g *= LAUNCH_GRAV * (1 + f.juggle * 0.12) * Math.min(1.25, Math.max(0.85, Math.po
 const chaosGrav = (chaosNow('grav') || { val: 1 }).val;
 if (wasAir) f.vy += g * chaosGrav * STEP;
 if (f.state === 'held') { f.vx = 0; f.vy = 0; }
+const oldY = f.y;
 f.x += f.vx * STEP; f.y += f.vy * STEP;
-if (f.y >= 0) { f.y = 0; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
-const onG = f.y >= 0;
+if (f.y >= 0) { f.y = 0; f.plat = -1; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
+else mapPlatLand(f, oldY, wasAir);   // 山河异境的平台
+const onG = f.y >= 0 || f.plat >= 0;
 const slide = f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].nofric;
 const fw = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
 const dampK = clamp(8.5 * Math.pow(fw, 0.4), 6.5, 12) * mapGrip(f);
 if (onG && !slide && !['walk', 'dash', 'idle', 'attack', 'charge'].includes(f.state)) f.vx = damp(f.vx, 0, dampK, STEP);
 if (onG && f.state === 'attack') f.vx = damp(f.vx, 0, f.lunged ? (dampK * 0.75) : (dampK * 1.5), STEP);
+mapWind(f, onG);
 const cliff = (mapNow() || {}).cliff;
 if (cliff) mapEdge(f, cliff);   // 断崖台：两侧是崖边，没有墙可撞
 else if (f.x < WALL || f.x > STAGE_W - WALL) {
 const side = f.x < WALL ? -1 : 1;
 f.x = side < 0 ? WALL : STAGE_W - WALL;
-if (f.state === 'launched' && Math.abs(f.vx) > 350) {
+if (f.state === 'launched' && Math.abs(f.vx) > 350 && !(mapNow() || {}).nobounce) {   // 皇城飞檐两侧没有红柱：不弹墙
 const isHardImpact = Math.abs(f.vx) > 480;
 f.vx *= isHardImpact ? -0.55 : -0.4;
 shake = Math.max(shake, isHardImpact ? 14 : 7);
@@ -14689,7 +14856,7 @@ f.state = 'getup'; f.t = ESC.landLag; f.vx *= 0.3; dust(f.x, 0, 6); SFX.land();
 return;
 }
 if (f.state === 'launched') {
-if (f.spiked && !f.bounced) { f.vy = -560; f.bounced = true; f.y = -1; shake = Math.max(shake, 8); dust(f.x, 0, 14); ring(f.x, 0, 70, '255,255,255', 0.35); SFX.thud(); return; }
+if (f.spiked && !f.bounced) { f.vy = -560; f.bounced = true; f.y = gndY(f) - 1; shake = Math.max(shake, 8); dust(f.x, 0, 14); ring(f.x, 0, 70, '255,255,255', 0.35); SFX.thud(); return; }
 const c = f.ctrl;
 const canTech = c && f.hp > 0 && !f.spiked && (c.consume('dash') || c.consume('jump') || (c.held && (c.held.dash || c.held.jump)));
 if (canTech) {
@@ -15093,7 +15260,7 @@ else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.
 else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
 else if (m.hold) { def.state = 'held'; }
 else {
-const air = def.y < -2 || def.state === 'launched' || def.state === 'held';
+const air = airH(def) > 2 || def.state === 'launched' || def.state === 'held';
 if (m.launch || air || def.hp <= 0) {
 def.juggle++;
 if (def.juggle >= 3 && def.hp > 0) {
@@ -15125,7 +15292,7 @@ def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx *
 }
 }
 if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed') && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
-if (att.y < -2 && att.state === 'attack') att.vy = Math.min(att.vy, -170);
+if (airH(att) > 2 && att.state === 'attack') att.vy = Math.min(att.vy, -170);
 ev.cn = def.comboHits; ev.dd = dmg;
 if (def.hp <= 0 && M.phase === 'fight') {
 def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.y = Math.min(def.y, -1);
@@ -15359,7 +15526,7 @@ p = POSES[f.spPose || 'spa'] || POSES.spa; k = 60;
 } else if (s === 'skill') {
 const pr = SKILLS[f.skill] ? SKILLS[f.skill].pose(f) : ['idle', 14]; k = pr[1];
 let pn = pr[0];
-if (f.skAir && f.y < -4) pn = (AIR_SKILL_POSE[f.skill] || {})[pn] || (pn === 'idle' || pn === 'getup' ? 'fall' : pn);
+if (f.skAir && airH(f) > 4) pn = (AIR_SKILL_POSE[f.skill] || {})[pn] || (pn === 'idle' || pn === 'getup' ? 'fall' : pn);
 p = POSES[pn] || POSES.idle;
 } else if (s === 'dash') { p = POSES[f.dashDir === f.face ? 'dash' : 'bdash']; k = 30; }
 else if (s === 'air') { p = POSES[f.vy < 0 ? 'jump' : 'fall']; k = 14; }
@@ -15544,6 +15711,7 @@ if (!C.hidden) updateFighter(C, foeOf(C));
 if (!D.hidden) updateFighter(D, foeOf(D));
 updateArena2v2(STEP);
 }
+mapTick(STEP);   // 山河异境：风、天雷、酒雾（不在山河异境就什么都不做）
 if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
 for (const f of allFighters()) {
 if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
@@ -16282,6 +16450,57 @@ const sg = ctx.createLinearGradient(sx - 60, 0, sx + 60, 0);
 sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.16)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
 ctx.fillStyle = sg; ctx.fillRect(sx - 60, 0, 120, 40);
 }
+if (mp.fog) {
+const x0 = mp.fog.from * STAGE_W, x1 = mp.fog.to * STAGE_W;
+for (let k = 0; k < 7; k++) {
+const mx = x0 + (k + 0.5) * (x1 - x0) / 7 + Math.sin(clock * 0.5 + k * 1.7) * 26, my = -26 - hash(k * 7) * 30;
+const mg = ctx.createRadialGradient(mx, my, 6, mx, my, 120);
+mg.addColorStop(0, 'rgba(230,200,160,0.16)'); mg.addColorStop(1, 'rgba(230,200,160,0)');
+ctx.fillStyle = mg; ctx.fillRect(mx - 120, my - 120, 240, 240);
+}
+}
+for (const P of mp.plats || []) {
+const left = P.x - P.w / 2, top = P.y, w = P.w, h = 12;
+if (P.k === 'bamboo') {
+ctx.fillStyle = '#212d1b'; ctx.fillRect(left + 28, top + h, 8, -top - h); ctx.fillRect(left + w - 36, top + h, 8, -top - h);
+ctx.fillStyle = '#2d3b26'; ctx.fillRect(left, top, w, h);
+ctx.fillStyle = '#415735'; ctx.fillRect(left, top + 2, w, h - 4);
+ctx.strokeStyle = '#182414'; ctx.lineWidth = 1.5;
+for (let bx = left + 15; bx < left + w; bx += 22) { ctx.beginPath(); ctx.moveTo(bx, top); ctx.lineTo(bx, top + h); ctx.stroke(); }
+ctx.fillStyle = '#9e814a'; for (const rx of [left + 35, left + w - 35]) ctx.fillRect(rx - 4, top - 1, 8, h + 2);
+} else if (P.k === 'stone') {
+ctx.fillStyle = '#141824'; ctx.strokeStyle = 'rgba(233,196,106,0.7)'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(left + 20, top + h); ctx.lineTo(left + 45, 0); ctx.lineTo(left + w - 45, 0); ctx.lineTo(left + w - 20, top + h); ctx.closePath(); ctx.fill(); ctx.stroke();
+ctx.fillStyle = '#1c2130'; ctx.fillRect(left, top, w, h); ctx.strokeRect(left, top, w, h);
+} else {
+ctx.fillStyle = '#2a0e14'; ctx.fillRect(left + 24, top + h, 6, -top - h); ctx.fillRect(left + w - 30, top + h, 6, -top - h);
+ctx.fillStyle = '#3a161e'; ctx.fillRect(left, top, w, h);
+ctx.fillStyle = '#6e2732'; ctx.fillRect(left, top, w, 3);
+ctx.strokeStyle = 'rgba(233,196,106,0.85)'; ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.moveTo(left - 8, top - 4); ctx.quadraticCurveTo(left, top + 3, left + 14, top + 3);
+ctx.moveTo(left + w + 8, top - 4); ctx.quadraticCurveTo(left + w, top + 3, left + w - 14, top + 3);
+ctx.stroke();
+}
+}
+const E = M.mapEnv;
+if (mp.wind && E && E.wOn > 0) {
+ctx.fillStyle = 'rgba(140,245,190,0.45)';
+for (let i = 0; i < 9; i++) {
+const span = STAGE_W + 400, lx = ((clock * 680 * E.wDir + i * 210) % span + span) % span - 200, ly = -30 - ((i * 35) % 190);
+ctx.beginPath(); ctx.ellipse(lx, ly, 13, 3.2, E.wDir * 0.35, 0, Math.PI * 2); ctx.fill();
+}
+}
+if (mp.thunder && E && E.tWarn > 0) {
+const tx = mp.thunder.x * STAGE_W, pulse = 0.6 + 0.4 * Math.sin(clock * 25);
+ctx.save();
+ctx.strokeStyle = `rgba(255,220,110,${pulse})`; ctx.lineWidth = 2.5;
+ctx.beginPath(); ctx.ellipse(tx, -120, mp.thunder.r - 10, 24, 0, 0, Math.PI * 2); ctx.stroke();
+ctx.beginPath(); ctx.ellipse(tx, -120, 100, 15, 0, 0, Math.PI * 2); ctx.stroke();
+ctx.setLineDash([8, 6]); ctx.strokeStyle = `rgba(255,240,160,${pulse * 0.7})`;
+ctx.beginPath(); ctx.moveTo(tx, -500); ctx.lineTo(tx, -120); ctx.stroke();
+ctx.restore();
+}
 }
 function drawGround() {
 const g = ctx.createLinearGradient(0, 0, 0, 260);
@@ -16295,7 +16514,7 @@ const rg = ctx.createRadialGradient(cam.x + 200, 40, 10, cam.x + 200, 40, 400);
 rg.addColorStop(0, 'rgba(255,236,210,0.1)'); rg.addColorStop(1, 'rgba(255,236,210,0)');
 ctx.fillStyle = rg; ctx.fillRect(cam.x - 400, 0, 1200, 200);
 drawMapGround();
-if (!(mapNow() || {}).cliff) for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
+if (!(mapNow() || {}).cliff && !(mapNow() || {}).nobounce) for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
 ctx.fillStyle = '#3a121c'; ctx.fillRect(px - 16, -900, 32, 900);
 ctx.fillStyle = 'rgba(255,120,120,0.12)'; ctx.fillRect(px - 16, -900, 6, 900);
 ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);
@@ -16469,9 +16688,9 @@ addP({ type: 'spark', x: f.x + rand(-30, 30), y: f.y - rand(10, 100), vx: rand(-
 }
 if (f.look.legend && f.look.fx) skinGround(f);
 if (f.look.tier && f.look.fx) skinTierGround(f);
-const hgt = clamp(-f.y / 300, 0, 1);
+const gy = gndY(f), hgt = clamp((gy - f.y) / 300, 0, 1);   // 站在平台上影子落在台面
 ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
-ctx.beginPath(); ctx.ellipse(f.x, 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
+ctx.beginPath(); ctx.ellipse(f.x, gy + 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
 if (f.state === 'charge') {
 const lv = clamp(f.t / CHARGE_FULL, 0, 1), full = f.t >= CHARGE_FULL;
 const r = 40 + lv * 55 + (full ? Math.sin(clock * 30) * 6 : 0);
@@ -16688,24 +16907,25 @@ if (f.hidden || !f.clones || !f.clones.length) continue;
 const C = f.ch.clone || { life: 6 }, rgb = f.look.slash;
 const foe = (f.target && !f.target.hidden) ? f.target : foesOf(f)[0], mark = foe ? cloneMark(f, foe) : null;
 for (const c of f.clones) {
-const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1;
+const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1, cy = c.y || 0;
 ctx.save(); ctx.fillStyle = `rgba(${rgb},${0.22 * blink})`;
-ctx.beginPath(); ctx.ellipse(c.x, 0, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+ctx.beginPath(); ctx.ellipse(c.x, cy, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
 const rec = CLONE_SK[f.idx + ':' + c.id];
 if (rec) drawBody(rec.sk, f, { ghost: 0.5 * blink, tint: rgb });
-else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, -f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
+else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
 if (c === mark) {
 ctx.save(); ctx.strokeStyle = `rgba(${rgb},${0.85 * blink})`; ctx.lineWidth = 2.5;
-ctx.beginPath(); ctx.ellipse(c.x, 0, 46, 11, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+ctx.beginPath(); ctx.ellipse(c.x, cy, 46, 11, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 }
 }
 if (f.state === 'skill' && f.skill === 'mistswap' && f.skPh === 0) {
 const c = f.clones.find(k => k.id === f.swapId);
 if (c) {
 ctx.save(); ctx.strokeStyle = `rgba(${rgb},0.55)`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
-ctx.beginPath(); ctx.moveTo(f.x, f.y - 55); ctx.lineTo(c.x, -55); ctx.stroke();
+const cy = c.y || 0;
+ctx.beginPath(); ctx.moveTo(f.x, f.y - 55); ctx.lineTo(c.x, cy - 55); ctx.stroke();
 ctx.setLineDash([]); ctx.lineWidth = 3.5; ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.4 * Math.sin(clock * 40)})`;
-ctx.beginPath(); ctx.ellipse(c.x, 0, 50, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+ctx.beginPath(); ctx.ellipse(c.x, cy, 50, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 }
 }
 }
@@ -23452,12 +23672,12 @@ pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
 } else NET.presses2.length = 0;
 return { h, p: pr };
 }
-function rollStart(ch, seed, duo, mv) {
+function rollStart(ch, seed, duo, mv, map) {
 refocusGame();
 setChars(ch[0], ch[1]);
 if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
 setupNetMatch();
-if (roomDef().rule === 'maps') M.map = mapPick(Array.isArray(mv) ? mv : [], mapSeedRand(seed));   // 山河异境：房主把两边的票随开局一起发来，按种子选图
+if (roomDef().rule === 'maps') M.map = MAP_POOL.includes(map) ? map : mapPick(Array.isArray(mv) ? mv : [], mapSeedRand(seed));
 if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
 ROLL.slots = netSlots(); ROLL.ctrls = [];
 for (const f of allFighters()) {
@@ -24380,7 +24600,7 @@ b.classList.toggle('sel', b.dataset.lv === mapsLevel);
 b.onclick = () => { mapsLevel = b.dataset.lv; lvs.forEach(x => x.classList.toggle('sel', x === b)); SFX.slice(); };
 });
 }
-function startMapsMode(p1, p2, lv, isWatch = false) {
+function startMapsMode(p1, p2, lv, isWatch = false, mapId) {
 initAudio();
 paused = false;
 mapsP1 = p1 !== undefined ? p1 : mapsP1;
@@ -24394,7 +24614,7 @@ M.carry = null;
 M.stage = null;
 M.duo = null;
 M.watchAi = !!isWatch;
-M.map = mapPick(mapVote ? [mapVote] : [], Math.random());
+M.map = MAP_POOL.includes(mapId) ? mapId : mapPick(mapVote ? [mapVote] : [], Math.random());   // 点将台上已经选好；没有就现在按票选
 setChars(mapsP1, mapsP2);
 A.ctrl = isWatch ? new AICtrl(mapsLevel || 'god') : human[0];
 B.ctrl = new AICtrl(mapsLevel || 'god');
@@ -26941,6 +27161,8 @@ picks,
 t: BP_TIME,
 avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
 };
+if (mode === 'maps') BP.mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
+else if (mode === 'net' && roomDef().rule === 'maps') BP.mapId = mapPick(netMapVotes(), Math.random());
 bpSel = -1; bpCpuT = BP_CPU_DELAY;
 showScreen('bp'); renderBP();
 if (mode === 'net') send({ bps: BP });
@@ -27005,6 +27227,7 @@ const picks = JSON.parse(JSON.stringify(BP.picks));
 const bans = Array.isArray(BP.bans) ? BP.bans.filter(x => x >= 0) : [];
 const mode = bpMode;
 const opts = bpCustomOpts || {};
+const mapId = BP.mapId;   // 山河异境点将台上定好的地图
 BP = null;
 bpCustomOpts = null;
 showScreen(null);
@@ -27022,15 +27245,15 @@ const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
 : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
 : (duo ? [duo[0][0], duo[1][0]] : picks);
 const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
-send({ rstart: duo ? { ch: flatCh, seed, duo, mv } : { ch: flatCh, seed, mv } });
-rollStart(flatCh, seed, duo, mv);
+send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId } : { ch: flatCh, seed, mv, map: mapId } });
+rollStart(flatCh, seed, duo, mv, mapId);
 }
 } else if (mode === 'chaos') {
 startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
 } else if (mode === 'mayhem') {
 startMayhem(picks[0], picks[1], opts.level || mayhemLevel, !!opts.isWatch);
 } else if (mode === 'maps') {
-startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch);
+startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch, mapId);
 } else if (mode === 'tag3') {
 startTag3Match(picks[0], picks[1], opts.level || tag3Level, !!opts.isWatch);
 M.bans = bans;
@@ -27125,6 +27348,7 @@ return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px s
 <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
 <!-- 皮肤改在角色图鉴里装配：选人是有时限的，这里只显示当前装束 -->
 <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${Math.round((st.hp || 850) * ((BAL[c.id] || {}).hp || 1))}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
+${bpFav(c) ? `<div class="bp-fav"><b>本局地利</b> <span>${bpFav(c)}</span></div>` : ''}
 <dl><dt><span>被动</span> <span>${c.passiveName}</span></dt><dd>${c.passiveDesc}</dd>
 <dt>门派架势</dt><dd>${guardTxt}</dd>
 ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
@@ -27134,10 +27358,22 @@ ${specialMove ? `<dt><span>绝技</span> <span>${S2.name}</span></dt><dd>${speci
 ${restrHtml}</div>`;
 }
 function buildDetails(force) {
-const box = document.getElementById('bpDetail');
-if (!force && box.dataset.built === String(PORTRAITS.length)) return;
+const box = document.getElementById('bpDetail'), mk = (bpMap() || {}).n || '';   // 换了地图，地利那一行跟着变
+if (!force && box.dataset.built === String(PORTRAITS.length) && box.dataset.map === mk) return;
 box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
-box.dataset.built = String(PORTRAITS.length);
+box.dataset.built = String(PORTRAITS.length); box.dataset.map = mk;
+}
+const bpMap = () => (BP && MAPS[BP.mapId] && (bpMode === 'maps' || (bpMode === 'net' && roomDef().rule === 'maps')) && MAPS[BP.mapId]) || null;
+const bpFav = c => { const mp = bpMap(); return (mp && mp.fav && mp.fav[c.id]) || ''; };
+function bpMapBanner() {
+const box = $id('bpMap'), mp = bpMap();
+if (!box) return;
+box.classList.toggle('hidden', !mp); if (box.parentElement) box.parentElement.classList.toggle('has-map', !!mp);
+if (!mp || box.dataset.map === mp.n) return;
+box.dataset.map = mp.n;
+const fav = Object.keys(mp.fav || {}).filter(id => CHAR_IDX[id] !== undefined).map(id => `<span>${CHARS[CHAR_IDX[id]].name}</span>`).join(' · ');
+box.innerHTML = `<span class="bpm-n">${mp.n}</span><span class="bpm-d">${mp.d}</span>`
++ (fav ? `<span class="bpm-f"><span>地利侠客</span> ${fav}</span>` : '');
 }
 let bpDeckMove = 'light';
 function updateBPDeck(i) {
@@ -27239,6 +27475,7 @@ for (const el of document.querySelectorAll('#bpDetail .bpd')) el.classList.toggl
 updateBPDeck(i);
 }
 function renderBP() {
+bpMapBanner();
 if (bpMode === 'watch2v2') { if (watch2v2Bp) renderBPWatch2v2(); return; }
 if (!BP) return;
 $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
@@ -27354,10 +27591,11 @@ const can = myTurn && bpValid(i);
 const myAv = BP.avail && BP.avail[my];
 const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
 const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
-const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
-const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
+const fav = !!bpFav(c);   // 山河异境：这张图的地利侠客
+const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : fav ? '<span class="tag fav">地利</span>' : '';
+const state = (banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '') + (fav ? '，本局地利' : '');
 const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
-return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
+return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}${fav ? ' fav' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
 <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
 }).join('');
 if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }

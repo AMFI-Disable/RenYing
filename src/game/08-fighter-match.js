@@ -63,11 +63,11 @@ class Fighter {
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
-      breakCD: 0, quickGetup: false, quickGetupPhase: false });
+      breakCD: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
     this.scarf = []; this.trail = []; this.ghosts = [];
     if (this.ch.passive === 'magnet') this.pol = 1;   // 磁仙的极性：真正开局时 startRound 用对局随机数再抽（magRoll）
   }
-  onGround() { return this.y >= 0 && this.vy >= 0; }
+  onGround() { return (this.y >= 0 || this.plat >= 0) && this.vy >= 0; }
 }
 // ======================= 比赛流程 =======================
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
@@ -253,14 +253,14 @@ function mapPick(votes, r) {
 }
 // 联机用对局种子算出选图的随机数：两边种子一样，选出来的图就一样；不动对局随机数（GRNG），后面的对局照旧
 const mapSeedRand = seed => (Math.imul((seed | 0) ^ 0x5bd1e995, 2654435761) >>> 0) / 4294967296;
-// 脚下的抓地力：1 是普通地面；站在冰面上小于 1，越重越小（滑得越远）。离影的雾身（分身）站在地上也按这个算
+// 脚下的抓地力：1 是普通地面；站在冰面上小于 1，越重越小（滑得越远），地利侠客有个下限。平台上不是冰面
 function mapGrip(f) {
   const mp = mapNow(), ice = mp && mp.ice;
   if (!ice || f.y < 0) return 1;
   const u = f.x / STAGE_W;
   if (u < ice.from || u > ice.to) return 1;
-  const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
-  return clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
+  const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1, g = clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
+  return ice.sure && ice.sure[f.ch.id] ? Math.max(g, ice.sure[f.ch.id]) : g;   // 凌霜、铁山（地利）站得稳
 }
 const mapIceX = () => { const ice = (mapNow() || {}).ice; return ice ? [ice.from * STAGE_W, ice.to * STAGE_W] : null; };
 // 断崖台的崖边（代替两侧的墙）：自己走、跳、闪都过不去；被击飞，或硬直中被打得很快，越过崖边就坠崖：
@@ -282,6 +282,119 @@ function mapEdge(f, cl) {
   ring(f.x, f.y - 40, 90, '170,200,255', 0.4);
   for (let i = 0; i < 10; i++) addP({ type: 'spark', x: f.x + rand(-20, 20), y: rand(-30, 10), vx: -side * rand(40, 200), vy: -rand(120, 420), life: 0.5, max: 0.5, rgb: '190,210,255', w: 2 });
   addP({ type: 'text', text: '坠崖 -' + dmg, x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '190,210,255' });
+}
+// ---------- 平台：能站上去的台子（MAPS[..].plats）----------
+// 站在哪个平台上记在侠客的 plat（序号，-1 是地上或空中），跟着侠客进回滚存档。站在平台上算「在地上」（onGround），
+// 只是脚下那一层不是 0 而是台面高度：要知道离脚下多高用 airH，不要直接看 y
+const mapPlats = () => (mapNow() || {}).plats || null;
+function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? P.y : 0; }
+const airH = f => gndY(f) - f.y;
+// 把人放到他现在的 x 上：plat 那个平台在脚下就站上去，不然回到地面（瞬移、被吸过来以后用）
+function mapPutOn(f, plat) {
+  const P = plat >= 0 && (mapPlats() || [])[plat];
+  if (P && Math.abs(f.x - P.x) <= P.w / 2) { f.y = P.y; f.plat = plat; } else { f.y = 0; f.plat = -1; }
+}
+// 物理开头：往上跳了、被挪走了（y 对不上），就不算站在平台上了
+function mapPlatKeep(f) {
+  if (f.plat < 0) return;
+  const P = (mapPlats() || [])[f.plat];
+  if (!P || f.vy < 0 || Math.abs(f.y - P.y) > 0.5) f.plat = -1;
+}
+// 物理移动以后：走出台边就掉下去；往下落经过台面就站上去（从下往上跳是穿过去的，刚按 ↓ + 跳落下的那一小段也穿过去）
+function mapPlatLand(f, oldY, wasAir) {
+  const ps = mapPlats(); if (!ps) return;
+  if (f.plat >= 0) {
+    const P = ps[f.plat];
+    if (Math.abs(f.x - P.x) > P.w / 2) f.plat = -1; else { f.y = P.y; if (f.vy > 0) f.vy = 0; }
+    return;
+  }
+  if (f.vy <= 0 || f.dropT > 0 || f.state === 'held') return;
+  for (let i = 0; i < ps.length; i++) {
+    const P = ps[i];
+    if (Math.abs(f.x - P.x) <= P.w / 2 && oldY <= P.y && f.y >= P.y) {
+      f.y = P.y; f.plat = i;
+      if (wasAir) onLand(f);
+      if (f.vy > 0) f.vy = 0;
+      return;
+    }
+  }
+}
+// 站在平台上按住 ↓ 再跳（电脑按 drop）：落下去，这一小段穿过平台
+function mapDrop(f) {
+  f.plat = -1; f.dropT = 0.25; f.y += 2; f.vy = Math.max(f.vy, 160); f.state = 'air';
+}
+
+// ---------- 地利侠客（MAPS[..].fav）、风、天雷、酒雾 ----------
+const mapFavOn = f => !!(f && f.ch && ((mapNow() || {}).fav || {})[f.ch.id]);
+// 绯影的地利：站在飞檐上走得快
+const mapWalk = f => f.plat >= 0 && f.ch.id === 'feiying' && mapFavOn(f) ? 1.15 : 1;
+// 风：空中、走路、闪步的人被往风向推；燕翎（地利）顺风推一倍、逆风不推
+function mapWind(f, onG) {
+  const E = M.mapEnv, W = (mapNow() || {}).wind;
+  if (!E || !W || E.wOn <= 0 || (onG && f.state !== 'dash' && f.state !== 'walk')) return;
+  let push = W.push;
+  if (f.ch.id === 'yanling' && mapFavOn(f)) push = Math.sign(f.vx) === E.wDir ? W.push * 2 : 0;
+  f.vx += E.wDir * push * STEP;
+}
+// 顺风的飞行道具多飞一段；青锋（地利）的多飞一倍
+function mapWindProj(p) {
+  const E = M.mapEnv, W = (mapNow() || {}).wind;
+  if (!E || !W || E.wOn <= 0 || Math.sign(p.vx) !== E.wDir) return;
+  const o = fighterByIdx(p.owner), k = o && o.ch.id === 'qingfeng' && mapFavOn(o) ? 2 : 1;
+  p.x += E.wDir * W.proj * k * STEP;
+}
+// 天雷劈下：离落点不到 r、脚离地面高过 60 的人。无敌、大招、被抓着、正在吸人的不劈（免得留下半截动作）
+function mapThunder(T) {
+  const tx = T.x * STAGE_W;
+  for (const f of allFighters()) {
+    if (f.hidden || f.hp <= 0 || Math.abs(f.x - tx) >= T.r || f.y > -60) continue;
+    if (mapFavOn(f) && (f.ch.id === 'leiming' || f.ch.id === 'gouchen')) {
+      if (f.ch.id === 'leiming') { f.meter = Math.min(100, (f.meter || 0) + 35); f.thunderGuardT = Math.max(f.thunderGuardT || 0, 3); }
+      if (!RESIM) addP({ type: 'text', text: '引雷淬体', x: f.x, y: f.y - 120, life: 1, max: 1, rgb: '255,230,120' });
+      continue;
+    }
+    if (f.invul > 0 || f.escInvul || f.state === 'special' || f.state === 'held' || (f.magTg !== undefined && f.magTg >= 0)) continue;
+    toNeutral(f);
+    f.hp = Math.max(1, f.hp - T.dmg);
+    f.vy = T.vy; f.vx = (Math.sign(f.x - tx) || 1) * 200; f.plat = -1;
+    f.state = 'launched'; f.t = 0; f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false;
+    if (!RESIM) addP({ type: 'text', text: '天雷 -' + T.dmg, x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,210,90' });
+  }
+  if (RESIM) return;
+  ring(tx, -120, 160, '255,230,120', 0.5); shake = Math.max(shake, 18); flashA = Math.max(flashA, 0.45); flashRGB = '255,240,150';
+  SFX.thunder(); SFX.thunderHit(1.2);
+}
+// 每一步（step 里，侠客都动完以后）：风和天雷的计时、酒雾、凌雀（地利）在飞檐上冷却快
+function mapTick(dt) {
+  const mp = mapNow(), E = M.mapEnv;
+  if (!mp || !E || M.phase !== 'fight') return;
+  if (mp.wind) {
+    if (E.wOn > 0) { E.wOn -= dt; if (E.wOn <= 0) { E.wOn = 0; E.wT = mp.wind.every; } }
+    else if ((E.wT -= dt) <= 0) {
+      E.wOn = mp.wind.last; E.wDir = (E.wN + M.round) % 2 ? -1 : 1; E.wN++;   // 东西风轮流，每回合换一个起头
+      if (!RESIM) { addP({ type: 'text', text: E.wDir > 0 ? '疾风 · 东风' : '疾风 · 西风', x: STAGE_W / 2, y: -230, life: 1.2, max: 1.2, rgb: '140,245,190' }); SFX.dash(); }
+    }
+  }
+  if (mp.thunder) {
+    const T = mp.thunder;
+    if (E.tWarn > 0) { E.tWarn -= dt; if (E.tWarn <= 0) { E.tWarn = 0; E.tT = T.every; mapThunder(T); } }
+    else if ((E.tT -= dt) <= 0) {
+      E.tWarn = T.warn;
+      if (!RESIM) addP({ type: 'text', text: '天雷将至', x: T.x * STAGE_W, y: -260, life: 1.2, max: 1.2, rgb: '255,220,100' });
+    }
+  }
+  for (const f of allFighters()) {
+    if (f.hidden || f.hp <= 0) continue;
+    if (mp.fog && f.y >= 0) {
+      const u = f.x / STAGE_W;
+      if (u >= mp.fog.from && u <= mp.fog.to) {
+        const fav = mapFavOn(f);
+        if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * dt);
+        if (fav && f.ch.id === 'zuixian') f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
+      }
+    }
+    if (f.plat >= 0 && f.ch.id === 'lingque' && mapFavOn(f) && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
+  }
 }
 
 const CN = ['', '一', '二', '三', '四', '五'];
@@ -333,6 +446,7 @@ function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet
 function startRound() {
   STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
+  M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
   if (typeof applySkins === 'function') applySkins();
   if (isRaid()) {
     const sq = M.raidSquadSize || 3;

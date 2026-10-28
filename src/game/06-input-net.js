@@ -261,7 +261,7 @@ function applySnapshot(sn, exact) {
 function onNetMsg(msg) {
   if (msg.mstart || msg.report) return;
   if (msg.ru !== undefined) { rollRecv(msg); return; }
-  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv); return; }
+  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map); return; }
   if (msg.rsync) { rollAdopt(msg.rsync); return; }
   if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }

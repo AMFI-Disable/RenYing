@@ -409,7 +409,7 @@ function applyHit(att, def, m, pt) {
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
   else if (m.hold) { def.state = 'held'; }
   else {
-    const air = def.y < -2 || def.state === 'launched' || def.state === 'held';
+    const air = airH(def) > 2 || def.state === 'launched' || def.state === 'held';
     if (m.launch || air || def.hp <= 0) {
       def.juggle++;
       if (def.juggle >= 3 && def.hp > 0) {
@@ -442,7 +442,7 @@ function applyHit(att, def, m, pt) {
     }
   }
   if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed') && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
-  if (att.y < -2 && att.state === 'attack') att.vy = Math.min(att.vy, -170);
+  if (airH(att) > 2 && att.state === 'attack') att.vy = Math.min(att.vy, -170);
   ev.cn = def.comboHits; ev.dd = dmg;
   if (def.hp <= 0 && M.phase === 'fight') {
     def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.y = Math.min(def.y, -1);

@@ -30,7 +30,7 @@ const ULTS = {
           addP({ type: 'spark', x: f.x - f.face * 18, y: f.y - 65, vx: -f.face * rand(60, 160), vy: rand(-40, 40), life: 0.22, max: 0.22, rgb: '255,200,120', w: 2 });
         }
         f.vy += GRAV * STEP;
-        if (f.t > 0.15 && f.y >= 0) {
+        if (f.t > 0.15 && (f.y >= 0 || f.plat >= 0)) {   // 落在山河异境的平台上也算砸到地
           f.sp = 'slam'; f.t = 0; f.vx = 0; f.spPose = 'ts_slam'; f.snap = true;
           shake = 26; flashA = 0.4; flashRGB = '255,210,150'; dust(f.x, 0, 30); ring(f.x, 0, 240, '255,210,150', 0.4); ring(f.x, 0, 150, '255,255,255', 0.3); SFX.ko();
           for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 40, y: -22, vx: sd * 500, w: 80, h: 44, life: 0.3, dmg: 0, kb: [0, 0], stun: 0, hs: 0, fx: true, unbreakable: true, groundOnly: true });
@@ -39,7 +39,7 @@ const ULTS = {
           const foeIsDashUlt = foe.state === 'special' && ['dash', 'rush', 'sweep'].includes(foe.sp);
           const canCrushUlt = foe.state === 'special' && !foeIsFlying && !foeIsDashUlt;
           const dx = Math.abs(foe.x - f.x), foeDown = foe.state === 'knockdown' || foe.state === 'getup';   // 倒在地上的人也砸得到
-          if (dx < 185 && foe.y > -80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
+          if (dx < 185 && airH(foe) < 80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
             const dir = foe.x >= f.x ? 1 : -1;
             // 正中（落点 92 像素以内、对手站着）才算打满；砸到边缘或砸倒地的人只回一半气量
             const full = dx < 92.5 && !foeDown;
@@ -280,8 +280,8 @@ const ULTS = {
       f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
       for (const c of (f.clones || []).slice()) {
         const d = foe.x >= c.x ? 1 : -1;
-        spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: -62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 34, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unbreakable: true });   // 刀光先到，本体后到
-        if (!RESIM) slashLine(c.x, -60, d > 0 ? 0 : Math.PI, f.look.slash);
+        spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 34, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unbreakable: true });   // 刀光先到，本体后到
+        if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
       }
       clearClones(f);
       SFX.swing();
@@ -291,7 +291,7 @@ const ULTS = {
         f.spN = 1;
         const side = foe.x >= f.x ? 1 : -1;
         if (!RESIM) smoke(f.x, f.y - 50, 10);
-        f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.y = 0; f.vy = 0; f.face = side;
+        f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.vy = 0; mapPutOn(f, foe.plat); f.face = side;   // 对手站在平台上就落到那个平台
         f.snap = true; f.trail.length = 0; f.scarf = [];
         f.spPose = 'l2a'; f.hitDone = false;
         strike(f, foe, { box: [0, -118, 110, 0], dmg: 45, kb: [240, -720], stun: 0.5, hs: 0.12, launch: true, ult: true });

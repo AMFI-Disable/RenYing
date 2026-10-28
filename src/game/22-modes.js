@@ -517,7 +517,7 @@ function renderMaps() {
     b.onclick = () => { mapsLevel = b.dataset.lv; lvs.forEach(x => x.classList.toggle('sel', x === b)); SFX.slice(); };
   });
 }
-function startMapsMode(p1, p2, lv, isWatch = false) {
+function startMapsMode(p1, p2, lv, isWatch = false, mapId) {
   initAudio();
   paused = false;
   mapsP1 = p1 !== undefined ? p1 : mapsP1;
@@ -531,7 +531,7 @@ function startMapsMode(p1, p2, lv, isWatch = false) {
   M.stage = null;
   M.duo = null;
   M.watchAi = !!isWatch;
-  M.map = mapPick(mapVote ? [mapVote] : [], Math.random());
+  M.map = MAP_POOL.includes(mapId) ? mapId : mapPick(mapVote ? [mapVote] : [], Math.random());   // 点将台上已经选好；没有就现在按票选
   setChars(mapsP1, mapsP2);
   A.ctrl = isWatch ? new AICtrl(mapsLevel || 'god') : human[0];
   B.ctrl = new AICtrl(mapsLevel || 'god');

@@ -450,6 +450,9 @@ function bpStart(mode, customOpts = null) {
     t: BP_TIME,
     avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
   };
+  // 山河异境：一进点将台就按票选好地图（联机由房主选，随 bps 发给对方；开打时随 rstart 再发一次），横幅写着这局的图和地利侠客
+  if (mode === 'maps') BP.mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
+  else if (mode === 'net' && roomDef().rule === 'maps') BP.mapId = mapPick(netMapVotes(), Math.random());
   bpSel = -1; bpCpuT = BP_CPU_DELAY;
   showScreen('bp'); renderBP();
   if (mode === 'net') send({ bps: BP });
@@ -514,6 +517,7 @@ function bpFinish() {
   const bans = Array.isArray(BP.bans) ? BP.bans.filter(x => x >= 0) : [];
   const mode = bpMode;
   const opts = bpCustomOpts || {};
+  const mapId = BP.mapId;   // 山河异境点将台上定好的地图
   BP = null;
   bpCustomOpts = null;
   showScreen(null);
@@ -533,15 +537,15 @@ function bpFinish() {
         : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
         : (duo ? [duo[0][0], duo[1][0]] : picks);
       const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
-      send({ rstart: duo ? { ch: flatCh, seed, duo, mv } : { ch: flatCh, seed, mv } });
-      rollStart(flatCh, seed, duo, mv);
+      send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId } : { ch: flatCh, seed, mv, map: mapId } });
+      rollStart(flatCh, seed, duo, mv, mapId);
     }
   } else if (mode === 'chaos') {
     startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
   } else if (mode === 'mayhem') {
     startMayhem(picks[0], picks[1], opts.level || mayhemLevel, !!opts.isWatch);
   } else if (mode === 'maps') {
-    startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch);
+    startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch, mapId);
   } else if (mode === 'tag3') {
     startTag3Match(picks[0], picks[1], opts.level || tag3Level, !!opts.isWatch);
     M.bans = bans;
@@ -639,6 +643,7 @@ function bpDetailHTML(i) {
     <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
     <!-- 皮肤改在角色图鉴里装配：选人是有时限的，这里只显示当前装束 -->
     <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${Math.round((st.hp || 850) * ((BAL[c.id] || {}).hp || 1))}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
+    ${bpFav(c) ? `<div class="bp-fav"><b>本局地利</b> <span>${bpFav(c)}</span></div>` : ''}
     <dl><dt><span>被动</span> <span>${c.passiveName}</span></dt><dd>${c.passiveDesc}</dd>
     <dt>门派架势</dt><dd>${guardTxt}</dd>
     ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
@@ -648,10 +653,23 @@ function bpDetailHTML(i) {
     ${restrHtml}</div>`;
 }
 function buildDetails(force) {
-  const box = document.getElementById('bpDetail');
-  if (!force && box.dataset.built === String(PORTRAITS.length)) return;
+  const box = document.getElementById('bpDetail'), mk = (bpMap() || {}).n || '';   // 换了地图，地利那一行跟着变
+  if (!force && box.dataset.built === String(PORTRAITS.length) && box.dataset.map === mk) return;
   box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
-  box.dataset.built = String(PORTRAITS.length);
+  box.dataset.built = String(PORTRAITS.length); box.dataset.map = mk;
+}
+// 山河异境的点将台：这局的地图（别的点将台没有，横幅藏着）
+const bpMap = () => (BP && MAPS[BP.mapId] && (bpMode === 'maps' || (bpMode === 'net' && roomDef().rule === 'maps')) && MAPS[BP.mapId]) || null;
+const bpFav = c => { const mp = bpMap(); return (mp && mp.fav && mp.fav[c.id]) || ''; };
+function bpMapBanner() {
+  const box = $id('bpMap'), mp = bpMap();
+  if (!box) return;
+  box.classList.toggle('hidden', !mp); if (box.parentElement) box.parentElement.classList.toggle('has-map', !!mp);
+  if (!mp || box.dataset.map === mp.n) return;
+  box.dataset.map = mp.n;
+  const fav = Object.keys(mp.fav || {}).filter(id => CHAR_IDX[id] !== undefined).map(id => `<span>${CHARS[CHAR_IDX[id]].name}</span>`).join(' · ');
+  box.innerHTML = `<span class="bpm-n">${mp.n}</span><span class="bpm-d">${mp.d}</span>`
+    + (fav ? `<span class="bpm-f"><span>地利侠客</span> ${fav}</span>` : '');
 }
 let bpDeckMove = 'light';
 function updateBPDeck(i) {
@@ -758,6 +776,7 @@ function setDetail(i) {
 
 function renderBP() {
   // 2v2 专属天道演武禁选走独立状态与独立渲染
+  bpMapBanner();
   if (bpMode === 'watch2v2') { if (watch2v2Bp) renderBPWatch2v2(); return; }
   if (!BP) return;
   $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
@@ -883,10 +902,11 @@ function renderBP() {
     const myAv = BP.avail && BP.avail[my];
     const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
     const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
-    const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : '';
-    const state = banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '';
+    const fav = !!bpFav(c);   // 山河异境：这张图的地利侠客
+    const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : fav ? '<span class="tag fav">地利</span>' : '';
+    const state = (banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '') + (fav ? '，本局地利' : '');
     const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
-    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
+    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}${fav ? ' fav' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
       <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
   if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }

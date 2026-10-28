@@ -141,6 +141,7 @@
     [/^天机异变 · (.+)$/, (m0, n) => `Mutation · ${lookup(n) || n}`],
     [/^山河异境 · (.+)$/, (m0, n) => `Terrain Clash · ${lookup(n) || n}`],
     [/^坠崖 -(\d+)$/, (m0, n) => `Fell -${n}`],
+    [/^天雷 -(\d+)$/, (m0, n) => `Lightning -${n}`],
     [/^「(.+)」$/, (m0, n) => { const t = lookup(n); return t ? `“${t}”` : ''; }],
     [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
     [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],

@@ -251,16 +251,31 @@ function checkModes(env) {
 // ---------- 山河异境的地图 ----------
 function checkMaps(env) {
   const { MAPS, MAP_POOL } = env, w0 = 'src/data/12-maps.js';
+  const heroIds = new Set((env.HEROES || []).map(h => h.id));
   const num = (w, o, k, lo, hi) => { if (typeof o[k] !== 'number' || !(o[k] >= lo && o[k] <= hi)) err(w, `${k} 要是 ${lo}~${hi} 之间的数，现在是 ${JSON.stringify(o[k])}`); };
   if (!Array.isArray(MAP_POOL) || !MAP_POOL.length) err(w0 + ' MAP_POOL', '要至少一张图');
   else { unique(w0 + ' MAP_POOL', MAP_POOL, '地图'); for (const id of MAP_POOL) if (!MAPS[id]) err(w0 + ' MAP_POOL', `${id} 在 MAPS 里没有`); }
   for (const [k, mp] of Object.entries(MAPS)) {
     const w = `${w0} MAPS.${k}`;
-    if (!shape(w, mp, { n: 'str', d: 'str', 'w?': 'num', 'cliff?': 'obj', 'ice?': 'obj' })) continue;
+    if (!shape(w, mp, { n: 'str', d: 'str', 'w?': 'num', 'cliff?': 'obj', 'ice?': 'obj', 'plats?': 'arr', 'nobounce?': 'bool', 'wind?': 'obj', 'thunder?': 'obj', 'fog?': 'obj', 'fav?': 'obj' })) continue;
     if (!(MAP_POOL || []).includes(k)) err(w, '不在 MAP_POOL 里，投票页上看不到');
     if (mp.w !== undefined) num(w, mp, 'w', 1000, 2600);
     if (mp.cliff) { const c = mp.cliff; num(w + '.cliff', c, 'dmg', 0, 0.3); num(w + '.cliff', c, 'push', 0, 2000); num(w + '.cliff', c, 'back', 0, 300); num(w + '.cliff', c, 'vy', -2000, 0); num(w + '.cliff', c, 'invul', 0, 3); }
-    if (mp.ice) { const c = mp.ice; num(w + '.ice', c, 'from', 0, 1); num(w + '.ice', c, 'to', 0, 1); num(w + '.ice', c, 'grip', 0.05, 1); num(w + '.ice', c, 'dash', 0, 1); if (c.from >= c.to) err(w + '.ice', 'from 要小于 to'); }
+    if (mp.ice) { const c = mp.ice; num(w + '.ice', c, 'from', 0, 1); num(w + '.ice', c, 'to', 0, 1); num(w + '.ice', c, 'grip', 0.05, 1); num(w + '.ice', c, 'dash', 0, 1); if (c.from >= c.to) err(w + '.ice', 'from 要小于 to');
+      for (const [id, g] of Object.entries(c.sure || {})) { if (!heroIds.has(id)) err(w + '.ice.sure', `${id} 不是侠客`); if (!(g > 0 && g <= 1)) err(w + '.ice.sure', `${id} 要是 0~1 之间的数`); } }
+    const sw = mp.w || 1800;
+    (mp.plats || []).forEach((P, i) => {   // 平台要整个在场地里、在地面上方、跳得上去（二段跳最高大约 330）
+      const wp = `${w}.plats[${i}]`;
+      if (!shape(wp, P, { x: 'num', y: 'num', w: 'num', k: 'str' })) return;
+      num(wp, P, 'y', -300, -60); num(wp, P, 'w', 80, 600);
+      if (P.x - P.w / 2 < 60 || P.x + P.w / 2 > sw - 60) err(wp, '平台伸出了场地');
+      if (!['bamboo', 'stone', 'wood'].includes(P.k)) err(wp, `k 要是 bamboo / stone / wood，现在是 ${JSON.stringify(P.k)}`);
+    });
+    if (mp.cliff && mp.plats) err(w, '断崖台不放平台（坠崖弹回时会卡在台下）');
+    if (mp.wind) { const c = mp.wind; num(w + '.wind', c, 'every', 3, 120); num(w + '.wind', c, 'last', 0.5, 60); num(w + '.wind', c, 'push', 0, 400); num(w + '.wind', c, 'proj', 0, 600); }
+    if (mp.thunder) { const c = mp.thunder; num(w + '.thunder', c, 'every', 3, 120); num(w + '.thunder', c, 'warn', 0.3, 5); num(w + '.thunder', c, 'x', 0, 1); num(w + '.thunder', c, 'r', 20, 600); num(w + '.thunder', c, 'dmg', 0, 200); num(w + '.thunder', c, 'vy', -2000, 0); }
+    if (mp.fog) { const c = mp.fog; num(w + '.fog', c, 'from', 0, 1); num(w + '.fog', c, 'to', 0, 1); num(w + '.fog', c, 'guard', 0, 50); if (c.from >= c.to) err(w + '.fog', 'from 要小于 to'); }
+    for (const [id, t] of Object.entries(mp.fav || {})) { if (!heroIds.has(id)) err(w + '.fav', `${id} 不是侠客`); if (!TYPES.str(t)) err(w + '.fav', `${id} 的说明要是非空字符串`); }
   }
 }
 
@@ -332,7 +347,7 @@ const TABLES = [
 
 const env = await makeEnv();
 const get = name => env.run(`typeof ${name} === 'undefined' ? undefined : ${name}`);
-const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN', 'CANCEL', 'SFX', 'MAPS', 'MAP_POOL'].map(k => [k, get(k)]));
+const refs = Object.fromEntries(['LEVELS', 'SAGA_GOAL', 'SC_BY', 'SKILLS', 'ULTS', 'WEAPON_LEN', 'MOVES', 'SKINS', 'BP_ORDERS', 'MODES', 'ROOM_MODES', 'MODE_DEFAULT', 'UI_COPY_EN', 'CANCEL', 'SFX', 'MAPS', 'MAP_POOL', 'HEROES'].map(k => [k, get(k)]));
 for (const t of TABLES) if (get(t.name) !== undefined) t.check(refs);
 checkPatterns();
 const stale = staleCopy();

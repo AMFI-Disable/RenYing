@@ -1313,7 +1313,8 @@ const testSuite = [
     name: 'Frozen Pond: ice slows stopping, heavier fighters slide further, other modes unchanged',
     fn: `(() => {
       const slide = (ci, x) => { setChars(ci, (ci + 1) % CHARS.length); A.x = x; A.y = 0; A.vx = 500; A.vy = 0; A.state = 'hitstun'; A.t = 0; A.stun = 9; const x0 = A.x; for (let i = 0; i < 30; i++) physics(A); return A.x - x0; };
-      const heavy = CHARS.findIndex(c => c.stat.weight >= 1.3), light = CHARS.findIndex(c => c.stat.weight <= 0.85);
+      const sure = MAPS.ice.ice.sure || {};   // 地利侠客冰上站得稳，比的是普通侠客
+      const heavy = CHARS.findIndex(c => c.stat.weight >= 1.3 && !sure[c.id]), light = CHARS.findIndex(c => c.stat.weight <= 0.85 && !sure[c.id]);
       mapVote = 'ice'; startMapsMode(0, 1, 'easy', true); M.phase = 'fight';
       if (M.map !== 'ice') return { pass: false, error: 'map ' + M.map };
       const mid = STAGE_W / 2, onIce = slide(heavy, mid), offIce = slide(heavy, WALL + 100);
@@ -1323,6 +1324,132 @@ const testSuite = [
       startMatch('cpu', 'easy', [heavy, 1]); M.map = 'ice'; M.phase = 'fight';
       const cpuMid = slide(heavy, STAGE_W / 2);
       if (Math.abs(cpuMid - offIce) > 1e-6) return { pass: false, error: 'maps must not apply outside the maps mode: ' + cpuMid + ' vs ' + offIce };
+      startMapsMode(0, 1, 'easy', true, 'ice'); M.phase = 'fight';
+      const ts = CHAR_IDX.tieshan, tsIce = slide(ts, mid), tsOff = slide(ts, WALL + 100);
+      if (!(tsIce < onIce && tsIce < tsOff * 1.2)) return { pass: false, error: 'Tie Shan (home ground) should barely slide: ice ' + tsIce + ' vs ground ' + tsOff };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    // 平台：从上面落下来站得住，站着不往下掉；从下面跳上去会穿过台面再落在上面；↓ + 跳落下去；走出台边掉下去；别的模式没有平台
+    name: 'Map platforms: land from above, jump through from below, drop with down + jump, walk off the edge',
+    fn: `(() => {
+      startMapsMode(0, 1, 'easy', true, 'bamboo'); M.phase = 'fight';
+      if (M.map !== 'bamboo') return { pass: false, error: 'the map picked at the draft must be used, got ' + M.map };
+      const P = MAPS.bamboo.plats[0], run = (n, f = A) => { for (let i = 0; i < n; i++) physics(f); };
+      A.x = P.x; A.y = P.y - 60; A.vx = 0; A.vy = 200; A.state = 'air'; A.plat = -1;
+      run(40);
+      if (A.plat !== 0 || A.y !== P.y || !A.onGround()) return { pass: false, error: 'should land on the platform: ' + JSON.stringify({ y: A.y, plat: A.plat }) };
+      toNeutral(A); run(120);
+      if (A.y !== P.y || A.plat !== 0) return { pass: false, error: 'standing on a platform must not sink: y ' + A.y };
+      if (airH(A) !== 0) return { pass: false, error: 'airH on a platform should be 0, got ' + airH(A) };
+      A.y = 0; A.plat = -1; A.vy = -JUMP_V; A.state = 'air';
+      let crossed = false;
+      for (let i = 0; i < 200 && !(A.plat === 0); i++) { physics(A); if (A.vy < 0 && A.y < P.y) crossed = true; }
+      if (!crossed || A.plat !== 0) return { pass: false, error: 'a jump from below should pass through and land on top' };
+      toNeutral(A); A.ctrl = human[0]; human[0].clear(); human[0].held.down = true; human[0].press('jump');
+      neutral(A, B); human[0].held.down = false;
+      if (A.plat !== -1 || !(A.dropT > 0)) return { pass: false, error: 'down + jump should drop through' };
+      run(120);
+      if (A.y !== 0) return { pass: false, error: 'dropping should fall all the way to the ground, y ' + A.y };
+      A.x = P.x + P.w / 2 - 2; A.vx = 0; mapPutOn(A, 0); toNeutral(A); A.vx = 400; A.state = 'walk'; run(60);
+      if (A.plat !== -1 || A.y !== 0) return { pass: false, error: 'walking off the edge should fall: ' + JSON.stringify({ y: A.y, plat: A.plat }) };
+      startMatch('cpu', 'easy', [0, 1]); M.map = 'bamboo'; M.phase = 'fight';
+      A.x = P.x; A.y = P.y - 60; A.vy = 200; A.state = 'air'; A.plat = -1; run(60);
+      if (A.y !== 0 || A.plat !== -1) return { pass: false, error: 'other modes must not have platforms: y ' + A.y };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    // 风和天雷：计时在 M.mapEnv；风推人、推飞行道具（青锋地利多推一倍）；天雷劈坛上的人（不会劈死），雷鸣地利不怕还回气；地上的人不劈
+    name: 'Bamboo wind and Thunder Altar lightning: timed in the match state, home-ground heroes resist',
+    fn: `(() => {
+      startMapsMode(0, 1, 'easy', true, 'bamboo'); M.phase = 'fight';
+      const E = M.mapEnv; E.wT = STEP / 2; mapTick(STEP);
+      if (!(E.wOn > 0) || Math.abs(E.wDir) !== 1) return { pass: false, error: 'wind should start: ' + JSON.stringify(E) };
+      setChars(CHAR_IDX.lingshuang, 1); A.x = 900; A.y = -200; A.vx = 0; A.vy = 0; A.state = 'air'; A.plat = -1; physics(A);
+      if (Math.sign(A.vx) !== E.wDir) return { pass: false, error: 'wind should push fighters in the air: vx ' + A.vx };
+      const shot = o => { const p = { owner: o.idx, x: 900, y: -60, vx: 600 * E.wDir, vy: 0 }; const x0 = p.x; mapWindProj(p); return Math.abs(p.x - x0); };
+      const plain = shot(A); setChars(CHAR_IDX.qingfeng, 1); const fav = shot(A);
+      if (!(plain > 0) || Math.abs(fav - plain * 2) > 1e-9) return { pass: false, error: 'tailwind boost ' + plain + ', Qing Feng ' + fav };
+      startMapsMode(CHAR_IDX.liuyun, CHAR_IDX.leiming, 'easy', true, 'thunder'); M.phase = 'fight';
+      const T = MAPS.thunder.thunder, P = MAPS.thunder.plats[0], E2 = M.mapEnv;
+      A.x = P.x; mapPutOn(A, 0); toNeutral(A); A.invul = 0;
+      B.x = P.x + 40; mapPutOn(B, 0); toNeutral(B); B.invul = 0; B.meter = 0;
+      const ground = C.hidden ? null : C;
+      const hpA = A.hp, hpB = B.hp;
+      E2.tT = STEP / 2; mapTick(STEP);
+      if (!(E2.tWarn > 0) || A.hp !== hpA) return { pass: false, error: 'lightning should warn first' };
+      for (let i = 0; i < 400 && E2.tWarn > 0; i++) mapTick(STEP);
+      if (A.hp !== hpA - T.dmg || A.state !== 'launched' || A.plat !== -1) return { pass: false, error: 'a fighter on the altar should be struck: ' + JSON.stringify({ lost: hpA - A.hp, st: A.state }) };
+      if (B.hp !== hpB || B.meter !== 35 || !(B.thunderGuardT > 0)) return { pass: false, error: 'Lei Ming should be immune and gain meter: ' + JSON.stringify({ lost: hpB - B.hp, meter: B.meter }) };
+      if (Math.abs(E2.tT - T.every) > 1e-9) return { pass: false, error: 'the next strike should be ' + T.every + 's away' };
+      A.x = P.x; A.y = 0; A.plat = -1; toNeutral(A); A.invul = 0; A.hp = 5; E2.tWarn = STEP / 2; mapTick(STEP);
+      if (A.hp !== 5) return { pass: false, error: 'someone on the ground under the altar must not be struck' };
+      A.x = P.x; mapPutOn(A, 0); toNeutral(A); E2.tWarn = STEP / 2; mapTick(STEP);
+      if (A.hp !== 1) return { pass: false, error: 'lightning must never finish a fighter, hp ' + A.hp };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    // 醉翁墨阁的酒雾回定力（墨羽地利快一倍、醉翁地利涨醉意）；皇城飞檐不弹墙；绯影地利在飞檐上走得快
+    name: 'Wine mist, palace eaves and the other home-ground bonuses',
+    fn: `(() => {
+      startMapsMode(CHAR_IDX.tieshan, CHAR_IDX.moyu, 'easy', true, 'wine'); M.phase = 'fight';
+      const fog = MAPS.wine.fog, mid = STAGE_W / 2;
+      for (const f of [A, B]) { f.x = mid; f.y = 0; f.plat = -1; f.guard = 10; }
+      B.x = mid + 60; mapTick(1);
+      if (Math.abs(A.guard - (10 + fog.guard)) > 1e-9 || Math.abs(B.guard - (10 + fog.guard * 2)) > 1e-9) return { pass: false, error: 'mist guard regen: ' + A.guard + ' / ' + B.guard };
+      A.x = WALL + 50; A.guard = 10; mapTick(1);
+      if (A.guard !== 10) return { pass: false, error: 'outside the mist there is no regen' };
+      setChars(CHAR_IDX.zuixian, CHAR_IDX.moyu); A.x = mid; A.drunk = 0; mapTick(1);
+      if (!(A.drunk >= 12 - 1e-9)) return { pass: false, error: 'Zui Weng should get drunk in the mist: ' + A.drunk };
+      startMapsMode(CHAR_IDX.feiying, 1, 'easy', true, 'pagoda'); M.phase = 'fight';
+      A.x = STAGE_W - WALL - 1; A.y = -80; A.vx = 700; A.vy = 0; A.state = 'launched'; A.plat = -1; physics(A);
+      if (A.vx < 0) return { pass: false, error: 'the eaves have no pillars to bounce off: vx ' + A.vx };
+      const P = MAPS.pagoda.plats[1];
+      A.x = P.x; mapPutOn(A, 1); toNeutral(A);
+      if (mapWalk(A) !== 1.15) return { pass: false, error: 'Fei Ying should walk faster on the eaves' };
+      A.y = 0; A.plat = -1;
+      if (mapWalk(A) !== 1) return { pass: false, error: 'the bonus is only on the eaves' };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    // 离影的雾身留在平台上：位置记着那一层，渡影回去站在平台上；万影归一瞬移到平台上的对手身前。磁仙在平台上吸人，吸到自己那一层
+    name: 'Clone and magnet heroes on platforms',
+    fn: `(() => {
+      const LY = CHAR_IDX.liying, CX = CHAR_IDX.cixian;
+      startMapsMode(LY, CX, 'easy', true, 'pagoda'); M.phase = 'fight';
+      const P = MAPS.pagoda.plats[0];
+      A.x = P.x; mapPutOn(A, 0); toNeutral(A); A.clones = [];
+      plantClone(A, A.x);
+      const c = A.clones[0];
+      if (!c || c.y !== P.y || c.p !== 0) return { pass: false, error: 'the clone should stand on the platform: ' + JSON.stringify(c) };
+      if (cloneBox(c)[3] !== P.y + 2) return { pass: false, error: 'clone hurtbox should sit on the platform' };
+      A.x = 900; A.y = 0; A.plat = -1; toNeutral(A);
+      A.state = 'skill'; A.skill = 'mistswap'; A.skPh = 0; A.t = A.ch.clone.swapSeal; A.swapId = c.id;
+      SKILLS.mistswap.update(A, B);
+      if (A.x !== P.x || A.y !== P.y || A.plat !== 0) return { pass: false, error: 'swapping to a platform clone should land on it: ' + JSON.stringify({ x: A.x, y: A.y, plat: A.plat }) };
+      physics(A);
+      if (A.y !== P.y || A.plat !== 0) return { pass: false, error: 'should stay on the platform after the swap' };
+      const Q = MAPS.pagoda.plats[2];
+      B.x = Q.x; mapPutOn(B, 2); toNeutral(B);
+      A.clones = []; A.state = 'special'; A.sp = 'cast'; A.spN = 0; A.t = 0.46;
+      ULTS.mistarray.update(A, B);
+      if (A.plat !== 2 || A.y !== Q.y) return { pass: false, error: 'the ult should blink onto the platform of the foe: ' + JSON.stringify({ y: A.y, plat: A.plat }) };
+      startMapsMode(CX, 1, 'easy', true, 'pagoda'); M.phase = 'fight';
+      A.x = P.x - 60; mapPutOn(A, 0); toNeutral(A); A.face = 1; A.pol = -1;
+      B.x = P.x + 200; B.y = 0; B.plat = -1; toNeutral(B); B.invul = 0;
+      const hp0 = B.hp;
+      A.state = 'skill'; A.skill = 'magfield'; A.magN = -1; A.magTg = -1; A.skPh = 0; A.t = 0; A.hitDone = false;
+      for (let i = 0; i < 200 && A.state === 'skill'; i++) { A.t += STEP; SKILLS.magfield.update(A, B); }
+      if (!(B.hp < hp0)) return { pass: false, error: 'the pull should land' };
+      if (B.plat !== 0 || B.y !== P.y) return { pass: false, error: 'pulled onto the platform of the caster: ' + JSON.stringify({ x: B.x, y: B.y, plat: B.plat }) };
       toMenu();
       return { pass: true, error: null };
     })()`

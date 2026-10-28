@@ -250,7 +250,7 @@ const SKILLS = {
         const attWeight = (f.ch.stat && f.ch.stat.weight) || 1.50;
         const defWeight = (foe.ch.stat && foe.ch.stat.weight) || 1.0;
         const wRatio = attWeight / defWeight;
-        const foeInAir = !foe.onGround() || foe.y < -2;
+        const foeInAir = !foe.onGround() || airH(foe) > 2;
         const isCrimson = f.skinKey === 'ts_crimson';
         const waveRGB = isCrimson ? '255,60,70' : '255,200,100';
 
@@ -312,7 +312,7 @@ const SKILLS = {
       if (n >= f.spinN && f.spinN < 8) {
         f.spinN++; f.hitDone = false; SFX.swing();
         const last = f.spinN === 8;
-        const foeInAir = !foe.onGround() || foe.y < -2;
+        const foeInAir = !foe.onGround() || airH(foe) > 2;
         strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 48, kb: foeInAir ? [420, -640] : [440, 0], stun: 0.50, hs: 0.12, launch: foeInAir, big: true }
                             : { box: [20, -126, 142, -14], dmg: 15, kb: [40, 0], stun: 0.18, hs: 0.03, launch: false, noScale: true });
       }
@@ -320,7 +320,7 @@ const SKILLS = {
     },
     pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
   windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。在空中开扇会斜着俯冲下去，落地炸开一圈风爆（24 伤害，挑起），再崩出 5 颗爆米花。',
-    start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (f.y < -40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
+    start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (airH(f) > 40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
     update(f, foe) {
       if (f.skPh >= 10) { windDive(f, foe); return; }
       if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗
@@ -376,7 +376,7 @@ const SKILLS = {
     update(f) {
       if (f.skPh === 0 && f.t >= 0.08) {
         f.skPh = 1; SFX.slice();
-        const air = f.y < -30;
+        const air = airH(f) > 30;
         for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
       }
       if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
@@ -590,10 +590,10 @@ const SKILLS = {
         if (f.t >= C.swapSeal) {
           const x0 = f.x;
           cloneGone(f, c, false);
-          f.x = c.x; f.y = 0; f.vy = 0; f.jumps = 0; f.airDash = 1;
+          f.x = c.x; f.vy = 0; mapPutOn(f, c.p !== undefined ? c.p : -1); f.jumps = 0; f.airDash = 1;   // 雾身在平台上就站到平台上
           if (c.x !== x0) f.face = c.x > x0 ? 1 : -1;   // 朝向是来的方向：换到对手身后时是背对着他的
           f.snap = true; f.trail.length = 0; f.scarf = [];
-          if (!RESIM) { smoke(x0, -50, 10); ring(f.x, -50, 70, f.look.slash, 0.3); SFX.poof(); }
+          if (!RESIM) { smoke(x0, -50, 10); ring(f.x, f.y - 50, 70, f.look.slash, 0.3); SFX.poof(); }
           f.skPh = 1; f.t = 0;
         }
         return;
@@ -641,10 +641,10 @@ const SKILLS = {
         if (tg.state !== 'held' || tg.hp <= 0) f.magTg = -1;
         else {
           const v = magForce(MAG.rMinusK, d, MAG.rMinusV[0], MAG.rMinusV[1]), stepX = Math.sign(dx) * Math.min(Math.abs(dx), v * STEP);
-          magMove(tg, tg.x + stepX); tg.y = damp(tg.y, 0, 18, STEP);
+          magMove(tg, tg.x + stepX); tg.y = damp(tg.y, gndY(f), 18, STEP);   // 吸到磁仙脚下那一层
           if (!RESIM && Math.random() < 0.7) addP({ type: 'spark', x: tg.x, y: tg.y - 60 + rand(-20, 20), vx: Math.sign(dx) * rand(300, 600), vy: rand(-30, 30), rgb: magRGB(-1), life: 0.2, max: 0.2, w: 2 });
           if (Math.abs(dx) < 2 || f.t >= MAG.rMinusTime) {
-            f.magTg = -1; tg.y = 0;
+            f.magTg = -1; mapPutOn(tg, f.plat);
             applyHit(f, tg, { dmg: MAG.rMinusDmg, kb: [0, 0], stun: MAG.rMinusStun, hs: 0.08, root: true, unblockable: true, dir: f.face }, [tg.x, tg.y - 60]);
             if (tg.state === 'held') toNeutral(tg);
             ring(tg.x, tg.y - 60, 60, magRGB(-1), 0.25); SFX.thud();

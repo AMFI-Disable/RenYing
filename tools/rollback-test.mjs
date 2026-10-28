@@ -115,6 +115,42 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
   assert(!maps.err && maps.picks[777] === 'cliff' && maps.picks[778] === 'ice' && ['cliff', 'ice'].includes(maps.picks[991]), 'Maps room: both sides pick the same map from the same votes and seed', JSON.stringify(maps));
   assert(maps.map === 'cliff' && maps.w0 === 1500 && maps.falls >= 1 && maps.match && maps.stays, 'Maps room: a cliff fall resimulates to the identical state hash after a 150-frame rollback', JSON.stringify(maps));
+  // 山河异境的平台、风、天雷、酒雾：房主在点将台上选好的图（map）压过票；离影和磁仙在平台上乱打（跳上跳下、留影、渡影、吸人），
+  // 风和天雷提前到几秒内来，回滚 150 帧重算出来的状态和第一次一模一样
+  const plat = new vm.Script(`(() => {
+    netRoomMode = 'maps';
+    const LY = CHARS.findIndex(c => c.id === 'liying'), CX = CHARS.findIndex(c => c.id === 'cixian'), out = {};
+    rollStart([LY, CX], 31, null, ['cliff', 'cliff'], 'wine');
+    if (M.map !== 'wine') return { err: 'the map chosen at the draft must win over the votes, got ' + M.map };
+    for (const [map, seed] of [['bamboo', 501], ['thunder', 502], ['pagoda', 503], ['wine', 504]]) {
+      rollStart([LY, CX], seed, null, null, map);
+      M.phase = 'fight';
+      M.mapEnv.wT = 0.6; M.mapEnv.tT = 0.9;
+      const P = MAPS[map].plats;
+      A.x = P[0].x; mapPutOn(A, 0); B.x = P[P.length - 1].x + 40; mapPutOn(B, P.length - 1);   // 两人都从平台上开打
+      let onPlat = 0, wind = 0;
+      const hp0 = [A.hp, B.hp];
+      for (let f = 0; f < 420; f++) {
+        const k = (f >> 5) % 6;
+        ROLL.loc[f] = { h: [0, 0, 2, 4, 1, 0][k], p: f % 97 === 0 ? ['jump'] : f % 53 === 7 ? ['skill'] : f % 61 === 20 ? ['skill2'] : k > 2 && f % 11 === 0 ? ['light'] : [] };   // 前几段只跳不砍（空中普攻会把人吊在半空）；第 4 段按住 ↓ 再跳：从平台上落下按住 ↓ 再跳：从平台上落下
+        ROLL.rem[f] = { h: [0, 1, 0, 4, 2, 0][k], p: f % 89 === 0 ? ['jump'] : f % 47 === 9 ? ['skill'] : f % 59 === 2 ? ['skill2'] : k > 2 && f % 13 === 0 ? ['light'] : [] };
+        ROLL.remLast = 420;
+        rollFrame(f);
+        ROLL.F = f + 1;
+        if (A.plat >= 0 || B.plat >= 0) onPlat++;
+        if (M.mapEnv && M.mapEnv.wOn > 0) wind++;
+      }
+      const before = hashState(capState());
+      ROLL.pend = 200;   // 天雷在第 264 帧落下：重算要跨过它
+      rollResim();
+      const after = hashState(capState());
+      out[map] = { match: before === after, onPlat, wind, env: JSON.stringify(M.mapEnv), hurt: hp0[0] - A.hp + hp0[1] - B.hp };
+    }
+    netRoomMode = 'normal';
+    return out;
+  })()`).runInContext(w);
+  assert(!plat.err && ['bamboo', 'thunder', 'pagoda', 'wine'].every(k => plat[k] && plat[k].match && plat[k].onPlat > 0), 'Maps room: platforms, wind, lightning and mist with the clone and magnet heroes resimulate to the identical state hash', JSON.stringify(plat));
+  assert(!plat.err && plat.bamboo.wind > 0, 'Maps room: the wind timer lives in the rollback state and starts on schedule', JSON.stringify(plat.bamboo || plat));
   // 离影的雾身（f.clones）：两边都是离影，大量留影和带方向的渡影。对面的按键先猜错（一直不按），
   // 隔 30 帧才收到真的按键再回滚重算，结果要和一开始就按对了的那条时间线一模一样（雾身的位置、编号、谁被打碎）。
   const ly = new vm.Script(`(() => {

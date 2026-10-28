@@ -134,7 +134,7 @@ function bamboo(par, sc, gy, color, spacing, scale) {
     }
   }
 }
-// 山河异境的地面：断崖台两侧画成深谷，寒潭冰面画出冰的范围（画在柱子、灯笼前面）
+// 山河异境的地面：断崖台两侧画成深谷，寒潭冰面画出冰的范围，还有酒雾、平台、风、天雷预警（画在柱子、灯笼前面）
 function drawMapGround() {
   const mp = mapNow();
   if (!mp) return;
@@ -179,6 +179,61 @@ function drawMapGround() {
     sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.16)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = sg; ctx.fillRect(sx - 60, 0, 120, 40);
   }
+  // 醉翁墨阁的酒雾：地面上一层慢慢飘的淡雾
+  if (mp.fog) {
+    const x0 = mp.fog.from * STAGE_W, x1 = mp.fog.to * STAGE_W;
+    for (let k = 0; k < 7; k++) {
+      const mx = x0 + (k + 0.5) * (x1 - x0) / 7 + Math.sin(clock * 0.5 + k * 1.7) * 26, my = -26 - hash(k * 7) * 30;
+      const mg = ctx.createRadialGradient(mx, my, 6, mx, my, 120);
+      mg.addColorStop(0, 'rgba(230,200,160,0.16)'); mg.addColorStop(1, 'rgba(230,200,160,0)');
+      ctx.fillStyle = mg; ctx.fillRect(mx - 120, my - 120, 240, 240);
+    }
+  }
+  // 平台：竹台、石坛、木檐
+  for (const P of mp.plats || []) {
+    const left = P.x - P.w / 2, top = P.y, w = P.w, h = 12;
+    if (P.k === 'bamboo') {
+      ctx.fillStyle = '#212d1b'; ctx.fillRect(left + 28, top + h, 8, -top - h); ctx.fillRect(left + w - 36, top + h, 8, -top - h);
+      ctx.fillStyle = '#2d3b26'; ctx.fillRect(left, top, w, h);
+      ctx.fillStyle = '#415735'; ctx.fillRect(left, top + 2, w, h - 4);
+      ctx.strokeStyle = '#182414'; ctx.lineWidth = 1.5;
+      for (let bx = left + 15; bx < left + w; bx += 22) { ctx.beginPath(); ctx.moveTo(bx, top); ctx.lineTo(bx, top + h); ctx.stroke(); }
+      ctx.fillStyle = '#9e814a'; for (const rx of [left + 35, left + w - 35]) ctx.fillRect(rx - 4, top - 1, 8, h + 2);
+    } else if (P.k === 'stone') {
+      ctx.fillStyle = '#141824'; ctx.strokeStyle = 'rgba(233,196,106,0.7)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(left + 20, top + h); ctx.lineTo(left + 45, 0); ctx.lineTo(left + w - 45, 0); ctx.lineTo(left + w - 20, top + h); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1c2130'; ctx.fillRect(left, top, w, h); ctx.strokeRect(left, top, w, h);
+    } else {
+      ctx.fillStyle = '#2a0e14'; ctx.fillRect(left + 24, top + h, 6, -top - h); ctx.fillRect(left + w - 30, top + h, 6, -top - h);
+      ctx.fillStyle = '#3a161e'; ctx.fillRect(left, top, w, h);
+      ctx.fillStyle = '#6e2732'; ctx.fillRect(left, top, w, 3);
+      ctx.strokeStyle = 'rgba(233,196,106,0.85)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(left - 8, top - 4); ctx.quadraticCurveTo(left, top + 3, left + 14, top + 3);
+      ctx.moveTo(left + w + 8, top - 4); ctx.quadraticCurveTo(left + w, top + 3, left + w - 14, top + 3);
+      ctx.stroke();
+    }
+  }
+  const E = M.mapEnv;
+  // 竹海悬岩的风：顺着风向飞的竹叶
+  if (mp.wind && E && E.wOn > 0) {
+    ctx.fillStyle = 'rgba(140,245,190,0.45)';
+    for (let i = 0; i < 9; i++) {
+      const span = STAGE_W + 400, lx = ((clock * 680 * E.wDir + i * 210) % span + span) % span - 200, ly = -30 - ((i * 35) % 190);
+      ctx.beginPath(); ctx.ellipse(lx, ly, 13, 3.2, E.wDir * 0.35, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // 雷泽石坛的天雷预警：落点上空闪的圈和一道虚线
+  if (mp.thunder && E && E.tWarn > 0) {
+    const tx = mp.thunder.x * STAGE_W, pulse = 0.6 + 0.4 * Math.sin(clock * 25);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,220,110,${pulse})`; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(tx, -120, mp.thunder.r - 10, 24, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(tx, -120, 100, 15, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([8, 6]); ctx.strokeStyle = `rgba(255,240,160,${pulse * 0.7})`;
+    ctx.beginPath(); ctx.moveTo(tx, -500); ctx.lineTo(tx, -120); ctx.stroke();
+    ctx.restore();
+  }
 }
 function drawGround() {
   // 世界坐标里画地面、柱子、灯笼
@@ -194,8 +249,8 @@ function drawGround() {
   rg.addColorStop(0, 'rgba(255,236,210,0.1)'); rg.addColorStop(1, 'rgba(255,236,210,0)');
   ctx.fillStyle = rg; ctx.fillRect(cam.x - 400, 0, 1200, 200);
   drawMapGround();
-  // 两侧朱红柱子（场地边界）；断崖台两侧是崖，没有柱子
-  if (!(mapNow() || {}).cliff) for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
+  // 两侧朱红柱子（场地边界）；断崖台两侧是崖、皇城飞檐两侧是开阔的殿顶，没有柱子
+  if (!(mapNow() || {}).cliff && !(mapNow() || {}).nobounce) for (const px of [WALL - 40, STAGE_W - WALL + 40]) {
     ctx.fillStyle = '#3a121c'; ctx.fillRect(px - 16, -900, 32, 900);
     ctx.fillStyle = 'rgba(255,120,120,0.12)'; ctx.fillRect(px - 16, -900, 6, 900);
     ctx.fillStyle = '#1e0a10'; ctx.fillRect(px - 22, -10, 44, 10);
@@ -378,9 +433,9 @@ function drawFighter(f) {
   if (f.look.legend && f.look.fx) skinGround(f);
   if (f.look.tier && f.look.fx) skinTierGround(f);
   // 影子
-  const hgt = clamp(-f.y / 300, 0, 1);
+  const gy = gndY(f), hgt = clamp((gy - f.y) / 300, 0, 1);   // 站在平台上影子落在台面
   ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
-  ctx.beginPath(); ctx.ellipse(f.x, 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(f.x, gy + 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
   // 蓄力光环
   if (f.state === 'charge') {
     const lv = clamp(f.t / CHARGE_FULL, 0, 1), full = f.t >= CHARGE_FULL;
@@ -625,24 +680,25 @@ function drawClones() {
     const C = f.ch.clone || { life: 6 }, rgb = f.look.slash;
     const foe = (f.target && !f.target.hidden) ? f.target : foesOf(f)[0], mark = foe ? cloneMark(f, foe) : null;
     for (const c of f.clones) {
-      const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1;
+      const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1, cy = c.y || 0;
       ctx.save(); ctx.fillStyle = `rgba(${rgb},${0.22 * blink})`;
-      ctx.beginPath(); ctx.ellipse(c.x, 0, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      ctx.beginPath(); ctx.ellipse(c.x, cy, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       const rec = CLONE_SK[f.idx + ':' + c.id];
       if (rec) drawBody(rec.sk, f, { ghost: 0.5 * blink, tint: rgb });
-      else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, -f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
+      else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
       if (c === mark) {
         ctx.save(); ctx.strokeStyle = `rgba(${rgb},${0.85 * blink})`; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.ellipse(c.x, 0, 46, 11, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+        ctx.beginPath(); ctx.ellipse(c.x, cy, 46, 11, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       }
     }
     if (f.state === 'skill' && f.skill === 'mistswap' && f.skPh === 0) {
       const c = f.clones.find(k => k.id === f.swapId);
       if (c) {
         ctx.save(); ctx.strokeStyle = `rgba(${rgb},0.55)`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
-        ctx.beginPath(); ctx.moveTo(f.x, f.y - 55); ctx.lineTo(c.x, -55); ctx.stroke();
+        const cy = c.y || 0;
+        ctx.beginPath(); ctx.moveTo(f.x, f.y - 55); ctx.lineTo(c.x, cy - 55); ctx.stroke();
         ctx.setLineDash([]); ctx.lineWidth = 3.5; ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.4 * Math.sin(clock * 40)})`;
-        ctx.beginPath(); ctx.ellipse(c.x, 0, 50, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+        ctx.beginPath(); ctx.ellipse(c.x, cy, 50, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       }
     }
   }

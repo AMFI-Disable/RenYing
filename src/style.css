@@ -806,6 +806,18 @@
   .bpcard.picked { opacity: .45; }
   .bpcard .tag { position: absolute; top: 4px; right: 4px; font-family: var(--title); font-size: clamp(12px, 1.1vw, 15px); color: #fbeee0; background: var(--seal); padding: 1px 5px; border-radius: 4px; transform: rotate(6deg); }
   .bpcard .tag.p { background: #2b6f86; }
+  /* 山河异境的点将台：上方一行写这局的地图，地利侠客的卡片描一圈金边。多出来的这一行要在 .bpw 的行里占一格，不然侠客说明那一行（1fr）错位 */
+  .bpw.has-map { grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; }
+  @media (max-width: 760px) { .bpw.has-map { grid-template-rows: none; } }
+  @media (max-height: 500px) { .bp-map .bpm-d { display: none; } }   /* 横着的手机：只留图名和地利侠客，一行放得下 */   /* 窄屏整页滚动，和下面 .bpw 的窄屏规则一样不分行 */
+  .bp-map { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; flex: none; padding: 5px 12px; margin-bottom: 6px; border: 1px solid rgba(233,196,106,.45); border-radius: 8px; background: rgba(20,24,45,.85); font-size: 12px; line-height: 1.35; color: #c9d1df; }
+  .bp-map .bpm-n { font-family: var(--title); font-size: clamp(14px, 1.2vw, 17px); color: #f7eedb; letter-spacing: .06em; }
+  .bp-map .bpm-f { color: #e9c46a; } .bp-map .bpm-f span:first-child { font-weight: 700; }
+  .bp-map .bpm-f span + span { color: #efe8d8; }
+  .bpcard.fav { border-color: rgba(233,196,106,.9); box-shadow: 0 0 0 1px rgba(233,196,106,.6), 0 0 12px rgba(233,196,106,.35); }
+  .bpcard .tag.fav { background: #c69429; color: #14110a; }
+  .bp-fav { margin: 4px 0; padding: 4px 8px; border: 1px solid rgba(233,196,106,.5); border-radius: 6px; background: rgba(233,196,106,.1); font-size: 12px; color: #efe8d8; }
+  .bp-fav b { color: #e9c46a; margin-right: 4px; }
   .bpcard:focus-visible { outline: 2px solid var(--p1); outline-offset: 2px; }
   .bpbot { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.15fr); gap: clamp(8px, 1.2vw, 14px); align-items: stretch; min-height: 0; height: 100%; overflow: hidden; }
   .bpdetail { border: 1px solid var(--faint); border-radius: 12px; padding: 0; background: rgba(0,0,0,.25); display: grid; font-size: 12px; line-height: 1.45; overflow-y: auto; min-height: 0; height: 100%; }

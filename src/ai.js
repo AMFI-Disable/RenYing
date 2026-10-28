@@ -258,6 +258,12 @@ class AIBrain {
       if (edge < 170 && this.dir === out) this.dir = this.chance(0.5 + 0.5 * this.L.read) ? -out : 0;
       if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
     }
+    // 山河异境的平台：对手在下面就 ↓ + 跳落下去（不然走到台边自己会掉）；对手站在平台上、离得近就跳上去（中间的高台要二段跳）
+    if (typeof mapPlats === 'function' && mapPlats() && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length) {
+      const dx = Math.abs(foe.x - me.x);
+      if (me.plat >= 0 && foe.plat !== me.plat && foe.y > me.y + 40 && dx < 360 && this.chance(0.05)) this.press('drop');
+      else if (foe.plat >= 0 && foe.plat !== me.plat && foe.y < me.y - 40 && dx < 240 && this.chance(0.04)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
+    }
     if (me.state === 'special' && me.ch.ult === 'avalanche') this.steerAvalanche(me, foe);
     if (this.holdAtk > 0 && me.state !== 'charge' && clock - (this.chargeT0 || 0) > 0.42) this.holdAtk = 0;   // 蓄力被打断了：松手
     c.held.down = this.holdDown > 0;
