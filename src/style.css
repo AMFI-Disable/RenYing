@@ -469,7 +469,8 @@
   .cx-skin-tag.tag-bd { color: #8ec5fc; border-color: rgba(142,197,252,.35); background: rgba(142,197,252,.1); }
   .cx-skin-tag.tag-wk { color: #e9c46a; border-color: rgba(233,196,106,.35); background: rgba(233,196,106,.1); }
   .cx-skin-row-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .cx-skin-empty { font-size: 12px; color: var(--dim); opacity: 0.7; padding: 4px 6px; }
+  .cx-skin-empty, .cx-skin-empty.ui-state { display: inline-flex; font-size: 12px; color: var(--dim); opacity: 0.7; padding: 4px 6px; }
+  .cx-skin-empty .ui-state-ic { width: 12px; height: 12px; }
   .cxskins button { font: 13px var(--body); padding: 5px 11px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,.05); color: var(--ink); border: 1px solid var(--faint); white-space: nowrap; word-break: keep-all; transition: all .18s ease; }
   .cxskins button:hover { transform: translateY(-1px); border-color: rgba(233,196,106,.45); }
   .cxskins button.sel { border-color: #e9c46a; color: #e9c46a; background: rgba(233,196,106,.1); box-shadow: 0 0 14px rgba(233,196,106,.22); }

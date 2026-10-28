@@ -1074,7 +1074,7 @@ function renderCodex() {
 
   const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
   const bdHtml = defaultBtn + bdSkins.map(renderSkinBtn).join('');
-  const wkHtml = wkSkins.length ? wkSkins.map(renderSkinBtn).join('') : `<span class="cx-skin-empty">暂无武库饰品</span>`;
+  const wkHtml = wkSkins.length ? wkSkins.map(renderSkinBtn).join('') : uiState('empty', '暂无武库饰品', 'cx-skin-empty');
 
   $id('cxSkins').innerHTML = `
     <div class="cx-skin-row">
