@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // 凌雀 AI 测试：连段路线（飞梭挂印记 → 换影引爆 → 追击 / 大招续印记）按难度分得开。
 //   node tools/ai-lingque-test.mjs            情景检查 + 每个难度对打统计
-//   node tools/ai-lingque-test.mjs --n 4      每个难度每个对手打 4 场（默认 2）
+//   node tools/ai-lingque-test.mjs --n 4      每个难度每个对手打 4 场（默认 4：气血放大后低难度胜率接近 0，2 场样本太小会排不出先后）
 import { makeEnv, HEROES } from './ai-arena.mjs';
 
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
-const N = +arg('n', 2), LQ = HEROES.indexOf('lingque'), OPP = HEROES.indexOf('qingfeng');
+const N = +arg('n', 4), LQ = HEROES.indexOf('lingque'), OPP = HEROES.indexOf('qingfeng');
 const env = await makeEnv();
 let fails = 0;
 const check = (ok, name, info = '') => { console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}${info ? ' — ' + info : ''}`); if (!ok) fails++; };
