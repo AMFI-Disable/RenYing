@@ -391,7 +391,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['zx_sway', 30] : ['gc_wind', 40],
     ai: (me, foe, d) => d < 650 },
-  feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, lack: () => '酒不够', desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 50 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 80 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
+  feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, lack: () => '酒不够', desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 85 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 135 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
     start(f) { f.vx = 0; f.drunk = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.18) {
@@ -399,8 +399,8 @@ const SKILLS = {
         spawnProj(f, { kind: 'bottle', x: f.x + f.face * 40, y: f.y - 92, vx: f.face * 950, vy: -60, g: 260, w: 40, h: 46, life: 0.9, dmg: 1, kb: [0, 0], stun: 0, hs: 0, feast: true, unblockable: true, unbreakable: true });
       }
       if (f.skPh === 1 && f.t >= 0.35) {
-        f.skPh = 2; f.hp = Math.min(f.maxHp, f.hp + 80); SFX.drink();
-        addP({ type: 'text', text: '+80', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '130,230,140' });
+        f.skPh = 2; f.hp = Math.min(f.maxHp, f.hp + 135); SFX.drink();
+        addP({ type: 'text', text: '+135', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '130,230,140' });
       }
       if (f.t >= 1.05) toNeutral(f);
     },

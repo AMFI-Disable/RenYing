@@ -428,11 +428,11 @@ function updateProjs() {
     if (p.feast) {   // 与民同乐：砸中就得陪着喝
       p.dead = true;
       if (!isClient()) {
-        foe.hp = Math.min(foe.maxHp, foe.hp + 50);
+        foe.hp = Math.min(foe.maxHp, foe.hp + 85);
         foe.state = 'hitstun'; foe.t = 0; foe.stun = 1.5; foe.drinkT = 1.5; foe.vx = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.rooted = true;
       }
       SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
-      addP({ type: 'text', text: '+50', x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
+      addP({ type: 'text', text: '+85', x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
       continue;
     }
     // 雷鸣金刚雷铠：消解飞行道具并降雷轰顶反制
@@ -720,7 +720,7 @@ function updateFighter(f, foe) {
   // 月华被动：3 秒没挨打缓慢回血
   f.sinceHit += STEP;
   if (f.ch.passive === 'regen' && M.phase === 'fight' && f.hp > 0 && f.hp < f.maxHp && f.sinceHit > 3 && f.regenLeft > 0) {
-    const h = Math.min(8.0 * STEP, f.regenLeft); f.hp = Math.min(f.maxHp, f.hp + h); f.regenLeft -= h;
+    const h = Math.min(13.5 * STEP, f.regenLeft); f.hp = Math.min(f.maxHp, f.hp + h); f.regenLeft -= h;
   }
   if (f.state !== 'special') f.invul = Math.max(0, f.invul - STEP);
   f.flash = Math.max(0, f.flash - STEP);

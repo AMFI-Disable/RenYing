@@ -4,7 +4,7 @@ defHero({
   bal: { normal: 0.882, skill: 0.882, ult: 0.882, cd: 1.0, hp: 0.882 },
   char: { name: '墨羽', role: '泼墨画师', diff: 3, escCD: 8.5, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
     passiveName: '笔锋', passiveDesc: '墨韵宗师宗风深沉（1.10体量），墨阵定身强行封锁走位；墨水屏障加持架势耐力（115），蓄力挥洒自如，更有【墨韵护体】减免重创，专破铁山等钝重武夫。',
-    stat: { hp: 485, walk: 1.02, speed: 0.90, dmg: 1.08, reach: 1.15, swing: 0.95, jump: 1.02, weight: 1.10, defRating: 1.02, guardMax: 115, guardStab: 1.18, guardChip: 0.07, guardRegen: 32, poise: 0.92, size: 1.00 }, hitFeel: 1.05,
+    stat: { hp: 825, walk: 1.02, speed: 0.90, dmg: 1.08, reach: 1.15, swing: 0.95, jump: 1.02, weight: 1.10, defRating: 1.02, guardMax: 115, guardStab: 1.18, guardChip: 0.07, guardRegen: 32, poise: 0.92, size: 1.00 }, hitFeel: 1.05,
     moveMods: { l1: { dmgAbs: 15 }, l2: { dmgAbs: 15 }, l3: { dmgAbs: 17 }, l4: { dmgAbs: 17 }, l5: { dmgAbs: 22 }, cs1: { reachMul: 1.45 }, cs2: { reachMul: 1.45 } }, inkShot: true,
     look: { body: '#1c1c22', shade: '#101014', outline: '#c9c3b4', outlineA: .7, scarf: '#5a5a66', slash: '210,210,230', blade: '#222', head: 'hat', weapon: 'brush' },
     ai: { range: [140, 290] }, beats: ['tieshan', 'qingfeng'], weakTo: ['feiying', 'leiming'] },

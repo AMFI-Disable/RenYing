@@ -3,8 +3,8 @@ defHero({
   id: 'yuehua', skin: 'yh', en: 'Yue Hua',
   bal: { normal: 0.926, skill: 0.926, ult: 0.926, cd: 1.0, hp: 0.926 },
   char: { name: '月华', role: '月镜宗师', diff: 3, escCD: 8.0, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
-    passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.92体量/460血），自带月魄神罡（110架势/6%微透伤）与脱战自愈，以静制动。',
-    stat: { hp: 460, walk: 1.02, speed: 0.86, dmg: 1.00, reach: 1.02, swing: 0.84, jump: 1, weight: 0.92, defRating: 1.06, guardMax: 110, guardStab: 1.30, guardChip: 0.06, guardRegen: 32, poise: 0.90, size: 0.96 }, hitFeel: 0.8,
+    passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.92体量/780血），自带月魄神罡（110架势/6%微透伤）与脱战自愈，以静制动。',
+    stat: { hp: 780, walk: 1.02, speed: 0.86, dmg: 1.00, reach: 1.02, swing: 0.84, jump: 1, weight: 0.92, defRating: 1.06, guardMax: 110, guardStab: 1.30, guardChip: 0.06, guardRegen: 32, poise: 0.90, size: 0.96 }, hitFeel: 0.8,
     look: { body: '#f4eefc', shade: '#b3a6c9', outline: '#15102a', outlineA: 1, scarf: '#c9b6ff', slash: '215,195,255', blade: '#f6f0ff', head: 'moon', weapon: 'moonblade' },
     ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
   forest: {

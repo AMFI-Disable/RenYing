@@ -3,8 +3,8 @@ defHero({
   id: 'yuxiao', skin: 'yx', en: 'Yu Xiao',
   bal: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
   char: { name: '玉箫', role: '箫音乐师', diff: 3, escCD: 9.0, skill: 'soundwave', skill2: 'echowall', ult: 'guangling', passive: 'rhythm',
-    passiveName: '宫商', passiveDesc: '以箫为刃，以音为兵。普攻每命中一次积攒一枚音律，不出手时每 2.5 秒也会自己攒一枚（最多 3 枚），清音会把音律一次吹尽：音律越满，音波越大、越快、越重，三律齐鸣时音波可穿透、挑空并令对手失律迟缓。身形清瘦（0.86 体量/455 血），被近身缠斗时要靠回音壁脱身。',
-    stat: { hp: 455, walk: 1.04, speed: 0.88, dmg: 0.98, reach: 1.12, swing: 0.86, jump: 1, weight: 0.86, defRating: 0.98, guardMax: 90, guardStab: 0.95, guardChip: 0.12, guardRegen: 27, poise: 1.00, size: 0.96 }, hitFeel: 0.85,
+    passiveName: '宫商', passiveDesc: '以箫为刃，以音为兵。普攻每命中一次积攒一枚音律，不出手时每 2.5 秒也会自己攒一枚（最多 3 枚），清音会把音律一次吹尽：音律越满，音波越大、越快、越重，三律齐鸣时音波可穿透、挑空并令对手失律迟缓。身形清瘦（0.86 体量/775 血），被近身缠斗时要靠回音壁脱身。',
+    stat: { hp: 775, walk: 1.04, speed: 0.88, dmg: 0.98, reach: 1.12, swing: 0.86, jump: 1, weight: 0.86, defRating: 0.98, guardMax: 90, guardStab: 0.95, guardChip: 0.12, guardRegen: 27, poise: 1.00, size: 0.96 }, hitFeel: 0.85,
     look: { body: '#eef4ec', shade: '#9fb7a6', outline: '#0d1a14', outlineA: 1, scarf: '#5fcf9a', slash: '150,240,200', blade: '#d8f5e4', head: 'jade', weapon: 'flute' },
     ai: { range: [110, 280] }, beats: ['tieshan', 'moyu'], weakTo: ['feiying', 'leiming'] },
   forest: {

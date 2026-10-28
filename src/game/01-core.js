@@ -146,12 +146,12 @@ let STAGE_W = 1800;
 const WALL = 60;
 const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T = 0.2, BUF = 0.16;
 // ---------- 对战规则数值：改规则、调手感都在这里改 ----------
-// 回合：50 秒内击倒对手才算赢；到时没人倒下就进 20 秒加时，加时里所有伤害 ×OT_DMG；加时也结束时血量比例低的败北。2v2 一回合 75 秒
-const ROUND_TIME = 50, ROUND_TIME_2V2 = 75, OT_TIME = 20, OT_DMG = 2;
+// 回合：80 秒内击倒对手才算赢；到时没人倒下就进 20 秒加时，加时里所有伤害 ×OT_DMG；加时也结束时血量比例低的败北。2v2 一回合 110 秒
+const ROUND_TIME = 80, ROUND_TIME_2V2 = 110, OT_TIME = 20, OT_DMG = 2;
 // 联机两人接力和车轮战：活下来的人带着剩下的血量 +CARRY_HEAL 进下一回合（不超过上限），换上来的人满血；其余模式每回合双方满血
-const CARRY_HEAL = 80;
+const CARRY_HEAL = 135;
 const WINS_NEEDED = 2, MAX_ROUNDS = 5;     // 先赢 2 回合的一方获胜；平局太多时第 5 回合打完就结束
-const LAST_STAND_METER = 100, LAST_STAND_T = 3.5, LAST_STAND_HEAL = 75;   // 2v2 队友倒下后「孤军奋战」：气满、强化 3.5 秒、回 75 血
+const LAST_STAND_METER = 100, LAST_STAND_T = 3.5, LAST_STAND_HEAL = 125;   // 2v2 队友倒下后「孤军奋战」：气满、强化 3.5 秒、回 125 血
 const CREDIT = 2.4;                        // 第一回合开场署名多停留的秒数
 const PENGLAI_T = 2;                       // 醉翁大招之后对手困在蓬莱境里的秒数（屏幕被画挡住）
 const CINE_LEN = 1.3;                      // 大招特写镜头的秒数

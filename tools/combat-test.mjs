@@ -759,10 +759,10 @@ const testSuite = [
     name: 'All heroes runtime maxHp, weight, reach, fly, and passives match hero settings',
     fn: `(() => {
       const expectedHp = {
-        qingfeng: 510, feiying: 470, tieshan: 530, lingshuang: 480,
-        liuyun: 495, leiming: 520, moyu: 485, yuehua: 460,
-        yanling: 440, yuxiao: 455, zuixian: 520, gouchen: 490,
-        lingque: 465
+        qingfeng: 870, feiying: 800, tieshan: 900, lingshuang: 815,
+        liuyun: 840, leiming: 885, moyu: 825, yuehua: 780,
+        yanling: 750, yuxiao: 775, zuixian: 885, gouchen: 835,
+        lingque: 790
       };
       for (let ci = 0; ci < CHARS.length; ci++) {
         const ch = CHARS[ci];

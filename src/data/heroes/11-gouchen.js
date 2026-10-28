@@ -4,7 +4,7 @@ defHero({
   bal: { normal: 1.08, skill: 1.08, ult: 1.08, cd: 1.0, hp: 1.08 },
   char: { name: '勾陈', role: '链锤游侠', diff: 2, escCD: 9.0, skill: 'hook', skill2: 'whirl', ult: 'skynet', passive: 'bind',
     passiveName: '震魄', passiveDesc: '一条铁链拴着一柄方锤，走路时锤子在身边晃荡，出手时整条链子甩出去。飞锤砸中会扯链把对手拽到身前，被锤中的 1.2 秒内对手承受的伤害提高 25%；旋锤抡圆了能连砸带甩。链长（1.25 臂展），但霸体能硬吃飞锤。',
-    stat: { hp: 490, walk: 1.10, speed: 1.0, dmg: 0.97, reach: 1.25, swing: 1.0, jump: 1, weight: 0.98, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, hitFeel: 1.0,
+    stat: { hp: 835, walk: 1.10, speed: 1.0, dmg: 0.97, reach: 1.25, swing: 1.0, jump: 1, weight: 0.98, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, hitFeel: 1.0,
     look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, scarf: '#c8a24a', slash: '235,205,130', blade: '#e8e8ee', head: 'mask', weapon: 'hammer' },
     ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
   forest: {

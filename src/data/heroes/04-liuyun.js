@@ -4,7 +4,7 @@ defHero({
   bal: { normal: 0.959, skill: 0.959, ult: 0.959, cd: 1.0, hp: 0.959 },
   char: { name: '流云', role: '御风散人', diff: 2, escCD: 8.0, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
     passiveName: '御风', passiveDesc: '御风而行，三段跳与开扇疾冲来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），身法飘忽制胜。',
-    stat: { hp: 495, walk: 1.15, speed: 0.85, dmg: 1.18, reach: 1.06, swing: 0.90, jump: 1.08, weight: 0.88, defRating: 1.02, guardMax: 112, guardStab: 1.15, guardChip: 0.07, guardRegen: 32, poise: 0.95, size: 0.98 }, jumps: 3, hitFeel: 0.9,
+    stat: { hp: 840, walk: 1.15, speed: 0.85, dmg: 1.18, reach: 1.06, swing: 0.90, jump: 1.08, weight: 0.88, defRating: 1.02, guardMax: 112, guardStab: 1.15, guardChip: 0.07, guardRegen: 32, poise: 0.95, size: 0.98 }, jumps: 3, hitFeel: 0.9,
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
   forest: {

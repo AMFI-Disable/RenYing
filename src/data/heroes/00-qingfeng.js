@@ -4,7 +4,7 @@ defHero({
   bal: { normal: 0.915, skill: 0.915, ult: 0.915, cd: 1.0, hp: 0.915 },
   char: { name: '青锋', role: '游龙剑客', diff: 1, escCD: 8.0, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
     passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 10%。体量身法均称（1.02），剑气与疾风斩攻守自如。',
-    stat: { hp: 510, walk: 1.02, speed: 0.96, dmg: 1.04, reach: 1.02, swing: 0.95, jump: 1, weight: 1.02, defRating: 1.02, guardMax: 105, guardStab: 1.10, guardChip: 0.09, guardRegen: 30, poise: 0.95, size: 1.00 }, meterMul: 1.10, hitFeel: 1,
+    stat: { hp: 870, walk: 1.02, speed: 0.96, dmg: 1.04, reach: 1.02, swing: 0.95, jump: 1, weight: 1.02, defRating: 1.02, guardMax: 105, guardStab: 1.10, guardChip: 0.09, guardRegen: 30, poise: 0.95, size: 1.00 }, meterMul: 1.10, hitFeel: 1,
     look: { body: '#e9eef6', shade: '#9aa6bd', outline: '#070914', outlineA: 1, scarf: '#46d3ea', slash: '120,230,255', blade: '#effcff', head: 'topknot', weapon: 'sword' },
     ai: { range: [70, 170] }, beats: ['moyu'], weakTo: ['yuehua'] },
   forest: {

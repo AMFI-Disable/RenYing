@@ -3,8 +3,8 @@ defHero({
   id: 'tieshan', skin: 'ts', en: 'Tie Shan',
   bal: { normal: 1.076, skill: 1.076, ult: 1.076, cd: 1.0, hp: 1.076 },
   char: { name: '铁山', role: '玄铁重甲', diff: 1, escCD: 8.5, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
-    passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血深厚（530），体量威严（1.35）。重斩与蓄力斩自带霸体减伤20%，巨刃沉身格挡稳健（115架势/8%微伤），刚猛沉稳。',
-    stat: { hp: 530, walk: 0.82, speed: 1.15, dmg: 0.96, reach: 1.08, swing: 1.15, jump: 0.9, weight: 1.35, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
+    passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血深厚（900），体量威严（1.35）。重斩与蓄力斩自带霸体减伤20%，巨刃沉身格挡稳健（115架势/8%微伤），刚猛沉稳。',
+    stat: { hp: 900, walk: 0.82, speed: 1.15, dmg: 0.96, reach: 1.08, swing: 1.15, jump: 0.9, weight: 1.35, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
     moveMods: { l1: { suAdd: 0.1 } },   // 巨刃第一刀先举起、顿 0.1 秒再砍下来
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },

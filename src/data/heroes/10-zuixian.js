@@ -4,7 +4,7 @@ defHero({
   bal: { normal: 1.026, skill: 1.026, ult: 1.026, cd: 1.0, hp: 1.026 },
   char: { name: '醉翁', role: '山水醉翁', diff: 3, escCD: 8.5, skill: 'pavilion', skill2: 'feast', ult: 'shanshui', passive: 'drunk',
     passiveName: '酒', passiveDesc: '腰间一壶酒。放任何技能都能添 30 酒（大招也算），打中人 +4（酒 0 到 100，每秒缓慢消退），每点酒增伤 0.5%（满壶 +50%）；酒过半壶就东倒西歪，有两成几率闪开近身攻击。与民同乐至少要半壶酒，并会把酒全部倒光。拳脚短（0.86 臂展）。',
-    stat: { hp: 520, walk: 1.12, speed: 0.84, dmg: 1.00, reach: 0.86, swing: 0.8, jump: 1, weight: 1.15, defRating: 1.00, guardMax: 105, guardStab: 1.15, guardChip: 0.09, guardRegen: 30, poise: 0.92, size: 1.02 }, hitFeel: 1.0,
+    stat: { hp: 885, walk: 1.12, speed: 0.84, dmg: 1.00, reach: 0.86, swing: 0.8, jump: 1, weight: 1.15, defRating: 1.00, guardMax: 105, guardStab: 1.15, guardChip: 0.09, guardRegen: 30, poise: 0.92, size: 1.02 }, hitFeel: 1.0,
     look: { body: '#c9a882', shade: '#8a6a4a', outline: '#1a0e06', outlineA: 1, scarf: '#d8452f', slash: '255,170,90', blade: '#f2d8a8', head: 'messy', weapon: 'gourd' },
     ai: { range: [50, 140] }, beats: ['lingshuang', 'yuehua'], weakTo: ['liuyun', 'moyu'] },
   forest: {

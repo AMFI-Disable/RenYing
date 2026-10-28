@@ -4,7 +4,7 @@ defHero({
   bal: { normal: 1.068, skill: 1.068, ult: 1.068, cd: 1.0, hp: 1.068 },
   char: { name: '燕翎', role: '御空飞燕', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
     passiveName: '御空', passiveDesc: '一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（85架势），一旦被重兵器挑中需速用腾空闪化解。',
-    stat: { hp: 440, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump: 1.05, weight: 0.84, defRating: 0.95, guardMax: 85, guardStab: 0.85, guardChip: 0.13, guardRegen: 25, poise: 1.05, size: 0.95 }, fly: 1.2, hitFeel: 0.9,
+    stat: { hp: 750, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump: 1.05, weight: 0.84, defRating: 0.95, guardMax: 85, guardStab: 0.85, guardChip: 0.13, guardRegen: 25, poise: 1.05, size: 0.95 }, fly: 1.2, hitFeel: 0.9,
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
   forest: {
