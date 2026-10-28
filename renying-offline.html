@@ -53,6 +53,7 @@ background: radial-gradient(ellipse at center, rgba(8, 8, 22, 0.35), rgba(5, 5, 
 opacity: 0; pointer-events: none; transition: opacity .4s ease, top .22s ease;
 }
 .scr.on { opacity: 1; pointer-events: auto; }
+.scr:not(.on):not(.scr-seen) { content-visibility: hidden; }
 p, dd, li, .sub, .td, .dhitdesc, .ai-desc, .tp-desc, .netnote, .tips, .vs-line { text-wrap: pretty; line-break: strict; }
 h1, h2, h3, h4, .spt, .tt { text-wrap: balance; }
 .nw { display: inline-block; white-space: nowrap; }
@@ -2818,7 +2819,7 @@ body.kb-only.has-nav .kb-hint { display: block; }
     </div>
   </nav>
 
-  <div id="menu" class="scr on menuscr" data-enter="run">
+  <div id="menu" class="scr on menuscr scr-seen" data-enter="run">
     <div class="home-scrim" aria-hidden="true"></div>
     <div class="home-landscape" aria-hidden="true">
       <svg class="home-mountains" viewBox="0 0 1440 380" preserveAspectRatio="none">
@@ -22700,6 +22701,7 @@ let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 �
 function showScreen(id) {
 const prev = currentScreen; currentScreen = id;
 for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
 $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
 if (id !== 'settings') cancelKeyRebind();
 if (id !== 'bp') {

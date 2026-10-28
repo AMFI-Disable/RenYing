@@ -61,6 +61,9 @@
     opacity: 0; pointer-events: none; transition: opacity .4s ease, top .22s ease;
   }
   .scr.on { opacity: 1; pointer-events: auto; }
+  /* 还没打开过的面板不排版：opacity 为 0 的面板照样排版，浏览器就会把里面所有文字要用的字体分片都下载下来，
+     首屏多下几百 KB 字体。第一次打开时 showScreen 加上 scr-seen，之后和以前一样靠 opacity 淡入淡出 */
+  .scr:not(.on):not(.scr-seen) { content-visibility: hidden; }
   p, dd, li, .sub, .td, .dhitdesc, .ai-desc, .tp-desc, .netnote, .tips, .vs-line { text-wrap: pretty; line-break: strict; }
   h1, h2, h3, h4, .spt, .tt { text-wrap: balance; }
   .nw { display: inline-block; white-space: nowrap; }
