@@ -20,7 +20,8 @@ head_sampling_rate = 1
 binding = "DB"
 database_name = "renying-db"
 database_id = "86f80607-7c39-4a0f-8b1f-b2ad4c8d6e72"
-migrations_dir = "migrations"   # cloudflare/migrations/：Worker 第一次收到请求时自己跑（记在 schema_migrations），不要用 wrangler d1 migrations apply，见那里的 readme.md
+migrations_dir = "migrations"   # 只给 tools/predeploy-check.mjs 找迁移目录用。迁移由 Worker 部署后第一次请求时自己跑（记在 schema_migrations），
+                                # 不要运行 wrangler d1 migrations apply（它用另一张表，会从 0001 重跑并报错）。见 migrations/readme.md、docs/deploy-runbook.md
 
 # 江湖共斗 · 开放世界：一条分线一个 Durable Object（免费版只能用 SQLite 存储的 Durable Object）
 [[durable_objects.bindings]]
@@ -36,7 +37,8 @@ new_sqlite_classes = ["WorldLine"]
 # 数据库、Durable Object、Secret 都不会从上面继承，要各自配：
 #   1. Even 建 staging 数据库：npx wrangler d1 create renying-db-staging，把输出的 database_id 填到下面；
 #   2. 设 staging 的管理口令：npx wrangler secret put ADMIN_SECRET --env staging（和生产用不同的口令）。
-# database_id 填好之前不要部署 staging；不加 --env 的 npx wrangler deploy 只部署生产，不受这一段影响。
+# 表结构和生产一样，由 Worker 第一次收到请求时自己跑 cloudflare/migrations/ 建好，不用手动建表。
+# database_id 填好之前不要部署 staging；npx wrangler deploy --env="" 只部署生产，不受这一段影响。步骤见 docs/deploy-runbook.md。
 [env.staging]
 name = "renying-staging"
 
@@ -44,7 +46,7 @@ name = "renying-staging"
 binding = "DB"
 database_name = "renying-db-staging"
 database_id = "00000000-0000-0000-0000-000000000000"   # 待填：renying-db-staging 的 id
-migrations_dir = "migrations"
+migrations_dir = "migrations"   # 同上：只给部署前检查用，不要 wrangler d1 migrations apply
 
 [[env.staging.durable_objects.bindings]]
 name = "WORLD"

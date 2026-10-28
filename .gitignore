@@ -86,3 +86,5 @@ _site/
 *.db
 *.sqlite
 *.sqlite3
+# D1 导出的备份（里面有账号和密码哈希），见 docs/deploy-runbook.md
+backup-*.sql

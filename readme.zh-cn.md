@@ -169,6 +169,8 @@ CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就�
 | `node tools/predeploy-check.mjs` | 部署 Worker 前：检查 wrangler.toml、管理后台 CSP，冒烟测试关键接口 |
 | `npx wrangler deploy --dry-run --env=""` | 在 `cloudflare/` 里运行：按部署的方式打包一遍，但不上传 |
 
+部署 Worker、D1 迁移（由 Worker 自己跑，不要用 `wrangler d1 migrations apply`）、备份、恢复和回滚：见 [docs/deploy-runbook.md](docs/deploy-runbook.md)。
+
 ### Test Matrix
 
 全部用 Node 22 直接运行，不用 `npm install`。浏览器类检查要先开本地服务器：`python3 -m http.server 8791`。
@@ -178,7 +180,7 @@ CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就�
 | combat | `node tools/combat-test.mjs --sim` | 所有侠客、战斗状态、2v2 AI | CI、Combat |
 | netplay | `node tools/netplay-test.mjs` | 两份游戏隔着有延迟的假网线对打，每一局两边算得一样 | Rollback |
 | rollback | `node tools/rollback-test.mjs --rollback` | 存档、读档、重算的确定性 | Rollback |
-| econ | `node tools/econ-test.mjs`（加 `--bundle` 测打包后的 Worker） | 武库、市场、爆率、防刷 | CI、Armory |
+| econ | `node tools/econ-test.mjs`（加 `--bundle` 测打包后的 Worker） | 武库、市场、爆率、防刷；D1 迁移在空库和老库上跑完都要和 `cloudflare/schema.sql` 一样 | CI、Armory |
 | cloud | `node tools/cloud-test.mjs` | 云存档客户端：按账号隔离、重试 | CI |
 | sync | `node tools/sync-test.mjs`（可加 `--bundle`） | 真 Worker 加多台设备：合并时不会重复计算 | CI |
 | world | `node tools/world-test.mjs` | 开放世界服务器：人数上限、视野、世界首领 | CI |
@@ -187,7 +189,7 @@ CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就�
 | touch | `node tools/touch-audit.mjs ci-touch` | 手机和平板的触屏操作 | CI、Mobile |
 | hud | `node tools/hud-audit.mjs ci-hud 1440 900` | 对局里的 HUD 文字不小于 12px | CI、UI |
 | hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD 文字和血条不重叠、不出画布 | UI |
-| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml、管理后台 CSP、接口冒烟测试 | Cloudflare Worker |
+| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml、迁移文件编号、管理后台 CSP、接口冒烟测试 | Cloudflare Worker |
 | perf | `node tools/perf-audit.mjs` | 首页加载到主菜单、面板切换、电脑对战帧率，不超过 `tools/perf-budget.json` 的预算 | UI |
 
 ---

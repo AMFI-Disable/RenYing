@@ -173,6 +173,8 @@ CI runs `python3 tools/build.py --check` and fails if the generated pages are ou
 | `node tools/predeploy-check.mjs` | Before deploying the Worker: wrangler.toml, admin CSP and key API smoke tests |
 | `npx wrangler deploy --dry-run --env=""` | Run inside `cloudflare/`: bundles the Worker as a deploy would, without uploading |
 
+Deploying the Worker, D1 migrations (run by the Worker itself, never with `wrangler d1 migrations apply`), backups, restores and rollbacks: see [docs/deploy-runbook.md](docs/deploy-runbook.md) (Chinese).
+
 ### Test Matrix
 
 Everything runs with plain Node 22 (no `npm install`). The browser audits need a local server first: `python3 -m http.server 8791`.
@@ -182,7 +184,7 @@ Everything runs with plain Node 22 (no `npm install`). The browser audits need a
 | combat | `node tools/combat-test.mjs --sim` | Every hero, combat states, 2v2 AI | CI, Combat |
 | netplay | `node tools/netplay-test.mjs` | Two game copies over a laggy link end every match identically | Rollback |
 | rollback | `node tools/rollback-test.mjs --rollback` | Snapshot, restore and resimulation determinism | Rollback |
-| econ | `node tools/econ-test.mjs` (add `--bundle` for the built Worker) | Armory, market, drop rates, anti-abuse | CI, Armory |
+| econ | `node tools/econ-test.mjs` (add `--bundle` for the built Worker) | Armory, market, drop rates, anti-abuse; D1 migrations on an empty and an old database must match `cloudflare/schema.sql` | CI, Armory |
 | cloud | `node tools/cloud-test.mjs` | Cloud save client: per-account isolation, retries | CI |
 | sync | `node tools/sync-test.mjs` (add `--bundle`) | Real Worker with several devices: merges never double count | CI |
 | world | `node tools/world-test.mjs` | Open world server: caps, view range, world boss | CI |
@@ -191,7 +193,7 @@ Everything runs with plain Node 22 (no `npm install`). The browser audits need a
 | touch | `node tools/touch-audit.mjs ci-touch` | Phone and tablet touch controls | CI, Mobile |
 | hud | `node tools/hud-audit.mjs ci-hud 1440 900` | No in-match HUD text below 12px | CI, UI |
 | hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD text and bars never overlap or leave the canvas | UI |
-| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml, admin CSP, API smoke test | Cloudflare Worker |
+| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml, migration file numbering, admin CSP, API smoke test | Cloudflare Worker |
 | perf | `node tools/perf-audit.mjs` | Load to main menu, panel switching, AI-vs-AI frame rate within `tools/perf-budget.json` | UI |
 
 ---

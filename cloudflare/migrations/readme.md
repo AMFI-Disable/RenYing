@@ -25,7 +25,7 @@ D1 数据库的表结构都写在这里，一个文件一次改动，按编号�
 5. 同步改 `cloudflare/schema.sql`（所有迁移跑完以后的样子），运行 `python3 tools/build.py`，再跑 `node tools/econ-test.mjs`：它会在空库和老库上各跑一遍，核对结果和 `schema.sql` 一样。
 6. 跑过的文件不要再改。改了 Worker 不会重跑，只会在日志里提示 `sum` 对不上。
 
-改表之前先在 Cloudflare 后台导出一次数据库备份，大改动先部署到 staging（`npx wrangler deploy --env staging`）试一遍。
+改表之前先导出一次数据库备份，大改动先部署到 staging（`npx wrangler deploy --env staging`）试一遍。部署、备份、恢复和回滚的完整步骤见 `docs/deploy-runbook.md`。
 
 ## 现在有的
 
