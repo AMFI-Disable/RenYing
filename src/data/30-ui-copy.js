@@ -1011,6 +1011,9 @@ const UI_COPY_EN = {
   "正在全服匹配同袍肉鸽共斗队友…": "Looking for a co-op roguelike teammate online…",
   "已建好同袍肉鸽共斗房间，把房间号发给好友即可并肩讨伐魔首！": "Co-op roguelike room created. Send the room number to a friend and take on the demon lord together!",
   // 账号、云存档、备份导入、云端接口回的提示
+  "确定": "OK",
+  "全部退出": "Sign out all",
+  "合并同步": "Merge",
   "云端已连": "Cloud Connected",
   "账号与云存档": "Account & Cloud Save",
   "将本机所有账号与数据打包备份": "Pack every account and its data on this device into one backup",

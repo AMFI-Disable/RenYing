@@ -220,7 +220,7 @@ $id('adDevList').addEventListener('click', async e => {
   renderAccDevices();
 });
 $id('adDevAll').addEventListener('click', async () => {
-  if (!confirm(trMsg('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。'))) return;
+  if (!await uiConfirm('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。', { ok: '全部退出', danger: true })) return;
   try { await CloudSave.logoutDevice('all'); } catch (err) { toast(err.message); return; }
   doLogout();
 });
@@ -284,7 +284,7 @@ if ($id('adPromoteBtn')) {
   });
 }
 $id('adPull').addEventListener('click', async () => {
-  if (!confirm(trMsg('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）'))) return;
+  if (!await uiConfirm('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）', { ok: '合并同步' })) return;
   $id('adMsg').textContent = '正在双向合并同步…';
   try {
     const d = await CloudSave.pullNow();
