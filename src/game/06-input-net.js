@@ -58,13 +58,14 @@ const localTeam = () => {
   }
   return localIdx();
 };
-const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on;
-function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on) NET.out.push(ev); }
+// NET.solo：对方中途掉线，这台接着把对局打完（见 netSolo），这时自己就是唯一算对局的一方
+const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on && !NET.solo;
+function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on && !NET.solo) NET.out.push(ev); }
 function netReset() {
   ROLL.on = false;
   if (typeof mmStop === 'function') mmStop();
   mmUI(null);
-  NET.peerQuit = false;
+  NET.peerQuit = false; NET.solo = false;
   NET.matching = false; NET.hold = false;
   p2pClose();
   NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
@@ -181,7 +182,29 @@ function onNetOpen() {
   if (NET.role === 'host') bpStart('net');
   else netStatus('已连接，即刻选人…');
 }
+// 2v2、3v3 车轮打到一半对方掉线（房主掉线也一样）：留下的这台接过对局，自己当房主，
+// 对方那边的人交给电脑，这一局接着打完。1v1、排位和同袍肉鸽还是照旧结束
+function netSolo() {
+  if (!ROLL.on || ROLL.ended || M.mode !== 'net' || M.phase === 'end' || NET.isRanked) return false;
+  const def = roomDef();
+  if (def.raid || !(def.four || M.duo)) return false;
+  if (ROLL.pend < ROLL.F) rollResim();   // 先用已经收到的按键把猜错的帧改对
+  const mine = NET.role === 'client' ? 1 : 0, wasHost = mine === 0;
+  ROLL.slots[1 - mine].forEach(i => { fighterByIdx(i).ctrl = new AICtrl(M.level || 'god'); });
+  ROLL.slots[mine].forEach((i, k) => { fighterByIdx(i).ctrl = human[k]; });
+  human[0].rec = human[1].rec = null; NET.presses.length = 0; NET.presses2.length = 0;
+  ROLL.on = false; REC.bad = true; NET.solo = true;
+  NET.open = false; p2pClose();
+  netOverlay('');
+  const who = NET.peerQuit ? '离开了' : '掉线了';
+  const msg = wasHost ? `对手${who}，对面的人改由电脑接手，这局接着打（不计入战绩）` : `房主${who}，这局由你接管，对面的人改由电脑接手（不计入战绩）`;
+  toast(msg); netStatus(msg);
+  NET.consensus = { committed: true };   // 没法和对方核对结果，不上报
+  NET.lastResult = '';
+  return true;
+}
 function netLost() {
+  if (netSolo()) return;
   const was = M.mode === 'net' || bpMode === 'net';
   // 排位赛打到一半对方走了：对方主动离开算你赢，网络断开不计分
   let rkMsg = '';
@@ -298,7 +321,7 @@ function netTick(dt) {
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
-  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0;
+  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; A.meter = B.meter = 0; NET.solo = false;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   if (netRoomMode === 'pp_cc' || netRoomMode === 'raid') {

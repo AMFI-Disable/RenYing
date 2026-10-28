@@ -188,6 +188,60 @@ let fail = 0;
   for (const [n] of bad) console.log('        没通过 ' + n);
 }
 
+// 2v2、3v3 打到一半对方掉线（房主掉线也算）：留下的这台接着打完，对方的人交给电脑
+function runDrop(mode, chars, duo, dropper, seed) {
+  now = 0;
+  const box = [[], []];
+  const P = [makePeer(box[0]), makePeer(box[1])];
+  P[0].Math.random = rng(seed * 7 + 1); P[1].Math.random = rng(seed * 7 + 2);
+  P.forEach((w, i) => vm.runInContext(`NET.role = '${i ? 'client' : 'host'}'; NET.open = true; netRoomMode = '${mode}';`, w));
+  for (const w of P) vm.runInContext(`rollStart(${JSON.stringify(chars)}, ${seed}${duo ? ', ' + JSON.stringify(duo) : ''});`, w);
+  const G = P.map(w => ({ human: vm.runInContext('human', w), onNetMsg: vm.runInContext('onNetMsg', w) }));
+  const d = rng(seed * 13 + 5), wire = [[], []], errs = [], keep = 1 - dropper, PRESS = ['light', 'jump', 'dash', 'skill', 'skill2', 'special'];
+  const W = P[keep];
+  let dropped = false, clock0 = 0, t = 0;
+  for (; t < 30000; t++) {
+    now += 1000 / 60;
+    if (t === 900) {   // 断线：掉线那台从此消失，留下那台的直连报“对方走了”
+      dropped = true;
+      clock0 = vm.runInContext('clock', W);
+      try { vm.runInContext(`onSys({ sys: 'left' })`, W); } catch (e) { errs.push('断线时 ' + e.stack.split('\n').slice(0, 2).join(' | ')); }
+    }
+    for (let i = 0; i < 2; i++) {
+      if (dropped && i === dropper) continue;
+      const h = G[i].human[0].held;
+      if (d() < 0.15) { h.left = d() < 0.4; h.right = !h.left && d() < 0.5; h.atk = d() < 0.3; h.jump = d() < 0.1; }
+      if (d() < 0.12) G[i].human[0].press(PRESS[(d() * PRESS.length) | 0]);
+      try { vm.runInContext('simTick(1 / 60)', P[i]); } catch (e) { if (errs.length < 4) errs.push(`${i ? 'client' : 'host'} @${t}: ${e.stack.split('\n').slice(0, 2).join(' | ')}`); }
+      while (box[i].length) { const m = box[i].shift(); if (!dropped) wire[i].push([t + 2, m]); }
+    }
+    if (!dropped) for (let i = 0; i < 2; i++) while (wire[i].length && wire[i][0][0] <= t) G[1 - i].onNetMsg(JSON.parse(wire[i].shift()[1]));
+    if (dropped && vm.runInContext('M.phase', W) === 'end') break;
+  }
+  const r = JSON.parse(vm.runInContext(`JSON.stringify({ mode: M.mode, roll: ROLL.on, solo: !!NET.solo, phase: M.phase, wins: M.wins, clock,
+    ai: ROLL.slots[${dropper}].map(i => fighterByIdx(i).ctrl instanceof AICtrl), mine: ROLL.slots[${keep}].map((i, k) => fighterByIdx(i).ctrl === human[k]) })`, W));
+  r.errs = errs; r.after = r.clock - clock0; r.frames = t;
+  return r;
+}
+{
+  const DROPS = [['pp_cc', [0, 3, 5, 9]], ['pp_pp', [2, 7, 4, 6]], ['normal', [2, 3], [[2, 5, 12], [3, 4, 7]]]];
+  for (const [mode, ch, duo] of DROPS) for (const dropper of [0, 1]) {
+    const r = runDrop(mode, ch, duo, dropper, SEED0 + ch[0] * 17 + dropper);
+    const ok = !r.errs.length && r.mode === 'net' && !r.roll && r.solo && r.ai.every(Boolean) && r.mine.every(Boolean) && r.after > 20 && r.phase === 'end';
+    if (!ok) fail++;
+    console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${duo ? '3v3 车轮' : JSON.stringify(ch)} ${dropper ? '加入的人' : '房主'}掉线：${r.mode === 'net' && r.solo ? `留下的人接着打了 ${r.after.toFixed(0)} 秒` : '留下的人被送回了大厅'}，${r.phase === 'end' ? '打完了' : '没打完'}（${r.phase}，比分 ${r.wins}）`);
+    for (const e of r.errs) console.log('        报错 ' + e);
+    if (!ok) console.log('        ' + JSON.stringify(r));
+  }
+  // 1v1 还是照旧：对方掉线就结束回到大厅
+  const w = makePeer([]);
+  vm.runInContext(`NET.role = 'client'; NET.open = true; netRoomMode = 'normal'; rollStart([0, 3], 9); for (let i = 0; i < 300; i++) { ROLL.remLast = ROLL.F + 2; rollTick(1 / 60); } onSys({ sys: 'left' });`, w);
+  const one = JSON.parse(vm.runInContext('JSON.stringify({ mode: M.mode, roll: ROLL.on, solo: !!NET.solo })', w));
+  const ok1 = one.mode !== 'net' && !one.roll && !one.solo;
+  if (!ok1) fail++;
+  console.log(`${ok1 ? '  PASS' : '  FAIL'}  1v1 对方掉线：照旧结束对局（${JSON.stringify(one)}）`);
+}
+
 const argF = process.argv.indexOf('--frames');
 const FRAMES = argF > 0 ? +process.argv[argF + 1] : 3600;
 const CASES = [
