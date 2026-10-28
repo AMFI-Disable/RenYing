@@ -238,7 +238,12 @@ const res = await ev(`({ title: $id('endTitle') ? $id('endTitle').textContent : 
 ok('results screen', true, `${res.title} ${res.wins.join(':')} after ${Math.round((Date.now() - t0) / 1000)}s`);
 await sleep(900);
 await shot('05-results');
-if (EN) { const t = await ev(`[...document.querySelectorAll('#end button')].filter(b => b.offsetParent).map(b => b.textContent.trim()).join(' | ')`); ok('results buttons in English', !CJK.test(t), t); }
+if (EN) {   // 结算页上看得见的字（印章图标里的单字除外）都该是英文
+  const left = await ev(`(() => { const out = [], w = document.createTreeWalker($id('end'), NodeFilter.SHOW_TEXT); let n;
+    while ((n = w.nextNode())) { const t = n.nodeValue.trim(); if (t && /[\u4e00-\u9fff]/.test(t) && n.parentElement.offsetParent !== null && !n.parentElement.closest('.sic')) out.push(t); }
+    return out; })()`);
+  ok('results screen in English', left.length === 0, left.slice(0, 4).join(' | '));
+}
 
 // 5. back home from the results screen
 await activate('back to home', '#menuBtn', 'menu');
