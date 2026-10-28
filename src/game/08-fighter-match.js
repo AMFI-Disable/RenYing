@@ -95,8 +95,8 @@ const foesOf = f => {
   const alive = list.filter(e => !e.hidden && e.hp > 0);
   return alive.length ? alive : list;
 };
-// 2v2 里谁算电脑（会配合队友选目标）。联机和本地回放里玩家的操控是普通 Ctrl，带 net 标记，不是电脑
-const cpuTeamwork = f => !!(f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net);
+// 2v2 里谁算电脑（会配合队友选目标）。本地四个玩家用 human[0]～[3]；联机和本地回放里玩家的操控是普通 Ctrl，带 net 标记，也不是电脑
+const cpuTeamwork = f => !!(f.ctrl && !human.includes(f.ctrl) && !f.ctrl.net);
 const foeOf = f => {
   if (!isMulti()) return f === A ? B : A;
   if (isRaid() && f !== B) { f.target = B; return B; }

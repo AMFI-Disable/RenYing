@@ -72,6 +72,17 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
 
   assert(res.match && res.rollbacks === 1, `12-frame rollback resimulation produces identical FNV-1a state hash (0x${res.hashAfter.toString(16)})`);
+
+  // 电脑往对手身上写的 lastComboHits（src/ai.js，电脑决定什么时候闪要看它）：回滚时要跟着存档回去，存档里没有就得删掉，
+  // 不然一边带着被丢弃那条时间线的数，两边的电脑想出来的招就不一样了
+  const ai = new vm.Script(`(() => {
+    const st0 = capState();                 // 这时还没人写过 lastComboHits
+    A.lastComboHits = 5; const st1 = capState();
+    A.lastComboHits = 9; restState(st1); const back = A.lastComboHits;
+    restState(st0); const gone = !('lastComboHits' in A);
+    return { back, gone, saved: st1.f[0].lastComboHits };
+  })()`).runInContext(w);
+  assert(ai.saved === 5 && ai.back === 5 && ai.gone, 'AI-written fighter field (lastComboHits) is saved, restored and cleared by rollback', JSON.stringify(ai));
 }
 
 // 2. QingFengXing (青锋行) 3D Action Mode Verification

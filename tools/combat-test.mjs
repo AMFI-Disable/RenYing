@@ -1100,17 +1100,19 @@ const testSuite = [
         const ai = f => f.ctrl instanceof AICtrl;
         const want = { p_cc: [false, true, true, true], pp_cc: [false, true, false, true], pp_pp: [false, false, false, false] }[sub];
         const got = [A, B, C, D].map(ai);
-        if (sub !== 'pp_pp' && JSON.stringify(got) !== JSON.stringify(want)) return { pass: false, error: sub + ': who is AI (A B C D) = ' + got };
+        if (JSON.stringify(got) !== JSON.stringify(want)) return { pass: false, error: sub + ': who is AI (A B C D) = ' + got };
         if (sub === 'p_cc' && A.ctrl !== human[0]) return { pass: false, error: 'p_cc: you should control A' };
         if (!REC.on || !REC.meta || !REC.meta.four || REC.meta.sub !== sub) return { pass: false, error: sub + ': 2v2 match is not being recorded' };
         // 录像要记下谁是玩家：回放里大家都是普通操控，玩家不能被当成电脑去配合队友
-        if (sub !== 'pp_pp' && JSON.stringify(REC.meta.pl) !== JSON.stringify(want.map(x => !x))) return { pass: false, error: sub + ': recorded players (A B C D) = ' + REC.meta.pl };
-        if (sub === 'p_cc') {
+        if (JSON.stringify(REC.meta.pl) !== JSON.stringify(want.map(x => !x))) return { pass: false, error: sub + ': recorded players (A B C D) = ' + REC.meta.pl };
+        // 四人对战的 3P、4P 也是真人：选目标按玩家的规则
+        if (sub === 'pp_pp' && [B, D].some(cpuTeamwork)) return { pass: false, error: 'pp_pp: 3P / 4P pick targets like the computer' };
+        if (sub === 'p_cc' || sub === 'pp_pp') {
           const rm = { ...REC.meta, ev: [], skins: ['', '', '', ''], names: ['a', 'b'] };
           startReplay(rm);
           const pl = [A, B, C, D].map(f => !cpuTeamwork(f));
           REPLAY.on = false;
-          if (JSON.stringify(pl) !== JSON.stringify(rm.pl)) return { pass: false, error: 'p_cc: in the replay players (A B C D) = ' + pl + ', recorded ' + rm.pl };
+          if (JSON.stringify(pl) !== JSON.stringify(rm.pl)) return { pass: false, error: sub + ': in the replay players (A B C D) = ' + pl + ', recorded ' + rm.pl };
           toMenu(); bpStart('2v2', { subMode: sub, level: 'hard' }); for (const i of [0, 1, 2, 3, 4, 5]) bpApply(i); currentScreen = 'bp'; bpFinish();
         }
         // 让电脑代替玩家出手，打一段，记下每一帧的局面

@@ -11445,7 +11445,7 @@ const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
 const alive = list.filter(e => !e.hidden && e.hp > 0);
 return alive.length ? alive : list;
 };
-const cpuTeamwork = f => !!(f.ctrl && f.ctrl !== human[0] && f.ctrl !== human[1] && !f.ctrl.net);
+const cpuTeamwork = f => !!(f.ctrl && !human.includes(f.ctrl) && !f.ctrl.net);
 const foeOf = f => {
 if (!isMulti()) return f === A ? B : A;
 if (isRaid() && f !== B) { f.target = B; return B; }
