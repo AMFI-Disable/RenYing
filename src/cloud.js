@@ -947,6 +947,17 @@
     notifyAuthChange(null);
   }
 
+  // 登录过的设备（新式登录一个浏览器一台；以前的老式登录合成一条 legacy）
+  async function devices() {
+    if (!cloudActive()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
+    return api('/api/devices', { method: 'GET' });
+  }
+  // 退出一台设备：id 是设备编号、'legacy'（以前的老式登录）或 'all'（所有设备，连这台一起；之后要再调 logout 清本机）
+  async function logoutDevice(id) {
+    if (!cloudActive()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
+    return api('/api/devices', { method: 'POST', body: JSON.stringify(id === 'all' ? { all: true } : { id }) });
+  }
+
   // 获取当前用户
   function getUser() {
     if (currentUser) {
@@ -1319,6 +1330,8 @@
       register,
       login,
       logout,
+      devices,
+      logoutDevice,
       getUser,
       loadProfile,
       saveProfile,

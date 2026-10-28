@@ -1554,6 +1554,42 @@ section('短效令牌 + 续期令牌：30 分钟过期，续期令牌用一次�
   await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
 }
 
+section('登录的设备：列出来、退出一台、退出全部；最近在用的时间');
+{
+  await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'all', why: '测试：设备列表' });
+  await newUser('devUser');
+  const UA = { mac: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15', ph: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1', win: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36' };
+  const loginUA = async (ua, ip) => {
+    const res = await worker.fetch(new Request('https://w.test/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': ip, 'User-Agent': ua }, body: JSON.stringify({ username: 'devUser', password: 'secret123', rt: 1 }) }), ENV, { waitUntil() {} });
+    return res.json();
+  };
+  const A = await loginUA(UA.mac, '8.8.9.1'), B = await loginUA(UA.ph, '8.8.9.2'), Cw = await loginUA(UA.win, '8.8.9.3');
+  const old = await call('POST', '/api/login', { username: 'devUser', password: 'secret123' }, undefined, '8.8.9.4');   // 老网页：老式令牌
+  const l = await call('GET', '/api/devices', undefined, A.token);
+  const labels = (l.devices || []).map(d => d.label).sort();
+  ok(l.ok && l.devices.length === 3 && labels.join('|') === ['Mac · Safari', 'iPhone · Safari', 'Windows · Chrome'].sort().join('|'), '三台设备，名字只有系统和浏览器', labels);
+  ok(l.current === A.device && l.devices.find(d => d.current).id === A.device && l.legacy === 2, '标出这台设备；老式登录（注册那次和老网页登录那次）合成一条，记着几处', l);
+  ok(!JSON.stringify(l).includes('refresh') && !JSON.stringify(l).includes('h1:'), '列表里没有令牌');
+  const seen0 = row('SELECT last_seen FROM devices WHERE id = ?', B.device).last_seen;
+  T += 6 * 60e3;
+  await call('GET', '/api/profile', undefined, B.token);
+  const seen1 = row('SELECT last_seen FROM devices WHERE id = ?', B.device).last_seen;
+  await call('GET', '/api/profile', undefined, B.token); T += 60e3; await call('GET', '/api/profile', undefined, B.token);
+  ok(seen1 === T - 60e3 && seen1 > seen0 && row('SELECT last_seen FROM devices WHERE id = ?', B.device).last_seen === seen1, '用了就记最近在用的时间（5 分钟最多记一次）');
+  const lo = await call('POST', '/api/devices', { id: B.device }, A.token);
+  ok(lo.ok && !lo.current, 'A 在设备列表里退出 B');
+  ok((await call('GET', '/api/profile', undefined, B.token)).status === 401 && (await call('POST', '/api/refresh', { refresh: B.refresh }, undefined, '8.8.9.5')).status === 401, 'B 的令牌和续期令牌马上都不能用了');
+  ok((await call('GET', '/api/profile', undefined, A.token)).ok && (await call('GET', '/api/profile', undefined, Cw.token)).ok, 'A、C 不受影响');
+  const other = await newUser('devOther');
+  ok((await call('POST', '/api/devices', { id: Cw.device }, other.token)).status === 404 && (await call('GET', '/api/profile', undefined, Cw.token)).ok, '别人的设备退不了');
+  ok((await call('POST', '/api/devices', { id: 'legacy' }, A.token)).ok && (await call('GET', '/api/profile', undefined, old.token)).status === 401, '退出以前的老式登录');
+  ok((await call('GET', '/api/devices', undefined, B.token)).status === 401, '没登录看不了');
+  const all = await call('POST', '/api/devices', { all: true }, Cw.token);
+  ok(all.ok && (await call('GET', '/api/profile', undefined, A.token)).status === 401 && (await call('GET', '/api/profile', undefined, Cw.token)).status === 401 && !row("SELECT 1 AS x FROM devices d JOIN users u ON u.id = d.user_id WHERE u.username = 'devUser'"), '所有设备都退出：连自己这台一起');
+  ok((await call('GET', '/api/profile', undefined, other.token)).ok, '别的账号不受影响');
+  await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');

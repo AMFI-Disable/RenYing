@@ -175,7 +175,33 @@ function renderAccPage() {
   ];
   $id('adStats').innerHTML = stats.map(([k, v, sub]) => `<div class="ad-stat"><span>${k}</span><b>${escapeHTML(v)}</b>${sub ? `<small>${escapeHTML(sub)}</small>` : ''}</div>`).join('');
   renderAccSync();
+  renderAccDevices();
 }
+// 登录的设备：云端账号才有；老服务器没有这个接口就整块不显示
+async function renderAccDevices() {
+  const box = $id('adDev'), u = window.CloudSave && CloudSave.getUser();
+  if (!box) return;
+  if (!(u && u.isCloud && CloudSave.devices)) { box.classList.add('hidden'); return; }
+  let r;
+  try { r = await CloudSave.devices(); } catch (e) { box.classList.add('hidden'); return; }
+  const rows = (r.devices || []).slice().sort((a, b) => (b.current ? 1 : 0) - (a.current ? 1 : 0)).map(d => `<div class="ad-dev-row"><b>${escapeHTML(d.label || '未知设备')}</b><span>${d.current ? '<i class="ad-dev-me">这台设备</i> · ' : ''}最近在用：${agoText(d.last_seen)}</span><button class="mm-cancel" type="button" data-dev="${escapeHTML(d.id)}" data-me="${d.current ? 1 : ''}">退出</button></div>`);
+  if (r.legacy) rows.push(`<div class="ad-dev-row"><b>以前的登录</b><span>更新前登录的 ${r.legacy} 处，分不出是哪台设备</span><button class="mm-cancel" type="button" data-dev="legacy">退出</button></div>`);
+  $id('adDevList').innerHTML = rows.join('') || '<div class="ad-dev-row"><span>只有这台设备</span></div>';
+  box.classList.remove('hidden');
+}
+$id('adDevList').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-dev]');
+  if (!b) return;
+  if (b.dataset.me) { doLogout(); return; }   // 退出这台：和点“退出登录”一样
+  b.disabled = true;
+  try { await CloudSave.logoutDevice(b.dataset.dev); toast('那台设备已退出登录'); } catch (err) { toast(err.message); }
+  renderAccDevices();
+});
+$id('adDevAll').addEventListener('click', async () => {
+  if (!confirm('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。')) return;
+  try { await CloudSave.logoutDevice('all'); } catch (err) { toast(err.message); return; }
+  doLogout();
+});
 function renderAccSync() {
   if (!$id('adSyncT')) return;
   const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };

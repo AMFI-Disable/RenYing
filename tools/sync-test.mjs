@@ -265,6 +265,21 @@ await sleep(1500);
 ok(cloudProf('Ren').netWins === 9 && wins(R.PROF) === 9, '重新登录：没传上去的那 1 场补传了', [cloudProf('Ren').netWins, R.PROF.netWins]);
 await R.CS.logout();
 ok(!R.store.has('renying-cloud-refresh') && !R.store.has('renying-cloud-token') && !R.store.has('renying-cloud-exp'), '退出登录：令牌和续期令牌都清掉');
+// 设备列表：A 在列表里退出 B，B 下一个请求就是 401（续期也换不到）
+const DA = makeDevice('DA'), DB = makeDevice('DB');
+await DA.CS.register('Dui', 'duipass123'); await DA.load();
+await DB.CS.login('Dui', 'duipass123'); await DB.load();
+const dl = await DA.CS.devices();
+ok(dl.ok && dl.devices.length === 2 && dl.devices.filter(d => d.current).length === 1, 'A 看到两台设备，标出了自己这台', dl);
+const bId = dl.devices.find(d => !d.current).id;
+await DA.CS.logoutDevice(bId);
+await DB.play(p => { p.netWins = 4; });
+await sleep(50);
+ok(DB.CS.getSyncState().state === 'expired' && cloudProf('Dui').netWins === 0, 'B 被退出：下次存档就是登录过期，没传上去', [DB.CS.getSyncState(), cloudProf('Dui').netWins]);
+await DA.play(p => { p.netWins = 1; });
+ok(cloudProf('Dui').netWins === 1, 'A 照常用');
+await DA.CS.logoutDevice('all'); await DA.CS.logout();
+ok((await DA.CS.login('Dui', 'duipass123')) && row("SELECT COUNT(*) AS n FROM devices d JOIN users u ON u.id = d.user_id WHERE u.username = 'Dui'").n === 1, '所有设备都退出以后：只剩重新登录的这一台');
 await admin('/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
 
 section('乱报的增量：编号不对、键不认识、一次加太多，都不认');

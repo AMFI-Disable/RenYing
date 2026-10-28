@@ -1435,6 +1435,11 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
 .ad-dot.s-idle { background: #3ddc97; opacity: .6; }
 .ad-sync #adMsg { margin: 8px 0 0; min-height: 0; text-align: left; }
 .ad-sync #adMsg:empty { display: none; }
+.ad-dev-list { margin: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.ad-dev-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.ad-dev-row b { color: #fff; font-weight: 600; }
+.ad-dev-row span { flex: 1; color: rgba(236,232,225,.62); }
+.ad-dev-row .ad-dev-me { color: #7fe0a8; font-style: normal; }
 #endTitle.ink-title { font-family: var(--title); font-weight: 400; letter-spacing: .04em; white-space: nowrap; font-size: clamp(44px, 7vw, 92px); line-height: 1.1; margin: 4px 0 6px; color: #efe6d6; text-shadow: 0 2px 0 rgba(0,0,0,.35), 0 0 26px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; gap: .02em; }
 #endTitle.ink-title::after { display: none; }
 #endTitle .it-name { background: linear-gradient(180deg, #f6efe2 0%, #d9cdb8 70%, #a99c86 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
@@ -3555,6 +3560,11 @@ body.kb-only.has-nav .kb-hint { display: block; }
           <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-go ad-btn hidden" id="adPromoteBtn" type="button" style="background:#46d3ea;color:#0a0e17">一键升级为云端账号</button><button class="mm-cancel" id="adPull" type="button">双向合并同步</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
           <p class="netstatus" id="adMsg" role="status"></p>
         </div>
+        <div class="ad-sync ad-dev hidden" id="adDev">
+          <div class="ad-sync-head"><b>登录的设备</b><span>在别处登录过、现在不用的，可以在这里退出</span></div>
+          <div class="ad-dev-list" id="adDevList"></div>
+          <div class="ad-sync-btns"><button class="mm-cancel" id="adDevAll" type="button">所有设备都退出</button></div>
+        </div>
       </div>
       <div class="acc-in" id="accIn">
       <span class="ad-kicker">账号</span>
@@ -4885,6 +4895,14 @@ currentUser = null;
 try { localStorage.removeItem('renying-local-current'); } catch (e) {}
 notifyAuthChange(null);
 }
+async function devices() {
+if (!cloudActive()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
+return api('/api/devices', { method: 'GET' });
+}
+async function logoutDevice(id) {
+if (!cloudActive()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
+return api('/api/devices', { method: 'POST', body: JSON.stringify(id === 'all' ? { all: true } : { id }) });
+}
 function getUser() {
 if (currentUser) {
 return {
@@ -5192,6 +5210,8 @@ hasValidConfig,
 register,
 login,
 logout,
+devices,
+logoutDevice,
 getUser,
 loadProfile,
 saveProfile,
@@ -24460,7 +24480,32 @@ const stats = [
 ];
 $id('adStats').innerHTML = stats.map(([k, v, sub]) => `<div class="ad-stat"><span>${k}</span><b>${escapeHTML(v)}</b>${sub ? `<small>${escapeHTML(sub)}</small>` : ''}</div>`).join('');
 renderAccSync();
+renderAccDevices();
 }
+async function renderAccDevices() {
+const box = $id('adDev'), u = window.CloudSave && CloudSave.getUser();
+if (!box) return;
+if (!(u && u.isCloud && CloudSave.devices)) { box.classList.add('hidden'); return; }
+let r;
+try { r = await CloudSave.devices(); } catch (e) { box.classList.add('hidden'); return; }
+const rows = (r.devices || []).slice().sort((a, b) => (b.current ? 1 : 0) - (a.current ? 1 : 0)).map(d => `<div class="ad-dev-row"><b>${escapeHTML(d.label || '未知设备')}</b><span>${d.current ? '<i class="ad-dev-me">这台设备</i> · ' : ''}最近在用：${agoText(d.last_seen)}</span><button class="mm-cancel" type="button" data-dev="${escapeHTML(d.id)}" data-me="${d.current ? 1 : ''}">退出</button></div>`);
+if (r.legacy) rows.push(`<div class="ad-dev-row"><b>以前的登录</b><span>更新前登录的 ${r.legacy} 处，分不出是哪台设备</span><button class="mm-cancel" type="button" data-dev="legacy">退出</button></div>`);
+$id('adDevList').innerHTML = rows.join('') || '<div class="ad-dev-row"><span>只有这台设备</span></div>';
+box.classList.remove('hidden');
+}
+$id('adDevList').addEventListener('click', async e => {
+const b = e.target.closest('button[data-dev]');
+if (!b) return;
+if (b.dataset.me) { doLogout(); return; }   // 退出这台：和点“退出登录”一样
+b.disabled = true;
+try { await CloudSave.logoutDevice(b.dataset.dev); toast('那台设备已退出登录'); } catch (err) { toast(err.message); }
+renderAccDevices();
+});
+$id('adDevAll').addEventListener('click', async () => {
+if (!confirm('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。')) return;
+try { await CloudSave.logoutDevice('all'); } catch (err) { toast(err.message); return; }
+doLogout();
+});
 function renderAccSync() {
 if (!$id('adSyncT')) return;
 const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState() : { state: 'local' };

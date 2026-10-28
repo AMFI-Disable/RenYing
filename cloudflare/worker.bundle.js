@@ -1325,11 +1325,13 @@ function getBearerToken(request) {
 
 // Authenticate session from token
 async function authenticate(env, request) {
-  const token = getBearerToken(request);
-  const r = await sessionOf(env, token, 'u.id AS id, u.username AS username, u.profile_json AS profile_json, u.created_at AS created_at', Date.now());
+  const token = getBearerToken(request), now = Date.now();
+  const r = await sessionOf(env, token, 'u.id AS id, u.username AS username, u.profile_json AS profile_json, u.created_at AS created_at, s.dev AS dev, (SELECT last_seen FROM devices WHERE id = s.dev) AS dseen', now);
   if (!r) return null;
-  const { stok, ...user } = r;
-  return { token, user };
+  const { stok, dev, dseen, ...user } = r;
+  // 设备列表里的“最近在用”：5 分钟最多记一次，别每个请求都写库
+  if (dev && now - (dseen || 0) > 5 * 60e3) await env.DB.prepare('UPDATE devices SET last_seen = ? WHERE id = ?').bind(now, dev).run();
+  return { token, user, dev: dev || '' };
 }
 
 async function readBody(request) {
@@ -3382,6 +3384,38 @@ async function route(request, env, ctx, rid = reqId()) {
           await env.DB.prepare('DELETE FROM sessions WHERE token IN (?, ?)').bind(await tokenKey(token), PLAIN_TOKEN.test(token) ? token : '-').run();
         }
         return json({ ok: true });
+      }
+
+      // 登录过的设备：GET 列出来；POST 退出一台（id）、以前的老式登录（id: 'legacy'）或者全部（all: true，连这台一起）
+      if (path === '/api/devices') {
+        const auth = await authenticate(env, request);
+        if (!auth) return error('未登录或登录已过期，请重新登录', 401);
+        const uid = auth.user.id;
+        if (request.method === 'GET') {
+          const rows = (await env.DB.prepare('SELECT id, label, created_at, last_seen FROM devices WHERE user_id = ? AND expires_at > ? ORDER BY last_seen DESC LIMIT 50').bind(uid, now).all()).results || [];
+          const legacy = await env.DB.prepare("SELECT COUNT(*) AS n FROM sessions WHERE user_id = ? AND dev = '' AND expires_at > ?").bind(uid, now).first('n');
+          return json({ ok: true, current: auth.dev, legacy: legacy || 0, devices: rows.map(d => ({ ...d, current: d.id === auth.dev })) });
+        }
+        if (request.method === 'POST') {
+          const body = await readBody(request);
+          if (!body) return error('请求太大', 413);
+          if (body.all === true) {
+            await env.DB.batch([
+              env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(uid),
+              env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(uid),
+            ]);
+            return json({ ok: true, all: true });
+          }
+          const id = String(body.id || '');
+          if (id === 'legacy') {
+            await env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND dev = ''").bind(uid).run();
+            return json({ ok: true, id });
+          }
+          const d = await env.DB.prepare('SELECT id FROM devices WHERE id = ? AND user_id = ?').bind(id, uid).first();
+          if (!d) return error('没有这台设备', 404);
+          await dropDevice(env, d.id);
+          return json({ ok: true, id: d.id, current: d.id === auth.dev });
+        }
       }
 
       // 用续期令牌换一套新的（见 handleRefresh）
