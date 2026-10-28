@@ -25181,7 +25181,10 @@ worldEnterMode(heroIdx, worldShrineX(0) + 80);
 WORLD.skin = A.skinKey || '';
 Object.assign(WORLD, { n: 0, kills: 0, myKills: 0, tries: 0, full: false, run: null, keySeq: 0 });
 let line = 1;
-try { line = Math.max(1, Math.min(9999, +localStorage.getItem('renying-world-line') || 1)); } catch (e) {}
+try {
+line = Math.max(1, Math.min(9999, +localStorage.getItem('renying-world-line') || 1));
+localStorage.setItem('renying-world-last-hero', String(heroIdx));   // 记住这次选的侠客
+} catch (e) {}
 if (WORLD.wantLine) { line = WORLD.wantLine; WORLD.wantLine = 0; }
 worldConnect(line);
 }
@@ -25356,9 +25359,23 @@ ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline =
 ctx.fillText(`${cvT('妖王 · 全线共讨')}  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
 }
 }
-function worldEnter(line) {
+function worldEnter(line, skipBP) {
 WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
+if (skipBP) {
+let heroIdx = menuHeroId >= 0 ? menuHeroId : 0;   // 用当前主菜单选中的侠客
+const avail = availList();
+if (!avail.includes(heroIdx)) {
+try {
+const last = localStorage.getItem('renying-world-last-hero');
+const lastIdx = last ? +last : -1;
+if (lastIdx >= 0 && lastIdx < CHARS.length && avail.includes(lastIdx)) heroIdx = lastIdx;
+else heroIdx = avail[0] || 0;
+} catch (e) { heroIdx = avail[0] || 0; }
+}
+worldStart(heroIdx);
+} else {
 bpStart('world');
+}
 }
 function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
 function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
@@ -25377,7 +25394,7 @@ $id('worldLineIn').addEventListener('keydown', e => { if (e.code === 'Enter' || 
 if ($id('btnRougeGoWorld')) {
 $id('btnRougeGoWorld').addEventListener('click', () => {
 if (typeof closeRougeModal === 'function') closeRougeModal();
-worldEnter(0);
+worldEnter(0, true);   // 全服肉鸽：跳过点将台，直接进
 });
 }
 const RG_JIE = 5;

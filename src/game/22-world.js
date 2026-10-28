@@ -215,7 +215,10 @@ function worldStart(heroIdx) {
   WORLD.skin = A.skinKey || '';
   Object.assign(WORLD, { n: 0, kills: 0, myKills: 0, tries: 0, full: false, run: null, keySeq: 0 });
   let line = 1;
-  try { line = Math.max(1, Math.min(9999, +localStorage.getItem('renying-world-line') || 1)); } catch (e) {}
+  try {
+    line = Math.max(1, Math.min(9999, +localStorage.getItem('renying-world-line') || 1));
+    localStorage.setItem('renying-world-last-hero', String(heroIdx));   // 记住这次选的侠客
+  } catch (e) {}
   if (WORLD.wantLine) { line = WORLD.wantLine; WORLD.wantLine = 0; }
   worldConnect(line);
 }
@@ -399,9 +402,25 @@ function drawWorldHUD() {
   }
 }
 // 入口：首页「开放世界」打开一个小弹窗，直接进或者填线号找朋友；肉鸽弹窗里的「全服肉鸽」直接进（自动分线）。都先在点将台选侠客
-function worldEnter(line) {
+function worldEnter(line, skipBP) {
   WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
-  bpStart('world');
+  // skipBP 为 true：用最近用过的侠客直接进，跳过点将台（全服肉鸽用）
+  if (skipBP) {
+    let heroIdx = menuHeroId >= 0 ? menuHeroId : 0;   // 用当前主菜单选中的侠客
+    // 如果主菜单侠客不可用，用最近用过的侠客
+    const avail = availList();
+    if (!avail.includes(heroIdx)) {
+      try {
+        const last = localStorage.getItem('renying-world-last-hero');
+        const lastIdx = last ? +last : -1;
+        if (lastIdx >= 0 && lastIdx < CHARS.length && avail.includes(lastIdx)) heroIdx = lastIdx;
+        else heroIdx = avail[0] || 0;
+      } catch (e) { heroIdx = avail[0] || 0; }
+    }
+    worldStart(heroIdx);
+  } else {
+    bpStart('world');
+  }
 }
 function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
 function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
@@ -420,7 +439,7 @@ if ($id('btnWorldLine')) {
 if ($id('btnRougeGoWorld')) {
   $id('btnRougeGoWorld').addEventListener('click', () => {
     if (typeof closeRougeModal === 'function') closeRougeModal();
-    worldEnter(0);
+    worldEnter(0, true);   // 全服肉鸽：跳过点将台，直接进
   });
 }
 
