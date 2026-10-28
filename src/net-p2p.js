@@ -27,6 +27,7 @@ const P2P = {
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:global.stun.twilio.com:3478' },
   ],
+  remoteIce: null, remoteAt: 0, remoteTtl: 0, turn: false,   // 服务器下发的 ICE（有 TURN 时带短时凭据），见 p2pIce()
   peer: null, conn: null, sess: 0, timer: 0, tries: 0, loading: null,
   opened: false,   // 房主的房间码登记成功过（之后牵线服务器断了只重连，不关房间）
   lastRx: 0,       // 最后一次收到对方消息的时间
@@ -45,14 +46,38 @@ function p2pOptions() {
     const saved = localStorage.getItem('renying-custom-ice');
     if (saved) customIce = JSON.parse(saved);
   } catch (e) {}
-  const iceServers = [
-    ...(Array.isArray(customIce) ? customIce : []),
-    ...(window.RENYING_ICE || []),
-    ...P2P.ice
-  ];
+  const seen = new Set(), iceServers = [];
+  for (const x of [...(Array.isArray(customIce) ? customIce : []), ...(window.RENYING_ICE || []), ...(P2P.remoteIce || []), ...P2P.ice]) {
+    const k = JSON.stringify([x && x.urls, x && x.username]);
+    if (x && x.urls && !seen.has(k)) { seen.add(k); iceServers.push(x); }
+  }
   const userOpts = window.RENYING_P2P || {};
   const config = Object.assign({ iceServers }, userOpts.config || (userOpts.iceServers ? { iceServers: userOpts.iceServers } : {}));
   return Object.assign({ debug: 0 }, userOpts, { config });
+}
+// 建房、加入、匹配之前先问服务器要 ICE 列表（GET /api/ice）。服务器开了 TURN 时里面带中转地址和几小时就过期的凭据，
+// 直连打不通的网络（校园网、公司网、对称 NAT）也能连上。拿不到（离线版、服务器没更新、网络慢）就只用上面固定的 STUN 列表
+async function p2pIce() {
+  const fresh = P2P.remoteIce && Date.now() - P2P.remoteAt < (P2P.turn ? P2P.remoteTtl * 500 : 3600e3);   // TURN 凭据过半就换新的
+  if (fresh) return;
+  const base = (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') || '';
+  if (!base || typeof fetch !== 'function') return;
+  const ac = typeof AbortController === 'function' ? new AbortController() : null;
+  const t = setTimeout(() => { if (ac) ac.abort(); }, 2500);   // 最多等 2.5 秒，别让建房卡住
+  try {
+    const r = await fetch(base + '/api/ice', ac ? { signal: ac.signal } : {});
+    const d = r.ok ? await r.json() : null;
+    if (d && Array.isArray(d.iceServers)) {
+      P2P.remoteIce = d.iceServers.filter(x => x && x.urls);
+      P2P.turn = !!d.turn; P2P.remoteTtl = +d.ttl || 0; P2P.remoteAt = Date.now();
+    }
+  } catch (e) {} finally { clearTimeout(t); }
+}
+// 直连打不通时的说明：服务器有没有给中转，说的话不一样
+function p2pNoRouteText() {
+  return P2P.turn
+    ? '连接失败：直连和中转服务器都没打通。检查一下网络，或者换个网络（比如手机热点）再试'
+    : '连接失败：你们的网络不允许点对点直连（校园网、公司网常见），现在也没有中转服务器可用。换个网络（比如手机热点）再试';
 }
 function p2pCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 去掉了容易看错的 0 O 1 I
@@ -98,8 +123,8 @@ function p2pClose() {
 function p2pErrorText(err) {
   const t = err && err.type;
   if (t === 'browser-incompatible') return '这个浏览器不支持直连，换最新的 Chrome、Edge 或 Safari 试试';
-  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return '连不上直连的牵线服务器，检查一下网络（有的校园网会拦），或者改用联机服务器';
-  if (t === 'webrtc') return '直连建立失败，可能是网络不允许点对点连接，换个网络或改用联机服务器';
+  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return '连不上牵线服务器（PeerJS），检查一下网络，有的校园网会拦；换个网络（比如手机热点）再试';
+  if (t === 'webrtc' || t === 'negotiation-failed') return p2pNoRouteText();
   return '直连出错：' + ((err && (err.message || err.type)) || '未知错误');
 }
 // 给一条数据通道挂上事件；sess 不对了说明已经换了房间，直接忽略。side 是自己这边（host / client）
@@ -181,7 +206,7 @@ async function netConnectP2P(asHost, code) {
   $id('roomCode').textContent = '';
   netStatus(asHost ? '正在建房…' : `正在加入房间 ${code}…`);
   const sess = P2P.sess;
-  const ok = await p2pLoad();
+  const [ok] = await Promise.all([p2pLoad(), p2pIce()]);
   if (sess !== P2P.sess) return;                       // 等待加载时又点了别的
   if (!ok) { netStatus('直连组件加载失败，检查一下网络后再试'); return; }
   if (asHost) { P2P.tries = 0; p2pHost(sess); } else p2pJoin(sess, code);
@@ -229,7 +254,7 @@ function p2pHost(sess) {
     P2P.conn = conn;
     clearTimeout(P2P.timer);
     P2P.timer = setTimeout(() => {                      // 有人来了但 15 秒还没连通：多半是网络不允许直连
-      if (live() && P2P.conn === conn && !conn.open) { P2P.conn = null; try { conn.close(); } catch (e) {} netStatus('朋友连不进来：你们的网络可能不允许点对点直连。房间还开着，可以让他再试一次'); }
+      if (live() && P2P.conn === conn && !conn.open) { P2P.conn = null; try { conn.close(); } catch (e) {} netStatus(p2pNoRouteText() + '。房间还开着，可以让他再试一次'); }
     }, 15000);
     p2pWire(conn, sess, 'host', () => { clearTimeout(P2P.timer); netStatus('对手已连入，正在核对版本…'); }, m => {
       if (m.sys === 'hello') {
@@ -268,7 +293,7 @@ function p2pHost(sess) {
       return;
     }
     if (NET.open) return;                               // 已经直连上了，牵线服务器的问题不影响对战
-    if (err.type === 'webrtc' || err.type === 'negotiation-failed') { netStatus('对手连接建立未成功（可能受到网络防火墙限制）。房间还开着，可以让他再试一次'); return; }
+    if (err.type === 'webrtc' || err.type === 'negotiation-failed') { netStatus(p2pNoRouteText() + '。房间还开着，可以让他再试一次'); return; }
     netStatus('和牵线服务器断开了，正在重连，房间码不变…');
     relink();
   });
@@ -294,7 +319,9 @@ function p2pJoin(sess, code) {
   }, 9000);
   clearTimeout(P2P.timer);
   P2P.timer = setTimeout(() => {
-    if (live() && !NET.open) fail(`连接超时：确认房间码 ${code} 没错且房主还在等候。若网络较慢可稍后再试一次`);
+    if (live() && !NET.open) fail(P2P.conn && P2P.conn.peerConnection && P2P.conn.peerConnection.iceConnectionState === 'failed'
+      ? p2pNoRouteText()   // 找到房主了，但网络打不通
+      : `连接超时：确认房间码 ${code} 没错且房主还在等候。若网络较慢可稍后再试一次`);
   }, 45000);
   peer.on('open', () => {
     clearTimeout(t1);
@@ -358,7 +385,7 @@ async function mmStart(kind) {
   MM.band = kind === 'ranked' && typeof rkMatchInfo === 'function' ? rkMatchInfo().band : 0;
   if (typeof mmUI === 'function') mmUI(kind);
   const sess = P2P.sess;
-  const ok = await p2pLoad();
+  const [ok] = await Promise.all([p2pLoad(), p2pIce()]);
   if (sess !== P2P.sess || !MM.on) return;
   if (!ok) { netStatus('直连组件加载失败，检查一下网络后再试'); netReset(); return; }
   mmSit(sess, 0);

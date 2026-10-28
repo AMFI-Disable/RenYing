@@ -60,6 +60,27 @@ function error(message, status = 400, extra) {
   return json({ ok: false, error: message, ...(extra || {}) }, status);
 }
 
+const ICE_STUN = ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'];
+const ICE_TTL = 6 * 3600;   // TURN 凭据的有效期（秒）：够打完一晚上，过期了网页下次建房会重新要
+async function iceServers(env) {
+  const out = { ok: true, iceServers: [{ urls: ICE_STUN }], turn: false };
+  if (!env.TURN_KEY_ID || !env.TURN_KEY_API_TOKEN) return out;
+  try {
+    const r = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(env.TURN_KEY_ID)}/credentials/generate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.TURN_KEY_API_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ttl: ICE_TTL }),
+    });
+    if (!r.ok) { console.error('turn creds', r.status); return out; }
+    const d = await r.json();
+    // 返回格式是 { iceServers: {...} } 或 { iceServers: [{...}] }，两种都认；只要带用户名和密码的 turn(s): 地址
+    const list = (Array.isArray(d.iceServers) ? d.iceServers : [d.iceServers]).filter(x => x && x.username && x.credential);
+    const turn = list.map(x => ({ urls: (Array.isArray(x.urls) ? x.urls : [x.urls]).filter(u => /^turns?:/.test(u)), username: x.username, credential: x.credential })).filter(x => x.urls.length);
+    if (turn.length) { out.iceServers.push(...turn); out.turn = true; out.ttl = ICE_TTL; }
+  } catch (e) { console.error('turn creds', e); }
+  return out;
+}
+
 const DAY_MS = 86400e3;
 // 客户端上报的墨锭收入（打电脑、任务、关卡星这些都在本机算）：服务器看不见本机发生了什么，只能限量。
 // 每天先认 1500；每打完一局服务器认可的对局（开局领了票、打够了时间），当天再多认 80；最多 6000。这三个数可以在线改
@@ -1764,6 +1785,13 @@ export default {
         if (ctx && ctx.waitUntil) ctx.waitUntil(p);
       }
       const ip = clientIp(request);
+
+      // 联机打洞用的 ICE 列表：平时只有 STUN；Even 在 Cloudflare 开了 TURN 并设好 TURN_KEY_ID / TURN_KEY_API_TOKEN 两个 Secret 后，
+      // 每次给一份几小时就过期的 TURN 凭据（直连打不通时走中转）。拿 TURN 失败也照样回 STUN，网页不会因此连不上
+      if (path === '/api/ice' && request.method === 'GET') {
+        if (!(await hit(env, 'ice:' + ip, 60, 3600e3, now))) return error('请求太频繁了，过一会儿再试', 429);
+        return json(await iceServers(env));
+      }
 
       // 2. Register
       if (path === '/api/register' && request.method === 'POST') {

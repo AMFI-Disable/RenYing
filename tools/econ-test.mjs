@@ -1522,6 +1522,32 @@ section('全服肉鸽 · 天道 Boss 的星座皮肤：服务器核对账号后�
   ok(!stateOf(Z2.uid).inv.some(x => x.k === 'qf_p1' && x.src === 'rouge') && stateOf(Z2.uid).inv.filter(x => x.src === 'rouge').length === 1, '不是星座武器箱的款不会当奖励发出去', r3.gifts);
 }
 
+section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭据；拿凭据失败也照样回 STUN');
+{
+  const realFetch = globalThis.fetch;
+  const r0 = await call('GET', '/api/ice', undefined, null, '7.7.7.1');
+  ok(r0.ok && r0.turn === false && r0.iceServers.length === 1 && r0.iceServers[0].urls.every(u => u.startsWith('stun:')), '没设 TURN 的 Secret：只有 STUN', r0);
+  let asked = null;
+  globalThis.fetch = async (url, opts) => {
+    asked = { url: String(url), auth: opts.headers.Authorization, body: JSON.parse(opts.body) };
+    return new Response(JSON.stringify({ iceServers: { urls: ['stun:stun.cloudflare.com:3478', 'turn:turn.cloudflare.com:3478?transport=udp', 'turns:turn.cloudflare.com:443?transport=tcp'], username: 'u1', credential: 'c1' } }), { status: 201 });
+  };
+  ENV.TURN_KEY_ID = 'kid'; ENV.TURN_KEY_API_TOKEN = 'tok';
+  const r1 = await call('GET', '/api/ice', undefined, null, '7.7.7.2');
+  const t = r1.iceServers && r1.iceServers.find(x => x.username);
+  ok(r1.turn === true && t && t.credential === 'c1' && t.urls.length === 2 && t.urls.every(u => /^turns?:/.test(u)), '设了 Secret：带上 TURN 地址和凭据（只留 turn/turns）', r1);
+  ok(asked && asked.url.includes('/turn/keys/kid/credentials/generate') && asked.auth === 'Bearer tok' && asked.body.ttl > 0 && asked.body.ttl <= 86400, '用短时凭据：向 Cloudflare 要的是几小时就过期的', asked);
+  globalThis.fetch = async () => new Response('boom', { status: 500 });
+  const r2 = await call('GET', '/api/ice', undefined, null, '7.7.7.3');
+  ok(r2.ok && r2.turn === false && r2.iceServers.length === 1, 'Cloudflare 那边出错：退回只有 STUN，不报错', r2);
+  globalThis.fetch = async () => { throw new Error('offline'); };
+  const r3 = await call('GET', '/api/ice', undefined, null, '7.7.7.3');
+  ok(r3.ok && r3.turn === false, '连不上 Cloudflare：同样退回 STUN', r3);
+  let n429 = 0; for (let i = 0; i < 62; i++) { const r = await call('GET', '/api/ice', undefined, null, '7.7.7.9'); if (r.status === 429) n429++; }
+  ok(n429 === 2, '同一个 IP 一小时最多要 60 次', n429);
+  globalThis.fetch = realFetch; delete ENV.TURN_KEY_ID; delete ENV.TURN_KEY_API_TOKEN;
+}
+
 console.log(`\n${pass} 项通过，${fail} 项失败`);
 Date.now = realNow;
 process.exit(fail ? 1 : 0);

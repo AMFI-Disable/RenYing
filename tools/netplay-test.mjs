@@ -94,6 +94,24 @@ function runCase(mode, chars, seed, frames, lag, duo) {
 }
 
 let fail = 0;
+// 建房前问服务器要的 ICE 列表：有 TURN 就带上；服务器连不上就只用网页里固定的 STUN
+{
+  const w = makePeer([]);
+  const run = code => vm.runInContext(code, w);
+  w.CloudSave = { getEndpoint: () => 'https://w.test' };
+  w.fetch = async () => ({ ok: true, json: async () => ({ ok: true, turn: true, ttl: 21600, iceServers: [{ urls: ['stun:stun.cloudflare.com:3478'] }, { urls: ['turn:t.test:3478'], username: 'u', credential: 'c' }] }) });
+  await run('p2pIce()');
+  const a = run('JSON.stringify(p2pOptions().config.iceServers)');
+  const list = JSON.parse(a), turns = list.filter(x => x.username);
+  const okA = turns.length === 1 && list.length === run('P2P.ice.length') + 2 && run('P2P.turn') === true;
+  w.fetch = async () => { throw new Error('offline'); };
+  run('P2P.remoteIce = null; P2P.turn = false;');
+  await run('p2pIce()');
+  const b = JSON.parse(run('JSON.stringify(p2pOptions().config.iceServers)'));
+  const okB = b.length === run('P2P.ice.length') && !b.some(x => x.username) && /中转/.test(run('p2pNoRouteText()'));
+  if (!okA || !okB) fail++;
+  console.log(`${okA && okB ? '  PASS' : '  FAIL'}  ICE 列表：服务器给了 TURN 就加上（${turns.length} 条），连不上就只用固定 STUN（${b.length} 条）`);
+}
 const argF = process.argv.indexOf('--frames');
 const FRAMES = argF > 0 ? +process.argv[argF + 1] : 3600;
 const CASES = [
