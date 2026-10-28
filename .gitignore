@@ -42,6 +42,7 @@ Thumbs.db
 *.xcuserdatad/
 xcuserdata/
 *.xcuserstate
+.claude/
 
 # 2.3 Build Products, Caches & Output Directories
 build/
