@@ -1,11 +1,26 @@
 name = "renying"
 main = "worker.bundle.js"   # python3 tools/build.py 生成（worker.js + src/armory-core.js）
+
+# compatibility_date 决定 Worker 用哪一天的 Cloudflare 运行时行为。2024-10-01 是建这个 Worker 时的日期，
+# 现在所有测试（sync-test、econ-test、world-test）和线上都是在这个日期的行为下跑通的，所以先不动。
+# 要更新的话：
+#   1. 先看 https://developers.cloudflare.com/workers/configuration/compatibility-flags/ 里
+#      从 2024-10-01 到新日期之间默认打开的改动，有没有影响 fetch、Request/Response、WebSocket、Durable Object 的；
+#   2. 只改 [env.staging] 里的 compatibility_date，部署到 staging 试一遍登录、存档、开箱、开放世界；
+#   3. 没问题再改这里，同一次部署里不要夹带别的改动，出问题直接改回旧日期重新部署就能回滚。
 compatibility_date = "2024-10-01"
+
+# Workers Logs：在 Cloudflare 后台 Workers → renying → Logs 里能查到每个请求和 console 输出，出问题时用来排查。
+# 免费版每天有额度，超了只是不再记新的日志，不影响 Worker 本身；日志太多时把 head_sampling_rate 调小（0.1 = 只记一成）。
+[observability]
+enabled = true
+head_sampling_rate = 1
 
 [[d1_databases]]
 binding = "DB"
 database_name = "renying-db"
 database_id = "86f80607-7c39-4a0f-8b1f-b2ad4c8d6e72"
+migrations_dir = "migrations"   # cloudflare/migrations/，用 npx wrangler d1 migrations apply renying-db --remote 执行
 
 # 江湖共斗 · 开放世界：一条分线一个 Durable Object（免费版只能用 SQLite 存储的 Durable Object）
 [[durable_objects.bindings]]
@@ -13,5 +28,28 @@ name = "WORLD"
 class_name = "WorldLine"
 
 [[migrations]]
+tag = "v1-world"
+new_sqlite_classes = ["WorldLine"]
+
+# ---------- staging：先在这里试新改动，再上生产 ----------
+# 部署：npx wrangler deploy --env staging（会建一个叫 renying-staging 的独立 Worker，和生产完全分开）。
+# 数据库、Durable Object、Secret 都不会从上面继承，要各自配：
+#   1. Even 建 staging 数据库：npx wrangler d1 create renying-db-staging，把输出的 database_id 填到下面；
+#   2. 设 staging 的管理口令：npx wrangler secret put ADMIN_SECRET --env staging（和生产用不同的口令）。
+# database_id 填好之前不要部署 staging；不加 --env 的 npx wrangler deploy 只部署生产，不受这一段影响。
+[env.staging]
+name = "renying-staging"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "renying-db-staging"
+database_id = "00000000-0000-0000-0000-000000000000"   # 待填：renying-db-staging 的 id
+migrations_dir = "migrations"
+
+[[env.staging.durable_objects.bindings]]
+name = "WORLD"
+class_name = "WorldLine"
+
+[[env.staging.migrations]]
 tag = "v1-world"
 new_sqlite_classes = ["WorldLine"]
