@@ -7,7 +7,7 @@ class Particles {
     this.pos = new Float32Array(max * 3); this.col = new Float32Array(max * 4); this.size = new Float32Array(max);
     this.vel = new Float32Array(max * 3); this.life = new Float32Array(max); this.ml = new Float32Array(max); this.prm = new Float32Array(max * 6); this.c0 = new Float32Array(max * 4);
     g.setAttribute('position', new T.BufferAttribute(this.pos, 3)); g.setAttribute('aCol', new T.BufferAttribute(this.col, 4)); g.setAttribute('aSize', new T.BufferAttribute(this.size, 1));
-    this.mat = new T.ShaderMaterial({
+    this.mat = terrSM({
       transparent: true, depthWrite: false, blending: additive ? T.AdditiveBlending : T.NormalBlending, uniforms: { uScale: { value: 600 } },
       vertexShader: TERR_PARS + 'attribute vec4 aCol; attribute float aSize; uniform float uScale; varying vec4 vCol; void main(){ vCol = aCol; vec4 mv = terrMV(position); gl_PointSize = aSize * uScale / max(.2, -mv.z); gl_Position = projectionMatrix * mv; }',
       fragmentShader: additive ? 'varying vec4 vCol; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = smoothstep(1., 0., d); a = a * a + smoothstep(.35, 0., d) * .6; gl_FragColor = vec4(vCol.rgb, vCol.a * a); }'
@@ -52,7 +52,7 @@ class Trail {
     this.pts = []; this.life = life; this.SUB = 3; this.MAXP = 18; const nv = ((this.MAXP - 1) * this.SUB + 1) * 2;
     this.pos = new Float32Array(nv * 3); this.uv = new Float32Array(nv * 2); const idx = []; for (let i = 0; i < nv / 2 - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
     const g = this.geo = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(this.pos, 3)); g.setAttribute('uv', new T.BufferAttribute(this.uv, 2)); g.setIndex(idx); g.setDrawRange(0, 0);
-    this.mat = new T.ShaderMaterial({ vertexShader: TRAIL_VS, fragmentShader: TRAIL_FS, uniforms: { uCol: { value: new T.Color(color) }, uInt: { value: inten } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide });
+    this.mat = terrSM({ vertexShader: TRAIL_VS, fragmentShader: TRAIL_FS, uniforms: { uCol: { value: new T.Color(color) }, uInt: { value: inten } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide });
     this.mesh = new T.Mesh(g, this.mat); this.mesh.frustumCulled = false; this.mesh.renderOrder = 7; GFX.scene.add(this.mesh);
   }
   push(b, t) { this.pts.unshift({ b: b.clone(), t: t.clone(), age: 0 }); if (this.pts.length > this.MAXP) this.pts.pop(); }
@@ -88,7 +88,7 @@ const SLASH_FS = `varying vec2 vUv; uniform vec3 uCol; uniform float uProg, uDir
     float rad = pow(vUv.y, 5.) * smoothstep(1., .92, vUv.y) * .75 + pow(vUv.y, 16.) * .8; float a = rev * rad * (1. - uProg * uProg);
     if (uStatic > .5) a = pow(sin(3.14159 * vUv.x), 1.4) * rad * (1. - uProg);
     vec3 c = mix(uCol, vec3(1.), pow(vUv.y, 7.) * .9); gl_FragColor = vec4(c * uInt, a); }`;
-function slashMat(color, inten) { return new T.ShaderMaterial({ vertexShader: TRAIL_VS, fragmentShader: SLASH_FS, uniforms: { uCol: { value: new T.Color(color) }, uProg: { value: 0 }, uDir: { value: 1 }, uInt: { value: inten }, uStatic: { value: 0 } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide }); }
+function slashMat(color, inten) { return terrSM({ vertexShader: TRAIL_VS, fragmentShader: SLASH_FS, uniforms: { uCol: { value: new T.Color(color) }, uProg: { value: 0 }, uDir: { value: 1 }, uInt: { value: inten }, uStatic: { value: 0 } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide }); }
 FX.slash = o => {
   const m = new T.Mesh(sectorGeo(o.arc || 2.8, o.inner || .45), slashMat(o.color, o.inten || .85)); m.frustumCulled = false; m.renderOrder = 8;
   m.position.set(o.x, o.y, o.z); m.rotation.set(o.pitch || 0, o.yaw, o.roll || 0, 'YXZ'); m.scale.setScalar(o.r); m.material.uniforms.uDir.value = o.dir || 1; GFX.scene.add(m);
@@ -125,7 +125,7 @@ const TELE_FS = `varying vec2 vUv; uniform vec3 uCol; uniform float uProg, uFade
 function fanGeo(arc) { const k = 'f' + arc.toFixed(2); if (_sect[k]) return _sect[k]; const N = 48, pos = [0, 0, 0], uv = [.5, 0], idx = []; for (let i = 0; i <= N; i++) { const u = i / N, th = (u - .5) * arc; pos.push(Math.sin(th), 0, Math.cos(th)); uv.push(u, 1); if (i < N) idx.push(0, i + 1, i + 2); } const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setIndex(idx); return _sect[k] = g; }
 function rectGeo() { if (_sect.rect) return _sect.rect; const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute([-.5, 0, 0, .5, 0, 0, -.5, 0, 1, .5, 0, 1], 3)); g.setAttribute('uv', new T.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2)); g.setIndex([0, 2, 1, 1, 2, 3]); return _sect.rect = g; }
 FX.telegraph = o => {
-  const mat = new T.ShaderMaterial({ vertexShader: TRAIL_VS, fragmentShader: TELE_FS, uniforms: { uCol: { value: new T.Color(o.color || 0xff3a22) }, uProg: { value: 0 }, uFade: { value: 1 }, uSide: { value: o.type === 'circle' ? 0 : 1 } }, transparent: true, depthWrite: false, side: T.DoubleSide });
+  const mat = terrSM({ vertexShader: TRAIL_VS, fragmentShader: TELE_FS, uniforms: { uCol: { value: new T.Color(o.color || 0xff3a22) }, uProg: { value: 0 }, uFade: { value: 1 }, uSide: { value: o.type === 'circle' ? 0 : 1 } }, transparent: true, depthWrite: false, side: T.DoubleSide });
   const m = new T.Mesh(o.type === 'line' ? rectGeo() : fanGeo(o.type === 'circle' ? TAU : o.arc), mat); m.position.set(o.x, .3, o.z); m.rotation.y = o.yaw || 0; m.renderOrder = 3; m.frustumCulled = false;
   if (o.type === 'line') m.scale.set(o.w, 1, o.len); else m.scale.setScalar(o.r); GFX.scene.add(m);
   const h = { t: 0, dur: o.dur, dead: false, mesh: m, cancel() { this.dead = true; }, update(dt) { this.t += dt; mat.uniforms.uProg.value = sat(this.t / this.dur); if (this.t > this.dur) this.dead = true; if (this.dead) { mat.uniforms.uFade.value -= dt * 7; if (mat.uniforms.uFade.value <= 0) { GFX.scene.remove(m); mat.dispose(); return false; } } return true; } };

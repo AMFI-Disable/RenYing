@@ -2,6 +2,10 @@
 const GFX = { time: { value: 0 }, quality: typeof window.__QUALITY === 'number' ? window.__QUALITY : 2 };
 const SUN_DIR = new V3(-.72, .36, -.6).normalize();
 const FOG_COL = new T.Color(0xb9a2a8);
+/* 颜色管线（一处说清）：渲染器输出 sRGB；贴图里的颜色一律当 sRGB（canvasTex 默认打上 sRGBEncoding，法线、星点这类数据贴图传 false）；
+   材质颜色分两种写法——场景里的 stdMat(hex) 按线性值直接用（地图的配色就是这么调出来的），人物、兵器按 sRGB 写，
+   传 { srgb: true } 由 stdMat 统一转成线性。要转颜色只走 srgbCol / stdMat，别在各处自己调 convertSRGBToLinear。 */
+const srgbCol = h => new T.Color(h).convertSRGBToLinear();
 
 function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 function canvasTex(c, srgb = true, repeat) {
@@ -26,6 +30,7 @@ function stdMat(color, o = {}) {
   if (o.emissive !== undefined) { m.emissive.set(o.emissive); m.emissiveIntensity = o.ei === undefined ? 1 : o.ei; }
   if (o.map) m.map = o.map; if (o.normalMap) { m.normalMap = o.normalMap; if (o.ns) m.normalScale.set(o.ns, o.ns); }
   if (o.vc) m.vertexColors = true;
+  if (o.srgb) m.color.convertSRGBToLinear();
   if (o.rim) { m.userData.rim = { value: new T.Color(o.rim === true ? 0x4a3524 : o.rim) }; m.onBeforeCompile = rimHook; }
   if (o.opacity !== undefined) { m.transparent = true; m.opacity = o.opacity; }
   return m;
@@ -158,7 +163,9 @@ function initGfx(canvas) {
   const mk = (w, h) => new T.WebGLRenderTarget(Math.max(2, w | 0), Math.max(2, h | 0), { minFilter: T.LinearFilter, magFilter: T.LinearFilter, depthBuffer: false });
   GFX.resize = (w, h, pr) => {
     R.setPixelRatio(pr); R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
-    const W = Math.max(2, Math.floor(w * pr)), H = Math.max(2, Math.floor(h * pr));
+    const W = Math.max(2, Math.floor(w * pr)), H = Math.max(2, Math.floor(h * pr)), key = W + 'x' + H + ':' + (GFX.quality >= 1 ? 4 : 0);
+    if (key === GFX.rtKey) return;   // 尺寸和抗锯齿都没变：留着现有的离屏缓冲，不重建
+    GFX.rtKey = key;
     [rtS, rtA, rtB, rtC, rtD, rtE, rtF].forEach(r => r && r.dispose());
     if (R.capabilities.isWebGL2) { rtS = new T.WebGLMultisampleRenderTarget(W, H, { minFilter: T.LinearFilter, magFilter: T.LinearFilter }); rtS.samples = GFX.quality >= 1 ? 4 : 0; }
     else rtS = new T.WebGLRenderTarget(W, H, { minFilter: T.LinearFilter, magFilter: T.LinearFilter });

@@ -5,7 +5,7 @@ World.update = (dt, t, focus) => { WIND_U.uPlayer.value.copy(focus); if (World.t
 /* 拆掉当前地图：几何、材质、贴图全部释放（共用的几何缓存除外） */
 World.clear = () => {
   const r = World.root; World.colliders.length = 0; World.lamps.length = 0; World.fires.length = 0; World.grass = null; World.tick = null; World.root = null; World.id = '';
-  for (const k of ['inWater', 'leaves', 'smokes', 'runes', 'giants']) World[k] = null; World.rage = 1; World.open = false; World.cg = null; World.arena = null; TERR.off();
+  for (const k of ['inWater', 'leaves', 'smokes', 'runes', 'giants']) World[k] = null; World.rage = 1; World.open = false; World.cg = null; World.arena = null; TERR.free();
   if (!r) return; GFX.scene.remove(r);
   const geos = new Set(), mats = new Set(), texs = new Set();
   r.traverse(o => {

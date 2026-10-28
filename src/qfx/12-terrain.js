@@ -8,6 +8,8 @@ const TERR = {
 /* 高度雾 + 逆光：x 雾底高度，y 随高度变稀的速率，z 未用，w 太阳染雾强度；uCamP 是镜头位置（three 只给部分材质传 cameraPosition） */
 const FOGX = { U: { uCamP: { value: new V3() }, uFogH: { value: new T.Vector4(0, 0, 0, 0) }, uFogSun: { value: SUN_DIR }, uFogSunC: { value: new T.Color(1, .8, .6) } } };
 function terrU(sh) { Object.assign(sh.uniforms, TERR.U, FOGX.U); }
+/* 自己写着色器、又拼了 TERR_PARS 的材质（拖尾、粒子、预警圈）用这个建：显式挂上高度图和雾的 uniform */
+function terrSM(params) { const m = new T.ShaderMaterial(params); m.onBeforeCompile = terrU; return m; }
 
 const TERR_PARS = `#define TERR_PARS_OK
 uniform sampler2D uHM; uniform vec4 uHMp; uniform vec2 uHMn; uniform vec3 uCamP;
@@ -81,8 +83,12 @@ gl_Position = projectionMatrix * mvPosition;`;
     tWP.y += tH( tWP.xz );
   #endif
   vec4 mvPosition = viewMatrix * tWP;`);
-  /* 所有材质编译前都挂上高度图与雾的 uniform；自带 onBeforeCompile 的材质自己调 terrU */
-  T.Material.prototype.onBeforeCompile = function (sh) { terrU(sh); };
+  /* 白名单：只给会用到上面那些着色器片段的内置材质挂高度图与雾的 uniform（阴影用的深度材质也要）；
+     后期、天空、海面这些 ShaderMaterial 不碰。自带 onBeforeCompile 的材质自己调 terrU，自写着色器的用 terrSM */
+  const hook = function (sh) { terrU(sh); };
+  for (const k of ['MeshBasicMaterial', 'MeshLambertMaterial', 'MeshPhongMaterial', 'MeshStandardMaterial', 'MeshPhysicalMaterial', 'MeshToonMaterial', 'MeshMatcapMaterial',
+    'MeshNormalMaterial', 'MeshDepthMaterial', 'MeshDistanceMaterial', 'SpriteMaterial', 'PointsMaterial', 'LineBasicMaterial', 'LineDashedMaterial', 'ShadowMaterial'])
+    if (T[k]) T[k].prototype.onBeforeCompile = hook;
 })();
 
 /* 装一张高度图：h 为 N×N 浮点（行优先，z 为行），cell 米一格，(x0,z0) 为第 0 格的世界坐标；ex 为每格三个附加量（草密度、秋色、枯色） */
@@ -94,6 +100,8 @@ TERR.set = (h, N, cell, x0, z0, ex) => {
   TERR.U.uHM.value = t; TERR.U.uHMp.value.set(x0, z0, 1 / cell, 1); TERR.U.uHMn.value.set(N, 1 / N);
 };
 TERR.off = () => { TERR.on = false; TERR.sdf = null; TERR.U.uHMp.value.w = 0; FOGX.U.uFogH.value.set(0, 0, 0, 0); };
+/* 换地图时把高度图整个放掉（显存里的浮点贴图和内存里的数组） */
+TERR.free = () => { TERR.off(); if (TERR.tex) TERR.tex.dispose(); TERR.tex = null; TERR.U.uHM.value = null; TERR.h = new Float32Array(4); TERR.N = 2; };
 /* 与着色器完全一致的双线性采样 */
 function gH(x, z) {
   if (!TERR.on) return 0; const N = TERR.N, h = TERR.h;

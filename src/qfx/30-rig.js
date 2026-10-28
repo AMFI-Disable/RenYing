@@ -11,7 +11,7 @@ const SWORD_TIERS = [
 ];
 const _ik = { S: new V3(), T: new V3(), E: new V3(), d: new V3(), pole: new V3(), v: new V3(), W: new V3(), p: new V3(), sc: new V3(), qi: new T.Quaternion(), qt: new T.Quaternion(), q1: new T.Quaternion(), q2: new T.Quaternion() };
 const _mv = new V3(), _f1 = new V3(), _f2 = new V3(), _f3 = new V3();
-const KC = h => new T.Color(h).convertSRGBToLinear(), shade = (c, k) => c.clone().multiplyScalar(k);
+const KC = srgbCol, shade = (c, k) => c.clone().multiplyScalar(k);
 
 /* 网格构建器：环形管、椭球、路径管、布片；可带骨骼权重，四个材质组（布 / 纹边 / 光泽 / 金属） */
 class MB {
@@ -159,7 +159,7 @@ function shellInto(mb, jaw, keep, sc, col, w, g, oy) {
 function rigBase(rig) {
   rig.mats = []; rig.lag = [];
   rig.M = (c, op = {}) => {
-    const m = stdMat(c, Object.assign({ rim: true }, op)); m.color.convertSRGBToLinear(); if (op.emap) { m.emissiveMap = op.emap; } if (op.env && GFX.env) { m.envMap = GFX.env; m.envMapIntensity = op.env; }
+    const m = stdMat(c, Object.assign({ rim: true, srgb: true }, op)); if (op.emap) { m.emissiveMap = op.emap; } if (op.env && GFX.env) { m.envMap = GFX.env; m.envMapIntensity = op.env; }
     m.userData.em0 = m.emissive.clone().multiplyScalar(op.emissive !== undefined ? m.emissiveIntensity : 0); m.emissive.copy(m.userData.em0); m.emissiveIntensity = 1; if (op.skin) m.skinning = true; rig.mats.push(m); return m;
   };
   rig.setGlow = (r, g, b) => { for (const m of rig.mats) { const e = m.userData.em0; m.emissive.setRGB(e.r + r, e.g + g, e.b + b); } };

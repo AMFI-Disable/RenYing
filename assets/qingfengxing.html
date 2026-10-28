@@ -639,6 +639,10 @@ const Snd = {
 const GFX = { time: { value: 0 }, quality: typeof window.__QUALITY === 'number' ? window.__QUALITY : 2 };
 const SUN_DIR = new V3(-.72, .36, -.6).normalize();
 const FOG_COL = new T.Color(0xb9a2a8);
+/* 颜色管线（一处说清）：渲染器输出 sRGB；贴图里的颜色一律当 sRGB（canvasTex 默认打上 sRGBEncoding，法线、星点这类数据贴图传 false）；
+   材质颜色分两种写法——场景里的 stdMat(hex) 按线性值直接用（地图的配色就是这么调出来的），人物、兵器按 sRGB 写，
+   传 { srgb: true } 由 stdMat 统一转成线性。要转颜色只走 srgbCol / stdMat，别在各处自己调 convertSRGBToLinear。 */
+const srgbCol = h => new T.Color(h).convertSRGBToLinear();
 
 function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 function canvasTex(c, srgb = true, repeat) {
@@ -663,6 +667,7 @@ function stdMat(color, o = {}) {
   if (o.emissive !== undefined) { m.emissive.set(o.emissive); m.emissiveIntensity = o.ei === undefined ? 1 : o.ei; }
   if (o.map) m.map = o.map; if (o.normalMap) { m.normalMap = o.normalMap; if (o.ns) m.normalScale.set(o.ns, o.ns); }
   if (o.vc) m.vertexColors = true;
+  if (o.srgb) m.color.convertSRGBToLinear();
   if (o.rim) { m.userData.rim = { value: new T.Color(o.rim === true ? 0x4a3524 : o.rim) }; m.onBeforeCompile = rimHook; }
   if (o.opacity !== undefined) { m.transparent = true; m.opacity = o.opacity; }
   return m;
@@ -795,7 +800,9 @@ function initGfx(canvas) {
   const mk = (w, h) => new T.WebGLRenderTarget(Math.max(2, w | 0), Math.max(2, h | 0), { minFilter: T.LinearFilter, magFilter: T.LinearFilter, depthBuffer: false });
   GFX.resize = (w, h, pr) => {
     R.setPixelRatio(pr); R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
-    const W = Math.max(2, Math.floor(w * pr)), H = Math.max(2, Math.floor(h * pr));
+    const W = Math.max(2, Math.floor(w * pr)), H = Math.max(2, Math.floor(h * pr)), key = W + 'x' + H + ':' + (GFX.quality >= 1 ? 4 : 0);
+    if (key === GFX.rtKey) return;   // 尺寸和抗锯齿都没变：留着现有的离屏缓冲，不重建
+    GFX.rtKey = key;
     [rtS, rtA, rtB, rtC, rtD, rtE, rtF].forEach(r => r && r.dispose());
     if (R.capabilities.isWebGL2) { rtS = new T.WebGLMultisampleRenderTarget(W, H, { minFilter: T.LinearFilter, magFilter: T.LinearFilter }); rtS.samples = GFX.quality >= 1 ? 4 : 0; }
     else rtS = new T.WebGLRenderTarget(W, H, { minFilter: T.LinearFilter, magFilter: T.LinearFilter });
@@ -859,6 +866,8 @@ const TERR = {
 /* 高度雾 + 逆光：x 雾底高度，y 随高度变稀的速率，z 未用，w 太阳染雾强度；uCamP 是镜头位置（three 只给部分材质传 cameraPosition） */
 const FOGX = { U: { uCamP: { value: new V3() }, uFogH: { value: new T.Vector4(0, 0, 0, 0) }, uFogSun: { value: SUN_DIR }, uFogSunC: { value: new T.Color(1, .8, .6) } } };
 function terrU(sh) { Object.assign(sh.uniforms, TERR.U, FOGX.U); }
+/* 自己写着色器、又拼了 TERR_PARS 的材质（拖尾、粒子、预警圈）用这个建：显式挂上高度图和雾的 uniform */
+function terrSM(params) { const m = new T.ShaderMaterial(params); m.onBeforeCompile = terrU; return m; }
 
 const TERR_PARS = `#define TERR_PARS_OK
 uniform sampler2D uHM; uniform vec4 uHMp; uniform vec2 uHMn; uniform vec3 uCamP;
@@ -932,8 +941,12 @@ gl_Position = projectionMatrix * mvPosition;`;
     tWP.y += tH( tWP.xz );
   #endif
   vec4 mvPosition = viewMatrix * tWP;`);
-  /* 所有材质编译前都挂上高度图与雾的 uniform；自带 onBeforeCompile 的材质自己调 terrU */
-  T.Material.prototype.onBeforeCompile = function (sh) { terrU(sh); };
+  /* 白名单：只给会用到上面那些着色器片段的内置材质挂高度图与雾的 uniform（阴影用的深度材质也要）；
+     后期、天空、海面这些 ShaderMaterial 不碰。自带 onBeforeCompile 的材质自己调 terrU，自写着色器的用 terrSM */
+  const hook = function (sh) { terrU(sh); };
+  for (const k of ['MeshBasicMaterial', 'MeshLambertMaterial', 'MeshPhongMaterial', 'MeshStandardMaterial', 'MeshPhysicalMaterial', 'MeshToonMaterial', 'MeshMatcapMaterial',
+    'MeshNormalMaterial', 'MeshDepthMaterial', 'MeshDistanceMaterial', 'SpriteMaterial', 'PointsMaterial', 'LineBasicMaterial', 'LineDashedMaterial', 'ShadowMaterial'])
+    if (T[k]) T[k].prototype.onBeforeCompile = hook;
 })();
 
 /* 装一张高度图：h 为 N×N 浮点（行优先，z 为行），cell 米一格，(x0,z0) 为第 0 格的世界坐标；ex 为每格三个附加量（草密度、秋色、枯色） */
@@ -945,6 +958,8 @@ TERR.set = (h, N, cell, x0, z0, ex) => {
   TERR.U.uHM.value = t; TERR.U.uHMp.value.set(x0, z0, 1 / cell, 1); TERR.U.uHMn.value.set(N, 1 / N);
 };
 TERR.off = () => { TERR.on = false; TERR.sdf = null; TERR.U.uHMp.value.w = 0; FOGX.U.uFogH.value.set(0, 0, 0, 0); };
+/* 换地图时把高度图整个放掉（显存里的浮点贴图和内存里的数组） */
+TERR.free = () => { TERR.off(); if (TERR.tex) TERR.tex.dispose(); TERR.tex = null; TERR.U.uHM.value = null; TERR.h = new Float32Array(4); TERR.N = 2; };
 /* 与着色器完全一致的双线性采样 */
 function gH(x, z) {
   if (!TERR.on) return 0; const N = TERR.N, h = TERR.h;
@@ -977,7 +992,7 @@ World.update = (dt, t, focus) => { WIND_U.uPlayer.value.copy(focus); if (World.t
 /* 拆掉当前地图：几何、材质、贴图全部释放（共用的几何缓存除外） */
 World.clear = () => {
   const r = World.root; World.colliders.length = 0; World.lamps.length = 0; World.fires.length = 0; World.grass = null; World.tick = null; World.root = null; World.id = '';
-  for (const k of ['inWater', 'leaves', 'smokes', 'runes', 'giants']) World[k] = null; World.rage = 1; World.open = false; World.cg = null; World.arena = null; TERR.off();
+  for (const k of ['inWater', 'leaves', 'smokes', 'runes', 'giants']) World[k] = null; World.rage = 1; World.open = false; World.cg = null; World.arena = null; TERR.free();
   if (!r) return; GFX.scene.remove(r);
   const geos = new Set(), mats = new Set(), texs = new Set();
   r.traverse(o => {
@@ -1794,7 +1809,7 @@ const SWORD_TIERS = [
 ];
 const _ik = { S: new V3(), T: new V3(), E: new V3(), d: new V3(), pole: new V3(), v: new V3(), W: new V3(), p: new V3(), sc: new V3(), qi: new T.Quaternion(), qt: new T.Quaternion(), q1: new T.Quaternion(), q2: new T.Quaternion() };
 const _mv = new V3(), _f1 = new V3(), _f2 = new V3(), _f3 = new V3();
-const KC = h => new T.Color(h).convertSRGBToLinear(), shade = (c, k) => c.clone().multiplyScalar(k);
+const KC = srgbCol, shade = (c, k) => c.clone().multiplyScalar(k);
 
 /* 网格构建器：环形管、椭球、路径管、布片；可带骨骼权重，四个材质组（布 / 纹边 / 光泽 / 金属） */
 class MB {
@@ -1942,7 +1957,7 @@ function shellInto(mb, jaw, keep, sc, col, w, g, oy) {
 function rigBase(rig) {
   rig.mats = []; rig.lag = [];
   rig.M = (c, op = {}) => {
-    const m = stdMat(c, Object.assign({ rim: true }, op)); m.color.convertSRGBToLinear(); if (op.emap) { m.emissiveMap = op.emap; } if (op.env && GFX.env) { m.envMap = GFX.env; m.envMapIntensity = op.env; }
+    const m = stdMat(c, Object.assign({ rim: true, srgb: true }, op)); if (op.emap) { m.emissiveMap = op.emap; } if (op.env && GFX.env) { m.envMap = GFX.env; m.envMapIntensity = op.env; }
     m.userData.em0 = m.emissive.clone().multiplyScalar(op.emissive !== undefined ? m.emissiveIntensity : 0); m.emissive.copy(m.userData.em0); m.emissiveIntensity = 1; if (op.skin) m.skinning = true; rig.mats.push(m); return m;
   };
   rig.setGlow = (r, g, b) => { for (const m of rig.mats) { const e = m.userData.em0; m.emissive.setRGB(e.r + r, e.g + g, e.b + b); } };
@@ -2770,7 +2785,7 @@ class Particles {
     this.pos = new Float32Array(max * 3); this.col = new Float32Array(max * 4); this.size = new Float32Array(max);
     this.vel = new Float32Array(max * 3); this.life = new Float32Array(max); this.ml = new Float32Array(max); this.prm = new Float32Array(max * 6); this.c0 = new Float32Array(max * 4);
     g.setAttribute('position', new T.BufferAttribute(this.pos, 3)); g.setAttribute('aCol', new T.BufferAttribute(this.col, 4)); g.setAttribute('aSize', new T.BufferAttribute(this.size, 1));
-    this.mat = new T.ShaderMaterial({
+    this.mat = terrSM({
       transparent: true, depthWrite: false, blending: additive ? T.AdditiveBlending : T.NormalBlending, uniforms: { uScale: { value: 600 } },
       vertexShader: TERR_PARS + 'attribute vec4 aCol; attribute float aSize; uniform float uScale; varying vec4 vCol; void main(){ vCol = aCol; vec4 mv = terrMV(position); gl_PointSize = aSize * uScale / max(.2, -mv.z); gl_Position = projectionMatrix * mv; }',
       fragmentShader: additive ? 'varying vec4 vCol; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = smoothstep(1., 0., d); a = a * a + smoothstep(.35, 0., d) * .6; gl_FragColor = vec4(vCol.rgb, vCol.a * a); }'
@@ -2815,7 +2830,7 @@ class Trail {
     this.pts = []; this.life = life; this.SUB = 3; this.MAXP = 18; const nv = ((this.MAXP - 1) * this.SUB + 1) * 2;
     this.pos = new Float32Array(nv * 3); this.uv = new Float32Array(nv * 2); const idx = []; for (let i = 0; i < nv / 2 - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
     const g = this.geo = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(this.pos, 3)); g.setAttribute('uv', new T.BufferAttribute(this.uv, 2)); g.setIndex(idx); g.setDrawRange(0, 0);
-    this.mat = new T.ShaderMaterial({ vertexShader: TRAIL_VS, fragmentShader: TRAIL_FS, uniforms: { uCol: { value: new T.Color(color) }, uInt: { value: inten } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide });
+    this.mat = terrSM({ vertexShader: TRAIL_VS, fragmentShader: TRAIL_FS, uniforms: { uCol: { value: new T.Color(color) }, uInt: { value: inten } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide });
     this.mesh = new T.Mesh(g, this.mat); this.mesh.frustumCulled = false; this.mesh.renderOrder = 7; GFX.scene.add(this.mesh);
   }
   push(b, t) { this.pts.unshift({ b: b.clone(), t: t.clone(), age: 0 }); if (this.pts.length > this.MAXP) this.pts.pop(); }
@@ -2851,7 +2866,7 @@ const SLASH_FS = `varying vec2 vUv; uniform vec3 uCol; uniform float uProg, uDir
     float rad = pow(vUv.y, 5.) * smoothstep(1., .92, vUv.y) * .75 + pow(vUv.y, 16.) * .8; float a = rev * rad * (1. - uProg * uProg);
     if (uStatic > .5) a = pow(sin(3.14159 * vUv.x), 1.4) * rad * (1. - uProg);
     vec3 c = mix(uCol, vec3(1.), pow(vUv.y, 7.) * .9); gl_FragColor = vec4(c * uInt, a); }`;
-function slashMat(color, inten) { return new T.ShaderMaterial({ vertexShader: TRAIL_VS, fragmentShader: SLASH_FS, uniforms: { uCol: { value: new T.Color(color) }, uProg: { value: 0 }, uDir: { value: 1 }, uInt: { value: inten }, uStatic: { value: 0 } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide }); }
+function slashMat(color, inten) { return terrSM({ vertexShader: TRAIL_VS, fragmentShader: SLASH_FS, uniforms: { uCol: { value: new T.Color(color) }, uProg: { value: 0 }, uDir: { value: 1 }, uInt: { value: inten }, uStatic: { value: 0 } }, transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide }); }
 FX.slash = o => {
   const m = new T.Mesh(sectorGeo(o.arc || 2.8, o.inner || .45), slashMat(o.color, o.inten || .85)); m.frustumCulled = false; m.renderOrder = 8;
   m.position.set(o.x, o.y, o.z); m.rotation.set(o.pitch || 0, o.yaw, o.roll || 0, 'YXZ'); m.scale.setScalar(o.r); m.material.uniforms.uDir.value = o.dir || 1; GFX.scene.add(m);
@@ -2888,7 +2903,7 @@ const TELE_FS = `varying vec2 vUv; uniform vec3 uCol; uniform float uProg, uFade
 function fanGeo(arc) { const k = 'f' + arc.toFixed(2); if (_sect[k]) return _sect[k]; const N = 48, pos = [0, 0, 0], uv = [.5, 0], idx = []; for (let i = 0; i <= N; i++) { const u = i / N, th = (u - .5) * arc; pos.push(Math.sin(th), 0, Math.cos(th)); uv.push(u, 1); if (i < N) idx.push(0, i + 1, i + 2); } const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setIndex(idx); return _sect[k] = g; }
 function rectGeo() { if (_sect.rect) return _sect.rect; const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute([-.5, 0, 0, .5, 0, 0, -.5, 0, 1, .5, 0, 1], 3)); g.setAttribute('uv', new T.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2)); g.setIndex([0, 2, 1, 1, 2, 3]); return _sect.rect = g; }
 FX.telegraph = o => {
-  const mat = new T.ShaderMaterial({ vertexShader: TRAIL_VS, fragmentShader: TELE_FS, uniforms: { uCol: { value: new T.Color(o.color || 0xff3a22) }, uProg: { value: 0 }, uFade: { value: 1 }, uSide: { value: o.type === 'circle' ? 0 : 1 } }, transparent: true, depthWrite: false, side: T.DoubleSide });
+  const mat = terrSM({ vertexShader: TRAIL_VS, fragmentShader: TELE_FS, uniforms: { uCol: { value: new T.Color(o.color || 0xff3a22) }, uProg: { value: 0 }, uFade: { value: 1 }, uSide: { value: o.type === 'circle' ? 0 : 1 } }, transparent: true, depthWrite: false, side: T.DoubleSide });
   const m = new T.Mesh(o.type === 'line' ? rectGeo() : fanGeo(o.type === 'circle' ? TAU : o.arc), mat); m.position.set(o.x, .3, o.z); m.rotation.y = o.yaw || 0; m.renderOrder = 3; m.frustumCulled = false;
   if (o.type === 'line') m.scale.set(o.w, 1, o.len); else m.scale.setScalar(o.r); GFX.scene.add(m);
   const h = { t: 0, dur: o.dur, dead: false, mesh: m, cancel() { this.dead = true; }, update(dt) { this.t += dt; mat.uniforms.uProg.value = sat(this.t / this.dur); if (this.t > this.dur) this.dead = true; if (this.dead) { mat.uniforms.uFade.value -= dt * 7; if (mat.uniforms.uFade.value <= 0) { GFX.scene.remove(m); mat.dispose(); return false; } } return true; } };
@@ -4654,7 +4669,7 @@ function bindUI() {
   const fs = () => { const el = document.documentElement; try { if (document.fullscreenElement) document.exitFullscreen(); else { const p = (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (p && p.catch) p.catch(() => {}); } } catch (_) {} };
   $('btnFull').onclick = fs; $('btnFull2').onclick = fs;
   for (let i = 0; i < 4; i++) $('sk' + i).onclick = () => { Input.hits['Sk' + i] = true; canvas.focus(); }; $('sk4').onclick = () => { Input.hits.KeyC = true; canvas.focus(); };
-  addEventListener('resize', () => applyQuality()); document.addEventListener('visibilitychange', () => { if (document.hidden) Game.pause(); });
+  let qT = 0; addEventListener('resize', () => { clearTimeout(qT); qT = setTimeout(applyQuality, 120); });   // 拖窗口时会连发几十次：停下来再重建一次 document.addEventListener('visibilitychange', () => { if (document.hidden) Game.pause(); });
   addEventListener('touchstart', () => { if (!Input.touch) { Input.touch = true; if (G.state === 'playing') $('touch').hidden = false; } }, { passive: true });
   setupPointer(canvas, () => G.state === 'playing' && !Input.touch); setupTouchUI();
 }

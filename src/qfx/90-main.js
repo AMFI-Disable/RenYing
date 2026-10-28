@@ -163,7 +163,7 @@ function bindUI() {
   const fs = () => { const el = document.documentElement; try { if (document.fullscreenElement) document.exitFullscreen(); else { const p = (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (p && p.catch) p.catch(() => {}); } } catch (_) {} };
   $('btnFull').onclick = fs; $('btnFull2').onclick = fs;
   for (let i = 0; i < 4; i++) $('sk' + i).onclick = () => { Input.hits['Sk' + i] = true; canvas.focus(); }; $('sk4').onclick = () => { Input.hits.KeyC = true; canvas.focus(); };
-  addEventListener('resize', () => applyQuality()); document.addEventListener('visibilitychange', () => { if (document.hidden) Game.pause(); });
+  let qT = 0; addEventListener('resize', () => { clearTimeout(qT); qT = setTimeout(applyQuality, 120); });   // 拖窗口时会连发几十次：停下来再重建一次 document.addEventListener('visibilitychange', () => { if (document.hidden) Game.pause(); });
   addEventListener('touchstart', () => { if (!Input.touch) { Input.touch = true; if (G.state === 'playing') $('touch').hidden = false; } }, { passive: true });
   setupPointer(canvas, () => G.state === 'playing' && !Input.touch); setupTouchUI();
 }
