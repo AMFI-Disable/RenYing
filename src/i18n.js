@@ -84,7 +84,8 @@
     [/^赛季已结束$/, () => 'Season over'],
     [/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
     [/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
-    [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`]
+    [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`],
+    [/^(2v2 .+?) · (凯旋大捷！|惜败，择日再战！) 比分 (\d+) : (\d+)$/, (m0, mode, r, a, b) => `${lookup(mode) || mode} · ${r === '凯旋大捷！' ? 'Victory!' : 'Close loss, fight again another day!'} Score ${a} : ${b}`]   // 2v2 结算
   ];
   // 一处查表：先查固定词条，再试模板；返回空串表示“没有这句的译文”
   function lookup(text) {

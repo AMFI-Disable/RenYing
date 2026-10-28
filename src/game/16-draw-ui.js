@@ -229,7 +229,7 @@ function drawHUD2v2() {
           fTag = (f === A || f === C) ? (NET.role === 'host' ? ' [我方]' : ' [敌方]') : (NET.role === 'client' ? ' [我方]' : ' [敌方]');
         }
       }
-      const dispName = f.look.name + fTag;
+      const dispName = f.look.name + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag);   // 英文界面：[队友] 这类标签也换成英文
       ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(dispName).width;
       ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
       const total = nameW + hpW + gW + txtGap * 2;
@@ -282,7 +282,7 @@ function drawHUD2v2() {
     else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
     else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
   }
-  ctx.fillText(bTitle, cx, H - 10);
+  ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
   ctx.restore();
 }
 function drawHUDRaid() {
