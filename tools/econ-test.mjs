@@ -2030,6 +2030,109 @@ section('管理员账号和角色：先登录换 30 分钟的管理令牌；四�
   ok(fails.slice(0, 20).every(s => s === 403) && fails[20] === 429 && (await login({ name: 'chief', password: 'chief-pass-00004' }, '5.6.9.9')).status === 429, '登录试错 20 次也锁一小时，和口令一样', fails.slice(-3));
 }
 
+section('删除账号（软删除）：登录不了、不上榜、挂单看不到，数据一样不动；恢复后什么都不丢；批量封号、解封、删除、恢复；导出 CSV');
+{
+  T = nextNoon();
+  const raw = (path, tok = ADMIN) => worker.fetch(new Request('https://w.test' + path, { headers: { Authorization: 'Bearer ' + tok, 'CF-Connecting-IP': '1.2.3.4' } }), ENV, { waitUntil() {} });
+  const batch = (body, tok = ADMIN) => adm('POST', '/api/admin/batch', body, tok);
+  const D = await newUser('delme');
+  await econ(D.token, 'sync');
+  const [x1] = grant(D.uid, [{ k: 'qf_p2' }, { k: 'gc_wolf', st: 3 }]);
+  const lst = await econ(D.token, 'list', { i: x1.i, price: 77 });
+  await call('POST', '/api/profile', { profile: { ...profOf(D.uid), netWins: 40, netLosses: 1 }, ledger: { deltas: [], ev: 0 } }, D.token);
+  const snap = () => ({
+    user: (({ deleted_at, ...r }) => r)(row('SELECT * FROM users WHERE id = ?', D.uid)),
+    econ: row('SELECT * FROM econ WHERE uid = ?', D.uid),
+    log: ENV.DB.raw.prepare("SELECT * FROM econ_log WHERE uid = ? AND act NOT IN ('acct_del', 'acct_restore') ORDER BY id").all(D.uid),
+    mkt: ENV.DB.raw.prepare('SELECT * FROM mkt WHERE seller = ? ORDER BY id').all(D.uid),
+  });
+  const before = snap();
+  ok(lst.res.ok && before.econ && before.log.length > 0 && before.mkt.length === 1, '准备：这个号有武库、流水、一单在卖、战绩', { mkt: before.mkt.length, log: before.log.length });
+  const wins0 = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.2.1');
+  ok(wins0.list.some(r => r.name === 'delme'), '删除前在战绩榜上');
+
+  ok((await batch({ op: 'delete', uids: [D.uid] })).status === 400, '删除要写原因');
+  const del = await batch({ op: 'delete', uids: [D.uid], why: '玩家要求删号' });
+  ok(del.ok && del.done.length === 1 && row('SELECT deleted_at FROM users WHERE id = ?', D.uid).deleted_at === T, '删除：只记下删除时间', del);
+  ok((await call('GET', '/api/profile', undefined, D.token)).status === 401 && !row('SELECT 1 AS x FROM sessions WHERE user_id = ?', D.uid), '删除以后已经登录的设备都退出了');
+  const li = await call('POST', '/api/login', { username: 'delme', password: 'secret123' }, undefined, '8.8.2.2');
+  ok(li.status === 403 && li.deleted === true && /删除/.test(li.error), '密码对了也登录不了，说明是删除了', li);
+  ok(row("SELECT note FROM auth_log WHERE uid = ? AND act = 'login_fail' ORDER BY id DESC LIMIT 1", D.uid).note === 'deleted', '登录记录里写着是删除了的号');
+  ok(/已被注册/.test((await call('POST', '/api/register', { username: 'delme', password: 'secret123' }, undefined, '8.8.2.3')).error), '昵称还占着：别人注册不了，恢复不会撞名');
+  const wins1 = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.2.4');
+  ok(!wins1.list.some(r => r.name === 'delme') && wins1.players === wins0.players - 1, '不上排行榜，玩家总数也不算它');
+  const viewer = await newUser('mktlooker');
+  const mq = await market(viewer.token, 'qf_p2');
+  ok(mq.ok && mq.open.length === 0 && !mq.open.some(o => o.l === lst.res.l) && mrow(lst.res.l).state === 0, '挂的单别人看不到（表里还在，没动）');
+  const st = await adm('GET', '/api/admin/stats');
+  ok(st.deleted >= 1, '总览里数得到删除了的号', st.deleted);
+  const fd = await adm('GET', '/api/admin/find?q=delme'), fdel = await adm('GET', '/api/admin/find?del=1');
+  ok(fd.users[0].deleted_at === T && fdel.users.some(u => u.id === D.uid) && fdel.users.every(u => u.deleted_at > 0), '找号能看到删除时间，也能只看删除了的');
+  ok((await adm('GET', '/api/admin/econ?uid=' + D.uid)).deletedAt === T, '账号详情写着删除了');
+  ok((await batch({ op: 'delete', uids: [D.uid], why: '再删一次' })).skip[0].why === '已经删除了', '删过的再删：跳过，说明原因');
+  const mid = snap();
+  ok(JSON.stringify(mid) === JSON.stringify(before), '删除期间：账号、武库、流水、市场记录一个字都没变');
+
+  T += 3600e3;
+  const res = await batch({ op: 'restore', uids: [D.uid], why: '玩家回来了' });
+  ok(res.ok && res.done.length === 1 && row('SELECT deleted_at FROM users WHERE id = ?', D.uid).deleted_at === 0, '恢复', res);
+  ok(JSON.stringify(snap()) === JSON.stringify(before), '恢复以后数据和删除前一模一样，什么都没丢');
+  const li2 = await call('POST', '/api/login', { username: 'delme', password: 'secret123' }, undefined, '8.8.2.5');
+  ok(li2.ok && li2.uid === D.uid, '原来的密码照常登录');
+  const s2 = await econ(li2.token, 'sync');
+  ok(s2.ok && s2.state.inv.length === 1 && s2.state.lst.length === 1 && s2.ledger.ink === before.econ.ink, '武库、在卖的单、墨锭都还在', s2.state && s2.state.inv.length);
+  const mq2 = await market(viewer.token, 'qf_p2');
+  ok(mq2.open.some(o => o.l === lst.res.l), '挂的单又看得到了');
+  ok((await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.2.6')).list.some(r => r.name === 'delme'), '又上排行榜了');
+  ok((await batch({ op: 'restore', uids: [D.uid], why: '再恢复' })).skip[0].why === '没有删除', '没删的恢复：跳过');
+  const lg = ENV.DB.raw.prepare("SELECT act, detail FROM econ_log WHERE uid = ? AND act IN ('acct_del', 'acct_restore') ORDER BY id").all(D.uid).map(r => ({ act: r.act, ...parseDetail(r.detail) }));
+  ok(lg.length === 2 && lg[0].by === 'admin' && lg[0].why === '玩家要求删号' && lg[1].since > 0, '删除、恢复各记一条流水（谁、原因、什么时候删的）', lg);
+  const au = await adm('GET', '/api/admin/audit');
+  ok(au.rows.some(r => r.act === 'acct_del' && r.uid === D.uid) && au.rows.some(r => r.act === 'acct_restore'), '「操作记录」里看得到');
+
+  const us = [await newUser('sdbulk1'), await newUser('sdbulk2'), await newUser('sdbulk3')];
+  const ids = us.map(u => u.uid);
+  const bb = await batch({ op: 'ban', uids: [...ids, 'nobody-here', ids[0]], days: 2, why: '批量封号测试' });
+  ok(bb.ok && bb.done.length === 3 && bb.skip.length === 1 && bb.skip[0].why === '没有这个账号', '批量封号：3 个号封上，没有的号跳过，重复的只算一次', bb);
+  ok(ids.every(id => row('SELECT ban_until FROM sanctions WHERE uid = ?', id).ban_until === T + 2 * 86400e3), '每个号都封到两天后');
+  ok((await econ(us[1].token, 'sync')).status === 403, '封了的号不能动武库');
+  const bp = await batch({ op: 'pardon', uids: ids, why: '批量解封测试' });
+  ok(bp.done.length === 3 && ids.every(id => row('SELECT ban_until, perm FROM sanctions WHERE uid = ?', id).ban_until === 0), '批量解封');
+  const bperm = await batch({ op: 'ban', uids: [ids[2]], perm: true, why: '永久' });
+  ok(bperm.ok && row('SELECT perm FROM sanctions WHERE uid = ?', ids[2]).perm === 1, '批量也能永久封');
+  await batch({ op: 'pardon', uids: [ids[2]], why: '解开' });
+  const bd = await batch({ op: 'delete', uids: ids, why: '批量删除测试' });
+  ok(bd.done.length === 3 && ids.every(id => row('SELECT deleted_at FROM users WHERE id = ?', id).deleted_at > 0), '批量删除');
+  ok((await batch({ op: 'restore', uids: ids, why: '批量恢复测试' })).done.length === 3 && ids.every(id => row('SELECT deleted_at FROM users WHERE id = ?', id).deleted_at === 0), '批量恢复');
+  ok((await batch({ op: 'ban', uids: ids, why: '没写天数' })).status === 400 && (await batch({ op: 'nuke', uids: ids, why: 'x1' })).status === 400, '封号没写天数、不认识的操作：不收');
+  ok((await batch({ op: 'pardon', uids: Array.from({ length: 101 }, (_, i) => 'u_' + i), why: '太多了' })).status === 400 && (await batch({ op: 'pardon', uids: [], why: '空的' })).status === 400, '一次 1 到 100 个');
+  const vw = await call('POST', '/api/admin/login', { password: ADMIN }, undefined, '5.6.1.1');
+  await adm('POST', '/api/admin/admins', { name: 'looker', role: 'view', password: 'looker-pass-0001', why: '测试' }, vw.token);
+  await adm('POST', '/api/admin/admins', { name: 'judge2', role: 'ban', password: 'judge2-pass-0001', why: '测试' }, vw.token);
+  const lk = await call('POST', '/api/admin/login', { name: 'looker', password: 'looker-pass-0001' }, undefined, '5.6.1.1');
+  const jd = await call('POST', '/api/admin/login', { name: 'judge2', password: 'judge2-pass-0001' }, undefined, '5.6.1.1');
+  ok((await batch({ op: 'delete', uids: [ids[0]], why: '只能看' }, lk.token)).status === 403, '只能看：批量操作不行');
+  const jdel = await batch({ op: 'delete', uids: [ids[0], 'Dev'], why: '封禁和账号' }, jd.token);
+  ok(jdel.done.length === 1 && jdel.skip.some(x => x.name === 'Dev' && /全部/.test(x.why)), '封禁和账号：能删普通号，删 Dev 要「全部」', jdel);
+  await batch({ op: 'restore', uids: [ids[0]], why: '恢复' }, jd.token);
+
+  legacyUser('u_csvformula1', '=HYPERLINK("x")', {});
+  const ex = await raw('/api/admin/export');
+  const bytes = new Uint8Array(await ex.clone().arrayBuffer()), csv = await ex.text(), lines = csv.replace(/^﻿/, '').trim().split('\r\n');
+  ok(ex.status === 200 && /text\/csv/.test(ex.headers.get('Content-Type')) && /attachment; filename="renying-users-\d{4}-\d\d-\d\d\.csv"/.test(ex.headers.get('Content-Disposition')) && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf, '导出 CSV：是附件，开头有 BOM（Excel 打开中文不乱码）');
+  ok(lines[0] === 'uid,username,created_at,updated_at,econ_at,ink,strikes,ban,deleted_at' && lines.length - 1 === row('SELECT COUNT(*) AS n FROM users').n, '第一行是表头，一个号一行', lines[0]);
+  ok(lines.some(l => l.startsWith('u_csvformula1,"\'=HYPERLINK(""x"")"')), '= 开头的昵称前面加了 \'，Excel 不会当成公式；引号转义了', lines.find(l => l.startsWith('u_csvformula1')));
+  ok(lines.find(l => l.startsWith(ids[2] + ',')).split(',')[6] === '0' && !lines.some(l => /secret|password|salt/i.test(l)), '没有密码、盐这些');
+  await batch({ op: 'delete', uids: [ids[1]], why: '导出测试' });
+  const ex2 = (await (await raw('/api/admin/export?del=1')).text()).replace(/^﻿/, '').trim().split('\r\n');
+  ok(ex2.length - 1 === row('SELECT COUNT(*) AS n FROM users WHERE deleted_at > 0').n && ex2.slice(1).every(l => /Z$/.test(l)), 'del=1 只导出删除了的（最后一列是删除时间）');
+  const ex3 = (await (await raw('/api/admin/export?q=sdbulk')).text()).replace(/^﻿/, '').trim().split('\r\n');
+  ok(ex3.length === 4 && ex3.slice(1).every(l => /,sdbulk\d,/.test(l)), '按昵称开头导出', ex3.length);
+  ok((await raw('/api/admin/export', lk.token)).status === 403, '只能看：不能导出');
+  ok(row("SELECT COUNT(*) AS n FROM econ_log WHERE act = 'acct_export'").n === 3 && parseDetail(row("SELECT detail FROM econ_log WHERE act = 'acct_export' ORDER BY id DESC LIMIT 1").detail).n === 3, '每次导出记一条流水（导了几个）');
+  await batch({ op: 'restore', uids: [ids[1]], why: '收尾' });
+}
+
 section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭据；拿凭据失败也照样回 STUN');
 {
   const realFetch = globalThis.fetch;

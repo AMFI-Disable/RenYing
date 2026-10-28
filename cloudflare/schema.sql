@@ -13,8 +13,11 @@ CREATE TABLE IF NOT EXISTS users (
     -- 密码怎么存的：'pbkdf2-sha256:次数' 或以前的 'sha256-v1'（老号登录成功时自动换成 PBKDF2）。
     -- 以前建的库没有这两列，worker 第一次收到请求时会自动 ALTER 加上
     password_algo TEXT NOT NULL DEFAULT 'sha256-v1',
-    password_updated_at INTEGER NOT NULL DEFAULT 0
+    password_updated_at INTEGER NOT NULL DEFAULT 0,
+    -- 管理后台删除的号：0 是没删，否则是删除时间。删除不动别的数据，恢复就是改回 0（以前的库也是自动加）
+    deleted_at INTEGER NOT NULL DEFAULT 0
 );
+CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted_at) WHERE deleted_at > 0;
 
 -- token 存的是 'h1:' + 令牌的 SHA-256（十六进制），不存原文；以前存原文的那些，用到一次就换成哈希。
 CREATE TABLE IF NOT EXISTS sessions (

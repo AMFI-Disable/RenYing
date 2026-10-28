@@ -213,10 +213,12 @@ const SCHEMA_COLS = [
   `ALTER TABLE errs ADD COLUMN ms INTEGER NOT NULL DEFAULT 0`,       // 慢请求：最慢一次多少毫秒
   `ALTER TABLE errs ADD COLUMN ms_sum INTEGER NOT NULL DEFAULT 0`,   // 慢请求：加起来多少毫秒（除以 n 是平均）
   `ALTER TABLE sessions ADD COLUMN dev TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE users ADD COLUMN deleted_at INTEGER NOT NULL DEFAULT 0`,   // 管理后台删除的号：0 是没删；删了不动任何数据，恢复就是改回 0
 ];
 // 要等上面的列加好才能建的
 const SCHEMA_POST = [
   `CREATE INDEX IF NOT EXISTS idx_sessions_dev ON sessions(dev)`,
+  `CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted_at) WHERE deleted_at > 0`,
 ];
 function ensureSchema(env) {
   if (!schemaReady) schemaReady = (async () => {
@@ -282,7 +284,7 @@ const PLAIN_TOKEN = /^[0-9a-f]{64}$/;
 async function sessionOf(env, token, cols, now) {
   if (!token || token.length > 128) return null;
   const key = await tokenKey(token);
-  const r = await env.DB.prepare(`SELECT s.token AS stok, ${cols} FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token IN (?1, ?2) AND s.expires_at > ?3 ORDER BY s.token = ?1 DESC LIMIT 1`)
+  const r = await env.DB.prepare(`SELECT s.token AS stok, ${cols} FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token IN (?1, ?2) AND s.expires_at > ?3 AND u.deleted_at = 0 ORDER BY s.token = ?1 DESC LIMIT 1`)
     .bind(key, PLAIN_TOKEN.test(token) ? token : key, now).first();
   if (r && r.stok !== key && await flagOn(env, 'auth.token_hash', r, now)) await env.DB.prepare('UPDATE sessions SET token = ?1 WHERE token = ?2').bind(key, token).run();
   return r;
@@ -379,7 +381,7 @@ async function handleRefresh(env, request, body, now) {
   }
   if (refresh.length > 128) return error('登录已过期，请重新登录', 401);
   const h = await tokenKey(refresh);
-  const d = await env.DB.prepare('SELECT d.id, d.user_id, u.username FROM devices d JOIN users u ON u.id = d.user_id WHERE d.refresh = ? AND d.expires_at > ?').bind(h, now).first();
+  const d = await env.DB.prepare('SELECT d.id, d.user_id, u.username FROM devices d JOIN users u ON u.id = d.user_id WHERE d.refresh = ? AND d.expires_at > ? AND u.deleted_at = 0').bind(h, now).first();
   if (d) {
     const next = generateToken(), nh = await tokenKey(next);
     const up = await env.DB.prepare('UPDATE devices SET refresh = ?, prev = ?, rotated_at = ?, expires_at = ?, last_seen = ? WHERE id = ? AND refresh = ?')
@@ -1090,12 +1092,12 @@ async function handleMarket(env, uid, k, now) {
   await cfgNow(env, now);
   if (k) {
     if (!C.isItem(k)) return error('没有这件饰品', 404);
-    const open = (await env.DB.prepare('SELECT id, st, price, at, seller = ? AS mine FROM mkt WHERE k = ? AND state = 0 AND at >= ? ORDER BY price, at LIMIT 80').bind(uid, k, now - mktTtl()).all()).results || [];
+    const open = (await env.DB.prepare('SELECT id, st, price, at, seller = ? AS mine FROM mkt WHERE k = ? AND state = 0 AND at >= ? AND seller NOT IN (SELECT id FROM users WHERE deleted_at > 0) ORDER BY price, at LIMIT 80').bind(uid, k, now - mktTtl()).all()).results || [];
     const deals = (await env.DB.prepare('SELECT st, price, done_at AS at FROM mkt WHERE k = ? AND state = 1 ORDER BY done_at DESC LIMIT 120').bind(k).all()).results || [];
     return json({ ok: true, now, k, open: open.map(r => ({ l: r.id, st: r.st, price: r.price, at: r.at, mine: !!r.mine })), deals: deals.map(r => ({ st: r.st, price: r.price, at: r.at })) });
   }
   // 每一款：在卖几件、最低多少（普通版 n / lo，斩数版 sn / slo），最近一次成交（last / slast），30 天成交几次（d）
-  const open = (await env.DB.prepare('SELECT k, st >= 0 AS s, COUNT(*) AS n, MIN(price) AS lo FROM mkt WHERE state = 0 AND at >= ? GROUP BY k, st >= 0').bind(now - mktTtl()).all()).results || [];
+  const open = (await env.DB.prepare('SELECT k, st >= 0 AS s, COUNT(*) AS n, MIN(price) AS lo FROM mkt WHERE state = 0 AND at >= ? AND seller NOT IN (SELECT id FROM users WHERE deleted_at > 0) GROUP BY k, st >= 0').bind(now - mktTtl()).all()).results || [];
   const deals = (await env.DB.prepare('SELECT k, st >= 0 AS s, price FROM mkt WHERE state = 1 AND done_at > ? ORDER BY done_at DESC LIMIT 3000').bind(now - 30 * DAY_MS).all()).results || [];
   const items = {}, of = k => items[k] || (items[k] = { n: 0, lo: 0, sn: 0, slo: 0, last: 0, slast: 0, d: 0 });
   for (const r of open) { if (!C.isItem(r.k)) continue; const x = of(r.k); if (r.s) { x.sn = r.n; x.slo = r.lo; } else { x.n = r.n; x.lo = r.lo; } }
@@ -1129,7 +1131,7 @@ const ADMIN_ROLE_NAME = { view: '只能看', econ: '经济', ban: '封禁和账�
 const ADMIN_NEED = {
   'POST /api/admin/adjust': 'econ', 'POST /api/admin/restore': 'econ', 'POST /api/admin/gift': 'econ', 'POST /api/admin/gift/off': 'econ',
   'POST /api/admin/code': 'econ', 'POST /api/admin/code/off': 'econ', 'POST /api/admin/cfg': 'econ', 'POST /api/admin/cfg/undo': 'econ',
-  'POST /api/admin/ban': 'ban', 'POST /api/admin/pardon': 'ban', 'POST /api/admin/password': 'ban',
+  'POST /api/admin/ban': 'ban', 'POST /api/admin/pardon': 'ban', 'POST /api/admin/password': 'ban', 'POST /api/admin/batch': 'ban', 'GET /api/admin/export': 'ban',
   'POST /api/admin/logout': 'view', 'GET /api/admin/admins': 'all',
 };
 const adminCan = (role, need) => role === 'all' || need === 'view' || role === need;
@@ -1353,7 +1355,20 @@ async function handleAdmin(env, request, path, now, ip) {
   if (!body) return error('请求太大', 413);
   const why = String(body.why || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 100);
   const needWhy = () => why.length >= 2 ? null : error('要写上原因（至少 2 个字），会记进流水');
-  const findUser = key => key ? env.DB.prepare('SELECT id, username, created_at FROM users WHERE id = ? OR username = ?').bind(key, key).first() : null;
+  const findUser = key => key ? env.DB.prepare('SELECT id, username, created_at, deleted_at FROM users WHERE id = ? OR username = ?').bind(key, key).first() : null;
+  // 封号、解封（单个和批量共用）
+  const banUser = async (u, perm, days) => {
+    const rec = await sanctionOf(env, u.id);
+    const until = perm ? rec.banUntil : Math.max(rec.banUntil, now + days * DAY_MS), log = rec.log.concat({ r: why.slice(0, 60), at: now, src: 'admin:' + who }).slice(-20);
+    await env.DB.prepare('INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0) ON CONFLICT(uid) DO UPDATE SET ban_until = ?3, perm = ?4, log_json = ?5, at = ?6')
+      .bind(u.id, rec.strikes, until, perm || rec.perm ? 1 : 0, JSON.stringify(log), now).run();
+    await logRow(env, u.id, now, 'admin_ban', 1, null, null, JSON.stringify({ by: who, why, days: perm ? 'perm' : days }));
+    return { banUntil: until, perm: perm || rec.perm };
+  };
+  const pardonUser = async (u, note) => {
+    await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
+    await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
+  };
   const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、终端机、改名标签，还有给玩家看的说明
     const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
     if (ink === null) return { err: `墨锭要填 0 到 ${ADJ_INK} 的整数` };
@@ -1413,13 +1428,13 @@ async function handleAdmin(env, request, path, now, ip) {
   if (route === 'GET /api/admin/stats') {   // 总览
     await cfgNow(env, now);
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
-    const [users, fresh, eco, open, deals, banned] = await Promise.all([
-      one('SELECT COUNT(*) AS n FROM users'), one('SELECT COUNT(*) AS n FROM users WHERE created_at > ?', now - DAY_MS),
+    const [users, fresh, eco, open, deals, banned, gone] = await Promise.all([
+      one('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0'), one('SELECT COUNT(*) AS n FROM users WHERE created_at > ?', now - DAY_MS),
       one('SELECT COUNT(*) AS n, COALESCE(SUM(ink), 0) AS ink FROM econ'), one('SELECT COUNT(*) AS n FROM mkt WHERE state = 0'),
       one('SELECT COUNT(*) AS n, COALESCE(SUM(price), 0) AS v FROM mkt WHERE state = 1 AND done_at > ?', now - DAY_MS),
-      one('SELECT COUNT(*) AS n FROM sanctions WHERE perm = 1 OR ban_until > ?', now),
+      one('SELECT COUNT(*) AS n FROM sanctions WHERE perm = 1 OR ban_until > ?', now), one('SELECT COUNT(*) AS n FROM users WHERE deleted_at > 0'),
     ]);
-    return json({ ok: true, who, now, users: users.n, newToday: fresh.n, accounts: eco.n, inkTotal: eco.ink, open: open.n, deals24: deals.n, dealInk24: deals.v, banned: banned.n, cfgId: CFG_CACHE.id });
+    return json({ ok: true, who, now, users: users.n, newToday: fresh.n, accounts: eco.n, inkTotal: eco.ink, open: open.n, deals24: deals.n, dealInk24: deals.v, banned: banned.n, deleted: gone.n, cfgId: CFG_CACHE.id });
   }
   if (route === 'GET /api/admin/errors') {   // 错误记录：最近出现的在前；kind 不填就全部
     const kind = q('kind'), days = Math.max(1, Math.min(30, +q('days') || 7));
@@ -1429,10 +1444,12 @@ async function handleAdmin(env, request, path, now, ip) {
     return json({ ok: true, days, rows });
   }
   if (route === 'GET /api/admin/find') {   // 按昵称开头找号；不填就列最近动过的
-    const key = q('q'), like = key.replace(/[\\%_]/g, m => '\\' + m) + '%';
+    const key = q('q'), like = key.replace(/[\\%_]/g, m => '\\' + m) + '%', del = q('del') === '1';   // del=1：只看删除了的
+    const cols = 'u.id, u.username, u.created_at, u.deleted_at, e.ink, e.updated_at';
     const rows = key
-      ? await env.DB.prepare("SELECT u.id, u.username, u.created_at, e.ink, e.updated_at FROM users u LEFT JOIN econ e ON e.uid = u.id WHERE u.username LIKE ? ESCAPE '\\' OR u.id = ? ORDER BY length(u.username), u.username LIMIT 20").bind(like, key).all()
-      : await env.DB.prepare('SELECT u.id, u.username, u.created_at, e.ink, e.updated_at FROM users u LEFT JOIN econ e ON e.uid = u.id ORDER BY COALESCE(e.updated_at, u.updated_at) DESC LIMIT 20').all();
+      ? await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id WHERE (u.username LIKE ? ESCAPE '\\' OR u.id = ?)${del ? ' AND u.deleted_at > 0' : ''} ORDER BY length(u.username), u.username LIMIT 20`).bind(like, key).all()
+      : del ? await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id WHERE u.deleted_at > 0 ORDER BY u.deleted_at DESC LIMIT 100`).all()
+        : await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id ORDER BY COALESCE(e.updated_at, u.updated_at) DESC LIMIT 20`).all();
     return json({ ok: true, users: rows.results || [] });
   }
   if (route === 'GET /api/admin/econ') {   // 一个号的武库存档、处罚、流水、市场记录
@@ -1443,12 +1460,12 @@ async function handleAdmin(env, request, path, now, ip) {
     const mk = await env.DB.prepare('SELECT id, seller, buyer, k, st, price, at, state, done_at, paid FROM mkt WHERE seller = ? OR buyer = ? ORDER BY at DESC LIMIT 60').bind(u.id, u.id).all();
     const pr = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first();
     const p = parseProfile(pr ? pr.profile_json : '', u.username);
-    return json({ ok: true, uid: u.id, username: u.username, createdAt: u.created_at, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null,
+    return json({ ok: true, uid: u.id, username: u.username, createdAt: u.created_at, deletedAt: u.deleted_at || 0, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null,
       profile: { rating: p.rating, placed: p.placed, netWins: p.netWins, netLosses: p.netLosses, skins: cleanSkins(p.skins).length, updatedAt: p.updatedAt },
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
   if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么）
-    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct') ORDER BY l.id DESC LIMIT 100").all();
+    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export') ORDER BY l.id DESC LIMIT 100").all();
     return json({ ok: true, rows: rows.results || [] });
   }
   if (route === 'POST /api/admin/adjust') {
@@ -1472,20 +1489,63 @@ async function handleAdmin(env, request, path, now, ip) {
     const w = needWhy(); if (w) return w;
     const perm = body.perm === true, days = intIn(body.days, 1, 3650);
     if (!perm && !days) return error('封几天要填 1 到 3650 的整数，永久封号选永久');
-    const rec = await sanctionOf(env, u.id);
-    const until = perm ? rec.banUntil : Math.max(rec.banUntil, now + days * DAY_MS), log = rec.log.concat({ r: why.slice(0, 60), at: now, src: 'admin:' + who }).slice(-20);
-    await env.DB.prepare('INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0) ON CONFLICT(uid) DO UPDATE SET ban_until = ?3, perm = ?4, log_json = ?5, at = ?6')
-      .bind(u.id, rec.strikes, until, perm || rec.perm ? 1 : 0, JSON.stringify(log), now).run();
-    await logRow(env, u.id, now, 'admin_ban', 1, null, null, JSON.stringify({ by: who, why, days: perm ? 'perm' : days }));
-    return json({ ok: true, uid: u.id, banUntil: until, perm: perm || rec.perm });
+    return json({ ok: true, uid: u.id, ...(await banUser(u, perm, days)) });
   }
   if (route === 'POST /api/admin/pardon') {   // 解封，清空处罚记录（玩家刷新网页后生效）
     const u = await findUser(String(body.uid || '').trim());
     if (!u) return error('没有这个账号', 404);
-    const note = why || String(body.note || '').trim().slice(0, 100);
-    await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
-    await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
+    await pardonUser(u, why || String(body.note || '').trim().slice(0, 100));
     return json({ ok: true, uid: u.id });
+  }
+  /* 批量：op 是 delete（删除）、restore（恢复）、ban（封号，带 days 或 perm）、pardon（解封），uids 一次最多 100 个。
+   * 删除只是把 users.deleted_at 记成现在、退出这个号所有的登录：存档、武库、流水、市场记录一样不动，恢复就是改回 0，什么都不丢。
+   * 删了的号登录不了、不上排行榜、挂的单别人看不到（到期照常撤下，恢复后退回），昵称还占着（别人注册不了，恢复不会撞名）。
+   * 删除、恢复 Dev 要「全部」角色。每个号各记一条流水；做不了的（没有这个号、已经删了…）放在 skip 里说明，不影响别的。 */
+  if (route === 'POST /api/admin/batch') {
+    const w = needWhy(); if (w) return w;
+    const op = String(body.op || '');
+    if (!['delete', 'restore', 'ban', 'pardon'].includes(op)) return error('op 要是 delete、restore、ban 或 pardon');
+    const keys = [...new Set((Array.isArray(body.uids) ? body.uids : []).map(x => String(x || '').trim().slice(0, 40)).filter(Boolean))];
+    if (!keys.length || keys.length > 100) return error('一次选 1 到 100 个号');
+    const perm = body.perm === true, days = intIn(body.days, 1, 3650);
+    if (op === 'ban' && !perm && !days) return error('封几天要填 1 到 3650 的整数，永久封号选永久');
+    const done = [], skip = [];
+    for (const key of keys) {
+      const u = await findUser(key);
+      if (!u) { skip.push({ uid: key, why: '没有这个账号' }); continue; }
+      if ((op === 'delete' || op === 'restore') && isDevUser(u) && role !== 'all') { skip.push({ uid: u.id, name: u.username, why: '删除、恢复 Dev 要「全部」角色' }); continue; }
+      if (op === 'delete') {
+        if (u.deleted_at) { skip.push({ uid: u.id, name: u.username, why: '已经删除了' }); continue; }
+        await env.DB.batch([
+          env.DB.prepare('UPDATE users SET deleted_at = ? WHERE id = ? AND deleted_at = 0').bind(now, u.id),
+          env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
+          env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(u.id),
+        ]);
+        await logRow(env, u.id, now, 'acct_del', 1, null, null, JSON.stringify({ by: who, why }));
+      } else if (op === 'restore') {
+        if (!u.deleted_at) { skip.push({ uid: u.id, name: u.username, why: '没有删除' }); continue; }
+        await env.DB.prepare('UPDATE users SET deleted_at = 0 WHERE id = ?').bind(u.id).run();
+        await logRow(env, u.id, now, 'acct_restore', 1, null, null, JSON.stringify({ by: who, why, since: u.deleted_at }));
+      } else if (op === 'ban') await banUser(u, perm, days);
+      else await pardonUser(u, why);
+      done.push({ uid: u.id, name: u.username });
+    }
+    return json({ ok: true, op, done, skip });
+  }
+  /* 导出 CSV：q 和找号一样（昵称开头或编号，不填就全部），del=1 只要删除了的，del=0 只要没删的；最多 5000 行。
+   * 开头带 BOM，Excel 打开中文不乱码；= + - @ 开头的格子前面加 '，Excel 不会当成公式。每次导出记一条流水 */
+  if (route === 'GET /api/admin/export') {
+    const key = q('q'), del = q('del'), where = [], args = [];
+    if (key) { where.push("(u.username LIKE ? ESCAPE '\\' OR u.id = ?)"); args.push(key.replace(/[\\%_]/g, m => '\\' + m) + '%', key); }
+    if (del === '1') where.push('u.deleted_at > 0');
+    if (del === '0') where.push('u.deleted_at = 0');
+    const rows = (await env.DB.prepare(`SELECT u.id, u.username, u.created_at, u.updated_at, u.deleted_at, e.ink, e.updated_at AS econ_at, s.perm, s.ban_until, s.strikes FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY u.created_at LIMIT 5000`).bind(...args).all()).results || [];
+    const iso = t => t ? new Date(t).toISOString() : '';
+    const cell = v => { let t = String(v === null || v === undefined ? '' : v); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const lines = [['uid', 'username', 'created_at', 'updated_at', 'econ_at', 'ink', 'strikes', 'ban', 'deleted_at'].join(',')];
+    for (const r of rows) lines.push([r.id, r.username, iso(r.created_at), iso(r.updated_at), iso(r.econ_at), r.ink === null ? '' : r.ink, r.strikes || 0, r.perm ? 'perm' : r.ban_until > now ? iso(r.ban_until) : '', iso(r.deleted_at)].map(cell).join(','));
+    await logRow(env, '*', now, 'acct_export', 1, null, null, JSON.stringify({ by: who, q: key || undefined, del: del || undefined, n: rows.length }));
+    return new Response('\ufeff' + lines.join('\r\n') + '\r\n', { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="renying-users-${new Date(now).toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' } });
   }
   if (route === 'POST /api/admin/password') {   // 重设密码（新密码由管理员给，至少 12 位），这个号在别处的登录全部退出。create 为 true 时没有这个号就新建：dev 这类保留的昵称只能这样建
     const w = needWhy(); if (w) return w;
@@ -1842,7 +1902,7 @@ async function gbHit(env, auth, body, now) {
  * 所以这里的数只用来展示，不拿去发奖励。 */
 const LB_N = 100, RK_PLACE = 5, RK_MIN = 1000, RK_MAX = 25000;
 async function leaderboard(env, kind, season, me, now) {
-  const notBanned = 'id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)';
+  const notBanned = 'deleted_at = 0 AND id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)';
   if (kind === 'rank') {
     if (!/^S\d{1,3}$/.test(season)) return { ok: true, kind, list: [] };
     const rows = (await env.DB.prepare(
@@ -1855,7 +1915,7 @@ async function leaderboard(env, kind, season, me, now) {
     env.DB.prepare(
       `SELECT id, username, json_extract(profile_json, '$.netWins') AS w, json_extract(profile_json, '$.netLosses') AS l FROM users WHERE ${notBanned}
        AND json_extract(profile_json, '$.netWins') > 0 ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N).all(),
-    env.DB.prepare('SELECT COUNT(*) AS n FROM users').first(),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0').first(),
   ]);
   const n = v => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));
   return { ok: true, kind, players: (cnt && cnt.n) || 0, list: (rows.results || []).map(r => ({ name: r.username, wins: n(r.w), losses: n(r.l), me: r.id === me })) };
@@ -2460,7 +2520,7 @@ async function route(request, env, ctx, rid = reqId()) {
         }
 
         const user = await env.DB.prepare(
-          'SELECT id, username, password_hash, salt, password_algo, profile_json FROM users WHERE username = ?'
+          'SELECT id, username, password_hash, salt, password_algo, profile_json, deleted_at FROM users WHERE username = ?'
         ).bind(username).first();
 
         if (!user) {
@@ -2473,6 +2533,10 @@ async function route(request, env, ctx, rid = reqId()) {
           await fail();
           await authLog(env, request, 'login_fail', { uid: user.id, name: username, note: 'pw' });
           return error('昵称或密码不对', 401);
+        }
+        if (user.deleted_at) {   // 管理后台删除的号：密码对了也不让登录（数据都还在，管理员恢复以后照常用）
+          await authLog(env, request, 'login_fail', { uid: user.id, name: username, note: 'deleted' });
+          return error('这个账号已经删除了，要恢复请联系开发组', 403, { deleted: true });
         }
         await env.DB.prepare('DELETE FROM rate WHERE k = ?').bind(nameKey).run();
         // 老办法存的密码（或者次数比现在少）：趁着知道原文换成现在的。WHERE 带上旧 hash：这期间管理员刚重设过就不覆盖

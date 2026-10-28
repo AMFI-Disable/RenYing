@@ -709,6 +709,7 @@
       err.status = res.status;
       if (data.ban) err.ban = data.ban;
       if (data.need) err.need = data.need;
+      if (data.deleted) err.deleted = true;
       throw err;
     }
     return data;
@@ -982,7 +983,7 @@
       notifyAuthChange(currentUser);
       return userObj;
     } catch (err) {
-      if (err && err.need) throw err;   // 要人机验证、玩家没过：照实说，不去登本机同名账号
+      if (err && (err.need || err.deleted)) throw err;   // 要人机验证没过、云端号被删除了：照实说，不去登本机同名账号
       // 检查是否有本地历史账号
       const mockUsers = localAccounts();
       const localName = localKeyOf(mockUsers, name);

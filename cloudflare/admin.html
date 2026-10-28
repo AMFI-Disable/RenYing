@@ -347,7 +347,7 @@ const ACT = {
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
   admin: '管理员调整', restore: '找回饰品', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
   claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码', flag: '改功能开关',
-  adm_login: '管理员登录', adm_acct: '改管理员账号',
+  adm_login: '管理员登录', adm_acct: '改管理员账号', acct_del: '删除账号', acct_restore: '恢复账号', acct_export: '导出账号',
 };
 const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
 
@@ -390,6 +390,9 @@ function detailText(act, raw, withWho) {
   if (act === 'code_got') return d.code + '（' + (d.note || '') + '）：' + stuff(d).join('，');
   if (act === 'cfg') return who + (d.undo !== undefined ? (d.undo ? '退回到第 ' + d.undo + ' 版' : '全部回到默认值') + '（存成第 ' + d.id + ' 版）'
     : '第 ' + d.id + ' 版：' + Object.entries(d.set || {}).map(([k, v]) => cfgName(k) + (v === null ? ' 回到默认' : ' → ' + v)).join('，'));
+  if (act === 'acct_del') return who + '删除（数据都留着）';
+  if (act === 'acct_restore') return who + '恢复' + (d.since ? '（' + fmtT(d.since) + ' 删除的）' : '');
+  if (act === 'acct_export') return who + '导出了 ' + d.n + ' 个号' + (d.q ? '（搜 “' + d.q + '”）' : '') + (d.del === '1' ? '（只要删除了的）' : '');
   if (act === 'adm_login') return (withWho && d.by ? d.by + '｜' : '') + (d.how === 'secret' ? '用 ADMIN_SECRET 口令' : '用管理员账号') + '，角色：' + (ROLE[d.role] || d.role);
   if (act === 'adm_acct') return who + (d.created ? '新建 ' : '改 ') + d.name + '：角色 ' + (d.from && d.from !== d.role ? (ROLE[d.from] || d.from) + ' → ' : '') + (ROLE[d.role] || d.role) + (d.pw ? '，' + (d.created ? '设了密码' : '改了密码') : '') + (d.disabled ? '，停用' : '');
   if (act === 'flag') return who + d.k + '：' + (FLAG_MODE[d.from] || d.from) + ' → ' + (FLAG_MODE[d.to] || d.to);
@@ -461,6 +464,7 @@ async function vHome() {
       ${tile('市场在卖', unit(s.open, '单'), '玩家挂出来的')}
       ${tile('24 小时成交', unit(s.deals24, '单'), '成交额 ' + fmtN(s.dealInk24) + ' 墨锭')}
       ${tile('封禁中', unit(s.banned, '个号'), '包括永久封号')}
+      ${tile('删除了的', unit(s.deleted || 0, '个号'), '不算在注册账号里，能恢复')}
       ${tile('经济数值', s.cfgId ? '第 ' + s.cfgId + ' 版' : '默认', s.cfgId ? '改过' : '没改过')}
     </div>
     <div class="card"><div class="row between"><h2>最近的操作</h2><button class="btn ghost sm" data-act="tab" data-tab="audit">全部记录</button></div>
@@ -479,15 +483,25 @@ async function vHome() {
 /* ---------- 玩家：搜索 ---------- */
 async function vPlayers() {
   if (S.uid) return vPlayer();
-  const r = await api('find?q=' + encodeURIComponent(S.q));
+  const r = await api('find?q=' + encodeURIComponent(S.q) + (S.del ? '&del=1' : ''));
+  S.found = r.users;
   return H`<div class="card">
-    <h2>玩家</h2>
+    <div class="row between wrap"><h2>玩家</h2><div class="row">
+      <button class="btn ghost sm" data-act="delview" data-v="" aria-pressed="${String(!S.del)}">所有账号</button>
+      <button class="btn ghost sm" data-act="delview" data-v="1" aria-pressed="${String(!!S.del)}">删除了的</button>
+      <button class="btn ghost sm" data-act="export">导出 CSV</button></div></div>
     <form class="search" data-form="find"><input name="q" value="${S.q}" placeholder="昵称开头，或者账号编号（u_ 开头）" autocomplete="off" spellcheck="false" aria-label="搜索玩家"><button class="btn">搜索</button></form>
-    <p class="hint">${S.q ? '“' + S.q + '” 的结果（最多 20 个）' : '最近动过武库的 20 个账号'}</p>
-    ${r.users.length ? H`<div class="tw"><table><thead><tr><th>昵称</th><th class="num">墨锭</th><th>上次动武库</th><th>注册</th></tr></thead><tbody>
-      ${r.users.map(u => H`<tr><td><button class="link" data-act="open" data-uid="${u.id}">${u.username}</button><div class="hint mono">${u.id}</div></td>
+    <p class="hint">${S.del ? (S.q ? '删除了的号里 “' + S.q + '” 的结果' : '删除了的号（最近删的在前，最多 100 个）') : S.q ? '“' + S.q + '” 的结果（最多 20 个）' : '最近动过武库的 20 个账号'}。勾上几个可以一起处理；「导出 CSV」按现在的搜索和筛选导出（最多 5000 行）。</p>
+    ${r.users.length ? H`<form data-form="batch"><div class="tw"><table><thead><tr><th><input type="checkbox" data-pickall aria-label="全选"></th><th>昵称</th><th class="num">墨锭</th><th>上次动武库</th><th>注册</th></tr></thead><tbody>
+      ${r.users.map(u => H`<tr class="${u.deleted_at ? 'mute' : ''}"><td><input type="checkbox" name="pick" value="${u.id}" aria-label="选 ${u.username}"></td>
+        <td><button type="button" class="link" data-act="open" data-uid="${u.id}">${u.username}</button>${u.deleted_at ? H` <span class="badge bad">${fmtT(u.deleted_at)} 删除</span>` : ''}<div class="hint mono">${u.id}</div></td>
         <td class="num">${u.ink === null || u.ink === undefined ? '—' : fmtN(u.ink)}</td><td class="nowrap">${ago(u.updated_at)}</td><td class="nowrap">${fmtT(u.created_at)}</td></tr>`)}
-    </tbody></table></div>` : H`<p class="empty">没找到这个昵称</p>`}
+    </tbody></table></div>
+    <div class="row wrap" style="margin-top:10px"><span class="hint">勾上的：</span>
+      <button type="button" class="btn ghost sm" data-act="batch" data-op="ban">封号…</button><button type="button" class="btn ghost sm" data-act="batch" data-op="pardon">解封…</button>
+      <button type="button" class="btn ghost sm" data-act="batch" data-op="delete">删除…</button><button type="button" class="btn ghost sm" data-act="batch" data-op="restore">恢复…</button>
+      <label class="f w120">封几天<input type="number" name="days" min="1" max="3650" step="1" value="1"></label><label class="chk"><input type="checkbox" name="perm"> 永久</label></div>
+    </form>` : H`<p class="empty">${S.del ? '没有删除了的号' : '没找到这个昵称'}</p>`}
   </div>${S.q.toLowerCase() === 'dev' && !r.users.some(u => String(u.username).toLowerCase() === 'dev') ? devCard() : ''}`;
 }
 function devCard() {   // 云端还没有 Dev：只能在这里建，别人注册不了
@@ -515,7 +529,7 @@ async function vPlayer() {
   const nCases = CAT.caseIds.reduce((a, c) => a + (+cases[c] || 0), 0), pr = p.profile || {};
   return H`<div class="crumbs"><button class="btn ghost sm" data-act="back">← 玩家列表</button></div>
   <div class="card head">
-    <div class="who"><h2>${p.username}</h2>${isBan ? H`<span class="badge bad">${sc.perm ? '永久封禁' : '封禁中'}</span>` : ''}</div>
+    <div class="who"><h2>${p.username}</h2>${p.deletedAt ? H`<span class="badge bad">删除了</span>` : ''}${isBan ? H`<span class="badge bad">${sc.perm ? '永久封禁' : '封禁中'}</span>` : ''}</div>
     <div class="meta"><span class="mono">${p.uid}</span><button class="btn ghost sm" data-act="copy" data-v="${p.uid}">复制编号</button>
       <span>注册于 ${fmtT(p.createdAt)}</span><span>上次动武库：${e ? ago(e.at) : '还没打开过'}</span></div>
     <div class="tiles sm">
@@ -561,6 +575,7 @@ async function vPlayer() {
   ${lostCard(p)}
   ${banCard(sc, isBan)}
   ${pwCard(p)}
+  ${delCard(p)}
   ${logCard(p.log || [])}
   ${mktCard(p)}`;
 }
@@ -592,6 +607,15 @@ function banCard(sc, isBan) {
       ${sc.log.slice().reverse().map(x => H`<tr><td class="nowrap">${fmtT(x.at)}</td><td>${x.r}</td><td class="nowrap">${String(x.src || '').replace(/^admin:/, '管理员 ').replace(/^client$/, '网页检测').replace(/^server$/, '服务器检测')}</td></tr>`)}
     </tbody></table></div>` : ''}
   </form>`;
+}
+function delCard(p) {
+  return H`<div class="card">
+    <h2>删除账号</h2>
+    ${p.deletedAt ? H`<p><span class="badge bad">${fmtT(p.deletedAt)} 删除了</span> 登录不了、不上排行榜，挂的单别人看不到。存档、武库、流水都还在。</p>
+      <div class="row"><button type="button" class="btn" data-act="restoreone">恢复这个号…</button></div>`
+      : H`<p class="hint">删除以后这个号登录不了、所有设备退出、不上排行榜，挂的单别人看不到。存档、武库、流水一样不动，昵称还占着，随时能恢复，恢复后什么都不丢。</p>
+      <div class="row"><button type="button" class="btn danger" data-act="delone">删除这个号…</button></div>`}
+  </div>`;
 }
 function pwCard(p) {
   const dev = String(p.username || '').toLowerCase() === 'dev';
@@ -777,7 +801,7 @@ async function vErrors() {
 
 /* ---------- 登录记录 ---------- */
 const AUTH_ACT = { register: '注册', login: '登录', login_fail: '登录失败', logout: '退出', device_out: '退出别的设备', device_all: '所有设备退出', refresh_reuse: '续期令牌被偷用', pw_admin: '管理员重设密码' };
-const AUTH_NOTE = { pw: '密码不对', noacct: '没有这个号', locked: '输错太多次，被锁住', legacy: '以前的老式登录' };
+const AUTH_NOTE = { pw: '密码不对', noacct: '没有这个号', locked: '输错太多次，被锁住', legacy: '以前的老式登录', deleted: '账号删除了' };
 async function vAuth() {
   const r = await api('authlog?q=' + encodeURIComponent(S.aq) + '&act=' + encodeURIComponent(S.aact));
   return H`<div class="card"><h2>登录记录 <small>最近 200 条，留 90 天</small></h2>
@@ -806,6 +830,24 @@ async function vFlags() {
         <td class="nowrap">${['off', 'dev', 'all'].filter(m => m !== f.mode).map(m => H`<button class="btn ghost sm" data-act="flagset" data-k="${f.k}" data-mode="${m}">改成${FLAG_MODE[m]}…</button> `)}</td></tr>`)}
     </tbody></table></div>` : H`<p class="empty">现在没有登记的开关</p>`}
   </div>`;
+}
+
+/* ---------- 批量：删除、恢复、封号、解封 ---------- */
+const BATCH = {
+  delete: { t: '删除', lines: ['这些号登录不了、所有设备退出、不上排行榜，挂的单别人看不到', '存档、武库、流水一样不动，随时能恢复'], danger: true },
+  restore: { t: '恢复', lines: ['恢复以后照常登录，存档、武库、流水都是删除前的样子'] },
+  ban: { t: '封号', lines: ['封禁期间不能同步存档、不能交易'], danger: true },
+  pardon: { t: '解封', lines: ['清空处罚记录（记过次数归零），玩家刷新网页后就能正常同步、交易'] },
+};
+async function batchOp(btn, op, uids, names, o = {}) {
+  const B = BATCH[op], head = names.length > 1 ? names.length + ' 个号：' + names.slice(0, 12).join('、') + (names.length > 12 ? '…' : '') : names[0];
+  const a = await ask({ title: B.t + ' ' + head, lines: [...(op === 'ban' ? [o.perm ? '永久封号' : '封 ' + o.days + ' 天'] : []), ...B.lines], ok: B.t, danger: B.danger });
+  if (!a) return;
+  await busy(btn, async () => {
+    const r = await api('batch', { op, uids, why: a.why, ...(op === 'ban' ? (o.perm ? { perm: true } : { days: o.days }) : {}) });
+    toast(B.t + '了 ' + r.done.length + ' 个号' + (r.skip.length ? '；没处理 ' + r.skip.length + ' 个：' + r.skip.map(x => (x.name || x.uid) + '（' + x.why + '）').join('、') : ''), r.skip.length > 0);
+    render();
+  });
 }
 
 /* ---------- 管理员账号（只有「全部」角色能看） ---------- */
@@ -873,6 +915,30 @@ const ACTS = {
   reload: () => render(),
   errkind: b => { S.errKind = b.dataset.k; render(); },
   logout: () => { api('logout', {}).catch(() => {}); logout(); },
+  delview: b => { S.del = b.dataset.v; render(); },
+  batch: async b => {
+    const f = b.form, op = b.dataset.op, uids = [...f.querySelectorAll('input[name=pick]:checked')].map(x => x.value);
+    if (!uids.length) return toast('先勾上要处理的号', true);
+    const perm = f.elements.perm.checked, days = numIn(f, 'days');
+    if (op === 'ban' && !perm && !(Number.isInteger(days) && days >= 1 && days <= 3650)) return toast('封几天要填 1 到 3650 的整数', true);
+    const names = uids.map(id => (S.found.find(u => u.id === id) || {}).username || id);
+    await batchOp(b, op, uids, names, { perm, days });
+  },
+  delone: b => batchOp(b, 'delete', [S.p.uid], [S.p.username]),
+  restoreone: b => batchOp(b, 'restore', [S.p.uid], [S.p.username]),
+  export: b => busy(b, async () => {
+    const qs = 'q=' + encodeURIComponent(S.q) + (S.del ? '&del=1' : '');
+    let r;
+    try { r = await fetch('/api/admin/export?' + qs, { headers: { Authorization: 'Bearer ' + S.tok }, cache: 'no-store' }); }
+    catch (e) { throw new Error('连不上服务器，检查一下网络'); }
+    if (r.status === 401) { logout('管理登录过期了，请重新登录'); return; }
+    if (!r.ok) { let j = {}; try { j = await r.json(); } catch (e) {} throw new Error(j.error || '出错了（' + r.status + '）'); }
+    const name = (/filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '') || [])[1] || 'renying-users.csv';
+    const url = URL.createObjectURL(await r.blob()), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast('导出好了：' + name);
+  }),
   admedit: b => { S.admEdit = b.dataset.name; render(); },
   admnew: () => { S.admEdit = ''; render(); },
   copy: b => { if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.v).then(() => toast('复制好了'), () => toast('复制不了，手动选一下吧', true)); },
@@ -937,6 +1003,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const f = e.target.form;
+  if (e.target.matches('[data-pickall]')) for (const x of f.querySelectorAll('input[name=pick]')) x.checked = e.target.checked;
   if (f && f.dataset.form === 'gift' && e.target.name === 'to') {
     const one = e.target.value === 'one';
     $('[data-one]', f).classList.toggle('hidden', !one);
@@ -951,6 +1018,7 @@ document.addEventListener('input', e => {
 
 /* ---------- 表单 ---------- */
 const FORMS = {
+  batch: () => {},   // 回车不提交：批量要点下面的按钮
   admin: async f => {
     const E = f.elements, name = E.name.value.trim(), role = E.role.value, pw = E.pw.value, old = S.admins.find(a => a.name === S.admEdit);
     if (!/^[A-Za-z0-9_\-\u4e00-\u9fa5]{2,20}$/.test(name)) return toast('名字要 2 到 20 个字（字母、数字、汉字、_、-）', true);
