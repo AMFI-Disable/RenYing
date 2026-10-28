@@ -114,7 +114,36 @@
     [/^· 伤害 ([\d.]+)(?: \((\d+)段\))?$/, (m0, d, n) => `· Damage ${d}${n ? ` (${n} hits)` : ''}`],
     [/^([QRE]) · (.+?)(?: \[(.+)\])?$/, (m0, k, n, t) => `${k} · ${lookup(n) || n}${t ? ` [${lookup(t) || t}]` : ''}`],
     [/^(.+?) \[(.+)\]$/, (m0, n, t) => `${lookup(n) || n} [${lookup(t) || t}]`],
-    [/^(2v2 .+?) · (凯旋大捷！|惜败，择日再战！) 比分 (\d+) : (\d+)$/, (m0, mode, r, a, b) => `${lookup(mode) || mode} · ${r === '凯旋大捷！' ? 'Victory!' : 'Close loss, fight again another day!'} Score ${a} : ${b}`]   // 2v2 结算
+    [/^(2v2 .+?) · (凯旋大捷！|惜败，择日再战！) 比分 (\d+) : (\d+)$/, (m0, mode, r, a, b) => `${lookup(mode) || mode} · ${r === '凯旋大捷！' ? 'Victory!' : 'Close loss, fight again another day!'} Score ${a} : ${b}`],   // 2v2 结算
+    // 账号、云存档、备份导入（src/game/24-account.js、src/cloud.js）和云端接口回的提示
+    [/^墨锭 (\d+)$/, (m0, n) => `Ink ${n}`],
+    [/^(\d+) 分钟前$/, (m0, n) => `${n} min ago`],
+    [/^(\d+) 小时前$/, (m0, n) => `${n} h ago`],
+    [/^上次上传：(.+)$/, (m0, x) => `Last upload: ${lookup(x) || x}`],
+    [/^(·\s*)?最近在用：(.+)$/, (m0, p, x) => `${p || ''}Last used: ${lookup(x) || x}`],
+    [/^更新前登录的 (\d+) 处，分不出是哪台设备$/, (m0, n) => `${n} sign-in${n === '1' ? '' : 's'} from before the update (device unknown)`],
+    [/^请求失败 \((\d+)\)$/, (m0, n) => `Request failed (${n})`],
+    [/^上传失败，(\d+) 秒后自动重试$/, (m0, n) => `Upload failed, retrying in ${n}s`],
+    [/^(.+)，重新登录后会自动补传存档$/, (m0, x) => `${lookup(x) || x}. Log in again and your save uploads automatically`],
+    [/^(.+)，本机存档不受影响，可先导出备份$/, (m0, x) => `${lookup(x) || x}. Your local save is safe; you can export a backup first`],
+    [/^服务器内部错误（编号 (\w+)）$/, (m0, id) => `Server error (ref ${id})`],
+    [/^升级失败：(.+)$/, (m0, x) => `Upgrade failed: ${lookup(x) || x}`],
+    [/^欢迎归来，(.+)！已载入存档$/, (m0, n) => `Welcome back, ${n}! Save loaded`],
+    [/^注册成功！大侠 (.+)，已开启专属存档$/, (m0, n) => `Registered! Welcome, ${n}. Your save is ready`],
+    [/^配置格式错误：(.+)$/, (m0, x) => `Invalid setting: ${x}`],
+    [/^-- 选择导入包中的账号（共 (\d+) 位） --$/, (m0, n) => `-- Pick an account from the backup (${n} total) --`],
+    [/^(.+) \((\d+)墨锭 · (\d+)英雄 · (\d+)皮肤 · (\d+)胜(\d+)负\)$/, (m0, n, ink, h, k, w, l) => `${n} (${ink} Ink · ${h} heroes · ${k} skins · ${w}W ${l}L)`],
+    [/^已成功继承【(.+)】！已解锁 (\d+) 位英雄、(\d+) 款皮肤、(\d+) 墨锭！$/, (m0, n, h, k, ink) => `Inherited "${n}"! Unlocked ${h} heroes, ${k} skins and ${ink} Ink!`],
+    [/^已成功导入【(.+)】$/, (m0, n) => `Imported "${n}"`],
+    [/^已切换到导入的本机账号【(.+?)】：(\d+) 位英雄、(\d+) 墨锭。(?:(.+)。)?$/, (m0, n, h, ink, note) => `Switched to the imported local account "${n}": ${h} heroes, ${ink} Ink.` + (note ? ` ${lookup(note) || note}.` : '')],
+    [/^已切换到导入的本机账号【(.+?)】(?:（(.+)）)?$/, (m0, n, note) => `Switched to the imported local account "${n}"` + (note ? ` (${lookup(note) || note})` : '')],
+    [/^已载入全备份包（共 (\d+) 个账号）$/, (m0, n) => `Loaded the full backup (${n} accounts)`],
+    [/^成功恢复 (\d+) 个账号，请在下拉框选择切换！$/, (m0, n) => `Restored ${n} accounts, pick one from the list to switch`],
+    [/^成功恢复 (\d+) 个账号$/, (m0, n) => `Restored ${n} accounts`],
+    [/^已读取 (.+)（(\d+) 个账号）$/, (m0, f, n) => `Read ${f} (${n} accounts)`],
+    [/^成功载入 (\d+) 个账号数据$/, (m0, n) => `Loaded ${n} accounts`],
+    [/^导入失败：(.+)$/, (m0, x) => `Import failed: ${lookup(x) || x}`],
+    [/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`]
   ];
   // 一处查表：先查固定词条，再试模板；返回空串表示“没有这句的译文”
   function lookup(text) {

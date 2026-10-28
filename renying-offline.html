@@ -5478,7 +5478,35 @@ const PATTERNS_EN = [
 [/^· 伤害 ([\d.]+)(?: \((\d+)段\))?$/, (m0, d, n) => `· Damage ${d}${n ? ` (${n} hits)` : ''}`],
 [/^([QRE]) · (.+?)(?: \[(.+)\])?$/, (m0, k, n, t) => `${k} · ${lookup(n) || n}${t ? ` [${lookup(t) || t}]` : ''}`],
 [/^(.+?) \[(.+)\]$/, (m0, n, t) => `${lookup(n) || n} [${lookup(t) || t}]`],
-[/^(2v2 .+?) · (凯旋大捷！|惜败，择日再战！) 比分 (\d+) : (\d+)$/, (m0, mode, r, a, b) => `${lookup(mode) || mode} · ${r === '凯旋大捷！' ? 'Victory!' : 'Close loss, fight again another day!'} Score ${a} : ${b}`]   // 2v2 结算
+[/^(2v2 .+?) · (凯旋大捷！|惜败，择日再战！) 比分 (\d+) : (\d+)$/, (m0, mode, r, a, b) => `${lookup(mode) || mode} · ${r === '凯旋大捷！' ? 'Victory!' : 'Close loss, fight again another day!'} Score ${a} : ${b}`],   // 2v2 结算
+[/^墨锭 (\d+)$/, (m0, n) => `Ink ${n}`],
+[/^(\d+) 分钟前$/, (m0, n) => `${n} min ago`],
+[/^(\d+) 小时前$/, (m0, n) => `${n} h ago`],
+[/^上次上传：(.+)$/, (m0, x) => `Last upload: ${lookup(x) || x}`],
+[/^(·\s*)?最近在用：(.+)$/, (m0, p, x) => `${p || ''}Last used: ${lookup(x) || x}`],
+[/^更新前登录的 (\d+) 处，分不出是哪台设备$/, (m0, n) => `${n} sign-in${n === '1' ? '' : 's'} from before the update (device unknown)`],
+[/^请求失败 \((\d+)\)$/, (m0, n) => `Request failed (${n})`],
+[/^上传失败，(\d+) 秒后自动重试$/, (m0, n) => `Upload failed, retrying in ${n}s`],
+[/^(.+)，重新登录后会自动补传存档$/, (m0, x) => `${lookup(x) || x}. Log in again and your save uploads automatically`],
+[/^(.+)，本机存档不受影响，可先导出备份$/, (m0, x) => `${lookup(x) || x}. Your local save is safe; you can export a backup first`],
+[/^服务器内部错误（编号 (\w+)）$/, (m0, id) => `Server error (ref ${id})`],
+[/^升级失败：(.+)$/, (m0, x) => `Upgrade failed: ${lookup(x) || x}`],
+[/^欢迎归来，(.+)！已载入存档$/, (m0, n) => `Welcome back, ${n}! Save loaded`],
+[/^注册成功！大侠 (.+)，已开启专属存档$/, (m0, n) => `Registered! Welcome, ${n}. Your save is ready`],
+[/^配置格式错误：(.+)$/, (m0, x) => `Invalid setting: ${x}`],
+[/^-- 选择导入包中的账号（共 (\d+) 位） --$/, (m0, n) => `-- Pick an account from the backup (${n} total) --`],
+[/^(.+) \((\d+)墨锭 · (\d+)英雄 · (\d+)皮肤 · (\d+)胜(\d+)负\)$/, (m0, n, ink, h, k, w, l) => `${n} (${ink} Ink · ${h} heroes · ${k} skins · ${w}W ${l}L)`],
+[/^已成功继承【(.+)】！已解锁 (\d+) 位英雄、(\d+) 款皮肤、(\d+) 墨锭！$/, (m0, n, h, k, ink) => `Inherited "${n}"! Unlocked ${h} heroes, ${k} skins and ${ink} Ink!`],
+[/^已成功导入【(.+)】$/, (m0, n) => `Imported "${n}"`],
+[/^已切换到导入的本机账号【(.+?)】：(\d+) 位英雄、(\d+) 墨锭。(?:(.+)。)?$/, (m0, n, h, ink, note) => `Switched to the imported local account "${n}": ${h} heroes, ${ink} Ink.` + (note ? ` ${lookup(note) || note}.` : '')],
+[/^已切换到导入的本机账号【(.+?)】(?:（(.+)）)?$/, (m0, n, note) => `Switched to the imported local account "${n}"` + (note ? ` (${lookup(note) || note})` : '')],
+[/^已载入全备份包（共 (\d+) 个账号）$/, (m0, n) => `Loaded the full backup (${n} accounts)`],
+[/^成功恢复 (\d+) 个账号，请在下拉框选择切换！$/, (m0, n) => `Restored ${n} accounts, pick one from the list to switch`],
+[/^成功恢复 (\d+) 个账号$/, (m0, n) => `Restored ${n} accounts`],
+[/^已读取 (.+)（(\d+) 个账号）$/, (m0, f, n) => `Read ${f} (${n} accounts)`],
+[/^成功载入 (\d+) 个账号数据$/, (m0, n) => `Loaded ${n} accounts`],
+[/^导入失败：(.+)$/, (m0, x) => `Import failed: ${lookup(x) || x}`],
+[/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`]
 ];
 function lookup(text) {
 if (!text) return '';
@@ -7612,6 +7640,119 @@ const UI_COPY_EN = {
 "同袍肉鸽 · 十三侠客斩妖列传": "Co-op Roguelike · Thirteen Heroes' Demon Hunt",
 "正在全服匹配同袍肉鸽共斗队友…": "Looking for a co-op roguelike teammate online…",
 "已建好同袍肉鸽共斗房间，把房间号发给好友即可并肩讨伐魔首！": "Co-op roguelike room created. Send the room number to a friend and take on the demon lord together!",
+"云端已连": "Cloud Connected",
+"账号与云存档": "Account & Cloud Save",
+"将本机所有账号与数据打包备份": "Pack every account and its data on this device into one backup",
+"📦 备份所有账号": "📦 Back Up All Accounts",
+"已成功打包备份本机所有账号": "Backed up every account on this device",
+"已成功导出当前账号存档": "Exported this account's save",
+"这个账号在别的标签页退出了，马上刷新": "This account signed out in another tab, refreshing",
+"别的标签页换了账号，马上刷新": "Another tab switched accounts, refreshing",
+"登录已过期，请重新登录（进度先存在这台设备上，登录后补传）": "Sign-in expired, please log in again (progress stays on this device and uploads after you log in)",
+"这个账号暂时被限制了": "This account is restricted for now",
+"没有权限做这件事": "You don't have permission to do that",
+"已退出账号，本机数据已清空": "Logged out, local data cleared",
+"已退出账号。云存档这次没传上去，本机先留着这个账号的存档，下次登录会合并": "Logged out. The cloud save didn't upload this time, so this account's save stays on this device and merges the next time you log in",
+"还没有上传过": "Not uploaded yet",
+"刚刚": "just now",
+"存档先存在本机，再自动上传到云端；上传失败会自动重试，没传完就关了网页，下次打开会补传。": "Your save is stored on this device first, then uploaded to the cloud automatically. Failed uploads retry on their own, and if you close the page before it finishes, it uploads next time.",
+"登录的设备": "Signed-in Devices",
+"在别处登录过、现在不用的，可以在这里退出": "Sign out devices you no longer use",
+"所有设备都退出": "Sign Out All Devices",
+"未知设备": "Unknown device",
+"这台设备": "This device",
+"以前的登录": "Earlier sign-ins",
+"只有这台设备": "Only this device",
+"那台设备已退出登录": "That device has been signed out",
+"所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。": "Sign out every device that has logged in to this account (including this one)?\nOther devices will need to log in again.",
+"当前未连接云端，进度保存在本机。如需跨设备同步，请点击下方【云端服务设置】或【导出当前存档】。": "Not connected to the cloud; progress is saved on this device. To sync across devices, use Cloud Service Settings or Export Current Save below.",
+"云端已连接，但当前为本机账号。点击【一键升级为云端账号】即可将进度上传到云端！": "The cloud is connected, but this is a local account. Click Upgrade to Cloud Account to upload your progress!",
+"有新进度会自动上传": "New progress uploads automatically",
+"有新进度，马上自动上传": "New progress, uploading shortly",
+"联网后自动补传，进度不会丢": "Uploads when you're back online; no progress is lost",
+"云端拒绝了存档": "Cloud Rejected the Save",
+"登录已过期": "Sign-in expired",
+"请重新登录，登录后会自动补传": "Please log in again; the save uploads automatically afterwards",
+"请输入当前本地账号密码以同步升级至云端：": "Enter this local account's password to upgrade it to a cloud account:",
+"正在升级同步至云端…": "Upgrading to the cloud…",
+"✅ 已成功升级为云端账号并同步！": "✅ Upgraded to a cloud account and synced!",
+"将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）": "Merge the cloud and local saves both ways?\n(Keeps every hero and skin from both sides, the higher Ink and all records; no progress is lost)",
+"✅ 云端与本地已智能融合同步完成": "✅ Cloud and local saves merged",
+"昵称与密码都得填": "Enter both a name and a password",
+"登录中…": "Logging in…",
+"注册中…": "Registering…",
+"登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。": "After you log in or register, unlocked heroes, Ink and records are all saved.",
+"还没有配置云端接口": "No cloud endpoint is set",
+"当前云端服务接口已默认连接：": "Connected to the default cloud endpoint:",
+"云端服务接口已更新！": "Cloud endpoint updated!",
+"已恢复默认云端接口 (renying.evengao6688.workers.dev)": "Restored the default cloud endpoint (renying.evengao6688.workers.dev)",
+"开发者管理后台：查账号、调墨锭、发补偿、改经济数值（要管理口令）": "Developer admin: look up accounts, adjust Ink, send compensation, edit economy values (admin login required)",
+"将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件": "Export this account's heroes, skins, Ink and records as a local JSON backup",
+"支持上传你导出的存档文件 (.json) 恢复英雄、皮肤、墨锭与战绩：": "Upload a save file (.json) you exported to restore heroes, skins, Ink and records:",
+"支持任一 renying-account 备份文件": "Any renying-account backup file works",
+"导入此账号": "Import This Account",
+"请先在下拉菜单中选择一个账号": "Pick an account from the list first",
+"未找到该账号信息": "Couldn't find that account",
+"📜 存档导入与继承": "📜 Import & Inherit Saves",
+"收起导入设置": "Hide Import Settings",
+"存档系统未就绪": "The save system isn't ready",
+"导出文件中未发现有效玩家用户数据": "No valid player data found in the file",
+"文件解析成功！请在下拉框中选择要继承的账号后点击【一键继承】": "File read! Pick the account to inherit from the list, then click Inherit",
+"当前页面无法安全签名（需要 https 或 localhost）。请用 https 打开后再导出，否则备份文件无法校验": "This page can't sign the file securely (it needs https or localhost). Open the game over https and export again, otherwise the backup can't be verified",
+"无效的存档文件数据": "Invalid save file data",
+"⚠️ 存档校验和不匹配：该备份文件已被外部篡改": "⚠️ Checksum mismatch: this backup file has been modified",
+"旧版备份：只有墨锭与胜负经过校验": "Old backup: only Ink and wins/losses are verified",
+"不支持的文件格式": "Unsupported file format",
+"当前未登录任何账号": "Not logged in to any account",
+"人机验证加载不出来": "The human check couldn't load",
+"人机验证加载不出来，检查一下网络": "The human check couldn't load, check your network",
+"先确认一下你不是机器人": "Quick check that you're not a robot",
+"当前是本地存档": "This is a local save",
+"账号已切换": "Account switched",
+"登录云端账号才能出战": "Log in to a cloud account to fight",
+"登录已过期，请重新登录，登录后会自动补传这次存档": "Sign-in expired. Log in again and this save uploads automatically",
+"云端拒绝了这次存档": "The cloud rejected this save",
+"该昵称已在本机注册": "That name is already registered on this device",
+"连不上云端服务器，账号先建在这台设备上：进度只存在这里，联网后可在账号页一键升级为云端账号": "Can't reach the cloud server, so the account was created on this device. Progress is saved only here; once online you can upgrade it to a cloud account from the account page",
+"已登录这台设备上的本机账号。云端也有一个叫这个名字的号，但密码不一样，两个号没有合并": "Logged in to the local account on this device. There is also a cloud account with this name but a different password; the two were not merged",
+"连不上云端服务器，先登录这台设备上的本机账号，进度只存在这里": "Can't reach the cloud server, logged in to the local account on this device. Progress is saved only here",
+"当前是本地存档，未连接云端": "This is a local save, not connected to the cloud",
+"本机没有可上传的存档": "No local save to upload",
+"云端还没有这个账号的存档": "The cloud has no save for this account yet",
+"请先完成人机验证": "Please complete the human check first",
+"登录已过期，请重新登录": "Sign-in expired, please log in again",
+"服务器还没开这个功能": "This feature isn't enabled on the server yet",
+"这个账号在这台设备上的登录已失效，请重新登录": "This account's sign-in on this device is no longer valid, please log in again",
+"账号已被永久封禁，如有异议请联系作者": "This account is permanently banned. Contact the developer if you think this is a mistake",
+"账号封禁中，解封后才能同步存档和交易": "This account is banned; saving and trading resume when the ban ends",
+"请求格式不对": "Malformed request",
+"请求太大": "Request too large",
+"不认识的操作": "Unknown action",
+"操作太快了，歇一会儿再试": "Too fast, take a short break and try again",
+"今天的操作次数用完了，明天再来": "You've used up today's actions, come back tomorrow",
+"操作失败，已记录": "Action failed and was logged",
+"服务器忙，请再试一次": "Server busy, please try again",
+"服务器忙，请稍后再试": "Server busy, please try again later",
+"同步太频繁了，稍后自动重试": "Syncing too often, retrying automatically soon",
+"无效的存档数据": "Invalid save data",
+"请求太频繁了，过一会儿再试": "Too many requests, try again in a while",
+"请求太频繁，稍后再试": "Too many requests, try again later",
+"注册太频繁了，过一会儿再试": "Too many registrations, try again in a while",
+"人机验证没通过，再试一次": "The human check failed, try again",
+"输错好几次了，先完成人机验证": "Several wrong tries, please complete the human check first",
+"昵称不能超过 20 个字符": "Names can be at most 20 characters",
+"密码太长了": "Password is too long",
+"这个昵称不能用，换一个吧": "That name isn't allowed, try another",
+"该昵称已被注册，请直接点击“登录”": "That name is taken. If it's yours, click Login",
+"请输入昵称和密码": "Enter a name and password",
+"密码输错太多次了，请 15 分钟后再试": "Too many wrong passwords, try again in 15 minutes",
+"未找到该账号，请先点击“注册”": "Account not found. Click Register first",
+"这个账号已经删除了，要恢复请联系开发组": "This account has been deleted. Contact the developers to restore it",
+"未登录或登录已过期，请重新登录": "Not logged in or sign-in expired, please log in again",
+"存档太大": "Save is too large",
+"刷新太快了，歇一会儿再试": "Refreshing too fast, take a short break",
+"没有这台设备": "No such device",
+"连不上服务器，检查一下网络": "Can't reach the server, check your network",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -25157,7 +25298,7 @@ try {
 CloudSave.exportAllAccounts();
 toast('已成功打包备份本机所有账号');
 } catch (err) {
-alert(err.message);
+alert(trMsg(err.message));
 }
 }
 });
@@ -25168,6 +25309,7 @@ if (expAll) expAll.remove();
 }
 }
 }
+function trMsg(s) { return window.I18N ? I18N.t(s) : s; }
 function isDevName(u) { return !!(u && u.isCloud && String(u.name || '').toLowerCase() === 'dev'); }   // 云端的 Dev 这个名字只能在管理后台建
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 if ($id('exportAccBtn')) {
@@ -25309,7 +25451,7 @@ try { await CloudSave.logoutDevice(b.dataset.dev); toast('那台设备已退出�
 renderAccDevices();
 });
 $id('adDevAll').addEventListener('click', async () => {
-if (!confirm('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。')) return;
+if (!confirm(trMsg('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。'))) return;
 try { await CloudSave.logoutDevice('all'); } catch (err) { toast(err.message); return; }
 doLogout();
 });
@@ -25355,7 +25497,7 @@ if (u && mockUsers[u.name] && mockUsers[u.name].pw) {
 try { pw = atob(mockUsers[u.name].pw); } catch (e) {}
 }
 if (!pw) {
-pw = prompt('请输入当前本地账号密码以同步升级至云端：') || '';
+pw = prompt(trMsg('请输入当前本地账号密码以同步升级至云端：')) || '';
 }
 if (!pw) return;
 $id('adMsg').textContent = '正在升级同步至云端…';
@@ -25373,7 +25515,7 @@ $id('adMsg').textContent = '升级失败：' + e.message;
 });
 }
 $id('adPull').addEventListener('click', async () => {
-if (!confirm('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）')) return;
+if (!confirm(trMsg('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）'))) return;
 $id('adMsg').textContent = '正在双向合并同步…';
 try {
 const d = await CloudSave.pullNow();
@@ -25454,7 +25596,7 @@ toast('云端服务接口已更新！');
 $id('cloudCfgBox').classList.add('hidden');
 renderAcc();
 } catch (e) {
-alert('配置格式错误：' + e.message);
+alert(trMsg('配置格式错误：' + e.message));
 }
 });
 }
@@ -25672,7 +25814,7 @@ if ($id('importMsg')) {
 $id('importMsg').style.color = '#ff6b6b';
 $id('importMsg').textContent = '导入失败：' + err.message;
 }
-alert('文件解析失败：' + err.message);
+alert(trMsg('文件解析失败：' + err.message));
 }
 };
 reader.readAsText(file);

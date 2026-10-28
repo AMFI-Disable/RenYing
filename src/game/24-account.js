@@ -54,7 +54,7 @@ function renderAcc() {
               CloudSave.exportAllAccounts();
               toast('已成功打包备份本机所有账号');
             } catch (err) {
-              alert(err.message);
+              alert(trMsg(err.message));
             }
           }
         });
@@ -65,6 +65,8 @@ function renderAcc() {
     }
   }
 }
+// alert / confirm / prompt 不在网页里，自动翻译管不到：英文界面先查一下表
+function trMsg(s) { return window.I18N ? I18N.t(s) : s; }
 function isDevName(u) { return !!(u && u.isCloud && String(u.name || '').toLowerCase() === 'dev'); }   // 云端的 Dev 这个名字只能在管理后台建
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
@@ -218,7 +220,7 @@ $id('adDevList').addEventListener('click', async e => {
   renderAccDevices();
 });
 $id('adDevAll').addEventListener('click', async () => {
-  if (!confirm('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。')) return;
+  if (!confirm(trMsg('所有登录过这个账号的设备都退出（包括这台）？\n别的设备上要重新登录才能用。'))) return;
   try { await CloudSave.logoutDevice('all'); } catch (err) { toast(err.message); return; }
   doLogout();
 });
@@ -264,7 +266,7 @@ if ($id('adPromoteBtn')) {
       try { pw = atob(mockUsers[u.name].pw); } catch (e) {}
     }
     if (!pw) {
-      pw = prompt('请输入当前本地账号密码以同步升级至云端：') || '';
+      pw = prompt(trMsg('请输入当前本地账号密码以同步升级至云端：')) || '';
     }
     if (!pw) return;
     $id('adMsg').textContent = '正在升级同步至云端…';
@@ -282,7 +284,7 @@ if ($id('adPromoteBtn')) {
   });
 }
 $id('adPull').addEventListener('click', async () => {
-  if (!confirm('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）')) return;
+  if (!confirm(trMsg('将云端与本地存档进行双向合并同步？\n（融合两端拥有的全部角色、皮肤、最高墨锭与战绩，绝不会丢失任何进度）'))) return;
   $id('adMsg').textContent = '正在双向合并同步…';
   try {
     const d = await CloudSave.pullNow();
@@ -367,7 +369,7 @@ if ($id('fbCfgSaveBtn')) {
       $id('cloudCfgBox').classList.add('hidden');
       renderAcc();
     } catch (e) {
-      alert('配置格式错误：' + e.message);
+      alert(trMsg('配置格式错误：' + e.message));
     }
   });
 }
@@ -623,7 +625,7 @@ if ($id('importFileInput')) {
           $id('importMsg').style.color = '#ff6b6b';
           $id('importMsg').textContent = '导入失败：' + err.message;
         }
-        alert('文件解析失败：' + err.message);
+        alert(trMsg('文件解析失败：' + err.message));
       }
     };
     reader.readAsText(file);
