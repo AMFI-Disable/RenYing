@@ -534,6 +534,7 @@
   /* ---------- 通用：确认框（uiConfirm）---------- */
   .ui-confirm { position: fixed; inset: 0; z-index: calc(var(--z-modal) + 10); background: var(--scrim); display: grid; place-items: center; padding: var(--sp-4); }
   .ui-confirm-box { width: min(420px, 100%); background: linear-gradient(160deg, #142130, #0d151e); border: 1px solid rgba(236,232,225,.14); box-shadow: var(--sh-pop); padding: var(--sp-5) var(--sp-5) var(--sp-4); text-align: center; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+  .ui-confirm-box h3 { margin: 0 0 var(--sp-3); font-size: var(--fs-xl); letter-spacing: .06em; color: #fff; }
   .ui-confirm-box p { margin: 0 0 var(--sp-4); white-space: pre-line; font-size: var(--fs-md); line-height: 1.7; }
   .ui-confirm-box .row { display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap; }
   :is(.rk-info, .rk-reveal, .ar-modal, .ar-ins):focus { outline: none; }
@@ -1572,16 +1573,17 @@
   .ar-dot { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--v-red); box-shadow: 0 0 6px var(--v-red); vertical-align: 6px; }
   .ar-msg { min-height: 20px; margin: 6px 0 4px; font-size: 14px; color: #ffb4bb; }
   .ar-busy .ar-main, .ar-busy .ar-box, .ar-busy .ar-insbox { cursor: progress; }
-  .ar-banner { margin: 0 0 12px; padding: 10px 14px; font-size: 14px; line-height: 1.6; color: var(--v-white); background: rgba(255,70,85,.12); border-left: 3px solid var(--v-red); }
+  .ar-banner { margin: 0 0 var(--sp-3); padding: 10px 14px; font-size: var(--fs-md); line-height: 1.6; color: var(--v-white); background: rgba(255,70,85,.12); border-left: 3px solid var(--v-red); }
+  .ar-banner.ui-state { justify-content: flex-start; text-align: left; }
   .ar-banner.soft { color: rgba(236,232,225,.86); background: rgba(233,196,106,.08); border-left-color: var(--gold); }
   .ar-note { margin: 8px 0 0; font-size: 13px; line-height: 1.7; color: var(--dim); }
   .ar-note.top { margin: 0 0 12px; }
   .ar-h { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 22px 0 10px; font-size: 16px; font-weight: 700; letter-spacing: .08em; color: var(--v-white); }
   .ar-h::before { content: ""; align-self: center; width: 4px; height: 14px; background: var(--v-red); }
   .ar-h small { font-size: 12px; font-weight: 400; letter-spacing: .02em; color: var(--dim); }
-  .ar-empty { margin: 0; padding: 34px 16px; text-align: center; font-size: 14px; color: var(--dim); background: rgba(236,232,225,.03); border: 1px dashed rgba(236,232,225,.14); }
-  .ar-empty p { margin: 0 0 14px; }
-  .ar-empty p:last-child { margin: 0; }
+  .ar-empty { margin: 0; padding: 34px var(--sp-4); text-align: center; font-size: var(--fs-md); color: var(--dim); background: rgba(236,232,225,.03); border: 1px dashed rgba(236,232,225,.14); }
+  .ar-empty > .ui-state { padding: 0 0 14px; font-size: inherit; }   /* 框里还有按钮：字和按钮之间留空 */
+  .ar-empty > .ui-state:last-child { padding: 0; }
   .armp .ar-empty .go.small { margin: 0 auto; }
   /* 按钮在武库里都是小号的，排在一行 */
   .armp .go.small, .ar-modal .go.small, .ar-ins .go.small { margin: 0; font-size: 14px; letter-spacing: .14em; padding: 8px 18px 8px 22px; }
@@ -1650,7 +1652,7 @@
   .ar-box .ar-stline { color: #ffa149; }
 
   /* 武器箱 */
-  .ar-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(236,232,225,.04); border: 1px solid var(--line); }
+  .ar-card { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 14px; background: rgba(236,232,225,.04); border: 1px solid var(--line); }
   .ar-gift { justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; font-size: 14px; background: linear-gradient(110deg, rgba(255,70,85,.2), rgba(13,21,30,.3) 70%); border-color: rgba(255,70,85,.45); }
   .ar-gift b { margin-right: 8px; color: #fff; }
   .ar-week { flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; font-size: 14px; color: var(--v-white); }
@@ -1840,7 +1842,7 @@
   .ar-lrow > span:first-child { display: flex; flex-direction: column; gap: 2px; }
   .ar-lrow > span:first-child small { color: var(--dim); font-size: 11px; }
   .ar-lrow.mine { background: rgba(233,196,106,.07); box-shadow: inset 3px 0 0 var(--gold); }
-  .ar-empty.sm { padding: 16px 12px; font-size: 13px; }
+  .ar-empty.sm { padding: var(--sp-4) var(--sp-3); font-size: var(--fs-sm); }
   .ar-qty { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; }
   .ar-qty .ghost.small { width: 40px; padding-left: 0; padding-right: 0; font-size: 18px; line-height: 1; }
   .ar-qty b { min-width: 34px; text-align: center; font-family: var(--v-cond); font-size: 24px; font-variant-numeric: tabular-nums; }

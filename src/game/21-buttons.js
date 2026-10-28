@@ -199,16 +199,17 @@ function uiState(kind, text, extra = '') {
 }
 // 确认框：代替浏览器自带的 confirm()（那个框不跟游戏的样式，手机上还会把全屏顶掉）。
 // 返回 Promise<boolean>。默认选中「取消」，Esc、点遮罩都算取消；Enter 按下当前选中的按钮。
+// opt.title 是标题；opt.html 是调用方自己拼好（名字已转义）的正文，带墨锭图标、加粗这些，给了就不用 msg。
 function uiConfirm(msg, opt = {}) {
   return new Promise(resolve => {
     const prev = document.activeElement;
     const wrap = document.createElement('div');
     wrap.className = 'ui-confirm'; wrap.setAttribute('role', 'alertdialog'); wrap.setAttribute('aria-modal', 'true');
     wrap.setAttribute('aria-labelledby', 'uiConfirmMsg');
-    wrap.innerHTML = `<div class="ui-confirm-box"><p id="uiConfirmMsg"></p><div class="row">
+    wrap.innerHTML = `<div class="ui-confirm-box">${opt.title ? `<h3>${escapeHTML(opt.title)}</h3>` : ''}<p id="uiConfirmMsg"></p><div class="row">
       <button type="button" class="ghost" data-v="0">${escapeHTML(opt.cancel || '取消')}</button>
       <button type="button" class="go${opt.danger ? ' danger' : ''}" data-v="1">${escapeHTML(opt.ok || '确定')}</button></div></div>`;
-    wrap.querySelector('p').textContent = msg;
+    if (opt.html) wrap.querySelector('p').innerHTML = opt.html; else wrap.querySelector('p').textContent = msg;
     const done = v => {
       wrap.remove(); window.removeEventListener('keydown', key, true);
       try { if (prev && prev.isConnected) prev.focus({ preventScroll: true }); } catch (e) {}

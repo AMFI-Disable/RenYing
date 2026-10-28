@@ -431,10 +431,12 @@
   /* ---------- 弹窗 ---------- */
   function modal(html, cls = '') { const m = $id('arModal'); m.innerHTML = `<div class="ar-box ${cls}">${html}</div>`; m.hidden = false; return m; }
   function closeModal() { const m = $id('arModal'); m.hidden = true; m.innerHTML = ''; REEL.on = false; }
+  // 确认用通用确认框：Esc、点遮罩取消，焦点停在“取消”；取消时下面的弹窗还在，确定了才关掉再做
   function confirmBox(title, body, okText, fn) {
-    modal(`<h3>${title}</h3><p>${body}</p><div class="row"><button class="go small" id="arOk">${okText}</button><button class="ghost small" data-ar-close>取消</button></div>`);
-    $id('arOk').addEventListener('click', async () => { closeModal(); await fn(); });
+    uiConfirm('', { title, html: body, ok: okText }).then(async ok => { if (!ok) return; if (!$id('arModal').hidden) closeModal(); await fn(); });
   }
+  // 空、出错、加载中：用通用的 uiState，样式类照旧（ar-empty 是虚线框，ar-banner 是左边一道色条）
+  const empty = (t, cls = 'ar-empty') => uiState('empty', t, cls);
   function tile(it, extra = '') {
     const eq = ST && Object.values(ST.eq).includes(it.i), fresh = it.t && it.t > seenAt() && it.i;
     return `<button type="button" class="ar-it${eq ? ' eq' : ''}" style="--tc:${tc(it.k)}" ${it.i ? `data-it="${it.i}"` : ''} ${extra}>
@@ -460,8 +462,8 @@
     for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
     $id('arTabs').innerHTML = TABS.map(([k, n]) => `<button type="button" data-tab="${k}" class="${k === TAB ? 'sel' : ''}">${n}${d[k] ? '<i class="ar-dot"></i>' : ''}</button>`).join('');
     const banner = MODE === 'none' ? '<p class="ar-banner">登录之后才能开箱、交易。先逛逛看吧。</p>'
-      : MODE === 'wait' ? '<p class="ar-banner soft">正在连接服务器…</p>'
-      : MODE === 'offline' ? '<p class="ar-banner">连不上服务器，武库暂时只能看。</p>'
+      : MODE === 'wait' ? uiState('loading', '正在连接服务器…', 'ar-banner soft')
+      : MODE === 'offline' ? uiState('error', '连不上服务器，武库暂时只能看。', 'ar-banner')
       : MODE === 'old' ? `<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易，你的饰品和武器箱都在${OLDV === 1 ? '，没用完的钥匙会一把换一台终端机' : ''}。</p>`
       : MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：服务器还没开武库，现在开箱、交易都只记在你的存档里，用来试玩。服务器版上线以后武库从零开始（会重新发新手礼），测试期开出来的东西不会带过去。</p>' : '';
     const R = { inv: pInv, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
@@ -495,7 +497,7 @@
         <select id="arInvTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${INV.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
         <select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['tier', '品质最高'], ['st', '斩数最多']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
       </div>
-      ${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty"><p>${s.inv.length ? '没有符合条件的饰品。' : `武库的库存还是空的${legacy.length ? '（以前得到的皮肤在下面，一直都能穿）' : ''}。打对局有机会掉落，或者去开箱、逛玩家市场。`}</p>${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
+      ${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty">${uiState('empty', s.inv.length ? '没有符合条件的饰品。' : `武库的库存还是空的${legacy.length ? '（以前得到的皮肤在下面，一直都能穿）' : ''}。打对局有机会掉落，或者去开箱、逛玩家市场。`)}${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
       ${legacy.length ? `<h4 class="ar-h">以前得到的皮肤 <small>绑定账号，不能出售和汰换</small></h4><div class="ar-grid sm">${legacy.map(k => `<div class="ar-it bound" style="--tc:${C.isItem(k) ? tc(k) : SKINS[k].rarity === 'legend' ? '235,75,75' : '136,71,255'}"><img src="${art(k)}" alt="" loading="lazy"><b>${escapeHTML(SKINS[k].name)}</b><small>${charName(k)} · 绑定</small><i class="ar-bar"></i></div>`).join('')}</div>` : ''}
       ${typeof freeSkinEvent === 'function' && freeSkinEvent() ? '<p class="ar-note">限免活动只包括游戏里原有的皮肤，活动结束就收回。从武库拿到的饰品永久拥有，能在市场卖掉，开出斩数版还会记击倒数。</p>' : ''}`;
   }
@@ -848,7 +850,7 @@
   const goodIcon = k => k === 'term' ? '<span class="ar-termbox sm"><span>终</span></span>' : `<span class="ar-casebox sm${C.COLS[k].prem ? ' prem' : ''}" style="--cc:${C.COLS[k].col}"><span>${C.COLS[k].emblem}</span></span>`;
   function dealChart(deals) {   // 最近的成交价，横轴是时间
     const pts = deals.filter(x => x && x.price > 0 && x.at > 0).slice(0, 120).reverse();
-    if (pts.length < 2) return `<p class="ar-empty sm">${pts.length ? `只成交过一次：${fmt(pts[0].price)} 墨锭` : '这款还没有成交记录'}</p>`;
+    if (pts.length < 2) return empty(pts.length ? `只成交过一次：${fmt(pts[0].price)} 墨锭` : '这款还没有成交记录', 'ar-empty sm');
     const W = 520, H = 150, t0 = pts[0].at, ts = pts[pts.length - 1].at - t0 || 1;
     const ys = pts.map(x => x.price), lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1;
     const line = pts.map(x => `${((x.at - t0) / ts * W).toFixed(1)},${(H - 14 - (x.price - lo) / sp * (H - 28)).toFixed(1)}`).join(' ');
@@ -868,18 +870,18 @@
         deals: (a, b) => row(b).d - row(a).d || cnt(b) - cnt(a), many: (a, b) => cnt(b) - cnt(a) || C.TIERS.indexOf(tierOf(b)) - C.TIERS.indexOf(tierOf(a)),
       };
       keys = keys.sort(sorts[MK.sort] || sorts.hot);
-      const status = !on ? `<p class="ar-banner soft">${noMkt()}</p>` : MKD.err ? `<p class="ar-banner">${escapeHTML(MKD.err)}</p>` : !MKD.items ? '<p class="ar-banner soft">正在读取玩家市场…</p>' : '';
+      const status = !on ? `<p class="ar-banner soft">${noMkt()}</p>` : MKD.err ? uiState('error', MKD.err, 'ar-banner') : !MKD.items ? uiState('loading', '正在读取玩家市场…', 'ar-banner soft') : '';
       body = `${status}<div class="ar-filter"><select id="arMkTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${MK.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
         <select id="arMkChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${MK.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
         <select id="arMkSort" class="ar-sel">${[['hot', '品质高的在前'], ['many', '在卖的多'], ['cheap', '最便宜'], ['dear', '最贵'], ['deals', '成交最多']].map(([k, n]) => `<option value="${k}" ${MK.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
         <label class="ar-chk"><input type="checkbox" id="arMkOnly" ${MK.only ? 'checked' : ''}> 只看有人在卖的</label></div>
-        ${keys.length ? `<div class="ar-mklist">${keys.map(k => { const x = row(k), p = lo(k), c = cnt(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${thumb(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span><span class="ar-mkc">${c ? `在卖 ${c} 件${x.sn ? `（斩数版 ${x.sn}）` : ''}` : '没人在卖'}<small>${x.d ? `30 天成交 ${x.d} 笔` : '30 天没有成交'}${x.last ? ` · 最近 ${fmt(x.last)}` : ''}</small></span><span class="ar-mkp">${p ? `<small>最低</small>${ink(p)}` : '<small>—</small>'}</span></button>`; }).join('')}</div>` : '<p class="ar-empty">没有符合条件的饰品。</p>'}`;
+        ${keys.length ? `<div class="ar-mklist">${keys.map(k => { const x = row(k), p = lo(k), c = cnt(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${thumb(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span><span class="ar-mkc">${c ? `在卖 ${c} 件${x.sn ? `（斩数版 ${x.sn}）` : ''}` : '没人在卖'}<small>${x.d ? `30 天成交 ${x.d} 笔` : '30 天没有成交'}${x.last ? ` · 最近 ${fmt(x.last)}` : ''}</small></span><span class="ar-mkp">${p ? `<small>最低</small>${ink(p)}` : '<small>—</small>'}</span></button>`; }).join('')}</div>` : empty('没有符合条件的饰品。')}`;
     } else if (MK.view === 'mine') {
       body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · ${new Date(L.t + C.cv(CF(), 'mktDays') * 864e5).toLocaleDateString()} 前没人买就退回库存</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price, CF()))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
-        : `<p class="ar-empty">没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定（最多同时挂 ${C.LIST_MAX} 件）。</p>`;
+        : empty(`没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定（最多同时挂 ${C.LIST_MAX} 件）。`);
     } else {
       const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出' }[h.kind] || '';
-      body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : '<p class="ar-empty">还没有成交记录。</p>';
+      body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : empty('还没有成交记录。');
     }
     return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
   }
@@ -890,14 +892,14 @@
     const mine = () => { const xs = blankS().inv.filter(x => x.k === k); return xs.length ? `<h4 class="ar-h">我库存里的这款</h4><div class="ar-lst">${xs.map(x => `<div class="ar-lrow"><span>${x.st >= 0 ? `<b class="ar-stn">斩数 ${x.st}</b>` : '普通版'}${x.n ? ` · ‘${escapeHTML(x.n)}’` : ''}</span><span></span><button type="button" class="ghost small" data-insp="${x.i}">挂到市场 / 检视</button></div>`).join('')}</div>` : ''; };
     const foot = '<div class="row"><button class="ghost small" data-ar-close>关闭</button></div>';
     if (MODE !== 'server') { modal(`${head}<p class="ar-banner soft">${noMkt()}</p>${mine()}${foot}`, 'wide'); return; }
-    if (!keep) modal(`${head}<p class="ar-empty sm">正在读取…</p>${foot}`, 'wide');
+    if (!keep) modal(`${head}${uiState('loading', '正在读取…', 'ar-empty sm')}${foot}`, 'wide');
     let d;
     try { d = await MKT(k); }
-    catch (e) { if (tok === MKI.tok && !$id('arModal').hidden) modal(`${head}<p class="ar-banner">${escapeHTML(e && e.status === 404 ? '服务器还没开玩家市场，等服务器更新以后就能用' : (e && e.message) || '读不到玩家市场')}</p>${mine()}${foot}`, 'wide'); return; }
+    catch (e) { if (tok === MKI.tok && !$id('arModal').hidden) modal(`${head}${uiState('error', e && e.status === 404 ? '服务器还没开玩家市场，等服务器更新以后就能用' : (e && e.message) || '读不到玩家市场', 'ar-banner')}${mine()}${foot}`, 'wide'); return; }
     if (tok !== MKI.tok || $id('arModal').hidden || REEL.on) return;
     const open = Array.isArray(d && d.open) ? d.open : [], deals = Array.isArray(d && d.deals) ? d.deals : [];
     const rows = open.map(x => `<div class="ar-lrow${x.mine ? ' mine' : ''}"><span>${x.st >= 0 ? `<b class="ar-stn">斩数 ${x.st}</b>` : '普通版'}<small>${new Date(x.at).toLocaleDateString()} 挂出</small></span><span>${ink(x.price)}</span>${x.mine ? `<button type="button" class="ghost small" data-cancel="${x.l}">撤下（我挂的）</button>` : `<button type="button" class="go small" data-buyl="${x.l}" data-price="${x.price}" data-st="${x.st}" ${live() ? '' : 'disabled'}>购买</button>`}</div>`).join('');
-    modal(`${head}${dealChart(deals)}<h4 class="ar-h">在卖 <small>${open.length ? `${open.length} 件，便宜的在前` : ''}</small></h4>${open.length ? `<div class="ar-lst">${rows}</div>` : '<p class="ar-empty sm">现在没人在卖这款。</p>'}${mine()}${foot}`, 'wide');
+    modal(`${head}${dealChart(deals)}<h4 class="ar-h">在卖 <small>${open.length ? `${open.length} 件，便宜的在前` : ''}</small></h4>${open.length ? `<div class="ar-lst">${rows}</div>` : empty('现在没人在卖这款。', 'ar-empty sm')}${mine()}${foot}`, 'wide');
   }
   function buyListing(l, price, st) {
     const k = MKI.k, name = itemName({ k, st });
@@ -927,7 +929,7 @@
       <div class="ar-trbar"><span>${TR.sel.length} / ${need}</span>${chk && chk.err && chk.full === undefined ? `<span class="ar-err">${chk.err}</span>` : ''}<button type="button" class="go small" id="arTradeGo" ${chk && chk.ok ? '' : 'disabled'}>签订合同</button><button type="button" class="ghost small" id="arTradeClr" ${TR.sel.length ? '' : 'disabled'}>清空</button></div>
       ${outs ? `<h4 class="ar-h">可能换到</h4><div class="ar-outs">${outs}</div>` : ''}
       <h4 class="ar-h">库存里的${C.TIER[TR.tier].n}饰品 <small>点一下放进合同</small></h4>
-      ${pool.length ? `<div class="ar-grid sm">${pool.map(x => tile(x, usable(x) && TR.sel.length < need ? 'data-sel="1"' : 'disabled')).join('')}</div>` : '<p class="ar-empty">库存里没有这一档的饰品。</p>'}`;
+      ${pool.length ? `<div class="ar-grid sm">${pool.map(x => tile(x, usable(x) && TR.sel.length < need ? 'data-sel="1"' : 'disabled')).join('')}</div>` : empty('库存里没有这一档的饰品。')}`;
   }
 
   // 江湖行动
@@ -953,7 +955,7 @@
         <div class="row"><button type="button" class="go small" id="arSupGo" ${ready && SUP.pick.length === 2 ? '' : 'disabled'}>领取这两样</button></div>`;
     const shop = C.STAR_SHOP.map(g => `<div class="ar-card ar-starg"><b>${g.name}</b><span class="ar-starc">${'★'.repeat(Math.min(g.cost, 5))}${g.cost > 5 ? ` ×${g.cost}` : ''}</span><button type="button" class="go small" data-star="${g.id}" ${stars >= g.cost && live() ? '' : 'disabled'}>${g.cost} 星章兑换</button></div>`).join('');
     return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.k + 1} 季 · 剩 ${left} 天</span><h3>星章 <b>${stars}</b> <small>本季共得 ${s.op.earned}</small></h3></div><p class="ar-note">每周一换四个任务，完成拿星章，星章换武器箱、终端机、改名标签和饰品。</p></div>
-      <h4 class="ar-h">本周任务</h4><div class="tlist">${ms || '<p class="ar-empty">登录之后才有任务。</p>'}</div>
+      <h4 class="ar-h">本周任务</h4><div class="tlist">${ms || empty('登录之后才有任务。')}</div>
       <h4 class="ar-h">每周补给 <small>${ready ? '已解锁：四样里挑两样' : `这周再打 ${C.SUPPLY_GAMES - s.drop.g} 局解锁（${s.drop.g}/${C.SUPPLY_GAMES}）`}</small></h4>${live() ? sup : ''}
       <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵、星座武器箱的换不到</small></h4><div class="ar-grid3">${shop}</div>
       <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
