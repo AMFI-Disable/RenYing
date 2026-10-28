@@ -265,47 +265,47 @@ section('并发双花：同一件同时挂 12 次、同一个箱子同时开 12 
   ok(rs3.filter(r => r.res && r.res.ok).length === 1 && inkOf(w.uid) === 5000 - 50 && stateOf(w.uid).inv.length === 1, '同一单并发买 10 次：只买到 1 次、只扣 1 次钱', [inkOf(w.uid), rs3.map(r => r.res && (r.res.err || 'ok'))]);
 }
 
-section('开箱次数：普通武器箱每天开 2 个，神兵武器箱每周开 1 个；并发也多开不了');
+section('开箱次数：普通武器箱每天开 5 个，神兵武器箱每天开 3 个；并发也多开不了');
 {
   T = nextNoon();
   const u = await newUser('daily', { ink: 5000 });
+  ENV.DB.raw.prepare('UPDATE econ SET ink = 20000 WHERE uid = ?').run(u.uid);
   const g = await econ(u.token, 'gift');
-  ok(C.openLeft(g.state, 'c1') === C.OPEN_DAY && C.openLeft(g.state, 'c7') === C.PREM_WEEK, `一开始：今天能开 ${C.OPEN_DAY} 个普通武器箱，这周能开 ${C.PREM_WEEK} 个神兵武器箱`);
-  const b1 = await econ(u.token, 'buyCase', { c: 'c3', n: 2 });
-  ok(b1.res.ok && b1.state.cases.c3 === 2 && b1.res.price === 2 * C.COLS.c3.price, '从商店买 2 个名剑武器箱（固定价格，买不限次数）', b1.res);
-  const o1 = await econ(u.token, 'open', { c: 'c1' }), o2 = await econ(u.token, 'open', { c: 'c3' });
-  ok(o1.res.ok && o2.res.ok && C.openLeft(o2.state, 'c3') === 0, '新手礼的箱子和买来的一样算次数：开了 2 个，今天用完了', [o1.res, o2.res]);
-  const o3 = await econ(u.token, 'open', { c: 'c3' });
-  ok(o3.res.err && o3.res.err.includes('明天') && stateOf(u.uid).cases.c3 === 1 && stateOf(u.uid).inv.length === 2, '第 3 个开不了，箱子还在', o3.res);
-  const bp = await econ(u.token, 'buyCase', { c: 'c7', n: 2 });
-  ok(bp.res.ok && bp.state.cases.c7 === 2 && bp.res.price === 2 * C.COLS.c7.price, '从商店买 2 个神兵武器箱', bp.res);
+  ok(C.openLeft(g.state, 'c1') === C.OPEN_DAY && C.openLeft(g.state, 'c7') === C.PREM_DAY, `一开始：今天能开 ${C.OPEN_DAY} 个普通武器箱，今天能开 ${C.PREM_DAY} 个神兵武器箱`);
+  const b1 = await econ(u.token, 'buyCase', { c: 'c3', n: 5 });
+  ok(b1.res.ok && b1.state.cases.c3 === 5 && b1.res.price === 5 * C.COLS.c3.price, '从商店买 5 个名剑武器箱（固定价格，买不限次数）', b1.res);
+  const o1 = await econ(u.token, 'open', { c: 'c1' }), o2 = await econ(u.token, 'open', { c: 'c3' }), o3 = await econ(u.token, 'open', { c: 'c3' }), o4 = await econ(u.token, 'open', { c: 'c3' }), o5 = await econ(u.token, 'open', { c: 'c3' });
+  ok(o1.res.ok && o2.res.ok && o3.res.ok && o4.res.ok && o5.res.ok && C.openLeft(o5.state, 'c3') === 0, '新手礼的箱子和买来的一样算次数：开了 5 个，今天用完了', [o1.res, o5.res]);
+  const o6 = await econ(u.token, 'open', { c: 'c3' });
+  ok(o6.res.err && o6.res.err.includes('明天') && stateOf(u.uid).cases.c3 === 1 && stateOf(u.uid).inv.length === 5, '第 6 个开不了，箱子还在', o6.res);
+  const bp = await econ(u.token, 'buyCase', { c: 'c7', n: 4 });
+  ok(bp.res.ok && bp.state.cases.c7 === 4 && bp.res.price === 4 * C.COLS.c7.price, '从商店买 4 个神兵武器箱', bp.res);
   const p1 = await econ(u.token, 'open', { c: 'c7' });
   const pt = p1.res.item && C.ITEM[p1.res.item.k];
-  ok(p1.res.ok && pt && ['cla', 'cov', 'gold'].includes(pt.tier) && pt.col === 'c7', '神兵武器箱不占每天那 2 个，开出来的是保密或更高', p1.res);
-  const p2 = await econ(u.token, 'open', { c: 'c7' });
-  ok(p2.res.err && p2.res.err.includes('下周一') && stateOf(u.uid).cases.c7 === 1, '神兵武器箱这周开过了，再开不了', p2.res);
+  ok(p1.res.ok && pt && ['cla', 'cov', 'gold'].includes(pt.tier) && pt.col === 'c7', '神兵武器箱不占每天那 5 个普通箱子，开出来的是保密或更高', p1.res);
+  const p2 = await econ(u.token, 'open', { c: 'c7' }), p3 = await econ(u.token, 'open', { c: 'c7' });
+  ok(p2.res.ok && p3.res.ok && C.openLeft(p3.state, 'c7') === 0, '神兵武器箱今天开了 3 个，用完了', [p2.res, p3.res]);
+  const p4 = await econ(u.token, 'open', { c: 'c7' });
+  ok(p4.res.err && p4.res.err.includes('明天') && stateOf(u.uid).cases.c7 === 1, '神兵武器箱今天开过了，明天再来，箱子还在', p4.res);
   T = nextNoon();
   const s1 = await econ(u.token, 'sync');
-  const wk = C.week(C.day(T)) !== C.week(C.day(T) - 1);
-  ok(C.openLeft(s1.state, 'c3') === C.OPEN_DAY && C.openLeft(s1.state, 'c7') === (wk ? C.PREM_WEEK : 0), '第二天：普通武器箱又能开 2 个，神兵武器箱要等到周一', [s1.state.od, s1.state.pw]);
-  ok((await econ(u.token, 'open', { c: 'c3' })).res.ok, '第二天接着开');
-  const D = C.day(T), mon = D + 7 - ((D + 3) % 7);
-  T = mon * 86400e3 - 8 * 3600e3 + 3600e3;           // 北京时间周一凌晨 1 点
-  const s2 = await econ(u.token, 'sync');
-  ok(C.openLeft(s2.state, 'c7') === C.PREM_WEEK && (await econ(u.token, 'open', { c: 'c7' })).res.ok, '到了周一，神兵武器箱又能开 1 个');
+  ok(C.openLeft(s1.state, 'c3') === C.OPEN_DAY && C.openLeft(s1.state, 'c7') === C.PREM_DAY, '第二天：普通武器箱又能开 5 个，神兵武器箱又能开 3 个', [s1.state.od, s1.state.pd]);
+  ok((await econ(u.token, 'open', { c: 'c3' })).res.ok, '第二天接着开普通武器箱');
+  ok((await econ(u.token, 'open', { c: 'c7' })).res.ok, '第二天接着开神兵武器箱');
 
   T = nextNoon();
   const v = await newUser('daily2', { ink: 5000 });
-  ok((await econ(v.token, 'buyCase', { c: 'c2', n: 4 })).res.ok, '买 4 个霜华武器箱');
+  ENV.DB.raw.prepare('UPDATE econ SET ink = 20000 WHERE uid = ?').run(v.uid);
+  ok((await econ(v.token, 'buyCase', { c: 'c2', n: 8 })).res.ok, '买 8 个霜华武器箱');
   const rs = await Promise.all(Array.from({ length: 12 }, () => econ(v.token, 'open', { c: 'c2' })));
   const sv = stateOf(v.uid);
-  ok(rs.filter(r => r.res && r.res.ok).length === 2 && sv.inv.length === 2 && sv.cases.c2 === 2 && sv.od.n === 2, '12 个并发开箱：正好开出 2 个，剩下的箱子还在', rs.map(r => r.res && (r.res.err || 'ok')));
-  ok((await econ(v.token, 'buyCase', { c: 'c7', n: 2 })).res.ok, '买 2 个神兵武器箱');
+  ok(rs.filter(r => r.res && r.res.ok).length === 5 && sv.inv.length === 5 && sv.cases.c2 === 3 && sv.od.n === 5, '12 个并发开箱：正好开出 5 个，剩下的箱子还在', rs.map(r => r.res && (r.res.err || 'ok')));
+  ok((await econ(v.token, 'buyCase', { c: 'c7', n: 5 })).res.ok, '买 5 个神兵武器箱');
   ok(stateOf(v.uid).cases.c8 === 1 && (await econ(v.token, 'buyCase', { c: 'c8' })).res.ok && stateOf(v.uid).cases.c8 === 2, '服务器上的新号有送的 1 个星座武器箱，再买 1 个');
   const rz = await Promise.all(Array.from({ length: 8 }, () => econ(v.token, 'open', { c: 'c8' })));
   ok(rz.filter(r => r.res && r.res.ok).length === 1 && stateOf(v.uid).cases.c8 === 1 && stateOf(v.uid).zw.n === 1 && C.ITEM[stateOf(v.uid).inv.find(x => C.ITEM[x.k].col === 'c8').k].col === 'c8', '8 个并发开星座武器箱：只开出 1 个', rz.map(r => r.res && (r.res.err || 'ok')));
   const rp = await Promise.all(Array.from({ length: 8 }, () => econ(v.token, 'open', { c: 'c7' })));
-  ok(rp.filter(r => r.res && r.res.ok).length === 1 && stateOf(v.uid).cases.c7 === 1 && stateOf(v.uid).pw.n === 1, '8 个并发开神兵武器箱：只开出 1 个', rp.map(r => r.res && (r.res.err || 'ok')));
+  ok(rp.filter(r => r.res && r.res.ok).length === 3 && stateOf(v.uid).cases.c7 === 2 && stateOf(v.uid).pd.n === 3, '8 个并发开神兵武器箱：只开出 3 个', rp.map(r => r.res && (r.res.err || 'ok')));
   const poor = await newUser('daily3', { ink: 100 });
   ok((await econ(poor.token, 'buyCase', { c: 'c1' })).res.err && Object.entries(stateOf(poor.uid).cases).every(([c, n]) => n === (c === 'c8' ? 1 : 0)) && inkOf(poor.uid) === 100, '墨锭不够买不了箱子，也不扣钱（只有送的那个星座武器箱）');
 }
@@ -628,18 +628,19 @@ section('第 2 版的武库存档：每周买箱的次数去掉，箱子买卖�
   T = nextNoon();
   const u = await newUser('legacy2');
   await econ(u.token, 'sync');
-  const v2 = { v: 2, tags: 0, term: 1, tm: null, nid: 3, gift: 1, cases: { c1: 0, c2: 3, c3: 1, c4: 0, c5: 0, c6: 0 }, cw: { w: C.week(C.day(T)), n: 5 },
+  const v2 = { v: 2, tags: 0, term: 1, tm: null, nid: 3, gift: 1, cases: { c1: 0, c2: 6, c3: 1, c4: 0, c5: 0, c6: 0 }, cw: { w: C.week(C.day(T)), n: 5 },
     inv: [{ i: 1, k: 'yh_p1', st: -1, n: '', t: T - 1e6, src: 'case' }], via: ['yh_p1'], eq: {},
     lst: [{ l: 'L9', it: { i: 2, k: 'ls_plum', st: 12, n: '', t: T - 1e6, src: 'case' }, price: 50, t: T - 1e5, at: 0 }],
     hist: [{ t: T - 1e5, kind: 'buy', c: 'c2', n: 3, price: 660 }, { t: T - 2e5, kind: 'sell', k: 'qf_p1', st: -1, price: 20 }] };
   ENV.DB.raw.prepare('UPDATE econ SET state_json = ? WHERE uid = ?').run(JSON.stringify(v2), u.uid);
   const r = await econ(u.token, 'sync');
   const s = stateOf(u.uid);
-  ok(r.state.v === C.VER && s.v === C.VER && !('cw' in s) && s.od.n === 0 && s.pw.n === 0, '换成新版：每周买箱的次数去掉，今天还能开 2 个', s);
-  ok(s.cases.c2 === 3 && s.cases.c3 === 1 && s.cases.c7 === 0 && s.term === 1, '武器箱和终端机照旧');
+  ok(r.state.v === C.VER && s.v === C.VER && !('cw' in s) && s.od.n === 0 && s.pw.n === 0, '换成新版：每周买箱的次数去掉，今天还能开 5 个', s);
+  ok(s.cases.c2 === 6 && s.cases.c3 === 1 && s.cases.c7 === 0 && s.term === 1, '武器箱和终端机照旧');
   ok(s.inv.length === 2 && !s.lst.length && s.inv.some(x => x.k === 'ls_plum' && x.st === 12) && s.nid > 2, '以前卖给系统的挂单撤下，饰品（连斩数）退回库存', [s.inv, s.lst]);
   ok(s.hist[0].g === 'c2' && s.hist[0].n === 3 && !('c' in s.hist[0]) && s.hist[1].k === 'qf_p1', '第 2 版的买箱记录换成新的写法', s.hist);
-  ok((await econ(u.token, 'open', { c: 'c2' })).res.ok && (await econ(u.token, 'open', { c: 'c2' })).res.ok && (await econ(u.token, 'open', { c: 'c2' })).res.err, '接着开：今天开 2 个，第 3 个等明天');
+  const ro = []; for (let i = 0; i < 6; i++) ro.push(await econ(u.token, 'open', { c: 'c2' }));
+  ok(ro.slice(0, 5).every(x => x.res.ok) && ro[5].res.err && ro[5].res.err.includes('明天'), '接着开：今天开 5 个，第 6 个等明天');
 }
 
 section('第 3 版的武库存档：卖给系统的挂单全部退回，武器箱和终端机的挂单也退回');
@@ -1299,7 +1300,7 @@ section('在线改经济数值：价格、每天能开几个、手续费、爆�
   ok(bb.res.ok && inkOf(E1.uid) === ib2 - C.COLS.c1.price && !Object.keys(bb.cfg).length, '数据库里存的数值坏了：整版不用，回到默认，照样能玩', ib2 - inkOf(E1.uid));
   const z = await adm('POST', '/api/admin/cfg/undo', { to: 0, why: '全部回到默认' });
   ok(z.ok && !Object.keys(z.cfg).length, '全部回到默认值');
-  ok(C.COLS.c1.price === 280 && C.FEE === 0.15 && C.OPEN_DAY === 2 && Object.isFrozen(C.CFG_DEF) && Object.isFrozen(C.CFG_INFO[0]) && C.CFG_DEF['price.c1'] === 280, '规则核心里写死的默认值一个没变（在线改的只存在数据库里）');
+  ok(C.COLS.c1.price === 280 && C.FEE === 0.15 && C.OPEN_DAY === 5 && Object.isFrozen(C.CFG_DEF) && Object.isFrozen(C.CFG_INFO[0]) && C.CFG_DEF['price.c1'] === 280, '规则核心里写死的默认值一个没变（在线改的只存在数据库里）');
 }
 
 section('两个人同时注册同一个昵称：只成一个，另一个看到“已被注册”而不是服务器错误');
@@ -1780,14 +1781,14 @@ section('规则核心：冻结、坏存档自愈');
   let threw = false;
   try { C.ODDS.gold = 1; } catch (e) { threw = true; }
   try { C.COLS.c7.odds.gold = 1; C.COLS.c7.price = 1; } catch (e) { threw = true; }
-  ok(C.ODDS.gold === 0.018 && C.COLS.c7.odds.gold === 0.08 && C.COLS.c7.price === 1000 && C.OPEN_DAY === 2 && C.PREM_WEEK === 1, '概率表、箱子价钱、每天和每周能开几个都改不动' + (threw ? '（严格模式下会报错）' : ''));
-  const s = C.normalize({ v: 1, jade: '1e9', keys: 'x', term: -5, cw: { w: 0, n: 99 }, od: { d: 0, n: 99 }, pw: { w: 'x', n: -3 },
+  ok(C.ODDS.gold === 0.018 && C.COLS.c7.odds.gold === 0.08 && C.COLS.c7.price === 1000 && C.OPEN_DAY === 5 && (C.PREM_DAY === 3 || C.PREM_WEEK === 3), '概率表、箱子价钱、每天和每周能开几个都改不动' + (threw ? '（严格模式下会报错）' : ''));
+  const s = C.normalize({ v: 1, jade: '1e9', keys: 'x', term: -5, cw: { w: 0, n: 99 }, od: { d: 0, n: 99 }, pd: { d: 0, n: 99 }, pw: { w: 'x', n: -3 },
     inv: [{ i: 1, k: 'qf_p1', f: 9, p: -3, st: 5 }, { i: 1, k: 'qf_p1', st: 2 }, { i: 2, k: 'nope' }, { i: 3, k: 'qf_p2', st: -7 }, null],
     lst: [{ l: 'L5', it: { i: 1, k: 'qf_p1' }, price: -1 }], eq: { qingfeng: 77 }, op: { earned: 5, spent: 99 }, evil: 1,
     tm: { t0: T, n: 99, o: { k: 'nope', price: 1 } } }, { now: T, uid: 'x' });
   ok(s.inv.length === 2 && s.inv[0].st === 5 && !('f' in s.inv[0]) && s.inv[1].st === -1, '坏饰品被修正、重复编号和假饰品被丢掉', s.inv);
   ok(s.term === 0 && !('keys' in s) && !('jade' in s) && s.lst.length === 0 && !s.eq.qingfeng && s.op.spent <= s.op.earned && !('evil' in s), '负数、乱填的钥匙、重复的挂单、穿着不存在的饰品、多余字段都被清掉', s);
-  ok(s.tm === null && C.openLeft(s, 'c1') === C.OPEN_DAY && C.openLeft(s, 'c7') === C.PREM_WEEK && !('cw' in s), '假的终端机报价作废；乱填的开箱次数换天、换周就重置', [s.tm, s.od, s.pw]);
+  ok(s.tm === null && C.openLeft(s, 'c1') === C.OPEN_DAY && (C.openLeft(s, 'c7') === C.PREM_DAY || C.openLeft(s, 'c7') === 3) && !('cw' in s), '假的终端机报价作废；乱填的开箱次数换天、换周就重置', [s.tm, s.od, s.pd, s.pw]);
   const t2 = C.normalize({ tm: { t0: T, n: 99, o: { k: 'qf_p1', st: 3, price: -9 } } }, { now: T, uid: 'x' });
   ok(t2.tm && t2.tm.n === C.TERM.offers && t2.tm.o.price >= 1, '终端机报到第几件、价格都夹在范围里', t2.tm);
   ok(s.nid > 3, '新编号不会和已有的撞');

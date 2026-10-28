@@ -20,8 +20,9 @@
   C.MKT_DAYS = 14;   // 挂单默认挂几天：过期没卖出去的自动撤回，饰品回到卖家库存（管理员可以在线改 mktDays）
   C.FEE = 0.15;                                // 玩家市场成交扣的手续费（墨锭从这里流出去，免得越攒越多）
   C.PRICE_MAX = 999999;                        // 挂单标价 1 ~ 999999 墨锭，多少由玩家自己定，系统不定价、也不收购
-  C.OPEN_DAY = 2;                            // 普通武器箱每天最多开 2 个（北京时间零点刷新）
-  C.PREM_WEEK = 1;                             // 神兵武器箱每周最多开 1 个（周一刷新），不占每天那 2 个
+  C.OPEN_DAY = 5;                              // 普通武器箱每天最多开 5 个（北京时间零点刷新）
+  C.PREM_DAY = 3;                              // 神兵武器箱每天最多开 3 个（北京时间零点刷新），不占普通武器箱每天那 5 个
+  C.PREM_WEEK = 3;                             // 兼容别名
   C.ZOD_WEEK = 1;                              // 星座武器箱也是每周 1 个，和神兵的分开算；每个号送 1 个
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
@@ -175,7 +176,7 @@
       mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura', 'lq_sparrow'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
     c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
       mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
-    c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, ok: 'prem.', lim: 'premWeek', cnt: 'pw', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
+    c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, daily: true, ok: 'prem.', lim: 'premDay', cnt: 'pd', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
       mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie'] },
     c8: { name: '星座', price: 1500, emblem: '星', col: '170,150,255', prem: true, ok: 'zod.', lim: 'zodWeek', cnt: 'zw', odds: { mil: 0, res: 0, cla: 0.65, cov: 0.28, gold: 0.07 },
       mil: [], res: [], cla: zodKeys(0), cov: zodKeys(1), gold: zodKeys(2) },
@@ -232,7 +233,8 @@
     ...Object.keys(C.COLS).map(c => ['price.' + c, C.COLS[c].price, 1, 100000, 1, '商店价格', C.COLS[c].name + '武器箱']),
     ['price.term', C.TERM.price, 1, 100000, 1, '商店价格', '终端机'],
     ['openDay', C.OPEN_DAY, 0, 50, 1, '开箱', '普通武器箱每天能开几个'],
-    ['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个'],
+    ['premDay', C.PREM_DAY, 0, 50, 1, '开箱', '神兵武器箱每天能开几个'],
+    ['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个（旧）'],
     ['zodWeek', C.ZOD_WEEK, 0, 20, 1, '开箱', '星座武器箱每周能开几个'],
     ['stP', C.ST_P, 0, 1, 0, '开箱', '开出斩数版的概率'],
     ...C.TIERS.map(t => ['odds.' + t, C.ODDS[t], 0, 1, 0, '普通武器箱爆率', C.TIER[t].n]),
@@ -248,7 +250,7 @@
     ['ink.cap', 6000, 0, 1000000, 1, '每天认多少本机收入', '一天最多认多少'],
   ];
   C.CFG_DEF = Object.fromEntries(C.CFG_INFO.map(r => [r[0], r[1]]));
-  C.cv = (cfg, k) => { const v = cfg && typeof cfg === 'object' ? own(cfg, k) : undefined; return v === undefined ? C.CFG_DEF[k] : v; };
+  C.cv = (cfg, k) => { const v = cfg && typeof cfg === 'object' ? own(cfg, k) : undefined; if (v !== undefined) return v; if (k === 'premDay' && cfg && typeof cfg === 'object' && own(cfg, 'premWeek') !== undefined) return own(cfg, 'premWeek'); return C.CFG_DEF[k]; };
   // 检查一份配置：只认表里有的键，数要在范围里（整数项要是整数），同一组爆率加起来要正好是 1，终端机报价的最低倍数不能高过最高倍数。
   // 和默认值一样的项、填 null 或空的项都不存（就是回到默认值）。不对时 cfg 是 null，err 写明是哪一项
   C.cleanCfg = raw => {
@@ -350,7 +352,7 @@
   /* ---------- 存档 ---------- */
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
-    lst: [], hist: [], od: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
+    lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
   });
@@ -410,6 +412,7 @@
     s.tk = isObj(s.tk) && C.MODES.includes(s.tk.mode) ? { t0: num(s.tk.t0), mode: s.tk.mode } : null;
     s.last = num(s.last); s.gift = s.gift ? 1 : 0;
     s.od = { d: int(s.od.d), n: int(s.od.n, 0, 1000) };   // 每天、每周能开几个可以在线改，这里只防乱填
+    s.pd = isObj(s.pd) ? { d: int(s.pd.d), n: int(s.pd.n, 0, 1000) } : { d: 0, n: 0 };
     s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, 1000) };
     s.zw = { w: int(s.zw.w), n: int(s.zw.n, 0, 1000) };
     if (!s.zf) s.cases.c8++;   // 每个号送 1 个星座武器箱（只送一次，老号第一次读到这一版的时候送）
@@ -425,6 +428,7 @@
       done: ms && Array.isArray(op.done) ? Array.from(new Set(op.done.map(Number).filter(i => i >= 0 && i < 4 && Number.isInteger(i)))) : [] };
     const now = env.now, day = C.day(now), wk = C.week(day), se = C.season(day);
     if (s.od.d !== day) s.od = { d: day, n: 0 };
+    if (s.pd.d !== day) s.pd = { d: day, n: 0 };
     if (s.pw.w !== wk) s.pw = { w: wk, n: 0 };
     if (s.zw.w !== wk) s.zw = { w: wk, n: 0 };
     if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
@@ -454,8 +458,8 @@
     for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
     return opts;
   };
-  // 今天还能开几个普通武器箱、这周还能开几个神兵（星座）武器箱
-  C.openLeft = (s, cid, cfg) => { const col = cid && own(C.COLS, cid); return col && col.prem ? Math.max(0, C.cv(cfg, col.lim) - s[col.cnt].n) : Math.max(0, C.cv(cfg, 'openDay') - s.od.n); };
+  // 今天还能开几个普通武器箱、今天/这周还能开几个神兵（星座）武器箱
+  C.openLeft = (s, cid, cfg) => { const col = cid && own(C.COLS, cid); return col && col.prem ? Math.max(0, C.cv(cfg, col.lim) - ((s[col.cnt] && s[col.cnt].n) || 0)) : Math.max(0, C.cv(cfg, 'openDay') - s.od.n); };
 
   /* ---------- 物品进出库存 ---------- */
   C.mkItem = (s, k, src, rnd, o = {}) => {
@@ -567,18 +571,18 @@
   // env：now 现在时间、rnd 随机数、uid、ink 墨锭（会被改）、skins 可穿的皮肤（会被改）、equip 穿着（会被改）、server 是不是服务器在算、
   //      cfg 管理员在线改过的经济数值（没有就用默认值）
   const A = {};
-  A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个。普通武器箱每天最多开 2 个，神兵、星座武器箱每周各 1 个
+  A.open = (s, a, env) => {   // 开箱：不用钥匙，开一个少一个。普通武器箱每天最多开 5 个，神兵武器箱每天 3 个，星座武器箱每周 1 个
     const cid = a.c;
     if (!C.CASES.includes(cid)) return { err: '没有这个武器箱' };
     if ((s.cases[cid] || 0) < 1) return { err: '没有这个武器箱了' };
     const col = C.COLS[cid];
     if (!C.openLeft(s, cid, env.cfg)) {
       const n = C.cv(env.cfg, col.prem ? col.lim : 'openDay');
-      return { err: !n ? `${col.prem ? col.name : '普通'}武器箱现在暂停开启` : col.prem ? `${col.name}武器箱每周只能开 ${n} 个，下周一再来` : `今天的 ${n} 个武器箱已经开完了，明天再来` };
+      return { err: !n ? `${col.prem ? col.name : '普通'}武器箱现在暂停开启` : (col.daily || !col.prem) ? `今天的 ${n} 个${col.prem ? col.name : ''}武器箱已经开完了，明天再来` : `${col.name}武器箱每周只能开 ${n} 个，下周一再来` };
     }
     if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
     s.cases[cid]--; s.stat.open++;
-    if (col.prem) s[col.cnt].n++; else s.od.n++;
+    if (col.prem) (s[col.cnt] || (s[col.cnt] = { d: C.day(env.now), n: 0 })).n++; else s.od.n++;
     const tier = rollTier(env.rnd, C.oddsOf(cid, env.cfg)), k = pickOf(env.rnd, col[tier]);
     const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env);
     bump(s, 'open', 1);

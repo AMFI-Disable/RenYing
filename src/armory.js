@@ -580,7 +580,7 @@
   function buyBox(k) {   // 商店：武器箱、终端机按固定价格买，一次 1~10 个
     const p = C.shopPrice(k, CF()); let n = 1;
     if (!p) return;
-    modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>买${goodName(k)}</h3><p class="ar-note">商店价 ${ink(p)} 一个，不限量${k === 'term' ? '' : C.COLS[k].prem ? ` · 每周能开 ${C.cv(CF(), 'premWeek')} 个` : ` · 普通武器箱每天一共能开 ${C.cv(CF(), 'openDay')} 个`}。买来的不能转卖。</p></div></div>
+    modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>买${goodName(k)}</h3><p class="ar-note">商店价 ${ink(p)} 一个，不限量${k === 'term' ? '' : C.COLS[k].prem ? (C.COLS[k].daily ? ` · 每天能开 ${C.cv(CF(), C.COLS[k].lim)} 个` : ` · 每周能开 ${C.cv(CF(), C.COLS[k].lim)} 个`) : ` · 普通武器箱每天一共能开 ${C.cv(CF(), 'openDay')} 个`}。买来的不能转卖。</p></div></div>
       <div class="ar-qty"><button type="button" class="ghost small" data-q="-1" aria-label="少买一个">−</button><b id="arQty">1</b><button type="button" class="ghost small" data-q="1" aria-label="多买一个">+</button><span class="ar-qtot">合计 <span id="arTot"></span></span></div>
       <p class="ar-note">你现在有 ${ink(PROF.ink || 0)}</p>
       <div class="row"><button class="go small" id="arBuyGo">买下</button><button class="ghost small" data-ar-close>取消</button></div>`);
@@ -606,8 +606,8 @@
     const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF());
     const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台终端机，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
     const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.cv(CF(), 'openDay'))}</span>
-      <span>本周还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premWeek'))}</span>
-      <span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span><small>普通的每天零点刷新，神兵、星座的每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
+      <span>今天还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premDay'))}</span>
+      <span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span><small>普通和神兵武器箱每天零点刷新，星座武器箱每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
     const card = cid => {
       const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
       const have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
@@ -622,16 +622,18 @@
     };
     const premCard = cid => {   // 神兵、星座武器箱：左边开箱、右边把饰品摆出来，点一下就能看穿上的样子
       const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF()), zod = cid === 'c8';
+      const limText = col.daily ? `每天限开 ${C.cv(CF(), col.lim)} 个` : `每周限开 ${C.cv(CF(), col.lim)} 个`;
+      const btnText = n && !left ? (col.daily ? '今天开完了' : '这周开过了') : '开启';
       const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length);
       // 神兵的 7 款摆成一排；星座的 36 款按品质分三行，每行十二个侠客
       const show = zod ? ts.map(t => `<div class="ar-zrow" style="--tc:${C.TIER[t].c}"><span class="ar-zlab">${C.TIER[t].n}<b>${pct(O[t])}</b></span><div class="ar-zgrid">${col[t].map(k => `<button type="button" class="ar-pcard ar-zcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k).split('·')[0])}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`).join('')
         : ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
       return `<div class="ar-casecard prem${zod ? ' zod' : ''}" style="--cc:${col.col}"><div class="ar-premside">
-        <span class="ar-premtag">每周限开 ${C.cv(CF(), col.lim)} 个 · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
+        <span class="ar-premtag">${limText} · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
         <div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(col.price)}</p>
-          <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${n && !left ? '这周开过了' : '开启'}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
+          <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${btnText}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
         <div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
-        <p class="ar-note">${zod ? '十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。' : ''}只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个。点一下饰品，就能先看看穿上的样子。</p>
+        <p class="ar-note">${zod ? '十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。' : ''}只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个普通武器箱。点一下饰品，就能先看看穿上的样子。</p>
       </div><div class="ar-pshow${zod ? ' zod' : ''}">${show}</div></div>`;
     };
     return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem).map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
