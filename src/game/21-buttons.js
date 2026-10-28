@@ -201,6 +201,7 @@ function uiState(kind, text, extra = '') {
 // 返回 Promise<boolean>。默认选中「取消」，Esc、点遮罩都算取消；Enter 按下当前选中的按钮。
 // opt.title 是标题；opt.html 是调用方自己拼好（名字已转义）的正文，带墨锭图标、加粗这些，给了就不用 msg。
 // opt.input 给了就多一个输入框（代替 prompt()）：{ type, placeholder, autocomplete }，返回输入的字，取消返回 null。
+// opt.alert 为真就只有一个「知道了」（代替 alert()），选中它，关掉都返回 true。
 function uiConfirm(msg, opt = {}) {
   return new Promise(resolve => {
     const prev = document.activeElement;
@@ -209,12 +210,12 @@ function uiConfirm(msg, opt = {}) {
     wrap.setAttribute('aria-labelledby', 'uiConfirmMsg');
     const io = opt.input;
     wrap.innerHTML = `<div class="ui-confirm-box">${opt.title ? `<h3>${escapeHTML(opt.title)}</h3>` : ''}<p id="uiConfirmMsg"></p>${io ? `<input class="ui-confirm-in" aria-labelledby="uiConfirmMsg" type="${io.type === 'password' ? 'password' : 'text'}" autocomplete="${escapeHTML(io.autocomplete || 'off')}" placeholder="${escapeHTML(io.placeholder || '')}">` : ''}<div class="row">
-      <button type="button" class="ghost" data-v="0">${escapeHTML(opt.cancel || '取消')}</button>
-      <button type="button" class="go${opt.danger ? ' danger' : ''}" data-v="1">${escapeHTML(opt.ok || '确定')}</button></div></div>`;
+      ${opt.alert ? '' : `<button type="button" class="ghost" data-v="0">${escapeHTML(opt.cancel || '取消')}</button>`}
+      <button type="button" class="go${opt.danger ? ' danger' : ''}" data-v="1">${escapeHTML(opt.ok || (opt.alert ? '知道了' : '确定'))}</button></div></div>`;
     if (opt.html) wrap.querySelector('p').innerHTML = opt.html; else wrap.querySelector('p').textContent = msg;
     const inp = wrap.querySelector('.ui-confirm-in');
     const done = v => {
-      const out = inp ? (v ? inp.value : null) : v;
+      const out = opt.alert || (inp ? (v ? inp.value : null) : v);
       wrap.remove(); window.removeEventListener('keydown', key, true);
       try { if (prev && prev.isConnected) prev.focus({ preventScroll: true }); } catch (e) {}
       resolve(out);
@@ -222,7 +223,7 @@ function uiConfirm(msg, opt = {}) {
     const key = e => {
       if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); }
       else if (inp && document.activeElement === inp && (e.code === 'Enter' || e.code === 'NumpadEnter') && !e.isComposing) { e.preventDefault(); e.stopImmediatePropagation(); done(true); }
-      else if (e.code === 'Tab') {   // 焦点只在弹窗里转（输入框和两个按钮）
+      else if (e.code === 'Tab') {   // 焦点只在弹窗里转（输入框和按钮）
         e.preventDefault(); e.stopImmediatePropagation();
         const bs = [...wrap.querySelectorAll('input, button')], i = bs.indexOf(document.activeElement);
         bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
@@ -231,7 +232,7 @@ function uiConfirm(msg, opt = {}) {
     wrap.addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) done(b.dataset.v === '1'); else if (e.target === wrap) done(false); });
     window.addEventListener('keydown', key, true);
     document.body.appendChild(wrap);
-    (inp || wrap.querySelector('button[data-v="0"]')).focus({ preventScroll: true });
+    (inp || wrap.querySelector('button[data-v="0"]') || wrap.querySelector('button[data-v="1"]')).focus({ preventScroll: true });
   });
 }
 // 弹窗焦点：弹窗一出来就把焦点放进去（读屏和键盘都从弹窗里开始），关掉以后回到打开它的那个按钮

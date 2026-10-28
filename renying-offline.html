@@ -7813,6 +7813,7 @@ const UI_COPY_EN = {
 "全部退出": "Sign out all",
 "合并同步": "Merge",
 "升级": "Upgrade",
+"知道了": "Got it",
 "云端已连": "Cloud Connected",
 "账号与云存档": "Account & Cloud Save",
 "将本机所有账号与数据打包备份": "Pack every account and its data on this device into one backup",
@@ -22266,12 +22267,12 @@ wrap.className = 'ui-confirm'; wrap.setAttribute('role', 'alertdialog'); wrap.se
 wrap.setAttribute('aria-labelledby', 'uiConfirmMsg');
 const io = opt.input;
 wrap.innerHTML = `<div class="ui-confirm-box">${opt.title ? `<h3>${escapeHTML(opt.title)}</h3>` : ''}<p id="uiConfirmMsg"></p>${io ? `<input class="ui-confirm-in" aria-labelledby="uiConfirmMsg" type="${io.type === 'password' ? 'password' : 'text'}" autocomplete="${escapeHTML(io.autocomplete || 'off')}" placeholder="${escapeHTML(io.placeholder || '')}">` : ''}<div class="row">
-<button type="button" class="ghost" data-v="0">${escapeHTML(opt.cancel || '取消')}</button>
-<button type="button" class="go${opt.danger ? ' danger' : ''}" data-v="1">${escapeHTML(opt.ok || '确定')}</button></div></div>`;
+${opt.alert ? '' : `<button type="button" class="ghost" data-v="0">${escapeHTML(opt.cancel || '取消')}</button>`}
+<button type="button" class="go${opt.danger ? ' danger' : ''}" data-v="1">${escapeHTML(opt.ok || (opt.alert ? '知道了' : '确定'))}</button></div></div>`;
 if (opt.html) wrap.querySelector('p').innerHTML = opt.html; else wrap.querySelector('p').textContent = msg;
 const inp = wrap.querySelector('.ui-confirm-in');
 const done = v => {
-const out = inp ? (v ? inp.value : null) : v;
+const out = opt.alert || (inp ? (v ? inp.value : null) : v);
 wrap.remove(); window.removeEventListener('keydown', key, true);
 try { if (prev && prev.isConnected) prev.focus({ preventScroll: true }); } catch (e) {}
 resolve(out);
@@ -22279,7 +22280,7 @@ resolve(out);
 const key = e => {
 if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); }
 else if (inp && document.activeElement === inp && (e.code === 'Enter' || e.code === 'NumpadEnter') && !e.isComposing) { e.preventDefault(); e.stopImmediatePropagation(); done(true); }
-else if (e.code === 'Tab') {   // 焦点只在弹窗里转（输入框和两个按钮）
+else if (e.code === 'Tab') {   // 焦点只在弹窗里转（输入框和按钮）
 e.preventDefault(); e.stopImmediatePropagation();
 const bs = [...wrap.querySelectorAll('input, button')], i = bs.indexOf(document.activeElement);
 bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
@@ -22288,7 +22289,7 @@ bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
 wrap.addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) done(b.dataset.v === '1'); else if (e.target === wrap) done(false); });
 window.addEventListener('keydown', key, true);
 document.body.appendChild(wrap);
-(inp || wrap.querySelector('button[data-v="0"]')).focus({ preventScroll: true });
+(inp || wrap.querySelector('button[data-v="0"]') || wrap.querySelector('button[data-v="1"]')).focus({ preventScroll: true });
 });
 }
 const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'modalWorld', 'arModal', 'arIns'];
@@ -25832,7 +25833,7 @@ try {
 CloudSave.exportAllAccounts();
 toast('已成功打包备份本机所有账号');
 } catch (err) {
-alert(trMsg(err.message));
+uiConfirm(err.message, { alert: true });
 }
 }
 });
@@ -25843,7 +25844,6 @@ if (expAll) expAll.remove();
 }
 }
 }
-function trMsg(s) { return window.I18N ? I18N.t(s) : s; }
 function isDevName(u) { return !!(u && u.isCloud && String(u.name || '').toLowerCase() === 'dev'); }   // 云端的 Dev 这个名字只能在管理后台建
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 if ($id('exportAccBtn')) {
@@ -26130,7 +26130,7 @@ toast('云端服务接口已更新！');
 $id('cloudCfgBox').classList.add('hidden');
 renderAcc();
 } catch (e) {
-alert(trMsg('配置格式错误：' + e.message));
+uiConfirm('配置格式错误：' + e.message, { alert: true });
 }
 });
 }
@@ -26348,7 +26348,7 @@ if ($id('importMsg')) {
 $id('importMsg').style.color = '#ff6b6b';
 $id('importMsg').textContent = '导入失败：' + err.message;
 }
-alert(trMsg('文件解析失败：' + err.message));
+uiConfirm('文件解析失败：' + err.message, { alert: true });
 }
 };
 reader.readAsText(file);

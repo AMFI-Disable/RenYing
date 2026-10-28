@@ -54,7 +54,7 @@ function renderAcc() {
               CloudSave.exportAllAccounts();
               toast('已成功打包备份本机所有账号');
             } catch (err) {
-              alert(trMsg(err.message));
+              uiConfirm(err.message, { alert: true });
             }
           }
         });
@@ -65,8 +65,6 @@ function renderAcc() {
     }
   }
 }
-// alert / confirm / prompt 不在网页里，自动翻译管不到：英文界面先查一下表
-function trMsg(s) { return window.I18N ? I18N.t(s) : s; }
 function isDevName(u) { return !!(u && u.isCloud && String(u.name || '').toLowerCase() === 'dev'); }   // 云端的 Dev 这个名字只能在管理后台建
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
@@ -369,7 +367,7 @@ if ($id('fbCfgSaveBtn')) {
       $id('cloudCfgBox').classList.add('hidden');
       renderAcc();
     } catch (e) {
-      alert(trMsg('配置格式错误：' + e.message));
+      uiConfirm('配置格式错误：' + e.message, { alert: true });
     }
   });
 }
@@ -625,7 +623,7 @@ if ($id('importFileInput')) {
           $id('importMsg').style.color = '#ff6b6b';
           $id('importMsg').textContent = '导入失败：' + err.message;
         }
-        alert(trMsg('文件解析失败：' + err.message));
+        uiConfirm('文件解析失败：' + err.message, { alert: true });
       }
     };
     reader.readAsText(file);
