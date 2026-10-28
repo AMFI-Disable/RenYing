@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at INTEGER NOT NULL
 );
 
+-- token 存的是 'h1:' + 令牌的 SHA-256（十六进制），不存原文；以前存原文的那些，用到一次就换成哈希。
 CREATE TABLE IF NOT EXISTS sessions (
     token TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,

@@ -1379,6 +1379,32 @@ section('功能开关：管理后台按功能开关，可以只开 Dev 账号；
   ENV.DB.raw.prepare("DELETE FROM flags WHERE k LIKE 'test.%'").run();
 }
 
+section('登录令牌：数据库里只存哈希；以前存原文的照样能用，用一次就换成哈希，不用重新登录');
+{
+  const sha = t => 'h1:' + createHash('sha256').update(t).digest('hex');
+  const u = await newUser('tokUser');
+  ok(!row('SELECT 1 AS x FROM sessions WHERE token = ?', u.token) && row('SELECT user_id FROM sessions WHERE token = ?', sha(u.token))?.user_id === u.uid, '新注册：库里没有令牌原文，只有哈希');
+  const li = await call('POST', '/api/login', { username: 'tokUser', password: 'secret123' }, undefined, '8.8.5.1');
+  ok(li.ok && !row('SELECT 1 AS x FROM sessions WHERE token = ?', li.token) && row('SELECT 1 AS x FROM sessions WHERE token = ?', sha(li.token)), '登录也一样');
+  ok((await call('GET', '/api/profile', undefined, u.token)).ok, '拿令牌原文照样能用');
+  const old = 'ab'.repeat(32);
+  ENV.DB.raw.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').run(old, u.uid, T, T + 86400e3);
+  const g1 = await call('GET', '/api/profile', undefined, old);
+  ok(g1.ok && g1.uid === u.uid, '以前存原文的令牌：还能用（玩家不用重新登录）', g1);
+  ok(!row('SELECT 1 AS x FROM sessions WHERE token = ?', old) && row('SELECT expires_at FROM sessions WHERE token = ?', sha(old))?.expires_at === T + 86400e3, '用了一次就换成哈希，到期时间不变');
+  ok((await call('GET', '/api/profile', undefined, old)).ok, '换完之后还能用');
+  ok((await call('GET', '/api/profile', undefined, sha(old))).status === 401 && (await call('GET', '/api/profile', undefined, sha(old).slice(3))).status === 401, '把库里存的哈希拿来当令牌：不认');
+  const lo = await call('POST', '/api/logout', undefined, old);
+  ok(lo.ok && !row('SELECT 1 AS x FROM sessions WHERE token = ?', sha(old)) && (await call('GET', '/api/profile', undefined, old)).status === 401, '退出登录：删掉的是哈希那行，令牌不能用了');
+  await adm('POST', '/api/admin/flags', { k: 'auth.token_hash', mode: 'off', why: '测试：关掉令牌哈希' });
+  const off = await call('POST', '/api/login', { username: 'tokUser', password: 'secret123' }, undefined, '8.8.5.2');
+  ok(off.ok && row('SELECT 1 AS x FROM sessions WHERE token = ?', off.token) && (await call('GET', '/api/profile', undefined, off.token)).ok && (await call('GET', '/api/profile', undefined, li.token)).ok, '开关关掉：新令牌存原文，存哈希的老令牌也照样认（关回去不会把人踢下线）');
+  ok(row('SELECT 1 AS x FROM sessions WHERE token = ?', off.token), '关着的时候用到原文令牌也不去换');
+  await adm('POST', '/api/admin/flags', { k: 'auth.token_hash', mode: 'all', why: '测试完开回去' });
+  await call('GET', '/api/profile', undefined, off.token);
+  ok(!row('SELECT 1 AS x FROM sessions WHERE token = ?', off.token) && row('SELECT 1 AS x FROM sessions WHERE token = ?', sha(off.token)), '再打开：那个原文令牌下次用到时换成哈希');
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');

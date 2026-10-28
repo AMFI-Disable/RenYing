@@ -161,6 +161,32 @@ async function hashPassword(password, salt) {
     .join('');
 }
 
+// 登录令牌在数据库里只存它的 SHA-256（前面加 h1:），库被拖走也拿不到能用的令牌。
+// 以前存的是原文：查的时候两种都认，原文那行用到一次就改成哈希，玩家不用重新登录。
+// 原文令牌一定是 64 位十六进制；别的样子（比如把库里的 h1:… 拿来当令牌）不按原文查。
+async function sha256Hex(str) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(d)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const tokenKey = async token => 'h1:' + await sha256Hex(token);
+const PLAIN_TOKEN = /^[0-9a-f]{64}$/;
+// 按令牌找登录记录（cols 是要的 users 列）；找到的还是原文、开关又开着，就顺手换成哈希
+async function sessionOf(env, token, cols, now) {
+  if (!token || token.length > 128) return null;
+  const key = await tokenKey(token);
+  const r = await env.DB.prepare(`SELECT s.token AS stok, ${cols} FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token IN (?1, ?2) AND s.expires_at > ?3 ORDER BY s.token = ?1 DESC LIMIT 1`)
+    .bind(key, PLAIN_TOKEN.test(token) ? token : key, now).first();
+  if (r && r.stok !== key && await flagOn(env, 'auth.token_hash', r, now)) await env.DB.prepare('UPDATE sessions SET token = ?1 WHERE token = ?2').bind(key, token).run();
+  return r;
+}
+// 新登录：写一行 sessions，返回给玩家的令牌原文
+async function newSession(env, user, now) {
+  const token = generateToken();
+  const stored = (await flagOn(env, 'auth.token_hash', user, now)) ? await tokenKey(token) : token;
+  await env.DB.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').bind(stored, user.id, now, now + 30 * 24 * 3600 * 1000).run();
+  return token;
+}
+
 // Generate crypto-secure token
 function generateToken() {
   return randHex(32);
@@ -198,11 +224,10 @@ function getBearerToken(request) {
 // Authenticate session from token
 async function authenticate(env, request) {
   const token = getBearerToken(request);
-  if (!token || token.length > 128) return null;
-  const user = await env.DB.prepare(
-    'SELECT u.id AS id, u.username AS username, u.profile_json AS profile_json, u.created_at AS created_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ?'
-  ).bind(token, Date.now()).first();
-  return user ? { token, user } : null;
+  const r = await sessionOf(env, token, 'u.id AS id, u.username AS username, u.profile_json AS profile_json, u.created_at AS created_at', Date.now());
+  if (!r) return null;
+  const { stok, ...user } = r;
+  return { token, user };
 }
 
 async function readBody(request) {
@@ -415,7 +440,9 @@ async function cfgNow(env, now) {
  * 大改动先做成开关，管理后台（/admin 的「功能开关」）按功能打开或关上，可以先只对 Dev 账号开，有问题一键关回去。
  * 不做按百分比放量。登记表在下面 FLAGS：[默认值, 说明, 网页要不要知道]。网页开局读 GET /api/flags，只拿得到“网页要知道”的那些。
  * 数据库里只存改过的；每个 Worker 实例最多 30 秒重读一次。 */
-export const FLAGS = {};
+export const FLAGS = {
+  'auth.token_hash': ['all', '新登录的令牌在数据库里只存哈希，旧的用到时换成哈希（关掉：新令牌存原文；两种照样都认）', false],
+};
 const FLAG_MODES = ['off', 'dev', 'all'];
 let FLAG_CACHE = { db: null, at: 0, rows: {} };
 async function flagRows(env, now) {
@@ -1745,7 +1772,7 @@ export class WorldLine {
   async auth(id, tk) {
     try {
       const now = Date.now();
-      const r = await this.env.DB.prepare('SELECT u.id, u.created_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > ?').bind(tk, now).first();
+      const r = await sessionOf(this.env, String(tk || ''), 'u.id AS id, u.username AS username, u.created_at AS created_at', now);
       if (r && !(await banOf(this.env, r.id, now))) this.sim.setAuth(id, r.id, r.created_at);
     } catch (e) {}
   }
@@ -1890,12 +1917,7 @@ export default {
           throw e;
         }
 
-        // Generate session token (valid for 30 days)
-        const token = generateToken();
-        const expiresAt = now + 30 * 24 * 3600 * 1000;
-        await env.DB.prepare(
-          'INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)'
-        ).bind(token, userId, now, expiresAt).run();
+        const token = await newSession(env, { id: userId, username }, now);   // 30 天有效
 
         const out = await profileOut(env, { id: userId, username, profile_json: JSON.stringify(initialProf) }, now);
         return json({
@@ -1941,12 +1963,7 @@ export default {
         }
         await env.DB.prepare('DELETE FROM rate WHERE k = ?').bind(nameKey).run();
 
-        const token = generateToken();
-        const expiresAt = now + 30 * 24 * 3600 * 1000;
-
-        await env.DB.prepare(
-          'INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)'
-        ).bind(token, user.id, now, expiresAt).run();
+        const token = await newSession(env, user, now);
 
         const out = await profileOut(env, user, now);
         return json({
@@ -2076,7 +2093,7 @@ export default {
       if (path === '/api/logout' && request.method === 'POST') {
         const token = getBearerToken(request);
         if (token) {
-          await env.DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
+          await env.DB.prepare('DELETE FROM sessions WHERE token IN (?, ?)').bind(await tokenKey(token), PLAIN_TOKEN.test(token) ? token : '-').run();
         }
         return json({ ok: true });
       }
