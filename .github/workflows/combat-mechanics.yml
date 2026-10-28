@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
+      - "src/data/**"
       - "src/game/**"
       - "src/ai.js"
       - "tools/combat-test.mjs"

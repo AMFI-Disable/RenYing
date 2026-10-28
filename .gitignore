@@ -73,6 +73,7 @@ scratch/
 tmp/
 .local/
 data/
+!src/data/
 logs/
 ci-ui/
 ci-hud/

@@ -6,6 +6,7 @@ on:
     paths:
       - "src/page.html"
       - "src/style.css"
+      - "src/data/**"
       - "src/game/**"
       - "src/armory.js"
       - "src/social.js"

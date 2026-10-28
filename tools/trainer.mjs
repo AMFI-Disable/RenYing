@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Trainer：电脑对电脑（默认天道）的全角色互打（无画面、只算对战逻辑，比实时快很多），统计每个角色的胜率和对位胜率，
-// 然后按胜率迭代出一份平衡建议（只写进 docs/trainer/，不改 src/game/02-heroes.js 里的 BAL）。
+// 然后按胜率迭代出一份平衡建议（只写进 docs/trainer/，不改 src/data/heroes/ 里的 bal）。
 //   node tools/trainer.mjs --n 20                       只测当前数值：每对角色 20 场（左右各一半）
 //   node tools/trainer.mjs --n 20 --rounds 4            再迭代 4 轮平衡建议，最后用建议数值复测一次
 //   node tools/trainer.mjs --n 20 --bal docs/trainer/proposal.json   直接测某份建议
@@ -9,6 +9,7 @@
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import { Pool, HEROES, NAMES } from './ai-arena.mjs';
+import { heroData } from './ai-code.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
@@ -19,9 +20,8 @@ const SEED = +arg('seed', 1);
 const STEP = +arg('step', 0.6), MAXSTEP = 0.1, LO = 0.6, HI = 1.4;
 const H = HEROES.length;
 
-// 读取 game 里当前的 BAL，作为起点
-const src = readFileSync(ROOT + 'src/game/02-heroes.js', 'utf8'), i0 = src.indexOf('const BAL = {');
-const BASE = Function('"use strict";return (' + src.slice(i0 + 'const BAL = '.length, src.indexOf('};', i0) + 1) + ')')();
+// 读取当前的 BAL（src/data/heroes/ 里每位侠客的 bal），作为起点
+const BASE = Object.fromEntries(heroData().map(h => [h.id, h.bal]));
 
 // 所有对位：a 角色对 b 角色各 N 场，奇数场左右互换；种子固定，同一份数值重跑结果一样
 function games(seed0 = SEED) {
@@ -125,7 +125,7 @@ function report(base, rounds, final, check) {
   }
   md += `\n## ${rounds.length ? 4 : 3}. 怎么用这份建议\n\n只在本地试，不影响游戏：\n\n`;
   md += '```bash\nAI_BAL=docs/trainer/proposal.json node tools/ai-arena.mjs --a god --b god --n 10\nAI_BAL=docs/trainer/proposal.json node tools/ai-arena.mjs --a hard --b hard --n 10\n```\n\n';
-  md += `确定要用，就把 \`docs/trainer/proposal.json\` 里每个角色的 normal / skill / ult / hp 抄进 \`src/game/02-heroes.js\` 的 \`BAL\`，再运行 \`python3 tools/build.py\` 重新生成页面。\n\n`;
+  md += `确定要用，就把 \`docs/trainer/proposal.json\` 里每个角色的 normal / skill / ult / hp 抄进 \`src/data/heroes/\` 里各自文件的 \`bal\`，再运行 \`python3 tools/build.py\` 重新生成页面。\n\n`;
   md += `注意：这是电脑对电脑的结果，AI 打法和真人不一样（比如 AI 招架反应很快），真人对战的强弱可能不同；数值建议适合当参考起点，最好再结合玩家反馈。\n`;
   return md;
 }

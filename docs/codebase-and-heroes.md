@@ -675,13 +675,13 @@ These are worth knowing before you touch balance or the codex UI:
 
 | Task | File / location |
 | :--- | :--- |
-| Tweak a hero's raw stats | `CHARS` — `src/game/02-heroes.js`, `stat` block |
-| Global damage/HP/cooldown tuning | `BAL` — `src/game/02-heroes.js` |
+| Tweak a hero's raw stats | that hero's file in `src/data/heroes/`, `char.stat` block |
+| Global damage/HP/cooldown tuning | that hero's file in `src/data/heroes/`, `bal` block |
 | Change a normal attack's frames/damage | `MOVES` — `src/game/02-heroes.js` (global) or `moveMods` (per hero) |
 | Change a Q/R ability | `SKILLS` — `src/game/03-skills.js` |
 | Change an ultimate | `ULTS` — `src/game/04-ults.js` |
 | Change reach/hitbox | move `box` + `stat.reach` (and `reachMul` in `moveMods`) |
-| Add a hero | `CHARS` + `SKILLS`/`ULTS` entries + `SKINS`/`CHAR_RARITY` + pose data |
+| Add a hero | a new file in `src/data/heroes/` + `SKILLS`/`ULTS` entries + `SKINS`/`CHAR_RARITY` + pose data |
 | Add a skin | `SKINS` — `src/game/19-progress.js` (plus `SCENES` there for legendary sky/FX; drawing in `13-skins.js`–`15-skin-weapons.js`) |
 | UI copy / numbers shown in codex | `statRows`, `HERO_HIT_DETAILS`, `PASSIVE_SHORT` — `src/game/18-codex.js` |
 | Netcode | rollback in `src/game/20-tutorial-rollback-touch.js`, shared net code in `06-input-net.js`, transport in `src/net-p2p.js` |

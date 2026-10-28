@@ -72,13 +72,24 @@ def read(*parts, mode="r"):
 
 
 
+def numbered(*parts):
+    return sorted(n for n in os.listdir(os.path.join(SRC, *parts)) if re.match(r"^\d\d-[a-z0-9-]+\.js$", n))
+
+
+def data_parts():
+    """src/data/ 下的数据表：先是本层按编号排好的文件（定义表和 defHero 这类登记函数），再是各子目录（heroes/ 每位侠客一个文件）"""
+    base = os.path.join(SRC, "data")
+    subs = sorted(d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d)))
+    return [("data", n) for n in numbered("data")] + [("data", d, n) for d in subs for n in numbered("data", d)]
+
+
 def game_parts():
-    """src/game/ 下按编号排好的文件，拼起来就是整个游戏主体（原来的 src/game.js）"""
-    return sorted(n for n in os.listdir(os.path.join(SRC, "game")) if re.match(r"^\d\d-[a-z0-9-]+\.js$", n))
+    """先是 src/data/ 的数据表，再是 src/game/ 下按编号排好的文件，拼起来就是整个游戏主体（原来的 src/game.js）"""
+    return data_parts() + [("game", n) for n in numbered("game")]
 
 
 def game_source():
-    return "".join(read(SRC, "game", n) for n in game_parts())
+    return "".join(read(SRC, *p) for p in game_parts())
 
 def compact_css(css):
     css = re.sub(r"/\*[\s\S]*?\*/", "", css)
@@ -184,7 +195,7 @@ NAMES_MARK = "/*@names*/null"
 
 
 def admin_names():
-    """管理网页里饰品、侠客的名字：原有皮肤和侠客从 src/game/ 读，武库的新皮肤从 src/armory-core.js 读"""
+    """管理网页里饰品、侠客的名字：原有皮肤从 src/game/ 读，侠客从 src/data/heroes/ 读，武库的新皮肤从 src/armory-core.js 读"""
     game, core = game_source(), read(SRC, "armory-core.js")
     a = game.index("const SKINS = {")
     b = game.index("\n};", a)
@@ -200,10 +211,9 @@ def admin_names():
     for pre, *codes in zof:
         for i, code in enumerate(codes):
             skins[f"{pre}_z{code}"] = f"{zod[code]}·{tiers[i]}"
-    a = game.index("const CHARS = [")
-    heroes = dict(re.findall(r"^  \{ id: '([a-z]+)', name: '([^']+)'", game[a:game.index("\n];", a)], re.M))
+    heroes = dict(re.findall(r"^  id: '([a-z]+)',[^\n]*\n(?:  [^\n]*\n)*?  char: \{ name: '([^']+)'", game, re.M))
     if len(skins) < 60 or len(heroes) < 12:
-        raise SystemExit(f"管理网页要的名字没读全：皮肤 {len(skins)} 款、侠客 {len(heroes)} 个（src/game/ 的 SKINS、CHARS 或 src/armory-core.js 的写法变了？）")
+        raise SystemExit(f"管理网页要的名字没读全：皮肤 {len(skins)} 款、侠客 {len(heroes)} 个（src/game/ 的 SKINS、src/data/heroes/ 或 src/armory-core.js 的写法变了？）")
     return {"skins": skins, "heroes": heroes}
 
 
@@ -265,14 +275,14 @@ def check_js():
             print(f"src/{name} 压缩后语法错误：\n{rc.stderr}")
             ok = False
     # 游戏主体拆成了 src/game/ 下的多个文件：每个单独查一遍，再把拼起来压缩后的整体查一遍
-    for name in game_parts():
-        r = subprocess.run([node, "--check", os.path.join(SRC, "game", name)], capture_output=True, text=True)
+    for part in game_parts():
+        r = subprocess.run([node, "--check", os.path.join(SRC, *part)], capture_output=True, text=True)
         if r.returncode:
-            print(f"src/game/{name} 语法错误：\n{r.stderr}")
+            print(f"src/{'/'.join(part)} 语法错误：\n{r.stderr}")
             ok = False
     rc = subprocess.run([node, "--check", "-"], input=compact_js(game_source()), capture_output=True, text=True)
     if rc.returncode:
-        print(f"src/game/ 拼起来压缩后语法错误：\n{rc.stderr}")
+        print(f"src/data/ + src/game/ 拼起来压缩后语法错误：\n{rc.stderr}")
         ok = False
     # 青锋行的各个文件共用一个闭包，拼起来再查
     game = "".join(read(QFX, n) for n in qfx_modules())

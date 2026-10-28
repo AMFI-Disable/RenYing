@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - "src/net-p2p.js"
+      - "src/data/**"
       - "src/game/**"
       - "tools/rollback-test.mjs"
       - "tools/netplay-test.mjs"

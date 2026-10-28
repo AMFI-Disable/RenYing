@@ -67,7 +67,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    MOVES     招式表。su 起手时间，ac 判定时间，rc 收招时间（秒），
              dmg 伤害，kb 击退速度 [横, 竖]，hs 顿帧时间，box 攻击范围，
              next 可以接哪一招，launch 是否挑空，spike 是否下砸。
-   CHARS     8 个角色：属性、被动、Q 技能、E 大招、外观、电脑的站位习惯。
+   CHARS     侠客：属性、被动、Q 技能、E 大招、外观、电脑的站位习惯，每位一个文件在 src/data/heroes/。
    SKILLS    Q 技能表；ULTS 大招表。想加新角色，在这三张表里各加一项就行。
    按键在 KEYS 里改；蓄力时间在 CHARGE_START / CHARGE_FULL 里调。
    联机代码在“联机（公共部分）”和“回滚联机”两节；浏览器之间直连（WebRTC）在 net-p2p.js。
