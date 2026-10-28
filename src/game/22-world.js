@@ -311,11 +311,13 @@ function drawWorld() {
     ctx.fillStyle = '#2a1e18'; ctx.fillRect(sx - 34, -62, 68, 62);
     ctx.fillStyle = '#5a2a1e'; ctx.beginPath(); ctx.moveTo(sx - 50, -60); ctx.lineTo(sx, -96); ctx.lineTo(sx + 50, -60); ctx.closePath(); ctx.fill();
     ctx.fillStyle = 'rgba(255,190,110,0.75)'; ctx.fillRect(sx - 9, -40, 18, 26);
-    ctx.font = `16px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(233,196,106,0.85)'; ctx.fillText('土地庙', sx, -106);
+    ctx.font = `16px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(233,196,106,0.85)'; ctx.fillText(cvT('土地庙'), sx, -106);
     if (i > 0) {   // 界碑
       ctx.fillStyle = '#3a3a44'; ctx.fillRect(z.a - 12, -120, 24, 120);
       ctx.save(); ctx.font = `20px ${TITLE_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.9)'; ctx.textAlign = 'center';
-      [...z.n].forEach((c, k) => ctx.fillText(c, z.a, -94 + k * 24)); ctx.restore();
+      const zn = cvT(z.n);   // 界碑上的字竖着写；英文横着写在碑顶上
+      if (zn !== z.n) ctx.fillText(zn, z.a, -130); else [...z.n].forEach((c, k) => ctx.fillText(c, z.a, -94 + k * 24));
+      ctx.restore();
     }
   }
   const S = WORLD.shots;
@@ -351,12 +353,13 @@ function drawWorldGhosts() {
     const y = g.sk.head[1] - 34;
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(g.x - 46, y - 14, 92, 4);
     ctx.fillStyle = g.hp > 0 ? '#46d3ea' : 'rgba(255,255,255,0.3)'; ctx.fillRect(g.x - 46, y - 14, 92 * clamp(g.hp / (g.maxHp || 1), 0, 1), 4);
-    ctx.fillStyle = 'rgba(200,240,255,0.9)'; ctx.fillText(g.name || '侠客', g.x, y - 20);
+    ctx.fillStyle = 'rgba(200,240,255,0.9)'; ctx.fillText(g.name || cvT('侠客'), g.x, y - 20);
     ctx.restore();
   }
 }
 function drawWorldHUD() {
-  const key = !!M.worldKey, fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + (key ? 150 : 84), w = fs * 13;
+  const key = !!M.worldKey, fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + (key ? 150 : 84);
+  let w = fs * 13;
   const zi = worldZoneAt(A.x), z = WORLD_ZONES[zi];
   const rows = WORLD.status ? [['状态', WORLD.status]] : key ? rgHudRows() : [
     ['所在', `${WORLD.line} 线 · ${z.n}`],
@@ -366,10 +369,13 @@ function drawWorldHUD() {
     ...rgHudRows(),
   ];
   ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
+  const title = cvT(key ? '全服肉鸽 · 关键战' : '江湖共斗 · 开放世界');
+  for (const r of rows) { r[0] = cvT(r[0]); r[1] = cvT(r[1]); }
+  w = Math.max(w, ctx.measureText(title).width, ...rows.map(([kk, v]) => ctx.measureText(kk).width + ctx.measureText(v).width + fs * 1.5));   // 英文长：框跟着变宽
   const hh = (rows.length + 1) * fs * 1.65 + 12;
   ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(x - w - 12, y - 10, w + 24, hh);
   ctx.strokeStyle = 'rgba(233,196,106,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(x - w - 12, y - 10, w + 24, hh);
-  ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(key ? '全服肉鸽 · 关键战' : '江湖共斗 · 开放世界', x - w, y);
+  ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(title, x - w, y);
   rows.forEach(([kk, v], i) => {
     const yy = y + (i + 1) * fs * 1.65;
     ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(239,232,216,0.65)'; ctx.fillText(kk, x - w, yy);

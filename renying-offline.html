@@ -5537,6 +5537,29 @@ const PATTERNS_EN = [
 [/^枪尖穿心 \((\d+)\/(\d+)\)$/, (m0, a, b) => `Spear to the Heart (${a}/${b})`],
 [/^剑坛赐福：(.+)$/, (m0, x) => `Arena blessing: ${lookup(x) || x}`],
 [/^(\d+) 连击$/, (m0, n) => `${n} Hits`],
+[/^(\d+) 线 · (.+)$/, (m0, n, z) => `Line ${n} · ${lookup(z) || z}`],
+[/^(\d+) 人$/, (m0, n) => `${n} player${n === '1' ? '' : 's'}`],
+[/^(\d+) 只（你 (\d+)）$/, (m0, a, b) => `${a} (you ${b})`],
+[/^魔窟 · 余 (\d+) 秒$/, (m0, n) => `Demon Cave · ${n}s left`],
+[/^还差 (\d+) 只$/, (m0, n) => `${n} more to go`],
+[/^天道(?: Boss|车轮) · 余 (\d+) 秒$/, m0 => m0.replace(/^天道 Boss/, 'Tiandao Boss').replace(/^天道车轮/, 'Tiandao Relay').replace(/余 (\d+) 秒$/, '$1s left')],
+[/^(\d+) \/ (\d+) 只$/, (m0, a, b) => `${a} / ${b}`],
+[/^第 (\d+) 轮 · 第 (\d+)\/(\d+) 劫$/, (m0, a, b, c) => `Round ${a} · Trial ${b}/${c}`],
+[/^正在进入 (\d+) 线…$/, (m0, n) => `Entering line ${n}…`],
+[/^(\d+) 线已满，去 (\d+) 线…$/, (m0, a, b) => `Line ${a} is full, moving to line ${b}…`],
+[/^江湖共斗 · (\d+) 线$/, (m0, n) => `Open World · Line ${n}`],
+[/^已有 (\d+) 位侠客在这条线上$/, (m0, n) => `${n} hero${n === '1' ? '' : 'es'} on this line`],
+[/^最后一击：(.+)$/, (m0, x) => `Final blow: ${x}`],
+[/^妖王伏诛！输出榜 (.*)$/, (m0, x) => `Demon King slain! Damage board: ${x}`],
+[/^(\d+) 秒后在土地庙复活$/, (m0, n) => `Respawn at the shrine in ${n}s`],
+[/^第 (\d+) \/ (\d+) 劫 · 已有 (\d+) 卷秘卷$/, (m0, a, b, c) => `Trial ${a} / ${b} · ${c} scroll${c === '1' ? '' : 's'} so far`],
+[/^本劫斩妖完成，(\d+) 秒内投票$/, (m0, n) => `Trial kills done, vote within ${n}s`],
+[/^线上真人不足 (\d+) 位：各自迎战 (\d+) 位天道侠客$/, (m0, a, b) => `Fewer than ${a} players online: each of you faces ${b} Tiandao heroes`],
+[/^融魂魔首【(.*)】· 共享 (\d+) 卷秘卷$/, (m0, h, n) => `Fused Demon Lord [${h.split('·').map(x => lookup(x) || x).join(' · ')}] · ${n} shared scroll${n === '1' ? '' : 's'}`],
+[/^对阵【(.*)】· 带着 (\d+) 卷共享秘卷$/, (m0, h, n) => `Versus [${h.split('·').map(x => lookup(x) || x).join(' · ')}] · with ${n} shared scroll${n === '1' ? '' : 's'}`],
+[/^(\d+) 秒后重新入战，魔首的血不回$/, (m0, n) => `Back in the fight in ${n}s; the boss doesn't heal`],
+[/^天道 Boss 伏诛！(.*?)( · 够资格的话，星座皮肤会在下次打开武库时到账| · 登录云端账号才能领星座皮肤)$/, (m0, x, t) => `Tiandao Boss slain! ${x}${t.includes('登录') ? ' · Log in to a cloud account to earn Zodiac skins' : ' · If you qualify, the Zodiac skin arrives next time you open the Armory'}`],
+[/^天道车轮战收场 · 告捷：(.+)$/, (m0, x) => `Tiandao Relay over · Winners: ${x.split('、').join(', ')}`],
 [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
 [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],
 [/^全员共享「(.+)」$/, (m0, n) => `Everyone shares “${lookup(n) || n}”`],
@@ -8392,6 +8415,44 @@ const UI_COPY_EN = {
 "韩湘子": "Han Xiangzi",
 "何仙姑": "He Xiangu",
 "蓝采和": "Lan Caihe",
+"土地庙": "Shrine",
+"侠客": "Hero",
+"状态": "Status",
+"所在": "Location",
+"本线侠客": "Heroes on line",
+"本线斩妖": "Line kills",
+"妖王现世": "Demon King spawns",
+"全线投票中": "Line vote in progress",
+"连不上服务器": "Can't reach the server",
+"与江湖失联，正在重连…": "Lost connection, reconnecting…",
+"连不上服务器，退出后再进试试": "Can't reach the server. Leave and try again",
+"进不去分线，过一会儿再试": "Couldn't join a line, try again shortly",
+"服务器还没更新开放世界，请等开发者部署": "The server doesn't have Open World yet; wait for the developers to deploy it",
+"魔窟深处妖气冲天，全线侠客速去讨伐！": "Demonic energy surges from the Demon Cave. Heroes on this line, go!",
+"妖王伏诛": "Demon King slain",
+"妖王遁走": "Demon King escaped",
+"没能在时限内拿下，下回再战": "Not defeated in time. Next time!",
+"土地庙 · 重整旗鼓": "Shrine · Regroup",
+"古道": "Old Road",
+"山寨": "Bandit Fort",
+"魔窟": "Demon Cave",
+"刀鬼、弓妖、夜枭出没": "Blade Ghouls, Bow Fiends and Night Owls roam here",
+"缚灵夜行，妖物更凶": "Binding Wraiths walk at night; the demons grow fiercer",
+"咒师聚众，火柱连天": "Hex Casters gather; pillars of fire fill the sky",
+"妖王盘踞之地": "The Demon King's lair",
+"天道 Boss 降世": "Tiandao Boss descends",
+"全线侠客共讨融魂魔首": "Every hero on the line fights the Fused Demon Lord",
+"天道 Boss · 全线共讨": "Tiandao Boss · all lines fight together",
+"同袍全倒": "Whole team down",
+"秘卷保留，回到江湖": "Scrolls kept, back to the world",
+"天道 Boss 伏诛": "Tiandao Boss slain",
+"天道 Boss 遁走": "Tiandao Boss escaped",
+"关键战结束": "Key fight over",
+"回到江湖": "Back to the world",
+"秘卷保留，下一轮开始": "Scrolls kept, next round begins",
+"离线版没有江湖共斗，请用联网版": "The offline version has no Open World; use the online version",
+"天道 Boss 遁走，下一轮再战": "Tiandao Boss escaped. Next round!",
+"天道车轮战收场 · 这一轮没人赢下，秘卷照样保留": "Tiandao Relay over · No one won this round; scrolls are kept",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -25149,11 +25210,13 @@ const sx = worldShrineX(i);   // 土地庙：复活点
 ctx.fillStyle = '#2a1e18'; ctx.fillRect(sx - 34, -62, 68, 62);
 ctx.fillStyle = '#5a2a1e'; ctx.beginPath(); ctx.moveTo(sx - 50, -60); ctx.lineTo(sx, -96); ctx.lineTo(sx + 50, -60); ctx.closePath(); ctx.fill();
 ctx.fillStyle = 'rgba(255,190,110,0.75)'; ctx.fillRect(sx - 9, -40, 18, 26);
-ctx.font = `16px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(233,196,106,0.85)'; ctx.fillText('土地庙', sx, -106);
+ctx.font = `16px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(233,196,106,0.85)'; ctx.fillText(cvT('土地庙'), sx, -106);
 if (i > 0) {   // 界碑
 ctx.fillStyle = '#3a3a44'; ctx.fillRect(z.a - 12, -120, 24, 120);
 ctx.save(); ctx.font = `20px ${TITLE_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.9)'; ctx.textAlign = 'center';
-[...z.n].forEach((c, k) => ctx.fillText(c, z.a, -94 + k * 24)); ctx.restore();
+const zn = cvT(z.n);   // 界碑上的字竖着写；英文横着写在碑顶上
+if (zn !== z.n) ctx.fillText(zn, z.a, -130); else [...z.n].forEach((c, k) => ctx.fillText(c, z.a, -94 + k * 24));
+ctx.restore();
 }
 }
 const S = WORLD.shots;
@@ -25188,12 +25251,13 @@ ctx.save(); ctx.font = `15px ${BODY_FONT}`; ctx.textAlign = 'center';
 const y = g.sk.head[1] - 34;
 ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(g.x - 46, y - 14, 92, 4);
 ctx.fillStyle = g.hp > 0 ? '#46d3ea' : 'rgba(255,255,255,0.3)'; ctx.fillRect(g.x - 46, y - 14, 92 * clamp(g.hp / (g.maxHp || 1), 0, 1), 4);
-ctx.fillStyle = 'rgba(200,240,255,0.9)'; ctx.fillText(g.name || '侠客', g.x, y - 20);
+ctx.fillStyle = 'rgba(200,240,255,0.9)'; ctx.fillText(g.name || cvT('侠客'), g.x, y - 20);
 ctx.restore();
 }
 }
 function drawWorldHUD() {
-const key = !!M.worldKey, fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + (key ? 150 : 84), w = fs * 13;
+const key = !!M.worldKey, fs = Math.max(13, Math.round(H * 0.019)), x = W - Math.max(24, W * 0.04), y = Math.max(22, H * 0.04) + (key ? 150 : 84);
+let w = fs * 13;
 const zi = worldZoneAt(A.x), z = WORLD_ZONES[zi];
 const rows = WORLD.status ? [['状态', WORLD.status]] : key ? rgHudRows() : [
 ['所在', `${WORLD.line} 线 · ${z.n}`],
@@ -25203,10 +25267,13 @@ const rows = WORLD.status ? [['状态', WORLD.status]] : key ? rgHudRows() : [
 ...rgHudRows(),
 ];
 ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
+const title = cvT(key ? '全服肉鸽 · 关键战' : '江湖共斗 · 开放世界');
+for (const r of rows) { r[0] = cvT(r[0]); r[1] = cvT(r[1]); }
+w = Math.max(w, ctx.measureText(title).width, ...rows.map(([kk, v]) => ctx.measureText(kk).width + ctx.measureText(v).width + fs * 1.5));   // 英文长：框跟着变宽
 const hh = (rows.length + 1) * fs * 1.65 + 12;
 ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(x - w - 12, y - 10, w + 24, hh);
 ctx.strokeStyle = 'rgba(233,196,106,0.45)'; ctx.lineWidth = 1; ctx.strokeRect(x - w - 12, y - 10, w + 24, hh);
-ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(key ? '全服肉鸽 · 关键战' : '江湖共斗 · 开放世界', x - w, y);
+ctx.textAlign = 'left'; ctx.fillStyle = '#e9c46a'; ctx.fillText(title, x - w, y);
 rows.forEach(([kk, v], i) => {
 const yy = y + (i + 1) * fs * 1.65;
 ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(239,232,216,0.65)'; ctx.fillText(kk, x - w, yy);
