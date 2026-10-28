@@ -189,3 +189,68 @@ const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => startTrainTarget(trainTargetMode, false));
 renderDummyFeatures();
 
+
+// ======================= 通用界面组件：空 / 出错 / 加载状态、确认框、弹窗焦点 =======================
+// 空列表、连不上、正在加载：各页统一用 uiState 画，读屏软件能听到（出错用 alert，其余用 status）。
+// 文字单独放一个节点，中英文切换按原句整句对得上。extra 是额外的 class，用来保留各页原来的位置写法。
+function uiState(kind, text, extra = '') {
+  const role = kind === 'error' ? 'alert' : 'status';
+  return `<div class="ui-state ui-${kind}${extra ? ' ' + extra : ''}" role="${role}"${kind === 'loading' ? ' aria-busy="true"' : ''}><i class="ui-state-ic" aria-hidden="true"></i><span>${escapeHTML(text)}</span></div>`;
+}
+// 确认框：代替浏览器自带的 confirm()（那个框不跟游戏的样式，手机上还会把全屏顶掉）。
+// 返回 Promise<boolean>。默认选中「取消」，Esc、点遮罩都算取消；Enter 按下当前选中的按钮。
+function uiConfirm(msg, opt = {}) {
+  return new Promise(resolve => {
+    const prev = document.activeElement;
+    const wrap = document.createElement('div');
+    wrap.className = 'ui-confirm'; wrap.setAttribute('role', 'alertdialog'); wrap.setAttribute('aria-modal', 'true');
+    wrap.setAttribute('aria-labelledby', 'uiConfirmMsg');
+    wrap.innerHTML = `<div class="ui-confirm-box"><p id="uiConfirmMsg"></p><div class="row">
+      <button type="button" class="ghost" data-v="0">${escapeHTML(opt.cancel || '取消')}</button>
+      <button type="button" class="go${opt.danger ? ' danger' : ''}" data-v="1">${escapeHTML(opt.ok || '确定')}</button></div></div>`;
+    wrap.querySelector('p').textContent = msg;
+    const done = v => {
+      wrap.remove(); window.removeEventListener('keydown', key, true);
+      try { if (prev && prev.isConnected) prev.focus({ preventScroll: true }); } catch (e) {}
+      resolve(v);
+    };
+    const key = e => {
+      if (e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); }
+      else if (e.code === 'Tab') {   // 焦点只在两个按钮之间转
+        e.preventDefault(); e.stopImmediatePropagation();
+        const bs = [...wrap.querySelectorAll('button')], i = bs.indexOf(document.activeElement);
+        bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
+      }
+    };
+    wrap.addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) done(b.dataset.v === '1'); else if (e.target === wrap) done(false); });
+    window.addEventListener('keydown', key, true);
+    document.body.appendChild(wrap);
+    wrap.querySelector('button[data-v="0"]').focus({ preventScroll: true });
+  });
+}
+// 弹窗焦点：弹窗一出来就把焦点放进去（读屏和键盘都从弹窗里开始），关掉以后回到打开它的那个按钮
+const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'arModal', 'arIns'];
+const uiDlgOpen = el => el.isConnected && !el.hidden && !el.classList.contains('hidden');
+const uiDlgPrev = new Map();
+function uiDlgWatch(el) {
+  if (!el || typeof el.hasAttribute !== 'function' || typeof MutationObserver !== 'function') return;   // 测试用的简化页面没有这些：直接跳过
+  if (!el.hasAttribute('role')) el.setAttribute('role', 'dialog');
+  if (!el.hasAttribute('aria-modal')) el.setAttribute('aria-modal', 'true');
+  if (!el.hasAttribute('tabindex')) el.tabIndex = -1;
+  let was = uiDlgOpen(el);
+  new MutationObserver(() => {
+    const now = uiDlgOpen(el); if (now === was) return; was = now;
+    if (now) {
+      uiDlgPrev.set(el, document.activeElement);
+      requestAnimationFrame(() => {   // 等内容画好再找按钮
+        if (!uiDlgOpen(el) || el.contains(document.activeElement)) return;
+        const t = el.querySelector('[data-kb-default]') || el.querySelector('button:not([disabled]), [href], input, select, textarea') || el;
+        try { t.focus({ preventScroll: true }); } catch (e) {}
+      });
+    } else {
+      const p = uiDlgPrev.get(el); uiDlgPrev.delete(el);
+      if (p && p.isConnected && (!document.activeElement || document.activeElement === document.body || el.contains(document.activeElement))) { try { p.focus({ preventScroll: true }); } catch (e) {} }
+    }
+  }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
+}
+for (const id of UI_DIALOGS) uiDlgWatch($id(id));

@@ -462,8 +462,8 @@ function socAccept(name) {
   socQueue(name, { t: 'facc' }); socSave(); socOpen('u:' + name);
 }
 function socDecline(name) { delete SOC.data.reqIn[name]; socSave(); socRenderAll(); }
-function socRemoveFriend(name) {
-  if (!confirm(`删除好友 ${name}？聊天记录也会一起清掉。`)) return;
+async function socRemoveFriend(name) {
+  if (!await uiConfirm(`删除好友 ${name}？聊天记录也会一起清掉。`, { ok: '删除', danger: true })) return;
   const D = SOC.data;
   delete D.friends[name]; delete D.convs['u:' + name]; delete D.unread['u:' + name];
   D.outbox[name] = (D.outbox[name] || []).filter(p => p.t !== 'dm');
@@ -498,9 +498,10 @@ function socInvite(gid) {
     socRenderAll();
   });
 }
-function socLeave(gid) {
+async function socLeave(gid) {
   const g = SOC.data.groups[gid]; if (!g) return;
-  if (!confirm(`退出群「${g.name}」？`)) return;
+  if (!await uiConfirm(`退出群「${g.name}」？`, { ok: '退出', danger: true })) return;
+  if (!SOC.data.groups[gid]) return;   // 确认框开着的时候群可能已经没了
   for (const n of g.members) if (n !== SOC.me) socQueue(n, { t: 'gleave', gid });
   delete SOC.data.groups[gid]; delete SOC.data.convs['g:' + gid]; delete SOC.data.unread['g:' + gid];
   socOpen('hall');
@@ -580,12 +581,12 @@ function socRenderList() {
   if (reqs.length) h += `<div class="soc-sec">好友申请</div>` + reqs.map(n => `<div class="soc-req"><span>${escapeHTML(n)}</span><button type="button" class="go small" data-acc="${escapeHTML(n)}">同意</button><button type="button" class="ghost small" data-dec="${escapeHTML(n)}">忽略</button></div>`).join('');
   const fs = Object.keys(D.friends).sort((a, b) => (on.has(b) - on.has(a)) || a.localeCompare(b, 'zh'));
   h += `<div class="soc-sec">好友 <span>${fs.length}</span></div>`;
-  h += fs.length ? fs.map(n => socItem('u:' + n, n, socLastText('u:' + n) || (on.has(n) ? '在线' : '离线'), on.has(n))).join('') : `<p class="soc-empty">${socGuestNow() ? '登录后可以加好友' : '还没有好友，在下面输入名字添加'}</p>`;
+  h += fs.length ? fs.map(n => socItem('u:' + n, n, socLastText('u:' + n) || (on.has(n) ? '在线' : '离线'), on.has(n))).join('') : uiState('empty', socGuestNow() ? '登录后可以加好友' : '还没有好友，在下面输入名字添加', 'soc-empty');
   const out = Object.keys(D.reqOut);
   if (out.length) h += out.map(n => `<div class="soc-wait">${escapeHTML(n)} <small>等对方通过</small></div>`).join('');
   const gs = Object.keys(D.groups);
   h += `<div class="soc-sec">群聊 <span>${gs.length}</span></div>`;
-  h += gs.length ? gs.map(g => socItem('g:' + g, D.groups[g].name, socLastText('g:' + g) || `${D.groups[g].members.length} 人`)).join('') : '<p class="soc-empty">还没有群</p>';
+  h += gs.length ? gs.map(g => socItem('g:' + g, D.groups[g].name, socLastText('g:' + g) || `${D.groups[g].members.length} 人`)).join('') : uiState('empty', '还没有群', 'soc-empty');
   el.innerHTML = h;
   socRenderBadge();
 }
@@ -614,7 +615,7 @@ function socRenderLog(keepBottom) {
   const k = SOC.cur, list = k === 'hall' ? SOC.hist : (SOC.data.convs[k] || []);
   const fr = SOC.data.friends, guest = socGuestNow();
   if (!list.length) {
-    log.innerHTML = `<p class="soc-none">${k === 'hall' ? (SOC.state === 'on' ? '大厅里还没人说话，来说第一句吧' : '正在连接大厅…') : '还没有消息，打个招呼吧'}</p>`;
+    log.innerHTML = k === 'hall' && SOC.state !== 'on' ? uiState('loading', '正在连接大厅…', 'soc-none') : uiState('empty', k === 'hall' ? '大厅里还没人说话，来说第一句吧' : '还没有消息，打个招呼吧', 'soc-none');
   } else {
     log.innerHTML = list.map(m => {
       if (m.sys) return `<div class="cm sys">${escapeHTML(m.text)}<span class="ct">${socTime(m.at)}</span></div>`;

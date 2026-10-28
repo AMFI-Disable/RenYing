@@ -532,7 +532,7 @@ function renderReplays() {
   // 训练集是本机攒下来的样本（导入的 .jsonl 并在这里），能整包导出、也能清掉
   const trRow = setN ? `<div class="rprow"><div class="rpm"><div class="rpt">训练集</div><div class="rps">${setN} 个样本</div></div><div style="display:flex;gap:6px;"><button class="ghost" data-trdl="1">导出</button><button class="ghost" data-trclear="1">清空</button></div></div>` : '';
   $id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
-    : '<p class="netnote">还没有回放。打完一场人机或联机对战，这里会自动保存。</p>') + trRow;
+    : uiState('empty', '还没有回放。打完一场人机或联机对战，这里会自动保存。')) + trRow;
 }
 $id('rpList').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;

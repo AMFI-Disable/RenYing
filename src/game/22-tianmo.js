@@ -59,7 +59,7 @@ function renderGboss() {
   const st = GB.st, now = Date.now(), esc = escapeHTML;
   const pend = gbPending();
   $id('gbMsg').textContent = pend && pend.uid === gbUid() ? (GB.sending ? '正在补交上次出战的伤害…' : '上次出战的伤害还没交上去，联网后会自动补交') : '';
-  if (!st) { body.innerHTML = `<p class="sub">${esc(GB.err || '正在查看天魔的情况…')}</p>`; $id('gbGo').disabled = true; return; }
+  if (!st) { body.innerHTML = GB.err ? uiState('error', GB.err) : uiState('loading', '正在查看天魔的情况…'); $id('gbGo').disabled = true; return; }
   const b = st.boss, hero = CHARS[gbHeroIdx(b.hero)], pct = b.hp / b.maxHp * 100;
   const off = now - GB.at;   // 服务器时间换成本机时间
   const affix = gbAffix(st).map(id => `<span class="gb-affix" title="${esc(SC_BY[id].d)}"><b>${esc(SC_BY[id].n)}</b>${esc(SC_BY[id].d)}</span>`).join('');

@@ -5,7 +5,7 @@
 const KBN = { on: false, root: null, key: '', rect: null, mem: new Map() };
 const KBN_FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 const KBN_DIR = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' };
-const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden])';
+const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm';
 const KBN_BACK = { bp: 'bpQuit', acc: 'accBack', lb: 'lbBack', replays: 'rpBack', settings: 'setDone', towerModal: '' };   // 各页的返回键；空串表示这一页 Esc 不返回
 const kbnRing = document.createElement('div');
 kbnRing.id = 'kbRing'; kbnRing.setAttribute('aria-hidden', 'true');

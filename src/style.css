@@ -522,6 +522,21 @@
   }
   .toast { position: fixed; left: 50%; top: 20px; transform: translateX(-50%) translateY(-20px); z-index: 40; padding: 10px 20px; border-radius: 10px; background: rgba(12,12,30,.95); border: 1px solid rgba(233,196,106,.5); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; white-space: nowrap; }
   .toast.on { opacity: 1; transform: translateX(-50%); }
+  .toast { width: max-content; max-width: calc(100vw - 32px); white-space: normal; text-align: center; }   /* 长提示在窄屏上换行，不跑出屏幕 */
+  /* ---------- 通用：空 / 出错 / 加载状态（uiState）---------- */
+  .ui-state { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); color: var(--dim); font-size: var(--fs-sm); line-height: 1.6; padding: var(--sp-3) var(--sp-2); text-align: center; }
+  .ui-state-ic { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid currentColor; opacity: .7; }
+  .ui-empty .ui-state-ic { border-style: dashed; }
+  .ui-error { color: #ffb0a8; } .ui-error .ui-state-ic { border-color: #ff6a5a; background: radial-gradient(circle, #ff6a5a 0 2px, transparent 2.5px); }
+  .ui-loading .ui-state-ic { border-color: var(--gold) transparent var(--gold) transparent; animation: uiSpin .9s linear infinite; }
+  @keyframes uiSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .ui-loading .ui-state-ic { animation: none; } }
+  /* ---------- 通用：确认框（uiConfirm）---------- */
+  .ui-confirm { position: fixed; inset: 0; z-index: calc(var(--z-modal) + 10); background: var(--scrim); display: grid; place-items: center; padding: var(--sp-4); }
+  .ui-confirm-box { width: min(420px, 100%); background: linear-gradient(160deg, #142130, #0d151e); border: 1px solid rgba(236,232,225,.14); box-shadow: var(--sh-pop); padding: var(--sp-5) var(--sp-5) var(--sp-4); text-align: center; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+  .ui-confirm-box p { margin: 0 0 var(--sp-4); white-space: pre-line; font-size: var(--fs-md); line-height: 1.7; }
+  .ui-confirm-box .row { display: flex; gap: var(--sp-3); justify-content: center; flex-wrap: wrap; }
+  :is(.rk-info, .rk-reveal, .ar-modal, .ar-ins):focus { outline: none; }
   .spt { font-family: var(--title); font-weight: 400; font-size: 26px; margin: 16px 0 6px; color: #e9c46a; }
   .trpick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 14px; }
   .trpick button { font-family: var(--title); font-size: 20px; padding: 4px 12px; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,.04); border: 1px solid var(--faint); white-space: nowrap; }
