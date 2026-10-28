@@ -85,6 +85,32 @@
     [/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
     [/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
     [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`],
+    // 匹配：计时后面的范围、排位、邀请、版本不符
+    [/^(\d+:\d{2}) · 全服随机$/, (m0, t) => `${t} · Anyone online`],
+    [/^(\d+:\d{2}) · 匹配范围 (.+?)(?:–(.+?))? 段$/, (m0, t, a, b) => `${t} · Range ${lookup(a) || a}${b ? `–${lookup(b) || b}` : ''}`],
+    [/^排位赛：(.+)$/, (m0, r) => `Competitive: ${lookup(r) || r}`],
+    [/^定级赛 (\d+)\/(\d+) · ～(\d+) 分$/, (m0, a, b, c) => `Placement ${a}/${b} · ~${c} pts`],
+    [/^([A-Z]\d*) · (.+?) · ([\d,]+) 分$/, (m0, l, n, p) => `${l} · ${lookup(n) || n} · ${p} pts`],
+    [/^检测到邀请房间码 (\S+)，正在自动加入…$/, (m0, c) => `Invite room code ${c} found, joining…`],
+    [/^中途离开排位赛，判负（(.+?) 分）$/, (m0, d) => `Left a ranked match early: counted as a loss (${d} pts)`],
+    [/^你的版本与房主不同（房主是 (.+?)），刷新网页再试$/, (m0, v) => `Your version differs from the host's (${v}). Refresh the page and try again`],
+    // 选人页（BP）：步骤、倒计时、侠客数值
+    [/^第\s*(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `Step ${a} / ${b}`],
+    [/^(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `${a} / ${b} steps`],
+    [/^(\d+(?:\.\d+)?)\s*秒$/, (m0, n) => `${n}s`],
+    [/^（冷却\s*(\d+(?:\.\d+)?)\s*秒）$/, (m0, n) => ` (cooldown ${n}s)`],
+    [/^(.+?)禁用一名侠客$/, (m0, w) => `${lookup(w) || w} · Ban a hero`],
+    [/^(.+?)选择出战侠客$/, (m0, w) => `${lookup(w) || w} · Pick a hero`],
+    [/^(.+?)钦点【(.+?)】出战$/, (m0, w, r) => `${lookup(w) || w} · Pick the ${lookup(r) || r}`],
+    [/^禁 (.+)$/, (m0, n) => `Ban · ${lookup(n) || n}`],
+    [/^皮肤 · (.+)$/, (m0, n) => `Skin · ${lookup(n) || n}`],
+    [/^生命 (\d+)$/, (m0, n) => `HP ${n}`],
+    [/^体量 ([\d.]+)$/, (m0, n) => `Build ${n}`],
+    [/^移速 ([\d.]+)$/, (m0, n) => `Speed ${n}`],
+    [/^耐力 (\d+) · 稳定 (\d+)% · 透伤 (\d+)% · 回涌 (\d+)\/秒$/, (m0, a, b, c, d) => `Guard ${a} · Stability ${b}% · Chip ${c}% · Regen ${d}/s`],
+    [/^· 伤害 ([\d.]+)(?: \((\d+)段\))?$/, (m0, d, n) => `· Damage ${d}${n ? ` (${n} hits)` : ''}`],
+    [/^([QRE]) · (.+?)(?: \[(.+)\])?$/, (m0, k, n, t) => `${k} · ${lookup(n) || n}${t ? ` [${lookup(t) || t}]` : ''}`],
+    [/^(.+?) \[(.+)\]$/, (m0, n, t) => `${lookup(n) || n} [${lookup(t) || t}]`],
     [/^(2v2 .+?) · (凯旋大捷！|惜败，择日再战！) 比分 (\d+) : (\d+)$/, (m0, mode, r, a, b) => `${lookup(mode) || mode} · ${r === '凯旋大捷！' ? 'Victory!' : 'Close loss, fight again another day!'} Score ${a} : ${b}`]   // 2v2 结算
   ];
   // 一处查表：先查固定词条，再试模板；返回空串表示“没有这句的译文”

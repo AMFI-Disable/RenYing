@@ -623,8 +623,8 @@ function renderBPWatch2v2() {
   $id('bpChat').classList.add('hidden');
   // 步骤名里已经带上了队名（苍龙禁 / 赤凤先锋），标题不再重复一遍
   const stepTeam = done ? '' : WATCH2V2_TEAMS[step.team];
-  $id('bpStep').innerHTML = (done ? '禁选完成 · 演武即将开始'
-    : (step.label.startsWith(stepTeam) ? step.label : `${stepTeam} · ${step.label}`))
+  $id('bpStep').innerHTML = `<span>${done ? '禁选完成 · 演武即将开始'
+    : (step.label.startsWith(stepTeam) ? step.label : `${stepTeam} · ${step.label}`)}</span>`
     + `<span class="bpcount">${done ? `6 / ${total} 步` : `第 ${st.step + 1} / ${total} 步`}</span>`;
   $id('bpStep').style.color = done ? 'var(--gold)' : teamCol(step.team);
   $id('bpTime').textContent = done ? '' : (st.last >= 0 ? `上一手 · ${CHARS[st.last].name}` : '天道 AI 演算中');

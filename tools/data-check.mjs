@@ -225,9 +225,9 @@ function checkUiCopy(env) {
     if (!TYPES.str(k) || k !== k.trim()) err(where, `键 ${JSON.stringify(k)} 要是非空、首尾没有空白的中文原文`);
     if (!TYPES.str(v)) err(where, `「${k}」的译文应该是非空字符串，现在是 ${JSON.stringify(v)}`);
   }
-  const keys = [];
-  for (const m of readFileSync(ROOT + where, 'utf8').matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:/gm)) keys.push(JSON.parse(m[1]));
-  unique(where, keys, '键');
+  const keys = [];   // 侠客说明的译文在 31-hero-copy.js 里补进同一张表：两个文件合起来查重
+  for (const f of [where, 'src/data/31-hero-copy.js']) for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:/gm)) keys.push(JSON.parse(m[1]));
+  unique('src/data/30-ui-copy.js + 31-hero-copy.js', keys, '键');
 }
 
 const TABLES = [

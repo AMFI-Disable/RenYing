@@ -14,7 +14,8 @@ function sealEl(ch, label) {   // 一枚印章图标；星星和在线状态画�
 const SEAL_LABEL = /^[\u4e00-\u9fa5·]{2,4}$/;
 function icoSvg(ch) { return sealEl(ch).outerHTML; }
 function iconizeText(node) {
-  const t = node.nodeValue; EMO_RE.lastIndex = 0;
+  // 英文界面下这个节点可能已经翻成英文了：按中文原文拆，拆出来的新节点再由 i18n 各自翻译，切回中文时才还得原
+  const t = node.__origText !== undefined ? node.__origText : node.nodeValue; EMO_RE.lastIndex = 0;
   if (!t || !EMO_RE.test(t)) return;
   const p = node.parentNode; if (!p || /^(SCRIPT|STYLE|TEXTAREA|OPTION|TITLE)$/.test(p.nodeName)) return;
   const frag = document.createDocumentFragment(); let last = 0; EMO_RE.lastIndex = 0; let m;

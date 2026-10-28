@@ -434,14 +434,15 @@ function drawFighter(f) {
 const ID_SELF = ['233,196,106', '190,150,255', '255,140,200', '170,230,120'];   // 1P 金、2P 紫、3P 粉、4P 青柠（都和队友的青色、对手的红色分得开）
 const ID_ALLY = '70,211,234', ID_FOE = '255,77,77';
 function idHumans() { return allFighters().filter(f => !f.hidden && human.includes(f.ctrl)); }
+const youLabel = () => (window.I18N ? I18N.t('你') : '你');   // 脚下「你」的标签，英文界面写 You
 // 这个人对我来说是谁：{ kind: 'self' | 'ally' | 'foe', rgb, label }，不用标的返回 null
 function idRole(f) {
   if (!f || f.hidden || f.dummy || !f.sk) return null;
-  if (M.mode === 'world' && !isMulti()) return f === A ? { kind: 'self', rgb: ID_SELF[0], label: '你' } : null;
+  if (M.mode === 'world' && !isMulti()) return f === A ? { kind: 'self', rgb: ID_SELF[0], label: youLabel() } : null;
   if (!isMulti() || M.mode === 'demo' || M.mode === 'replay') return null;
   if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: f.look.name } : { kind: 'foe', rgb: ID_FOE };   // 旁观：只分两队
   const k = human.indexOf(f.ctrl);
-  if (k >= 0) return { kind: 'self', rgb: ID_SELF[k] || ID_SELF[0], label: idHumans().length > 1 ? `${k + 1}P` : '你' };
+  if (k >= 0) return { kind: 'self', rgb: ID_SELF[k] || ID_SELF[0], label: idHumans().length > 1 ? `${k + 1}P` : youLabel() };
   if (fighterTeam(f) === localTeam()) return { kind: 'ally', rgb: ID_ALLY, label: String(f.ctrl === NET.remote ? ((NET.names || {})[NET.role === 'host' ? 'client' : 'host'] || f.look.name) : f.look.name).slice(0, 6) };   // 名字太长就截到 6 个字，别把旁边的名牌挤走
   return isRaid() ? null : { kind: 'foe', rgb: ID_FOE };
 }

@@ -247,18 +247,19 @@ class Puppet {
         const alpha = Math.min(1, b.life * 2.5);
         ctx.save(); ctx.translate(w / 2, h * 0.84); ctx.scale(scale, scale);
         ctx.font = `bold 12px ${BODY_FONT}`;
-        const bw = ctx.measureText(b.text).width;
+        const bt = window.I18N ? I18N.t(b.text) : b.text, bw = ctx.measureText(bt).width;   // 英文界面换成英文再量宽度
         ctx.fillStyle = `rgba(10,12,24,${alpha * 0.85})`;
         ctx.beginPath(); ctx.roundRect ? ctx.roundRect(b.x - bw / 2 - 6, b.y - 10, bw + 12, 20, 4) : ctx.rect(b.x - bw / 2 - 6, b.y - 10, bw + 12, 20); ctx.fill();
         ctx.strokeStyle = `rgba(${this.look.slash},${alpha * 0.8})`; ctx.lineWidth = 1; ctx.stroke();
         ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.text, b.x, b.y);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(bt, b.x, b.y);
         ctx.restore();
       }
       if (!hideLabel && this.lab) {
-        ctx.font = `600 12px ${BODY_FONT}`; const tw = ctx.measureText(this.lab).width;
+        const lab = window.I18N ? I18N.t(this.lab) : this.lab;
+        ctx.font = `600 12px ${BODY_FONT}`; const tw = ctx.measureText(lab).width;
         ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(8, 8, tw + 18, 22, 11) : ctx.rect(8, 8, tw + 18, 22); ctx.fill();
-        ctx.fillStyle = `rgb(${this.look.slash})`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(this.lab, 17, 19.5);
+        ctx.fillStyle = `rgb(${this.look.slash})`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(lab, 17, 19.5);
       }
     });
   }
@@ -624,20 +625,20 @@ function bpDetailHTML(i) {
   const st = c.stat || {};
   const guardTxt = `耐力 ${st.guardMax || 100} · 稳定 ${Math.round((st.guardStab || 1) * 100)}% · 透伤 ${Math.round((st.guardChip || 0.1) * 100)}% · 回涌 ${st.guardRegen || 28}/秒`;
   const hits = HERO_HIT_DETAILS[c.id] || {};
-  const comboFlow = hits.light ? `${hits.light.name}（${hits.light.badge || '连击'}） · 蓄力：${hits.charge ? hits.charge.name : '蓄力重斩'}` : '';
+  const comboFlow = hits.light ? `<span>${hits.light.name}</span>（<span>${hits.light.badge || '连击'}</span>） · <span>蓄力</span>：<span>${hits.charge ? hits.charge.name : '蓄力重斩'}</span>` : '';   // 每段单独一个节点，英文界面才能逐段查表
   const S2 = SKILLS[c.skill2];
-  const specialMove = S2 ? `${S2.name} · ${S2.desc || ''}` : '';
+  const specialMove = S2 ? `<span>${S2.name}</span> · <span>${S2.desc || ''}</span>` : '';
 
   return `<img src="${PORTRAITS[i] || makePortrait(i)}" alt="" style="border:1px solid ${col};border-radius:6px">
     <div><h3 style="color:${col};display:flex;align-items:center;gap:8px;margin:0 0 4px">${c.name}${curSkin ? `<span class="pill" style="font-size:12px;color:${col};border-color:${col}">皮肤 · ${SKINS[curSkin].name}</span>` : ''}</h3>
     <!-- 皮肤改在角色图鉴里装配：选人是有时限的，这里只显示当前装束 -->
     <div class="meta"><span>${c.role}</span><span>难度 ${'★'.repeat(c.diff)}${'☆'.repeat(3 - c.diff)}</span><span>生命 ${Math.round((st.hp || 500) * ((BAL[c.id] || {}).hp || 1))}</span><span>体量 ${(st.weight || 1).toFixed(2)}</span><span>移速 ${(st.walk || 1).toFixed(2)}</span></div>
-    <dl><dt>被动 ${c.passiveName}</dt><dd>${c.passiveDesc}</dd>
+    <dl><dt><span>被动</span> <span>${c.passiveName}</span></dt><dd>${c.passiveDesc}</dd>
     <dt>门派架势</dt><dd>${guardTxt}</dd>
     ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
-    <dt>技能 ${S.name}</dt><dd>${S.desc}（冷却 ${S.cd} 秒）</dd>
-    ${specialMove ? `<dt>绝技 ${S2.name}</dt><dd>${specialMove}</dd>` : ''}
-    <dt>大招 ${U.name}</dt><dd>${U.desc}<div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
+    <dt><span>技能</span> <span>${S.name}</span></dt><dd><span>${S.desc}</span><span>（冷却 ${S.cd} 秒）</span></dd>
+    ${specialMove ? `<dt><span>绝技</span> <span>${S2.name}</span></dt><dd>${specialMove}</dd>` : ''}
+    <dt><span>大招</span> <span>${U.name}</span></dt><dd><span>${U.desc}</span><div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
     ${restrHtml}</div>`;
 }
 function buildDetails(force) {
@@ -797,7 +798,8 @@ function renderBP() {
     stepTitle = `${bpSideName(side)}选择出战侠客`;
   }
 
-  document.getElementById('bpStep').innerHTML = modePrefix + stepTitle
+  // 模式名和这一步分开放，英文界面才能各自查表
+  document.getElementById('bpStep').innerHTML = (modePrefix ? `<span>${modePrefix.slice(0, -3)}</span> · ` : '') + `<span>${stepTitle}</span>`
     + (done ? '' : `<span class="bpcount">第 ${BP.step + 1} / ${bpSteps().length} 步</span>`);
   document.getElementById('bpStep').style.color = myTurn ? '#e9c46a' : 'var(--ink)';
   document.getElementById('bpTime').textContent = done ? '' : `${Math.ceil(BP.t)} 秒`;

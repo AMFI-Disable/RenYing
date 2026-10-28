@@ -1064,6 +1064,7 @@
   /* 印章里直接写 2-4 个字，取代“印章 + 文字” */
   .sic.w { width: auto; min-width: 1.42em; padding: .05em .42em .1em; margin-right: 0; letter-spacing: .08em; text-indent: .08em; height: 1.6em; font-size: max(12px, 1em); transform: rotate(-1.5deg); }
   .sic.w:nth-of-type(even) { transform: rotate(1.2deg); }
+  body.lang-en .sic.w { font-family: var(--body); letter-spacing: 0; text-indent: 0; transform: none; }   /* 英文刻不进印章：换回正文字体，不再歪着 */
   button .sic.w, .ghost .sic.w { font-size: max(12px, 1em); }
   .lv-icon .sic.w { font-size: max(12px, 1.1em); }
   .sel .sic.w, button.sel .sic.w { box-shadow: inset 0 0 0 1.4px #8e2a21, inset 0 0 0 2.6px rgba(255,240,225,.6), 0 0 10px rgba(184,57,46,.6); }
