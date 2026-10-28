@@ -336,7 +336,7 @@ function drawWorldBoss(b) {
   ctx.fillStyle = warn ? '#ffd0a0' : '#ff3c3c'; circle([x + f * 8 - 14, -168 + bob], 5); circle([x + f * 8 + 14, -168 + bob], 5);
   ctx.strokeStyle = b.flash > 0 ? '#fff' : '#8a6070'; ctx.lineWidth = 6;
   ctx.beginPath(); ctx.moveTo(x + f * 60, -120 + bob); ctx.quadraticCurveTo(x + f * 130, -160 - (warn ? 50 : 0), x + f * 150, -60); ctx.stroke();
-  ctx.font = `18px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,170,170,0.9)'; ctx.fillText('妖王', x, -262 + bob);
+  ctx.font = `18px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,170,170,0.9)'; ctx.fillText(cvT('妖王'), x, -262 + bob);
   ctx.restore();
 }
 // 同道：别的侠客，头顶写名字（在自己身后画）
@@ -389,7 +389,7 @@ function drawWorldHUD() {
     ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(bx - 3, by - 3, bw + 6, 16);
     ctx.fillStyle = '#c42a45'; ctx.fillRect(bx, by, bw * clamp(b.hp / (b.maxHp || 1), 0, 1), 10);
     ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#ffd0c0';
-    ctx.fillText(`妖王 · 全线共讨  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
+    ctx.fillText(`${cvT('妖王 · 全线共讨')}  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
   }
 }
 // 入口：首页「开放世界」打开一个小弹窗，直接进或者填线号找朋友；肉鸽弹窗里的「全服肉鸽」直接进（自动分线）。都先在点将台选侠客

@@ -527,7 +527,7 @@ function drawMons(mons, shots) {
     if (warn) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(${T.eye},0.25)`; circle([x, y - (T.fly ? 0 : 60)], 40); ctx.globalCompositeOperation = 'source-over'; }
     const bw = 44, top = (T.fly ? y - 26 : y - T.h - (T.float ? 30 : 12));
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x - bw / 2, top - 6, bw, 4); ctx.fillStyle = `rgb(${T.eye})`; ctx.fillRect(x - bw / 2, top - 6, bw * m.hp / m.maxHp, 4);
-    ctx.fillStyle = 'rgba(230,220,240,0.55)'; ctx.font = `12px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.fillText(`${T.name}·${T.kind}`, x, top - 12);
+    ctx.fillStyle = 'rgba(230,220,240,0.55)'; ctx.font = `12px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.fillText(cvT(T.name) === T.name ? `${T.name}·${T.kind}` : `${cvT(T.name)} · ${cvT(T.kind)}`, x, top - 12);
     ctx.restore();
   }
 }

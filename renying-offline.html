@@ -7491,6 +7491,19 @@ const UI_COPY_EN = {
 "剑阁大捷！": "Sword Pavilion cleared!",
 "试炼止步": "Trial over",
 "喘息休整": "Catching breath",
+"刀鬼": "Blade Ghoul",
+"弓妖": "Bow Fiend",
+"缚灵": "Binding Wraith",
+"咒师": "Hex Caster",
+"夜枭": "Night Owl",
+"近身": "Melee",
+"远射": "Ranged",
+"缠缚": "Binder",
+"术法": "Caster",
+"飞空": "Flyer",
+"妖物": "Demons",
+"妖王": "Demon King",
+"妖王 · 全线共讨": "Demon King · all lines fight together",
 "势": "Guard",
 "游客": "Guest",
 "帧率": "FPS",
@@ -11738,7 +11751,7 @@ if (m.key === 'binder') { ctx.strokeStyle = 'rgba(200,120,255,0.5)'; ctx.lineWid
 if (warn) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(${T.eye},0.25)`; circle([x, y - (T.fly ? 0 : 60)], 40); ctx.globalCompositeOperation = 'source-over'; }
 const bw = 44, top = (T.fly ? y - 26 : y - T.h - (T.float ? 30 : 12));
 ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x - bw / 2, top - 6, bw, 4); ctx.fillStyle = `rgb(${T.eye})`; ctx.fillRect(x - bw / 2, top - 6, bw * m.hp / m.maxHp, 4);
-ctx.fillStyle = 'rgba(230,220,240,0.55)'; ctx.font = `12px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.fillText(`${T.name}·${T.kind}`, x, top - 12);
+ctx.fillStyle = 'rgba(230,220,240,0.55)'; ctx.font = `12px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.fillText(cvT(T.name) === T.name ? `${T.name}·${T.kind}` : `${cvT(T.name)} · ${cvT(T.kind)}`, x, top - 12);
 ctx.restore();
 }
 }
@@ -24653,7 +24666,7 @@ ctx.beginPath(); ctx.moveTo(x - 30, -196 + bob); ctx.lineTo(x - 52, -246 + bob);
 ctx.fillStyle = warn ? '#ffd0a0' : '#ff3c3c'; circle([x + f * 8 - 14, -168 + bob], 5); circle([x + f * 8 + 14, -168 + bob], 5);
 ctx.strokeStyle = b.flash > 0 ? '#fff' : '#8a6070'; ctx.lineWidth = 6;
 ctx.beginPath(); ctx.moveTo(x + f * 60, -120 + bob); ctx.quadraticCurveTo(x + f * 130, -160 - (warn ? 50 : 0), x + f * 150, -60); ctx.stroke();
-ctx.font = `18px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,170,170,0.9)'; ctx.fillText('妖王', x, -262 + bob);
+ctx.font = `18px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,170,170,0.9)'; ctx.fillText(cvT('妖王'), x, -262 + bob);
 ctx.restore();
 }
 function drawWorldGhosts() {
@@ -24704,7 +24717,7 @@ const b = WORLD.boss, bw = Math.min(W * 0.5, 640), bx = (W - bw) / 2, by = H - M
 ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(bx - 3, by - 3, bw + 6, 16);
 ctx.fillStyle = '#c42a45'; ctx.fillRect(bx, by, bw * clamp(b.hp / (b.maxHp || 1), 0, 1), 10);
 ctx.font = `${fs}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#ffd0c0';
-ctx.fillText(`妖王 · 全线共讨  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
+ctx.fillText(`${cvT('妖王 · 全线共讨')}  ${Math.max(0, Math.ceil(b.hp))} / ${b.maxHp}`, W / 2, by - 6); ctx.restore();
 }
 }
 function worldEnter(line) {
