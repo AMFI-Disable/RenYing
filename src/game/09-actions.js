@@ -72,6 +72,7 @@ function neutral(f, foe) {
     if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
     if (c.held.down) {
       if (c.consume('light')) return startAttack(f, 'dl');
+      if (f.skill2CD <= 0 && (SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) return startSkill(f, foe, 2);   // 离影 ↓+R：换到最早的雾身
       f.blockT = f.state === 'block' ? (f.blockT || 0) + STEP : 0;
       f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
     } else {
@@ -121,7 +122,7 @@ function neutral(f, foe) {
         return;
       }
       if (f.skillCD <= 0 && c.consume('skill')) { f.airHover = 0; endEscape(f); return startSkill(f, foe); }
-      if (f.skill2CD <= 0 && c.consume('skill2')) { f.airHover = 0; endEscape(f); return startSkill(f, foe, 2); }
+      if (f.skill2CD <= 0 && !(SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) { f.airHover = 0; endEscape(f); return startSkill(f, foe, 2); }
       return;
     }
     if (c.consume('light')) return startAttack(f, 'a1');
@@ -172,14 +173,15 @@ function attackUpdate(f, foe) {
     SFX[m.snd]();
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
-  if (M.phase === 'fight' && cx.skill2FromLight && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+  const free2 = (SKILLS[f.ch.skill2] || {}).free;   // free：只能从自由状态放，不能接在出招后面（离影的换影）
+  if (M.phase === 'fight' && cx.skill2FromLight && !free2 && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
   if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
     if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
     if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
     if (m.next.heavy && c.consume('heavy')) return startAttack(f, m.next.heavy);
     if (f.hitConfirmed) {
       if (cx.skillOnHit && f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
-      if (cx.skillOnHit && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+      if (cx.skillOnHit && !free2 && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
       if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = faceDir(f, foe); return doJump(f, f.face); }
     }
   }
@@ -227,7 +229,8 @@ function specialUpdate(f, foe) {
       const ang = rand(0, Math.PI);
       slashLine(victim.x, victim.y - 55, ang, f.look.slash);
       if (f.ch.ult === 'shadows') {
-        decoys.push({ owner: f.idx, sk: f.sk, x0: f.x, y0: f.y, x: f.x, y: f.y, vx: rand(-40, 40), vy: rand(-30, 30), rot: 0, vr: 0, life: 0.35, landed: true, age: 0 });
+        // 残影进回滚存档、会被打中（hitDecoy），飘的方向不能用 rand（两边的 Math.random 不一样），按刀数定
+        decoys.push({ owner: f.idx, sk: f.sk, x0: f.x, y0: f.y, x: f.x, y: f.y, vx: side * 30, vy: (f.slashN % 3 - 1) * 20, rot: 0, vr: 0, life: 0.35, landed: true, age: 0 });
         smoke(f.x, f.y - 50, 6);
       } else if (f.ch.ult === 'crescent') {
         ring(victim.x, victim.y - 55, 75, '120,230,255', 0.22);
@@ -257,7 +260,7 @@ function specialUpdate(f, foe) {
       } else if (f.ch.ult === 'shadows') {
         f.skillCD = 0; f.skill2CD = 0; f.dashCD = 0;
         for (let k = 0; k < 2; k++) {
-          decoys.push({ owner: f.idx, sk: f.sk, x0: f.x + (k === 0 ? -40 : 40), y0: f.y, x: f.x + (k === 0 ? -40 : 40), y: f.y, vx: rand(-50, 50), vy: rand(-30, 30), rot: 0, vr: 0, life: 1.8, landed: true, age: 0 });
+          decoys.push({ owner: f.idx, sk: f.sk, x0: f.x + (k === 0 ? -40 : 40), y0: f.y, x: f.x + (k === 0 ? -40 : 40), y: f.y, vx: k === 0 ? -35 : 35, vy: -15, rot: 0, vr: 0, life: 1.8, landed: true, age: 0 });
           smoke(f.x + (k === 0 ? -40 : 40), f.y - 40, 8);
         }
         addP({ type: 'text', text: '🗡️ 影遁无形 · 苦无重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,95,115' });
@@ -421,6 +424,7 @@ function updateProjs() {
       foe.meter = Math.min(100, foe.meter + 1.5);
       addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb: foe.look.slash }); continue;
     }
+    hitClones(box, p.owner);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
     if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
@@ -608,7 +612,7 @@ function updateDecoys() {
   for (let i = decoys.length - 1; i >= 0; i--) if (decoys[i].gone) decoys.splice(i, 1);
 }
 // 攻击先打到假人：假人碎掉，这一刀作废
-function hitDecoy(att, box) { if (hitDecoyBox(box, att.idx)) { att.hitDone = true; return true; } return false; }
+function hitDecoy(att, box) { hitClones(box, att.idx); if (hitDecoyBox(box, att.idx)) { att.hitDone = true; return true; } return false; }
 function hitDecoyBox(box, attIdx) {
   for (const d of decoys) {
     if (d.gone || d.owner === attIdx) continue;
@@ -621,6 +625,66 @@ function hitDecoyBox(box, attIdx) {
     }
   }
   return false;
+}
+// ======================= 雾身（离影） =======================
+// 雾身存在主人身上（f.clones = [{ id, x, t }]，t 是已经存在了几秒），回滚存档跟着侠客一起存、一起回；全程不用随机数。
+// 规则的数都在 char.clone（src/data/heroes/13-liying.js）：最多 max 个，存在 life 秒，离本体超过 leash 像素自己散，
+// 任何攻击碰到就碎、攻击照常往下走（不像木偶替身那样把刀吃掉），打碎的人回 breakMeter 点气。雾身只在地上，不会动也不出招。
+const cloneBox = c => [c.x - 22, -100, c.x + 22, 2];
+function plantClone(f, x) {
+  const C = f.ch.clone; if (!C) return;
+  if (!f.clones) f.clones = [];
+  while (f.clones.length >= C.max) cloneGone(f, f.clones[0], false);   // 满了：最早的那个散掉
+  f.cloneN = (f.cloneN || 0) + 1;
+  const c = { id: f.cloneN, x: clamp(x, WALL, STAGE_W - WALL), t: 0 };
+  f.clones.push(c);
+  if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + c.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: c.x - f.x };
+  if (!RESIM) { smoke(c.x, -40, 6); ring(c.x, -10, 46, f.look.slash, 0.3); }
+}
+function cloneGone(f, c, broken) {
+  const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
+  f.clones.splice(i, 1);
+  delete CLONE_SK[f.idx + ':' + c.id];
+  if (RESIM) return;
+  smoke(c.x, -50, broken ? 12 : 7);
+  if (broken) { addP({ type: 'text', text: '破影', x: c.x, y: -120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
+}
+function clearClones(f) { for (const c of (f.clones || []).slice()) cloneGone(f, c, false); }
+function cloneTick(f) {
+  if (!f.clones || !f.clones.length) return;
+  const C = f.ch.clone || { life: 0, leash: 0 };
+  for (const c of f.clones.slice()) {
+    c.t += STEP;
+    if (c.t >= C.life || Math.abs(c.x - f.x) > C.leash || f.hp <= 0) cloneGone(f, c, false);
+  }
+}
+// 攻击框碰到对手的雾身：雾身碎掉，打的人回气；攻击本身不受影响
+function hitClones(box, attIdx) {
+  const att = fighterByIdx(attIdx);
+  for (const o of foesOf(att)) {
+    if (!o.clones || !o.clones.length) continue;
+    for (const c of o.clones.slice()) {
+      if (!overlap(box, cloneBox(c))) continue;
+      cloneGone(o, c, true);
+      att.meter = Math.min(100, (att.meter || 0) + ((o.ch.clone || {}).breakMeter || 0));
+    }
+  }
+}
+// 按 R 时换到哪个雾身：↓ 最早的；← / → 本体那一边最近的；不按方向就是「高亮」的那个（离对手最近，画面上一直标着）
+function cloneMark(f, foe) {
+  let best = null;
+  for (const c of f.clones || []) if (!best || Math.abs(c.x - foe.x) < Math.abs(best.x - foe.x)) best = c;
+  return best;
+}
+function pickClone(f, foe) {
+  const cs = f.clones || [], h = (f.ctrl && f.ctrl.held) || {};
+  if (!cs.length) return null;
+  if (h.down) return cs[0];
+  const dir = (h.right ? 1 : 0) - (h.left ? 1 : 0);
+  if (!dir) return cloneMark(f, foe);
+  let best = null;
+  for (const c of cs) { const d = (c.x - f.x) * dir; if (d > 1 && (!best || d < (best.x - f.x) * dir)) best = c; }
+  return best;
 }
 function smoke(x, y, n) {
   for (let i = 0; i < n; i++) addP({ type: 'smoke', x: x + rand(-18, 18), y: y + rand(-30, 30), vx: rand(-90, 90), vy: rand(-90, 20), drag: 3, life: rand(0.4, 0.7), max: 0.7, r: rand(10, 22) });
@@ -664,6 +728,7 @@ function updateFighter(f, foe) {
   if (f.onGround()) f.diveChained = false;
   trySecondQ(f, foe);
   escapeTick(f);
+  cloneTick(f);
   if (tryEscape(f, foe)) { physics(f); return; }
   f.skillCD = Math.max(0, f.skillCD - STEP);
   f.flying = false;

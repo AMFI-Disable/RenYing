@@ -115,6 +115,40 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
   assert(!maps.err && maps.picks[777] === 'cliff' && maps.picks[778] === 'ice' && ['cliff', 'ice'].includes(maps.picks[991]), 'Maps room: both sides pick the same map from the same votes and seed', JSON.stringify(maps));
   assert(maps.map === 'cliff' && maps.w0 === 1500 && maps.falls >= 1 && maps.match && maps.stays, 'Maps room: a cliff fall resimulates to the identical state hash after a 150-frame rollback', JSON.stringify(maps));
+  // 离影的雾身（f.clones）：两边都是离影，大量留影和带方向的渡影。对面的按键先猜错（一直不按），
+  // 隔 30 帧才收到真的按键再回滚重算，结果要和一开始就按对了的那条时间线一模一样（雾身的位置、编号、谁被打碎）。
+  const ly = new vm.Script(`(() => {
+    const L = CHARS.findIndex(c => c.id === 'liying');
+    const real = f => ({
+      loc: { h: [0, 2, 2, 1, 4, 0][(f >> 4) % 6], p: f % 50 === 5 ? ['skill'] : f % 50 === 30 ? ['skill2'] : f % 9 === 0 ? ['light'] : [] },
+      rem: { h: [1, 0, 4, 2, 0, 1][(f >> 4) % 6], p: f % 44 === 3 ? ['skill'] : f % 44 === 25 ? ['skill2'] : f % 11 === 0 ? ['light'] : [] }
+    });
+    const T = 2400, out = { swaps: 0, planted: 0 };
+    const run = guess => {
+      rollStart([L, L], 777); M.rseq = 0;   // 每开一局 rseq 加一，两次重开要从同一个数起
+      M.phase = 'fight';
+      let swaps = 0, maxClones = 0, prev = [A.x, B.x];
+      for (let f = 0; f < T; f++) {
+        const r = real(f);
+        ROLL.loc[f] = r.loc;
+        ROLL.rem[f] = guess && f % 40 >= 10 ? { h: 0, p: [] } : r.rem;
+        ROLL.remLast = f;
+        rollFrame(f); ROLL.F = f + 1;
+        if (guess && f % 40 === 39) { for (let g = f - 29; g <= f; g++) ROLL.rem[g] = real(g).rem; ROLL.pend = f - 29; rollResim(); }
+        for (const F of [A, B]) maxClones = Math.max(maxClones, F.clones.length);
+        if (Math.abs(A.x - prev[0]) > 60 || Math.abs(B.x - prev[1]) > 60) swaps++;
+        prev = [A.x, B.x];
+      }
+      return { h: hashState(capState()), swaps, maxClones, n: A.cloneN + B.cloneN, rb: ROLL.rollbacks };
+    };
+    const a = run(false), b = run(true);
+    return { a, b };
+  })()`).runInContext(w);
+  assert(ly.a.h === ly.b.h && ly.b.rb >= 10 && ly.a.n >= 6 && ly.a.maxClones >= 1 && ly.a.swaps >= 2,
+    `Li Ying mist doubles: ${ly.b.rb} mispredicted rollbacks across plants/swaps/breaks end on the same state hash as the true timeline (${ly.a.n} doubles planted, ${ly.a.swaps} swaps)`, JSON.stringify(ly));
+  // 同一个状态、字段先后不一样（回滚过的一边 resF 删掉再补回的字段排到了最后），校验码也要一样，不然会被当成不同步
+  const ord = new vm.Script(`hashState({ a: 1, b: { x: 2, y: [3, { p: 1, q: 2 }] } }) === hashState({ b: { y: [3, { q: 2, p: 1 }], x: 2 }, a: 1 })`).runInContext(w);
+  assert(ord === true, 'State hash does not depend on field order (a rolled-back peer and a non-rolled-back peer agree)');
 }
 
 // 2. QingFengXing (青锋行) 3D Action Mode Verification

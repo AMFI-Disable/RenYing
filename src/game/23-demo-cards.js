@@ -87,6 +87,9 @@ class Puppet {
       else if (st.fx === 'inktrap') { this.puddles.push({ x: 60, life: 2.5 }); }
       else if (st.fx === 'inkblob') { this.projs.push({ kind: 'inkblob', x: this.x + 25, y: -80, vx: 450, vy: -380, g: 1400, life: 0.6, col: '40,40,55' }); }
       else if (st.fx === 'inkdragon') { this.dimT = 0.8; this.projs.push({ kind: 'dragon', x: this.x + 30, y: -65, vx: 620, life: 0.85, col: '25,25,35' }); this.flashT = 0.25; this.rings.push({ x: 60, y: -65, r: 45, life: 0.5, col: '230,70,50' }); }
+      else if (st.fx === 'mist') { this.rings.push({ x: this.x, y: -60, r: 22, life: 0.5, col: '127,214,224' }); for (let k = 0; k < 8; k++) this.fx.push({ x: this.x + rand(-12, 12), y: -60 + rand(-30, 30), vx: rand(-40, 40), vy: -rand(20, 80), life: 0.5, c: '127,214,224' }); }
+      else if (st.fx === 'mistswap') { this.rings.push({ x: this.x, y: -60, r: 26, life: 0.35, col: '127,214,224' }); for (let k = 0; k < 10; k++) this.fx.push({ x: this.x + rand(-10, 10), y: -60 + rand(-25, 25), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.3, c: '127,214,224' }); }
+      else if (st.fx === 'mistarray') { this.flashT = 0.25; this.dimT = 0.65; for (const dx of [-120, -60]) this.projs.push({ kind: 'wind', x: this.x + dx, y: -62, vx: 1100, life: 0.4, col: '127,214,224' }); this.rings.push({ x: 60, y: -62, r: 40, life: 0.5, col: '127,214,224' }); }
       else if (st.fx === 'mirror') { this.rings.push({ x: this.x + 25, y: -65, r: 24, life: 0.4, col: '215,195,255' }); }
       else if (st.fx === 'moonring') { this.projs.push({ kind: 'moonring', x: this.x + 30, y: -65, vx: 650, life: 0.7, col: '215,195,255' }); }
       else if (st.fx === 'moonflow') { this.dimT = 0.65; this.flashT = 0.25; this.rings.push({ x: this.x, y: -60, r: 48, life: 0.55, col: '215,195,255' }, { x: this.x, y: -60, r: 28, life: 0.45, col: '180,255,200' }); this.badges.push({ text: '+60', x: this.x, y: -105, life: 0.85, max: 0.85 }); }
@@ -314,7 +317,7 @@ function demoLoop(canvas, getIdx, isOn, getSkin, getMoveKey) {
   requestAnimationFrame(tick);
 }
 // ======================= 立绘卡面 =======================
-const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a' };
+const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a', liying: 'fy_seal' };
 function makeCardArt(i, CW, CH, skin) {
   const c = document.createElement('canvas'); c.width = CW; c.height = CH;
   const g = c.getContext && c.getContext('2d'); if (!g) return c;

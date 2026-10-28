@@ -290,7 +290,7 @@ const testSuite = [
     fn: `(() => {
       for (let ci = 0; ci < CHARS.length; ci++) {
         setChars(ci, (ci + 1) % CHARS.length);
-        toNeutral(A);
+        A.y = 0; A.vy = 0; toNeutral(A);   // 站在地上放（离影的留影只能在地上用）
         A.skillCD = 0;
         startSkill(A, B, 1);
         if (A.state !== 'skill' && A.state !== 'attack') {
@@ -299,10 +299,11 @@ const testSuite = [
         toNeutral(A);
         A.skill2CD = 0;
         const gate = SKILLS[A.ch.skill2].can;
-        if (gate) {   // 有使用条件的技能（醉翁与民同乐要半壶酒，墨羽画符要 3 格墨水）：条件不够时不能放，也不扣冷却
-          A.drunk = 0; A.ink = 0; startSkill(A, B, 2);
+        if (gate) {   // 有使用条件的技能（醉翁与民同乐要半壶酒，墨羽画符要 3 格墨水，离影渡影要场上有雾身）：条件不够时不能放，也不扣冷却
+          A.drunk = 0; A.ink = 0; clearClones(A); startSkill(A, B, 2);
           if (A.state === 'skill' || A.skill2CD > 0) return { pass: false, error: CHARS[ci].name + ' skill 2 fired without meeting its condition' };
           A.drunk = 100; A.ink = 100; A.fu = 0;
+          if (A.ch.clone) plantClone(A, A.x - 150);
         }
         startSkill(A, B, 2);
         if (A.state !== 'skill' && A.state !== 'attack') {
@@ -762,7 +763,7 @@ const testSuite = [
         qingfeng: 870, feiying: 800, tieshan: 900, lingshuang: 815,
         liuyun: 840, leiming: 885, moyu: 825, yuehua: 780,
         yanling: 750, yuxiao: 775, zuixian: 885, gouchen: 835,
-        lingque: 790
+        lingque: 790, liying: 815
       };
       for (let ci = 0; ci < CHARS.length; ci++) {
         const ch = CHARS[ci];
@@ -942,9 +943,9 @@ const testSuite = [
       if (!subTxt.includes('600') || !subTxt.includes('墨锭')) {
         return { pass: false, error: 'Victory screen did not announce Ink reward: ' + subTxt };
       }
-      // Verify all 13 heroes have dedicated stories in HERO_FOREST_STORIES & CHAPTERS, and unified storyWaves -> Raid Boss works
+      // Verify every hero has a dedicated story in HERO_FOREST_STORIES & CHAPTERS, and unified storyWaves -> Raid Boss works
       if (typeof HERO_FOREST_STORIES !== 'object' || CHAPTERS.length !== CHARS.length) {
-        return { pass: false, error: 'Expected 13 CHAPTERS matching CHARS.length, got ' + CHAPTERS.length };
+        return { pass: false, error: 'Expected one CHAPTER per hero (' + CHARS.length + '), got ' + CHAPTERS.length };
       }
       for (const ch of CHARS) {
         const st = HERO_FOREST_STORIES[ch.id];

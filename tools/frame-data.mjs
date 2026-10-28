@@ -66,7 +66,10 @@ if (check) {
     if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) walk(a[k], b[k], p + '.' + k); }
     else if (JSON.stringify(a) !== JSON.stringify(b)) diff.push(`${p}：原来 ${JSON.stringify(a)}，现在 ${JSON.stringify(b)}`);
   };
-  base.forEach((r, i) => walk(r, data[i], r.name));
+  // 按名字对齐：新加或删掉的侠客也要报出来（按下标比会漏掉多出来的那一位）
+  const now = new Map(data.map(r => [r.name, r])), was = new Set(base.map(r => r.name));
+  for (const r of base) if (now.has(r.name)) walk(r, now.get(r.name), r.name); else diff.push(`${r.name}：基准里有，现在没有了`);
+  for (const r of data) if (!was.has(r.name)) diff.push(`${r.name}：新侠客，基准里还没有（不带 --check 重新生成）`);
   if (diff.length) { console.log(`帧数和 docs/frame-data.json 不一样（${diff.length} 处）：`); for (const d of diff.slice(0, 40)) console.log('  ' + d); process.exit(1); }
   console.log(`帧数和基准一致（${data.length} 位侠客）`);
 } else {

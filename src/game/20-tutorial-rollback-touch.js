@@ -227,7 +227,10 @@ function restState(st) {
   if (isRaid()) raidBossSkills();
 }
 function hashState(st) {
-  const txt = JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);   // sk 是画面上的骨架（残影里也带着），不算
+  // sk 是画面上的骨架（残影里也带着），不算。键按名字排好再算：回滚时 resF 会删掉再补回字段，
+  // 同一个状态在回滚过的一边和没回滚的一边键的先后不一样，不排序的话两边算出来不同，会被当成不同步
+  const txt = JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000
+    : v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(q => [q, v[q]])) : v);
   let h = 2166136261; for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
   return h >>> 0;
 }

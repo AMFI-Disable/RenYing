@@ -509,6 +509,48 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? ['dash', 60] : ['idle', 14],
     ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
+  // 离影：雾身的规则和怎么选雾身在 09-actions.js 的「雾身」那一节，数在 src/data/heroes/13-liying.js 的 clone
+  mistmark: { name: '留影', cd: 5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 2 个雾身，再留就散掉最早的那个。雾身存在 6 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。',
+    start(f) { f.vx = 0; plantClone(f, f.x); },
+    update(f, foe) {
+      // 踏出约 110 像素再出刀：雾身留在身后，不和本体叠在一起（不然打本体的刀顺手就把雾身打碎了）
+      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; f.t = 0; f.hitDone = false; f.vx = 920 * f.face; SFX.swing(); }
+      if (f.skPh === 1) {
+        strike(f, foe, { box: [0, -112, 118, -8], dmg: 40, kb: [260, -60], stun: 0.32, hs: 0.07 });
+        if (f.t >= 0.12) { f.skPh = 2; f.t = 0; f.vx *= 0.3; }
+      }
+      if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['fy_seal', 40] : f.skPh === 1 ? ['l2a', 60] : ['idle', 14],
+    ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 2 },
+  // free：只能从自由状态（站、走、下落、防御）发动，不能接在出招后面，也不能从腾空闪里放
+  mistswap: { name: '渡影', cd: 4, free: true,
+    can: f => ['idle', 'walk', 'air', 'block'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
+    lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
+    desc: '结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。',
+    start(f, foe) { const c = pickClone(f, foe); f.swapId = c ? c.id : -1; f.vx = 0; },
+    update(f) {
+      const C = f.ch.clone;
+      f.vx = 0;
+      if (f.skPh === 0) {
+        const c = (f.clones || []).find(k => k.id === f.swapId);
+        if (!c) { toNeutral(f); return; }   // 结印时雾身被打碎或散了：这次落空，冷却照算
+        if (f.t >= C.swapSeal) {
+          const x0 = f.x;
+          cloneGone(f, c, false);
+          f.x = c.x; f.y = 0; f.vy = 0; f.jumps = 0; f.airDash = 1;
+          if (c.x !== x0) f.face = c.x > x0 ? 1 : -1;   // 朝向是来的方向：换到对手身后时是背对着他的
+          f.snap = true; f.trail.length = 0; f.scarf = [];
+          if (!RESIM) { smoke(x0, -50, 10); ring(f.x, -50, 70, f.look.slash, 0.3); SFX.poof(); }
+          f.skPh = 1; f.t = 0;
+        }
+        return;
+      }
+      if (f.ctrl && f.ctrl.held.down && f.onGround()) { toNeutral(f); f.state = 'block'; return; }   // 凝身时可以防御
+      if (f.t >= C.swapLand) toNeutral(f);
+    },
+    pose: f => f.skPh === 0 ? ['fy_seal', 50] : ['idle', 20],
+    ai: () => false },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 

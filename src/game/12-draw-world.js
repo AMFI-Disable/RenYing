@@ -581,6 +581,36 @@ function drawIdentityEdges(list, sx, sy) {
     ctx.restore();
   }
 }
+// 离影的雾身：本体的半透明剪影（一眼分得清哪个是本体），脚下一圈雾；只按 R 会去的那个（离对手最近）多一圈光；
+// 最后 1 秒闪；结印时本体和目标雾身之间连一条雾线。只画，不改任何对局状态（不调用会记目标的 foeOf）
+function drawClones() {
+  for (const f of allFighters()) {
+    if (f.hidden || !f.clones || !f.clones.length) continue;
+    const C = f.ch.clone || { life: 6 }, rgb = f.look.slash;
+    const foe = (f.target && !f.target.hidden) ? f.target : foesOf(f)[0], mark = foe ? cloneMark(f, foe) : null;
+    for (const c of f.clones) {
+      const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1;
+      ctx.save(); ctx.fillStyle = `rgba(${rgb},${0.22 * blink})`;
+      ctx.beginPath(); ctx.ellipse(c.x, 0, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      const rec = CLONE_SK[f.idx + ':' + c.id];
+      if (rec) drawBody(rec.sk, f, { ghost: 0.5 * blink, tint: rgb });
+      else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, -f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
+      if (c === mark) {
+        ctx.save(); ctx.strokeStyle = `rgba(${rgb},${0.85 * blink})`; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.ellipse(c.x, 0, 46, 11, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      }
+    }
+    if (f.state === 'skill' && f.skill === 'mistswap' && f.skPh === 0) {
+      const c = f.clones.find(k => k.id === f.swapId);
+      if (c) {
+        ctx.save(); ctx.strokeStyle = `rgba(${rgb},0.55)`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
+        ctx.beginPath(); ctx.moveTo(f.x, f.y - 55); ctx.lineTo(c.x, -55); ctx.stroke();
+        ctx.setLineDash([]); ctx.lineWidth = 3.5; ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.4 * Math.sin(clock * 40)})`;
+        ctx.beginPath(); ctx.ellipse(c.x, 0, 50, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      }
+    }
+  }
+}
 function drawDecoys() {
   for (const d of decoys) {
     const sk = d.sk; if (!sk) continue;

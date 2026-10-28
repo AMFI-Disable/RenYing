@@ -54,7 +54,18 @@ const AI_KIT = {
   // 凌雀：飞梭打中挂【雀芒】，带印记时换影穿刺会引爆并清零冷却；换影一路追踪，只有腾空闪躲得开
   spindle: { role: 'proj', combo: true },
   shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, B) => !(B && B.lqHold > clock) && ((o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state)) },
+  // 离影：留影（在脚下留雾身、顺手斩一刀）当成准备动作；渡影不走通用打法，由 liyingRoute 决定什么时候、去哪个雾身
+  mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 2 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
+  mistswap: { role: 'self', combo: false, use: () => false },
 };
+// 离影：用「不按方向 / 按那一边」能不能正好选到雾身 c（和游戏里 pickClone 的规则一样）
+function pickCloneDir(me, foe, c) {
+  if (c === cloneMark(me, foe)) return true;
+  const dir = Math.sign(c.x - me.x); if (!dir) return false;
+  let best = null;
+  for (const k of me.clones || []) { const dd = (k.x - me.x) * dir; if (dd > 1 && (!best || dd < (best.x - me.x) * dir)) best = k; }
+  return best === c;
+}
 // 大招：hit 按打击数据判断打不打得到；sure(me, foe, d) 额外条件
 const AI_ULT = {
   crescent: { contact: true }, shadows: { contact: true }, eightimm: { contact: true },
@@ -71,6 +82,8 @@ const AI_ULT = {
   // 万线归宗全场必中、挂印记、清零换影：留着续连段用（换影在冷却、对手身上没印记时放最值），对手残血就直接放
   needlestorm: { far: true, sure: (m, o) => o.hp < 150 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
   moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
+  // 万影归一：雾身越多刀越多，至少攒一个雾身再放（对手残血就直接放）
+  mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp < 60 },
 };
 
 // ---------- 3. 打法基因 ----------
@@ -618,6 +631,8 @@ class AIBrain {
     if (foe.jailT > 0.1 && foe.hp > 0 && AI_FREE.includes(me.state) && me.onGround()) return this.beatJailed(me, foe, d, to);
     // 凌雀：飞梭挂印记 → 换影引爆（重置换影）→ 追击 / 大招再挂印记，按难度决定会打到哪一步
     if (me.ch.id === 'lingque' && this.lingqueRoute(me, foe, d, to)) return;
+    // 离影：对手打空 / 收招时渡到他身后的雾身反打；残血被压时渡到离对手最远的雾身拉开
+    if (me.ch.id === 'liying' && this.liyingRoute(me, foe, d, to)) return;
     // 局势
     this.updateMode(me, foe, d);
     // 抓破绽（对手收招、落地、被打僵直）
@@ -1144,6 +1159,30 @@ class AIBrain {
   // 印记（雀芒，3.5 秒）由飞梭和大招挂上；带印记时换影穿刺会引爆、挑空，并把换影冷却清零，所以能接第二次换影追击。
   // 难度越高会的越多：寻常只会“有印记就引爆”；劲敌会等对手闪不了再引爆、引爆后接换影追击；
   // 绝顶 / 天道再用大招（全场必中、重新挂印记、清零换影）续上第二轮引爆，并且会等对手先把腾空闪交掉。
+  // 离影的渡影：只从自由状态放（和规则一样）。选雾身靠方向键：dir 为 0 去高亮的那个（离对手最近），否则去那一边最近的
+  // 简单 / 入门不会渡影；寻常偶尔；劲敌以上按下面两条规则。平衡交给 Trainer 再调
+  liyingRoute(me, foe, d, to) {
+    const L = this.L, cs = me.clones || [];
+    if (!cs.length || me.skill2CD > 0 || !['idle', 'walk', 'air', 'block'].includes(me.state) || foe.hp <= 0 || !this.seen) return false;
+    if (clock < (this.lyNext || 0) || L.combo < 3) return false;
+    const go = c => {   // 去雾身 c：先定好方向，pickClone 在这一帧按方向键选
+      const mark = cloneMark(me, foe);
+      this.stopAll(); this.dir = c === mark ? 0 : Math.sign(c.x - me.x) || 0; this.holdDown = 0;
+      this.press('skill2', 'liying'); this.lyNext = clock + 0.6; return true;
+    };
+    const open = ['attack', 'skill', 'charge', 'special'].includes(foe.state) && foe.t > 0.12 && Math.abs(foe.vx) < 400;
+    // 1. 对手出招落空 / 收招：去他身后、离他 220 像素以内的雾身
+    if (open) {
+      const behind = cs.find(c => Math.sign(c.x - foe.x) === Math.sign(foe.x - me.x) && Math.abs(c.x - foe.x) < 220);
+      if (behind && pickCloneDir(me, foe, behind) && Math.random() < L.skill * (L.read >= 0.7 ? 0.9 : 0.5)) return go(behind);
+    }
+    // 2. 残血、对手贴身：去离对手最远的雾身
+    if (me.hp < me.maxHp * 0.35 && d < 180 && L.read >= 0.3) {
+      let far = null; for (const c of cs) if (!far || Math.abs(c.x - foe.x) > Math.abs(far.x - foe.x)) far = c;
+      if (far && Math.abs(far.x - foe.x) > 320 && pickCloneDir(me, foe, far) && Math.random() < L.skill * 0.6) return go(far);
+    }
+    return false;
+  }
   lingqueRoute(me, foe, d, to) {
     const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
     if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;

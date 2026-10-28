@@ -203,11 +203,11 @@ ok(cloudProf('Xia').netWins === 50 && cloudProf('Yu').netWins === 1, '换回 Xia
 
 section('不是计数的进度按确定的规则合并：关卡星、侠客、列传取两边的，排位取新的');
 await A.play(p => { p.stageStars = { s1: 3 }; p.owned = ['qingfeng', 'moyu']; p.saga = { moyu: { r: 0, s: 2, f: '', c: 0, e: [], t: 1 } }; p.rk = { season: 'S1', pts: 3000, at: 100, owner: 'Sam' }; });
-await B.play(p => { p.stageStars = { s2: 2 }; p.owned = ['qingfeng', 'yanling']; p.saga = { yanling: { r: 1, s: 5, f: 'a', c: 0, e: ['good'], t: 2 } }; p.rk = { season: 'S1', pts: 2000, at: 50, owner: 'Sam' }; });
+await B.play(p => { p.stageStars = { s2: 2 }; p.owned = ['qingfeng', 'yanling', 'liying']; p.saga = { yanling: { r: 1, s: 5, f: 'a', c: 0, e: ['good'], t: 2 }, liying: { r: 0, s: 3, f: 'seek', c: 0, e: [], t: 2 } }; p.rk = { season: 'S1', pts: 2000, at: 50, owner: 'Sam' }; });
 c = cloudProf('Sam');
 ok(c.stageStars.s1 === 3 && c.stageStars.s2 === 2, 'A 的 s1、B 的 s2 都在（B 后传，没把 A 的盖掉）', c.stageStars);
-ok(['qingfeng', 'moyu', 'yanling'].every(h => c.owned.includes(h)), '两边的侠客都在', c.owned);
-ok(c.saga.moyu && c.saga.yanling && c.saga.yanling.e.includes('good'), '两边的列传进度都在', Object.keys(c.saga));
+ok(['qingfeng', 'moyu', 'yanling', 'liying'].every(h => c.owned.includes(h)), '两边的侠客都在（含新侠客离影）', c.owned);
+ok(c.saga.moyu && c.saga.yanling && c.saga.yanling.e.includes('good') && c.saga.liying && c.saga.liying.f === 'seek', '两边的列传进度都在（离影传走到第 3 关、选了「还是要找到他」）', Object.keys(c.saga));
 ok(c.rk.pts === 3000, '排位：B 传的那份更旧（at 小），云端留 A 的', c.rk);
 ok(c.netWins === 12, '胜场在这期间没被绝对数覆盖：还是 12', c.netWins);
 

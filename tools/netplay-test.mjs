@@ -303,10 +303,11 @@ const FRAMES = argF > 0 ? +process.argv[argF + 1] : 3600;
 const CASES = [
   ['normal', [0, 3]], ['normal', [5, 9]], ['normal', [2, 7]], ['normal', [10, 11]], ['normal', [4, 6]], ['normal', [1, 8]],
   ['normal', [12, 0]], ['normal', [7, 12]],
+  ['normal', [13, 0]], ['normal', [13, 13]], ['normal', [12, 13]],   // 离影：雾身的留、换、碎都要两边算得一样
   ['normal', [2, 3], [[2, 5, 12], [3, 4, 7]]],   // 3v3 车轮：输一回合换下一人
   ['chaos', [3, 9]], ['mayhem', [6, 2]],
   ['maps', [3, 8], null, ['cliff', null]], ['maps', [9, 2], null, ['ice', 'ice']], ['maps', [6, 1], null, ['cliff', 'ice']],   // 山河异境：两边的票随开局发
-  ['pp_cc', [0, 3, 5, 9]], ['pp_pp', [2, 7, 4, 6]],
+  ['pp_cc', [0, 3, 5, 9]], ['pp_cc', [13, 3, 5, 13]], ['pp_pp', [2, 7, 4, 6]],
   ['raid', [1, 1, 4, 8]], ['raid', [11, 11, 6, 2]],   // 同袍肉鸽：房主 A、好友 C、电脑同袍 D 打魔首 B（魔首和秘卷两边按种子抽）
 ];
 for (const [mode, ch, duo, mv] of CASES) for (const lag of [1, 6]) {

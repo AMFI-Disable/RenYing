@@ -41,8 +41,18 @@ const lines = (where, ls) => { if (!Array.isArray(ls) || !ls.length) err(where, 
 const STAT = { hp: 'pos', walk: 'pos', speed: 'pos', dmg: 'pos', reach: 'pos', swing: 'pos', jump: 'pos', weight: 'pos', defRating: 'pos', guardMax: 'pos', guardStab: 'pos', guardChip: 'num', guardRegen: 'pos', poise: 'pos', size: 'pos' };
 const LOOK = { body: 'str', shade: 'str', outline: 'str', outlineA: 'num', scarf: 'str', slash: 'str', blade: 'str', head: 'str', weapon: 'str' };
 const CHAR = { id: 'str', name: 'str', role: 'str', diff: 'int', escCD: 'pos', skill: 'str', skill2: 'str', ult: 'str', passive: 'str', passiveName: 'str', passiveDesc: 'str',
-  stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj' };
+  stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj', 'clone?': 'obj' };
 const CANCEL_SPEC = { blockEarly: 'num', chainAt: 'num', skill2FromLight: 'bool', skillOnHit: 'bool' };
+// 雾身（离影）：上限、存在秒数、拴绳距离、换影结印 / 凝身秒数、打碎一个给对手多少气
+const CLONE_SPEC = { max: 'int', life: 'pos', leash: 'pos', swapSeal: 'pos', swapLand: 'pos', breakMeter: 'num' };
+function checkClone(w, c) {
+  if (!shape(w, c, CLONE_SPEC)) return;
+  if (!(c.max >= 1 && c.max <= 3)) err(w, `max 是场上最多几个雾身，只能是 1~3，现在是 ${c.max}`);
+  if (!(c.life <= 15)) err(w, `life 是雾身存在几秒，不能超过 15，现在是 ${c.life}`);
+  if (!(c.leash >= 200 && c.leash <= 1400)) err(w, `leash 是雾身离本体最远多少像素，要在 200~1400 之间，现在是 ${c.leash}`);
+  for (const k of ['swapSeal', 'swapLand']) if (!(c[k] <= 1)) err(w, `${k} 是秒数，不能超过 1，现在是 ${c[k]}`);
+  if (!(c.breakMeter >= 0 && c.breakMeter <= 100)) err(w, `breakMeter 是 0~100 的气，现在是 ${c.breakMeter}`);
+}
 // 一招普攻（src/data/01-moves.js 的 MOVES）；侠客的 moveMods 每项都是选填，另外可以写 dmgAbs、suAdd、reachMul
 const MOVE = { p: 'arr', su: 'num', ac: 'pos', rc: 'num', dmg: 'num', kb: 'arr', stun: 'num', hs: 'num', box: 'arr', next: 'obj',
   'lunge?': 'num', 'snd?': 'str', 'launch?': 'bool', 'jumpCancel?': 'bool', 'air?': 'bool', 'knock?': 'bool', 'unblockable?': 'bool', 'big?': 'bool', 'track?': 'bool', 'spike?': 'bool', 'hitNext?': 'obj' };
@@ -184,6 +194,7 @@ function checkHeroes(env) {
         if (shape(`${w} char.moveMods.${mv}`, mod, MOVE_MOD)) checkMove(`${w} char.moveMods.${mv}`, mod, env);
       }
       if (c.cancel) checkCancel(w + ' char.cancel', c.cancel, env.CANCEL);
+      if (c.clone) checkClone(w + ' char.clone', c.clone);
     }
     const f = h.forest;
     if (shape(w + ' forest', f, FOREST)) {

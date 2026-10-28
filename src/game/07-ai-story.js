@@ -42,6 +42,7 @@ const ADV = {
   zuixian: '酒过半壶可触发两成近战闪避，并可掷坛施展与民同乐回春80血且压制对手。',
   gouchen: '飞锤拽敌至身前附加 1.2 秒 25% 震魄易伤，立时衔接旋锤连砸。',
   lingque: '锦梭穿云标记敌身后，幽影掠步可循印瞬身突袭并刷新连段。',
+  liying: '先留影再出手：只按 R 渡到离对手最近的雾身，按住 ← / → 再按 R 去那一边，按住 ↓ 去最早的那个。',
 };
 function trySecondQ(f, foe) {
   if (f.skillCD <= 0 || M.phase !== 'fight' || !['idle', 'walk', 'air'].includes(f.state)) return false;
@@ -93,6 +94,7 @@ const CHAPTERS = [
   { hero: 'yuehua', name: '月宫', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yuehua', lv: 'impossible' },
   { hero: 'moyu', name: '墨渊', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'moyu', lv: 'impossible' },
   { hero: 'lingque', name: '织锦谷', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'lingque', lv: 'impossible' },
+  { hero: 'liying', name: '千雾泽', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'liying', lv: 'impossible' },
 ];
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 // 一关的内容：妖物关每一波出哪些妖物是固定的（每次打都一样），并附上该侠客的专属剧情

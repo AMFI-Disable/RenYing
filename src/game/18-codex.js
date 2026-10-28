@@ -47,11 +47,13 @@ const SHORT = {
   剑气: ['52', '半场弧月剑气 · 挑空'], 飞镖: ['25×4', '四枚散射'], 铁壁冲: ['56', '通天巨浪 · 霸体冲撞'], 枪旋: ['15×7+48', '身前旋转 2 秒'], 开扇: ['8×5', '向前疾冲 · 撒爆米花半秒后炸'],
   金刚雷铠: ['50', '雷铠御守 · 引雷反震'], 画符: ['—', '花 3 格墨 · 符 +1'], 月轮: ['28 / 38', '飞出轻削 · 折返背袭'], 翎羽: ['22×3', '三道翎羽 · 射程无限'],
   残月: ['169', '六连居合 · 终结回气重置'], 千影: ['179', '九影乱斩 · 绝杀分身重置'], 山崩: ['185', '砸地晕眩 · 正中回满气重置'], 刹那: ['140–185', '贯穿减速 · 重置回马枪'], 百鸟朝凤: ['—', '原地八连刺'],
+  留影: ['40', '脚下留雾身 · 踏步一刀'], 渡影: ['—', '换到雾身处 · 方向选身'], 万影归一: ['45–113', '雾身齐斩 · 本体补刀'],
   龙卷: ['16×16', '双龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['48×3', '天雷追落 · 气量回涌30%'], 符阵: ['80–280', '宣纸全图 · 按符数爆伤'], 月华如水: ['75 (+100血)', '回血霸体 · 架招重置'], 万羽: ['14×14', '羽刃天降 · 飞行重置'],
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(870血)', feiying: '最快移速出手 · 身轻体巧(800血)', tieshan: '重斩蓄力霸体 · 气血冠绝(900血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(815血)',
   liuyun: '三段跳 · 御风轻盈(840血)', leiming: '普攻六连 · 强横体魄(885血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(825血)', yuehua: '3 秒未受伤每秒回 14 血(780血)', yanling: '空中按住跳跃飞 1.2 秒(750血)',
-  yuxiao: '普攻攒音律，清音随音律变强(775血)', zuixian: '醉意增伤，半醉可闪避近身攻击(885血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(835血)', lingque: '子母梭挂雀芒，换影穿刺引爆重置(790血)' };
+  yuxiao: '普攻攒音律，清音随音律变强(775血)', zuixian: '醉意增伤，半醉可闪避近身攻击(885血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(835血)', lingque: '子母梭挂雀芒，换影穿刺引爆重置(790血)',
+  liying: '最多 2 个雾身，碰到就碎 · 只有一段跳(815血)' };
 const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
@@ -66,6 +68,7 @@ const ADV_SHORT = {
   zuixian: '酒过半壶可闪避近战，并可掷坛与民同乐回春',
   gouchen: '飞锤拽到身前，接旋锤',
   lingque: '雀芒印记配合换影穿刺，瞬发引爆清空冷却',
+  liying: 'R 加方向选雾身：← → 选那一边，↓ 选最早留下的',
 };
 // 各角色大招怒气积攒专属特性与通用规则
 const HERO_METER_EXPLAIN = {
@@ -82,9 +85,19 @@ const HERO_METER_EXPLAIN = {
   zuixian: '【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「山水之间」全屏墨染八段重创并令醉意飙升！',
   gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
   lingque: '【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！',
+  liying: '【雾身换位 · 碎影成本】留影一刀与普攻攒气；雾身被打碎时对手回 10 点气，留得太随便等于给对手送气。万影归一按雾身数量出刀。',
 };
 // ======================= 招式类型与克制详解 =======================
 const HERO_MOVE_TYPES = {
+  liying: {
+    light: { type: 'melee', label: '近战', rng: 'melee' },
+    charge: { type: 'melee', label: '近战', rng: 'melee' },
+    air: { type: 'melee', label: '近战', rng: 'melee' },
+    skill: { type: 'dash', label: '留身踏斩', rng: 'melee', icon: 'melee' },
+    ranged: { type: 'esc', label: '换位', rng: 'screen', icon: 'esc' },
+    ult: { type: 'ranged', label: '雾身齐斩', rng: 'ranged', icon: 'ranged' },
+    esc: { type: 'esc', label: '身法' }
+  },
   lingque: {
     light: { type: 'melee', label: '近战飞梭', rng: 'melee' },
     charge: { type: 'melee', label: '近战突刺', rng: 'melee' },
@@ -204,6 +217,10 @@ const HERO_MOVE_TYPES = {
   }
 };
 const HERO_RESTRAINTS_EXPLAIN = {
+  liying: {
+    beatsWhy: '【克 铁山、勾陈】两人出手慢、招式大，打空的瞬间离影换到身后的雾身，从背后下刀。',
+    weakWhy: '【怕 凌雀、燕翎】飞梭和翎羽隔着半屏就能把雾身一个个打碎，离影无处可换，还白白给对手送气。'
+  },
   yuxiao: {
     beatsWhy: '【克 铁山、墨羽】铁山步子慢，被三律音波隔着半屏挑起来就很难近身；墨羽的泼墨和墨团撞上回音壁会原路飞回去。',
     weakWhy: '【怕 绯影、雷鸣】绯影影遁直接闪到身后，雷鸣雷闪贴脸快拳，玉箫来不及攒音律，回音壁也挡不住连续近身。'
@@ -260,6 +277,15 @@ const HERO_RESTRAINTS_EXPLAIN = {
 // ======================= 全真打击数据与时序 =======================
 // 招式卡片的名字、标签、伤害说明。冷却不写在这里：图鉴和选人页直接读 SKILLS[..].cd 和 escCD，免得两边数字对不上
 const HERO_HIT_DETAILS = {
+  liying: {
+    light: { name: '离魂五斩', badge: '✦ 快刀', badgeCls: 'badge-buff', dmg: '77 (5段)', desc: '单刀五连斩，末段挑空。' },
+    charge: { name: '雾里藏锋', badge: '💥 破防', badgeCls: 'badge-break', dmg: '—', desc: '按住蓄力，一刀破开正面格挡。' },
+    air: { name: '落影斩', badge: '✦ 挑空', badgeCls: 'badge-buff', dmg: '—', desc: '空中两段斩。她只有一段跳，跳起来就要想好怎么落地。' },
+    skill: { name: '留影', badge: '✦ 留下雾身', badgeCls: 'badge-buff', dmg: '40', desc: '在脚下留一个雾身，向前踏出一大步斩一刀。只能在地上用；最多 2 个雾身，存在 6 秒，碰到攻击就碎。' },
+    ranged: { name: '渡影', badge: '✦ 换位', badgeCls: 'badge-stun', dmg: '—', desc: '结印 0.2 秒后换到雾身那里，那个雾身随之散去。不按方向换到离对手最近的；按 ← → 选那一边最近的；按 ↓ 选最早留下的。只能从站立、走动、空中、格挡里发动，不能接在出招后面。' },
+    ult: { name: '万影归一', badge: '✦ 雾身齐斩', badgeCls: 'badge-stun', dmg: '45~113', desc: '每个雾身朝对手斩出一道刀光，然后本体瞬移到对手身前补一刀挑空。全程没有无敌。' },
+    esc: { name: '散影', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
+  },
   yuxiao: {
     light: { name: '玉箫点穴连击', badge: '攒音律', badgeCls: 'badge-buff', dmg: '95 (5段)', desc: '箫管点打五连击，每中一击攒一枚音律，最多三枚。' },
     charge: { name: '横吹破气扫击', badge: '破防打倒', badgeCls: 'badge-break', dmg: '35.3 / 56.8', desc: '旋身横扫破开防守，将对手打倒在地。' },
@@ -380,6 +406,21 @@ const HERO_HIT_DETAILS = {
 };
 
 const HERO_MOVE_SEQS = {
+  liying: {
+    light: [
+      { p: 'idle', d: 0.1, reset: true },
+      { p: 'l1s', d: 0.07, lab: '离魂五斩' }, { p: 'l1a', d: 0.12, dx: 12, hit: 1 },
+      { p: 'l2s', d: 0.06 }, { p: 'l2a', d: 0.12, dx: 12, hit: 1 },
+      { p: 'l3s', d: 0.08 }, { p: 'l3a', d: 0.22, dx: 16, hit: 2, launch: true, badge: '挑空' },
+      { p: 'idle', d: 0.35, reset: true }
+    ],
+    charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防' }, { p: 'idle', d: 0.35, reset: true }],
+    air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中（一段跳）' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.12, fx: 'mist', lab: 'Q · 留影' }, { p: 'l2a', d: 0.24, dx: 40, hit: 2, badge: '留下雾身' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.2, lab: 'R · 渡影' }, { p: 'idle', d: 0.15, fx: 'mistswap', dx: -60, badge: '换位' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.2, lab: 'E · 万影归一' }, { p: 'l3a', d: 0.45, dx: 40, fx: 'mistarray', hit: 3, launch: true, badge: '雾身齐斩' }, { p: 'idle', d: 0.35, reset: true }],
+    esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '散影' }, { p: 'idle', d: 0.35, reset: true }]
+  },
   yuxiao: {
     light: [
       { p: 'idle', d: 0.1, reset: true },
@@ -861,6 +902,18 @@ const HERO_MOVE_SEQS = {
 };
 
 const HERO_FULL_DEMO = {
+  liying: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1s', d: 0.07, lab: '普攻' }, { p: 'l1a', d: 0.12, dx: 10, hit: 1 },
+    { p: 'l3s', d: 0.08 }, { p: 'l3a', d: 0.2, dx: 14, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.12, fx: 'mist', lab: 'Q · 留影' }, { p: 'l2a', d: 0.24, dx: 40, hit: 2, badge: '留下雾身' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.2, lab: 'R · 渡影' }, { p: 'idle', d: 0.2, fx: 'mistswap', dx: -60, badge: '换位' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.2, lab: 'E · 万影归一' }, { p: 'l3a', d: 0.45, dx: 40, fx: 'mistarray', hit: 3, launch: true, badge: '雾身齐斩' },
+    { p: 'victory', d: 0.55, reset: true }
+  ],
   yuxiao: [
     { p: 'idle', d: 0.2, reset: true },
     { p: 'yx_play', d: 0.08, lab: '普攻' }, { p: 'yx_push', d: 0.12, dx: 10, hit: 1 },
@@ -1036,6 +1089,7 @@ const SKILL_FUN = {
   yuxiao: { passive: '打人也讲节奏，三拍一小节。', light: '箫管敲头，咚咚咚，是节拍。', charge: '横扫一记，音符都震飞了。', air: '跳起来吹一个高音。', skill: '攒满三个音符再吹，伤害翻倍不是梦。', ranged: '你的暗器我收下了，原样奉还。', ult: '广陵散于今绝矣？今天再奏一遍。', esc: '一个休止符，人先撤了。' },
   zuixian: { passive: '酒量即战力，放招添酒打中添酒，东倒西歪能闪避。', light: '东倒西歪五连拳，步法虚实难测。', charge: '蓄力一撞，重若巨石倾覆。', air: '醉步腾跃，飘忽不定难预测。', skill: '亭中留客，飞亭砸落禁锢两秒任你痛揍。', ranged: '与民同乐，半壶酒掷向对手，共醉回春。', ult: '山水之间，水墨泼染全屏八段重创。', esc: '醉意腾身，踏风撤步。' },
   gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' },
+  liying: { passive: '一缕魂留在原地，碰一下就散。', light: '单刀五连，干净利落。', charge: '雾里藏着的那一刀最重。', air: '只有一段跳，跳之前先想好落点。', skill: '人往前走，魂留在后面。', ranged: '结个印，人就到了雾身那里。', ult: '雾身一起出刀，本体最后补上。', esc: '雾一散，人已退开。' },
   lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子母飞梭刺得比针还快。', charge: '蓄力一梭子，隔着衣服都疼。', air: '凌波踏空，身法灵巧似惊雀。', skill: '飞梭脱手，丝线连着千里之外。', ranged: '印记一亮，瞬身穿刺直接清空CD！', ult: '万线归宗，漫天悬丝罗网避无可避。', esc: '悬丝一荡，人已在数丈之外。' }
 };
 
