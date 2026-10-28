@@ -535,6 +535,8 @@ never paid, and `PROF.qfx` only ever changes through a cloud merge.
 
 ### F1 — Passwords Are Single-Round Salted SHA-256
 
+> **Fixed:** new passwords use PBKDF2-SHA256 with `PW_ITER` (25000) iterations; old `sha256-v1` hashes are upgraded on the next successful login. See `users.password_algo`.
+
 **Severity:** medium · `cloudflare/worker.js:102`–`108`
 
 `hashPassword()` is one SHA-256 over `salt + ':' + password + ':renying_sword_salt_2026'`. The 12-character salt

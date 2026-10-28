@@ -16,7 +16,7 @@ const realNow = Date.now;
 Date.now = () => T;
 
 const FILE = process.argv.includes('--bundle') ? 'cloudflare/worker.bundle.js' : 'cloudflare/worker.js';
-const { default: worker, WorldLine, FLAGS } = await import(new URL(FILE, ROOT));
+const { default: worker, WorldLine, FLAGS, PW_ITER } = await import(new URL(FILE, ROOT));
 const C = globalThis.ArmoryCore;
 
 /* ---------- 用 node:sqlite 模拟 D1（接口和 Cloudflare 的一样：prepare/bind/first/all/run/batch） ---------- */
@@ -1403,6 +1403,53 @@ section('登录令牌：数据库里只存哈希；以前存原文的照样能�
   await adm('POST', '/api/admin/flags', { k: 'auth.token_hash', mode: 'all', why: '测试完开回去' });
   await call('GET', '/api/profile', undefined, off.token);
   ok(!row('SELECT 1 AS x FROM sessions WHERE token = ?', off.token) && row('SELECT 1 AS x FROM sessions WHERE token = ?', sha(off.token)), '再打开：那个原文令牌下次用到时换成哈希');
+}
+
+section('密码用 PBKDF2 存；老号照样能登录，登录成功时换成 PBKDF2；从老表升级不丢号');
+{
+  const v1 = (pw, salt) => createHash('sha256').update(salt + ':' + pw + ':renying_sword_salt_2026').digest('hex');
+  const urow = name => row('SELECT id, password_hash, salt, password_algo, password_updated_at FROM users WHERE username = ?', name);
+  ok(PW_ITER >= 20000 && PW_ITER <= 100000, `迭代次数 ${PW_ITER}（免费版 10ms CPU 里算得完，Cloudflare 上限 10 万）`);
+  await newUser('pbNew');
+  const n = urow('pbNew');
+  ok(n.password_algo === 'pbkdf2-sha256:' + PW_ITER && /^[0-9a-f]{64}$/.test(n.password_hash) && /^[0-9a-f]{32}$/.test(n.salt) && n.password_updated_at === T, '新注册：PBKDF2，记着次数和改密码的时间', n);
+  ok((await call('POST', '/api/login', { username: 'pbNew', password: 'secret123' }, undefined, '8.8.6.1')).ok, '新号能登录');
+  ok((await call('POST', '/api/login', { username: 'pbNew', password: 'secret124' }, undefined, '8.8.6.2')).status === 401, '密码不对：401');
+  const salt = 'abcdef123456', id = 'u_pbold000000000a';
+  ENV.DB.raw.prepare('INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, 'pbOld', v1('old-pass-1', salt), salt, JSON.stringify({ name: 'pbOld', ink: 77 }), T, T);
+  ok(urow('pbOld').password_algo === 'sha256-v1' && urow('pbOld').password_updated_at === 0, '以前的号：算法记成 sha256-v1');
+  ok((await call('POST', '/api/login', { username: 'pbOld', password: 'old-pass-2' }, undefined, '8.8.6.3')).status === 401 && urow('pbOld').password_algo === 'sha256-v1', '老号输错：401，不换');
+  const ol = await call('POST', '/api/login', { username: 'pbOld', password: 'old-pass-1' }, undefined, '8.8.6.4');
+  const o = urow('pbOld');
+  ok(ol.ok && ol.profile && ol.profile.ink === 77, '老号用原来的密码照样能登录，存档还在', ol);
+  ok(o.password_algo === 'pbkdf2-sha256:' + PW_ITER && o.password_hash !== v1('old-pass-1', salt) && o.salt !== salt && o.password_updated_at === T, '登录成功时换成了 PBKDF2（换了新盐）', o);
+  ok((await call('POST', '/api/login', { username: 'pbOld', password: 'old-pass-1' }, undefined, '8.8.6.5')).ok && (await call('POST', '/api/login', { username: 'pbOld', password: 'old-pass-x' }, undefined, '8.8.6.6')).status === 401, '换完以后：对的能登录，错的不行');
+  ok((await call('GET', '/api/profile', undefined, ol.token)).ok, '换密码存法不会让已经登录的设备掉线');
+  const ap = await adm('POST', '/api/admin/password', { uid: 'pbNew', password: 'admin-set-pass-123', why: '测试 PBKDF2' });
+  ok(ap.ok && urow('pbNew').password_algo === 'pbkdf2-sha256:' + PW_ITER && (await call('POST', '/api/login', { username: 'pbNew', password: 'admin-set-pass-123' }, undefined, '8.8.6.7')).ok, '管理后台重设的密码也是 PBKDF2，能登录');
+  await adm('POST', '/api/admin/flags', { k: 'auth.pbkdf2', mode: 'off', why: '测试：关掉 PBKDF2' });
+  await newUser('pbOff');
+  ok(urow('pbOff').password_algo === 'sha256-v1' && (await call('POST', '/api/login', { username: 'pbOff', password: 'secret123' }, undefined, '8.8.6.8')).ok, '开关关掉：新号用老办法存，能登录');
+  ok(urow('pbOff').password_algo === 'sha256-v1', '关着的时候登录也不换');
+  ok((await call('POST', '/api/login', { username: 'pbOld', password: 'old-pass-1' }, undefined, '8.8.6.9')).ok && urow('pbOld').password_algo.startsWith('pbkdf2'), '已经是 PBKDF2 的号照样能登录，也不会被换回去');
+  await adm('POST', '/api/admin/flags', { k: 'auth.pbkdf2', mode: 'dev', why: '测试：只开 Dev' });
+  await call('POST', '/api/login', { username: 'pbOff', password: 'secret123' }, undefined, '8.8.6.10');
+  ok(urow('pbOff').password_algo === 'sha256-v1', '只开 Dev 时：别的号登录不换');
+  await adm('POST', '/api/admin/flags', { k: 'auth.pbkdf2', mode: 'all', why: '测试完开回去' });
+  await call('POST', '/api/login', { username: 'pbOff', password: 'secret123' }, undefined, '8.8.6.11');
+  ok(urow('pbOff').password_algo === 'pbkdf2-sha256:' + PW_ITER, '再打开：下次登录就换');
+
+  // 线上的库是以前建的：users 表没有新加的两列。换一个全新的 Worker 实例（模块重新加载）接上这样的老库
+  const env2 = { DB: makeD1(), ADMIN_SECRET: ADMIN };
+  env2.DB.raw.exec('CREATE TABLE users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)');
+  env2.DB.raw.prepare('INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run('u_legacy00000000a', 'legacyGuy', v1('legacy-pw-1', salt), salt, JSON.stringify({ name: 'legacyGuy', ink: 5 }), T, T);
+  const { default: w2 } = await import(new URL(FILE, ROOT).href + '?oldschema');
+  const r2 = await w2.fetch(new Request('https://w.test/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '8.8.6.20' }, body: JSON.stringify({ username: 'legacyGuy', password: 'legacy-pw-1' }) }), env2, { waitUntil() {} }).then(r => r.json());
+  const cols = env2.DB.raw.prepare("SELECT name FROM pragma_table_info('users')").all().map(c => c.name);
+  ok(cols.includes('password_algo') && cols.includes('password_updated_at'), '老库自动加上两列', cols);
+  ok(r2.ok && r2.profile.ink === 5 && env2.DB.raw.prepare('SELECT password_algo FROM users WHERE id = ?').get('u_legacy00000000a').password_algo.startsWith('pbkdf2'), '老库里的号用原来的密码能登录，存档在，密码换成了 PBKDF2', r2);
+  const r3 = await w2.fetch(new Request('https://w.test/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '8.8.6.21' }, body: JSON.stringify({ username: 'legacyGuy', password: 'legacy-pw-1' }) }), env2, { waitUntil() {} }).then(r => r.json());
+  ok(r3.ok, '再登录一次也没问题');
 }
 
 section('管理后台的查询：总览、找号、操作记录、饰品目录');

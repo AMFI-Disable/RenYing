@@ -107,7 +107,7 @@ const CODE_BUILTIN = {};
 const CODE_VOID = { ZODIAC2026STAR: it => it && it.src === 'code' && !!C.ITEM[it.k] && C.ITEM[it.k].col === 'c8' };
 
 const SCHEMA = [
-  `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, profile_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, password_algo TEXT NOT NULL DEFAULT 'sha256-v1', password_updated_at INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)`,
   `CREATE TABLE IF NOT EXISTS econ (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL, ver INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS econ_nonce (uid TEXT NOT NULL, nonce TEXT NOT NULL, at INTEGER NOT NULL, res_json TEXT NOT NULL, PRIMARY KEY (uid, nonce))`,
@@ -146,12 +146,52 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS flags (k TEXT PRIMARY KEY, mode TEXT NOT NULL CHECK (mode IN ('off', 'dev', 'all')), by TEXT NOT NULL, note TEXT NOT NULL, at INTEGER NOT NULL)`,
 ];
 let schemaReady = null;
+// 以前建的表后来加的列：已经有了 SQLite 会报 duplicate column，跳过就行
+const SCHEMA_COLS = [
+  `ALTER TABLE users ADD COLUMN password_algo TEXT NOT NULL DEFAULT 'sha256-v1'`,
+  `ALTER TABLE users ADD COLUMN password_updated_at INTEGER NOT NULL DEFAULT 0`,
+];
 function ensureSchema(env) {
-  if (!schemaReady) schemaReady = env.DB.batch(SCHEMA.map(s => env.DB.prepare(s))).catch(e => { schemaReady = null; throw e; });
+  if (!schemaReady) schemaReady = (async () => {
+    await env.DB.batch(SCHEMA.map(s => env.DB.prepare(s)));
+    for (const sql of SCHEMA_COLS) {
+      try { await env.DB.prepare(sql).run(); } catch (e) { if (!/duplicate column/i.test(String(e && e.message))) throw e; }
+    }
+  })().catch(e => { schemaReady = null; throw e; });
   return schemaReady;
 }
 
-// SHA-256 password hash with salt
+/* ---------- 密码 ----------
+ * 新密码用 PBKDF2-SHA256 存，users.password_algo 记着是哪种（'pbkdf2-sha256:次数'）；以前的号是 'sha256-v1'（下面 hashPassword，只算一遍）。
+ * 老号登录成功时顺手换成 PBKDF2，玩家什么都不用做。两种一直都认，所以开关 auth.pbkdf2 关掉只是新密码又用老办法存。
+ * PW_ITER：免费版每个请求最多 10ms CPU。在 workerd 1.20261028 上量的（Intel Xeon，每种跑 15 次取最快）：
+ *   1 万次 1.7ms，2 万次 2.9ms，3 万次 4.1ms，5 万次 6.7ms，10 万次 12.8ms；登录请求别的部分不到 1ms。
+ * 取 2.5 万次（约 3ms），给慢一些的机器留出一倍多的余量。Cloudflare 不让超过 10 万次。 */
+export const PW_ITER = 25000;
+const PW_ALGO = 'pbkdf2-sha256:' + PW_ITER;
+async function pbkdf2(password, salt, iter) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: iter }, key, 256);
+  return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+// 新密码要写进库的三样：hash、salt、algo（user 用来看开关是不是只开了 Dev）
+async function makePassword(env, user, password, now) {
+  const salt = randHex(16);
+  if (await flagOn(env, 'auth.pbkdf2', user, now)) return { hash: await pbkdf2(password, salt, PW_ITER), salt, algo: PW_ALGO };
+  return { hash: await hashPassword(password, salt), salt, algo: 'sha256-v1' };
+}
+// user 是 users 那一行（要有 password_hash、salt、password_algo）
+async function checkPassword(user, password) {
+  const m = /^pbkdf2-sha256:(\d+)$/.exec(String(user.password_algo || ''));
+  if (m) {
+    const n = +m[1];
+    return n >= 1000 && n <= 100000 && sameStr(await pbkdf2(password, user.salt, n), user.password_hash);
+  }
+  return sameStr(await hashPassword(password, user.salt), user.password_hash);
+}
+
+// 老办法（sha256-v1）：加盐 SHA-256 算一遍
 async function hashPassword(password, salt) {
   const enc = new TextEncoder();
   const data = enc.encode(salt + ':' + password + ':renying_sword_salt_2026');
@@ -441,6 +481,7 @@ async function cfgNow(env, now) {
  * 不做按百分比放量。登记表在下面 FLAGS：[默认值, 说明, 网页要不要知道]。网页开局读 GET /api/flags，只拿得到“网页要知道”的那些。
  * 数据库里只存改过的；每个 Worker 实例最多 30 秒重读一次。 */
 export const FLAGS = {
+  'auth.pbkdf2': ['all', '新密码用 PBKDF2 存，老号登录成功时换成 PBKDF2（关掉：新密码用老办法存；两种照样都认）', false],
   'auth.token_hash': ['all', '新登录的令牌在数据库里只存哈希，旧的用到时换成哈希（关掉：新令牌存原文；两种照样都认）', false],
 };
 const FLAG_MODES = ['off', 'dev', 'all'];
@@ -1043,18 +1084,18 @@ async function handleAdmin(env, request, path, now, ip) {
     const w = needWhy(); if (w) return w;
     const key = String(body.uid || '').trim(), pw = String(body.password || '');
     if (pw.length < 12 || pw.length > 128) return error('新密码要 12 到 128 位');
-    const salt = crypto.randomUUID().slice(0, 12), hash = await hashPassword(pw, salt);
     let u = await findUser(key), created = false;
+    const pwr = await makePassword(env, u || { username: key }, pw, now);
     if (!u) {
       if (body.create !== true) return error('没有这个账号', 404);
       if (key.length < 2 || key.length > 20 || /^u_/i.test(key) || /[\u0000-\u001f\u007f<>]/.test(key)) return error('新账号的昵称要 2 到 20 个字，不能用 u_ 开头');
       u = { id: 'u_' + crypto.randomUUID().replace(/-/g, '').slice(0, 16), username: key };
-      await env.DB.prepare('INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-        .bind(u.id, key, hash, salt, JSON.stringify(newProfile(key, now)), now, now).run();
+      await env.DB.prepare('INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at, password_algo, password_updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .bind(u.id, key, pwr.hash, pwr.salt, JSON.stringify(newProfile(key, now)), now, now, pwr.algo, now).run();
       created = true;
     } else {
       await env.DB.batch([
-        env.DB.prepare('UPDATE users SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?').bind(hash, salt, now, u.id),
+        env.DB.prepare('UPDATE users SET password_hash = ?, salt = ?, password_algo = ?, password_updated_at = ?, updated_at = ? WHERE id = ?').bind(pwr.hash, pwr.salt, pwr.algo, now, now, u.id),
         env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
         env.DB.prepare('DELETE FROM rate WHERE k = ?').bind('lf:' + String(u.username).toLowerCase().slice(0, 40)),
       ]);
@@ -1899,8 +1940,7 @@ export default {
         }
 
         const userId = 'u_' + crypto.randomUUID().replace(/-/g, '').slice(0, 16);
-        const salt = crypto.randomUUID().slice(0, 12);
-        const passHash = await hashPassword(password, salt);
+        const pwr = await makePassword(env, { username }, password, now);
 
         // Default or initial guest profile
         const initialProf = cleanInitial((body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile)) ? body.profile : newProfile(username, now));
@@ -1909,8 +1949,8 @@ export default {
 
         try {
           await env.DB.prepare(
-            'INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-          ).bind(userId, username, passHash, salt, JSON.stringify(initialProf), now, now).run();
+            'INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at, password_algo, password_updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(userId, username, pwr.hash, pwr.salt, JSON.stringify(initialProf), now, now, pwr.algo, now).run();
         } catch (e) {
           // 两个人同时注册同一个昵称：上面的查询都没查到，后到的那个在这里撞上唯一约束
           if (/UNIQUE/i.test(String(e && e.message))) return error('该昵称已被注册，请直接点击“登录”');
@@ -1948,7 +1988,7 @@ export default {
         const fail = async () => { await hit(env, nameKey, 1e9, 15 * 60e3, now); await hit(env, ipKey, 1e9, 15 * 60e3, now); };
 
         const user = await env.DB.prepare(
-          'SELECT id, username, password_hash, salt, profile_json FROM users WHERE username = ?'
+          'SELECT id, username, password_hash, salt, password_algo, profile_json FROM users WHERE username = ?'
         ).bind(username).first();
 
         if (!user) {
@@ -1956,12 +1996,17 @@ export default {
           return error('未找到该账号，请先点击“注册”', 404);
         }
 
-        const checkHash = await hashPassword(password, user.salt);
-        if (!sameStr(checkHash, user.password_hash)) {
+        if (!(await checkPassword(user, password))) {
           await fail();
           return error('昵称或密码不对', 401);
         }
         await env.DB.prepare('DELETE FROM rate WHERE k = ?').bind(nameKey).run();
+        // 老办法存的密码（或者次数比现在少）：趁着知道原文换成现在的。WHERE 带上旧 hash：这期间管理员刚重设过就不覆盖
+        if (user.password_algo !== PW_ALGO && await flagOn(env, 'auth.pbkdf2', user, now)) {
+          const pwr = await makePassword(env, user, password, now);
+          await env.DB.prepare('UPDATE users SET password_hash = ?, salt = ?, password_algo = ?, password_updated_at = ? WHERE id = ? AND password_hash = ?')
+            .bind(pwr.hash, pwr.salt, pwr.algo, now, user.id, user.password_hash).run();
+        }
 
         const token = await newSession(env, user, now);
 

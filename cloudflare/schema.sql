@@ -9,7 +9,11 @@ CREATE TABLE IF NOT EXISTS users (
     salt TEXT NOT NULL,
     profile_json TEXT NOT NULL,
     created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
+    updated_at INTEGER NOT NULL,
+    -- 密码怎么存的：'pbkdf2-sha256:次数' 或以前的 'sha256-v1'（老号登录成功时自动换成 PBKDF2）。
+    -- 以前建的库没有这两列，worker 第一次收到请求时会自动 ALTER 加上
+    password_algo TEXT NOT NULL DEFAULT 'sha256-v1',
+    password_updated_at INTEGER NOT NULL DEFAULT 0
 );
 
 -- token 存的是 'h1:' + 令牌的 SHA-256（十六进制），不存原文；以前存原文的那些，用到一次就换成哈希。
