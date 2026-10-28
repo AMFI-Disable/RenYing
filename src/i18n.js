@@ -159,6 +159,14 @@
     [/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
     [/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
     [/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
+    // 拿到秘卷时的大字（src/game/22-modes.js、07-ai-story.js、22-world.js 的 say）
+    [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
+    [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],
+    [/^全员共享「(.+)」$/, (m0, n) => `Everyone shares “${lookup(n) || n}”`],
+    [/^全线共享「(.+)」$/, (m0, n) => `All lines share “${lookup(n) || n}”`],
+    [/^第 (\d+) 波击退 · 全队共享「(.+)」$/, (m0, w, n) => `Wave ${w} repelled · The team shares “${lookup(n) || n}”`],
+    // 选卷页的流派 · 品级标签：流派是印章式的单字，照原样
+    [/^(\S) · (凡品|精品|绝品|险卷|天书)$/, (m0, g, r) => `${g} · ${lookup(r) || r}`],
     // 同袍肉鸽的画布 HUD（src/game/16-draw-ui.js drawHUDRaid）：要排在上面「全队共享秘卷：…」之前
     [/^全队共享秘卷：(\d+) 卷 · 破魔悬赏 \+(\d+) 墨锭$/, (m0, n, g) => `Shared scrolls: ${n} · Boss bounty +${g} Ink`],
     [/^全服共享秘卷：(\d+) 卷 · 魔首血量全线共享$/, (m0, n) => `Server-shared scrolls: ${n} · Boss HP shared across all lines`],
