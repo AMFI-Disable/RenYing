@@ -191,6 +191,7 @@ CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就�
 | hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD 文字和血条不重叠、不出画布 | UI |
 | predeploy | `node tools/predeploy-check.mjs` | wrangler.toml、迁移文件编号、管理后台 CSP、接口冒烟测试 | Cloudflare Worker |
 | perf | `node tools/perf-audit.mjs` | 首页加载到主菜单、面板切换、电脑对战帧率，不超过 `tools/perf-budget.json` 的预算 | UI |
+| firstload | `node tools/firstload-audit.mjs` | 无缓存首次打开：FCP、LCP、布局跳动、字体请求数和大小；字体加载时文字不隐身，首屏不请求音乐 | UI |
 
 ---
 

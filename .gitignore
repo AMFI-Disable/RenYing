@@ -82,6 +82,7 @@ ci-hud-ov/
 ci-touch/
 ci-net/
 ci-perf/
+ci-firstload/
 ci-kb/
 tools/music/out/
 _site/

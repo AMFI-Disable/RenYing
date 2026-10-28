@@ -16,6 +16,7 @@ on:
       - "tools/kb-flow-test.mjs"
       - "tools/perf-audit.mjs"
       - "tools/perf-budget.json"
+      - "tools/firstload-audit.mjs"
   pull_request:
     branches: [ main ]
 
@@ -81,3 +82,8 @@ jobs:
       # checked against tools/perf-budget.json (measured, then loosened about 3x).
       - name: Performance Budget Audit
         run: node tools/perf-audit.mjs ci-perf
+
+      # Cold first load: fails if a web font can hide text (font-display block/auto) or if music or the
+      # Qingfengxing page is requested on the first screen. Timings and sizes are reported only.
+      - name: First Load Audit (Fonts, Music, Deferred Pages)
+        run: node tools/firstload-audit.mjs ci-firstload 3
