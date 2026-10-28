@@ -1629,6 +1629,49 @@ section('登录记录：注册、登录、失败、退出、改密码都记；IP
   await adm('POST', '/api/admin/flags', { k: 'auth.refresh', mode: 'dev', why: '测试完回到默认' });
 }
 
+section('人机验证（Turnstile）：没配置时完全跳过；配置了以后注册要过，登录输错 3 次后要过');
+{
+  const reg = (name, extra = {}, ip = '66.6.' + Math.floor(Math.random() * 250) + '.' + Math.floor(Math.random() * 250)) => call('POST', '/api/register', { username: name, password: 'secret123', ...extra }, undefined, ip);
+  ok((await reg('tsNone')).ok && (await call('GET', '/api/flags', undefined, undefined, '66.7.0.1')).turnstile === '', '没设 TURNSTILE_SITEKEY / SECRET：注册照常，网页拿不到 site key');
+  const realFetch = globalThis.fetch, seen = [];
+  globalThis.fetch = async (url, opts) => {
+    if (String(url).startsWith('https://challenges.cloudflare.com/')) {
+      const f = new URLSearchParams(String(opts.body)); seen.push(Object.fromEntries(f));
+      if (f.get('response') === 'down') throw new TypeError('network');
+      return new Response(JSON.stringify({ success: f.get('secret') === 'ts-secret' && f.get('response') === 'good-token' }));
+    }
+    return realFetch(url, opts);
+  };
+  ENV.TURNSTILE_SITEKEY = 'ts-site-key'; ENV.TURNSTILE_SECRET = 'ts-secret';
+  try {
+    ok((await call('GET', '/api/flags', undefined, undefined, '66.7.0.2')).turnstile === 'ts-site-key', '配置好了：网页拿得到 site key（secret 不给）');
+    const regRate = () => row("SELECT COALESCE(SUM(n), 0) AS n FROM rate WHERE k = 'reg:66.7.1.1'").n;
+    const n0 = await reg('tsUser', {}, '66.7.1.1');
+    ok(n0.status === 400 && n0.need === 'turnstile' && !row("SELECT 1 AS x FROM users WHERE username = 'tsUser'"), '注册没带验证结果：400、need turnstile，号没建');
+    ok(regRate() === 0, '这次不算进每小时注册次数');
+    const n1 = await reg('tsUser', { turnstile: 'bad-token' }, '66.7.1.1');
+    ok(n1.status === 400 && n1.need === 'turnstile' && /没通过/.test(n1.error), '验证结果不对：不建号');
+    const n2 = await reg('tsUser', { turnstile: 'down' }, '66.7.1.1');
+    ok(n2.status === 400 && n2.need === 'turnstile', '验证服务器连不上：当没通过');
+    const n3 = await reg('tsUser', { turnstile: 'good-token' }, '66.7.1.1');
+    ok(n3.ok, '过了：建号成功');
+    ok(seen.at(-1).secret === 'ts-secret' && seen.at(-1).remoteip === '66.7.1.1', '验证时带上 secret 和玩家的 IP');
+    const li = (pw, extra = {}) => call('POST', '/api/login', { username: 'tsUser', password: pw, ...extra }, undefined, '66.7.2.' + Math.floor(Math.random() * 250));
+    ok((await li('secret123')).ok, '没输错过：登录不用验证');
+    for (let i = 0; i < 3; i++) await li('wrong-' + i);
+    const l1 = await li('secret123');
+    ok(l1.status === 400 && l1.need === 'turnstile', '同一个昵称输错 3 次后：密码对也要先过验证');
+    ok((await li('secret123', { turnstile: 'bad-token' })).need === 'turnstile', '验证不对：还是不让登');
+    ok((await li('secret123', { turnstile: 'good-token' })).ok, '过了验证、密码对：登录成功');
+    ok((await li('secret123')).ok, '登录成功以后错误次数清零，下次不用再验证');
+    await adm('POST', '/api/admin/flags', { k: 'auth.turnstile', mode: 'off', why: '测试：关掉人机验证' });
+    ok((await reg('tsOff')).ok && (await call('GET', '/api/flags', undefined, undefined, '66.7.0.3')).turnstile === '', '开关关掉：配置了也跳过');
+    await adm('POST', '/api/admin/flags', { k: 'auth.turnstile', mode: 'all', why: '测试完开回去' });
+  } finally {
+    globalThis.fetch = realFetch; delete ENV.TURNSTILE_SITEKEY; delete ENV.TURNSTILE_SECRET;
+  }
+}
+
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');

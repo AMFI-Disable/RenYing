@@ -346,6 +346,24 @@ async function authLog(env, request, act, o = {}) {
   } catch (e) { console.warn('auth_log', e && e.message); }
 }
 
+/* ---------- 人机验证（Cloudflare Turnstile）----------
+ * Worker 里设了 TURNSTILE_SITEKEY（变量）和 TURNSTILE_SECRET（Secret）两样、开关 auth.turnstile 也开着才生效，不然整段跳过。
+ * 注册每次都要过；登录在同一个昵称 15 分钟内输错 3 次、或者同一个 IP 输错 10 次以后才要。
+ * 没带验证结果时回 400 和 need: 'turnstile'（不算进注册次数），网页弹出验证框，过了再带着结果重发一次。
+ * 验证服务器连不上就当没通过（宁可让人等一下再试，也不放机器人进来）。 */
+async function turnstileOn(env, user, now) {
+  return !!(env.TURNSTILE_SECRET && env.TURNSTILE_SITEKEY) && flagOn(env, 'auth.turnstile', user, now);
+}
+async function turnstileOk(env, token, ip) {
+  if (!token || typeof token !== 'string' || token.length > 2048) return false;
+  try {
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: new URLSearchParams({ secret: env.TURNSTILE_SECRET, response: token, remoteip: ip }) });
+    const j = await r.json();
+    return j && j.success === true;
+  } catch (e) { return false; }
+}
+const needTurnstile = msg => error(msg || '请先完成人机验证', 400, { need: 'turnstile' });
+
 async function handleRefresh(env, request, body, now) {
   const refresh = String(body.refresh || '');
   if (!refresh) {   // 老式的 30 天令牌换成新的一套（换完老令牌就删掉）
@@ -638,6 +656,7 @@ async function cfgNow(env, now) {
  * 不做按百分比放量。登记表在下面 FLAGS：[默认值, 说明, 网页要不要知道]。网页开局读 GET /api/flags，只拿得到“网页要知道”的那些。
  * 数据库里只存改过的；每个 Worker 实例最多 30 秒重读一次。 */
 export const FLAGS = {
+  'auth.turnstile': ['all', '注册、输错几次后的登录要过人机验证（Worker 里没设 TURNSTILE_SITEKEY 和 TURNSTILE_SECRET 时不管开没开都跳过）', false],
   'auth.refresh': ['dev', '登录令牌 30 分钟过期，网页用续期令牌自己换新的；偷来的续期令牌一用，整台设备退出（关掉：发老式的 30 天令牌，已经发出去的照样能用）', false],
   'auth.pbkdf2': ['all', '新密码用 PBKDF2 存，老号登录成功时换成 PBKDF2（关掉：新密码用老办法存；两种照样都认）', false],
   'auth.token_hash': ['all', '新登录的令牌在数据库里只存哈希，旧的用到时换成哈希（关掉：新令牌存原文；两种照样都认）', false],
@@ -2250,9 +2269,12 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 2. Register
       if (path === '/api/register' && request.method === 'POST') {
-        if (!(await hit(env, 'reg:' + ip, 6, 3600e3, now))) return error('注册太频繁了，过一会儿再试', 429);
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
+        const ts = await turnstileOn(env, null, now);
+        if (ts && !body.turnstile) return needTurnstile();
+        if (!(await hit(env, 'reg:' + ip, 6, 3600e3, now))) return error('注册太频繁了，过一会儿再试', 429);
+        if (ts && !(await turnstileOk(env, body.turnstile, ip))) return needTurnstile('人机验证没通过，再试一次');
         const username = String(body.username || '').trim();
         const password = String(body.password || '');
 
@@ -2330,6 +2352,11 @@ async function route(request, env, ctx, rid = reqId()) {
           return error('密码输错太多次了，请 15 分钟后再试', 429);
         }
         const fail = async () => { await hit(env, nameKey, 1e9, 15 * 60e3, now); await hit(env, ipKey, 1e9, 15 * 60e3, now); };
+        // 输错过几次：先过人机验证再说
+        if (((await peek(env, nameKey, now)) >= 3 || (await peek(env, ipKey, now)) >= 10) && await turnstileOn(env, null, now)) {
+          if (!body.turnstile) return needTurnstile('输错好几次了，先完成人机验证');
+          if (!(await turnstileOk(env, body.turnstile, ip))) return needTurnstile('人机验证没通过，再试一次');
+        }
 
         const user = await env.DB.prepare(
           'SELECT id, username, password_hash, salt, password_algo, profile_json FROM users WHERE username = ?'
@@ -2473,7 +2500,8 @@ async function route(request, env, ctx, rid = reqId()) {
       if (path === '/api/flags' && request.method === 'GET') {
         if (!(await hit(env, 'flg:' + ip, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
-        return json({ ok: true, flags: await flagsFor(env, auth && auth.user, now) });
+        const user = auth && auth.user;
+        return json({ ok: true, flags: await flagsFor(env, user, now), turnstile: (await turnstileOn(env, user, now)) ? String(env.TURNSTILE_SITEKEY) : '' });
       }
 
       // 13. 排行榜（不用登录）：段位榜是这个赛季打满定级赛的，按段位分排；战绩榜按联机胜场排。被封的号不上榜

@@ -632,7 +632,49 @@
   }
 
   // 核心 HTTP 异步请求封装
-  async function api(path, options = {}, retried) {
+  // 人机验证：服务器回 need: 'turnstile' 时弹一个框（Cloudflare Turnstile），拿到结果再重发。
+  // site key 跟着 /api/flags 下来；服务器没开人机验证时它是空的，这一段什么都不做。玩家点取消就算没过
+  let tsKey = '', tsLoading = null;
+  function loadTurnstile() {
+    if (window.turnstile) return Promise.resolve(window.turnstile);
+    if (!tsLoading) tsLoading = new Promise((ok, bad) => {
+      const sc = document.createElement('script');
+      sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      sc.async = true;
+      sc.onload = () => (window.turnstile ? ok(window.turnstile) : bad(new Error('人机验证加载不出来')));
+      sc.onerror = () => { tsLoading = null; bad(new Error('人机验证加载不出来，检查一下网络')); };
+      document.head.appendChild(sc);
+    });
+    return tsLoading;
+  }
+  async function turnstileToken() {
+    if (!tsKey) await loadFlags();
+    if (!tsKey || typeof document === 'undefined') return '';
+    const ts = await loadTurnstile();
+    return new Promise(resolve => {
+      const box = document.createElement('div');
+      box.className = 'ry-turnstile';
+      box.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(5,8,14,.72);display:flex;align-items:center;justify-content:center';
+      box.innerHTML = '<div style="background:#111824;border:1px solid rgba(255,255,255,.14);padding:18px 20px;border-radius:10px;text-align:center;color:#ece8e1;font:14px/1.6 system-ui,sans-serif">'
+        + '<p style="margin:0 0 10px">先确认一下你不是机器人</p><div data-ts></div>'
+        + '<button type="button" data-ts-x style="margin-top:10px;background:none;border:1px solid rgba(255,255,255,.3);color:inherit;padding:4px 14px;border-radius:6px;cursor:pointer;font:inherit">取消</button></div>';
+      document.body.appendChild(box);
+      let id = null, over = false;
+      const done = t => {
+        if (over) return;
+        over = true;
+        try { if (id !== null) ts.remove(id); } catch (e) {}
+        box.remove();
+        resolve(t || '');
+      };
+      box.querySelector('[data-ts-x]').addEventListener('click', () => done(''));
+      try {
+        id = ts.render(box.querySelector('[data-ts]'), { sitekey: tsKey, callback: t => done(t), 'error-callback': () => done(''), 'expired-callback': () => done('') });
+      } catch (e) { done(''); }
+    });
+  }
+
+  async function api(path, options = {}, retried, verified) {
     const base = getEndpoint();
     const url = base + path;
     const authed = !/^\/api\/(login|register|refresh)$/.test(path);
@@ -649,6 +691,15 @@
     const data = await res.json().catch(() => ({}));
     // 401：token 过期了。有 refresh 就换一次再试一次
     if (res.status === 401 && authed && token && !retried && !options.keepalive && getRefresh() && await refreshNow(true, token)) return api(path, options, true);
+    // 要人机验证（注册、输错几次后的登录）：弹框，过了带上结果重发一次
+    if (res.status === 400 && data.need === 'turnstile' && !authed && !verified && options.body) {
+      const t = await turnstileToken().catch(() => '');
+      if (t) {
+        let b = {};
+        try { b = JSON.parse(options.body); } catch (e) {}
+        return api(path, { ...options, body: JSON.stringify({ ...b, turnstile: t }) }, retried, true);
+      }
+    }
     if (authed && token && !quiet && getToken() === token) {
       if (res.status === 401) authError('expired', data);
       else if (res.status === 403) authError(data.ban ? 'banned' : 'forbidden', data);
@@ -657,6 +708,7 @@
       const err = new Error(data.error || `请求失败 (${res.status})`);
       err.status = res.status;
       if (data.ban) err.ban = data.ban;
+      if (data.need) err.need = data.need;
       throw err;
     }
     return data;
@@ -715,6 +767,7 @@
     const u = getUser(), uid = (u && u.uid) || '';
     try {
       const r = await api('/api/flags', { method: 'GET' });
+      if (r && typeof r.turnstile === 'string') tsKey = r.turnstile;
       if (r && r.flags && typeof r.flags === 'object') {
         srvFlags = r.flags;
         try { localStorage.setItem(FLAG_CACHE_KEY, JSON.stringify({ uid, flags: r.flags })); } catch (e) {}
@@ -929,6 +982,7 @@
       notifyAuthChange(currentUser);
       return userObj;
     } catch (err) {
+      if (err && err.need) throw err;   // 要人机验证、玩家没过：照实说，不去登本机同名账号
       // 检查是否有本地历史账号
       const mockUsers = localAccounts();
       const localName = localKeyOf(mockUsers, name);
