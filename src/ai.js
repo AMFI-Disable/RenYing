@@ -234,6 +234,12 @@ class AIBrain {
     if (this.dir === -to && ((this.dir < 0 && me.x < WALL + 120) || (this.dir > 0 && me.x > STAGE_W - WALL - 120)) && me.onGround() && AI_FREE.includes(me.state)) {
       if (this.mode === 'keep' || this.chance(0.5)) { this.dir = to; if (!this.queue.length && this.chance(0.08)) this.plan([['jump', 0], ['jump', 0.22]]); }
     }
+    // 山河异境的断崖台：贴着崖边还往外走就回头，被逼在崖边就跳过对手（自己走不下崖，坠崖只会是被打下去）
+    if (typeof mapNow === 'function' && (mapNow() || {}).cliff && me.onGround() && AI_FREE.includes(me.state)) {
+      const edge = Math.min(me.x - WALL, STAGE_W - WALL - me.x), out = me.x < STAGE_W / 2 ? -1 : 1;
+      if (edge < 170 && this.dir === out) this.dir = this.chance(0.5 + 0.5 * this.L.read) ? -out : 0;
+      if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
+    }
     if (me.state === 'special' && me.ch.ult === 'avalanche') this.steerAvalanche(me, foe);
     if (this.holdAtk > 0 && me.state !== 'charge' && clock - (this.chargeT0 || 0) > 0.42) this.holdAtk = 0;   // 蓄力被打断了：松手
     c.held.down = this.holdDown > 0;
