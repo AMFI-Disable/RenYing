@@ -10497,7 +10497,7 @@ class AICtrl extends Ctrl {
 constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
 updateTactic() { this.brain.newRound(); }
 think(me, foe) {
-if (!((ROLL.on && M.mode === 'net') || (REPLAY.on && REPLAY.kind === 'net'))) return this.brain.think(me, foe);
+if (!netSim()) return this.brain.think(me, foe);
 const r0 = Math.random; Math.random = grnd;
 try { this.brain.think(me, foe); } finally { Math.random = r0; }
 }
@@ -10570,8 +10570,10 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && !!roomDef().four) || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.four));
-const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && !!roomDef().raid);
+const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
+const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
+const isRaid = () => M.mode === 'raid' || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
 const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
@@ -10790,7 +10792,7 @@ A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
 if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
 if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 }
-const isMayhem = M.mode === 'mayhem' || (M.mode === 'net' && roomDef().rule === 'mayhem');
+const isMayhem = M.mode === 'mayhem' || (netRoom() || {}).rule === 'mayhem';
 if (isMayhem) {
 A.maxHp = Math.round(A.maxHp * 10);
 B.maxHp = Math.round(B.maxHp * 10);
@@ -10805,7 +10807,7 @@ if (M.round === 1) { currentChaosMutation = null; chaosTimer = 0; }
 if (NET.role === 'host') rollChaosMutation();
 }
 const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
-if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
+if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
 if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
 M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
 M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
@@ -11072,7 +11074,7 @@ const wave = M.raidWave || 1;
 const gain = 600 + (wave - 1) * 200;
 M.raidLastReward = gain;
 M.raidInkEarned = (M.raidInkEarned || 0) + gain;
-if (!ROLL.on) raidPay(gain);   // 联机时这一帧还可能被回滚改掉：等两边都确认打完（showEnd）再发墨锭
+if (!ROLL.on && !REPLAY.on) raidPay(gain);   // 联机时这一帧还可能被回滚改掉：等两边都确认打完（showEnd）再发墨锭；看录像不发
 }
 M.phase = 'end';
 if (!ROLL.on) showEnd(w);   // 联机由回滚确认这一帧之后统一弹结算
@@ -12998,11 +13000,11 @@ Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], po
 meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
 if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] }); REC.post = ['', '', '', '']; }
 if (kind === 'net') {
-REC.meta.slots = ROLL.slots.map(s => s.slice());
-if (allFighters().length > 2) Object.assign(REC.meta, { four: true, sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
+Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+if (allFighters().length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
 }
 }
-const rpFighters = m => (m && m.four) ? [A, B, C, D] : [A, B];
+const rpFighters = m => (m && (m.four || m.raid)) ? [A, B, C, D] : [A, B];   // 同袍肉鸽：A、C、D 打魔首 B（两人队时 D 藏着）
 function rpPoint() {
 if (REC.on && REC.kind === 'loc') {
 rpFighters(REC.meta).forEach((f, i) => { if (ctrlKey(f.ctrl) !== REC.post[i]) REC.ev.push([REC.f, i, inBits(f.ctrl.held), f.ctrl.atkT, { ...f.ctrl.buf }]); });
@@ -13126,7 +13128,7 @@ rpStore(list);
 }
 function rpNetNames(m) {
 const h = (NET.names || {}).host || '游客', c = (NET.names || {}).client || '游客';
-return m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
+return m.raid ? [h + ' · ' + c, '魔首'] : m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
 }
 function rpTitle(m) {
 const nm = i => (CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?';
@@ -13134,7 +13136,7 @@ return m.four ? `${nm(0)} · ${nm(2)} 对 ${nm(1)} · ${nm(3)}` : `${nm(0)} 对 
 }
 function rpSub(m) {
 const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-const mode = m.four && m.mode === 'net' ? '联机 2v2' : m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
+const mode = m.raid ? '联机同袍肉鸽' : m.room === 'mayhem' ? '联机神决' : m.four && m.mode === 'net' ? '联机 2v2' : m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
 const win = m.w >= 0 ? `${m.four ? (m.names || [])[m.w] || '' : (CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
 return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }
@@ -13256,7 +13258,7 @@ if (!m || !m.ev || !m.st0) return;
 if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
 ROLL.on = false; REC.on = false; paused = false; BP = null; B.dummy = false; M.stage = null;
 setChars(m.ch[0], m.ch[1]);
-if (m.four) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
+if (m.ch4) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
 const net = m.kind === 'net', mine = new Set(net ? rpSlots(m).flat() : []);
 for (const f of rpFighters(m)) {
 f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
@@ -13265,6 +13267,7 @@ if (net && mine.has(f.idx)) f.ctrl.net = true;   // 和对局里一样标成玩�
 restState(m.st0);
 M.mode = 'replay';
 Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, names: m.names || null });
+if (isRaid()) raidBossSkills();   // 读存档那一刻还不知道是在放同袍肉鸽的录像：魔首的招这里再接上
 acc = 0; creditT = 0; particles.length = 0;
 showScreen(null);
 startRound();
@@ -22395,7 +22398,7 @@ jin: '受到的伤害 -10%',
 ying: '8% 几率完全闪开一次攻击',
 qi: '气的获取 +25%',
 };
-const scRnd = () => ROLL.on ? grnd() : Math.random();   // 联机同袍肉鸽也有秘卷：回滚时两边得抽到同一个数
+const scRnd = () => ROLL.on || netSim() ? grnd() : Math.random();   // 联机同袍肉鸽也有秘卷：回滚时两边、放录像时都得抽到同一个数
 function scTxt(f, text, rgb, dy = 0) { if (!RESIM) addP({ type: 'text', text, x: f.x, y: f.y - 125 - dy, life: 0.85, max: 0.85, rgb: rgb || '235,220,170' }); }
 function scHeal(f, n, _shared = false) {
 if (n <= 0 || f.hp <= 0 || scHas(f, 'no_heal')) return 0;

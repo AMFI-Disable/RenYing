@@ -30,7 +30,7 @@ const SC_RESO = {
 };
 
 // ---------- 小工具 ----------
-const scRnd = () => ROLL.on ? grnd() : Math.random();   // 联机同袍肉鸽也有秘卷：回滚时两边得抽到同一个数
+const scRnd = () => ROLL.on || netSim() ? grnd() : Math.random();   // 联机同袍肉鸽也有秘卷：回滚时两边、放录像时都得抽到同一个数
 function scTxt(f, text, rgb, dy = 0) { if (!RESIM) addP({ type: 'text', text, x: f.x, y: f.y - 125 - dy, life: 0.85, max: 0.85, rgb: rgb || '235,220,170' }); }
 function scHeal(f, n, _shared = false) {
   if (n <= 0 || f.hp <= 0 || scHas(f, 'no_heal')) return 0;

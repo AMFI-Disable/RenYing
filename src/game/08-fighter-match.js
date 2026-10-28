@@ -68,8 +68,13 @@ const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins:
 let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
 C.hidden = true; D.hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'net' && !!roomDef().four) || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.four));
-const isRaid = () => M.mode === 'raid' || (M.mode === 'net' && !!roomDef().raid);
+// 正在按哪个联机房间的规则打：联机对局里是这个房间，放联机录像时是录像里记的那个房间（M.mode 是 replay），别的时候没有。
+// 规则（2v2、同袍肉鸽、神决……）都从这里判断，不要只认 M.mode === 'net'，不然录像放出来规则不对
+const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
+// 对局要在别的机器上算得一模一样的时候（联机回滚、放联机录像）：电脑想招、抽秘卷都用对局随机数
+const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
+const isRaid = () => M.mode === 'raid' || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
 const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
@@ -297,7 +302,7 @@ function startRound() {
     if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
     if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
   }
-  const isMayhem = M.mode === 'mayhem' || (M.mode === 'net' && roomDef().rule === 'mayhem');
+  const isMayhem = M.mode === 'mayhem' || (netRoom() || {}).rule === 'mayhem';
   if (isMayhem) {
     A.maxHp = Math.round(A.maxHp * 10);
     B.maxHp = Math.round(B.maxHp * 10);
@@ -312,7 +317,7 @@ function startRound() {
     if (NET.role === 'host') rollChaosMutation();
   }
   const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
-  if ((M.mode === 'cpu' || M.mode === 'replay' || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
+  if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
   M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
@@ -581,7 +586,7 @@ function endRound() {
       const gain = 600 + (wave - 1) * 200;
       M.raidLastReward = gain;
       M.raidInkEarned = (M.raidInkEarned || 0) + gain;
-      if (!ROLL.on) raidPay(gain);   // 联机时这一帧还可能被回滚改掉：等两边都确认打完（showEnd）再发墨锭
+      if (!ROLL.on && !REPLAY.on) raidPay(gain);   // 联机时这一帧还可能被回滚改掉：等两边都确认打完（showEnd）再发墨锭；看录像不发
     }
     M.phase = 'end';
     if (!ROLL.on) showEnd(w);   // 联机由回滚确认这一帧之后统一弹结算

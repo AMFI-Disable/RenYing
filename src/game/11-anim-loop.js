@@ -392,12 +392,12 @@ function recBegin(kind) {
   if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] }); REC.post = ['', '', '', '']; }
   // 联机：按键是按“每台电脑”记的（一台可能管两个人），回放时要知道每台电脑管哪几个人；2v2 里没人管的是电脑，回放时照样让它想
   if (kind === 'net') {
-    REC.meta.slots = ROLL.slots.map(s => s.slice());
-    if (allFighters().length > 2) Object.assign(REC.meta, { four: true, sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
+    Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+    if (allFighters().length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
   }
 }
 // 本地回放要记的人：1v1 是 A、B，2v2 四个人都记（顺序 A B C D，和 fighterByIdx 一样）
-const rpFighters = m => (m && m.four) ? [A, B, C, D] : [A, B];
+const rpFighters = m => (m && (m.four || m.raid)) ? [A, B, C, D] : [A, B];   // 同袍肉鸽：A、C、D 打魔首 B（两人队时 D 藏着）
 // 本地对战：在角色读操作之前记下双方控制器的状态（只记变化）
 function rpPoint() {
   if (REC.on && REC.kind === 'loc') {
@@ -529,7 +529,7 @@ function recSave(w) {
 // 联机录像两队的名字：双人共斗是两个人一队打电脑，其余是房主一队、加入的人一队
 function rpNetNames(m) {
   const h = (NET.names || {}).host || '游客', c = (NET.names || {}).client || '游客';
-  return m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
+  return m.raid ? [h + ' · ' + c, '魔首'] : m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
 }
 function rpTitle(m) {
   const nm = i => (CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?';
@@ -537,7 +537,7 @@ function rpTitle(m) {
 }
 function rpSub(m) {
   const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-  const mode = m.four && m.mode === 'net' ? '联机 2v2' : m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
+  const mode = m.raid ? '联机同袍肉鸽' : m.room === 'mayhem' ? '联机神决' : m.four && m.mode === 'net' ? '联机 2v2' : m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
   const win = m.w >= 0 ? `${m.four ? (m.names || [])[m.w] || '' : (CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
   return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
 }
@@ -662,7 +662,7 @@ function startReplay(m) {
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   ROLL.on = false; REC.on = false; paused = false; BP = null; B.dummy = false; M.stage = null;
   setChars(m.ch[0], m.ch[1]);
-  if (m.four) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
+  if (m.ch4) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
   // 回放只照着录下来的按键按，本地录像里电脑也不再自己想（它的按键也记了）；
   // 联机录像只记了玩家的按键，2v2 里的电脑和对局里一样，用对局随机数自己想，想出来的招一模一样
   const net = m.kind === 'net', mine = new Set(net ? rpSlots(m).flat() : []);
@@ -673,6 +673,7 @@ function startReplay(m) {
   restState(m.st0);
   M.mode = 'replay';
   Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, names: m.names || null });
+  if (isRaid()) raidBossSkills();   // 读存档那一刻还不知道是在放同袍肉鸽的录像：魔首的招这里再接上
   acc = 0; creditT = 0; particles.length = 0;
   showScreen(null);
   startRound();

@@ -60,14 +60,19 @@ function replayDiff(m, checks) {
       return `第 ${f} 帧：${out.join('；')}`;
     }
   }
+  // 同袍肉鸽的录像放到打赢魔首：看录像不能发墨锭
+  if (m.raid) {
+    const r = JSON.parse(vm.runInContext(`(() => { const i0 = PROF.ink || 0; B.hp = 0; M.koWinner = 0; endRound(); return JSON.stringify({ raid: isRaid(), gain: (PROF.ink || 0) - i0 }); })()`, w));
+    if (!r.raid || r.gain) return `同袍肉鸽录像：规则=${r.raid}，放到打赢多了 ${r.gain} 墨锭`;
+  }
   return '';
 }
 
 // 本测试自己的伪随机数（不用 Math.random，好复现）
 function rng(s) { return () => { s = (Math.imul(s ^ (s >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) | 0; return ((s >>> 0) % 1e6) / 1e6; }; }
 
-// 这几种房间的联机录像要能原样放出来。神决（mayhem）的随机词条和同袍肉鸽（raid）回放时还不认房间规则，暂时不比
-const REPLAY_OK = ['normal', 'chaos', 'pp_cc', 'pp_pp'];
+// 这几种房间的联机录像要能原样放出来（以前神决和同袍肉鸽回放时不认房间规则：神决的十倍气血、魔首都没了）
+const REPLAY_OK = ['normal', 'chaos', 'mayhem', 'pp_cc', 'pp_pp', 'raid'];
 const STJSON = st => JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
 function runCase(mode, chars, seed, frames, lag, duo) {
   now = 0;
