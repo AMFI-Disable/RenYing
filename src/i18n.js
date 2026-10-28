@@ -159,6 +159,14 @@
     [/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
     [/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
     [/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
+    // 问剑密卷（src/game/22-modes.js）和天魔讨伐的选卷面板、层数大字、画布上的层数
+    [/^(问剑|问剑密卷|万仞剑阁|天道爬塔) · 第 (\d+) 层$/, (m0, w, n) => `${{ 问剑: 'Sword Scrolls', 问剑密卷: 'Sword Scrolls', 万仞剑阁: 'Sword Pavilion', 天道爬塔: 'AI Climb' }[w]} · Floor ${n}`],
+    [/^问剑密卷 · 继续第 (\d+) 层$/, (m0, n) => `Sword Scrolls · Resume floor ${n}`],
+    [/^突破第 (\d+) 层 · 顿悟秘卷$/, (m0, n) => `Floor ${n} cleared · Learn a scroll`],
+    [/^讨伐第 (\d+) 劫大捷 · 全员共享秘卷增益$/, (m0, n) => `Trial ${n} won · A shared scroll for everyone`],
+    // 已领悟 / 已带 N 卷 · 雷 3/3：共鸣效果 · 墨 1/3（流派是印章式单字，照原样）
+    [/^(\S) (\d+)\/(\d+)(?:：(.+))?$/, (m0, g, a, b, x) => `${g} ${a}/${b}${x ? `: ${lookup(x) || x}` : ''}`],
+    [/^(已领悟|已带) (\d+) 卷(?: · (.+))?$/, (m0, w, n, x) => `${w === '已带' ? 'Taking' : 'Learned'} ${n} scroll${n === '1' ? '' : 's'}${x ? ' · ' + x.split(' · ').map(r => lookup(r) || r).join(' · ') : ''}`],
     // 拿到秘卷时的大字（src/game/22-modes.js、07-ai-story.js、22-world.js 的 say）
     [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
     [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],

@@ -5526,6 +5526,12 @@ const PATTERNS_EN = [
 [/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
 [/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
 [/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
+[/^(问剑|问剑密卷|万仞剑阁|天道爬塔) · 第 (\d+) 层$/, (m0, w, n) => `${{ 问剑: 'Sword Scrolls', 问剑密卷: 'Sword Scrolls', 万仞剑阁: 'Sword Pavilion', 天道爬塔: 'AI Climb' }[w]} · Floor ${n}`],
+[/^问剑密卷 · 继续第 (\d+) 层$/, (m0, n) => `Sword Scrolls · Resume floor ${n}`],
+[/^突破第 (\d+) 层 · 顿悟秘卷$/, (m0, n) => `Floor ${n} cleared · Learn a scroll`],
+[/^讨伐第 (\d+) 劫大捷 · 全员共享秘卷增益$/, (m0, n) => `Trial ${n} won · A shared scroll for everyone`],
+[/^(\S) (\d+)\/(\d+)(?:：(.+))?$/, (m0, g, a, b, x) => `${g} ${a}/${b}${x ? `: ${lookup(x) || x}` : ''}`],
+[/^(已领悟|已带) (\d+) 卷(?: · (.+))?$/, (m0, w, n, x) => `${w === '已带' ? 'Taking' : 'Learned'} ${n} scroll${n === '1' ? '' : 's'}${x ? ' · ' + x.split(' · ').map(r => lookup(r) || r).join(' · ') : ''}`],
 [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
 [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],
 [/^全员共享「(.+)」$/, (m0, n) => `Everyone shares “${lookup(n) || n}”`],
@@ -8081,6 +8087,11 @@ const UI_COPY_EN = {
 "天书 · 逍遥游": "Heavenly Tome · Carefree Roam",
 "天书 · 万剑归宗": "Heavenly Tome · Ten Thousand Swords",
 "全队秘卷共鸣": "Team scroll resonance",
+"问剑悟道 · 秘卷三选一": "Sword Insight · Pick 1 of 3 Scrolls",
+"同袍肉鸽 · 全队共享秘卷三选一": "Co-op Roguelike · Pick 1 of 3 Shared Scrolls",
+"突破守关者 · 顿悟绝学": "Guardian defeated · Learn a technique",
+"顿悟秘卷": "Learn Scroll",
+"问剑密卷 · 天道爬塔观战": "Sword Scrolls · Watch the AI climb",
 "凡品": "Common",
 "精品": "Fine",
 "绝品": "Superb",
@@ -18806,7 +18817,7 @@ if (M.mode === 'tower') {
 ctx.save();
 ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;
 ctx.fillStyle = '#e9c46a';
-ctx.fillText(`问剑 · 第 ${M.towerFloor || 1} 层`, cx, top + bh + 18);
+ctx.fillText(cvT(`问剑 · 第 ${M.towerFloor || 1} 层`), cx, top + bh + 18);
 ctx.restore();
 } else if (chaosOn()) {
 ctx.save();

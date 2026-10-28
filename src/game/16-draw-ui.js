@@ -638,7 +638,7 @@ function drawHUD() {
     ctx.save();
     ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;
     ctx.fillStyle = '#e9c46a';
-    ctx.fillText(`问剑 · 第 ${M.towerFloor || 1} 层`, cx, top + bh + 18);
+    ctx.fillText(cvT(`问剑 · 第 ${M.towerFloor || 1} 层`), cx, top + bh + 18);
     ctx.restore();
   } else if (chaosOn()) {
     ctx.save();
