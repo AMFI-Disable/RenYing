@@ -584,7 +584,7 @@ function drawHUD() {
       ctx.fillStyle = '#fff'; ctx.textAlign = i === 0 ? 'left' : 'right';
       ctx.shadowColor = `rgba(${f.look.slash}, 0.9)`; ctx.shadowBlur = 8;
       const ultNm = skinUltName(f) || ULTS[f.ch.ult].name;
-      ctx.fillText(`⚡ ${cvT(ultNm)} ${cvT('绝技就绪')}${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 11);
+      ctx.fillText(`⚡ ${cvT(ultNm)} ${cvT('绝技就绪')}${keyHint(i, 'sp')}`, i === 0 ? mx : mx + mw, my + 11 + resH);
       ctx.shadowBlur = 0;
     } else {
       ctx.fillStyle = `rgba(${f.look.slash}, 0.75)`;
@@ -593,7 +593,7 @@ function drawHUD() {
     // 技能冷却（木人桩不显示）
     if (!f.dummy) {
       ctx.font = `${Math.round(bh * 0.85)}px ${BODY_FONT}`; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
-      const ry = my + (full ? 9 + bh * 1.3 : 12), fs = bh * 0.85;
+      const ry = my + resH + (full ? 9 + bh * 1.3 : 12), fs = bh * 0.85;   // 有角色资源条就往下让一行
       const S = SKILLS[f.ch.skill];
       const S2 = SKILLS[f.ch.skill2];
       const s1Nm = cvT(skinSkillName(f, 1) || S.name);
