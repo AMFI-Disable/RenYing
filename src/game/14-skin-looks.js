@@ -340,10 +340,135 @@ function drawDeco(sk, f, L, layer) {
   } else if (hd === 'headband') {   // 头巾 + 飘带
     ctx.strokeStyle = D.band; ctx.lineWidth = 3; line(P(-10, 3), P(10, 3));
     ctx.lineWidth = 2.2; for (const k of [0, 1]) { const b0 = P(-10, 3), c1 = P(-22, -2 - k * 4 + sway), tp = P(-34 - k * 4, -8 - k * 6 + sway * 1.5); ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]); ctx.stroke(); }
+  } else if (hd === 'ribbon') {   // 凌雀·素丝：素锦双蝶发带 + 垂丝流苏
+    const c = P(-6, 12);
+    ctx.fillStyle = '#f06292'; ctx.strokeStyle = '#ffd0e0'; ctx.lineWidth = 1.2;
+    for (const s2 of [-1, 1]) {
+      ctx.beginPath(); ctx.ellipse(c[0] + fx * s2 * 4.5, c[1] + fy * s2 * 4.5 + 1, 5.2, 2.8, Math.atan2(uy, ux) + s2 * 0.45, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#fff0f5'; circle(c, 2.2);
+    ctx.strokeStyle = '#f06292'; ctx.lineWidth = 1.8;
+    for (const k of [0, 1]) {
+      const b1 = P(-16 - k * 4 + sway * 0.6, 2 - k * 3), b2 = P(-26 - k * 6 + sway * 1.1, -6 - k * 4);
+      ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.quadraticCurveTo(b1[0], b1[1], b2[0], b2[1]); ctx.stroke();
+    }
+  } else if (hd === 'tiara') {   // 凌雀·惊雀：夜雀紫晶羽冠 + 额心紫钻
+    ctx.fillStyle = '#4a148c'; ctx.strokeStyle = '#e040fb'; ctx.lineWidth = 1.4;
+    for (const [ox, h1] of [[-7, 13], [-3, 18], [1, 22], [5, 16]]) {
+      const b0 = P(ox - 2.2, 6), b1 = P(ox + 2.2, 6), tp = P(ox - 2, h1);
+      ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(b1[0], b1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#f3e5f5'; circle(P(8, 5.5), 2.3);
+  } else if (hd === 'loomcrown') {   // 凌雀·天罗星杼（★非凡）：织女双金梭凤冠 + 八角星钻 + 双侧垂珠星光步摇
+    // 交叉双金梭发簪横贯发髻
+    for (const [dx0, dy0, dx1, dy1] of [[-15, 9, 9, 19], [-13, 19, 11, 9]]) {
+      const a = P(dx0, dy0), b = P(dx1, dy1), m = [(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5];
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      ctx.save(); ctx.translate(m[0], m[1]); ctx.rotate(ang);
+      const gr = ctx.createLinearGradient(-13, 0, 13, 0);
+      gr.addColorStop(0, '#ffd24a'); gr.addColorStop(0.5, '#ffffff'); gr.addColorStop(1, '#ff7ad9');
+      ctx.fillStyle = gr; ctx.strokeStyle = '#8a4a18'; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.ellipse(0, 0, 13, 2.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    // 华丽金紫织女凤冠主梁
+    ctx.fillStyle = '#ffd24a'; ctx.strokeStyle = '#ff7ad9'; ctx.lineWidth = 1.3;
+    const cPts = [P(-9, 6), P(-11, 14), P(-5, 11), P(-2, 21), P(2, 13), P(6, 19), P(10, 8), P(7, 5)];
+    ctx.beginPath(); ctx.moveTo(cPts[0][0], cPts[0][1]); for (const q of cPts) ctx.lineTo(q[0], q[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 冠心八角星钻与星芒
+    const gemP = P(1, 12);
+    ctx.fillStyle = '#ff7ad9'; circle(gemP, 3.0);
+    ctx.fillStyle = '#ffffff'; circle(gemP, 1.4);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    glint(gemP[0], gemP[1], 5.5 + Math.sin(t * 4) * 1.5, '255,190,245', 0.95);
+    ctx.restore();
+    // 两侧垂珠星光步摇与流苏飘带
+    for (const [k, ox] of [[0, -9], [1, 7]]) {
+      const top = P(ox, 6), mid = P(ox - 2 + sway * 0.4, -2 - k * 2), bot = P(ox - 4 + sway * 0.75, -10 - k * 3);
+      ctx.strokeStyle = 'rgba(255,215,110,0.9)'; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.quadraticCurveTo(mid[0], mid[1], bot[0], bot[1]); ctx.stroke();
+      ctx.fillStyle = '#ffd24a'; circle(mid, 1.5);
+      ctx.fillStyle = '#ffd6fa'; circle(bot, 2.2);
+      ctx.fillStyle = '#ffffff'; circle(bot, 1.0);
+    }
+  } else if (hd === 'wraithveil') {   // 离影·幽夜星魄（★非凡）：冥魄断魂黑曜半面傩 + 掠空双星魄角 + 额心竖瞳魂印（彻底区别于绯影狐面）
+    // 1. 深渊暗夜高领兜帽底衬
+    const a0 = Math.atan2(uy, ux);
+    ctx.fillStyle = '#07111a'; ctx.strokeStyle = '#1c4a66'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.arc(hx, hy, 12.6, a0 - Math.PI * 0.72, a0 + Math.PI * 0.28);
+    const hoodTail = P(-20 + sway * 0.5, -9);
+    ctx.lineTo(hoodTail[0], hoodTail[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 2. 向后上方斜掠的流线型寒晶双冥角（修长锋刃状，非兽耳）
+    for (const [s2, hOff, len] of [[-1, 8, 22], [1, 11, 27]]) {
+      const b0 = P(s2 * 3 - 1, hOff), b1 = P(s2 * 3 + 3.5, hOff - 1);
+      const c1 = P(-10 + s2 * 2, hOff + 9), tp = P(-len + s2 * 3, hOff + 14 + sway * 0.2);
+      const gr = ctx.createLinearGradient(b0[0], b0[1], tp[0], tp[1]);
+      gr.addColorStop(0, '#0d2232'); gr.addColorStop(0.55, '#38b6d8'); gr.addColorStop(1, '#e8ffff');
+      ctx.fillStyle = gr; ctx.strokeStyle = '#7feeff'; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.quadraticCurveTo(c1[0], c1[1], tp[0], tp[1]);
+      ctx.lineTo(b1[0], b1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    // 3. 下半脸精雕黑曜断魂鬼傩面甲（只覆下颌与鼻梁，露出上半脸冷冽双眸与额印）
+    const m0 = P(-2, 1.5), m1 = P(11.5, 1.0), m2 = P(9.5, -9.2), m3 = P(-4, -7.5);
+    ctx.fillStyle = '#0b1924'; ctx.strokeStyle = '#5ef0ff'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.lineTo(m2[0], m2[1]); ctx.lineTo(m3[0], m3[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 面甲上的青金断魂獠牙纹
+    ctx.strokeStyle = '#b8faff'; ctx.lineWidth = 1.1;
+    line(P(2, -1.5), P(9.5, -2.0));
+    line(P(4, -4.5), P(8.8, -5.0));
+    line(P(5.5, 0.5), P(4.2, -6.5));
+    // 4. 独目幽冥寒芒 + 额间裂空竖瞳星钻
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const eyeP = P(6.2, 3.8), browP = P(7.8, 8.2);
+    ctx.fillStyle = '#5ef0ff'; circle(eyeP, 2.2);
+    ctx.fillStyle = '#ffffff'; circle(eyeP, 1.0);
+    // 眼尾拖曳的幽蓝魂火光痕
+    ctx.strokeStyle = 'rgba(94,240,255,0.85)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(eyeP[0], eyeP[1]); ctx.quadraticCurveTo(P(1, 5.5)[0], P(1, 5.5)[1], P(-6 + sway * 0.3, 7)[0], P(-6 + sway * 0.3, 7)[1]); ctx.stroke();
+    // 额心竖瞳菱形星钻
+    const dTop = P(7.8, 11.5), dRight = P(9.6, 8.2), dBot = P(7.8, 5.2), dLeft = P(6.0, 8.2);
+    ctx.fillStyle = '#7feeff';
+    ctx.beginPath(); ctx.moveTo(dTop[0], dTop[1]); ctx.lineTo(dRight[0], dRight[1]); ctx.lineTo(dBot[0], dBot[1]); ctx.lineTo(dLeft[0], dLeft[1]); ctx.closePath(); ctx.fill();
+    glint(browP[0], browP[1], 4.5 + Math.sin(t * 5) * 1.2, '127,238,255', 0.9);
+    ctx.restore();
+  } else if (hd === 'polarhalo') {   // 磁仙·极星乾坤（★非凡）：紫金两仪乾坤帝冕 + 悬浮阴阳星轨环（区别于雷鸣/墨羽星冠）
+    const pol = sk.pol || 1;
+    // 1. 紫金乾坤帝冕冠座（双翼高耸金冠）
+    ctx.fillStyle = '#24183c'; ctx.strokeStyle = '#ffb24a'; ctx.lineWidth = 1.5;
+    const g0 = P(-7, 8), g1 = P(-9, 17), g2 = P(-3, 14), g3 = P(0, 22), g4 = P(3, 14), g5 = P(9, 17), g6 = P(7, 8);
+    ctx.beginPath(); ctx.moveTo(g0[0], g0[1]); for (const q of [g1, g2, g3, g4, g5, g6]) ctx.lineTo(q[0], q[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 冠心阴阳太极双色宝珠
+    const cP = P(0, 13);
+    ctx.fillStyle = '#ffb24a'; circle([cP[0] + fx * 1.2, cP[1] + fy * 1.2], 2.2);
+    ctx.fillStyle = '#5ef0ff'; circle([cP[0] - fx * 1.2, cP[1] - fy * 1.2], 2.2);
+    ctx.fillStyle = '#ffffff'; circle(cP, 1.1);
+    // 2. 头顶上方悬浮旋转的阴阳两仪微缩星轨环
+    const haloC = P(0, 25);
+    const ang = Math.atan2(uy, ux) + Math.PI / 2 + Math.sin(t * 2) * 0.18;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = pol > 0 ? 'rgba(255,185,80,0.9)' : 'rgba(100,195,255,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(haloC[0], haloC[1], 13, 3.8, ang, 0, Math.PI * 2); ctx.stroke();
+    const orbA = t * 3.2;
+    const pPos = [haloC[0] + Math.cos(orbA) * 12, haloC[1] + Math.sin(orbA) * 3.5];
+    const pNeg = [haloC[0] - Math.cos(orbA) * 12, haloC[1] - Math.sin(orbA) * 3.5];
+    ctx.fillStyle = '#ff6a3c'; circle(pPos, 2.5);
+    ctx.fillStyle = '#5ef0ff'; circle(pNeg, 2.5);
+    glint(haloC[0], haloC[1], 4.5, pol > 0 ? '255,215,130' : '120,220,255', 0.85);
+    ctx.restore();
   }
   if (D.shoulder) {   // 护肩
-    ctx.fillStyle = D.shoulder; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.ellipse(sk.sh[0], sk.sh[1] + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = D.shoulder; ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.ellipse(sk.sh[0], sk.sh[1] + 2, 10.5, 6.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    if (D.robe === 'celestial_loom' || D.robe === 'abyss_wraith' || D.robe === 'polar_robe') {
+      // ★ 非凡专属：双层流光金/星肩甲翼片
+      const swingP = [sk.sh[0] - sk.face * 9, sk.sh[1] - 3];
+      ctx.fillStyle = D.robe === 'abyss_wraith' ? '#5ef0ff' : '#ffd24a';
+      circle([sk.sh[0] + sk.face * 2, sk.sh[1] + 1], 2.2);
+      ctx.strokeStyle = D.robe === 'abyss_wraith' ? '#5ef0ff' : '#ffd24a';
+      ctx.lineWidth = 1.4;
+      line([sk.sh[0] - sk.face * 3, sk.sh[1] - 1], swingP);
+    }
   }
   if (D.breastplate) {   // 斜挎的甲带（不画胸口的护心镜圆片）
     const a0 = [sk.sh[0] + sk.face * 4, sk.sh[1] - 1], a1 = [sk.hip[0] - sk.face * 6, sk.hip[1] + 2];
@@ -359,14 +484,24 @@ function drawDeco(sk, f, L, layer) {
       : D.robe === 'thunder' ? '#4a287c' : D.robe === 'solar' ? '#ba5416' : D.robe === 'vajra' ? '#6a3610'
       : D.robe === 'cinnabar' ? '#882014' : D.robe === 'gilt' ? '#8a6820' : D.robe === 'starry' ? '#14244a'
       : D.robe === 'sakura' ? '#c86488' : D.robe === 'eclipse' ? '#34101e' : D.robe === 'snow' ? '#4478a8'
+      : D.robe === 'silk' ? '#561c46' : D.robe === 'nightingale' ? '#32105c'
+      : D.robe === 'celestial_loom' ? '#421458' : D.robe === 'abyss_wraith' ? '#0b2234' : D.robe === 'polar_robe' ? '#2c1e4a'
       : D.robe === 'raven' ? '#1c1c24' : D.robe === 'jade_master' ? '#1a5448' : D.robe === 'phoenix' ? '#a83610' : D.robe === 'foxfire' ? '#c8361e' : '#284666';
-    ctx.fillStyle = rbCol; ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1.2;
+    ctx.fillStyle = rbCol; ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 1.3;
     const h = sk.hip, kf = sk.kf, kb = sk.kb;
     const rDir = -sk.face;
     const rTipX = (kf[0] + kb[0]) * 0.5 + rDir * (12 + Math.abs(sway)), rTipY = Math.max(kf[1], kb[1]) + 8 + (f.state === 'skill' ? Math.sin(t * 18) * 6 : 0);
     ctx.beginPath(); ctx.moveTo(h[0] - 6, h[1]); ctx.lineTo(h[0] + 6, h[1]);
     ctx.quadraticCurveTo(kf[0] + 8, kf[1], rTipX, rTipY);
     ctx.quadraticCurveTo(kb[0] - 8, kb[1], h[0] - 6, h[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // ★ 非凡战袍专属：双层流光金边/星纹刺绣与腰封佩玉
+    if (D.robe === 'celestial_loom' || D.robe === 'abyss_wraith' || D.robe === 'polar_robe') {
+      const trimC = D.robe === 'abyss_wraith' ? '#5ef0ff' : '#ffd24a';
+      ctx.strokeStyle = trimC; ctx.lineWidth = 1.1;
+      line([h[0] - 4, h[1] + 2], [(h[0] + rTipX) * 0.5, (h[1] + rTipY) * 0.5]);
+      ctx.fillStyle = trimC; circle([h[0] + sk.face * 3, h[1]], 2.4);
+      ctx.fillStyle = '#ffffff'; circle([h[0] + sk.face * 3, h[1]], 1.0);
+    }
   }
   if (D.dress) {   // 及踝长裙：上浅下深，裙摆随风往后飘；腰上一道带子，两根带尾往后飘
     const h = sk.hip, kf = sk.kf, kb = sk.kb, ff = sk.ff, fb = sk.fb, fc = sk.face, bk = -fc;

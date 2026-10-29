@@ -475,69 +475,124 @@ SKIN_WEAP.jade_gourd = W => {   // 酒剑仙：青玉葫芦刻着云纹，葫芦
   ctx.globalCompositeOperation = 'lighter';
   for (let k = 0; k < 3; k++) { const u = (W.T * 0.7 + k / 3) % 1, p = [top[0] + Math.sin(u * 6 + k) * 4, top[1] - 5 - u * 16]; ctx.fillStyle = `rgba(150,240,255,${0.35 * (1 - u)})`; circle(p, 2.5 + u * 3); }
 };
-// ---------- 新三侠非凡兵器：天罗星杼、幽夜星魄、极星乾坤 ----------
-SKIN_WEAP.star_spindle = W => {   // 天罗星杼：星晶子母飞梭，梭尖嵌八角星核，牵引星光悬丝
-  const { sk, L, o, flash, live, g, t, hl, ux, uy, px, py, T } = W;
-  const blade = flash ? '#fff' : '#fff2fc';
+// ---------- 新三侠专属与非凡兵器：素丝、惊雀、天罗星杼、幽夜星魄、极星乾坤 ----------
+SKIN_WEAP.silk_spindle = W => {   // 素丝：粉玉银丝飞梭
+  const { sk, L, o, flash, ux, uy, g } = W;
   const spinDraw = (pt, ang) => {
     ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang);
-    if (o) { ctx.fillStyle = L.outline; ctx.beginPath(); ctx.ellipse(0, 0, 18, 5.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
-    const gr = ctx.createLinearGradient(-16, 0, 16, 0);
+    if (o) { ctx.fillStyle = L.outline; ctx.beginPath(); ctx.ellipse(0, 0, 16, 4.8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
+    ctx.fillStyle = flash ? '#fff' : '#ffd8e8'; ctx.beginPath(); ctx.ellipse(0, 0, 14.5, 3.6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f06292'; circle([0, 0], 2.4);
+    ctx.restore();
+  };
+  spinDraw(g, Math.atan2(uy, ux)); spinDraw(sk.hb, Math.atan2(uy, ux));
+  if (!o) { ctx.strokeStyle = 'rgba(240,98,146,0.75)'; ctx.lineWidth = 1.1; line(sk.hf, sk.hb); }
+};
+SKIN_WEAP.nightingale_spindle = W => {   // 惊雀：夜雀紫晶飞梭，梭翼带紫电羽棱
+  const { sk, L, o, flash, ux, uy, g } = W;
+  const spinDraw = (pt, ang) => {
+    ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang);
+    if (o) { ctx.fillStyle = L.outline; ctx.beginPath(); ctx.ellipse(0, 0, 17, 5.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
+    ctx.fillStyle = flash ? '#fff' : '#4a148c';
+    ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(0, -4.5); ctx.lineTo(16, 0); ctx.lineTo(0, 4.5); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#e040fb'; ctx.lineWidth = 1.1; ctx.stroke();
+    ctx.fillStyle = '#f3e5f5'; circle([0, 0], 2.2);
+    ctx.restore();
+  };
+  spinDraw(g, Math.atan2(uy, ux)); spinDraw(sk.hb, Math.atan2(uy, ux));
+  if (!o) { ctx.strokeStyle = 'rgba(224,64,251,0.8)'; ctx.lineWidth = 1.2; line(sk.hf, sk.hb); }
+};
+SKIN_WEAP.star_spindle = W => {   // 天罗星杼（★非凡）：织女金翼星晶双生梭，梭身展鎏金凤翼，中嵌八角星钻，牵引璀璨银河星丝
+  const { sk, L, o, flash, live, g, ux, uy, T } = W;
+  const spinDraw = (pt, ang, sc = 1) => {
+    ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang); ctx.scale(sc, sc);
+    if (o) {
+      ctx.fillStyle = L.outline;
+      ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(-3, -7); ctx.lineTo(20, 0); ctx.lineTo(-3, 7); ctx.closePath(); ctx.fill();
+      ctx.restore(); return;
+    }
+    // 外层鎏金凤翼护翼
+    ctx.fillStyle = '#ffd24a';
+    ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-2, -6.2); ctx.lineTo(10, 0); ctx.lineTo(-2, 6.2); ctx.closePath(); ctx.fill();
+    // 主梭流光星晶刃体
+    const gr = ctx.createLinearGradient(-19, 0, 19, 0);
     gr.addColorStop(0, '#ffd6fa'); gr.addColorStop(0.5, '#ffffff'); gr.addColorStop(1, '#ff7ad9');
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(0, 0, 16, 4.2, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#ffd24a'; ctx.fillRect(-3, -2.5, 6, 5);
-    ctx.strokeStyle = 'rgba(255,225,140,0.95)'; ctx.lineWidth = 1.2;
-    line([-15, 0], [15, 0]);
+    ctx.fillStyle = flash ? '#fff' : gr;
+    ctx.beginPath(); ctx.moveTo(-19, 0); ctx.lineTo(0, -3.8); ctx.lineTo(19, 0); ctx.lineTo(0, 3.8); ctx.closePath(); ctx.fill();
+    // 梭心紫金八角星核
+    ctx.fillStyle = '#4a148c'; circle([0, 0], 3.2);
+    ctx.fillStyle = '#ffd24a'; circle([0, 0], 1.8);
+    ctx.strokeStyle = 'rgba(255,235,160,0.95)'; ctx.lineWidth = 1.1; line([-17, 0], [17, 0]);
     if (live) {
       ctx.globalCompositeOperation = 'lighter';
-      const ph = (T * 1.5) % 1;
-      ctx.fillStyle = `rgba(255,140,225,${0.6 * (1 - ph)})`; circle([0, 0], 3 + ph * 3);
+      const ph = (T * 1.8) % 1;
+      ctx.fillStyle = `rgba(255,140,225,${0.65 * (1 - ph)})`; circle([0, 0], 3.5 + ph * 4);
     }
     ctx.restore();
   };
-  spinDraw(g, Math.atan2(uy, ux));
-  spinDraw(sk.hb, Math.atan2(uy, ux));
+  spinDraw(g, Math.atan2(uy, ux), 1);
+  spinDraw(sk.hb, Math.atan2(uy, ux) + 0.25, 0.92);
   if (!o) {
-    ctx.strokeStyle = 'rgba(255,140,225,0.85)'; ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.moveTo(sk.hf[0], sk.hf[1]);
-    ctx.quadraticCurveTo((sk.hf[0] + sk.hb[0]) / 2, (sk.hf[1] + sk.hb[1]) / 2 + 8, sk.hb[0], sk.hb[1]);
-    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,175,235,0.9)'; ctx.lineWidth = 1.5;
+    const mx = (sk.hf[0] + sk.hb[0]) / 2, my = (sk.hf[1] + sk.hb[1]) / 2 + 8;
+    ctx.beginPath(); ctx.moveTo(sk.hf[0], sk.hf[1]); ctx.quadraticCurveTo(mx, my, sk.hb[0], sk.hb[1]); ctx.stroke();
+    ctx.fillStyle = '#ffd24a'; circle([mx, my - 4], 1.8);
   }
 };
-SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄：星渊破界长刀，刃脊浮动深空星云，刀尖垂星辉
+SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄（★非凡）：冥魄断界星渊太刀，镂空星轨血槽 + 冥角护手 + 刃尖幽蓝星芒
   const { P, poly, bar, live, t, g, hl, T, o, flash, L } = W;
-  bar(hl, g, 4.5, '#0a141e');
+  // 刀柄与柄首幽蓝魂晶
+  bar(hl, g, 4.6, '#091520');
+  if (!o) { ctx.fillStyle = '#5ef0ff'; circle(hl, 2.6); }
+  // 镂空双翼冥角刀镡（护手）
+  poly([P(0.04, -8.5), P(-0.03, -4.5), P(-0.05, 0), P(-0.03, 4.5), P(0.04, 8.5), P(0.01, 0)], '#0d2638');
+  if (!o) {
+    ctx.strokeStyle = '#7feeff'; ctx.lineWidth = 1.2;
+    line(P(0.03, -8), P(0.03, 8));
+    ctx.fillStyle = '#ffffff'; circle(P(0.01, 0), 2.0);
+  }
+  // 双层弧光星渊刀身（背厚刃薄，带深空渐变与刃口寒芒）
   const gr = ctx.createLinearGradient(g[0], g[1], t[0], t[1]);
-  gr.addColorStop(0, '#102438'); gr.addColorStop(0.45, '#2e6a8e'); gr.addColorStop(0.85, '#5ef0ff'); gr.addColorStop(1, '#ffffff');
-  poly([P(0, -2.4), P(0.92, -2.1), t, P(0.92, 2.1), P(0, 2.4)], gr);
-  poly([P(0.02, -6.5), P(-0.02, -7.5), P(-0.04, 0), P(-0.02, 7.5), P(0.02, 6.5), P(0.0, 0)], '#1a3e5c');
+  gr.addColorStop(0, '#091826'); gr.addColorStop(0.38, '#1a4e6e'); gr.addColorStop(0.78, '#5ef0ff'); gr.addColorStop(1, '#ffffff');
+  poly([P(0, -2.8), P(0.65, -3.1), P(0.92, -2.2), t, P(0.88, 2.4), P(0, 2.5)], gr);
+  // 刀脊黑曜加固棱线
+  poly([P(0, -2.8), P(0.82, -2.5), P(0.82, -0.6), P(0, -0.8)], '#07131e');
   if (!live) return;
-  ctx.strokeStyle = 'rgba(94,240,255,0.8)'; ctx.lineWidth = 1.0; ctx.beginPath();
-  for (let i = 0; i <= 12; i++) { const k = 0.08 + i / 12 * 0.8, q = P(k, Math.sin(k * 16 - T * 6) * 0.8); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+  // 刀身流动的星脉裂纹与刀尖星魄寒芒
+  ctx.strokeStyle = 'rgba(160,248,255,0.9)'; ctx.lineWidth = 1.1; ctx.beginPath();
+  for (let i = 0; i <= 14; i++) { const k = 0.06 + i / 14 * 0.86, q = P(k, Math.sin(k * 18 - T * 7) * 0.9); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
   ctx.stroke();
   ctx.globalCompositeOperation = 'lighter';
-  const ph = (T * 0.9) % 1;
-  W.glow([t[0], t[1]], 6.5, '94,240,255', 0.55 * (1 - ph));
+  const ph = (T * 1.1) % 1;
+  W.glow([t[0], t[1]], 7.5, '94,240,255', 0.65 * (1 - ph));
 };
-SKIN_WEAP.star_magnet = W => {   // 极星乾坤：两仪天象星盘，一手托日耀金极，一手托幽月银极
+SKIN_WEAP.star_magnet = W => {   // 极星乾坤（★非凡）：掌托阴阳双极星象罗盘法器，外旋紫金八卦环，内耀烈日/玄月磁核
   const { sk, L, o, flash, live, T } = W;
-  if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 10); circle(sk.hb, 9); return; }
+  if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 11.5); circle(sk.hb, 10.5); return; }
   const pol = sk.pol || 1;
-  const colA = pol > 0 ? '#ffb24a' : '#5a8aff';
-  const colB = pol > 0 ? '#ff5a3c' : '#3c64ff';
-  for (const [p, r, isFront] of [[sk.hf, 8, true], [sk.hb, 7, false]]) {
+  const colA = pol > 0 ? '#ffb24a' : '#5ef0ff';
+  const colB = pol > 0 ? '#ff5a3c' : '#3a68ff';
+  for (const [p, r, isFront] of [[sk.hf, 9.2, true], [sk.hb, 8.0, false]]) {
+    // 外层紫金星盘底座与旋转刻度十字
+    ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(p[0], p[1], r + 2.4, 0, Math.PI * 2); ctx.stroke();
+    const rot = T * (isFront ? 2.2 : -1.8);
+    for (let k = 0; k < 4; k++) {
+      const a = rot + k * Math.PI / 2;
+      line([p[0] + Math.cos(a) * (r - 1), p[1] + Math.sin(a) * (r - 1)], [p[0] + Math.cos(a) * (r + 3.8), p[1] + Math.sin(a) * (r + 3.8)]);
+    }
+    // 中心发光磁极星核
     const gr = ctx.createRadialGradient(p[0] - r * 0.25, p[1] - r * 0.25, 1, p[0], p[1], r);
     gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.5, colA); gr.addColorStop(1, colB);
     ctx.fillStyle = flash ? '#fff' : gr; circle(p, r);
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.0;
-    ctx.beginPath(); ctx.arc(p[0], p[1], r + 2, 0, Math.PI * 2); ctx.stroke();
   }
-  drawMagSym(sk.hf[0], sk.hf[1], 4.8, pol, 0.95);
+  drawMagSym(sk.hf[0], sk.hf[1], 5.2, pol, 0.98);
   if (live) {
     ctx.globalCompositeOperation = 'lighter';
-    const ph = (T * 1.8) % (Math.PI * 2);
-    ctx.fillStyle = pol > 0 ? 'rgba(255,200,90,0.6)' : 'rgba(100,180,255,0.6)';
-    circle([sk.hf[0] + Math.cos(ph) * 11, sk.hf[1] + Math.sin(ph) * 11], 2);
+    const ph = (T * 2.4) % (Math.PI * 2);
+    ctx.fillStyle = pol > 0 ? 'rgba(255,205,95,0.75)' : 'rgba(100,200,255,0.75)';
+    circle([sk.hf[0] + Math.cos(ph) * 12, sk.hf[1] + Math.sin(ph) * 12], 2.3);
+    circle([sk.hf[0] - Math.cos(ph) * 12, sk.hf[1] - Math.sin(ph) * 12], 1.8);
   }
 };
 // ---------- 流星锤：勾陈（链子和锤头的物理还是原来那套，这里只换颜色和锤头花样） ----------

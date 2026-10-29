@@ -922,6 +922,126 @@ function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
       }
       break;
     }
+    case 'featherwings': {   // 凌雀·惊雀：幽紫夜雀羽翼，六片流光雀翎随步法轻振
+      const flap = Math.sin(t * 3.6 + idx) * 0.14;
+      glow([bc[0] + bk * 16, bc[1] - 14], 54, '224,64,251', 0.25);
+      for (let k = 0; k < 6; k++) {
+        const a = -1.45 + k * 0.32 + flap, len = 48 - k * 3;
+        const tip = [bc[0] + bk * Math.cos(a) * len, bc[1] + Math.sin(a) * len];
+        const mid = [bc[0] + bk * Math.cos(a - 0.15) * len * 0.55, bc[1] + Math.sin(a - 0.15) * len * 0.55];
+        ribbon(bc, mid, tip, 4.8, 0.6, lg(bc, tip, [[0, '#4a148c'], [0.55, '#e040fb'], [1, '#f3e5f5']]), 10);
+      }
+      break;
+    }
+    case 'starloom': {   // 凌雀·天罗星杼（★非凡）：背后悬浮黄金星轮机杼，八道星河天丝如光翼交织展开，星芒流转
+      const c = [bc[0] + bk * 14, bc[1] - 16], R = 28, rot = t * 0.65 * bk;
+      ctx.save();
+      glow(c, 68, '255,140,225', 0.30);
+      // 1. 八道向后上方扇形编织展开的星河天丝光翼
+      for (let k = 0; k < 8; k++) {
+        const a = -1.65 + k * 0.32 + Math.sin(t * 2.4 + k * 0.7) * 0.06;
+        const len = 64 - Math.abs(k - 3.5) * 5;
+        const tip = [c[0] + bk * Math.cos(a) * len, c[1] + Math.sin(a) * len];
+        const mid = [c[0] + bk * Math.cos(a - 0.12) * len * 0.52, c[1] + Math.sin(a - 0.12) * len * 0.52];
+        ribbon(c, mid, tip, 3.2, 0.4, lg(c, tip, [[0, 'rgba(255,215,110,0.92)'], [0.5, 'rgba(255,130,225,0.75)'], [1, 'rgba(255,240,255,0.15)']]), 10);
+        // 经纬横丝连接相邻光羽，构成天罗织网
+        if (k > 0) {
+          const prevA = -1.65 + (k - 1) * 0.32 + Math.sin(t * 2.4 + (k - 1) * 0.7) * 0.06;
+          const prevLen = 64 - Math.abs(k - 4.5) * 5;
+          for (const u of [0.45, 0.75]) {
+            const p1 = [c[0] + bk * Math.cos(a) * len * u, c[1] + Math.sin(a) * len * u];
+            const p2 = [c[0] + bk * Math.cos(prevA) * prevLen * u, c[1] + Math.sin(prevA) * prevLen * u];
+            ctx.strokeStyle = 'rgba(255,220,245,0.55)'; ctx.lineWidth = 0.9; line(p1, p2);
+          }
+        }
+        // 丝线末端的璀璨星珠
+        ctx.fillStyle = k % 2 ? '#ffd24a' : '#ff9ae8';
+        circle(tip, 2.2);
+        const tw = Math.max(0, Math.sin(t * 3.5 + k * 1.3));
+        if (tw > 0.25) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(tip[0], tip[1], 2.5 + tw * 3.5, '255,230,250', tw * 0.9); ctx.restore(); }
+      }
+      // 2. 中心旋转黄金织天星轮机杼
+      ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 2.0;
+      ctx.beginPath(); ctx.arc(c[0], c[1], R, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,140,225,0.85)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(c[0], c[1], R * 0.68, 0, Math.PI * 2); ctx.stroke();
+      for (let k = 0; k < 8; k++) {
+        const a = rot + k * Math.PI / 4;
+        line([c[0] + Math.cos(a) * 6, c[1] + Math.sin(a) * 6], [c[0] + Math.cos(a) * R, c[1] + Math.sin(a) * R]);
+      }
+      ctx.fillStyle = '#fff2fc'; circle(c, 5.5);
+      ctx.fillStyle = '#ff7ad9'; circle(c, 3.0);
+      ctx.restore(); break;
+    }
+    case 'soulmirrors': {   // 离影·幽夜星魄（★非凡）：背后环列六面幽冥破界黑曜棱镜 + 镜心裂空星痕 + 离魂虚影飘带
+      const c = [bc[0] + bk * 12, bc[1] - 16];
+      ctx.save();
+      glow(c, 66, '94,240,255', 0.28);
+      // 1. 两条从肩后飘曳而出的幽冥星雾长魂带
+      for (const [k, yOff, len] of [[0, -8, 66], [1, 12, 54]]) {
+        const s0 = [sh[0] + bk * 6, sh[1] + 6 + k * 8];
+        const wv = Math.sin(t * 2.6 + k * 1.8) * 8;
+        const m0 = [s0[0] + bk * len * 0.5, s0[1] + yOff - 14 + wv * 0.6];
+        const e0 = [s0[0] + bk * len, s0[1] + yOff + 16 + wv];
+        ribbon(s0, m0, e0, 4.2, 0.4, lg(s0, e0, [[0, 'rgba(13,32,48,0.85)'], [0.5, 'rgba(94,240,255,0.65)'], [1, 'rgba(220,252,255,0)']]), 14);
+      }
+      // 2. 六面扇形环列悬浮的幽冥破界黑曜棱镜
+      for (let k = 0; k < 6; k++) {
+        const a = -2.25 + k * 0.40, r = 38 + (k % 2) * 6, bob = Math.sin(t * 2.2 + k * 1.1) * 3.5;
+        const mc = [c[0] - bk * Math.cos(a) * r, c[1] + Math.sin(a) * r + bob];
+        const rot = a + Math.PI / 2 + Math.sin(t * 1.2 + k) * 0.1;
+        const len = 15 - Math.abs(k - 2.5) * 1.2, w = 5.5;
+        const q = (d, s2) => [mc[0] + Math.cos(rot) * d * bk - Math.sin(rot) * s2, mc[1] + Math.sin(rot) * d + Math.cos(rot) * s2 * bk];
+        const pTop = q(len, 0), pR = q(0, w), pBot = q(-len, 0), pL = q(0, -w);
+        // 外框黑曜石与青金描边
+        ctx.fillStyle = '#07131e'; ctx.strokeStyle = '#5ef0ff'; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(pTop[0], pTop[1]); ctx.lineTo(pR[0], pR[1]); ctx.lineTo(pBot[0], pBot[1]); ctx.lineTo(pL[0], pL[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+        // 镜面内部深空星云与裂空十字星芒
+        const pTop2 = q(len * 0.62, 0), pR2 = q(0, w * 0.55), pBot2 = q(-len * 0.62, 0), pL2 = q(0, -w * 0.55);
+        ctx.fillStyle = 'rgba(94,240,255,0.45)';
+        ctx.beginPath(); ctx.moveTo(pTop2[0], pTop2[1]); ctx.lineTo(pR2[0], pR2[1]); ctx.lineTo(pBot2[0], pBot2[1]); ctx.lineTo(pL2[0], pL2[1]); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#e8ffff'; ctx.lineWidth = 0.9; line(pTop2, pBot2);
+        const tw = Math.max(0, Math.sin(t * 3.2 + k * 1.7));
+        if (tw > 0.25) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(mc[0], mc[1], 2.5 + tw * 3.5, '150,248,255', tw * 0.9); ctx.restore(); }
+      }
+      ctx.restore(); break;
+    }
+    case 'astrolabe': {   // 磁仙·极星乾坤（★非凡）：背后旋转双层乾坤浑天星象磁轮 + 阴阳双极浮游星核 + 金蓝交织电弧
+      const c = [bc[0] + bk * 10, bc[1] - 14], R = 32, pol = sk.pol || 1;
+      ctx.save();
+      glow(c, 68, pol > 0 ? '255,195,90' : '90,175,255', 0.30);
+      // 1. 外层逆时针旋转紫金乾坤浑天环与十二星度刻度
+      ctx.strokeStyle = 'rgba(255,195,90,0.92)'; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.arc(c[0], c[1], R, 0, Math.PI * 2); ctx.stroke();
+      for (let k = 0; k < 12; k++) {
+        const a = k * Math.PI / 6 + t * 0.45;
+        line([c[0] + Math.cos(a) * (R - 4), c[1] + Math.sin(a) * (R - 4)], [c[0] + Math.cos(a) * (R + 4), c[1] + Math.sin(a) * (R + 4)]);
+      }
+      // 2. 内层顺时针旋转幽蓝星轨环与八卦横梁
+      ctx.strokeStyle = 'rgba(100,190,255,0.88)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(c[0], c[1], R * 0.66, 0, Math.PI * 2); ctx.stroke();
+      for (let k = 0; k < 4; k++) {
+        const a = -t * 0.7 + k * Math.PI / 4;
+        line([c[0] + Math.cos(a) * (R * 0.28), c[1] + Math.sin(a) * (R * 0.28)], [c[0] + Math.cos(a) * (R * 0.66), c[1] + Math.sin(a) * (R * 0.66)]);
+      }
+      // 3. 环绕外轨公转的阴阳双极巨型浮游星核（⊕烈阳金核 与 ⊖太阴蓝核）
+      for (const [isPlus, phaseOff, col1, col2] of [[true, 0, '#ffe28a', '#ff5a3c'], [false, Math.PI, '#b8f2ff', '#3a78ff']]) {
+        const orbA = t * 1.15 + phaseOff;
+        const ox = c[0] + Math.cos(orbA) * (R + 9), oy = c[1] + Math.sin(orbA) * (R + 9);
+        ctx.fillStyle = col2; circle([ox, oy], 6.8);
+        ctx.fillStyle = col1; circle([ox, oy], 4.5);
+        ctx.fillStyle = '#ffffff'; circle([ox - 1.2, oy - 1.2], 1.6);
+        // 磁极十字/一字星纹与中心星轮的磁力电弧连接
+        ctx.strokeStyle = isPlus ? 'rgba(255,210,110,0.8)' : 'rgba(110,205,255,0.8)';
+        ctx.lineWidth = 1.2;
+        const midX = (c[0] + ox) * 0.5 + Math.sin(t * 16 + phaseOff) * 4, midY = (c[1] + oy) * 0.5 + Math.cos(t * 16 + phaseOff) * 4;
+        ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(midX, midY); ctx.lineTo(ox, oy); ctx.stroke();
+      }
+      // 4. 阵心太极星芒核
+      ctx.fillStyle = pol > 0 ? '#ffb24a' : '#5ef0ff'; circle(c, 5.5);
+      ctx.fillStyle = '#ffffff'; circle(c, 2.5);
+      ctx.restore(); break;
+    }
     default: return false;
   }
   return true;
