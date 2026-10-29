@@ -211,12 +211,13 @@ function specialUpdate(f, foe) {
   if (!U.flurry) { U.update(f, foe); return; }
   const victim = (f.flurryVictim && !f.flurryVictim.hidden && f.flurryVictim.hp > 0) ? f.flurryVictim : foe;
   if (f.sp === 'dash') {
-    if (!isClient() && foe.hp > 0 && foe.invul <= 0 && overlap(hitbox(f, [0, -118, 96, 0]), hurtbox(foe))) {
+    if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * 1400, 10, STEP);   // 冲刺朝对手拐
+    if (!isClient() && foe.hp > 0 && foe.invul <= 0 && overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe))) {
       f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.flurryVictim = foe;
       foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
       const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
       hitVisual(ev); netEmit(ev);
-    } else if (t >= 0.26) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
+    } else if (t >= 0.28) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
   } else if (f.sp === 'miss') {
     if (t >= 0.42) { f.invul = 0; toNeutral(f); }
   } else if (f.sp === 'flurry') {
@@ -403,6 +404,15 @@ function updateProjs() {
     if (p.dead) continue;
     p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
     const wasDelay = p.delay > 0;
+    if (p.track || p.home || p.stick) {
+      const tg = foeOf(fighterByIdx(p.owner));
+      if (tg && tg.hp > 0) {
+        if (p.track && p.delay > (p.trackEnd || 0)) p.x = clamp(damp(p.x, tg.x, p.track, STEP), WALL, STAGE_W - WALL);
+        if (p.home && p.delay <= 0) p.vx = damp(p.vx, clamp((tg.x - p.x) * 2, -p.homeV, p.homeV), p.home, STEP);
+        if (p.stick && !p.stuck && overlap(projBox(p), hurtbox(tg))) { p.vx *= p.stick; p.stuck = true; }
+        else if (p.stick && p.stuck && !overlap(projBox(p), hurtbox(tg))) { p.vx /= p.stick; p.stuck = false; }
+      }
+    }
     if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
     if (p.g) p.vy += p.g * STEP;
     if (p.boomer && p.age > p.turn) {

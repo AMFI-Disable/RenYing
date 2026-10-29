@@ -20,7 +20,7 @@ const ULTS = {
             f.vx = damp(f.vx, dir * 520, 10, STEP);
             f.face = dir;
           } else {
-            f.vx = damp(f.vx, 0, 7, STEP);
+            f.vx = damp(f.vx, clamp(foe.x - f.x, -260, 260), 7, STEP);   // 没按方向：慢慢朝对手飘过去
           }
           if (c.held.down && f.t > 0.18 && f.vy > -300) {
             f.vy += 1400 * STEP;
@@ -39,7 +39,7 @@ const ULTS = {
           const foeIsDashUlt = foe.state === 'special' && ['dash', 'rush', 'sweep'].includes(foe.sp);
           const canCrushUlt = foe.state === 'special' && !foeIsFlying && !foeIsDashUlt;
           const dx = Math.abs(foe.x - f.x), foeDown = foe.state === 'knockdown' || foe.state === 'getup';   // 倒在地上的人也砸得到
-          if (dx < 185 && airH(foe) < 80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
+          if (dx < 205 && airH(foe) < 100 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
             const dir = foe.x >= f.x ? 1 : -1;
             // 正中（落点 92 像素以内、对手站着）才算打满；砸到边缘或砸倒地的人只回一半气量
             const full = dx < 92.5 && !foeDown;
@@ -92,7 +92,7 @@ const ULTS = {
       if (f.sp === 'sweep' && f.t >= 0.8) { f.sp = 'rush'; f.t = 0; f.spPose = 'ls_thrust'; f.face = faceDir(f, foe); f.spX = f.x; SFX.dash(); }
       if (f.sp === 'rush') {
         f.vx = f.face * 1700;
-        if (!f.hitDone && foe.hp > 0 && overlap(hitbox(f, [0, -120, 90, 4]), hurtbox(foe))) {
+        if (!f.hitDone && foe.hp > 0 && overlap(hitbox(f, [0, -150, 105, 4]), hurtbox(foe))) {
           f.hitDone = true; f.vx = 0;
           const dmg = clamp(140 + Math.abs(f.x - f.spX) / 10, 140, 185);
           applyHit(f, foe, { dmg: Math.round(dmg), kb: [480, -700], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true }, [foe.x, foe.y - 60]);
@@ -118,7 +118,7 @@ const ULTS = {
       if (f.spN < 2 && f.t >= f.spN * 0.45) {
         const second = f.spN === 1; f.spN++;
         f.spPose = second ? 'ly_hover' : 'ly_fanswipe';
-        spawnProj(f, { kind: 'tornado', x: f.x + f.face * 70, y: -110, vx: f.face * 360, w: 120, h: 230, life: 2.4, dmg: 16, kb: [40, -220], stun: 0.4, hs: 0.03, pierce: true, rehit: 0.12, maxHits: 8, launch: true, ult: true, unbreakable: true, noScale: true, lastBig: second });
+        spawnProj(f, { kind: 'tornado', x: f.x + f.face * 70, y: -110, vx: f.face * 360, w: 120, h: 230, life: 2.4, dmg: 16, kb: [40, -220], stun: 0.4, hs: 0.03, pierce: true, rehit: 0.12, maxHits: 8, launch: true, ult: true, unbreakable: true, noScale: true, lastBig: second, stick: 0.55 });
         SFX.swing();
       }
       if (f.t >= 0.85) endSpecial(f);
@@ -135,7 +135,7 @@ const ULTS = {
       if (f.spN < 3 && f.t >= times[f.spN]) {
         f.spN++;
         f.spPose = f.spN % 2 ? 'lm_boxer' : 'lm_kick';
-        spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL), y: -360, vx: 0, w: 76, h: 720, life: 0.62, delay: 0.46, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true });
+        spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL), y: -360, vx: 0, w: 76, h: 720, life: 0.62, delay: 0.46, track: 5, trackEnd: 0.18, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true });
       }
       if (f.t >= 1.2) endSpecial(f);
     } },
@@ -174,7 +174,7 @@ const ULTS = {
       if (n >= f.spN && f.spN < 14) {
         f.spN++;
         f.spPose = f.spN % 2 ? 'yl_wings' : 'a1a';
-        spawnProj(f, { kind: 'feather', x: clamp(foe.x + grand(-150, 150), WALL, STAGE_W - WALL), y: -620, vx: grand(-60, 60), vy: 1100, w: 22, h: 40, life: 1.2, dmg: 14, kb: [40, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true });
+        spawnProj(f, { kind: 'feather', x: clamp(foe.x + foe.vx * 0.4 + grand(-110, 110), WALL, STAGE_W - WALL), y: -620, vx: grand(-60, 60), vy: 1100, home: 4, homeV: 240, w: 22, h: 40, life: 1.2, dmg: 14, kb: [40, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true });
       }
       if (f.t >= 1.1) endSpecial(f);
     } },
@@ -190,7 +190,7 @@ const ULTS = {
     update(f, foe) {
       if (f.t >= 0.1 && !f.hitDone) {
         f.hitDone = true;
-        if (Math.abs(foe.x - f.x) < 260 && Math.abs(foe.y - f.y) < 200 && foe.invul <= 0)
+        if (Math.abs(foe.x - f.x) < 280 && Math.abs(foe.y - f.y) < 220 && foe.invul <= 0)
           applyHit(f, foe, { dmg: 75, kb: [460, -640], stun: 0.6, hs: 0.15, launch: true, big: true, ult: true, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
       }
       if (f.t >= 0.55) endSpecial(f);
@@ -206,7 +206,7 @@ const ULTS = {
       }
       if (f.spN === 6 && f.t >= 1.0) {
         f.spN = 7; f.spPose = 'yx_push';
-        spawnProj(f, { kind: 'chord', vx: 0, x: foe.x, y: -100, delay: 0.12, w: 170, h: 200, life: 0.42, dmg: 60 + 15 * Math.min(3, f.notes || 0), kb: [300, -760], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, unbreakable: true });
+        spawnProj(f, { kind: 'chord', vx: 0, x: foe.x, y: -100, delay: 0.12, track: 8, trackEnd: 0.03, w: 190, h: 200, life: 0.42, dmg: 60 + 15 * Math.min(3, f.notes || 0), kb: [300, -760], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, unbreakable: true });
         f.notes = 3; f.skillCD = 0;
         addP({ type: 'text', text: '曲终绝响 · 音律回满', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,240,200' });
       }
@@ -228,7 +228,7 @@ const ULTS = {
     update(f, foe) {
       if (f.spN === 0 && f.t >= 0.15) {
         f.spN = 1; f.spPose = 'gc_wind'; SFX.swing();
-        spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
+        spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, track: 6, trackEnd: 0.08, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
       }
       if (f.spN === 1 && f.t >= 0.95) {
         f.spN = 2;
@@ -280,7 +280,7 @@ const ULTS = {
       f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
       for (const c of (f.clones || []).slice()) {
         const d = foe.x >= c.x ? 1 : -1;
-        spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 40, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 刀光先到，本体后到
+        spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 90, life: 0.45, dmg: 40, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 刀光先到，本体后到
         if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
       }
       clearClones(f);
@@ -311,6 +311,7 @@ const ULTS = {
       const S = f.sw; if (!S) { endSpecial(f); return; }
       foe = fighterByIdx(S.v);   // 2v2 里一直夹放招时选中的那个人
       S.t = f.t;
+      if (f.spN === 0 && foe.hp > 0) S.x = clamp(damp(S.x, foe.x, 12, STEP), WALL, STAGE_W - WALL);   // 吸住之前磁石跟着对手
       if (f.spN === 0 && f.t >= 0.12) {   // 吸住：对手被两块磁石定在中间
         f.spN = 1; f.spPose = 'victory';
         if (!isClient() && foe.hp > 0 && foe.invul <= 0) {

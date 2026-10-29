@@ -29,12 +29,12 @@
 | 青锋 | gale 11 / 59 | swordqi 15 / 39 | crescent 0 / 132 |
 | 绯影 | blink 54 / 69 | kunai 15 / 31 | shadows 0 / 133 |
 | 铁山 | quake 34 / 77 | ironwall 20 / 85 | avalanche 86 / 146 |
-| 凌霜 | backthrust 29 / 70 | spin 1 / 241 | timestop 0 / 25 |
+| 凌霜 | backthrust 29 / 70 | spin 1 / 241 | timestop 0 / 24 |
 | 流云 | windblade 7 / 14 | windstep -1 / 48 | tornado 1 / 94 |
 | 雷鸣 | thunderfist 18 / 62 | stomp -1 / 91 | thunder 57 / 136 |
 | 墨羽 | inktrap -1 / 27 | inksplash -1 / 48 | inkdragon 106 / 167 |
 | 月华 | mirror -1 / 96 | moonring 18 / 34 | moonflow 4 / 57 |
-| 燕翎 | dive 25 / 70 | darts 16 / 29 | featherstorm 67 / 124 |
+| 燕翎 | dive 25 / 70 | darts 16 / 29 | featherstorm 54 / 124 |
 | 玉箫 | soundwave 16 / 25 | echowall 10 / 54 | guangling 52 / 154 |
 | 醉翁 | pavilion -1 / 33 | feast -1 / 127 | shanshui 33 / 226 |
 | 勾陈 | hook 18 / 44 | whirl 18 / 145 | skynet 40 / 148 |

@@ -307,7 +307,7 @@
    "ult": {
     "id": "timestop",
     "hit": 0,
-    "total": 25
+    "total": 24
    }
   }
  },
@@ -701,7 +701,7 @@
    },
    "ult": {
     "id": "featherstorm",
-    "hit": 67,
+    "hit": 54,
     "total": 124
    }
   }

@@ -6818,8 +6818,8 @@ const fast = Math.abs(me.x - foe.x) < 90 && foe.t > 0.18;   // 铁山对准了�
 while (t < 1.5 && !(t > 0.15 - foe.t && y >= 0)) { if (fast && vy > -300) vy += 1400 * STEP; vy += GRAV * STEP; y += vy * STEP; t += STEP; }
 this.stopAll(); this.holdDown = 0;
 if (!me.onGround()) { this.dir = -to; return true; }   // 已经在空中：别落下来
-if (free && t < 0.5 && t > 0.08) { this.press('jump'); this.dir = -to; return true; }
-if (t <= 0.08 && me.breakCD <= 0) { this.press('dash'); return true; }
+if (free && t < 0.5 && t > 0.14) { this.press('jump'); this.dir = -to; return true; }
+if (t <= 0.14 && me.breakCD <= 0) { this.press('dash'); return true; }
 this.dir = -to;   // 还早：先往外走，等时机再跳
 return true;
 }
@@ -11886,7 +11886,7 @@ if (dir !== 0) {
 f.vx = damp(f.vx, dir * 520, 10, STEP);
 f.face = dir;
 } else {
-f.vx = damp(f.vx, 0, 7, STEP);
+f.vx = damp(f.vx, clamp(foe.x - f.x, -260, 260), 7, STEP);   // 没按方向：慢慢朝对手飘过去
 }
 if (c.held.down && f.t > 0.18 && f.vy > -300) {
 f.vy += 1400 * STEP;
@@ -11904,7 +11904,7 @@ const foeIsFlying = foe.flying || (foe.ch && foe.ch.id === 'yanling' && foe.y < 
 const foeIsDashUlt = foe.state === 'special' && ['dash', 'rush', 'sweep'].includes(foe.sp);
 const canCrushUlt = foe.state === 'special' && !foeIsFlying && !foeIsDashUlt;
 const dx = Math.abs(foe.x - f.x), foeDown = foe.state === 'knockdown' || foe.state === 'getup';   // 倒在地上的人也砸得到
-if (dx < 185 && airH(foe) < 80 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
+if (dx < 205 && airH(foe) < 100 && (foe.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
 const dir = foe.x >= f.x ? 1 : -1;
 const full = dx < 92.5 && !foeDown;
 if (foeDown) {
@@ -11955,7 +11955,7 @@ ring(f.x, f.y - 60, 160, f.look.slash, 0.4); ring(f.x, f.y - 60, 90, '255,255,25
 if (f.sp === 'sweep' && f.t >= 0.8) { f.sp = 'rush'; f.t = 0; f.spPose = 'ls_thrust'; f.face = faceDir(f, foe); f.spX = f.x; SFX.dash(); }
 if (f.sp === 'rush') {
 f.vx = f.face * 1700;
-if (!f.hitDone && foe.hp > 0 && overlap(hitbox(f, [0, -120, 90, 4]), hurtbox(foe))) {
+if (!f.hitDone && foe.hp > 0 && overlap(hitbox(f, [0, -150, 105, 4]), hurtbox(foe))) {
 f.hitDone = true; f.vx = 0;
 const dmg = clamp(140 + Math.abs(f.x - f.spX) / 10, 140, 185);
 applyHit(f, foe, { dmg: Math.round(dmg), kb: [480, -700], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true }, [foe.x, foe.y - 60]);
@@ -11981,7 +11981,7 @@ update(f) {
 if (f.spN < 2 && f.t >= f.spN * 0.45) {
 const second = f.spN === 1; f.spN++;
 f.spPose = second ? 'ly_hover' : 'ly_fanswipe';
-spawnProj(f, { kind: 'tornado', x: f.x + f.face * 70, y: -110, vx: f.face * 360, w: 120, h: 230, life: 2.4, dmg: 16, kb: [40, -220], stun: 0.4, hs: 0.03, pierce: true, rehit: 0.12, maxHits: 8, launch: true, ult: true, unbreakable: true, noScale: true, lastBig: second });
+spawnProj(f, { kind: 'tornado', x: f.x + f.face * 70, y: -110, vx: f.face * 360, w: 120, h: 230, life: 2.4, dmg: 16, kb: [40, -220], stun: 0.4, hs: 0.03, pierce: true, rehit: 0.12, maxHits: 8, launch: true, ult: true, unbreakable: true, noScale: true, lastBig: second, stick: 0.55 });
 SFX.swing();
 }
 if (f.t >= 0.85) endSpecial(f);
@@ -11998,7 +11998,7 @@ const times = [0.02, 0.38, 0.74];
 if (f.spN < 3 && f.t >= times[f.spN]) {
 f.spN++;
 f.spPose = f.spN % 2 ? 'lm_boxer' : 'lm_kick';
-spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL), y: -360, vx: 0, w: 76, h: 720, life: 0.62, delay: 0.46, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true });
+spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL), y: -360, vx: 0, w: 76, h: 720, life: 0.62, delay: 0.46, track: 5, trackEnd: 0.18, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true });
 }
 if (f.t >= 1.2) endSpecial(f);
 } },
@@ -12037,7 +12037,7 @@ const n = Math.floor(f.t / 0.07);
 if (n >= f.spN && f.spN < 14) {
 f.spN++;
 f.spPose = f.spN % 2 ? 'yl_wings' : 'a1a';
-spawnProj(f, { kind: 'feather', x: clamp(foe.x + grand(-150, 150), WALL, STAGE_W - WALL), y: -620, vx: grand(-60, 60), vy: 1100, w: 22, h: 40, life: 1.2, dmg: 14, kb: [40, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true });
+spawnProj(f, { kind: 'feather', x: clamp(foe.x + foe.vx * 0.4 + grand(-110, 110), WALL, STAGE_W - WALL), y: -620, vx: grand(-60, 60), vy: 1100, home: 4, homeV: 240, w: 22, h: 40, life: 1.2, dmg: 14, kb: [40, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true });
 }
 if (f.t >= 1.1) endSpecial(f);
 } },
@@ -12053,7 +12053,7 @@ SFX.chargeFull();
 update(f, foe) {
 if (f.t >= 0.1 && !f.hitDone) {
 f.hitDone = true;
-if (Math.abs(foe.x - f.x) < 260 && Math.abs(foe.y - f.y) < 200 && foe.invul <= 0)
+if (Math.abs(foe.x - f.x) < 280 && Math.abs(foe.y - f.y) < 220 && foe.invul <= 0)
 applyHit(f, foe, { dmg: 75, kb: [460, -640], stun: 0.6, hs: 0.15, launch: true, big: true, ult: true, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
 }
 if (f.t >= 0.55) endSpecial(f);
@@ -12069,7 +12069,7 @@ spawnProj(f, { kind: 'note', x: foe.x + sd * 520, y: foe.y - 50 - (f.spN % 3) * 
 }
 if (f.spN === 6 && f.t >= 1.0) {
 f.spN = 7; f.spPose = 'yx_push';
-spawnProj(f, { kind: 'chord', vx: 0, x: foe.x, y: -100, delay: 0.12, w: 170, h: 200, life: 0.42, dmg: 60 + 15 * Math.min(3, f.notes || 0), kb: [300, -760], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, unbreakable: true });
+spawnProj(f, { kind: 'chord', vx: 0, x: foe.x, y: -100, delay: 0.12, track: 8, trackEnd: 0.03, w: 190, h: 200, life: 0.42, dmg: 60 + 15 * Math.min(3, f.notes || 0), kb: [300, -760], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, unbreakable: true });
 f.notes = 3; f.skillCD = 0;
 addP({ type: 'text', text: '曲终绝响 · 音律回满', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,240,200' });
 }
@@ -12091,7 +12091,7 @@ begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitD
 update(f, foe) {
 if (f.spN === 0 && f.t >= 0.15) {
 f.spN = 1; f.spPose = 'gc_wind'; SFX.swing();
-spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
+spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, track: 6, trackEnd: 0.08, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
 }
 if (f.spN === 1 && f.t >= 0.95) {
 f.spN = 2;
@@ -12142,7 +12142,7 @@ begin(f, foe) {
 f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
 for (const c of (f.clones || []).slice()) {
 const d = foe.x >= c.x ? 1 : -1;
-spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 60, life: 0.45, dmg: 40, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 刀光先到，本体后到
+spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 90, life: 0.45, dmg: 40, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 刀光先到，本体后到
 if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
 }
 clearClones(f);
@@ -12172,6 +12172,7 @@ update(f, foe) {
 const S = f.sw; if (!S) { endSpecial(f); return; }
 foe = fighterByIdx(S.v);   // 2v2 里一直夹放招时选中的那个人
 S.t = f.t;
+if (f.spN === 0 && foe.hp > 0) S.x = clamp(damp(S.x, foe.x, 12, STEP), WALL, STAGE_W - WALL);   // 吸住之前磁石跟着对手
 if (f.spN === 0 && f.t >= 0.12) {   // 吸住：对手被两块磁石定在中间
 f.spN = 1; f.spPose = 'victory';
 if (!isClient() && foe.hp > 0 && foe.invul <= 0) {
@@ -14498,12 +14499,13 @@ return;
 if (!U.flurry) { U.update(f, foe); return; }
 const victim = (f.flurryVictim && !f.flurryVictim.hidden && f.flurryVictim.hp > 0) ? f.flurryVictim : foe;
 if (f.sp === 'dash') {
-if (!isClient() && foe.hp > 0 && foe.invul <= 0 && overlap(hitbox(f, [0, -118, 96, 0]), hurtbox(foe))) {
+if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * 1400, 10, STEP);   // 冲刺朝对手拐
+if (!isClient() && foe.hp > 0 && foe.invul <= 0 && overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe))) {
 f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.flurryVictim = foe;
 foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
 const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
 hitVisual(ev); netEmit(ev);
-} else if (t >= 0.26) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
+} else if (t >= 0.28) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
 } else if (f.sp === 'miss') {
 if (t >= 0.42) { f.invul = 0; toNeutral(f); }
 } else if (f.sp === 'flurry') {
@@ -14681,6 +14683,15 @@ for (const p of projs) {
 if (p.dead) continue;
 p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
 const wasDelay = p.delay > 0;
+if (p.track || p.home || p.stick) {
+const tg = foeOf(fighterByIdx(p.owner));
+if (tg && tg.hp > 0) {
+if (p.track && p.delay > (p.trackEnd || 0)) p.x = clamp(damp(p.x, tg.x, p.track, STEP), WALL, STAGE_W - WALL);
+if (p.home && p.delay <= 0) p.vx = damp(p.vx, clamp((tg.x - p.x) * 2, -p.homeV, p.homeV), p.home, STEP);
+if (p.stick && !p.stuck && overlap(projBox(p), hurtbox(tg))) { p.vx *= p.stick; p.stuck = true; }
+else if (p.stick && p.stuck && !overlap(projBox(p), hurtbox(tg))) { p.vx /= p.stick; p.stuck = false; }
+}
+}
 if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
 if (p.g) p.vy += p.g * STEP;
 if (p.boomer && p.age > p.turn) {

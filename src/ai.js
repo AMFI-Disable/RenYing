@@ -1179,8 +1179,8 @@ class AIBrain {
     while (t < 1.5 && !(t > 0.15 - foe.t && y >= 0)) { if (fast && vy > -300) vy += 1400 * STEP; vy += GRAV * STEP; y += vy * STEP; t += STEP; }
     this.stopAll(); this.holdDown = 0;
     if (!me.onGround()) { this.dir = -to; return true; }   // 已经在空中：别落下来
-    if (free && t < 0.5 && t > 0.08) { this.press('jump'); this.dir = -to; return true; }
-    if (t <= 0.08 && me.breakCD <= 0) { this.press('dash'); return true; }
+    if (free && t < 0.5 && t > 0.14) { this.press('jump'); this.dir = -to; return true; }
+    if (t <= 0.14 && me.breakCD <= 0) { this.press('dash'); return true; }
     this.dir = -to;   // 还早：先往外走，等时机再跳
     return true;
   }
