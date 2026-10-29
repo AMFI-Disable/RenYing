@@ -247,7 +247,14 @@
 <div id="app" class="hidden">
   <header class="top">
     <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿和兑换码、改经济数值</small></div></div>
-    <div class="me"><span>管理员 <b id="who"></b> <span class="badge" id="role"></span></span><button class="btn ghost sm" data-act="logout">退出</button></div>
+    <div class="me">
+      <span id="sessTimer" class="badge">剩余 30分00秒</span>
+      <button class="btn ghost sm" id="btnRenew" data-act="renew" title="给管理令牌续期 30 分钟">续期</button>
+      <button class="btn ghost sm" id="btnRefresh" data-act="reload" title="刷新当前页">刷新</button>
+      <button class="btn ghost sm" id="btnAutoRefresh" data-act="toggleauto" aria-pressed="false" title="每 30 秒自动刷新">自动刷新: 关</button>
+      <span>管理员 <b id="who"></b> <span class="badge" id="role"></span></span>
+      <button class="btn ghost sm" data-act="logout">退出</button>
+    </div>
   </header>
   <nav class="tabs" aria-label="分页"><div role="tablist">
     <button role="tab" data-act="tab" data-tab="home">总览</button>
@@ -303,9 +310,40 @@ function ago(ms) {
 const parse = t => { try { const o = JSON.parse(t); return o && typeof o === 'object' ? o : null; } catch (e) { return null; } };
 
 /* ---------- 登录令牌、请求 ---------- */
-const S = { tok: '', who: '', role: '', exp: 0, tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [], cfg: null, flags: [], aq: '', aact: '', seq: 0 };
+const SESS_KEY = 'renying_adm_s';
+const S = {
+  tok: '', who: '', role: '', exp: 0, expT: 0, timerT: 0, auto: false, autoT: 0,
+  tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [],
+  giftSkins: [], codeSkins: [],
+  pFilter: '', pLimit: 20, pOffset: 0, pTotal: 0,
+  cfg: null, flags: [], aq: '', aact: '', seq: 0
+};
 const ROLE = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
 try { sessionStorage.removeItem('renying-admin'); } catch (e) {}   // 以前的版本把口令存在这里，清掉
+
+function saveSession() {
+  try {
+    if (S.tok && S.exp) {
+      sessionStorage.setItem(SESS_KEY, JSON.stringify({ tok: S.tok, exp: S.exp }));
+    } else {
+      sessionStorage.removeItem(SESS_KEY);
+    }
+  } catch (e) {}
+}
+function clearSession() {
+  try { sessionStorage.removeItem(SESS_KEY); } catch (e) {}
+}
+function updateTimer() {
+  const el = $('#sessTimer');
+  if (!el || !S.exp) return;
+  const rem = Math.max(0, Math.floor((S.exp - Date.now()) / 1000));
+  const m = Math.floor(rem / 60), s = rem % 60;
+  el.textContent = '剩余 ' + m + '分' + pad(s) + '秒';
+  el.className = 'badge' + (rem < 300 ? ' bad' : rem < 600 ? ' gold' : '');
+  if (rem <= 0 && S.who) {
+    logout('管理登录已过期，请重新登录');
+  }
+}
 
 async function api(path, body) {
   const headers = { Authorization: 'Bearer ' + S.tok };
@@ -352,12 +390,15 @@ const ACT = {
 const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
 
 /* ---------- 流水里的详情写成人话 ---------- */
-function stuff(d) {   // 墨锭、武器箱、终端机、改名标签（调整、补偿共用）
+function stuff(d) {   // 墨锭、武器箱、终端机、改名标签、送的饰品（调整、补偿共用）
   const out = [];
   if (d.ink) out.push('墨锭 ' + sign(d.ink));
   for (const [c, n] of Object.entries(d.cases || {})) out.push(caseName(c) + ' ' + sign(n));
   if (d.term) out.push('终端机 ' + sign(d.term));
   if (d.tags) out.push('改名标签 ' + sign(d.tags));
+  if (Array.isArray(d.skins) && d.skins.length) {
+    for (const s of d.skins) out.push(itemName(s.k) + (s.st >= 0 ? '（斩数版 ' + s.st + '）' : ''));
+  }
   return out;
 }
 function itemRef(s) {   // "qf_p1#12 st" → 竹影 #12（斩数版）
@@ -370,6 +411,9 @@ const giftText = g => {
   for (const [c, n] of Object.entries(it.cases || {})) out.push(caseName(c) + ' ×' + n);
   if (it.term) out.push('终端机 ×' + it.term);
   if (it.tags) out.push('改名标签 ×' + it.tags);
+  if (Array.isArray(it.skins) && it.skins.length) {
+    for (const s of it.skins) out.push(itemName(s.k) + (s.st >= 0 ? '（斩数版 ' + s.st + '）' : ''));
+  }
   return out.join('、') || '—';
 };
 const argText = (k, v) => k === 'c' ? caseName(v) : k === 'i' ? '#' + v : k === 'price' ? '标价 ' + fmtN(v) : k === 'l' ? '单号 ' + String(v).slice(0, 6) : k + ' ' + v;
@@ -453,20 +497,51 @@ async function busy(btn, fn) {
 const numIn = (f, name) => { const el = f.elements[name], v = el ? el.value.trim() : ''; return v === '' ? 0 : Number(v); };
 const submitBtn = f => $('button:not([type=button])', f);
 
+function drawSparkline(data) {
+  if (!Array.isArray(data) || !data.length) return '';
+  const w = 240, h = 48, p = 6;
+  const max = Math.max(...data, 1);
+  const step = data.length > 1 ? (w - 2 * p) / (data.length - 1) : 0;
+  const pts = data.map((v, i) => {
+    const x = p + i * step;
+    const y = h - p - (v / max) * (h - 2 * p);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const last = pts[pts.length - 1].split(',');
+  return H`<div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <h2>近 7 天新注册走势</h2>
+      <p class="hint" style="margin:4px 0 0">最近 7 天每日新注册账号数：${data.map(v => fmtN(v)).join(' → ')}（今天：${fmtN(data[data.length - 1] || 0)}）</p>
+    </div>
+    <div style="background:rgba(255,255,255,.02);padding:6px 12px;border-radius:8px;border:1px solid var(--line)">
+      <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible">
+        <polyline fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${pts.join(' ')}" />
+        <circle cx="${last[0]}" cy="${last[1]}" r="4" fill="var(--gold2)" stroke="var(--bg)" stroke-width="2" />
+      </svg>
+    </div>
+  </div>`;
+}
+
 /* ---------- 总览 ---------- */
 async function vHome() {
   const [s, a] = await Promise.all([api('stats'), api('audit')]);
   const rows = a.rows.slice(0, 8);
+  const inkNet = (s.inkIn24 || 0) - (s.inkOut24 || 0);
   return H`<div class="tiles">
       ${tile('注册账号', s.users, '24 小时内新注册 ' + fmtN(s.newToday))}
       ${tile('有武库存档的', s.accounts, '打开过武库的账号')}
       ${tile('全服墨锭', s.inkTotal, '所有武库存档加起来')}
+      ${tile('24h 墨锭流入', '+' + fmtN(s.inkIn24 || 0), '开箱、对局、补给等')}
+      ${tile('24h 墨锭流出', fmtN(s.inkOut24 || 0), '商城、改名等')}
+      ${tile('24h 墨锭净增', (inkNet > 0 ? '+' : '') + fmtN(inkNet), '全服净差额')}
+      ${tile('24h 开箱次数', unit(s.open24 || 0, '次'), '玩家开武器箱')}
       ${tile('市场在卖', unit(s.open, '单'), '玩家挂出来的')}
       ${tile('24 小时成交', unit(s.deals24, '单'), '成交额 ' + fmtN(s.dealInk24) + ' 墨锭')}
       ${tile('封禁中', unit(s.banned, '个号'), '包括永久封号')}
       ${tile('删除了的', unit(s.deleted || 0, '个号'), '不算在注册账号里，能恢复')}
       ${tile('经济数值', s.cfgId ? '第 ' + s.cfgId + ' 版' : '默认', s.cfgId ? '改过' : '没改过')}
     </div>
+    ${drawSparkline(s.signups7d)}
     <div class="card"><div class="row between"><h2>最近的操作</h2><button class="btn ghost sm" data-act="tab" data-tab="audit">全部记录</button></div>
       ${rows.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th>内容</th></tr></thead><tbody>
         ${rows.map(r => { const d = parse(r.detail) || {}; return H`<tr><td class="nowrap">${fmtT(r.at)}</td><td>${d.by || '—'}</td><td class="nowrap">${ACT[r.act] || r.act}</td><td>${target(r)}</td><td class="detail">${detailText(r.act, r.detail)}${d.why ? H`<div class="hint">原因：${d.why}</div>` : ''}</td></tr>`; })}
@@ -477,31 +552,62 @@ async function vHome() {
       <button class="btn ghost" data-act="tab" data-tab="gifts">发全服补偿</button>
       <button class="btn ghost" data-act="tab" data-tab="codes">建兑换码</button>
       <button class="btn ghost" data-act="tab" data-tab="cfg">改价格、爆率</button>
+      <button class="btn ghost" data-act="tab" data-tab="flags">功能开关</button>
+      <button class="btn ghost" data-act="tab" data-tab="errors">查看错误</button>
     </div></div>`;
 }
 
 /* ---------- 玩家：搜索 ---------- */
 async function vPlayers() {
   if (S.uid) return vPlayer();
-  const r = await api('find?q=' + encodeURIComponent(S.q) + (S.del ? '&del=1' : ''));
+  const qs = 'q=' + encodeURIComponent(S.q)
+    + (S.pFilter === 'deleted' ? '&del=1' : '')
+    + (S.pFilter === 'banned' || S.pFilter === 'wealth' ? '&filter=' + S.pFilter : '')
+    + '&limit=' + (S.pLimit || 20)
+    + '&offset=' + (S.pOffset || 0);
+  const r = await api('find?' + qs);
   S.found = r.users;
+  S.pTotal = r.total !== undefined ? r.total : r.users.length;
+  const isDel = S.pFilter === 'deleted';
+  const filterDesc = S.pFilter === 'banned' ? '封禁中的账号' : S.pFilter === 'wealth' ? '墨锭 ≥ 10,000 的富豪榜' : isDel ? '删除了的账号' : '所有账号';
   return H`<div class="card">
-    <div class="row between wrap"><h2>玩家</h2><div class="row">
-      <button class="btn ghost sm" data-act="delview" data-v="" aria-pressed="${String(!S.del)}">所有账号</button>
-      <button class="btn ghost sm" data-act="delview" data-v="1" aria-pressed="${String(!!S.del)}">删除了的</button>
+    <div class="row between wrap"><h2>玩家</h2><div class="row wrap">
+      <button class="btn ghost sm" data-act="fltview" data-f="" aria-pressed="${String(!S.pFilter)}">所有账号</button>
+      <button class="btn ghost sm" data-act="fltview" data-f="banned" aria-pressed="${String(S.pFilter === 'banned')}">封禁中</button>
+      <button class="btn ghost sm" data-act="fltview" data-f="deleted" aria-pressed="${String(isDel)}">删除了的</button>
+      <button class="btn ghost sm" data-act="fltview" data-f="wealth" aria-pressed="${String(S.pFilter === 'wealth')}">富豪榜</button>
       <button class="btn ghost sm" data-act="export">导出 CSV</button></div></div>
-    <form class="search" data-form="find"><input name="q" value="${S.q}" placeholder="昵称开头，或者账号编号（u_ 开头）" autocomplete="off" spellcheck="false" aria-label="搜索玩家"><button class="btn">搜索</button></form>
-    <p class="hint">${S.del ? (S.q ? '删除了的号里 “' + S.q + '” 的结果' : '删除了的号（最近删的在前，最多 100 个）') : S.q ? '“' + S.q + '” 的结果（最多 20 个）' : '最近动过武库的 20 个账号'}。勾上几个可以一起处理；「导出 CSV」按现在的搜索和筛选导出（最多 5000 行）。</p>
+    <form class="search" data-form="find">
+      <input name="q" value="${S.q}" placeholder="按昵称搜索（支持子串、开头匹配）或账号编号（u_ 开头）" autocomplete="off" spellcheck="false" aria-label="搜索玩家">
+      ${S.q ? H`<button type="button" class="btn ghost sm" data-act="clearsearch">清空</button>` : ''}
+      <button class="btn">搜索</button>
+    </form>
+    <p class="hint">${filterDesc}${S.q ? ' · 匹配 “' + S.q + '”' : ''}（共 ${fmtN(S.pTotal)} 个结果）。勾上几个可以一起处理；「导出 CSV」按现在的搜索和筛选导出（最多 5000 行）。</p>
     ${r.users.length ? H`<form data-form="batch"><div class="tw"><table><thead><tr><th><input type="checkbox" data-pickall aria-label="全选"></th><th>昵称</th><th class="num">墨锭</th><th>上次动武库</th><th>注册</th></tr></thead><tbody>
       ${r.users.map(u => H`<tr class="${u.deleted_at ? 'mute' : ''}"><td><input type="checkbox" name="pick" value="${u.id}" aria-label="选 ${u.username}"></td>
         <td><button type="button" class="link" data-act="open" data-uid="${u.id}">${u.username}</button>${u.deleted_at ? H` <span class="badge bad">${fmtT(u.deleted_at)} 删除</span>` : ''}<div class="hint mono">${u.id}</div></td>
         <td class="num">${u.ink === null || u.ink === undefined ? '—' : fmtN(u.ink)}</td><td class="nowrap">${ago(u.updated_at)}</td><td class="nowrap">${fmtT(u.created_at)}</td></tr>`)}
     </tbody></table></div>
+    <div class="row between wrap" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+      <div class="row">
+        <span class="hint">每页</span>
+        <select data-act="pagesize" style="width:auto">
+          <option value="20"${S.pLimit === 20 ? ' selected' : ''}>20 条</option>
+          <option value="50"${S.pLimit === 50 ? ' selected' : ''}>50 条</option>
+          <option value="100"${S.pLimit === 100 ? ' selected' : ''}>100 条</option>
+        </select>
+        <span class="hint">第 ${fmtN(S.pTotal ? S.pOffset + 1 : 0)} - ${fmtN(Math.min(S.pOffset + S.pLimit, S.pTotal))} 条 / 共 ${fmtN(S.pTotal)} 条</span>
+      </div>
+      <div class="row">
+        <button type="button" class="btn ghost sm" data-act="page" data-dir="-1"${S.pOffset <= 0 ? ' disabled' : ''}>上一页</button>
+        <button type="button" class="btn ghost sm" data-act="page" data-dir="1"${S.pOffset + S.pLimit >= S.pTotal ? ' disabled' : ''}>下一页</button>
+      </div>
+    </div>
     <div class="row wrap" style="margin-top:10px"><span class="hint">勾上的：</span>
       <button type="button" class="btn ghost sm" data-act="batch" data-op="ban">封号…</button><button type="button" class="btn ghost sm" data-act="batch" data-op="pardon">解封…</button>
       <button type="button" class="btn ghost sm" data-act="batch" data-op="delete">删除…</button><button type="button" class="btn ghost sm" data-act="batch" data-op="restore">恢复…</button>
       <label class="f w120">封几天<input type="number" name="days" min="1" max="3650" step="1" value="1"></label><label class="chk"><input type="checkbox" name="perm"> 永久</label></div>
-    </form>` : H`<p class="empty">${S.del ? '没有删除了的号' : '没找到这个昵称'}</p>`}
+    </form>` : H`<p class="empty">${isDel ? '没有删除了的号' : '没找到符合条件的账号'}</p>`}
   </div>${S.q.toLowerCase() === 'dev' && !r.users.some(u => String(u.username).toLowerCase() === 'dev') ? devCard() : ''}`;
 }
 function devCard() {   // 云端还没有 Dev：只能在这里建，别人注册不了
@@ -666,6 +772,14 @@ async function vGifts() {
       <label class="f">改名标签<input type="number" name="tags" min="0" max="100" step="1" placeholder="0"></label>
       <label class="f">几天内能领<input type="number" name="days" min="1" max="90" step="1" value="14"></label>
     </div>
+    <h3>附赠饰品</h3>
+    <div class="giverow">
+      <select name="gk" aria-label="选一件饰品">${itemOptions()}</select>
+      <label class="chk"><input type="checkbox" name="gst"> 斩数版</label>
+      <input type="number" name="gstn" min="0" step="1" value="0" aria-label="斩数（记了多少次击倒）">
+      <button type="button" class="btn ghost" data-act="addgiftgive">加进清单</button>
+    </div>
+    <div id="giftGives" class="chips"></div>
     <label class="f" style="margin-top:8px">给玩家看的说明（2～60 个字）<input name="note" maxlength="60" placeholder="比如：服务器维护补偿"></label>
     <label class="chk" style="margin-top:10px" data-all><input type="checkbox" name="newToo"> 之后新注册的账号也能领（不勾就只发给现在已经注册的，免得有人开小号来领）</label>
     <div class="row end"><button class="btn">检查并发出…</button></div>
@@ -697,6 +811,14 @@ async function vCodes() {
       <label class="f">最多几个号能领<input type="number" name="uses" min="1" max="100000" step="1" value="100"></label>
       <label class="f">几天内能领<input type="number" name="days" min="1" max="90" step="1" value="14"></label>
     </div>
+    <h3>附赠饰品</h3>
+    <div class="giverow">
+      <select name="ck" aria-label="选一件饰品">${itemOptions()}</select>
+      <label class="chk"><input type="checkbox" name="cst"> 斩数版</label>
+      <input type="number" name="cstn" min="0" step="1" value="0" aria-label="斩数（记了多少次击倒）">
+      <button type="button" class="btn ghost" data-act="addcodegive">加进清单</button>
+    </div>
+    <div id="codeGives" class="chips"></div>
     <label class="f" style="margin-top:8px">给玩家看的说明（2～60 个字）<input name="note" maxlength="60" placeholder="比如：新春礼包"></label>
     <div class="row end"><button class="btn">检查并建码…</button></div>
   </form>
@@ -877,8 +999,17 @@ async function vAdmins() {
   </div>`;
 }
 
+function drawGiftGives() {
+  const el = $('#giftGives');
+  if (el) paint(el, S.giftSkins.map((g, i) => H`<span class="chip">${itemName(g.k)}（${heroOf(g.k)}）${g.st >= 0 ? ' 斩数 ' + g.st : ''}<button type="button" data-act="delgiftgive" data-i="${i}" aria-label="去掉">×</button></span>`));
+}
+function drawCodeGives() {
+  const el = $('#codeGives');
+  if (el) paint(el, S.codeSkins.map((g, i) => H`<span class="chip">${itemName(g.k)}（${heroOf(g.k)}）${g.st >= 0 ? ' 斩数 ' + g.st : ''}<button type="button" data-act="delcodegive" data-i="${i}" aria-label="去掉">×</button></span>`));
+}
+
 const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
-const AFTER = { players: drawGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
+const AFTER = { players: drawGives, gifts: drawGiftGives, codes: drawCodeGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 async function render() {
   const main = $('#main'), seq = ++S.seq, tab = S.tab;
   paint(main, H`<p class="loading">读取中…</p>`);
@@ -915,7 +1046,63 @@ const ACTS = {
   reload: () => render(),
   errkind: b => { S.errKind = b.dataset.k; render(); },
   logout: () => { api('logout', {}).catch(() => {}); logout(); },
-  delview: b => { S.del = b.dataset.v; render(); },
+  renew: b => busy(b, async () => {
+    const r = await api('refresh', {});
+    S.exp = Date.now() + (r.expiresIn || 1800) * 1000;
+    clearTimeout(S.expT);
+    S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, (r.expiresIn || 1800) * 1000);
+    saveSession();
+    updateTimer();
+    toast('已续期 30 分钟');
+  }),
+  toggleauto: b => {
+    S.auto = !S.auto;
+    b.setAttribute('aria-pressed', String(S.auto));
+    b.textContent = S.auto ? '自动刷新: 30秒' : '自动刷新: 关';
+    clearInterval(S.autoT);
+    if (S.auto) {
+      S.autoT = setInterval(() => { if (S.who && !$('#dlg').open) render(); }, 30000);
+      toast('已开启 30 秒自动刷新');
+    } else {
+      toast('已关闭自动刷新');
+    }
+  },
+  delview: b => { S.del = b.dataset.v; S.pFilter = b.dataset.v === '1' ? 'deleted' : ''; S.pOffset = 0; render(); },
+  fltview: b => {
+    S.pFilter = b.dataset.f;
+    S.del = S.pFilter === 'deleted' ? '1' : '';
+    S.pOffset = 0;
+    render();
+  },
+  clearsearch: () => {
+    S.q = '';
+    S.pOffset = 0;
+    render();
+  },
+  page: b => {
+    S.pOffset = Math.max(0, S.pOffset + (+b.dataset.dir) * S.pLimit);
+    render();
+  },
+  addgiftgive: () => {
+    const f = $('form[data-form=gift]'), k = f.elements.gk.value;
+    if (!k) return toast('先选一件饰品', true);
+    if (S.giftSkins.length >= 20) return toast('一次最多附赠 20 件饰品', true);
+    const n = Number(f.elements.gstn.value || 0);
+    if (f.elements.gst.checked && !(Number.isInteger(n) && n >= 0 && n <= 1e7)) return toast('斩数要填 0 到 10000000 的整数', true);
+    S.giftSkins.push({ k, st: f.elements.gst.checked ? n : -1 });
+    drawGiftGives();
+  },
+  delgiftgive: b => { S.giftSkins.splice(+b.dataset.i, 1); drawGiftGives(); },
+  addcodegive: () => {
+    const f = $('form[data-form=code]'), k = f.elements.ck.value;
+    if (!k) return toast('先选一件饰品', true);
+    if (S.codeSkins.length >= 20) return toast('一次最多附赠 20 件饰品', true);
+    const n = Number(f.elements.cstn.value || 0);
+    if (f.elements.cst.checked && !(Number.isInteger(n) && n >= 0 && n <= 1e7)) return toast('斩数要填 0 到 10000000 的整数', true);
+    S.codeSkins.push({ k, st: f.elements.cst.checked ? n : -1 });
+    drawCodeGives();
+  },
+  delcodegive: b => { S.codeSkins.splice(+b.dataset.i, 1); drawCodeGives(); },
   batch: async b => {
     const f = b.form, op = b.dataset.op, uids = [...f.querySelectorAll('input[name=pick]:checked')].map(x => x.value);
     if (!uids.length) return toast('先勾上要处理的号', true);
@@ -927,7 +1114,7 @@ const ACTS = {
   delone: b => batchOp(b, 'delete', [S.p.uid], [S.p.username]),
   restoreone: b => batchOp(b, 'restore', [S.p.uid], [S.p.username]),
   export: b => busy(b, async () => {
-    const qs = 'q=' + encodeURIComponent(S.q) + (S.del ? '&del=1' : '');
+    const qs = 'q=' + encodeURIComponent(S.q) + (S.pFilter === 'deleted' ? '&del=1' : '');
     let r;
     try { r = await fetch('/api/admin/export?' + qs, { headers: { Authorization: 'Bearer ' + S.tok }, cache: 'no-store' }); }
     catch (e) { throw new Error('连不上服务器，检查一下网络'); }
@@ -1002,6 +1189,12 @@ document.addEventListener('click', e => {
   ACTS[b.dataset.act](b);
 });
 document.addEventListener('change', e => {
+  if (e.target.matches('[data-act=pagesize]')) {
+    S.pLimit = +e.target.value;
+    S.pOffset = 0;
+    render();
+    return;
+  }
   const f = e.target.form;
   if (e.target.matches('[data-pickall]')) for (const x of f.querySelectorAll('input[name=pick]')) x.checked = e.target.checked;
   if (f && f.dataset.form === 'gift' && e.target.name === 'to') {
@@ -1038,7 +1231,7 @@ const FORMS = {
     const a = await ask({ title: old ? '改管理员 ' + name : '建管理员账号 ' + name, lines, ok: old ? '保存' : '建账号', danger: role === 'all' && (!old || old.role !== 'all') });
     if (a) await busy(submitBtn(f), async () => { await api('admins', { ...body, why: a.why }); toast(old ? '改好了' : '建好了，' + name + ' 可以登录了'); S.admEdit = ''; render(); });
   },
-  find: f => { S.q = f.elements.q.value.trim().slice(0, 64); render(); },
+  find: f => { S.q = f.elements.q.value.trim().slice(0, 64); S.pOffset = 0; render(); },
   authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
   adjust: async f => {
     const p = S.p, e = p.econ, s = (e && e.state) || {}, cases = s.cases || {}, inv = s.inv || [];
@@ -1086,28 +1279,28 @@ const FORMS = {
   gift: async f => {
     const E = f.elements, one = E.to.value === 'one', to = one ? E.user.value.trim() : 'all';
     if (one && !to) return toast('填上要发给哪个账号', true);
-    const body = { to, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), days: numIn(f, 'days') || 14, newToo: !one && E.newToo.checked, note: E.note.value.trim() };
+    const body = { to, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), skins: S.giftSkins.slice(), days: numIn(f, 'days') || 14, newToo: !one && E.newToo.checked, note: E.note.value.trim() };
     for (const c of CAT.caseIds) { const n = numIn(f, 'gc_' + c); if (n) body.cases[c] = n; }
     if ([body.ink, body.term, body.tags, body.days, ...Object.values(body.cases)].some(v => !Number.isInteger(v) || v < 0)) return toast('数量要填 0 或者正整数', true);
-    if (!body.ink && !body.term && !body.tags && !Object.keys(body.cases).length) return toast('补偿里什么都没有', true);
+    if (!body.ink && !body.term && !body.tags && !Object.keys(body.cases).length && !body.skins.length) return toast('补偿里什么都没有', true);
     if (body.note.length < 2) return toast('写一句给玩家看的说明（至少 2 个字）', true);
     const lines = ['发给：' + (one ? to : body.newToo ? '所有人，包括之后新注册的' : '现在已经注册的所有人'), '内容：' + giftText(body),
       '玩家看到：开发组补偿：' + body.note, body.days + ' 天内登录或者打开武库就能领，每个账号一份'];
     const a = await ask({ title: '发补偿', lines, whyInit: body.note, ok: '发出' });
-    if (a) await busy(submitBtn(f), async () => { await api('gift', { ...body, why: a.why }); toast('补偿发出去了'); render(); });
+    if (a) await busy(submitBtn(f), async () => { await api('gift', { ...body, why: a.why }); S.giftSkins = []; toast('补偿发出去了'); render(); });
   },
   code: async f => {
     const E = f.elements, raw = E.code.value.trim().toUpperCase();
     if (raw && !/^[A-Z0-9]{4,20}$/.test(raw)) return toast('兑换码只能用 4 到 20 位英文字母和数字', true);
-    const body = { code: raw, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), uses: numIn(f, 'uses') || 100, days: numIn(f, 'days') || 14, note: E.note.value.trim() };
+    const body = { code: raw, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), skins: S.codeSkins.slice(), uses: numIn(f, 'uses') || 100, days: numIn(f, 'days') || 14, note: E.note.value.trim() };
     for (const c of CAT.caseIds) { const n = numIn(f, 'cc_' + c); if (n) body.cases[c] = n; }
     if ([body.ink, body.term, body.tags, body.uses, body.days, ...Object.values(body.cases)].some(v => !Number.isInteger(v) || v < 0)) return toast('数量要填 0 或者正整数', true);
-    if (!body.ink && !body.term && !body.tags && !Object.keys(body.cases).length) return toast('兑换码里什么都没有', true);
+    if (!body.ink && !body.term && !body.tags && !Object.keys(body.cases).length && !body.skins.length) return toast('兑换码里什么都没有', true);
     if (body.note.length < 2) return toast('写一句给玩家看的说明（至少 2 个字）', true);
     const lines = ['兑换码：' + (raw || '随机生成 10 位'), '内容：' + giftText(body), '玩家看到：兑换成功：' + body.note + '（内容）',
       '最多 ' + fmtN(body.uses) + ' 个号能领，每个号一次；' + body.days + ' 天内有效'];
     const a = await ask({ title: '建兑换码', lines, whyInit: body.note, ok: '建码' });
-    if (a) await busy(submitBtn(f), async () => { const r = await api('code', { ...body, why: a.why }); toast('建好了：' + r.code); render(); });
+    if (a) await busy(submitBtn(f), async () => { const r = await api('code', { ...body, why: a.why }); S.codeSkins = []; toast('建好了：' + r.code); render(); });
   },
   cfg: async f => {
     const { info, cfg: cur } = S.cfg, set = {}, lines = [];
@@ -1140,11 +1333,18 @@ async function start() {
   for (const b of document.querySelectorAll('.tabs [data-need]')) b.classList.toggle('hidden', S.role !== b.dataset.need);
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
+  clearInterval(S.timerT);
+  S.timerT = setInterval(updateTimer, 1000);
+  updateTimer();
+  saveSession();
   route();
 }
 function logout(msg) {
-  S.tok = ''; S.who = ''; S.role = ''; S.p = null; S.cfg = null; S.admEdit = '';
+  S.tok = ''; S.who = ''; S.role = ''; S.p = null; S.cfg = null; S.admEdit = ''; S.exp = 0;
   clearTimeout(S.expT);
+  clearInterval(S.timerT);
+  clearInterval(S.autoT);
+  clearSession();
   $('#app').classList.add('hidden');
   $('#main').textContent = '';
   $('#login').classList.remove('hidden');
@@ -1165,13 +1365,33 @@ $('#loginForm').addEventListener('submit', async e => {
     try { j = await r.json(); } catch (err) {}
     if (!r.ok || !j.token) throw new Error(j.error || '出错了（' + r.status + '）');
     S.tok = j.token;
+    S.exp = Date.now() + (j.expiresIn || 1800) * 1000;
     $('#tok').value = '';
-    S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, j.expiresIn * 1000);
+    S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, (j.expiresIn || 1800) * 1000);
     await start();
-  } catch (err) { S.tok = ''; $('#loginMsg').textContent = err.message; }
+  } catch (err) { S.tok = ''; S.exp = 0; $('#loginMsg').textContent = err.message; }
   finally { btn.disabled = false; btn.textContent = '进入'; }
 });
-logout();
+
+async function init() {
+  try {
+    const raw = sessionStorage.getItem(SESS_KEY);
+    if (raw) {
+      const sess = JSON.parse(raw);
+      if (sess && sess.tok && sess.exp > Date.now()) {
+        S.tok = sess.tok;
+        S.exp = sess.exp;
+        S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, S.exp - Date.now());
+        await start();
+        return;
+      }
+    }
+  } catch (e) {
+    clearSession();
+  }
+  logout();
+}
+init();
 </script>
 </body>
 </html>

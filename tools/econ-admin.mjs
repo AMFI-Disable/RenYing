@@ -70,7 +70,8 @@ const int = (v, what) => { const n = Number(String(v).replace(/^\+/, '')); if (!
 const time = t => t ? new Date(t).toLocaleString('zh-CN', { hour12: false }) : '-';
 const ago = t => { if (!t) return '-'; const s = (Date.now() - t) / 1000; return s < 3600 ? Math.max(1, Math.round(s / 60)) + ' 分钟前' : s < 86400 ? Math.round(s / 3600) + ' 小时前' : Math.round(s / 86400) + ' 天前'; };
 const stuff = d => [d.ink ? `墨锭 ${d.ink > 0 ? '+' : ''}${d.ink}` : '', ...Object.entries(d.cases || {}).map(([c, n]) => `${c} ${n > 0 ? '+' : ''}${n}`),
-  d.term ? `终端机 ${d.term > 0 ? '+' : ''}${d.term}` : '', d.tags ? `改名标签 ${d.tags > 0 ? '+' : ''}${d.tags}` : ''].filter(Boolean).join('，');
+  d.term ? `终端机 ${d.term > 0 ? '+' : ''}${d.term}` : '', d.tags ? `改名标签 ${d.tags > 0 ? '+' : ''}${d.tags}` : '',
+  ...(d.skins || []).map(s => `${s.k}${s.st >= 0 ? `@${s.st}` : ''}`)].filter(Boolean).join('，');
 // 墨锭、武器箱、终端机、改名标签：ink=500 c1=2 term=1 tags=1（adjust 还认 give= 和 take=）
 function amounts(list, withItems) {
   const b = { ink: 0, cases: {}, term: 0, tags: 0, give: [], take: [] };
@@ -148,8 +149,8 @@ if (cmd === 'whoami') {
   console.log(`已解封 ${j.uid}，玩家刷新网页后生效。`);
 } else if (cmd === 'gift') {
   if (!pos[0] || pos.length < 2 || !o.note) die('用法：node tools/econ-admin.mjs gift <all|号> ink=500 c1=2 --note <给玩家看的说明> [--days 14] [--new] [--why <原因>]');
-  const b = amounts(pos.slice(1), false);
-  const j = await admin('POST', '/api/admin/gift', { to: pos[0], ink: b.ink, cases: b.cases, term: b.term, tags: b.tags, days: o.days === undefined ? 14 : int(o.days, '天数'), newToo: !!o.new, note: o.note, why: o.why || '' });
+  const b = amounts(pos.slice(1), true);
+  const j = await admin('POST', '/api/admin/gift', { to: pos[0], ink: b.ink, cases: b.cases, term: b.term, tags: b.tags, skins: b.give, days: o.days === undefined ? 14 : int(o.days, '天数'), newToo: !!o.new, note: o.note, why: o.why || '' });
   console.log(`补偿发出去了（编号 ${j.id}），${time(j.until)} 之前登录或者打开武库就能领。`);
 } else if (cmd === 'gifts') {
   const j = await admin('GET', '/api/admin/gifts');
@@ -165,8 +166,8 @@ if (cmd === 'whoami') {
 } else if (cmd === 'code') {
   const named = pos[0] && !pos[0].includes('=') ? pos[0] : '', list = named ? pos.slice(1) : pos;
   if (!list.length || !o.note) die('用法：node tools/econ-admin.mjs code [兑换码] ink=500 c1=1 --note <给玩家看的说明> [--uses 100] [--days 14] [--why <原因>]（不写兑换码就随机生成）');
-  const b = amounts(list, false);
-  const j = await admin('POST', '/api/admin/code', { code: named, ink: b.ink, cases: b.cases, term: b.term, tags: b.tags, uses: o.uses === undefined ? 100 : int(o.uses, '人数'), days: o.days === undefined ? 14 : int(o.days, '天数'), note: o.note, why: o.why || '' });
+  const b = amounts(list, true);
+  const j = await admin('POST', '/api/admin/code', { code: named, ink: b.ink, cases: b.cases, term: b.term, tags: b.tags, skins: b.give, uses: o.uses === undefined ? 100 : int(o.uses, '人数'), days: o.days === undefined ? 14 : int(o.days, '天数'), note: o.note, why: o.why || '' });
   console.log(`兑换码建好了：${j.code}。${time(j.until)} 之前，玩家在游戏「任务 → 礼包兑换」里输入就能领，每个号一次。`);
 } else if (cmd === 'codes') {
   const j = await admin('GET', '/api/admin/codes');

@@ -665,12 +665,20 @@ async function giftsFor(env, user, now) {
   return (await env.DB.prepare("SELECT id, ink, items_json, note FROM gift WHERE (uid = ? OR uid = '*') AND off = 0 AND at <= ? AND until > ? AND born > ? AND NOT EXISTS (SELECT 1 FROM gift_got x WHERE x.gid = gift.id AND x.uid = ?) ORDER BY at LIMIT 10")
     .bind(user.id, now, now, Math.floor(+user.created_at || 0), user.id).all()).results || [];
 }
-function giftItems(txt) {   // 一份补偿里的东西：{ cases: { c1: 2 }, term: 1, tags: 1 }，数都夹在 0 ~ 100；全服肉鸽发的还有 skin（只认星座武器箱的款）
+function giftItems(txt) {   // 一份补偿里的东西：{ cases: { c1: 2 }, term: 1, tags: 1, skins: [{ k, st }] }，数都夹在 0 ~ 100；全服肉鸽发的还有 skin（只认星座武器箱的款）
   const o = parseObj(txt) || {}, cases = {};
   for (const c of C.CASES) { const n = Math.floor(+(o.cases && o.cases[c]) || 0); if (n > 0) cases[c] = Math.min(100, n); }
   const one = x => Math.max(0, Math.min(100, Math.floor(+x || 0)));
-  const out = { cases, term: one(o.term), tags: one(o.tags) };
+  const out = { cases, term: one(o.term), tags: one(o.tags), skins: [] };
   if (typeof o.skin === 'string' && C.isItem(o.skin) && C.ITEM[o.skin].col === 'c8') out.skin = o.skin;
+  if (Array.isArray(o.skins)) {
+    out.skins = o.skins.map(x => {
+      const k = typeof x === 'string' ? x : (x && x.k);
+      if (!C.isItem(k)) return null;
+      const st = x && x.st !== undefined ? (x.st >= 0 ? Math.floor(+x.st || 0) : -1) : -1;
+      return { k, st };
+    }).filter(Boolean).slice(0, 20);
+  }
   return out;
 }
 
@@ -787,13 +795,16 @@ async function handleEcon(env, auth, body, now, ip) {
         ink0 += ink;
         for (const [c, n] of Object.entries(it.cases)) state0.cases[c] += n;
         state0.term += it.term; state0.tags += it.tags;
-        if (it.skin) giftSkins.push(it.skin);
+        if (it.skin) giftSkins.push({ k: it.skin, st: -1, src: 'rouge' });
+        if (Array.isArray(it.skins)) for (const sk of it.skins) giftSkins.push({ ...sk, src: 'gift' });
         got.push({ id: g.id, note: g.note, ink, ...it });
       }
       if (code) {   // 兑换码里的东西也先放进去
         ink0 += code.ink;
         for (const [c, n] of Object.entries(code.cases)) state0.cases[c] += n;
         state0.term += code.term; state0.tags += code.tags;
+        if (code.skin) giftSkins.push({ k: code.skin, st: -1, src: 'code' });
+        if (Array.isArray(code.skins)) for (const sk of code.skins) giftSkins.push({ ...sk, src: 'code' });
       }
     }
     const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, back, mkt, cfg };
@@ -819,7 +830,13 @@ async function handleEcon(env, auth, body, now, ip) {
         state0.lst = state0.lst.filter(L => { if (!isV(L.it) || !open.has(L.l)) return true; voided.lst.push(L.l); return false; });
       }
     }
-    for (const k of giftSkins) if (state0.inv.length < C.INV_MAX) C.addItem(state0, C.mkItem(state0, k, 'rouge', rnd, { st: -1 }), E);   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能汰换
+    for (const sk of giftSkins) {
+      const k = typeof sk === 'string' ? sk : (sk && sk.k), st = sk && sk.st !== undefined ? sk.st : -1;
+      const src = (sk && sk.src) || (C.ITEM[k] && C.ITEM[k].col === 'c8' ? 'rouge' : 'gift');
+      if (state0.inv.length < C.INV_MAX && C.isItem(k)) {
+        C.addItem(state0, C.mkItem(state0, k, src, rnd, { st }), E);
+      }
+    }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能汰换
     if (code && code.items) {   // 兑换码送的饰品：库存里没有这一款的才放一件进去（普通版）
       let n = 0;
       for (const k of code.items) if (C.isItem(k) && !state0.inv.some(x => x.k === k) && state0.inv.length < C.INV_MAX) { C.addItem(state0, C.mkItem(state0, k, 'code', rnd, { st: -1 }), E); n++; }
@@ -1103,7 +1120,7 @@ const ADMIN_NEED = {
   'POST /api/admin/adjust': 'econ', 'POST /api/admin/restore': 'econ', 'POST /api/admin/gift': 'econ', 'POST /api/admin/gift/off': 'econ',
   'POST /api/admin/code': 'econ', 'POST /api/admin/code/off': 'econ', 'POST /api/admin/cfg': 'econ', 'POST /api/admin/cfg/undo': 'econ',
   'POST /api/admin/ban': 'ban', 'POST /api/admin/pardon': 'ban', 'POST /api/admin/password': 'ban', 'POST /api/admin/batch': 'ban', 'GET /api/admin/export': 'ban',
-  'POST /api/admin/logout': 'view', 'GET /api/admin/admins': 'all',
+  'POST /api/admin/logout': 'view', 'POST /api/admin/refresh': 'view', 'GET /api/admin/admins': 'all',
 };
 const adminCan = (role, need) => role === 'all' || need === 'view' || role === need;
 // ADMIN_SECRET 里写了名字的那些（只要名字）
@@ -1340,7 +1357,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
     await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
   };
-  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、终端机、改名标签，还有给玩家看的说明
+  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、终端机、改名标签，还有饰品和给玩家看的说明
     const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
     if (ink === null) return { err: `墨锭要填 0 到 ${ADJ_INK} 的整数` };
     if (term === null || tags === null) return { err: '终端机、改名标签每份最多 100 个' };
@@ -1350,17 +1367,32 @@ async function handleAdmin(env, request, path, now, ip) {
       if (!C.CASES.includes(c) || n === null) return { err: `武器箱 ${c} 不对：每份每种最多 100 个` };
       if (n) cases[c] = n;
     }
-    if (!ink && !term && !tags && !Object.keys(cases).length) return { err: noun + '里什么都没有' };
+    const skins = [];
+    const rawSkins = Array.isArray(body.skins) ? body.skins : Array.isArray(body.give) ? body.give : [];
+    for (const item of rawSkins) {
+      const k = typeof item === 'string' ? item : (item && item.k);
+      if (!C.isItem(k)) return { err: `不认识的饰品：${k}` };
+      const st = item && item.st !== undefined ? (item.st >= 0 ? Math.floor(+item.st || 0) : -1) : -1;
+      skins.push({ k, st });
+    }
+    if (skins.length > 20) return { err: '每份最多附带 20 件饰品' };
+    if (!ink && !term && !tags && !Object.keys(cases).length && !skins.length) return { err: noun + '里什么都没有' };
     const note = String(body.note || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 60);
     if (note.length < 2) return { err: `要写给玩家看的说明（至少 2 个字），比如「${eg}」` };
-    return { ink, cases, term, tags, note };
+    return { ink, cases, term, tags, skins, note };
   };
-  const bundleLog = b => ({ ink: b.ink || undefined, cases: Object.keys(b.cases).length ? b.cases : undefined, term: b.term || undefined, tags: b.tags || undefined });
+  const bundleLog = b => ({ ink: b.ink || undefined, cases: Object.keys(b.cases).length ? b.cases : undefined, term: b.term || undefined, tags: b.tags || undefined, skins: (b.skins && b.skins.length) ? b.skins : undefined });
   const route = (post ? 'POST ' : 'GET ') + path;
   const need = ADMIN_NEED[route] || (post ? 'all' : 'view');
   if (!adminCan(role, need)) return error(`你的管理员角色（${ADMIN_ROLE_NAME[role]}）不能做这件事，要「${ADMIN_ROLE_NAME[need]}」`, 403, { role });
 
   if (route === 'GET /api/admin/whoami') return json({ ok: true, who, role, now });
+  if (route === 'POST /api/admin/refresh') {
+    if (me.tok && me.tok.startsWith('as_')) {
+      await env.DB.prepare('UPDATE admin_sessions SET expires_at = ? WHERE token = ?').bind(now + ADMIN_TTL, await tokenKey(me.tok)).run();
+    }
+    return json({ ok: true, who, role, expiresIn: ADMIN_TTL / 1000, now });
+  }
   if (route === 'POST /api/admin/logout') {
     if (me.tok) await env.DB.prepare('DELETE FROM admin_sessions WHERE token = ?').bind(await tokenKey(me.tok)).run();
     return json({ ok: true });
@@ -1399,13 +1431,29 @@ async function handleAdmin(env, request, path, now, ip) {
   if (route === 'GET /api/admin/stats') {   // 总览
     await cfgNow(env, now);
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
-    const [users, fresh, eco, open, deals, banned, gone] = await Promise.all([
-      one('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0'), one('SELECT COUNT(*) AS n FROM users WHERE created_at > ?', now - DAY_MS),
-      one('SELECT COUNT(*) AS n, COALESCE(SUM(ink), 0) AS ink FROM econ'), one('SELECT COUNT(*) AS n FROM mkt WHERE state = 0'),
+    const [users, fresh, eco, open, deals, banned, gone, inkFlow, opens24, signups] = await Promise.all([
+      one('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0'),
+      one('SELECT COUNT(*) AS n FROM users WHERE created_at > ?', now - DAY_MS),
+      one('SELECT COUNT(*) AS n, COALESCE(SUM(ink), 0) AS ink FROM econ'),
+      one('SELECT COUNT(*) AS n FROM mkt WHERE state = 0'),
       one('SELECT COUNT(*) AS n, COALESCE(SUM(price), 0) AS v FROM mkt WHERE state = 1 AND done_at > ?', now - DAY_MS),
-      one('SELECT COUNT(*) AS n FROM sanctions WHERE perm = 1 OR ban_until > ?', now), one('SELECT COUNT(*) AS n FROM users WHERE deleted_at > 0'),
+      one('SELECT COUNT(*) AS n FROM sanctions WHERE perm = 1 OR ban_until > ?', now),
+      one('SELECT COUNT(*) AS n FROM users WHERE deleted_at > 0'),
+      one("SELECT COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ?", now - DAY_MS),
+      one("SELECT COUNT(*) AS n FROM econ_log WHERE act = 'open' AND ok = 1 AND at > ?", now - DAY_MS),
+      env.DB.prepare("SELECT CAST((created_at / 86400000) AS INTEGER) AS d, COUNT(*) AS n FROM users WHERE created_at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
     ]);
-    return json({ ok: true, who, now, users: users.n, newToday: fresh.n, accounts: eco.n, inkTotal: eco.ink, open: open.n, deals24: deals.n, dealInk24: deals.v, banned: banned.n, deleted: gone.n, cfgId: CFG_CACHE.id });
+    const signups7d = (signups && signups.results || []).map(r => r.n);
+    return json({
+      ok: true, who, now,
+      users: users.n, newToday: fresh.n, accounts: eco.n, inkTotal: eco.ink,
+      open: open.n, deals24: deals.n, dealInk24: deals.v, banned: banned.n, deleted: gone.n,
+      inkIn24: (inkFlow && inkFlow.inkIn) || 0,
+      inkOut24: (inkFlow && inkFlow.inkOut) || 0,
+      open24: (opens24 && opens24.n) || 0,
+      signups7d,
+      cfgId: CFG_CACHE.id,
+    });
   }
   if (route === 'GET /api/admin/errors') {   // 错误记录：最近出现的在前；kind 不填就全部
     const kind = q('kind'), days = Math.max(1, Math.min(30, +q('days') || 7));
@@ -1414,14 +1462,32 @@ async function handleAdmin(env, request, path, now, ip) {
     ).bind(...(kind ? [now - days * DAY_MS, kind] : [now - days * DAY_MS])).all()).results || [];
     return json({ ok: true, days, rows });
   }
-  if (route === 'GET /api/admin/find') {   // 按昵称开头找号；不填就列最近动过的
-    const key = q('q'), like = key.replace(/[\\%_]/g, m => '\\' + m) + '%', del = q('del') === '1';   // del=1：只看删除了的
+  if (route === 'GET /api/admin/find') {   // 按昵称或账号找号；支持子串、账号ID、状态筛选与分页
+    const key = q('q').trim(), escKey = key.replace(/[\\%_]/g, m => '\\' + m), del = q('del') === '1', flt = q('filter');
+    const limit = Math.max(1, Math.min(100, parseInt(q('limit')) || 20));
+    const offset = Math.max(0, parseInt(q('offset')) || 0);
     const cols = 'u.id, u.username, u.created_at, u.deleted_at, e.ink, e.updated_at';
-    const rows = key
-      ? await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id WHERE (u.username LIKE ? ESCAPE '\\' OR u.id = ?)${del ? ' AND u.deleted_at > 0' : ''} ORDER BY length(u.username), u.username LIMIT 20`).bind(like, key).all()
-      : del ? await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id WHERE u.deleted_at > 0 ORDER BY u.deleted_at DESC LIMIT 100`).all()
-        : await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id ORDER BY COALESCE(e.updated_at, u.updated_at) DESC LIMIT 20`).all();
-    return json({ ok: true, users: rows.results || [] });
+    const fltCond = flt === 'banned' ? ` AND (s.perm = 1 OR s.ban_until > ${now})` : flt === 'wealth' ? ' AND e.ink >= 10000' : '';
+    let total = 0, rows = [];
+    if (key) {
+      const prefix = escKey + '%', substr = '%' + escKey + '%';
+      const w = `(u.username LIKE ? ESCAPE '\\' OR u.username LIKE ? ESCAPE '\\' OR u.id = ? OR u.id LIKE ? ESCAPE '\\')${del ? ' AND u.deleted_at > 0' : ''}${fltCond}`;
+      const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).bind(prefix, substr, key, prefix).first();
+      total = (tot && tot.n) || 0;
+      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY (u.username = ?) DESC, (u.username LIKE ? ESCAPE '\\') DESC, length(u.username), u.username LIMIT ? OFFSET ?`)
+        .bind(prefix, substr, key, prefix, key, prefix, limit, offset).all()).results || [];
+    } else if (del) {
+      const w = `u.deleted_at > 0${fltCond}`;
+      const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).first();
+      total = (tot && tot.n) || 0;
+      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY u.deleted_at DESC LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
+    } else {
+      const w = `1=1${fltCond}`;
+      const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).first();
+      total = (tot && tot.n) || 0;
+      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY COALESCE(e.updated_at, u.updated_at) DESC LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
+    }
+    return json({ ok: true, users: rows, total, limit, offset });
   }
   if (route === 'GET /api/admin/econ') {   // 一个号的武库存档、处罚、流水、市场记录
     const u = await findUser(q('uid'));
@@ -1558,7 +1624,7 @@ async function handleAdmin(env, request, path, now, ip) {
     if (!days) return error('有效天数要填 1 到 90');
     const id = randHex(8), until = now + days * DAY_MS, born = uid === '*' && !body.newToo ? now : until;
     await env.DB.prepare('INSERT INTO gift (id, uid, ink, items_json, note, by, at, until, born, off) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)')
-      .bind(id, uid, b.ink, JSON.stringify({ cases: b.cases, term: b.term, tags: b.tags }), b.note, who, now, until, born).run();
+      .bind(id, uid, b.ink, JSON.stringify({ cases: b.cases, term: b.term, tags: b.tags, skins: b.skins }), b.note, who, now, until, born).run();
     await logRow(env, uid, now, 'gift_new', 1, null, null, JSON.stringify({ by: who, why: why || b.note, id, ...bundleLog(b), days, newToo: uid === '*' ? !!body.newToo : undefined }));
     return json({ ok: true, id, until });
   }
@@ -1586,7 +1652,7 @@ async function handleAdmin(env, request, path, now, ip) {
     const until = now + days * DAY_MS;
     try {
       await env.DB.prepare('INSERT INTO code (code, ink, items_json, note, by, at, until, uses, got, off) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)')
-        .bind(k, b.ink, JSON.stringify({ cases: b.cases, term: b.term, tags: b.tags }), b.note, who, now, until, uses).run();
+        .bind(k, b.ink, JSON.stringify({ cases: b.cases, term: b.term, tags: b.tags, skins: b.skins }), b.note, who, now, until, uses).run();
     } catch (e) {
       if (/UNIQUE|PRIMARY/i.test(String(e && e.message || e))) return error('已经有这个兑换码了，换一个', 409);
       throw e;
