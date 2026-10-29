@@ -94,6 +94,11 @@ jobs:
       - name: Lingque AI Combo Checks
         run: node tools/ai-lingque-test.mjs
 
+      # Anti-cheat damage check: a full roguelike scroll stack must not be flagged, while edited move
+      # tables and inflated hidden multipliers still are.
+      - name: Anti-Cheat Damage Checks
+        run: node tools/anticheat-test.mjs
+
       - name: Start Static Web Server for Browser Audits
         run: |
           python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &

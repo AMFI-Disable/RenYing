@@ -169,11 +169,47 @@ function acLocalAttacker(att) {
   if (typeof isAiVsAi === 'function' && isAiVsAi()) return false;
   return M.mode === 'net' ? att.idx === localIdx() : att.ctrl === human[0];
 }
+// 有秘卷的模式（爬塔、天魔讨伐、列传、开放世界、同袍肉鸽）：秘卷的增伤一层层乘上去，爬得越高叠得越多，
+// 正常玩家后期一下打出招式的一两百倍是常事（以前上限不算秘卷，误封过人）。上限按这一刻双方身上真有的秘卷放宽：
+// 打人的每一卷按它增伤（out 里的 c.dmg *= …）最多能乘到多少算，挨打的每一卷改受伤（inc）的算 ×1.5，
+// 再算上易伤、流派共鸣和打中时顺手补的真伤。秘卷之外凭空多出来的倍数（改了身上的计数、换了函数）照样超限。
+// 每卷最多乘多少从秘卷的代码里读：写死的数取最大的；“1 + …”这种随战况涨的按 1.6 算（现有的最多 1.6）；读不出来按 2 算。
+// combat-test 会拿极端战况把每一卷都试一遍，确认没有哪一卷真打出来的倍数超过这里读出来的。
+const AC_SC_INC = 1.5, AC_SC_GROW = 1.6, AC_SC_UNKNOWN = 2, AC_SC_OUT = new Map();
+function acScOut(s) {
+  if (!s || typeof s.out !== 'function') return 1;
+  if (AC_SC_OUT.has(s.out)) return AC_SC_OUT.get(s.out);
+  let k = 1, n = 0;
+  for (const m of String(s.out).matchAll(/c\.dmg\s*\*=\s*([^;}]+)/g)) {
+    const e = m[1].trim(), lit = (e.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(x => x >= 1);
+    n++; k *= /^1\s*\+/.test(e) ? AC_SC_GROW : lit.length ? Math.max(1, ...lit.filter(x => x <= 5)) : AC_SC_UNKNOWN;
+  }
+  if (!n && !/dmg/.test(String(s.out))) k = 1;   // 只改击退之类、根本不碰伤害的
+  else if (!n) k = AC_SC_UNKNOWN;
+  AC_SC_OUT.set(s.out, k);
+  return k;
+}
+function acScMul(att, def) {
+  if (typeof scOn !== 'function' || !scOn()) return 1;
+  const list = f => typeof scEligible === 'function' && scEligible(f) ? scList(f) : [];
+  let k = 1.1 * 1.1;   // 墨派共鸣 ×1.1；打中时同步补的真伤（针落、雷霆万钧这类）再留一成
+  for (const s of list(att)) k *= acScOut(s);
+  for (const s of list(def)) if (s.inc) k *= AC_SC_INC;
+  const st = def.st;
+  if (st && st.vulnT > 0) k *= 1 + Math.min(1, st.vuln || 0);
+  return k;
+}
+function acHitCap(att, def, m) {
+  const base = m.dmgAbs !== undefined ? m.dmgAbs : (m.dmg || 0);
+  const wild = M.mode === 'mayhem' || M.mode === 'chaos' || M.mode === 'raid' ? 6 : 1;
+  const ot = M.ot && typeof OT_DMG === 'number' ? OT_DMG : 1;   // 加时赛伤害翻倍，是在 applyHit 里面乘的，这里拿到的 m 还没乘
+  const sc = acScMul(att, def);
+  return Math.max(base, 20) * 12 * wild * ot * sc + (sc > 1 ? 40 : 0);
+}
 function acCheckHit(att, def, m, before) {
   if (!def || !m || typeof before !== 'number' || typeof def.hp !== 'number' || !acLocalAttacker(att)) return;
-  const dealt = before - def.hp, base = m.dmgAbs !== undefined ? m.dmgAbs : (m.dmg || 0);
-  const wild = M.mode === 'mayhem' || M.mode === 'chaos' || M.mode === 'raid' ? 6 : 1;
-  if (dealt <= 150 || dealt <= Math.max(base, 20) * 12 * wild) return;
+  const dealt = before - def.hp;
+  if (dealt <= 150 || dealt <= acHitCap(att, def, m)) return;
   if (ACH.hitSeq !== M.rseq) { ACH.hitSeq = M.rseq; ACH.hits = 0; }
   if (++ACH.hits >= 2) acStrike(`一下打出 ${Math.round(dealt)} 伤害，远超招式上限`);
 }
