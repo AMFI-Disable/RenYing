@@ -30,6 +30,6 @@ function updateStage(dt) {
   if (!G.queue.length && G.sub < G.waves.length - 1 && alive <= (G.waves.length > 2 ? 2 : 1)) {
     G.subT += dt; if (G.subT > 1.4) { G.subT = 0; G.sub++; fillQueue(G.waves[G.sub]); G.spawnT = .6; UI.toast(G.sub === G.waves.length - 1 ? '敌军殿后压上' : '援兵将至', 2.2); Snd.gong(); }
   }
-  if (!G.queue.length && G.sub >= G.waves.length - 1 && G.enemies.length === 0 && G.stage > 0 && Pl.state !== 'dead' && !G.cleared) { G.cleared = true; stageClear(); }
+  if (!G.queue.length && G.sub >= G.waves.length - 1 && G.enemies.length === 0 && G.stage > 0 && (Net.on ? coopAnyAlive() : Pl.state !== 'dead') && !G.cleared) { G.cleared = true; stageClear(); }
 }
 function stageClear() { Save.stageDone(G.stage); Run.won(); }

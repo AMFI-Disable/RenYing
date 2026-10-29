@@ -74,7 +74,7 @@ function updateProjs(dt, t) {
       else if (Pl.attackActive && dd < 2.3) { dead = true; Snd.clang(); FX.sparks({ x: p.x, y: p.y, z: p.z }, 10, 0xffe0a0, 8); Pl.mp = Math.min(Pl.maxMp, Pl.mp + 3); }
       else if (!p.done && dd < .6) { p.done = true; const r = hurtPlayer(p.dmg, p.x - p.vx, p.z - p.vz, { knock: 3, src: p.src, proj: true }); if (r === 'parry') reflectProj(p); else if (r) dead = true; }
     } else if (p.kind === 'orb') {
-      const tx = p.reflect ? (p.target && p.target.state !== 'dead' ? p.target.pos : null) : Pl.pos, ta = tx ? Math.atan2(tx.x - p.x, tx.z - p.z) : Math.atan2(p.vx, p.vz), ca = Math.atan2(p.vx, p.vz), na = ca + clamp(angDiff(ca, ta), -p.turn * d, p.turn * d), sp = Math.hypot(p.vx, p.vz); p.vx = Math.sin(na) * sp; p.vz = Math.cos(na) * sp;
+      const tx = p.reflect ? (p.target && p.target.state !== 'dead' ? p.target.pos : null) : coopAim(p), ta = tx ? Math.atan2(tx.x - p.x, tx.z - p.z) : Math.atan2(p.vx, p.vz), ca = Math.atan2(p.vx, p.vz), na = ca + clamp(angDiff(ca, ta), -p.turn * d, p.turn * d), sp = Math.hypot(p.vx, p.vz); p.vx = Math.sin(na) * sp; p.vz = Math.cos(na) * sp;
       p.x += p.vx * d; p.z += p.vz * d; p.y = 1.3 + Math.sin(p.t * 5) * .2; m.position.set(p.x, p.y, p.z); const dd = Math.hypot(Pl.pos.x - p.x, Pl.pos.z - p.z);
       if (Math.random() < .7) FX.add.emit({ x: p.x, y: p.y, z: p.z, vx: rand(-.5, .5), vy: rand(-.5, .5), vz: rand(-.5, .5), life: .4, s0: .35, s1: 0, r: .7, g: .4, b: 1, grav: 0 });
       if (p.reflect) { if (reflectHit(p, 1)) dead = true; }

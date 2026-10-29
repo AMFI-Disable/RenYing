@@ -216,6 +216,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 #rmSvg .nd .halo{fill:none;stroke:none}
 #rmSvg .nd text{fill:var(--c);text-anchor:middle;font-family:var(--f-brush);pointer-events:none}
 #rmSvg .nd{opacity:.42}
+#rmSvg .nd.voted .halo{stroke:#7fd8c8;stroke-width:2;stroke-dasharray:4 3}
 #rmSvg .nd.done{opacity:.78}#rmSvg .nd.done circle{fill:var(--c);stroke:rgba(14,17,20,.9)}#rmSvg .nd.done text{fill:#0c0f12}
 #rmSvg .nd.ok{opacity:1;cursor:pointer;outline:none}
 #rmSvg .nd.ok .halo{stroke:var(--c);stroke-width:1.5;opacity:.7;animation:rmPulse 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
@@ -236,6 +237,22 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 #event .item:disabled{opacity:.45;cursor:default}
 #event .ev-r{max-width:520px;margin:0;text-align:center;color:var(--gold);font-size:15px;line-height:1.8}
 .asc-row{display:flex;flex-direction:column;gap:6px}.asc-row .seg button{font-family:var(--f-text)}.asc-d{font-size:12px;color:var(--dim);letter-spacing:.06em}
+/* ---------- 同袍肉鸽 ---------- */
+#coop{gap:16px}
+.coop-name{font-size:14px;color:var(--paper2);letter-spacing:.1em;display:flex;gap:10px;align-items:center}
+#coop input{background:rgba(12,15,18,.7);border:1px solid var(--straw);color:var(--paper);font:inherit;font-size:16px;padding:7px 10px;width:9em;text-align:center;letter-spacing:.1em}
+#coop input:focus{outline:none;border-color:var(--paper)}
+#coopCode{width:6.5em!important;font-variant-numeric:tabular-nums;letter-spacing:.3em!important}
+.coop-pre{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.coop-or{font-size:13px;color:var(--dim)}
+.coop-room{display:flex;flex-direction:column;align-items:center;gap:12px}
+.coop-code{font-size:14px;color:var(--paper2);letter-spacing:.15em}.coop-code b{font-family:var(--f-num,inherit);font-size:42px;color:var(--gold);letter-spacing:.25em;margin-left:8px;font-variant-numeric:tabular-nums}
+.coop-list{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.coop-list span{border:1px solid;padding:5px 12px;font-size:14px;background:rgba(12,15,18,.6)}
+.coop-msg{min-height:1.6em;font-size:14px;color:var(--paper);text-align:center}
+.rm-coop{font-size:13px;line-height:1.8;color:var(--paper2);border-left:2px solid var(--straw);padding-left:10px}
+.coop-hud{position:absolute;left:18px;top:118px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--paper)}
+.coop-hud div{display:flex;flex-direction:column;gap:2px;min-width:120px}.coop-hud i{display:block;height:4px;background:rgba(255,255,255,.15)}.coop-hud i b{display:block;height:100%;background:#c8463a}
+.coop-hud .down{opacity:.55}
 .note{font-size:12.5px;color:var(--dim);letter-spacing:.1em;text-align:center}
 
 /* ---------- 章节过场 ---------- */
@@ -292,6 +309,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
   <div id="dmg"></div>
 
   <div id="hud" hidden>
+    <div class="coop-hud" id="coopHud" hidden></div>
     <div class="vitals">
       <div class="lv"><b id="lvNum">一</b><small>境界</small></div>
       <div class="bars">
@@ -344,7 +362,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
       <p>每一章一张路线图：遭遇、精锐、奇遇、剑庐、歇脚、藏宝，岔路自己挑，尽头是本章首领。身死这一局就结束，剑魄带回藏经阁，下一局更强。</p>
       <div class="btns"><button class="btn pri" id="btnCont" type="button" hidden>续行</button><button class="btn pri" id="btnStart" type="button" disabled>开一局</button><button class="btn sm" id="btnFull" type="button">全屏</button></div>
       <div class="asc-row"><div class="seg" id="ascSeg" hidden></div><div class="asc-d" id="ascD" hidden></div></div>
-      <div class="btns"><button class="btn sm" id="btnMeta" type="button">藏经阁</button><button class="btn sm" id="btnSet" type="button">设置</button></div>
+      <div class="btns"><button class="btn sm" id="btnCoop" type="button">同袍肉鸽 · 联机</button><button class="btn sm" id="btnMeta" type="button">藏经阁</button><button class="btn sm" id="btnSet" type="button">设置</button></div>
       <div class="loading" id="loading">山色渐起……</div>
       <div class="best" id="best"></div>
       <div class="keys">
@@ -406,6 +424,24 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="note">每打完一处、每斩一敌都得剑魄；身死也不散</div>
   </div>
 
+  <div id="coop" class="screen veil" hidden>
+    <h2>同袍肉鸽<small>二到四人，同走一张路线图</small></h2>
+    <label class="coop-name">你的名号 <input id="coopName" maxlength="8" placeholder="无名侠客" autocomplete="off"></label>
+    <div class="coop-pre" id="coopPre">
+      <button class="btn pri" id="btnHost" type="button">建房</button>
+      <span class="coop-or">或者</span>
+      <input id="coopCode" inputmode="numeric" maxlength="4" placeholder="四位房间码" autocomplete="off" aria-label="房间码">
+      <button class="btn sm" id="btnJoin" type="button">加入</button>
+    </div>
+    <div class="coop-room" id="coopRoom" hidden>
+      <div class="coop-code">房间码 <b id="coopCodeT">----</b></div>
+      <div class="coop-list" id="coopList"></div>
+    </div>
+    <div class="coop-msg" id="coopMsg" role="status"></div>
+    <div class="btns"><button class="btn pri" id="btnCoopGo" type="button" hidden>开局</button><button class="btn sm" id="btnCoopBack" type="button">回山门</button></div>
+    <div class="note">每多一位同袍，敌人气血多三成半、伤害略涨、来得也多些 · 由房主择路<br>倒下了别慌，同袍站到身边两秒半就能扶你起来 · 房主的网页要留在前台</div>
+  </div>
+
   <div id="settings" class="screen veil" hidden>
     <h2>设置</h2>
     <div class="setgrid">
@@ -439,6 +475,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
           <i style="color:#62cdb9">憩</i><span>歇脚</span><i style="color:#e8c46a">宝</i><span>藏宝</span>
           <i style="color:#ff3a22">首</i><span>首领</span>
         </div>
+        <div class="rm-coop" id="rmCoop" hidden></div>
         <div class="perklist" id="rmPerks"></div>
         <div class="btns"><button class="btn sm" id="btnRmLeave" type="button">暂离 · 已存档</button></div>
       </div>

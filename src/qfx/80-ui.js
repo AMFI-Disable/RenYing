@@ -46,6 +46,7 @@ const UI = {
     for (const o of Orbs.list) { if (o.type === 0) continue; p = P(o.x, o.z); g.fillStyle = o.type === 1 ? '#dcae55' : '#ff6b57'; g.fillRect(p[0] - 2, p[1] - 2, 4, 4); }
     for (const e of G.enemies) { if (e.state === 'dead') continue; p = P(e.pos.x, e.pos.z); g.fillStyle = e.boss ? '#ff3a22' : e.elite ? '#ffc040' : '#e8674f'; g.beginPath(); g.arc(p[0], p[1], e.boss ? 9 : e.elite ? 6 : 4.5, 0, TAU); g.fill(); }
     for (const h of G.hazards) { if (!h.tele) continue; p = P(h.x, h.z); g.strokeStyle = '#ff3a22'; g.beginPath(); g.arc(p[0], p[1], h.r * k, 0, TAU); g.stroke(); }
+    for (const o of Net.ghosts.values()) { if (!o.net) continue; p = P(o.pos.x, o.pos.z); g.fillStyle = COOP_TAG[o.slot % 4]; g.globalAlpha = o.state === 'dead' ? .45 : 1; g.beginPath(); g.arc(p[0], p[1], 5.5, 0, TAU); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 1.5; g.stroke(); g.globalAlpha = 1; }
     const a = angDiff(yaw, Pl.yaw); g.translate(c, c); g.rotate(-a); g.fillStyle = '#62cdb9'; g.beginPath(); g.moveTo(0, -11); g.lineTo(7, 8); g.lineTo(0, 4); g.lineTo(-7, 8); g.closePath(); g.fill(); g.restore();
   },
   perkList(el) {

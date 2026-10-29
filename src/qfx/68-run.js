@@ -222,7 +222,7 @@ const EVENTS = [
     { n: '离开', d: '什么也不做', f: () => '你合十一拜，转身下山。' }] },
   { id: 'dice', t: '野店赌坊', d: '酒旗下面一桌骰子，庄家朝你招手：“客官，押一把？”', opts: [
     { n: '押 40 文', d: '五五开：赢了得 100 文，输了 40 文没了', ok: () => Pl.gold >= 40, f: () => { Pl.gold -= 40; if (Math.random() < .5) { Pl.gold += 100; return '三个六！庄家脸都绿了，你揣着 100 文出了门。'; } return '骰子落定，你输了。庄家笑得合不拢嘴。'; } },
-    { n: '掀桌子', d: '骰子灌了铅！打跑这伙赌徒', f: () => ({ fight: [{ bandit: 4 + G.asc % 2 }, { bandit: 3, archer: 1 }] }) },
+    { n: '掀桌子', d: '骰子灌了铅！打跑这伙赌徒', fight: 1, f: () => ({ fight: [{ bandit: 4 + G.asc % 2 }, { bandit: 3, archer: 1 }] }) },
     { n: '离开', d: '什么也不做', f: () => '赌字头上一把刀，不碰为妙。' }] },
   { id: 'smith', t: '铸剑老人', d: '溪边一座铁匠铺，老人眯眼看你的剑：“好坯子，可惜没开锋。”', opts: [
     { n: '请他开锋', d: () => `花 ${60 + Pl.swordLv * 15} 文，锻剑一重`, ok: () => Pl.swordLv < 9 && Pl.gold >= 60 + Pl.swordLv * 15, f: () => { Pl.gold -= 60 + Pl.swordLv * 15; Pl.swordLv++; recalc(); setSwordTier(); Snd.forge(); return `火星四溅，${swordTier().name}寒光更胜。`; } },
@@ -242,9 +242,9 @@ const EVENTS = [
     { n: '送他回村', d: '村民谢你回春丹一枚、铜钱 30 文', f: () => { Pl.pots = Math.min(5, Pl.pots + 1); Pl.gold += 30; return '村口的灯一盏盏亮起来，孩子的娘哭着道谢。'; } },
     { n: '指个方向', d: '得铜钱 10 文', f: () => { Pl.gold += 10; return '孩子塞给你十文钱，一溜烟跑了。'; } }] },
   { id: 'wolves', t: '狼嚎', d: '林子里绿光点点，狼群盯上你了。', ch: [0, 1], opts: [
-    { n: '拔剑迎战', d: '打退狼群，狼皮能换 45 文', f: () => (Run.bounty = 'pelt', { fight: [{ wolf: 5 }, { wolf: 4, brute: G.asc >= 3 ? 1 : 0 }] }) },
+    { n: '拔剑迎战', d: '打退狼群，狼皮能换 45 文', fight: 1, f: () => (Run.bounty = 'pelt', { fight: [{ wolf: 5 }, { wolf: 4, brute: G.asc >= 3 ? 1 : 0 }] }) },
     { n: '绕路', d: () => `失去 ${hpCost(.1)} 点气血，不打`, f: () => { hurtFlat(hpCost(.1)); return '你在荆棘里穿行半夜，总算甩掉了狼群。'; } }] },
   { id: 'ghost', t: '剑冢孤魂', d: '一缕孤魂飘在断剑之间：“替我了结那些剑奴，这柄残剑归你。”', ch: [2], opts: [
-    { n: '应下', d: '打一场，赢了锻剑一重', f: () => { Run.bounty = 'sword'; return { fight: [{ slave: 3, spirit: 3 }, { slave: 2, wraith: 2 }] }; } },
+    { n: '应下', d: '打一场，赢了锻剑一重', fight: 1, f: () => { Run.bounty = 'sword'; return { fight: [{ slave: 3, spirit: 3 }, { slave: 2, wraith: 2 }] }; } },
     { n: '婉拒', d: '孤魂叹息着散去，留下 50 文', f: () => { Pl.gold += 50; return '断剑之间，只剩风声。'; } }] },
 ];

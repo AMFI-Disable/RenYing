@@ -319,6 +319,7 @@ function updatePlayer(dt) {
   // 骨架
   rig.root.position.copy(Pl.pos); rig.root.rotation.y = Pl.yaw;
   const back = Pl.combatT <= 0 && Pl.state === 'free';
+  Pl.animO = { s: Pl.state === 'free' ? speed : 0, a: action, r: rate, b: back };
   animHuman(rig, dt, G.t, { speed: Pl.state === 'free' ? speed : 0, action, rate, hurt: Pl.state === 'hurt' ? 1 - Pl.st / .24 : 0, fall: Pl.state === 'dead' ? smooth(Pl.deadT / .7) : 0, pose: P => { if (back) setHand(P, -.36, .98, -.1, -.1, .94, -.33); else setHand(P, -.36, .93, .14, -.28, -.52, .8); } });
   const fl = Pl.hurtV; rig.setGlow(fl * .9, fl * .12, fl * .08);
   if (Pl.buffT > 0 || Pl.shield > 0) { if (Math.random() < .25) FX.wisp({ x: Pl.pos.x, y: 1, z: Pl.pos.z }, Pl.buffT > 0 ? 0xffd060 : 0x62cdb9, 1, .8); }
