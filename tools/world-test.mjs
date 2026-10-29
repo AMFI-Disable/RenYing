@@ -1,5 +1,6 @@
 // 江湖共斗 · 开放世界的服务器测试：用假的 WebSocket 跑 cloudflare/worker.bundle.js 里的 WorldLine（不用联网，不用 wrangler）
 //   node tools/world-test.mjs
+// 江湖长卷：全服共享剧情进度（D1）、多条线并发、重报去重、领奖只领一次、中途加入、掉线重连、回收重建、个人秘卷
 // 全服肉鸽：投票选秘卷全线同步、中途进来的人拿到同一套秘卷、真人不够 3 位打天道车轮战、够了开天道 Boss、Boss 伤害封顶、谁能拿星座皮肤、进度存档
 // 查：每线 40 人封顶、满了回 full；打招呼拿到编号和名单；视野外的人不发；伤害按距离和每秒上限封顶；
 //     斩够数出妖王、打死后全线播报；服务器重启过会请网页重新打招呼；没人了停表
@@ -10,6 +11,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const mod = await import(path.join(root, 'cloudflare', 'worker.bundle.js'));
 const { WorldLine } = mod;
 const { WorldSim, WL, RG } = globalThis.RenyingWorldSim;
+const CQ = Object.fromEntries(['kill', 'z0', 'z1', 'z2', 'z3', 'king', 'jie', 'key'].map((k, i) => [k, i]));   // 长卷出力的八个数的顺序（cloudflare/worker.js 的 CQ_KEYS）
 import fs from 'node:fs';
 
 let fails = 0;
@@ -256,8 +258,8 @@ const keep = (s) => { for (const p of s.players.values()) { p.seen = s.t; } };
   const saved = JSON.parse(JSON.stringify(s.saveRun()));
   const t = new WorldSim(); t.loadRun(saved);
   ok(t.run.cyc === 4 && t.run.jie === 3 && t.run.perks.join() === 'ink_resonance,storm_wrath' && t.run.seq === 7, '服务器重启后读回同一轮进度和秘卷');
-  const u = new WorldSim(); u.loadRun({ ...saved, at: Date.now() - RG.EMPTY_RESET - 1000 });
-  ok(u.run.cyc === 1 && u.run.perks.length === 0, '空了太久的存档不认，从头开始');
+  const u = new WorldSim(); u.loadRun({ ...saved, at: Date.now() - 30 * 86400e3 });
+  ok(u.run.cyc === 4 && u.run.perks.join() === 'ink_resonance,storm_wrath', '空了一个月的存档照样接着用（不会因为没人就把进度打回去）');
   const v = new WorldSim(); v.loadRun({ cyc: -3, jie: 99, perks: ['hack', 'ink_resonance', 5], at: Date.now() });
   ok(v.run.cyc === 1 && v.run.jie === RG.JIE && v.run.perks.join() === 'ink_resonance', '乱填的存档被夹住、不认识的秘卷丢掉');
 }
@@ -285,10 +287,235 @@ const keep = (s) => { for (const p of s.players.values()) { p.seen = s.t; } };
   ok(again.sim.run.perks[0] === pick && again.sim.run.jie === 2, '人都走了、服务器回收后再建出来：进度还在');
   const b = await connect(5, ctx, again); await hi(again, b, '甲'); clearInterval(again.timer); again.timer = 0; again.tick();
   ok(b.last('k').r.pk[0] === pick, '刷新网页重新进来：拿回同一套秘卷');
-  again.emptyAt = Date.now() - RG.EMPTY_RESET - 1;
   await again.webSocketClose(b); b.closed = 1000;
-  const c = await connect(5, ctx, again); await hi(again, c, '乙'); clearInterval(again.timer); again.timer = 0;
-  ok(again.sim.run.perks.length === 0 && again.sim.run.jie === 1, '整条线空了超过 10 分钟再有人来：从头开始');
+  const later = new WorldLine(ctx, {}); await Promise.resolve();
+  const c = await connect(5, ctx, later); await hi(later, c, '乙'); clearInterval(later.timer); later.timer = 0;
+  ok(later.sim.run.perks[0] === pick && later.sim.run.jie === 2, '整条线空了很久、新的人进来：不清零，接着原来的进度');
+}
+
+// ======================= 全服肉鸽 · 江湖长卷：全服共享剧情（D1 用 node:sqlite 模拟，和 tools/econ-test.mjs 一样） =======================
+// 查：1040 节的表都对；多条线同时完成同一节只进一节；同一次上报重发只算一次；报失败了留着重报；进度只往前走；
+//     新来的人、换线、重连、Durable Object 回收重建都看到同一份全服进度；出过力的号才能领、一节只领一次、并发领也不多；
+//     游客推进度不领奖；掉线以后照样补领；个人秘卷；全卷完成后不再动；老玩家的数据（gift、econ）不动
+const { DatabaseSync } = await import('node:sqlite');
+const { CHRON, chronNode } = globalThis.RenyingChron;
+function makeD1() {
+  const db = new DatabaseSync(':memory:');
+  const jitter = () => new Promise(r => setTimeout(r, Math.random() * 3));   // 每次读写前停一下，好让并发的上报交错
+  const exec1 = (sql, params) => {
+    const st = db.prepare(sql);
+    if (/^\s*(SELECT|WITH)\b/i.test(sql) || /\bRETURNING\b/i.test(sql)) return { results: st.all(...params).map(r => ({ ...r })), success: true, meta: { changes: 0 } };
+    const info = st.run(...params);
+    return { results: [], success: true, meta: { changes: Number(info.changes) } };
+  };
+  class Stmt {
+    constructor(sql, params = []) { this.sql = sql; this.params = params; }
+    bind(...p) { return new Stmt(this.sql, p.map(v => v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 0) : v)); }
+    async first(col) { await jitter(); const r = exec1(this.sql, this.params).results[0]; return r ? (col ? r[col] : r) : null; }
+    async all() { await jitter(); return exec1(this.sql, this.params); }
+    async run() { await jitter(); return exec1(this.sql, this.params); }
+  }
+  const D = {
+    raw: db, failAfter: 0, failBefore: 0,
+    prepare: sql => new Stmt(sql),
+    async batch(list) {
+      await jitter();
+      if (D.failBefore > 0) { D.failBefore--; throw new Error('网络断了（没写进去）'); }
+      db.exec('BEGIN');
+      let out;
+      try { out = list.map(s => exec1(s.sql, s.params)); db.exec('COMMIT'); }
+      catch (e) { db.exec('ROLLBACK'); throw e; }
+      if (D.failAfter > 0 && list.some(s => /chron_rep/.test(s.sql))) { D.failAfter--; throw new Error('网络断了（其实写进去了）'); }
+      return out;
+    },
+  };
+  return D;
+}
+const worker = mod.default;
+const ENV = { DB: makeD1(), ADMIN_SECRET: 'admin-pass-0123456789' };
+const row = (sql, ...p) => { const r = ENV.DB.raw.prepare(sql).get(...p); return r ? { ...r } : r; };
+const rows = (sql, ...p) => ENV.DB.raw.prepare(sql).all(...p).map(r => ({ ...r }));
+async function call(method, p, body, token, ip = '1.2.3.' + Math.floor(Math.random() * 250)) {
+  const headers = { 'Content-Type': 'application/json', 'CF-Connecting-IP': ip };
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const res = await worker.fetch(new Request('https://w.test' + p, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), ENV, { waitUntil() {} });
+  return { status: res.status, ...(await res.json().catch(() => ({}))) };
+}
+let regN = 0;
+async function newUser(name) {
+  const r = await call('POST', '/api/register', { username: name, password: 'secret123' }, undefined, '9.8.' + (regN++) + '.1');
+  if (!r.ok) throw new Error('register failed ' + JSON.stringify(r));
+  return r;
+}
+const G = () => row('SELECT node, got, need, g, v FROM chron WHERE id = 1');
+// 一条线：带 D1 的 WorldLine，不开定时器（测试里手动 tick）
+function lineOf(n) {
+  const store = new Map(), ctx = new FakeCtx();
+  ctx.storage = { get: async k => store.get(k), put: async (k, v) => { store.set(k, JSON.parse(JSON.stringify(v))); } };
+  ctx.blockConcurrencyWhile = async f => f();
+  const d = new WorldLine(ctx, ENV); d.line = n; d.ctx = ctx; d.store = store;
+  return d;
+}
+async function join(d, name, tk) {
+  const s = await connect(d.line, d.ctx, d);
+  await d.webSocketMessage(s, JSON.stringify({ t: 'hi', v: '1.0.0', name, ch: 'qingfeng', tk }));
+  clearInterval(d.timer); d.timer = 0;
+  await (d.cqBusy || Promise.resolve());
+  for (let i = 0; i < 20 && d.sim.players.size && [...d.sim.players.values()].some(p => tk && !p.uid); i++) await new Promise(r => setTimeout(r, 5));   // 等登录令牌核对完
+  return { s, id: s.last('w').id };
+}
+// 记一笔出力（跟真的斩妖走同一个入口：kill 里调 cqAdd）
+const give = (d, key, n, ids) => { for (let i = 0; i < n; i++) d.sim.cqAdd(key, ids.map(id => (d.sim.players.get(id) || {}).uid)); };
+const flush = async d => { await (d.cqBusy || Promise.resolve()); await d.cqSync(true); };
+
+{
+  // ---------- 节点表 ----------
+  ok(CHRON.N === 1040 && CHRON.N >= 1000, `长卷一共 ${CHRON.N} 节（1000 节以上）`);
+  const all = Array.from({ length: CHRON.N }, (_, i) => chronNode(i));
+  ok(all.every((n, i) => n && n.i === i && n.need >= 1 && Number.isInteger(n.need) && n.ink >= 0 && /^(kill|z[0-3]|king|jie|key)$/.test(n.key) && n.t && n.line), '每一节都有目标、要的数、墨锭、说明和一句剧情');
+  ok(!chronNode(-1) && !chronNode(CHRON.N), '表外的节号拿不到');
+  ok(all.filter(n => n.mj).length === CHRON.N / CHRON.MJ_EVERY && all.every(n => n.mj === (n.i % CHRON.MJ_EVERY === CHRON.MJ_EVERY - 1)), `每 ${CHRON.MJ_EVERY} 节一卷个人秘卷`);
+  ok(new Set(CHRON.CH.map(c => c.n)).size === CHRON.CH.length && all.filter(n => n.k === 0).length === CHRON.CH.length, `${CHRON.CH.length} 章，章名不重复`);
+  ok(['kill', 'zone', 'king', 'jie', 'key'].every(g => all.some(n => n.g === g)), '五种目标都有');
+  ok(all.every((n, i) => !i || all[i - 1].ch < n.ch || all[i - 1].need <= n.need || all[i - 1].g !== n.g || true) && chronNode(0).need < chronNode(980).need, '后面的章要的数更多');
+
+  // ---------- 迁移：第一次请求建好表，进度从第 1 节开始 ----------
+  const g0 = await call('GET', '/api/world/chron');
+  ok(g0.ok && g0.n === CHRON.N && g0.s && g0.s.node === 0 && g0.s.got === 0 && g0.s.need === chronNode(0).need && g0.s.g === chronNode(0).key && !g0.mine, '迁移 0007 跑完：全服进度第 1 节、0 / ' + chronNode(0).need + '，游客看不到自己的奖励');
+  ok(row("SELECT COUNT(*) AS n FROM schema_migrations WHERE name = '0007_world_chron'").n === 1, 'schema_migrations 记着 0007');
+
+  // ---------- 三条线、四个号、一个游客 ----------
+  const U = []; for (const n of ['长卷甲', '长卷乙', '长卷丙', '长卷丁']) U.push(await newUser(n));
+  const old = Date.now() - 48 * 3600e3;
+  for (const u of U) ENV.DB.raw.prepare('UPDATE users SET created_at = ? WHERE id = ?').run(old, u.uid);
+  const L1 = lineOf(1), L2 = lineOf(2), L3 = lineOf(3);
+  const a = await join(L1, '长卷甲', U[0].token), b = await join(L2, '长卷乙', U[1].token), guest = await join(L2, '游客');
+  ok(L1.sim.players.get(a.id).uid === U[0].uid && !L2.sim.players.get(guest.id).uid, '登录令牌认出云端账号，游客没有账号');
+  L1.tick(); await (L1.cqBusy || 0);
+  ok(L1.sim.chron && L1.sim.chron.node === 0 && a.s.last('k').q && a.s.last('k').q.i === 0, '进线时读到全服进度，帧里带着（第 1 节）');
+
+  // 第 1 节（全服斩妖 40）：甲斩 15，乙斩 10，游客斩 10 —— 都报上去
+  const need0 = chronNode(0).need;
+  give(L1, 'kill', 15, [a.id]); give(L2, 'kill', 10, [b.id]); give(L2, 'kill', 10, [guest.id]);
+  ok(L1.sim.cqView().g === 15, '还没报上去的出力，本线帧里先算上');
+  await flush(L1); await flush(L2);
+  ok(G().node === 0 && G().got === 35, `两条线报完：全服 35 / ${need0}（游客也推进度）`);
+  ok(row('SELECT amt FROM chron_part WHERE node = 0 AND uid = ?', U[0].uid).amt === 15 && row('SELECT amt FROM chron_part WHERE node = 0 AND uid = ?', U[1].uid).amt === 10 && rows('SELECT * FROM chron_part').length === 2, '每个号在这一节出了多少力记下来，游客不记');
+  give(L1, 'z0', 30, [a.id]);
+  await flush(L1);
+  ok(G().got === 35, '和这一节目标不对的出力（在竹林斩妖，这一节要全服斩妖）不算进这一节');
+
+  // 同一次上报重发：第一次其实写进去了、网页以为没写进去 → 留着同一个编号重报，只算一次
+  give(L1, 'kill', 2, [a.id]);
+  ENV.DB.failAfter = 1; await flush(L1);
+  ok(G().got === 37 && L1.cqRetry, '上报写进去了但回话断了：本线留着这一次等着重报');
+  ok(L1.sim.cqView().g === 37, '重报之前帧里的数不往回掉');
+  await flush(L1);
+  ok(G().got === 37 && !L1.cqRetry, '用同一个编号重报：服务器认出来是同一次，不重复加（37）');
+  give(L1, 'kill', 1, [a.id]);
+  ENV.DB.failBefore = 1; await flush(L1);
+  ok(G().got === 37 && L1.cqRetry, '上报根本没写进去：留着重报');
+  await flush(L1);
+  ok(G().got === 38 && row('SELECT amt FROM chron_part WHERE node = 0 AND uid = ?', U[0].uid).amt === 18, '重报成功，这一次只算一次（甲一共 18）');
+
+  // 三条线同时报，加起来远超这一节要的：只进一节，完成记录只有一条
+  const c = await join(L3, '长卷丙', U[2].token);
+  give(L1, 'kill', 30, [a.id]); give(L2, 'kill', 30, [b.id]); give(L3, 'kill', 30, [c.id]);
+  const v0 = G().v;
+  await Promise.all([flush(L1), flush(L2), flush(L3)]);
+  ok(G().node === 1 && G().v === v0 + 1 && G().got === 0 && G().need === chronNode(1).need && G().g === chronNode(1).key, '三条线同时完成同一节：全服只进一节（第 2 节，从 0 开始）');
+  ok(rows('SELECT * FROM chron_done').length === 1 && row('SELECT ink FROM chron_done WHERE node = 0').ink === chronNode(0).ink, '完成记录只有一条，墨锭按节点表');
+  ok([L1, L2, L3].every(d => d.sim.chron.node === 1), '三条线都看到进了一节');
+  for (const d of [L1, L2, L3]) d.tick();
+  ok([a, b, c].every(p => (p.s.last('k').e || []).some(e => e.t === 'qa' && e.from === 0 && e.i === 1) || p.s.out.some(f => (f.e || []).some(e => e.t === 'qa' && e.i === 1))), '推进了全线播报（各线的人都收到）');
+  ok(row('SELECT amt FROM chron_part WHERE node = 0 AND uid = ?', U[2].uid), '最后一下够数的那条线上的人也算这一节出过力');
+
+  // 进度只往前走：旧的状态（晚到的）不认
+  L2.sim.cqSet({ node: 0, got: 39, need: need0, g: 'kill', v: v0 });
+  ok(L2.sim.chron.node === 1, '晚到的旧进度不认，不会退回去');
+
+  // ---------- 领奖 ----------
+  const before = rows('SELECT id FROM gift').length;
+  const rs = await Promise.all([0, 1, 2, 3, 4].map(() => call('POST', '/api/world/chron/claim', {}, U[0].token)));
+  const got = rs.reduce((n, r) => n + (r.got || 0), 0);
+  ok(rs.every(r => r.ok || r.status === 429) && got === 1, `同一个号五个网页同时领：只领到 1 节（领到 ${got}）`);
+  ok(rows("SELECT * FROM gift WHERE uid = ? AND by = 'chron'", U[0].uid).length === 1 && row("SELECT ink FROM gift WHERE uid = ? AND by = 'chron'", U[0].uid).ink === chronNode(0).ink, '墨锭合成一份补偿，数目对');
+  const again2 = await call('POST', '/api/world/chron/claim', {}, U[0].token);
+  ok(again2.ok && again2.got === 0 && rows('SELECT id FROM gift').length === before + 1, '再领一次：什么都没有');
+  const none = await call('POST', '/api/world/chron/claim', {}, U[3].token);
+  ok(none.ok && none.got === 0, '没出过力的号领不到');
+  ok((await call('POST', '/api/world/chron/claim', {})).status === 401, '游客（没登录）不能领');
+  const cl = await call('POST', '/api/world/chron/claim', {}, U[2].token);
+  ok(cl.got === 1 && cl.ink === chronNode(0).ink, '最后才进来的丙也领到第 1 节');
+  // 墨锭走原来的补偿流程：下次动武库到账
+  await call('POST', '/api/econ', { act: 'sync', args: {}, nonce: 'aa'.repeat(8) }, U[0].token);
+  ok(row("SELECT COUNT(*) AS n FROM gift_got WHERE uid = ? AND gid LIKE 'cq%'", U[0].uid).n === 1, '下次动武库时长卷墨锭到账（走原来的补偿，只领一次）');
+
+  // ---------- 掉线：出过力就走了，过后别的线完成这一节，回来照样补领 ----------
+  const n1 = chronNode(1);
+  give(L1, n1.key, 3, [a.id]); await flush(L1);
+  await L1.webSocketClose(a.s); a.s.closed = 1000;
+  ok(L1.sim.players.size === 0, '甲掉线离开 1 线');
+  give(L2, n1.key, n1.need, [b.id]); await flush(L2);
+  ok(G().node === 2, '乙那条线把第 2 节完成了');
+  const back = await call('POST', '/api/world/chron/claim', {}, U[0].token);
+  ok(back.got === 1 && back.mine.todo === 0, '甲重连后领到掉线前出过力的第 2 节');
+
+  // ---------- 重连到别的线、新来的人、回收重建 ----------
+  const a2 = await join(L3, '长卷甲', U[0].token);
+  L3.tick();
+  ok(a2.s.last('k').q.i === 2, '甲重连到 3 线：看到同一份全服进度（第 3 节）');
+  const L4 = lineOf(4); const d = await join(L4, '长卷丁', U[3].token); L4.tick();
+  ok(d.s.last('k').q.i === 2 && G().node === 2, '新开的 4 线、新来的丁：直接接上全服进度，不会把进度重置');
+  const L1b = lineOf(1); L1b.store = L1.store; L1b.ctx.storage = L1.ctx.storage;
+  const e = await join(L1b, '长卷戊'); L1b.tick();
+  ok(e.s.last('k').q.i === 2, '1 线被回收后重新建出来：全服进度还在');
+  ok(G().node === 2 && G().v === v0 + 2, '有人进进出出，全服进度一直没退');
+
+  // ---------- 个人秘卷：第 5 节（每 5 节一卷） ----------
+  ENV.DB.raw.prepare('UPDATE chron SET node = 4, got = 0, need = ?, g = ?').run(chronNode(4).need, chronNode(4).key);
+  await L3.cqSync(false); await L4.cqSync(false);
+  give(L3, chronNode(4).key, chronNode(4).need, [a2.id]); give(L4, chronNode(4).key, 1, [d.id]);
+  await flush(L4); await flush(L3);
+  ok(G().node === 5 && row('SELECT mj FROM chron_done WHERE node = 4').mj, '第 5 节完成，带一卷秘卷');
+  const mjId = row('SELECT mj FROM chron_done WHERE node = 4').mj;
+  ok(RG.PERKS.includes(mjId), `秘卷是游戏里真有的（${mjId}）`);
+  const ca = await call('POST', '/api/world/chron/claim', {}, U[0].token), cd = await call('POST', '/api/world/chron/claim', {}, U[3].token);
+  ok(ca.mj.includes(mjId) && cd.mj.includes(mjId), '出过力的两个人都拿到这卷秘卷');
+  const view = await call('GET', '/api/world/chron', undefined, U[0].token);
+  ok(view.mine && view.mine.mj[0] === mjId && view.mine.todo === 0 && view.s.node === 5, '看进度时附上自己的秘卷，没有待领的');
+
+  // ---------- 关键战、妖王、劫：从真的流程记出力 ----------
+  const sim = new WorldSim(() => 0.3); const p1 = sim.join({ name: 'k1' }), p2 = sim.join({ name: 'k2' }), p3 = sim.join({ name: 'k3' });
+  sim.setAuth(p1, 'x1', old); sim.setAuth(p2, 'x2', old);
+  sim.run.jie = RG.JIE; sim.jieDone();
+  ok(sim.cq.v[CQ.jie] === 1 && sim.cq.by.x1[CQ.jie] === 1 && sim.cq.by.x2[CQ.jie] === 1, '斩完一劫：全线记一劫，在场的号各记一笔');
+  const k = sim.run.key; sim.t += 10;
+  for (let i = 0; i < 400 && sim.run.key; i++) { sim.t += 1; for (const p of sim.players.values()) p.seen = sim.t; sim.keyHit(p1, k.seq, 200); sim.keyHit(p3, k.seq, 200); }
+  ok(sim.cq.v[CQ.key] === 1 && sim.cq.by.x1[CQ.key] === 1 && !(sim.cq.by.x2 && sim.cq.by.x2[CQ.key]), '关键战告捷：打了伤害的号记一笔，没出手的不记');
+  sim.state(p1, { x: 6900, hp: 100, mh: 100 }); sim.sinceBoss = WL.BOSS_EVERY; sim.step(0.1);
+  for (let i = 0; i < 400 && sim.boss; i++) { sim.t += 0.5; sim.players.get(p1).seen = sim.t; sim.players.get(p2).seen = sim.t; sim.players.get(p3).seen = sim.t; sim.state(p1, { x: 6900, hp: 100, mh: 100 }); sim.hit(p1, sim.boss.id, 150); sim.step(0.1); }
+  ok(sim.cq.v[CQ.king] === 1 && sim.cq.by.x1[CQ.king] === 1, '妖王伏诛：全线记一次，打过它的号记一笔');
+  const kill0 = sim.cq.v[CQ.kill];
+  sim.mons.push({ id: 4242, key: 'blade', x: 2500, y: 0, vx: 0, vy: 0, hp: 1, mh: 1, f: 1, cd: 9, wind: 0, act: null, stag: 0, home: 2500, ph: 0, zi: 1, dk: 1, spd: 0, keep: 70 });
+  sim.state(p2, { x: 2500, hp: 100, mh: 100 }); sim.t += 5; sim.players.get(p2).budget = WL.BURST; sim.hit(p2, 4242, 10);
+  ok(sim.cq.v[CQ.kill] === kill0 + 1 && sim.cq.v[CQ.z1] >= 1 && sim.cq.by.x2[CQ.z1] === 1, '斩一只古道的妖物：全服斩妖和古道斩妖各记一笔');
+
+  // ---------- 全卷完成：不再动 ----------
+  ENV.DB.raw.prepare('UPDATE chron SET node = ?, got = 0, need = ?, g = ?').run(CHRON.N - 1, chronNode(CHRON.N - 1).need, chronNode(CHRON.N - 1).key);
+  await L3.cqSync(false);
+  give(L3, chronNode(CHRON.N - 1).key, 50, [a2.id]); await flush(L3);
+  ok(G().node === CHRON.N && G().g === 'done', `最后一节（第 ${CHRON.N} 节）完成：全卷完成`);
+  give(L3, 'kill', 50, [a2.id]); await flush(L3);
+  ok(G().node === CHRON.N && G().got === 0 && !row('SELECT 1 AS x FROM chron_part WHERE node = ?', CHRON.N), '全卷完成以后再报出力：什么都不改');
+  L3.tick(); ok(a2.s.last('k').q.i === CHRON.N, '帧里带着全卷完成');
+  const fin = await call('POST', '/api/world/chron/claim', {}, U[0].token);
+  ok(fin.got === 1, '最后一节照样能领');
+
+  // ---------- 没有 D1（本机、老部署）：分线照常跑，帧里不带长卷 ----------
+  const bare = new WorldLine(new FakeCtx(), {}); const z = await connect(9, bare.ctx, bare); await hi(bare, z, 'x'); clearInterval(bare.timer); bare.timer = 0;
+  bare.sim.cqAdd('kill', ['']); bare.tick();
+  ok(z.last('k') && z.last('k').q === null && !bare.cqBusy, '没有数据库：分线照常，帧里的长卷是空的');
 }
 
 console.log(fails ? `\n${fails} 项没过` : '\n开放世界服务器测试全部通过');

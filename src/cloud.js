@@ -755,6 +755,11 @@
     if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
     return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
   }
+  // 全服肉鸽 · 江湖长卷：不带 act 是看全服进度（不登录也能看，登录了附上自己的秘卷和能领几节）；claim 领奖要云端账号
+  async function chron(act) {
+    if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能领长卷奖励'); e.status = 401; throw e; }
+    return api('/api/world/chron' + (act ? '/' + act : ''), act ? { method: 'POST', body: '{}' } : { method: 'GET' });
+  }
   // 功能开关：服务器管理后台按功能打开 / 关上（可以只对 Dev 账号开）。开局、登录、退出时读一次；
   // 读不到（断网、老版本服务器）就用上次读到的；从来没读到过就全当关着，和没有这个开关时一模一样
   const FLAG_CACHE_KEY = 'renying-srvflags';
@@ -1475,6 +1480,7 @@
       econ,
       market,
       gboss,
+      chron,
       saga,
       sagaMark,
       flushNow,

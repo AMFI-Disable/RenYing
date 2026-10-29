@@ -4,6 +4,7 @@
 // 自己打中妖物：本机先显示伤害，再跟着下一次上报一起交给服务器（服务器按距离和每秒上限封顶）。
 // 每线 40 人，满了自动去下一线；可以在弹窗里输入线号去找朋友。
 // 全服肉鸽：每条线一份共享进程（第几轮、第几劫、全线投票选出的秘卷、关键战），都以服务器为准，见文件末尾那一节。
+// 江湖长卷：全服所有分线一起推的剧情线（src/data/13-chron.js），进度、奖励都在服务器，见文件最后一节。
 const WORLD_W = 24000;
 const WORLD_ZONES = [
   { n: '竹林', a: 0, b: 2000, tint: '60,120,80', d: '刀鬼、弓妖、夜枭出没' },
@@ -76,6 +77,7 @@ function worldMsg(o) {
     W_.roster.clear(); for (const p of o.roster || []) W_.roster.set(p[0], p);
     try { localStorage.setItem('renying-world-line', String(o.line)); } catch (e) {}
     say(`江湖共斗 · ${o.line} 线`, 1.4, 'big', `已有 ${W_.roster.size} 位侠客在这条线上`);
+    cqLoad(true);   // 进线（含重连）：看一眼长卷，有没领的就领
   } else if (o.t === 'full') {
     W_.full = true; W_.status = `${o.line} 线已满，去 ${o.line + 1} 线…`;
   } else if (o.t === 're') worldHello();
@@ -100,6 +102,7 @@ function worldEvent(e) {
     W_.boss = null;
   } else if (e.t === 'bg') { say('妖王遁走', 1.4, 'big', '没能在时限内拿下，下回再战'); W_.boss = null; }
   else if (e.t === 'bw' && W_.boss) { W_.boss.warn = e.w; W_.boss.act = e.a; }
+  else if (e.t === 'qa') cqAdvanced(e);
   else rgEvent(e);
 }
 // 服务器的血量减去自己还没交上去的伤害；刚打过的 0.6 秒内只降不升，免得血条来回跳（服务器没认的伤害之后会补回来）
@@ -148,6 +151,7 @@ function worldFrame(o) {
     const b = W_.boss; b.tx = x; b.hp = worldHp(b, hp); b.maxHp = mh; b.face = f; b.act = act; b.life = life;
   } else W_.boss = null;
   if (o.r) rgFrame(o.r);
+  if (o.q) cqFrame(o.q);
   for (const e of o.e || []) worldEvent(e);
 }
 // 服务器说某只妖物出招了：本机把这一招放出来，只判定会不会打到自己
@@ -387,6 +391,7 @@ function drawWorldHUD() {
     ['本线斩妖', `${WORLD.kills} 只（你 ${WORLD.myKills}）`],
     [WORLD.boss ? '妖王' : '妖王现世', WORLD.boss ? `魔窟 · 余 ${WORLD.boss.life || 0} 秒` : `还差 ${WORLD.nb} 只`],
     ...rgHudRows(),
+    ...cqHudRows(),
   ];
   ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
   const title = cvT(key ? '全服肉鸽 · 关键战' : '江湖共斗 · 开放世界');
@@ -430,7 +435,7 @@ function worldEnter(line) {
   WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
   bpStart('world');
 }
-function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
+function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); cqLoad(false); }
 function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
 if ($id('mWorld')) $id('mWorld').addEventListener('click', () => { SFX.slice(); openWorldModal(); });
 if ($id('modalWorldClose')) $id('modalWorldClose').addEventListener('click', closeWorldModal);
@@ -526,18 +531,18 @@ function worldKeyEnter(k) {
     B.worldProxy = false; B.hidden = false; B.invul = 0;   // B 不再是妖物的代理，换成真打的魔首
     startRaidMatch([W_.hero, ...rgMates(W_.hero)], 3);
     creditT = 0; creditPending = false;
-    M.towerPerks = (rgRun().pk || []).slice(); scRoundStart();
+    M.towerPerks = cqKeyPerks(); scRoundStart();
     B.maxHp = k.mh; B.hp = B.lagHp = Math.max(1, k.hp); W_.kLastB = B.hp; M.timer = k.u;
-    say('天道 Boss · 全线共讨', 1.5, 'big', `融魂魔首【${M.raidBoss && M.raidBoss.heroNames ? M.raidBoss.heroNames.join('·') : ''}】· 共享 ${M.towerPerks.length} 卷秘卷`);
+    say('天道 Boss · 全线共讨', 1.5, 'big', `融魂魔首【${M.raidBoss && M.raidBoss.heroNames ? M.raidBoss.heroNames.join('·') : ''}】· 共享 ${(rgRun().pk || []).length} 卷秘卷`);
   } else {   // 真人不够：自己 + 2 名同袍车轮战 3 位天道侠客，秘卷照样带着，对面不带
     const foes = (k.h || []).map(id => CHAR_IDX[id]).filter(i => i !== undefined);
     while (foes.length < 3) foes.push((W_.hero + 5 + foes.length * 3) % CHARS.length);
     M.worldKey = { kind: 'trio', seq: k.s };
     B.worldProxy = false; B.hidden = false; B.invul = 0;
-    M.towerPerks = (rgRun().pk || []).slice(); M.foeScrolls = []; M.scRun = {};
+    M.towerPerks = cqKeyPerks(); M.foeScrolls = []; M.scRun = {};
     startTag3Match([W_.hero, ...rgMates(W_.hero)], foes, 'god');
     creditT = 0; creditPending = false;
-    say('天道车轮战', 1.5, 'big', `对阵【${foes.map(i => CHARS[i].name).join('·')}】· 带着 ${M.towerPerks.length} 卷共享秘卷`);
+    say('天道车轮战', 1.5, 'big', `对阵【${foes.map(i => CHARS[i].name).join('·')}】· 带着 ${(rgRun().pk || []).length} 卷共享秘卷`);
   }
 }
 // 关键战里每一步：记下自己这边打掉魔首多少血，每 0.25 秒交一次；顺便报个平安，免得服务器以为掉线
@@ -592,7 +597,6 @@ function worldResume() {
   worldEnterMode(WORLD.hero, b ? b.x : worldShrineX(3));
   say('回到江湖', 1, 'go', '秘卷保留，下一轮开始');
 }
-
 
 // ======================= 神行千里：传送至本线任意同道身旁 =======================
 function worldTeleportTo(tx, ty, name, targetId) {
@@ -722,3 +726,76 @@ window.addEventListener('keydown', e => {
     }
   }
 });
+
+// ======================= 全服肉鸽 · 江湖长卷：全服共享的剧情线 =======================
+// 全服只有一份进度（服务器 D1 的 chron 表），所有分线一起往下推，只会往前走：刷新、换线、掉线重连、隔几天再来看到的都是同一份。
+// 帧里的 q 是全服现在推到第几节、完成了多少（含本线还没报上去的）；推进了服务器全线播报一次（qa）。
+// 奖励只在服务器上算：这一节出过力的云端账号调一次 /api/world/chron/claim 就把出过力、完成了、还没领的节一起领了（一个号一节只领一次），
+// 墨锭下次打开武库时到账；每 CHRON.MJ_EVERY 节一卷个人秘卷，进关键战时在全线共享秘卷之外再带最近的 CHRON.PERS_MAX 卷。游客能推进度，不领奖。
+const CQS = { q: null, mine: null, busy: false, at: 0, want: false };
+const cqCloud = () => !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.chron && CloudSave.worldToken && CloudSave.worldToken());
+// 「竹林斩妖」「讨伐妖王」这类不带数的说法（HUD 上一行左边）
+const CQ_ZONE_GOAL = ['竹林斩妖', '古道斩妖', '山寨斩妖', '魔窟斩妖'];   // 和 CHRON.ZONE 同一顺序
+function cqGoalName(n) { return n.g === 'kill' ? '全服斩妖' : n.g === 'zone' ? CQ_ZONE_GOAL[n.z] : n.g === 'king' ? '讨伐妖王' : n.g === 'jie' ? '斩完劫数' : '关键战告捷'; }
+function cqFrame(q) {
+  const old = CQS.q;
+  if (old && (q.v < old.v || (q.v === old.v && q.g < old.g))) return;   // 晚到的旧帧不认，数只往上走
+  CQS.q = q;
+}
+function cqHudRows() {
+  const q = CQS.q; if (!q) return [];
+  if (q.i >= CHRON.N) return [['江湖长卷', '全卷完成']];
+  const n = chronNode(q.i); if (!n) return [];
+  return [['江湖长卷', `${CHRON.CH[n.ch].n} · 第 ${n.k + 1}/${n.len} 节`], [cqGoalName(n), `${q.g} / ${q.nd}`]];
+}
+// 全服推进了：开新章念章名，不然念下一节的剧情；登录了就去领
+function cqAdvanced(e) {
+  const n = chronNode(e.i), done = e.i - e.from;
+  if (M.worldKey) { /* 关键战里不打断大字，只弹一行提示 */ }
+  else if (!n) { say('江湖长卷 · 全卷完成', 2, 'big', '全服侠客一起写完了这一卷'); SFX.gong(); }
+  else if (n.k === 0) { say(`第 ${n.ch + 1} 章 · ${CHRON.CH[n.ch].n}`, 1.8, 'big', CHRON.CH[n.ch].d); SFX.gong(); }
+  else say(done > 1 ? `江湖长卷推进 ${done} 节` : `长卷第 ${e.from + 1} 节完成`, 1.3, 'go', n.line);
+  if (n) toast(`下一节：${n.t}`);
+  if (cqCloud()) cqClaim();
+}
+// 看全服进度（登录了附上自己的秘卷和能领几节），claim：有没领的就领
+async function cqLoad(claim) {
+  if (OFFLINE_BUILD || !window.CloudSave || !CloudSave.chron) return;
+  try {
+    const r = await CloudSave.chron();
+    if (r && r.s) { cqFrame({ i: r.s.node, g: r.s.got, nd: r.s.need, v: r.s.v }); }
+    if (r && r.mine) CQS.mine = r.mine;
+    cqModalText();
+    if (claim && cqCloud() && r && r.mine && r.mine.todo > 0) cqClaim();
+  } catch (e) {}
+}
+// 领奖：同一时间只领一次，领的时候又有新完成的就领完再领一次（服务器那边重复领也只算一次）
+async function cqClaim() {
+  if (!cqCloud()) return;
+  if (CQS.busy) { CQS.want = true; return; }
+  CQS.busy = true;
+  try {
+    const r = await CloudSave.chron('claim');
+    if (r && r.mine) CQS.mine = r.mine;
+    if (r && r.got > 0) {
+      const mj = (r.mj || []).map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean);
+      toast(`江湖长卷：领到 ${r.got} 节的奖励 · +${r.ink} 墨锭（下次打开武库到账）${mj.length ? ` · 秘卷${mj.join('、')}` : ''}`, 4);
+    }
+    if (r && r.mine && r.mine.todo > 0) CQS.want = true;
+  } catch (e) {}
+  CQS.busy = false;
+  if (CQS.want) { CQS.want = false; setTimeout(cqClaim, 1500); }
+}
+// 关键战带的秘卷：全线共享的，再加长卷里拿到的最近几卷个人秘卷（不重复）
+function cqKeyPerks() {
+  const shared = ((rgRun() && rgRun().pk) || []).slice();
+  const mine = ((CQS.mine && CQS.mine.mj) || []).filter(id => SC_BY[id] && !shared.includes(id)).slice(0, CHRON.PERS_MAX);
+  return shared.concat(mine);
+}
+// 首页「开放世界」弹窗里的一行：全服推到第几节
+function cqModalText() {
+  const el = $id('worldChron'), q = CQS.q; if (!el || !q) return;
+  const n = chronNode(q.i);
+  const mine = CQS.mine ? ` · 个人秘卷 ${CQS.mine.mj.length} 卷` : '';
+  el.textContent = n ? `江湖长卷 · 全服第 ${q.i + 1} / ${CHRON.N} 节 · ${CHRON.CH[n.ch].n}${mine}` : `江湖长卷 · 全卷完成${mine}`;
+}

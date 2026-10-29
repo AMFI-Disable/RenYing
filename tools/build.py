@@ -194,6 +194,7 @@ def page(offline):
 
 CORE_IMPORT = "import '../src/armory-core.js';\n"
 MIG_IMPORT = "import { MIGRATIONS } from './migrations.gen.js';\n"
+CHRON_IMPORT = "import '../src/data/13-chron.js';\n"
 ADMIN_LINE = "const ADMIN_PAGE = { html: '', sha: '' };\n"
 NAMES_MARK = "/*@names*/null"
 
@@ -261,13 +262,14 @@ def migrations_js():
 def worker_bundle():
     """Cloudflare Worker：把 worker.js 引用的武库规则原样拼进去，浏览器和服务器用的是同一份规则；管理网页也放进去"""
     src = read(ROOT, "cloudflare", "worker.js")
-    for line in (CORE_IMPORT, ADMIN_LINE, MIG_IMPORT):
+    for line in (CORE_IMPORT, ADMIN_LINE, MIG_IMPORT, CHRON_IMPORT):
         if src.count(line) != 1:
             raise SystemExit("cloudflare/worker.js 里应该正好有一行 " + line.strip())
     html, _, sha = admin_page()
     src = src.replace(ADMIN_LINE, "const ADMIN_PAGE = { html: " + json.dumps(html, ensure_ascii=False) + ", sha: '" + sha + "' };\n")
     src = src.replace(MIG_IMPORT, migrations_js().split("\n", 1)[1].replace("export const", "const", 1))
-    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html、cloudflare/migrations/*.sql 和 src/armory-core.js 再重新生成。\n"
+    src = src.replace(CHRON_IMPORT, "/* === src/data/13-chron.js === */\n" + read(SRC, "data", "13-chron.js") + "\n")   # 全服肉鸽的长卷节点表：浏览器和服务器用同一份
+    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html、cloudflare/migrations/*.sql、src/armory-core.js 和 src/data/13-chron.js 再重新生成。\n"
     return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + read(SRC, "armory-core.js") + "\n/* === cloudflare/worker.js === */\n")
 
 

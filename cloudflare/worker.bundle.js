@@ -1,4 +1,4 @@
-// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html、cloudflare/migrations/*.sql 和 src/armory-core.js 再重新生成。
+// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html、cloudflare/migrations/*.sql、src/armory-core.js 和 src/data/13-chron.js 再重新生成。
 /**
  * 刃影 Cloudflare Worker：云端账号、存档同步、武库经济、反作弊
  *
@@ -975,8 +975,113 @@ const MIGRATIONS = [
   {"id": 3, "name": "0003_slow_request_timing", "sum": "88e0793ec908b297", "sql": ["ALTER TABLE errs ADD COLUMN ms INTEGER NOT NULL DEFAULT 0", "ALTER TABLE errs ADD COLUMN ms_sum INTEGER NOT NULL DEFAULT 0"]},
   {"id": 4, "name": "0004_session_device", "sum": "16bcaad80842a309", "sql": ["ALTER TABLE sessions ADD COLUMN dev TEXT NOT NULL DEFAULT ''", "CREATE INDEX IF NOT EXISTS idx_sessions_dev ON sessions(dev)"]},
   {"id": 5, "name": "0005_account_soft_delete", "sum": "71f9e80147327174", "sql": ["ALTER TABLE users ADD COLUMN deleted_at INTEGER NOT NULL DEFAULT 0", "CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted_at) WHERE deleted_at > 0"]},
-  {"id": 6, "name": "0006_check_constraints", "sum": "f102df6f07c628bf", "sql": ["CREATE TABLE econ_new (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL CHECK (ink >= 0), ver INTEGER NOT NULL CHECK (ver >= 0), updated_at INTEGER NOT NULL)", "INSERT INTO econ_new (uid, state_json, srv_json, ink, ver, updated_at) SELECT uid, state_json, srv_json, MAX(ink, 0), MAX(ver, 0), updated_at FROM econ", "DROP TABLE econ", "ALTER TABLE econ_new RENAME TO econ", "CREATE TABLE mkt_new (id TEXT PRIMARY KEY, seller TEXT NOT NULL, k TEXT NOT NULL, st INTEGER NOT NULL CHECK (st >= -1), item_json TEXT NOT NULL, price INTEGER NOT NULL CHECK (price >= 1), at INTEGER NOT NULL, state INTEGER NOT NULL DEFAULT 0 CHECK (state IN (0, 1, 2)), buyer TEXT, done_at INTEGER, paid INTEGER NOT NULL DEFAULT 0 CHECK (paid IN (0, 1)), tx TEXT)", "INSERT INTO mkt_new (id, seller, k, st, item_json, price, at, state, buyer, done_at, paid, tx) SELECT id, seller, k, MAX(st, -1), item_json, MAX(price, 1), at, CASE WHEN state IN (0, 1, 2) THEN state ELSE 2 END, buyer, done_at, CASE WHEN paid = 0 THEN 0 ELSE 1 END, tx FROM mkt", "DROP TABLE mkt", "ALTER TABLE mkt_new RENAME TO mkt", "CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price)", "CREATE INDEX IF NOT EXISTS idx_mkt_seller ON mkt (seller, state, paid)", "CREATE INDEX IF NOT EXISTS idx_mkt_done ON mkt (state, done_at)", "CREATE TABLE sanctions_new (uid TEXT PRIMARY KEY, strikes INTEGER NOT NULL DEFAULT 0 CHECK (strikes >= 0), ban_until INTEGER NOT NULL DEFAULT 0, perm INTEGER NOT NULL DEFAULT 0 CHECK (perm IN (0, 1)), log_json TEXT NOT NULL DEFAULT '[]', at INTEGER NOT NULL DEFAULT 0, pardon INTEGER NOT NULL DEFAULT 0)", "INSERT INTO sanctions_new (uid, strikes, ban_until, perm, log_json, at, pardon) SELECT uid, MAX(strikes, 0), ban_until, CASE WHEN perm = 0 THEN 0 ELSE 1 END, log_json, at, pardon FROM sanctions", "DROP TABLE sanctions", "ALTER TABLE sanctions_new RENAME TO sanctions"]}
+  {"id": 6, "name": "0006_check_constraints", "sum": "f102df6f07c628bf", "sql": ["CREATE TABLE econ_new (uid TEXT PRIMARY KEY, state_json TEXT NOT NULL, srv_json TEXT NOT NULL, ink INTEGER NOT NULL CHECK (ink >= 0), ver INTEGER NOT NULL CHECK (ver >= 0), updated_at INTEGER NOT NULL)", "INSERT INTO econ_new (uid, state_json, srv_json, ink, ver, updated_at) SELECT uid, state_json, srv_json, MAX(ink, 0), MAX(ver, 0), updated_at FROM econ", "DROP TABLE econ", "ALTER TABLE econ_new RENAME TO econ", "CREATE TABLE mkt_new (id TEXT PRIMARY KEY, seller TEXT NOT NULL, k TEXT NOT NULL, st INTEGER NOT NULL CHECK (st >= -1), item_json TEXT NOT NULL, price INTEGER NOT NULL CHECK (price >= 1), at INTEGER NOT NULL, state INTEGER NOT NULL DEFAULT 0 CHECK (state IN (0, 1, 2)), buyer TEXT, done_at INTEGER, paid INTEGER NOT NULL DEFAULT 0 CHECK (paid IN (0, 1)), tx TEXT)", "INSERT INTO mkt_new (id, seller, k, st, item_json, price, at, state, buyer, done_at, paid, tx) SELECT id, seller, k, MAX(st, -1), item_json, MAX(price, 1), at, CASE WHEN state IN (0, 1, 2) THEN state ELSE 2 END, buyer, done_at, CASE WHEN paid = 0 THEN 0 ELSE 1 END, tx FROM mkt", "DROP TABLE mkt", "ALTER TABLE mkt_new RENAME TO mkt", "CREATE INDEX IF NOT EXISTS idx_mkt_k ON mkt (k, state, price)", "CREATE INDEX IF NOT EXISTS idx_mkt_seller ON mkt (seller, state, paid)", "CREATE INDEX IF NOT EXISTS idx_mkt_done ON mkt (state, done_at)", "CREATE TABLE sanctions_new (uid TEXT PRIMARY KEY, strikes INTEGER NOT NULL DEFAULT 0 CHECK (strikes >= 0), ban_until INTEGER NOT NULL DEFAULT 0, perm INTEGER NOT NULL DEFAULT 0 CHECK (perm IN (0, 1)), log_json TEXT NOT NULL DEFAULT '[]', at INTEGER NOT NULL DEFAULT 0, pardon INTEGER NOT NULL DEFAULT 0)", "INSERT INTO sanctions_new (uid, strikes, ban_until, perm, log_json, at, pardon) SELECT uid, MAX(strikes, 0), ban_until, CASE WHEN perm = 0 THEN 0 ELSE 1 END, log_json, at, pardon FROM sanctions", "DROP TABLE sanctions", "ALTER TABLE sanctions_new RENAME TO sanctions"]},
+  {"id": 7, "name": "0007_world_chron", "sum": "f8499526f71b09a2", "sql": ["CREATE TABLE IF NOT EXISTS chron (id INTEGER PRIMARY KEY CHECK (id = 1), node INTEGER NOT NULL DEFAULT 0 CHECK (node >= 0), got INTEGER NOT NULL DEFAULT 0 CHECK (got >= 0), need INTEGER NOT NULL DEFAULT 1 CHECK (need >= 1), g TEXT NOT NULL DEFAULT 'kill', v INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL DEFAULT 0)", "INSERT OR IGNORE INTO chron (id, node, got, need, g, v, at) VALUES (1, 0, 0, 40, 'kill', 0, 0)", "CREATE TABLE IF NOT EXISTS chron_rep (rid TEXT PRIMARY KEY, nonce TEXT NOT NULL, at INTEGER NOT NULL)", "CREATE INDEX IF NOT EXISTS idx_chron_rep_at ON chron_rep (at)", "CREATE TABLE IF NOT EXISTS chron_part (node INTEGER NOT NULL, uid TEXT NOT NULL, amt INTEGER NOT NULL DEFAULT 0 CHECK (amt >= 0), PRIMARY KEY (node, uid))", "CREATE INDEX IF NOT EXISTS idx_chron_part_uid ON chron_part (uid, node)", "CREATE TABLE IF NOT EXISTS chron_done (node INTEGER PRIMARY KEY, at INTEGER NOT NULL, line INTEGER NOT NULL DEFAULT 0, ink INTEGER NOT NULL DEFAULT 0 CHECK (ink >= 0), mj TEXT NOT NULL DEFAULT '')", "CREATE TABLE IF NOT EXISTS chron_claim (node INTEGER NOT NULL, uid TEXT NOT NULL, cn TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (node, uid))", "CREATE INDEX IF NOT EXISTS idx_chron_claim_uid ON chron_claim (uid, cn)"]}
 ];
+/* === src/data/13-chron.js === */
+// ======================= 全服肉鸽 · 江湖长卷：全服共享的剧情线 =======================
+// 所有分线、所有侠客一起往下推同一卷剧情：全服只有一份进度（存在 D1 的 chron 表，cloudflare/worker.js 的 chron* 一节），只会往前走。
+// 每一节要全服一起完成一个目标（斩妖、在某一段斩妖、讨伐妖王、斩完几劫、关键战告捷），够数了就进下一节；
+// 这一节出过力的云端账号能领一次奖励（墨锭，每 CHRON.MJ_EVERY 节还有一卷个人秘卷），掉线、换线、过几天再来都能补领，只领一次。
+// 浏览器（src/game/22-world.js）和服务器（打包进 cloudflare/worker.bundle.js）用的是这同一份表。
+//   CH       章：n 名字，d 开章时的一句话。前 50 章每章 CHRON.PER 节，最后一章（尾声）CHRON.TAIL 节
+//   PLAN     一章里每一节的目标，按顺序排；尾声把这一排走两遍
+//   GOAL     目标：need(ch) 全服要完成多少（ch 是第几章，从 0 数），t 这一节的说明
+//   ZONE     「某一段斩妖」用的段名（和 WL.ZONES、WORLD_ZONES 同一顺序）
+//   墨锭     INK0 + 章数 / 2，每章最后一节另加 INK_END
+const CHRON = {
+  PER: 20, TAIL: 40, MJ_EVERY: 5, PERS_MAX: 3, INK0: 5, INK_END: 40,
+  ZONE: ['竹林', '古道', '山寨', '魔窟'],
+  CH: [
+    { n: '竹林初劫', d: '竹林里妖气初起，第一批侠客拔剑入林。' },
+    { n: '夜枭鸣山', d: '夜枭整夜啼叫，山里的路越来越难走。' },
+    { n: '刀鬼出鞘', d: '刀鬼成群下山，见人就砍。' },
+    { n: '弓妖伏道', d: '弓妖埋伏在道旁，过路的商队不敢出门。' },
+    { n: '古道迷踪', d: '古道上起了雾，走进去的人没有回来。' },
+    { n: '缚灵夜行', d: '缚灵趁夜出没，把人困在原地。' },
+    { n: '断桥残雪', d: '桥断了，雪地上全是妖物的脚印。' },
+    { n: '荒驿孤灯', d: '荒废的驿站里还亮着一盏灯。' },
+    { n: '山寨狼烟', d: '山寨升起狼烟，妖物占了寨子。' },
+    { n: '咒师聚众', d: '咒师聚在寨里，日夜念咒。' },
+    { n: '火柱连天', d: '咒火一根接一根冲上天。' },
+    { n: '寨门血誓', d: '侠客们在寨门前立誓，不破此寨不回头。' },
+    { n: '魔窟初探', d: '第一批侠客摸进了魔窟。' },
+    { n: '妖王低语', d: '魔窟深处传来妖王的低语。' },
+    { n: '血月当空', d: '血月升起，妖物都发了狂。' },
+    { n: '群妖朝拜', d: '群妖往魔窟聚拢，像在朝拜什么。' },
+    { n: '竹海听涛', d: '风过竹海，侠客们暂得喘息。' },
+    { n: '青锋试剑', d: '新铸的剑要在妖物身上试锋。' },
+    { n: '雾锁长亭', d: '长亭被浓雾锁住，送别的人出不来。' },
+    { n: '古刹钟鸣', d: '山中古刹的钟无人自鸣。' },
+    { n: '鬼市开张', d: '半夜的鬼市开张了，卖的都是妖物的东西。' },
+    { n: '风雪归人', d: '风雪里有人赶路回乡，侠客一路护送。' },
+    { n: '铁索横江', d: '妖物用铁索拦住了江面。' },
+    { n: '烽火连营', d: '一座座营寨点起烽火，江湖都动了起来。' },
+    { n: '天道初现', d: '天上裂开一道口子，天道第一次露了面。' },
+    { n: '星落平野', d: '星星落在平野上，砸出一个个妖穴。' },
+    { n: '寒潭映月', d: '寒潭底下有东西在动。' },
+    { n: '百鬼夜行', d: '一百只妖物排成一列，在夜里穿过村庄。' },
+    { n: '孤城落日', d: '孤城被围，城头只剩几位侠客。' },
+    { n: '剑冢问心', d: '剑冢里的旧剑在问来人为什么拔剑。' },
+    { n: '金鼓雷鸣', d: '战鼓响起，全江湖一起出战。' },
+    { n: '雁门秋声', d: '雁群南飞，关外的妖物也跟着南下。' },
+    { n: '墨雨江南', d: '江南下起墨一样的雨。' },
+    { n: '玉门关外', d: '关外的风沙里藏着妖物的大营。' },
+    { n: '大漠孤烟', d: '大漠里只有一缕烟，那是妖物的信号。' },
+    { n: '黄沙埋骨', d: '黄沙底下埋着上一代侠客的剑。' },
+    { n: '天山雪莲', d: '天山上的雪莲能解妖毒，妖物守着不让采。' },
+    { n: '昆仑云深', d: '昆仑山云很深，妖王的影子在云里走。' },
+    { n: '蜀道难行', d: '蜀道上的妖物把栈道一段段拆了。' },
+    { n: '巫峡猿啼', d: '峡里的猿啼声变成了妖物的嘶吼。' },
+    { n: '洞庭秋水', d: '洞庭湖水变黑了。' },
+    { n: '岳阳论剑', d: '各路侠客在楼上论剑，商量最后一战。' },
+    { n: '姑苏夜泊', d: '夜里泊船的地方，妖物从水里爬上来。' },
+    { n: '钱塘潮起', d: '大潮里卷着成群的妖物。' },
+    { n: '东海蓬莱', d: '海上的仙山也被妖气染黑了。' },
+    { n: '天涯海角', d: '一路打到天涯海角，妖物已经无处可退。' },
+    { n: '万妖归墟', d: '所有的妖物都往归墟退去。' },
+    { n: '魔首将醒', d: '归墟深处，融魂魔首快要醒了。' },
+    { n: '天道裁决', d: '天道亲自出手，要看江湖配不配活下去。' },
+    { n: '江湖同归', d: '全江湖的侠客站到了一起。' },
+    { n: '长卷余韵', d: '大战过后，江湖还要守下去。' },
+  ],
+  PLAN: ['kill', 'zone', 'kill', 'jie', 'zone', 'kill', 'king', 'zone', 'kill', 'jie', 'zone', 'kill', 'king', 'zone', 'jie', 'kill', 'zone', 'king', 'jie', 'key'],
+  GOAL: {
+    kill: { need: ch => 40 + 6 * ch, t: n => `全服斩妖 ${n} 只` },
+    zone: { need: ch => 25 + 4 * ch, t: (n, z) => `${z}斩妖 ${n} 只` },
+    king: { need: ch => 1 + Math.floor(ch / 10), t: n => `讨伐妖王 ${n} 次` },
+    jie: { need: ch => 2 + Math.floor(ch / 8), t: n => `斩完 ${n} 劫` },
+    key: { need: ch => 1 + Math.floor(ch / 25), t: n => `关键战告捷 ${n} 次` },
+  },
+  // 每一节的一句剧情：按目标分，按节数轮着用
+  LINE: {
+    kill: ['妖物越聚越多，先把眼前的清干净。', '有村子求救，侠客们连夜赶去。', '妖气散了一些，还不够。', '一路斩过去，给后来的人开出一条路。'],
+    zone: ['这一段的妖物最凶，全服的侠客往这里聚。', '有人在这一段失踪了，去把他找回来。', '守住这一段，别让妖物往外走。', '这一段的土地庙快守不住了。'],
+    king: ['妖王又出来了，这次要把它打回去。', '妖王身上带着线索，得打倒它才拿得到。', '妖王在魔窟里召集手下。', '打倒妖王，魔窟会安静一阵子。'],
+    jie: ['一劫一劫地斩过去，天道在看着。', '每斩完一劫，江湖就稳一分。', '劫数未尽，不能停手。', '斩完这几劫，下一段路才会打开。'],
+    key: ['这一章到了最后，天道派来了守关的人。', '关键战打赢了，这一章才算写完。', '全线一起出手，赢下这一战。', '守关的人很强，带上秘卷再去。'],
+  },
+};
+CHRON.N = (CHRON.CH.length - 1) * CHRON.PER + CHRON.TAIL;   // 一共多少节（现在 1040）
+// 第 i 节（从 0 数）：第几章、章里第几节、目标、要多少、奖励。全服进度、浏览器显示、服务器发奖都按这个算
+function chronNode(i) {
+  i = Math.floor(+i);
+  if (!(i >= 0 && i < CHRON.N)) return null;
+  const P = CHRON.PER, last = CHRON.CH.length - 1;
+  const ch = Math.min(last, Math.floor(i / P)), k = i - ch * P, len = ch === last ? CHRON.TAIL : P;
+  const g = CHRON.PLAN[k % P], need = CHRON.GOAL[g].need(ch), z = g === 'zone' ? (ch + k) % CHRON.ZONE.length : -1;
+  const end = k === len - 1;
+  return {
+    i, ch, k, len, g, z, need,
+    key: g === 'zone' ? 'z' + z : g,   // 服务器计数用的键：kill、z0 ~ z3、king、jie、key
+    ink: CHRON.INK0 + Math.floor(ch / 2) + (end ? CHRON.INK_END : 0),
+    mj: i % CHRON.MJ_EVERY === CHRON.MJ_EVERY - 1,
+    t: CHRON.GOAL[g].t(need, z >= 0 ? CHRON.ZONE[z] : ''),
+    line: CHRON.LINE[g][(ch + k) % CHRON.LINE[g].length],
+  };
+}
+if (typeof globalThis !== 'undefined') globalThis.RenyingChron = { CHRON, chronNode };   // 服务器（cloudflare/worker.js）从这里拿
+
 
 const C = globalThis.ArmoryCore;
 
@@ -2690,6 +2795,7 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM mkt WHERE state = 1 AND paid = 1 AND done_at < ?').bind(now - 120 * DAY_MS),   // 成交记录留四个月（价格走势用）
     env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - 10 * 60e3),
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),
+    env.DB.prepare('DELETE FROM chron_rep WHERE at < ?').bind(now - 2 * DAY_MS),                         // 分线上报的去重编号：重报只会在几分钟里，留两天够了
   ]);
 }
 
@@ -2921,6 +3027,80 @@ async function sagaMarkPost(env, auth, body, now) {
   return json({ ok: true });
 }
 
+/* ---------- 全服肉鸽 · 江湖长卷：全服共享的剧情进度（D1 的 chron 表，节点表在 src/data/13-chron.js） ----------
+ * 分线（WorldLine）报出力：chronReport 一个 batch 就是一个事务——先插这次上报的编号（chron_rep，重发的插不进去），
+ * 后面每一句都要求「这个编号是这一次插进去的」（nonce 对得上）才生效，所以同一次上报重发多少遍都只算一次。
+ * 出力只算进全服当前这一节：每个号在这一节出了多少力记进 chron_part，全服完成数 got 往上加、最多加到 need。
+ * 够数了 chronAdvance 推到下一节：UPDATE … WHERE node = 这一节 AND got >= need，几条线同时推只有一条推得动，进度只进一节、只会往前走。
+ * 完成的节写进 chron_done（墨锭、秘卷按 13-chron.js 当时算好），玩家调 /api/world/chron/claim 自己领。 */
+const CQ_COLS = 'node, got, need, g, v';
+const cqAmt = base => `CASE g ${CQ_KEYS.map((k, i) => `WHEN '${k}' THEN ?${base + i}`).join(' ')} ELSE 0 END`;   // 按全服当前这一节的目标，取出力里对应的那个数
+async function chronRead(env) {
+  await ensureSchema(env);
+  return await env.DB.prepare(`SELECT ${CQ_COLS} FROM chron WHERE id = 1`).first();
+}
+async function chronReport(env, line, out, now) {
+  await ensureSchema(env);
+  const DB = env.DB, nonce = randHex(8), num = n => Math.max(0, Math.min(1e6, Math.floor(+n) || 0));
+  const mine = 'EXISTS (SELECT 1 FROM chron_rep WHERE rid = ?1 AND nonce = ?2)', amt = cqAmt(3);   // ?1 编号、?2 nonce、?3 ~ ?10 八个数
+  const st = [DB.prepare('INSERT OR IGNORE INTO chron_rep (rid, nonce, at) VALUES (?, ?, ?)').bind(String(out.rid).slice(0, 64), nonce, now)];
+  for (const [uid, v] of Object.entries(out.by || {}).slice(0, CQ_T.MAX_UID)) {
+    st.push(DB.prepare(`INSERT INTO chron_part (node, uid, amt) SELECT node, ?11, ${amt} FROM chron WHERE id = 1 AND node < ?12 AND ${amt} > 0 AND ${mine} ON CONFLICT(node, uid) DO UPDATE SET amt = amt + excluded.amt`)
+      .bind(String(out.rid).slice(0, 64), nonce, ...CQ_KEYS.map((_, i) => num(v[i])), String(uid), CQ.N));
+  }
+  st.push(DB.prepare(`UPDATE chron SET got = MIN(need, got + ${amt}), at = ?11 WHERE id = 1 AND node < ?12 AND ${mine}`)
+    .bind(String(out.rid).slice(0, 64), nonce, ...CQ_KEYS.map((_, i) => num(out.v[i])), now, CQ.N));
+  st.push(DB.prepare(`SELECT ${CQ_COLS} FROM chron WHERE id = 1`));
+  const res = await DB.batch(st);
+  return chronAdvance(env, (res[res.length - 1].results || [])[0], line, now);
+}
+// 这一节够数了：推到下一节，写下完成记录。别的线已经推过了就什么都不改（WHERE node = 这一节）
+async function chronAdvance(env, s, line, now) {
+  const DB = env.DB;
+  for (let k = 0; k < 3 && s && s.node < CQ.N && s.got >= s.need; k++) {
+    const cur = cqNode(s.node), nx = cqNode(s.node + 1);
+    const res = await DB.batch([
+      DB.prepare('UPDATE chron SET node = node + 1, got = 0, need = ?, g = ?, v = v + 1, at = ? WHERE id = 1 AND node = ? AND got >= need').bind(nx ? nx.need : 1, nx ? nx.key : 'done', now, s.node),
+      DB.prepare('INSERT OR IGNORE INTO chron_done (node, at, line, ink, mj) SELECT ?1, ?2, ?3, ?4, ?5 WHERE (SELECT node FROM chron WHERE id = 1) > ?1').bind(s.node, now, line | 0, cur.ink, cur.mj ? cqMj(cur.i) : ''),
+      DB.prepare(`SELECT ${CQ_COLS} FROM chron WHERE id = 1`),
+    ]);
+    s = (res[2].results || [])[0];
+  }
+  return s;
+}
+// 我在长卷里拿到的个人秘卷（新的在前，不重复）、还有几节能领
+async function chronMine(env, uid) {
+  const [mj, todo] = await env.DB.batch([
+    env.DB.prepare("SELECT d.mj AS mj FROM chron_claim c JOIN chron_done d ON d.node = c.node WHERE c.uid = ? AND d.mj != '' ORDER BY c.node DESC LIMIT 300").bind(uid),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM chron_part p JOIN chron_done d ON d.node = p.node WHERE p.uid = ?1 AND p.amt > 0 AND NOT EXISTS (SELECT 1 FROM chron_claim c WHERE c.node = p.node AND c.uid = ?1)').bind(uid),
+  ]);
+  return { mj: [...new Set((mj.results || []).map(r => r.mj).filter(id => RG.PERKS.includes(id)))], todo: ((todo.results || [])[0] || {}).n || 0 };
+}
+async function chronGet(env, uid) {
+  const s = await chronRead(env);
+  const done = (await env.DB.prepare('SELECT node, at, line FROM chron_done ORDER BY node DESC LIMIT 5').all()).results || [];
+  return { ok: true, n: CQ.N, s: s || null, done, mine: uid ? await chronMine(env, uid) : null };
+}
+// 领奖：出过力、已经完成、还没领过的节一次领完（最多 500 节，多的下次再领）。主键 (node, uid) 挡住重复领，几个网页同时点也只领一次；
+// 墨锭合成一份 gift（编号跟着这一次领取走，下次动武库时自动到账），秘卷记在 chron_claim 里（进关键战时带上）
+async function chronClaim(env, auth, now) {
+  const uid = auth.user.id, DB = env.DB;
+  const ban = await banOf(env, uid, now);
+  if (ban) return banned(ban);
+  if (!(await hit(env, 'cqc:' + uid, 20, 60e3, now))) return error('领得太快了，歇一会儿再试', 429);
+  await ensureSchema(env);
+  const cn = randHex(8);
+  const res = await DB.batch([
+    DB.prepare('INSERT OR IGNORE INTO chron_claim (node, uid, cn, at) SELECT d.node, ?1, ?2, ?3 FROM chron_done d JOIN chron_part p ON p.node = d.node AND p.uid = ?1 WHERE p.amt > 0 AND NOT EXISTS (SELECT 1 FROM chron_claim c WHERE c.node = d.node AND c.uid = ?1) ORDER BY d.node LIMIT 500').bind(uid, cn, now),
+    DB.prepare("INSERT OR IGNORE INTO gift (id, uid, ink, items_json, note, by, at, until, born) SELECT 'cq' || ?2 || '_' || ?1, ?1, SUM(d.ink), '{}', ?4, 'chron', ?3, ?5, ?3 + 1 FROM chron_claim c JOIN chron_done d ON d.node = c.node WHERE c.uid = ?1 AND c.cn = ?2 GROUP BY c.uid HAVING COUNT(*) > 0 AND SUM(d.ink) > 0")
+      .bind(uid, cn, now, '全服肉鸽 · 江湖长卷奖励', now + 30 * DAY_MS),
+    DB.prepare('SELECT c.node AS node, d.ink AS ink, d.mj AS mj FROM chron_claim c JOIN chron_done d ON d.node = c.node WHERE c.uid = ? AND c.cn = ? ORDER BY c.node').bind(uid, cn),
+  ]);
+  const rows = res[2].results || [], ink = rows.reduce((a, r) => a + (+r.ink || 0), 0), mj = rows.map(r => r.mj).filter(Boolean);
+  if (rows.length) await logRow(env, uid, now, 'chron_claim', 1, null, null, JSON.stringify({ n: rows.length, from: rows[0].node, to: rows[rows.length - 1].node, ink, mj }));
+  return json({ ok: true, got: rows.length, ink, mj, mine: await chronMine(env, uid) });
+}
+
 /* ---------- 江湖共斗 · 开放世界（/api/world/line/N，WebSocket） ----------
    一条分线 = 一个 Durable Object（WorldLine）。妖物和妖王由服务器每秒模拟 10 次；每位侠客只在自己的网页里模拟，
    服务器只收「我在哪、在做什么、打中了哪只妖物多少伤害」，伤害按距离和每秒上限封顶，改网页也刷不动。
@@ -2948,7 +3128,7 @@ const WL = {
    以服务器为准）。打赢了，够资格的云端账号由服务器写进 gift 表发一件随机星座皮肤（下次动武库自动领）。
    奖励相关的数都在 RG 里，改这里就行。 */
 const RG = {
-  JIE: 5, VOTE_T: 15, PERK_MAX: 24, EMPTY_RESET: 10 * 60e3,
+  JIE: 5, VOTE_T: 15, PERK_MAX: 24,
   NEED0: 20, NEED_PER: 5, NEED_MAX: 150, CYC_HP: 0.15, CYC_HP_MAX: 3,   // 每劫要斩几只：20 + 每人 5 只；每过一轮妖物血量 +15%
   BOSS_MIN: 3, BOSS_HP: 1500, BOSS_T: 180,                              // 几个真人打 Boss、Boss 每人份的血、限时（秒）
   TRIO_T: 420,                                                          // 真人不够时改打 3 位天道 AI 的车轮战，限时（秒）
@@ -2958,6 +3138,15 @@ const RG = {
   PERKS: ['ink_resonance', 'storm_wrath', 'air_burst', 'ink_blade', 'first_blood', 'executioner', 'giant_slayer', 'crescendo', 'heavy_hand', 'needle_rain', 'counter_master', 'backstab', 'sniper', 'brawler', 'momentum', 'crit_eye', 'lethal_rhythm', 'sunder', 'double_strike', 'shockwave', 'ult_amp', 'piercing_wind', 'golden_bell', 'parry_refresh', 'iron_skin', 'thorns', 'last_stand', 'guard_wall', 'retaliation', 'second_wind', 'evasion', 'stone_stance', 'aegis', 'counter_guard', 'jg_window', 'meditation', 'bulwark', 'proj_ward', 'ult_resist', 'after_armor', 'lifeline', 'recoil_guard', 'thunder_dash', 'sky_master', 'swift_feet', 'phantom_step', 'jump_guard', 'dash_strike', 'aerial_ace', 'feather_fall', 'jg_blink', 'wind_runner', 'dash_cd', 'slipstream', 'air_reset', 'ground_slam', 'escape_meter', 'sidestep', 'light_cdr', 'skill_echo', 'haste', 'ult_cdr', 'alternate', 'break_reset', 'hurt_cdr', 'full_meter_cdr', 'low_hp_haste', 'patient_power', 'jg_escape', 'combo_cdr', 'link_skill', 'opening_haste', 'cd_shield', 'flow_combo', 'meter_start', 'meter_block', 'meter_drain', 'meter_heal', 'ult_refund', 'meter_power', 'jg_meter', 'meter_shield', 'overflow', 'meter_bank', 'foe_meter_cut', 'ult_heal', 'guard_regen', 'fury', 'full_hp', 'berserker', 'far_reach', 'wall_pin', 'clutch', 'opener', 'untouched', 'juggler', 'low_leech', 'stance_switch', 'stun_bonus', 'block_punish', 'full_meter_foe', 'odd_even', 'heat', 'frost_lock', 'bleed_rend', 'venom', 'virulent', 'ignite', 'wildfire', 'shatter', 'hemorrhage', 'marked_prey', 'static', 'weaken', 'expose', 'root_strike', 'plague', 'cauterize', 'toxic_guard', 'frost_aura', 'chill_proj', 'frost_armor', 'deep_freeze', 'chain_lightning', 'thunder_mark', 'overcharge', 'storm_guard', 'charge_break', 'proj_absorb', 'listen_wind', 'skill_heal', 'guard_crush', 'after_skill_light', 'pressure', 'escape_strike', 'jg_heal'],
 };
 const rgNew = () => ({ cyc: 1, jie: 1, got: 0, need: RG.NEED0, perks: [], vote: null, key: null, seq: 0 });
+/* 全服肉鸽 · 江湖长卷：全服共享的剧情线（节点表在 src/data/13-chron.js）。全服只有一份进度，在 D1 的 chron 表里，只会往前走：
+   每条线把攒着的出力（斩妖、各段斩妖、妖王、劫、关键战告捷）每 CQ_T.REP 秒报一次（chronReport），够这一节了就推到下一节（chronAdvance，
+   只有 node 还是这一节的那一下推得动，几条线同时够数也只进一节）。同一次上报重发只算一次（chron_rep）。
+   奖励不在分线上发：玩家调 /api/world/chron/claim 领自己出过力、完成了、还没领过的节（chron_claim 主键挡住重复领），掉线、换线以后照样补领。 */
+const { CHRON: CQ, chronNode: cqNode } = globalThis.RenyingChron;
+const CQ_KEYS = ['kill', 'z0', 'z1', 'z2', 'z3', 'king', 'jie', 'key'];
+const CQ_T = { REP: 20, READ: 10, MAX_UID: 60 };   // 多久报一次出力、没出力时多久看一次全服进度（秒）、一次最多报几个账号
+const cqVec = () => CQ_KEYS.map(() => 0);
+const cqMj = i => RG.PERKS[(i * 37 + 11) % RG.PERKS.length];   // 第 i 节的秘卷（每 CQ.MJ_EVERY 节一卷）：按节数定，谁领都一样
 const ZOD_KEYS = () => Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
 const wlNum = (v, lo, hi, d = 0) => { v = +v; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
 const wlStr = v => (typeof v === 'string' && /^[a-z0-9_]{0,16}$/i.test(v) ? v : '');
@@ -2969,6 +3158,7 @@ class WorldSim {
     this.rnd = rnd; this.t = 0; this.players = new Map(); this.mons = []; this.nid = 1; this.mid = 1;
     this.kills = 0; this.sinceBoss = 0; this.boss = null; this.spawnT = 0; this.events = [];
     this.run = rgNew(); this.rewards = []; this.dirty = false;
+    this.cq = { v: cqVec(), by: {} }; this.chron = null;   // 江湖长卷：还没报上去的出力；全服进度（分线从 D1 读来的）
   }
   get count() { return this.players.size; }
   join(meta) {
@@ -3018,10 +3208,12 @@ class WorldSim {
       const top = Object.entries(m.dmg).sort((a, b) => b[1] - a[1]).slice(0, 5)
         .map(([pid, n]) => [(this.players.get(+pid) || { name: '已离开的侠客' }).name, Math.round(n)]);
       this.events.push({ t: 'bk', by: p.name, top, all: true });
+      this.cqAdd('king', Object.keys(m.dmg).map(pid => (this.players.get(+pid) || {}).uid));
       this.boss = null; this.sinceBoss = 0;
     } else {
       this.sinceBoss++;
       this.events.push({ t: 'x', m: m.id, by: p.id, x: m.x });
+      this.cqAdd('kill', [p.uid]); this.cqAdd('z' + m.zi, [p.uid]);
       const R = this.run;
       if (!R.vote && !R.key && R.got < R.need) { R.got++; if (R.got >= R.need) this.jieDone(); }
     }
@@ -3146,6 +3338,7 @@ class WorldSim {
       b: b ? [b.id, r1(b.x), Math.ceil(b.hp), b.mh, b.f, b.act || '', Math.round(b.life)] : null,
       r: this.rgView(id),
       u: [...this.players.values()].filter(p => p.id !== id).map(p => [p.id, Math.round(p.x), Math.round(p.y), this.zoneOf(p.x)]),
+      q: this.cqView(),
     };
   }
   /* ---------- 全服肉鸽的共享进程 ---------- */
@@ -3163,6 +3356,7 @@ class WorldSim {
   jieDone() {
     const R = this.run;
     for (const p of this.players.values()) p.jies++;
+    this.cqAdd('jie', [...this.players.values()].map(p => p.uid));
     if (R.jie < RG.JIE) this.startVote(); else this.startKey();
     this.dirty = true;
   }
@@ -3196,7 +3390,7 @@ class WorldSim {
     const bag = C.HERO_IDS.slice(), heroes = [];
     while (heroes.length < 3) heroes.push(bag.splice((this.rnd() * bag.length) | 0, 1)[0]);
     const mh = boss ? RG.BOSS_HP * n : 0, T = boss ? RG.BOSS_T : RG.TRIO_T;
-    R.key = { kind: boss ? 'boss' : 'trio', seq: ++R.seq, heroes, mh, hp: mh, t0: this.t, until: this.t + T, dmg: {}, in: {}, rep: {} };
+    R.key = { kind: boss ? 'boss' : 'trio', seq: ++R.seq, heroes, mh, hp: mh, t0: this.t, until: this.t + T, dmg: {}, in: {}, rep: {}, uids: {} };
     for (const p of this.players.values()) { p.keyDmg = 0; p.keyIn = this.t; }
     this.mons.length = 0; this.boss = null;
     this.events.push({ t: 'ks', kind: R.key.kind, all: true });
@@ -3207,6 +3401,7 @@ class WorldSim {
     const k = this.run.key;
     if (!k || k.kind !== 'trio' || k.seq !== +seq || !this.players.has(id) || id in k.rep) return false;
     k.rep[id] = w ? 1 : 0; k.in[id] = 1;
+    if (w && this.players.get(id).uid) k.uids[this.players.get(id).uid] = 1;   // 车轮战：赢下来的人算出力
     const left = Object.keys(k.in).filter(x => this.players.has(+x) && !(x in k.rep));
     if (!left.length) this.endKey(Object.values(k.rep).some(Boolean));
     return true;
@@ -3220,6 +3415,7 @@ class WorldSim {
     d = Math.min(d, RG.KEY_HIT_MAX, cap); if (d <= 0) return 0;
     p.keyDmg += d; k.hp -= d;
     const who = p.uid || 'g' + p.id; k.dmg[who] = (k.dmg[who] || 0) + d;
+    if (p.uid) k.uids[p.uid] = 1;
     if (k.hp <= 0) this.endKey(true);
     return d;
   }
@@ -3234,6 +3430,7 @@ class WorldSim {
       if (win) this.payout(k);
     } else top = Object.entries(k.rep).filter(([, w]) => w).slice(0, 5).map(([id]) => { const p = this.players.get(+id); return [p ? p.name : '已离开的侠客', 1]; });
     this.events.push({ t: 'ke', kind: k.kind, win: !!win, top, all: true });
+    if (win) this.cqAdd('key', Object.keys(k.uids || {}));
     R.key = null; R.cyc++; R.jie = 1; R.got = 0; R.need = this.needOf();   // 秘卷保留，下一轮
     for (const p of this.players.values()) { p.jies = 0; p.keyDmg = 0; }
     this.dirty = true;
@@ -3259,11 +3456,38 @@ class WorldSim {
   // 存进 Durable Object 存储 / 从存储读回来（关键战不存：重启就算这一场没打完）
   saveRun() { const R = this.run; return { cyc: R.cyc, jie: R.jie, got: R.got, need: R.need, perks: R.perks.slice(), seq: R.seq, at: Date.now() }; }
   loadRun(o) {
-    if (!o || Date.now() - (+o.at || 0) > RG.EMPTY_RESET) return;
+    if (!o || typeof o !== 'object') return;   // 空了多久都接着上次的进度（以前空了 10 分钟会清零，新来的人不该把进度打回去）
     const R = this.run;
     R.cyc = wlNum(o.cyc, 1, 1e6, 1) | 0; R.jie = wlNum(o.jie, 1, RG.JIE, 1) | 0; R.got = wlNum(o.got, 0, RG.NEED_MAX, 0) | 0; R.need = wlNum(o.need, 1, RG.NEED_MAX, RG.NEED0) | 0;
     if (R.got >= R.need) R.got = R.need - 1;   // 存档时正在打关键战（关键战不存）：再斩一只就重开
     R.perks = Array.isArray(o.perks) ? o.perks.filter(id => RG.PERKS.includes(id)).slice(-RG.PERK_MAX) : []; R.seq = wlNum(o.seq, 0, 1e9, 0) | 0;
+  }
+  /* ---------- 江湖长卷：这条线的出力 ---------- */
+  // 记一笔出力：全线 +1，在场出过力的每个云端账号各 +1（同一个号只算一次；游客推进度，不领奖）
+  cqAdd(key, uids) {
+    const i = CQ_KEYS.indexOf(key); if (i < 0) return;
+    this.cq.v[i]++;
+    for (const u of new Set(uids)) if (u) (this.cq.by[u] || (this.cq.by[u] = cqVec()))[i]++;
+  }
+  cqPending() { return this.cq.v.some(n => n > 0); }
+  // 拿走攒着的出力去上报（报失败了由 WorldLine 留着原样重报，见 cqSync）
+  cqTake() { const o = this.cq; this.cq = { v: cqVec(), by: {} }; return o; }
+  // 这条线攒着的出力里，算进全服当前这一节的有多少
+  cqMine(s) { const i = s ? CQ_KEYS.indexOf(s.g) : -1; return i < 0 ? 0 : this.cq.v[i] + (this.cqFly ? this.cqFly.v[i] : 0); }
+  // 加上这条线还没报上去的，够这一节了就该马上报
+  cqDue() { const s = this.chron; return !!s && s.node < CQ.N && this.cqMine(s) > 0 && s.got + this.cqMine(s) >= s.need; }
+  // 新的全服进度（从 D1 读到的）：往前走了就全线播报，旧的（比手上的还早）不认
+  cqSet(s) {
+    if (!s || !(s.node >= 0)) return;
+    const old = this.chron;
+    if (old && (s.v < old.v || (s.v === old.v && s.got < old.got))) return;   // 进度只会往前走
+    this.chron = { node: s.node | 0, got: s.got | 0, need: s.need | 0, g: String(s.g || ''), v: s.v | 0 };
+    if (old && s.node > old.node) this.events.push({ t: 'qa', from: old.node, i: s.node, all: true });
+  }
+  // 帧里的全服进度：第几节、完成了多少（加上本线还没报上去的，不超过要的数）
+  cqView() {
+    const s = this.chron; if (!s) return null;
+    return { i: s.node, g: Math.min(s.need, s.got + this.cqMine(s)), nd: s.need, v: s.v };
   }
   // 这一拍的事件谁该收到：全线播报的人人都收，其余只发给附近的侠客
   takeEvents() { const e = this.events; this.events = []; return e; }
@@ -3272,7 +3496,8 @@ class WorldSim {
 
 export class WorldLine {
   constructor(ctx, env) {
-    this.ctx = ctx; this.env = env; this.sim = new WorldSim(); this.timer = 0; this.emptyAt = 0;
+    this.ctx = ctx; this.env = env; this.sim = new WorldSim(); this.timer = 0; this.line = 0;
+    this.cqAt = 0; this.cqReadAt = 0; this.cqBusy = null;   // 江湖长卷：上次报出力、上次读全服进度的时间（毫秒），正在跑的那一次
     if (ctx.storage && ctx.blockConcurrencyWhile) ctx.blockConcurrencyWhile(async () => { try { this.sim.loadRun(await ctx.storage.get('run')); } catch (e) {} });
   }
   async fetch(request) {
@@ -3280,7 +3505,7 @@ export class WorldLine {
     const line = wlNum(new URL(request.url).pathname.split('/').pop(), 1, 9999, 1) | 0;
     const pair = new WebSocketPair(), client = pair[0], server = pair[1];
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ line, id: 0 });
+    server.serializeAttachment({ line, id: 0 }); this.line = line;
     if (this.ctx.getWebSockets().length > WL.CAP) { this.send(server, { t: 'full', line }); server.close(4001, 'full'); }
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -3298,13 +3523,13 @@ export class WorldLine {
       if (a.id && sim.players.has(a.id)) { ws.serializeAttachment(a); return; }
       const id = sim.join(o);
       if (!id) { this.send(ws, { t: 'full', line: a.line }); ws.close(4001, 'full'); return; }
-      if (sim.players.size === 1 && this.emptyAt && Date.now() - this.emptyAt > RG.EMPTY_RESET) sim.run = rgNew();   // 整条线空了很久：进度清零
       a.id = id; ws.serializeAttachment(a);
       if (o.tk && this.env && this.env.DB) this.auth(id, String(o.tk).slice(0, 200));
       const roster = [...sim.players.values()].map(p => sim.meta(p));
       this.send(ws, { t: 'w', id, line: a.line, cap: WL.CAP, w: WL.W, roster });
       sim.events.push({ t: 'j', p: sim.meta(sim.players.get(id)), all: true });
       this.ensureTimer();
+      this.cqSync(false);   // 有人进来：读一次全服进度，新来的、重连的人马上看到现在推到哪了
       return;
     }
     ws.serializeAttachment(a);
@@ -3367,6 +3592,9 @@ export class WorldLine {
     const evs = sim.takeEvents();
     if (sim.rewards.length) { const list = sim.rewards; sim.rewards = []; this.paying = this.pay(list); }
     if (sim.dirty && this.ctx.storage) { sim.dirty = false; this.ctx.storage.put('run', sim.saveRun()).catch(() => {}); }
+    const now = Date.now();   // 江湖长卷：有出力每 CQ_T.REP 秒报一次（够这一节了马上报），没有就每 CQ_T.READ 秒看一次全服进度
+    if ((sim.cqPending() || this.cqRetry) && (sim.cqDue() || now - this.cqAt >= CQ_T.REP * 1000)) this.cqSync(true);
+    else if (now - this.cqReadAt >= CQ_T.READ * 1000) this.cqSync(false);
     for (const ws of this.ctx.getWebSockets()) {
       const a = ws.deserializeAttachment(); if (!a || !a.id) continue;
       if (!sim.players.has(a.id)) { this.send(ws, { t: 're' }); continue; }
@@ -3374,7 +3602,30 @@ export class WorldLine {
       if (mine.length) fr.e = mine;
       this.send(ws, fr);
     }
-    if (!sim.players.size) { clearInterval(this.timer); this.timer = 0; this.emptyAt = Date.now(); if (this.ctx.storage) this.ctx.storage.put('run', sim.saveRun()).catch(() => {}); }   // 没人了：停表，让它休眠
+    if (!sim.players.size) {   // 没人了：停表，让它休眠；攒着的出力先报上去
+      clearInterval(this.timer); this.timer = 0;
+      if (this.ctx.storage) this.ctx.storage.put('run', sim.saveRun()).catch(() => {});
+      if (sim.cqPending() || this.cqRetry) this.cqSync(true);
+    }
+  }
+  // 江湖长卷：报出力（report）或者只读全服进度。同一时间只跑一次；报失败了出力放回去，下次用同一个编号重报（服务器只认一次）
+  cqSync(report) {
+    const env = this.env, sim = this.sim;
+    if (this.cqBusy || !env || !env.DB) return this.cqBusy;
+    const now = Date.now(); this.cqReadAt = now;
+    let out = null;
+    if (report) { this.cqAt = now; out = sim.cqFly = this.cqRetry || { ...sim.cqTake(), rid: `l${this.line}_${now.toString(36)}_${randHex(4)}` }; this.cqRetry = null; }
+    this.cqBusy = (async () => {
+      try {
+        sim.cqSet(out ? await chronReport(env, this.line, out, now) : await chronRead(env));
+        if (out) sim.cqFly = null;
+      } catch (e) {
+        if (out) { this.cqRetry = out; sim.cqFly = out; }   // 不知道成没成：留着同一个编号下次重报
+        console.error('chron sync', e);
+      } finally { this.cqBusy = null; }
+      if (!sim.players.size && sim.cqPending() && !this.cqRetry) this.cqSync(true);   // 人走光的时候正好在报：剩下的也报掉（失败了就不再追，免得空转）
+    })();
+    return this.cqBusy;
   }
 }
 globalThis.RenyingWorldSim = { WorldSim, WL, RG };
@@ -3653,6 +3904,18 @@ async function route(request, env, ctx, rid = reqId()) {
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
         return await sagaMarkPost(env, auth, body, now);
+      }
+
+      // 13. 全服肉鸽 · 江湖长卷：看全服进度不用登录（带登录凭证时附上自己的秘卷和能领几节）；领奖要云端账号
+      if (path === '/api/world/chron' && request.method === 'GET') {
+        if (!(await hit(env, 'cqg:' + ip, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        const auth = await authenticate(env, request);
+        return json(await chronGet(env, auth && auth.user.id));
+      }
+      if (path === '/api/world/chron/claim' && request.method === 'POST') {
+        const auth = await authenticate(env, request);
+        if (!auth) return error('登录云端账号才能领长卷奖励', 401);
+        return await chronClaim(env, auth, now);
       }
 
       // 14. 功能开关（不用登录；带登录凭证时 Dev 账号能看到“只开 Dev”的）

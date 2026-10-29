@@ -37,3 +37,4 @@ D1 数据库的表结构都写在这里，一个文件一次改动，按编号�
 | `0004_session_device.sql` | `sessions` 加 `dev` 和索引（登录属于哪台设备） |
 | `0005_account_soft_delete.sql` | `users` 加 `deleted_at` 和索引（删除账号只记时间） |
 | `0006_check_constraints.sql` | 重建 `econ`、`mkt`、`sanctions`，加 CHECK（墨锭不为负、挂单状态只有 0/1/2、标价至少 1、记过次数不为负…） |
+| `0007_world_chron.sql` | 全服肉鸽 · 江湖长卷：加 `chron`（全服共享的剧情进度，只有一行）、`chron_rep`（分线上报去重）、`chron_part`（谁在哪一节出过力）、`chron_done`（完成了的节和奖励）、`chron_claim`（谁领过哪一节）。只加新表，不动已有的表 |

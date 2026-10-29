@@ -297,3 +297,43 @@ CREATE TABLE IF NOT EXISTS saga_mark (
     at INTEGER NOT NULL,
     PRIMARY KEY (hero, node, uid)
 );
+
+-- 全服肉鸽 · 江湖长卷（0007）：全服共享的剧情进度只有 chron 这一行；分线上报去重（chron_rep）；谁在哪一节出过力（chron_part）；
+-- 完成了的节和奖励（chron_done）；谁领过哪一节（chron_claim，一个号一节只领一次）
+CREATE TABLE IF NOT EXISTS chron (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    node INTEGER NOT NULL DEFAULT 0 CHECK (node >= 0),
+    got INTEGER NOT NULL DEFAULT 0 CHECK (got >= 0),
+    need INTEGER NOT NULL DEFAULT 1 CHECK (need >= 1),
+    g TEXT NOT NULL DEFAULT 'kill',
+    v INTEGER NOT NULL DEFAULT 0,
+    at INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS chron_rep (
+    rid TEXT PRIMARY KEY,
+    nonce TEXT NOT NULL,
+    at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_chron_rep_at ON chron_rep (at);
+CREATE TABLE IF NOT EXISTS chron_part (
+    node INTEGER NOT NULL,
+    uid TEXT NOT NULL,
+    amt INTEGER NOT NULL DEFAULT 0 CHECK (amt >= 0),
+    PRIMARY KEY (node, uid)
+);
+CREATE INDEX IF NOT EXISTS idx_chron_part_uid ON chron_part (uid, node);
+CREATE TABLE IF NOT EXISTS chron_done (
+    node INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    line INTEGER NOT NULL DEFAULT 0,
+    ink INTEGER NOT NULL DEFAULT 0 CHECK (ink >= 0),
+    mj TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS chron_claim (
+    node INTEGER NOT NULL,
+    uid TEXT NOT NULL,
+    cn TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    PRIMARY KEY (node, uid)
+);
+CREATE INDEX IF NOT EXISTS idx_chron_claim_uid ON chron_claim (uid, cn);

@@ -4032,6 +4032,7 @@ body.kb-only.has-nav .kb-hint { display: block; }
       </div>
       <div class="m2-body">
         <p class="m2-desc">一张大地图，谁都能随时加入，人数不设上限。先在点将台选好侠客，再进分线。</p>
+        <p class="m2-desc mw-chron" id="worldChron" aria-live="polite"></p>
         <div class="m2-ways mw-ways">
           <button class="m2-way" id="btnWorldGo" type="button" data-kb-default><b>直接进入</b><span>自动分到一条线</span></button>
         </div>
@@ -4853,6 +4854,10 @@ async function gboss(act, body) {
 if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能出战'); e.status = 401; throw e; }
 return api('/api/gboss' + (act ? '/' + act : ''), act ? { method: 'POST', body: JSON.stringify(body || {}) } : { method: 'GET' });
 }
+async function chron(act) {
+if (act && (!cloudActive() || !getUser())) { const e = new Error('登录云端账号才能领长卷奖励'); e.status = 401; throw e; }
+return api('/api/world/chron' + (act ? '/' + act : ''), act ? { method: 'POST', body: '{}' } : { method: 'GET' });
+}
 const FLAG_CACHE_KEY = 'renying-srvflags';
 let srvFlags = null;
 function flagCache() {
@@ -5465,6 +5470,7 @@ worldToken: () => { const u = getUser(); return u && u.isCloud ? (getToken() || 
 econ,
 market,
 gboss,
+chron,
 saga,
 sagaMark,
 flushNow,
@@ -5654,6 +5660,18 @@ const PATTERNS_EN = [
 [/^(\d+) 秒后在土地庙复活$/, (m0, n) => `Respawn at the shrine in ${n}s`],
 [/^第 (\d+) \/ (\d+) 劫 · 已有 (\d+) 卷秘卷$/, (m0, a, b, c) => `Trial ${a} / ${b} · ${c} scroll${c === '1' ? '' : 's'} so far`],
 [/^本劫斩妖完成，(\d+) 秒内投票$/, (m0, n) => `Trial kills done, vote within ${n}s`],
+[/^(.+) · 第 (\d+)\/(\d+) 节$/, (m0, c, a, b) => `${lookup(c) || c} · Part ${a}/${b}`],
+[/^江湖长卷推进 (\d+) 节$/, (m0, n) => `The Chronicle advances ${n} parts`],
+[/^长卷第 (\d+) 节完成$/, (m0, n) => `Chronicle part ${n} complete`],
+[/^下一节：(.+)$/, (m0, x) => `Next: ${lookup(x) || x}`],
+[/^全服斩妖 (\d+) 只$/, (m0, n) => `Slay ${n} demons server-wide`],
+[/^(竹林|古道|山寨|魔窟)斩妖 (\d+) 只$/, (m0, z, n) => `Slay ${n} demons in ${lookup(z) || z}`],
+[/^讨伐妖王 (\d+) 次$/, (m0, n) => `Slay the Demon King ${n} time${n === '1' ? '' : 's'}`],
+[/^斩完 (\d+) 劫$/, (m0, n) => `Clear ${n} trial${n === '1' ? '' : 's'}`],
+[/^关键战告捷 (\d+) 次$/, (m0, n) => `Win ${n} Key Fight${n === '1' ? '' : 's'}`],
+[/^江湖长卷：领到 (\d+) 节的奖励 · \+(\d+) 墨锭（下次打开武库到账）(?: · 秘卷(.+))?$/, (m0, n, ink, mj) => `World Chronicle: rewards for ${n} part${n === '1' ? '' : 's'} · +${ink} Ink (arrives next time you open the Armory)` + (mj ? ` · Scrolls ${mj.split('、').map(x => { const m = x.match(/^「(.+)」$/); return m ? `“${lookup(m[1]) || m[1]}”` : x; }).join(', ')}` : '')],
+[/^江湖长卷 · 全服第 (\d+) \/ (\d+) 节 · (.+?)(?: · 个人秘卷 (\d+) 卷)?$/, (m0, a, b, c, n) => `World Chronicle · Part ${a} / ${b} server-wide · ${lookup(c) || c}` + (n ? ` · ${n} personal scroll${n === '1' ? '' : 's'}` : '')],
+[/^江湖长卷 · 全卷完成 · 个人秘卷 (\d+) 卷$/, (m0, n) => `World Chronicle · Complete · ${n} personal scroll${n === '1' ? '' : 's'}`],
 [/^线上真人不足 (\d+) 位：各自迎战 (\d+) 位天道侠客$/, (m0, a, b) => `Fewer than ${a} players online: each of you faces ${b} Tiandao heroes`],
 [/^融魂魔首【(.*)】· 共享 (\d+) 卷秘卷$/, (m0, h, n) => `Fused Demon Lord [${h.split('·').map(x => lookup(x) || x).join(' · ')}] · ${n} shared scroll${n === '1' ? '' : 's'}`],
 [/^对阵【(.*)】· 带着 (\d+) 卷共享秘卷$/, (m0, h, n) => `Versus [${h.split('·').map(x => lookup(x) || x).join(' · ')}] · with ${n} shared scroll${n === '1' ? '' : 's'}`],
@@ -7006,6 +7024,96 @@ fog: { from: 0.25, to: 0.75, guard: 2.5 },
 fav: { zuixian: '酒香浸染：在酒雾里醉意每秒涨 12。', moyu: '水榭湿润：在酒雾里定力回得快一倍。' } },
 };
 const MAP_POOL = ['cliff', 'ice', 'bamboo', 'thunder', 'pagoda', 'wine'];   // 投票页上的顺序
+const CHRON = {
+PER: 20, TAIL: 40, MJ_EVERY: 5, PERS_MAX: 3, INK0: 5, INK_END: 40,
+ZONE: ['竹林', '古道', '山寨', '魔窟'],
+CH: [
+{ n: '竹林初劫', d: '竹林里妖气初起，第一批侠客拔剑入林。' },
+{ n: '夜枭鸣山', d: '夜枭整夜啼叫，山里的路越来越难走。' },
+{ n: '刀鬼出鞘', d: '刀鬼成群下山，见人就砍。' },
+{ n: '弓妖伏道', d: '弓妖埋伏在道旁，过路的商队不敢出门。' },
+{ n: '古道迷踪', d: '古道上起了雾，走进去的人没有回来。' },
+{ n: '缚灵夜行', d: '缚灵趁夜出没，把人困在原地。' },
+{ n: '断桥残雪', d: '桥断了，雪地上全是妖物的脚印。' },
+{ n: '荒驿孤灯', d: '荒废的驿站里还亮着一盏灯。' },
+{ n: '山寨狼烟', d: '山寨升起狼烟，妖物占了寨子。' },
+{ n: '咒师聚众', d: '咒师聚在寨里，日夜念咒。' },
+{ n: '火柱连天', d: '咒火一根接一根冲上天。' },
+{ n: '寨门血誓', d: '侠客们在寨门前立誓，不破此寨不回头。' },
+{ n: '魔窟初探', d: '第一批侠客摸进了魔窟。' },
+{ n: '妖王低语', d: '魔窟深处传来妖王的低语。' },
+{ n: '血月当空', d: '血月升起，妖物都发了狂。' },
+{ n: '群妖朝拜', d: '群妖往魔窟聚拢，像在朝拜什么。' },
+{ n: '竹海听涛', d: '风过竹海，侠客们暂得喘息。' },
+{ n: '青锋试剑', d: '新铸的剑要在妖物身上试锋。' },
+{ n: '雾锁长亭', d: '长亭被浓雾锁住，送别的人出不来。' },
+{ n: '古刹钟鸣', d: '山中古刹的钟无人自鸣。' },
+{ n: '鬼市开张', d: '半夜的鬼市开张了，卖的都是妖物的东西。' },
+{ n: '风雪归人', d: '风雪里有人赶路回乡，侠客一路护送。' },
+{ n: '铁索横江', d: '妖物用铁索拦住了江面。' },
+{ n: '烽火连营', d: '一座座营寨点起烽火，江湖都动了起来。' },
+{ n: '天道初现', d: '天上裂开一道口子，天道第一次露了面。' },
+{ n: '星落平野', d: '星星落在平野上，砸出一个个妖穴。' },
+{ n: '寒潭映月', d: '寒潭底下有东西在动。' },
+{ n: '百鬼夜行', d: '一百只妖物排成一列，在夜里穿过村庄。' },
+{ n: '孤城落日', d: '孤城被围，城头只剩几位侠客。' },
+{ n: '剑冢问心', d: '剑冢里的旧剑在问来人为什么拔剑。' },
+{ n: '金鼓雷鸣', d: '战鼓响起，全江湖一起出战。' },
+{ n: '雁门秋声', d: '雁群南飞，关外的妖物也跟着南下。' },
+{ n: '墨雨江南', d: '江南下起墨一样的雨。' },
+{ n: '玉门关外', d: '关外的风沙里藏着妖物的大营。' },
+{ n: '大漠孤烟', d: '大漠里只有一缕烟，那是妖物的信号。' },
+{ n: '黄沙埋骨', d: '黄沙底下埋着上一代侠客的剑。' },
+{ n: '天山雪莲', d: '天山上的雪莲能解妖毒，妖物守着不让采。' },
+{ n: '昆仑云深', d: '昆仑山云很深，妖王的影子在云里走。' },
+{ n: '蜀道难行', d: '蜀道上的妖物把栈道一段段拆了。' },
+{ n: '巫峡猿啼', d: '峡里的猿啼声变成了妖物的嘶吼。' },
+{ n: '洞庭秋水', d: '洞庭湖水变黑了。' },
+{ n: '岳阳论剑', d: '各路侠客在楼上论剑，商量最后一战。' },
+{ n: '姑苏夜泊', d: '夜里泊船的地方，妖物从水里爬上来。' },
+{ n: '钱塘潮起', d: '大潮里卷着成群的妖物。' },
+{ n: '东海蓬莱', d: '海上的仙山也被妖气染黑了。' },
+{ n: '天涯海角', d: '一路打到天涯海角，妖物已经无处可退。' },
+{ n: '万妖归墟', d: '所有的妖物都往归墟退去。' },
+{ n: '魔首将醒', d: '归墟深处，融魂魔首快要醒了。' },
+{ n: '天道裁决', d: '天道亲自出手，要看江湖配不配活下去。' },
+{ n: '江湖同归', d: '全江湖的侠客站到了一起。' },
+{ n: '长卷余韵', d: '大战过后，江湖还要守下去。' },
+],
+PLAN: ['kill', 'zone', 'kill', 'jie', 'zone', 'kill', 'king', 'zone', 'kill', 'jie', 'zone', 'kill', 'king', 'zone', 'jie', 'kill', 'zone', 'king', 'jie', 'key'],
+GOAL: {
+kill: { need: ch => 40 + 6 * ch, t: n => `全服斩妖 ${n} 只` },
+zone: { need: ch => 25 + 4 * ch, t: (n, z) => `${z}斩妖 ${n} 只` },
+king: { need: ch => 1 + Math.floor(ch / 10), t: n => `讨伐妖王 ${n} 次` },
+jie: { need: ch => 2 + Math.floor(ch / 8), t: n => `斩完 ${n} 劫` },
+key: { need: ch => 1 + Math.floor(ch / 25), t: n => `关键战告捷 ${n} 次` },
+},
+LINE: {
+kill: ['妖物越聚越多，先把眼前的清干净。', '有村子求救，侠客们连夜赶去。', '妖气散了一些，还不够。', '一路斩过去，给后来的人开出一条路。'],
+zone: ['这一段的妖物最凶，全服的侠客往这里聚。', '有人在这一段失踪了，去把他找回来。', '守住这一段，别让妖物往外走。', '这一段的土地庙快守不住了。'],
+king: ['妖王又出来了，这次要把它打回去。', '妖王身上带着线索，得打倒它才拿得到。', '妖王在魔窟里召集手下。', '打倒妖王，魔窟会安静一阵子。'],
+jie: ['一劫一劫地斩过去，天道在看着。', '每斩完一劫，江湖就稳一分。', '劫数未尽，不能停手。', '斩完这几劫，下一段路才会打开。'],
+key: ['这一章到了最后，天道派来了守关的人。', '关键战打赢了，这一章才算写完。', '全线一起出手，赢下这一战。', '守关的人很强，带上秘卷再去。'],
+},
+};
+CHRON.N = (CHRON.CH.length - 1) * CHRON.PER + CHRON.TAIL;   // 一共多少节（现在 1040）
+function chronNode(i) {
+i = Math.floor(+i);
+if (!(i >= 0 && i < CHRON.N)) return null;
+const P = CHRON.PER, last = CHRON.CH.length - 1;
+const ch = Math.min(last, Math.floor(i / P)), k = i - ch * P, len = ch === last ? CHRON.TAIL : P;
+const g = CHRON.PLAN[k % P], need = CHRON.GOAL[g].need(ch), z = g === 'zone' ? (ch + k) % CHRON.ZONE.length : -1;
+const end = k === len - 1;
+return {
+i, ch, k, len, g, z, need,
+key: g === 'zone' ? 'z' + z : g,   // 服务器计数用的键：kill、z0 ~ z3、king、jie、key
+ink: CHRON.INK0 + Math.floor(ch / 2) + (end ? CHRON.INK_END : 0),
+mj: i % CHRON.MJ_EVERY === CHRON.MJ_EVERY - 1,
+t: CHRON.GOAL[g].t(need, z >= 0 ? CHRON.ZONE[z] : ''),
+line: CHRON.LINE[g][(ch + k) % CHRON.LINE[g].length],
+};
+}
+if (typeof globalThis !== 'undefined') globalThis.RenyingChron = { CHRON, chronNode };   // 服务器（cloudflare/worker.js）从这里拿
 const DIFFICULTIES = [
 {
 id: 'easy', name: '入门',
@@ -8741,6 +8849,143 @@ const UI_COPY_EN = {
 "疾风 · 西风": "Gale · West wind",
 "天雷将至": "Lightning incoming",
 "引雷淬体": "Lightning tempered",
+"竹林初劫": "First Trial in the Bamboo",
+"竹林里妖气初起，第一批侠客拔剑入林。": "Demon energy stirs in the bamboo, and the first heroes draw their swords.",
+"夜枭鸣山": "Owls Cry on the Mountain",
+"夜枭整夜啼叫，山里的路越来越难走。": "The owls cry all night, and the mountain paths grow dangerous.",
+"刀鬼出鞘": "The Blade Ghosts Draw",
+"刀鬼成群下山，见人就砍。": "Blade ghosts come down the mountain in packs, cutting down anyone they meet.",
+"弓妖伏道": "Archer Demons in Ambush",
+"弓妖埋伏在道旁，过路的商队不敢出门。": "Archer demons wait by the road, and the caravans no longer dare to travel.",
+"古道迷踪": "Lost on the Old Road",
+"古道上起了雾，走进去的人没有回来。": "Fog has settled on the old road, and those who went in never came back.",
+"缚灵夜行": "Binders Walk at Night",
+"缚灵趁夜出没，把人困在原地。": "Binders come out at night and trap people where they stand.",
+"断桥残雪": "Snow on the Broken Bridge",
+"桥断了，雪地上全是妖物的脚印。": "The bridge is broken, and the snow is full of demon tracks.",
+"荒驿孤灯": "A Lamp in the Empty Inn",
+"荒废的驿站里还亮着一盏灯。": "A single lamp still burns in the abandoned inn.",
+"山寨狼烟": "Smoke over the Fort",
+"山寨升起狼烟，妖物占了寨子。": "Smoke rises over the fort. Demons have taken it.",
+"咒师聚众": "The Casters Gather",
+"咒师聚在寨里，日夜念咒。": "The casters gather in the fort, chanting day and night.",
+"火柱连天": "Pillars of Fire",
+"咒火一根接一根冲上天。": "Pillars of cursed fire shoot into the sky, one after another.",
+"寨门血誓": "Oath at the Fort Gate",
+"侠客们在寨门前立誓，不破此寨不回头。": "The heroes swear at the fort gate not to turn back until it falls.",
+"魔窟初探": "Into the Demon Cave",
+"第一批侠客摸进了魔窟。": "The first heroes slip into the demon cave.",
+"妖王低语": "The Demon King Whispers",
+"魔窟深处传来妖王的低语。": "The Demon King's whisper rises from deep in the cave.",
+"血月当空": "Blood Moon Rising",
+"血月升起，妖物都发了狂。": "The blood moon rises, and every demon goes mad.",
+"群妖朝拜": "The Demons Gather",
+"群妖往魔窟聚拢，像在朝拜什么。": "The demons flock to the cave as if to worship something.",
+"竹海听涛": "Wind in the Bamboo Sea",
+"风过竹海，侠客们暂得喘息。": "Wind moves through the bamboo sea, and the heroes catch their breath.",
+"青锋试剑": "Testing the New Blade",
+"新铸的剑要在妖物身上试锋。": "The newly forged blades must be tested on demons.",
+"雾锁长亭": "Fog at the Long Pavilion",
+"长亭被浓雾锁住，送别的人出不来。": "Thick fog has trapped everyone at the long pavilion.",
+"古刹钟鸣": "The Old Temple Bell",
+"山中古刹的钟无人自鸣。": "The bell of the old mountain temple rings on its own.",
+"鬼市开张": "The Ghost Market Opens",
+"半夜的鬼市开张了，卖的都是妖物的东西。": "The midnight ghost market is open, and everything for sale came from demons.",
+"风雪归人": "Home Through the Snow",
+"风雪里有人赶路回乡，侠客一路护送。": "Travelers head home through the snow, and the heroes escort them.",
+"铁索横江": "Chains Across the River",
+"妖物用铁索拦住了江面。": "The demons have chained off the river.",
+"烽火连营": "Beacon Fires",
+"一座座营寨点起烽火，江湖都动了起来。": "Beacon fires light up camp after camp as the whole land rises.",
+"天道初现": "Tiandao Appears",
+"天上裂开一道口子，天道第一次露了面。": "The sky splits open, and Tiandao shows itself for the first time.",
+"星落平野": "Stars Fall on the Plain",
+"星星落在平野上，砸出一个个妖穴。": "Stars fall on the plain, leaving demon nests where they land.",
+"寒潭映月": "Moon in the Cold Pool",
+"寒潭底下有东西在动。": "Something is moving at the bottom of the cold pool.",
+"百鬼夜行": "Night of a Hundred Demons",
+"一百只妖物排成一列，在夜里穿过村庄。": "A hundred demons march through the village at night.",
+"孤城落日": "Sunset on the Lone City",
+"孤城被围，城头只剩几位侠客。": "The lone city is surrounded, with only a few heroes left on the walls.",
+"剑冢问心": "The Sword Tomb Asks",
+"剑冢里的旧剑在问来人为什么拔剑。": "The old swords in the tomb ask each visitor why they fight.",
+"金鼓雷鸣": "War Drums",
+"战鼓响起，全江湖一起出战。": "The war drums sound, and every hero rides out.",
+"雁门秋声": "Autumn at the Pass",
+"雁群南飞，关外的妖物也跟着南下。": "The geese fly south, and the demons beyond the pass follow them.",
+"墨雨江南": "Ink Rain in the South",
+"江南下起墨一样的雨。": "Rain like ink falls on the south.",
+"玉门关外": "Beyond the Jade Gate",
+"关外的风沙里藏着妖物的大营。": "The demons' main camp hides in the sandstorms beyond the pass.",
+"大漠孤烟": "Smoke in the Desert",
+"大漠里只有一缕烟，那是妖物的信号。": "A single plume of smoke rises in the desert, a signal from the demons.",
+"黄沙埋骨": "Bones in the Sand",
+"黄沙底下埋着上一代侠客的剑。": "The swords of past heroes lie buried under the sand.",
+"天山雪莲": "Snow Lotus of Tianshan",
+"天山上的雪莲能解妖毒，妖物守着不让采。": "The snow lotus can cure demon poison, and the demons guard it closely.",
+"昆仑云深": "Clouds over Kunlun",
+"昆仑山云很深，妖王的影子在云里走。": "The clouds over Kunlun are deep, and the Demon King's shadow walks in them.",
+"蜀道难行": "The Hard Road to Shu",
+"蜀道上的妖物把栈道一段段拆了。": "The demons are tearing down the mountain walkways piece by piece.",
+"巫峡猿啼": "Apes Cry in the Gorge",
+"峡里的猿啼声变成了妖物的嘶吼。": "The apes' cries in the gorge have turned into demon howls.",
+"洞庭秋水": "Autumn on Dongting Lake",
+"洞庭湖水变黑了。": "The water of the lake has turned black.",
+"岳阳论剑": "Sword Talk at Yueyang",
+"各路侠客在楼上论剑，商量最后一战。": "Heroes from everywhere meet in the tower to plan the final battle.",
+"姑苏夜泊": "Night Mooring at Gusu",
+"夜里泊船的地方，妖物从水里爬上来。": "Where the boats moor at night, demons climb out of the water.",
+"钱塘潮起": "The Qiantang Tide",
+"大潮里卷着成群的妖物。": "The great tide carries swarms of demons with it.",
+"东海蓬莱": "Penglai in the East Sea",
+"海上的仙山也被妖气染黑了。": "Even the island of immortals has turned black with demon energy.",
+"天涯海角": "The Ends of the Earth",
+"一路打到天涯海角，妖物已经无处可退。": "The fight has reached the ends of the earth, and the demons have nowhere left to run.",
+"万妖归墟": "All Demons Flee to the Abyss",
+"所有的妖物都往归墟退去。": "Every demon retreats toward the abyss.",
+"魔首将醒": "The Demon Lord Stirs",
+"归墟深处，融魂魔首快要醒了。": "Deep in the abyss, the Fused Demon Lord is about to wake.",
+"天道裁决": "Tiandao's Judgment",
+"天道亲自出手，要看江湖配不配活下去。": "Tiandao steps in to judge whether the world deserves to survive.",
+"江湖同归": "All Heroes Together",
+"全江湖的侠客站到了一起。": "Every hero in the land stands together.",
+"长卷余韵": "After the Great Battle",
+"大战过后，江湖还要守下去。": "The great battle is over, but the land still needs guarding.",
+"妖物越聚越多，先把眼前的清干净。": "More demons keep gathering. Clear out the ones in front of you first.",
+"有村子求救，侠客们连夜赶去。": "A village is calling for help, and the heroes rush there overnight.",
+"妖气散了一些，还不够。": "The demon energy has thinned a little, but not enough.",
+"一路斩过去，给后来的人开出一条路。": "Cut a path through so those who follow can pass.",
+"这一段的妖物最凶，全服的侠客往这里聚。": "The demons here are the fiercest, and heroes from every line are heading this way.",
+"有人在这一段失踪了，去把他找回来。": "Someone went missing here. Go and bring them back.",
+"守住这一段，别让妖物往外走。": "Hold this area and don't let the demons get out.",
+"这一段的土地庙快守不住了。": "The shrine in this area is about to fall.",
+"妖王又出来了，这次要把它打回去。": "The Demon King is out again. Drive it back this time.",
+"妖王身上带着线索，得打倒它才拿得到。": "The Demon King carries a clue, and you have to defeat it to get it.",
+"妖王在魔窟里召集手下。": "The Demon King is gathering its followers in the cave.",
+"打倒妖王，魔窟会安静一阵子。": "Defeat the Demon King and the cave will be quiet for a while.",
+"一劫一劫地斩过去，天道在看着。": "Clear the trials one by one. Tiandao is watching.",
+"每斩完一劫，江湖就稳一分。": "Each trial cleared makes the land a little safer.",
+"劫数未尽，不能停手。": "The trials aren't over, so don't stop now.",
+"斩完这几劫，下一段路才会打开。": "Clear these trials and the road ahead will open.",
+"这一章到了最后，天道派来了守关的人。": "This chapter is ending, and Tiandao has sent a guardian.",
+"关键战打赢了，这一章才算写完。": "Win the key fight to finish this chapter.",
+"全线一起出手，赢下这一战。": "Every line strikes together to win this fight.",
+"守关的人很强，带上秘卷再去。": "The guardian is strong. Bring your scrolls.",
+"江湖长卷": "World Chronicle",
+"全卷完成": "Chronicle complete",
+"全服斩妖": "Server-wide kills",
+"竹林斩妖": "Kills in Bamboo Grove",
+"古道斩妖": "Kills on Old Road",
+"山寨斩妖": "Kills at Bandit Fort",
+"魔窟斩妖": "Kills in Demon Cave",
+"讨伐妖王": "Demon Kings slain",
+"斩完劫数": "Trials cleared",
+"关键战告捷": "Key Fights won",
+"江湖长卷 · 全卷完成": "World Chronicle · Complete",
+"全服侠客一起写完了这一卷": "Heroes across the server finished the whole chronicle together",
+"全服肉鸽 · 江湖长卷奖励": "Server Roguelike · World Chronicle reward",
+"登录云端账号才能领长卷奖励": "Log in to a cloud account to claim Chronicle rewards",
+"领得太快了，歇一会儿再试": "Claiming too fast, take a short break",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -26452,6 +26697,7 @@ W_.id = o.id; W_.line = o.line; W_.tries = 0; W_.status = '';
 W_.roster.clear(); for (const p of o.roster || []) W_.roster.set(p[0], p);
 try { localStorage.setItem('renying-world-line', String(o.line)); } catch (e) {}
 say(`江湖共斗 · ${o.line} 线`, 1.4, 'big', `已有 ${W_.roster.size} 位侠客在这条线上`);
+cqLoad(true);   // 进线（含重连）：看一眼长卷，有没领的就领
 } else if (o.t === 'full') {
 W_.full = true; W_.status = `${o.line} 线已满，去 ${o.line + 1} 线…`;
 } else if (o.t === 're') worldHello();
@@ -26476,6 +26722,7 @@ if (W_.boss) { smoke(W_.boss.x, -100, 30); ring(W_.boss.x, -90, 160, '255,80,80'
 W_.boss = null;
 } else if (e.t === 'bg') { say('妖王遁走', 1.4, 'big', '没能在时限内拿下，下回再战'); W_.boss = null; }
 else if (e.t === 'bw' && W_.boss) { W_.boss.warn = e.w; W_.boss.act = e.a; }
+else if (e.t === 'qa') cqAdvanced(e);
 else rgEvent(e);
 }
 function worldHp(m, srv) {
@@ -26523,6 +26770,7 @@ if (!W_.boss || W_.boss.id !== id) W_.boss = { id, x, y: 0, hp, ph: 0, flash: 0,
 const b = W_.boss; b.tx = x; b.hp = worldHp(b, hp); b.maxHp = mh; b.face = f; b.act = act; b.life = life;
 } else W_.boss = null;
 if (o.r) rgFrame(o.r);
+if (o.q) cqFrame(o.q);
 for (const e of o.e || []) worldEvent(e);
 }
 function worldAttack(e) {
@@ -26751,6 +26999,7 @@ const rows = WORLD.status ? [['状态', WORLD.status]] : key ? rgHudRows() : [
 ['本线斩妖', `${WORLD.kills} 只（你 ${WORLD.myKills}）`],
 [WORLD.boss ? '妖王' : '妖王现世', WORLD.boss ? `魔窟 · 余 ${WORLD.boss.life || 0} 秒` : `还差 ${WORLD.nb} 只`],
 ...rgHudRows(),
+...cqHudRows(),
 ];
 ctx.save(); ctx.textBaseline = 'top'; ctx.font = `${fs}px ${BODY_FONT}`;
 const title = cvT(key ? '全服肉鸽 · 关键战' : '江湖共斗 · 开放世界');
@@ -26792,7 +27041,7 @@ function worldEnter(line) {
 WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
 bpStart('world');
 }
-function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
+function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); cqLoad(false); }
 function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
 if ($id('mWorld')) $id('mWorld').addEventListener('click', () => { SFX.slice(); openWorldModal(); });
 if ($id('modalWorldClose')) $id('modalWorldClose').addEventListener('click', closeWorldModal);
@@ -26881,18 +27130,18 @@ M.worldKey = { kind: 'boss', seq: k.s };
 B.worldProxy = false; B.hidden = false; B.invul = 0;   // B 不再是妖物的代理，换成真打的魔首
 startRaidMatch([W_.hero, ...rgMates(W_.hero)], 3);
 creditT = 0; creditPending = false;
-M.towerPerks = (rgRun().pk || []).slice(); scRoundStart();
+M.towerPerks = cqKeyPerks(); scRoundStart();
 B.maxHp = k.mh; B.hp = B.lagHp = Math.max(1, k.hp); W_.kLastB = B.hp; M.timer = k.u;
-say('天道 Boss · 全线共讨', 1.5, 'big', `融魂魔首【${M.raidBoss && M.raidBoss.heroNames ? M.raidBoss.heroNames.join('·') : ''}】· 共享 ${M.towerPerks.length} 卷秘卷`);
+say('天道 Boss · 全线共讨', 1.5, 'big', `融魂魔首【${M.raidBoss && M.raidBoss.heroNames ? M.raidBoss.heroNames.join('·') : ''}】· 共享 ${(rgRun().pk || []).length} 卷秘卷`);
 } else {   // 真人不够：自己 + 2 名同袍车轮战 3 位天道侠客，秘卷照样带着，对面不带
 const foes = (k.h || []).map(id => CHAR_IDX[id]).filter(i => i !== undefined);
 while (foes.length < 3) foes.push((W_.hero + 5 + foes.length * 3) % CHARS.length);
 M.worldKey = { kind: 'trio', seq: k.s };
 B.worldProxy = false; B.hidden = false; B.invul = 0;
-M.towerPerks = (rgRun().pk || []).slice(); M.foeScrolls = []; M.scRun = {};
+M.towerPerks = cqKeyPerks(); M.foeScrolls = []; M.scRun = {};
 startTag3Match([W_.hero, ...rgMates(W_.hero)], foes, 'god');
 creditT = 0; creditPending = false;
-say('天道车轮战', 1.5, 'big', `对阵【${foes.map(i => CHARS[i].name).join('·')}】· 带着 ${M.towerPerks.length} 卷共享秘卷`);
+say('天道车轮战', 1.5, 'big', `对阵【${foes.map(i => CHARS[i].name).join('·')}】· 带着 ${(rgRun().pk || []).length} 卷共享秘卷`);
 }
 }
 function worldKeyStep() {
@@ -27067,6 +27316,67 @@ refocusGame();
 }
 }
 });
+const CQS = { q: null, mine: null, busy: false, at: 0, want: false };
+const cqCloud = () => !OFFLINE_BUILD && !!(window.CloudSave && CloudSave.chron && CloudSave.worldToken && CloudSave.worldToken());
+const CQ_ZONE_GOAL = ['竹林斩妖', '古道斩妖', '山寨斩妖', '魔窟斩妖'];   // 和 CHRON.ZONE 同一顺序
+function cqGoalName(n) { return n.g === 'kill' ? '全服斩妖' : n.g === 'zone' ? CQ_ZONE_GOAL[n.z] : n.g === 'king' ? '讨伐妖王' : n.g === 'jie' ? '斩完劫数' : '关键战告捷'; }
+function cqFrame(q) {
+const old = CQS.q;
+if (old && (q.v < old.v || (q.v === old.v && q.g < old.g))) return;   // 晚到的旧帧不认，数只往上走
+CQS.q = q;
+}
+function cqHudRows() {
+const q = CQS.q; if (!q) return [];
+if (q.i >= CHRON.N) return [['江湖长卷', '全卷完成']];
+const n = chronNode(q.i); if (!n) return [];
+return [['江湖长卷', `${CHRON.CH[n.ch].n} · 第 ${n.k + 1}/${n.len} 节`], [cqGoalName(n), `${q.g} / ${q.nd}`]];
+}
+function cqAdvanced(e) {
+const n = chronNode(e.i), done = e.i - e.from;
+if (M.worldKey) { /* 关键战里不打断大字，只弹一行提示 */ }
+else if (!n) { say('江湖长卷 · 全卷完成', 2, 'big', '全服侠客一起写完了这一卷'); SFX.gong(); }
+else if (n.k === 0) { say(`第 ${n.ch + 1} 章 · ${CHRON.CH[n.ch].n}`, 1.8, 'big', CHRON.CH[n.ch].d); SFX.gong(); }
+else say(done > 1 ? `江湖长卷推进 ${done} 节` : `长卷第 ${e.from + 1} 节完成`, 1.3, 'go', n.line);
+if (n) toast(`下一节：${n.t}`);
+if (cqCloud()) cqClaim();
+}
+async function cqLoad(claim) {
+if (OFFLINE_BUILD || !window.CloudSave || !CloudSave.chron) return;
+try {
+const r = await CloudSave.chron();
+if (r && r.s) { cqFrame({ i: r.s.node, g: r.s.got, nd: r.s.need, v: r.s.v }); }
+if (r && r.mine) CQS.mine = r.mine;
+cqModalText();
+if (claim && cqCloud() && r && r.mine && r.mine.todo > 0) cqClaim();
+} catch (e) {}
+}
+async function cqClaim() {
+if (!cqCloud()) return;
+if (CQS.busy) { CQS.want = true; return; }
+CQS.busy = true;
+try {
+const r = await CloudSave.chron('claim');
+if (r && r.mine) CQS.mine = r.mine;
+if (r && r.got > 0) {
+const mj = (r.mj || []).map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean);
+toast(`江湖长卷：领到 ${r.got} 节的奖励 · +${r.ink} 墨锭（下次打开武库到账）${mj.length ? ` · 秘卷${mj.join('、')}` : ''}`, 4);
+}
+if (r && r.mine && r.mine.todo > 0) CQS.want = true;
+} catch (e) {}
+CQS.busy = false;
+if (CQS.want) { CQS.want = false; setTimeout(cqClaim, 1500); }
+}
+function cqKeyPerks() {
+const shared = ((rgRun() && rgRun().pk) || []).slice();
+const mine = ((CQS.mine && CQS.mine.mj) || []).filter(id => SC_BY[id] && !shared.includes(id)).slice(0, CHRON.PERS_MAX);
+return shared.concat(mine);
+}
+function cqModalText() {
+const el = $id('worldChron'), q = CQS.q; if (!el || !q) return;
+const n = chronNode(q.i);
+const mine = CQS.mine ? ` · 个人秘卷 ${CQS.mine.mj.length} 卷` : '';
+el.textContent = n ? `江湖长卷 · 全服第 ${q.i + 1} / ${CHRON.N} 节 · ${CHRON.CH[n.ch].n}${mine}` : `江湖长卷 · 全卷完成${mine}`;
+}
 const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s', 0.08, 0], ['l2a', 0.15, 16], ['lcs', 0.08, 0], ['lca', 0.15, 16],
 ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
 ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],
