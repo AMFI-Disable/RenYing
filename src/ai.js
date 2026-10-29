@@ -53,12 +53,12 @@ const AI_KIT = {
   whirl: { role: 'zone', combo: true, reflect: true },
   // 凌雀：飞梭打中挂【雀芒】，带印记时换影穿刺会引爆并清零冷却；换影一路追踪，只有腾空闪躲得开
   spindle: { role: 'proj', combo: true },
-  shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, B) => !(B && B.lqHold > clock) && ((o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state)) },
+  shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, B) => !(B && B.lqHold > clock) && ((o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state) || (B && B.L.read >= 0.3 && m.skillCD > 1.5)) },   // 劲敌以上：飞梭一时挂不上印记也照放（新换影一路追到中为止，被挡也定身）
   // 离影：留影（在脚下留雾身、顺手斩一刀）当成准备动作；渡影不走通用打法，由 liyingRoute 决定什么时候、去哪个雾身
   mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 2 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
   mistswap: { role: 'self', combo: false, use: () => false },
   // 磁仙：Q 换极性（不花时间、清零 R）——R 在冷却、身边的人想换种打法时用；R 正极贴身弹开，负极把中距离的人吸过来接负极连段
-  polarswap: { role: 'self', combo: true, air: true, use: (m, o, d) => (m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150)) },
+  polarswap: { role: 'self', combo: true, air: true, use: (m, o, d, B) => !(B && B.L.combo >= 3) && ((m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150))) },   // 寻常以上换极性交给 cixianRoute
   magfield: { role: 'zone', combo: true, use: (m, o, d) => o.invul <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
 };
 // 离影：用「不按方向 / 按那一边」能不能正好选到雾身 c（和游戏里 pickClone 的规则一样）
@@ -660,9 +660,12 @@ class AIBrain {
     // 对手关在醉翁亭里（动不了、打不飞）：冲过去一直普攻，能打多少打多少
     if (foe.jailT > 0.1 && foe.hp > 0 && AI_FREE.includes(me.state) && me.onGround()) return this.beatJailed(me, foe, d, to);
     // 凌雀：飞梭挂印记 → 换影引爆（重置换影）→ 追击 / 大招再挂印记，按难度决定会打到哪一步
+    if (me.ch.id === 'lingque' && me.state === 'skill' && me.skill === 'shadowdash') this.lqDash = clock;
     if (me.ch.id === 'lingque' && this.lingqueRoute(me, foe, d, to)) return;
     // 离影：对手打空 / 收招时渡到他身后的雾身反打；残血被压时渡到离对手最远的雾身拉开
     if (me.ch.id === 'liying' && this.liyingRoute(me, foe, d, to)) return;
+    // 磁仙：负极 R 远远吸过来 → 负极普攻长连 → Q 换正极挑飞收尾 → Q 好了换回负极
+    if (me.ch.id === 'cixian' && this.cixianRoute(me, foe, d, to)) return;
     // 局势
     this.updateMode(me, foe, d);
     // 抓破绽（对手收招、落地、被打僵直）
@@ -714,6 +717,12 @@ class AIBrain {
       }
       // 大招接在连段里（贴身型）：普攻不能直接取消成大招，等收招前一刻按（缓冲会接上）
       if (me.meter >= 100 && act1 + m.rc - t < 0.12 && this.ultWouldHit(me, foe, d, true) && Math.random() < L.ult * (1 - g.ultSave * 0.5)) { this.press('special'); return; }
+      // 磁仙负极：普攻四段循环能一直连到消磁前一下；连满了换正极（Q 能从命中取消），下一下正极普攻挑飞
+      if (me.ch.passive === 'magnet' && me.pol < 0 && L.combo >= 3) {
+        const cap = Math.min(MAG.chainCap - 1, Math.round(L.combo + 8 * L.read));
+        if (m.next.light && (me.mChain || 0) < cap && hits < cap + 2) { this.press('light'); return; }
+        if (L.read >= 0.7 && me.skillCD <= 0 && Math.random() < L.skill) { this.press('skill', 'cixian'); return; }
+      }
       if (m.next.light && hits < L.combo + (this.err() ? -1 : 0)) { this.press('light'); return; }
       // 挑飞后追击：跳起来空中再打
       if (m.launch && L.combo >= 5 && foe.juggle < 2 && Math.random() < L.punish) { this.plan([['jump', 0.02], ['light', 0.22], ['light', 0.42]]); return; }
@@ -1213,17 +1222,38 @@ class AIBrain {
     }
     return false;
   }
+  // 磁仙：负极 R 是 0.16 秒起手、挡不住的远程吸人（560 像素内），吸到身前定住；Q 换极性会把 R 冷却清零。
+  // 负极打法最好：吸人 → 负极长连（劲敌约 8 下，天道连到消磁前）；绝顶 / 天道连完从命中取消成 Q 换正极，下一下正极普攻挑飞收尾，
+  // Q 好了再换回负极。入门交给通用打法（AI_KIT 的 polarswap 规则）
+  cixianRoute(me, foe, d, to) {
+    const L = this.L;
+    if (L.combo < 3 || foe.hp <= 0) return false;
+    const rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0, roll = p => Math.random() < p;
+    // 1. 正极（负极长连收尾换过去的）：Q 一好就换回负极，负极才能吸人、长连
+    if (me.pol > 0 && qReady && roll(L.skill)) { this.stopAll(); this.press('skill', 'cixian'); return true; }
+    if (me.pol > 0) return false;
+    const free = AI_FREE.includes(me.state) || me.state === 'air';
+    if (!free || foe.invul > 0 || !this.seen || clock < (this.cxNext || 0)) return false;
+    // 2. 负极、R 好了、对手在吸得到的距离：吸过来（挡不住），接负极长连
+    const counter = foe.state === 'skill' && AI_KIT[foe.skill] && AI_KIT[foe.skill].role === 'counter';
+    if (rReady && me.onGround() && d > 120 && d < MAG.rMinusRange - 40 && Math.abs(foe.y - me.y) < 220 && !counter && roll(L.skill)) {
+      this.stopAll(); this.press('skill2', 'cixian'); this.cxNext = clock + 0.5; return true;
+    }
+    return false;
+  }
   lingqueRoute(me, foe, d, to) {
     const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
     if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;
     if (clock < (this.lqNext || 0)) return false;
     const mark = foe.needleMark || 0, rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0;
-    const fly = d / SD_SPD + 0.1;                                 // 换影起手 + 飞到对手身边要多久
+    const fly = d / SD_SPD + 0.1 + (SD_DRIFT_MAX / SD_DRIFT_SPD + 0.12);   // 换影起手 + 飞到对手身边 + 第一次近身漂移回拉再扑回来
     const stuck = AI_HURT.includes(foe.state) || foe.jailT > 0 || foe.rooted;   // 对手正在挨打，闪不了也挡不了
     const canEsc = foe.breakCD <= fly && !stuck;                  // 对手的腾空闪能躲开换影
     const roll = p => Math.random() < p;
     const act = (k, wait = 0.25) => { this.stopAll(); this.press(k, 'lingque'); this.lqNext = clock + wait; return true; };
     if (L.combo < 3) return false;                               // 入门：不会刻意打连段，交给通用打法
+    // 0. 换影穿刺被挡也会把人定住 0.45 秒（强袭定身）：贴身接普攻
+    if (foe.state === 'hitstun' && foe.rooted && me.onGround() && d < aiFrame(me, 'l1').max + 15 && clock - (this.lqDash || -9) < 1.2 && roll(L.punish)) return act('light', 0.15);
     // 1. 对手被换影引爆挑飞、换影刚清零：大招再挂一层印记（续下一轮），没气就直接换影追击
     if (rReady && foe.state === 'launched' && this.lqBurst && clock - this.lqBurst < 0.9) {
       if (me.meter >= 100 && L.ult >= 0.9 && roll(L.ult)) { this.lqBurst = 0; return act('special', 1.2); }

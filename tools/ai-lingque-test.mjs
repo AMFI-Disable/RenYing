@@ -46,7 +46,7 @@ for (const lv of ['normal', 'hard', 'impossible', 'god']) {
   let n = 0;
   for (let k = 0; k < 20; k++) if (scene('normal', (A, B) => { B.needleMark = 3.2; B.breakCD = 0; }).includes('skill2')) n++;
   check(n >= 8, 'normal：有印记就放（不会等闪）', `${n}/20`);
-  const hurry = scene('god', (A, B) => { B.needleMark = 0.5; B.breakCD = 0; }).includes('skill2');
+  const hurry = scene('god', (A, B) => { B.needleMark = 0.9; B.breakCD = 0; }).includes('skill2');   // 换影要先漂移回拉再扑回来，约 0.6 秒才到
   check(hurry, 'god：印记快没了就不等，直接引爆');
 }
 // 刚引爆、对手被挑飞、换影已清零：有满气的绝顶 / 天道放大招续印记，劲敌直接换影追击，寻常不追
