@@ -5,7 +5,7 @@ const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,
 function skinGrade(k) {
   const S = SKINS[k], C = window.ArmoryCore, it = S && C && C.ITEM[k];
   if (it) return { t: it.tier, n: C.TIER[it.tier].n, c: C.TIER[it.tier].c };
-  if (k === 'qf_qfx') return { t: 'gold', n: '★ 非凡', c: '228,174,57' };
+  if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return { t: 'gold', n: '★ 非凡', c: '228,174,57' };
   return { t: S ? S.rarity : 'rare', n: RAR_NAME[S && S.rarity] || '稀有', c: RAR_RGB[S && S.rarity] || RAR_RGB.rare };
 }
 // 统一品质综合权重：用于由低到高（最差到最好）排序及自动穿戴最高品质
@@ -19,7 +19,7 @@ function skinWeight(k) {
   }
   const S = SKINS[k];
   if (S) {
-    if (k === 'qf_qfx') return 50;
+    if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return 50;
     if (S.rarity === 'legend') return 35;
     if (S.rarity === 'rare') return 20;
   }
@@ -84,6 +84,9 @@ const SKINS = {
   lq_sparrow: { char: 'lingque', rarity: 'legend', name: '惊雀', look: { body: '#1a1028', shade: '#0d0616', scarf: '#e040fb', slash: '224,64,251', blade: '#f3e5f5' }, deco: { head: 'tiara', robe: 'nightingale', breastplate: '#4a148c', back: 'featherwings', trail: 'spark', aura: 'smoke', weapStyle: 'nightingale_spindle' }, fx: { th: 'void', c: '224,64,251', c2: '74,20,140' } },
   yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { back: 'phoenixtail', head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], robe: 'phoenix', breastplate: '#b84414', cape: '#e8552a', trail: 'ember', aura: 'ember', weapStyle: 'phoenix_feather' }, fx: { th: 'flame', c: '255,145,50', c2: '255,60,20', part: 'feather' } },
   yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'owlhood', hideBaseHead: true, hoodC: '#1c2838', robe: 'blizzard', breastplate: '#385878', back: 'wings', trail: 'feather', featherC: '220,240,255', aura: 'snow', weapStyle: 'owl_feather' }, fx: { th: 'frost', c: '150,210,255', c2: '235,245,255', part: 'feather' } },
+  lq_star: { char: 'lingque', rarity: 'legend', name: '天罗星杼', exclusive: true, look: { body: '#241230', shade: '#14081c', scarf: '#ff7ad9', slash: '255,140,225', blade: '#fff2fc', outline: '#ffd6fa', outlineA: 0.9 }, deco: { head: 'jadepin', gem: '#ffd2f5', robe: 'starry', breastplate: '#381640', back: 'constellation', lotusC: '255,140,225', cape: '#22082a', trail: 'spark', aura: 'aurora', weapStyle: 'star_spindle' }, fx: { th: 'star', c: '255,140,225', c2: '255,225,140' } },
+  li_star: { char: 'liying', rarity: 'legend', name: '幽夜星魄', exclusive: true, look: { body: '#0d1822', shade: '#060c12', scarf: '#5ef0ff', slash: '94,240,255', blade: '#f0fdff', outline: '#7feeff', outlineA: 0.9 }, deco: { head: 'foxmask', hideBaseHead: true, mask: '#7feeff', robe: 'spirit', breastplate: '#142c3c', shoulder: '#1c3c52', back: 'galaxy', trail: 'snow', aura: 'aurora', weapStyle: 'star_mistblade' }, fx: { th: 'nebula', c: '94,240,255', c2: '165,185,255' } },
+  cx_star: { char: 'cixian', rarity: 'legend', name: '极星乾坤', exclusive: true, look: { body: '#262232', shade: '#13101c', scarf: '#ffb24a', slash: '255,195,110', blade: '#fffaf0', outline: '#ffd699', outlineA: 0.9 }, deco: { head: 'starguan', robe: 'thunder', breastplate: '#362854', shoulder: '#543c7c', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'star_magnet' }, fx: { th: 'thunder', c: '255,195,110', c2: '100,160,255' } },
 };
 // ======================= 皮肤场景和特效：稀有皮肤换天色、天气和命中特效，传说皮肤整个场景都换 =======================
 // sky 天空渐变 orb 天上的月亮/太阳 mist 雾色 mtn 远山 bam 竹林 wx 天气 hit 命中图案 hitC 命中颜色 stars 星星多少 rays 光柱
@@ -125,6 +128,9 @@ const SCENES = {
   gc_underworld: { sky: ['#080312', '#1a0a32', '#3c1468', '#18082c'], orb: 'rift', orbC: '185,105,255', mist: '175,95,245', mtn: ['#200b3a', '#120522'], bam: ['#0c0318', '#06010e'], wx: 'spark', wxC: '190,115,255', hit: 'crescent', hitC: '185,105,255', stars: 0.65, rays: true },
   lq_silk: { sky: ['#160a18', '#34143a', '#682270', '#34123c'], orb: 'moon', orbC: '255,200,240', mist: '240,140,210', mtn: ['#2e1236', '#1c0822'], bam: ['#140618', '#0a020e'], wx: 'petal', wxC: '255,160,220', hit: 'flower', hitC: '240,110,210' },
   lq_sparrow: { sky: ['#0a0418', '#200a3e', '#521288', '#220840'], orb: 'rift', orbC: '230,120,255', mist: '210,100,255', mtn: ['#280c48', '#16042a'], bam: ['#100220', '#080112'], wx: 'spark', wxC: '230,130,255', hit: 'crescent', hitC: '224,64,251', stars: 0.7, rays: true },
+  lq_star: { sky: ['#0c0618', '#1e0c34', '#481866', '#1c082e'], orb: 'galaxy', orbC: '255,180,240', mist: '240,150,230', mtn: ['#240d3a', '#140624'], bam: ['#0e031a', '#06010e'], wx: 'twinkle', wxC: '255,190,245', hit: 'swirl', hitC: '255,140,225', stars: 0.95, rays: true },
+  li_star: { sky: ['#030914', '#08182c', '#143656', '#091c32'], orb: 'moon', orbC: '190,245,255', mist: '130,230,255', mtn: ['#0e263e', '#071626'], bam: ['#04101c', '#020810'], wx: 'snow', wxC: '160,245,255', hit: 'crescent', hitC: '94,240,255', stars: 0.85, rays: true },
+  cx_star: { sky: ['#0d081a', '#241242', '#4e287a', '#1e0e38'], orb: 'rift', orbC: '255,215,130', mist: '210,170,255', mtn: ['#281448', '#140828'], bam: ['#100420', '#080212'], wx: 'spark', wxC: '255,220,130', hit: 'sunburst', hitC: '255,195,110', stars: 0.6, rays: true },
 };
 const SCN_DEF = { mtn: ['#241f48', '#1a1636'], bam: ['#110f26', '#0b0a1c'], mist: '190,160,220' };
 // 默认擂台动态天气环境变体（清晨竹风、暮色残阳、风雨雷霆、静谧竹夜）

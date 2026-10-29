@@ -70,8 +70,8 @@ async function handleGitLifecycle() {
   if (localRev !== remoteRev) {
     const baseRev = runSync('git merge-base HEAD origin/main');
     if (baseRev === localRev) {
-      console.log('Remote has newer commits. Performing git pull --rebase origin main...');
-      execSync('git pull --rebase origin main', { cwd: ROOT, stdio: 'inherit' });
+      console.log('Remote has newer commits. Performing autostash git pull --rebase origin main...');
+      execSync('git pull --rebase --autostash origin main', { cwd: ROOT, stdio: 'inherit' });
     }
   } else {
     console.log('Local branch is up to date with origin/main.');
@@ -85,7 +85,7 @@ async function handleGitLifecycle() {
     execSync('git add -A', { cwd: ROOT, stdio: 'inherit' });
 
     // 3-word conventional commit message rule
-    const commitMsg = 'test: consolidate suite runners';
+    const commitMsg = 'feat: add star skins';
     console.log(`Creating commit: "${commitMsg}"`);
     try {
       execSync(`git commit -m "${commitMsg}"`, { cwd: ROOT, stdio: 'inherit' });

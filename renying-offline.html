@@ -19365,6 +19365,70 @@ ctx.fillStyle = W.L.scarf || '#38e8ff'; ctx.fillRect(mid[0] - 3, mid[1] - 1, 6, 
 ctx.globalCompositeOperation = 'lighter';
 for (let k = 0; k < 3; k++) { const u = (W.T * 0.7 + k / 3) % 1, p = [top[0] + Math.sin(u * 6 + k) * 4, top[1] - 5 - u * 16]; ctx.fillStyle = `rgba(150,240,255,${0.35 * (1 - u)})`; circle(p, 2.5 + u * 3); }
 };
+SKIN_WEAP.star_spindle = W => {   // 天罗星杼：星晶子母飞梭，梭尖嵌八角星核，牵引星光悬丝
+const { sk, L, o, flash, live, g, t, hl, ux, uy, px, py, T } = W;
+const blade = flash ? '#fff' : '#fff2fc';
+const spinDraw = (pt, ang) => {
+ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang);
+if (o) { ctx.fillStyle = L.outline; ctx.beginPath(); ctx.ellipse(0, 0, 18, 5.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
+const gr = ctx.createLinearGradient(-16, 0, 16, 0);
+gr.addColorStop(0, '#ffd6fa'); gr.addColorStop(0.5, '#ffffff'); gr.addColorStop(1, '#ff7ad9');
+ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(0, 0, 16, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+ctx.fillStyle = '#ffd24a'; ctx.fillRect(-3, -2.5, 6, 5);
+ctx.strokeStyle = 'rgba(255,225,140,0.95)'; ctx.lineWidth = 1.2;
+line([-15, 0], [15, 0]);
+if (live) {
+ctx.globalCompositeOperation = 'lighter';
+const ph = (T * 1.5) % 1;
+ctx.fillStyle = `rgba(255,140,225,${0.6 * (1 - ph)})`; circle([0, 0], 3 + ph * 3);
+}
+ctx.restore();
+};
+spinDraw(g, Math.atan2(uy, ux));
+spinDraw(sk.hb, Math.atan2(uy, ux));
+if (!o) {
+ctx.strokeStyle = 'rgba(255,140,225,0.85)'; ctx.lineWidth = 1.4;
+ctx.beginPath(); ctx.moveTo(sk.hf[0], sk.hf[1]);
+ctx.quadraticCurveTo((sk.hf[0] + sk.hb[0]) / 2, (sk.hf[1] + sk.hb[1]) / 2 + 8, sk.hb[0], sk.hb[1]);
+ctx.stroke();
+}
+};
+SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄：星渊破界长刀，刃脊浮动深空星云，刀尖垂星辉
+const { P, poly, bar, live, t, g, hl, T, o, flash, L } = W;
+bar(hl, g, 4.5, '#0a141e');
+const gr = ctx.createLinearGradient(g[0], g[1], t[0], t[1]);
+gr.addColorStop(0, '#102438'); gr.addColorStop(0.45, '#2e6a8e'); gr.addColorStop(0.85, '#5ef0ff'); gr.addColorStop(1, '#ffffff');
+poly([P(0, -2.4), P(0.92, -2.1), t, P(0.92, 2.1), P(0, 2.4)], gr);
+poly([P(0.02, -6.5), P(-0.02, -7.5), P(-0.04, 0), P(-0.02, 7.5), P(0.02, 6.5), P(0.0, 0)], '#1a3e5c');
+if (!live) return;
+ctx.strokeStyle = 'rgba(94,240,255,0.8)'; ctx.lineWidth = 1.0; ctx.beginPath();
+for (let i = 0; i <= 12; i++) { const k = 0.08 + i / 12 * 0.8, q = P(k, Math.sin(k * 16 - T * 6) * 0.8); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+ctx.stroke();
+ctx.globalCompositeOperation = 'lighter';
+const ph = (T * 0.9) % 1;
+W.glow([t[0], t[1]], 6.5, '94,240,255', 0.55 * (1 - ph));
+};
+SKIN_WEAP.star_magnet = W => {   // 极星乾坤：两仪天象星盘，一手托日耀金极，一手托幽月银极
+const { sk, L, o, flash, live, T } = W;
+if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 10); circle(sk.hb, 9); return; }
+const pol = sk.pol || 1;
+const colA = pol > 0 ? '#ffb24a' : '#5a8aff';
+const colB = pol > 0 ? '#ff5a3c' : '#3c64ff';
+for (const [p, r, isFront] of [[sk.hf, 8, true], [sk.hb, 7, false]]) {
+const gr = ctx.createRadialGradient(p[0] - r * 0.25, p[1] - r * 0.25, 1, p[0], p[1], r);
+gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.5, colA); gr.addColorStop(1, colB);
+ctx.fillStyle = flash ? '#fff' : gr; circle(p, r);
+ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.0;
+ctx.beginPath(); ctx.arc(p[0], p[1], r + 2, 0, Math.PI * 2); ctx.stroke();
+}
+drawMagSym(sk.hf[0], sk.hf[1], 4.8, pol, 0.95);
+if (live) {
+ctx.globalCompositeOperation = 'lighter';
+const ph = (T * 1.8) % (Math.PI * 2);
+ctx.fillStyle = pol > 0 ? 'rgba(255,200,90,0.6)' : 'rgba(100,180,255,0.6)';
+circle([sk.hf[0] + Math.cos(ph) * 11, sk.hf[1] + Math.sin(ph) * 11], 2);
+}
+};
 const HAMMER_LOOK = {
 crimson_hammer: { chain: ['#6a2a22', '#b0503a'], head: '#4a1610', band: '#ff6a2a', crack: '255,120,50', spikes: '#2a0c08' },
 underworld_hammer: { chain: ['#4a2a7a', '#b48cff'], head: '#2a1840', band: '#a855f7', crack: '185,105,255', ghost: true },
@@ -22792,7 +22856,7 @@ const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,
 function skinGrade(k) {
 const S = SKINS[k], C = window.ArmoryCore, it = S && C && C.ITEM[k];
 if (it) return { t: it.tier, n: C.TIER[it.tier].n, c: C.TIER[it.tier].c };
-if (k === 'qf_qfx') return { t: 'gold', n: '★ 非凡', c: '228,174,57' };
+if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return { t: 'gold', n: '★ 非凡', c: '228,174,57' };
 return { t: S ? S.rarity : 'rare', n: RAR_NAME[S && S.rarity] || '稀有', c: RAR_RGB[S && S.rarity] || RAR_RGB.rare };
 }
 function skinWeight(k) {
@@ -22804,7 +22868,7 @@ return tm[it.tier] || 10;
 }
 const S = SKINS[k];
 if (S) {
-if (k === 'qf_qfx') return 50;
+if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return 50;
 if (S.rarity === 'legend') return 35;
 if (S.rarity === 'rare') return 20;
 }
@@ -22869,6 +22933,9 @@ lq_silk: { char: 'lingque', rarity: 'rare', name: '素丝', look: { body: '#2d1b
 lq_sparrow: { char: 'lingque', rarity: 'legend', name: '惊雀', look: { body: '#1a1028', shade: '#0d0616', scarf: '#e040fb', slash: '224,64,251', blade: '#f3e5f5' }, deco: { head: 'tiara', robe: 'nightingale', breastplate: '#4a148c', back: 'featherwings', trail: 'spark', aura: 'smoke', weapStyle: 'nightingale_spindle' }, fx: { th: 'void', c: '224,64,251', c2: '74,20,140' } },
 yl_phoenix: { char: 'yanling', rarity: 'legend', name: '凤羽', look: { body: '#fff0d8', shade: '#d6874a', scarf: '#ff5a2a', slash: '255,130,60', blade: '#fff2e0' }, deco: { back: 'phoenixtail', head: 'plume', plumeC: ['#ff7a2a', '#ffd25a'], robe: 'phoenix', breastplate: '#b84414', cape: '#e8552a', trail: 'ember', aura: 'ember', weapStyle: 'phoenix_feather' }, fx: { th: 'flame', c: '255,145,50', c2: '255,60,20', part: 'feather' } },
 yl_blizzard: { char: 'yanling', rarity: 'legend', name: '雪鸮', look: { body: '#eef4fa', shade: '#94acc4', scarf: '#70b6f6', slash: '120,190,255', blade: '#f2f8ff' }, deco: { head: 'owlhood', hideBaseHead: true, hoodC: '#1c2838', robe: 'blizzard', breastplate: '#385878', back: 'wings', trail: 'feather', featherC: '220,240,255', aura: 'snow', weapStyle: 'owl_feather' }, fx: { th: 'frost', c: '150,210,255', c2: '235,245,255', part: 'feather' } },
+lq_star: { char: 'lingque', rarity: 'legend', name: '天罗星杼', exclusive: true, look: { body: '#241230', shade: '#14081c', scarf: '#ff7ad9', slash: '255,140,225', blade: '#fff2fc', outline: '#ffd6fa', outlineA: 0.9 }, deco: { head: 'jadepin', gem: '#ffd2f5', robe: 'starry', breastplate: '#381640', back: 'constellation', lotusC: '255,140,225', cape: '#22082a', trail: 'spark', aura: 'aurora', weapStyle: 'star_spindle' }, fx: { th: 'star', c: '255,140,225', c2: '255,225,140' } },
+li_star: { char: 'liying', rarity: 'legend', name: '幽夜星魄', exclusive: true, look: { body: '#0d1822', shade: '#060c12', scarf: '#5ef0ff', slash: '94,240,255', blade: '#f0fdff', outline: '#7feeff', outlineA: 0.9 }, deco: { head: 'foxmask', hideBaseHead: true, mask: '#7feeff', robe: 'spirit', breastplate: '#142c3c', shoulder: '#1c3c52', back: 'galaxy', trail: 'snow', aura: 'aurora', weapStyle: 'star_mistblade' }, fx: { th: 'nebula', c: '94,240,255', c2: '165,185,255' } },
+cx_star: { char: 'cixian', rarity: 'legend', name: '极星乾坤', exclusive: true, look: { body: '#262232', shade: '#13101c', scarf: '#ffb24a', slash: '255,195,110', blade: '#fffaf0', outline: '#ffd699', outlineA: 0.9 }, deco: { head: 'starguan', robe: 'thunder', breastplate: '#362854', shoulder: '#543c7c', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'star_magnet' }, fx: { th: 'thunder', c: '255,195,110', c2: '100,160,255' } },
 };
 const SCENES = {
 qf_frost: { sky: ['#081216', '#12282f', '#24434b', '#122126'], orb: 'moon', orbC: '205,228,232', mist: '170,210,215', mtn: ['#1a3238', '#10222a'], bam: ['#0a1a16', '#06120e'], wx: 'rain', wxC: '190,225,235', hit: 'ripple', hitC: '170,220,230' },
@@ -22908,6 +22975,9 @@ gc_crimson: { sky: ['#160608', '#381014', '#7a1e28', '#380e14'], orb: 'bloodmoon
 gc_underworld: { sky: ['#080312', '#1a0a32', '#3c1468', '#18082c'], orb: 'rift', orbC: '185,105,255', mist: '175,95,245', mtn: ['#200b3a', '#120522'], bam: ['#0c0318', '#06010e'], wx: 'spark', wxC: '190,115,255', hit: 'crescent', hitC: '185,105,255', stars: 0.65, rays: true },
 lq_silk: { sky: ['#160a18', '#34143a', '#682270', '#34123c'], orb: 'moon', orbC: '255,200,240', mist: '240,140,210', mtn: ['#2e1236', '#1c0822'], bam: ['#140618', '#0a020e'], wx: 'petal', wxC: '255,160,220', hit: 'flower', hitC: '240,110,210' },
 lq_sparrow: { sky: ['#0a0418', '#200a3e', '#521288', '#220840'], orb: 'rift', orbC: '230,120,255', mist: '210,100,255', mtn: ['#280c48', '#16042a'], bam: ['#100220', '#080112'], wx: 'spark', wxC: '230,130,255', hit: 'crescent', hitC: '224,64,251', stars: 0.7, rays: true },
+lq_star: { sky: ['#0c0618', '#1e0c34', '#481866', '#1c082e'], orb: 'galaxy', orbC: '255,180,240', mist: '240,150,230', mtn: ['#240d3a', '#140624'], bam: ['#0e031a', '#06010e'], wx: 'twinkle', wxC: '255,190,245', hit: 'swirl', hitC: '255,140,225', stars: 0.95, rays: true },
+li_star: { sky: ['#030914', '#08182c', '#143656', '#091c32'], orb: 'moon', orbC: '190,245,255', mist: '130,230,255', mtn: ['#0e263e', '#071626'], bam: ['#04101c', '#020810'], wx: 'snow', wxC: '160,245,255', hit: 'crescent', hitC: '94,240,255', stars: 0.85, rays: true },
+cx_star: { sky: ['#0d081a', '#241242', '#4e287a', '#1e0e38'], orb: 'rift', orbC: '255,215,130', mist: '210,170,255', mtn: ['#281448', '#140828'], bam: ['#100420', '#080212'], wx: 'spark', wxC: '255,220,130', hit: 'sunburst', hitC: '255,195,110', stars: 0.6, rays: true },
 };
 const SCN_DEF = { mtn: ['#241f48', '#1a1636'], bam: ['#110f26', '#0b0a1c'], mist: '190,160,220' };
 const DEFAULT_WEATHER_THEMES = [
