@@ -10895,7 +10895,7 @@ return out;
 }
 const CHAR_MOVES = CHARS.map(buildMoves);
 const HEAVY_MOVES = ['hv', 'cs1', 'cs2'];
-const SD_SPD = 1750, SD_TURN = 16, SD_TIME = 0.8;
+const SD_SPD = 2350, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
 function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
 if (typeof is2v2 === 'function' && is2v2()) {
 let best = null, bd = Infinity;
@@ -11377,16 +11377,25 @@ if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
 ai: (me, foe, d) => d > 110 && d < 460 },
-shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作一道流光直扑对手，飞行中一路追踪转向（最多追 0.8 秒），追上就穿刺（34 伤害）。对手只有用腾空闪这类无敌身法才躲得开：无敌期间悬丝断开，凌雀照直飞出去。若穿刺已带【雀芒】印记之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
+shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不命中而是凌空漂移回拉（大幅提升最大漂移距离），随后不绝追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
 start(f, foe) {
 f.vx = 0; f.vy = 0;
 f.sdTrack = false;
+f.sdDrifted = false;
+f.sdDrifting = false;
+f.sdDriftT = 0;
+f.sdDriftDist = 0;
+f.sdDriftDir = 0;
 },
 update(f, foe) {
 const target = sdTarget(f, foe);
 if (f.skPh === 0) {
 if (f.t >= 0.08) {
 f.skPh = 1; f.t = 0; f.invul = 0.12; f.hitDone = false; SFX.dash();
+f.sdDrifted = false;
+f.sdDrifting = false;
+f.sdDriftT = 0;
+f.sdDriftDist = 0;
 const toward = target && (Math.sign(target.x - f.x) === f.face || Math.abs(target.x - f.x) <= 15);
 f.sdTrack = !!toward;
 const a = toward ? sdAim(f, target) : (f.face > 0 ? 0 : Math.PI);
@@ -11394,12 +11403,65 @@ f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
 }
 }
 if (f.skPh === 1) {
-if (target && target.invul <= 0 && f.sdTrack) {
+if (f.x <= WALL + 6 && f.vx < 0) {
+f.x = WALL + 8;
+f.vx = Math.abs(f.vx) || SD_SPD * 0.75;
+f.face = 1;
+if (f.sdDrifting) { f.sdDrifting = false; f.sdDrifted = true; }
+SFX.dash();
+if (!RESIM) ring(f.x, f.y - 50, 45, '255,140,225', 0.2);
+} else if (f.x >= STAGE_W - WALL - 6 && f.vx > 0) {
+f.x = STAGE_W - WALL - 8;
+f.vx = -Math.abs(f.vx) || -SD_SPD * 0.75;
+f.face = -1;
+if (f.sdDrifting) { f.sdDrifting = false; f.sdDrifted = true; }
+SFX.dash();
+if (!RESIM) ring(f.x, f.y - 50, 45, '255,140,225', 0.2);
+}
+const dFoe = target ? Math.hypot(target.x - f.x, (target.y - 50) - (f.y - 50)) : Infinity;
+if (!f.sdDrifted && !f.sdDrifting && target && (dFoe <= 125 || Math.abs(target.x - f.x) <= 85)) {
+f.sdDrifting = true;
+f.sdDriftT = 0;
+f.sdDriftDist = 0;
+f.sdDriftDir = f.x < target.x ? -1 : 1;
+f.vx = f.sdDriftDir * SD_DRIFT_SPD;
+f.vy = Math.min(f.vy, -160);
+f.invul = Math.max(f.invul, 0.15);
+SFX.dash();
+if (!RESIM) {
+ring(f.x, f.y - 50, 75, '255,140,225', 0.35);
+addP({ type: 'text', text: '✦ 移形回影 · 漂移 ✦', x: f.x, y: f.y - 110, life: 0.65, max: 0.65, rgb: '255,140,225' });
+}
+return;
+}
+if (f.sdDrifting) {
+f.sdDriftT += STEP;
+f.sdDriftDist += Math.abs(f.vx) * STEP;
+f.vx = damp(f.vx, f.sdDriftDir * SD_DRIFT_SPD * 0.45, 7, STEP);
+f.vy = damp(f.vy, -100, 8, STEP);
+if (f.y >= 0 && f.vy > 0) f.vy = 0;
+if (target) f.face = target.x >= f.x ? 1 : -1;
+if (!RESIM && Math.random() < 0.6) {
+addP({ type: 'spark', x: f.x - f.face * 15, y: f.y - 45, vx: -f.sdDriftDir * rand(60, 200), vy: rand(-60, 60), rgb: '255,140,225', life: 0.25, max: 0.25 });
+}
+if (f.sdDriftDist >= SD_DRIFT_MAX || f.sdDriftT >= 0.24) {
+f.sdDrifting = false;
+f.sdDrifted = true;
+f.sdTrack = true;
+const a = target ? sdAim(f, target) : (f.face > 0 ? 0 : Math.PI);
+f.vx = Math.cos(a) * SD_SPD;
+f.vy = Math.sin(a) * SD_SPD;
+SFX.dash();
+if (!RESIM) ring(f.x, f.y - 50, 60, '255,140,225', 0.3);
+}
+return;
+}
+if (target && f.sdTrack) {
 const cur = Math.atan2(f.vy, f.vx), want = sdAim(f, target);
 let d = want - cur;
 while (d > Math.PI) d -= Math.PI * 2;
 while (d < -Math.PI) d += Math.PI * 2;
-if (f.y >= 0 && Math.sin(cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP)) > Math.max(0.001, Math.sin(cur))) d -= Math.sign(d) * Math.PI * 2;   // 贴着地面掉头：从上面绕过去，不往地里转
+if (f.y >= 0 && Math.sin(cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP)) > Math.max(0.001, Math.sin(cur))) d -= Math.sign(d) * Math.PI * 2;
 const a = cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP);
 f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
 } else {
@@ -11407,13 +11469,25 @@ const v = Math.hypot(f.vx, f.vy) || 1;
 f.vx = f.vx / v * SD_SPD; f.vy = f.vy / v * SD_SPD;
 }
 if (f.vx) f.face = f.vx > 0 ? 1 : -1;
-if (f.y >= 0 && f.vy > 0) f.vy = 0;   // 贴地飞，不往地里钻
+if (f.y >= 0 && f.vy > 0) f.vy = 0;
 if (!RESIM && Math.random() < 0.6) {
 addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 50, vx: -f.face * rand(50, 150), vy: rand(-40, 40), rgb: '235,110,210', life: 0.25, max: 0.25 });
 }
+if (f.sdDrifted) {
 const hitFoe = target || foe;
 const wasMarked = (hitFoe.needleMark || 0) > 0;
-if (strike(f, hitFoe, { box: [-40, -120, 104, 24], dmg: 34, kb: [190, -70], stun: 0.36, hs: 0.07 })) {
+if (strike(f, hitFoe, {
+name: 'shadowdash',
+box: [-40, -120, 104, 24],
+dmg: 34,
+kb: [190, 0],
+stun: 0.42,
+hs: 0.07,
+noJg: true,
+unparryable: true,
+blockStun: 0.45,
+launch: false
+})) {
 if (wasMarked) {
 hitFoe.needleMark = 0;
 f.skill2CD = 0;
@@ -11428,11 +11502,13 @@ addP({ type: 'spark', x: hitFoe.x, y: hitFoe.y - 60, vx: Math.cos(a) * v, vy: Ma
 addP({ type: 'text', text: '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
 }
 f.skPh = 2; f.t = 0; f.vx *= 0.06; f.vy *= 0.06;
-} else if (f.t >= SD_TIME) { f.skPh = 2; f.t = 0; f.vx *= 0.12; f.vy *= 0.12; }
+}
+}
+if (target && target.hp <= 0 && f.t >= 1.5) { f.skPh = 2; f.t = 0; f.vx *= 0.12; f.vy *= 0.12; }
 }
 if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
 },
-pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? ['dash', 60] : ['idle', 14],
+pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? (f.sdDrifting ? ['du_l1s', 30] : ['dash', 60]) : ['idle', 14],
 ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
 mistmark: { name: '留影', cd: 5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 2 个雾身，再留就散掉最早的那个。雾身存在 6 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。',
 start(f) { f.vx = 0; plantClone(f, f.x); },
@@ -14859,6 +14935,10 @@ addP({ type: 'ink', x: f.x, y: f.y - rand(20, 80), vx: -side * rand(60, 220), vy
 }
 }
 }
+else if (f.state === 'skill' && f.skill === 'shadowdash') {
+f.vx = -side * Math.max(360, Math.abs(f.vx) * 0.85);
+if (f.y >= 0 && f.vy > 0) f.vy = -160;
+}
 else if (Math.sign(f.vx) === side) f.vx = 0;
 }
 }
@@ -15076,7 +15156,7 @@ const attWeight = (att.ch && att.ch.stat && att.ch.stat.weight) || 1;
 const defWeight = (def.ch && def.ch.stat && def.ch.stat.weight) || 1;
 const massRatio = clamp(attWeight / defWeight, 0.45, 2.5);
 if (blocking) {
-const isJustGuard = !m.isProj && !m.unblockable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
+const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
 if (isJustGuard) {
 if (scOn()) scFire(def, 'blk', att, true, m);
 def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
@@ -15123,8 +15203,16 @@ ev.guardBreak = true;
 hitVisual(ev); netEmit(ev);
 return;
 }
+if (m.blockStun) {
+def.state = 'hitstun'; def.t = 0;
+def.stun = typeof m.blockStun === 'number' ? m.blockStun : 0.45;
+def.rooted = true;
+def.vy = 0; def.y = Math.min(0, def.y);
+addP({ type: 'text', text: '💫 强袭定身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '255,200,100' });
+} else {
 def.state = 'blockstun'; def.t = 0;
 def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1);
+}
 const isDefFixed = def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed');
 def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
 if (isDefFixed) { def.vy = 0; def.y = 0; }

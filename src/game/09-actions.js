@@ -948,6 +948,11 @@ function physics(f) {
         }
       }
     }
+    else if (f.state === 'skill' && f.skill === 'shadowdash') {
+      // 凌雀「移形换影」触墙不中断、不卡死停滞：沿墙借力反弹回场内
+      f.vx = -side * Math.max(360, Math.abs(f.vx) * 0.85);
+      if (f.y >= 0 && f.vy > 0) f.vy = -160;
+    }
     else if (Math.sign(f.vx) === side) f.vx = 0;
   }
 }

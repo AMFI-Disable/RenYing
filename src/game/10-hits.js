@@ -190,8 +190,8 @@ function applyHit(att, def, m, pt) {
   const massRatio = clamp(attWeight / defWeight, 0.45, 2.5);
 
   if (blocking) {
-    // 精准招架（Just Guard / Perfect Parry）：在受击前 0.09s 内按下格挡
-    const isJustGuard = !m.isProj && !m.unblockable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
+    // 精准招架（Just Guard / Perfect Parry）：在受击前 0.09s 内按下格挡（特定招式如移形换影不可被精准招架）
+    const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
     if (isJustGuard) {
       if (scOn()) scFire(def, 'blk', att, true, m);
       def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
@@ -243,8 +243,16 @@ function applyHit(att, def, m, pt) {
       return;
     }
 
-    def.state = 'blockstun'; def.t = 0;
-    def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1);
+    if (m.blockStun) {
+      def.state = 'hitstun'; def.t = 0;
+      def.stun = typeof m.blockStun === 'number' ? m.blockStun : 0.45;
+      def.rooted = true;
+      def.vy = 0; def.y = Math.min(0, def.y);
+      addP({ type: 'text', text: '💫 强袭定身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '255,200,100' });
+    } else {
+      def.state = 'blockstun'; def.t = 0;
+      def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) || 1);
+    }
     const isDefFixed = def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed');
     def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
     if (isDefFixed) { def.vy = 0; def.y = 0; }

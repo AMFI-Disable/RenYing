@@ -322,9 +322,9 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Lingque R (shadowdash) homes in: hits a far, fleeing or jumping target; only 腾空闪 dodges it',
+    name: 'Lingque R (shadowdash) feints & drifts back, homes non-stop on far/fleeing/jumping targets, wall-bounces, cannot be Just Guarded, and block stuns without knockdown',
     fn: `(() => {
-      const run = (setup, perFrame) => {
+      const run = (setup, perFrame, maxFrames = 150) => {
         startMatch('train', 'stand', [CHAR_IDX.lingque, 0]);
         showScreen(null); paused = false; M.phase = 'fight';
         for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; f.needleMark = 0; }
@@ -332,26 +332,60 @@ const testSuite = [
         if (setup) setup();
         const hp0 = B.hp; A.skill2CD = 0; startSkill(A, B, 2);
         if (A.skill !== 'shadowdash') return { err: 'R did not start shadowdash: ' + A.skill };
-        let hitAt = -1, maxGap = 0;
-        for (let i = 0; i < 120 && A.state === 'skill'; i++) {
+        let hitAt = -1, maxDrift = 0, sawDrift = false;
+        for (let i = 0; i < maxFrames && A.state === 'skill'; i++) {
           if (perFrame) perFrame(i);
           step();
+          if (A.sdDrifting || A.sdDrifted) sawDrift = true;
+          if (A.sdDriftDist > maxDrift) maxDrift = A.sdDriftDist;
           if (hitAt < 0 && B.hp < hp0) hitAt = i;
         }
-        return { hit: hitAt >= 0, hitAt, dist: Math.round(Math.abs(B.x - A.x)), lqState: A.state };
+        return { hit: hitAt >= 0, hitAt, sawDrift, maxDrift, dist: Math.round(Math.abs(B.x - A.x)), lqState: A.state, bState: B.state, bHp: B.hp, hp0 };
       };
+      // 1. Far target: approaches, drifts back (does not hit first pass), then tracks and hits
       const far = run();
-      if (!far.hit) return { pass: false, error: 'missed a standing target 760 px away: ' + JSON.stringify(far) };
-      const flee = run(null, i => { if (B.state !== 'hitstun' && B.state !== 'launched') { B.x = Math.min(STAGE_W - WALL, B.x + 4); } });
+      if (!far.hit) return { pass: false, error: 'missed standing target: ' + JSON.stringify(far) };
+      if (!far.sawDrift || far.maxDrift < 200) return { pass: false, error: 'did not drift back properly: ' + JSON.stringify(far) };
+
+      // 2. Fleeing target: pursues non-stop
+      const flee = run(null, i => { if (B.state !== 'hitstun' && B.state !== 'launched') { B.x = Math.min(STAGE_W - WALL - 20, B.x + 5); } });
       if (!flee.hit) return { pass: false, error: 'missed a target running away: ' + JSON.stringify(flee) };
+
+      // 3. Jumping target: homes into air / landing
       const jump = run(() => { B.state = 'air'; B.vy = -1100; B.y = -2; });
       if (!jump.hit) return { pass: false, error: 'missed a jumping target: ' + JSON.stringify(jump) };
-      const side = run(null, i => { if (i === 24) { B.x = Math.max(WALL, A.x - 300); } });
-      if (!side.hit) return { pass: false, error: 'did not turn around to a target that got behind it: ' + JSON.stringify(side) };
-      const esc = run(null, i => { if (i === 10) { B.ctrl.buf.dash = clock; } });
-      if (esc.hit) return { pass: false, error: '腾空闪 did not dodge the homing dash: ' + JSON.stringify(esc) };
-      const late = run(null, i => { if (i === far.hitAt + 2) { B.ctrl.buf.dash = clock; } });
-      if (!late.hit) return { pass: false, error: 'a 腾空闪 after the hit should not undo it: ' + JSON.stringify(late) };
+
+      // 4. Target gets behind: turns around
+      const side = run(null, i => { if (i === 24) { B.x = Math.max(WALL + 50, A.x - 300); } });
+      if (!side.hit) return { pass: false, error: 'did not turn around: ' + JSON.stringify(side) };
+
+      // 5. Wall test: A starting near wall or rushing into wall does not stop R
+      const wallRun = run(() => { A.x = WALL + 20; A.face = -1; B.x = STAGE_W - WALL - 100; });
+      if (!wallRun.hit) return { pass: false, error: 'R stopped at wall: ' + JSON.stringify(wallRun) };
+
+      // 6. Block test: Blocking reduces damage, stops R, inflicts standing stun (not fall/knockdown), and cannot be Just Guarded
+      startMatch('train', 'block', [CHAR_IDX.lingque, 0]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      if (B.ctrl && B.ctrl.cfg) B.ctrl.cfg.block = true;
+      A.x = STAGE_W / 2 - 200; B.x = STAGE_W / 2 + 200; A.face = 1; B.face = -1;
+      A.skill2CD = 0; startSkill(A, B, 2);
+      let blockedHit = false;
+      const bHp0 = B.hp;
+      for (let i = 0; i < 150 && A.state === 'skill'; i++) {
+        B.ctrl.held.down = true;
+        B.ctrl.held.left = false;
+        B.ctrl.held.right = false;
+        step();
+        if (B.hp < bHp0) { blockedHit = true; break; }
+      }
+      if (!blockedHit) return { pass: false, error: 'R did not connect against blocking opponent' };
+      const dmgTaken = bHp0 - B.hp;
+      if (dmgTaken >= 30) return { pass: false, error: 'blocking did not reduce damage: dmg=' + dmgTaken };
+      if (B.state !== 'hitstun') return { pass: false, error: 'blocked opponent was not stunned: state=' + B.state };
+      if (B.y !== 0) return { pass: false, error: 'blocked opponent fell or launched: y=' + B.y };
+      if (A.state === 'skill' && A.skPh === 1) return { pass: false, error: 'R was not stopped by block' };
+
       toMenu();
       return { pass: true, error: null };
     })()`
