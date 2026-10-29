@@ -108,5 +108,22 @@ for (const [hero, seed] of [['qingfeng', 3], ['moyu', 9], ['liying', 5]]) {
   check(r.clean === 0 && r.strikes.length === 1 && /招式伤害数值被篡改/.test(r.strikes[0]), '叠满秘卷时数值表检查不误报；改了招式伤害立刻记过', JSON.stringify(r));
 }
 
+// 4. 联机房间（M.mode 是 'net'）按房间规则放宽：天机、神决、同袍肉鸽和本机同一档，普通房间不放宽
+{
+  const env = await env0(8);
+  const r = JSON.parse(env.run(`(() => {
+    const out = {};
+    for (const room of ['normal', 'chaos', 'mayhem', 'raid']) {
+      NET.role = 'host'; NET.open = true; netRoomMode = room;
+      rollStart(room === 'raid' ? [0, 1, 3, 4] : [0, 3], 11);
+      out[room] = Math.round(acHitCap(A, B, { dmg: 20 }) / (20 * 12) / acScMul(A, B));
+    }
+    for (const mode of ['chaos', 'mayhem']) { (mode === 'chaos' ? startChaos : startMayhem)(0, 3, 'god', true); out['local_' + mode] = Math.round(acHitCap(A, B, { dmg: 20 }) / (20 * 12)); }
+    return JSON.stringify(out);
+  })()`));
+  check(r.normal === 1 && r.chaos === 6 && r.mayhem === 6 && r.raid === 6 && r.local_chaos === 6 && r.local_mayhem === 6,
+    '联机天机、神决、同袍肉鸽房间和本机一样放宽 6 倍，普通房间不放宽', JSON.stringify(r));
+}
+
 if (fails) { console.error(`\nFAIL: ${fails} 项反作弊检查没过`); process.exit(1); }
 console.log('\nPASS: 反作弊“改伤害”检查全部通过');

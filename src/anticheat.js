@@ -201,7 +201,9 @@ function acScMul(att, def) {
 }
 function acHitCap(att, def, m) {
   const base = m.dmgAbs !== undefined ? m.dmgAbs : (m.dmg || 0);
-  const wild = M.mode === 'mayhem' || M.mode === 'chaos' || M.mode === 'raid' ? 6 : 1;
+  // 联机房间里 M.mode 是 'net'，规则在房间上（天机、神决、同袍肉鸽）：按规则认，不能只看 M.mode
+  const rule = (typeof netRoom === 'function' && netRoom()) || {};
+  const wild = M.mode === 'mayhem' || M.mode === 'chaos' || rule.rule === 'mayhem' || rule.rule === 'chaos' || (typeof isRaid === 'function' ? isRaid() : M.mode === 'raid') ? 6 : 1;
   const ot = M.ot && typeof OT_DMG === 'number' ? OT_DMG : 1;   // 加时赛伤害翻倍，是在 applyHit 里面乘的，这里拿到的 m 还没乘
   const sc = acScMul(att, def);
   return Math.max(base, 20) * 12 * wild * ot * sc + (sc > 1 ? 40 : 0);
