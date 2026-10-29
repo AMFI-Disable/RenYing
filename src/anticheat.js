@@ -9,7 +9,9 @@
              从云端或别的设备载入存档时不算（那是真实进度）；服务器确认的、武库结算的入账也不算
              （云端模块记一笔，这里对账，对得上才放过；记账入口只交给武库，控制台拿不到）。
      改伤害：开局时记下招式表、平衡表、技能表的指纹，之后每 3 秒对一次，被改过就算作弊；
-             伤害函数被换掉也算；自己打出去的一下伤害远超这一招可能的最大值（两次）也算。
+             伤害函数被换掉也算。自己打出去的一下伤害远超这一招可能的最大值，只记录、不算作弊：
+             秘卷、模式、平衡一叠就分不清是叠得高还是改了数，误封过正常玩家；记一条在本机，再当错误报给服务器
+             （管理网页「错误」页能查），真改了数的会被上面两条抓到。
    处罚（按账号记，开发者账号不管）：
      第一次警告；第二次封 1 天；第三次永久封号，要联系作者解封。
    记录存两份：本机（带校验，改了也认得出来）和服务器（/api/ac，客户端只能往上加，被封期间服务器
@@ -212,8 +214,17 @@ function acCheckHit(att, def, m, before) {
   if (!def || !m || typeof before !== 'number' || typeof def.hp !== 'number' || !acLocalAttacker(att)) return;
   const dealt = before - def.hp;
   if (dealt <= 150 || dealt <= acHitCap(att, def, m)) return;
-  if (ACH.hitSeq !== M.rseq) { ACH.hitSeq = M.rseq; ACH.hits = 0; }
-  if (++ACH.hits >= 2) acStrike(`一下打出 ${Math.round(dealt)} 伤害，远超招式上限`);
+  acSuspect(dealt, acHitCap(att, def, m), att, m);
+}
+// 单下超限：不记过、不封号，只留记录。本机存最近 20 条；每回合最多报一条给服务器（走错误上报 /api/err，不改服务器）
+const AC_SUS_KEY = 'renying-ac-suspect';
+function acSuspect(dealt, cap, att, m) {
+  if (ACH.hitSeq === M.rseq) return;
+  ACH.hitSeq = M.rseq;
+  const row = { at: Date.now(), dmg: Math.round(dealt), cap: Math.round(cap), mode: M.mode, ch: att.ch && att.ch.id, st: att.state, mv: att.moveName || att.skill || '', ult: !!m.ult, sc: typeof scIds === 'function' && scOn() ? scIds(att).length : 0 };
+  ACH.suspect = (ACH.suspect || []).concat(row).slice(-20);
+  try { const old = JSON.parse(localStorage.getItem(AC_SUS_KEY) || '[]'); localStorage.setItem(AC_SUS_KEY, JSON.stringify((Array.isArray(old) ? old : []).concat(row).slice(-20))); } catch (e) {}
+  try { if (window.ERR && ERR.report) ERR.report({ message: `反作弊可疑（只记录）：${row.mode} ${row.ch} 一下打出 ${row.dmg} 伤害，上限 ${row.cap}` }, { dmg: row.dmg, cap: row.cap, ch: row.ch, st: row.st, mv: row.mv, ult: row.ult, sc: row.sc }); } catch (e) {}   // 服务器只收一层的短键
 }
 function acHookHits() {
   const orig = applyHit;

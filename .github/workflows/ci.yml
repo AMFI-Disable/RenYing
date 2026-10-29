@@ -94,8 +94,8 @@ jobs:
       - name: Lingque AI Combo Checks
         run: node tools/ai-lingque-test.mjs
 
-      # Anti-cheat damage check: a full roguelike scroll stack must not be flagged, while edited move
-      # tables and inflated hidden multipliers still are.
+      # Anti-cheat damage check: a single oversized hit is only logged and reported, never a strike (a full
+      # roguelike scroll stack leaves no record at all); edited move tables and a swapped damage function still strike.
       - name: Anti-Cheat Damage Checks
         run: node tools/anticheat-test.mjs
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// 反作弊“改伤害”这一条的测试（src/anticheat.js 的 acCheckHit / acTableSig）：
-//   有秘卷的模式里正常叠满秘卷不能记过（以前上限不算秘卷，爬塔后期一下打出招式的一两百倍，误封过人）；
-//   改了招式表、改了身上的计数照样记过。
+// 反作弊“改伤害”这一条的测试（src/anticheat.js 的 acCheckHit / acTableSig / acCodeTick）：
+//   单下伤害超限只记录、不记过（以前记过，秘卷、模式一叠误封过人）：正常叠满秘卷连记录都不该有，改了身上的计数要留下记录；
+//   改了招式表、换了伤害函数照样记过。
 //   node tools/anticheat-test.mjs
 import { readFileSync } from 'node:fs';
 import { makeEnv, HEROES } from './ai-arena.mjs';
@@ -14,7 +14,8 @@ async function env0(seed = 3) {
   const env = await makeEnv(); env.seed(seed);
   // 反作弊脚本接在游戏后面跑（网页里也是这个顺序）；记过只数次数，不真的弹窗、退回大厅
   env.run(readFileSync(ROOT + 'src/anticheat.js', 'utf8').replace("'use strict';", ''));
-  env.run(`ACH.test = true; ACH.strikes = []; acStrike = r => { ACH.strikes.push(r); ACH.hits = 0; };`);
+  env.run(`ACH.test = true; ACH.strikes = []; acStrike = r => { ACH.strikes.push(r); };
+    ACH.reported = []; window.ERR = { report: (e, x) => { ACH.reported.push([e.message, x]); return true; } };`);
   return env;
 }
 
@@ -66,23 +67,24 @@ for (const [hero, seed] of [['qingfeng', 3], ['moyu', 9], ['liying', 5]]) {
       return r; };
     for (let i = 0; i < 120 * 150 && M.phase !== 'end'; i++) { step(); A.hp = Math.max(A.hp, A.maxHp * 0.5); }
     applyHit = orig;
-    return JSON.stringify({ perks: M.towerPerks.length, strikes: ACH.strikes, worst: Math.round(worst), oldRule, sig: acTableSig() === s0 });
+    return JSON.stringify({ perks: M.towerPerks.length, strikes: ACH.strikes, sus: (ACH.suspect || []).length, worst: Math.round(worst), oldRule, sig: acTableSig() === s0 });
   })()`));
-  check(!r.strikes.length && r.worst > 12 && r.oldRule >= 2 && r.sig,
-    `${hero} 爬塔带 ${r.perks} 卷秘卷：最大一下是招式伤害的 ${r.worst} 倍，旧规则会判 ${r.oldRule} 次超限，现在不记过；数值表签名没变`, JSON.stringify(r));
+  check(!r.strikes.length && !r.sus && r.worst > 12 && r.oldRule >= 2 && r.sig,
+    `${hero} 爬塔带 ${r.perks} 卷秘卷：最大一下是招式伤害的 ${r.worst} 倍，旧规则会判 ${r.oldRule} 次超限，现在不记过也不留可疑记录；数值表签名没变`, JSON.stringify(r));
 }
 
-// 3. 真改伤害的照样拦得住
+// 3. 真改伤害的：改身上计数的留下可疑记录（不记过）；改表、换函数的记过
 {
   // 秘卷之外凭空多出来的倍数：带着破甲等 8 卷（爬塔中段的量），把破甲层数从最多 10 层改成 10 万层。
   // 秘卷叠得越多上限越宽，几十卷时这种改法就藏得住了：本机这层只管不误封，真正的账在服务器上
   const env = await env0(4);
   const r = JSON.parse(env.run(`(() => {
     startTower(0, true); M.towerPerks = ['sunder', 'crit_eye', 'first_blood', 'backstab', 'opener', 'crescendo', 'glass_cannon', 'executioner']; for (const f of allFighters()) f.sc = null; scRoundStart(); B.maxHp *= 1000; B.hp = B.maxHp;
-    for (let i = 0; i < 120 * 60 && ACH.strikes.length === 0 && M.phase !== 'end'; i++) { A.sc.sunder = 1e5; step(); A.hp = Math.max(A.hp, A.maxHp * 0.5); }
-    return JSON.stringify({ strikes: ACH.strikes });
+    for (let i = 0; i < 120 * 60 && !(ACH.suspect || []).length && M.phase !== 'end'; i++) { A.sc.sunder = 1e5; step(); A.hp = Math.max(A.hp, A.maxHp * 0.5); }
+    return JSON.stringify({ strikes: ACH.strikes, sus: ACH.suspect || [], rep: ACH.reported, local: JSON.parse(localStorage.getItem('renying-ac-suspect') || '[]').length });
   })()`));
-  check(r.strikes.length >= 1 && /远超招式上限/.test(r.strikes[0]), '带 8 卷秘卷时把破甲层数改大：一下的伤害超出秘卷能给的上限，记过', JSON.stringify(r));
+  check(!r.strikes.length && r.sus.length === 1 && r.sus[0].dmg > r.sus[0].cap && r.sus[0].mode === 'tower' && r.rep.length === 1 && /只记录/.test(r.rep[0][0]) && r.rep[0][1].dmg === r.sus[0].dmg,
+    '带 8 卷秘卷时把破甲层数改大：一下超出秘卷能给的上限，不记过，留一条可疑记录并上报', JSON.stringify(r).slice(0, 400));
 }
 {
   // 没有秘卷的普通对局：醉翁的醉意改成 10 万
@@ -90,10 +92,10 @@ for (const [hero, seed] of [['qingfeng', 3], ['moyu', 9], ['liying', 5]]) {
   const r = JSON.parse(env.run(`(() => {
     const Z = CHARS.findIndex(c => c.id === 'zuixian');
     startMatch('cpu', 'hard', [Z, 0], true); showScreen(null); paused = false; M.phase = 'fight'; B.maxHp *= 1000; B.hp = B.maxHp;
-    for (let i = 0; i < 120 * 60 && ACH.strikes.length === 0 && M.phase !== 'end'; i++) { A.drunk = 1e5; step(); A.hp = A.maxHp; }
-    return JSON.stringify({ strikes: ACH.strikes });
+    for (let i = 0; i < 120 * 60 && M.phase !== 'end'; i++) { A.drunk = 1e5; step(); A.hp = A.maxHp; }
+    return JSON.stringify({ strikes: ACH.strikes, sus: (ACH.suspect || []).length, rep: ACH.reported.length, banned: !!(ACH.rec && acBanned(ACH.rec)) });
   })()`));
-  check(r.strikes.length >= 1 && /远超招式上限/.test(r.strikes[0]), '普通对局把醉意改到 10 万：一下打出的伤害超限，记过', JSON.stringify(r));
+  check(!r.strikes.length && !r.banned && r.sus === 1 && r.rep === 1, '普通对局把醉意改到 10 万：一回合里多下超限，只留一条记录、报一次，不记过不封号', JSON.stringify(r));
 }
 {
   // 改招式表：普攻伤害 ×10，三秒一次的数值表检查发现被改过（哪个模式、带不带秘卷都一样）
@@ -106,6 +108,17 @@ for (const [hero, seed] of [['qingfeng', 3], ['moyu', 9], ['liying', 5]]) {
     return JSON.stringify({ clean, strikes: ACH.strikes });
   })()`));
   check(r.clean === 0 && r.strikes.length === 1 && /招式伤害数值被篡改/.test(r.strikes[0]), '叠满秘卷时数值表检查不误报；改了招式伤害立刻记过', JSON.stringify(r));
+}
+{
+  // 换掉伤害函数：下一次检查记过，并换回原来的
+  const env = await env0(7);
+  const r = JSON.parse(env.run(`(() => {
+    startMatch('cpu', 'hard', [0, 3], true);
+    const real = applyHit; applyHit = function (att, def, m, pt) { return real.call(this, att, def, { ...m, dmg: (m.dmg || 0) * 10 }, pt); };
+    acCodeTick();
+    return JSON.stringify({ strikes: ACH.strikes, back: applyHit === real });
+  })()`));
+  check(r.strikes.length === 1 && /伤害计算被篡改/.test(r.strikes[0]) && r.back, '换掉伤害函数：记过，函数换回原来的', JSON.stringify(r));
 }
 
 // 4. 联机房间（M.mode 是 'net'）按房间规则放宽：天机、神决、同袍肉鸽和本机同一档，普通房间不放宽

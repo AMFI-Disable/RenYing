@@ -32501,8 +32501,16 @@ function acCheckHit(att, def, m, before) {
 if (!def || !m || typeof before !== 'number' || typeof def.hp !== 'number' || !acLocalAttacker(att)) return;
 const dealt = before - def.hp;
 if (dealt <= 150 || dealt <= acHitCap(att, def, m)) return;
-if (ACH.hitSeq !== M.rseq) { ACH.hitSeq = M.rseq; ACH.hits = 0; }
-if (++ACH.hits >= 2) acStrike(`一下打出 ${Math.round(dealt)} 伤害，远超招式上限`);
+acSuspect(dealt, acHitCap(att, def, m), att, m);
+}
+const AC_SUS_KEY = 'renying-ac-suspect';
+function acSuspect(dealt, cap, att, m) {
+if (ACH.hitSeq === M.rseq) return;
+ACH.hitSeq = M.rseq;
+const row = { at: Date.now(), dmg: Math.round(dealt), cap: Math.round(cap), mode: M.mode, ch: att.ch && att.ch.id, st: att.state, mv: att.moveName || att.skill || '', ult: !!m.ult, sc: typeof scIds === 'function' && scOn() ? scIds(att).length : 0 };
+ACH.suspect = (ACH.suspect || []).concat(row).slice(-20);
+try { const old = JSON.parse(localStorage.getItem(AC_SUS_KEY) || '[]'); localStorage.setItem(AC_SUS_KEY, JSON.stringify((Array.isArray(old) ? old : []).concat(row).slice(-20))); } catch (e) {}
+try { if (window.ERR && ERR.report) ERR.report({ message: `反作弊可疑（只记录）：${row.mode} ${row.ch} 一下打出 ${row.dmg} 伤害，上限 ${row.cap}` }, { dmg: row.dmg, cap: row.cap, ch: row.ch, st: row.st, mv: row.mv, ult: row.ult, sc: row.sc }); } catch (e) {}   // 服务器只收一层的短键
 }
 function acHookHits() {
 const orig = applyHit;
