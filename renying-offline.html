@@ -6078,6 +6078,7 @@ if (foe.comboHits) foe.lastComboHits = foe.comboHits;
 if (me.state === 'launched' || me.state === 'hitstun' || me.state === 'knockdown') {
 this.dir = 0; this.stopAll();
 if (this.shouldBreak(me, foe)) { this.press('dash'); return true; }
+if (this.shouldBreakoutSkill(me, foe)) return true;
 if (me.state === 'launched' && !me.spiked && this.chance(L.tech * 0.25 + (this.techRoll === undefined ? 0 : 0))) this.techRoll = true;
 if (me.state === 'launched') {
 if (this.techRoll === undefined) this.techRoll = Math.random() < L.tech;
@@ -6113,6 +6114,22 @@ if (danger && hits >= 1) return true;
 if (me.state === 'knockdown') return foe.state === 'charge' || (foe.meter >= 100 && L.breaker > 0.8 && me.t > 0.4);   // 压起身：对手在蓄不可挡的力或等着放大招
 const at = Math.max(1, Math.floor(g.breakAt)), lost = (this.hpBeforeCombo || me.hp) - me.hp;
 if (hits >= at && lost >= 30) return me.hp < me.maxHp * 0.5 || hits >= at + 1 || Math.random() < L.breaker * 0.6;
+return false;
+}
+shouldBreakoutSkill(me, foe) {
+if (me.state !== 'hitstun' && me.state !== 'launched') return false;
+if (me.jailT > 0 || me.drinkT > 0 || me.t < 0.06) return false;
+for (const slot of [2, 1]) {
+const id = slot === 2 ? me.ch.skill2 : me.ch.skill;
+const cd = slot === 2 ? me.skill2CD : me.skillCD;
+const S = SKILLS[id];
+if (S && S.breakout && cd <= 0 && (!S.can || S.can(me))) {
+if ((me.comboHits || 0) >= 2 || me.hp < me.maxHp * 0.5) {
+this.press(slot === 2 ? 'skill2' : 'skill');
+return true;
+}
+}
+}
 return false;
 }
 planWakeup(me, foe) {
@@ -10998,8 +11015,8 @@ if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 36] : f.skPh === 2 ? ['dash', 60] : ['fy_xslash', 40],
 ai: (me, foe, d) => d > 120 },
-quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
-start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; },
+quake: { name: '震地', cd: 8, breakout: true, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
+start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.24) {
 f.skPh = 1; f.t = 0; f.hitDone = false;
@@ -11209,9 +11226,10 @@ if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - ra
 if (f.t >= 0.4) toNeutral(f);
 },
 pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
-stomp: { name: '金刚雷铠', cd: 5.5, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
+stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
 start(f) {
-f.vx = 0; f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
+f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0);
+f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
 dust(f.x, 0, 10); SFX.block();
 ring(f.x, f.y - 60, 75, '255,230,120', 0.35);
 },
@@ -11291,8 +11309,8 @@ if (f.skPh === 1 && f.t >= 0.2) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['yx_play', 30] : ['yx_push', 50],
 ai: (me, foe, d) => d > 110 && d < 700 && ((me.notes || 0) >= 2 || d > 240) },
-echowall: { name: '回音壁', cd: 6, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
-start(f) { f.vx = 0; f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
+echowall: { name: '回音壁', cd: 6, breakout: true, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
+start(f) { f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
 update(f, foe) {
 f.vx = damp(f.vx, 0, 12, STEP);
 if (f.skPh === 0 && f.t >= 0.08) {
@@ -11523,8 +11541,8 @@ if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 40] : f.skPh === 1 ? ['l2a', 60] : ['idle', 14],
 ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 2 },
-mistswap: { name: '渡影', cd: 4, free: true,
-can: f => ['idle', 'walk', 'air', 'block'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
+mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
+can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
 lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
 desc: '结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。',
 start(f, foe) { const c = pickClone(f, foe); f.swapId = c ? c.id : -1; f.vx = 0; },
@@ -14601,6 +14619,43 @@ SFX.escape();
 return true;
 }
 function endEscape(f) { if (f.escInvul) { f.escInvul = false; f.invul = 0; } f.escMode = ''; }
+function tryBreakoutSkill(f, foe) {
+if (f.hp <= 0 || M.phase !== 'fight') return false;
+if (f.state === 'held' || f.jailT > 0 || f.drinkT > 0 || f.state === 'special' || f.state === 'victory') return false;
+const isVictim = f.state === 'hitstun' || f.state === 'blockstun' || f.state === 'launched';
+if (!isVictim) return false;
+const c = f.ctrl;
+if (!c || !c.consume) return false;
+for (const slot of [2, 1]) {
+const id = slot === 2 ? f.ch.skill2 : f.ch.skill;
+const cd = slot === 2 ? f.skill2CD : f.skillCD;
+const key = slot === 2 ? 'skill2' : 'skill';
+const S = SKILLS[id];
+if (S && S.breakout && cd <= 0 && c.consume(key)) {
+if (S.can && !S.can(f)) {
+if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' });
+continue;
+}
+f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.airRecover = false;
+f.stun = 0; f.rooted = false; f.rot = 0;
+delete c.buf.light; delete c.buf.heavy; c.atkT = clock + 1e6;
+comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
+ring(f.x, f.y - 50, 110, f.look.slash || '255,230,120', 0.4);
+ring(f.x, f.y - 50, 60, '255,255,255', 0.3);
+for (let i = 0; i < 12; i++) {
+const a = rand(0, Math.PI * 2), v = rand(100, 260);
+addP({ type: 'spark', x: f.x, y: f.y - 50, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.35, max: 0.35, rgb: f.look.slash || '255,230,120' });
+}
+addP({ type: 'text', text: '⚡ 破势受击 · 绝境反击', x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,230,120' });
+SFX.escape();
+startSkill(f, foe, slot);
+if (slot === 2) f.skill2CD += 1.5; else f.skillCD += 1.5;
+f.breakCD = Math.max(f.breakCD, 2.0);
+return true;
+}
+}
+return false;
+}
 const decoys = [];
 function updateDecoys() {
 for (const d of decoys) {
@@ -14725,6 +14780,7 @@ trySecondQ(f, foe);
 escapeTick(f);
 cloneTick(f);
 if (tryEscape(f, foe)) { physics(f); return; }
+if (tryBreakoutSkill(f, foe)) { physics(f); return; }
 f.skillCD = Math.max(0, f.skillCD - STEP);
 f.flying = false;
 if (M.mode === 'mayhem') {

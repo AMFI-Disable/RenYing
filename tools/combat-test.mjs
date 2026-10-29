@@ -391,6 +391,61 @@ const testSuite = [
     })()`
   },
   {
+    name: 'Breakout skills (受击可释放): Lei Ming Lei Kai, Tie Shan Quake, Yu Xiao Echo Wall can break out of hitstun, regular skills cannot, hard disables block it',
+    fn: `(() => {
+      // 1. Lei Ming (金刚雷铠 / stomp): Can break out of hitstun
+      startMatch('train', 'stand', [0, CHAR_IDX.leiming]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'hitstun'; B.t = 0; B.stun = 0.6; B.comboHits = 3; B.skill2CD = 0;
+      B.ctrl.buf.skill2 = clock;
+      step();
+      if (B.state !== 'skill' || B.skill !== 'stomp' || !(B.thunderGuardT > 0)) {
+        return { pass: false, error: 'Lei Ming Lei Kai did not break out of hitstun: state=' + B.state + ', skill=' + B.skill };
+      }
+      if (B.comboHits !== 0) return { pass: false, error: 'comboHits not reset on breakout' };
+
+      // 2. Tie Shan (震地 / quake): Can break out of hitstun
+      startMatch('train', 'stand', [0, CHAR_IDX.tieshan]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'hitstun'; B.t = 0; B.stun = 0.6; B.comboHits = 2; B.skillCD = 0;
+      B.ctrl.buf.skill = clock;
+      step();
+      if (B.state !== 'skill' || B.skill !== 'quake') {
+        return { pass: false, error: 'Tie Shan Quake did not break out of hitstun: state=' + B.state + ', skill=' + B.skill };
+      }
+
+      // 3. Regular skill (Qing Feng 疾风斩 / gale): CANNOT break out of hitstun
+      startMatch('train', 'stand', [1, CHAR_IDX.qingfeng]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'hitstun'; B.t = 0; B.stun = 0.6; B.comboHits = 2; B.skillCD = 0;
+      B.ctrl.buf.skill = clock;
+      step();
+      if (B.state === 'skill') {
+        return { pass: false, error: 'Qing Feng gale broke out of hitstun when it lacks breakout flag' };
+      }
+      if (B.state !== 'hitstun') {
+        return { pass: false, error: 'B did not remain in hitstun: state=' + B.state };
+      }
+
+      // 4. Hard disables (held / jail): Cannot break out even with Lei Kai ready
+      startMatch('train', 'stand', [0, CHAR_IDX.leiming]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'held'; B.t = 0; B.skill2CD = 0;
+      B.ctrl.buf.skill2 = clock;
+      step();
+      if (B.state === 'skill') {
+        return { pass: false, error: 'Lei Ming broke out while in held state' };
+      }
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'Cixian (磁仙): seeded pole each round, Q swap clears R, ⊖ normals pull and demagnetize after 15, R blasts / pulls by distance, ult clamps',
     fn: `(() => {
       const setup = (pol, gap) => {

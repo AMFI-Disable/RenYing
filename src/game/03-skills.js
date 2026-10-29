@@ -115,8 +115,8 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 36] : f.skPh === 2 ? ['dash', 60] : ['fy_xslash', 40],
     ai: (me, foe, d) => d > 120 },
-  quake: { name: '震地', cd: 8, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
-    start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; },
+  quake: { name: '震地', cd: 8, breakout: true, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
+    start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.24) {
         f.skPh = 1; f.t = 0; f.hitDone = false;
@@ -332,9 +332,10 @@ const SKILLS = {
       if (f.t >= 0.4) toNeutral(f);
     },
     pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
-  stomp: { name: '金刚雷铠', cd: 5.5, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
+  stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
     start(f) {
-      f.vx = 0; f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
+      f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0);
+      f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
       dust(f.x, 0, 10); SFX.block();
       ring(f.x, f.y - 60, 75, '255,230,120', 0.35);
     },
@@ -414,8 +415,8 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['yx_play', 30] : ['yx_push', 50],
     ai: (me, foe, d) => d > 110 && d < 700 && ((me.notes || 0) >= 2 || d > 240) },
-  echowall: { name: '回音壁', cd: 6, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
-    start(f) { f.vx = 0; f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
+  echowall: { name: '回音壁', cd: 6, breakout: true, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
+    start(f) { f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
     update(f, foe) {
       f.vx = damp(f.vx, 0, 12, STEP);
       if (f.skPh === 0 && f.t >= 0.08) {
@@ -660,8 +661,8 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['fy_seal', 40] : f.skPh === 1 ? ['l2a', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 2 },
   // free：只能从自由状态（站、走、下落、防御）发动，不能接在出招后面，也不能从腾空闪里放
-  mistswap: { name: '渡影', cd: 4, free: true,
-    can: f => ['idle', 'walk', 'air', 'block'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
+  mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
+    can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
     lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
     desc: '结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。',
     start(f, foe) { const c = pickClone(f, foe); f.swapId = c ? c.id : -1; f.vx = 0; },

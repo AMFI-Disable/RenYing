@@ -599,6 +599,46 @@ function tryEscape(f, foe) {
   return true;
 }
 function endEscape(f) { if (f.escInvul) { f.escInvul = false; f.invul = 0; } f.escMode = ''; }
+// 绝境受击反击（Breakout Skill）：在硬直/受击/浮空状态下消耗带 breakout 标记的技能反制脱困
+function tryBreakoutSkill(f, foe) {
+  if (f.hp <= 0 || M.phase !== 'fight') return false;
+  if (f.state === 'held' || f.jailT > 0 || f.drinkT > 0 || f.state === 'special' || f.state === 'victory') return false;
+  const isVictim = f.state === 'hitstun' || f.state === 'blockstun' || f.state === 'launched';
+  if (!isVictim) return false;
+  const c = f.ctrl;
+  if (!c || !c.consume) return false;
+  for (const slot of [2, 1]) {
+    const id = slot === 2 ? f.ch.skill2 : f.ch.skill;
+    const cd = slot === 2 ? f.skill2CD : f.skillCD;
+    const key = slot === 2 ? 'skill2' : 'skill';
+    const S = SKILLS[id];
+    if (S && S.breakout && cd <= 0 && c.consume(key)) {
+      if (S.can && !S.can(f)) {
+        if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' });
+        continue;
+      }
+      f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.airRecover = false;
+      f.stun = 0; f.rooted = false; f.rot = 0;
+      delete c.buf.light; delete c.buf.heavy; c.atkT = clock + 1e6;
+      comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
+
+      ring(f.x, f.y - 50, 110, f.look.slash || '255,230,120', 0.4);
+      ring(f.x, f.y - 50, 60, '255,255,255', 0.3);
+      for (let i = 0; i < 12; i++) {
+        const a = rand(0, Math.PI * 2), v = rand(100, 260);
+        addP({ type: 'spark', x: f.x, y: f.y - 50, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.35, max: 0.35, rgb: f.look.slash || '255,230,120' });
+      }
+      addP({ type: 'text', text: '⚡ 破势受击 · 绝境反击', x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,230,120' });
+      SFX.escape();
+
+      startSkill(f, foe, slot);
+      if (slot === 2) f.skill2CD += 1.5; else f.skillCD += 1.5;
+      f.breakCD = Math.max(f.breakCD, 2.0);
+      return true;
+    }
+  }
+  return false;
+}
 const decoys = [];
 function updateDecoys() {
   for (const d of decoys) {
@@ -732,6 +772,7 @@ function updateFighter(f, foe) {
   escapeTick(f);
   cloneTick(f);
   if (tryEscape(f, foe)) { physics(f); return; }
+  if (tryBreakoutSkill(f, foe)) { physics(f); return; }
   f.skillCD = Math.max(0, f.skillCD - STEP);
   f.flying = false;
   if (M.mode === 'mayhem') {

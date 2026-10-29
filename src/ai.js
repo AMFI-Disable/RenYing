@@ -312,6 +312,7 @@ class AIBrain {
     if (me.state === 'launched' || me.state === 'hitstun' || me.state === 'knockdown') {
       this.dir = 0; this.stopAll();
       if (this.shouldBreak(me, foe)) { this.press('dash'); return true; }
+      if (this.shouldBreakoutSkill(me, foe)) return true;
       if (me.state === 'launched' && !me.spiked && this.chance(L.tech * 0.25 + (this.techRoll === undefined ? 0 : 0))) this.techRoll = true;
       if (me.state === 'launched') {
         if (this.techRoll === undefined) this.techRoll = Math.random() < L.tech;
@@ -360,6 +361,24 @@ class AIBrain {
     if (me.state === 'knockdown') return foe.state === 'charge' || (foe.meter >= 100 && L.breaker > 0.8 && me.t > 0.4);   // 压起身：对手在蓄不可挡的力或等着放大招
     const at = Math.max(1, Math.floor(g.breakAt)), lost = (this.hpBeforeCombo || me.hp) - me.hp;
     if (hits >= at && lost >= 30) return me.hp < me.maxHp * 0.5 || hits >= at + 1 || Math.random() < L.breaker * 0.6;
+    return false;
+  }
+
+  // 该不该用受击可释放技能破连反击（雷铠、震地、回音壁、渡影）
+  shouldBreakoutSkill(me, foe) {
+    if (me.state !== 'hitstun' && me.state !== 'launched') return false;
+    if (me.jailT > 0 || me.drinkT > 0 || me.t < 0.06) return false;
+    for (const slot of [2, 1]) {
+      const id = slot === 2 ? me.ch.skill2 : me.ch.skill;
+      const cd = slot === 2 ? me.skill2CD : me.skillCD;
+      const S = SKILLS[id];
+      if (S && S.breakout && cd <= 0 && (!S.can || S.can(me))) {
+        if ((me.comboHits || 0) >= 2 || me.hp < me.maxHp * 0.5) {
+          this.press(slot === 2 ? 'skill2' : 'skill');
+          return true;
+        }
+      }
+    }
     return false;
   }
 
