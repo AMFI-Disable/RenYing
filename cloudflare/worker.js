@@ -1987,14 +1987,18 @@ async function sagaMarkPost(env, auth, body, now) {
    每线最多 WL.CAP 人，满了网页自动去下一线，线数不设上限；每次只发视野内（左右 WL.AOI）最近的 WL.NEAR 位侠客。
    免费额度：网页发上来的消息 20 条算一次请求，发下去的不算；没人时停掉定时器，Durable Object 自动休眠不计时。 */
 const WL = {
-  CAP: 40, W: 8000, WALL: 60, TICK: 100, AOI: 2000, NEAR: 24, AGGRO: 700, IDLE: 15e3,
+  CAP: 40, W: 24000, WALL: 60, TICK: 100, AOI: 2000, NEAR: 24, AGGRO: 700, IDLE: 15e3,
   HIT_MAX: 160, HIT_RANGE: 420, DPS: 320, BURST: 900,   // 单次伤害上限、离妖物多远还算打得到、每秒伤害上限和攒着的上限
   BOSS_EVERY: 40, BOSS_LIFE: 360,                         // 全线每斩 40 只妖物，魔窟里出一次妖王；6 分钟没打死就遁走
   ZONES: [
     { a: 60, b: 2000, hp: 1, dk: 1, keys: ['blade', 'archer', 'owl'] },                          // 竹林
     { a: 2000, b: 4000, hp: 1.5, dk: 1.25, keys: ['blade', 'archer', 'owl', 'binder'] },         // 古道
     { a: 4000, b: 6000, hp: 2.2, dk: 1.5, keys: ['blade', 'archer', 'binder', 'caster'] },       // 山寨
-    { a: 6000, b: 7940, hp: 3, dk: 1.8, keys: ['blade', 'archer', 'owl', 'binder', 'caster'] },  // 魔窟
+    { a: 6000, b: 8000, hp: 3, dk: 1.8, keys: ['blade', 'archer', 'owl', 'binder', 'caster'] },  // 魔窟
+    { a: 8000, b: 12000, hp: 3.5, dk: 2.0, keys: ['blade', 'archer', 'owl', 'binder', 'caster'] }, // 荒村
+    { a: 12000, b: 16000, hp: 4.2, dk: 2.3, keys: ['blade', 'binder', 'caster'] },                // 寒渊
+    { a: 16000, b: 20000, hp: 5.0, dk: 2.6, keys: ['archer', 'owl', 'caster'] },                 // 绝峰
+    { a: 20000, b: 23940, hp: 6.0, dk: 3.0, keys: ['blade', 'archer', 'owl', 'binder', 'caster'] }, // 祭坛
   ],
   MON: { blade: { hp: 40, spd: 150, keep: 70 }, archer: { hp: 30, spd: 120, keep: 380 }, binder: { hp: 34, spd: 90, keep: 260 }, caster: { hp: 32, spd: 100, keep: 320 }, owl: { hp: 24, spd: 220, keep: 0 } },
 };
@@ -2003,7 +2007,7 @@ const WL = {
    以服务器为准）。打赢了，够资格的云端账号由服务器写进 gift 表发一件随机星座皮肤（下次动武库自动领）。
    奖励相关的数都在 RG 里，改这里就行。 */
 const RG = {
-  JIE: 5, VOTE_T: 15, PERK_MAX: 8, EMPTY_RESET: 10 * 60e3,
+  JIE: 5, VOTE_T: 15, PERK_MAX: 24, EMPTY_RESET: 10 * 60e3,
   NEED0: 20, NEED_PER: 5, NEED_MAX: 150, CYC_HP: 0.15, CYC_HP_MAX: 3,   // 每劫要斩几只：20 + 每人 5 只；每过一轮妖物血量 +15%
   BOSS_MIN: 3, BOSS_HP: 1500, BOSS_T: 180,                              // 几个真人打 Boss、Boss 每人份的血、限时（秒）
   TRIO_T: 420,                                                          // 真人不够时改打 3 位天道 AI 的车轮战，限时（秒）
@@ -2200,6 +2204,7 @@ class WorldSim {
       m: this.mons.filter(m => Math.abs(m.x - me.x) <= WL.AOI + 300).map(m => [m.id, m.key, r1(m.x), r1(m.y), Math.ceil(m.hp), m.mh, m.f, m.wind > 0 || m.act === 'dive' ? 1 : 0, m.zi]),
       b: b ? [b.id, r1(b.x), Math.ceil(b.hp), b.mh, b.f, b.act || '', Math.round(b.life)] : null,
       r: this.rgView(id),
+      u: [...this.players.values()].filter(p => p.id !== id).map(p => [p.id, Math.round(p.x), Math.round(p.y), this.zoneOf(p.x)]),
     };
   }
   /* ---------- 全服肉鸽的共享进程 ---------- */
@@ -2365,6 +2370,17 @@ export class WorldLine {
     if (!a.id || !sim.players.has(a.id)) { this.send(ws, { t: 're' }); return; }   // 服务器重启过：请网页重新打个招呼
     if (o.t === 's') sim.state(a.id, o);   // 位置和这一拍打出的伤害一起上报（h: [[妖物编号, 伤害], ...]），省一半消息
     if ((o.t === 's' || o.t === 'h') && Array.isArray(o.h)) for (const h of o.h.slice(0, 12)) if (Array.isArray(h)) sim.hit(a.id, +h[0], +h[1]);
+    if (o.t === 'tp') {
+      const me = sim.players.get(a.id);
+      if (me) {
+        if (o.to) {
+          const tgt = sim.players.get(+o.to);
+          if (tgt) { me.x = wlNum(tgt.x + (tgt.f > 0 ? -60 : 60), 60, WL.W - 60, me.x); me.y = tgt.y; sim.events.push({ t: 'tp', id: a.id, to: +o.to, x: me.x }); }
+        } else if (Number.isFinite(o.x)) {
+          me.x = wlNum(o.x, 60, WL.W - 60, me.x);
+        }
+      }
+    }
     if (o.t === 'v') sim.vote(a.id, o.i);
     if (o.t === 'kd') sim.keyHit(a.id, o.s, o.d);
     if (o.t === 'kr') sim.keyReport(a.id, o.s, o.w);

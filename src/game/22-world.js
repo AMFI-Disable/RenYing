@@ -4,19 +4,23 @@
 // 自己打中妖物：本机先显示伤害，再跟着下一次上报一起交给服务器（服务器按距离和每秒上限封顶）。
 // 每线 40 人，满了自动去下一线；可以在弹窗里输入线号去找朋友。
 // 全服肉鸽：每条线一份共享进程（第几轮、第几劫、全线投票选出的秘卷、关键战），都以服务器为准，见文件末尾那一节。
-const WORLD_W = 8000;
+const WORLD_W = 24000;
 const WORLD_ZONES = [
   { n: '竹林', a: 0, b: 2000, tint: '60,120,80', d: '刀鬼、弓妖、夜枭出没' },
   { n: '古道', a: 2000, b: 4000, tint: '150,120,70', d: '缚灵夜行，妖物更凶' },
   { n: '山寨', a: 4000, b: 6000, tint: '160,80,50', d: '咒师聚众，火柱连天' },
-  { n: '魔窟', a: 6000, b: 8000, tint: '150,40,60', d: '妖王盘踞之地' },
+  { n: '魔窟', a: 6000, b: 8000, tint: '150,40,60', d: '万妖盘踞，妖王巢穴' },
+  { n: '荒村', a: 8000, b: 12000, tint: '90,90,130', d: '幽魂怨煞，荒冢夜哭' },
+  { n: '寒渊', a: 12000, b: 16000, tint: '70,140,190', d: '玄冰刺骨，冻魄难移' },
+  { n: '绝峰', a: 16000, b: 20000, tint: '140,150,180', d: '天风浩荡，云海孤巅' },
+  { n: '祭坛', a: 20000, b: 24000, tint: '180,30,40', d: '混沌禁地，万妖祖坛' },
 ];
 const WORLD_SEND = 1 / 8;          // 每秒上报 8 次（免费额度按发上去的消息算）
 const WORLD_RESPAWN = 3;           // 倒下后几秒在这一段的土地庙复活
 const WORLD_DMG = { blade: 7, shot: 5, trap: 4, fire: 9, dive: 6, slam: 18, charge: 16, bfire: 12 };
 const WORLD = {
   on: false, ws: null, sess: 0, line: 1, id: 0, n: 0, kills: 0, nb: 40, myKills: 0, status: '', sendT: 0, hits: [],
-  roster: new Map(), ghosts: new Map(), mons: new Map(), boss: null, shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, tries: 0,
+  roster: new Map(), ghosts: new Map(), rosterPos: new Map(), mons: new Map(), boss: null, shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, tries: 0,
 };
 const worldZoneAt = x => Math.max(0, Math.min(WORLD_ZONES.length - 1, WORLD_ZONES.findIndex(z => x < z.b)));
 const worldShrineX = zi => WORLD_ZONES[zi].a + 160;
@@ -62,7 +66,8 @@ function worldClose() {
   WORLD.sess++;
   const ws = WORLD.ws; WORLD.ws = null; WORLD.id = 0;
   if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
-  WORLD.ghosts.clear(); WORLD.mons.clear(); WORLD.roster.clear(); WORLD.boss = null; WORLD.hits = [];
+  WORLD.ghosts.clear(); WORLD.mons.clear(); WORLD.roster.clear(); WORLD.rosterPos.clear(); WORLD.boss = null; WORLD.hits = [];
+  closeTeleportModal();
 }
 function worldMsg(o) {
   const W_ = WORLD;
@@ -106,6 +111,10 @@ function worldHp(m, srv) {
 function worldFrame(o) {
   const W_ = WORLD;
   W_.n = o.n; W_.kills = o.kills; W_.nb = o.nb;
+  if (Array.isArray(o.u)) {
+    for (const r of o.u) W_.rosterPos.set(r[0], { x: r[1], y: r[2], zi: r[3] });
+    for (const id of [...W_.rosterPos.keys()]) if (!o.u.some(r => r[0] === id)) W_.rosterPos.delete(id);
+  }
   const seen = new Set();
   for (const r of o.p || []) {
     const [id, x, y, vx, f, st, tt, mv, sk, sp, ph, hp, mh] = r;
@@ -187,7 +196,12 @@ function worldHit(att, mv, pt, target) {
   const mon = target || worldTargets().sort((a, b) => Math.abs(a.x - att.x) + Math.abs(a.y - att.y) - Math.abs(b.x - att.x) - Math.abs(b.y - att.y))[0];
   if (!mon || att !== A) return;
   const dir = mv.dir || (mon.x >= att.x ? 1 : -1);
-  const dmg = Math.min(160, mv.dmg || 0); if (!(dmg > 0)) return;
+  let dmg = Math.min(160, mv.dmg || 0); if (!(dmg > 0)) return;
+  if (typeof scOn === 'function' && scOn()) {
+    const c = scDamage(att, B, mv, { x: pt ? pt[0] : mon.x, y: pt ? pt[1] : mon.y - 60 }, dmg, false);
+    dmg = Math.min(160, Math.round(c.dmg));
+    scFireC(att, 'hit', c);
+  }
   mon.hp -= dmg; mon.flash = 0.1; mon.lastHit = clock;
   if (mon.T) { mon.x += dir * 24; }
   const h = WORLD.hits.find(q => q[0] === mon.id); if (h) h[1] += dmg; else WORLD.hits.push([mon.id, dmg]);
@@ -206,6 +220,9 @@ function worldEnterMode(heroIdx, x) {
   B.ctrl = new Ctrl(); B.worldProxy = true; B.hidden = true; B.invul = 99; B.look = { ...B.look, name: '妖物' };
   Object.assign(WORLD, { shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, sendT: 0 });
   A.x = x; A.face = 1; cam.x = A.x;
+  M.mode = 'world';
+  M.towerPerks = (WORLD.run && WORLD.run.pk) ? WORLD.run.pk.slice() : [];
+  if (typeof scRoundStart === 'function') scRoundStart();
 }
 function worldStart(heroIdx) {
   if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }
@@ -389,9 +406,16 @@ function drawWorldHUD() {
   const my = y + hh + 6, mw = w + 24, mx = x - w - 12;
   ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(mx, my, mw, 14);
   for (const zz of WORLD_ZONES) { ctx.fillStyle = `rgba(${zz.tint},0.45)`; ctx.fillRect(mx + mw * zz.a / WORLD_W, my + 4, mw * (zz.b - zz.a) / WORLD_W - 1, 6); }
-  ctx.fillStyle = '#46d3ea'; for (const g of WORLD.ghosts.values()) ctx.fillRect(mx + mw * g.x / WORLD_W - 1, my + 2, 2, 10);
+  ctx.fillStyle = '#46d3ea';
+  if (W_.rosterPos && W_.rosterPos.size) {
+    for (const [pid, pos] of W_.rosterPos) if (pid !== W_.id) ctx.fillRect(mx + mw * pos.x / WORLD_W - 1, my + 2, 2, 10);
+  } else {
+    for (const g of WORLD.ghosts.values()) ctx.fillRect(mx + mw * g.x / WORLD_W - 1, my + 2, 2, 10);
+  }
   if (WORLD.boss) { ctx.fillStyle = '#ff4d4d'; ctx.fillRect(mx + mw * WORLD.boss.x / WORLD_W - 2, my, 4, 14); }
   ctx.fillStyle = '#38d976'; ctx.fillRect(mx + mw * A.x / WORLD_W - 2, my, 4, 14);
+  ctx.font = `11px ${BODY_FONT}`; ctx.fillStyle = 'rgba(233,196,106,0.9)'; ctx.textAlign = 'center';
+  ctx.fillText(cvT('[T] 神行千里 · 传送同道'), mx + mw / 2, my + 28);
   ctx.restore();
   if (WORLD.boss) {   // 妖王血条：全线共用
     const b = WORLD.boss, bw = Math.min(W * 0.5, 640), bx = (W - bw) / 2, by = H - Math.max(70, H * 0.1);
@@ -429,6 +453,10 @@ const RG_JIE = 5;
 const rgRun = () => WORLD.run || null;
 function rgFrame(r) {
   const W_ = WORLD; W_.run = r;
+  if (r && Array.isArray(r.pk)) {
+    M.towerPerks = r.pk.slice();
+    if (A && A.sc) A.sc.key = '';
+  }
   rgVoteUI();
   const K = M.worldKey;
   if (r.k && r.k.s !== W_.keySeq && !K && W_.on && W_.deadT <= 0 && !paused) worldKeyEnter(r.k);   // 关键战开了（或进来时正在打）：进场
@@ -471,7 +499,19 @@ function rgHudRows() {
   const r = rgRun(); if (!r) return [];
   const st = r.k ? (r.k.kind === 'boss' ? `天道 Boss · 余 ${r.k.u} 秒` : `天道车轮 · 余 ${r.k.u} 秒`)
     : r.v ? '全线投票中' : `${r.g} / ${r.nd} 只`;
-  return [['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`], [r.k ? '关键战' : '本劫斩妖', st], ['共享秘卷', `${(r.pk || []).length} 卷`]];
+  const pks = r.pk || [];
+  const counts = {};
+  for (const id of pks) counts[id] = (counts[id] || 0) + 1;
+  const perkCountStr = Object.entries(counts).map(([id, n]) => {
+    const s = SC_BY[id];
+    return (s ? s.n : id) + (n > 1 ? ` ×${n}` : '');
+  }).join('、') || '暂无';
+  return [
+    ['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`],
+    [r.k ? '关键战' : '本劫斩妖', st],
+    ['共享秘卷', `${pks.length} 卷 (${Object.keys(counts).length} 种)`],
+    ['叠层增益', perkCountStr.length > 20 ? perkCountStr.slice(0, 19) + '…' : perkCountStr],
+  ];
 }
 // 进关键战：天道 Boss = 同袍肉鸽（自己 + 2 名天道同袍）打服务器指定的融魂魔首，血量全线共享
 function rgMates(me) { const out = []; for (let k = 2; out.length < 2; k += 2) { const i = (me + k) % CHARS.length; if (i !== me && !out.includes(i)) out.push(i); } return out; }
@@ -552,3 +592,133 @@ function worldResume() {
   worldEnterMode(WORLD.hero, b ? b.x : worldShrineX(3));
   say('回到江湖', 1, 'go', '秘卷保留，下一轮开始');
 }
+
+
+// ======================= 神行千里：传送至本线任意同道身旁 =======================
+function worldTeleportTo(tx, ty, name, targetId) {
+  tx = clamp(tx, 60, WORLD_W - 60);
+  ty = ty || 0;
+  if (!RESIM) {
+    smoke(A.x, A.y - 60, 20); ring(A.x, A.y - 60, 140, '233,196,106', 0.6); SFX.dash();
+  }
+  A.x = tx; A.y = ty; A.vx = 0; A.vy = 0;
+  if (!RESIM) {
+    smoke(A.x, A.y - 60, 20); ring(A.x, A.y - 60, 180, '70,211,234', 0.8); SFX.parry();
+  }
+  cam.x = A.x; cam.y = A.y;
+  say('神行千里', 1.2, 'go', '已瞬移至 ' + name + ' 身旁');
+  worldSend({ t: 's', x: Math.round(A.x), y: Math.round(A.y), vx: 0, f: A.face, st: A.state, tt: A.t, hp: Math.round(A.hp), mh: A.maxHp });
+  if (targetId) worldSend({ t: 'tp', to: targetId, x: Math.round(A.x) });
+  closeTeleportModal();
+}
+function closeTeleportModal() {
+  const el = $id('worldTeleport');
+  if (el) el.remove();
+}
+function worldToggleTeleport() {
+  let el = $id('worldTeleport');
+  if (el) { el.remove(); return; }
+  if (!WORLD.on || M.worldKey) return;
+  el = document.createElement('div');
+  el.id = 'worldTeleport';
+  el.className = 'world-teleport';
+  renderTeleportModal(el);
+  document.body.appendChild(el);
+}
+function renderTeleportModal(el) {
+  const W_ = WORLD;
+  const others = [];
+  for (const [id, meta] of W_.roster) {
+    if (id === W_.id) continue;
+    const pos = W_.rosterPos.get(id) || (W_.ghosts.get(id) ? { x: Math.round(W_.ghosts.get(id).x), y: 0, zi: worldZoneAt(W_.ghosts.get(id).x) } : null);
+    const x = pos ? pos.x : 0;
+    const zi = pos ? pos.zi : worldZoneAt(x);
+    const z = WORLD_ZONES[zi] || WORLD_ZONES[0];
+    const dist = pos ? Math.round(Math.abs(x - A.x)) : 0;
+    others.push({ id, name: meta[1] || `游侠${id}`, ch: meta[2], x, zi, zName: z.n, dist });
+  }
+  others.sort((a, b) => a.dist - b.dist);
+
+  let itemsHtml = '';
+  if (others.length) {
+    itemsHtml = others.map((p, idx) => {
+      const num = idx < 9 ? idx + 1 : '';
+      const keyTip = num ? `<span class="wt-key">[${num}]</span>` : '<span class="wt-key"></span>';
+      const hero = CHARS[CHAR_IDX[p.ch]] || { name: p.ch };
+      return `<div class="wt-item" data-act="tp-user" data-id="${p.id}" data-x="${p.x}" data-name="${p.name}">
+        ${keyTip}
+        <div class="wt-who"><span class="wt-name">${p.name}</span><span class="wt-sub">${hero.name} · 距你 ${p.dist}px</span></div>
+        <span class="wt-loc">${p.zName} (x: ${p.x})</span>
+        <button class="wt-btn" type="button" data-act="tp-btn" data-x="${p.x}" data-name="${p.name}" data-id="${p.id}">瞬移</button>
+      </div>`;
+    }).join('');
+  } else {
+    itemsHtml = `<p class="wt-tip" style="text-align:center;padding:10px 0;color:var(--dim)">当前分线暂无其他同道在线，可快捷神行至各区土地庙：</p>` +
+      WORLD_ZONES.map((z, idx) => {
+        const sx = worldShrineX(idx);
+        const num = idx < 9 ? idx + 1 : '';
+        const keyTip = num ? `<span class="wt-key">[${num}]</span>` : '';
+        return `<div class="wt-item" data-act="tp-shrine" data-x="${sx}" data-name="${z.n} 土地庙">
+          ${keyTip}
+          <div class="wt-who"><span class="wt-name">${z.n} · 土地庙</span><span class="wt-sub">${z.d}</span></div>
+          <span class="wt-loc">x: ${sx}</span>
+          <button class="wt-btn" type="button" data-act="tp-btn" data-x="${sx}" data-name="${z.n} 土地庙">神行</button>
+        </div>`;
+      }).join('');
+  }
+
+  el.innerHTML = `
+    <div class="wt-head">
+      <h3 class="wt-title">神行千里 · 传送同道</h3>
+      <button class="wt-close" type="button" data-act="close">✕</button>
+    </div>
+    <p class="wt-tip">快捷键 <b>[T]</b> 打开/关闭 · 按数字 <b>[1-9]</b> 或点击对应条目即可瞬间神行！</p>
+    <div class="wt-list">${itemsHtml}</div>
+  `;
+
+  el.onclick = e => {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === 'close') { closeTeleportModal(); refocusGame(); return; }
+    const it = e.target.closest('.wt-item') || btn;
+    const x = +it.dataset.x, name = it.dataset.name, id = it.dataset.id ? +it.dataset.id : 0;
+    if (Number.isFinite(x) && name) {
+      worldTeleportTo(x, 0, name, id);
+      refocusGame();
+    }
+  };
+}
+
+window.addEventListener('keydown', e => {
+  if (!WORLD.on || M.worldKey) return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.code === 'KeyT') {
+    e.preventDefault();
+    worldToggleTeleport();
+    return;
+  }
+  const el = $id('worldTeleport');
+  if (el) {
+    if (e.code === 'Escape') {
+      e.preventDefault();
+      closeTeleportModal();
+      refocusGame();
+      return;
+    }
+    const m = /^Digit([1-9])$/.exec(e.code) || /^Numpad([1-9])$/.exec(e.code);
+    if (m) {
+      const idx = +m[1] - 1;
+      const items = el.querySelectorAll('.wt-item');
+      if (items[idx]) {
+        e.preventDefault();
+        const it = items[idx];
+        const x = +it.dataset.x, name = it.dataset.name, id = it.dataset.id ? +it.dataset.id : 0;
+        if (Number.isFinite(x) && name) {
+          worldTeleportTo(x, 0, name, id);
+          refocusGame();
+        }
+      }
+    }
+  }
+});

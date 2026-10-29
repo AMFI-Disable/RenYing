@@ -1142,9 +1142,8 @@ if ($id('btnRougeGoLocal')) {
 if ($id('btnRougeGoMatch')) {
   $id('btnRougeGoMatch').addEventListener('click', () => {
     closeRougeModal();
-    if (!$id('netp').classList.contains('on')) openScreen('netp');
-    mmGo('2v2_coop');
-    toast('正在全服匹配同袍肉鸽共斗队友…');
+    worldEnter(0);
+    toast('已踏入全服肉鸽江湖分线，按 [T] 键可随时瞬移至同道身旁！');
   });
 }
 if ($id('btnRougeGoOnline')) {

@@ -299,7 +299,7 @@ for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
 
 // ---------- 谁有哪些秘卷 ----------
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()); }
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || M.mode === 'world' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()); }
 const scEligible = f => !!(f && (f.idx <= 1 || (typeof isRaid === 'function' && isRaid())));
 function scIds(f) {
   if (!f) return [];
@@ -309,7 +309,8 @@ function scIds(f) {
 function scHas(f, id) { return scOn() && scIds(f).includes(id); }
 function scList(f) {
   const ids = scIds(f);
-  if (!f.sc || f.sc.key !== ids.length + ':' + ids[ids.length - 1]) { f.sc = f.sc || {}; f.sc.key = ids.length + ':' + ids[ids.length - 1]; f.sc.list = ids.map(id => SC_BY[id]).filter(Boolean); }
+  const key = ids.length + ':' + ids.join(',');
+  if (!f.sc || f.sc.key !== key) { f.sc = f.sc || {}; f.sc.key = key; f.sc.list = ids.map(id => SC_BY[id]).filter(Boolean); }
   return f.sc.list;
 }
 function scCount(f, school) { let n = 0; for (const s of scList(f)) if (s.s === school) n++; return n; }

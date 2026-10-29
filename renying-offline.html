@@ -2732,6 +2732,22 @@ body.kbnav #kbRing.on { display: block; }
 .world-vote button i { display: block; font-style: normal; margin-top: 2px; color: #2bd49a; font-weight: 700; }
 .world-vote button.sel { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; }
 @media (max-width: 520px) { .world-vote button { width: 31vw; min-height: 58px; font-size: 11px; } }
+.world-teleport { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 55; width: min(480px, calc(100vw - 24px)); max-height: min(540px, 86vh); background: linear-gradient(165deg, rgba(16, 18, 36, 0.94), rgba(8, 9, 20, 0.97)); border: 1px solid rgba(233, 196, 106, 0.45); border-radius: 14px; box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(233, 196, 106, 0.15); color: var(--ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; font-family: var(--body); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.world-teleport .wt-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(233, 196, 106, 0.2); padding-bottom: 8px; }
+.world-teleport .wt-title { font-family: var(--title); font-size: 20px; color: var(--gold); letter-spacing: 0.5px; margin: 0; }
+.world-teleport .wt-close { appearance: none; background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 14px; padding: 4px 8px; border-radius: 6px; }
+.world-teleport .wt-close:hover { color: var(--ink); background: rgba(255, 255, 255, 0.08); }
+.world-teleport .wt-tip { font-size: 12px; color: var(--dim); margin: 0; line-height: 1.4; }
+.world-teleport .wt-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 380px; padding-right: 4px; }
+.world-teleport .wt-item { display: grid; grid-template-columns: 28px 1fr auto auto; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.07); cursor: pointer; transition: background .15s, border-color .15s; font-size: 13px; }
+.world-teleport .wt-item:hover, .world-teleport .wt-item:focus-visible { background: rgba(233, 196, 106, 0.12); border-color: rgba(233, 196, 106, 0.45); outline: none; }
+.world-teleport .wt-key { color: var(--gold); font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 700; text-align: center; }
+.world-teleport .wt-who { display: flex; flex-direction: column; min-width: 0; }
+.world-teleport .wt-name { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.world-teleport .wt-sub { font-size: 11px; color: var(--dim); }
+.world-teleport .wt-loc { font-size: 12px; color: #46d3ea; white-space: nowrap; }
+.world-teleport .wt-btn { font-size: 12px; padding: 4px 10px; border-radius: 6px; background: var(--seal); color: #fff; border: 0; cursor: pointer; white-space: nowrap; font-family: var(--title); }
+.world-teleport .wt-btn:hover { filter: brightness(1.15); }
 .home-entries { position: absolute; left: 6vw; top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 40px); z-index: 2;
 display: flex; flex-direction: column; gap: 10px; width: 340px; max-width: calc(100vw - 32px); }
 .menuscr .home-entries .mcard.mcard { position: relative !important; left: auto !important; top: auto !important; width: 100% !important; min-width: 0 !important; max-width: none !important; }
@@ -2926,7 +2942,7 @@ body.kb-only.has-nav .kb-hint { display: block; }
     <!-- 首页入口：三大入口（对战、肉鸽、开放世界），下面一排次入口 -->
     <div class="home-entries" id="homeEntries">
       <button class="mcard right" id="mNet" data-go="netp" data-kb-default><span class="mk">对战</span><span class="ms">匹配 · 排位 · 好友房 · 2v2</span></button>
-      <button class="mcard left hm-rouge" id="homeRouge" type="button"><span class="mk">肉鸽</span><span class="ms">同袍剧情肉鸽 · 全服肉鸽随时加入</span></button>
+      <button class="mcard left hm-rouge" id="homeRouge" type="button"><span class="mk">全服肉鸽</span><span class="ms">江湖共斗 · 随时加入 · 秘卷叠层 · 传送同道</span></button>
       <button class="mcard left hm-world tn-online" id="mWorld" type="button"><span class="mk">开放世界</span><span class="ms">江湖共斗 · 一张大地图 · 填线号找朋友</span></button>
       <div class="home-sub" id="homeSub">
         <button class="hs-btn" id="mSingle" data-go="single" type="button"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
@@ -4001,7 +4017,7 @@ body.kb-only.has-nav .kb-hint { display: block; }
         <div class="sec-sub-label">结阵方式</div>
         <div class="m2-ways" id="modalRougeOptions">
           <button class="m2-way" id="btnRougeGoLocal" type="button" data-kb-default><b>同屏/单机集结</b><span id="modalRougeLocalDesc">1P 键盘主控，2P/3P 随时按键参战或由天道同袍协战</span></button>
-          <button class="m2-way tn-online" id="btnRougeGoMatch" type="button"><b>全服匹配集结</b><span>全服招募同袍侠士，共享秘卷合力破魔</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoMatch" type="button"><b>全服肉鸽 · 随时加入</b><span>无须匹配等待，直接踏入江湖分线，全线共享秘卷无限叠层！</span></button>
           <button class="m2-way tn-online" id="btnRougeGoOnline" type="button"><b>好友共斗房间</b><span>建房拿到房间号，呼朋引伴共讨魔首</span></button>
         </div>
         <div class="m2-foot"><button class="mm-link" id="btnRougeReroll" type="button">🎲 重新卜算当期融魂首领（切换三侠六技）</button></div>
@@ -7806,7 +7822,7 @@ const UI_COPY_EN = {
 "肉鸽": "Roguelike",
 "开放世界": "Open World",
 "匹配 · 排位 · 好友房 · 2v2": "Match · Ranked · Friend Room · 2v2",
-"同袍剧情肉鸽 · 全服肉鸽随时加入": "Co-op Story Roguelike · Server Roguelike, join anytime",
+"江湖共斗 · 随时加入 · 秘卷叠层 · 传送同道": "Shared World · Join Anytime · Stackable Scrolls · Teleport",
 "江湖共斗 · 一张大地图 · 填线号找朋友": "Shared world · one big map · join a friend by line number",
 "教程": "Tutorial",
 "纯键盘": "Keyboard Only",
@@ -7976,7 +7992,8 @@ const UI_COPY_EN = {
 "天机乱斗 (随机词条)": "Chaos Mutators (random modifiers)",
 "同袍肉鸽 · 斩妖列传": "Co-op Roguelike · Demon Hunt",
 "同袍肉鸽 · 十三侠客斩妖列传": "Co-op Roguelike · Thirteen Heroes' Demon Hunt",
-"正在全服匹配同袍肉鸽共斗队友…": "Looking for a co-op roguelike teammate online…",
+"已踏入全服肉鸽江湖分线，按 [T] 键可随时瞬移至同道身旁！": "Entered Server Roguelike line! Press [T] to teleport to allies.",
+"无须匹配等待，直接踏入江湖分线，全线共享秘卷无限叠层！": "No matchmaking required! Step into the shared line with infinite stackable scrolls!",
 "已建好同袍肉鸽共斗房间，把房间号发给好友即可并肩讨伐魔首！": "Co-op roguelike room created. Send the room number to a friend and take on the demon lord together!",
 "确定": "OK",
 "全部退出": "Sign out all",
@@ -8596,7 +8613,10 @@ const UI_COPY_EN = {
 "刀鬼、弓妖、夜枭出没": "Blade Ghouls, Bow Fiends and Night Owls roam here",
 "缚灵夜行，妖物更凶": "Binding Wraiths walk at night; the demons grow fiercer",
 "咒师聚众，火柱连天": "Hex Casters gather; pillars of fire fill the sky",
-"妖王盘踞之地": "The Demon King's lair",
+"万妖盘踞，妖王巢穴": "The Demon King's lair",
+"神行千里 · 传送同道": "Teleport to Ally",
+"[T] 神行千里 · 传送同道": "[T] Teleport to Ally",
+"神行千里": "Thousand-Mile Teleport",
 "天道 Boss 降世": "Tiandao Boss descends",
 "全线侠客共讨融魂魔首": "Every hero on the line fights the Fused Demon Lord",
 "天道 Boss · 全线共讨": "Tiandao Boss · all lines fight together",
@@ -25188,9 +25208,8 @@ bpStart('raid', { squadSize: rougeSquadSize, chapterIdx: rougeStoryChapter, stor
 if ($id('btnRougeGoMatch')) {
 $id('btnRougeGoMatch').addEventListener('click', () => {
 closeRougeModal();
-if (!$id('netp').classList.contains('on')) openScreen('netp');
-mmGo('2v2_coop');
-toast('正在全服匹配同袍肉鸽共斗队友…');
+worldEnter(0);
+toast('已踏入全服肉鸽江湖分线，按 [T] 键可随时瞬移至同道身旁！');
 });
 }
 if ($id('btnRougeGoOnline')) {
@@ -25876,7 +25895,7 @@ const BOSS_AFFIXES = [
 const SC_BY = {};
 for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()); }
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || M.mode === 'world' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()); }
 const scEligible = f => !!(f && (f.idx <= 1 || (typeof isRaid === 'function' && isRaid())));
 function scIds(f) {
 if (!f) return [];
@@ -25886,7 +25905,8 @@ return f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) :
 function scHas(f, id) { return scOn() && scIds(f).includes(id); }
 function scList(f) {
 const ids = scIds(f);
-if (!f.sc || f.sc.key !== ids.length + ':' + ids[ids.length - 1]) { f.sc = f.sc || {}; f.sc.key = ids.length + ':' + ids[ids.length - 1]; f.sc.list = ids.map(id => SC_BY[id]).filter(Boolean); }
+const key = ids.length + ':' + ids.join(',');
+if (!f.sc || f.sc.key !== key) { f.sc = f.sc || {}; f.sc.key = key; f.sc.list = ids.map(id => SC_BY[id]).filter(Boolean); }
 return f.sc.list;
 }
 function scCount(f, school) { let n = 0; for (const s of scList(f)) if (s.s === school) n++; return n; }
@@ -26218,19 +26238,23 @@ $id('homeGboss').addEventListener('click', () => { SFX.slice && SFX.slice(); nav
 setTimeout(() => { gbLoad(); gbFlush(); }, 1500);
 window.addEventListener('pagehide', () => { if (M.mode === 'boss' && M.phase !== 'end') gbKeep(); });   // 关网页、刷新前把最后这一秒的伤害也存上
 setInterval(() => { if (currentScreen === 'gboss' || currentScreen === 'menu') gbLoad(); }, 30000);
-const WORLD_W = 8000;
+const WORLD_W = 24000;
 const WORLD_ZONES = [
 { n: '竹林', a: 0, b: 2000, tint: '60,120,80', d: '刀鬼、弓妖、夜枭出没' },
 { n: '古道', a: 2000, b: 4000, tint: '150,120,70', d: '缚灵夜行，妖物更凶' },
 { n: '山寨', a: 4000, b: 6000, tint: '160,80,50', d: '咒师聚众，火柱连天' },
-{ n: '魔窟', a: 6000, b: 8000, tint: '150,40,60', d: '妖王盘踞之地' },
+{ n: '魔窟', a: 6000, b: 8000, tint: '150,40,60', d: '万妖盘踞，妖王巢穴' },
+{ n: '荒村', a: 8000, b: 12000, tint: '90,90,130', d: '幽魂怨煞，荒冢夜哭' },
+{ n: '寒渊', a: 12000, b: 16000, tint: '70,140,190', d: '玄冰刺骨，冻魄难移' },
+{ n: '绝峰', a: 16000, b: 20000, tint: '140,150,180', d: '天风浩荡，云海孤巅' },
+{ n: '祭坛', a: 20000, b: 24000, tint: '180,30,40', d: '混沌禁地，万妖祖坛' },
 ];
 const WORLD_SEND = 1 / 8;          // 每秒上报 8 次（免费额度按发上去的消息算）
 const WORLD_RESPAWN = 3;           // 倒下后几秒在这一段的土地庙复活
 const WORLD_DMG = { blade: 7, shot: 5, trap: 4, fire: 9, dive: 6, slam: 18, charge: 16, bfire: 12 };
 const WORLD = {
 on: false, ws: null, sess: 0, line: 1, id: 0, n: 0, kills: 0, nb: 40, myKills: 0, status: '', sendT: 0, hits: [],
-roster: new Map(), ghosts: new Map(), mons: new Map(), boss: null, shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, tries: 0,
+roster: new Map(), ghosts: new Map(), rosterPos: new Map(), mons: new Map(), boss: null, shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, tries: 0,
 };
 const worldZoneAt = x => Math.max(0, Math.min(WORLD_ZONES.length - 1, WORLD_ZONES.findIndex(z => x < z.b)));
 const worldShrineX = zi => WORLD_ZONES[zi].a + 160;
@@ -26274,7 +26298,8 @@ function worldClose() {
 WORLD.sess++;
 const ws = WORLD.ws; WORLD.ws = null; WORLD.id = 0;
 if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
-WORLD.ghosts.clear(); WORLD.mons.clear(); WORLD.roster.clear(); WORLD.boss = null; WORLD.hits = [];
+WORLD.ghosts.clear(); WORLD.mons.clear(); WORLD.roster.clear(); WORLD.rosterPos.clear(); WORLD.boss = null; WORLD.hits = [];
+closeTeleportModal();
 }
 function worldMsg(o) {
 const W_ = WORLD;
@@ -26317,6 +26342,10 @@ return m.hp !== undefined && clock - (m.lastHit || -9) < 0.6 ? Math.min(m.hp, v)
 function worldFrame(o) {
 const W_ = WORLD;
 W_.n = o.n; W_.kills = o.kills; W_.nb = o.nb;
+if (Array.isArray(o.u)) {
+for (const r of o.u) W_.rosterPos.set(r[0], { x: r[1], y: r[2], zi: r[3] });
+for (const id of [...W_.rosterPos.keys()]) if (!o.u.some(r => r[0] === id)) W_.rosterPos.delete(id);
+}
 const seen = new Set();
 for (const r of o.p || []) {
 const [id, x, y, vx, f, st, tt, mv, sk, sp, ph, hp, mh] = r;
@@ -26395,7 +26424,12 @@ function worldHit(att, mv, pt, target) {
 const mon = target || worldTargets().sort((a, b) => Math.abs(a.x - att.x) + Math.abs(a.y - att.y) - Math.abs(b.x - att.x) - Math.abs(b.y - att.y))[0];
 if (!mon || att !== A) return;
 const dir = mv.dir || (mon.x >= att.x ? 1 : -1);
-const dmg = Math.min(160, mv.dmg || 0); if (!(dmg > 0)) return;
+let dmg = Math.min(160, mv.dmg || 0); if (!(dmg > 0)) return;
+if (typeof scOn === 'function' && scOn()) {
+const c = scDamage(att, B, mv, { x: pt ? pt[0] : mon.x, y: pt ? pt[1] : mon.y - 60 }, dmg, false);
+dmg = Math.min(160, Math.round(c.dmg));
+scFireC(att, 'hit', c);
+}
 mon.hp -= dmg; mon.flash = 0.1; mon.lastHit = clock;
 if (mon.T) { mon.x += dir * 24; }
 const h = WORLD.hits.find(q => q[0] === mon.id); if (h) h[1] += dmg; else WORLD.hits.push([mon.id, dmg]);
@@ -26413,6 +26447,9 @@ M.phase = 'fight'; M.t = 0; creditT = 0; creditPending = false;
 B.ctrl = new Ctrl(); B.worldProxy = true; B.hidden = true; B.invul = 99; B.look = { ...B.look, name: '妖物' };
 Object.assign(WORLD, { shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, sendT: 0 });
 A.x = x; A.face = 1; cam.x = A.x;
+M.mode = 'world';
+M.towerPerks = (WORLD.run && WORLD.run.pk) ? WORLD.run.pk.slice() : [];
+if (typeof scRoundStart === 'function') scRoundStart();
 }
 function worldStart(heroIdx) {
 if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }
@@ -26588,9 +26625,16 @@ if (key) { ctx.restore(); return; }   // 关键战里只留肉鸽这几行，挪
 const my = y + hh + 6, mw = w + 24, mx = x - w - 12;
 ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(mx, my, mw, 14);
 for (const zz of WORLD_ZONES) { ctx.fillStyle = `rgba(${zz.tint},0.45)`; ctx.fillRect(mx + mw * zz.a / WORLD_W, my + 4, mw * (zz.b - zz.a) / WORLD_W - 1, 6); }
-ctx.fillStyle = '#46d3ea'; for (const g of WORLD.ghosts.values()) ctx.fillRect(mx + mw * g.x / WORLD_W - 1, my + 2, 2, 10);
+ctx.fillStyle = '#46d3ea';
+if (W_.rosterPos && W_.rosterPos.size) {
+for (const [pid, pos] of W_.rosterPos) if (pid !== W_.id) ctx.fillRect(mx + mw * pos.x / WORLD_W - 1, my + 2, 2, 10);
+} else {
+for (const g of WORLD.ghosts.values()) ctx.fillRect(mx + mw * g.x / WORLD_W - 1, my + 2, 2, 10);
+}
 if (WORLD.boss) { ctx.fillStyle = '#ff4d4d'; ctx.fillRect(mx + mw * WORLD.boss.x / WORLD_W - 2, my, 4, 14); }
 ctx.fillStyle = '#38d976'; ctx.fillRect(mx + mw * A.x / WORLD_W - 2, my, 4, 14);
+ctx.font = `11px ${BODY_FONT}`; ctx.fillStyle = 'rgba(233,196,106,0.9)'; ctx.textAlign = 'center';
+ctx.fillText(cvT('[T] 神行千里 · 传送同道'), mx + mw / 2, my + 28);
 ctx.restore();
 if (WORLD.boss) {   // 妖王血条：全线共用
 const b = WORLD.boss, bw = Math.min(W * 0.5, 640), bx = (W - bw) / 2, by = H - Math.max(70, H * 0.1);
@@ -26622,6 +26666,10 @@ const RG_JIE = 5;
 const rgRun = () => WORLD.run || null;
 function rgFrame(r) {
 const W_ = WORLD; W_.run = r;
+if (r && Array.isArray(r.pk)) {
+M.towerPerks = r.pk.slice();
+if (A && A.sc) A.sc.key = '';
+}
 rgVoteUI();
 const K = M.worldKey;
 if (r.k && r.k.s !== W_.keySeq && !K && W_.on && W_.deadT <= 0 && !paused) worldKeyEnter(r.k);   // 关键战开了（或进来时正在打）：进场
@@ -26663,7 +26711,19 @@ function rgHudRows() {
 const r = rgRun(); if (!r) return [];
 const st = r.k ? (r.k.kind === 'boss' ? `天道 Boss · 余 ${r.k.u} 秒` : `天道车轮 · 余 ${r.k.u} 秒`)
 : r.v ? '全线投票中' : `${r.g} / ${r.nd} 只`;
-return [['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`], [r.k ? '关键战' : '本劫斩妖', st], ['共享秘卷', `${(r.pk || []).length} 卷`]];
+const pks = r.pk || [];
+const counts = {};
+for (const id of pks) counts[id] = (counts[id] || 0) + 1;
+const perkCountStr = Object.entries(counts).map(([id, n]) => {
+const s = SC_BY[id];
+return (s ? s.n : id) + (n > 1 ? ` ×${n}` : '');
+}).join('、') || '暂无';
+return [
+['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`],
+[r.k ? '关键战' : '本劫斩妖', st],
+['共享秘卷', `${pks.length} 卷 (${Object.keys(counts).length} 种)`],
+['叠层增益', perkCountStr.length > 20 ? perkCountStr.slice(0, 19) + '…' : perkCountStr],
+];
 }
 function rgMates(me) { const out = []; for (let k = 2; out.length < 2; k += 2) { const i = (me + k) % CHARS.length; if (i !== me && !out.includes(i)) out.push(i); } return out; }
 function worldKeyEnter(k) {
@@ -26740,6 +26800,129 @@ if (!WORLD.on) return;
 worldEnterMode(WORLD.hero, b ? b.x : worldShrineX(3));
 say('回到江湖', 1, 'go', '秘卷保留，下一轮开始');
 }
+function worldTeleportTo(tx, ty, name, targetId) {
+tx = clamp(tx, 60, WORLD_W - 60);
+ty = ty || 0;
+if (!RESIM) {
+smoke(A.x, A.y - 60, 20); ring(A.x, A.y - 60, 140, '233,196,106', 0.6); SFX.dash();
+}
+A.x = tx; A.y = ty; A.vx = 0; A.vy = 0;
+if (!RESIM) {
+smoke(A.x, A.y - 60, 20); ring(A.x, A.y - 60, 180, '70,211,234', 0.8); SFX.parry();
+}
+cam.x = A.x; cam.y = A.y;
+say('神行千里', 1.2, 'go', '已瞬移至 ' + name + ' 身旁');
+worldSend({ t: 's', x: Math.round(A.x), y: Math.round(A.y), vx: 0, f: A.face, st: A.state, tt: A.t, hp: Math.round(A.hp), mh: A.maxHp });
+if (targetId) worldSend({ t: 'tp', to: targetId, x: Math.round(A.x) });
+closeTeleportModal();
+}
+function closeTeleportModal() {
+const el = $id('worldTeleport');
+if (el) el.remove();
+}
+function worldToggleTeleport() {
+let el = $id('worldTeleport');
+if (el) { el.remove(); return; }
+if (!WORLD.on || M.worldKey) return;
+el = document.createElement('div');
+el.id = 'worldTeleport';
+el.className = 'world-teleport';
+renderTeleportModal(el);
+document.body.appendChild(el);
+}
+function renderTeleportModal(el) {
+const W_ = WORLD;
+const others = [];
+for (const [id, meta] of W_.roster) {
+if (id === W_.id) continue;
+const pos = W_.rosterPos.get(id) || (W_.ghosts.get(id) ? { x: Math.round(W_.ghosts.get(id).x), y: 0, zi: worldZoneAt(W_.ghosts.get(id).x) } : null);
+const x = pos ? pos.x : 0;
+const zi = pos ? pos.zi : worldZoneAt(x);
+const z = WORLD_ZONES[zi] || WORLD_ZONES[0];
+const dist = pos ? Math.round(Math.abs(x - A.x)) : 0;
+others.push({ id, name: meta[1] || `游侠${id}`, ch: meta[2], x, zi, zName: z.n, dist });
+}
+others.sort((a, b) => a.dist - b.dist);
+let itemsHtml = '';
+if (others.length) {
+itemsHtml = others.map((p, idx) => {
+const num = idx < 9 ? idx + 1 : '';
+const keyTip = num ? `<span class="wt-key">[${num}]</span>` : '<span class="wt-key"></span>';
+const hero = CHARS[CHAR_IDX[p.ch]] || { name: p.ch };
+return `<div class="wt-item" data-act="tp-user" data-id="${p.id}" data-x="${p.x}" data-name="${p.name}">
+${keyTip}
+<div class="wt-who"><span class="wt-name">${p.name}</span><span class="wt-sub">${hero.name} · 距你 ${p.dist}px</span></div>
+<span class="wt-loc">${p.zName} (x: ${p.x})</span>
+<button class="wt-btn" type="button" data-act="tp-btn" data-x="${p.x}" data-name="${p.name}" data-id="${p.id}">瞬移</button>
+</div>`;
+}).join('');
+} else {
+itemsHtml = `<p class="wt-tip" style="text-align:center;padding:10px 0;color:var(--dim)">当前分线暂无其他同道在线，可快捷神行至各区土地庙：</p>` +
+WORLD_ZONES.map((z, idx) => {
+const sx = worldShrineX(idx);
+const num = idx < 9 ? idx + 1 : '';
+const keyTip = num ? `<span class="wt-key">[${num}]</span>` : '';
+return `<div class="wt-item" data-act="tp-shrine" data-x="${sx}" data-name="${z.n} 土地庙">
+${keyTip}
+<div class="wt-who"><span class="wt-name">${z.n} · 土地庙</span><span class="wt-sub">${z.d}</span></div>
+<span class="wt-loc">x: ${sx}</span>
+<button class="wt-btn" type="button" data-act="tp-btn" data-x="${sx}" data-name="${z.n} 土地庙">神行</button>
+</div>`;
+}).join('');
+}
+el.innerHTML = `
+<div class="wt-head">
+<h3 class="wt-title">神行千里 · 传送同道</h3>
+<button class="wt-close" type="button" data-act="close">✕</button>
+</div>
+<p class="wt-tip">快捷键 <b>[T]</b> 打开/关闭 · 按数字 <b>[1-9]</b> 或点击对应条目即可瞬间神行！</p>
+<div class="wt-list">${itemsHtml}</div>
+`;
+el.onclick = e => {
+const btn = e.target.closest('[data-act]');
+if (!btn) return;
+const act = btn.dataset.act;
+if (act === 'close') { closeTeleportModal(); refocusGame(); return; }
+const it = e.target.closest('.wt-item') || btn;
+const x = +it.dataset.x, name = it.dataset.name, id = it.dataset.id ? +it.dataset.id : 0;
+if (Number.isFinite(x) && name) {
+worldTeleportTo(x, 0, name, id);
+refocusGame();
+}
+};
+}
+window.addEventListener('keydown', e => {
+if (!WORLD.on || M.worldKey) return;
+if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+if (e.code === 'KeyT') {
+e.preventDefault();
+worldToggleTeleport();
+return;
+}
+const el = $id('worldTeleport');
+if (el) {
+if (e.code === 'Escape') {
+e.preventDefault();
+closeTeleportModal();
+refocusGame();
+return;
+}
+const m = /^Digit([1-9])$/.exec(e.code) || /^Numpad([1-9])$/.exec(e.code);
+if (m) {
+const idx = +m[1] - 1;
+const items = el.querySelectorAll('.wt-item');
+if (items[idx]) {
+e.preventDefault();
+const it = items[idx];
+const x = +it.dataset.x, name = it.dataset.name, id = it.dataset.id ? +it.dataset.id : 0;
+if (Number.isFinite(x) && name) {
+worldTeleportTo(x, 0, name, id);
+refocusGame();
+}
+}
+}
+}
+});
 const DEMO_SEQ = [['idle', 0.55, 0], ['l1s', 0.09, 0], ['l1a', 0.15, 16], ['l2s', 0.08, 0], ['l2a', 0.15, 16], ['lcs', 0.08, 0], ['lca', 0.15, 16],
 ['lds', 0.1, 0], ['lda', 0.18, 18], ['l3s', 0.1, 0], ['l3a', 0.2, 30], ['idle', 0.4, 0], ['hvs', 0.14, 0], ['hva', 0.24, 0], ['jump', 0.22, 0],
 ['a1s', 0.08, 0], ['a1a', 0.18, 0], ['fall', 0.3, 0], ['charge', 0.7, 0], ['spa', 0.32, 34], ['idle', 0.5, 0], ['sps', 0.4, 0], ['spa', 0.18, 40],

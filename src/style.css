@@ -2897,6 +2897,24 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
 .world-vote button.sel { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; }
 @media (max-width: 520px) { .world-vote button { width: 31vw; min-height: 58px; font-size: 11px; } }
 
+.world-teleport { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 55; width: min(480px, calc(100vw - 24px)); max-height: min(540px, 86vh); background: linear-gradient(165deg, rgba(16, 18, 36, 0.94), rgba(8, 9, 20, 0.97)); border: 1px solid rgba(233, 196, 106, 0.45); border-radius: 14px; box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(233, 196, 106, 0.15); color: var(--ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; font-family: var(--body); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.world-teleport .wt-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(233, 196, 106, 0.2); padding-bottom: 8px; }
+.world-teleport .wt-title { font-family: var(--title); font-size: 20px; color: var(--gold); letter-spacing: 0.5px; margin: 0; }
+.world-teleport .wt-close { appearance: none; background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 14px; padding: 4px 8px; border-radius: 6px; }
+.world-teleport .wt-close:hover { color: var(--ink); background: rgba(255, 255, 255, 0.08); }
+.world-teleport .wt-tip { font-size: 12px; color: var(--dim); margin: 0; line-height: 1.4; }
+.world-teleport .wt-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 380px; padding-right: 4px; }
+.world-teleport .wt-item { display: grid; grid-template-columns: 28px 1fr auto auto; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.07); cursor: pointer; transition: background .15s, border-color .15s; font-size: 13px; }
+.world-teleport .wt-item:hover, .world-teleport .wt-item:focus-visible { background: rgba(233, 196, 106, 0.12); border-color: rgba(233, 196, 106, 0.45); outline: none; }
+.world-teleport .wt-key { color: var(--gold); font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 700; text-align: center; }
+.world-teleport .wt-who { display: flex; flex-direction: column; min-width: 0; }
+.world-teleport .wt-name { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.world-teleport .wt-sub { font-size: 11px; color: var(--dim); }
+.world-teleport .wt-loc { font-size: 12px; color: #46d3ea; white-space: nowrap; }
+.world-teleport .wt-btn { font-size: 12px; padding: 4px 10px; border-radius: 6px; background: var(--seal); color: #fff; border: 0; cursor: pointer; white-space: nowrap; font-family: var(--title); }
+.world-teleport .wt-btn:hover { filter: brightness(1.15); }
+
+
 /* ---------- 首页：左边三大入口（对战、肉鸽、开放世界）+ 一排次入口；右栏只放会变的东西（天魔讨伐、今日任务、版本动态） ---------- */
 .home-entries { position: absolute; left: 6vw; top: calc(12% + 34px + clamp(92px, 12vw, 162px) + 40px); z-index: 2;
   display: flex; flex-direction: column; gap: 10px; width: 340px; max-width: calc(100vw - 32px); }
