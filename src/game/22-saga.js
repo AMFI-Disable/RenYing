@@ -15,10 +15,22 @@ function sagaRec(h) {
   const n = SAGA[h] ? SAGA[h].nodes.length : 5;
   return { r: Math.max(0, Math.floor(+r.r || 0)), s: Math.max(0, Math.min(n, Math.floor(+r.s || 0))), f: typeof r.f === 'string' ? r.f : '', c: r.c ? 1 : 0, e: Array.isArray(r.e) ? r.e.filter(x => typeof x === 'string') : [], t: +r.t || 0 };
 }
-function sagaPut(h, rec, ink) {
+// rw：这一步该领的列传墨锭（{ n: 第几节, end: 结局 }）。云端账号找服务器领，每节、每个结局每个号只给一次，
+// 所以「重走」照样能玩，只是不再发墨锭；离线版、本机账号照旧按 ink 本机加
+function sagaPut(h, rec, ink, rw) {
   PROF.saga = Object.assign({}, PROF.saga || {}, { [h]: { r: rec.r, s: rec.s, f: rec.f, c: rec.c ? 1 : 0, e: rec.e, t: Date.now() } });
+  if (rw && typeof rwServer === 'function' && rwServer()) { window.armoryReward('saga', { h, ...rw }, { queue: true }); ink = 0; }
   if (ink) PROF.ink = (PROF.ink || 0) + ink;
   if (window.CloudSave) CloudSave.saveProfile(PROF);
+}
+// 云端账号：这一节 / 这个结局服务器上还给不给墨锭（看服务器武库存档里的领取记录），显示用；没连上服务器时按本机算的 local
+function sagaSrvInk(h, n, end, local) {
+  const rw = typeof rwServer === 'function' && rwServer() && typeof window.armoryRw === 'function' ? window.armoryRw() : null;
+  if (!rw) return local;
+  const g = (rw.sg && rw.sg[h]) || { n: 0, e: [] };
+  let ink = !g.e.length && !(g.n & (1 << (n - 1))) ? SAGA_INK.node : 0;
+  if (end !== undefined && !g.e.includes(end) && g.e.length < 2) ink += SAGA_INK.end;
+  return ink;
 }
 function sagaMerge(a, b) {
   const out = Object.assign({}, a || {});
@@ -217,23 +229,25 @@ function sagaEnd(w) {
   if (last) {
     const E = sagaVar(nd.end, r.f), fresh = !r.e.includes(r.f);
     if (fresh) { r.e.push(r.f); ink += SAGA_INK.end; }
+    ink = sagaSrvInk(h, SG.node + 1, r.f, ink);
     lines.push(...E.text, ['', `—— 结局 · 「${E.title}」 ——${ink ? `　获得 ${ink} 墨锭` : ''}`]);
     sagaMark(h, 'end', r.f);
   } else {
+    ink = sagaSrvInk(h, SG.node + 1, undefined, ink);
     lines.push(['', `第 ${SG.node + 1} 节走完${ink ? `，获得 ${ink} 墨锭` : ''}`]);
     sagaMark(h, 'n' + (SG.node + 1), 1);
   }
   r.s = Math.max(r.s, SG.node + 1);
-  sagaPut(h, r, ink);
+  sagaPut(h, r, ink, last ? { n: SG.node + 1, end: r.f } : { n: SG.node + 1 });
   sagaTalk(lines, sagaBack);
 }
 function sagaChoose() {
   const h = SG.hero, nd = SAGA[h].nodes[SG.node];
   M.phase = 'end'; paused = true;
   sagaTalk([['', nd.choice.q]], null, nd.choice.opts.map(o => ({ t: o.t, fn: () => {
-    const r = sagaRec(h), ink = r.e.length ? 0 : SAGA_INK.node;
+    const r = sagaRec(h), ink = sagaSrvInk(h, SG.node + 1, undefined, r.e.length ? 0 : SAGA_INK.node);
     r.f = o.f; r.c = 0; r.s = Math.max(r.s, SG.node + 1);
-    sagaPut(h, r, ink);
+    sagaPut(h, r, ink, { n: SG.node + 1 });
     sagaMark(h, 'n' + (SG.node + 1), 1); sagaMark(h, 'c' + (SG.node + 1), o.f);
     sagaTalk((o.say || []).concat([['', `第 ${SG.node + 1} 节走完${ink ? `，获得 ${ink} 墨锭` : ''}`]]), sagaBack);
   } })));

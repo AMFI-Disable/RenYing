@@ -285,7 +285,9 @@ function stageShowEnd(win, stars, info) {
   if (win && S && (STAGE_STARS[S.id] || 0) < stars) {
     const starDiff = stars - (STAGE_STARS[S.id] || 0);
     STAGE_STARS[S.id] = stars;
-    PROF.ink = (PROF.ink || 0) + starDiff * 30;
+    // 云端账号：星的墨锭找服务器领，每关每颗星只给一次（清掉本机的关卡星再打一遍也不会再给）
+    if (typeof rwServer === 'function' && rwServer()) window.armoryReward('stars', { id: S.id, n: stars }, { queue: true }).then(r => { if (r && r.gain) toast(`关卡星 +${r.gain} 墨锭`); });
+    else PROF.ink = (PROF.ink || 0) + starDiff * 30;
     PROF.stageStars = STAGE_STARS;
     if (window.CloudSave) CloudSave.saveProfile(PROF);
     try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {}

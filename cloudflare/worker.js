@@ -809,6 +809,8 @@ async function handleEcon(env, auth, body, now, ip) {
       }
     }
     const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, back, mkt, cfg };
+    // 领奖记录第一次建：服务器存档里已有的关卡星、列传进度当成领过了（见 armory-core 的 rwClean）
+    if (!(eco.state && eco.state.rw && eco.state.rw.seeded)) E.seed = { ss: prof.stageStars, sg: prof.saga };
     // 绑定皮肤换成饰品（每个号只做一次，记在 srv.lg）：库存里没有这一款的放一件普通版，并记进 via，卖掉最后一件就穿不了，和开箱得到的一样
     let legacy = null;
     if (!eco.srv.lg && Math.floor(+auth.user.created_at || 0) < LEGACY_CUTOFF) {

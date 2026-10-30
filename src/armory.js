@@ -292,6 +292,7 @@
         if (out && out.state && out.state.v < C.VER) { MODE = 'old'; OLDV = out.state.v; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是旧版的武库：先只给看，等服务器更新
         if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
         MODE = 'server'; apply(out, true);
+        setTimeout(() => rewardFlush().catch(() => {}), 0);   // 上次没报上去的关卡星、列传
       } catch (e) {
         if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还没有武库：先用本机规则
         else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
@@ -1192,6 +1193,34 @@
       return { err: e && e.message ? e.message : '服务器出错了' };
     } finally { BUSY = false; busyUi(false); }
   };
+  /* ---------- 一次性、按天按周的奖励（任务、系统补偿、新手教程、关卡星、列传） ----------
+     云端账号：领没领过只看服务器上武库存档里的 rw，墨锭由服务器发（armory-core 的 A.task、A.comp、A.tut、A.stars、A.saga），
+     本机记的领取记录不算数，换设备、清缓存、退出再登录都领不到第二次。离线版、本机账号返回 null，调用的地方照旧本机算。
+     关卡星、列传是打完自动领的（queue）：连不上就先记在本机，下次连上再报；服务器每关每星、每节每结局只给一次，报几遍都一样 */
+  const pendKey = () => 'renying-rw-pend-' + UID;
+  const pendLoad = () => { try { const a = JSON.parse(localStorage.getItem(pendKey()) || '[]'); return Array.isArray(a) ? a.filter(x => Array.isArray(x) && ['stars', 'saga'].includes(x[0])).slice(-200) : []; } catch (e) { return []; } };
+  const pendSave = a => { try { if (a.length) localStorage.setItem(pendKey(), JSON.stringify(a)); else localStorage.removeItem(pendKey()); } catch (e) {} };
+  window.armoryRewardServer = () => !PROF.guest && cloudOn();
+  window.armoryReward = async function (name, args, opt = {}) {
+    if (!window.armoryRewardServer()) return null;
+    if (LOADING) await LOADING.catch(() => {});
+    const res = MODE === 'wait' ? null : await act(name, args || {}, { bg: true });
+    if (!res && opt.queue) pendSave(pendLoad().concat([[name, args || {}]]));
+    return res || { err: '连不上服务器，等联网了再领' };
+  };
+  async function rewardFlush() {
+    const a = pendLoad();
+    if (MODE !== 'server' || !a.length) return;
+    pendSave([]);
+    for (let i = 0; i < a.length; i++) {
+      const r = await act(a[i][0], a[i][1], { bg: true });
+      if (!r) { pendSave(pendLoad().concat(a.slice(i))); return; }
+      if (r.gain) toast(`补领到 ${r.gain} 墨锭`);
+    }
+  }
+  // 网页显示用：服务器上的任务进度和领取记录（没连上服务器时是 null）
+  window.armoryTasks = () => MODE === 'server' && ST ? C.taskView(ST, NOW()) : null;
+  window.armoryRw = () => MODE === 'server' && ST && ST.rw ? ST.rw : null;
   window.armoryHasAll = function (keys) {
     if (!ST || !Array.isArray(ST.inv)) return false;
     return keys.every(k => ST.inv.some(x => x.k === k));

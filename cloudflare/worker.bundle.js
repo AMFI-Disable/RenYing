@@ -69,6 +69,14 @@
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
 
+  // 一次性、按天按周的奖励：领没领过记在武库存档的 rw 里（云端账号就是服务器上那份，玩家改不了），墨锭由这里发。
+  // 本机的领取记录（localStorage）不算数：换设备、清缓存、退出再登录都领不到第二次。离线版和本机账号没有服务器，照旧本机算
+  // 任务：[按天 d / 按周 w / 活动 e, 看哪个数, 要多少, 给多少墨锭]；数只认服务器记过的对局（matchEnd 带开局票的那些）
+  C.TASKS = { d1: ['d', 'games', 1, 30], d2: ['d', 'combo', 5, 40], d3: ['d', 'wins', 1, 50], w1: ['w', 'games', 5, 120], w2: ['w', 'wins', 3, 180], w3: ['w', 'ults', 5, 200], e1000: ['e', 'cpu', 3, 1000] };
+  C.EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };   // 全皮肤限免活动（和 src/game/01-core.js 的 FREE_SKIN_EVENT 一样）：活动任务、系统补偿只在这段时间能领
+  C.inEvent = now => now >= C.EVENT.start && now < C.EVENT.end;
+  C.RW = { comp: 500, tut: 300, star: 30, sagaNode: 40, sagaEnd: 150, sagaNodes: 5, sagaEnds: 2, stages: 5 };   // 补偿、教程、每颗关卡星、列传每节、每个结局；每部列传 5 节 2 个结局，每章 5 关
+
   // 品质：从低到高五档，每档有自己的颜色和名字
   C.TIERS = ['mil', 'res', 'cla', 'cov', 'gold'];
   C.TIER = {
@@ -388,11 +396,15 @@
   C.isLid = l => typeof l === 'string' && LID_RE.test(l);   // 挂单编号：服务器随机给的 16 位
 
   /* ---------- 存档 ---------- */
+  // 领奖记录：d / w 是哪天哪周，dp / wp 是这天这周服务器认的对局数，dc / wc 是这天这周领过的任务，ev 活动期间打了几局人机，
+  // ec / comp / tut 领没领过，ss 每关领过几颗星，sg 每部列传领过哪几节（位）、哪几个结局。seed 是第一次建这份记录时用服务器上的旧进度做底
+  C.rwBlank = () => ({ d: 0, w: 0, dp: { games: 0, wins: 0, combo: 0, ults: 0 }, wp: { games: 0, wins: 0, combo: 0, ults: 0 }, dc: [], wc: [], ev: 0, ec: 0, comp: 0, tut: 0, ss: {}, sg: {}, seeded: 0 });
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
     lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
+    rw: C.rwBlank(),
   });
   const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
   const int = (x, lo = 0, hi = 1e15) => { const v = Math.floor(+x); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
@@ -473,8 +485,54 @@
     if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
     if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk), prog: {}, done: [] });
     if (s.dm.d !== day) s.dm = { d: day, n: 0 };
+    s.rw = C.rwClean(s.rw, env, day, wk);
     if (s.tm && !(now - s.tm.t0 < C.TERM.days * 86400e3)) s.tm = null;   // 开封超过 3 天：作废
     return s;
+  };
+  const STAGE_RE = /^([1-9]\d?)\.([1-9])$/;
+  C.stageOk = id => { const m = STAGE_RE.exec(String(id)); return !!m && +m[1] <= C.HERO_IDS.length && +m[2] <= C.RW.stages; };   // 关卡编号「第几章.第几关」：一位侠客一章，每章 5 关
+  const END_RE = /^[a-z0-9_]{1,16}$/;
+  const cnt = o => ({ games: int(o && o.games, 0, 1e6), wins: int(o && o.wins, 0, 1e6), combo: int(o && o.combo, 0, 1e6), ults: int(o && o.ults, 0, 1e6) });
+  C.rwClean = (r, env, day, wk) => {
+    if (!isObj(r)) r = C.rwBlank();
+    const o = { d: int(r.d), w: int(r.w), dp: cnt(r.dp), wp: cnt(r.wp), dc: [], wc: [], ev: int(r.ev, 0, 1e6), ec: r.ec ? 1 : 0, comp: r.comp ? 1 : 0, tut: r.tut ? 1 : 0, ss: {}, sg: {}, seeded: r.seeded ? 1 : 0 };
+    o.dc = Array.from(new Set((Array.isArray(r.dc) ? r.dc : []).filter(id => own(C.TASKS, id) && C.TASKS[id][0] === 'd')));
+    o.wc = Array.from(new Set((Array.isArray(r.wc) ? r.wc : []).filter(id => own(C.TASKS, id) && C.TASKS[id][0] === 'w')));
+    if (isObj(r.ss)) for (const [id, n] of Object.entries(r.ss)) if (C.stageOk(id)) o.ss[id] = int(n, 0, 3);
+    if (isObj(r.sg)) for (const [h, v] of Object.entries(r.sg)) if (C.HERO_IDS.includes(h) && isObj(v)) o.sg[h] = { n: int(v.n, 0, (1 << C.RW.sagaNodes) - 1), e: Array.from(new Set((Array.isArray(v.e) ? v.e : []).filter(x => typeof x === 'string' && END_RE.test(x)))).slice(0, C.RW.sagaEnds) };
+    // 第一次建这份记录：服务器上已经有的关卡星、列传进度当成领过了（老号不能把已经拿过的再领一遍）
+    if (!o.seeded && env && isObj(env.seed)) {
+      if (isObj(env.seed.ss)) for (const [id, n] of Object.entries(env.seed.ss)) if (C.stageOk(id)) o.ss[id] = Math.max(o.ss[id] || 0, int(n, 0, 3));
+      if (isObj(env.seed.sg)) for (const [h, v] of Object.entries(env.seed.sg)) {
+        if (!C.HERO_IDS.includes(h) || !isObj(v)) continue;
+        const e = (Array.isArray(v.e) ? v.e : []).filter(x => typeof x === 'string' && END_RE.test(x));
+        const g = o.sg[h] || { n: 0, e: [] };
+        g.n |= e.length ? (1 << C.RW.sagaNodes) - 1 : (1 << int(v.s, 0, C.RW.sagaNodes)) - 1;   // 节点墨锭只在第一次走、还没拿到结局时给
+        g.e = Array.from(new Set([...g.e, ...e])).slice(0, C.RW.sagaEnds);
+        o.sg[h] = g;
+      }
+      o.seeded = 1;
+    }
+    if (day !== undefined && o.d !== day) Object.assign(o, { d: day, dp: cnt(null), dc: [] });
+    if (wk !== undefined && o.w !== wk) Object.assign(o, { w: wk, wp: cnt(null), wc: [] });
+    return o;
+  };
+  // 一局服务器认了：记进今天、这周的任务进度；活动期间的人机局记进活动任务
+  const rwMatch = (s, c, env) => {
+    const r = s.rw, win = !!c.win, combo = int(c.combo, 0, 200), ults = int(c.ults, 0, 30);
+    for (const p of [r.dp, r.wp]) { p.games++; if (win) p.wins++; p.combo = Math.max(p.combo, combo); p.ults += ults; }
+    if (c.mode === 'cpu' && C.inEvent(env.now)) r.ev++;
+  };
+  // 任务现在的样子（网页显示用）：进度、领没领过
+  C.taskView = (s, now) => {
+    const r0 = s && s.rw ? s.rw : C.rwBlank(), day = C.day(now), wk = C.week(day);
+    const r = { ...r0, dp: r0.d === day ? r0.dp : cnt(null), dc: r0.d === day ? r0.dc : [], wp: r0.w === wk ? r0.wp : cnt(null), wc: r0.w === wk ? r0.wc : [] }, out = [];
+    for (const [id, [per, k, n, ink]] of Object.entries(C.TASKS)) {
+      if (per === 'e' && !C.inEvent(now)) continue;
+      const v = per === 'd' ? r.dp[k] : per === 'w' ? r.wp[k] : r.ev, done = per === 'd' ? r.dc.includes(id) : per === 'w' ? r.wc.includes(id) : !!r.ec;
+      out.push({ id, per, target: n, prog: Math.min(n, v || 0), reward: ink, claimed: done });
+    }
+    return out;
   };
   // 给玩家看的那份：开局领的票只有服务器知道
   C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); delete o.tk; return o; };
@@ -896,6 +954,7 @@
       if (s.dm.n >= C.MATCH_DAY_CAP) return { err: '今天的对局奖励已经拿满了' };
     }
     s.last = env.now; s.dm.n++;
+    rwMatch(s, c, env);
     const win = !!c.win;
     const combo = Math.max(0, Math.min(200, Math.floor(+c.combo || 0))), ults = Math.max(0, Math.min(30, Math.floor(+c.ults || 0)));
     s.drop.g++;
@@ -940,6 +999,56 @@
     if (s.gift) return { err: '已经领过了' };
     s.gift = 1; s.cases.c1++; s.term++;
     return { ok: true };
+  };
+  // 每日、每周、活动任务：按服务器认的对局算进度，这天 / 这周 / 这次活动只领一次
+  A.task = (s, a, env) => {
+    const t = own(C.TASKS, a.id) ? C.TASKS[a.id] : null;
+    if (!t) return { err: '没有这个任务' };
+    const [per, k, n, ink] = t, r = s.rw;
+    if (per === 'e' && !C.inEvent(env.now)) return { err: '活动已经结束了' };
+    const got = per === 'd' ? r.dc : per === 'w' ? r.wc : null;
+    if (got ? got.includes(a.id) : r.ec) return { err: '已经领过了' };
+    if ((per === 'd' ? r.dp[k] : per === 'w' ? r.wp[k] : r.ev) < n) return { err: '任务还没完成' };
+    if (got) got.push(a.id); else r.ec = 1;
+    giveInk(env, ink);
+    return { ok: true, gain: ink };
+  };
+  // 系统补偿（活动期间）、新手教程：每个号一次
+  A.comp = (s, a, env) => {
+    if (!C.inEvent(env.now)) return { err: '补偿已经结束了' };
+    if (s.rw.comp) return { err: '已经领过了' };
+    s.rw.comp = 1; giveInk(env, C.RW.comp);
+    return { ok: true, gain: C.RW.comp };
+  };
+  A.tut = (s, a, env) => {
+    if (s.rw.tut) return { err: '已经领过了' };
+    s.rw.tut = 1; giveInk(env, C.RW.tut);
+    return { ok: true, gain: C.RW.tut };
+  };
+  // 关卡星：每关每颗星只给一次（拿到更多星时补差）。重复报、报少了都不给，也不算错
+  A.stars = (s, a, env) => {
+    if (!C.stageOk(a.id)) return { err: '没有这一关' };
+    const n = int(a.n, 0, 3), had = s.rw.ss[a.id] || 0;
+    if (n <= had) return { ok: true, gain: 0 };
+    s.rw.ss[a.id] = n;
+    const gain = (n - had) * C.RW.star;
+    giveInk(env, gain);
+    return { ok: true, gain };
+  };
+  // 列传：每节第一次走完给一次（重走、刷新回来再走都不再给）；每部最多两个结局，每个结局给一次
+  A.saga = (s, a, env) => {
+    if (!C.HERO_IDS.includes(a.h)) return { err: '没有这位侠客' };
+    const g = s.rw.sg[a.h] || (s.rw.sg[a.h] = { n: 0, e: [] });
+    let gain = 0;
+    const node = int(a.n, 0, C.RW.sagaNodes);
+    if (node >= 1 && !(g.n & (1 << (node - 1))) && !g.e.length) { g.n |= 1 << (node - 1); gain += C.RW.sagaNode; }
+    if (a.end !== undefined) {
+      if (typeof a.end !== 'string' || !END_RE.test(a.end)) return { err: '没有这个结局' };
+      if (!g.e.includes(a.end) && g.e.length < C.RW.sagaEnds) { g.e.push(a.end); gain += C.RW.sagaEnd; }
+      g.n = (1 << C.RW.sagaNodes) - 1;   // 拿到结局以后再走的节都不给了（和以前一样）
+    }
+    if (gain) giveInk(env, gain);
+    return { ok: true, gain };
   };
   C.ACTIONS = Object.keys(A);
   // 跑一个动作：先整理存档、结掉卖出去的挂单、把撤回的挂单退回库存，再做动作。出错时存档原样不动（先在副本上做）
@@ -1854,6 +1963,8 @@ async function handleEcon(env, auth, body, now, ip) {
       }
     }
     const E = { now, rnd, uid, ink: ink0, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true, paid, back, mkt, cfg };
+    // 领奖记录第一次建：服务器存档里已有的关卡星、列传进度当成领过了（见 armory-core 的 rwClean）
+    if (!(eco.state && eco.state.rw && eco.state.rw.seeded)) E.seed = { ss: prof.stageStars, sg: prof.saga };
     // 绑定皮肤换成饰品（每个号只做一次，记在 srv.lg）：库存里没有这一款的放一件普通版，并记进 via，卖掉最后一件就穿不了，和开箱得到的一样
     let legacy = null;
     if (!eco.srv.lg && Math.floor(+auth.user.created_at || 0) < LEGACY_CUTOFF) {

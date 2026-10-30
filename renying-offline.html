@@ -5717,6 +5717,10 @@ const PATTERNS_EN = [
 [/^选择 (.+)$/, (m0, n) => `Pick ${lookup(n) || n}`],
 [/^禁用 (.+)$/, (m0, n) => `Ban ${lookup(n) || n}`],
 [/^\+(\d+) 墨锭$/, (m0, n) => `+${n} Ink`],
+[/^补领到 (\d+) 墨锭$/, (m0, n) => `Claimed ${n} Ink you had earned earlier`],
+[/^关卡星 \+(\d+) 墨锭$/, (m0, n) => `Stage stars +${n} Ink`],
+[/^侠客现在都能直接用，补偿改发 (\d+) 墨锭$/, (m0, n) => `Every hero is playable now, so the compensation is ${n} Ink`],
+[/^一键领取完成：\+(\d+) 墨锭$/, (m0, n) => `Claimed everything: +${n} Ink`],
 [/^皮肤 · (.+)$/, (m0, n) => `Skin · ${lookup(n) || n}`],
 [/^生命 (\d+)$/, (m0, n) => `HP ${n}`],
 [/^体量 ([\d.]+)$/, (m0, n) => `Build ${n}`],
@@ -7657,6 +7661,15 @@ const UI_COPY_EN = {
 "返回主菜单": "Back to Main Menu",
 "返回菜单": "Back to Menu",
 "这个兑换码你已经领过了": "You have already redeemed this code",
+"已经领过了": "Already claimed",
+"任务还没完成": "This task isn't done yet",
+"活动已经结束了": "The event has ended",
+"补偿已经结束了": "The compensation period has ended",
+"没有这一关": "No such stage",
+"没有这个结局": "No such ending",
+"没有这个任务": "No such task",
+"连不上服务器，等联网了再领": "Can't reach the server. Claim it once you're back online",
+"这个号已经领过教学奖励了。": "This account has already claimed the tutorial reward.",
 "这个兑换码已经被领完了": "This code has run out",
 "这游戏得用键盘和鼠标，请在电脑上打开。": "This game requires keyboard & mouse, please open on desktop.",
 "进入选人 · 开战": "Pick Hero & Battle",
@@ -13176,7 +13189,8 @@ const S = STAGE;
 if (win && S && (STAGE_STARS[S.id] || 0) < stars) {
 const starDiff = stars - (STAGE_STARS[S.id] || 0);
 STAGE_STARS[S.id] = stars;
-PROF.ink = (PROF.ink || 0) + starDiff * 30;
+if (typeof rwServer === 'function' && rwServer()) window.armoryReward('stars', { id: S.id, n: stars }, { queue: true }).then(r => { if (r && r.gain) toast(`关卡星 +${r.gain} 墨锭`); });
+else PROF.ink = (PROF.ink || 0) + starDiff * 30;
 PROF.stageStars = STAGE_STARS;
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 try { localStorage.setItem('renying-stage', JSON.stringify(STAGE_STARS)); } catch (e) {}
@@ -23680,6 +23694,8 @@ function compKey() { return 'renying-comp1022-' + curName(); }
 function compState() {
 if (OFFLINE_BUILD || Date.now() >= FREE_SKIN_EVENT.end) return null;
 let claimed = false; try { claimed = !!curName() && localStorage.getItem(compKey()) === '1'; } catch (e) {}
+const rw = rwServer() && typeof window.armoryRw === 'function' ? window.armoryRw() : null;
+if (rw) claimed = !!rw.comp;   // 云端账号以服务器为准：本机标记清掉了也领不到第二次
 return { claimed };
 }
 function compMaybe() {   // 登录后回到首页时弹一次，点了稍后再选就不再追着弹
@@ -23690,6 +23706,11 @@ function compMark() { try { localStorage.setItem(compKey(), '1'); } catch (e) {}
 function compClaim() {
 const st = compState(); if (!st || st.claimed || PROF.guest || !curName()) return;
 if (CHARS.every(c => ownsHero(c.id))) {   // 侠客都能直接用了：改发墨锭
+if (rwServer()) {
+compAsked = true;
+rwClaim('comp', null, true).then(g => { if (g >= 0 || g === -2) compMark(); if (g >= 0) { SFX.chargeFull(); toast(`侠客现在都能直接用，补偿改发 ${g} 墨锭`); } if ($id('tEvt')) renderTasks(); });
+return;
+}
 compMark(); PROF.ink = (PROF.ink || 0) + 500; saveProfile(); SFX.chargeFull(); toast('侠客现在都能直接用，补偿改发 500 墨锭'); return;
 }
 openWelfare('comp');
@@ -23767,11 +23788,25 @@ else s.wc.push(id);
 }
 saveTasks(s);
 }
+const rwServer = () => typeof window.armoryRewardServer === 'function' && window.armoryRewardServer();
+async function rwClaim(name, args, quietDup) {   // 领到返回墨锭数；已经领过返回 -2；别的错返回 -1（都会提示，quietDup 时领过的不提示）
+const r = await window.armoryReward(name, args);
+if (r && r.ok) return r.gain || 0;
+const dup = !!(r && r.err === '已经领过了');
+if (r && r.err && !(dup && quietDup)) toast(r.err);
+return dup ? -2 : -1;
+}
 function ensureClientTasks() {
 const s = loadTasks(), row = (x, per, cl) => ({ id: x[0], name: x[1], target: x[3], prog: Math.min(x[3], per[x[2]] || 0), reward: x[4], claimed: cl.includes(x[0]) });
 PROF.daily = TASK_DEFS.daily.map(x => row(x, s.d, s.dc));
 PROF.weekly = TASK_DEFS.weekly.map(x => row(x, s.w, s.wc));
 PROF.evtTask = freeSkinEvent() ? Object.assign({}, EVT_TASK, { prog: Math.min(EVT_TASK.target, s.evt.cpu), claimed: !!s.evt.claimed }) : null;
+const sv = rwServer() && typeof window.armoryTasks === 'function' ? window.armoryTasks() : null;
+if (sv) {   // 服务器上的进度（只算服务器认的对局）和领取记录
+const put = t => { const v = sv.find(x => x.id === t.id); if (v) Object.assign(t, { prog: v.prog, target: v.target, reward: v.reward, claimed: v.claimed }); };
+PROF.daily.forEach(put); PROF.weekly.forEach(put);
+if (PROF.evtTask) { const v = sv.find(x => x.id === EVT_TASK.id); if (v) put(PROF.evtTask); else PROF.evtTask = null; }
+}
 }
 function allTasks() { return [...(PROF.evtTask ? [PROF.evtTask] : []), ...(PROF.daily || []), ...(PROF.weekly || [])]; }
 function renderTasks() {
@@ -23813,6 +23848,14 @@ const tid = b.dataset.t;
 if (PROF.guest) return;
 const t = allTasks().find(x => x.id === tid);
 if (!t || t.claimed || t.prog < t.target) return;
+if (rwServer()) {
+b.disabled = true;
+const gain = await rwClaim('task', { id: tid });
+if (gain >= 0 || gain === -2) taskMarkClaimed([tid]);
+if (gain >= 0) { SFX.chargeFull(); toast(`+${gain} 墨锭`); }
+renderTasks();
+return;
+}
 t.claimed = true; taskMarkClaimed([tid]);
 const gain = t.reward || 50;
 PROF.ink = (PROF.ink || 0) + gain;
@@ -23827,6 +23870,13 @@ $id('claimAllBtn').addEventListener('click', async () => {
 if (PROF.guest) return;
 const all = allTasks().filter(t => !t.claimed && t.prog >= t.target);
 if (!all.length) return;
+if (rwServer()) {
+let totalGain = 0, n = 0;
+for (const t of all) { const g = await rwClaim('task', { id: t.id }, true); if (g >= 0 || g === -2) taskMarkClaimed([t.id]); if (g >= 0) { totalGain += g; n++; } }
+if (n) { SFX.chargeFull(); toast(`一键领取完成：+${totalGain} 墨锭`); }
+renderTasks();
+return;
+}
 taskMarkClaimed(all.map(t => t.id));
 let totalGain = 0;
 for (const t of all) {
@@ -24302,7 +24352,12 @@ updateTutBtn();
 $id('tutBox').classList.add('hidden');
 let msg = '该会的都会了。去找电脑或是同学，过几招吧。';
 if (!PROF.guest) {
-if (!PROF.tutorial) {
+if (!PROF.tutorial && typeof rwServer === 'function' && rwServer()) {   // 云端账号：找服务器领，每个号只给一次（本机标记不算数）
+PROF.tutorial = 1; saveFlag('tutorial', 1);
+const g = await rwClaim('tut', null, true);
+if (g > 0) msg += `<br>奖励 <b style="color:#e9c46a">${g} 墨锭</b>，去武库买个武器箱试试手气吧！`;
+else if (g === -2) msg += '<br>这个号已经领过教学奖励了。';
+} else if (!PROF.tutorial) {
 PROF.tutorial = 1; saveFlag('tutorial', 1);
 PROF.ink = (PROF.ink || 0) + 300;
 if (window.CloudSave) CloudSave.saveProfile(PROF);
@@ -26179,10 +26234,19 @@ const r = (PROF.saga && PROF.saga[h]) || {};
 const n = SAGA[h] ? SAGA[h].nodes.length : 5;
 return { r: Math.max(0, Math.floor(+r.r || 0)), s: Math.max(0, Math.min(n, Math.floor(+r.s || 0))), f: typeof r.f === 'string' ? r.f : '', c: r.c ? 1 : 0, e: Array.isArray(r.e) ? r.e.filter(x => typeof x === 'string') : [], t: +r.t || 0 };
 }
-function sagaPut(h, rec, ink) {
+function sagaPut(h, rec, ink, rw) {
 PROF.saga = Object.assign({}, PROF.saga || {}, { [h]: { r: rec.r, s: rec.s, f: rec.f, c: rec.c ? 1 : 0, e: rec.e, t: Date.now() } });
+if (rw && typeof rwServer === 'function' && rwServer()) { window.armoryReward('saga', { h, ...rw }, { queue: true }); ink = 0; }
 if (ink) PROF.ink = (PROF.ink || 0) + ink;
 if (window.CloudSave) CloudSave.saveProfile(PROF);
+}
+function sagaSrvInk(h, n, end, local) {
+const rw = typeof rwServer === 'function' && rwServer() && typeof window.armoryRw === 'function' ? window.armoryRw() : null;
+if (!rw) return local;
+const g = (rw.sg && rw.sg[h]) || { n: 0, e: [] };
+let ink = !g.e.length && !(g.n & (1 << (n - 1))) ? SAGA_INK.node : 0;
+if (end !== undefined && !g.e.includes(end) && g.e.length < 2) ink += SAGA_INK.end;
+return ink;
 }
 function sagaMerge(a, b) {
 const out = Object.assign({}, a || {});
@@ -26369,23 +26433,25 @@ let ink = r.e.length ? 0 : SAGA_INK.node;   // 每节的墨锭只在第一次走
 if (last) {
 const E = sagaVar(nd.end, r.f), fresh = !r.e.includes(r.f);
 if (fresh) { r.e.push(r.f); ink += SAGA_INK.end; }
+ink = sagaSrvInk(h, SG.node + 1, r.f, ink);
 lines.push(...E.text, ['', `—— 结局 · 「${E.title}」 ——${ink ? `　获得 ${ink} 墨锭` : ''}`]);
 sagaMark(h, 'end', r.f);
 } else {
+ink = sagaSrvInk(h, SG.node + 1, undefined, ink);
 lines.push(['', `第 ${SG.node + 1} 节走完${ink ? `，获得 ${ink} 墨锭` : ''}`]);
 sagaMark(h, 'n' + (SG.node + 1), 1);
 }
 r.s = Math.max(r.s, SG.node + 1);
-sagaPut(h, r, ink);
+sagaPut(h, r, ink, last ? { n: SG.node + 1, end: r.f } : { n: SG.node + 1 });
 sagaTalk(lines, sagaBack);
 }
 function sagaChoose() {
 const h = SG.hero, nd = SAGA[h].nodes[SG.node];
 M.phase = 'end'; paused = true;
 sagaTalk([['', nd.choice.q]], null, nd.choice.opts.map(o => ({ t: o.t, fn: () => {
-const r = sagaRec(h), ink = r.e.length ? 0 : SAGA_INK.node;
+const r = sagaRec(h), ink = sagaSrvInk(h, SG.node + 1, undefined, r.e.length ? 0 : SAGA_INK.node);
 r.f = o.f; r.c = 0; r.s = Math.max(r.s, SG.node + 1);
-sagaPut(h, r, ink);
+sagaPut(h, r, ink, { n: SG.node + 1 });
 sagaMark(h, 'n' + (SG.node + 1), 1); sagaMark(h, 'c' + (SG.node + 1), o.f);
 sagaTalk((o.say || []).concat([['', `第 ${SG.node + 1} 节走完${ink ? `，获得 ${ink} 墨锭` : ''}`]]), sagaBack);
 } })));
@@ -31400,6 +31466,10 @@ C.KO_MAX = 12;                               // 一局最多记 12 斩（三人�
 C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian'];
 C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
 C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+C.TASKS = { d1: ['d', 'games', 1, 30], d2: ['d', 'combo', 5, 40], d3: ['d', 'wins', 1, 50], w1: ['w', 'games', 5, 120], w2: ['w', 'wins', 3, 180], w3: ['w', 'ults', 5, 200], e1000: ['e', 'cpu', 3, 1000] };
+C.EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };   // 全皮肤限免活动（和 src/game/01-core.js 的 FREE_SKIN_EVENT 一样）：活动任务、系统补偿只在这段时间能领
+C.inEvent = now => now >= C.EVENT.start && now < C.EVENT.end;
+C.RW = { comp: 500, tut: 300, star: 30, sagaNode: 40, sagaEnd: 150, sagaNodes: 5, sagaEnds: 2, stages: 5 };   // 补偿、教程、每颗关卡星、列传每节、每个结局；每部列传 5 节 2 个结局，每章 5 关
 C.TIERS = ['mil', 'res', 'cla', 'cov', 'gold'];
 C.TIER = {
 mil: { n: '军规级', c: '75,105,255' },
@@ -31679,11 +31749,13 @@ C.shopPrice = (k, cfg) => k === 'term' ? C.cv(cfg, 'price.term') : own(C.COLS, k
 C.net = (p, cfg) => Math.floor(p * (1 - C.cv(cfg, 'fee')));    // 挂单卖掉，卖家到手多少
 const LID_RE = /^[0-9a-f]{16}$/;
 C.isLid = l => typeof l === 'string' && LID_RE.test(l);   // 挂单编号：服务器随机给的 16 位
+C.rwBlank = () => ({ d: 0, w: 0, dp: { games: 0, wins: 0, combo: 0, ults: 0 }, wp: { games: 0, wins: 0, combo: 0, ults: 0 }, dc: [], wc: [], ev: 0, ec: 0, comp: 0, tut: 0, ss: {}, sg: {}, seeded: 0 });
 C.blank = () => ({
 v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
 lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
 op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
 stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
+rw: C.rwBlank(),
 });
 const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 const int = (x, lo = 0, hi = 1e15) => { const v = Math.floor(+x); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
@@ -31760,8 +31832,51 @@ if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
 if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
 if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk), prog: {}, done: [] });
 if (s.dm.d !== day) s.dm = { d: day, n: 0 };
+s.rw = C.rwClean(s.rw, env, day, wk);
 if (s.tm && !(now - s.tm.t0 < C.TERM.days * 86400e3)) s.tm = null;   // 开封超过 3 天：作废
 return s;
+};
+const STAGE_RE = /^([1-9]\d?)\.([1-9])$/;
+C.stageOk = id => { const m = STAGE_RE.exec(String(id)); return !!m && +m[1] <= C.HERO_IDS.length && +m[2] <= C.RW.stages; };   // 关卡编号「第几章.第几关」：一位侠客一章，每章 5 关
+const END_RE = /^[a-z0-9_]{1,16}$/;
+const cnt = o => ({ games: int(o && o.games, 0, 1e6), wins: int(o && o.wins, 0, 1e6), combo: int(o && o.combo, 0, 1e6), ults: int(o && o.ults, 0, 1e6) });
+C.rwClean = (r, env, day, wk) => {
+if (!isObj(r)) r = C.rwBlank();
+const o = { d: int(r.d), w: int(r.w), dp: cnt(r.dp), wp: cnt(r.wp), dc: [], wc: [], ev: int(r.ev, 0, 1e6), ec: r.ec ? 1 : 0, comp: r.comp ? 1 : 0, tut: r.tut ? 1 : 0, ss: {}, sg: {}, seeded: r.seeded ? 1 : 0 };
+o.dc = Array.from(new Set((Array.isArray(r.dc) ? r.dc : []).filter(id => own(C.TASKS, id) && C.TASKS[id][0] === 'd')));
+o.wc = Array.from(new Set((Array.isArray(r.wc) ? r.wc : []).filter(id => own(C.TASKS, id) && C.TASKS[id][0] === 'w')));
+if (isObj(r.ss)) for (const [id, n] of Object.entries(r.ss)) if (C.stageOk(id)) o.ss[id] = int(n, 0, 3);
+if (isObj(r.sg)) for (const [h, v] of Object.entries(r.sg)) if (C.HERO_IDS.includes(h) && isObj(v)) o.sg[h] = { n: int(v.n, 0, (1 << C.RW.sagaNodes) - 1), e: Array.from(new Set((Array.isArray(v.e) ? v.e : []).filter(x => typeof x === 'string' && END_RE.test(x)))).slice(0, C.RW.sagaEnds) };
+if (!o.seeded && env && isObj(env.seed)) {
+if (isObj(env.seed.ss)) for (const [id, n] of Object.entries(env.seed.ss)) if (C.stageOk(id)) o.ss[id] = Math.max(o.ss[id] || 0, int(n, 0, 3));
+if (isObj(env.seed.sg)) for (const [h, v] of Object.entries(env.seed.sg)) {
+if (!C.HERO_IDS.includes(h) || !isObj(v)) continue;
+const e = (Array.isArray(v.e) ? v.e : []).filter(x => typeof x === 'string' && END_RE.test(x));
+const g = o.sg[h] || { n: 0, e: [] };
+g.n |= e.length ? (1 << C.RW.sagaNodes) - 1 : (1 << int(v.s, 0, C.RW.sagaNodes)) - 1;   // 节点墨锭只在第一次走、还没拿到结局时给
+g.e = Array.from(new Set([...g.e, ...e])).slice(0, C.RW.sagaEnds);
+o.sg[h] = g;
+}
+o.seeded = 1;
+}
+if (day !== undefined && o.d !== day) Object.assign(o, { d: day, dp: cnt(null), dc: [] });
+if (wk !== undefined && o.w !== wk) Object.assign(o, { w: wk, wp: cnt(null), wc: [] });
+return o;
+};
+const rwMatch = (s, c, env) => {
+const r = s.rw, win = !!c.win, combo = int(c.combo, 0, 200), ults = int(c.ults, 0, 30);
+for (const p of [r.dp, r.wp]) { p.games++; if (win) p.wins++; p.combo = Math.max(p.combo, combo); p.ults += ults; }
+if (c.mode === 'cpu' && C.inEvent(env.now)) r.ev++;
+};
+C.taskView = (s, now) => {
+const r0 = s && s.rw ? s.rw : C.rwBlank(), day = C.day(now), wk = C.week(day);
+const r = { ...r0, dp: r0.d === day ? r0.dp : cnt(null), dc: r0.d === day ? r0.dc : [], wp: r0.w === wk ? r0.wp : cnt(null), wc: r0.w === wk ? r0.wc : [] }, out = [];
+for (const [id, [per, k, n, ink]] of Object.entries(C.TASKS)) {
+if (per === 'e' && !C.inEvent(now)) continue;
+const v = per === 'd' ? r.dp[k] : per === 'w' ? r.wp[k] : r.ev, done = per === 'd' ? r.dc.includes(id) : per === 'w' ? r.wc.includes(id) : !!r.ec;
+out.push({ id, per, target: n, prog: Math.min(n, v || 0), reward: ink, claimed: done });
+}
+return out;
 };
 C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); delete o.tk; return o; };
 C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.FULL)];
@@ -32159,6 +32274,7 @@ if (env.now - (s.last || 0) < C.MATCH_GAP_MS) return { err: '太快了，不算'
 if (s.dm.n >= C.MATCH_DAY_CAP) return { err: '今天的对局奖励已经拿满了' };
 }
 s.last = env.now; s.dm.n++;
+rwMatch(s, c, env);
 const win = !!c.win;
 const combo = Math.max(0, Math.min(200, Math.floor(+c.combo || 0))), ults = Math.max(0, Math.min(30, Math.floor(+c.ults || 0)));
 s.drop.g++;
@@ -32202,6 +32318,52 @@ A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和�
 if (s.gift) return { err: '已经领过了' };
 s.gift = 1; s.cases.c1++; s.term++;
 return { ok: true };
+};
+A.task = (s, a, env) => {
+const t = own(C.TASKS, a.id) ? C.TASKS[a.id] : null;
+if (!t) return { err: '没有这个任务' };
+const [per, k, n, ink] = t, r = s.rw;
+if (per === 'e' && !C.inEvent(env.now)) return { err: '活动已经结束了' };
+const got = per === 'd' ? r.dc : per === 'w' ? r.wc : null;
+if (got ? got.includes(a.id) : r.ec) return { err: '已经领过了' };
+if ((per === 'd' ? r.dp[k] : per === 'w' ? r.wp[k] : r.ev) < n) return { err: '任务还没完成' };
+if (got) got.push(a.id); else r.ec = 1;
+giveInk(env, ink);
+return { ok: true, gain: ink };
+};
+A.comp = (s, a, env) => {
+if (!C.inEvent(env.now)) return { err: '补偿已经结束了' };
+if (s.rw.comp) return { err: '已经领过了' };
+s.rw.comp = 1; giveInk(env, C.RW.comp);
+return { ok: true, gain: C.RW.comp };
+};
+A.tut = (s, a, env) => {
+if (s.rw.tut) return { err: '已经领过了' };
+s.rw.tut = 1; giveInk(env, C.RW.tut);
+return { ok: true, gain: C.RW.tut };
+};
+A.stars = (s, a, env) => {
+if (!C.stageOk(a.id)) return { err: '没有这一关' };
+const n = int(a.n, 0, 3), had = s.rw.ss[a.id] || 0;
+if (n <= had) return { ok: true, gain: 0 };
+s.rw.ss[a.id] = n;
+const gain = (n - had) * C.RW.star;
+giveInk(env, gain);
+return { ok: true, gain };
+};
+A.saga = (s, a, env) => {
+if (!C.HERO_IDS.includes(a.h)) return { err: '没有这位侠客' };
+const g = s.rw.sg[a.h] || (s.rw.sg[a.h] = { n: 0, e: [] });
+let gain = 0;
+const node = int(a.n, 0, C.RW.sagaNodes);
+if (node >= 1 && !(g.n & (1 << (node - 1))) && !g.e.length) { g.n |= 1 << (node - 1); gain += C.RW.sagaNode; }
+if (a.end !== undefined) {
+if (typeof a.end !== 'string' || !END_RE.test(a.end)) return { err: '没有这个结局' };
+if (!g.e.includes(a.end) && g.e.length < C.RW.sagaEnds) { g.e.push(a.end); gain += C.RW.sagaEnd; }
+g.n = (1 << C.RW.sagaNodes) - 1;   // 拿到结局以后再走的节都不给了（和以前一样）
+}
+if (gain) giveInk(env, gain);
+return { ok: true, gain };
 };
 C.ACTIONS = Object.keys(A);
 C.run = (state, name, args, env) => {
@@ -32498,6 +32660,7 @@ const out = await ECON('sync', {});
 if (out && out.state && out.state.v < C.VER) { MODE = 'old'; OLDV = out.state.v; ST = C.normalize(JSON.parse(JSON.stringify(out.state)), envBase()); return; }   // 服务器还是旧版的武库：先只给看，等服务器更新
 if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
 MODE = 'server'; apply(out, true);
+setTimeout(() => rewardFlush().catch(() => {}), 0);   // 上次没报上去的关卡星、列传
 } catch (e) {
 if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还没有武库：先用本机规则
 else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
@@ -33354,6 +33517,29 @@ if (e && e.status === 400 && e.message === '不认识的操作') return { err: '
 return { err: e && e.message ? e.message : '服务器出错了' };
 } finally { BUSY = false; busyUi(false); }
 };
+const pendKey = () => 'renying-rw-pend-' + UID;
+const pendLoad = () => { try { const a = JSON.parse(localStorage.getItem(pendKey()) || '[]'); return Array.isArray(a) ? a.filter(x => Array.isArray(x) && ['stars', 'saga'].includes(x[0])).slice(-200) : []; } catch (e) { return []; } };
+const pendSave = a => { try { if (a.length) localStorage.setItem(pendKey(), JSON.stringify(a)); else localStorage.removeItem(pendKey()); } catch (e) {} };
+window.armoryRewardServer = () => !PROF.guest && cloudOn();
+window.armoryReward = async function (name, args, opt = {}) {
+if (!window.armoryRewardServer()) return null;
+if (LOADING) await LOADING.catch(() => {});
+const res = MODE === 'wait' ? null : await act(name, args || {}, { bg: true });
+if (!res && opt.queue) pendSave(pendLoad().concat([[name, args || {}]]));
+return res || { err: '连不上服务器，等联网了再领' };
+};
+async function rewardFlush() {
+const a = pendLoad();
+if (MODE !== 'server' || !a.length) return;
+pendSave([]);
+for (let i = 0; i < a.length; i++) {
+const r = await act(a[i][0], a[i][1], { bg: true });
+if (!r) { pendSave(pendLoad().concat(a.slice(i))); return; }
+if (r.gain) toast(`补领到 ${r.gain} 墨锭`);
+}
+}
+window.armoryTasks = () => MODE === 'server' && ST ? C.taskView(ST, NOW()) : null;
+window.armoryRw = () => MODE === 'server' && ST && ST.rw ? ST.rw : null;
 window.armoryHasAll = function (keys) {
 if (!ST || !Array.isArray(ST.inv)) return false;
 return keys.every(k => ST.inv.some(x => x.k === k));

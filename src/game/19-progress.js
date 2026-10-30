@@ -556,6 +556,8 @@ function compKey() { return 'renying-comp1022-' + curName(); }
 function compState() {
   if (OFFLINE_BUILD || Date.now() >= FREE_SKIN_EVENT.end) return null;
   let claimed = false; try { claimed = !!curName() && localStorage.getItem(compKey()) === '1'; } catch (e) {}
+  const rw = rwServer() && typeof window.armoryRw === 'function' ? window.armoryRw() : null;
+  if (rw) claimed = !!rw.comp;   // 云端账号以服务器为准：本机标记清掉了也领不到第二次
   return { claimed };
 }
 function compMaybe() {   // 登录后回到首页时弹一次，点了稍后再选就不再追着弹
@@ -566,6 +568,11 @@ function compMark() { try { localStorage.setItem(compKey(), '1'); } catch (e) {}
 function compClaim() {
   const st = compState(); if (!st || st.claimed || PROF.guest || !curName()) return;
   if (CHARS.every(c => ownsHero(c.id))) {   // 侠客都能直接用了：改发墨锭
+    if (rwServer()) {
+      compAsked = true;
+      rwClaim('comp', null, true).then(g => { if (g >= 0 || g === -2) compMark(); if (g >= 0) { SFX.chargeFull(); toast(`侠客现在都能直接用，补偿改发 ${g} 墨锭`); } if ($id('tEvt')) renderTasks(); });
+      return;
+    }
     compMark(); PROF.ink = (PROF.ink || 0) + 500; saveProfile(); SFX.chargeFull(); toast('侠客现在都能直接用，补偿改发 500 墨锭'); return;
   }
   openWelfare('comp');
@@ -647,11 +654,26 @@ function taskMarkClaimed(ids) {
   }
   saveTasks(s);
 }
+// 云端账号：任务、补偿找服务器领（armory.js 的 armoryReward），进度和领没领过以服务器为准；离线版、本机账号照旧本机算
+const rwServer = () => typeof window.armoryRewardServer === 'function' && window.armoryRewardServer();
+async function rwClaim(name, args, quietDup) {   // 领到返回墨锭数；已经领过返回 -2；别的错返回 -1（都会提示，quietDup 时领过的不提示）
+  const r = await window.armoryReward(name, args);
+  if (r && r.ok) return r.gain || 0;
+  const dup = !!(r && r.err === '已经领过了');
+  if (r && r.err && !(dup && quietDup)) toast(r.err);
+  return dup ? -2 : -1;
+}
 function ensureClientTasks() {
   const s = loadTasks(), row = (x, per, cl) => ({ id: x[0], name: x[1], target: x[3], prog: Math.min(x[3], per[x[2]] || 0), reward: x[4], claimed: cl.includes(x[0]) });
   PROF.daily = TASK_DEFS.daily.map(x => row(x, s.d, s.dc));
   PROF.weekly = TASK_DEFS.weekly.map(x => row(x, s.w, s.wc));
   PROF.evtTask = freeSkinEvent() ? Object.assign({}, EVT_TASK, { prog: Math.min(EVT_TASK.target, s.evt.cpu), claimed: !!s.evt.claimed }) : null;
+  const sv = rwServer() && typeof window.armoryTasks === 'function' ? window.armoryTasks() : null;
+  if (sv) {   // 服务器上的进度（只算服务器认的对局）和领取记录
+    const put = t => { const v = sv.find(x => x.id === t.id); if (v) Object.assign(t, { prog: v.prog, target: v.target, reward: v.reward, claimed: v.claimed }); };
+    PROF.daily.forEach(put); PROF.weekly.forEach(put);
+    if (PROF.evtTask) { const v = sv.find(x => x.id === EVT_TASK.id); if (v) put(PROF.evtTask); else PROF.evtTask = null; }
+  }
 }
 function allTasks() { return [...(PROF.evtTask ? [PROF.evtTask] : []), ...(PROF.daily || []), ...(PROF.weekly || [])]; }
 function renderTasks() {
@@ -693,6 +715,14 @@ for (const id of ['tEvt', 'tDaily', 'tWeekly']) $id(id).addEventListener('click'
   if (PROF.guest) return;
   const t = allTasks().find(x => x.id === tid);
   if (!t || t.claimed || t.prog < t.target) return;
+  if (rwServer()) {
+    b.disabled = true;
+    const gain = await rwClaim('task', { id: tid });
+    if (gain >= 0 || gain === -2) taskMarkClaimed([tid]);
+    if (gain >= 0) { SFX.chargeFull(); toast(`+${gain} 墨锭`); }
+    renderTasks();
+    return;
+  }
   t.claimed = true; taskMarkClaimed([tid]);
   const gain = t.reward || 50;
   PROF.ink = (PROF.ink || 0) + gain;
@@ -707,6 +737,13 @@ if ($id('claimAllBtn')) {
     if (PROF.guest) return;
     const all = allTasks().filter(t => !t.claimed && t.prog >= t.target);
     if (!all.length) return;
+    if (rwServer()) {
+      let totalGain = 0, n = 0;
+      for (const t of all) { const g = await rwClaim('task', { id: t.id }, true); if (g >= 0 || g === -2) taskMarkClaimed([t.id]); if (g >= 0) { totalGain += g; n++; } }
+      if (n) { SFX.chargeFull(); toast(`一键领取完成：+${totalGain} 墨锭`); }
+      renderTasks();
+      return;
+    }
     taskMarkClaimed(all.map(t => t.id));
     let totalGain = 0;
     for (const t of all) {

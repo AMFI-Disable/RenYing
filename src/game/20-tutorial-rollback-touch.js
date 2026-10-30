@@ -85,7 +85,12 @@ async function tutFinish() {
   $id('tutBox').classList.add('hidden');
   let msg = '该会的都会了。去找电脑或是同学，过几招吧。';
   if (!PROF.guest) {
-    if (!PROF.tutorial) {
+    if (!PROF.tutorial && typeof rwServer === 'function' && rwServer()) {   // 云端账号：找服务器领，每个号只给一次（本机标记不算数）
+      PROF.tutorial = 1; saveFlag('tutorial', 1);
+      const g = await rwClaim('tut', null, true);
+      if (g > 0) msg += `<br>奖励 <b style="color:#e9c46a">${g} 墨锭</b>，去武库买个武器箱试试手气吧！`;
+      else if (g === -2) msg += '<br>这个号已经领过教学奖励了。';
+    } else if (!PROF.tutorial) {
       PROF.tutorial = 1; saveFlag('tutorial', 1);
       PROF.ink = (PROF.ink || 0) + 300;
       if (window.CloudSave) CloudSave.saveProfile(PROF);

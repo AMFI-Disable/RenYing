@@ -659,7 +659,7 @@ section('第 3 版的武库存档：卖给系统的挂单全部退回，武器�
 
 section('不能套利：系统不定饰品的价、也不收购；墨锭只有对局、补给、星章和卖给别的玩家能拿到');
 {
-  const income = ['matchEnd', 'supply', 'star', 'sellDupes'];   // 规则里会加墨锭的动作（加上结算挂单与出售重复饰品）
+  const income = ['matchEnd', 'supply', 'star', 'sellDupes', 'task', 'comp', 'tut', 'stars', 'saga'];   // 规则里会加墨锭的动作（加上结算挂单与出售重复饰品；任务、补偿、教程、关卡星、列传每份只给一次，下面单独测）
   const R = C.rng(99), env = () => ({ now: T, rnd: R, uid: 'arb', ink: 1000, skins: [], equip: {}, server: true });
   const rich = () => { const s = C.blank(); s.cases = Object.fromEntries(C.CASES.map(c => [c, 3])); s.term = 3; s.tags = 3; s.gift = 0;
     for (let i = 1; i <= 12; i++) s.inv.push({ i, k: C.ofTier('mil')[i % 4], st: -1, n: '', t: T, src: 'case' }); s.nid = 13; return s; };
@@ -2244,6 +2244,59 @@ section('数据库迁移：cloudflare/migrations/ 按编号跑，记在 schema_m
   const r6 = await hit1(await fresh(), e1);
   console.warn = ow;
   ok(r6.status === 200 && warns.some(w => /0001_init/.test(w) && /新的迁移文件/.test(w)), '改过跑过的迁移文件：照常服务，日志提示要加新文件', warns);
+}
+
+section('一次性、按天按周的奖励：领没领过记在服务器上，换设备、退出再登录、清本机都领不到第二次');
+{
+  T = nextNoon();
+  const u = await newUser('farmer', { ink: 100, stageStars: { '1.2': 3 }, saga: { qingfeng: { r: 0, s: 5, f: 'a', c: 0, e: ['a'], t: 1 }, tieshan: { r: 0, s: 2, f: '', c: 0, e: [], t: 1 } } });
+  const inkOf = async tok => (await call('GET', '/api/profile', undefined, tok)).ledger.ink;
+  const ink0 = await inkOf(u.token);
+  const t0 = await econ(u.token, 'task', { id: 'd1' });
+  ok(t0.res && t0.res.err === '任务还没完成', '每日任务：没打过服务器认的对局，领不了', t0.res);
+  ok(await playMatches(u.token, 1) === 1, '打一局服务器认的对局');
+  const t1 = await econ(u.token, 'task', { id: 'd1' });
+  ok(t1.res && t1.res.ok && t1.res.gain === 30 && t1.ledger.ink === ink0 + 30, '领到 30，墨锭是服务器发的', [t1.res, t1.ledger && t1.ledger.ink]);
+  ok(t1.state.rw.dc.includes('d1') && C.taskView(t1.state, T).find(x => x.id === 'd1').claimed, '领取记录在服务器的武库存档里');
+  const li = await call('POST', '/api/login', { username: 'farmer', password: 'secret123' }, undefined, '9.8.7.6');
+  const t2 = await econ(li.token, 'task', { id: 'd1' });
+  ok(t2.res && t2.res.err === '已经领过了' && t2.ledger.ink === ink0 + 30, '退出再登录（换一台设备，本机什么都没有）：已经领过了', t2.res);
+  ok((await econ(li.token, 'task', { id: 'w1' })).res.err === '任务还没完成' && (await econ(li.token, 'task', { id: 'zz' })).res.err === '没有这个任务', '周任务没打够不给；没有的任务不认');
+  T = nextNoon();
+  ok((await econ(li.token, 'task', { id: 'd1' })).res.err === '任务还没完成', '第二天：进度清零，要重新打');
+  await playMatches(li.token, 1);
+  ok((await econ(li.token, 'task', { id: 'd1' })).res.gain === 30, '第二天打完再领一次');
+  const tu = [await econ(u.token, 'tut'), await econ(li.token, 'tut')];
+  ok(tu[0].res.gain === C.RW.tut && tu[1].res.err === '已经领过了', '新手教程：每个号一次', tu.map(x => x.res));
+  const st = [await econ(u.token, 'stars', { id: '1.1', n: 2 }), await econ(u.token, 'stars', { id: '1.1', n: 2 }), await econ(li.token, 'stars', { id: '1.1', n: 3 }), await econ(u.token, 'stars', { id: '1.2', n: 3 }), await econ(u.token, 'stars', { id: '99.1', n: 3 }), await econ(u.token, 'stars', { id: '1.6', n: 3 })];
+  ok(st[0].res.gain === 60 && st[1].res.gain === 0 && st[2].res.gain === 30, '关卡星：每颗只给一次，拿到更多星补差', st.slice(0, 3).map(x => x.res));
+  ok(st[3].res.gain === 0, '注册时存档里已经有的星（1.2 三星）当成领过了', st[3].res);
+  ok(st[4].res.err === '没有这一关' && st[5].res.err === '没有这一关', '编出来的关卡不认（一位侠客一章、每章 5 关）', [st[4].res, st[5].res]);
+  const sg = [await econ(u.token, 'saga', { h: 'cixian', n: 1 }), await econ(u.token, 'saga', { h: 'cixian', n: 1 }), await econ(li.token, 'saga', { h: 'cixian', n: 5, end: 'bell' }),
+    await econ(u.token, 'saga', { h: 'cixian', n: 2 }), await econ(u.token, 'saga', { h: 'cixian', n: 5, end: 'needle' }), await econ(u.token, 'saga', { h: 'cixian', n: 5, end: 'third' }), await econ(u.token, 'saga', { h: 'cixian', n: 5, end: 'bell' })];
+  ok(sg[0].res.gain === 40 && sg[1].res.gain === 0, '列传：每节第一次走完给 40，重走、刷新回来再走都不给', sg.slice(0, 2).map(x => x.res));
+  ok(sg[2].res.gain === 190 && sg[3].res.gain === 0, '第一个结局：这一节 40 + 结局 150；拿到结局以后再走的节不给', [sg[2].res, sg[3].res]);
+  ok(sg[4].res.gain === 150 && sg[5].res.gain === 0 && sg[6].res.gain === 0, '第二个结局再给 150；编出来的第三个、拿过的都不给', sg.slice(4).map(x => x.res));
+  const sd = [await econ(u.token, 'saga', { h: 'qingfeng', n: 3 }), await econ(u.token, 'saga', { h: 'tieshan', n: 2 }), await econ(u.token, 'saga', { h: 'tieshan', n: 3 })];
+  ok(sd[0].res.gain === 0 && sd[1].res.gain === 0 && sd[2].res.gain === 40, '注册时存档里已有的列传进度当成领过了（走完的那部全不给；走到第 2 节的从第 3 节给）', sd.map(x => x.res));
+  // 清掉本机进度再传一份旧存档（不带 prog）：关卡星、列传、胜场都退不回去
+  const before = profOf(u.uid);
+  await call('POST', '/api/profile', { profile: { ...before, stageStars: {}, saga: {}, netWins: 0 }, ledger: { deltas: [], ev: 0 } }, u.token);
+  const after = profOf(u.uid);
+  ok(after.stageStars['1.2'] === 3 && after.saga.qingfeng && after.saga.qingfeng.e.includes('a'), '传一份清空的旧存档：关卡星、列传进度不会被退回去', [before.stageStars, after.stageStars, before.saga && Object.keys(before.saga)]);
+  const pr = await call('POST', '/api/profile', { profile: { ...after, netWins: 999 } }, u.token);
+  ok(pr.ok && profOf(u.uid).netWins === (before.netWins || 0), '不带 prog 报的胜场绝对数不认', profOf(u.uid).netWins);
+  ok(await inkOf(u.token) === ink0 + 30 + 30 + C.RW.tut + 90 + 40 + 190 + 150 + 40, '前后加起来的墨锭一分不多', await inkOf(u.token));
+  // 规则核心：活动任务、系统补偿只在活动期间，每个号一次
+  const env = now => ({ now, rnd: C.rng(1), uid: 'ev', ink: 0, skins: [], equip: {}, server: true });
+  const inEv = C.EVENT.start + 86400e3, after2 = C.EVENT.end + 1;
+  let s = C.blank();
+  for (let i = 0; i < 3; i++) { const e = env(inEv + i * 60e3); s = C.run(s, 'matchStart', { mode: 'cpu' }, e).state; const e2 = env(inEv + i * 60e3 + 30e3); s = C.run(s, 'matchEnd', { ctx: { mode: 'cpu', level: 'easy', char: 'qingfeng', win: false } }, e2).state; }
+  const ev1 = env(inEv + 1e6), r1 = C.run(s, 'task', { id: 'e1000' }, ev1), ev2 = env(inEv + 2e6), r2 = C.run(r1.state, 'task', { id: 'e1000' }, ev2);
+  ok(r1.res.gain === 1000 && ev1.ink === 1000 && r2.res.err === '已经领过了', '活动任务：活动期间打满 3 局人机，领一次', [r1.res, r2.res]);
+  ok(C.run(s, 'task', { id: 'e1000' }, env(after2)).res.err === '活动已经结束了' && !C.taskView(s, after2).some(x => x.id === 'e1000'), '活动结束后领不了，也不显示');
+  const c1 = env(inEv), cr = C.run(C.blank(), 'comp', {}, c1), c2 = C.run(cr.state, 'comp', {}, env(inEv));
+  ok(cr.res.gain === C.RW.comp && c1.ink === C.RW.comp && c2.res.err === '已经领过了' && C.run(C.blank(), 'comp', {}, env(after2)).res.err === '补偿已经结束了', '系统补偿：活动期间每个号一次', [cr.res, c2.res]);
 }
 
 section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭据；拿凭据失败也照样回 STUN');
