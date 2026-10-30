@@ -5,7 +5,9 @@
 // selection ring, Enter to press, Esc to go back, A/D/X to fight). A pointer listener fails the
 // run if any mouse or touch event reaches the page.
 // --maps runs the same flow through the Terrain Clash mode instead (special tab -> vote for a map -> start).
-// Usage: node tools/kb-flow-test.mjs [outdir] [width] [height] [--en] [--maps]
+// --dummy runs the training dummy instead: train tab -> start -> draft, then Tab opens the dummy action bar, the arrows
+// pick an action and Enter takes it, Esc closes the bar and the dummy has to do it; the old digit keys must do nothing.
+// Usage: node tools/kb-flow-test.mjs [outdir] [width] [height] [--en] [--maps | --dummy]
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -22,6 +24,7 @@ if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/pa
 const args = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const EN = process.argv.includes('--en');
 const MAPS_FLOW = process.argv.includes('--maps');
+const DUMMY_FLOW = process.argv.includes('--dummy');
 const OUT = args[0] || join(tmpdir(), 'renying-kb-flow');
 const VW = +(args[1] || 1440), VH = +(args[2] || 900);
 const PORT = +(process.env.RENYING_CDP_PORT || 9385);
@@ -83,7 +86,7 @@ const shot = async name => { const s = await cdp.send('Page.captureScreenshot', 
 const KEYDEF = {
   ArrowUp: ['ArrowUp', 38], ArrowDown: ['ArrowDown', 40], ArrowLeft: ['ArrowLeft', 37], ArrowRight: ['ArrowRight', 39],
   Enter: ['Enter', 13, '\r'], Escape: ['Escape', 27], Tab: ['Tab', 9],
-  KeyA: ['a', 65, 'a'], KeyD: ['d', 68, 'd'], KeyW: ['w', 87, 'w'], KeyX: ['x', 88, 'x'], KeyQ: ['q', 81, 'q'], KeyE: ['e', 69, 'e'],
+  KeyA: ['a', 65, 'a'], KeyD: ['d', 68, 'd'], KeyW: ['w', 87, 'w'], KeyX: ['x', 88, 'x'], KeyQ: ['q', 81, 'q'], KeyE: ['e', 69, 'e'], Digit1: ['1', 49, '1'], Digit2: ['2', 50, '2'],
 };
 async function keyDown(code) {
   const [key, vk, text] = KEYDEF[code];
@@ -198,6 +201,11 @@ if (MAPS_FLOW) {
   await activate('choose easy', '#mapsLevels [data-lv="easy"]');
   await shot('02-maps');
   await activate('start terrain clash', '#mapsStartBtn', 'bp');
+} else if (DUMMY_FLOW) {
+  await activate('training tab', '#singleTabs [data-tab="train"]');
+  await activate('training dummy', '#trainModeSeg [data-tmode="dummy"]');
+  await shot('02-train');
+  await activate('start the training dummy', '#trainBtn', 'bp');
 } else {
   await activate('choose easy', '#levels [data-lv="easy"]');
   ok('easy selected', await ev(`!!document.querySelector('#levels [data-lv="easy"].sel')`));
@@ -237,6 +245,48 @@ ok('draft finished', picks > 0, `${picks} picks`);
 ok('match starts', await ev(`typeof M !== 'undefined' && !!A && !!B`), await ev(`M.mode`));
 if (MAPS_FLOW) ok('match is on the voted map', await ev(`M.mode === 'maps' && M.map === 'ice' && !!mapNow()`), await ev(`M.mode + ' ' + M.map`));
 ok('selection ring hidden in the match', await ev(`!document.getElementById('kbRing').classList.contains('on')`));
+if (DUMMY_FLOW) await dummyFlow();
+
+// --dummy: the action bar, driven by keys only
+async function dummyFlow() {
+  ok('training dummy match', await ev(`M.mode === 'train' && B.ctrl instanceof DummyCtrl`), await ev(`M.mode`));
+  for (let i = 0; i < 40 && (await ev(`M.phase`)) !== 'fight'; i++) await sleep(150);
+  const cfg0 = await ev(`JSON.stringify(dummyCfg)`);
+  await press('Digit1'); await press('Digit2'); await sleep(200);
+  ok('digit keys no longer change the dummy', (await ev(`JSON.stringify(dummyCfg)`)) === cfg0 && !(await ev(`dummyBarOn()`)), await ev(`JSON.stringify(dummyCfg)`));
+  const key = await ev(`dummyBarKey()`);
+  await press(key); await sleep(250);
+  ok(`${key} opens the action bar and pauses`, await ev(`dummyBarOn() && paused && !$id('dummyBar').classList.contains('hidden') && !document.querySelector('.scr.on')`));
+  ok('selected action has focus', await ev(`document.activeElement && document.activeElement.matches('#dummyActs button.sel')`), await ev(`document.activeElement ? document.activeElement.textContent : ''`));
+  await activate('pick combo', '#dummyActs [data-act="combo"]');
+  ok('combo picked', await ev(`dummyCfg.act === 'combo' && B.ctrl.cfg.act === 'combo' && !!document.querySelector('#dummyActs [data-act="combo"].sel')`), await ev(`dummyCfg.act`));
+  await activate('pick once', '#dummyRep [data-rep="0"]');
+  ok('once picked', await ev(`dummyCfg.rep === false && B.ctrl.cfg.rep === false`));
+  await activate('pick a 2 s interval', '#dummyGap [data-gap="2"]');
+  ok('interval picked', await ev(`dummyCfg.gap === 2 && B.ctrl.cfg.gap === 2`));
+  await shot('04-dummy-bar');
+  if (EN) {
+    const left = await ev(`(() => { const out = [], w = document.createTreeWalker($id('dummyBar'), NodeFilter.SHOW_TEXT); let n;
+      while ((n = w.nextNode())) { const t = n.nodeValue.trim(); if (t && /[\u4e00-\u9fff]/.test(t)) out.push(t); } return out; })()`);
+    ok('action bar in English', left.length === 0, left.slice(0, 4).join(' | '));
+  }
+  await press('Escape'); await sleep(250);
+  ok('Esc closes the bar and the fight goes on', await ev(`!dummyBarOn() && !paused && $id('dummyBar').classList.contains('hidden') && !document.querySelector('.scr.on')`), await ev(`([...document.querySelectorAll('.scr.on')].pop() || {}).id || ''`));
+  await ev(`(() => { window.__dst = new Set(); const f = () => { window.__dst.add(B.state); if (window.__dst) requestAnimationFrame(f); }; f(); })()`);
+  await sleep(4000);
+  const seen = await ev(`[...window.__dst]`);
+  ok('dummy does the combo', seen.includes('attack') || seen.includes('skill'), seen.join(','));
+  ok('once means it stops afterwards', await ev(`B.ctrl.done === true`));
+  // and choose again with the bar button's own key once more: block, which holds
+  await press(key); await sleep(250);
+  await activate('pick block', '#dummyActs [data-act="block"]');
+  ok('interval is off for a held action', await ev(`[...document.querySelectorAll('#dummyGap button')].every(b => b.disabled)`));
+  await press('Escape'); await sleep(600);
+  ok('dummy holds its guard', await ev(`B.ctrl.held.down === true`));
+  const hud = await ev(`$id('dummyBarBtn').textContent`);
+  if (EN) ok('action button in English', !CJK.test(hud), hud);
+  await finish();
+}
 
 // 4. fight with the 1P keyboard keys only: walk at the opponent, attack, jump now and then
 const t0 = Date.now(); let held = null, hits = 0, shotMid = false;

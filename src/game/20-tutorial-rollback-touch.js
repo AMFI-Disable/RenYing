@@ -17,7 +17,7 @@ const TUT_STEPS = [
 ];
 function startTutorial() {
   try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
-  trainChar = 0; dummyMode = 'stand';
+  trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
   startTraining('dummy');
   B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
   TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
@@ -451,27 +451,7 @@ if (TOUCH) {
   const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; touchHeldJump(); };
   st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
   $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
-  $id('tDummy').addEventListener('click', () => {
-    if (!(B.ctrl instanceof DummyCtrl)) return;
-    const presets = [
-      { name: '自由试剑', cfg: { fixed: false, block: false, escape: false, counter: false, infGuard: true, autoHeal: true } },
-      { name: '钉在原地', cfg: { fixed: true, block: false, escape: false, counter: false, infGuard: true, autoHeal: true } },
-      { name: '一味死守', cfg: { fixed: false, block: true, escape: false, counter: false, infGuard: true, autoHeal: true } },
-      { name: '受身腾空', cfg: { fixed: false, block: false, escape: true, counter: false, infGuard: true, autoHeal: true } },
-      { name: '防守反击', cfg: { fixed: false, block: true, escape: true, counter: true, infGuard: true, autoHeal: true } }
-    ];
-    let curIdx = presets.findIndex(p => Object.keys(p.cfg).every(k => p.cfg[k] === B.ctrl.cfg[k]));
-    const nextP = presets[(curIdx + 1) % presets.length];
-    B.ctrl.cfg = { ...nextP.cfg };
-    dummyCfg = { ...B.ctrl.cfg };
-    if (B.ctrl.cfg.fixed) {
-      B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
-    } else {
-      B.homeX = undefined;
-    }
-    renderDummyFeatures();
-    say('木人：' + nextP.name, 0.8, 'go');
-  });
+  $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons.js）
   document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
 

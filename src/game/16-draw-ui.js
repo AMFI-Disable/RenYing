@@ -9,7 +9,7 @@ function drawTrainStats(cx, top, bh) {
   const dps = TRAIN.hits.reduce((a, h) => a + h[1], 0) / 5;
   const x = W - Math.max(24, W * 0.04), y = top + bh + 80, fs = Math.max(13, Math.round(H * 0.019));
   const lines = [
-    ['木人桩', DUMMY_MODES[dummyMode], '#e9c46a'],
+    ['对手行为', B && B.ctrl instanceof DummyCtrl ? dummyActName(B.ctrl.cfg) : '站桩', '#e9c46a'],
     ['当前连击', cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '-', cu.t > 0 ? '#ffb088' : '#efe8d8'],
     ['最高连击', `${TRAIN.best} 段 · ${Math.round(TRAIN.bestDmg)} 伤`, '#ffd166'],
     ['累计伤害', `${Math.round(TRAIN.total)}`, '#efe8d8'],
@@ -17,7 +17,7 @@ function drawTrainStats(cx, top, bh) {
   ];
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
   for (const l of lines) { l[0] = cvT(l[0]); l[1] = cvT(l[1]); }
-  const hint = cvT(TOUCH ? '左上角切换木人' : '按 1-6 切换木人 | F1 判定框透视');
+  const hint = cvT(TOUCH ? '点左上角「对手行为」换动作' : `按 ${dummyBarKey()} 换对手行为 | F1 判定框透视`);
   const pw = Math.min(fs * 22, Math.max(fs * 17, ctx.measureText(hint).width, ...lines.map(([k, v]) => ctx.measureText(k).width + ctx.measureText(v).width + fs * 1.5)));   // 英文长：卡片跟着变宽（不超过 fs * 22）
   const cardH = (lines.length + 2) * fs * 1.75 + 16;
   ctx.fillStyle = 'rgba(10,10,24,0.68)'; ctx.fillRect(x - pw - 14, y - 12, pw + 28, cardH);

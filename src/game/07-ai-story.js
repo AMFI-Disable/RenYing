@@ -580,43 +580,112 @@ $id('feNext').addEventListener('click', () => { const nx = nextStage(STAGE); if 
 $id('feAgain').addEventListener('click', () => { paused = false; showScreen(null); startStage(STAGE.c, STAGE.l); });
 $id('feMenu').addEventListener('click', () => { paused = false; backToStages(); });
 
-// 木人桩高级功能特性清单：将四种情况（钉在原地、持续格挡、受击腾空闪、不还手）及扩展功能融合成统一的特性列表
-const DUMMY_FEATURES = {
-  fixed: { name: '钉在原地', desc: '免除击飞击退位移，锁死原点' },
-  block: { name: '一味死守', desc: '全程保持防御格挡' },
-  escape: { name: '被连便闪', desc: '被挑空/连击4段受身腾空闪' },
-  counter: { name: '防守反击', desc: '格挡受击后适度出拳打断' },
-  infGuard: { name: '坚若磐石', desc: '架势耐力恒满永不破防' },
-  autoHeal: { name: '连段自愈', desc: '连击结束后血量秒回满' }
+// 木人桩：稻草人做什么（对手行为栏选的动作）加几项特性。动作表、特性表在 src/data/14-dummy.js，这里是每个动作怎么做。
+// dummyCfg 是栏里现在选的：act 动作、rep 一直做（false 只做一次）、gap 两次之间隔几秒，其余是特性开关
+let dummyCfg = { act: 'stand', rep: true, gap: 1, fixed: false, escape: false, infGuard: true, autoHeal: true };
+const DUMMY_BY = Object.fromEntries(DUMMY_ACTS.map(a => [a.id, a]));
+const DUMMY_RANDOM = DUMMY_ACTS.filter(a => a.k === 'do' && a.id !== 'random').map(a => a.id);   // 「随机」从这些里抽
+const dummyActName = c => { const a = DUMMY_BY[c.act] || DUMMY_BY.stand; return a.k === 'do' && !c.rep ? `${a.n}（只做一次）` : a.n; };
+// 以前的写法（startMatch('train', 'stand') 和旧的 block / counter 开关）照样认
+function dummyNorm(o) {
+  const c = { ...dummyCfg, ...(o && typeof o === 'object' ? o : {}) };
+  if (typeof o === 'string') { if (o === 'fixed') c.fixed = true; else if (o === 'escape') c.escape = true; c.act = o === 'block' ? 'block' : 'stand'; }
+  if (o && typeof o === 'object' && !o.act) c.act = o.counter ? 'counter' : o.block ? 'block' : 'stand';
+  if (!DUMMY_BY[c.act]) c.act = 'stand';
+  c.rep = c.rep !== false; c.gap = DUMMY_GAPS.includes(+c.gap) ? +c.gap : 1;
+  delete c.block; delete c.counter;
+  return c;
+}
+// 一个动作拆成几步，每一步 (ctrl, me, foe, J) 做完返回 true 才走下一步；J.t 是这一步开始了多久
+const dj = {
+  near: r => (c, me, foe, J) => {   // 走到对手身边（钉在原地就原地出手）
+    const dx = foe.x - me.x;
+    if (c.cfg.fixed || Math.abs(dx) <= r || J.t > 1.6) return true;
+    c.held[dx > 0 ? 'right' : 'left'] = true; return false;
+  },
+  press: (a, prep) => (c, me, foe) => { if (prep) prep(me, foe); c.press(a); return true; },
+  wait: d => (c, me, foe, J) => J.t >= d,
+  idle: (c, me, foe, J) => J.t > 0.08 && (me.onGround() && ['idle', 'walk', 'block'].includes(me.state)) || J.t > 3,
+  // 远程：自己有飞行道具技能就放那一招（冷却直接转好），没有就甩一道风刃
+  shoot: (c, me, foe) => {
+    const proj = slot => { const id = slot === 2 ? me.ch.skill2 : me.ch.skill; return typeof AI_KIT !== 'undefined' && AI_KIT[id] && AI_KIT[id].role === 'proj'; };
+    const slot = proj(1) ? 1 : proj(2) ? 2 : 0;
+    if (slot === 1) { me.skillCD = 0; c.press('skill'); }
+    else if (slot === 2) { me.skill2CD = 0; c.press('skill2'); }
+    else { const dir = foe.x >= me.x ? 1 : -1; spawnProj(me, { kind: 'wind', x: me.x + dir * 40, y: me.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 4, kb: [160, 0], stun: 0.3, hs: 0.04 }); }
+    return true;
+  },
 };
-let dummyCfg = { fixed: false, block: false, escape: false, counter: false, infGuard: true, autoHeal: true };
-const DUMMY_MODES = { stand: '任打不还手', block: '一味死守', escape: '被连便闪', fixed: '钉在原地' };
+const DUMMY_JOBS = {
+  light: [dj.near(110), dj.press('light'), dj.idle],
+  ranged: [dj.shoot, dj.idle],
+  jump: [dj.press('jump'), dj.idle],
+  djump: [dj.press('jump'), dj.wait(0.24), dj.press('jump'), dj.idle],
+  dash: [dj.press('dash', me => { me.breakCD = 0; }), dj.idle],
+  skill: [dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
+  skill2: [dj.press('skill2', me => { me.skill2CD = 0; }), dj.idle],
+  ult: [dj.press('special', me => { me.meter = 100; }), dj.idle],
+  combo: [dj.near(100), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'),
+    dj.wait(0.2), dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
+};
 
 class DummyCtrl extends Ctrl {
   constructor(modeOrCfg) {
     super();
-    if (typeof modeOrCfg === 'object' && modeOrCfg !== null) {
-      this.cfg = { ...modeOrCfg };
-    } else {
-      this.cfg = {
-        fixed: modeOrCfg === 'fixed' || dummyCfg.fixed,
-        block: modeOrCfg === 'block' || dummyCfg.block,
-        escape: modeOrCfg === 'escape' || dummyCfg.escape,
-        counter: !!dummyCfg.counter,
-        infGuard: !!dummyCfg.infGuard,
-        autoHeal: !!dummyCfg.autoHeal
-      };
-    }
+    this.cfg = dummyNorm(modeOrCfg);
     this.mode = typeof modeOrCfg === 'string' ? modeOrCfg : 'custom';
+    this.restart();
   }
-  think(me) {
-    this.held.down = !!this.cfg.block;
-    if (this.cfg.escape && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) {
-      this.press('dash');
+  // 换了动作（或者再选一次同一个）：从头来，稍等一下再出手，好看清
+  restart() { this.job = null; this.step = 0; this.J = { t: 0 }; this.wait = 0.6; this.done = false; this.prev = ''; this.soon = false; this.walkT = 0; this.walkDir = 1; }
+  setCfg(o) { this.cfg = dummyNorm(o); this.restart(); }
+  think(me, foe) {
+    const c = this.cfg, a = DUMMY_BY[c.act] || DUMMY_BY.stand, h = this.held;
+    h.left = h.right = false; h.down = c.act === 'block';
+    if (c.escape && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) this.press('dash');
+    if (c.act === 'walk') {   // 来回走：每 1.2 秒掉头，走到场边也掉头
+      this.walkT += STEP;
+      if (this.walkT > 1.2 || (this.walkDir < 0 && me.x < WALL + 120) || (this.walkDir > 0 && me.x > STAGE_W - WALL - 120)) { this.walkT = 0; this.walkDir = -this.walkDir; }
+      h[this.walkDir > 0 ? 'right' : 'left'] = true;
     }
-    if (this.cfg.counter && me.breakCD <= 0 && me.state === 'blockstun' && Math.random() < 0.25) {
-      this.press('light');
+    if (a.k === 'react') this.react(me, foe, c);
+    else if (a.k === 'do') this.doJob(me, foe, c);
+    this.prev = me.state;
+  }
+  // 看时机反应：只做一次的话，反应过一次就停
+  react(me, foe, c) {
+    if (this.done) return;
+    let did = false;
+    if (c.act === 'parry') {   // 对手的招快打到了（出招点前 0.06 秒到招式结束）才按住格挡，招一过就松开：每一下都是精准招架
+      const m = foe.state === 'attack' && foe.move;
+      const soon = m && Math.abs(foe.x - me.x) < 260 && foe.t >= m.su - 0.06 && foe.t < m.su + m.ac;
+      this.held.down = !!soon;
+      did = this.soon && !soon; this.soon = !!soon;   // 一招过去了算招架过一次
+    } else if (c.act === 'counter') {   // 挨打、被格挡的硬直一结束就还手
+      if ((this.prev === 'hitstun' || this.prev === 'blockstun') && me.state !== this.prev && me.hp > 0) { this.press('light'); did = true; }
+    } else if (c.act === 'wakeup') {   // 起身那一下出刀（一直按着，起来的第一刻就出）
+      if (me.state === 'getup') this.press('light');
+      if (this.prev === 'getup' && me.state !== 'getup') did = true;
     }
+    if (did && !c.rep) this.done = true;
+  }
+  // 每隔 gap 秒做一次（只做一次就做完停下）；正在挨打、在空中就先等
+  doJob(me, foe, c) {
+    if (!this.job) {
+      if (this.done) return;
+      const free = me.onGround() && ['idle', 'walk', 'block'].includes(me.state);
+      if (free) this.wait -= STEP;
+      if (this.wait > 0 || !free) return;
+      const id = c.act === 'random' ? DUMMY_RANDOM[Math.floor(grnd() * DUMMY_RANDOM.length)] : c.act;
+      this.job = DUMMY_JOBS[id]; this.jobId = id; this.step = 0; this.J = { t: 0 };
+    }
+    const J = this.J;
+    while (this.job && this.step < this.job.length) {
+      if (!this.job[this.step](this, me, foe, J)) { J.t += STEP; return; }
+      this.step++; J.t = 0;
+    }
+    this.job = null; this.wait = c.gap;
+    if (!c.rep) this.done = true;
   }
 }
 const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };

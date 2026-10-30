@@ -326,7 +326,7 @@
           <button data-tmode="watch2v2" type="button">2v2 双人 · 对天道</button>
         </div>
         <div id="dummyFeatWrap">
-          <div class="sec-sub-label">木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）</div>
+          <div class="sec-sub-label">木人桩特性（自由组合；开练后点「对手行为」或按 Tab 还能换动作、改特性）</div>
           <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;justify-content:center"></div>
         </div>
         <div class="single-action-row">
@@ -1232,9 +1232,23 @@
       </div>
     </div>
   </div>
+  <!-- 木人试剑：对手行为栏（src/game/21-buttons.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
+  <button class="dummy-bar-btn hidden" id="dummyBarBtn" type="button">对手行为</button>
+  <div class="dummy-bar hidden" id="dummyBar" role="dialog" aria-modal="true" aria-label="对手行为">
+    <div class="db-head"><b>对手行为</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
+    <div class="db-lab">动作</div>
+    <div class="db-acts" id="dummyActs"></div>
+    <div class="db-row">
+      <div><div class="db-lab">次数</div><div class="db-seg" id="dummyRep"><button type="button" data-rep="1">一直重复</button><button type="button" data-rep="0">只做一次</button></div></div>
+      <div><div class="db-lab">间隔</div><div class="db-seg" id="dummyGap"></div></div>
+    </div>
+    <div class="db-lab">特性</div>
+    <div class="db-feats" id="dummyFeats"></div>
+    <p class="db-note" id="dummyNote"></p>
+  </div>
   <div id="touchUI" class="hidden">
     <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>
-    <button class="tbtn tdummy hidden" id="tDummy">切换木人</button>
+    <button class="tbtn tdummy hidden" id="tDummy" type="button">对手行为</button>
     <div class="tstick" id="tStick"><div class="tknob" id="tKnob"></div></div>
     <div class="tpad">
       <button class="tbtn tatk" data-a="atk">攻击</button>

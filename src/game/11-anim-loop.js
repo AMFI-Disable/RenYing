@@ -809,6 +809,7 @@ function frameBody(now) {
   netTick(real);
   render();
   touchUIUpdate();
+  dummyBarUpdate();
 }
 function updateCamera(dt) {
   if (WORLD.on) { worldCamera(dt); return; }

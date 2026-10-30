@@ -367,7 +367,7 @@ const testSuite = [
       startMatch('train', 'block', [CHAR_IDX.lingque, 0]);
       showScreen(null); paused = false; M.phase = 'fight';
       for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
-      if (B.ctrl && B.ctrl.cfg) B.ctrl.cfg.block = true;
+      if (B.ctrl && B.ctrl.cfg) B.ctrl.cfg.act = 'block';
       A.x = STAGE_W / 2 - 200; B.x = STAGE_W / 2 + 200; A.face = 1; B.face = -1;
       A.skill2CD = 0; startSkill(A, B, 2);
       let blockedHit = false;

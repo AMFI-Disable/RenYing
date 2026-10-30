@@ -2817,6 +2817,41 @@ background: rgba(233,196,106,.12); border: 1px solid rgba(233,196,106,.5); borde
 .kb-hint { display: none; position: fixed; left: 12px; bottom: 12px; z-index: var(--z-toast); font: inherit; font-size: var(--fs-xs); padding: 4px 10px; cursor: pointer;
 color: var(--gold); background: rgba(13,21,30,.82); border: 1px solid rgba(233,196,106,.45); border-radius: var(--r-pill); }
 body.kb-only.has-nav .kb-hint { display: block; }
+.dummy-bar-btn { position: fixed; left: calc(16px + env(safe-area-inset-left)); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 16; padding: 7px 14px; border-radius: 18px; border: 1px solid rgba(233,196,106,.55); background: rgba(10,10,24,.72); color: #f4ecd8; font: 600 13px var(--body); cursor: pointer; }
+.dummy-bar-btn:hover, .dummy-bar-btn:focus-visible { background: rgba(233,196,106,.22); }
+.dummy-bar-btn.hidden, .dummy-bar.hidden { display: none; }
+body.touchdev .dummy-bar-btn { display: none; }
+.dummy-bar { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box;
+padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); border: 1px solid rgba(233,196,106,.45); color: #efe8d8; font: 13px var(--body); box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.dummy-bar .db-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.dummy-bar .db-head b { font: 600 18px var(--title); color: #e9c46a; }
+.dummy-bar .db-key { flex: 1; font-size: 12px; color: rgba(239,232,216,.55); }
+.dummy-bar .db-lab { font-size: 12px; color: rgba(239,232,216,.6); margin: 8px 0 5px; }
+.dummy-bar .db-acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.dummy-bar button { cursor: pointer; color: #efe8d8; font: inherit; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); }
+.dummy-bar button.sel { background: rgba(233,196,106,.22); border-color: #e9c46a; color: #fff6dc; }
+.dummy-bar .db-acts button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 7px 10px; text-align: left; min-height: 44px; }
+.dummy-bar .db-acts b { font-size: 13px; }
+.dummy-bar .db-acts span { font-size: 12px; opacity: .7; line-height: 1.3; }
+.dummy-bar .db-row { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.dummy-bar .db-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.dummy-bar .db-seg button, .dummy-bar .db-feats button { padding: 7px 12px; min-height: 36px; }
+.dummy-bar .db-seg button:disabled { opacity: .4; cursor: default; }
+.dummy-bar .db-feats { display: flex; flex-wrap: wrap; gap: 6px; }
+.dummy-bar .db-feats span { font-size: 12px; opacity: .7; margin-left: 4px; }
+.dummy-bar .db-note { margin: 8px 0 0; font-size: 12px; color: rgba(239,232,216,.55); }
+@media (max-width: 560px), (max-height: 480px) {
+.dummy-bar { padding: 10px 12px; }
+.dummy-bar .db-acts { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.dummy-bar .db-acts span { display: none; }
+.dummy-bar .db-acts button { min-height: 38px; justify-content: center; }
+.dummy-bar .db-feats span { display: none; }
+}
+.dummy-feat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 18px; font: 12px var(--body); cursor: pointer; transition: background .2s, border-color .2s; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); color: rgba(239,232,216,.65); }
+.dummy-feat-chip b { font-weight: 700; color: rgba(239,232,216,.8); }
+.dummy-feat-chip span { opacity: .75; }
+.dummy-feat-chip.sel { background: rgba(233,196,106,.22); border-color: #e9c46a; color: #f4ecd8; }
+.dummy-feat-chip.sel b { color: #e9c46a; }
 </style>
 </head>
 <body>
@@ -3134,7 +3169,7 @@ body.kb-only.has-nav .kb-hint { display: block; }
           <button data-tmode="watch2v2" type="button">2v2 双人 · 对天道</button>
         </div>
         <div id="dummyFeatWrap">
-          <div class="sec-sub-label">木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）</div>
+          <div class="sec-sub-label">木人桩特性（自由组合；开练后点「对手行为」或按 Tab 还能换动作、改特性）</div>
           <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px;justify-content:center"></div>
         </div>
         <div class="single-action-row">
@@ -4040,9 +4075,23 @@ body.kb-only.has-nav .kb-hint { display: block; }
       </div>
     </div>
   </div>
+  <!-- 木人试剑：对手行为栏（src/game/21-buttons.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
+  <button class="dummy-bar-btn hidden" id="dummyBarBtn" type="button">对手行为</button>
+  <div class="dummy-bar hidden" id="dummyBar" role="dialog" aria-modal="true" aria-label="对手行为">
+    <div class="db-head"><b>对手行为</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
+    <div class="db-lab">动作</div>
+    <div class="db-acts" id="dummyActs"></div>
+    <div class="db-row">
+      <div><div class="db-lab">次数</div><div class="db-seg" id="dummyRep"><button type="button" data-rep="1">一直重复</button><button type="button" data-rep="0">只做一次</button></div></div>
+      <div><div class="db-lab">间隔</div><div class="db-seg" id="dummyGap"></div></div>
+    </div>
+    <div class="db-lab">特性</div>
+    <div class="db-feats" id="dummyFeats"></div>
+    <p class="db-note" id="dummyNote"></p>
+  </div>
   <div id="touchUI" class="hidden">
     <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>
-    <button class="tbtn tdummy hidden" id="tDummy">切换木人</button>
+    <button class="tbtn tdummy hidden" id="tDummy" type="button">对手行为</button>
     <div class="tstick" id="tStick"><div class="tknob" id="tKnob"></div></div>
     <div class="tpad">
       <button class="tbtn tatk" data-a="atk">攻击</button>
@@ -5570,6 +5619,9 @@ const PATTERNS_EN = [
 [/^第\s*(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `Step ${a} / ${b}`],
 [/^(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `${a} / ${b} steps`],
 [/^(\d+(?:\.\d+)?)\s*秒$/, (m0, n) => `${n}s`],
+[/^(.+)（只做一次）$/, (m0, a) => `${lookup(a) || a} (once)`],
+[/^按 (\S+) 换对手行为 \| F1 判定框透视$/, (m0, k) => `${k}: dummy actions · F1 hitboxes`],
+[/^(\S+) 打开 · Esc 关闭$/, (m0, k) => `${k} opens · Esc closes`],
 [/^（冷却\s*(\d+(?:\.\d+)?)\s*秒）$/, (m0, n) => ` (cooldown ${n}s)`],
 [/^(.+?)禁用一名侠客$/, (m0, w) => `${lookup(w) || w} · Ban a hero`],
 [/^(.+?)选择出战侠客$/, (m0, w) => `${lookup(w) || w} · Pick a hero`],
@@ -7140,6 +7192,31 @@ line: CHRON.LINE[g][(ch + k) % CHRON.LINE[g].length],
 };
 }
 if (typeof globalThis !== 'undefined') globalThis.RenyingChron = { CHRON, chronNode };   // 服务器（cloudflare/worker.js）从这里拿
+const DUMMY_ACTS = [
+{ id: 'stand', n: '站桩', d: '站着不动，任你打', k: 'hold' },
+{ id: 'walk', n: '来回走动', d: '在原地附近左右走', k: 'hold' },
+{ id: 'light', n: '近身普攻', d: '走到你身边砍一刀', k: 'do' },
+{ id: 'ranged', n: '远程攻击', d: '放一发飞行道具', k: 'do' },
+{ id: 'block', n: '一直格挡', d: '全程举刀防御', k: 'hold' },
+{ id: 'parry', n: '精准招架', d: '你的招打到前一刻才格挡', k: 'react' },
+{ id: 'jump', n: '跳', d: '原地跳一下', k: 'do' },
+{ id: 'djump', n: '二段跳', d: '跳起来在空中再跳一次', k: 'do' },
+{ id: 'dash', n: '冲刺闪避', d: '腾空闪往后撤开', k: 'do' },
+{ id: 'skill', n: '技能 Q', d: '放第一个技能', k: 'do' },
+{ id: 'skill2', n: '技能 R', d: '放第二个技能', k: 'do' },
+{ id: 'ult', n: '大招 E', d: '直接放大招（真元自动补满）', k: 'do' },
+{ id: 'combo', n: '连招', d: '贴身打满五段，再接技能', k: 'do' },
+{ id: 'counter', n: '受击反击', d: '挨打或被格挡后马上还手', k: 'react' },
+{ id: 'wakeup', n: '起身攻击', d: '倒地起身时立刻出刀', k: 'react' },
+{ id: 'random', n: '随机', d: '每次从会出手的动作里抽一个', k: 'do' },
+];
+const DUMMY_GAPS = [0.5, 1, 2, 3];
+const DUMMY_FEATURES = {
+fixed: { name: '钉在原地', desc: '不被击飞、不被打退' },
+escape: { name: '被连便闪', desc: '被挑空或连中 4 下就腾空闪' },
+infGuard: { name: '坚若磐石', desc: '架势恒满，不会破防' },
+autoHeal: { name: '连段自愈', desc: '连击停下后血量回满' },
+};
 const DIFFICULTIES = [
 {
 id: 'easy', name: '入门',
@@ -7274,7 +7351,6 @@ const UI_COPY_EN = {
 "件": "items",
 "任务": "Tasks",
 "任务与秘笈": "Quests & Manuals",
-"任打不还手": "No Counter",
 "低": "Low",
 "体量压制": "Weight Poise",
 "侠": "Warrior",
@@ -7313,7 +7389,6 @@ const UI_COPY_EN = {
 "出价": "Price",
 "刃影": "RenYing",
 "刃影武库": "RenYing Armory",
-"切换木人": "Toggle Dummy",
 "初刃武器箱": "First Blade Case",
 "初学练手": "Novice Practice",
 "初学练手 · 反应迟缓": "Slow Reaction · Beginner Friendly",
@@ -7498,7 +7573,7 @@ const UI_COPY_EN = {
 "服务器还没开兑换码，等更新以后再试": "Gift codes are not on the server yet. Try again after the update",
 "朝向": "Facing",
 "木人桩": "Dummy",
-"木人桩特性定制（自由组合勾选，战斗中按数字 1-6 也可随时开关）": "Custom Dummy Attributes (Toggle freely or use keys 1-6 in combat)",
+"木人桩特性（自由组合；开练后点「对手行为」或按 Tab 还能换动作、改特性）": "Dummy traits (mix freely; once training starts, click Dummy Actions or press Tab to change the action and traits)",
 "木人桩自由试剑": "Free Practice Dummy",
 "未登录": "Not logged in",
 "本机存档": "Local Save",
@@ -8837,11 +8912,56 @@ const UI_COPY_EN = {
 "累计伤害": "Total damage",
 "每秒伤害（DPS）": "DPS",
 "试剑数据": "Training Stats",
-"左上角切换木人": "Switch dummy at top left",
-"按 1-6 切换木人 | F1 判定框透视": "1-6 switch dummy · F1 hitboxes",
-"一味死守": "Always Block",
-"被连便闪": "Escapes Combos",
+"点左上角「对手行为」换动作": "Tap Dummy Actions at top left to change",
+"对手行为": "Dummy Actions",
+"继续练": "Resume",
+"动作": "Action",
+"次数": "Times",
+"间隔": "Interval",
+"特性": "Traits",
+"一直重复": "Keep Repeating",
+"只做一次": "Once",
+"这个动作会一直保持，次数和间隔不用选": "This action is held the whole time, so repeat and interval don't apply",
+"这个动作看时机反应，「只做一次」就是反应一次": "This action reacts to your moves; Once means it reacts a single time",
+"站桩": "Stand",
+"站着不动，任你打": "Stands still and takes hits",
+"来回走动": "Walk",
+"在原地附近左右走": "Paces left and right",
+"近身普攻": "Close Attack",
+"走到你身边砍一刀": "Walks up and strikes once",
+"远程攻击": "Ranged Attack",
+"放一发飞行道具": "Fires one projectile",
+"一直格挡": "Always Block",
+"全程举刀防御": "Holds guard the whole time",
+"精准招架": "Just Guard",
+"你的招打到前一刻才格挡": "Guards right before your hit lands",
+"原地跳一下": "Jumps in place",
+"二段跳": "Double Jump",
+"跳起来在空中再跳一次": "Jumps, then jumps again in the air",
+"冲刺闪避": "Dash Away",
+"腾空闪往后撤开": "Air-dashes away from you",
+"技能 Q": "Skill Q",
+"放第一个技能": "Uses the first skill",
+"技能 R": "Skill R",
+"放第二个技能": "Uses the second skill",
+"大招 E": "Ultimate E",
+"直接放大招（真元自动补满）": "Uses the ultimate (energy refills itself)",
+"连招": "Combo",
+"贴身打满五段，再接技能": "Closes in, lands five hits, then a skill",
+"受击反击": "Counter",
+"挨打或被格挡后马上还手": "Strikes back right after being hit or blocked",
+"起身攻击": "Wake-up Attack",
+"倒地起身时立刻出刀": "Attacks as soon as it gets up",
+"随机": "Random",
+"每次从会出手的动作里抽一个": "Picks one attacking action at random each time",
 "钉在原地": "Rooted",
+"不被击飞、不被打退": "Never launched or pushed back",
+"被连便闪": "Escapes Combos",
+"被挑空或连中 4 下就腾空闪": "Air-dashes out when launched or hit 4 times in a row",
+"坚若磐石": "Unbreakable",
+"架势恒满，不会破防": "Guard stays full and never breaks",
+"连段自愈": "Combo Heal",
+"连击停下后血量回满": "Health refills after each combo ends",
 "山河异境": "Terrain Clash",
 "山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",
 "特殊地形 · 不计排位": "Special terrain · Unranked",
@@ -13472,41 +13592,103 @@ openScreen('stage');
 $id('feNext').addEventListener('click', () => { const nx = nextStage(STAGE); if (!nx) return; paused = false; showScreen(null); startStage(nx[0], nx[1]); });
 $id('feAgain').addEventListener('click', () => { paused = false; showScreen(null); startStage(STAGE.c, STAGE.l); });
 $id('feMenu').addEventListener('click', () => { paused = false; backToStages(); });
-const DUMMY_FEATURES = {
-fixed: { name: '钉在原地', desc: '免除击飞击退位移，锁死原点' },
-block: { name: '一味死守', desc: '全程保持防御格挡' },
-escape: { name: '被连便闪', desc: '被挑空/连击4段受身腾空闪' },
-counter: { name: '防守反击', desc: '格挡受击后适度出拳打断' },
-infGuard: { name: '坚若磐石', desc: '架势耐力恒满永不破防' },
-autoHeal: { name: '连段自愈', desc: '连击结束后血量秒回满' }
+let dummyCfg = { act: 'stand', rep: true, gap: 1, fixed: false, escape: false, infGuard: true, autoHeal: true };
+const DUMMY_BY = Object.fromEntries(DUMMY_ACTS.map(a => [a.id, a]));
+const DUMMY_RANDOM = DUMMY_ACTS.filter(a => a.k === 'do' && a.id !== 'random').map(a => a.id);   // 「随机」从这些里抽
+const dummyActName = c => { const a = DUMMY_BY[c.act] || DUMMY_BY.stand; return a.k === 'do' && !c.rep ? `${a.n}（只做一次）` : a.n; };
+function dummyNorm(o) {
+const c = { ...dummyCfg, ...(o && typeof o === 'object' ? o : {}) };
+if (typeof o === 'string') { if (o === 'fixed') c.fixed = true; else if (o === 'escape') c.escape = true; c.act = o === 'block' ? 'block' : 'stand'; }
+if (o && typeof o === 'object' && !o.act) c.act = o.counter ? 'counter' : o.block ? 'block' : 'stand';
+if (!DUMMY_BY[c.act]) c.act = 'stand';
+c.rep = c.rep !== false; c.gap = DUMMY_GAPS.includes(+c.gap) ? +c.gap : 1;
+delete c.block; delete c.counter;
+return c;
+}
+const dj = {
+near: r => (c, me, foe, J) => {   // 走到对手身边（钉在原地就原地出手）
+const dx = foe.x - me.x;
+if (c.cfg.fixed || Math.abs(dx) <= r || J.t > 1.6) return true;
+c.held[dx > 0 ? 'right' : 'left'] = true; return false;
+},
+press: (a, prep) => (c, me, foe) => { if (prep) prep(me, foe); c.press(a); return true; },
+wait: d => (c, me, foe, J) => J.t >= d,
+idle: (c, me, foe, J) => J.t > 0.08 && (me.onGround() && ['idle', 'walk', 'block'].includes(me.state)) || J.t > 3,
+shoot: (c, me, foe) => {
+const proj = slot => { const id = slot === 2 ? me.ch.skill2 : me.ch.skill; return typeof AI_KIT !== 'undefined' && AI_KIT[id] && AI_KIT[id].role === 'proj'; };
+const slot = proj(1) ? 1 : proj(2) ? 2 : 0;
+if (slot === 1) { me.skillCD = 0; c.press('skill'); }
+else if (slot === 2) { me.skill2CD = 0; c.press('skill2'); }
+else { const dir = foe.x >= me.x ? 1 : -1; spawnProj(me, { kind: 'wind', x: me.x + dir * 40, y: me.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 4, kb: [160, 0], stun: 0.3, hs: 0.04 }); }
+return true;
+},
 };
-let dummyCfg = { fixed: false, block: false, escape: false, counter: false, infGuard: true, autoHeal: true };
-const DUMMY_MODES = { stand: '任打不还手', block: '一味死守', escape: '被连便闪', fixed: '钉在原地' };
+const DUMMY_JOBS = {
+light: [dj.near(110), dj.press('light'), dj.idle],
+ranged: [dj.shoot, dj.idle],
+jump: [dj.press('jump'), dj.idle],
+djump: [dj.press('jump'), dj.wait(0.24), dj.press('jump'), dj.idle],
+dash: [dj.press('dash', me => { me.breakCD = 0; }), dj.idle],
+skill: [dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
+skill2: [dj.press('skill2', me => { me.skill2CD = 0; }), dj.idle],
+ult: [dj.press('special', me => { me.meter = 100; }), dj.idle],
+combo: [dj.near(100), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'),
+dj.wait(0.2), dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
+};
 class DummyCtrl extends Ctrl {
 constructor(modeOrCfg) {
 super();
-if (typeof modeOrCfg === 'object' && modeOrCfg !== null) {
-this.cfg = { ...modeOrCfg };
-} else {
-this.cfg = {
-fixed: modeOrCfg === 'fixed' || dummyCfg.fixed,
-block: modeOrCfg === 'block' || dummyCfg.block,
-escape: modeOrCfg === 'escape' || dummyCfg.escape,
-counter: !!dummyCfg.counter,
-infGuard: !!dummyCfg.infGuard,
-autoHeal: !!dummyCfg.autoHeal
-};
-}
+this.cfg = dummyNorm(modeOrCfg);
 this.mode = typeof modeOrCfg === 'string' ? modeOrCfg : 'custom';
+this.restart();
 }
-think(me) {
-this.held.down = !!this.cfg.block;
-if (this.cfg.escape && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) {
-this.press('dash');
+restart() { this.job = null; this.step = 0; this.J = { t: 0 }; this.wait = 0.6; this.done = false; this.prev = ''; this.soon = false; this.walkT = 0; this.walkDir = 1; }
+setCfg(o) { this.cfg = dummyNorm(o); this.restart(); }
+think(me, foe) {
+const c = this.cfg, a = DUMMY_BY[c.act] || DUMMY_BY.stand, h = this.held;
+h.left = h.right = false; h.down = c.act === 'block';
+if (c.escape && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) this.press('dash');
+if (c.act === 'walk') {   // 来回走：每 1.2 秒掉头，走到场边也掉头
+this.walkT += STEP;
+if (this.walkT > 1.2 || (this.walkDir < 0 && me.x < WALL + 120) || (this.walkDir > 0 && me.x > STAGE_W - WALL - 120)) { this.walkT = 0; this.walkDir = -this.walkDir; }
+h[this.walkDir > 0 ? 'right' : 'left'] = true;
 }
-if (this.cfg.counter && me.breakCD <= 0 && me.state === 'blockstun' && Math.random() < 0.25) {
-this.press('light');
+if (a.k === 'react') this.react(me, foe, c);
+else if (a.k === 'do') this.doJob(me, foe, c);
+this.prev = me.state;
 }
+react(me, foe, c) {
+if (this.done) return;
+let did = false;
+if (c.act === 'parry') {   // 对手的招快打到了（出招点前 0.06 秒到招式结束）才按住格挡，招一过就松开：每一下都是精准招架
+const m = foe.state === 'attack' && foe.move;
+const soon = m && Math.abs(foe.x - me.x) < 260 && foe.t >= m.su - 0.06 && foe.t < m.su + m.ac;
+this.held.down = !!soon;
+did = this.soon && !soon; this.soon = !!soon;   // 一招过去了算招架过一次
+} else if (c.act === 'counter') {   // 挨打、被格挡的硬直一结束就还手
+if ((this.prev === 'hitstun' || this.prev === 'blockstun') && me.state !== this.prev && me.hp > 0) { this.press('light'); did = true; }
+} else if (c.act === 'wakeup') {   // 起身那一下出刀（一直按着，起来的第一刻就出）
+if (me.state === 'getup') this.press('light');
+if (this.prev === 'getup' && me.state !== 'getup') did = true;
+}
+if (did && !c.rep) this.done = true;
+}
+doJob(me, foe, c) {
+if (!this.job) {
+if (this.done) return;
+const free = me.onGround() && ['idle', 'walk', 'block'].includes(me.state);
+if (free) this.wait -= STEP;
+if (this.wait > 0 || !free) return;
+const id = c.act === 'random' ? DUMMY_RANDOM[Math.floor(grnd() * DUMMY_RANDOM.length)] : c.act;
+this.job = DUMMY_JOBS[id]; this.jobId = id; this.step = 0; this.J = { t: 0 };
+}
+const J = this.J;
+while (this.job && this.step < this.job.length) {
+if (!this.job[this.step](this, me, foe, J)) { J.t += STEP; return; }
+this.step++; J.t = 0;
+}
+this.job = null; this.wait = c.gap;
+if (!c.rep) this.done = true;
 }
 }
 const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
@@ -16733,6 +16915,7 @@ musicSet(musicMode());
 netTick(real);
 render();
 touchUIUpdate();
+dummyBarUpdate();
 }
 function updateCamera(dt) {
 if (WORLD.on) { worldCamera(dt); return; }
@@ -20474,7 +20657,7 @@ while (TRAIN.hits.length && clock - TRAIN.hits[0][0] > 5) TRAIN.hits.shift();
 const dps = TRAIN.hits.reduce((a, h) => a + h[1], 0) / 5;
 const x = W - Math.max(24, W * 0.04), y = top + bh + 80, fs = Math.max(13, Math.round(H * 0.019));
 const lines = [
-['木人桩', DUMMY_MODES[dummyMode], '#e9c46a'],
+['对手行为', B && B.ctrl instanceof DummyCtrl ? dummyActName(B.ctrl.cfg) : '站桩', '#e9c46a'],
 ['当前连击', cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '-', cu.t > 0 ? '#ffb088' : '#efe8d8'],
 ['最高连击', `${TRAIN.best} 段 · ${Math.round(TRAIN.bestDmg)} 伤`, '#ffd166'],
 ['累计伤害', `${Math.round(TRAIN.total)}`, '#efe8d8'],
@@ -20482,7 +20665,7 @@ const lines = [
 ];
 ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
 for (const l of lines) { l[0] = cvT(l[0]); l[1] = cvT(l[1]); }
-const hint = cvT(TOUCH ? '左上角切换木人' : '按 1-6 切换木人 | F1 判定框透视');
+const hint = cvT(TOUCH ? '点左上角「对手行为」换动作' : `按 ${dummyBarKey()} 换对手行为 | F1 判定框透视`);
 const pw = Math.min(fs * 22, Math.max(fs * 17, ctx.measureText(hint).width, ...lines.map(([k, v]) => ctx.measureText(k).width + ctx.measureText(v).width + fs * 1.5)));   // 英文长：卡片跟着变宽（不超过 fs * 22）
 const cardH = (lines.length + 2) * fs * 1.75 + 16;
 ctx.fillStyle = 'rgba(10,10,24,0.68)'; ctx.fillRect(x - pw - 14, y - 12, pw + 28, cardH);
@@ -24471,7 +24654,7 @@ const TUT_STEPS = [
 ];
 function startTutorial() {
 try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
-trainChar = 0; dummyMode = 'stand';
+trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
 startTraining('dummy');
 B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
 TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
@@ -24880,27 +25063,7 @@ st.addEventListener('pointermove', e => { if (e.pointerId === TUI.stick) move(e)
 const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; touchHeldJump(); };
 st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
 $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
-$id('tDummy').addEventListener('click', () => {
-if (!(B.ctrl instanceof DummyCtrl)) return;
-const presets = [
-{ name: '自由试剑', cfg: { fixed: false, block: false, escape: false, counter: false, infGuard: true, autoHeal: true } },
-{ name: '钉在原地', cfg: { fixed: true, block: false, escape: false, counter: false, infGuard: true, autoHeal: true } },
-{ name: '一味死守', cfg: { fixed: false, block: true, escape: false, counter: false, infGuard: true, autoHeal: true } },
-{ name: '受身腾空', cfg: { fixed: false, block: false, escape: true, counter: false, infGuard: true, autoHeal: true } },
-{ name: '防守反击', cfg: { fixed: false, block: true, escape: true, counter: true, infGuard: true, autoHeal: true } }
-];
-let curIdx = presets.findIndex(p => Object.keys(p.cfg).every(k => p.cfg[k] === B.ctrl.cfg[k]));
-const nextP = presets[(curIdx + 1) % presets.length];
-B.ctrl.cfg = { ...nextP.cfg };
-dummyCfg = { ...B.ctrl.cfg };
-if (B.ctrl.cfg.fixed) {
-B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
-} else {
-B.homeX = undefined;
-}
-renderDummyFeatures();
-say('木人：' + nextP.name, 0.8, 'go');
-});
+$id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons.js）
 document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
@@ -25009,7 +25172,7 @@ if (scr) scr.scrollTop = 0;
 SFX.slice();
 });
 }
-let trainChar = 0, dummyMode = 'stand', trainTargetMode = 'dummy';
+let trainChar = 0, trainTargetMode = 'dummy';
 const trainModeSegEl = $id('trainModeSeg');
 if (trainModeSegEl) {
 trainModeSegEl.addEventListener('click', e => {
@@ -25024,35 +25187,84 @@ SFX.slice();
 }
 function renderDummyFeatures() {
 const el = $id('dummyFeatList');
-if (!el) return;
-el.innerHTML = Object.entries(DUMMY_FEATURES).map(([k, feat], idx) => {
-const on = !!dummyCfg[k];
-return `<button type="button" class="dummy-feat-chip${on ? ' sel' : ''}" data-feat="${k}" style="padding:6px 12px;border-radius:18px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s;background:${on ? 'rgba(233,196,106,0.22)' : 'rgba(255,255,255,0.06)'};border:1px solid ${on ? '#e9c46a' : 'rgba(255,255,255,0.18)'};color:${on ? '#f4ecd8' : 'rgba(239,232,216,0.65)'}">
-<span style="font-weight:700;color:${on ? '#e9c46a' : 'rgba(255,255,255,0.4)'}">${idx + 1}.</span>
-<span>${feat.name}</span>
-<span style="font-size:12px;opacity:0.75;margin-left:2px">(${feat.desc})</span>
-</button>`;
-}).join('');
+if (el) el.innerHTML = Object.entries(DUMMY_FEATURES).map(([k, feat]) => `<button type="button" class="dummy-feat-chip${dummyCfg[k] ? ' sel' : ''}" data-feat="${k}" aria-pressed="${!!dummyCfg[k]}"><b>${feat.name}</b><span>${feat.desc}</span></button>`).join('');
+dummyBarRender();
 }
-const dummyFeatEl = $id('dummyFeatList');
-if (dummyFeatEl) {
-dummyFeatEl.addEventListener('click', e => {
-const b = e.target.closest('button');
-if (!b || !b.dataset.feat) return;
-const k = b.dataset.feat;
+function dummyFeatToggle(k) {
 dummyCfg[k] = !dummyCfg[k];
 if (B && B.ctrl instanceof DummyCtrl) {
 B.ctrl.cfg[k] = dummyCfg[k];
 if (k === 'fixed') {
-if (dummyCfg.fixed) {
-B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
-} else {
-B.homeX = undefined;
-}
+if (dummyCfg.fixed) { B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0; }
+else B.homeX = undefined;
 }
 }
 renderDummyFeatures();
 SFX.slice();
+}
+const dummyFeatEl = $id('dummyFeatList');
+if (dummyFeatEl) dummyFeatEl.addEventListener('click', e => { const b = e.target.closest('button[data-feat]'); if (b) dummyFeatToggle(b.dataset.feat); });
+const DB = { open: false, paused: false };
+const dummyBarKey = () => (Object.values(custom1PKeys).includes('Tab') ? 'F4' : 'Tab');
+const dummyBarAvail = () => M.mode === 'train' && !!B && B.ctrl instanceof DummyCtrl && !FOREST.on && !TUT && !REPLAY.on && M.phase !== 'end';
+function dummyBarOn() { return DB.open; }
+function dummyBarRender() {
+const acts = $id('dummyActs'); if (!acts) return;
+const c = dummyCfg, a = DUMMY_BY[c.act] || DUMMY_BY.stand, timed = a.k === 'do';
+acts.innerHTML = DUMMY_ACTS.map(x => `<button type="button" data-act="${x.id}" class="${x.id === c.act ? 'sel' : ''}" aria-pressed="${x.id === c.act}"><b>${x.n}</b><span>${x.d}</span></button>`).join('');
+for (const b of $id('dummyRep').querySelectorAll('button')) { const on = (b.dataset.rep === '1') === c.rep; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on); }
+$id('dummyGap').innerHTML = DUMMY_GAPS.map(g => `<button type="button" data-gap="${g}" class="${g === c.gap ? 'sel' : ''}" aria-pressed="${g === c.gap}"${timed ? '' : ' disabled'}>${g} 秒</button>`).join('');
+$id('dummyFeats').innerHTML = Object.entries(DUMMY_FEATURES).map(([k, f]) => `<button type="button" data-feat="${k}" class="${c[k] ? 'sel' : ''}" aria-pressed="${!!c[k]}"><b>${f.name}</b><span>${f.desc}</span></button>`).join('');
+$id('dummyNote').textContent = a.k === 'hold' ? '这个动作会一直保持，次数和间隔不用选' : a.k === 'react' ? '这个动作看时机反应，「只做一次」就是反应一次' : '';
+$id('dummyBarKey').textContent = TOUCH ? '' : `${dummyBarKey()} 打开 · Esc 关闭`;
+}
+function dummyApply() {
+if (B && B.ctrl instanceof DummyCtrl) B.ctrl.setCfg(dummyCfg);
+dummyBarRender();
+}
+function dummyBarShow(on) {
+const el = $id('dummyBar'); if (!el) return;
+if (on && !dummyBarAvail()) return;
+if (on === DB.open) return;
+DB.open = on;
+el.classList.toggle('hidden', !on);
+if (on) {
+DB.paused = !paused; paused = true;
+for (const h of human) if (h && h.clear) h.clear();   // 别把开栏前按着的方向键带进去
+dummyBarRender();
+const sel = el.querySelector('.db-acts button.sel');
+if (sel) { try { sel.focus({ preventScroll: true }); } catch (e) { sel.focus(); } }
+} else {
+if (DB.paused) paused = false;
+DB.paused = false;
+refocusGame();
+}
+SFX.slice();
+}
+function dummyBarUpdate() {
+const ok = dummyBarAvail(), btn = $id('dummyBarBtn');
+if (btn) btn.classList.toggle('hidden', !ok || DB.open || !!document.querySelector('.scr.on'));
+if (DB.open && !ok) dummyBarShow(false);
+}
+if ($id('dummyBar')) {
+$id('dummyBar').addEventListener('click', e => {
+const b = e.target.closest('button'); if (!b || b.disabled) return;
+if (b.id === 'dummyBarClose') { dummyBarShow(false); return; }
+if (b.dataset.act) { dummyCfg.act = b.dataset.act; dummyApply(); SFX.slice(); }
+else if (b.dataset.rep) { dummyCfg.rep = b.dataset.rep === '1'; dummyApply(); SFX.slice(); }
+else if (b.dataset.gap) { dummyCfg.gap = +b.dataset.gap; dummyApply(); SFX.slice(); }
+else if (b.dataset.feat) dummyFeatToggle(b.dataset.feat);
+const k = b.dataset.act ? `[data-act="${b.dataset.act}"]` : b.dataset.rep ? `[data-rep="${b.dataset.rep}"]` : b.dataset.gap ? `[data-gap="${b.dataset.gap}"]` : b.dataset.feat ? `[data-feat="${b.dataset.feat}"]` : '';
+const again = k && $id('dummyBar').querySelector(k);   // 栏重画了：焦点放回刚点的那个
+if (again && document.activeElement !== again) { try { again.focus({ preventScroll: true }); } catch (err) {} }
+});
+$id('dummyBarBtn').addEventListener('click', () => dummyBarShow(true));
+window.addEventListener('keydown', e => {
+if (e.ctrlKey || e.metaKey || e.altKey) return;
+if (DB.open && (e.code === 'Escape' || (e.code === dummyBarKey() && dummyBarKey() !== 'Tab'))) { e.preventDefault(); e.stopImmediatePropagation(); dummyBarShow(false); return; }
+if (!DB.open && e.code === dummyBarKey() && !e.repeat && dummyBarAvail() && !paused && !document.querySelector('.scr.on')) {
+e.preventDefault(); e.stopImmediatePropagation(); if (typeof kbnOn === 'function' && e.isTrusted) kbnOn(); dummyBarShow(true);
+}
 });
 }
 function startDummyTraining() {
@@ -29989,25 +30201,7 @@ if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !=
 paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
 }
 if (M.mode === 'demo') return;
-if (M.mode === 'train' && /^Digit[1-6]$/.test(e.code) && B.ctrl instanceof DummyCtrl) {
-const featKeys = ['fixed', 'block', 'escape', 'counter', 'infGuard', 'autoHeal'];
-const idx = +e.code.slice(5) - 1;
-const feat = featKeys[idx];
-if (feat) {
-B.ctrl.cfg[feat] = !B.ctrl.cfg[feat];
-dummyCfg[feat] = B.ctrl.cfg[feat];
-if (feat === 'fixed') {
-if (B.ctrl.cfg.fixed) {
-B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
-} else {
-B.homeX = undefined;
-}
-}
-renderDummyFeatures();
-say(DUMMY_FEATURES[feat].name + (B.ctrl.cfg[feat] ? '：开启' : '：关闭'), 0.8, 'go');
-}
-return;
-}
+if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局
 for (let p = 0; p < KEYS.length; p++) {
 const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
 e.preventDefault();
@@ -30156,7 +30350,7 @@ window.addEventListener('load', () => refocusGame());
 const KBN = { on: false, root: null, key: '', rect: null, mem: new Map() };
 const KBN_FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 const KBN_DIR = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' };
-const KBN_DIALOGS = '.rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
+const KBN_DIALOGS = '#dummyBar:not(.hidden), .rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
 const KBN_BACK = { bp: 'bpQuit', acc: 'accBack', lb: 'lbBack', replays: 'rpBack', settings: 'setDone', towerModal: '' };   // 各页的返回键；空串表示这一页 Esc 不返回
 const kbnRing = document.createElement('div');
 kbnRing.id = 'kbRing'; kbnRing.setAttribute('aria-hidden', 'true');

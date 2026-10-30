@@ -48,25 +48,7 @@ window.addEventListener('keydown', e => {
     paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
   }
   if (M.mode === 'demo') return;
-  if (M.mode === 'train' && /^Digit[1-6]$/.test(e.code) && B.ctrl instanceof DummyCtrl) {
-    const featKeys = ['fixed', 'block', 'escape', 'counter', 'infGuard', 'autoHeal'];
-    const idx = +e.code.slice(5) - 1;
-    const feat = featKeys[idx];
-    if (feat) {
-      B.ctrl.cfg[feat] = !B.ctrl.cfg[feat];
-      dummyCfg[feat] = B.ctrl.cfg[feat];
-      if (feat === 'fixed') {
-        if (B.ctrl.cfg.fixed) {
-          B.x = B.homeX = STAGE_W / 2; B.y = 0; B.vx = B.vy = 0; B.state = 'idle'; B.t = 0; B.juggle = 0; B.comboHits = 0;
-        } else {
-          B.homeX = undefined;
-        }
-      }
-      renderDummyFeatures();
-      say(DUMMY_FEATURES[feat].name + (B.ctrl.cfg[feat] ? '：开启' : '：关闭'), 0.8, 'go');
-    }
-    return;
-  }
+  if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局
   for (let p = 0; p < KEYS.length; p++) {
     const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
     e.preventDefault();

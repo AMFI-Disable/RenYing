@@ -98,6 +98,10 @@
     [/^第\s*(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `Step ${a} / ${b}`],
     [/^(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `${a} / ${b} steps`],
     [/^(\d+(?:\.\d+)?)\s*秒$/, (m0, n) => `${n}s`],
+    // 木人桩的对手行为栏和左上角提示（src/game/21-buttons.js、16-draw-ui.js）
+    [/^(.+)（只做一次）$/, (m0, a) => `${lookup(a) || a} (once)`],
+    [/^按 (\S+) 换对手行为 \| F1 判定框透视$/, (m0, k) => `${k}: dummy actions · F1 hitboxes`],
+    [/^(\S+) 打开 · Esc 关闭$/, (m0, k) => `${k} opens · Esc closes`],
     [/^（冷却\s*(\d+(?:\.\d+)?)\s*秒）$/, (m0, n) => ` (cooldown ${n}s)`],
     [/^(.+?)禁用一名侠客$/, (m0, w) => `${lookup(w) || w} · Ban a hero`],
     [/^(.+?)选择出战侠客$/, (m0, w) => `${lookup(w) || w} · Pick a hero`],
