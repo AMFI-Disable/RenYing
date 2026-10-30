@@ -1700,6 +1700,50 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   const expMdRes = await worker.fetch(new Request('https://w.test/api/admin/errors/export?format=md', { headers: { Authorization: 'Bearer ' + ADMIN } }), ENV, { waitUntil() {} });
   const expMd = await expMdRes.text();
   ok(expMdRes.status === 200 && expMd.includes('# 刃影 (RenYing) 错误诊断报告') && expMd.includes('TypeError: test err'), '导出调试文件 (Markdown) 包含 Markdown 格式诊断报告');
+
+  // 统计 2.0：7日墨锭收支趋势、开箱分布、在线计数
+  ok(Array.isArray(st.inkFlow7d) && st.inkFlow7d.length >= 1 && typeof st.caseCounts7d === 'object' && typeof st.online === 'number', '总览 2.0：包含 7 日墨锭收支趋势与 7 日开箱统计', st.inkFlow7d);
+
+  // 玩家多列排序与筛选项
+  const sortInk = await adm('GET', '/api/admin/find?sort=ink&dir=desc&limit=5');
+  ok(sortInk.ok && sortInk.users.length >= 2 && sortInk.users[0].ink >= sortInk.users[1].ink, '玩家列表支持按墨锭降序排序');
+  const sortName = await adm('GET', '/api/admin/find?sort=username&dir=asc&limit=5');
+  ok(sortName.ok && sortName.users.length >= 2 && sortName.users[0].username.toLowerCase() <= sortName.users[1].username.toLowerCase(), '玩家列表支持按昵称升序排序');
+  const fltAct = await adm('GET', '/api/admin/find?filter=active24h');
+  ok(fltAct.ok && Array.isArray(fltAct.users), '玩家列表支持 24h 活跃筛选');
+
+  // 错误单条删除与批量清理
+  const targetSig = errView.rows[0].sig;
+  const delErr = await adm('POST', '/api/admin/errors/delete', { sig: targetSig, why: '测试单条清除' });
+  ok(delErr.ok && delErr.deleted === 1, '管理后台支持按签名删除单条错误记录', delErr);
+
+  // 玩家单人快照导出、强制下线设备、清理历史流水
+  const sampleUid = sortInk.users[0].id;
+  const pExpRes = await worker.fetch(new Request('https://w.test/api/admin/player/export?uid=' + encodeURIComponent(sampleUid), { headers: { Authorization: 'Bearer ' + ADMIN } }), ENV, { waitUntil() {} });
+  const pExp = await pExpRes.json();
+  ok(pExpRes.status === 200 && pExp.user && pExp.user.id === sampleUid && Array.isArray(pExp.recent_log), '导出单个玩家完整 JSON 快照成功');
+  const dropDev = await adm('POST', '/api/admin/player/devices/drop', { uid: sampleUid, dev: 'all', why: '测试踢下线' });
+  ok(dropDev.ok, '强制踢下玩家设备会话成功');
+  const clrHist = await adm('POST', '/api/admin/player/clear-history', { uid: sampleUid, kind: 'auth_log', why: '测试清理登录历史' });
+  ok(clrHist.ok && typeof clrHist.deleted === 'number', '清理玩家指定历史记录成功');
+
+  // 世界共斗与数据库维护接口
+  const maint = await adm('GET', '/api/admin/maint');
+  ok(maint.ok && maint.tables && Object.keys(maint.tables).length === 30 && maint.gboss && maint.chron, '世界与维护看板：返回全部 30 张数据表行数、天魔状态与岁史状态');
+  const wAct1 = await adm('POST', '/api/admin/world/act', { op: 'gboss_hp', hp: 123456, maxHp: 500000, why: '测试调天魔血量' });
+  ok(wAct1.ok && wAct1.gboss && wAct1.gboss.hp === 123456 && wAct1.gboss.max_hp === 500000, '世界调控：调整天魔血量成功', wAct1);
+  const wAct2 = await adm('POST', '/api/admin/world/act', { op: 'gboss_reroll', why: '测试重随词缀' });
+  ok(wAct2.ok && wAct2.gboss && wAct2.gboss.affix, '世界调控：重随天魔词缀成功');
+  const wAct3 = await adm('POST', '/api/admin/world/act', { op: 'chron_advance', why: '测试推进岁史' });
+  ok(wAct3.ok && wAct3.chron && wAct3.chron.node >= 1, '世界调控：推进全服岁史节点成功', wAct3);
+  const pruneRes = await adm('POST', '/api/admin/maint/prune', { target: 'expired', why: '测试清理过期缓存' });
+  ok(pruneRes.ok && typeof pruneRes.deleted === 'number', '数据库维护：清理过期数据表成功');
+
+  // 审计日志按类型筛选与智能归档摘要 (adm_digest)
+  const compactRes = await adm('POST', '/api/admin/audit/compact', { olderThanDays: 0, why: '测试按天智能归档管理记录' });
+  ok(compactRes.ok && compactRes.compacted >= 5 && compactRes.days >= 1, '管理员操作记录智能归档：成功折叠多条记录为每日摘要', compactRes);
+  const digestAudit = await adm('GET', '/api/admin/audit?act=adm_digest');
+  ok(digestAudit.ok && digestAudit.rows.length >= 1 && digestAudit.rows[0].act === 'adm_digest' && parseDetail(digestAudit.rows[0].detail).n >= 5, '按 act=adm_digest 筛选可查到结构化每日归档摘要', digestAudit.rows[0]);
 }
 
 section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段脚本');

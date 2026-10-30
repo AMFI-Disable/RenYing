@@ -1120,8 +1120,10 @@ const ADMIN_ROLE_NAME = { view: '只能看', econ: '经济', ban: '封禁和账�
 // 不写在这里的：GET 是 view，POST 是 all（管理员账号列表也只给 all 看）
 const ADMIN_NEED = {
   'POST /api/admin/adjust': 'econ', 'POST /api/admin/restore': 'econ', 'POST /api/admin/gift': 'econ', 'POST /api/admin/gift/off': 'econ',
-  'POST /api/admin/code': 'econ', 'POST /api/admin/code/off': 'econ', 'POST /api/admin/cfg': 'econ', 'POST /api/admin/cfg/undo': 'econ',
+  'POST /api/admin/code': 'econ', 'POST /api/admin/code/off': 'econ', 'POST /api/admin/cfg': 'econ', 'POST /api/admin/cfg/undo': 'econ', 'POST /api/admin/mkt/cancel': 'econ',
   'POST /api/admin/ban': 'ban', 'POST /api/admin/pardon': 'ban', 'POST /api/admin/password': 'ban', 'POST /api/admin/batch': 'ban', 'GET /api/admin/export': 'ban',
+  'POST /api/admin/player/devices/drop': 'ban', 'POST /api/admin/player/clear-history': 'ban', 'GET /api/admin/player/export': 'ban',
+  'POST /api/admin/errors/delete': 'ban', 'POST /api/admin/audit/compact': 'all', 'POST /api/admin/maint/prune': 'all', 'POST /api/admin/world/act': 'all',
   'POST /api/admin/logout': 'view', 'POST /api/admin/refresh': 'view', 'GET /api/admin/admins': 'all',
 };
 const adminCan = (role, need) => role === 'all' || need === 'view' || role === need;
@@ -1430,10 +1432,10 @@ async function handleAdmin(env, request, path, now, ip) {
       cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem })),
       items: Object.keys(C.ITEM).map(k => ({ k, col: C.ITEM[k].col, tier: C.ITEM[k].tier, char: C.charOf(k) })), cfg: C.CFG_INFO });
   }
-  if (route === 'GET /api/admin/stats') {   // 总览
+  if (route === 'GET /api/admin/stats') {   // 总览与深度数据统计
     await cfgNow(env, now);
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
-    const [users, fresh, eco, open, deals, banned, gone, inkFlow, opens24, signups] = await Promise.all([
+    const [users, fresh, eco, open, deals, banned, gone, inkFlow, opens24, signups, inkFlow7, caseOpens, pres] = await Promise.all([
       one('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0'),
       one('SELECT COUNT(*) AS n FROM users WHERE created_at > ?', now - DAY_MS),
       one('SELECT COUNT(*) AS n, COALESCE(SUM(ink), 0) AS ink FROM econ'),
@@ -1444,8 +1446,18 @@ async function handleAdmin(env, request, path, now, ip) {
       one("SELECT COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ?", now - DAY_MS),
       one("SELECT COUNT(*) AS n FROM econ_log WHERE act = 'open' AND ok = 1 AND at > ?", now - DAY_MS),
       env.DB.prepare("SELECT CAST((created_at / 86400000) AS INTEGER) AS d, COUNT(*) AS n FROM users WHERE created_at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
+      env.DB.prepare("SELECT CAST((at / 86400000) AS INTEGER) AS d, COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
+      env.DB.prepare("SELECT detail FROM econ_log WHERE act = 'open' AND ok = 1 AND at > ? LIMIT 1000").bind(now - 7 * DAY_MS).all(),
+      one("SELECT COUNT(*) AS online, COALESCE(SUM(st = 'match'), 0) AS playing, COALESCE(SUM(st = 'queue'), 0) AS waiting FROM presence WHERE seen > ?", now - PRESENCE_WINDOW),
     ]);
     const signups7d = (signups && signups.results || []).map(r => r.n);
+    const inkFlow7d = (inkFlow7 && inkFlow7.results || []).map(r => ({ d: r.d, inkIn: r.inkIn || 0, inkOut: r.inkOut || 0 }));
+    const caseCounts = {};
+    for (const r of (caseOpens && caseOpens.results || [])) {
+      const d = parseObj(r.detail);
+      const c = d && d.a && d.a.c;
+      if (c) caseCounts[c] = (caseCounts[c] || 0) + 1;
+    }
     return json({
       ok: true, who, now,
       users: users.n, newToday: fresh.n, accounts: eco.n, inkTotal: eco.ink,
@@ -1454,6 +1466,11 @@ async function handleAdmin(env, request, path, now, ip) {
       inkOut24: (inkFlow && inkFlow.inkOut) || 0,
       open24: (opens24 && opens24.n) || 0,
       signups7d,
+      inkFlow7d,
+      caseCounts7d: caseCounts,
+      online: (pres && pres.online) || 0,
+      playing: (pres && pres.playing) || 0,
+      waiting: (pres && pres.waiting) || 0,
       cfgId: CFG_CACHE.id,
     });
   }
@@ -1463,6 +1480,28 @@ async function handleAdmin(env, request, path, now, ip) {
       `SELECT sig, kind, msg, src, stack, meta, n, first_at, last_at, ms, ms_sum FROM errs WHERE last_at > ?1 ${kind ? 'AND kind = ?2' : ''} ORDER BY last_at DESC LIMIT 200`
     ).bind(...(kind ? [now - days * DAY_MS, kind] : [now - days * DAY_MS])).all()).results || [];
     return json({ ok: true, days, rows });
+  }
+  if (route === 'POST /api/admin/errors/delete') {   // 清理 / 删除错误日志（按 sig、按类别 kind、按天数 olderThanDays、或全部 all）
+    const w = needWhy(); if (w) return w;
+    const sig = String(body.sig || '').trim();
+    const kind = String(body.kind || '').trim();
+    const older = intIn(body.olderThanDays, 0, 365);
+    let res;
+    if (sig) {
+      res = await env.DB.prepare('DELETE FROM errs WHERE sig = ?').bind(sig).run();
+    } else if (kind && ['client', 'server', 'slow'].includes(kind)) {
+      res = older ? await env.DB.prepare('DELETE FROM errs WHERE kind = ? AND last_at < ?').bind(kind, now - older * DAY_MS).run()
+                  : await env.DB.prepare('DELETE FROM errs WHERE kind = ?').bind(kind).run();
+    } else if (older && older > 0) {
+      res = await env.DB.prepare('DELETE FROM errs WHERE last_at < ?').bind(now - older * DAY_MS).run();
+    } else if (body.all === true) {
+      res = await env.DB.prepare('DELETE FROM errs').run();
+    } else {
+      return error('请指定要清理的错误签名、类别或天数');
+    }
+    const deleted = (res && res.meta && res.meta.changes) || 0;
+    await logRow(env, '*', now, 'err_clean', 1, null, null, JSON.stringify({ by: who, why, sig: sig || undefined, kind: kind || undefined, older: older || undefined, all: body.all || undefined, deleted }));
+    return json({ ok: true, deleted });
   }
   if (route === 'GET /api/admin/errors/export' || (route === 'GET /api/admin/errors' && q('export') === '1')) {   // 导出全部错误单文件，供 Agent 诊断调试
     const kind = q('kind'), days = q('days') !== null && q('days') !== '' ? Math.max(0, Math.min(365, +q('days') || 0)) : 30;
@@ -1588,48 +1627,153 @@ async function handleAdmin(env, request, path, now, ip) {
       },
     });
   }
-  if (route === 'GET /api/admin/find') {   // 按昵称或账号找号；支持子串、账号ID、状态筛选与分页
+  if (route === 'GET /api/admin/find') {   // 按昵称或账号找号；支持子串、账号ID、状态筛选、多维排序与分页
     const key = q('q').trim(), escKey = key.replace(/[\\%_]/g, m => '\\' + m), del = q('del') === '1', flt = q('filter');
+    const sort = q('sort') || '', dir = q('dir') === 'asc' ? 'ASC' : 'DESC';
     const limit = Math.max(1, Math.min(100, parseInt(q('limit')) || 20));
     const offset = Math.max(0, parseInt(q('offset')) || 0);
-    const cols = 'u.id, u.username, u.created_at, u.deleted_at, e.ink, e.updated_at';
-    const fltCond = flt === 'banned' ? ` AND (s.perm = 1 OR s.ban_until > ${now})` : flt === 'wealth' ? ' AND e.ink >= 10000' : '';
+    const cols = 'u.id, u.username, u.created_at, u.deleted_at, e.ink, COALESCE(e.updated_at, u.updated_at) AS updated_at, COALESCE(s.strikes, 0) AS strikes, COALESCE(s.perm, 0) AS perm, COALESCE(s.ban_until, 0) AS ban_until';
+    const fltCond = flt === 'banned' ? ` AND (s.perm = 1 OR s.ban_until > ${now})`
+      : flt === 'wealth' ? ' AND e.ink >= 10000'
+      : flt === 'flagged' ? ' AND s.strikes > 0'
+      : flt === 'active24h' ? ` AND COALESCE(e.updated_at, u.updated_at) > ${now - DAY_MS}`
+      : '';
+    const sortSql = sort === 'ink' ? `COALESCE(e.ink, -1) ${dir}, u.created_at DESC`
+      : sort === 'created' ? `u.created_at ${dir}`
+      : sort === 'strikes' ? `COALESCE(s.strikes, 0) ${dir}, COALESCE(e.updated_at, u.updated_at) DESC`
+      : sort === 'username' ? `u.username ${dir}`
+      : sort === 'updated' ? `COALESCE(e.updated_at, u.updated_at) ${dir}`
+      : '';
     let total = 0, rows = [];
     if (key) {
       const prefix = escKey + '%', substr = '%' + escKey + '%';
       const w = `(u.username LIKE ? ESCAPE '\\' OR u.username LIKE ? ESCAPE '\\' OR u.id = ? OR u.id LIKE ? ESCAPE '\\')${del ? ' AND u.deleted_at > 0' : ''}${fltCond}`;
       const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).bind(prefix, substr, key, prefix).first();
       total = (tot && tot.n) || 0;
-      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY (u.username = ?) DESC, (u.username LIKE ? ESCAPE '\\') DESC, length(u.username), u.username LIMIT ? OFFSET ?`)
-        .bind(prefix, substr, key, prefix, key, prefix, limit, offset).all()).results || [];
+      const orderClause = sortSql || `(u.username = ?) DESC, (u.username LIKE ? ESCAPE '\\') DESC, length(u.username), u.username`;
+      const binds = sortSql ? [prefix, substr, key, prefix, limit, offset] : [prefix, substr, key, prefix, key, prefix, limit, offset];
+      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY ${orderClause} LIMIT ? OFFSET ?`)
+        .bind(...binds).all()).results || [];
     } else if (del) {
       const w = `u.deleted_at > 0${fltCond}`;
       const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).first();
       total = (tot && tot.n) || 0;
-      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY u.deleted_at DESC LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
+      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY ${sortSql || 'u.deleted_at DESC'} LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
     } else {
       const w = `1=1${fltCond}`;
       const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).first();
       total = (tot && tot.n) || 0;
-      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY COALESCE(e.updated_at, u.updated_at) DESC LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
+      rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY ${sortSql || 'COALESCE(e.updated_at, u.updated_at) DESC'} LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
     }
     return json({ ok: true, users: rows, total, limit, offset });
   }
-  if (route === 'GET /api/admin/econ') {   // 一个号的武库存档、处罚、流水、市场记录
+  if (route === 'GET /api/admin/econ') {   // 一个号的武库存档、处罚、流水、市场记录、登录设备
     const u = await findUser(q('uid'));
     if (!u) return error('没有这个账号', 404);
-    const row = await env.DB.prepare('SELECT state_json, ink, ver, updated_at FROM econ WHERE uid = ?').bind(u.id).first();
-    const log = await env.DB.prepare('SELECT at, act, ok, ink0, ink1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all();
-    const mk = await env.DB.prepare('SELECT id, seller, buyer, k, st, price, at, state, done_at, paid FROM mkt WHERE seller = ? OR buyer = ? ORDER BY at DESC LIMIT 60').bind(u.id, u.id).all();
-    const pr = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first();
+    const [row, log, mk, pr, devs, legacySess] = await Promise.all([
+      env.DB.prepare('SELECT state_json, ink, ver, updated_at FROM econ WHERE uid = ?').bind(u.id).first(),
+      env.DB.prepare('SELECT id, at, act, ok, ink0, ink1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 100').bind(u.id).all(),
+      env.DB.prepare('SELECT id, seller, buyer, k, st, price, at, state, done_at, paid FROM mkt WHERE seller = ? OR buyer = ? ORDER BY at DESC LIMIT 60').bind(u.id, u.id).all(),
+      env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first(),
+      env.DB.prepare('SELECT id, label, created_at, last_seen, expires_at FROM devices WHERE user_id = ? AND expires_at > ? ORDER BY last_seen DESC').bind(u.id, now).all(),
+      env.DB.prepare("SELECT COUNT(*) AS n, MAX(created_at) AS last FROM sessions WHERE user_id = ? AND dev = '' AND expires_at > ?").bind(u.id, now).first(),
+    ]);
     const p = parseProfile(pr ? pr.profile_json : '', u.username);
     return json({ ok: true, uid: u.id, username: u.username, createdAt: u.created_at, deletedAt: u.deleted_at || 0, econ: row ? { ink: row.ink, ver: row.ver, at: row.updated_at, state: parseObj(row.state_json) } : null,
       profile: { rating: p.rating, placed: p.placed, netWins: p.netWins, netLosses: p.netLosses, skins: cleanSkins(p.skins).length, updatedAt: p.updatedAt },
+      devices: (devs && devs.results) || [],
+      legacySessions: (legacySess && legacySess.n) || 0,
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
-  if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么）
-    const rows = await env.DB.prepare("SELECT l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export') ORDER BY l.id DESC LIMIT 100").all();
-    return json({ ok: true, rows: rows.results || [] });
+  if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么），支持按类型或管理员筛选
+    const actFilter = q('act'), byFilter = q('by').trim().toLowerCase();
+    const rows = (await env.DB.prepare("SELECT l.id, l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel') ORDER BY l.id DESC LIMIT 200").all()).results || [];
+    const filtered = rows.filter(r => {
+      if (actFilter && r.act !== actFilter) return false;
+      if (byFilter) {
+        const d = parseObj(r.detail) || {};
+        const actor = String(d.by || '').toLowerCase();
+        if (!actor.includes(byFilter)) return false;
+      }
+      return true;
+    }).slice(0, 100);
+    return json({ ok: true, rows: filtered });
+  }
+  if (route === 'POST /api/admin/audit/compact') {   // 智能审计归档与自动摘要：将冗余的管理员日志合并为结构化摘要 (adm_digest)
+    const w = needWhy(); if (w) return w;
+    const mode = String(body.mode || 'routine');   // 'routine' (合并登录/导出/巡检/调控等常规日志) 或 'all' (合并所有历史管理日志)
+    const rawDays = body.olderThanDays !== undefined ? body.olderThanDays : body.keepDays;
+    const keepDays = rawDays !== undefined ? Math.max(0, Math.min(365, +rawDays || 0)) : 0;
+    const cutoff = keepDays > 0 ? now - keepDays * DAY_MS : now + 1000;
+    const targetActs = mode === 'all'
+      ? ['adm_login', 'acct_export', 'err_export', 'err_clean', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel', 'admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'acct_del', 'acct_restore']
+      : ['adm_login', 'acct_export', 'err_export', 'err_clean', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel'];
+    const placeholders = targetActs.map(() => '?').join(',');
+    const rawRows = (await env.DB.prepare(
+      `SELECT id, uid, at, act, ink0, ink1, detail FROM econ_log WHERE act IN (${placeholders}) AND at <= ? ORDER BY at ASC LIMIT 2000`
+    ).bind(...targetActs, cutoff).all()).results || [];
+
+    if (rawRows.length < 2) {
+      return json({ ok: true, compacted: 0, digests: 0, days: 0, msg: '可合并的日志不足 2 条，无需归档' });
+    }
+
+    // 按自然日 (UTC 天) 分组检测并生成智能摘要
+    const groups = new Map();
+    for (const r of rawRows) {
+      const dayKey = new Date(r.at).toISOString().slice(0, 10);
+      if (!groups.has(dayKey)) groups.set(dayKey, []);
+      groups.get(dayKey).push(r);
+    }
+
+    const stmts = [];
+    let totalCompacted = 0, digestCount = 0;
+    for (const [dayKey, list] of groups.entries()) {
+      if (list.length < 2 && groups.size > 1) continue;   // 单条且有多天时不单独合并
+      const actors = {}, acts = {};
+      let netInk = 0, inkOps = 0;
+      const highlights = [];
+      for (const r of list) {
+        const d = parseObj(r.detail) || {};
+        const actor = d.by || 'system';
+        actors[actor] = (actors[actor] || 0) + 1;
+        acts[r.act] = (acts[r.act] || 0) + 1;
+        if (r.ink0 !== null && r.ink1 !== null && r.ink0 !== undefined && r.ink1 !== undefined) {
+          netInk += (r.ink1 - r.ink0);
+          inkOps++;
+        }
+        if (['admin_ban', 'pardon', 'gift_new', 'code_new', 'cfg', 'flag', 'acct_del'].includes(r.act) && highlights.length < 8) {
+          highlights.push(`${actor}:${r.act}${d.why ? '(' + d.why.slice(0, 20) + ')' : ''}`);
+        }
+      }
+      const fromAt = list[0].at, toAt = list[list.length - 1].at;
+      const summaryParts = [];
+      for (const [k, cnt] of Object.entries(acts)) summaryParts.push(`${k}×${cnt}`);
+      const digestDetail = JSON.stringify({
+        by: who,
+        why,
+        day: dayKey,
+        n: list.length,
+        fromAt,
+        toAt,
+        actors,
+        acts,
+        netInk: inkOps ? netInk : undefined,
+        highlights: highlights.length ? highlights : undefined,
+        summary: `${dayKey} 归档 ${list.length} 条记录（${summaryParts.join('、')}）`,
+      });
+      const ids = list.map(x => x.id);
+      // 分批删除归档原记录并插入摘要行
+      for (let i = 0; i < ids.length; i += 50) {
+        const chunk = ids.slice(i, i + 50);
+        stmts.push(env.DB.prepare(`DELETE FROM econ_log WHERE id IN (${chunk.map(() => '?').join(',')})`).bind(...chunk));
+      }
+      stmts.push(env.DB.prepare('INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) VALUES (?, ?, ?, 1, NULL, NULL, ?)')
+        .bind('*', toAt, 'adm_digest', digestDetail.slice(0, 1000)));
+      totalCompacted += list.length;
+      digestCount++;
+    }
+    if (stmts.length) await env.DB.batch(stmts);
+    return json({ ok: true, compacted: totalCompacted, digests: digestCount, days: digestCount });
   }
   if (route === 'POST /api/admin/adjust') {
     const u = await findUser(String(body.uid || '').trim());
@@ -1846,6 +1990,175 @@ async function handleAdmin(env, request, path, now, ip) {
     const id = await cfgSave(env, c.cfg, who, (to ? `退回到第 ${to} 版：` : '全部回到默认值：') + why, now);
     await logRow(env, '*', now, 'cfg', 1, null, null, JSON.stringify({ by: who, why, id, undo: to }));
     return json({ ok: true, id, cfg: c.cfg });
+  }
+  if (route === 'POST /api/admin/player/devices/drop') {   // 强制退出玩家的指定设备或全部设备
+    const w = needWhy(); if (w) return w;
+    const u = await findUser(String(body.uid || '').trim());
+    if (!u) return error('没有这个账号', 404);
+    const devId = String(body.dev || '').trim();
+    if (devId && devId !== 'all') {
+      await dropDevice(env, devId);
+    } else {
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
+        env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(u.id),
+      ]);
+    }
+    await logRow(env, u.id, now, 'dev_drop', 1, null, null, JSON.stringify({ by: who, why, dev: devId || 'all' }));
+    return json({ ok: true, uid: u.id, dev: devId || 'all' });
+  }
+  if (route === 'POST /api/admin/player/clear-history') {   // 清理玩家的处罚记过历史、流水记录或登录记录
+    const w = needWhy(); if (w) return w;
+    const u = await findUser(String(body.uid || '').trim());
+    if (!u) return error('没有这个账号', 404);
+    const kind = String(body.kind || '');
+    if (!['sanctions', 'econ_log', 'auth_log'].includes(kind)) return error('kind 要是 sanctions、econ_log 或 auth_log');
+    let deleted = 0;
+    if (kind === 'sanctions') {
+      const r = await env.DB.prepare("UPDATE sanctions SET strikes = 0, log_json = '[]' WHERE uid = ?").bind(u.id).run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    } else if (kind === 'econ_log') {
+      const r = await env.DB.prepare('DELETE FROM econ_log WHERE uid = ?').bind(u.id).run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    } else if (kind === 'auth_log') {
+      const r = await env.DB.prepare('DELETE FROM auth_log WHERE uid = ? OR name = ? COLLATE NOCASE').bind(u.id, u.username).run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    }
+    await logRow(env, u.id, now, 'hist_clear', 1, null, null, JSON.stringify({ by: who, why, kind, deleted }));
+    return json({ ok: true, uid: u.id, kind, deleted });
+  }
+  if (route === 'POST /api/admin/mkt/cancel') {   // 强制撤下玩家市场上的挂单（退回卖家下次同步）
+    const w = needWhy(); if (w) return w;
+    const lid = String(body.id || '').trim();
+    const m = lid ? await env.DB.prepare('SELECT id, seller, k, st, price, state FROM mkt WHERE id = ?').bind(lid).first() : null;
+    if (!m) return error('找不到这一单', 404);
+    if (m.state !== 0) return error('这一单已经不是在卖状态了');
+    await env.DB.prepare('UPDATE mkt SET state = 2, done_at = ? WHERE id = ? AND state = 0').bind(now, lid).run();
+    await logRow(env, m.seller, now, 'mkt_cancel', 1, null, null, JSON.stringify({ by: who, why, id: lid, k: m.k, price: m.price }));
+    return json({ ok: true, id: lid });
+  }
+  if (route === 'GET /api/admin/player/export') {   // 导出单个玩家的完整存档快照 JSON（供本地复现与调试）
+    const u = await findUser(q('uid'));
+    if (!u) return error('没有这个账号', 404);
+    const [urow, erow, srow, mrows, lrows] = await Promise.all([
+      env.DB.prepare('SELECT id, username, profile_json, created_at, updated_at, deleted_at FROM users WHERE id = ?').bind(u.id).first(),
+      env.DB.prepare('SELECT state_json, srv_json, ink, ver, updated_at FROM econ WHERE uid = ?').bind(u.id).first(),
+      sanctionOf(env, u.id),
+      env.DB.prepare('SELECT id, seller, buyer, k, st, price, at, state, done_at, paid FROM mkt WHERE seller = ? OR buyer = ? ORDER BY at DESC LIMIT 100').bind(u.id, u.id).all(),
+      env.DB.prepare('SELECT id, at, act, ok, ink0, ink1, detail FROM econ_log WHERE uid = ? ORDER BY id DESC LIMIT 200').bind(u.id).all(),
+    ]);
+    const snap = {
+      exported_at: new Date(now).toISOString(),
+      exported_by: who,
+      user: {
+        id: u.id,
+        username: u.username,
+        created_at: urow ? urow.created_at : 0,
+        updated_at: urow ? urow.updated_at : 0,
+        deleted_at: urow ? urow.deleted_at : 0,
+        profile: urow ? parseObj(urow.profile_json) : null,
+      },
+      econ: erow ? {
+        ink: erow.ink,
+        ver: erow.ver,
+        updated_at: erow.updated_at,
+        state: parseObj(erow.state_json),
+        srv: parseObj(erow.srv_json),
+      } : null,
+      sanction: srow,
+      market: (mrows && mrows.results) || [],
+      recent_log: (lrows && lrows.results) || [],
+    };
+    const dateStr = new Date(now).toISOString().slice(0, 10);
+    return new Response(JSON.stringify(snap, null, 2), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="renying-player-${u.id}-${dateStr}.json"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+  if (route === 'GET /api/admin/maint') {   // 数据库各表行数统计与天魔 / 江湖长卷实时监控
+    const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
+    const tableNames = ['users', 'sessions', 'devices', 'refresh_used', 'econ', 'econ_nonce', 'econ_log', 'sanctions', 'rate', 'mkt', 'gift', 'gift_got', 'code', 'code_got', 'cfg', 'presence', 'flags', 'auth_log', 'admins', 'admin_sessions', 'errs', 'gboss', 'gboss_hit', 'gboss_try', 'saga_mark', 'chron', 'chron_done', 'chron_part', 'chron_claim', 'chron_rep'];
+    const counts = {};
+    await Promise.all(tableNames.map(async t => {
+      try {
+        const r = await one(`SELECT COUNT(*) AS n FROM ${t}`);
+        counts[t] = (r && r.n) || 0;
+      } catch (e) { counts[t] = 0; }
+    }));
+    const b = await gbNow(env, now);
+    const gb = await gbState(env, b, null, now);
+    const cq = await chronGet(env, null);
+    const curNode = cq.s && cq.s.node < CQ.N ? cqNode(cq.s.node) : null;
+    return json({
+      ok: true,
+      now,
+      tables: counts,
+      gboss: gb,
+      chron: { ...cq, curNode },
+    });
+  }
+  if (route === 'POST /api/admin/maint/prune') {   // 手动清理数据库过期或历史冗余数据
+    const w = needWhy(); if (w) return w;
+    const target = String(body.target || 'expired');
+    let deleted = 0;
+    if (target === 'expired') {
+      await cleanup(env, now);
+      deleted = 1;
+    } else if (target === 'econ_nonce') {
+      const r = await env.DB.prepare('DELETE FROM econ_nonce').run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    } else if (target === 'rate') {
+      const r = await env.DB.prepare('DELETE FROM rate').run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    } else if (target === 'presence') {
+      const r = await env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - PRESENCE_WINDOW).run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    } else if (target === 'auth_log_30d') {
+      const r = await env.DB.prepare('DELETE FROM auth_log WHERE at < ?').bind(now - 30 * DAY_MS).run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    } else if (target === 'econ_log_player_30d') {
+      const r = await env.DB.prepare("DELETE FROM econ_log WHERE uid != '*' AND at < ? AND act IN ('sync', 'ledger', 'matchStart', 'matchEnd', 'equip', 'unequip')").bind(now - 30 * DAY_MS).run();
+      deleted = (r && r.meta && r.meta.changes) || 0;
+    } else {
+      return error('不支持的清理项');
+    }
+    await logRow(env, '*', now, 'maint_prune', 1, null, null, JSON.stringify({ by: who, why, target, deleted }));
+    return json({ ok: true, target, deleted });
+  }
+  if (route === 'POST /api/admin/world/act') {   // 调整全服天魔讨伐或全服肉鸽长卷进度
+    const w = needWhy(); if (w) return w;
+    const op = String(body.op || '');
+    const b = await gbNow(env, now);
+    if (op === 'gboss_hp') {
+      const hp = intIn(body.hp, 1, 100000000);
+      if (!hp) return error('血量要填 1 到 100,000,000 的整数');
+      const maxHp = intIn(body.maxHp, hp, 100000000) || Math.max(hp, b.max_hp);
+      await env.DB.prepare('UPDATE gboss SET hp = ?, max_hp = ? WHERE gen = ?').bind(hp, maxHp, b.gen).run();
+      await logRow(env, '*', now, 'world_act', 1, null, null, JSON.stringify({ by: who, why, op, gen: b.gen, hp, maxHp }));
+    } else if (op === 'gboss_reroll') {
+      const bag = GB_AFFIX.slice(), affix = [];
+      for (let n = Math.min(4, 2 + Math.floor((b.gen - 1) / 4)); n > 0; n--) affix.push(bag.splice(Math.floor(rnd() * bag.length), 1)[0]);
+      await env.DB.prepare('UPDATE gboss SET affix = ? WHERE gen = ?').bind(affix.join(','), b.gen).run();
+      await logRow(env, '*', now, 'world_act', 1, null, null, JSON.stringify({ by: who, why, op, gen: b.gen, affix: affix.join(',') }));
+    } else if (op === 'gboss_next') {
+      await env.DB.prepare('UPDATE gboss SET ended = ? WHERE gen = ? AND ended = 0').bind(now, b.gen).run();
+      const b2 = await gbLatest(env);
+      if (b2 && b2.ended && !b2.paid) await gbSettle(env, b2, now);
+      await logRow(env, '*', now, 'world_act', 1, null, null, JSON.stringify({ by: who, why, op, gen: b.gen }));
+    } else if (op === 'chron_advance') {
+      const s = await chronRead(env);
+      if (!s || s.node >= CQ.N) return error('全服长卷已经全部通关了');
+      await env.DB.prepare('UPDATE chron SET got = need, at = ? WHERE id = 1 AND node = ?').bind(now, s.node).run();
+      const s2 = await chronRead(env);
+      await chronAdvance(env, s2, 0, now);
+      await logRow(env, '*', now, 'world_act', 1, null, null, JSON.stringify({ by: who, why, op, node: s.node + 1 }));
+    } else {
+      return error('不支持的操作');
+    }
+    return json({ ok: true, op, gboss: await gbNow(env, now), chron: await chronRead(env) });
   }
   return error('Not found', 404);
 }

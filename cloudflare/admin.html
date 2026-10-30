@@ -209,6 +209,14 @@
   }
   #toast.on { opacity: 1; transform: translate(-50%, 0); }
   #toast.err { border-color: rgba(255, 138, 128, .55); color: #ffd9d4; }
+  .sortbtn { appearance: none; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
+  .sortbtn:hover { color: var(--gold2); }
+  .sortbtn.active { color: var(--gold); font-weight: 600; }
+  .pbar { height: 10px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; border: 1px solid var(--line); }
+  .pbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--seal), var(--gold)); border-radius: 99px; transition: width .3s; }
+  .cmd-list { max-height: 300px; overflow-y: auto; margin: 10px 0 6px; display: grid; gap: 4px; }
+  .cmd-item { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; color: var(--ink); font: inherit; cursor: pointer; }
+  .cmd-item:hover, .cmd-item:focus { border-color: var(--gold); background: var(--goldbg); outline: none; }
 
   @media (max-width: 720px) {
     .cfgrow { grid-template-columns: minmax(0, 1fr) auto; }
@@ -246,8 +254,9 @@
 
 <div id="app" class="hidden">
   <header class="top">
-    <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿和兑换码、改经济数值</small></div></div>
+    <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿和兑换码、改经济数值、全服共斗与数据维护</small></div></div>
     <div class="me">
+      <button class="btn ghost sm" data-act="cmdk" title="全局快捷命令面板 (Cmd/Ctrl + K)">⌘K 快捷面板</button>
       <span id="sessTimer" class="badge">剩余 30分00秒</span>
       <button class="btn ghost sm" id="btnRenew" data-act="renew" title="给管理令牌续期 30 分钟">续期</button>
       <button class="btn ghost sm" id="btnRefresh" data-act="reload" title="刷新当前页">刷新</button>
@@ -263,16 +272,18 @@
     <button role="tab" data-act="tab" data-tab="codes">兑换码</button>
     <button role="tab" data-act="tab" data-tab="cfg">经济数值</button>
     <button role="tab" data-act="tab" data-tab="flags">功能开关</button>
+    <button role="tab" data-act="tab" data-tab="maint">世界与维护</button>
     <button role="tab" data-act="tab" data-tab="auth">登录记录</button>
     <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
     <button role="tab" data-act="tab" data-tab="errors">错误</button>
     <button role="tab" data-act="tab" data-tab="admins" data-need="all">管理员</button>
   </div></nav>
   <main id="main"></main>
-  <footer>刃影 · 管理后台 · 所有修改都记在流水里，谁做的、为什么都查得到</footer>
+  <footer>刃影 · 管理后台 · 所有修改都记在流水里，谁做的、为什么都查得到（按 ⌘K / Ctrl+K 呼出快捷命令）</footer>
 </div>
 
 <dialog id="dlg"></dialog>
+<dialog id="cmdDlg"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -315,7 +326,8 @@ const S = {
   tok: '', who: '', role: '', exp: 0, expT: 0, timerT: 0, auto: false, autoT: 0,
   tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [],
   giftSkins: [], codeSkins: [],
-  pFilter: '', pLimit: 20, pOffset: 0, pTotal: 0,
+  pFilter: '', pSort: '', pDir: 'desc', pLimit: 20, pOffset: 0, pTotal: 0,
+  auditAct: '', auditBy: '',
   cfg: null, flags: [], aq: '', aact: '', seq: 0
 };
 const ROLE = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
@@ -385,7 +397,9 @@ const ACT = {
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
   admin: '管理员调整', restore: '找回饰品', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
   claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码', flag: '改功能开关',
-  adm_login: '管理员登录', adm_acct: '改管理员账号', acct_del: '删除账号', acct_restore: '恢复账号', acct_export: '导出账号', err_export: '导出错误日志',
+  adm_login: '管理员登录', adm_acct: '改管理员账号', acct_del: '删除账号', acct_restore: '恢复账号', acct_export: '导出账号',
+  err_export: '导出错误日志', err_clean: '清理错误日志', adm_digest: '智能归档摘要', maint_prune: '数据库清理', world_act: '世界进度调控',
+  dev_drop: '强制下线设备', hist_clear: '清理玩家历史', mkt_cancel: '强制撤下挂单',
 };
 const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
 
@@ -396,11 +410,12 @@ function stuff(d) {   // 墨锭、武器箱、终端机、改名标签、送的�
   for (const [c, n] of Object.entries(d.cases || {})) out.push(caseName(c) + ' ' + sign(n));
   if (d.term) out.push('终端机 ' + sign(d.term));
   if (d.tags) out.push('改名标签 ' + sign(d.tags));
-  if (Array.isArray(d.skins) && d.skins.length) {
+  if (Array.isArray(d.skins) && itSkinList(d.skins)) {
     for (const s of d.skins) out.push(itemName(s.k) + (s.st >= 0 ? '（斩数版 ' + s.st + '）' : ''));
   }
   return out;
 }
+function itSkinList(arr) { return Array.isArray(arr) && arr.length > 0; }
 function itemRef(s) {   // "qf_p1#12 st" → 竹影 #12（斩数版）
   const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st)?$/.exec(String(s));
   return m ? itemName(m[1]) + ' #' + m[2] + (m[3] ? '（斩数版）' : '') : String(s);
@@ -438,6 +453,17 @@ function detailText(act, raw, withWho) {
   if (act === 'acct_restore') return who + '恢复' + (d.since ? '（' + fmtT(d.since) + ' 删除的）' : '');
   if (act === 'acct_export') return who + '导出了 ' + d.n + ' 个号' + (d.q ? '（搜 “' + d.q + '”）' : '') + (d.del === '1' ? '（只要删除了的）' : '');
   if (act === 'err_export') return who + '导出了 ' + d.n + ' 条错误日志' + (d.kind ? '（' + (ERR_KIND[d.kind] || d.kind) + '）' : '') + (d.format ? ' [' + d.format + ']' : '');
+  if (act === 'err_clean') return who + '清理了 ' + fmtN(d.deleted || 0) + ' 条错误记录' + (d.sig ? '（签名 ' + d.sig.slice(0, 8) + '）' : d.kind ? '（类别 ' + (ERR_KIND[d.kind] || d.kind) + '）' : d.all ? '（全部清空）' : '');
+  if (act === 'adm_digest') {
+    const actList = Object.entries(d.acts || {}).map(([k, n]) => (ACT[k] || k) + ' ×' + n).join('、');
+    const actorList = Object.entries(d.actors || {}).map(([k, n]) => k + '(' + n + ')').join('、');
+    return who + `[${d.day || ''} 智能归档 ${fmtN(d.n || 0)} 条] 管理员：${actorList || '—'}｜分布：${actList || '—'}${d.netInk !== undefined ? '｜净墨锭变动：' + sign(d.netInk) : ''}${d.highlights && d.highlights.length ? '｜重点：' + d.highlights.join('；') : ''}`;
+  }
+  if (act === 'maint_prune') return who + '清理数据表（' + d.target + '），移除 ' + fmtN(d.deleted || 0) + ' 行';
+  if (act === 'world_act') return who + '世界调控：' + d.op + (d.gen ? '（第 ' + d.gen + ' 代天魔）' : '') + (d.hp ? ' 血量设为 ' + fmtN(d.hp) : '') + (d.affix ? ' 词缀设为 ' + d.affix : '') + (d.node ? ' 推进至第 ' + d.node + ' 节' : '');
+  if (act === 'dev_drop') return who + '强制下线设备：' + (d.dev === 'all' ? '全部登录设备' : d.dev);
+  if (act === 'hist_clear') return who + '清理历史记录：' + d.kind + '（移除 ' + fmtN(d.deleted || 0) + ' 条）';
+  if (act === 'mkt_cancel') return who + '强制撤下市场挂单 #' + String(d.id || '').slice(0, 8) + '（' + itemName(d.k) + '，标价 ' + fmtN(d.price) + '）';
   if (act === 'adm_login') return (withWho && d.by ? d.by + '｜' : '') + (d.how === 'secret' ? '用 ADMIN_SECRET 口令' : '用管理员账号') + '，角色：' + (ROLE[d.role] || d.role);
   if (act === 'adm_acct') return who + (d.created ? '新建 ' : '改 ') + d.name + '：角色 ' + (d.from && d.from !== d.role ? (ROLE[d.from] || d.from) + ' → ' : '') + (ROLE[d.role] || d.role) + (d.pw ? '，' + (d.created ? '设了密码' : '改了密码') : '') + (d.disabled ? '，停用' : '');
   if (act === 'flag') return who + d.k + '：' + (FLAG_MODE[d.from] || d.from) + ' → ' + (FLAG_MODE[d.to] || d.to);
@@ -523,12 +549,41 @@ function drawSparkline(data) {
   </div>`;
 }
 
+function drawInkFlowChart(flow, cases) {
+  const hasFlow = Array.isArray(flow) && flow.length > 0;
+  const caseEntries = Object.entries(cases || {}).sort((a, b) => b[1] - a[1]);
+  if (!hasFlow && !caseEntries.length) return '';
+  let svg = '';
+  if (hasFlow) {
+    const w = 260, h = 54, p = 6;
+    const max = Math.max(...flow.flatMap(x => [x.inkIn || 0, x.inkOut || 0]), 1);
+    const step = flow.length > 1 ? (w - 2 * p) / (flow.length - 1) : 0;
+    const ptsIn = flow.map((x, i) => `${(p + i * step).toFixed(1)},${(h - p - ((x.inkIn || 0) / max) * (h - 2 * p)).toFixed(1)}`);
+    const ptsOut = flow.map((x, i) => `${(p + i * step).toFixed(1)},${(h - p - ((x.inkOut || 0) / max) * (h - 2 * p)).toFixed(1)}`);
+    svg = H`<div style="background:rgba(255,255,255,.02);padding:6px 12px;border-radius:8px;border:1px solid var(--line)">
+      <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible">
+        <polyline fill="none" stroke="var(--ok)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="${ptsIn.join(' ')}" />
+        <polyline fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="${ptsOut.join(' ')}" />
+      </svg>
+    </div>`;
+  }
+  return H`<div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+    <div style="flex:1 1 280px">
+      <h2>近 7 天经济流速 & 武器箱开启分布</h2>
+      ${hasFlow ? H`<p class="hint" style="margin:4px 0 4px"><span class="up">绿线：流入</span>（${flow.map(x => fmtN(x.inkIn)).join(' → ')}）｜ <span class="down">红线：流出</span>（${flow.map(x => fmtN(x.inkOut)).join(' → ')}）</p>` : ''}
+      ${caseEntries.length ? H`<div class="chips" style="margin-top:6px">${caseEntries.map(([c, n]) => H`<span class="badge gold">${caseName(c)}: ${fmtN(n)} 次</span>`)}</div>` : H`<p class="hint">近 7 天暂无开箱记录</p>`}
+    </div>
+    ${svg}
+  </div>`;
+}
+
 /* ---------- 总览 ---------- */
 async function vHome() {
   const [s, a] = await Promise.all([api('stats'), api('audit')]);
   const rows = a.rows.slice(0, 8);
   const inkNet = (s.inkIn24 || 0) - (s.inkOut24 || 0);
   return H`<div class="tiles">
+      ${tile('实时在线', unit(s.online || 0, '人'), `对战 ${fmtN(s.playing || 0)} · 匹配 ${fmtN(s.waiting || 0)}`)}
       ${tile('注册账号', s.users, '24 小时内新注册 ' + fmtN(s.newToday))}
       ${tile('有武库存档的', s.accounts, '打开过武库的账号')}
       ${tile('全服墨锭', s.inkTotal, '所有武库存档加起来')}
@@ -538,56 +593,75 @@ async function vHome() {
       ${tile('24h 开箱次数', unit(s.open24 || 0, '次'), '玩家开武器箱')}
       ${tile('市场在卖', unit(s.open, '单'), '玩家挂出来的')}
       ${tile('24 小时成交', unit(s.deals24, '单'), '成交额 ' + fmtN(s.dealInk24) + ' 墨锭')}
-      ${tile('封禁中', unit(s.banned, '个号'), '包括永久封号')}
-      ${tile('删除了的', unit(s.deleted || 0, '个号'), '不算在注册账号里，能恢复')}
+      ${tile('封禁 / 软删', H`${fmtN(s.banned)}<small>封</small> / ${fmtN(s.deleted || 0)}<small>删</small>`, '处罚与回收站')}
       ${tile('经济数值', s.cfgId ? '第 ' + s.cfgId + ' 版' : '默认', s.cfgId ? '改过' : '没改过')}
     </div>
     ${drawSparkline(s.signups7d)}
+    ${drawInkFlowChart(s.inkFlow7d, s.caseCounts7d)}
     <div class="card"><div class="row between"><h2>最近的操作</h2><button class="btn ghost sm" data-act="tab" data-tab="audit">全部记录</button></div>
       ${rows.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th>内容</th></tr></thead><tbody>
-        ${rows.map(r => { const d = parse(r.detail) || {}; return H`<tr><td class="nowrap">${fmtT(r.at)}</td><td>${d.by || '—'}</td><td class="nowrap">${ACT[r.act] || r.act}</td><td>${target(r)}</td><td class="detail">${detailText(r.act, r.detail)}${d.why ? H`<div class="hint">原因：${d.why}</div>` : ''}</td></tr>`; })}
+        ${rows.map(r => { const d = parse(r.detail) || {}; return H`<tr><td class="nowrap">${fmtT(r.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${r.act === 'adm_digest' ? ' gold' : ''}">${ACT[r.act] || r.act}</span></td><td>${target(r)}</td><td class="detail">${detailText(r.act, r.detail)}${d.why ? H`<div class="hint">原因：${d.why}</div>` : ''}</td></tr>`; })}
       </tbody></table></div>` : H`<p class="empty">还没有管理员操作</p>`}
     </div>
-    <div class="card"><h2>常用</h2><div class="row wrap">
-      <button class="btn ghost" data-act="tab" data-tab="players">找玩家、加减墨锭</button>
+    <div class="card"><h2>常用与快捷入口</h2><div class="row wrap">
+      <button class="btn ghost" data-act="tab" data-tab="players">找玩家、排序与管理</button>
       <button class="btn ghost" data-act="tab" data-tab="gifts">发全服补偿</button>
       <button class="btn ghost" data-act="tab" data-tab="codes">建兑换码</button>
       <button class="btn ghost" data-act="tab" data-tab="cfg">改价格、爆率</button>
-      <button class="btn ghost" data-act="tab" data-tab="flags">功能开关</button>
-      <button class="btn ghost" data-act="tab" data-tab="errors">查看错误</button>
+      <button class="btn ghost" data-act="tab" data-tab="maint">天魔、长卷与数据库维护</button>
+      <button class="btn ghost" data-act="tab" data-tab="audit">操作记录与智能归档</button>
+      <button class="btn ghost" data-act="tab" data-tab="errors">查看与清理错误</button>
+      <button class="btn ghost" data-act="cmdk">⌘K 快捷命令面板</button>
     </div></div>`;
 }
 
-/* ---------- 玩家：搜索 ---------- */
+/* ---------- 玩家：搜索与多维排序 ---------- */
+function sortTh(col, label, isNum) {
+  const active = S.pSort === col;
+  const arrow = active ? (S.pDir === 'asc' ? ' ↑' : ' ↓') : ' ↕';
+  return H`<th class="${isNum ? 'num' : ''}"><button type="button" class="sortbtn${active ? ' active' : ''}" data-act="psort" data-col="${col}">${label}${arrow}</button></th>`;
+}
 async function vPlayers() {
   if (S.uid) return vPlayer();
   const qs = 'q=' + encodeURIComponent(S.q)
     + (S.pFilter === 'deleted' ? '&del=1' : '')
-    + (S.pFilter === 'banned' || S.pFilter === 'wealth' ? '&filter=' + S.pFilter : '')
+    + (['banned', 'wealth', 'flagged', 'active24h'].includes(S.pFilter) ? '&filter=' + S.pFilter : '')
+    + (S.pSort ? '&sort=' + encodeURIComponent(S.pSort) + '&dir=' + encodeURIComponent(S.pDir || 'desc') : '')
     + '&limit=' + (S.pLimit || 20)
     + '&offset=' + (S.pOffset || 0);
   const r = await api('find?' + qs);
   S.found = r.users;
   S.pTotal = r.total !== undefined ? r.total : r.users.length;
   const isDel = S.pFilter === 'deleted';
-  const filterDesc = S.pFilter === 'banned' ? '封禁中的账号' : S.pFilter === 'wealth' ? '墨锭 ≥ 10,000 的富豪榜' : isDel ? '删除了的账号' : '所有账号';
+  const filterDesc = S.pFilter === 'banned' ? '封禁中的账号'
+    : S.pFilter === 'wealth' ? '墨锭 ≥ 10,000 的富豪榜'
+    : S.pFilter === 'flagged' ? '有反作弊记过的账号'
+    : S.pFilter === 'active24h' ? '24 小时内活跃的账号'
+    : isDel ? '删除了的账号' : '所有账号';
   return H`<div class="card">
     <div class="row between wrap"><h2>玩家</h2><div class="row wrap">
       <button class="btn ghost sm" data-act="fltview" data-f="" aria-pressed="${String(!S.pFilter)}">所有账号</button>
+      <button class="btn ghost sm" data-act="fltview" data-f="active24h" aria-pressed="${String(S.pFilter === 'active24h')}">24h 活跃</button>
+      <button class="btn ghost sm" data-act="fltview" data-f="wealth" aria-pressed="${String(S.pFilter === 'wealth')}">富豪榜</button>
+      <button class="btn ghost sm" data-act="fltview" data-f="flagged" aria-pressed="${String(S.pFilter === 'flagged')}">有记过</button>
       <button class="btn ghost sm" data-act="fltview" data-f="banned" aria-pressed="${String(S.pFilter === 'banned')}">封禁中</button>
       <button class="btn ghost sm" data-act="fltview" data-f="deleted" aria-pressed="${String(isDel)}">删除了的</button>
-      <button class="btn ghost sm" data-act="fltview" data-f="wealth" aria-pressed="${String(S.pFilter === 'wealth')}">富豪榜</button>
       <button class="btn ghost sm" data-act="export">导出 CSV</button></div></div>
     <form class="search" data-form="find">
       <input name="q" value="${S.q}" placeholder="按昵称搜索（支持子串、开头匹配）或账号编号（u_ 开头）" autocomplete="off" spellcheck="false" aria-label="搜索玩家">
       ${S.q ? H`<button type="button" class="btn ghost sm" data-act="clearsearch">清空</button>` : ''}
       <button class="btn">搜索</button>
     </form>
-    <p class="hint">${filterDesc}${S.q ? ' · 匹配 “' + S.q + '”' : ''}（共 ${fmtN(S.pTotal)} 个结果）。勾上几个可以一起处理；「导出 CSV」按现在的搜索和筛选导出（最多 5000 行）。</p>
-    ${r.users.length ? H`<form data-form="batch"><div class="tw"><table><thead><tr><th><input type="checkbox" data-pickall aria-label="全选"></th><th>昵称</th><th class="num">墨锭</th><th>上次动武库</th><th>注册</th></tr></thead><tbody>
-      ${r.users.map(u => H`<tr class="${u.deleted_at ? 'mute' : ''}"><td><input type="checkbox" name="pick" value="${u.id}" aria-label="选 ${u.username}"></td>
-        <td><button type="button" class="link" data-act="open" data-uid="${u.id}">${u.username}</button>${u.deleted_at ? H` <span class="badge bad">${fmtT(u.deleted_at)} 删除</span>` : ''}<div class="hint mono">${u.id}</div></td>
-        <td class="num">${u.ink === null || u.ink === undefined ? '—' : fmtN(u.ink)}</td><td class="nowrap">${ago(u.updated_at)}</td><td class="nowrap">${fmtT(u.created_at)}</td></tr>`)}
+    <p class="hint">${filterDesc}${S.q ? ' · 匹配 “' + S.q + '”' : ''}（共 ${fmtN(S.pTotal)} 个结果）。点表头可按昵称、墨锭、记过次数、活跃时间或注册时间排序；勾上多个可批量处理。</p>
+    ${r.users.length ? H`<form data-form="batch"><div class="tw"><table><thead><tr><th><input type="checkbox" data-pickall aria-label="全选"></th>${sortTh('username', '昵称')}${sortTh('ink', '墨锭', true)}${sortTh('strikes', '记过 / 状态', true)}${sortTh('updated', '上次活跃')}${sortTh('created', '注册时间')}</tr></thead><tbody>
+      ${r.users.map(u => {
+        const isBan = !!(u.perm || u.ban_until > Date.now());
+        return H`<tr class="${u.deleted_at ? 'mute' : ''}"><td><input type="checkbox" name="pick" value="${u.id}" aria-label="选 ${u.username}"></td>
+        <td><button type="button" class="link" data-act="open" data-uid="${u.id}">${u.username}</button>${u.deleted_at ? H` <span class="badge bad">${fmtT(u.deleted_at)} 删除</span>` : ''}${isBan ? H` <span class="badge bad">${u.perm ? '永久封禁' : '封禁中'}</span>` : ''}<div class="hint mono">${u.id}</div></td>
+        <td class="num">${u.ink === null || u.ink === undefined ? '—' : fmtN(u.ink)}</td>
+        <td class="num">${u.strikes ? H`<span class="badge bad">${u.strikes} 次</span>` : H`<span class="hint">0</span>`}</td>
+        <td class="nowrap">${ago(u.updated_at)}</td><td class="nowrap">${fmtT(u.created_at)}</td></tr>`;
+      })}
     </tbody></table></div>
     <div class="row between wrap" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
       <div class="row">
@@ -621,7 +695,7 @@ function devCard() {   // 云端还没有 Dev：只能在这里建，别人注�
   </form>`;
 }
 
-/* ---------- 玩家：一个号的详情、加减、封号、流水 ---------- */
+/* ---------- 玩家：一个号的详情、加减、设备、挂单管理、历史清理 ---------- */
 function itemOptions() {
   return H`<option value="">选一件饰品…</option>${CAT.caseIds.map(c => H`<optgroup label="${caseName(c)}">${CAT.order
     .flatMap(t => Object.values(CAT.items).filter(x => x.col === c && x.tier === t))
@@ -634,7 +708,8 @@ async function vPlayer() {
   const inv = Array.isArray(s.inv) ? s.inv : [], lst = Array.isArray(s.lst) ? s.lst : [], cases = s.cases || {};
   const worn = new Set(Object.values(s.eq || {})), sc = p.sanction || {}, isBan = !!(sc.perm || sc.banUntil > now);
   const nCases = CAT.caseIds.reduce((a, c) => a + (+cases[c] || 0), 0), pr = p.profile || {};
-  return H`<div class="crumbs"><button class="btn ghost sm" data-act="back">← 玩家列表</button></div>
+  return H`<div class="crumbs row between wrap"><button class="btn ghost sm" data-act="back">← 玩家列表</button>
+    <button class="btn ghost sm" data-act="exportplayer" data-uid="${p.uid}">导出该玩家存档快照 (JSON)</button></div>
   <div class="card head">
     <div class="who"><h2>${p.username}</h2>${p.deletedAt ? H`<span class="badge bad">删除了</span>` : ''}${isBan ? H`<span class="badge bad">${sc.perm ? '永久封禁' : '封禁中'}</span>` : ''}</div>
     <div class="meta"><span class="mono">${p.uid}</span><button class="btn ghost sm" data-act="copy" data-v="${p.uid}">复制编号</button>
@@ -663,7 +738,7 @@ async function vPlayer() {
         <button type="button" class="btn ghost" data-act="addgive">加进清单</button>
       </div>
       <div id="gives" class="chips"></div>
-      <p class="hint">要收走饰品，在下面的库存里勾上。挂在市场上的收不了。</p>
+      <p class="hint">要收走饰品，在下面的库存里勾上。挂在市场上的可以先强制撤下再收。</p>
       <div class="row end"><button class="btn">检查并提交…</button></div>
     </div>
     <div class="card">
@@ -674,18 +749,34 @@ async function vPlayer() {
           <td>${itemTag(it.k, it.st)}${worn.has(it.i) ? H` <span class="badge ok">穿着</span>` : ''}${it.n ? H`<div class="hint">改了名：${it.n}</div>` : ''}</td>
           <td>${tierTag(d.tier)}</td><td class="nowrap">${caseName(d.col)}</td><td class="nowrap">${SRC[it.src] || it.src || '—'}</td><td class="nowrap">${fmtT(it.t)}</td></tr>`; })}
       </tbody></table></div>` : H`<p class="empty">库存是空的</p>`}
-      ${lst.length ? H`<h3>挂在玩家市场上的 <small>要等玩家撤下或者卖掉</small></h3><div class="tw"><table><thead><tr><th>编号</th><th>饰品</th><th>品质</th><th class="num">标价</th></tr></thead><tbody>
-        ${lst.map(L => H`<tr><td class="mono">#${L.it.i}</td><td>${itemTag(L.it.k, L.it.st)}</td><td>${tierTag((CAT.items[L.it.k] || {}).tier)}</td><td class="num">${fmtN(L.price)}</td></tr>`)}
+      ${lst.length ? H`<h3>挂在玩家市场上的 <small>可强制撤下退回卖家</small></h3><div class="tw"><table><thead><tr><th>编号</th><th>单号</th><th>饰品</th><th>品质</th><th class="num">标价</th><th>操作</th></tr></thead><tbody>
+        ${lst.map(L => H`<tr><td class="mono">#${L.it.i}</td><td class="mono">${L.l}</td><td>${itemTag(L.it.k, L.it.st)}</td><td>${tierTag((CAT.items[L.it.k] || {}).tier)}</td><td class="num">${fmtN(L.price)}</td>
+          <td><button type="button" class="btn ghost sm" data-act="mktcancel" data-id="${L.l}">强制撤下…</button></td></tr>`)}
       </tbody></table></div>` : ''}
     </div>
   </form>
+  ${devicesCard(p)}
   ${lostCard(p)}
-  ${banCard(sc, isBan)}
+  ${banCard(sc, isBan, p)}
   ${pwCard(p)}
   ${delCard(p)}
-  ${logCard(p.log || [])}
+  ${logCard(p.log || [], p)}
   ${mktCard(p)}`;
 }
+
+function devicesCard(p) {
+  const devs = p.devices || [], leg = p.legacySessions || 0;
+  return H`<div class="card">
+    <div class="row between wrap"><h2>登录设备与会话 <small>${devs.length} 台设备${leg ? ' · ' + leg + ' 个旧式会话' : ''}</small></h2>
+      ${(devs.length || leg) ? H`<button type="button" class="btn ghost sm" data-act="dropdev" data-dev="all">强制下线全部设备…</button>` : ''}</div>
+    <p class="hint">管理该账号当前在线的设备令牌，可单独踢下某台设备或将全部登录状态强制下线。</p>
+    ${devs.length ? H`<div class="tw"><table><thead><tr><th>设备编号</th><th>系统与浏览器</th><th>最近活跃</th><th>登录时间</th><th>过期时间</th><th></th></tr></thead><tbody>
+      ${devs.map(d => H`<tr><td class="mono">${d.id}</td><td>${d.label || '未知设备'}</td><td class="nowrap">${ago(d.last_seen)}</td><td class="nowrap">${fmtT(d.created_at)}</td><td class="nowrap">${fmtT(d.expires_at)}</td>
+        <td><button type="button" class="btn ghost sm" data-act="dropdev" data-dev="${d.id}">踢下线…</button></td></tr>`)}
+    </tbody></table></div>` : H`<p class="empty">${leg ? '只有 ' + leg + ' 个旧式 30 天登录会话' : '当前没有活跃的登录设备'}</p>`}
+  </div>`;
+}
+
 // 找回饰品：按流水查这个号拿到过、现在没有的饰品。正常没的（汰换、一键卖掉、市场卖掉）只列出来，去向不明和管理员收走的可以勾上找回
 const LOST_TEXT = { trade: '汰换掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了', odd: '在这一步里不见了', unknown: '去向不明（流水里没记）', restored: '已经找回过了' };
 function lostCard(p) {
@@ -702,9 +793,10 @@ function lostCard(p) {
     ${can.length ? H`<div class="row end"><button class="btn">找回勾上的…</button></div>` : ''}` : H`<p class="empty">流水里拿到过的饰品都还在</p>`}
   </form>`;
 }
-function banCard(sc, isBan) {
+function banCard(sc, isBan, p) {
   return H`<form class="card" data-form="ban" novalidate>
-    <h2>封号</h2>
+    <div class="row between wrap"><h2>封号与处罚记录</h2>
+      ${(sc.strikes || (sc.log && sc.log.length)) ? H`<button type="button" class="btn ghost sm" data-act="clearhist" data-k="sanctions">清空记过历史…</button>` : ''}</div>
     ${isBan ? H`<p>${sc.perm ? '永久封禁。' : '封禁中，到 ' + fmtT(sc.banUntil) + '。'}</p><div class="row"><button type="button" class="btn" data-act="pardon">解封…</button></div>`
       : H`<div class="row wrap"><label class="f w120">封几天<input type="number" name="days" min="1" max="3650" step="1" value="1"></label>
         <label class="chk" style="margin-top:18px"><input type="checkbox" name="perm"> 永久封号</label>
@@ -717,11 +809,13 @@ function banCard(sc, isBan) {
 }
 function delCard(p) {
   return H`<div class="card">
-    <h2>删除账号</h2>
+    <h2>删除账号与历史移除</h2>
     ${p.deletedAt ? H`<p><span class="badge bad">${fmtT(p.deletedAt)} 删除了</span> 登录不了、不上排行榜，挂的单别人看不到。存档、武库、流水都还在。</p>
-      <div class="row"><button type="button" class="btn" data-act="restoreone">恢复这个号…</button></div>`
+      <div class="row wrap"><button type="button" class="btn" data-act="restoreone">恢复这个号…</button>
+        <button type="button" class="btn ghost sm" data-act="clearhist" data-k="auth_log">清空该号登录记录…</button></div>`
       : H`<p class="hint">删除以后这个号登录不了、所有设备退出、不上排行榜，挂的单别人看不到。存档、武库、流水一样不动，昵称还占着，随时能恢复，恢复后什么都不丢。</p>
-      <div class="row"><button type="button" class="btn danger" data-act="delone">删除这个号…</button></div>`}
+      <div class="row wrap"><button type="button" class="btn danger" data-act="delone">删除这个号…</button>
+        <button type="button" class="btn ghost sm" data-act="clearhist" data-k="auth_log">清空该号登录记录…</button></div>`}
   </div>`;
 }
 function pwCard(p) {
@@ -734,8 +828,9 @@ function pwCard(p) {
       <button class="btn danger" style="margin-top:18px">重设密码…</button></div>
   </form>`;
 }
-function logCard(log) {
-  return H`<div class="card"><h2>流水 <small>最近 ${log.length} 条</small></h2>
+function logCard(log, p) {
+  return H`<div class="card"><div class="row between wrap"><h2>流水 <small>最近 ${log.length} 条</small></h2>
+    ${log.length ? H`<button type="button" class="btn ghost sm" data-act="clearhist" data-k="econ_log">清空该号流水历史…</button>` : ''}</div>
     ${log.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>操作</th><th class="num">墨锭</th><th>详情</th></tr></thead><tbody>
       ${log.map(r => H`<tr class="${r.ok ? '' : 'fail'}"><td class="nowrap">${fmtT(r.at)}</td><td class="nowrap">${ACT[r.act] || r.act}${r.ok ? '' : H` <span class="badge bad">没成</span>`}</td>
         <td class="num">${inkCell(r)}</td><td class="detail">${detailText(r.act, r.detail, true)}</td></tr>`)}
@@ -746,8 +841,9 @@ function mktCard(p) {
   if (!rows.length) return '';
   const stText = r => r.state === 0 ? '在卖' : r.state === 2 ? '撤下了' : r.seller === p.uid ? (r.paid ? '卖掉了，已到账' : '卖掉了，下次动武库时到账') : '买到了';
   return H`<div class="card"><h2>玩家市场 <small>最近 ${rows.length} 单</small></h2><div class="tw"><table>
-    <thead><tr><th>时间</th><th>买还是卖</th><th>饰品</th><th class="num">价格</th><th>状态</th></tr></thead><tbody>
-    ${rows.map(r => H`<tr><td class="nowrap">${fmtT(r.done_at || r.at)}</td><td>${r.seller === p.uid ? '卖' : '买'}</td><td>${itemTag(r.k, r.st)}</td><td class="num">${fmtN(r.price)}</td><td class="nowrap">${stText(r)}</td></tr>`)}
+    <thead><tr><th>时间</th><th>买还是卖</th><th>饰品</th><th class="num">价格</th><th>状态</th><th></th></tr></thead><tbody>
+    ${rows.map(r => H`<tr><td class="nowrap">${fmtT(r.done_at || r.at)}</td><td>${r.seller === p.uid ? '卖' : '买'}</td><td>${itemTag(r.k, r.st)}</td><td class="num">${fmtN(r.price)}</td><td class="nowrap">${stText(r)}</td>
+      <td>${r.state === 0 ? H`<button type="button" class="btn ghost sm" data-act="mktcancel" data-id="${r.id}">撤单…</button>` : ''}</td></tr>`)}
   </tbody></table></div></div>`;
 }
 function drawGives() {
@@ -756,13 +852,20 @@ function drawGives() {
 }
 
 /* ---------- 补偿 ---------- */
+const GIFT_TPLS = [
+  { label: '例行维护补偿', ink: 500, c1: 1, term: 0, tags: 0, days: 14, note: '服务器例行维护补偿' },
+  { label: '紧急故障补偿', ink: 1200, c1: 2, term: 1, tags: 0, days: 14, note: '服务器异常波动补偿' },
+  { label: '版本更新贺礼', ink: 1500, c7: 1, term: 1, tags: 1, days: 30, note: '新版本上线全服贺礼' },
+  { label: '周末福利补给', ink: 600, c2: 1, term: 0, tags: 0, days: 7, note: '周末江湖修整福利' },
+];
 async function vGifts() {
   const r = await api('gifts');
   S.gifts = r.gifts;
   const now = Date.now();
   const state = g => g.off ? H`<span class="badge">停发了</span>` : g.until <= now ? H`<span class="badge">过期了</span>` : H`<span class="badge ok">发放中</span>`;
   return H`<form class="card" data-form="gift" novalidate>
-    <h2>发补偿</h2>
+    <div class="row between wrap"><h2>发补偿</h2>
+      <div class="row wrap"><span class="hint">快速模板：</span>${GIFT_TPLS.map((t, i) => H`<button type="button" class="btn ghost sm" data-act="gifttpl" data-i="${i}">${t.label}</button>`)}</div></div>
     <p class="hint">玩家下次登录或者打开武库时自动领到，每个账号只领一次；游戏里会弹出「开发组补偿：说明（内容）」。</p>
     <div class="grid">
       <label class="f">发给<select name="to"><option value="all">所有人</option><option value="one">一个账号</option></select></label>
@@ -795,13 +898,19 @@ async function vGifts() {
 }
 
 /* ---------- 兑换码 ---------- */
+const CODE_TPLS = [
+  { label: '新手助力码', ink: 800, c1: 2, term: 1, tags: 0, uses: 500, days: 30, note: '新手江湖助力礼包' },
+  { label: '群友福利码', ink: 1000, c3: 1, term: 1, tags: 1, uses: 200, days: 14, note: '官方社群专属福利' },
+  { label: '赛事应援码', ink: 1500, c7: 1, term: 1, tags: 0, uses: 1000, days: 7, note: '刃影赛事应援礼包' },
+];
 async function vCodes() {
   const r = await api('codes');
   S.codes = r.codes;
   const now = Date.now();
   const state = c => c.off ? H`<span class="badge">停用了</span>` : c.until <= now ? H`<span class="badge">过期了</span>` : c.got >= c.uses ? H`<span class="badge">领完了</span>` : H`<span class="badge ok">能领</span>`;
   return H`<form class="card" data-form="code" novalidate>
-    <h2>建兑换码</h2>
+    <div class="row between wrap"><h2>建兑换码</h2>
+      <div class="row wrap"><span class="hint">快速模板：</span>${CODE_TPLS.map((t, i) => H`<button type="button" class="btn ghost sm" data-act="codetpl" data-i="${i}">${t.label}</button>`)}</div></div>
     <p class="hint">玩家在游戏的「任务 → 礼包兑换」里输入就能领，要登录云端账号，每个号只领一次。码只存在服务器上，不在代码里。公开发出去的码，看到的人都能领，领满人数就停；只想给少数人的，用随机生成的码。</p>
     <div class="grid">
       <label class="f">兑换码（不填就随机生成）<input name="code" maxlength="20" placeholder="比如 SPRING2026" autocomplete="off" spellcheck="false"></label>
@@ -825,7 +934,7 @@ async function vCodes() {
   </form>
   <div class="card"><h2>建过的兑换码 <small>最近 50 个</small></h2>
     ${r.codes.length ? H`<div class="tw"><table><thead><tr><th>兑换码</th><th>说明</th><th>内容</th><th class="num">领了 / 最多</th><th>谁建的</th><th>建于</th><th>截止</th><th>状态</th><th></th></tr></thead><tbody>
-      ${r.codes.map(c => H`<tr><td class="mono nowrap">${c.code}</td><td class="mw">${c.note}</td><td class="mw">${giftText(c)}</td>
+      ${r.codes.map(c => H`<tr><td class="mono nowrap">${c.code} <button type="button" class="btn ghost sm" data-act="copy" data-v="${c.code}" style="padding:2px 6px;font-size:11px">复制</button></td><td class="mw">${c.note}</td><td class="mw">${giftText(c)}</td>
         <td class="num nowrap">${fmtN(c.got)} / ${fmtN(c.uses)}</td><td>${c.by}</td><td class="nowrap">${fmtT(c.at)}</td><td class="nowrap">${fmtT(c.until)}</td><td>${state(c)}</td>
         <td>${!c.off && c.until > now ? H`<button class="btn ghost sm" data-act="codeoff" data-code="${c.code}">停用…</button>` : ''}</td></tr>`)}
     </tbody></table></div>` : H`<p class="empty">还没建过兑换码</p>`}
@@ -893,19 +1002,33 @@ function cfgLive(f) {
   $('#cfgSave').disabled = !dirty;
 }
 
-/* ---------- 操作记录 ---------- */
+/* ---------- 操作记录与智能归档 ---------- */
+const AUDIT_FILTER_ACTS = ['admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel'];
 async function vAudit() {
-  const r = await api('audit');
-  return H`<div class="card"><h2>操作记录 <small>最近 100 条</small></h2>
-    <p class="hint">管理员做过的事：加减、封号、解封、发补偿、停发、改经济数值。每个号自己的流水在「玩家」里。</p>
+  const qs = (S.auditAct ? 'act=' + encodeURIComponent(S.auditAct) : '') + (S.auditBy ? (S.auditAct ? '&' : '') + 'by=' + encodeURIComponent(S.auditBy) : '');
+  const r = await api('audit' + (qs ? '?' + qs : ''));
+  return H`<div class="card">
+    <div class="row between wrap"><h2>操作记录与智能归档 <small>显示最近 ${r.rows.length} 条</small></h2>
+      <div class="row wrap" style="gap:6px">
+        <button class="btn ghost sm" data-act="auditcompact" data-mode="routine" title="将 1 天前的管理员登录、导出、错误清理等常规记录按日合并为结构化摘要">智能合并常规日志</button>
+        <button class="btn ghost sm" data-act="auditcompact" data-mode="all" title="将 7 天前的所有管理操作按日自动汇总为结构化变更摘要">归档 7 天前全部变更</button>
+      </div>
+    </div>
+    <form class="search" data-form="auditq">
+      <input name="by" value="${S.auditBy || ''}" placeholder="按管理员名字过滤（如 TestAdmin、even）" autocomplete="off" spellcheck="false">
+      <select name="act" aria-label="按动作过滤"><option value="">全部操作类型</option>${AUDIT_FILTER_ACTS.map(k => H`<option value="${k}"${k === S.auditAct ? ' selected' : ''}>${ACT[k] || k}</option>`)}</select>
+      <button class="btn">筛选</button>
+      ${(S.auditAct || S.auditBy) ? H`<button type="button" class="btn ghost sm" data-act="clearaudit">重置</button>` : ''}
+    </form>
+    <p class="hint">管理员做过的事：加减、封号、解封、发补偿、停发、改经济数值、清理数据。点「智能合并常规日志」可自动检测并将高频登录、导出等记录按天折叠为一条结构化摘要（adm_digest），保持审计表整洁清晰。</p>
     ${r.rows.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
-      ${r.rows.map(row => { const d = parse(row.detail) || {}; return H`<tr><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap">${ACT[row.act] || row.act}</td>
+      ${r.rows.map(row => { const d = parse(row.detail) || {}; return H`<tr class="${row.act === 'adm_digest' ? 'mod' : ''}"><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${row.act === 'adm_digest' ? ' gold' : ''}">${ACT[row.act] || row.act}</span></td>
         <td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || ''}</td></tr>`; })}
-    </tbody></table></div>` : H`<p class="empty">还没有管理员操作</p>`}
+    </tbody></table></div>` : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
   </div>`;
 }
 
-/* ---------- 错误 ---------- */
+/* ---------- 错误与清理 ---------- */
 const ERR_KIND = { client: '网页', server: '服务器', slow: '慢请求' };
 async function vErrors() {
   const kind = S.errKind || '';
@@ -914,14 +1037,79 @@ async function vErrors() {
     <div class="row wrap" style="gap:6px">${[['', '全部'], ...Object.entries(ERR_KIND)].map(([k, n]) => H`<button class="btn ghost sm" data-act="errkind" data-k="${k}" aria-pressed="${String(k === kind)}">${n}</button> `)}
       <button class="btn sm" data-act="exporterrs" data-fmt="json" title="导出单文件 JSON 错误诊断日志供 AI Agent 或开发组调试">导出调试日志 (JSON)</button>
       <button class="btn ghost sm" data-act="exporterrs" data-fmt="md" title="导出 Markdown 格式诊断报告">导出 Markdown</button>
+      ${r.rows.length ? H`<button class="btn ghost sm" data-act="errclean" data-k="${kind || 'all'}">清空${kind ? ERR_KIND[kind] : '全部'}错误…</button>` : ''}
     </div></div>
     <p class="hint">网页里没接住的错、服务器自己出的错、超过 1 秒的慢请求都记在这里（网址参数、邮箱、长串号码都已经去掉，不带账号）。点错误那一格看调用栈。
-      玩家报“服务器内部错误（编号 xxxx）”时，在「当时」那一列找 rid=xxxx。可点击「导出调试日志」将全量错误与调用栈导出为单文件，供 AI Agent 或开发者离线排查分析。</p>
-    ${r.rows.length ? H`<div class="tw"><table><thead><tr><th>最近一次</th><th>来源</th><th class="num">次数</th><th class="num">耗时</th><th>错误</th><th>位置</th><th>当时</th><th>第一次</th></tr></thead><tbody>
+      已修复的报错可点右侧「移除」单条删掉，或一键清空当前分类。</p>
+    ${r.rows.length ? H`<div class="tw"><table><thead><tr><th>最近一次</th><th>来源</th><th class="num">次数</th><th class="num">耗时</th><th>错误</th><th>位置</th><th>当时</th><th>第一次</th><th>操作</th></tr></thead><tbody>
       ${r.rows.map(e => { const m = parse(e.meta) || {}; return H`<tr><td class="nowrap">${fmtT(e.last_at)}</td><td class="nowrap">${ERR_KIND[e.kind] || e.kind}</td><td class="num">${e.n}</td>
         <td class="num">${e.ms ? H`最慢 ${e.ms}ms<br><small>平均 ${Math.round(e.ms_sum / e.n)}ms</small>` : '—'}</td><td class="err"><details><summary>${e.msg}</summary><pre>${e.stack || '（没有调用栈）'}</pre></details></td><td class="mono">${e.src || '—'}</td>
-        <td class="detail">${Object.entries(m).map(([k, v]) => k + '=' + v).join(' · ')}</td><td class="nowrap">${fmtT(e.first_at)}</td></tr>`; })}
+        <td class="detail">${Object.entries(m).map(([k, v]) => k + '=' + v).join(' · ')}</td><td class="nowrap">${fmtT(e.first_at)}</td>
+        <td class="nowrap"><button type="button" class="btn ghost sm" data-act="errdel" data-sig="${e.sig}" data-msg="${e.msg}">移除</button></td></tr>`; })}
     </tbody></table></div>` : H`<p class="empty">这段时间没有错误</p>`}
+  </div>`;
+}
+
+/* ---------- 世界监控与数据库维护 ---------- */
+const TABLE_DESC = {
+  users: '注册玩家账号', sessions: '活跃短效会话', devices: '登录设备与续期令牌', refresh_used: '已轮换续期令牌',
+  econ: '武库存档与墨锭账本', econ_nonce: '武库请求防重放编号', econ_log: '全服经济与管理流水', sanctions: '反作弊记过与封禁',
+  rate: '接口限流计数器', mkt: '玩家市场挂单与成交', gift: '全服/个人补偿包', gift_got: '玩家已领补偿记录',
+  code: '礼包兑换码', code_got: '玩家已兑礼包记录', cfg: '经济参数历史版本', presence: '实时在线心跳状态',
+  flags: '功能灰度开关', auth_log: '账号登录安全审计', admins: '后台管理员账号', admin_sessions: '后台登录会话',
+  errs: '客户端/服务端错误与慢请求', gboss: '全服天魔历代记录', gboss_hit: '天魔讨伐伤害榜', gboss_try: '天魔出战门票',
+  saga_mark: '侠客列传足迹统计', chron: '全服肉鸽长卷当前进度', chron_done: '长卷已通关节点', chron_part: '长卷玩家出力记录',
+  chron_claim: '长卷奖励领取记录', chron_rep: '分线上报去重凭证',
+};
+async function vMaint() {
+  const m = S.maint = await api('maint');
+  const b = (m.gboss && m.gboss.boss) || {};
+  const hpPct = b.maxHp ? Math.max(0, Math.min(100, Math.round((b.hp / b.maxHp) * 100))) : 0;
+  const cq = m.chron || {}, cs = cq.s || {}, cn = cq.curNode || {};
+  const cqPct = cs.need ? Math.max(0, Math.min(100, Math.round((cs.got / cs.need) * 100))) : 0;
+  const tables = Object.entries(m.tables || {});
+  const totalRows = tables.reduce((s, [, n]) => s + n, 0);
+  return H`<div class="card">
+    <div class="row between wrap"><h2>天魔讨伐 · 实时监控 <small>第 ${b.gen || 1} 代 · ${HERO[b.hero] || b.hero || '—'}</small></h2>
+      <div class="row wrap">
+        <button class="btn ghost sm" data-act="worldact" data-op="gboss_reroll">重随天魔词缀…</button>
+        <button class="btn ghost sm" data-act="worldact" data-op="gboss_next">结算并换下一代…</button>
+      </div>
+    </div>
+    <div class="tiles sm" style="margin-bottom:12px">
+      ${tile('当前血量', `${fmtN(b.hp || 0)} / ${fmtN(b.maxHp || 0)}`, `剩余 ${hpPct}%`)}
+      ${tile('词缀', (b.affix || []).join(', ') || '无', '当前天魔特性')}
+      ${tile('参战玩家', unit((m.gboss && m.gboss.players) || 0, '人'), `正在交战 ${(m.gboss && m.gboss.fighting) || 0} 人`)}
+      ${tile('历史已斩杀', unit((m.gboss && m.gboss.kills) || 0, '代'), `本代截止 ${fmtT(b.until)}`)}
+    </div>
+    <div class="pbar"><i style="width:${hpPct}%"></i></div>
+    <form class="row wrap" data-form="gbosshp" style="margin-top:12px">
+      <label class="f w120">设置当前血量<input type="number" name="hp" min="1" max="1000000" step="1000" value="${b.hp || 30000}"></label>
+      <button class="btn ghost sm" style="margin-top:18px">修改天魔血量…</button>
+    </form>
+  </div>
+  <div class="card">
+    <div class="row between wrap"><h2>全服肉鸽 · 江湖长卷进度 <small>第 ${(cs.node || 0) + 1} / ${cq.n || 1040} 节</small></h2>
+      <button class="btn ghost sm" data-act="worldact" data-op="chron_advance">强制完成并推进一节…</button>
+    </div>
+    <p class="hint" style="margin:4px 0 8px">${cn.t ? `当前章节目标：${cn.t}（${cn.line || ''}）｜ 奖励：${cn.ink || 0} 墨锭` : '全服共享剧情长卷'}</p>
+    <div class="row between" style="margin-bottom:6px"><span>当前进度：<b>${fmtN(cs.got || 0)} / ${fmtN(cs.need || 1)}</b>（目标类型：${cs.g || '—'}）</span><span>${cqPct}%</span></div>
+    <div class="pbar"><i style="width:${cqPct}%"></i></div>
+  </div>
+  <div class="card">
+    <div class="row between wrap"><h2>D1 数据库健康与历史清理 <small>共 ${tables.length} 张表 · 合计 ${fmtN(totalRows)} 行</small></h2>
+      <div class="row wrap" style="gap:6px">
+        <button class="btn sm" data-act="maintprune" data-t="expired">一键清理所有过期缓存…</button>
+        <button class="btn ghost sm" data-act="maintprune" data-t="econ_nonce">清空防重放表 (econ_nonce)…</button>
+        <button class="btn ghost sm" data-act="maintprune" data-t="rate">清空限速计数表 (rate)…</button>
+        <button class="btn ghost sm" data-act="maintprune" data-t="econ_log_player_30d">清理 30 天前普通同步流水…</button>
+        <button class="btn ghost sm" data-act="maintprune" data-t="auth_log_30d">清理 30 天前登录记录…</button>
+      </div>
+    </div>
+    <p class="hint">实时统计 Cloudflare D1 各业务表行数，可随时释放过期会话、防重放凭证、限流计数以及陈旧流水占用的空间。</p>
+    <div class="tw"><table><thead><tr><th>数据表名</th><th>用途说明</th><th class="num">当前行数</th></tr></thead><tbody>
+      ${tables.map(([k, n]) => H`<tr><td class="mono">${k}</td><td>${TABLE_DESC[k] || '业务表'}</td><td class="num"><b>${fmtN(n)}</b></td></tr>`)}
+    </tbody></table></div>
   </div>`;
 }
 
@@ -942,7 +1130,6 @@ async function vAuth() {
   </div>`;
 }
 
-/* ---------- 换页 ---------- */
 /* ---------- 功能开关 ---------- */
 async function vFlags() {
   const r = await api('flags');
@@ -1012,7 +1199,7 @@ function drawCodeGives() {
   if (el) paint(el, S.codeSkins.map((g, i) => H`<span class="chip">${itemName(g.k)}（${heroOf(g.k)}）${g.st >= 0 ? ' 斩数 ' + g.st : ''}<button type="button" data-act="delcodegive" data-i="${i}" aria-label="去掉">×</button></span>`));
 }
 
-const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
 const AFTER = { players: drawGives, gifts: drawGiftGives, codes: drawCodeGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 async function render() {
   const main = $('#main'), seq = ++S.seq, tab = S.tab;
@@ -1042,12 +1229,86 @@ function go(tab, uid) {
 }
 window.addEventListener('hashchange', () => { if (S.who) route(); });
 
+/* ---------- ⌘K 全局快捷命令面板 ---------- */
+const CMD_LIST = [
+  { label: '跳转到：总览看板', hint: '#home', run: () => go('home') },
+  { label: '跳转到：玩家管理与多列排序', hint: '#players', run: () => go('players') },
+  { label: '跳转到：玩家 → 财富榜 Top', hint: 'filter:wealth', run: () => { S.pFilter = 'wealth'; S.pOffset = 0; go('players'); } },
+  { label: '跳转到：玩家 → 有反作弊记过 (strikes > 0)', hint: 'filter:flagged', run: () => { S.pFilter = 'flagged'; S.pOffset = 0; go('players'); } },
+  { label: '跳转到：玩家 → 24h 活跃玩家', hint: 'filter:active24h', run: () => { S.pFilter = 'active24h'; S.pOffset = 0; go('players'); } },
+  { label: '跳转到：发补偿（含快捷模板）', hint: '#gifts', run: () => go('gifts') },
+  { label: '跳转到：兑换码（含快捷模板）', hint: '#codes', run: () => go('codes') },
+  { label: '跳转到：经济数值配置', hint: '#cfg', run: () => go('cfg') },
+  { label: '跳转到：功能开关 (Feature Flags)', hint: '#flags', run: () => go('flags') },
+  { label: '跳转到：世界共斗与数据库维护', hint: '#maint', run: () => go('maint') },
+  { label: '跳转到：登录记录', hint: '#auth', run: () => go('auth') },
+  { label: '跳转到：操作记录与智能归档', hint: '#audit', run: () => go('audit') },
+  { label: '跳转到：错误日志与 AI 诊断导出', hint: '#errors', run: () => go('errors') },
+  { label: '打开 Dev 开发者测试账号', hint: 'player:Dev', run: () => go('players', 'Dev') },
+];
+function openCmdPalette() {
+  if (!S.who) return;
+  const d = $('#cmdDlg');
+  paint(d, H`<div class="dlg-b">
+    <h3>⌘K 快捷命令与跳转</h3>
+    <label class="f">输入功能名称，或直接输入「玩家名字 / UID」按回车直达<input id="cmdIn" placeholder="例如：维护、错误、财富榜、或者输入玩家名字…" autocomplete="off"></label>
+    <div id="cmdItems" class="cmd-list"></div>
+  </div>
+  <div class="dlg-f"><button type="button" class="btn ghost sm" id="cmdClose">关闭 (Esc)</button></div>`);
+  const input = $('#cmdIn', d), box = $('#cmdItems', d);
+  const drawList = () => {
+    const q = input.value.trim().toLowerCase();
+    const matches = CMD_LIST.filter(c => !q || c.label.toLowerCase().includes(q) || c.hint.toLowerCase().includes(q));
+    const rows = matches.map(c => H`<button type="button" class="cmd-item" data-cidx="${CMD_LIST.indexOf(c)}"><span>${c.label}</span><small class="mono">${c.hint}</small></button>`);
+    if (q) {
+      rows.unshift(H`<button type="button" class="cmd-item" data-search-q="${input.value.trim()}"><span>🔍 搜索玩家：「<b>${input.value.trim()}</b>」</span><small class="mono">回车直达</small></button>`);
+    }
+    paint(box, rows.length ? rows : H`<p class="empty">无匹配命令</p>`);
+  };
+  drawList();
+  input.oninput = drawList;
+  input.onkeydown = e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const first = box.querySelector('.cmd-item');
+      if (first) first.click();
+    }
+  };
+  box.onclick = e => {
+    const btn = e.target.closest('.cmd-item');
+    if (!btn) return;
+    d.close();
+    if (btn.dataset.cidx !== undefined) {
+      const c = CMD_LIST[+btn.dataset.cidx];
+      if (c) c.run();
+    } else {
+      S.q = input.value.trim();
+      S.pFilter = '';
+      S.pOffset = 0;
+      go('players');
+    }
+  };
+  $('#cmdClose', d).onclick = () => d.close();
+  d.onclick = e => { if (e.target === d) d.close(); };
+  d.showModal();
+  input.focus();
+}
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    if (!S.who) return;
+    e.preventDefault();
+    const d = $('#cmdDlg');
+    if (d && d.open) d.close(); else openCmdPalette();
+  }
+});
+
 /* ---------- 按钮 ---------- */
 const ACTS = {
   tab: b => go(b.dataset.tab),
   open: b => go('players', b.dataset.uid),
   back: () => go('players'),
   reload: () => render(),
+  cmdk: () => openCmdPalette(),
   errkind: b => { S.errKind = b.dataset.k; render(); },
   exporterrs: b => busy(b, async () => {
     const fmt = b.dataset.fmt || 'json';
@@ -1064,6 +1325,23 @@ const ACTS = {
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     toast('已导出错误调试文件：' + name);
   }),
+  errdel: async b => {
+    const sig = b.dataset.sig;
+    const a = await ask({ title: '清除该条错误记录', lines: ['签名：' + sig, '若该问题已修复，清除后可观察是否还会再次触发'], whyInit: '已修复，清除旧报错', ok: '清除', danger: true });
+    if (a) await busy(b, async () => { const r = await api('errors/delete', { sig, why: a.why }); toast('已清除 ' + fmtN(r.deleted || 0) + ' 条错误'); render(); });
+  },
+  errclean: async b => {
+    const days = +b.dataset.days || 0;
+    const rawK = b.dataset.k !== undefined ? b.dataset.k : (S.errKind || '');
+    const kind = rawK === 'all' ? '' : rawK;
+    const all = b.dataset.all === '1' || b.dataset.k !== undefined;
+    const a = await ask({
+      title: all ? (kind ? '清空「' + (ERR_KIND[kind] || kind) + '」全部错误' : '清空全部错误记录') : '清理 ' + days + ' 天前的旧错误',
+      lines: [all ? '将删除当前筛选范围内的所有错误记录' : '将删除最后发生时间早于 ' + days + ' 天前的错误记录'],
+      whyInit: '清理历史错误日志', ok: '确认清理', danger: true
+    });
+    if (a) await busy(b, async () => { const r = await api('errors/delete', { olderThanDays: days, all, kind, why: a.why }); toast('已清理 ' + fmtN(r.deleted || 0) + ' 条错误记录'); render(); });
+  },
   logout: () => { api('logout', {}).catch(() => {}); logout(); },
   renew: b => busy(b, async () => {
     const r = await api('refresh', {});
@@ -1093,6 +1371,13 @@ const ACTS = {
     S.pOffset = 0;
     render();
   },
+  psort: b => {
+    const s = b.dataset.sort;
+    if (S.pSort === s) S.pDir = S.pDir === 'asc' ? 'desc' : 'asc';
+    else { S.pSort = s; S.pDir = s === 'username' ? 'asc' : 'desc'; }
+    S.pOffset = 0;
+    render();
+  },
   clearsearch: () => {
     S.q = '';
     S.pOffset = 0;
@@ -1101,6 +1386,30 @@ const ACTS = {
   page: b => {
     S.pOffset = Math.max(0, S.pOffset + (+b.dataset.dir) * S.pLimit);
     render();
+  },
+  gifttpl: b => {
+    const tpl = GIFT_TPLS[+b.dataset.i], f = $('form[data-form=gift]');
+    if (!tpl || !f) return;
+    f.elements.ink.value = tpl.ink || 0;
+    f.elements.term.value = tpl.term || 0;
+    f.elements.tags.value = tpl.tags || 0;
+    f.elements.days.value = tpl.days || 14;
+    f.elements.note.value = tpl.note || '';
+    for (const c of CAT.caseIds) if (f.elements['gc_' + c]) f.elements['gc_' + c].value = (tpl.cases && tpl.cases[c]) || tpl[c] || 0;
+    toast('已填入模板：' + tpl.label);
+  },
+  codetpl: b => {
+    const tpl = CODE_TPLS[+b.dataset.i], f = $('form[data-form=code]');
+    if (!tpl || !f) return;
+    f.elements.code.value = tpl.code || '';
+    f.elements.ink.value = tpl.ink || 0;
+    f.elements.term.value = tpl.term || 0;
+    f.elements.tags.value = tpl.tags || 0;
+    f.elements.uses.value = tpl.uses || 100;
+    f.elements.days.value = tpl.days || 14;
+    f.elements.note.value = tpl.note || '';
+    for (const c of CAT.caseIds) if (f.elements['cc_' + c]) f.elements['cc_' + c].value = (tpl.cases && tpl.cases[c]) || tpl[c] || 0;
+    toast('已填入模板：' + tpl.label);
   },
   addgiftgive: () => {
     const f = $('form[data-form=gift]'), k = f.elements.gk.value;
@@ -1145,6 +1454,81 @@ const ACTS = {
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     toast('导出好了：' + name);
   }),
+  exportplayer: b => busy(b, async () => {
+    const uid = S.p && S.p.uid;
+    if (!uid) return;
+    let r;
+    try { r = await fetch('/api/admin/player/export?uid=' + encodeURIComponent(uid), { headers: { Authorization: 'Bearer ' + S.tok }, cache: 'no-store' }); }
+    catch (e) { throw new Error('连不上服务器，检查一下网络'); }
+    if (r.status === 401) { logout('管理登录过期了，请重新登录'); return; }
+    if (!r.ok) { let j = {}; try { j = await r.json(); } catch (e) {} throw new Error(j.error || '出错了（' + r.status + '）'); }
+    const name = (/filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '') || [])[1] || ('renying-player-' + uid + '.json');
+    const url = URL.createObjectURL(await r.blob()), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast('已导出玩家完整快照：' + name);
+  }),
+  dropdev: async b => {
+    const p = S.p, dev = b.dataset.dev || 'all';
+    const a = await ask({
+      title: dev === 'all' ? '强制踢下全部设备' : '强制下线设备 ' + dev,
+      lines: ['目标玩家：' + p.username, dev === 'all' ? '将清除该玩家所有设备会话与旧版 Token，需重新密码登录' : '将移除设备 ' + dev + ' 的登录会话'],
+      whyInit: '安全协助下线设备', ok: '强制下线', danger: true
+    });
+    if (a) await busy(b, async () => { await api('player/devices/drop', { uid: p.uid, dev, why: a.why }); toast('已强制下线'); render(); });
+  },
+  clearhist: async b => {
+    const p = S.p, kind = b.dataset.kind || b.dataset.k;
+    const label = kind === 'sanctions' ? '处罚与记过记录' : kind === 'econ_log' ? '个人经济流水' : '个人登录日志';
+    const a = await ask({
+      title: '清理 ' + p.username + ' 的' + label,
+      lines: ['只清理历史流水或反作弊记过，不影响玩家当前墨锭与库存存档', '本次清理操作本身会记入后台审计流水'],
+      whyInit: '清理测试/误报历史记录', ok: '确认清理', danger: true
+    });
+    if (a) await busy(b, async () => { const r = await api('player/clear-history', { uid: p.uid, kind, why: a.why }); toast('已清理 ' + fmtN(r.deleted || 0) + ' 条记录'); render(); });
+  },
+  mktcancel: async b => {
+    const p = S.p, id = b.dataset.id;
+    const a = await ask({
+      title: '强制撤下市场挂单 #' + String(id).slice(0, 8),
+      lines: ['卖家：' + p.username, '撤单后玩家打开武库同步时会自动领回该饰品'],
+      whyInit: '违规标价/协助撤单', ok: '强制撤单', danger: true
+    });
+    if (a) await busy(b, async () => { await api('mkt/cancel', { id, why: a.why }); toast('已撤下挂单'); render(); });
+  },
+  clearaudit: () => { S.auditAct = ''; S.auditBy = ''; render(); },
+  auditcompact: async b => {
+    const mode = b.dataset.mode || '';
+    const days = b.dataset.days !== undefined ? +b.dataset.days : (mode === 'all' ? 7 : mode === 'routine' ? 1 : 0);
+    const a = await ask({
+      title: days > 0 ? '智能归档 ' + days + ' 天前的管理操作记录' : '按天智能归档全部历史管理记录',
+      lines: [
+        '系统会自动按天检测并统计管理员分布、操作类型次数、净墨锭变动及关键操作摘要，合并为一条「智能归档摘要 (adm_digest)」',
+        '合并后原始零散记录将被折叠移除，大幅精简审计表体积'
+      ],
+      whyInit: '定期智能归档管理员流水', ok: '执行归档'
+    });
+    if (a) await busy(b, async () => {
+      const r = await api('audit/compact', { olderThanDays: days, mode, why: a.why });
+      toast(r.compacted ? '已将 ' + fmtN(r.compacted) + ' 条记录智能归档为 ' + (r.days || r.digests || 1) + ' 条每日摘要' : (r.msg || '暂无需要归档的多余记录'));
+      render();
+    });
+  },
+  worldact: async b => {
+    const op = b.dataset.op;
+    const label = op === 'gboss_reroll' ? '重随全服天魔词缀' : op === 'gboss_next' ? '直接讨伐进入下一代天魔' : '推进全服岁史至下一节点';
+    const a = await ask({ title: label, lines: ['此操作将直接改变全服共斗/岁史实时状态'], whyInit: label, ok: '执行', danger: op === 'gboss_next' });
+    if (a) await busy(b, async () => { await api('world/act', { op, why: a.why }); toast('已执行：' + label); render(); });
+  },
+  maintprune: async b => {
+    const target = b.dataset.target || b.dataset.t;
+    const a = await ask({
+      title: '数据库清理 (' + target + ')',
+      lines: ['清理过期缓存、旧防重号或 30 天前的普通玩家流水/登录日志，释放 D1 存储空间'],
+      whyInit: '例行数据库巡检清理', ok: '执行清理', danger: true
+    });
+    if (a) await busy(b, async () => { const r = await api('maint/prune', { target, why: a.why }); toast('清理完成，共移除 ' + fmtN(r.deleted || 0) + ' 行'); render(); });
+  },
   admedit: b => { S.admEdit = b.dataset.name; render(); },
   admnew: () => { S.admEdit = ''; render(); },
   copy: b => { if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.v).then(() => toast('复制好了'), () => toast('复制不了，手动选一下吧', true)); },
@@ -1252,6 +1636,13 @@ const FORMS = {
   },
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); S.pOffset = 0; render(); },
   authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
+  auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); render(); },
+  gbosshp: async f => {
+    const hp = numIn(f, 'hp'), maxHp = numIn(f, 'maxHp');
+    if (!Number.isInteger(hp) || hp < 0) return toast('血量要填非负整数', true);
+    const a = await ask({ title: '调整全服天魔血量', lines: ['当前血量设为：' + fmtN(hp) + (maxHp > 0 ? '，上限设为：' + fmtN(maxHp) : '')], whyInit: '调试/活动调整天魔血量', ok: '保存' });
+    if (a) await busy(submitBtn(f), async () => { await api('world/act', { op: 'gboss_hp', hp, maxHp: maxHp > 0 ? maxHp : undefined, why: a.why }); toast('天魔血量已更新'); render(); });
+  },
   adjust: async f => {
     const p = S.p, e = p.econ, s = (e && e.state) || {}, cases = s.cases || {}, inv = s.inv || [];
     const body = { uid: p.uid, ink: numIn(f, 'ink'), cases: {}, term: numIn(f, 'term'), tags: numIn(f, 'tags'), give: S.give.slice(),
