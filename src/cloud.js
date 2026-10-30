@@ -14,6 +14,9 @@
       const saved = localStorage.getItem('renying-cloud-endpoint');
       if (saved) return String(saved).replace(/\/+$/, '');
     } catch (e) {}
+    if (typeof window !== 'undefined' && window.location && window.location.origin) {
+      if (/\.workers\.dev$/i.test(window.location.hostname)) return window.location.origin;
+    }
     return DEFAULT_ENDPOINT;
   }
 
@@ -687,8 +690,19 @@
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...(options.headers || {})
     };
-    const res = await fetch(url, { ...options, headers });
-    const data = await res.json().catch(() => ({}));
+    let res, data = {};
+    try {
+      res = await fetch(url, { ...options, headers });
+      data = await res.json().catch(() => ({}));
+    } catch (netErr) {
+      const msg = netErr && netErr.message ? String(netErr.message) : '';
+      const isFetchErr = netErr && (netErr.name === 'TypeError' || /failed to fetch|network|load failed/i.test(msg));
+      const err = new Error(isFetchErr ? '无法连接到云端服务器，请检查网络连接或接口配置' : (msg || '网络请求失败'));
+      err.status = 0;
+      err.isNetwork = true;
+      err.cause = netErr;
+      throw err;
+    }
     // 401：token 过期了。有 refresh 就换一次再试一次
     if (res.status === 401 && authed && token && !retried && !options.keepalive && getRefresh() && await refreshNow(true, token)) return api(path, options, true);
     // 要人机验证（注册、输错几次后的登录）：弹框，过了带上结果重发一次

@@ -326,7 +326,8 @@ async function doAcc(kind) {
     $id('accPass').value = '';
     backToMenu();
   } catch (err) {
-    $id('accMsg').textContent = err.message;
+    const isFetch = err && (err.isNetwork || /failed to fetch|network|load failed/i.test(err.message));
+    $id('accMsg').textContent = isFetch ? '无法连接到云端服务器，请检查网络或稍后重试' : (err.message || '操作失败');
   }
 }
 $id('loginBtn').addEventListener('click', () => doAcc('login'));
