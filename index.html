@@ -33061,6 +33061,7 @@ if (!m || !m.n) return `现在没人在卖${m && m.last ? ` · 最近成交 ${in
 return `在卖 ${m.n} 件，最低 ${ink(m.lo)}${m.last ? ` · 最近成交 ${ink(m.last)}` : ''}`;
 }
 function insInfo() {
+if (!INS || !INS.it) return;
 const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i);
 const worn = own && ST.eq[C.charOf(it.k)] === it.i, can = live(), mk = MODE === 'server';
 const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '汰换合同', supply: '每周补给', op: '江湖行动', term: '终端机' }[it.src] || '';
@@ -33080,8 +33081,8 @@ async function insAction(a) {
 const it = INS && INS.it; if (!it) return;
 if (a === 'close') { closeIns(); return; }
 if (a === 'market') { closeIns(); marketItem(it.k); return; }
-if (a === 'equip') { const r = await act('equip', { i: it.i }); if (r && r.ok) { SFX.slice && SFX.slice(); toast(`已穿上「${skinName(it.k)}」`); insInfo(); render(); } return; }
-if (a === 'unequip') { const r = await act('unequip', { char: C.charOf(it.k) }); if (r && r.ok) { insInfo(); render(); } return; }
+if (a === 'equip') { const r = await act('equip', { i: it.i }); if (r && r.ok) { SFX.slice && SFX.slice(); toast(`已穿上「${skinName(it.k)}」`); if (INS) insInfo(); render(); } return; }
+if (a === 'unequip') { const r = await act('unequip', { char: C.charOf(it.k) }); if (r && r.ok) { if (INS) insInfo(); render(); } return; }
 if (a === 'list') { listBox(it); return; }
 if (a === 'rename') renameBox(it);
 }
@@ -33092,7 +33093,7 @@ modal(`<h3>改名标签</h3><p>给「${escapeHTML(itemName(it))}」起个名字�
 <div class="row">${ST.tags < 1 ? `<button class="ghost small" id="arTagBuy" ${tl ? '' : 'disabled'}>${tl ? `买一张标签 ${ink(C.STORE[0].cost)}` : '本周的标签买满了'}</button>` : ''}<button class="go small" id="arNameGo">确定</button><button class="ghost small" data-ar-close>取消</button></div>`);
 $id('arName').addEventListener('keydown', e => { if (e.key !== 'Escape') e.stopPropagation(); });
 if ($id('arTagBuy')) $id('arTagBuy').addEventListener('click', async () => { const name = $id('arName').value; if (await buyTag()) { renameBox(it); $id('arName').value = name; } });
-$id('arNameGo').addEventListener('click', async () => { const r = await act('rename', { i: it.i, name: $id('arName').value }); if (r && r.ok) { closeModal(); INS.it = ST.inv.find(x => x.i === it.i) || it; insInfo(); render(); } });
+$id('arNameGo').addEventListener('click', async () => { const r = await act('rename', { i: it.i, name: $id('arName').value }); if (r && r.ok) { closeModal(); if (INS) { INS.it = ST.inv.find(x => x.i === it.i) || it; insInfo(); } render(); } });
 }
 async function buyTag() { const r = await act('store', { id: 'tag' }); if (r && r.ok) { SFX.wood && SFX.wood(); toast('改名标签 +1'); render(); return true; } return false; }
 function listBox(it) {   // 挂到玩家市场：卖多少自己定（默认比现在最低的便宜 1，没人卖就按最近成交价）
