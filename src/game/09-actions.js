@@ -613,6 +613,7 @@ function tryEscape(f, foe) {
     f.escInvul = true; f.escMode = 'hover'; f.escT = 0; f.invul = f.airHover;
     f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
     f.airRecover = false;   // 腾空闪接管这次下落：不然落地会走受身那条路，腾空闪的无敌不会结束
+    f.beaconT = 0.5;
     delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;
     comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
     if (scOn()) scFire(f, 'esc', foe, true);
@@ -634,6 +635,7 @@ function tryEscape(f, foe) {
   f.escInvul = true; f.escMode = 'rise'; f.escT = 0; f.invul = 99;
   f.juggle = 0; f.comboHits = 0; f.spiked = false; f.bounced = false; f.jumps = 1; f.rot = 0; f.armorT = 0;
   f.airRecover = false;
+  f.beaconT = 0.5;
   delete f.ctrl.buf.light; delete f.ctrl.buf.heavy; f.ctrl.atkT = clock + 1e6;   // 松开左键前不会开始蓄力
   comboUI[foe.idx].t = Math.min(comboUI[foe.idx].t, 0.3);
   if (scOn()) scFire(f, 'esc', foe, false);
@@ -882,6 +884,7 @@ function updateFighter(f, foe) {
   }
   if (f.state !== 'special') f.invul = Math.max(0, f.invul - STEP);
   f.flash = Math.max(0, f.flash - STEP);
+  if (f.beaconT > 0) f.beaconT = Math.max(0, f.beaconT - STEP);
   switch (f.state) {
     case 'idle': case 'walk': case 'air': case 'block': neutral(f, foe); break;
     case 'attack': attackUpdate(f, foe); break;
@@ -934,6 +937,7 @@ function updateFighter(f, foe) {
         f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
         if (f.quickGetup) f.quickGetupPhase = true;
         f.quickGetup = false; delete f.knockdownDur;
+        f.beaconT = 0.5;
       }
       break;
     }
@@ -1051,6 +1055,7 @@ function onLand(f) {
   if (f.airRecover) {
     f.airRecover = false;
     f.state = 'getup'; f.t = 0.15; f.vx *= 0.2; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
+    f.beaconT = 0.5;
     dust(f.x, 0, 10); SFX.land();
     return;
   }
@@ -1069,6 +1074,7 @@ function onLand(f) {
       const dir = (c.held && (c.held.left ? -1 : (c.held.right ? 1 : 0))) || -f.face;
       f.state = 'dash'; f.t = 0; f.face = -dir; f.vx = dir * 560;
       f.invul = 0.28; f.comboHits = 0; f.juggle = 0;
+      f.beaconT = 0.5;
       dust(f.x, 0, 12); SFX.dash();
       addP({ type: 'text', text: '受身', x: f.x, y: f.y - 70, life: 0.55, max: 0.55, rgb: '170,230,255' });
       return;
