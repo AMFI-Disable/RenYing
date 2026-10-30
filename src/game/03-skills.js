@@ -2,6 +2,8 @@
 // 每个技能：cd 冷却，start 开始时，update 每一帧，pose 用哪个姿势，ai 电脑什么时候用
 // 凌雀「移形换影」的追踪：大幅提升飞行速度、漂移回拉最大距离与转向灵敏度
 const SD_SPD = 2350, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
+// 迂回：第一次近身从对手头顶翻过去（横向速度、起跳速度、下落加速度），对手身后至少要留这么多地方
+const SD_OVER_VX = 1450, SD_OVER_VY = -950, SD_OVER_G = 3800, SD_OVER_ROOM = 170;
 function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
   if (typeof is2v2 === 'function' && is2v2()) {
     let best = null, bd = Infinity;
@@ -502,7 +504,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
-  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不命中而是凌空漂移回拉（大幅提升最大漂移距离），随后不绝追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
+  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
       f.sdTrack = false;
@@ -511,6 +513,7 @@ const SKILLS = {
       f.sdDriftT = 0;
       f.sdDriftDist = 0;
       f.sdDriftDir = 0;
+      f.sdOver = false;
     },
     update(f, foe) {
       const target = sdTarget(f, foe);
@@ -547,14 +550,16 @@ const SKILLS = {
 
         const dFoe = target ? Math.hypot(target.x - f.x, (target.y - 50) - (f.y - 50)) : Infinity;
 
-        // 第一次不命中对手，而是向后凌空漂移回拉（大幅提升最大漂移距离）
+        // 第一次近身不刺，迂回：从对手头顶翻到他身后再扑下来（身后贴墙没地方就照旧往回漂移）
         if (!f.sdDrifted && !f.sdDrifting && target && (dFoe <= 125 || Math.abs(target.x - f.x) <= 85)) {
+          const over = f.x < target.x ? 1 : -1, room = over > 0 ? STAGE_W - WALL - target.x : target.x - WALL;
           f.sdDrifting = true;
           f.sdDriftT = 0;
           f.sdDriftDist = 0;
-          f.sdDriftDir = f.x < target.x ? -1 : 1;
-          f.vx = f.sdDriftDir * SD_DRIFT_SPD;
-          f.vy = Math.min(f.vy, -160);
+          f.sdOver = room > SD_OVER_ROOM;
+          f.sdDriftDir = f.sdOver ? over : -over;
+          f.vx = f.sdDriftDir * (f.sdOver ? SD_OVER_VX : SD_DRIFT_SPD);
+          f.vy = f.sdOver ? SD_OVER_VY : Math.min(f.vy, -160);
           f.invul = Math.max(f.invul, 0.15);
           SFX.dash();
           if (!RESIM) {
@@ -568,8 +573,8 @@ const SKILLS = {
         if (f.sdDrifting) {
           f.sdDriftT += STEP;
           f.sdDriftDist += Math.abs(f.vx) * STEP;
-          f.vx = damp(f.vx, f.sdDriftDir * SD_DRIFT_SPD * 0.45, 7, STEP);
-          f.vy = damp(f.vy, -100, 8, STEP);
+          if (f.sdOver) f.vy += SD_OVER_G * STEP;   // 翻过头顶的弧线
+          else { f.vx = damp(f.vx, f.sdDriftDir * SD_DRIFT_SPD * 0.45, 7, STEP); f.vy = damp(f.vy, -100, 8, STEP); }
           if (f.y >= 0 && f.vy > 0) f.vy = 0;
           if (target) f.face = target.x >= f.x ? 1 : -1;
           if (!RESIM && Math.random() < 0.6) {
