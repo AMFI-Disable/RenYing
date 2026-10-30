@@ -1542,6 +1542,39 @@ const testSuite = [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'QingFeng and FeiYing ultimate travel distance (1.25x) and FeiYing aerial tracking',
+    fn: `(() => {
+      // 1. 青锋残月：突进速度 1750，总突进距离达到原版（280px）的 1.25 倍（约 350px）
+      startMatch('train', 'stand', [CHAR_IDX.qingfeng, CHAR_IDX.tieshan]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      toNeutral(A); toNeutral(B);
+      A.x = 200; A.y = 0; A.face = 1; B.x = 2000; B.y = 0;
+      A.meter = 100; startSpecial(A);
+      const qfStart = A.x;
+      for (let i = 0; i < 150 && A.state === 'special'; i++) step();
+      const qfDist = A.x - qfStart;
+      if (qfDist < 340 || qfDist > 365) { toMenu(); return { pass: false, error: 'QingFeng ult travel distance should be ~350px (1.25x of 280px), got ' + Math.round(qfDist) }; }
+      toMenu();
+
+      // 2. 绯影千影：空中追猎——对手在空中且在突进射程内（如 332px），绯影腾空追猎并触发千影
+      startMatch('train', 'stand', [CHAR_IDX.feiying, CHAR_IDX.tieshan]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      toNeutral(A); toNeutral(B);
+      A.x = 300; A.y = 0; A.face = 1;
+      B.x = 580; B.y = -180; B.state = 'launched'; B.invul = 0; B.vy = 0;
+      A.meter = 100; startSpecial(A);
+      let trackedAir = false;
+      for (let i = 0; i < 150 && A.state === 'special' && A.sp !== 'flurry'; i++) {
+        if (A.vy < -200 && A.y < -30) trackedAir = true;
+        step();
+      }
+      if (!trackedAir) { toMenu(); return { pass: false, error: 'FeiYing ult should track upward towards airborne opponent' }; }
+      if (A.sp !== 'flurry') { toMenu(); return { pass: false, error: 'FeiYing ult should reach airborne opponent and enter flurry, got ' + A.sp }; }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];
 

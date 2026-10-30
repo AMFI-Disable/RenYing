@@ -203,22 +203,60 @@ function specialUpdate(f, foe) {
   if (f.sp === 'charge') {
     if (t >= 0.42) {
       f.t = 0;
-      if (U.flurry) { f.sp = 'dash'; f.vx = 1400 * f.face; SFX.dash(); }
+      if (U.flurry) {
+        f.sp = 'dash';
+        const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
+        f.vx = spd * f.face;
+        f.vy = 0;
+        if (f.ch.ult === 'shadows' || U.airTrack) {
+          const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
+          const maxDist = spd * (U.dashT || 0.28);
+          const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
+          const dist = Math.hypot(dx, dy);
+          if (inAir && dist <= maxDist) {
+            f.face = dx >= 0 ? 1 : -1;
+            f.vx = (dx / Math.max(1, dist)) * spd;
+            f.vy = (dy / Math.max(1, dist)) * spd;
+          }
+        }
+        SFX.dash();
+      }
       else U.begin(f, foe);
     }
     return;
   }
   if (!U.flurry) { U.update(f, foe); return; }
   const victim = (f.flurryVictim && !f.flurryVictim.hidden && f.flurryVictim.hp > 0) ? f.flurryVictim : foe;
+  const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
+  const dashT = U.dashT || 0.28;
+  const maxDist = spd * dashT;
   if (f.sp === 'dash') {
-    if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * 1400, 10, STEP);   // 冲刺朝对手拐
-    if (!isClient() && foe.hp > 0 && foe.invul <= 0 && overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe))) {
-      f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.flurryVictim = foe;
+    const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
+    if (f.ch.ult === 'shadows' || U.airTrack) {
+      const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
+      const dist = Math.hypot(dx, dy);
+      if (inAir && dist <= maxDist) {
+        f.face = dx >= 0 ? 1 : -1;
+        f.vx = damp(f.vx, (dx / Math.max(1, dist)) * spd, 14, STEP);
+        f.vy = damp(f.vy, (dy / Math.max(1, dist)) * spd, 14, STEP);
+        if (Math.random() < 0.4) smoke(f.x, f.y - 30, 4);
+      } else {
+        if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
+        f.vy = damp(f.vy, 0, 10, STEP);
+      }
+    } else {
+      if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
+    }
+    const hitAir = (f.ch.ult === 'shadows' || U.airTrack) && inAir && Math.hypot(foe.x - f.x, (foe.y - 35) - f.y) <= 120;
+    const hit = overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe)) || hitAir;
+    if (!isClient() && foe.hp > 0 && foe.invul <= 0 && hit) {
+      f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.vy = 0; f.flurryVictim = foe;
       foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
       const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
       hitVisual(ev); netEmit(ev);
-    } else if (t >= 0.28) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
+    } else if (t >= dashT) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; f.vy = 0; }
   } else if (f.sp === 'miss') {
+    if (f.y < 0) { f.vy += GRAV * STEP; if (f.y + f.vy * STEP >= 0) { f.y = 0; f.vy = 0; } }
     if (t >= 0.42) { f.invul = 0; toNeutral(f); }
   } else if (f.sp === 'flurry') {
     const n = Math.floor(t / U.iv);

@@ -11907,8 +11907,8 @@ ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinus
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 const ULTS = {
-crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, desc: '纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
-shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, desc: '结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
+crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, dashSpd: 1750, dashT: 0.28, desc: '纳刀起手，一记居合突刺撕开战局（突进距离提升至 1.25 倍）；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
+shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, dashSpd: 1750, dashT: 0.28, airTrack: true, desc: '结印潜入暗影，贴地瞬步欺身而入（突进距离提升至 1.25 倍；若对手身处空中且在突进射程内，化为暗影腾空追猎）；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
 avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
 begin(f, foe) {
 f.sp = 'leap'; f.vy = -1050; f.y = -1;
@@ -14532,22 +14532,60 @@ const t = f.t, U = ULTS[f.ch.ult];
 if (f.sp === 'charge') {
 if (t >= 0.42) {
 f.t = 0;
-if (U.flurry) { f.sp = 'dash'; f.vx = 1400 * f.face; SFX.dash(); }
+if (U.flurry) {
+f.sp = 'dash';
+const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
+f.vx = spd * f.face;
+f.vy = 0;
+if (f.ch.ult === 'shadows' || U.airTrack) {
+const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
+const maxDist = spd * (U.dashT || 0.28);
+const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
+const dist = Math.hypot(dx, dy);
+if (inAir && dist <= maxDist) {
+f.face = dx >= 0 ? 1 : -1;
+f.vx = (dx / Math.max(1, dist)) * spd;
+f.vy = (dy / Math.max(1, dist)) * spd;
+}
+}
+SFX.dash();
+}
 else U.begin(f, foe);
 }
 return;
 }
 if (!U.flurry) { U.update(f, foe); return; }
 const victim = (f.flurryVictim && !f.flurryVictim.hidden && f.flurryVictim.hp > 0) ? f.flurryVictim : foe;
+const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
+const dashT = U.dashT || 0.28;
+const maxDist = spd * dashT;
 if (f.sp === 'dash') {
-if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * 1400, 10, STEP);   // 冲刺朝对手拐
-if (!isClient() && foe.hp > 0 && foe.invul <= 0 && overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe))) {
-f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.flurryVictim = foe;
+const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
+if (f.ch.ult === 'shadows' || U.airTrack) {
+const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
+const dist = Math.hypot(dx, dy);
+if (inAir && dist <= maxDist) {
+f.face = dx >= 0 ? 1 : -1;
+f.vx = damp(f.vx, (dx / Math.max(1, dist)) * spd, 14, STEP);
+f.vy = damp(f.vy, (dy / Math.max(1, dist)) * spd, 14, STEP);
+if (Math.random() < 0.4) smoke(f.x, f.y - 30, 4);
+} else {
+if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
+f.vy = damp(f.vy, 0, 10, STEP);
+}
+} else {
+if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
+}
+const hitAir = (f.ch.ult === 'shadows' || U.airTrack) && inAir && Math.hypot(foe.x - f.x, (foe.y - 35) - f.y) <= 120;
+const hit = overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe)) || hitAir;
+if (!isClient() && foe.hp > 0 && foe.invul <= 0 && hit) {
+f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.vy = 0; f.flurryVictim = foe;
 foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
 const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
 hitVisual(ev); netEmit(ev);
-} else if (t >= 0.28) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
+} else if (t >= dashT) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; f.vy = 0; }
 } else if (f.sp === 'miss') {
+if (f.y < 0) { f.vy += GRAV * STEP; if (f.y + f.vy * STEP >= 0) { f.y = 0; f.vy = 0; } }
 if (t >= 0.42) { f.invul = 0; toNeutral(f); }
 } else if (f.sp === 'flurry') {
 const n = Math.floor(t / U.iv);
