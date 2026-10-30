@@ -2083,7 +2083,7 @@ const WL = {
    以服务器为准）。打赢了，够资格的云端账号由服务器写进 gift 表发一件随机星座皮肤（下次动武库自动领）。
    奖励相关的数都在 RG 里，改这里就行。 */
 const RG = {
-  JIE: 5, VOTE_T: 15, PERK_MAX: 24,
+  JIE: 5, VOTE_T: 15, PERK_MAX: 24, TOTAL_STORIES: 1080,
   NEED0: 20, NEED_PER: 5, NEED_MAX: 150, CYC_HP: 0.15, CYC_HP_MAX: 3,   // 每劫要斩几只：20 + 每人 5 只；每过一轮妖物血量 +15%
   BOSS_MIN: 3, BOSS_HP: 1500, BOSS_T: 180,                              // 几个真人打 Boss、Boss 每人份的血、限时（秒）
   TRIO_T: 420,                                                          // 真人不够时改打 3 位天道 AI 的车轮战，限时（秒）
@@ -2092,7 +2092,34 @@ const RG = {
   // 可以抽到的秘卷：src/game/22-scrolls.js 里不分侠客的凡品、精品、绝品（tools/world-test.mjs 会核对这些编号都还在）
   PERKS: ['ink_resonance', 'storm_wrath', 'air_burst', 'ink_blade', 'first_blood', 'executioner', 'giant_slayer', 'crescendo', 'heavy_hand', 'needle_rain', 'counter_master', 'backstab', 'sniper', 'brawler', 'momentum', 'crit_eye', 'lethal_rhythm', 'sunder', 'double_strike', 'shockwave', 'ult_amp', 'piercing_wind', 'golden_bell', 'parry_refresh', 'iron_skin', 'thorns', 'last_stand', 'guard_wall', 'retaliation', 'second_wind', 'evasion', 'stone_stance', 'aegis', 'counter_guard', 'jg_window', 'meditation', 'bulwark', 'proj_ward', 'ult_resist', 'after_armor', 'lifeline', 'recoil_guard', 'thunder_dash', 'sky_master', 'swift_feet', 'phantom_step', 'jump_guard', 'dash_strike', 'aerial_ace', 'feather_fall', 'jg_blink', 'wind_runner', 'dash_cd', 'slipstream', 'air_reset', 'ground_slam', 'escape_meter', 'sidestep', 'light_cdr', 'skill_echo', 'haste', 'ult_cdr', 'alternate', 'break_reset', 'hurt_cdr', 'full_meter_cdr', 'low_hp_haste', 'patient_power', 'jg_escape', 'combo_cdr', 'link_skill', 'opening_haste', 'cd_shield', 'flow_combo', 'meter_start', 'meter_block', 'meter_drain', 'meter_heal', 'ult_refund', 'meter_power', 'jg_meter', 'meter_shield', 'overflow', 'meter_bank', 'foe_meter_cut', 'ult_heal', 'guard_regen', 'fury', 'full_hp', 'berserker', 'far_reach', 'wall_pin', 'clutch', 'opener', 'untouched', 'juggler', 'low_leech', 'stance_switch', 'stun_bonus', 'block_punish', 'full_meter_foe', 'odd_even', 'heat', 'frost_lock', 'bleed_rend', 'venom', 'virulent', 'ignite', 'wildfire', 'shatter', 'hemorrhage', 'marked_prey', 'static', 'weaken', 'expose', 'root_strike', 'plague', 'cauterize', 'toxic_guard', 'frost_aura', 'chill_proj', 'frost_armor', 'deep_freeze', 'chain_lightning', 'thunder_mark', 'overcharge', 'storm_guard', 'charge_break', 'proj_absorb', 'listen_wind', 'skill_heal', 'guard_crush', 'after_skill_light', 'pressure', 'escape_strike', 'jg_heal'],
 };
-const rgNew = () => ({ cyc: 1, jie: 1, got: 0, need: RG.NEED0, perks: [], vote: null, key: null, seq: 0 });
+const RG_STORY_PREFIX = ['风起', '月落', '雪漫', '雷动', '剑啸', '残阳', '雾锁', '夜伏', '血染', '霜降', '影潜', '寒夜', '破晓', '云涌', '铁马', '金戈', '碧血', '幽冥', '赤霄', '孤鸿', '裂地', '踏碎', '断空', '伏虎', '屠龙', '定海', '惊蛰', '白露', '玄冰', '炎狱', '万象', '千重', '渡劫', '问道', '归墟', '封魔', '诛邪', '荡寇', '斩魄', '镇魂'];
+const RG_STORY_PLACES = ['竹林', '古道', '山寨', '魔窟', '荒村', '寒渊', '绝峰', '祭坛', '剑冢', '黑水', '落雁坡', '断魂桥', '望月阁', '幽冥谷', '藏剑阁', '百妖窟', '流沙城', '苍梧峰', '洗剑池', '锁妖塔', '青玉坛', '万劫谷', '天机崖', '凌霄顶', '无妄海', '九幽殿', '赤水滩', '孤竹亭', '伏魔殿', '寒晶洞', '烈火峡', '紫竹林'];
+const RG_STORY_OBJS = ['平妖乱', '破妖阵', '斩妖魁', '护灵脉', '寻古印', '渡险关', '诛凶灵', '定天道'];
+function rgStory(num) {
+  num = Math.max(1, (num | 0) || 1);
+  if (typeof cqNode === 'function' && typeof CQ !== 'undefined' && num <= CQ.N) {
+    const node = cqNode(num - 1);
+    if (node) {
+      const chName = (CQ.CH[node.ch] && CQ.CH[node.ch].n) || '江湖长卷';
+      return {
+        num,
+        name: `第 ${num} 回 · ${chName}`,
+        lore: `${node.t}。${node.line}`,
+        need: node.need,
+      };
+    }
+  }
+  const p = RG_STORY_PREFIX[(num * 17) % RG_STORY_PREFIX.length];
+  const l = RG_STORY_PLACES[(num * 31) % RG_STORY_PLACES.length];
+  const o = RG_STORY_OBJS[(num * 13) % RG_STORY_OBJS.length];
+  return {
+    num,
+    name: `第 ${num} 回 · ${p}${l}`,
+    lore: `侠客们齐聚${l}，携手同心${o}。`,
+    need: 20 + (num % 20) * 3,
+  };
+}
+const rgNew = () => ({ cyc: 1, jie: 1, got: 0, need: RG.NEED0, perks: [], vote: null, key: null, seq: 0, story: 1, totalStories: RG.TOTAL_STORIES });
 /* 全服肉鸽 · 江湖长卷：全服共享的剧情线（节点表在 src/data/13-chron.js）。全服只有一份进度，在 D1 的 chron 表里，只会往前走：
    每条线把攒着的出力（斩妖、各段斩妖、妖王、劫、关键战告捷）每 CQ_T.REP 秒报一次（chronReport），够这一节了就推到下一节（chronAdvance，
    只有 node 还是这一节的那一下推得动，几条线同时够数也只进一节）。同一次上报重发只算一次（chron_rep）。
@@ -2112,12 +2139,12 @@ class WorldSim {
   constructor(rnd = Math.random) {
     this.rnd = rnd; this.t = 0; this.players = new Map(); this.mons = []; this.nid = 1; this.mid = 1;
     this.kills = 0; this.sinceBoss = 0; this.boss = null; this.spawnT = 0; this.events = [];
-    this.run = rgNew(); this.rewards = []; this.dirty = false;
+    this.run = rgNew(); this.rewards = []; this.dirty = false; this.line = 0;
     this.cq = { v: cqVec(), by: {} }; this.chron = null;   // 江湖长卷：还没报上去的出力；全服进度（分线从 D1 读来的）
   }
   get count() { return this.players.size; }
   join(meta) {
-    if (this.players.size >= WL.CAP) return 0;
+    if (this.line > 0 && this.players.size >= WL.CAP) return 0;
     const id = this.nid++;
     const ch = C.HERO_IDS.includes(meta && meta.ch) ? meta.ch : 'qingfeng';
     const skin = typeof (meta && meta.skin) === 'string' && /^[a-z]{2}_[a-z0-9]{1,20}$/.test(meta.skin) ? meta.skin : '';
@@ -2301,8 +2328,11 @@ class WorldSim {
   needOf() { return Math.min(RG.NEED_MAX, RG.NEED0 + RG.NEED_PER * this.players.size); }
   rgView(id) {
     const R = this.run, v = R.vote, k = R.key, me = this.players.get(id);
+    const st = rgStory(R.story || 1);
     return {
       c: R.cyc, j: R.jie, g: R.got, nd: R.need, pk: R.perks, n: this.real(),
+      story: R.story || 1, totalStories: R.totalStories || RG.TOTAL_STORIES,
+      stName: st.name, stLore: st.lore,
       v: v ? { o: v.opts, u: Math.max(0, Math.ceil(v.until - this.t)), n: v.opts.map((_, i) => Object.values(v.votes).filter(x => x === i).length), my: v.votes[id] === undefined ? -1 : v.votes[id] } : null,
       k: k ? { kind: k.kind, s: k.seq, h: k.heroes, hp: Math.ceil(k.hp), mh: k.mh, u: Math.max(0, Math.ceil(k.until - this.t)), my: me ? Math.round(me.keyDmg) : 0 } : null,
     };
@@ -2312,12 +2342,15 @@ class WorldSim {
     const R = this.run;
     for (const p of this.players.values()) p.jies++;
     this.cqAdd('jie', [...this.players.values()].map(p => p.uid));
+    const st = rgStory(R.story || 1);
+    this.events.push({ t: 'story_clear', story: R.story || 1, name: st.name, all: true });
     if (R.jie < RG.JIE) this.startVote(); else this.startKey();
     this.dirty = true;
   }
   startVote() {
     const pool = RG.PERKS.filter(id => !this.run.perks.includes(id)), opts = [];
-    while (opts.length < 3 && pool.length) opts.push(pool.splice((this.rnd() * pool.length) | 0, 1)[0]);
+    const source = pool.length >= 3 ? pool : RG.PERKS.slice();
+    while (opts.length < 3 && source.length) opts.push(source.splice((this.rnd() * source.length) | 0, 1)[0]);
     this.run.vote = { opts, until: this.t + RG.VOTE_T, votes: {} };
     this.events.push({ t: 'rv', all: true });
   }
@@ -2335,7 +2368,10 @@ class WorldSim {
     if (R.perks.length >= RG.PERK_MAX) R.perks.shift();   // 满了：最早的那卷让位
     R.perks.push(pick);
     R.vote = null; R.jie++; R.got = 0; R.need = this.needOf();
-    this.events.push({ t: 'rp', pick, perks: R.perks, j: R.jie, all: true });
+    R.story = (R.story || 1) + 1;
+    if (R.story > (R.totalStories || RG.TOTAL_STORIES)) R.story = 1;
+    const nextSt = rgStory(R.story);
+    this.events.push({ t: 'rp', pick, perks: R.perks, j: R.jie, story: R.story, stName: nextSt.name, all: true });
     this.dirty = true;
   }
   // 最后一劫斩完开关键战：线上真人够 RG.BOSS_MIN 位打天道 Boss（血量全线共享，赢了发星座皮肤）；
@@ -2387,6 +2423,8 @@ class WorldSim {
     this.events.push({ t: 'ke', kind: k.kind, win: !!win, top, all: true });
     if (win) this.cqAdd('key', Object.keys(k.uids || {}));
     R.key = null; R.cyc++; R.jie = 1; R.got = 0; R.need = this.needOf();   // 秘卷保留，下一轮
+    R.story = (R.story || 1) + 1;
+    if (R.story > (R.totalStories || RG.TOTAL_STORIES)) R.story = 1;
     for (const p of this.players.values()) { p.jies = 0; p.keyDmg = 0; }
     this.dirty = true;
   }
@@ -2409,11 +2447,13 @@ class WorldSim {
     else if (k && this.t >= k.until) this.endKey(false);
   }
   // 存进 Durable Object 存储 / 从存储读回来（关键战不存：重启就算这一场没打完）
-  saveRun() { const R = this.run; return { cyc: R.cyc, jie: R.jie, got: R.got, need: R.need, perks: R.perks.slice(), seq: R.seq, at: Date.now() }; }
+  saveRun() { const R = this.run; return { cyc: R.cyc, jie: R.jie, got: R.got, need: R.need, perks: R.perks.slice(), seq: R.seq, story: R.story || 1, totalStories: R.totalStories || RG.TOTAL_STORIES, at: Date.now() }; }
   loadRun(o) {
     if (!o || typeof o !== 'object') return;   // 空了多久都接着上次的进度（以前空了 10 分钟会清零，新来的人不该把进度打回去）
     const R = this.run;
     R.cyc = wlNum(o.cyc, 1, 1e6, 1) | 0; R.jie = wlNum(o.jie, 1, RG.JIE, 1) | 0; R.got = wlNum(o.got, 0, RG.NEED_MAX, 0) | 0; R.need = wlNum(o.need, 1, RG.NEED_MAX, RG.NEED0) | 0;
+    R.story = wlNum(o.story, 1, RG.TOTAL_STORIES, 1) | 0;
+    R.totalStories = RG.TOTAL_STORIES;
     if (R.got >= R.need) R.got = R.need - 1;   // 存档时正在打关键战（关键战不存）：再斩一只就重开
     R.perks = Array.isArray(o.perks) ? o.perks.filter(id => RG.PERKS.includes(id)).slice(-RG.PERK_MAX) : []; R.seq = wlNum(o.seq, 0, 1e9, 0) | 0;
   }
@@ -2457,11 +2497,11 @@ export class WorldLine {
   }
   async fetch(request) {
     if (request.headers.get('Upgrade') !== 'websocket') return new Response('expected websocket', { status: 426 });
-    const line = wlNum(new URL(request.url).pathname.split('/').pop(), 1, 9999, 1) | 0;
+    const line = wlNum(new URL(request.url).pathname.split('/').pop(), 0, 9999, 0) | 0;
     const pair = new WebSocketPair(), client = pair[0], server = pair[1];
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ line, id: 0 }); this.line = line;
-    if (this.ctx.getWebSockets().length > WL.CAP) { this.send(server, { t: 'full', line }); server.close(4001, 'full'); }
+    server.serializeAttachment({ line, id: 0 }); this.line = line; this.sim.line = line;
+    if (line > 0 && this.ctx.getWebSockets().length > WL.CAP) { this.send(server, { t: 'full', line }); server.close(4001, 'full'); }
     return new Response(null, { status: 101, webSocket: client });
   }
   send(ws, o) { try { ws.send(JSON.stringify(o)); } catch (e) {} }
@@ -2475,6 +2515,7 @@ export class WorldLine {
     if (now - (a.rt || 0) > 1000) { a.rt = now; a.rn = 0; }
     if (++a.rn > 25) { ws.serializeAttachment(a); return; }
     if (o.t === 'hi') {
+      this.sim.line = a.line;
       if (a.id && sim.players.has(a.id)) { ws.serializeAttachment(a); return; }
       const id = sim.join(o);
       if (!id) { this.send(ws, { t: 'full', line: a.line }); ws.close(4001, 'full'); return; }
@@ -2583,7 +2624,7 @@ export class WorldLine {
     return this.cqBusy;
   }
 }
-globalThis.RenyingWorldSim = { WorldSim, WL, RG };
+globalThis.RenyingWorldSim = { WorldSim, WL, RG, rgStory };
 
 export default {
   fetch: withCors,
@@ -2604,7 +2645,7 @@ async function route(request, env, ctx, rid = reqId()) {
       if (wm) {
         if (!env.WORLD) return error('开放世界还没部署', 503);
         if (request.headers.get('Upgrade') !== 'websocket') return json({ ok: true, world: true, cap: WL.CAP });
-        const n = Math.max(1, Math.min(9999, +wm[1] || 1));
+        const n = Math.max(0, Math.min(9999, +wm[1] || 0));
         return env.WORLD.get(env.WORLD.idFromName('line-' + n)).fetch(request);
       }
 

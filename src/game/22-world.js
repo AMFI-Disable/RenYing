@@ -235,12 +235,16 @@ function worldStart(heroIdx) {
   worldEnterMode(heroIdx, worldShrineX(0) + 80);
   WORLD.skin = A.skinKey || '';
   Object.assign(WORLD, { n: 0, kills: 0, myKills: 0, tries: 0, full: false, run: null, keySeq: 0 });
-  let line = 1;
-  try {
-    line = Math.max(1, Math.min(9999, +localStorage.getItem('renying-world-line') || 1));
-    localStorage.setItem('renying-world-last-hero', String(heroIdx));   // 记住这次选的侠客
-  } catch (e) {}
-  if (WORLD.wantLine) { line = WORLD.wantLine; WORLD.wantLine = 0; }
+  let line = 0;
+  if (WORLD.wantLine !== undefined && WORLD.wantLine !== null) {
+    line = WORLD.wantLine; WORLD.wantLine = null;
+  } else {
+    try {
+      const s = localStorage.getItem('renying-world-line');
+      line = s !== null && s !== '' ? Math.max(0, Math.min(9999, +s || 0)) : 0;
+      localStorage.setItem('renying-world-last-hero', String(heroIdx));   // 记住这次选的侠客
+    } catch (e) { line = 0; }
+  }
   worldConnect(line);
 }
 function worldLeave() {
@@ -456,11 +460,30 @@ if ($id('btnWorldLine')) {
 // 魔首的血全线共享，以服务器为准。打赢后够资格的云端账号由服务器发星座皮肤（下次打开武库自动领），网页里不加任何东西。
 const RG_JIE = 5;
 const rgRun = () => WORLD.run || null;
+function applySharedPerks(pks) {
+  pks = Array.isArray(pks) ? pks : [];
+  M.towerPerks = pks.slice();
+  if (typeof scOn === 'function' && scOn()) {
+    if (typeof allFighters === 'function') {
+      for (const f of allFighters()) {
+        if (!f || f === B) continue;
+        if (!f.sc) f.sc = { lc: 0, markN: 0 };
+        f.sc.key = '';
+        if (typeof scFire === 'function' && typeof foeOf === 'function') {
+          scFire(f, 'start', foeOf(f));
+        }
+      }
+    }
+  }
+}
 function rgFrame(r) {
   const W_ = WORLD; W_.run = r;
   if (r && Array.isArray(r.pk)) {
-    M.towerPerks = r.pk.slice();
-    if (A && A.sc) A.sc.key = '';
+    const oldKey = (M.towerPerks || []).join(',');
+    const newKey = r.pk.join(',');
+    if (oldKey !== newKey || !A || !A.sc || !A.sc.key) {
+      applySharedPerks(r.pk);
+    }
   }
   rgVoteUI();
   const K = M.worldKey;
@@ -476,10 +499,19 @@ function rgFrame(r) {
 function rgEvent(e) {
   const W_ = WORLD;
   if (e.t === 'rv') { say('全线共选秘卷', 1.2, 'go', '本劫斩妖完成，15 秒内投票'); SFX.gong(); }
+  else if (e.t === 'story_clear') {
+    say(`剧情大捷 · 第 ${e.story} 回达成`, 1.5, 'big', e.name || '斩妖平乱，共筑江湖');
+    SFX.gong();
+  }
   else if (e.t === 'rp') {
     const s = SC_BY[e.pick];
-    say(`全线共享「${s ? s.n : e.pick}」`, 1.4, 'big', `第 ${e.j} / ${RG_JIE} 劫 · 已有 ${e.perks.length} 卷秘卷`);
-  } else if (e.t === 'ks') { if (e.kind === 'boss') say('天道 Boss 降世', 1.6, 'big', '全线侠客共讨融魂魔首'); else say('天道车轮战', 1.6, 'big', '线上真人不足 3 位：各自迎战 3 位天道侠客'); SFX.gong(); }
+    say(`全服共享秘卷「${s ? s.n : e.pick}」`, 1.5, 'big', `第 ${e.story || e.j} 回 · 全员已共享 ${e.perks.length} 卷秘卷`);
+    if (e.perks) applySharedPerks(e.perks);
+  } else if (e.t === 'ks') {
+    if (e.kind === 'boss') say('天道 Boss 降世', 1.6, 'big', '全线侠客共讨融魂魔首');
+    else say('天道车轮战', 1.6, 'big', '线上真人不足 3 位：各自迎战 3 位天道侠客');
+    SFX.gong();
+  }
   else if (e.t === 'ke') rgKeyOver(e);
 }
 // 投票：屏幕下方三张秘卷，点一下就投；不挡战斗，可以边打边投
@@ -511,10 +543,15 @@ function rgHudRows() {
     const s = SC_BY[id];
     return (s ? s.n : id) + (n > 1 ? ` ×${n}` : '');
   }).join('、') || '暂无';
+  const storyNum = r.story || 1;
+  const totalStories = r.totalStories || 1080;
+  const stName = r.stName ? ` · ${r.stName}` : '';
   return [
+    ['全服剧情', `第 ${storyNum}/${totalStories} 回${stName}`],
     ['全服肉鸽', `第 ${r.c} 轮 · 第 ${r.j}/${RG_JIE} 劫`],
-    [r.k ? '关键战' : '本劫斩妖', st],
+    [r.k ? '关键战' : '本回斩妖', st],
     ['共享秘卷', `${pks.length} 卷 (${Object.keys(counts).length} 种)`],
+    ['队伍侠客', `${r.n || 1} 人在场 · 秘卷实时共享`],
     ['叠层增益', perkCountStr.length > 20 ? perkCountStr.slice(0, 19) + '…' : perkCountStr],
   ];
 }

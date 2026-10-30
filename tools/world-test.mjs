@@ -10,7 +10,7 @@ import path from 'node:path';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const mod = await import(path.join(root, 'cloudflare', 'worker.bundle.js'));
 const { WorldLine } = mod;
-const { WorldSim, WL, RG } = globalThis.RenyingWorldSim;
+const { WorldSim, WL, RG, rgStory } = globalThis.RenyingWorldSim;
 const CQ = Object.fromEntries(['kill', 'z0', 'z1', 'z2', 'z3', 'king', 'jie', 'key'].map((k, i) => [k, i]));   // 长卷出力的八个数的顺序（cloudflare/worker.js 的 CQ_KEYS）
 import fs from 'node:fs';
 
@@ -516,6 +516,39 @@ const flush = async d => { await (d.cqBusy || Promise.resolve()); await d.cqSync
   const bare = new WorldLine(new FakeCtx(), {}); const z = await connect(9, bare.ctx, bare); await hi(bare, z, 'x'); clearInterval(bare.timer); bare.timer = 0;
   bare.sim.cqAdd('kill', ['']); bare.tick();
   ok(z.last('k') && z.last('k').q === null && !bare.cqBusy, '没有数据库：分线照常，帧里的长卷是空的');
+}
+
+// ======================= 全服肉鸽：0 线无限容量、千回剧情、共享秘卷实时生效 =======================
+{
+  const line0 = new WorldLine(new FakeCtx(), {});
+  const socks0 = [];
+  for (let i = 0; i < 60; i++) {
+    const s = await connect(0, line0.ctx, line0);
+    await hi(line0, s, 'hero' + i);
+    socks0.push(s);
+  }
+  ok(socks0.length === 60 && socks0.every(s => s.closed === 0), '0 线为全服肉鸽共享服：超过 40 人（60人）无限制接入，不被拒');
+  ok(RG.TOTAL_STORIES >= 1000, `全服肉鸽共有 1000 回以上剧情（当前 ${RG.TOTAL_STORIES} 回）`);
+  const s1 = rgStory(1), s1000 = rgStory(1000), s1080 = rgStory(1080);
+  ok(s1 && s1.name.includes('第 1 回') && s1000 && s1000.name.includes('第 1000 回') && s1080 && s1080.name.includes('第 1080 回'), '千回剧情标题生成正确');
+
+  // 剧情过关与秘卷全服共享
+  const s = new WorldSim(() => 0.5);
+  s.line = 0;
+  const p1 = s.join({ name: '先锋' });
+  s.state(p1, { x: 500, hp: 100, mh: 100 });
+  ok(s.run.story === 1, '开局第 1 回');
+  fillJie(s); killIt(s, p1);
+  const evs = s.takeEvents();
+  ok(evs.some(e => e.t === 'story_clear' && e.story === 1), '斩妖达标：触发第 1 回剧情通关广播');
+  s.vote(p1, 0); s.step(0.05);
+  ok(s.run.perks.length === 1 && s.run.story === 2, '完成剧情获得秘卷，推进至第 2 回');
+  const earnedPerk = s.run.perks[0];
+  ok(s.frameFor(p1).r.pk.includes(earnedPerk), '在场队员实时获得秘卷');
+  const p2 = s.join({ name: '后进侠客' });
+  s.state(p2, { x: 500, hp: 100, mh: 100 });
+  ok(s.frameFor(p2).r.pk.includes(earnedPerk), '后加入的队员也立即共享已解锁的秘卷');
+  clearInterval(line0.timer); line0.timer = 0;
 }
 
 console.log(fails ? `\n${fails} 项没过` : '\n开放世界服务器测试全部通过');
