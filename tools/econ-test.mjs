@@ -1318,7 +1318,7 @@ section('排行榜：段位榜只列本赛季打满定级赛的，战绩榜按�
 {
   const mk = async (name, rk, w, l) => {
     const u = await newUser(name);
-    const r = await call('POST', '/api/profile', { profile: { ...profOf(u.uid), rk, netWins: w, netLosses: l }, ledger: { deltas: [], ev: 0 } }, u.token);
+    const r = await call('POST', '/api/profile', { profile: { ...profOf(u.uid), rk }, ledger: { deltas: [], ev: 0 }, prog: { deltas: [{ id: 'abcd' + Buffer.from(name).toString('hex').slice(0, 12), d: { netWins: w, netLosses: l } }] } }, u.token);   // 胜负场走增量账（绝对数不认）
     if (!r.ok) throw new Error('profile ' + JSON.stringify(r));
     return u;
   };
@@ -2040,7 +2040,7 @@ section('删除账号（软删除）：登录不了、不上榜、挂单看不�
   await econ(D.token, 'sync');
   const [x1] = grant(D.uid, [{ k: 'qf_p2' }, { k: 'gc_wolf', st: 3 }]);
   const lst = await econ(D.token, 'list', { i: x1.i, price: 77 });
-  await call('POST', '/api/profile', { profile: { ...profOf(D.uid), netWins: 40, netLosses: 1 }, ledger: { deltas: [], ev: 0 } }, D.token);
+  await call('POST', '/api/profile', { profile: profOf(D.uid), ledger: { deltas: [], ev: 0 }, prog: { deltas: [{ id: 'de1e7e0001', d: { netWins: 40, netLosses: 1 } }] } }, D.token);
   const snap = () => ({
     user: (({ deleted_at, ...r }) => r)(row('SELECT * FROM users WHERE id = ?', D.uid)),
     econ: row('SELECT * FROM econ WHERE uid = ?', D.uid),

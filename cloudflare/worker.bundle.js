@@ -1974,7 +1974,7 @@ async function handleEcon(env, auth, body, now, ip) {
  * 两台设备各自打了几局，云端要的是两边新增的加起来，不是谁大要谁、也不是后传的覆盖先传的。
  * 所以网页把“这次比上次多了几”记成一条条带编号的增量（prog.deltas），服务器每条只加一次（编号记在 srv.pg），
  * 存档里报上来的绝对数不认。网页重试、刷新后重报、两台设备同时报，都不会重复加。
- * 老版本网页没有 prog：照旧用它报的绝对数（等它刷新成新网页就走账了）。 */
+ * 没有 prog 的存档（老版本网页）：报上来的绝对数不认，计数留在服务器上那份（不然能把进度退回去重新领）。 */
 const PG_KEY = /^(netWins|netLosses|frags\.[a-z]{2,16})$/, PG_MAX = 1e6, PG_STEP = 10000, PG_KEEP = 10 * DAY_MS;
 function clampPg(x) { return Math.max(0, Math.min(PG_MAX, Math.floor(+x || 0))); }
 function pgVals(p) {
@@ -2021,7 +2021,7 @@ function mergeStored(stored, inc) {
   const own = new Set([...(Array.isArray(stored.owned) ? stored.owned : []), ...(Array.isArray(inc.owned) ? inc.owned : [])].filter(h => typeof h === 'string' && /^[a-z]{2,16}$/.test(h)));
   out.owned = own.size ? [...own] : ['qingfeng'];
   const stars = {};
-  for (const src of [stored.stageStars, inc.stageStars]) if (src && typeof src === 'object' && !Array.isArray(src)) for (const [k, v] of Object.entries(src)) if (/^[\w-]{1,32}$/.test(k)) stars[k] = Math.max(stars[k] || 0, Math.max(0, Math.min(3, Math.floor(+v || 0))));
+  for (const src of [stored.stageStars, inc.stageStars]) if (src && typeof src === 'object' && !Array.isArray(src)) for (const [k, v] of Object.entries(src)) if (/^[\w.-]{1,32}$/.test(k)) stars[k] = Math.max(stars[k] || 0, Math.max(0, Math.min(3, Math.floor(+v || 0))));
   out.stageStars = stars;
   out.qfx = Math.max(clampPg(stored.qfx), clampPg(inc.qfx));
   out.online10Unlocked = !!(stored.online10Unlocked || inc.online10Unlocked);
@@ -2071,14 +2071,13 @@ async function handleProfilePost(env, auth, body, now) {
     delete p.armory; delete p.ledger; delete p.prog;
     p.name = auth.user.username;
     p.updatedAt = now;
-    // 计数走增量账；其余进度和服务器上那份按确定的规则合并，不让后到的一份把另一台设备的进度盖掉
+    // 计数走增量账；其余进度和服务器上那份按确定的规则合并，不让后到的一份把另一台设备的进度盖掉。
+    // 不带 prog 的存档（老网页，或者改过的请求）也一样合并：报上来的绝对数不认，不然清掉本机存档再传一份旧的，就能把关卡星、列传、胜场退回去重新领
     let pgAcks = [];
-    if (prog) {
-      const vals = pgVals(stored);
-      pgAcks = pgApply(eco.srv, vals, prog.deltas, now);
-      pgPut(p, vals);
-      Object.assign(p, mergeStored(stored, incoming));
-    }
+    const vals = pgVals(stored);
+    if (prog) pgAcks = pgApply(eco.srv, vals, prog.deltas, now);
+    pgPut(p, vals);
+    Object.assign(p, mergeStored(stored, incoming));
     // 老版本网页没有账本：拿它报的数和服务器上的差当作一条上报（一样有每日上限）
     const deltas = ledger ? ledger.deltas : [{ id: 'abs' + now.toString(36) + Math.floor(rnd() * 1e9).toString(36), d: clampInk(p.ink) - eco.ink }];
     const { capped, forged, paid, owed, allow, revoked } = applyDeltas(eco, deltas, now, cfg);

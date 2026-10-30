@@ -164,10 +164,14 @@ section('老存档第一次走新逻辑：不丢、不多，只把本机多出�
 NET.oldServer = true;   // 先用“老版本服务器”造一个老号：云端 10 胜，存档按绝对数存
 const O1 = makeDevice('O1');
 await O1.CS.register('Old', 'oldpass123'); await O1.load();
+// 老版本服务器按网页报的绝对数存；现在的服务器不再收绝对数（能拿来把进度退回去重新领），这里直接把老服务器存下的写进库
+const oldStore = (name, f) => { const p = cloudProf(name); f(p); ENV.DB.raw.prepare('UPDATE users SET profile_json = ? WHERE username = ?').run(JSON.stringify(p), name); };
 await O1.play(p => { p.netWins = 10; p.frags = { yanling: 4 }; });
+oldStore('Old', p => { p.netWins = 10; p.frags = { yanling: 4 }; });
 ok(cloudProf('Old').netWins === 10, '老服务器：绝对数，云端 10');
 ok(!O1.store.has('renying-prog-' + O1.CS.getUser().uid) || JSON.parse(O1.store.get('renying-prog-' + O1.CS.getUser().uid)).seen === null, '老服务器不回 prog：网页不建账本，照旧传绝对数');
 await O1.play(p => { p.netWins = 12; });   // 本机又赢 2 场，还是老服务器
+oldStore('Old', p => { p.netWins = 12; });
 const O2 = makeDevice('O2');
 await O2.CS.login('Old', 'oldpass123'); await O2.load();
 O2.store.set('renying-prof-' + O2.CS.getUser().uid, JSON.stringify({ ...O2.PROF, netWins: 8 }));   // O2 的本机镜像比较旧：8
