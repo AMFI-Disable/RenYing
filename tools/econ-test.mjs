@@ -1687,6 +1687,19 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   const au = await adm('GET', '/api/admin/audit'), acts = new Set(au.rows.map(r => r.act));
   ok(au.ok && ['admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg'].every(a => acts.has(a)) && au.rows.every(r => !!(parseDetail(r.detail).by)), '操作记录：九种管理员操作都在，每条都写着是谁', [...acts]);
   ok(au.rows.some(r => r.uid === '*' && r.act === 'cfg') && !acts.has('open') && !acts.has('ledger') && !acts.has('gift_got') && !acts.has('code_got'), '全服的记在“全服”名下；玩家自己的操作不混进来');
+
+  // 错误报告与导出：测试客户端上报错误、查看错误、导出单文件调试日志 (JSON 和 Markdown)
+  await call('POST', '/api/err', { k: 'client', msg: 'TypeError: test err', src: 'src/game.js:100', stack: 'Error at test', meta: { ver: 1, mode: 'local' } });
+  const errView = await adm('GET', '/api/admin/errors');
+  ok(errView.ok && errView.rows.length >= 1 && errView.rows.some(r => r.msg.includes('TypeError: test err')), '管理后台错误列表能看到上报的错误');
+
+  const expJsonRes = await worker.fetch(new Request('https://w.test/api/admin/errors/export', { headers: { Authorization: 'Bearer ' + ADMIN } }), ENV, { waitUntil() {} });
+  const expJson = await expJsonRes.json();
+  ok(expJsonRes.status === 200 && expJson.report && expJson.report.scope.total_signatures >= 1 && expJson.errors.some(e => e.message.includes('TypeError: test err')), '导出调试文件 (JSON) 包含诊断概览与完整错误信息', expJson.report);
+
+  const expMdRes = await worker.fetch(new Request('https://w.test/api/admin/errors/export?format=md', { headers: { Authorization: 'Bearer ' + ADMIN } }), ENV, { waitUntil() {} });
+  const expMd = await expMdRes.text();
+  ok(expMdRes.status === 200 && expMd.includes('# 刃影 (RenYing) 错误诊断报告') && expMd.includes('TypeError: test err'), '导出调试文件 (Markdown) 包含 Markdown 格式诊断报告');
 }
 
 section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段脚本');

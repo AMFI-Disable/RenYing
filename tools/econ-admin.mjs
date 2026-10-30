@@ -52,11 +52,11 @@ async function admin(method, path, body) {
   return j;
 }
 
-// 参数：--why、--note、--days、--uses 后面跟一个值（也可以写成 --why=…），--new、--create 不跟值；其余的按顺序放进 pos
+// 参数：--why、--note、--days、--uses、--kind、--format 后面跟一个值（也可以写成 --why=…），--new、--create 不跟值；其余的按顺序放进 pos
 function parse(list) {
   const pos = [], o = {};
   for (let i = 0; i < list.length; i++) {
-    const a = list[i], m = /^--(why|note|days|uses)(?:=(.*))?$/s.exec(a);
+    const a = list[i], m = /^--(why|note|days|uses|kind|format)(?:=(.*))?$/s.exec(a);
     if (a === '--new') o.new = true;
     else if (a === '--create') o.create = true;
     else if (m) o[m[1]] = m[2] !== undefined ? m[2] : list[++i];
@@ -218,6 +218,21 @@ if (cmd === 'whoami') {
       : r.act === 'admin_ban' ? (d.days === 'perm' ? '永久封号' : `封 ${d.days} 天`) : r.act === 'admin_pw' ? (d.created ? '建号' : '重设密码') : r.act === 'gift_new' ? stuff(d) : r.act === 'code_new' ? `${d.code} ${stuff(d)}，最多 ${d.uses} 个号` : r.act === 'code_off' ? `停用 ${d.code}` : r.act === 'cfg' ? (d.set ? Object.entries(d.set).map(([k, v]) => `${k}=${v === null ? 'default' : v}`).join(' ') : d.undo ? `退回到第 ${d.undo} 版` : '全部回到默认值') : '';
     console.log(`  ${time(r.at)}  ${d.by || '-'}  ${r.act}  ${r.uid === '*' ? '全服' : r.username || r.uid}${what ? '  ' + what : ''}  原因：${d.why || '-'}`);
   }
+} else if (cmd === 'errors') {
+  const kind = o.kind || '', days = o.days || 7;
+  const j = await admin('GET', '/api/admin/errors?days=' + encodeURIComponent(days) + (kind ? '&kind=' + encodeURIComponent(kind) : ''));
+  console.log(`最近 ${j.days} 天错误记录（共 ${j.rows.length} 种）：`);
+  for (const e of j.rows) console.log(`  [${e.kind}] ${e.msg} (${e.n} 次，最近 ${time(e.last_at)})`);
+} else if (cmd === 'errors-export') {
+  const kind = o.kind || '', days = o.days || 30, fmt = o.format || 'json';
+  const res = await fetch(API + '/api/admin/errors/export?days=' + encodeURIComponent(days) + '&format=' + encodeURIComponent(fmt) + (kind ? '&kind=' + encodeURIComponent(kind) : ''), {
+    headers: { Authorization: 'Bearer ' + secret() },
+  });
+  if (!res.ok) die(`导出失败（HTTP ${res.status}）`);
+  const text = await res.text();
+  const file = pos[0] || (/filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '') || [])[1] || `renying-errors-debug.${fmt}`;
+  await import('node:fs/promises').then(fs => fs.writeFile(file, text, 'utf-8'));
+  console.log(`已成功导出至文件：${file}`);
 } else {
   console.log(`用法（<号> 写昵称或者账号编号；修改都要 --why 写原因）：
   node tools/econ-admin.mjs whoami | stats | audit
@@ -236,6 +251,8 @@ if (cmd === 'whoami') {
   node tools/econ-admin.mjs cfg
   node tools/econ-admin.mjs cfg-set price.c1=300 fee=0.1 --why <原因>
   node tools/econ-admin.mjs cfg-undo <版本号|0> --why <原因>
+  node tools/econ-admin.mjs errors [--days 7] [--kind client|server|slow]
+  node tools/econ-admin.mjs errors-export [文件] [--days 30] [--kind client|server|slow] [--format json|md]
 网页版：${API}/admin`);
   if (cmd) process.exit(1);
 }

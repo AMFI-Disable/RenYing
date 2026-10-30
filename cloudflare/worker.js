@@ -1464,6 +1464,130 @@ async function handleAdmin(env, request, path, now, ip) {
     ).bind(...(kind ? [now - days * DAY_MS, kind] : [now - days * DAY_MS])).all()).results || [];
     return json({ ok: true, days, rows });
   }
+  if (route === 'GET /api/admin/errors/export' || (route === 'GET /api/admin/errors' && q('export') === '1')) {   // 导出全部错误单文件，供 Agent 诊断调试
+    const kind = q('kind'), days = q('days') !== null && q('days') !== '' ? Math.max(0, Math.min(365, +q('days') || 0)) : 30;
+    const format = (q('format') || 'json').toLowerCase();
+    const where = [], args = [];
+    if (days > 0) {
+      where.push('last_at > ?');
+      args.push(now - days * DAY_MS);
+    }
+    if (kind) {
+      where.push('kind = ?');
+      args.push(kind);
+    }
+    const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
+    const rows = (await env.DB.prepare(
+      `SELECT sig, kind, msg, src, stack, meta, n, first_at, last_at, ms, ms_sum FROM errs ${whereSql} ORDER BY last_at DESC LIMIT 5000`
+    ).bind(...args).all()).results || [];
+
+    let totalOccurrences = 0;
+    const kindCounts = { client: { types: 0, occurrences: 0 }, server: { types: 0, occurrences: 0 }, slow: { types: 0, occurrences: 0 } };
+    const items = rows.map(r => {
+      let metaObj = {};
+      try { metaObj = JSON.parse(r.meta) || {}; } catch (e) { metaObj = { raw: r.meta }; }
+      const occurrences = Math.max(1, r.n || 1);
+      totalOccurrences += occurrences;
+      if (kindCounts[r.kind]) {
+        kindCounts[r.kind].types++;
+        kindCounts[r.kind].occurrences += occurrences;
+      }
+      const avgMs = r.ms_sum && occurrences ? Math.round(r.ms_sum / occurrences) : 0;
+      return {
+        signature: r.sig,
+        kind: r.kind,
+        message: r.msg,
+        source: r.src || '',
+        occurrences,
+        first_seen: new Date(r.first_at).toISOString(),
+        last_seen: new Date(r.last_at).toISOString(),
+        first_at_ms: r.first_at,
+        last_at_ms: r.last_at,
+        timing: {
+          max_ms: r.ms || 0,
+          avg_ms: avgMs,
+          sum_ms: r.ms_sum || 0,
+        },
+        meta: metaObj,
+        stack: r.stack || '',
+      };
+    });
+
+    const dateStr = new Date(now).toISOString().slice(0, 10);
+    await logRow(env, '*', now, 'err_export', 1, null, null, JSON.stringify({ by: who, kind: kind || undefined, days, format, n: rows.length }));
+
+    if (format === 'md' || format === 'markdown') {
+      const lines = [
+        '# 刃影 (RenYing) 错误诊断报告 (Agent Debug Report)',
+        '',
+        `> 生成时间: ${new Date(now).toISOString()} | 操作管理员: ${who} | 检索范围: ${days > 0 ? `最近 ${days} 天` : '全部历史'} | 来源过滤: ${kind || '全部 (client, server, slow)'}`,
+        '',
+        '## 1. 概览 (Summary)',
+        `- **不同错误种类 (Signatures)**: ${rows.length}`,
+        `- **累计发生总次数 (Total Occurrences)**: ${totalOccurrences}`,
+        '- **按类别分布**:',
+        `  - 网页客户端 (client): ${kindCounts.client.types} 种 / ${kindCounts.client.occurrences} 次`,
+        `  - 服务器异常 (server): ${kindCounts.server.types} 种 / ${kindCounts.server.occurrences} 次`,
+        `  - 慢请求 (slow): ${kindCounts.slow.types} 种 / ${kindCounts.slow.occurrences} 次`,
+        '',
+        '## 2. 错误详情列表 (Error Details)',
+        '',
+      ];
+      if (!items.length) {
+        lines.push('_所选时间范围和过滤条件下无错误记录。_');
+      } else {
+        items.forEach((item, idx) => {
+          lines.push(`### #${idx + 1} [${item.kind.toUpperCase()}] ${item.message}`);
+          lines.push(`- **Signature**: \`${item.signature}\``);
+          lines.push(`- **Source**: \`${item.source || '—'}\``);
+          lines.push(`- **频次**: 发生 ${item.occurrences} 次 (首次: ${item.first_seen} | 最近: ${item.last_seen})`);
+          if (item.timing.max_ms > 0) {
+            lines.push(`- **耗时**: 最慢 ${item.timing.max_ms}ms | 平均 ${item.timing.avg_ms}ms`);
+          }
+          if (Object.keys(item.meta).length) {
+            lines.push(`- **上下文元数据 (Meta)**: \`${JSON.stringify(item.meta)}\``);
+          }
+          if (item.stack) {
+            lines.push('', '**调用栈 (Stack Trace)**:', '```', item.stack, '```');
+          }
+          lines.push('');
+        });
+      }
+      return new Response(lines.join('\n'), {
+        headers: {
+          'Content-Type': 'text/markdown; charset=utf-8',
+          'Content-Disposition': `attachment; filename="renying-errors-debug-${dateStr}.md"`,
+          'Cache-Control': 'no-store',
+        },
+      });
+    }
+
+    const payload = {
+      report: {
+        title: '刃影 (RenYing) 错误诊断导出文件 (Agent Debug Export)',
+        generated_at: new Date(now).toISOString(),
+        generated_ms: now,
+        exported_by: who,
+        scope: {
+          days,
+          kind: kind || 'all',
+          total_signatures: rows.length,
+          total_occurrences: totalOccurrences,
+          breakdown: kindCounts,
+        },
+        instruction_for_agent: '本文件汇集了刃影 (RenYing) 的客户端运行报错 (client)、服务端未捕获异常 (server) 以及慢请求 (slow)。请重点检查 occurrences 较高或 last_seen 较新的项，结合 source 位置、meta 上下文 (浏览器、屏幕、游戏模式、版本号) 以及 stack 调用栈进行根因排查。',
+      },
+      errors: items,
+    };
+
+    return new Response(JSON.stringify(payload, null, 2), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="renying-errors-debug-${dateStr}.json"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
   if (route === 'GET /api/admin/find') {   // 按昵称或账号找号；支持子串、账号ID、状态筛选与分页
     const key = q('q').trim(), escKey = key.replace(/[\\%_]/g, m => '\\' + m), del = q('del') === '1', flt = q('filter');
     const limit = Math.max(1, Math.min(100, parseInt(q('limit')) || 20));
