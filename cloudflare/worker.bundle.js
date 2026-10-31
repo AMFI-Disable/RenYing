@@ -1209,7 +1209,6 @@ const CF_HOST_ORIGIN = /^https:\/\/[a-z0-9_-]+(\.[a-z0-9_-]+)*\.(workers\.dev|pa
 const DEV_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}|[a-z0-9_-]+\.local)(:\d{1,5})?$/i;
 function corsOrigin(env, origin) {
   if (!origin) return '';
-  if (origin === 'null' || origin === 'file://') return '*';
   const extra = String((env && env.CORS_ORIGINS) || '').split(',').map(o => o.trim().replace(/\/+$/, '')).filter(Boolean);
   return CORS_ORIGINS.includes(origin) || extra.includes(origin) || GITHUB_IO_ORIGIN.test(origin) || CF_HOST_ORIGIN.test(origin) || DEV_ORIGIN.test(origin) ? origin : '';
 }
@@ -1279,13 +1278,13 @@ async function iceServers(env) {
       headers: { Authorization: `Bearer ${env.TURN_KEY_API_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ttl: ICE_TTL }),
     });
-    if (!r.ok) { console.error('turn creds', r.status); return out; }
+    if (!r.ok) { console.warn('turn creds', r.status); return out; }
     const d = await r.json();
     // 返回格式是 { iceServers: {...} } 或 { iceServers: [{...}] }，两种都认；只要带用户名和密码的 turn(s): 地址
     const list = (Array.isArray(d.iceServers) ? d.iceServers : [d.iceServers]).filter(x => x && x.username && x.credential);
     const turn = list.map(x => ({ urls: (Array.isArray(x.urls) ? x.urls : [x.urls]).filter(u => /^turns?:/.test(u)), username: x.username, credential: x.credential })).filter(x => x.urls.length);
     if (turn.length) { out.iceServers.push(...turn); out.turn = true; out.ttl = ICE_TTL; }
-  } catch (e) { console.error('turn creds', e); }
+  } catch (e) { console.warn('turn creds', (e && e.message) || e); }
   return out;
 }
 

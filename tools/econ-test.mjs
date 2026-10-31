@@ -2377,9 +2377,9 @@ section('联机 ICE 列表：没配 TURN 只回 STUN；配了就带上短时凭�
   globalThis.fetch = async () => { throw new Error('offline'); };
   const r3 = await call('GET', '/api/ice', undefined, null, '7.7.7.3');
   ok(r3.ok && r3.turn === false, '连不上 Cloudflare：同样退回 STUN', r3);
+  globalThis.fetch = realFetch; delete ENV.TURN_KEY_ID; delete ENV.TURN_KEY_API_TOKEN;
   let n429 = 0; for (let i = 0; i < 62; i++) { const r = await call('GET', '/api/ice', undefined, null, '7.7.7.9'); if (r.status === 429) n429++; }
   ok(n429 === 2, '同一个 IP 一小时最多要 60 次', n429);
-  globalThis.fetch = realFetch; delete ENV.TURN_KEY_ID; delete ENV.TURN_KEY_API_TOKEN;
 }
 
 console.log(`\n${pass} 项通过，${fail} 项失败`);
