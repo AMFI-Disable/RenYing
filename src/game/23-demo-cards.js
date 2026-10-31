@@ -524,9 +524,9 @@ function bpFinish() {
   MSTAT.maxcombo = 0; MSTAT.ults = 0;
 
   if (mode === 'cpu') {
-    startMatch('cpu', pickLevel, picks);
+    startMatch('cpu', opts.level || pickLevel, picks);
   } else if (mode === 'cpuWatch') {
-    startMatch('cpu', pickLevel || 'god', picks, true);
+    startMatch('cpu', opts.level || pickLevel || 'god', picks, true);
   } else if (mode === 'net') {
     if (NET.role === 'host') {
       const seed = (Math.random() * 2147483647) | 0;
@@ -541,13 +541,13 @@ function bpFinish() {
       rollStart(flatCh, seed, duo, mv, mapId);
     }
   } else if (mode === 'chaos') {
-    startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
+    startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
   } else if (mode === 'mayhem') {
-    startMayhem(picks[0], picks[1], opts.level || mayhemLevel, !!opts.isWatch);
+    startMayhem(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
   } else if (mode === 'maps') {
-    startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch, mapId);
+    startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
   } else if (mode === 'tag3') {
-    startTag3Match(picks[0], picks[1], opts.level || tag3Level, !!opts.isWatch);
+    startTag3Match(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
     M.bans = bans;
   } else if (mode === 'tower') {
     startTower(picks[0], !!opts.isWatch);

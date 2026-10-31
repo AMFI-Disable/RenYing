@@ -369,7 +369,7 @@ function setMenuHero(ci) {
 function heroQuickFight(lv) {
   if (menuLock || menuHeroId < 0) return;
   initAudio(); heroPickShow(false); heroLvShow(false);
-  if (lv) { pickLevel = lv; for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x.dataset.lv === lv); }
+  if (lv) setPickLevel(lv);
   paused = false;
   // 首页已经选好角色和难度：不进点将台，直接开打，对手随机挑一个别的侠客
   const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);

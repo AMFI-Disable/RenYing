@@ -3029,37 +3029,44 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
         </div>
       </div>
 
+      <!-- 电脑境界：对电脑的各模式（论剑、3v3、天机、山河异境、神决、2v2）共用这一条，选了会记住。见 src/game/21-buttons.js 的 setPickLevel -->
+      <div data-sec="cpu tag3 chaos maps mayhem" id="aiLvHome">
+        <div class="ai-lv-bar" id="aiLvBar">
+          <div class="sec-head-row">
+            <h3 class="spt">电脑境界</h3>
+            <span class="sub-badge">各模式通用 · 会记住</span>
+          </div>
+          <div class="levels-grid" id="levels" role="group" aria-label="电脑境界">
+            <button data-lv="easy" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+              <span class="lv-sub">初学练手 · 反应迟缓</span>
+            </button>
+            <button data-lv="normal" class="sel" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+              <span class="lv-sub">见招拆招 · 标准对练</span>
+            </button>
+            <button data-lv="hard" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+              <span class="lv-sub">凌厉反击 · 4连段压制</span>
+            </button>
+            <button data-lv="impossible" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+              <span class="lv-sub">极境宗师 · 零空隙弹反</span>
+            </button>
+            <button data-lv="god" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+              <span class="lv-sub">全系神经策略 · 算无遗策</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 对战电脑 (Choosing AI) -->
       <div data-sec="cpu" class="single-sec-pane">
         <div class="sec-head-row">
-          <h3 class="spt">对手境界选择</h3>
+          <h3 class="spt">对战电脑</h3>
           <span class="sub-badge">离线人机演练</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">选择电脑 AI 战力境界，各难度具备独立的出招倾向、格挡反应与连段深度。</p>
-
-        <div class="levels-grid" id="levels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学练手 · 反应迟缓</span>
-          </button>
-          <button data-lv="normal" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">见招拆招 · 标准对练</span>
-          </button>
-          <button data-lv="hard" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉反击 · 4连段压制</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">极境宗师 · 零空隙弹反</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">全系神经策略 · 算无遗策</span>
-          </button>
-        </div>
-
         <div class="ai-brief-card" id="aiBriefCard">
           <div class="ai-brief-head">
             <span class="ai-brief-title" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a9.96 9.96 0 0 0-7.07 2.93A9.96 9.96 0 0 0 2 12c0 2.22.73 4.27 1.96 5.92A10.05 10.05 0 0 0 12 22a10.05 10.05 0 0 0 8.04-4.08A9.96 9.96 0 0 0 22 12c0-2.76-1.12-5.26-2.93-7.07A9.96 9.96 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>AI 战术情报分析</span>
@@ -3097,29 +3104,6 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
           </div>
         </div>
 
-        <div class="sec-sub-label" style="margin-top:10px">敌方门派战力境界</div>
-        <div class="levels-grid" id="tag3Levels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">反应迟缓 · 初涉江湖</span>
-          </button>
-          <button data-lv="normal" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">攻防均衡 · 门派精英</span>
-          </button>
-          <button data-lv="hard" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉反击 · 连招压制</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">极境宗师 · 绝无破绽</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神级策略 · 阵法克制</span>
-          </button>
-        </div>
 
         <div class="single-action-row">
           <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
@@ -3214,29 +3198,6 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
             <span>选定境界后点击开启，在点将台中自由点选本命侠客迎战天机异变。</span>
           </div>
         </div>
-        <div class="sec-sub-label" style="margin-top:10px">乱斗电脑境界</div>
-        <div class="levels-grid" id="chaosLevels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学试水</span>
-          </button>
-          <button data-lv="normal" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">标准切磋</span>
-          </button>
-          <button data-lv="hard" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉出招</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">零瑕宗师</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神经网络</span>
-          </button>
-        </div>
         <div class="single-action-row">
           <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
           <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
@@ -3252,29 +3213,6 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
         <p class="sub" style="margin:2px 0 10px;text-align:left">换一处战场比试：每张图的地形会改变侠客的走位和招式。开打前投一票，每张图被选中的概率按票数算，没人投票时每张图机会一样。</p>
         <div class="sec-sub-label">投出你的一票（再按一次收回）</div>
         <div class="map-vote" id="mapVote"></div>
-        <div class="sec-sub-label" style="margin-top:10px">电脑境界</div>
-        <div class="levels-grid" id="mapsLevels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学试练</span>
-          </button>
-          <button data-lv="normal" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">见招拆招</span>
-          </button>
-          <button data-lv="hard" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉出招</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">零瑕闪避</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神级策略</span>
-          </button>
-        </div>
         <div class="single-action-row">
           <button class="go" id="mapsStartBtn" type="button">开启山河异境</button>
           <button class="go alt" id="mapsWatchBtn" type="button">异境 AI 观战</button>
@@ -3294,29 +3232,6 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
             <b>点将台规则 · 狂暴神通免禁用直选</b>
             <span>选定电脑境界后点击开启，进入点将台点选你的神魔出战侠客。</span>
           </div>
-        </div>
-        <div class="sec-sub-label" style="margin-top:10px">神魔电脑境界</div>
-        <div class="levels-grid" id="mayhemLevels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学试练</span>
-          </button>
-          <button data-lv="normal" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">见招拆招</span>
-          </button>
-          <button data-lv="hard" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉出招</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">零瑕闪避</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神级策略</span>
-          </button>
         </div>
         <div class="single-action-row">
           <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
@@ -3998,28 +3913,7 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
         <p class="sub m2-desc" id="modal2v2Desc"></p>
         <div id="m2LvWrap">
           <div class="sec-sub-label">电脑的境界</div>
-          <div class="levels-grid" id="m2Levels">
-            <button data-lv="easy" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-              <span class="lv-sub">反应迟缓 · 初学练手</span>
-            </button>
-            <button data-lv="normal" class="sel" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-              <span class="lv-sub">见招拆招 · 攻守均衡</span>
-            </button>
-            <button data-lv="hard" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-              <span class="lv-sub">凌厉反击 · 连招压制</span>
-            </button>
-            <button data-lv="impossible" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-              <span class="lv-sub">极境宗师 · 绝无破绽</span>
-            </button>
-            <button data-lv="god" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-              <span class="lv-sub">神经网络 · 协同战术</span>
-            </button>
-          </div>
+          <!-- 弹窗开着时，单人模式那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
         </div>
         <div class="sec-sub-label">在哪打</div>
         <div class="m2-ways" id="modal2v2Options">
@@ -7371,7 +7265,6 @@ const UI_COPY_EN = {
 "个，开箱不用钥匙": " cases, no key needed to open",
 "中": "Medium",
 "九霄": "Nine Skies",
-"乱斗电脑境界": "Mayhem AI Tier",
 "乾坤异变": "Celestial Shift",
 "云存档设置": "Cloud Save Settings",
 "云端存档双向合并同步成功！": "Cloud save two-way merge sync successful!",
@@ -7416,7 +7309,6 @@ const UI_COPY_EN = {
 "冥狱": "Nether Underworld",
 "凌厉反击": "Fierce Counter",
 "凌厉反击 · 4连段压制": "Fierce Counter · 4-Hit Combos",
-"凌厉反击 · 连招压制": "Aggressive Combos & Pressure",
 "凌霜": "Ling Shuang",
 "凤羽": "Phoenix Plume",
 "出价": "Price",
@@ -7572,7 +7464,6 @@ const UI_COPY_EN = {
 "操作说明": "Controls",
 "攻击": "Attack",
 "攻击距离": "Attack Reach",
-"敌方门派战力境界": "Enemy Sect Realm",
 "敌方阵线技高一筹": "Enemy sect had the upper hand",
 "教学完成": "Tutorial Completed",
 "斩数版": "StatTrak",
@@ -7614,7 +7505,6 @@ const UI_COPY_EN = {
 "朱砂": "Cinnabar",
 "极光": "Aurora",
 "极境宗师": "Supreme Grandmaster",
-"极境宗师 · 绝无破绽": "Grandmaster · Seamless Defense",
 "极境宗师 · 零空隙弹反": "Grandmaster · Flawless Parries",
 "极高画质（原生全像素）": "Ultra (Native Pixels)",
 "枪旋": "Spear Whirl",
@@ -7690,11 +7580,7 @@ const UI_COPY_EN = {
 "礼包兑换码要先登录云端账号才能领": "Log in to a cloud account to redeem gift codes",
 "社区": "Community",
 "神兵武器箱": "Divine Arms Case",
-"神级策略": "Divine AI Strategy",
-"初学试练": "Beginner Trial",
 "见招拆招": "Read and Counter",
-"凌厉出招": "Sharp Attacks",
-"零瑕闪避": "Flawless Dodges",
 "神魔乱斗": "Chaos Mayhem",
 "福利": "Welfare",
 "秘卷三选一": "Choose 1 of 3 Scrolls",
@@ -7820,7 +7706,6 @@ const UI_COPY_EN = {
 "隐秘": "Covert",
 "雪箫": "Snow Flute",
 "雪鸮": "Snow Owl",
-"零瑕宗师": "Flawless Master",
 "雷拳武僧": "Thunder Monk",
 "雷闪": "Thunder Fist",
 "雷霆万钧": "Thunderstruck",
@@ -7883,7 +7768,6 @@ const UI_COPY_EN = {
 "木人试剑": "Dummy Training",
 "问剑密卷 (肉鸽)": "Sword Scrolls (Roguelike)",
 "2v2 组队": "2v2 Team",
-"对手境界选择": "Opponent Realm",
 "离线人机演练": "Offline CPU Practice",
 "未解锁": "Locked",
 "开启专精演武": "Start Specialized Duel",
@@ -8148,7 +8032,6 @@ const UI_COPY_EN = {
 "你 + 电脑队友": "You + AI Teammate",
 "电脑的境界": "AI Level",
 "反应迟缓 · 初学练手": "Slow reactions · For beginners",
-"神经网络 · 协同战术": "Neural network · Team tactics",
 "在哪打": "Where to Play",
 "同一台电脑": "Same Computer",
 "全服匹配": "Online Matchmaking",
@@ -8999,6 +8882,7 @@ const UI_COPY_EN = {
 "换一处战场比试：每张图的地形会改变侠客的走位和招式。开打前投一票，每张图被选中的概率按票数算，没人投票时每张图机会一样。": "Fight somewhere new: each map's terrain changes how heroes move and use their skills. Cast a vote before the match; each map's chance is its share of the votes, and with no votes every map is equally likely.",
 "投出你的一票（再按一次收回）": "Cast your vote (press again to take it back)",
 "电脑境界": "AI Tier",
+"各模式通用 · 会记住": "Shared by every mode · Remembered",
 "开启山河异境": "Start Terrain Clash",
 "异境 AI 观战": "Watch Terrain AI Battle",
 "换一处战场：投票选地图，断崖、冰面都会改变侠客的打法": "A new battlefield: vote for the map. Cliffs and ice change how every hero fights",
@@ -22042,7 +21926,7 @@ $id('heroName').innerHTML = escapeHTML(CHARS[ci].name) + (sk ? `<small>${escapeH
 function heroQuickFight(lv) {
 if (menuLock || menuHeroId < 0) return;
 initAudio(); heroPickShow(false); heroLvShow(false);
-if (lv) { pickLevel = lv; for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x.dataset.lv === lv); }
+if (lv) setPickLevel(lv);
 paused = false;
 const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);
 const foe = foes[Math.random() * foes.length | 0];
@@ -25176,6 +25060,7 @@ if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFini
 if (prev === 'bp') { BP = null; watch2v2Bp = null; }
 }
 if (id === 'single') {
+if ($id('modal2v2') && $id('modal2v2').classList.contains('hidden')) levelBarTo(null);   // 2v2 弹窗借走的境界栏放回来
 singleSec(currentSingleTab || 'cpu');
 }
 if (id === 'codex' && $id('cxTabs') && !$id('cxTabs').children.length) {
@@ -25219,16 +25104,41 @@ function selectMode(mode) {
 pickMode = mode;
 if (mode === 'net') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; showScreen('netp'); }
 }
+const AI_LEVEL_KEY = 'renying-ai-level', AI_LEVEL_IDS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+const AI_LEVEL_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps', '2v2'];
+function setPickLevel(lv, save = true) {
+if (!AI_LEVEL_IDS.includes(lv)) return;
+pickLevel = lv;
+if (save) try { localStorage.setItem(AI_LEVEL_KEY, lv); } catch (e) {}
+for (const x of document.querySelectorAll('#levels button[data-lv]')) { const on = x.dataset.lv === lv; x.classList.toggle('sel', on); x.setAttribute('aria-pressed', on); }
+updateAIBrief();
+}
+function loadPickLevel() {
+let lv = null;
+try { lv = localStorage.getItem(AI_LEVEL_KEY); } catch (e) {}
+if (AI_LEVEL_IDS.includes(lv)) return setPickLevel(lv, false);
+let t = -1; lv = null;
+for (const r of rpList()) {
+const m = r && (r.meta || r);
+if (m && AI_LEVEL_MODES.includes(m.mode) && AI_LEVEL_IDS.includes(m.level) && (+m.t || 0) > t) { t = +m.t || 0; lv = m.level; }
+}
+setPickLevel(lv || 'normal', !!lv);
+}
+for (const k of ['tag3Level', 'chaosLevel', 'mayhemLevel', 'mapsLevel', 'm2Level']) Object.defineProperty(globalThis, k, { get: () => pickLevel, set: v => setPickLevel(v), configurable: true });
+function levelBarTo(host) {
+const bar = $id('levels'), home = $id('aiLvBar'); if (!bar || !home) return;
+const to = host || home;
+if (bar.parentNode !== to) to.appendChild(bar);
+}
 const levelsEl = document.getElementById('levels');
 if (levelsEl) {
 levelsEl.addEventListener('click', e => {
 const b = e.target.closest('button'); if (!b || !b.dataset.lv) return;
-pickLevel = b.dataset.lv;
-for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x === b);
-updateAIBrief();
+setPickLevel(b.dataset.lv);
 SFX.slice();
 });
 }
+loadPickLevel();
 const singleCatTabsEl = document.getElementById('singleCatTabs');
 if (singleCatTabsEl) {
 singleCatTabsEl.addEventListener('click', e => {
@@ -25379,7 +25289,7 @@ A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; 
 }
 function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
 if (targetMode === 'watch2v2') return isWatch ? startWatch2v2Draft() : bpStart('2v2', { subMode: 'pp_cc', level: 'god' });
-if (targetMode === 'cpu') { pickLevel = 'god'; return bpStart(isWatch ? 'cpuWatch' : 'cpu'); }
+if (targetMode === 'cpu') return bpStart(isWatch ? 'cpuWatch' : 'cpu', { level: 'god' });   // 专项训练固定天道，不改玩家选好的电脑境界
 if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
 bpStart('train', { targetMode: 'dummy', isWatch });
 }
@@ -25461,17 +25371,14 @@ if (p && p.isConnected && (!document.activeElement || document.activeElement ===
 }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
 }
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
-let tag3Level = 'normal';
-function renderTag3() {
-for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x.dataset.lv === tag3Level);
-}
+function renderTag3() {}
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 if (p2pActive()) netDropWaiting();
 refocusGame();
 human[0].rec = null;
 REC.on = false;
 M.mode = 'tag3';
-M.level = lv || tag3Level || 'normal';
+M.level = lv || pickLevel || 'normal';
 M.teams = [[...pTeam], [...eTeam]];
 M.teamIdx = [0, 0];
 M.wins = [0, 0];
@@ -25489,22 +25396,12 @@ showScreen(null);
 startRound();
 if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
 }
-const tag3LevelsEl = document.getElementById('tag3Levels');
-if (tag3LevelsEl) {
-tag3LevelsEl.addEventListener('click', e => {
-const b = e.target.closest('button');
-if (!b || !b.dataset.lv) return;
-tag3Level = b.dataset.lv;
-for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x === b);
-SFX.slice();
-});
-}
 const tag3StartBtn = document.getElementById('tag3StartBtn');
 if (tag3StartBtn) {
 tag3StartBtn.addEventListener('click', () => {
 initAudio();
 paused = false;
-bpStart('tag3', { level: tag3Level, isWatch: false });
+bpStart('tag3', { level: pickLevel, isWatch: false });
 });
 }
 const TOWER_SAVE_KEY = 'renying-tower-run';
@@ -25796,7 +25693,7 @@ const CHAOS_MUTATIONS = [
 { id: "chaos_119", name: "「破军·奔雷」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 狂雷贯顶，迅若闪电" },
 { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
-let chaosP1 = 0, chaosP2 = 1, chaosLevel = 'normal';
+let chaosP1 = 0, chaosP2 = 1;
 const chaosOn = () => M.mode === 'chaos' || (netRoom() || {}).rule === 'chaos';
 function chaosNow(type) {
 const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
@@ -25823,33 +25720,22 @@ if (!M.chaos) M.chaos = { i: -1, t: 0 };
 M.chaos.t += dt;
 if (M.chaos.i < 0 || M.chaos.t >= CHAOS_INTERVAL) rollChaosMutation();
 }
-function renderChaos() {
-const lvs = document.querySelectorAll('#chaosLevels button');
-lvs.forEach(b => {
-b.classList.toggle('sel', b.dataset.lv === chaosLevel);
-b.onclick = () => {
-chaosLevel = b.dataset.lv;
-lvs.forEach(x => x.classList.toggle('sel', x === b));
-SFX.slice();
-};
-});
-}
+function renderChaos() {}   // 电脑境界用共用的那一条（pickLevel）
 function startChaos(p1, p2, lv, isWatch = false) {
 initAudio();
 paused = false;
 chaosP1 = p1 !== undefined ? p1 : chaosP1;
 chaosP2 = p2 !== undefined ? p2 : chaosP2;
-chaosLevel = lv !== undefined ? lv : chaosLevel;
 M.mode = 'chaos';
-M.level = chaosLevel;
+M.level = lv || pickLevel;   // 这局用的境界；不改玩家选好的那一条
 M.round = 1;
 M.wins = [0, 0];
 M.stage = null;
 M.watchAi = !!isWatch;
 M.chaos = { i: -1, t: 0 };
 setChars(chaosP1, chaosP2);
-A.ctrl = isWatch ? new AICtrl(chaosLevel || 'god') : human[0];
-B.ctrl = new AICtrl(chaosLevel || 'god');
+A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+B.ctrl = new AICtrl(M.level || 'god');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
@@ -25865,39 +25751,28 @@ const towerResumeBtn = document.getElementById('towerResumeBtn');
 if (towerResumeBtn) towerResumeBtn.addEventListener('click', () => resumeTower());
 const chaosStartBtn = document.getElementById('chaosStartBtn');
 if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => {
-bpStart('chaos', { level: chaosLevel, isWatch: false });
+bpStart('chaos', { level: pickLevel, isWatch: false });
 });
 const chaosWatchBtn = document.getElementById('chaosWatchBtn');
 if (chaosWatchBtn) chaosWatchBtn.addEventListener('click', () => {
-bpStart('chaos', { level: chaosLevel || 'god', isWatch: true });
+bpStart('chaos', { level: pickLevel || 'god', isWatch: true });
 });
-let mayhemP1 = 0, mayhemP2 = 1, mayhemLevel = 'hard';
-function renderMayhem() {
-const lvs = document.querySelectorAll('#mayhemLevels button');
-lvs.forEach(b => {
-b.classList.toggle('sel', b.dataset.lv === mayhemLevel);
-b.onclick = () => {
-mayhemLevel = b.dataset.lv;
-lvs.forEach(x => x.classList.toggle('sel', x === b));
-SFX.slice();
-};
-});
-}
+let mayhemP1 = 0, mayhemP2 = 1;
+function renderMayhem() {}   // 电脑境界用共用的那一条（pickLevel）
 function startMayhem(p1, p2, lv, isWatch = false) {
 initAudio();
 paused = false;
 mayhemP1 = p1 !== undefined ? p1 : mayhemP1;
 mayhemP2 = p2 !== undefined ? p2 : mayhemP2;
-mayhemLevel = lv !== undefined ? lv : mayhemLevel;
 M.mode = 'mayhem';
-M.level = mayhemLevel;
+M.level = lv || pickLevel;
 M.round = 1;
 M.wins = [0, 0];
 M.stage = null;
 M.watchAi = !!isWatch;
 setChars(mayhemP1, mayhemP2);
-A.ctrl = isWatch ? new AICtrl(mayhemLevel || 'god') : human[0];
-B.ctrl = new AICtrl(mayhemLevel || 'god');
+A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+B.ctrl = new AICtrl(M.level || 'god');
 A.meter = B.meter = 100;
 human[0].clear(); human[1].clear();
 showScreen(null);
@@ -25906,13 +25781,13 @@ say(isWatch ? '通天神决 · 神魔 AI 观战' : '通天神决 · 大显神通
 }
 const mayhemStartBtn = document.getElementById('mayhemStartBtn');
 if (mayhemStartBtn) mayhemStartBtn.addEventListener('click', () => {
-bpStart('mayhem', { level: mayhemLevel, isWatch: false });
+bpStart('mayhem', { level: pickLevel, isWatch: false });
 });
 const mayhemWatchBtn = document.getElementById('mayhemWatchBtn');
 if (mayhemWatchBtn) mayhemWatchBtn.addEventListener('click', () => {
-bpStart('mayhem', { level: mayhemLevel || 'god', isWatch: true });
+bpStart('mayhem', { level: pickLevel || 'god', isWatch: true });
 });
-let mapsLevel = 'hard', mapsP1 = 0, mapsP2 = 1;
+let mapsP1 = 0, mapsP2 = 1;
 let mapVote = null;
 try { const v = localStorage.getItem('renying-map-vote'); if (MAPS[v]) mapVote = v; } catch (e) {}
 function setMapVote(id) {
@@ -25932,20 +25807,14 @@ for (const b of box.querySelectorAll('button[data-map]')) b.onclick = () => { on
 }
 function renderMaps() {
 mapVoteCards($id('mapVote'), mapVote ? [mapVote] : [], mapVote, id => { setMapVote(mapVote === id ? null : id); renderMaps(); });
-const lvs = document.querySelectorAll('#mapsLevels button');
-lvs.forEach(b => {
-b.classList.toggle('sel', b.dataset.lv === mapsLevel);
-b.onclick = () => { mapsLevel = b.dataset.lv; lvs.forEach(x => x.classList.toggle('sel', x === b)); SFX.slice(); };
-});
 }
 function startMapsMode(p1, p2, lv, isWatch = false, mapId) {
 initAudio();
 paused = false;
 mapsP1 = p1 !== undefined ? p1 : mapsP1;
 mapsP2 = p2 !== undefined ? p2 : mapsP2;
-mapsLevel = lv !== undefined ? lv : mapsLevel;
 M.mode = 'maps';
-M.level = mapsLevel;
+M.level = lv || pickLevel;
 M.round = 1;
 M.wins = [0, 0];
 M.carry = null;
@@ -25954,8 +25823,8 @@ M.duo = null;
 M.watchAi = !!isWatch;
 M.map = MAP_POOL.includes(mapId) ? mapId : mapPick(mapVote ? [mapVote] : [], Math.random());   // 点将台上已经选好；没有就现在按票选
 setChars(mapsP1, mapsP2);
-A.ctrl = isWatch ? new AICtrl(mapsLevel || 'god') : human[0];
-B.ctrl = new AICtrl(mapsLevel || 'god');
+A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+B.ctrl = new AICtrl(M.level || 'god');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
@@ -25964,9 +25833,9 @@ startRound();
 say('山河异境 · ' + MAPS[M.map].n, 1.4, 'big', MAPS[M.map].d);
 }
 const mapsStartBtn = document.getElementById('mapsStartBtn');
-if (mapsStartBtn) mapsStartBtn.addEventListener('click', () => bpStart('maps', { level: mapsLevel, isWatch: false }));
+if (mapsStartBtn) mapsStartBtn.addEventListener('click', () => bpStart('maps', { level: pickLevel, isWatch: false }));
 const mapsWatchBtn = document.getElementById('mapsWatchBtn');
-if (mapsWatchBtn) mapsWatchBtn.addEventListener('click', () => bpStart('maps', { level: mapsLevel || 'god', isWatch: true }));
+if (mapsWatchBtn) mapsWatchBtn.addEventListener('click', () => bpStart('maps', { level: pickLevel || 'god', isWatch: true }));
 const cpuWatchBtn = document.getElementById('cpuWatchBtn');
 if (cpuWatchBtn) cpuWatchBtn.addEventListener('click', () => {
 initAudio();
@@ -25975,7 +25844,7 @@ bpStart('cpuWatch');
 });
 const tag3WatchBtn = document.getElementById('tag3WatchBtn');
 if (tag3WatchBtn) tag3WatchBtn.addEventListener('click', () => {
-bpStart('tag3', { level: tag3Level || 'god', isWatch: true });
+bpStart('tag3', { level: pickLevel || 'god', isWatch: true });
 });
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
 const WATCH2V2_TEAMS = ['苍龙', '赤凤'];
@@ -26198,7 +26067,6 @@ startRound();
 say(`2v2 四人对决 · 苍龙 vs 赤凤！`, 1.4);
 }
 let active2v2ModalMode = 'pp_cc';
-let m2Level = 'normal';   // 对阵电脑时（你 + 电脑队友、两人 vs 两电脑）电脑的境界，队友和对手一样
 const M2_TEXT = {
 p_cc: { desc: '你和一个电脑队友一队，对阵两个电脑。', local: '你用 WASD 或方向键，队友由电脑操控', match: '' },
 pp_cc: { desc: '你和队友一队，对阵两个电脑。', local: '1P 用 WASD，2P 用方向键 + K 攻击', match: '全服找一位队友，一起打两个电脑' },
@@ -26207,7 +26075,6 @@ pp_pp: { desc: '两队各两人对打：你们两个对另外两个玩家。', l
 function render2v2Modal() {
 const mode = active2v2ModalMode, tx = M2_TEXT[mode];
 for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
-for (const b of document.querySelectorAll('#m2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === m2Level);
 $id('m2LvWrap').hidden = mode === 'pp_pp';
 for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) $id(id).style.display = mode === 'p_cc' ? 'none' : '';   // 一个人带电脑队友，不用联网（.m2-way 自带 display，hidden 属性压不住）
 $id('modal2v2Desc').textContent = tx.desc;
@@ -26217,6 +26084,7 @@ $id('modal2v2MatchDesc').textContent = tx.match;
 function open2v2Modal(mode) {
 if (M2_TEXT[mode]) active2v2ModalMode = mode;
 $id('modal2v2').classList.remove('hidden');
+levelBarTo($id('m2LvWrap'));   // 对阵电脑时（你 + 电脑队友、两人 vs 两电脑）电脑的境界：借用共用的那一条，队友和对手一样
 render2v2Modal();
 }
 function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一页（离线版没有对战页，回单人页），再打开弹窗
@@ -26224,21 +26092,17 @@ const scr = openScreen(OFFLINE_BUILD ? 'single' : 'netp', reveal);
 open2v2Modal(mode);
 return scr;
 }
-function close2v2Modal() { $id('modal2v2').classList.add('hidden'); }
+function close2v2Modal() { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
 $id('modal2v2Seg').addEventListener('click', e => {
 const b = e.target.closest('button[data-m]'); if (!b) return;
 active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
-});
-$id('m2Levels').addEventListener('click', e => {
-const b = e.target.closest('button[data-lv]'); if (!b) return;
-m2Level = b.dataset.lv; SFX.slice(); render2v2Modal();
 });
 $id('mm2v2CoopBtn').addEventListener('click', () => open2v2Modal('pp_cc'));
 $id('mm2v2VsBtn').addEventListener('click', () => open2v2Modal('pp_pp'));
 $id('modal2v2Close').addEventListener('click', close2v2Modal);
 $id('btn2v2GoLocal').addEventListener('click', () => {
 close2v2Modal();
-bpStart('2v2', { subMode: active2v2ModalMode, level: m2Level });
+bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
 });
 $id('btn2v2GoMatch').addEventListener('click', () => {
 close2v2Modal();
@@ -26578,15 +26442,15 @@ startWatch2v2Draft();
 return;
 }
 if (M.mode === 'mayhem') {
-bpStart('mayhem', { level: mayhemLevel, isWatch: false });
+bpStart('mayhem', { level: pickLevel, isWatch: false });
 return;
 }
 if (M.mode === 'maps') {   // 再来一局：按现在的票重新选图
-bpStart('maps', { level: mapsLevel, isWatch: false });
+bpStart('maps', { level: pickLevel, isWatch: false });
 return;
 }
 if (M.mode === 'tag3') {
-bpStart('tag3', { level: tag3Level, isWatch: false });
+bpStart('tag3', { level: pickLevel, isWatch: false });
 return;
 }
 if (isRaid()) {
@@ -26604,7 +26468,7 @@ bpStart('tower', { isWatch: false });
 return;
 }
 if (M.mode === 'chaos') {
-bpStart('chaos', { level: chaosLevel, isWatch: false });
+bpStart('chaos', { level: pickLevel, isWatch: false });
 return;
 }
 if (M.mode === 'cpu' && M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
@@ -28847,9 +28711,9 @@ bpCustomOpts = null;
 showScreen(null);
 MSTAT.maxcombo = 0; MSTAT.ults = 0;
 if (mode === 'cpu') {
-startMatch('cpu', pickLevel, picks);
+startMatch('cpu', opts.level || pickLevel, picks);
 } else if (mode === 'cpuWatch') {
-startMatch('cpu', pickLevel || 'god', picks, true);
+startMatch('cpu', opts.level || pickLevel || 'god', picks, true);
 } else if (mode === 'net') {
 if (NET.role === 'host') {
 const seed = (Math.random() * 2147483647) | 0;
@@ -28863,13 +28727,13 @@ send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId } : { ch: flatCh, s
 rollStart(flatCh, seed, duo, mv, mapId);
 }
 } else if (mode === 'chaos') {
-startChaos(picks[0], picks[1], opts.level || chaosLevel, !!opts.isWatch);
+startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
 } else if (mode === 'mayhem') {
-startMayhem(picks[0], picks[1], opts.level || mayhemLevel, !!opts.isWatch);
+startMayhem(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
 } else if (mode === 'maps') {
-startMapsMode(picks[0], picks[1], opts.level || mapsLevel, !!opts.isWatch, mapId);
+startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
 } else if (mode === 'tag3') {
-startTag3Match(picks[0], picks[1], opts.level || tag3Level, !!opts.isWatch);
+startTag3Match(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
 M.bans = bans;
 } else if (mode === 'tower') {
 startTower(picks[0], !!opts.isWatch);

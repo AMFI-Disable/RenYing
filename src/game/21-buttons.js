@@ -12,6 +12,7 @@ function showScreen(id) {
     if (prev === 'bp') { BP = null; watch2v2Bp = null; }
   }
   if (id === 'single') {
+    if ($id('modal2v2') && $id('modal2v2').classList.contains('hidden')) levelBarTo(null);   // 2v2 弹窗借走的境界栏放回来
     singleSec(currentSingleTab || 'cpu');
   }
   if (id === 'codex' && $id('cxTabs') && !$id('cxTabs').children.length) {
@@ -56,16 +57,48 @@ function selectMode(mode) {
   pickMode = mode;
   if (mode === 'net') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; showScreen('netp'); }
 }
+// ---------- 电脑境界：对电脑的各模式共用一条 ----------
+// 论剑、3v3 车轮战、2v2、天机乱斗、通天神决、山河异境都用 pickLevel，选了记在 localStorage。
+// 守关、列传、问剑密卷、开放世界、全服肉鸽有自己的难度曲线，不看它。
+// 栏只有一条（#levels）：平时在单人页顶上，2v2 弹窗开着时挪进弹窗（levelBarTo）
+const AI_LEVEL_KEY = 'renying-ai-level', AI_LEVEL_IDS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+const AI_LEVEL_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps', '2v2'];
+function setPickLevel(lv, save = true) {
+  if (!AI_LEVEL_IDS.includes(lv)) return;
+  pickLevel = lv;
+  if (save) try { localStorage.setItem(AI_LEVEL_KEY, lv); } catch (e) {}
+  for (const x of document.querySelectorAll('#levels button[data-lv]')) { const on = x.dataset.lv === lv; x.classList.toggle('sel', on); x.setAttribute('aria-pressed', on); }
+  updateAIBrief();
+}
+// 打开网页时读回来。以前各模式的境界各记各的、关掉网页就忘了；第一次用新版时，从最近一场对电脑的录像里取当时的境界
+function loadPickLevel() {
+  let lv = null;
+  try { lv = localStorage.getItem(AI_LEVEL_KEY); } catch (e) {}
+  if (AI_LEVEL_IDS.includes(lv)) return setPickLevel(lv, false);
+  let t = -1; lv = null;
+  for (const r of rpList()) {
+    const m = r && (r.meta || r);
+    if (m && AI_LEVEL_MODES.includes(m.mode) && AI_LEVEL_IDS.includes(m.level) && (+m.t || 0) > t) { t = +m.t || 0; lv = m.level; }
+  }
+  setPickLevel(lv || 'normal', !!lv);
+}
+// 以前每个模式各有一个境界变量，现在都是 pickLevel 的别名：老代码和测试照样能读能写
+for (const k of ['tag3Level', 'chaosLevel', 'mayhemLevel', 'mapsLevel', 'm2Level']) Object.defineProperty(globalThis, k, { get: () => pickLevel, set: v => setPickLevel(v), configurable: true });
+// 把那一条栏放进 host（null 放回单人页顶上）
+function levelBarTo(host) {
+  const bar = $id('levels'), home = $id('aiLvBar'); if (!bar || !home) return;
+  const to = host || home;
+  if (bar.parentNode !== to) to.appendChild(bar);
+}
 const levelsEl = document.getElementById('levels');
 if (levelsEl) {
   levelsEl.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || !b.dataset.lv) return;
-    pickLevel = b.dataset.lv;
-    for (const x of document.querySelectorAll('#levels button')) x.classList.toggle('sel', x === b);
-    updateAIBrief();
+    setPickLevel(b.dataset.lv);
     SFX.slice();
   });
 }
+loadPickLevel();
 const singleCatTabsEl = document.getElementById('singleCatTabs');
 if (singleCatTabsEl) {
   singleCatTabsEl.addEventListener('click', e => {
@@ -227,7 +260,7 @@ function startDummyTraining() {
 // 木人试剑：木人桩直接开练；各模式的最高境界专项训练和正常开局一样先去点将台选人
 function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
   if (targetMode === 'watch2v2') return isWatch ? startWatch2v2Draft() : bpStart('2v2', { subMode: 'pp_cc', level: 'god' });
-  if (targetMode === 'cpu') { pickLevel = 'god'; return bpStart(isWatch ? 'cpuWatch' : 'cpu'); }
+  if (targetMode === 'cpu') return bpStart(isWatch ? 'cpuWatch' : 'cpu', { level: 'god' });   // 专项训练固定天道，不改玩家选好的电脑境界
   if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
   bpStart('train', { targetMode: 'dummy', isWatch });
 }

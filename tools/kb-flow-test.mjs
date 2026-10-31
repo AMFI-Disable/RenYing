@@ -198,7 +198,7 @@ if (MAPS_FLOW) {
   if (await ev(`!!document.querySelector('#mapVote .map-card.sel')`)) await activate('take back an old vote', '#mapVote .map-card.sel');
   await activate('vote for Frozen Pond', '#mapVote [data-map="ice"]');
   ok('vote counted', await ev(`mapVote === 'ice' && !!document.querySelector('#mapVote [data-map="ice"].sel')`), await ev(`document.querySelector('#mapVote [data-map="ice"] .map-v').textContent`));
-  await activate('choose easy', '#mapsLevels [data-lv="easy"]');
+  await activate('choose easy', '#levels [data-lv="easy"]');
   await shot('02-maps');
   await activate('start terrain clash', '#mapsStartBtn', 'bp');
 } else if (DUMMY_FLOW) {

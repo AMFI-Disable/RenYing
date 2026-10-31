@@ -1,10 +1,6 @@
 // ======================= 3v3 门派车轮战 =======================
-let tag3Level = 'normal';
-
-// 车轮战设置页只剩难度按钮：选人统一在点将台里做（各禁 1 选 3）
-function renderTag3() {
-  for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x.dataset.lv === tag3Level);
-}
+// 车轮战设置页没有自己的设置了：电脑境界用单人页顶上共用的那一条（pickLevel），选人统一在点将台里做（各禁 1 选 3）
+function renderTag3() {}
 
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   if (p2pActive()) netDropWaiting();
@@ -13,7 +9,7 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   REC.on = false;
 
   M.mode = 'tag3';
-  M.level = lv || tag3Level || 'normal';
+  M.level = lv || pickLevel || 'normal';
   M.teams = [[...pTeam], [...eTeam]];
   M.teamIdx = [0, 0];
   M.wins = [0, 0];
@@ -34,22 +30,12 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
 }
 
-const tag3LevelsEl = document.getElementById('tag3Levels');
-if (tag3LevelsEl) {
-  tag3LevelsEl.addEventListener('click', e => {
-    const b = e.target.closest('button');
-    if (!b || !b.dataset.lv) return;
-    tag3Level = b.dataset.lv;
-    for (const x of document.querySelectorAll('#tag3Levels button')) x.classList.toggle('sel', x === b);
-    SFX.slice();
-  });
-}
 const tag3StartBtn = document.getElementById('tag3StartBtn');
 if (tag3StartBtn) {
   tag3StartBtn.addEventListener('click', () => {
     initAudio();
     paused = false;
-    bpStart('tag3', { level: tag3Level, isWatch: false });
+    bpStart('tag3', { level: pickLevel, isWatch: false });
   });
 }
 
@@ -356,7 +342,7 @@ const CHAOS_MUTATIONS = [
   { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
 
-let chaosP1 = 0, chaosP2 = 1, chaosLevel = 'normal';
+let chaosP1 = 0, chaosP2 = 1;
 // 天机乱斗正在生效的异变记在 M.chaos：{ i: CHAOS_MUTATIONS 里第几条（-1 还没抽）, t: 这条生效了几秒 }。
 // 放在 M 里，联机回滚的存档、录像都带着它；联机时两边（和放录像时）用对局随机数抽，抽到的是同一条，两边都生效
 const chaosOn = () => M.mode === 'chaos' || (netRoom() || {}).rule === 'chaos';
@@ -389,34 +375,23 @@ function updateChaos(dt) {
   if (M.chaos.i < 0 || M.chaos.t >= CHAOS_INTERVAL) rollChaosMutation();
 }
 
-function renderChaos() {
-  const lvs = document.querySelectorAll('#chaosLevels button');
-  lvs.forEach(b => {
-    b.classList.toggle('sel', b.dataset.lv === chaosLevel);
-    b.onclick = () => {
-      chaosLevel = b.dataset.lv;
-      lvs.forEach(x => x.classList.toggle('sel', x === b));
-      SFX.slice();
-    };
-  });
-}
+function renderChaos() {}   // 电脑境界用共用的那一条（pickLevel）
 
 function startChaos(p1, p2, lv, isWatch = false) {
   initAudio();
   paused = false;
   chaosP1 = p1 !== undefined ? p1 : chaosP1;
   chaosP2 = p2 !== undefined ? p2 : chaosP2;
-  chaosLevel = lv !== undefined ? lv : chaosLevel;
   M.mode = 'chaos';
-  M.level = chaosLevel;
+  M.level = lv || pickLevel;   // 这局用的境界；不改玩家选好的那一条
   M.round = 1;
   M.wins = [0, 0];
   M.stage = null;
   M.watchAi = !!isWatch;
   M.chaos = { i: -1, t: 0 };
   setChars(chaosP1, chaosP2);
-  A.ctrl = isWatch ? new AICtrl(chaosLevel || 'god') : human[0];
-  B.ctrl = new AICtrl(chaosLevel || 'god');
+  A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+  B.ctrl = new AICtrl(M.level || 'god');
   A.meter = B.meter = 0;
   human[0].clear(); human[1].clear();
   showScreen(null);
@@ -435,42 +410,31 @@ if (towerResumeBtn) towerResumeBtn.addEventListener('click', () => resumeTower()
 
 const chaosStartBtn = document.getElementById('chaosStartBtn');
 if (chaosStartBtn) chaosStartBtn.addEventListener('click', () => {
-  bpStart('chaos', { level: chaosLevel, isWatch: false });
+  bpStart('chaos', { level: pickLevel, isWatch: false });
 });
 
 const chaosWatchBtn = document.getElementById('chaosWatchBtn');
 if (chaosWatchBtn) chaosWatchBtn.addEventListener('click', () => {
-  bpStart('chaos', { level: chaosLevel || 'god', isWatch: true });
+  bpStart('chaos', { level: pickLevel || 'god', isWatch: true });
 });
 
-let mayhemP1 = 0, mayhemP2 = 1, mayhemLevel = 'hard';
-function renderMayhem() {
-  const lvs = document.querySelectorAll('#mayhemLevels button');
-  lvs.forEach(b => {
-    b.classList.toggle('sel', b.dataset.lv === mayhemLevel);
-    b.onclick = () => {
-      mayhemLevel = b.dataset.lv;
-      lvs.forEach(x => x.classList.toggle('sel', x === b));
-      SFX.slice();
-    };
-  });
-}
+let mayhemP1 = 0, mayhemP2 = 1;
+function renderMayhem() {}   // 电脑境界用共用的那一条（pickLevel）
 
 function startMayhem(p1, p2, lv, isWatch = false) {
   initAudio();
   paused = false;
   mayhemP1 = p1 !== undefined ? p1 : mayhemP1;
   mayhemP2 = p2 !== undefined ? p2 : mayhemP2;
-  mayhemLevel = lv !== undefined ? lv : mayhemLevel;
   M.mode = 'mayhem';
-  M.level = mayhemLevel;
+  M.level = lv || pickLevel;
   M.round = 1;
   M.wins = [0, 0];
   M.stage = null;
   M.watchAi = !!isWatch;
   setChars(mayhemP1, mayhemP2);
-  A.ctrl = isWatch ? new AICtrl(mayhemLevel || 'god') : human[0];
-  B.ctrl = new AICtrl(mayhemLevel || 'god');
+  A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+  B.ctrl = new AICtrl(M.level || 'god');
   A.meter = B.meter = 100;
   human[0].clear(); human[1].clear();
   showScreen(null);
@@ -480,17 +444,17 @@ function startMayhem(p1, p2, lv, isWatch = false) {
 
 const mayhemStartBtn = document.getElementById('mayhemStartBtn');
 if (mayhemStartBtn) mayhemStartBtn.addEventListener('click', () => {
-  bpStart('mayhem', { level: mayhemLevel, isWatch: false });
+  bpStart('mayhem', { level: pickLevel, isWatch: false });
 });
 
 const mayhemWatchBtn = document.getElementById('mayhemWatchBtn');
 if (mayhemWatchBtn) mayhemWatchBtn.addEventListener('click', () => {
-  bpStart('mayhem', { level: mayhemLevel || 'god', isWatch: true });
+  bpStart('mayhem', { level: pickLevel || 'god', isWatch: true });
 });
 
 // ---------- 山河异境：投票选地图（地图表在 src/data/12-maps.js）----------
 // 本机：你的一票（再点一次收回）；联机：两边各一票，房主开局时把票随开局一起发过去（rollStart 按种子选图）
-let mapsLevel = 'hard', mapsP1 = 0, mapsP2 = 1;
+let mapsP1 = 0, mapsP2 = 1;
 let mapVote = null;
 try { const v = localStorage.getItem('renying-map-vote'); if (MAPS[v]) mapVote = v; } catch (e) {}
 function setMapVote(id) {
@@ -511,20 +475,14 @@ function mapVoteCards(box, votes, mine, onPick) {
 }
 function renderMaps() {
   mapVoteCards($id('mapVote'), mapVote ? [mapVote] : [], mapVote, id => { setMapVote(mapVote === id ? null : id); renderMaps(); });
-  const lvs = document.querySelectorAll('#mapsLevels button');
-  lvs.forEach(b => {
-    b.classList.toggle('sel', b.dataset.lv === mapsLevel);
-    b.onclick = () => { mapsLevel = b.dataset.lv; lvs.forEach(x => x.classList.toggle('sel', x === b)); SFX.slice(); };
-  });
 }
 function startMapsMode(p1, p2, lv, isWatch = false, mapId) {
   initAudio();
   paused = false;
   mapsP1 = p1 !== undefined ? p1 : mapsP1;
   mapsP2 = p2 !== undefined ? p2 : mapsP2;
-  mapsLevel = lv !== undefined ? lv : mapsLevel;
   M.mode = 'maps';
-  M.level = mapsLevel;
+  M.level = lv || pickLevel;
   M.round = 1;
   M.wins = [0, 0];
   M.carry = null;
@@ -533,8 +491,8 @@ function startMapsMode(p1, p2, lv, isWatch = false, mapId) {
   M.watchAi = !!isWatch;
   M.map = MAP_POOL.includes(mapId) ? mapId : mapPick(mapVote ? [mapVote] : [], Math.random());   // 点将台上已经选好；没有就现在按票选
   setChars(mapsP1, mapsP2);
-  A.ctrl = isWatch ? new AICtrl(mapsLevel || 'god') : human[0];
-  B.ctrl = new AICtrl(mapsLevel || 'god');
+  A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
+  B.ctrl = new AICtrl(M.level || 'god');
   A.meter = B.meter = 0;
   human[0].clear(); human[1].clear();
   showScreen(null);
@@ -543,9 +501,9 @@ function startMapsMode(p1, p2, lv, isWatch = false, mapId) {
   say('山河异境 · ' + MAPS[M.map].n, 1.4, 'big', MAPS[M.map].d);
 }
 const mapsStartBtn = document.getElementById('mapsStartBtn');
-if (mapsStartBtn) mapsStartBtn.addEventListener('click', () => bpStart('maps', { level: mapsLevel, isWatch: false }));
+if (mapsStartBtn) mapsStartBtn.addEventListener('click', () => bpStart('maps', { level: pickLevel, isWatch: false }));
 const mapsWatchBtn = document.getElementById('mapsWatchBtn');
-if (mapsWatchBtn) mapsWatchBtn.addEventListener('click', () => bpStart('maps', { level: mapsLevel || 'god', isWatch: true }));
+if (mapsWatchBtn) mapsWatchBtn.addEventListener('click', () => bpStart('maps', { level: pickLevel || 'god', isWatch: true }));
 
 const cpuWatchBtn = document.getElementById('cpuWatchBtn');
 if (cpuWatchBtn) cpuWatchBtn.addEventListener('click', () => {
@@ -556,7 +514,7 @@ if (cpuWatchBtn) cpuWatchBtn.addEventListener('click', () => {
 
 const tag3WatchBtn = document.getElementById('tag3WatchBtn');
 if (tag3WatchBtn) tag3WatchBtn.addEventListener('click', () => {
-  bpStart('tag3', { level: tag3Level || 'god', isWatch: true });
+  bpStart('tag3', { level: pickLevel || 'god', isWatch: true });
 });
 
 // ======================= 2v2 天道演武观战 (Watch AI vs AI 2v2) =======================
@@ -807,7 +765,6 @@ function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
 
 // 2v2 只有这一个入口：对战页的 2v2 卡片（离线版是单人页的「2v2 组队」）打开这个弹窗，先选对阵，再选同一台电脑 / 全服匹配 / 好友房间
 let active2v2ModalMode = 'pp_cc';
-let m2Level = 'normal';   // 对阵电脑时（你 + 电脑队友、两人 vs 两电脑）电脑的境界，队友和对手一样
 const M2_TEXT = {
   p_cc: { desc: '你和一个电脑队友一队，对阵两个电脑。', local: '你用 WASD 或方向键，队友由电脑操控', match: '' },
   pp_cc: { desc: '你和队友一队，对阵两个电脑。', local: '1P 用 WASD，2P 用方向键 + K 攻击', match: '全服找一位队友，一起打两个电脑' },
@@ -816,7 +773,6 @@ const M2_TEXT = {
 function render2v2Modal() {
   const mode = active2v2ModalMode, tx = M2_TEXT[mode];
   for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
-  for (const b of document.querySelectorAll('#m2Levels button[data-lv]')) b.classList.toggle('sel', b.dataset.lv === m2Level);
   $id('m2LvWrap').hidden = mode === 'pp_pp';
   for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) $id(id).style.display = mode === 'p_cc' ? 'none' : '';   // 一个人带电脑队友，不用联网（.m2-way 自带 display，hidden 属性压不住）
   $id('modal2v2Desc').textContent = tx.desc;
@@ -826,6 +782,7 @@ function render2v2Modal() {
 function open2v2Modal(mode) {
   if (M2_TEXT[mode]) active2v2ModalMode = mode;
   $id('modal2v2').classList.remove('hidden');
+  levelBarTo($id('m2LvWrap'));   // 对阵电脑时（你 + 电脑队友、两人 vs 两电脑）电脑的境界：借用共用的那一条，队友和对手一样
   render2v2Modal();
 }
 function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一页（离线版没有对战页，回单人页），再打开弹窗
@@ -833,21 +790,17 @@ function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一
   open2v2Modal(mode);
   return scr;
 }
-function close2v2Modal() { $id('modal2v2').classList.add('hidden'); }
+function close2v2Modal() { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
 $id('modal2v2Seg').addEventListener('click', e => {
   const b = e.target.closest('button[data-m]'); if (!b) return;
   active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
-});
-$id('m2Levels').addEventListener('click', e => {
-  const b = e.target.closest('button[data-lv]'); if (!b) return;
-  m2Level = b.dataset.lv; SFX.slice(); render2v2Modal();
 });
 $id('mm2v2CoopBtn').addEventListener('click', () => open2v2Modal('pp_cc'));
 $id('mm2v2VsBtn').addEventListener('click', () => open2v2Modal('pp_pp'));
 $id('modal2v2Close').addEventListener('click', close2v2Modal);
 $id('btn2v2GoLocal').addEventListener('click', () => {
   close2v2Modal();
-  bpStart('2v2', { subMode: active2v2ModalMode, level: m2Level });
+  bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
 });
 $id('btn2v2GoMatch').addEventListener('click', () => {
   close2v2Modal();
@@ -1197,15 +1150,15 @@ document.getElementById('againBtn').addEventListener('click', () => {
     return;
   }
   if (M.mode === 'mayhem') {
-    bpStart('mayhem', { level: mayhemLevel, isWatch: false });
+    bpStart('mayhem', { level: pickLevel, isWatch: false });
     return;
   }
   if (M.mode === 'maps') {   // 再来一局：按现在的票重新选图
-    bpStart('maps', { level: mapsLevel, isWatch: false });
+    bpStart('maps', { level: pickLevel, isWatch: false });
     return;
   }
   if (M.mode === 'tag3') {
-    bpStart('tag3', { level: tag3Level, isWatch: false });
+    bpStart('tag3', { level: pickLevel, isWatch: false });
     return;
   }
   if (isRaid()) {
@@ -1223,7 +1176,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
     return;
   }
   if (M.mode === 'chaos') {
-    bpStart('chaos', { level: chaosLevel, isWatch: false });
+    bpStart('chaos', { level: pickLevel, isWatch: false });
     return;
   }
   if (M.mode === 'cpu' && M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来

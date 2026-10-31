@@ -186,37 +186,44 @@
         </div>
       </div>
 
+      <!-- 电脑境界：对电脑的各模式（论剑、3v3、天机、山河异境、神决、2v2）共用这一条，选了会记住。见 src/game/21-buttons.js 的 setPickLevel -->
+      <div data-sec="cpu tag3 chaos maps mayhem" id="aiLvHome">
+        <div class="ai-lv-bar" id="aiLvBar">
+          <div class="sec-head-row">
+            <h3 class="spt">电脑境界</h3>
+            <span class="sub-badge">各模式通用 · 会记住</span>
+          </div>
+          <div class="levels-grid" id="levels" role="group" aria-label="电脑境界">
+            <button data-lv="easy" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
+              <span class="lv-sub">初学练手 · 反应迟缓</span>
+            </button>
+            <button data-lv="normal" class="sel" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
+              <span class="lv-sub">见招拆招 · 标准对练</span>
+            </button>
+            <button data-lv="hard" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
+              <span class="lv-sub">凌厉反击 · 4连段压制</span>
+            </button>
+            <button data-lv="impossible" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
+              <span class="lv-sub">极境宗师 · 零空隙弹反</span>
+            </button>
+            <button data-lv="god" type="button">
+              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
+              <span class="lv-sub">全系神经策略 · 算无遗策</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 对战电脑 (Choosing AI) -->
       <div data-sec="cpu" class="single-sec-pane">
         <div class="sec-head-row">
-          <h3 class="spt">对手境界选择</h3>
+          <h3 class="spt">对战电脑</h3>
           <span class="sub-badge">离线人机演练</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">选择电脑 AI 战力境界，各难度具备独立的出招倾向、格挡反应与连段深度。</p>
-
-        <div class="levels-grid" id="levels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学练手 · 反应迟缓</span>
-          </button>
-          <button data-lv="normal" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">见招拆招 · 标准对练</span>
-          </button>
-          <button data-lv="hard" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉反击 · 4连段压制</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">极境宗师 · 零空隙弹反</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">全系神经策略 · 算无遗策</span>
-          </button>
-        </div>
-
         <div class="ai-brief-card" id="aiBriefCard">
           <div class="ai-brief-head">
             <span class="ai-brief-title" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a9.96 9.96 0 0 0-7.07 2.93A9.96 9.96 0 0 0 2 12c0 2.22.73 4.27 1.96 5.92A10.05 10.05 0 0 0 12 22a10.05 10.05 0 0 0 8.04-4.08A9.96 9.96 0 0 0 22 12c0-2.76-1.12-5.26-2.93-7.07A9.96 9.96 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>AI 战术情报分析</span>
@@ -254,29 +261,6 @@
           </div>
         </div>
 
-        <div class="sec-sub-label" style="margin-top:10px">敌方门派战力境界</div>
-        <div class="levels-grid" id="tag3Levels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">反应迟缓 · 初涉江湖</span>
-          </button>
-          <button data-lv="normal" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">攻防均衡 · 门派精英</span>
-          </button>
-          <button data-lv="hard" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉反击 · 连招压制</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">极境宗师 · 绝无破绽</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神级策略 · 阵法克制</span>
-          </button>
-        </div>
 
         <div class="single-action-row">
           <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
@@ -371,29 +355,6 @@
             <span>选定境界后点击开启，在点将台中自由点选本命侠客迎战天机异变。</span>
           </div>
         </div>
-        <div class="sec-sub-label" style="margin-top:10px">乱斗电脑境界</div>
-        <div class="levels-grid" id="chaosLevels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学试水</span>
-          </button>
-          <button data-lv="normal" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">标准切磋</span>
-          </button>
-          <button data-lv="hard" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉出招</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">零瑕宗师</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神经网络</span>
-          </button>
-        </div>
         <div class="single-action-row">
           <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
           <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
@@ -409,29 +370,6 @@
         <p class="sub" style="margin:2px 0 10px;text-align:left">换一处战场比试：每张图的地形会改变侠客的走位和招式。开打前投一票，每张图被选中的概率按票数算，没人投票时每张图机会一样。</p>
         <div class="sec-sub-label">投出你的一票（再按一次收回）</div>
         <div class="map-vote" id="mapVote"></div>
-        <div class="sec-sub-label" style="margin-top:10px">电脑境界</div>
-        <div class="levels-grid" id="mapsLevels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学试练</span>
-          </button>
-          <button data-lv="normal" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">见招拆招</span>
-          </button>
-          <button data-lv="hard" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉出招</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">零瑕闪避</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神级策略</span>
-          </button>
-        </div>
         <div class="single-action-row">
           <button class="go" id="mapsStartBtn" type="button">开启山河异境</button>
           <button class="go alt" id="mapsWatchBtn" type="button">异境 AI 观战</button>
@@ -451,29 +389,6 @@
             <b>点将台规则 · 狂暴神通免禁用直选</b>
             <span>选定电脑境界后点击开启，进入点将台点选你的神魔出战侠客。</span>
           </div>
-        </div>
-        <div class="sec-sub-label" style="margin-top:10px">神魔电脑境界</div>
-        <div class="levels-grid" id="mayhemLevels">
-          <button data-lv="easy" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-            <span class="lv-sub">初学试练</span>
-          </button>
-          <button data-lv="normal" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-            <span class="lv-sub">见招拆招</span>
-          </button>
-          <button data-lv="hard" class="sel" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-            <span class="lv-sub">凌厉出招</span>
-          </button>
-          <button data-lv="impossible" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-            <span class="lv-sub">零瑕闪避</span>
-          </button>
-          <button data-lv="god" type="button">
-            <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-            <span class="lv-sub">神级策略</span>
-          </button>
         </div>
         <div class="single-action-row">
           <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
@@ -1155,28 +1070,7 @@
         <p class="sub m2-desc" id="modal2v2Desc"></p>
         <div id="m2LvWrap">
           <div class="sec-sub-label">电脑的境界</div>
-          <div class="levels-grid" id="m2Levels">
-            <button data-lv="easy" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8M9 9c0 3 3 5 3 5s3-2 3-5a3 3 0 0 0-6 0z"/><path d="M7 16c2-1 4-1 5 1"/></svg></span><span class="lv-name">入门</span></span>
-              <span class="lv-sub">反应迟缓 · 初学练手</span>
-            </button>
-            <button data-lv="normal" class="sel" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><span class="lv-name">寻常</span></span>
-              <span class="lv-sub">见招拆招 · 攻守均衡</span>
-            </button>
-            <button data-lv="hard" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span><span class="lv-name">劲敌</span></span>
-              <span class="lv-sub">凌厉反击 · 连招压制</span>
-            </button>
-            <button data-lv="impossible" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/></svg></span><span class="lv-name">绝顶</span></span>
-              <span class="lv-sub">极境宗师 · 绝无破绽</span>
-            </button>
-            <button data-lv="god" type="button">
-              <span class="lv-top"><span class="lv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span><span class="lv-name">天道</span></span>
-              <span class="lv-sub">神经网络 · 协同战术</span>
-            </button>
-          </div>
+          <!-- 弹窗开着时，单人模式那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
         </div>
         <div class="sec-sub-label">在哪打</div>
         <div class="m2-ways" id="modal2v2Options">
