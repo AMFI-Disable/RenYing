@@ -754,24 +754,45 @@ function drawStats() {
 function drawCredit() {
   if (creditT <= 0 || M.mode === 'demo') return;
   const t = CREDIT - creditT, a = Math.min(clamp(t / 0.35, 0, 1), clamp(creditT / 0.45, 0, 1));
-  const cx = W / 2, cy = H * 0.28, s1 = Math.round(H * 0.028), s2 = Math.round(H * 0.07);
+  const cx = W / 2, cy = H * 0.28, s1 = Math.round(H * 0.028);
   ctx.save(); ctx.globalAlpha = a;
-  const bw = Math.min(W * 0.86, s2 * 11), bh = s2 * 2.4;
+
+  const lang = window.I18N ? I18N.getLang() : 'zh';
+  const isEn = lang === 'en';
+  const title = isEn ? 'CREATED BY' : '制作';
+  const names = isEn
+    ? 'Even, Luffy, Opus 5.5, Gemini 4 Argon'
+    : 'Even、Luffy、Opus 5.5、Gemini 4 Argon';
+
+  let s2 = Math.round(H * (isEn ? 0.048 : 0.052));
+  const maxW = W * 0.86;
+  ctx.font = `700 ${s2}px ${BODY_FONT}`;
+  let tw = ctx.measureText(names).width;
+  if (tw > maxW) {
+    s2 = Math.max(12, Math.floor(s2 * (maxW / tw)));
+    ctx.font = `700 ${s2}px ${BODY_FONT}`;
+    tw = ctx.measureText(names).width;
+  }
+
+  const bw = Math.min(W * 0.94, Math.max(tw + s2 * 3.4, W * 0.65)), bh = Math.round(s2 * 2.35);
   const g = ctx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
-  g.addColorStop(0, 'rgba(6,5,14,0)'); g.addColorStop(0.2, 'rgba(6,5,14,0.86)'); g.addColorStop(0.8, 'rgba(6,5,14,0.86)'); g.addColorStop(1, 'rgba(6,5,14,0)');
+  g.addColorStop(0, 'rgba(6,5,14,0)'); g.addColorStop(0.18, 'rgba(6,5,14,0.86)'); g.addColorStop(0.82, 'rgba(6,5,14,0.86)'); g.addColorStop(1, 'rgba(6,5,14,0)');
   ctx.fillStyle = g; ctx.fillRect(cx - bw / 2, cy - bh / 2, bw, bh);
-  const lw = bw * 0.6 * clamp(t / 0.6, 0, 1);          // 金线从中间展开
+
+  const lw = Math.min(bw * 0.84, tw + s2 * 1.6) * clamp(t / 0.6, 0, 1);          // 金线从中间展开
   ctx.fillStyle = 'rgba(233,196,106,0.8)';
-  ctx.fillRect(cx - lw / 2, cy - bh / 2 + 6, lw, 1.5); ctx.fillRect(cx - lw / 2, cy + bh / 2 - 8, lw, 1.5);
+  ctx.fillRect(cx - lw / 2, cy - bh / 2 + 5, lw, 1.5); ctx.fillRect(cx - lw / 2, cy + bh / 2 - 7, lw, 1.5);
+
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `italic ${s1}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.72)';
-  if ('letterSpacing' in ctx) ctx.letterSpacing = `${Math.round(s1 * 0.3)}px`;
-  ctx.fillText('制作', cx, cy - s2 * 0.55);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = isEn ? `${Math.round(s1 * 0.2)}px` : `${Math.round(s1 * 0.3)}px`;
+  ctx.fillText(title, cx, cy - s2 * 0.52);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
   const lift = (1 - clamp(t / 0.5, 0, 1)) * 12;
   ctx.font = `700 ${s2}px ${BODY_FONT}`;
   ctx.shadowColor = 'rgba(120,230,255,0.45)'; ctx.shadowBlur = 24; ctx.fillStyle = '#f4ecd8';
-  ctx.fillText('Even、Luffy、半闲', cx, cy + s2 * 0.3 + lift);
+  ctx.fillText(names, cx, cy + s2 * 0.32 + lift);
   ctx.restore();
 }
 function drawAnnounce() {

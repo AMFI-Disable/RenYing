@@ -693,7 +693,16 @@ if (window.CloudSave) {
 renderAcc();
 function netStatus(t) { if ($id('netStatus')) $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
-if ($id('verLine')) $id('verLine').textContent = `刃影 v${VERSION}${TOY_BUILD ? ' B站版' : OFFLINE_BUILD ? ' 离线版' : ''}　制作：Even、Luffy、半闲`;
+function updateVerLine() {
+  const el = $id('verLine');
+  if (!el) return;
+  const isEn = window.I18N && I18N.getLang() === 'en';
+  const tag = TOY_BUILD ? (isEn ? ' Bilibili Edition' : ' B站版') : OFFLINE_BUILD ? (isEn ? ' Offline' : ' 离线版') : '';
+  const pre = isEn ? `RenYing v${VERSION}${tag}　Created by: ` : `刃影 v${VERSION}${tag}　制作：`;
+  const names = isEn ? 'Even, Luffy, Opus 5.5, Gemini 4 Argon' : 'Even、Luffy、Opus 5.5、Gemini 4 Argon';
+  el.textContent = pre + names;
+}
+updateVerLine();
 // 离线单文件版：全部皮肤可用，装备记在本机；在线版拥有完整成长与解锁
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 document.body.classList.toggle('offline', OFFLINE_BUILD);

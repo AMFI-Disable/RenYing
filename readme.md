@@ -5,7 +5,7 @@
 <img src="assets/skin-qingfengxing.png" width="240" alt="RenYing Artwork" />
 
 **An ink-wash martial-arts duel game that runs in a browser tab**  
-*By Even, Luffy, and Opus 5.5. Plain JavaScript and canvas, serverless WebRTC multiplayer, and an optional zero-dependency Python server.*
+*By Even, Luffy, Opus 5.5, and Gemini 4 Argon. Plain JavaScript and canvas, serverless WebRTC multiplayer, and an optional zero-dependency Python server.*
 
 [![Play Online: GitHub Pages](https://img.shields.io/badge/Play%20Online-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
 [![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
@@ -219,4 +219,4 @@ Everything runs with plain Node 22 (no `npm install`). The browser audits need a
 
 ## 📄 License And Legal Attribution <a id="license-and-legal-attribution"></a>
 
-Created by **Even, Luffy, and Opus 5.5**. Licensed under the [MIT License](license). Copyright (c) 2026 AMFI-Disable, Even, Luffy, and Opus 5.5.
+Created by **Even, Luffy, Opus 5.5, and Gemini 4 Argon**. Licensed under the [MIT License](license). Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.

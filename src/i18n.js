@@ -64,6 +64,7 @@
     try { if (typeof updateAIBrief === 'function') updateAIBrief(); } catch (e) {}
     try { if (typeof singleSec === 'function' && typeof currentSingleTab !== 'undefined') singleSec(currentSingleTab); } catch (e) {}
     try { if (typeof renderLobby === 'function') renderLobby(); } catch (e) {}
+    try { if (typeof updateVerLine === 'function') updateVerLine(); } catch (e) {}
   }
 
   // 数字是拼进去的句子（"剩余 25 天 6 小时"、"全服 12 人在线"），整句查表永远查不到，
