@@ -55,6 +55,7 @@ const CF_HOST_ORIGIN = /^https:\/\/[a-z0-9_-]+(\.[a-z0-9_-]+)*\.(workers\.dev|pa
 const DEV_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}|[a-z0-9_-]+\.local)(:\d{1,5})?$/i;
 function corsOrigin(env, origin) {
   if (!origin) return '';
+  if (origin === 'null' || origin === 'file://') return '*';
   const extra = String((env && env.CORS_ORIGINS) || '').split(',').map(o => o.trim().replace(/\/+$/, '')).filter(Boolean);
   return CORS_ORIGINS.includes(origin) || extra.includes(origin) || GITHUB_IO_ORIGIN.test(origin) || CF_HOST_ORIGIN.test(origin) || DEV_ORIGIN.test(origin) ? origin : '';
 }

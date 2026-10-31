@@ -932,6 +932,12 @@
       currentUser = userObj;
       localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 
+      try {
+        const mockUsers = localAccounts();
+        mockUsers[data.username] = { uid: data.uid, name: data.username, pw: await pwHash(password), pwv: 2, isCloud: true, created: Date.now() };
+        localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+      } catch (e) {}
+
       if (data.profile) {
         adoptProfile(data.uid, data.profile, data.ledger);
         try {
@@ -990,6 +996,12 @@
       currentUser = userObj;
       localStorage.setItem('renying-local-current', JSON.stringify(userObj));
 
+      try {
+        const mockUsers = localAccounts();
+        mockUsers[data.username] = { uid: data.uid, name: data.username, pw: await pwHash(password), pwv: 2, isCloud: true, lastLogin: Date.now() };
+        localStorage.setItem('renying-local-accounts', JSON.stringify(mockUsers));
+      } catch (e) {}
+
       if (data.profile) {
         adoptProfile(data.uid, data.profile, data.ledger);
         // 本机已有这个号的镜像就留着：里面可能有登录过期期间没传上去的进度，接下来 loadProfile 会和云端合并再补传
@@ -1008,6 +1020,12 @@
       const localName = localKeyOf(mockUsers, name);
       const localU = localName ? mockUsers[localName] : null;
       const pwOk = await pwMatches(localU, password);
+      if (localU && !pwOk && err && (err.isNetwork || /failed to fetch|network|load failed/i.test(err.message))) {
+        throw new Error('密码不对');
+      }
+      if (!localU && err && (err.isNetwork || /failed to fetch|network|load failed/i.test(err.message))) {
+        err.message = '无法连接到云端服务器，请检查网络连接；若需离线游玩请点击“注册”创建本机账号';
+      }
       // 云端有这个昵称、密码却对不上（401）：本机同名账号是另一个号，登进去要说清楚，不然玩家以为在用云端那个
       const cloudHasName = err && err.status === 401;
       if (localU && pwOk) {
