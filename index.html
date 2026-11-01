@@ -2974,13 +2974,13 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
         </ul>
       </details>
     </div>
-    <!-- 首页入口：三大入口（对战、肉鸽、开放世界），下面一排次入口 -->
+    <!-- 首页单主入口：一键进入演武大厅，畅玩全部模式 -->
     <div class="home-entries" id="homeEntries">
-      <button class="mcard right" id="mNet" data-go="netp" data-kb-default><span class="mk">对战</span><span class="ms">匹配 · 排位 · 好友房 · 2v2</span></button>
-      <button class="mcard left hm-rouge" id="homeRouge" type="button"><span class="mk">全服肉鸽</span><span class="ms">江湖共斗 · 随时加入 · 秘卷叠层 · 传送同道</span></button>
-      <button class="mcard left hm-world tn-online" id="mWorld" type="button"><span class="mk">开放世界</span><span class="ms">江湖共斗 · 一张大地图 · 填线号找朋友</span></button>
-      <div class="home-sub" id="homeSub">
-        <button class="hs-btn" id="mSingle" data-go="single" type="button"><span class="mk">单人练习</span><span class="ms">在习武亭和电脑过招</span></button>
+      <button class="mcard right" id="mSingle" data-go="single" data-kb-default type="button"><span class="mk">开始演武</span><span class="ms">一处入口畅玩全部模式 · 人机 · 3v3 联机 · 肉鸽 · 开放世界</span></button>
+      <button class="mcard right" id="mNet" data-go="netp" type="button" hidden style="display:none"><span class="mk">对战</span><span class="ms">匹配 · 排位 · 好友房 · 2v2</span></button>
+      <button class="mcard left hm-rouge" id="homeRouge" type="button" hidden style="display:none"><span class="mk">全服肉鸽</span><span class="ms">江湖共斗 · 随时加入 · 秘卷叠层 · 传送同道</span></button>
+      <button class="mcard left hm-world tn-online" id="mWorld" type="button" hidden style="display:none"><span class="mk">开放世界</span><span class="ms">江湖共斗 · 一张大地图 · 填线号找朋友</span></button>
+      <div class="home-sub" id="homeSub" hidden style="display:none">
         <button class="hs-btn" data-go="qfx" type="button">青锋行</button>
         <button class="hs-btn" data-go="tutorial" type="button">教程</button>
         <button class="hs-btn" data-go="train" type="button">木人桩</button>
@@ -3001,8 +3001,8 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
   <div id="single" class="scr">
     <div class="panel singlep">
       <div class="mode-title-wrap">
-        <h2 id="singleT">单人模式</h2>
-        <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
+        <h2 id="singleT">演武大厅</h2>
+        <p class="sub" id="singleSub" style="margin:4px 0 0">统一设定人机境界，各模式均在后台随机轮换山河异境地图</p>
       </div>
 
       <div class="single-nav-deck">
@@ -3014,15 +3014,18 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
 
         <div class="single-tabs" id="singleTabs">
           <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>对战电脑</button>
+          <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
+          <button data-tab="tower" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
+          <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
+          <button data-tab="mayhem" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
+          <button data-tab="maps" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-12 4 7 3-4 5 9z"/><path d="M3 20h18"/></svg></span>山河异境</button>
           <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>守关挑战</button>
           <button data-tab="saga" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>侠客列传</button>
           <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>木人试剑</button>
-          <button data-tab="tower" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
-          <button data-tab="chaos" data-cat="rogue" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
-          <button data-tab="tag3" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
-          <button data-tab="maps" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-12 4 7 3-4 5 9z"/><path d="M3 20h18"/></svg></span>山河异境</button>
-          <button data-tab="mayhem" data-cat="special" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
-          <button data-tab="watch2v2" data-cat="special" class="tn-offline" style="display:none" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 组队</button>
+          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 组队</button>
+          <button data-tab="netp" data-cat="special" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>3v3 联机擂台</button>
+          <button data-tab="rouge" data-cat="rogue" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>全服肉鸽</button>
+          <button data-tab="world" data-cat="special" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>开放世界</button>
         </div>
       </div>
 
@@ -3328,13 +3331,13 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
   <div id="netp" class="scr">
     <div class="panel" style="max-width:min(1360px,96vw);">
       <div class="sec-head-row" style="justify-content:center;position:relative;margin-bottom:12px;">
-        <h2 style="margin:0;font-size:clamp(28px,3.2vw,40px)">月下对弈 · 联机对战</h2>
+        <h2 style="margin:0;font-size:clamp(28px,3.2vw,40px)">月下对弈 · 3v3 联机擂台</h2>
         <span class="sub-badge" id="netLobbyBadge" style="position:absolute;right:0;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:5px;">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> 全网连线 · 毫秒回滚
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> 3v3 车轮接力 · 毫秒回滚
         </span>
       </div>
 
-      <!-- 对战大厅：匹配对战（主要玩法）+ 排位赛，房间对战收在下面的小按钮里 -->
+      <!-- 单一 PvP 3v3 擂台入口：全服 3v3 匹配 + 3v3 赛季排位 + 好友 3v3 密令建房 -->
       <div class="mm-hero" id="mmHero">
         <div class="season-bar">
           <span class="season-tag" id="seasonName">第一赛季</span>
@@ -3344,20 +3347,20 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
         <div class="mm-cards">
           <div class="mm-card mm-quick" id="mmQuickCard">
             <div class="mm-card-bg" aria-hidden="true"></div>
-            <span class="mm-kicker">主要玩法</span>
+            <span class="mm-kicker">3v3 车轮战 · 自由匹配</span>
             <span class="mm-title">匹配对战</span>
-            <span class="mm-en">QUICK MATCH</span>
-            <span class="mm-desc">全服随机对手，谁都可能遇到 · 标准三局两胜 · 不影响段位</span>
+            <span class="mm-en">3V3 TAG QUICK MATCH</span>
+            <span class="mm-desc">双方各禁 1 选 3 车轮接力 · 后台随机轮换地图 · 不影响段位</span>
             <button class="mm-go" id="mmQuickBtn" type="button">开始匹配</button>
           </div>
           <div class="mm-card mm-ranked" id="mmRankCard">
             <div class="mm-card-bg" aria-hidden="true"></div>
-            <span class="mm-kicker">赛季排位</span>
+            <span class="mm-kicker">3v3 车轮战 · 赛季排位</span>
             <div class="mm-rank-row">
               <span class="mm-medal" id="mmMedal"></span>
               <div class="mm-rank-txt">
                 <span class="mm-title">排位赛</span>
-                <span class="mm-en">COMPETITIVE</span>
+                <span class="mm-en">3V3 TAG COMPETITIVE</span>
                 <span class="mm-rank-label" id="mmRankLabel">登录后开启排位</span>
                 <span class="mm-rank-sub" id="mmRankSub"></span>
                 <span class="mm-bar"><i id="mmRankBar"></i></span>
@@ -3368,7 +3371,7 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
               <button class="mm-link" id="mmRankInfoBtn" type="button">段位与战绩</button>
             </div>
           </div>
-          <div class="mm-card mm-2v2" id="mm2v2Card">
+          <div class="mm-card mm-2v2" id="mm2v2Card" hidden style="display:none">
             <div class="mm-card-bg" aria-hidden="true"></div>
             <span class="mm-kicker">全网连线 · 协同决战</span>
             <span class="mm-title">2v2 组队</span>
@@ -3386,7 +3389,7 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
           <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
         </div>
         <div class="mm-foot">
-          <button class="mm-room-btn" id="mmRoomBtn" type="button" aria-expanded="false">房间对战 · 和好友约战</button>
+          <button class="mm-room-btn" id="mmRoomBtn" type="button" aria-expanded="false">房间对战 · 3v3 好友约战</button>
         </div>
       </div>
 
@@ -9171,6 +9174,19 @@ const UI_COPY_EN = {
 "全服肉鸽 · 江湖长卷奖励": "Server Roguelike · World Chronicle reward",
 "登录云端账号才能领长卷奖励": "Log in to a cloud account to claim Chronicle rewards",
 "领得太快了，歇一会儿再试": "Claiming too fast, take a short break",
+"开始演武": "Play All Modes",
+"一处入口畅玩全部模式 · 人机 · 3v3 联机 · 肉鸽 · 开放世界": "One portal for all modes · PvC · 3v3 Tag PvP · Roguelike · Open World",
+"演武大厅": "Play Hub",
+"统一设定人机境界，各模式均在后台随机轮换山河异境地图": "Unified AI difficulty across all modes, with maps chosen automatically in the background",
+"一处入口畅玩全部模式，后台自动轮换地图": "Play every mode from one hub with background map rotation",
+"偏好地图投票：在此投出一票，所有模式后台选图都会提高该地图出现概率": "Preferred Map Vote: cast your vote here to boost its background selection odds across all modes",
+"3v3 联机擂台": "3v3 Tag PvP",
+"月下对弈 · 3v3 联机擂台": "Moonlit Duel · 3v3 Tag PvP Portal",
+"3v3 车轮接力 · 毫秒回滚": "3v3 Tag Relay · Millisecond Rollback",
+"3v3 车轮战 · 自由匹配": "3v3 Tag · Casual Matchmaking",
+"3v3 车轮战 · 赛季排位": "3v3 Tag · Ranked Season",
+"双方各禁 1 选 3 车轮接力 · 后台随机轮换地图 · 不影响段位": "Ban 1 & Pick 3 Tag Relay · Background Map Rotation · Unranked",
+"房间对战 · 3v3 好友约战": "Friend Room · 3v3 Tag Duel",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
