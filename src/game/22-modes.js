@@ -157,6 +157,8 @@ function showTowerPerkModal() {
     nextTowerFloor();
     return;
   }
+  modal.classList.remove('has-5-choices');
+  choicesEl.classList.remove('choices-5');
   const picked = scDraw(A.ch.id, M.towerPerks || [], 3);
   if (!picked.length) { nextTowerFloor(); return; }   // 这个侠客能拿的秘卷全拿完了
   const reso = scResoLines(M.towerPerks || []);

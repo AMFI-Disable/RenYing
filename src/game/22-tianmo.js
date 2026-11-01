@@ -1,7 +1,7 @@
 // ======================= 天魔讨伐：全服一起打同一只天魔 =======================
 // 天魔的血量、谁打了多少、谁斩杀的都只在服务器上（cloudflare/worker.js 的 /api/gboss），这里不编人也不编进度：
 // 页面上的名单、正在出战的人数、最近战报全是服务器回来的真实记录，连不上就直说连不上。
-// 一次出战：先领票 → 抽三次秘卷（三选一）→ 和天魔打 90 秒（天魔倒下会再站起来，越打越凶）→ 交上打出的伤害。
+// 一次出战：先领票 → 抽三次秘卷（五选一）→ 和天魔打 90 秒（天魔倒下会再站起来，越打越凶）→ 交上打出的伤害。
 // 伤害每秒存一份到本机（GB_PENDING_KEY）：打到一半刷新、断网、关掉网页，下次打开会把已经打出的伤害补交上去，
 // 同一张票服务器只认一次，所以重交不会多算。
 const GB_PENDING_KEY = 'renying-gboss-pending', GB_KILLS_KEY = 'renying-gboss-kills';
@@ -134,12 +134,15 @@ async function gbossGo() {
   gbDraft();
 }
 function gbDraft() {
-  const picked = scDraw(A.ch.id, M.towerPerks, 3);
+  const picked = scDraw(A.ch.id, M.towerPerks, 5);
   if (GB.picks.length >= GB_DRAFT || !picked.length) { gbFight(); return; }
   const reso = scResoLines(M.towerPerks);
   $id('towerTitle').textContent = '天魔讨伐 · 出战前抽秘卷';
   $id('towerFloorBadge').textContent = `第 ${GB.picks.length + 1} / ${GB_DRAFT} 卷 · 天魔词缀：${M.foeScrolls.map(id => SC_BY[id].n).join('、') || '无'}`;
+  const modal = $id('towerModal');
+  if (modal) modal.classList.add('has-5-choices');
   const el = $id('towerChoices');
+  el.classList.add('choices-5');
   el.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}" data-perk="${p.id}">
       <div class="tp-icon">${scIcon(p)}</div>
       <div class="tp-name">「${p.n}」</div>
@@ -156,6 +159,10 @@ function gbPick(id) {
   gbDraft();
 }
 function gbFight() {
+  const modal = $id('towerModal');
+  if (modal) modal.classList.remove('has-5-choices');
+  const el = $id('towerChoices');
+  if (el) el.classList.remove('choices-5');
   showScreen(null);
   paused = false;
   startRound();   // 秘卷和天魔词缀的开局效果在这里生效
@@ -217,7 +224,13 @@ function gbEndText() {
   $id('endRank').textContent = t;
 }
 // 中途退出（暂停菜单里的「返回菜单」）：已经打出的伤害照样交
-function gbossQuit() { if (M.mode === 'boss' && M.phase !== 'end') gbossFinish('quit'); }
+function gbossQuit() {
+  const modal = $id('towerModal');
+  if (modal) modal.classList.remove('has-5-choices');
+  const el = $id('towerChoices');
+  if (el) el.classList.remove('choices-5');
+  if (M.mode === 'boss' && M.phase !== 'end') gbossFinish('quit');
+}
 
 $id('gbGo').addEventListener('click', () => { SFX.slice && SFX.slice(); gbossGo(); });
 $id('homeGboss').addEventListener('click', () => { SFX.slice && SFX.slice(); navTo('gboss'); });

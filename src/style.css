@@ -999,10 +999,32 @@
   margin-top: auto;
 }
 
+#towerModal .panel {
+  max-width: min(720px, 96vw);
+}
+#towerModal.has-5-choices .panel,
+#towerModal:has(.choices-5) .panel {
+  max-width: min(1120px, 96vw);
+}
 .tower-choices {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0;
 }
-@media (max-width: 600px) { .tower-choices { grid-template-columns: 1fr; } }
+.tower-choices.choices-5 {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+@media (min-width: 900px) {
+  .tower-choices.choices-5 {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+.tower-choices.choices-5 .tower-perk-card {
+  padding: 14px 10px;
+}
+@media (max-width: 600px) {
+  .tower-choices { grid-template-columns: 1fr; }
+  .tower-choices.choices-5 { grid-template-columns: 1fr; }
+}
 .tower-perk-card {
   background: linear-gradient(170deg, rgba(30, 24, 40, .92), rgba(15, 12, 22, .96));
   border: 1px solid rgba(233, 196, 106, .35); border-radius: 12px;
