@@ -3036,3 +3036,29 @@ body.touchdev .dummy-bar-btn { display: none; }
 .home-swap { position: relative; }
 .home-swap .hh-pick { left: 0; transform: none; bottom: calc(100% + 8px); z-index: 5; }
 #levels .lv-sub { white-space: normal; max-width: 100%; }   /* 英文说明比中文长：折行，不伸出按钮 */
+/* 对战页：一张 3v3 卡，里面并排快速匹配、排位赛、好友约战 */
+.tag-portal { position: relative; border: 1px solid rgba(255,70,85,.35); border-radius: 14px; padding: 16px 18px 18px; background: linear-gradient(160deg, rgba(40,18,26,.55), rgba(12,14,26,.75)); }
+.tag-portal .tp-head { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; column-gap: 12px; margin-bottom: 12px; }
+.tag-portal .tp-head .mm-kicker { grid-column: 1 / -1; justify-self: start; margin-bottom: 4px; }
+.tag-portal .tp-title { margin: 0; font: 400 clamp(30px, 3.4vw, 44px) var(--title); letter-spacing: .08em; color: var(--ink); }
+.tag-portal .tp-desc { grid-column: 1 / -1; margin: 6px 0 0; font-size: 13px; color: var(--dim); line-height: 1.5; }
+.tag-portal .tp-cards { grid-template-columns: 1fr 1.1fr 1.2fr; }
+.tag-portal .mm-card { min-height: 0; padding: 16px 18px 18px; }
+.tag-portal .mm-card .mm-title { font-size: clamp(26px, 2.6vw, 34px); }
+.mm-friend .mm-card-bg { background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 100% 0%, rgba(70,211,234,.22), transparent 60%); }
+.mm-friend .tp-room { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.mm-friend .tp-host { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.mm-friend .tp-host .roomcode { margin: 0; min-height: 0; font-size: 26px; }
+.mm-friend .tp-host .roomcode:empty { display: none; }
+.mm-friend .tp-share { display: flex; gap: 6px; flex-wrap: wrap; }
+.mm-friend .tp-join { margin-top: 0; max-width: none; }
+.mm-friend .mm-go { margin-top: 0; }
+.mm-friend .mm-go.alt { background: rgba(70,211,234,.12); border: 1px solid rgba(70,211,234,.4); color: #46d3ea; }
+.tp-more { margin-top: 6px; font-size: 13px; }
+.tp-more summary { cursor: pointer; color: var(--gold); padding: 4px 0; list-style-position: inside; }
+.tp-more .lobby-modes-seg { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.tp-more .lobby-modes-seg button { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+.tp-more .lobby-modes-seg button.sel { border-color: var(--gold); color: var(--gold); background: rgba(233,196,106,.14); }
+.tp-more .tp-note { margin: 2px 0 0; font-size: 12px; color: var(--dim); line-height: 1.45; }
+@media (max-width: 1160px) { .tag-portal .tp-cards { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .tag-portal { padding: 12px; } .tag-portal .tp-head { grid-template-columns: auto 1fr; } }

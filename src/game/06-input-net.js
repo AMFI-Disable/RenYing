@@ -122,8 +122,7 @@ function onSys(m) {
     netMapVoteRecv(m.v);
   } else if (m.sys === 'room_rule') {
     setRoomModeUI(m.rule);
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', maps: '山河异境 (地图投票)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)', raid: '同袍肉鸽 (并肩讨伐魔首)' };
-    toast(`擂主已设定切磋规则：${nameMap[m.rule] || '标准论剑'}`);
+    toast(`擂主已设定切磋规则：${ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal}`);
   } else if (m.sys === 'rematch') {
     if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
     if (m.action === 'ask') {

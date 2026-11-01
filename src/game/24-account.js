@@ -745,11 +745,12 @@ function updateNetLobby(active, hostName, peerName, roomCode, peerReady) {
   if (!active) {
     box.classList.add('hidden');
     if (cols) cols.classList.remove('hidden');
+    for (const btn of document.querySelectorAll('#lobbyModesSeg button')) btn.disabled = false;   // 出了房间：规则又能自己选了
     return;
   }
   box.classList.remove('hidden');
   if (cols) cols.classList.add('hidden');
-  if ($id('roomWrap')) { $id('roomWrap').classList.remove('hidden'); $id('mmRoomBtn').classList.add('sel'); }
+  roomWrapShow();
   if ($id('lobbyRoomBadge')) $id('lobbyRoomBadge').textContent = `房间密令：${roomCode || '----'}`;
   if ($id('lobbyHostName')) $id('lobbyHostName').textContent = hostName || '擂主 (房主)';
   if ($id('lobbyPeerName')) $id('lobbyPeerName').textContent = peerName || (NET.role === 'host' ? '静候应战者入局…' : '正在连线…');
@@ -760,35 +761,39 @@ function updateNetLobby(active, hostName, peerName, roomCode, peerReady) {
   }
 }
 window.updateNetLobby = updateNetLobby;
+// 建房、加入、进了房间：露出下面的候战厅、状态和网络情况（平时收着，对战页只有那张 3v3 卡）
+function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
 
-let netRoomMode = 'normal';   // 'normal' (BO3), 'chaos' (天机乱斗)
+let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；快速匹配和排位固定 normal（3v3 车轮战）
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境' };
 
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
   lobbyModesSegEl.addEventListener('click', e => {
     const b = e.target.closest('button[data-mode]');
     if (!b || !b.dataset.mode) return;
-    if (NET.role !== 'host') {
+    if (NET.role === 'client') {   // 建房前谁都能选；进了房间只有房主能改
       toast('仅擂主可调整切磋模式');
       return;
     }
-    netRoomMode = b.dataset.mode;
-    for (const btn of lobbyModesSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
-    send({ sys: 'room_rule', rule: netRoomMode });
-    const nameMap = { normal: '标准论剑 (BO3)', chaos: '天机乱斗 (随机词条)', maps: '山河异境 (地图投票)', pp_cc: '双人共斗 (双人破阵 vs AI)', pp_pp: '四人切磋 (2v2 玩家对决)' };
-    toast(`已设定切磋规则：${nameMap[netRoomMode] || '标准论剑'}`);
+    setRoomModeUI(b.dataset.mode);
+    if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
+    toast(`已设定切磋规则：${ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal}`);
     SFX.slice();
   });
 }
 
 function setRoomModeUI(rule) {
-  netRoomMode = rule || 'normal';
+  netRoomMode = ROOM_MODES[rule] ? rule : 'normal';
   if (lobbyModesSegEl) {
     for (const btn of lobbyModesSegEl.querySelectorAll('button')) {
       btn.classList.toggle('sel', btn.dataset.mode === netRoomMode);
-      btn.disabled = NET.role !== 'host';
+      btn.setAttribute('aria-pressed', btn.dataset.mode === netRoomMode);
+      btn.disabled = NET.role === 'client' && NET.open;
     }
   }
+  if ($id('roomRuleNow')) $id('roomRuleNow').textContent = ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal;
+  if (netRoomMode !== 'normal' && $id('roomMore')) $id('roomMore').open = true;   // 选的是别的规则：把折叠打开，让人看得见
   renderLobbyMaps();
 }
 // 山河异境的联机投票：两边各一票（默认是自己在单人页上投的那张），改票时发给对面；房主开局时把两票一起发出去
@@ -860,7 +865,7 @@ function copyRoomInvite() {
 
 if ($id('copyCodeBtn')) $id('copyCodeBtn').addEventListener('click', copyRoomInvite);
 if ($id('roomCode')) $id('roomCode').addEventListener('click', copyRoomInvite);
-$id('hostBtn').addEventListener('click', () => { initAudio(); netConnect(true); });
+$id('hostBtn').addEventListener('click', () => { initAudio(); roomWrapShow(); netConnect(true); });
 // ---------- 对战大厅：匹配对战 / 排位赛（免服务器） ----------
 let mmKind = null;
 function mmUI(kind) {
@@ -913,11 +918,6 @@ function mmGo(kind) {
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
 $id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
 $id('mmCancelBtn').addEventListener('click', () => { netReset(); netStatus('已取消'); });
-$id('mmRoomBtn').addEventListener('click', () => {
-  const w = $id('roomWrap'), open = w.classList.toggle('hidden') === false;
-  $id('mmRoomBtn').setAttribute('aria-expanded', String(open));
-  $id('mmRoomBtn').classList.toggle('sel', open);
-});
 $id('mmRankInfoBtn').addEventListener('click', () => {
   renderRankInfo();
   const sea = rkSeason();
@@ -1037,6 +1037,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) pres
 function joinByCode() {
   initAudio();
   const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  roomWrapShow();
   if (code.length !== 4) return netStatus('房间码是 4 位');
   netConnect(false, code);
 }

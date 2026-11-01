@@ -795,8 +795,6 @@ $id('modal2v2Seg').addEventListener('click', e => {
   const b = e.target.closest('button[data-m]'); if (!b) return;
   active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
 });
-$id('mm2v2CoopBtn').addEventListener('click', () => open2v2Modal('pp_cc'));
-$id('mm2v2VsBtn').addEventListener('click', () => open2v2Modal('pp_pp'));
 $id('modal2v2Close').addEventListener('click', close2v2Modal);
 $id('btn2v2GoLocal').addEventListener('click', () => {
   close2v2Modal();
@@ -812,10 +810,6 @@ $id('btn2v2GoOnline').addEventListener('click', () => {
   if (!$id('netp').classList.contains('on')) openScreen('netp');
   netRoomMode = active2v2ModalMode;
   setRoomModeUI(netRoomMode);
-  if ($id('roomWrap')) {
-    $id('roomWrap').classList.remove('hidden');
-    $id('mmRoomBtn').classList.add('sel');
-  }
   const hb = $id('hostBtn');
   if (hb) hb.click();
   toast(`已建好${active2v2ModalMode === 'pp_cc' ? '两人 vs 两电脑' : '两人 vs 两人'}的房间，把房间号发给朋友`);
@@ -1101,10 +1095,6 @@ if ($id('btnRougeGoOnline')) {
     closeRougeModal();
     if (!$id('netp').classList.contains('on')) openScreen('netp');
     setRoomModeUI('raid');
-    if ($id('roomWrap')) {
-      $id('roomWrap').classList.remove('hidden');
-      $id('mmRoomBtn').classList.add('sel');
-    }
     const hb = $id('hostBtn');
     if (hb) hb.click();
     toast('已建好同袍肉鸽共斗房间，把房间号发给好友即可并肩讨伐魔首！');
