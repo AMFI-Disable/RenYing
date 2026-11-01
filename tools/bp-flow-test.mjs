@@ -166,7 +166,7 @@ const chrome = spawn(CHROME, [
   '--hide-scrollbars', '--mute-audio', '--no-first-run', '--no-default-browser-check', '--disable-extensions',
   '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
   `--remote-debugging-port=${PORT}`, '--remote-allow-origins=*', '--remote-debugging-address=127.0.0.1',
-  `--user-data-dir=${OUT}/chrome`, `--window-size=${VW},${VH}`, URL,
+  `--user-data-dir=${OUT}/chrome`, `--window-size=${VW},${VH}`, 'about:blank',
 ], { stdio: ['ignore', logFd, logFd] });
 process.on('exit', () => { try { chrome.kill(); } catch (e) {} });
 
@@ -201,7 +201,17 @@ await cdp.send('Emulation.setDeviceMetricsOverride', { width: VW, height: VH, de
 
 await cdp.send('Network.enable', {}, S);
 await cdp.send('Network.setBlockedURLs', { urls: ['*fonts.googleapis.com*', '*fonts.gstatic.com*'] }, S);
-await cdp.send('Page.reload', { ignoreCache: true }, S);
+async function loadGame(url) {
+  await cdp.send('Page.navigate', { url }, S);
+  for (let i = 0; i < 100; i++) {
+    const r = await cdp.send('Runtime.evaluate', { expression: `location.href === ${JSON.stringify(url)} && document.readyState === 'complete' && typeof showScreen === 'function'`, returnByValue: true }, S);
+    if (r.result?.value) return;
+    await sleep(200);
+  }
+  throw new Error('Game did not finish loading: ' + url);
+}
+await loadGame(URL);
+// Let the first-run language and tutorial prompts finish their startup timers.
 await sleep(1800);
 async function check(label, expr) {
   const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }, S);
@@ -216,8 +226,7 @@ try {
   for (const mode of ['p_cc','pp_cc','pp_pp']) await check('local draft ' + mode, `(() => { showScreen('single'); open2v2Modal('${mode}'); document.getElementById('btn2v2GoLocal').click(); return {ok: currentScreen === 'bp' && bpMode === '2v2' && !!BP && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
   await check('English draft fits without horizontal overflow', `(() => { I18N.setLang('en'); bpStart('2v2', {subMode:'pp_cc'}); const w = document.querySelector('#bp .bpw'); return {ok: w.scrollWidth <= w.clientWidth + 2, scroll: w.scrollWidth, width: w.clientWidth}; })()`);
   await check('2v2 AI draft', `(() => { showScreen('single'); open2v2Modal(); document.getElementById('btn2v2GoWatch').click(); return {ok: currentScreen === 'bp' && bpMode === 'watch2v2' && !!watch2v2Bp && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
-  await cdp.send('Page.navigate', { url: URL.replace(/[^/]*$/, 'renying-offline.html') }, S);
-  await sleep(2200);
+  await loadGame(URL.replace(/[^/]*$/, 'renying-offline.html'));
   await check('offline styles and draft without remote fonts', `(() => { const css = [...document.styleSheets].find(s => !s.href); showScreen('single'); open2v2Modal('pp_cc'); document.getElementById('btn2v2GoLocal').click(); return {ok: !!css && css.cssRules.length > 100 && currentScreen === 'bp' && !!BP && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
   console.log('PASS browser draft and stylesheet checks');
