@@ -489,6 +489,7 @@ let settingsBack = 'menu';
 const SETTING_ROWS = [
   { k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
   { k: 'kbOnly', name: '纯键盘模式', opts: [[false, '不用'], [true, '开启']] },
+  { k: 'backgroundPlay', name: '切换窗口时', opts: [[false, '暂停对局'], [true, '继续对局']] },
   { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
   { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
   { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },

@@ -8133,6 +8133,9 @@ const UI_COPY_EN = {
 "线号": "Line #",
 "进这条线": "Join This Line",
 "线号是 1 到 9999 的数字": "Line numbers go from 1 to 9999",
+"切换窗口时": "When switching windows",
+"暂停对局": "Pause match",
+"继续对局": "Continue match",
 "纯键盘模式": "Keyboard-Only Mode",
 "不用": "Off",
 "开启": "On",
@@ -11103,7 +11106,7 @@ iconizeTree(n); stripAttrs(n);
 if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 'use strict';
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, lang: 'zh' };
 try {
 const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
 Object.assign(SETTINGS, saved);
@@ -16648,6 +16651,9 @@ let n = 0;
 while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
 if (n >= 5) acc = 0;
 }
+function backgroundLocalActive() {
+return SETTINGS.backgroundPlay === true && M.mode !== 'net' && M.mode !== 'demo' && !REPLAY.on && !isAiVsAi() && !paused && !EXT.on && !document.querySelector('.scr.on');
+}
 let bgWorker = null, bgUrl = '';
 function bgWorkerSet(on) {
 if (!on) { if (bgWorker) { bgWorker.terminate(); bgWorker = null; } bgLast = 0; return; }
@@ -16656,9 +16662,9 @@ try {
 bgUrl = bgUrl || URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},8)'], { type: 'text/javascript' }));
 bgWorker = new Worker(bgUrl);
 bgWorker.onmessage = () => {
-if (!document.hidden || M.mode !== 'net') { bgLast = 0; return; }
+if (!document.hidden || (M.mode !== 'net' && !backgroundLocalActive())) { bgLast = 0; return; }
 const now = performance.now(), real = bgLast ? Math.min(0.05, (now - bgLast) / 1000) : 0; bgLast = now;
-if (real > 0 && !paused) { simTick(real); netTick(real); }
+if (real > 0 && !paused) { simTick(real); if (M.mode === 'net') netTick(real); }
 };
 } catch (e) { bgWorker = null; }
 }
@@ -17057,7 +17063,8 @@ if (cine.t >= 0) { cine.t += real; if (cine.t > CINE_LEN) { cine.t = -1; cine.ow
 updateFireflies(real); updateAim();
 if (TUT && M.mode === 'train' && !paused) tutTick(real);
 for (const f of [A, B]) { if (f.vox) f.vox = damp(f.vox, 0, 14, real); if (f.voy) f.voy = damp(f.voy, 0, 14, real); }
-if (ROLL.on && M.mode === 'net') rollTick(real);
+if (document.hidden && backgroundLocalActive() && (bgWorker || bgAiTimer)) { /* background ticker owns local simulation */ }
+else if (ROLL.on && M.mode === 'net') rollTick(real);
 else if (REPLAY.on) replayTick(real);
 else {
 acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
@@ -22262,6 +22269,7 @@ let settingsBack = 'menu';
 const SETTING_ROWS = [
 { k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
 { k: 'kbOnly', name: '纯键盘模式', opts: [[false, '不用'], [true, '开启']] },
+{ k: 'backgroundPlay', name: '切换窗口时', opts: [[false, '暂停对局'], [true, '继续对局']] },
 { k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
 { k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
 { k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
@@ -30579,9 +30587,12 @@ window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) 
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去
+function shouldPauseOnBlur() {
+return M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && SETTINGS.backgroundPlay !== true && M.phase !== 'end' && !paused;
+}
 window.addEventListener('blur', () => {
 human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
-if (M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && M.phase !== 'end' && !paused) {
+if (shouldPauseOnBlur()) {
 paused = true;
 showScreen('pause');
 }
@@ -30589,11 +30600,11 @@ showScreen('pause');
 let bgAiTimer = null;
 function updateBgAiTicker() {
 if (typeof document === 'undefined') return;
-if (document.hidden && isAiVsAi() && !paused && M && M.phase === 'fight') {
+if (document.hidden && ((isAiVsAi() && !paused && M && M.phase === 'fight') || (!bgWorker && backgroundLocalActive()))) {
 if (!bgAiTimer) {
 let lastBgTime = performance.now();
 bgAiTimer = setInterval(() => {
-if (!document.hidden || !isAiVsAi() || paused || (M && M.phase !== 'fight')) {
+if (!document.hidden || !((isAiVsAi() && !paused && M && M.phase === 'fight') || (!bgWorker && backgroundLocalActive()))) {
 clearInterval(bgAiTimer);
 bgAiTimer = null;
 return;
@@ -30601,6 +30612,7 @@ return;
 const now = performance.now();
 const dt = Math.min(0.1, (now - lastBgTime) / 1000);
 lastBgTime = now;
+if (!isAiVsAi()) { simTick(dt); return; }
 acc += dt * (slowmo > 0 ? 0.28 : 1);
 if (acc > STEP * 10) acc = STEP * 10;
 let n = 0;

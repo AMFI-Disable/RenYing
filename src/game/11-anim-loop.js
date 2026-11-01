@@ -342,6 +342,9 @@ function simTick(real) {
 }
 // 切到后台时浏览器会停掉 requestAnimationFrame，联机对局靠这个小 Worker 接着算。
 // 只在网页藏起来的时候开着：回到前台就关掉，不然每 8 毫秒唤醒一次主线程，白白费电
+function backgroundLocalActive() {
+  return SETTINGS.backgroundPlay === true && M.mode !== 'net' && M.mode !== 'demo' && !REPLAY.on && !isAiVsAi() && !paused && !EXT.on && !document.querySelector('.scr.on');
+}
 let bgWorker = null, bgUrl = '';
 function bgWorkerSet(on) {
   if (!on) { if (bgWorker) { bgWorker.terminate(); bgWorker = null; } bgLast = 0; return; }
@@ -350,9 +353,9 @@ function bgWorkerSet(on) {
     bgUrl = bgUrl || URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},8)'], { type: 'text/javascript' }));
     bgWorker = new Worker(bgUrl);
     bgWorker.onmessage = () => {
-      if (!document.hidden || M.mode !== 'net') { bgLast = 0; return; }
+      if (!document.hidden || (M.mode !== 'net' && !backgroundLocalActive())) { bgLast = 0; return; }
       const now = performance.now(), real = bgLast ? Math.min(0.05, (now - bgLast) / 1000) : 0; bgLast = now;
-      if (real > 0 && !paused) { simTick(real); netTick(real); }
+      if (real > 0 && !paused) { simTick(real); if (M.mode === 'net') netTick(real); }
     };
   } catch (e) { bgWorker = null; }
 }
@@ -778,7 +781,8 @@ function frameBody(now) {
     updateFireflies(real); updateAim();
     if (TUT && M.mode === 'train' && !paused) tutTick(real);
     for (const f of [A, B]) { if (f.vox) f.vox = damp(f.vox, 0, 14, real); if (f.voy) f.voy = damp(f.voy, 0, 14, real); }
-    if (ROLL.on && M.mode === 'net') rollTick(real);
+    if (document.hidden && backgroundLocalActive() && (bgWorker || bgAiTimer)) { /* background ticker owns local simulation */ }
+    else if (ROLL.on && M.mode === 'net') rollTick(real);
     else if (REPLAY.on) replayTick(real);
     else {
       acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();

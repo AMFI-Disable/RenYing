@@ -105,7 +105,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, lang: 'zh' };
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);

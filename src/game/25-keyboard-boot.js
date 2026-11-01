@@ -130,9 +130,12 @@ window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) 
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去
+function shouldPauseOnBlur() {
+  return M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && SETTINGS.backgroundPlay !== true && M.phase !== 'end' && !paused;
+}
 window.addEventListener('blur', () => {
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
-  if (M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && M.phase !== 'end' && !paused) {
+  if (shouldPauseOnBlur()) {
     paused = true;
     showScreen('pause');
   }
@@ -140,11 +143,11 @@ window.addEventListener('blur', () => {
 let bgAiTimer = null;
 function updateBgAiTicker() {
   if (typeof document === 'undefined') return;
-  if (document.hidden && isAiVsAi() && !paused && M && M.phase === 'fight') {
+  if (document.hidden && ((isAiVsAi() && !paused && M && M.phase === 'fight') || (!bgWorker && backgroundLocalActive()))) {
     if (!bgAiTimer) {
       let lastBgTime = performance.now();
       bgAiTimer = setInterval(() => {
-        if (!document.hidden || !isAiVsAi() || paused || (M && M.phase !== 'fight')) {
+        if (!document.hidden || !((isAiVsAi() && !paused && M && M.phase === 'fight') || (!bgWorker && backgroundLocalActive()))) {
           clearInterval(bgAiTimer);
           bgAiTimer = null;
           return;
@@ -152,6 +155,7 @@ function updateBgAiTicker() {
         const now = performance.now();
         const dt = Math.min(0.1, (now - lastBgTime) / 1000);
         lastBgTime = now;
+        if (!isAiVsAi()) { simTick(dt); return; }
         acc += dt * (slowmo > 0 ? 0.28 : 1);
         if (acc > STEP * 10) acc = STEP * 10;
         let n = 0;

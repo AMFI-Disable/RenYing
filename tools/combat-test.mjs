@@ -633,6 +633,28 @@ const testSuite = [
     })()`
   },
   {
+    name: 'Background setting pauses player matches by default and leaves AI watch unchanged',
+    fn: `(() => {
+      startMatch('cpu', 'normal', [0, 1], false); paused = false; M.phase = 'fight';
+      SETTINGS.backgroundPlay = false;
+      if (!shouldPauseOnBlur()) return { pass: false, error: 'default should pause player matches' };
+      SETTINGS.backgroundPlay = true; saveSettings();
+      if (shouldPauseOnBlur() || JSON.parse(localStorage.getItem('renying-settings')).backgroundPlay !== true) return { pass: false, error: 'continue setting did not persist or prevent pause' };
+      const find = document.querySelector; document.querySelector = () => null;
+      const enabled = backgroundLocalActive(); paused = true; const manuallyPaused = backgroundLocalActive(); paused = false;
+      SETTINGS.backgroundPlay = false; const disabled = backgroundLocalActive();
+      document.querySelector = find;
+      if (!enabled || manuallyPaused || disabled) return { pass: false, error: 'background simulation eligibility is wrong' };
+      startMatch('cpu', 'god', [0, 1], true); paused = false; M.phase = 'fight';
+      SETTINGS.backgroundPlay = false;
+      if (!isAiVsAi() || shouldPauseOnBlur()) return { pass: false, error: 'AI watch must continue with setting off' };
+      SETTINGS.backgroundPlay = true;
+      if (shouldPauseOnBlur()) return { pass: false, error: 'AI watch must continue with setting on' };
+      SETTINGS.backgroundPlay = false; saveSettings(); toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'isAiVsAi() prevents window blur pausing in all watch modes',
     fn: `(() => {
       // Normal 1v1 PvC should pause on blur
