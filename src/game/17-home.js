@@ -285,14 +285,21 @@ function singleSec(sec) {
     b.classList.toggle('sel', b.dataset.tab === active);
   }
   for (const p of document.querySelectorAll('#mutatorPills button')) {
-    p.classList.toggle('sel', p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active));
+    const on = p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active);
+    p.classList.toggle('sel', on); p.setAttribute('aria-pressed', String(on));
   }
   for (const el of document.querySelectorAll('#single [data-sec]')) {
     const secs = el.dataset.sec.split(' ');
     el.style.display = secs.includes(active) ? '' : 'none';
   }
-  if ($id('xiwuQuickGo')) $id('xiwuQuickGo').disabled = active === 'train';
-  if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
+  const duel = ['cpu', 'chaos', 'mayhem', 'tag3'].includes(active);
+  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'maps'].includes(active);
+  if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
+  const mutators = $id('mutatorPills');
+  if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
+  const maps = $id('xiwuMapChips');
+  if (maps && maps.parentElement) maps.parentElement.hidden = active !== 'cpu';
+  updateXiwuSummary();
   const scr = $id('single');
   if (scr && !sec) scr.scrollTop = 0;
   $id('singleT').textContent = '习武';
@@ -322,6 +329,17 @@ function singleSec(sec) {
   else if (active === 'mayhem') renderMayhem();
   else if (active === 'maps') renderMaps();
   else if (active === 'cpu') updateAIBrief();
+}
+function updateXiwuSummary() {
+  const info = $id('xiwuQuickInfo'); if (!info) return;
+  const active = currentSingleTab;
+  const mode = active === 'tag3' ? '3v3 车轮战' : '对战电脑';
+  const rule = active === 'tag3' ? teamMutator : active;
+  const ruleName = rule === 'chaos' ? '天机乱斗' : rule === 'mayhem' ? '通天神决' : '常规标准';
+  const pieces = [CHARS[menuHeroPick()].name, LV_NAME[pickLevel] || pickLevel, mode, ruleName];
+  let preferredMap = ''; try { preferredMap = localStorage.getItem('renying-map-vote') || ''; } catch (e) {}
+  if (active === 'cpu') pieces.push(MAPS[preferredMap] ? MAPS[preferredMap].n : '标准擂台');
+  info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(' · ');
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
 function openScreen(name, reveal = true) {

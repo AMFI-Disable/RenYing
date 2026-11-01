@@ -154,6 +154,51 @@
         <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
 
+      <!-- 习武大厅：两级大类导航与模式卡片（告别13个按钮堆叠在一屏） -->
+      <div class="xiwu-studio">
+      <div class="single-nav-deck play-deck">
+        <div class="xiwu-category-tabs" id="xiwuCatTabs" role="tablist">
+          <button class="xiwu-cat-btn sel" data-cat="combat" type="button" role="tab" aria-selected="true">
+            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>
+            <span class="cat-name">实战切磋</span>
+            <span class="cat-desc">切磋与演练</span>
+          </button>
+          <button class="xiwu-cat-btn" data-cat="story" type="button" role="tab" aria-selected="false">
+            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>
+            <span class="cat-name">江湖历练</span>
+            <span class="cat-desc">故事与试炼</span>
+          </button>
+        </div>
+
+        <div class="single-tabs xiwu-mode-deck" id="singleTabs">
+          <!-- 实战切磋分区模式 (4 张主卡) -->
+          <div class="xiwu-cat-group" data-cat-group="combat">
+            <div class="xiwu-cards-row">
+              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span></button>
+              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
+              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
+              <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">木人试剑</b><span class="pt-d">木人桩练连招</span></button>
+            </div>
+
+
+          </div>
+
+          <!-- 江湖历练分区模式 (3 张主卡) -->
+          <div class="xiwu-cat-group" data-cat-group="story" style="display:none">
+            <div class="xiwu-cards-row">
+              <button data-tab="stage" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span><b class="pt-n">守关挑战</b><span class="pt-d">六章三十关</span></button>
+              <button data-tab="saga" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span><b class="pt-n">侠客列传</b><span class="pt-d">每位侠客自己的故事</span></button>
+              <button data-tab="tower" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">问剑密卷</b><span class="pt-d">一层层爬塔抽秘卷</span></button>
+            </div>
+          </div>
+
+          <!-- 测试兼容保留标签 -->
+          <button data-tab="maps" style="display:none" type="button" aria-hidden="true"></button>
+          <button data-act="rouge" style="display:none" type="button" aria-hidden="true"></button>
+        </div>
+      </div>
+
+      <div class="xiwu-config">
       <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons.js 的 setPickLevel -->
       <div id="aiLvHome">
         <div class="ai-lv-bar" id="aiLvBar">
@@ -186,32 +231,7 @@
         </div>
       </div>
 
-      <!-- 习武大厅：两级大类导航与模式卡片（告别13个按钮堆叠在一屏） -->
-      <div class="single-nav-deck play-deck">
-        <div class="xiwu-category-tabs" id="xiwuCatTabs" role="tablist">
-          <button class="xiwu-cat-btn sel" data-cat="combat" type="button" role="tab" aria-selected="true">
-            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>
-            <span class="cat-name">实战切磋</span>
-            <span class="cat-desc">对战电脑 · 3v3 车轮 · 2v2 组队 · 木人试剑</span>
-          </button>
-          <button class="xiwu-cat-btn" data-cat="story" type="button" role="tab" aria-selected="false">
-            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>
-            <span class="cat-name">江湖历练</span>
-            <span class="cat-desc">守关挑战 · 侠客列传 · 问剑密卷</span>
-          </button>
-        </div>
-
-        <div class="single-tabs xiwu-mode-deck" id="singleTabs">
-          <!-- 实战切磋分区模式 (4 张主卡) -->
-          <div class="xiwu-cat-group" data-cat-group="combat">
-            <div class="xiwu-cards-row">
-              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span></button>
-              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
-              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
-              <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">木人试剑</b><span class="pt-d">木人桩练连招</span></button>
-            </div>
-
-            <div class="xiwu-quick-card"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
+            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
             <!-- 战场异变 -->
             <div class="xiwu-mutator-row">
               <span class="mutator-label">战场异变：</span>
@@ -225,11 +245,11 @@
             <!-- 偏好地图（后台自动选图） -->
             <div class="xiwu-map-select-bar">
               <div class="sec-head-row" style="margin-bottom:6px">
-                <span class="mutator-label" style="font-weight:600;color:var(--gold)">偏好地图（后台选图）：</span>
-                <span class="sub-badge" id="mapVoteStatusBadge">全部地图随机轮换</span>
+                <span class="mutator-label" style="font-weight:600;color:var(--gold)">战场：</span>
+                <span class="sub-badge" id="mapVoteStatusBadge">标准擂台</span>
               </div>
               <div class="xiwu-map-chips" id="xiwuMapChips" role="group" aria-label="偏好地图">
-                <button type="button" class="map-chip sel" data-map="">全部随机</button>
+                <button type="button" class="map-chip sel" data-map="">标准擂台</button>
                 <button type="button" class="map-chip" data-map="cliff">断崖台</button>
                 <button type="button" class="map-chip" data-map="ice">寒潭冰面</button>
                 <button type="button" class="map-chip" data-map="bamboo">竹海悬岩</button>
@@ -237,25 +257,9 @@
                 <button type="button" class="map-chip" data-map="pagoda">皇城飞檐</button>
                 <button type="button" class="map-chip" data-map="wine">醉仙楼</button>
               </div>
-              <p id="xiwuMapTrait" class="xiwu-map-trait" role="status">随机选择一处战场。</p>
+              <p id="xiwuMapTrait" class="xiwu-map-trait" role="status">标准擂台，没有特殊地形。</p>
             </div>
-          </div>
-
-          <!-- 江湖历练分区模式 (3 张主卡) -->
-          <div class="xiwu-cat-group" data-cat-group="story" style="display:none">
-            <div class="xiwu-cards-row">
-              <button data-tab="stage" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span><b class="pt-n">守关挑战</b><span class="pt-d">六章三十关</span></button>
-              <button data-tab="saga" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span><b class="pt-n">侠客列传</b><span class="pt-d">每位侠客自己的故事</span></button>
-              <button data-tab="tower" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">问剑密卷</b><span class="pt-d">一层层爬塔抽秘卷</span></button>
-            </div>
-          </div>
-
-          <!-- 测试兼容保留标签 -->
-          <button data-tab="maps" style="display:none" type="button" aria-hidden="true"></button>
-          <button data-act="rouge" style="display:none" type="button" aria-hidden="true"></button>
-        </div>
-      </div>
-
+      <div class="xiwu-mode-content">
       <!-- 对战电脑 (Choosing AI) -->
       <div data-sec="cpu" class="single-sec-pane">
         <div class="sec-head-row">
@@ -432,6 +436,10 @@
           <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
           <button class="go alt" id="mayhemWatchBtn" type="button">通天 AI 观战</button>
         </div>
+      </div>
+
+      </div>
+      </div>
       </div>
 
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
