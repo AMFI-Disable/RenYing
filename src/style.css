@@ -51,6 +51,12 @@
   *, *::before, *::after { box-sizing: inherit; }
   html, body { height: 100%; margin: 0; }
   body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; }
+  /* Native controls inherit the same readable font and ink color even without remote fonts. */
+  :where(button, input, select, textarea) { font-family: inherit; color: inherit; }
+  :where(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    background-color: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm);
+  }
+  :where(button, input, select, textarea, a):focus-visible { outline: 2px solid var(--p1); outline-offset: 2px; }
   #wrap { position: relative; width: 100%; height: 100%; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
   canvas:focus, canvas:focus-visible { outline: none; }
@@ -786,7 +792,7 @@
   .bpcard img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: center top; display: block; border-radius: 6px; max-height: clamp(80px, 17vh, 155px); }
   .bpcard .nm { font-family: var(--title); font-size: clamp(13px, 1.2vw, 17px); line-height: 1.1; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bpcard .bp-shortcut { position: absolute; top: 4px; left: 4px; font-size: 12px; font-weight: 700; background: rgba(0,0,0,.65); color: var(--gold); border: 1px solid rgba(233,196,106,.3); border-radius: 3px; padding: 0 4px; pointer-events: none; }
-  .bpcard .rl { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .bpcard .rl { font-size: 12px; color: var(--dim); white-space: normal; overflow-wrap: anywhere; line-height: 1.2; max-width: 100%; }
   .bppop { position: fixed; z-index: 30; width: 300px; padding: 10px; border-radius: 12px; background: rgba(12,12,30,.96); border: 1px solid rgba(233,196,106,.35); box-shadow: 0 18px 50px rgba(0,0,0,.55); pointer-events: none; opacity: 0; transition: opacity .15s; }
   .bppop.on { opacity: 1; }
   .bppop canvas { width: 280px; height: 200px; display: block; border-radius: 8px; }

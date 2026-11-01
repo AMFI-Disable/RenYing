@@ -45,6 +45,11 @@ html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 *, *::before, *::after { box-sizing: inherit; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; }
+:where(button, input, select, textarea) { font-family: inherit; color: inherit; }
+:where(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), select, textarea) {
+background-color: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm);
+}
+:where(button, input, select, textarea, a):focus-visible { outline: 2px solid var(--p1); outline-offset: 2px; }
 #wrap { position: relative; width: 100%; height: 100%; }
 canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
 canvas:focus, canvas:focus-visible { outline: none; }
@@ -770,7 +775,7 @@ gap: var(--bp-gap); width: 100%; --bp-gap: clamp(4px, 0.5vw, 7px); --bp-cols: 12
 .bpcard img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: center top; display: block; border-radius: 6px; max-height: clamp(80px, 17vh, 155px); }
 .bpcard .nm { font-family: var(--title); font-size: clamp(13px, 1.2vw, 17px); line-height: 1.1; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bpcard .bp-shortcut { position: absolute; top: 4px; left: 4px; font-size: 12px; font-weight: 700; background: rgba(0,0,0,.65); color: var(--gold); border: 1px solid rgba(233,196,106,.3); border-radius: 3px; padding: 0 4px; pointer-events: none; }
-.bpcard .rl { font-size: 12px; color: var(--dim); white-space: nowrap; }
+.bpcard .rl { font-size: 12px; color: var(--dim); white-space: normal; overflow-wrap: anywhere; line-height: 1.2; max-width: 100%; }
 .bppop { position: fixed; z-index: 30; width: 300px; padding: 10px; border-radius: 12px; background: rgba(12,12,30,.96); border: 1px solid rgba(233,196,106,.35); box-shadow: 0 18px 50px rgba(0,0,0,.55); pointer-events: none; opacity: 0; transition: opacity .15s; }
 .bppop.on { opacity: 1; }
 .bppop canvas { width: 280px; height: 200px; display: block; border-radius: 8px; }
@@ -5667,6 +5672,7 @@ try { if (typeof updateVerLine === 'function') updateVerLine(); } catch (e) {}
 }
 const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
 const PATTERNS_EN = [
+[/^总伤害\s*(\d+)\s*·\s*最长连击\s*(\d+)\s*·\s*破防\s*(\d+)\s*·\s*坠崖\s*(\d+)$/, (m0, damage, combo, breaks, falls) => `Damage ${damage} · Longest combo ${combo} · Guard breaks ${breaks} · Terrain falls ${falls}`],
 [/^今日\s*(\d+)\/(\d+)(?:\s*·\s*可领\s*(\d+)\s*墨锭)?$/, (m0, a, b, c) => `Today ${a}/${b}` + (c ? ` · ${c} Ink to claim` : '')],
 [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
 [/^剩\s*(\d+)\s*天$/, (m0, d) => `${d}d left`],
@@ -22003,11 +22009,13 @@ const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb',
 const MENU_DOLLY = 520;                 // 推进镜头的时长，和 CSS 里 .scr 的交接收尾对齐
 let menuLock = false;                   // 按下之后锁住悬停和连点，回到首页才解锁
 let menuEntered = false;                // 首页入场动画是否已经播过
+let menuTransition = 0, menuTransitionCompleting = false;
 let currentScreen = 'menu';             // showScreen 当前显示的是哪一页（null = 在对局里）
 const prefersReduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 function menuGo(name) {
 if (menuLock) return;                 // 已经出发了：忽略连点和二次点击
 menuLock = true;
+const transition = ++menuTransition;
 initAudio();
 const spot = MENU_SPOT[name];
 const root = $id('menu');
@@ -22032,9 +22040,13 @@ document.body.classList.remove('menu-handoff');
 return;
 }
 setTimeout(() => {
+if (transition !== menuTransition) return;
 delete root.dataset.phase;
-showScreen(target);
-setTimeout(() => document.body.classList.remove('menu-handoff'), 320);
+if (currentScreen !== 'menu') { menuLock = false; document.body.classList.remove('menu-handoff'); return; }
+menuTransitionCompleting = true;
+try { showScreen(target); } finally { menuTransitionCompleting = false; }
+const completed = menuTransition;
+setTimeout(() => { if (menuTransition === completed) document.body.classList.remove('menu-handoff'); }, 320);
 }, prefersReduced() ? 0 : (spot !== undefined ? MENU_DOLLY : 220));
 }
 function updateAIBrief() {
@@ -25302,6 +25314,10 @@ document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
+if (!menuTransitionCompleting && currentScreen === 'menu' && id !== 'menu' && document.body.classList.contains('menu-handoff')) {
+delete $id('menu').dataset.phase; document.body.classList.remove('menu-handoff'); menuLock = false;
+}
+menuTransition++;
 const prev = currentScreen; currentScreen = id;
 for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
 if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen

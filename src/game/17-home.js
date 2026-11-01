@@ -207,12 +207,14 @@ const MENU_SCREENS = ['menu', 'single', 'netp', 'help', 'settings', 'acc', 'lb',
 const MENU_DOLLY = 520;                 // 推进镜头的时长，和 CSS 里 .scr 的交接收尾对齐
 let menuLock = false;                   // 按下之后锁住悬停和连点，回到首页才解锁
 let menuEntered = false;                // 首页入场动画是否已经播过
+let menuTransition = 0, menuTransitionCompleting = false;
 let currentScreen = 'menu';             // showScreen 当前显示的是哪一页（null = 在对局里）
 const prefersReduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 // 主界面按钮：悬停时镜头平移到对应场景，点击后推进镜头再打开页面
 function menuGo(name) {
   if (menuLock) return;                 // 已经出发了：忽略连点和二次点击
   menuLock = true;
+  const transition = ++menuTransition;
   initAudio();
   const spot = MENU_SPOT[name];
   const root = $id('menu');
@@ -237,9 +239,14 @@ function menuGo(name) {
     return;
   }
   setTimeout(() => {
+    if (transition !== menuTransition) return;
     delete root.dataset.phase;
-    showScreen(target);
-    setTimeout(() => document.body.classList.remove('menu-handoff'), 320);
+    // A modal can start a draft before the home transition finishes. Never replace that newer screen.
+    if (currentScreen !== 'menu') { menuLock = false; document.body.classList.remove('menu-handoff'); return; }
+    menuTransitionCompleting = true;
+    try { showScreen(target); } finally { menuTransitionCompleting = false; }
+    const completed = menuTransition;
+    setTimeout(() => { if (menuTransition === completed) document.body.classList.remove('menu-handoff'); }, 320);
   }, prefersReduced() ? 0 : (spot !== undefined ? MENU_DOLLY : 220));
 }
 // AI_PROFILES（每档难度的标签、介绍、关键词）从 src/data/20-levels.js 来，见 src/game/01-core.js
