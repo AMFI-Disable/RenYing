@@ -5971,7 +5971,7 @@ hook: { role: 'proj', combo: true, pull: true },
 whirl: { role: 'zone', combo: true, reflect: true },
 spindle: { role: 'proj', combo: true },
 shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, B) => !(B && B.lqHold > clock) && ((o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state) || (B && B.L.read >= 0.3 && m.skillCD > 1.5)) },   // 劲敌以上：飞梭一时挂不上印记也照放（新换影一路追到中为止，被挡也定身）
-mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 2 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
+mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 4 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
 mistswap: { role: 'self', combo: false, use: () => false },
 polarswap: { role: 'self', combo: true, air: true, use: (m, o, d, B) => !(B && B.L.combo >= 3) && ((m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150))) },   // 寻常以上换极性交给 cixianRoute
 magfield: { role: 'zone', combo: true, use: (m, o, d) => o.invul <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
@@ -6959,6 +6959,7 @@ const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
 if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;
 if (clock < (this.lqNext || 0)) return false;
 const mark = foe.needleMark || 0, rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0;
+const markTime = (foe.needleMarkT !== undefined && foe.needleMarkT > 0) ? foe.needleMarkT : mark;
 const fly = d / SD_SPD + 0.1 + (SD_DRIFT_MAX / SD_DRIFT_SPD + 0.12);   // 换影起手 + 飞到对手身边 + 第一次近身漂移回拉再扑回来
 const stuck = AI_HURT.includes(foe.state) || foe.jailT > 0 || foe.rooted;   // 对手正在挨打，闪不了也挡不了
 const canEsc = foe.breakCD <= fly && !stuck;                  // 对手的腾空闪能躲开换影
@@ -6970,8 +6971,8 @@ if (rReady && foe.state === 'launched' && this.lqBurst && clock - this.lqBurst <
 if (me.meter >= 100 && L.ult >= 0.9 && roll(L.ult)) { this.lqBurst = 0; return act('special', 1.2); }
 if (L.combo >= 5 && roll(L.skill)) { this.lqBurst = 0; return act('skill2', 0.4); }
 }
-if (mark > fly + 0.05 && rReady && d < 700) {
-const hurry = mark < fly + 0.6;                             // 印记快没了，不等了
+if (mark > 0 && markTime > fly + 0.05 && rReady && d < 700) {
+const hurry = markTime < fly + 0.6;                             // 印记快没了，不等了
 if (L.read >= 0.3 && canEsc && !hurry) {
 if (L.read >= 0.7) this.dir = d > 160 ? to : 0;
 this.lqHold = clock + 0.1;                                // 通用打法这一下也别放换影
@@ -7368,7 +7369,6 @@ const UI_COPY_EN = {
 "严密格挡": "Guard Always",
 "个，开箱不用钥匙": " cases, no key needed to open",
 "中": "Medium",
-"主要玩法": "Main Mode",
 "九霄": "Nine Skies",
 "乱斗电脑境界": "Mayhem AI Tier",
 "乾坤异变": "Celestial Shift",
@@ -7402,7 +7402,6 @@ const UI_COPY_EN = {
 "全服在线侠士": "Warriors Online",
 "全服待命中": "Standby Globally",
 "全服随机对手，开局即打": "Global random matchmaking, instant duel",
-"全服随机对手，谁都可能遇到 · 标准三局两胜 · 不影响段位": "Random global opponents · Best of 3 · Casual unranked",
 "全系神经策略 · 算无遗策": "Neural AI · Perfect Predictions",
 "全网连线 · 毫秒回滚": "Global Netplay · Millisecond Rollback",
 "关": "Stage",
@@ -7460,7 +7459,6 @@ const UI_COPY_EN = {
 "回音壁": "Echo Barrier",
 "回马枪": "Back Thrust",
 "图鉴": "Catalog",
-"在习武亭和电脑过招": "Practice against AI in the pavilion",
 "场": "Bouts",
 "基础伤害": "Base Damage",
 "墨竹": "Ink Bamboo",
@@ -8779,7 +8777,6 @@ const UI_COPY_EN = {
 "⚡ 触电麻痹 · 雷铠重置": "⚡ Shocked · Thunder Armor reset",
 "⚡ 金刚雷铠 · 引雷天罚": "⚡ Vajra Armor · Thunder Punishment",
 "⚡ 雷帝灌顶 · 拳劲重置": "⚡ Thunder Emperor · Fist reset",
-"✦ 雀芒入体": "✦ Needle in",
 "✦ 雀芒入魂 · 悬丝归宗 ✦": "✦ Needle to the soul · Threads return ✦",
 "✦ 雀芒引爆 · 换影重置 ✦": "✦ Needles burst · Shadow Swap reset ✦",
 "✨ 腾空·凌空凝势": "✨ Airborne · Poise in the air",
@@ -9178,8 +9175,6 @@ const UI_COPY_EN = {
 "一处入口畅玩全部模式 · 人机 · 3v3 联机 · 肉鸽 · 开放世界": "One portal for all modes · PvC · 3v3 Tag PvP · Roguelike · Open World",
 "演武大厅": "Play Hub",
 "统一设定人机境界，各模式均在后台随机轮换山河异境地图": "Unified AI difficulty across all modes, with maps chosen automatically in the background",
-"一处入口畅玩全部模式，后台自动轮换地图": "Play every mode from one hub with background map rotation",
-"偏好地图投票：在此投出一票，所有模式后台选图都会提高该地图出现概率": "Preferred Map Vote: cast your vote here to boost its background selection odds across all modes",
 "3v3 联机擂台": "3v3 Tag PvP",
 "月下对弈 · 3v3 联机擂台": "Moonlit Duel · 3v3 Tag PvP Portal",
 "3v3 车轮接力 · 毫秒回滚": "3v3 Tag Relay · Millisecond Rollback",
@@ -9586,11 +9581,11 @@ Object.assign(UI_COPY_EN, {
 "凌雀": "Ling Que",
 "飞梭游侠": "Shuttle Wanderer",
 "雀芒": "Sparrow Mark",
-"双持子母飞梭，以悬丝牵引。穿叶飞梭与万线归宗击中敌人附加【雀芒】印记（持续3.5秒）；移形换影冲刺穿刺带印记者，引爆悬丝真气重创敌人并大幅返还冷却；雀步凌波可灵活穿梭战场。": "Dual-wields linked shuttles guided by fine threads. Leaf-Piercing Shuttle and Thousand Threads apply a [Sparrow Mark] on hit (3.5s); a Shadow Swap dash through a marked enemy detonates the thread energy for heavy damage and a big cooldown refund. Sparrow Step lets her weave nimbly around the stage.",
+"双持子母飞梭，以悬丝牵引。对敌人造成三次普攻、穿叶飞梭命中、蓄力斩（无需满蓄）命中或万线归宗命中均可施加【雀芒】印记（最多叠加 5 层，印记环绕目标周身，持续 15 秒）；移形换影每次穿刺引爆 1 层印记重创挑空敌人并立即清零移形换影冷却，可连续发动 5 次突进而无冷却！": "Dual-wields linked shuttles guided by fine threads. Three normal hits, Leaf-Piercing Shuttle, a charged attack (does not need full charge), or Thousand Threads apply a [Sparrow Mark] on hit (up to 5 stacks, orbiting the target for 15s); each Shadow Swap dash pierces and detonates 1 stack to launch the enemy and instantly reset Shadow Swap's cooldown, allowing up to 5 consecutive dashes without cooldown!",
 "穿叶飞梭": "Leaf-Piercing Shuttle",
-"凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 3.5 秒【雀芒】印记并造成 30 伤害。": "Ling Que throws threaded twin shuttles that pierce forward through the air (through enemies and Ink Traps), applying a 3.5s [Sparrow Mark] and dealing 30 damage on hit.",
+"凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 15 秒【雀芒】印记（最多 5 层）并造成 30 伤害。": "Ling Que throws threaded twin shuttles that pierce forward through the air (through enemies and Ink Traps), applying a 15s [Sparrow Mark] (up to 5 stacks) and dealing 30 damage on hit.",
 "移形换影": "Shadow Swap",
-"踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！": "Ride the threads as a high-speed streak of light toward the enemy. On the first close approach she does not strike but circles around, flipping over the enemy's head to land behind them (if there is no room behind them by the wall, she drifts back mid-air instead), then homes in until connecting. Opponents cannot Just Guard; only properly timed blocking can reduce damage and stop her rush, but they will still suffer a standing stun (without knockdown). Piercing an enemy with a [Sparrow Mark] detonates the thread energy for 38 burst damage and a launch, and resets Shadow Swap's cooldown instantly!",
+"踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆 1 层悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却（若目标带多层印记，可连续五发换影不休）！": "Ride the threads as a high-speed streak of light toward the enemy. On the first close approach she does not strike but circles around, flipping over the enemy's head to land behind them (if there is no room behind them by the wall, she drifts back mid-air instead), then homes in until connecting. Opponents cannot Just Guard; only properly timed blocking can reduce damage and stop her rush, but they will still suffer a standing stun (without knockdown). Piercing an enemy with a [Sparrow Mark] detonates 1 stack of thread energy for 38 burst damage and a launch, and resets Shadow Swap's cooldown instantly (with multiple marks, chain up to five dashes without cooldown)!",
 "万线归宗": "Thousand Threads",
 "凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。": "Ling Que leaps up and weaves a sky-wide net of threads as the twin shuttles crisscross the whole screen like a storm (7 hits of 12 + a 56 damage finisher), applying [Sparrow Mark] and resetting Shadow Swap.",
 "【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！": "[Shuttle Weave · Sparrow Lock] Twin shuttles pierce at mid to long range and build meter efficiently; the Thousand Threads ultimate storms the whole screen, applies Sparrow Mark and resets Shadow Swap!",
@@ -10103,19 +10098,19 @@ Object.assign(UI_COPY_EN, {
 "离影": "Li Ying",
 "离魂刀客": "Soul-Parted Blade",
 "离魂": "Parted Soul",
-"能把一缕魂留在原地，化作雾身（最多 2 个，存在 6 秒，碰到就碎，离本体超过 700 像素自行散去）。身子却比旁人笨重：只有一段跳。打碎雾身的人回 10 点气。": "She can leave a wisp of her soul behind as a mist double (up to 2, lasting 6s; any touch shatters one, and one more than 700 px from her fades on its own). Her body is heavier than most: only a single jump. Whoever shatters a mist double gains 10 meter.",
+"能把一缕魂留在原地，化作雾身（最多 4 个，存在 15 秒，碰到就碎，可布于全场任意位置无距离消散限制）。身子却比旁人笨重：只有一段跳。打碎雾身的人回 10 点气。": "She can leave a wisp of her soul behind as a mist double (up to 4, lasting 15s; any touch shatters one, and they can be placed anywhere across the stage without leash dissipation). Her body is heavier than most: only a single jump. Whoever shatters a mist double gains 10 meter.",
 "留影": "Mist Mark",
 "要站在地上才能留影": "Mist Mark needs you on the ground",
-"在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 2 个雾身，再留就散掉最早的那个。雾身存在 6 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。": "Leave a mist double where you stand while taking a big step forward with a slash (40 damage). Ground only. Up to 2 doubles at once; leaving another fades the oldest. Doubles last 6s and shatter on any attack (the attack still carries on), and whoever shatters one gains 10 meter.",
+"在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 4 个雾身，再留就散掉最早的那个。雾身存在 15 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。": "Leave a mist double where you stand while taking a big step forward with a slash (40 damage). Ground only. Up to 4 doubles at once; leaving another fades the oldest. Doubles last 15s and shatter on any attack (the attack still carries on), and whoever shatters one gains 10 meter.",
 "渡影": "Mist Crossing",
 "那边没有雾身": "No mist double that way",
 "没有雾身可渡": "No mist double to cross to",
 "结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。": "Form a seal for 0.2s (standing still, and the target double is visible), then appear at that mist double's spot, using it up. R alone goes to the double nearest the enemy (always ringed); hold ← or → and press R for the nearest one on that side; hold ↓ and press R for the oldest. After arriving you can't attack for 0.15s (you can block), facing the way you traveled. No invincibility: get hit during the seal and it fails.",
 "破影": "Shattered",
 "万影归一": "Myriad Mists",
-"场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多三刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。": "Every mist double on the field slashes a blade light at the enemy at once (40 damage each), then they all fade; 0.3 seconds later she blinks in front of the enemy for one more cut (60 damage, launch), and she follows them into the air if they jumped. More doubles, more cuts, up to three. With no doubles there is only her own cut. The blade lights and the cut cannot be blocked, but there is no invincibility at any point: getting hit before the cut or an enemy dodge makes it miss. Landing the cut resets the cooldown of Mist Mark.",
+"场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。": "Every mist double on the field slashes a blade light at the enemy at once (40 damage each), then they all fade; 0.3 seconds later she blinks in front of the enemy for one more cut (60 damage, launch), and she follows them into the air if they jumped. More doubles, more cuts, up to four. With no doubles there is only her own cut. The blade lights and the cut cannot be blocked, but there is no invincibility at any point: getting hit before the cut or an enemy dodge makes it miss. Landing the cut resets the cooldown of Mist Mark.",
 "先留影再出手：只按 R 渡到离对手最近的雾身，按住 ← / → 再按 R 去那一边，按住 ↓ 去最早的那个。": "Mark first, then strike: R alone crosses to the double nearest the enemy, hold ← / → and press R for that side, hold ↓ for the oldest one.",
-"最多 2 个雾身，碰到就碎 · 只有一段跳(815血)": "Up to 2 mist doubles, shatter on touch · single jump (815 HP)",
+"最多 4 个雾身，碰到就碎 · 只有一段跳(815血)": "Up to 4 mist doubles, shatter on touch · single jump (815 HP)",
 "R 加方向选雾身：← → 选那一边，↓ 选最早留下的": "R plus a direction picks the double: ← → for that side, ↓ for the oldest",
 "【雾身换位 · 碎影成本】留影一刀与普攻攒气；雾身被打碎时对手回 10 点气，留得太随便等于给对手送气。万影归一按雾身数量出刀。": "[Mist Swap · Cost of Shattering] Mist Mark's slash and normal attacks build meter; when a double is shattered the enemy gains 10 meter, so careless doubles feed your opponent. Myriad Mists cuts once per double.",
 "脚下留雾身 · 踏步一刀": "Leave a double · stepping slash",
@@ -10136,7 +10131,7 @@ Object.assign(UI_COPY_EN, {
 "✦ 挑空": "✦ Launch",
 "空中两段斩。她只有一段跳，跳起来就要想好怎么落地。": "Two slashes in the air. She has only one jump, so plan the landing before you leave the ground.",
 "✦ 留下雾身": "✦ Leaves a Double",
-"在脚下留一个雾身，向前踏出一大步斩一刀。只能在地上用；最多 2 个雾身，存在 6 秒，碰到攻击就碎。": "Leave a mist double where you stand and take a big step forward with a slash. Ground only; up to 2 doubles, lasting 6s, shattering on any attack.",
+"在脚下留一个雾身，向前踏出一大步斩一刀。只能在地上用；最多 4 个雾身，存在 15 秒，碰到攻击就碎。": "Leave a mist double where you stand and take a big step forward with a slash. Ground only; up to 4 doubles, lasting 15s, shattering on any attack.",
 "✦ 换位": "✦ Swap",
 "结印 0.2 秒后换到雾身那里，那个雾身随之散去。不按方向换到离对手最近的；按 ← → 选那一边最近的；按 ↓ 选最早留下的。只能从站立、走动、空中、格挡里发动，不能接在出招后面。": "After a 0.2s seal, swap to a mist double, which then fades. No direction goes to the one nearest the enemy; ← → picks the nearest on that side; ↓ picks the oldest. Only from standing, walking, air or blocking, never as a follow-up to an attack.",
 "✦ 雾身齐斩": "✦ Doubles Slash",
@@ -10834,7 +10829,7 @@ defHero({
 id: 'lingque', skin: 'lq', en: 'Ling Que',
 bal: { normal: 1.108, skill: 1.108, ult: 1.108, cd: 1.0, hp: 1.108 },
 char: { name: '凌雀', role: '飞梭游侠', diff: 3, escCD: 8.5, skill: 'spindle', skill2: 'shadowdash', ult: 'needlestorm', passive: 'needlemark',
-passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。穿叶飞梭与万线归宗击中敌人附加【雀芒】印记（持续3.5秒）；移形换影冲刺穿刺带印记者，引爆悬丝真气重创敌人并大幅返还冷却；雀步凌波可灵活穿梭战场。',
+passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。对敌人造成三次普攻、穿叶飞梭命中、蓄力斩（无需满蓄）命中或万线归宗命中均可施加【雀芒】印记（最多叠加 5 层，印记环绕目标周身，持续 15 秒）；移形换影每次穿刺引爆 1 层印记重创挑空敌人并立即清零移形换影冷却，可连续发动 5 次突进而无冷却！',
 stat: { hp: 790, walk: 1.10, speed: 0.88, dmg: 0.96, reach: 1.00, swing: 0.86, jump: 1.04, weight: 0.86, defRating: 0.96, guardMax: 92, guardStab: 1.00, guardChip: 0.10, guardRegen: 28, poise: 0.98, size: 0.94 }, hitFeel: 0.85,
 look: { body: '#2a1a2e', shade: '#160c1c', outline: '#e07ac8', outlineA: .85, scarf: '#e056b0', slash: '235,110,210', blade: '#ffe8fa', head: 'topknot', weapon: 'spindle' },
 ai: { range: [70, 220] }, beats: ['feiying', 'liuyun'], weakTo: ['tieshan', 'leiming'] },
@@ -10881,10 +10876,10 @@ defHero({
 id: 'liying', skin: 'li', en: 'Li Ying',
 bal: { normal: 1.47, skill: 1.47, ult: 1.47, cd: 1.0, hp: 1.47 },
 char: { name: '离影', role: '离魂刀客', diff: 3, escCD: 8.5, skill: 'mistmark', skill2: 'mistswap', ult: 'mistarray', passive: 'mist',
-passiveName: '离魂', passiveDesc: '能把一缕魂留在原地，化作雾身（最多 2 个，存在 6 秒，碰到就碎，离本体超过 700 像素自行散去）。身子却比旁人笨重：只有一段跳。打碎雾身的人回 10 点气。',
+passiveName: '离魂', passiveDesc: '能把一缕魂留在原地，化作雾身（最多 4 个，存在 15 秒，碰到就碎，可布于全场任意位置无距离消散限制）。身子却比旁人笨重：只有一段跳。打碎雾身的人回 10 点气。',
 stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 1.0, swing: 0.9, jump: 1.0, weight: 0.95, defRating: 1.0, guardMax: 95, guardStab: 1.0, guardChip: 0.10, guardRegen: 28, poise: 1.0, size: 0.95 }, hitFeel: 0.85,
 jumps: 1,
-clone: { max: 2, life: 6, leash: 700, swapSeal: 0.2, swapLand: 0.15, breakMeter: 10 },
+clone: { max: 4, life: 15, leash: 0, swapSeal: 0.2, swapLand: 0.15, breakMeter: 10 },
 look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', head: 'ponytail', weapon: 'sword' },
 ai: { range: [80, 200] }, beats: ['tieshan', 'gouchen'], weakTo: ['lingque', 'yanling'] },
 forest: {
@@ -11370,6 +11365,15 @@ if (best) return best;
 return foe || (typeof foeOf === 'function' ? foeOf(f) : null);
 }
 const sdAim = (f, t) => Math.atan2(t.y - f.y, t.x - f.x);   // 两人都按身体中间（脚下往上 50）算，高度差就是 y 差
+function addNeedleMark(target, count = 1) {
+if (!target || target.hp <= 0) return;
+target.needleMark = Math.min(5, (target.needleMark || 0) + count);
+target.needleMarkT = 15.0;
+if (!RESIM) {
+ring(target.x, target.y - 50, 60, '235,110,210', 0.25);
+addP({ type: 'text', text: `✦ 雀芒印记 (${Math.round(target.needleMark)}/5)`, x: target.x, y: target.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
+}
+}
 const MAG = { plusDmg: 1.35, plusKb: [300, -620], minusDmg: 0.55, pullK: 2.6e6, pullMax: 320, chainCap: 15, capStun: 0.3, demagRest: 1.0,
 rPlusDir: 1, rPlusR: 175, rPlusDmg: 48, rPlusKb: [360, 900], rMinusRange: 560, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
 const magRGB = pol => pol > 0 ? '255,96,84' : '96,156,255';
@@ -11831,7 +11835,7 @@ if (f.t >= 1.2) toNeutral(f);
 },
 pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
 ai: (me, foe, d) => d < 170 },
-spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 3.5 秒【雀芒】印记并造成 30 伤害。',
+spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 15 秒【雀芒】印记（最多 5 层）并造成 30 伤害。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) {
@@ -11843,7 +11847,7 @@ if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
 ai: (me, foe, d) => d > 110 && d < 460 },
-shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
+shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆 1 层悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却（若目标带多层印记，可连续五发换影不休）！',
 start(f, foe) {
 f.vx = 0; f.vy = 0;
 f.sdTrack = false;
@@ -11958,7 +11962,11 @@ blockStun: 0.45,
 launch: false
 })) {
 if (wasMarked) {
+hitFoe.needleMark = Math.max(0, (hitFoe.needleMark || 0) - 1);
+if (hitFoe.needleMark <= 0) {
 hitFoe.needleMark = 0;
+hitFoe.needleMarkT = 0;
+}
 f.skill2CD = 0;
 shake = Math.max(shake, 14);
 SFX.heavy(); SFX.slice();
@@ -11968,18 +11976,22 @@ for (let k = 0; k < 12; k++) {
 const a = rand(0, 6.28), v = rand(120, 320);
 addP({ type: 'spark', x: hitFoe.x, y: hitFoe.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: '255,160,230', life: 0.35, max: 0.35 });
 }
-addP({ type: 'text', text: '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
+const leftMarks = Math.round(hitFoe.needleMark);
+addP({ type: 'text', text: leftMarks > 0 ? `✦ 雀芒引爆 (${leftMarks}余印) · 换影重置 ✦` : '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
 }
 f.skPh = 2; f.t = 0; f.vx *= 0.06; f.vy *= 0.06;
 }
 }
 if (target && target.hp <= 0 && f.t >= 1.5) { f.skPh = 2; f.t = 0; f.vx *= 0.12; f.vy *= 0.12; }
 }
-if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
+if (f.skPh === 2) {
+if (f.skill2CD <= 0 && f.ctrl && f.ctrl.consume && f.ctrl.consume('skill2')) return startSkill(f, foe, 2);
+if (f.t >= 0.16) toNeutral(f);
+}
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? (f.sdDrifting ? ['du_l1s', 30] : ['dash', 60]) : ['idle', 14],
 ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
-mistmark: { name: '留影', cd: 5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 2 个雾身，再留就散掉最早的那个。雾身存在 6 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。',
+mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 4 个雾身，再留就散掉最早的那个。雾身存在 15 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。',
 start(f) { f.vx = 0; plantClone(f, f.x); },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; f.t = 0; f.hitDone = false; f.vx = 920 * f.face; SFX.swing(); }
@@ -11990,7 +12002,7 @@ if (f.t >= 0.12) { f.skPh = 2; f.t = 0; f.vx *= 0.3; }
 if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 40] : f.skPh === 1 ? ['l2a', 60] : ['idle', 14],
-ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 2 },
+ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 4 },
 mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
 can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
 lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
@@ -12327,6 +12339,7 @@ slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210')
 ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
 if (foe.hp > 0 && foe.invul <= 0) {
 applyHit(f, foe, { dmg: 12, exact: true, kb: [sd * 60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
+addNeedleMark(foe, 1);
 }
 }
 if (f.spN === 7 && f.t >= 0.78) {
@@ -12336,14 +12349,14 @@ shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
 ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
 if (foe.hp > 0 && foe.invul <= 0) {
 applyHit(f, foe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
-foe.needleMark = 3.5;
+addNeedleMark(foe, 1);
 f.skill2CD = 0;
 addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
 }
 }
 if (f.t >= 1.15) endSpecial(f);
 } },
-mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多三刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
+mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
 begin(f, foe) {
 f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
 for (const c of (f.clones || []).slice()) {
@@ -13807,7 +13820,7 @@ this.clones = []; this.cloneN = 0; this.swapId = -1;   // 离影的雾身（09-a
 for (const k of Object.keys(CLONE_SK)) if (k.startsWith(this.idx + ':')) delete CLONE_SK[k];
 Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
 skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 135, spN: 0, spPose: null, rooted: false, slowT: 0,
-notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
+notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -15074,8 +15087,7 @@ addP({ type: 'text', text: '墨迹遮目', x: foe.x, y: foe.y - 100, life: 0.9, 
 foe.slowT = 2.2;
 addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
 } else if (p.kind === 'spindle' || p.mark) {
-foe.needleMark = 3.5;
-addP({ type: 'text', text: '✦ 雀芒入体', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
+addNeedleMark(foe, 1);
 }
 applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
 const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
@@ -15273,7 +15285,7 @@ if (!f.clones || !f.clones.length) return;
 const C = f.ch.clone || { life: 0, leash: 0 };
 for (const c of f.clones.slice()) {
 c.t += STEP;
-if (c.t >= C.life || Math.abs(c.x - f.x) > C.leash || f.hp <= 0) cloneGone(f, c, false);
+if (c.t >= C.life || (C.leash > 0 && Math.abs(c.x - f.x) > C.leash) || f.hp <= 0) cloneGone(f, c, false);
 }
 }
 function hitClones(box, attIdx) {
@@ -15493,7 +15505,12 @@ f.frostSlow = Math.max(0, f.frostSlow - STEP);
 if (Math.random() < 0.25) addP({ type: 'spark', x: f.x + rand(-20, 20), y: f.y - rand(20, 80), vx: 0, vy: rand(-15, 15), life: 0.3, max: 0.3, rgb: '160,230,255' });
 }
 if (f.needleMark > 0) {
+if (f.needleMarkT !== undefined && f.needleMarkT > 0) {
+f.needleMarkT = Math.max(0, f.needleMarkT - STEP);
+if (f.needleMarkT <= 0) { f.needleMark = 0; f.needleMarkT = 0; }
+} else {
 f.needleMark = Math.max(0, f.needleMark - STEP);
+}
 if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
 }
 if (scOn()) scTick(f, foe);
@@ -15922,8 +15939,20 @@ if (att.ch.passive === 'drunk') dmg *= 1 + (att.drunk || 0) * 0.005;
 if (att.ch.passive === 'bind' && def.hookedT > 0 && !m.ult) { dmg *= 1.25; ev.big = true; }
 if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack') att.notes = Math.min(3, (att.notes || 0) + 1);
 if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
-if (att.ch.passive === 'needlemark' && (m.isProj || m.mark)) {
-def.needleMark = 3.5;
+if (att.ch.passive === 'needlemark') {
+if (m.name === 'cs1' || m.name === 'cs2' || att.moveName === 'cs1' || att.moveName === 'cs2') {
+addNeedleMark(def, 1);
+} else if (m.isProj || m.mark || m.name === 'spindle') {
+addNeedleMark(def, 1);
+} else if (m.ult) {
+addNeedleMark(def, 1);
+} else if (att.state === 'attack' && !m.isProj && !m.skill && !m.skill2) {
+att.lqNormHits = (att.lqNormHits || 0) + 1;
+if (att.lqNormHits >= 3) {
+att.lqNormHits = 0;
+addNeedleMark(def, 1);
+}
+}
 }
 if (def.ch && def.ch.id === 'moyu' && (def.ink || 0) >= 25 && !m.hold && dmg > 8) {
 def.ink = Math.max(0, def.ink - 12);
@@ -17492,18 +17521,19 @@ ctx.beginPath(); ctx.ellipse(f.x, f.y - 56, 22, 34, 0, 0, Math.PI * 2); ctx.stro
 if ((f.needleMark || 0) > 0 && f.hp > 0) {
 const isPlayerLQ = A && A.ch && A.ch.id === 'lingque';
 const rReady = isPlayerLQ && (A.skill2CD || 0) <= 0;
+const markCount = Math.min(5, Math.max(1, Math.round(f.needleMark)));
 ctx.save();
 if (rReady) {
 const pulse = 0.7 + 0.3 * Math.sin(clock * 12);
 ctx.strokeStyle = `rgba(255,140,230,${pulse})`; ctx.lineWidth = 2.4;
 ctx.shadowColor = '#ff8ce6'; ctx.shadowBlur = 12;
 const a0 = clock * 6;
-for (let k = 0; k < 4; k++) {
-const ang = a0 + k * (Math.PI / 2);
-const px = f.x + Math.cos(ang) * 30, py = f.y - 52 + Math.sin(ang) * 20;
-ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, Math.PI * 2); ctx.fill();
+for (let k = 0; k < markCount; k++) {
+const ang = a0 + k * (Math.PI * 2 / markCount);
+const px = f.x + Math.cos(ang) * 32, py = f.y - 52 + Math.sin(ang) * 22;
+ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py, 3.6, 0, Math.PI * 2); ctx.fill();
 }
-ctx.beginPath(); ctx.ellipse(f.x, f.y - 52, 32, 22, 0, 0, Math.PI * 2); ctx.stroke();
+ctx.beginPath(); ctx.ellipse(f.x, f.y - 52, 34, 24, 0, 0, Math.PI * 2); ctx.stroke();
 ctx.fillStyle = `rgba(255,230,250,${0.85 + 0.15 * Math.sin(clock * 14)})`;
 ctx.beginPath();
 const topY = f.y - 110 + Math.sin(clock * 8) * 3;
@@ -17514,15 +17544,20 @@ ctx.lineTo(f.x - 10, topY);
 ctx.closePath();
 ctx.fill();
 ctx.strokeStyle = '#e040fb'; ctx.lineWidth = 1.5; ctx.stroke();
+for (let p = 0; p < markCount; p++) {
+const pipX = f.x + (p - (markCount - 1) / 2) * 7;
+ctx.fillStyle = '#ff8ce6';
+ctx.beginPath(); ctx.arc(pipX, topY + 22, 2.2, 0, Math.PI * 2); ctx.fill();
+}
 } else {
 ctx.strokeStyle = `rgba(235,110,210,${0.5 + 0.4 * Math.sin(clock * 10)})`; ctx.lineWidth = 1.8;
 const a0 = clock * 5;
-for (let k = 0; k < 3; k++) {
-const ang = a0 + k * (Math.PI * 2 / 3);
-const px = f.x + Math.cos(ang) * 24, py = f.y - 50 + Math.sin(ang) * 16;
-ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 2.8, 0, Math.PI * 2); ctx.fill();
+for (let k = 0; k < markCount; k++) {
+const ang = a0 + k * (Math.PI * 2 / markCount);
+const px = f.x + Math.cos(ang) * 26, py = f.y - 50 + Math.sin(ang) * 18;
+ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 3.0, 0, Math.PI * 2); ctx.fill();
 }
-ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 26, 18, 0, 0, Math.PI * 2); ctx.stroke();
+ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 28, 20, 0, 0, Math.PI * 2); ctx.stroke();
 }
 ctx.restore();
 }
@@ -17780,7 +17815,7 @@ ctx.restore();
 function drawClones() {
 for (const f of allFighters()) {
 if (f.hidden || !f.clones || !f.clones.length) continue;
-const C = f.ch.clone || { life: 6 }, rgb = f.look.slash;
+const C = f.ch.clone || { life: 15 }, rgb = f.look.slash;
 const foe = (f.target && !f.target.hidden) ? f.target : foesOf(f)[0], mark = foe ? cloneMark(f, foe) : null;
 for (const c of f.clones) {
 const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1, cy = c.y || 0;

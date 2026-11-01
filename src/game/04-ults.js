@@ -258,6 +258,7 @@ const ULTS = {
         ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
         if (foe.hp > 0 && foe.invul <= 0) {
           applyHit(f, foe, { dmg: 12, exact: true, kb: [sd * 60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
+          addNeedleMark(foe, 1);
         }
       }
       if (f.spN === 7 && f.t >= 0.78) {
@@ -267,7 +268,7 @@ const ULTS = {
         ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
         if (foe.hp > 0 && foe.invul <= 0) {
           applyHit(f, foe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
-          foe.needleMark = 3.5;
+          addNeedleMark(foe, 1);
           f.skill2CD = 0;
           addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
         }
@@ -275,7 +276,7 @@ const ULTS = {
       if (f.t >= 1.15) endSpecial(f);
     } },
   // 离影：每个雾身朝对手斩出一道刀光，然后全部散掉；本体最后瞬移到对手身前补一刀。没有雾身就只剩这一刀。没有无敌（只有出手那一下的定格）
-  mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多三刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
+  mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
     begin(f, foe) {
       f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
       for (const c of (f.clones || []).slice()) {

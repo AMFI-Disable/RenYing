@@ -13,6 +13,16 @@ function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
   return foe || (typeof foeOf === 'function' ? foeOf(f) : null);
 }
 const sdAim = (f, t) => Math.atan2(t.y - f.y, t.x - f.x);   // 两人都按身体中间（脚下往上 50）算，高度差就是 y 差
+// 凌雀雀芒印记：上限 5 层，每次施加刷新 15 秒持续时间
+function addNeedleMark(target, count = 1) {
+  if (!target || target.hp <= 0) return;
+  target.needleMark = Math.min(5, (target.needleMark || 0) + count);
+  target.needleMarkT = 15.0;
+  if (!RESIM) {
+    ring(target.x, target.y - 50, 60, '235,110,210', 0.25);
+    addP({ type: 'text', text: `✦ 雀芒印记 (${Math.round(target.needleMark)}/5)`, x: target.x, y: target.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
+  }
+}
 // 磁仙的磁极（极性 f.pol：1 正极 ⊕，-1 负极 ⊖；每回合开局由 magRoll 用对局随机数抽）
 // 吸和弹都按真磁铁来：离得越近力越大（力 ∝ 1 / 距离²，再夹在上下限之间）。
 //   普攻   正极：伤害 ×plusDmg，地上轻攻击每下都击飞；负极：伤害 ×minusDmg，每下把对手往身边吸一下
@@ -492,7 +502,7 @@ const SKILLS = {
     },
     pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
     ai: (me, foe, d) => d < 170 },
-  spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 3.5 秒【雀芒】印记并造成 30 伤害。',
+  spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 15 秒【雀芒】印记（最多 5 层）并造成 30 伤害。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.12) {
@@ -504,7 +514,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
-  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却！',
+  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆 1 层悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却（若目标带多层印记，可连续五发换影不休）！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
       f.sdTrack = false;
@@ -629,7 +639,11 @@ const SKILLS = {
             launch: false
           })) {
             if (wasMarked) {
-              hitFoe.needleMark = 0;
+              hitFoe.needleMark = Math.max(0, (hitFoe.needleMark || 0) - 1);
+              if (hitFoe.needleMark <= 0) {
+                hitFoe.needleMark = 0;
+                hitFoe.needleMarkT = 0;
+              }
               f.skill2CD = 0;
               shake = Math.max(shake, 14);
               SFX.heavy(); SFX.slice();
@@ -639,7 +653,8 @@ const SKILLS = {
                 const a = rand(0, 6.28), v = rand(120, 320);
                 addP({ type: 'spark', x: hitFoe.x, y: hitFoe.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: '255,160,230', life: 0.35, max: 0.35 });
               }
-              addP({ type: 'text', text: '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
+              const leftMarks = Math.round(hitFoe.needleMark);
+              addP({ type: 'text', text: leftMarks > 0 ? `✦ 雀芒引爆 (${leftMarks}余印) · 换影重置 ✦` : '✦ 雀芒引爆 · 换影重置 ✦', x: f.x, y: f.y - 120, life: 1.0, max: 1.0, rgb: '255,140,225' });
             }
             f.skPh = 2; f.t = 0; f.vx *= 0.06; f.vy *= 0.06;
           }
@@ -647,12 +662,15 @@ const SKILLS = {
         // 持续不间断追踪，直至命中目标（或目标阵亡脱离）
         if (target && target.hp <= 0 && f.t >= 1.5) { f.skPh = 2; f.t = 0; f.vx *= 0.12; f.vy *= 0.12; }
       }
-      if (f.skPh === 2 && f.t >= 0.16) toNeutral(f);
+      if (f.skPh === 2) {
+        if (f.skill2CD <= 0 && f.ctrl && f.ctrl.consume && f.ctrl.consume('skill2')) return startSkill(f, foe, 2);
+        if (f.t >= 0.16) toNeutral(f);
+      }
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? (f.sdDrifting ? ['du_l1s', 30] : ['dash', 60]) : ['idle', 14],
     ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
   // 离影：雾身的规则和怎么选雾身在 09-actions.js 的「雾身」那一节，数在 src/data/heroes/13-liying.js 的 clone
-  mistmark: { name: '留影', cd: 5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 2 个雾身，再留就散掉最早的那个。雾身存在 6 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。',
+  mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 4 个雾身，再留就散掉最早的那个。雾身存在 15 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。',
     start(f) { f.vx = 0; plantClone(f, f.x); },
     update(f, foe) {
       // 踏出约 110 像素再出刀：雾身留在身后，不和本体叠在一起（不然打本体的刀顺手就把雾身打碎了）
@@ -664,7 +682,7 @@ const SKILLS = {
       if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 40] : f.skPh === 1 ? ['l2a', 60] : ['idle', 14],
-    ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 2 },
+    ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 4 },
   // free：只能从自由状态（站、走、下落、防御）发动，不能接在出招后面，也不能从腾空闪里放
   mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
     can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),

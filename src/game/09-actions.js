@@ -530,8 +530,7 @@ function updateProjs() {
       foe.slowT = 2.2;
       addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
     } else if (p.kind === 'spindle' || p.mark) {
-      foe.needleMark = 3.5;
-      addP({ type: 'text', text: '✦ 雀芒入体', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
+      addNeedleMark(foe, 1);
     }
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
     const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
@@ -747,7 +746,7 @@ function cloneTick(f) {
   const C = f.ch.clone || { life: 0, leash: 0 };
   for (const c of f.clones.slice()) {
     c.t += STEP;
-    if (c.t >= C.life || Math.abs(c.x - f.x) > C.leash || f.hp <= 0) cloneGone(f, c, false);
+    if (c.t >= C.life || (C.leash > 0 && Math.abs(c.x - f.x) > C.leash) || f.hp <= 0) cloneGone(f, c, false);
   }
 }
 // 攻击框碰到对手的雾身：雾身碎掉，打的人回气；攻击本身不受影响
@@ -976,7 +975,12 @@ function updateFighter(f, foe) {
     if (Math.random() < 0.25) addP({ type: 'spark', x: f.x + rand(-20, 20), y: f.y - rand(20, 80), vx: 0, vy: rand(-15, 15), life: 0.3, max: 0.3, rgb: '160,230,255' });
   }
   if (f.needleMark > 0) {
-    f.needleMark = Math.max(0, f.needleMark - STEP);
+    if (f.needleMarkT !== undefined && f.needleMarkT > 0) {
+      f.needleMarkT = Math.max(0, f.needleMarkT - STEP);
+      if (f.needleMarkT <= 0) { f.needleMark = 0; f.needleMarkT = 0; }
+    } else {
+      f.needleMark = Math.max(0, f.needleMark - STEP);
+    }
     if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
   }
   if (scOn()) scTick(f, foe);

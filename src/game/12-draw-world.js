@@ -507,10 +507,11 @@ function drawFighter(f) {
     ctx.save(); ctx.strokeStyle = 'rgba(235,205,130,' + (0.4 + 0.3 * Math.min(1, f.hookedT)) + ')'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
     ctx.beginPath(); ctx.ellipse(f.x, f.y - 56, 22, 34, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
-  // 凌雀雀芒印记：身周环绕粉紫悬丝印记（当自身为凌雀且 R 就绪时高亮显现可重置光环）
+  // 凌雀雀芒印记：身周环绕粉紫悬丝印记（最多 5 枚印记环绕）
   if ((f.needleMark || 0) > 0 && f.hp > 0) {
     const isPlayerLQ = A && A.ch && A.ch.id === 'lingque';
     const rReady = isPlayerLQ && (A.skill2CD || 0) <= 0;
+    const markCount = Math.min(5, Math.max(1, Math.round(f.needleMark)));
     ctx.save();
     if (rReady) {
       // R 可重置就绪特效：醒目的粉紫双环气旋 + 顶部雀芒菱印
@@ -518,13 +519,13 @@ function drawFighter(f) {
       ctx.strokeStyle = `rgba(255,140,230,${pulse})`; ctx.lineWidth = 2.4;
       ctx.shadowColor = '#ff8ce6'; ctx.shadowBlur = 12;
       const a0 = clock * 6;
-      for (let k = 0; k < 4; k++) {
-        const ang = a0 + k * (Math.PI / 2);
-        const px = f.x + Math.cos(ang) * 30, py = f.y - 52 + Math.sin(ang) * 20;
-        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py, 3.2, 0, Math.PI * 2); ctx.fill();
+      for (let k = 0; k < markCount; k++) {
+        const ang = a0 + k * (Math.PI * 2 / markCount);
+        const px = f.x + Math.cos(ang) * 32, py = f.y - 52 + Math.sin(ang) * 22;
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(px, py, 3.6, 0, Math.PI * 2); ctx.fill();
       }
-      ctx.beginPath(); ctx.ellipse(f.x, f.y - 52, 32, 22, 0, 0, Math.PI * 2); ctx.stroke();
-      // 头顶雀芒击破标志 (Diamond Crest)
+      ctx.beginPath(); ctx.ellipse(f.x, f.y - 52, 34, 24, 0, 0, Math.PI * 2); ctx.stroke();
+      // 头顶雀芒击破标志 (Diamond Crest with pips)
       ctx.fillStyle = `rgba(255,230,250,${0.85 + 0.15 * Math.sin(clock * 14)})`;
       ctx.beginPath();
       const topY = f.y - 110 + Math.sin(clock * 8) * 3;
@@ -535,15 +536,20 @@ function drawFighter(f) {
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = '#e040fb'; ctx.lineWidth = 1.5; ctx.stroke();
+      for (let p = 0; p < markCount; p++) {
+        const pipX = f.x + (p - (markCount - 1) / 2) * 7;
+        ctx.fillStyle = '#ff8ce6';
+        ctx.beginPath(); ctx.arc(pipX, topY + 22, 2.2, 0, Math.PI * 2); ctx.fill();
+      }
     } else {
       ctx.strokeStyle = `rgba(235,110,210,${0.5 + 0.4 * Math.sin(clock * 10)})`; ctx.lineWidth = 1.8;
       const a0 = clock * 5;
-      for (let k = 0; k < 3; k++) {
-        const ang = a0 + k * (Math.PI * 2 / 3);
-        const px = f.x + Math.cos(ang) * 24, py = f.y - 50 + Math.sin(ang) * 16;
-        ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 2.8, 0, Math.PI * 2); ctx.fill();
+      for (let k = 0; k < markCount; k++) {
+        const ang = a0 + k * (Math.PI * 2 / markCount);
+        const px = f.x + Math.cos(ang) * 26, py = f.y - 50 + Math.sin(ang) * 18;
+        ctx.fillStyle = '#ffe8fa'; ctx.beginPath(); ctx.arc(px, py, 3.0, 0, Math.PI * 2); ctx.fill();
       }
-      ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 26, 18, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(f.x, f.y - 50, 28, 20, 0, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
   }
@@ -888,7 +894,7 @@ function drawIdentityEdges(list, sx, sy) {
 function drawClones() {
   for (const f of allFighters()) {
     if (f.hidden || !f.clones || !f.clones.length) continue;
-    const C = f.ch.clone || { life: 6 }, rgb = f.look.slash;
+    const C = f.ch.clone || { life: 15 }, rgb = f.look.slash;
     const foe = (f.target && !f.target.hidden) ? f.target : foesOf(f)[0], mark = foe ? cloneMark(f, foe) : null;
     for (const c of f.clones) {
       const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1, cy = c.y || 0;

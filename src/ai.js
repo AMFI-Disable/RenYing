@@ -55,7 +55,7 @@ const AI_KIT = {
   spindle: { role: 'proj', combo: true },
   shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, B) => !(B && B.lqHold > clock) && ((o.needleMark || 0) > 0.3 || o.breakCD > 0.5 || AI_HURT.includes(o.state) || (B && B.L.read >= 0.3 && m.skillCD > 1.5)) },   // 劲敌以上：飞梭一时挂不上印记也照放（新换影一路追到中为止，被挡也定身）
   // 离影：留影（在脚下留雾身、顺手斩一刀）当成准备动作；渡影不走通用打法，由 liyingRoute 决定什么时候、去哪个雾身
-  mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 2 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
+  mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 4 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
   mistswap: { role: 'self', combo: false, use: () => false },
   // 磁仙：Q 换极性（不花时间、清零 R）——R 在冷却、身边的人想换种打法时用；R 正极贴身弹开，负极把中距离的人吸过来接负极连段
   polarswap: { role: 'self', combo: true, air: true, use: (m, o, d, B) => !(B && B.L.combo >= 3) && ((m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150))) },   // 寻常以上换极性交给 cixianRoute
@@ -1246,6 +1246,7 @@ class AIBrain {
     if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;
     if (clock < (this.lqNext || 0)) return false;
     const mark = foe.needleMark || 0, rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0;
+    const markTime = (foe.needleMarkT !== undefined && foe.needleMarkT > 0) ? foe.needleMarkT : mark;
     const fly = d / SD_SPD + 0.1 + (SD_DRIFT_MAX / SD_DRIFT_SPD + 0.12);   // 换影起手 + 飞到对手身边 + 第一次近身漂移回拉再扑回来
     const stuck = AI_HURT.includes(foe.state) || foe.jailT > 0 || foe.rooted;   // 对手正在挨打，闪不了也挡不了
     const canEsc = foe.breakCD <= fly && !stuck;                  // 对手的腾空闪能躲开换影
@@ -1260,8 +1261,8 @@ class AIBrain {
       if (L.combo >= 5 && roll(L.skill)) { this.lqBurst = 0; return act('skill2', 0.4); }
     }
     // 2. 有印记、换影好了：引爆
-    if (mark > fly + 0.05 && rReady && d < 700) {
-      const hurry = mark < fly + 0.6;                             // 印记快没了，不等了
+    if (mark > 0 && markTime > fly + 0.05 && rReady && d < 700) {
+      const hurry = markTime < fly + 0.6;                             // 印记快没了，不等了
       if (L.read >= 0.3 && canEsc && !hurry) {
         // 劲敌以上：对手还留着腾空闪就先不放，等它交掉闪（绝顶 / 天道往前压逼闪，劲敌只是等）
         if (L.read >= 0.7) this.dir = d > 160 ? to : 0;
