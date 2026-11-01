@@ -262,33 +262,12 @@ function updateAIBrief() {
   }
 }
 
-// 模式所属类别映射
-const SINGLE_TAB_CATS = {
-  cpu: 'regular', stage: 'regular', saga: 'regular', train: 'regular',
-  tower: 'rogue', chaos: 'rogue',
-  tag3: 'special', mayhem: 'special', maps: 'special'
-};
-
-// 单人面板：sec 为空时切换至当前激活的模式标签，否则切换并显示指定模块
+// 模式大厅（#single）：所有玩法一屏格子都摆出来，sec 为空时打开上次那一格，否则打开指定那一格的面板
 let currentSingleTab = 'cpu';
-let currentSingleCat = 'regular';
-
-function setSingleCat(cat) {
-  currentSingleCat = cat;
-  for (const b of document.querySelectorAll('#singleCatTabs button')) {
-    b.classList.toggle('sel', b.dataset.cat === cat);
-  }
-  for (const b of document.querySelectorAll('#singleTabs button')) {
-    const belongs = b.dataset.cat === cat;
-    b.style.display = belongs ? '' : 'none';
-  }
-}
 
 function singleSec(sec) {
   const active = sec || currentSingleTab || 'cpu';
   currentSingleTab = active;
-  const targetCat = SINGLE_TAB_CATS[active] || 'regular';
-  setSingleCat(targetCat);
 
   for (const b of document.querySelectorAll('#singleTabs button')) {
     b.classList.toggle('sel', b.dataset.tab === active);
@@ -298,8 +277,8 @@ function singleSec(sec) {
     el.style.display = secs.includes(active) ? '' : 'none';
   }
   const scr = $id('single');
-  if (scr) scr.scrollTop = 0;
-  $id('singleT').textContent = '单人模式';
+  if (scr && !sec) scr.scrollTop = 0;
+  $id('singleT').textContent = '开始演武';
   const subEl = $id('singleSub');
   if (subEl) {
     const subs = {
@@ -349,7 +328,7 @@ function openScreen(name, reveal = true) {
   return name;
 }
 function backToMenu() { menuLock = false; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
-// ---------- 首页正中的展示角色：下面一个「快速开打」直接用他和电脑打，一个「更换角色」 ----------
+// ---------- 首页正中的展示角色：「开始演武」下面的「换侠客」换人，选人时也先指着他 ----------
 let MENU_HERO = null, menuHeroId = -1;
 function menuHeroPick() {   // 记住上次展示的角色；现在用不了就换成第一个能用的
   const av = availList();
@@ -368,7 +347,7 @@ function setMenuHero(ci) {
 }
 function heroQuickFight(lv) {
   if (menuLock || menuHeroId < 0) return;
-  initAudio(); heroPickShow(false); heroLvShow(false);
+  initAudio(); heroPickShow(false);
   if (lv) setPickLevel(lv);
   paused = false;
   // 首页已经选好角色和难度：不进点将台，直接开打，对手随机挑一个别的侠客
@@ -385,25 +364,19 @@ function heroPickShow(on) {
   const el = $id('heroPick'); if (!el) return;
   if (on) {
     const av = availList(); ensurePortraits();
-    el.style.gridTemplateColumns = `repeat(${Math.min(6, av.length)}, 64px)`;
+    el.style.gridTemplateColumns = `repeat(${Math.max(3, Math.min(6, av.length, Math.floor((innerWidth - 40) / 70)))}, 64px)`;   // 窄屏少摆几列，别出屏
     el.innerHTML = av.map(i => `<button type="button" data-i="${i}" class="${i === menuHeroId ? 'sel' : ''}"><img src="${PORTRAITS[i] || ''}" alt=""><span style="color:rgb(${CHARS[i].look.slash})">${CHARS[i].name}</span></button>`).join('');
   }
   el.hidden = !on;
-  if (on) heroLvShow(false);
+  $id('heroSwap').setAttribute('aria-expanded', on);
+  if (on) { const s = el.querySelector('button.sel') || el.querySelector('button'); if (s && typeof KBN !== 'undefined' && KBN.on) s.focus(); }
 }
-function heroLvShow(on) {   // 点「快速开打」先弹一排难度，点哪个就用哪个开打
-  const el = $id('heroLv'); if (!el) return;
-  if (on) { heroPickShow(false); for (const b of el.querySelectorAll('button')) b.classList.toggle('sel', b.dataset.lv === pickLevel); }
-  el.hidden = !on;
-}
-$id('heroGo').addEventListener('click', e => { e.stopPropagation(); SFX.block && SFX.block(); heroLvShow($id('heroLv').hidden); });
-$id('heroLv').addEventListener('click', e => { const b = e.target.closest('button[data-lv]'); if (!b) return; e.stopPropagation(); SFX.slice && SFX.slice(); heroQuickFight(b.dataset.lv); });
 $id('heroSwap').addEventListener('click', e => { e.stopPropagation(); heroPickShow($id('heroPick').hidden); });
 $id('heroPick').addEventListener('click', e => {
   const b = e.target.closest('button[data-i]'); if (!b) return;
   e.stopPropagation(); setMenuHero(+b.dataset.i); heroPickShow(false); SFX.block && SFX.block();
 });
-document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) { heroPickShow(false); heroLvShow(false); } });
+document.addEventListener('click', e => { if (!e.target.closest('#homeSub')) heroPickShow(false); });
 // 回放从设置里进：返回时回到设置
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });

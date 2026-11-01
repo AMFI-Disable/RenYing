@@ -441,7 +441,6 @@ function worldEnter(line) {
 }
 function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); cqLoad(false); }
 function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
-if ($id('mWorld')) $id('mWorld').addEventListener('click', () => { SFX.slice(); openWorldModal(); });
 if ($id('modalWorldClose')) $id('modalWorldClose').addEventListener('click', closeWorldModal);
 if ($id('btnWorldGo')) $id('btnWorldGo').addEventListener('click', () => { closeWorldModal(); worldEnter(0); });
 if ($id('btnWorldLine')) {

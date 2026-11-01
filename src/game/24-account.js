@@ -707,8 +707,7 @@ updateVerLine();
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 document.body.classList.toggle('offline', OFFLINE_BUILD);
 if (OFFLINE_BUILD) {
-  $id('mSingle').innerHTML = '<span class="mk">对战电脑</span><span class="ms">和电脑过招，难度可选</span>';
-  $id('mNet').innerHTML = '<span class="mk">闯关模式</span><span class="ms">六章三十关，一关一关打上去</span>';
+  $id('mPlay').innerHTML = '<span class="mk">开始演武</span><span class="ms">对战电脑 · 闯关 · 车轮战 · 木人桩</span>';
   const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
 }
 function updateNetDiagRtt(ms) {

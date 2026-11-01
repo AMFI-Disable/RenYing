@@ -2754,11 +2754,6 @@ display: flex; flex-direction: column; gap: 10px; width: 340px; max-width: calc(
 .menuscr .home-entries .mcard.left { padding-top: 12px !important; padding-bottom: 12px !important; }
 .menuscr .home-entries .mcard.left .mk { font-size: clamp(22px, 2vw, 28px) !important; }
 .menuscr .home-entries .mcard.left .ms { font-size: var(--fs-xs) !important; }
-body.offline .home-entries .tn-online { display: none !important; }
-.menuscr .mcard.hm-rouge { --x-jade-hi: #e9a15a; }
-.menuscr .mcard.hm-world { --x-jade-hi: #46d3ea; }
-.menuscr .mcard.hm-rouge::after { content: "鸽" !important; background: #a8552e !important; }
-.menuscr .mcard.hm-world::after { content: "游" !important; background: #2a6a86 !important; }
 .home-sub { display: flex; flex-wrap: wrap; gap: 6px; }
 .hs-btn { font: inherit; font-size: var(--fs-sm); letter-spacing: .02em; min-height: 32px; padding: 5px 10px; cursor: pointer; color: rgba(244,236,220,.9);
 background: rgba(13,21,30,.74); border: 1px solid rgba(236,226,204,.22); border-radius: var(--r-sm); transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast); }
@@ -2776,8 +2771,6 @@ background: rgba(233,196,106,.12); border: 1px solid rgba(233,196,106,.5); borde
 .home-news .hn-line::after { content: " ›"; color: var(--gold); }
 .home-news[open] .hn-line { display: none; }
 .home-news ul { margin-top: 6px; }
-#menu[data-enter="run"] #homeRouge { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .22s backwards; }
-#menu[data-enter="run"] #mWorld { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .26s backwards; }
 #menu[data-enter="run"] .home-sub { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .3s backwards; }
 #menu[data-phase] .home-sub, #menu[data-phase] .home-evt-pill { opacity: 0; transition: opacity .18s; }
 .mw-panel { width: min(480px, calc(100vw - 32px)); }
@@ -2852,6 +2845,23 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
 .dummy-feat-chip span { opacity: .75; }
 .dummy-feat-chip.sel { background: rgba(233,196,106,.22); border-color: #e9c46a; color: #f4ecd8; }
 .dummy-feat-chip.sel b { color: #e9c46a; }
+.single-nav-deck.play-deck { padding: 8px; }
+.single-tabs.play-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 6px; padding: 0; overflow: visible; min-height: 0; }
+.single-tabs.play-grid button { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 7px; row-gap: 1px; align-items: center; text-align: left;
+border-radius: 10px; padding: 7px 10px; white-space: normal; min-height: 48px; font-size: 13px; }
+.single-tabs.play-grid button .tab-ic { grid-row: 1 / 3; width: 22px; height: 22px; display: inline-flex; }
+.single-tabs.play-grid button .tab-ic svg { width: 22px; height: 22px; }
+.single-tabs.play-grid .pt-n { font: 600 14px var(--title); letter-spacing: .04em; line-height: 1.2; }
+.single-tabs.play-grid .pt-d { font-size: 12px; line-height: 1.25; opacity: .72; }
+.single-tabs.play-grid button.sel .pt-d { opacity: .85; }
+#aiLvHome { width: min(780px, 100%); margin: 4px auto 8px; box-sizing: border-box; }
+@media (max-width: 640px) {
+.single-tabs.play-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.single-tabs.play-grid button { padding: 6px 8px; min-height: 44px; }
+}
+.home-swap { position: relative; }
+.home-swap .hh-pick { left: 0; transform: none; bottom: calc(100% + 8px); z-index: 5; }
+#levels .lv-sub { white-space: normal; max-width: 100%; }
 </style>
 </head>
 <body>
@@ -2879,7 +2889,7 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
     <button class="tn-logo" type="button" data-nav="menu" aria-label="回到首页"><span class="tn-mark">刃影</span><span class="tn-en">RENYING</span></button>
     <div class="tn-tabs">
       <button type="button" data-nav="menu">首页</button>
-      <button type="button" data-nav="single">单人</button>
+      <button type="button" data-nav="single">演武</button>
       <button type="button" data-nav="qfx" class="tn-qfx" title="打通青锋行三章，可领刃影奖励">青锋行</button>
       <button type="button" data-nav="netp" class="tn-play tn-online">对战</button>
       <button type="button" data-nav="stage" class="tn-offline">闯关</button>
@@ -2976,23 +2986,14 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
     </div>
     <!-- 首页单主入口：一键进入演武大厅，畅玩全部模式 -->
     <div class="home-entries" id="homeEntries">
-      <button class="mcard right" id="mSingle" data-go="single" data-kb-default type="button"><span class="mk">开始演武</span><span class="ms">一处入口畅玩全部模式 · 人机 · 3v3 联机 · 肉鸽 · 开放世界</span></button>
-      <button class="mcard right" id="mNet" data-go="netp" type="button" hidden style="display:none"><span class="mk">对战</span><span class="ms">匹配 · 排位 · 好友房 · 2v2</span></button>
-      <button class="mcard left hm-rouge" id="homeRouge" type="button" hidden style="display:none"><span class="mk">全服肉鸽</span><span class="ms">江湖共斗 · 随时加入 · 秘卷叠层 · 传送同道</span></button>
-      <button class="mcard left hm-world tn-online" id="mWorld" type="button" hidden style="display:none"><span class="mk">开放世界</span><span class="ms">江湖共斗 · 一张大地图 · 填线号找朋友</span></button>
-      <div class="home-sub" id="homeSub" hidden style="display:none">
-        <button class="hs-btn" data-go="qfx" type="button">青锋行</button>
-        <button class="hs-btn" data-go="tutorial" type="button">教程</button>
-        <button class="hs-btn" data-go="train" type="button">木人桩</button>
-        <button class="hs-btn hs-kb" id="mKbOnly" type="button" aria-pressed="false" title="只用键盘操作：选中框一直显示，按 ? 看快捷键">纯键盘</button>
+      <button class="mcard right" id="mPlay" data-go="single" data-kb-default><span class="mk">开始演武</span><span class="ms">对战电脑 · 联机 · 肉鸽 · 开放世界</span></button>
+      <div class="home-sub home-swap" id="homeSub">   <!-- 换侠客：点开一排头像，选谁首页正中就站谁，进点将台也先指着他 -->
+        <button class="hs-btn" id="heroSwap" type="button" aria-haspopup="true">换侠客</button>
+        <div class="hh-pick" id="heroPick" hidden></div>
       </div>
     </div>
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走 -->
       <div class="hh-name" id="heroName"></div>
-      <button class="hh-go" id="heroGo" type="button">快速开打</button>
-      <button class="hh-swap" id="heroSwap" type="button">更换角色</button>
-      <div class="hh-pick" id="heroPick" hidden></div>
-      <div class="hh-lv" id="heroLv" hidden><span>选难度</span><button type="button" data-lv="easy">入门</button><button type="button" data-lv="normal">寻常</button><button type="button" data-lv="hard">劲敌</button><button type="button" data-lv="impossible">绝顶</button><button type="button" data-lv="god">天道</button></div>
     </div>
     <p class="ver" id="verLine"></p>
     <p class="touch">这游戏得用键盘和鼠标，请在电脑上打开。</p>
@@ -3001,40 +3002,16 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
   <div id="single" class="scr">
     <div class="panel singlep">
       <div class="mode-title-wrap">
-        <h2 id="singleT">演武大厅</h2>
-        <p class="sub" id="singleSub" style="margin:4px 0 0">统一设定人机境界，各模式均在后台随机轮换山河异境地图</p>
+        <h2 id="singleT">开始演武</h2>
+        <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
 
-      <div class="single-nav-deck">
-        <div class="single-cat-tabs" id="singleCatTabs">
-          <button data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>常规演武</button>
-          <button data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>秘宝异变</button>
-          <button data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-katana"/></svg></span>特殊决战</button>
-        </div>
-
-        <div class="single-tabs" id="singleTabs">
-          <button data-tab="cpu" data-cat="regular" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>对战电脑</button>
-          <button data-tab="tag3" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>3v3 车轮战</button>
-          <button data-tab="tower" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span>问剑密卷 (肉鸽)</button>
-          <button data-tab="chaos" data-cat="rogue" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span>天机乱斗</button>
-          <button data-tab="mayhem" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>通天神决</button>
-          <button data-tab="maps" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-12 4 7 3-4 5 9z"/><path d="M3 20h18"/></svg></span>山河异境</button>
-          <button data-tab="stage" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>守关挑战</button>
-          <button data-tab="saga" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>侠客列传</button>
-          <button data-tab="train" data-cat="regular" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>木人试剑</button>
-          <button data-tab="watch2v2" data-cat="special" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>2v2 组队</button>
-          <button data-tab="netp" data-cat="special" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>3v3 联机擂台</button>
-          <button data-tab="rouge" data-cat="rogue" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>全服肉鸽</button>
-          <button data-tab="world" data-cat="special" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span>开放世界</button>
-        </div>
-      </div>
-
-      <!-- 电脑境界：对电脑的各模式（论剑、3v3、天机、山河异境、神决、2v2）共用这一条，选了会记住。见 src/game/21-buttons.js 的 setPickLevel -->
-      <div data-sec="cpu tag3 chaos maps mayhem" id="aiLvHome">
+      <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons.js 的 setPickLevel -->
+      <div id="aiLvHome">
         <div class="ai-lv-bar" id="aiLvBar">
           <div class="sec-head-row">
             <h3 class="spt">电脑境界</h3>
-            <span class="sub-badge">各模式通用 · 会记住</span>
+            <span class="sub-badge">对电脑的模式通用 · 会记住</span>
           </div>
           <div class="levels-grid" id="levels" role="group" aria-label="电脑境界">
             <button data-lv="easy" type="button">
@@ -3058,6 +3035,25 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
               <span class="lv-sub">全系神经策略 · 算无遗策</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- 模式大厅：所有玩法一屏格子，点一格在下面打开它的面板（守关、列传这些照旧用自己的面板）；开放世界、全服肉鸽、联机直接去各自的地方 -->
+      <div class="single-nav-deck play-deck">
+        <div class="single-tabs play-grid" id="singleTabs">
+          <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span></button>
+          <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
+          <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
+          <button data-tab="chaos" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-yinyang"/></svg></span><b class="pt-n">天机乱斗</b><span class="pt-d">每 15 秒一种异变</span></button>
+          <button data-tab="mayhem" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><b class="pt-n">通天神决</b><span class="pt-d">真元暴涨，技能无冷却</span></button>
+          <button data-tab="maps" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-12 4 7 3-4 5 9z"/><path d="M3 20h18"/></svg></span><b class="pt-n">山河异境</b><span class="pt-d">投票选地图，地形改打法</span></button>
+          <button data-tab="tower" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">问剑密卷</b><span class="pt-d">一层层爬塔抽秘卷</span></button>
+          <button data-tab="stage" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span><b class="pt-n">守关挑战</b><span class="pt-d">六章三十关</span></button>
+          <button data-tab="saga" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span><b class="pt-n">侠客列传</b><span class="pt-d">每位侠客自己的故事</span></button>
+          <button data-act="world" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span><b class="pt-n">开放世界</b><span class="pt-d">一张大地图，和大家同场</span></button>
+          <button data-act="rouge" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-gourd"/></svg></span><b class="pt-n">全服肉鸽</b><span class="pt-d">全服一起打，随时加入</span></button>
+          <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">木人试剑</b><span class="pt-d">木人桩练连招</span></button>
+          <button data-act="netp" class="tn-online" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-target"/></svg></span><b class="pt-n">联机对战</b><span class="pt-d">匹配 · 排位 · 好友房</span></button>
         </div>
       </div>
 
@@ -3913,7 +3909,7 @@ padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); bord
         <p class="sub m2-desc" id="modal2v2Desc"></p>
         <div id="m2LvWrap">
           <div class="sec-sub-label">电脑的境界</div>
-          <!-- 弹窗开着时，单人模式那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
+          <!-- 弹窗开着时，模式大厅那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
         </div>
         <div class="sec-sub-label">在哪打</div>
         <div class="m2-ways" id="modal2v2Options">
@@ -7480,7 +7476,6 @@ const UI_COPY_EN = {
 "暂停": "Pause",
 "暗影刺客": "Shadow Assassin",
 "暗角": "Vignette",
-"更换角色": "Change Hero",
 "最高纪录": "Best Record",
 "月下一决": "Duel Under the Moon",
 "月下对弈 · 联机对战": "Moonlit Duel · Online Multiplayer",
@@ -7580,6 +7575,7 @@ const UI_COPY_EN = {
 "社区": "Community",
 "神兵武器箱": "Divine Arms Case",
 "见招拆招": "Read and Counter",
+"见招拆招 · 标准对练": "Read & Counter · Standard Sparring",
 "神魔乱斗": "Chaos Mayhem",
 "福利": "Welfare",
 "秘卷三选一": "Choose 1 of 3 Scrolls",
@@ -7758,9 +7754,6 @@ const UI_COPY_EN = {
 "限时福利": "Limited Event",
 "礼包兑换": "Redeem",
 "天魔讨伐 · 全服共斗": "Demon Raid · Server-wide",
-"常规演武": "Standard Duel",
-"秘宝异变": "Relic Mutation",
-"特殊决战": "Special Showdown",
 "对战电脑": "Vs CPU",
 "守关挑战": "Stage Challenge",
 "侠客列传": "Hero Chronicles",
@@ -7972,11 +7965,9 @@ const UI_COPY_EN = {
 "肉鸽": "Roguelike",
 "开放世界": "Open World",
 "匹配 · 排位 · 好友房 · 2v2": "Match · Ranked · Friend Room · 2v2",
-"江湖共斗 · 随时加入 · 秘卷叠层 · 传送同道": "Shared World · Join Anytime · Stackable Scrolls · Teleport",
 "江湖共斗 · 一张大地图 · 填线号找朋友": "Shared world · one big map · join a friend by line number",
 "教程": "Tutorial",
 "纯键盘": "Keyboard Only",
-"只用键盘操作：选中框一直显示，按 ? 看快捷键": "Keyboard only: the selection box stays on, press ? for shortcuts",
 "活动：全皮肤限免 ·": "Event: all skins free ·",
 "今日任务": "Today's Tasks",
 "每日任务": "Daily Tasks",
@@ -7987,7 +7978,6 @@ const UI_COPY_EN = {
 "今天的都做完了": "All done for today",
 "点开任务页看看": "Open the task page",
 "刃影武库 · 匹配对战 · 排位赛 · 技能重做": "Armory · Matchmaking · Ranked · Skill reworks",
-"快速开打": "Quick Fight",
 "开放世界 · 江湖共斗": "Open World · Shared Map",
 "一张大地图，谁都能随时加入，人数不设上限。先在点将台选好侠客，再进分线。": "One big map anyone can join at any time, with no player limit. Pick your hero first, then enter a line.",
 "直接进入": "Enter Now",
@@ -8881,7 +8871,26 @@ const UI_COPY_EN = {
 "换一处战场比试：每张图的地形会改变侠客的走位和招式。开打前投一票，每张图被选中的概率按票数算，没人投票时每张图机会一样。": "Fight somewhere new: each map's terrain changes how heroes move and use their skills. Cast a vote before the match; each map's chance is its share of the votes, and with no votes every map is equally likely.",
 "投出你的一票（再按一次收回）": "Cast your vote (press again to take it back)",
 "电脑境界": "AI Tier",
-"各模式通用 · 会记住": "Shared by every mode · Remembered",
+"开始演武": "Play",
+"演武": "Play",
+"换侠客": "Change Hero",
+"对战电脑 · 联机 · 肉鸽 · 开放世界": "Vs AI · Online · Roguelike · Open World",
+"对战电脑 · 闯关 · 车轮战 · 木人桩": "Vs AI · Stages · Relay · Dummy",
+"对电脑的模式通用 · 会记住": "Used by every mode against the AI · Remembered",
+"联机对战": "Online Battle",
+"一对一，难度自选": "1v1 at the tier you pick",
+"三人接力，胜者守擂": "Three-hero relay, the winner stays on",
+"两人一队，可带电脑队友": "Teams of two, AI partners welcome",
+"每 15 秒一种异变": "A new twist every 15 seconds",
+"真元暴涨，技能无冷却": "Overflowing energy, no cooldowns",
+"投票选地图，地形改打法": "Vote for a map whose terrain changes the fight",
+"一层层爬塔抽秘卷": "Climb floor by floor, collect scrolls",
+"六章三十关": "Six chapters, thirty stages",
+"每位侠客自己的故事": "Every hero's own story",
+"一张大地图，和大家同场": "One big map shared with everyone",
+"全服一起打，随时加入": "Server-wide co-op, join any time",
+"木人桩练连招": "Practice combos on the dummy",
+"匹配 · 排位 · 好友房": "Matchmaking · Ranked · Friend rooms",
 "开启山河异境": "Start Terrain Clash",
 "异境 AI 观战": "Watch Terrain AI Battle",
 "换一处战场：投票选地图，断崖、冰面都会改变侠客的打法": "A new battlefield: vote for the map. Cliffs and ice change how every hero fights",
@@ -9055,10 +9064,7 @@ const UI_COPY_EN = {
 "全服肉鸽 · 江湖长卷奖励": "Server Roguelike · World Chronicle reward",
 "登录云端账号才能领长卷奖励": "Log in to a cloud account to claim Chronicle rewards",
 "领得太快了，歇一会儿再试": "Claiming too fast, take a short break",
-"开始演武": "Play All Modes",
-"一处入口畅玩全部模式 · 人机 · 3v3 联机 · 肉鸽 · 开放世界": "One portal for all modes · PvC · 3v3 Tag PvP · Roguelike · Open World",
 "演武大厅": "Play Hub",
-"统一设定人机境界，各模式均在后台随机轮换山河异境地图": "Unified AI difficulty across all modes, with maps chosen automatically in the background",
 "3v3 联机擂台": "3v3 Tag PvP",
 "月下对弈 · 3v3 联机擂台": "Moonlit Duel · 3v3 Tag PvP Portal",
 "3v3 车轮接力 · 毫秒回滚": "3v3 Tag Relay · Millisecond Rollback",
@@ -21826,28 +21832,10 @@ if (adaptEl) {
 adaptEl.style.display = 'none';
 }
 }
-const SINGLE_TAB_CATS = {
-cpu: 'regular', stage: 'regular', saga: 'regular', train: 'regular',
-tower: 'rogue', chaos: 'rogue',
-tag3: 'special', mayhem: 'special', maps: 'special'
-};
 let currentSingleTab = 'cpu';
-let currentSingleCat = 'regular';
-function setSingleCat(cat) {
-currentSingleCat = cat;
-for (const b of document.querySelectorAll('#singleCatTabs button')) {
-b.classList.toggle('sel', b.dataset.cat === cat);
-}
-for (const b of document.querySelectorAll('#singleTabs button')) {
-const belongs = b.dataset.cat === cat;
-b.style.display = belongs ? '' : 'none';
-}
-}
 function singleSec(sec) {
 const active = sec || currentSingleTab || 'cpu';
 currentSingleTab = active;
-const targetCat = SINGLE_TAB_CATS[active] || 'regular';
-setSingleCat(targetCat);
 for (const b of document.querySelectorAll('#singleTabs button')) {
 b.classList.toggle('sel', b.dataset.tab === active);
 }
@@ -21856,8 +21844,8 @@ const secs = el.dataset.sec.split(' ');
 el.style.display = secs.includes(active) ? '' : 'none';
 }
 const scr = $id('single');
-if (scr) scr.scrollTop = 0;
-$id('singleT').textContent = '单人模式';
+if (scr && !sec) scr.scrollTop = 0;
+$id('singleT').textContent = '开始演武';
 const subEl = $id('singleSub');
 if (subEl) {
 const subs = {
@@ -21924,7 +21912,7 @@ $id('heroName').innerHTML = escapeHTML(CHARS[ci].name) + (sk ? `<small>${escapeH
 }
 function heroQuickFight(lv) {
 if (menuLock || menuHeroId < 0) return;
-initAudio(); heroPickShow(false); heroLvShow(false);
+initAudio(); heroPickShow(false);
 if (lv) setPickLevel(lv);
 paused = false;
 const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);
@@ -21940,25 +21928,19 @@ function heroPickShow(on) {
 const el = $id('heroPick'); if (!el) return;
 if (on) {
 const av = availList(); ensurePortraits();
-el.style.gridTemplateColumns = `repeat(${Math.min(6, av.length)}, 64px)`;
+el.style.gridTemplateColumns = `repeat(${Math.max(3, Math.min(6, av.length, Math.floor((innerWidth - 40) / 70)))}, 64px)`;   // 窄屏少摆几列，别出屏
 el.innerHTML = av.map(i => `<button type="button" data-i="${i}" class="${i === menuHeroId ? 'sel' : ''}"><img src="${PORTRAITS[i] || ''}" alt=""><span style="color:rgb(${CHARS[i].look.slash})">${CHARS[i].name}</span></button>`).join('');
 }
 el.hidden = !on;
-if (on) heroLvShow(false);
+$id('heroSwap').setAttribute('aria-expanded', on);
+if (on) { const s = el.querySelector('button.sel') || el.querySelector('button'); if (s && typeof KBN !== 'undefined' && KBN.on) s.focus(); }
 }
-function heroLvShow(on) {   // 点「快速开打」先弹一排难度，点哪个就用哪个开打
-const el = $id('heroLv'); if (!el) return;
-if (on) { heroPickShow(false); for (const b of el.querySelectorAll('button')) b.classList.toggle('sel', b.dataset.lv === pickLevel); }
-el.hidden = !on;
-}
-$id('heroGo').addEventListener('click', e => { e.stopPropagation(); SFX.block && SFX.block(); heroLvShow($id('heroLv').hidden); });
-$id('heroLv').addEventListener('click', e => { const b = e.target.closest('button[data-lv]'); if (!b) return; e.stopPropagation(); SFX.slice && SFX.slice(); heroQuickFight(b.dataset.lv); });
 $id('heroSwap').addEventListener('click', e => { e.stopPropagation(); heroPickShow($id('heroPick').hidden); });
 $id('heroPick').addEventListener('click', e => {
 const b = e.target.closest('button[data-i]'); if (!b) return;
 e.stopPropagation(); setMenuHero(+b.dataset.i); heroPickShow(false); SFX.block && SFX.block();
 });
-document.addEventListener('click', e => { if (!e.target.closest('#homeHero')) { heroPickShow(false); heroLvShow(false); } });
+document.addEventListener('click', e => { if (!e.target.closest('#homeSub')) heroPickShow(false); });
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
 $id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
@@ -25138,29 +25120,20 @@ SFX.slice();
 });
 }
 loadPickLevel();
-const singleCatTabsEl = document.getElementById('singleCatTabs');
-if (singleCatTabsEl) {
-singleCatTabsEl.addEventListener('click', e => {
-const b = e.target.closest('button');
-if (!b || !b.dataset.cat) return;
-const cat = b.dataset.cat;
-const firstTabBtn = document.querySelector(`#singleTabs button[data-cat="${cat}"]`);
-if (firstTabBtn && firstTabBtn.dataset.tab) {
-singleSec(firstTabBtn.dataset.tab);
-} else {
-setSingleCat(cat);
-}
-SFX.slice();
-});
-}
 const singleTabsEl = document.getElementById('singleTabs');
 if (singleTabsEl) {
 singleTabsEl.addEventListener('click', e => {
 const b = e.target.closest('button');
-if (!b || !b.dataset.tab) return;
-if (b.dataset.tab === 'watch2v2') { open2v2Modal(); SFX.slice(); return; }   // 离线版的 2v2 入口：打开组队弹窗，不换页
-singleSec(b.dataset.tab);
+if (!b) return;
 SFX.slice();
+if (b.dataset.tab === 'watch2v2') { open2v2Modal(); return; }
+if (b.dataset.act === 'world') { openWorldModal(); return; }
+if (b.dataset.act === 'rouge') { openRougeModal(); return; }
+if (b.dataset.act === 'netp') { navTo('netp'); return; }
+if (!b.dataset.tab) return;
+singleSec(b.dataset.tab);
+const pane = document.querySelector(`#single [data-sec~="${b.dataset.tab}"]`);   // 面板在格子下面：滚过去让人看见
+if (pane && pane.scrollIntoView) try { pane.scrollIntoView({ block: 'nearest', behavior: prefersReduced() ? 'auto' : 'smooth' }); } catch (err) {}
 });
 }
 const taskTabsEl = document.getElementById('taskTabs');
@@ -26344,9 +26317,6 @@ renderRougeModal();
 function closeRougeModal() {
 const m = $id('modalRouge');
 if (m) m.classList.add('hidden');
-}
-if ($id('homeRouge')) {
-$id('homeRouge').addEventListener('click', () => { SFX.slice(); openRougeModal(); });
 }
 if ($id('modalRougeClose')) {
 $id('modalRougeClose').addEventListener('click', closeRougeModal);
@@ -27848,7 +27818,6 @@ bpStart('world');
 }
 function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); cqLoad(false); }
 function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
-if ($id('mWorld')) $id('mWorld').addEventListener('click', () => { SFX.slice(); openWorldModal(); });
 if ($id('modalWorldClose')) $id('modalWorldClose').addEventListener('click', closeWorldModal);
 if ($id('btnWorldGo')) $id('btnWorldGo').addEventListener('click', () => { closeWorldModal(); worldEnter(0); });
 if ($id('btnWorldLine')) {
@@ -29796,8 +29765,7 @@ updateVerLine();
 if (OFFLINE_BUILD) { PROF.skins = Object.keys(SKINS); try { PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) {} }
 document.body.classList.toggle('offline', OFFLINE_BUILD);
 if (OFFLINE_BUILD) {
-$id('mSingle').innerHTML = '<span class="mk">对战电脑</span><span class="ms">和电脑过招，难度可选</span>';
-$id('mNet').innerHTML = '<span class="mk">闯关模式</span><span class="ms">六章三十关，一关一关打上去</span>';
+$id('mPlay').innerHTML = '<span class="mk">开始演武</span><span class="ms">对战电脑 · 闯关 · 车轮战 · 木人桩</span>';
 const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
 }
 function updateNetDiagRtt(ms) {

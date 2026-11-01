@@ -2922,11 +2922,6 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
 .menuscr .home-entries .mcard.left { padding-top: 12px !important; padding-bottom: 12px !important; }
 .menuscr .home-entries .mcard.left .mk { font-size: clamp(22px, 2vw, 28px) !important; }
 .menuscr .home-entries .mcard.left .ms { font-size: var(--fs-xs) !important; }
-body.offline .home-entries .tn-online { display: none !important; }   /* 墨笔卡片自己带 display !important，离线版要再压一层 */
-.menuscr .mcard.hm-rouge { --x-jade-hi: #e9a15a; }
-.menuscr .mcard.hm-world { --x-jade-hi: #46d3ea; }
-.menuscr .mcard.hm-rouge::after { content: "鸽" !important; background: #a8552e !important; }
-.menuscr .mcard.hm-world::after { content: "游" !important; background: #2a6a86 !important; }
 .home-sub { display: flex; flex-wrap: wrap; gap: 6px; }
 .hs-btn { font: inherit; font-size: var(--fs-sm); letter-spacing: .02em; min-height: 32px; padding: 5px 10px; cursor: pointer; color: rgba(244,236,220,.9);
   background: rgba(13,21,30,.74); border: 1px solid rgba(236,226,204,.22); border-radius: var(--r-sm); transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast); }
@@ -2944,8 +2939,6 @@ body.offline .home-entries .tn-online { display: none !important; }   /* 墨笔�
 .home-news .hn-line::after { content: " ›"; color: var(--gold); }
 .home-news[open] .hn-line { display: none; }
 .home-news ul { margin-top: 6px; }
-#menu[data-enter="run"] #homeRouge { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .22s backwards; }
-#menu[data-enter="run"] #mWorld { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .26s backwards; }
 #menu[data-enter="run"] .home-sub { animation: homeIn .46s cubic-bezier(.2,.8,.2,1) .3s backwards; }
 #menu[data-phase] .home-sub, #menu[data-phase] .home-evt-pill { opacity: 0; transition: opacity .18s; }
 .mw-panel { width: min(480px, calc(100vw - 32px)); }
@@ -3024,3 +3017,22 @@ body.touchdev .dummy-bar-btn { display: none; }
 .dummy-feat-chip span { opacity: .75; }
 .dummy-feat-chip.sel { background: rgba(233,196,106,.22); border-color: #e9c46a; color: #f4ecd8; }
 .dummy-feat-chip.sel b { color: #e9c46a; }
+/* 模式大厅：所有玩法一屏格子（#singleTabs.play-grid），上面是电脑境界 */
+.single-nav-deck.play-deck { padding: 8px; }
+.single-tabs.play-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 6px; padding: 0; overflow: visible; min-height: 0; }
+.single-tabs.play-grid button { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 7px; row-gap: 1px; align-items: center; text-align: left;
+  border-radius: 10px; padding: 7px 10px; white-space: normal; min-height: 48px; font-size: 13px; }
+.single-tabs.play-grid button .tab-ic { grid-row: 1 / 3; width: 22px; height: 22px; display: inline-flex; }
+.single-tabs.play-grid button .tab-ic svg { width: 22px; height: 22px; }
+.single-tabs.play-grid .pt-n { font: 600 14px var(--title); letter-spacing: .04em; line-height: 1.2; }
+.single-tabs.play-grid .pt-d { font-size: 12px; line-height: 1.25; opacity: .72; }
+.single-tabs.play-grid button.sel .pt-d { opacity: .85; }
+#aiLvHome { width: min(780px, 100%); margin: 4px auto 8px; box-sizing: border-box; }
+@media (max-width: 640px) {
+  .single-tabs.play-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .single-tabs.play-grid button { padding: 6px 8px; min-height: 44px; }
+}
+/* 首页换侠客：按钮在「开始演武」下面，头像一排从按钮上方弹出 */
+.home-swap { position: relative; }
+.home-swap .hh-pick { left: 0; transform: none; bottom: calc(100% + 8px); z-index: 5; }
+#levels .lv-sub { white-space: normal; max-width: 100%; }   /* 英文说明比中文长：折行，不伸出按钮 */

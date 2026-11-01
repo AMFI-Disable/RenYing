@@ -1,6 +1,6 @@
 // Keyboard-only end-to-end flow test for RenYing.
 // A fresh player who never touches the mouse: language prompt -> tutorial prompt -> home ->
-// single mode -> draft (pick a fighter) -> a real match against the computer -> results -> home.
+// Play -> mode hub -> draft (pick a fighter) -> a real match against the computer -> results -> home.
 // Every step is driven by trusted key events through DevTools (arrow keys / Tab to move the
 // selection ring, Enter to press, Esc to go back, A/D/X to fight). A pointer listener fails the
 // run if any mouse or touch event reaches the page.
@@ -165,7 +165,7 @@ async function activate(name, sel, next, ms = 8000) {
 }
 
 const CJK = /[\u4e00-\u9fff]/;
-const SINGLE = ['#mSingle', '#topNav [data-nav="single"]'];   // home entry, or the top bar on short screens
+const SINGLE = ['#mPlay', '#topNav [data-nav="single"]'];   // the Play button on the home page, or the top bar on short screens
 
 // ---- fresh player ----
 await nav(GAME);
@@ -192,7 +192,6 @@ await press('Escape');
 ok('Esc returns home', (await waitScreen(['menu'], 3000)) === 'menu');
 await activate('reopen single mode', SINGLE, 'single');
 if (MAPS_FLOW) {
-  await activate('special modes tab', '#singleCatTabs [data-cat="special"]');
   await activate('terrain clash tab', '#singleTabs [data-tab="maps"]');
   ok('terrain clash pane shown', await ev(`!!document.querySelector('[data-sec="maps"]') && document.querySelector('[data-sec="maps"]').style.display !== 'none'`));
   if (await ev(`!!document.querySelector('#mapVote .map-card.sel')`)) await activate('take back an old vote', '#mapVote .map-card.sel');

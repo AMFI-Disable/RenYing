@@ -1051,12 +1051,12 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Multiplayer Co-op Roguelike (同袍肉鸽 · 众志破魔): Home-only entry, 6-skill 3-hero Boss (3x HP, 1.25x dmg), shared gains & Ink reward',
+    name: 'Multiplayer Co-op Roguelike (同袍肉鸽 · 众志破魔): hub-tile entry, 6-skill 3-hero Boss (3x HP, 1.25x dmg), shared gains & Ink reward',
     fn: `(() => {
-      const homeBtn = document.getElementById('homeRouge');
+      const homeBtn = document.querySelector('#singleTabs [data-act="rouge"]');   // 模式大厅里的「全服肉鸽」格子
       const modalRouge = document.getElementById('modalRouge');
       if (!homeBtn || !modalRouge) {
-        return { pass: false, error: '#homeRouge or #modalRouge missing in DOM' };
+        return { pass: false, error: 'hub rouge tile or #modalRouge missing in DOM' };
       }
       openRougeModal();
       if (modalRouge.classList.contains('hidden')) {

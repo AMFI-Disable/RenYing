@@ -99,30 +99,21 @@ if (levelsEl) {
   });
 }
 loadPickLevel();
-const singleCatTabsEl = document.getElementById('singleCatTabs');
-if (singleCatTabsEl) {
-  singleCatTabsEl.addEventListener('click', e => {
-    const b = e.target.closest('button');
-    if (!b || !b.dataset.cat) return;
-    const cat = b.dataset.cat;
-    // 找到该类别下的第一个模式
-    const firstTabBtn = document.querySelector(`#singleTabs button[data-cat="${cat}"]`);
-    if (firstTabBtn && firstTabBtn.dataset.tab) {
-      singleSec(firstTabBtn.dataset.tab);
-    } else {
-      setSingleCat(cat);
-    }
-    SFX.slice();
-  });
-}
 const singleTabsEl = document.getElementById('singleTabs');
 if (singleTabsEl) {
   singleTabsEl.addEventListener('click', e => {
     const b = e.target.closest('button');
-    if (!b || !b.dataset.tab) return;
-    if (b.dataset.tab === 'watch2v2') { open2v2Modal(); SFX.slice(); return; }   // 离线版的 2v2 入口：打开组队弹窗，不换页
-    singleSec(b.dataset.tab);
+    if (!b) return;
     SFX.slice();
+    // 不在大厅里打开面板的几格：2v2 开组队弹窗，开放世界、全服肉鸽开各自的弹窗，联机对战去对战页
+    if (b.dataset.tab === 'watch2v2') { open2v2Modal(); return; }
+    if (b.dataset.act === 'world') { openWorldModal(); return; }
+    if (b.dataset.act === 'rouge') { openRougeModal(); return; }
+    if (b.dataset.act === 'netp') { navTo('netp'); return; }
+    if (!b.dataset.tab) return;
+    singleSec(b.dataset.tab);
+    const pane = document.querySelector(`#single [data-sec~="${b.dataset.tab}"]`);   // 面板在格子下面：滚过去让人看见
+    if (pane && pane.scrollIntoView) try { pane.scrollIntoView({ block: 'nearest', behavior: prefersReduced() ? 'auto' : 'smooth' }); } catch (err) {}
   });
 }
 const taskTabsEl = document.getElementById('taskTabs');

@@ -1053,9 +1053,6 @@ function closeRougeModal() {
   const m = $id('modalRouge');
   if (m) m.classList.add('hidden');
 }
-if ($id('homeRouge')) {
-  $id('homeRouge').addEventListener('click', () => { SFX.slice(); openRougeModal(); });
-}
 if ($id('modalRougeClose')) {
   $id('modalRougeClose').addEventListener('click', closeRougeModal);
 }
