@@ -416,12 +416,11 @@ section('玩家市场：只在玩家之间买卖饰品，标价自己定；卖�
   await econ(S.token, 'sync');
   ok(boughtIt ? stateOf(S.uid).hist[0].kind === 'sold' : true, '买到的那种情况，卖家照样到账');
 
-  // 同时最多挂 20 单
-  const many = grant(S.uid, Array.from({ length: C.LIST_MAX + 1 }, () => ({ k: 'ts_p1' })));
-  const have = stateOf(S.uid).lst.length;
-  for (let i = 0; i < C.LIST_MAX - have; i++) await econ(S.token, 'list', { i: many[i].i, price: 5 });
-  const over = await econ(S.token, 'list', { i: many[C.LIST_MAX].i, price: 5 });
-  ok(stateOf(S.uid).lst.length === C.LIST_MAX && over.res.err, `同时最多挂 ${C.LIST_MAX} 单`, over.res);
+  // 挂单不设上限：以前的上限是 20，挂到 25 单也都挂得上
+  const many = grant(S.uid, Array.from({ length: 25 }, () => ({ k: 'ts_p1' })));
+  const have = stateOf(S.uid).lst.length, rsMany = [];
+  for (let i = 0; i < 25; i++) rsMany.push(await econ(S.token, 'list', { i: many[i].i, price: 5 + i }));
+  ok(rsMany.every(r => r.res.ok) && stateOf(S.uid).lst.length === have + 25, `挂单不设上限：一共挂了 ${have + 25} 单都挂得上`, rsMany.map(r => r.res.err).filter(Boolean));
 
   // 本机存档（没有服务器）：玩家市场用不了
   const env = { now: T, rnd: Math.random, uid: 'local', ink: 100, skins: [], equip: {}, server: false };
@@ -1941,15 +1940,24 @@ section('玩家市场挂单到期：挂太久没卖出的自动撤下，饰品�
   ok(lg && parseDetail(lg.detail).b === 2, '流水里记下退回了几件', lg);
   const again = await econ(S.token, 'sync');
   ok(!again.back && stateOf(S.uid).inv.filter(x => x.i === a.i).length === 1, '只退一次，不会多出一件');
-  // 挂单上限按服务器的市场表算：存档里的挂单对不上（比如旧存档覆盖了）也挂不出第 21 件
-  const fake = Array.from({ length: C.LIST_MAX }, (_, i) => ('f' + String(i).padStart(15, '0')));
+  // 挂单不设上限：服务器市场表里已经有一堆在卖的，也照样能再挂
+  const fake = Array.from({ length: 30 }, (_, i) => ('f' + String(i).padStart(15, '0')));
   for (const id of fake) ENV.DB.raw.prepare('INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)').run(id, S.uid, 'qf_p1', -1, JSON.stringify({ i: 90000, k: 'qf_p1', st: -1 }), 10, T);
   const over = await econ(S.token, 'list', { i: a.i, price: 10 });
-  ok(over.res.err && /最多同时挂/.test(over.res.err) && stateOf(S.uid).inv.some(x => x.i === a.i), `市场表里已经有 ${C.LIST_MAX} 单在卖：存档里没挂也不让再挂`, over.res);
-  const overD = await econ(S.token, 'listDupes');
-  ok(overD.res.err, '一键挂重复的也一样', overD.res);
+  ok(over.res.ok && !stateOf(S.uid).inv.some(x => x.i === a.i), '市场表里已经有 30 单在卖：照样能再挂', over.res);
   ENV.DB.raw.prepare("DELETE FROM mkt WHERE id LIKE 'f%' AND seller = ?").run(S.uid);
-  ok((await econ(S.token, 'list', { i: a.i, price: 10 })).res.ok, '腾出位置以后照常能挂');
+  // 挂得很多：一键挂牌一次最多挂 LIST_BATCH 件；到期以后每次操作最多核对、退回 LIST_CHECK 单，剩下的下次接着退，一件都不丢
+  const D = await newUser('manylist');
+  await econ(D.token, 'sync');
+  grant(D.uid, Array.from({ length: 2 * C.LIST_BATCH + 1 }, () => ({ k: 'ts_p1' })));
+  const d1 = await econ(D.token, 'listDupes'), d2 = await econ(D.token, 'listDupes');
+  ok(d1.res.ok && d1.res.count === C.LIST_BATCH && d1.res.skipped === C.LIST_BATCH && d2.res.ok && d2.res.count === C.LIST_BATCH, `一键挂牌一次挂 ${C.LIST_BATCH} 件，再点一次挂剩下的`, [d1.res, d2.res]);
+  ok(stateOf(D.uid).lst.length === 2 * C.LIST_BATCH && row('SELECT COUNT(*) AS n FROM mkt WHERE seller = ? AND state = 0', D.uid).n === 2 * C.LIST_BATCH, `一共挂着 ${2 * C.LIST_BATCH} 单，存档和市场表对得上`);
+  T += (days + 1) * 86400e3;
+  const b1 = await econ(D.token, 'sync'), left1 = stateOf(D.uid).lst.length;
+  ok(b1.back && b1.back.length === C.LIST_CHECK && left1 === 2 * C.LIST_BATCH - C.LIST_CHECK, `全部到期：这次先退回 ${C.LIST_CHECK} 件`, b1.back && b1.back.length);
+  const b2 = await econ(D.token, 'sync'), sD = stateOf(D.uid);
+  ok(b2.back && b2.back.length === left1 && !sD.lst.length && sD.inv.length === 2 * C.LIST_BATCH + 1, '下一次把剩下的也退回，库存一件不少', [b2.back && b2.back.length, sD.inv.length]);
 }
 
 section('找回饰品：管理后台按流水查出“拿到过、现在没有”的饰品，写明是哪一步没的；只有去向不明、管理员收走的能找回，找回一次');

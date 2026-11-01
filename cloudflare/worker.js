@@ -773,14 +773,14 @@ async function handleEcon(env, auth, body, now, ip) {
     const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
     const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
-    const mkt = { id: randHex(8), ids: Array.from({ length: 20 }, () => randHex(8)), row: null, out: null, open: 0 };
+    const mkt = { id: randHex(8), ids: act === 'listDupes' ? Array.from({ length: C.LIST_BATCH }, () => randHex(8)) : null, row: null, out: null };
     if ((act === 'buy' || act === 'cancel') && C.isLid(args.l)) {
       const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state, at FROM mkt WHERE id = ?').bind(args.l).first();
       if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json), expired: r0.state === 0 && r0.at < now - ttl };
     }
-    if (act === 'list' || act === 'listDupes') mkt.open = ((await env.DB.prepare('SELECT COUNT(*) AS n FROM mkt WHERE seller = ? AND state = 0').bind(uid).first()) || {}).n || 0;
     // 存档里还挂着、市场上已经不在卖的（到期撤下、被撤下，或者那一单已经清理掉了）：这次退回库存。卖掉的不算，卖掉的走上面的结账
-    const lst0 = (Array.isArray(eco.state.lst) ? eco.state.lst : []).filter(L => L && C.isLid(L.l)).slice(0, 40);
+    // 挂单不设上限：每次只核对最早挂的 LIST_CHECK 单（快到期的先核对），剩下的下次操作接着核对，一次请求读的行数不会跟着挂单数涨
+    const lst0 = (Array.isArray(eco.state.lst) ? eco.state.lst : []).filter(L => L && C.isLid(L.l)).sort((a, b) => (+a.t || 0) - (+b.t || 0)).slice(0, C.LIST_CHECK);
     let back = [];
     if (lst0.length) {
       const rows = (await env.DB.prepare(`SELECT id, state FROM mkt WHERE id IN (${lst0.map(() => '?').join(', ')})`).bind(...lst0.map(L => L.l)).all()).results || [];

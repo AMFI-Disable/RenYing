@@ -16,7 +16,11 @@
   C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和终端机改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加终端机）
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
-  C.INV_MAX = 1000000000, C.LIST_MAX = 20, C.HIST_MAX = 40;
+  C.INV_MAX = 1000000000, C.HIST_MAX = 40;
+  // 玩家市场同时挂几单不设上限（和库存一样，挂出去的饰品只是从库存挪到挂单，存档不会因此变大多少）。
+  // 下面两个只是“一次请求最多做多少”，免得一次请求太重：
+  C.LIST_BATCH = 50;   // 一键挂牌一次最多挂几件，剩下的再点一次
+  C.LIST_CHECK = 90;   // 每次操作最多核对几单挂单还在不在卖（从最早挂的开始，快到期的先核对；D1 一条查询最多 100 个参数）
   C.MKT_DAYS = 14;   // 挂单默认挂几天：过期没卖出去的自动撤回，饰品回到卖家库存（管理员可以在线改 mktDays）
   C.FEE = 0.15;                                // 玩家市场成交扣的手续费（墨锭从这里流出去，免得越攒越多）
   C.PRICE_MAX = 999999;                        // 挂单标价 1 ~ 999999 墨锭，多少由玩家自己定，系统不定价、也不收购
@@ -408,7 +412,7 @@
       if (!it || seen.has(it.i)) return null;
       seen.add(it.i);
       return { l: L.l, it: { ...it, n: '' }, price: int(L.price, 1, C.PRICE_MAX), t: num(L.t) };
-    }).filter(Boolean).slice(0, C.LIST_MAX);
+    }).filter(Boolean).slice(0, C.INV_MAX);
     let top = 0;
     for (const x of s.inv) top = Math.max(top, x.i);
     for (const L of s.lst) top = Math.max(top, L.it.i);
@@ -682,7 +686,6 @@
     if (!m || !C.isLid(m.id)) return { err: NO_MKT };
     if (a.c !== undefined) return { err: '武器箱和终端机只在商店按固定价格卖，不能挂到市场' };
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
-    if (Math.max(s.lst.length, m.open | 0) >= C.LIST_MAX) return { err: `最多同时挂 ${C.LIST_MAX} 件` };   // m.open：服务器 mkt 表里这个号还在卖的单数，存档里的对不上也按多的算
     const price = +a.price;
     if (!(Number.isInteger(price) && price >= 1 && price <= C.PRICE_MAX)) return { err: `标价要是 1 到 ${C.PRICE_MAX} 之间的整数` };
     C.dropItem(s, it.i, env);
@@ -744,7 +747,7 @@
   // 已经卖掉的单不会在这里（卖掉的走上面的结账）。退回的记在 env.returned，服务器在流水里记下
   C.unlist = (s, env) => {
     const out = [];
-    for (const id of Array.isArray(env.back) ? env.back.slice(0, C.LIST_MAX * 2) : []) {
+    for (const id of Array.isArray(env.back) ? env.back.slice(0, C.LIST_CHECK) : []) {
       const ix = s.lst.findIndex(L => L.l === id); if (ix < 0) continue;
       const L = s.lst.splice(ix, 1)[0];
       C.addItem(s, L.it, env);
@@ -785,11 +788,9 @@
     if (!m || (!C.isLid(m.id) && !Array.isArray(m.ids))) return { err: NO_MKT };
     const plan = C.dupePlan(s);
     if (!plan.items.length) return { err: '库存里没有重复的饰品' };
-    const freeSlots = Math.max(0, C.LIST_MAX - Math.max(s.lst.length, m.open | 0));
-    if (freeSlots <= 0) return { err: `市场挂单已满（最多 ${C.LIST_MAX} 件），请先撤回或等待售出` };
-    const toList = plan.items.slice(0, freeSlots);
+    const ids = (Array.isArray(m.ids) ? m.ids.slice() : [m.id]).slice(0, C.LIST_BATCH);   // 挂单不设上限，一次最多挂 LIST_BATCH 件
+    const toList = plan.items.slice(0, ids.length);
     const listed = [];
-    const ids = Array.isArray(m.ids) ? m.ids.slice() : [m.id];
     for (let idx = 0; idx < toList.length; idx++) {
       const d = toList[idx];
       const it = C.dropItem(s, d.i, env);

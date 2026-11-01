@@ -213,7 +213,7 @@
   function loadMarket(force) {   // 读到新的行情时回 true
     if (MODE !== 'server' || !MKT) return Promise.resolve(false);
     if (MKD.busy) return MKD.busy.then(() => false);
-    if (!force && MKD.items && NOW() - MKD.at < 60000) return Promise.resolve(false);
+    if (!force && (MKD.items || MKD.err) && NOW() - MKD.at < 60000) return Promise.resolve(false);   // 读失败了也等一分钟再试：不然每画一次就重读一次，读失败又重画，页面会卡死
     MKD.busy = MKT().then(d => { MKD.items = d && d.items && typeof d.items === 'object' ? d.items : {}; MKD.at = NOW(); MKD.err = ''; return true; })
       .catch(e => { MKD.err = e && e.status === 404 ? '服务器还没开玩家市场，等服务器更新以后就能用' : (e && e.message) || '读不到玩家市场'; MKD.at = NOW(); return true; })
       .finally(() => { MKD.busy = null; });
@@ -849,7 +849,7 @@
   }
 
   // 玩家市场：只有饰品，只有玩家之间买卖，价格全由卖家定（系统不定价、不收购）
-  const MK = { view: 'items', tier: '', char: '', sort: 'hot', only: false };
+  const MK = { view: 'items', tier: '', char: '', sort: 'hot', only: false, msort: 'exp', mtier: '', mchar: '', mshow: 60 };   // m 开头的是「我的挂单」自己的排序、筛选和显示到第几件
   const goodCol = k => k === 'term' ? '120,220,200' : C.COLS[k].col;
   const goodIcon = k => k === 'term' ? '<span class="ar-termbox sm"><span>终</span></span>' : `<span class="ar-casebox sm${C.COLS[k].prem ? ' prem' : ''}" style="--cc:${C.COLS[k].col}"><span>${C.COLS[k].emblem}</span></span>`;
   function dealChart(deals) {   // 最近的成交价，横轴是时间
@@ -881,13 +881,34 @@
         <label class="ar-chk"><input type="checkbox" id="arMkOnly" ${MK.only ? 'checked' : ''}> 只看有人在卖的</label></div>
         ${keys.length ? `<div class="ar-mklist">${keys.map(k => { const x = row(k), p = lo(k), c = cnt(k); return `<button type="button" class="ar-mkrow" data-mk="${k}" style="--tc:${tc(k)}"><img src="${thumb(k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName({ k, st: -1 }))}</b><small>${C.TIER[tierOf(k)].n} · ${colName(k)}武器箱</small></span><span class="ar-mkc">${c ? `在卖 ${c} 件${x.sn ? `（斩数版 ${x.sn}）` : ''}` : '没人在卖'}<small>${x.d ? `30 天成交 ${x.d} 笔` : '30 天没有成交'}${x.last ? ` · 最近 ${fmt(x.last)}` : ''}</small></span><span class="ar-mkp">${p ? `<small>最低</small>${ink(p)}` : '<small>—</small>'}</span></button>`; }).join('')}</div>` : empty('没有符合条件的饰品。')}`;
     } else if (MK.view === 'mine') {
-      body = s.lst.length ? `<div class="ar-mklist">${s.lst.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt=""><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>挂于 ${new Date(L.t).toLocaleString()} · ${new Date(L.t + C.cv(CF(), 'mktDays') * 864e5).toLocaleDateString()} 前没人买就退回库存</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price, CF()))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('')}</div>`
-        : empty(`没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定（最多同时挂 ${C.LIST_MAX} 件）。`);
+      body = s.lst.length ? myListings(s) : empty('没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定，同时挂多少件都可以。');
     } else {
       const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出' }[h.kind] || '';
       body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : empty('还没有成交记录。');
     }
     return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
+  }
+  // 我的挂单：挂多少件都行，所以要能排序、筛选；一次先画 60 件，多的点“再显示”
+  const MSORTS = [['exp', '快到期的在前'], ['new', '最新挂的在前'], ['dear', '标价从高到低'], ['cheap', '标价从低到高'], ['tier', '品质高的在前'], ['st', '斩数多的在前'], ['char', '按侠客']];
+  function myListings(s) {
+    const ttl = C.cv(CF(), 'mktDays') * 864e5, tr = L => C.TIERS.indexOf(tierOf(L.it.k));
+    const ci = L => { const i = CHARS.findIndex(c => c.id === C.charOf(L.it.k)); return i < 0 ? 999 : i; };
+    const sorts = {
+      exp: (a, b) => a.t - b.t, new: (a, b) => b.t - a.t,
+      dear: (a, b) => b.price - a.price || a.t - b.t, cheap: (a, b) => a.price - b.price || a.t - b.t,
+      tier: (a, b) => tr(b) - tr(a) || b.price - a.price, st: (a, b) => b.it.st - a.it.st || tr(b) - tr(a),
+      char: (a, b) => ci(a) - ci(b) || tr(b) - tr(a) || a.t - b.t,
+    };
+    const all = s.lst.filter(L => (!MK.mtier || tierOf(L.it.k) === MK.mtier) && (!MK.mchar || C.charOf(L.it.k) === MK.mchar)).sort(sorts[MK.msort] || sorts.exp);
+    const shown = all.slice(0, MK.mshow), sum = all.reduce((a, L) => a + L.price, 0), net = all.reduce((a, L) => a + C.net(L.price, CF()), 0);
+    const left = L => { const d = Math.ceil((L.t + ttl - Date.now()) / 864e5); return d <= 1 ? '今天或明天到期' : `还有 ${d} 天到期`; };
+    const filter = `<div class="ar-filter"><select id="arMyTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${MK.mtier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
+        <select id="arMyChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${MK.mchar === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
+        <select id="arMySort" class="ar-sel">${MSORTS.map(([k, n]) => `<option value="${k}" ${MK.msort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`;
+    const head = `<div class="ar-sum"><span>${all.length === s.lst.length ? '挂着' : '符合条件的'} <b>${all.length}</b> 件</span><span>标价合计 ${ink(sum)}</span><span>全部卖掉到手 <b>${fmt(net)}</b></span></div>`;
+    const rows = shown.map(L => `<div class="ar-mkrow static" style="--tc:${tc(L.it.k)}"><img src="${thumb(L.it.k)}" alt="" loading="lazy"><span class="ar-mkn"><b>${escapeHTML(itemName(L.it))}</b><small>${C.TIER[tierOf(L.it.k)].n} · 挂于 ${new Date(L.t).toLocaleString()} · ${left(L)}（${new Date(L.t + ttl).toLocaleDateString()} 前没人买就退回库存）</small></span><span class="ar-mkp">标价 ${ink(L.price)}<small>卖掉到手 ${fmt(C.net(L.price, CF()))}</small></span><span class="ar-mkbtns"><button type="button" class="ghost small" data-mk="${L.it.k}">行情</button><button type="button" class="ghost small" data-cancel="${L.l}">撤下</button></span></div>`).join('');
+    const more = all.length > shown.length ? `<div class="row"><button type="button" class="ghost small" data-mymore>再显示 ${Math.min(60, all.length - shown.length)} 件（还有 ${all.length - shown.length} 件）</button></div>` : '';
+    return `${filter}${head}${all.length ? `<div class="ar-mklist">${rows}</div>${more}` : empty('没有符合条件的挂单。')}`;
   }
   let MKI = { tok: 0, k: '' };   // 正在看的那一款：读回来时弹窗还开着、还是这一款才画
   async function marketItem(k, keep) {
@@ -985,7 +1006,8 @@
     main.addEventListener('change', e => {
       const id = e.target.id, v = e.target.value;
       if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvSort') INV.sort = v;
-      else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked; else return;
+      else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked;
+      else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; } else return;
       render();
     });
     main.addEventListener('keydown', e => { if (e.key === 'Escape') return; e.stopPropagation(); });   // 打字时别触发游戏的快捷键
@@ -998,6 +1020,7 @@
       if (d.it && !d.sel) { const it = ST && ST.inv.find(x => x.i === +d.it); if (it) inspect(it, 'inv'); return; }
       if (d.mk) { marketItem(d.mk); return; }
       if (d.mkv) { MK.view = d.mkv; render(); return; }
+      if (d.mymore !== undefined) { MK.mshow += 60; render(); return; }
       if (d.trt) { TR.tier = d.trt; TR.sel = []; render(); return; }
       if (d.sel) { TR.sel.push(+d.it); render(); return; }
       if (d.unsel) { TR.sel = TR.sel.filter(x => x !== +d.unsel); render(); return; }
@@ -1030,15 +1053,13 @@
   function listDupesGo() {
     const s = ST, plan = C.dupePlan(s);
     if (!plan.items.length) { msg('没有重复的饰品可挂牌'); return; }
-    const freeSlots = Math.max(0, C.LIST_MAX - (s.lst ? s.lst.length : 0));
-    if (freeSlots <= 0) { msg(`市场在售单已达到上限（最多 ${C.LIST_MAX} 件），请先撤回或等待成交`); return; }
-    const willList = Math.min(plan.items.length, freeSlots);
-    const extra = plan.items.length > willList ? `<br><small style="color:#e9c46a">当前市场挂单剩余 ${freeSlots} 个槽位，将先挂出前 ${willList} 件。</small>` : '';
+    const willList = Math.min(plan.items.length, C.LIST_BATCH);   // 挂单不设上限，只是一次最多挂 LIST_BATCH 件
+    const extra = plan.items.length > willList ? `<br><small style="color:#e9c46a">一次最多挂 ${C.LIST_BATCH} 件，这次先挂前 ${willList} 件，剩下的再点一次。</small>` : '';
     confirmBox('自动挂牌市场', `将为您自动把 <b>${willList}</b> 件重复饰品挂到玩家市场出售。<br><small>系统将为您严格保留每款饰品中斩数最高（或当前穿着）的一件。</small>${extra}`, '确认挂牌', async () => {
       const r = await act('listDupes', {});
       if (r && r.ok) {
         SFX.wood && SFX.wood();
-        toast(`已成功将 ${r.count} 件重复饰品挂牌到玩家市场！`);
+        toast(`已成功将 ${r.count} 件重复饰品挂牌到玩家市场！${r.skipped ? `还有 ${r.skipped} 件，再点一次接着挂` : ''}`);
         render();
       }
     });
