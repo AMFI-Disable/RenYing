@@ -109,6 +109,9 @@ jobs:
           curl -sf http://127.0.0.1:8791/ >/dev/null || { echo "http server failed to start"; cat /tmp/renying-http.log; exit 1; }
           echo "Static web server is up on :8791"
 
+      - name: Draft And Offline Font Fallback Checks
+        run: node tools/bp-flow-test.mjs
+
       - name: UI Panel Layout Audit (all panels, 1440x900)
         run: |
           set +e

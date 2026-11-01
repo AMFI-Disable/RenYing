@@ -1,6 +1,10 @@
 // ======================= 界面按钮 =======================
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
+  if (!menuTransitionCompleting && currentScreen === 'menu' && id !== 'menu' && document.body.classList.contains('menu-handoff')) {
+    delete $id('menu').dataset.phase; document.body.classList.remove('menu-handoff'); menuLock = false;
+  }
+  menuTransition++;
   const prev = currentScreen; currentScreen = id;
   for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
