@@ -1,7 +1,7 @@
 // ======================= 技能（Q） =======================
 // 每个技能：cd 冷却，start 开始时，update 每一帧，pose 用哪个姿势，ai 电脑什么时候用
 // 凌雀「移形换影」的追踪：大幅提升飞行速度、漂移回拉最大距离与转向灵敏度
-const SD_SPD = 2350, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
+const SD_SPD = 3525, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
 // 迂回：第一次近身从对手头顶翻过去（横向速度、起跳速度、下落加速度），对手身后至少要留这么多地方
 const SD_OVER_VX = 1450, SD_OVER_VY = -950, SD_OVER_G = 3800, SD_OVER_ROOM = 170;
 function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
