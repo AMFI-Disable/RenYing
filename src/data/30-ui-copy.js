@@ -1690,7 +1690,6 @@ const UI_COPY_EN = {
   "战场：": "Arena:",
   "即刻开战": "Fight Now",
   "帧优势": "Frame Advantage",
-  "随机选择一处战场。": "Choose a random arena.",
   // 山河异境：投票选地图（src/data/12-maps.js、src/game/22-modes.js 的 renderMaps、联机房间的地图投票）
   "山河异境": "Terrain Clash",
   "山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",
@@ -1729,8 +1728,6 @@ const UI_COPY_EN = {
   "守关挑战 · 侠客列传 · 问剑密卷": "Stages · Sagas · Sword Pagoda",
   "战场异变：": "Battle Mutator:",
   "常规标准": "Standard",
-  "偏好地图（后台选图）：": "Preferred Map (Background Selection):",
-  "全部地图随机轮换": "Random Map Rotation",
   "全部随机": "All Random",
   "对战电脑 · 闯关 · 车轮战 · 木人桩": "Vs AI · Stages · Relay · Dummy",
   "对电脑的模式通用 · 会记住": "Used by every mode against the AI · Remembered",

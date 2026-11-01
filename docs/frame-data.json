@@ -1008,8 +1008,8 @@
    },
    "skill2": {
     "id": "shadowdash",
-    "hit": 45,
-    "total": 65
+    "hit": 43,
+    "total": 63
    },
    "ult": {
     "id": "needlestorm",

@@ -976,10 +976,32 @@ border-radius: 6px;
 padding: 6px 8px;
 margin-top: auto;
 }
+#towerModal .panel {
+max-width: min(720px, 96vw);
+}
+#towerModal.has-5-choices .panel,
+#towerModal:has(.choices-5) .panel {
+max-width: min(1120px, 96vw);
+}
 .tower-choices {
 display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0;
 }
-@media (max-width: 600px) { .tower-choices { grid-template-columns: 1fr; } }
+.tower-choices.choices-5 {
+grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+gap: 10px;
+}
+@media (min-width: 900px) {
+.tower-choices.choices-5 {
+grid-template-columns: repeat(5, 1fr);
+}
+}
+.tower-choices.choices-5 .tower-perk-card {
+padding: 14px 10px;
+}
+@media (max-width: 600px) {
+.tower-choices { grid-template-columns: 1fr; }
+.tower-choices.choices-5 { grid-template-columns: 1fr; }
+}
 .tower-perk-card {
 background: linear-gradient(170deg, rgba(30, 24, 40, .92), rgba(15, 12, 22, .96));
 border: 1px solid rgba(233, 196, 106, .35); border-radius: 12px;
@@ -4156,7 +4178,7 @@ body.offline #mMatch { display: none !important; }
   </div>
 
   <div id="towerModal" class="scr">
-    <div class="panel" style="max-width:700px">
+    <div class="panel">
       <h2 id="towerTitle" style="color:var(--gold);font-family:var(--title)">问剑悟道 · 秘卷三选一</h2>
       <p class="sub" id="towerFloorBadge" style="margin-bottom:14px">突破守关者 · 顿悟绝学</p>
       <div class="tower-choices" id="towerChoices"></div>
@@ -8990,7 +9012,6 @@ const UI_COPY_EN = {
 "战场：": "Arena:",
 "即刻开战": "Fight Now",
 "帧优势": "Frame Advantage",
-"随机选择一处战场。": "Choose a random arena.",
 "山河异境": "Terrain Clash",
 "山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",
 "特殊地形 · 不计排位": "Special terrain · Unranked",
@@ -9026,8 +9047,6 @@ const UI_COPY_EN = {
 "守关挑战 · 侠客列传 · 问剑密卷": "Stages · Sagas · Sword Pagoda",
 "战场异变：": "Battle Mutator:",
 "常规标准": "Standard",
-"偏好地图（后台选图）：": "Preferred Map (Background Selection):",
-"全部地图随机轮换": "Random Map Rotation",
 "全部随机": "All Random",
 "对战电脑 · 闯关 · 车轮战 · 木人桩": "Vs AI · Stages · Relay · Dummy",
 "对电脑的模式通用 · 会记住": "Used by every mode against the AI · Remembered",
@@ -11391,7 +11410,7 @@ return out;
 }
 const CHAR_MOVES = CHARS.map(buildMoves);
 const HEAVY_MOVES = ['hv', 'cs1', 'cs2'];
-const SD_SPD = 2350, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
+const SD_SPD = 3525, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
 const SD_OVER_VX = 1450, SD_OVER_VY = -950, SD_OVER_G = 3800, SD_OVER_ROOM = 170;
 function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
 if (typeof is2v2 === 'function' && is2v2()) {
@@ -25773,6 +25792,8 @@ if (!modal || !choicesEl) {
 nextTowerFloor();
 return;
 }
+modal.classList.remove('has-5-choices');
+choicesEl.classList.remove('choices-5');
 const picked = scDraw(A.ch.id, M.towerPerks || [], 3);
 if (!picked.length) { nextTowerFloor(); return; }   // 这个侠客能拿的秘卷全拿完了
 const reso = scResoLines(M.towerPerks || []);
@@ -27620,12 +27641,15 @@ M.phase = 'draft'; paused = true;
 gbDraft();
 }
 function gbDraft() {
-const picked = scDraw(A.ch.id, M.towerPerks, 3);
+const picked = scDraw(A.ch.id, M.towerPerks, 5);
 if (GB.picks.length >= GB_DRAFT || !picked.length) { gbFight(); return; }
 const reso = scResoLines(M.towerPerks);
 $id('towerTitle').textContent = '天魔讨伐 · 出战前抽秘卷';
 $id('towerFloorBadge').textContent = `第 ${GB.picks.length + 1} / ${GB_DRAFT} 卷 · 天魔词缀：${M.foeScrolls.map(id => SC_BY[id].n).join('、') || '无'}`;
+const modal = $id('towerModal');
+if (modal) modal.classList.add('has-5-choices');
 const el = $id('towerChoices');
+el.classList.add('choices-5');
 el.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}" data-perk="${p.id}">
 <div class="tp-icon">${scIcon(p)}</div>
 <div class="tp-name">「${p.n}」</div>
@@ -27642,6 +27666,10 @@ M.towerPerks.push(id); GB.picks.push(id);
 gbDraft();
 }
 function gbFight() {
+const modal = $id('towerModal');
+if (modal) modal.classList.remove('has-5-choices');
+const el = $id('towerChoices');
+if (el) el.classList.remove('choices-5');
 showScreen(null);
 paused = false;
 startRound();   // 秘卷和天魔词缀的开局效果在这里生效
@@ -27700,7 +27728,13 @@ t = res.killed ? `计入全服 ${res.credited.toLocaleString()} 伤害，最后�
 }
 $id('endRank').textContent = t;
 }
-function gbossQuit() { if (M.mode === 'boss' && M.phase !== 'end') gbossFinish('quit'); }
+function gbossQuit() {
+const modal = $id('towerModal');
+if (modal) modal.classList.remove('has-5-choices');
+const el = $id('towerChoices');
+if (el) el.classList.remove('choices-5');
+if (M.mode === 'boss' && M.phase !== 'end') gbossFinish('quit');
+}
 $id('gbGo').addEventListener('click', () => { SFX.slice && SFX.slice(); gbossGo(); });
 $id('homeGboss').addEventListener('click', () => { SFX.slice && SFX.slice(); navTo('gboss'); });
 setTimeout(() => { gbLoad(); gbFlush(); }, 1500);
