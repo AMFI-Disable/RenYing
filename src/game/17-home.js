@@ -262,15 +262,30 @@ function updateAIBrief() {
   }
 }
 
-// 模式大厅（#single）：所有玩法一屏格子都摆出来，sec 为空时打开上次那一格，否则打开指定那一格的面板
+// 模式大厅（#single）：所有玩法分类摆放，sec 为空时打开上次那一格，否则打开指定那一格的面板
 let currentSingleTab = 'cpu';
 
 function singleSec(sec) {
   const active = sec || currentSingleTab || 'cpu';
   currentSingleTab = active;
 
-  for (const b of document.querySelectorAll('#singleTabs button')) {
+  const isStory = ['stage', 'saga', 'tower'].includes(active);
+  const activeCat = isStory ? 'story' : 'combat';
+
+  for (const b of document.querySelectorAll('#xiwuCatTabs button')) {
+    const on = b.dataset.cat === activeCat;
+    b.classList.toggle('sel', on);
+    b.setAttribute('aria-selected', on);
+  }
+  for (const g of document.querySelectorAll('#singleTabs [data-cat-group]')) {
+    g.style.display = g.dataset.catGroup === activeCat ? '' : 'none';
+  }
+
+  for (const b of document.querySelectorAll('#singleTabs button[data-tab]')) {
     b.classList.toggle('sel', b.dataset.tab === active);
+  }
+  for (const p of document.querySelectorAll('#mutatorPills button')) {
+    p.classList.toggle('sel', p.dataset.tab === active);
   }
   for (const el of document.querySelectorAll('#single [data-sec]')) {
     const secs = el.dataset.sec.split(' ');
@@ -284,6 +299,7 @@ function singleSec(sec) {
     const subs = {
       cpu: '选择 AI 难度与对手境界，在实战对局中锤炼招式攻防',
       tag3: '挑选三位豪杰排定出战顺序，胜者保留残血守擂，直至一方全灭！',
+      watch2v2: '两人一组默契配合，可带电脑同袍或同屏对决！',
       tower: '挑选本命侠客登临万仞剑阁，突破层层守关者，顿悟三选一武林秘卷！',
       chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
@@ -294,6 +310,7 @@ function singleSec(sec) {
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
+  if (typeof updateMapChipsUI === 'function') updateMapChipsUI();
   if (active === 'tag3') renderTag3();
   else if (active === 'saga') renderSaga();
   else if (active === 'tower') renderTower();

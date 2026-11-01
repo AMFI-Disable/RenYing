@@ -99,6 +99,31 @@ if (levelsEl) {
   });
 }
 loadPickLevel();
+const xiwuCatTabsEl = document.getElementById('xiwuCatTabs');
+if (xiwuCatTabsEl) {
+  xiwuCatTabsEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-cat]');
+    if (!b) return;
+    SFX.slice();
+    const cat = b.dataset.cat;
+    if (cat === 'combat') {
+      const isCombat = ['cpu', 'tag3', 'watch2v2', 'train', 'chaos', 'mayhem'].includes(currentSingleTab);
+      singleSec(isCombat ? currentSingleTab : 'cpu');
+    } else if (cat === 'story') {
+      const isStory = ['stage', 'saga', 'tower'].includes(currentSingleTab);
+      singleSec(isStory ? currentSingleTab : 'stage');
+    }
+  });
+}
+const xiwuMapChipsEl = document.getElementById('xiwuMapChips');
+if (xiwuMapChipsEl) {
+  xiwuMapChipsEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-map]');
+    if (!b) return;
+    SFX.slice();
+    setMapVote(b.dataset.map || null);
+  });
+}
 const singleTabsEl = document.getElementById('singleTabs');
 if (singleTabsEl) {
   singleTabsEl.addEventListener('click', e => {
