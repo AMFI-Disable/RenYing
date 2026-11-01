@@ -3032,9 +3032,11 @@ body.touchdev .dummy-bar-btn { display: none; }
   .single-tabs.play-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .single-tabs.play-grid button { padding: 6px 8px; min-height: 44px; }
 }
-/* 首页换侠客：按钮在「开始演武」下面，头像一排从按钮上方弹出 */
-.home-swap { position: relative; }
-.home-swap .hh-pick { left: 0; transform: none; bottom: calc(100% + 8px); z-index: 5; }
+/* 首页换侠客：按钮在正中侠客的名字下面，头像一排从按钮上方弹出 */
+.hh-swapwrap { position: relative; }
+.hh-swapwrap .hh-pick { z-index: 5; }
+/* 离线版没有联机：不显示「匹配对战」，「习武」当主按钮 */
+body.offline #mMatch { display: none !important; }
 #levels .lv-sub { white-space: normal; max-width: 100%; }   /* 英文说明比中文长：折行，不伸出按钮 */
 /* 对战页：一张 3v3 卡，里面并排快速匹配、排位赛、好友约战 */
 .tag-portal { position: relative; border: 1px solid rgba(255,70,85,.35); border-radius: 14px; padding: 16px 18px 18px; background: linear-gradient(160deg, rgba(40,18,26,.55), rgba(12,14,26,.75)); }

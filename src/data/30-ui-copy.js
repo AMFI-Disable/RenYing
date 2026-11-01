@@ -1711,9 +1711,11 @@ const UI_COPY_EN = {
   "建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。": "Pick before you create the room; inside the room the host can still change it and the other side follows. 2v2 matchmaking and same-computer 2v2 are under 2v2 Team in Play.",
   // 首页「开始演武」和模式大厅（src/page.html 的 #homeEntries、#single）
   "开始演武": "Play",
+  "习武": "Practice",
+  "3v3 车轮战 · 全服随机对手": "3v3 relay · Random opponents worldwide",
+  "对战电脑 · 肉鸽 · 开放世界": "Vs AI · Roguelike · Open World",
   "演武": "Play",
   "换侠客": "Change Hero",
-  "对战电脑 · 联机 · 肉鸽 · 开放世界": "Vs AI · Online · Roguelike · Open World",
   "对战电脑 · 闯关 · 车轮战 · 木人桩": "Vs AI · Stages · Relay · Dummy",
   "对电脑的模式通用 · 会记住": "Used by every mode against the AI · Remembered",
   "联机对战": "Online Battle",

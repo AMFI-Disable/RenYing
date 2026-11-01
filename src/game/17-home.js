@@ -278,7 +278,7 @@ function singleSec(sec) {
   }
   const scr = $id('single');
   if (scr && !sec) scr.scrollTop = 0;
-  $id('singleT').textContent = '开始演武';
+  $id('singleT').textContent = '习武';
   const subEl = $id('singleSub');
   if (subEl) {
     const subs = {
@@ -328,7 +328,7 @@ function openScreen(name, reveal = true) {
   return name;
 }
 function backToMenu() { menuLock = false; $id('menu').classList.remove('hl-single', 'hl-netp'); showScreen('menu'); compMaybe(); }
-// ---------- 首页正中的展示角色：「开始演武」下面的「换侠客」换人，选人时也先指着他 ----------
+// ---------- 首页正中的展示角色：脚下的「换侠客」换人，选人时也先指着他 ----------
 let MENU_HERO = null, menuHeroId = -1;
 function menuHeroPick() {   // 记住上次展示的角色；现在用不了就换成第一个能用的
   const av = availList();

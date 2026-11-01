@@ -131,16 +131,17 @@
         </ul>
       </details>
     </div>
-    <!-- 首页只有一个「开始演武」入口，下面是换侠客 -->
+    <!-- 首页两个入口：大的「匹配对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
     <div class="home-entries" id="homeEntries">
-      <button class="mcard right" id="mPlay" data-go="single" data-kb-default><span class="mk">开始演武</span><span class="ms">对战电脑 · 联机 · 肉鸽 · 开放世界</span></button>
-      <div class="home-sub home-swap" id="homeSub">   <!-- 换侠客：点开一排头像，选谁首页正中就站谁，进点将台也先指着他 -->
-        <button class="hs-btn" id="heroSwap" type="button" aria-haspopup="true">换侠客</button>
+      <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">匹配对战</span><span class="ms">3v3 车轮战 · 全服随机对手</span></button>
+      <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">对战电脑 · 肉鸽 · 开放世界</span></button>
+    </div>
+    <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走：上面是名字，下面是换侠客 -->
+      <div class="hh-name" id="heroName"></div>
+      <div class="hh-swapwrap" id="homeSub">   <!-- 点开一排头像，选谁首页正中就站谁，进点将台也先指着他 -->
+        <button class="hh-swap" id="heroSwap" type="button" aria-haspopup="true">换侠客</button>
         <div class="hh-pick" id="heroPick" hidden></div>
       </div>
-    </div>
-    <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走 -->
-      <div class="hh-name" id="heroName"></div>
     </div>
     <p class="ver" id="verLine"></p>
     <p class="touch">这游戏得用键盘和鼠标，请在电脑上打开。</p>
@@ -149,7 +150,7 @@
   <div id="single" class="scr">
     <div class="panel singlep">
       <div class="mode-title-wrap">
-        <h2 id="singleT">开始演武</h2>
+        <h2 id="singleT">习武</h2>
         <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
 
