@@ -70,6 +70,7 @@ window.addEventListener('keydown', e => {
     } else {
       c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
     }
+    if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
     if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
     if (act === 'left' || act === 'right' || act === 'down') { c.held[act] = true; if (act !== 'down') c.held.aim = act === 'left' ? -1 : 1; continue; }
@@ -95,6 +96,7 @@ window.addEventListener('keyup', e => {
     } else {
       c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
     }
+    if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'left' || act === 'right' || act === 'down') {
       c.held[act] = false;
       if (c.held.left && !c.held.right) c.held.aim = -1;
@@ -115,6 +117,7 @@ cv.addEventListener('mousedown', e => {
   }
   if (M.mode === 'demo') return;
   e.preventDefault();
+  if (secretEnabled && !REPLAY.on) return;
   if (SETTINGS.kbOnly === true) return;   // 纯键盘模式：鼠标不出招，1P 只用键盘的攻击键
   const c = human[0];
   if (e.button === 0) { c.held.atk = true; c.atkT = clock; c.press('light'); }
@@ -123,7 +126,7 @@ cv.addEventListener('mousedown', e => {
   }
 });
 cv.addEventListener('pointerdown', () => refocusGame());
-window.addEventListener('mouseup', e => { if (e.button === 0) human[0].held.atk = false; });
+window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) human[0].held.atk = false; });
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去

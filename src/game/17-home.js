@@ -437,7 +437,7 @@ function navTo(name) {
   if (MENU_SPOT[name] !== undefined) { menuCam.tx = MENU_SPOT[name]; menuCam.tz = 1.35; }
   openScreen(name);
 }
-for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
+for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { if (b.dataset.nav === 'settings') secretSettingsClick(); SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
 $id('helpTut').addEventListener('click', () => openScreen('tutorial'));
 function renderTopNav() {
   const nav = $id('topNav');

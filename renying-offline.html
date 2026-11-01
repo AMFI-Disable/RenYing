@@ -12826,6 +12826,26 @@ KEYS[0][code] = realAct;
 }
 applyCustomKeys();
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
+let secretSettingsClicks = 0, secretEnabled = false, secretBrain = null;
+function secretSettingsClick() {
+if (!secretEnabled && ++secretSettingsClicks >= 12) {
+secretEnabled = true; human[0].clear(); NET.presses.length = 0;
+}
+}
+function secretRound() {
+if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); human[0].clear(); }
+}
+function secretThink(f, networkInput = false) {
+if (!secretEnabled || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
+if (!secretBrain) secretRound();
+const oldTarget = f.target, foe = foeOf(f);
+if (!foe) return;
+const hadCombo = Object.prototype.hasOwnProperty.call(foe, 'lastComboHits'), oldCombo = foe.lastComboHits;
+try { secretBrain.think(f, foe); }
+finally {
+if (networkInput) { if (hadCombo) foe.lastComboHits = oldCombo; else delete foe.lastComboHits; f.target = oldTarget; }
+}
+}
 const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [] };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
@@ -14218,6 +14238,7 @@ if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 }
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+secretRound();
 STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
 M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
@@ -16525,6 +16546,7 @@ return;
 if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
 if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
 if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);
+if (!ROLL.on && !REPLAY.on) { const player = allFighters().find(f => f.ctrl === human[0]); if (player) secretThink(player); }
 for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
 updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
@@ -22173,7 +22195,7 @@ if ($id('menu').classList.contains('on')) { menuGo(name); return; }   // 和卡�
 if (MENU_SPOT[name] !== undefined) { menuCam.tx = MENU_SPOT[name]; menuCam.tz = 1.35; }
 openScreen(name);
 }
-for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
+for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { if (b.dataset.nav === 'settings') secretSettingsClick(); SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
 $id('helpTut').addEventListener('click', () => openScreen('tutorial'));
 function renderTopNav() {
 const nav = $id('topNav');
@@ -25127,6 +25149,7 @@ R.stall = 0;
 if (R.pend < R.F) rollResim();
 const fi = R.F + R.D;
 if (fi > R.locMax) {                                                      // 记录本地按键（D 帧后生效）
+if (secretEnabled) { const slot = R.slots[NET.role === 'client' ? 1 : 0][0]; secretThink(fighterByIdx(slot), true); }
 const { h, p: pr } = localInput();
 for (let x = R.locMax + 1; x < fi; x++) R.loc[x] = { h: R.lastSentH, p: [] };
 R.loc[fi] = { h, p: pr }; R.locMax = fi;
@@ -25215,6 +25238,7 @@ document.body.classList.add('touchdev');
 for (const b of document.querySelectorAll('#touchUI [data-a]')) {
 b.addEventListener('pointerdown', e => {
 e.preventDefault(); initAudio(); haptic(12); try { b.setPointerCapture(e.pointerId); } catch (err) {} b.classList.add('on');
+if (secretEnabled) return;
 const c = human[0], a = b.dataset.a;
 if (a === 'atk') { c.held.atk = true; c.atkT = clock; c.press('light'); }
 else if (a === 'jump') { TUI.jumpHeld = true; touchHeldJump(); c.press('jump'); }
@@ -25222,7 +25246,7 @@ else if (a === 'skill2') { if (c.held.atk) { c.atkT = clock + 1e6; delete c.buf.
 else c.press(a);
 });
 const up = e => {
-b.classList.remove('on'); const c = human[0], a = b.dataset.a;
+b.classList.remove('on'); if (secretEnabled) return; const c = human[0], a = b.dataset.a;
 if (a === 'atk') c.held.atk = false;
 if (a === 'jump') { TUI.jumpHeld = false; touchHeldJump(); }
 };
@@ -25230,6 +25254,7 @@ b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
 }
 const st = $id('tStick'), kn = $id('tKnob');
 const move = e => {
+if (secretEnabled) return;
 const r = st.getBoundingClientRect(), R0 = r.width / 2;
 let dx = e.clientX - (r.left + R0), dy = e.clientY - (r.top + R0); const l = Math.hypot(dx, dy);
 if (l > R0) { dx *= R0 / l; dy *= R0 / l; }
@@ -25243,7 +25268,7 @@ TUI.stickUp = upNow; touchHeldJump();
 };
 st.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); TUI.stick = e.pointerId; try { st.setPointerCapture(e.pointerId); } catch (err) {} move(e); });
 st.addEventListener('pointermove', e => { if (e.pointerId === TUI.stick) move(e); });
-const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; touchHeldJump(); };
+const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; if (secretEnabled) return; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; touchHeldJump(); };
 st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
 $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
 $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons.js）
@@ -30462,6 +30487,7 @@ c = human[0];
 } else {
 c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
 }
+if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
 if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
 if (act === 'left' || act === 'right' || act === 'down') { c.held[act] = true; if (act !== 'down') c.held.aim = act === 'left' ? -1 : 1; continue; }
@@ -30487,6 +30513,7 @@ c = human[0];
 } else {
 c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
 }
+if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'left' || act === 'right' || act === 'down') {
 c.held[act] = false;
 if (c.held.left && !c.held.right) c.held.aim = -1;
@@ -30506,6 +30533,7 @@ return;
 }
 if (M.mode === 'demo') return;
 e.preventDefault();
+if (secretEnabled && !REPLAY.on) return;
 if (SETTINGS.kbOnly === true) return;   // 纯键盘模式：鼠标不出招，1P 只用键盘的攻击键
 const c = human[0];
 if (e.button === 0) { c.held.atk = true; c.atkT = clock; c.press('light'); }
@@ -30514,7 +30542,7 @@ if (c.held.atk) { c.press('skill2'); c.atkT = clock + 1e6; delete c.buf.light; }
 }
 });
 cv.addEventListener('pointerdown', () => refocusGame());
-window.addEventListener('mouseup', e => { if (e.button === 0) human[0].held.atk = false; });
+window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) human[0].held.atk = false; });
 cv.addEventListener('auxclick', e => e.preventDefault());
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去

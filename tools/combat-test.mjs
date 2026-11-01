@@ -1362,6 +1362,23 @@ const testSuite = [
     })()`
   },
   {
+    name: 'Hidden session control unlocks after twelve settings clicks and drives the player',
+    fn: `(() => {
+      secretEnabled = false; secretSettingsClicks = 0; secretBrain = null;
+      for (let i = 0; i < 11; i++) secretSettingsClick();
+      if (secretEnabled) return { pass: false, error: 'unlocked too early' };
+      secretSettingsClick();
+      if (!secretEnabled) return { pass: false, error: 'did not unlock on click 12' };
+      startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight';
+      if (!secretBrain || secretBrain.lvKey !== 'god' || A.ctrl !== human[0]) return { pass: false, error: 'player controller or AI difficulty incorrect' };
+      let calls = 0; secretBrain.think = (me, foe) => { calls++; human[0].press('light'); foe.lastComboHits = 42; };
+      B.lastComboHits = 7; secretThink(A, true);
+      if (calls !== 1 || B.lastComboHits !== 7 || human[0].buf.light === undefined) return { pass: false, error: 'input or rollback state incorrect' };
+      secretEnabled = false; secretSettingsClicks = 0; secretBrain = null; human[0].clear(); toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'Team mutators apply to both team formats and reset between matches',
     fn: `(() => {
       teamMutator = 'mayhem'; startTag3Match([0,2,4], [1,3,5], 'normal');

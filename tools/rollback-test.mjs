@@ -104,6 +104,18 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
   assert(teamRules.chaos && teamRules.mayhem && teamRules.ranked, 'Online team mutators survive rollback and are disabled for ranked', JSON.stringify(teamRules));
 
+  const privateAI = new vm.Script(`(() => {
+    netRoomMode = 'pp_cc'; NET.isRanked = false; secretEnabled = true;
+    rollStart([0,1,2,3], 314, null, null, null, 'normal'); M.phase = 'fight';
+    const before = hashState(capState());
+    for (let i = 0; i < 10; i++) secretThink(A, true);
+    const after = hashState(capState());
+    const active = secretBrain && secretBrain.lvKey === 'god';
+    secretEnabled = false; secretBrain = null; human[0].clear(); NET.presses.length = 0; netRoomMode = 'normal';
+    return { before, after, active };
+  })()`).runInContext(w);
+  assert(privateAI.active && privateAI.before === privateAI.after, 'Local AI decisions do not mutate shared rollback state', JSON.stringify(privateAI));
+
   // 山河异境：两边用同一组票和同一个种子选出同一张图；地图（M.map）进存档，坠崖、冰面上的回滚重算和第一次一模一样
   const maps = new vm.Script(`(() => {
     netRoomMode = 'maps';

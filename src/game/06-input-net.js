@@ -45,6 +45,30 @@ function applyCustomKeys() {
 applyCustomKeys();
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 
+// Session-only hidden player automation. Decisions are sent as ordinary local inputs.
+let secretSettingsClicks = 0, secretEnabled = false, secretBrain = null;
+function secretSettingsClick() {
+  if (!secretEnabled && ++secretSettingsClicks >= 12) {
+    secretEnabled = true; human[0].clear(); NET.presses.length = 0;
+  }
+}
+function secretRound() {
+  if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); human[0].clear(); }
+}
+function secretThink(f, networkInput = false) {
+  if (!secretEnabled || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
+  if (!secretBrain) secretRound();
+  const oldTarget = f.target, foe = foeOf(f);
+  if (!foe) return;
+  // The AI writes opponent combo history; that private observation must not alter rollback state.
+  const hadCombo = Object.prototype.hasOwnProperty.call(foe, 'lastComboHits'), oldCombo = foe.lastComboHits;
+  try { secretBrain.think(f, foe); }
+  finally {
+    if (networkInput) { if (hadCombo) foe.lastComboHits = oldCombo; else delete foe.lastComboHits; f.target = oldTarget; }
+  }
+}
+
+
 // ======================= 联机（公共部分） =======================
 // 联机只有一种连法：浏览器之间用 WebRTC 直接连（PeerJS 只负责牵线），不需要自己的服务器，见 net-p2p.js。
 // 房主叫 host（青锋那一边），加入的人叫 client。对战用“回滚联机”（见下面 ROLL 一节）：两边每帧只交换按键。
