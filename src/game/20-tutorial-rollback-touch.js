@@ -265,13 +265,14 @@ function localInput() {
   } else NET.presses2.length = 0;
   return { h, p: pr };
 }
-function rollStart(ch, seed, duo, mv, map) {
+function rollStart(ch, seed, duo, mv, map, mut) {
   refocusGame();
   setChars(ch[0], ch[1]);
   if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
   setupNetMatch();
+  M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
   // 山河异境：房主在点将台上选好的图随开局发来（map）；同阵容再战没有点将台，就按两边的票和种子选
-  if (roomDef().rule === 'maps') M.map = MAP_POOL.includes(map) ? map : mapPick(Array.isArray(mv) ? mv : [], mapSeedRand(seed));
+  if (Array.isArray(mv) || (roomDef().rule === 'maps' && MAP_POOL.includes(map))) M.map = MAP_POOL.includes(map) ? map : mapPick(mv, mapSeedRand(seed));
   if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
   // 两边用同一套操控：玩家的人只听回滚记下的按键，其余的人（2v2 里）是两边各跑一份、一模一样的电脑
   ROLL.slots = netSlots(); ROLL.ctrls = [];
@@ -291,6 +292,7 @@ function rollStart(ch, seed, duo, mv, map) {
   BP = null; showScreen(null); creditT = 0;
   recBegin('net');
   startRound();
+  if (M.map && MAPS[M.map]) say(MAPS[M.map].n, 1.4, 'big', MAPS[M.map].d);
   applySkins(); MSTAT.maxcombo = 0; MSTAT.ults = 0; acc = 0;
   if (NET.role === 'host') send({ mstart: 1 });
   $id('endRank').textContent = '';

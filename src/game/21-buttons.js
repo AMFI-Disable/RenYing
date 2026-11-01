@@ -69,6 +69,7 @@ function setPickLevel(lv, save = true) {
   if (save) try { localStorage.setItem(AI_LEVEL_KEY, lv); } catch (e) {}
   for (const x of document.querySelectorAll('#levels button[data-lv]')) { const on = x.dataset.lv === lv; x.classList.toggle('sel', on); x.setAttribute('aria-pressed', on); }
   updateAIBrief();
+  if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
 }
 // 打开网页时读回来。以前各模式的境界各记各的、关掉网页就忘了；第一次用新版时，从最近一场对电脑的录像里取当时的境界
 function loadPickLevel() {
@@ -117,11 +118,19 @@ if (xiwuCatTabsEl) {
 }
 const xiwuMapChipsEl = document.getElementById('xiwuMapChips');
 if (xiwuMapChipsEl) {
+  const showMapTrait = b => {
+    const detail = $id('xiwuMapTrait');
+    if (detail) detail.textContent = b && MAPS[b.dataset.map] ? MAPS[b.dataset.map].d : '随机选择一处战场。';
+  };
+  xiwuMapChipsEl.addEventListener('mouseover', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
+  xiwuMapChipsEl.addEventListener('focusin', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
+  xiwuMapChipsEl.addEventListener('mouseleave', () => showMapTrait(xiwuMapChipsEl.querySelector('button.sel')));
   xiwuMapChipsEl.addEventListener('click', e => {
     const b = e.target.closest('button[data-map]');
     if (!b) return;
     SFX.slice();
     setMapVote(b.dataset.map || null);
+    showMapTrait(b);
   });
 }
 const singleTabsEl = document.getElementById('singleTabs');
@@ -130,6 +139,7 @@ if (singleTabsEl) {
     const b = e.target.closest('button');
     if (!b) return;
     SFX.slice();
+    if (b.closest('#mutatorPills') && ['tag3', 'watch2v2'].includes(currentSingleTab)) { teamMutator = b.dataset.tab === 'cpu' ? 'normal' : b.dataset.tab; singleSec(currentSingleTab); return; }
     // 不在大厅里打开面板的几格：2v2 开组队弹窗，开放世界、全服肉鸽开各自的弹窗，联机对战去对战页
     if (b.dataset.tab === 'watch2v2') { open2v2Modal(); return; }
     if (b.dataset.act === 'world') { openWorldModal(); return; }
@@ -268,7 +278,7 @@ function startDummyTraining() {
   initAudio(); paused = false;
   showScreen(null);
   startMatch('train', { ...dummyCfg }, [trainChar, 0]);
-  Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0 });
+  Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, advantage: null, frameProbe: null });
   B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木人桩' };
   applySkins();
   A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
@@ -369,3 +379,5 @@ function uiDlgWatch(el) {
   }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
 }
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
+
+if ($id('xiwuQuickGo')) $id('xiwuQuickGo').addEventListener('click', () => { if (menuHeroId < 0) setMenuHero(menuHeroPick()); heroQuickFight(); });

@@ -463,7 +463,7 @@ const testSuite = [
       if (!(seen.has(1) && seen.has(-1))) return { pass: false, error: 'pole roll never gave both poles: ' + [...seen] };
       // 2. Q：换极性、清零 R、不花出招时间、圈的动画计时
       setup(1, 300); A.skill2CD = 4; startSkill(A, B, 1);
-      if (A.pol !== -1 || A.skill2CD !== 0 || A.state === 'skill' || !(A.polT > 0) || !(A.skillCD > 7)) return { pass: false, error: 'Q swap wrong: ' + JSON.stringify({ pol: A.pol, cd2: A.skill2CD, st: A.state, polT: A.polT, cd: A.skillCD }) };
+      if (A.pol !== -1 || A.skill2CD !== 0 || A.state === 'skill' || !(A.polT > 0) || !(A.skillCD > 5)) return { pass: false, error: 'Q swap wrong: ' + JSON.stringify({ pol: A.pol, cd2: A.skill2CD, st: A.state, polT: A.polT, cd: A.skillCD }) };
       // 3. 负极普攻：打中往身边吸、四段循环；连中 15 下消磁（不再吸、推开），停手 1 秒恢复
       setup(-1, 150);
       let pulled = 0, hits = 0, last = B.hp, chainSeen = [];
@@ -1359,6 +1359,20 @@ const testSuite = [
       }
       reset(); toMenu();
       return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Team mutators apply to both team formats and reset between matches',
+    fn: `(() => {
+      teamMutator = 'mayhem'; startTag3Match([0,2,4], [1,3,5], 'normal');
+      if (!mayhemOn() || A.maxHp < 5000 || B.maxHp < 5000) return { pass: false, error: 'tag mayhem did not initialize' };
+      teamMutator = 'chaos'; start2v2LocalCoop(0,2,1,3,'normal', true);
+      if (!chaosOn() || mayhemOn() || !M.chaos) return { pass: false, error: '2v2 chaos did not initialize' };
+      teamMutator = 'mayhem'; start2v2LocalCoop(0,2,1,3,'normal', true);
+      if (![A,B,C,D].every(f => f.maxHp > 5000)) return { pass: false, error: 'mayhem did not initialize all four fighters' };
+      teamMutator = 'normal'; startTag3Match([0,2,4], [1,3,5], 'normal');
+      if (mayhemOn() || chaosOn()) return { pass: false, error: 'mutator leaked' };
+      toMenu(); return { pass: true, error: null };
     })()`
   },
   {

@@ -84,6 +84,26 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
   assert(ai.saved === 5 && ai.back === 5 && ai.gone, 'AI-written fighter field (lastComboHits) is saved, restored and cleared by rollback', JSON.stringify(ai));
 
+  const teamRules = new vm.Script(`(() => {
+    netRoomMode = 'pp_cc'; NET.isRanked = false;
+    const out = {};
+    for (const mut of ['chaos', 'mayhem']) {
+      rollStart([0,1,2,3], 789, null, null, null, mut);
+      M.phase = 'fight';
+      const enabled = mut === 'chaos' ? chaosOn() : mayhemOn();
+      for (let f = 0; f < 180; f++) {
+        ROLL.loc[f] = { h: 0, p: f % 20 === 0 ? ['light'] : [] };
+        ROLL.rem[f] = { h: 0, p: [] }; ROLL.remLast = 180; rollFrame(f); ROLL.F = f + 1;
+      }
+      const before = hashState(capState()); ROLL.pend = 90; rollResim();
+      out[mut] = enabled && before === hashState(capState());
+    }
+    NET.isRanked = true; rollStart([0,1,2,3], 789, null, null, null, 'mayhem');
+    out.ranked = M.teamMutator === 'normal'; NET.isRanked = false; netRoomMode = 'normal';
+    return out;
+  })()`).runInContext(w);
+  assert(teamRules.chaos && teamRules.mayhem && teamRules.ranked, 'Online team mutators survive rollback and are disabled for ranked', JSON.stringify(teamRules));
+
   // 山河异境：两边用同一组票和同一个种子选出同一张图；地图（M.map）进存档，坠崖、冰面上的回滚重算和第一次一模一样
   const maps = new vm.Script(`(() => {
     netRoomMode = 'maps';

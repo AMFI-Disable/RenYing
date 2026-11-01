@@ -1685,6 +1685,9 @@ const UI_COPY_EN = {
   "架势恒满，不会破防": "Guard stays full and never breaks",
   "连段自愈": "Combo Heal",
   "连击停下后血量回满": "Health refills after each combo ends",
+  "即刻开战": "Fight Now",
+  "帧优势": "Frame Advantage",
+  "随机选择一处战场。": "Choose a random arena.",
   // 山河异境：投票选地图（src/data/12-maps.js、src/game/22-modes.js 的 renderMaps、联机房间的地图投票）
   "山河异境": "Terrain Clash",
   "山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",

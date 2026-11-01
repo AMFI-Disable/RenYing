@@ -65,6 +65,9 @@ function metal(f0, dur, vol) {
   });
 }
 const SFX = {
+  iceSlide() { sNoise(0.13, 4500, 1800, 1.2, 0.07, 'highpass'); },
+  cliffFall() { sNoise(0.45, 900, 120, 0.7, 0.18, 'lowpass'); sTone(180, 70, 0.25, 0.08, 'triangle'); },
+  terrainLightning() { sNoise(0.12, 9000, 2200, 1, 0.16, 'highpass'); },
   swing() { sNoise(0.16, 3400, 700, 2.2, 0.26); sNoise(0.06, 7000, 5000, 0.7, 0.05, 'highpass'); },          // 挥刀破风
   heavy() { sNoise(0.26, 2400, 380, 1.6, 0.34); sNoise(0.1, 6000, 3000, 0.7, 0.07, 'highpass'); },
   hit(p = 1) {                                                                                                  // 刀砍中

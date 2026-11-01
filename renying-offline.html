@@ -2854,7 +2854,7 @@ padding: 10px 14px; border-radius: 12px; background: rgba(30, 24, 44, 0.65); bor
 .xiwu-cat-btn .cat-icon { grid-row: 1 / 3; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: var(--gold); }
 .xiwu-cat-btn .cat-icon svg { width: 26px; height: 26px; }
 .xiwu-cat-btn .cat-name { font: 600 16px var(--title); letter-spacing: .06em; color: #fff; }
-.xiwu-cat-btn .cat-desc { font-size: 11px; color: rgba(255, 255, 255, 0.6); line-height: 1.25; }
+.xiwu-cat-btn .cat-desc { font-size: 12px; color: rgba(255, 255, 255, 0.6); line-height: 1.25; }
 .xiwu-cat-btn.sel .cat-desc { color: rgba(255, 235, 180, 0.88); }
 .xiwu-cat-group { width: 100%; }
 .xiwu-cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 8px; }
@@ -2911,6 +2911,12 @@ body.offline #mMatch { display: none !important; }
 .tp-more .tp-note { margin: 2px 0 0; font-size: 12px; color: var(--dim); line-height: 1.45; }
 @media (max-width: 1160px) { .tag-portal .tp-cards { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .tag-portal { padding: 12px; } .tag-portal .tp-head { grid-template-columns: auto 1fr; } }
+.xiwu-map-trait { min-height: 1.5em; margin: 6px 0 0; color: var(--dim); font-size: 13px; }
+.xiwu-quick-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 12px; margin:6px 0; border:1px solid rgba(233,196,106,.42); border-radius:10px; background:rgba(233,196,106,.08); }
+.xiwu-quick-card p { margin:4px 0 0; color:var(--dim); }
+.combat-card { margin:10px auto; padding:10px; border:1px solid rgba(233,196,106,.3); border-radius:8px; color:var(--gold); }
+.combat-card:empty { display:none; }
+#single .xiwu-quick-card .go { margin:0; padding:5px 18px; font-size:20px; }
 </style>
 </head>
 <body>
@@ -3113,6 +3119,7 @@ body.offline #mMatch { display: none !important; }
               <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">木人试剑</b><span class="pt-d">木人桩练连招</span></button>
             </div>
 
+            <div class="xiwu-quick-card"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
             <!-- 战场异变 -->
             <div class="xiwu-mutator-row">
               <span class="mutator-label">战场异变：</span>
@@ -3138,6 +3145,7 @@ body.offline #mMatch { display: none !important; }
                 <button type="button" class="map-chip" data-map="pagoda">皇城飞檐</button>
                 <button type="button" class="map-chip" data-map="wine">醉仙楼</button>
               </div>
+              <p id="xiwuMapTrait" class="xiwu-map-trait" role="status">随机选择一处战场。</p>
             </div>
           </div>
 
@@ -3421,7 +3429,6 @@ body.offline #mMatch { display: none !important; }
                   <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
                   <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
-                  <button class="ghost small" data-mode="maps" type="button">山河异境</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>
@@ -3501,9 +3508,11 @@ body.offline #mMatch { display: none !important; }
             </div>
           </div>
 
+          <div id="lobbyMutator" class="mutator-pills" role="group" aria-label="战场异变"><span>战场异变：</span><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
           <!-- 山河异境：两边各投一票 -->
           <div class="lobby-map-vote hidden" id="lobbyMapVote">
             <div class="sec-sub-label">地图投票：双方各一票，按票数决定选到哪张图</div>
+            <button class="ghost small" id="lobbyMapRandom" type="button" aria-pressed="true">全部随机</button>
             <div class="map-vote" id="lobbyMapCards"></div>
           </div>
 
@@ -3985,12 +3994,14 @@ body.offline #mMatch { display: none !important; }
           <button data-m="pp_pp" type="button">两人 vs 两人</button>
         </div>
         <p class="sub m2-desc" id="modal2v2Desc"></p>
+        <div class="sec-sub-label">战场异变</div><div class="mutator-pills" id="m2Mutator" role="group" aria-label="战场异变"><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
         <div id="m2LvWrap">
           <div class="sec-sub-label">电脑的境界</div>
           <!-- 弹窗开着时，模式大厅那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
         </div>
         <div class="sec-sub-label">在哪打</div>
         <div class="m2-ways" id="modal2v2Options">
+          <button class="m2-way" id="btn2v2Quick" type="button"><b>即刻开战</b><span>当前侠客与随机阵容</span></button>
           <button class="m2-way" id="btn2v2GoLocal" type="button" data-kb-default><b>同一台电脑</b><span id="modal2v2LocalDesc"></span></button>
           <button class="m2-way tn-online" id="btn2v2GoMatch" type="button"><b>全服匹配</b><span id="modal2v2MatchDesc"></span></button>
           <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
@@ -4084,7 +4095,7 @@ body.offline #mMatch { display: none !important; }
   </div>
 
   <div id="end" class="scr">
-    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><p class="end-arm" id="endArm"></p>
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><p class="end-arm" id="endArm"></p>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>
@@ -8935,6 +8946,9 @@ const UI_COPY_EN = {
 "架势恒满，不会破防": "Guard stays full and never breaks",
 "连段自愈": "Combo Heal",
 "连击停下后血量回满": "Health refills after each combo ends",
+"即刻开战": "Fight Now",
+"帧优势": "Frame Advantage",
+"随机选择一处战场。": "Choose a random arena.",
 "山河异境": "Terrain Clash",
 "山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",
 "特殊地形 · 不计排位": "Special terrain · Unranked",
@@ -11356,7 +11370,7 @@ addP({ type: 'text', text: `✦ 雀芒印记 (${Math.round(target.needleMark)}/5
 }
 }
 const MAG = { plusDmg: 1.35, plusKb: [300, -620], minusDmg: 0.55, pullK: 2.6e6, pullMax: 320, chainCap: 15, capStun: 0.3, demagRest: 1.0,
-rPlusDir: 1, rPlusR: 175, rPlusDmg: 48, rPlusKb: [360, 900], rMinusRange: 560, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
+rPlusDir: 1, rPlusR: 175, rPlusDmg: 48, rPlusKb: [360, 900], rMinusRange: 620, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
 const magRGB = pol => pol > 0 ? '255,96,84' : '96,156,255';
 const magName = pol => pol > 0 ? '⊕ 正极' : '⊖ 负极';
 const magForce = (k, d, lo, hi) => clamp(k / Math.max(40, d) ** 2, lo, hi);   // 磁力：离得越近越大
@@ -12011,7 +12025,7 @@ if (f.t >= C.swapLand) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 50] : ['idle', 20],
 ai: () => false },
-polarswap: { name: '极性反转', cd: 8, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
+polarswap: { name: '极性反转', cd: 6, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
 start(f) {
 f.pol = f.pol > 0 ? -1 : 1; f.polT = 0.6; f.skill2CD = 0; f.mChain = 0; f.mT = 0;   // 换极性也顺便恢复消磁
 ring(f.x, f.y - 60, 90, magRGB(f.pol), 0.3); SFX.parry();
@@ -12038,7 +12052,7 @@ strike(f, tg, { box: [-MAG.rPlusR, -150, MAG.rPlusR, 20], dmg: MAG.rPlusDmg, kb:
 ring(f.x, f.y - 60, 70, rgb, 0.3); SFX.dash();
 addP({ type: 'mag', pol: -1, x: f.x + f.face * 34, y: f.y - 62, vx: 0, vy: 0, rot: 0, r: 13, life: 0.45, max: 0.45 });
 const dx = tg.x - f.x;
-if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= MAG.rMinusRange && Math.abs(tg.y - f.y) < 260) {
+if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= MAG.rMinusRange && Math.abs(tg.y - f.y) < 310) {
 f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
 tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;
 }
@@ -12465,6 +12479,9 @@ o.connect(g).connect(master); o.start(t); o.stop(t + d + 0.02);
 });
 }
 const SFX = {
+iceSlide() { sNoise(0.13, 4500, 1800, 1.2, 0.07, 'highpass'); },
+cliffFall() { sNoise(0.45, 900, 120, 0.7, 0.18, 'lowpass'); sTone(180, 70, 0.25, 0.08, 'triangle'); },
+terrainLightning() { sNoise(0.12, 9000, 2200, 1, 0.16, 'highpass'); },
 swing() { sNoise(0.16, 3400, 700, 2.2, 0.26); sNoise(0.06, 7000, 5000, 0.7, 0.05, 'highpass'); },          // 挥刀破风
 heavy() { sNoise(0.26, 2400, 380, 1.6, 0.34); sNoise(0.1, 6000, 3000, 0.7, 0.07, 'highpass'); },
 hit(p = 1) {                                                                                                  // 刀砍中
@@ -12830,12 +12847,14 @@ netStatus('入局成功，正在同步战局…');
 } else if (m.sys === 'ready') {
 NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
 updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
-if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
+if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
 NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
 onNetOpen();
 } else if (m.sys === 'map_vote') {
 netMapVoteRecv(m.v);
 } else if (m.sys === 'room_rule') {
+if (NET.role !== 'client') return;
+teamMutator = ['chaos', 'mayhem'].includes(m.mut) ? m.mut : 'normal';
 setRoomModeUI(m.rule);
 toast(`擂主已设定切磋规则：${ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal}`);
 } else if (m.sys === 'rematch') {
@@ -12966,7 +12985,7 @@ if (sn.p) { projs.length = 0; for (const q of sn.p) projs.push(q); }
 function onNetMsg(msg) {
 if (msg.mstart || msg.report) return;
 if (msg.ru !== undefined) { rollRecv(msg); return; }
-if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map); return; }
+if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map, msg.rstart.mut); return; }
 if (msg.rsync) { rollAdopt(msg.rsync); return; }
 if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
 if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
@@ -13967,7 +13986,8 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
-const mapsOn = () => M.mode === 'maps' || (netRoom() || {}).rule === 'maps' || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'loc' && !!REPLAY.m && REPLAY.m.mode === 'maps');
+const mayhemOn = () => M.mode === 'mayhem' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mapsOn = () => M.mode === 'maps' || (M.mode === 'net' && !!M.map) || (M.mode === 'replay' && REPLAY.on && !!M.map);
 const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
 function mapOdds(votes) {
 const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
@@ -14001,8 +14021,10 @@ f.x -= side * cl.back; f.y = Math.min(f.y, -40); f.vy = cl.vy; f.vx = -side * 12
 f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul);
 f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.wallBounced = true;
 f.mapFalls = (f.mapFalls || 0) + 1;
+if (M.combatStats && M.combatStats[f.idx]) M.combatStats[f.idx].falls++;
 if (RESIM) return;
-shake = Math.max(shake, 10); SFX.thud();
+shake = Math.max(shake, 10); SFX.thud(); SFX.cliffFall();
+for (let i = 0; i < 12; i++) addP({ type: 'ink', x: f.x + rand(-30, 30), y: rand(-25, 15), vx: rand(-40, 40), vy: rand(30, 140), life: 0.7, max: 0.7, r: rand(3, 8), rgb: '40,45,60' });
 ring(f.x, f.y - 40, 90, '170,200,255', 0.4);
 for (let i = 0; i < 10; i++) addP({ type: 'spark', x: f.x + rand(-20, 20), y: rand(-30, 10), vx: -side * rand(40, 200), vy: -rand(120, 420), life: 0.5, max: 0.5, rgb: '190,210,255', w: 2 });
 addP({ type: 'text', text: '坠崖 -' + dmg, x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '190,210,255' });
@@ -14073,7 +14095,8 @@ if (!RESIM) addP({ type: 'text', text: '天雷 -' + T.dmg, x: f.x, y: f.y - 110,
 }
 if (RESIM) return;
 ring(tx, -120, 160, '255,230,120', 0.5); shake = Math.max(shake, 18); flashA = Math.max(flashA, 0.45); flashRGB = '255,240,150';
-SFX.thunder(); SFX.thunderHit(1.2);
+for (let i = 0; i < 18; i++) addP({ type: 'spark', x: tx + rand(-90, 90), y: -120, vx: rand(-260, 260), vy: rand(-350, 100), life: 0.4, max: 0.4, rgb: '255,225,120', w: 3 });
+SFX.thunder(); SFX.thunderHit(1.2); SFX.terrainLightning();
 }
 function mapTick(dt) {
 const mp = mapNow(), E = M.mapEnv;
@@ -14095,6 +14118,10 @@ if (!RESIM) addP({ type: 'text', text: '天雷将至', x: T.x * STAGE_W, y: -260
 }
 for (const f of allFighters()) {
 if (f.hidden || f.hp <= 0) continue;
+if (!RESIM && mp.ice && mapGrip(f) < 1 && Math.abs(f.vx) > 140 && Math.random() < 0.12) {
+if (Math.random() < 0.04) SFX.iceSlide();
+addP({ type: 'spark', x: f.x, y: f.y - 3, vx: -f.vx * 0.2 + rand(-30, 30), vy: rand(-55, -10), life: 0.3, max: 0.3, rgb: '180,225,255', w: 2 });
+}
 if (mp.fog && f.y >= 0) {
 const u = f.x / STAGE_W;
 if (u >= mp.fog.from && u <= mp.fog.to) {
@@ -14180,15 +14207,13 @@ if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, 
 if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 }
 magRoll();
-const isMayhem = M.mode === 'mayhem' || (netRoom() || {}).rule === 'mayhem';
+if (M.round === 1) M.combatStats = Array.from({ length: 4 }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
+const isMayhem = mayhemOn();
 if (isMayhem) {
-A.maxHp = Math.round(A.maxHp * 10);
-B.maxHp = Math.round(B.maxHp * 10);
-A.hp = A.lagHp = A.maxHp;
-B.hp = B.lagHp = B.maxHp;
-A.guard = A.maxGuard = 500;
-B.guard = B.maxGuard = 500;
-A.meter = B.meter = 100;
+for (const f of allFighters()) if (!f.hidden) {
+f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
+f.guard = f.maxGuard = 500; f.meter = 100;
+}
 }
 if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
 const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
@@ -14290,6 +14315,9 @@ function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
 if (M.worldKey) { worldKeyRound(w); return; }
 if (REC.on) recSave(w);
+const stats = M.combatStats && M.combatStats[localIdx()];
+const card = $id('endCombatCard');
+if (card) card.textContent = stats ? `总伤害 ${Math.round(stats.damage)} · 最长连击 ${stats.combo} · 破防 ${stats.breaks} · 坠崖 ${stats.falls}` : '';
 taskMatchEnd(w);
 $id('endKicker').textContent = '';
 $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
@@ -14600,7 +14628,7 @@ SFX.voiceUlt(ultPitch);
 if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
 ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
 if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
-if (M.mode === 'mayhem') {
+if (mayhemOn()) {
 shake = Math.max(shake, 32);
 flashA = 0.65;
 flashRGB = '255,225,120';
@@ -14877,7 +14905,7 @@ const customNm = skinSkillName(f, slot);
 if (customNm && f.hp > 0 && M.phase === 'fight') {
 addP({ type: 'callout', text: customNm, x: f.x, y: f.y - 75, life: 0.65, max: 0.65, rgb: f.look.slash, scale: 1.5 });
 }
-if (M.mode === 'mayhem') {
+if (mayhemOn()) {
 shake = Math.max(shake, 18);
 flashA = Math.max(flashA, 0.38);
 flashRGB = f.look.slash || '255,215,80';
@@ -14968,7 +14996,7 @@ let projSeq = 0;
 function spawnProj(f, o) {
 if (isClient()) return;   // 联机时由房主生成，加入方从快照同步
 if (scOn()) { o = { src: f.state === 'skill' ? f.skill : f.state === 'special' ? 'ult' : '', ...o }; scProj(f, o); }   // 秘卷：认得出是哪一招放的，也能改它
-if (M.mode === 'mayhem') {
+if (mayhemOn()) {
 o = { ...o };
 if (o.dmg) o.dmg = Math.round(o.dmg * 2.5);
 if (o.w) o.w = Math.round(o.w * 1.8);
@@ -14993,6 +15021,11 @@ else if (p.stick && p.stuck && !overlap(projBox(p), hurtbox(tg))) { p.vx /= p.st
 }
 }
 if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
+if (p.vx && !p.fx) for (const f of allFighters()) {
+if (f.hidden || f.hp <= 0 || !f.ch || f.ch.passive !== 'magnet' || f.idx % 2 === p.owner % 2) continue;
+const dx = f.x - p.x, dy = f.y - 65 - p.y, d = Math.hypot(dx, dy);
+if (d > 20 && d < 420) p.vy += clamp(dy / d * f.pol * 100 * (1 - d / 420), -100, 100) * STEP;
+}
 if (p.g) p.vy += p.g * STEP;
 if (p.boomer && p.age > p.turn) {
 const o = fighterByIdx(p.owner), dx = o.x - p.x;
@@ -15339,7 +15372,7 @@ if (tryEscape(f, foe)) { physics(f); return; }
 if (tryBreakoutSkill(f, foe)) { physics(f); return; }
 f.skillCD = Math.max(0, f.skillCD - STEP);
 f.flying = false;
-if (M.mode === 'mayhem') {
+if (mayhemOn()) {
 f.skillCD = 0;
 f.skill2CD = 0;
 f.breakCD = 0;
@@ -15800,7 +15833,9 @@ return;
 }
 const chipFrac = (def.ch && def.ch.stat && def.ch.stat.guardChip) || 0.12;
 const bm = scOn() ? scBlockMod(att, def, m) : null;   // 秘卷改格挡磨血、削架势
+const hpBeforeChip = def.hp;
 def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
+ev.dd = hpBeforeChip - def.hp;
 let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
 if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
 if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
@@ -15896,7 +15931,7 @@ ev.big = true;
 if (chaosNow('dmg')) {
 dmg *= chaosNow('dmg').val;
 }
-if (M.mode === 'mayhem') {
+if (mayhemOn()) {
 dmg *= (m.ult ? 5.2 : (m.skill || m.isProj ? 4.5 : 3.8));
 }
 if (isRaid() && att === B && att.bossDmgMul) {
@@ -16069,6 +16104,8 @@ if (ev.ko) hitstop = 0.28;
 }
 function hitVisual(ev, quiet) {
 const att = fighterByIdx(ev.a), def = fighterByIdx(ev.d);
+if (M.combatStats && M.combatStats[ev.a]) { const s = M.combatStats[ev.a]; s.damage += ev.dd || 0; s.combo = Math.max(s.combo, ev.cn || 0); if (ev.guardBreak) s.breaks++; }
+if (!RESIM && !quiet && M.mode === 'train' && ev.d === 1 && !ev.justGuard) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); TRAIN.frameProbe = { start: clock, attacker: null, defender: null }; }
 if (RESIM) { hitStopOf(ev, att); return; }   // 重算：只保留影响对战的顿帧
 if (!quiet) hitStopOf(ev, att);
 if (quiet) {   // 效果已经提前播过了，只更新连击数
@@ -16137,7 +16174,7 @@ addP(atk.ch.id === 'moyu' ? { type: 'ink', x: ev.x, y: ev.y, vx: Math.cos(a) * v
 }
 } }
 if (!ev.blk && !quiet && fighterByIdx(ev.a)) skinHitFX(fighterByIdx(ev.a), ev);
-if (M.mode === 'mayhem' && !quiet) {
+if (mayhemOn() && !quiet) {
 shake = Math.max(shake, 24);
 flashA = Math.max(flashA, 0.55);
 flashRGB = att.look.slash || '255,215,80';
@@ -16159,7 +16196,6 @@ const dd = Math.round(ev.dd * 10) / 10, big = dd >= 8;
 addP({ type: 'dmg', text: String(dd), x: ev.x + rand(-22, 22), y: ev.y - 20 - ((ev.cn || 0) % 3) * 16, vx: rand(-60, 60), vy: -150, g: 260, life: 0.85, max: 0.85,
 s: ev.blk ? 0.62 : clamp(0.72 + dd / 20, 0.75, 1.25), rgb: ev.blk ? '170,180,200' : big ? '255,210,90' : '255,250,240', edge: fighterByIdx(ev.a) ? fighterByIdx(ev.a).look.slash : '255,255,255' });
 }
-if (M.mode === 'train' && ev.d === 1) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); }
 if (ev.root) { for (let i = 0; i < 14; i++) addP({ type: 'ink', x: def.x + rand(-30, 30), y: -rand(0, 30), vx: rand(-60, 60), vy: rand(-200, -40), g: 900, life: 0.7, max: 0.7, r: rand(2, 5), rgb: '15,15,22' }); addP({ type: 'text', text: '定', x: def.x, y: def.y - 130, life: 0.8, max: 0.8, rgb: '210,210,230' }); }
 SFX.hit(Math.min(1.2, 0.5 + ev.dmg / 12));
 if (!ev.blk) {
@@ -16453,6 +16489,12 @@ if (isMulti()) {
 if (!C.hidden) updateFighter(C, foeOf(C));
 if (!D.hidden) updateFighter(D, foeOf(D));
 updateArena2v2(STEP);
+}
+if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
+const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
+if (p.attacker === null && ready(A)) p.attacker = clock;
+if (p.defender === null && ready(B)) p.defender = clock;
+if (p.attacker !== null && p.defender !== null) { TRAIN.advantage = Math.round((p.defender - p.attacker) / STEP); TRAIN.frameProbe = null; }
 }
 mapTick(STEP);   // 山河异境：风、天雷、酒雾（不在山河异境就什么都不做）
 if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
@@ -20722,7 +20764,8 @@ const lines = [
 ['当前连击', cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '-', cu.t > 0 ? '#ffb088' : '#efe8d8'],
 ['最高连击', `${TRAIN.best} 段 · ${Math.round(TRAIN.bestDmg)} 伤`, '#ffd166'],
 ['累计伤害', `${Math.round(TRAIN.total)}`, '#efe8d8'],
-['每秒伤害（DPS）', dps.toFixed(1), '#8ff0ff']
+['每秒伤害（DPS）', dps.toFixed(1), '#8ff0ff'],
+['帧优势', TRAIN.advantage == null ? '—' : `${TRAIN.advantage >= 0 ? '+' : ''}${TRAIN.advantage}f`, '#a9efc4']
 ];
 ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
 for (const l of lines) { l[0] = cvT(l[0]); l[1] = cvT(l[1]); }
@@ -21922,7 +21965,7 @@ if (adaptEl) {
 adaptEl.style.display = 'none';
 }
 }
-let currentSingleTab = 'cpu';
+let currentSingleTab = 'cpu', teamMutator = 'normal';
 function singleSec(sec) {
 const active = sec || currentSingleTab || 'cpu';
 currentSingleTab = active;
@@ -21940,12 +21983,14 @@ for (const b of document.querySelectorAll('#singleTabs button[data-tab]')) {
 b.classList.toggle('sel', b.dataset.tab === active);
 }
 for (const p of document.querySelectorAll('#mutatorPills button')) {
-p.classList.toggle('sel', p.dataset.tab === active);
+p.classList.toggle('sel', p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active));
 }
 for (const el of document.querySelectorAll('#single [data-sec]')) {
 const secs = el.dataset.sec.split(' ');
 el.style.display = secs.includes(active) ? '' : 'none';
 }
+if ($id('xiwuQuickGo')) $id('xiwuQuickGo').disabled = active === 'train';
+if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
 const scr = $id('single');
 if (scr && !sec) scr.scrollTop = 0;
 $id('singleT').textContent = '习武';
@@ -22023,9 +22068,17 @@ paused = false;
 const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);
 const foe = foes[Math.random() * foes.length | 0];
 netDropWaiting(); chatClear(); BP = null; bpMode = 'cpu'; bpCustomOpts = null;
+const quickMode = currentScreen === 'single' ? currentSingleTab : 'cpu';
 showPop(null); showScreen(null);
 MSTAT.maxcombo = 0; MSTAT.ults = 0;
-startMatch('cpu', pickLevel, [menuHeroId, foe]);
+if (quickMode === 'tag3') {
+const pool = CHARS.map((c, i) => i).filter(i => i !== menuHeroId).sort(() => Math.random() - 0.5);
+startTag3Match([menuHeroId, pool[0], pool[1]], [pool[2], pool[3], pool[4]], pickLevel);
+}
+else if (quickMode === 'chaos') startChaos(menuHeroId, foe, pickLevel);
+else if (quickMode === 'mayhem') startMayhem(menuHeroId, foe, pickLevel);
+else if (mapVote) startMapsMode(menuHeroId, foe, pickLevel, false, mapVote);
+else startMatch('cpu', pickLevel, [menuHeroId, foe]);
 M.quick = true;   // 「再来一局」也不进点将台
 applySkins();
 }
@@ -24951,12 +25004,13 @@ pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
 } else NET.presses2.length = 0;
 return { h, p: pr };
 }
-function rollStart(ch, seed, duo, mv, map) {
+function rollStart(ch, seed, duo, mv, map, mut) {
 refocusGame();
 setChars(ch[0], ch[1]);
 if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
 setupNetMatch();
-if (roomDef().rule === 'maps') M.map = MAP_POOL.includes(map) ? map : mapPick(Array.isArray(mv) ? mv : [], mapSeedRand(seed));
+M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
+if (Array.isArray(mv) || (roomDef().rule === 'maps' && MAP_POOL.includes(map))) M.map = MAP_POOL.includes(map) ? map : mapPick(mv, mapSeedRand(seed));
 if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
 ROLL.slots = netSlots(); ROLL.ctrls = [];
 for (const f of allFighters()) {
@@ -24975,6 +25029,7 @@ const early = (ROLL.early || []).filter(x => x.m === ROLL.mid); ROLL.early = [];
 BP = null; showScreen(null); creditT = 0;
 recBegin('net');
 startRound();
+if (M.map && MAPS[M.map]) say(MAPS[M.map].n, 1.4, 'big', MAPS[M.map].d);
 applySkins(); MSTAT.maxcombo = 0; MSTAT.ults = 0; acc = 0;
 if (NET.role === 'host') send({ mstart: 1 });
 $id('endRank').textContent = '';
@@ -25198,6 +25253,7 @@ pickLevel = lv;
 if (save) try { localStorage.setItem(AI_LEVEL_KEY, lv); } catch (e) {}
 for (const x of document.querySelectorAll('#levels button[data-lv]')) { const on = x.dataset.lv === lv; x.classList.toggle('sel', on); x.setAttribute('aria-pressed', on); }
 updateAIBrief();
+if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
 }
 function loadPickLevel() {
 let lv = null;
@@ -25243,11 +25299,19 @@ singleSec(isStory ? currentSingleTab : 'stage');
 }
 const xiwuMapChipsEl = document.getElementById('xiwuMapChips');
 if (xiwuMapChipsEl) {
+const showMapTrait = b => {
+const detail = $id('xiwuMapTrait');
+if (detail) detail.textContent = b && MAPS[b.dataset.map] ? MAPS[b.dataset.map].d : '随机选择一处战场。';
+};
+xiwuMapChipsEl.addEventListener('mouseover', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
+xiwuMapChipsEl.addEventListener('focusin', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
+xiwuMapChipsEl.addEventListener('mouseleave', () => showMapTrait(xiwuMapChipsEl.querySelector('button.sel')));
 xiwuMapChipsEl.addEventListener('click', e => {
 const b = e.target.closest('button[data-map]');
 if (!b) return;
 SFX.slice();
 setMapVote(b.dataset.map || null);
+showMapTrait(b);
 });
 }
 const singleTabsEl = document.getElementById('singleTabs');
@@ -25256,6 +25320,7 @@ singleTabsEl.addEventListener('click', e => {
 const b = e.target.closest('button');
 if (!b) return;
 SFX.slice();
+if (b.closest('#mutatorPills') && ['tag3', 'watch2v2'].includes(currentSingleTab)) { teamMutator = b.dataset.tab === 'cpu' ? 'normal' : b.dataset.tab; singleSec(currentSingleTab); return; }
 if (b.dataset.tab === 'watch2v2') { open2v2Modal(); return; }
 if (b.dataset.act === 'world') { openWorldModal(); return; }
 if (b.dataset.act === 'rouge') { openRougeModal(); return; }
@@ -25384,7 +25449,7 @@ FOREST.on = false; B.forestProxy = false; B.hidden = false;
 initAudio(); paused = false;
 showScreen(null);
 startMatch('train', { ...dummyCfg }, [trainChar, 0]);
-Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0 });
+Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, advantage: null, frameProbe: null });
 B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木人桩' };
 applySkins();
 A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
@@ -25473,13 +25538,14 @@ if (p && p.isConnected && (!document.activeElement || document.activeElement ===
 }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
 }
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
+if ($id('xiwuQuickGo')) $id('xiwuQuickGo').addEventListener('click', () => { if (menuHeroId < 0) setMenuHero(menuHeroPick()); heroQuickFight(); });
 function renderTag3() {}
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 if (p2pActive()) netDropWaiting();
 refocusGame();
 human[0].rec = null;
 REC.on = false;
-M.mode = 'tag3';
+M.mode = 'tag3'; M.teamMutator = teamMutator;
 M.level = lv || pickLevel || 'normal';
 M.teams = [[...pTeam], [...eTeam]];
 M.teamIdx = [0, 0];
@@ -25796,7 +25862,7 @@ const CHAOS_MUTATIONS = [
 { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
 let chaosP1 = 0, chaosP2 = 1;
-const chaosOn = () => M.mode === 'chaos' || (netRoom() || {}).rule === 'chaos';
+const chaosOn = () => M.mode === 'chaos' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
 function chaosNow(type) {
 const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
 return mut && (!type || mut.type === type) ? mut : null;
@@ -26114,7 +26180,7 @@ human[0].rec = null;
 REC.on = false;
 if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
 const [ban0, ban1, t1a, t2a, t2b, t1b] = watch2v2Draft;
-M.mode = 'watch2v2';
+M.mode = 'watch2v2'; M.teamMutator = teamMutator;
 M.watchAi = true;
 M.level = 'god';
 M.bans = [ban0, ban1];
@@ -26135,7 +26201,7 @@ say(`天道 2v2 · 禁选 ${CHARS[ban0].name} & ${CHARS[ban1].name}`, 1.4);
 function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal', ally = false) {
 if (p2pActive()) netDropWaiting();
 initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
-M.mode = '2v2';
+M.mode = '2v2'; M.teamMutator = teamMutator;
 M.subMode = ally ? 'p_cc' : 'pp_cc';
 M.watchAi = false;
 M.level = level;
@@ -26160,7 +26226,7 @@ say(ally ? `携手共斗 · 【${CHARS[p1].name}】与电脑队友【${CHARS[p2]
 function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
 if (p2pActive()) netDropWaiting();
 initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
-M.mode = '2v2';
+M.mode = '2v2'; M.teamMutator = teamMutator;
 M.subMode = 'pp_pp';
 M.watchAi = false;
 M.level = 'god';
@@ -26190,6 +26256,7 @@ pp_pp: { desc: '两队各两人对打：你们两个对另外两个玩家。', l
 };
 function render2v2Modal() {
 const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === teamMutator); b.setAttribute('aria-pressed', String(b.dataset.mut === teamMutator)); }
 for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
 $id('m2LvWrap').hidden = mode === 'pp_pp';
 for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) $id(id).style.display = mode === 'p_cc' ? 'none' : '';   // 一个人带电脑队友，不用联网（.m2-way 自带 display，hidden 属性压不住）
@@ -26209,11 +26276,21 @@ open2v2Modal(mode);
 return scr;
 }
 function close2v2Modal() { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
+if ($id('m2Mutator')) $id('m2Mutator').addEventListener('click', e => { const b = e.target.closest('button[data-mut]'); if (b) { teamMutator = b.dataset.mut; render2v2Modal(); } });
 $id('modal2v2Seg').addEventListener('click', e => {
 const b = e.target.closest('button[data-m]'); if (!b) return;
 active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
 });
 $id('modal2v2Close').addEventListener('click', close2v2Modal);
+if ($id('btn2v2Quick')) $id('btn2v2Quick').addEventListener('click', () => {
+const hero = menuHeroPick();
+const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
+for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+close2v2Modal();
+if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
+else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
+applySkins();
+});
 $id('btn2v2GoLocal').addEventListener('click', () => {
 close2v2Modal();
 bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
@@ -26532,8 +26609,9 @@ const picks = roomDef().four ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo
 const seed = (Math.random() * 2147483647) | 0;
 const mv = netMapVotes();
 send({ sys: 'rematch', action: 'start' });
-send({ rstart: duo ? { ch: picks, seed, duo, mv } : { ch: picks, seed, mv } });
-rollStart(picks, seed, duo, mv);
+const mut = netTeamMutator();
+send({ rstart: duo ? { ch: picks, seed, duo, mv, mut } : { ch: picks, seed, mv, mut } });
+rollStart(picks, seed, duo, mv, undefined, mut);
 } else {
 send({ sys: 'rematch', action: 'ask' });
 toast('已向房主发送再战请求');
@@ -28746,7 +28824,6 @@ t: BP_TIME,
 avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
 };
 if (mode === 'maps') BP.mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
-else if (mode === 'net' && roomDef().rule === 'maps') BP.mapId = mapPick(netMapVotes(), Math.random());
 bpSel = -1; bpCpuT = BP_CPU_DELAY;
 showScreen('bp'); renderBP();
 if (mode === 'net') send({ bps: BP });
@@ -28829,8 +28906,9 @@ const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
 : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
 : (duo ? [duo[0][0], duo[1][0]] : picks);
 const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
-send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId } : { ch: flatCh, seed, mv, map: mapId } });
-rollStart(flatCh, seed, duo, mv, mapId);
+const mut = netTeamMutator();
+send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut } : { ch: flatCh, seed, mv, map: mapId, mut } });
+rollStart(flatCh, seed, duo, mv, mapId, mut);
 }
 } else if (mode === 'chaos') {
 startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
@@ -29958,6 +30036,7 @@ $id('lobbyPeerState').style.color = peerReady ? '#2bd49a' : 'var(--dim)';
 }
 window.updateNetLobby = updateNetLobby;
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
+const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(teamMutator) ? teamMutator : 'normal';
 let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；快速匹配和排位固定 normal（3v3 车轮战）
 const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境' };
 const lobbyModesSegEl = $id('lobbyModesSeg');
@@ -29970,7 +30049,7 @@ toast('仅擂主可调整切磋模式');
 return;
 }
 setRoomModeUI(b.dataset.mode);
-if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
+if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
 toast(`已设定切磋规则：${ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal}`);
 SFX.slice();
 });
@@ -29987,9 +30066,20 @@ btn.disabled = NET.role === 'client' && NET.open;
 if ($id('roomRuleNow')) $id('roomRuleNow').textContent = ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal;
 if (netRoomMode !== 'normal' && $id('roomMore')) $id('roomMore').open = true;   // 选的是别的规则：把折叠打开，让人看得见
 renderLobbyMaps();
+renderLobbyMutator();
 }
+function renderLobbyMutator() {
+const el = $id('lobbyMutator'); if (!el) return;
+el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode);
+for (const b of el.querySelectorAll('button')) { b.disabled = NET.role === 'client' && NET.open; b.classList.toggle('sel', b.dataset.mut === netTeamMutator()); b.setAttribute('aria-pressed', String(b.dataset.mut === netTeamMutator())); }
+}
+if ($id('lobbyMutator')) $id('lobbyMutator').addEventListener('click', e => {
+const b = e.target.closest('button[data-mut]'); if (!b || (NET.role === 'client' && NET.open)) return;
+teamMutator = ['chaos', 'mayhem'].includes(b.dataset.mut) ? b.dataset.mut : 'normal';
+renderLobbyMutator(); if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
+});
 const NET_MAPV = { host: null, client: null };
-const netMapVotes = () => roomDef().rule === 'maps' ? [NET_MAPV.host, NET_MAPV.client] : undefined;
+const netMapVotes = () => !NET.isRanked && (netRoomMode === 'normal' || netRoomMode === 'maps') ? [NET_MAPV.host, NET_MAPV.client] : undefined;
 function netMapVoteSend() {
 NET_MAPV[NET.role === 'client' ? 'client' : 'host'] = mapVote;
 if (NET.open) send({ sys: 'map_vote', v: mapVote });
@@ -30001,11 +30091,13 @@ renderLobbyMaps();
 function renderLobbyMaps() {
 const wrap = $id('lobbyMapVote');
 if (!wrap) return;
-const on = netRoomMode === 'maps';
+const on = !NET.isRanked && (netRoomMode === 'normal' || netRoomMode === 'maps');
 wrap.classList.toggle('hidden', !on);
 if (!on) return;
 NET_MAPV[NET.role === 'client' ? 'client' : 'host'] = mapVote;
 mapVoteCards($id('lobbyMapCards'), [NET_MAPV.host, NET_MAPV.client], mapVote, id => { setMapVote(mapVote === id ? null : id); netMapVoteSend(); renderLobbyMaps(); });
+const random = $id('lobbyMapRandom');
+if (random) random.setAttribute('aria-pressed', String(!mapVote));
 }
 if ($id('lobbyCancelBtn')) $id('lobbyCancelBtn').addEventListener('click', () => {
 netLeave();
@@ -30230,6 +30322,7 @@ joinByCode();
 } catch (e) {}
 }
 setTimeout(checkUrlRoom, 300);
+if ($id('lobbyMapRandom')) $id('lobbyMapRandom').addEventListener('click', () => { setMapVote(null); netMapVoteSend(); renderLobbyMaps(); });
 window.addEventListener('keydown', e => {
 initAudio();
 if (e.code === 'KeyM') { muted = !muted; return; }

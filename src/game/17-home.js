@@ -263,7 +263,7 @@ function updateAIBrief() {
 }
 
 // 模式大厅（#single）：所有玩法分类摆放，sec 为空时打开上次那一格，否则打开指定那一格的面板
-let currentSingleTab = 'cpu';
+let currentSingleTab = 'cpu', teamMutator = 'normal';
 
 function singleSec(sec) {
   const active = sec || currentSingleTab || 'cpu';
@@ -285,12 +285,14 @@ function singleSec(sec) {
     b.classList.toggle('sel', b.dataset.tab === active);
   }
   for (const p of document.querySelectorAll('#mutatorPills button')) {
-    p.classList.toggle('sel', p.dataset.tab === active);
+    p.classList.toggle('sel', p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active));
   }
   for (const el of document.querySelectorAll('#single [data-sec]')) {
     const secs = el.dataset.sec.split(' ');
     el.style.display = secs.includes(active) ? '' : 'none';
   }
+  if ($id('xiwuQuickGo')) $id('xiwuQuickGo').disabled = active === 'train';
+  if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
   const scr = $id('single');
   if (scr && !sec) scr.scrollTop = 0;
   $id('singleT').textContent = '习武';
@@ -371,9 +373,17 @@ function heroQuickFight(lv) {
   const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);
   const foe = foes[Math.random() * foes.length | 0];
   netDropWaiting(); chatClear(); BP = null; bpMode = 'cpu'; bpCustomOpts = null;
+  const quickMode = currentScreen === 'single' ? currentSingleTab : 'cpu';
   showPop(null); showScreen(null);
   MSTAT.maxcombo = 0; MSTAT.ults = 0;
-  startMatch('cpu', pickLevel, [menuHeroId, foe]);
+  if (quickMode === 'tag3') {
+    const pool = CHARS.map((c, i) => i).filter(i => i !== menuHeroId).sort(() => Math.random() - 0.5);
+    startTag3Match([menuHeroId, pool[0], pool[1]], [pool[2], pool[3], pool[4]], pickLevel);
+  }
+  else if (quickMode === 'chaos') startChaos(menuHeroId, foe, pickLevel);
+  else if (quickMode === 'mayhem') startMayhem(menuHeroId, foe, pickLevel);
+  else if (mapVote) startMapsMode(menuHeroId, foe, pickLevel, false, mapVote);
+  else startMatch('cpu', pickLevel, [menuHeroId, foe]);
   M.quick = true;   // 「再来一局」也不进点将台
   applySkins();
 }

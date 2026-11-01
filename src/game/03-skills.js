@@ -31,7 +31,7 @@ function addNeedleMark(target, count = 1) {
 //   R      正极：身边一圈磁石炸开，把半径 rPlusR 里的敌人用力弹走，离得越近弹得越远；rPlusDir = 1 弹开、-1 改成吸到身边（只改这一个数）
 //          负极：把 rMinusRange 以内的对手吸过来，越近吸得越快，到身前定住 rMinusStun 秒（不倒地）
 const MAG = { plusDmg: 1.35, plusKb: [300, -620], minusDmg: 0.55, pullK: 2.6e6, pullMax: 320, chainCap: 15, capStun: 0.3, demagRest: 1.0,
-  rPlusDir: 1, rPlusR: 175, rPlusDmg: 48, rPlusKb: [360, 900], rMinusRange: 560, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
+  rPlusDir: 1, rPlusR: 175, rPlusDmg: 48, rPlusKb: [360, 900], rMinusRange: 620, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
 const magRGB = pol => pol > 0 ? '255,96,84' : '96,156,255';
 const magName = pol => pol > 0 ? '⊕ 正极' : '⊖ 负极';
 const magForce = (k, d, lo, hi) => clamp(k / Math.max(40, d) ** 2, lo, hi);   // 磁力：离得越近越大
@@ -711,7 +711,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 50] : ['idle', 20],
     ai: () => false },
-  polarswap: { name: '极性反转', cd: 8, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
+  polarswap: { name: '极性反转', cd: 6, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
     start(f) {
       f.pol = f.pol > 0 ? -1 : 1; f.polT = 0.6; f.skill2CD = 0; f.mChain = 0; f.mT = 0;   // 换极性也顺便恢复消磁
       ring(f.x, f.y - 60, 90, magRGB(f.pol), 0.3); SFX.parry();
@@ -738,7 +738,7 @@ const SKILLS = {
           ring(f.x, f.y - 60, 70, rgb, 0.3); SFX.dash();
           addP({ type: 'mag', pol: -1, x: f.x + f.face * 34, y: f.y - 62, vx: 0, vy: 0, rot: 0, r: 13, life: 0.45, max: 0.45 });
           const dx = tg.x - f.x;
-          if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= MAG.rMinusRange && Math.abs(tg.y - f.y) < 260) {
+          if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= MAG.rMinusRange && Math.abs(tg.y - f.y) < 310) {
             f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
             tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;
           }

@@ -238,7 +238,8 @@ function updateArena2v2(dt) {
 
 // ---------- 山河异境的地图（src/data/12-maps.js）----------
 // 这一局在哪张图记在 M.map，跟着 M 进回滚存档和录像（st0），两边、回放里都一样。普通对战、排位没有 M.map，就是原来的平地
-const mapsOn = () => M.mode === 'maps' || (netRoom() || {}).rule === 'maps' || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'loc' && !!REPLAY.m && REPLAY.m.mode === 'maps');
+const mayhemOn = () => M.mode === 'mayhem' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mapsOn = () => M.mode === 'maps' || (M.mode === 'net' && !!M.map) || (M.mode === 'replay' && REPLAY.on && !!M.map);
 const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
 // 按票数选图：votes 是每位玩家投的地图 id（没投是 null），r 是 0~1 的随机数。没人投票时每张图一样
 function mapOdds(votes) {
@@ -277,8 +278,10 @@ function mapEdge(f, cl) {
   f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul);
   f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.wallBounced = true;
   f.mapFalls = (f.mapFalls || 0) + 1;
+  if (M.combatStats && M.combatStats[f.idx]) M.combatStats[f.idx].falls++;
   if (RESIM) return;
-  shake = Math.max(shake, 10); SFX.thud();
+  shake = Math.max(shake, 10); SFX.thud(); SFX.cliffFall();
+  for (let i = 0; i < 12; i++) addP({ type: 'ink', x: f.x + rand(-30, 30), y: rand(-25, 15), vx: rand(-40, 40), vy: rand(30, 140), life: 0.7, max: 0.7, r: rand(3, 8), rgb: '40,45,60' });
   ring(f.x, f.y - 40, 90, '170,200,255', 0.4);
   for (let i = 0; i < 10; i++) addP({ type: 'spark', x: f.x + rand(-20, 20), y: rand(-30, 10), vx: -side * rand(40, 200), vy: -rand(120, 420), life: 0.5, max: 0.5, rgb: '190,210,255', w: 2 });
   addP({ type: 'text', text: '坠崖 -' + dmg, x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '190,210,255' });
@@ -362,7 +365,8 @@ function mapThunder(T) {
   }
   if (RESIM) return;
   ring(tx, -120, 160, '255,230,120', 0.5); shake = Math.max(shake, 18); flashA = Math.max(flashA, 0.45); flashRGB = '255,240,150';
-  SFX.thunder(); SFX.thunderHit(1.2);
+  for (let i = 0; i < 18; i++) addP({ type: 'spark', x: tx + rand(-90, 90), y: -120, vx: rand(-260, 260), vy: rand(-350, 100), life: 0.4, max: 0.4, rgb: '255,225,120', w: 3 });
+  SFX.thunder(); SFX.thunderHit(1.2); SFX.terrainLightning();
 }
 // 每一步（step 里，侠客都动完以后）：风和天雷的计时、酒雾、凌雀（地利）在飞檐上冷却快
 function mapTick(dt) {
@@ -385,6 +389,10 @@ function mapTick(dt) {
   }
   for (const f of allFighters()) {
     if (f.hidden || f.hp <= 0) continue;
+    if (!RESIM && mp.ice && mapGrip(f) < 1 && Math.abs(f.vx) > 140 && Math.random() < 0.12) {
+      if (Math.random() < 0.04) SFX.iceSlide();
+      addP({ type: 'spark', x: f.x, y: f.y - 3, vx: -f.vx * 0.2 + rand(-30, 30), vy: rand(-55, -10), life: 0.3, max: 0.3, rgb: '180,225,255', w: 2 });
+    }
     if (mp.fog && f.y >= 0) {
       const u = f.x / STAGE_W;
       if (u >= mp.fog.from && u <= mp.fog.to) {
@@ -476,15 +484,13 @@ function startRound() {
     if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
   }
   magRoll();
-  const isMayhem = M.mode === 'mayhem' || (netRoom() || {}).rule === 'mayhem';
+  if (M.round === 1) M.combatStats = Array.from({ length: 4 }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
+  const isMayhem = mayhemOn();
   if (isMayhem) {
-    A.maxHp = Math.round(A.maxHp * 10);
-    B.maxHp = Math.round(B.maxHp * 10);
-    A.hp = A.lagHp = A.maxHp;
-    B.hp = B.lagHp = B.maxHp;
-    A.guard = A.maxGuard = 500;
-    B.guard = B.maxGuard = 500;
-    A.meter = B.meter = 100;
+    for (const f of allFighters()) if (!f.hidden) {
+      f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
+      f.guard = f.maxGuard = 500; f.meter = 100;
+    }
   }
   if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
   const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
@@ -588,6 +594,9 @@ function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (M.worldKey) { worldKeyRound(w); return; }
   if (REC.on) recSave(w);
+  const stats = M.combatStats && M.combatStats[localIdx()];
+  const card = $id('endCombatCard');
+  if (card) card.textContent = stats ? `总伤害 ${Math.round(stats.damage)} · 最长连击 ${stats.combo} · 破防 ${stats.breaks} · 坠崖 ${stats.falls}` : '';
   taskMatchEnd(w);
   $id('endKicker').textContent = '';
   $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');

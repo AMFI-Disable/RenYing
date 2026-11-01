@@ -115,12 +115,14 @@ function onSys(m) {
   } else if (m.sys === 'ready') {
     NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
     updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
-    if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode });
+    if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
     NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
     onNetOpen();
   } else if (m.sys === 'map_vote') {
     netMapVoteRecv(m.v);
   } else if (m.sys === 'room_rule') {
+    if (NET.role !== 'client') return;
+    teamMutator = ['chaos', 'mayhem'].includes(m.mut) ? m.mut : 'normal';
     setRoomModeUI(m.rule);
     toast(`擂主已设定切磋规则：${ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal}`);
   } else if (m.sys === 'rematch') {
@@ -260,7 +262,7 @@ function applySnapshot(sn, exact) {
 function onNetMsg(msg) {
   if (msg.mstart || msg.report) return;
   if (msg.ru !== undefined) { rollRecv(msg); return; }
-  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map); return; }
+  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map, msg.rstart.mut); return; }
   if (msg.rsync) { rollAdopt(msg.rsync); return; }
   if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }

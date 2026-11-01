@@ -211,6 +211,7 @@
               <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">木人试剑</b><span class="pt-d">木人桩练连招</span></button>
             </div>
 
+            <div class="xiwu-quick-card"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
             <!-- 战场异变 -->
             <div class="xiwu-mutator-row">
               <span class="mutator-label">战场异变：</span>
@@ -236,6 +237,7 @@
                 <button type="button" class="map-chip" data-map="pagoda">皇城飞檐</button>
                 <button type="button" class="map-chip" data-map="wine">醉仙楼</button>
               </div>
+              <p id="xiwuMapTrait" class="xiwu-map-trait" role="status">随机选择一处战场。</p>
             </div>
           </div>
 
@@ -519,7 +521,6 @@
                   <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
                   <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
-                  <button class="ghost small" data-mode="maps" type="button">山河异境</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>
@@ -599,9 +600,11 @@
             </div>
           </div>
 
+          <div id="lobbyMutator" class="mutator-pills" role="group" aria-label="战场异变"><span>战场异变：</span><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
           <!-- 山河异境：两边各投一票 -->
           <div class="lobby-map-vote hidden" id="lobbyMapVote">
             <div class="sec-sub-label">地图投票：双方各一票，按票数决定选到哪张图</div>
+            <button class="ghost small" id="lobbyMapRandom" type="button" aria-pressed="true">全部随机</button>
             <div class="map-vote" id="lobbyMapCards"></div>
           </div>
 
@@ -1083,12 +1086,14 @@
           <button data-m="pp_pp" type="button">两人 vs 两人</button>
         </div>
         <p class="sub m2-desc" id="modal2v2Desc"></p>
+        <div class="sec-sub-label">战场异变</div><div class="mutator-pills" id="m2Mutator" role="group" aria-label="战场异变"><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
         <div id="m2LvWrap">
           <div class="sec-sub-label">电脑的境界</div>
           <!-- 弹窗开着时，模式大厅那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
         </div>
         <div class="sec-sub-label">在哪打</div>
         <div class="m2-ways" id="modal2v2Options">
+          <button class="m2-way" id="btn2v2Quick" type="button"><b>即刻开战</b><span>当前侠客与随机阵容</span></button>
           <button class="m2-way" id="btn2v2GoLocal" type="button" data-kb-default><b>同一台电脑</b><span id="modal2v2LocalDesc"></span></button>
           <button class="m2-way tn-online" id="btn2v2GoMatch" type="button"><b>全服匹配</b><span id="modal2v2MatchDesc"></span></button>
           <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
@@ -1182,7 +1187,7 @@
   </div>
 
   <div id="end" class="scr">
-    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><p class="end-arm" id="endArm"></p>
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><p class="end-arm" id="endArm"></p>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>

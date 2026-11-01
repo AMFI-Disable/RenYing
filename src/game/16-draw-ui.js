@@ -13,7 +13,8 @@ function drawTrainStats(cx, top, bh) {
     ['当前连击', cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '-', cu.t > 0 ? '#ffb088' : '#efe8d8'],
     ['最高连击', `${TRAIN.best} 段 · ${Math.round(TRAIN.bestDmg)} 伤`, '#ffd166'],
     ['累计伤害', `${Math.round(TRAIN.total)}`, '#efe8d8'],
-    ['每秒伤害（DPS）', dps.toFixed(1), '#8ff0ff']
+    ['每秒伤害（DPS）', dps.toFixed(1), '#8ff0ff'],
+    ['帧优势', TRAIN.advantage == null ? '—' : `${TRAIN.advantage >= 0 ? '+' : ''}${TRAIN.advantage}f`, '#a9efc4']
   ];
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
   for (const l of lines) { l[0] = cvT(l[0]); l[1] = cvT(l[1]); }

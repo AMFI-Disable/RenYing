@@ -213,7 +213,9 @@ function applyHit(att, def, m, pt) {
     }
     const chipFrac = (def.ch && def.ch.stat && def.ch.stat.guardChip) || 0.12;
     const bm = scOn() ? scBlockMod(att, def, m) : null;   // 秘卷改格挡磨血、削架势
+    const hpBeforeChip = def.hp;
     def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
+    ev.dd = hpBeforeChip - def.hp;
 
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
     let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
@@ -316,7 +318,7 @@ function applyHit(att, def, m, pt) {
   if (chaosNow('dmg')) {
     dmg *= chaosNow('dmg').val;
   }
-  if (M.mode === 'mayhem') {
+  if (mayhemOn()) {
     dmg *= (m.ult ? 5.2 : (m.skill || m.isProj ? 4.5 : 3.8));
   }
   if (isRaid() && att === B && att.bossDmgMul) {
@@ -499,6 +501,8 @@ function hitStopOf(ev, att) {
 // 命中的画面和声音（联机时两边都会播放）
 function hitVisual(ev, quiet) {
   const att = fighterByIdx(ev.a), def = fighterByIdx(ev.d);
+  if (M.combatStats && M.combatStats[ev.a]) { const s = M.combatStats[ev.a]; s.damage += ev.dd || 0; s.combo = Math.max(s.combo, ev.cn || 0); if (ev.guardBreak) s.breaks++; }
+  if (!RESIM && !quiet && M.mode === 'train' && ev.d === 1 && !ev.justGuard) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); TRAIN.frameProbe = { start: clock, attacker: null, defender: null }; }
   if (RESIM) { hitStopOf(ev, att); return; }   // 重算：只保留影响对战的顿帧
   if (!quiet) hitStopOf(ev, att);
   if (quiet) {   // 效果已经提前播过了，只更新连击数
@@ -568,7 +572,7 @@ function hitVisual(ev, quiet) {
       }
     } }
   if (!ev.blk && !quiet && fighterByIdx(ev.a)) skinHitFX(fighterByIdx(ev.a), ev);
-  if (M.mode === 'mayhem' && !quiet) {
+  if (mayhemOn() && !quiet) {
     shake = Math.max(shake, 24);
     flashA = Math.max(flashA, 0.55);
     flashRGB = att.look.slash || '255,215,80';
@@ -590,7 +594,6 @@ function hitVisual(ev, quiet) {
     addP({ type: 'dmg', text: String(dd), x: ev.x + rand(-22, 22), y: ev.y - 20 - ((ev.cn || 0) % 3) * 16, vx: rand(-60, 60), vy: -150, g: 260, life: 0.85, max: 0.85,
       s: ev.blk ? 0.62 : clamp(0.72 + dd / 20, 0.75, 1.25), rgb: ev.blk ? '170,180,200' : big ? '255,210,90' : '255,250,240', edge: fighterByIdx(ev.a) ? fighterByIdx(ev.a).look.slash : '255,255,255' });
   }
-  if (M.mode === 'train' && ev.d === 1) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); }
   if (ev.root) { for (let i = 0; i < 14; i++) addP({ type: 'ink', x: def.x + rand(-30, 30), y: -rand(0, 30), vx: rand(-60, 60), vy: rand(-200, -40), g: 900, life: 0.7, max: 0.7, r: rand(2, 5), rgb: '15,15,22' }); addP({ type: 'text', text: '定', x: def.x, y: def.y - 130, life: 0.8, max: 0.8, rgb: '210,210,230' }); }
   SFX.hit(Math.min(1.2, 0.5 + ev.dmg / 12));
   if (!ev.blk) {

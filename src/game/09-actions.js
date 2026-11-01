@@ -44,7 +44,7 @@ function startSpecial(f) {
   if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
   ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
   if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
-  if (M.mode === 'mayhem') {
+  if (mayhemOn()) {
     shake = Math.max(shake, 32);
     flashA = 0.65;
     flashRGB = '255,225,120';
@@ -330,7 +330,7 @@ function startSkill(f, foe, slot) {
   if (customNm && f.hp > 0 && M.phase === 'fight') {
     addP({ type: 'callout', text: customNm, x: f.x, y: f.y - 75, life: 0.65, max: 0.65, rgb: f.look.slash, scale: 1.5 });
   }
-  if (M.mode === 'mayhem') {
+  if (mayhemOn()) {
     shake = Math.max(shake, 18);
     flashA = Math.max(flashA, 0.38);
     flashRGB = f.look.slash || '255,215,80';
@@ -427,7 +427,7 @@ let projSeq = 0;
 function spawnProj(f, o) {
   if (isClient()) return;   // 联机时由房主生成，加入方从快照同步
   if (scOn()) { o = { src: f.state === 'skill' ? f.skill : f.state === 'special' ? 'ult' : '', ...o }; scProj(f, o); }   // 秘卷：认得出是哪一招放的，也能改它
-  if (M.mode === 'mayhem') {
+  if (mayhemOn()) {
     o = { ...o };
     if (o.dmg) o.dmg = Math.round(o.dmg * 2.5);
     if (o.w) o.w = Math.round(o.w * 1.8);
@@ -452,6 +452,12 @@ function updateProjs() {
       }
     }
     if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
+    // Moving enemy projectiles bend gently in Ci Xian's magnetic field.
+    if (p.vx && !p.fx) for (const f of allFighters()) {
+      if (f.hidden || f.hp <= 0 || !f.ch || f.ch.passive !== 'magnet' || f.idx % 2 === p.owner % 2) continue;
+      const dx = f.x - p.x, dy = f.y - 65 - p.y, d = Math.hypot(dx, dy);
+      if (d > 20 && d < 420) p.vy += clamp(dy / d * f.pol * 100 * (1 - d / 420), -100, 100) * STEP;
+    }
     if (p.g) p.vy += p.g * STEP;
     if (p.boomer && p.age > p.turn) {
       const o = fighterByIdx(p.owner), dx = o.x - p.x;
@@ -824,7 +830,7 @@ function updateFighter(f, foe) {
   if (tryBreakoutSkill(f, foe)) { physics(f); return; }
   f.skillCD = Math.max(0, f.skillCD - STEP);
   f.flying = false;
-  if (M.mode === 'mayhem') {
+  if (mayhemOn()) {
     f.skillCD = 0;
     f.skill2CD = 0;
     f.breakCD = 0;

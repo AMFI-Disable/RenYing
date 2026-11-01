@@ -8,7 +8,7 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   human[0].rec = null;
   REC.on = false;
 
-  M.mode = 'tag3';
+  M.mode = 'tag3'; M.teamMutator = teamMutator;
   M.level = lv || pickLevel || 'normal';
   M.teams = [[...pTeam], [...eTeam]];
   M.teamIdx = [0, 0];
@@ -345,7 +345,7 @@ const CHAOS_MUTATIONS = [
 let chaosP1 = 0, chaosP2 = 1;
 // 天机乱斗正在生效的异变记在 M.chaos：{ i: CHAOS_MUTATIONS 里第几条（-1 还没抽）, t: 这条生效了几秒 }。
 // 放在 M 里，联机回滚的存档、录像都带着它；联机时两边（和放录像时）用对局随机数抽，抽到的是同一条，两边都生效
-const chaosOn = () => M.mode === 'chaos' || (netRoom() || {}).rule === 'chaos';
+const chaosOn = () => M.mode === 'chaos' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
 // 现在生效的异变；给了 type 就只在是这一种时返回
 function chaosNow(type) {
   const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
@@ -703,7 +703,7 @@ function startWatch2v2(draft) {
   REC.on = false;
   if (Array.isArray(draft) && draft.length === 6) watch2v2Draft = [...draft];
   const [ban0, ban1, t1a, t2a, t2b, t1b] = watch2v2Draft;
-  M.mode = 'watch2v2';
+  M.mode = 'watch2v2'; M.teamMutator = teamMutator;
   M.watchAi = true;
   M.level = 'god';
   M.bans = [ban0, ban1];
@@ -728,7 +728,7 @@ function startWatch2v2(draft) {
 function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal', ally = false) {
   if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
-  M.mode = '2v2';
+  M.mode = '2v2'; M.teamMutator = teamMutator;
   M.subMode = ally ? 'p_cc' : 'pp_cc';
   M.watchAi = false;
   M.level = level;
@@ -754,7 +754,7 @@ function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal',
 function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
   if (p2pActive()) netDropWaiting();
   initAudio(); refocusGame(); paused = false; human[0].rec = null; REC.on = false;
-  M.mode = '2v2';
+  M.mode = '2v2'; M.teamMutator = teamMutator;
   M.subMode = 'pp_pp';
   M.watchAi = false;
   M.level = 'god';
@@ -786,6 +786,7 @@ const M2_TEXT = {
 };
 function render2v2Modal() {
   const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+  for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === teamMutator); b.setAttribute('aria-pressed', String(b.dataset.mut === teamMutator)); }
   for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
   $id('m2LvWrap').hidden = mode === 'pp_pp';
   for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) $id(id).style.display = mode === 'p_cc' ? 'none' : '';   // 一个人带电脑队友，不用联网（.m2-way 自带 display，hidden 属性压不住）
@@ -805,11 +806,21 @@ function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一
   return scr;
 }
 function close2v2Modal() { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
+if ($id('m2Mutator')) $id('m2Mutator').addEventListener('click', e => { const b = e.target.closest('button[data-mut]'); if (b) { teamMutator = b.dataset.mut; render2v2Modal(); } });
 $id('modal2v2Seg').addEventListener('click', e => {
   const b = e.target.closest('button[data-m]'); if (!b) return;
   active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
 });
 $id('modal2v2Close').addEventListener('click', close2v2Modal);
+if ($id('btn2v2Quick')) $id('btn2v2Quick').addEventListener('click', () => {
+  const hero = menuHeroPick();
+  const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  close2v2Modal();
+  if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
+  else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
+  applySkins();
+});
 $id('btn2v2GoLocal').addEventListener('click', () => {
   close2v2Modal();
   bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
@@ -1139,8 +1150,9 @@ document.getElementById('againBtn').addEventListener('click', () => {
       const seed = (Math.random() * 2147483647) | 0;
       const mv = netMapVotes();
       send({ sys: 'rematch', action: 'start' });
-      send({ rstart: duo ? { ch: picks, seed, duo, mv } : { ch: picks, seed, mv } });
-      rollStart(picks, seed, duo, mv);
+      const mut = netTeamMutator();
+      send({ rstart: duo ? { ch: picks, seed, duo, mv, mut } : { ch: picks, seed, mv, mut } });
+      rollStart(picks, seed, duo, mv, undefined, mut);
     } else {
       send({ sys: 'rematch', action: 'ask' });
       toast('已向房主发送再战请求');

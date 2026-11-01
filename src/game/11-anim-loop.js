@@ -261,6 +261,12 @@ function step() {
     if (!D.hidden) updateFighter(D, foeOf(D));
     updateArena2v2(STEP);
   }
+  if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
+    const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
+    if (p.attacker === null && ready(A)) p.attacker = clock;
+    if (p.defender === null && ready(B)) p.defender = clock;
+    if (p.attacker !== null && p.defender !== null) { TRAIN.advantage = Math.round((p.defender - p.attacker) / STEP); TRAIN.frameProbe = null; }
+  }
   mapTick(STEP);   // 山河异境：风、天雷、酒雾（不在山河异境就什么都不做）
   // 倒下的人一直躺着：落地后不管之前是什么状态（受身、被打、技能收招）都按回地上，不再站起来
   if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {

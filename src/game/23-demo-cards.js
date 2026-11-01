@@ -452,7 +452,7 @@ function bpStart(mode, customOpts = null) {
   };
   // 山河异境：一进点将台就按票选好地图（联机由房主选，随 bps 发给对方；开打时随 rstart 再发一次），横幅写着这局的图和地利侠客
   if (mode === 'maps') BP.mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
-  else if (mode === 'net' && roomDef().rule === 'maps') BP.mapId = mapPick(netMapVotes(), Math.random());
+  // Online map selection happens at match start from the shared seed and votes.
   bpSel = -1; bpCpuT = BP_CPU_DELAY;
   showScreen('bp'); renderBP();
   if (mode === 'net') send({ bps: BP });
@@ -537,8 +537,9 @@ function bpFinish() {
         : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
         : (duo ? [duo[0][0], duo[1][0]] : picks);
       const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
-      send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId } : { ch: flatCh, seed, mv, map: mapId } });
-      rollStart(flatCh, seed, duo, mv, mapId);
+      const mut = netTeamMutator();
+      send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut } : { ch: flatCh, seed, mv, map: mapId, mut } });
+      rollStart(flatCh, seed, duo, mv, mapId, mut);
     }
   } else if (mode === 'chaos') {
     startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
