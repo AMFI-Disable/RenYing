@@ -2939,6 +2939,38 @@ body.offline #mMatch { display: none !important; }
 .combat-card { margin:10px auto; padding:10px; border:1px solid rgba(233,196,106,.3); border-radius:8px; color:var(--gold); }
 .combat-card:empty { display:none; }
 #single .xiwu-quick-card .go { margin:0; padding:5px 18px; font-size:20px; }
+#single .singlep { max-width: min(1180px, 96vw); }
+#single .mode-title-wrap { text-align: left; max-width: 1080px; margin: 0 auto 18px; }
+#single .mode-title-wrap h2 { margin-bottom: 2px; }
+.xiwu-studio { display: grid; grid-template-columns: minmax(190px, 240px) minmax(0, 1fr); gap: 20px; width: min(1080px, 100%); margin: auto; align-items: start; }
+#single .single-nav-deck.play-deck { width: 100%; padding: 0; margin: 0; }
+#single .xiwu-category-tabs { grid-template-columns: 1fr; gap: 6px; margin-bottom: 16px; }
+#single .xiwu-cat-btn { padding: 10px 12px; border-radius: 6px; box-shadow: none; }
+#single .xiwu-cards-row { grid-template-columns: 1fr; gap: 4px; }
+#single .xiwu-cards-row button { min-height: 52px; border-radius: 5px; background: rgba(15,16,29,.42); border: 1px solid transparent; }
+#single .xiwu-cards-row button.sel { background: rgba(233,196,106,.1); border-color: rgba(233,196,106,.45); }
+.xiwu-config { min-width: 0; padding: 20px; border: 1px solid rgba(233,196,106,.22); border-radius: 8px; background: linear-gradient(145deg, rgba(35,31,42,.82), rgba(13,15,25,.9)); box-shadow: 0 16px 40px rgba(0,0,0,.18); }
+#single #aiLvHome { width: 100%; margin: 0 0 16px; }
+#single .xiwu-quick-card { margin: 0 0 16px; padding: 12px 16px; background: rgba(233,196,106,.08); border-radius: 5px; }
+#single .xiwu-quick-card p { line-height: 1.5; }
+#single .xiwu-mutator-row, #single .xiwu-map-select-bar { margin: 0 0 14px; }
+#single .xiwu-mode-content { padding-top: 14px; border-top: 1px solid rgba(233,196,106,.16); }
+#single .single-action-row { justify-content: flex-start; }
+#single [hidden] { display: none !important; }
+@media (max-width: 760px) {
+.xiwu-studio { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+#single .xiwu-category-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 8px; }
+#single .xiwu-cards-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.xiwu-config { padding: 14px; }
+}
+@media (max-width: 420px) {
+#single .xiwu-cat-btn { grid-template-columns: 1fr; }
+#single .xiwu-cat-btn .cat-icon { display: none; }
+#single .xiwu-quick-card { flex-wrap: wrap; }
+}
+@media (max-width: 900px) {
+#single .xiwu-quick-card .go { max-width: 100%; min-width: 0; font-size: 17px; padding: 6px 12px; white-space: normal; }
+}
 </style>
 </head>
 <body>
@@ -3084,6 +3116,51 @@ body.offline #mMatch { display: none !important; }
         <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
 
+      <!-- 习武大厅：两级大类导航与模式卡片（告别13个按钮堆叠在一屏） -->
+      <div class="xiwu-studio">
+      <div class="single-nav-deck play-deck">
+        <div class="xiwu-category-tabs" id="xiwuCatTabs" role="tablist">
+          <button class="xiwu-cat-btn sel" data-cat="combat" type="button" role="tab" aria-selected="true">
+            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>
+            <span class="cat-name">实战切磋</span>
+            <span class="cat-desc">切磋与演练</span>
+          </button>
+          <button class="xiwu-cat-btn" data-cat="story" type="button" role="tab" aria-selected="false">
+            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>
+            <span class="cat-name">江湖历练</span>
+            <span class="cat-desc">故事与试炼</span>
+          </button>
+        </div>
+
+        <div class="single-tabs xiwu-mode-deck" id="singleTabs">
+          <!-- 实战切磋分区模式 (4 张主卡) -->
+          <div class="xiwu-cat-group" data-cat-group="combat">
+            <div class="xiwu-cards-row">
+              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span></button>
+              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
+              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
+              <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">木人试剑</b><span class="pt-d">木人桩练连招</span></button>
+            </div>
+
+
+          </div>
+
+          <!-- 江湖历练分区模式 (3 张主卡) -->
+          <div class="xiwu-cat-group" data-cat-group="story" style="display:none">
+            <div class="xiwu-cards-row">
+              <button data-tab="stage" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span><b class="pt-n">守关挑战</b><span class="pt-d">六章三十关</span></button>
+              <button data-tab="saga" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span><b class="pt-n">侠客列传</b><span class="pt-d">每位侠客自己的故事</span></button>
+              <button data-tab="tower" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">问剑密卷</b><span class="pt-d">一层层爬塔抽秘卷</span></button>
+            </div>
+          </div>
+
+          <!-- 测试兼容保留标签 -->
+          <button data-tab="maps" style="display:none" type="button" aria-hidden="true"></button>
+          <button data-act="rouge" style="display:none" type="button" aria-hidden="true"></button>
+        </div>
+      </div>
+
+      <div class="xiwu-config">
       <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons.js 的 setPickLevel -->
       <div id="aiLvHome">
         <div class="ai-lv-bar" id="aiLvBar">
@@ -3116,32 +3193,7 @@ body.offline #mMatch { display: none !important; }
         </div>
       </div>
 
-      <!-- 习武大厅：两级大类导航与模式卡片（告别13个按钮堆叠在一屏） -->
-      <div class="single-nav-deck play-deck">
-        <div class="xiwu-category-tabs" id="xiwuCatTabs" role="tablist">
-          <button class="xiwu-cat-btn sel" data-cat="combat" type="button" role="tab" aria-selected="true">
-            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>
-            <span class="cat-name">实战切磋</span>
-            <span class="cat-desc">对战电脑 · 3v3 车轮 · 2v2 组队 · 木人试剑</span>
-          </button>
-          <button class="xiwu-cat-btn" data-cat="story" type="button" role="tab" aria-selected="false">
-            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span>
-            <span class="cat-name">江湖历练</span>
-            <span class="cat-desc">守关挑战 · 侠客列传 · 问剑密卷</span>
-          </button>
-        </div>
-
-        <div class="single-tabs xiwu-mode-deck" id="singleTabs">
-          <!-- 实战切磋分区模式 (4 张主卡) -->
-          <div class="xiwu-cat-group" data-cat-group="combat">
-            <div class="xiwu-cards-row">
-              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span></button>
-              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
-              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
-              <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">木人试剑</b><span class="pt-d">木人桩练连招</span></button>
-            </div>
-
-            <div class="xiwu-quick-card"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
+            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
             <!-- 战场异变 -->
             <div class="xiwu-mutator-row">
               <span class="mutator-label">战场异变：</span>
@@ -3155,11 +3207,11 @@ body.offline #mMatch { display: none !important; }
             <!-- 偏好地图（后台自动选图） -->
             <div class="xiwu-map-select-bar">
               <div class="sec-head-row" style="margin-bottom:6px">
-                <span class="mutator-label" style="font-weight:600;color:var(--gold)">偏好地图（后台选图）：</span>
-                <span class="sub-badge" id="mapVoteStatusBadge">全部地图随机轮换</span>
+                <span class="mutator-label" style="font-weight:600;color:var(--gold)">战场：</span>
+                <span class="sub-badge" id="mapVoteStatusBadge">标准擂台</span>
               </div>
               <div class="xiwu-map-chips" id="xiwuMapChips" role="group" aria-label="偏好地图">
-                <button type="button" class="map-chip sel" data-map="">全部随机</button>
+                <button type="button" class="map-chip sel" data-map="">标准擂台</button>
                 <button type="button" class="map-chip" data-map="cliff">断崖台</button>
                 <button type="button" class="map-chip" data-map="ice">寒潭冰面</button>
                 <button type="button" class="map-chip" data-map="bamboo">竹海悬岩</button>
@@ -3167,25 +3219,9 @@ body.offline #mMatch { display: none !important; }
                 <button type="button" class="map-chip" data-map="pagoda">皇城飞檐</button>
                 <button type="button" class="map-chip" data-map="wine">醉仙楼</button>
               </div>
-              <p id="xiwuMapTrait" class="xiwu-map-trait" role="status">随机选择一处战场。</p>
+              <p id="xiwuMapTrait" class="xiwu-map-trait" role="status">标准擂台，没有特殊地形。</p>
             </div>
-          </div>
-
-          <!-- 江湖历练分区模式 (3 张主卡) -->
-          <div class="xiwu-cat-group" data-cat-group="story" style="display:none">
-            <div class="xiwu-cards-row">
-              <button data-tab="stage" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span><b class="pt-n">守关挑战</b><span class="pt-d">六章三十关</span></button>
-              <button data-tab="saga" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span><b class="pt-n">侠客列传</b><span class="pt-d">每位侠客自己的故事</span></button>
-              <button data-tab="tower" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">问剑密卷</b><span class="pt-d">一层层爬塔抽秘卷</span></button>
-            </div>
-          </div>
-
-          <!-- 测试兼容保留标签 -->
-          <button data-tab="maps" style="display:none" type="button" aria-hidden="true"></button>
-          <button data-act="rouge" style="display:none" type="button" aria-hidden="true"></button>
-        </div>
-      </div>
-
+      <div class="xiwu-mode-content">
       <!-- 对战电脑 (Choosing AI) -->
       <div data-sec="cpu" class="single-sec-pane">
         <div class="sec-head-row">
@@ -3362,6 +3398,10 @@ body.offline #mMatch { display: none !important; }
           <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
           <button class="go alt" id="mayhemWatchBtn" type="button">通天 AI 观战</button>
         </div>
+      </div>
+
+      </div>
+      </div>
       </div>
 
       <div class="row" style="margin-top:18px"><button class="ghost" data-back>返回主菜单</button></div>
@@ -8968,9 +9008,11 @@ const UI_COPY_EN = {
 "架势恒满，不会破防": "Guard stays full and never breaks",
 "连段自愈": "Combo Heal",
 "连击停下后血量回满": "Health refills after each combo ends",
+"标准擂台": "Standard Arena",
+"标准擂台，没有特殊地形。": "Standard arena with no terrain effects.",
+"战场：": "Arena:",
 "即刻开战": "Fight Now",
 "帧优势": "Frame Advantage",
-"随机选择一处战场。": "Choose a random arena.",
 "山河异境": "Terrain Clash",
 "山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",
 "特殊地形 · 不计排位": "Special terrain · Unranked",
@@ -9006,8 +9048,6 @@ const UI_COPY_EN = {
 "守关挑战 · 侠客列传 · 问剑密卷": "Stages · Sagas · Sword Pagoda",
 "战场异变：": "Battle Mutator:",
 "常规标准": "Standard",
-"偏好地图（后台选图）：": "Preferred Map (Background Selection):",
-"全部地图随机轮换": "Random Map Rotation",
 "全部随机": "All Random",
 "对战电脑 · 闯关 · 车轮战 · 木人桩": "Vs AI · Stages · Relay · Dummy",
 "对电脑的模式通用 · 会记住": "Used by every mode against the AI · Remembered",
@@ -22005,14 +22045,21 @@ for (const b of document.querySelectorAll('#singleTabs button[data-tab]')) {
 b.classList.toggle('sel', b.dataset.tab === active);
 }
 for (const p of document.querySelectorAll('#mutatorPills button')) {
-p.classList.toggle('sel', p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active));
+const on = p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active);
+p.classList.toggle('sel', on); p.setAttribute('aria-pressed', String(on));
 }
 for (const el of document.querySelectorAll('#single [data-sec]')) {
 const secs = el.dataset.sec.split(' ');
 el.style.display = secs.includes(active) ? '' : 'none';
 }
-if ($id('xiwuQuickGo')) $id('xiwuQuickGo').disabled = active === 'train';
-if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
+const duel = ['cpu', 'chaos', 'mayhem', 'tag3'].includes(active);
+if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'maps'].includes(active);
+if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
+const mutators = $id('mutatorPills');
+if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
+const maps = $id('xiwuMapChips');
+if (maps && maps.parentElement) maps.parentElement.hidden = active !== 'cpu';
+updateXiwuSummary();
 const scr = $id('single');
 if (scr && !sec) scr.scrollTop = 0;
 $id('singleT').textContent = '习武';
@@ -22042,6 +22089,17 @@ else if (active === 'train') renderDummyFeatures();
 else if (active === 'mayhem') renderMayhem();
 else if (active === 'maps') renderMaps();
 else if (active === 'cpu') updateAIBrief();
+}
+function updateXiwuSummary() {
+const info = $id('xiwuQuickInfo'); if (!info) return;
+const active = currentSingleTab;
+const mode = active === 'tag3' ? '3v3 车轮战' : '对战电脑';
+const rule = active === 'tag3' ? teamMutator : active;
+const ruleName = rule === 'chaos' ? '天机乱斗' : rule === 'mayhem' ? '通天神决' : '常规标准';
+const pieces = [CHARS[menuHeroPick()].name, LV_NAME[pickLevel] || pickLevel, mode, ruleName];
+let preferredMap = ''; try { preferredMap = localStorage.getItem('renying-map-vote') || ''; } catch (e) {}
+if (active === 'cpu') pieces.push(MAPS[preferredMap] ? MAPS[preferredMap].n : '标准擂台');
+info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(' · ');
 }
 function openScreen(name, reveal = true) {
 if (OFFLINE_BUILD && name === 'netp') name = 'stage';
@@ -25275,7 +25333,7 @@ pickLevel = lv;
 if (save) try { localStorage.setItem(AI_LEVEL_KEY, lv); } catch (e) {}
 for (const x of document.querySelectorAll('#levels button[data-lv]')) { const on = x.dataset.lv === lv; x.classList.toggle('sel', on); x.setAttribute('aria-pressed', on); }
 updateAIBrief();
-if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
+if (typeof updateXiwuSummary === 'function') updateXiwuSummary();
 }
 function loadPickLevel() {
 let lv = null;
@@ -25323,7 +25381,7 @@ const xiwuMapChipsEl = document.getElementById('xiwuMapChips');
 if (xiwuMapChipsEl) {
 const showMapTrait = b => {
 const detail = $id('xiwuMapTrait');
-if (detail) detail.textContent = b && MAPS[b.dataset.map] ? MAPS[b.dataset.map].d : '随机选择一处战场。';
+if (detail) detail.textContent = b && MAPS[b.dataset.map] ? MAPS[b.dataset.map].d : '标准擂台，没有特殊地形。';
 };
 xiwuMapChipsEl.addEventListener('mouseover', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
 xiwuMapChipsEl.addEventListener('focusin', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
@@ -25334,15 +25392,22 @@ if (!b) return;
 SFX.slice();
 setMapVote(b.dataset.map || null);
 showMapTrait(b);
+updateXiwuSummary();
 });
 }
+const xiwuMutatorEl = $id('mutatorPills');
+if (xiwuMutatorEl) xiwuMutatorEl.addEventListener('click', e => {
+const b = e.target.closest('button[data-tab]'); if (!b) return;
+SFX.slice();
+if (currentSingleTab === 'tag3') { teamMutator = b.dataset.tab === 'cpu' ? 'normal' : b.dataset.tab; singleSec('tag3'); }
+else singleSec(b.dataset.tab);
+});
 const singleTabsEl = document.getElementById('singleTabs');
 if (singleTabsEl) {
 singleTabsEl.addEventListener('click', e => {
 const b = e.target.closest('button');
 if (!b) return;
 SFX.slice();
-if (b.closest('#mutatorPills') && ['tag3', 'watch2v2'].includes(currentSingleTab)) { teamMutator = b.dataset.tab === 'cpu' ? 'normal' : b.dataset.tab; singleSec(currentSingleTab); return; }
 if (b.dataset.tab === 'watch2v2') { open2v2Modal(); return; }
 if (b.dataset.act === 'world') { openWorldModal(); return; }
 if (b.dataset.act === 'rouge') { openRougeModal(); return; }
@@ -25990,7 +26055,7 @@ updateMapChipsUI();
 function updateMapChipsUI() {
 const badge = $id('mapVoteStatusBadge');
 if (badge) {
-badge.textContent = mapVote && MAPS[mapVote] ? `偏好：${MAPS[mapVote].n}` : '全部地图随机轮换';
+badge.textContent = mapVote && MAPS[mapVote] ? `偏好：${MAPS[mapVote].n}` : '标准擂台';
 }
 for (const b of document.querySelectorAll('#xiwuMapChips button')) {
 const m = b.dataset.map;

@@ -467,7 +467,7 @@ function setMapVote(id) {
 function updateMapChipsUI() {
   const badge = $id('mapVoteStatusBadge');
   if (badge) {
-    badge.textContent = mapVote && MAPS[mapVote] ? `偏好：${MAPS[mapVote].n}` : '全部地图随机轮换';
+    badge.textContent = mapVote && MAPS[mapVote] ? `偏好：${MAPS[mapVote].n}` : '标准擂台';
   }
   for (const b of document.querySelectorAll('#xiwuMapChips button')) {
     const m = b.dataset.map;

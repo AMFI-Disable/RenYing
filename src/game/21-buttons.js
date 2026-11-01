@@ -69,7 +69,7 @@ function setPickLevel(lv, save = true) {
   if (save) try { localStorage.setItem(AI_LEVEL_KEY, lv); } catch (e) {}
   for (const x of document.querySelectorAll('#levels button[data-lv]')) { const on = x.dataset.lv === lv; x.classList.toggle('sel', on); x.setAttribute('aria-pressed', on); }
   updateAIBrief();
-  if ($id('xiwuQuickInfo')) $id('xiwuQuickInfo').textContent = `${CHARS[menuHeroPick()].name} · ${LV_NAME[pickLevel] || pickLevel}`;
+  if (typeof updateXiwuSummary === 'function') updateXiwuSummary();
 }
 // 打开网页时读回来。以前各模式的境界各记各的、关掉网页就忘了；第一次用新版时，从最近一场对电脑的录像里取当时的境界
 function loadPickLevel() {
@@ -120,7 +120,7 @@ const xiwuMapChipsEl = document.getElementById('xiwuMapChips');
 if (xiwuMapChipsEl) {
   const showMapTrait = b => {
     const detail = $id('xiwuMapTrait');
-    if (detail) detail.textContent = b && MAPS[b.dataset.map] ? MAPS[b.dataset.map].d : '随机选择一处战场。';
+    if (detail) detail.textContent = b && MAPS[b.dataset.map] ? MAPS[b.dataset.map].d : '标准擂台，没有特殊地形。';
   };
   xiwuMapChipsEl.addEventListener('mouseover', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
   xiwuMapChipsEl.addEventListener('focusin', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
@@ -131,15 +131,22 @@ if (xiwuMapChipsEl) {
     SFX.slice();
     setMapVote(b.dataset.map || null);
     showMapTrait(b);
+    updateXiwuSummary();
   });
 }
+const xiwuMutatorEl = $id('mutatorPills');
+if (xiwuMutatorEl) xiwuMutatorEl.addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  SFX.slice();
+  if (currentSingleTab === 'tag3') { teamMutator = b.dataset.tab === 'cpu' ? 'normal' : b.dataset.tab; singleSec('tag3'); }
+  else singleSec(b.dataset.tab);
+});
 const singleTabsEl = document.getElementById('singleTabs');
 if (singleTabsEl) {
   singleTabsEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
     SFX.slice();
-    if (b.closest('#mutatorPills') && ['tag3', 'watch2v2'].includes(currentSingleTab)) { teamMutator = b.dataset.tab === 'cpu' ? 'normal' : b.dataset.tab; singleSec(currentSingleTab); return; }
     // 不在大厅里打开面板的几格：2v2 开组队弹窗，开放世界、全服肉鸽开各自的弹窗，联机对战去对战页
     if (b.dataset.tab === 'watch2v2') { open2v2Modal(); return; }
     if (b.dataset.act === 'world') { openWorldModal(); return; }

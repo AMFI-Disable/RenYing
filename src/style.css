@@ -3118,3 +3118,37 @@ body.offline #mMatch { display: none !important; }
 .combat-card:empty { display:none; }
 
 #single .xiwu-quick-card .go { margin:0; padding:5px 18px; font-size:20px; }
+
+/* XiWu studio: modes on the left, the selected practice on the right. */
+#single .singlep { max-width: min(1180px, 96vw); }
+#single .mode-title-wrap { text-align: left; max-width: 1080px; margin: 0 auto 18px; }
+#single .mode-title-wrap h2 { margin-bottom: 2px; }
+.xiwu-studio { display: grid; grid-template-columns: minmax(190px, 240px) minmax(0, 1fr); gap: 20px; width: min(1080px, 100%); margin: auto; align-items: start; }
+#single .single-nav-deck.play-deck { width: 100%; padding: 0; margin: 0; }
+#single .xiwu-category-tabs { grid-template-columns: 1fr; gap: 6px; margin-bottom: 16px; }
+#single .xiwu-cat-btn { padding: 10px 12px; border-radius: 6px; box-shadow: none; }
+#single .xiwu-cards-row { grid-template-columns: 1fr; gap: 4px; }
+#single .xiwu-cards-row button { min-height: 52px; border-radius: 5px; background: rgba(15,16,29,.42); border: 1px solid transparent; }
+#single .xiwu-cards-row button.sel { background: rgba(233,196,106,.1); border-color: rgba(233,196,106,.45); }
+.xiwu-config { min-width: 0; padding: 20px; border: 1px solid rgba(233,196,106,.22); border-radius: 8px; background: linear-gradient(145deg, rgba(35,31,42,.82), rgba(13,15,25,.9)); box-shadow: 0 16px 40px rgba(0,0,0,.18); }
+#single #aiLvHome { width: 100%; margin: 0 0 16px; }
+#single .xiwu-quick-card { margin: 0 0 16px; padding: 12px 16px; background: rgba(233,196,106,.08); border-radius: 5px; }
+#single .xiwu-quick-card p { line-height: 1.5; }
+#single .xiwu-mutator-row, #single .xiwu-map-select-bar { margin: 0 0 14px; }
+#single .xiwu-mode-content { padding-top: 14px; border-top: 1px solid rgba(233,196,106,.16); }
+#single .single-action-row { justify-content: flex-start; }
+#single [hidden] { display: none !important; }
+@media (max-width: 760px) {
+  .xiwu-studio { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  #single .xiwu-category-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 8px; }
+  #single .xiwu-cards-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .xiwu-config { padding: 14px; }
+}
+@media (max-width: 420px) {
+  #single .xiwu-cat-btn { grid-template-columns: 1fr; }
+  #single .xiwu-cat-btn .cat-icon { display: none; }
+  #single .xiwu-quick-card { flex-wrap: wrap; }
+}
+@media (max-width: 900px) {
+  #single .xiwu-quick-card .go { max-width: 100%; min-width: 0; font-size: 17px; padding: 6px 12px; white-space: normal; }
+}
