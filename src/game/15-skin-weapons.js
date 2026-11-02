@@ -1173,7 +1173,7 @@ function drawProjs(glowOnly) {
       ctx.fillStyle = '#d8452f'; ctx.fillRect(-5, -6, 10, 8); // 红布封口/坛签
       ctx.fillStyle = 'rgba(255,220,150,0.5)'; ctx.fillRect(-2, -4, 4, 4);
     } else if (p.kind === 'pavilion') {   // 亭中留客：醉翁亭从天而降，和关人时是同一座亭子
-      const drop = p.delay > 0 ? p.delay / 0.35 : 0;   // 0.35 秒从天上落到地面
+      const drop = p.delay > 0 ? p.delay / 0.45 : 0;   // 0.45 秒从天上落到地面
       if (p.delay > 0) { ctx.strokeStyle = 'rgba(255,190,90,0.5)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.ellipse(p.x, 0, 100, 9, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
       drawWengTing(p.x, -drop * drop * 640, 1, 1);
     }
