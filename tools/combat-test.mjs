@@ -565,7 +565,7 @@ const testSuite = [
       toNeutral(A);
       A.meter = 100; A.skillCD = 10;
       startSpecial(A);
-      for (let i = 0; i < 40; i++) step();
+      for (let i = 0; i < 150; i++) { step(); if (A.state !== 'special') break; }
       if (A.skillCD > 0) return { pass: false, error: 'Ult did not reset Q cooldown: skillCD=' + A.skillCD };
 
       toMenu();

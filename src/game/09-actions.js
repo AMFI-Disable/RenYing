@@ -495,6 +495,9 @@ function updateProjs() {
       if (Math.abs(dx) < 34 && p.age > p.turn + 0.15) { p.dead = true; continue; }
     }
     p.x += p.vx * STEP; p.y += p.vy * STEP;
+    if (p.kind === 'ironball' && !p.recalling) {
+      p.x = clamp(p.x, WALL + 18, STAGE_W - WALL - 18);
+    }
     mapWindProj(p);   // 竹海悬岩的风
     if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
     if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
@@ -582,7 +585,9 @@ function updateProjs() {
       dust(foe.x, 0, 6); SFX.heavy();
     }
     p.hits++; p.hitCD = p.rehit || 99;
-    if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
+    if (p.kind === 'ironball') {
+      // 玄铁傀丸永不消散（只有千机大招收回时才销毁）
+    } else if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
   }
   // 双方远程弹道相撞相抵（Projectile Clashing）：两方飞射物在空中交错时互相抵消消散（排除地面震波、落雷、陷阱与结构物）
   const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net', 'popcorn'];
