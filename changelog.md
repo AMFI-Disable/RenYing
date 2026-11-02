@@ -4,6 +4,28 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ---
 
+## [1.0.2] - 2026-11-02
+
+### Added
+
+- **Synchronized Map Briefing Screen and Automatic Map Selection (`src/data/12-maps.js`, `src/game/08-fighter-match.js`, `src/game/22-modes.js`, `src/game/23-demo-cards.js`, `src/page.html`, `src/style.css`, `index.html`, `renying-offline.html`)**:
+  - Implemented automatic synchronized map selection (`rollMap`) across PvP, PvC, and CvC modes (including 1v1, 2v2 co-op/vs/watch, and 3v3 tag wheel), selecting deterministically from all 6 landscapes (`cliff`, `ice`, `bamboo`, `thunder`, `pagoda`, `wine`).
+  - Added the dedicated Map Briefing Screen modal (`#mapBriefing`) displaying map landscape name, Chinese seal badge, overview lore, terrain hazard breakdown, and 5–6 地利 (Territorial Advantage) hero synergies prior to the ban/pick phase, with a 4s auto-advance or Space/Enter/Click bypass.
+  - Expanded home-ground 地利 heroes from 2 to 5–6 heroes per map across all 6 maps, introducing new interactive terrain mechanics (e.g. Feiying frost glide speed and kick knockback, Yanling aerial fall damage reduction, Yuehua lightning defense, Yuxiao lightning rhythm notes acceleration, Qianji / Moyu / Zuixian wine fog buffs, and Qianji / Lingque pagoda cooldown reductions).
+- **顿悟密卷 (Insight Scroll Buff Selection) Draft (`src/game/22-scrolls.js`, `src/game/23-demo-cards.js`, `src/game/08-fighter-match.js`, `src/page.html`, `src/style.css`, `index.html`, `renying-offline.html`)**:
+  - Added pre-battle buff drafting screen (`#buffDraft`) following the ban/pick phase: draws 5 candidate insight scrolls (`scDraw(heroId, owned, 5)`) for each selected hero.
+  - Implemented an animated 7.5s visual SVG countdown ring timer (`.bd-timer-ring`) with automatic fallback pick upon timeout.
+  - Added intelligent computer / AI auto-selection and 【天时 · 契合】(Auspicious Synergy) badges (`.bd-tianshi-badge`) highlighting scrolls best tailored to each hero and terrain conditions (e.g., Qianji's `mech_charge`, Feiying's `crit_parry`, Tieshan's `super_armor`, Yuxiao's `tempo_boost`, Canglang's `bleed_burst`, etc.).
+  - Added sequential multi-hero buff drafting and relay activation: in 3v3 tag wheel or 2v2 modes, players draft one buff per rostered hero, and scrolls activate sequentially as each fighter enters combat.
+
+### Changed
+
+- **Streamlined Practice Lobby (习武) (`src/page.html`, `src/style.css`, `src/game/17-home.js`, `src/game/21-buttons.js`, `index.html`, `renying-offline.html`)**:
+  - Removed manual map selection chips (`#xiwuMapChips`), voting status badge (`#mapVoteStatusBadge`), and map trait footer (`#xiwuMapTrait`) from the practice mode interface.
+  - Simplified practice summary display (`updateXiwuSummary`) to focus on selected hero, game mode, AI difficulty tier, and battle mutator.
+
+---
+
 ## [1.0.1] - 2026-11-02
 
 ### Added

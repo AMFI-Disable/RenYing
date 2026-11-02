@@ -6,7 +6,7 @@ function showScreen(id) {
   }
   menuTransition++;
   const prev = currentScreen; currentScreen = id;
-  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
   if (id !== 'settings') cancelKeyRebind();
@@ -120,24 +120,7 @@ if (xiwuCatTabsEl) {
     }
   });
 }
-const xiwuMapChipsEl = document.getElementById('xiwuMapChips');
-if (xiwuMapChipsEl) {
-  const showMapTrait = b => {
-    const detail = $id('xiwuMapTrait');
-    if (detail) detail.textContent = b && MAPS[b.dataset.map] ? MAPS[b.dataset.map].d : '标准擂台，没有特殊地形。';
-  };
-  xiwuMapChipsEl.addEventListener('mouseover', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
-  xiwuMapChipsEl.addEventListener('focusin', e => { const b = e.target.closest('button[data-map]'); if (b) showMapTrait(b); });
-  xiwuMapChipsEl.addEventListener('mouseleave', () => showMapTrait(xiwuMapChipsEl.querySelector('button.sel')));
-  xiwuMapChipsEl.addEventListener('click', e => {
-    const b = e.target.closest('button[data-map]');
-    if (!b) return;
-    SFX.slice();
-    setMapVote(b.dataset.map || null);
-    showMapTrait(b);
-    updateXiwuSummary();
-  });
-}
+
 const xiwuMutatorEl = $id('mutatorPills');
 if (xiwuMutatorEl) xiwuMutatorEl.addEventListener('click', e => {
   const b = e.target.closest('button[data-tab]'); if (!b) return;

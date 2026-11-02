@@ -242,23 +242,7 @@
               </div>
             </div>
 
-            <!-- 偏好地图（后台自动选图） -->
-            <div class="xiwu-map-select-bar">
-              <div class="sec-head-row" style="margin-bottom:6px">
-                <span class="mutator-label" style="font-weight:600;color:var(--gold)">战场：</span>
-                <span class="sub-badge" id="mapVoteStatusBadge">标准擂台</span>
-              </div>
-              <div class="xiwu-map-chips" id="xiwuMapChips" role="group" aria-label="偏好地图">
-                <button type="button" class="map-chip sel" data-map="">标准擂台</button>
-                <button type="button" class="map-chip" data-map="cliff">断崖台</button>
-                <button type="button" class="map-chip" data-map="ice">寒潭冰面</button>
-                <button type="button" class="map-chip" data-map="bamboo">竹海悬岩</button>
-                <button type="button" class="map-chip" data-map="thunder">雷泽石坛</button>
-                <button type="button" class="map-chip" data-map="pagoda">皇城飞檐</button>
-                <button type="button" class="map-chip" data-map="wine">醉仙楼</button>
-              </div>
-              <p id="xiwuMapTrait" class="xiwu-map-trait" role="status">标准擂台，没有特殊地形。</p>
-            </div>
+
       <div class="xiwu-mode-content">
       <!-- 对战电脑 (Choosing AI) -->
       <div data-sec="cpu" class="single-sec-pane">
@@ -753,6 +737,58 @@
           </div>
           <div class="emobar" id="comEmo"></div>
         </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- 战场通览与地图快报 -->
+  <div id="mapBriefing" class="scr map-briefing-scr" role="dialog" aria-modal="true" aria-label="战场通览">
+    <div class="mb-wrap">
+      <div class="mb-header">
+        <div class="mb-badge">山河风貌 · 战场通览</div>
+        <h2 class="mb-title" id="mbTitle">断崖台</h2>
+        <p class="mb-subtitle" id="mbSub">险峰孤绝，云海翻涌</p>
+      </div>
+      <div class="mb-body">
+        <div class="mb-landscape" id="mbLandscape">
+          <div class="mb-topo-tag" id="mbTopoTag">特殊地形：深渊断崖</div>
+          <p class="mb-desc" id="mbDesc">两侧没有墙壁，被重击击飞将直接坠崖，损耗气血后弹回边缘。</p>
+        </div>
+        <div class="mb-fav-panel">
+          <div class="mb-fav-title">
+            <span class="mb-fav-icon">⚡</span>
+            <span>地利豪杰 · 战术协同 (5-6位)</span>
+          </div>
+          <div class="mb-fav-grid" id="mbFavGrid"></div>
+        </div>
+      </div>
+      <div class="mb-footer">
+        <div class="mb-hint">按 <kbd>空格</kbd> 或 <kbd>回车</kbd> 快速进入点将台</div>
+        <button type="button" class="go mb-continue-btn" id="mbContinueBtn">进入点将台 (<span id="mbTimer">4</span>s)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顿悟密卷 (Insight Scroll Draft) -->
+  <div id="buffDraft" class="scr buff-draft-scr" role="dialog" aria-modal="true" aria-label="顿悟密卷">
+    <div class="bd-wrap">
+      <div class="bd-header">
+        <div class="bd-badge">武道境界 · 顿悟密卷</div>
+        <h2 class="bd-title">顿悟密卷 · 武学进境</h2>
+        <div class="bd-timer-wrap">
+          <svg class="bd-timer-ring" viewBox="0 0 40 40">
+            <circle class="bd-timer-bg" cx="20" cy="20" r="17"></circle>
+            <circle class="bd-timer-fg" id="bdTimerFg" cx="20" cy="20" r="17"></circle>
+          </svg>
+          <span class="bd-timer-text" id="bdTimerText">7.5</span>s
+        </div>
+      </div>
+      <div class="bd-tabs" id="bdTabs"></div>
+      <div class="bd-hero-intro" id="bdHeroIntro">为先锋挑选专属对局秘术，战斗中实时生效</div>
+      <div class="bd-cards-grid" id="bdCardsGrid"></div>
+      <div class="bd-footer">
+        <div class="bd-status" id="bdStatus">请选择一卷强化秘术（倒计时结束将自动选择【天时】推荐）</div>
+        <button type="button" class="go bd-confirm-btn" id="bdConfirmBtn" disabled>确认密卷</button>
       </div>
     </div>
   </div>

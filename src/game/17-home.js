@@ -304,8 +304,6 @@ function singleSec(sec) {
   if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
-  const maps = $id('xiwuMapChips');
-  if (maps && maps.parentElement) maps.parentElement.hidden = active !== 'cpu';
   updateXiwuSummary();
   const scr = $id('single');
   if (scr && !sec) scr.scrollTop = 0;
@@ -344,8 +342,6 @@ function updateXiwuSummary() {
   const rule = active === 'tag3' ? teamMutator : active;
   const ruleName = rule === 'chaos' ? '天机乱斗' : rule === 'mayhem' ? '通天神决' : '常规标准';
   const pieces = [CHARS[menuHeroPick()].name, LV_NAME[pickLevel] || pickLevel, mode, ruleName];
-  let preferredMap = ''; try { preferredMap = localStorage.getItem('renying-map-vote') || ''; } catch (e) {}
-  if (active === 'cpu') pieces.push(MAPS[preferredMap] ? MAPS[preferredMap].n : '标准擂台');
   info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(' · ');
 }
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen

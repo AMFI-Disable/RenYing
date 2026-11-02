@@ -299,11 +299,21 @@ for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
 
 // ---------- 谁有哪些秘卷 ----------
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || M.mode === 'world' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()); }
-const scEligible = f => !!(f && (f.idx <= 1 || (typeof isRaid === 'function' && isRaid())));
+function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || M.mode === 'world' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()) || !!M.hasBuffs; }
+const scEligible = f => !!(f && (f.idx <= 3 || (typeof isRaid === 'function' && isRaid())));
 function scIds(f) {
   if (!f) return [];
   if (typeof isRaid === 'function' && isRaid()) return f.idx === 1 ? (M.foeScrolls || []) : (M.towerPerks || []);
+  if (M.hasBuffs && M.heroBuffs) {
+    if (M.mode === 'tag3' && M.teams) {
+      const side = f.idx === 0 ? 0 : 1;
+      const slot = (M.teamIdx && M.teamIdx[side]) || 0;
+      const b = (M.heroBuffs[side] && M.heroBuffs[side][slot]) || null;
+      return b ? [b] : [];
+    }
+    const b = M.heroBuffs[f.idx];
+    return b ? (Array.isArray(b) ? b : [b]) : [];
+  }
   return f.idx === 0 ? (M.towerPerks || []) : f.idx === 1 ? (M.foeScrolls || []) : [];
 }
 function scHas(f, id) { return scOn() && scIds(f).includes(id); }
@@ -433,6 +443,28 @@ function scDraw(heroId, owned, n = 3) {
     out.push(bag.splice(i, 1)[0]);
   }
   return out;
+}
+
+// 竞技顿悟密卷池与【天时 · 契合】计算
+function getAuspiciousBuff(heroId, mapId, candidates) {
+  if (!candidates || !candidates.length) return null;
+  let best = candidates[0], bestScore = -999;
+  for (const s of candidates) {
+    let score = 0;
+    if (s.h === heroId) score += 30; // 专属密卷高度契合
+    if (s.r === 'e') score += 10;
+    else if (s.r === 'r') score += 6;
+    else if (s.r === 'c') score += 3;
+    // 地图与英雄属性联动
+    if (mapId === 'thunder' && s.s === 'lei') score += 15;
+    if (mapId === 'ice' && s.s === 'shuang') score += 15;
+    if (mapId === 'bamboo' && s.s === 'feng') score += 15;
+    if (mapId === 'wine' && (s.s === 'mo' || s.s === 'qi')) score += 12;
+    if (mapId === 'cliff' && (s.s === 'ying' || s.s === 'feng')) score += 12;
+    if (mapId === 'pagoda' && (s.s === 'ying' || s.s === 'qi')) score += 12;
+    if (score > bestScore) { bestScore = score; best = s; }
+  }
+  return best;
 }
 // 卡片上的图标：按流派画一个简单的符号
 const SC_GLYPH = {

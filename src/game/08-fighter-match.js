@@ -254,6 +254,11 @@ function mapPick(votes, r) {
 }
 // 联机用对局种子算出选图的随机数：两边种子一样，选出来的图就一样；不动对局随机数（GRNG），后面的对局照旧
 const mapSeedRand = seed => (Math.imul((seed | 0) ^ 0x5bd1e995, 2654435761) >>> 0) / 4294967296;
+function rollMap(seed = null) {
+  const r = (seed !== null && seed !== undefined) ? mapSeedRand(seed) : Math.random();
+  const idx = Math.floor(r * MAP_POOL.length) % MAP_POOL.length;
+  return MAP_POOL[idx] || MAP_POOL[0];
+}
 // 脚下的抓地力：1 是普通地面；站在冰面上小于 1，越重越小（滑得越远），地利侠客有个下限。平台上不是冰面
 function mapGrip(f) {
   const mp = mapNow(), ice = mp && mp.ice;
@@ -269,10 +274,14 @@ const mapIceX = () => { const ice = (mapNow() || {}).ice; return ice ? [ice.from
 function mapEdge(f, cl) {
   if (f.x >= WALL && f.x <= STAGE_W - WALL) return;
   const side = f.x < WALL ? -1 : 1;
-  const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > cl.push);
+  const fav = mapFavOn(f);
+  // 燕翎（地利）：羽行御风，坠崖伤害减半；勾陈/磁仙/凌霜对手更容易受制，流云空中不易失足
+  let pushThresh = cl.push;
+  const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > pushThresh);
   f.x = side < 0 ? WALL : STAGE_W - WALL;
   if (!flung || f.hp <= 0) { if (Math.sign(f.vx) === side) f.vx = 0; return; }
-  const dmg = Math.round(f.maxHp * cl.dmg);
+  const dmgMul = (fav && f.ch.id === 'yanling') ? 0.5 : 1;
+  const dmg = Math.round(f.maxHp * cl.dmg * dmgMul);
   f.hp = Math.max(1, f.hp - dmg);
   f.x -= side * cl.back; f.y = Math.min(f.y, -40); f.vy = cl.vy; f.vx = -side * 120;
   f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul);
@@ -329,8 +338,13 @@ function mapDrop(f) {
 
 // ---------- 地利侠客（MAPS[..].fav）、风、天雷、酒雾 ----------
 const mapFavOn = f => !!(f && f.ch && ((mapNow() || {}).fav || {})[f.ch.id]);
-// 绯影的地利：站在飞檐上走得快
-const mapWalk = f => f.plat >= 0 && f.ch.id === 'feiying' && mapFavOn(f) ? 1.15 : 1;
+// 绯影的地利：站在飞檐上走得快 15%；寒潭冰面上疾行突进提速
+const mapWalk = f => {
+  if (!mapFavOn(f)) return 1;
+  if (f.plat >= 0 && f.ch.id === 'feiying') return 1.15;
+  if (M.map === 'ice' && f.ch.id === 'feiying') return 1.15;
+  return 1;
+};
 // 风：空中、走路、闪步的人被往风向推；燕翎（地利）顺风推一倍、逆风不推
 function mapWind(f, onG) {
   const E = M.mapEnv, W = (mapNow() || {}).wind;
@@ -339,11 +353,16 @@ function mapWind(f, onG) {
   if (f.ch.id === 'yanling' && mapFavOn(f)) push = Math.sign(f.vx) === E.wDir ? W.push * 2 : 0;
   f.vx += E.wDir * push * STEP;
 }
-// 顺风的飞行道具多飞一段；青锋（地利）的多飞一倍
+// 顺风的飞行道具多飞一段；青锋/流云/墨羽（地利）顺风额外加成
 function mapWindProj(p) {
   const E = M.mapEnv, W = (mapNow() || {}).wind;
   if (!E || !W || E.wOn <= 0 || Math.sign(p.vx) !== E.wDir) return;
-  const o = fighterByIdx(p.owner), k = o && o.ch.id === 'qingfeng' && mapFavOn(o) ? 2 : 1;
+  const o = fighterByIdx(p.owner);
+  let k = 1;
+  if (o && mapFavOn(o)) {
+    if (o.ch.id === 'qingfeng') k = 2;
+    else if (o.ch.id === 'liuyun' || o.ch.id === 'moyu') k = 1.3;
+  }
   p.x += E.wDir * W.proj * k * STEP;
 }
 // 天雷劈下：离落点不到 r、脚离地面高过 60 的人。无敌、大招、被抓着、正在吸人的不劈（免得留下半截动作）
@@ -357,18 +376,20 @@ function mapThunder(T) {
       continue;
     }
     if (f.invul > 0 || f.escInvul || f.state === 'special' || f.state === 'held' || (f.magTg !== undefined && f.magTg >= 0)) continue;
+    let thunderDmg = T.dmg;
+    if (mapFavOn(f) && f.ch.id === 'yuehua') thunderDmg = Math.round(thunderDmg * 0.5);
     toNeutral(f);
-    f.hp = Math.max(1, f.hp - T.dmg);
+    f.hp = Math.max(1, f.hp - thunderDmg);
     f.vy = T.vy; f.vx = (Math.sign(f.x - tx) || 1) * 200; f.plat = -1;
     f.state = 'launched'; f.t = 0; f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false;
-    if (!RESIM) addP({ type: 'text', text: '天雷 -' + T.dmg, x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,210,90' });
+    if (!RESIM) addP({ type: 'text', text: '天雷 -' + thunderDmg, x: f.x, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,210,90' });
   }
   if (RESIM) return;
   ring(tx, -120, 160, '255,230,120', 0.5); shake = Math.max(shake, 18); flashA = Math.max(flashA, 0.45); flashRGB = '255,240,150';
   for (let i = 0; i < 18; i++) addP({ type: 'spark', x: tx + rand(-90, 90), y: -120, vx: rand(-260, 260), vy: rand(-350, 100), life: 0.4, max: 0.4, rgb: '255,225,120', w: 3 });
   SFX.thunder(); SFX.thunderHit(1.2); SFX.terrainLightning();
 }
-// 每一步（step 里，侠客都动完以后）：风和天雷的计时、酒雾、凌雀（地利）在飞檐上冷却快
+// 每一步（step 里，侠客都动完以后）：风和天雷的计时、酒雾、地利特性增益
 function mapTick(dt) {
   const mp = mapNow(), E = M.mapEnv;
   if (!mp || !E || M.phase !== 'fight') return;
@@ -381,8 +402,17 @@ function mapTick(dt) {
   }
   if (mp.thunder) {
     const T = mp.thunder;
-    if (E.tWarn > 0) { E.tWarn -= dt; if (E.tWarn <= 0) { E.tWarn = 0; E.tT = T.every; mapThunder(T); } }
-    else if ((E.tT -= dt) <= 0) {
+    if (E.tWarn > 0) {
+      E.tWarn -= dt;
+      if (E.tWarn <= 0) { E.tWarn = 0; E.tT = T.every; mapThunder(T); }
+      // 玉箫（地利）：天雷预警石坛回响，音律充能提速
+      for (const f of allFighters()) {
+        if (!f.hidden && f.hp > 0 && mapFavOn(f) && f.ch.id === 'yuxiao' && (f.notes || 0) < 3) {
+          f.noteT = (f.noteT || 0) + dt * 0.5;
+          if (f.noteT >= 2.5) { f.noteT = 0; f.notes = (f.notes || 0) + 1; }
+        }
+      }
+    } else if ((E.tT -= dt) <= 0) {
       E.tWarn = T.warn;
       if (!RESIM) addP({ type: 'text', text: '天雷将至', x: T.x * STAGE_W, y: -260, life: 1.2, max: 1.2, rgb: '255,220,100' });
     }
@@ -399,9 +429,17 @@ function mapTick(dt) {
         const fav = mapFavOn(f);
         if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * dt);
         if (fav && f.ch.id === 'zuixian') f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
+        if (fav && f.ch.id === 'yuehua' && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = Math.min(f.maxHp, f.hp + 6 * dt);
+        if (fav && f.ch.id === 'qianji') {
+          if (f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.2 * dt);
+          if (f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.2 * dt);
+        }
       }
     }
-    if (f.plat >= 0 && f.ch.id === 'lingque' && mapFavOn(f) && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
+    if (f.plat >= 0 && mapFavOn(f)) {
+      if (f.ch.id === 'lingque' && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
+      if (f.ch.id === 'qianji' && f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.15 * dt);
+    }
   }
 }
 
@@ -439,7 +477,8 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (duo) chars = [duo[0][0], duo[1][0]];
   setChars(chars[0], chars[1]);
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
-  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = null;
+  const keepMap = M.map;
+  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null;
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];

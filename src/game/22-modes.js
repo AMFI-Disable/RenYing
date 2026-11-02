@@ -18,6 +18,7 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   M.stage = null;
   M.duo = null;
   M.watchAi = !!isWatch;
+  if (!M.map) M.map = rollMap();
 
   setChars(M.teams[0][0], M.teams[1][0]);
   A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
@@ -469,12 +470,6 @@ function updateMapChipsUI() {
   if (badge) {
     badge.textContent = mapVote && MAPS[mapVote] ? `偏好：${MAPS[mapVote].n}` : '标准擂台';
   }
-  for (const b of document.querySelectorAll('#xiwuMapChips button')) {
-    const m = b.dataset.map;
-    const isSel = (m === '' && !mapVote) || (m === mapVote);
-    b.classList.toggle('sel', isSel);
-    b.setAttribute('aria-pressed', isSel);
-  }
 }
 // 一排地图卡片：名字、说明、得票和概率。数字和中文分开放，界面翻成英文时各自翻
 function mapVoteCards(box, votes, mine, onPick) {
@@ -504,7 +499,7 @@ function startMapsMode(p1, p2, lv, isWatch = false, mapId) {
   M.stage = null;
   M.duo = null;
   M.watchAi = !!isWatch;
-  M.map = MAP_POOL.includes(mapId) ? mapId : mapPick(mapVote ? [mapVote] : [], Math.random());   // 点将台上已经选好；没有就现在按票选
+  M.map = MAP_POOL.includes(mapId) ? mapId : (MAP_POOL.includes(mapVote) ? mapVote : (M.map || rollMap()));
   setChars(mapsP1, mapsP2);
   A.ctrl = isWatch ? new AICtrl(M.level || 'god') : human[0];
   B.ctrl = new AICtrl(M.level || 'god');
@@ -713,6 +708,7 @@ function startWatch2v2(draft) {
   M.round = 1;
   M.carry = null;
   M.stage = null;
+  if (!M.map) M.map = rollMap();
   A.setChar(t1a); C.setChar(t1b);
   B.setChar(t2a); D.setChar(t2b);
   A.ctrl = new AICtrl('god'); C.ctrl = new AICtrl('god');
@@ -739,6 +735,7 @@ function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal',
   M.round = 1;
   M.carry = null;
   M.stage = null;
+  if (!M.map) M.map = rollMap();
   A.setChar(p1); C.setChar(p2);
   B.setChar(foe1); D.setChar(foe2);
   A.ctrl = human[0]; // 1P

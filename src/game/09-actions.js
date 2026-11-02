@@ -474,7 +474,8 @@ function updateProjs() {
             dust(p.x, 0, 8); ring(p.x, 0, 36, '235,165,70', 0.2); SFX.ballHit();
           } else {
             p.vy = 0;
-            p.vx = damp(p.vx, 0, 4.5, STEP);
+            const dampRate = (M.map === 'ice' && typeof mapFavOn === 'function' && mapFavOn(fighterByIdx(p.owner))) ? 1.2 : 4.5;
+            p.vx = damp(p.vx, 0, dampRate, STEP);
             if (Math.abs(p.vx) < 30) { p.vx = 0; p.resting = true; }
           }
         }
@@ -857,6 +858,15 @@ function hitClones(box, attIdx) {
       if (!overlap(box, cloneBox(c))) continue;
       cloneGone(o, c, true);
       att.meter = Math.min(100, (att.meter || 0) + ((o.ch.clone || {}).breakMeter || 0));
+      if (typeof mapFavOn === 'function' && mapFavOn(o)) {
+        if (M.map === 'bamboo') {
+          o.meter = Math.min(100, (o.meter || 0) + 12);
+        } else if (M.map === 'wine' && att.hp > 0) {
+          att.guard = Math.max(0, att.guard - 15);
+          att.vx = -att.face * 180;
+          if (!RESIM) addP({ type: 'text', text: '雾震', x: c.x, y: (c.y || 0) - 100, life: 0.6, max: 0.6, rgb: o.look.slash });
+        }
+      }
     }
   }
 }
