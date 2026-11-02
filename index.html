@@ -7348,6 +7348,8 @@ traits: ['自我对弈训练', '九成精准招架', '骗闪与压起身'],
 },
 ];
 const UI_COPY_EN = {
+"一键开启全部": "Open All",
+"开箱结果": "Case Results",
 "全服在线人数未知": "Players online: unknown",
 "在线人数未知": "Players online: unknown",
 "连不上服务器，稍后自动重试": "Can't reach the server, retrying soon",
@@ -33661,10 +33663,11 @@ const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
 const pips = (n, max) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
 function pCases() {
 const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF());
+const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0);
 const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台终端机，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
 const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.cv(CF(), 'openDay'))}</span>
 <span>今天还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premDay'))}</span>
-<span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span><small>普通和神兵武器箱每天零点刷新，星座武器箱每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
+<span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span><button type="button" class="go small" data-open-all ${live() && available ? '' : 'disabled'}>一键开启全部</button><small>普通和神兵武器箱每天零点刷新，星座武器箱每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
 const card = cid => {
 const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
 const have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
@@ -33695,6 +33698,28 @@ return `<div class="ar-casecard prem${zod ? ' zod' : ''}" style="--cc:${col.col}
 return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem).map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
 }
 const REEL = { on: false };
+let bulkOpening = false;
+async function openAllCases() {
+if (bulkOpening || REEL.on || BUSY || !live()) return;
+bulkOpening = true;
+const wins = [], owner = UID;
+try {
+for (const cid of C.CASES) {
+while (live() && UID === owner && ST.cases[cid] > 0 && C.openLeft(ST, cid, CF()) > 0) {
+const r = await act('open', { c: cid });
+if (!r || !r.ok || !r.item) return;
+wins.push(r.item);
+}
+}
+} finally {
+bulkOpening = false;
+render();
+if (wins.length && UID === owner && $id('armory').classList.contains('on')) {
+modal(`<h3>开箱结果</h3><div class="ar-grid">${wins.map(it => tile(it)).join('')}</div><div class="row"><button class="go small" id="arBulkDone">收下</button></div>`, 'wide');
+$id('arBulkDone').addEventListener('click', () => { closeModal(); render(); });
+}
+}
+}
 const CW = 132;   // 每格宽 + 间隔
 function reelFill(cid, win) {   // 滚轮上的其他格子按这个箱子的爆率随便摆（好的那几档多摆一点，看着热闹）
 const col = C.COLS[cid], O = C.oddsOf(cid, CF()), ts = C.TIERS.filter(t => O[t] > 0 && (col[t] || []).length), w = ts.map((t, i) => O[t] * (i ? 3 : 1)), sum = w.reduce((a, b) => a + b, 0), out = [];
@@ -33707,7 +33732,7 @@ return out;
 }
 function skipAnim() { try { return localStorage.getItem('renying-arm-fast') === '1'; } catch (e) { return false; } }
 async function openCase(cid) {
-if (REEL.on) return;
+if (REEL.on || bulkOpening) return;
 const r = await act('open', { c: cid });
 if (!r || !r.ok) { render(); return; }
 const win = r.item, lvWin = C.TIERS.indexOf(tierOf(win.k)), big = lvWin >= 2;
@@ -34031,7 +34056,7 @@ const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
 modal(`<h3>自选一件隐秘饰品</h3><div class="ar-grid sm">${list.map(k => `<button type="button" class="ar-it" style="--tc:${tc(k)}" data-opcov="${k}"><img src="${art(k)}" alt=""><b>${escapeHTML(skinName(k))}</b><small>${charName(k)} · ${colName(k)}</small><i class="ar-bar"></i></button>`).join('')}</div><div class="row"><button class="ghost small" data-ar-close>取消</button></div>`, 'wide');
 }
 function bind() {
-$id('arTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; SFX.slice && SFX.slice(); TAB = b.dataset.tab; render(); $id('arMain').scrollTop = 0; });
+$id('arTabs').addEventListener('click', e => { if (bulkOpening) return; const b = e.target.closest('[data-tab]'); if (!b) return; SFX.slice && SFX.slice(); TAB = b.dataset.tab; render(); $id('arMain').scrollTop = 0; });
 $id('arModal').addEventListener('click', async e => {
 if (e.target.closest('[data-ar-close]') || e.target === $id('arModal')) { if (!REEL.on) closeModal(); return; }
 const b = e.target.closest('button'); if (!b || b.disabled) return;
@@ -34051,6 +34076,7 @@ render();
 });
 main.addEventListener('keydown', e => { if (e.key === 'Escape') return; e.stopPropagation(); });   // 打字时别触发游戏的快捷键
 main.addEventListener('click', async e => {
+if (bulkOpening) return;
 const pv = e.target.closest('[data-pv]');   // 武器箱里的饰品：点开预览
 if (pv) { inspect({ i: -1, k: pv.dataset.pv, st: -1, t: 0 }, 'pv'); return; }
 const b = e.target.closest('button'); if (!b || b.disabled) return;
@@ -34069,6 +34095,7 @@ await connect(true);
 if (live()) { render(); msg('连上了，可以用了'); return; }
 }
 if (!live()) { msg(MODE === 'wait' ? '正在连接服务器，稍等一下' : MODE === 'offline' ? '连不上服务器，等联网了再试' : MODE === 'old' ? OLD_MSG : '登录之后才能用武库'); return; }
+if (d.openAll !== undefined) { openAllCases(); return; }
 if (d.open) { openCase(d.open); return; }
 if (d.term) { termAct(d.term); return; }
 if (d.buyg) { buyBox(d.buyg); return; }
@@ -34121,7 +34148,7 @@ if (MODE === 'server') { try { apply(await ECON('sync', {})); } catch (e) {} }
 else if (MODE === 'local' && ST) { const env = envBase(), sold = C.settle(ST, env); if (sold.length) apply({ state: ST, ink: env.ink, sold }); }
 render();
 clearInterval(POLL);
-POLL = setInterval(() => { if (!$id('armory').classList.contains('on')) { clearInterval(POLL); return; } if (!BUSY && !REEL.on) act('sync', {}, { bg: true }).then(() => { if (!BUSY && !REEL.on && $id('arModal').hidden && $id('arIns').hidden) render(); }); }, 60000);
+POLL = setInterval(() => { if (!$id('armory').classList.contains('on')) { clearInterval(POLL); return; } if (!BUSY && !REEL.on && !bulkOpening) act('sync', {}, { bg: true }).then(() => { if (!BUSY && !REEL.on && !bulkOpening && $id('arModal').hidden && $id('arIns').hidden) render(); }); }, 60000);
 }
 window.openArmory = openArmory;
 bind();

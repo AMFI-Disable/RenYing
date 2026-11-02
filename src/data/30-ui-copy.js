@@ -7,6 +7,8 @@
 // 带数字的句子（"剩余 25 天"、"12 人在线"）整句查不到，走 src/i18n.js 里的 PATTERNS_EN 模板。
 // 加一句新文案：在这里加一行；没加的照样显示中文，不会出错。
 const UI_COPY_EN = {
+  "一键开启全部": "Open All",
+  "开箱结果": "Case Results",
   "全服在线人数未知": "Players online: unknown",
   "在线人数未知": "Players online: unknown",
   "连不上服务器，稍后自动重试": "Can't reach the server, retrying soon",

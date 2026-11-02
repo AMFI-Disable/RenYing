@@ -226,8 +226,22 @@ try {
   for (const mode of ['p_cc','pp_cc','pp_pp']) await check('local draft ' + mode, `(() => { showScreen('single'); open2v2Modal('${mode}'); document.getElementById('btn2v2GoLocal').click(); return {ok: currentScreen === 'bp' && bpMode === '2v2' && !!BP && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
   await check('English draft fits without horizontal overflow', `(() => { I18N.setLang('en'); bpStart('2v2', {subMode:'pp_cc'}); const w = document.querySelector('#bp .bpw'); return {ok: w.scrollWidth <= w.clientWidth + 2, scroll: w.scrollWidth, width: w.clientWidth}; })()`);
   await check('2v2 AI draft', `(() => { showScreen('single'); open2v2Modal(); document.getElementById('btn2v2GoWatch').click(); return {ok: currentScreen === 'bp' && bpMode === 'watch2v2' && !!watch2v2Bp && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
+  await check('bulk opening respects shared daily and weekly limits', `(async () => {
+    CloudSave.getUser = () => ({uid:'bulk-test', isCloud:false}); PROF.guest = false; PROF.armory = null;
+    const s = PROF.armory; delete s.sig; s.cases.c1 = 8; s.cases.c2 = 2; s.cases.c7 = 5; s.cases.c8 = 2;
+    const raw = JSON.stringify(s), uid = 'bulk-test', salt = 'ry-armory|v1|';
+    s.sig = ArmoryCore.hash32(salt + uid + '|' + raw).toString(36) + ArmoryCore.hash32(raw + '|' + uid + salt).toString(36);
+    PROF.armory = s; showScreen('armory'); await openArmory('cases');
+    const button = document.querySelector('[data-open-all]');
+    if (!button || button.disabled) return {ok:false, stage:'button'};
+    button.click();
+    for (let i = 0; i < 200 && !document.getElementById('arBulkDone'); i++) await new Promise(r => setTimeout(r, 50));
+    const out = PROF.armory;
+    return {ok: !!document.getElementById('arBulkDone') && out.cases.c1 === 3 && out.cases.c2 === 2 && out.cases.c7 === 2 && out.cases.c8 === 1 && out.inv.length === 9, cases:out.cases, items:out.inv.length};
+  })()`);
   await loadGame(URL.replace(/[^/]*$/, 'renying-offline.html'));
   await check('offline styles and draft without remote fonts', `(() => { const css = [...document.styleSheets].find(s => !s.href); showScreen('single'); open2v2Modal('pp_cc'); document.getElementById('btn2v2GoLocal').click(); return {ok: !!css && css.cssRules.length > 100 && currentScreen === 'bp' && !!BP && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
+
   if (pageErrors.length) throw new Error('Uncaught browser errors: ' + pageErrors.join(' | '));
   console.log('PASS browser draft and stylesheet checks');
 } finally { ws.onclose = null; ws.close(); chrome.kill(); }
