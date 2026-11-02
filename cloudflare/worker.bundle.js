@@ -1524,7 +1524,12 @@ async function handleRefresh(env, request, body, now) {
     return json({ ok: true, token, refresh: next, expiresIn: ACCESS_TTL / 1000, device: d.id });
   }
   const used = await env.DB.prepare('SELECT dev FROM refresh_used WHERE h = ?').bind(h).first();
-  if (!used) return error('登录已过期，请重新登录', 401);
+  if (!used) {
+    // A concurrent rotation may have updated devices before recording refresh_used.
+    const pending = await env.DB.prepare('SELECT rotated_at FROM devices WHERE prev = ? AND expires_at > ?').bind(h, now).first();
+    if (pending && now - pending.rotated_at < REFRESH_RACE && body.insist !== true) return error('别的标签页刚换过，读一下新的', 409, { race: true });
+    return error('登录已过期，请重新登录', 401);
+  }
   const cur = await env.DB.prepare('SELECT id, user_id, prev, rotated_at FROM devices WHERE id = ?').bind(used.dev).first();
   if (!cur) return error('登录已过期，请重新登录', 401);
   if (cur.prev === h && now - cur.rotated_at < REFRESH_RACE && body.insist !== true) return error('别的标签页刚换过，读一下新的', 409, { race: true });

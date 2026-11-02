@@ -1535,6 +1535,10 @@ section('短效令牌 + 续期令牌：30 分钟过期，续期令牌用一次�
   const g = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123', rt: 1 }, undefined, '8.8.8.6');
   const [p1, p2] = await Promise.all([rf({ refresh: g.refresh }), rf({ refresh: g.refresh })]);
   ok([p1, p2].filter(x => x.ok).length === 1 && [p1, p2].some(x => x.status === 409), '两个请求同时拿同一个续期令牌来换：一个换到，另一个 409，不会两个都换到', [p1.status, p2.status]);
+  const gap = await call('POST', '/api/login', { username: 'rtUser', password: 'secret123', rt: 1 }, undefined, '8.8.8.9');
+  ENV.DB.raw.prepare('UPDATE devices SET prev = refresh, refresh = ?, rotated_at = ? WHERE id = ?').run(sha('new-refresh-for-test'), T, gap.device);
+  const pendingRace = await rf({ refresh: gap.refresh });
+  ok(pendingRace.status === 409 && pendingRace.race, '续期令牌已轮换、旧令牌尚未记账时也返回 409', pendingRace);
   ok((await rf({ refresh: 'f'.repeat(64) })).status === 401 && (await rf({})).status === 401 && (await rf({ refresh: 'x'.repeat(200) })).status === 401, '乱填的、没填的、太长的：401');
   const last = (p1.ok ? p1 : p2).refresh;   // 不拨时间（拨 31 天会顺手清掉后面要用的老令牌）：把到期时间改到现在之前
   ENV.DB.raw.prepare('UPDATE devices SET expires_at = ? WHERE refresh = ?').run(T - 1, sha(last));
