@@ -1018,13 +1018,14 @@ async function vAudit() {
   const groups = new Map();
   for (const row of r.rows) {
     const day = new Date(row.at).toLocaleDateString('zh-CN');
-    if (!groups.has(day)) groups.set(day, []);
-    groups.get(day).push(row);
+    const key = JSON.stringify([day, row.act]);
+    if (!groups.has(key)) groups.set(key, { day, act: row.act, rows: [] });
+    groups.get(key).rows.push(row);
   }
   return H`<div class="card">
     <div class="row between wrap"><h2>操作记录与智能归档 <small>显示最近 ${r.rows.length} 条</small></h2>
       <div class="row wrap" style="gap:6px">
-        <button class="btn ghost sm" data-act="audittoggle">${S.auditGrouped ? '显示逐条记录' : '自动按日期合并'}</button>
+        <button class="btn ghost sm" data-act="audittoggle">${S.auditGrouped ? '显示逐条记录' : '智能合并全部操作'}</button>
       </div>
     </div>
     <form class="search" data-form="auditq">
@@ -1033,8 +1034,8 @@ async function vAudit() {
       <button class="btn">筛选</button>
       ${(S.auditAct || S.auditBy) ? H`<button type="button" class="btn ghost sm" data-act="clearaudit">重置</button>` : ''}
     </form>
-    <p class="hint">记录按日期自动合并显示；展开可查看每条操作、对象、内容和原始原因。翻页可浏览全部历史，原始记录不会被修改。</p>
-    ${r.rows.length ? (S.auditGrouped ? [...groups].map(([day, rows]) => { const counts = {}; for (const row of rows) counts[row.act] = (counts[row.act] || 0) + 1; return H`<details class="card"><summary>${day} · ${rows.length} 条 · ${Object.entries(counts).map(([act, n]) => (ACT[act] || act) + ' ×' + n).join('、')}</summary>${table(rows)}</details>`; }) : table(r.rows)) : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
+    <p class="hint">当前页的每一种操作都会按日期和类型自动合并；展开可查看每条操作、对象、内容和原始原因。翻页可浏览全部历史，原始记录不会被修改。</p>
+    ${r.rows.length ? (S.auditGrouped ? [...groups.values()].map(({ day, act, rows }) => { const actors = {}; for (const row of rows) { const d = parse(row.detail) || {}, actor = d.by || '—'; actors[actor] = (actors[actor] || 0) + 1; } return H`<details class="card"><summary>${day} · ${ACT[act] || act} · ${rows.length} 条 · ${Object.entries(actors).map(([name, n]) => name + ' ×' + n).join('、')}</summary>${table(rows)}</details>`; }) : table(r.rows)) : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
     <div class="row wrap"><button class="btn ghost sm" data-act="auditprev" ${S.auditStack.length ? '' : 'disabled'}>上一页</button><button class="btn ghost sm" data-act="auditnext" data-before="${r.nextBefore || ''}" ${r.nextBefore ? '' : 'disabled'}>更早的记录</button></div>
   </div>`;
 }
