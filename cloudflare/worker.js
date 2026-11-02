@@ -882,7 +882,7 @@ async function handleEcon(env, auth, body, now, ip) {
     const quiet = QUIET.includes(act) && !out.sold.length && !out.back;
     // 流水里记下这一次进出库存的每一件（rm 出去的、ad 进来的，挂到市场上不算出去）：哪件饰品是哪一步没的，后台找回工具按这个查
     const moved = itemDiff(eco.state, st);
-    const detail = logDetail({ a: args, r: res.err ? res.err : res.item ? itemRef(res.item) : res.gain || res.price || '', s: out.sold.length || undefined, b: out.back ? out.back.length : undefined, ...moved });
+    const detail = logDetail({ a: args, r: res.err ? res.err : res.item ? itemRef(res.item) : res.gain || res.price || '', n: act === 'openAll' && res.items ? res.items.length : undefined, cases: act === 'openAll' ? res.cases : undefined, s: out.sold.length || undefined, b: out.back ? out.back.length : undefined, ...moved });
     // 买、撤：先把那一单从“在卖”改掉（只有它还在卖、版本号也没变才改得动），后面每一条都要看到这一改才生效
     const id = mo && (mo.buy || mo.cancel), tx = id ? [id, nonce.slice(0, 24) + '.' + attempt] : null;
     const stmts = [];
@@ -1116,17 +1116,18 @@ function adminOf(env, request) {
   return who;
 }
 /* ---------- 管理员账号和角色 ----------
- * 管理网页先登录（POST /api/admin/login）换一个 30 分钟的管理令牌（as_ 开头），网页只放在内存里，刷新、过期就要重新登录。
+ * 管理网页先登录（POST /api/admin/login）换一个 1 小时的管理令牌（as_ 开头），网页只放在内存里，刷新、过期就要重新登录。
  * 两种登录：管理员账号（名字 + 密码，存在 admins 表，密码和玩家一样用 PBKDF2），或者 ADMIN_SECRET 里的口令（角色是“全部”，
  * 用来建第一批管理员账号；命令行 tools/econ-admin.mjs 也还是直接带口令）。
  * 角色：view 只能看；econ 还能改墨锭、补偿、兑换码、经济数值、找回饰品；ban 还能封号、解封、重设玩家密码；all 什么都能做（功能开关、管理员账号）。
  * 每次登录、每次改管理员账号都记进 econ_log，和别的管理操作一样在「操作记录」里看得到。 */
-const ADMIN_TTL = 30 * 60e3;
+const ADMIN_TTL = 60 * 60e3;
 const ADMIN_ROLES = ['view', 'econ', 'ban', 'all'];
 const ADMIN_ROLE_NAME = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
 // 不写在这里的：GET 是 view，POST 是 all（管理员账号列表也只给 all 看）
 const ADMIN_NEED = {
   'POST /api/admin/adjust': 'econ', 'POST /api/admin/restore': 'econ', 'POST /api/admin/gift': 'econ', 'POST /api/admin/gift/off': 'econ',
+  'GET /api/admin/lost/scan': 'econ',
   'POST /api/admin/code': 'econ', 'POST /api/admin/code/off': 'econ', 'POST /api/admin/cfg': 'econ', 'POST /api/admin/cfg/undo': 'econ', 'POST /api/admin/mkt/cancel': 'econ',
   'POST /api/admin/ban': 'ban', 'POST /api/admin/pardon': 'ban', 'POST /api/admin/password': 'ban', 'POST /api/admin/batch': 'ban', 'GET /api/admin/export': 'ban',
   'POST /api/admin/player/devices/drop': 'ban', 'POST /api/admin/player/clear-history': 'ban', 'GET /api/admin/player/export': 'ban',
@@ -1259,14 +1260,20 @@ async function adminAdjust(env, u, body, who, why, now) {
 // 去向不明的（某一步操作里突然没了、旧流水没记去向）和管理员收走的可以找回。找回过的会标出来，不能再找回第二次
 const LOST_WHY = { trade: '汰换掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
 const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(m[1]) ? { k: m[1], i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined } : null; };   // 老流水只记了 st，没有斩数
-async function lostItems(env, uid) {
+async function lostItems(env, uid, all = false) {
   const row = await env.DB.prepare('SELECT state_json FROM econ WHERE uid = ?').bind(uid).first();
   const st = parseObj(row && row.state_json) || C.blank(), here = new Set();
   for (const it of Array.isArray(st.inv) ? st.inv : []) if (it) here.add(+it.i);
   for (const L of Array.isArray(st.lst) ? st.lst : []) if (L && L.it) here.add(+L.it.i);
   const sold = new Set();
   for (const r of (await env.DB.prepare('SELECT item_json FROM mkt WHERE seller = ? AND state = 1').bind(uid).all()).results || []) { const it = parseObj(r.item_json); if (it) sold.add(+it.i); }
-  const log = (await env.DB.prepare('SELECT at, act, ok, detail FROM econ_log WHERE uid = ? ORDER BY id LIMIT 20000').bind(uid).all()).results || [];
+  const log = []; let after = 0;
+  for (;;) {
+    const page = (await env.DB.prepare('SELECT id, at, act, ok, detail FROM econ_log WHERE uid = ? AND id > ? ORDER BY id LIMIT 5000').bind(uid, after).all()).results || [];
+    log.push(...page);
+    if (page.length < 5000) break;
+    after = page[page.length - 1].id;
+  }
   const seen = new Map();
   const one = (x, fresh) => { let o = seen.get(x.i); if (!o) seen.set(x.i, o = { i: x.i, k: x.k, st: x.st }); else if (fresh || x.n) { o.k = x.k; o.st = x.st; } return o; };   // 记了斩数的以最近一次为准；老流水没记斩数，以拿到时的为准
   const got = (t, r) => { const x = parseItemRef(t); if (x) { const o = one(x, true); if (!o.got) o.got = { at: r.at, act: r.act }; } };
@@ -1288,21 +1295,22 @@ async function lostItems(env, uid) {
     out.push({ i: o.i, k: o.k, st: o.st, got: o.got || null, gone: g || null, why, can: ['admin', 'odd', 'unknown'].includes(why) });
   }
   out.sort((a, b) => ((b.gone && b.gone.at) || 0) - ((a.gone && a.gone.at) || 0) || b.i - a.i);
-  return out.slice(0, 300);
+  return all ? out : out.slice(0, 300);
 }
 async function adminRestore(env, u, body, who, why, now) {
   const ids = Array.isArray(body.ids) ? [...new Set(body.ids.map(Number))] : [];
   if (!ids.length || ids.length > 50 || ids.some(i => !Number.isInteger(i) || i < 1)) return error('要找回的饰品编号不对（一次最多 50 件）');
-  const lost = new Map((await lostItems(env, u.id)).map(x => [x.i, x]));
-  for (const i of ids) {
-    const x = lost.get(i);
-    if (!x) return error(`第 ${i} 号饰品不在“找不到的饰品”里（可能还在库存里，或者流水里没有它）`);
-    if (!x.can) return error(`第 ${i} 号饰品${x.why === 'restored' ? '已经找回过了' : LOST_WHY[x.why] || '是正常没的'}，不能找回`);
-  }
   for (let attempt = 0; attempt < 5; attempt++) {
     const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first();
     const prof = parseProfile(urow ? urow.profile_json : '', u.username);
     const eco = await loadEcon(env, u.id, prof, now);
+    const lost = new Map((await lostItems(env, u.id, true)).map(x => [x.i, x]));
+    for (const i of ids) {
+      const x = lost.get(i);
+      if (!x) return error(`第 ${i} 号饰品不在“找不到的饰品”里（可能还在库存里，或者流水里没有它）`);
+      if (!x.can) return error(`第 ${i} 号饰品${x.why === 'restored' ? '已经找回过了' : LOST_WHY[x.why] || '是正常没的'}，不能找回`);
+      if (body.onlyUnknown === true && x.why !== 'unknown') return error(`第 ${i} 号饰品的去向已改变，请重新扫描`);
+    }
     const s = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid: u.id });
     const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     const E = { now, rnd, uid: u.id, ink: eco.ink, skins: skins0.slice(), equip: fixEquip(cleanEquip(prof.equip), skins0), server: true };
@@ -1317,9 +1325,14 @@ async function adminRestore(env, u, body, who, why, now) {
     for (const k of add) delete srv.gone[k];
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
     delete p.armory; delete p.ledger;
-    const detail = JSON.stringify({ by: who, why, items, ad: items.map(x => itemRef({ k: x.k, i: x.to, st: x.st })) });
+    const logs = [];
+    for (let i = 0; i < items.length; i += 10) {
+      const chunk = items.slice(i, i + 10);
+      const detail = JSON.stringify({ by: who, why, items: chunk, ad: chunk.map(x => itemRef({ k: x.k, i: x.to, st: x.st })) });
+      logs.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'restore', 1, eco.ink, E.ink, detail], u.id, ver));
+    }
     const results = await env.DB.batch([
-      ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'restore', 1, eco.ink, E.ink, detail.slice(0, 2000)], u.id, ver),
+      ...logs,
       userWrite(env, u.id, p, now, ver),
       econWrite(env, u.id, ver, now, srv, E.ink, JSON.stringify(s)),
     ]);
@@ -1451,10 +1464,10 @@ async function handleAdmin(env, request, path, now, ip) {
       one('SELECT COUNT(*) AS n FROM sanctions WHERE perm = 1 OR ban_until > ?', now),
       one('SELECT COUNT(*) AS n FROM users WHERE deleted_at > 0'),
       one("SELECT COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ?", now - DAY_MS),
-      one("SELECT COUNT(*) AS n FROM econ_log WHERE act = 'open' AND ok = 1 AND at > ?", now - DAY_MS),
+      one("SELECT COALESCE(SUM(CASE WHEN act = 'open' THEN 1 WHEN json_valid(detail) THEN COALESCE(json_extract(detail, '$.n'), 0) ELSE 0 END), 0) AS n FROM econ_log WHERE act IN ('open', 'openAll') AND ok = 1 AND at > ?", now - DAY_MS),
       env.DB.prepare("SELECT CAST((created_at / 86400000) AS INTEGER) AS d, COUNT(*) AS n FROM users WHERE created_at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT CAST((at / 86400000) AS INTEGER) AS d, COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
-      env.DB.prepare("SELECT detail FROM econ_log WHERE act = 'open' AND ok = 1 AND at > ? LIMIT 1000").bind(now - 7 * DAY_MS).all(),
+      env.DB.prepare("SELECT detail FROM econ_log WHERE act IN ('open', 'openAll') AND ok = 1 AND at > ? LIMIT 1000").bind(now - 7 * DAY_MS).all(),
       one("SELECT COUNT(*) AS online, COALESCE(SUM(st = 'match'), 0) AS playing, COALESCE(SUM(st = 'queue'), 0) AS waiting FROM presence WHERE seen > ?", now - PRESENCE_WINDOW),
     ]);
     const signups7d = (signups && signups.results || []).map(r => r.n);
@@ -1464,6 +1477,7 @@ async function handleAdmin(env, request, path, now, ip) {
       const d = parseObj(r.detail);
       const c = d && d.a && d.a.c;
       if (c) caseCounts[c] = (caseCounts[c] || 0) + 1;
+      for (const [id, count] of Object.entries(d && d.cases || {})) if (C.CASES.includes(id)) caseCounts[id] = (caseCounts[id] || 0) + count;
     }
     return json({
       ok: true, who, now,
@@ -1781,6 +1795,16 @@ async function handleAdmin(env, request, path, now, ip) {
     const u = await findUser(String(body.uid || '').trim());
     if (!u) return error('没有这个账号', 404);
     return needWhy() || await adminAdjust(env, u, body, who, why, now);
+  }
+  if (route === 'GET /api/admin/lost/scan') {
+    // Read-only, bounded pages; only items with evidence of acquisition and no recorded departure.
+    const accounts = (await env.DB.prepare('SELECT u.id, u.username FROM users u JOIN econ e ON e.uid = u.id WHERE u.deleted_at = 0 AND u.id > ? ORDER BY u.id LIMIT 11').bind(q('after')).all()).results || [];
+    const page = accounts.slice(0, 10), matches = [];
+    for (const u of page) {
+      const ids = (await lostItems(env, u.id, true)).filter(x => x.why === 'unknown' && x.can).map(x => x.i);
+      if (ids.length) matches.push({ uid: u.id, username: u.username, ids });
+    }
+    return json({ ok: true, scanned: page.length, matches, next: accounts.length > 10 ? page[page.length - 1].id : null });
   }
   if (route === 'GET /api/admin/lost') {   // 找回饰品：这个号拿到过、现在没有的饰品，各自是哪一步没的
     const u = await findUser(q('uid'));
@@ -2379,13 +2403,13 @@ async function gbHit(env, auth, body, now) {
 /* ---------- 排行榜 ----------
  * 段位分、胜负场都是玩家自己的网页算好存进存档的（rk、netWins / netLosses），服务器只负责排序和挡掉被封的号，
  * 所以这里的数只用来展示，不拿去发奖励。 */
-const LB_N = 100, RK_PLACE = 5, RK_MIN = 1000, RK_MAX = 25000;
+const LB_N = 100, RK_PLACE = 3, RK_MIN = 1000, RK_MAX = 25000;
 async function leaderboard(env, kind, season, me, now) {
   const notBanned = 'deleted_at = 0 AND id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)';
   if (kind === 'rank') {
     if (!/^S\d{1,3}$/.test(season)) return { ok: true, kind, list: [] };
     const rows = (await env.DB.prepare(
-      `SELECT id, username, json_extract(profile_json, '$.rk.pts') AS pts FROM users WHERE ${notBanned}
+      `SELECT id, username, CASE WHEN COALESCE(json_extract(profile_json, '$.rk.pts'), 0) > 0 THEN json_extract(profile_json, '$.rk.pts') ELSE json_extract(profile_json, '$.rk.est') END AS pts FROM users WHERE ${notBanned}
        AND json_extract(profile_json, '$.rk.season') = ?2 AND json_extract(profile_json, '$.rk.placed') >= ?3
        ORDER BY pts DESC, updated_at LIMIT ?4`).bind(now, season, RK_PLACE, LB_N).all()).results || [];
     return { ok: true, kind, list: rows.map(r => ({ name: r.username, pts: Math.max(RK_MIN, Math.min(RK_MAX, Math.round(+r.pts || 0))), me: r.id === me })) };

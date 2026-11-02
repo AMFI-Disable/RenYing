@@ -649,7 +649,7 @@ async function openLeaderboard() {
     try {
       const j = await CloudSave.leaderboard('rank', rkSeason().id);
       if (tok !== lbTok) return;   // 读的时候换了标签：这份结果不要了
-      if (!j.list.length) { lbShow('', uiState('empty', '还没有人完成定级赛。排位赛打满 5 场就能上榜！'), ''); return; }
+      if (!j.list.length) { lbShow('', uiState('empty', '还没有人完成定级赛。排位赛打满 3 场就能上榜！'), ''); return; }
       lbShow(`本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`, '',
         '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
         `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join(''));

@@ -603,7 +603,7 @@
   // 武器箱
   const goodName = k => k === 'term' ? '终端机' : `${C.COLS[k].name}武器箱`;
   const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
-  const pips = (n, max) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
+  const pips = (n, max) => Array.from({ length: Math.min(20, max) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
   function pCases() {
     const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF());
     const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0);
@@ -649,13 +649,10 @@
     bulkOpening = true;
     const wins = [], owner = UID;
     try {
-      // Use the ordinary server-authoritative operation for every box, rechecking shared limits after each response.
-      for (const cid of C.CASES) {
-        while (live() && UID === owner && ST.cases[cid] > 0 && C.openLeft(ST, cid, CF()) > 0) {
-          const r = await act('open', { c: cid });
-          if (!r || !r.ok || !r.item) return;
-          wins.push(r.item);
-        }
+      while (live() && UID === owner && C.CASES.some(cid => ST.cases[cid] > 0 && C.openLeft(ST, cid, CF()) > 0) && !C.invFull(ST)) {
+        const r = await act('openAll', {});
+        if (!r || !r.ok || !Array.isArray(r.items) || !r.items.length) return;
+        wins.push(...r.items);
       }
     } finally {
       bulkOpening = false;

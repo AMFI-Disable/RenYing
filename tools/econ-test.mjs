@@ -147,6 +147,17 @@ const A = await newUser('alice');
   ok(c.ledger.ink === inkOf(A.uid), '返回的账本和服务器一致');
 }
 
+section('一键开箱：单次请求按共享额度开箱，重试不会重复');
+{
+  const u = await newUser('bulkCases'); await econ(u.token, 'sync');
+  const s = stateOf(u.uid); s.cases.c1 = 8; s.cases.c2 = 2; s.cases.c7 = 5; s.cases.c8 = 2;
+  ENV.DB.raw.prepare('UPDATE econ SET state_json = ?, ver = ver + 1 WHERE uid = ?').run(JSON.stringify(s), u.uid);
+  const n = nonce(), opened = await econ(u.token, 'openAll', {}, n), again = await econ(u.token, 'openAll', {}, n), out = stateOf(u.uid);
+  ok(opened.res.ok && opened.res.items.length === 9 && again.replay && out.cases.c1 === 3 && out.cases.c2 === 2 && out.cases.c7 === 2 && out.cases.c8 === 1 && out.inv.length === 9, '普通、神兵和星座额度各自生效，重放不重复开箱', opened.res);
+  const log = JSON.parse(row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'openAll' ORDER BY id DESC LIMIT 1", u.uid).detail);
+  ok(log.ad && log.ad.length === 9, '每件批量开出的饰品都有获得流水', log);
+}
+
 section('开箱概率：和公布的一样，五分之一是斩数版');
 {
   const R = C.rng(20261023), N = 120000, cnt = Object.fromEntries(C.TIERS.map(t => [t, 0]));
@@ -1260,11 +1271,13 @@ section('兑换码：管理后台建、玩家在游戏的兑换框输入；每�
 
 section('在线改经济数值：价格、每天能开几个、手续费、爆率马上生效；乱填的不收；能退回；规则核心里写死的默认值不变');
 {
+  const expanded = C.cleanCfg({ openDay: 1000, 'price.c1': 0, fee: 0.9 });
+  ok(!expanded.err && expanded.cfg.openDay === 1000 && expanded.cfg['price.c1'] === 0 && expanded.cfg.fee === 0.9, '经济配置不再受原先的人为上限限制', expanded);
   const c0 = await adm('GET', '/api/admin/cfg');
   ok(c0.ok && c0.id === 0 && !Object.keys(c0.cfg).length && c0.info.length === C.CFG_INFO.length && !c0.hist.length, '一开始全是默认值', c0.id);
   const bad = await badInputs('/api/admin/cfg', { why: '乱填测试' }, [
-    [{ set: { bogus: 1 } }, /不认识/], [{ set: { constructor: 1 } }, /不认识/], [{ set: { 'price.c1': 0 } }, /之间/], [{ set: { 'price.c1': 'abc' } }, /数字/],
-    [{ set: { openDay: 2.5 } }, /整数/], [{ set: { fee: 0.9 } }, /之间/], [{ set: { 'odds.mil': 0.6 } }, /加起来/], [{ set: { 'prem.gold': 0.5 } }, /加起来/],
+    [{ set: { bogus: 1 } }, /不认识/], [{ set: { constructor: 1 } }, /不认识/], [{ set: { 'price.c1': -1 } }, /之间/], [{ set: { 'price.c1': 'abc' } }, /数字/],
+    [{ set: { openDay: 2.5 } }, /整数/], [{ set: { fee: 1.1 } }, /之间/], [{ set: { 'odds.mil': 0.6 } }, /加起来/], [{ set: { 'prem.gold': 0.5 } }, /加起来/],
     [{ set: { 'term.lo': 2, 'term.hi': 1.5 } }, /最低/], [{ set: {} }, /没写/], [{ set: 'price.c1=1' }, /没写/], [{ set: { 'price.c1': 280 } }, /一样/],
   ]);
   ok(!bad.length && row('SELECT COUNT(*) AS n FROM cfg').n === 0, '12 种乱填的都存不进去（不认识的项、超出范围、不是数字、该填整数的填了小数、爆率加起来不是 1、终端机倍数反了、和现在一样）', bad);
@@ -1324,13 +1337,16 @@ section('排行榜：段位榜只列本赛季打满定级赛的，战绩榜按�
   const a = await mk('lbAlpha', { season: 'S1', pts: 9000, placed: 5 }, 12, 3);
   await mk('lbBeta', { season: 'S1', pts: 99999, placed: 7 }, 30, 1);
   await mk('lbGamma', { season: 'S1', pts: 20000, placed: 3 }, 0, 2);
+  await mk('lbPlacing', { season: 'S1', pts: 0, est: 7800, placed: 3 }, 0, 0);
+  await mk('lbNotReady', { season: 'S1', pts: 0, est: 8000, placed: 2 }, 0, 0);
   await mk('lbDelta', { season: 'S0', pts: 24000, placed: 9 }, 5, 5);
   const bad = await mk('lbEvil', { season: 'S1', pts: 24000, placed: 9 }, 99, 0);
   await adm('POST', '/api/admin/ban', { uid: bad.uid, days: 2, why: '测试排行榜' });
   const rk = await call('GET', '/api/leaderboard?k=rank&s=S1', undefined, a.token, '8.8.1.1');
   const names = (rk.list || []).map(r => r.name);
-  ok(rk.ok && names.includes('lbAlpha') && names.includes('lbBeta') && !names.includes('lbGamma') && !names.includes('lbDelta') && !names.includes('lbEvil'),
-    '段位榜：本赛季打满 5 场的上榜；没打满、上赛季、被封的不上', names);
+  ok(rk.ok && names.includes('lbAlpha') && names.includes('lbBeta') && names.includes('lbGamma') && !names.includes('lbDelta') && !names.includes('lbEvil'),
+    '段位榜：本赛季打满 3 场的上榜；没打满、上赛季、被封的不上', names);
+  ok(names.includes('lbPlacing') && !names.includes('lbNotReady') && rk.list.find(x => x.name === 'lbPlacing').pts === 7800, '原来打了 3 场但尚未定级的账号按估分上榜');
   ok(names.indexOf('lbBeta') < names.indexOf('lbAlpha') && rk.list.find(r => r.name === 'lbBeta').pts === 25000, '按段位分排，报上来的离谱分数夹到最高 25000', rk.list.slice(0, 3));
   ok(rk.list.find(r => r.name === 'lbAlpha').me && !rk.list.find(r => r.name === 'lbBeta').me, '带登录凭证看，自己那一行标出来');
   const wn = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.1.2');
@@ -2001,6 +2017,11 @@ section('找回饰品：管理后台按流水查出“拿到过、现在没有�
   const L = await adm('GET', '/api/admin/lost?uid=' + R.uid);
   const by = i => L.items.find(x => x.i === i);
   ok(L.ok && by(wolf.i) && by(wolf.i).why === 'unknown' && by(wolf.i).can && by(wolf.i).k === 'gc_wolf', '狼皮：去向不明，可以找回', by(wolf.i));
+  const previous = row('SELECT u.id FROM users u JOIN econ e ON e.uid = u.id WHERE u.deleted_at = 0 AND u.id < ? ORDER BY u.id DESC LIMIT 1', R.uid);
+  const scan = await adm('GET', '/api/admin/lost/scan' + (previous ? '?after=' + encodeURIComponent(previous.id) : ''));
+  const found = scan.matches.find(x => x.uid === R.uid);
+  ok(found && found.ids.includes(wolf.i) && !found.ids.includes(bamboo.i) && !found.ids.includes(yh.i), '全服扫描只找获得记录存在但去向不明的饰品', found);
+  ok((await adm('POST', '/api/admin/restore', { uid: R.uid, ids: [bamboo.i], onlyUnknown: true, why: '全服恢复测试' })).status === 400, '全服恢复不会发回管理员收走的饰品');
   ok(by(bamboo.i) && by(bamboo.i).why === 'admin' && by(bamboo.i).can && by(bamboo.i).st === 4, '管理员收走的：写明是谁收的那一步，可以找回（斩数照旧是 4）', by(bamboo.i));
   ok(by(yh.i) && by(yh.i).why === 'sold' && !by(yh.i).can, '在玩家市场卖掉的：不能找回', by(yh.i));
   ok(mils.every(x => by(x.i) && by(x.i).why === 'trade' && !by(x.i).can), '汰换掉的 10 件：不能找回');
@@ -2023,15 +2044,20 @@ section('找回饰品：管理后台按流水查出“拿到过、现在没有�
   ok(twice.status === 400 && stateOf(R.uid).inv.filter(x => x.k === 'gc_wolf').length === 1, '同一件找回不了第二次', twice.error);
   const L2 = await adm('GET', '/api/admin/lost?uid=' + R.uid);
   ok(!L2.items.some(x => x.i === wolf.i || x.i === bamboo.i), '找回以后不再列为找不到');
+  const extra = await adm('POST', '/api/admin/adjust', { uid: R.uid, give: [{ k: 'gc_wolf' }], why: '并发找回测试' });
+  const missing = extra.given[0], broken = stateOf(R.uid); broken.inv = broken.inv.filter(x => x.i !== missing.i);
+  ENV.DB.raw.prepare('UPDATE econ SET state_json = ?, ver = ver + 1 WHERE uid = ?').run(JSON.stringify(broken), R.uid);
+  const concurrent = await Promise.all([1, 2].map(() => adm('POST', '/api/admin/restore', { uid: R.uid, ids: [missing.i], onlyUnknown: true, why: '并发找回测试' })));
+  ok(concurrent.filter(x => x.ok).length === 1 && stateOf(R.uid).inv.filter(x => x.i === missing.i).length === 1, '同时找回同一件饰品只会发放一次', concurrent);
   const aud = await adm('GET', '/api/admin/audit');
   ok(aud.ok && aud.rows.some(r => r.act === 'restore' && r.uid === R.uid), '操作记录里看得到这次找回', aud.rows && aud.rows.slice(0, 3));
 }
 
-section('管理员账号和角色：先登录换 30 分钟的管理令牌；四种角色按接口放行；停用、改密码马上踢下线；都记进操作记录');
+section('管理员账号和角色：先登录换 1 小时的管理令牌；四种角色按接口放行；停用、改密码马上踢下线；都记进操作记录');
 {
   const login = (body, ip = '5.6.0.1') => call('POST', '/api/admin/login', body, undefined, ip);
   const s0 = await login({ password: ADMIN });
-  ok(s0.ok && s0.token.startsWith('as_') && s0.who === 'admin' && s0.role === 'all' && s0.expiresIn === 1800, '用 ADMIN_SECRET 口令登录：拿到 30 分钟的管理令牌，角色是全部', s0);
+  ok(s0.ok && s0.token.startsWith('as_') && s0.who === 'admin' && s0.role === 'all' && s0.expiresIn === 3600, '用 ADMIN_SECRET 口令登录：拿到 1 小时的管理令牌，角色是全部', s0);
   ok(!row('SELECT 1 AS x FROM admin_sessions WHERE token = ?', s0.token) && row("SELECT COUNT(*) AS n FROM admin_sessions WHERE token LIKE 'h1:%'").n >= 1, '数据库里只存管理令牌的哈希');
   const w0 = await adm('GET', '/api/admin/whoami', undefined, s0.token);
   ok(w0.ok && w0.who === 'admin' && w0.role === 'all', '用管理令牌调接口', w0);
@@ -2092,11 +2118,11 @@ section('管理员账号和角色：先登录换 30 分钟的管理令牌；四�
   const out = await adm('POST', '/api/admin/logout', {}, L.chief.token);
   ok(out.ok && (await adm('GET', '/api/admin/whoami', undefined, L.chief.token)).status === 401, '退出以后管理令牌就没用了');
   const s1 = await login({ name: 'chief', password: 'chief-pass-00004' });
-  T += 29 * 60000;
-  ok((await adm('GET', '/api/admin/whoami', undefined, s1.token)).ok, '29 分钟时还能用');
+  T += 59 * 60000;
+  ok((await adm('GET', '/api/admin/whoami', undefined, s1.token)).ok, '59 分钟时还能用');
   T += 2 * 60000;
   const exp = await adm('GET', '/api/admin/whoami', undefined, s1.token);
-  ok(exp.status === 401 && /重新登录/.test(exp.error), '30 分钟过了：401，要重新登录', exp);
+  ok(exp.status === 401 && /重新登录/.test(exp.error), '1 小时过了：401，要重新登录', exp);
   ok((await adm('GET', '/api/admin/whoami', undefined, 'as_' + 'f'.repeat(64))).status === 401, '编造的管理令牌不行');
 
   const logs = ENV.DB.raw.prepare("SELECT act, detail FROM econ_log WHERE act IN ('adm_login', 'adm_acct') ORDER BY id").all().map(r => ({ act: r.act, ...parseDetail(r.detail) }));

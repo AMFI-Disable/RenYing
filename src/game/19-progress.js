@@ -810,9 +810,9 @@ window.redeemCode = redeemCode;
 // ---------- 排位赛：赛季、段位、定级（不需要服务器，分数存在账号里） ----------
 // 分数 1000–25000。D C B A S 每个字母 5000 分（D 从 1000 起，只有 4000 分），
 // 每个字母最低的 1500 分是“-”、最高的 1500 分是“+”，中间是不带符号的。
-// 新赛季先打 5 场定级赛：定级期间显示一个估分（～xxxx 分），起点偏低、每场涨落很大，最高只能定到 B+。
+// 新赛季先打 3 场定级赛：定级期间显示一个估分（～xxxx 分），最高只能定到 B+。
 const SEASON = { id: 'S1', name: '第一赛季', start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 21, 16) };   // 北京时间 10 月 22 日 0 点到 11 月 22 日 0 点
-const RK = { MIN: 1000, MAX: 25000, STEP: 5000, EDGE: 1500, PLACE: 5, PLACE_CAP: 14999, PLACE_START: 2600 };
+const RK = { MIN: 1000, MAX: 25000, STEP: 5000, EDGE: 1500, PLACE: 3, PLACE_CAP: 14999, PLACE_START: 2600 };
 const RK_TIERS = [
   { l: 'D', n: '初出茅庐', c1: '#e0a06a', c2: '#5a2c12', glow: '#ffb27a' },
   { l: 'C', n: '小有名气', c1: '#e8eef5', c2: '#4f5c6c', glow: '#dff0ff' },
@@ -854,6 +854,8 @@ function rkState() {
     RKS = rkFresh(sid);
     if (old && old.placed >= RK.PLACE) RKS.last = { season: old.season, label: rkTier(old.pts).label, peak: old.peak || old.pts };
   }
+  // Players already on their third or fourth placement under the old rules are placed at their estimate.
+  if (RKS.placed >= RK.PLACE && !(RKS.pts > 0)) { RKS.pts = rkClamp(RKS.est, RK.PLACE_CAP); RKS.peak = Math.max(RKS.peak || 0, RKS.pts); }
   RKS.owner = owner;
   return RKS;
 }

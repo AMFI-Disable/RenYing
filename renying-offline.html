@@ -3093,7 +3093,7 @@ body.offline #mMatch { display: none !important; }
         <ul>
           <li><b>刃影武库</b>武器箱、玩家市场、汰换合同</li>
           <li><b>匹配对战</b>全服随机对手，开局即打</li>
-          <li><b>排位赛</b>D 到 S 五段，定级 5 场</li>
+          <li><b>排位赛</b>D 到 S 五段，定级 3 场</li>
           <li><b>流云 · 墨羽</b>技能重做</li>
         </ul>
       </details>
@@ -7396,7 +7396,7 @@ const UI_COPY_EN = {
 "50 秒内击倒对手才算赢；没分出胜负就进 20 秒加时，加时里伤害翻倍。活下来的人带着剩余血量 +80 进下一回合，倒下的人满血再来": "Knock out the opponent within 50s to win. If tied, enter 20s overtime with double damage. The survivor carries remaining HP +80 into next round; the defeated respawns at full HP.",
 "AI 对决 · 演武观战": "AI vs AI · Watch Exhibition",
 "AI 战术情报分析": "AI Tactical Intelligence",
-"D 到 S 五段，定级 5 场": "D to S tiers, 5 placement matches",
+"D 到 S 五段，定级 3 场": "D to S tiers, 3 placement matches",
 "E 终极奥义": "E Ultimate",
 "English": "English",
 "E奥义": "E Ultimate",
@@ -7947,7 +7947,7 @@ const UI_COPY_EN = {
 "排行榜": "Leaderboard",
 "正在读取排行榜…": "Loading the leaderboard…",
 "排行榜暂时读不到，稍后再试": "The leaderboard can't be loaded right now. Try again later.",
-"还没有人完成定级赛。排位赛打满 5 场就能上榜！": "No one has finished placements yet. Play 5 ranked matches to get on the board!",
+"还没有人完成定级赛。排位赛打满 3 场就能上榜！": "No one has finished placements yet. Play 3 ranked matches to get on the board!",
 "还没有人打过联机——去赢下第一场吧！": "No one has played online yet. Go win the first match!",
 "加载中…": "Loading…",
 "新手福利": "New Player Gift",
@@ -24888,7 +24888,7 @@ $id('rdBtn').addEventListener('click', () => redeemCode());
 $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode(); });
 window.redeemCode = redeemCode;
 const SEASON = { id: 'S1', name: '第一赛季', start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 21, 16) };   // 北京时间 10 月 22 日 0 点到 11 月 22 日 0 点
-const RK = { MIN: 1000, MAX: 25000, STEP: 5000, EDGE: 1500, PLACE: 5, PLACE_CAP: 14999, PLACE_START: 2600 };
+const RK = { MIN: 1000, MAX: 25000, STEP: 5000, EDGE: 1500, PLACE: 3, PLACE_CAP: 14999, PLACE_START: 2600 };
 const RK_TIERS = [
 { l: 'D', n: '初出茅庐', c1: '#e0a06a', c2: '#5a2c12', glow: '#ffb27a' },
 { l: 'C', n: '小有名气', c1: '#e8eef5', c2: '#4f5c6c', glow: '#dff0ff' },
@@ -24929,6 +24929,7 @@ const old = RKS;
 RKS = rkFresh(sid);
 if (old && old.placed >= RK.PLACE) RKS.last = { season: old.season, label: rkTier(old.pts).label, peak: old.peak || old.pts };
 }
+if (RKS.placed >= RK.PLACE && !(RKS.pts > 0)) { RKS.pts = rkClamp(RKS.est, RK.PLACE_CAP); RKS.peak = Math.max(RKS.peak || 0, RKS.pts); }
 RKS.owner = owner;
 return RKS;
 }
@@ -30417,7 +30418,7 @@ if (kind === 'rank') {
 try {
 const j = await CloudSave.leaderboard('rank', rkSeason().id);
 if (tok !== lbTok) return;   // 读的时候换了标签：这份结果不要了
-if (!j.list.length) { lbShow('', uiState('empty', '还没有人完成定级赛。排位赛打满 5 场就能上榜！'), ''); return; }
+if (!j.list.length) { lbShow('', uiState('empty', '还没有人完成定级赛。排位赛打满 3 场就能上榜！'), ''); return; }
 lbShow(`本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`, '',
 '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
 `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join(''));
@@ -32724,8 +32725,9 @@ if (!r) return { cfg: null, err: `不认识的数值：${k}` };
 if (v === null || v === undefined || v === '') continue;
 const x = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? +v : NaN;
 if (!Number.isFinite(x)) return { cfg: null, err: `${r[6]}（${k}）要填数字` };
-if (r[4] && !Number.isInteger(x)) return { cfg: null, err: `${r[6]}（${k}）要填整数` };
-if (x < r[2] || x > r[3]) return { cfg: null, err: `${r[6]}（${k}）要在 ${r[2]} 到 ${r[3]} 之间` };
+if (r[4] && !Number.isSafeInteger(x)) return { cfg: null, err: `${r[6]}（${k}）要填安全整数` };
+const probability = /^(odds|prem|zod)\./.test(k) || ['stP', 'dropP', 'fee'].includes(k);
+if (x < 0 || (probability && x > 1)) return { cfg: null, err: `${r[6]}（${k}）要在有效范围之间` };
 if (x !== r[1]) cfg[k] = x;
 }
 for (const [p, name] of [['odds.', '普通武器箱'], ...C.CASES.filter(c => C.COLS[c].prem).map(c => [C.COLS[c].ok, C.COLS[c].name + '武器箱'])]) {
@@ -33063,6 +33065,17 @@ const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd, { stP: C.cv(env.cfg, 'st
 bump(s, 'open', 1);
 return { ok: true, item: it };
 };
+A.openAll = (s, a, env) => {
+const items = [], cases = {};
+for (const cid of C.CASES) {
+while ((s.cases[cid] || 0) > 0 && C.openLeft(s, cid, env.cfg) > 0 && items.length < 50 && !C.invFull(s)) {
+const r = A.open(s, { c: cid }, env);
+if (!r.ok) return items.length ? { ok: true, items, cases } : r;
+items.push(r.item); cases[cid] = (cases[cid] || 0) + 1;
+}
+}
+return items.length ? { ok: true, items, cases } : { err: '没有可以开启的武器箱' };
+};
 A.store = (s, a, env) => {
 const g = C.STORE.find(x => x.id === a.id), n = Math.max(1, Math.min(10, Math.floor(+a.n || 1)));
 if (!g) return { err: '没有这件商品' };
@@ -33081,7 +33094,7 @@ const shopBuy = (s, k, a, env) => {
 const n = a.n === undefined ? 1 : +a.n;
 if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
 const p = C.shopPrice(k, env.cfg) * n;
-if (!(p > 0)) return { err: '没有这件商品' };
+if (!(p >= 0 && Number.isSafeInteger(p))) return { err: '价格不正确' };
 if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
 giveInk(env, -p);
 if (k === 'term') s.term += n; else s.cases[k] += n;
@@ -33998,7 +34011,7 @@ if (r && r.ok) { closeModal(); SFX.wood && SFX.wood(); toast(`买到了：${good
 }
 const goodName = k => k === 'term' ? '终端机' : `${C.COLS[k].name}武器箱`;
 const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
-const pips = (n, max) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
+const pips = (n, max) => Array.from({ length: Math.min(20, max) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
 function pCases() {
 const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF());
 const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0);
@@ -34042,12 +34055,10 @@ if (bulkOpening || REEL.on || BUSY || !live()) return;
 bulkOpening = true;
 const wins = [], owner = UID;
 try {
-for (const cid of C.CASES) {
-while (live() && UID === owner && ST.cases[cid] > 0 && C.openLeft(ST, cid, CF()) > 0) {
-const r = await act('open', { c: cid });
-if (!r || !r.ok || !r.item) return;
-wins.push(r.item);
-}
+while (live() && UID === owner && C.CASES.some(cid => ST.cases[cid] > 0 && C.openLeft(ST, cid, CF()) > 0) && !C.invFull(ST)) {
+const r = await act('openAll', {});
+if (!r || !r.ok || !Array.isArray(r.items) || !r.items.length) return;
+wins.push(...r.items);
 }
 } finally {
 bulkOpening = false;

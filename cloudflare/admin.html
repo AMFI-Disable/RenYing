@@ -9,7 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='6' fill='%23b8392e'/%3E%3Cpath d='M10 9h12M16 9v15M11 15l5 4 5-4' stroke='%23fbeee0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <!--
   刃影管理后台：Worker 的 /admin 回这一页（python3 tools/build.py 把它打包进 cloudflare/worker.bundle.js）。
-  只连这个 Worker 自己的 /api/admin/*。先用管理员账号（名字 + 密码）或者 ADMIN_SECRET 口令登录，换一个 30 分钟的管理令牌；
+  只连这个 Worker 自己的 /api/admin/*。先用管理员账号（名字 + 密码）或者 ADMIN_SECRET 口令登录，换一个 1 小时的管理令牌；
   令牌只放在内存里（不写 sessionStorage / localStorage），刷新网页、过期都要重新登录。管理员账号分四种角色，服务器按角色放行。
   整页只有最下面一段脚本：Worker 按它的 sha256 放行，别的脚本、onclick 这种都不会跑，所以事件一律用 addEventListener。
   服务器给的字（昵称、原因、说明）一律经过 H`` 转义再放进网页。
@@ -248,7 +248,7 @@
     <label class="f">密码<input id="tok" type="password" autocomplete="current-password" spellcheck="false" required></label>
     <button class="btn wide" id="loginBtn">进入</button>
     <p id="loginMsg" class="msg" role="alert"></p>
-    <p class="hint">有管理员账号就填名字和密码。没有的话名字留空，密码填 Cloudflare 里 ADMIN_SECRET 的值（写成「名字:口令」的，只输入冒号后面那一段），用它建管理员账号。登录 30 分钟有效，刷新网页也要重新登录。</p>
+    <p class="hint">有管理员账号就填名字和密码。没有的话名字留空，密码填 Cloudflare 里 ADMIN_SECRET 的值（写成「名字:口令」的，只输入冒号后面那一段），用它建管理员账号。登录 1 小时有效，刷新网页也要重新登录。</p>
   </form>
 </div>
 
@@ -257,8 +257,8 @@
     <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>查账号、调墨锭、发补偿和兑换码、改经济数值、全服共斗与数据维护</small></div></div>
     <div class="me">
       <button class="btn ghost sm" data-act="cmdk" title="全局快捷命令面板 (Cmd/Ctrl + K)">⌘K 快捷面板</button>
-      <span id="sessTimer" class="badge">剩余 30分00秒</span>
-      <button class="btn ghost sm" id="btnRenew" data-act="renew" title="给管理令牌续期 30 分钟">续期</button>
+      <span id="sessTimer" class="badge">剩余 60分00秒</span>
+      <button class="btn ghost sm" id="btnRenew" data-act="renew" title="给管理令牌续期 1 小时">续期</button>
       <button class="btn ghost sm" id="btnRefresh" data-act="reload" title="刷新当前页">刷新</button>
       <button class="btn ghost sm" id="btnAutoRefresh" data-act="toggleauto" aria-pressed="false" title="每 30 秒自动刷新">自动刷新: 关</button>
       <span>管理员 <b id="who"></b> <span class="badge" id="role"></span></span>
@@ -328,7 +328,7 @@ const S = {
   giftSkins: [], codeSkins: [],
   pFilter: '', pSort: '', pDir: 'desc', pLimit: 20, pOffset: 0, pTotal: 0,
   auditAct: '', auditBy: '', auditBefore: 0, auditStack: [], auditGrouped: true,
-  cfg: null, flags: [], aq: '', aact: '', seq: 0
+  cfg: null, flags: [], aq: '', aact: '', seq: 0, lostScan: null
 };
 const ROLE = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
 try { sessionStorage.removeItem('renying-admin'); } catch (e) {}   // 以前的版本把口令存在这里，清掉
@@ -365,7 +365,7 @@ async function api(path, body) {
   catch (e) { throw new Error('连不上服务器，检查一下网络'); }
   let j = {};
   try { j = await r.json(); } catch (e) {}
-  // 401：管理登录过期了（30 分钟、被停用、改了密码），重新登录；403 只是这个角色不能做这件事，提示一下就行
+  // 401：管理登录过期了（1 小时、被停用、改了密码），重新登录；403 只是这个角色不能做这件事，提示一下就行
   if (r.status === 401 && S.who) { logout('管理登录过期了，请重新登录'); throw new Error('管理登录过期了'); }
   if (!r.ok || !j.ok) throw new Error(j.error || '出错了（' + r.status + '）');
   return j;
@@ -391,7 +391,7 @@ const unit = (n, u) => H`${fmtN(n)}<small>${u}</small>`;
 const tile = (label, v, sub) => H`<div class="tile"><span>${label}</span><b>${typeof v === 'number' ? fmtN(v) : v}</b>${sub ? H`<i>${sub}</i>` : ''}</div>`;
 const SRC = { case: '开箱', term: '终端机', trade: '汰换', supply: '补给', op: '星章兑换', admin: '管理员发的', restore: '找回的', market: '市场买的' };
 const ACT = {
-  open: '开箱', store: '商店', buyCase: '买武器箱', buyTerm: '买终端机', list: '挂单', buy: '买下', cancel: '撤单', trade: '汰换', rename: '改名',
+  open: '开箱', openAll: '批量开箱', store: '商店', buyCase: '买武器箱', buyTerm: '买终端机', list: '挂单', buy: '买下', cancel: '撤单', trade: '汰换', rename: '改名',
   equip: '穿上', unequip: '脱下', unseal: '开封终端机', termNext: '终端机换一件', termBuy: '终端机买下', supply: '领补给', mission: '领任务奖励',
   star: '星章兑换', collect: '集齐奖励', matchEnd: '对局结束', matchStart: '开局', sync: '同步', gift: '新手礼',
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
@@ -486,6 +486,7 @@ const target = r => r.uid === '*' ? '全服' : r.username ? H`<button class="lin
 
 /* ---------- 确认框：每一笔修改先给你看要改什么，再写原因 ---------- */
 function ask({ title, lines = [], whyInit = '', ok = '确定', danger = false }) {
+  whyInit = whyInit || ('管理操作：' + title).slice(0, 100);
   const d = $('#dlg');
   paint(d, H`<form>
     <div class="dlg-b"><h3>${title}</h3>${lines.length ? H`<ul>${lines.map(l => H`<li>${l}</li>`)}</ul>` : ''}
@@ -594,8 +595,9 @@ async function vHome() {
       ${tile('市场在卖', unit(s.open, '单'), '玩家挂出来的')}
       ${tile('24 小时成交', unit(s.deals24, '单'), '成交额 ' + fmtN(s.dealInk24) + ' 墨锭')}
       ${tile('封禁 / 软删', H`${fmtN(s.banned)}<small>封</small> / ${fmtN(s.deleted || 0)}<small>删</small>`, '处罚与回收站')}
-      ${tile('经济数值', s.cfgId ? '第 ' + s.cfgId + ' 版' : '默认', s.cfgId ? '改过' : '没改过')}
+      ${tile('经济数值', s.cfgId ? '已调整' : '默认', s.cfgId ? '改过' : '没改过')}
     </div>
+    ${(S.role === 'econ' || S.role === 'all') ? H`<div class="card"><div class="row between wrap"><h2>全服找回去向不明的饰品</h2><button class="btn ghost" data-act="scanlost">扫描全部账号</button></div><p class="hint">只查流水中有获得记录、但库存和挂单中没有且没有去向记录的饰品；已售出、汰换和收走的不会自动找回。扫描不会修改账号。</p>${S.lostScan ? H`<p>已扫描 ${S.lostScan.scanned} 个账号；${S.lostScan.matches.length} 个账号共 ${S.lostScan.matches.reduce((n, x) => n + x.ids.length, 0)} 件可找回。</p>${S.lostScan.matches.length ? H`<div class="chips">${S.lostScan.matches.map(x => H`<label class="chip"><input type="checkbox" name="lostAccount" value="${x.uid}"> ${x.username} · ${x.ids.length} 件</label>`)}</div><div class="row wrap"><button class="btn ghost" data-act="selectlostaccounts">全选账号</button><button class="btn" data-act="restoreunknown">找回所选账号…</button></div>` : ''}` : ''}</div>` : ''}
     ${drawSparkline(s.signups7d)}
     ${drawInkFlowChart(s.inkFlow7d, s.caseCounts7d)}
     <div class="card"><div class="row between"><h2>最近的操作</h2><button class="btn ghost sm" data-act="tab" data-tab="audit">全部记录</button></div>
@@ -790,7 +792,7 @@ function lostCard(p) {
         <td class="nowrap">${x.got ? fmtT(x.got.at) + ' ' + (ACT[x.got.act] || x.got.act) : '—'}</td><td class="nowrap">${x.gone ? fmtT(x.gone.at) + ' ' + (ACT[x.gone.act] || x.gone.act) : '—'}</td>
         <td>${x.why === 'restored' ? H`<span class="badge ok">${LOST_TEXT.restored}</span>` : x.can ? H`<span class="badge bad">${LOST_TEXT[x.why]}</span>` : LOST_TEXT[x.why] || x.why}</td></tr>`)}
     </tbody></table></div>
-    ${can.length ? H`<div class="row end"><button class="btn">找回勾上的…</button></div>` : ''}` : H`<p class="empty">流水里拿到过的饰品都还在</p>`}
+    ${can.length ? H`<div class="row end"><button type="button" class="btn ghost" data-act="restoreselect">全选可找回</button><button class="btn">找回勾上的…</button></div>` : ''}` : H`<p class="empty">流水里拿到过的饰品都还在</p>`}
   </form>`;
 }
 function banCard(sc, isBan, p) {
@@ -954,20 +956,20 @@ async function vCfg() {
   }
   const sumKey = grp => grp.rows.every(x => ODDS_RE.test(x.k)) ? grp.rows[0].k.split('.')[0] : '';
   return H`<form class="card" data-form="cfg" novalidate>
-    <div class="row between wrap"><h2>经济数值</h2><span class="badge${r.id ? ' gold' : ''}">${r.id ? '现在用的是第 ' + r.id + ' 版' : '现在用的是默认数值'}</span></div>
+    <div class="row between wrap"><h2>经济数值</h2><span class="badge${r.id ? ' gold' : ''}">${r.id ? '已调整' : '默认数值'}</span></div>
     <p class="hint">保存后半分钟内全服生效，玩家的武库下一次操作后显示新数值。这里只有经济数值，伤害、血量、技能这些在代码里改。</p>
     ${groups.map(g => { const sk = sumKey(g); return H`<fieldset class="grp"><legend>${g.name}</legend>
       ${g.rows.map(x => H`<div class="cfgrow${x.cur !== x.def ? ' mod' : ''}" data-row="${x.k}">
         <label for="cfg_${x.k}">${x.desc}${x.cur !== x.def ? H` <span class="badge gold">改过</span>` : ''}</label>
-        <div class="cfgin"><input id="cfg_${x.k}" name="${x.k}" type="number" inputmode="${x.isInt ? 'numeric' : 'decimal'}" step="${x.isInt ? 1 : 'any'}" min="${x.lo}" max="${x.hi}" value="${x.cur}"><span class="pct" data-pct="${x.k}"></span></div>
-        <span class="hint">默认 ${x.def}，范围 ${x.lo}～${x.hi}</span>
+        <div class="cfgin"><input id="cfg_${x.k}" name="${x.k}" type="number" inputmode="${x.isInt ? 'numeric' : 'decimal'}" step="${x.isInt ? 1 : 'any'}" value="${x.cur}"><span class="pct" data-pct="${x.k}"></span></div>
+        <span class="hint">默认 ${x.def}</span>
         <button type="button" class="btn ghost sm" data-act="cfgdef" data-k="${x.k}">用默认</button>
       </div>`)}
       ${sk ? H`<div class="sum" data-sum="${sk}"></div>` : ''}
     </fieldset>`; })}
     <div class="row end"><span class="hint" id="cfgDirty"></span><button class="btn" id="cfgSave" disabled>检查并保存…</button></div>
   </form>
-  ${histCard(r)}`;
+  `;
 }
 function histCard(r) {
   const diff = c => Object.entries(c).map(([k, v]) => cfgName(k) + ' ' + v).join('，') || '全是默认值';
@@ -1210,16 +1212,23 @@ function drawCodeGives() {
 
 const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
 const AFTER = { players: drawGives, gifts: drawGiftGives, codes: drawCodeGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
-async function render() {
-  const main = $('#main'), seq = ++S.seq, tab = S.tab;
-  paint(main, H`<p class="loading">读取中…</p>`);
+let adminEditRevision = 0, adminDirty = false;
+$('#main').addEventListener('input', () => { adminDirty = true; adminEditRevision++; });
+$('#main').addEventListener('change', () => { adminDirty = true; adminEditRevision++; });
+async function render(auto = false) {
+  const main = $('#main');
+  if (auto && (adminDirty || main.contains(document.activeElement) || main.querySelector('details[open]'))) return;
+  if (!auto) adminDirty = false;
+  const revision = adminEditRevision, seq = ++S.seq, tab = S.tab, previousCfg = S.cfg, previousPlayer = S.p;
+  if (!auto) paint(main, H`<p class="loading">读取中…</p>`);
   try {
     const view = await VIEWS[tab]();
-    if (seq !== S.seq) return;   // 读的时候又换了页：不画旧的
+    if (seq !== S.seq) return;
+    if (auto && (adminDirty || revision !== adminEditRevision || main.contains(document.activeElement) || main.querySelector('details[open]'))) { S.cfg = previousCfg; S.p = previousPlayer; return; }   // 不覆盖正在编辑的内容
     paint(main, view);
     if (AFTER[tab]) AFTER[tab]();
   } catch (e) {
-    if (seq === S.seq && S.who) paint(main, H`<div class="card err"><span>${e.message}</span><button class="btn ghost sm" data-act="reload">再试一次</button></div>`);
+    if (!auto && seq === S.seq && S.who) paint(main, H`<div class="card err"><span>${e.message}</span><button class="btn ghost sm" data-act="reload">再试一次</button></div>`);
   }
 }
 function route() {
@@ -1354,12 +1363,12 @@ const ACTS = {
   logout: () => { api('logout', {}).catch(() => {}); logout(); },
   renew: b => busy(b, async () => {
     const r = await api('refresh', {});
-    S.exp = Date.now() + (r.expiresIn || 1800) * 1000;
+    S.exp = Date.now() + (r.expiresIn || 3600) * 1000;
     clearTimeout(S.expT);
-    S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, (r.expiresIn || 1800) * 1000);
+    S.expT = setTimeout(() => { if (S.who) logout('管理登录 1 小时到了，请重新登录'); }, (r.expiresIn || 3600) * 1000);
     saveSession();
     updateTimer();
-    toast('已续期 30 分钟');
+    toast('已续期 1 小时');
   }),
   toggleauto: b => {
     S.auto = !S.auto;
@@ -1367,7 +1376,7 @@ const ACTS = {
     b.textContent = S.auto ? '自动刷新: 30秒' : '自动刷新: 关';
     clearInterval(S.autoT);
     if (S.auto) {
-      S.autoT = setInterval(() => { if (S.who && !$('#dlg').open) render(); }, 30000);
+      S.autoT = setInterval(() => { if (S.who && !$('#dlg').open && !$('#cmdDlg').open) render(true); }, 30000);
       toast('已开启 30 秒自动刷新');
     } else {
       toast('已关闭自动刷新');
@@ -1506,6 +1515,19 @@ const ACTS = {
     if (a) await busy(b, async () => { await api('mkt/cancel', { id, why: a.why }); toast('已撤下挂单'); render(); });
   },
   clearaudit: () => { S.auditAct = ''; S.auditBy = ''; S.auditBefore = 0; S.auditStack = []; render(); },
+  scanlost: b => busy(b, async () => { const scan = { scanned: 0, matches: [] }; let after = ''; do { const r = await api('lost/scan' + (after ? '?after=' + encodeURIComponent(after) : '')); scan.scanned += r.scanned; scan.matches.push(...r.matches); after = r.next || ''; b.textContent = '扫描中：' + scan.scanned + ' 个账号'; } while (after); S.lostScan = scan; await render(); }),
+  selectlostaccounts: b => { const boxes = [...b.closest('.card').querySelectorAll('input[name=lostAccount]')]; const all = boxes.every(x => x.checked); boxes.forEach(x => { x.checked = !all; }); b.textContent = all ? '全选账号' : '取消全选'; adminDirty = true; adminEditRevision++; },
+  restoreunknown: async b => {
+    const scan = S.lostScan; if (!scan || !scan.matches.length) return;
+    const selected = new Set([...b.closest('.card').querySelectorAll('input[name=lostAccount]:checked')].map(x => x.value));
+    const chosen = scan.matches.filter(x => selected.has(x.uid));
+    if (!chosen.length) return toast('请先选择账号', true);
+    const count = chosen.reduce((n, x) => n + x.ids.length, 0);
+    const a = await ask({ title: '找回所选账号去向不明的饰品', lines: ['将为 ' + chosen.length + ' 个账号找回 ' + count + ' 件有获得记录、但没有去向记录的饰品。', '每批重新核对库存与流水；已恢复或正常离开的饰品不会重复发放。'], whyInit: '找回流水中去向不明的饰品', ok: '全部找回' });
+    if (!a) return;
+    await busy(b, async () => { let done = 0; try { for (const x of chosen) { while (x.ids.length) { const r = await api('restore', { uid: x.uid, ids: x.ids.slice(0, 50), onlyUnknown: true, why: a.why }); done += r.items.length; x.ids.splice(0, 50); b.textContent = '已找回 ' + done + ' 件'; } } toast('已找回 ' + done + ' 件'); } finally { scan.matches = scan.matches.filter(x => x.ids.length); await render(); } });
+  },
+  restoreselect: b => { const boxes = [...b.closest('form').querySelectorAll('input[name=restore]')]; const all = boxes.every(x => x.checked); boxes.forEach(x => { x.checked = !all; }); b.textContent = all ? '全选可找回' : '取消全选'; adminDirty = true; adminEditRevision++; },
   audittoggle: () => { S.auditGrouped = !S.auditGrouped; render(); },
   auditnext: b => { const before = Number(b.dataset.before); if (before > 0) { S.auditStack.push(S.auditBefore); S.auditBefore = before; render(); } },
   auditprev: () => { if (S.auditStack.length) { S.auditBefore = S.auditStack.pop(); render(); } },
@@ -1675,10 +1697,9 @@ const FORMS = {
   restore: async f => {
     const p = S.p, ids = [...f.querySelectorAll('input[name=restore]:checked')].map(x => Number(x.value));
     if (!ids.length) return toast('先勾上要找回的饰品', true);
-    if (ids.length > 50) return toast('一次最多找回 50 件', true);
     const L = S.lost.items, lines = ids.map(i => { const x = L.find(y => y.i === i) || {}; return '找回：#' + i + ' ' + itemName(x.k) + '（' + heroOf(x.k) + '）' + (x.st >= 0 ? ' 斩数版' : '') + '，' + (LOST_TEXT[x.why] || ''); });
     const a = await ask({ title: '给 ' + p.username + ' 找回饰品', lines: [...lines, '放回库存，原来的编号空着就用原来的；每件只能找回一次'], ok: '确定找回' });
-    if (a) await busy(submitBtn(f), async () => { const r = await api('restore', { uid: p.uid, ids, why: a.why }); S.lost = null; toast('找回了 ' + r.items.length + ' 件'); render(); });
+    if (a) await busy(submitBtn(f), async () => { let n = 0; try { for (let i = 0; i < ids.length; i += 50) { const r = await api('restore', { uid: p.uid, ids: ids.slice(i, i + 50), why: a.why }); n += r.items.length; } toast('找回了 ' + n + ' 件'); } finally { if (n) { S.lost = null; await render(); } } });
   },
   ban: async f => {
     const p = S.p, perm = f.elements.perm.checked, days = numIn(f, 'days');
@@ -1728,14 +1749,14 @@ const FORMS = {
     const { info, cfg: cur } = S.cfg, set = {}, lines = [];
     for (const [k, def, lo, hi, isInt, g, desc] of info) {
       const raw = f.elements[k].value.trim(), v = raw === '' ? def : Number(raw), was = Object.prototype.hasOwnProperty.call(cur, k) ? cur[k] : def;
-      if (!Number.isFinite(v) || v < lo || v > hi || (isInt && !Number.isInteger(v))) return toast(g + '：' + desc + ' 要填 ' + lo + '～' + hi + ' 的' + (isInt ? '整数' : '数'), true);
+      if (!Number.isFinite(v) || v < 0 || (isInt && !Number.isSafeInteger(v)) || (isPct(k) && v > 1)) return toast(g + '：' + desc + ' 要填有效的' + (isInt ? '非负整数' : isPct(k) ? '概率（0～1）' : '非负数'), true);
       if (v === was) continue;
       set[k] = v === def ? null : v;
       lines.push(g + '：' + desc + '　' + was + ' → ' + v + (v === def ? '（默认值）' : ''));
     }
     if (!lines.length) return toast('没有改动', true);
     const a = await ask({ title: '保存经济数值', lines, ok: '保存' });
-    if (a) await busy($('#cfgSave'), async () => { const r = await api('cfg', { set, why: a.why }); toast('保存好了，现在是第 ' + r.id + ' 版'); render(); });
+    if (a) await busy($('#cfgSave'), async () => { const r = await api('cfg', { set, why: a.why }); toast('经济数值已保存'); render(); });
   },
 };
 document.addEventListener('submit', e => {
@@ -1787,9 +1808,9 @@ $('#loginForm').addEventListener('submit', async e => {
     try { j = await r.json(); } catch (err) {}
     if (!r.ok || !j.token) throw new Error(j.error || '出错了（' + r.status + '）');
     S.tok = j.token;
-    S.exp = Date.now() + (j.expiresIn || 1800) * 1000;
+    S.exp = Date.now() + (j.expiresIn || 3600) * 1000;
     $('#tok').value = '';
-    S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, (j.expiresIn || 1800) * 1000);
+    S.expT = setTimeout(() => { if (S.who) logout('管理登录 1 小时到了，请重新登录'); }, (j.expiresIn || 3600) * 1000);
     await start();
   } catch (err) { S.tok = ''; S.exp = 0; $('#loginMsg').textContent = err.message; }
   finally { btn.disabled = false; btn.textContent = '进入'; }
@@ -1803,7 +1824,7 @@ async function init() {
       if (sess && sess.tok && sess.exp > Date.now()) {
         S.tok = sess.tok;
         S.exp = sess.exp;
-        S.expT = setTimeout(() => { if (S.who) logout('管理登录 30 分钟到了，请重新登录'); }, S.exp - Date.now());
+        S.expT = setTimeout(() => { if (S.who) logout('管理登录 1 小时到了，请重新登录'); }, S.exp - Date.now());
         await start();
         return;
       }
