@@ -1771,6 +1771,15 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   const secondPage = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test&before=' + firstPage.nextBefore);
   const oldFiltered = await adm('GET', '/api/admin/audit?act=adm_login&by=old-filter-test');
   ok(firstPage.rows.length === 100 && secondPage.rows.length === 100 && firstPage.rows[99].id > secondPage.rows[0].id && oldFiltered.rows.length === 1 && parseDetail(oldFiltered.rows[0].detail).why === 'preserve this note', '审计历史按筛选条件分页，不丢失旧记录或原因');
+  const groups = await adm('GET', '/api/admin/audit/groups?act=adm_login&by=page-test');
+  const group = groups.groups[0];
+  const groupRows = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test&day=' + group.day + '&snapshot=' + groups.snapshot);
+  const groupNext = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test&day=' + group.day + '&snapshot=' + groups.snapshot + '&before=' + groupRows.nextBefore);
+  ok(groups.groups.length === 1 && group.n === 204 && groupRows.rows.length === 100 && groupNext.rows.length === 100 && groupRows.rows[99].id > groupNext.rows[0].id && parseDetail(groupRows.rows[0].detail).why === 'preserve this note', '同一天同一类型跨全部记录合并，展开分页保留每条原因');
+  ENV.DB.raw.prepare("INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('*', ?, 'future_admin_action', 1, ?)").run(T, JSON.stringify({ by: 'future-admin', why: 'new action' }));
+  const future = await adm('GET', '/api/admin/audit/groups?act=future_admin_action');
+  ok(future.groups.length === 1 && future.groups[0].n === 1, '带管理员身份的新操作类型也会自动合并');
+  ENV.DB.raw.prepare("DELETE FROM econ_log WHERE act = 'future_admin_action'").run();
   ENV.DB.raw.prepare("DELETE FROM econ_log WHERE act = 'adm_login' AND json_extract(detail, '$.why') = 'preserve this note'").run();
 }
 

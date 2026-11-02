@@ -1706,11 +1706,28 @@ async function handleAdmin(env, request, path, now, ip) {
       legacySessions: (legacySess && legacySess.n) || 0,
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
+  const auditActions = "'admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel'";
+  // Future administrator actions are also shown when their audit detail identifies the actor.
+  const auditWhere = `(l.act IN (${auditActions}) OR CASE WHEN json_valid(l.detail) THEN json_type(l.detail, '$.by') = 'text' ELSE 0 END)`;
+  if (route === 'GET /api/admin/audit/groups') {
+    const act = q('act'), by = q('by').toLowerCase(), before = Number(q('before')), requested = Number(q('snapshot'));
+    const latest = await env.DB.prepare('SELECT COALESCE(MAX(id), 0) AS id FROM econ_log').first();
+    const snapshot = Number.isSafeInteger(requested) && requested > 0 ? requested : (latest && latest.id || 0);
+    const cursor = Number.isSafeInteger(before) && before > 0 ? before : 0;
+    const rows = (await env.DB.prepare(`SELECT strftime('%Y-%m-%d', l.at / 1000, 'unixepoch', '+8 hours') AS day, l.act, COUNT(*) AS n, MAX(l.id) AS last_id FROM econ_log l WHERE ${auditWhere} AND l.id <= ? AND (? = '' OR l.act = ?) AND (? = '' OR instr(lower(CASE WHEN json_valid(l.detail) THEN coalesce(json_extract(l.detail, '$.by'), '') ELSE '' END), ?) > 0) GROUP BY day, l.act HAVING (? = 0 OR MAX(l.id) < ?) ORDER BY last_id DESC LIMIT 101`).bind(snapshot, act, act, by, by, cursor, cursor).all()).results || [];
+    const page = rows.slice(0, 100);
+    return json({ ok: true, groups: page, snapshot, nextBefore: rows.length > 100 ? page[page.length - 1].last_id : null });
+  }
   if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么），支持按类型或管理员筛选
     const actFilter = q('act'), byFilter = q('by').trim().toLowerCase();
     const before = Number(q('before'));
-    const rows = (await env.DB.prepare("SELECT l.id, l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel') AND (? = '' OR l.act = ?) AND (? = '' OR instr(lower(CASE WHEN json_valid(l.detail) THEN coalesce(json_extract(l.detail, '$.by'), '') ELSE '' END), ?) > 0) AND (? = 0 OR l.id < ?) ORDER BY l.id DESC LIMIT 101")
-      .bind(actFilter, actFilter, byFilter, byFilter, Number.isSafeInteger(before) && before > 0 ? before : 0, Number.isSafeInteger(before) && before > 0 ? before : 0).all()).results || [];
+    const day = q('day'), snapshot = Number(q('snapshot'));
+    if (day && !/^\d{4}-\d{2}-\d{2}$/.test(day)) return error('日期格式不对');
+    const dayStart = day ? Date.parse(day + 'T00:00:00+08:00') : 0;
+    if (day && !Number.isFinite(dayStart)) return error('日期格式不对');
+    const cursor = Number.isSafeInteger(before) && before > 0 ? before : 0, ceiling = Number.isSafeInteger(snapshot) && snapshot > 0 ? snapshot : 0;
+    const rows = (await env.DB.prepare(`SELECT l.id, l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE ${auditWhere} AND (? = '' OR l.act = ?) AND (? = '' OR instr(lower(CASE WHEN json_valid(l.detail) THEN coalesce(json_extract(l.detail, '$.by'), '') ELSE '' END), ?) > 0) AND (? = 0 OR l.id < ?) AND (? = 0 OR l.id <= ?) AND (? = '' OR (l.at >= ? AND l.at < ?)) ORDER BY l.id DESC LIMIT 101`)
+      .bind(actFilter, actFilter, byFilter, byFilter, cursor, cursor, ceiling, ceiling, day, dayStart, dayStart + DAY_MS).all()).results || [];
     const more = rows.length > 100;
     const page = rows.slice(0, 100);
     return json({ ok: true, rows: page, nextBefore: more ? page[page.length - 1].id : null });
