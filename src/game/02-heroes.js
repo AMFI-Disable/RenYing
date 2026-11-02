@@ -23,7 +23,7 @@ const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
 const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 // 墨羽的符：R 画一张花 FU_INK 格墨水，最多 FU_MAX 张；大招全部烧掉，伤害 FU_BASE + FU_PER × 张数
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
-const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56, spindle: 42, magnet: 16 };
+const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56, spindle: 42, magnet: 16, puppet: 20 };
 // 按兵器流派定制专属普攻武学动作映射
 const WEAPON_POSE_MODS = {
   wing: { a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },

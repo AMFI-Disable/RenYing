@@ -132,6 +132,9 @@ const SFX = {
     sTone(240, 80, 0.16, 0.3 * p, 'sine');
     metal(1200, 0.18, 0.04 * p);
   },
+  gear() { metal(rand(1400, 1600), 0.18, 0.1); sNoise(0.08, 4000, 1500, 2, 0.15); },
+  ballHit() { metal(rand(850, 1150), 0.35, 0.22); sNoise(0.04, 8000, 3000, 0.8, 0.35, 'highpass'); },
+  needleBurst() { metal(2400, 0.25, 0.18); sNoise(0.12, 9000, 4500, 3, 0.35, 'highpass'); },
   // 武侠拟真呼吸吐纳与气势呼喝 (Procedural Martial Voice Shouts & Callouts)
   voiceKiai(pitch = 1) {
     if (!AC || muted) return;

@@ -459,6 +459,36 @@ function updateProjs() {
       if (d > 20 && d < 420) p.vy += clamp(dy / d * f.pol * 100 * (1 - d / 420), -100, 100) * STEP;
     }
     if (p.g) p.vy += p.g * STEP;
+    if (p.kind === 'ironball') {
+      // 玄铁傀丸专属物理：弹跳、减速与静止
+      if (p.recalling) {
+        // 大招收球中：直线贯穿，不受重力与反弹限制
+      } else {
+        const floorY = -18;
+        if (p.y >= floorY) {
+          p.y = floorY;
+          if (Math.abs(p.vy) > 120 && (p.bounceCount || 0) < 3) {
+            p.vy = -p.vy * 0.65;
+            p.vx *= 0.8;
+            p.bounceCount = (p.bounceCount || 0) + 1;
+            dust(p.x, 0, 8); ring(p.x, 0, 36, '235,165,70', 0.2); SFX.ballHit();
+          } else {
+            p.vy = 0;
+            p.vx = damp(p.vx, 0, 4.5, STEP);
+            if (Math.abs(p.vx) < 30) { p.vx = 0; p.resting = true; }
+          }
+        }
+        // 墙壁反弹
+        if (p.x <= WALL + 18) {
+          p.x = WALL + 18; p.vx = Math.abs(p.vx) * 0.75;
+          ring(p.x, p.y, 40, '235,165,70', 0.25); SFX.ballHit();
+        } else if (p.x >= STAGE_W - WALL - 18) {
+          p.x = STAGE_W - WALL - 18; p.vx = -Math.abs(p.vx) * 0.75;
+          ring(p.x, p.y, 40, '235,165,70', 0.25); SFX.ballHit();
+        }
+        p.speedTier = Math.abs(p.vx) > 1400 ? 3 : Math.abs(p.vx) > 400 ? 2 : 1;
+      }
+    }
     if (p.boomer && p.age > p.turn) {
       const o = fighterByIdx(p.owner), dx = o.x - p.x;
       p.vx = damp(p.vx, Math.sign(dx) * 860, 7, STEP); p.vy = damp(p.vy, (o.y - 65 - p.y) * 4, 7, STEP);
@@ -558,13 +588,31 @@ function updateProjs() {
   const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net', 'popcorn'];
   for (let i = 0; i < projs.length; i++) {
     const p1 = projs[i];
-    if (p1.dead || p1.unbreakable || p1.ult || p1.dmg <= 0 || p1.groundOnly || NO_CLASH.includes(p1.kind)) continue;
+    if (p1.dead || p1.dmg <= 0 || p1.groundOnly || NO_CLASH.includes(p1.kind)) continue;
     const b1 = projBox(p1);
     for (let j = i + 1; j < projs.length; j++) {
       const p2 = projs[j];
-      if (p2.dead || p2.unbreakable || p2.ult || p2.dmg <= 0 || p1.owner === p2.owner || p2.groundOnly || NO_CLASH.includes(p2.kind)) continue;
+      if (p2.dead || p2.dmg <= 0 || p1.owner === p2.owner || p2.groundOnly || NO_CLASH.includes(p2.kind)) continue;
       const b2 = projBox(p2);
       if (overlap(b1, b2)) {
+        // 高速玄铁傀丸撞碎普通飞行道具
+        if (p1.kind === 'ironball' && p1.speedTier >= 2 && !p2.ult && !p2.unbreakable) {
+          p2.dead = true;
+          const cx = p2.x, cy = p2.y;
+          ring(cx, cy, 50, '255,220,130', 0.2);
+          for (let k = 0; k < 4; k++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-140, 140), vy: rand(-140, 140), rgb: '255,220,130', life: 0.15, max: 0.15 });
+          SFX.block(); addP({ type: 'text', text: '碾碎', x: cx, y: cy - 20, life: 0.4, max: 0.4, rgb: '255,220,130' });
+          continue;
+        }
+        if (p2.kind === 'ironball' && p2.speedTier >= 2 && !p1.ult && !p1.unbreakable) {
+          p1.dead = true;
+          const cx = p1.x, cy = p1.y;
+          ring(cx, cy, 50, '255,220,130', 0.2);
+          for (let k = 0; k < 4; k++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-140, 140), vy: rand(-140, 140), rgb: '255,220,130', life: 0.15, max: 0.15 });
+          SFX.block(); addP({ type: 'text', text: '碾碎', x: cx, y: cy - 20, life: 0.4, max: 0.4, rgb: '255,220,130' });
+          break;
+        }
+        if (p1.unbreakable || p2.unbreakable || p1.ult || p2.ult) continue;
         p1.dead = true; p2.dead = true;
         const cx = (p1.x + p2.x) / 2, cy = (p1.y + p2.y) / 2;
         ring(cx, cy, 60, '255,220,130', 0.25);
@@ -603,7 +651,7 @@ function escapeTick(f) {
   f.escT += STEP;
   if (f.flying || (f.escMode !== 'hover' && f.escT > ESC.riseMax)) endEscape(f);
 }
-const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke', cixian: 'bolt' };
+const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuang: 'wind', liuyun: 'wind', leiming: 'bolt', moyu: 'ink', yuehua: 'moon', yanling: 'wing', yuxiao: 'wind', zuixian: 'smoke', gouchen: 'smoke', cixian: 'bolt', qianji: 'smoke' };
 function tryEscape(f, foe) {
   if (escapeBlock(f)) return false;
   if (!f.ctrl.consume('dash')) return false;
@@ -710,6 +758,46 @@ function updateDecoys() {
 }
 // 攻击先打到假人：假人碎掉，这一刀作废
 function hitDecoy(att, box) { hitClones(box, att.idx); if (hitDecoyBox(box, att.idx)) { att.hitDone = true; return true; } return false; }
+// 击打场上的玄铁傀丸（击球加速机制）
+function hitBall(att, box, m) {
+  for (const p of projs) {
+    if (p.dead || p.kind !== 'ironball') continue;
+    const bBox = [p.x - 24, p.y - 24, p.x + 24, p.y + 24];
+    if (overlap(box, bBox)) {
+      att.hitDone = true;
+      const isDl = att.moveName === 'dl';
+      const isCs = att.moveName === 'cs1' || att.moveName === 'cs2';
+      const dir = att.face || 1;
+      p.resting = false;
+      p.hitCD = 0.08;
+      p.rehit = 0.15;
+      p.unbreakable = true;
+      if (isDl) {
+        // 下攻击挑球：高抛弧线球
+        p.vx = dir * 650; p.vy = -850; p.g = 1400; p.speedTier = 2; p.dmg = 50;
+      } else if (isCs) {
+        // 蓄力斩爆轰：高速重炮
+        const spd = att.moveName === 'cs2' ? 2200 : 1600;
+        p.vx = dir * spd; p.vy = -120; p.g = 900; p.speedTier = 3; p.dmg = att.moveName === 'cs2' ? 85 : 65;
+        shake = Math.max(shake, att.moveName === 'cs2' ? 14 : 9);
+      } else {
+        // 普攻推打：平推加速
+        p.vx = dir * (Math.abs(p.vx) > 500 ? Math.min(1800, Math.abs(p.vx) + 400) : 1100);
+        p.vy = -180; p.g = 1300; p.speedTier = Math.abs(p.vx) > 1400 ? 3 : 2; p.dmg = 55;
+      }
+      p.bounceCount = 0;
+      ring(p.x, p.y, 60, att.look.slash || '235,165,70', 0.35);
+      for (let i = 0; i < 7; i++) {
+        const a = rand(0, Math.PI * 2), v = rand(120, 280);
+        addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: att.look.slash || '235,165,70', life: 0.2, max: 0.2 });
+      }
+      SFX.ballHit(); SFX.block();
+      addP({ type: 'text', text: '击丸 · 传动', x: p.x, y: p.y - 40, life: 0.6, max: 0.6, rgb: '255,215,110' });
+      return true;
+    }
+  }
+  return false;
+}
 function hitDecoyBox(box, attIdx) {
   for (const d of decoys) {
     if (d.gone || d.owner === attIdx) continue;

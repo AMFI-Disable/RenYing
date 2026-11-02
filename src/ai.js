@@ -60,6 +60,12 @@ const AI_KIT = {
   // 磁仙：Q 换极性（不花时间、清零 R）——R 在冷却、身边的人想换种打法时用；R 正极贴身弹开，负极把中距离的人吸过来接负极连段
   polarswap: { role: 'self', combo: true, air: true, use: (m, o, d, B) => !(B && B.L.combo >= 3) && ((m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150))) },   // 寻常以上换极性交给 cixianRoute
   magfield: { role: 'zone', combo: true, use: (m, o, d) => o.invul <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
+  // 千机：投丸与暴雨梨花
+  throwball: { role: 'proj', combo: true, use: (m, o, d) => !projs.some(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead) && d > 120 },
+  ballspike: { role: 'zone', combo: true, breakout: true, use: (m, o, d) => {
+    const ball = projs.find(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead);
+    return ball && Math.hypot(ball.x - o.x, ball.y - (o.y - 60)) < 150;
+  } },
 };
 // 离影：用「不按方向 / 按那一边」能不能正好选到雾身 c（和游戏里 pickClone 的规则一样）
 function pickCloneDir(me, foe, c) {
@@ -89,6 +95,8 @@ const AI_ULT = {
   moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
   // 万影归一：雾身越多刀越多，至少攒一个雾身再放（对手残血就直接放）
   mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp < 60 },
+  // 千丝收网：全场收丸
+  recallball: { far: true, sure: (m, o) => o.invul <= 0 || o.hp < 120 },
 };
 
 // ---------- 3. 打法基因 ----------

@@ -342,5 +342,54 @@ const ULTS = {
       }
       if (f.t >= 1.15) { magRelease(f); endSpecial(f); }
     } },
+  // 千机：千丝收网（E）——绞盘机栝全力收缩金丝，傀丸贯穿全场直线拉回，撞穿沿途敌人并刷新 Q
+  recallball: { name: '千丝收网', desc: '手腕高强发条绞盘强力反卷金丝，无论傀丸身在何处，皆以破空之势直线拉回千机手中！途中被击中的敌人遭受 120 点高额贯穿巨创并掀飞浮空；傀丸回笼瞬间立即刷新【投丸】冷却。千机本人不受任何傀丸撞击伤害。',
+    begin(f, foe) {
+      f.sp = 'cast'; f.spN = 0; f.spPose = 'fy_seal'; f.invul = 0.8; f.vx = 0; f.hitDone = false;
+      let ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
+      if (!ball) {
+        // 若场上无球（开局直接放大招），则在身前凭空召丸并向前狂飙回旋
+        spawnProj(f, {
+          kind: 'ironball', x: f.x - f.face * 200, y: -20, vx: 0, vy: 0,
+          g: 0, w: 36, h: 36, life: 999999, dmg: 40, kb: [300, -200], stun: 0.5, hs: 0.1,
+          bounceCount: 0, speedTier: 3, resting: false, unbreakable: true, pierce: true, rehit: 0.3
+        });
+        ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
+      }
+      if (ball) {
+        ball.recalling = true; ball.resting = false; ball.g = 0; ball.unbreakable = true;
+        ball.dmg = 120; ball.speedTier = 3;
+        ring(ball.x, ball.y, 100, f.look.slash || '235,165,70', 0.4);
+      }
+      ring(f.x, f.y - 50, 150, '255,225,120', 0.4);
+      SFX.superOn(); SFX.gear();
+    },
+    update(f, foe) {
+      const ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
+      if (!ball) { f.skillCD = 0; endSpecial(f); return; }
+      const targetX = f.x, targetY = f.y - 45;
+      const dx = targetX - ball.x, dy = targetY - ball.y, dist = Math.hypot(dx, dy);
+      const pullSpd = 2400;
+      if (dist < 45 || f.t > 1.2) {
+        // 球已回到千机手中
+        ball.dead = true;
+        f.skillCD = 0; // 重置 Q 技能
+        ring(f.x, f.y - 50, 90, f.look.slash || '235,165,70', 0.35);
+        for (let i = 0; i < 12; i++) {
+          const a = rand(0, Math.PI * 2), v = rand(120, 320);
+          addP({ type: 'spark', x: f.x, y: f.y - 50, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: f.look.slash || '235,165,70', life: 0.25, max: 0.25 });
+        }
+        SFX.block(); SFX.dash();
+        addP({ type: 'text', text: '千丝归一 · 傀丸回手', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,225,120' });
+        endSpecial(f);
+      } else {
+        const nx = dx / dist, ny = dy / dist;
+        ball.vx = nx * pullSpd; ball.vy = ny * pullSpd;
+        ball.dmg = 120; ball.kb = [f.face * 350, -680]; ball.stun = 0.7; ball.hs = 0.14; ball.launch = true; ball.big = true;
+        if (!RESIM && Math.random() < 0.6) {
+          addP({ type: 'spark', x: ball.x, y: ball.y, vx: -nx * rand(100, 300), vy: -ny * rand(100, 300), rgb: '255,230,130', life: 0.15, max: 0.15 });
+        }
+      }
+    } },
 };
 
