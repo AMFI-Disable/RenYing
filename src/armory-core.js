@@ -274,8 +274,9 @@
       if (v === null || v === undefined || v === '') continue;
       const x = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? +v : NaN;
       if (!Number.isFinite(x)) return { cfg: null, err: `${r[6]}（${k}）要填数字` };
-      if (r[4] && !Number.isInteger(x)) return { cfg: null, err: `${r[6]}（${k}）要填整数` };
-      if (x < r[2] || x > r[3]) return { cfg: null, err: `${r[6]}（${k}）要在 ${r[2]} 到 ${r[3]} 之间` };
+      if (r[4] && !Number.isSafeInteger(x)) return { cfg: null, err: `${r[6]}（${k}）要填安全整数` };
+      const probability = /^(odds|prem|zod)\./.test(k) || ['stP', 'dropP', 'fee'].includes(k);
+      if (x < 0 || (probability && x > 1)) return { cfg: null, err: `${r[6]}（${k}）要在有效范围之间` };
       if (x !== r[1]) cfg[k] = x;
     }
     for (const [p, name] of [['odds.', '普通武器箱'], ...C.CASES.filter(c => C.COLS[c].prem).map(c => [C.COLS[c].ok, C.COLS[c].name + '武器箱'])]) {
@@ -650,6 +651,18 @@
     bump(s, 'open', 1);
     return { ok: true, item: it };
   };
+  // One authoritative transaction per batch; keep the audit's item list complete.
+  A.openAll = (s, a, env) => {
+    const items = [], cases = {};
+    for (const cid of C.CASES) {
+      while ((s.cases[cid] || 0) > 0 && C.openLeft(s, cid, env.cfg) > 0 && items.length < 50 && !C.invFull(s)) {
+        const r = A.open(s, { c: cid }, env);
+        if (!r.ok) return items.length ? { ok: true, items, cases } : r;
+        items.push(r.item); cases[cid] = (cases[cid] || 0) + 1;
+      }
+    }
+    return items.length ? { ok: true, items, cases } : { err: '没有可以开启的武器箱' };
+  };
   A.store = (s, a, env) => {
     const g = C.STORE.find(x => x.id === a.id), n = Math.max(1, Math.min(10, Math.floor(+a.n || 1)));
     if (!g) return { err: '没有这件商品' };
@@ -669,7 +682,7 @@
     const n = a.n === undefined ? 1 : +a.n;
     if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
     const p = C.shopPrice(k, env.cfg) * n;
-    if (!(p > 0)) return { err: '没有这件商品' };
+    if (!(p >= 0 && Number.isSafeInteger(p))) return { err: '价格不正确' };
     if (env.ink < p) return { err: `墨锭不够，要 ${p}` };
     giveInk(env, -p);
     if (k === 'term') s.term += n; else s.cases[k] += n;

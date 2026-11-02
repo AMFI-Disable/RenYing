@@ -226,6 +226,7 @@ try {
   for (const mode of ['p_cc','pp_cc','pp_pp']) await check('local draft ' + mode, `(() => { showScreen('single'); open2v2Modal('${mode}'); document.getElementById('btn2v2GoLocal').click(); return {ok: currentScreen === 'bp' && bpMode === '2v2' && !!BP && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
   await check('English draft fits without horizontal overflow', `(() => { I18N.setLang('en'); bpStart('2v2', {subMode:'pp_cc'}); const w = document.querySelector('#bp .bpw'); return {ok: w.scrollWidth <= w.clientWidth + 2, scroll: w.scrollWidth, width: w.clientWidth}; })()`);
   await check('2v2 AI draft', `(() => { showScreen('single'); open2v2Modal(); document.getElementById('btn2v2GoWatch').click(); return {ok: currentScreen === 'bp' && bpMode === 'watch2v2' && !!watch2v2Bp && document.querySelectorAll('#bpGrid .bpcard').length === CHARS.length}; })()`);
+  await check('three-match placement migrates existing estimates', `(() => { RKS_KEY = 'renying-rk-' + rkOwner(); PROF.rk = null; RKS = {season: rkSeason().id, placed: 3, pts: 0, est: 7800, peak: 0}; const s = rkState(); return {ok: RK.PLACE === 3 && rkPlaced(s) && s.pts === 7800 && s.peak === 7800}; })()`);
   await check('bulk opening respects shared daily and weekly limits', `(async () => {
     CloudSave.getUser = () => ({uid:'bulk-test', isCloud:false}); PROF.guest = false; PROF.armory = null;
     const s = PROF.armory; delete s.sig; s.cases.c1 = 8; s.cases.c2 = 2; s.cases.c7 = 5; s.cases.c8 = 2;
