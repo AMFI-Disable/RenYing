@@ -327,7 +327,7 @@ const S = {
   tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [],
   giftSkins: [], codeSkins: [],
   pFilter: '', pSort: '', pDir: 'desc', pLimit: 20, pOffset: 0, pTotal: 0,
-  auditAct: '', auditBy: '', auditBefore: 0, auditStack: [], auditGrouped: true,
+  auditAct: '', auditBy: '', auditBefore: 0, auditStack: [], auditGrouped: true, auditSnapshot: 0,
   cfg: null, flags: [], aq: '', aact: '', seq: 0, lostScan: null
 };
 const ROLE = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
@@ -1006,24 +1006,20 @@ function cfgLive(f) {
 
 /* ---------- 操作记录与智能归档 ---------- */
 const AUDIT_FILTER_ACTS = ['admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel'];
+const auditRows = rows => H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
+  ${rows.map(row => { const d = parse(row.detail) || {}; return H`<tr class="${row.act === 'adm_digest' ? 'mod' : ''}"><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${row.act === 'adm_digest' ? ' gold' : ''}">${ACT[row.act] || row.act}</span></td><td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || '—'}</td></tr>`; })}
+</tbody></table></div>`;
 async function vAudit() {
   const qs = new URLSearchParams();
   if (S.auditAct) qs.set('act', S.auditAct);
   if (S.auditBy) qs.set('by', S.auditBy);
   if (S.auditBefore) qs.set('before', S.auditBefore);
-  const r = await api('audit' + (qs.toString() ? '?' + qs : ''));
-  const table = rows => H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
-    ${rows.map(row => { const d = parse(row.detail) || {}; return H`<tr class="${row.act === 'adm_digest' ? 'mod' : ''}"><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${row.act === 'adm_digest' ? ' gold' : ''}">${ACT[row.act] || row.act}</span></td><td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || '—'}</td></tr>`; })}
-  </tbody></table></div>`;
-  const groups = new Map();
-  for (const row of r.rows) {
-    const day = new Date(row.at).toLocaleDateString('zh-CN');
-    const key = JSON.stringify([day, row.act]);
-    if (!groups.has(key)) groups.set(key, { day, act: row.act, rows: [] });
-    groups.get(key).rows.push(row);
-  }
+  if (S.auditGrouped && S.auditBefore && S.auditSnapshot) qs.set('snapshot', S.auditSnapshot);
+  const r = await api((S.auditGrouped ? 'audit/groups' : 'audit') + (qs.toString() ? '?' + qs : ''));
+  if (S.auditGrouped) S.auditSnapshot = r.snapshot;
+  const count = S.auditGrouped ? r.groups.length : r.rows.length;
   return H`<div class="card">
-    <div class="row between wrap"><h2>操作记录与智能归档 <small>显示最近 ${r.rows.length} 条</small></h2>
+    <div class="row between wrap"><h2>操作记录与智能归档 <small>本页 ${count} ${S.auditGrouped ? '组' : '条'}</small></h2>
       <div class="row wrap" style="gap:6px">
         <button class="btn ghost sm" data-act="audittoggle">${S.auditGrouped ? '显示逐条记录' : '智能合并全部操作'}</button>
       </div>
@@ -1034,8 +1030,8 @@ async function vAudit() {
       <button class="btn">筛选</button>
       ${(S.auditAct || S.auditBy) ? H`<button type="button" class="btn ghost sm" data-act="clearaudit">重置</button>` : ''}
     </form>
-    <p class="hint">当前页的每一种操作都会按日期和类型自动合并；展开可查看每条操作、对象、内容和原始原因。翻页可浏览全部历史，原始记录不会被修改。</p>
-    ${r.rows.length ? (S.auditGrouped ? [...groups.values()].map(({ day, act, rows }) => { const actors = {}; for (const row of rows) { const d = parse(row.detail) || {}, actor = d.by || '—'; actors[actor] = (actors[actor] || 0) + 1; } return H`<details class="card"><summary>${day} · ${ACT[act] || act} · ${rows.length} 条 · ${Object.entries(actors).map(([name, n]) => name + ' ×' + n).join('、')}</summary>${table(rows)}</details>`; }) : table(r.rows)) : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
+    <p class="hint">全部管理员操作按北京时间的日期和类型合并；展开可查看原始记录。每组覆盖全部历史，原始记录不会被修改。</p>
+    ${count ? (S.auditGrouped ? r.groups.map(g => H`<details class="card" data-audit-day="${g.day}" data-audit-type="${g.act}"><summary>${g.day} · ${ACT[g.act] || g.act} · ${g.n} 条</summary><div class="audit-entries"><button type="button" class="btn ghost sm" data-act="auditentries">查看记录</button></div></details>`) : auditRows(r.rows)) : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
     <div class="row wrap"><button class="btn ghost sm" data-act="auditprev" ${S.auditStack.length ? '' : 'disabled'}>上一页</button><button class="btn ghost sm" data-act="auditnext" data-before="${r.nextBefore || ''}" ${r.nextBefore ? '' : 'disabled'}>更早的记录</button></div>
   </div>`;
 }
@@ -1213,6 +1209,13 @@ function drawCodeGives() {
 
 const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
 const AFTER = { players: drawGives, gifts: drawGiftGives, codes: drawCodeGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
+$('#main').addEventListener('toggle', e => {
+  const box = e.target;
+  if (box.matches('details[data-audit-day]') && box.open) {
+    const first = box.querySelector('.audit-entries > [data-act=auditentries]:only-child');
+    if (first && !first.disabled) first.click();
+  }
+}, true);
 let adminEditRevision = 0, adminDirty = false;
 $('#main').addEventListener('input', () => { adminDirty = true; adminEditRevision++; });
 $('#main').addEventListener('change', () => { adminDirty = true; adminEditRevision++; });
@@ -1220,12 +1223,12 @@ async function render(auto = false) {
   const main = $('#main');
   if (auto && (adminDirty || main.contains(document.activeElement) || main.querySelector('details[open]'))) return;
   if (!auto) adminDirty = false;
-  const revision = adminEditRevision, seq = ++S.seq, tab = S.tab, previousCfg = S.cfg, previousPlayer = S.p;
+  const revision = adminEditRevision, seq = ++S.seq, tab = S.tab, previousCfg = S.cfg, previousPlayer = S.p, previousAuditSnapshot = S.auditSnapshot;
   if (!auto) paint(main, H`<p class="loading">读取中…</p>`);
   try {
     const view = await VIEWS[tab]();
     if (seq !== S.seq) return;
-    if (auto && (adminDirty || revision !== adminEditRevision || main.contains(document.activeElement) || main.querySelector('details[open]'))) { S.cfg = previousCfg; S.p = previousPlayer; return; }   // 不覆盖正在编辑的内容
+    if (auto && (adminDirty || revision !== adminEditRevision || main.contains(document.activeElement) || main.querySelector('details[open]'))) { S.cfg = previousCfg; S.p = previousPlayer; S.auditSnapshot = previousAuditSnapshot; return; }   // 不覆盖正在编辑的内容
     paint(main, view);
     if (AFTER[tab]) AFTER[tab]();
   } catch (e) {
@@ -1515,7 +1518,7 @@ const ACTS = {
     });
     if (a) await busy(b, async () => { await api('mkt/cancel', { id, why: a.why }); toast('已撤下挂单'); render(); });
   },
-  clearaudit: () => { S.auditAct = ''; S.auditBy = ''; S.auditBefore = 0; S.auditStack = []; render(); },
+  clearaudit: () => { S.auditAct = ''; S.auditBy = ''; S.auditBefore = 0; S.auditStack = []; S.auditSnapshot = 0; render(); },
   scanlost: b => busy(b, async () => { const scan = { scanned: 0, matches: [] }; let after = ''; do { const r = await api('lost/scan' + (after ? '?after=' + encodeURIComponent(after) : '')); scan.scanned += r.scanned; scan.matches.push(...r.matches); after = r.next || ''; b.textContent = '扫描中：' + scan.scanned + ' 个账号'; } while (after); S.lostScan = scan; await render(); }),
   selectlostaccounts: b => { const boxes = [...b.closest('.card').querySelectorAll('input[name=lostAccount]')]; const all = boxes.every(x => x.checked); boxes.forEach(x => { x.checked = !all; }); b.textContent = all ? '全选账号' : '取消全选'; adminDirty = true; adminEditRevision++; },
   restoreunknown: async b => {
@@ -1529,7 +1532,17 @@ const ACTS = {
     await busy(b, async () => { let done = 0; try { for (const x of chosen) { while (x.ids.length) { const r = await api('restore', { uid: x.uid, ids: x.ids.slice(0, 50), onlyUnknown: true, why: a.why }); done += r.items.length; x.ids.splice(0, 50); b.textContent = '已找回 ' + done + ' 件'; } } toast('已找回 ' + done + ' 件'); } finally { scan.matches = scan.matches.filter(x => x.ids.length); await render(); } });
   },
   restoreselect: b => { const boxes = [...b.closest('form').querySelectorAll('input[name=restore]')]; const all = boxes.every(x => x.checked); boxes.forEach(x => { x.checked = !all; }); b.textContent = all ? '全选可找回' : '取消全选'; adminDirty = true; adminEditRevision++; },
-  audittoggle: () => { S.auditGrouped = !S.auditGrouped; render(); },
+  audittoggle: () => { S.auditGrouped = !S.auditGrouped; S.auditBefore = 0; S.auditStack = []; S.auditSnapshot = 0; render(); },
+  auditentries: b => busy(b, async () => {
+    const box = b.closest('details'), params = new URLSearchParams({ day: box.dataset.auditDay, act: box.dataset.auditType, snapshot: String(S.auditSnapshot) });
+    if (S.auditBy) params.set('by', S.auditBy);
+    if (b.dataset.before) params.set('before', b.dataset.before);
+    const r = await api('audit?' + params);
+    if (!b.isConnected) return;
+    const container = b.parentElement; b.remove();
+    container.insertAdjacentHTML('beforeend', put(auditRows(r.rows)));
+    if (r.nextBefore) container.insertAdjacentHTML('beforeend', put(H`<button type="button" class="btn ghost sm" data-act="auditentries" data-before="${r.nextBefore}">更多记录</button>`));
+  }),
   auditnext: b => { const before = Number(b.dataset.before); if (before > 0) { S.auditStack.push(S.auditBefore); S.auditBefore = before; render(); } },
   auditprev: () => { if (S.auditStack.length) { S.auditBefore = S.auditStack.pop(); render(); } },
   auditcompact: async b => {
@@ -1671,7 +1684,7 @@ const FORMS = {
   },
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); S.pOffset = 0; render(); },
   authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
-  auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); S.auditBefore = 0; S.auditStack = []; render(); },
+  auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); S.auditBefore = 0; S.auditStack = []; S.auditSnapshot = 0; render(); },
   gbosshp: async f => {
     const hp = numIn(f, 'hp'), maxHp = numIn(f, 'maxHp');
     if (!Number.isInteger(hp) || hp < 0) return toast('血量要填非负整数', true);
@@ -1824,7 +1837,10 @@ async function init() {
       const sess = JSON.parse(raw);
       if (sess && sess.tok && sess.exp > Date.now()) {
         S.tok = sess.tok;
-        S.exp = sess.exp;
+        // Renew sessions created by an older page so their stored 30-minute expiry is upgraded.
+        const renewal = await api('refresh', {});
+        S.exp = Date.now() + (renewal.expiresIn || 3600) * 1000;
+        saveSession();
         S.expT = setTimeout(() => { if (S.who) logout('管理登录 1 小时到了，请重新登录'); }, S.exp - Date.now());
         await start();
         return;
