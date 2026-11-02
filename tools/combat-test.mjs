@@ -305,6 +305,7 @@ const testSuite = [
           if (A.state === 'skill' || A.skill2CD > 0) return { pass: false, error: CHARS[ci].name + ' skill 2 fired without meeting its condition' };
           A.drunk = 100; A.ink = 100; A.fu = 0;
           if (A.ch.clone) plantClone(A, A.x - 150);
+          if (A.ch.id === 'qianji') spawnProj(A, { kind: 'ironball', x: A.x + 100, y: -20, vx: 0, vy: 0, life: 999999, resting: true });
         }
         startSkill(A, B, 2);
         if (A.state !== 'skill' && A.state !== 'attack') {
@@ -513,6 +514,60 @@ const testSuite = [
       A.x = STAGE_W - WALL - 20; B.x = A.x - 420; A.face = -1; A.pol = -1; A.skill2CD = 0; B.mapFalls = 0; startSkill(A, B, 2);
       run(120, () => A.state !== 'skill');
       if (B.mapFalls || B.x < WALL || B.x > STAGE_W - WALL) return { pass: false, error: 'R- on the cliff map: ' + JSON.stringify({ x: B.x, falls: B.mapFalls }) };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Qianji (千机): Single ball persistence, bounce physics, attack strike drive, breakout R on hitstun, and ult recall resetting Q',
+    fn: `(() => {
+      startMatch('train', 'stand', [CHAR_IDX.qianji, 0]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      projs.length = 0;
+
+      // 1. Q 投丸：生成唯一傀丸
+      A.skillCD = 0; startSkill(A, B, 1);
+      for (let i = 0; i < 15; i++) step();
+      let ball = projs.find(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead);
+      if (!ball) return { pass: false, error: 'Iron ball not spawned by Q' };
+
+      // 2. 傀丸在场时 Q 锁定无法重复释放
+      A.skillCD = 0; toNeutral(A);
+      startSkill(A, B, 1);
+      if (A.state === 'skill') return { pass: false, error: 'Q fired while ball already exists in field' };
+
+      // 3. 普攻击丸传动加速
+      ball.x = A.x + A.face * 50; ball.y = -20; ball.vx = 0; ball.vy = 0; ball.resting = true;
+      startAttack(A, 'l1');
+      for (let i = 0; i < 20; i++) step();
+      if (Math.abs(ball.vx) < 500) return { pass: false, error: 'Normal attack did not accelerate the ball: vx=' + ball.vx };
+
+      // 4. 蓄力斩轰击傀丸
+      toNeutral(A);
+      ball.x = A.x + A.face * 50; ball.y = -20; ball.vx = 0; ball.resting = true;
+      startAttack(A, 'cs2');
+      for (let i = 0; i < 40; i++) step();
+      if (Math.abs(ball.vx) < 1500 || ball.speedTier < 3) return { pass: false, error: 'cs2 attack did not supercharge the ball: vx=' + ball.vx + ', tier=' + ball.speedTier };
+
+      // 5. R 暴雨梨花：在受击硬直（hitstun）下触发绝境反击（breakout / ImmuneControl）
+      toNeutral(A);
+      A.state = 'hitstun'; A.t = 0; A.stun = 0.6; A.comboHits = 3; A.skill2CD = 0;
+      A.ctrl.buf.skill2 = clock;
+      step();
+      if (A.state !== 'skill' || A.skill !== 'ballspike') {
+        return { pass: false, error: 'Qian Ji R did not breakout from hitstun: state=' + A.state + ', skill=' + A.skill };
+      }
+      const needles = projs.filter(p => p.kind === 'needle' && p.owner === A.idx && !p.dead);
+      if (needles.length < 8) return { pass: false, error: 'Qian Ji R did not burst 8 needles: got ' + needles.length };
+
+      // 6. E 大招千丝收网：将球拉回，造成伤害并重置 Q 技能
+      toNeutral(A);
+      A.meter = 100; A.skillCD = 10;
+      startSpecial(A);
+      for (let i = 0; i < 150; i++) { step(); if (A.state !== 'special') break; }
+      if (A.skillCD > 0) return { pass: false, error: 'Ult did not reset Q cooldown: skillCD=' + A.skillCD };
+
       toMenu();
       return { pass: true, error: null };
     })()`
@@ -947,7 +1002,7 @@ const testSuite = [
         qingfeng: 870, feiying: 800, tieshan: 900, lingshuang: 815,
         liuyun: 840, leiming: 885, moyu: 825, yuehua: 780,
         yanling: 750, yuxiao: 775, zuixian: 885, gouchen: 835,
-        lingque: 790, liying: 815, cixian: 815
+        lingque: 790, liying: 815, cixian: 815, qianji: 830
       };
       for (let ci = 0; ci < CHARS.length; ci++) {
         const ch = CHARS[ci];

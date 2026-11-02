@@ -612,9 +612,10 @@ function drawHUD() {
       const ry = my + resH + (full ? 9 + bh * 1.3 : 12), fs = bh * 0.85;   // 有角色资源条就往下让一行
       const S = SKILLS[f.ch.skill];
       const S2 = SKILLS[f.ch.skill2];
-      const s1Nm = cvT(skinSkillName(f, 1) || S.name);
+      const hasBall = f.ch.id === 'qianji' && projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
+      const s1Nm = cvT(skinSkillName(f, 1) || (hasBall ? '丸在阵中' : S.name));
       const s2Nm = cvT(skinSkillName(f, 2) || S2.name);
-      const items = [[s1Nm + keyHint(i, 'sk'), f.skillCD, S.cd], [s2Nm + keyHint(i, 'sk2'), f.skill2CD, S2.cd], [cvT('腾空闪') + keyHint(i, 'esc'), f.breakCD, f.ch.escCD || BREAK_CD]];
+      const items = [[s1Nm + keyHint(i, 'sk'), hasBall ? 1 : f.skillCD, hasBall ? 1 : (S.cd || 1)], [s2Nm + keyHint(i, 'sk2'), f.skill2CD, S2.cd], [cvT('腾空闪') + keyHint(i, 'esc'), f.breakCD, f.ch.escCD || BREAK_CD]];
       if (f.ch.fly) items.push([cvT('飞行'), f.ch.fly - f.flyT, f.ch.fly]);
       const widths = items.map(it => ctx.measureText(it[0]).width + 8 + 46 + 16);
       // 一行放到场地中线还放不下（英文名字长、窄屏）就折到下一行，别和对面那一排撞上

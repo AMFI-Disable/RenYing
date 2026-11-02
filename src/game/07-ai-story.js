@@ -44,6 +44,7 @@ const ADV = {
   lingque: '锦梭穿云标记敌身后，幽影掠步可循印瞬身突袭并刷新连段。',
   liying: '先留影再出手：只按 R 渡到离对手最近的雾身，按住 ← / → 再按 R 去那一边，按住 ↓ 去最早的那个。',
   cixian: 'Q 换极性会清零 R：正极 R 把人弹开，换成负极马上再 R 把人吸回来；负极普攻连到 15 下会消磁，停手 1 秒或换一下极性就好。',
+  qianji: '投丸入阵后普攻/下攻击/蓄力可传动加速铁球；被连段或击飞时随时可按 R 远程爆射钢针护身解控；大招直线收丸重置 Q。',
 };
 function trySecondQ(f, foe) {
   if (f.skillCD <= 0 || M.phase !== 'fight' || !['idle', 'walk', 'air'].includes(f.state)) return false;
@@ -97,6 +98,7 @@ const CHAPTERS = [
   { hero: 'lingque', name: '织锦谷', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'lingque', lv: 'impossible' },
   { hero: 'liying', name: '千雾泽', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'liying', lv: 'impossible' },
   { hero: 'cixian', name: '磁石峰', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'cixian', lv: 'impossible' },
+  { hero: 'qianji', name: '千机阁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'qianji', lv: 'impossible' },
 ];
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 // 一关的内容：妖物关每一波出哪些妖物是固定的（每次打都一样），并附上该侠客的专属剧情

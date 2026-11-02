@@ -627,6 +627,15 @@ function weapon(sk, L, outline, flash) {
       drawMagSym(sk.hf[0], sk.hf[1], 4.6, pol, 0.95);
       return;
     }
+    case 'puppet': {  // 千机：护腕带发条齿轮，手托金丝机关傀丸（球在手中时显示）
+      if (outline) { ctx.fillStyle = L.outline; circle(sk.hf, 9.5); return; }
+      ctx.fillStyle = flash ? '#fff' : (L.metal || '#d49b42'); circle(sk.hf, 7.5);
+      ctx.fillStyle = '#2b2318'; circle([sk.hf[0] - 2, sk.hf[1] - 2], 4.2);
+      ctx.strokeStyle = `rgba(${L.slash},0.85)`; ctx.lineWidth = 1.2;
+      line([sk.hf[0] - 6, sk.hf[1]], [sk.hf[0] + 6, sk.hf[1]]);
+      line([sk.hf[0], sk.hf[1] - 6], [sk.hf[0], sk.hf[1] + 6]);
+      return;
+    }
     case 'spear': {
       const back = [g[0] - ux * 36, g[1] - uy * 36];
       if (outline) { ctx.strokeStyle = L.outline; ctx.lineWidth = 6.5; line(back, t); return; }
@@ -1111,6 +1120,44 @@ function drawProjs(glowOnly) {
       // 尾部牵引丝线
       ctx.strokeStyle = `rgba(${L.slash},0.6)`; ctx.lineWidth = 1.2;
       line([-15, 0], [-45, 0]);
+    } else if (p.kind === 'needle') {  // 千机暴雨梨花钢针
+      ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx));
+      ctx.fillStyle = '#ffdf7a'; ctx.fillRect(-10, -1.5, 20, 3);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(4, -1, 6, 2);
+    } else if (p.kind === 'ironball') {  // 千机：天工金丝傀丸（机关球）
+      const r = (p.w || 36) * 0.45;
+      const ownerF = fighterByIdx(p.owner);
+      // 金丝牵引连线
+      if (ownerF && !p.dead) {
+        ctx.save();
+        ctx.strokeStyle = p.recalling ? 'rgba(255,225,120,0.85)' : 'rgba(235,165,70,0.4)';
+        ctx.lineWidth = p.recalling ? 2 : 1;
+        if (p.recalling) { ctx.shadowColor = '#ffd24a'; ctx.shadowBlur = 8; }
+        ctx.beginPath(); ctx.moveTo(p.x, p.y);
+        ctx.quadraticCurveTo((p.x + ownerF.x) / 2, Math.min(p.y, ownerF.y - 45) - (p.recalling ? 10 : 35), ownerF.x, ownerF.y - 45);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.age * (p.resting ? 0.5 : (p.vx * 0.015)));
+      // 外层青铜齿轮边缘与金属铆钉
+      ctx.fillStyle = p.speedTier === 3 ? '#ffcf56' : '#d49b42';
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#261e17'; ctx.beginPath(); ctx.arc(0, 0, r * 0.75, 0, Math.PI * 2); ctx.fill();
+      // 内部旋转十字金枢与铜心
+      ctx.strokeStyle = p.speedTier >= 2 ? '#fff' : '#e5a558'; ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.7, 0); ctx.lineTo(r * 0.7, 0);
+      ctx.moveTo(0, -r * 0.7); ctx.lineTo(0, r * 0.7);
+      ctx.stroke();
+      ctx.fillStyle = p.speedTier === 3 ? '#fff' : '#e5a558';
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.3, 0, Math.PI * 2); ctx.fill();
+      // 高速气流光环与拖尾光效
+      if (p.speedTier >= 2) {
+        ctx.strokeStyle = p.speedTier === 3 ? 'rgba(255,230,120,0.8)' : 'rgba(235,165,70,0.6)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, Math.PI * 2); ctx.stroke();
+      }
     } else if (p.kind === 'trap') {
       const armed = p.delay <= 0, r = (p.w || 84) * 0.48;
       ctx.translate(p.x, 0); ctx.scale(1, 0.28);
