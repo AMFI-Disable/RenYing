@@ -143,7 +143,9 @@ async function reach(sel, maxSteps = 60) {
     if (!s.t) return { ok: false, why: `${sel} not on the page` };
     if (s.hit) return { ok: true, ring: s.ring, keys: i };
     let code;
-    if (!s.a || stall >= 2) code = 'Tab';
+    // Spatial navigation can alternate between two cards without ever stalling.
+    // Fall back to sequential keyboard traversal if it has not reached the target.
+    if (!s.a || stall >= 2 || i >= 20) code = 'Tab';
     else {
       const dx = s.t.x - s.a.x, dy = s.t.y - s.a.y;
       const vert = Math.abs(dy) > Math.max(s.a.h, s.t.h) / 2;

@@ -327,7 +327,7 @@ const S = {
   tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [],
   giftSkins: [], codeSkins: [],
   pFilter: '', pSort: '', pDir: 'desc', pLimit: 20, pOffset: 0, pTotal: 0,
-  auditAct: '', auditBy: '',
+  auditAct: '', auditBy: '', auditBefore: 0, auditStack: [], auditGrouped: true,
   cfg: null, flags: [], aq: '', aact: '', seq: 0
 };
 const ROLE = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
@@ -1005,13 +1005,24 @@ function cfgLive(f) {
 /* ---------- 操作记录与智能归档 ---------- */
 const AUDIT_FILTER_ACTS = ['admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel'];
 async function vAudit() {
-  const qs = (S.auditAct ? 'act=' + encodeURIComponent(S.auditAct) : '') + (S.auditBy ? (S.auditAct ? '&' : '') + 'by=' + encodeURIComponent(S.auditBy) : '');
-  const r = await api('audit' + (qs ? '?' + qs : ''));
+  const qs = new URLSearchParams();
+  if (S.auditAct) qs.set('act', S.auditAct);
+  if (S.auditBy) qs.set('by', S.auditBy);
+  if (S.auditBefore) qs.set('before', S.auditBefore);
+  const r = await api('audit' + (qs.toString() ? '?' + qs : ''));
+  const table = rows => H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
+    ${rows.map(row => { const d = parse(row.detail) || {}; return H`<tr class="${row.act === 'adm_digest' ? 'mod' : ''}"><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${row.act === 'adm_digest' ? ' gold' : ''}">${ACT[row.act] || row.act}</span></td><td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || '—'}</td></tr>`; })}
+  </tbody></table></div>`;
+  const groups = new Map();
+  for (const row of r.rows) {
+    const day = new Date(row.at).toLocaleDateString('zh-CN');
+    if (!groups.has(day)) groups.set(day, []);
+    groups.get(day).push(row);
+  }
   return H`<div class="card">
     <div class="row between wrap"><h2>操作记录与智能归档 <small>显示最近 ${r.rows.length} 条</small></h2>
       <div class="row wrap" style="gap:6px">
-        <button class="btn ghost sm" data-act="auditcompact" data-mode="routine" title="将 1 天前的管理员登录、导出、错误清理等常规记录按日合并为结构化摘要">智能合并常规日志</button>
-        <button class="btn ghost sm" data-act="auditcompact" data-mode="all" title="将 7 天前的所有管理操作按日自动汇总为结构化变更摘要">归档 7 天前全部变更</button>
+        <button class="btn ghost sm" data-act="audittoggle">${S.auditGrouped ? '显示逐条记录' : '自动按日期合并'}</button>
       </div>
     </div>
     <form class="search" data-form="auditq">
@@ -1020,11 +1031,9 @@ async function vAudit() {
       <button class="btn">筛选</button>
       ${(S.auditAct || S.auditBy) ? H`<button type="button" class="btn ghost sm" data-act="clearaudit">重置</button>` : ''}
     </form>
-    <p class="hint">管理员做过的事：加减、封号、解封、发补偿、停发、改经济数值、清理数据。点「智能合并常规日志」可自动检测并将高频登录、导出等记录按天折叠为一条结构化摘要（adm_digest），保持审计表整洁清晰。</p>
-    ${r.rows.length ? H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
-      ${r.rows.map(row => { const d = parse(row.detail) || {}; return H`<tr class="${row.act === 'adm_digest' ? 'mod' : ''}"><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${row.act === 'adm_digest' ? ' gold' : ''}">${ACT[row.act] || row.act}</span></td>
-        <td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || ''}</td></tr>`; })}
-    </tbody></table></div>` : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
+    <p class="hint">记录按日期自动合并显示；展开可查看每条操作、对象、内容和原始原因。翻页可浏览全部历史，原始记录不会被修改。</p>
+    ${r.rows.length ? (S.auditGrouped ? [...groups].map(([day, rows]) => { const counts = {}; for (const row of rows) counts[row.act] = (counts[row.act] || 0) + 1; return H`<details class="card"><summary>${day} · ${rows.length} 条 · ${Object.entries(counts).map(([act, n]) => (ACT[act] || act) + ' ×' + n).join('、')}</summary>${table(rows)}</details>`; }) : table(r.rows)) : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
+    <div class="row wrap"><button class="btn ghost sm" data-act="auditprev" ${S.auditStack.length ? '' : 'disabled'}>上一页</button><button class="btn ghost sm" data-act="auditnext" data-before="${r.nextBefore || ''}" ${r.nextBefore ? '' : 'disabled'}>更早的记录</button></div>
   </div>`;
 }
 
@@ -1496,7 +1505,10 @@ const ACTS = {
     });
     if (a) await busy(b, async () => { await api('mkt/cancel', { id, why: a.why }); toast('已撤下挂单'); render(); });
   },
-  clearaudit: () => { S.auditAct = ''; S.auditBy = ''; render(); },
+  clearaudit: () => { S.auditAct = ''; S.auditBy = ''; S.auditBefore = 0; S.auditStack = []; render(); },
+  audittoggle: () => { S.auditGrouped = !S.auditGrouped; render(); },
+  auditnext: b => { const before = Number(b.dataset.before); if (before > 0) { S.auditStack.push(S.auditBefore); S.auditBefore = before; render(); } },
+  auditprev: () => { if (S.auditStack.length) { S.auditBefore = S.auditStack.pop(); render(); } },
   auditcompact: async b => {
     const mode = b.dataset.mode || '';
     const days = b.dataset.days !== undefined ? +b.dataset.days : (mode === 'all' ? 7 : mode === 'routine' ? 1 : 0);
@@ -1636,7 +1648,7 @@ const FORMS = {
   },
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); S.pOffset = 0; render(); },
   authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
-  auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); render(); },
+  auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); S.auditBefore = 0; S.auditStack = []; render(); },
   gbosshp: async f => {
     const hp = numIn(f, 'hp'), maxHp = numIn(f, 'maxHp');
     if (!Number.isInteger(hp) || hp < 0) return toast('血量要填非负整数', true);

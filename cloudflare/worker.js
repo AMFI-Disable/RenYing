@@ -1689,17 +1689,12 @@ async function handleAdmin(env, request, path, now, ip) {
   }
   if (route === 'GET /api/admin/audit') {   // 管理员做过的事（谁、什么时候、改了谁、为什么），支持按类型或管理员筛选
     const actFilter = q('act'), byFilter = q('by').trim().toLowerCase();
-    const rows = (await env.DB.prepare("SELECT l.id, l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel') ORDER BY l.id DESC LIMIT 200").all()).results || [];
-    const filtered = rows.filter(r => {
-      if (actFilter && r.act !== actFilter) return false;
-      if (byFilter) {
-        const d = parseObj(r.detail) || {};
-        const actor = String(d.by || '').toLowerCase();
-        if (!actor.includes(byFilter)) return false;
-      }
-      return true;
-    }).slice(0, 100);
-    return json({ ok: true, rows: filtered });
+    const before = Number(q('before'));
+    const rows = (await env.DB.prepare("SELECT l.id, l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE l.act IN ('admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel') AND (? = '' OR l.act = ?) AND (? = '' OR instr(lower(CASE WHEN json_valid(l.detail) THEN coalesce(json_extract(l.detail, '$.by'), '') ELSE '' END), ?) > 0) AND (? = 0 OR l.id < ?) ORDER BY l.id DESC LIMIT 101")
+      .bind(actFilter, actFilter, byFilter, byFilter, Number.isSafeInteger(before) && before > 0 ? before : 0, Number.isSafeInteger(before) && before > 0 ? before : 0).all()).results || [];
+    const more = rows.length > 100;
+    const page = rows.slice(0, 100);
+    return json({ ok: true, rows: page, nextBefore: more ? page[page.length - 1].id : null });
   }
   if (route === 'POST /api/admin/audit/compact') {   // 智能审计归档与自动摘要：将冗余的管理员日志合并为结构化摘要 (adm_digest)
     const w = needWhy(); if (w) return w;

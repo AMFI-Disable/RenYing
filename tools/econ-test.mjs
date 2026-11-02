@@ -1743,6 +1743,15 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   ok(compactRes.ok && compactRes.compacted >= 5 && compactRes.days >= 1, '管理员操作记录智能归档：成功折叠多条记录为每日摘要', compactRes);
   const digestAudit = await adm('GET', '/api/admin/audit?act=adm_digest');
   ok(digestAudit.ok && digestAudit.rows.length >= 1 && digestAudit.rows[0].act === 'adm_digest' && parseDetail(digestAudit.rows[0].detail).n >= 5, '按 act=adm_digest 筛选可查到结构化每日归档摘要', digestAudit.rows[0]);
+
+  // Filtering applies before pagination, even beyond the newest 200 records; paging must not delete history.
+  const insertAudit = ENV.DB.raw.prepare("INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('*', ?, 'adm_login', 1, ?)");
+  for (let i = 0; i < 205; i++) insertAudit.run(T + i, JSON.stringify({ by: i === 0 ? 'old-filter-test' : 'page-test', why: 'preserve this note' }));
+  const firstPage = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test');
+  const secondPage = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test&before=' + firstPage.nextBefore);
+  const oldFiltered = await adm('GET', '/api/admin/audit?act=adm_login&by=old-filter-test');
+  ok(firstPage.rows.length === 100 && secondPage.rows.length === 100 && firstPage.rows[99].id > secondPage.rows[0].id && oldFiltered.rows.length === 1 && parseDetail(oldFiltered.rows[0].detail).why === 'preserve this note', '审计历史按筛选条件分页，不丢失旧记录或原因');
+  ENV.DB.raw.prepare("DELETE FROM econ_log WHERE act = 'adm_login' AND json_extract(detail, '$.why') = 'preserve this note'").run();
 }
 
 section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段脚本');
