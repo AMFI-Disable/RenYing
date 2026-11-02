@@ -216,7 +216,7 @@ def admin_names():
     for pre, *codes in zof:
         for i, code in enumerate(codes):
             skins[f"{pre}_z{code}"] = f"{zod[code]}·{tiers[i]}"
-    heroes = dict(re.findall(r"^  id: '([a-z]+)',[^\n]*\n(?:  [^\n]*\n)*?  char: \{ name: '([^']+)'", game, re.M))
+    heroes = dict(re.findall(r"^  id: '([a-z]+)',[^\n]*\n(?:  [^\n]*\n)*?  char: \{\s*name: '([^']+)'", game, re.M))
     if len(skins) < 60 or len(heroes) < 12:
         raise SystemExit(f"管理网页要的名字没读全：皮肤 {len(skins)} 款、侠客 {len(heroes)} 个（src/game/ 的 SKINS、src/data/heroes/ 或 src/armory-core.js 的写法变了？）")
     return {"skins": skins, "heroes": heroes}
