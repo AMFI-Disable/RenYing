@@ -1765,6 +1765,7 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   ok(digestAudit.ok && digestAudit.rows.length >= 1 && digestAudit.rows[0].act === 'adm_digest' && parseDetail(digestAudit.rows[0].detail).n >= 5, '按 act=adm_digest 筛选可查到结构化每日归档摘要', digestAudit.rows[0]);
 
   // Filtering applies before pagination, even beyond the newest 200 records; paging must not delete history.
+  const fixtureStart = row('SELECT COALESCE(MAX(id), 0) AS n FROM econ_log').n;
   const insertAudit = ENV.DB.raw.prepare("INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('*', ?, 'adm_login', 1, ?)");
   for (let i = 0; i < 205; i++) insertAudit.run(T + i, JSON.stringify({ by: i === 0 ? 'old-filter-test' : 'page-test', why: 'preserve this note' }));
   const firstPage = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test');
@@ -1779,8 +1780,26 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   ENV.DB.raw.prepare("INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('*', ?, 'future_admin_action', 1, ?)").run(T, JSON.stringify({ by: 'future-admin', why: 'new action' }));
   const future = await adm('GET', '/api/admin/audit/groups?act=future_admin_action');
   ok(future.groups.length === 1 && future.groups[0].n === 1, '带管理员身份的新操作类型也会自动合并');
-  ENV.DB.raw.prepare("DELETE FROM econ_log WHERE act = 'future_admin_action'").run();
-  ENV.DB.raw.prepare("DELETE FROM econ_log WHERE act = 'adm_login' AND json_extract(detail, '$.why') = 'preserve this note'").run();
+  const older = insertAudit.run(T - 3 * 86400e3, JSON.stringify({ by: 'page-test', why: 'old timestamp' })).lastInsertRowid;
+  const timed = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test&order=time');
+  const timedNext = await adm('GET', '/api/admin/audit?act=adm_login&by=page-test&order=time&before=' + timed.nextBefore + '&beforeAt=' + timed.nextBeforeAt);
+  ok(timed.rows[0].id !== older && timed.rows[99].at > timedNext.rows[0].at && timed.rows[0].at > timed.rows[99].at, '操作记录按实际时间排序并分页，而不是按插入编号排序');
+  ENV.DB.raw.prepare("INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('*', ?, 'admin', 1, 'not-json')").run(T);
+  ENV.DB.raw.prepare("INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('*', ?, 'open', 1, ?)").run(T, JSON.stringify({ why: 'player action' }));
+  const end = row('SELECT MAX(id) AS n FROM econ_log').n;
+  let after = fixtureStart, total = 0, skipped = 0, batches = 0;
+  do {
+    const r = await adm('POST', '/api/admin/audit/reset-reasons', { after, snapshot: end, why: '测试恢复默认原因' });
+    if (!r.ok) throw new Error('audit reset failed: ' + JSON.stringify(r));
+    total += r.changed; skipped += r.skipped; batches++; after = r.nextAfter || 0;
+  } while (after);
+  const original = ENV.DB.raw.prepare("SELECT detail FROM econ_log WHERE id > ? AND id <= ? AND act = 'adm_login' ORDER BY id LIMIT 1").get(fixtureStart, end);
+  const reset = parseDetail(original.detail);
+  const untouched = row("SELECT detail FROM econ_log WHERE id > ? AND id <= ? AND act = 'open'", fixtureStart, end);
+  ok(total === 207 && skipped === 1 && batches >= 3 && reset.why === '管理操作：管理员登录' && reset._auditReasonOriginal.value === 'preserve this note' && parseDetail(untouched.detail).why === 'player action', '恢复全部管理员原因时保留原始内容、跳过损坏的记录且不修改玩家流水', { total, skipped, batches, reset });
+  const repeated = await adm('POST', '/api/admin/audit/reset-reasons', { after: fixtureStart, snapshot: end, why: '再次测试' });
+  ok(repeated.ok && repeated.changed === 0 && parseDetail(ENV.DB.raw.prepare('SELECT detail FROM econ_log WHERE id = ?').get(fixtureStart + 1).detail)._auditReasonOriginal.value === 'preserve this note', '重复恢复不会覆盖原始原因', repeated);
+  ENV.DB.raw.prepare('DELETE FROM econ_log WHERE id > ? AND id <= ?').run(fixtureStart, end);
 }
 
 section('管理网页：Worker 的 /admin；浏览器只许跑网页里那一段脚本');
@@ -2096,6 +2115,7 @@ section('管理员账号和角色：先登录换 1 小时的管理令牌；四�
   const vic = await newUser('roletest');
   const can = async (n, method, path, body) => (await adm(method, path, body, L[n].token)).status;
   const adj = { uid: vic.uid, ink: 5, why: '角色测试' };
+  ok(await can('viewer', 'POST', '/api/admin/audit/reset-reasons', { why: '角色测试' }) === 403 && await can('banker', 'POST', '/api/admin/audit/reset-reasons', { why: '角色测试' }) === 403, '只有全部权限的管理员能恢复默认原因');
   ok(await can('viewer', 'GET', '/api/admin/stats') === 200 && await can('viewer', 'GET', '/api/admin/econ?uid=' + vic.uid) === 200, '只能看：所有查询都能看');
   const v403 = await adm('POST', '/api/admin/adjust', adj, L.viewer.token);
   ok(v403.status === 403 && v403.role === 'view' && inkOf(vic.uid) === inkOf(vic.uid), '只能看：加墨锭被拒（403，说明缺什么角色）', v403);

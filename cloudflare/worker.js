@@ -1132,6 +1132,7 @@ const ADMIN_NEED = {
   'POST /api/admin/ban': 'ban', 'POST /api/admin/pardon': 'ban', 'POST /api/admin/password': 'ban', 'POST /api/admin/batch': 'ban', 'GET /api/admin/export': 'ban',
   'POST /api/admin/player/devices/drop': 'ban', 'POST /api/admin/player/clear-history': 'ban', 'GET /api/admin/player/export': 'ban',
   'POST /api/admin/errors/delete': 'ban', 'POST /api/admin/audit/compact': 'all', 'POST /api/admin/maint/prune': 'all', 'POST /api/admin/world/act': 'all',
+  'POST /api/admin/audit/reset-reasons': 'all',
   'POST /api/admin/logout': 'view', 'POST /api/admin/refresh': 'view', 'GET /api/admin/admins': 'all',
 };
 const adminCan = (role, need) => role === 'all' || need === 'view' || role === need;
@@ -1706,7 +1707,7 @@ async function handleAdmin(env, request, path, now, ip) {
       legacySessions: (legacySess && legacySess.n) || 0,
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
-  const auditActions = "'admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel'";
+  const auditActions = "'admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel', 'audit_reason_reset'";
   // Future administrator actions are also shown when their audit detail identifies the actor.
   const auditWhere = `(l.act IN (${auditActions}) OR CASE WHEN json_valid(l.detail) THEN json_type(l.detail, '$.by') = 'text' ELSE 0 END)`;
   if (route === 'GET /api/admin/audit/groups') {
@@ -1726,11 +1727,38 @@ async function handleAdmin(env, request, path, now, ip) {
     const dayStart = day ? Date.parse(day + 'T00:00:00+08:00') : 0;
     if (day && !Number.isFinite(dayStart)) return error('日期格式不对');
     const cursor = Number.isSafeInteger(before) && before > 0 ? before : 0, ceiling = Number.isSafeInteger(snapshot) && snapshot > 0 ? snapshot : 0;
-    const rows = (await env.DB.prepare(`SELECT l.id, l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE ${auditWhere} AND (? = '' OR l.act = ?) AND (? = '' OR instr(lower(CASE WHEN json_valid(l.detail) THEN coalesce(json_extract(l.detail, '$.by'), '') ELSE '' END), ?) > 0) AND (? = 0 OR l.id < ?) AND (? = 0 OR l.id <= ?) AND (? = '' OR (l.at >= ? AND l.at < ?)) ORDER BY l.id DESC LIMIT 101`)
-      .bind(actFilter, actFilter, byFilter, byFilter, cursor, cursor, ceiling, ceiling, day, dayStart, dayStart + DAY_MS).all()).results || [];
+    const byTime = q('order') === 'time', rawAt = Number(q('beforeAt'));
+    const beforeAt = Number.isSafeInteger(rawAt) && rawAt > 0 && cursor ? rawAt : 0;
+    const paging = byTime ? 'AND (? = 0 OR l.at < ? OR (l.at = ? AND l.id < ?))' : 'AND (? = 0 OR l.id < ?)';
+    const pagingArgs = byTime ? [beforeAt, beforeAt, beforeAt, cursor] : [cursor, cursor];
+    const rows = (await env.DB.prepare(`SELECT l.id, l.at, l.uid, u.username, l.act, l.ink0, l.ink1, l.detail FROM econ_log l LEFT JOIN users u ON u.id = l.uid WHERE ${auditWhere} AND (? = '' OR l.act = ?) AND (? = '' OR instr(lower(CASE WHEN json_valid(l.detail) THEN coalesce(json_extract(l.detail, '$.by'), '') ELSE '' END), ?) > 0) ${paging} AND (? = 0 OR l.id <= ?) AND (? = '' OR (l.at >= ? AND l.at < ?)) ORDER BY ${byTime ? 'l.at DESC, l.id DESC' : 'l.id DESC'} LIMIT 101`)
+      .bind(actFilter, actFilter, byFilter, byFilter, ...pagingArgs, ceiling, ceiling, day, dayStart, dayStart + DAY_MS).all()).results || [];
     const more = rows.length > 100;
     const page = rows.slice(0, 100);
-    return json({ ok: true, rows: page, nextBefore: more ? page[page.length - 1].id : null });
+    return json({ ok: true, rows: page, nextBefore: more ? page[page.length - 1].id : null, nextBeforeAt: more && byTime ? page[page.length - 1].at : null });
+  }
+  if (route === 'POST /api/admin/audit/reset-reasons') {
+    const w = needWhy(); if (w) return w;
+    const labels = { admin: '管理员调整', restore: '找回饰品', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_new: '发补偿', gift_off: '停发补偿', code_new: '建兑换码', code_off: '停用兑换码', cfg: '改经济数值', flag: '改功能开关', adm_login: '管理员登录', adm_acct: '改管理员账号', acct_del: '删除账号', acct_restore: '恢复账号', acct_export: '导出账号', err_export: '导出错误日志', err_clean: '清理错误日志', adm_digest: '智能归档摘要', maint_prune: '数据库清理', world_act: '世界进度调控', dev_drop: '强制下线设备', hist_clear: '清理玩家历史', mkt_cancel: '强制撤下挂单', audit_reason_reset: '恢复默认原因' };
+    const after = Number(body.after || 0), requested = Number(body.snapshot || 0);
+    if (!Number.isSafeInteger(after) || after < 0 || !Number.isSafeInteger(requested) || requested < 0) return error('分页参数不对');
+    const latest = requested ? null : await env.DB.prepare('SELECT COALESCE(MAX(id), 0) AS id FROM econ_log').first();
+    const snapshot = requested || (latest && latest.id) || 0;
+    const rows = (await env.DB.prepare(`SELECT l.id, l.act, l.detail FROM econ_log l WHERE ${auditWhere} AND l.id > ? AND l.id <= ? ORDER BY l.id LIMIT 101`).bind(after, snapshot).all()).results || [];
+    const page = rows.slice(0, 100), updates = []; let skipped = 0;
+    for (const r of page) {
+      const detail = parseObj(r.detail);
+      if (!detail) { skipped++; continue; }
+      const def = ('管理操作：' + (labels[r.act] || r.act)).slice(0, 100);
+      if (detail.why === def) continue;
+      if (!Object.prototype.hasOwnProperty.call(detail, '_auditReasonOriginal')) detail._auditReasonOriginal = { present: Object.prototype.hasOwnProperty.call(detail, 'why'), value: detail.why };
+      detail.why = def;
+      updates.push(env.DB.prepare('UPDATE econ_log SET detail = ? WHERE id = ? AND detail = ?').bind(JSON.stringify(detail), r.id, r.detail));
+    }
+    const results = updates.length ? await env.DB.batch(updates) : [];
+    const changed = results.reduce((n, r) => n + (r.meta && r.meta.changes || 0), 0), conflicts = updates.length - changed;
+    await logRow(env, '*', now, 'audit_reason_reset', 1, null, null, JSON.stringify({ by: who, why, changed, skipped, conflicts, after, snapshot }));
+    return json({ ok: true, changed, skipped, conflicts, snapshot, nextAfter: rows.length > 100 ? page[page.length - 1].id : null });
   }
   if (route === 'POST /api/admin/audit/compact') {   // 智能审计归档与自动摘要：将冗余的管理员日志合并为结构化摘要 (adm_digest)
     const w = needWhy(); if (w) return w;

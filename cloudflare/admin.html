@@ -151,6 +151,7 @@
   td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   tbody tr:last-child td { border-bottom: 0; }
   tbody tr:hover td { background: rgba(255, 255, 255, .018); }
+  .audit-table tr.audit-day-break td { border-top: 18px solid var(--bg2); }
   tr.fail td { color: var(--faint); }
   tr.mute td { color: var(--faint); }
   .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -327,7 +328,7 @@ const S = {
   tab: 'home', uid: '', q: '', p: null, give: [], gifts: [], codes: [],
   giftSkins: [], codeSkins: [],
   pFilter: '', pSort: '', pDir: 'desc', pLimit: 20, pOffset: 0, pTotal: 0,
-  auditAct: '', auditBy: '', auditBefore: 0, auditStack: [], auditGrouped: true, auditSnapshot: 0,
+  auditAct: '', auditBy: '', auditBefore: 0, auditBeforeAt: 0, auditStack: [],
   cfg: null, flags: [], aq: '', aact: '', seq: 0, lostScan: null
 };
 const ROLE = { view: '只能看', econ: '经济', ban: '封禁和账号', all: '全部' };
@@ -399,7 +400,7 @@ const ACT = {
   claimCode: '兑换', code_got: '兑换礼包码', code_new: '建兑换码', code_off: '停用兑换码', flag: '改功能开关',
   adm_login: '管理员登录', adm_acct: '改管理员账号', acct_del: '删除账号', acct_restore: '恢复账号', acct_export: '导出账号',
   err_export: '导出错误日志', err_clean: '清理错误日志', adm_digest: '智能归档摘要', maint_prune: '数据库清理', world_act: '世界进度调控',
-  dev_drop: '强制下线设备', hist_clear: '清理玩家历史', mkt_cancel: '强制撤下挂单',
+  dev_drop: '强制下线设备', hist_clear: '清理玩家历史', mkt_cancel: '强制撤下挂单', audit_reason_reset: '恢复默认原因',
 };
 const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
 
@@ -1005,23 +1006,21 @@ function cfgLive(f) {
 }
 
 /* ---------- 操作记录与智能归档 ---------- */
-const AUDIT_FILTER_ACTS = ['admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel'];
-const auditRows = rows => H`<div class="tw"><table><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
-  ${rows.map(row => { const d = parse(row.detail) || {}; return H`<tr class="${row.act === 'adm_digest' ? 'mod' : ''}"><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${row.act === 'adm_digest' ? ' gold' : ''}">${ACT[row.act] || row.act}</span></td><td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || '—'}</td></tr>`; })}
+const AUDIT_FILTER_ACTS = ['admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel', 'audit_reason_reset'];
+const auditRows = rows => H`<div class="tw"><table class="audit-table"><thead><tr><th>时间</th><th>谁</th><th>做了什么</th><th>对象</th><th class="num">墨锭</th><th>内容</th><th>原因</th></tr></thead><tbody>
+  ${rows.map((row, i) => { const d = parse(row.detail) || {}, old = d._auditReasonOriginal, boundary = i > 0 && new Date(row.at).toDateString() !== new Date(rows[i - 1].at).toDateString(); return H`<tr class="${row.act === 'adm_digest' ? 'mod' : ''}${boundary ? ' audit-day-break' : ''}"><td class="nowrap">${fmtT(row.at)}</td><td>${d.by || '—'}</td><td class="nowrap"><span class="badge${row.act === 'adm_digest' ? ' gold' : ''}">${ACT[row.act] || row.act}</span></td><td>${target(row)}</td><td class="num">${inkCell(row)}</td><td class="detail">${detailText(row.act, row.detail)}</td><td>${d.why || '—'}${old && old.present ? H`<details><summary>原始原因</summary><span>${old.value}</span></details>` : ''}</td></tr>`; })}
 </tbody></table></div>`;
 async function vAudit() {
   const qs = new URLSearchParams();
+  qs.set('order', 'time');
   if (S.auditAct) qs.set('act', S.auditAct);
   if (S.auditBy) qs.set('by', S.auditBy);
-  if (S.auditBefore) qs.set('before', S.auditBefore);
-  if (S.auditGrouped && S.auditBefore && S.auditSnapshot) qs.set('snapshot', S.auditSnapshot);
-  const r = await api((S.auditGrouped ? 'audit/groups' : 'audit') + (qs.toString() ? '?' + qs : ''));
-  if (S.auditGrouped) S.auditSnapshot = r.snapshot;
-  const count = S.auditGrouped ? r.groups.length : r.rows.length;
+  if (S.auditBefore) { qs.set('before', S.auditBefore); qs.set('beforeAt', S.auditBeforeAt); }
+  const r = await api('audit' + (qs.toString() ? '?' + qs : ''));
   return H`<div class="card">
-    <div class="row between wrap"><h2>操作记录与智能归档 <small>本页 ${count} ${S.auditGrouped ? '组' : '条'}</small></h2>
+    <div class="row between wrap"><h2>操作记录 <small>本页 ${r.rows.length} 条</small></h2>
       <div class="row wrap" style="gap:6px">
-        <button class="btn ghost sm" data-act="audittoggle">${S.auditGrouped ? '显示逐条记录' : '智能合并全部操作'}</button>
+        ${S.role === 'all' ? H`<button type="button" class="btn ghost sm" data-act="auditresetreasons">恢复默认</button>` : ''}
       </div>
     </div>
     <form class="search" data-form="auditq">
@@ -1030,9 +1029,9 @@ async function vAudit() {
       <button class="btn">筛选</button>
       ${(S.auditAct || S.auditBy) ? H`<button type="button" class="btn ghost sm" data-act="clearaudit">重置</button>` : ''}
     </form>
-    <p class="hint">全部管理员操作按北京时间的日期和类型合并；展开可查看原始记录。每组覆盖全部历史，原始记录不会被修改。</p>
-    ${count ? (S.auditGrouped ? r.groups.map(g => H`<details class="card" data-audit-day="${g.day}" data-audit-type="${g.act}"><summary>${g.day} · ${ACT[g.act] || g.act} · ${g.n} 条</summary><div class="audit-entries"><button type="button" class="btn ghost sm" data-act="auditentries">查看记录</button></div></details>`) : auditRows(r.rows)) : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
-    <div class="row wrap"><button class="btn ghost sm" data-act="auditprev" ${S.auditStack.length ? '' : 'disabled'}>上一页</button><button class="btn ghost sm" data-act="auditnext" data-before="${r.nextBefore || ''}" ${r.nextBefore ? '' : 'disabled'}>更早的记录</button></div>
+    <p class="hint">按时间逐条显示，不同日期之间留有间距。恢复默认会重置全部管理员记录的原因，并保留原始原因供查阅。</p>
+    ${r.rows.length ? auditRows(r.rows) : H`<p class="empty">没有符合条件的管理员操作记录</p>`}
+    <div class="row wrap"><button class="btn ghost sm" data-act="auditprev" ${S.auditStack.length ? '' : 'disabled'}>上一页</button><button class="btn ghost sm" data-act="auditnext" data-before="${r.nextBefore || ''}" data-before-at="${r.nextBeforeAt || ''}" ${r.nextBefore ? '' : 'disabled'}>更早的记录</button></div>
   </div>`;
 }
 
@@ -1209,26 +1208,19 @@ function drawCodeGives() {
 
 const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
 const AFTER = { players: drawGives, gifts: drawGiftGives, codes: drawCodeGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
-$('#main').addEventListener('toggle', e => {
-  const box = e.target;
-  if (box.matches('details[data-audit-day]') && box.open) {
-    const first = box.querySelector('.audit-entries > [data-act=auditentries]:only-child');
-    if (first && !first.disabled) first.click();
-  }
-}, true);
-let adminEditRevision = 0, adminDirty = false;
+let adminEditRevision = 0, adminDirty = false, auditResetBusy = false;
 $('#main').addEventListener('input', () => { adminDirty = true; adminEditRevision++; });
 $('#main').addEventListener('change', () => { adminDirty = true; adminEditRevision++; });
 async function render(auto = false) {
   const main = $('#main');
-  if (auto && (adminDirty || main.contains(document.activeElement) || main.querySelector('details[open]'))) return;
+  if (auto && (auditResetBusy || adminDirty || main.contains(document.activeElement) || main.querySelector('details[open]'))) return;
   if (!auto) adminDirty = false;
-  const revision = adminEditRevision, seq = ++S.seq, tab = S.tab, previousCfg = S.cfg, previousPlayer = S.p, previousAuditSnapshot = S.auditSnapshot;
+  const revision = adminEditRevision, seq = ++S.seq, tab = S.tab, previousCfg = S.cfg, previousPlayer = S.p;
   if (!auto) paint(main, H`<p class="loading">读取中…</p>`);
   try {
     const view = await VIEWS[tab]();
     if (seq !== S.seq) return;
-    if (auto && (adminDirty || revision !== adminEditRevision || main.contains(document.activeElement) || main.querySelector('details[open]'))) { S.cfg = previousCfg; S.p = previousPlayer; S.auditSnapshot = previousAuditSnapshot; return; }   // 不覆盖正在编辑的内容
+    if (auto && (adminDirty || revision !== adminEditRevision || main.contains(document.activeElement) || main.querySelector('details[open]'))) { S.cfg = previousCfg; S.p = previousPlayer; return; }   // 不覆盖正在编辑的内容
     paint(main, view);
     if (AFTER[tab]) AFTER[tab]();
   } catch (e) {
@@ -1518,7 +1510,7 @@ const ACTS = {
     });
     if (a) await busy(b, async () => { await api('mkt/cancel', { id, why: a.why }); toast('已撤下挂单'); render(); });
   },
-  clearaudit: () => { S.auditAct = ''; S.auditBy = ''; S.auditBefore = 0; S.auditStack = []; S.auditSnapshot = 0; render(); },
+  clearaudit: () => { S.auditAct = ''; S.auditBy = ''; S.auditBefore = 0; S.auditBeforeAt = 0; S.auditStack = []; render(); },
   scanlost: b => busy(b, async () => { const scan = { scanned: 0, matches: [] }; let after = ''; do { const r = await api('lost/scan' + (after ? '?after=' + encodeURIComponent(after) : '')); scan.scanned += r.scanned; scan.matches.push(...r.matches); after = r.next || ''; b.textContent = '扫描中：' + scan.scanned + ' 个账号'; } while (after); S.lostScan = scan; await render(); }),
   selectlostaccounts: b => { const boxes = [...b.closest('.card').querySelectorAll('input[name=lostAccount]')]; const all = boxes.every(x => x.checked); boxes.forEach(x => { x.checked = !all; }); b.textContent = all ? '全选账号' : '取消全选'; adminDirty = true; adminEditRevision++; },
   restoreunknown: async b => {
@@ -1532,19 +1524,28 @@ const ACTS = {
     await busy(b, async () => { let done = 0; try { for (const x of chosen) { while (x.ids.length) { const r = await api('restore', { uid: x.uid, ids: x.ids.slice(0, 50), onlyUnknown: true, why: a.why }); done += r.items.length; x.ids.splice(0, 50); b.textContent = '已找回 ' + done + ' 件'; } } toast('已找回 ' + done + ' 件'); } finally { scan.matches = scan.matches.filter(x => x.ids.length); await render(); } });
   },
   restoreselect: b => { const boxes = [...b.closest('form').querySelectorAll('input[name=restore]')]; const all = boxes.every(x => x.checked); boxes.forEach(x => { x.checked = !all; }); b.textContent = all ? '全选可找回' : '取消全选'; adminDirty = true; adminEditRevision++; },
-  audittoggle: () => { S.auditGrouped = !S.auditGrouped; S.auditBefore = 0; S.auditStack = []; S.auditSnapshot = 0; render(); },
-  auditentries: b => busy(b, async () => {
-    const box = b.closest('details'), params = new URLSearchParams({ day: box.dataset.auditDay, act: box.dataset.auditType, snapshot: String(S.auditSnapshot) });
-    if (S.auditBy) params.set('by', S.auditBy);
-    if (b.dataset.before) params.set('before', b.dataset.before);
-    const r = await api('audit?' + params);
-    if (!b.isConnected) return;
-    const container = b.parentElement; b.remove();
-    container.insertAdjacentHTML('beforeend', put(auditRows(r.rows)));
-    if (r.nextBefore) container.insertAdjacentHTML('beforeend', put(H`<button type="button" class="btn ghost sm" data-act="auditentries" data-before="${r.nextBefore}">更多记录</button>`));
-  }),
-  auditnext: b => { const before = Number(b.dataset.before); if (before > 0) { S.auditStack.push(S.auditBefore); S.auditBefore = before; render(); } },
-  auditprev: () => { if (S.auditStack.length) { S.auditBefore = S.auditStack.pop(); render(); } },
+  auditresetreasons: async b => {
+    if (auditResetBusy) return;
+    const a = await ask({ title: '恢复默认原因', lines: ['将全部管理员操作记录的原因设为“管理操作：操作类型”，包括当前筛选或分页以外的记录。', '原始原因会保留在每条记录中，供展开查看；无法读取的记录会跳过。'], whyInit: '管理操作：恢复默认原因', ok: '恢复默认' });
+    if (!a) return;
+    auditResetBusy = true;
+    await busy(b, async () => {
+      let after = 0, snapshot = 0, changed = 0, skipped = 0, conflicts = 0;
+      try {
+        for (;;) {
+          const r = await api('audit/reset-reasons', { after, snapshot, why: a.why });
+          snapshot = r.snapshot; changed += r.changed; skipped += r.skipped; conflicts += r.conflicts;
+          b.textContent = '已恢复 ' + changed + ' 条';
+          if (!r.nextAfter) break;
+          after = r.nextAfter;
+        }
+        toast('已恢复 ' + changed + ' 条' + (skipped || conflicts ? '；跳过 ' + skipped + ' 条，冲突 ' + conflicts + ' 条，可重试' : ''));
+      } catch (e) { throw new Error('已恢复 ' + changed + ' 条，后续处理失败：' + e.message); }
+      finally { auditResetBusy = false; await render(); }
+    });
+  },
+  auditnext: b => { const before = Number(b.dataset.before), at = Number(b.dataset.beforeAt); if (before > 0 && at > 0) { S.auditStack.push({ before: S.auditBefore, at: S.auditBeforeAt }); S.auditBefore = before; S.auditBeforeAt = at; render(); } },
+  auditprev: () => { if (S.auditStack.length) { const p = S.auditStack.pop(); S.auditBefore = p.before; S.auditBeforeAt = p.at; render(); } },
   auditcompact: async b => {
     const mode = b.dataset.mode || '';
     const days = b.dataset.days !== undefined ? +b.dataset.days : (mode === 'all' ? 7 : mode === 'routine' ? 1 : 0);
@@ -1684,7 +1685,7 @@ const FORMS = {
   },
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); S.pOffset = 0; render(); },
   authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
-  auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); S.auditBefore = 0; S.auditStack = []; S.auditSnapshot = 0; render(); },
+  auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); S.auditBefore = 0; S.auditBeforeAt = 0; S.auditStack = []; render(); },
   gbosshp: async f => {
     const hp = numIn(f, 'hp'), maxHp = numIn(f, 'maxHp');
     if (!Number.isInteger(hp) || hp < 0) return toast('血量要填非负整数', true);
