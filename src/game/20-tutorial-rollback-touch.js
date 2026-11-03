@@ -266,6 +266,7 @@ function localInput() {
   return { h, p: pr };
 }
 function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null) {
+  if (typeof currentScreen !== 'undefined' && (currentScreen === 'buffDraft' || currentScreen === 'mapBriefing')) showScreen(null);   // 加入方：房主开打时收起通览和密卷页
   refocusGame();
   setChars(ch[0], ch[1]);
   if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }

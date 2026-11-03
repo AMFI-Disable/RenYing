@@ -619,6 +619,7 @@ function competitiveDraftAdvance() {
     const cb = d.onComplete;
     const state = d.state;
     competitiveDraft = null;
+    if (currentScreen === 'buffDraft') showScreen(null);   // 选完密卷就收起这一页，不然开打了还盖在场上
     if (cb) cb(state);
     return;
   }
@@ -640,6 +641,7 @@ function competitiveDraftMaybeFinishOnline() {
   d.finishing = true;
   competitiveDraftStopTimer();
   competitiveDraft = null; onlineCompetitiveDraft = null;
+  if (currentScreen === 'buffDraft') showScreen(null);
   d.onComplete(state);
 }
 function competitiveDraftReceive(msg) {

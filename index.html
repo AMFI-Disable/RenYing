@@ -25831,6 +25831,7 @@ pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
 return { h, p: pr };
 }
 function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null) {
+if (typeof currentScreen !== 'undefined' && (currentScreen === 'buffDraft' || currentScreen === 'mapBriefing')) showScreen(null);   // 加入方：房主开打时收起通览和密卷页
 refocusGame();
 setChars(ch[0], ch[1]);
 if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
@@ -29899,6 +29900,7 @@ competitiveDraftStopTimer();
 const cb = d.onComplete;
 const state = d.state;
 competitiveDraft = null;
+if (currentScreen === 'buffDraft') showScreen(null);   // 选完密卷就收起这一页，不然开打了还盖在场上
 if (cb) cb(state);
 return;
 }
@@ -29920,6 +29922,7 @@ if (state.selections.some((side, s) => side.some((id, slot) => !id && (state.can
 d.finishing = true;
 competitiveDraftStopTimer();
 competitiveDraft = null; onlineCompetitiveDraft = null;
+if (currentScreen === 'buffDraft') showScreen(null);
 d.onComplete(state);
 }
 function competitiveDraftReceive(msg) {
