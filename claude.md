@@ -9,3 +9,8 @@
 
 - 游戏主体在 `src/game/`，按文件名的编号顺序拼起来就是整个游戏（以前的 `src/game.js`）。新代码放进对应功能的文件，不要另起顶层文件。侠客的数据（强度、属性、故事）在 `src/data/heroes/`，一位一个文件；模式和点将台顺序在 `src/data/10-modes.js`、`11-bp-orders.js`；界面的中译英文案在 `src/data/30-ui-copy.js`（`src/i18n.js` 只管查表）。`src/data/` 构建时排在 `src/game/` 前面，并由 `tools/data-check.mjs` 检查（写错字段构建会失败）。
 - `index.html` 和 `renying-offline.html` 是 `python3 tools/build.py` 生成的，不要手改；改完源码要重新生成，提交前用 `python3 tools/build.py --check` 确认是最新的。
+
+## 文档
+
+- `readme.md` 和 `readme.zh-cn.md` 内容要一致；Wiki（`AMFI-Disable/RenYing.wiki`）在 `docs/wiki/` 有一份小写文件名的副本，改一边就同步另一边。规则见 `contributing.md`。
+- 介绍刃影时只写它自己，不要写成照着别的游戏做的。

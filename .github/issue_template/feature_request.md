@@ -20,4 +20,4 @@ A description of any alternative solutions, mechanics, or workarounds you have c
 
 ## Additional Context
 
-Add any other context, mockup screenshots, or balance references here.
+Add sketches, screenshots or numbers (for balance ideas) here.

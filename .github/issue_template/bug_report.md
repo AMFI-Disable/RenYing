@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Create a report to help us improve the application
+about: Report something in RenYing that does not work
 title: "[BUG] "
 labels: bug
 assignees: ''
@@ -12,10 +12,10 @@ A clear and concise description of what the bug is.
 
 ## Steps To Reproduce
 
-1. Launch application.
-2. Navigate to '...'
-3. Click on '....'
-4. Observe error behavior.
+1. Open the game (online or offline edition).
+2. Go to '...'
+3. Pick hero / mode '...'
+4. See the problem.
 
 ## Expected Behavior
 
@@ -25,8 +25,11 @@ A clear and concise description of what you expected to happen.
 
 - **Browser**: [e.g. Chrome 125, Safari 17, Firefox 126]
 - **OS Version**: [e.g. macOS Sonoma 14.5, Windows 11, Linux]
-- **Python Version**: [e.g. Python 3.10+]
+- **Edition**: [online (GitHub Pages) or offline file]
+- **Game Version**: [shown at the bottom of the account page, e.g. 1.0.1]
+- **Input**: [keyboard and mouse, keyboard only, touch]
+- **Account**: [guest, local account or cloud account; never post your password]
 
 ## Additional Context
 
-Add any other context, logs, or diagnostic exports here.
+Add screenshots, a replay file or the browser console output here.

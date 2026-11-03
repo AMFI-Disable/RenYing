@@ -1,218 +1,267 @@
-# ⚔ 刃影 (RenYing)
+# ⚔ 刃影
 
 <div align="center">
 
-<img src="assets/skin-qingfengxing.png" width="240" alt="刃影艺术图" />
+<img src="assets/skin-qingfengxing.png" width="240" alt="刃影插画" />
 
-**高性能水墨风武侠格斗对战游戏**  
-*由 Even, Luffy, Opus 5.5, Gemini 4 Argon 倾力创作。基于 HTML5 Canvas、WebRTC P2P 免服务器直连与轻量 Python WebSocket 服务器的实时武侠格斗游戏。*
+**在浏览器里打开就能玩的水墨武侠格斗游戏。**  
+*由 Even、Luffy、Opus 5.5 和 Gemini 4 Argon 制作。纯 JavaScript 画在一块 canvas 上，点对点联机，账号和存档用可选的 Cloudflare Worker。*
 
-[![在线畅玩: GitHub Pages](https://img.shields.io/badge/在线畅玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
-[![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
-[![Technology: HTML5 Canvas](https://img.shields.io/badge/Technology-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](https://html.spec.whatwg.org)
-[![Multiplayer: WebRTC P2P](https://img.shields.io/badge/Multiplayer-WebRTC%20P2P%20%2F%20WebSocket-blue.svg?style=flat-square)](#architecture-and-technical-anatomy)
-[![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/AMFI-Disable/RenYing/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
-[![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#privacy-and-security-first)
-[![Pricing: Free & Open-Source](https://img.shields.io/badge/Pricing-100%25%20Free%20%26%20Open%20Source-success.svg?style=flat-square)](#overview-and-core-value)
+[![在线游玩](https://img.shields.io/badge/在线游玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
+[![版本 1.0.1](https://img.shields.io/badge/版本-1.0.1-blue.svg?style=flat-square)](changelog.md)
+[![侠客 16 位](https://img.shields.io/badge/侠客-16%20位-red.svg?style=flat-square)](#侠客)
+[![技术 HTML5 Canvas](https://img.shields.io/badge/技术-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#工作原理)
+[![联机 WebRTC 回滚](https://img.shields.io/badge/联机-WebRTC%20%2B%20回滚-blue.svg?style=flat-square)](#工作原理)
+[![许可 MIT](https://img.shields.io/badge/许可-MIT-blue.svg?style=flat-square)](license)
+
+**[English](readme.md)** • **[简体中文](readme.zh-cn.md)** • **[Wiki](https://github.com/AMFI-Disable/RenYing/wiki)**
 
 </div>
 
 ---
 
-## 🌐 Select Language / 选择语言
+## 目录
 
-**[English](readme.md)** •
-**[简体中文](readme.zh-cn.md)**
-
----
-
-## 🧭 Table Of Contents
-
-- [Overview And Core Value](#overview-and-core-value)
-- [Key Features](#key-features)
-- [Game Controls And Mechanics](#game-controls-and-mechanics)
-- [How To Play And Multiplayer Modes](#how-to-play-and-multiplayer-modes)
-- [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
-- [Project Structure And Building](#project-structure-and-building)
-- [Privacy And Security First](#privacy-and-security-first)
-- [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
-- [License And Legal Attribution](#license-and-legal-attribution)
+- [这是什么](#这是什么)
+- [怎么玩](#怎么玩)
+- [操作](#操作)
+- [模式](#模式)
+- [侠客](#侠客)
+- [武库](#武库)
+- [工作原理](#工作原理)
+- [仓库结构](#仓库结构)
+- [构建与测试](#构建与测试)
+- [参与开发](#参与开发)
+- [隐私](#隐私)
+- [许可](#许可)
 
 ---
 
-## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
+## 这是什么
 
-**刃影 (RenYing)** 是一款由 **Even, Luffy, Opus 5.5, Gemini 4 Argon** 共同创作的快节奏水墨风格武侠格斗对战游戏。专门针对校园及多端对战场景设计，通过 GitHub Pages 打开就能玩，联机是免服务器的浏览器对浏览器 WebRTC 直连（$0 成本、无网络中转延迟）。
+**刃影（RenYing）** 是一款节奏很快的水墨风 2D 格斗游戏。十六位侠客各有自己的攻击距离、体量、被动和三个招式，可以一对一、2v2 组队，或者 3v3 车轮战。画面上的一切，从笔触拖尾到围巾飘动、受击闪光，都是代码在一块 canvas 上实时画出来的，没有贴图序列帧。
 
----
+它是为了和同学朋友马上开打而做的：打开链接，把四位房间号发给对方，两个浏览器就直接连上。另有一个单文件离线版，完全不用网络。
 
-## 🚀 Key Features <a id="key-features"></a>
-
-- **GitHub Pages 即开即玩**：无需安装任何环境，不需克隆代码，任意浏览器点开网页即可开始。
-- **免服务器 WebRTC P2P 联机**：两位玩家通过 4 位房间码直接建立浏览器间 UDP 通道，配合回滚机制保障零延迟对决。
-- **神兵武库与玩家集市**：消耗对战获得的墨锭开启武器箱，获取 5 档品质的收藏品与击杀计数版皮肤；支持玩家自由挂单交易、汰换合同升级与最高品质自动装配。
-- **中英双语支持**：内置无缝中英语言切换系统，首次进游戏引导选择，偏好持久化保存。
-- **写意水墨美术风格**：流畅的笔墨拖尾粒子、顿挫有力的打击定格、纯正武侠意境。
-- **纯本地单机离线模式**：提供单文件离线版（`renying-offline.html`），音频全内置，随时随地畅玩。
+游戏支持简体中文和英文，随时可以在顶栏或设置里切换。
 
 ---
 
-## 🎮 Game Controls And Mechanics <a id="game-controls-and-mechanics"></a>
+## 怎么玩
 
-### 默认键盘和鼠标操作
-
-| 操作 | 按键 |
+| 方式 | 做法 |
 | :--- | :--- |
-| **左右移动** | `A` / `D` |
-| **跳跃 / 二段跳** | `W` 或 `空格` |
-| **防御** | 按住 `S` |
-| **攻击（五段连击）** | 鼠标左键 |
-| **蓄力斩** | 按住鼠标左键再松开 |
-| **远程招式** | 按住左键再点右键（或 `R`） |
-| **腾空闪** | 鼠标右键（或 `左 Shift`） |
-| **技能 / 大招** | `Q` / `E`（大招需要气满） |
-| **暂停 / 静音** | `P` / `M`（单人模式） |
+| **在线** | 用 Chrome、Edge、Safari 或 Firefox 打开 <https://amfi-disable.github.io/RenYing/>，什么都不用装。 |
+| **离线** | 下载 `renying-offline.html`，双击打开。音乐和青锋行小游戏都在这一个文件里。离线版没有联机模式和账号。 |
+| **手机或平板** | 打开同一个链接，把设备横过来，触屏操作会自动出现。 |
 
-*(注：在移动设备或平板触控屏上，游戏将自动启用虚拟摇杆与触控按键)。*
+### 和朋友联机
 
----
+1. 两个人都打开游戏。
+2. 一个人进 **联机**，建好友房间，把房间号（例如 `K7PQ`）发给对方。
+3. 另一个人输入房间号加入。
 
-## 📦 How To Play And Multiplayer Modes <a id="how-to-play-and-multiplayer-modes"></a>
-
-### 模式一：WebRTC P2P 在线直连（推荐校园开黑，0 成本零延迟）
-
-无需安装任何软件或启动后台：
-
-1. 两位玩家均打开 **[https://amfi-disable.github.io/RenYing/](https://amfi-disable.github.io/RenYing/)**。
-2. 玩家 1 点击 **联机对战** $\rightarrow$ **建房** $\rightarrow$ 获得 4 位房间码（例如 `K7PQ`）。
-3. 玩家 2 在 **加入** 栏输入该房间码 $\rightarrow$ 点击 **加入**。
-4. 双方浏览器直接建立 WebRTC 数据连接，PeerJS 只负责让两边找到对方，然后立即开始选人对决！
-
-部分管得严的网络（某些校园 Wi-Fi 或防火墙）会拦截点对点连接。如果加入一直超时，换个网络再试。
-
-### 模式二：单机离线游玩
-
-双击打开 `renying-offline.html`，无需任何网络即可进行单人闯关、人机对战与木人桩练习。音乐和青锋行小游戏都打包在这一个文件里。
+之后操作直接从一个浏览器发到另一个浏览器。有些网络（部分校园网、公司网）会拦点对点连接，这时游戏会向服务器要一条中转线路，照样能连上。
 
 ---
 
-## 🏗 Architecture And Technical Anatomy <a id="architecture-and-technical-anatomy"></a>
+## 操作
+
+1P 默认的键盘和鼠标操作。每个键都可以在 **设置** 里改。
+
+| 动作 | 鼠标 | 键盘 |
+| :--- | :--- | :--- |
+| 移动 | | `A` / `D` |
+| 跳、二段跳 | | `W` 或 `空格` |
+| 防御（按住）、从平台跳下（`↓` + 跳） | | `S` |
+| 普攻，五连段 | 左键 | `X` |
+| 蓄力斩 | 按住左键再松开 | 按住 `X` 再松开 |
+| 技能一 | | `Q` |
+| 技能二 | 按住左键再点右键 | `R` |
+| 大招（气满才能放） | | `E` |
+| 腾空闪 | 右键 | `左 Shift` |
+| 暂停 / 静音 | | `P` / `M` |
+
+- **纯键盘：** 所有菜单、对话框、点将台和结算页都能用方向键或 WASD 移动，`Enter`/`空格` 确认，`Esc` 返回，金色框表示当前选中。
+- **一台电脑多人：** 2P 到 4P 各有一组键（方向键 + `UIOJK`、`TFGH` + `CVBNM`、小键盘）。
+- **触屏：** 左边虚拟摇杆，右边动作按钮。
+
+---
+
+## 模式
+
+| 模式 | 玩什么 |
+| :--- | :--- |
+| **演武** | 和电脑单挑，六档难度从 入门 到 天道，可以选场地和规则。 |
+| **天机乱斗** | 每 15 秒场上来一种随机异变。 |
+| **通天神决** | 全员 10 倍真元、技能零冷却、招式威力翻倍。 |
+| **山河异境** | 六张带平台、冰面、大风和雷击的地图，投票选图。 |
+| **3v3 车轮战** | 每边三位侠客，蛇形选人；赢下回合的一方带着剩余血量继续。 |
+| **2v2** | 两人对两个电脑，或两人对两人，本机或联机都行。 |
+| **守关挑战** | 一章一章闯关，按星级给奖励。 |
+| **侠客列传** | 每位侠客一部有分支选择、两个结局的故事。 |
+| **问剑密卷** | 爬塔，一路攒秘卷组成这一局的打法。 |
+| **同袍肉鸽** | 2 到 3 人共享秘卷和回血，一起打融魂魔首。 |
+| **江湖共斗 · 开放世界** | 全服共用一张 24000 像素宽、八个区域的大地图，有世界 Boss 和全服共同推进的江湖长卷，每条线最多 40 人。 |
+| **天魔讨伐** | 全服一起打的 Boss 战。 |
+| **联机** | 快速匹配、排位赛、好友房间，还有 2v2、魔首和各种特殊规则。 |
+| **木人桩** | 对着木人自由练连招。 |
+| **观战与回放** | 看电脑之间的对局，保存和导入回放。 |
+| **青锋行** | 独立的 3D 动作小游戏，可单人，也可 2 到 4 人联机。 |
+
+排位赛、开放世界、天魔讨伐和武库的玩家市场要连服务器并登录账号，其余模式游客也能玩。
+
+---
+
+## 侠客
+
+一共十六位。每位都有一个被动，`Q` 一个技能，`R` 第二个技能，`E` 大招。
+
+| 侠客 | 定位 | Q | R | E |
+| :--- | :--- | :--- | :--- | :--- |
+| 青锋 | 游龙剑客 | 疾风斩 | 剑气 | 残月 |
+| 绯影 | 暗影刺客 | 影遁 | 飞镖 | 千影 |
+| 铁山 | 玄铁重甲 | 震地 | 铁壁冲 | 山崩 |
+| 凌霜 | 寒枪骁将 | 回马枪 | 枪旋 | 刹那 |
+| 流云 | 御风散人 | 风刃 | 开扇 | 龙卷 |
+| 雷鸣 | 雷拳武僧 | 雷闪 | 金刚雷铠 | 雷霆万钧 |
+| 墨羽 | 泼墨画师 | 墨阵 | 画符 | 符阵 |
+| 月华 | 月镜宗师 | 月镜 | 月轮 | 月华如水 |
+| 燕翎 | 御空飞燕 | 俯冲 | 翎羽 | 万羽 |
+| 玉箫 | 箫音乐师 | 清音 | 回音壁 | 广陵散 |
+| 醉翁 | 山水醉翁 | 亭中留客 | 与民同乐 | 山水之间 |
+| 勾陈 | 链锤游侠 | 飞锤 | 旋锤 | 开天一锤 |
+| 凌雀 | 飞梭游侠 | 穿叶飞梭 | 移形换影 | 万线归宗 |
+| 离影 | 离魂刀客 | 留影 | 渡影 | 万影归一 |
+| 磁仙 | 两极方士 | 极性反转 | 磁极 | 天地磁合 |
+| 千机 | 机关傀客 | 投丸 | 暴雨梨花 | 千丝收网 |
+
+完整招式、克制关系和帧数见 [Wiki：侠客与战斗](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) 和 [docs/frame-data.md](docs/frame-data.md)。
+
+---
+
+## 武库
+
+武库是游戏里的外观收藏。皮肤和武器外观不改变侠客的任何数值。
+
+- **墨锭** 是唯一的货币，靠玩游戏获得（每日每周任务、关卡、列传）。没有任何真钱商店。
+- **武器箱** 各装一套皮肤，分五档品质；每种箱子每天或每周能开的数量有限。
+- **斩数版** 会记录这件皮肤打出的击倒数。
+- **汰换合同** 把同一档的十件换成高一档的一件。
+- **玩家市场** 玩家之间用墨锭买卖，每笔成交扣一点手续费，免得墨锭越攒越多。
+- **终端机** 一次报一件、按固定价格卖。
+
+云端账号的每一次武库操作都由服务器核对并记录。详见 [Wiki：武库与市场](https://github.com/AMFI-Disable/RenYing/wiki/Armory-and-Marketplace)。
+
+---
+
+## 工作原理
 
 ```mermaid
-flowchart TD
-    P1["玩家 1 (GitHub Pages)"] <-->|"WebRTC DataChannel (直连 UDP)"| P2["玩家 2 (GitHub Pages)"]
+flowchart LR
+    A["玩家 A 的浏览器"] <-->|"WebRTC 数据通道：只传操作"| B["玩家 B 的浏览器"]
+    A -.->|"房间号握手（PeerJS）"| S["信令"]
+    B -.-> S
+    A -.->|"账号、存档、武库、开放世界"| W["Cloudflare Worker + D1"]
+    B -.-> W
 ```
 
-- **客户端引擎**：纯原生 JavaScript + HTML5 Canvas 2D，极致低输入延迟。
-- **回滚联机**：两边用同一个随机种子各自完整计算对战，每帧只交换按键；对方按键晚到时回到那一帧重算，并定期校验状态。
-- **P2P 通信**：基于 WebRTC DataChannels 与 PeerJS 握手协议，自动穿透局域网 NAT（`src/net-p2p.js`）。
-- **数据存储**：本地 LocalStorage，加上 Cloudflare Worker + D1 上的云端账号与存档（`cloudflare/`）。
+- **客户端：** 原生 JavaScript 画在一块 HTML5 canvas 上。没有框架、没有打包器、运行时不依赖任何 npm 包。游戏逻辑固定每秒 120 步。
+- **回滚联机：** 两个浏览器用同一个随机种子各自算整局，只互相发操作。某一帧的操作来晚了，就退回存好的那一帧，用正确的操作重算再追上来；双方还定期对一次状态校验和，发现不同步。
+- **连接：** WebRTC 数据通道，PeerJS 负责握手，公共 STUN 服务器打洞；直连不通时 Worker 可以发短时有效的 TURN 中转凭据。
+- **服务器（可选）：** Cloudflare Worker 加 D1 数据库，负责账号、云存档、武库经济、排行榜和开放世界（每条线一个 Durable Object）。没有它游戏也能玩。
+- **生成的网页：** `tools/build.py` 把 `src/` 里的源码拼成 `index.html`（在线版）和 `renying-offline.html`（单文件离线版）。
+
+更多见 Wiki：[联机与回滚同步](https://github.com/AMFI-Disable/RenYing/wiki/Multiplayer-and-Netcode)、[架构与开发](https://github.com/AMFI-Disable/RenYing/wiki/Architecture-and-Development)。
 
 ---
 
-## 🧱 Project Structure And Building <a id="project-structure-and-building"></a>
+## 仓库结构
 
-只改源文件，不要直接改生成的网页：
-
-| 路径 | 用途 |
+| 路径 | 是什么 |
 | :--- | :--- |
-| `src/page.html` | 网页结构，带打包标记 |
-| `src/style.css` | 全部样式 |
-| `src/i18n.js` | 国际化多语言翻译引擎与中英文字典 |
-| `src/game/` | 游戏引擎、12 名英雄机制、菜单、战斗状态机和回滚联机，按功能拆成 25 个带编号的文件（`02-heroes.js`、`03-skills.js`、`10-hits.js` 等），build.py 按编号顺序拼起来 |
-| `src/armory-core.js` | 武库核心逻辑、武器箱配置、品质分级与饰品概率 |
-| `src/armory.js` | 武库 UI、开箱动画、汰换合同、图鉴与玩家集市 |
-| `src/anticheat.js` | 客户端防作弊状态校验、封禁防护与伤害审计 |
-| `src/net-p2p.js` | 免服务器 WebRTC 直连 |
-| `src/cloud.js` | 云存档同步、合并算法与本地备份导入/导出 |
-| `src/social.js` | 免服务器 P2P 江湖茶馆社区、好友与观战 |
-| `src/qfx/` | 青锋行小游戏模块化源码 |
-| `cloudflare/` | Cloudflare Worker 经济中枢、D1 数据库与管理员后台 |
-| `assets/music/` | 背景音乐（`.mp3`） |
-| `assets/qingfengxing.html` | 生成的青锋行小游戏页面 |
-| `tools/build.py` | 生成下面三个网页（只用 Python 自带的库） |
-| `tools/combat-test.mjs` | 12 英雄招式、状态机与 2v2 AI 回归测试套件 |
-| `tools/econ-test.mjs` | 经济、武库、集市与反作弊全套自动化测试（389 项通过） |
-| `tools/rollback-test.mjs` | 回滚联机确定性与帧重放测试 |
-| `tools/predeploy-check.mjs` | 部署前检查：wrangler.toml、管理后台 CSP、本机 Worker 关键接口冒烟测试 |
-| `tools/simulate-all.mjs` | 全模式 AI 仿真对战、克制审计与神经网络训练管线 |
-| `index.html` | 生成的联网版（GitHub Pages） |
-| `renying-offline.html` | 生成的单文件离线版 |
-| `renying.html` | 生成的旧网址跳转页 |
+| `src/page.html`、`src/style.css` | 页面结构（带构建标记）和全部样式 |
+| `src/game/` | 游戏本体，按编号拆成多个文件，`tools/build.py` 按顺序拼起来 |
+| `src/data/` | 数据表：`src/data/heroes/` 一位侠客一个文件，还有模式、点将台顺序、地图、电脑难度、界面英文。构建时由 `tools/data-check.mjs` 检查 |
+| `src/ai.js` | 电脑对手 |
+| `src/net-p2p.js` | 点对点连接 |
+| `src/cloud.js` | 账号和云存档 |
+| `src/armory-core.js`、`src/armory.js` | 武库规则和武库界面 |
+| `src/anticheat.js` | 客户端完整性检查 |
+| `src/social.js`、`src/errlog.js`、`src/i18n.js` | 社区功能、错误上报、翻译查表 |
+| `src/qfx/` | 青锋行小游戏的源码 |
+| `assets/` | 音乐、生成的小游戏页面、内置的 `peerjs` 和 `three.js` |
+| `cloudflare/` | Worker、管理后台页面、D1 表结构和迁移 |
+| `models/` | 训练好的电脑 AI 权重 |
+| `tools/` | 构建脚本、测试、检查和 AI 训练工具 |
+| `docs/` | 设计笔记、部署手册、管理后台说明、帧数表、Wiki 源文件 |
+| `index.html`、`renying-offline.html` | **生成的文件。** 在线版和离线版 |
+| `renying.html` | 旧地址的提示页 |
 
-改了 `src/` 或 `assets/` 里的东西之后，重新生成，并把生成的网页和源文件一起提交：
+---
+
+## 构建与测试
+
+需要 Python 3.10 以上和 Node 22，不需要 `npm install`。
+
+只改 `src/`、`assets/` 或 `cloudflare/` 里的文件，不要手改生成的网页。改完重新生成：
 
 ```bash
 python3 tools/build.py
 ```
 
-CI 会运行 `python3 tools/build.py --check`，生成的网页不是最新就会失败。
+提交前确认生成的网页是最新的：
 
-### Entry Points
+```bash
+python3 tools/build.py --check
+```
 
-| 入口 | 是什么 |
+主要测试（CI 里都会跑）：
+
+| 测什么 | 命令 |
 | :--- | :--- |
-| `index.html` | 联网版，GitHub Pages 上的网址 <https://amfi-disable.github.io/RenYing/> |
-| `renying-offline.html` | 单文件离线版，下载后直接打开，不用联网 |
-| `renying.html` | 旧网址，转到 `index.html` |
-| `assets/qingfengxing.html` | 青锋行小游戏 |
-| `cloudflare/worker.bundle.js` | Cloudflare Worker（账号、云存档、武库经济、开放世界），`cloudflare/wrangler.toml` 指向它 |
-| Worker 的 `/admin` | 管理后台，由 Worker 自己提供 |
+| 战斗、每位侠客、2v2 电脑 | `node tools/combat-test.mjs --sim` |
+| 回滚确定性 | `node tools/rollback-test.mjs --rollback` |
+| 两份游戏隔着卡顿网络对打 | `node tools/netplay-test.mjs` |
+| 武库经济和数据库迁移 | `node tools/econ-test.mjs` |
+| 云存档客户端 | `node tools/cloud-test.mjs` |
+| 多设备同步 | `node tools/sync-test.mjs` |
+| 开放世界服务器 | `node tools/world-test.mjs` |
+| 反作弊检查 | `node tools/anticheat-test.mjs` |
 
-### Build Commands
+浏览器检查要先开本地服务器（`python3 -m http.server 8791`），然后比如 `node tools/ui-audit.mjs ci-ui 1440 900`、`node tools/hud-audit.mjs ci-hud 1440 900`、`node tools/touch-audit.mjs ci-touch`、`node tools/kb-flow-test.mjs ci-kb 1440 900`。`node tools/test.mjs` 一次跑完主要的几项。
 
-| 命令 | 什么时候用 |
-| :--- | :--- |
-| `python3 tools/build.py` | 改了 `src/`、`assets/` 或 `cloudflare/` 之后（重新生成所有网页和 Worker 打包文件） |
-| `python3 tools/build.py --check` | 提交前：生成的文件不是最新就报错 |
-| `node tools/predeploy-check.mjs` | 部署 Worker 前：检查 wrangler.toml、管理后台 CSP，冒烟测试关键接口 |
-| `npx wrangler deploy --dry-run --env=""` | 在 `cloudflare/` 里运行：按部署的方式打包一遍，但不上传 |
-
-部署 Worker、D1 迁移（由 Worker 自己跑，不要用 `wrangler d1 migrations apply`）、备份、恢复和回滚：见 [docs/deploy-runbook.md](docs/deploy-runbook.md)。
-
-### Test Matrix
-
-全部用 Node 22 直接运行，不用 `npm install`。浏览器类检查要先开本地服务器：`python3 -m http.server 8791`。
-
-| 范围 | 命令 | 测什么 | 在哪个 CI 工作流 |
-| :--- | :--- | :--- | :--- |
-| combat | `node tools/combat-test.mjs --sim` | 所有侠客、战斗状态、2v2 AI | CI、Combat |
-| netplay | `node tools/netplay-test.mjs` | 两份游戏隔着有延迟的假网线对打，每一局两边算得一样 | Rollback |
-| rollback | `node tools/rollback-test.mjs --rollback` | 存档、读档、重算的确定性 | Rollback |
-| econ | `node tools/econ-test.mjs`（加 `--bundle` 测打包后的 Worker） | 武库、市场、爆率、防刷；D1 迁移在空库和老库上跑完都要和 `cloudflare/schema.sql` 一样 | CI、Armory |
-| cloud | `node tools/cloud-test.mjs` | 云存档客户端：按账号隔离、重试 | CI |
-| sync | `node tools/sync-test.mjs`（可加 `--bundle`） | 真 Worker 加多台设备：合并时不会重复计算 | CI |
-| world | `node tools/world-test.mjs` | 开放世界服务器：人数上限、视野、世界首领 | CI |
-| ai-lingque | `node tools/ai-lingque-test.mjs` | 凌雀 AI 连招检查 | CI |
-| ui | `node tools/ui-audit.mjs ci-ui 1440 900` | 每个面板放得下，没有被裁掉或字太小 | CI、UI |
-| touch | `node tools/touch-audit.mjs ci-touch` | 手机和平板的触屏操作 | CI、Mobile |
-| hud | `node tools/hud-audit.mjs ci-hud 1440 900` | 对局里的 HUD 文字不小于 12px | CI、UI |
-| hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD 文字和血条不重叠、不出画布 | UI |
-| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml、迁移文件编号、管理后台 CSP、接口冒烟测试 | Cloudflare Worker |
-| perf | `node tools/perf-audit.mjs` | 首页加载到主菜单、面板切换、电脑对战帧率，不超过 `tools/perf-budget.json` 的预算 | UI |
-| firstload | `node tools/firstload-audit.mjs` | 无缓存首次打开：FCP、LCP、布局跳动、字体请求数和大小；字体加载时文字不隐身，首屏不请求音乐 | UI |
+完整的测试清单见 Wiki 的 [测试与 CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI)。Worker 由维护者部署，步骤在 [docs/deploy-runbook.md](docs/deploy-runbook.md)。
 
 ---
 
-## 🛡 Privacy And Security First <a id="privacy-and-security-first"></a>
+## 参与开发
 
-- **零数据追踪**：无任何第三方统计脚本或分析 SDK，纯净无广告。
-- **点对点隐私保障**：P2P 模式下所有操作指令直接在两位玩家浏览器之间传输，不经过任何第三方服务器。
-- **本地优先**：所有战绩和配置仅保存在本地设备。
+先看 [contributing.md](contributing.md)。简单说：
 
----
+- 提交信息写成 `类型: 三个小写英文单词`（例如 `fix: guard break timing`），别的写法 CI 不通过。
+- 仓库里所有文件名都是小写。
+- Markdown 标题用 Title Case（英文每个实词首字母大写）。
+- 改了源码要重新生成网页，和源码一起提交。
+- 只合并维护者和仓库协作者开的 PR。
 
-## ⚖ Educational And Fair-Play Disclaimer <a id="educational-and-fair-play-disclaimer"></a>
-
-> [!CAUTION]
-> **免责声明与公平竞技声明**：
-> 本项目源码与资源仅供学习研究、技术交流与个人非商业娱乐使用。
-> 请遵守相关社区规范，在联机对战与社区交流中保持友善文明与公平竞技。
-> 开发者对第三方独立搭建之服务器及衍生内容不承担法律责任。
+问题和想法提到 [Issues](https://github.com/AMFI-Disable/RenYing/issues)。安全问题请按 [security.md](security.md) 私下报告，不要公开发 issue。
 
 ---
 
-## 📄 License And Legal Attribution <a id="license-and-legal-attribution"></a>
+## 隐私
 
-由 **Even, Luffy, Opus 5.5, Gemini 4 Argon** 倾力创作。本项目采用 [MIT License](license) 开源协议。Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.
+- 没有广告、没有统计分析、没有跟踪脚本。
+- 游客和离线版的数据都只存在浏览器本地。
+- 云端账号会把存档、武库和对局记录存在游戏的 Worker 上。密码用加盐的 PBKDF2 存哈希，登录令牌也只存哈希。
+- 在线版会把崩溃报告（没接住的错误）和少量可疑伤害记录发给 Worker，方便修 bug，里面没有密码。
+- 点对点对局时，你的操作直接发到对方浏览器。
+
+> [!NOTE]
+> 刃影是非商业项目，用来学习和跟朋友一起玩。对局和聊天请友善。
+
+---
+
+## 许可
+
+[MIT](license)。Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.

@@ -2,221 +2,266 @@
 
 <div align="center">
 
-<img src="assets/skin-qingfengxing.png" width="240" alt="RenYing Artwork" />
+<img src="assets/skin-qingfengxing.png" width="240" alt="RenYing artwork" />
 
-**An ink-wash martial-arts duel game that runs in a browser tab**  
-*By Even, Luffy, Opus 5.5, and Gemini 4 Argon. Plain JavaScript and canvas, serverless WebRTC multiplayer, and an optional zero-dependency Python server.*
+**An ink-wash martial-arts fighting game that runs in a browser tab.**  
+*Made by Even, Luffy, Opus 5.5 and Gemini 4 Argon. Plain JavaScript on one canvas, peer-to-peer online play, and an optional Cloudflare Worker for accounts.*
 
-[![Play Online: GitHub Pages](https://img.shields.io/badge/Play%20Online-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
-[![Platform: Web & Python](https://img.shields.io/badge/Platform-Web%20%7C%20Python%203.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
-[![Technology: HTML5 Canvas](https://img.shields.io/badge/Technology-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](https://html.spec.whatwg.org)
-[![Multiplayer: WebRTC P2P](https://img.shields.io/badge/Multiplayer-WebRTC%20P2P%20%2F%20WebSocket-blue.svg?style=flat-square)](#architecture-and-technical-anatomy)
-[![Release: v1.0.0](https://img.shields.io/badge/Release-v1.0.0-blue.svg?style=flat-square&logo=github)](https://github.com/AMFI-Disable/RenYing/releases)
+[![Play: GitHub Pages](https://img.shields.io/badge/Play-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
+[![Version: 1.0.1](https://img.shields.io/badge/Version-1.0.1-blue.svg?style=flat-square)](changelog.md)
+[![Heroes: 16](https://img.shields.io/badge/Heroes-16-red.svg?style=flat-square)](#heroes)
+[![Tech: HTML5 Canvas](https://img.shields.io/badge/Tech-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#how-it-works)
+[![Online: WebRTC + Rollback](https://img.shields.io/badge/Online-WebRTC%20%2B%20Rollback-blue.svg?style=flat-square)](#how-it-works)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
-[![Privacy: Zero Telemetry](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%2F%20100%25%20Local-purple.svg?style=flat-square)](#privacy-and-security-first)
-[![Pricing: Free & Open-Source](https://img.shields.io/badge/Pricing-100%25%20Free%20%26%20Open%20Source-success.svg?style=flat-square)](#overview-and-core-value)
+
+**[English](readme.md)** • **[简体中文](readme.zh-cn.md)** • **[Wiki](https://github.com/AMFI-Disable/RenYing/wiki)**
 
 </div>
 
 ---
 
-## 🌐 Select Language / 选择语言
+## Contents
 
-**[English](readme.md)** •
-**[简体中文](readme.zh-cn.md)**
-
----
-
-## 🧭 Table Of Contents
-
-- [Overview And Core Value](#overview-and-core-value)
-- [Key Features](#key-features)
-- [Game Controls And Mechanics](#game-controls-and-mechanics)
-- [How To Play And Multiplayer Modes](#how-to-play-and-multiplayer-modes)
-- [Architecture And Technical Anatomy](#architecture-and-technical-anatomy)
-- [Project Structure And Building](#project-structure-and-building)
-- [Privacy And Security First](#privacy-and-security-first)
-- [Educational And Fair-Play Disclaimer](#educational-and-fair-play-disclaimer)
-- [License And Legal Attribution](#license-and-legal-attribution)
+- [What It Is](#what-it-is)
+- [Play It](#play-it)
+- [Controls](#controls)
+- [Modes](#modes)
+- [Heroes](#heroes)
+- [Armory](#armory)
+- [How It Works](#how-it-works)
+- [Repository Layout](#repository-layout)
+- [Building And Testing](#building-and-testing)
+- [Contributing](#contributing)
+- [Privacy](#privacy)
+- [License](#license)
 
 ---
 
-## ⚡ Overview And Core Value <a id="overview-and-core-value"></a>
+## What It Is
 
-**RenYing (刃影)** is a fast ink-wash martial-arts duel game. Twelve characters fight on one stage, each with their own reach, weight and tricks. It is built to be played right away — at school or at home: two browsers connect **directly** to each other over WebRTC, with nothing to host and nothing to install.
+**RenYing (刃影)** is a fast 2D fighting game drawn in an ink-wash style. Sixteen heroes, each with their own reach, weight, passive and three skills, fight one-on-one, in 2v2 teams or in 3v3 relay matches. Everything on screen, from brush trails to scarves and hit flashes, is drawn in code on a single canvas; there are no sprite sheets.
 
----
+The game is made for playing with friends straight away. Open the link, share a four-character room code, and the two browsers connect directly to each other. There is also a single-file offline edition that works with no network at all.
 
-## 🚀 Key Features <a id="key-features"></a>
-
-- **Plays from a URL** — open the GitHub Pages link and start. No install, no clone, no hosting.
-- **Serverless P2P multiplayer** — share a 4-character room code and the two browsers connect directly over a WebRTC DataChannel, with rollback netcode to keep the fight responsive.
-- **Armory & Marketplace (武库与集市)** — open weapon cases with ink, trade collectibles with other players, use trade-up contracts, or equip skins tiered from Standard to Legendary with automatic highest-tier equipping.
-- **Bilingual Interface** — seamless English and Simplified Chinese support with persistent preferences and in-game toggle.
-- **Drawn in code, not sprites** — brushstroke trails, scarf motion, hit-stop, screen shake and the whole ink-wash look are drawn procedurally on a 2D canvas.
-- **Single-file offline build** — `renying-offline.html` opens by double-click, with the music and the Qingfengxing mini-game packed inside it.
+The game is bilingual: Simplified Chinese and English, switchable at any time from the top bar or settings.
 
 ---
 
-## 🎮 Game Controls And Mechanics <a id="game-controls-and-mechanics"></a>
+## Play It
 
-### Default Keyboard And Mouse Controls
-
-| Action | Input |
+| Way | How |
 | :--- | :--- |
-| **Move left / right** | `A` / `D` |
-| **Jump / double jump** | `W` or `Space` |
-| **Block** | Hold `S` |
-| **Attack (5-hit combo)** | Left mouse button |
-| **Charged slash** | Hold the left mouse button, then release |
-| **Ranged attack** | Hold the left mouse button, then right-click (or `R`) |
-| **Escape (dodge upward)** | Right-click (or `Left Shift`) |
-| **Skill / ultimate** | `Q` / `E` (the ultimate needs a full meter) |
-| **Pause / mute** | `P` / `M` (single-player) |
+| **Online** | Open <https://amfi-disable.github.io/RenYing/> in Chrome, Edge, Safari or Firefox. Nothing to install. |
+| **Offline** | Download `renying-offline.html` and double-click it. Music and the 青锋行 (Qingfengxing) mini-game are packed inside the one file. Online modes and accounts are not available offline. |
+| **Phone or tablet** | Open the same link and turn the device sideways. Touch controls appear automatically. |
 
-*On a phone or tablet the game switches to its own touch controls — a virtual stick on the left, action buttons on the right — and asks you to turn the device sideways.*
+### Playing With A Friend
 
----
+1. Both players open the game.
+2. One player opens **联机 / Online**, creates a friend room and shares the room code (for example `K7PQ`).
+3. The other player types the code and joins.
 
-## 📦 How To Play And Multiplayer Modes <a id="how-to-play-and-multiplayer-modes"></a>
-
-### Option 1: Direct WebRTC (Best For School — No Budget Needed)
-
-Nothing to install and no server to run:
-
-1. Both players open **[https://amfi-disable.github.io/RenYing/](https://amfi-disable.github.io/RenYing/)**.
-2. Player 1 goes to **联机对战**, clicks **建房**, and shares the 4-character room code it shows (for example `K7PQ`).
-3. Player 2 types that code into **加入** and clicks **加入**.
-4. From then on the two browsers talk straight to each other over a WebRTC DataChannel; PeerJS is only used to introduce them.
-
-Some networks — campus Wi-Fi in particular — block peer-to-peer traffic. If joining times out, try another network.
-
-### Option 2: Standalone Offline Play
-
-Open `renying-offline.html` directly — double-click it, with no server and no internet connection. The music and the Qingfengxing mini-game are inside that single file.
+Inputs then go straight from one browser to the other. On networks that block peer-to-peer traffic (some school or office Wi-Fi), the game asks the server for a relay so the match still connects.
 
 ---
 
-## 🏗 Architecture And Technical Anatomy <a id="architecture-and-technical-anatomy"></a>
+## Controls
+
+Default keyboard and mouse layout for player 1. Every key can be changed in **设置 / Settings**.
+
+| Action | Mouse | Keyboard |
+| :--- | :--- | :--- |
+| Move | | `A` / `D` |
+| Jump, double jump | | `W` or `Space` |
+| Block (hold), drop through a platform (`↓` + jump) | | `S` |
+| Attack, 5-hit combo | Left click | `X` |
+| Charged slash | Hold left click, release | Hold `X`, release |
+| Skill 1 | | `Q` |
+| Skill 2 | Hold left click, then right click | `R` |
+| Ultimate (needs a full meter) | | `E` |
+| Escape (腾空闪) | Right click | `Left Shift` |
+| Pause / mute | | `P` / `M` |
+
+- **Keyboard only:** every menu, dialog, the draft screen and the results screen work with the arrow keys or WASD, `Enter`/`Space` to press and `Esc` to go back. A gold frame shows the selection.
+- **Same computer, several players:** players 2 to 4 have their own key blocks (arrows + `UIOJK`, `TFGH` + `CVBNM`, and the number pad).
+- **Touch:** a virtual stick on the left and action buttons on the right.
+
+---
+
+## Modes
+
+| Mode | What you do |
+| :--- | :--- |
+| **演武 · Play vs AI** | Duel the computer at six levels, from 入门 (Easy) to 天道 (Transcendent). Pick the arena and a rule set. |
+| **天机乱斗 · Chaos** | A new random mutation hits the arena every 15 seconds. |
+| **通天神决 · Mayhem** | Ten times the meter, no cooldowns and doubled skill power for everyone. |
+| **山河异境 · Terrain Clash** | Six maps with platforms, ice, wind and lightning; the map is chosen by vote. |
+| **3v3 车轮战 · Relay** | Three heroes per side, snake draft; the round winner carries over their remaining health. |
+| **2v2** | Two players against two AIs, or two players against two players, on one computer or online. |
+| **守关挑战 · Stages** | Stage chapters with star ratings and rewards. |
+| **侠客列传 · Hero Chronicles** | A branching story for every hero, with choices and two endings. |
+| **问剑密卷 · Sword Pagoda** | Climb a tower and build a run from scrolls. |
+| **同袍肉鸽 · Co-op Raid** | 2 to 3 players share scrolls and healing against a fused boss. |
+| **江湖共斗 · Open World** | A shared 24,000 px world with eight zones, a world boss and a server-wide story. Up to 40 players per line. |
+| **天魔讨伐 · Demon Raid** | A server-wide boss fight. |
+| **联机 · Online** | Quick match, ranked play and friend rooms, plus 2v2, raid and special rules. |
+| **木人桩 · Dummy** | Free practice against a training dummy. |
+| **观战与回放 · Watch and Replays** | Watch AI exhibitions, save and import replays. |
+| **青锋行 · Qingfengxing** | A separate 3D action mini-game, solo or 2 to 4 player co-op. |
+
+Some modes (ranked, open world, Demon Raid, the armory market) need the server and a signed-in account. Everything else also works as a guest.
+
+---
+
+## Heroes
+
+Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` and an ultimate on `E`.
+
+| Hero | Style | Q | R | E |
+| :--- | :--- | :--- | :--- | :--- |
+| 青锋 Qing Feng | Wandering Swordsman | 疾风斩 Gale Slash | 剑气 Sword Qi | 残月 Crescent Moon |
+| 绯影 Fei Ying | Shadow Assassin | 影遁 Shadow Blink | 飞镖 Kunai Star | 千影 Thousand Shadows |
+| 铁山 Tie Shan | Heavy Iron Armor | 震地 Earthquake | 铁壁冲 Iron Wall Charge | 山崩 Avalanche |
+| 凌霜 Ling Shuang | Frost Spear Champion | 回马枪 Back Thrust | 枪旋 Spear Whirl | 刹那 Time Freeze |
+| 流云 Liu Yun | Wind Walker | 风刃 Wind Blade | 开扇 Fan Flourish | 龙卷 Tornado Storm |
+| 雷鸣 Lei Ming | Thunder Monk | 雷闪 Thunder Fist | 金刚雷铠 Vajra Armor | 雷霆万钧 Thunderstruck |
+| 墨羽 Mo Yu | Ink Painter | 墨阵 Ink Trap | 画符 Talisman Brush | 符阵 Talisman Array |
+| 月华 Yue Hua | Moon Mirror Master | 月镜 Moon Mirror | 月轮 Moon Chariot | 月华如水 Moonlight Cascade |
+| 燕翎 Yan Ling | Sky Swallows | 俯冲 Falcon Dive | 翎羽 Feather Darts | 万羽 Feather Storm |
+| 玉箫 Yu Xiao | Flute Musician | 清音 Clear Tone | 回音壁 Echo Barrier | 广陵散 Guangling Verse |
+| 醉翁 Zui Weng | Drunken Hermit | 亭中留客 Pavilion Trap | 与民同乐 Wine Feast | 山水之间 Landscape Domain |
+| 勾陈 Gou Chen | Chain Hammer Wanderer | 飞锤 Chain Hook | 旋锤 Hammer Whirl | 开天一锤 Heavensplitter |
+| 凌雀 Ling Que | Shuttle Wanderer | 穿叶飞梭 Leaf-Piercing Shuttle | 移形换影 Shadow Swap | 万线归宗 Thousand Threads |
+| 离影 Li Ying | Soul-Parted Blade | 留影 Mist Mark | 渡影 Mist Crossing | 万影归一 Myriad Mists |
+| 磁仙 Ci Xian | Two-Pole Adept | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp |
+| 千机 Qian Ji | Puppet Engineer | 投丸 Ball Throw | 暴雨梨花 Needle Burst | 千丝收网 Silk Recall |
+
+Full move lists, matchups and frame data: [wiki: Heroes And Combat](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) and [docs/frame-data.md](docs/frame-data.md).
+
+---
+
+## Armory
+
+The armory (武库) is the game's cosmetic collection. Skins and weapon looks never change how a hero plays.
+
+- **Ink (墨锭)** is the only currency. It is earned by playing (daily and weekly tasks, stages, stories). There is no real-money shop.
+- **Weapon cases (武器箱)** hold a set of skins in five quality tiers. Each case can be opened a limited number of times per day or week.
+- **Kill-count editions (斩数版)** record how many knockouts the skin has made.
+- **Trade-up contracts (汰换合同)** turn ten items of one tier into one item of the next tier.
+- **Player market (玩家市场)** lets players list items for Ink; a fee is removed from each sale so Ink does not pile up.
+- **Terminal (终端机)** shows one offer at a time at a fixed price.
+
+Every armory action on a cloud account is checked and recorded by the server. Details: [wiki: Armory](https://github.com/AMFI-Disable/RenYing/wiki/Armory-and-Marketplace).
+
+---
+
+## How It Works
 
 ```mermaid
-flowchart TD
-    P1["Player 1 Browser (GitHub Pages)"] <-->|"WebRTC DataChannel (Direct UDP)"| P2["Player 2 Browser (GitHub Pages)"]
+flowchart LR
+    A["Player A browser"] <-->|"WebRTC DataChannel: inputs only"| B["Player B browser"]
+    A -.->|"room code handshake (PeerJS)"| S["Signalling"]
+    B -.-> S
+    A -.->|"accounts, saves, armory, open world"| W["Cloudflare Worker + D1"]
+    B -.-> W
 ```
 
-- **Client runtime** — vanilla JavaScript drawing to a single HTML5 canvas. No framework, no bundler.
-- **Rollback netcode** — both sides simulate the whole match deterministically and exchange only their inputs. If an input arrives late, that side reloads the stored frame, replays it with the correct input and catches back up; the two sides also compare a state checksum periodically to catch any drift.
-- **P2P networking** — WebRTC DataChannels, with PeerJS for the handshake and public STUN servers for NAT traversal (`src/net-p2p.js`).
-- **Persistence** — `localStorage` in the browser, plus cloud accounts and saves on a Cloudflare Worker with D1 (`cloudflare/`).
+- **Client:** vanilla JavaScript drawing on one HTML5 canvas. No framework, no bundler, no runtime npm packages. The game logic runs at a fixed 120 steps per second.
+- **Rollback netcode:** both browsers simulate the match with the same seed and exchange only inputs. A late input makes that side rewind to the stored frame, replay with the correct input and catch up. Periodic state checksums catch any drift.
+- **Connection:** WebRTC DataChannels with PeerJS for the handshake and public STUN servers; the Worker can hand out short-lived TURN credentials for networks where a direct link fails.
+- **Server (optional):** a Cloudflare Worker with a D1 database for accounts, cloud saves, the armory economy, leaderboards and the open world (a Durable Object per world line). The game still works without it.
+- **Generated pages:** `tools/build.py` joins the sources in `src/` into `index.html` (online) and `renying-offline.html` (single file, offline).
+
+More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenYing/wiki/Multiplayer-and-Netcode) and [Architecture And Development](https://github.com/AMFI-Disable/RenYing/wiki/Architecture-and-Development).
 
 ---
 
-## 🧱 Project Structure And Building <a id="project-structure-and-building"></a>
+## Repository Layout
 
-Edit the sources; never edit the generated pages.
-
-| Path | Purpose |
+| Path | What it is |
 | :--- | :--- |
-| `src/page.html` | Page markup with build markers |
-| `src/style.css` | All styles |
-| `src/i18n.js` | Bilingual internationalization engine and vocabulary dictionary |
-| `src/game/` | Game engine, 12-character roster, menus, combat states and rollback netcode, split into 25 numbered files (`02-heroes.js`, `03-skills.js`, `10-hits.js` …) that build.py concatenates in order |
-| `src/armory-core.js` | Weapon cases, rarity tiers, skins catalog, and inventory calculations |
-| `src/armory.js` | Armory UI, unboxing animations, trade-up contracts, and marketplace views |
-| `src/anticheat.js` | Anti-cheat state integrity, rate limiting, and damage verification |
-| `src/net-p2p.js` | Serverless WebRTC direct connection |
-| `src/cloud.js` | Cloud save synchronization, account merge, and signed local backup/restore |
-| `src/social.js` | Serverless WebRTC P2P community hub, friends, and live spectating |
-| `src/qfx/` | Modular source files for the Qingfengxing mini-game |
-| `cloudflare/` | Cloudflare Worker backend with D1 database for account sync, economy, and admin console |
-| `assets/music/` | Background music (`.mp3`) |
-| `assets/qingfengxing.html` | Generated Qingfengxing mini-game page |
-| `tools/build.py` | Generates the pages below (Python standard library only) |
-| `tools/combat-test.mjs` | Headless/in-process regression suite for all 12 heroes, 2v2 AI, and combat state transitions |
-| `tools/econ-test.mjs` | Economy, armory, market, drop rates, and anti-abuse test suite (389 checks) |
-| `tools/rollback-test.mjs` | Rollback determinism and frame replay verification |
-| `tools/predeploy-check.mjs` | Pre-deploy checks: wrangler.toml, admin page CSP, key API smoke test on a local Worker |
-| `tools/simulate-all.mjs` | Multi-threaded simulation, counter audit, and neural policy training pipeline |
-| `tools/ui-audit.mjs` | Headless check that every panel fits, with nothing clipped or too small to read |
-| `tools/hud-audit.mjs` | Headless check that no in-match HUD text is drawn below 12px |
-| `tools/hud-overlap-audit.mjs` | Headless check that HUD text and bars never overlap or run off-canvas |
-| `tools/touch-audit.mjs` | Emulates phones and tablets, then drives the touch controls |
-| `index.html` | Generated online edition (GitHub Pages) |
-| `renying-offline.html` | Generated single-file offline edition |
-| `renying.html` | Generated redirect for the old address |
+| `src/page.html`, `src/style.css` | Page markup (with build markers) and all styles |
+| `src/game/` | The game, split into numbered files that `tools/build.py` joins in order |
+| `src/data/` | Data tables: one file per hero in `src/data/heroes/`, modes, draft orders, maps, AI levels, English UI text. Checked at build time by `tools/data-check.mjs` |
+| `src/ai.js` | Computer opponents |
+| `src/net-p2p.js` | Peer-to-peer connection |
+| `src/cloud.js` | Accounts and cloud saves |
+| `src/armory-core.js`, `src/armory.js` | Armory rules and armory screens |
+| `src/anticheat.js` | Client-side integrity checks |
+| `src/social.js`, `src/errlog.js`, `src/i18n.js` | Community features, error reports, translation lookup |
+| `src/qfx/` | Sources of the 青锋行 mini-game |
+| `assets/` | Music, the generated mini-game page, vendored `peerjs` and `three.js` |
+| `cloudflare/` | Worker, admin page, D1 schema and migrations |
+| `models/` | Trained AI weights |
+| `tools/` | Build script, tests, audits and AI training tools |
+| `docs/` | Design notes, deploy runbook (Chinese), admin guide, frame data, wiki source |
+| `index.html`, `renying-offline.html` | **Generated.** Online and offline editions |
+| `renying.html` | Notice page for the old address |
 
-After changing anything in `src/` or `assets/`, rebuild and commit the generated pages together with the sources:
+---
+
+## Building And Testing
+
+You need Python 3.10+ and Node 22. There is no `npm install`.
+
+Edit files in `src/`, `assets/` or `cloudflare/`, never the generated pages. Then rebuild:
 
 ```bash
 python3 tools/build.py
 ```
 
-CI runs `python3 tools/build.py --check` and fails if the generated pages are out of date. It also runs the economy tests, the combat and AI regression suite, and the panel, HUD and touch audits.
+Before committing, make sure the generated pages are current:
 
-### Entry Points
+```bash
+python3 tools/build.py --check
+```
 
-| Entry | What it is |
+Main test suites (all run in CI):
+
+| Area | Command |
 | :--- | :--- |
-| `index.html` | Online edition served by GitHub Pages (<https://amfi-disable.github.io/RenYing/>) |
-| `renying-offline.html` | Single-file offline edition: download and open, no network needed |
-| `renying.html` | Old address, forwards to `index.html` |
-| `assets/qingfengxing.html` | Qingfengxing mini-game page |
-| `cloudflare/worker.bundle.js` | Cloudflare Worker (accounts, cloud saves, armory economy, open world); `cloudflare/wrangler.toml` points at it |
-| Worker `/admin` | Admin console, served by the Worker itself |
+| Combat, every hero, 2v2 AI | `node tools/combat-test.mjs --sim` |
+| Rollback determinism | `node tools/rollback-test.mjs --rollback` |
+| Two copies over a laggy link | `node tools/netplay-test.mjs` |
+| Armory economy and migrations | `node tools/econ-test.mjs` |
+| Cloud save client | `node tools/cloud-test.mjs` |
+| Multi-device sync | `node tools/sync-test.mjs` |
+| Open world server | `node tools/world-test.mjs` |
+| Anti-cheat checks | `node tools/anticheat-test.mjs` |
 
-### Build Commands
+Browser audits need a local server first (`python3 -m http.server 8791`), then for example `node tools/ui-audit.mjs ci-ui 1440 900`, `node tools/hud-audit.mjs ci-hud 1440 900`, `node tools/touch-audit.mjs ci-touch` and `node tools/kb-flow-test.mjs ci-kb 1440 900`. `node tools/test.mjs` runs the main set in one go.
 
-| Command | When |
-| :--- | :--- |
-| `python3 tools/build.py` | After any change in `src/`, `assets/` or `cloudflare/` (regenerates every page and the Worker bundle) |
-| `python3 tools/build.py --check` | Before committing: fails if a generated file is stale |
-| `node tools/predeploy-check.mjs` | Before deploying the Worker: wrangler.toml, admin CSP and key API smoke tests |
-| `npx wrangler deploy --dry-run --env=""` | Run inside `cloudflare/`: bundles the Worker as a deploy would, without uploading |
-
-Deploying the Worker, D1 migrations (run by the Worker itself, never with `wrangler d1 migrations apply`), backups, restores and rollbacks: see [docs/deploy-runbook.md](docs/deploy-runbook.md) (Chinese).
-
-### Test Matrix
-
-Everything runs with plain Node 22 (no `npm install`). The browser audits need a local server first: `python3 -m http.server 8791`.
-
-| Area | Command | What it covers | CI workflow |
-| :--- | :--- | :--- | :--- |
-| combat | `node tools/combat-test.mjs --sim` | Every hero, combat states, 2v2 AI | CI, Combat |
-| netplay | `node tools/netplay-test.mjs` | Two game copies over a laggy link end every match identically | Rollback |
-| rollback | `node tools/rollback-test.mjs --rollback` | Snapshot, restore and resimulation determinism | Rollback |
-| econ | `node tools/econ-test.mjs` (add `--bundle` for the built Worker) | Armory, market, drop rates, anti-abuse; D1 migrations on an empty and an old database must match `cloudflare/schema.sql` | CI, Armory |
-| cloud | `node tools/cloud-test.mjs` | Cloud save client: per-account isolation, retries | CI |
-| sync | `node tools/sync-test.mjs` (add `--bundle`) | Real Worker with several devices: merges never double count | CI |
-| world | `node tools/world-test.mjs` | Open world server: caps, view range, world boss | CI |
-| ai-lingque | `node tools/ai-lingque-test.mjs` | Lingque AI combo checks | CI |
-| ui | `node tools/ui-audit.mjs ci-ui 1440 900` | Every panel fits, nothing clipped or too small | CI, UI |
-| touch | `node tools/touch-audit.mjs ci-touch` | Phone and tablet touch controls | CI, Mobile |
-| hud | `node tools/hud-audit.mjs ci-hud 1440 900` | No in-match HUD text below 12px | CI, UI |
-| hud-overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD text and bars never overlap or leave the canvas | UI |
-| predeploy | `node tools/predeploy-check.mjs` | wrangler.toml, migration file numbering, admin CSP, API smoke test | Cloudflare Worker |
-| perf | `node tools/perf-audit.mjs` | Load to main menu, panel switching, AI-vs-AI frame rate within `tools/perf-budget.json` | UI |
-| firstload | `node tools/firstload-audit.mjs` | Cold first load: FCP, LCP, layout shift, font requests and bytes; no text hidden while fonts load, no music on the first screen | UI |
+The full test matrix is on the wiki page [Testing And CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI). The Worker is deployed by the maintainer; the steps are in [docs/deploy-runbook.md](docs/deploy-runbook.md).
 
 ---
 
-## 🛡 Privacy And Security First <a id="privacy-and-security-first"></a>
+## Contributing
 
-- **No telemetry** — no analytics, no trackers, no crash reporting.
-- **Peer-to-peer stays peer-to-peer** — in WebRTC mode your inputs travel straight to the other player's browser and never pass through a server.
-- **Your data stays on your machine** — match history, ladder statistics and replays live in your browser's local storage, or in `data/renying.db` on the machine running the server.
+Read [contributing.md](contributing.md) first. In short:
 
----
+- Commit messages are `type: three lowercase words` (for example `fix: guard break timing`). CI rejects anything else.
+- Every tracked file name is lowercase.
+- Markdown headings use Title Case.
+- Rebuild and commit the generated pages together with the source change.
+- Only pull requests from the maintainer and repository collaborators are merged.
 
-## ⚖ Educational And Fair-Play Disclaimer <a id="educational-and-fair-play-disclaimer"></a>
-
-> [!CAUTION]
-> **Notice**:
-> This codebase is meant for learning, research and non-commercial play.
-> Please keep multiplayer matches and community chat friendly.
-> The authors are not responsible for third-party hosting or for servers other people run.
+Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). Security problems go through [security.md](security.md), not public issues.
 
 ---
 
-## 📄 License And Legal Attribution <a id="license-and-legal-attribution"></a>
+## Privacy
 
-Created by **Even, Luffy, Opus 5.5, and Gemini 4 Argon**. Licensed under the [MIT License](license). Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.
+- No ads, no analytics, no tracking scripts.
+- Guests and the offline edition keep everything in the browser's local storage.
+- A cloud account stores your save, armory and match records on the game's Worker. Passwords are stored as salted PBKDF2 hashes and session tokens only as hashes.
+- The online page sends crash reports (uncaught errors) and rare suspicious-damage reports to the Worker so they can be fixed. They contain no passwords.
+- In a peer-to-peer match your inputs go straight to the other player's browser.
+
+> [!NOTE]
+> RenYing is a non-commercial project for learning and for playing with friends. Please keep matches and chat friendly.
+
+---
+
+## License
+
+[MIT](license). Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.

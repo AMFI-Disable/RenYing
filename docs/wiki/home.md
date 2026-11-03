@@ -1,26 +1,31 @@
-# ⚔ Welcome To The RenYing Wiki / 欢迎来到刃影 Wiki
+# Welcome To The RenYing Wiki / 刃影 Wiki
 
-[**刃影 (RenYing)**](https://amfi-disable.github.io/RenYing/) is a high-performance ink-wash martial arts duel game designed for web browsers and offline devices.
+**[刃影 RenYing](https://amfi-disable.github.io/RenYing/)** is an ink-wash martial-arts fighting game that runs in a browser tab. Sixteen heroes, duels, 2v2 and 3v3 relay matches, story chronicles, co-op raids, a shared open world and peer-to-peer online play. Current version: **1.0.1**.
 
-## 📚 Table Of Contents / 目录导航
+刃影是一款在浏览器里打开就能玩的水墨武侠格斗游戏：十六位侠客，单挑、2v2、3v3 车轮战，侠客列传，同袍肉鸽，开放世界，点对点联机。当前版本 **1.0.1**。
 
-1. **[Getting Started / 新手指南](getting-started.md)**
-   - Online Play vs. Standalone Offline Play
-   - Controls & Combat Basics
-   - Language Selection (English / 简体中文)
-2. **[Heroes & Combat System / 侠客与战斗系统](heroes-and-combat.md)**
-   - 12 Heroes: Stats, Special Traits & Playstyles
-   - Frame Data, Cancel Windows, and Movesets
-   - Parry, Precise Parry & Counter-Attack Mechanics
-3. **[Armory & Marketplace / 武库与集市系统](armory-and-marketplace.md)**
-   - Weapon Cases, Drop Rates & StatTrak (斩数版)
-   - Quality Tiers: Standard to Extraordinary (普通到非凡)
-   - Trade-Up Contracts (汰换合同) & Auto-Equip System
-4. **[Multiplayer & Networking / 联机与回滚同步](multiplayer-and-netcode.md)**
-   - Serverless WebRTC DataChannel (P2P)
-   - Rollback Netcode Architecture & Determinism
-   - Tea House (江湖茶馆) Lobby & Spectating
-5. **[Architecture & Development / 系统架构与二次开发](architecture-and-development.md)**
-   - Build Toolchain (`tools/build.py`)
-   - Test Suites (`econ-test.mjs`, `combat-test.mjs`)
-   - Deploying Cloudflare Worker & D1 Database
+**[▶ Play now / 立即游玩](https://amfi-disable.github.io/RenYing/)** · **[Repository / 仓库](https://github.com/AMFI-Disable/RenYing)** · **[Changelog / 更新日志](https://github.com/AMFI-Disable/RenYing/blob/main/changelog.md)**
+
+## For Players / 玩家
+
+| Page | What is in it |
+| :--- | :--- |
+| [Getting Started / 新手指南](getting-started.md) | Online and offline editions, language, controls, your first match |
+| [Game Modes / 游戏模式](game-modes.md) | Every mode, what it needs, and how it plays |
+| [Heroes And Combat / 侠客与战斗](heroes-and-combat.md) | All 16 heroes, their skills and matchups, guard, parry and meter |
+| [Armory And Marketplace / 武库与市场](armory-and-marketplace.md) | Ink, weapon cases, tiers, trade-ups, the player market |
+| [Accounts And Cloud Saves / 账号与云存档](accounts-and-cloud-saves.md) | Guest, local and cloud accounts, devices, sync, privacy |
+| [FAQ / 常见问题](faq.md) | Connection problems, lost progress, phones, school networks |
+
+## For Developers / 开发者
+
+| Page | What is in it |
+| :--- | :--- |
+| [Multiplayer And Netcode / 联机与回滚同步](multiplayer-and-netcode.md) | WebRTC, rollback, checksums, TURN fallback, the open world server |
+| [Architecture And Development / 架构与开发](architecture-and-development.md) | Source layout, build script, data tables, the Worker and D1 |
+| [Testing And CI / 测试与 CI](testing-and-ci.md) | Every test and audit, what it checks, and which workflow runs it |
+| [Contributing / 参与开发](contributing.md) | Commit format, file names, who can merge |
+
+## Credits / 制作
+
+Made by **Even, Luffy, Opus 5.5 and Gemini 4 Argon**. MIT License.
