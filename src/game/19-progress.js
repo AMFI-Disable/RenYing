@@ -1127,7 +1127,7 @@ function commitNetProgress(w, agreed, isQualifying) {
   if (!NET.consensus) NET.consensus = {};
   NET.consensus.committed = true;
 
-  const won = w === localTeam();
+  const won = w === (NET.consensus.myTeam !== undefined ? NET.consensus.myTeam : localTeam());
   const ranked = NET.isRanked && !NET.rkDone && rkOwner();
   if (ranked) NET.rkDone = true;
   // 若对局过短（<15秒且<4次命中），属于切磋/自测练习局，不计入胜场与排位分，仅给予友好提示

@@ -13253,7 +13253,7 @@ if ($id('postToComBtn')) $id('postToComBtn').classList.add('hidden');
 }
 function netLeave() {
 NET.leaving = true;
-if (NET.isRanked && !NET.rkDone && rkOwner() && rkState().pending) {   // 排位打到一半自己走：判负
+if (NET.isRanked && !NET.rkDone && rkOwner() && rkState().pending && !(M.mode === 'net' && M.phase === 'end')) {   // 排位打到一半自己走：判负（已经打完、在等两边核对结果时不算）
 NET.rkDone = true;
 const r = rkFinish(false, 'quit');
 if (r) toast(`中途离开排位赛，判负（${r.delta} 分）`);
@@ -13382,6 +13382,16 @@ return true;
 }
 function netLost() {
 if (netSolo()) return;
+if (M.mode === 'net' && $id('end').classList.contains('on')) {
+const quit = NET.peerQuit;
+netOverlay(''); netReset();
+$id('againBtn').style.display = 'none';
+$id('netRepickBtn').classList.add('hidden');
+$id('roomCode').textContent = '';
+toast(quit ? '对手已离开房间' : '和对手的连接断开了');
+netStatus('对手已离开。可以重新建房或加入');
+return;
+}
 const was = M.mode === 'net' || bpMode === 'net';
 let rkMsg = '';
 if (NET.isRanked && !NET.rkDone && rkState().pending) {
@@ -14917,6 +14927,7 @@ const hits = NET.matchHits || 0;
 const isQualifying = duration >= 15000 || hits >= 4;
 NET.consensus = NET.consensus || {};
 NET.consensus.localWinner = w;
+NET.consensus.myTeam = localTeam();   // 结算可能在离开房间以后才落下（等对方确认最多 5 秒），那时 M.mode 已经不是 net，先记下自己是哪一边
 NET.consensus.qualifying = isQualifying;
 send({
 sys: 'match_finish',
@@ -25429,7 +25440,7 @@ function commitNetProgress(w, agreed, isQualifying) {
 if (NET.consensus && NET.consensus.committed) return;
 if (!NET.consensus) NET.consensus = {};
 NET.consensus.committed = true;
-const won = w === localTeam();
+const won = w === (NET.consensus.myTeam !== undefined ? NET.consensus.myTeam : localTeam());
 const ranked = NET.isRanked && !NET.rkDone && rkOwner();
 if (ranked) NET.rkDone = true;
 if (!isQualifying) {

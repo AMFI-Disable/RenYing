@@ -753,6 +753,7 @@ function showEnd(w) {
     const isQualifying = duration >= 15000 || hits >= 4;
     NET.consensus = NET.consensus || {};
     NET.consensus.localWinner = w;
+    NET.consensus.myTeam = localTeam();   // 结算可能在离开房间以后才落下（等对方确认最多 5 秒），那时 M.mode 已经不是 net，先记下自己是哪一边
     NET.consensus.qualifying = isQualifying;
     send({
       sys: 'match_finish',

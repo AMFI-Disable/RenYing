@@ -104,7 +104,7 @@ function netReset() {
 // 主动离开：告诉对方不用等我
 function netLeave() {
   NET.leaving = true;
-  if (NET.isRanked && !NET.rkDone && rkOwner() && rkState().pending) {   // 排位打到一半自己走：判负
+  if (NET.isRanked && !NET.rkDone && rkOwner() && rkState().pending && !(M.mode === 'net' && M.phase === 'end')) {   // 排位打到一半自己走：判负（已经打完、在等两边核对结果时不算）
     NET.rkDone = true;
     const r = rkFinish(false, 'quit');
     if (r) toast(`中途离开排位赛，判负（${r.delta} 分）`);
@@ -237,6 +237,18 @@ function netSolo() {
 }
 function netLost() {
   if (netSolo()) return;
+  // 对局已经打完、停在结算页时对方走了：留在结算页看结果（排位分、墨锭照常结算），只是不能再战了。
+  // 以前会被直接拉回联机大厅，还提示“对局已中断（未完成）”，打完的排位还可能被当成对手中途离开
+  if (M.mode === 'net' && $id('end').classList.contains('on')) {
+    const quit = NET.peerQuit;
+    netOverlay(''); netReset();
+    $id('againBtn').style.display = 'none';
+    $id('netRepickBtn').classList.add('hidden');
+    $id('roomCode').textContent = '';
+    toast(quit ? '对手已离开房间' : '和对手的连接断开了');
+    netStatus('对手已离开。可以重新建房或加入');
+    return;
+  }
   const was = M.mode === 'net' || bpMode === 'net';
   // 排位赛打到一半对方走了：对方主动离开算你赢，网络断开不计分
   let rkMsg = '';
