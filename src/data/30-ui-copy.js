@@ -1691,7 +1691,6 @@ const UI_COPY_EN = {
   "连段自愈": "Combo Heal",
   "连击停下后血量回满": "Health refills after each combo ends",
   "标准擂台": "Standard Arena",
-  "标准擂台，没有特殊地形。": "Standard arena with no terrain effects.",
   "战场：": "Arena:",
   "即刻开战": "Fight Now",
   "帧优势": "Frame Advantage",

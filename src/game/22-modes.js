@@ -762,6 +762,7 @@ function start2v2LocalVs(p1 = 0, p2 = 2, p3 = 1, p4 = 3) {
   M.round = 1;
   M.carry = null;
   M.stage = null;
+  if (!M.map) M.map = rollMap();
   A.setChar(p1); C.setChar(p2);
   B.setChar(p3); D.setChar(p4);
   A.ctrl = human[0]; // 1P
