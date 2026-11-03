@@ -46,9 +46,8 @@ jobs:
 
       - name: Verify Lowercase Filenames
         run: |
-          # Two names have to stay in capitals: CNAME is required by GitHub Pages, and
-          # CLAUDE.md is looked up by that exact name by Claude Code. Everything else is lowercase.
-          if git ls-files | grep -vE '^(CNAME|CLAUDE\.md)$' | grep '[A-Z]'; then
+          # CNAME is required in capitals by GitHub Pages. Everything else is lowercase.
+          if git ls-files | grep -vE '^CNAME$' | grep '[A-Z]'; then
             echo "Error: uppercase tracked files found"
             exit 1
           fi
