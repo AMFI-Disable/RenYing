@@ -1493,6 +1493,21 @@ const testSuite = [
   },
   {
     // 山河异境：每张图被选中的概率 = 得票 / 总票数，没人投票时一样；联机用种子算出的随机数两边相同
+    name: 'Pre-match state produces deterministic hero-specific scroll candidates and validates choices',
+    fn: `(() => {
+      const a = preMatchCreate('ice', 123), b = preMatchCreate('ice', 123);
+      if (!preMatchSetPicks(a, [[0, 1], [2]]) || !preMatchSetPicks(b, [[0, 1], [2]])) return { pass: false, error: 'valid picks rejected' };
+      if (JSON.stringify(a) !== JSON.stringify(b)) return { pass: false, error: 'candidates are not deterministic' };
+      if (a.mapId !== 'ice' || a.candidates[0][0].length !== 3) return { pass: false, error: 'map or candidates missing' };
+      const id = a.candidates[0][0][0];
+      if (preMatchSelect(a, 0, 0, 'invalid') || preMatchSelect(a, 5, 0, id)) return { pass: false, error: 'invalid selection accepted' };
+      if (!preMatchSelect(a, 0, 0, id) || a.selections[0][0] !== id || a.selections[0][1] !== null) return { pass: false, error: 'selection assigned to wrong hero' };
+      const before = JSON.stringify(a);
+      if (preMatchSetPicks(a, [[-1], [1]]) || JSON.stringify(a) !== before) return { pass: false, error: 'invalid picks changed state' };
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'Map vote odds follow the vote count',
     fn: `(() => {
       const near = (a, b) => Math.abs(a - b) < 1e-9;

@@ -27988,6 +27988,11 @@ const scEligible = f => !!(f && (f.idx <= 3 || (typeof isRaid === 'function' && 
 function scIds(f) {
 if (!f) return [];
 if (typeof isRaid === 'function' && isRaid()) return f.idx === 1 ? (M.foeScrolls || []) : (M.towerPerks || []);
+if (M.hasBuffs && M.competitiveScrolls && f.ch) {
+const side = f.idx === 0 || f.idx === 2 ? 0 : 1;
+const scroll = M.competitiveScrolls[side] && M.competitiveScrolls[side][f.ch.id];
+return scroll && SC_BY[scroll] ? [scroll] : [];
+}
 if (M.hasBuffs && M.heroBuffs) {
 if (M.mode === 'tag3' && M.teams) {
 const side = f.idx === 0 ? 0 : 1;
@@ -28103,6 +28108,16 @@ function scLegendUnlocked() { const n = typeof gbossKills === 'function' ? gboss
 function scPool(heroId) {
 const legend = new Set(scLegendUnlocked());
 return SCROLLS.filter(s => (!s.h || s.h === heroId) && (s.r !== 'l' || legend.has(s.id)));
+}
+function scCompetitiveCandidates(heroId, seed, count = 3) {
+const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l');
+let state = (seed >>> 0) || 1;
+const result = [];
+while (bag.length && result.length < count) {
+state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+result.push(bag.splice(state % bag.length, 1)[0]);
+}
+return result;
 }
 function scDraw(heroId, owned, n = 3) {
 const pool = scPool(heroId).filter(s => !owned.includes(s.id));
@@ -29556,7 +29571,60 @@ const n = NET.names && NET.names[side === 0 ? 'host' : 'client'];
 return n ? String(n) : '对手';
 };
 let bpFinishTimer = null;
+let currentPreMatch = null;
+function preMatchCreate(mapId, seed) {
+return { mapId: MAPS[mapId] ? mapId : null, seed: seed >>> 0, picks: [[], []], candidates: [[], []], selections: [[], []] };
+}
+function preMatchSetPicks(state, picks) {
+if (!state || !Array.isArray(picks) || picks.length !== 2) return false;
+const teams = picks.map(side => Array.isArray(side) ? side.slice() : [side]);
+if (teams.some(team => !team.length || team.some(i => !Number.isInteger(i) || !CHARS[i]))) return false;
+state.picks = teams;
+state.candidates = teams.map((team, side) => team.map((index, slot) =>
+scCompetitiveCandidates(CHARS[index].id, (state.seed + Math.imul(side + 1, 0x9e3779b9) + slot) >>> 0).map(scroll => scroll.id)));
+state.selections = teams.map(team => team.map(() => null));
+return true;
+}
+function preMatchSelect(state, side, slot, scrollId) {
+if (!state || !Number.isInteger(side) || !Number.isInteger(slot) || !state.candidates[side] ||
+!state.candidates[side][slot] || !state.candidates[side][slot].includes(scrollId)) return false;
+state.selections[side][slot] = scrollId;
+return true;
+}
+let mapBriefingTimer = null;
 function bpStart(mode, customOpts = null) {
+currentPreMatch = null;
+if (mode === 'maps' && !(customOpts && customOpts.mapBriefed)) {
+const mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
+const opts = { ...(customOpts || {}), mapBriefed: true, mapId };
+if (opts.isWatch) return bpStart(mode, opts);
+const map = MAPS[mapId];
+$id('mbTitle').textContent = map.n;
+$id('mbSub').textContent = '';
+$id('mbTopoTag').textContent = map.n;
+$id('mbDesc').textContent = map.d;
+$id('mbFavGrid').innerHTML = Object.entries(map.fav || {}).filter(([id]) => CHAR_IDX[id] !== undefined).map(([id, desc]) => {
+const ch = CHARS[CHAR_IDX[id]];
+return `<div class="mb-fav-item"><span class="mb-fav-name">${escapeHTML(ch.name)}</span><span class="mb-fav-desc">${escapeHTML(desc)}</span></div>`;
+}).join('');
+showScreen('mapBriefing');
+const until = Date.now() + 15000;
+const advance = () => {
+clearInterval(mapBriefingTimer); mapBriefingTimer = null;
+if (currentScreen === 'mapBriefing') bpStart(mode, opts);
+};
+$id('mbContinueBtn').onclick = advance;
+$id('mbTimer').textContent = '15';
+$id('mbContinueBtn').focus();
+if (mapBriefingTimer) clearInterval(mapBriefingTimer);
+mapBriefingTimer = setInterval(() => {
+if (currentScreen !== 'mapBriefing') { clearInterval(mapBriefingTimer); mapBriefingTimer = null; return; }
+const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+$id('mbTimer').textContent = String(left);
+if (!left) advance();
+}, 250);
+return;
+}
 if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
 if (isLocalBp(mode)) netDropWaiting();
 watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
@@ -29577,7 +29645,12 @@ picks,
 t: BP_TIME,
 avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
 };
-if (mode === 'maps') BP.mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
+if (mode === 'maps') BP.mapId = customOpts && MAPS[customOpts.mapId] ? customOpts.mapId : mapPick(mapVote ? [mapVote] : [], Math.random());
+if ((mode === 'tag3' || mode === '2v2') && !BP.mapId) BP.mapId = MAPS[M.map] ? M.map : rollMap();
+if (mode === 'net' && Array.isArray(netMapVotes())) BP.mapId = mapPick(netMapVotes(), Math.random());
+if (['cpu', 'cpuWatch', 'chaos', 'mayhem', 'maps', 'tag3', '2v2'].includes(mode) || (mode === 'net' && !md.raid)) {
+BP.preMatch = preMatchCreate(BP.mapId, (Math.random() * 0x100000000) >>> 0);
+}
 bpSel = -1; bpCpuT = BP_CPU_DELAY;
 showScreen('bp'); renderBP();
 if (mode === 'net') send({ bps: BP });
@@ -29626,6 +29699,7 @@ BP.picks[side] = i;
 }
 }
 BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = BP_CPU_DELAY;
+if (BP.preMatch && BP.step >= bpSteps().length) preMatchSetPicks(BP.preMatch, BP.picks);
 if (type === 'ban') SFX.thud(); else { SFX.block(); }
 if (bpMode === 'net') send({ bps: BP });
 renderBP();
@@ -29643,6 +29717,8 @@ const bans = Array.isArray(BP.bans) ? BP.bans.filter(x => x >= 0) : [];
 const mode = bpMode;
 const opts = bpCustomOpts || {};
 const mapId = BP.mapId;   // 山河异境点将台上定好的地图
+currentPreMatch = BP.preMatch || null;
+if ((mode === 'tag3' || mode === '2v2') && MAPS[mapId]) M.map = mapId;
 BP = null;
 bpCustomOpts = null;
 showScreen(null);

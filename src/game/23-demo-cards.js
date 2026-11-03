@@ -427,7 +427,62 @@ const bpSideName = side => {
   return n ? String(n) : '对手';
 };
 let bpFinishTimer = null;
+let currentPreMatch = null;
+// JSON-only pre-match data can be sent to a peer and saved in a replay.
+// Hero indices are stored by side and slot, even in a one-hero draft.
+function preMatchCreate(mapId, seed) {
+  return { mapId: MAPS[mapId] ? mapId : null, seed: seed >>> 0, picks: [[], []], candidates: [[], []], selections: [[], []] };
+}
+function preMatchSetPicks(state, picks) {
+  if (!state || !Array.isArray(picks) || picks.length !== 2) return false;
+  const teams = picks.map(side => Array.isArray(side) ? side.slice() : [side]);
+  if (teams.some(team => !team.length || team.some(i => !Number.isInteger(i) || !CHARS[i]))) return false;
+  state.picks = teams;
+  state.candidates = teams.map((team, side) => team.map((index, slot) =>
+    scCompetitiveCandidates(CHARS[index].id, (state.seed + Math.imul(side + 1, 0x9e3779b9) + slot) >>> 0).map(scroll => scroll.id)));
+  state.selections = teams.map(team => team.map(() => null));
+  return true;
+}
+function preMatchSelect(state, side, slot, scrollId) {
+  if (!state || !Number.isInteger(side) || !Number.isInteger(slot) || !state.candidates[side] ||
+      !state.candidates[side][slot] || !state.candidates[side][slot].includes(scrollId)) return false;
+  state.selections[side][slot] = scrollId;
+  return true;
+}
+let mapBriefingTimer = null;
 function bpStart(mode, customOpts = null) {
+  currentPreMatch = null;
+  if (mode === 'maps' && !(customOpts && customOpts.mapBriefed)) {
+    const mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
+    const opts = { ...(customOpts || {}), mapBriefed: true, mapId };
+    if (opts.isWatch) return bpStart(mode, opts);
+    const map = MAPS[mapId];
+    $id('mbTitle').textContent = map.n;
+    $id('mbSub').textContent = '';
+    $id('mbTopoTag').textContent = map.n;
+    $id('mbDesc').textContent = map.d;
+    $id('mbFavGrid').innerHTML = Object.entries(map.fav || {}).filter(([id]) => CHAR_IDX[id] !== undefined).map(([id, desc]) => {
+      const ch = CHARS[CHAR_IDX[id]];
+      return `<div class="mb-fav-item"><span class="mb-fav-name">${escapeHTML(ch.name)}</span><span class="mb-fav-desc">${escapeHTML(desc)}</span></div>`;
+    }).join('');
+    showScreen('mapBriefing');
+    const until = Date.now() + 15000;
+    const advance = () => {
+      clearInterval(mapBriefingTimer); mapBriefingTimer = null;
+      if (currentScreen === 'mapBriefing') bpStart(mode, opts);
+    };
+    $id('mbContinueBtn').onclick = advance;
+    $id('mbTimer').textContent = '15';
+    $id('mbContinueBtn').focus();
+    if (mapBriefingTimer) clearInterval(mapBriefingTimer);
+    mapBriefingTimer = setInterval(() => {
+      if (currentScreen !== 'mapBriefing') { clearInterval(mapBriefingTimer); mapBriefingTimer = null; return; }
+      const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      $id('mbTimer').textContent = String(left);
+      if (!left) advance();
+    }, 250);
+    return;
+  }
   if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
   if (isLocalBp(mode)) netDropWaiting();
   watch2v2Bp = null;   // 进入任何常规禁选都先取消可能残留的 2v2 禁选
@@ -451,7 +506,12 @@ function bpStart(mode, customOpts = null) {
     avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
   };
   // 山河异境：一进点将台就按票选好地图（联机由房主选，随 bps 发给对方；开打时随 rstart 再发一次），横幅写着这局的图和地利侠客
-  if (mode === 'maps') BP.mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
+  if (mode === 'maps') BP.mapId = customOpts && MAPS[customOpts.mapId] ? customOpts.mapId : mapPick(mapVote ? [mapVote] : [], Math.random());
+  if ((mode === 'tag3' || mode === '2v2') && !BP.mapId) BP.mapId = MAPS[M.map] ? M.map : rollMap();
+  if (mode === 'net' && Array.isArray(netMapVotes())) BP.mapId = mapPick(netMapVotes(), Math.random());
+  if (['cpu', 'cpuWatch', 'chaos', 'mayhem', 'maps', 'tag3', '2v2'].includes(mode) || (mode === 'net' && !md.raid)) {
+    BP.preMatch = preMatchCreate(BP.mapId, (Math.random() * 0x100000000) >>> 0);
+  }
   // Online map selection happens at match start from the shared seed and votes.
   bpSel = -1; bpCpuT = BP_CPU_DELAY;
   showScreen('bp'); renderBP();
@@ -501,6 +561,7 @@ function bpApply(i) {
     }
   }
   BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = BP_CPU_DELAY;
+  if (BP.preMatch && BP.step >= bpSteps().length) preMatchSetPicks(BP.preMatch, BP.picks);
   if (type === 'ban') SFX.thud(); else { SFX.block(); }
   if (bpMode === 'net') send({ bps: BP });
   renderBP();
@@ -518,6 +579,8 @@ function bpFinish() {
   const mode = bpMode;
   const opts = bpCustomOpts || {};
   const mapId = BP.mapId;   // 山河异境点将台上定好的地图
+  currentPreMatch = BP.preMatch || null;
+  if ((mode === 'tag3' || mode === '2v2') && MAPS[mapId]) M.map = mapId;
   BP = null;
   bpCustomOpts = null;
   showScreen(null);
