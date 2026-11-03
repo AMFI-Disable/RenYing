@@ -161,7 +161,13 @@ async function activate(name, sel, next, ms = 8000) {
   const r = await reach(sel);
   if (!r.ok) return fatal(name, r.why);
   await press('Enter');
-  const got = next ? await waitScreen([].concat(next), ms) : null;
+  let got = next ? await waitScreen([].concat(next, 'mapBriefing'), ms) : null;
+  // The battlefield overview comes before the draft: Enter on its Continue button moves on
+  if (got === 'mapBriefing' && ![].concat(next).includes('mapBriefing')) {
+    ok(`${name}: battlefield overview`, true);
+    await press('Enter');
+    got = await waitScreen([].concat(next), ms);
+  }
   if (next && ![].concat(next).includes(got)) return fatal(name, `Enter on ${sel}: expected screen ${next}, got ${got}`);
   ok(name, true, `${r.keys} keys${r.ring ? ', ring shown' : ''}`);
 }
@@ -194,7 +200,11 @@ await press('Escape');
 ok('Esc returns home', (await waitScreen(['menu'], 3000)) === 'menu');
 await activate('reopen single mode', SINGLE, 'single');
 if (MAPS_FLOW) {
-  await activate('terrain clash tab', '#singleTabs [data-tab="maps"]');
+  // The hall no longer shows a tile for terrain clash (every mode now opens with a battlefield overview),
+  // so open its pane the way the tile did; the rest of this flow is keys only
+  if (await ev(`(() => { const b = document.querySelector('#singleTabs [data-tab="maps"]'); return !!b && b.getBoundingClientRect().width > 2; })()`))
+    await activate('terrain clash tab', '#singleTabs [data-tab="maps"]');
+  else await ev(`singleSec('maps')`);
   ok('terrain clash pane shown', await ev(`!!document.querySelector('[data-sec="maps"]') && document.querySelector('[data-sec="maps"]').style.display !== 'none'`));
   if (await ev(`!!document.querySelector('#mapVote .map-card.sel')`)) await activate('take back an old vote', '#mapVote .map-card.sel');
   await activate('vote for Frozen Pond', '#mapVote [data-map="ice"]');
@@ -240,7 +250,17 @@ for (let round = 0; round < 8; round++) {
   await activate(`draft pick ${++picks}`, '#bpGo');
   await sleep(700);
 }
-const inMatch = await waitScreen([null], 15000);
+let inMatch = await waitScreen([null, 'buffDraft'], 15000);
+// After the draft: pick an insight scroll with the number keys, confirm with Enter (once per hero you control)
+for (let i = 0; i < 4 && inMatch === 'buffDraft'; i++) {
+  const n = await ev(`document.querySelectorAll('#bdCardsGrid .bd-card').length`);
+  ok(i ? `insight scroll ${i + 1}` : 'insight scroll draft', n > 0, `${n} cards`);
+  await press('Digit1'); await sleep(150);
+  ok(i ? `scroll ${i + 1} picked by key` : 'scroll picked by key', await ev(`!!document.querySelector('#bdCardsGrid .bd-card.sel')`));
+  await press('Enter'); await sleep(400);
+  inMatch = await waitScreen([null, 'buffDraft'], 4000);
+}
+inMatch = await waitScreen([null], 15000);
 if (inMatch !== null) await fatal('match starts', `still on screen ${inMatch}`);
 ok('draft finished', picks > 0, `${picks} picks`);
 ok('match starts', await ev(`typeof M !== 'undefined' && !!A && !!B`), await ev(`M.mode`));
