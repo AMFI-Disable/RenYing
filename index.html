@@ -12256,8 +12256,9 @@ if (f.y >= 0 && Math.sin(cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP)) > Math
 const a = cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP);
 f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
 } else {
-const v = Math.hypot(f.vx, f.vy) || 1;
-f.vx = f.vx / v * SD_SPD; f.vy = f.vy / v * SD_SPD;
+const v = Math.hypot(f.vx, f.vy);
+if (v > 1) { f.vx = f.vx / v * SD_SPD; f.vy = f.vy / v * SD_SPD; }
+else { f.vx = (target ? (target.x >= f.x ? 1 : -1) : f.face) * SD_SPD; f.vy = 0; }   // 速度被什么清零了：别停在原地，朝对手接着冲
 }
 if (f.vx) f.face = f.vx > 0 ? 1 : -1;
 if (f.y >= 0 && f.vy > 0) f.vy = 0;
@@ -14483,7 +14484,11 @@ const fav = mapFavOn(f);
 let pushThresh = cl.push;
 const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > pushThresh);
 f.x = side < 0 ? WALL : STAGE_W - WALL;
-if (!flung || f.hp <= 0) { if (Math.sign(f.vx) === side) f.vx = 0; return; }
+if (!flung || f.hp <= 0) {
+if (f.state === 'skill' && f.skill === 'shadowdash' && f.hp > 0) { f.vx = -side * Math.max(360, Math.abs(f.vx) * 0.85); if (f.y >= 0 && f.vy > 0) f.vy = -160; }
+else if (Math.sign(f.vx) === side) f.vx = 0;
+return;
+}
 const dmgMul = (fav && f.ch.id === 'yanling') ? 0.5 : 1;
 const dmg = Math.round(f.maxHp * cl.dmg * dmgMul);
 f.hp = Math.max(1, f.hp - dmg);

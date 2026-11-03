@@ -323,7 +323,7 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Lingque R (shadowdash) feints & drifts back, homes non-stop on far/fleeing/jumping targets, wall-bounces, cannot be Just Guarded, and block stuns without knockdown',
+    name: 'Lingque R (shadowdash) feints & drifts back, homes non-stop on far/fleeing/jumping targets, wall- and cliff-edge-bounces, cannot be Just Guarded, and block stuns without knockdown',
     fn: `(() => {
       const run = (setup, perFrame, maxFrames = 150) => {
         startMatch('train', 'stand', [CHAR_IDX.lingque, 0]);
@@ -363,6 +363,19 @@ const testSuite = [
       // 5. Wall test: A starting near wall or rushing into wall does not stop R
       const wallRun = run(() => { A.x = WALL + 20; A.face = -1; B.x = STAGE_W - WALL - 100; });
       if (!wallRun.hit) return { pass: false, error: 'R stopped at wall: ' + JSON.stringify(wallRun) };
+
+      // 5b. Cliff edge (断崖台 has no walls): R cast at the edge facing away must bounce back in, not freeze at the edge
+      for (const sd of [-1, 1]) for (const air of [false, true]) {
+        startMapsMode(CHAR_IDX.lingque, 0, 'easy', false, 'cliff'); showScreen(null); paused = false; M.phase = 'fight';
+        for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; }
+        B.ctrl = new Ctrl();
+        A.x = sd < 0 ? WALL + 20 : STAGE_W - WALL - 20; B.x = sd < 0 ? WALL + 400 : STAGE_W - WALL - 400;
+        A.face = sd; B.face = -sd;
+        if (air) { A.y = -150; A.state = 'air'; }
+        const bHp = B.hp; A.skill2CD = 0; startSkill(A, B, 2);
+        let n = 0; for (; n < 240 && A.state === 'skill'; n++) step();
+        if (A.state === 'skill' || B.hp >= bHp) { const e = { side: sd, air, frames: n, state: A.state, x: Math.round(A.x), vx: Math.round(A.vx), bHp: B.hp }; M.map = null; return { pass: false, error: 'R froze at the cliff edge: ' + JSON.stringify(e) }; }
+      }
 
       // 6. Block test: Blocking reduces damage, stops R, inflicts standing stun (not fall/knockdown), and cannot be Just Guarded
       startMatch('train', 'block', [CHAR_IDX.lingque, 0]);

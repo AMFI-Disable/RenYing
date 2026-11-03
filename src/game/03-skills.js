@@ -613,8 +613,9 @@ const SKILLS = {
           const a = cur + clamp(d, -SD_TURN * STEP, SD_TURN * STEP);
           f.vx = Math.cos(a) * SD_SPD; f.vy = Math.sin(a) * SD_SPD;
         } else {
-          const v = Math.hypot(f.vx, f.vy) || 1;
-          f.vx = f.vx / v * SD_SPD; f.vy = f.vy / v * SD_SPD;
+          const v = Math.hypot(f.vx, f.vy);
+          if (v > 1) { f.vx = f.vx / v * SD_SPD; f.vy = f.vy / v * SD_SPD; }
+          else { f.vx = (target ? (target.x >= f.x ? 1 : -1) : f.face) * SD_SPD; f.vy = 0; }   // 速度被什么清零了：别停在原地，朝对手接着冲
         }
         if (f.vx) f.face = f.vx > 0 ? 1 : -1;
         if (f.y >= 0 && f.vy > 0) f.vy = 0;
