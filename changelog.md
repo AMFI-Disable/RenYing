@@ -4,6 +4,24 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **Broken ultimates no longer leave the victim invulnerable (`src/game/04-ults.js`, `index.html`, `renying-offline.html`)**: when 山崩 broke a grounded ultimate, the cleanup that was meant to end it could never run (it tested `foe.state === 'special'` after the same code had forced `hitstun`), so the 99 second invulnerability granted by `startSpecial` was never cleared and the fighter was untouchable for the rest of the round. The decision is now taken before the state change and the long invulnerability is cleared; short getup and tech invulnerability is left alone.
+- **Knockback vectors no longer signed twice (`src/game/04-ults.js`, `index.html`, `renying-offline.html`)**: three call sites passed an already signed `kb[0]` while also passing `dir`, and `applyHit` multiplies the two, so 万线归宗 always launched the victim to the right (through the attacker when facing left), its flurry hits always pushed right, and 千丝收网 did the same. `kb[0]` is now an unsigned magnitude everywhere.
+- **广陵散 sound blades near a wall (`src/game/04-ults.js`, `index.html`, `renying-offline.html`)**: notes spawned 520 px either side of the target were outside the ±300 px projectile cull line, so three of the six never existed when the target stood near a wall. The spawn position is clamped inside the cull line.
+- **Blade clash recovery used the opponent frame data (`src/game/10-hits.js`, `index.html`, `renying-offline.html`)**: `f.t` was advanced with the defender's `su + ac`, so a heavy clashing a light lost its active frames and a fast attack clashing a charged slash skipped recovery. Each side now uses its own move timing.
+- **Rollback re-simulation counted hits twice (`src/game/10-hits.js`, `index.html`, `renying-offline.html`)**: `NET.matchHits` was incremented inside the simulation path without a `RESIM` guard, so the two peers could disagree on the anti-cheat qualification for the same match. The counter is now only touched on the first pass.
+- **Matchmaking could stall after one failed connection (`src/net-p2p.js`, `index.html`, `renying-offline.html`)**: an incoming knock whose channel died before `hello` left `MM.busy` set forever, because the release path depended on `P2P.conn` which `p2pWire` had already cleared. The release is now idempotent, also runs on `close`, and no longer depends on `P2P.conn`.
+- **Unvalidated netplay messages (`src/game/06-input-net.js`, `index.html`, `renying-offline.html`)**: `rsync` was accepted from either side, so a modified client could overwrite the host state with a doctored one and flip the result; `rstart` was accepted from either side and unvalidated; and `msg.ru` was unbounded, which could freeze the tab and silently discard the peer's later inputs. Only the client now accepts a shape checked host correction, the host ignores restarts, and frame numbers are range checked.
+- **Windows build and tooling (`tools/build.py`, `tools/test.mjs`, `tools/world-test.mjs`, and eleven audit scripts)**: the build script read and wrote through pipes using the machine code page, which crashed on any non ANSI character, and it compared source lines that end in `\n` against CRLF checkouts, so it failed on a Windows working copy. Reads are now normalized to LF and all subprocess pipes are UTF-8. Eleven tools resolved the repository root with `new URL('..').pathname`, which is not a usable path on Windows; they now use `fileURLToPath`. `tools/test.mjs` probes for a working Python 3 instead of assuming `python3`.
+- **AI benchmark coverage (`tools/ai-arena.mjs`, `docs/trainer/report.md`, `docs/trainer/results.json`)**: the hero list held 15 of the 16 heroes, so the matchup matrix, the trainer and the report never covered 千机. The matrix now runs 480 games instead of 420 and the benchmark documents include her row.
+
+### Performance
+
+- **Render pipeline (`src/game/16-draw-ui.js`, `src/game/12-draw-world.js`, `index.html`, `renying-offline.html`)**: the vignette was a full screen radial gradient every frame (3.61 ms to 0.26 ms by baking it once and blitting it 1:1), bloom composited three full screen layers instead of one pre-composited pass (7.54 ms to 3.67 ms), the blurred backdrop upscaled with `imageSmoothingQuality = 'medium'` (13.42 ms to 4.75 ms, the extra re-sampling buys nothing on an already blurred image), and the sky and mist gradients were rebuilt every frame instead of cached. `render()` now costs 13.25 ms per frame instead of 22.07 ms on the same machine. The cinematic dim also covered only a quarter of the canvas at device pixel ratio 2.
+
 ## [1.0.2] - 2026-11-02
 
 ### Added
