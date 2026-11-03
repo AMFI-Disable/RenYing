@@ -3197,7 +3197,7 @@ body.offline #mMatch { display: none !important; }
 .mb-fav-avatar { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(233, 196, 106, 0.3); }
 .mb-fav-name { font-size: 13px; font-weight: 600; color: #fff; min-width: 42px; }
 .mb-fav-desc { font-size: 12px; color: #bbb; line-height: 1.35; flex: 1; }
-.mb-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; }
+.mb-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; }
 .mb-hint { font-size: 12px; color: var(--dim); }
 .mb-continue-btn { padding: 8px 24px; font-size: 16px; letter-spacing: 1px; min-width: 170px; }
 
@@ -3228,8 +3228,8 @@ body.offline #mMatch { display: none !important; }
 .bd-timer-ring { width: 34px; height: 34px; transform: rotate(-90deg); }
 .bd-timer-bg { fill: none; stroke: rgba(255, 255, 255, 0.1); stroke-width: 3; }
 .bd-timer-fg { fill: none; stroke: var(--gold); stroke-width: 3; stroke-dasharray: 106.8; stroke-dashoffset: 0; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
-.bd-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
-.bd-tab-btn { padding: 6px 14px; font-size: 13px; border-radius: 6px; background: rgba(30, 24, 46, 0.65); border: 1px solid rgba(255, 255, 255, 0.12); color: #ccc; cursor: pointer; transition: all .15s ease; }
+.bd-tabs { display: flex; gap: 8px; margin-bottom: 10px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding: 4px 2px 8px; }
+.bd-tab-btn { flex: 0 0 auto; padding: 6px 14px; font-size: 13px; border-radius: 6px; background: rgba(30, 24, 46, 0.65); border: 1px solid rgba(255, 255, 255, 0.12); color: #ccc; cursor: pointer; transition: all .15s ease; }
 .bd-tab-btn.sel { background: linear-gradient(135deg, rgba(233, 196, 106, 0.28), rgba(200, 140, 60, 0.2)); border-color: var(--gold); color: var(--gold); font-weight: 600; }
 .bd-hero-intro { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
 .bd-cards-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
@@ -3248,6 +3248,7 @@ body.offline #mMatch { display: none !important; }
   min-height: 200px;
 }
 .bd-card:hover { transform: translateY(-3px); border-color: rgba(233, 196, 106, 0.5); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
+.bd-card:focus-visible, .bd-tab-btn:focus-visible, .bd-confirm-btn:focus-visible, .mb-continue-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .bd-card.sel {
   border-color: var(--gold);
   background: linear-gradient(175deg, rgba(58, 46, 76, 0.95), rgba(30, 24, 42, 0.98));
@@ -3270,6 +3271,8 @@ body.offline #mMatch { display: none !important; }
 .bd-card-icon { margin-bottom: 8px; }
 .bd-card-name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
 .bd-card-tag { font-size: 11px; margin-bottom: 8px; }
+.bd-card-tag .tp-tag { font-size: 11px; }
+.bd-card-key { position: absolute; top: 8px; right: 9px; font-size: 11px; color: var(--dim); }
 .bd-card-desc { font-size: 12px; line-height: 1.45; color: #ccc; margin: 0; }
 .bd-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; }
 .bd-status { font-size: 13px; color: var(--dim); }
@@ -3280,5 +3283,13 @@ body.offline #mMatch { display: none !important; }
   .bd-cards-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 580px) {
+  .mb-wrap, .bd-wrap { width: 96vw; padding: 20px 16px; max-height: 92vh; overflow-y: auto; }
+  .mb-footer, .bd-footer { align-items: stretch; flex-direction: column; }
+  .mb-hint { text-align: center; }
+  .mb-continue-btn, .bd-confirm-btn { width: 100%; }
+  .bd-header { align-items: flex-end; }
+  .bd-title { max-width: 72%; font-size: 22px; letter-spacing: 1px; }
+  .bd-tabs { margin-right: -4px; }
   .bd-cards-grid { grid-template-columns: 1fr; }
+  .bd-card { min-height: 145px; }
 }

@@ -301,8 +301,16 @@ function applySnapshot(sn, exact) {
 }
 function onNetMsg(msg) {
   if (msg.mstart || msg.report) return;
+  if (msg.mbrief && NET.role === 'client' && MAPS[msg.mbrief.mapId]) { showMapBriefing(msg.mbrief.mapId, null, true); return; }
+  if (msg.prematch) {
+    if (msg.prematch.type === 'start' && NET.role === 'client' && msg.prematch.state) {
+      onlineCompetitiveDraft = { state: msg.prematch.state, onComplete: () => {}, remoteDeadline: 0, finishing: false };
+      competitiveDraftStart(msg.prematch.state, 'net', {}, () => {}, true);
+    } else competitiveDraftReceive(msg.prematch);
+    return;
+  }
   if (msg.ru !== undefined) { rollRecv(msg); return; }
-  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map, msg.rstart.mut); return; }
+  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map, msg.rstart.mut, msg.rstart.competitiveScrolls); return; }
   if (msg.rsync) { rollAdopt(msg.rsync); return; }
   if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }

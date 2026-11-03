@@ -431,7 +431,7 @@ let currentPreMatch = null;
 // JSON-only pre-match data can be sent to a peer and saved in a replay.
 // Hero indices are stored by side and slot, even in a one-hero draft.
 function preMatchCreate(mapId, seed) {
-  return { mapId: MAPS[mapId] ? mapId : null, seed: seed >>> 0, picks: [[], []], candidates: [[], []], selections: [[], []] };
+  return { mapId: MAPS[mapId] ? mapId : null, seed: seed >>> 0, picks: [[], []], candidates: [[], []], recommendations: [[], []], selections: [[], []] };
 }
 function preMatchSetPicks(state, picks) {
   if (!state || !Array.isArray(picks) || picks.length !== 2) return false;
@@ -439,7 +439,12 @@ function preMatchSetPicks(state, picks) {
   if (teams.some(team => !team.length || team.some(i => !Number.isInteger(i) || !CHARS[i]))) return false;
   state.picks = teams;
   state.candidates = teams.map((team, side) => team.map((index, slot) =>
-    scCompetitiveCandidates(CHARS[index].id, (state.seed + Math.imul(side + 1, 0x9e3779b9) + slot) >>> 0).map(scroll => scroll.id)));
+    scCompetitiveCandidates(CHARS[index].id, (state.seed + Math.imul(side + 1, 0x9e3779b9) + slot) >>> 0, 5).map(scroll => scroll.id)));
+  state.recommendations = teams.map((team, side) => team.map((index, slot) => {
+    const candidates = state.candidates[side][slot].map(id => SC_BY[id]).filter(Boolean);
+    const recommended = getAuspiciousBuff(CHARS[index].id, state.mapId, candidates);
+    return recommended ? recommended.id : null;
+  }));
   state.selections = teams.map(team => team.map(() => null));
   return true;
 }
@@ -450,37 +455,287 @@ function preMatchSelect(state, side, slot, scrollId) {
   return true;
 }
 let mapBriefingTimer = null;
+const BP_BRIEFING_MODES = new Set(['cpu', 'cpuWatch', 'chaos', 'mayhem', 'maps', 'tag3', '2v2', 'net']);
+function briefingMapId(mode, opts = {}) {
+  if (MAPS[opts.mapId]) return opts.mapId;
+  if (mode === 'net') {
+    const seed = Number.isInteger(opts.matchSeed) ? opts.matchSeed : ((Math.random() * 0x7fffffff) | 0);
+    opts.matchSeed = seed;
+    const votes = netMapVotes();
+    return Array.isArray(votes) ? mapPick(votes, mapSeedRand(seed)) : rollMap(seed);
+  }
+  if (mode === 'maps') return mapPick(mapVote ? [mapVote] : [], Math.random());
+  if ((mode === 'tag3' || mode === '2v2') && MAPS[M.map]) return M.map;
+  return rollMap();
+}
+function renderMapBriefing(mapId) {
+  const map = MAPS[mapId];
+  if (!map) return false;
+  $id('mbTitle').textContent = cvT(map.n);
+  $id('mbSub').textContent = cvT('山河风貌 · 战场通览');
+  $id('mbTopoTag').textContent = cvT(map.n);
+  $id('mbDesc').textContent = cvT(map.d);
+  $id('mbFavGrid').innerHTML = Object.entries(map.fav || {}).filter(([id]) => CHAR_IDX[id] !== undefined).map(([id, desc]) => {
+    const ch = CHARS[CHAR_IDX[id]];
+    return `<div class="mb-fav-item"><span class="mb-fav-name">${escapeHTML(cvT(ch.name))}</span><span class="mb-fav-desc">${escapeHTML(cvT(desc))}</span></div>`;
+  }).join('');
+  return true;
+}
+function showMapBriefing(mapId, advance = null, remote = false) {
+  if (!renderMapBriefing(mapId)) { if (advance) advance(); return; }
+  if (mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
+  showScreen('mapBriefing');
+  const until = Date.now() + 15000;
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    clearInterval(mapBriefingTimer); mapBriefingTimer = null;
+    if (currentScreen !== 'mapBriefing') return;
+    if (advance) advance();
+    else if (remote) showScreen(null);
+  };
+  $id('mbContinueBtn').onclick = finish;
+  $id('mbTimer').textContent = '15';
+  $id('mbContinueBtn').focus();
+  mapBriefingTimer = setInterval(() => {
+    if (currentScreen !== 'mapBriefing') { clearInterval(mapBriefingTimer); mapBriefingTimer = null; return; }
+    const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+    $id('mbTimer').textContent = String(left);
+    if (!left) finish();
+  }, 250);
+}
+function skipInteractiveDraft() {
+  return (typeof navigator !== 'undefined' && /node|jsdom/i.test(navigator.userAgent || '')) ||
+    (typeof window !== 'undefined' && (window.RENYING_TEST || window.__RENYING_TEST__)) ||
+    (typeof process !== 'undefined' && process.env && (process.env.NODE_TEST_CONTEXT || process.env.RENYING_TEST));
+}
+let competitiveDraft = null, competitiveDraftTimer = null, onlineCompetitiveDraft = null;
+const COMPETITIVE_DRAFT_SECONDS = 7.5;
+function competitiveRecommendations(state) {
+  return state.picks.map((team, side) => team.map((_, slot) => {
+    const ids = state.candidates[side][slot] || [];
+    const saved = state.recommendations && state.recommendations[side] && state.recommendations[side][slot];
+    return ids.includes(saved) ? saved : (getAuspiciousBuff(CHARS[state.picks[side][slot]].id, state.mapId, ids.map(id => SC_BY[id]).filter(Boolean)) || {}).id || ids[0] || null;
+  }));
+}
+function competitiveScrollMap(state) {
+  const out = { 0: {}, 1: {} };
+  for (let side = 0; side < 2; side++) for (let slot = 0; slot < (state.picks[side] || []).length; slot++) {
+    const hero = CHARS[state.picks[side][slot]], id = state.selections[side] && state.selections[side][slot];
+    if (hero && id && (state.candidates[side][slot] || []).includes(id)) out[side][hero.id] = id;
+  }
+  return out;
+}
+function competitiveHumanSlots(state, mode, opts, side) {
+  const n = (state.picks[side] || []).length;
+  if (mode === 'net') return Array.from({ length: n }, (_, i) => i);
+  if (opts.isWatch || mode === 'cpuWatch') return [];
+  if (mode === '2v2') {
+    if (opts.subMode === 'p_cc') return side === 0 ? [0] : [];
+    if (opts.subMode === 'pp_pp') return Array.from({ length: n }, (_, i) => i);
+    return side === 0 ? Array.from({ length: n }, (_, i) => i) : [];
+  }
+  return side === 0 ? Array.from({ length: n }, (_, i) => i) : [];
+}
+function competitiveReason(state, side, slot, id) {
+  const s = SC_BY[id];
+  const hero = CHARS[state.picks[side][slot]];
+  const map = MAPS[state.mapId];
+  const favored = getAuspiciousBuff(hero.id, state.mapId, (state.candidates[side][slot] || []).map(k => SC_BY[k]).filter(Boolean));
+  if (s && s.h === hero.id) return cvT('侠客专属契合');
+  if (favored && s && favored.id === s.id && map) return `${cvT('地形契合')} · ${cvT(map.n)}`;
+  return cvT('武学契合');
+}
+function competitiveDraftRender() {
+  const d = competitiveDraft;
+  if (!d) return;
+  const tabs = $id('bdTabs'), grid = $id('bdCardsGrid'), confirm = $id('bdConfirmBtn');
+  const side = d.side, slot = d.activeSlot, heroIndex = d.state.picks[side][slot], hero = CHARS[heroIndex];
+  tabs.innerHTML = d.humanSlots.map((i, n) => {
+    const ch = CHARS[d.state.picks[side][i]], chosen = d.state.selections[side][i];
+    return `<button type="button" class="bd-tab-btn${i === slot ? ' sel' : ''}" data-bd-slot="${i}" aria-pressed="${i === slot}">${n + 1}. ${escapeHTML(cvT(ch.name))}${chosen ? ' ✓' : ''}</button>`;
+  }).join('');
+  const ids = d.state.candidates[side][slot] || [];
+  const rec = d.recommendations[side][slot];
+  grid.innerHTML = ids.map((id, i) => {
+    const s = SC_BY[id];
+    if (!s) return '';
+    return `<button type="button" class="bd-card${id === d.selectedId ? ' sel' : ''}" data-bd-id="${escapeHTML(id)}" aria-pressed="${id === d.selectedId}">
+      ${id === rec ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))}</span>` : ''}
+      <span class="bd-card-key">${i + 1}</span><span class="bd-card-icon">${scIcon(s)}</span>
+      <span class="bd-card-name">${escapeHTML(cvT(s.n))}</span><span class="bd-card-tag">${scTag(s)}</span>
+      <span class="bd-card-desc">${escapeHTML(cvT(s.d))}</span></button>`;
+  }).join('');
+  $id('bdHeroIntro').textContent = `${cvT('为先锋挑选专属对局秘术，战斗中实时生效')} · ${cvT(hero.name)} · ${competitiveReason(d.state, side, slot, rec)}`;
+  const waiting = d.online && d.doneLocal;
+  const timerWrap = document.querySelector('.bd-timer-wrap');
+  if (timerWrap) timerWrap.style.visibility = waiting ? 'hidden' : 'visible';
+  $id('bdStatus').textContent = waiting ? cvT('密卷已锁定，等待对方完成选择…') : cvT('请选择一卷强化秘术');
+  confirm.disabled = waiting || !ids.length;
+  confirm.textContent = cvT(waiting ? '等待对方' : '确认密卷');
+  for (const b of tabs.querySelectorAll('[data-bd-slot]')) b.onclick = () => competitiveDraftSetSlot(+b.dataset.bdSlot);
+  for (const b of grid.querySelectorAll('[data-bd-id]')) b.onclick = () => { d.selectedId = b.dataset.bdId; competitiveDraftRender(); };
+  confirm.onclick = () => competitiveDraftLock(false);
+}
+function competitiveDraftSetSlot(slot) {
+  const d = competitiveDraft;
+  if (!d || !d.humanSlots.includes(slot) || d.doneLocal) return;
+  d.activeSlot = slot;
+  const current = d.state.selections[d.side][slot];
+  d.selectedId = current || d.recommendations[d.side][slot];
+  d.slotUntil = Date.now() + COMPETITIVE_DRAFT_SECONDS * 1000;
+  competitiveDraftRender();
+}
+function competitiveDraftLock(auto = false) {
+  const d = competitiveDraft;
+  if (!d || d.doneLocal || !d.humanSlots.includes(d.activeSlot)) return;
+  const side = d.side, slot = d.activeSlot;
+  const candidates = d.state.candidates[side][slot] || [];
+  const id = candidates.includes(d.selectedId) ? d.selectedId : d.recommendations[side][slot];
+  if (!id || !preMatchSelect(d.state, side, slot, id)) {
+    competitiveDraftAdvance();
+    return;
+  }
+  if (d.online && NET.role === 'client') send({ prematch: { type: 'select', side, slot, scrollId: id } });
+  if (d.online && NET.role === 'host') competitiveDraftBroadcast();
+  if (auto) SFX.slice(); else SFX.block();
+  competitiveDraftAdvance();
+}
+function competitiveDraftAdvance() {
+  const d = competitiveDraft;
+  if (!d) return;
+  const next = d.humanSlots.find(slot => !(d.state.selections[d.side] || [])[slot]);
+  if (next !== undefined) return competitiveDraftSetSlot(next);
+  d.doneLocal = true;
+  d.selectedId = null;
+  if (d.online && NET.role === 'host') competitiveDraftBroadcast();
+  if (d.online && NET.role === 'client') {
+    competitiveDraftRender();
+    return;
+  }
+  if (!d.online) {
+    competitiveDraftStopTimer();
+    const cb = d.onComplete;
+    const state = d.state;
+    competitiveDraft = null;
+    if (cb) cb(state);
+    return;
+  }
+  competitiveDraftRender();
+  competitiveDraftMaybeFinishOnline();
+}
+function competitiveDraftStopTimer() {
+  if (competitiveDraftTimer) { clearInterval(competitiveDraftTimer); competitiveDraftTimer = null; }
+}
+function competitiveDraftBroadcast() {
+  if (!onlineCompetitiveDraft || NET.role !== 'host') return;
+  send({ prematch: { type: 'state', state: onlineCompetitiveDraft.state } });
+}
+function competitiveDraftMaybeFinishOnline() {
+  const d = onlineCompetitiveDraft;
+  if (!d || d.finishing || NET.role !== 'host') return;
+  const state = d.state;
+  if (state.selections.some((side, s) => side.some((id, slot) => !id && (state.candidates[s][slot] || []).length))) return;
+  d.finishing = true;
+  competitiveDraftStopTimer();
+  competitiveDraft = null; onlineCompetitiveDraft = null;
+  d.onComplete(state);
+}
+function competitiveDraftReceive(msg) {
+  const d = onlineCompetitiveDraft;
+  if (!msg || !d) return;
+  if (msg.type === 'select' && NET.role === 'host' && !d.remoteResolved && !d.finishing && msg.side === 1 && Number.isInteger(msg.slot) &&
+      preMatchSelect(d.state, 1, msg.slot, msg.scrollId)) {
+    competitiveDraftBroadcast();
+    if (competitiveDraft && competitiveDraft.side === 0) competitiveDraftRender();
+    competitiveDraftMaybeFinishOnline();
+    return;
+  }
+  if (msg.type === 'state' && NET.role === 'client' && msg.state && msg.state.seed === d.state.seed) {
+    d.state = msg.state;
+    if (competitiveDraft) {
+      competitiveDraft.state = d.state;
+      competitiveDraft.recommendations = d.state.recommendations || competitiveRecommendations(d.state);
+      competitiveDraftRender();
+    }
+  }
+}
+function competitiveDraftStart(state, mode, opts, onComplete, online = false) {
+  const recommendations = competitiveRecommendations(state);
+  state.recommendations = recommendations;
+  const sides = online ? [NET.role === 'host' ? 0 : 1] : [0, 1];
+  for (let side = 0; side < 2; side++) for (let slot = 0; slot < state.picks[side].length; slot++) {
+    const human = sides.includes(side) && competitiveHumanSlots(state, mode, opts, side).includes(slot);
+    if (!human && !state.selections[side][slot] && recommendations[side][slot]) preMatchSelect(state, side, slot, recommendations[side][slot]);
+  }
+  if (skipInteractiveDraft()) {
+    for (let side = 0; side < 2; side++) for (let slot = 0; slot < state.picks[side].length; slot++)
+      if (!state.selections[side][slot] && recommendations[side][slot]) preMatchSelect(state, side, slot, recommendations[side][slot]);
+    if ((!online || NET.role === 'host') && onComplete) onComplete(state);
+    return;
+  }
+  if (online && NET.role === 'host') onlineCompetitiveDraft = { state, onComplete, remoteDeadline: Date.now() + COMPETITIVE_DRAFT_SECONDS * Math.max(1, state.picks[1].length), remoteResolved: false, finishing: false };
+  const side = online ? (NET.role === 'host' ? 0 : 1) : 0;
+  const humanSlots = competitiveHumanSlots(state, mode, opts, side).filter(i => !state.selections[side][i]);
+  if (online && NET.role === 'host') send({ prematch: { type: 'start', state } });
+  if (!humanSlots.length) {
+    if (online && NET.role === 'host') competitiveDraftMaybeFinishOnline();
+    else if (!online && onComplete) onComplete(state);
+    return;
+  }
+  competitiveDraft = { state, mode, opts, side, humanSlots, activeSlot: humanSlots[0], selectedId: null, slotUntil: Date.now() + COMPETITIVE_DRAFT_SECONDS * 1000,
+    doneLocal: false, online, onComplete: online ? null : onComplete, recommendations };
+  competitiveDraft.selectedId = recommendations[side][competitiveDraft.activeSlot];
+  showScreen('buffDraft');
+  $id('bdTimerText').textContent = COMPETITIVE_DRAFT_SECONDS.toFixed(1);
+  $id('bdTimerFg').style.strokeDashoffset = '0';
+  competitiveDraftRender();
+  competitiveDraftStopTimer();
+  competitiveDraftTimer = setInterval(() => {
+    const d = competitiveDraft;
+    const now = Date.now();
+    if (d && !d.doneLocal) {
+      const left = Math.max(0, d.slotUntil - now);
+      $id('bdTimerText').textContent = (left / 1000).toFixed(1);
+      $id('bdTimerFg').style.strokeDashoffset = String(106.8 * (1 - left / (COMPETITIVE_DRAFT_SECONDS * 1000)));
+      if (!left) competitiveDraftLock(true);
+    }
+    if (online && NET.role === 'host' && onlineCompetitiveDraft && !onlineCompetitiveDraft.remoteResolved) {
+      const live = onlineCompetitiveDraft;
+      if (!NET.open || now >= live.remoteDeadline) {
+        live.remoteResolved = true;
+        for (let i = 0; i < live.state.picks[1].length; i++) if (!live.state.selections[1][i] && live.state.recommendations[1][i]) preMatchSelect(live.state, 1, i, live.state.recommendations[1][i]);
+        competitiveDraftBroadcast();
+        competitiveDraftMaybeFinishOnline();
+      }
+    }
+  }, 50);
+  if (online && NET.role === 'host') competitiveDraftMaybeFinishOnline();
+}
+window.addEventListener('keydown', e => {
+  if (currentScreen !== 'buffDraft' || !competitiveDraft || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/^Digit[1-5]$/.test(e.code) || /^Numpad[1-5]$/.test(e.code)) {
+    const i = Number(e.code.slice(-1)) - 1, id = (competitiveDraft.state.candidates[competitiveDraft.side][competitiveDraft.activeSlot] || [])[i];
+    if (id) { e.preventDefault(); e.stopImmediatePropagation(); competitiveDraft.selectedId = id; competitiveDraftRender(); }
+  } else if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
+    e.preventDefault(); e.stopImmediatePropagation(); competitiveDraftLock(false);
+  } else if (e.code === 'Tab' && competitiveDraft.humanSlots.length > 1) {
+    e.preventDefault(); e.stopImmediatePropagation();
+    const d = competitiveDraft, at = d.humanSlots.indexOf(d.activeSlot);
+    competitiveDraftSetSlot(d.humanSlots[(at + (e.shiftKey ? d.humanSlots.length - 1 : 1)) % d.humanSlots.length]);
+  }
+}, true);
 function bpStart(mode, customOpts = null) {
   currentPreMatch = null;
-  if (mode === 'maps' && !(customOpts && customOpts.mapBriefed)) {
-    const mapId = mapPick(mapVote ? [mapVote] : [], Math.random());
-    const opts = { ...(customOpts || {}), mapBriefed: true, mapId };
-    if (opts.isWatch) return bpStart(mode, opts);
-    const map = MAPS[mapId];
-    $id('mbTitle').textContent = map.n;
-    $id('mbSub').textContent = '';
-    $id('mbTopoTag').textContent = map.n;
-    $id('mbDesc').textContent = map.d;
-    $id('mbFavGrid').innerHTML = Object.entries(map.fav || {}).filter(([id]) => CHAR_IDX[id] !== undefined).map(([id, desc]) => {
-      const ch = CHARS[CHAR_IDX[id]];
-      return `<div class="mb-fav-item"><span class="mb-fav-name">${escapeHTML(ch.name)}</span><span class="mb-fav-desc">${escapeHTML(desc)}</span></div>`;
-    }).join('');
-    showScreen('mapBriefing');
-    const until = Date.now() + 15000;
-    const advance = () => {
-      clearInterval(mapBriefingTimer); mapBriefingTimer = null;
-      if (currentScreen === 'mapBriefing') bpStart(mode, opts);
-    };
-    $id('mbContinueBtn').onclick = advance;
-    $id('mbTimer').textContent = '15';
-    $id('mbContinueBtn').focus();
-    if (mapBriefingTimer) clearInterval(mapBriefingTimer);
-    mapBriefingTimer = setInterval(() => {
-      if (currentScreen !== 'mapBriefing') { clearInterval(mapBriefingTimer); mapBriefingTimer = null; return; }
-      const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
-      $id('mbTimer').textContent = String(left);
-      if (!left) advance();
-    }, 250);
+  customOpts = { ...(customOpts || {}) };
+  if (BP_BRIEFING_MODES.has(mode) && !customOpts.mapBriefed && !skipInteractiveDraft()) {
+    customOpts.mapId = briefingMapId(mode, customOpts);
+    customOpts.mapBriefed = true;
+    if (mode === 'net' && NET.role === 'host') send({ mbrief: { mapId: customOpts.mapId } });
+    showMapBriefing(customOpts.mapId, () => {
+      if (currentScreen === 'mapBriefing') bpStart(mode, customOpts);
+    });
     return;
   }
   if (bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
@@ -505,14 +760,12 @@ function bpStart(mode, customOpts = null) {
     t: BP_TIME,
     avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
   };
-  // 山河异境：一进点将台就按票选好地图（联机由房主选，随 bps 发给对方；开打时随 rstart 再发一次），横幅写着这局的图和地利侠客
-  if (mode === 'maps') BP.mapId = customOpts && MAPS[customOpts.mapId] ? customOpts.mapId : mapPick(mapVote ? [mapVote] : [], Math.random());
-  if ((mode === 'tag3' || mode === '2v2') && !BP.mapId) BP.mapId = MAPS[M.map] ? M.map : rollMap();
-  if (mode === 'net' && Array.isArray(netMapVotes())) BP.mapId = mapPick(netMapVotes(), Math.random());
+  BP.mapId = MAPS[customOpts.mapId] ? customOpts.mapId : briefingMapId(mode, customOpts);
+  BP.matchSeed = Number.isInteger(customOpts.matchSeed) ? customOpts.matchSeed : null;
   if (['cpu', 'cpuWatch', 'chaos', 'mayhem', 'maps', 'tag3', '2v2'].includes(mode) || (mode === 'net' && !md.raid)) {
-    BP.preMatch = preMatchCreate(BP.mapId, (Math.random() * 0x100000000) >>> 0);
+    BP.preMatch = preMatchCreate(BP.mapId, BP.matchSeed === null ? (Math.random() * 0x100000000) >>> 0 : BP.matchSeed >>> 0);
   }
-  // Online map selection happens at match start from the shared seed and votes.
+  // Online map and scroll candidates share the match seed sent in the BP state.
   bpSel = -1; bpCpuT = BP_CPU_DELAY;
   showScreen('bp'); renderBP();
   if (mode === 'net') send({ bps: BP });
@@ -578,21 +831,53 @@ function bpFinish() {
   const bans = Array.isArray(BP.bans) ? BP.bans.filter(x => x >= 0) : [];
   const mode = bpMode;
   const opts = bpCustomOpts || {};
-  const mapId = BP.mapId;   // 山河异境点将台上定好的地图
+  const mapId = BP.mapId;   // 通览时定好的地图；联机开局也复用这个 id
   currentPreMatch = BP.preMatch || null;
+  if (currentPreMatch && !currentPreMatch.candidates[0].length && !preMatchSetPicks(currentPreMatch, picks)) currentPreMatch = null;
   if ((mode === 'tag3' || mode === '2v2') && MAPS[mapId]) M.map = mapId;
   BP = null;
   bpCustomOpts = null;
   showScreen(null);
   MSTAT.maxcombo = 0; MSTAT.ults = 0;
-
+  if (currentPreMatch && mode === 'net') {
+    if (NET.role !== 'host') return; // The host starts the shared draft; the client waits for its authoritative state.
+    const matchSeed = Number.isInteger(opts.matchSeed) ? opts.matchSeed : ((Math.random() * 0x7fffffff) | 0);
+    const complete = state => {
+      const competitiveScrolls = competitiveScrollMap(state);
+      const is2v2Net = !!roomDef().four, raidNet = !!roomDef().raid;
+      const duo = !is2v2Net && !raidNet && Array.isArray(picks[0]) ? picks : null;
+      const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
+        : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
+        : (duo ? [duo[0][0], duo[1][0]] : picks);
+      const mv = netMapVotes(), mut = netTeamMutator();
+      const start = { ch: flatCh, seed: matchSeed, duo, mv, map: mapId, mut, competitiveScrolls };
+      send({ rstart: start });
+      rollStart(flatCh, matchSeed, duo, mv, mapId, mut, competitiveScrolls);
+    };
+    onlineCompetitiveDraft = { state: currentPreMatch, onComplete: complete, remoteDeadline: Date.now() + COMPETITIVE_DRAFT_SECONDS * Math.max(1, currentPreMatch.picks[1].length), finishing: false };
+    competitiveDraftStart(currentPreMatch, mode, opts, complete, true);
+    return;
+  }
+  const launch = state => launchBpMatch(mode, opts, picks, bans, mapId, state);
+  if (currentPreMatch) {
+    competitiveDraftStart(currentPreMatch, mode, opts, launch, false);
+    return;
+  }
+  launch(null);
+}
+function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
+  if (MAPS[mapId]) M.map = mapId;
+  if (preMatch) {
+    M.competitiveScrolls = competitiveScrollMap(preMatch);
+    M.hasBuffs = Object.values(M.competitiveScrolls).some(team => Object.keys(team).length > 0);
+  } else { M.hasBuffs = false; M.competitiveScrolls = null; }
   if (mode === 'cpu') {
     startMatch('cpu', opts.level || pickLevel, picks);
   } else if (mode === 'cpuWatch') {
     startMatch('cpu', opts.level || pickLevel || 'god', picks, true);
   } else if (mode === 'net') {
     if (NET.role === 'host') {
-      const seed = (Math.random() * 2147483647) | 0;
+      const seed = Number.isInteger(opts.matchSeed) ? opts.matchSeed : ((Math.random() * 2147483647) | 0);
       const is2v2Net = !!roomDef().four, raidNet = !!roomDef().raid;
       const duo = !is2v2Net && !raidNet && Array.isArray(picks[0]) ? picks : null;
       // 同袍肉鸽：A 房主、C 好友、D 房主替电脑同袍选的；B 先放房主的人占位，开打时换成魔首
@@ -601,8 +886,9 @@ function bpFinish() {
         : (duo ? [duo[0][0], duo[1][0]] : picks);
       const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
       const mut = netTeamMutator();
-      send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut } : { ch: flatCh, seed, mv, map: mapId, mut } });
-      rollStart(flatCh, seed, duo, mv, mapId, mut);
+      const competitiveScrolls = preMatch ? competitiveScrollMap(preMatch) : null;
+      send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut, competitiveScrolls } : { ch: flatCh, seed, mv, map: mapId, mut, competitiveScrolls } });
+      rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls);
     }
   } else if (mode === 'chaos') {
     startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);

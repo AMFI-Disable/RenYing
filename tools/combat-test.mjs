@@ -1498,7 +1498,9 @@ const testSuite = [
       const a = preMatchCreate('ice', 123), b = preMatchCreate('ice', 123);
       if (!preMatchSetPicks(a, [[0, 1], [2]]) || !preMatchSetPicks(b, [[0, 1], [2]])) return { pass: false, error: 'valid picks rejected' };
       if (JSON.stringify(a) !== JSON.stringify(b)) return { pass: false, error: 'candidates are not deterministic' };
-      if (a.mapId !== 'ice' || a.candidates[0][0].length !== 3) return { pass: false, error: 'map or candidates missing' };
+      if (a.mapId !== 'ice' || a.candidates[0][0].length !== 5) return { pass: false, error: 'map or candidates missing' };
+      if ([...a.candidates[0][0], ...a.candidates[1][0]].includes('meter_bank')) return { pass: false, error: 'tower-only scroll entered competitive draft' };
+      if (!a.candidates[0][0].includes(a.recommendations[0][0])) return { pass: false, error: 'recommendation is outside the candidate list' };
       const id = a.candidates[0][0][0];
       if (preMatchSelect(a, 0, 0, 'invalid') || preMatchSelect(a, 5, 0, id)) return { pass: false, error: 'invalid selection accepted' };
       if (!preMatchSelect(a, 0, 0, id) || a.selections[0][0] !== id || a.selections[0][1] !== null) return { pass: false, error: 'selection assigned to wrong hero' };

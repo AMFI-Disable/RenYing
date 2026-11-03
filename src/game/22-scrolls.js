@@ -30,7 +30,7 @@ const SC_RESO = {
 };
 
 // ---------- 小工具 ----------
-const scRnd = () => ROLL.on || netSim() ? grnd() : Math.random();   // 联机同袍肉鸽也有秘卷：回滚时两边、放录像时都得抽到同一个数
+const scRnd = () => ROLL.on || netSim() || M.hasBuffs ? grnd() : Math.random();   // 竞技密卷、联机回滚和回放都用对局随机数
 function scTxt(f, text, rgb, dy = 0) { if (!RESIM) addP({ type: 'text', text, x: f.x, y: f.y - 125 - dy, life: 0.85, max: 0.85, rgb: rgb || '235,220,170' }); }
 function scHeal(f, n, _shared = false) {
   if (n <= 0 || f.hp <= 0 || scHas(f, 'no_heal')) return 0;
@@ -440,7 +440,7 @@ function scPool(heroId) {
 // The competitive pool must not depend on an individual player's unlocks:
 // both peers need to be able to validate the same candidates.
 function scCompetitiveCandidates(heroId, seed, count = 3) {
-  const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l');
+  const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l' && s.id !== 'meter_bank');
   let state = (seed >>> 0) || 1;
   const result = [];
   while (bag.length && result.length < count) {

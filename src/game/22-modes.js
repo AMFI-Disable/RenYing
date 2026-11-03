@@ -549,8 +549,16 @@ const WATCH2V2_FINISH_DELAY = 1.15;   // 禁选完成后留一点时间给玩家
 let watch2v2Bp = null;                // 2v2 专属禁选状态；1v1 仍然使用 BP / bpMode，互不干扰
 
 // 进入 2v2 禁选：切到 #bp 选人界面，由 bpTick 驱动的天道 AI 逐步完成 6 手禁选。
-function startWatch2v2Draft() {
+function startWatch2v2Draft(customOpts = {}) {
+  const opts = { ...(customOpts || {}) };
+  if (!opts.mapBriefed && !skipInteractiveDraft()) {
+    opts.mapId = MAPS[opts.mapId] ? opts.mapId : rollMap();
+    opts.mapBriefed = true;
+    showMapBriefing(opts.mapId, () => { if (currentScreen === 'mapBriefing') startWatch2v2Draft(opts); });
+    return;
+  }
   initAudio();
+  M.map = MAPS[opts.mapId] ? opts.mapId : rollMap();
   ensurePortraits();
   chatClear();
   BP = null;
@@ -691,7 +699,18 @@ function renderBPWatch2v2() {
 }
 
 // 禁选结束后按 [苍龙禁, 赤凤禁, 苍龙先, 赤凤先, 赤凤次, 苍龙次] 的阵容真正开打。
-function startWatch2v2(draft) {
+function startWatch2v2(draft, buffsReady = false) {
+  if (!buffsReady) {
+    const [ban0, ban1, t1a, t2a, t2b, t1b] = Array.isArray(draft) && draft.length === 6 ? draft : watch2v2Draft;
+    const preMatch = preMatchCreate(M.map, (Math.random() * 0x100000000) >>> 0);
+    preMatchSetPicks(preMatch, [[t1a, t1b], [t2a, t2b]]);
+    competitiveDraftStart(preMatch, 'watch2v2', { isWatch: true }, state => {
+      M.competitiveScrolls = competitiveScrollMap(state);
+      M.hasBuffs = Object.values(M.competitiveScrolls).some(team => Object.keys(team).length > 0);
+      startWatch2v2(draft, true);
+    }, false);
+    return;
+  }
   if (p2pActive()) netDropWaiting();
   initAudio();
   refocusGame();
@@ -1151,8 +1170,9 @@ document.getElementById('againBtn').addEventListener('click', () => {
       const mv = netMapVotes();
       send({ sys: 'rematch', action: 'start' });
       const mut = netTeamMutator();
-      send({ rstart: duo ? { ch: picks, seed, duo, mv, mut } : { ch: picks, seed, mv, mut } });
-      rollStart(picks, seed, duo, mv, undefined, mut);
+      const competitiveScrolls = M.hasBuffs && M.competitiveScrolls ? JSON.parse(JSON.stringify(M.competitiveScrolls)) : null;
+      send({ rstart: duo ? { ch: picks, seed, duo, mv, mut, competitiveScrolls } : { ch: picks, seed, mv, mut, competitiveScrolls } });
+      rollStart(picks, seed, duo, mv, undefined, mut, competitiveScrolls);
     } else {
       send({ sys: 'rematch', action: 'ask' });
       toast('已向房主发送再战请求');
@@ -1227,11 +1247,16 @@ document.getElementById('pause').addEventListener('click', e => {
   }
 });
 function toMenu() {
+  if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
+  if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
+  if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;
+  if (typeof onlineCompetitiveDraft !== 'undefined') onlineCompetitiveDraft = null;
   ROLL.on = false; REC.on = false;
   if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   if (WORLD.on) worldLeave();
   M.worldKey = null;
+  M.hasBuffs = false; M.competitiveScrolls = null;
   M.stage = null;
   if (TUT) endTutorial();
   paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
