@@ -1,7 +1,8 @@
 // 无画面沙盒用的游戏代码：训练好的 AI 数据 + src/ai.js + src/data/ + src/game/（和 tools/build.py 打包的顺序一样）
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 const numbered = dir => readdirSync(ROOT + dir).filter(n => /^\d\d-[a-z0-9-]+\.js$/.test(n)).sort().map(n => dir + '/' + n);
 const isDir = p => statSync(ROOT + p).isDirectory();

@@ -70,7 +70,8 @@ def read(*parts, mode="r"):
         with open(path, "rb") as f:
             return f.read()
     with open(path, "r", encoding="utf-8", newline="") as f:
-        return f.read()
+        # 统一成 LF 再返回：Windows 上 git 检出的是 CRLF，不归一化的话下面按 \n 拼的标记行永远对不上
+        return f.read().replace("\r\n", "\n").replace("\r", "\n")
 
 
 
@@ -297,44 +298,44 @@ def check_js():
     ok = True
     for name in ("cloud.js", "i18n.js", "ai.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
         src_path = os.path.join(SRC, name)
-        r = subprocess.run([node, "--check", src_path], capture_output=True, text=True)
+        r = subprocess.run([node, "--check", src_path], capture_output=True, text=True, encoding="utf-8", errors="replace")
         if r.returncode:
             print(f"src/{name} 语法错误：\n{r.stderr}")
             ok = False
             continue
         compacted = compact_js(read(SRC, name))
-        rc = subprocess.run([node, "--check", "-"], input=compacted, capture_output=True, text=True)
+        rc = subprocess.run([node, "--check", "-"], input=compacted, capture_output=True, text=True, encoding="utf-8", errors="replace")
         if rc.returncode:
             print(f"src/{name} 压缩后语法错误：\n{rc.stderr}")
             ok = False
     # 游戏主体拆成了 src/game/ 下的多个文件：每个单独查一遍，再把拼起来压缩后的整体查一遍
     for part in game_parts():
-        r = subprocess.run([node, "--check", os.path.join(SRC, *part)], capture_output=True, text=True)
+        r = subprocess.run([node, "--check", os.path.join(SRC, *part)], capture_output=True, text=True, encoding="utf-8", errors="replace")
         if r.returncode:
             print(f"src/{'/'.join(part)} 语法错误：\n{r.stderr}")
             ok = False
-    rc = subprocess.run([node, "--check", "-"], input=compact_js(game_source()), capture_output=True, text=True)
+    rc = subprocess.run([node, "--check", "-"], input=compact_js(game_source()), capture_output=True, text=True, encoding="utf-8", errors="replace")
     if rc.returncode:
         print(f"src/data/ + src/game/ 拼起来压缩后语法错误：\n{rc.stderr}")
         ok = False
     # src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用存在（tools/data-check.mjs），有错就不生成网页
     # CI 里再加 --strict-copy：英文词条的中文在源码里找不到也算错；本机只提醒
     strict = ["--strict-copy"] if os.environ.get("CI") else []
-    r = subprocess.run([node, os.path.join(ROOT, "tools", "data-check.mjs"), *strict], capture_output=True, text=True)
+    r = subprocess.run([node, os.path.join(ROOT, "tools", "data-check.mjs"), *strict], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode:
         print(r.stdout + r.stderr)
         ok = False
     # 青锋行的各个文件共用一个闭包，拼起来再查
     game = "".join(read(QFX, n) for n in qfx_modules())
-    r = subprocess.run([node, "--check", "-"], input="(function(){\n'use strict';\n" + game + "\n})();", capture_output=True, text=True)
+    r = subprocess.run([node, "--check", "-"], input="(function(){\n'use strict';\n" + game + "\n})();", capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode:
         print(f"src/qfx 语法错误：\n{r.stderr}")
         ok = False
-    r = subprocess.run([node, "--input-type=module", "--check", "-"], input=worker_bundle(), capture_output=True, text=True)
+    r = subprocess.run([node, "--input-type=module", "--check", "-"], input=worker_bundle(), capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode:
         print(f"cloudflare/worker.bundle.js 语法错误：\n{r.stderr}")
         ok = False
-    r = subprocess.run([node, "--check", "-"], input=admin_page()[1], capture_output=True, text=True)
+    r = subprocess.run([node, "--check", "-"], input=admin_page()[1], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode:
         print(f"cloudflare/admin.html 的脚本语法错误：\n{r.stderr}")
         ok = False

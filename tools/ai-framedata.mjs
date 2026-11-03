@@ -5,7 +5,8 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { makeEnv, HEROES, NAMES } from './ai-arena.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = ROOT + 'models/ai-brain.json';
 const env = await makeEnv();
 const F_ = { get A() { return env.A; }, get B() { return env.B; } };

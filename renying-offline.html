@@ -12526,12 +12526,11 @@ const full = dx < 92.5 && !foeDown;
 if (foeDown) {
 applyHit(f, foe, { dmg: 185, kb: [0, 0], stun: 0, hs: 0.25, unblockable: true, ult: true, noScale: true, noStun: true, dir, big: true }, [foe.x, foe.y - 20]);   // 只掉血，人还躺着
 } else {
-const isLeiMingUlt = foe.ch && foe.ch.id === 'leiming' && foe.state === 'special';
+const wasSpecial = foe.state === 'special';
+const isLeiMingUlt = wasSpecial && foe.ch && foe.ch.id === 'leiming';
 applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 1.3, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
 foe.state = 'hitstun'; foe.stun = 1.3; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
-if (!isLeiMingUlt && foe.state === 'special') {
-foe.sp = null; // 打断地面常规绝技蓄势
-}
+if (wasSpecial) { if (!isLeiMingUlt) foe.sp = null; if (foe.invul > 1) foe.invul = 0; }   // 只收掉绝技带的长无敌，短无敌（起身、受身）别动
 }
 const free = full && !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次、砸偏或砸倒地的人只回 50%
 f.meter = free ? 100 : Math.min(100, f.meter + 50); f.avaFree = free;
@@ -12681,7 +12680,7 @@ const T = [0.05, 0.2, 0.35, 0.5, 0.65, 0.8];
 if (f.spN < 6 && f.t >= T[f.spN]) {
 const sd = f.spN % 2 ? 1 : -1; f.spN++;
 f.spPose = f.spN % 2 ? 'yx_play' : 'yx_push'; SFX.note(f.spN % 4);
-spawnProj(f, { kind: 'note', x: foe.x + sd * 520, y: foe.y - 50 - (f.spN % 3) * 18, vx: -sd * 1100, w: 50, h: 50, life: 0.9, dmg: 14, kb: [60, 0], stun: 0.3, hs: 0.03, ult: true, noScale: true, pierce: true, maxHits: 1, notes: 0 });
+spawnProj(f, { kind: 'note', x: clamp(foe.x + sd * 520, -280, STAGE_W + 280), y: foe.y - 50 - (f.spN % 3) * 18, vx: -sd * 1100, w: 50, h: 50, life: 0.9, dmg: 14, kb: [60, 0], stun: 0.3, hs: 0.03, ult: true, noScale: true, pierce: true, maxHits: 1, notes: 0 });   // 出生点要在出界回收线（±300）以内，贴着墙放的这一局才有六道音刃
 }
 if (f.spN === 6 && f.t >= 1.0) {
 f.spN = 7; f.spPose = 'yx_push';
@@ -12736,7 +12735,7 @@ const ang = (f.spN * 0.6) % 3.14;
 slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
 ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
 if (foe.hp > 0 && foe.invul <= 0) {
-applyHit(f, foe, { dmg: 12, exact: true, kb: [sd * 60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
+applyHit(f, foe, { dmg: 12, exact: true, kb: [60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
 addNeedleMark(foe, 1);
 }
 }
@@ -12746,7 +12745,7 @@ f.y = 0; f.vy = 0;
 shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
 ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
 if (foe.hp > 0 && foe.invul <= 0) {
-applyHit(f, foe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
+applyHit(f, foe, { dmg: 56, kb: [300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);   // kb 只写大小，方向由 dir 带
 addNeedleMark(foe, 1);
 f.skill2CD = 0;
 addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
@@ -12859,7 +12858,7 @@ endSpecial(f);
 } else {
 const nx = dx / dist, ny = dy / dist;
 ball.vx = nx * pullSpd; ball.vy = ny * pullSpd;
-ball.dmg = 120; ball.kb = [f.face * 350, -680]; ball.stun = 0.7; ball.hs = 0.14; ball.launch = true; ball.big = true;
+ball.dmg = 120; ball.kb = [350, -680]; ball.stun = 0.7; ball.hs = 0.14; ball.launch = true; ball.big = true;   // kb 只写大小，方向用主人的朝向（applyHit 的 fx）
 if (!RESIM && Math.random() < 0.6) {
 addP({ type: 'spark', x: ball.x, y: ball.y, vx: -nx * rand(100, 300), vy: -ny * rand(100, 300), rgb: '255,230,130', life: 0.15, max: 0.15 });
 }
@@ -13477,9 +13476,21 @@ competitiveDraftStart(msg.prematch.state, 'net', {}, () => {}, true);
 } else competitiveDraftReceive(msg.prematch);
 return;
 }
-if (msg.ru !== undefined) { rollRecv(msg); return; }
-if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map, msg.rstart.mut, msg.rstart.competitiveScrolls); return; }
-if (msg.rsync) { rollAdopt(msg.rsync); return; }
+if (msg.ru !== undefined) {
+if (typeof msg.ru !== 'number' || !isFinite(msg.ru) || msg.ru < 0 || msg.ru > ROLL.F + ROLL.MAXP * 4) return;
+rollRecv(msg); return;
+}
+if (msg.rstart) {
+const r = msg.rstart;
+if (NET.role === 'host' || !r || !Array.isArray(r.ch) || r.ch.length < 2 || typeof r.seed !== 'number' || !isFinite(r.seed)) return;
+rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls); return;
+}
+if (msg.rsync) {
+const p = msg.rsync, st = p && p.st;
+if (NET.role !== 'client' || !p || typeof p.f !== 'number' || !isFinite(p.f) || p.f < 0 || p.f > ROLL.F + ROLL.N) return;
+if (!st || typeof st.clock !== 'number' || !Array.isArray(st.f) || !Array.isArray(st.c) || !Array.isArray(st.projs) || !st.M) return;
+rollAdopt(p); return;
+}
 if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
 if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
 if (msg.po !== undefined) { const r = performance.now() - msg.po; NET.rtt = NET.rtt ? NET.rtt * 0.7 + r * 0.3 : r; return; }
@@ -16382,7 +16393,7 @@ return;
 f.hitDone = true; foe.hitDone = true;
 f.vx = -f.face * clamp(210 / Math.sqrt(fWeight), 130, 280);
 foe.vx = -foe.face * clamp(210 / Math.sqrt(foeWeight), 130, 280);
-f.t = Math.max(f.t, foeSu + foeAc);
+f.t = Math.max(f.t, (m.su || 0.04) + (m.ac || 0.08));   // 各自按自己的招式时长收招，别用对手的
 foe.t = Math.max(foe.t, foeSu + foeAc);
 SFX.parry(); haptic([15, 25, 15]);
 shake = Math.max(shake, 8);
@@ -16415,7 +16426,7 @@ hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: isBlocked
 predicted.push(performance.now());
 }
 function applyHit(att, def, m, pt) {
-if (M.mode === 'net') NET.matchHits = (NET.matchHits || 0) + 1;
+if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
 if (def.forestProxy) { forestHit(att, m, pt); return; }
 if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
 if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
@@ -17758,16 +17769,33 @@ ctx.fill();
 ctx.restore();
 }
 const ARENA_SPLATTERS = [];
+const BG_GRAD = new WeakMap();
+function bgGrads(sky, mc, legend) {
+const key = W + 'x' + H + '|' + sky.join(',') + '|' + mc + '|' + (legend ? 1 : 0);
+let g = BG_GRAD.get(ctx);
+if (!g || g.key !== key) {
+const skyG = ctx.createLinearGradient(0, 0, 0, H);
+skyG.addColorStop(0, sky[0]); skyG.addColorStop(0.48, sky[1]); skyG.addColorStop(0.78, sky[2]); skyG.addColorStop(1, sky[3]);
+const wash = ctx.createRadialGradient(W * 0.65, H * 0.24, H * 0.05, W * 0.55, H * 0.35, W * 0.75);
+wash.addColorStop(0, 'rgba(239, 230, 210, 0.08)');
+wash.addColorStop(0.5, 'rgba(180, 195, 220, 0.02)');
+wash.addColorStop(1, 'rgba(4, 6, 12, 0.28)');
+const mid = ctx.createLinearGradient(0, -H * 0.32, 0, -H * 0.08);
+mid.addColorStop(0, `rgba(${mc},0)`);
+mid.addColorStop(0.5, `rgba(${mc},0.11)`);
+mid.addColorStop(1, `rgba(${mc},0.02)`);
+const low = ctx.createLinearGradient(0, -H * 0.25, 0, 0);
+low.addColorStop(0, `rgba(${mc},0)`); low.addColorStop(1, `rgba(${mc},${legend ? 0.28 : 0.19})`);
+g = { key, sky: skyG, wash, mid, low };
+BG_GRAD.set(ctx, g);
+}
+return g;
+}
 function drawBackground(sc) {
-const T = SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'];
-const g = ctx.createLinearGradient(0, 0, 0, H);
-g.addColorStop(0, sky[0]); g.addColorStop(0.48, sky[1]); g.addColorStop(0.78, sky[2]); g.addColorStop(1, sky[3]);
-ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-const skyWash = ctx.createRadialGradient(W * 0.65, H * 0.24, H * 0.05, W * 0.55, H * 0.35, W * 0.75);
-skyWash.addColorStop(0, 'rgba(239, 230, 210, 0.08)');
-skyWash.addColorStop(0.5, 'rgba(180, 195, 220, 0.02)');
-skyWash.addColorStop(1, 'rgba(4, 6, 12, 0.28)');
-ctx.fillStyle = skyWash; ctx.fillRect(0, 0, W, H);
+const T = SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
+const bg = bgGrads(sky, mc, !!(T && T.legend));
+ctx.fillStyle = bg.sky; ctx.fillRect(0, 0, W, H);
+ctx.fillStyle = bg.wash; ctx.fillRect(0, 0, W, H);
 if (T && T.storm) { const k = Math.floor(clock * 0.4), ph = clock * 0.4 - k; if (hash(k) < 0.45 && ph < 0.12) { ctx.fillStyle = `rgba(200,170,255,${0.22 * (1 - ph / 0.12)})`; ctx.fillRect(0, 0, W, H); } }
 ctx.fillStyle = '#fff';
 for (let i = 0, ns = 90 * (T && T.stars !== undefined ? T.stars : 1); i < ns; i++) {
@@ -17779,24 +17807,22 @@ ctx.globalAlpha = 1;
 const mx = W * 0.68 - (cam.x - STAGE_W / 2) * 0.04 * sc, my = H * 0.26, mr = H * 0.11;
 drawOrb(T, mx, my, mr, clock);
 if (T && T.legend && T.rays) drawRays(T, mx, my);
-const gy = groundY(), mt = (T && T.mtn) || SCN_DEF.mtn, bm = (T && T.bam) || SCN_DEF.bam, mc = T ? T.mist : SCN_DEF.mist;
+const gy = groundY(), mt = (T && T.mtn) || SCN_DEF.mtn, bm = (T && T.bam) || SCN_DEF.bam;
 mountains(0.04, gy - H * 0.28, H * 0.18, 'rgba(26, 34, 54, 0.55)', 0.6, sc);
 mountains(0.08, gy - H * 0.2, H * 0.16, mt[0], 1.3, sc);
 const pagX = W * 0.76 - (cam.x - STAGE_W / 2) * 0.08 * sc;
 const pagU = (pagX + (cam.x - STAGE_W / 2) * 0.08 * sc) / H;
 const pagY = (gy - H * 0.2) - (H * 0.16) * (0.55 * Math.sin(pagU * 2.3 + 1.3) + 0.3 * Math.sin(pagU * 5.1 + 2.6) + 0.15 * Math.sin(pagU * 11 + 3.9));
 drawDistantPagoda(pagX, pagY + 4 * sc, sc * 0.95);
-const midMist = ctx.createLinearGradient(0, gy - H * 0.32, 0, gy - H * 0.08);
-midMist.addColorStop(0, `rgba(${mc},0)`);
-midMist.addColorStop(0.5, `rgba(${mc},0.11)`);
-midMist.addColorStop(1, `rgba(${mc},0.02)`);
-ctx.fillStyle = midMist; ctx.fillRect(0, gy - H * 0.32, W, H * 0.24);
+ctx.save(); ctx.translate(0, gy);
+ctx.fillStyle = bg.mid; ctx.fillRect(0, -H * 0.32, W, H * 0.24);
+ctx.restore();
 mountains(0.18, gy - H * 0.1, H * 0.12, mt[1], 4.7, sc);
 mountains(0.28, gy - H * 0.04, H * 0.07, 'rgba(10, 13, 24, 0.86)', 8.2, sc);
 drawInkClouds(gy, sc);
-const mist = ctx.createLinearGradient(0, gy - H * 0.25, 0, gy);
-mist.addColorStop(0, `rgba(${mc},0)`); mist.addColorStop(1, `rgba(${mc},${T && T.legend ? 0.28 : 0.19})`);
-ctx.fillStyle = mist; ctx.fillRect(0, gy - H * 0.25, W, H * 0.25);
+ctx.save(); ctx.translate(0, gy);
+ctx.fillStyle = bg.low; ctx.fillRect(0, -H * 0.25, W, H * 0.25);
+ctx.restore();
 bamboo(0.5, sc, gy, bm[0], 150, 0.75);
 bamboo(0.75, sc, gy, bm[1], 210, 0.9);
 if (T && T.legend) {   // 传说场景：地平线上一层主题色的光
@@ -22311,15 +22337,56 @@ withCtx(b1.x, () => (emit || drawEmissive)(sc, sx, sy));
 b1.x.globalCompositeOperation = 'source-over';
 for (const [src, dst] of [[b1, b2], [b2, b3]]) { dst.x.setTransform(1, 0, 0, 1, 0, 0); dst.x.clearRect(0, 0, dst.c.width, dst.c.height); dst.x.imageSmoothingEnabled = true; dst.x.drawImage(src.c, 0, 0, dst.c.width, dst.c.height); }
 const I = SETTINGS.bloom * (1 + 0.9 * cineEnv());
+const mix = offCanvas('b4', W / 4, H / 4);
+if (mix.x) {
+mix.x.setTransform(1, 0, 0, 1, 0, 0); mix.x.globalAlpha = 1;
+mix.x.globalCompositeOperation = 'source-over'; mix.x.clearRect(0, 0, mix.c.width, mix.c.height);
+mix.x.globalCompositeOperation = 'lighter'; mix.x.imageSmoothingEnabled = true;
+mix.x.globalAlpha = Math.min(1, 0.32 * I); mix.x.drawImage(b1.c, 0, 0, mix.c.width, mix.c.height);
+mix.x.globalAlpha = Math.min(1, 0.42 * I); mix.x.drawImage(b2.c, 0, 0, mix.c.width, mix.c.height);
+mix.x.globalAlpha = Math.min(1, 0.55 * I); mix.x.drawImage(b3.c, 0, 0, mix.c.width, mix.c.height);
+mix.x.globalAlpha = 1;
+ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
+ctx.drawImage(mix.c, 0, 0, cv.width, cv.height);
+ctx.restore();
+return;
+}
 ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
 ctx.globalAlpha = Math.min(1, 0.32 * I); ctx.drawImage(b1.c, 0, 0, cv.width, cv.height);
 ctx.globalAlpha = Math.min(1, 0.42 * I); ctx.drawImage(b2.c, 0, 0, cv.width, cv.height);
 ctx.globalAlpha = Math.min(1, 0.55 * I); ctx.drawImage(b3.c, 0, 0, cv.width, cv.height);
 ctx.restore();
 }
+const VIG = { key: '', c: null };
+function drawVignette(ce) {
+const vig = SETTINGS.vig;
+if (!(vig > 0)) return;
+if (ce > 0.01) {   // 大招特写：镜头边界与浓淡一直在动，走原来的逐帧渐变
+const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (0.36 - 0.08 * ce), W / 2, H / 2, Math.max(W, H) * 0.72);
+v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, (0.66 + 0.2 * ce) * vig)})`);
+ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+return;
+}
+const key = cv.width + 'x' + cv.height + '|' + vig;
+if (VIG.key !== key || !VIG.c) {
+const big = cv.width * cv.height > 4200000;
+const o = offCanvas('vig', big ? cv.width / 2 : cv.width, big ? cv.height / 2 : cv.height);
+if (!o.x) return;
+o.x.setTransform(1, 0, 0, 1, 0, 0); o.x.clearRect(0, 0, o.c.width, o.c.height);
+o.x.setTransform(o.c.width / W, 0, 0, o.c.height / H, 0, 0);
+const v = o.x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.36, W / 2, H / 2, Math.max(W, H) * 0.72);
+v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, 0.66 * vig)})`);
+o.x.fillStyle = v; o.x.fillRect(0, 0, W, H);
+VIG.key = key; VIG.c = o.c; VIG.big = big;
+}
+ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+if (VIG.big) { ctx.imageSmoothingEnabled = true; ctx.drawImage(VIG.c, 0, 0, cv.width, cv.height); }
+else ctx.drawImage(VIG.c, 0, 0);
+ctx.restore();
+}
 function cineFX(e) {
 ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-ctx.fillStyle = '#050510'; ctx.globalAlpha = 0.25 * e; ctx.fillRect(0, 0, W, H);
+ctx.fillStyle = '#050510'; ctx.globalAlpha = 0.25 * e; ctx.fillRect(0, 0, cv.width, cv.height);
 ctx.restore();
 const bh = H * 0.09 * e;   // 电影黑边
 ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bh); ctx.fillRect(0, H - bh, W, bh);
@@ -22330,7 +22397,7 @@ const k = 1 / 3, o = offCanvas('bg', cv.width * k, cv.height * k);
 if (o.x) {
 o.x.setTransform(o.c.width / W, 0, 0, o.c.height / H, 0, 0);
 withCtx(o.x, () => drawBackground(sc));
-ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
+ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true;
 ctx.drawImage(o.c, 0, 0, cv.width, cv.height); ctx.restore();
 return;
 }
@@ -22399,9 +22466,7 @@ const ce = cineEnv();
 if (ce > 0.01) cineFX(ce);
 { const T = superOwner && superFreeze > 0 && sceneOf(superOwner.skinKey);
 if (T && T.legend) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7); g.addColorStop(0, `rgba(${T.orbC},0)`); g.addColorStop(1, `rgba(${T.orbC},0.28)`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } }
-const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (0.36 - 0.08 * ce), W / 2, H / 2, Math.max(W, H) * 0.72);
-v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * SETTINGS.vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, (0.66 + 0.2 * ce) * SETTINGS.vig)})`);
-ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+drawVignette(ce);
 if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
 drawIdentityEdges(order, sx, sy);
 drawHUD();
@@ -32429,15 +32494,24 @@ const refuse = () => { conn.on('open', () => { try { conn.send({ sys: 'full' });
 if (!live() || !MM.on || MM.busy || P2P.conn) return refuse();
 MM.busy = true;
 P2P.conn = conn;
-const drop = () => { if (P2P.conn === conn) P2P.conn = null; MM.busy = false; try { conn.close(); } catch (e) {} };
-const t = setTimeout(() => { if (live() && P2P.conn === conn && !NET.open) drop(); }, 20000);   // 和敲门那边一样，网络慢时也等得到
+let timer = 0;
+const drop = () => {
+if (drop.done) return;
+drop.done = true;
+if (P2P.conn === conn) P2P.conn = null;
+MM.busy = false;
+clearTimeout(timer);
+try { conn.close(); } catch (e) {}
+};
+conn.on('close', () => { if (!NET.open) drop(); });   // 敲门的人先断了：马上放开下一轮
+timer = setTimeout(() => { if (live() && !NET.open) drop(); }, 20000);   // 和敲门那边一样，网络慢时也等得到
 p2pWire(conn, sess, 'host', () => {}, m => {
 if (m.sys === 'hello') {
 const mine = mmInfo(), theirs = m.mm || {};
 const fit = m.v === VERSION && theirs.kind === MM.kind &&
 (MM.kind !== 'ranked' || (mine && Math.abs((theirs.band | 0) - mine.band) <= 2 && !(mine.uid && theirs.uid && mine.uid === theirs.uid) && !mmAvoided(theirs.uid)));
-if (!fit) { try { conn.send({ sys: 'full' }); } catch (e) {} clearTimeout(t); setTimeout(drop, 300); return; }
-clearTimeout(t);
+if (!fit) { try { conn.send({ sys: 'full' }); } catch (e) {} clearTimeout(timer); setTimeout(drop, 300); return; }
+clearTimeout(timer);
 NET.role = 'host';
 NET.oppRk = theirs.rk || null; NET.oppUid = theirs.uid || '';
 const ready = { sys: 'ready', names: { host: (ACC && ACC.name) || '房主', client: p2pName(m.name, '对手') }, tiers: {}, mm: { kind: MM.kind, rk: mine ? mine.rk : null, uid: mine ? mine.uid : '' } };

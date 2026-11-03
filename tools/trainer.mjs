@@ -11,7 +11,8 @@ import os from 'node:os';
 import { Pool, HEROES, NAMES } from './ai-arena.mjs';
 import { heroData } from './ai-code.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const N = Math.max(2, +arg('n', 20) & ~1), ROUNDS = +arg('rounds', 0), LEVELS = arg('level', 'god').split(','), LEVEL = LEVELS.join('+');
 const OUT = (arg('out', 'docs/trainer').startsWith('/') ? '' : ROOT) + arg('out', 'docs/trainer') + '/';

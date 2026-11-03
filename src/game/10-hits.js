@@ -116,7 +116,7 @@ function tryHit(f, foe, m) {
           f.hitDone = true; foe.hitDone = true;
           f.vx = -f.face * clamp(210 / Math.sqrt(fWeight), 130, 280);
           foe.vx = -foe.face * clamp(210 / Math.sqrt(foeWeight), 130, 280);
-          f.t = Math.max(f.t, foeSu + foeAc);
+          f.t = Math.max(f.t, (m.su || 0.04) + (m.ac || 0.08));   // 各自按自己的招式时长收招，别用对手的
           foe.t = Math.max(foe.t, foeSu + foeAc);
           SFX.parry(); haptic([15, 25, 15]);
           shake = Math.max(shake, 8);
@@ -150,7 +150,7 @@ function predictHit(att, def, m, pt) {
   predicted.push(performance.now());
 }
 function applyHit(att, def, m, pt) {
-  if (M.mode === 'net') NET.matchHits = (NET.matchHits || 0) + 1;
+  if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
   if (def.forestProxy) { forestHit(att, m, pt); return; }
   if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
   if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍

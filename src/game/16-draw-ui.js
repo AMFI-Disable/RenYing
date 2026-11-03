@@ -918,15 +918,64 @@ function drawBloom(sc, sx, sy, emit) {
   b1.x.globalCompositeOperation = 'source-over';
   for (const [src, dst] of [[b1, b2], [b2, b3]]) { dst.x.setTransform(1, 0, 0, 1, 0, 0); dst.x.clearRect(0, 0, dst.c.width, dst.c.height); dst.x.imageSmoothingEnabled = true; dst.x.drawImage(src.c, 0, 0, dst.c.width, dst.c.height); }
   const I = SETTINGS.bloom * (1 + 0.9 * cineEnv());
+  // 三层光晕先在四分之一尺寸的画布上按原来的配比叠好，最后只往屏幕上合成一次。
+  // 「加亮」是相加混合，先叠后叠结果一样（0.32·b1 + 0.42·b2 + 0.55·b3），但整屏混合从三次变成一次：
+  // 无 GPU 的机器上一次 1440×900 的整屏混合就要几毫秒
+  const mix = offCanvas('b4', W / 4, H / 4);
+  if (mix.x) {
+    mix.x.setTransform(1, 0, 0, 1, 0, 0); mix.x.globalAlpha = 1;
+    mix.x.globalCompositeOperation = 'source-over'; mix.x.clearRect(0, 0, mix.c.width, mix.c.height);
+    mix.x.globalCompositeOperation = 'lighter'; mix.x.imageSmoothingEnabled = true;
+    mix.x.globalAlpha = Math.min(1, 0.32 * I); mix.x.drawImage(b1.c, 0, 0, mix.c.width, mix.c.height);
+    mix.x.globalAlpha = Math.min(1, 0.42 * I); mix.x.drawImage(b2.c, 0, 0, mix.c.width, mix.c.height);
+    mix.x.globalAlpha = Math.min(1, 0.55 * I); mix.x.drawImage(b3.c, 0, 0, mix.c.width, mix.c.height);
+    mix.x.globalAlpha = 1;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(mix.c, 0, 0, cv.width, cv.height);
+    ctx.restore();
+    return;
+  }
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingEnabled = true;
   ctx.globalAlpha = Math.min(1, 0.32 * I); ctx.drawImage(b1.c, 0, 0, cv.width, cv.height);
   ctx.globalAlpha = Math.min(1, 0.42 * I); ctx.drawImage(b2.c, 0, 0, cv.width, cv.height);
   ctx.globalAlpha = Math.min(1, 0.55 * I); ctx.drawImage(b3.c, 0, 0, cv.width, cv.height);
   ctx.restore();
 }
+// 暗角：只有画布尺寸、vig、ce 会变。ce=0 的时候（绝大多数帧）把渐变烤成一张半尺寸贴图，每帧只做一次缩放贴图；
+// 逐像素算一整个屏幕的径向渐变很贵，贴一次图便宜一个数量级
+const VIG = { key: '', c: null };
+function drawVignette(ce) {
+  const vig = SETTINGS.vig;
+  if (!(vig > 0)) return;
+  if (ce > 0.01) {   // 大招特写：镜头边界与浓淡一直在动，走原来的逐帧渐变
+    const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (0.36 - 0.08 * ce), W / 2, H / 2, Math.max(W, H) * 0.72);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, (0.66 + 0.2 * ce) * vig)})`);
+    ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+    return;
+  }
+  const key = cv.width + 'x' + cv.height + '|' + vig;
+  if (VIG.key !== key || !VIG.c) {
+    // 按设备像素烤一张贴图：放大贴图要走重采样，比一比一贴贵六七倍。
+    // 画布特别大（高分屏 + 4K）时退一半尺寸，省一块跟主画布一样大的显存，贴图会被拉开但暗角本来就是平滑渐变
+    const big = cv.width * cv.height > 4200000;
+    const o = offCanvas('vig', big ? cv.width / 2 : cv.width, big ? cv.height / 2 : cv.height);
+    if (!o.x) return;
+    o.x.setTransform(1, 0, 0, 1, 0, 0); o.x.clearRect(0, 0, o.c.width, o.c.height);
+    o.x.setTransform(o.c.width / W, 0, 0, o.c.height / H, 0, 0);
+    const v = o.x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.36, W / 2, H / 2, Math.max(W, H) * 0.72);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, 0.66 * vig)})`);
+    o.x.fillStyle = v; o.x.fillRect(0, 0, W, H);
+    VIG.key = key; VIG.c = o.c; VIG.big = big;
+  }
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (VIG.big) { ctx.imageSmoothingEnabled = true; ctx.drawImage(VIG.c, 0, 0, cv.width, cv.height); }
+  else ctx.drawImage(VIG.c, 0, 0);
+  ctx.restore();
+}
 function cineFX(e) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = '#050510'; ctx.globalAlpha = 0.25 * e; ctx.fillRect(0, 0, W, H);
+  // 这里是设备像素坐标（变换被重置成单位阵）：要按画布的像素尺寸铺满，用 W/H（CSS 像素）只盖住左上角 1/DPR²
+  ctx.fillStyle = '#050510'; ctx.globalAlpha = 0.25 * e; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.restore();
   const bh = H * 0.09 * e;   // 电影黑边
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bh); ctx.fillRect(0, H - bh, W, bh);
@@ -937,7 +986,8 @@ function drawBackdrop(sc) {
     if (o.x) {
       o.x.setTransform(o.c.width / W, 0, 0, o.c.height / H, 0, 0);
       withCtx(o.x, () => drawBackground(sc));
-      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
+      // 放大这一下本来就够糊了（1/3 分辨率），用默认的双线性就好：'medium' 要重采样，实测贵一倍多
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true;
       ctx.drawImage(o.c, 0, 0, cv.width, cv.height); ctx.restore();
       return;
     }
@@ -1007,9 +1057,7 @@ function render() {
   { const T = superOwner && superFreeze > 0 && sceneOf(superOwner.skinKey);
     if (T && T.legend) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7); g.addColorStop(0, `rgba(${T.orbC},0)`); g.addColorStop(1, `rgba(${T.orbC},0.28)`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } }
   // 暗角
-  const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (0.36 - 0.08 * ce), W / 2, H / 2, Math.max(W, H) * 0.72);
-  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.6, `rgba(0,0,0,${0.18 * SETTINGS.vig})`); v.addColorStop(1, `rgba(0,0,0,${Math.min(0.95, (0.66 + 0.2 * ce) * SETTINGS.vig)})`);
-  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  drawVignette(ce);
   if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
   drawIdentityEdges(order, sx, sy);
   drawHUD();

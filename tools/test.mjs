@@ -17,11 +17,23 @@
 //   node tools/test.mjs --git            Run suite + full Git lifecycle (rebase, commit, push)
 //   node tools/test.mjs --train          Run suite + genetic policy training sweep
 
-import { spawn, execSync } from 'node:child_process';
+import { spawn, spawnSync, execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// 打包脚本要 Python 3.10+。Windows 上没有 python3 这个名字（应用商店的 python3.exe 只是个占位符），
+// 所以挨个试一遍，挑真能跑的那个；一个都没有就报一句清楚的出错，而不是 spawn 一个不存在的命令
+function findPython() {
+  for (const cmd of ['python3', 'python', 'py']) {
+    const probe = spawnSync(cmd, ['-c', 'import sys; print(sys.version_info[0])'], { encoding: 'utf8' });
+    if (!probe.error && probe.status === 0 && String(probe.stdout).trim() === '3') return cmd;
+  }
+  return null;
+}
+const PYTHON = findPython();
+
 const args = process.argv.slice(2);
 const isFull = args.includes('--full');
 const isGit = args.includes('--git');
@@ -113,7 +125,8 @@ async function main() {
 
   try {
     // Step 1: Automated Build Synchronization
-    await runStep('Build Synchronization (build.py)', 'python3', ['tools/build.py']);
+    if (!PYTHON) throw new Error('找不到 Python 3（试过 python3、python、py），网页没法重新生成');
+    await runStep('Build Synchronization (build.py)', PYTHON, ['tools/build.py']);
 
     // Step 2: Combat & Netcode Suite
     const combatArgs = isFull ? [] : ['--fast'];

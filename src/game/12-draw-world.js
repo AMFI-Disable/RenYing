@@ -42,17 +42,36 @@ function drawInkClouds(gy, sc) {
   ctx.restore();
 }
 const ARENA_SPLATTERS = [];
+// 天空、宣纸晕染和两带山岚只跟画布尺寸与场景颜色有关：按 context 缓存渐变对象，每帧只换 fillStyle。
+// 山岚是纯竖直渐变，按 y=0 建一次、画的时候整体 translate 到地平线，镜头上下移动也不会失效
+const BG_GRAD = new WeakMap();
+function bgGrads(sky, mc, legend) {
+  const key = W + 'x' + H + '|' + sky.join(',') + '|' + mc + '|' + (legend ? 1 : 0);
+  let g = BG_GRAD.get(ctx);
+  if (!g || g.key !== key) {
+    const skyG = ctx.createLinearGradient(0, 0, 0, H);
+    skyG.addColorStop(0, sky[0]); skyG.addColorStop(0.48, sky[1]); skyG.addColorStop(0.78, sky[2]); skyG.addColorStop(1, sky[3]);
+    const wash = ctx.createRadialGradient(W * 0.65, H * 0.24, H * 0.05, W * 0.55, H * 0.35, W * 0.75);
+    wash.addColorStop(0, 'rgba(239, 230, 210, 0.08)');
+    wash.addColorStop(0.5, 'rgba(180, 195, 220, 0.02)');
+    wash.addColorStop(1, 'rgba(4, 6, 12, 0.28)');
+    const mid = ctx.createLinearGradient(0, -H * 0.32, 0, -H * 0.08);
+    mid.addColorStop(0, `rgba(${mc},0)`);
+    mid.addColorStop(0.5, `rgba(${mc},0.11)`);
+    mid.addColorStop(1, `rgba(${mc},0.02)`);
+    const low = ctx.createLinearGradient(0, -H * 0.25, 0, 0);
+    low.addColorStop(0, `rgba(${mc},0)`); low.addColorStop(1, `rgba(${mc},${legend ? 0.28 : 0.19})`);
+    g = { key, sky: skyG, wash, mid, low };
+    BG_GRAD.set(ctx, g);
+  }
+  return g;
+}
 function drawBackground(sc) {
-  const T = SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'];
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, sky[0]); g.addColorStop(0.48, sky[1]); g.addColorStop(0.78, sky[2]); g.addColorStop(1, sky[3]);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const T = SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
+  const bg = bgGrads(sky, mc, !!(T && T.legend));
+  ctx.fillStyle = bg.sky; ctx.fillRect(0, 0, W, H);
   // 宣纸水墨暗纹晕染（四角微暗、天际微亮）
-  const skyWash = ctx.createRadialGradient(W * 0.65, H * 0.24, H * 0.05, W * 0.55, H * 0.35, W * 0.75);
-  skyWash.addColorStop(0, 'rgba(239, 230, 210, 0.08)');
-  skyWash.addColorStop(0.5, 'rgba(180, 195, 220, 0.02)');
-  skyWash.addColorStop(1, 'rgba(4, 6, 12, 0.28)');
-  ctx.fillStyle = skyWash; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = bg.wash; ctx.fillRect(0, 0, W, H);
   // 雷雨天：偶尔闪一下
   if (T && T.storm) { const k = Math.floor(clock * 0.4), ph = clock * 0.4 - k; if (hash(k) < 0.45 && ph < 0.12) { ctx.fillStyle = `rgba(200,170,255,${0.22 * (1 - ph / 0.12)})`; ctx.fillRect(0, 0, W, H); } }
   // 星星
@@ -68,7 +87,7 @@ function drawBackground(sc) {
   drawOrb(T, mx, my, mr, clock);
   if (T && T.legend && T.rays) drawRays(T, mx, my);
   // 远山：四层水墨皴染峰峦 + 层间云雾 + 孤峰古塔
-  const gy = groundY(), mt = (T && T.mtn) || SCN_DEF.mtn, bm = (T && T.bam) || SCN_DEF.bam, mc = T ? T.mist : SCN_DEF.mist;
+  const gy = groundY(), mt = (T && T.mtn) || SCN_DEF.mtn, bm = (T && T.bam) || SCN_DEF.bam;
   mountains(0.04, gy - H * 0.28, H * 0.18, 'rgba(26, 34, 54, 0.55)', 0.6, sc);
   mountains(0.08, gy - H * 0.2, H * 0.16, mt[0], 1.3, sc);
   // 远峰孤塔剪影
@@ -76,18 +95,16 @@ function drawBackground(sc) {
   const pagU = (pagX + (cam.x - STAGE_W / 2) * 0.08 * sc) / H;
   const pagY = (gy - H * 0.2) - (H * 0.16) * (0.55 * Math.sin(pagU * 2.3 + 1.3) + 0.3 * Math.sin(pagU * 5.1 + 2.6) + 0.15 * Math.sin(pagU * 11 + 3.9));
   drawDistantPagoda(pagX, pagY + 4 * sc, sc * 0.95);
-  // 中层云岚流雾
-  const midMist = ctx.createLinearGradient(0, gy - H * 0.32, 0, gy - H * 0.08);
-  midMist.addColorStop(0, `rgba(${mc},0)`);
-  midMist.addColorStop(0.5, `rgba(${mc},0.11)`);
-  midMist.addColorStop(1, `rgba(${mc},0.02)`);
-  ctx.fillStyle = midMist; ctx.fillRect(0, gy - H * 0.32, W, H * 0.24);
+  // 中层云岚流雾（渐变按 y=0 缓存，画之前整体移到地平线）
+  ctx.save(); ctx.translate(0, gy);
+  ctx.fillStyle = bg.mid; ctx.fillRect(0, -H * 0.32, W, H * 0.24);
+  ctx.restore();
   mountains(0.18, gy - H * 0.1, H * 0.12, mt[1], 4.7, sc);
   mountains(0.28, gy - H * 0.04, H * 0.07, 'rgba(10, 13, 24, 0.86)', 8.2, sc);
   drawInkClouds(gy, sc);
-  const mist = ctx.createLinearGradient(0, gy - H * 0.25, 0, gy);
-  mist.addColorStop(0, `rgba(${mc},0)`); mist.addColorStop(1, `rgba(${mc},${T && T.legend ? 0.28 : 0.19})`);
-  ctx.fillStyle = mist; ctx.fillRect(0, gy - H * 0.25, W, H * 0.25);
+  ctx.save(); ctx.translate(0, gy);
+  ctx.fillStyle = bg.low; ctx.fillRect(0, -H * 0.25, W, H * 0.25);
+  ctx.restore();
   // 竹林
   bamboo(0.5, sc, gy, bm[0], 150, 0.75);
   bamboo(0.75, sc, gy, bm[1], 210, 0.9);

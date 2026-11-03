@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { gameSource } from './ai-code.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const argSeed = process.argv.indexOf('--seed');
 const SEED0 = argSeed > 0 ? +process.argv[argSeed + 1] : 1;
 const NETJS = readFileSync(ROOT + 'src/net-p2p.js', 'utf8');
