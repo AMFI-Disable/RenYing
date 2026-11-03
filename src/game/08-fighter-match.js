@@ -286,7 +286,12 @@ function mapEdge(f, cl) {
   let pushThresh = cl.push;
   const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > pushThresh);
   f.x = side < 0 ? WALL : STAGE_W - WALL;
-  if (!flung || f.hp <= 0) { if (Math.sign(f.vx) === side) f.vx = 0; return; }
+  if (!flung || f.hp <= 0) {
+    // 凌雀「移形换影」撞到崖边和撞墙一样借力弹回场内；只把速度清零的话它会贴在崖边一直冲、出不了招
+    if (f.state === 'skill' && f.skill === 'shadowdash' && f.hp > 0) { f.vx = -side * Math.max(360, Math.abs(f.vx) * 0.85); if (f.y >= 0 && f.vy > 0) f.vy = -160; }
+    else if (Math.sign(f.vx) === side) f.vx = 0;
+    return;
+  }
   const dmgMul = (fav && f.ch.id === 'yanling') ? 0.5 : 1;
   const dmg = Math.round(f.maxHp * cl.dmg * dmgMul);
   f.hp = Math.max(1, f.hp - dmg);
