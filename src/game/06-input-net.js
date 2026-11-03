@@ -46,8 +46,12 @@ applyCustomKeys();
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 
 // Session-only hidden player automation. Decisions are sent as ordinary local inputs.
-let secretSettingsClicks = 0, secretEnabled = false, secretBrain = null;
+// 要在几秒内连点 12 下才算：以前是整个网页开着期间累计点 12 下，正常进出设置页十几次就会被打开，键盘鼠标突然不听使唤
+let secretSettingsClicks = 0, secretLastClick = 0, secretEnabled = false, secretBrain = null;
 function secretSettingsClick() {
+  const now = Date.now();
+  if (now - secretLastClick > 600) secretSettingsClicks = 0;
+  secretLastClick = now;
   if (!secretEnabled && ++secretSettingsClicks >= 12) {
     secretEnabled = true; human[0].clear(); NET.presses.length = 0;
   }
