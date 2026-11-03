@@ -239,7 +239,14 @@ function updateArena2v2(dt) {
 // ---------- 山河异境的地图（src/data/12-maps.js）----------
 // 这一局在哪张图记在 M.map，跟着 M 进回滚存档和录像（st0），两边、回放里都一样。普通对战、排位没有 M.map，就是原来的平地
 const mayhemOn = () => M.mode === 'mayhem' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
-const mapsOn = () => M.mode === 'maps' || (M.mode === 'net' && !!M.map) || (M.mode === 'replay' && REPLAY.on && !!M.map);
+const mapsOn = () => {
+  if (M.mode === 'replay' && REPLAY.on) {
+    const m = REPLAY.m || {};
+    // Old recordings predate terrain in local team modes and must retain their original physics.
+    return !!M.map && (typeof m.mapActive === 'boolean' ? m.mapActive : m.mode === 'maps' || m.kind === 'net');
+  }
+  return M.mode === 'maps' || (!!M.map && (M.mode === 'net' || M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2'));
+};
 const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
 // 按票数选图：votes 是每位玩家投的地图 id（没投是 null），r 是 0~1 的随机数。没人投票时每张图一样
 function mapOdds(votes) {

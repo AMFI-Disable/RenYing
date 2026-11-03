@@ -9218,7 +9218,6 @@ const UI_COPY_EN = {
 "连段自愈": "Combo Heal",
 "连击停下后血量回满": "Health refills after each combo ends",
 "标准擂台": "Standard Arena",
-"标准擂台，没有特殊地形。": "Standard arena with no terrain effects.",
 "战场：": "Arena:",
 "即刻开战": "Fight Now",
 "帧优势": "Frame Advantage",
@@ -14431,7 +14430,13 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 const mayhemOn = () => M.mode === 'mayhem' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
-const mapsOn = () => M.mode === 'maps' || (M.mode === 'net' && !!M.map) || (M.mode === 'replay' && REPLAY.on && !!M.map);
+const mapsOn = () => {
+if (M.mode === 'replay' && REPLAY.on) {
+const m = REPLAY.m || {};
+return !!M.map && (typeof m.mapActive === 'boolean' ? m.mapActive : m.mode === 'maps' || m.kind === 'net');
+}
+return M.mode === 'maps' || (!!M.map && (M.mode === 'net' || M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2'));
+};
 const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
 function mapOdds(votes) {
 const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
@@ -17195,7 +17200,7 @@ return s;
 }
 function recBegin(kind) {
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
-meta: { v: VERSION, kind, mode: M.mode, level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
+meta: { v: VERSION, kind, mode: M.mode, mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
 if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
 if (kind === 'net') {
 Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
@@ -26927,6 +26932,7 @@ M.wins = [0, 0];
 M.round = 1;
 M.carry = null;
 M.stage = null;
+if (!M.map) M.map = rollMap();
 A.setChar(p1); C.setChar(p2);
 B.setChar(p3); D.setChar(p4);
 A.ctrl = human[0]; // 1P

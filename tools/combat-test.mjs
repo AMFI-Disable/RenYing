@@ -1326,17 +1326,39 @@ const testSuite = [
     })()`
   },
   {
+    name: 'Team terrain is active and replay preserves both new and legacy terrain rules',
+    fn: `(() => {
+      for (const mode of ['2v2', 'watch2v2', 'tag3']) for (const id of MAP_POOL) {
+        M.mode = mode; M.map = id;
+        if (mapNow() !== MAPS[id]) return { pass: false, error: mode + ' did not activate ' + id };
+      }
+      M.mode = 'replay'; M.map = 'ice'; REPLAY.on = true;
+      REPLAY.m = { mode: '2v2', kind: 'loc', mapActive: true };
+      if (mapNow() !== MAPS.ice) return { pass: false, error: 'new team replay lost its terrain' };
+      REPLAY.m.mapActive = false;
+      if (mapNow()) return { pass: false, error: 'flat recording gained terrain' };
+      delete REPLAY.m.mapActive;
+      if (mapNow()) return { pass: false, error: 'legacy team replay gained terrain' };
+      REPLAY.m.mode = 'maps';
+      if (mapNow() !== MAPS.ice) return { pass: false, error: 'legacy terrain replay lost its map' };
+      REPLAY.on = false; toMenu(); return { pass: true, error: null };
+    })()`
+  },
+  {
     name: '2v2 has three local variants (you + AI ally, two players vs two AIs, two vs two): each starts, ends and replays frame-for-frame',
     fn: `(() => {
       const snap = () => JSON.stringify([A, B, C, D].map(f => [f.chIdx, f.state, Math.round(f.x), Math.round(f.y), Math.round(f.hp * 10)]));
       const out = [];
       for (const sub of ['p_cc', 'pp_cc', 'pp_pp']) {
         toMenu();
+        const terrain = { p_cc: 'ice', pp_cc: 'bamboo', pp_pp: 'thunder' }[sub];
+        M.map = terrain;
         bpStart('2v2', { subMode: sub, level: 'hard' });
         if (BP.steps.length !== 6) return { pass: false, error: sub + ': 2v2 BP should have 6 steps, got ' + BP.steps.length };
         for (const i of [0, 1, 2, 3, 4, 5]) bpApply(i);
         currentScreen = 'bp'; bpFinish();
         if (M.mode !== '2v2' || M.subMode !== sub) return { pass: false, error: sub + ': started ' + M.mode + '/' + M.subMode };
+        if (M.map !== terrain || !mapNow() || !M.mapEnv || !REC.meta.mapActive) return { pass: false, error: sub + ': selected terrain not active or recorded' };
         const ai = f => f.ctrl instanceof AICtrl;
         const want = { p_cc: [false, true, true, true], pp_cc: [false, true, false, true], pp_pp: [false, false, false, false] }[sub];
         const got = [A, B, C, D].map(ai);
@@ -1353,14 +1375,14 @@ const testSuite = [
           const pl = [A, B, C, D].map(f => !cpuTeamwork(f));
           REPLAY.on = false;
           if (JSON.stringify(pl) !== JSON.stringify(rm.pl)) return { pass: false, error: sub + ': in the replay players (A B C D) = ' + pl + ', recorded ' + rm.pl };
-          toMenu(); bpStart('2v2', { subMode: sub, level: 'hard' }); for (const i of [0, 1, 2, 3, 4, 5]) bpApply(i); currentScreen = 'bp'; bpFinish();
+          toMenu(); M.map = terrain; bpStart('2v2', { subMode: sub, level: 'hard' }); for (const i of [0, 1, 2, 3, 4, 5]) bpApply(i); currentScreen = 'bp'; bpFinish();
         }
         // 让电脑代替玩家出手，打一段，记下每一帧的局面
         for (const f of [A, B, C, D]) if (!ai(f)) f.ctrl = new AICtrl('hard');
         // 代打的电脑会配合队友选目标；回放要照这个来，不然就是在测“玩家规则”和“电脑规则”不一样
         REC.meta.pl = [A, B, C, D].map(f => !cpuTeamwork(f));
         const frames = [];
-        for (let i = 0; i < 1500; i++) { step(); if (i % 50 === 49) frames.push(snap()); }
+        for (let i = 0; i < 1800; i++) { step(); if (i % 50 === 49) frames.push(snap()); }
         const m = { ...REC.meta, ev: REC.ev.slice(), skins: ['', '', '', ''], names: ['a', 'b'] };
         // 打到分出胜负，看能不能结算
         B.hp = D.hp = 0; M.koWinner = 0; M.wins = [1, 0];
@@ -1370,7 +1392,7 @@ const testSuite = [
         startReplay(m);
         if (!is2v2() || C.hidden || D.hidden) return { pass: false, error: sub + ': replay is not shown as 2v2' };
         const again = [];
-        for (let i = 0; i < 1500; i++) { replayFrame(); if (i % 50 === 49) again.push(snap()); }
+        for (let i = 0; i < 1800; i++) { replayFrame(); if (i % 50 === 49) again.push(snap()); }
         const bad = frames.findIndex((x, i) => x !== again[i]);
         if (bad >= 0) return { pass: false, error: sub + ': replay drifts at frame ' + (bad + 1) * 50 + ': ' + frames[bad] + ' vs ' + again[bad] };
         out.push(sub);
