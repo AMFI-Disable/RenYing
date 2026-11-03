@@ -304,6 +304,13 @@ const scEligible = f => !!(f && (f.idx <= 3 || (typeof isRaid === 'function' && 
 function scIds(f) {
   if (!f) return [];
   if (typeof isRaid === 'function' && isRaid()) return f.idx === 1 ? (M.foeScrolls || []) : (M.towerPerks || []);
+  // Competitive scrolls belong to a hero on a side, not to the active fighter
+  // slot: tag relays reuse A and B for every hero on their respective teams.
+  if (M.hasBuffs && M.competitiveScrolls && f.ch) {
+    const side = f.idx === 0 || f.idx === 2 ? 0 : 1;
+    const scroll = M.competitiveScrolls[side] && M.competitiveScrolls[side][f.ch.id];
+    return scroll && SC_BY[scroll] ? [scroll] : [];
+  }
   if (M.hasBuffs && M.heroBuffs) {
     if (M.mode === 'tag3' && M.teams) {
       const side = f.idx === 0 ? 0 : 1;
@@ -429,6 +436,18 @@ function scLegendUnlocked() { const n = typeof gbossKills === 'function' ? gboss
 function scPool(heroId) {
   const legend = new Set(scLegendUnlocked());
   return SCROLLS.filter(s => (!s.h || s.h === heroId) && (s.r !== 'l' || legend.has(s.id)));
+}
+// The competitive pool must not depend on an individual player's unlocks:
+// both peers need to be able to validate the same candidates.
+function scCompetitiveCandidates(heroId, seed, count = 3) {
+  const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l');
+  let state = (seed >>> 0) || 1;
+  const result = [];
+  while (bag.length && result.length < count) {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    result.push(bag.splice(state % bag.length, 1)[0]);
+  }
+  return result;
 }
 function scDraw(heroId, owned, n = 3) {
   const pool = scPool(heroId).filter(s => !owned.includes(s.id));
