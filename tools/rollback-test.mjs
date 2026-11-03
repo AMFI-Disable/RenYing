@@ -9,7 +9,8 @@ import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 import { gameSource } from './ai-code.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const args = process.argv.slice(2);
 const runAll = !args.length || args.includes('--all');
 

@@ -525,15 +525,26 @@ function mmIncoming(sess, peer, conn) {
   if (!live() || !MM.on || MM.busy || P2P.conn) return refuse();
   MM.busy = true;
   P2P.conn = conn;
-  const drop = () => { if (P2P.conn === conn) P2P.conn = null; MM.busy = false; try { conn.close(); } catch (e) {} };
-  const t = setTimeout(() => { if (live() && P2P.conn === conn && !NET.open) drop(); }, 20000);   // 和敲门那边一样，网络慢时也等得到
+  // 收尾一定要把 MM.busy 放开：敲门那边要是先挂了（p2pWire 的 gone() 会先把 P2P.conn 清掉），
+  // 只看 P2P.conn 的话 drop 永远不跑，这个 busy 就一直卡着，之后谁都匹配不上
+  let timer = 0;
+  const drop = () => {
+    if (drop.done) return;
+    drop.done = true;
+    if (P2P.conn === conn) P2P.conn = null;
+    MM.busy = false;
+    clearTimeout(timer);
+    try { conn.close(); } catch (e) {}
+  };
+  conn.on('close', () => { if (!NET.open) drop(); });   // 敲门的人先断了：马上放开下一轮
+  timer = setTimeout(() => { if (live() && !NET.open) drop(); }, 20000);   // 和敲门那边一样，网络慢时也等得到
   p2pWire(conn, sess, 'host', () => {}, m => {
     if (m.sys === 'hello') {
       const mine = mmInfo(), theirs = m.mm || {};
       const fit = m.v === VERSION && theirs.kind === MM.kind &&
         (MM.kind !== 'ranked' || (mine && Math.abs((theirs.band | 0) - mine.band) <= 2 && !(mine.uid && theirs.uid && mine.uid === theirs.uid) && !mmAvoided(theirs.uid)));
-      if (!fit) { try { conn.send({ sys: 'full' }); } catch (e) {} clearTimeout(t); setTimeout(drop, 300); return; }
-      clearTimeout(t);
+      if (!fit) { try { conn.send({ sys: 'full' }); } catch (e) {} clearTimeout(timer); setTimeout(drop, 300); return; }
+      clearTimeout(timer);
       NET.role = 'host';
       NET.oppRk = theirs.rk || null; NET.oppUid = theirs.uid || '';
       const ready = { sys: 'ready', names: { host: (ACC && ACC.name) || '房主', client: p2pName(m.name, '对手') }, tiers: {}, mm: { kind: MM.kind, rk: mine ? mine.rk : null, uid: mine ? mine.uid : '' } };

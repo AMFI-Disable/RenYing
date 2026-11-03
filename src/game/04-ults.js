@@ -46,12 +46,14 @@ const ULTS = {
             if (foeDown) {
               applyHit(f, foe, { dmg: 185, kb: [0, 0], stun: 0, hs: 0.25, unblockable: true, ult: true, noScale: true, noStun: true, dir, big: true }, [foe.x, foe.y - 20]);   // 只掉血，人还躺着
             } else {
-              const isLeiMingUlt = foe.ch && foe.ch.id === 'leiming' && foe.state === 'special';
+              // 打断绝技：判断要在下面把对手改成 hitstun 之前取，不然 foe.state === 'special' 永远不成立
+              const wasSpecial = foe.state === 'special';
+              const isLeiMingUlt = wasSpecial && foe.ch && foe.ch.id === 'leiming';
               applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 1.3, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
               foe.state = 'hitstun'; foe.stun = 1.3; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
-              if (!isLeiMingUlt && foe.state === 'special') {
-                foe.sp = null; // 打断地面常规绝技蓄势
-              }
+              // 被打断的绝技要收干净：无敌只有 endSpecial 会清，而它已经不会再跑了。
+              // 不清的话被打断的人会带着 99 秒无敌打完这一回合（山崩能打穿绝技就是这个口子）
+              if (wasSpecial) { if (!isLeiMingUlt) foe.sp = null; if (foe.invul > 1) foe.invul = 0; }   // 只收掉绝技带的长无敌，短无敌（起身、受身）别动
             }
             const free = full && !f.avaChain;   // 山崩打满：气量回满，能马上再放一次；连放的那一次、砸偏或砸倒地的人只回 50%
             f.meter = free ? 100 : Math.min(100, f.meter + 50); f.avaFree = free;
@@ -202,7 +204,7 @@ const ULTS = {
       if (f.spN < 6 && f.t >= T[f.spN]) {
         const sd = f.spN % 2 ? 1 : -1; f.spN++;
         f.spPose = f.spN % 2 ? 'yx_play' : 'yx_push'; SFX.note(f.spN % 4);
-        spawnProj(f, { kind: 'note', x: foe.x + sd * 520, y: foe.y - 50 - (f.spN % 3) * 18, vx: -sd * 1100, w: 50, h: 50, life: 0.9, dmg: 14, kb: [60, 0], stun: 0.3, hs: 0.03, ult: true, noScale: true, pierce: true, maxHits: 1, notes: 0 });
+        spawnProj(f, { kind: 'note', x: clamp(foe.x + sd * 520, -280, STAGE_W + 280), y: foe.y - 50 - (f.spN % 3) * 18, vx: -sd * 1100, w: 50, h: 50, life: 0.9, dmg: 14, kb: [60, 0], stun: 0.3, hs: 0.03, ult: true, noScale: true, pierce: true, maxHits: 1, notes: 0 });   // 出生点要在出界回收线（±300）以内，贴着墙放的这一局才有六道音刃
       }
       if (f.spN === 6 && f.t >= 1.0) {
         f.spN = 7; f.spPose = 'yx_push';
@@ -257,7 +259,7 @@ const ULTS = {
         slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
         ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
         if (foe.hp > 0 && foe.invul <= 0) {
-          applyHit(f, foe, { dmg: 12, exact: true, kb: [sd * 60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
+          applyHit(f, foe, { dmg: 12, exact: true, kb: [60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
           addNeedleMark(foe, 1);
         }
       }
@@ -267,7 +269,7 @@ const ULTS = {
         shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
         ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
         if (foe.hp > 0 && foe.invul <= 0) {
-          applyHit(f, foe, { dmg: 56, kb: [f.face * 300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);
+          applyHit(f, foe, { dmg: 56, kb: [300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);   // kb 只写大小，方向由 dir 带
           addNeedleMark(foe, 1);
           f.skill2CD = 0;
           addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
@@ -385,7 +387,7 @@ const ULTS = {
       } else {
         const nx = dx / dist, ny = dy / dist;
         ball.vx = nx * pullSpd; ball.vy = ny * pullSpd;
-        ball.dmg = 120; ball.kb = [f.face * 350, -680]; ball.stun = 0.7; ball.hs = 0.14; ball.launch = true; ball.big = true;
+        ball.dmg = 120; ball.kb = [350, -680]; ball.stun = 0.7; ball.hs = 0.14; ball.launch = true; ball.big = true;   // kb 只写大小，方向用主人的朝向（applyHit 的 fx）
         if (!RESIM && Math.random() < 0.6) {
           addP({ type: 'spark', x: ball.x, y: ball.y, vx: -nx * rand(100, 300), vy: -ny * rand(100, 300), rgb: '255,230,130', life: 0.15, max: 0.15 });
         }

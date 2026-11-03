@@ -6,7 +6,8 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { makeEnv } from './ai-arena.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const JSON_OUT = ROOT + 'docs/frame-data.json', MD_OUT = ROOT + 'docs/frame-data.md';
 const check = process.argv.includes('--check');
 const MOVE_KEYS = ['l1', 'l2', 'l3', 'l4', 'l5', 'hv', 'cs1', 'cs2', 'a1', 'a2', 'dl'];

@@ -7,7 +7,8 @@ import vm from 'node:vm';
 import { dataFiles } from './ai-code.mjs';
 import { makeEnv } from './ai-arena.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const errors = [];
 const err = (where, msg) => errors.push(`${where}：${msg}`);
 

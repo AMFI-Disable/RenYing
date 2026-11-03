@@ -6,7 +6,8 @@
 import { readFileSync } from 'node:fs';
 import { makeEnv, HEROES } from './ai-arena.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 let fails = 0;
 const check = (ok, name, info = '') => { console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}${info ? ' — ' + info : ''}`); if (!ok) fails++; };
 

@@ -17,7 +17,8 @@ import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs
 import os from 'node:os';
 import { Pool, HEROES, NAMES, score } from './ai-arena.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const BRAIN = ROOT + 'models/ai-brain.json';
 const LOG = ROOT + 'models/ai-train-log.txt';
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };

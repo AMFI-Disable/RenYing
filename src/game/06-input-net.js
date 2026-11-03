@@ -301,9 +301,24 @@ function applySnapshot(sn, exact) {
 }
 function onNetMsg(msg) {
   if (msg.mstart || msg.report) return;
-  if (msg.ru !== undefined) { rollRecv(msg); return; }
-  if (msg.rstart) { rollStart(msg.rstart.ch, msg.rstart.seed, msg.rstart.duo, msg.rstart.mv, msg.rstart.map, msg.rstart.mut); return; }
-  if (msg.rsync) { rollAdopt(msg.rsync); return; }
+  if (msg.ru !== undefined) {
+    // 对方最多领先我们几十帧：离谱的帧号（改过的客户端）不认，不然会卡死，还会把之后的按键全丢掉
+    if (typeof msg.ru !== 'number' || !isFinite(msg.ru) || msg.ru < 0 || msg.ru > ROLL.F + ROLL.MAXP * 4) return;
+    rollRecv(msg); return;
+  }
+  if (msg.rstart) {
+    // 开局只由房主发起：加入方收到才照办，形状不对的直接扔掉（以前 {} 就能把对面打崩）
+    const r = msg.rstart;
+    if (NET.role === 'host' || !r || !Array.isArray(r.ch) || r.ch.length < 2 || typeof r.seed !== 'number' || !isFinite(r.seed)) return;
+    rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut); return;
+  }
+  if (msg.rsync) {
+    // 纠正状态只有房主会发：加入方收到才接受，而且状态要是 capState() 那个样子
+    const p = msg.rsync, st = p && p.st;
+    if (NET.role !== 'client' || !p || typeof p.f !== 'number' || !isFinite(p.f) || p.f < 0 || p.f > ROLL.F + ROLL.N) return;
+    if (!st || typeof st.clock !== 'number' || !Array.isArray(st.f) || !Array.isArray(st.c) || !Array.isArray(st.projs) || !st.M) return;
+    rollAdopt(p); return;
+  }
   if (msg.rdesync) { if (NET.role === 'host' && rollMine(msg)) rollSendSync(); return; }
   if (msg.pg !== undefined) { send({ po: msg.pg }); return; }
   if (msg.po !== undefined) { const r = performance.now() - msg.po; NET.rtt = NET.rtt ? NET.rtt * 0.7 + r * 0.3 : r; return; }

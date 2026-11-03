@@ -4,11 +4,11 @@
 // 全服肉鸽：投票选秘卷全线同步、中途进来的人拿到同一套秘卷、真人不够 3 位打天道车轮战、够了开天道 Boss、Boss 伤害封顶、谁能拿星座皮肤、进度存档
 // 查：每线 40 人封顶、满了回 full；打招呼拿到编号和名单；视野外的人不发；伤害按距离和每秒上限封顶；
 //     斩够数出妖王、打死后全线播报；服务器重启过会请网页重新打招呼；没人了停表
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const mod = await import(path.join(root, 'cloudflare', 'worker.bundle.js'));
+const mod = await import(pathToFileURL(path.join(root, 'cloudflare', 'worker.bundle.js')).href);
 const { WorldLine } = mod;
 const { WorldSim, WL, RG, rgStory } = globalThis.RenyingWorldSim;
 const CQ = Object.fromEntries(['kill', 'z0', 'z1', 'z2', 'z3', 'king', 'jie', 'key'].map((k, i) => [k, i]));   // 长卷出力的八个数的顺序（cloudflare/worker.js 的 CQ_KEYS）
