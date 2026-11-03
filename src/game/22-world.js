@@ -416,8 +416,8 @@ function drawWorldHUD() {
   ctx.fillStyle = 'rgba(8,8,20,0.72)'; ctx.fillRect(mx, my, mw, 14);
   for (const zz of WORLD_ZONES) { ctx.fillStyle = `rgba(${zz.tint},0.45)`; ctx.fillRect(mx + mw * zz.a / WORLD_W, my + 4, mw * (zz.b - zz.a) / WORLD_W - 1, 6); }
   ctx.fillStyle = '#46d3ea';
-  if (W_.rosterPos && W_.rosterPos.size) {
-    for (const [pid, pos] of W_.rosterPos) if (pid !== W_.id) ctx.fillRect(mx + mw * pos.x / WORLD_W - 1, my + 2, 2, 10);
+  if (WORLD.rosterPos && WORLD.rosterPos.size) {
+    for (const [pid, pos] of WORLD.rosterPos) if (pid !== WORLD.id) ctx.fillRect(mx + mw * pos.x / WORLD_W - 1, my + 2, 2, 10);
   } else {
     for (const g of WORLD.ghosts.values()) ctx.fillRect(mx + mw * g.x / WORLD_W - 1, my + 2, 2, 10);
   }
