@@ -591,7 +591,7 @@ function bpMapBanner() {
   box.classList.toggle('hidden', !mp); if (box.parentElement) box.parentElement.classList.toggle('has-map', !!mp);
   if (!mp || box.dataset.map === mp.n) return;
   box.dataset.map = mp.n;
-  const fav = Object.keys(mp.fav || {}).filter(id => CHAR_IDX[id] !== undefined).map(id => `<span>${CHARS[CHAR_IDX[id]].name}</span>`).join(' · ');
+  const fav = Object.keys(mp.fav || {}).filter(id => CHAR_IDX[id] !== undefined).map(id => `<span>${escapeHTML(cvT(CHARS[CHAR_IDX[id]].name))}</span>`).join(' · ');
   box.innerHTML = `<span class="bpm-n">${mp.n}</span><span class="bpm-d">${mp.d}</span>`
     + (fav ? `<span class="bpm-f"><span>地利侠客</span> ${fav}</span>` : '');
 }

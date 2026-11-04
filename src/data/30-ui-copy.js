@@ -521,6 +521,7 @@ const UI_COPY_EN = {
   "金牛·星焰": "Taurus · Starflame",
   "金牛·星辉": "Taurus · Starglow",
   "钧天": "Heaven Sound",
+  "千机": "Qian Ji",
   "铁壁冲": "Iron Wall Charge",
   "铁山": "Tie Shan",
   "链锤游侠": "Chain Hammer Wanderer",
