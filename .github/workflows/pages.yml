@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "index.html"
+      - "renying.html"
+      - "assets/**"
   workflow_dispatch:
 
 permissions:

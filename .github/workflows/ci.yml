@@ -9,11 +9,39 @@ on:
 permissions:
   contents: read
 
-jobs:
-  quality:
-    name: Codebase & Syntax Validation
-    runs-on: ubuntu-latest
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  changes:
+    name: Select Relevant Checks
+    runs-on: ubuntu-latest
+    outputs:
+      all: ${{ steps.classify.outputs.all }}
+      game: ${{ steps.classify.outputs.game }}
+      ai: ${{ steps.classify.outputs.ai }}
+      cloud: ${{ steps.classify.outputs.cloud }}
+      economy: ${{ steps.classify.outputs.economy }}
+      worker: ${{ steps.classify.outputs.worker }}
+      browser: ${{ steps.classify.outputs.browser }}
+      offline: ${{ steps.classify.outputs.offline }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Classify Changed Files
+        id: classify
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: python3 tools/ci/change-groups.py "$BASE_SHA" "$HEAD_SHA" "$GITHUB_OUTPUT"
+
+  repo-quality:
+    name: Repository Checks
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -29,111 +57,22 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
+          package-manager-cache: false
 
-      - name: Validate Build Script Syntax
+      - name: Validate Build Script, YAML, Filenames, And Entrypoints
         run: |
-          python3 -m py_compile tools/build.py
-          echo "tools/build.py syntax valid."
-
-      - name: Validate YAML Files
-        run: |
-          ruby -ryaml -e '
-            Dir.glob(".github/**/*.{yml,yaml}").each do |f|
-              YAML.safe_load(File.read(f))
-              puts "Validated: #{f}"
-            end
-          '
-
-      - name: Verify Lowercase Filenames
-        run: |
-          # CNAME is required in capitals by GitHub Pages. Everything else is lowercase.
+          python3 -m py_compile tools/build.py tools/ci/change-groups.py
+          ruby -ryaml -e 'Dir.glob(".github/**/*.{yml,yaml}").each { |f| YAML.safe_load(File.read(f)); puts "Validated: #{f}" }'
           if git ls-files | grep -vE '^CNAME$' | grep '[A-Z]'; then
             echo "Error: uppercase tracked files found"
             exit 1
           fi
-          echo "All tracked files are lowercase."
-
-      - name: Verify Core Game Entrypoints
-        run: |
           test -f index.html
           test -f renying.html
           test -f renying-offline.html
-          echo "All HTML entrypoints verified."
 
       - name: Verify Generated Pages Are Up To Date
         run: python3 tools/build.py --check
-
-      - name: Armory Economy & Anti-Cheat Server Tests
-        run: |
-          node tools/tests/econ-test.mjs
-          node tools/tests/econ-test.mjs --bundle
-
-      # Runs src/cloud.js in Node with a fake Worker: per-account save isolation, a pending
-      # save that must not follow an account switch, no retry storm on a 4xx refusal,
-      # non-Latin-1 passwords for local accounts, and full-profile export signatures.
-      - name: Cloud Save Client Tests
-        run: node tools/tests/cloud-test.mjs
-
-      # Real Worker (node:sqlite as D1) plus several simulated devices: progress added on two devices
-      # is summed in the cloud, retries, reloads, re-login and reconnects never count twice, an old save
-      # migrates without loss, and nothing crosses between accounts.
-      - name: Cloud Sync Merge Tests
-        run: |
-          node tools/tests/sync-test.mjs
-          node tools/tests/sync-test.mjs --bundle
-
-      # Runs the open world line (WorldLine Durable Object) in Node with fake sockets: 40-player cap,
-      # view-range filtering, damage caps, world boss, restart re-hello and idle timer shutdown.
-      - name: Open World Server Tests
-        run: node tools/tests/world-test.mjs
-
-      - name: Run Combat & AI Regression Suite
-        run: node tools/tests/combat-test.mjs --sim
-
-      - name: Lingque AI Combo Checks
-        run: node tools/tests/ai-lingque-test.mjs
-
-      # Anti-cheat damage check: a single oversized hit is only logged and reported, never a strike (a full
-      # roguelike scroll stack leaves no record at all); edited move tables and a swapped damage function still strike.
-      - name: Anti-Cheat Damage Checks
-        run: node tools/tests/anticheat-test.mjs
-
-      - name: Start Static Web Server for Browser Audits
-        run: |
-          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
-          for _ in $(seq 1 20); do
-            curl -sf http://127.0.0.1:8791/ >/dev/null && break
-            sleep 0.5
-          done
-          curl -sf http://127.0.0.1:8791/ >/dev/null || { echo "http server failed to start"; cat /tmp/renying-http.log; exit 1; }
-          echo "Static web server is up on :8791"
-
-      - name: Draft And Offline Font Fallback Checks
-        run: node tools/audits/bp-flow-test.mjs
-
-      - name: UI Panel Layout Audit (all panels, 1440x900)
-        run: |
-          set +e
-          node tools/audits/ui-audit.mjs ci-ui 1440 900 2>&1 | tee /tmp/ui-audit.log
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ]; then
-            # Surface the audit's own verdict as check annotations: this audit is timing sensitive, so the
-            # next failure should say which panel and which measurement, not just "exit code 1".
-            grep -E 'FAIL|ERROR|overflow|^     ' /tmp/ui-audit.log | head -25 | while IFS= read -r line; do
-              printf '::error::%s\n' "$line"
-            done
-          fi
-          exit "$status"
-
-      - name: Canvas HUD Text Audit
-        run: node tools/audits/hud-audit.mjs ci-hud 1440 900
-
-      - name: Mobile / Touch Layout Audit
-        run: node tools/audits/touch-audit.mjs ci-touch
-
-      # A fresh player with no mouse: language prompt, home, single mode, draft, a real match, results, home.
-      - name: Keyboard-Only Flow Test (1440x900)
-        run: node tools/audits/kb-flow-test.mjs ci-kb 1440 900
 
       - name: Verify Commit Message Conventions
         env:
@@ -143,23 +82,261 @@ jobs:
           import subprocess, re, os
           pattern = re.compile(r"^[a-z]+: [a-z0-9]+ [a-z0-9]+ [a-z0-9]+$")
           base_sha = os.environ.get("BASE_SHA", "")
-
           if base_sha and not re.match(r"^0+$", base_sha):
               rev_range = f"{base_sha}..HEAD"
           else:
               rev_range = "HEAD~1..HEAD"
-
           try:
               commits = subprocess.check_output(["git", "log", rev_range, "--format=%H %s"]).decode().strip().split("\n")
           except Exception:
               commits = subprocess.check_output(["git", "log", "-1", "--format=%H %s"]).decode().strip().split("\n")
-
-          commits = [c for c in commits if c.strip()]
-          for c in commits:
-              sha, msg = c.split(" ", 1)
-              if msg.startswith("Merge "):
-                  continue
-              if not pattern.match(msg):
-                  raise SystemExit(f"Invalid commit message {sha[:7]}: {msg}")
-          print(f"Validated {len(commits)} commit messages.")
+          for commit in (c for c in commits if c.strip()):
+              sha, message = commit.split(" ", 1)
+              if not message.startswith("Merge ") and not pattern.match(message):
+                  raise SystemExit(f"Invalid commit message {sha[:7]}: {message}")
+          print("Commit message conventions passed.")
           '
+
+  game:
+    name: Game And Rollback Checks
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.game == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Validate Data And Combat
+        run: |
+          node tools/checks/data-check.mjs --strict-copy
+          node tools/tests/combat-test.mjs --sim
+      - name: Verify Rollback And Netplay
+        run: |
+          node tools/tests/rollback-test.mjs --rollback
+          node tools/tests/netplay-test.mjs
+      - name: Verify Anti-Cheat Boundaries
+        run: node tools/tests/anticheat-test.mjs
+      - name: Check Hero AI Patterns
+        run: node tools/tests/ai-lingque-test.mjs
+
+  ai:
+    name: AI Simulation Checks
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.ai == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - run: node tools/tests/test-ai.mjs
+
+  cloud:
+    name: Cloud Save And World Checks
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.cloud == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Verify Cloud Save And Sync
+        run: |
+          node tools/tests/cloud-test.mjs
+          node tools/tests/sync-test.mjs
+          node tools/tests/sync-test.mjs --bundle
+      - name: Verify Open World Server
+        run: node tools/tests/world-test.mjs
+
+  economy:
+    name: Armory And Economy Checks
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.economy == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - run: |
+          node tools/tests/econ-test.mjs
+          node tools/tests/econ-test.mjs --bundle
+
+  worker:
+    name: Worker And Deployment Checks
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.worker == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Verify Schema And Deployment
+        run: |
+          node tools/tests/rollback-test.mjs --schema
+          node tools/tests/predeploy-check.mjs
+          node tools/tests/predeploy-check.mjs --source
+
+  browser-flow:
+    name: Browser Flow Checks
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Start Static Web Server
+        run: |
+          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
+          for _ in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8791/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
+      - name: Test Draft, Offline Font Fallback, And Keyboard Navigation
+        run: |
+          node tools/audits/bp-flow-test.mjs
+          node tools/audits/kb-flow-test.mjs ci-kb 1440 900
+
+  ui-layout:
+    name: UI Layout And HUD Audits
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Start Static Web Server
+        run: |
+          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
+          for _ in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8791/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
+      - name: Run Visual Layout And HUD Audits
+        run: |
+          node tools/audits/ui-audit.mjs ci-ui 1440 900
+          node tools/audits/hud-audit.mjs ci-hud 1440 900
+          node tools/audits/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2
+
+  mobile-ui:
+    name: Mobile Layout And Touch Audits
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Start Static Web Server
+        run: |
+          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
+          for _ in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8791/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
+      - name: Verify Touch And English Keyboard Flow
+        run: |
+          node tools/audits/touch-audit.mjs ci-touch
+          node tools/audits/kb-flow-test.mjs ci-kb-en 844 390 --en
+
+  visual-performance:
+    name: First Load And Performance Audits
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Start Static Web Server
+        run: |
+          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
+          for _ in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8791/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
+      - name: Verify First Load And Frame Budgets
+        run: |
+          node tools/audits/perf-audit.mjs ci-perf
+          node tools/audits/firstload-audit.mjs ci-firstload 3
+
+  offline-qfx:
+    name: Offline And QFX Bundle Checks
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.offline == 'true' || needs.changes.outputs.all == 'true')
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - run: |
+          node tools/tests/rollback-test.mjs --offline
+          node tools/tests/rollback-test.mjs --qfx
+
+  quality:
+    name: Codebase & Syntax Validation
+    if: always()
+    needs:
+      - changes
+      - repo-quality
+      - game
+      - ai
+      - cloud
+      - economy
+      - worker
+      - browser-flow
+      - ui-layout
+      - mobile-ui
+      - visual-performance
+      - offline-qfx
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require All Applicable Checks To Pass
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          results = {name: job["result"] for name, job in json.loads(os.environ["JOB_RESULTS"]).items()}
+          failed = {name: result for name, result in results.items() if result not in ("success", "skipped")}
+          if failed:
+              print("Required checks failed or were cancelled:", failed)
+              sys.exit(1)
+          print("All applicable checks passed.")
+          PY

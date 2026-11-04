@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   cloud-schema-health:
+    if: github.event_name != 'pull_request'
     name: D1 SQLite Schema & Worker Bundle Verification
     runs-on: ubuntu-latest
 
@@ -45,6 +46,7 @@ jobs:
           curl -sf --max-time 10 https://renying.evengao6688.workers.dev/api/health || echo "Health probe warning (non-fatal in offline/sandboxed CI)"
 
   predeploy:
+    if: github.event_name != 'pull_request'
     name: Pre-Deploy Checks (Build, Admin CSP, API Smoke, Wrangler Dry Run)
     runs-on: ubuntu-latest
 

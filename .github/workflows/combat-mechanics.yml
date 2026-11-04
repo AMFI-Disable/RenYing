@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   combat-suite:
+    if: github.event_name != 'pull_request'
     name: 12-Hero Combat & Mode Regression
     runs-on: ubuntu-latest
 

@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   build-gate:
+    if: github.event_name != 'pull_request'
     name: Bundle Sync & Syntax Validation
     runs-on: ubuntu-latest
 

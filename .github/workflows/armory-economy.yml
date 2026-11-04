@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   economy:
+    if: github.event_name != 'pull_request'
     name: Armory Market, Cases & Anti-Cheat Verification
     runs-on: ubuntu-latest
 

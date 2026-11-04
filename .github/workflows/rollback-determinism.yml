@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   rollback:
+    if: github.event_name != 'pull_request'
     name: Deterministic Rollback Resimulation Check
     runs-on: ubuntu-latest
 

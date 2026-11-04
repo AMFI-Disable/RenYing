@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   qfx-smoke:
+    if: github.event_name != 'pull_request'
     name: QingFengXing 3D Module & Bundle Verification
     runs-on: ubuntu-latest
 

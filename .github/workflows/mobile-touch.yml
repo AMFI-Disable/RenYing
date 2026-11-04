@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   touch-audit:
+    if: github.event_name != 'pull_request'
     name: Mobile Viewport & Virtual Joystick Audit
     runs-on: ubuntu-latest
 

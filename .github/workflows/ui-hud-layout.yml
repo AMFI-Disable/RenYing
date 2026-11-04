@@ -25,6 +25,7 @@ permissions:
 
 jobs:
   ui-hud:
+    if: github.event_name != 'pull_request'
     name: Headless Browser UI & Canvas HUD Audit
     runs-on: ubuntu-latest
 

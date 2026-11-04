@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   offline-bundle:
+    if: github.event_name != 'pull_request'
     name: Zero-Network Standalone Bundle Verification
     runs-on: ubuntu-latest
 

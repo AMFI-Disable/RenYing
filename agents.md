@@ -46,6 +46,8 @@ Put new code in the numbered file that owns the feature. Do not add new top-leve
 - Economy and server: `node tools/tests/econ-test.mjs --bundle`, `node tools/tests/sync-test.mjs --bundle`, `node tools/tests/cloud-test.mjs`, `node tools/tests/predeploy-check.mjs`.
 - Interface (needs Chromium and a local server on port 8791): `node tools/audits/kb-flow-test.mjs`, `node tools/audits/kb-flow-test.mjs --en`, `node tools/audits/ui-audit.mjs`, `node tools/audits/touch-audit.mjs`, `node tools/audits/hud-overlap-audit.mjs`.
 
+Pull requests use `.github/workflows/ci.yml`, which runs repository checks on every change and selects parallel test groups from changed paths. The complete suite runs on a schedule or by manual dispatch in `.github/workflows/full-regression.yml`. Specialized workflows retain their path-triggered checks on `main` and skip duplicate work on pull requests.
+
 Never skip, disable or weaken a test to make it pass.
 
 ## Commits
