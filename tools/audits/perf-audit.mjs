@@ -19,7 +19,7 @@ const CHROME = process.env.RENYING_CHROME || [
   '/usr/bin/chromium', '/usr/bin/chromium-browser',
 ].find(p => existsSync(p));
 if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/path/to/chrome'); process.exit(1); }
-const URL = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
+const GAME_URL = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
 const PORT = +(process.env.CDP_PORT || 9347);
 const OUT = process.argv[2] || join(tmpdir(), 'renying-perf-audit');
 const VW = 1440, VH = 900;
@@ -89,17 +89,17 @@ await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: `(() => {
 })();` }, S);
 
 // 先打开一次写好设置（跳过教程、关掉音乐），后面才开始计时
-await nav(URL);
+await nav(GAME_URL);
 await ev(`localStorage.setItem('renying-tut-seen','1'); localStorage.setItem('renying-tut-done','1');
   localStorage.setItem('renying-settings', JSON.stringify({bloom:1,fps:0,shake:1,quality:'auto',blur:true,vig:1,music:0,sfx:0,aim:true}));`);
 
-const result = { when: new Date().toISOString(), url: URL, scale: SCALE, load: {}, panels: {}, match: {} };
+const result = { when: new Date().toISOString(), url: GAME_URL, scale: SCALE, load: {}, panels: {}, match: {} };
 
 /* ---------- 1. 首页加载（不带缓存） ---------- */
 await cdp.send('Network.setCacheDisabled', { cacheDisabled: true }, S);
 const loads = [];
 for (let i = 0; i < LOADS; i++) {
-  await nav(URL);
+  await nav(GAME_URL);
   let t = null;
   for (let k = 0; k < 200 && !t; k++) { await sleep(100); t = await ev('window.__menuAt || null'); }
   const nav0 = await ev(`(() => { const n = performance.getEntriesByType('navigation')[0];
