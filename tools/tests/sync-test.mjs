@@ -95,7 +95,7 @@ function makeDevice(label, store = new Map()) {   // 传同一个 store：同一
     vm.runInContext(CLOUD_JS, vm.createContext(g), { filename: 'cloud.js' });
     dev.CS = g.CloudSave;
     dev.CS.setConfig({ endpoint: 'https://w.test' });
-    // 和游戏里 24-account.js 一样：别的设备加的，加到当前存档上
+    // 和游戏里 24-account-01-profile.js 一样：别的设备加的，加到当前存档上
     if (dev.CS.onProgress) dev.CS.onProgress(d => {
       dev.heard.push(d);
       if (!dev.PROF) return;

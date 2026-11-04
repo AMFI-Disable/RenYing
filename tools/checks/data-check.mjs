@@ -209,7 +209,7 @@ function checkHeroes(env) {
   const bySkin = Object.fromEntries(H.map(h => [h.skin, h.id]));
   for (const [k, s] of Object.entries(env.SKINS)) {
     const owner = bySkin[k.split('_')[0]];
-    if (owner && s.char !== owner) err('src/game/19-progress.js SKINS', `${k} 的前缀是 ${owner} 的，但 char 写的是 ${s.char}`);
+    if (owner && s.char !== owner) err('src/game/19-progress-01-skins.js SKINS', `${k} 的前缀是 ${owner} 的，但 char 写的是 ${s.char}`);
   }
 }
 

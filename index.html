@@ -23155,28 +23155,6 @@ window.removeEventListener('keydown', handleKeyRebind, true);
 $id('setHelp').addEventListener('click', () => navTo('help'));
 $id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') showScreen('pause'); else backToMenu(); });
 $id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
-let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
-demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)), () => cxActiveMove === 'full' ? null : cxActiveMove);
-function statRows(c) {
-const m = CHAR_MOVES[CHAR_IDX[c.id]];
-const st = c.stat, B = BAL[c.id] || BAL.qingfeng, hp = Math.round(st.hp * B.hp), dmg = +(st.dmg * B.normal).toFixed(2);
-const rows = [
-['生命上限', hp, 1000, `${hp}`],
-['体量压制', st.weight || 1, 2.0, `${st.weight || 1}×`],
-['防御减伤', st.defRating || 1, 1.25, `×${st.defRating || 1}`],
-['格挡架势', st.guardMax || 100, 160, `${st.guardMax || 100}`],
-['格挡稳定性', st.guardStab || 1, 2.0, `×${st.guardStab || 1}`],
-['格挡穿透伤', Math.round((st.guardChip || 0.12) * 100), 20, `${Math.round((st.guardChip || 0.12) * 100)}%`],
-['受击硬直', st.poise || 1, 1.25, `×${st.poise || 1}`],
-['移动速度', WALK * st.walk, WALK * 1.2, `${Math.round(WALK * st.walk)}`],
-['基础伤害', dmg, 1.25, `×${dmg}`],
-['攻击距离', m.l1.box[2], 130, `${Math.round(m.l1.box[2])}`],
-['跳跃高度', st.jump || 1, 1.2, `×${st.jump || 1}`],
-['卡肉感', c.hitFeel || 1, 1.6, `×${c.hitFeel || 1}`],
-];
-if (c.fly) rows.push(['飞行时间', c.fly, 3, `${c.fly} 秒`]);
-return rows;
-}
 const ICONS = {
 passive: '<circle cx="12" cy="12" r="9"/><path d="M12 3a4.5 4.5 0 0 1 0 9 4.5 4.5 0 0 0 0 9"/><circle cx="12" cy="7.5" r="1"/><circle cx="12" cy="16.5" r="1"/>',
 light: '<path d="M20 4L7 17l-3 3 1-4L18 3l2 1zM5.5 14.5l4 4M14 6l4 4"/>',
@@ -24337,6 +24315,28 @@ cixian: { passive: '一会儿正极一会儿负极，脾气说变就变。', lig
 lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子母飞梭刺得比针还快。', charge: '蓄力一梭子，隔着衣服都疼。', air: '凌波踏空，身法灵巧似惊雀。', skill: '飞梭脱手，丝线连着千里之外。', ranged: '印记一亮，瞬身穿刺直接清空CD！', ult: '万线归宗，漫天悬丝罗网避无可避。', esc: '悬丝一荡，人已在数丈之外。' }
 };
 let cxPrev = null;   // 正在预览的皮肤（null = 用自己装备的）
+let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
+demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)), () => cxActiveMove === 'full' ? null : cxActiveMove);
+function statRows(c) {
+const m = CHAR_MOVES[CHAR_IDX[c.id]];
+const st = c.stat, B = BAL[c.id] || BAL.qingfeng, hp = Math.round(st.hp * B.hp), dmg = +(st.dmg * B.normal).toFixed(2);
+const rows = [
+['生命上限', hp, 1000, `${hp}`],
+['体量压制', st.weight || 1, 2.0, `${st.weight || 1}×`],
+['防御减伤', st.defRating || 1, 1.25, `×${st.defRating || 1}`],
+['格挡架势', st.guardMax || 100, 160, `${st.guardMax || 100}`],
+['格挡稳定性', st.guardStab || 1, 2.0, `×${st.guardStab || 1}`],
+['格挡穿透伤', Math.round((st.guardChip || 0.12) * 100), 20, `${Math.round((st.guardChip || 0.12) * 100)}%`],
+['受击硬直', st.poise || 1, 1.25, `×${st.poise || 1}`],
+['移动速度', WALK * st.walk, WALK * 1.2, `${Math.round(WALK * st.walk)}`],
+['基础伤害', dmg, 1.25, `×${dmg}`],
+['攻击距离', m.l1.box[2], 130, `${Math.round(m.l1.box[2])}`],
+['跳跃高度', st.jump || 1, 1.2, `×${st.jump || 1}`],
+['卡肉感', c.hitFeel || 1, 1.6, `×${c.hitFeel || 1}`],
+];
+if (c.fly) rows.push(['飞行时间', c.fly, 3, `${c.fly} 秒`]);
+return rows;
+}
 function renderCodex() {
 const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult];
 const skin = cxPrev !== null ? cxPrev : mySkin(c.id);

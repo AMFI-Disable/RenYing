@@ -575,7 +575,7 @@ Object.assign(UI_COPY_EN, {
   "展翼空战": "Wing Air Combat",
   "鹰击钉地": "Falcon Pin",
   "🪶 凌霄破虚": "🪶 Sky Breaker",
-  // ---- 英雄页招式区（src/game/18-codex.js）：标签、被动简介、进阶技巧、趣味台词、宿命篇章、列传 ----
+  // ---- 英雄页招式区（src/game/18-codex-content.js）：标签、被动简介、进阶技巧、趣味台词、宿命篇章、列传 ----
   "左键 · 连击": "Left Click · Combo",
   "按住左键 · 蓄力": "Hold Left Click · Charge",
   "满蓄破防 · 打倒": "Full charge breaks guard · Knockdown",

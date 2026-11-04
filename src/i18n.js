@@ -100,7 +100,7 @@
     [/^第\s*(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `Step ${a} / ${b}`],
     [/^(\d+)\s*\/\s*(\d+)\s*步$/, (m0, a, b) => `${a} / ${b} steps`],
     [/^(\d+(?:\.\d+)?)\s*秒$/, (m0, n) => `${n}s`],
-    // 好友房换规则的提示（src/game/24-account.js、06-input-net.js，规则名见 ROOM_RULE_NAMES）
+    // 好友房换规则的提示（src/game/24-account-02-lobby.js、src/game/06-input-net.js，规则名见 ROOM_RULE_NAMES）
     [/^已设定切磋规则：(.+)$/, (m0, r) => `Room rule set: ${lookup(r) || r}`],
     [/^擂主已设定切磋规则：(.+)$/, (m0, r) => `The host set the room rule: ${lookup(r) || r}`],
     // 木人桩的对手行为栏和左上角提示（src/game/21-buttons.js、16-draw-ui.js）
@@ -120,7 +120,7 @@
     [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
     [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],
     [/^慢放 ([\d.]+)x$/, (m0, n) => `Slow ${n}x`],
-    // 结算页（src/game/08-fighter-match.js showEnd、src/game/19-progress.js reportProgress）
+    // 结算页（src/game/08-fighter-match.js showEnd、src/game/19-progress-04-ranked.js reportProgress）
     [/^(你赢了|你输了)，比分 (\d+) : (\d+)$/, (m0, r, a, b) => `${r === '你赢了' ? 'You won' : 'You lost'} · Score ${a} : ${b}`],
     [/^比分 (\d+) : (\d+)$/, (m0, a, b) => `Score ${a} : ${b}`],
     [/^\+(\d+) 墨锭 · 联机(胜|负)（累计 (\d+) 胜）$/, (m0, g, r, n) => `+${g} Ink · Online ${r === '胜' ? 'win' : 'loss'} (${n} win${n === '1' ? '' : 's'} total)`],
@@ -135,7 +135,7 @@
     [/^最高纪录：第 (\d+) 层$/, (m0, f) => `Best: floor ${f}`],
     [/^同袍肉鸽虽败犹荣 · 全员共享抚恤 \+(\d+) 墨锭$/, (m0, g) => `Co-op Roguelike: a loss with honor · Everyone gets +${g} Ink`],
     [/^(?:🎉 )?众志破魔大捷！全员共享丰厚悬赏 \+(\d+) 墨锭！$/, (m0, g) => `The demon falls! Everyone gets a +${g} Ink bounty!`],
-    // 英雄页招式区（src/game/18-codex.js、src/game/22-saga.js 的 sagaCodexLine）
+    // 英雄页招式区（src/game/18-codex-content.js、src/game/22-saga.js 的 sagaCodexLine）
     [/^“([\s\S]+)”$/, (m0, x) => { const t = lookup(x); return t ? `“${t}”` : ''; }],
     [/^被动 · (.+)$/, (m0, n) => `Passive · ${lookup(n) || n}`],
     [/^左键\+右键 · (.+)$/, (m0, n) => `L+R Click · ${lookup(n) || n}`],
@@ -144,7 +144,7 @@
     [/^（守关：(.+?) · 难度：(.+?)）$/, (m0, h, lv) => ` (Guardian: ${lookup(h) || h} · Difficulty: ${lookup(lv) || lv})`],
     [/^已破关 \(★(\d)\)$/, (m0, n) => `Cleared (★${n})`],
     [/^前往第 (\d+) 章试炼$/, (m0, n) => `Go to the Chapter ${n} trial`],
-    // 天机乱斗的异变（src/game/22-modes.js）：「疾风·天罡」、「效果 · 星宿句」两半分别查表；要排在通用的「…」之前
+    // 天机乱斗的异变（src/game/22-modes-03-chaos.js）：「疾风·天罡」、「效果 · 星宿句」两半分别查表；要排在通用的「…」之前
     [/^「([^·」]+)·([^·」]+)」$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); if (x && y) return `“${x} · ${y}”`; const t = lookup(`${a}·${b}`); return t ? `“${t}”` : ''; }],
     [/^(.+) · ((?:天罡北斗|地煞幽冥|青龙出海|白虎啸风|朱雀振羽|玄武镇岳|破晓晨光|孤月映水|狂雷贯顶|炽火焚天)，.+)$/, (m0, a, b) => { const x = lookup(a), y = lookup(b); return x && y ? `${x} · ${y}` : ''; }],
     [/^天机异变 · (.+)$/, (m0, n) => `Mutation · ${lookup(n) || n}`],
@@ -165,7 +165,7 @@
     [/^全员共享斩妖赏金 \+(\d+) 墨锭！$/, (m0, g) => `Everyone shares a +${g} Ink bounty!`],
     [/^(?:🎉 )?宿命通关奖励：已解锁【(.+?)】专属皮肤「(.+?)」！$/, (m0, h, k) => `Destiny reward: unlocked ${lookup(h) || h}'s exclusive skin “${lookup(k) || k}”!`],
     [/^比分 (\d+) : (\d+)，再磨一磨剑$/, (m0, a, b) => `Score ${a} : ${b}. Sharpen your sword and try again`],
-    // 守关关卡里画在画布上的字（src/game/07-ai-story.js、22-modes.js 的同袍斩妖）：大字、HUD、条幅
+    // 守关关卡里画在画布上的字（src/game/07-ai-story.js、22-modes-07-raid.js 的同袍斩妖）：大字、HUD、条幅
     [/^第 (\d+) \/ (\d+) 波妖潮$/, (m0, a, b) => `Wave ${a} / ${b}`],
     [/^尚余 (\d+) 妖$/, (m0, n) => `${n} left`],
     [/^(\d+) 只$/, (m0, n) => n],
@@ -175,7 +175,7 @@
     [/^决战【(.+)】$/, (m0, h) => `Final battle [${h.split('·').map(n => lookup(n) || n).join(' · ')}]`],
     [/^全员共享 \+(\d+) 墨锭$/, (m0, g) => `+${g} Ink for everyone`],
     [/^群妖肃清！全队共享顿悟「(.+)」$/, (m0, n) => `Demons cleared! The team shares the scroll “${lookup(n) || n}”`],
-    // 问剑密卷（src/game/22-modes.js）和天魔讨伐的选卷面板、层数大字、画布上的层数
+    // 问剑密卷（src/game/22-modes-02-tower.js）和天魔讨伐的选卷面板、层数大字、画布上的层数
     [/^(问剑|问剑密卷|万仞剑阁|天道爬塔) · 第 (\d+) 层$/, (m0, w, n) => `${{ 问剑: 'Sword Scrolls', 问剑密卷: 'Sword Scrolls', 万仞剑阁: 'Sword Pavilion', 天道爬塔: 'AI Climb' }[w]} · Floor ${n}`],
     [/^问剑密卷 · 继续第 (\d+) 层$/, (m0, n) => `Sword Scrolls · Resume floor ${n}`],
     [/^突破第 (\d+) 层 · 顿悟秘卷$/, (m0, n) => `Floor ${n} cleared · Learn a scroll`],
@@ -228,7 +228,7 @@
     [/^天道车轮战收场 · 告捷：(.+)$/, (m0, x) => `Tiandao Relay over · Winners: ${x.split('、').join(', ')}`],
     // 木人桩的试剑数据卡（src/game/16-draw-ui.js drawTrainStats）
     [/^(\d+) 段 · (\d+) 伤$/, (m0, n, d) => `${n} hit${n === '1' ? '' : 's'} · ${d} dmg`],
-    // 拿到秘卷时的大字（src/game/22-modes.js、07-ai-story.js、22-world.js 的 say）
+    // 拿到秘卷时的大字（src/game/22-modes-02-tower.js、07-ai-story.js、22-world.js 的 say）
     [/^全队共享领悟「(.+)」$/, (m0, n) => `The team learns “${lookup(n) || n}”`],
     [/^领悟「(.+)」$/, (m0, n) => `Learned “${lookup(n) || n}”`],
     [/^全员共享「(.+)」$/, (m0, n) => `Everyone shares “${lookup(n) || n}”`],
@@ -284,7 +284,7 @@
     [/^([QRE]) · (.+?)(?: \[(.+)\])?$/, (m0, k, n, t) => `${k} · ${lookup(n) || n}${t ? ` [${lookup(t) || t}]` : ''}`],
     [/^(.+?) \[(.+)\]$/, (m0, n, t) => `${lookup(n) || n} [${lookup(t) || t}]`],
     [/^(2v2 .+?) · (凯旋大捷！|惜败，择日再战！) 比分 (\d+) : (\d+)$/, (m0, mode, r, a, b) => `${lookup(mode) || mode} · ${r === '凯旋大捷！' ? 'Victory!' : 'Close loss, fight again another day!'} Score ${a} : ${b}`],   // 2v2 结算
-    // 账号、云存档、备份导入（src/game/24-account.js、src/cloud.js）和云端接口回的提示
+    // 账号、云存档、备份导入（src/game/24-account-01-profile.js、src/cloud.js）和云端接口回的提示
     [/^墨锭 (\d+)$/, (m0, n) => `Ink ${n}`],
     [/^(\d+) 分钟前$/, (m0, n) => `${n} min ago`],
     [/^(\d+) 小时前$/, (m0, n) => `${n} h ago`],

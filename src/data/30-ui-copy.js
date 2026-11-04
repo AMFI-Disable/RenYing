@@ -1609,7 +1609,7 @@ const UI_COPY_EN = {
   "离线版没有江湖共斗，请用联网版": "The offline version has no Open World; use the online version",
   "天道 Boss 遁走，下一轮再战": "Tiandao Boss escaped. Next round!",
   "天道车轮战收场 · 这一轮没人赢下，秘卷照样保留": "Tiandao Relay over · No one won this round; scrolls are kept",
-  // 天机乱斗的异变（src/game/22-modes.js CHAOS_MUTATIONS）：名字「效果·星宿」和说明「效果 · 星宿句」都拆成两半查，src/i18n.js 的模板拼起来
+  // 天机乱斗的异变（src/game/22-modes-03-chaos.js CHAOS_MUTATIONS）：名字「效果·星宿」和说明「效果 · 星宿句」都拆成两半查，src/i18n.js 的模板拼起来
   "疾风": "Gale",
   "迅影": "Swift Shadow",
   "千钧": "Mighty Force",
@@ -1712,14 +1712,14 @@ const UI_COPY_EN = {
   "战场：": "Arena:",
   "即刻开战": "Fight Now",
   "帧优势": "Frame Advantage",
-  // 山河异境：投票选地图（src/data/12-maps.js、src/game/22-modes.js 的 renderMaps、联机房间的地图投票）
+  // 山河异境：投票选地图（src/data/12-maps.js、src/game/22-modes-04-maps.js 的 renderMaps、联机房间的地图投票）
   "山河异境": "Terrain Clash",
   "山河异境 · 投票选地图": "Terrain Clash · Vote for the Map",
   "特殊地形 · 不计排位": "Special terrain · Unranked",
   "换一处战场比试：每张图的地形会改变侠客的走位和招式。开打前投一票，每张图被选中的概率按票数算，没人投票时每张图机会一样。": "Fight somewhere new: each map's terrain changes how heroes move and use their skills. Cast a vote before the match; each map's chance is its share of the votes, and with no votes every map is equally likely.",
   "投出你的一票（再按一次收回）": "Cast your vote (press again to take it back)",
   "电脑境界": "AI Tier",
-  // 对战页的 3v3 卡（src/page.html 的 #tagPortal，规则名在 src/game/24-account.js 的 ROOM_RULE_NAMES）
+  // 对战页的 3v3 卡（src/page.html 的 #tagPortal，规则名在 src/game/24-account-02-lobby.js 的 ROOM_RULE_NAMES）
   "3V3 RELAY": "3V3 RELAY",
   "两边各禁 1 名侠客，再轮流各选 3 人；输掉一回合就换下一位上场，三人都倒下的一方输。": "Each side bans 1 hero, then both take turns picking 3. Lose a round and your next hero steps in; the side whose three all fall loses.",
   "全服随机对手 · 不影响段位": "Random opponent from anywhere · Rank unaffected",

@@ -33,18 +33,18 @@ supposed to be login-only — the panel is supposed to read "登录之后，方�
 
 - `CloudSave.saveProfile` (`src/cloud.js:778`) stores a logged-out profile under `renying-guest-profile`, using
   `toCloudData(prof)`. That function (`src/cloud.js:253`) has a field whitelist and **no `guest` field**.
-- `applyProfile` (`src/game/19-progress.js:476`) decides "is this a guest blob?" by testing `p.guest`. It is not, so
+- `applyProfile` (`src/game/19-progress-02-profile.js`) decides "is this a guest blob?" by testing `p.guest`. It is not, so
   the else branch runs:
 
   ```js
-  Object.assign(PROF, p, { guest: false });   // src/game/19-progress.js:503
+  Object.assign(PROF, p, { guest: false });   // src/game/19-progress-02-profile.js
   ```
 
   The reload path is exactly this one: `CloudSave.loadProfile()` returns the stored blob (`src/cloud.js:716`) and
-  `src/game/24-account.js:615-618` feeds it to `applyProfile`.
+  `src/game/24-account-01-profile.js:615-618` feeds it to `applyProfile`.
 
-`PROF.guest` is what gates the reward UI and the claim handlers (`19-progress.js:648-661`, `:678`, `:692`), the
-compensation claim (`:548`, `:552`) and the tutorial hand-off (`20-tutorial-rollback-touch.js:79`), so all of those
+`PROF.guest` gates the reward UI, task claim handlers, and compensation claim in
+`src/game/19-progress-03-rewards.js`, plus the tutorial hand-off in `20-tutorial-rollback-touch.js:79`; all of those
 now behave as if an account were logged in.
 
 **Evidence.** Fresh profile, then a guest save, then a reload:
@@ -159,9 +159,9 @@ and say so.
 
 ## 5. The Task "前往" Button Calls A Function That Does Not Exist
 
-**Symptom.** `taskDest()` (`src/game/19-progress.js:584-591`) routes any task whose name matches
+**Symptom.** `taskDest()` (`src/game/19-progress-03-rewards.js`) routes any task whose name matches
 `青锋行|秘境|竹林` to the forest, and the click handler calls `startForest()` unconditionally
-(`src/game/19-progress.js:670`). `startForest` is defined nowhere — not in `src/`, not in the worker, not in the
+(`src/game/19-progress-03-rewards.js`). `startForest` is defined nowhere — not in `src/`, not in the worker, not in the
 build script. Clicking 前往 on such a task throws and the button does nothing.
 
 **Evidence.**
@@ -185,7 +185,7 @@ handler (`cpu`, `train`, `codex`, `netp`) all work.
 **Symptom.** The best QFX score is written to `localStorage['renying-qfx']` (`src/game/11-anim-loop.js:609-617`) and
 `PROF.qfx` is a cloud-synced field (`src/cloud.js:268`, `:351`), but `PROF.qfx` is never updated.
 
-**Cause.** The only code that would copy one to the other is `src/game/19-progress.js:523`:
+**Cause.** The only code that would copy one to the other is `src/game/19-progress-02-profile.js`:
 
 ```js
 if (!PROF.guest && typeof qfxClaim === 'function' && qfxBest() > (PROF.qfx || 0)) setTimeout(() => qfxClaim(qfxBest()), 0);
@@ -248,12 +248,12 @@ the node suites (combat 25, cloud 29, econ 458, netplay) and the ui/hud audits s
 
 | # | Fix | Files |
 | :-- | :--- | :--- |
-| 1 | The guest flag is restored by `loadProfile` (`{ ...blob, guest: true }`), the boot path marks a signed-out player a guest, and `applyProfile` derives the flag from `CloudSave.getUser()` instead of trusting the stored blob. Offline single-file builds keep working as before (no account system, so not a guest). | `src/cloud.js`, `src/game/24-account.js`, `src/game/19-progress.js` |
+| 1 | The guest flag is restored by `loadProfile` (`{ ...blob, guest: true }`), the boot path marks a signed-out player a guest, and `applyProfile` derives the flag from `CloudSave.getUser()` instead of trusting the stored blob. Offline single-file builds keep working as before (no account system, so not a guest). | `src/cloud.js`, `src/game/24-account-01-profile.js`, `src/game/24-account-02-lobby.js`, `src/game/19-progress-02-profile.js`, `src/game/19-progress-03-rewards.js` |
 | 2 | A `MutationObserver` on `document.body` re-translates nodes added after the switch (childList only, so writing `nodeValue` cannot feed back into it; measured ~5 records/s during a live match). Numbered strings go through a pattern table (`剩余 25 天 6 小时`, `全服 12 人在线`, `剩 9 天`, `N 个样本`, …), and ~90 missing panel headings, task rows and buttons were added to the dictionary. | `src/i18n.js` |
 | 3 | The recorder now samples every 4th frame of a real match: 19 normalised state values plus both players' held-key bitmasks. `训AI` exports those real samples with a reward computed from health/guard deltas and the final result, and says so plainly when a replay has no trace instead of fabricating one. | `src/game/11-anim-loop.js`, `src/page.html` |
 | 4 | `.jsonl` import parses line by line into a training set stored in `localStorage`, reports how many samples were added and how many lines were skipped, and the panel shows the set with export and clear buttons. | `src/game/11-anim-loop.js`, `src/page.html` |
-| 5 | `taskDest` routes forest-flavoured tasks to the campaign screen, and the handler still guards `startForest` for old saves. | `src/game/19-progress.js` |
-| 6 | The dead `qfxClaim` call is replaced by a direct `PROF.qfx` update from `qfxBest()`. | `src/game/19-progress.js` |
+| 5 | `taskDest` routes forest-flavoured tasks to the campaign screen, and the handler still guards `startForest` for old saves. | `src/game/19-progress-03-rewards.js` |
+| 6 | The dead `qfxClaim` call is replaced by a direct `PROF.qfx` update from `qfxBest()`. | `src/game/19-progress-02-profile.js` |
 | 7 | `acPack` packs `log.slice(-20)`, so the hash is computed over exactly the lines that are stored and re-read. | `src/anticheat.js` |
 
 Measured after the fixes: signed-out reload gives `guest: true` with the login note and a disabled claim button (ink
