@@ -30,8 +30,8 @@ function addNeedleMark(target, count = 1) {
 //          消磁只管负极普攻（不是角色状态，Q、R、大招不受影响）；停手 demagRest 秒没再用负极普攻打中人，或者按 Q 换极性，就恢复
 //   R      正极：身边一圈磁石炸开，把半径 rPlusR 里的敌人用力弹走，离得越近弹得越远；rPlusDir = 1 弹开、-1 改成吸到身边（只改这一个数）
 //          负极：把 rMinusRange 以内的对手吸过来，越近吸得越快，到身前定住 rMinusStun 秒（不倒地）
-const MAG = { plusDmg: 1.35, plusKb: [300, -620], minusDmg: 0.55, pullK: 2.6e6, pullMax: 320, chainCap: 15, capStun: 0.3, demagRest: 1.0,
-  rPlusDir: 1, rPlusR: 175, rPlusDmg: 48, rPlusKb: [360, 900], rMinusRange: 620, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
+const MAG = { plusDmg: 1.9, plusKb: [300, -620], minusDmg: 0.62, pullK: 2.6e6, pullMax: 320, chainCap: 15, capStun: 0.3, demagRest: 1.0,
+  rPlusDir: 1, rPlusR: 175, rPlusDmg: 80, rPlusKb: [360, 900], rMinusRange: 620, rMinusDmg: 16, rMinusStun: 0.5, rMinusK: 6.4e7, rMinusV: [1100, 2600], rMinusTime: 0.4 };
 const magRGB = pol => pol > 0 ? '255,96,84' : '96,156,255';
 const magName = pol => pol > 0 ? '⊕ 正极' : '⊖ 负极';
 const magForce = (k, d, lo, hi) => clamp(k / Math.max(40, d) ** 2, lo, hi);   // 磁力：离得越近越大
@@ -688,7 +688,7 @@ const SKILLS = {
   mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
     can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
     lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
-    desc: '结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。',
+    desc: '结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉；路上经过的每个敌人都挨一刀（约 95 伤害，打飞）。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。',
     start(f, foe) { const c = pickClone(f, foe); f.swapId = c ? c.id : -1; f.vx = 0; },
     update(f) {
       const C = f.ch.clone;
@@ -697,9 +697,16 @@ const SKILLS = {
         const c = (f.clones || []).find(k => k.id === f.swapId);
         if (!c) { toNeutral(f); return; }   // 结印时雾身被打碎或散了：这次落空，冷却照算
         if (f.t >= C.swapSeal) {
-          const x0 = f.x;
+          const x0 = f.x, y0 = f.y;
           cloneGone(f, c, false);
           f.x = c.x; f.vy = 0; mapPutOn(f, c.p !== undefined ? c.p : -1); f.jumps = 0; f.airDash = 1;   // 雾身在平台上就站到平台上
+          // 渡影路过的敌人：起点到雾身之间的每个对手挨一刀（每次渡影每人一次，算强度后约 95）
+          const lo = Math.min(x0, f.x) - C.swapPathPad, hi = Math.max(x0, f.x) + C.swapPathPad, top = Math.min(y0, f.y) - 170, bot = Math.max(y0, f.y) + 30;
+          for (const e of foesOf(f)) {
+            if (!e || e.hp <= 0 || e.invul > 0 || e.x < lo || e.x > hi || e.y < top || e.y > bot) continue;
+            applyHit(f, e, { dmg: C.swapPathDmg, kb: [220, -380], stun: 0.45, hs: 0.1, launch: true, big: true, dir: Math.sign(f.x - x0) || f.face, srcX: x0 }, [e.x, e.y - 60]);
+            if (!RESIM) for (let k = 0; k < 8; k++) addP({ type: 'spark', x: e.x, y: e.y - 60 + rand(-30, 30), vx: (Math.sign(f.x - x0) || 1) * rand(200, 460), vy: rand(-60, 60), rgb: '127,214,224', life: 0.28, max: 0.28, w: 1.8 });
+          }
           if (c.x !== x0) f.face = c.x > x0 ? 1 : -1;   // 朝向是来的方向：换到对手身后时是背对着他的
           f.snap = true; f.trail.length = 0; f.scarf = [];
           if (!RESIM) { smoke(x0, -50, 10); ring(f.x, f.y - 50, 70, f.look.slash, 0.3); SFX.poof(); }

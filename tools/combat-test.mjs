@@ -1704,6 +1704,29 @@ const testSuite = [
     })()`
   },
   {
+    // 离影渡影：路过的敌人挨一刀（约 95，打飞）；不在路上的不挨。磁仙正极普攻、正极 R 伤害比负极高很多
+    name: 'LiYing swap path damage and CiXian polarity damage',
+    fn: `(() => {
+      startMatch('train', 'stand', [CHAR_IDX.liying, CHAR_IDX.qingfeng]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      const swap = bx => {
+        toNeutral(A); toNeutral(B); A.clones = []; A.x = 300; A.y = 0; A.plat = -1; A.face = 1;
+        B.x = bx; B.y = 0; B.plat = -1; B.invul = 0; B.hp = B.maxHp; B.comboHits = 0;
+        plantClone(A, 900); const c = A.clones[A.clones.length - 1];
+        A.state = 'skill'; A.skill = 'mistswap'; A.skPh = 0; A.t = A.ch.clone.swapSeal; A.swapId = c.id;
+        SKILLS.mistswap.update(A, B);
+        return B.maxHp - B.hp;
+      };
+      const on = swap(600), off = swap(1400);
+      if (A.x !== 900) { toMenu(); return { pass: false, error: 'the swap should still land on the clone' }; }
+      if (on < 90 || on > 105) { toMenu(); return { pass: false, error: 'a foe on the path should take about 95, got ' + on }; }
+      if (off !== 0) { toMenu(); return { pass: false, error: 'a foe off the path should take nothing, got ' + off }; }
+      if (MAG.plusDmg < 1.8 || MAG.rPlusDmg < 75 || !(MAG.minusDmg > 0.55 && MAG.minusDmg < 0.7)) { toMenu(); return { pass: false, error: 'cixian polarity damage: ' + JSON.stringify(MAG) }; }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'QingFeng and FeiYing ultimate travel distance (1.25x) and FeiYing aerial tracking',
     fn: `(() => {
       // 1. 青锋残月：突进速度 1750，总突进距离达到原版（280px）的 1.25 倍（约 350px）
