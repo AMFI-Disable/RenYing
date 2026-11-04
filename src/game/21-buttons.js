@@ -295,7 +295,7 @@ function startTraining(targetMode = 'dummy', isWatch = false) {
   if (isWatch) {
     A.ctrl = new AICtrl('god');
     say('木人试剑 · AI 演示连招', 1.4);
-  }
+  } else say('木人试剑 · 开始训练', 1.4);
 }
 const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => startTrainTarget(trainTargetMode, false));

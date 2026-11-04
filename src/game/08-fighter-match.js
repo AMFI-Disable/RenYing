@@ -499,10 +499,13 @@ function startMatch(mode, level, chars, isWatch = false) {
   REC.on = false; if ((mode === 'cpu' || mode === 'pvp') && !TUT && !isWatch) recBegin('loc');
   startRound();
   if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
+  else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
 }
 // 磁仙每回合开局抽正极或负极：只在这里抽、只用对局随机数，联机两边和回放抽到的一样（预览用的角色 reset 不碰随机数）
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+  announce = null;
+  announceQueue.length = 0;
   secretRound();
   STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
@@ -918,4 +921,3 @@ function duoRelay(w) {
   }
   return `${loser === localIdx() ? '' : '对方 '}${CHARS[next].name} 接力出战！`;
 }
-

@@ -28,7 +28,7 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 
   showScreen(null);
   startRound();
-  if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
+  say(isWatch ? '3v3 门派车轮战 · AI 群英观战' : '3v3 门派车轮战', 1.4);
 }
 
 const tag3StartBtn = document.getElementById('tag3StartBtn');

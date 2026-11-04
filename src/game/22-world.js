@@ -220,13 +220,13 @@ function worldEnterMode(heroIdx, x) {
   FOREST.on = false; B.forestProxy = false; M.worldKey = null;
   initAudio(); paused = false; showScreen(null);
   startMatch('world', 'normal', [heroIdx, 0]);
-  M.phase = 'fight'; M.t = 0; creditT = 0; creditPending = false;
   B.ctrl = new Ctrl(); B.worldProxy = true; B.hidden = true; B.invul = 99; B.look = { ...B.look, name: '妖物' };
   Object.assign(WORLD, { shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, sendT: 0 });
   A.x = x; A.face = 1; cam.x = A.x;
   M.mode = 'world';
   M.towerPerks = (WORLD.run && WORLD.run.pk) ? WORLD.run.pk.slice() : [];
   if (typeof scRoundStart === 'function') scRoundStart();
+  say('江湖共斗 · 踏入荒野', 1.4);
 }
 function worldStart(heroIdx) {
   if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }

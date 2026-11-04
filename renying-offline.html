@@ -14729,9 +14729,12 @@ human[0].clear(); human[1].clear();
 REC.on = false; if ((mode === 'cpu' || mode === 'pvp') && !TUT && !isWatch) recBegin('loc');
 startRound();
 if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
+else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
 }
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+announce = null;
+announceQueue.length = 0;
 secretRound();
 STAGE_W = M.mode === 'world' ? WORLD_W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
@@ -26302,7 +26305,7 @@ startDummyTraining();
 if (isWatch) {
 A.ctrl = new AICtrl('god');
 say('木人试剑 · AI 演示连招', 1.4);
-}
+} else say('木人试剑 · 开始训练', 1.4);
 }
 const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => startTrainTarget(trainTargetMode, false));
@@ -26394,7 +26397,7 @@ A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
 startRound();
-if (isWatch) say('3v3 门派车轮战 · AI 群英观战', 1.4);
+say(isWatch ? '3v3 门派车轮战 · AI 群英观战' : '3v3 门派车轮战', 1.4);
 }
 const tag3StartBtn = document.getElementById('tag3StartBtn');
 if (tag3StartBtn) {
@@ -28735,13 +28738,13 @@ function worldEnterMode(heroIdx, x) {
 FOREST.on = false; B.forestProxy = false; M.worldKey = null;
 initAudio(); paused = false; showScreen(null);
 startMatch('world', 'normal', [heroIdx, 0]);
-M.phase = 'fight'; M.t = 0; creditT = 0; creditPending = false;
 B.ctrl = new Ctrl(); B.worldProxy = true; B.hidden = true; B.invul = 99; B.look = { ...B.look, name: '妖物' };
 Object.assign(WORLD, { shots: [], deadT: 0, hurtT: 9, zone: -1, calm: 0, sendT: 0 });
 A.x = x; A.face = 1; cam.x = A.x;
 M.mode = 'world';
 M.towerPerks = (WORLD.run && WORLD.run.pk) ? WORLD.run.pk.slice() : [];
 if (typeof scRoundStart === 'function') scRoundStart();
+say('江湖共斗 · 踏入荒野', 1.4);
 }
 function worldStart(heroIdx) {
 if (OFFLINE_BUILD) { toast('离线版没有江湖共斗，请用联网版'); return; }
