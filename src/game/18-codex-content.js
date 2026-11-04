@@ -309,7 +309,7 @@ const HERO_HIT_DETAILS = {
     light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '东倒西歪的五连拳，醉意越高越痛。' },
     charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '36 / 58', desc: '身如醉钟横撞，正面撞碎对手防御。' },
     air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
-    skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割，霸体可硬抗。' },
+    skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割；对手可用腾空闪脱困，霸体可硬抗。' },
     ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0 (+135血)', desc: '半壶酒掷向对手，自身回135血晕0.7秒，对手回85血晕1.5秒并清空酒意。' },
     ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
     esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }

@@ -9911,7 +9911,7 @@ Object.assign(UI_COPY_EN, {
 "全域绝响": "Global Final Note",
 "酒": "Wine",
 "腰间一壶酒。放任何技能都能添 30 酒（大招也算），打中人 +4（酒 0 到 100，每秒缓慢消退），每点酒增伤 0.5%（满壶 +50%）；酒过半壶就东倒西歪，有两成几率闪开近身攻击。与民同乐至少要半壶酒，并会把酒全部倒光。拳脚短（0.86 臂展）。": "A gourd of wine at the hip. Every skill adds 30 wine (the ultimate too), and each hit +4 (wine runs 0 to 100 and slowly fades). Each point of wine adds 0.5% damage (+50% when full). Past half a gourd you stagger about with a 20% chance to dodge melee attacks. Wine Feast needs at least half a gourd and pours out all of it. Short reach (0.86).",
-"把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间动弹不得、腾空闪也用不出，但可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。": "Keep the enemy as a guest: a drunken pavilion drops onto their head (lands about 0.5s after casting, range about 720). If it covers them, they are trapped inside for 1.5s, unable to move or Air Dodge, but free to be hit (hits do not knock them out). Walk away before it lands and it misses. Super armor can tank it.",
+"把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间无法移动，但可以用腾空闪脱困；也可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。": "Keep the enemy as a guest: a drunken pavilion drops onto their head (lands about 0.5s after casting, range about 720). If it covers them, they are trapped inside for 1.5s and cannot move, but can escape with Air Dodge; they are still free to be hit (hits do not knock them out). Walk away before it lands and it misses. Super armor can tank it.",
 "至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 50 血，捧着酒瓶僵直 1.5 秒；醉翁自己也灌一口回 80 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。": "Needs at least half a gourd and pours out all of it: throw a bottle at the enemy, and if it hits they have to drink with you. The enemy heals 50 HP and is stunned holding the bottle for 1.5s; Zui Weng takes a swig too, healing 80 HP and stunned for 0.7s. You finish first, so use the short gap to go hit them.",
 "醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。画卷落下后对手困在蓬莱境里 2 秒：对手的屏幕被画挡住，看不见自己和醉翁在哪，只有醉翁一方看得见。": "The old drunk's heart is not in the wine but in the hills and streams. A screen-wide landscape painting presses down from the sky, dealing 120 damage over its descent (8 hits of 15, unblockable, no hiding anywhere; only Air Dodge invincibility avoids a few hits). Once the scroll lands, the enemy is trapped in the Penglai realm for 2s: their screen is covered by the painting and they cannot see themselves or Zui Weng, while Zui Weng's side can still see everything.",
 "【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「山水之间」全屏墨染八段重创并令醉意飙升！": "[Hold the Guest · Landscape Buzz] Skills and punches build up drunkenness fast (up to +50% damage); the Landscape Domain ultimate deals eight heavy full-screen ink hits and sends drunkenness soaring!",
@@ -12221,7 +12221,7 @@ if (f.t >= 0.45) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
 ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
-pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间动弹不得、腾空闪也用不出，但可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
+pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间无法移动，但可以用腾空闪脱困；也可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.05) {
@@ -15860,7 +15860,6 @@ if (f.breakCD > 0) return 'cd';
 if (f.state === 'held') return 'held';
 if (f.state === 'special') return 'ult';
 if (f.state === 'victory') return 'victory';
-if (f.jailT > 0) return 'jail';
 if (f.drinkT > 0) return 'drink';
 return '';
 }
@@ -15873,6 +15872,7 @@ const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuan
 function tryEscape(f, foe) {
 if (escapeBlock(f)) return false;
 if (!f.ctrl.consume('dash')) return false;
+f.jailT = 0;
 const noDir = !f.ctrl.held.left && !f.ctrl.held.right && !f.ctrl.held.down;
 const inAir = airH(f) > 15 || !f.onGround();
 if (inAir && noDir) {
@@ -23461,7 +23461,7 @@ zuixian: {
 light: { name: '醉拳五打', badge: '醉意增伤', badgeCls: 'badge-buff', dmg: '97 (5段)', desc: '东倒西歪的五连拳，醉意越高越痛。' },
 charge: { name: '醉汉撞钟', badge: '破防击飞', badgeCls: 'badge-break', dmg: '36 / 58', desc: '身如醉钟横撞，正面撞碎对手防御。' },
 air: { name: '倒踢金钩', badge: '挑空', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '凌空一记醉倒踢，翻身把人踢上半空。' },
-skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割，霸体可硬抗。' },
+skill: { name: '亭中留客', badge: '禁锢 1.5s', badgeCls: 'badge-stun', dmg: '20', desc: '召唤醉翁亭从空中砸落，将对手困在亭中 1.5 秒任由宰割；对手可用腾空闪脱困，霸体可硬抗。' },
 ranged: { name: '与民同乐', badge: '共饮回春', badgeCls: 'badge-buff', dmg: '0 (+135血)', desc: '半壶酒掷向对手，自身回135血晕0.7秒，对手回85血晕1.5秒并清空酒意。' },
 ult: { name: '山水之间', badge: '全屏墨染', badgeCls: 'badge-stun', dmg: '120 (8段)', desc: '醉意化作山水墨色浸染乾坤，全屏判定八段绝杀，无法闪避。' },
 esc: { name: '醉卧浮生', badge: '霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }

@@ -1416,7 +1416,7 @@ const testSuite = [
     })()`
   },
   {
-    name: 'Escape (腾空闪) state machine: rise / hover invulnerability, cooldown, landing lag, and what blocks it (cooldown, held, own ult, jail, drunk, not fighting)',
+    name: 'Escape (腾空闪) state machine: rise / hover invulnerability, cooldown, landing lag, and what blocks it (cooldown, held, own ult, drunk, not fighting)',
     fn: `(() => {
       startMatch('train', 'stand', [0, 1]);
       showScreen(null); paused = false; M.phase = 'fight';
@@ -1459,10 +1459,17 @@ const testSuite = [
       if (!A.escInvul) return { pass: false, error: 'long hover lost invulnerability before the hover ended' };
       for (let i = 0; i < 200 && A.airHover > 0; i++) physics(A);
       if (A.escInvul || A.escMode) return { pass: false, error: 'hover end did not end the escape' };
+      // 醉翁亭禁锢可以被腾空闪解除；后续更新不能把角色拉回亭子里的旧位置。
+      reset(); A.state = 'hitstun'; A.stun = 1.5; A.rooted = true; A.jailT = 1.5; A.jailX = A.x;
+      const pavilionX = A.jailX;
+      if (escapeBlock(A)) return { pass: false, error: 'pavilion jail blocked Aerial Flash' };
+      if (!esc() || A.jailT !== 0 || A.escMode !== 'rise' || A.rooted || A.state !== 'air') return { pass: false, error: 'Aerial Flash did not clear pavilion jail' };
+      step();
+      if (A.jailT !== 0 || A.state !== 'air' || A.rooted || A.x === pavilionX) return { pass: false, error: 'escaped fighter was snapped back or remained stuck: ' + JSON.stringify({ x: A.x, pavilionX, jailT: A.jailT, state: A.state, rooted: A.rooted }) };
       // 用不了的情况
       const blocked = [
         ['cd', () => { A.breakCD = 2; }], ['held', () => { A.state = 'held'; }], ['ult', () => { A.state = 'special'; }],
-        ['jail', () => { A.jailT = 1; }], ['drink', () => { A.drinkT = 1; }], ['phase', () => { M.phase = 'ko'; }], ['dead', () => { A.hp = 0; }],
+        ['drink', () => { A.drinkT = 1; }], ['phase', () => { M.phase = 'ko'; }], ['dead', () => { A.hp = 0; }],
       ];
       for (const [why, set] of blocked) {
         reset(); A.state = 'hitstun'; set();

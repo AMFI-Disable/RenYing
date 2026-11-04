@@ -636,7 +636,7 @@ function boltFX(p) { shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35
 // 按冲刺键（左键 + 右键）触发，有两种：
 //   rise  地上或挨打时：解除硬直、倒地、定身，向后上方闪起。无敌到落地、自己出手、开始飞，最长 ESC.riseMax 秒；落地有 ESC.landLag 秒落地硬直
 //   hover 在空中不按方向：原地凝住 ESC.hover 秒（秘卷「凌霄御风」1.5 秒），悬停期间无敌，悬停结束或自己出手就结束
-// 用不了的情况都在 escapeBlock 里：冷却没好、被抓住（投技、扯链、大招锁定）、自己在放大招、被关进醉翁亭、被灌醉（挨一下就醒）
+// 用不了的情况都在 escapeBlock 里：冷却没好、被抓住（投技、扯链、大招锁定）、自己在放大招、被灌醉（挨一下就醒）。醉翁亭可用腾空闪脱困。
 // 冷却：rise 用侠客的 escCD（没写就是 BREAK_CD），hover 最多 ESC.hoverCdCap 秒；秘卷「轻身」「如履薄冰」在 esc 时机改冷却
 // 被月华太阴绝罚、被月镜格开会把冷却顶到一个下限（见 03-skills.js 的 mirror、本文件的 parry）
 const ESC = { riseMax: 1.1, hover: 0.85, hoverCdCap: 4.5, landLag: 0.15, riseVy: 1000, riseVx: 150 };
@@ -647,7 +647,6 @@ function escapeBlock(f) {
   if (f.state === 'held') return 'held';
   if (f.state === 'special') return 'ult';
   if (f.state === 'victory') return 'victory';
-  if (f.jailT > 0) return 'jail';
   if (f.drinkT > 0) return 'drink';
   return '';
 }
@@ -661,6 +660,9 @@ const ESC_FX = { qingfeng: 'wind', feiying: 'smoke', tieshan: 'quake', lingshuan
 function tryEscape(f, foe) {
   if (escapeBlock(f)) return false;
   if (!f.ctrl.consume('dash')) return false;
+  // 亭中留客会在 updateFighter 后段把目标钉回 jailX。清除禁锢再执行闪身，
+  // 避免脱困后的物理更新仍被旧的 jail 状态拉回原位。
+  f.jailT = 0;
   const noDir = !f.ctrl.held.left && !f.ctrl.held.right && !f.ctrl.held.down;
   const inAir = airH(f) > 15 || !f.onGround();
   if (inAir && noDir) {
