@@ -20,9 +20,9 @@ Only pull requests from the maintainer (Even, GitHub `AMFI-Disable`) and reposit
 | Modes and draft orders | `src/data/10-modes.js`, `src/data/11-bp-orders.js` |
 | Maps | `src/data/12-maps.js` |
 | Game logic | The matching numbered file in `src/game/` (do not add new top-level files) |
-| Server | `cloudflare/worker.js`; database changes as a new file in `cloudflare/migrations/` |
+| Server | Worker source modules in `cloudflare/worker/`; database changes as a new file in `cloudflare/migrations/` |
 
-`index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cloudflare/migrations.gen.js` and `cloudflare/worker.bundle.js` are generated. Never edit them by hand.
+`index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cloudflare/worker.js`, `cloudflare/migrations.gen.js` and `cloudflare/worker.bundle.js` are generated. Never edit them by hand.
 
 ## Rules CI Checks
 

@@ -191,7 +191,7 @@ flowchart LR
 | `src/social.js`、`src/errlog.js`、`src/i18n.js` | 社区功能、错误上报、翻译查表 |
 | `src/qfx/` | 青锋行小游戏的源码 |
 | `assets/` | 音乐、生成的小游戏页面、内置的 `peerjs` 和 `three.js` |
-| `cloudflare/` | Worker、管理后台页面、D1 表结构和迁移 |
+| `cloudflare/` | 按编号拆分的 Worker 源码、生成的 Worker 入口、管理后台页面、D1 表结构和迁移 |
 | `models/` | 训练好的电脑 AI 权重 |
 | `tools/` | `build.py`，以及 `ai/`、`admin/`、`audits/`、`checks/`、`tests/` 和 `music/` |
 | `docs/` | 设计笔记、部署手册、管理后台说明、帧数表、Wiki 源文件 |

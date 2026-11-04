@@ -9,6 +9,7 @@
   assets/qingfengxing.html  青锋行（三维小游戏）：由 src/qfx/ 里的 page.html 和按编号排好的各个 .js 拼成。
   renying-offline.html  离线版：一个文件就能玩（音乐、青锋行都打包在里面），双击打开，不能联机。
   renying.html          旧网址，只放一个进入 index.html 的链接（不自动跳转）。
+  cloudflare/worker.js        Worker source：cloudflare/worker/ 下按编号排好的各个 .js 拼成。
   cloudflare/worker.bundle.js  云端账号的 Cloudflare Worker：worker.js 加上武库规则（src/armory-core.js）和管理网页
                         （cloudflare/admin.html，Worker 的 /admin）拼成一个文件，wrangler deploy 用它，
                         在 Cloudflare 网页编辑器里整段粘贴也能用。
@@ -89,6 +90,18 @@ def style_parts():
 
 def style_source():
     return "".join(read(path) for path in style_parts())
+
+
+def worker_parts():
+    folder = os.path.join(ROOT, "cloudflare", "worker")
+    return sorted(n for n in os.listdir(folder) if re.match(r"^\d\d-[a-z0-9-]+\.js$", n))
+
+
+def worker_source():
+    parts = worker_parts()
+    if not parts:
+        raise SystemExit("cloudflare/worker/ 里没有按编号排好的 Worker 源文件")
+    return "".join(read(ROOT, "cloudflare", "worker", name) for name in parts)
 
 
 def data_parts():
@@ -273,8 +286,8 @@ def migrations_js():
 
 
 def worker_bundle():
-    """Cloudflare Worker：把 worker.js 引用的武库规则原样拼进去，浏览器和服务器用的是同一份规则；管理网页也放进去"""
-    src = read(ROOT, "cloudflare", "worker.js")
+    """Cloudflare Worker：把编号源码拼起来，再嵌入武库规则、迁移、长卷表和管理网页"""
+    src = worker_source()
     for line in (CORE_IMPORT, ADMIN_LINE, MIG_IMPORT, CHRON_IMPORT):
         if src.count(line) != 1:
             raise SystemExit("cloudflare/worker.js 里应该正好有一行 " + line.strip())
@@ -282,7 +295,7 @@ def worker_bundle():
     src = src.replace(ADMIN_LINE, "const ADMIN_PAGE = { html: " + json.dumps(html, ensure_ascii=False) + ", sha: '" + sha + "' };\n")
     src = src.replace(MIG_IMPORT, migrations_js().split("\n", 1)[1].replace("export const", "const", 1))
     src = src.replace(CHRON_IMPORT, "/* === src/data/13-chron.js === */\n" + read(SRC, "data", "13-chron.js") + "\n")   # 全服肉鸽的长卷节点表：浏览器和服务器用同一份
-    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html、cloudflare/migrations/*.sql、src/armory-core.js 和 src/data/13-chron.js 再重新生成。\n"
+    head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker/*.js、cloudflare/admin.html、cloudflare/migrations/*.sql、src/armory-core.js 和 src/data/13-chron.js 再重新生成。\n"
     return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + read(SRC, "armory-core.js") + "\n/* === cloudflare/worker.js === */\n")
 
 
@@ -292,6 +305,7 @@ def outputs():
         "renying-offline.html": page(offline=True),
         "renying.html": REDIRECT,
         "assets/qingfengxing.html": qfx_page(),
+        "cloudflare/worker.js": worker_source(),
         "cloudflare/worker.bundle.js": worker_bundle(),
         "cloudflare/migrations.gen.js": migrations_js(),
     }

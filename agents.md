@@ -16,7 +16,7 @@ RenYing (刃影) is a browser fighting game with offline play, online rollback n
 | English interface text | `src/data/30-ui-copy.js` (`src/i18n.js` only looks it up) |
 | Page markup and styles | `src/page.html`, `src/style.css`, numbered styles in `src/styles/` |
 | Armory and market | `src/armory-core.js`, `src/armory.js` |
-| Server | `cloudflare/worker.js`, migrations in `cloudflare/migrations/` |
+| Server | Worker source modules in `cloudflare/worker/`; generated entry points in `cloudflare/worker.js` and `cloudflare/worker.bundle.js`; migrations in `cloudflare/migrations/` |
 | Build entrypoint | `tools/build.py` |
 | AI simulation and training | `tools/ai/` |
 | Admin command line tools | `tools/admin/` |
@@ -30,7 +30,7 @@ Put new code in the numbered file that owns the feature. Do not add new top-leve
 
 ## Generated Files
 
-`index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cloudflare/migrations.gen.js` and `cloudflare/worker.bundle.js` are generated. Never edit them by hand.
+`index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cloudflare/worker.js`, `cloudflare/migrations.gen.js` and `cloudflare/worker.bundle.js` are generated. Never edit them by hand.
 
 1. Change the source.
 2. Run `python3 tools/build.py`.

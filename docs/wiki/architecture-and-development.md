@@ -25,7 +25,7 @@
 | `src/anticheat.js` | Client-side integrity checks |
 | `src/i18n.js` | Translation lookup (the text itself is in `src/data/30-ui-copy.js`) |
 | `src/qfx/` | 青锋行 mini-game, built into `assets/qingfengxing.html` |
-| `cloudflare/` | `worker.js`, `admin.html`, `schema.sql`, `migrations/`, `wrangler.toml`; `worker.bundle.js` and `migrations.gen.js` are generated |
+| `cloudflare/` | Numbered Worker source modules in `worker/`; generated `worker.js`, `worker.bundle.js` and `migrations.gen.js`; plus `admin.html`, `schema.sql`, `migrations/` and `wrangler.toml` |
 | `tools/` | Build, tests, audits, AI training (`trainer.mjs`, `ai-train.mjs`), frame data, music tools |
 | `docs/` | Design notes, deploy runbook, admin guide, frame data, AI benchmark, and a copy of this wiki in `docs/wiki/` |
 
@@ -35,7 +35,7 @@
 python3 tools/build.py
 ```
 
-Regenerates every generated file: both game pages, the mini-game page, the Worker bundle and the migration list. It also runs `tools/checks/data-check.mjs`, which fails the build if a hero file or data table has a missing, unknown or wrong field, or if a story breaks the story template.
+Regenerates every generated file: both game pages, the mini-game page, the Worker entry and bundle, and the migration list. It also runs `tools/checks/data-check.mjs`, which fails the build if a hero file or data table has a missing, unknown or wrong field, or if a story breaks the story template.
 
 ```bash
 python3 tools/build.py --check
@@ -43,7 +43,7 @@ python3 tools/build.py --check
 
 Fails if any generated file is out of date. CI runs it on every push.
 
-Never edit `index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cloudflare/worker.bundle.js` or `cloudflare/migrations.gen.js` by hand.
+Never edit `index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cloudflare/worker.js`, `cloudflare/worker.bundle.js` or `cloudflare/migrations.gen.js` by hand.
 
 ## Adding Things / 加内容
 
@@ -64,7 +64,7 @@ Add the next numbered file in `cloudflare/migrations/`, update `cloudflare/schem
 
 ## The Server / 服务器
 
-- `cloudflare/worker.js` handles HTTP routes under `/api/…` and the admin page at `/admin`.
+- `cloudflare/worker.js` is assembled from numbered files in `cloudflare/worker/`; it handles HTTP routes under `/api/…` and the admin page at `/admin`.
 - `WorldLine` Durable Objects run the open world lines.
 - Big changes can ship behind server feature flags (admin page → 功能开关), off, Dev-only or on for everyone.
 - CORS only allows the game's own page and local development.

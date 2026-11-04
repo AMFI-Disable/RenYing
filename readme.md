@@ -191,7 +191,7 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenY
 | `src/social.js`, `src/errlog.js`, `src/i18n.js` | Community features, error reports, translation lookup |
 | `src/qfx/` | Sources of the 青锋行 mini-game |
 | `assets/` | Music, the generated mini-game page, vendored `peerjs` and `three.js` |
-| `cloudflare/` | Worker, admin page, D1 schema and migrations |
+| `cloudflare/` | Numbered Worker sources, generated Worker entry points, admin page, D1 schema and migrations |
 | `models/` | Trained AI weights |
 | `tools/` | `build.py` plus `ai/`, `admin/`, `audits/`, `checks/`, `tests/` and `music/` |
 | `docs/` | Design notes, deploy runbook (Chinese), admin guide, frame data, wiki source |

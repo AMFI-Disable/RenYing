@@ -1,4 +1,4 @@
-// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker.js、cloudflare/admin.html、cloudflare/migrations/*.sql、src/armory-core.js 和 src/data/13-chron.js 再重新生成。
+// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker/*.js、cloudflare/admin.html、cloudflare/migrations/*.sql、src/armory-core.js 和 src/data/13-chron.js 再重新生成。
 /**
  * 刃影 Cloudflare Worker：云端账号、存档同步、武库经济、反作弊
  *
