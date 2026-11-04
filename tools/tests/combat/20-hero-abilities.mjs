@@ -1,0 +1,265 @@
+export default [
+  {
+    name: 'Lingque R (shadowdash) feints & drifts back, homes non-stop on far/fleeing/jumping targets, wall- and cliff-edge-bounces, cannot be Just Guarded, and block stuns without knockdown',
+    fn: `(() => {
+      const run = (setup, perFrame, maxFrames = 150) => {
+        startMatch('train', 'stand', [CHAR_IDX.lingque, 0]);
+        showScreen(null); paused = false; M.phase = 'fight';
+        for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; f.needleMark = 0; }
+        A.x = STAGE_W / 2 - 380; B.x = STAGE_W / 2 + 380; A.face = 1; B.face = -1;
+        if (setup) setup();
+        const hp0 = B.hp; A.skill2CD = 0; startSkill(A, B, 2);
+        if (A.skill !== 'shadowdash') return { err: 'R did not start shadowdash: ' + A.skill };
+        let hitAt = -1, maxDrift = 0, sawDrift = false;
+        for (let i = 0; i < maxFrames && A.state === 'skill'; i++) {
+          if (perFrame) perFrame(i);
+          step();
+          if (A.sdDrifting || A.sdDrifted) sawDrift = true;
+          if (A.sdDriftDist > maxDrift) maxDrift = A.sdDriftDist;
+          if (hitAt < 0 && B.hp < hp0) hitAt = i;
+        }
+        return { hit: hitAt >= 0, hitAt, sawDrift, maxDrift, dist: Math.round(Math.abs(B.x - A.x)), lqState: A.state, bState: B.state, bHp: B.hp, hp0 };
+      };
+      // 1. Far target: approaches, drifts back (does not hit first pass), then tracks and hits
+      const far = run();
+      if (!far.hit) return { pass: false, error: 'missed standing target: ' + JSON.stringify(far) };
+      if (!far.sawDrift || far.maxDrift < 200) return { pass: false, error: 'did not drift back properly: ' + JSON.stringify(far) };
+
+      // 2. Fleeing target: pursues non-stop
+      const flee = run(null, i => { if (B.state !== 'hitstun' && B.state !== 'launched') { B.x = Math.min(STAGE_W - WALL - 20, B.x + 5); } });
+      if (!flee.hit) return { pass: false, error: 'missed a target running away: ' + JSON.stringify(flee) };
+
+      // 3. Jumping target: homes into air / landing
+      const jump = run(() => { B.state = 'air'; B.vy = -1100; B.y = -2; });
+      if (!jump.hit) return { pass: false, error: 'missed a jumping target: ' + JSON.stringify(jump) };
+
+      // 4. Target gets behind: turns around
+      const side = run(null, i => { if (i === 24) { B.x = Math.max(WALL + 50, A.x - 300); } });
+      if (!side.hit) return { pass: false, error: 'did not turn around: ' + JSON.stringify(side) };
+
+      // 5. Wall test: A starting near wall or rushing into wall does not stop R
+      const wallRun = run(() => { A.x = WALL + 20; A.face = -1; B.x = STAGE_W - WALL - 100; });
+      if (!wallRun.hit) return { pass: false, error: 'R stopped at wall: ' + JSON.stringify(wallRun) };
+
+      // 5b. Cliff edge (断崖台 has no walls): R cast at the edge facing away must bounce back in, not freeze at the edge
+      for (const sd of [-1, 1]) for (const air of [false, true]) {
+        startMapsMode(CHAR_IDX.lingque, 0, 'easy', false, 'cliff'); showScreen(null); paused = false; M.phase = 'fight';
+        for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; }
+        B.ctrl = new Ctrl();
+        A.x = sd < 0 ? WALL + 20 : STAGE_W - WALL - 20; B.x = sd < 0 ? WALL + 400 : STAGE_W - WALL - 400;
+        A.face = sd; B.face = -sd;
+        if (air) { A.y = -150; A.state = 'air'; }
+        const bHp = B.hp; A.skill2CD = 0; startSkill(A, B, 2);
+        let n = 0; for (; n < 240 && A.state === 'skill'; n++) step();
+        if (A.state === 'skill' || B.hp >= bHp) { const e = { side: sd, air, frames: n, state: A.state, x: Math.round(A.x), vx: Math.round(A.vx), bHp: B.hp }; M.map = null; return { pass: false, error: 'R froze at the cliff edge: ' + JSON.stringify(e) }; }
+      }
+
+      // 6. Block test: Blocking reduces damage, stops R, inflicts standing stun (not fall/knockdown), and cannot be Just Guarded
+      startMatch('train', 'block', [CHAR_IDX.lingque, 0]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      if (B.ctrl && B.ctrl.cfg) B.ctrl.cfg.act = 'block';
+      A.x = STAGE_W / 2 - 200; B.x = STAGE_W / 2 + 200; A.face = 1; B.face = -1;
+      A.skill2CD = 0; startSkill(A, B, 2);
+      let blockedHit = false;
+      const bHp0 = B.hp;
+      for (let i = 0; i < 150 && A.state === 'skill'; i++) {
+        B.ctrl.held.down = true;
+        B.ctrl.held.left = false;
+        B.ctrl.held.right = false;
+        step();
+        if (B.hp < bHp0) { blockedHit = true; break; }
+      }
+      if (!blockedHit) return { pass: false, error: 'R did not connect against blocking opponent' };
+      const dmgTaken = bHp0 - B.hp;
+      if (dmgTaken >= 30) return { pass: false, error: 'blocking did not reduce damage: dmg=' + dmgTaken };
+      if (B.state !== 'hitstun') return { pass: false, error: 'blocked opponent was not stunned: state=' + B.state };
+      if (B.y !== 0) return { pass: false, error: 'blocked opponent fell or launched: y=' + B.y };
+      if (A.state === 'skill' && A.skPh === 1) return { pass: false, error: 'R was not stopped by block' };
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Breakout skills (受击可释放): Lei Ming Lei Kai, Tie Shan Quake, Yu Xiao Echo Wall can break out of hitstun, regular skills cannot, hard disables block it',
+    fn: `(() => {
+      // 1. Lei Ming (金刚雷铠 / stomp): Can break out of hitstun
+      startMatch('train', 'stand', [0, CHAR_IDX.leiming]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'hitstun'; B.t = 0; B.stun = 0.6; B.comboHits = 3; B.skill2CD = 0;
+      B.ctrl.buf.skill2 = clock;
+      step();
+      if (B.state !== 'skill' || B.skill !== 'stomp' || !(B.thunderGuardT > 0)) {
+        return { pass: false, error: 'Lei Ming Lei Kai did not break out of hitstun: state=' + B.state + ', skill=' + B.skill };
+      }
+      if (B.comboHits !== 0) return { pass: false, error: 'comboHits not reset on breakout' };
+
+      // 2. Tie Shan (震地 / quake): Can break out of hitstun
+      startMatch('train', 'stand', [0, CHAR_IDX.tieshan]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'hitstun'; B.t = 0; B.stun = 0.6; B.comboHits = 2; B.skillCD = 0;
+      B.ctrl.buf.skill = clock;
+      step();
+      if (B.state !== 'skill' || B.skill !== 'quake') {
+        return { pass: false, error: 'Tie Shan Quake did not break out of hitstun: state=' + B.state + ', skill=' + B.skill };
+      }
+
+      // 3. Regular skill (Qing Feng 疾风斩 / gale): CANNOT break out of hitstun
+      startMatch('train', 'stand', [1, CHAR_IDX.qingfeng]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'hitstun'; B.t = 0; B.stun = 0.6; B.comboHits = 2; B.skillCD = 0;
+      B.ctrl.buf.skill = clock;
+      step();
+      if (B.state === 'skill') {
+        return { pass: false, error: 'Qing Feng gale broke out of hitstun when it lacks breakout flag' };
+      }
+      if (B.state !== 'hitstun') {
+        return { pass: false, error: 'B did not remain in hitstun: state=' + B.state };
+      }
+
+      // 4. Hard disables (held / jail): Cannot break out even with Lei Kai ready
+      startMatch('train', 'stand', [0, CHAR_IDX.leiming]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      B.state = 'held'; B.t = 0; B.skill2CD = 0;
+      B.ctrl.buf.skill2 = clock;
+      step();
+      if (B.state === 'skill') {
+        return { pass: false, error: 'Lei Ming broke out while in held state' };
+      }
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Cixian (磁仙): seeded pole each round, Q swap clears R, ⊖ normals pull and demagnetize after 15, R blasts / pulls by distance, ult clamps',
+    fn: `(() => {
+      const setup = (pol, gap) => {
+        startMatch('train', 'stand', [CHAR_IDX.cixian, 0]);
+        showScreen(null); paused = false; M.phase = 'fight';
+        for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; f.comboHits = 0; }
+        A.x = STAGE_W / 2 - gap / 2; B.x = STAGE_W / 2 + gap / 2; A.face = 1; B.face = -1;
+        A.pol = pol; A.mChain = 0; A.mT = 0; A.skillCD = 0; A.skill2CD = 0;
+      };
+      const run = (n, cond) => { for (let i = 0; i < n; i++) { step(); if (cond && cond()) return i; } return -1; };
+      // 1. 极性：同一个种子抽到的一样，换种子两种都抽得到
+      const roll = seed => { setChars(CHAR_IDX.cixian, 0); GRNG.s = seed; M.mode = 'cpu'; startRound(); return A.pol; };
+      const seen = new Set();
+      for (let sd = 1; sd <= 12; sd++) { const p1 = roll(sd * 7919), p2 = roll(sd * 7919); if (p1 !== p2) return { pass: false, error: 'same seed gave different poles' }; seen.add(p1); }
+      if (!(seen.has(1) && seen.has(-1))) return { pass: false, error: 'pole roll never gave both poles: ' + [...seen] };
+      // 2. Q：换极性、清零 R、不花出招时间、圈的动画计时
+      setup(1, 300); A.skill2CD = 4; startSkill(A, B, 1);
+      if (A.pol !== -1 || A.skill2CD !== 0 || A.state === 'skill' || !(A.polT > 0) || !(A.skillCD > 5)) return { pass: false, error: 'Q swap wrong: ' + JSON.stringify({ pol: A.pol, cd2: A.skill2CD, st: A.state, polT: A.polT, cd: A.skillCD }) };
+      // 3. 负极普攻：打中往身边吸、四段循环；连中 15 下消磁（不再吸、推开），停手 1 秒恢复
+      setup(-1, 150);
+      let pulled = 0, hits = 0, last = B.hp, chainSeen = [];
+      for (let i = 0; i < 900 && hits < 18; i++) {
+        if (A.state === 'idle' || A.state === 'walk' || (A.state === 'attack' && A.hitConfirmed)) A.ctrl.press ? A.ctrl.press('light') : (A.ctrl.buf.light = clock);
+        const bx = B.x; step();
+        if (B.hp < last) { hits++; last = B.hp; chainSeen.push(A.mChain); if (hits <= 10 && B.vx < 0 && B.x <= bx + 1) pulled++; if (hits <= 10 && B.x - A.x < 110) B.x = A.x + 110; }   // 每下都从中距离打，才看得出吸
+      }
+      if (A.moves.l4.next.light !== 'l1') return { pass: false, error: 'l4 does not loop back to l1' };
+      if (pulled < 5) return { pass: false, error: 'negative normals did not pull: ' + pulled + ' of ' + hits };
+      if (!chainSeen.includes(MAG.chainCap) || A.mChain !== MAG.chainCap) return { pass: false, error: 'no demagnetize at 15: ' + chainSeen.join(',') };
+      const mm = magHit(A, B, { ...A.moves.l1 });
+      if (!(mm.kb[0] > 0) || !(mm.stun < A.moves.l1.stun)) return { pass: false, error: 'demagnetized hit still pulls or keeps full stun: ' + JSON.stringify(mm.kb) };
+      toNeutral(A); A.mT = 0; run(Math.ceil(MAG.demagRest / STEP) + 10);
+      if (A.mChain !== 0) return { pass: false, error: 'demagnetize did not recover after resting: ' + A.mChain };
+      A.mChain = MAG.chainCap; A.skillCD = 0; startSkill(A, B, 1);
+      if (A.mChain !== 0) return { pass: false, error: 'Q did not clear demagnetize' };
+      // 4. 正极普攻：伤害更高、地上轻攻击击飞
+      setup(1, 120); const pm = magHit(A, B, { ...A.moves.l1 });
+      if (!(pm.dmg > A.moves.l1.dmg) || !pm.launch) return { pass: false, error: 'positive normal not stronger / not launching' };
+      // 5. R 正极：弹开，越近越远
+      const blast = gap => { setup(1, gap); startSkill(A, B, 2); run(40); return { vx: Math.abs(B.vx), st: B.state, dx: B.x - A.x, hit: B.hp < B.maxHp }; };
+      const near = blast(70), far = blast(160);
+      if (!near.hit || !far.hit) return { pass: false, error: 'R+ did not hit: ' + JSON.stringify([near, far]) };
+      setup(1, 70); startSkill(A, B, 2); let nearV = 0; run(20, () => { nearV = Math.max(nearV, B.vx * Math.sign(B.x - A.x)); return false; });
+      setup(1, 160); startSkill(A, B, 2); let farV = 0; run(20, () => { farV = Math.max(farV, B.vx * Math.sign(B.x - A.x)); return false; });
+      if (!(nearV > farV && farV > 0)) return { pass: false, error: 'R+ should push away harder when closer: ' + nearV + ' vs ' + farV };
+      // 6. R 负极：从 450 像素外吸到身前，定住 0.5 秒，不倒地
+      setup(-1, 450); startSkill(A, B, 2);
+      let rooted = -1; run(120, () => { if (B.rooted && B.state === 'hitstun') { rooted = clock; return true; } return false; });
+      if (rooted < 0 || Math.abs(B.x - A.x) > 90 || B.y < -2) return { pass: false, error: 'R- did not pull in and root: ' + JSON.stringify({ d: B.x - A.x, st: B.state, y: B.y }) };
+      if (Math.abs(B.stun - MAG.rMinusStun) > 0.01) return { pass: false, error: 'R- root time is ' + B.stun };
+      let down = false; run(40, () => { if (['launched', 'knockdown'].includes(B.state)) down = true; return false; });
+      if (down) return { pass: false, error: 'R- knocked the target down' };
+      // 7. 大招：夹住、125 伤害、夹扁定身；对手无敌时夹不到
+      setup(1, 400); A.meter = 100; B.hp = B.maxHp; const h0 = B.hp; startSpecial(A); run(200, () => A.state !== 'special');
+      if (h0 - B.hp < 100 || !(B.squashT > 0 || B.state === 'hitstun')) return { pass: false, error: 'ult did not clamp: ' + JSON.stringify({ dmg: h0 - B.hp, st: B.state, sq: B.squashT }) };
+      setup(1, 400); A.meter = 100; startSpecial(A); B.invul = 3; const h1 = B.hp; run(200, () => A.state !== 'special');
+      if (B.hp < h1) return { pass: false, error: 'ult hit an invincible target' };
+      if (B.state === 'held') return { pass: false, error: 'ult left the target held' };
+      // 8. 断崖台：磁力直接挪人（负极 R、大招）也过不了崖边，不算坠崖
+      mapVote = 'cliff'; startMapsMode(CHAR_IDX.cixian, 0, 'easy', true); M.phase = 'fight';
+      if (M.map !== 'cliff') return { pass: false, error: 'map ' + M.map };
+      B.state = 'held'; B.mapFalls = 0; magMove(B, WALL - 150);
+      if (B.x !== WALL || B.mapFalls) return { pass: false, error: 'magnet moved a fighter past the cliff edge: ' + JSON.stringify({ x: B.x, falls: B.mapFalls }) };
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.invul = 0; }
+      A.x = STAGE_W - WALL - 20; B.x = A.x - 420; A.face = -1; A.pol = -1; A.skill2CD = 0; B.mapFalls = 0; startSkill(A, B, 2);
+      run(120, () => A.state !== 'skill');
+      if (B.mapFalls || B.x < WALL || B.x > STAGE_W - WALL) return { pass: false, error: 'R- on the cliff map: ' + JSON.stringify({ x: B.x, falls: B.mapFalls }) };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Qianji (千机): Single ball persistence, bounce physics, attack strike drive, breakout R on hitstun, and ult recall resetting Q',
+    fn: `(() => {
+      startMatch('train', 'stand', [CHAR_IDX.qianji, 0]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
+      projs.length = 0;
+
+      // 1. Q 投丸：生成唯一傀丸
+      A.skillCD = 0; startSkill(A, B, 1);
+      for (let i = 0; i < 15; i++) step();
+      let ball = projs.find(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead);
+      if (!ball) return { pass: false, error: 'Iron ball not spawned by Q' };
+
+      // 2. 傀丸在场时 Q 锁定无法重复释放
+      A.skillCD = 0; toNeutral(A);
+      startSkill(A, B, 1);
+      if (A.state === 'skill') return { pass: false, error: 'Q fired while ball already exists in field' };
+
+      // 3. 普攻击丸传动加速
+      ball.x = A.x + A.face * 50; ball.y = -20; ball.vx = 0; ball.vy = 0; ball.resting = true;
+      startAttack(A, 'l1');
+      for (let i = 0; i < 20; i++) step();
+      if (Math.abs(ball.vx) < 500) return { pass: false, error: 'Normal attack did not accelerate the ball: vx=' + ball.vx };
+
+      // 4. 蓄力斩轰击傀丸
+      toNeutral(A);
+      ball.x = A.x + A.face * 50; ball.y = -20; ball.vx = 0; ball.resting = true;
+      startAttack(A, 'cs2');
+      for (let i = 0; i < 40; i++) step();
+      if (Math.abs(ball.vx) < 1500 || ball.speedTier < 3) return { pass: false, error: 'cs2 attack did not supercharge the ball: vx=' + ball.vx + ', tier=' + ball.speedTier };
+
+      // 5. R 暴雨梨花：在受击硬直（hitstun）下触发绝境反击（breakout / ImmuneControl）
+      toNeutral(A);
+      A.state = 'hitstun'; A.t = 0; A.stun = 0.6; A.comboHits = 3; A.skill2CD = 0;
+      A.ctrl.buf.skill2 = clock;
+      step();
+      if (A.state !== 'skill' || A.skill !== 'ballspike') {
+        return { pass: false, error: 'Qian Ji R did not breakout from hitstun: state=' + A.state + ', skill=' + A.skill };
+      }
+      const needles = projs.filter(p => p.kind === 'needle' && p.owner === A.idx && !p.dead);
+      if (needles.length < 8) return { pass: false, error: 'Qian Ji R did not burst 8 needles: got ' + needles.length };
+
+      // 6. E 大招千丝收网：将球拉回，造成伤害并重置 Q 技能
+      toNeutral(A);
+      A.meter = 100; A.skillCD = 10;
+      startSpecial(A);
+      for (let i = 0; i < 150; i++) { step(); if (A.state !== 'special') break; }
+      if (A.skillCD > 0) return { pass: false, error: 'Ult did not reset Q cooldown: skillCD=' + A.skillCD };
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+];
