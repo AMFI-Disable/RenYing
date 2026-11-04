@@ -6,7 +6,7 @@ on:
     paths:
       - "renying-offline.html"
       - "tools/build.py"
-      - "tools/rollback-test.mjs"
+      - "tools/tests/rollback-test.mjs"
   pull_request:
     branches: [ main ]
 
@@ -30,4 +30,4 @@ jobs:
           node-version: "22"
 
       - name: Verify Standalone Offline HTML Bundle & Embedded Payloads
-        run: node tools/rollback-test.mjs --offline
+        run: node tools/tests/rollback-test.mjs --offline

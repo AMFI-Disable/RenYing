@@ -4,7 +4,7 @@
 defHero({
   id: 'liying', skin: 'li', en: 'Li Ying',
   // 初始强度：她的伤害几乎全靠普攻和留影一刀（渡影不打人），不调时电脑天道对打胜率只有 0~4%。
-  // 2026-10-28 用天道 AI 对 13 位侠客各打左右两边、4 组种子粗调到这里（1.45 时约 42%）；细调交给 tools/trainer.mjs。
+  // 2026-10-28 用天道 AI 对 13 位侠客各打左右两边、4 组种子粗调到这里（1.45 时约 42%）；细调交给 tools/ai/trainer.mjs。
   bal: { normal: 1.47, skill: 1.47, ult: 1.47, cd: 1.0, hp: 1.47 },
   char: { name: '离影', role: '离魂刀客', diff: 3, escCD: 8.5, skill: 'mistmark', skill2: 'mistswap', ult: 'mistarray', passive: 'mist',
     passiveName: '离魂', passiveDesc: '能把一缕魂留在原地，化作雾身（最多 4 个，存在 15 秒，碰到就碎，可布于全场任意位置无距离消散限制）。身子却比旁人笨重：只有一段跳。打碎雾身的人回 10 点气。',

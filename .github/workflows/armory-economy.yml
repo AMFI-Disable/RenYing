@@ -9,7 +9,7 @@ on:
       - "src/anticheat.js"
       - "src/cloud.js"
       - "cloudflare/**"
-      - "tools/econ-test.mjs"
+      - "tools/tests/econ-test.mjs"
   pull_request:
     branches: [ main ]
 
@@ -34,5 +34,5 @@ jobs:
 
       - name: Run Armory Economy & Anti-Cheat Suite (Source & Bundle)
         run: |
-          node tools/econ-test.mjs
-          node tools/econ-test.mjs --bundle
+          node tools/tests/econ-test.mjs
+          node tools/tests/econ-test.mjs --bundle

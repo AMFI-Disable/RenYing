@@ -14,7 +14,7 @@ D1 数据库的表结构都写在这里，一个文件一次改动，按编号�
 
 `python3 tools/build.py` 把这里的 `.sql` 拆成一句一句，写进 `cloudflare/migrations.gen.js`（`worker.js` 引用它）和 `cloudflare/worker.bundle.js`。这两个是生成的，不要直接改。
 
-**不要用 `npx wrangler d1 migrations apply`。** wrangler 用的是另一张表（`d1_migrations`），不知道 Worker 已经跑过哪些，会从 `0001` 重跑，在 `0002` 的 `ALTER TABLE` 上报“列已经有了”停下来。`wrangler.toml` 里留着 `migrations_dir` 只是给部署前检查（`tools/predeploy-check.mjs`）找这个目录用。
+**不要用 `npx wrangler d1 migrations apply`。** wrangler 用的是另一张表（`d1_migrations`），不知道 Worker 已经跑过哪些，会从 `0001` 重跑，在 `0002` 的 `ALTER TABLE` 上报“列已经有了”停下来。`wrangler.toml` 里留着 `migrations_dir` 只是给部署前检查（`tools/tests/predeploy-check.mjs`）找这个目录用。
 
 ## 加一个迁移
 
@@ -22,7 +22,7 @@ D1 数据库的表结构都写在这里，一个文件一次改动，按编号�
 2. 每句用分号结尾；字符串里不要写分号（打包时按分号拆句子）。`--` 后面是注释，打包时去掉。
 3. 加列用 `ALTER TABLE 表 ADD COLUMN 列 …`。改约束只能重建表：新建 `表_new`、`INSERT … SELECT` 搬数据、`DROP` 旧表、`RENAME`、重建索引，照 `0006` 的写法。**`users` 被 `sessions`、`devices` 用外键指着，D1 默认开着外键，`DROP TABLE users` 会连带删掉所有登录，不要重建它。**
 4. 文件末尾用注释写好回滚 SQL。
-5. 同步改 `cloudflare/schema.sql`（所有迁移跑完以后的样子），运行 `python3 tools/build.py`，再跑 `node tools/econ-test.mjs`：它会在空库和老库上各跑一遍，核对结果和 `schema.sql` 一样。
+5. 同步改 `cloudflare/schema.sql`（所有迁移跑完以后的样子），运行 `python3 tools/build.py`，再跑 `node tools/tests/econ-test.mjs`：它会在空库和老库上各跑一遍，核对结果和 `schema.sql` 一样。
 6. 跑过的文件不要再改。改了 Worker 不会重跑，只会在日志里提示 `sum` 对不上。
 
 改表之前先导出一次数据库备份，大改动先部署到 staging（`npx wrangler deploy --env staging`）试一遍。部署、备份、恢复和回滚的完整步骤见 `docs/deploy-runbook.md`。

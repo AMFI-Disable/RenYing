@@ -1,6 +1,6 @@
 # 刃影管理后台
 
-管理后台有两种用法：Cloudflare Worker 上的网页（`/admin`），和终端里的命令 `node tools/econ-admin.mjs`。两边能做的事一样：
+管理后台有两种用法：Cloudflare Worker 上的网页（`/admin`），和终端里的命令 `node tools/admin/econ-admin.mjs`。两边能做的事一样：
 
 - 查玩家的武库、处罚记录、流水和市场记录。
 - 给一个号加减墨锭、武器箱、终端机、改名标签，发饰品或者收走饰品。
@@ -247,7 +247,7 @@ Dev 是开发组的市场账号：墨锭、武器箱和饰品不受库存限制�
 4. 看看口令对不对、流水里记成谁：
 
    ```
-   node tools/econ-admin.mjs whoami
+   node tools/admin/econ-admin.mjs whoami
    ```
 
 关掉这个终端窗口，口令就没了，下次再做一遍第 2、3 步。下面是常用的命令，`<号>` 写昵称或者账号编号，修改都要用 `--why` 写原因。
@@ -255,115 +255,115 @@ Dev 是开发组的市场账号：墨锭、武器箱和饰品不受库存限制�
 5. 总览：
 
    ```
-   node tools/econ-admin.mjs stats
+   node tools/admin/econ-admin.mjs stats
    ```
 
 6. 按昵称开头找人：
 
    ```
-   node tools/econ-admin.mjs find 小明
+   node tools/admin/econ-admin.mjs find 小明
    ```
 
 7. 看一个号的武库、处罚、市场记录和最近 100 条流水（库存里每件饰品的编号也在这里）：
 
    ```
-   node tools/econ-admin.mjs log 小明
+   node tools/admin/econ-admin.mjs log 小明
    ```
 
 8. 加 500 墨锭、2 个初刃武器箱、1 台终端机（`c1` 到 `c8` 是八种武器箱，`c8` 是星座武器箱，扣就写负数，比如 `ink=-200`）：
 
    ```
-   node tools/econ-admin.mjs adjust 小明 ink=+500 c1=+2 term=+1 --why "开箱没到账"
+   node tools/admin/econ-admin.mjs adjust 小明 ink=+500 c1=+2 term=+1 --why "开箱没到账"
    ```
 
 9. 发一件饰品、一件斩数版（`@0` 是斩数从 0 开始），收走库存里第 12 号：
 
    ```
-   node tools/econ-admin.mjs adjust 小明 give=qf_p1 give=gc_wolf@0 take=12 --why "活动奖励"
+   node tools/admin/econ-admin.mjs adjust 小明 give=qf_p1 give=gc_wolf@0 take=12 --why "活动奖励"
    ```
 
 10. 封 3 天（永久就把 `3` 换成 `perm`）：
 
     ```
-    node tools/econ-admin.mjs ban 小明 3 --why "刷墨锭"
+    node tools/admin/econ-admin.mjs ban 小明 3 --why "刷墨锭"
     ```
 
 11. 解封：
 
     ```
-    node tools/econ-admin.mjs unban 小明 --why "误封"
+    node tools/admin/econ-admin.mjs unban 小明 --why "误封"
     ```
 
 12. 重设密码。会随机生成一个 20 位的新密码，只显示这一次；这个号在所有设备上的登录都会退出：
 
     ```
-    node tools/econ-admin.mjs password 小明 --why "玩家忘了密码"
+    node tools/admin/econ-admin.mjs password 小明 --why "玩家忘了密码"
     ```
 
 13. 云端还没有 Dev 时建 Dev 账号（已经有了，就和第 12 步一样是重设密码）：
 
     ```
-    node tools/econ-admin.mjs password Dev --create --why "建开发组的市场账号"
+    node tools/admin/econ-admin.mjs password Dev --create --why "建开发组的市场账号"
     ```
 
 14. 给所有人发补偿，14 天内能领（加 `--new` 之后新注册的号也能领；把 `all` 换成昵称就只发给一个号）：
 
     ```
-    node tools/econ-admin.mjs gift all ink=500 c1=1 --note "服务器维护补偿" --days 14
+    node tools/admin/econ-admin.mjs gift all ink=500 c1=1 --note "服务器维护补偿" --days 14
     ```
 
 15. 看发过的补偿和补偿编号：
 
     ```
-    node tools/econ-admin.mjs gifts
+    node tools/admin/econ-admin.mjs gifts
     ```
 
 16. 停发一份补偿（编号在第 15 步里看）：
 
     ```
-    node tools/econ-admin.mjs gift-off 补偿编号 --why "发错了"
+    node tools/admin/econ-admin.mjs gift-off 补偿编号 --why "发错了"
     ```
 
 17. 建兑换码 SPRING2026：500 墨锭和 1 个初刃武器箱，最多 200 个号能领，30 天内有效（不写 `SPRING2026` 就随机生成 10 位）：
 
     ```
-    node tools/econ-admin.mjs code SPRING2026 ink=500 c1=1 --note "新春礼包" --uses 200 --days 30
+    node tools/admin/econ-admin.mjs code SPRING2026 ink=500 c1=1 --note "新春礼包" --uses 200 --days 30
     ```
 
 18. 看建过的兑换码、各领了几份：
 
     ```
-    node tools/econ-admin.mjs codes
+    node tools/admin/econ-admin.mjs codes
     ```
 
 19. 停用一个兑换码：
 
     ```
-    node tools/econ-admin.mjs code-off SPRING2026 --why "活动结束了"
+    node tools/admin/econ-admin.mjs code-off SPRING2026 --why "活动结束了"
     ```
 
 20. 看经济数值：现在用的、默认值、范围、最近改过的版本：
 
     ```
-    node tools/econ-admin.mjs cfg
+    node tools/admin/econ-admin.mjs cfg
     ```
 
 21. 改经济数值（键看上面的表；值写 `default` 就回到默认）：
 
     ```
-    node tools/econ-admin.mjs cfg-set price.c1=300 fee=0.1 --why "初刃涨价"
+    node tools/admin/econ-admin.mjs cfg-set price.c1=300 fee=0.1 --why "初刃涨价"
     ```
 
 22. 退回到第 3 版（写 `0` 就是全部回到默认值）：
 
     ```
-    node tools/econ-admin.mjs cfg-undo 3 --why "涨价效果不好"
+    node tools/admin/econ-admin.mjs cfg-undo 3 --why "涨价效果不好"
     ```
 
 23. 管理员做过的事：
 
     ```
-    node tools/econ-admin.mjs audit
+    node tools/admin/econ-admin.mjs audit
     ```
 
 连本机测试服务器时，先设 `RENYING_CLOUD_API`（比如 `http://127.0.0.1:8787`），不设就连正式服务器。

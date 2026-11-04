@@ -94,4 +94,4 @@ A terminal costs 500 Ink in the shop. Opening it shows **one item at a time** at
 
 - Rules, odds, prices and limits: `src/armory-core.js` (shared by the page and the Worker).
 - Screens: `src/armory.js`.
-- Server side: `cloudflare/worker.js` (`handleEcon`). Tests: `node tools/econ-test.mjs`.
+- Server side: `cloudflare/worker.js` (`handleEcon`). Tests: `node tools/tests/econ-test.mjs`.

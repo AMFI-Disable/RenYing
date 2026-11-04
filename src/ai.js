@@ -2,8 +2,8 @@
 // 这个文件在 game.js 之前加载，只定义数据和函数；用到的游戏变量（clock、projs、SKILLS……）都在调用时才读。
 //   1. LEVELS        五个难度的“手速与见识”：反应多快、会不会确反、压起身、骗闪、避战……（数据在 src/data/20-levels.js）
 //   2. AI_KIT        每个角色的技能该怎么用（什么时候放、打中后接什么）
-//   3. 打法基因      每个角色可以训练的打法参数。天道与绝顶用 tools/ai-train.mjs 自我对弈进化出来的基因
-//   4. 打击数据      tools/ai-framedata.mjs 实测的每招距离、出手时间、收招时间，存在 models/ai-brain.json
+//   3. 打法基因      每个角色可以训练的打法参数。天道与绝顶用 tools/ai/ai-train.mjs 自我对弈进化出来的基因
+//   4. 打击数据      tools/ai/ai-framedata.mjs 实测的每招距离、出手时间、收招时间，存在 models/ai-brain.json
 //   5. FoeModel      对局中记下对手的习惯：被连几下会闪、起身爱做什么、爱不爱挡
 //   6. AIBrain       每帧决策：本能（受身、破连、格挡、精准招架、躲暗器）→ 战术（连招、确反、压起身、骗闪、立回、避战）
 

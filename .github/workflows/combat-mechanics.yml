@@ -7,8 +7,8 @@ on:
       - "src/data/**"
       - "src/game/**"
       - "src/ai.js"
-      - "tools/combat-test.mjs"
-      - "tools/ai-code.mjs"
+      - "tools/tests/combat-test.mjs"
+      - "tools/ai/ai-code.mjs"
   pull_request:
     branches: [ main ]
 
@@ -32,4 +32,4 @@ jobs:
           node-version: "22"
 
       - name: Run 12-Hero Combat & 2v2 Regression Suite
-        run: node tools/combat-test.mjs --sim
+        run: node tools/tests/combat-test.mjs --sim

@@ -7,8 +7,8 @@ on:
       - "src/net-p2p.js"
       - "src/data/**"
       - "src/game/**"
-      - "tools/rollback-test.mjs"
-      - "tools/netplay-test.mjs"
+      - "tools/tests/rollback-test.mjs"
+      - "tools/tests/netplay-test.mjs"
   pull_request:
     branches: [ main ]
 
@@ -32,9 +32,9 @@ jobs:
           node-version: "22"
 
       - name: Verify Rollback Snapshot & Resimulation Determinism
-        run: node tools/rollback-test.mjs --rollback
+        run: node tools/tests/rollback-test.mjs --rollback
 
       # Two sandboxed copies of the game joined by a fake laggy link, both mashing random inputs;
       # every match must come out identical on both sides.
       - name: Two-Player Netplay Determinism
-        run: node tools/netplay-test.mjs
+        run: node tools/tests/netplay-test.mjs

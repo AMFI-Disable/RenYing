@@ -7,8 +7,8 @@ on:
       - "cloudflare/**"
       - "src/armory-core.js"
       - "src/cloud.js"
-      - "tools/rollback-test.mjs"
-      - "tools/predeploy-check.mjs"
+      - "tools/tests/rollback-test.mjs"
+      - "tools/tests/predeploy-check.mjs"
       - "tools/build.py"
   pull_request:
     branches: [ main ]
@@ -38,7 +38,7 @@ jobs:
       - name: Validate D1 Schema & Worker Bundle Syntax
         run: |
           node --input-type=module --check < cloudflare/worker.bundle.js
-          node tools/rollback-test.mjs --schema
+          node tools/tests/rollback-test.mjs --schema
 
       - name: Probe Live Cloudflare Worker Health Endpoint
         run: |
@@ -69,10 +69,10 @@ jobs:
       # wrangler.toml sanity, /admin CSP (one script, sha256 matches, no inline handlers),
       # then the key API routes against the real Worker running locally with node:sqlite as D1.
       - name: Admin CSP And API Smoke Test (Bundle)
-        run: node tools/predeploy-check.mjs
+        run: node tools/tests/predeploy-check.mjs
 
       - name: Admin CSP And API Smoke Test (Source)
-        run: node tools/predeploy-check.mjs --source
+        run: node tools/tests/predeploy-check.mjs --source
 
       # Parses wrangler.toml and bundles the Worker exactly as a deploy would, without uploading.
       # No Cloudflare credentials are used; production and staging are both checked.

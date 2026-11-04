@@ -61,6 +61,6 @@ The open world (江湖共斗) is different: it runs on the server.
 
 | Command | Checks |
 | :--- | :--- |
-| `node tools/rollback-test.mjs --rollback` | Snapshot, restore and re-simulation give identical results |
-| `node tools/netplay-test.mjs` | Two game copies over a laggy, jittery link end every match identically |
-| `node tools/world-test.mjs` | Open world line: player cap, view range, damage caps, world boss, restarts |
+| `node tools/tests/rollback-test.mjs --rollback` | Snapshot, restore and re-simulation give identical results |
+| `node tools/tests/netplay-test.mjs` | Two game copies over a laggy, jittery link end every match identically |
+| `node tools/tests/world-test.mjs` | Open world line: player cap, view range, damage caps, world boss, restarts |

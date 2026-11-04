@@ -10,13 +10,13 @@ on:
       - "src/game/**"
       - "src/armory.js"
       - "src/social.js"
-      - "tools/ui-audit.mjs"
-      - "tools/hud-audit.mjs"
-      - "tools/hud-overlap-audit.mjs"
-      - "tools/kb-flow-test.mjs"
-      - "tools/perf-audit.mjs"
-      - "tools/perf-budget.json"
-      - "tools/firstload-audit.mjs"
+      - "tools/audits/ui-audit.mjs"
+      - "tools/audits/hud-audit.mjs"
+      - "tools/audits/hud-overlap-audit.mjs"
+      - "tools/audits/kb-flow-test.mjs"
+      - "tools/audits/perf-audit.mjs"
+      - "tools/audits/perf-budget.json"
+      - "tools/audits/firstload-audit.mjs"
   pull_request:
     branches: [ main ]
 
@@ -57,7 +57,7 @@ jobs:
       - name: Run UI Panel Layout Audit (1440x900)
         run: |
           set +e
-          node tools/ui-audit.mjs ci-ui 1440 900 2>&1 | tee /tmp/ui-audit.log
+          node tools/audits/ui-audit.mjs ci-ui 1440 900 2>&1 | tee /tmp/ui-audit.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             # Surface the audit's own verdict as check annotations: this audit is timing sensitive, so the
@@ -71,19 +71,19 @@ jobs:
       # Keyboard-only flow (home, single mode, draft, match, results, home) on a short landscape window in English;
       # ci.yml runs it at 1440x900 in Chinese.
       - name: Keyboard-Only Flow Test (844x390, English)
-        run: node tools/kb-flow-test.mjs ci-kb 844 390 --en
+        run: node tools/audits/kb-flow-test.mjs ci-kb 844 390 --en
 
       - name: Run Canvas HUD Text & Overlap Audit
         run: |
-          node tools/hud-audit.mjs ci-hud 1440 900
-          node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2
+          node tools/audits/hud-audit.mjs ci-hud 1440 900
+          node tools/audits/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2
 
       # Load to main menu, panel switch to next frame, and AI-vs-AI 1v1 / 2v2 frame rate,
-      # checked against tools/perf-budget.json (measured, then loosened about 3x).
+      # checked against tools/audits/perf-budget.json (measured, then loosened about 3x).
       - name: Performance Budget Audit
-        run: node tools/perf-audit.mjs ci-perf
+        run: node tools/audits/perf-audit.mjs ci-perf
 
       # Cold first load: fails if a web font can hide text (font-display block/auto) or if music or the
       # Qingfengxing page is requested on the first screen. Timings and sizes are reported only.
       - name: First Load Audit (Fonts, Music, Deferred Pages)
-        run: node tools/firstload-audit.mjs ci-firstload 3
+        run: node tools/audits/firstload-audit.mjs ci-firstload 3

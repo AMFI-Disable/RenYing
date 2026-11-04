@@ -1,6 +1,6 @@
 # 帧数表
 
-由 `node tools/frame-data.mjs` 生成，1 帧 = 1/60 秒。改招式或技能的时间后重新生成；`--check` 用来确认手感没变。
+由 `node tools/checks/frame-data.mjs` 生成，1 帧 = 1/60 秒。改招式或技能的时间后重新生成；`--check` 用来确认手感没变。
 
 ## 普攻：前摇 / 判定 / 后摇（帧）
 

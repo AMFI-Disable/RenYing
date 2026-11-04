@@ -1,6 +1,6 @@
 # Trainer：天道互打胜率与平衡建议
 
-> 由 `node tools/trainer.mjs --n 2` 自动生成（2026-11-04）。双方同一难度（天道），同一套打法基因（models/ai-brain.json）。每个难度每对角色 2 场（左右各半，固定种子可复现），镜像不打，共 480 场三局两胜；每个对位格子的 95% 误差约 ±69 个百分点，每个角色总胜率约 ±17.9。
+> 由 `node tools/ai/trainer.mjs --n 2` 自动生成（2026-11-04）。双方同一难度（天道），同一套打法基因（models/ai-brain.json）。每个难度每对角色 2 场（左右各半，固定种子可复现），镜像不打，共 480 场三局两胜；每个对位格子的 95% 误差约 ±69 个百分点，每个角色总胜率约 ±17.9。
 
 > 平衡建议**没有**改进游戏，只在 `docs/trainer/proposal.json` 里。要试玩，按下面「怎么用这份建议」操作。
 
@@ -68,8 +68,8 @@
 只在本地试，不影响游戏：
 
 ```bash
-AI_BAL=docs/trainer/proposal.json node tools/ai-arena.mjs --a god --b god --n 10
-AI_BAL=docs/trainer/proposal.json node tools/ai-arena.mjs --a hard --b hard --n 10
+AI_BAL=docs/trainer/proposal.json node tools/ai/ai-arena.mjs --a god --b god --n 10
+AI_BAL=docs/trainer/proposal.json node tools/ai/ai-arena.mjs --a hard --b hard --n 10
 ```
 
 确定要用，就把 `docs/trainer/proposal.json` 里每个角色的 normal / skill / ult / hp 抄进 `src/data/heroes/` 里各自文件的 `bal`，再运行 `python3 tools/build.py` 重新生成页面。

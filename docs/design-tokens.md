@@ -34,7 +34,7 @@
 
 ## 字号
 
-最常用的几档（现有样式里出现次数最多的）：`--fs-xs` 12px、`--fs-sm` 13px、`--fs-md` 14px、`--fs-lg` 16px、`--fs-xl` 20px、`--fs-2xl` 26px、`--fs-title` 30px。界面文字不小于 12px（`tools/ui-audit.mjs` 会查）。
+最常用的几档（现有样式里出现次数最多的）：`--fs-xs` 12px、`--fs-sm` 13px、`--fs-md` 14px、`--fs-lg` 16px、`--fs-xl` 20px、`--fs-2xl` 26px、`--fs-title` 30px。界面文字不小于 12px（`tools/audits/ui-audit.mjs` 会查）。
 
 ## 间距
 

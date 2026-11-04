@@ -65,38 +65,38 @@ jobs:
 
       - name: Armory Economy & Anti-Cheat Server Tests
         run: |
-          node tools/econ-test.mjs
-          node tools/econ-test.mjs --bundle
+          node tools/tests/econ-test.mjs
+          node tools/tests/econ-test.mjs --bundle
 
       # Runs src/cloud.js in Node with a fake Worker: per-account save isolation, a pending
       # save that must not follow an account switch, no retry storm on a 4xx refusal,
       # non-Latin-1 passwords for local accounts, and full-profile export signatures.
       - name: Cloud Save Client Tests
-        run: node tools/cloud-test.mjs
+        run: node tools/tests/cloud-test.mjs
 
       # Real Worker (node:sqlite as D1) plus several simulated devices: progress added on two devices
       # is summed in the cloud, retries, reloads, re-login and reconnects never count twice, an old save
       # migrates without loss, and nothing crosses between accounts.
       - name: Cloud Sync Merge Tests
         run: |
-          node tools/sync-test.mjs
-          node tools/sync-test.mjs --bundle
+          node tools/tests/sync-test.mjs
+          node tools/tests/sync-test.mjs --bundle
 
       # Runs the open world line (WorldLine Durable Object) in Node with fake sockets: 40-player cap,
       # view-range filtering, damage caps, world boss, restart re-hello and idle timer shutdown.
       - name: Open World Server Tests
-        run: node tools/world-test.mjs
+        run: node tools/tests/world-test.mjs
 
       - name: Run Combat & AI Regression Suite
-        run: node tools/combat-test.mjs --sim
+        run: node tools/tests/combat-test.mjs --sim
 
       - name: Lingque AI Combo Checks
-        run: node tools/ai-lingque-test.mjs
+        run: node tools/tests/ai-lingque-test.mjs
 
       # Anti-cheat damage check: a single oversized hit is only logged and reported, never a strike (a full
       # roguelike scroll stack leaves no record at all); edited move tables and a swapped damage function still strike.
       - name: Anti-Cheat Damage Checks
-        run: node tools/anticheat-test.mjs
+        run: node tools/tests/anticheat-test.mjs
 
       - name: Start Static Web Server for Browser Audits
         run: |
@@ -109,12 +109,12 @@ jobs:
           echo "Static web server is up on :8791"
 
       - name: Draft And Offline Font Fallback Checks
-        run: node tools/bp-flow-test.mjs
+        run: node tools/audits/bp-flow-test.mjs
 
       - name: UI Panel Layout Audit (all panels, 1440x900)
         run: |
           set +e
-          node tools/ui-audit.mjs ci-ui 1440 900 2>&1 | tee /tmp/ui-audit.log
+          node tools/audits/ui-audit.mjs ci-ui 1440 900 2>&1 | tee /tmp/ui-audit.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             # Surface the audit's own verdict as check annotations: this audit is timing sensitive, so the
@@ -126,14 +126,14 @@ jobs:
           exit "$status"
 
       - name: Canvas HUD Text Audit
-        run: node tools/hud-audit.mjs ci-hud 1440 900
+        run: node tools/audits/hud-audit.mjs ci-hud 1440 900
 
       - name: Mobile / Touch Layout Audit
-        run: node tools/touch-audit.mjs ci-touch
+        run: node tools/audits/touch-audit.mjs ci-touch
 
       # A fresh player with no mouse: language prompt, home, single mode, draft, a real match, results, home.
       - name: Keyboard-Only Flow Test (1440x900)
-        run: node tools/kb-flow-test.mjs ci-kb 1440 900
+        run: node tools/audits/kb-flow-test.mjs ci-kb 1440 900
 
       - name: Verify Commit Message Conventions
         env:

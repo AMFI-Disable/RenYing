@@ -182,7 +182,7 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenY
 | :--- | :--- |
 | `src/page.html`, `src/style.css` | Page markup (with build markers) and all styles |
 | `src/game/` | The game, split into numbered files that `tools/build.py` joins in order |
-| `src/data/` | Data tables: one file per hero in `src/data/heroes/`, modes, draft orders, maps, AI levels, English UI text. Checked at build time by `tools/data-check.mjs` |
+| `src/data/` | Data tables: one file per hero in `src/data/heroes/`, modes, draft orders, maps, AI levels, English UI text. Checked at build time by `tools/checks/data-check.mjs` |
 | `src/ai.js` | Computer opponents |
 | `src/net-p2p.js` | Peer-to-peer connection |
 | `src/cloud.js` | Accounts and cloud saves |
@@ -193,7 +193,7 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenY
 | `assets/` | Music, the generated mini-game page, vendored `peerjs` and `three.js` |
 | `cloudflare/` | Worker, admin page, D1 schema and migrations |
 | `models/` | Trained AI weights |
-| `tools/` | Build script, tests, audits and AI training tools |
+| `tools/` | `build.py` plus `ai/`, `admin/`, `audits/`, `checks/`, `tests/` and `music/` |
 | `docs/` | Design notes, deploy runbook (Chinese), admin guide, frame data, wiki source |
 | `index.html`, `renying-offline.html` | **Generated.** Online and offline editions |
 | `renying.html` | Notice page for the old address |
@@ -220,16 +220,16 @@ Main test suites (all run in CI):
 
 | Area | Command |
 | :--- | :--- |
-| Combat, every hero, 2v2 AI | `node tools/combat-test.mjs --sim` |
-| Rollback determinism | `node tools/rollback-test.mjs --rollback` |
-| Two copies over a laggy link | `node tools/netplay-test.mjs` |
-| Armory economy and migrations | `node tools/econ-test.mjs` |
-| Cloud save client | `node tools/cloud-test.mjs` |
-| Multi-device sync | `node tools/sync-test.mjs` |
-| Open world server | `node tools/world-test.mjs` |
-| Anti-cheat checks | `node tools/anticheat-test.mjs` |
+| Combat, every hero, 2v2 AI | `node tools/tests/combat-test.mjs --sim` |
+| Rollback determinism | `node tools/tests/rollback-test.mjs --rollback` |
+| Two copies over a laggy link | `node tools/tests/netplay-test.mjs` |
+| Armory economy and migrations | `node tools/tests/econ-test.mjs` |
+| Cloud save client | `node tools/tests/cloud-test.mjs` |
+| Multi-device sync | `node tools/tests/sync-test.mjs` |
+| Open world server | `node tools/tests/world-test.mjs` |
+| Anti-cheat checks | `node tools/tests/anticheat-test.mjs` |
 
-Browser audits need a local server first (`python3 -m http.server 8791`), then for example `node tools/ui-audit.mjs ci-ui 1440 900`, `node tools/hud-audit.mjs ci-hud 1440 900`, `node tools/touch-audit.mjs ci-touch` and `node tools/kb-flow-test.mjs ci-kb 1440 900`. `node tools/test.mjs` runs the main set in one go.
+Browser audits need a local server first (`python3 -m http.server 8791`), then for example `node tools/audits/ui-audit.mjs ci-ui 1440 900`, `node tools/audits/hud-audit.mjs ci-hud 1440 900`, `node tools/audits/touch-audit.mjs ci-touch` and `node tools/audits/kb-flow-test.mjs ci-kb 1440 900`. `node tools/tests/test.mjs` runs the main set in one go.
 
 The full test matrix is on the wiki page [Testing And CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI). The Worker is deployed by the maintainer; the steps are in [docs/deploy-runbook.md](docs/deploy-runbook.md).
 

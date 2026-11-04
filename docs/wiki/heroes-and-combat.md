@@ -90,10 +90,10 @@ These are the hints shown on the draft screen, not hard rules. / 选人页上给
 
 ## Frame Data / 帧数表
 
-Startup, active and recovery frames for every normal attack, skill and ultimate are generated from the game code into [docs/frame-data.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/frame-data.md) (1 frame = 1/60 s). Run `node tools/frame-data.mjs` after changing a move, and `node tools/frame-data.mjs --check` to confirm timing did not change by accident.
+Startup, active and recovery frames for every normal attack, skill and ultimate are generated from the game code into [docs/frame-data.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/frame-data.md) (1 frame = 1/60 s). Run `node tools/checks/frame-data.mjs` after changing a move, and `node tools/checks/frame-data.mjs --check` to confirm timing did not change by accident.
 
 每一招的前摇、判定、后摇帧数由代码生成在 [docs/frame-data.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/frame-data.md)。
 
 ## Where Hero Data Lives / 侠客数据在哪
 
-One file per hero in [`src/data/heroes/`](https://github.com/AMFI-Disable/RenYing/tree/main/src/data/heroes): stats, balance multipliers, look, AI range, matchups and both stories. The field reference is at the top of `src/data/00-heroes.js`, and `tools/data-check.mjs` fails the build if a field is missing or wrong. Skill logic is in `src/game/03-skills.js` and ultimates in `src/game/04-ults.js`.
+One file per hero in [`src/data/heroes/`](https://github.com/AMFI-Disable/RenYing/tree/main/src/data/heroes): stats, balance multipliers, look, AI range, matchups and both stories. The field reference is at the top of `src/data/00-heroes.js`, and `tools/checks/data-check.mjs` fails the build if a field is missing or wrong. Skill logic is in `src/game/03-skills.js` and ultimates in `src/game/04-ults.js`.

@@ -1,6 +1,6 @@
 -- Cloudflare D1 Database Schema for RenYing (刃影)
 -- 这是 cloudflare/migrations/ 里所有迁移跑完以后的样子，方便一次看全；表结构以迁移文件为准，改表要加新的迁移文件，再同步改这里
--- （tools/econ-test.mjs 会核对两边一样）。Worker 第一次收到请求时自己跑迁移，记在 schema_migrations 表里，平时不用手动执行这个文件。
+-- （tools/tests/econ-test.mjs 会核对两边一样）。Worker 第一次收到请求时自己跑迁移，记在 schema_migrations 表里，平时不用手动执行这个文件。
 
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
