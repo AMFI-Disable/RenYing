@@ -180,7 +180,7 @@ flowchart LR
 
 | 路径 | 是什么 |
 | :--- | :--- |
-| `src/page.html`、`src/style.css` | 页面结构（带构建标记）和全部样式 |
+| `src/page.html`、`src/style.css`、`src/styles/` | 页面结构（带构建标记）和按文件名顺序拼接的样式 |
 | `src/game/` | 游戏本体，按编号拆成多个文件，`tools/build.py` 按顺序拼起来 |
 | `src/data/` | 数据表：`src/data/heroes/` 一位侠客一个文件，还有模式、点将台顺序、地图、电脑难度、界面英文。构建时由 `tools/checks/data-check.mjs` 检查 |
 | `src/ai.js` | 电脑对手 |

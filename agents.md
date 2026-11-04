@@ -14,7 +14,7 @@ RenYing (刃影) is a browser fighting game with offline play, online rollback n
 | Hero data, one file per hero | `src/data/heroes/` |
 | Modes, draft orders, maps | `src/data/10-modes.js`, `src/data/11-bp-orders.js`, `src/data/12-maps.js` |
 | English interface text | `src/data/30-ui-copy.js` (`src/i18n.js` only looks it up) |
-| Page markup and styles | `src/page.html`, `src/style.css` |
+| Page markup and styles | `src/page.html`, `src/style.css`, numbered styles in `src/styles/` |
 | Armory and market | `src/armory-core.js`, `src/armory.js` |
 | Server | `cloudflare/worker.js`, migrations in `cloudflare/migrations/` |
 | Build entrypoint | `tools/build.py` |

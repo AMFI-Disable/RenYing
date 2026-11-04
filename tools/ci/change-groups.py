@@ -48,7 +48,7 @@ def main():
             "tools/tests/predeploy-check.mjs", "tools/tests/world-test.mjs",
             "tools/tests/rollback-test.mjs", "tools/tests/test.mjs", "tools/build.py",
         )) for path in paths),
-        "browser": any(matches(path, ("src/data/", "src/game/", "tools/audits/"), (
+        "browser": any(matches(path, ("src/data/", "src/game/", "src/styles/", "tools/audits/"), (
             "src/page.html", "src/style.css", "src/armory.js", "src/social.js",
             "index.html", "tools/build.py", "tools/tests/test.mjs",
         )) for path in paths),

@@ -79,6 +79,18 @@ def numbered(*parts):
     return sorted(n for n in os.listdir(os.path.join(SRC, *parts)) if re.match(r"^\d\d-[a-z0-9-]+\.js$", n))
 
 
+def style_parts():
+    folder = os.path.join(SRC, "styles")
+    modules = []
+    if os.path.isdir(folder):
+        modules = sorted(n for n in os.listdir(folder) if re.match(r"^\d\d-[a-z0-9-]+\.css$", n))
+    return [os.path.join(SRC, "style.css")] + [os.path.join(folder, n) for n in modules]
+
+
+def style_source():
+    return "".join(read(path) for path in style_parts())
+
+
 def data_parts():
     """src/data/ 下的数据表：先是本层按编号排好的文件（定义表和 defHero 这类登记函数），再是各子目录（heroes/ 每位侠客一个文件）"""
     base = os.path.join(SRC, "data")
@@ -168,7 +180,7 @@ def page(offline):
     build = {"offline": offline}
     qfx_b64 = base64.b64encode(qfx_page().encode("utf-8")).decode() if offline else ""
     parts = {
-        "<!--@style-->\n": "<style>\n" + compact_css(read(SRC, "style.css")) + "\n</style>\n",
+        "<!--@style-->\n": "<style>\n" + compact_css(style_source()) + "\n</style>\n",
         "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
             "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_AI_BRAIN=" + json.dumps(ai_brain_data(), separators=(",", ":")) + ";</script>\n"

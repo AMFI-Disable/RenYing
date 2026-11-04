@@ -180,7 +180,7 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenY
 
 | Path | What it is |
 | :--- | :--- |
-| `src/page.html`, `src/style.css` | Page markup (with build markers) and all styles |
+| `src/page.html`, `src/style.css`, `src/styles/` | Page markup (with build markers) and styles joined in filename order |
 | `src/game/` | The game, split into numbered files that `tools/build.py` joins in order |
 | `src/data/` | Data tables: one file per hero in `src/data/heroes/`, modes, draft orders, maps, AI levels, English UI text. Checked at build time by `tools/checks/data-check.mjs` |
 | `src/ai.js` | Computer opponents |
