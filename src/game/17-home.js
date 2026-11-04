@@ -292,15 +292,15 @@ function singleSec(sec) {
     b.classList.toggle('sel', b.dataset.tab === active);
   }
   for (const p of document.querySelectorAll('#mutatorPills button')) {
-    const on = p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active);
+    const on = p.dataset.mut === (teamMutator || 'normal');
     p.classList.toggle('sel', on); p.setAttribute('aria-pressed', String(on));
   }
   for (const el of document.querySelectorAll('#single [data-sec]')) {
     const secs = el.dataset.sec.split(' ');
     el.style.display = secs.includes(active) ? '' : 'none';
   }
-  const duel = ['cpu', 'chaos', 'mayhem', 'tag3'].includes(active);
-  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'maps'].includes(active);
+  const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
+  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps'].includes(active);
   if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;

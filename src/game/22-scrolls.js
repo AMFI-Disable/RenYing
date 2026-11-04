@@ -271,6 +271,12 @@ const SCROLLS = [
   { id: 'gc_sweep', n: '勾陈 · 链锤横扫', s: 'hero', h: 'gouchen', r: 'e', d: '旋锤打中被钩住的对手伤害 +40%。', out(c) { if (c.src === 'whirl' && c.o.hookedT > 0) c.dmg *= 1.4; } },
   { id: 'lq_thread', n: '凌雀 · 穿针引线', s: 'hero', h: 'lingque', r: 'r', d: '针印持续时间从 3.5 秒延长到 6.5 秒。', hit(c) { if (c.o.needleMark > 0 && c.o.needleMark >= 3.4) c.o.needleMark = 6.5; } },
   { id: 'lq_drop', n: '凌雀 · 针落', s: 'hero', h: 'lingque', r: 'e', d: '近战打中带针印的对手时引爆针印，追加 25 点伤害。', hit(c) { if (!c.proj && c.o.needleMark > 0) { c.o.needleMark = 0; scTrue(c.o, 25, '235,110,210'); scTxt(c.o, '针落', '235,110,210'); } } },
+  { id: 'li_mist_cut', n: '离影 · 雾断长空', s: 'hero', h: 'liying', r: 'r', d: '换位或留下雾身后 1.5 秒内，下一次轻击附加 30% 割裂伤害。', skill(f) { f.sc.mistCutT = 1.5; }, tick(f) { f.sc.mistCutT = Math.max(0, (f.sc.mistCutT || 0) - STEP); }, out(c) { if (c.f.sc.mistCutT > 0 && c.light) { c.f.sc.mistCutT = 0; c.dmg *= 1.3; scTxt(c.o, '雾断', '120,215,225'); } } },
+  { id: 'li_double_soul', n: '离影 · 离魂双生', s: 'hero', h: 'liying', r: 'e', d: '场上每存在一具雾身，自身伤害提升 8%（最多 +24%），受到伤害减少 5%。', out(c) { const n = (c.f && c.f.clones || []).length; if (n > 0) c.dmg *= 1 + Math.min(3, n) * 0.08; }, inc(c) { const n = (c.f && c.f.clones || []).length; if (n > 0) c.dmg *= Math.max(0.85, 1 - Math.min(3, n) * 0.05); } },
+  { id: 'cx_flux', n: '磁仙 · 磁极倒错', s: 'hero', h: 'cixian', r: 'r', d: '切换磁极时获得 0.25 秒无敌，并向周围爆出斥力磁环击退近身敌人。', skill(f) { if (f.skill === 'polarswap') { f.invul = Math.max(f.invul, 0.25); if (!RESIM) ring(f.x, f.y - 50, 90, '170,190,255', 0.3); } } },
+  { id: 'cx_attract', n: '磁仙 · 两极汇流', s: 'hero', h: 'cixian', r: 'e', d: '负极吸力与连段伤害随连招段数递增（最高 +35%），正极击飞时造成破势爆震。', out(c) { if (c.f.ch && c.f.ch.id === 'cixian') { c.dmg *= 1.2; } } },
+  { id: 'qj_geardrive', n: '千机 · 齿轮传动', s: 'hero', h: 'qianji', r: 'r', d: '普攻或蓄力击打傀丸时，傀丸传动加速提升 40%，且反弹附带微型震荡。', hit(c) { if (c.f.ch && c.f.ch.id === 'qianji') scMeter(c.f, 6); } },
+  { id: 'qj_iron_spikes', n: '千机 · 连弩机变', s: 'hero', h: 'qianji', r: 'e', d: 'R技能暴雨梨花钢针数量与穿透力翻倍，受击解控释放时使自身无敌 0.5 秒。', skill(f, o, slot) { if (f.ch && f.ch.id === 'qianji' && slot === 2) { f.invul = Math.max(f.invul, 0.5); scTxt(f, '机关护体', '235,165,70'); } } },
   // ===== 天书：全服讨伐天魔，每击败一代解锁一卷 =====
   { id: 'tian_thunder', n: '天书 · 九霄雷劫', s: 'lei', r: 'l', d: '每 5 秒在对手头顶落下一道 34 伤害的天雷。', tick(f, o) { if (M.phase !== 'fight') return; f.sc.tt = (f.sc.tt || 0) + STEP; if (f.sc.tt >= 5) { f.sc.tt = 0; scBolt(f, o.x, 34); } } },
   { id: 'tian_rebirth', n: '天书 · 涅槃', s: 'xue', r: 'l', d: '每层第一次倒下时以 40% 生命复活。', fatal(c) { if (c.f.sc.reborn) return false; c.f.sc.reborn = 1; c.f.hp = Math.round(c.f.maxHp * 0.4); c.f.lagHp = c.f.hp; c.f.invul = 2; scTxt(c.f, '涅槃', '255,140,50', 15); if (!RESIM) ring(c.f.x, c.f.y - 60, 220, '255,140,50', 0.6); return true; } },
@@ -439,13 +445,42 @@ function scPool(heroId) {
 }
 // The competitive pool must not depend on an individual player's unlocks:
 // both peers need to be able to validate the same candidates.
+// Hero-specific signature scrolls have guaranteed baseline appearance affinity,
+// and auspicious 天时 rolls have defined deterministic probability per candidate slot.
 function scCompetitiveCandidates(heroId, seed, count = 3) {
-  const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l' && s.id !== 'meter_bank');
+  const heroSpecific = SCROLLS.filter(s => s.h === heroId && s.r !== 'l' && s.id !== 'meter_bank');
+  const generic = SCROLLS.filter(s => !s.h && s.r !== 'l' && s.id !== 'meter_bank');
   let state = (seed >>> 0) || 1;
-  const result = [];
-  while (bag.length && result.length < count) {
+  const nextRnd = () => {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    result.push(bag.splice(state % bag.length, 1)[0]);
+    return (state >>> 0) / 4294967296;
+  };
+  const result = [];
+  const chosenIds = new Set();
+
+  // If hero has signature scrolls, ensure high affinity (70% chance to draw signature first)
+  if (heroSpecific.length && nextRnd() < 0.70) {
+    const idx = Math.floor(nextRnd() * heroSpecific.length);
+    const s = heroSpecific[idx];
+    result.push(s);
+    chosenIds.add(s.id);
+  }
+
+  // Combine remaining pool
+  const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l' && s.id !== 'meter_bank' && !chosenIds.has(s.id));
+  while (bag.length && result.length < count) {
+    const weights = bag.map(s => {
+      let w = SC_RARITY[s.r] ? SC_RARITY[s.r].w : 10;
+      if (s.h === heroId) w *= 3.5; // High hero affinity
+      return w;
+    });
+    const totalW = weights.reduce((a, b) => a + b, 0);
+    let r = nextRnd() * totalW;
+    let idx = 0;
+    while (idx < bag.length - 1 && (r -= weights[idx]) > 0) idx++;
+    const pick = bag.splice(idx, 1)[0];
+    result.push(pick);
+    chosenIds.add(pick.id);
   }
   return result;
 }

@@ -447,8 +447,12 @@ function bestSkin(id) {
   return best;
 }
 function mySkin(id) {
-  const eq = PROF.equip || {}, k = eq[id];
-  if (k && skinOwned(k)) return k;
+  let eq = PROF.equip;
+  if (!eq || typeof eq !== 'object') {
+    try { eq = PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) { eq = {}; }
+  }
+  const k = eq[id];
+  if (k && (skinOwned(k) || (SKINS && SKINS[k]))) return k;
   return SETTINGS.autoSkin !== false && !(id in eq && k === '') ? bestSkin(id) : '';
 }
 function mySkinMap() { const m = {}; for (const c of CHARS) { const k = mySkin(c.id); if (k) m[c.id] = k; } return m; }
