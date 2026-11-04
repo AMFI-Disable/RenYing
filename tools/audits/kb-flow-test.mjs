@@ -226,12 +226,17 @@ if (MAPS_FLOW) {
 
 // 3. draft: walk the grid, pick a fighter, confirm (bans and picks alike)
 await sleep(500);
-// the Terrain Clash draft names the map and marks its home-ground heroes; every other draft hides that line
+// Regular drafts name the selected map and mark its home-ground heroes. Training drafts have no battlefield map.
 const banner = await ev(`(() => { const b = $id('bpMap'); return { on: !!b && !b.classList.contains('hidden') && b.offsetHeight > 0, t: b ? b.textContent : '', fav: document.querySelectorAll('#bpGrid .bpcard.fav').length, want: BP && MAPS[BP.mapId] ? Object.keys(MAPS[BP.mapId].fav || {}).length : -1, map: BP && BP.mapId }; })()`);
 if (MAPS_FLOW) {
   ok('draft banner shows the voted map', banner.on && banner.map === 'ice' && banner.fav === banner.want, JSON.stringify(banner));
   if (EN) ok('draft banner in English', !CJK.test(banner.t), banner.t);
-} else ok('no map banner outside Terrain Clash', !banner.on && banner.fav === 0, JSON.stringify(banner));
+} else if (DUMMY_FLOW) {
+  ok('training draft has no battlefield banner', !banner.on && banner.fav === 0, JSON.stringify(banner));
+} else {
+  ok('draft banner shows the selected battlefield', banner.on && !!banner.map && banner.want > 0 && banner.fav === banner.want, JSON.stringify(banner));
+  if (EN) ok('draft banner in English', !CJK.test(banner.t), banner.t);
+}
 let picks = 0;
 for (let round = 0; round < 8; round++) {
   if ((await screenOn()) !== 'bp') break;
