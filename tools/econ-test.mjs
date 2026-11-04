@@ -112,11 +112,28 @@ section('皮肤都在箱子里：游戏里原有的皮肤和武库的新皮肤�
 
 section('注册：带上来的存档不能凭空造墨锭和武库皮肤');
 {
-  const r = await newUser('forger', { ink: 999999, skins: ['gc_wolf', 'qf_frost', 'qf_p1'], equip: { gouchen: 'gc_wolf' }, armory: { term: 99, cases: { c1: 99 } } });
+  const r = await newUser('forger', {
+    ink: 999999,
+    skins: ['gc_wolf', 'qf_frost', 'qf_p1'],
+    equip: { gouchen: 'gc_wolf' },
+    owned: ['qingfeng', 'moyu'],
+    frags: { moyu: 999 },
+    netWins: 999,
+    netLosses: 999,
+    rating: 9999,
+    placed: 99,
+    stageStars: { '1.2': 3 },
+    rk: { season: 'S99', pts: 9999 },
+    armory: { term: 99, cases: { c1: 99 } }
+  });
   ok(r.profile.ink === 5000, '注册时墨锭最多认 5000', r.profile.ink);
   ok(!r.profile.skins.includes('gc_wolf') && !r.profile.skins.includes('qf_p1'), '武库专属皮肤被拿掉', r.profile.skins);
   ok(r.profile.skins.includes('qf_frost'), '以前得到的原有皮肤保留');
   ok(!r.profile.equip.gouchen, '穿着的假皮肤被脱掉', r.profile.equip);
+  ok(r.profile.owned.length === 1 && r.profile.owned[0] === 'qingfeng' && !r.profile.frags.moyu &&
+    r.profile.netWins === 0 && r.profile.netLosses === 0 && r.profile.rating === 1100 &&
+    r.profile.placed === 0 && !r.profile.stageStars['1.2'] && !r.profile.rk,
+  '注册时竞争数据、解锁和进度不从客户端导入', r.profile);
   ok(r.profile.armory === undefined, '存档里带的武库数据不认');
   ok(r.ledger && r.ledger.ink === 5000 && r.ledger.ver === 0, '返回账本', r.ledger);
 }
@@ -2383,6 +2400,12 @@ section('一次性、按天按周的奖励：领没领过记在服务器上，�
 {
   T = nextNoon();
   const u = await newUser('farmer', { ink: 100, stageStars: { '1.2': 3 }, saga: { qingfeng: { r: 0, s: 5, f: 'a', c: 0, e: ['a'], t: 1 }, tieshan: { r: 0, s: 2, f: '', c: 0, e: [], t: 1 } } });
+  // Registration no longer imports untrusted progress; seed this fixture through the
+  // server-side profile row so the reward-accounting assertions remain meaningful.
+  const farmerProfile = profOf(u.uid);
+  farmerProfile.stageStars = { '1.2': 3 };
+  farmerProfile.saga = { qingfeng: { r: 0, s: 5, f: 'a', c: 0, e: ['a'], t: 1 }, tieshan: { r: 0, s: 2, f: '', c: 0, e: [], t: 1 } };
+  ENV.DB.raw.prepare('UPDATE users SET profile_json = ? WHERE id = ?').run(JSON.stringify(farmerProfile), u.uid);
   const inkOf = async tok => (await call('GET', '/api/profile', undefined, tok)).ledger.ink;
   const ink0 = await inkOf(u.token);
   const t0 = await econ(u.token, 'task', { id: 'd1' });

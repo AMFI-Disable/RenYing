@@ -961,7 +961,7 @@ function pgApply(srv, vals, deltas, now) {
     if (pg[e.id]) { acks.push(e.id); continue; }
     for (const [k, d] of Object.entries(e.d)) {
       const n = Math.trunc(+d);
-      if (!PG_KEY.test(k) || !Number.isFinite(n) || Math.abs(n) > PG_STEP) continue;
+      if (!PG_KEY.test(k) || !Number.isFinite(n) || n === 0 || Math.abs(n) > PG_STEP || (n < 0 && !k.startsWith('frags.'))) continue;
       vals[k] = clampPg((vals[k] || 0) + n);
     }
     pg[e.id] = now; acks.push(e.id);
@@ -1063,13 +1063,12 @@ async function handleProfilePost(env, auth, body, now) {
 
 // 新账号的默认存档（注册时没带存档、管理后台建号）
 const newProfile = (name, now) => ({ name, ink: 100, owned: ['qingfeng'], frags: {}, pity: 0, spity: 0, skins: [], equip: {}, netWins: 0, netLosses: 0, rating: 1100, placed: 0, stageStars: {}, updatedAt: now });
-// 注册时带上来的存档（游客进度、本机老账号）：墨锭有上限，武库专属皮肤不认。不管叫什么昵称都一样
-function cleanInitial(prof) {
-  const p = { ...prof };
-  delete p.armory; delete p.ledger;
-  p.ink = Math.min(clampInk(p.ink), REG_INK_CAP);
-  p.skins = cleanSkins(p.skins).filter(k => !C.CS_KEYS.includes(k));
-  p.equip = fixEquip(cleanEquip(p.equip), p.skins);
+// 注册时只接收墨锭和普通饰品；竞争数据、解锁、碎片和关卡进度都必须从服务器产生
+function cleanInitial(prof, name, now) {
+  const p = newProfile(name, now);
+  p.ink = Math.min(clampInk(prof && prof.ink), REG_INK_CAP);
+  p.skins = cleanSkins(prof && prof.skins).filter(k => !C.CS_KEYS.includes(k));
+  p.equip = fixEquip(cleanEquip(prof && prof.equip), p.skins);
   return p;
 }
 // 不让注册的昵称：像是官方、开发者的。云端的 Dev 账号和别人一样按规则记账，只是这个名字只能在管理后台建、
@@ -3218,7 +3217,7 @@ async function route(request, env, ctx, rid = reqId()) {
         const pwr = await makePassword(env, { username }, password, now);
 
         // Default or initial guest profile
-        const initialProf = cleanInitial((body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile)) ? body.profile : newProfile(username, now));
+        const initialProf = cleanInitial((body.profile && typeof body.profile === 'object' && !Array.isArray(body.profile)) ? body.profile : {}, username, now);
         initialProf.name = username;
         initialProf.updatedAt = now;
 

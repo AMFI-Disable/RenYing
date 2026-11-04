@@ -315,7 +315,7 @@ section('同一个浏览器的几个标签页：一个退出、换号，别的�
 section('乱报的增量：编号不对、键不认识、一次加太多，都不认');
 const tok = A.CS.getUser().token;
 const bad = await worker.fetch(new Request('https://w.test/api/profile', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok, 'CF-Connecting-IP': '10.9.9.9' },
-  body: JSON.stringify({ profile: { netWins: 999999 }, prog: { deltas: [{ id: 'nothex!', d: { netWins: 5 } }, { id: 'abcdef01', d: { ink: 5000, rating: 9, 'frags.<x>': 3 } }, { id: 'abcdef02', d: { netWins: 99999 } }] } }) }), ENV);
+  body: JSON.stringify({ profile: { netWins: 999999 }, prog: { deltas: [{ id: 'nothex!', d: { netWins: 5 } }, { id: 'abcdef01', d: { ink: 5000, rating: 9, 'frags.<x>': 3 } }, { id: 'abcdef02', d: { netWins: 99999 } }, { id: 'abcdef03', d: { netWins: -99999 } }] } }) }), ENV);
 const bj = await bad.json();
 c = cloudProf('Sam');
 ok(bad.status === 200 && c.netWins === 12 && !('<x>' in (c.frags || {})), '都没加上，报上来的绝对数 999999 也不认', [c.netWins, bj.prog]);

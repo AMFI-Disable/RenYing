@@ -4624,9 +4624,13 @@ if (PROG.seen === null) return;
 const cur = progFlat(prof), d = {};
 for (const k of new Set([...Object.keys(cur), ...Object.keys(PROG.seen)])) {
 const x = (cur[k] || 0) - (PROG.seen[k] || 0);
-if (x) d[k] = x;
+if (x > 0 || (k.startsWith('frags.') && x < 0)) d[k] = x;
 }
-if (Object.keys(d).length) { PROG.un.push({ id: rhex(8), d, t: Date.now() }); PROG.seen = cur; progSave(); }
+if (Object.keys(d).length) {
+PROG.un.push({ id: rhex(8), d, t: Date.now() });
+for (const [k, n] of Object.entries(cur)) PROG.seen[k] = Math.max(PROG.seen[k] || 0, n);
+progSave();
+}
 }
 function progDrop(acks) {
 const set = new Set(Array.isArray(acks) ? acks : []), now = Date.now(), gone = [];
