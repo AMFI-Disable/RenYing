@@ -533,10 +533,10 @@ walks the menu paths with 30 assertions: the home is on at boot, a press sets `d
 screen back, the second screen reveals after the dolly and cleans up `menu-handoff`, `backToMenu()` restores the
 home without replaying the entrance, quitting a match replays it, the dock path uses the short phase, a throwing
 panel build still restores the home, direct `openScreen()` calls still reveal immediately (the path
-`tools/ui-audit.mjs` uses), `prefers-reduced-motion` skips the dolly, and a demo battle is not re-staged when only
+`tools/audits/ui-audit.mjs` uses), `prefers-reduced-motion` skips the dolly, and a demo battle is not re-staged when only
 a menu screen was open.
 
-CI additionally runs `tools/ui-audit.mjs ci-ui 1440 900`, `tools/hud-audit.mjs`, `tools/touch-audit.mjs`,
+CI additionally runs `tools/audits/ui-audit.mjs ci-ui 1440 900`, `tools/audits/hud-audit.mjs`, `tools/audits/touch-audit.mjs`,
 `tools/net-test.mjs server ci-net` and `tools/protocol-test.mjs` (`.github/workflows/ci.yml`), so layout and
 touch regressions are caught there — but no gate here can see a flash.
 

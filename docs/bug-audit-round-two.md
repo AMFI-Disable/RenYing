@@ -126,7 +126,7 @@ data are never read, only `m.ch`, `m.frames` and `m.w`. The count is `frames / 2
 more identical rows.
 
 **Why it matters.** The toast says the trajectory is ready to drop into `data/` for training. Feeding it to
-`tools/ai-train.mjs` teaches a policy to press the same button from a fake state, with a reward signal that repeats
+`tools/ai/ai-train.mjs` teaches a policy to press the same button from a fake state, with a reward signal that repeats
 the match result thousands of times — that is worse than no data.
 
 **Fix sketch.** Either build each sample from the recorded events (`m.ev`) and the sampled fighter state, with the

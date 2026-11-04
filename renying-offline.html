@@ -15,6 +15,9 @@
 --p1: #46d3ea; --p2: #ff4a5f; --seal: #b8392e; --gold: #e9c46a;
 --title: "Ma Shan Zheng", "STKaiti", "KaiTi", "Kaiti SC", serif;
 --body: "Noto Serif SC", "STZhongsong", "Songti SC", "SimSun", serif;
+--seal-font: "FangSong", "STFangsong", "SimSun", "Noto Serif SC", serif;
+--num-font: "Fira Code", "JetBrains Mono", "Roboto Mono", "Consolas", monospace;
+--badge-font: "Noto Sans SC", "PingFang SC", system-ui, -apple-system, sans-serif;
 --nav-serif: "Cinzel", "Noto Serif SC", "STZhongsong", "Songti SC", "SimSun", serif;
 --v-red: #ff4655; --v-navy: #0f1923; --v-navy2: #1f2a36; --v-white: #ece8e1; --v-cond: "Oswald", "DIN Condensed", "Arial Narrow", "Noto Sans SC", sans-serif;
 --nav-h: 58px; --line: rgba(236,232,225,.12); --panel: rgba(13,21,30,.84); --panel2: rgba(22,32,44,.9);
@@ -492,6 +495,8 @@ overflow-x: hidden;
 .pill.sk-pill { color: rgb(var(--tc)); border-color: rgba(var(--tc), .8); background: rgba(var(--tc), .14); }
 .cxskins button.lock { opacity: .45; cursor: default; }
 .pill.sk-pill { font-weight: 600; letter-spacing: 0.5px; animation: breath 2s infinite ease-in-out; }
+.sub-badge, .tag, .tp-tag, .ai-badge { font-family: var(--badge-font); }
+.v, .time, .sec, .bpm-n, .bd-card-key, .stat-num { font-variant-numeric: tabular-nums lining-nums; font-family: var(--num-font); }
 .bpcard.lock img { filter: grayscale(1) brightness(.45); }
 .bpcard .tag.free { background: #3f8f5a; } .bpcard .tag.lk { background: #444; }
 .tutbox { position: fixed; left: 50%; top: 13%; transform: translateX(-50%); z-index: 20; min-width: 360px; max-width: 560px; padding: 14px 22px; border-radius: 14px; background: rgba(8,8,22,.82); border: 1px solid rgba(233,196,106,.4); text-align: center; pointer-events: none; }
@@ -574,7 +579,17 @@ html, body { overscroll-behavior: none; }
 @media (max-width: 560px) { .stgrid { grid-template-columns: repeat(3, 1fr); } }
 .setp { max-width: min(1360px, 96vw); }
 .setlist { display: grid; gap: 12px; margin: 12px 0; text-align: left; }
-@media (min-width: 860px) { .setlist { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(6, auto); grid-auto-flow: column; column-gap: 36px; } .setlist > .keypanel { grid-column: 1 / -1; grid-row: 7; } }
+@media (min-width: 860px) {
+.setlist {
+grid-template-columns: repeat(2, 1fr);
+grid-auto-flow: row;
+column-gap: 36px;
+row-gap: 14px;
+}
+.setlist > .keypanel {
+grid-column: 1 / -1;
+}
+}
 .setrow { display: grid; grid-template-columns: minmax(90px, max-content) 1fr minmax(48px, auto); gap: 10px; align-items: center; font-size: 13.5px; }
 .setrow > span:first-child { white-space: nowrap; }
 .setrow .seg { margin: 0; }
@@ -802,8 +817,25 @@ gap: var(--bp-gap); width: 100%; --bp-gap: clamp(4px, 0.5vw, 7px); --bp-cols: 12
 .bp-map .bpm-n { font-family: var(--title); font-size: clamp(14px, 1.2vw, 17px); color: #f7eedb; letter-spacing: .06em; }
 .bp-map .bpm-f { color: #e9c46a; } .bp-map .bpm-f span:first-child { font-weight: 700; }
 .bp-map .bpm-f span + span { color: #efe8d8; }
-.bpcard.fav { border-color: rgba(233,196,106,.9); box-shadow: 0 0 0 1px rgba(233,196,106,.6), 0 0 12px rgba(233,196,106,.35); }
-.bpcard .tag.fav { background: #c69429; color: #14110a; }
+.bpcard.fav {
+border-color: #ffd166;
+box-shadow: 0 0 0 2px rgba(255,209,102,.75), 0 0 20px rgba(233,196,106,.55), inset 0 0 12px rgba(233,196,106,.2);
+position: relative;
+}
+.bpcard.fav::before {
+content: '';
+position: absolute;
+inset: -2px;
+border-radius: 11px;
+border: 1px dashed rgba(255, 230, 140, 0.85);
+pointer-events: none;
+animation: bpFavGlow 2.4s ease-in-out infinite alternate;
+}
+@keyframes bpFavGlow {
+from { opacity: 0.55; box-shadow: 0 0 4px rgba(233,196,106,.3); }
+to { opacity: 1; box-shadow: 0 0 12px rgba(255,215,0,.7); }
+}
+.bpcard .tag.fav { background: linear-gradient(135deg, #d4a017, #f39c12); color: #100d05; font-weight: 700; border: 1px solid rgba(255,255,255,.4); }
 .bp-fav { margin: 4px 0; padding: 4px 8px; border: 1px solid rgba(233,196,106,.5); border-radius: 6px; background: rgba(233,196,106,.1); font-size: 12px; color: #efe8d8; }
 .bp-fav b { color: #e9c46a; margin-right: 4px; }
 .bpcard:focus-visible { outline: 2px solid var(--p1); outline-offset: 2px; }
@@ -2892,12 +2924,44 @@ border-radius: 10px; padding: 8px 12px; white-space: normal; min-height: 50px; f
 .xiwu-cards-row .pt-n { font: 600 14px var(--title); letter-spacing: .04em; line-height: 1.2; }
 .xiwu-cards-row .pt-d { font-size: 12px; line-height: 1.25; opacity: .72; }
 .xiwu-cards-row button.sel .pt-d { opacity: .88; }
-.xiwu-mutator-row { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; padding: 6px 12px; background: rgba(20, 16, 32, 0.45); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); flex-wrap: wrap; }
-.mutator-label { font-size: 12px; color: var(--dim); white-space: nowrap; }
-.mutator-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.mut-pill { padding: 4px 10px; font-size: 12px; border-radius: 6px; background: rgba(36, 30, 52, 0.6); border: 1px solid rgba(255, 255, 255, 0.12); color: #ddd; cursor: pointer; transition: all .15s ease; }
-.mut-pill:hover { background: rgba(56, 46, 80, 0.75); border-color: rgba(233, 196, 106, 0.35); }
-.mut-pill.sel { background: rgba(233, 196, 106, 0.22); border-color: var(--gold); color: var(--gold); font-weight: 600; }
+.xiwu-mutator-row { display: flex; align-items: center; gap: 12px; margin: 8px 0 14px; padding: 8px 14px; background: rgba(20, 16, 32, 0.45); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); flex-wrap: wrap; }
+.mutator-label { font-family: var(--title); font-size: 14px; color: var(--gold); white-space: nowrap; letter-spacing: 1px; }
+.mutator-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.mut-pill.seal-stamp {
+position: relative;
+border: 1.5px solid #b8392e;
+border-radius: 6px;
+background: rgba(184, 57, 46, 0.12);
+color: #f7dcd8;
+padding: 3px 10px;
+cursor: pointer;
+font-family: var(--seal-font);
+font-size: 13px;
+letter-spacing: 1.5px;
+transition: all .18s cubic-bezier(.2,.8,.2,1);
+box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.mut-pill.seal-stamp .stamp-border {
+display: block;
+border: 1px dashed rgba(184, 57, 46, 0.45);
+padding: 2px 6px;
+border-radius: 4px;
+}
+.mut-pill.seal-stamp:hover {
+background: rgba(184, 57, 46, 0.28);
+border-color: #e04738;
+box-shadow: 0 0 8px rgba(184, 57, 46, 0.35);
+}
+.mut-pill.seal-stamp.sel {
+background: linear-gradient(135deg, #a72d23, #811e15);
+border-color: #ff6e61;
+color: #fff6f0;
+box-shadow: 0 0 0 1px rgba(255,215,0,0.5), 0 0 14px rgba(220,65,71,0.55), inset 0 0 8px rgba(0,0,0,0.3);
+transform: translateY(-1px);
+}
+.mut-pill.seal-stamp.sel .stamp-border {
+border-color: rgba(255, 235, 200, 0.6);
+}
 #aiLvHome { width: min(780px, 100%); margin: 4px auto 8px; box-sizing: border-box; }
 @media (max-width: 640px) {
 .xiwu-category-tabs { grid-template-columns: 1fr; gap: 6px; }
@@ -3330,13 +3394,13 @@ white-space: nowrap;
       </div>
 
             <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
-            <!-- 战场异变 -->
+            <!-- 战场异变印章 -->
             <div class="xiwu-mutator-row">
               <span class="mutator-label">战场异变：</span>
-              <div class="mutator-pills" id="mutatorPills">
-                <button type="button" class="mut-pill sel" data-tab="cpu">常规标准</button>
-                <button type="button" class="mut-pill" data-tab="chaos">☯️ 天机乱斗</button>
-                <button type="button" class="mut-pill" data-tab="mayhem">⚡ 通天神决</button>
+              <div class="mutator-pills seal-group" id="mutatorPills" role="group" aria-label="战场异变">
+                <button type="button" class="mut-pill seal-stamp sel" data-mut="normal"><span class="stamp-border"><b>常规标准</b></span></button>
+                <button type="button" class="mut-pill seal-stamp" data-mut="chaos"><span class="stamp-border"><b>天机乱斗</b></span></button>
+                <button type="button" class="mut-pill seal-stamp" data-mut="mayhem"><span class="stamp-border"><b>通天神诀</b></span></button>
               </div>
             </div>
 
@@ -3389,6 +3453,36 @@ white-space: nowrap;
         <div class="single-action-row">
           <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
           <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI群英观战</button>
+        </div>
+      </div>
+
+      <!-- 2v2 组队对决 (Inline Right-hand Panel) -->
+      <div data-sec="watch2v2" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">2v2 组队对决</h3>
+          <span class="sub-badge">携手破阵 · 双人共斗</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left" id="xiwu2v2Desc">你和一个电脑队友一队，对阵两个电脑。宽广战场，协同克敌！</p>
+
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">对阵编制</div>
+        <div class="seg m2-seg" id="xiwu2v2Seg" style="margin-bottom:12px">
+          <button data-m="p_cc" class="sel" type="button">你 + 电脑队友</button>
+          <button data-m="pp_cc" type="button">两人 vs 两电脑</button>
+          <button data-m="pp_pp" type="button">两人 vs 两人</button>
+        </div>
+
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal">点将</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 双方各禁 1 人 + 蛇形选 2 人</b>
+            <span id="xiwu2v2LocalDesc">你用 WASD 或方向键操控，电脑队友与对手根据选人阵容智能演练。</span>
+          </div>
+        </div>
+
+        <div class="single-action-row" style="margin-top:14px">
+          <button class="go" id="xiwu2v2StartBtn" type="button">开始选角 (BP) · 开战</button>
+          <button class="go alt" id="xiwu2v2QuickBtn" type="button">即刻开战 · 随机阵容</button>
+          <button class="ghost" id="xiwu2v2WatchBtn" type="button">观战 4 天道 AI 对决</button>
         </div>
       </div>
 
@@ -6149,7 +6243,7 @@ setLang,
 t,
 applyTranslations,
 get DICT_EN() { return dictEn(); },
-get PATTERNS_EN() { return PATTERNS_EN; }   // tools/data-check.mjs 检查每一项的形状
+get PATTERNS_EN() { return PATTERNS_EN; }   // tools/checks/data-check.mjs 检查每一项的形状
 };
 window.t = t;
 }
@@ -22765,15 +22859,15 @@ for (const b of document.querySelectorAll('#singleTabs button[data-tab]')) {
 b.classList.toggle('sel', b.dataset.tab === active);
 }
 for (const p of document.querySelectorAll('#mutatorPills button')) {
-const on = p.dataset.tab === (['tag3', 'watch2v2'].includes(active) ? (teamMutator === 'normal' ? 'cpu' : teamMutator) : active);
+const on = p.dataset.mut === (teamMutator || 'normal');
 p.classList.toggle('sel', on); p.setAttribute('aria-pressed', String(on));
 }
 for (const el of document.querySelectorAll('#single [data-sec]')) {
 const secs = el.dataset.sec.split(' ');
 el.style.display = secs.includes(active) ? '' : 'none';
 }
-const duel = ['cpu', 'chaos', 'mayhem', 'tag3'].includes(active);
-if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'maps'].includes(active);
+const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
+if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps'].includes(active);
 if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
 const mutators = $id('mutatorPills');
 if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
@@ -24920,8 +25014,12 @@ best = k;
 return best;
 }
 function mySkin(id) {
-const eq = PROF.equip || {}, k = eq[id];
-if (k && skinOwned(k)) return k;
+let eq = PROF.equip;
+if (!eq || typeof eq !== 'object') {
+try { eq = PROF.equip = JSON.parse(localStorage.getItem('renying-equip') || '{}'); } catch (e) { eq = {}; }
+}
+const k = eq[id];
+if (k && (skinOwned(k) || (SKINS && SKINS[k]))) return k;
 return SETTINGS.autoSkin !== false && !(id in eq && k === '') ? bestSkin(id) : '';
 }
 function mySkinMap() { const m = {}; for (const c of CHARS) { const k = mySkin(c.id); if (k) m[c.id] = k; } return m; }
@@ -26150,10 +26248,10 @@ singleSec(isStory ? currentSingleTab : 'stage');
 }
 const xiwuMutatorEl = $id('mutatorPills');
 if (xiwuMutatorEl) xiwuMutatorEl.addEventListener('click', e => {
-const b = e.target.closest('button[data-tab]'); if (!b) return;
+const b = e.target.closest('button[data-mut]'); if (!b) return;
 SFX.slice();
-if (currentSingleTab === 'tag3') { teamMutator = b.dataset.tab === 'cpu' ? 'normal' : b.dataset.tab; singleSec('tag3'); }
-else singleSec(b.dataset.tab);
+teamMutator = b.dataset.mut;
+singleSec(currentSingleTab || 'cpu');
 });
 const singleTabsEl = document.getElementById('singleTabs');
 if (singleTabsEl) {
@@ -26161,12 +26259,12 @@ singleTabsEl.addEventListener('click', e => {
 const b = e.target.closest('button');
 if (!b) return;
 SFX.slice();
-if (b.dataset.tab === 'watch2v2') { open2v2Modal(); return; }
 if (b.dataset.act === 'world') { openWorldModal(); return; }
 if (b.dataset.act === 'rouge') { openRougeModal(); return; }
 if (b.dataset.act === 'netp') { navTo('netp'); return; }
 if (!b.dataset.tab) return;
 singleSec(b.dataset.tab);
+if (b.dataset.tab === 'watch2v2') render2v2Inline();
 const pane = document.querySelector(`#single [data-sec~="${b.dataset.tab}"]`);   // 面板在格子下面：滚过去让人看见
 if (pane && pane.scrollIntoView) try { pane.scrollIntoView({ block: 'nearest', behavior: prefersReduced() ? 'auto' : 'smooth' }); } catch (err) {}
 });
@@ -27113,15 +27211,51 @@ p_cc: { desc: '你和一个电脑队友一队，对阵两个电脑。', local: '
 pp_cc: { desc: '你和队友一队，对阵两个电脑。', local: '1P 用 WASD，2P 用方向键 + K 攻击', match: '全服找一位队友，一起打两个电脑' },
 pp_pp: { desc: '两队各两人对打：你们两个对另外两个玩家。', local: '四人一台电脑：1P、2P 一队，3P、4P 一队', match: '全服找一位队友和两位对手' }
 };
-function render2v2Modal() {
+function render2v2Inline() {
 const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+if (!tx) return;
+for (const b of document.querySelectorAll('#xiwu2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
+const descEl = $id('xiwu2v2Desc'), localDescEl = $id('xiwu2v2LocalDesc');
+if (descEl) descEl.textContent = tx.desc;
+if (localDescEl) localDescEl.textContent = tx.local;
+}
+function render2v2Modal() {
+render2v2Inline();
+const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+if (!tx) return;
 for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === teamMutator); b.setAttribute('aria-pressed', String(b.dataset.mut === teamMutator)); }
 for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
-$id('m2LvWrap').hidden = mode === 'pp_pp';
-for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) $id(id).style.display = mode === 'p_cc' ? 'none' : '';   // 一个人带电脑队友，不用联网（.m2-way 自带 display，hidden 属性压不住）
-$id('modal2v2Desc').textContent = tx.desc;
-$id('modal2v2LocalDesc').textContent = tx.local;
-$id('modal2v2MatchDesc').textContent = tx.match;
+if ($id('m2LvWrap')) $id('m2LvWrap').hidden = mode === 'pp_pp';
+for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) { if ($id(id)) $id(id).style.display = mode === 'p_cc' ? 'none' : ''; }
+if ($id('modal2v2Desc')) $id('modal2v2Desc').textContent = tx.desc;
+if ($id('modal2v2LocalDesc')) $id('modal2v2LocalDesc').textContent = tx.local;
+if ($id('modal2v2MatchDesc')) $id('modal2v2MatchDesc').textContent = tx.match;
+}
+if ($id('xiwu2v2Seg')) {
+$id('xiwu2v2Seg').addEventListener('click', e => {
+const b = e.target.closest('button[data-m]'); if (!b) return;
+active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Inline();
+});
+}
+if ($id('xiwu2v2StartBtn')) {
+$id('xiwu2v2StartBtn').addEventListener('click', () => {
+bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
+});
+}
+if ($id('xiwu2v2QuickBtn')) {
+$id('xiwu2v2QuickBtn').addEventListener('click', () => {
+const hero = menuHeroPick();
+const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
+for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
+else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
+applySkins();
+});
+}
+if ($id('xiwu2v2WatchBtn')) {
+$id('xiwu2v2WatchBtn').addEventListener('click', () => {
+startWatch2v2Draft();
+});
 }
 function open2v2Modal(mode) {
 if (M2_TEXT[mode]) active2v2ModalMode = mode;
@@ -27627,6 +27761,13 @@ if (!BP || BP.step >= bpSteps().length) return false;
 const isWatch = bpMode === 'cpuWatch' || (bpCustomOpts && bpCustomOpts.isWatch);
 if (isWatch) return false;
 if (isLocalBothHumanBP()) return true;
+if (bpMode === '2v2' && bpCustomOpts && bpCustomOpts.subMode === 'p_cc') {
+const curStep = bpSteps()[BP.step];
+if (curStep[0] !== bpMySide()) return false;
+const priorPicksSide0 = bpSteps().slice(0, BP.step).filter(st => st[0] === 0 && st[1] === 'pick').length;
+if (curStep[1] === 'pick' && priorPicksSide0 >= 1) return false;
+return true;
+}
 return bpSteps()[BP.step][0] === bpMySide();
 };
 let BP = null, bpMode = 'cpu', bpSel = -1, bpHover = -1, bpCpuT = 0, bpCustomOpts = null;
@@ -28112,6 +28253,12 @@ const SCROLLS = [
 { id: 'gc_sweep', n: '勾陈 · 链锤横扫', s: 'hero', h: 'gouchen', r: 'e', d: '旋锤打中被钩住的对手伤害 +40%。', out(c) { if (c.src === 'whirl' && c.o.hookedT > 0) c.dmg *= 1.4; } },
 { id: 'lq_thread', n: '凌雀 · 穿针引线', s: 'hero', h: 'lingque', r: 'r', d: '针印持续时间从 3.5 秒延长到 6.5 秒。', hit(c) { if (c.o.needleMark > 0 && c.o.needleMark >= 3.4) c.o.needleMark = 6.5; } },
 { id: 'lq_drop', n: '凌雀 · 针落', s: 'hero', h: 'lingque', r: 'e', d: '近战打中带针印的对手时引爆针印，追加 25 点伤害。', hit(c) { if (!c.proj && c.o.needleMark > 0) { c.o.needleMark = 0; scTrue(c.o, 25, '235,110,210'); scTxt(c.o, '针落', '235,110,210'); } } },
+{ id: 'li_mist_cut', n: '离影 · 雾断长空', s: 'hero', h: 'liying', r: 'r', d: '换位或留下雾身后 1.5 秒内，下一次轻击附加 30% 割裂伤害。', skill(f) { f.sc.mistCutT = 1.5; }, tick(f) { f.sc.mistCutT = Math.max(0, (f.sc.mistCutT || 0) - STEP); }, out(c) { if (c.f.sc.mistCutT > 0 && c.light) { c.f.sc.mistCutT = 0; c.dmg *= 1.3; scTxt(c.o, '雾断', '120,215,225'); } } },
+{ id: 'li_double_soul', n: '离影 · 离魂双生', s: 'hero', h: 'liying', r: 'e', d: '场上每存在一具雾身，自身伤害提升 8%（最多 +24%），受到伤害减少 5%。', out(c) { const n = (c.f && c.f.clones || []).length; if (n > 0) c.dmg *= 1 + Math.min(3, n) * 0.08; }, inc(c) { const n = (c.f && c.f.clones || []).length; if (n > 0) c.dmg *= Math.max(0.85, 1 - Math.min(3, n) * 0.05); } },
+{ id: 'cx_flux', n: '磁仙 · 磁极倒错', s: 'hero', h: 'cixian', r: 'r', d: '切换磁极时获得 0.25 秒无敌，并向周围爆出斥力磁环击退近身敌人。', skill(f) { if (f.skill === 'polarswap') { f.invul = Math.max(f.invul, 0.25); if (!RESIM) ring(f.x, f.y - 50, 90, '170,190,255', 0.3); } } },
+{ id: 'cx_attract', n: '磁仙 · 两极汇流', s: 'hero', h: 'cixian', r: 'e', d: '负极吸力与连段伤害随连招段数递增（最高 +35%），正极击飞时造成破势爆震。', out(c) { if (c.f.ch && c.f.ch.id === 'cixian') { c.dmg *= 1.2; } } },
+{ id: 'qj_geardrive', n: '千机 · 齿轮传动', s: 'hero', h: 'qianji', r: 'r', d: '普攻或蓄力击打傀丸时，傀丸传动加速提升 40%，且反弹附带微型震荡。', hit(c) { if (c.f.ch && c.f.ch.id === 'qianji') scMeter(c.f, 6); } },
+{ id: 'qj_iron_spikes', n: '千机 · 连弩机变', s: 'hero', h: 'qianji', r: 'e', d: 'R技能暴雨梨花钢针数量与穿透力翻倍，受击解控释放时使自身无敌 0.5 秒。', skill(f, o, slot) { if (f.ch && f.ch.id === 'qianji' && slot === 2) { f.invul = Math.max(f.invul, 0.5); scTxt(f, '机关护体', '235,165,70'); } } },
 { id: 'tian_thunder', n: '天书 · 九霄雷劫', s: 'lei', r: 'l', d: '每 5 秒在对手头顶落下一道 34 伤害的天雷。', tick(f, o) { if (M.phase !== 'fight') return; f.sc.tt = (f.sc.tt || 0) + STEP; if (f.sc.tt >= 5) { f.sc.tt = 0; scBolt(f, o.x, 34); } } },
 { id: 'tian_rebirth', n: '天书 · 涅槃', s: 'xue', r: 'l', d: '每层第一次倒下时以 40% 生命复活。', fatal(c) { if (c.f.sc.reborn) return false; c.f.sc.reborn = 1; c.f.hp = Math.round(c.f.maxHp * 0.4); c.f.lagHp = c.f.hp; c.f.invul = 2; scTxt(c.f, '涅槃', '255,140,50', 15); if (!RESIM) ring(c.f.x, c.f.y - 60, 220, '255,140,50', 0.6); return true; } },
 { id: 'tian_timeless', n: '天书 · 光阴', s: 'qi', r: 'l', d: '技能冷却永远快一倍。', cd() { return 1; } },
@@ -28263,12 +28410,35 @@ const legend = new Set(scLegendUnlocked());
 return SCROLLS.filter(s => (!s.h || s.h === heroId) && (s.r !== 'l' || legend.has(s.id)));
 }
 function scCompetitiveCandidates(heroId, seed, count = 3) {
-const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l' && s.id !== 'meter_bank');
+const heroSpecific = SCROLLS.filter(s => s.h === heroId && s.r !== 'l' && s.id !== 'meter_bank');
+const generic = SCROLLS.filter(s => !s.h && s.r !== 'l' && s.id !== 'meter_bank');
 let state = (seed >>> 0) || 1;
-const result = [];
-while (bag.length && result.length < count) {
+const nextRnd = () => {
 state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-result.push(bag.splice(state % bag.length, 1)[0]);
+return (state >>> 0) / 4294967296;
+};
+const result = [];
+const chosenIds = new Set();
+if (heroSpecific.length && nextRnd() < 0.70) {
+const idx = Math.floor(nextRnd() * heroSpecific.length);
+const s = heroSpecific[idx];
+result.push(s);
+chosenIds.add(s.id);
+}
+const bag = SCROLLS.filter(s => (!s.h || s.h === heroId) && s.r !== 'l' && s.id !== 'meter_bank' && !chosenIds.has(s.id));
+while (bag.length && result.length < count) {
+const weights = bag.map(s => {
+let w = SC_RARITY[s.r] ? SC_RARITY[s.r].w : 10;
+if (s.h === heroId) w *= 3.5; // High hero affinity
+return w;
+});
+const totalW = weights.reduce((a, b) => a + b, 0);
+let r = nextRnd() * totalW;
+let idx = 0;
+while (idx < bag.length - 1 && (r -= weights[idx]) > 0) idx++;
+const pick = bag.splice(idx, 1)[0];
+result.push(pick);
+chosenIds.add(pick.id);
 }
 return result;
 }
@@ -29856,8 +30026,10 @@ const rec = d.recommendations[side][slot];
 grid.innerHTML = ids.map((id, i) => {
 const s = SC_BY[id];
 if (!s) return '';
+const isTianshi = id === rec;
+const tianshiOdds = isTianshi ? (s.h === hero.id ? '92%' : '75%') : '';
 return `<button type="button" class="bd-card${id === d.selectedId ? ' sel' : ''}" data-bd-id="${escapeHTML(id)}" aria-pressed="${id === d.selectedId}">
-${id === rec ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))}</span>` : ''}
+${isTianshi ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))} <small style="opacity:0.85;font-size:10px;">${tianshiOdds}</small></span>` : ''}
 <span class="bd-card-key">${i + 1}</span><span class="bd-card-icon">${scIcon(s)}</span>
 <span class="bd-card-name">${escapeHTML(cvT(s.n))}</span><span class="bd-card-tag">${scTag(s)}</span>
 <span class="bd-card-desc">${escapeHTML(cvT(s.d))}</span></button>`;
@@ -30248,7 +30420,8 @@ document.getElementById('bpTime').classList.toggle('urgent', BP.t <= 8);
 if (!bpAuth()) return;
 const side = bpSteps()[BP.step][0];
 const isWatch = bpMode === 'cpuWatch' || (bpCustomOpts && bpCustomOpts.isWatch);
-if (isWatch || (side !== bpMySide() && bpMode !== 'net' && !isLocalBothHumanBP())) {
+const isCpuTurn = isWatch || !isMyTurnBP();
+if (isCpuTurn && bpMode !== 'net' && !isLocalBothHumanBP()) {
 bpCpuT -= dt;
 if (bpCpuT <= 0 || BP.t <= 0) {
 const choice = bpCpuChoice();
@@ -30298,7 +30471,7 @@ if (!force && box.dataset.built === String(PORTRAITS.length) && box.dataset.map 
 box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
 box.dataset.built = String(PORTRAITS.length); box.dataset.map = mk;
 }
-const bpMap = () => (BP && MAPS[BP.mapId] && (bpMode === 'maps' || (bpMode === 'net' && roomDef().rule === 'maps')) && MAPS[BP.mapId]) || null;
+const bpMap = () => (BP && MAPS[BP.mapId] && MAPS[BP.mapId]) || null;
 const bpFav = c => { const mp = bpMap(); return (mp && mp.fav && mp.fav[c.id]) || ''; };
 function bpMapBanner() {
 const box = $id('bpMap'), mp = bpMap();
@@ -34683,13 +34856,20 @@ renderTopNav();
 let seenTm = 0;
 function markSeenSoon() { clearTimeout(seenTm); seenTm = setTimeout(() => { if (TAB === 'inv' && $id('armory').classList.contains('on')) markSeen(); }, 2500); }
 function blankS() { return ST || C.normalize(C.blank(), { now: NOW(), uid: '' }); }
-const INV = { char: '', tier: '', sort: 'new' };
+const INV = { char: '', tier: '', sort: 'new', stat: '' };
 function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !OFFLINE_BUILD); }
 function pInv() {
 const s = blankS();
-let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier));
+let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier) && (!INV.stat || (INV.stat === 'st' ? x.st >= 0 : x.st < 0)));
 const tr = x => C.TIERS.indexOf(tierOf(x.k));
-const sorts = { new: (a, b) => b.i - a.i, tier: (a, b) => tr(b) - tr(a) || b.i - a.i, st: (a, b) => b.st - a.st || b.i - a.i };
+const sorts = {
+new: (a, b) => b.i - a.i,
+old: (a, b) => a.i - b.i,
+tier: (a, b) => tr(b) - tr(a) || b.i - a.i,
+tier_asc: (a, b) => tr(a) - tr(b) || b.i - a.i,
+st: (a, b) => (b.st || 0) - (a.st || 0) || b.i - a.i,
+name: (a, b) => (itemName(a) || '').localeCompare(itemName(b) || '', 'zh-CN')
+};
 list = list.slice().sort(sorts[INV.sort] || sorts.new);
 const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button" class="ar-caseitem" data-gotab="cases" style="--cc:${C.COLS[c].col}"><span class="ar-emb">${C.COLS[c].emblem}</span><b>${C.COLS[c].name}武器箱</b><small>×${s.cases[c]}</small></button>`).join('')
 + (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
@@ -34700,7 +34880,8 @@ ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
 <div class="ar-filter">
 <select id="arInvChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${INV.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
 <select id="arInvTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${INV.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
-<select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['tier', '品质最高'], ['st', '斩数最多']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+<select id="arInvStat" class="ar-sel"><option value="">全部类型</option><option value="st" ${INV.stat === 'st' ? 'selected' : ''}>仅看斩数饰品</option><option value="norm" ${INV.stat === 'norm' ? 'selected' : ''}>仅看普通饰品</option></select>
+<select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['old', '最早获得'], ['tier', '品质最高'], ['tier_asc', '品质最低'], ['st', '斩数最多'], ['name', '按名称排序']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
 </div>
 ${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty">${uiState('empty', s.inv.length ? '没有符合条件的饰品。' : `武库的库存还是空的${legacy.length ? '（以前得到的皮肤在下面，一直都能穿）' : ''}。打对局有机会掉落，或者去开箱、逛玩家市场。`)}${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
 ${legacy.length ? `<h4 class="ar-h">以前得到的皮肤 <small>绑定账号，不能出售和汰换</small></h4><div class="ar-grid sm">${legacy.map(k => `<div class="ar-it bound" style="--tc:${C.isItem(k) ? tc(k) : SKINS[k].rarity === 'legend' ? '235,75,75' : '136,71,255'}"><img src="${art(k)}" alt="" loading="lazy"><b>${escapeHTML(SKINS[k].name)}</b><small>${charName(k)} · 绑定</small><i class="ar-bar"></i></div>`).join('')}</div>` : ''}
@@ -35209,7 +35390,7 @@ $id('arIns').addEventListener('click', e => { if (e.target === $id('arIns')) { c
 const main = $id('arMain');
 main.addEventListener('change', e => {
 const id = e.target.id, v = e.target.value;
-if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvSort') INV.sort = v;
+if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvStat') INV.stat = v; else if (id === 'arInvSort') INV.sort = v;
 else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked;
 else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; } else return;
 render();

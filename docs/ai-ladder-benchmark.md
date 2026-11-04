@@ -1,6 +1,6 @@
 # 刃影 AI 难度阶梯胜率报告 (AI Difficulty Ladder Benchmark)
 
-> 本报告由 `node tools/ai-ladder-report.mjs` 及 GitHub Actions (`ai-ladder-audit.yml`) 自动实测生成，记录每个 AI 难度等级对阵**下一级难度（Next Best Difficulty）**的全角色交叉对弈胜率。
+> 本报告由 `node tools/ai/ai-ladder-report.mjs` 及 GitHub Actions (`ai-ladder-audit.yml`) 自动实测生成，记录每个 AI 难度等级对阵**下一级难度（Next Best Difficulty）**的全角色交叉对弈胜率。
 
 - **对局规模**: 每组相邻难度对阵 **288 场**（12 × 12 全英雄交叉匹配，先手/后手各半，固定随机种子对齐）
 - **总模拟场次**: **1152 场**（物理引擎 120Hz 完整帧模拟）
@@ -39,5 +39,5 @@
 
 ```bash
 # 运行相邻难度天梯实测并更新本 Markdown 报告
-node tools/ai-ladder-report.mjs --n 2
+node tools/ai/ai-ladder-report.mjs --n 2
 ```

@@ -35,7 +35,7 @@
 python3 tools/build.py
 ```
 
-Regenerates every generated file: both game pages, the mini-game page, the Worker bundle and the migration list. It also runs `tools/data-check.mjs`, which fails the build if a hero file or data table has a missing, unknown or wrong field, or if a story breaks the story template.
+Regenerates every generated file: both game pages, the mini-game page, the Worker bundle and the migration list. It also runs `tools/checks/data-check.mjs`, which fails the build if a hero file or data table has a missing, unknown or wrong field, or if a story breaks the story template.
 
 ```bash
 python3 tools/build.py --check
@@ -52,7 +52,7 @@ Never edit `index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cl
 1. Create `src/data/heroes/NN-<id>.js` with `defHero({...})`, following the field reference in `src/data/00-heroes.js`.
 2. Add the skill to `src/game/03-skills.js`, the ultimate to `src/game/04-ults.js`, skins and weapon looks in `src/game/13-skins.js` to `15-skin-weapons.js`, and the AI profile in `src/ai.js`.
 3. Add the English text to `src/data/31-hero-copy.js`, the id to `C.HERO_IDS` in `src/armory-core.js`.
-4. Rebuild, then run `node tools/combat-test.mjs --sim` and `node tools/frame-data.mjs`.
+4. Rebuild, then run `node tools/tests/combat-test.mjs --sim` and `node tools/checks/frame-data.mjs`.
 
 ### A Mode / 加模式
 
@@ -60,7 +60,7 @@ Add one line to `MODES` (local) or `ROOM_MODES` (online) in `src/data/10-modes.j
 
 ### A Database Change / 改数据库
 
-Add the next numbered file in `cloudflare/migrations/`, update `cloudflare/schema.sql`, rebuild and run `node tools/econ-test.mjs`. Migrations run inside the Worker on its first request; never use `wrangler d1 migrations apply`. Details: `cloudflare/migrations/readme.md`.
+Add the next numbered file in `cloudflare/migrations/`, update `cloudflare/schema.sql`, rebuild and run `node tools/tests/econ-test.mjs`. Migrations run inside the Worker on its first request; never use `wrangler d1 migrations apply`. Details: `cloudflare/migrations/readme.md`.
 
 ## The Server / 服务器
 
@@ -78,4 +78,4 @@ Online play depends on both browsers computing the same match. In match logic:
 - keep every piece of match state inside the rollback snapshot,
 - never read the wall clock or the frame rate.
 
-`node tools/rollback-test.mjs --rollback` and `node tools/netplay-test.mjs` catch most mistakes.
+`node tools/tests/rollback-test.mjs --rollback` and `node tools/tests/netplay-test.mjs` catch most mistakes.

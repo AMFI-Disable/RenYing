@@ -17,7 +17,13 @@ RenYing (刃影) is a browser fighting game with offline play, online rollback n
 | Page markup and styles | `src/page.html`, `src/style.css` |
 | Armory and market | `src/armory-core.js`, `src/armory.js` |
 | Server | `cloudflare/worker.js`, migrations in `cloudflare/migrations/` |
-| Build script and tests | `tools/` |
+| Build entrypoint | `tools/build.py` |
+| AI simulation and training | `tools/ai/` |
+| Admin command line tools | `tools/admin/` |
+| Browser audits | `tools/audits/` |
+| Data and frame checks | `tools/checks/` |
+| Test suites and runners | `tools/tests/` |
+| Music source tools | `tools/music/` |
 | Docs and wiki copy | `docs/`, `docs/wiki/` |
 
 Put new code in the numbered file that owns the feature. Do not add new top-level source files.
@@ -33,12 +39,12 @@ Put new code in the numbered file that owns the feature. Do not add new top-leve
 
 ## Tests
 
-- Quick full run: `node tools/test.mjs`.
-- Data and copy: `node tools/data-check.mjs --strict-copy`.
-- Combat: `node tools/combat-test.mjs --sim`.
-- Netplay and rollback: `node tools/netplay-test.mjs`, `node tools/rollback-test.mjs`.
-- Economy and server: `node tools/econ-test.mjs --bundle`, `node tools/sync-test.mjs --bundle`, `node tools/cloud-test.mjs`, `node tools/predeploy-check.mjs`.
-- Interface (needs Chromium and a local server on port 8791): `node tools/kb-flow-test.mjs`, `node tools/kb-flow-test.mjs --en`, `node tools/ui-audit.mjs`, `node tools/touch-audit.mjs`, `node tools/hud-overlap-audit.mjs`.
+- Quick full run: `node tools/tests/test.mjs`.
+- Data and copy: `node tools/checks/data-check.mjs --strict-copy`.
+- Combat: `node tools/tests/combat-test.mjs --sim`.
+- Netplay and rollback: `node tools/tests/netplay-test.mjs`, `node tools/tests/rollback-test.mjs`.
+- Economy and server: `node tools/tests/econ-test.mjs --bundle`, `node tools/tests/sync-test.mjs --bundle`, `node tools/tests/cloud-test.mjs`, `node tools/tests/predeploy-check.mjs`.
+- Interface (needs Chromium and a local server on port 8791): `node tools/audits/kb-flow-test.mjs`, `node tools/audits/kb-flow-test.mjs --en`, `node tools/audits/ui-audit.mjs`, `node tools/audits/touch-audit.mjs`, `node tools/audits/hud-overlap-audit.mjs`.
 
 Never skip, disable or weaken a test to make it pass.
 

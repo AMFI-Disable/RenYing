@@ -561,8 +561,10 @@ function competitiveDraftRender() {
   grid.innerHTML = ids.map((id, i) => {
     const s = SC_BY[id];
     if (!s) return '';
+    const isTianshi = id === rec;
+    const tianshiOdds = isTianshi ? (s.h === hero.id ? '92%' : '75%') : '';
     return `<button type="button" class="bd-card${id === d.selectedId ? ' sel' : ''}" data-bd-id="${escapeHTML(id)}" aria-pressed="${id === d.selectedId}">
-      ${id === rec ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))}</span>` : ''}
+      ${isTianshi ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))} <small style="opacity:0.85;font-size:10px;">${tianshiOdds}</small></span>` : ''}
       <span class="bd-card-key">${i + 1}</span><span class="bd-card-icon">${scIcon(s)}</span>
       <span class="bd-card-name">${escapeHTML(cvT(s.n))}</span><span class="bd-card-tag">${scTag(s)}</span>
       <span class="bd-card-desc">${escapeHTML(cvT(s.d))}</span></button>`;
@@ -959,7 +961,8 @@ function bpTick(dt) {
   if (!bpAuth()) return;
   const side = bpSteps()[BP.step][0];
   const isWatch = bpMode === 'cpuWatch' || (bpCustomOpts && bpCustomOpts.isWatch);
-  if (isWatch || (side !== bpMySide() && bpMode !== 'net' && !isLocalBothHumanBP())) {
+  const isCpuTurn = isWatch || !isMyTurnBP();
+  if (isCpuTurn && bpMode !== 'net' && !isLocalBothHumanBP()) {
     bpCpuT -= dt;
     if (bpCpuT <= 0 || BP.t <= 0) {
       const choice = bpCpuChoice();
@@ -1010,8 +1013,8 @@ function buildDetails(force) {
   box.innerHTML = [-1, ...CHARS.map((c, i) => i)].map(i => `<div class="bpd" data-i="${i}">${bpDetailHTML(i)}</div>`).join('');
   box.dataset.built = String(PORTRAITS.length); box.dataset.map = mk;
 }
-// 山河异境的点将台：这局的地图（别的点将台没有，横幅藏着）
-const bpMap = () => (BP && MAPS[BP.mapId] && (bpMode === 'maps' || (bpMode === 'net' && roomDef().rule === 'maps')) && MAPS[BP.mapId]) || null;
+// 山河异境与常规对决的点将台：这局的地图
+const bpMap = () => (BP && MAPS[BP.mapId] && MAPS[BP.mapId]) || null;
 const bpFav = c => { const mp = bpMap(); return (mp && mp.fav && mp.fav[c.id]) || ''; };
 function bpMapBanner() {
   const box = $id('bpMap'), mp = bpMap();

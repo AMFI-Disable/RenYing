@@ -1,6 +1,6 @@
 # 刃影平衡方案（Trainer，2026-10-27）
 
-全部结论来自 `tools/trainer.mjs` 的电脑对电脑模拟：天道、劲敌两档各打一遍，13 个角色两两对打，每个对位 20 场（左右各半），每轮 6240 场，最后用一组没参与调整的新随机种子复核。基线是 main `e3bb90a` 加上本次的 AI 修复。
+全部结论来自 `tools/ai/trainer.mjs` 的电脑对电脑模拟：天道、劲敌两档各打一遍，13 个角色两两对打，每个对位 20 场（左右各半），每轮 6240 场，最后用一组没参与调整的新随机种子复核。基线是 main `e3bb90a` 加上本次的 AI 修复。
 
 **原则：不改变英雄形象。** 不改招式、不改定位、不改手感：
 
@@ -45,7 +45,7 @@
 
 ## 2. 技能和大招修改建议（方案 B：先改技能，再补小一点的数值）
 
-诊断工具 `tools/trainer-why.mjs` 统计了每个角色的伤害从哪来、挨打时自己在干什么。强势角色几乎都靠一招远程或一招定身吃掉大半伤害，弱势角色缺一个稳定的起手。
+诊断工具 `tools/ai/trainer-why.mjs` 统计了每个角色的伤害从哪来、挨打时自己在干什么。强势角色几乎都靠一招远程或一招定身吃掉大半伤害，弱势角色缺一个稳定的起手。
 
 ### 2.1 已经测过的 7 项（只改冷却和瞄准）
 
@@ -118,7 +118,7 @@
 - 绯影：天道 37% / 劲敌 68%
 - 铁山：天道 42% / 劲敌 60%
 
-数值对两档是一起乘的，只能把平均值拉到 50%，拉不平两档之间的差。这要靠给每档难度单独训练打法基因（`tools/ai-train.mjs --lvkey hard`），或者像修山崩那样找出这些角色在某一档的 AI 漏洞。这是下一步建议做的事。
+数值对两档是一起乘的，只能把平均值拉到 50%，拉不平两档之间的差。这要靠给每档难度单独训练打法基因（`tools/ai/ai-train.mjs --lvkey hard`），或者像修山崩那样找出这些角色在某一档的 AI 漏洞。这是下一步建议做的事。
 
 ## 4. 推荐顺序
 
@@ -131,7 +131,7 @@
 ## 怎么复现
 
 ```bash
-node tools/trainer.mjs --n 20 --rounds 4 --level god,hard
-AI_EXP=docs/trainer/experiments/skill-tweaks.js node tools/trainer.mjs --n 20 --rounds 3 --level god,hard --out /tmp/skills
-node tools/trainer-why.mjs --hero moyu --n 10
+node tools/ai/trainer.mjs --n 20 --rounds 4 --level god,hard
+AI_EXP=docs/trainer/experiments/skill-tweaks.js node tools/ai/trainer.mjs --n 20 --rounds 3 --level god,hard --out /tmp/skills
+node tools/ai/trainer-why.mjs --hero moyu --n 10
 ```

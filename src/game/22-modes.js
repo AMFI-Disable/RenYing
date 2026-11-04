@@ -803,15 +803,51 @@ const M2_TEXT = {
   pp_cc: { desc: '你和队友一队，对阵两个电脑。', local: '1P 用 WASD，2P 用方向键 + K 攻击', match: '全服找一位队友，一起打两个电脑' },
   pp_pp: { desc: '两队各两人对打：你们两个对另外两个玩家。', local: '四人一台电脑：1P、2P 一队，3P、4P 一队', match: '全服找一位队友和两位对手' }
 };
-function render2v2Modal() {
+function render2v2Inline() {
   const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+  if (!tx) return;
+  for (const b of document.querySelectorAll('#xiwu2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
+  const descEl = $id('xiwu2v2Desc'), localDescEl = $id('xiwu2v2LocalDesc');
+  if (descEl) descEl.textContent = tx.desc;
+  if (localDescEl) localDescEl.textContent = tx.local;
+}
+function render2v2Modal() {
+  render2v2Inline();
+  const mode = active2v2ModalMode, tx = M2_TEXT[mode];
+  if (!tx) return;
   for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === teamMutator); b.setAttribute('aria-pressed', String(b.dataset.mut === teamMutator)); }
   for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
-  $id('m2LvWrap').hidden = mode === 'pp_pp';
-  for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) $id(id).style.display = mode === 'p_cc' ? 'none' : '';   // 一个人带电脑队友，不用联网（.m2-way 自带 display，hidden 属性压不住）
-  $id('modal2v2Desc').textContent = tx.desc;
-  $id('modal2v2LocalDesc').textContent = tx.local;
-  $id('modal2v2MatchDesc').textContent = tx.match;
+  if ($id('m2LvWrap')) $id('m2LvWrap').hidden = mode === 'pp_pp';
+  for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) { if ($id(id)) $id(id).style.display = mode === 'p_cc' ? 'none' : ''; }
+  if ($id('modal2v2Desc')) $id('modal2v2Desc').textContent = tx.desc;
+  if ($id('modal2v2LocalDesc')) $id('modal2v2LocalDesc').textContent = tx.local;
+  if ($id('modal2v2MatchDesc')) $id('modal2v2MatchDesc').textContent = tx.match;
+}
+if ($id('xiwu2v2Seg')) {
+  $id('xiwu2v2Seg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-m]'); if (!b) return;
+    active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Inline();
+  });
+}
+if ($id('xiwu2v2StartBtn')) {
+  $id('xiwu2v2StartBtn').addEventListener('click', () => {
+    bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
+  });
+}
+if ($id('xiwu2v2QuickBtn')) {
+  $id('xiwu2v2QuickBtn').addEventListener('click', () => {
+    const hero = menuHeroPick();
+    const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
+    else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
+    applySkins();
+  });
+}
+if ($id('xiwu2v2WatchBtn')) {
+  $id('xiwu2v2WatchBtn').addEventListener('click', () => {
+    startWatch2v2Draft();
+  });
 }
 function open2v2Modal(mode) {
   if (M2_TEXT[mode]) active2v2ModalMode = mode;
@@ -1334,6 +1370,15 @@ const isMyTurnBP = () => {
   const isWatch = bpMode === 'cpuWatch' || (bpCustomOpts && bpCustomOpts.isWatch);
   if (isWatch) return false;
   if (isLocalBothHumanBP()) return true;
+  // 2v2 p_cc: 玩家只操控 Side 0 的第 1 个席位（禁选第一手），队友由电脑自动挑选
+  if (bpMode === '2v2' && bpCustomOpts && bpCustomOpts.subMode === 'p_cc') {
+    const curStep = bpSteps()[BP.step];
+    if (curStep[0] !== bpMySide()) return false;
+    // Side 0 的第 2 个 pick 归电脑队友
+    const priorPicksSide0 = bpSteps().slice(0, BP.step).filter(st => st[0] === 0 && st[1] === 'pick').length;
+    if (curStep[1] === 'pick' && priorPicksSide0 >= 1) return false;
+    return true;
+  }
   return bpSteps()[BP.step][0] === bpMySide();
 };
 let BP = null, bpMode = 'cpu', bpSel = -1, bpHover = -1, bpCpuT = 0, bpCustomOpts = null;

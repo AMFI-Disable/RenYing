@@ -182,7 +182,7 @@ flowchart LR
 | :--- | :--- |
 | `src/page.html`、`src/style.css` | 页面结构（带构建标记）和全部样式 |
 | `src/game/` | 游戏本体，按编号拆成多个文件，`tools/build.py` 按顺序拼起来 |
-| `src/data/` | 数据表：`src/data/heroes/` 一位侠客一个文件，还有模式、点将台顺序、地图、电脑难度、界面英文。构建时由 `tools/data-check.mjs` 检查 |
+| `src/data/` | 数据表：`src/data/heroes/` 一位侠客一个文件，还有模式、点将台顺序、地图、电脑难度、界面英文。构建时由 `tools/checks/data-check.mjs` 检查 |
 | `src/ai.js` | 电脑对手 |
 | `src/net-p2p.js` | 点对点连接 |
 | `src/cloud.js` | 账号和云存档 |
@@ -193,7 +193,7 @@ flowchart LR
 | `assets/` | 音乐、生成的小游戏页面、内置的 `peerjs` 和 `three.js` |
 | `cloudflare/` | Worker、管理后台页面、D1 表结构和迁移 |
 | `models/` | 训练好的电脑 AI 权重 |
-| `tools/` | 构建脚本、测试、检查和 AI 训练工具 |
+| `tools/` | `build.py`，以及 `ai/`、`admin/`、`audits/`、`checks/`、`tests/` 和 `music/` |
 | `docs/` | 设计笔记、部署手册、管理后台说明、帧数表、Wiki 源文件 |
 | `index.html`、`renying-offline.html` | **生成的文件。** 在线版和离线版 |
 | `renying.html` | 旧地址的提示页 |
@@ -220,16 +220,16 @@ python3 tools/build.py --check
 
 | 测什么 | 命令 |
 | :--- | :--- |
-| 战斗、每位侠客、2v2 电脑 | `node tools/combat-test.mjs --sim` |
-| 回滚确定性 | `node tools/rollback-test.mjs --rollback` |
-| 两份游戏隔着卡顿网络对打 | `node tools/netplay-test.mjs` |
-| 武库经济和数据库迁移 | `node tools/econ-test.mjs` |
-| 云存档客户端 | `node tools/cloud-test.mjs` |
-| 多设备同步 | `node tools/sync-test.mjs` |
-| 开放世界服务器 | `node tools/world-test.mjs` |
-| 反作弊检查 | `node tools/anticheat-test.mjs` |
+| 战斗、每位侠客、2v2 电脑 | `node tools/tests/combat-test.mjs --sim` |
+| 回滚确定性 | `node tools/tests/rollback-test.mjs --rollback` |
+| 两份游戏隔着卡顿网络对打 | `node tools/tests/netplay-test.mjs` |
+| 武库经济和数据库迁移 | `node tools/tests/econ-test.mjs` |
+| 云存档客户端 | `node tools/tests/cloud-test.mjs` |
+| 多设备同步 | `node tools/tests/sync-test.mjs` |
+| 开放世界服务器 | `node tools/tests/world-test.mjs` |
+| 反作弊检查 | `node tools/tests/anticheat-test.mjs` |
 
-浏览器检查要先开本地服务器（`python3 -m http.server 8791`），然后比如 `node tools/ui-audit.mjs ci-ui 1440 900`、`node tools/hud-audit.mjs ci-hud 1440 900`、`node tools/touch-audit.mjs ci-touch`、`node tools/kb-flow-test.mjs ci-kb 1440 900`。`node tools/test.mjs` 一次跑完主要的几项。
+浏览器检查要先开本地服务器（`python3 -m http.server 8791`），然后比如 `node tools/audits/ui-audit.mjs ci-ui 1440 900`、`node tools/audits/hud-audit.mjs ci-hud 1440 900`、`node tools/audits/touch-audit.mjs ci-touch`、`node tools/audits/kb-flow-test.mjs ci-kb 1440 900`。`node tools/tests/test.mjs` 一次跑完主要的几项。
 
 完整的测试清单见 Wiki 的 [测试与 CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI)。Worker 由维护者部署，步骤在 [docs/deploy-runbook.md](docs/deploy-runbook.md)。
 

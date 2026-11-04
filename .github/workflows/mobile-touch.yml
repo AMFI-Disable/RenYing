@@ -8,7 +8,7 @@ on:
       - "src/style.css"
       - "src/data/**"
       - "src/game/**"
-      - "tools/touch-audit.mjs"
+      - "tools/audits/touch-audit.mjs"
   pull_request:
     branches: [ main ]
 
@@ -47,4 +47,4 @@ jobs:
           echo "Static web server is up on :8791"
 
       - name: Run Mobile & Tablet Touch Audit
-        run: node tools/touch-audit.mjs ci-touch
+        run: node tools/audits/touch-audit.mjs ci-touch

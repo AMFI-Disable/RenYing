@@ -26,11 +26,11 @@ so nothing was lost.
 
 | ID | Bug | Where | Guard |
 | :--- | :--- | :--- | :--- |
-| C4 | A new account inherited the previous player's save from a shared cache key | `src/cloud.js` mirrors | `tools/cloud-test.mjs` |
-| C5 | A debounced save crossed an account switch and was written to the next account | `doSync`, `logout` | `tools/cloud-test.mjs` |
-| C10 | A save the server refused was retried forever, on every boot | `doSync` | `tools/cloud-test.mjs` |
-| C6 | A password with non-Latin-1 characters threw before a local account could exist | `pwHash` / `pwMatches` | `tools/cloud-test.mjs` |
-| C11 | Exported backups signed six fields and fell back to a 32-bit hash | `computeProfileDigest` | `tools/cloud-test.mjs` |
+| C4 | A new account inherited the previous player's save from a shared cache key | `src/cloud.js` mirrors | `tools/tests/cloud-test.mjs` |
+| C5 | A debounced save crossed an account switch and was written to the next account | `doSync`, `logout` | `tools/tests/cloud-test.mjs` |
+| C10 | A save the server refused was retried forever, on every boot | `doSync` | `tools/tests/cloud-test.mjs` |
+| C6 | A password with non-Latin-1 characters threw before a local account could exist | `pwHash` / `pwMatches` | `tools/tests/cloud-test.mjs` |
+| C11 | Exported backups signed six fields and fell back to a 32-bit hash | `computeProfileDigest` | `tools/tests/cloud-test.mjs` |
 | C2 / L2 | A guest profile answer overwrote the roster, ink, welfare flag and tasks | `applyProfile` | page-scope probe, manual |
 | D6 | `#onlineLine` writes targeted an element no page renders | `src/game.js` | grep |
 
@@ -96,8 +96,8 @@ longer exists. They are kept here so the history is not rewritten.
 | C1 | Starter caps denied the first upload of any real save, permanently | The Worker merges the incoming profile server-side (`handleProfilePost`) and has no create-time cap |
 | C9 | Per-write progression caps sat below a single session's gains | Ink moves through a ledger of deltas with daily allowances; the server accepts, caps and reports `capped` / `owed` instead of denying the write |
 | C12 | `rating` / `placed` were dropped by the field whitelist; `rk` was silently stripped | `toCloudData()` now emits both, and `mergeProfiles()` merges `rk` |
-| C7 | The dev superuser test could never match; the dev password shipped in the bundle | No client-side dev login path; `Dev` is a reserved nickname created from the admin backend (`/api/admin/*`, `tools/econ-admin.mjs`) |
-| D1 | Two growth systems with drifted rates | The armory economy runs in the Worker only; `/api/econ` and `/api/market` are the single source, covered by `tools/econ-test.mjs` |
+| C7 | The dev superuser test could never match; the dev password shipped in the bundle | No client-side dev login path; `Dev` is a reserved nickname created from the admin backend (`/api/admin/*`, `tools/admin/econ-admin.mjs`) |
+| D1 | Two growth systems with drifted rates | The armory economy runs in the Worker only; `/api/econ` and `/api/market` are the single source, covered by `tools/tests/econ-test.mjs` |
 | D2 | Eight server endpoints were dead code | Those endpoints are gone with `server.py` |
 | D3 / D4 / D5 | Two rank ladders, two task systems, two difficulty tables | Ladder, tasks and rewards are defined once in `src/` and `cloudflare/worker.js` |
 
@@ -130,7 +130,7 @@ Correct for "never lose progress", wrong for a loss that only exists on one side
 loss count without a corresponding win. The rating path is server-owned, so this only affects the displayed record.
 
 **Fixed during this pass — the combat suite flake (was O5).**
-`tools/combat-test.mjs --sim` used to fail intermittently on "2v2 Single KO Survival: Surviving teammate did not
+`tools/tests/combat-test.mjs --sim` used to fail intermittently on "2v2 Single KO Survival: Surviving teammate did not
 receive last stand meter buff" (reproduced 2/3 runs on `903dfaa`, so it predates this branch). It was a test bug
 with two causes, both now fixed, and the suite passes 10/10 consecutive runs:
 
@@ -147,7 +147,7 @@ meter, which the AI is free to spend on the next frame.
 
 ## 5. Regression Coverage
 
-`tools/cloud-test.mjs` is new and runs in CI as **Cloud Save Client Tests**. It loads `src/cloud.js` in a Node
+`tools/tests/cloud-test.mjs` is new and runs in CI as **Cloud Save Client Tests**. It loads `src/cloud.js` in a Node
 `vm` with a fake Worker, a fake `localStorage` and a fake `document`, and asserts twenty behaviours:
 
 | Group | Checks |
@@ -164,9 +164,9 @@ Full local run:
 
 ```bash
 python3 tools/build.py --check
-node tools/cloud-test.mjs          # 20 checks
-node tools/econ-test.mjs           # 396 checks
-node tools/combat-test.mjs --sim   # 22 checks
+node tools/tests/cloud-test.mjs          # 20 checks
+node tools/tests/econ-test.mjs           # 396 checks
+node tools/tests/combat-test.mjs --sim   # 22 checks
 ```
 
 ---

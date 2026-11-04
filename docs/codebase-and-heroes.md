@@ -691,7 +691,7 @@ These are worth knowing before you touch balance or the codex UI:
 | Mini-game | `src/qfx/NN-*.js` + `src/qfx/page.html` |
 | Build/packaging | `tools/build.py`, `src/page.html` markers |
 
-After changes: `python3 tools/build.py`, then run the relevant audit (`node tools/ui-audit.mjs`, `hud-audit`,
+After changes: `python3 tools/build.py`, then run the relevant audit (`node tools/audits/ui-audit.mjs`, `hud-audit`,
 `touch-audit`, `combat-test.mjs`) and commit sources **with** the regenerated pages.
 
 ---

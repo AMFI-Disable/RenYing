@@ -57,5 +57,5 @@ Ask the maintainer (see [security.md](https://github.com/AMFI-Disable/RenYing/bl
 
 - Client: `src/cloud.js` (sync, tokens, offline queue) and `src/game/24-account.js` (account page).
 - Server: `cloudflare/worker.js`; tables in `cloudflare/schema.sql`, changes as numbered files in `cloudflare/migrations/`.
-- Tests: `node tools/cloud-test.mjs` and `node tools/sync-test.mjs`.
+- Tests: `node tools/tests/cloud-test.mjs` and `node tools/tests/sync-test.mjs`.
 - Admin tools and roles: [docs/admin.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/admin.md) (Chinese).

@@ -34,7 +34,7 @@ python3 tools/build.py --check
 ```
 3. 部署前检查（wrangler.toml、管理后台 CSP、接口冒烟测试，包括在空库上跑一遍全部迁移）：
 ```
-node tools/predeploy-check.mjs
+node tools/tests/predeploy-check.mjs
 ```
 4. 看这次有没有新的迁移文件（对比线上已经跑过的编号和 `cloudflare/migrations/` 里的文件）：
 ```
@@ -209,9 +209,9 @@ npx wrangler d1 execute renying-db-restore --remote --command "SELECT count(*) A
 
 | 命令 | 测什么 |
 | :--- | :--- |
-| `node tools/predeploy-check.mjs` | 部署前检查：wrangler.toml、迁移文件编号、管理后台 CSP、接口冒烟测试 |
-| `node tools/econ-test.mjs` | 经济全套，也包括迁移：空库和老库各跑一遍，结果要和 `cloudflare/schema.sql` 一样；同时跑不重复；出错整个退回 |
-| `node tools/sync-test.mjs` | 真 Worker 加多台设备的云存档合并 |
+| `node tools/tests/predeploy-check.mjs` | 部署前检查：wrangler.toml、迁移文件编号、管理后台 CSP、接口冒烟测试 |
+| `node tools/tests/econ-test.mjs` | 经济全套，也包括迁移：空库和老库各跑一遍，结果要和 `cloudflare/schema.sql` 一样；同时跑不重复；出错整个退回 |
+| `node tools/tests/sync-test.mjs` | 真 Worker 加多台设备的云存档合并 |
 
 完整的测试矩阵见 README 的 Test Matrix。
 

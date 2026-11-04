@@ -461,9 +461,9 @@ flowchart LR
 # 全局自动化质量验证汇总 (全部通过)
 python3 -m py_compile server.py tools/build.py tools/import_data.py tools/export_data.py  # 语法校验：PASS (exit 0)
 python3 tools/build.py --check                                                            # 单文件零代码漂移校验：PASS (exit 0)
-node tools/ui-audit.mjs ci-ui 1440 900                                                    # UI 面板全量审计：PASS (22 panels, 0 defects)
-node tools/hud-audit.mjs ci-hud 1440 900                                                  # HUD 字体合规审计：PASS (12px floor satisfied)
-node tools/touch-audit.mjs ci-touch                                                       # 触屏与移动适配审计：PASS (exit 0)
+node tools/audits/ui-audit.mjs ci-ui 1440 900                                                    # UI 面板全量审计：PASS (22 panels, 0 defects)
+node tools/audits/hud-audit.mjs ci-hud 1440 900                                                  # HUD 字体合规审计：PASS (12px floor satisfied)
+node tools/audits/touch-audit.mjs ci-touch                                                       # 触屏与移动适配审计：PASS (exit 0)
 git status                                                                                # 工作区状态：working tree clean (ahead of origin/main by 0)
 ```
 

@@ -8,8 +8,8 @@ on:
       - "src/data/**"
       - "src/game/**"
       - "models/ai-brain.json"
-      - "tools/ai-arena.mjs"
-      - "tools/ai-ladder-report.mjs"
+      - "tools/ai/ai-arena.mjs"
+      - "tools/ai/ai-ladder-report.mjs"
   pull_request:
     branches: [ main ]
   schedule:
@@ -36,7 +36,7 @@ jobs:
           node-version: "22"
 
       - name: Run Adjacent Difficulty Ladder Benchmark & Generate Markdown
-        run: node tools/ai-ladder-report.mjs --n 2 --out docs/ai-ladder-benchmark.md
+        run: node tools/ai/ai-ladder-report.mjs --n 2 --out docs/ai-ladder-benchmark.md
 
       - name: Auto-Commit Updated AI Ladder Win-Rate Report
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

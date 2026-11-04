@@ -11,7 +11,7 @@ python3 -m http.server 8791
 ## Quick Run / 一次跑完
 
 ```bash
-node tools/test.mjs
+node tools/tests/test.mjs
 ```
 
 Rebuilds if needed and runs the main suites in one go. `--full` adds the long UI simulations.
@@ -21,27 +21,27 @@ Rebuilds if needed and runs the main suites in one go. `--full` adds the long UI
 | Area | Command | What it checks |
 | :--- | :--- | :--- |
 | Build | `python3 tools/build.py --check` | Generated pages, Worker bundle and migration list match the sources |
-| Data | `node tools/data-check.mjs` | Hero files and data tables: required and unknown fields, unique ids, story template (also runs inside the build) |
-| Combat | `node tools/combat-test.mjs --sim` | Every hero, combat states, skills, maps, 2v2 AI |
-| AI | `node tools/ai-lingque-test.mjs` | Ling Que AI combos and level separation |
-| Anti-cheat | `node tools/anticheat-test.mjs` | Oversized hits are only logged; edited move tables still strike |
-| Rollback | `node tools/rollback-test.mjs --rollback` | Snapshot, restore and re-simulation are deterministic |
-| Netplay | `node tools/netplay-test.mjs` | Two game copies over a laggy link end every match identically |
-| Economy | `node tools/econ-test.mjs` (`--bundle` for the built Worker) | Armory, market, odds, limits, anti-abuse, admin routes; D1 migrations on empty and old databases match `cloudflare/schema.sql` |
-| Cloud client | `node tools/cloud-test.mjs` | Per-account save isolation, retries, local accounts, export signatures |
-| Sync | `node tools/sync-test.mjs` (`--bundle`) | Real Worker with several devices: progress is summed, never counted twice |
-| Open world | `node tools/world-test.mjs` | World line cap, view range, damage caps, world boss, restarts |
-| Predeploy | `node tools/predeploy-check.mjs` | `wrangler.toml`, migration numbering, admin page CSP, API smoke test on a local Worker |
-| Draft flow | `node tools/bp-flow-test.mjs` | Draft screen and offline font fallback |
-| Panels | `node tools/ui-audit.mjs ci-ui 1440 900` | Every panel fits, nothing clipped or too small to read |
-| HUD | `node tools/hud-audit.mjs ci-hud 1440 900` | No in-match HUD text below 12 px |
-| HUD overlap | `node tools/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD text and bars never overlap or leave the canvas |
-| Touch | `node tools/touch-audit.mjs ci-touch` | Phone and tablet touch controls |
-| Keyboard | `node tools/kb-flow-test.mjs ci-kb 1440 900` | A new player with no mouse: language prompt → home → match → results |
-| Performance | `node tools/perf-audit.mjs ci-perf` | Load time, panel switching and AI-vs-AI frame rate within `tools/perf-budget.json` |
-| First load | `node tools/firstload-audit.mjs ci-firstload 3` | First paint, largest paint, layout shift, fonts; no music on the first screen |
-| Frame data | `node tools/frame-data.mjs --check` | Move timing did not change by accident |
-| AI ladder | `node tools/ai-ladder-report.mjs` | Win rates between AI levels and heroes (writes `docs/ai-ladder-benchmark.md`) |
+| Data | `node tools/checks/data-check.mjs` | Hero files and data tables: required and unknown fields, unique ids, story template (also runs inside the build) |
+| Combat | `node tools/tests/combat-test.mjs --sim` | Every hero, combat states, skills, maps, 2v2 AI |
+| AI | `node tools/tests/ai-lingque-test.mjs` | Ling Que AI combos and level separation |
+| Anti-cheat | `node tools/tests/anticheat-test.mjs` | Oversized hits are only logged; edited move tables still strike |
+| Rollback | `node tools/tests/rollback-test.mjs --rollback` | Snapshot, restore and re-simulation are deterministic |
+| Netplay | `node tools/tests/netplay-test.mjs` | Two game copies over a laggy link end every match identically |
+| Economy | `node tools/tests/econ-test.mjs` (`--bundle` for the built Worker) | Armory, market, odds, limits, anti-abuse, admin routes; D1 migrations on empty and old databases match `cloudflare/schema.sql` |
+| Cloud client | `node tools/tests/cloud-test.mjs` | Per-account save isolation, retries, local accounts, export signatures |
+| Sync | `node tools/tests/sync-test.mjs` (`--bundle`) | Real Worker with several devices: progress is summed, never counted twice |
+| Open world | `node tools/tests/world-test.mjs` | World line cap, view range, damage caps, world boss, restarts |
+| Predeploy | `node tools/tests/predeploy-check.mjs` | `wrangler.toml`, migration numbering, admin page CSP, API smoke test on a local Worker |
+| Draft flow | `node tools/audits/bp-flow-test.mjs` | Draft screen and offline font fallback |
+| Panels | `node tools/audits/ui-audit.mjs ci-ui 1440 900` | Every panel fits, nothing clipped or too small to read |
+| HUD | `node tools/audits/hud-audit.mjs ci-hud 1440 900` | No in-match HUD text below 12 px |
+| HUD overlap | `node tools/audits/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD text and bars never overlap or leave the canvas |
+| Touch | `node tools/audits/touch-audit.mjs ci-touch` | Phone and tablet touch controls |
+| Keyboard | `node tools/audits/kb-flow-test.mjs ci-kb 1440 900` | A new player with no mouse: language prompt → home → match → results |
+| Performance | `node tools/audits/perf-audit.mjs ci-perf` | Load time, panel switching and AI-vs-AI frame rate within `tools/audits/perf-budget.json` |
+| First load | `node tools/audits/firstload-audit.mjs ci-firstload 3` | First paint, largest paint, layout shift, fonts; no music on the first screen |
+| Frame data | `node tools/checks/frame-data.mjs --check` | Move timing did not change by accident |
+| AI ladder | `node tools/ai/ai-ladder-report.mjs` | Win rates between AI levels and heroes (writes `docs/ai-ladder-benchmark.md`) |
 
 Audit screenshots go into the `ci-*` folders, which are ignored by git.
 

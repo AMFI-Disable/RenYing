@@ -479,13 +479,20 @@
   function blankS() { return ST || C.normalize(C.blank(), { now: NOW(), uid: '' }); }
 
   // 库存
-  const INV = { char: '', tier: '', sort: 'new' };
+  const INV = { char: '', tier: '', sort: 'new', stat: '' };
   function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !OFFLINE_BUILD); }
   function pInv() {
     const s = blankS();
-    let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier));
+    let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier) && (!INV.stat || (INV.stat === 'st' ? x.st >= 0 : x.st < 0)));
     const tr = x => C.TIERS.indexOf(tierOf(x.k));
-    const sorts = { new: (a, b) => b.i - a.i, tier: (a, b) => tr(b) - tr(a) || b.i - a.i, st: (a, b) => b.st - a.st || b.i - a.i };
+    const sorts = {
+      new: (a, b) => b.i - a.i,
+      old: (a, b) => a.i - b.i,
+      tier: (a, b) => tr(b) - tr(a) || b.i - a.i,
+      tier_asc: (a, b) => tr(a) - tr(b) || b.i - a.i,
+      st: (a, b) => (b.st || 0) - (a.st || 0) || b.i - a.i,
+      name: (a, b) => (itemName(a) || '').localeCompare(itemName(b) || '', 'zh-CN')
+    };
     list = list.slice().sort(sorts[INV.sort] || sorts.new);
     const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button" class="ar-caseitem" data-gotab="cases" style="--cc:${C.COLS[c].col}"><span class="ar-emb">${C.COLS[c].emblem}</span><b>${C.COLS[c].name}武器箱</b><small>×${s.cases[c]}</small></button>`).join('')
       + (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
@@ -496,7 +503,8 @@
       <div class="ar-filter">
         <select id="arInvChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${INV.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
         <select id="arInvTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${INV.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
-        <select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['tier', '品质最高'], ['st', '斩数最多']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+        <select id="arInvStat" class="ar-sel"><option value="">全部类型</option><option value="st" ${INV.stat === 'st' ? 'selected' : ''}>仅看斩数饰品</option><option value="norm" ${INV.stat === 'norm' ? 'selected' : ''}>仅看普通饰品</option></select>
+        <select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['old', '最早获得'], ['tier', '品质最高'], ['tier_asc', '品质最低'], ['st', '斩数最多'], ['name', '按名称排序']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
       </div>
       ${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty">${uiState('empty', s.inv.length ? '没有符合条件的饰品。' : `武库的库存还是空的${legacy.length ? '（以前得到的皮肤在下面，一直都能穿）' : ''}。打对局有机会掉落，或者去开箱、逛玩家市场。`)}${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
       ${legacy.length ? `<h4 class="ar-h">以前得到的皮肤 <small>绑定账号，不能出售和汰换</small></h4><div class="ar-grid sm">${legacy.map(k => `<div class="ar-it bound" style="--tc:${C.isItem(k) ? tc(k) : SKINS[k].rarity === 'legend' ? '235,75,75' : '136,71,255'}"><img src="${art(k)}" alt="" loading="lazy"><b>${escapeHTML(SKINS[k].name)}</b><small>${charName(k)} · 绑定</small><i class="ar-bar"></i></div>`).join('')}</div>` : ''}
@@ -1026,7 +1034,7 @@
     const main = $id('arMain');
     main.addEventListener('change', e => {
       const id = e.target.id, v = e.target.value;
-      if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvSort') INV.sort = v;
+      if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvStat') INV.stat = v; else if (id === 'arInvSort') INV.sort = v;
       else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked;
       else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; } else return;
       render();

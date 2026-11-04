@@ -138,7 +138,7 @@ def music_data():
 
 
 def ai_brain_data():
-    """电脑 AI 的打击数据和训练出来的打法基因（tools/ai-framedata.mjs、tools/ai-train.mjs 生成）"""
+    """电脑 AI 的打击数据和训练出来的打法基因（tools/ai/ai-framedata.mjs、tools/ai/ai-train.mjs 生成）"""
     path = os.path.join(ROOT, "models", "ai-brain.json")
     if os.path.exists(path):
         return json.loads(read(path))
@@ -318,10 +318,10 @@ def check_js():
     if rc.returncode:
         print(f"src/data/ + src/game/ 拼起来压缩后语法错误：\n{rc.stderr}")
         ok = False
-    # src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用存在（tools/data-check.mjs），有错就不生成网页
+    # src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用存在（tools/checks/data-check.mjs），有错就不生成网页
     # CI 里再加 --strict-copy：英文词条的中文在源码里找不到也算错；本机只提醒
     strict = ["--strict-copy"] if os.environ.get("CI") else []
-    r = subprocess.run([node, os.path.join(ROOT, "tools", "data-check.mjs"), *strict], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    r = subprocess.run([node, os.path.join(ROOT, "tools", "checks", "data-check.mjs"), *strict], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode:
         print(r.stdout + r.stderr)
         ok = False
