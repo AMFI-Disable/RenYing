@@ -172,6 +172,7 @@
   .head .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--faint); font-size: 12.5px; margin-top: 6px; align-items: center; }
   .crumbs { margin-bottom: 12px; }
   .giverow { display: grid; grid-template-columns: minmax(0, 1fr) auto 90px auto; gap: 8px; align-items: center; }
+  .setgiverow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-top: 8px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 2px; }
   .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 99px; background: var(--goldbg); border: 1px solid rgba(233, 196, 106, .35); font-size: 13px; }
   .chip button { appearance: none; border: 0; background: none; color: var(--dim); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 6px; border-radius: 99px; }
@@ -225,6 +226,7 @@
     .cfgrow .hint { grid-column: 1 / -1; order: 3; }
     .giverow { grid-template-columns: auto minmax(0, 1fr) auto; }
     .giverow select { grid-column: 1 / -1; }
+    .setgiverow { grid-template-columns: minmax(0, 1fr) auto; }
   }
   @media (max-width: 560px) {
     body { font-size: 14.5px; }
@@ -740,6 +742,12 @@ async function vPlayer() {
         <input type="number" name="gstn" min="0" step="1" value="0" aria-label="斩数（记了多少次击倒）">
         <button type="button" class="btn ghost" data-act="addgive">加进清单</button>
       </div>
+      <div class="row end" style="margin-top:8px"><button type="button" class="btn ghost sm" data-act="markallgive">清单全部设为斩数版</button></div>
+      <div class="setgiverow">
+        <select name="gset" aria-label="选择整套饰品"><option value="">选一套饰品…</option><option value="all">全部饰品</option>${CAT.caseIds.map(c => H`<option value="${c}">${caseName(c)}整套</option>`)}</select>
+        <button type="button" class="btn ghost" data-act="addsetgive">加整套进清单</button>
+      </div>
+      <p class="hint">可以单件、整套或全部发放。勾选“斩数版”会把上面的斩数应用到清单中新加的每件饰品。</p>
       <div id="gives" class="chips"></div>
       <p class="hint">要收走饰品，在下面的库存里勾上。挂在市场上的可以先强制撤下再收。</p>
       <div class="row end"><button class="btn">检查并提交…</button></div>
@@ -1584,11 +1592,33 @@ const ACTS = {
   addgive: () => {
     const f = $('form[data-form=adjust]'), k = f.elements.gk.value;
     if (!k) return toast('先选一件饰品', true);
-    if (S.give.length >= 50) return toast('一次最多发 50 件', true);
+    if (S.give.length >= Object.keys(CAT.items).length) return toast('单次发放数量不能超过饰品总数', true);
     const n = Number(f.elements.gstn.value || 0);
     if (f.elements.gst.checked && !(Number.isInteger(n) && n >= 0 && n <= 1e7)) return toast('斩数要填 0 到 10000000 的整数', true);
     S.give.push({ k, st: f.elements.gst.checked ? n : -1 });
     drawGives();
+  },
+  markallgive: () => {
+    const f = $('form[data-form=adjust]'), n = Number(f.elements.gstn.value || 0);
+    if (!(Number.isInteger(n) && n >= 0 && n <= 1e7)) return toast('斩数要填 0 到 10000000 的整数', true);
+    f.elements.gst.checked = true;
+    for (const item of S.give) item.st = n;
+    drawGives();
+    toast(S.give.length ? `已将清单中的 ${S.give.length} 件饰品设为斩数版` : '已启用斩数版；接下来加入清单的饰品会使用斩数版');
+  },
+  addsetgive: () => {
+    const f = $('form[data-form=adjust]'), selected = f.elements.gset.value;
+    if (!selected) return toast('先选一套饰品', true);
+    const keys = CAT.caseIds.filter(c => selected === 'all' || c === selected).flatMap(c => CAT.order.flatMap(t =>
+      Object.values(CAT.items).filter(x => x.col === c && x.tier === t).map(x => x.k)));
+    if (!keys.length) return toast('这套里没有饰品', true);
+    if (S.give.length + keys.length > Object.keys(CAT.items).length) return toast('单次发放数量不能超过饰品总数', true);
+    const n = Number(f.elements.gstn.value || 0);
+    if (f.elements.gst.checked && !(Number.isInteger(n) && n >= 0 && n <= 1e7)) return toast('斩数要填 0 到 10000000 的整数', true);
+    const st = f.elements.gst.checked ? n : -1;
+    S.give.push(...keys.map(k => ({ k, st })));
+    drawGives();
+    toast(`已将 ${keys.length} 件饰品加入清单`);
   },
   delgive: b => { S.give.splice(+b.dataset.i, 1); drawGives(); },
   lost: b => busy(b, async () => { const r = await api('lost?uid=' + encodeURIComponent(S.p.uid)); S.lost = { uid: S.p.uid, items: r.items }; render(); }),

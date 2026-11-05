@@ -480,7 +480,7 @@
 
   // 库存
   const INV = { char: '', tier: '', sort: 'new', stat: '' };
-  const CODEX = { col: '', char: '', tier: '', sort: 'set' };
+  const CODEX = { col: '', char: '', tier: '', state: '', sort: 'set' };
   function pInv() {
     const s = blankS();
     let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier) && (!INV.stat || (INV.stat === 'st' ? x.st >= 0 : x.st < 0)));
@@ -517,7 +517,8 @@
     for (const it of s.inv) counts.set(it.k, (counts.get(it.k) || 0) + 1);
     for (const k of s.via || []) owned.add(k);
     for (const k of PROF.skins || []) if (C.isItem(k)) owned.add(k);
-    let keys = Object.keys(C.ITEM).filter(k => (!CODEX.col || C.ITEM[k].col === CODEX.col) && (!CODEX.char || C.charOf(k) === CODEX.char) && (!CODEX.tier || tierOf(k) === CODEX.tier));
+    let keys = Object.keys(C.ITEM).filter(k => (!CODEX.col || C.ITEM[k].col === CODEX.col) && (!CODEX.char || C.charOf(k) === CODEX.char) && (!CODEX.tier || tierOf(k) === CODEX.tier)
+      && (!CODEX.state || (CODEX.state === 'missing' ? !owned.has(k) : owned.has(k))));
     const tierRank = k => C.TIERS.indexOf(tierOf(k));
     const byName = (a, b) => skinName(a).localeCompare(skinName(b), 'zh-CN') || a.localeCompare(b);
     const sorts = {
@@ -536,6 +537,7 @@
       <div class="ar-filter"><select id="arCodexCol" class="ar-sel"><option value="">全部套装</option>${C.CASES.map(c => `<option value="${c}" ${CODEX.col === c ? 'selected' : ''}>${C.COLS[c].name}套装</option>`).join('')}</select>
       <select id="arCodexChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${CODEX.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
       <select id="arCodexTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${CODEX.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
+      <select id="arCodexState" class="ar-sel"><option value="">全部皮肤</option><option value="owned" ${CODEX.state === 'owned' ? 'selected' : ''}>已获得</option><option value="missing" ${CODEX.state === 'missing' ? 'selected' : ''}>未获得</option></select>
       <select id="arCodexSort" class="ar-sel">${[['set', '按套装'], ['tier', '品质最高'], ['tier_asc', '品质最低'], ['hero', '按侠客'], ['name', '按名称']].map(([k, n]) => `<option value="${k}" ${CODEX.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
       ${cards ? `<div class="ar-grid">${cards}</div>` : empty('没有符合筛选条件的皮肤。')}`;
   }
@@ -1076,7 +1078,7 @@
     main.addEventListener('change', e => {
       const id = e.target.id, v = e.target.value;
       if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvStat') INV.stat = v; else if (id === 'arInvSort') INV.sort = v;
-      else if (id === 'arCodexCol') CODEX.col = v; else if (id === 'arCodexChar') CODEX.char = v; else if (id === 'arCodexTier') CODEX.tier = v; else if (id === 'arCodexSort') CODEX.sort = v;
+      else if (id === 'arCodexCol') CODEX.col = v; else if (id === 'arCodexChar') CODEX.char = v; else if (id === 'arCodexTier') CODEX.tier = v; else if (id === 'arCodexState') CODEX.state = v; else if (id === 'arCodexSort') CODEX.sort = v;
       else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked;
       else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; } else return;
       render();

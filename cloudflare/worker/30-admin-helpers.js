@@ -82,6 +82,7 @@ const intIn = (v, lo, hi) => {   // 是整数、在范围里就给这个数，�
   return Number.isInteger(x) && x >= lo && x <= hi ? x : null;
 };
 const ADJ_INK = 1000000, ADJ_N = 1000;   // 一次最多加减这么多墨锭、这么多个箱子 / 终端机 / 标签
+const ADMIN_GIVE_MAX = Object.keys(C.ITEM).length;
 
 // 改一个玩家：墨锭、武器箱、终端机、改名标签加减，发饰品、收饰品，一次请求里的几样要么一起改成、要么都不改。
 // 和玩家自己的操作走同一套带版本号的写入：玩家正好在开箱也不会互相覆盖。收走的皮肤记进 gone，旧存档加不回来
@@ -96,7 +97,7 @@ async function adminAdjust(env, u, body, who, why, now) {
     if (n) cases[c] = n;
   }
   const give = Array.isArray(body.give) ? body.give : [], take = Array.isArray(body.take) ? body.take : [];
-  if (give.length > 50 || take.length > 200) return error('一次最多发 50 件、收 200 件');
+  if (give.length > ADMIN_GIVE_MAX || take.length > 200) return error(`一次最多发 ${ADMIN_GIVE_MAX} 件、收 200 件`);
   const gv = [];
   for (const g of give) {
     const k = isPlain(g) ? String(g.k || '') : String(g || ''), st = isPlain(g) && g.st !== undefined && g.st !== null && g.st !== '' && +g.st >= 0 ? intIn(g.st, 0, 1e7) : -1;
@@ -141,7 +142,7 @@ async function adminAdjust(env, u, body, who, why, now) {
     const detail = JSON.stringify({ by: who, why, ink: dInk || undefined, cases: Object.keys(cases).length ? cases : undefined, term: dTerm || undefined, tags: dTags || undefined,
       give: given.length ? given.map(itemRef) : undefined, take: taken.length ? taken.map(itemRef) : undefined });
     const results = await env.DB.batch([
-      ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'admin', 1, eco.ink, E.ink, detail.slice(0, 2000)], u.id, ver),
+      ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'admin', 1, eco.ink, E.ink, detail.slice(0, 12000)], u.id, ver),
       userWrite(env, u.id, p, now, ver),
       econWrite(env, u.id, ver, now, srv, E.ink, JSON.stringify(s)),
     ]);

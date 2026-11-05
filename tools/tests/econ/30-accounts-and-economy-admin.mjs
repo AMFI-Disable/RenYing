@@ -126,13 +126,22 @@ section('管理员加减：墨锭、武器箱、终端机、改名标签、发�
     [{ ink: -(i1 + 1) }, /扣不了/], [{ cases: { c2: -1 } }, /扣不了/], [{ term: -99 }, /终端机/], [{ tags: -3 }, /改名标签/], [{ ink: 1000001 }, /最多/], [{ ink: 1.5 }, /整数/],
     [{ ink: 'lots' }, /整数/], [{ cases: { c9: 1 } }, /武器箱/], [{ cases: { c1: 1001 } }, /武器箱/], [{ give: [{ k: 'nope' }] }, /没有这件饰品/], [{ give: ['__proto__'] }, /没有这件饰品/],
     [{ give: [{ k: 'qf_p1', st: 2.5 }] }, /斩数/], [{ take: [99999] }, /库存里没有/], [{ take: ['x'] }, /编号不对/], [{}, /什么都没填/], [{ ink: 50, take: [99999] }, /库存里没有/],
-    [{ give: Array.from({ length: 51 }, () => ({ k: 'qf_p1' })) }, /最多/],
+    [{ give: Array.from({ length: Object.keys(C.ITEM).length + 1 }, () => ({ k: 'qf_p1' })) }, /最多/],
   ]);
   ok(!bad.length && ver() === v1 && inkOf(P.uid) === i1, '17 种乱填都不改（扣成负数、超上限、小数、不存在的箱子和饰品、库存里没有的）；有一项不对，整个请求都不改', bad);
   const it = stateOf(P.uid).inv[0], l = await econ(P.token, 'list', { i: it.i, price: 99 });
   const tl = await adm('POST', '/api/admin/adjust', { uid: P.uid, take: [it.i], why: '测试' });
   ok(l.res.ok && tl.status === 400 && /市场/.test(tl.error), '挂在玩家市场上的收不了（要等玩家撤下或者卖掉）', tl.error);
   await econ(P.token, 'cancel', { l: l.res.l });
+  const fullSetUser = await newUser('skin-set-recipient');
+  const allKeys = Object.keys(C.ITEM);
+  const fullSet = await adm('POST', '/api/admin/adjust', { uid: fullSetUser.uid, give: allKeys.map(k => ({ k, st: 7 })), why: '全饰品发放测试' });
+  const allInv = stateOf(fullSetUser.uid).inv;
+  const fullLog = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'admin' ORDER BY id DESC LIMIT 1", fullSetUser.uid);
+  const loggedGive = JSON.parse(fullLog.detail).give;
+  ok(fullSet.ok && fullSet.given.length === allKeys.length && allInv.length === allKeys.length && allInv.every(it => it.st === 7 && it.src === 'admin'), '整套发放上限覆盖全部饰品，斩数版应用到每件饰品', { given: fullSet.given.length, inventory: allInv.length });
+  ok(new Set(allInv.map(it => it.k)).size === allKeys.length && allKeys.every(k => allInv.some(it => it.k === k)), '完整发放包含目录中的每一件饰品');
+  ok(loggedGive.length === allKeys.length, '完整发放流水保留全部饰品明细', loggedGive.length);
   legacyUser('u_legacyold00001', 'oldtimer', { ink: 300 });
   const fa = await adm('POST', '/api/admin/adjust', { uid: 'oldtimer', ink: 200, why: '老号补偿' });
   ok(fa.ok && inkOf('u_legacyold00001') === 500 && row("SELECT COUNT(*) AS n FROM econ_log WHERE uid = ? AND act = 'open_account'", 'u_legacyold00001').n === 1, '还没有武库存档的老号：先按存档建好武库（300 墨锭），再加 200');
