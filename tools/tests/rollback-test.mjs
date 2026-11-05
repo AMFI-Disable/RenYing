@@ -189,8 +189,8 @@ if (runAll || args.includes('--rollback')) {
   const ly = new vm.Script(`(() => {
     const L = CHARS.findIndex(c => c.id === 'liying');
     const real = f => ({
-      loc: { h: [0, 2, 2, 1, 4, 0][(f >> 4) % 6], p: f % 50 === 5 ? ['skill'] : f % 50 === 30 ? ['skill2'] : f % 9 === 0 ? ['light'] : [] },
-      rem: { h: [1, 0, 4, 2, 0, 1][(f >> 4) % 6], p: f % 44 === 3 ? ['skill'] : f % 44 === 25 ? ['skill2'] : f % 11 === 0 ? ['light'] : [] }
+      loc: { h: [0, 2, 2, 1, 4, 0][(f >> 4) % 6], p: f % 30 === 5 ? ['skill'] : f % 30 === 18 ? ['skill2'] : f % 12 === 0 ? ['light'] : [] },
+      rem: { h: [1, 0, 4, 2, 0, 1][(f >> 4) % 6], p: f % 26 === 3 ? ['skill'] : f % 26 === 15 ? ['skill2'] : f % 15 === 0 ? ['light'] : [] }
     });
     const T = 2400, out = { swaps: 0, planted: 0 };
     const run = guess => {

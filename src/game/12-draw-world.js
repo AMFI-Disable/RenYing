@@ -921,28 +921,62 @@ function drawClones() {
     if (f.hidden || !f.clones || !f.clones.length) continue;
     const C = f.ch.clone || { life: 15 }, rgb = f.look.slash;
     const foe = (f.target && !f.target.hidden) ? f.target : foesOf(f)[0], mark = foe ? cloneMark(f, foe) : null;
+    const isSwapping = f.state === 'skill' && f.skill === 'mistswap' && f.skPh === 0;
+
     for (const c of f.clones) {
       const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1, cy = c.y || 0;
-      ctx.save(); ctx.fillStyle = `rgba(${rgb},${0.22 * blink})`;
-      ctx.beginPath(); ctx.ellipse(c.x, cy, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      const isSub = !!c.sub;
+      const alphaMul = isSub ? 0.65 : 1.0;
+      ctx.save();
+      ctx.fillStyle = `rgba(${rgb},${(isSub ? 0.14 : 0.24) * blink})`;
+      ctx.beginPath();
+      ctx.ellipse(c.x, cy, isSub ? 28 : 36, isSub ? 6 : 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
       const rec = CLONE_SK[f.idx + ':' + c.id];
       const echoing = ['attack', 'skill', 'special'].includes(f.state);
-      if (f.sk && echoing) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }
-      else if (rec) drawBody(rec.sk, f, { ghost: 0.5 * blink, tint: rgb });
-      else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
-      if (c === mark) {
-        ctx.save(); ctx.strokeStyle = `rgba(${rgb},${0.85 * blink})`; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.ellipse(c.x, cy, 46, 11, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      const ghostAlpha = (isSub ? 0.35 : 0.5) * blink;
+      if (f.sk && echoing) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: ghostAlpha, tint: rgb }); ctx.restore(); }
+      else if (rec) drawBody(rec.sk, f, { ghost: ghostAlpha, tint: rgb });
+      else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: ghostAlpha, tint: rgb }); ctx.restore(); }
+
+      // 生命值微型印条（若受损）
+      if (c.maxHp && c.hp < c.maxHp) {
+        ctx.save();
+        const barW = 34, hpFrac = clamp(c.hp / c.maxHp, 0, 1);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(c.x - barW / 2, cy - 105, barW, 4);
+        ctx.fillStyle = `rgb(${rgb})`;
+        ctx.fillRect(c.x - barW / 2, cy - 105, barW * hpFrac, 4);
+        ctx.restore();
+      }
+
+      // 可渡影标志 / 当前高亮目标
+      if (!isSub && (c === mark || c.id === f.swapId)) {
+        ctx.save();
+        const isTarget = isSwapping && c.id === f.swapId;
+        ctx.strokeStyle = isTarget ? `rgba(255,255,255,${0.9 * blink})` : `rgba(${rgb},${0.85 * blink})`;
+        ctx.lineWidth = isTarget ? 3.5 : 2.5;
+        ctx.beginPath();
+        ctx.ellipse(c.x, cy, 46, 11, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // 浮空印记标记真身可渡
+        ctx.font = `11px ${TITLE_FONT || 'sans-serif'}`;
+        ctx.fillStyle = `rgba(${rgb},0.85)`;
+        ctx.textAlign = 'center';
+        ctx.fillText('真影', c.x, cy - 110);
+        ctx.restore();
       }
     }
-    if (f.state === 'skill' && f.skill === 'mistswap' && f.skPh === 0) {
-      const c = f.clones.find(k => k.id === f.swapId);
+    if (isSwapping) {
+      const c = f.clones.find(k => k.id === f.swapId && !k.sub);
       if (c) {
-        ctx.save(); ctx.strokeStyle = `rgba(${rgb},0.55)`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
+        ctx.save(); ctx.strokeStyle = `rgba(${rgb},0.65)`; ctx.lineWidth = 3.5; ctx.setLineDash([10, 8]);
         const cy = c.y || 0;
         ctx.beginPath(); ctx.moveTo(f.x, f.y - 55); ctx.lineTo(c.x, cy - 55); ctx.stroke();
-        ctx.setLineDash([]); ctx.lineWidth = 3.5; ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.4 * Math.sin(clock * 40)})`;
-        ctx.beginPath(); ctx.ellipse(c.x, cy, 50, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+        ctx.setLineDash([]); ctx.lineWidth = 4; ctx.strokeStyle = `rgba(255,255,255,${0.6 + 0.4 * Math.sin(clock * 40)})`;
+        ctx.beginPath(); ctx.ellipse(c.x, cy, 52, 13, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       }
     }
   }

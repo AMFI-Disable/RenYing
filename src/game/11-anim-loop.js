@@ -779,6 +779,7 @@ function frameBody(now) {
   fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
   if (!paused) {
     if (slowmo > 0) slowmo -= real;
+    if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) swapFreezeTimer = Math.max(0, swapFreezeTimer - real);
     for (const f of [A, B]) if (f.state === 'special' && f.sp === 'charge' && f.t < 0.06 && cine.t < 0) { cine.t = 0; cine.owner = f; if (f.idx === localIdx()) MSTAT.ults++; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
     if (cine.t >= 0) { cine.t += real; if (cine.t > CINE_LEN) { cine.t = -1; cine.owner = null; } }
     updateFireflies(real); updateAim();

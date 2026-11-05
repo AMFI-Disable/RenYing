@@ -7,10 +7,10 @@ defHero({
   // 2026-10-28 用天道 AI 对 13 位侠客各打左右两边、4 组种子粗调到这里（1.45 时约 42%）；细调交给 tools/ai/trainer.mjs。
   bal: { normal: 1.47, skill: 1.47, ult: 1.47, cd: 1.0, hp: 1.47 },
   char: { name: '离影', role: '离魂刀客', diff: 3, escCD: 8.5, skill: 'mistmark', skill2: 'mistswap', ult: 'mistarray', passive: 'mist',
-    passiveName: '离魂', passiveDesc: '能把一缕魂留在原地，化作雾身（最多 4 个，存在 15 秒，碰到就碎，可布于全场任意位置无距离消散限制）。雾身会以 75% 伤害重放普攻、技能和飞行道具。身子却比旁人笨重：只有一段跳。打碎雾身的人回 5 点气。',
+    passiveName: '离魂', passiveDesc: '能把一缕魂留在原地化作雾身（最多 10 个，存在 15 秒，具高额生命且承受攻击，破碎时反噬引爆并削弱对手）。本体再次留影时场上雾身会同步复制出刀并生出较弱子影。雾身以波动内功重放攻击，伤害较低但削弱对手防御并加速其架势消耗。渡影（R）获得 0.25 秒霸体，并在时空凝滞中精准拣选本体真身所生雾身瞬移渡位。',
     stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 1.0, swing: 0.9, jump: 1.0, weight: 0.95, defRating: 1.0, guardMax: 95, guardStab: 1.0, guardChip: 0.10, guardRegen: 28, poise: 1.0, size: 0.95 }, hitFeel: 0.85,
     jumps: 1,
-    clone: { max: 4, life: 15, leash: 0, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5 },
+    clone: { max: 10, life: 15, leash: 0, hp: 120, subHp: 60, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapArmor: 0.25, swapFreeze: 0.5, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5, waveDmg: 12, waveGuardMul: 2.2 },
     look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', head: 'ponytail', weapon: 'sword' },
     ai: { range: [80, 200] }, beats: ['tieshan', 'gouchen'], weakTo: ['lingque', 'yanling'] },
   forest: {

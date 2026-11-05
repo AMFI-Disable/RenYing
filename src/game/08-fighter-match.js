@@ -58,7 +58,7 @@ class Fighter {
     this.clones = []; this.cloneN = 0; this.swapId = -1;   // 离影的雾身（09-actions.js「雾身」）：换人、每回合都清空
     for (const k of Object.keys(CLONE_SK)) if (k.startsWith(this.idx + ':')) delete CLONE_SK[k];
     Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
-      skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 135, spN: 0, spPose: null, rooted: false, slowT: 0,
+      skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 135, spN: 0, spPose: null, rooted: false, slowT: 0, defDebuffT: 0, swapFreezeT: 0,
       notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,

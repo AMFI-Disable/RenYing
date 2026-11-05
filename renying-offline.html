@@ -10018,7 +10018,7 @@ Object.assign(UI_COPY_EN, {
 "✦ 雀芒印记 5s": "✦ Sparrow Mark 5s",
 "掷出牵丝子母梭贯穿前方，命中施加5秒雀芒印记。": "Throw threaded twin shuttles that pierce forward; a hit applies a 5s Sparrow Mark.",
 "✦ 雀芒引爆": "✦ Mark Detonation",
-"化作流光追着对手飞过去穿刺（最多追 0.8 秒），只有腾空闪这类无敌身法躲得开；穿透已带印记者引爆真气并瞬间刷新冷却！": "Become a streak of light that chases and pierces the enemy (up to 0.8s); only invincible moves like Air Dodge avoid it. Piercing a marked enemy detonates the energy and refreshes the cooldown instantly!",
+"化作流光追着对手飞过去穿刺（最多追 0.8 秒），只有腾空闪这类无敌身法躲得开；穿透已带印记者追加30爆炸伤害、挑空并瞬间刷新冷却！": "Become a streak of light that chases and pierces the enemy (up to 0.8s); only invincible moves like Air Dodge avoid it. Piercing a marked enemy adds 30 blast damage, launches, and refreshes cooldown instantly!",
 "✦ 全域悬丝": "✦ Global Threads",
 "漫天悬丝罗网交错绞杀，附加雀芒印记并清零换影冷却。": "A sky-wide net of threads crisscrosses to strike, applying Sparrow Mark and clearing Shadow Swap's cooldown.",
 "雀步凌波": "Sparrow Step",
@@ -10511,26 +10511,30 @@ Object.assign(UI_COPY_EN, {
 "离影": "Li Ying",
 "离魂刀客": "Soul-Parted Blade",
 "离魂": "Parted Soul",
-"能把一缕魂留在原地，化作雾身（最多 4 个，存在 15 秒，碰到就碎，可布于全场任意位置无距离消散限制）。雾身会以 75% 伤害重放普攻、技能和飞行道具。身子却比旁人笨重：只有一段跳。打碎雾身的人回 5 点气。": "He can leave a wisp of his soul behind as a mist double (up to 4, lasting 15s; any touch shatters one, and they can be placed anywhere across the stage without leash dissipation). Doubles replay his attacks, skills, and projectiles at 75% damage. His body is heavier than most: only a single jump. Whoever shatters a mist double gains 5 meter.",
+"能把一缕魂留在原地化作雾身（最多 10 个，存在 15 秒，具高额生命且承受攻击，破碎时反噬引爆并削弱对手）。本体再次留影时场上雾身会同步复制出刀并生出较弱子影。雾身以波动内功重放攻击，伤害较低但削弱对手防御并加速其架势消耗。渡影（R）获得 0.25 秒霸体，并在时空凝滞中精准拣选本体真身所生雾身瞬移渡位。": "He can leave a wisp of his soul behind as a mist double (up to 10, lasting 15s, with high HP absorbing attacks; shattering triggers a retributive blast that nerfs the foe). Creating doubles while existing ones are out causes them to mirror the slash and spawn weaker sub-doubles. Doubles emit wave-like strikes that deal lower direct damage but strip foe defense and hasten posture loss. Mist Crossing (R) grants 0.25s super armor and freezes time by 0.5x to pick a true double to teleport to.",
 "留影": "Mist Mark",
 "要站在地上才能留影": "Mist Mark needs you on the ground",
-"在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。雾身会以 75% 伤害重放普攻、近身技能和飞行道具。只能在地上用；场上最多 4 个雾身，再留就散掉最早的那个。雾身存在 15 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 5 点气。": "Leave a mist double where you stand while taking a big step forward with a slash (40 damage). Doubles replay normal attacks, melee skills, and projectiles at 75% damage. Ground only. Up to 4 doubles at once; leaving another fades the oldest. Doubles last 15s and shatter on any attack (the attack still carries on), and whoever shatters one gains 5 meter.",
+"在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。若场上已有雾身，它们会同步复制出刀并在身后化出较弱子影。场上最多 10 个雾身（含本体与子影所生）。雾身具备高额生命且可被攻击打散，被击碎时发生碎影自爆并短暂弱化对手。雾身随本体出招释放内功波动飞刃，虽伤害偏低但直透防御、加剧对手架势耐力流失。": "Leave a mist double where you stand while taking a big step forward with a slash (40 damage). Existing doubles mirror the slash and spawn weaker sub-doubles behind them. Up to 10 doubles total. Doubles possess high HP, absorb attacks, and detonate upon shattering to weaken the enemy. Their attacks emit wave-like inner force that pierces defense and accelerates posture depletion.",
 "渡影": "Mist Crossing",
 "那边没有雾身": "No mist double that way",
 "没有雾身可渡": "No mist double to cross to",
-"结印 0.1 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。换位时短暂无敌，落地后 0.08 秒不能出招（可以防御），朝向是来的方向。结印时被打断就落空。": "Form a seal for 0.1s (standing still, and the target double is visible), then appear at that mist double's spot, using it up. R alone goes to the double nearest the enemy (always ringed); hold ← or → and press R for the nearest one on that side; hold ↓ and press R for the oldest. Briefly invulnerable during the swap; after arriving you can't attack for 0.08s (you can block), facing the way you traveled. Get hit during the seal and it fails.",
+"施展渡影获得 0.25 秒霸体护身；发动时全场进入 0.5 秒时空凝滞（0.5x 减速）。在此期间按方向键精确拣选本体真身所留雾身进行瞬移，若未指定方向则随机拣选一具真身雾身渡位。结印后身形瞬现，消去选定雾身；路径间穿梭造成飞身割裂（约 95 伤害，击飞）。": "Mist Crossing grants 0.25s super armor and triggers a 0.5s game-wide 0.5x time freeze to select which true double to teleport to (or a random one if unselected). Blinks to the chosen double and consumes it, slashing foes along the path.",
 "破影": "Shattered",
+"破影震煞": "Shadow Rupture",
+"破影爆": "Shadow Blast",
+"真影": "True Shadow",
 "万影归一": "Myriad Mists",
 "场上每个雾身同时朝对手斩出一道刀光（每道 30 伤害，按雾身复制攻击的 75% 计算），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。": "Each mist double fires a blade light at the enemy (30 damage, 75% of Li Ying's attack), then all doubles fade. After 0.3s he blinks in front of the enemy for one more cut (60 damage, launch), following airborne opponents. More doubles mean more cuts, up to four; with none, only his own cut remains. The blade lights and final cut cannot be blocked, but he has no invincibility during the ultimate. Getting hit before the cut or an enemy dodge makes it miss. Landing the cut resets Mist Mark's cooldown.",
 "先留影再出手：只按 R 渡到离对手最近的雾身，按住 ← / → 再按 R 去那一边，按住 ↓ 去最早的那个。": "Mark first, then strike: R alone crosses to the double nearest the enemy, hold ← / → and press R for that side, hold ↓ for the oldest one.",
-"最多 4 个雾身，复制招式造成 75% 伤害 · 碰到就碎(815血)": "Up to 4 mist doubles replaying attacks at 75% damage · shatter on touch (815 HP)",
+"最多 10 个雾身，内功波削防崩势 · 破影引爆(815血)": "Up to 10 mist doubles, inner force waves strip defense and posture · shadows blast on shatter (815 HP)",
 "R 加方向选雾身：← → 选那一边，↓ 选最早留下的": "R plus a direction picks the double: ← → for that side, ↓ for the oldest",
-"【雾身换位 · 碎影成本】雾身以 75% 伤害重放普攻、技能与飞行道具；雾身被打碎时对手回 5 点气。万影归一按雾身数量出刀。": "[Mist Swap · Cost of Shattering] Doubles replay normal attacks, skills, and projectiles at 75% damage; when a double is shattered the enemy gains 5 meter. Myriad Mists cuts once per double.",
+"【雾身换位 · 碎影反噬】雾身具高额生命承受伤害，碎裂反噬自爆；出招释放内功波动飞刃，虽伤害偏低但直透防御加速架势消耗。渡影霸体且伴随全场 0.5 秒时空凝滞供拣选真身。": "[Mist Swap · Shatter Retribution] Doubles have high HP to absorb attacks and detonate when shattered; attacks emit wave-like inner blades that pierce defense and accelerate posture loss. Mist Crossing grants super armor and a 0.5s time freeze to pick true doubles.",
 "脚下留雾身 · 踏步一刀": "Leave a double · stepping slash",
 "换到雾身处 · 方向选身": "Swap to a double · pick by direction",
 "雾身齐斩 · 本体补刀": "Doubles slash together · she finishes",
 "留身踏斩": "Stepping Slash",
 "换位": "Swap",
+"✦ 霸体换位": "✦ Super Armor Swap",
 "雾身齐斩": "Doubles Slash",
 "离魂五斩": "Five Parting Cuts",
 "✦ 快刀": "✦ Quick Blade",
@@ -10542,9 +10546,9 @@ Object.assign(UI_COPY_EN, {
 "✦ 挑空": "✦ Launch",
 "空中两段斩。他只有一段跳，跳起来就要想好怎么落地。": "Two slashes in the air. He has only one jump, so plan the landing before you leave the ground.",
 "✦ 留下雾身": "✦ Leaves a Double",
-"在脚下留一个雾身，向前踏出一大步斩一刀。雾身以 75% 伤害重放普攻、近身技能与飞行道具。最多 4 个雾身，存在 15 秒，碰到攻击就碎。": "Leave a mist double where you stand and take a big step forward with a slash. Doubles replay normal attacks, melee skills, and projectiles at 75% damage; up to 4 doubles last 15s and shatter on any attack.",
+"在脚下留一个雾身，向前踏出一大步斩一刀。已有雾身同步出刀并在身后留下一具较弱子影。场上最多 10 个雾身，具高额生命承受伤害，碎裂反噬引爆。出招伴随内功气刃直透防御。": "Leave a mist double where you stand and take a big step forward with a slash. Existing doubles mirror the cut and leave a weaker sub-double behind. Up to 10 doubles total with high HP; shattering triggers retributive blasts and attacks pierce defense.",
 "✦ 换位": "✦ Swap",
-"结印 0.1 秒后换到雾身那里，那个雾身随之散去。不按方向换到离对手最近的；按 ← → 选那一边最近的；按 ↓ 选最早留下的。换位时短暂无敌，落地后 0.08 秒不能出招（可以防御）。": "After a 0.1s seal, swap to a mist double, which then fades. No direction goes to the one nearest the enemy; ← → picks the nearest on that side; ↓ picks the oldest. Briefly invulnerable during the swap, with 0.08s of landing recovery during which you can block.",
+"获得 0.25 秒霸体护身，全场进入 0.5 秒时空凝滞供拣选目标真身雾身；未选则随机指定。结印后身形瞬现，消去真身雾身，路径间飞身割裂。": "Gain 0.25s super armor and enter a 0.5s time freeze to select a true double (or random if unselected). Blinks to the chosen double and consumes it while slashing along the path.",
 "✦ 雾身齐斩": "✦ Doubles Slash",
 "每个雾身朝对手斩出一道刀光，然后本体瞬移到对手身前补一刀挑空。全程没有无敌。": "Each mist double slashes a blade light at the enemy, then she blinks in front of them for a launching cut. No invincibility at any point.",
 "散影": "Scattered Shadow",
@@ -11285,10 +11289,10 @@ defHero({
 id: 'liying', skin: 'li', en: 'Li Ying',
 bal: { normal: 1.47, skill: 1.47, ult: 1.47, cd: 1.0, hp: 1.47 },
 char: { name: '离影', role: '离魂刀客', diff: 3, escCD: 8.5, skill: 'mistmark', skill2: 'mistswap', ult: 'mistarray', passive: 'mist',
-passiveName: '离魂', passiveDesc: '能把一缕魂留在原地，化作雾身（最多 4 个，存在 15 秒，碰到就碎，可布于全场任意位置无距离消散限制）。雾身会以 75% 伤害重放普攻、技能和飞行道具。身子却比旁人笨重：只有一段跳。打碎雾身的人回 5 点气。',
+passiveName: '离魂', passiveDesc: '能把一缕魂留在原地化作雾身（最多 10 个，存在 15 秒，具高额生命且承受攻击，破碎时反噬引爆并削弱对手）。本体再次留影时场上雾身会同步复制出刀并生出较弱子影。雾身以波动内功重放攻击，伤害较低但削弱对手防御并加速其架势消耗。渡影（R）获得 0.25 秒霸体，并在时空凝滞中精准拣选本体真身所生雾身瞬移渡位。',
 stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 1.0, swing: 0.9, jump: 1.0, weight: 0.95, defRating: 1.0, guardMax: 95, guardStab: 1.0, guardChip: 0.10, guardRegen: 28, poise: 1.0, size: 0.95 }, hitFeel: 0.85,
 jumps: 1,
-clone: { max: 4, life: 15, leash: 0, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5 },
+clone: { max: 10, life: 15, leash: 0, hp: 120, subHp: 60, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapArmor: 0.25, swapFreeze: 0.5, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5, waveDmg: 12, waveGuardMul: 2.2 },
 look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', head: 'ponytail', weapon: 'sword' },
 ai: { range: [80, 200] }, beats: ['tieshan', 'gouchen'], weakTo: ['lingque', 'yanling'] },
 forest: {
@@ -12454,7 +12458,7 @@ if (f.t >= 0.16) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? (f.sdDrifting ? ['du_l1s', 30] : ['dash', 60]) : ['idle', 14],
 ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
-mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。雾身会以 75% 伤害重放你的普攻、近身技能和飞行道具。只能在地上用；场上最多 4 个雾身，再留就散掉最早的那个。雾身存在 15 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 5 点气。',
+mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。若场上已有雾身，它们会同步复制出刀并在身后化出较弱子影。场上最多 10 个雾身（含本体与子影所生）。雾身具备高额生命且可被攻击打散，被击碎时发生碎影自爆并短暂弱化对手。雾身随本体出招释放内功波动飞刃，虽伤害偏低但直透防御、加剧对手架势耐力流失。',
 start(f) { f.vx = 0; plantClone(f, f.x); },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; f.t = 0; f.hitDone = false; f.vx = 920 * f.face; SFX.swing(); }
@@ -12465,39 +12469,56 @@ if (f.t >= 0.12) { f.skPh = 2; f.t = 0; f.vx *= 0.3; }
 if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 40] : f.skPh === 1 ? ['l2a', 60] : ['idle', 14],
-ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < 4 },
+ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < (me.ch.clone ? me.ch.clone.max : 10) },
 mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
 can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
 lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
-desc: '结印 0.1 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉；路上经过的每个敌人都挨一刀（约 95 伤害，打飞）。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。换位时短暂无敌，落地后 0.08 秒不能出招（可以防御），朝向是来的方向。结印时被打断就落空。',
-start(f, foe) { const c = pickClone(f, foe); f.swapId = c ? c.id : -1; f.vx = 0; },
+desc: '施展渡影获得 0.25 秒霸体护身；发动时全场进入 0.5 秒时空凝滞（0.5x 减速）。在此期间按方向键精确拣选本体真身所留雾身进行瞬移，若未指定方向则随机拣选一具真身雾身渡位。结印后身形瞬现，消去选定雾身；路径间穿梭造成飞身割裂（约 95 伤害，击飞）。',
+start(f, foe) {
+const C = f.ch.clone || {};
+f.armorT = Math.max(f.armorT || 0, C.swapArmor !== undefined ? C.swapArmor : 0.25);
+f.armorHits = Math.max(f.armorHits || 0, 1);
+const c = pickClone(f, foe);
+f.swapId = c ? c.id : -1;
+f.vx = 0;
+f.swapFreezeT = C.swapFreeze !== undefined ? C.swapFreeze : 0.5;
+triggerSwapFreeze(f, f.swapFreezeT);
+},
 update(f) {
-const C = f.ch.clone;
+const C = f.ch.clone || {};
 f.vx = 0;
 if (f.skPh === 0) {
-const c = (f.clones || []).find(k => k.id === f.swapId);
-if (!c) { toNeutral(f); return; }   // 结印时雾身被打碎或散了：这次落空，冷却照算
+const steer = steerClone(f, foeOf(f));
+if (steer) f.swapId = steer.id;
+const c = (f.clones || []).find(k => k.id === f.swapId && !k.sub);
+if (!c) {
+const fb = pickClone(f, foeOf(f));
+if (fb) f.swapId = fb.id;
+else { toNeutral(f); return; }
+}
 if (f.t >= C.swapSeal) {
+const targetClone = (f.clones || []).find(k => k.id === f.swapId && !k.sub);
+if (!targetClone) { toNeutral(f); return; }
 const x0 = f.x, y0 = f.y;
-cloneGone(f, c, false);
-f.x = c.x; f.vy = 0; mapPutOn(f, c.p !== undefined ? c.p : -1); f.jumps = 0; f.airDash = 1;   // 雾身在平台上就站到平台上
+cloneGone(f, targetClone, false);
+f.x = targetClone.x; f.vy = 0; mapPutOn(f, targetClone.p !== undefined ? targetClone.p : -1); f.jumps = 0; f.airDash = 1;
 f.invul = Math.max(f.invul || 0, C.swapInvul || 0.12);
-const lo = Math.min(x0, f.x) - C.swapPathPad, hi = Math.max(x0, f.x) + C.swapPathPad, top = Math.min(y0, f.y) - 170, bot = Math.max(y0, f.y) + 30;
+const lo = Math.min(x0, f.x) - (C.swapPathPad || 30), hi = Math.max(x0, f.x) + (C.swapPathPad || 30), top = Math.min(y0, f.y) - 170, bot = Math.max(y0, f.y) + 30;
 echoCloneAttack(f, [lo, top, hi, bot], { dmg: C.swapPathDmg, kb: [220, -380], stun: 0.45, hs: 0.1, launch: true, big: true, skill: true }, 'mistswap');
 for (const e of foesOf(f)) {
 if (!e || e.hp <= 0 || e.invul > 0 || e.x < lo || e.x > hi || e.y < top || e.y > bot) continue;
 applyHit(f, e, { dmg: C.swapPathDmg, kb: [220, -380], stun: 0.45, hs: 0.1, launch: true, big: true, dir: Math.sign(f.x - x0) || f.face, srcX: x0 }, [e.x, e.y - 60]);
 if (!RESIM) for (let k = 0; k < 8; k++) addP({ type: 'spark', x: e.x, y: e.y - 60 + rand(-30, 30), vx: (Math.sign(f.x - x0) || 1) * rand(200, 460), vy: rand(-60, 60), rgb: '127,214,224', life: 0.28, max: 0.28, w: 1.8 });
 }
-if (c.x !== x0) f.face = c.x > x0 ? 1 : -1;   // 朝向是来的方向：换到对手身后时是背对着他的
+if (targetClone.x !== x0) f.face = targetClone.x > x0 ? 1 : -1;
 f.snap = true; f.trail.length = 0; f.scarf = [];
 if (!RESIM) { smoke(x0, -50, 10); ring(f.x, f.y - 50, 70, f.look.slash, 0.3); SFX.poof(); }
 f.skPh = 1; f.t = 0;
 }
 return;
 }
-if (f.ctrl && f.ctrl.held.down && f.onGround()) { toNeutral(f); f.state = 'block'; return; }   // 凝身时可以防御
-if (f.t >= C.swapLand) toNeutral(f);
+if (f.ctrl && f.ctrl.held && f.ctrl.held.down && f.onGround()) { toNeutral(f); f.state = 'block'; return; }
+if (f.t >= (C.swapLand || 0.08)) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 50] : ['idle', 20],
 ai: () => false },
@@ -13581,7 +13602,7 @@ NET.lastResult = '';
 }
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId'];
+'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 const VICTIM = ['hitstun', 'launched', 'knockdown', 'getup', 'held', 'blockstun'];
 function applyF(f, arr, exact) {
@@ -14466,7 +14487,7 @@ this.sinceBlock = 0;
 this.clones = []; this.cloneN = 0; this.swapId = -1;   // 离影的雾身（09-actions.js「雾身」）：换人、每回合都清空
 for (const k of Object.keys(CLONE_SK)) if (k.startsWith(this.idx + ':')) delete CLONE_SK[k];
 Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1, hp: this.maxHp, lagHp: this.maxHp, lagDelay: 0, huiMaHits: 0,
-skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 135, spN: 0, spPose: null, rooted: false, slowT: 0,
+skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: 135, spN: 0, spPose: null, rooted: false, slowT: 0, defDebuffT: 0, swapFreezeT: 0,
 notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
@@ -15637,6 +15658,7 @@ SFX.thud(); SFX.poof();
 function strike(f, foe, spec) {
 if (f.hitDone) return false;
 const hb = hitbox(f, spec.box);
+hitClones(hb, f.idx, spec.dmg);
 if (hitDecoy(f, hb)) return false;
 echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
 const targets = is2v2() ? foesOf(f) : [foe];
@@ -15788,7 +15810,7 @@ p.dead = true; blockFX(p.x, p.y, foe.face); SFX.block();
 foe.meter = Math.min(100, foe.meter + 1.5);
 addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb: foe.look.slash }); continue;
 }
-hitClones(box, p.owner);
+hitClones(box, p.owner, p.dmg);
 if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
 if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
 if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
@@ -16069,26 +16091,96 @@ return true;
 return false;
 }
 const cloneBox = c => [c.x - 22, (c.y || 0) - 100, c.x + 22, (c.y || 0) + 2];
+let swapFreezeTimer = 0;
+function triggerSwapFreeze(f, dur = 0.5) {
+swapFreezeTimer = Math.max(swapFreezeTimer, dur);
+if (!RESIM) {
+flashA = Math.max(flashA, 0.15);
+flashRGB = f.look && f.look.slash ? f.look.slash : '127,214,224';
+ring(f.x, f.y - 50, 110, f.look.slash || '127,214,224', 0.4);
+}
+}
 function plantClone(f, x) {
-const C = f.ch.clone; if (!C) return;
+const C = f.ch.clone || { max: 10, life: 15, hp: 120, subHp: 60 };
 if (!f.clones) f.clones = [];
-while (f.clones.length >= C.max) cloneGone(f, f.clones[0], false);   // 满了：最早的那个散掉
+const existing = f.clones.slice();
+const baseHp = C.hp || 120;
+const subHp = C.subHp || 60;
+while (f.clones.length >= C.max) cloneGone(f, f.clones[0], false);
 f.cloneN = (f.cloneN || 0) + 1;
-const c = { id: f.cloneN, x: clamp(x, WALL, STAGE_W - WALL), y: f.plat >= 0 ? gndY(f) : 0, p: f.plat, t: 0 };
-f.clones.push(c);
-if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + c.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: c.x - f.x };
-if (!RESIM) { smoke(c.x, c.y - 40, 6); ring(c.x, c.y - 10, 46, f.look.slash, 0.3); }
+const mainClone = {
+id: f.cloneN,
+x: clamp(x, WALL, STAGE_W - WALL),
+y: f.plat >= 0 ? gndY(f) : 0,
+p: f.plat,
+t: 0,
+hp: baseHp,
+maxHp: baseHp,
+sub: false
+};
+f.clones.push(mainClone);
+if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + mainClone.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: mainClone.x - f.x };
+if (!RESIM) { smoke(mainClone.x, mainClone.y - 40, 6); ring(mainClone.x, mainClone.y - 10, 46, f.look.slash, 0.3); }
+if (existing.length > 0) {
+for (const ec of existing) {
+if (f.clones.length >= C.max) break;
+spawnCloneWave(f, ec.x, ec.y, f.face, 30);
+f.cloneN = (f.cloneN || 0) + 1;
+const subX = clamp(ec.x - f.face * 65, WALL, STAGE_W - WALL);
+const subClone = {
+id: f.cloneN,
+x: subX,
+y: ec.y || 0,
+p: ec.p,
+t: 0,
+hp: subHp,
+maxHp: subHp,
+sub: true
+};
+f.clones.push(subClone);
+if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + subClone.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: subClone.x - f.x };
+if (!RESIM) { smoke(subClone.x, (subClone.y || 0) - 30, 4); ring(subClone.x, (subClone.y || 0) - 10, 32, f.look.slash, 0.25); }
+}
+}
 }
 function cloneGone(f, c, broken) {
 const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
 f.clones.splice(i, 1);
 delete CLONE_SK[f.idx + ':' + c.id];
+if (broken) {
+const C = f.ch.clone || {};
+const bx = c.x, by = (c.y || 0) - 50;
+const boomR = 140;
+for (const foe of foesOf(f)) {
+if (!foe || foe.hp <= 0 || foe.invul > 0) continue;
+if (Math.abs(foe.x - bx) <= boomR && Math.abs(foe.y - (c.y || 0)) <= 120) {
+foe.guard = Math.max(0, (foe.guard !== undefined ? foe.guard : foe.maxGuard) - 22);
+foe.slowT = Math.max(foe.slowT || 0, 2.0);
+foe.defDebuffT = Math.max(foe.defDebuffT || 0, 3.5);
+if (foe.hp > 1) {
+const dmg = Math.round(18 * (f.ch.bal ? f.ch.bal.skill || 1 : 1));
+foe.hp = Math.max(1, foe.hp - dmg);
+foe.sinceHit = 0; foe.lagDelay = 0.4;
+}
+if (!RESIM) {
+addP({ type: 'text', text: '破影震煞', x: foe.x, y: foe.y - 120, life: 0.8, max: 0.8, rgb: '255,90,90' });
+for (let k = 0; k < 6; k++) addP({ type: 'spark', x: foe.x, y: foe.y - 60 + rand(-20, 20), vx: rand(-180, 180), vy: rand(-120, 60), rgb: '255,100,100', life: 0.3, max: 0.3, w: 2 });
+}
+}
+}
+if (!RESIM) {
+ring(bx, by, 95, '255,80,80', 0.4);
+shake = Math.max(shake, 8);
+SFX.heavy();
+}
+}
 if (RESIM) return;
-smoke(c.x, (c.y || 0) - 50, broken ? 12 : 7);
-if (broken) { addP({ type: 'text', text: '破影', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
+smoke(c.x, (c.y || 0) - 50, broken ? 14 : 7);
+if (broken) { addP({ type: 'text', text: '破影爆', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
 }
 function clearClones(f) { for (const c of (f.clones || []).slice()) cloneGone(f, c, false); }
 function cloneTick(f) {
+if (f.swapFreezeT > 0) f.swapFreezeT = Math.max(0, f.swapFreezeT - STEP);
 if (!f.clones || !f.clones.length) return;
 const C = f.ch.clone || { life: 0, leash: 0 };
 for (const c of f.clones.slice()) {
@@ -16097,31 +16189,73 @@ if (!['attack', 'skill', 'special'].includes(f.state)) c.echoHitKey = '';
 if (c.t >= C.life || (C.leash > 0 && Math.abs(c.x - f.x) > C.leash) || f.hp <= 0) cloneGone(f, c, false);
 }
 }
+function spawnCloneWave(f, srcX, srcY, dir, dmg = 12) {
+const C = f.ch.clone || {};
+const waveDmg = Math.round(dmg * ((f.ch.bal && f.ch.bal.normal) || 1));
+spawnProj(f, {
+kind: 'wind',
+x: srcX + dir * 28,
+y: (srcY || 0) - 55,
+vx: dir * 980,
+vy: 0,
+w: 58,
+h: 52,
+life: 0.55,
+dmg: waveDmg,
+kb: [120, 0],
+stun: 0.24,
+hs: 0.05,
+cloneEcho: true,
+isWave: true,
+guardBreakMul: C.waveGuardMul || 2.2,
+unbreakable: true
+});
+}
 function echoCloneAttack(f, hb, m, phase = '') {
 if (!f.clones || !f.clones.length || f.ch.passive !== 'mist' || !hb || !m || m.cloneEcho) return;
 const key = [f.state, f.moveName || '', f.skill || '', f.skPh || 0, f.spN || 0, f.spinN || 0, f.mChain || 0, phase, m.name || ''].join(':');
 const targets = foesOf(f);
+const C = f.ch.clone || {};
+const baseDmg = C.waveDmg || 12;
 for (const c of f.clones) {
 if (c.echoHitKey === key) continue;
+c.echoHitKey = key;
+const waveDir = Math.sign(f.face) || 1;
+const waveDmg = c.sub ? Math.round(baseDmg * 0.7) : baseDmg;
+spawnCloneWave(f, c.x, c.y, waveDir, waveDmg);
 const dx = c.x - f.x, dy = (c.y || 0) - f.y;
 const cb = [hb[0] + dx, hb[1] + dy, hb[2] + dx, hb[3] + dy];
 for (const target of targets) {
 if (!target || target.hp <= 0 || target.invul > 0) continue;
 const hu = hurtbox(target);
 if (!overlap(cb, hu)) continue;
-c.echoHitKey = key;
-const mirror = { ...m, dmg: (m.dmg || 0) * 0.75, cloneEcho: true, srcX: c.x, dir: Math.sign(target.x - c.x) || f.face };
+const mirrorDmg = Math.round((m.dmg || 0) * (c.sub ? 0.35 : 0.50));
+const mirror = {
+...m,
+dmg: mirrorDmg,
+cloneEcho: true,
+guardBreakMul: C.waveGuardMul || 2.2,
+srcX: c.x,
+dir: Math.sign(target.x - c.x) || f.face
+};
 applyHit(f, target, mirror, [(Math.max(cb[0], hu[0]) + Math.min(cb[2], hu[2])) / 2, (Math.max(cb[1], hu[1]) + Math.min(cb[3], hu[3])) / 2]);
 break;
 }
 }
 }
-function hitClones(box, attIdx) {
+function hitClones(box, attIdx, attackDmg = 35) {
 const att = fighterByIdx(attIdx);
 for (const o of foesOf(att)) {
 if (!o.clones || !o.clones.length) continue;
 for (const c of o.clones.slice()) {
 if (!overlap(box, cloneBox(c))) continue;
+const dmg = Math.max(25, attackDmg || 35);
+c.hp = (c.hp !== undefined ? c.hp : 120) - dmg;
+if (!RESIM) {
+ring(c.x, (c.y || 0) - 50, 42, att.look.slash, 0.2);
+addP({ type: 'text', text: `-${dmg}`, x: c.x, y: (c.y || 0) - 95, life: 0.5, max: 0.5, rgb: '230,245,255' });
+}
+if (c.hp <= 0) {
 cloneGone(o, c, true);
 att.meter = Math.min(100, (att.meter || 0) + ((o.ch.clone || {}).breakMeter || 0));
 if (typeof mapFavOn === 'function' && mapFavOn(o)) {
@@ -16136,20 +16270,36 @@ if (!RESIM) addP({ type: 'text', text: '雾震', x: c.x, y: (c.y || 0) - 100, li
 }
 }
 }
+}
+function steerClone(f, foe) {
+const primaryClones = (f.clones || []).filter(c => !c.sub);
+if (!primaryClones.length) return null;
+const h = (f.ctrl && f.ctrl.held) || {};
+if (h.down) return primaryClones[0];
+const dir = (h.right ? 1 : 0) - (h.left ? 1 : 0);
+if (dir) {
+let best = null;
+for (const c of primaryClones) {
+const d = (c.x - f.x) * dir;
+if (d > 1 && (!best || d < (best.x - f.x) * dir)) best = c;
+}
+if (best) return best;
+}
+return null;
+}
 function cloneMark(f, foe) {
 let best = null;
-for (const c of f.clones || []) if (!best || Math.abs(c.x - foe.x) < Math.abs(best.x - foe.x)) best = c;
+const primaryClones = (f.clones || []).filter(c => !c.sub);
+for (const c of primaryClones) if (!best || Math.abs(c.x - foe.x) < Math.abs(best.x - foe.x)) best = c;
 return best;
 }
 function pickClone(f, foe) {
-const cs = f.clones || [], h = (f.ctrl && f.ctrl.held) || {};
-if (!cs.length) return null;
-if (h.down) return cs[0];
-const dir = (h.right ? 1 : 0) - (h.left ? 1 : 0);
-if (!dir) return cloneMark(f, foe);
-let best = null;
-for (const c of cs) { const d = (c.x - f.x) * dir; if (d > 1 && (!best || d < (best.x - f.x) * dir)) best = c; }
-return best;
+const primaryClones = (f.clones || []).filter(c => !c.sub);
+if (!primaryClones.length) return null;
+const steered = steerClone(f, foe);
+if (steered) return steered;
+const idx = Math.floor(grnd() * primaryClones.length);
+return primaryClones[idx] || primaryClones[0];
 }
 function smoke(x, y, n) {
 for (let i = 0; i < n; i++) addP({ type: 'smoke', x: x + rand(-18, 18), y: y + rand(-30, 30), vx: rand(-90, 90), vy: rand(-90, 20), drag: 3, life: rand(0.4, 0.7), max: 0.7, r: rand(10, 22) });
@@ -16212,6 +16362,7 @@ if (f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed
 if (f.ch.fly && f.onGround()) f.flyT = Math.min(f.ch.fly, f.flyT + STEP * 0.9);
 f.armorT = Math.max(0, f.armorT - STEP);
 f.slowT = Math.max(0, (f.slowT || 0) - STEP);
+f.defDebuffT = Math.max(0, (f.defDebuffT || 0) - STEP);
 f.buffT = Math.max(0, f.buffT - STEP);
 f.reflectT = Math.max(0, (f.reflectT || 0) - STEP);
 f.hookedT = Math.max(0, (f.hookedT || 0) - STEP);
@@ -16524,6 +16675,7 @@ ctx.restore();
 function tryHit(f, foe, m) {
 const hb = hitbox(f, m.box);
 if (hitBall(f, hb, m)) return;
+hitClones(hb, f.idx, m.dmg);
 if (hitDecoy(f, hb)) return;
 echoCloneAttack(f, hb, m, 'basic');
 if (isMulti()) {
@@ -16662,7 +16814,8 @@ const bm = scOn() ? scBlockMod(att, def, m) : null;   // 秘卷改格挡磨血�
 const hpBeforeChip = def.hp;
 def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
 ev.dd = hpBeforeChip - def.hp;
-let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
+let guardLoss = ((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln;
 if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
 if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
 guardLoss = 0;
@@ -16705,7 +16858,8 @@ if (scOn()) scFire(def, 'blk', att, false, m);
 hitVisual(ev); netEmit(ev);
 return;
 }
-const defRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
+const rawDefRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
+const defRating = def.defDebuffT > 0 ? Math.max(0.65, rawDefRating * 0.75) : rawDefRating;
 if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.80 > 0) {
 const dmg = (m.dmg * 0.80) / defRating;
 def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
@@ -17802,6 +17956,7 @@ const real = Math.min(0.04, (now - last) / 1000); last = now; menuDt = real;
 fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
 if (!paused) {
 if (slowmo > 0) slowmo -= real;
+if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) swapFreezeTimer = Math.max(0, swapFreezeTimer - real);
 for (const f of [A, B]) if (f.state === 'special' && f.sp === 'charge' && f.t < 0.06 && cine.t < 0) { cine.t = 0; cine.owner = f; if (f.idx === localIdx()) MSTAT.ults++; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
 if (cine.t >= 0) { cine.t += real; if (cine.t > CINE_LEN) { cine.t = -1; cine.owner = null; } }
 updateFireflies(real); updateAim();
@@ -18695,28 +18850,55 @@ for (const f of allFighters()) {
 if (f.hidden || !f.clones || !f.clones.length) continue;
 const C = f.ch.clone || { life: 15 }, rgb = f.look.slash;
 const foe = (f.target && !f.target.hidden) ? f.target : foesOf(f)[0], mark = foe ? cloneMark(f, foe) : null;
+const isSwapping = f.state === 'skill' && f.skill === 'mistswap' && f.skPh === 0;
 for (const c of f.clones) {
 const left = C.life - c.t, blink = left < 1 && Math.floor(left * 8) % 2 ? 0.3 : 1, cy = c.y || 0;
-ctx.save(); ctx.fillStyle = `rgba(${rgb},${0.22 * blink})`;
-ctx.beginPath(); ctx.ellipse(c.x, cy, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+const isSub = !!c.sub;
+const alphaMul = isSub ? 0.65 : 1.0;
+ctx.save();
+ctx.fillStyle = `rgba(${rgb},${(isSub ? 0.14 : 0.24) * blink})`;
+ctx.beginPath();
+ctx.ellipse(c.x, cy, isSub ? 28 : 36, isSub ? 6 : 8, 0, 0, Math.PI * 2);
+ctx.fill();
+ctx.restore();
 const rec = CLONE_SK[f.idx + ':' + c.id];
 const echoing = ['attack', 'skill', 'special'].includes(f.state);
-if (f.sk && echoing) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }
-else if (rec) drawBody(rec.sk, f, { ghost: 0.5 * blink, tint: rgb });
-else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
-if (c === mark) {
-ctx.save(); ctx.strokeStyle = `rgba(${rgb},${0.85 * blink})`; ctx.lineWidth = 2.5;
-ctx.beginPath(); ctx.ellipse(c.x, cy, 46, 11, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+const ghostAlpha = (isSub ? 0.35 : 0.5) * blink;
+if (f.sk && echoing) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: ghostAlpha, tint: rgb }); ctx.restore(); }
+else if (rec) drawBody(rec.sk, f, { ghost: ghostAlpha, tint: rgb });
+else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: ghostAlpha, tint: rgb }); ctx.restore(); }
+if (c.maxHp && c.hp < c.maxHp) {
+ctx.save();
+const barW = 34, hpFrac = clamp(c.hp / c.maxHp, 0, 1);
+ctx.fillStyle = 'rgba(0,0,0,0.5)';
+ctx.fillRect(c.x - barW / 2, cy - 105, barW, 4);
+ctx.fillStyle = `rgb(${rgb})`;
+ctx.fillRect(c.x - barW / 2, cy - 105, barW * hpFrac, 4);
+ctx.restore();
+}
+if (!isSub && (c === mark || c.id === f.swapId)) {
+ctx.save();
+const isTarget = isSwapping && c.id === f.swapId;
+ctx.strokeStyle = isTarget ? `rgba(255,255,255,${0.9 * blink})` : `rgba(${rgb},${0.85 * blink})`;
+ctx.lineWidth = isTarget ? 3.5 : 2.5;
+ctx.beginPath();
+ctx.ellipse(c.x, cy, 46, 11, 0, 0, Math.PI * 2);
+ctx.stroke();
+ctx.font = `11px ${TITLE_FONT || 'sans-serif'}`;
+ctx.fillStyle = `rgba(${rgb},0.85)`;
+ctx.textAlign = 'center';
+ctx.fillText('真影', c.x, cy - 110);
+ctx.restore();
 }
 }
-if (f.state === 'skill' && f.skill === 'mistswap' && f.skPh === 0) {
-const c = f.clones.find(k => k.id === f.swapId);
+if (isSwapping) {
+const c = f.clones.find(k => k.id === f.swapId && !k.sub);
 if (c) {
-ctx.save(); ctx.strokeStyle = `rgba(${rgb},0.55)`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
+ctx.save(); ctx.strokeStyle = `rgba(${rgb},0.65)`; ctx.lineWidth = 3.5; ctx.setLineDash([10, 8]);
 const cy = c.y || 0;
 ctx.beginPath(); ctx.moveTo(f.x, f.y - 55); ctx.lineTo(c.x, cy - 55); ctx.stroke();
-ctx.setLineDash([]); ctx.lineWidth = 3.5; ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.4 * Math.sin(clock * 40)})`;
-ctx.beginPath(); ctx.ellipse(c.x, cy, 50, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+ctx.setLineDash([]); ctx.lineWidth = 4; ctx.strokeStyle = `rgba(255,255,255,${0.6 + 0.4 * Math.sin(clock * 40)})`;
+ctx.beginPath(); ctx.ellipse(c.x, cy, 52, 13, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 }
 }
 }
@@ -22465,12 +22647,14 @@ function withCtx(c2, fn) { const main = ctx; ctx = c2; try { fn(); } finally { c
 const cine = { t: -1, owner: null };
 function cineEnv() { if (cine.t < 0) return 0; return clamp(Math.min(cine.t / 0.15, (CINE_LEN - cine.t) / 0.3), 0, 1); }
 function cineSpeed() {
+let rate = 1;
+if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) rate *= 0.5;
 const t = cine.t;
-if (t < 0) return 1;
-if (t < 0.3) return 0.35;
-if (t < 0.55) return lerp(0.35, 1.6, (t - 0.3) / 0.25);
-if (t < CINE_LEN) return lerp(1.6, 1, (t - 0.55) / (CINE_LEN - 0.55));
-return 1;
+if (t < 0) return rate;
+if (t < 0.3) return 0.35 * rate;
+if (t < 0.55) return lerp(0.35, 1.6, (t - 0.3) / 0.25) * rate;
+if (t < CINE_LEN) return lerp(1.6, 1, (t - 0.55) / (CINE_LEN - 0.55)) * rate;
+return rate;
 }
 const FIREFLIES = Array.from({ length: 36 }, (_, i) => ({ x: rand(-200, STAGE_W + 200), y: rand(-420, -30), ph: rand(0, 6.28), sp: rand(0.4, 1.1) }));
 function updateFireflies(dt) {
@@ -23260,7 +23444,7 @@ const SHORT = {
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(870血)', feiying: '最快移速出手 · 身轻体巧(800血)', tieshan: '重斩蓄力霸体 · 气血冠绝(900血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(815血)',
 liuyun: '三段跳 · 御风轻盈(840血)', leiming: '普攻六连 · 强横体魄(885血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(825血)', yuehua: '3 秒未受伤每秒回 14 血(780血)', yanling: '空中按住跳跃飞 1.2 秒(750血)',
 yuxiao: '普攻攒音律，清音随音律变强(775血)', zuixian: '醉意增伤，半醉可闪避近身攻击(885血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(835血)', lingque: '子母梭挂雀芒，换影穿刺引爆重置(790血)',
-liying: '最多 4 个雾身，复制招式造成 75% 伤害 · 碰到就碎(815血)', cixian: '开局随机正负极，负极普攻最多 15 连(815血)', qianji: '玄铁傀丸击打传动，金丝远程解控护主(830血)' };
+liying: '最多 10 个雾身，内功波削防崩势 · 破影引爆(815血)', cixian: '开局随机正负极，负极普攻最多 15 连(815血)', qianji: '玄铁傀丸击打传动，金丝远程解控护主(830血)' };
 const ADV_SHORT = {
 qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
 tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
@@ -23294,7 +23478,7 @@ zuixian: '【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉
 gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
 cixian: '【两极磁力 · 一弹一吸】正极普攻伤害高、每下击飞，负极普攻轻吸对手、四段循环连个不停；绝技「天地磁合」天上正极、地上负极，把对手夹成肉饼！',
 lingque: '【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！',
-liying: '【雾身换位 · 碎影成本】雾身以 75% 伤害重放普攻、技能与飞行道具；雾身被打碎时对手回 5 点气。万影归一按雾身数量出刀。',
+liying: '【雾身换位 · 碎影反噬】雾身具高额生命承受伤害，碎裂反噬自爆；出招释放内功波动飞刃，虽伤害偏低但直透防御加速架势消耗。渡影霸体且伴随全场 0.5 秒时空凝滞供拣选真身。',
 qianji: '【机关机栝 · 动能汇聚】投掷傀丸与击打传动高效聚气；大招「千丝收网」直线拉回贯穿全屏，并瞬间刷新 Q 技能！',
 };
 const HERO_MOVE_TYPES = {
@@ -23448,8 +23632,8 @@ liying: {
 light: { name: '离魂五斩', badge: '✦ 快刀', badgeCls: 'badge-buff', dmg: '77 (5段)', desc: '单刀五连斩，末段挑空。' },
 charge: { name: '雾里藏锋', badge: '💥 破防', badgeCls: 'badge-break', dmg: '—', desc: '按住蓄力，一刀破开正面格挡。' },
 air: { name: '落影斩', badge: '✦ 挑空', badgeCls: 'badge-buff', dmg: '—', desc: '空中两段斩。他只有一段跳，跳起来就要想好怎么落地。' },
-skill: { name: '留影', badge: '✦ 留下雾身', badgeCls: 'badge-buff', dmg: '40', desc: '在脚下留一个雾身，向前踏出一大步斩一刀。雾身以 75% 伤害重放普攻、近身技能与飞行道具。最多 4 个雾身，存在 15 秒，碰到攻击就碎。' },
-ranged: { name: '渡影', badge: '✦ 换位', badgeCls: 'badge-stun', dmg: '—', desc: '结印 0.1 秒后换到雾身那里，那个雾身随之散去。不按方向换到离对手最近的；按 ← → 选那一边最近的；按 ↓ 选最早留下的。换位时短暂无敌，落地后 0.08 秒不能出招（可以防御）。' },
+skill: { name: '留影', badge: '✦ 留下雾身', badgeCls: 'badge-buff', dmg: '40', desc: '在脚下留一个雾身，向前踏出一大步斩一刀。已有雾身同步出刀并在身后留下一具较弱子影。场上最多 10 个雾身，具高额生命承受伤害，碎裂反噬引爆。出招伴随内功气刃直透防御。' },
+ranged: { name: '渡影', badge: '✦ 霸体换位', badgeCls: 'badge-stun', dmg: '—', desc: '获得 0.25 秒霸体护身，全场进入 0.5 秒时空凝滞供拣选目标真身雾身；未选则随机指定。结印后身形瞬现，消去真身雾身，路径间飞身割裂。' },
 ult: { name: '万影归一', badge: '✦ 雾身齐斩', badgeCls: 'badge-stun', dmg: '45~113', desc: '每个雾身朝对手斩出一道刀光，然后本体瞬移到对手身前补一刀挑空。全程没有无敌。' },
 esc: { name: '散影', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
 },

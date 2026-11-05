@@ -364,6 +364,7 @@ function windDive(f, foe) {
 function strike(f, foe, spec) {
   if (f.hitDone) return false;
   const hb = hitbox(f, spec.box);
+  hitClones(hb, f.idx, spec.dmg);
   if (hitDecoy(f, hb)) return false;
   echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
   const targets = is2v2() ? foesOf(f) : [foe];
@@ -524,7 +525,7 @@ function updateProjs() {
       foe.meter = Math.min(100, foe.meter + 1.5);
       addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb: foe.look.slash }); continue;
     }
-    hitClones(box, p.owner);
+    hitClones(box, p.owner, p.dmg);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
     if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
@@ -830,30 +831,111 @@ function hitDecoyBox(box, attIdx) {
   return false;
 }
 // ======================= 雾身（离影） =======================
-// 雾身存在主人身上（f.clones = [{ id, x, t }]，t 是已经存在了几秒），回滚存档跟着侠客一起存、一起回；全程不用随机数。
-// 规则的数都在 char.clone（src/data/heroes/13-liying.js）：最多 max 个，存在 life 秒，离本体超过 leash 像素自己散，
-// 任何攻击碰到就碎、攻击照常往下走（不像木偶替身那样把刀吃掉），打碎的人回 breakMeter 点气。雾身站在留下它的那一层（地上，或山河异境的平台：y、p），不会动也不出招。
+// 雾身存在主人身上（f.clones = [{ id, x, y, p, t, hp, maxHp, sub }]，t 是已经存在了几秒），回滚存档跟着侠客一起存、一起回；全程不用随机数。
+// 规则的数都在 char.clone（src/data/heroes/13-liying.js）：最多 10 个（含本体留影与子影），存在 life 秒，离本体超过 leash 像素自己散。
+// 雾身拥有高额生命值（默认本体留影 120 HP，子影 60 HP），受到对手攻击扣除自身血量；归零碎裂时产生「碎影自爆」造成反噬并附带短暂削弱。
+// 雾身随本体出招释放内功波动飞刃，虽伤害偏低但直透防御、加剧对手架势耐力流失。
+// 渡影（R）只能瞬移至本体真身所留雾身（!c.sub），并获得 0.25 秒霸体；发动时全场进入 0.5 秒时空凝滞（0.5x 减速）。
 const cloneBox = c => [c.x - 22, (c.y || 0) - 100, c.x + 22, (c.y || 0) + 2];
+let swapFreezeTimer = 0;
+function triggerSwapFreeze(f, dur = 0.5) {
+  swapFreezeTimer = Math.max(swapFreezeTimer, dur);
+  if (!RESIM) {
+    flashA = Math.max(flashA, 0.15);
+    flashRGB = f.look && f.look.slash ? f.look.slash : '127,214,224';
+    ring(f.x, f.y - 50, 110, f.look.slash || '127,214,224', 0.4);
+  }
+}
 function plantClone(f, x) {
-  const C = f.ch.clone; if (!C) return;
+  const C = f.ch.clone || { max: 10, life: 15, hp: 120, subHp: 60 };
   if (!f.clones) f.clones = [];
-  while (f.clones.length >= C.max) cloneGone(f, f.clones[0], false);   // 满了：最早的那个散掉
+
+  // 若场上已存在雾身：现有雾身同步复制本体出刀并在身后留下一具较弱的子影（sub: true）
+  const existing = f.clones.slice();
+  const baseHp = C.hp || 120;
+  const subHp = C.subHp || 60;
+
+  // 本体留下主真身雾身（sub: false，可以被 R 渡影瞬移）
+  while (f.clones.length >= C.max) cloneGone(f, f.clones[0], false);
   f.cloneN = (f.cloneN || 0) + 1;
-  const c = { id: f.cloneN, x: clamp(x, WALL, STAGE_W - WALL), y: f.plat >= 0 ? gndY(f) : 0, p: f.plat, t: 0 };
-  f.clones.push(c);
-  if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + c.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: c.x - f.x };
-  if (!RESIM) { smoke(c.x, c.y - 40, 6); ring(c.x, c.y - 10, 46, f.look.slash, 0.3); }
+  const mainClone = {
+    id: f.cloneN,
+    x: clamp(x, WALL, STAGE_W - WALL),
+    y: f.plat >= 0 ? gndY(f) : 0,
+    p: f.plat,
+    t: 0,
+    hp: baseHp,
+    maxHp: baseHp,
+    sub: false
+  };
+  f.clones.push(mainClone);
+  if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + mainClone.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: mainClone.x - f.x };
+  if (!RESIM) { smoke(mainClone.x, mainClone.y - 40, 6); ring(mainClone.x, mainClone.y - 10, 46, f.look.slash, 0.3); }
+
+  // 现有雾身复制留影：出刀并在各自后方留下一具子影（sub: true，不可渡影，较弱）
+  if (existing.length > 0) {
+    for (const ec of existing) {
+      if (f.clones.length >= C.max) break;
+      // 产生子影攻击剑气
+      spawnCloneWave(f, ec.x, ec.y, f.face, 30);
+      f.cloneN = (f.cloneN || 0) + 1;
+      const subX = clamp(ec.x - f.face * 65, WALL, STAGE_W - WALL);
+      const subClone = {
+        id: f.cloneN,
+        x: subX,
+        y: ec.y || 0,
+        p: ec.p,
+        t: 0,
+        hp: subHp,
+        maxHp: subHp,
+        sub: true
+      };
+      f.clones.push(subClone);
+      if (!RESIM && f.sk) CLONE_SK[f.idx + ':' + subClone.id] = { sk: JSON.parse(JSON.stringify(f.sk)), dx: subClone.x - f.x };
+      if (!RESIM) { smoke(subClone.x, (subClone.y || 0) - 30, 4); ring(subClone.x, (subClone.y || 0) - 10, 32, f.look.slash, 0.25); }
+    }
+  }
 }
 function cloneGone(f, c, broken) {
   const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
   f.clones.splice(i, 1);
   delete CLONE_SK[f.idx + ':' + c.id];
+  if (broken) {
+    // 碎影爆炸与削弱反噬 (Shadow Explosion & Debuff)
+    const C = f.ch.clone || {};
+    const bx = c.x, by = (c.y || 0) - 50;
+    const boomR = 140;
+    for (const foe of foesOf(f)) {
+      if (!foe || foe.hp <= 0 || foe.invul > 0) continue;
+      if (Math.abs(foe.x - bx) <= boomR && Math.abs(foe.y - (c.y || 0)) <= 120) {
+        // 自爆反噬伤害与虚弱 Debuff（削减防御评级与加速架势消耗）
+        foe.guard = Math.max(0, (foe.guard !== undefined ? foe.guard : foe.maxGuard) - 22);
+        foe.slowT = Math.max(foe.slowT || 0, 2.0);
+        foe.defDebuffT = Math.max(foe.defDebuffT || 0, 3.5);
+        if (foe.hp > 1) {
+          const dmg = Math.round(18 * (f.ch.bal ? f.ch.bal.skill || 1 : 1));
+          foe.hp = Math.max(1, foe.hp - dmg);
+          foe.sinceHit = 0; foe.lagDelay = 0.4;
+        }
+        if (!RESIM) {
+          addP({ type: 'text', text: '破影震煞', x: foe.x, y: foe.y - 120, life: 0.8, max: 0.8, rgb: '255,90,90' });
+          for (let k = 0; k < 6; k++) addP({ type: 'spark', x: foe.x, y: foe.y - 60 + rand(-20, 20), vx: rand(-180, 180), vy: rand(-120, 60), rgb: '255,100,100', life: 0.3, max: 0.3, w: 2 });
+        }
+      }
+    }
+    if (!RESIM) {
+      ring(bx, by, 95, '255,80,80', 0.4);
+      shake = Math.max(shake, 8);
+      SFX.heavy();
+    }
+  }
   if (RESIM) return;
-  smoke(c.x, (c.y || 0) - 50, broken ? 12 : 7);
-  if (broken) { addP({ type: 'text', text: '破影', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
+  smoke(c.x, (c.y || 0) - 50, broken ? 14 : 7);
+  if (broken) { addP({ type: 'text', text: '破影爆', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
 }
 function clearClones(f) { for (const c of (f.clones || []).slice()) cloneGone(f, c, false); }
 function cloneTick(f) {
+  if (f.swapFreezeT > 0) f.swapFreezeT = Math.max(0, f.swapFreezeT - STEP);
   if (!f.clones || !f.clones.length) return;
   const C = f.ch.clone || { life: 0, leash: 0 };
   for (const c of f.clones.slice()) {
@@ -862,62 +944,129 @@ function cloneTick(f) {
     if (c.t >= C.life || (C.leash > 0 && Math.abs(c.x - f.x) > C.leash) || f.hp <= 0) cloneGone(f, c, false);
   }
 }
-// 离影出招时，雾身在自己的位置重放同一判定；每个动作阶段每个雾身只命中一次。
+// 生成波状行进内功波动飞刃（Wave-like projectile emitting from shadows）
+function spawnCloneWave(f, srcX, srcY, dir, dmg = 12) {
+  const C = f.ch.clone || {};
+  const waveDmg = Math.round(dmg * ((f.ch.bal && f.ch.bal.normal) || 1));
+  spawnProj(f, {
+    kind: 'wind',
+    x: srcX + dir * 28,
+    y: (srcY || 0) - 55,
+    vx: dir * 980,
+    vy: 0,
+    w: 58,
+    h: 52,
+    life: 0.55,
+    dmg: waveDmg,
+    kb: [120, 0],
+    stun: 0.24,
+    hs: 0.05,
+    cloneEcho: true,
+    isWave: true,
+    guardBreakMul: C.waveGuardMul || 2.2,
+    unbreakable: true
+  });
+}
+// 离影出招时，雾身在各自位置重放判定并释放行进的内功波动飞刃；透破防御并加剧架势消耗
 function echoCloneAttack(f, hb, m, phase = '') {
   if (!f.clones || !f.clones.length || f.ch.passive !== 'mist' || !hb || !m || m.cloneEcho) return;
   const key = [f.state, f.moveName || '', f.skill || '', f.skPh || 0, f.spN || 0, f.spinN || 0, f.mChain || 0, phase, m.name || ''].join(':');
   const targets = foesOf(f);
+  const C = f.ch.clone || {};
+  const baseDmg = C.waveDmg || 12;
+
   for (const c of f.clones) {
     if (c.echoHitKey === key) continue;
+    c.echoHitKey = key;
+
+    // 释放波状内功气刃
+    const waveDir = Math.sign(f.face) || 1;
+    const waveDmg = c.sub ? Math.round(baseDmg * 0.7) : baseDmg;
+    spawnCloneWave(f, c.x, c.y, waveDir, waveDmg);
+
     const dx = c.x - f.x, dy = (c.y || 0) - f.y;
     const cb = [hb[0] + dx, hb[1] + dy, hb[2] + dx, hb[3] + dy];
     for (const target of targets) {
       if (!target || target.hp <= 0 || target.invul > 0) continue;
       const hu = hurtbox(target);
       if (!overlap(cb, hu)) continue;
-      c.echoHitKey = key;
-      const mirror = { ...m, dmg: (m.dmg || 0) * 0.75, cloneEcho: true, srcX: c.x, dir: Math.sign(target.x - c.x) || f.face };
+      // 内功削防与架势重击：较低直接伤害，高额架势削减
+      const mirrorDmg = Math.round((m.dmg || 0) * (c.sub ? 0.35 : 0.50));
+      const mirror = {
+        ...m,
+        dmg: mirrorDmg,
+        cloneEcho: true,
+        guardBreakMul: C.waveGuardMul || 2.2,
+        srcX: c.x,
+        dir: Math.sign(target.x - c.x) || f.face
+      };
       applyHit(f, target, mirror, [(Math.max(cb[0], hu[0]) + Math.min(cb[2], hu[2])) / 2, (Math.max(cb[1], hu[1]) + Math.min(cb[3], hu[3])) / 2]);
       break;
     }
   }
 }
-// 攻击框碰到对手的雾身：雾身碎掉，打的人回气；攻击本身不受影响
-function hitClones(box, attIdx) {
+// 攻击框碰到对手的雾身：雾身承受伤害，高血量被打散后引爆；攻击本身不受影响
+function hitClones(box, attIdx, attackDmg = 35) {
   const att = fighterByIdx(attIdx);
   for (const o of foesOf(att)) {
     if (!o.clones || !o.clones.length) continue;
     for (const c of o.clones.slice()) {
       if (!overlap(box, cloneBox(c))) continue;
-      cloneGone(o, c, true);
-      att.meter = Math.min(100, (att.meter || 0) + ((o.ch.clone || {}).breakMeter || 0));
-      if (typeof mapFavOn === 'function' && mapFavOn(o)) {
-        if (M.map === 'bamboo') {
-          o.meter = Math.min(100, (o.meter || 0) + 12);
-        } else if (M.map === 'wine' && att.hp > 0) {
-          att.guard = Math.max(0, att.guard - 15);
-          att.vx = -att.face * 180;
-          if (!RESIM) addP({ type: 'text', text: '雾震', x: c.x, y: (c.y || 0) - 100, life: 0.6, max: 0.6, rgb: o.look.slash });
+      const dmg = Math.max(25, attackDmg || 35);
+      c.hp = (c.hp !== undefined ? c.hp : 120) - dmg;
+      if (!RESIM) {
+        ring(c.x, (c.y || 0) - 50, 42, att.look.slash, 0.2);
+        addP({ type: 'text', text: `-${dmg}`, x: c.x, y: (c.y || 0) - 95, life: 0.5, max: 0.5, rgb: '230,245,255' });
+      }
+      if (c.hp <= 0) {
+        cloneGone(o, c, true);
+        att.meter = Math.min(100, (att.meter || 0) + ((o.ch.clone || {}).breakMeter || 0));
+        if (typeof mapFavOn === 'function' && mapFavOn(o)) {
+          if (M.map === 'bamboo') {
+            o.meter = Math.min(100, (o.meter || 0) + 12);
+          } else if (M.map === 'wine' && att.hp > 0) {
+            att.guard = Math.max(0, att.guard - 15);
+            att.vx = -att.face * 180;
+            if (!RESIM) addP({ type: 'text', text: '雾震', x: c.x, y: (c.y || 0) - 100, life: 0.6, max: 0.6, rgb: o.look.slash });
+          }
         }
       }
     }
   }
 }
-// 按 R 时换到哪个雾身：↓ 最早的；← / → 本体那一边最近的；不按方向就是「高亮」的那个（离对手最近，画面上一直标着）
+// 按 R 时换到哪个雾身：只能传送至本体留下的真身雾身（!c.sub）
+// 支持方向选择；若未指定方向或未匹配到，则随机或按最近距离拣选一个真身雾身
+function steerClone(f, foe) {
+  const primaryClones = (f.clones || []).filter(c => !c.sub);
+  if (!primaryClones.length) return null;
+  const h = (f.ctrl && f.ctrl.held) || {};
+  if (h.down) return primaryClones[0];
+  const dir = (h.right ? 1 : 0) - (h.left ? 1 : 0);
+  if (dir) {
+    let best = null;
+    for (const c of primaryClones) {
+      const d = (c.x - f.x) * dir;
+      if (d > 1 && (!best || d < (best.x - f.x) * dir)) best = c;
+    }
+    if (best) return best;
+  }
+  return null;
+}
 function cloneMark(f, foe) {
   let best = null;
-  for (const c of f.clones || []) if (!best || Math.abs(c.x - foe.x) < Math.abs(best.x - foe.x)) best = c;
+  // 高亮显示真身雾身中离对手最近的
+  const primaryClones = (f.clones || []).filter(c => !c.sub);
+  for (const c of primaryClones) if (!best || Math.abs(c.x - foe.x) < Math.abs(best.x - foe.x)) best = c;
   return best;
 }
 function pickClone(f, foe) {
-  const cs = f.clones || [], h = (f.ctrl && f.ctrl.held) || {};
-  if (!cs.length) return null;
-  if (h.down) return cs[0];
-  const dir = (h.right ? 1 : 0) - (h.left ? 1 : 0);
-  if (!dir) return cloneMark(f, foe);
-  let best = null;
-  for (const c of cs) { const d = (c.x - f.x) * dir; if (d > 1 && (!best || d < (best.x - f.x) * dir)) best = c; }
-  return best;
+  const primaryClones = (f.clones || []).filter(c => !c.sub);
+  if (!primaryClones.length) return null;
+  const steered = steerClone(f, foe);
+  if (steered) return steered;
+  // 未按方向选择：随机授予一个真身雾身（在真身列表中随机选择）
+  const idx = Math.floor(grnd() * primaryClones.length);
+  return primaryClones[idx] || primaryClones[0];
 }
 function smoke(x, y, n) {
   for (let i = 0; i < n; i++) addP({ type: 'smoke', x: x + rand(-18, 18), y: y + rand(-30, 30), vx: rand(-90, 90), vy: rand(-90, 20), drag: 3, life: rand(0.4, 0.7), max: 0.7, r: rand(10, 22) });
@@ -982,6 +1131,7 @@ function updateFighter(f, foe) {
   if (f.ch.fly && f.onGround()) f.flyT = Math.min(f.ch.fly, f.flyT + STEP * 0.9);
   f.armorT = Math.max(0, f.armorT - STEP);
   f.slowT = Math.max(0, (f.slowT || 0) - STEP);
+  f.defDebuffT = Math.max(0, (f.defDebuffT || 0) - STEP);
   f.buffT = Math.max(0, f.buffT - STEP);
   f.reflectT = Math.max(0, (f.reflectT || 0) - STEP);
   f.hookedT = Math.max(0, (f.hookedT || 0) - STEP);

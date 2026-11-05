@@ -866,12 +866,14 @@ function withCtx(c2, fn) { const main = ctx; ctx = c2; try { fn(); } finally { c
 const cine = { t: -1, owner: null };
 function cineEnv() { if (cine.t < 0) return 0; return clamp(Math.min(cine.t / 0.15, (CINE_LEN - cine.t) / 0.3), 0, 1); }
 function cineSpeed() {
+  let rate = 1;
+  if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) rate *= 0.5;
   const t = cine.t;
-  if (t < 0) return 1;
-  if (t < 0.3) return 0.35;
-  if (t < 0.55) return lerp(0.35, 1.6, (t - 0.3) / 0.25);
-  if (t < CINE_LEN) return lerp(1.6, 1, (t - 0.55) / (CINE_LEN - 0.55));
-  return 1;
+  if (t < 0) return rate;
+  if (t < 0.3) return 0.35 * rate;
+  if (t < 0.55) return lerp(0.35, 1.6, (t - 0.3) / 0.25) * rate;
+  if (t < CINE_LEN) return lerp(1.6, 1, (t - 0.55) / (CINE_LEN - 0.55)) * rate;
+  return rate;
 }
 // ---------- 萤火虫 ----------
 const FIREFLIES = Array.from({ length: 36 }, (_, i) => ({ x: rand(-200, STAGE_W + 200), y: rand(-420, -30), ph: rand(0, 6.28), sp: rand(0.4, 1.1) }));

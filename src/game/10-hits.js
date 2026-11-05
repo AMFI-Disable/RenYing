@@ -65,6 +65,7 @@ function drawHitboxOverlay(fighters) {
 function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitBall(f, hb, m)) return;
+  hitClones(hb, f.idx, m.dmg);
   if (hitDecoy(f, hb)) return;
   echoCloneAttack(f, hb, m, 'basic');
   if (isMulti()) {
@@ -220,7 +221,8 @@ function applyHit(att, def, m, pt) {
     ev.dd = hpBeforeChip - def.hp;
 
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
-    let guardLoss = (m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1);
+    const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
+    let guardLoss = ((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln;
     if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
     if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
       guardLoss = 0;
@@ -267,7 +269,8 @@ function applyHit(att, def, m, pt) {
     return;
   }
   // 霸体：普通攻击打不断，减伤 20%（只吃 80% 伤害）
-  const defRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
+  const rawDefRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
+  const defRating = def.defDebuffT > 0 ? Math.max(0.65, rawDefRating * 0.75) : rawDefRating;
   if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.80 > 0) {
     const dmg = (m.dmg * 0.80) / defRating;
     def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
