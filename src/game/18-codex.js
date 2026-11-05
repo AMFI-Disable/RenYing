@@ -43,31 +43,16 @@ function renderCodex() {
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨' : '🌟'}<span>${skMeta.rarity === 'legend' ? '专属全景天象与奥义特效' : '专属灵光天色与命中特效'}</span>）</span>` : '';
   $id('cxSkinT').innerHTML = (cxPrev !== null && cxPrev !== mySkin(c.id) ? '皮肤 · 预览中' : '皮肤装束') + skDesc;
 
-  const C_CORE = window.ArmoryCore;
-  const isWukuKey = k => (C_CORE && C_CORE.CS_KEYS && C_CORE.CS_KEYS.includes(k)) || (SKINS[k] && SKINS[k].cs);
-  const bdSkins = skList.filter(([k]) => !isWukuKey(k)).sort((a, b) => skinWeight(a[0]) - skinWeight(b[0]));
-  const wkSkins = skList.filter(([k]) => isWukuKey(k)).sort((a, b) => skinWeight(a[0]) - skinWeight(b[0]));
+  skList.sort((a, b) => skinWeight(a[0]) - skinWeight(b[0]) || a[1].name.localeCompare(b[1].name, 'zh-CN'));
 
   const renderSkinBtn = ([k, v]) => {
     const has = skinOwned(k), g = skinGrade(k);
-    const lockHint = v.exclusive ? ' · 青锋行 / 武库' : ' · 武库';
+    const lockHint = ' · 武库';
     return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD ? '' : ' · 限免') : lockHint}</button>`;
   };
 
   const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
-  const bdHtml = defaultBtn + bdSkins.map(renderSkinBtn).join('');
-  const wkHtml = wkSkins.length ? wkSkins.map(renderSkinBtn).join('') : uiState('empty', '暂无武库饰品', 'cx-skin-empty');
-
-  $id('cxSkins').innerHTML = `
-    <div class="cx-skin-row">
-      <div class="cx-skin-row-hd"><span class="cx-skin-tag tag-bd">绑定装束</span></div>
-      <div class="cx-skin-row-btns">${bdHtml}</div>
-    </div>
-    <div class="cx-skin-row">
-      <div class="cx-skin-row-hd"><span class="cx-skin-tag tag-wk">武库饰品</span></div>
-      <div class="cx-skin-row-btns">${wkHtml}</div>
-    </div>
-  `;
+  $id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div></div>`;
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : c.id === 'cixian' ? ['l1', 'l2', 'l3', 'l4'] : ['l1', 'l2', 'l3', 'l4', 'l5'];   // 磁仙四段循环
   const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10) / 10;   // 普攻、蓄力、空中按强度调整后的数
@@ -112,7 +97,7 @@ function renderCodex() {
       const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD;
       const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
       const clear = stars > 0;
-      return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
+      return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '武库获取或破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
     })()}${typeof sagaCodexLine === 'function' ? sagaCodexLine(c.id) : ''}</div>`, '', true),
     ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', true) : '',
   ].filter(Boolean).join('');

@@ -2,7 +2,7 @@ section('皮肤都在箱子里：游戏里原有的皮肤和武库的新皮肤�
 {
   const src = gameJs();
   const a = src.indexOf('const SKINS = {'), b = src.indexOf('\n};', a);
-  const orig = [...src.slice(a, b).matchAll(/^ {2}([a-z]{2}_[a-z0-9]+): \{ char: '([a-z]+)'/gm)].map(m => [m[1], m[2]]).filter(([k]) => C.isItem(k));
+  const orig = [...src.slice(a, b).matchAll(/^ {2}([a-z]{2}_[a-z0-9]+): \{ char: '([a-z]+)'/gm)].map(m => [m[1], m[2]]);
   const inCases = C.CASES.flatMap(c => C.TIERS.flatMap(t => C.COLS[c][t] || []));
   ok(orig.length >= 35 && orig.every(([k]) => C.isItem(k)), `游戏里原有的 ${orig.length} 款皮肤都在箱子里`, orig.filter(([k]) => !C.isItem(k)));
   ok(C.CS_KEYS.every(k => C.isItem(k)), `武库的 ${C.CS_KEYS.length} 款新皮肤也都在`);
@@ -10,8 +10,8 @@ section('皮肤都在箱子里：游戏里原有的皮肤和武库的新皮肤�
   ok(orig.every(([k, ch]) => C.charOf(k) === ch), '每款的侠客对得上');
   ok(C.CASES.length === 8 && C.REG.length === 6 && C.REG.every(c => C.TIERS.every(t => (C.COLS[c][t] || []).length)), '八个武器箱：六个普通武器箱，每个五档品质都有东西');
   const P = C.COLS.c7, pk = ['cla', 'cov', 'gold'].flatMap(t => P[t]);
-  ok(P.prem && !P.mil.length && !P.res.length && pk.length === 7 && P.odds.mil === 0 && P.odds.res === 0 && Math.abs(P.odds.cov + P.odds.gold - 0.3) < 1e-9, '神兵武器箱没有军规级和受限，隐秘加非凡一共 30%', P.odds);
-  ok(pk.every(k => C.CS_KEYS.includes(k) && C.ITEM[k].col === 'c7') && !C.REG.some(c => C.TIERS.some(t => C.COLS[c][t].some(k => pk.includes(k)))), '神兵武器箱的 7 款只在这个箱子里出');
+  ok(P.prem && !P.mil.length && !P.res.length && pk.length === 10 && P.odds.mil === 0 && P.odds.res === 0 && Math.abs(P.odds.cov + P.odds.gold - 0.3) < 1e-9, '神兵武器箱没有军规级和受限，隐秘加非凡一共 30%', P.odds);
+  ok(pk.every(k => C.isItem(k) && C.ITEM[k].col === 'c7') && !C.REG.some(c => C.TIERS.some(t => C.COLS[c][t].some(k => pk.includes(k)))), '神兵武器箱的 10 款只在这个箱子里出');
   ok(C.isItem('qf_qfx') && !C.CS_KEYS.includes('qf_qfx'), '青锋行那款也在箱子里，青锋行通关拿到的照样认');
 }
 
@@ -145,12 +145,12 @@ section('星座武器箱：十二星座 36 款，65% / 28% / 7%，每个号送 1
   ok(z0.res.err === '星座武器箱现在暂停开启', '每周个数改成 0：星座武器箱暂停开启', z0.res);
 }
 
-section('星章兑换：只从普通武器箱里出，神兵武器箱的 7 款换不到');
+section('星章兑换：只从普通武器箱里出，神兵武器箱的 10 款换不到');
 {
   const R = C.rng(77), env = () => ({ now: T, rnd: R, uid: 'star', ink: 0, skins: [], equip: {}, server: true });
   const rich = () => { const s = C.blank(); Object.assign(s.op, { s: C.season(C.day(T)).id, earned: 999 }); return s; };
   const prem = Object.keys(C.ITEM).filter(C.isPrem);
-  ok(prem.length === 43 && prem.filter(k => C.ITEM[k].col === 'c7').length === 7 && prem.filter(k => C.ITEM[k].col === 'c8').length === 36, '神兵武器箱 7 款、星座武器箱 36 款，都只在自己的箱子里', prem.length);
+  ok(prem.length === 46 && prem.filter(k => C.ITEM[k].col === 'c7').length === 10 && prem.filter(k => C.ITEM[k].col === 'c8').length === 36, '神兵武器箱 10 款、星座武器箱 36 款，都只在自己的箱子里', prem.length);
   const pc = C.ofTier('cov').find(C.isPrem), rc = C.ofTierReg('cov')[0];
   const r1 = C.run(rich(), 'star', { id: 'cov', k: pc }, env()).res;
   ok(r1.err === '要从普通武器箱的隐秘级里挑一件', `自选隐秘挑神兵武器箱的 ${pc} 被拒绝`, r1);

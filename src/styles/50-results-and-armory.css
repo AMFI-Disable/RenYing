@@ -102,6 +102,12 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
 
   /* 库存 */
   .ar-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin: 2px 0 12px; font-size: 14px; color: var(--dim); }
+  .ar-codex-head { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 12px; }
+  .ar-codex-head h3 { margin: 0; color: var(--v-white); font-size: 20px; }
+  .ar-codex-head > b { color: var(--gold); font-size: 14px; }
+  .ar-codex-it { overflow: hidden; }
+  .ar-owned { position: absolute; top: 7px; right: 7px; padding: 4px 7px; color: #102019; background: #8de0ae; font-size: 12px; font-weight: 700; }
+  .ar-codex-it.owned { border-color: rgba(141,224,174,.35); }
   .ar-sum b { font-family: var(--v-cond); font-size: 17px; color: #fff; }
   .ar-link { padding: 0; font: inherit; font-size: 12px; color: #9fd0ff; text-decoration: underline; cursor: pointer; background: none; border: none; }
   .ar-link:disabled { color: var(--dim); text-decoration: none; cursor: default; }

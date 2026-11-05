@@ -446,7 +446,7 @@
   }
 
   /* ---------- 页面 ---------- */
-  const TABS = [['inv', '库存'], ['cases', '武器箱'], ['term', '终端机'], ['market', '玩家市场'], ['trade', '汰换合同'], ['op', '江湖行动']];
+  const TABS = [['inv', '库存'], ['codex', '皮肤图鉴'], ['cases', '武器箱'], ['term', '终端机'], ['market', '玩家市场'], ['trade', '汰换合同'], ['op', '江湖行动']];
   function dots() {
     if (!ST || MODE === 'none') return {};
     const d = {};
@@ -467,7 +467,7 @@
       : MODE === 'offline' ? uiState('error', '连不上服务器，武库暂时只能看。', 'ar-banner')
       : MODE === 'old' ? `<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易，你的饰品和武器箱都在${OLDV === 1 ? '，没用完的钥匙会一把换一台终端机' : ''}。</p>`
       : MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：服务器还没开武库，现在开箱、交易都只记在你的存档里，用来试玩。服务器版上线以后武库从零开始（会重新发新手礼），测试期开出来的东西不会带过去。</p>' : '';
-    const R = { inv: pInv, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
+    const R = { inv: pInv, codex: pCodex, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
     $id('arMain').innerHTML = banner + R();
     if (TAB === 'market' || TAB === 'term') loadMarket().then(fresh => { if (fresh && (TAB === 'market' || TAB === 'term') && $id('armory').classList.contains('on') && $id('arModal').hidden) render(); });
     if (TAB === 'inv') markSeenSoon();
@@ -480,7 +480,7 @@
 
   // 库存
   const INV = { char: '', tier: '', sort: 'new', stat: '' };
-  function legacySkins(s) { return (PROF.skins || []).filter(k => SKINS[k] && !s.via.includes(k) && !s.inv.some(x => x.k === k) && !OFFLINE_BUILD); }
+  const CODEX = { col: '', char: '', tier: '', sort: 'set' };
   function pInv() {
     const s = blankS();
     let list = s.inv.filter(x => (!INV.char || C.charOf(x.k) === INV.char) && (!INV.tier || tierOf(x.k) === INV.tier) && (!INV.stat || (INV.stat === 'st' ? x.st >= 0 : x.st < 0)));
@@ -496,7 +496,7 @@
     list = list.slice().sort(sorts[INV.sort] || sorts.new);
     const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button" class="ar-caseitem" data-gotab="cases" style="--cc:${C.COLS[c].col}"><span class="ar-emb">${C.COLS[c].emblem}</span><b>${C.COLS[c].name}武器箱</b><small>×${s.cases[c]}</small></button>`).join('')
       + (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
-    const legacy = legacySkins(s), tl = tagLeft(s);
+    const tl = tagLeft(s);
     const dupeP = C.dupePlan(s), dupeCount = dupeP.items.length;
     return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-list-dupes>一键挂牌市场（${dupeCount}件）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
       ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
@@ -506,9 +506,38 @@
         <select id="arInvStat" class="ar-sel"><option value="">全部类型</option><option value="st" ${INV.stat === 'st' ? 'selected' : ''}>仅看斩数饰品</option><option value="norm" ${INV.stat === 'norm' ? 'selected' : ''}>仅看普通饰品</option></select>
         <select id="arInvSort" class="ar-sel">${[['new', '最新获得'], ['old', '最早获得'], ['tier', '品质最高'], ['tier_asc', '品质最低'], ['st', '斩数最多'], ['name', '按名称排序']].map(([k, n]) => `<option value="${k}" ${INV.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
       </div>
-      ${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty">${uiState('empty', s.inv.length ? '没有符合条件的饰品。' : `武库的库存还是空的${legacy.length ? '（以前得到的皮肤在下面，一直都能穿）' : ''}。打对局有机会掉落，或者去开箱、逛玩家市场。`)}${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="cases">去开箱</button>'}</div>`}
-      ${legacy.length ? `<h4 class="ar-h">以前得到的皮肤 <small>绑定账号，不能出售和汰换</small></h4><div class="ar-grid sm">${legacy.map(k => `<div class="ar-it bound" style="--tc:${C.isItem(k) ? tc(k) : SKINS[k].rarity === 'legend' ? '235,75,75' : '136,71,255'}"><img src="${art(k)}" alt="" loading="lazy"><b>${escapeHTML(SKINS[k].name)}</b><small>${charName(k)} · 绑定</small><i class="ar-bar"></i></div>`).join('')}</div>` : ''}
+      ${list.length ? `<div class="ar-grid">${list.map(x => tile(x)).join('')}</div>` : `<div class="ar-empty">${uiState('empty', s.inv.length ? '没有符合条件的饰品。' : '武库的库存还是空的。去皮肤图鉴看看所有皮肤和获取方式。')}${s.inv.length ? '' : '<button type="button" class="go small" data-gotab="codex">看皮肤图鉴</button>'}</div>`}
       ${typeof freeSkinEvent === 'function' && freeSkinEvent() ? '<p class="ar-note">限免活动只包括游戏里原有的皮肤，活动结束就收回。从武库拿到的饰品永久拥有，能在市场卖掉，开出斩数版还会记击倒数。</p>' : ''}`;
+  }
+
+  function pCodex() {
+    const s = blankS();
+    const owned = new Set(s.inv.map(x => x.k));
+    const counts = new Map();
+    for (const it of s.inv) counts.set(it.k, (counts.get(it.k) || 0) + 1);
+    for (const k of s.via || []) owned.add(k);
+    for (const k of PROF.skins || []) if (C.isItem(k)) owned.add(k);
+    let keys = Object.keys(C.ITEM).filter(k => (!CODEX.col || C.ITEM[k].col === CODEX.col) && (!CODEX.char || C.charOf(k) === CODEX.char) && (!CODEX.tier || tierOf(k) === CODEX.tier));
+    const tierRank = k => C.TIERS.indexOf(tierOf(k));
+    const byName = (a, b) => skinName(a).localeCompare(skinName(b), 'zh-CN') || a.localeCompare(b);
+    const sorts = {
+      set: (a, b) => C.CASES.indexOf(C.ITEM[a].col) - C.CASES.indexOf(C.ITEM[b].col) || tierRank(b) - tierRank(a) || charName(a).localeCompare(charName(b), 'zh-CN') || byName(a, b),
+      tier: (a, b) => tierRank(b) - tierRank(a) || byName(a, b),
+      tier_asc: (a, b) => tierRank(a) - tierRank(b) || byName(a, b),
+      hero: (a, b) => charName(a).localeCompare(charName(b), 'zh-CN') || tierRank(b) - tierRank(a) || byName(a, b),
+      name: byName
+    };
+    keys.sort(sorts[CODEX.sort] || sorts.set);
+    const cards = keys.map(k => {
+      const it = C.ITEM[k], have = owned.has(k), cnt = counts.get(k) || 0;
+      return `<button type="button" class="ar-it ar-codex-it${have ? ' owned' : ''}" data-pv="${k}" style="--tc:${tc(k)}"><img src="${art(k)}" alt="" loading="lazy">${have ? '<span class="ar-owned">已拥有</span>' : ''}<b>${it.tier === 'gold' ? '★ ' : ''}${escapeHTML(skinName(k))}</b><small>${escapeHTML(charName(k))} · ${escapeHTML(C.COLS[it.col].name)} · ${have ? (cnt ? `库存 ${cnt}` : '已获得') : C.TIER[it.tier].n}</small><i class="ar-bar"></i></button>`;
+    }).join('');
+    return `<div class="ar-codex-head"><div><h3>皮肤图鉴</h3><p class="ar-note">收录全部 ${Object.keys(C.ITEM).length} 款皮肤。点选查看效果、所属套装和获取方式。</p></div><b>${keys.length} 款 · ${keys.filter(k => owned.has(k)).length} 款已拥有</b></div>
+      <div class="ar-filter"><select id="arCodexCol" class="ar-sel"><option value="">全部套装</option>${C.CASES.map(c => `<option value="${c}" ${CODEX.col === c ? 'selected' : ''}>${C.COLS[c].name}套装</option>`).join('')}</select>
+      <select id="arCodexChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${CODEX.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
+      <select id="arCodexTier" class="ar-sel"><option value="">全部品质</option>${C.TIERS.map(t => `<option value="${t}" ${CODEX.tier === t ? 'selected' : ''}>${C.TIER[t].n}</option>`).join('')}</select>
+      <select id="arCodexSort" class="ar-sel">${[['set', '按套装'], ['tier', '品质最高'], ['tier_asc', '品质最低'], ['hero', '按侠客'], ['name', '按名称']].map(([k, n]) => `<option value="${k}" ${CODEX.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+      ${cards ? `<div class="ar-grid">${cards}</div>` : empty('没有符合筛选条件的皮肤。')}`;
   }
 
   // 检视：左边是会动的侠客（穿着这一件），右边是详细信息
@@ -545,8 +574,8 @@
       <div class="ar-insbtns">${own ? `${worn ? `<button type="button" class="ghost small" data-ins="unequip">脱下</button>` : `<button type="button" class="go small" data-ins="equip" ${can ? '' : 'disabled'}>穿上</button>`}
         <button type="button" class="ghost small" data-ins="list" ${can && mk ? '' : 'disabled'}${mk ? '' : ' title="玩家市场要连上服务器才能用"'}>挂到市场</button>
         <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
-        <button type="button" class="ghost small" data-ins="market">${INS.from === 'pv' ? '去玩家市场看看' : '这款的行情'}</button><button type="button" class="ghost small" data-ins="close">关闭</button></div>
-      <p class="ar-note">${INS.from === 'pv' ? `这是预览。从${colName(it.k)}武器箱开出来、在玩家市场买到，或者汰换合同、终端机碰上了，就能穿上。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
+        ${INS.from === 'pv' ? '<button type="button" class="go small" data-ins="cases">去所属套装</button>' : `<button type="button" class="ghost small" data-ins="market">这款的行情</button>`}<button type="button" class="ghost small" data-ins="close">关闭</button></div>
+      <p class="ar-note">${INS.from === 'pv' ? `属于「${colName(it.k)}」套装。可从对应武器箱获得，也能通过玩家市场、汰换合同或终端机取得。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
     if (mk && !MKD.items && !MKD.err) loadMarket().then(fresh => { if (fresh && INS && INS.it === it) insInfo(); });
   }
   function closeIns() { $id('arIns').hidden = true; INS = null; }
@@ -554,6 +583,7 @@
     const it = INS && INS.it; if (!it) return;
     if (a === 'close') { closeIns(); return; }
     if (a === 'market') { closeIns(); marketItem(it.k); return; }
+    if (a === 'cases') { closeIns(); TAB = 'cases'; render(); $id('arMain').scrollTop = 0; return; }
     if (a === 'equip') { const r = await act('equip', { i: it.i }); if (r && r.ok) { SFX.slice && SFX.slice(); toast(`已穿上「${skinName(it.k)}」`); if (INS) insInfo(); render(); } return; }
     if (a === 'unequip') { const r = await act('unequip', { char: C.charOf(it.k) }); if (r && r.ok) { if (INS) insInfo(); render(); } return; }
     if (a === 'list') { listBox(it); return; }
@@ -636,7 +666,7 @@
       const limText = col.daily ? `每天限开 ${C.cv(CF(), col.lim)} 个` : `每周限开 ${C.cv(CF(), col.lim)} 个`;
       const btnText = n && !left ? (col.daily ? '今天开完了' : '这周开过了') : '开启';
       const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length);
-      // 神兵的 7 款摆成一排；星座的 36 款按品质分三行，每行十二个侠客
+      // 神兵的 10 款摆成一排；星座的 36 款按品质分三行，每行十二个侠客
       const show = zod ? ts.map(t => `<div class="ar-zrow" style="--tc:${C.TIER[t].c}"><span class="ar-zlab">${C.TIER[t].n}<b>${pct(O[t])}</b></span><div class="ar-zgrid">${col[t].map(k => `<button type="button" class="ar-pcard ar-zcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k).split('·')[0])}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`).join('')
         : ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
       return `<div class="ar-casecard prem${zod ? ' zod' : ''}" style="--cc:${col.col}"><div class="ar-premside">
@@ -1046,6 +1076,7 @@
     main.addEventListener('change', e => {
       const id = e.target.id, v = e.target.value;
       if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvStat') INV.stat = v; else if (id === 'arInvSort') INV.sort = v;
+      else if (id === 'arCodexCol') CODEX.col = v; else if (id === 'arCodexChar') CODEX.char = v; else if (id === 'arCodexTier') CODEX.tier = v; else if (id === 'arCodexSort') CODEX.sort = v;
       else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked;
       else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; } else return;
       render();

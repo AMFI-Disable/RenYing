@@ -189,7 +189,7 @@
     c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
       mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
     c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, daily: true, ok: 'prem.', lim: 'premDay', cnt: 'pd', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
-      mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie'] },
+      mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie', 'lq_star', 'li_star', 'cx_star'] },
     c8: { name: '星座', price: 1500, emblem: '星', col: '170,150,255', prem: true, ok: 'zod.', lim: 'zodWeek', cnt: 'zw', odds: { mil: 0, res: 0, cla: 0.65, cov: 0.28, gold: 0.07 },
       mil: [], res: [], cla: zodKeys(0), cov: zodKeys(1), gold: zodKeys(2) },
   };
@@ -503,7 +503,7 @@
   };
   // 给玩家看的那份：开局领的票只有服务器知道
   C.publicState = s => { const o = JSON.parse(JSON.stringify(s)); delete o.tk; return o; };
-  // 只在武库里出的皮肤（24 款涂装、5 款 ★、神兵武器箱的 7 款和星座武器箱的 36 款）：服务器只认库存里真有的
+  // 武库专属内容（24 款涂装、5 款 ★、神兵武器箱新增的 7 款和星座武器箱的 36 款）：服务器只认库存里真有的
   C.CS_KEYS = [...C.PAINTS.map(p => p[0]), ...Object.keys(C.FULL)];
   C.genMissions = (uid, wk) => {
     const r = rng(hash32(`ms|${uid}|${wk}`)), out = [];
