@@ -78,7 +78,7 @@ function renderCodex() {
     const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
     const mType = (moveKey && mTypes[moveKey]) || null;
     const rng = (mType && mType.rng) || (moveKey === 'ult' ? 'screen' : moveKey === 'air' ? 'air' : 'melee');
-    const mini = moveKey ? `<div class="card-mini-win" data-rng="${rng}"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
+    const mini = moveKey ? `<div class="card-mini-win" data-rng="${rng}" data-mv="${moveKey}"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
     const f = moveKey && fun[moveKey];
     return `<div class="tile t-m${half ? ' half' : wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${f ? `<div class="tf">“${f}”</div>` : ''}${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
   };
@@ -124,7 +124,7 @@ function renderCodex() {
 let cxCardsRAF = null;
 function codexCardGap(heroId, moveKey) {
   const rng = (HERO_MOVE_TYPES[heroId] && HERO_MOVE_TYPES[heroId][moveKey] && HERO_MOVE_TYPES[heroId][moveKey].rng) || 'melee';
-  return ({ self: 8, melee: 68, air: 88, mid: 142, ranged: 194, screen: 220 })[rng] || 68;
+  return ({ self: 118, melee: 118, air: 132, mid: 160, ranged: 205, screen: 220 })[rng] || 118;
 }
 function startCodexCardsDirector() {
   if (cxCardsRAF) return;
@@ -147,11 +147,10 @@ function startCodexCardsDirector() {
         let p = cv._pup;
         if (!p || p.chIdx !== cxIdx || p.skin !== skin || cv._mv !== mv) {
           p = new Puppet(cxIdx, skin);
-          const seq = HERO_MOVE_SEQS[c.id][mv];
-          // Ultimates include a readable windup, strike and recovery instead of
-          // flashing through the same short timing as a regular attack.
-          p.playSeq(mv === 'ult' ? seq.map(step => ({ ...step, d: step.d * 2.2 })) : seq, null, true);
+          const seq = mv === 'ult' && HERO_ULT_REPLAYS[c.id] ? HERO_ULT_REPLAYS[c.id] : HERO_MOVE_SEQS[c.id][mv];
+          p.playSeq(seq, null, true);
           p.setDemoRange(codexCardGap(c.id, mv));
+          p.setDemoOpponent((cxIdx + 1) % CHARS.length);
           cv._pup = p;
           cv._mv = mv;
         }
@@ -167,7 +166,7 @@ function startCodexCardsDirector() {
           g.fillStyle = '#0a0b18';
           g.fillRect(0, 0, cw, chh);
           g.fillStyle = 'rgba(200,180,255,0.08)'; g.fillRect(0, chh * 0.84, cw, 1);
-          p.draw(g, cw, chh, chh / 180, true);
+          p.draw(g, cw, chh, chh / 180, mv !== 'ult');
         }
       }
     }

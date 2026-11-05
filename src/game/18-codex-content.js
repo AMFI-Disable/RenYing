@@ -178,7 +178,7 @@ const HERO_MOVE_TYPES = {
     air: { type: 'melee', label: '近战', rng: 'melee' },
     skill: { type: 'counter', label: '反制月镜', rng: 'melee', icon: 'shield_bash' },
     ranged: { type: 'mid', label: '中距折返', rng: 'mid', icon: 'ranged' },
-    ult: { type: 'fullscreen', label: '全屏月华', rng: 'screen' },
+    ult: { type: 'mid', label: '近距震退', rng: 'mid' },
     esc: { type: 'esc', label: '身法' }
   },
   yanling: {
@@ -893,6 +893,131 @@ const HERO_MOVE_SEQS = {
       { p: 'idle', d: 0.35, reset: true }
     ]
   }
+};
+
+// Card replays follow the phase order and timings in src/game/04-ults.js.
+// Shortened only where needed to fit the miniature loop; repeat hits stay
+// separate so the target reacts to the actual rhythm of each ultimate.
+const HERO_ULT_REPLAYS = {
+  qingfeng: [
+    { p: 'qf_charge', d: 0.48, lab: '纳刀 · 蓄势' },
+    { p: 'qf_thrust', d: 0.24, dx: 46, fx: 'crescent', hit: 1, badge: '居合突刺' },
+    { p: 'l1a', d: 0.12, hit: 1 }, { p: 'l2a', d: 0.12, hit: 1 },
+    { p: 'l1a', d: 0.12, hit: 1 }, { p: 'l2a', d: 0.12, hit: 1 },
+    { p: 'l1a', d: 0.12, hit: 1 }, { p: 'l2a', d: 0.12, hit: 1 },
+    { p: 'jump', d: 0.16, dy: -38, lab: '残月剑气 · 追斩' },
+    { p: 'hva', d: 0.32, dy: 0, hit: 3, launch: true, fx: 'crescent', badge: '终结斩' },
+    { p: 'victory', d: 0.46, reset: true, lab: '剑意通明 · 收势' }
+  ],
+  feiying: [
+    { p: 'fy_seal', d: 0.42, lab: '结印 · 入影' },
+    { p: 'dash', d: 0.28, dx: 90, fx: 'shadows', badge: '瞬步近身' },
+    { p: 'fy_xslash', d: 0.1, hit: 1 }, { p: 'l1a', d: 0.1, hit: 1 },
+    { p: 'l2a', d: 0.1, hit: 1 }, { p: 'fy_xslash', d: 0.1, hit: 1 },
+    { p: 'l1a', d: 0.1, hit: 1 }, { p: 'l2a', d: 0.1, hit: 1 },
+    { p: 'fy_xslash', d: 0.1, hit: 1 }, { p: 'l1a', d: 0.1, hit: 1 },
+    { p: 'fy_xslash', d: 0.25, hit: 2, launch: true, badge: '双刃终结' },
+    { p: 'victory', d: 0.42, reset: true, lab: '暗影绝杀 · 收势' }
+  ],
+  tieshan: [
+    { p: 'ts_lift', d: 0.3, lab: '擎刃 · 起跳' },
+    { p: 'jump', d: 0.35, dy: -92, lab: '滞空 · 调整落点' },
+    { p: 'ts_slam', d: 0.16, dy: 0, fx: 'avalanche', hit: 1, launch: true, badge: '泰山压顶' },
+    { p: 'victory', d: 0.52, reset: true, lab: '地裂 · 回涌' }
+  ],
+  lingshuang: [
+    { p: 'ls_stance', d: 0.45, lab: '拄枪 · 凝神' },
+    { p: 'ls_thrust', d: 0.35, fx: 'timestop', lab: '天地停滞 · 枪影铺开' },
+    { p: 'ls_thrust', d: 0.28, dx: 84, hit: 1, launch: true, badge: '寒芒贯日' },
+    { p: 'ls_plant', d: 0.3, reset: true, lab: '冰封 · 收枪' }
+  ],
+  liuyun: [
+    { p: 'ly_fanswipe', d: 0.3, lab: '展扇 · 引风' },
+    { p: 'ly_hover', d: 0.32, dy: -32, fx: 'tornado', badge: '双道龙卷' },
+    { p: 'ly_hover', d: 0.32, dy: -20, hit: 1, launch: true, badge: '卷入高空' },
+    { p: 'victory', d: 0.42, dy: 0, reset: true, lab: '扶摇万里 · 浮空' }
+  ],
+  leiming: [
+    { p: 'lm_kick', d: 0.18, fx: 'thunder', hit: 1, launch: true, badge: '第一道天雷' },
+    { p: 'lm_boxer', d: 0.36, fx: 'thunder', hit: 1, launch: true, badge: '第二道天雷' },
+    { p: 'lm_kick', d: 0.36, fx: 'thunder', hit: 1, launch: true, badge: '第三道天雷' },
+    { p: 'victory', d: 0.42, reset: true, lab: '雷帝灌顶 · 收势' }
+  ],
+  moyu: [
+    { p: 'my_stroke', d: 0.4, lab: '展纸 · 运笔' },
+    { p: 'my_paint', d: 0.55, fx: 'inkdragon', lab: '全场染纸 · 符印浮现' },
+    { p: 'my_paint', d: 0.24, hit: 2, launch: true, badge: '符阵引爆' },
+    { p: 'victory', d: 0.46, reset: true, lab: '朱砂散尽 · 收笔' }
+  ],
+  yuehua: [
+    { p: 'yh_lotus', d: 0.5, fx: 'moonflow', lab: '结月印 · 凝露回气' },
+    { p: 'yh_lotus', d: 0.14, hit: 1, launch: true, badge: '月芒震退' },
+    { p: 'victory', d: 0.38, reset: true, lab: '月魄护体 · 收势' }
+  ],
+  yanling: [
+    { p: 'yl_wings', d: 0.34, dy: -66, lab: '展翼 · 冲上九霄' },
+    { p: 'a1a', d: 0.28, dy: -66, fx: 'featherstorm', count: 7, hit: 2, launch: true, badge: '翎羽齐射' },
+    { p: 'yl_wings', d: 0.28, dy: -40, fx: 'featherstorm', count: 7, hit: 2, launch: true, badge: '破甲暴雨' },
+    { p: 'victory', d: 0.4, dy: 0, reset: true, lab: '凌霄破虚 · 回落' }
+  ],
+  yuxiao: [
+    { p: 'yx_play', d: 0.3, lab: '起奏 · 广陵散' },
+    { p: 'yx_push', d: 0.15, fx: 'note', badge: '音刃一' },
+    { p: 'yx_play', d: 0.15, fx: 'note', badge: '音刃二' },
+    { p: 'yx_push', d: 0.15, fx: 'note', badge: '音刃三' },
+    { p: 'yx_play', d: 0.15, fx: 'note', badge: '音刃四' },
+    { p: 'yx_push', d: 0.15, fx: 'note', badge: '音刃五' },
+    { p: 'yx_play', d: 0.2, fx: 'note', badge: '音刃六' },
+    { p: 'yx_push', d: 0.28, fx: 'guangling', hit: 3, launch: true, badge: '曲终绝响' },
+    { p: 'yx_play', d: 0.42, reset: true, lab: '音律回满 · 曲终' }
+  ],
+  zuixian: [
+    { p: 'zx_drink', d: 0.34, fx: 'shanshui', lab: '举酒 · 展开山水' },
+    { p: 'zx_sway', d: 0.17, hit: 1, badge: '墨染一' }, { p: 'zx_drink', d: 0.17, hit: 1 },
+    { p: 'zx_sway', d: 0.17, hit: 1 }, { p: 'zx_drink', d: 0.17, hit: 1 },
+    { p: 'zx_sway', d: 0.17, hit: 1 }, { p: 'zx_drink', d: 0.17, hit: 1 },
+    { p: 'zx_sway', d: 0.17, hit: 1 }, { p: 'zx_upper', d: 0.2, hit: 1, badge: '八重墨浪' },
+    { p: 'victory', d: 0.4, reset: true, lab: '蓬莱境 · 收卷' }
+  ],
+  gouchen: [
+    { p: 'gc_wind', d: 0.4, lab: '抡锤 · 锁定目标' },
+    { p: 'gc_wind', d: 0.55, fx: 'skynet', hit: 1, badge: '巨锤砸落 · 震晕' },
+    { p: 'gc_pull', d: 0.16, fx: 'magnet', lab: '扯链 · 回锤' },
+    { p: 'gc_sweep', d: 0.3, hit: 2, launch: true, badge: '近身重抡' },
+    { p: 'victory', d: 0.38, reset: true, lab: '震魄 · 收链' }
+  ],
+  lingque: [
+    { p: 'du_l1s', d: 0.2, dy: -60, lab: '跃起 · 织网' },
+    { p: 'du_l2a', d: 0.08, dy: -60, fx: 'needlestorm', hit: 1, badge: '悬丝一' },
+    { p: 'du_l1a', d: 0.08, dy: -60, hit: 1, badge: '悬丝二' },
+    { p: 'du_l2a', d: 0.08, dy: -60, hit: 1, badge: '悬丝三' },
+    { p: 'du_l1a', d: 0.08, dy: -60, hit: 1, badge: '悬丝四' },
+    { p: 'du_l2a', d: 0.08, dy: -60, hit: 1, badge: '悬丝五' },
+    { p: 'du_l1a', d: 0.08, dy: -60, hit: 1, badge: '悬丝六' },
+    { p: 'du_l2a', d: 0.12, dy: -60, hit: 1, badge: '悬丝七' },
+    { p: 'l3a', d: 0.28, dy: 0, hit: 3, launch: true, badge: '终结 · 雀芒入魂' },
+    { p: 'victory', d: 0.38, reset: true, lab: '悬丝归宗 · 落地' }
+  ],
+  liying: [
+    { p: 'fy_seal', d: 0.3, lab: '结印 · 雾身齐发' },
+    { p: 'fy_xslash', d: 0.16, fx: 'mistarray', badge: '雾身刀光' },
+    { p: 'l1a', d: 0.14, hit: 1 }, { p: 'l2a', d: 0.14, hit: 1 },
+    { p: 'dash', d: 0.3, dx: 74, fx: 'blink', lab: '瞬身 · 追至身前' },
+    { p: 'l2a', d: 0.22, hit: 2, launch: true, badge: '本体补刀' },
+    { p: 'victory', d: 0.36, reset: true, lab: '雾身散尽 · 收势' }
+  ],
+  cixian: [
+    { p: 'lm_boxer', d: 0.28, fx: 'magnet', lab: '异极 · 磁石升起' },
+    { p: 'victory', d: 0.5, fx: 'sandwich', lab: '双极合拢 · 吸住目标' },
+    { p: 'lm_jab', d: 0.18, hit: 2, badge: '天地夹击' },
+    { p: 'victory', d: 0.42, reset: true, lab: '定身 · 收势' }
+  ],
+  qianji: [
+    { p: 'fy_seal', d: 0.25, fx: 'recallball', lab: '发条反卷 · 召回傀丸', badge: '傀丸贯穿' },
+    { p: 'qf_charge', d: 0.42, lab: '傀丸疾返 · 穿身而过' },
+    { p: 'spa', d: 0.22, badge: '傀丸回手' },
+    { p: 'victory', d: 0.36, reset: true, lab: '傀丸回手 · 重置投丸' }
+  ]
 };
 
 const HERO_FULL_DEMO = {

@@ -428,6 +428,7 @@ overflow-x: hidden;
 .t-has-demo:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.4); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
 .t-has-demo.active-demo { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,196,106,.5), 0 8px 24px rgba(0,0,0,.45); background: rgba(233,196,106,.08); }
 .card-mini-win { width: 100%; height: 76px; border-radius: 8px; overflow: hidden; background: #070814; border: 1px solid rgba(255,255,255,.08); margin: 6px 0 8px; position: relative; }
+.card-mini-win[data-mv="ult"] { height: 136px; }
 .card-mini-win::after { content: ''; position: absolute; left: 0; bottom: 0; right: 0; height: 2px; background: rgba(255,255,255,.08); pointer-events: none; }
 .card-mini-win[data-rng="melee"]::after { background: linear-gradient(90deg, #ff8a8a, transparent); }
 .card-mini-win[data-rng="mid"]::after { background: linear-gradient(90deg, #f3cf7a, transparent); }
@@ -9548,6 +9549,83 @@ const UI_COPY_EN = {
 "3v3 车轮接力 · 毫秒回滚": "3v3 Tag Relay · Millisecond Rollback",
 "3v3 车轮战 · 赛季排位": "3v3 Tag · Ranked Season",
 "房间对战 · 3v3 好友约战": "Friend Room · 3v3 Tag Duel",
+"纳刀 · 蓄势": "Sheathe · Gather strength",
+"居合突刺": "Iaido thrust",
+"残月剑气 · 追斩": "Crescent blades · Pursuit slashes",
+"终结斩": "Finishing slash",
+"剑意通明 · 收势": "Clear Blade Intent · Recovery",
+"结印 · 入影": "Form seal · Enter the shadow",
+"瞬步近身": "Shadow step · Close in",
+"双刃终结": "Twin-blade finisher",
+"暗影绝杀 · 收势": "Shadow execution · Recovery",
+"擎刃 · 起跳": "Raise the great blade · Leap",
+"滞空 · 调整落点": "Airborne · Adjust the landing",
+"泰山压顶": "Mountain-crushing slam",
+"地裂 · 回涌": "Shattered ground · Qi surges back",
+"拄枪 · 凝神": "Plant the spear · Focus",
+"天地停滞 · 枪影铺开": "Time stops · Spear images sweep out",
+"寒芒贯日": "Cold light pierces through",
+"冰封 · 收枪": "Frostbound · Lower the spear",
+"展扇 · 引风": "Open the fan · Call the wind",
+"双道龙卷": "Twin tornadoes",
+"卷入高空": "Lifted into the air",
+"扶摇万里 · 浮空": "Soaring Wind · Hover",
+"第一道天雷": "First thunderbolt",
+"第二道天雷": "Second thunderbolt",
+"第三道天雷": "Third thunderbolt",
+"雷帝灌顶 · 收势": "Thunder Sovereign · Recovery",
+"展纸 · 运笔": "Unroll the paper · Begin the brushwork",
+"全场染纸 · 符印浮现": "The field becomes paper · Talismans appear",
+"符阵引爆": "Talisman array detonates",
+"朱砂散尽 · 收笔": "Cinnabar fades · Finish the brushwork",
+"结月印 · 凝露回气": "Form the moon seal · Gather dew and Qi",
+"月芒震退": "Moonlight repels",
+"月魄护体 · 收势": "Moon Soul Guard · Recovery",
+"展翼 · 冲上九霄": "Spread the wings · Rise to the heavens",
+"翎羽齐射": "Feathers volley",
+"破甲暴雨": "Armor-piercing feather storm",
+"凌霄破虚 · 回落": "Pierce the clouds · Descend",
+"起奏 · 广陵散": "Begin the Guangling melody",
+"音刃一": "Sound blade one",
+"音刃二": "Sound blade two",
+"音刃三": "Sound blade three",
+"音刃四": "Sound blade four",
+"音刃五": "Sound blade five",
+"音刃六": "Sound blade six",
+"音律回满 · 曲终": "Melody restored · Finale",
+"举酒 · 展开山水": "Raise the wine · Unfurl the landscape",
+"墨染一": "Ink wash one",
+"八重墨浪": "Eight waves of ink",
+"蓬莱境 · 收卷": "Penglai realm · Close the scroll",
+"抡锤 · 锁定目标": "Swing the hammer · Lock on",
+"巨锤砸落 · 震晕": "Giant hammer falls · Stun",
+"扯链 · 回锤": "Pull the chain · Reel the hammer back",
+"近身重抡": "Close-range follow-up swing",
+"震魄 · 收链": "Soul-shaking blow · Reel in",
+"跃起 · 织网": "Leap · Weave the net",
+"悬丝一": "Suspended thread one",
+"悬丝二": "Suspended thread two",
+"悬丝三": "Suspended thread three",
+"悬丝四": "Suspended thread four",
+"悬丝五": "Suspended thread five",
+"悬丝六": "Suspended thread six",
+"悬丝七": "Suspended thread seven",
+"终结 · 雀芒入魂": "Finisher · Needle mark strikes the soul",
+"悬丝归宗 · 落地": "Threads return · Land",
+"结印 · 雾身齐发": "Form seal · Clones strike together",
+"雾身刀光": "Clone sword lights",
+"瞬身 · 追至身前": "Vanish · Reappear beside the target",
+"本体补刀": "Original body follows with a slash",
+"雾身散尽 · 收势": "Clones fade · Recovery",
+"异极 · 磁石升起": "Opposite poles · Magnets rise",
+"双极合拢 · 吸住目标": "Poles converge · Target pinned",
+"定身 · 收势": "Pinned in place · Recovery",
+"发条反卷 · 召回傀丸": "Wind the gear back · Recall the puppet ball",
+"傀丸贯穿": "Puppet ball pierces through",
+"傀丸疾返 · 穿身而过": "Puppet ball rushes back through the target",
+"傀丸回手": "Puppet ball returns to hand",
+"傀丸回手 · 重置投丸": "Puppet ball returns · Throw reset",
+"近距震退": "Close-range pulse",
 };
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -23294,7 +23372,7 @@ charge: { type: 'melee', label: '近战破防', rng: 'melee' },
 air: { type: 'melee', label: '近战', rng: 'melee' },
 skill: { type: 'counter', label: '反制月镜', rng: 'melee', icon: 'shield_bash' },
 ranged: { type: 'mid', label: '中距折返', rng: 'mid', icon: 'ranged' },
-ult: { type: 'fullscreen', label: '全屏月华', rng: 'screen' },
+ult: { type: 'mid', label: '近距震退', rng: 'mid' },
 esc: { type: 'esc', label: '身法' }
 },
 yanling: {
@@ -24007,6 +24085,127 @@ esc: [
 ]
 }
 };
+const HERO_ULT_REPLAYS = {
+qingfeng: [
+{ p: 'qf_charge', d: 0.48, lab: '纳刀 · 蓄势' },
+{ p: 'qf_thrust', d: 0.24, dx: 46, fx: 'crescent', hit: 1, badge: '居合突刺' },
+{ p: 'l1a', d: 0.12, hit: 1 }, { p: 'l2a', d: 0.12, hit: 1 },
+{ p: 'l1a', d: 0.12, hit: 1 }, { p: 'l2a', d: 0.12, hit: 1 },
+{ p: 'l1a', d: 0.12, hit: 1 }, { p: 'l2a', d: 0.12, hit: 1 },
+{ p: 'jump', d: 0.16, dy: -38, lab: '残月剑气 · 追斩' },
+{ p: 'hva', d: 0.32, dy: 0, hit: 3, launch: true, fx: 'crescent', badge: '终结斩' },
+{ p: 'victory', d: 0.46, reset: true, lab: '剑意通明 · 收势' }
+],
+feiying: [
+{ p: 'fy_seal', d: 0.42, lab: '结印 · 入影' },
+{ p: 'dash', d: 0.28, dx: 90, fx: 'shadows', badge: '瞬步近身' },
+{ p: 'fy_xslash', d: 0.1, hit: 1 }, { p: 'l1a', d: 0.1, hit: 1 },
+{ p: 'l2a', d: 0.1, hit: 1 }, { p: 'fy_xslash', d: 0.1, hit: 1 },
+{ p: 'l1a', d: 0.1, hit: 1 }, { p: 'l2a', d: 0.1, hit: 1 },
+{ p: 'fy_xslash', d: 0.1, hit: 1 }, { p: 'l1a', d: 0.1, hit: 1 },
+{ p: 'fy_xslash', d: 0.25, hit: 2, launch: true, badge: '双刃终结' },
+{ p: 'victory', d: 0.42, reset: true, lab: '暗影绝杀 · 收势' }
+],
+tieshan: [
+{ p: 'ts_lift', d: 0.3, lab: '擎刃 · 起跳' },
+{ p: 'jump', d: 0.35, dy: -92, lab: '滞空 · 调整落点' },
+{ p: 'ts_slam', d: 0.16, dy: 0, fx: 'avalanche', hit: 1, launch: true, badge: '泰山压顶' },
+{ p: 'victory', d: 0.52, reset: true, lab: '地裂 · 回涌' }
+],
+lingshuang: [
+{ p: 'ls_stance', d: 0.45, lab: '拄枪 · 凝神' },
+{ p: 'ls_thrust', d: 0.35, fx: 'timestop', lab: '天地停滞 · 枪影铺开' },
+{ p: 'ls_thrust', d: 0.28, dx: 84, hit: 1, launch: true, badge: '寒芒贯日' },
+{ p: 'ls_plant', d: 0.3, reset: true, lab: '冰封 · 收枪' }
+],
+liuyun: [
+{ p: 'ly_fanswipe', d: 0.3, lab: '展扇 · 引风' },
+{ p: 'ly_hover', d: 0.32, dy: -32, fx: 'tornado', badge: '双道龙卷' },
+{ p: 'ly_hover', d: 0.32, dy: -20, hit: 1, launch: true, badge: '卷入高空' },
+{ p: 'victory', d: 0.42, dy: 0, reset: true, lab: '扶摇万里 · 浮空' }
+],
+leiming: [
+{ p: 'lm_kick', d: 0.18, fx: 'thunder', hit: 1, launch: true, badge: '第一道天雷' },
+{ p: 'lm_boxer', d: 0.36, fx: 'thunder', hit: 1, launch: true, badge: '第二道天雷' },
+{ p: 'lm_kick', d: 0.36, fx: 'thunder', hit: 1, launch: true, badge: '第三道天雷' },
+{ p: 'victory', d: 0.42, reset: true, lab: '雷帝灌顶 · 收势' }
+],
+moyu: [
+{ p: 'my_stroke', d: 0.4, lab: '展纸 · 运笔' },
+{ p: 'my_paint', d: 0.55, fx: 'inkdragon', lab: '全场染纸 · 符印浮现' },
+{ p: 'my_paint', d: 0.24, hit: 2, launch: true, badge: '符阵引爆' },
+{ p: 'victory', d: 0.46, reset: true, lab: '朱砂散尽 · 收笔' }
+],
+yuehua: [
+{ p: 'yh_lotus', d: 0.5, fx: 'moonflow', lab: '结月印 · 凝露回气' },
+{ p: 'yh_lotus', d: 0.14, hit: 1, launch: true, badge: '月芒震退' },
+{ p: 'victory', d: 0.38, reset: true, lab: '月魄护体 · 收势' }
+],
+yanling: [
+{ p: 'yl_wings', d: 0.34, dy: -66, lab: '展翼 · 冲上九霄' },
+{ p: 'a1a', d: 0.28, dy: -66, fx: 'featherstorm', count: 7, hit: 2, launch: true, badge: '翎羽齐射' },
+{ p: 'yl_wings', d: 0.28, dy: -40, fx: 'featherstorm', count: 7, hit: 2, launch: true, badge: '破甲暴雨' },
+{ p: 'victory', d: 0.4, dy: 0, reset: true, lab: '凌霄破虚 · 回落' }
+],
+yuxiao: [
+{ p: 'yx_play', d: 0.3, lab: '起奏 · 广陵散' },
+{ p: 'yx_push', d: 0.15, fx: 'note', badge: '音刃一' },
+{ p: 'yx_play', d: 0.15, fx: 'note', badge: '音刃二' },
+{ p: 'yx_push', d: 0.15, fx: 'note', badge: '音刃三' },
+{ p: 'yx_play', d: 0.15, fx: 'note', badge: '音刃四' },
+{ p: 'yx_push', d: 0.15, fx: 'note', badge: '音刃五' },
+{ p: 'yx_play', d: 0.2, fx: 'note', badge: '音刃六' },
+{ p: 'yx_push', d: 0.28, fx: 'guangling', hit: 3, launch: true, badge: '曲终绝响' },
+{ p: 'yx_play', d: 0.42, reset: true, lab: '音律回满 · 曲终' }
+],
+zuixian: [
+{ p: 'zx_drink', d: 0.34, fx: 'shanshui', lab: '举酒 · 展开山水' },
+{ p: 'zx_sway', d: 0.17, hit: 1, badge: '墨染一' }, { p: 'zx_drink', d: 0.17, hit: 1 },
+{ p: 'zx_sway', d: 0.17, hit: 1 }, { p: 'zx_drink', d: 0.17, hit: 1 },
+{ p: 'zx_sway', d: 0.17, hit: 1 }, { p: 'zx_drink', d: 0.17, hit: 1 },
+{ p: 'zx_sway', d: 0.17, hit: 1 }, { p: 'zx_upper', d: 0.2, hit: 1, badge: '八重墨浪' },
+{ p: 'victory', d: 0.4, reset: true, lab: '蓬莱境 · 收卷' }
+],
+gouchen: [
+{ p: 'gc_wind', d: 0.4, lab: '抡锤 · 锁定目标' },
+{ p: 'gc_wind', d: 0.55, fx: 'skynet', hit: 1, badge: '巨锤砸落 · 震晕' },
+{ p: 'gc_pull', d: 0.16, fx: 'magnet', lab: '扯链 · 回锤' },
+{ p: 'gc_sweep', d: 0.3, hit: 2, launch: true, badge: '近身重抡' },
+{ p: 'victory', d: 0.38, reset: true, lab: '震魄 · 收链' }
+],
+lingque: [
+{ p: 'du_l1s', d: 0.2, dy: -60, lab: '跃起 · 织网' },
+{ p: 'du_l2a', d: 0.08, dy: -60, fx: 'needlestorm', hit: 1, badge: '悬丝一' },
+{ p: 'du_l1a', d: 0.08, dy: -60, hit: 1, badge: '悬丝二' },
+{ p: 'du_l2a', d: 0.08, dy: -60, hit: 1, badge: '悬丝三' },
+{ p: 'du_l1a', d: 0.08, dy: -60, hit: 1, badge: '悬丝四' },
+{ p: 'du_l2a', d: 0.08, dy: -60, hit: 1, badge: '悬丝五' },
+{ p: 'du_l1a', d: 0.08, dy: -60, hit: 1, badge: '悬丝六' },
+{ p: 'du_l2a', d: 0.12, dy: -60, hit: 1, badge: '悬丝七' },
+{ p: 'l3a', d: 0.28, dy: 0, hit: 3, launch: true, badge: '终结 · 雀芒入魂' },
+{ p: 'victory', d: 0.38, reset: true, lab: '悬丝归宗 · 落地' }
+],
+liying: [
+{ p: 'fy_seal', d: 0.3, lab: '结印 · 雾身齐发' },
+{ p: 'fy_xslash', d: 0.16, fx: 'mistarray', badge: '雾身刀光' },
+{ p: 'l1a', d: 0.14, hit: 1 }, { p: 'l2a', d: 0.14, hit: 1 },
+{ p: 'dash', d: 0.3, dx: 74, fx: 'blink', lab: '瞬身 · 追至身前' },
+{ p: 'l2a', d: 0.22, hit: 2, launch: true, badge: '本体补刀' },
+{ p: 'victory', d: 0.36, reset: true, lab: '雾身散尽 · 收势' }
+],
+cixian: [
+{ p: 'lm_boxer', d: 0.28, fx: 'magnet', lab: '异极 · 磁石升起' },
+{ p: 'victory', d: 0.5, fx: 'sandwich', lab: '双极合拢 · 吸住目标' },
+{ p: 'lm_jab', d: 0.18, hit: 2, badge: '天地夹击' },
+{ p: 'victory', d: 0.42, reset: true, lab: '定身 · 收势' }
+],
+qianji: [
+{ p: 'fy_seal', d: 0.25, fx: 'recallball', lab: '发条反卷 · 召回傀丸', badge: '傀丸贯穿' },
+{ p: 'qf_charge', d: 0.42, lab: '傀丸疾返 · 穿身而过' },
+{ p: 'spa', d: 0.22, badge: '傀丸回手' },
+{ p: 'victory', d: 0.36, reset: true, lab: '傀丸回手 · 重置投丸' }
+]
+};
 const HERO_FULL_DEMO = {
 liying: [
 { p: 'idle', d: 0.2, reset: true },
@@ -24286,7 +24485,7 @@ const tile = (icon, label, val, desc, cd, wide, moveKey, half) => {
 const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
 const mType = (moveKey && mTypes[moveKey]) || null;
 const rng = (mType && mType.rng) || (moveKey === 'ult' ? 'screen' : moveKey === 'air' ? 'air' : 'melee');
-const mini = moveKey ? `<div class="card-mini-win" data-rng="${rng}"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
+const mini = moveKey ? `<div class="card-mini-win" data-rng="${rng}" data-mv="${moveKey}"><canvas class="card-mini-cv" data-mv="${moveKey}"></canvas><span class="mini-tag">${hit ? hit.badge : val}</span></div>` : '';
 const f = moveKey && fun[moveKey];
 return `<div class="tile t-m${half ? ' half' : wide ? ' wide' : ''}${moveKey ? ' t-has-demo' : ''}${moveKey && cxActiveMove === moveKey ? ' active-demo' : ''}" ${moveKey ? `data-move="${moveKey}" title="点击在主视窗慢放/演示该招式"` : ''}><div class="th">${ic(icon, col)}<span class="tl">${label}</span></div>${mini}${val ? `<div class="tv">${val}</div>` : ''}<div class="td">${desc}</div>${f ? `<div class="tf">“${f}”</div>` : ''}${cd ? `<span class="cd">${cd}</span>` : ''}</div>`;
 };
@@ -24331,7 +24530,7 @@ startCodexCardsDirector();
 let cxCardsRAF = null;
 function codexCardGap(heroId, moveKey) {
 const rng = (HERO_MOVE_TYPES[heroId] && HERO_MOVE_TYPES[heroId][moveKey] && HERO_MOVE_TYPES[heroId][moveKey].rng) || 'melee';
-return ({ self: 8, melee: 68, air: 88, mid: 142, ranged: 194, screen: 220 })[rng] || 68;
+return ({ self: 118, melee: 118, air: 132, mid: 160, ranged: 205, screen: 220 })[rng] || 118;
 }
 function startCodexCardsDirector() {
 if (cxCardsRAF) return;
@@ -24354,9 +24553,10 @@ if (!mv || !HERO_MOVE_SEQS[c.id] || !HERO_MOVE_SEQS[c.id][mv]) continue;
 let p = cv._pup;
 if (!p || p.chIdx !== cxIdx || p.skin !== skin || cv._mv !== mv) {
 p = new Puppet(cxIdx, skin);
-const seq = HERO_MOVE_SEQS[c.id][mv];
-p.playSeq(mv === 'ult' ? seq.map(step => ({ ...step, d: step.d * 2.2 })) : seq, null, true);
+const seq = mv === 'ult' && HERO_ULT_REPLAYS[c.id] ? HERO_ULT_REPLAYS[c.id] : HERO_MOVE_SEQS[c.id][mv];
+p.playSeq(seq, null, true);
 p.setDemoRange(codexCardGap(c.id, mv));
+p.setDemoOpponent((cxIdx + 1) % CHARS.length);
 cv._pup = p;
 cv._mv = mv;
 }
@@ -24372,7 +24572,7 @@ g.setTransform(dpr, 0, 0, dpr, 0, 0);
 g.fillStyle = '#0a0b18';
 g.fillRect(0, 0, cw, chh);
 g.fillStyle = 'rgba(200,180,255,0.08)'; g.fillRect(0, chh * 0.84, cw, 1);
-p.draw(g, cw, chh, chh / 180, true);
+p.draw(g, cw, chh, chh / 180, mv !== 'ult');
 }
 }
 }
@@ -29407,6 +29607,7 @@ this.t = 99;
 this.ox = 0;
 this.x = 0;
 this.y = 0;
+this.oyY = 0;
 this.badges = [];
 this.projs = [];
 this.rings = [];
@@ -29417,18 +29618,29 @@ this.hitQ = [];
 setDemoRange(gap) {
 this.demoTargetX = -60 + gap;
 }
+setDemoOpponent(idx, skin) {
+this.demoTargetPup = new Puppet(idx, skin);
+this.demoTargetPup.face = -1;
+this.demoTargetPose = 'idle';
+this.demoTargetPoseT = 0;
+this.demoTargetDownT = 0;
+this.demoTargetDx = 0;
+this.demoTargetDxGoal = 0;
+}
 set(i, skin) {
 const ch = CHARS[i];
 this.skin = skin === undefined ? mySkin(ch.id) : skin;
 Object.assign(this, { chIdx: i, ch, look: skinLook(i, this.skin), wlen: WEAPON_LEN[ch.look.weapon] || 54, size: ch.size || 1,
-j: {}, k: 0, t: 0, ox: 0, x: 0, y: 0, face: 1, rot: 0, trail: [], scarf: [], idx: 0, state: 'idle', flying: false,
-badges: [], projs: [], rings: [], fx: [], puddles: [], hitQ: [], dummyY: 0, dummyVy: 0, dummyShake: 0, flashT: 0, dimT: 0 });
+j: {}, k: 0, t: 0, ox: 0, x: 0, y: 0, oyY: 0, face: 1, rot: 0, trail: [], scarf: [], idx: 0, state: 'idle', flying: false,
+badges: [], projs: [], rings: [], fx: [], puddles: [], hitQ: [], dummyY: 0, dummyVy: 0, dummyShake: 0, flashT: 0, dimT: 0,
+sandwichT: 0, shanshuiT: 0, inkT: 0, netT: 0 });
 for (const k of JOINTS) this.j[k] = [...POSES.idle[k]]; this.j.sw = POSES.idle.sw;
 this.sk = skeleton(this);
 }
 update(dt) {
 const defaultSeq = (HERO_FULL_DEMO && HERO_FULL_DEMO[this.ch.id]) ? HERO_FULL_DEMO[this.ch.id] : DEMO2;
 let steps = this.customSeq || defaultSeq;
+const targetX = this.demoTargetX === undefined ? 60 : this.demoTargetX;
 this.t += dt;
 this.hitQ = this.hitQ || [];
 if (this.fx === undefined) {
@@ -29442,6 +29654,8 @@ this.t = 0; this.k++;
 if (this.k >= steps.length) {
 if (this.loopCustom) {
 this.k = 0;
+this.ox = 0; this.x = 0; this.oyY = 0;
+this.demoTargetDxGoal = 0;
 } else if (this.customSeq) {
 this.customSeq = null;
 this.customLab = null;
@@ -29453,8 +29667,9 @@ this.k = 0;
 }
 }
 const st = steps[this.k], ch = this.ch;
-if (st.reset) { this.ox = 0; this.x = 0; }
+if (st.reset) { this.ox = 0; this.x = 0; this.oyY = 0; }
 this.ox += st.dx || 0;
+if (st.dy !== undefined) this.oyY = st.dy;
 if (this.customLab) this.lab = this.customLab;
 else if (st.lab) this.lab = { L: '左键 · 连击', Q: `Q · ${SKILLS[ch.skill].name}`, R: `左键+右键 · ${SKILLS[ch.skill2].name}`, E: `E · ${ULTS[ch.ult].name}`, '按住蓄力': '按住左键 · 蓄力', '空中': '空中斩', '腾空闪': '右键 · 腾空闪' }[st.lab] || st.lab;
 if (st.hit) this.hitQ.push({ t: 0.045, n: st.hit, launch: st.launch, badge: st.badge });
@@ -29463,23 +29678,23 @@ else if (st.fx === 'swordqi') { this.projs.push({ kind: 'swordqi', x: this.x + 3
 else if (st.fx === 'gale') { this.rings.push({ x: this.x + 20, y: -62, r: 18, life: 0.4 }, { x: 60, y: -62, r: 24, life: 0.4 }); this.fx.push({ x: this.x + 20, y: -62, vx: 700, vy: 0, life: 0.2, c: '120,230,255' }); }
 else if (st.fx === 'quake') { this.projs.push({ kind: 'quake', x: this.x + 20, y: 0, vx: 560, life: 0.45, col: '255,200,120' }); for (let k = 0; k < 6; k++) this.fx.push({ x: this.x + 20 + rand(-10, 10), y: 0, vx: rand(100, 300), vy: -rand(150, 350), life: 0.35, c: '200,160,100' }); }
 else if (st.fx === 'ironwall') { this.rings.push({ x: this.x + 10, y: -60, r: 30, life: 0.45 }); this.flashT = 0.15; }
-else if (st.fx === 'crescent') { this.flashT = 0.25; this.dimT = 0.6; this.rings.push({ x: this.x + 30, y: -60, r: 45, life: 0.45, col: this.look.slash }, { x: 60, y: -60, r: 32, life: 0.4, col: '255,255,255' }); }
-else if (st.fx === 'avalanche') { this.flashT = 0.3; this.dimT = 0.7; this.rings.push({ x: 60, y: 0, r: 50, life: 0.55, col: '255,210,140' }, { x: this.x, y: 0, r: 35, life: 0.45 }); for (let k = 0; k < 12; k++) this.fx.push({ x: 60 + rand(-25, 25), y: 0, vx: rand(-240, 240), vy: -rand(200, 480), life: 0.48, c: '220,180,120' }); }
+else if (st.fx === 'crescent') { this.flashT = 0.25; this.dimT = 0.6; this.rings.push({ x: this.x + 30, y: -60, r: 45, life: 0.45, col: this.look.slash }, { x: targetX, y: -60, r: 32, life: 0.4, col: '255,255,255' }); }
+else if (st.fx === 'avalanche') { this.flashT = 0.3; this.dimT = 0.7; this.rings.push({ x: this.x, y: 0, r: 50, life: 0.55, col: '255,210,140' }, { x: this.x, y: 0, r: 35, life: 0.45 }); for (let k = 0; k < 12; k++) this.fx.push({ x: this.x + rand(-25, 25), y: 0, vx: rand(-240, 240), vy: -rand(200, 480), life: 0.48, c: '220,180,120' }); }
 else if (st.fx === 'blink') { for (let k = 0; k < 10; k++) this.fx.push({ x: this.x, y: -60 + rand(-20, 20), vx: rand(-80, 80), vy: rand(-80, 80), life: 0.3, c: '40,30,50' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60, y: -62 + rand(-20, 20), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.3, c: '255,95,115' }); }
 else if (st.fx === 'kunai') { for (const a of [-0.15, 0, 0.15]) this.projs.push({ kind: 'kunai', x: this.x + 25, y: -65, vx: 1100 * Math.cos(a), vy: 1100 * Math.sin(a), life: 0.4, col: '200,200,220' }); }
-else if (st.fx === 'shadows') { this.flashT = 0.28; this.dimT = 0.65; this.rings.push({ x: 60, y: -62, r: 42, life: 0.5, col: '255,60,80' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60 + rand(-20, 20), y: -60 + rand(-20, 20), vx: rand(-160, 160), vy: rand(-160, 160), life: 0.35, c: '255,80,100' }); }
+else if (st.fx === 'shadows') { this.flashT = 0.28; this.dimT = 0.65; this.rings.push({ x: targetX, y: -62, r: 42, life: 0.5, col: '255,60,80' }); for (let k = 0; k < 8; k++) this.fx.push({ x: targetX + rand(-20, 20), y: -60 + rand(-20, 20), vx: rand(-160, 160), vy: rand(-160, 160), life: 0.35, c: '255,80,100' }); }
 else if (st.fx === 'windblade') { this.projs.push({ kind: 'wind', x: this.x + 30, y: -62, vx: 1000, life: 0.45, col: '150,255,200' }); }
 else if (st.fx === 'windstep') { this.rings.push({ x: this.x + 20, y: -60, r: 32, life: 0.35 }); for (let k = 0; k < 8; k++) this.fx.push({ x: this.x + 10, y: -60 + rand(-20, 20), vx: rand(-150, 150), vy: rand(-100, 100), life: 0.25, c: '150,255,200' }); }
 else if (st.fx === 'tornado') { this.dimT = 0.6; this.projs.push({ kind: 'tornado', x: this.x + 30, y: -70, vx: 360, life: 0.85, col: '150,255,200' }, { kind: 'tornado', x: this.x + 75, y: -70, vx: 420, life: 0.95, col: '180,255,230' }); }
 else if (st.fx === 'thunderfist') { this.rings.push({ x: this.x + 20, y: -62, r: 24, life: 0.35 }); for (let k = 0; k < 10; k++) this.fx.push({ x: this.x + rand(-10, 30), y: -62 + rand(-25, 25), vx: rand(-180, 180), vy: rand(-180, 180), life: 0.25, c: '255,230,120' }); }
 else if (st.fx === 'stomp') { this.projs.push({ kind: 'bolt', x: 60, y: -200, vx: 0, life: 0.35, col: '255,240,150' }); this.rings.push({ x: 60, y: 0, r: 25, life: 0.3 }); }
-else if (st.fx === 'thunder') { this.flashT = 0.32; this.dimT = 0.7; this.projs.push({ kind: 'bolt', x: 60, y: -220, vx: 0, life: 0.55, col: '255,240,150' }, { kind: 'bolt', x: 45, y: -220, vx: 0, life: 0.45, col: '255,255,200' }); this.rings.push({ x: 60, y: 0, r: 42, life: 0.45, col: '255,230,120' }); }
+else if (st.fx === 'thunder') { this.flashT = 0.32; this.dimT = 0.7; const count = st.count || 1; for (let k = 0; k < count; k++) this.projs.push({ kind: 'bolt', x: targetX + k * 14, y: -220, vx: 0, life: 0.55, col: k % 2 ? '255,255,200' : '255,240,150' }); this.rings.push({ x: targetX, y: 0, r: 42, life: 0.45, col: '255,230,120' }); }
 else if (st.fx === 'backthrust') { this.rings.push({ x: 60, y: -68, r: 20, life: 0.3 }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60, y: -68, vx: rand(100, 300), vy: rand(-120, 120), life: 0.25, c: '170,220,255' }); }
 else if (st.fx === 'spin') { this.rings.push({ x: this.x + 25, y: -65, r: 28, life: 0.35 }); }
-else if (st.fx === 'timestop') { this.flashT = 0.35; this.dimT = 0.75; this.rings.push({ x: 60, y: -65, r: 45, life: 0.45, col: '180,230,255' }, { x: this.x + 30, y: -65, r: 30, life: 0.35 }); }
+else if (st.fx === 'timestop') { this.flashT = 0.35; this.dimT = 0.75; this.rings.push({ x: targetX, y: -65, r: 45, life: 0.45, col: '180,230,255' }, { x: this.x + 30, y: -65, r: 30, life: 0.35 }); }
 else if (st.fx === 'inktrap') { this.puddles.push({ x: 60, life: 2.5 }); }
 else if (st.fx === 'inkblob') { this.projs.push({ kind: 'inkblob', x: this.x + 25, y: -80, vx: 450, vy: -380, g: 1400, life: 0.6, col: '40,40,55' }); }
-else if (st.fx === 'inkdragon') { this.dimT = 0.8; this.projs.push({ kind: 'dragon', x: this.x + 30, y: -65, vx: 620, life: 0.85, col: '25,25,35' }); this.flashT = 0.25; this.rings.push({ x: 60, y: -65, r: 45, life: 0.5, col: '230,70,50' }); }
+else if (st.fx === 'inkdragon') { this.dimT = 0.8; this.inkT = 1.0; this.flashT = 0.25; this.rings.push({ x: targetX, y: -65, r: 45, life: 0.5, col: '230,70,50' }); }
 else if (st.fx === 'mist') { this.rings.push({ x: this.x, y: -60, r: 22, life: 0.5, col: '127,214,224' }); for (let k = 0; k < 8; k++) this.fx.push({ x: this.x + rand(-12, 12), y: -60 + rand(-30, 30), vx: rand(-40, 40), vy: -rand(20, 80), life: 0.5, c: '127,214,224' }); }
 else if (st.fx === 'mistswap') { this.rings.push({ x: this.x, y: -60, r: 26, life: 0.35, col: '127,214,224' }); for (let k = 0; k < 10; k++) this.fx.push({ x: this.x + rand(-10, 10), y: -60 + rand(-25, 25), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.3, c: '127,214,224' }); }
 else if (st.fx === 'mistarray') { this.flashT = 0.25; this.dimT = 0.65; for (const dx of [-120, -60]) this.projs.push({ kind: 'wind', x: this.x + dx, y: -62, vx: 1100, life: 0.4, col: '127,214,224' }); this.rings.push({ x: 60, y: -62, r: 40, life: 0.5, col: '127,214,224' }); }
@@ -29488,25 +29703,37 @@ else if (st.fx === 'moonring') { this.projs.push({ kind: 'moonring', x: this.x +
 else if (st.fx === 'moonflow') { this.dimT = 0.65; this.flashT = 0.25; this.rings.push({ x: this.x, y: -60, r: 48, life: 0.55, col: '215,195,255' }, { x: this.x, y: -60, r: 28, life: 0.45, col: '180,255,200' }); this.badges.push({ text: '+60', x: this.x, y: -105, life: 0.85, max: 0.85 }); }
 else if (st.fx === 'dive') { this.rings.push({ x: 60, y: -40, r: 22, life: 0.3, col: '140,190,255' }); }
 else if (st.fx === 'feather') { for (const dy of [-12, 0, 12]) this.projs.push({ kind: 'feather', x: this.x + 25, y: -68 + dy, vx: 950, life: 0.45, col: '160,205,255' }); }
-else if (st.fx === 'featherstorm') { this.flashT = 0.25; this.dimT = 0.65; for (let k = 0; k < 8; k++) this.projs.push({ kind: 'feather', x: 60 + rand(-35, 35), y: -220 - k * 28, vx: rand(-30, 30), vy: 980, life: 0.42, col: '160,205,255' }); }
-else if (st.fx === 'shanshui') { this.flashT = 0.25; this.dimT = 0.8; this.rings.push({ x: 60, y: -60, r: 45, life: 0.55, col: '233,196,106' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60 + rand(-30, 30), y: -60 + rand(-30, 30), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.4, c: '20,20,30' }); }
-else if (st.fx === 'skynet') { this.flashT = 0.28; this.dimT = 0.7; this.rings.push({ x: 60, y: 0, r: 50, life: 0.55, col: '235,205,130' }); for (let k = 0; k < 8; k++) this.fx.push({ x: 60 + rand(-20, 20), y: 0, vx: rand(-150, 150), vy: -rand(120, 360), life: 0.4, c: '200,160,100' }); }
+else if (st.fx === 'featherstorm') { this.flashT = 0.25; this.dimT = 0.65; const count = st.count || 8; for (let k = 0; k < count; k++) this.projs.push({ kind: 'feather', x: targetX + rand(-35, 35), y: -220 - k * 28, vx: rand(-30, 30), vy: 980, life: 0.42, col: '160,205,255' }); }
+else if (st.fx === 'shanshui') { this.flashT = 0.25; this.dimT = 0.8; this.shanshuiT = 2.2; this.rings.push({ x: targetX, y: -60, r: 45, life: 0.55, col: '233,196,106' }); for (let k = 0; k < 8; k++) this.fx.push({ x: targetX + rand(-30, 30), y: -60 + rand(-30, 30), vx: rand(-120, 120), vy: rand(-120, 120), life: 0.4, c: '20,20,30' }); }
+else if (st.fx === 'skynet') { this.flashT = 0.28; this.dimT = 0.7; this.netT = 0.7; this.rings.push({ x: targetX, y: 0, r: 50, life: 0.55, col: '235,205,130' }); for (let k = 0; k < 8; k++) this.fx.push({ x: targetX + rand(-20, 20), y: 0, vx: rand(-150, 150), vy: -rand(120, 360), life: 0.4, c: '200,160,100' }); }
+else if (st.fx === 'recallball') { this.rings.push({ x: targetX + 42, y: -55, r: 22, life: 0.35, col: '255,225,120' }); this.projs.push({ kind: 'ironball', x: targetX + 56, y: -58, vx: -1050, life: 0.5, col: '255,205,90', badge: st.badge }); }
+else if (st.fx === 'magnet') { this.rings.push({ x: targetX, y: -60, r: 35, life: 0.55, col: '110,170,255' }, { x: targetX, y: -60, r: 18, life: 0.45, col: '255,100,90' }); for (let k = 0; k < 10; k++) this.fx.push({ x: targetX + rand(-32, 32), y: -100 + k * 8, vx: rand(-40, 40), vy: rand(70, 150), life: 0.45, c: k % 2 ? '110,170,255' : '255,100,90' }); }
+else if (st.fx === 'sandwich') { this.sandwichT = 0.72; this.rings.push({ x: targetX, y: -20, r: 40, life: 0.65, col: '110,170,255' }); }
+else if (st.fx === 'needlestorm') { this.flashT = 0.12; for (let k = 0; k < 12; k++) this.projs.push({ kind: 'spindle', x: targetX + rand(-55, 55), y: -190 - k * 8, vx: rand(-35, 35), vy: 420 + k * 24, life: 0.48, col: '235,110,210' }); this.rings.push({ x: targetX, y: -60, r: 55, life: 0.35, col: '235,110,210' }); }
 else if (st.fx === 'note') { this.rings.push({ x: this.x + 25, y: -65, r: 24, life: 0.4, col: '150,240,200' }); this.projs.push({ kind: 'proj', x: this.x + 30, y: -65, vx: 800, life: 0.45, col: '150,240,200' }); }
-else if (st.fx === 'guangling') { this.flashT = 0.28; this.dimT = 0.7; this.rings.push({ x: 60, y: -65, r: 42, life: 0.5, col: '150,240,200' }, { x: 60, y: 0, r: 35, life: 0.45, col: '233,196,106' }); for (let k = 0; k < 6; k++) this.fx.push({ x: 60 + rand(-20, 20), y: -60 + rand(-20, 20), vx: rand(-140, 140), vy: rand(-140, 140), life: 0.35, c: '150,240,200' }); }
+else if (st.fx === 'guangling') { this.flashT = 0.28; this.dimT = 0.7; this.rings.push({ x: targetX, y: -65, r: 42, life: 0.5, col: '150,240,200' }, { x: targetX, y: 0, r: 35, life: 0.45, col: '233,196,106' }); for (let k = 0; k < 6; k++) this.fx.push({ x: targetX + rand(-20, 20), y: -60 + rand(-20, 20), vx: rand(-140, 140), vy: rand(-140, 140), life: 0.35, c: '150,240,200' }); }
 }
 const st = steps[this.k], name = st.p, p = POSES[name] || POSES.idle, a = 1 - Math.exp(-(DEMO_SWING.has(name) ? 55 : 22) * dt);
 for (const k of JOINTS) { this.j[k][0] += (p[k][0] - this.j[k][0]) * a; this.j[k][1] += (p[k][1] - this.j[k][1]) * a; }
 this.j.sw += (p.sw - this.j.sw) * a;
 this.flying = false; this.state = 'idle';
-this.y = damp(this.y, 0, 9, dt); this.x = damp(this.x, this.ox - 60, 10, dt);
+this.y = damp(this.y, this.oyY || 0, 9, dt); this.x = damp(this.x, this.ox - 60, 10, dt);
 this.sk = skeleton(this);
 if (DEMO_SWING.has(name) && this.t < 0.14) this.trail.push({ b: this.sk.bladeMid, t: this.sk.tip, life: 1 });
 for (const e of this.trail) e.life -= dt / 0.18;
 while (this.trail.length && this.trail[0].life <= 0) this.trail.shift();
-const targetX = this.demoTargetX === undefined ? 60 : this.demoTargetX;
 const hit = (n, launch, badge) => {
 this.dummyShake = Math.min(0.7, this.dummyShake + 0.22 * n);
-if (launch) this.dummyVy = -320 * Math.min(1.5, Math.sqrt(n));
+if (launch) {
+this.dummyVy = -320 * Math.min(1.5, Math.sqrt(n));
+this.demoTargetPose = 'hurtAir';
+this.demoTargetDownT = 0.58;
+this.demoTargetPoseT = 0.22;
+this.demoTargetDxGoal = Math.min(58, (this.demoTargetDxGoal || 0) + 30);
+} else if (this.demoTargetPup) {
+this.demoTargetPose = 'hurt';
+this.demoTargetPoseT = 0.26;
+}
 for (let k = 0; k < 8 * n; k++) {
 const an = rand(-2.4, 0.6), v = rand(120, 400);
 this.fx.push({ x: targetX, y: -62 + this.dummyY + rand(-16, 16), vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: rand(0.18, 0.35), c: Math.random() < 0.35 ? '255,255,255' : this.look.slash });
@@ -29523,9 +29750,9 @@ p.y = (p.y || -62) + (p.vy || 0) * dt;
 if (p.g) p.vy += p.g * dt;
 p.life -= dt;
 if (p.kind === 'moonring' && p.life < 0.35 && p.vx > 0) p.vx = -p.vx;
-if (!p.hitDone && p.vx > 0 && prevX <= targetX && p.x >= targetX) {
+if (!p.hitDone && ((p.vx > 0 && prevX <= targetX && p.x >= targetX) || (p.vx < 0 && prevX >= targetX && p.x <= targetX))) {
 p.hitDone = true;
-hit(1.2, p.kind === 'tornado' || p.kind === 'bolt' || p.kind === 'dragon');
+hit(1.2, p.kind === 'tornado' || p.kind === 'bolt' || p.kind === 'dragon' || p.kind === 'ironball', p.badge);
 }
 }
 this.projs = this.projs.filter(p => p.life > 0);
@@ -29533,6 +29760,21 @@ this.dummyY += this.dummyVy * dt;
 this.dummyVy += 1300 * dt;
 if (this.dummyY >= 0) { this.dummyY = 0; this.dummyVy = 0; }
 this.dummyShake = Math.max(0, this.dummyShake - dt * 2.2);
+if (this.demoTargetPup) {
+this.demoTargetPoseT = Math.max(0, (this.demoTargetPoseT || 0) - dt);
+this.demoTargetDownT = Math.max(0, (this.demoTargetDownT || 0) - dt);
+this.demoTargetDx = damp(this.demoTargetDx || 0, this.demoTargetDxGoal || 0, 5, dt);
+if (this.demoTargetDownT <= 0 && this.demoTargetPoseT <= 0) this.demoTargetPose = 'idle';
+const targetPose = this.demoTargetPoseT > 0 ? (this.demoTargetPose || 'hurt') : this.demoTargetDownT > 0 ? 'lying' : 'idle';
+const targetDef = POSES[targetPose] || POSES.idle, targetPup = this.demoTargetPup;
+for (const k of JOINTS) {
+targetPup.j[k][0] += (targetDef[k][0] - targetPup.j[k][0]) * (1 - Math.exp(-32 * dt));
+targetPup.j[k][1] += (targetDef[k][1] - targetPup.j[k][1]) * (1 - Math.exp(-32 * dt));
+}
+targetPup.j.sw += (targetDef.sw - targetPup.j.sw) * (1 - Math.exp(-32 * dt));
+targetPup.sk = skeleton(targetPup);
+updateScarf(targetPup);
+}
 for (const b of this.badges) { b.y -= 25 * dt; b.life -= dt; }
 this.badges = this.badges.filter(b => b.life > 0);
 for (const pud of this.puddles) pud.life -= dt;
@@ -29543,6 +29785,10 @@ for (const r of this.rings) { r.r += 260 * dt; r.life -= dt; }
 this.rings = this.rings.filter(r => r.life > 0);
 this.flashT = Math.max(0, this.flashT - dt);
 this.dimT = Math.max(0, (this.dimT || 0) - dt);
+this.sandwichT = Math.max(0, (this.sandwichT || 0) - dt);
+this.shanshuiT = Math.max(0, (this.shanshuiT || 0) - dt);
+this.inkT = Math.max(0, (this.inkT || 0) - dt);
+this.netT = Math.max(0, (this.netT || 0) - dt);
 updateScarf(this);
 }
 draw(g, w, h, scale, hideLabel = false) {
@@ -29559,11 +29805,21 @@ ctx.strokeStyle = 'rgba(40,40,65,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
 }
 const tilt = Math.sin(performance.now() / 25) * this.dummyShake;
 const targetX = this.demoTargetX === undefined ? 60 : this.demoTargetX;
+if (this.demoTargetPup) {
+const foe = this.demoTargetPup, fx = targetX + (this.demoTargetDx || 0);
+ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(fx, 2, 34, 7, 0, 0, Math.PI * 2); ctx.fill();
+ctx.save(); ctx.translate(fx, -60 + this.dummyY); ctx.rotate(tilt); ctx.scale(-1, 1);
+if (foe.size !== 1) ctx.scale(foe.size, foe.size);
+if (foe.ch.fly) drawWings(foe.sk, foe);
+drawScarf(foe); drawBody(foe.sk, foe, { flash: this.dummyShake > 0.2 });
+ctx.restore();
+} else {
 ctx.save(); ctx.translate(targetX, -60 + this.dummyY); ctx.rotate(tilt); ctx.translate(0, 60);
 ctx.fillStyle = '#4a3322'; ctx.fillRect(-3, -118, 6, 118); ctx.fillRect(-30, -88, 60, 5);
 ctx.fillStyle = this.dummyShake > 0.2 ? '#f5e6c4' : '#b08a5a'; ctx.beginPath(); ctx.ellipse(0, -76, 18, 27, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -114, 12, 0, 7); ctx.fill();
 ctx.strokeStyle = '#6b4f30'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-16, -86); ctx.lineTo(16, -86); ctx.moveTo(-16, -64); ctx.lineTo(16, -64); ctx.stroke();
 ctx.restore();
+}
 ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(this.x, 2, 36, 7, 0, 0, Math.PI * 2); ctx.fill();
 ctx.save();
 if (this.size !== 1) { ctx.translate(this.x, 0); ctx.scale(this.size, this.size); ctx.translate(-this.x, 0); }
@@ -29571,6 +29827,22 @@ if (this.ch.fly) drawWings(this.sk, this);
 drawScarf(this); drawBody(this.sk, this, {});
 ctx.restore();
 drawTrail(this);
+if (this.sandwichT > 0) {
+const x = targetX + (this.demoTargetDx || 0), k = 1 - this.sandwichT / 0.72;
+const gap = 180 - 115 * k;
+ctx.fillStyle = `rgba(90,155,255,${0.25 + k * 0.35})`; ctx.fillRect(x - 28, -60 - gap, 56, 12);
+ctx.fillStyle = `rgba(255,95,90,${0.25 + k * 0.35})`; ctx.fillRect(x - 28, -48 + gap, 56, 12);
+ctx.strokeStyle = 'rgba(230,230,255,0.65)'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(x - 20, -60 - gap + 12); ctx.lineTo(x - 8, -45); ctx.moveTo(x + 20, -60 - gap + 12); ctx.lineTo(x + 8, -45); ctx.stroke();
+}
+if (this.netT > 0) {
+const x = targetX + (this.demoTargetDx || 0), t = this.netT / 0.7;
+ctx.strokeStyle = `rgba(235,205,130,${t * 0.8})`; ctx.lineWidth = 2;
+for (let k = -2; k <= 2; k++) {
+ctx.beginPath(); ctx.moveTo(x + k * 12, -176); ctx.lineTo(x + k * 12, -8); ctx.stroke();
+ctx.beginPath(); ctx.moveTo(x - 34, -100 + k * 18); ctx.lineTo(x + 34, -100 + k * 18); ctx.stroke();
+}
+}
 ctx.globalCompositeOperation = 'lighter';
 for (const r of this.rings) {
 const rc = r.col || this.look.slash;
@@ -29622,6 +29894,9 @@ ctx.beginPath(); ctx.moveTo(p.x - 8, p.y); ctx.lineTo(p.x + 8, p.y); ctx.stroke(
 } else if (p.kind === 'spindle') {
 ctx.fillStyle = `rgba(${col},0.95)`; ctx.beginPath(); ctx.ellipse(p.x, p.y, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
 ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x - 14, p.y); ctx.lineTo(p.x + 14, p.y); ctx.stroke();
+} else if (p.kind === 'ironball') {
+ctx.fillStyle = `rgba(${col},0.95)`; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, Math.PI * 2); ctx.fill();
+ctx.strokeStyle = 'rgba(255,250,210,0.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 13, -1.1, 1.1); ctx.stroke();
 } else if (p.kind === 'kunai') {
 ctx.fillStyle = '#eee'; ctx.beginPath(); ctx.moveTo(p.x + 8, p.y); ctx.lineTo(p.x - 6, p.y - 4); ctx.lineTo(p.x - 6, p.y + 4); ctx.fill();
 } else {
@@ -29631,6 +29906,22 @@ ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(p.x + 3, p.y, 6, 3, 0, 0, M
 }
 ctx.globalCompositeOperation = 'source-over';
 ctx.restore();
+if (this.shanshuiT > 0) {
+const progress = 1 - this.shanshuiT / 2.2, cover = h * clamp(progress, 0, 1);
+ctx.save(); ctx.beginPath(); ctx.rect(0, 0, w, cover); ctx.clip();
+ctx.fillStyle = 'rgba(226,215,184,0.94)'; ctx.fillRect(0, 0, w, cover);
+ctx.fillStyle = 'rgba(35,39,48,0.92)'; ctx.beginPath(); ctx.moveTo(0, h * 0.72); ctx.lineTo(w * 0.22, h * 0.34); ctx.lineTo(w * 0.36, h * 0.62); ctx.lineTo(w * 0.57, h * 0.22); ctx.lineTo(w * 0.78, h * 0.58); ctx.lineTo(w, h * 0.30); ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.fill();
+ctx.fillStyle = 'rgba(15,20,28,0.9)'; ctx.fillRect(0, cover - 3, w, 4);
+ctx.restore();
+}
+if (this.inkT > 0) {
+const alpha = Math.min(0.7, this.inkT * 0.72), sx = w / 2 + (targetX + (this.demoTargetDx || 0)) * scale, sy = h * 0.84 - 154 * scale;
+ctx.fillStyle = `rgba(235,220,190,${alpha * 0.72})`; ctx.fillRect(0, 0, w, h);
+ctx.strokeStyle = `rgba(190,45,45,${alpha})`; ctx.lineWidth = 3;
+ctx.beginPath(); ctx.arc(sx, sy, 17 * scale, 0, Math.PI * 2); ctx.stroke();
+ctx.fillStyle = `rgba(190,45,45,${alpha})`; ctx.fillRect(sx - 4 * scale, sy - 11 * scale, 8 * scale, 22 * scale);
+ctx.beginPath(); ctx.moveTo(sx - 9 * scale, sy); ctx.lineTo(sx + 9 * scale, sy); ctx.stroke();
+}
 if (this.flashT > 0) { ctx.fillStyle = `rgba(${this.look.slash},${this.flashT})`; ctx.fillRect(0, 0, w, h); }
 for (const b of this.badges) {
 const alpha = Math.min(1, b.life * 2.5);
@@ -29674,8 +29965,15 @@ curMv = undefined;
 }
 if (mv !== curMv) {
 curMv = mv;
-if (mv && HERO_MOVE_SEQS[CHARS[i].id] && HERO_MOVE_SEQS[CHARS[i].id][mv]) {
-pup.playSeq(HERO_MOVE_SEQS[CHARS[i].id][mv], null, true);
+const seq = mv === 'ult' && HERO_ULT_REPLAYS[CHARS[i].id]
+? HERO_ULT_REPLAYS[CHARS[i].id]
+: HERO_MOVE_SEQS[CHARS[i].id] && HERO_MOVE_SEQS[CHARS[i].id][mv];
+if (mv && seq) {
+pup.playSeq(seq, null, true);
+if (mv === 'ult') {
+pup.setDemoRange(({ melee: 118, mid: 160, ranged: 205, screen: 220 })[(HERO_MOVE_TYPES[CHARS[i].id] || {}).ult?.rng] || 160);
+pup.setDemoOpponent((i + 1) % CHARS.length);
+}
 } else {
 pup.playSeq(HERO_FULL_DEMO[CHARS[i].id] || DEMO2, null, true);
 }

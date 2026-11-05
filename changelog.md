@@ -6,6 +6,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- **Hero ultimate previews**: expanded all 16 Codex replays into distinct windup, travel, multi-hit, impact, and recovery phases. Cards now show a rival fighter reacting to hits, with hero-specific ultimate effects and enough frame space to follow the sequence.
+
 ---
 
 ## [1.0.6] - 2026-11-05

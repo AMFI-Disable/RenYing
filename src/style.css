@@ -442,6 +442,7 @@
   .t-has-demo:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.4); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
   .t-has-demo.active-demo { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,196,106,.5), 0 8px 24px rgba(0,0,0,.45); background: rgba(233,196,106,.08); }
   .card-mini-win { width: 100%; height: 76px; border-radius: 8px; overflow: hidden; background: #070814; border: 1px solid rgba(255,255,255,.08); margin: 6px 0 8px; position: relative; }
+  .card-mini-win[data-mv="ult"] { height: 136px; }
   .card-mini-win::after { content: ''; position: absolute; left: 0; bottom: 0; right: 0; height: 2px; background: rgba(255,255,255,.08); pointer-events: none; }
   .card-mini-win[data-rng="melee"]::after { background: linear-gradient(90deg, #ff8a8a, transparent); }
   .card-mini-win[data-rng="mid"]::after { background: linear-gradient(90deg, #f3cf7a, transparent); }
