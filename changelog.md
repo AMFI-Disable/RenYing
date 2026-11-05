@@ -12,6 +12,16 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ---
 
+## [1.0.4] - 2026-11-05
+
+### Changed
+
+- **Release consistency**: updated the client version, README badges, generated pages, and Open World test fixtures to 1.0.4.
+- **Account synchronization**: cloud-owned win/loss counters no longer merge by taking independent maximums, and an unchanged cloud profile is not uploaded again on every boot.
+- **Backup clarity**: account imports explicitly identify the account switch and warn when a legacy backup only has a partial signature.
+
+---
+
 ## [1.0.3] - 2026-11-04
 
 ### Added

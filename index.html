@@ -5062,8 +5062,8 @@ pity: Math.max(Math.floor(+p1.pity || 0), Math.floor(+p2.pity || 0)),
 spity: Math.max(Math.floor(+p1.spity || 0), Math.floor(+p2.spity || 0)),
 skins,
 equip,
-netWins: Math.max(Math.floor(+p1.netWins || 0), Math.floor(+p2.netWins || 0)),
-netLosses: Math.max(Math.floor(+p1.netLosses || 0), Math.floor(+p2.netLosses || 0)),
+netWins: Math.floor(+p2.netWins || 0),
+netLosses: Math.floor(+p2.netLosses || 0),
 rating: Math.max(Math.floor(+p1.rating || 1100), Math.floor(+p2.rating || 1100)),
 placed: Math.max(Math.floor(+p1.placed || 0), Math.floor(+p2.placed || 0)),
 stageStars,
@@ -5546,7 +5546,7 @@ if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }
 if (local && local.ink) ledgerNote(u.uid, local.ink);
 adoptProfile(u.uid, merged, res.ledger);
 }
-const localChanged = !local || progressKey(merged) !== progressKey(cloudData) ||
+const localChanged = !!local && progressKey(merged) !== progressKey(cloudData) ||
 (res.ledger ? LEDGER.un.length > 0 : (merged.ink || 0) > (cloudData.ink || 0));
 try {
 localStorage.removeItem(dirtyKey());
@@ -11457,7 +11457,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.0.3';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.4';         // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜

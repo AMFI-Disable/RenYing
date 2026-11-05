@@ -617,8 +617,11 @@
       spity: Math.max(Math.floor(+p1.spity || 0), Math.floor(+p2.spity || 0)),
       skins,
       equip,
-      netWins: Math.max(Math.floor(+p1.netWins || 0), Math.floor(+p2.netWins || 0)),
-      netLosses: Math.max(Math.floor(+p1.netLosses || 0), Math.floor(+p2.netLosses || 0)),
+      // These counters are server-owned increments, not independent snapshots.
+      // progAdopt() reconciles local increments; taking max here can create a
+      // loss without its matching win when two devices have different totals.
+      netWins: Math.floor(+p2.netWins || 0),
+      netLosses: Math.floor(+p2.netLosses || 0),
       rating: Math.max(Math.floor(+p1.rating || 1100), Math.floor(+p2.rating || 1100)),
       placed: Math.max(Math.floor(+p1.placed || 0), Math.floor(+p2.placed || 0)),
       stageStars,
@@ -1174,7 +1177,7 @@
           }
 
           // 合并后和云端那份不一样（本机多了角色、皮肤、关卡星、列传、碎片……），或者还有没报上去的墨锭，就补传
-          const localChanged = !local || progressKey(merged) !== progressKey(cloudData) ||
+          const localChanged = !!local && progressKey(merged) !== progressKey(cloudData) ||
             (res.ledger ? LEDGER.un.length > 0 : (merged.ink || 0) > (cloudData.ink || 0));
 
           try {
