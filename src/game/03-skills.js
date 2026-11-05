@@ -13,11 +13,11 @@ function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
   return foe || (typeof foeOf === 'function' ? foeOf(f) : null);
 }
 const sdAim = (f, t) => Math.atan2(t.y - f.y, t.x - f.x);   // 两人都按身体中间（脚下往上 50）算，高度差就是 y 差
-// 凌雀雀芒印记：上限 5 层，每次施加刷新 15 秒持续时间
+// 凌雀雀芒印记：上限 5 层，每次施加刷新 5 秒持续时间
 function addNeedleMark(target, count = 1) {
   if (!target || target.hp <= 0) return;
   target.needleMark = Math.min(5, (target.needleMark || 0) + count);
-  target.needleMarkT = 15.0;
+  target.needleMarkT = 5.0;
   if (!RESIM) {
     ring(target.x, target.y - 50, 60, '235,110,210', 0.25);
     addP({ type: 'text', text: `✦ 雀芒印记 (${Math.round(target.needleMark)}/5)`, x: target.x, y: target.y - 100, life: 0.8, max: 0.8, rgb: '235,110,210' });
@@ -502,7 +502,7 @@ const SKILLS = {
     },
     pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
     ai: (me, foe, d) => d < 170 },
-  spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 15 秒【雀芒】印记（最多 5 层）并造成 30 伤害。',
+  spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 5 秒【雀芒】印记（最多 5 层）并造成 30 伤害。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.12) {
@@ -514,7 +514,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
-  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆 1 层悬丝真气造成 38 爆炸伤害与挑空，并立即清零移形换影冷却（若目标带多层印记，可连续五发换影不休）！',
+  shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆 1 层悬丝真气造成 30 爆炸伤害与挑空，并立即清零移形换影冷却（若目标带多层印记，可连续五发换影不休）！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
       f.sdTrack = false;
@@ -648,7 +648,7 @@ const SKILLS = {
               f.skill2CD = 0;
               shake = Math.max(shake, 14);
               SFX.heavy(); SFX.slice();
-              applyHit(f, hitFoe, { dmg: 38, kb: [240, -640], stun: 0.55, hs: 0.14, launch: true, big: true, unblockable: true }, [hitFoe.x, hitFoe.y - 60]);
+              applyHit(f, hitFoe, { dmg: 30, kb: [240, -640], stun: 0.55, hs: 0.14, launch: true, big: true, unblockable: true }, [hitFoe.x, hitFoe.y - 60]);
               ring(hitFoe.x, hitFoe.y - 60, 110, '235,110,210', 0.4);
               for (let k = 0; k < 12; k++) {
                 const a = rand(0, 6.28), v = rand(120, 320);

@@ -1455,7 +1455,7 @@ const UI_COPY_EN = {
   "醉意在 80 以上时受到的伤害 -25%。": "Above 80 Drunkenness, damage taken -25%.",
   "钩住对手的时间延长 1 秒。": "Hooked opponents stay hooked 1s longer.",
   "旋锤打中被钩住的对手伤害 +40%。": "Hammer Whirl deals +40% damage to hooked opponents.",
-  "针印持续时间从 3.5 秒延长到 6.5 秒。": "Needle Marks last 6.5s instead of 3.5s.",
+  "针印持续时间从 5 秒延长到 8 秒。": "Needle Marks last 8s instead of 5s.",
   "近战打中带针印的对手时引爆针印，追加 25 点伤害。": "Melee hits on a needle-marked opponent detonate the mark for 25 extra damage.",
   "每 5 秒在对手头顶落下一道 34 伤害的天雷。": "Every 5s a 34-damage lightning bolt strikes the opponent.",
   "每层第一次倒下时以 40% 生命复活。": "The first time you fall on each floor, revive with 40% HP.",

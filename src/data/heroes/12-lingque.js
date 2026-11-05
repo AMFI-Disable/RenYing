@@ -3,7 +3,7 @@ defHero({
   id: 'lingque', skin: 'lq', en: 'Ling Que',
   bal: { normal: 1.108, skill: 1.108, ult: 1.108, cd: 1.0, hp: 1.108 },
   char: { name: '凌雀', role: '飞梭游侠', diff: 3, escCD: 8.5, skill: 'spindle', skill2: 'shadowdash', ult: 'needlestorm', passive: 'needlemark',
-    passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。对敌人造成三次普攻、穿叶飞梭命中、蓄力斩（无需满蓄）命中或万线归宗命中均可施加【雀芒】印记（最多叠加 5 层，印记环绕目标周身，持续 15 秒）；移形换影每次穿刺引爆 1 层印记重创挑空敌人并立即清零移形换影冷却，可连续发动 5 次突进而无冷却！',
+    passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。对敌人造成三次普攻、穿叶飞梭命中、蓄力斩（无需满蓄）命中或万线归宗命中均可施加【雀芒】印记（最多叠加 5 层，印记环绕目标周身，持续 5 秒）；移形换影每次穿刺引爆 1 层印记造成 30 点爆炸伤害并挑空敌人，同时立即清零移形换影冷却，可连续发动 5 次突进而无冷却！',
     stat: { hp: 790, walk: 1.10, speed: 0.88, dmg: 0.96, reach: 1.00, swing: 0.86, jump: 1.04, weight: 0.86, defRating: 0.96, guardMax: 92, guardStab: 1.00, guardChip: 0.10, guardRegen: 28, poise: 0.98, size: 0.94 }, hitFeel: 0.85,
     look: { body: '#2a1a2e', shade: '#160c1c', outline: '#e07ac8', outlineA: .85, scarf: '#e056b0', slash: '235,110,210', blade: '#ffe8fa', head: 'topknot', weapon: 'spindle' },
     ai: { range: [70, 220] }, beats: ['feiying', 'liuyun'], weakTo: ['tieshan', 'leiming'] },

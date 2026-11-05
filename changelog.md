@@ -6,6 +6,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- **Ling Que balance**: shortened Sparrow Mark duration from 15s to 5s and reduced Shadow Swap's mark detonation from 38 to 30 damage. Mark detonations still reset Shadow Swap's cooldown; the Threading Needle scroll extends marks to 8s.
 - **Market price chart**: the item price chart now shows today's change in percent and in Ink, compared with yesterday's last trade, and draws that reference price as a dashed line. Rises are red and falls are green.
 - **Hero ultimate previews**: expanded all 16 Codex replays into distinct windup, travel, multi-hit, impact, and recovery phases. Cards now show a rival fighter reacting to hits, with hero-specific ultimate effects and enough frame space to follow the sequence.
 
