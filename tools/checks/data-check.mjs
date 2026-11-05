@@ -44,14 +44,14 @@ const LOOK = { body: 'str', shade: 'str', outline: 'str', outlineA: 'num', scarf
 const CHAR = { id: 'str', name: 'str', role: 'str', diff: 'int', escCD: 'pos', skill: 'str', skill2: 'str', ult: 'str', passive: 'str', passiveName: 'str', passiveDesc: 'str',
   stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj', 'clone?': 'obj' };
 const CANCEL_SPEC = { blockEarly: 'num', chainAt: 'num', skill2FromLight: 'bool', skillOnHit: 'bool' };
-// 雾身（离影）：上限、存在秒数、拴绳距离、换影结印 / 凝身秒数、打碎一个给对手多少气
-const CLONE_SPEC = { max: 'int', life: 'pos', leash: 'num', swapSeal: 'pos', swapLand: 'pos', breakMeter: 'num', swapPathDmg: 'num', swapPathPad: 'num' };
+// 雾身（离影）：上限、存在秒数、拴绳距离、换影结印 / 凝身 / 无敌秒数、打碎一个给对手多少气
+const CLONE_SPEC = { max: 'int', life: 'pos', leash: 'num', swapSeal: 'pos', swapLand: 'pos', swapInvul: 'pos', breakMeter: 'num', swapPathDmg: 'num', swapPathPad: 'num' };
 function checkClone(w, c) {
   if (!shape(w, c, CLONE_SPEC)) return;
   if (!(c.max >= 1 && c.max <= 4)) err(w, `max 是场上最多几个雾身，只能是 1~4，现在是 ${c.max}`);
   if (!(c.life <= 15)) err(w, `life 是雾身存在几秒，不能超过 15，现在是 ${c.life}`);
   if (c.leash !== 0 && !(c.leash >= 200 && c.leash <= 1400)) err(w, `leash 是雾身离本体最远多少像素（0 为无限制），要在 200~1400 之间或为 0，现在是 ${c.leash}`);
-  for (const k of ['swapSeal', 'swapLand']) if (!(c[k] <= 1)) err(w, `${k} 是秒数，不能超过 1，现在是 ${c[k]}`);
+  for (const k of ['swapSeal', 'swapLand', 'swapInvul']) if (c[k] !== undefined && !(c[k] <= 1)) err(w, `${k} 是秒数，不能超过 1，现在是 ${c[k]}`);
   if (!(c.breakMeter >= 0 && c.breakMeter <= 100)) err(w, `breakMeter 是 0~100 的气，现在是 ${c.breakMeter}`);
 }
 // 一招普攻（src/data/01-moves.js 的 MOVES）；侠客的 moveMods 每项都是选填，另外可以写 dmgAbs、suAdd、reachMul

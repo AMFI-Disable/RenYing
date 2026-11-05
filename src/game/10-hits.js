@@ -66,6 +66,7 @@ function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitBall(f, hb, m)) return;
   if (hitDecoy(f, hb)) return;
+  echoCloneAttack(f, hb, m, 'basic');
   if (isMulti()) {
     const matchTarget = foesOf(f).find(ef => ef.invul <= 0 && ef.hp > 0 && overlap(hb, hurtbox(ef)));
     if (matchTarget) foe = matchTarget;

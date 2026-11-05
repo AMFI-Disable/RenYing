@@ -278,12 +278,12 @@ const ULTS = {
       if (f.t >= 1.15) endSpecial(f);
     } },
   // 离影：每个雾身朝对手斩出一道刀光，然后全部散掉；本体最后瞬移到对手身前补一刀。没有雾身就只剩这一刀。没有无敌（只有出手那一下的定格）
-  mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 40 伤害），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
+  mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 30 伤害，按雾身复制攻击的 75% 计算），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
     begin(f, foe) {
       f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
       for (const c of (f.clones || []).slice()) {
         const d = foe.x >= c.x ? 1 : -1;
-        spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 90, life: 0.45, dmg: 40, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 刀光先到，本体后到
+        spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 90, life: 0.45, dmg: 30, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 雾身以 75% 伤害出刀，本体后到
         if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
       }
       clearClones(f);

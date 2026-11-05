@@ -926,7 +926,9 @@ function drawClones() {
       ctx.save(); ctx.fillStyle = `rgba(${rgb},${0.22 * blink})`;
       ctx.beginPath(); ctx.ellipse(c.x, cy, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       const rec = CLONE_SK[f.idx + ':' + c.id];
-      if (rec) drawBody(rec.sk, f, { ghost: 0.5 * blink, tint: rgb });
+      const echoing = ['attack', 'skill', 'special'].includes(f.state);
+      if (f.sk && echoing) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }
+      else if (rec) drawBody(rec.sk, f, { ghost: 0.5 * blink, tint: rgb });
       else if (f.sk) { ctx.save(); ctx.translate(c.x - f.x, cy - f.y); drawBody(f.sk, f, { ghost: 0.5 * blink, tint: rgb }); ctx.restore(); }   // 回滚重算时留下的雾身没记样子：借本体现在的样子
       if (c === mark) {
         ctx.save(); ctx.strokeStyle = `rgba(${rgb},${0.85 * blink})`; ctx.lineWidth = 2.5;

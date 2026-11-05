@@ -365,6 +365,7 @@ function strike(f, foe, spec) {
   if (f.hitDone) return false;
   const hb = hitbox(f, spec.box);
   if (hitDecoy(f, hb)) return false;
+  echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
   const targets = is2v2() ? foesOf(f) : [foe];
   for (const tf of targets) {
     if (tf.invul > 0 || tf.hp <= 0 || !overlap(hb, hurtbox(tf))) continue;
@@ -434,7 +435,16 @@ function spawnProj(f, o) {
     if (o.h) o.h = Math.round(o.h * 1.8);
     ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
   }
-  projs.push(Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o));
+  const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
+  projs.push(projectile);
+  if (f.ch.passive === 'mist' && f.clones && f.clones.length && !o.cloneEcho && !projectile.ult && projectile.dmg) {
+    for (const c of f.clones) {
+      projs.push(Object.assign({}, projectile, {
+        id: ++projSeq, x: projectile.x + c.x - f.x, y: projectile.y + (c.y || 0) - f.y,
+        dmg: projectile.dmg * 0.75, cloneEcho: true
+      }));
+    }
+  }
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
 function updateProjs() {
@@ -848,7 +858,28 @@ function cloneTick(f) {
   const C = f.ch.clone || { life: 0, leash: 0 };
   for (const c of f.clones.slice()) {
     c.t += STEP;
+    if (!['attack', 'skill', 'special'].includes(f.state)) c.echoHitKey = '';
     if (c.t >= C.life || (C.leash > 0 && Math.abs(c.x - f.x) > C.leash) || f.hp <= 0) cloneGone(f, c, false);
+  }
+}
+// 离影出招时，雾身在自己的位置重放同一判定；每个动作阶段每个雾身只命中一次。
+function echoCloneAttack(f, hb, m, phase = '') {
+  if (!f.clones || !f.clones.length || f.ch.passive !== 'mist' || !hb || !m || m.cloneEcho) return;
+  const key = [f.state, f.moveName || '', f.skill || '', f.skPh || 0, f.spN || 0, f.spinN || 0, f.mChain || 0, phase, m.name || ''].join(':');
+  const targets = foesOf(f);
+  for (const c of f.clones) {
+    if (c.echoHitKey === key) continue;
+    const dx = c.x - f.x, dy = (c.y || 0) - f.y;
+    const cb = [hb[0] + dx, hb[1] + dy, hb[2] + dx, hb[3] + dy];
+    for (const target of targets) {
+      if (!target || target.hp <= 0 || target.invul > 0) continue;
+      const hu = hurtbox(target);
+      if (!overlap(cb, hu)) continue;
+      c.echoHitKey = key;
+      const mirror = { ...m, dmg: (m.dmg || 0) * 0.75, cloneEcho: true, srcX: c.x, dir: Math.sign(target.x - c.x) || f.face };
+      applyHit(f, target, mirror, [(Math.max(cb[0], hu[0]) + Math.min(cb[2], hu[2])) / 2, (Math.max(cb[1], hu[1]) + Math.min(cb[3], hu[3])) / 2]);
+      break;
+    }
   }
 }
 // 攻击框碰到对手的雾身：雾身碎掉，打的人回气；攻击本身不受影响

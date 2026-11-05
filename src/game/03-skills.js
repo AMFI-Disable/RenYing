@@ -671,7 +671,7 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? (f.sdDrifting ? ['du_l1s', 30] : ['dash', 60]) : ['idle', 14],
     ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
   // 离影：雾身的规则和怎么选雾身在 09-actions.js 的「雾身」那一节，数在 src/data/heroes/13-liying.js 的 clone
-  mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。只能在地上用；场上最多 4 个雾身，再留就散掉最早的那个。雾身存在 15 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 10 点气。',
+  mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。雾身会以 75% 伤害重放你的普攻、近身技能和飞行道具。只能在地上用；场上最多 4 个雾身，再留就散掉最早的那个。雾身存在 15 秒，碰到任何攻击就碎（攻击照常打下去），打碎的人回 5 点气。',
     start(f) { f.vx = 0; plantClone(f, f.x); },
     update(f, foe) {
       // 踏出约 110 像素再出刀：雾身留在身后，不和本体叠在一起（不然打本体的刀顺手就把雾身打碎了）
@@ -688,7 +688,7 @@ const SKILLS = {
   mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
     can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
     lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
-    desc: '结印 0.2 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉；路上经过的每个敌人都挨一刀（约 95 伤害，打飞）。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。到了以后 0.15 秒不能出招（可以防御），朝向是来的方向。没有无敌，结印时被打断就落空。',
+    desc: '结印 0.1 秒（站着不动，看得出要去哪个雾身），然后身子瞬间到那个雾身的位置，雾身用掉；路上经过的每个敌人都挨一刀（约 95 伤害，打飞）。只按 R 去离对手最近的雾身（一直标着光圈）；按住 ← 或 → 再按 R 去那一边最近的；按住 ↓ 再按 R 去最早留下的。换位时短暂无敌，落地后 0.08 秒不能出招（可以防御），朝向是来的方向。结印时被打断就落空。',
     start(f, foe) { const c = pickClone(f, foe); f.swapId = c ? c.id : -1; f.vx = 0; },
     update(f) {
       const C = f.ch.clone;
@@ -700,8 +700,10 @@ const SKILLS = {
           const x0 = f.x, y0 = f.y;
           cloneGone(f, c, false);
           f.x = c.x; f.vy = 0; mapPutOn(f, c.p !== undefined ? c.p : -1); f.jumps = 0; f.airDash = 1;   // 雾身在平台上就站到平台上
+          f.invul = Math.max(f.invul || 0, C.swapInvul || 0.12);
           // 渡影路过的敌人：起点到雾身之间的每个对手挨一刀（每次渡影每人一次，算强度后约 95）
           const lo = Math.min(x0, f.x) - C.swapPathPad, hi = Math.max(x0, f.x) + C.swapPathPad, top = Math.min(y0, f.y) - 170, bot = Math.max(y0, f.y) + 30;
+          echoCloneAttack(f, [lo, top, hi, bot], { dmg: C.swapPathDmg, kb: [220, -380], stun: 0.45, hs: 0.1, launch: true, big: true, skill: true }, 'mistswap');
           for (const e of foesOf(f)) {
             if (!e || e.hp <= 0 || e.invul > 0 || e.x < lo || e.x > hi || e.y < top || e.y > bot) continue;
             applyHit(f, e, { dmg: C.swapPathDmg, kb: [220, -380], stun: 0.45, hs: 0.1, launch: true, big: true, dir: Math.sign(f.x - x0) || f.face, srcX: x0 }, [e.x, e.y - 60]);

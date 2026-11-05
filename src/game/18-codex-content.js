@@ -33,7 +33,7 @@ const SHORT = {
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(870血)', feiying: '最快移速出手 · 身轻体巧(800血)', tieshan: '重斩蓄力霸体 · 气血冠绝(900血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(815血)',
   liuyun: '三段跳 · 御风轻盈(840血)', leiming: '普攻六连 · 强横体魄(885血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(825血)', yuehua: '3 秒未受伤每秒回 14 血(780血)', yanling: '空中按住跳跃飞 1.2 秒(750血)',
   yuxiao: '普攻攒音律，清音随音律变强(775血)', zuixian: '醉意增伤，半醉可闪避近身攻击(885血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(835血)', lingque: '子母梭挂雀芒，换影穿刺引爆重置(790血)',
-  liying: '最多 2 个雾身，碰到就碎 · 只有一段跳(815血)', cixian: '开局随机正负极，负极普攻最多 15 连(815血)', qianji: '玄铁傀丸击打传动，金丝远程解控护主(830血)' };
+  liying: '最多 4 个雾身，复制招式造成 75% 伤害 · 碰到就碎(815血)', cixian: '开局随机正负极，负极普攻最多 15 连(815血)', qianji: '玄铁傀丸击打传动，金丝远程解控护主(830血)' };
 const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
@@ -68,7 +68,7 @@ const HERO_METER_EXPLAIN = {
   gouchen: '【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。',
   cixian: '【两极磁力 · 一弹一吸】正极普攻伤害高、每下击飞，负极普攻轻吸对手、四段循环连个不停；绝技「天地磁合」天上正极、地上负极，把对手夹成肉饼！',
   lingque: '【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！',
-  liying: '【雾身换位 · 碎影成本】留影一刀与普攻攒气；雾身被打碎时对手回 10 点气，留得太随便等于给对手送气。万影归一按雾身数量出刀。',
+  liying: '【雾身换位 · 碎影成本】雾身以 75% 伤害重放普攻、技能与飞行道具；雾身被打碎时对手回 5 点气。万影归一按雾身数量出刀。',
   qianji: '【机关机栝 · 动能汇聚】投掷傀丸与击打传动高效聚气；大招「千丝收网」直线拉回贯穿全屏，并瞬间刷新 Q 技能！',
 };
 // ======================= 招式类型详解 =======================
@@ -224,9 +224,9 @@ const HERO_HIT_DETAILS = {
   liying: {
     light: { name: '离魂五斩', badge: '✦ 快刀', badgeCls: 'badge-buff', dmg: '77 (5段)', desc: '单刀五连斩，末段挑空。' },
     charge: { name: '雾里藏锋', badge: '💥 破防', badgeCls: 'badge-break', dmg: '—', desc: '按住蓄力，一刀破开正面格挡。' },
-    air: { name: '落影斩', badge: '✦ 挑空', badgeCls: 'badge-buff', dmg: '—', desc: '空中两段斩。她只有一段跳，跳起来就要想好怎么落地。' },
-    skill: { name: '留影', badge: '✦ 留下雾身', badgeCls: 'badge-buff', dmg: '40', desc: '在脚下留一个雾身，向前踏出一大步斩一刀。只能在地上用；最多 2 个雾身，存在 6 秒，碰到攻击就碎。' },
-    ranged: { name: '渡影', badge: '✦ 换位', badgeCls: 'badge-stun', dmg: '—', desc: '结印 0.2 秒后换到雾身那里，那个雾身随之散去。不按方向换到离对手最近的；按 ← → 选那一边最近的；按 ↓ 选最早留下的。只能从站立、走动、空中、格挡里发动，不能接在出招后面。' },
+    air: { name: '落影斩', badge: '✦ 挑空', badgeCls: 'badge-buff', dmg: '—', desc: '空中两段斩。他只有一段跳，跳起来就要想好怎么落地。' },
+    skill: { name: '留影', badge: '✦ 留下雾身', badgeCls: 'badge-buff', dmg: '40', desc: '在脚下留一个雾身，向前踏出一大步斩一刀。雾身以 75% 伤害重放普攻、近身技能与飞行道具。最多 4 个雾身，存在 15 秒，碰到攻击就碎。' },
+    ranged: { name: '渡影', badge: '✦ 换位', badgeCls: 'badge-stun', dmg: '—', desc: '结印 0.1 秒后换到雾身那里，那个雾身随之散去。不按方向换到离对手最近的；按 ← → 选那一边最近的；按 ↓ 选最早留下的。换位时短暂无敌，落地后 0.08 秒不能出招（可以防御）。' },
     ult: { name: '万影归一', badge: '✦ 雾身齐斩', badgeCls: 'badge-stun', dmg: '45~113', desc: '每个雾身朝对手斩出一道刀光，然后本体瞬移到对手身前补一刀挑空。全程没有无敌。' },
     esc: { name: '散影', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空向后位移，落地前无敌。' }
   },
@@ -379,7 +379,7 @@ const HERO_MOVE_SEQS = {
     charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'hva', d: 0.3, dx: 30, hit: 3, launch: true, badge: '破防' }, { p: 'idle', d: 0.35, reset: true }],
     air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中（一段跳）' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
     skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.12, fx: 'mist', lab: 'Q · 留影' }, { p: 'l2a', d: 0.24, dx: 40, hit: 2, badge: '留下雾身' }, { p: 'idle', d: 0.35, reset: true }],
-    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.2, lab: 'R · 渡影' }, { p: 'idle', d: 0.15, fx: 'mistswap', dx: -60, badge: '换位' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.1, lab: 'R · 渡影' }, { p: 'idle', d: 0.08, fx: 'mistswap', dx: -60, badge: '换位' }, { p: 'idle', d: 0.35, reset: true }],
     ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.2, lab: 'E · 万影归一' }, { p: 'l3a', d: 0.45, dx: 40, fx: 'mistarray', hit: 3, launch: true, badge: '雾身齐斩' }, { p: 'idle', d: 0.35, reset: true }],
     esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '散影' }, { p: 'idle', d: 0.35, reset: true }]
   },
@@ -1028,7 +1028,7 @@ const HERO_FULL_DEMO = {
     { p: 'idle', d: 0.25, reset: true },
     { p: 'fy_seal', d: 0.12, fx: 'mist', lab: 'Q · 留影' }, { p: 'l2a', d: 0.24, dx: 40, hit: 2, badge: '留下雾身' },
     { p: 'idle', d: 0.25, reset: true },
-    { p: 'fy_seal', d: 0.2, lab: 'R · 渡影' }, { p: 'idle', d: 0.2, fx: 'mistswap', dx: -60, badge: '换位' },
+    { p: 'fy_seal', d: 0.1, lab: 'R · 渡影' }, { p: 'idle', d: 0.08, fx: 'mistswap', dx: -60, badge: '换位' },
     { p: 'idle', d: 0.25, reset: true },
     { p: 'fy_seal', d: 0.2, lab: 'E · 万影归一' }, { p: 'l3a', d: 0.45, dx: 40, fx: 'mistarray', hit: 3, launch: true, badge: '雾身齐斩' },
     { p: 'victory', d: 0.55, reset: true }
