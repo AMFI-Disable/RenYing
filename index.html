@@ -850,8 +850,6 @@ to { opacity: 1; box-shadow: 0 0 12px rgba(255,215,0,.7); }
 .bpdetail dl { display: grid; grid-template-columns: auto 1fr; gap: 2px clamp(6px, 1vw, 8px); margin: 0; }
 .bpdetail dt { color: #e9c46a; white-space: nowrap; font-size: 12px; }
 .bpdetail dd { margin: 0; font-size: 12px; line-height: 1.4; }
-.bpdetail .ctr { margin-top: auto; padding-top: 4px; color: var(--dim); font-size: 12px; }
-.bpdetail .ctr b { color: var(--ink); font-weight: 600; }
 .bp-skin-bar { display: flex; align-items: center; gap: 4px; margin: 2px 0 4px; flex-wrap: wrap; }
 .bp-skin-btn { font: 12px var(--body); padding: 1px 6px; border-radius: 5px; cursor: pointer; background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid var(--faint); transition: all .15s; }
 .bp-skin-btn:hover { border-color: rgba(233,196,106,.5); }
@@ -987,31 +985,6 @@ border: 1px solid rgba(215, 195, 255, 0.35);
 background: rgba(120, 215, 255, 0.15);
 color: #7fd4ff;
 border: 1px solid rgba(120, 215, 255, 0.35);
-}
-.vs-explain {
-text-align: left;
-font-size: 12px;
-line-height: 1.5;
-margin-top: 4px;
-}
-.vs-explain .vs-line {
-padding: 4px 6px;
-border-radius: 4px;
-background: rgba(255, 255, 255, 0.03);
-margin-bottom: 3px;
-}
-.vs-explain .beats {
-border-left: 2px solid #7fe0b0;
-}
-.vs-explain .weaks {
-border-left: 2px solid #ff8a8a;
-}
-.bp-restr-box {
-background: rgba(0, 0, 0, 0.25);
-border: 1px solid var(--faint);
-border-radius: 6px;
-padding: 6px 8px;
-margin-top: auto;
 }
 #towerModal .panel {
 max-width: min(720px, 96vw);
@@ -8577,7 +8550,7 @@ const UI_COPY_EN = {
 "点将完成 · 准备开战": "Draft complete · Get ready",
 "禁选完成 · 演武即将开始": "Draft complete · The exhibition is about to begin",
 "挑选你的本命首发出战侠客（免禁用直选）": "Pick your starting hero (no bans)",
-"把鼠标移到角色上，可查看招式与克制关系。": "Hover over a hero to see their moves and matchups.",
+"把鼠标移到角色上，可查看招式说明。": "Hover over a hero to see their moves.",
 "难度": "Difficulty",
 "被动": "Passive",
 "门派架势": "Guard Stance",
@@ -9584,8 +9557,6 @@ Object.assign(UI_COPY_EN, {
 "纳刀起手，一记居合突刺撕开战局；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。": "Sheathe, then open the fight with an iaido thrust. On hit, six crescent sword waves follow up, ending with a downward finishing slash from the air (85 damage). The finisher triggers [Clear Sword Intent]: resets all skill and dash cooldowns and refunds 20% ultimate meter. If the thrust misses, you are wide open.",
 "【聚气流转 · 极速充能】天生剑意通明，命中与受击攒气速度常驻 +10%（meterMul 1.10）。绝技「残月」终结斩落额外回涌 20% 气量。": "[Flowing Meter · Fast Charge] Born with clear sword intent: meter gain on hit and when hit is permanently +10% (meterMul 1.10). The Crescent Moon finisher refunds an extra 20% meter.",
 "疾风斩直击穿身得手后，立时重置剑气冷却，可瞬间接出弧月剑气连招。": "After Gale Slash passes through an enemy, Sword Qi's cooldown resets instantly, so you can chain straight into the crescent wave.",
-"【克 墨羽】疾风斩高速穿身无视墨阵禁锢，半场剑气可对撞消融墨团，拔剑速攻直接打断挥毫。": "[Beats Mo Yu] Gale Slash dashes through Ink Traps untouched, the half-screen sword wave cancels ink blobs, and fast draws interrupt the brushwork.",
-"【怕 月华】疾风斩正面突击必触发月镜太阴绝罚反制，月华脱战凝露使青锋换血消耗优势荡然无存。": "[Weak to Yue Hua] A frontal Gale Slash always triggers the Moon Mirror counter, and Yue Hua's out-of-combat healing erases Qing Feng's trading advantage.",
 "五段快剑连斩": "Five-Hit Quick Blade",
 "🌪️ 击飞浮空": "🌪️ Launch",
 "行云流水五连斩，末段挑空，青蓝弧光残影。": "Five smooth slashes, the last one launching, leaving cyan arc trails.",
@@ -9618,8 +9589,6 @@ Object.assign(UI_COPY_EN, {
 "结印潜入暗影，贴地瞬步欺身而入；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。": "Seal and melt into shadow, flash-step along the ground; on hit, nine crimson afterimages strike in turn, ending with a cross of twin blades (80 damage finisher). A kill triggers [Shadow Execution]: resets Shadow Blink and shuriken cooldowns and spawns decoy clones. Whiff it and you are at their mercy.",
 "【高频近身 · 疾速积怒】普攻五段与双刃连削出手极快，高频判定迅速攒气；贴身破防刺杀令怒意飙升。": "[Rapid Close Range · Quick Rage] Five-hit combos and twin-blade cuts are very fast; frequent hits build meter quickly, and close guard-breaking stabs spike it.",
 "影遁之后 1.5 秒内再按 Q——影归，瞬息退回遁走前的位置。": "Within 1.5s of Shadow Blink, press Q again for Shadow Return: snap back to where you started.",
-"【克 流云、凌霜】影遁瞬移与背刺能无视枪尖与风压，瞬间贴身刺入安全死角，极速爆发斩灭布衣脆皮。": "[Beats Liu Yun, Ling Shuang] Shadow Blink and backstabs ignore spear tips and wind pushes, slipping into safe blind spots to burst down fragile fighters.",
-"【怕 铁山、月华】铁山玄铁霸体正面硬吃飞刺直接重砸崩山；月镜完美格开多段贴身短刃必被反切。": "[Weak to Tie Shan, Yue Hua] Tie Shan's super armor eats the shuriken and crushes back; Yue Hua's Moon Mirror parries close-range blades and always punishes.",
 "迅疾双刃刺杀": "Swift Twin-Blade Strikes",
 "⚡ 疾风连打": "⚡ Gale Combo",
 "出刀极疾，近身密雨连刺，末段暗影穿刺。": "Lightning-fast close stabs, ending in a shadow pierce.",
@@ -9651,8 +9620,6 @@ Object.assign(UI_COPY_EN, {
 "举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。": "Raise the great blade and leap into the sky; steer the landing with the arrow keys while airborne (press S to drop faster), then crash down (185 damage, unblockable), splitting the ground. It pierces normal guards and even smashes ground ultimate super armor! A direct hit triggers [Rage Surge]: stuns the enemy (1.3s), fully refills meter so you can Avalanche again right away, and resets Earthquake and Iron Wall Charge. A second Avalanche in a row, an edge hit (landing over 92 px away) or hitting a downed enemy refunds only 50% meter.",
 "【承伤蓄怒 · 绝境回涌】重甲霸体受击全额聚气（受击攒气效率极高）。奥义「山崩」正中命中更是气量回满，可以立刻再砸一次（砸偏或砸倒地的对手只回一半）！": "[Pain to Rage · Last-Stand Surge] Heavy armor gains full meter when hit (very efficient). A direct Avalanche hit fully refills meter so you can smash again at once (half refund on an off-center or downed hit)!",
 "震地直击得手后，瞬时回涌 30 点架势耐力，并削减铁壁冲 2.5 秒冷却。": "After a direct Earthquake hit, instantly regain 30 guard and cut 2.5s off Iron Wall Charge's cooldown.",
-"【克 绯影、雷鸣】玄铁重甲与蓄力霸体令短手刺客与快拳无法打断起手，狂暴裂地与铁壁冲瞬间震溃对手防御。": "[Beats Fei Ying, Lei Ming] Black-iron armor and charged super armor stop short blades and quick fists from interrupting, while the ground smash and Iron Wall Charge crush their defense in an instant.",
-"【怕 流云、凌霜、燕翎】步履沉重难以触及高空燕翎，常被流云远距风刃放风筝或被凌霜枪尖在中距离精准破防。": "[Weak to Liu Yun, Ling Shuang, Yan Ling] Too slow to reach Yan Ling in the air, often kited by Liu Yun's long-range wind blades, or guard-broken at mid range by Ling Shuang's spear tip.",
 "重剑沉猛五斩": "Five Heavy Blade Strikes",
 "💥 霸体压制": "💥 Armored Pressure",
 "玄铁巨剑刀刀沉重带金属火星，体量压迫。": "Every swing of the black-iron greatsword hits hard and throws sparks, pushing with sheer mass.",
@@ -9683,8 +9650,6 @@ Object.assign(UI_COPY_EN, {
 "长枪拄地，凝神入定，天地为之一滞。漫天枪影泼洒开来，终归于一线寒芒，极速贯穿（140 到 185 伤害）。贯穿得手触发【寒霜贯日】：重置回马枪与枪旋冷却，并令对手陷入 4 秒冰冻迟缓（移速减慢 40%）。": "Plant the spear and focus as the world holds its breath. A storm of spear shadows collapses into a single cold line that pierces at speed (140 to 185 damage). A hit triggers [Frost Through the Sun]: resets Back Thrust and Spear Whirl and slows the enemy for 4s (40% slower movement).",
 "【枪尖聚焦 · 远距破阵】235px 枪尖极远端命中造成 1.25 倍伤害并按比例高效攒气；长线牵制保持安全聚气。": "[Spear Tip Focus · Long-Range Pressure] Max-range tip hits at 235 px deal 1.25x damage and build meter efficiently; long-range zoning keeps meter gain safe.",
 "回马枪得手后，枪旋余下的冷却减半。": "After Back Thrust hits, Spear Whirl's remaining cooldown is halved.",
-"【克 铁山、青锋】235px极限枪尖距离在中距离完全压制铁山与青锋，枪旋可拨落远程暗器并强力击退。": "[Beats Tie Shan, Qing Feng] The 235 px spear reach fully controls Tie Shan and Qing Feng at mid range, and Spear Whirl knocks down projectiles and pushes hard.",
-"【怕 雷鸣、绯影、燕翎】绯影瞬移背刺、雷鸣贴地雷闪与燕翎空中俯冲均能轻易越过长枪有效距离，贴身即陷被动。": "[Weak to Lei Ming, Fei Ying, Yan Ling] Fei Ying's blink backstab, Lei Ming's ground dash and Yan Ling's dive all slip past the spear's range, and once they are close you are on the back foot.",
 "银枪连刺·抽枪": "Silver Spear Combo · Withdraw",
 "⚡ 枪芒连刺": "⚡ Spear Flurry",
 "长枪一线连环突刺，枪尖命中伤害提升25%。": "A straight line of spear thrusts; tip hits deal 25% more damage.",
@@ -9717,8 +9682,6 @@ Object.assign(UI_COPY_EN, {
 "舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。": "Spread the sleeves and fan, ride the wind and unleash two sky-high tornadoes across the stage (16 damage per hit). Casting activates [Soaring Ten Thousand Miles]: resets Wind Blade and Fan Flourish and fully restores air jumps.",
 "【御风牵制 · 风暴蓄势】远距离双风刃与开扇爆米花安全换血聚气；大招「龙卷」重置全技能与空中跳跃，开辟新一轮节奏。": "[Wind Control · Storm Build-Up] Twin wind blades and popcorn trade safely from range to build meter; the Tornado ultimate resets all skills and air jumps for a fresh round.",
 "风刃一次扇出两道；开扇冲过去撒下的爆米花半秒后会炸。": "Wind Blade fires two blades at once; the popcorn scattered by Fan Flourish pops after half a second.",
-"【克 铁山、月华、燕翎】三段跳滞空与风刃推搡能长线放风筝折磨铁山；远距离狂风龙卷可直接破除月华静坐与燕翎滑翔。": "[Beats Tie Shan, Yue Hua, Yan Ling] Triple-jump hangtime and wind-blade pushes kite Tie Shan endlessly; long-range tornadoes break Yue Hua's meditation and Yan Ling's glide.",
-"【怕 雷鸣、绯影】雷鸣电光雷闪霸体直穿与绯影暗影影遁瞬移，能无视风压瞬间突脸秒杀薄弱体躯。": "[Weak to Lei Ming, Fei Ying] Lei Ming's armored Thunder Fist and Fei Ying's Shadow Blink ignore the wind and get in the face of a fragile body instantly.",
 "折扇翻飞连舞": "Flying Fan Dance",
 "🌪️ 击退推搡": "🌪️ Knockback Push",
 "轻扇翻转随风而动，动作轻盈且多段推退。": "Light fan flips that ride the wind, airy multi-hit pushes.",
@@ -9751,8 +9714,6 @@ Object.assign(UI_COPY_EN, {
 "一拳击破长空，引落九天神雷。三道天雷循着对手踪迹直劈而下（每道 48 伤害，破防击飞）。引雷触发【雷帝灌顶】：重置奔雷拳与撼地冷却，自身直接回涌 30% 绝技气量！": "One punch splits the sky and calls down divine thunder. Three bolts follow the enemy and strike down (48 damage each, guard break and launch). The thunder triggers [Thunder Emperor's Blessing]: resets Thunder Fist and Vajra Armor and refunds 30% ultimate meter!",
 "【狂雷六连 · 雷帝灌顶】六连重拳记记沉猛令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！": "[Six-Hit Thunder · Thunder Emperor's Blessing] Every heavy punch in the six-hit combo builds meter fast; casting Thunderstruck triggers the blessing right away and refunds 30% meter!",
 "雷闪贴地冲拳命中对手，立时重置金刚雷铠冷却，可瞬间转守为攻。": "When the ground-dash punch of Thunder Fist hits, Vajra Armor's cooldown resets instantly so you can flip from defense to offense.",
-"【克 流云、凌霜】雷闪霸体冲拳直接穿过气流与枪尖阻击，六连重拳拳拳到肉，令依赖身位拉扯的对手窒息。": "[Beats Liu Yun, Ling Shuang] The armored Thunder Fist dash punches straight through wind and spear tips, and every punch of the six-hit combo lands, smothering opponents who rely on spacing.",
-"【怕 铁山、月华】铁山重甲霸体正面拼拳毫不退让并反砸击倒；月华月镜架招专克高频连击拳。": "[Weak to Tie Shan, Yue Hua] Tie Shan's armor trades punches head-on and smashes back for a knockdown; Yue Hua's Moon Mirror parry hard-counters fast combos.",
 "狂雷六连轰拳": "Six-Hit Thunder Barrage",
 "⚡ 疾电连打": "⚡ Lightning Combo",
 "六记重拳连环轰击，拳拳带雷，末拳雷暴轰天。": "Six heavy punches in a row, each crackling with thunder, the last one exploding upward.",
@@ -9784,8 +9745,6 @@ Object.assign(UI_COPY_EN, {
 "把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = 80 + 每张符 40（最多 280）。": "Burn every saved talisman: the whole map becomes a sheet of paper with nowhere to hide, the enemy is stained cinnabar red and the talismans above them explode. Hits anywhere on the map and cannot be blocked; damage = 80 + 40 per talisman (up to 280).",
 "【墨符蓄势 · 一纸封喉】普攻甩墨攒气，R 花墨画符攒符；大招「符阵」把符全部烧掉，全图宣纸，符越多伤害越高。": "[Talisman Build-Up · One Sheet to Seal Them] Basic ink attacks build meter, R spends ink to draw talismans; Talisman Array burns them all across the map, and more talismans means more damage.",
 "墨阵尚在场时再按 Q——引爆，阵中之敌受 25 伤害，被墨浪掀飞。": "While an Ink Trap is still out, press Q again to detonate it: enemies inside take 25 damage and are thrown by the ink wave.",
-"【克 铁山、青锋】画地墨阵强制定身铁山使其沦为定点木桩，大面积浓墨溅射封锁正面直冲，令笨重前压寸步难行。": "[Beats Tie Shan, Qing Feng] Ink Traps root Tie Shan in place like a training dummy, and wide ink splashes block frontal rushes so heavy pressure goes nowhere.",
-"【怕 绯影、雷鸣】绯影影遁闪身无视墨阵，雷闪贴地冲拳极快，常在泼墨后摇期间直取中宫斩杀。": "[Weak to Fei Ying, Lei Ming] Fei Ying's Shadow Blink ignores Ink Traps and Lei Ming's ground dash punch is very fast; both often strike during the recovery after a splash.",
 "挥毫泼墨五式": "Five Ink Strokes",
 "🎨 浓墨溅射": "🎨 Ink Splash",
 "狼毫大笔挥洒浓墨，附带远程墨滴额外伤害（每团24）。": "Big brush strokes fling thick ink, with extra damage from ranged ink drops (24 each).",
@@ -9817,8 +9776,6 @@ Object.assign(UI_COPY_EN, {
 "双手结月印，盘坐入定。月华凝露，回复 100 点生命；月芒震退贴身之敌（75 伤害）。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。": "Form the moon seal and sit in meditation. Moon dew restores 100 HP, and moonlight pushes back nearby enemies (75 damage). The bloom triggers [Lunar Rebirth]: resets Moon Mirror and Moon Chariot and grants a 4s moon-spirit armor shield (reduced block stun).",
 "【以静制动 · 月镜返照】月镜精准架招反斩直接获取高额怒气；近战格挡换血配合脱战自愈，稳步积累大招。": "[Stillness Over Motion · Mirror Reflection] Precise Moon Mirror counters give big meter; melee trades plus out-of-combat healing steadily build toward the ultimate.",
 "月镜格开一击后，月轮立时冷却完毕，可顺势再放一轮。": "After Moon Mirror parries a hit, Moon Chariot's cooldown finishes instantly so you can throw another.",
-"【克 雷鸣、绯影、青锋、燕翎】太阴月镜能格开一切正面突进与下落扑击并自动绝罚反斩，折返月轮彻底切断贴身路线。": "[Beats Lei Ming, Fei Ying, Qing Feng, Yan Ling] The Moon Mirror parries every frontal rush and diving attack and counters automatically, and the returning moon blades shut down close approaches.",
-"【怕 流云、墨羽】流云接天龙卷风刃与墨羽远距离泼墨全屏覆盖且不触发近战月镜反制，被远程持续消耗压制。": "[Weak to Liu Yun, Mo Yu] Liu Yun's tornadoes and wind blades and Mo Yu's long-range ink cover the screen without triggering the melee mirror, wearing her down from range.",
 "双月流水旋舞": "Twin Moon Flowing Dance",
 "🌙 月华流水": "🌙 Flowing Moonlight",
 "双月短刃回旋如流水，舞姿飘逸清冷。": "Twin moon blades spin like flowing water in a cool, graceful dance.",
@@ -9849,8 +9806,6 @@ Object.assign(UI_COPY_EN, {
 "展翼直上九霄，唤来漫天破甲翎羽如暴雨倾泻（14 枚，每枚 14 伤害）。齐射触发【凌霄破虚】：重置俯冲突袭与翎羽射击冷却，御空飞行耐力全额回满。": "Spread the wings and climb to the heavens, calling down a storm of armor-piercing feathers (14 feathers, 14 damage each). The volley triggers [Sky Breaker]: resets Falcon Dive and Feather Darts and fully restores flight stamina.",
 "【制空掠阵 · 翎羽贯穿】空中滞空翎羽全屏三连穿透安全攒气；俯冲空中刷新二次突刺加速怒气积攒。": "[Air Control · Piercing Feathers] Full-screen triple-piercing feathers from the air build meter safely; diving refreshes in the air speed up meter gain.",
 "自空中起手的俯冲一旦命中，此技立时冷却完毕，落地前可再冲一次（每次落地前只刷新一次）。": "If a dive started in the air hits, its cooldown finishes instantly and you can dive again before landing (one refresh per landing).",
-"【克 铁山、凌霜】超长时间自由滞空飞翔完全避开地面震地与一线枪芒，居高临下俯冲猎杀直取破绽。": "[Beats Tie Shan, Ling Shuang] Long free flight avoids ground quakes and the spear's line entirely, then dives from above to punish openings.",
-"【怕 流云、月华】流云扶摇龙卷将高空飞行强行打落，月华月镜太阴护体与月轮折返有效拦截俯冲。": "[Weak to Liu Yun, Yue Hua] Liu Yun's tornadoes knock high fliers out of the sky; Yue Hua's Moon Mirror and returning moon blades intercept dives.",
 "飞羽短刃疾斩": "Feather Blade Quick Cuts",
 "🪶 振羽连打": "🪶 Feather Combo",
 "羽刃翩跹迅捷凌厉，灵动逼人。": "Feather blades flutter with quick, sharp, lively cuts.",
@@ -9884,8 +9839,6 @@ Object.assign(UI_COPY_EN, {
 "奏一曲广陵散：六道音刃从左右两侧轮番穿过对手（每道 14 伤害），曲终一记【绝响】从对手脚下炸开（60 伤害，身上每枚音律再 +15，不可格挡，挑空）。曲罢音律回满，清音冷却清零。": "Play the Guangling Verse: six sound blades cross through the enemy from left and right (14 damage each), and the piece ends with a [Final Note] bursting beneath them (60 damage, +15 per note held, unblockable, launches). Afterward notes are full and Clear Tone's cooldown is cleared.",
 "【音律和鸣 · 广陵绝响】普攻与回音弹回暗器积攒音律；绝技「广陵散」终结炸裂令音律回满并清零清音冷却。": "[Harmony of Notes · Final Note] Basic hits and reflected projectiles store notes; the Guangling Verse finisher refills notes and clears Clear Tone's cooldown.",
 "回音壁可将暗器、剑气、风刃原路弹回，每弹回一次额外积攒一枚音律。": "Echo Barrier reflects projectiles, sword qi and wind blades straight back; each reflect stores an extra note.",
-"【克 铁山、墨羽】铁山步子慢，被三律音波隔着半屏挑起来就很难近身；墨羽的泼墨和墨团撞上回音壁会原路飞回去。": "[Beats Tie Shan, Mo Yu] Tie Shan is slow and struggles to close in once a three-note wave launches him from half a screen away; Mo Yu's ink and ink blobs fly straight back off the Echo Barrier.",
-"【怕 绯影、雷鸣】绯影影遁直接闪到身后，雷鸣雷闪贴脸快拳，玉箫来不及攒音律，回音壁也挡不住连续近身。": "[Weak to Fei Ying, Lei Ming] Fei Ying blinks straight behind you and Lei Ming's Thunder Fist dashes into your face; Yu Xiao has no time to store notes, and the Echo Barrier cannot hold off constant close pressure.",
 "玉箫点穴连击": "Flute Pressure-Point Combo",
 "攒音律": "Stores Notes",
 "箫管点打五连击，每中一击攒一枚音律，最多三枚。": "Five quick flute strikes; each hit stores a note, up to three.",
@@ -9916,8 +9869,6 @@ Object.assign(UI_COPY_EN, {
 "醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。画卷落下后对手困在蓬莱境里 2 秒：对手的屏幕被画挡住，看不见自己和醉翁在哪，只有醉翁一方看得见。": "The old drunk's heart is not in the wine but in the hills and streams. A screen-wide landscape painting presses down from the sky, dealing 120 damage over its descent (8 hits of 15, unblockable, no hiding anywhere; only Air Dodge invincibility avoids a few hits). Once the scroll lands, the enemy is trapped in the Penglai realm for 2s: their screen is covered by the painting and they cannot see themselves or Zui Weng, while Zui Weng's side can still see everything.",
 "【豪饮留客 · 山水醉意】放招与拳脚命中迅速累积醉意（增伤最高 +50%）；绝技「山水之间」全屏墨染八段重创并令醉意飙升！": "[Hold the Guest · Landscape Buzz] Skills and punches build up drunkenness fast (up to +50% damage); the Landscape Domain ultimate deals eight heavy full-screen ink hits and sends drunkenness soaring!",
 "酒过半壶可触发两成近战闪避，并可掷坛施展与民同乐回春80血且压制对手。": "Past half a gourd you get a 20% melee dodge, and can throw the jar for Wine Feast to heal 80 HP while suppressing the enemy.",
-"【克 凌霜、月华】醉步身法与飞亭留客封锁中距离，贴身后凌霜的枪施展不开；月华的月镜只格近身，醉翁可掷坛共饮或飞亭砸落。": "[Beats Ling Shuang, Yue Hua] Drunken footwork and the flying pavilion lock down mid range, and up close Ling Shuang's spear has no room; Yue Hua's mirror only parries melee, so throw the jar or drop the pavilion.",
-"【怕 流云、墨羽】流云风刃一直把人往外推，醉翁拳短够不着；墨羽的墨阵定住脚，近身极其艰难。": "[Weak to Liu Yun, Mo Yu] Liu Yun's wind blades keep pushing you out of your short reach; Mo Yu's Ink Trap roots your feet and makes getting close very hard.",
 "醉拳五打": "Five Drunken Fists",
 "醉意增伤": "Drunken Damage Boost",
 "东倒西歪的五连拳，醉意越高越痛。": "A tipsy five-punch combo that hurts more the drunker you are.",
@@ -9945,8 +9896,6 @@ Object.assign(UI_COPY_EN, {
 "把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 1.2 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。": "Hurl the chain hammer into the sky; it grows as it flies and becomes a giant hammer that crashes onto the enemy (40 damage, unblockable), stunning and rooting them for 1.2s. Then pull the chain back, drag them in and swing once more (80 damage, launch), resetting Chain Hook and applying [Shock]. If the giant hammer misses, it only leaves a crater.",
 "【飞锤扯链 · 震魄巨力】飞锤拉拽破防附加震魄增伤；奥义「开天一锤」砸落定身并重置飞锤冷却。": "[Chain Pull · Shocking Force] Chain Hook pulls and breaks guard with Shock's damage boost; the Heavensplitter ultimate roots on impact and resets Chain Hook.",
 "飞锤拽敌至身前附加 1.2 秒 25% 震魄易伤，立时衔接旋锤连砸。": "Chain Hook pulls the enemy close with 1.2s of 25% Shock vulnerability; follow straight into Hammer Whirl.",
-"【克 燕翎、绯影】燕翎落地就会被旋锤卷进去；绯影血薄，被飞锤拽到身前吃满震魄增伤很快就倒。": "[Beats Yan Ling, Fei Ying] Yan Ling gets caught in Hammer Whirl the moment of landing; Fei Ying has little health and falls fast when hooked in under full Shock.",
-"【怕 铁山、月华】铁山霸体直接硬吃飞锤，带不动；月华月镜格开锤子后的反斩极痛。": "[Weak to Tie Shan, Yue Hua] Tie Shan's super armor tanks Chain Hook and cannot be pulled; the counter after Yue Hua's mirror parries the hammer hurts a lot.",
 "链锤连打": "Chain Hammer Combo",
 "长臂展": "Long Reach",
 "甩着链锤抡打五连击，攻击距离比常人长一截。": "Swing the chain hammer for five hits, with noticeably longer reach than most.",
@@ -9983,8 +9932,6 @@ Object.assign(UI_COPY_EN, {
 "凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。": "Ling Que leaps up and weaves a sky-wide net of threads as the twin shuttles crisscross the whole screen like a storm (7 hits of 12 + a 56 damage finisher), applying [Sparrow Mark] and resetting Shadow Swap.",
 "【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！": "[Shuttle Weave · Sparrow Lock] Twin shuttles pierce at mid to long range and build meter efficiently; the Thousand Threads ultimate storms the whole screen, applies Sparrow Mark and resets Shadow Swap!",
 "锦梭穿云标记敌身后，幽影掠步可循印瞬身突袭并刷新连段。": "After the shuttle marks an enemy, the shadow step can follow the mark to flash in for a surprise attack and refresh the combo.",
-"【克 绯影、流云】飞梭与悬丝远端穿刺直克脆皮近身；移形换影高速多角穿梭令流云风刃与爆米花频频落空。": "[Beats Fei Ying, Liu Yun] Long-range shuttle and thread piercing punishes fragile close-range fighters; fast multi-angle Shadow Swaps make Liu Yun's wind blades and popcorn keep missing.",
-"【怕 铁山、雷鸣】铁山厚重霸体硬抗飞梭穿刺反手重震；雷鸣雷铠与电光冲拳极易在换影突进瞬间反制重击。": "[Weak to Tie Shan, Lei Ming] Tie Shan's thick super armor tanks the shuttles and quakes back; Lei Ming's Vajra Armor and lightning dash punch easily counter Shadow Swap as it comes in.",
 "飞梭快影连刺": "Quick Shuttle Stabs",
 "✦ 飞梭速刺": "✦ Shuttle Flurry",
 "子母梭双持穿刺连击，出手灵巧如惊雀掠空。": "Twin-shuttle stab combo, nimble as a startled sparrow skimming the sky.",
@@ -10141,7 +10088,6 @@ Object.assign(UI_COPY_EN, {
 "解除受制 · 落地前无敌": "Breaks out of hitstun · Invincible until landing",
 "宿命篇章 · 试炼与秘传": "Destiny Chapter · Trial and Secret Art",
 "进阶技巧": "Advanced Tips",
-"克制机理详解": "Matchups Explained",
 "点击在主视窗慢放/演示该招式": "Click to play this move slowly in the main view",
 "通关破关：": "Chapter trial: ",
 "未破关": "Not cleared",
@@ -10512,8 +10458,6 @@ Object.assign(UI_COPY_EN, {
 "留身踏斩": "Stepping Slash",
 "换位": "Swap",
 "雾身齐斩": "Doubles Slash",
-"【克 铁山、勾陈】两人出手慢、招式大，打空的瞬间离影换到身后的雾身，从背后下刀。": "[Beats Tie Shan, Gou Chen] Both swing slow and big; the moment they whiff, Li Ying crosses to a double behind them and cuts from the back.",
-"【怕 凌雀、燕翎】飞梭和翎羽隔着半屏就能把雾身一个个打碎，离影无处可换，还白白给对手送气。": "[Weak to Ling Que, Yan Ling] Shuttles and feathers shatter her doubles one by one from half a screen away, leaving her nowhere to cross and feeding the enemy meter.",
 "离魂五斩": "Five Parting Cuts",
 "✦ 快刀": "✦ Quick Blade",
 "单刀五连斩，末段挑空。": "Five single-blade slashes, the last one launching.",
@@ -10579,8 +10523,6 @@ Object.assign(UI_COPY_EN, {
 "对手脚下浮出一块负极磁石、头顶压下一块正极磁石，两块磁石异极相吸，把对手牢牢吸住、越合越快，最后合拢夹成肉饼（125 伤害，不可格挡），被夹扁的人定住 1 秒。放的时候对手正在腾空闪这类无敌里，就只吸得住磁石，夹不到人。": "A negative magnet rises under the enemy's feet and a positive one presses down from above. Opposite poles attract: the enemy is held fast as the plates close faster and faster, then snap shut into a meat patty (125 damage, unblockable), and the flattened enemy is stuck for 1 s. If the enemy is invincible (like during Air Dodge) when you cast it, the magnets only catch each other.",
 "【两极磁力 · 一弹一吸】正极普攻伤害高、每下击飞，负极普攻轻吸对手、四段循环连个不停；绝技「天地磁合」天上正极、地上负极，把对手夹成肉饼！": "[Two Poles · Push and Pull] Positive normal attacks hit hard and launch every time; negative ones pull the enemy in and loop four hits without end. The ultimate Heaven-Earth Clamp puts a positive pole in the sky and a negative one on the ground and squashes the enemy into a meat patty!",
 "Q 换极性会清零 R：正极 R 把人弹开，换成负极马上再 R 把人吸回来；负极普攻连到 15 下会消磁，停手 1 秒或换一下极性就好。": "Swapping poles with Q clears R: blast them away with a positive R, then swap to negative and R again to pull them right back. Negative normal attacks demagnetize after 15 hits; stop for 1 s or swap poles to recover.",
-"【克 燕翎、凌雀】负极 R 隔着半个场地把飞在空中、来回穿梭的人吸到身前定住，身法再快也逃不出磁力。": "[Beats Yan Ling, Ling Que] A negative R pulls fliers and dashers in from half the stage and holds them in place. No footwork outruns the magnet.",
-"【怕 铁山、月华】铁山霸体硬吃正极击飞照样砸下来；月华月镜格开近身磁掌，负极连段一断就被反斩。": "[Weak to Tie Shan, Yue Hua] Tie Shan's super armor eats a positive launch and slams down anyway; Yue Hua's Moon Mirror parries the palms and punishes the broken negative loop.",
 "两极磁掌": "Two-Pole Palms",
 "⊕ 击飞 / ⊖ 轻吸": "⊕ Launch / ⊖ Pull",
 "⊕ ×1.35 / ⊖ ×0.55": "⊕ ×1.35 / ⊖ ×0.55",
@@ -23372,72 +23314,6 @@ ult: { type: 'fullscreen', label: '全图巨锤', rng: 'screen' },
 esc: { type: 'esc', label: '身法' }
 }
 };
-const HERO_RESTRAINTS_EXPLAIN = {
-liying: {
-beatsWhy: '【克 铁山、勾陈】两人出手慢、招式大，打空的瞬间离影换到身后的雾身，从背后下刀。',
-weakWhy: '【怕 凌雀、燕翎】飞梭和翎羽隔着半屏就能把雾身一个个打碎，离影无处可换，还白白给对手送气。'
-},
-yuxiao: {
-beatsWhy: '【克 铁山、墨羽】铁山步子慢，被三律音波隔着半屏挑起来就很难近身；墨羽的泼墨和墨团撞上回音壁会原路飞回去。',
-weakWhy: '【怕 绯影、雷鸣】绯影影遁直接闪到身后，雷鸣雷闪贴脸快拳，玉箫来不及攒音律，回音壁也挡不住连续近身。'
-},
-zuixian: {
-beatsWhy: '【克 凌霜、月华】醉步身法与飞亭留客封锁中距离，贴身后凌霜的枪施展不开；月华的月镜只格近身，醉翁可掷坛共饮或飞亭砸落。',
-weakWhy: '【怕 流云、墨羽】流云风刃一直把人往外推，醉翁拳短够不着；墨羽的墨阵定住脚，近身极其艰难。'
-},
-gouchen: {
-beatsWhy: '【克 燕翎、绯影】燕翎落地就会被旋锤卷进去；绯影血薄，被飞锤拽到身前吃满震魄增伤很快就倒。',
-weakWhy: '【怕 铁山、月华】铁山霸体直接硬吃飞锤，带不动；月华月镜格开锤子后的反斩极痛。'
-},
-qianji: {
-beatsWhy: '【克 墨羽、绯影】傀丸在场可持续压制立回走位；暴雨梨花受击解控让近身刺客不敢贸然长连段。',
-weakWhy: '【怕 铁山、雷鸣】铁山与雷鸣的霸体直接吃下傀丸冲撞并暴力近身，千机近身肉搏判定相对较弱。'
-},
-cixian: {
-beatsWhy: '【克 燕翎、凌雀】负极 R 隔着半个场地把飞在空中、来回穿梭的人吸到身前定住，身法再快也逃不出磁力。',
-weakWhy: '【怕 铁山、月华】铁山霸体硬吃正极击飞照样砸下来；月华月镜格开近身磁掌，负极连段一断就被反斩。'
-},
-lingque: {
-beatsWhy: '【克 绯影、流云】飞梭与悬丝远端穿刺直克脆皮近身；移形换影高速多角穿梭令流云风刃与爆米花频频落空。',
-weakWhy: '【怕 铁山、雷鸣】铁山厚重霸体硬抗飞梭穿刺反手重震；雷鸣雷铠与电光冲拳极易在换影突进瞬间反制重击。'
-},
-qingfeng: {
-beatsWhy: '【克 墨羽】疾风斩高速穿身无视墨阵禁锢，半场剑气可对撞消融墨团，拔剑速攻直接打断挥毫。',
-weakWhy: '【怕 月华】疾风斩正面突击必触发月镜太阴绝罚反制，月华脱战凝露使青锋换血消耗优势荡然无存。'
-},
-feiying: {
-beatsWhy: '【克 流云、凌霜】影遁瞬移与背刺能无视枪尖与风压，瞬间贴身刺入安全死角，极速爆发斩灭布衣脆皮。',
-weakWhy: '【怕 铁山、月华】铁山玄铁霸体正面硬吃飞刺直接重砸崩山；月镜完美格开多段贴身短刃必被反切。'
-},
-tieshan: {
-beatsWhy: '【克 绯影、雷鸣】玄铁重甲与蓄力霸体令短手刺客与快拳无法打断起手，狂暴裂地与铁壁冲瞬间震溃对手防御。',
-weakWhy: '【怕 流云、凌霜、燕翎】步履沉重难以触及高空燕翎，常被流云远距风刃放风筝或被凌霜枪尖在中距离精准破防。'
-},
-lingshuang: {
-beatsWhy: '【克 铁山、青锋】235px极限枪尖距离在中距离完全压制铁山与青锋，枪旋可拨落远程暗器并强力击退。',
-weakWhy: '【怕 雷鸣、绯影、燕翎】绯影瞬移背刺、雷鸣贴地雷闪与燕翎空中俯冲均能轻易越过长枪有效距离，贴身即陷被动。'
-},
-liuyun: {
-beatsWhy: '【克 铁山、月华、燕翎】三段跳滞空与风刃推搡能长线放风筝折磨铁山；远距离狂风龙卷可直接破除月华静坐与燕翎滑翔。',
-weakWhy: '【怕 雷鸣、绯影】雷鸣电光雷闪霸体直穿与绯影暗影影遁瞬移，能无视风压瞬间突脸秒杀薄弱体躯。'
-},
-leiming: {
-beatsWhy: '【克 流云、凌霜】雷闪霸体冲拳直接穿过气流与枪尖阻击，六连重拳拳拳到肉，令依赖身位拉扯的对手窒息。',
-weakWhy: '【怕 铁山、月华】铁山重甲霸体正面拼拳毫不退让并反砸击倒；月华月镜架招专克高频连击拳。'
-},
-moyu: {
-beatsWhy: '【克 铁山、青锋】画地墨阵强制定身铁山使其沦为定点木桩，大面积浓墨溅射封锁正面直冲，令笨重前压寸步难行。',
-weakWhy: '【怕 绯影、雷鸣】绯影影遁闪身无视墨阵，雷闪贴地冲拳极快，常在泼墨后摇期间直取中宫斩杀。'
-},
-yuehua: {
-beatsWhy: '【克 雷鸣、绯影、青锋、燕翎】太阴月镜能格开一切正面突进与下落扑击并自动绝罚反斩，折返月轮彻底切断贴身路线。',
-weakWhy: '【怕 流云、墨羽】流云接天龙卷风刃与墨羽远距离泼墨全屏覆盖且不触发近战月镜反制，被远程持续消耗压制。'
-},
-yanling: {
-beatsWhy: '【克 铁山、凌霜】超长时间自由滞空飞翔完全避开地面震地与一线枪芒，居高临下俯冲猎杀直取破绽。',
-weakWhy: '【怕 流云、月华】流云扶摇龙卷将高空飞行强行打落，月华月镜太阴护体与月轮折返有效拦截俯冲。'
-}
-};
 const HERO_HIT_DETAILS = {
 liying: {
 light: { name: '离魂五斩', badge: '✦ 快刀', badgeCls: 'badge-buff', dmg: '77 (5段)', desc: '单刀五连斩，末段挑空。' },
@@ -24386,7 +24262,6 @@ const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10)
 const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * bn * 10) / 10;
 const fun = (typeof SKILL_FUN !== 'undefined' && SKILL_FUN[c.id]) || {};
 const sh = n => { const p = (n || '').split('·'); return p.length > 1 ? [p[0].trim(), p[1].trim()] : ['', n || '']; };
-const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
 const tile = (icon, label, val, desc, cd, wide, moveKey, half) => {
 const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
 const mType = (moveKey && mTypes[moveKey]) || null;
@@ -24402,7 +24277,6 @@ const aType = mTypes.air || { label: '近战', type: 'melee', rng: 'melee' };
 const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee', rng: 'melee' };
 const rType = mTypes.ranged || { label: '远程', icon: 'ranged', type: 'ranged', rng: 'ranged' };
 const uType = mTypes.ult || { label: '奥义', type: 'fullscreen', rng: 'screen' };
-const restr = HERO_RESTRAINTS_EXPLAIN[c.id] || { beatsWhy: `克 ${nm(c.beats)}`, weakWhy: `怕 ${nm(c.weakTo)}` };
 const qName = (skin && skinSkillName(skin, 1)) || S.name;
 const rName = (skin && skinSkillName(skin, 2)) || S2.name;
 const uName = (skin && skinUltName(skin)) || U.name;
@@ -24428,8 +24302,7 @@ const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
 const clear = stars > 0;
 return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
 })()}${typeof sagaCodexLine === 'function' ? sagaCodexLine(c.id) : ''}</div>`, '', true),
-ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', false, null, true) : '',
-tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true, null, !!ADV_SHORT[c.id]),
+ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', true) : '',
 ].filter(Boolean).join('');
 for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic] || ICONS.skill}</svg>`;
 if ($id('cxBento')) $id('cxBento').style.setProperty('--cx-accent', col);
@@ -30436,16 +30309,11 @@ bpApply(chosen);
 }
 }
 function bpDetailHTML(i) {
-if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式与克制关系。</p>';
+if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式说明。</p>';
 const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult];
 const curSkin = mySkin(c.id);
 const L = skinLook(i, curSkin);
 const col = `rgb(${L.slash})`;
-const nm = ids => (ids || []).map(id => (CHARS[CHAR_IDX[id]] ? CHARS[CHAR_IDX[id]].name : id)).filter(Boolean).join('、') || '无';
-const restr = HERO_RESTRAINTS_EXPLAIN[c.id];
-const restrHtml = restr
-? `<div class="bp-restr-box" style="margin-top:6px;font-size:12px;line-height:1.45;color:var(--dim);text-align:left"><div style="color:#7fe0b0;margin-bottom:2px">${restr.beatsWhy}</div><div style="color:#ff8a8a">${restr.weakWhy}</div></div>`
-: `<p class="ctr">克制 <b>${nm(c.beats)}</b>　怕 <b>${nm(c.weakTo)}</b></p>`;
 const st = c.stat || {};
 const guardTxt = `耐力 ${st.guardMax || 100} · 稳定 ${Math.round((st.guardStab || 1) * 100)}% · 透伤 ${Math.round((st.guardChip || 0.1) * 100)}% · 回涌 ${st.guardRegen || 28}/秒`;
 const hits = HERO_HIT_DETAILS[c.id] || {};
@@ -30463,7 +30331,7 @@ ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
 <dt><span>技能</span> <span>${S.name}</span></dt><dd><span>${S.desc}</span><span>（冷却 ${S.cd} 秒）</span></dd>
 ${specialMove ? `<dt><span>绝技</span> <span>${S2.name}</span></dt><dd>${specialMove}</dd>` : ''}
 <dt><span>大招</span> <span>${U.name}</span></dt><dd><span>${U.desc}</span><div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
-${restrHtml}</div>`;
+</div>`;
 }
 function buildDetails(force) {
 const box = document.getElementById('bpDetail'), mk = (bpMap() || {}).n || '';   // 换了地图，地利那一行跟着变

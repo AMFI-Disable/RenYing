@@ -12,7 +12,7 @@
 | :--- | :--- |
 | [Getting Started / 新手指南](getting-started.md) | Online and offline editions, language, controls, your first match |
 | [Game Modes / 游戏模式](game-modes.md) | Every mode, what it needs, and how it plays |
-| [Heroes And Combat / 侠客与战斗](heroes-and-combat.md) | All 16 heroes, their skills and matchups, guard, parry and meter |
+| [Heroes And Combat / 侠客与战斗](heroes-and-combat.md) | All 16 heroes, their skills, guard, parry and meter |
 | [Armory And Marketplace / 武库与市场](armory-and-marketplace.md) | Ink, weapon cases, tiers, trade-ups, the player market |
 | [Accounts And Cloud Saves / 账号与云存档](accounts-and-cloud-saves.md) | Guest, local and cloud accounts, devices, sync, privacy |
 | [FAQ / 常见问题](faq.md) | Connection problems, lost progress, phones, school networks |

@@ -81,7 +81,7 @@ const SKILLS = {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
       if (f.skPh === 1) {
-        // 破墨阵克制逻辑：穿过墨阵直接净化
+        // 破墨阵：穿过墨阵直接净化
         for (const p of projs) {
           if (p.kind === 'trap' && p.owner === foe.idx && Math.abs(p.x - f.x) < 80) {
             p.dead = true; smoke(p.x, -10, 8); SFX.slice();

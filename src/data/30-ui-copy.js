@@ -933,7 +933,7 @@ const UI_COPY_EN = {
   "点将完成 · 准备开战": "Draft complete · Get ready",
   "禁选完成 · 演武即将开始": "Draft complete · The exhibition is about to begin",
   "挑选你的本命首发出战侠客（免禁用直选）": "Pick your starting hero (no bans)",
-  "把鼠标移到角色上，可查看招式与克制关系。": "Hover over a hero to see their moves and matchups.",
+  "把鼠标移到角色上，可查看招式说明。": "Hover over a hero to see their moves.",
   "难度": "Difficulty",
   "被动": "Passive",
   "门派架势": "Guard Stance",

@@ -44,29 +44,6 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` (or ho
 - **磁仙 Ci Xian** — starts each round with a random magnetic pole and switches with `Q`. Positive hits launch; negative hits pull the enemy in and keep combos going.
 - **千机 Qian Ji** — throws one puppet ball that bounces and stays on the stage. Hitting the ball with your own attacks speeds it up and lets it break enemy projectiles. Needle Burst fires from the ball, even while you are being hit; Silk Recall pulls it back through every enemy in the way and resets `Q`.
 
-## Matchups / 克制关系
-
-These are the hints shown on the draft screen, not hard rules. / 选人页上给的克制提示，仅供参考。
-
-| Hero / 侠客 | Strong against / 克 | Weak against / 怕 |
-| :--- | :--- | :--- |
-| 青锋 | 墨羽 | 月华 |
-| 绯影 | 流云、凌霜 | 铁山、月华 |
-| 铁山 | 绯影、雷鸣 | 流云、凌霜、燕翎 |
-| 凌霜 | 铁山、青锋 | 雷鸣、绯影、燕翎 |
-| 流云 | 铁山、月华、燕翎 | 雷鸣、绯影 |
-| 雷鸣 | 流云、凌霜 | 铁山、月华 |
-| 墨羽 | 铁山、青锋 | 绯影、雷鸣 |
-| 月华 | 雷鸣、绯影、青锋、燕翎 | 流云、墨羽 |
-| 燕翎 | 铁山、凌霜 | 流云、月华 |
-| 玉箫 | 铁山、墨羽 | 绯影、雷鸣 |
-| 醉翁 | 凌霜、月华 | 流云、墨羽 |
-| 勾陈 | 燕翎、绯影 | 铁山、月华 |
-| 凌雀 | 绯影、流云 | 铁山、雷鸣 |
-| 离影 | 铁山、勾陈 | 凌雀、燕翎 |
-| 磁仙 | 燕翎、凌雀 | 铁山、月华 |
-| 千机 | 墨羽、绯影 | 铁山、雷鸣 |
-
 ## How A Match Works / 对局规则
 
 - First to win **2 rounds** wins the match; a match ends after round **5** at the latest.
@@ -96,4 +73,4 @@ Startup, active and recovery frames for every normal attack, skill and ultimate 
 
 ## Where Hero Data Lives / 侠客数据在哪
 
-One file per hero in [`src/data/heroes/`](https://github.com/AMFI-Disable/RenYing/tree/main/src/data/heroes): stats, balance multipliers, look, AI range, matchups and both stories. The field reference is at the top of `src/data/00-heroes.js`, and `tools/checks/data-check.mjs` fails the build if a field is missing or wrong. Skill logic is in `src/game/03-skills.js` and ultimates in `src/game/04-ults.js`.
+One file per hero in [`src/data/heroes/`](https://github.com/AMFI-Disable/RenYing/tree/main/src/data/heroes): stats, balance multipliers, look, AI range, AI draft picks and both stories. The field reference is at the top of `src/data/00-heroes.js`, and `tools/checks/data-check.mjs` fails the build if a field is missing or wrong. Skill logic is in `src/game/03-skills.js` and ultimates in `src/game/04-ults.js`.

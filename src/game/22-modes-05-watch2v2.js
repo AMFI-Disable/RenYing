@@ -47,7 +47,7 @@ function startWatch2v2Draft(customOpts = {}) {
 }
 
 // 天道 AI 的选人逻辑：禁选永远从“未被禁、未被选”的侠客里挑，保证 6 个席位互不重复；
-// 选人时优先拿能克制敌方已选阵容的侠客，禁用时优先封掉能克制自家已选阵容的侠客。
+// 选人时优先拿 beats 里写着敌方已选侠客的人，禁用时优先封掉 beats 里写着自家已选侠客的人。
 function watch2v2AiChoice(step) {
   const st = watch2v2Bp;
   const used = new Set();
@@ -56,7 +56,7 @@ function watch2v2AiChoice(step) {
   const avail = CHARS.map((_, i) => i).filter(i => !used.has(i));
   if (!avail.length) return 0;
   if (step.type === 'pick') {
-    // 打分选人：克制对面 +3、被对面克制 -2.5、和队友招式定位互补（近身配远程）+1.5，再加一点随机避免每局同一套
+    // 打分选人：beats 里有对面的人 +3、对面的 beats 里有自己 -2.5、和队友招式定位互补（近身配远程）+1.5，再加一点随机避免每局同一套
     const foes = st.picks[1 - step.team].filter(i => i >= 0).map(i => CHARS[i]);
     const mates = st.picks[step.team].filter(i => i >= 0).map(i => CHARS[i]);
     const role = ch => (typeof AI_KIT !== 'undefined' && AI_KIT[ch.skill] && AI_KIT[ch.skill].role) || 'rush';

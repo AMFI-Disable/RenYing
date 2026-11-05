@@ -490,7 +490,7 @@ function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
   }
   applySkins();
 }
-// 电脑选人：禁掉一个随机角色；选人时六成概率挑能克制你的角色
+// 电脑选人：禁掉一个随机角色；选人时六成概率挑 beats 里写着你这位侠客的角色
 function bpCpuChoice() {
   const valid = bpValidList();
   if (!valid.length) {
@@ -546,16 +546,11 @@ function bpTick(dt) {
   }
 }
 function bpDetailHTML(i) {
-  if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式与克制关系。</p>';
+  if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式说明。</p>';
   const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult];
   const curSkin = mySkin(c.id);
   const L = skinLook(i, curSkin);
   const col = `rgb(${L.slash})`;
-  const nm = ids => (ids || []).map(id => (CHARS[CHAR_IDX[id]] ? CHARS[CHAR_IDX[id]].name : id)).filter(Boolean).join('、') || '无';
-  const restr = HERO_RESTRAINTS_EXPLAIN[c.id];
-  const restrHtml = restr
-    ? `<div class="bp-restr-box" style="margin-top:6px;font-size:12px;line-height:1.45;color:var(--dim);text-align:left"><div style="color:#7fe0b0;margin-bottom:2px">${restr.beatsWhy}</div><div style="color:#ff8a8a">${restr.weakWhy}</div></div>`
-    : `<p class="ctr">克制 <b>${nm(c.beats)}</b>　怕 <b>${nm(c.weakTo)}</b></p>`;
   const st = c.stat || {};
   const guardTxt = `耐力 ${st.guardMax || 100} · 稳定 ${Math.round((st.guardStab || 1) * 100)}% · 透伤 ${Math.round((st.guardChip || 0.1) * 100)}% · 回涌 ${st.guardRegen || 28}/秒`;
   const hits = HERO_HIT_DETAILS[c.id] || {};
@@ -574,7 +569,7 @@ function bpDetailHTML(i) {
     <dt><span>技能</span> <span>${S.name}</span></dt><dd><span>${S.desc}</span><span>（冷却 ${S.cd} 秒）</span></dd>
     ${specialMove ? `<dt><span>绝技</span> <span>${S2.name}</span></dt><dd>${specialMove}</dd>` : ''}
     <dt><span>大招</span> <span>${U.name}</span></dt><dd><span>${U.desc}</span><div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
-    ${restrHtml}</div>`;
+    </div>`;
 }
 function buildDetails(force) {
   const box = document.getElementById('bpDetail'), mk = (bpMap() || {}).n || '';   // 换了地图，地利那一行跟着变

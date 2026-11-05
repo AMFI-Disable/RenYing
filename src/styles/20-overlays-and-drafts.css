@@ -312,8 +312,6 @@
   .bpdetail dl { display: grid; grid-template-columns: auto 1fr; gap: 2px clamp(6px, 1vw, 8px); margin: 0; }
   .bpdetail dt { color: #e9c46a; white-space: nowrap; font-size: 12px; }
   .bpdetail dd { margin: 0; font-size: 12px; line-height: 1.4; }
-  .bpdetail .ctr { margin-top: auto; padding-top: 4px; color: var(--dim); font-size: 12px; }
-  .bpdetail .ctr b { color: var(--ink); font-weight: 600; }
   .bp-skin-bar { display: flex; align-items: center; gap: 4px; margin: 2px 0 4px; flex-wrap: wrap; }
   .bp-skin-btn { font: 12px var(--body); padding: 1px 6px; border-radius: 5px; cursor: pointer; background: rgba(255,255,255,.06); color: var(--ink); border: 1px solid var(--faint); transition: all .15s; }
   .bp-skin-btn:hover { border-color: rgba(233,196,106,.5); }

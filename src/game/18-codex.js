@@ -74,7 +74,6 @@ function renderCodex() {
   const sum = Math.round(lk.reduce((a, k) => a + m[k].dmg, 0) * bn * 10) / 10;
   const fun = (typeof SKILL_FUN !== 'undefined' && SKILL_FUN[c.id]) || {};
   const sh = n => { const p = (n || '').split('·'); return p.length > 1 ? [p[0].trim(), p[1].trim()] : ['', n || '']; };
-  const nm = ids => ids.map(id => CHARS[CHAR_IDX[id]].name).join(' ');
   const tile = (icon, label, val, desc, cd, wide, moveKey, half) => {
     const hit = (moveKey && HERO_HIT_DETAILS[c.id] && HERO_HIT_DETAILS[c.id][moveKey]) || null;
     const mType = (moveKey && mTypes[moveKey]) || null;
@@ -90,7 +89,6 @@ function renderCodex() {
   const qType = mTypes.skill || { label: '技能', icon: 'skill', type: 'melee', rng: 'melee' };
   const rType = mTypes.ranged || { label: '远程', icon: 'ranged', type: 'ranged', rng: 'ranged' };
   const uType = mTypes.ult || { label: '奥义', type: 'fullscreen', rng: 'screen' };
-  const restr = HERO_RESTRAINTS_EXPLAIN[c.id] || { beatsWhy: `克 ${nm(c.beats)}`, weakWhy: `怕 ${nm(c.weakTo)}` };
   const qName = (skin && skinSkillName(skin, 1)) || S.name;
   const rName = (skin && skinSkillName(skin, 2)) || S2.name;
   const uName = (skin && skinUltName(skin)) || U.name;
@@ -116,8 +114,7 @@ function renderCodex() {
       const clear = stars > 0;
       return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
     })()}${typeof sagaCodexLine === 'function' ? sagaCodexLine(c.id) : ''}</div>`, '', true),
-    ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', false, null, true) : '',
-    tile('vs', '克制机理详解', '', `<div class="vs-explain"><div class="vs-line beats" style="color:#7fe0b0;margin-bottom:3px">${restr.beatsWhy}</div><div class="vs-line weaks" style="color:#ff8a8a">${restr.weakWhy}</div></div>`, '', true, null, !!ADV_SHORT[c.id]),
+    ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', true) : '',
   ].filter(Boolean).join('');
   for (const el of document.querySelectorAll('#cxBento .ic[data-ic]')) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.ic] || ICONS.skill}</svg>`;
   if ($id('cxBento')) $id('cxBento').style.setProperty('--cx-accent', col);

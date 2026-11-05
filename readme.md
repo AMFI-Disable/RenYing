@@ -136,7 +136,7 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` and an
 | 磁仙 Ci Xian | Two-Pole Adept | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp |
 | 千机 Qian Ji | Puppet Engineer | 投丸 Ball Throw | 暴雨梨花 Needle Burst | 千丝收网 Silk Recall |
 
-Full move lists, matchups and frame data: [wiki: Heroes And Combat](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) and [docs/frame-data.md](docs/frame-data.md).
+Full move lists and frame data: [wiki: Heroes And Combat](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) and [docs/frame-data.md](docs/frame-data.md).
 
 ---
 

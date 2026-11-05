@@ -29,7 +29,7 @@ const TIERS = [
 // Adjacent difficulty matchups: higher tier vs next best (immediately below it)
 const STEP_PAIRS = [
   { hi: TIERS[1], lo: TIERS[0], desc: '基础立回与适度格挡 vs 初学随机出招' },
-  { hi: TIERS[2], lo: TIERS[1], desc: '确反、招式取消与克制微调 vs 标准立回' },
+  { hi: TIERS[2], lo: TIERS[1], desc: '确反、招式取消与选人微调 vs 标准立回' },
   { hi: TIERS[3], lo: TIERS[2], desc: '零空隙反应、压起身、骗闪与进化基因 vs 劲敌' },
   { hi: TIERS[4], lo: TIERS[3], desc: '天道极致预判、精准招架与完全体打法基因 vs 绝顶' },
 ];

@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Removed
+
+- **Hero matchup text (`src/game/18-codex.js`, `src/game/18-codex-content.js`, `src/game/23-prematch-draft.js`, `src/data/31-hero-copy.js`, `src/data/30-ui-copy.js`, `docs/wiki/heroes-and-combat.md`, `index.html`, `renying-offline.html`)**: the Codex tile and the draft card no longer list which heroes each hero is strong or weak against, and the matchup table is gone from the wiki. The AI still uses the `beats` / `weakTo` fields when it drafts.
+
 ---
 
 ## [1.0.3] - 2026-11-04
@@ -319,8 +323,8 @@ Release pass for issue #11. Only changes that were implemented and then checked 
   - Added dynamic screen punch zoom and directional focal recoil (`camImpact`, `camPunch`) on impactful combat events including parries, counters, KO finishes, spear tip sweetspots, and Vajra Thunder Armor counters, with dampened 0.6x zoom scaling in 2v2 spectator mode.
 - **Procedural Elemental Hit Audio (`src/game.js`)**:
   - Added synthesized Web Audio procedural sound effects for elemental strikes: `thunderHit` (highpass crackle and sub rumble), `frostHit` (ice shatter and ringing metal), `windHit` (air rush whip), `fireHit` (flame thud), and `inkHit` (metallic fluid splash), dynamically triggered on unblocked hits based on hero archetype or attack elemental attributes.
-- **Exhaustive Simulation & KeZhi Counter Audit (`tools/simulate-all.mjs`)**:
-  - Implemented asymmetric KeZhi (克制) counter evaluation: hero counter relationships accept an advantage tolerance window of ±10% (expected ~58% ± 10%, i.e. 48%–68%), whereas neutral matchups enforce tight ±5% equilibrium (45%–55%).
+- **Exhaustive Simulation & Pairing Audit (`tools/simulate-all.mjs`)**:
+  - Implemented asymmetric pairing evaluation: hero counter relationships accept an advantage tolerance window of ±10% (expected ~58% ± 10%, i.e. 48%–68%), whereas neutral matchups enforce tight ±5% equilibrium (45%–55%).
   - Upgraded `tools/simulate-all.mjs` with full one-command pipeline support (`--all-in-one`, `--simulate-all`, `--train-all`, `--print-all`, and `--push`), running multi-mode simulation, neural policy training, distribution bundle builds, regression tests, and remote publishing.
 - **江湖驿站 Community Rework (`src/social.js`)**: one community screen with a public hall, friends, private chats and group chats, working on the static GitHub Pages site with no server. Players find each other through the same PeerJS broker netplay uses; whoever claims the hall slot first relays hall chat and the online list, and another player takes over within seconds when they leave. Friend requests, DMs and group messages go browser to browser; if the other player is offline they wait on the sender's side and are delivered when both are online, marked 未送达 until acknowledged. The seeded sample posts and the 约战 / 心得 channel tabs are gone; 发到社区 from a room now posts the room code to the hall. Unread DMs and friend requests show a badge on the 社区 tab.
 - **Auto Best Skin (设置 → 皮肤)**: on by default; any hero you haven't picked a skin for wears your highest-rarity owned skin (legend over elite). Choosing 默认 for a hero keeps it on the default look, and online opponents now receive the skins you actually wear.
@@ -357,7 +361,7 @@ Release pass for issue #11. Only changes that were implemented and then checked 
   - Optimized simulation speed to over 30,000 - 60,000 frames/sec (>500-800x real-time) via persistent in-process VM sandboxes, eliminating 700KB recompilation per match, and suppressing non-essential particle allocations.
 - **Mode-Specific Strength & Weakness Meta Tier Generator (`tools/gamemode-meta.mjs`, `tools/cvc-sim.mjs --meta`)**:
   - Built an automated meta analyzer simulating round-robin tournaments for each game mode.
-  - Evaluates win rates, damage differentials, S/A/B/C tier rankings, and calculates explicit counter matchups: what each hero is strong against (优势克制) and weak against (劣势被克) tailored to that specific game mode.
+  - Evaluates win rates, damage differentials, S/A/B/C tier rankings, and calculates explicit counter matchups: what each hero is strong and weak against tailored to that specific game mode.
   - Generates structured JSON reports in `data/meta/[mode].json` and renders markdown summary tables.
 - **User Fight Upload & Human Demonstration Distillation (`#rpTrainUploadBtn`, `tools/ingest-replay.mjs`)**:
   - Added "上传战局训AI" upload button and per-replay "训AI" action on the Replays screen (`#replays`), allowing players to export or upload match replays (`.json` / `.jsonl`) directly into the training pipeline.
@@ -664,7 +668,7 @@ Release pass for issue #11. Only changes that were implemented and then checked 
   - **Yue Hua (月华如水)**: Heals 22 HP, refreshes all skill cooldowns, and grants 4 seconds of super armor with 3 hits absorption (`太阴化生 · 月魄霸体`).
 - Tie Shan's Avalanche (山崩) ultimate is now fully steerable during the airborne leap, allowing horizontal directional steering (A/D / arrows) and fast-plunge slam acceleration (S / down), with spark trails and intelligent AI airborne tracking.
 - Character-specific skeletal animation poses: 22 bespoke joint poses across all 9 fighters for skills, ultimate charges, flurry attacks, and finishers.
-- Mechanic-driven 克制 (Counter / Matchup Advantage) system without flat stat debuffs:
+- Mechanic-driven move interactions without flat stat debuffs:
   - Ground tremors and shockwaves naturally bypass airborne and flying fighters (Yan Ling, Liu Yun).
   - Qing Feng's Gale dash slices through and purges Mo Yu's Ink Traps on contact.
   - Ling Shuang's Spin deflects incoming non-unbreakable projectiles.

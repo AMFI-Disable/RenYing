@@ -136,7 +136,7 @@
 | 磁仙 | 两极方士 | 极性反转 | 磁极 | 天地磁合 |
 | 千机 | 机关傀客 | 投丸 | 暴雨梨花 | 千丝收网 |
 
-完整招式、克制关系和帧数见 [Wiki：侠客与战斗](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) 和 [docs/frame-data.md](docs/frame-data.md)。
+完整招式和帧数见 [Wiki：侠客与战斗](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) 和 [docs/frame-data.md](docs/frame-data.md)。
 
 ---
 
