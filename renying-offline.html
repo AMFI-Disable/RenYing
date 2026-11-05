@@ -990,28 +990,11 @@ border: 1px solid rgba(120, 215, 255, 0.35);
 #towerModal .panel {
 max-width: min(720px, 96vw);
 }
-#towerModal.has-5-choices .panel,
-#towerModal:has(.choices-5) .panel {
-max-width: min(1120px, 96vw);
-}
 .tower-choices {
 display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0;
 }
-.tower-choices.choices-5 {
-grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-gap: 10px;
-}
-@media (min-width: 900px) {
-.tower-choices.choices-5 {
-grid-template-columns: repeat(5, 1fr);
-}
-}
-.tower-choices.choices-5 .tower-perk-card {
-padding: 14px 10px;
-}
 @media (max-width: 600px) {
 .tower-choices { grid-template-columns: 1fr; }
-.tower-choices.choices-5 { grid-template-columns: 1fr; }
 }
 .tower-perk-card {
 background: linear-gradient(170deg, rgba(30, 24, 40, .92), rgba(15, 12, 22, .96));
@@ -1037,6 +1020,10 @@ width: 100%; border-radius: 999px;
 .tower-perk-card .tp-tag { font-size: 12px; letter-spacing: .08em; opacity: .9; }
 .tower-perk-card.cursed { border-color: rgba(255, 120, 60, .55); background: linear-gradient(170deg, rgba(48, 20, 16, .94), rgba(18, 10, 10, .97)); }
 .tower-perk-card.legend { border-color: rgba(255, 215, 120, .8); box-shadow: 0 0 22px rgba(233, 196, 106, .35); }
+.tower-perk-card.auspicious { border-color: #ffe27a; background: linear-gradient(165deg, rgba(91, 69, 23, .58), rgba(15, 12, 22, .97)); box-shadow: 0 0 26px rgba(255, 216, 92, .4); }
+.tower-perk-card .tp-auspicious { padding: 3px 10px; border-radius: 999px; color: #241800; background: linear-gradient(90deg, #f6cb58, #fff0aa, #e9b934); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+.tower-perk-card.auspicious .tp-name { color: #ffe27a; }
+.tower-choices .tp-guidance { grid-column: 1 / -1; margin: 0; color: #f4d578; font-size: 13px; text-align: center; }
 .tower-choices .tp-owned { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--dim); text-align: center; }
 .home-gboss { border-color: rgba(200,60,80,.55); background: linear-gradient(120deg, rgba(200,60,80,.16), var(--panel) 60%); }
 .home-gboss .hc-kicker { color: #ff6b7a; }
@@ -7647,6 +7634,9 @@ const UI_COPY_EN = {
 "地形契合": "Terrain Synergy",
 "天时 · 契合": "Heavenly Favor · Synergy",
 "【天时 · 契合】": "【Heavenly Favor · Synergy】",
+"天时": "Heavenly Favor",
+"天时：为当前侠客精选；可用的侠客专属卷尽量每两卷出现一次": "Heavenly Favor is tailored to your hero; an unowned signature scroll is offered about every other pick when available.",
+"大家各自出战（不是同场联机），伤害都扣在这一只天魔身上。一次出战先抽十卷秘卷（每卷三选一，金边【天时】为当前侠客精选；可用的侠客专属卷尽量每两卷出现一次），再打 90 秒，天魔倒下会再站起来。天魔被斩杀或遁走后，按伤害发墨锭，伤害前三和斩杀者另得一个武器箱，下次打开武库自动领取。": "Each player fights alone (not in the same online match), and all damage counts against this shared demon. Before a run, choose 10 scrolls from three options each; the gold-bordered Heavenly Favor is tailored to your hero, and an unowned signature scroll is offered about every other pick when available. Fight for 90 seconds; the demon rises again whenever defeated. When it is slain or escapes, Ink rewards are paid by damage share, with a weapon chest for the top three damage dealers and the slayer, collected from the Armory next time you open it.",
 "密卷已锁定，等待对方完成选择…": "Scroll locked. Waiting for the other player…",
 "山河风貌 · 战场通览": "Land And Terrain · Battlefield Briefing",
 "武道境界 · 顿悟密卷": "Martial Insight · Battle Scrolls",
@@ -28534,7 +28524,9 @@ chosenIds.add(pick.id);
 return result;
 }
 function scDraw(heroId, owned, n = 3) {
-const pool = scPool(heroId).filter(s => !owned.includes(s.id));
+return scDrawFromPool(scPool(heroId).filter(s => !owned.includes(s.id)), owned, n);
+}
+function scDrawFromPool(pool, owned, n) {
 const out = [];
 const bag = [...pool];
 while (out.length < n && bag.length) {
@@ -28545,6 +28537,44 @@ while (i < bag.length - 1 && (r -= w[i]) > 0) i++;
 out.push(bag.splice(i, 1)[0]);
 }
 return out;
+}
+function scDrawGboss(heroId, owned, n = 3, draftIndex = 0) {
+const pool = scPool(heroId).filter(s => !owned.includes(s.id));
+const hasSignatureSlot = draftIndex % 2 === 0;
+const signatures = pool.filter(s => s.h === heroId);
+if (!hasSignatureSlot || !signatures.length) {
+return scDrawFromPool(pool.filter(s => !s.h), owned, n);
+}
+const signature = scDrawFromPool(signatures, owned, 1)[0];
+const rest = scDrawFromPool(pool.filter(s => s.id !== signature.id), owned, n - 1);
+return [signature, ...rest];
+}
+const SC_BOSS_TIANSHI = {
+qingfeng: ['qf_loop', 'qf_intent'], feiying: ['fy_ambush', 'fy_poison'], tieshan: ['ts_aftershock', 'ts_vajra'],
+lingshuang: ['ls_frost_tip', 'ls_turn'], liuyun: ['ly_return', 'ly_ride'], leiming: ['lm_mark', 'lm_guard'],
+moyu: ['my_bold', 'my_pond'], yuehua: ['yh_full', 'yh_mirror'], yanling: ['yl_chain', 'yl_sky'],
+yuxiao: ['yx_echo', 'yx_wall'], zuixian: ['zx_immortal', 'zx_sprawl'], gouchen: ['gc_sweep', 'gc_soul'],
+lingque: ['lq_drop', 'lq_thread'], liying: ['li_double_soul', 'li_mist_cut'],
+cixian: ['cx_attract', 'cx_flux'], qianji: ['qj_iron_spikes', 'qj_geardrive']
+};
+const SC_BOSS_TIANSHI_SCHOOLS = {
+qingfeng: ['jin', 'qi'], feiying: ['ying', 'feng'], tieshan: ['jin', 'xue'], lingshuang: ['shuang', 'jin'],
+liuyun: ['feng', 'qi'], leiming: ['lei', 'qi'], moyu: ['mo', 'qi'], yuehua: ['xue', 'jin'],
+yanling: ['feng', 'ying'], yuxiao: ['qi', 'feng'], zuixian: ['xue', 'qi'], gouchen: ['jin', 'xue'],
+lingque: ['ying', 'feng'], liying: ['ying', 'feng'], cixian: ['jin', 'qi'], qianji: ['feng', 'mo']
+};
+function scBossTianshi(heroId, candidates) {
+const available = new Set((candidates || []).map(s => s.id));
+for (const id of SC_BOSS_TIANSHI[heroId] || []) if (available.has(id)) return SC_BY[id];
+const schools = SC_BOSS_TIANSHI_SCHOOLS[heroId] || [];
+let best = candidates[0], bestScore = -999;
+for (const s of candidates) {
+const rarity = { l: 20, x: 14, e: 10, r: 6, c: 3 }[s.r] || 0;
+const school = schools.indexOf(s.s);
+const score = rarity + (school === 0 ? 12 : school === 1 ? 7 : 0);
+if (score > bestScore) { best = s; bestScore = score; }
+}
+return best || getAuspiciousBuff(heroId, null, candidates);
 }
 function getAuspiciousBuff(heroId, mapId, candidates) {
 if (!candidates || !candidates.length) return null;
@@ -28579,7 +28609,7 @@ const n = {}; for (const id of ids) { const s = SC_BY[id]; if (s && SC_RESO[s.s]
 return Object.entries(n).map(([k, v]) => `${SC_SCHOOLS[k].n} ${Math.min(v, SC_RESONANCE)}/${SC_RESONANCE}${v >= SC_RESONANCE ? '：' + SC_RESO[k] : ''}`);
 }
 const GB_PENDING_KEY = 'renying-gboss-pending', GB_KILLS_KEY = 'renying-gboss-kills';
-const GB_FIGHT = 90, GB_HP_MUL = 4, GB_DRAFT = 3;
+const GB_FIGHT = 90, GB_HP_MUL = 4, GB_DRAFT = 10;
 const GB = { st: null, at: 0, err: '', loading: false, ticket: null, dmg: 0, lastHp: 0, phase: 1, saveT: 0, picks: [], result: null, sending: false, retry: null };
 function gbossKills() {
 if (GB.st) return GB.st.kills | 0;
@@ -28637,6 +28667,7 @@ const feed = st.feed.length ? st.feed.map(r => `<li><b>${esc(r.name)}</b> <span>
 const last = st.last ? esc(`上一代（${CHARS[gbHeroIdx(st.last.hero)].name}）${st.last.killed ? `被 ${st.last.killer} 斩杀` : '没被打死，遁走了'}`) : '';   // 整句一个文本节点，英文模板才对得上
 const me = !gbCloud() ? '登录云端账号才能出战（游客和本机存档只能观战）'
 : st.me && st.me.runs ? `你这一代造成 ${st.me.dmg.toLocaleString()} 伤害（出战 ${st.me.runs} 次）` : '你这一代还没出战';
+const rule = `大家各自出战（不是同场联机），伤害都扣在这一只天魔身上。一次出战先抽十卷秘卷（每卷三选一，金边【天时】为当前侠客精选；可用的侠客专属卷尽量每两卷出现一次），再打 ${GB_FIGHT} 秒，天魔倒下会再站起来。天魔被斩杀或遁走后，按伤害发墨锭，伤害前三和斩杀者另得一个武器箱，下次打开武库自动领取。`;
 body.innerHTML = `
 <div class="gb-boss" style="--hc:${hero.look.slash}">
 <div class="gb-name"><i>第 ${b.gen} 代天魔</i> · <span>${esc(hero.name)}</span></div>
@@ -28649,7 +28680,7 @@ body.innerHTML = `
 <div><h3>最近战报</h3><ul class="gb-feed">${feed}</ul>${last ? `<p class="gb-last">${last}</p>` : ''}</div>
 </div>
 <p class="gb-me">${me}</p>
-<p class="gb-rule">大家各自出战（不是同场联机），伤害都扣在这一只天魔身上。一次出战先抽三卷秘卷，再打 ${GB_FIGHT} 秒，天魔倒下会再站起来。天魔被斩杀或遁走后，按伤害发墨锭，伤害前三和斩杀者另得一个武器箱，下次打开武库自动领取。</p>`;
+<p class="gb-rule">${cvT(rule)}</p>`;
 $id('gbGo').disabled = !gbCloud() || !!(pend && pend.uid === gbUid());
 }
 function gbPending() { try { const p = JSON.parse(localStorage.getItem(GB_PENDING_KEY) || 'null'); return p && /^[0-9a-f]{20}$/.test(p.id) ? p : null; } catch (e) { return null; } }
@@ -28698,22 +28729,23 @@ M.phase = 'draft'; paused = true;
 gbDraft();
 }
 function gbDraft() {
-const picked = scDraw(A.ch.id, M.towerPerks, 5);
-if (GB.picks.length >= GB_DRAFT || !picked.length) { gbFight(); return; }
+if (GB.picks.length >= GB_DRAFT) { gbFight(); return; }
+const picked = scDrawGboss(A.ch.id, M.towerPerks, 3, GB.picks.length);
+if (!picked.length) { gbFight(); return; }
+const auspicious = scBossTianshi(A.ch.id, picked);
 const reso = scResoLines(M.towerPerks);
 $id('towerTitle').textContent = '天魔讨伐 · 出战前抽秘卷';
 $id('towerFloorBadge').textContent = `第 ${GB.picks.length + 1} / ${GB_DRAFT} 卷 · 天魔词缀：${M.foeScrolls.map(id => SC_BY[id].n).join('、') || '无'}`;
-const modal = $id('towerModal');
-if (modal) modal.classList.add('has-5-choices');
 const el = $id('towerChoices');
-el.classList.add('choices-5');
-el.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}" data-perk="${p.id}">
+el.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}${auspicious && p.id === auspicious.id ? ' auspicious' : ''}" data-perk="${p.id}">
 <div class="tp-icon">${scIcon(p)}</div>
 <div class="tp-name">「${p.n}」</div>
+${auspicious && p.id === auspicious.id ? `<span class="tp-auspicious">✦ ${cvT('天时')} ✦</span>` : ''}
 ${scTag(p)}
 <div class="tp-desc">${p.d}</div>
 <button class="go small tp-pick" type="button">带上这卷</button>
-</div>`).join('') + (M.towerPerks.length ? `<p class="tp-owned">已带 ${M.towerPerks.length} 卷${reso.length ? ' · ' + reso.join(' · ') : ''}</p>` : '');
+</div>`).join('') + `<p class="tp-guidance">${cvT('天时：为当前侠客精选；可用的侠客专属卷尽量每两卷出现一次')}</p>`
++ (M.towerPerks.length ? `<p class="tp-owned">已带 ${M.towerPerks.length} 卷${reso.length ? ' · ' + reso.join(' · ') : ''}</p>` : '');
 el.querySelectorAll('.tower-perk-card').forEach(card => card.addEventListener('click', () => gbPick(card.dataset.perk)));
 showScreen('towerModal');
 }
@@ -28723,10 +28755,6 @@ M.towerPerks.push(id); GB.picks.push(id);
 gbDraft();
 }
 function gbFight() {
-const modal = $id('towerModal');
-if (modal) modal.classList.remove('has-5-choices');
-const el = $id('towerChoices');
-if (el) el.classList.remove('choices-5');
 showScreen(null);
 paused = false;
 startRound();   // 秘卷和天魔词缀的开局效果在这里生效
@@ -28786,10 +28814,6 @@ t = res.killed ? `计入全服 ${res.credited.toLocaleString()} 伤害，最后�
 $id('endRank').textContent = t;
 }
 function gbossQuit() {
-const modal = $id('towerModal');
-if (modal) modal.classList.remove('has-5-choices');
-const el = $id('towerChoices');
-if (el) el.classList.remove('choices-5');
 if (M.mode === 'boss' && M.phase !== 'end') gbossFinish('quit');
 }
 $id('gbGo').addEventListener('click', () => { SFX.slice && SFX.slice(); gbossGo(); });

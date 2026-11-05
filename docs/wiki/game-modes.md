@@ -43,7 +43,7 @@
 | **同袍肉鸽 · 斩妖列传 (Co-op Roguelike)** | Each hero's monster-fighting story: five stages of waves and a boss, picking shared scrolls along the way. Solo or with friends. | Online co-op: server |
 | **同袍肉鸽 · 众志破魔 (Co-op Raid)** | 2 to 3 players share scrolls and healing against the 融魂魔首, a boss with six skills taken from three heroes. Local, matchmaking or a private room. | Online: server |
 | **江湖共斗 · Open World** | One shared 24,000 px map in eight zones (竹林, 古道, 山寨, 魔窟, 荒村, 寒渊, 绝峰, 祭坛), harder further in. Join or leave any time, up to 40 players per line, a world boss (妖王) and the server-wide story 江湖长卷 (51 chapters). `T` opens 神行千里 to teleport to allies or shrines. | Server; rewards need an account |
-| **天魔讨伐 · Demon Raid** | A server-wide boss. Draft five scrolls before each fight. | Server |
+| **天魔讨伐 · Demon Raid** | A server-wide boss. Draft ten scrolls before each fight, choosing from three options each time; a hero-curated Heavenly Favor is highlighted. | Server |
 
 ## Online / 联机
 

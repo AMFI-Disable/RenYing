@@ -1,11 +1,11 @@
 // ======================= 天魔讨伐：全服一起打同一只天魔 =======================
 // 天魔的血量、谁打了多少、谁斩杀的都只在服务器上（cloudflare/worker.js 的 /api/gboss），这里不编人也不编进度：
 // 页面上的名单、正在出战的人数、最近战报全是服务器回来的真实记录，连不上就直说连不上。
-// 一次出战：先领票 → 抽三次秘卷（五选一）→ 和天魔打 90 秒（天魔倒下会再站起来，越打越凶）→ 交上打出的伤害。
+// 一次出战：先领票 → 抽十卷秘卷（三选一）→ 和天魔打 90 秒（天魔倒下会再站起来，越打越凶）→ 交上打出的伤害。
 // 伤害每秒存一份到本机（GB_PENDING_KEY）：打到一半刷新、断网、关掉网页，下次打开会把已经打出的伤害补交上去，
 // 同一张票服务器只认一次，所以重交不会多算。
 const GB_PENDING_KEY = 'renying-gboss-pending', GB_KILLS_KEY = 'renying-gboss-kills';
-const GB_FIGHT = 90, GB_HP_MUL = 4, GB_DRAFT = 3;
+const GB_FIGHT = 90, GB_HP_MUL = 4, GB_DRAFT = 10;
 const GB = { st: null, at: 0, err: '', loading: false, ticket: null, dmg: 0, lastHp: 0, phase: 1, saveT: 0, picks: [], result: null, sending: false, retry: null };
 
 // 全服击败过几代天魔（解锁几卷天书）：以服务器为准，本机留一份，离线时也能用上次的数
@@ -69,6 +69,7 @@ function renderGboss() {
   const last = st.last ? esc(`上一代（${CHARS[gbHeroIdx(st.last.hero)].name}）${st.last.killed ? `被 ${st.last.killer} 斩杀` : '没被打死，遁走了'}`) : '';   // 整句一个文本节点，英文模板才对得上
   const me = !gbCloud() ? '登录云端账号才能出战（游客和本机存档只能观战）'
     : st.me && st.me.runs ? `你这一代造成 ${st.me.dmg.toLocaleString()} 伤害（出战 ${st.me.runs} 次）` : '你这一代还没出战';
+  const rule = `大家各自出战（不是同场联机），伤害都扣在这一只天魔身上。一次出战先抽十卷秘卷（每卷三选一，金边【天时】为当前侠客精选；可用的侠客专属卷尽量每两卷出现一次），再打 ${GB_FIGHT} 秒，天魔倒下会再站起来。天魔被斩杀或遁走后，按伤害发墨锭，伤害前三和斩杀者另得一个武器箱，下次打开武库自动领取。`;
   body.innerHTML = `
     <div class="gb-boss" style="--hc:${hero.look.slash}">
       <div class="gb-name"><i>第 ${b.gen} 代天魔</i> · <span>${esc(hero.name)}</span></div>
@@ -81,7 +82,7 @@ function renderGboss() {
       <div><h3>最近战报</h3><ul class="gb-feed">${feed}</ul>${last ? `<p class="gb-last">${last}</p>` : ''}</div>
     </div>
     <p class="gb-me">${me}</p>
-    <p class="gb-rule">大家各自出战（不是同场联机），伤害都扣在这一只天魔身上。一次出战先抽三卷秘卷，再打 ${GB_FIGHT} 秒，天魔倒下会再站起来。天魔被斩杀或遁走后，按伤害发墨锭，伤害前三和斩杀者另得一个武器箱，下次打开武库自动领取。</p>`;
+    <p class="gb-rule">${cvT(rule)}</p>`;
   $id('gbGo').disabled = !gbCloud() || !!(pend && pend.uid === gbUid());
 }
 
@@ -134,22 +135,23 @@ async function gbossGo() {
   gbDraft();
 }
 function gbDraft() {
-  const picked = scDraw(A.ch.id, M.towerPerks, 5);
-  if (GB.picks.length >= GB_DRAFT || !picked.length) { gbFight(); return; }
+  if (GB.picks.length >= GB_DRAFT) { gbFight(); return; }
+  const picked = scDrawGboss(A.ch.id, M.towerPerks, 3, GB.picks.length);
+  if (!picked.length) { gbFight(); return; }
+  const auspicious = scBossTianshi(A.ch.id, picked);
   const reso = scResoLines(M.towerPerks);
   $id('towerTitle').textContent = '天魔讨伐 · 出战前抽秘卷';
   $id('towerFloorBadge').textContent = `第 ${GB.picks.length + 1} / ${GB_DRAFT} 卷 · 天魔词缀：${M.foeScrolls.map(id => SC_BY[id].n).join('、') || '无'}`;
-  const modal = $id('towerModal');
-  if (modal) modal.classList.add('has-5-choices');
   const el = $id('towerChoices');
-  el.classList.add('choices-5');
-  el.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}" data-perk="${p.id}">
+  el.innerHTML = picked.map(p => `<div class="tower-perk-card${p.r === 'x' ? ' cursed' : p.r === 'l' ? ' legend' : ''}${auspicious && p.id === auspicious.id ? ' auspicious' : ''}" data-perk="${p.id}">
       <div class="tp-icon">${scIcon(p)}</div>
       <div class="tp-name">「${p.n}」</div>
+      ${auspicious && p.id === auspicious.id ? `<span class="tp-auspicious">✦ ${cvT('天时')} ✦</span>` : ''}
       ${scTag(p)}
       <div class="tp-desc">${p.d}</div>
       <button class="go small tp-pick" type="button">带上这卷</button>
-    </div>`).join('') + (M.towerPerks.length ? `<p class="tp-owned">已带 ${M.towerPerks.length} 卷${reso.length ? ' · ' + reso.join(' · ') : ''}</p>` : '');
+    </div>`).join('') + `<p class="tp-guidance">${cvT('天时：为当前侠客精选；可用的侠客专属卷尽量每两卷出现一次')}</p>`
+    + (M.towerPerks.length ? `<p class="tp-owned">已带 ${M.towerPerks.length} 卷${reso.length ? ' · ' + reso.join(' · ') : ''}</p>` : '');
   el.querySelectorAll('.tower-perk-card').forEach(card => card.addEventListener('click', () => gbPick(card.dataset.perk)));
   showScreen('towerModal');
 }
@@ -159,10 +161,6 @@ function gbPick(id) {
   gbDraft();
 }
 function gbFight() {
-  const modal = $id('towerModal');
-  if (modal) modal.classList.remove('has-5-choices');
-  const el = $id('towerChoices');
-  if (el) el.classList.remove('choices-5');
   showScreen(null);
   paused = false;
   startRound();   // 秘卷和天魔词缀的开局效果在这里生效
@@ -225,10 +223,6 @@ function gbEndText() {
 }
 // 中途退出（暂停菜单里的「返回菜单」）：已经打出的伤害照样交
 function gbossQuit() {
-  const modal = $id('towerModal');
-  if (modal) modal.classList.remove('has-5-choices');
-  const el = $id('towerChoices');
-  if (el) el.classList.remove('choices-5');
   if (M.mode === 'boss' && M.phase !== 'end') gbossFinish('quit');
 }
 

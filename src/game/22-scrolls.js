@@ -485,7 +485,9 @@ function scCompetitiveCandidates(heroId, seed, count = 3) {
   return result;
 }
 function scDraw(heroId, owned, n = 3) {
-  const pool = scPool(heroId).filter(s => !owned.includes(s.id));
+  return scDrawFromPool(scPool(heroId).filter(s => !owned.includes(s.id)), owned, n);
+}
+function scDrawFromPool(pool, owned, n) {
   const out = [];
   const bag = [...pool];
   while (out.length < n && bag.length) {
@@ -497,6 +499,48 @@ function scDraw(heroId, owned, n = 3) {
     out.push(bag.splice(i, 1)[0]);
   }
   return out;
+}
+
+// 全服天魔：10 卷、每卷三选一。每隔一卷安排一次侠客专属卷，约一半选卷都有专属卷可选。
+function scDrawGboss(heroId, owned, n = 3, draftIndex = 0) {
+  const pool = scPool(heroId).filter(s => !owned.includes(s.id));
+  const hasSignatureSlot = draftIndex % 2 === 0;
+  const signatures = pool.filter(s => s.h === heroId);
+  if (!hasSignatureSlot || !signatures.length) {
+    return scDrawFromPool(pool.filter(s => !s.h), owned, n);
+  }
+  const signature = scDrawFromPool(signatures, owned, 1)[0];
+  const rest = scDrawFromPool(pool.filter(s => s.id !== signature.id), owned, n - 1);
+  return [signature, ...rest];
+}
+
+// 天魔讨伐的天时优先推荐为每位侠客手选的招牌秘卷，未出现或已获得时再按品质与契合度推荐。
+const SC_BOSS_TIANSHI = {
+  qingfeng: ['qf_loop', 'qf_intent'], feiying: ['fy_ambush', 'fy_poison'], tieshan: ['ts_aftershock', 'ts_vajra'],
+  lingshuang: ['ls_frost_tip', 'ls_turn'], liuyun: ['ly_return', 'ly_ride'], leiming: ['lm_mark', 'lm_guard'],
+  moyu: ['my_bold', 'my_pond'], yuehua: ['yh_full', 'yh_mirror'], yanling: ['yl_chain', 'yl_sky'],
+  yuxiao: ['yx_echo', 'yx_wall'], zuixian: ['zx_immortal', 'zx_sprawl'], gouchen: ['gc_sweep', 'gc_soul'],
+  lingque: ['lq_drop', 'lq_thread'], liying: ['li_double_soul', 'li_mist_cut'],
+  cixian: ['cx_attract', 'cx_flux'], qianji: ['qj_iron_spikes', 'qj_geardrive']
+};
+const SC_BOSS_TIANSHI_SCHOOLS = {
+  qingfeng: ['jin', 'qi'], feiying: ['ying', 'feng'], tieshan: ['jin', 'xue'], lingshuang: ['shuang', 'jin'],
+  liuyun: ['feng', 'qi'], leiming: ['lei', 'qi'], moyu: ['mo', 'qi'], yuehua: ['xue', 'jin'],
+  yanling: ['feng', 'ying'], yuxiao: ['qi', 'feng'], zuixian: ['xue', 'qi'], gouchen: ['jin', 'xue'],
+  lingque: ['ying', 'feng'], liying: ['ying', 'feng'], cixian: ['jin', 'qi'], qianji: ['feng', 'mo']
+};
+function scBossTianshi(heroId, candidates) {
+  const available = new Set((candidates || []).map(s => s.id));
+  for (const id of SC_BOSS_TIANSHI[heroId] || []) if (available.has(id)) return SC_BY[id];
+  const schools = SC_BOSS_TIANSHI_SCHOOLS[heroId] || [];
+  let best = candidates[0], bestScore = -999;
+  for (const s of candidates) {
+    const rarity = { l: 20, x: 14, e: 10, r: 6, c: 3 }[s.r] || 0;
+    const school = schools.indexOf(s.s);
+    const score = rarity + (school === 0 ? 12 : school === 1 ? 7 : 0);
+    if (score > bestScore) { best = s; bestScore = score; }
+  }
+  return best || getAuspiciousBuff(heroId, null, candidates);
 }
 
 // 竞技顿悟密卷池与【天时 · 契合】计算

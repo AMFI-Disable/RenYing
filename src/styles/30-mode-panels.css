@@ -55,28 +55,11 @@
 #towerModal .panel {
   max-width: min(720px, 96vw);
 }
-#towerModal.has-5-choices .panel,
-#towerModal:has(.choices-5) .panel {
-  max-width: min(1120px, 96vw);
-}
 .tower-choices {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0;
 }
-.tower-choices.choices-5 {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-}
-@media (min-width: 900px) {
-  .tower-choices.choices-5 {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-.tower-choices.choices-5 .tower-perk-card {
-  padding: 14px 10px;
-}
 @media (max-width: 600px) {
   .tower-choices { grid-template-columns: 1fr; }
-  .tower-choices.choices-5 { grid-template-columns: 1fr; }
 }
 .tower-perk-card {
   background: linear-gradient(170deg, rgba(30, 24, 40, .92), rgba(15, 12, 22, .96));
@@ -102,6 +85,10 @@
 .tower-perk-card .tp-tag { font-size: 12px; letter-spacing: .08em; opacity: .9; }
 .tower-perk-card.cursed { border-color: rgba(255, 120, 60, .55); background: linear-gradient(170deg, rgba(48, 20, 16, .94), rgba(18, 10, 10, .97)); }
 .tower-perk-card.legend { border-color: rgba(255, 215, 120, .8); box-shadow: 0 0 22px rgba(233, 196, 106, .35); }
+.tower-perk-card.auspicious { border-color: #ffe27a; background: linear-gradient(165deg, rgba(91, 69, 23, .58), rgba(15, 12, 22, .97)); box-shadow: 0 0 26px rgba(255, 216, 92, .4); }
+.tower-perk-card .tp-auspicious { padding: 3px 10px; border-radius: 999px; color: #241800; background: linear-gradient(90deg, #f6cb58, #fff0aa, #e9b934); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+.tower-perk-card.auspicious .tp-name { color: #ffe27a; }
+.tower-choices .tp-guidance { grid-column: 1 / -1; margin: 0; color: #f4d578; font-size: 13px; text-align: center; }
 .tower-choices .tp-owned { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--dim); text-align: center; }
 /* 天魔讨伐 */
 .home-gboss { border-color: rgba(200,60,80,.55); background: linear-gradient(120deg, rgba(200,60,80,.16), var(--panel) 60%); }
