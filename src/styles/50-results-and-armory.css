@@ -425,6 +425,10 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-chart svg { display: block; width: 100%; height: 150px; }
   .ar-chart polyline.fill { fill: rgba(233,196,106,.12); stroke: none; }
   .ar-chart polyline.line { fill: none; stroke: var(--gold); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .ar-chart line.ref { stroke: var(--dim); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; opacity: .7; }
+  .ar-chg { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; margin-bottom: 6px; font-size: 15px; font-weight: 700; }
+  .ar-chg small { font-size: 12px; font-weight: 400; color: var(--dim); }
+  .ar-chg.up { color: #e85d5d; } .ar-chg.down { color: #4fc38a; } .ar-chg.flat { color: var(--dim); }
   .ar-chartlbl { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 12px; color: var(--dim); }
   .ar-lst { display: grid; gap: 4px; }
   .ar-lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 6px 10px; font-size: 13px; font-variant-numeric: tabular-nums; background: rgba(236,232,225,.035); }

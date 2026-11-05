@@ -6,6 +6,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- **Market price chart**: the item price chart now shows today's change in percent and in Ink, compared with yesterday's last trade, and draws that reference price as a dashed line. Rises are red and falls are green.
 - **Hero ultimate previews**: expanded all 16 Codex replays into distinct windup, travel, multi-hit, impact, and recovery phases. Cards now show a rival fighter reacting to hits, with hero-specific ultimate effects and enough frame space to follow the sequence.
 
 ---

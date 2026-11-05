@@ -1918,6 +1918,10 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
 .ar-chart svg { display: block; width: 100%; height: 150px; }
 .ar-chart polyline.fill { fill: rgba(233,196,106,.12); stroke: none; }
 .ar-chart polyline.line { fill: none; stroke: var(--gold); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.ar-chart line.ref { stroke: var(--dim); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; opacity: .7; }
+.ar-chg { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; margin-bottom: 6px; font-size: 15px; font-weight: 700; }
+.ar-chg small { font-size: 12px; font-weight: 400; color: var(--dim); }
+.ar-chg.up { color: #e85d5d; } .ar-chg.down { color: #4fc38a; } .ar-chg.flat { color: var(--dim); }
 .ar-chartlbl { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 12px; color: var(--dim); }
 .ar-lst { display: grid; gap: 4px; }
 .ar-lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 6px 10px; font-size: 13px; font-variant-numeric: tabular-nums; background: rgba(236,232,225,.035); }
@@ -35447,8 +35451,18 @@ const pts = deals.filter(x => x && x.price > 0 && x.at > 0).slice(0, 120).revers
 if (pts.length < 2) return empty(pts.length ? `只成交过一次：${fmt(pts[0].price)} 墨锭` : '这款还没有成交记录', 'ar-empty sm');
 const W = 520, H = 150, t0 = pts[0].at, ts = pts[pts.length - 1].at - t0 || 1;
 const ys = pts.map(x => x.price), lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1;
-const line = pts.map(x => `${((x.at - t0) / ts * W).toFixed(1)},${(H - 14 - (x.price - lo) / sp * (H - 28)).toFixed(1)}`).join(' ');
-return `<div class="ar-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="最近的成交价"><polyline points="0,${H} ${line} ${W},${H}" class="fill"/><polyline points="${line}" class="line"/></svg><div class="ar-chartlbl"><span>${new Date(t0).toLocaleDateString()}</span><span>最近 ${pts.length} 笔成交：最高 ${fmt(hi)} · 最低 ${fmt(lo)} · 最近一笔 ${fmt(ys[ys.length - 1])}</span><span>${new Date(pts[pts.length - 1].at).toLocaleDateString()}</span></div></div>`;
+const Y = p => (H - 14 - (p - lo) / sp * (H - 28)).toFixed(1);
+const line = pts.map(x => `${((x.at - t0) / ts * W).toFixed(1)},${Y(x.price)}`).join(' ');
+const td = today(), tdy = pts.filter(x => C.day(x.at) === td), prev = pts.filter(x => C.day(x.at) < td);
+let chg = `<span class="ar-chg flat">今日 —<small>今天还没成交</small></span>`, base = 0;
+if (tdy.length) {
+base = prev.length ? prev[prev.length - 1].price : tdy[0].price;
+const now = tdy[tdy.length - 1].price, d = now - base, pc = base ? d / base * 100 : 0;
+const cls = d > 0 ? 'up' : d < 0 ? 'down' : 'flat', sign = d > 0 ? '+' : d < 0 ? '−' : '';
+chg = `<span class="ar-chg ${cls}">今日 ${sign}${Math.abs(pc).toFixed(2)}%<small>${sign}${fmt(Math.abs(d))} · 对比${prev.length ? '昨收' : '今天第一笔'} ${fmt(base)}</small></span>`;
+}
+const ref = base ? `<line x1="0" x2="${W}" y1="${Y(base)}" y2="${Y(base)}" class="ref"/>` : '';
+return `<div class="ar-chart">${chg}<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="最近的成交价"><polyline points="0,${H} ${line} ${W},${H}" class="fill"/>${ref}<polyline points="${line}" class="line"/></svg><div class="ar-chartlbl"><span>${new Date(t0).toLocaleDateString()}</span><span>最近 ${pts.length} 笔成交：最高 ${fmt(hi)} · 最低 ${fmt(lo)} · 最近一笔 ${fmt(ys[ys.length - 1])}</span><span>${new Date(pts[pts.length - 1].at).toLocaleDateString()}</span></div></div>`;
 }
 function pMarket() {
 const s = blankS(), on = MODE === 'server';

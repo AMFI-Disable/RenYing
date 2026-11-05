@@ -886,8 +886,19 @@
     if (pts.length < 2) return empty(pts.length ? `只成交过一次：${fmt(pts[0].price)} 墨锭` : '这款还没有成交记录', 'ar-empty sm');
     const W = 520, H = 150, t0 = pts[0].at, ts = pts[pts.length - 1].at - t0 || 1;
     const ys = pts.map(x => x.price), lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1;
-    const line = pts.map(x => `${((x.at - t0) / ts * W).toFixed(1)},${(H - 14 - (x.price - lo) / sp * (H - 28)).toFixed(1)}`).join(' ');
-    return `<div class="ar-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="最近的成交价"><polyline points="0,${H} ${line} ${W},${H}" class="fill"/><polyline points="${line}" class="line"/></svg><div class="ar-chartlbl"><span>${new Date(t0).toLocaleDateString()}</span><span>最近 ${pts.length} 笔成交：最高 ${fmt(hi)} · 最低 ${fmt(lo)} · 最近一笔 ${fmt(ys[ys.length - 1])}</span><span>${new Date(pts[pts.length - 1].at).toLocaleDateString()}</span></div></div>`;
+    const Y = p => (H - 14 - (p - lo) / sp * (H - 28)).toFixed(1);
+    const line = pts.map(x => `${((x.at - t0) / ts * W).toFixed(1)},${Y(x.price)}`).join(' ');
+    // 今日涨跌：今天最后一笔对比昨天及以前的最后一笔（收盘）；以前没成交过就对比今天第一笔
+    const td = today(), tdy = pts.filter(x => C.day(x.at) === td), prev = pts.filter(x => C.day(x.at) < td);
+    let chg = `<span class="ar-chg flat">今日 —<small>今天还没成交</small></span>`, base = 0;
+    if (tdy.length) {
+      base = prev.length ? prev[prev.length - 1].price : tdy[0].price;
+      const now = tdy[tdy.length - 1].price, d = now - base, pc = base ? d / base * 100 : 0;
+      const cls = d > 0 ? 'up' : d < 0 ? 'down' : 'flat', sign = d > 0 ? '+' : d < 0 ? '−' : '';
+      chg = `<span class="ar-chg ${cls}">今日 ${sign}${Math.abs(pc).toFixed(2)}%<small>${sign}${fmt(Math.abs(d))} · 对比${prev.length ? '昨收' : '今天第一笔'} ${fmt(base)}</small></span>`;
+    }
+    const ref = base ? `<line x1="0" x2="${W}" y1="${Y(base)}" y2="${Y(base)}" class="ref"/>` : '';
+    return `<div class="ar-chart">${chg}<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="最近的成交价"><polyline points="0,${H} ${line} ${W},${H}" class="fill"/>${ref}<polyline points="${line}" class="line"/></svg><div class="ar-chartlbl"><span>${new Date(t0).toLocaleDateString()}</span><span>最近 ${pts.length} 笔成交：最高 ${fmt(hi)} · 最低 ${fmt(lo)} · 最近一笔 ${fmt(ys[ys.length - 1])}</span><span>${new Date(pts[pts.length - 1].at).toLocaleDateString()}</span></div></div>`;
   }
   function pMarket() {
     const s = blankS(), on = MODE === 'server';
