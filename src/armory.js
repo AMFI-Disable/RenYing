@@ -568,12 +568,14 @@
     if (!INS || !INS.it) return;
     const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i);
     const worn = own && ST.eq[C.charOf(it.k)] === it.i, can = live(), mk = MODE === 'server';
+    const upgradeCost = C.ST_UPGRADE_COST[tierOf(it.k)];
     const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '汰换合同', supply: '每周补给', op: '江湖行动', term: '终端机' }[it.src] || '';
     $id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[tierOf(it.k)].n}</span>
       <h3>${escapeHTML(itemName(it))}</h3>${it.n ? `<p class="ar-tagname">‘${escapeHTML(it.n)}’</p>` : ''}
       <dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}武器箱</dd>
       ${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateString() : ''}</dd>` : ''}<dt>玩家市场</dt><dd>${mkLine(it.k, it.st)}</dd></dl>
       <div class="ar-insbtns">${own ? `${worn ? `<button type="button" class="ghost small" data-ins="unequip">脱下</button>` : `<button type="button" class="go small" data-ins="equip" ${can ? '' : 'disabled'}>穿上</button>`}
+        ${it.st < 0 ? `<button type="button" class="go small" data-ins="upgrade" ${can && PROF.ink >= upgradeCost ? '' : 'disabled'}>升为斩数版 · ${fmt(upgradeCost)}墨锭</button>` : ''}
         <button type="button" class="ghost small" data-ins="list" ${can && mk ? '' : 'disabled'}${mk ? '' : ' title="玩家市场要连上服务器才能用"'}>挂到市场</button>
         <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
         ${INS.from === 'pv' ? '<button type="button" class="go small" data-ins="cases">去所属套装</button>' : `<button type="button" class="ghost small" data-ins="market">这款的行情</button>`}<button type="button" class="ghost small" data-ins="close">关闭</button></div>
@@ -588,6 +590,14 @@
     if (a === 'cases') { closeIns(); TAB = 'cases'; render(); $id('arMain').scrollTop = 0; return; }
     if (a === 'equip') { const r = await act('equip', { i: it.i }); if (r && r.ok) { SFX.slice && SFX.slice(); toast(`已穿上「${skinName(it.k)}」`); if (INS) insInfo(); render(); } return; }
     if (a === 'unequip') { const r = await act('unequip', { char: C.charOf(it.k) }); if (r && r.ok) { if (INS) insInfo(); render(); } return; }
+    if (a === 'upgrade') {
+      const cost = C.ST_UPGRADE_COST[tierOf(it.k)];
+      confirmBox('升级为斩数版', `花 ${ink(cost)} 把「${escapeHTML(itemName(it))}」升级成斩数版？升级后从 0 斩开始，保留这件饰品的编号和名字，不能退回普通版。`, '确认升级', async () => {
+        const r = await act('upgradeSt', { i: it.i });
+        if (r && r.ok) { SFX.chargeFull && SFX.chargeFull(); toast(`已升级为斩数版，花了 ${fmt(r.price)} 墨锭`); if (INS) INS.it = ST.inv.find(x => x.i === it.i) || it; render(); if (INS) insInfo(); }
+      });
+      return;
+    }
     if (a === 'list') { listBox(it); return; }
     if (a === 'rename') renameBox(it);
   }
@@ -955,8 +965,8 @@
     } else if (MK.view === 'mine') {
       body = s.lst.length ? myListings(s) : empty('没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定，同时挂多少件都可以。');
     } else {
-      const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出' }[h.kind] || '';
-      body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : empty('还没有成交记录。');
+      const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出', upgrade: '升为斩数版' }[h.kind] || '';
+      body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' || h.kind === 'upgrade' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : empty('还没有成交记录。');
     }
     return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
   }

@@ -69,6 +69,31 @@ const A = await newUser('alice');
   ok(c.ledger.ink === inkOf(A.uid), '返回的账本和服务器一致');
 }
 
+section('升级斩数版：按品质收费、保留饰品编号并防止重复扣款');
+{
+  const U = await newUser('st-upgrader', { ink: 5000 }); await econ(U.token, 'sync');
+  const [regular, listed] = grant(U.uid, [{ k: 'qf_p1', n: '旧名' }, { k: 'ts_p1' }]);
+  await econ(U.token, 'equip', { i: regular.i });
+  const cost = C.ST_UPGRADE_COST[C.ITEM[regular.k].tier], before = inkOf(U.uid), upgradeNonce = nonce();
+  const upgraded = await econ(U.token, 'upgradeSt', { i: regular.i }, upgradeNonce);
+  const item = itemOf(U.uid, regular.i), replay = await econ(U.token, 'upgradeSt', { i: regular.i }, upgradeNonce);
+  ok(upgraded.res.ok && upgraded.res.price === cost && item.i === regular.i && item.st === 0 && item.n === '旧名' && inkOf(U.uid) === before - cost, '升级按品质扣固定墨锭，保留编号和改名并从 0 斩开始', { item, cost });
+  ok(profOf(U.uid).equip.qingfeng === regular.k && stateOf(U.uid).eq.qingfeng === regular.i, '升级后原来的穿着状态不变');
+  ok(replay.replay && inkOf(U.uid) === before - cost && stateOf(U.uid).hist.filter(h => h.kind === 'upgrade').length === 1, '重放同一升级请求不会再扣钱或重复记流水');
+  const repeated = await econ(U.token, 'upgradeSt', { i: regular.i });
+  ok(repeated.res.err && /已经是斩数版/.test(repeated.res.err) && inkOf(U.uid) === before - cost, '斩数版不能重复升级或重复收费');
+  const badId = await econ(U.token, 'upgradeSt', { i: 1.5 });
+  ok(badId.res.err && /编号不对/.test(badId.res.err) && inkOf(U.uid) === before - cost, '小数编号不能升级其他库存饰品');
+  const listing = await econ(U.token, 'list', { i: listed.i, price: 150 });
+  const listedUpgrade = await econ(U.token, 'upgradeSt', { i: listed.i });
+  ok(listing.res.ok && listedUpgrade.res.err && /挂在玩家市场/.test(listedUpgrade.res.err) && mrow(listing.res.l).state === 0, '挂单中的饰品不能升级');
+
+  const poor = await newUser('st-upgrade-poor', { ink: 0 }); await econ(poor.token, 'sync');
+  const [poorItem] = grant(poor.uid, [{ k: 'qf_p1' }]), poorBefore = inkOf(poor.uid);
+  const denied = await econ(poor.token, 'upgradeSt', { i: poorItem.i });
+  ok(denied.res.err && /墨锭不够/.test(denied.res.err) && inkOf(poor.uid) === poorBefore && itemOf(poor.uid, poorItem.i).st === -1, '墨锭不足时不改饰品、不扣款');
+}
+
 section('一键开箱：单次请求按共享额度开箱，重试不会重复');
 {
   const u = await newUser('bulkCases'); await econ(u.token, 'sync');

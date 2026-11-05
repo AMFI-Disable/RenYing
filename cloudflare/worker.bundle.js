@@ -93,6 +93,7 @@
   C.ODDS = { mil: 0.53, res: 0.27, cla: 0.13, cov: 0.052, gold: 0.018 };   // 普通武器箱；神兵武器箱的写在它自己那一项里
   C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
   C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 每档的基准价（墨锭）：只用来定终端机的报价
+  C.ST_UPGRADE_COST = { mil: 100, res: 250, cla: 600, cov: 1500, gold: 4000 };   // 把普通饰品升级成斩数版的固定花费（墨锭）
   // 终端机：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
   // 5 件都不要终端机也没了；开封 3 天不处理就作废。终端机在商店按固定价格 price 卖（不能转卖），
   // 报价是这一件基准价的 1.2~1.5 倍（按品质、热门程度、斩数定，不跟玩家市场走）
@@ -458,7 +459,7 @@
     s.nid = Math.max(int(s.nid, 1), top + 1);
     s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
     s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
-    s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold', 'term'].includes(h.kind) ? h.kind : 'sell',
+    s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold', 'term', 'upgrade'].includes(h.kind) ? h.kind : 'sell',
       ...(C.isGood(h.g) || C.CASES.includes(h.c) ? { g: C.isGood(h.g) ? h.g : h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),   // 第 2 版的箱子记录写在 c 里
       price: int(h.price, 0, 1e9), ...(h.gain !== undefined ? { gain: int(h.gain, 0, 1e9) } : {}) }));
     s.cc = Array.from(new Set(s.cc.filter(c => own(C.COLS, c))));
@@ -865,6 +866,21 @@
     if (name) s.tags--;
     it.n = name;
     return { ok: true };
+  };
+  A.upgradeSt = (s, a, env) => {
+    const id = +a.i;
+    if (!Number.isSafeInteger(id) || id < 1) return { err: '饰品编号不对' };
+    const listed = s.lst.find(L => L.it.i === id);
+    if (listed) return { err: '这件饰品挂在玩家市场上，撤下后才能升级' };
+    const it = C.findItem(s, id); if (!it) return { err: '库存里没有这件' };
+    if (it.st >= 0) return { err: '这件已经是斩数版了' };
+    const cost = C.ST_UPGRADE_COST[C.ITEM[it.k].tier];
+    if (!Number.isSafeInteger(cost) || cost < 0) return { err: '升级价格设置不正确' };
+    if (env.ink < cost) return { err: `墨锭不够，升级要 ${cost}` };
+    giveInk(env, -cost);
+    it.st = 0;
+    histPush(s, { t: env.now, kind: 'upgrade', k: it.k, st: it.st, price: cost });
+    return { ok: true, item: it, price: cost };
   };
   A.equip = (s, a, env) => {
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
