@@ -259,7 +259,6 @@ Object.assign(UI_COPY_EN, {
   "月光幻化身法退后，脱离危险贴身缠斗。": "Moonlight shifts the body backward, out of a dangerous close fight.",
   "反制月镜": "Counter Mirror",
   "中距折返": "Mid-Range Return",
-  "全屏月华": "Full-Screen Moonlight",
   // 燕翎
   "御空": "Sky Rider",
   "一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（85架势），一旦被重兵器挑中需速用腾空闪化解。": "Soars into the sky on light wings (0.84 build); dodges ground shockwaves in the air, but air guard is weaker (85 guard). If a heavy weapon catches you, use Air Dodge quickly.",
