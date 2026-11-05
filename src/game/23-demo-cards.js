@@ -22,6 +22,11 @@ class Puppet {
     this.puddles = [];
     this.hitQ = [];
   }
+  setDemoRange(gap) {
+    // The fighter stands at x=-60 in the preview stage; place the target at
+    // the selected move's approximate reach so every card has its own spacing.
+    this.demoTargetX = -60 + gap;
+  }
   set(i, skin) {
     const ch = CHARS[i];
     this.skin = skin === undefined ? mySkin(ch.id) : skin;
@@ -112,27 +117,29 @@ class Puppet {
     while (this.trail.length && this.trail[0].life <= 0) this.trail.shift();
 
     // 命中稻草人反馈：火花、晃动、浮空、控制徽标
+    const targetX = this.demoTargetX === undefined ? 60 : this.demoTargetX;
     const hit = (n, launch, badge) => {
       this.dummyShake = Math.min(0.7, this.dummyShake + 0.22 * n);
       if (launch) this.dummyVy = -320 * Math.min(1.5, Math.sqrt(n));
       for (let k = 0; k < 8 * n; k++) {
         const an = rand(-2.4, 0.6), v = rand(120, 400);
-        this.fx.push({ x: 60, y: -62 + this.dummyY + rand(-16, 16), vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: rand(0.18, 0.35), c: Math.random() < 0.35 ? '255,255,255' : this.look.slash });
+        this.fx.push({ x: targetX, y: -62 + this.dummyY + rand(-16, 16), vx: Math.cos(an) * v, vy: Math.sin(an) * v, life: rand(0.18, 0.35), c: Math.random() < 0.35 ? '255,255,255' : this.look.slash });
       }
-      this.rings.push({ x: 60, y: -62 + this.dummyY, r: 8, life: 0.25 });
-      if (badge) this.badges.push({ text: badge, x: 60, y: -95 + this.dummyY, life: 0.75, max: 0.75 });
+      this.rings.push({ x: targetX, y: -62 + this.dummyY, r: 8, life: 0.25 });
+      if (badge) this.badges.push({ text: badge, x: targetX, y: -95 + this.dummyY, life: 0.75, max: 0.75 });
     };
     for (const q of this.hitQ) { q.t -= dt; if (q.t <= 0) { hit(q.n, q.launch, q.badge); q.done = true; } }
     this.hitQ = this.hitQ.filter(q => !q.done);
 
     // 飞行物更新与碰撞
     for (const p of this.projs) {
+      const prevX = p.x;
       p.x += (p.vx || 0) * dt;
       p.y = (p.y || -62) + (p.vy || 0) * dt;
       if (p.g) p.vy += p.g * dt;
       p.life -= dt;
       if (p.kind === 'moonring' && p.life < 0.35 && p.vx > 0) p.vx = -p.vx;
-      if (!p.hitDone && p.vx > 0 && p.x >= 50 && p.x <= 75) {
+      if (!p.hitDone && p.vx > 0 && prevX <= targetX && p.x >= targetX) {
         p.hitDone = true;
         hit(1.2, p.kind === 'tornado' || p.kind === 'bolt' || p.kind === 'dragon');
       }
@@ -173,7 +180,8 @@ class Puppet {
       }
       // 稻草人靶子（带浮空与晃动）
       const tilt = Math.sin(performance.now() / 25) * this.dummyShake;
-      ctx.save(); ctx.translate(60, -60 + this.dummyY); ctx.rotate(tilt); ctx.translate(0, 60);
+      const targetX = this.demoTargetX === undefined ? 60 : this.demoTargetX;
+      ctx.save(); ctx.translate(targetX, -60 + this.dummyY); ctx.rotate(tilt); ctx.translate(0, 60);
       ctx.fillStyle = '#4a3322'; ctx.fillRect(-3, -118, 6, 118); ctx.fillRect(-30, -88, 60, 5);
       ctx.fillStyle = this.dummyShake > 0.2 ? '#f5e6c4' : '#b08a5a'; ctx.beginPath(); ctx.ellipse(0, -76, 18, 27, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -114, 12, 0, 7); ctx.fill();
       ctx.strokeStyle = '#6b4f30'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-16, -86); ctx.lineTo(16, -86); ctx.moveTo(-16, -64); ctx.lineTo(16, -64); ctx.stroke();

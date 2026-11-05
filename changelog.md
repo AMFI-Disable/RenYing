@@ -8,6 +8,12 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ---
 
+## [1.0.6] - 2026-11-05
+
+### Changed
+
+- **Hero move cards**: move previews now space their targets according to each attack's range, and ultimate previews play longer so their setup, strike, and impact are easier to follow.
+
 ## [1.0.5] - 2026-11-05
 
 ### Changed

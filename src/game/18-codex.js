@@ -122,6 +122,10 @@ function renderCodex() {
 }
 
 let cxCardsRAF = null;
+function codexCardGap(heroId, moveKey) {
+  const rng = (HERO_MOVE_TYPES[heroId] && HERO_MOVE_TYPES[heroId][moveKey] && HERO_MOVE_TYPES[heroId][moveKey].rng) || 'melee';
+  return ({ self: 8, melee: 68, air: 88, mid: 142, ranged: 194, screen: 220 })[rng] || 68;
+}
 function startCodexCardsDirector() {
   if (cxCardsRAF) return;
   let lastT = performance.now();
@@ -143,7 +147,11 @@ function startCodexCardsDirector() {
         let p = cv._pup;
         if (!p || p.chIdx !== cxIdx || p.skin !== skin || cv._mv !== mv) {
           p = new Puppet(cxIdx, skin);
-          p.playSeq(HERO_MOVE_SEQS[c.id][mv], null, true);
+          const seq = HERO_MOVE_SEQS[c.id][mv];
+          // Ultimates include a readable windup, strike and recovery instead of
+          // flashing through the same short timing as a regular attack.
+          p.playSeq(mv === 'ult' ? seq.map(step => ({ ...step, d: step.d * 2.2 })) : seq, null, true);
+          p.setDemoRange(codexCardGap(c.id, mv));
           cv._pup = p;
           cv._mv = mv;
         }
