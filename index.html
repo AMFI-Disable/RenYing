@@ -11457,7 +11457,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.0.4';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.5';         // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
@@ -13303,7 +13303,7 @@ finally {
 if (networkInput) { if (hadCombo) foe.lastComboHits = oldCombo; else delete foe.lastComboHits; f.target = oldTarget; }
 }
 }
-const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [] };
+const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [], forfeit: false, forfeitResult: '' };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
 if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
@@ -13319,7 +13319,7 @@ function netReset() {
 ROLL.on = false;
 if (typeof mmStop === 'function') mmStop();
 mmUI(null);
-NET.peerQuit = false; NET.solo = false;
+NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = '';
 NET.matching = false; NET.hold = false;
 p2pClose();
 NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
@@ -13456,8 +13456,26 @@ NET.consensus = { committed: true };   // 没法和对方核对结果，不上�
 NET.lastResult = '';
 return true;
 }
+function netForfeitWin() {
+if (M.mode !== 'net' || NET.isRanked || !NET.peerQuit || NET.forfeit) return false;
+if (netRoomMode === 'pp_cc' || roomDef().raid) return false;
+const winner = localTeam();
+const needWins = isDuo() ? (M.duo[0].length || 3) : (is2v2() ? 2 : WINS_NEEDED);
+M.wins[winner] = needWins;
+M.koWinner = winner;
+M.phase = 'end';
+ROLL.on = false;
+NET.open = false;
+NET.forfeit = true;
+NET.forfeitResult = '对手中途离席，这场算你赢';
+p2pClose();
+if (typeof mmStop === 'function') mmStop();
+NET.consensus = { localWinner: winner, myTeam: winner, qualifying: true, committed: false };
+commitNetProgress(winner, true, true);
+showEnd(winner);
+return true;
+}
 function netLost() {
-if (netSolo()) return;
 if (M.mode === 'net' && $id('end').classList.contains('on')) {
 const quit = NET.peerQuit;
 netOverlay(''); netReset();
@@ -13468,6 +13486,8 @@ toast(quit ? '对手已离开房间' : '和对手的连接断开了');
 netStatus('对手已离开。可以重新建房或加入');
 return;
 }
+if (netForfeitWin()) return;
+if (netSolo()) return;
 const was = M.mode === 'net' || bpMode === 'net';
 let rkMsg = '';
 if (NET.isRanked && !NET.rkDone && rkState().pending) {
@@ -15043,7 +15063,7 @@ qualifying: isQualifying
 send({ report: w === 0 ? 'host' : 'client' });
 }
 if (M.mode === 'cpu' || M.mode === 'net') adaptRecord(w === localTeam());
-$id('endRank').textContent = M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '';
+$id('endRank').textContent = NET.forfeitResult || (M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '');
 reportProgress(w);
 const t = document.getElementById('endTitle');
 const wf = [A, B][w];

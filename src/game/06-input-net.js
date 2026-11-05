@@ -76,7 +76,7 @@ function secretThink(f, networkInput = false) {
 // ======================= 联机（公共部分） =======================
 // 联机只有一种连法：浏览器之间用 WebRTC 直接连（PeerJS 只负责牵线），不需要自己的服务器，见 net-p2p.js。
 // 房主叫 host（青锋那一边），加入的人叫 client。对战用“回滚联机”（见下面 ROLL 一节）：两边每帧只交换按键。
-const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [] };
+const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [], forfeit: false, forfeitResult: '' };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
   if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
@@ -93,7 +93,7 @@ function netReset() {
   ROLL.on = false;
   if (typeof mmStop === 'function') mmStop();
   mmUI(null);
-  NET.peerQuit = false; NET.solo = false;
+  NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = '';
   NET.matching = false; NET.hold = false;
   p2pClose();
   NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
@@ -215,7 +215,7 @@ function onNetOpen() {
   else netStatus('已连接，即刻选人…');
 }
 // 2v2、3v3 车轮打到一半对方掉线（房主掉线也一样）：留下的这台接过对局，自己当房主，
-// 对方那边的人交给电脑，这一局接着打完。1v1、排位和同袍肉鸽还是照旧结束
+// 对方那边的人交给电脑，这一局接着打完。PvP 对手主动离开则直接判胜。
 function netSolo() {
   if (!ROLL.on || ROLL.ended || M.mode !== 'net' || M.phase === 'end' || NET.isRanked) return false;
   const def = roomDef();
@@ -235,8 +235,26 @@ function netSolo() {
   NET.lastResult = '';
   return true;
 }
+function netForfeitWin() {
+  if (M.mode !== 'net' || NET.isRanked || !NET.peerQuit || NET.forfeit) return false;
+  if (netRoomMode === 'pp_cc' || roomDef().raid) return false;
+  const winner = localTeam();
+  const needWins = isDuo() ? (M.duo[0].length || 3) : (is2v2() ? 2 : WINS_NEEDED);
+  M.wins[winner] = needWins;
+  M.koWinner = winner;
+  M.phase = 'end';
+  ROLL.on = false;
+  NET.open = false;
+  NET.forfeit = true;
+  NET.forfeitResult = '对手中途离席，这场算你赢';
+  p2pClose();
+  if (typeof mmStop === 'function') mmStop();
+  NET.consensus = { localWinner: winner, myTeam: winner, qualifying: true, committed: false };
+  commitNetProgress(winner, true, true);
+  showEnd(winner);
+  return true;
+}
 function netLost() {
-  if (netSolo()) return;
   // 对局已经打完、停在结算页时对方走了：留在结算页看结果（排位分、墨锭照常结算），只是不能再战了。
   // 以前会被直接拉回联机大厅，还提示“对局已中断（未完成）”，打完的排位还可能被当成对手中途离开
   if (M.mode === 'net' && $id('end').classList.contains('on')) {
@@ -249,6 +267,8 @@ function netLost() {
     netStatus('对手已离开。可以重新建房或加入');
     return;
   }
+  if (netForfeitWin()) return;
+  if (netSolo()) return;
   const was = M.mode === 'net' || bpMode === 'net';
   // 排位赛打到一半对方走了：对方主动离开算你赢，网络断开不计分
   let rkMsg = '';
@@ -434,4 +454,3 @@ function setupNetMatch() {
   NET.consensus = { agreed: false, peerAgreed: false, qualifying: true, committed: false, pendingReport: false };
   rkBegin();
 }
-

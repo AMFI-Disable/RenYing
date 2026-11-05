@@ -245,7 +245,7 @@ let fail = 0;
   if (!ok) console.log('        ' + JSON.stringify(r));
 }
 
-// 2v2、3v3 打到一半对方掉线（房主掉线也算）：留下的这台接着打完，对方的人交给电脑
+// 共斗掉线后由 AI 接管；PvP 主动离开则立即判胜
 function runDrop(mode, chars, duo, dropper, seed) {
   now = 0;
   const box = [[], []];
@@ -262,7 +262,7 @@ function runDrop(mode, chars, duo, dropper, seed) {
     if (t === 900) {   // 断线：掉线那台从此消失，留下那台的直连报“对方走了”
       dropped = true;
       clock0 = vm.runInContext('clock', W);
-      try { vm.runInContext(`onSys({ sys: 'left' })`, W); } catch (e) { errs.push('断线时 ' + e.stack.split('\n').slice(0, 2).join(' | ')); }
+      try { vm.runInContext(`NET.peerQuit = true; onSys({ sys: 'left' })`, W); } catch (e) { errs.push('断线时 ' + e.stack.split('\n').slice(0, 2).join(' | ')); }
     }
     for (let i = 0; i < 2; i++) {
       if (dropped && i === dropper) continue;
@@ -284,19 +284,23 @@ function runDrop(mode, chars, duo, dropper, seed) {
   const DROPS = [['pp_cc', [0, 3, 5, 9]], ['pp_pp', [2, 7, 4, 6]], ['normal', [2, 3], [[2, 5, 12], [3, 4, 7]]]];
   for (const [mode, ch, duo] of DROPS) for (const dropper of [0, 1]) {
     const r = runDrop(mode, ch, duo, dropper, SEED0 + ch[0] * 17 + dropper);
-    const ok = !r.errs.length && r.mode === 'net' && !r.roll && r.solo && r.ai.every(Boolean) && r.mine.every(Boolean) && r.after > 20 && r.phase === 'end';
+    const pvp = mode !== 'pp_cc';
+    const ok = !r.errs.length && r.mode === 'net' && !r.roll &&
+      (pvp ? !r.solo && r.ai.every(v => !v) && r.after < 2 : r.solo && r.ai.every(Boolean) && r.mine.every(Boolean) && r.after > 20) &&
+      r.phase === 'end';
     if (!ok) fail++;
-    console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${duo ? '3v3 车轮' : JSON.stringify(ch)} ${dropper ? '加入的人' : '房主'}掉线：${r.mode === 'net' && r.solo ? `留下的人接着打了 ${r.after.toFixed(0)} 秒` : '留下的人被送回了大厅'}，${r.phase === 'end' ? '打完了' : '没打完'}（${r.phase}，比分 ${r.wins}）`);
+    const outcome = pvp ? `直接判胜（${r.after.toFixed(0)} 秒）` : (r.mode === 'net' && r.solo ? `留下的人接着打了 ${r.after.toFixed(0)} 秒` : '留下的人被送回了大厅');
+    console.log(`${ok ? '  PASS' : '  FAIL'}  ${mode} ${duo ? '3v3 车轮' : JSON.stringify(ch)} ${dropper ? '加入的人' : '房主'}掉线：${outcome}，${r.phase === 'end' ? '打完了' : '没打完'}（${r.phase}，比分 ${r.wins}）`);
     for (const e of r.errs) console.log('        报错 ' + e);
     if (!ok) console.log('        ' + JSON.stringify(r));
   }
-  // 1v1 还是照旧：对方掉线就结束回到大厅
+  // 1v1 PvP 对方主动离开：直接判胜并进入结算
   const w = makePeer([]);
-  vm.runInContext(`NET.role = 'client'; NET.open = true; netRoomMode = 'normal'; rollStart([0, 3], 9); for (let i = 0; i < 300; i++) { ROLL.remLast = ROLL.F + 2; rollTick(1 / 60); } onSys({ sys: 'left' });`, w);
-  const one = JSON.parse(vm.runInContext('JSON.stringify({ mode: M.mode, roll: ROLL.on, solo: !!NET.solo })', w));
-  const ok1 = one.mode !== 'net' && !one.roll && !one.solo;
+  vm.runInContext(`NET.role = 'client'; NET.open = true; netRoomMode = 'normal'; rollStart([0, 3], 9); for (let i = 0; i < 300; i++) { ROLL.remLast = ROLL.F + 2; rollTick(1 / 60); } NET.peerQuit = true; onSys({ sys: 'left' });`, w);
+  const one = JSON.parse(vm.runInContext('JSON.stringify({ mode: M.mode, roll: ROLL.on, solo: !!NET.solo, forfeit: !!NET.forfeit, phase: M.phase, wins: M.wins })', w));
+  const ok1 = one.mode === 'net' && !one.roll && !one.solo && one.forfeit && one.phase === 'end' && one.wins[1] > one.wins[0];
   if (!ok1) fail++;
-  console.log(`${ok1 ? '  PASS' : '  FAIL'}  1v1 对方掉线：照旧结束对局（${JSON.stringify(one)}）`);
+  console.log(`${ok1 ? '  PASS' : '  FAIL'}  1v1 对方主动离开：直接判胜并进入结算（${JSON.stringify(one)}）`);
 }
 
 const argF = process.argv.indexOf('--frames');

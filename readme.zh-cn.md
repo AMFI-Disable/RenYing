@@ -8,7 +8,7 @@
 *由 Even、Luffy、Opus 5.5 和 Gemini 4 Argon 制作。纯 JavaScript 画在一块 canvas 上，点对点联机，账号和存档用可选的 Cloudflare Worker。*
 
 [![在线游玩](https://img.shields.io/badge/在线游玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
-[![版本 1.0.4](https://img.shields.io/badge/版本-1.0.4-blue.svg?style=flat-square)](changelog.md)
+[![版本 1.0.5](https://img.shields.io/badge/版本-1.0.5-blue.svg?style=flat-square)](changelog.md)
 [![侠客 16 位](https://img.shields.io/badge/侠客-16%20位-red.svg?style=flat-square)](#侠客)
 [![技术 HTML5 Canvas](https://img.shields.io/badge/技术-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#工作原理)
 [![联机 WebRTC 回滚](https://img.shields.io/badge/联机-WebRTC%20%2B%20回滚-blue.svg?style=flat-square)](#工作原理)

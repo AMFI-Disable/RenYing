@@ -774,7 +774,7 @@ function showEnd(w) {
     send({ report: w === 0 ? 'host' : 'client' });
   }
   if (M.mode === 'cpu' || M.mode === 'net') adaptRecord(w === localTeam());
-  $id('endRank').textContent = M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '';
+  $id('endRank').textContent = NET.forfeitResult || (M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '');
   reportProgress(w);
   const t = document.getElementById('endTitle');
   const wf = [A, B][w];

@@ -8,7 +8,7 @@
 *Made by Even, Luffy, Opus 5.5 and Gemini 4 Argon. Plain JavaScript on one canvas, peer-to-peer online play, and an optional Cloudflare Worker for accounts.*
 
 [![Play: GitHub Pages](https://img.shields.io/badge/Play-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
-[![Version: 1.0.4](https://img.shields.io/badge/Version-1.0.4-blue.svg?style=flat-square)](changelog.md)
+[![Version: 1.0.5](https://img.shields.io/badge/Version-1.0.5-blue.svg?style=flat-square)](changelog.md)
 [![Heroes: 16](https://img.shields.io/badge/Heroes-16-red.svg?style=flat-square)](#heroes)
 [![Tech: HTML5 Canvas](https://img.shields.io/badge/Tech-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#how-it-works)
 [![Online: WebRTC + Rollback](https://img.shields.io/badge/Online-WebRTC%20%2B%20Rollback-blue.svg?style=flat-square)](#how-it-works)

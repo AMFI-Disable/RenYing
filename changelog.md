@@ -6,6 +6,14 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+---
+
+## [1.0.5] - 2026-11-05
+
+### Changed
+
+- **PvP forfeit wins**: when a player actively leaves a casual PvP match, the remaining player now wins immediately instead of handing the opponent's fighters to AI or returning to the lobby. Co-op and raid disconnect recovery keep their existing AI takeover behavior.
+
 ### Removed
 
 - **Hero matchup text (`src/game/18-codex.js`, `src/game/18-codex-content.js`, `src/game/23-prematch-draft.js`, `src/data/31-hero-copy.js`, `src/data/30-ui-copy.js`, `docs/wiki/heroes-and-combat.md`, `index.html`, `renying-offline.html`)**: the Codex tile and the draft card no longer list which heroes each hero is strong or weak against, and the matchup table is gone from the wiki. The AI still uses the `beats` / `weakTo` fields when it drafts.
