@@ -6,10 +6,28 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
-- **Global Boss scroll draft**: increased the pre-fight draft to 10 scroll picks with 3 choices each. Added a curated Heavenly Favor highlight for all 16 heroes and offer a hero signature scroll about every other pick while one remains unowned.
-- **Ling Que balance**: shortened Sparrow Mark duration from 15s to 5s and reduced Shadow Swap's mark detonation from 38 to 30 damage. Mark detonations still reset Shadow Swap's cooldown; the Threading Needle scroll extends marks to 8s.
-- **Market price chart**: the item price chart now shows today's change in percent and in Ink, compared with yesterday's last trade, and draws that reference price as a dashed line. Rises are red and falls are green.
-- **Hero ultimate previews**: expanded all 16 Codex replays into distinct windup, travel, multi-hit, impact, and recovery phases. Cards now show a rival fighter reacting to hits, with hero-specific ultimate effects and enough frame space to follow the sequence.
+### Added
+
+- **StatTrak cosmetic upgrades (`src/armory-core.js`, `src/armory.js`, `cloudflare/worker.bundle.js`)**: added the ability to upgrade standard cosmetics to StatTrak/斩数版 directly from the inspection modal for a fixed Ink fee based on item tier (`C.ST_UPGRADE_COST`), recording new `upgrade` ledger entries in transaction history.
+- **Armory skin codex gallery (`src/armory.js`, `src/styles/50-results-and-armory.css`, `index.html`, `renying-offline.html`)**: introduced a dedicated "皮肤图鉴" tab to the Armory to browse all cosmetics by collection, hero, and quality tier, complete with an ownership state filter (All / Owned / Missing).
+- **Admin console bulk skin granting (`cloudflare/admin.html`)**: added batch item granting by full set or all sets, with support for applying StatTrak kill counts to all granted items.
+- **Global Boss scroll draft (`src/game/22-scrolls.js`, `src/game/22-tianmo.js`)**: increased the pre-fight draft to 10 scroll picks with 3 choices each, added curated Heavenly Favor highlights for all 16 heroes, and ensured signature scrolls appear regularly while unowned.
+- **Market price chart trends (`src/armory.js`, `index.html`, `renying-offline.html`)**: the item price chart now displays daily price fluctuations in percent and Ink relative to yesterday's last trade, with dashed reference lines colored green for falls and red for rises.
+
+### Changed
+
+- **Ling Que combat balance (`src/data/heroes/12-lingque.js`, `src/game/03-skills.js`, `src/game/22-scrolls.js`)**: shortened Sparrow Mark duration from 15s to 5s and reduced Shadow Swap's mark detonation from 38 to 30 damage while preserving cooldown reset on detonation, with the Threading Needle scroll extending mark lifetime to 8s.
+- **Hero ultimate preview replays (`src/game/18-codex.js`, `src/game/23-demo-cards.js`)**: expanded all 16 Codex replay animations into distinct windup, travel, multi-hit, impact, and recovery phases, showcasing dynamic rival reactions and hero-specific ultimate visual effects.
+- **Unified skin presentation (`src/game/18-codex.js`)**: streamlined hero skin selection in the Codex by removing the artificial division between bound attire and armory cosmetics.
+- **Cloudflare Worker source modularization (`cloudflare/worker/`, `tools/build.py`)**: decomposed monolithic Worker scripts into modular domain files across runtime HTTP, authentication, economy, admin routes, maintenance, and world simulation.
+- **Test suite architectural decomposition (`tools/tests/combat/`, `tools/tests/econ/`)**: partitioned monolithic combat and economy test runners into focused domain suites covering combat states, abilities, AI arenas, market mechanics, abuse controls, and account lifecycle.
+- **AI ladder benchmark metrics (`docs/ai-ladder-benchmark.md`)**: synchronized competitive AI rating benchmarks and performance metrics.
+
+### Fixed
+
+- **Li Ying mist clone echo attacks (`src/data/heroes/13-liying.js`, `src/game/03-skills.js`, `src/game/09-actions.js`)**: mist clones now echo the hero's basic attacks, skills, and non-ultimate projectiles at 75% damage at the clone's position, reduced swap seal time to 0.1s and landing lag to 0.08s, added 0.12s swap invulnerability, and lowered attacker break meter reward to 5.
+- **Panel navigation transition flicker (`src/styles/40-navigation-and-home.css`, `index.html`, `renying-offline.html`)**: resolved visual flashes during screen transitions by standardizing panel animations on `inkBleedIn` across menu handoffs and respecting user reduced-motion preferences.
+- **Obsolete UI translations and copy cleanup (`src/data/30-ui-copy.js`, `src/data/31-hero-copy.js`, `index.html`, `renying-offline.html`)**: purged stale English translation keys and obsolete hero text strings.
 
 ---
 
