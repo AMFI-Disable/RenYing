@@ -97,7 +97,7 @@ function renderCodex() {
       const skinHas = (PROF.skins || []).includes(rSkinKey) || OFFLINE_BUILD;
       const stars = (STAGE_STARS && STAGE_STARS[`${chIdx + 1}.5`]) || 0;
       const clear = stars > 0;
-      return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '武库获取或破关解锁'}）` : '无'}<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`;
+      return `<b style="color:#efe8d8">第 ${chIdx + 1} 章 · ${ch.name}</b>（守关：${c.name} · 难度：${LV_NAME[ch.lv]}）<br>通关破关：${clear ? `<span style="color:#7fe0b0">已破关 (★${stars})</span>` : '<span style="color:#e9c46a">未破关</span>'} · 专属皮肤：${rSkin ? `<span style="color:rgb(${RAR_RGB[rSkin.rarity] || '239,232,216'})">「${rSkin.name}」</span>（${skinHas ? '<span style="color:#7fe0b0">已获得</span>' : '武库获取或破关解锁'}）` : '无'}${typeof modeShelved === 'function' && modeShelved('stage') ? '' : `<div style="margin-top:6px"><button type="button" class="ghost small cx-go-stage" data-c="${chIdx}" style="padding:2px 10px;font-size:12px;border-radius:4px;color:var(--gold);border-color:rgba(233,196,106,.4);cursor:pointer">⚔️ 前往第 ${chIdx + 1} 章试炼</button></div>`}`;
     })()}${typeof sagaCodexLine === 'function' ? sagaCodexLine(c.id) : ''}</div>`, '', true),
     ADV_SHORT[c.id] ? tile('adv', '进阶技巧', '', ADV_SHORT[c.id], '', true) : '',
   ].filter(Boolean).join('');
@@ -164,6 +164,7 @@ $id('cxMoves').addEventListener('click', e => {
   const sagaBtn = e.target.closest('.cx-go-saga');
   if (sagaBtn) { sagaPick = sagaBtn.dataset.h; openScreen('saga'); SFX.slice && SFX.slice(); return; }
   const stageBtn = e.target.closest('.cx-go-stage');
+  if (stageBtn && typeof modeShelved === 'function' && modeShelved('stage')) return;
   if (stageBtn) {
     const ch = +stageBtn.dataset.c;
     stageCh = ch;

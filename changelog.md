@@ -18,6 +18,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Fewer modes on the menu (`src/game/17-home.js`, `src/game/18-codex.js`)**: Stage Trials and the Sword Tower are hidden from the solo menu for now, so new players see a shorter list. Their code and saves stay; listing a mode in `SHELVED_MODES` is the only switch. The offline build keeps Stage Trials, since it has no online play.
 - **Co-op roguelike team size (`src/page.html`, `src/game/22-modes-07-raid.js`)**: the 2-or-3 player choice is gone. A run is always a team of three; local 2P/3P can join at any time, and AI allies fill any empty spot.
 - **Quick start for new players (`src/game/20-tutorial-rollback-touch.js`, `src/page.html`)**: the first-run tutorial is now five steps (move, five-hit combo, sect skill, air dash, ultimate) and takes about a minute. The finish screen offers "Fight the AI" and "Play with Friends" straight away. The full eleven-step tutorial, with blocking and perfect parries, is still in Help.
 - **Armory names (`src/armory-core.js`, `src/data/30-ui-copy.js`, `cloudflare/worker/`, docs)**: the five quality tiers are now 精铁 / 碧玉 / 灵犀 / 赤霄 / ★ 绝世 (Iron / Jade / Spirit / Crimson / ★ Peerless), the ten-for-one exchange is the 熔铸契 (Reforge Pact), and the one-offer shop item is the 货郎 (Peddler). Only names changed; saves, odds and prices are untouched. Needs a Worker redeploy.

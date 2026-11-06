@@ -271,8 +271,17 @@ function updateAIBrief() {
 
 // 模式大厅（#single）：所有玩法分类摆放，sec 为空时打开上次那一格，否则打开指定那一格的面板
 let currentSingleTab = 'cpu', teamMutator = 'normal';
+// 暂时收起来的模式：只藏入口，代码和存档都不动。以后想放出来，把名字从这张表里删掉就行。
+// 守关在离线版里是主要内容（离线版没有联机），所以离线版照旧留着。天机乱斗、通天神决已经是对战里的「战场异变」选项，山河异境的图在联机里投票选。
+const SHELVED_MODES = OFFLINE_BUILD ? ['tower'] : ['stage', 'tower'];
+const modeShelved = m => SHELVED_MODES.includes(m);
+for (const m of SHELVED_MODES) {
+  const b = document.querySelector(`#singleTabs button[data-tab="${m}"]`);
+  if (b) { b.style.display = 'none'; b.setAttribute('aria-hidden', 'true'); b.tabIndex = -1; }
+}
 
 function singleSec(sec) {
+  if (sec && modeShelved(sec)) sec = 'saga';   // 收起来的模式（从旧链接、图鉴、结算页回来）：改去侠客列传
   const active = sec || currentSingleTab || 'cpu';
   currentSingleTab = active;
 
