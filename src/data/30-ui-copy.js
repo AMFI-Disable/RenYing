@@ -99,6 +99,7 @@ const UI_COPY_EN = {
   "一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn the basic moves in one minute. Signed-in players get 300 Ink when they finish.",
   "一分钟学会基本招式，再去挑战电脑与闯关。": "Learn the basic moves in one minute, then take on the AI and the stages.",
   "快速上手": "Quick Start",
+  "征讨流程（固定三人一队：没人接手的位置由电脑同袍顶上）": "Run type (always a team of three; AI allies fill any empty spot)",
   "匿名统计": "Anonymous stats",
   "开（不记名字、账号）": "On (no names or accounts)",
   "画面有点卡，已自动调成中画质（可在设置里改回）": "The game was stuttering, so graphics were lowered to Medium (you can change this in Settings)",

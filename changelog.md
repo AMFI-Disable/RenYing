@@ -18,6 +18,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Co-op roguelike team size (`src/page.html`, `src/game/22-modes-07-raid.js`)**: the 2-or-3 player choice is gone. A run is always a team of three; local 2P/3P can join at any time, and AI allies fill any empty spot.
 - **Quick start for new players (`src/game/20-tutorial-rollback-touch.js`, `src/page.html`)**: the first-run tutorial is now five steps (move, five-hit combo, sect skill, air dash, ultimate) and takes about a minute. The finish screen offers "Fight the AI" and "Play with Friends" straight away. The full eleven-step tutorial, with blocking and perfect parries, is still in Help.
 - **Armory names (`src/armory-core.js`, `src/data/30-ui-copy.js`, `cloudflare/worker/`, docs)**: the five quality tiers are now 精铁 / 碧玉 / 灵犀 / 赤霄 / ★ 绝世 (Iron / Jade / Spirit / Crimson / ★ Peerless), the ten-for-one exchange is the 熔铸契 (Reforge Pact), and the one-offer shop item is the 货郎 (Peddler). Only names changed; saves, odds and prices are untouched. Needs a Worker redeploy.
 - **Ling Que combat balance (`src/data/heroes/12-lingque.js`, `src/game/03-skills.js`, `src/game/22-scrolls.js`)**: shortened Sparrow Mark duration from 15s to 5s and reduced Shadow Swap's mark detonation from 38 to 30 damage while preserving cooldown reset on detonation, with the Threading Needle scroll extending mark lifetime to 8s.

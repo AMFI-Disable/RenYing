@@ -1,5 +1,5 @@
 // ======================= 同袍肉鸽 · 十三侠客斩妖列传（打小怪剧情 + 肉鸽秘卷 + 六技魔首合一多人模式） =======================
-let rougeSquadSize = 3;
+let rougeSquadSize = 3;   // 固定三人一队（不再让玩家选两人还是三人）：本机 2P / 3P 随时按键接手，没人的位置电脑同袍顶上
 let rougeStoryChapter = 0;
 let rougePhaseMode = 'story';   // 'story': 先打小怪剧情波次再战六技魔首；'boss': 直接迎战六技魔首
 let pendingRaidBoss = null;
@@ -171,9 +171,6 @@ function nextRaidWave() {
 }
 function renderRougeModal() {
   if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
-  for (const b of document.querySelectorAll('#rougeSquadSeg button')) {
-    b.classList.toggle('sel', +b.dataset.sq === rougeSquadSize);
-  }
   for (const b of document.querySelectorAll('#rougePhaseSeg button')) {
     b.classList.toggle('sel', b.dataset.ph === rougePhaseMode);
   }
@@ -233,13 +230,6 @@ if ($id('rougeStoryTabs')) {
   $id('rougeStoryTabs').addEventListener('click', e => {
     const b = e.target.closest('button[data-ch]'); if (!b) return;
     rougeStoryChapter = +b.dataset.ch || 0;
-    SFX.slice(); renderRougeModal();
-  });
-}
-if ($id('rougeSquadSeg')) {
-  $id('rougeSquadSeg').addEventListener('click', e => {
-    const b = e.target.closest('button[data-sq]'); if (!b) return;
-    rougeSquadSize = +b.dataset.sq === 2 ? 2 : 3;
     SFX.slice(); renderRougeModal();
   });
 }
