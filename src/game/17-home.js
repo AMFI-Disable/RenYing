@@ -441,7 +441,7 @@ function navTo(name) {
   openScreen(name);
 }
 for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { if (b.dataset.nav === 'settings') secretSettingsClick(); SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
-$id('helpTut').addEventListener('click', () => openScreen('tutorial'));
+$id('helpTut').addEventListener('click', () => startTutorial(true));   // 帮助里的是完整教学（十一步）
 function renderTopNav() {
   const nav = $id('topNav');
   if (!nav) return;

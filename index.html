@@ -3805,7 +3805,7 @@ white-space: nowrap;
   <div id="help" class="scr">
     <div class="panel">
       <h2>说明</h2>
-      <p class="help-tut"><button type="button" class="ghost" id="helpTut">新手教学 · 两分钟学会基本招式</button></p>
+      <p class="help-tut"><button type="button" class="ghost" id="helpTut">完整教学 · 格挡、精准招架都会教</button></p>
       <div class="keys keyonly">
         <div class="p1"><dl>
           <dt>移动</dt><dd><kbd>A</kbd> <kbd>D</kbd></dd>
@@ -4253,8 +4253,8 @@ white-space: nowrap;
   <div id="tutask" class="scr">
     <div class="panel narrowp">
       <h2>初来乍到？</h2>
-      <p class="sub">两分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。</p>
-      <div class="row"><button class="go" id="tutYes">开始教学</button><button class="ghost" id="tutNo">以后再说</button></div>
+      <p class="sub">一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。</p>
+      <div class="row"><button class="go" id="tutYes">快速上手</button><button class="ghost" id="tutNo">以后再说</button></div>
     </div>
   </div>
 
@@ -4271,7 +4271,8 @@ white-space: nowrap;
     <div class="panel narrowp">
       <h2>教学完成</h2>
       <p class="sub" id="tutReward">该会的都会了。去找电脑或是同学，过几招吧。</p>
-      <div class="row"><button class="go" id="tutMenu">返回菜单</button><button class="ghost" id="tutStay">继续练习</button></div>
+      <div class="row"><button class="go" id="tutCpu">和电脑打一局</button><button class="go" id="tutNet">和朋友联机</button></div>
+      <div class="row"><button class="ghost" id="tutMenu">返回菜单</button><button class="ghost" id="tutStay">继续练习</button></div>
     </div>
   </div>
 
@@ -5948,6 +5949,7 @@ const PATTERNS_EN = [
 [/^没找到名字里同时有「(.+)」这几个字的人，按回车按全名加$/, (m0, q) => `No one's name contains “${q}”. Press Enter to add by full name`],
 [/^(.+?) · (限免|武库|青锋行 \/ 武库)$/, (m0, n, t) => `${lookup(n) || n} · ${{ 限免: 'Free trial', 武库: 'Armory', '青锋行 / 武库': 'Qingfeng Quest / Armory' }[t]}`],
 [/^(碧玉|赤霄|灵犀|精铁|★ 绝世|绝世|传说|精英) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
+[/^(快速上手|完整教学) (\d+) \/ (\d+)$/, (m0, w, a, b) => `${w === '快速上手' ? 'Quick start' : 'Full tutorial'} ${a} / ${b}`],
 [/^难度 ([●○]+)$/, (m0, d) => `Difficulty ${d}`],
 [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
 [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],
@@ -7716,7 +7718,12 @@ const UI_COPY_EN = {
 "上传导出文件 (.json)": "Upload Export File (.json)",
 "下一关": "Next Stage",
 "与民同乐": "Wine Feast",
-"两分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn basic moves in 2 minutes. Logged-in warriors claim 300 Ink on completion.",
+"一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn the basic moves in one minute. Signed-in players get 300 Ink when they finish.",
+"一分钟学会基本招式，再去挑战电脑与闯关。": "Learn the basic moves in one minute, then take on the AI and the stages.",
+"快速上手": "Quick Start",
+"和电脑打一局": "Fight the AI",
+"和朋友联机": "Play with Friends",
+"基本招式会了。格挡和精准招架这些进阶操作，在「帮助」里的完整教学能学到。": "You know the basics. Blocking, perfect parries and more are in the full tutorial under Help.",
 "严密格挡": "Guard Always",
 "个，开箱不用钥匙": " cases, no key needed to open",
 "中": "Medium",
@@ -7889,7 +7896,6 @@ const UI_COPY_EN = {
 "开始人机对战": "Start AI Battle",
 "开始匹配": "Find Match",
 "开始排位": "Start Ranked",
-"开始教学": "Start Tutorial",
 "开扇": "Fan Flourish",
 "开箱": "Open Case",
 "影遁": "Shadow Blink",
@@ -8395,7 +8401,7 @@ const UI_COPY_EN = {
 "库存": "Inventory",
 "武器箱": "Cases",
 "武器箱 · 货郎 · 玩家市场 · 熔铸契 · 江湖行动": "Cases · Peddler · Player Market · Reforge · Jianghu Ops",
-"新手教学 · 两分钟学会基本招式": "Tutorial · Learn the basics in two minutes",
+"完整教学 · 格挡、精准招架都会教": "Full tutorial · Blocking and perfect parries included",
 "货郎": "Peddler",
 "玩家市场": "Player Market",
 "江湖行动": "Jianghu Ops",
@@ -23257,7 +23263,7 @@ if (MENU_SPOT[name] !== undefined) { menuCam.tx = MENU_SPOT[name]; menuCam.tz = 
 openScreen(name);
 }
 for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { if (b.dataset.nav === 'settings') secretSettingsClick(); SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
-$id('helpTut').addEventListener('click', () => openScreen('tutorial'));
+$id('helpTut').addEventListener('click', () => startTutorial(true));   // 帮助里的是完整教学（十一步）
 function renderTopNav() {
 const nav = $id('topNav');
 if (!nav) return;
@@ -26009,12 +26015,14 @@ const TUT_STEPS = [
 { t: '绝境腾空闪', d: '受到硬直连击陷入绝境时，按右键（或左 Shift）引爆真气触发「腾空闪」逃脱并获短暂无敌！', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
 { t: '真元爆发 · 绝招', d: '怒气已为你灌满！按 E 释放震撼全场的天地绝技！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
 ];
-function startTutorial() {
+const TUT_QUICK = [0, 2, 6, 9, 10];
+const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
+function startTutorial(full) {
 try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
 trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
 startTraining('dummy');
 B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
-TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
+TUT = { list: full === true ? TUT_STEPS.map((_, i) => i) : TUT_QUICK, full: full === true, step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
 tutNext();
 $id('tutBox').classList.remove('hidden');
 }
@@ -26033,27 +26041,27 @@ const TUT_TOUCH = [
 ];
 function tutNext() {
 TUT.step++; TUT.wait = 0; TUT.hit = {}; TUT.x0 = A.x;
-const st = TUT_STEPS[TUT.step];
+const st = TUT_STEPS[tutCur()];
 if (!st) return tutFinish();
 $id('tutBox').classList.remove('ok');
-$id('tutN').textContent = `新手演武教学 ${TUT.step + 1} / ${TUT_STEPS.length}`;
-$id('tutT').textContent = st.t; $id('tutD').textContent = TOUCH ? TUT_TOUCH[TUT.step] : st.d;
+$id('tutN').textContent = `${TUT.full ? '完整教学' : '快速上手'} ${TUT.step + 1} / ${TUT.list.length}`;
+$id('tutT').textContent = st.t; $id('tutD').textContent = TOUCH ? TUT_TOUCH[tutCur()] : st.d;
 if (st.setup) st.setup();
 }
 function tutTick(dt) {
-const st = TUT_STEPS[TUT.step]; if (!st) return;
-A.hp = A.maxHp; A.breakCD = TUT.step === 9 ? 0 : A.breakCD;
+const cur = tutCur(), st = TUT_STEPS[cur]; if (!st) return;
+A.hp = A.maxHp; A.breakCD = cur === 9 ? 0 : A.breakCD;
 if (A.state === 'attack' && A.hitConfirmed) TUT.hit[A.moveName] = true;
 if (A.state === 'blockstun' && TUT.prev !== 'blockstun') TUT.blocks++;
 TUT.prev = A.state;
-if (TUT.step === 7 && !TUT.wait) {
+if (cur === 7 && !TUT.wait) {
 TUT.shotT -= dt;
 if (TUT.shotT <= 0) {
 TUT.shotT = 1.6; const dir = A.x >= B.x ? 1 : -1;
 spawnProj(B, { kind: 'wind', x: B.x + dir * 40, y: B.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 2, kb: [160, 0], stun: 0.3, hs: 0.04 });
 }
 }
-if (TUT.step === 8 && !TUT.wait) {
+if (cur === 8 && !TUT.wait) {
 TUT.parryShotT = (TUT.parryShotT || 0) - dt;
 if (TUT.parryShotT <= 0 && B.state === 'idle') {
 TUT.parryShotT = 2.0;
@@ -26062,7 +26070,7 @@ B.face = -A.face;
 startAttack(B, 'l1');
 }
 }
-if (TUT.step === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
+if (cur === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
 if (TUT.wait) { TUT.wait -= dt; if (TUT.wait <= 0) tutNext(); return; }
 if (st.ok()) { TUT.wait = 1; $id('tutBox').classList.add('ok'); SFX.chargeFull(); }
 }
@@ -26075,7 +26083,8 @@ async function tutFinish() {
 try { localStorage.setItem('renying-tut-done', '1'); } catch (e) {}
 updateTutBtn();
 $id('tutBox').classList.add('hidden');
-let msg = '该会的都会了。去找电脑或是同学，过几招吧。';
+const wasFull = TUT && TUT.full;
+let msg = wasFull ? '该会的都会了。去找电脑或是同学，过几招吧。' : '基本招式会了。格挡和精准招架这些进阶操作，在「帮助」里的完整教学能学到。';
 if (!PROF.guest) {
 if (!PROF.tutorial && typeof rwServer === 'function' && rwServer()) {   // 云端账号：找服务器领，每个号只给一次（本机标记不算数）
 PROF.tutorial = 1; saveFlag('tutorial', 1);
@@ -26098,6 +26107,8 @@ TUT = null; paused = true; showScreen('tutdone'); SFX.gong();
 function endTutorial() { TUT = null; $id('tutBox').classList.add('hidden'); }
 $id('tutMenu').addEventListener('click', () => { paused = false; toMenu(); });
 $id('tutStay').addEventListener('click', () => { paused = false; showScreen(null); });
+if ($id('tutCpu')) $id('tutCpu').addEventListener('click', () => { paused = false; toMenu(); openScreen('cpu'); });
+if ($id('tutNet')) $id('tutNet').addEventListener('click', () => { paused = false; toMenu(); openScreen('netp'); });
 $id('tutYes').addEventListener('click', () => startTutorial());
 $id('tutNo').addEventListener('click', () => { try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
 let langPromptDone = false;
@@ -31862,7 +31873,7 @@ if (OFFLINE_BUILD) {
 const mp = $id('mPlay'); mp.className = 'mcard right'; mp.setAttribute('data-kb-default', '');
 $id('mMatch').removeAttribute('data-kb-default');
 mp.innerHTML = '<span class="mk">习武</span><span class="ms">对战电脑 · 闯关 · 车轮战 · 木人桩</span>';
-const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
+const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '一分钟学会基本招式，再去挑战电脑与闯关。';
 }
 function updateNetDiagRtt(ms) {
 if (typeof ms !== 'number' || isNaN(ms)) return;

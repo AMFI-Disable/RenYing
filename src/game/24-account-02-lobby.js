@@ -17,7 +17,7 @@ if (OFFLINE_BUILD) {
   const mp = $id('mPlay'); mp.className = 'mcard right'; mp.setAttribute('data-kb-default', '');
   $id('mMatch').removeAttribute('data-kb-default');
   mp.innerHTML = '<span class="mk">习武</span><span class="ms">对战电脑 · 闯关 · 车轮战 · 木人桩</span>';
-  const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
+  const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '一分钟学会基本招式，再去挑战电脑与闯关。';
 }
 function updateNetDiagRtt(ms) {
   if (typeof ms !== 'number' || isNaN(ms)) return;
