@@ -15,5 +15,6 @@
 - [Architecture And Development / 架构](architecture-and-development.md)
 - [Testing And CI / 测试](testing-and-ci.md)
 - [Contributing / 参与开发](contributing.md)
+- [Version History / 版本迭代史](version-history.md)
 
 [▶ Play / 游玩](https://amfi-disable.github.io/RenYing/)
