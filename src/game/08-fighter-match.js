@@ -504,6 +504,7 @@ function startMatch(mode, level, chars, isWatch = false) {
 // 磁仙每回合开局抽正极或负极：只在这里抽、只用对局随机数，联机两边和回放抽到的一样（预览用的角色 reset 不碰随机数）
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+  if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
   announce = null;
   announceQueue.length = 0;
   secretRound();

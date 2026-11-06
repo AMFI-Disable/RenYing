@@ -16,6 +16,7 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - 10 * 60e3),
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),
     env.DB.prepare('DELETE FROM chron_rep WHERE at < ?').bind(now - 2 * DAY_MS),                         // 分线上报的去重编号：重报只会在几分钟里，留两天够了
+    env.DB.prepare('DELETE FROM play_days WHERE day < ?').bind(Math.floor((now + 8 * 3600e3) / DAY_MS) - 120),   // 匿名统计每天来过谁：留 120 天（够算留存）
   ]);
 }
 
@@ -81,6 +82,62 @@ async function presence(env, body, ip, now) {
   }
   const c = await env.DB.prepare("SELECT COUNT(*) AS online, SUM(st = 'match') AS playing, SUM(st = 'queue') AS waiting FROM presence WHERE seen > ?").bind(now - PRESENCE_WINDOW).first();
   return json({ ok: true, online: (c && c.online) || 0, playing: (c && c.playing) || 0, waiting: (c && c.waiting) || 0, every: 30 });
+}
+
+/* ---------- 匿名游玩统计 ----------
+ * 网页每次打开、走新手教学、开一局时报一下（POST /api/stats，不用登录，游客也算）。
+ * 不存名字、账号、邮箱、IP：网页在本机存一个随机编号（renying-anon-id），服务器加盐再算一次哈希才存，只用来去重和算留存。
+ * 设置里可以关掉；离线版不报。管理网页「游玩统计」看：每天多少人、新玩家第 2 天 / 第 7 天还回不回来、各模式开了多少局、教学走到哪。
+ * 每个 IP 一小时最多 120 次、全服一小时最多 20000 次，多出来的直接丢（统计不能把数据库写爆）。 */
+const STAT_EVENTS = ['open', 'tut_start', 'tut_done', 'tut_skip'];
+const STAT_MODES = ['cpu', 'tag3', 'tower', 'chaos', 'mayhem', 'maps', '2v2', 'watch2v2', 'saga', 'stage', 'train', 'raid', 'world', 'boss', 'net', 'netrk', 'pvp', 'replay', 'qfx'];
+const statKeyOk = k => typeof k === 'string' && (STAT_EVENTS.includes(k) || (k.startsWith('m:') && STAT_MODES.includes(k.slice(2))));
+const statDay = now => Math.floor((now + 8 * 3600e3) / DAY_MS);   // 北京时间的第几天：学校的一天按北京时间算
+async function statVid(raw) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('renying-stats:' + raw));
+  return Array.from(new Uint8Array(d).slice(0, 12)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function playStats(env, body, ip, now) {
+  const raw = String(body.vid || '');
+  if (!/^[a-z0-9]{12,40}$/.test(raw)) return error('编号不对');
+  const tag = await ipTag(ip);
+  if (!(await hit(env, 'st:' + tag, 120, 3600e3, now)) || !(await hit(env, 'st:*', 20000, 3600e3, now))) return json({ ok: true, kept: false });
+  const ev = (Array.isArray(body.ev) ? body.ev : []).slice(0, 30).filter(statKeyOk);
+  const day = statDay(now), vid = await statVid(raw);
+  const counts = {};
+  for (const k of ev) counts[k] = Math.min(10, (counts[k] || 0) + 1);   // 同一批里同一件事最多算 10 次
+  const st = [
+    env.DB.prepare('INSERT INTO play_visitors (vid, first_day, last_day) VALUES (?1, ?2, ?2) ON CONFLICT(vid) DO UPDATE SET last_day = MAX(last_day, ?2)').bind(vid, day),
+    env.DB.prepare('INSERT OR IGNORE INTO play_days (day, vid) VALUES (?, ?)').bind(day, vid),
+  ];
+  for (const [k, n] of Object.entries(counts)) st.push(env.DB.prepare('INSERT INTO play_counts (day, k, n) VALUES (?1, ?2, ?3) ON CONFLICT(day, k) DO UPDATE SET n = n + ?3').bind(day, k, n));
+  await env.DB.batch(st);
+  return json({ ok: true, kept: true });
+}
+// 管理网页用：最近 days 天每天的人数、新玩家、留存、各件事的次数
+async function playStatsReport(env, now, days) {
+  const today = statDay(now), from = today - days + 1;
+  const [dau, cohort, counts, total] = await Promise.all([
+    env.DB.prepare('SELECT day, COUNT(*) AS n FROM play_days WHERE day >= ? GROUP BY day').bind(from).all(),
+    env.DB.prepare(
+      'SELECT v.first_day AS day, COUNT(*) AS n, ' +
+      'SUM(EXISTS (SELECT 1 FROM play_days p WHERE p.vid = v.vid AND p.day = v.first_day + 1)) AS r1, ' +
+      'SUM(EXISTS (SELECT 1 FROM play_days p WHERE p.vid = v.vid AND p.day = v.first_day + 7)) AS r7 ' +
+      'FROM play_visitors v WHERE v.first_day >= ? GROUP BY v.first_day').bind(from).all(),
+    env.DB.prepare('SELECT day, k, n FROM play_counts WHERE day >= ?').bind(from).all(),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM play_visitors').first(),
+  ]);
+  const rows = {};
+  const row = d => rows[d] || (rows[d] = { day: d, date: new Date(d * DAY_MS).toISOString().slice(0, 10), players: 0, fresh: 0, back1: null, back7: null, ev: {} });
+  for (let d = from; d <= today; d++) row(d);
+  for (const r of dau.results || []) row(r.day).players = r.n;
+  for (const r of cohort.results || []) {
+    const o = row(r.day); o.fresh = r.n;
+    o.back1 = r.day + 1 <= today ? (r.r1 || 0) : null;   // 还没到第 2 天的不算（显示成空）
+    o.back7 = r.day + 7 <= today ? (r.r7 || 0) : null;
+  }
+  for (const r of counts.results || []) row(r.day).ev[r.k] = r.n;
+  return { ok: true, days, today: row(today).date, visitors: (total && total.n) || 0, rows: Object.values(rows).sort((a, b) => b.day - a.day), modes: STAT_MODES };
 }
 
 /* ---------- 天魔讨伐：全服一起打一只天魔 ----------

@@ -45,9 +45,9 @@ The account page can export your profile to a file and import it again. Exported
 - A sign-in log (sign-ins, failed sign-ins, sign-outs) kept for 90 days. IP addresses in it are stored only as a short one-way code, so the address cannot be read back.
 - Crash reports from the page (uncaught errors) and rare suspicious-damage reports, used to fix bugs and catch cheating. They contain no passwords.
 
-There are no ads, no analytics and no tracking scripts. The offline edition and guests send nothing about your progress to the server.
+There are no ads, no tracking scripts and no third-party analytics. The online page keeps its own anonymous play stats (page opens, tutorial progress, which mode each match is) tied only to a random browser ID that the server salts and hashes; no name, account, email or IP is stored, and Settings → Anonymous stats turns it off. The offline edition sends nothing.
 
-服务器只存账号名、存档、武库、墨锭流水、对局记录和排行榜。密码和登录令牌都只存哈希。没有广告、没有统计分析、没有跟踪脚本。
+服务器只存账号名、存档、武库、墨锭流水、对局记录和排行榜。密码和登录令牌都只存哈希。没有广告、没有跟踪脚本、没有第三方统计。在线版有自己的匿名游玩统计（打开网页、新手教学、开了哪个模式），只带一个本机随机编号（服务器加盐哈希后才存），不存名字、账号、邮箱、IP，设置里「匿名统计」可以关；离线版什么都不发。
 
 ## Deleting An Account / 删除账号
 

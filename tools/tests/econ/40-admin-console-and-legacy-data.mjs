@@ -26,6 +26,28 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   const expMd = await expMdRes.text();
   ok(expMdRes.status === 200 && expMd.includes('# 刃影 (RenYing) 错误诊断报告') && expMd.includes('TypeError: test err'), '导出调试文件 (Markdown) 包含 Markdown 格式诊断报告');
 
+  // 匿名游玩统计：不用登录；只认白名单里的事件；编号只存加盐哈希；管理网页能看到每天人数、新玩家留存和各模式局数
+  {
+    const bad = await call('POST', '/api/stats', { vid: 'x', ev: ['open'] });
+    ok(!bad.ok, '匿名统计：编号格式不对就拒绝', bad);
+    const s1 = await call('POST', '/api/stats', { vid: 'statsvid000000001', ev: ['open', 'm:cpu', 'm:cpu', 'm:hack', 'drop table', 'tut_start', 'tut_done'] }, null, '9.9.9.1');
+    ok(s1.ok && s1.kept, '匿名统计：游客也能报', s1);
+    const day = Math.floor((T + 8 * 3600e3) / 86400000);
+    const cnt = k => (row('SELECT n FROM play_counts WHERE day = ? AND k = ?', day, k) || {}).n || 0;
+    ok(cnt('open') === 1 && cnt('m:cpu') === 2 && cnt('tut_done') === 1 && !row("SELECT 1 AS x FROM play_counts WHERE k = 'm:hack' OR k = 'drop table'"), '匿名统计：白名单以外的事件不记', { open: cnt('open'), cpu: cnt('m:cpu') });
+    ok(!row("SELECT 1 AS x FROM play_visitors WHERE vid = 'statsvid000000001'") && row('SELECT COUNT(*) AS n FROM play_visitors').n >= 1, '匿名统计：数据库里没有网页给的原始编号（只有加盐哈希）');
+    const vid = row('SELECT vid FROM play_days WHERE day = ? LIMIT 1', day).vid;
+    // 造一个“昨天第一次来、今天又来了”的玩家，看第 2 天留存
+    ENV.DB.raw.prepare('INSERT INTO play_visitors (vid, first_day, last_day) VALUES (?, ?, ?)').run('cohortvid', day - 1, day);
+    ENV.DB.raw.prepare('INSERT INTO play_days (day, vid) VALUES (?, ?), (?, ?)').run(day - 1, 'cohortvid', day, 'cohortvid');
+    const ps = await adm('GET', '/api/admin/playstats?days=7');
+    const y = ps.rows.find(r => r.day === day - 1), t = ps.rows.find(r => r.day === day);
+    ok(ps.ok && ps.rows.length === 7 && y.fresh === 1 && y.back1 === 1 && y.back7 === null && t.players >= 2 && t.ev['m:cpu'] === 2 && t.back1 === null && !!vid, '管理网页游玩统计：每天人数、第 2 天留存、各模式局数', { y, t });
+    let kept = 0;
+    for (let i = 0; i < 125; i++) if ((await call('POST', '/api/stats', { vid: 'statsflood0000001', ev: ['open'] }, null, '9.9.9.2')).kept) kept++;
+    ok(kept === 120, '匿名统计：同一个 IP 一小时最多记 120 次', kept);
+  }
+
   // 统计 2.0：7日墨锭收支趋势、开箱分布、在线计数
   ok(Array.isArray(st.inkFlow7d) && st.inkFlow7d.length >= 1 && typeof st.caseCounts7d === 'object' && typeof st.online === 'number', '总览 2.0：包含 7 日墨锭收支趋势与 7 日开箱统计', st.inkFlow7d);
 
@@ -54,7 +76,7 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
 
   // 世界共斗与数据库维护接口
   const maint = await adm('GET', '/api/admin/maint');
-  ok(maint.ok && maint.tables && Object.keys(maint.tables).length === 30 && maint.gboss && maint.chron, '世界与维护看板：返回全部 30 张数据表行数、天魔状态与岁史状态');
+  ok(maint.ok && maint.tables && Object.keys(maint.tables).length === 33 && maint.gboss && maint.chron, '世界与维护看板：返回全部 33 张数据表行数、天魔状态与岁史状态');
   const wAct1 = await adm('POST', '/api/admin/world/act', { op: 'gboss_hp', hp: 123456, maxHp: 500000, why: '测试调天魔血量' });
   ok(wAct1.ok && wAct1.gboss && wAct1.gboss.hp === 123456 && wAct1.gboss.max_hp === 500000, '世界调控：调整天魔血量成功', wAct1);
   const wAct2 = await adm('POST', '/api/admin/world/act', { op: 'gboss_reroll', why: '测试重随词缀' });

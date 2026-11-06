@@ -337,3 +337,22 @@ CREATE TABLE IF NOT EXISTS chron_claim (
     PRIMARY KEY (node, uid)
 );
 CREATE INDEX IF NOT EXISTS idx_chron_claim_uid ON chron_claim (uid, cn);
+
+-- 匿名游玩统计（0008）：不存名字、账号、邮箱、IP。vid 是网页随机编号再加盐哈希的结果，只用来去重和算留存。
+CREATE TABLE IF NOT EXISTS play_visitors (
+    vid TEXT PRIMARY KEY,
+    first_day INTEGER NOT NULL,
+    last_day INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_play_visitors_first ON play_visitors (first_day);
+CREATE TABLE IF NOT EXISTS play_days (
+    day INTEGER NOT NULL,
+    vid TEXT NOT NULL,
+    PRIMARY KEY (day, vid)
+);
+CREATE TABLE IF NOT EXISTS play_counts (
+    day INTEGER NOT NULL,
+    k TEXT NOT NULL,
+    n INTEGER NOT NULL DEFAULT 0 CHECK (n >= 0),
+    PRIMARY KEY (day, k)
+);

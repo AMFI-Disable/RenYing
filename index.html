@@ -7721,6 +7721,8 @@ const UI_COPY_EN = {
 "一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn the basic moves in one minute. Signed-in players get 300 Ink when they finish.",
 "一分钟学会基本招式，再去挑战电脑与闯关。": "Learn the basic moves in one minute, then take on the AI and the stages.",
 "快速上手": "Quick Start",
+"匿名统计": "Anonymous stats",
+"开（不记名字、账号）": "On (no names or accounts)",
 "画面有点卡，已自动调成中画质（可在设置里改回）": "The game was stuttering, so graphics were lowered to Medium (you can change this in Settings)",
 "画面还是卡，已自动调成低画质（可在设置里改回）": "Still stuttering, so graphics were lowered to Low (you can change this in Settings)",
 "对手已离开。房间还开着，朋友用同一个房间码就能再进来": "Your opponent left. The room is still open, and friends can join again with the same code",
@@ -11522,7 +11524,7 @@ iconizeTree(n); stripAttrs(n);
 if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 'use strict';
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, lang: 'zh' };
 try {
 const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
 Object.assign(SETTINGS, saved);
@@ -14916,6 +14918,7 @@ else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
 }
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
 announce = null;
 announceQueue.length = 0;
 secretRound();
@@ -23354,6 +23357,7 @@ const SETTING_ROWS = [
 { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
 { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
 { k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
+{ k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关']] },
 { k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
 { k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
 { k: 'music', name: '音乐', range: [0, 1, 0.05] },
@@ -26057,11 +26061,14 @@ const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
 function startTutorial(full) {
 try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
 trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
+if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
 startTraining('dummy');
+if (typeof STATQ !== 'undefined') STATQ.skip = false;
 B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
 TUT = { list: full === true ? TUT_STEPS.map((_, i) => i) : TUT_QUICK, full: full === true, step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
 tutNext();
 $id('tutBox').classList.remove('hidden');
+if (typeof statEv === 'function') statEv('tut_start');
 }
 const TUT_TOUCH = [
 '拨动左摇杆，左右走动熟悉身法。',
@@ -26117,6 +26124,7 @@ if (!PROF.guest && PROF.tutorial) done = true;
 const b = document.querySelector('#menu [data-go="tutorial"]'); if (b) b.style.display = done ? 'none' : '';
 }
 async function tutFinish() {
+if (typeof statEv === 'function') statEv('tut_done');
 try { localStorage.setItem('renying-tut-done', '1'); } catch (e) {}
 updateTutBtn();
 $id('tutBox').classList.add('hidden');
@@ -26147,7 +26155,7 @@ $id('tutStay').addEventListener('click', () => { paused = false; showScreen(null
 if ($id('tutCpu')) $id('tutCpu').addEventListener('click', () => { paused = false; toMenu(); openScreen('cpu'); });
 if ($id('tutNet')) $id('tutNet').addEventListener('click', () => { paused = false; toMenu(); openScreen('netp'); });
 $id('tutYes').addEventListener('click', () => startTutorial());
-$id('tutNo').addEventListener('click', () => { try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
+$id('tutNo').addEventListener('click', () => { if (typeof statEv === 'function') statEv('tut_skip'); try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
 let langPromptDone = false;
 try {
 langPromptDone = !!localStorage.getItem('renying-lang-chosen');
@@ -32192,6 +32200,44 @@ function presBye() {
 try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
 }
 window.addEventListener('pagehide', presBye);
+const STATQ = { q: [], timer: 0, skip: false };
+function statId() {
+let id = '';
+try { id = localStorage.getItem('renying-anon-id') || ''; } catch (e) {}
+if (!/^[a-z0-9]{12,40}$/.test(id)) {
+id = Array.from(crypto.getRandomValues(new Uint8Array(12)), x => x.toString(36).padStart(2, '0')).join('').slice(0, 20);
+try { localStorage.setItem('renying-anon-id', id); } catch (e) {}
+}
+return id;
+}
+const statUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/stats';
+const statOn = () => !OFFLINE_BUILD && SETTINGS.stats !== false && !!(window.CloudSave && CloudSave.getEndpoint && CloudSave.getEndpoint());
+function statEv(k) {
+if (!statOn()) return;
+STATQ.q.push(k);
+if (STATQ.q.length >= 20) statFlush();
+else if (!STATQ.timer) STATQ.timer = setTimeout(statFlush, 15000);   // 攒 15 秒一起报，少发请求
+}
+function statFlush(beacon) {
+clearTimeout(STATQ.timer); STATQ.timer = 0;
+if (!STATQ.q.length || !statOn()) { STATQ.q.length = 0; return; }
+const body = JSON.stringify({ vid: statId(), ev: STATQ.q.splice(0, 30) });
+try {
+if (beacon && navigator.sendBeacon) navigator.sendBeacon(statUrl(), new Blob([body], { type: 'text/plain' }));
+else fetch(statUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body, keepalive: true }).catch(() => {});
+} catch (e) {}
+}
+function statMatch() {
+if (typeof RESIM !== 'undefined' && RESIM) return;
+if (STATQ.skip || M.mode === 'demo' || TUT || M.round !== 1 || M.wins[0] || M.wins[1]) return;
+let k = M.mode;
+if (k === 'net' && NET.isRanked) k = 'netrk';
+else if (k === 'cpu' && typeof FOREST !== 'undefined' && FOREST.on) k = 'stage';
+statEv('m:' + k);
+}
+window.addEventListener('pagehide', () => statFlush(true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) statFlush(true); });
+setTimeout(() => { statEv('open'); statFlush(); }, 3000);   // 打开网页：等云端地址准备好再报
 function onlineNow() {
 const fresh = PRES.srv && Date.now() - PRES.at < 120e3 && PRES.fail < 2 && !(typeof navigator !== 'undefined' && navigator.onLine === false);
 if (!fresh) return null;

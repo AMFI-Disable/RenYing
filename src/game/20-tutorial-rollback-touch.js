@@ -21,11 +21,14 @@ const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
 function startTutorial(full) {
   try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
   trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
+  if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
   startTraining('dummy');
+  if (typeof STATQ !== 'undefined') STATQ.skip = false;
   B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
   TUT = { list: full === true ? TUT_STEPS.map((_, i) => i) : TUT_QUICK, full: full === true, step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
   tutNext();
   $id('tutBox').classList.remove('hidden');
+  if (typeof statEv === 'function') statEv('tut_start');
 }
 const TUT_TOUCH = [
   '拨动左摇杆，左右走动熟悉身法。',
@@ -83,6 +86,7 @@ function updateTutBtn() {
   const b = document.querySelector('#menu [data-go="tutorial"]'); if (b) b.style.display = done ? 'none' : '';
 }
 async function tutFinish() {
+  if (typeof statEv === 'function') statEv('tut_done');
   try { localStorage.setItem('renying-tut-done', '1'); } catch (e) {}
   updateTutBtn();
   $id('tutBox').classList.add('hidden');
@@ -114,7 +118,7 @@ $id('tutStay').addEventListener('click', () => { paused = false; showScreen(null
 if ($id('tutCpu')) $id('tutCpu').addEventListener('click', () => { paused = false; toMenu(); openScreen('cpu'); });
 if ($id('tutNet')) $id('tutNet').addEventListener('click', () => { paused = false; toMenu(); openScreen('netp'); });
 $id('tutYes').addEventListener('click', () => startTutorial());
-$id('tutNo').addEventListener('click', () => { try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
+$id('tutNo').addEventListener('click', () => { if (typeof statEv === 'function') statEv('tut_skip'); try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
 // 初次进入游戏语言偏好引导弹窗
 let langPromptDone = false;
 try {

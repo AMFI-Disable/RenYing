@@ -251,7 +251,8 @@ Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). S
 
 ## Privacy
 
-- No ads, no analytics, no tracking scripts.
+- No ads, no tracking scripts, no third-party analytics.
+- The online page keeps its own anonymous play stats: page opens, tutorial progress and which mode each match is. It sends only a random browser ID (the server salts and hashes it before storing) and no name, account, email or IP. It is used to see how many people play and whether new players come back. Turn it off under Settings → Anonymous stats. The offline edition has none.
 - Guests and the offline edition keep everything in the browser's local storage.
 - A cloud account stores your save, armory and match records on the game's Worker. Passwords are stored as salted PBKDF2 hashes and session tokens only as hashes.
 - The online page sends crash reports (uncaught errors) and rare suspicious-damage reports to the Worker so they can be fixed. They contain no passwords.

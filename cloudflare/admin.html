@@ -279,6 +279,7 @@
     <button role="tab" data-act="tab" data-tab="auth">登录记录</button>
     <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
     <button role="tab" data-act="tab" data-tab="errors">错误</button>
+    <button role="tab" data-act="tab" data-tab="play">游玩统计</button>
     <button role="tab" data-act="tab" data-tab="admins" data-need="all">管理员</button>
   </div></nav>
   <main id="main"></main>
@@ -1065,6 +1066,41 @@ async function vErrors() {
   </div>`;
 }
 
+/* ---------- 匿名游玩统计 ---------- */
+const PLAY_MODE_NAME = { cpu: '人机', tag3: '3v3 车轮', tower: '问剑密卷', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', '2v2': '2v2', watch2v2: '观战 2v2',
+  saga: '侠客列传', stage: '守关', train: '木人桩', raid: '同袍肉鸽', world: '开放世界', boss: '天魔讨伐', net: '联机', netrk: '排位', pvp: '本机对战', replay: '回放', qfx: '青锋行' };
+const pctOf = (a, b) => b ? Math.round(a * 100 / b) + '%' : '—';
+async function vPlay() {
+  const r = await api('playstats?days=30');
+  const tot = {}, sum = (o, k, v) => { o[k] = (o[k] || 0) + (v || 0); };
+  let fresh = 0, b1 = 0, b1n = 0, b7 = 0, b7n = 0;
+  for (const d of r.rows) {
+    for (const [k, v] of Object.entries(d.ev)) sum(tot, k, v);
+    fresh += d.fresh;
+    if (d.back1 !== null) { b1 += d.back1; b1n += d.fresh; }
+    if (d.back7 !== null) { b7 += d.back7; b7n += d.fresh; }
+  }
+  const modes = r.modes.filter(m => tot['m:' + m]).sort((a, b) => tot['m:' + b] - tot['m:' + a]);
+  return H`<div class="card"><h2>游玩统计 <small>最近 ${r.days} 天 · 北京时间 · 今天 ${r.today}</small></h2>
+    <p class="hint">完全匿名：不存名字、账号、邮箱、IP。每个浏览器一个随机编号（服务器只存加盐后的哈希），玩家在设置里可以关掉。
+      「第 2 天回来」是那天第一次来的人里，第二天又打开的比例；「第 7 天回来」同理。还没到那一天的显示「—」。</p>
+    <div class="row wrap" style="gap:18px">
+      <div><b>${fmtN(r.visitors)}</b><br><small>累计来过的浏览器</small></div>
+      <div><b>${fmtN(fresh)}</b><br><small>这 ${r.days} 天的新玩家</small></div>
+      <div><b>${pctOf(b1, b1n)}</b><br><small>第 2 天回来</small></div>
+      <div><b>${pctOf(b7, b7n)}</b><br><small>第 7 天回来</small></div>
+      <div><b>${pctOf(tot.tut_done || 0, tot.tut_start || 0)}</b><br><small>开始教学的人里走完的</small></div>
+    </div></div>
+    <div class="card"><h2>各模式开局数 <small>最近 ${r.days} 天，多的在前</small></h2>
+    ${modes.length ? H`<div class="tw"><table><thead><tr><th>模式</th><th class="num">局数</th><th class="num">占比</th></tr></thead><tbody>
+      ${(() => { const all = modes.reduce((a, m) => a + tot['m:' + m], 0); return modes.map(m => H`<tr><td>${PLAY_MODE_NAME[m] || m}</td><td class="num">${fmtN(tot['m:' + m])}</td><td class="num">${pctOf(tot['m:' + m], all)}</td></tr>`); })()}
+    </tbody></table></div>` : H`<p class="empty">还没有开局记录</p>`}</div>
+    <div class="card"><h2>每天</h2><div class="tw"><table><thead><tr><th>日期</th><th class="num">玩家</th><th class="num">新玩家</th><th class="num">第 2 天回来</th><th class="num">第 7 天回来</th><th class="num">打开次数</th><th class="num">开局</th><th class="num">教学 开始 / 走完</th></tr></thead><tbody>
+      ${r.rows.map(d => { const games = Object.entries(d.ev).filter(([k]) => k.startsWith('m:')).reduce((a, [, v]) => a + v, 0); return H`<tr><td class="nowrap">${d.date}</td><td class="num">${fmtN(d.players)}</td><td class="num">${fmtN(d.fresh)}</td>
+        <td class="num">${d.back1 === null ? '—' : pctOf(d.back1, d.fresh)}</td><td class="num">${d.back7 === null ? '—' : pctOf(d.back7, d.fresh)}</td><td class="num">${fmtN(d.ev.open)}</td><td class="num">${fmtN(games)}</td><td class="num">${fmtN(d.ev.tut_start)} / ${fmtN(d.ev.tut_done)}</td></tr>`; })}
+    </tbody></table></div></div>`;
+}
+
 /* ---------- 世界监控与数据库维护 ---------- */
 const TABLE_DESC = {
   users: '注册玩家账号', sessions: '活跃短效会话', devices: '登录设备与续期令牌', refresh_used: '已轮换续期令牌',
@@ -1075,6 +1111,7 @@ const TABLE_DESC = {
   errs: '客户端/服务端错误与慢请求', gboss: '全服天魔历代记录', gboss_hit: '天魔讨伐伤害榜', gboss_try: '天魔出战门票',
   saga_mark: '侠客列传足迹统计', chron: '全服肉鸽长卷当前进度', chron_done: '长卷已通关节点', chron_part: '长卷玩家出力记录',
   chron_claim: '长卷奖励领取记录', chron_rep: '分线上报去重凭证',
+  play_visitors: '匿名游玩统计 · 编号首末日', play_days: '匿名游玩统计 · 每天来过谁', play_counts: '匿名游玩统计 · 每天各事件次数',
 };
 async function vMaint() {
   const m = S.maint = await api('maint');
@@ -1214,7 +1251,7 @@ function drawCodeGives() {
   if (el) paint(el, S.codeSkins.map((g, i) => H`<span class="chip">${itemName(g.k)}（${heroOf(g.k)}）${g.st >= 0 ? ' 斩数 ' + g.st : ''}<button type="button" data-act="delcodegive" data-i="${i}" aria-label="去掉">×</button></span>`));
 }
 
-const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, admins: vAdmins };
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, play: vPlay, admins: vAdmins };
 const AFTER = { players: drawGives, gifts: drawGiftGives, codes: drawCodeGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 let adminEditRevision = 0, adminDirty = false, auditResetBusy = false;
 $('#main').addEventListener('input', () => { adminDirty = true; adminEditRevision++; });

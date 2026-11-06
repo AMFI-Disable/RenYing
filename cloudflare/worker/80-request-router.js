@@ -242,6 +242,13 @@ async function route(request, env, ctx, rid = reqId()) {
         return await presence(env, body, ip, now);
       }
 
+      // 10b. 匿名游玩统计（不用登录，游客也算；不存名字、账号、IP）
+      if (path === '/api/stats' && request.method === 'POST') {
+        const body = await readBody(request);
+        if (!body) return error('请求太大', 413);
+        return await playStats(env, body, ip, now);
+      }
+
       // 11. 天魔讨伐：看天魔不用登录；出战、交伤害要云端账号
       if (path === '/api/gboss' && request.method === 'GET') {
         if (!(await hit(env, 'gbg:' + ip, 120, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);

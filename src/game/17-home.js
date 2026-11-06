@@ -499,6 +499,7 @@ const SETTING_ROWS = [
   { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
   { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
   { k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
+  { k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关']] },
   { k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
   { k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
   { k: 'music', name: '音乐', range: [0, 1, 0.05] },

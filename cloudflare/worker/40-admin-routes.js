@@ -140,6 +140,9 @@ async function handleAdmin(env, request, path, now, ip) {
       cfgId: CFG_CACHE.id,
     });
   }
+  if (route === 'GET /api/admin/playstats') {   // 匿名游玩统计：每天人数、新玩家留存、各模式开局数、新手教学
+    return json(await playStatsReport(env, now, Math.max(7, Math.min(90, +q('days') || 30))));
+  }
   if (route === 'GET /api/admin/errors') {   // 错误记录：最近出现的在前；kind 不填就全部
     const kind = q('kind'), days = Math.max(1, Math.min(30, +q('days') || 7));
     const rows = (await env.DB.prepare(
@@ -795,7 +798,7 @@ async function handleAdmin(env, request, path, now, ip) {
   }
   if (route === 'GET /api/admin/maint') {   // 数据库各表行数统计与天魔 / 江湖长卷实时监控
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
-    const tableNames = ['users', 'sessions', 'devices', 'refresh_used', 'econ', 'econ_nonce', 'econ_log', 'sanctions', 'rate', 'mkt', 'gift', 'gift_got', 'code', 'code_got', 'cfg', 'presence', 'flags', 'auth_log', 'admins', 'admin_sessions', 'errs', 'gboss', 'gboss_hit', 'gboss_try', 'saga_mark', 'chron', 'chron_done', 'chron_part', 'chron_claim', 'chron_rep'];
+    const tableNames = ['users', 'sessions', 'devices', 'refresh_used', 'econ', 'econ_nonce', 'econ_log', 'sanctions', 'rate', 'mkt', 'gift', 'gift_got', 'code', 'code_got', 'cfg', 'presence', 'flags', 'auth_log', 'admins', 'admin_sessions', 'errs', 'gboss', 'gboss_hit', 'gboss_try', 'saga_mark', 'chron', 'chron_done', 'chron_part', 'chron_claim', 'chron_rep', 'play_visitors', 'play_days', 'play_counts'];
     const counts = {};
     await Promise.all(tableNames.map(async t => {
       try {
