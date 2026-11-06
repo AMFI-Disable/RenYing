@@ -581,7 +581,7 @@ $id('setList').addEventListener('click', e => {
   const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
   if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
   if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
-  if (k === 'quality') resize();
+  if (k === 'quality') { SETTINGS.qualityChosen = true; saveSettings(); resize(); }   // 手动选过画质：以后不再自动降
   if (k === 'autoSkin') applySkins();
 });
 $id('setList').addEventListener('input', e => {

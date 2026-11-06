@@ -7721,6 +7721,8 @@ const UI_COPY_EN = {
 "一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn the basic moves in one minute. Signed-in players get 300 Ink when they finish.",
 "一分钟学会基本招式，再去挑战电脑与闯关。": "Learn the basic moves in one minute, then take on the AI and the stages.",
 "快速上手": "Quick Start",
+"画面有点卡，已自动调成中画质（可在设置里改回）": "The game was stuttering, so graphics were lowered to Medium (you can change this in Settings)",
+"画面还是卡，已自动调成低画质（可在设置里改回）": "Still stuttering, so graphics were lowered to Low (you can change this in Settings)",
 "对手已离开。房间还开着，朋友用同一个房间码就能再进来": "Your opponent left. The room is still open, and friends can join again with the same code",
 "对手已离开，房间还开着，同一个房间码可以再进": "Your opponent left. The room stays open with the same code",
 "和电脑打一局": "Fight the AI",
@@ -17962,6 +17964,22 @@ window.addEventListener('message', e => {
 const fr = $id('extFrame'); if (!fr || e.source !== fr.contentWindow) return;
 const d = e.data; if (d && d.qfx === 'wave') qfxCleared(d.n | 0);
 });
+const AUTOQ = { slowT: 0, n: 0, t0: 0, fps: 60 };
+function autoQualityTick(now) {
+if (!AUTOQ.t0) AUTOQ.t0 = now;
+AUTOQ.n++;
+const span = now - AUTOQ.t0;
+if (span < 1000) return;
+AUTOQ.fps = AUTOQ.n * 1000 / span; AUTOQ.n = 0; AUTOQ.t0 = now;
+if ((navigator.webdriver && !window.__autoQTest) || SETTINGS.qualityChosen || SETTINGS.quality === 'low' || SETTINGS.fps < 60
+|| M.mode === 'demo' || M.watchAi || paused || document.hidden || span > 5000) { AUTOQ.slowT = 0; return; }
+if (AUTOQ.fps < 40) AUTOQ.slowT += span / 1000; else AUTOQ.slowT = Math.max(0, AUTOQ.slowT - span / 500);
+if (AUTOQ.slowT < 6) return;
+AUTOQ.slowT = 0;
+SETTINGS.quality = SETTINGS.quality === 'high' ? 'mid' : 'low'; SETTINGS.qualityAuto = true;
+saveSettings(); resize();
+toast(SETTINGS.quality === 'mid' ? '画面有点卡，已自动调成中画质（可在设置里改回）' : '画面还是卡，已自动调成低画质（可在设置里改回）');
+}
 function frame(now) {
 if (EXT.on) { last = now; requestAnimationFrame(frame); return; }   // 正在玩青锋行：刃影这边不画也不算
 try { frameBody(now); }
@@ -17976,6 +17994,7 @@ if (elapsed < targetInterval - 3) return;
 lastDraw = now - (elapsed % targetInterval);
 const real = Math.min(0.04, (now - last) / 1000); last = now; menuDt = real;
 fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
+autoQualityTick(now);
 if (!paused) {
 if (slowmo > 0) slowmo -= real;
 if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) swapFreezeTimer = Math.max(0, swapFreezeTimer - real);
@@ -23417,7 +23436,7 @@ const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentEle
 const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
 if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
 if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
-if (k === 'quality') resize();
+if (k === 'quality') { SETTINGS.qualityChosen = true; saveSettings(); resize(); }   // 手动选过画质：以后不再自动降
 if (k === 'autoSkin') applySkins();
 });
 $id('setList').addEventListener('input', e => {

@@ -99,6 +99,8 @@ const UI_COPY_EN = {
   "一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn the basic moves in one minute. Signed-in players get 300 Ink when they finish.",
   "一分钟学会基本招式，再去挑战电脑与闯关。": "Learn the basic moves in one minute, then take on the AI and the stages.",
   "快速上手": "Quick Start",
+  "画面有点卡，已自动调成中画质（可在设置里改回）": "The game was stuttering, so graphics were lowered to Medium (you can change this in Settings)",
+  "画面还是卡，已自动调成低画质（可在设置里改回）": "Still stuttering, so graphics were lowered to Low (you can change this in Settings)",
   "对手已离开。房间还开着，朋友用同一个房间码就能再进来": "Your opponent left. The room is still open, and friends can join again with the same code",
   "对手已离开，房间还开着，同一个房间码可以再进": "Your opponent left. The room stays open with the same code",
   "和电脑打一局": "Fight the AI",

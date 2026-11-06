@@ -8,6 +8,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Automatic graphics fallback (`src/game/11-anim-loop.js`, `src/game/17-home.js`)**: if a match runs below 40 FPS for about six seconds and the player never picked a graphics level by hand, quality drops one step (Ultra to Medium to Low) with a short notice. Picking a level in Settings turns this off. The home-screen demo and spectating never trigger it.
 - **Kill Counter cosmetic upgrades (`src/armory-core.js`, `src/armory.js`, `cloudflare/worker.bundle.js`)**: added the ability to upgrade standard cosmetics to 斩数版 directly from the inspection modal for a fixed Ink fee based on item tier (`C.ST_UPGRADE_COST`), recording new `upgrade` ledger entries in transaction history.
 - **Armory skin codex gallery (`src/armory.js`, `src/styles/50-results-and-armory.css`, `index.html`, `renying-offline.html`)**: introduced a dedicated "皮肤图鉴" tab to the Armory to browse all cosmetics by collection, hero, and quality tier, complete with an ownership state filter (All / Owned / Missing).
 - **Admin console bulk skin granting (`cloudflare/admin.html`)**: added batch item granting by full set or all sets, with support for applying Kill Counter kill counts to all granted items.
