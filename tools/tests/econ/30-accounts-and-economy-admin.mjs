@@ -97,10 +97,10 @@ section('管理口令：没有、不对都不行；同一个 IP 试错 20 次锁
   ok((await adm('GET', '/api/admin/whoami', undefined, ADMIN, '8.8.4.4')).ok, '一小时后自己解锁');
 }
 
-section('管理员加减：墨锭、武器箱、终端机、改名标签、发饰品、收饰品；一次请求里的要么都改成、要么都不改');
+section('管理员加减：墨锭、武器箱、货郎、改名标签、发饰品、收饰品；一次请求里的要么都改成、要么都不改');
 {
   const P = await newUser('patient');
-  await econ(P.token, 'gift');   // 新手礼：初刃武器箱 1 个、终端机 1 台
+  await econ(P.token, 'gift');   // 新手礼：初刃武器箱 1 个、货郎 1 台
   const ink0 = inkOf(P.uid), ver = () => row('SELECT ver FROM econ WHERE uid = ?', P.uid).ver;
   const noWhy = await adm('POST', '/api/admin/adjust', { uid: P.uid, ink: 100 });
   ok(noWhy.status === 400 && /原因/.test(noWhy.error) && inkOf(P.uid) === ink0, '不写原因不让改', noWhy.error);
@@ -108,7 +108,7 @@ section('管理员加减：墨锭、武器箱、终端机、改名标签、发�
   const a1 = await adm('POST', '/api/admin/adjust', { uid: 'patient', ink: 500, cases: { c1: 2, c7: 1 }, term: 1, tags: 2, give: [{ k: 'gc_wolf', st: 5 }, { k: 'qf_p1' }], why: '测试补偿' });
   const s1 = stateOf(P.uid), wolf = s1.inv.find(x => x.k === 'gc_wolf'), p1 = s1.inv.find(x => x.k === 'qf_p1');
   ok(a1.ok && a1.uid === P.uid && inkOf(P.uid) === ink0 + 500, '按昵称找到号，墨锭 +500', a1);
-  ok(s1.cases.c1 === 3 && s1.cases.c7 === 1 && s1.term === 2 && s1.tags === 2, '武器箱、终端机、改名标签都加上了', [s1.cases, s1.term, s1.tags]);
+  ok(s1.cases.c1 === 3 && s1.cases.c7 === 1 && s1.term === 2 && s1.tags === 2, '武器箱、货郎、改名标签都加上了', [s1.cases, s1.term, s1.tags]);
   ok(wolf && wolf.st === 5 && wolf.src === 'admin' && p1 && p1.st === -1, '发的饰品进了库存：斩数版从 5 开始、普通版，来源记成管理员发的', s1.inv);
   ok(profOf(P.uid).skins.includes('gc_wolf') && profOf(P.uid).ink === inkOf(P.uid), '发的武库皮肤能穿，存档里的墨锭也跟着变');
   const lg = row("SELECT detail, ink0, ink1 FROM econ_log WHERE uid = ? AND act = 'admin' ORDER BY id DESC LIMIT 1", P.uid), d = JSON.parse(lg.detail);
@@ -123,7 +123,7 @@ section('管理员加减：墨锭、武器箱、终端机、改名标签、发�
   ok(!profOf(P.uid).skins.includes('gc_wolf'), '拿旧存档覆盖也加不回来');
   const v1 = ver(), i1 = inkOf(P.uid);
   const bad = await badInputs('/api/admin/adjust', { uid: P.uid, why: '乱填测试' }, [
-    [{ ink: -(i1 + 1) }, /扣不了/], [{ cases: { c2: -1 } }, /扣不了/], [{ term: -99 }, /终端机/], [{ tags: -3 }, /改名标签/], [{ ink: 1000001 }, /最多/], [{ ink: 1.5 }, /整数/],
+    [{ ink: -(i1 + 1) }, /扣不了/], [{ cases: { c2: -1 } }, /扣不了/], [{ term: -99 }, /货郎/], [{ tags: -3 }, /改名标签/], [{ ink: 1000001 }, /最多/], [{ ink: 1.5 }, /整数/],
     [{ ink: 'lots' }, /整数/], [{ cases: { c9: 1 } }, /武器箱/], [{ cases: { c1: 1001 } }, /武器箱/], [{ give: [{ k: 'nope' }] }, /没有这件饰品/], [{ give: ['__proto__'] }, /没有这件饰品/],
     [{ give: [{ k: 'qf_p1', st: 2.5 }] }, /斩数/], [{ take: [99999] }, /库存里没有/], [{ take: ['x'] }, /编号不对/], [{}, /什么都没填/], [{ ink: 50, take: [99999] }, /库存里没有/],
     [{ give: Array.from({ length: Object.keys(C.ITEM).length + 1 }, () => ({ k: 'qf_p1' })) }, /最多/],
@@ -192,7 +192,7 @@ section('全服补偿：每个号只领一份，同时领也只领一份；发�
   ok(g.ok && /^[0-9a-f]{16}$/.test(g.id) && g.until === T + 14 * 86400e3, '发出全服补偿，默认 14 天内能领', g);
   const i1 = inkOf(G1.uid), r1 = await econ(G1.token, 'sync');
   ok(r1.ok && r1.gifts && r1.gifts.length === 1 && r1.gifts[0].note === '服务器维护补偿' && r1.gifts[0].ink === 300 && r1.gifts[0].cases.c2 === 1 && !('id' in r1.gifts[0]), '下次动武库就领到，回复里带着说明和内容（网页弹提示用）', r1.gifts);
-  ok(inkOf(G1.uid) === i1 + 300 && stateOf(G1.uid).cases.c2 === 1 && stateOf(G1.uid).term === 1, '墨锭、武器箱、终端机都进了账');
+  ok(inkOf(G1.uid) === i1 + 300 && stateOf(G1.uid).cases.c2 === 1 && stateOf(G1.uid).term === 1, '墨锭、武器箱、货郎都进了账');
   const r1b = await econ(G1.token, 'sync');
   ok(!r1b.gifts && inkOf(G1.uid) === i1 + 300, '再动武库不会再领');
   const i2 = inkOf(G2.uid), rs = await Promise.all(Array.from({ length: 6 }, () => econ(G2.token, 'sync')));
@@ -250,7 +250,7 @@ section('兑换码：管理后台建、玩家在游戏的兑换框输入；每�
   const r1 = await claim(R1.token, 'spring2026');
   ok(r1.ok && r1.res.ok && r1.code && r1.code.note === '新春礼包' && r1.code.ink === 500 && r1.code.cases.c2 === 1 && r1.code.term === 1 && r1.code.tags === 1, '玩家输入（小写也行）就领到，回复里带着说明和内容（网页弹提示用）', r1);
   const s1b = stateOf(R1.uid);
-  ok(inkOf(R1.uid) === i1 + 500 && s1b.cases.c2 === (s1.cases.c2 || 0) + 1 && s1b.term === s1.term + 1 && s1b.tags === s1.tags + 1, '墨锭、武器箱、终端机、改名标签都进了账');
+  ok(inkOf(R1.uid) === i1 + 500 && s1b.cases.c2 === (s1.cases.c2 || 0) + 1 && s1b.term === s1.term + 1 && s1b.tags === s1.tags + 1, '墨锭、武器箱、货郎、改名标签都进了账');
   ok(r1.ledger && r1.ledger.ink === inkOf(R1.uid) && r1.state && r1.state.term === s1b.term, '回复里的账本和存档也是领完以后的（网页按这个显示）', r1.ledger);
   const lg = row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'code_got'", R1.uid), lgd = lg ? parseDetail(lg.detail) : {};
   ok(lgd.code === 'SPRING2026' && lgd.ink === 500 && lgd.cases.c2 === 1 && !row("SELECT 1 AS x FROM econ_log WHERE act = 'claimCode'"), '玩家的流水里记一条 code_got：哪个码、领到了什么', lgd);
@@ -330,7 +330,7 @@ section('在线改经济数值：价格、每天能开几个、手续费、爆�
     [{ set: { openDay: 2.5 } }, /整数/], [{ set: { fee: 1.1 } }, /之间/], [{ set: { 'odds.mil': 0.6 } }, /加起来/], [{ set: { 'prem.gold': 0.5 } }, /加起来/],
     [{ set: { 'term.lo': 2, 'term.hi': 1.5 } }, /最低/], [{ set: {} }, /没写/], [{ set: 'price.c1=1' }, /没写/], [{ set: { 'price.c1': 280 } }, /一样/],
   ]);
-  ok(!bad.length && row('SELECT COUNT(*) AS n FROM cfg').n === 0, '12 种乱填的都存不进去（不认识的项、超出范围、不是数字、该填整数的填了小数、爆率加起来不是 1、终端机倍数反了、和现在一样）', bad);
+  ok(!bad.length && row('SELECT COUNT(*) AS n FROM cfg').n === 0, '12 种乱填的都存不进去（不认识的项、超出范围、不是数字、该填整数的填了小数、爆率加起来不是 1、货郎倍数反了、和现在一样）', bad);
   ok((await adm('POST', '/api/admin/cfg', { set: { 'price.c1': 300 } })).status === 400, '不写原因不让改');
   const E1 = await newUser('econ1'), E2 = await newUser('econ2');
   await adm('POST', '/api/admin/adjust', { uid: E1.uid, ink: 20000, why: '测试用' });

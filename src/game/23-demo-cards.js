@@ -480,7 +480,7 @@ function makeCardArt(i, CW, CH, skin) {
     ctx.fillStyle = '#fbeee0'; ctx.font = `${Math.round(15 * u)}px ${TITLE_FONT}`; ctx.fillText(ch.role.slice(0, 2), 0, 1 * u);
     ctx.restore();
     // 金色双线边框和角花
-    // 皮肤卡：稀有度的字和边框照它自己的颜色（武库的五档：军规级、受限、保密、隐秘、非凡；不在武器箱里的照稀有 / 传说），提亮一点免得在夜色里发闷
+    // 皮肤卡：稀有度的字和边框照它自己的颜色（武库的五档：精铁、碧玉、灵犀、赤霄、绝世；不在武器箱里的照稀有 / 传说），提亮一点免得在夜色里发闷
     const GR = skin && SKINS[skin] ? skinGrade(skin) : null, gc = GR ? rgbMix(GR.c, '255,255,255', 0.28) : '233,196,106';
     if (ST) {   // 皮肤名：竖排名字下面的小字
       ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';

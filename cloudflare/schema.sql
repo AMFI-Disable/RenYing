@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS refresh_used (
 );
 
 -- 刃影武库（经济）和反作弊。
--- 武库存档：state_json 是库存、武器箱、终端机、改名标签这些；srv_json 是只有服务器看的账（墨锭入账编号、每天入账额、卖掉的皮肤）。
+-- 武库存档：state_json 是库存、武器箱、货郎、改名标签这些；srv_json 是只有服务器看的账（墨锭入账编号、每天入账额、卖掉的皮肤）。
 -- ver 每改一次加 1，两个请求同时改时只有一个能成（防双花）。
 CREATE TABLE IF NOT EXISTS econ (
     uid TEXT PRIMARY KEY,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS econ_nonce (
     PRIMARY KEY (uid, nonce)
 );
 
--- 流水：每次开箱、终端机、买卖、汰换、墨锭上报都记一条（查账、查作弊用）。
+-- 流水：每次开箱、货郎、买卖、熔铸、墨锭上报都记一条（查账、查作弊用）。
 CREATE TABLE IF NOT EXISTS econ_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uid TEXT NOT NULL,

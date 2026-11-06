@@ -8,7 +8,7 @@
  *   node tools/admin/econ-admin.mjs find [昵称开头]                  找账号；不填就列最近动过武库的
  *   node tools/admin/econ-admin.mjs log <号>                        武库存档、处罚记录、市场记录、最近 100 条流水
  *   node tools/admin/econ-admin.mjs adjust <号> <改动…> --why <原因>
- *        改动：ink=+500 或 ink=-200（墨锭）、c1=+2（武器箱 c1～c8）、term=+1（终端机）、tags=+1（改名标签）、
+ *        改动：ink=+500 或 ink=-200（墨锭）、c1=+2（武器箱 c1～c8）、term=+1（货郎）、tags=+1（改名标签）、
  *              give=qf_p1（发一件饰品）、give=gc_wolf@0（发斩数版，斩数从 0 开始）、take=12（收走库存里第 12 号）
  *   node tools/admin/econ-admin.mjs ban <号> <天数|perm> --why <原因>
  *   node tools/admin/econ-admin.mjs unban <号> --why <原因>
@@ -70,9 +70,9 @@ const int = (v, what) => { const n = Number(String(v).replace(/^\+/, '')); if (!
 const time = t => t ? new Date(t).toLocaleString('zh-CN', { hour12: false }) : '-';
 const ago = t => { if (!t) return '-'; const s = (Date.now() - t) / 1000; return s < 3600 ? Math.max(1, Math.round(s / 60)) + ' 分钟前' : s < 86400 ? Math.round(s / 3600) + ' 小时前' : Math.round(s / 86400) + ' 天前'; };
 const stuff = d => [d.ink ? `墨锭 ${d.ink > 0 ? '+' : ''}${d.ink}` : '', ...Object.entries(d.cases || {}).map(([c, n]) => `${c} ${n > 0 ? '+' : ''}${n}`),
-  d.term ? `终端机 ${d.term > 0 ? '+' : ''}${d.term}` : '', d.tags ? `改名标签 ${d.tags > 0 ? '+' : ''}${d.tags}` : '',
+  d.term ? `货郎 ${d.term > 0 ? '+' : ''}${d.term}` : '', d.tags ? `改名标签 ${d.tags > 0 ? '+' : ''}${d.tags}` : '',
   ...(d.skins || []).map(s => `${s.k}${s.st >= 0 ? `@${s.st}` : ''}`)].filter(Boolean).join('，');
-// 墨锭、武器箱、终端机、改名标签：ink=500 c1=2 term=1 tags=1（adjust 还认 give= 和 take=）
+// 墨锭、武器箱、货郎、改名标签：ink=500 c1=2 term=1 tags=1（adjust 还认 give= 和 take=）
 function amounts(list, withItems) {
   const b = { ink: 0, cases: {}, term: 0, tags: 0, give: [], take: [] };
   for (const a of list) {
@@ -106,7 +106,7 @@ if (cmd === 'whoami') {
   if (j.econ) {
     const s = j.econ.state || {};
     const cases = Object.entries(s.cases || {}).filter(([, n]) => n > 0).map(([c, n]) => `${c}×${n}`).join(' ') || '没有';
-    console.log(`墨锭 ${j.econ.ink} · 武器箱 ${cases}（今天开了 ${(s.od && s.od.n) || 0} 个，本周开了 ${(s.pw && s.pw.n) || 0} 个神兵、${(s.zw && s.zw.n) || 0} 个星座武器箱）· 终端机 ${(s.term || 0) + (s.tm ? 1 : 0)} 台 · 改名标签 ${s.tags || 0} · 挂单 ${(s.lst || []).length} 个 · 存档版本 ${j.econ.ver} · 最后改动 ${time(j.econ.at)}`);
+    console.log(`墨锭 ${j.econ.ink} · 武器箱 ${cases}（今天开了 ${(s.od && s.od.n) || 0} 个，本周开了 ${(s.pw && s.pw.n) || 0} 个神兵、${(s.zw && s.zw.n) || 0} 个星座武器箱）· 货郎 ${(s.term || 0) + (s.tm ? 1 : 0)} 台 · 改名标签 ${s.tags || 0} · 挂单 ${(s.lst || []).length} 个 · 存档版本 ${j.econ.ver} · 最后改动 ${time(j.econ.at)}`);
     const inv = s.inv || [];
     console.log(`饰品 ${inv.length} 件${inv.length ? '：' + inv.map(x => `#${x.i} ${x.k}${x.st >= 0 ? `（斩数 ${x.st}）` : ''}`).join('，') : ''}`);
   } else console.log('还没有武库存档（没打开过武库，也没同步过存档）');
@@ -129,7 +129,7 @@ if (cmd === 'whoami') {
   if (!pos[0] || pos.length < 2) die('用法：node tools/admin/econ-admin.mjs adjust <号> ink=+500 c1=+2 give=qf_p1 take=12 --why <原因>');
   const b = amounts(pos.slice(1), true), w = why();
   const j = await admin('POST', '/api/admin/adjust', { uid: pos[0], ...b, why: w });
-  console.log(`改好了 ${j.uid}：墨锭 ${j.ink} · 终端机 ${j.term} · 改名标签 ${j.tags} · 武器箱 ${Object.entries(j.cases).filter(([, n]) => n > 0).map(([c, n]) => `${c}×${n}`).join(' ') || '没有'}`);
+  console.log(`改好了 ${j.uid}：墨锭 ${j.ink} · 货郎 ${j.term} · 改名标签 ${j.tags} · 武器箱 ${Object.entries(j.cases).filter(([, n]) => n > 0).map(([c, n]) => `${c}×${n}`).join(' ') || '没有'}`);
   for (const x of j.given || []) console.log(`  发了 #${x.i} ${x.k}${x.st >= 0 ? `（斩数 ${x.st}）` : ''}`);
   for (const x of j.taken || []) console.log(`  收了 #${x.i} ${x.k}`);
 } else if (cmd === 'ban') {

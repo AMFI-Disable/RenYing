@@ -3257,7 +3257,7 @@ white-space: nowrap;
       <details class="home-card home-news">
         <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 匹配对战 · 排位赛 · 技能重做</span></summary>
         <ul>
-          <li><b>刃影武库</b>武器箱、玩家市场、汰换合同</li>
+          <li><b>刃影武库</b>武器箱、玩家市场、熔铸契</li>
           <li><b>匹配对战</b>全服随机对手，开局即打</li>
           <li><b>排位赛</b>D 到 S 五段，定级 3 场</li>
           <li><b>流云 · 墨羽</b>技能重做</li>
@@ -4103,7 +4103,7 @@ white-space: nowrap;
   <div id="armory" class="scr">
     <div class="panel armp">
       <div class="cxhead ar-head">
-        <div class="ar-title"><h2>刃影武库</h2><p class="sub">武器箱 · 终端机 · 玩家市场 · 汰换合同 · 江湖行动</p></div>
+        <div class="ar-title"><h2>刃影武库</h2><p class="sub">武器箱 · 货郎 · 玩家市场 · 熔铸契 · 江湖行动</p></div>
         <div class="ar-wallet">
           <span class="ar-cur ar-ink" title="墨锭：打对局、做任务、在市场卖饰品得到；用来买武器箱"><i>墨</i><b class="gInk">0</b></span>
           <button class="ghost" type="button" data-back>返回</button>
@@ -4225,7 +4225,7 @@ white-space: nowrap;
               <ul>
                 <li>武器箱：两百墨锭上下一个，每周最多买 <b>5</b> 个，开箱不用钥匙</li>
                 <li>斩数版：开出来有 <b>20%</b> 的机会，穿着它每击倒一个对手记一笔</li>
-                <li>终端机：一次报一件饰品的价，想要就买下，不要就换，最多看 <b>5</b> 件</li>
+                <li>货郎：一次报一件饰品的价，想要就买下，不要就换，最多看 <b>5</b> 件</li>
               </ul>
             </div>
           </div>
@@ -5947,7 +5947,7 @@ const PATTERNS_EN = [
 [/^禁 (.+)$/, (m0, n) => `Ban · ${lookup(n) || n}`],
 [/^没找到名字里同时有「(.+)」这几个字的人，按回车按全名加$/, (m0, q) => `No one's name contains “${q}”. Press Enter to add by full name`],
 [/^(.+?) · (限免|武库|青锋行 \/ 武库)$/, (m0, n, t) => `${lookup(n) || n} · ${{ 限免: 'Free trial', 武库: 'Armory', '青锋行 / 武库': 'Qingfeng Quest / Armory' }[t]}`],
-[/^(受限|隐秘|保密|军规级|★ 非凡|非凡|传说|精英) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
+[/^(碧玉|赤霄|灵犀|精铁|★ 绝世|绝世|传说|精英) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
 [/^难度 ([●○]+)$/, (m0, d) => `Difficulty ${d}`],
 [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
 [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],
@@ -7739,7 +7739,7 @@ const UI_COPY_EN = {
 "侠": "Warrior",
 "侠客 (房主)": "Hero (Host)",
 "保存接口": "Save Endpoint",
-"保密": "Spirit",
+"灵犀": "Spirit",
 "修罗": "Asura",
 "修行历练 · 礼包兑换 · 墨锭经济全录": "Training Journey · Gift Redemption · Ink Economy Compendium",
 "俯冲": "Falcon Dive",
@@ -7760,7 +7760,7 @@ const UI_COPY_EN = {
 "再来一次": "Retry",
 "再看一遍": "Watch Again",
 "再磨一磨剑": "Sharpen your blade and try again",
-"军规级": "Iron",
+"精铁": "Iron",
 "冥狱": "Nether Underworld",
 "凌厉反击": "Fierce Counter",
 "凌厉反击 · 4连段压制": "Fierce Counter · 4-Hit Combos",
@@ -7798,7 +7798,7 @@ const UI_COPY_EN = {
 "双鱼·星辉": "Pisces · Starglow",
 "取消": "Cancel",
 "受击硬直": "Stun Duration",
-"受限": "Jade",
+"碧玉": "Jade",
 "向右移动": "Move Right",
 "向左移动": "Move Left",
 "四方争锋 · 对决": "4-Player Showdown",
@@ -7971,7 +7971,7 @@ const UI_COPY_EN = {
 "正在兑换…": "Redeeming…",
 "正在双向合并同步…": "Performing two-way merge sync…",
 "正在寻找对手": "Searching for opponent...",
-"武器箱、玩家市场、汰换合同": "Weapon cases, marketplace, trade contracts",
+"武器箱、玩家市场、熔铸契": "Weapon cases, marketplace, reforge pacts",
 "武库": "Armory",
 "残月": "Crescent Moon",
 "段位与战绩": "Rank & Records",
@@ -7982,7 +7982,7 @@ const UI_COPY_EN = {
 "水瓶·星焰": "Aquarius · Starflame",
 "水瓶·星辉": "Aquarius · Starglow",
 "江湖武器箱": "Wanderer Case",
-"汰换合同": "Trade-Up Contract",
+"熔铸契": "Reforge Pact",
 "沉身格挡": "Block / Parry",
 "沧龙": "Azure Dragon",
 "泛光": "Bloom",
@@ -8153,7 +8153,7 @@ const UI_COPY_EN = {
 "闯关": "Stages",
 "防": "Guard",
 "防御减伤": "Defense Rating",
-"隐秘": "Crimson",
+"赤霄": "Crimson",
 "雪箫": "Snow Flute",
 "雪鸮": "Snow Owl",
 "雷拳武僧": "Thunder Monk",
@@ -8168,7 +8168,7 @@ const UI_COPY_EN = {
 "青锋": "Qing Feng",
 "青锋行": "Qingfeng Quest",
 "静候对手入局…": "Waiting for challenger…",
-"非凡": "Extraordinary",
+"绝世": "Peerless",
 "音乐": "Music",
 "音效": "Sound Effects",
 "风刃": "Wind Blade",
@@ -8255,7 +8255,7 @@ const UI_COPY_EN = {
 "正在查看江湖足迹…": "Loading Footprints…",
 "江湖足迹暂时连不上": "Footprints can't be loaded right now",
 "还没有人走过这条路，你会是第一个": "No one has walked this path yet. You could be the first.",
-"★ 非凡": "★ Extraordinary",
+"★ 绝世": "★ Peerless",
 "普通": "Common",
 "稀有": "Rare",
 "传说": "Legendary",
@@ -8394,9 +8394,9 @@ const UI_COPY_EN = {
 "登录后可以加好友": "Log in to add friends",
 "库存": "Inventory",
 "武器箱": "Cases",
-"武器箱 · 终端机 · 玩家市场 · 汰换合同 · 江湖行动": "Cases · Terminal · Player Market · Trade-In · Jianghu Ops",
+"武器箱 · 货郎 · 玩家市场 · 熔铸契 · 江湖行动": "Cases · Peddler · Player Market · Reforge · Jianghu Ops",
 "新手教学 · 两分钟学会基本招式": "Tutorial · Learn the basics in two minutes",
-"终端机": "Terminal",
+"货郎": "Peddler",
 "玩家市场": "Player Market",
 "江湖行动": "Jianghu Ops",
 "饰品": "Accessories",
@@ -18496,7 +18496,7 @@ if (f.escInvul) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.stro
 const sq = f.squashT > 0 ? clamp(f.squashT / 0.25, 0, 1) : 0;   // 被磁仙大招夹扁：先扁着，最后 0.25 秒弹回来
 const big = f.size !== 1 || sq > 0;
 if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size * (1 + 0.4 * sq), f.size * (1 - 0.62 * sq)); ctx.translate(-f.x, -f.y); }
-const gt = tierRank(L) >= 3 ? L.fx : null;   // 隐秘、非凡：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
+const gt = tierRank(L) >= 3 ? L.fx : null;   // 赤霄、绝世：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
 for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
 skinTierMotes(f, false);
 if (f.armorT > 0 || f.buffT > 0 || f.parryT > 0 || (f.thunderGuardT && f.thunderGuardT > 0)) {
@@ -18951,7 +18951,7 @@ const rgbMix = (a, b, k) => { const p = a.split(','), q = b.split(','); return p
 const skinTh = L => L && L.fx ? SKIN_TH[L.fx.th] : null;
 const TIER_RANK = { mil: 0, res: 1, cla: 2, cov: 3, gold: 4 };
 const tierRank = L => (L && L.fx && TIER_RANK[L.tier]) || 0;
-const TIER_TXT = { cla: ['保密', '235,120,255'], cov: ['隐秘', '255,120,110'], gold: ['★ 非凡', '255,214,120'] };
+const TIER_TXT = { cla: ['灵犀', '235,120,255'], cov: ['赤霄', '255,120,110'], gold: ['★ 绝世', '255,214,120'] };
 function skinBladeSeg(sk, f, L) {
 const w = L.weapon;
 if (w === 'fists' || w === 'gourd') return null;
@@ -19106,10 +19106,10 @@ ctx.strokeStyle = kind === 'fire' ? `rgba(255,240,200,${0.95 * al})` : `rgba(255
 ctx.lineWidth = (2.6 * al + 0.6) * (leg ? 1.35 : 1.1); line(a.t, b.t);
 if (!leg) continue;
 const dx = b.t[0] - b.b[0], dy = b.t[1] - b.b[1], d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
-if (rk >= 4 && a.h && al > 0.15) {   // 非凡：刀光外沿再铺一层淡金的光边
+if (rk >= 4 && a.h && al > 0.15) {   // 绝世：刀光外沿再铺一层淡金的光边
 ctx.fillStyle = `rgba(${rgbMix(c, '255,226,150', 0.5)},${0.16 * al})`; quad(a.t, [a.t[0] + nx * 11 * al, a.t[1] + ny * 11 * al], [b.t[0] + nx * 11 * al, b.t[1] + ny * 11 * al], b.t);
 }
-if (rk >= 3 && i % 3 === 0 && al > 0.35) glint(b.t[0], b.t[1], (rk >= 4 ? 7.5 : 5.5) * al, rk >= 4 ? '255,240,190' : c2, al * 0.9);   // 隐秘以上：刃尖划过的地方留几颗星光
+if (rk >= 3 && i % 3 === 0 && al > 0.35) glint(b.t[0], b.t[1], (rk >= 4 ? 7.5 : 5.5) * al, rk >= 4 ? '255,240,190' : c2, al * 0.9);   // 赤霄以上：刃尖划过的地方留几颗星光
 if (kind === 'fire' && al > 0.2) {   // 刃尖外侧一排跳动的火舌
 const lk = (10 + 9 * Math.sin(clock * 30 + i * 1.9)) * al;
 const g = ctx.createLinearGradient(b.t[0], b.t[1], b.t[0] + nx * lk * 2, b.t[1] + ny * lk * 2 - lk);
@@ -19142,7 +19142,7 @@ const e = f.trail.length > 1 ? f.trail[f.trail.length - 1] : null;
 if (e && Math.random() < (leg ? 0.8 : 0.45)) { const q = lerp2(e.b, e.t, 0.3 + Math.random() * 0.7); skinSpawn(kind, q[0], q[1], c, c2, leg ? 1 : 0.7, true); }
 if (!leg) { if (Math.random() < 0.04) skinSpawn(kind, f.x + rand(-24, 24), f.y - rand(10, 110), c, c2, 0.7, false); return; }
 if (Math.random() < 0.3) skinSpawn(kind, f.x + rand(-26, 26), f.y - rand(8, 120), c, c2, 1, false);
-if (tierRank(L) >= 3 && Math.random() < 0.12) addP({ type: 'glint', x: f.x + rand(-30, 30), y: f.y - rand(10, 125), vx: rand(-6, 6), vy: -rand(10, 30), life: rand(0.5, 0.9), max: 0.9, r: rand(2.5, 4.5), rgb: Math.random() < 0.5 ? c2 : '255,255,255' });   // 隐秘以上：身边时不时亮一颗星
+if (tierRank(L) >= 3 && Math.random() < 0.12) addP({ type: 'glint', x: f.x + rand(-30, 30), y: f.y - rand(10, 125), vx: rand(-6, 6), vy: -rand(10, 30), life: rand(0.5, 0.9), max: 0.9, r: rand(2.5, 4.5), rgb: Math.random() < 0.5 ? c2 : '255,255,255' });   // 赤霄以上：身边时不时亮一颗星
 if (kind !== 'arc' && th.amb === 'arc' && Math.random() < 0.06) skinSpawn('arc', f.x + rand(-20, 20), f.y - rand(30, 100), c, c2, 1, false);   // 雷：配着别的粒子时也偶尔跳一道电
 }
 function skinSpawn(kind, x, y, c, c2, s, fromBlade) {
@@ -19241,7 +19241,7 @@ if (!leg && tr < 2) { name(); return; }
 addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c, ng: tr >= 2 ? 1 : 0 });   // 品质皮肤的不进泛光：开场一下别把人照成白的
 ring(f.x, f.y - 60, 120, c, 0.55);
 if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < 14; i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
-if (tr >= 4) {   // 非凡：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
+if (tr >= 4) {   // 绝世：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
 addP({ type: 'pillar', x: f.x, y: f.y, r: 40, life: 1.5, max: 1.5, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
 addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 70, r: 78, life: 0.9, max: 0.9, rgb: '255,214,120', rot: 0, spin: 0.8, ng: 1 });
 addP({ type: 'ring', x: f.x, y: f.y - 4, r: 150, life: 0.9, max: 0.9, rgb: '255,226,150', ng: 1 });
@@ -19305,7 +19305,7 @@ ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fil
 case 'iring':
 ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${p.rgb},${(1 - k) * 0.9 + 0.1})`; ctx.lineWidth = 2 + 4 * k;
 ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, p.r * k), 0, 7); ctx.stroke(); ctx.restore(); return;
-case 'pillar': {   // 非凡开场 / 胜利：一道柔光从天上落下来，落到脚下化成一圈光晕，慢慢收窄淡掉
+case 'pillar': {   // 绝世开场 / 胜利：一道柔光从天上落下来，落到脚下化成一圈光晕，慢慢收窄淡掉
 const age = 1 - k, reach = Math.min(1, age * 5), a = Math.min(1, age * 8) * Math.pow(k, 0.6), w = p.r * (0.45 + 0.55 * k), h = 1100, top = p.y - h, bot = top + h * reach;
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
 const v = ctx.createLinearGradient(0, top, 0, bot); v.addColorStop(0, `rgba(${p.rgb},0)`); v.addColorStop(0.6, `rgba(${p.rgb},${0.12 * a})`); v.addColorStop(1, `rgba(${p.rgb},${0.28 * a})`);
@@ -19327,7 +19327,7 @@ const L = f.look; if (!L.legend || !L.fx || f.hidden || !f.sk) return;
 const seg = skinBladeSeg(f.sk, f, L);
 ctx.strokeStyle = `rgba(${L.fx.c},0.9)`; ctx.lineWidth = 6; ctx.lineCap = 'round';
 if (seg) line(seg[0], seg[1]); else { ctx.fillStyle = `rgba(${L.fx.c},0.8)`; circle(f.sk.hf, 7); circle(f.sk.hb, 7); }
-if (tierRank(L) >= 4) { ctx.fillStyle = `rgba(${rgbMix(L.fx.c, '255,226,150', 0.5)},0.9)`; for (const m of tierMotes(f)) circle(m, 4); }   // 非凡的三颗光点也泛光
+if (tierRank(L) >= 4) { ctx.fillStyle = `rgba(${rgbMix(L.fx.c, '255,226,150', 0.5)},0.9)`; for (const m of tierMotes(f)) circle(m, 4); }   // 绝世的三颗光点也泛光
 }
 function tierMotes(f) {
 const t = clock * 1.6 + (f.idx || 0) * 2.1, out = [];
@@ -19825,7 +19825,7 @@ ribbon(bc, mid, tip, 4.8, 0.6, lg(bc, tip, [[0, '#4a148c'], [0.55, '#e040fb'], [
 }
 break;
 }
-case 'starloom': {   // 凌雀·天罗星杼（★非凡）：背后悬浮黄金星轮机杼，八道星河天丝如光翼交织展开，星芒流转
+case 'starloom': {   // 凌雀·天罗星杼（★绝世）：背后悬浮黄金星轮机杼，八道星河天丝如光翼交织展开，星芒流转
 const c = [bc[0] + bk * 14, bc[1] - 16], R = 28, rot = t * 0.65 * bk;
 ctx.save();
 glow(c, 68, '255,140,225', 0.30);
@@ -19861,7 +19861,7 @@ ctx.fillStyle = '#fff2fc'; circle(c, 5.5);
 ctx.fillStyle = '#ff7ad9'; circle(c, 3.0);
 ctx.restore(); break;
 }
-case 'soulmirrors': {   // 离影·幽夜星魄（★非凡）：背后环列六面幽冥破界黑曜棱镜 + 镜心裂空星痕 + 离魂虚影飘带
+case 'soulmirrors': {   // 离影·幽夜星魄（★绝世）：背后环列六面幽冥破界黑曜棱镜 + 镜心裂空星痕 + 离魂虚影飘带
 const c = [bc[0] + bk * 12, bc[1] - 16];
 ctx.save();
 glow(c, 66, '94,240,255', 0.28);
@@ -19890,7 +19890,7 @@ if (tw > 0.25) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glint(mc[
 }
 ctx.restore(); break;
 }
-case 'astrolabe': {   // 磁仙·极星乾坤（★非凡）：背后旋转双层乾坤浑天星象磁轮 + 阴阳双极浮游星核 + 金蓝交织电弧
+case 'astrolabe': {   // 磁仙·极星乾坤（★绝世）：背后旋转双层乾坤浑天星象磁轮 + 阴阳双极浮游星核 + 金蓝交织电弧
 const c = [bc[0] + bk * 10, bc[1] - 14], R = 32, pol = sk.pol || 1;
 ctx.save();
 glow(c, 68, pol > 0 ? '255,195,90' : '90,175,255', 0.30);
@@ -20282,7 +20282,7 @@ const b0 = P(ox - 2.2, 6), b1 = P(ox + 2.2, 6), tp = P(ox - 2, h1);
 ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(b1[0], b1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
 }
 ctx.fillStyle = '#f3e5f5'; circle(P(8, 5.5), 2.3);
-} else if (hd === 'loomcrown') {   // 凌雀·天罗星杼（★非凡）：织女双金梭凤冠 + 八角星钻 + 双侧垂珠星光步摇
+} else if (hd === 'loomcrown') {   // 凌雀·天罗星杼（★绝世）：织女双金梭凤冠 + 八角星钻 + 双侧垂珠星光步摇
 for (const [dx0, dy0, dx1, dy1] of [[-15, 9, 9, 19], [-13, 19, 11, 9]]) {
 const a = P(dx0, dy0), b = P(dx1, dy1), m = [(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5];
 const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
@@ -20310,7 +20310,7 @@ ctx.fillStyle = '#ffd24a'; circle(mid, 1.5);
 ctx.fillStyle = '#ffd6fa'; circle(bot, 2.2);
 ctx.fillStyle = '#ffffff'; circle(bot, 1.0);
 }
-} else if (hd === 'wraithveil') {   // 离影·幽夜星魄（★非凡）：冥魄断魂黑曜半面傩 + 掠空双星魄角 + 额心竖瞳魂印（彻底区别于绯影狐面）
+} else if (hd === 'wraithveil') {   // 离影·幽夜星魄（★绝世）：冥魄断魂黑曜半面傩 + 掠空双星魄角 + 额心竖瞳魂印（彻底区别于绯影狐面）
 const a0 = Math.atan2(uy, ux);
 ctx.fillStyle = '#07111a'; ctx.strokeStyle = '#1c4a66'; ctx.lineWidth = 1.3;
 ctx.beginPath(); ctx.arc(hx, hy, 12.6, a0 - Math.PI * 0.72, a0 + Math.PI * 0.28);
@@ -20343,7 +20343,7 @@ ctx.fillStyle = '#7feeff';
 ctx.beginPath(); ctx.moveTo(dTop[0], dTop[1]); ctx.lineTo(dRight[0], dRight[1]); ctx.lineTo(dBot[0], dBot[1]); ctx.lineTo(dLeft[0], dLeft[1]); ctx.closePath(); ctx.fill();
 glint(browP[0], browP[1], 4.5 + Math.sin(t * 5) * 1.2, '127,238,255', 0.9);
 ctx.restore();
-} else if (hd === 'polarhalo') {   // 磁仙·极星乾坤（★非凡）：紫金两仪乾坤帝冕 + 悬浮阴阳星轨环（区别于雷鸣/墨羽星冠）
+} else if (hd === 'polarhalo') {   // 磁仙·极星乾坤（★绝世）：紫金两仪乾坤帝冕 + 悬浮阴阳星轨环（区别于雷鸣/墨羽星冠）
 const pol = sk.pol || 1;
 ctx.fillStyle = '#24183c'; ctx.strokeStyle = '#ffb24a'; ctx.lineWidth = 1.5;
 const g0 = P(-7, 8), g1 = P(-9, 17), g2 = P(-3, 14), g3 = P(0, 22), g4 = P(3, 14), g5 = P(9, 17), g6 = P(7, 8);
@@ -21167,7 +21167,7 @@ ctx.restore();
 spinDraw(g, Math.atan2(uy, ux)); spinDraw(sk.hb, Math.atan2(uy, ux));
 if (!o) { ctx.strokeStyle = 'rgba(224,64,251,0.8)'; ctx.lineWidth = 1.2; line(sk.hf, sk.hb); }
 };
-SKIN_WEAP.star_spindle = W => {   // 天罗星杼（★非凡）：织女金翼星晶双生梭，梭身展鎏金凤翼，中嵌八角星钻，牵引璀璨银河星丝
+SKIN_WEAP.star_spindle = W => {   // 天罗星杼（★绝世）：织女金翼星晶双生梭，梭身展鎏金凤翼，中嵌八角星钻，牵引璀璨银河星丝
 const { sk, L, o, flash, live, g, ux, uy, T } = W;
 const spinDraw = (pt, ang, sc = 1) => {
 ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang); ctx.scale(sc, sc);
@@ -21201,7 +21201,7 @@ ctx.beginPath(); ctx.moveTo(sk.hf[0], sk.hf[1]); ctx.quadraticCurveTo(mx, my, sk
 ctx.fillStyle = '#ffd24a'; circle([mx, my - 4], 1.8);
 }
 };
-SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄（★非凡）：冥魄断界星渊太刀，镂空星轨血槽 + 冥角护手 + 刃尖幽蓝星芒
+SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄（★绝世）：冥魄断界星渊太刀，镂空星轨血槽 + 冥角护手 + 刃尖幽蓝星芒
 const { P, poly, bar, live, t, g, hl, T, o, flash, L } = W;
 bar(hl, g, 4.6, '#091520');
 if (!o) { ctx.fillStyle = '#5ef0ff'; circle(hl, 2.6); }
@@ -21223,7 +21223,7 @@ ctx.globalCompositeOperation = 'lighter';
 const ph = (T * 1.1) % 1;
 W.glow([t[0], t[1]], 7.5, '94,240,255', 0.65 * (1 - ph));
 };
-SKIN_WEAP.star_magnet = W => {   // 极星乾坤（★非凡）：掌托阴阳双极星象罗盘法器，外旋紫金八卦环，内耀烈日/玄月磁核
+SKIN_WEAP.star_magnet = W => {   // 极星乾坤（★绝世）：掌托阴阳双极星象罗盘法器，外旋紫金八卦环，内耀烈日/玄月磁核
 const { sk, L, o, flash, live, T } = W;
 if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 11.5); circle(sk.hb, 10.5); return; }
 const pol = sk.pol || 1;
@@ -24887,7 +24887,7 @@ const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,
 function skinGrade(k) {
 const S = SKINS[k], C = window.ArmoryCore, it = S && C && C.ITEM[k];
 if (it) return { t: it.tier, n: C.TIER[it.tier].n, c: C.TIER[it.tier].c };
-if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return { t: 'gold', n: '★ 非凡', c: '228,174,57' };
+if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return { t: 'gold', n: '★ 绝世', c: '228,174,57' };
 return { t: S ? S.rarity : 'rare', n: RAR_NAME[S && S.rarity] || '稀有', c: RAR_RGB[S && S.rarity] || RAR_RGB.rare };
 }
 function skinWeight(k) {
@@ -25096,7 +25096,7 @@ else if (kind === 'lotus') { for (let k = -3; k <= 3; k++) { ctx.save(); ctx.rot
 else if (kind === 'shards') arms(5, () => { ctx.beginPath(); ctx.moveTo(r * 0.35, -r * 0.1); ctx.lineTo(r, 0); ctx.lineTo(r * 0.35, r * 0.1); ctx.closePath(); ctx.fill(); });
 else if (kind === 'ripple') { ctx.save(); ctx.scale(1, 0.42); for (const [q, w] of [[0.35, 2.6], [0.68, 1.8], [1, 1.1]]) { ctx.lineWidth = w; ctx.globalAlpha = 1.15 - q * 0.6; ctx.beginPath(); ctx.arc(0, 0, r * q, 0, 7); ctx.stroke(); } ctx.restore(); ctx.fillStyle = w; ctx.beginPath(); ctx.arc(0, 0, r * 0.08, 0, 7); ctx.fill(); }
 else if (kind === 'feathers') arms(5, () => { ctx.save(); ctx.translate(r * 0.55, 0); ctx.rotate(Math.PI / 2); drawShape('feather', r * 0.2, rgb, a); ctx.restore(); });
-else if (kind === 'star8') {   // 非凡：八角星印，长短芒交替，中间一圈
+else if (kind === 'star8') {   // 绝世：八角星印，长短芒交替，中间一圈
 ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r * 0.3, 0, 7); ctx.stroke();
 arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.34, -r * 0.07); ctx.lineTo(r, 0); ctx.lineTo(r * 0.34, r * 0.07); ctx.closePath(); ctx.fill(); });
 ctx.save(); ctx.rotate(Math.PI / 8); arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.32, -r * 0.05); ctx.lineTo(r * 0.6, 0); ctx.lineTo(r * 0.32, r * 0.05); ctx.closePath(); ctx.fill(); }); ctx.restore();
@@ -33893,7 +33893,7 @@ document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.da
 (function (G) {
 'use strict';
 const C = {};
-C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和终端机改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加终端机）
+C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加货郎）
 C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
 C.SEASON_DAYS = 32;
 C.INV_MAX = 1000000000, C.HIST_MAX = 40;
@@ -33918,15 +33918,15 @@ C.inEvent = now => now >= C.EVENT.start && now < C.EVENT.end;
 C.RW = { comp: 500, tut: 300, star: 30, sagaNode: 40, sagaEnd: 150, sagaNodes: 5, sagaEnds: 2, stages: 5 };   // 补偿、教程、每颗关卡星、列传每节、每个结局；每部列传 5 节 2 个结局，每章 5 关
 C.TIERS = ['mil', 'res', 'cla', 'cov', 'gold'];
 C.TIER = {
-mil: { n: '军规级', c: '75,105,255' },
-res: { n: '受限', c: '136,71,255' },
-cla: { n: '保密', c: '211,44,230' },
-cov: { n: '隐秘', c: '235,75,75' },
-gold: { n: '★ 非凡', c: '228,174,57' },
+mil: { n: '精铁', c: '75,105,255' },
+res: { n: '碧玉', c: '136,71,255' },
+cla: { n: '灵犀', c: '211,44,230' },
+cov: { n: '赤霄', c: '235,75,75' },
+gold: { n: '★ 绝世', c: '228,174,57' },
 };
 C.ODDS = { mil: 0.53, res: 0.27, cla: 0.13, cov: 0.052, gold: 0.018 };   // 普通武器箱；神兵武器箱的写在它自己那一项里
 C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
-C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 每档的基准价（墨锭）：只用来定终端机的报价
+C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 每档的基准价（墨锭）：只用来定货郎的报价
 C.ST_UPGRADE_COST = { mil: 100, res: 250, cla: 600, cov: 1500, gold: 4000 };   // 把普通饰品升级成斩数版的固定花费（墨锭）
 C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1.2, 1.5], price: 500 };
 C.PAINTS = [
@@ -34048,7 +34048,7 @@ c5: { name: '惊雷', price: 280, emblem: '雷', col: '150,100,240',
 mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura', 'lq_sparrow'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
 c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
 mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
-c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, daily: true, ok: 'prem.', lim: 'premDay', cnt: 'pd', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
+c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, daily: true, ok: 'prem.', lim: 'premDay', cnt: 'pd', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 赤霄 + 绝世一共 30%
 mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie', 'lq_star', 'li_star', 'cx_star'] },
 c8: { name: '星座', price: 1500, emblem: '星', col: '170,150,255', prem: true, ok: 'zod.', lim: 'zodWeek', cnt: 'zw', odds: { mil: 0, res: 0, cla: 0.65, cov: 0.28, gold: 0.07 },
 mil: [], res: [], cla: zodKeys(0), cov: zodKeys(1), gold: zodKeys(2) },
@@ -34078,7 +34078,7 @@ chaos: { g: 2, n: 1, star: 1, t: '打 {n} 局天机乱斗' },
 tag3: { g: 2, n: 1, star: 2, t: '赢下 {n} 局 3v3 车轮战' },
 duo: { g: 2, n: 1, star: 1, t: '打 {n} 局 2v2' },
 open: { g: 3, n: 2, star: 1, t: '开启 {n} 个武器箱' },
-trade: { g: 3, n: 1, star: 1, t: '签 {n} 份汰换合同' },
+trade: { g: 3, n: 1, star: 1, t: '签 {n} 份熔铸契' },
 sell: { g: 9, n: 1, star: 1, t: '在玩家市场卖出 {n} 件饰品' },
 buy: { g: 9, n: 1, star: 1, t: '在玩家市场买入 {n} 件饰品' },
 };
@@ -34086,14 +34086,14 @@ C.STAR_SHOP = [
 { id: 'ink', cost: 1, name: '300 墨锭' },
 { id: 'case', cost: 2, name: '随机武器箱' },
 { id: 'tag', cost: 2, name: '改名标签' },
-{ id: 'term', cost: 3, name: '终端机' },
-{ id: 'res', cost: 5, name: '随机受限饰品' },
-{ id: 'cla', cost: 9, name: '随机保密饰品' },
-{ id: 'cov', cost: 15, name: '自选隐秘饰品' },
+{ id: 'term', cost: 3, name: '货郎' },
+{ id: 'res', cost: 5, name: '随机碧玉饰品' },
+{ id: 'cla', cost: 9, name: '随机灵犀饰品' },
+{ id: 'cov', cost: 15, name: '自选赤霄饰品' },
 ];
 C.CFG_INFO = [
 ...Object.keys(C.COLS).map(c => ['price.' + c, C.COLS[c].price, 1, 100000, 1, '商店价格', C.COLS[c].name + '武器箱']),
-['price.term', C.TERM.price, 1, 100000, 1, '商店价格', '终端机'],
+['price.term', C.TERM.price, 1, 100000, 1, '商店价格', '货郎'],
 ['openDay', C.OPEN_DAY, 0, 50, 1, '开箱', '普通武器箱每天能开几个'],
 ['premDay', C.PREM_DAY, 0, 50, 1, '开箱', '神兵武器箱每天能开几个'],
 ['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个（旧）'],
@@ -34103,8 +34103,8 @@ C.CFG_INFO = [
 ...C.CASES.filter(c => C.COLS[c].prem).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
 ['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
 ['mktDays', C.MKT_DAYS, 1, 90, 1, '玩家市场', '挂单几天没卖出就自动撤回'],
-['term.lo', C.TERM.markup[0], 0.5, 5, 0, '终端机', '报价最低是基准价的几倍'],
-['term.hi', C.TERM.markup[1], 0.5, 5, 0, '终端机', '报价最高是基准价的几倍'],
+['term.lo', C.TERM.markup[0], 0.5, 5, 0, '货郎', '报价最低是基准价的几倍'],
+['term.hi', C.TERM.markup[1], 0.5, 5, 0, '货郎', '报价最高是基准价的几倍'],
 ['dropP', C.DROP_P, 0, 1, 0, '对局掉落', '每局掉一件的概率'],
 ['dropCap', C.DROP_CAP, 0, 100, 1, '对局掉落', '每周最多掉几次'],
 ['ink.base', 1500, 0, 100000, 1, '每天认多少本机收入', '每天先认多少墨锭'],
@@ -34131,7 +34131,7 @@ for (const [p, name] of [['odds.', '普通武器箱'], ...C.CASES.filter(c => C.
 const sum = C.CFG_INFO.filter(r => r[0].startsWith(p)).reduce((a, r) => a + C.cv(cfg, r[0]), 0);
 if (Math.abs(sum - 1) > 1e-6) return { cfg: null, err: `${name}的几档爆率加起来要正好是 1（现在是 ${+sum.toFixed(6)}）` };
 }
-if (C.cv(cfg, 'term.lo') > C.cv(cfg, 'term.hi')) return { cfg: null, err: '终端机报价的最低倍数不能高过最高倍数' };
+if (C.cv(cfg, 'term.lo') > C.cv(cfg, 'term.hi')) return { cfg: null, err: '货郎报价的最低倍数不能高过最高倍数' };
 return { cfg, err: '' };
 };
 function hash32(str) {
@@ -34157,7 +34157,7 @@ C.ITEM[k] = { col: cid, tier: t, mul: 0.85 + (hash32('pop|' + k) % 450) / 1000 }
 C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
 C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
 C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
-C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、终端机、汰换
+C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
 const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji' };
 C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -34186,12 +34186,12 @@ fx: { th: 'nebula', c: rgbS(m), c2: rgbS(GOLD), part: 'twinkle' },
 scene: { sky: sky(0.85, 0.55), orb: 'galaxy', orbC: rgbS(mixH(m, '#ffffff', 0.4)), mist: rgbS(m), mtn: [mixH(nt, dk, 0.8), mixH(nt, dk, 0.5)], bam: [mixH(nt, dk, 0.35), nt], wx: 'gold', wxC: rgbS(GOLD), hit: 'sunburst', hitC: rgbS(GOLD), stars: 1, rays: true } };
 };
 for (const [pre, zs] of Object.entries(C.ZOD_OF)) zs.forEach((code, ti) => { C.FULL[`${pre}_z${code}`] = zodSkin(pre, C.ZODIAC.find(z => z[0] === code), ti); });
-C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 终端机报斩数版时贵多少
-C.refVal = it => {   // 一件饰品的基准价：只用来定终端机的报价
+C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 货郎报斩数版时贵多少
+C.refVal = it => {   // 一件饰品的基准价：只用来定货郎的报价
 const d = C.ITEM[it.k]; if (!d) return 0;
 return Math.max(2, Math.round(C.BASE[d.tier] * d.mul * (it.st >= 0 ? C.ST_MUL(d.tier) : 1)));
 };
-C.GOODS = [...C.CASES, 'term'];              // 武器箱和终端机：只在商店卖，不能挂到市场
+C.GOODS = [...C.CASES, 'term'];              // 武器箱和货郎：只在商店卖，不能挂到市场
 C.isGood = k => C.GOODS.includes(k);
 C.shopPrice = (k, cfg) => k === 'term' ? C.cv(cfg, 'price.term') : own(C.COLS, k) ? C.cv(cfg, 'price.' + k) : 0;
 C.net = (p, cfg) => Math.floor(p * (1 - C.cv(cfg, 'fee')));    // 挂单卖掉，卖家到手多少
@@ -34399,7 +34399,7 @@ if (uniq.length !== ids.length) return { err: '同一件放了两次' };
 const items = uniq.map(id => C.findItem(s, id));
 if (items.some(x => !x)) return { err: '有材料已经不在库存里了' };
 const tier = C.ITEM[items[0].k].tier, up = C.UP[tier];
-if (!up) return { err: '★ 非凡已经是最高一档' };
+if (!up) return { err: '★ 绝世已经是最高一档' };
 if (items.some(x => C.ITEM[x.k].tier !== tier)) return { err: '材料要同一档品质' };
 const stN = items.filter(x => x.st >= 0).length;
 if (stN && stN !== items.length) return { err: '斩数版和普通版不能混着放' };
@@ -34504,7 +34504,7 @@ const NO_MKT = '玩家市场要登录云端账号、连上服务器才能用';
 A.list = (s, a, env) => {
 const m = env.mkt;
 if (!m || !C.isLid(m.id)) return { err: NO_MKT };
-if (a.c !== undefined) return { err: '武器箱和终端机只在商店按固定价格卖，不能挂到市场' };
+if (a.c !== undefined) return { err: '武器箱和货郎只在商店按固定价格卖，不能挂到市场' };
 const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
 const price = +a.price;
 if (!(Number.isInteger(price) && price >= 1 && price <= C.PRICE_MAX)) return { err: `标价要是 1 到 ${C.PRICE_MAX} 之间的整数` };
@@ -34659,21 +34659,21 @@ delete s.eq[char]; env.equip[char] = '';
 return { ok: true };
 };
 A.unseal = (s, a, env) => {
-if (s.tm) return { err: '已经有一台开着的终端机，先处理完它' };
-if (s.term < 1) return { err: '没有终端机' };
+if (s.tm) return { err: '已经有一台开着的货郎，先处理完它' };
+if (s.term < 1) return { err: '没有货郎' };
 s.term--;
 s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd, env.cfg) };
 return { ok: true, tm: s.tm };
 };
 A.termNext = (s, a, env) => {
-if (!s.tm) return { err: '没有开着的终端机' };
+if (!s.tm) return { err: '没有开着的货郎' };
 if (a.n !== undefined && +a.n !== s.tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点得太快、请求重发：不会一下跳过两件
 if (s.tm.n >= C.TERM.offers) { s.tm = null; return { ok: true, gone: true }; }
 s.tm.n++; s.tm.o = C.termOffer(env.rnd, env.cfg);
 return { ok: true, tm: s.tm };
 };
 A.termBuy = (s, a, env) => {
-const tm = s.tm; if (!tm) return { err: '没有开着的终端机' };
+const tm = s.tm; if (!tm) return { err: '没有开着的货郎' };
 if (a.n !== undefined && +a.n !== tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点“买下”时看到的是第几件
 if (C.invFull(s)) return { err: '库存满了' };
 if (env.ink < tm.o.price) return { err: `墨锭不够，要 ${tm.o.price}` };
@@ -34721,7 +34721,7 @@ else if (g.id === 'term') s.term++;
 else {
 if (C.invFull(s)) return { err: '库存满了' };
 let k;
-if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的隐秘级里挑一件' }; k = a.k; }
+if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的赤霄级里挑一件' }; k = a.k; }
 else k = pickOf(r, C.ofTierReg(g.id));
 res.item = C.addItem(s, C.mkItem(s, k, 'op', r, { stP: C.cv(env.cfg, 'stP') }), env);
 }
@@ -34785,7 +34785,7 @@ return { ok: true };
 };
 A.sync = () => ({ ok: true });
 A.claimCode = (s, a, env) => env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
-A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台终端机
+A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台货郎
 if (s.gift) return { err: '已经领过了' };
 s.gift = 1; s.cases.c1++; s.term++;
 return { ok: true };
@@ -35147,7 +35147,7 @@ if (menuHeroId >= 0) { MENU_HERO = null; setMenuHero(menuHeroId); }
 applySkins();
 } catch (e) {}
 }
-const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `终端机 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
+const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `货郎 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
 function apply(out, quiet) {
 if (!out) return;
 if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
@@ -35273,7 +35273,7 @@ return `<button type="button" class="ar-it${eq ? ' eq' : ''}" style="--tc:${tc(i
 <img src="${art(it.k)}" alt="" loading="lazy">${it.st >= 0 ? `<span class="ar-st">斩数 ${it.st}</span>` : ''}${eq ? '<span class="ar-eq">穿着</span>' : ''}${fresh ? '<span class="ar-new">新</span>' : ''}
 <b>${tierOf(it.k) === 'gold' ? '★ ' : ''}${escapeHTML(skinName(it.k))}</b><small>${charName(it.k)}${it.n ? ` · ‘${escapeHTML(it.n)}’` : ''}</small><i class="ar-bar"></i></button>`;
 }
-const TABS = [['inv', '库存'], ['codex', '皮肤图鉴'], ['cases', '武器箱'], ['term', '终端机'], ['market', '玩家市场'], ['trade', '汰换合同'], ['op', '江湖行动']];
+const TABS = [['inv', '库存'], ['codex', '皮肤图鉴'], ['cases', '武器箱'], ['term', '货郎'], ['market', '玩家市场'], ['trade', '熔铸契'], ['op', '江湖行动']];
 function dots() {
 if (!ST || MODE === 'none') return {};
 const d = {};
@@ -35292,7 +35292,7 @@ $id('arTabs').innerHTML = TABS.map(([k, n]) => `<button type="button" data-tab="
 const banner = MODE === 'none' ? '<p class="ar-banner">登录之后才能开箱、交易。先逛逛看吧。</p>'
 : MODE === 'wait' ? uiState('loading', '正在连接服务器…', 'ar-banner soft')
 : MODE === 'offline' ? uiState('error', '连不上服务器，武库暂时只能看。', 'ar-banner')
-: MODE === 'old' ? `<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易，你的饰品和武器箱都在${OLDV === 1 ? '，没用完的钥匙会一把换一台终端机' : ''}。</p>`
+: MODE === 'old' ? `<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易，你的饰品和武器箱都在${OLDV === 1 ? '，没用完的钥匙会一把换一台货郎' : ''}。</p>`
 : MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：服务器还没开武库，现在开箱、交易都只记在你的存档里，用来试玩。服务器版上线以后武库从零开始（会重新发新手礼），测试期开出来的东西不会带过去。</p>' : '';
 const R = { inv: pInv, codex: pCodex, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
 $id('arMain').innerHTML = banner + R();
@@ -35320,7 +35320,7 @@ name: (a, b) => (itemName(a) || '').localeCompare(itemName(b) || '', 'zh-CN')
 };
 list = list.slice().sort(sorts[INV.sort] || sorts.new);
 const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button" class="ar-caseitem" data-gotab="cases" style="--cc:${C.COLS[c].col}"><span class="ar-emb">${C.COLS[c].emblem}</span><b>${C.COLS[c].name}武器箱</b><small>×${s.cases[c]}</small></button>`).join('')
-+ (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
++ (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>货郎</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
 const tl = tagLeft(s);
 const dupeP = C.dupePlan(s), dupeCount = dupeP.items.length;
 return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-list-dupes>一键挂牌市场（${dupeCount}件）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
@@ -35376,7 +35376,7 @@ function mkInfo(k, st) {
 const x = MKD.items && MKD.items[k]; if (!x) return null;
 return st >= 0 ? { n: x.sn, lo: x.slo, last: x.slast, d: x.d } : { n: x.n, lo: x.lo, last: x.last, d: x.d };
 }
-const noMkt = () => MODE === 'old' ? OLD_MSG : MODE === 'offline' ? '连不上服务器，玩家市场暂时用不了。' : '玩家市场要登录云端账号、连上服务器才能用：本机存档只能开箱、汰换，不能和别的玩家买卖。';
+const noMkt = () => MODE === 'old' ? OLD_MSG : MODE === 'offline' ? '连不上服务器，玩家市场暂时用不了。' : '玩家市场要登录云端账号、连上服务器才能用：本机存档只能开箱、熔铸，不能和别的玩家买卖。';
 function mkLine(k, st) {
 if (MODE !== 'server') return '连上服务器才看得到';
 if (MKD.err) return escapeHTML(MKD.err);
@@ -35390,7 +35390,7 @@ if (!INS || !INS.it) return;
 const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i);
 const worn = own && ST.eq[C.charOf(it.k)] === it.i, can = live(), mk = MODE === 'server';
 const upgradeCost = C.ST_UPGRADE_COST[tierOf(it.k)];
-const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '汰换合同', supply: '每周补给', op: '江湖行动', term: '终端机' }[it.src] || '';
+const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '熔铸契', supply: '每周补给', op: '江湖行动', term: '货郎' }[it.src] || '';
 $id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[tierOf(it.k)].n}</span>
 <h3>${escapeHTML(itemName(it))}</h3>${it.n ? `<p class="ar-tagname">‘${escapeHTML(it.n)}’</p>` : ''}
 <dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}武器箱</dd>
@@ -35400,7 +35400,7 @@ ${it.st < 0 ? `<button type="button" class="go small" data-ins="upgrade" ${can &
 <button type="button" class="ghost small" data-ins="list" ${can && mk ? '' : 'disabled'}${mk ? '' : ' title="玩家市场要连上服务器才能用"'}>挂到市场</button>
 <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
 ${INS.from === 'pv' ? '<button type="button" class="go small" data-ins="cases">去所属套装</button>' : `<button type="button" class="ghost small" data-ins="market">这款的行情</button>`}<button type="button" class="ghost small" data-ins="close">关闭</button></div>
-<p class="ar-note">${INS.from === 'pv' ? `属于「${colName(it.k)}」套装。可从对应武器箱获得，也能通过玩家市场、汰换合同或终端机取得。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
+<p class="ar-note">${INS.from === 'pv' ? `属于「${colName(it.k)}」套装。可从对应武器箱获得，也能通过玩家市场、熔铸契或货郎取得。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
 if (mk && !MKD.items && !MKD.err) loadMarket().then(fresh => { if (fresh && INS && INS.it === it) insInfo(); });
 }
 function closeIns() { $id('arIns').hidden = true; INS = null; }
@@ -35450,7 +35450,7 @@ const price = Math.floor(+$id('arPrice').value || 0), r = await act('list', { i:
 if (r && r.ok) { closeModal(); closeIns(); MKD.at = 0; SFX.wood && SFX.wood(); toast('已挂到玩家市场，有人买走会通知你'); render(); }
 });
 }
-function buyBox(k) {   // 商店：武器箱、终端机按固定价格买，一次 1~10 个
+function buyBox(k) {   // 商店：武器箱、货郎按固定价格买，一次 1~10 个
 const p = C.shopPrice(k, CF()); let n = 1;
 if (!p) return;
 modal(`<div class="ar-mkhead" style="--tc:${goodCol(k)}">${goodIcon(k).replace(' sm', '')}<div><h3>买${goodName(k)}</h3><p class="ar-note">商店价 ${ink(p)} 一个，不限量${k === 'term' ? '' : C.COLS[k].prem ? (C.COLS[k].daily ? ` · 每天能开 ${C.cv(CF(), C.COLS[k].lim)} 个` : ` · 每周能开 ${C.cv(CF(), C.COLS[k].lim)} 个`) : ` · 普通武器箱每天一共能开 ${C.cv(CF(), 'openDay')} 个`}。买来的不能转卖。</p></div></div>
@@ -35470,13 +35470,13 @@ const r = await act(k === 'term' ? 'buyTerm' : 'buyCase', k === 'term' ? { n } :
 if (r && r.ok) { closeModal(); SFX.wood && SFX.wood(); toast(`买到了：${goodName(k)} ×${r.n}（${fmt(r.price)} 墨锭）`); render(); }
 });
 }
-const goodName = k => k === 'term' ? '终端机' : `${C.COLS[k].name}武器箱`;
+const goodName = k => k === 'term' ? '货郎' : `${C.COLS[k].name}武器箱`;
 const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
 const pips = (n, max) => Array.from({ length: Math.min(20, max) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
 function pCases() {
 const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF());
 const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0);
-const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台终端机，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
+const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台货郎，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
 const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.cv(CF(), 'openDay'))}</span>
 <span>今天还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premDay'))}</span>
 <span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span><button type="button" class="go small" data-open-all ${live() && available ? '' : 'disabled'}>一键开启全部</button><small>普通和神兵武器箱每天零点刷新，星座武器箱每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
@@ -35489,7 +35489,7 @@ return `<div class="ar-casecard" style="--cc:${col.col}">
 <div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(col.price)}</p>
 <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${openTxt}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
 ${tiers}
-${col.mil.length ? `<div class="ar-col"><span>集齐这个箱子的 ${col.mil.length} 款军规级：${have}/${col.mil.length}，送 1 个${col.name}武器箱 + 1 张改名标签</span><button type="button" class="${have >= col.mil.length && !claimed ? 'go' : 'ghost'} small" data-collect="${cid}" ${have >= col.mil.length && !claimed ? '' : 'disabled'}>${claimed ? '已领取' : have >= col.mil.length ? '领取' : '未集齐'}</button></div>` : ''}
+${col.mil.length ? `<div class="ar-col"><span>集齐这个箱子的 ${col.mil.length} 款精铁：${have}/${col.mil.length}，送 1 个${col.name}武器箱 + 1 张改名标签</span><button type="button" class="${have >= col.mil.length && !claimed ? 'go' : 'ghost'} small" data-collect="${cid}" ${have >= col.mil.length && !claimed ? '' : 'disabled'}>${claimed ? '已领取' : have >= col.mil.length ? '领取' : '未集齐'}</button></div>` : ''}
 </div>`;
 };
 const premCard = cid => {   // 神兵、星座武器箱：左边开箱、右边把饰品摆出来，点一下就能看穿上的样子
@@ -35500,7 +35500,7 @@ const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length)
 const show = zod ? ts.map(t => `<div class="ar-zrow" style="--tc:${C.TIER[t].c}"><span class="ar-zlab">${C.TIER[t].n}<b>${pct(O[t])}</b></span><div class="ar-zgrid">${col[t].map(k => `<button type="button" class="ar-pcard ar-zcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k).split('·')[0])}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`).join('')
 : ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
 return `<div class="ar-casecard prem${zod ? ' zod' : ''}" style="--cc:${col.col}"><div class="ar-premside">
-<span class="ar-premtag">${limText} · 隐秘和非凡加起来 ${pct(O.cov + O.gold)}</span>
+<span class="ar-premtag">${limText} · 赤霄和绝世加起来 ${pct(O.cov + O.gold)}</span>
 <div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(col.price)}</p>
 <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${btnText}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
 <div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
@@ -35556,7 +35556,7 @@ const el = $id('arStrip'), box = el.parentElement, mid = box.clientWidth / 2;
 const target = -(48 * CW + CW / 2 - mid) + Math.round((Math.random() - 0.5) * (CW - 24));
 let done = false, lastI = -1, raf = 0;
 const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); REEL.on = false; reveal(win, cid); };
-const land = () => {   // 停在保密以上：中间那一格先亮一下，再出结果
+const land = () => {   // 停在灵犀以上：中间那一格先亮一下，再出结果
 if (done) return;
 if (!big) { setTimeout(finish, 450); return; }
 const t = el.children[48]; if (t) t.classList.add('win');
@@ -35622,26 +35622,26 @@ function sting(k) {
 const lv = C.TIERS.indexOf(tierOf(k));
 if (!AC || muted) return;
 try {
-if (lv <= 0) {                      // 军规：木鱼一声 + 一个铃
+if (lv <= 0) {                      // 精铁：木鱼一声 + 一个铃
 toneAt(620, 300, 0, 0.12, 0.22, 'triangle'); noiseAt(0, 0.05, 2400, 900, 2, 0.14);
 bellAt(pent(3, 1), 0.04, 0.9, 0.045);
-} else if (lv === 1) {              // 受限：两个铃往上走
+} else if (lv === 1) {              // 碧玉：两个铃往上走
 toneAt(560, 280, 0, 0.1, 0.18, 'triangle');
 bells([pent(1, 1), pent(3, 1)], 0.02, 0.11, 1.2, 0.055);
 noiseAt(0.02, 0.5, 2500, 8000, 5, 0.025);
-} else if (lv === 2) {              // 保密：低鼓垫底，三个铃一串，一面小锣
+} else if (lv === 2) {              // 灵犀：低鼓垫底，三个铃一串，一面小锣
 drumAt(0, 70, 0.45);
 bells([pent(0, 1), pent(2, 1), pent(4, 1), pent(5, 1)], 0.03, 0.085, 1.4, 0.06);
 gongAt(0.02, 392, 1.8, 0.045);
 noiseAt(0.05, 0.7, 3000, 9000, 6, 0.03);
-} else if (lv === 3) {              // 隐秘：两声太鼓、大锣，铃音一路冲上去，后面垫一个和弦
+} else if (lv === 3) {              // 赤霄：两声太鼓、大锣，铃音一路冲上去，后面垫一个和弦
 drumAt(0, 58, 0.7); drumAt(0.16, 64, 0.5);
 gongAt(0, 196, 3.2, 0.08);
 bells([0, 1, 2, 3, 4, 5, 7].map(i => pent(i, 1)), 0.12, 0.06, 1.6, 0.055);
 padAt([293.66, 440, 587.33], 0.1, 2.6, 0.035);
 noiseAt(0, 1.4, 6000, 2500, 0.8, 0.05, 'highpass');
 playSting('legendary', true);
-} else {                            // 非凡：鼓点连击、大锣、铃音像金子一样洒下来，合唱和弦铺满，再接传说的乐句
+} else {                            // 绝世：鼓点连击、大锣、铃音像金子一样洒下来，合唱和弦铺满，再接传说的乐句
 drumAt(0, 55, 0.85); drumAt(0.12, 55, 0.55); drumAt(0.24, 62, 0.7);
 gongAt(0, 174.6, 4.2, 0.1); gongAt(0.02, 261.6, 3.2, 0.04);
 bells([0, 2, 4, 5, 7, 9, 10, 12].map(i => pent(i, 1)), 0.18, 0.055, 1.8, 0.06);
@@ -35683,24 +35683,24 @@ if (tm) {
 const o = tm.o, left = C.TERM.offers - tm.n, fx = NOW() - TERM_FX < 1500;
 body = `<div class="ar-term${fx ? ' scan' : ''}" style="--tc:${tc(o.k)}">
 <div class="ar-termart"><img src="${bigArt(o.k)}" alt="">${o.st >= 0 ? `<span class="ar-st">斩数 ${o.st}</span>` : ''}<i class="ar-scanline"></i></div>
-<div class="ar-terminfo"><span class="ar-k">终端机 · 第 ${tm.n} / ${C.TERM.offers} 件</span>
+<div class="ar-terminfo"><span class="ar-k">货郎 · 第 ${tm.n} / ${C.TERM.offers} 件</span>
 <span class="ar-tier" style="--tc:${tc(o.k)}">${C.TIER[tierOf(o.k)].n}</span>
 <h3>${escapeHTML(itemName(o))}</h3>
 <p class="ar-note">${colName(o.k)}武器箱 · ${charName(o.k)}</p>
 <div class="ar-termprice"><span>报价</span>${ink(o.price)}</div>
 <p class="ar-note">玩家市场：${mkLine(o.k, o.st)}</p>
-<div class="ar-insbtns"><button type="button" class="go small" data-term="buy" ${live() ? '' : 'disabled'}>买下 ${ink(o.price)}</button><button type="button" class="ghost small" data-term="next" ${live() ? '' : 'disabled'}>${left ? `不要，换下一件（还能换 ${left} 次）` : '不要（这台终端机就没了）'}</button></div>
+<div class="ar-insbtns"><button type="button" class="go small" data-term="buy" ${live() ? '' : 'disabled'}>买下 ${ink(o.price)}</button><button type="button" class="ghost small" data-term="next" ${live() ? '' : 'disabled'}>${left ? `不要，换下一件（还能换 ${left} 次）` : '不要（这台货郎就没了）'}</button></div>
 <p class="ar-note" id="arTermLeft"></p></div></div>`;
 } else {
-body = `<div class="ar-card ar-termseal"><span class="ar-termbox"><span>终</span></span><div><h3>终端机 <small>还有 ${s.term} 台没开封</small></h3>
-<p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : `终端机在商店按固定价格卖（一台 ${fmt(C.shopPrice('term', CF()))} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
+body = `<div class="ar-card ar-termseal"><span class="ar-termbox"><span>终</span></span><div><h3>货郎 <small>还有 ${s.term} 台没开封</small></h3>
+<p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : `货郎在商店按固定价格卖（一台 ${fmt(C.shopPrice('term', CF()))} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
 <div class="ar-termbtns"><button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button><button type="button" class="ghost small" data-buyg="term">买一台 ${ink(C.shopPrice('term', CF()))}</button></div></div>`;
 }
-return `${body}<h4 class="ar-h">终端机报价的概率 <small>每件都从八个武器箱的全部饰品里抽（神兵、星座武器箱的也有），报价按饰品的品质定，有高有低</small></h4>${odds}
-<p class="ar-note">买下一件，这台终端机就用掉了；5 件都不要，终端机也没了。开封 ${C.TERM.days} 天内不处理会作废。终端机只在商店卖，买来的不能转卖。</p>`;
+return `${body}<h4 class="ar-h">货郎报价的概率 <small>每件都从八个武器箱的全部饰品里抽（神兵、星座武器箱的也有），报价按饰品的品质定，有高有低</small></h4>${odds}
+<p class="ar-note">买下一件，这台货郎就用掉了；5 件都不要，货郎也没了。开封 ${C.TERM.days} 天内不处理会作废。货郎只在商店卖，买来的不能转卖。</p>`;
 }
 let TERM_TM = 0;
-function termTick() {   // 开着的终端机：显示还剩多久作废
+function termTick() {   // 开着的货郎：显示还剩多久作废
 clearTimeout(TERM_TM);
 const el = $id('arTermLeft'); if (!el || !ST || !ST.tm) return;
 const ms = ST.tm.t0 + C.TERM.days * 86400e3 - NOW();
@@ -35714,7 +35714,7 @@ if (a === 'unseal') { const r = await act('unseal', {}); if (r && r.ok) { TERM_F
 const tm = ST && ST.tm; if (!tm) { render(); return; }
 if (a === 'buy') {
 const o = tm.o;
-confirmBox('买下这一件', `花 ${ink(o.price)} 买下「${escapeHTML(itemName(o))}」？买下以后这台终端机就用掉了。`, '买下', async () => {
+confirmBox('买下这一件', `花 ${ink(o.price)} 买下「${escapeHTML(itemName(o))}」？买下以后这台货郎就用掉了。`, '买下', async () => {
 const r = await act('termBuy', { n: tm.n });
 if (r && r.ok) { render(); reveal(r.item); } else render();
 });
@@ -35723,10 +35723,10 @@ return;
 if (a === 'next') {
 const go = async () => {
 const r = await act('termNext', { n: tm.n });
-if (r && r.ok) { if (r.gone) toast('5 件都没要，这台终端机用完了'); else { TERM_FX = NOW(); SFX.slice && SFX.slice(); } }
+if (r && r.ok) { if (r.gone) toast('5 件都没要，这台货郎用完了'); else { TERM_FX = NOW(); SFX.slice && SFX.slice(); } }
 render();
 };
-if (tm.n >= C.TERM.offers) confirmBox('最后一件', '这是这台终端机的最后一件了。不要的话，终端机就没了。', '不要了', go);
+if (tm.n >= C.TERM.offers) confirmBox('最后一件', '这是这台货郎的最后一件了。不要的话，货郎就没了。', '不要了', go);
 else go();
 }
 }
@@ -35774,10 +35774,10 @@ ${keys.length ? `<div class="ar-mklist">${keys.map(k => { const x = row(k), p = 
 } else if (MK.view === 'mine') {
 body = s.lst.length ? myListings(s) : empty('没有挂单。在库存里点一件饰品，选“挂到市场”，标价自己定，同时挂多少件都可以。');
 } else {
-const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '终端机买入', sell: '卖出', upgrade: '升为斩数版' }[h.kind] || '';
+const kind = h => h.kind === 'buy' ? (h.g ? '商店买入' : '玩家市场买入') : { sold: '卖给玩家', term: '货郎买入', sell: '卖出', upgrade: '升为斩数版' }[h.kind] || '';
 body = s.hist.length ? `<div class="ar-hist">${s.hist.map(h => `<div class="ar-hrow"><span>${new Date(h.t).toLocaleString()}</span><span>${kind(h)}</span><span>${h.g ? `${goodName(h.g)} ×${h.n}` : escapeHTML(itemName({ k: h.k, st: h.st }))}</span><span>${h.kind === 'buy' || h.kind === 'term' || h.kind === 'upgrade' ? '−' : '+'}${fmt(h.gain || h.price)}</span></div>`).join('')}</div>` : empty('还没有成交记录。');
 }
-return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武器箱和终端机在商店按固定价格买。</p>${body}`;
+return `<div class="ar-seg">${tabs}</div><p class="ar-note top">玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武器箱和货郎在商店按固定价格买。</p>${body}`;
 }
 const MSORTS = [['exp', '快到期的在前'], ['new', '最新挂的在前'], ['dear', '标价从高到低'], ['cheap', '标价从低到高'], ['tier', '品质高的在前'], ['st', '斩数多的在前'], ['char', '按侠客']];
 function myListings(s) {
@@ -35846,7 +35846,7 @@ ${pool.length ? `<div class="ar-grid sm">${pool.map(x => tile(x, usable(x) && TR
 }
 function supplyName(o) {
 if (o.t === 'case') return `${C.COLS[o.c].name}武器箱`;
-if (o.t === 'term') return '终端机';
+if (o.t === 'term') return '货郎';
 if (o.t === 'tag') return '改名标签';
 if (o.t === 'ink') return `${o.n} 墨锭`;
 return itemName({ k: o.k, st: -1 });
@@ -35865,7 +35865,7 @@ const sup = s.drop.sup ? '<p class="ar-note">这周的补给已经领了，下�
 : `<div class="ar-sup">${opts.map((o, i) => `<button type="button" class="ar-supo${SUP.pick.includes(i) ? ' sel' : ''}" data-sup="${i}" ${ready ? '' : 'disabled'} style="--tc:${o.t === 'item' ? tc(o.k) : o.t === 'term' ? '120,220,200' : '233,196,106'}">${o.t === 'item' ? `<img src="${thumb(o.k)}" alt="">` : `<span class="ar-supi">${{ case: '箱', term: '终', tag: '签', ink: '墨' }[o.t]}</span>`}<b>${escapeHTML(supplyName(o))}</b></button>`).join('')}</div>
 <div class="row"><button type="button" class="go small" id="arSupGo" ${ready && SUP.pick.length === 2 ? '' : 'disabled'}>领取这两样</button></div>`;
 const shop = C.STAR_SHOP.map(g => `<div class="ar-card ar-starg"><b>${g.name}</b><span class="ar-starc">${'★'.repeat(Math.min(g.cost, 5))}${g.cost > 5 ? ` ×${g.cost}` : ''}</span><button type="button" class="go small" data-star="${g.id}" ${stars >= g.cost && live() ? '' : 'disabled'}>${g.cost} 星章兑换</button></div>`).join('');
-return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.k + 1} 季 · 剩 ${left} 天</span><h3>星章 <b>${stars}</b> <small>本季共得 ${s.op.earned}</small></h3></div><p class="ar-note">每周一换四个任务，完成拿星章，星章换武器箱、终端机、改名标签和饰品。</p></div>
+return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.k + 1} 季 · 剩 ${left} 天</span><h3>星章 <b>${stars}</b> <small>本季共得 ${s.op.earned}</small></h3></div><p class="ar-note">每周一换四个任务，完成拿星章，星章换武器箱、货郎、改名标签和饰品。</p></div>
 <h4 class="ar-h">本周任务</h4><div class="tlist">${ms || empty('登录之后才有任务。')}</div>
 <h4 class="ar-h">每周补给 <small>${ready ? '已解锁：四样里挑两样' : `这周再打 ${C.SUPPLY_GAMES - s.drop.g} 局解锁（${s.drop.g}/${C.SUPPLY_GAMES}）`}</small></h4>${live() ? sup : ''}
 <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵、星座武器箱的换不到</small></h4><div class="ar-grid3">${shop}</div>
@@ -35873,7 +35873,7 @@ return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.
 }
 function covPick() {
 const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
-modal(`<h3>自选一件隐秘饰品</h3><div class="ar-grid sm">${list.map(k => `<button type="button" class="ar-it" style="--tc:${tc(k)}" data-opcov="${k}"><img src="${art(k)}" alt=""><b>${escapeHTML(skinName(k))}</b><small>${charName(k)} · ${colName(k)}</small><i class="ar-bar"></i></button>`).join('')}</div><div class="row"><button class="ghost small" data-ar-close>取消</button></div>`, 'wide');
+modal(`<h3>自选一件赤霄饰品</h3><div class="ar-grid sm">${list.map(k => `<button type="button" class="ar-it" style="--tc:${tc(k)}" data-opcov="${k}"><img src="${art(k)}" alt=""><b>${escapeHTML(skinName(k))}</b><small>${charName(k)} · ${colName(k)}</small><i class="ar-bar"></i></button>`).join('')}</div><div class="row"><button class="ghost small" data-ar-close>取消</button></div>`, 'wide');
 }
 function bind() {
 $id('arTabs').addEventListener('click', e => { if (bulkOpening) return; const b = e.target.closest('[data-tab]'); if (!b) return; SFX.slice && SFX.slice(); TAB = b.dataset.tab; render(); $id('arMain').scrollTop = 0; });
@@ -35931,7 +35931,7 @@ return;
 }
 if (d.store) { confirmBox('买改名标签', `花 ${ink(C.STORE[0].cost)} 买一张改名标签？每周最多买 ${C.STORE[0].lim} 张。`, '购买', buyTag); return; }
 if (d.sellDupes !== undefined || d.listDupes !== undefined) { listDupesGo(); return; }
-if (b.id === 'arGift') { const r = await act('gift', {}); if (r && r.ok) { SFX.gong && SFX.gong(); toast('新手礼：初刃武器箱 +1，终端机 +1'); render(); } return; }
+if (b.id === 'arGift') { const r = await act('gift', {}); if (r && r.ok) { SFX.gong && SFX.gong(); toast('新手礼：初刃武器箱 +1，货郎 +1'); render(); } return; }
 if (b.id === 'arTradeGo') { tradeGo(); return; }
 if (b.id === 'arTradeClr') { TR.sel = []; render(); return; }
 if (b.id === 'arSupGo') { const r = await act('supply', { picks: SUP.pick }); if (r && r.ok) { SUP.pick = []; SFX.gong && SFX.gong(); const it = r.got.find(x => x.t === 'item'); if (it) reveal(it.item); else toast('补给到手'); render(); } return; }
@@ -35954,7 +35954,7 @@ render();
 function sellDupesGo() { listDupesGo(); }
 function tradeGo() {
 const s = ST, chk = C.tradeCheck(s, TR.sel); if (!chk.ok) { msg(chk.err); return; }
-confirmBox('签订汰换合同', `这 ${TR.sel.length} 件${C.TIER[chk.tier].n}饰品会被收走，换 1 件${C.TIER[chk.up].n}。确定吗？`, '签订', async () => {
+confirmBox('签订熔铸契', `这 ${TR.sel.length} 件${C.TIER[chk.tier].n}饰品会被收走，换 1 件${C.TIER[chk.up].n}。确定吗？`, '签订', async () => {
 const r = await act('trade', { ids: TR.sel });
 if (r && r.ok) { TR.sel = []; reveal(r.item); render(); }
 });

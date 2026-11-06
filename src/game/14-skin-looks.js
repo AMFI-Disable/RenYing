@@ -359,7 +359,7 @@ function drawDeco(sk, f, L, layer) {
       ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(tp[0], tp[1]); ctx.lineTo(b1[0], b1[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
     ctx.fillStyle = '#f3e5f5'; circle(P(8, 5.5), 2.3);
-  } else if (hd === 'loomcrown') {   // 凌雀·天罗星杼（★非凡）：织女双金梭凤冠 + 八角星钻 + 双侧垂珠星光步摇
+  } else if (hd === 'loomcrown') {   // 凌雀·天罗星杼（★绝世）：织女双金梭凤冠 + 八角星钻 + 双侧垂珠星光步摇
     // 交叉双金梭发簪横贯发髻
     for (const [dx0, dy0, dx1, dy1] of [[-15, 9, 9, 19], [-13, 19, 11, 9]]) {
       const a = P(dx0, dy0), b = P(dx1, dy1), m = [(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5];
@@ -391,7 +391,7 @@ function drawDeco(sk, f, L, layer) {
       ctx.fillStyle = '#ffd6fa'; circle(bot, 2.2);
       ctx.fillStyle = '#ffffff'; circle(bot, 1.0);
     }
-  } else if (hd === 'wraithveil') {   // 离影·幽夜星魄（★非凡）：冥魄断魂黑曜半面傩 + 掠空双星魄角 + 额心竖瞳魂印（彻底区别于绯影狐面）
+  } else if (hd === 'wraithveil') {   // 离影·幽夜星魄（★绝世）：冥魄断魂黑曜半面傩 + 掠空双星魄角 + 额心竖瞳魂印（彻底区别于绯影狐面）
     // 1. 深渊暗夜高领兜帽底衬
     const a0 = Math.atan2(uy, ux);
     ctx.fillStyle = '#07111a'; ctx.strokeStyle = '#1c4a66'; ctx.lineWidth = 1.3;
@@ -431,7 +431,7 @@ function drawDeco(sk, f, L, layer) {
     ctx.beginPath(); ctx.moveTo(dTop[0], dTop[1]); ctx.lineTo(dRight[0], dRight[1]); ctx.lineTo(dBot[0], dBot[1]); ctx.lineTo(dLeft[0], dLeft[1]); ctx.closePath(); ctx.fill();
     glint(browP[0], browP[1], 4.5 + Math.sin(t * 5) * 1.2, '127,238,255', 0.9);
     ctx.restore();
-  } else if (hd === 'polarhalo') {   // 磁仙·极星乾坤（★非凡）：紫金两仪乾坤帝冕 + 悬浮阴阳星轨环（区别于雷鸣/墨羽星冠）
+  } else if (hd === 'polarhalo') {   // 磁仙·极星乾坤（★绝世）：紫金两仪乾坤帝冕 + 悬浮阴阳星轨环（区别于雷鸣/墨羽星冠）
     const pol = sk.pol || 1;
     // 1. 紫金乾坤帝冕冠座（双翼高耸金冠）
     ctx.fillStyle = '#24183c'; ctx.strokeStyle = '#ffb24a'; ctx.lineWidth = 1.5;
@@ -461,7 +461,7 @@ function drawDeco(sk, f, L, layer) {
     ctx.fillStyle = D.shoulder; ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 1.3;
     ctx.beginPath(); ctx.ellipse(sk.sh[0], sk.sh[1] + 2, 10.5, 6.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     if (D.robe === 'celestial_loom' || D.robe === 'abyss_wraith' || D.robe === 'polar_robe') {
-      // ★ 非凡专属：双层流光金/星肩甲翼片
+      // ★ 绝世专属：双层流光金/星肩甲翼片
       const swingP = [sk.sh[0] - sk.face * 9, sk.sh[1] - 3];
       ctx.fillStyle = D.robe === 'abyss_wraith' ? '#5ef0ff' : '#ffd24a';
       circle([sk.sh[0] + sk.face * 2, sk.sh[1] + 1], 2.2);
@@ -494,7 +494,7 @@ function drawDeco(sk, f, L, layer) {
     ctx.beginPath(); ctx.moveTo(h[0] - 6, h[1]); ctx.lineTo(h[0] + 6, h[1]);
     ctx.quadraticCurveTo(kf[0] + 8, kf[1], rTipX, rTipY);
     ctx.quadraticCurveTo(kb[0] - 8, kb[1], h[0] - 6, h[1]); ctx.closePath(); ctx.fill(); ctx.stroke();
-    // ★ 非凡战袍专属：双层流光金边/星纹刺绣与腰封佩玉
+    // ★ 绝世战袍专属：双层流光金边/星纹刺绣与腰封佩玉
     if (D.robe === 'celestial_loom' || D.robe === 'abyss_wraith' || D.robe === 'polar_robe') {
       const trimC = D.robe === 'abyss_wraith' ? '#5ef0ff' : '#ffd24a';
       ctx.strokeStyle = trimC; ctx.lineWidth = 1.1;

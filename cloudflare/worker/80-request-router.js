@@ -200,7 +200,7 @@ async function route(request, env, ctx, rid = reqId()) {
         return await handleProfilePost(env, auth, body, now);
       }
 
-      // 6. 武库：开箱、买卖、汰换……
+      // 6. 武库：开箱、买卖、熔铸……
       if (path === '/api/econ' && request.method === 'POST') {
         const auth = await authenticate(env, request);
         if (!auth) return error('未登录或登录已过期，请重新登录', 401);

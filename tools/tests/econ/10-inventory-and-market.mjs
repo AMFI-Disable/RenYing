@@ -10,7 +10,7 @@ section('皮肤都在箱子里：游戏里原有的皮肤和武库的新皮肤�
   ok(orig.every(([k, ch]) => C.charOf(k) === ch), '每款的侠客对得上');
   ok(C.CASES.length === 8 && C.REG.length === 6 && C.REG.every(c => C.TIERS.every(t => (C.COLS[c][t] || []).length)), '八个武器箱：六个普通武器箱，每个五档品质都有东西');
   const P = C.COLS.c7, pk = ['cla', 'cov', 'gold'].flatMap(t => P[t]);
-  ok(P.prem && !P.mil.length && !P.res.length && pk.length === 10 && P.odds.mil === 0 && P.odds.res === 0 && Math.abs(P.odds.cov + P.odds.gold - 0.3) < 1e-9, '神兵武器箱没有军规级和受限，隐秘加非凡一共 30%', P.odds);
+  ok(P.prem && !P.mil.length && !P.res.length && pk.length === 10 && P.odds.mil === 0 && P.odds.res === 0 && Math.abs(P.odds.cov + P.odds.gold - 0.3) < 1e-9, '神兵武器箱没有精铁和碧玉，赤霄加绝世一共 30%', P.odds);
   ok(pk.every(k => C.isItem(k) && C.ITEM[k].col === 'c7') && !C.REG.some(c => C.TIERS.some(t => C.COLS[c][t].some(k => pk.includes(k)))), '神兵武器箱的 10 款只在这个箱子里出');
   ok(C.isItem('qf_qfx') && !C.CS_KEYS.includes('qf_qfx'), '青锋行那款也在箱子里，青锋行通关拿到的照样认');
 }
@@ -47,7 +47,7 @@ section('正常流程：新手礼、开箱（不用钥匙）、穿上、挂到�
 const A = await newUser('alice');
 {
   const g = await econ(A.token, 'gift');
-  ok(g.ok && g.res.ok && g.state.cases.c1 === 1 && g.state.term === 1, '领新手礼：初刃武器箱 1 个、终端机 1 台', g);
+  ok(g.ok && g.res.ok && g.state.cases.c1 === 1 && g.state.term === 1, '领新手礼：初刃武器箱 1 个、货郎 1 台', g);
   ok((await econ(A.token, 'gift')).res.err, '新手礼只能领一次');
   const o = await econ(A.token, 'open', { c: 'c1' });
   ok(o.res.ok && o.res.item && C.COLS.c1[C.ITEM[o.res.item.k].tier].includes(o.res.item.k), '开箱出了一件初刃收藏品', o.res);
@@ -118,7 +118,7 @@ section('开箱概率：和公布的一样，五分之一是斩数版');
   ok(C.ODDS.mil === 0.53 && C.ODDS.res === 0.27 && C.ODDS.cla === 0.13 && C.ODDS.cov === 0.052 && C.ODDS.gold === 0.018, '普通武器箱的爆率是 53% / 27% / 13% / 5.2% / 1.8%');
   ok(C.TIERS.every(t => Math.abs(cnt[t] / N - C.ODDS[t]) < Math.max(0.002, C.ODDS[t] * 0.15)), '五档品质的比例和公布的一样', Object.fromEntries(C.TIERS.map(t => [t, +(cnt[t] / N).toFixed(4)])));
   ok(Math.abs(st / N - C.ST_P) < 0.005, `斩数版占 ${(st / N * 100).toFixed(1)}%（公布的是 ${C.ST_P * 100}%）`);
-  ok(C.CASES.every(c => Math.abs(Object.values(C.oddsOf(c)).reduce((a, b) => a + b, 0) - 1) < 1e-9) && Math.abs(Object.values(C.TERM.odds).reduce((a, b) => a + b, 0) - 1) < 1e-9, '每个武器箱和终端机的概率加起来都是 100%');
+  ok(C.CASES.every(c => Math.abs(Object.values(C.oddsOf(c)).reduce((a, b) => a + b, 0) - 1) < 1e-9) && Math.abs(Object.values(C.TERM.odds).reduce((a, b) => a + b, 0) - 1) < 1e-9, '每个武器箱和货郎的概率加起来都是 100%');
   const PO = C.oddsOf('c7'), M = 60000, pc = Object.fromEntries(C.TIERS.map(t => [t, 0]));
   for (let i = 0; i < M; i++) {
     const s = C.blank(); s.cases.c7 = 1;
@@ -127,14 +127,14 @@ section('开箱概率：和公布的一样，五分之一是斩数版');
     pc[C.ITEM[it.k].tier]++;
     if (C.ITEM[it.k].col !== 'c7') { pc.bad = (pc.bad || 0) + 1; }
   }
-  ok(!pc.mil && !pc.res && !pc.bad && ['cla', 'cov', 'gold'].every(t => Math.abs(pc[t] / M - PO[t]) < Math.max(0.004, PO[t] * 0.1)), `神兵武器箱开 ${M} 次：保密 ${(pc.cla / M * 100).toFixed(1)}%、隐秘 ${(pc.cov / M * 100).toFixed(1)}%、非凡 ${(pc.gold / M * 100).toFixed(1)}%，一个军规级、受限都没有`, pc);
+  ok(!pc.mil && !pc.res && !pc.bad && ['cla', 'cov', 'gold'].every(t => Math.abs(pc[t] / M - PO[t]) < Math.max(0.004, PO[t] * 0.1)), `神兵武器箱开 ${M} 次：灵犀 ${(pc.cla / M * 100).toFixed(1)}%、赤霄 ${(pc.cov / M * 100).toFixed(1)}%、绝世 ${(pc.gold / M * 100).toFixed(1)}%，一个精铁、碧玉都没有`, pc);
 }
 
 section('星座武器箱：十二星座 36 款，65% / 28% / 7%，每个号送 1 个，每周开 1 个');
 {
   const Z = C.COLS.c8, codes = C.ZODIAC.map(z => z[0]);
   ok(Z.prem && !Z.mil.length && !Z.res.length && ['cla', 'cov', 'gold'].every(t => Z[t].length === 12) && Z.odds.cla === 0.65 && Z.odds.cov === 0.28 && Z.odds.gold === 0.07 && Z.price > C.COLS.c7.price,
-    '保密、隐秘、非凡各 12 款，爆率 65 / 28 / 7，比神兵武器箱贵', [Z.price, Z.odds]);
+    '灵犀、赤霄、绝世各 12 款，爆率 65 / 28 / 7，比神兵武器箱贵', [Z.price, Z.odds]);
   const ZOD_HERO_IDS = Object.keys(C.ZOD_OF).map(pre => C.charOf(pre + '_x'));
   ok(['cla', 'cov', 'gold'].every(t => ZOD_HERO_IDS.every(h => Z[t].filter(k => C.charOf(k) === h).length === 1)), '每位侠客粉、红、金各一款');
   ok(['cla', 'cov', 'gold'].every(t => codes.every(c => Z[t].filter(k => C.FULL[k].deco.sign === c).length === 1)), '每一档里十二星座正好各一款');
@@ -150,7 +150,7 @@ section('星座武器箱：十二星座 36 款，65% / 28% / 7%，每个号送 1
     pc[C.ITEM[it.k].tier]++; if (C.ITEM[it.k].col !== 'c8') pc.bad = (pc.bad || 0) + 1;
   }
   const ZO = C.oddsOf('c8');
-  ok(!pc.mil && !pc.res && !pc.bad && ['cla', 'cov', 'gold'].every(t => Math.abs(pc[t] / M - ZO[t]) < Math.max(0.004, ZO[t] * 0.1)), `星座武器箱开 ${M} 次：保密 ${(pc.cla / M * 100).toFixed(1)}%、隐秘 ${(pc.cov / M * 100).toFixed(1)}%、非凡 ${(pc.gold / M * 100).toFixed(1)}%`, pc);
+  ok(!pc.mil && !pc.res && !pc.bad && ['cla', 'cov', 'gold'].every(t => Math.abs(pc[t] / M - ZO[t]) < Math.max(0.004, ZO[t] * 0.1)), `星座武器箱开 ${M} 次：灵犀 ${(pc.cla / M * 100).toFixed(1)}%、赤霄 ${(pc.cov / M * 100).toFixed(1)}%、绝世 ${(pc.gold / M * 100).toFixed(1)}%`, pc);
   const s0 = C.normalize(C.blank(), { now: T, uid: 'zf' });
   ok(s0.cases.c8 === 1 && s0.zf === 1 && Object.entries(s0.cases).every(([c, n]) => c === 'c8' || n === 0), '新号送 1 个星座武器箱', s0.cases);
   ok(C.normalize(s0, { now: T, uid: 'zf' }).cases.c8 === 1, '再读一次不会再送');
@@ -178,12 +178,12 @@ section('星章兑换：只从普通武器箱里出，神兵武器箱的 10 款�
   ok(prem.length === 46 && prem.filter(k => C.ITEM[k].col === 'c7').length === 10 && prem.filter(k => C.ITEM[k].col === 'c8').length === 36, '神兵武器箱 10 款、星座武器箱 36 款，都只在自己的箱子里', prem.length);
   const pc = C.ofTier('cov').find(C.isPrem), rc = C.ofTierReg('cov')[0];
   const r1 = C.run(rich(), 'star', { id: 'cov', k: pc }, env()).res;
-  ok(r1.err === '要从普通武器箱的隐秘级里挑一件', `自选隐秘挑神兵武器箱的 ${pc} 被拒绝`, r1);
+  ok(r1.err === '要从普通武器箱的赤霄级里挑一件', `自选赤霄挑神兵武器箱的 ${pc} 被拒绝`, r1);
   const o2 = C.run(rich(), 'star', { id: 'cov', k: rc }, env()), r2 = o2.res;
-  ok(r2.ok && r2.item.k === rc && o2.state.op.spent === 15, `自选隐秘挑普通武器箱的 ${rc} 可以`, r2);
+  ok(r2.ok && r2.item.k === rc && o2.state.op.spent === 15, `自选赤霄挑普通武器箱的 ${rc} 可以`, r2);
   let bad = 0;
   for (let i = 0; i < 400; i++) for (const id of ['res', 'cla']) { const r = C.run(rich(), 'star', { id }, env()).res; if (!r.ok || C.isPrem(r.item.k)) bad++; }
-  ok(bad === 0, '随机受限、随机保密换 800 次，一次都没出神兵武器箱的饰品', bad);
+  ok(bad === 0, '随机碧玉、随机灵犀换 800 次，一次都没出神兵武器箱的饰品', bad);
   let cbad = 0;
   for (let i = 0; i < 300; i++) { const r = C.run(rich(), 'star', { id: 'case' }, env()).res; if (!C.REG.includes(r.c)) cbad++; }
   ok(cbad === 0, '随机武器箱换 300 次，一次都没出神兵武器箱', cbad);
@@ -208,7 +208,7 @@ section('并发双花：同一件同时挂 12 次、同一个箱子同时开 12 
   const u = await newUser('racer');
   await econ(u.token, 'gift');
   const o = await econ(u.token, 'open', { c: 'c1' });
-  RACE_K = o.res.item.k;   // 这件后面以 50 卖掉了：开出来的要是霜狼（gc_wolf，初刃武器箱的非凡），玩家市场那段的成交记录会多一笔
+  RACE_K = o.res.item.k;   // 这件后面以 50 卖掉了：开出来的要是霜狼（gc_wolf，初刃武器箱的绝世），玩家市场那段的成交记录会多一笔
   const rs = await Promise.all(Array.from({ length: 12 }, () => econ(u.token, 'list', { i: o.res.item.i, price: 50 })));
   const wins = rs.filter(r => r.res && r.res.ok);
   ok(wins.length === 1 && stateOf(u.uid).lst.length === 1 && row('SELECT COUNT(*) AS n FROM mkt WHERE seller = ?', u.uid).n === 1, `12 个并发挂单只挂上 1 单（挂上 ${wins.length}）`, rs.map(r => r.res ? r.res.err || 'ok' : r.error));
@@ -240,7 +240,7 @@ section('开箱次数：普通武器箱每天开 5 个，神兵武器箱每天�
   ok(bp.res.ok && bp.state.cases.c7 === 4 && bp.res.price === 4 * C.COLS.c7.price, '从商店买 4 个神兵武器箱', bp.res);
   const p1 = await econ(u.token, 'open', { c: 'c7' });
   const pt = p1.res.item && C.ITEM[p1.res.item.k];
-  ok(p1.res.ok && pt && ['cla', 'cov', 'gold'].includes(pt.tier) && pt.col === 'c7', '神兵武器箱不占每天那 5 个普通箱子，开出来的是保密或更高', p1.res);
+  ok(p1.res.ok && pt && ['cla', 'cov', 'gold'].includes(pt.tier) && pt.col === 'c7', '神兵武器箱不占每天那 5 个普通箱子，开出来的是灵犀或更高', p1.res);
   const p2 = await econ(u.token, 'open', { c: 'c7' }), p3 = await econ(u.token, 'open', { c: 'c7' });
   ok(p2.res.ok && p3.res.ok && C.openLeft(p3.state, 'c7') === 0, '神兵武器箱今天开了 3 个，用完了', [p2.res, p3.res]);
   const p4 = await econ(u.token, 'open', { c: 'c7' });
@@ -268,12 +268,12 @@ section('开箱次数：普通武器箱每天开 5 个，神兵武器箱每天�
   ok((await econ(poor.token, 'buyCase', { c: 'c1' })).res.err && Object.entries(stateOf(poor.uid).cases).every(([c, n]) => n === (c === 'c8' ? 1 : 0)) && inkOf(poor.uid) === 100, '墨锭不够买不了箱子，也不扣钱（只有送的那个星座武器箱）');
 }
 
-section('商店：武器箱和终端机按固定价格买，不限量；不能挂到玩家市场，系统也不收购');
+section('商店：武器箱和货郎按固定价格买，不限量；不能挂到玩家市场，系统也不收购');
 {
   T = nextNoon();
   const u = await newUser('shop', { ink: 5000 });
   const P = C.COLS.c4.price;
-  ok(C.CASES.every(c => C.shopPrice(c) === C.COLS[c].price && C.COLS[c].price > 0) && C.shopPrice('term') === C.TERM.price && C.TERM.price === 500, '每个武器箱都有固定价格，终端机 500 墨锭一台');
+  ok(C.CASES.every(c => C.shopPrice(c) === C.COLS[c].price && C.COLS[c].price > 0) && C.shopPrice('term') === C.TERM.price && C.TERM.price === 500, '每个武器箱都有固定价格，货郎 500 墨锭一台');
   const b = await econ(u.token, 'buyCase', { c: 'c4', n: 3 });
   ok(b.res.ok && b.res.price === 3 * P && b.res.n === 3 && b.state.cases.c4 === 3 && inkOf(u.uid) === 5000 - 3 * P, `一次买 3 个江湖武器箱：正好 3 × ${P}`, b.res);
   ok(stateOf(u.uid).hist[0].kind === 'buy' && stateOf(u.uid).hist[0].g === 'c4' && stateOf(u.uid).hist[0].n === 3, '成交记录里记着买了 3 个江湖武器箱', stateOf(u.uid).hist[0]);
@@ -282,7 +282,7 @@ section('商店：武器箱和终端机按固定价格买，不限量；不能�
   ok(b2.res.ok && b2.res.price === P, '过一会儿再买，价格还是一样（不随时间、不随买的人多少变）', b2.res);
   const ink1 = inkOf(u.uid);
   const bt = await econ(u.token, 'buyTerm', { n: 2 });
-  ok(bt.res.ok && bt.res.price === 2 * C.TERM.price && bt.state.term === 2 && inkOf(u.uid) === ink1 - 2 * C.TERM.price, '买 2 台终端机：2 × 500', bt.res);
+  ok(bt.res.ok && bt.res.price === 2 * C.TERM.price && bt.state.term === 2 && inkOf(u.uid) === ink1 - 2 * C.TERM.price, '买 2 台货郎：2 × 500', bt.res);
   for (const n of [2, -5, 0, 11, 1e9, 2.5, 'abc', null, '3; DROP TABLE econ']) {
     const i0 = inkOf(u.uid), c0 = stateOf(u.uid).cases.c6, r = await econ(u.token, 'buyCase', { c: 'c6', n });
     const fine = n === 2;
@@ -294,7 +294,7 @@ section('商店：武器箱和终端机按固定价格买，不限量；不能�
   }
   for (const c of ['c4', 'term', 'c7']) {
     const r = await econ(u.token, 'list', { c, price: 10 });
-    ok(r.res.err && r.res.err.includes('商店') && !stateOf(u.uid).lst.length, `${c === 'term' ? '终端机' : C.COLS[c].name + '武器箱'}不能挂到市场`, r.res);
+    ok(r.res.err && r.res.err.includes('商店') && !stateOf(u.uid).lst.length, `${c === 'term' ? '货郎' : C.COLS[c].name + '武器箱'}不能挂到市场`, r.res);
   }
   for (const c of ['c9', '__proto__', 'constructor', 'toString', null, 7]) ok((await econ(u.token, 'buyCase', { c })).res.err, `买不存在的武器箱 ${JSON.stringify(c)} 被拒绝`);
 
@@ -393,16 +393,16 @@ section('玩家市场：只在玩家之间买卖饰品，标价自己定；卖�
   ok(mi.deals.length === 1 + early && mi.deals[0].price === 2000 && mi.open.length === 0, '一款的成交记录（画走势用）', mi);
 }
 
-section('终端机：一次报一件，最多 5 件，买下就用掉；重发、并发都不会跳过或多买');
+section('货郎：一次报一件，最多 5 件，买下就用掉；重发、并发都不会跳过或多买');
 {
   T = nextNoon();
-  const u = await newUser('terminal', { ink: 5000 });
-  ok((await econ(u.token, 'unseal')).res.err, '没有终端机开不了');
+  const u = await newUser('peddler', { ink: 5000 });
+  ok((await econ(u.token, 'unseal')).res.err, '没有货郎开不了');
   await econ(u.token, 'gift');
   ok((await econ(u.token, 'termNext', { n: 1 })).res.err, '没开封不能换');
   const s1 = await econ(u.token, 'unseal');
   const tm = s1.state.tm, rv = C.refVal(tm.o);
-  ok(s1.res.ok && tm && tm.n === 1 && s1.state.term === 0, '开封：给出第 1 件，终端机少一台', s1.state.tm);
+  ok(s1.res.ok && tm && tm.n === 1 && s1.state.term === 0, '开封：给出第 1 件，货郎少一台', s1.state.tm);
   ok(C.isItem(tm.o.k) && tm.o.price >= Math.round(rv * C.TERM.markup[0]) && tm.o.price <= Math.round(rv * C.TERM.markup[1]), `报价在这件基准价的 ${C.TERM.markup[0]}~${C.TERM.markup[1]} 倍之间`, [tm.o, rv]);
   ok((await econ(u.token, 'unseal')).res.err, '开着一台时不能再开封');
   const wrong = await econ(u.token, 'termNext', { n: 3 });
@@ -414,29 +414,29 @@ section('终端机：一次报一件，最多 5 件，买下就用掉；重发�
   const race = await Promise.all(Array.from({ length: 8 }, () => econ(u.token, 'termNext', { n: 2 })));
   ok(race.filter(r => r.res && r.res.ok).length === 1 && stateOf(u.uid).tm.n === 3, '8 个并发“换下一件”只换了一次', race.map(r => r.res && (r.res.err || 'ok')));
   const o = stateOf(u.uid).tm.o;
-  // 偶尔会报到一件 5,000 墨锭买不起的（斩数版的 ★ 非凡）：让管理员先补上差的墨锭，这一段就不看运气
+  // 偶尔会报到一件 5,000 墨锭买不起的（斩数版的 ★ 绝世）：让管理员先补上差的墨锭，这一段就不看运气
   if (inkOf(u.uid) < o.price) await call('POST', '/api/admin/adjust', { uid: u.uid, ink: o.price - inkOf(u.uid), why: '测试：报价比手里的墨锭高' }, ADMIN);
   const ink0 = inkOf(u.uid);
   const buys = await Promise.all(Array.from({ length: 6 }, () => econ(u.token, 'termBuy', { n: 3 })));
   const won = buys.filter(r => r.res && r.res.ok), s = stateOf(u.uid);
-  ok(won.length === 1 && inkOf(u.uid) === ink0 - o.price && s.inv.filter(x => x.src === 'term').length === 1 && !s.tm, '6 个并发买下：只买到 1 件、只扣 1 次钱，终端机用掉了', [won.length, inkOf(u.uid) - ink0, o.price]);
+  ok(won.length === 1 && inkOf(u.uid) === ink0 - o.price && s.inv.filter(x => x.src === 'term').length === 1 && !s.tm, '6 个并发买下：只买到 1 件、只扣 1 次钱，货郎用掉了', [won.length, inkOf(u.uid) - ink0, o.price]);
   const got = won[0] && won[0].res.item;
   ok(got && got.k === o.k && got.st === o.st && s.hist[0].kind === 'term' && s.hist[0].price === o.price, '买到的就是报的那一件（斩数版也一样），记进成交记录', [got, o]);
   ok(got && profOf(u.uid).skins.includes(got.k), '买到的皮肤能穿');
 
-  const v = await newUser('terminal2', { ink: 0 });
+  const v = await newUser('peddler2', { ink: 0 });
   await econ(v.token, 'gift');
   await econ(v.token, 'unseal');
   const poor = await econ(v.token, 'termBuy', { n: 1 });
-  ok(poor.res.err && stateOf(v.uid).tm && stateOf(v.uid).inv.length === 0, '墨锭不够买不了，终端机还开着', poor.res);
+  ok(poor.res.err && stateOf(v.uid).tm && stateOf(v.uid).inv.length === 0, '墨锭不够买不了，货郎还开着', poor.res);
   for (let i = 1; i < C.TERM.offers; i++) await econ(v.token, 'termNext', { n: i });
   ok(stateOf(v.uid).tm.n === C.TERM.offers, `换到第 ${C.TERM.offers} 件`);
   const last = await econ(v.token, 'termNext', { n: C.TERM.offers });
-  ok(last.res.ok && last.res.gone && !stateOf(v.uid).tm && stateOf(v.uid).term === 0, `第 ${C.TERM.offers} 件也不要：终端机就没了`, last.res);
+  ok(last.res.ok && last.res.gone && !stateOf(v.uid).tm && stateOf(v.uid).term === 0, `第 ${C.TERM.offers} 件也不要：货郎就没了`, last.res);
   ok((await econ(v.token, 'termBuy', { n: C.TERM.offers })).res.err, '没了就买不了');
   for (const x of ['abc', -1, null, 1e9, { n: 1 }]) ok((await econ(v.token, 'termNext', { n: x })).res.err, `乱填编号 ${JSON.stringify(x)}：不出错，什么也不做`);
 
-  const w = await newUser('terminal3', { ink: 5000 });
+  const w = await newUser('peddler3', { ink: 5000 });
   await econ(w.token, 'gift'); await econ(w.token, 'unseal');
   T += C.TERM.days * 86400e3 + 60000;
   const late = await econ(w.token, 'termBuy', { n: 1 });

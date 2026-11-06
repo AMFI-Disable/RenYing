@@ -147,9 +147,9 @@ The armory (武库) is the game's cosmetic collection. Skins and weapon looks ne
 - **Ink (墨锭)** is the only currency. It is earned by playing (daily and weekly tasks, stages, stories). There is no real-money shop.
 - **Weapon cases (武器箱)** hold a set of skins in five quality tiers. Each case can be opened a limited number of times per day or week.
 - **Kill-count editions (斩数版)** record how many knockouts the skin has made.
-- **Trade-up contracts (汰换合同)** turn ten items of one tier into one item of the next tier.
+- **Reforge pacts (熔铸契)** turn ten items of one tier into one item of the next tier.
 - **Player market (玩家市场)** lets players list items for Ink; a fee is removed from each sale so Ink does not pile up.
-- **Terminal (终端机)** shows one offer at a time at a fixed price.
+- **Peddler (货郎)** shows one offer at a time at a fixed price.
 
 Every armory action on a cloud account is checked and recorded by the server. Details: [wiki: Armory](https://github.com/AMFI-Disable/RenYing/wiki/Armory-and-Marketplace).
 

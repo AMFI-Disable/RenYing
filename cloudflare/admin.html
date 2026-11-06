@@ -392,10 +392,10 @@ const itemTag = (k, st) => H`<span class="it"><b>${itemName(k)}</b><i>${heroOf(k
 const cfgName = k => { const x = CAT.cfgInfo.find(r => r[0] === k); return x ? x[5] + '：' + x[6] : k; };
 const unit = (n, u) => H`${fmtN(n)}<small>${u}</small>`;
 const tile = (label, v, sub) => H`<div class="tile"><span>${label}</span><b>${typeof v === 'number' ? fmtN(v) : v}</b>${sub ? H`<i>${sub}</i>` : ''}</div>`;
-const SRC = { case: '开箱', term: '终端机', trade: '汰换', supply: '补给', op: '星章兑换', admin: '管理员发的', restore: '找回的', market: '市场买的' };
+const SRC = { case: '开箱', term: '货郎', trade: '熔铸', supply: '补给', op: '星章兑换', admin: '管理员发的', restore: '找回的', market: '市场买的' };
 const ACT = {
-  open: '开箱', openAll: '批量开箱', store: '商店', buyCase: '买武器箱', buyTerm: '买终端机', list: '挂单', buy: '买下', cancel: '撤单', trade: '汰换', rename: '改名',
-  equip: '穿上', unequip: '脱下', unseal: '开封终端机', termNext: '终端机换一件', termBuy: '终端机买下', supply: '领补给', mission: '领任务奖励',
+  open: '开箱', openAll: '批量开箱', store: '商店', buyCase: '买武器箱', buyTerm: '买货郎', list: '挂单', buy: '买下', cancel: '撤单', trade: '熔铸', rename: '改名',
+  equip: '穿上', unequip: '脱下', unseal: '开封货郎', termNext: '货郎换一件', termBuy: '货郎买下', supply: '领补给', mission: '领任务奖励',
   star: '星章兑换', collect: '集齐奖励', matchEnd: '对局结束', matchStart: '开局', sync: '同步', gift: '新手礼',
   ledger: '本机收入', ink_spike: '大额上报', invariant: '数值异常', strike: '反作弊记过', open_account: '建武库存档',
   admin: '管理员调整', restore: '找回饰品', admin_ban: '封号', pardon: '解封', admin_pw: '重设密码', gift_got: '领到补偿', gift_new: '发补偿', gift_off: '停发补偿', cfg: '改经济数值',
@@ -407,11 +407,11 @@ const ACT = {
 const FLAG_MODE = { off: '关', dev: '只开 Dev 账号', all: '所有人开' };
 
 /* ---------- 流水里的详情写成人话 ---------- */
-function stuff(d) {   // 墨锭、武器箱、终端机、改名标签、送的饰品（调整、补偿共用）
+function stuff(d) {   // 墨锭、武器箱、货郎、改名标签、送的饰品（调整、补偿共用）
   const out = [];
   if (d.ink) out.push('墨锭 ' + sign(d.ink));
   for (const [c, n] of Object.entries(d.cases || {})) out.push(caseName(c) + ' ' + sign(n));
-  if (d.term) out.push('终端机 ' + sign(d.term));
+  if (d.term) out.push('货郎 ' + sign(d.term));
   if (d.tags) out.push('改名标签 ' + sign(d.tags));
   if (Array.isArray(d.skins) && itSkinList(d.skins)) {
     for (const s of d.skins) out.push(itemName(s.k) + (s.st >= 0 ? '（斩数版 ' + s.st + '）' : ''));
@@ -427,7 +427,7 @@ const giftText = g => {
   const it = g.items || g, out = [];
   if (g.ink) out.push('墨锭 ' + fmtN(g.ink));
   for (const [c, n] of Object.entries(it.cases || {})) out.push(caseName(c) + ' ×' + n);
-  if (it.term) out.push('终端机 ×' + it.term);
+  if (it.term) out.push('货郎 ×' + it.term);
   if (it.tags) out.push('改名标签 ×' + it.tags);
   if (Array.isArray(it.skins) && it.skins.length) {
     for (const s of it.skins) out.push(itemName(s.k) + (s.st >= 0 ? '（斩数版 ' + s.st + '）' : ''));
@@ -600,7 +600,7 @@ async function vHome() {
       ${tile('封禁 / 软删', H`${fmtN(s.banned)}<small>封</small> / ${fmtN(s.deleted || 0)}<small>删</small>`, '处罚与回收站')}
       ${tile('经济数值', s.cfgId ? '已调整' : '默认', s.cfgId ? '改过' : '没改过')}
     </div>
-    ${(S.role === 'econ' || S.role === 'all') ? H`<div class="card"><div class="row between wrap"><h2>全服找回去向不明的饰品</h2><button class="btn ghost" data-act="scanlost">扫描全部账号</button></div><p class="hint">只查流水中有获得记录、但库存和挂单中没有且没有去向记录的饰品；已售出、汰换和收走的不会自动找回。扫描不会修改账号。</p>${S.lostScan ? H`<p>已扫描 ${S.lostScan.scanned} 个账号；${S.lostScan.matches.length} 个账号共 ${S.lostScan.matches.reduce((n, x) => n + x.ids.length, 0)} 件可找回。</p>${S.lostScan.matches.length ? H`<div class="chips">${S.lostScan.matches.map(x => H`<label class="chip"><input type="checkbox" name="lostAccount" value="${x.uid}"> ${x.username} · ${x.ids.length} 件</label>`)}</div><div class="row wrap"><button class="btn ghost" data-act="selectlostaccounts">全选账号</button><button class="btn" data-act="restoreunknown">找回所选账号…</button></div>` : ''}` : ''}</div>` : ''}
+    ${(S.role === 'econ' || S.role === 'all') ? H`<div class="card"><div class="row between wrap"><h2>全服找回去向不明的饰品</h2><button class="btn ghost" data-act="scanlost">扫描全部账号</button></div><p class="hint">只查流水中有获得记录、但库存和挂单中没有且没有去向记录的饰品；已售出、熔铸和收走的不会自动找回。扫描不会修改账号。</p>${S.lostScan ? H`<p>已扫描 ${S.lostScan.scanned} 个账号；${S.lostScan.matches.length} 个账号共 ${S.lostScan.matches.reduce((n, x) => n + x.ids.length, 0)} 件可找回。</p>${S.lostScan.matches.length ? H`<div class="chips">${S.lostScan.matches.map(x => H`<label class="chip"><input type="checkbox" name="lostAccount" value="${x.uid}"> ${x.username} · ${x.ids.length} 件</label>`)}</div><div class="row wrap"><button class="btn ghost" data-act="selectlostaccounts">全选账号</button><button class="btn" data-act="restoreunknown">找回所选账号…</button></div>` : ''}` : ''}</div>` : ''}
     ${drawSparkline(s.signups7d)}
     ${drawInkFlowChart(s.inkFlow7d, s.caseCounts7d)}
     <div class="card"><div class="row between"><h2>最近的操作</h2><button class="btn ghost sm" data-act="tab" data-tab="audit">全部记录</button></div>
@@ -721,18 +721,18 @@ async function vPlayer() {
       <span>注册于 ${fmtT(p.createdAt)}</span><span>上次动武库：${e ? ago(e.at) : '还没打开过'}</span></div>
     <div class="tiles sm">
       ${tile('墨锭', e ? e.ink : 0)}${tile('饰品', unit(inv.length, '件'))}${tile('在卖', unit(lst.length, '单'))}${tile('武器箱', unit(nCases, '个'))}
-      ${tile('终端机', unit(+s.term || 0, '台'))}${tile('改名标签', unit(+s.tags || 0, '张'))}${tile('段位分', pr.rating === undefined ? '—' : pr.rating)}${tile('联机', H`${pr.netWins || 0}<small>胜</small> ${pr.netLosses || 0}<small>负</small>`)}
+      ${tile('货郎', unit(+s.term || 0, '台'))}${tile('改名标签', unit(+s.tags || 0, '张'))}${tile('段位分', pr.rating === undefined ? '—' : pr.rating)}${tile('联机', H`${pr.netWins || 0}<small>胜</small> ${pr.netLosses || 0}<small>负</small>`)}
     </div>
     ${e ? '' : H`<p class="hint" style="margin-top:10px">这个号还没打开过武库：第一次调整时会先按它的存档建好武库，再加减。</p>`}
   </div>
   <form data-form="adjust" novalidate>
     <div class="card">
       <h2>加减</h2>
-      <p class="hint">正数是加，负数是扣，空着就是不动。墨锭一次最多 ±1,000,000；武器箱、终端机、改名标签一次最多 ±1,000。扣不成负数。</p>
+      <p class="hint">正数是加，负数是扣，空着就是不动。墨锭一次最多 ±1,000,000；武器箱、货郎、改名标签一次最多 ±1,000。扣不成负数。</p>
       <div class="grid">
         <label class="f">墨锭<span class="cur">现有 ${fmtN(e ? e.ink : 0)}</span><input type="number" name="ink" step="1" placeholder="0"></label>
         ${CAT.caseIds.map(c => H`<label class="f">${caseName(c)}<span class="cur">现有 ${+cases[c] || 0}</span><input type="number" name="case_${c}" step="1" placeholder="0"></label>`)}
-        <label class="f">终端机<span class="cur">现有 ${+s.term || 0}</span><input type="number" name="term" step="1" placeholder="0"></label>
+        <label class="f">货郎<span class="cur">现有 ${+s.term || 0}</span><input type="number" name="term" step="1" placeholder="0"></label>
         <label class="f">改名标签<span class="cur">现有 ${+s.tags || 0}</span><input type="number" name="tags" step="1" placeholder="0"></label>
       </div>
       <h3>发饰品</h3>
@@ -788,8 +788,8 @@ function devicesCard(p) {
   </div>`;
 }
 
-// 找回饰品：按流水查这个号拿到过、现在没有的饰品。正常没的（汰换、一键卖掉、市场卖掉）只列出来，去向不明和管理员收走的可以勾上找回
-const LOST_TEXT = { trade: '汰换掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了', odd: '在这一步里不见了', unknown: '去向不明（流水里没记）', restored: '已经找回过了' };
+// 找回饰品：按流水查这个号拿到过、现在没有的饰品。正常没的（熔铸、一键卖掉、市场卖掉）只列出来，去向不明和管理员收走的可以勾上找回
+const LOST_TEXT = { trade: '熔铸掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了', odd: '在这一步里不见了', unknown: '去向不明（流水里没记）', restored: '已经找回过了' };
 function lostCard(p) {
   const L = S.lost && S.lost.uid === p.uid ? S.lost.items : null;
   if (!L) return H`<div class="card"><div class="row between wrap"><h2>找回饰品</h2><button type="button" class="btn ghost" data-act="lost">查一查丢了什么</button></div>
@@ -883,7 +883,7 @@ async function vGifts() {
       <label class="f hidden" data-one>昵称或账号编号<input name="user" autocomplete="off" spellcheck="false"></label>
       <label class="f">墨锭<input type="number" name="ink" min="0" max="1000000" step="1" placeholder="0"></label>
       ${CAT.caseIds.map(c => H`<label class="f">${caseName(c)}<input type="number" name="gc_${c}" min="0" max="100" step="1" placeholder="0"></label>`)}
-      <label class="f">终端机<input type="number" name="term" min="0" max="100" step="1" placeholder="0"></label>
+      <label class="f">货郎<input type="number" name="term" min="0" max="100" step="1" placeholder="0"></label>
       <label class="f">改名标签<input type="number" name="tags" min="0" max="100" step="1" placeholder="0"></label>
       <label class="f">几天内能领<input type="number" name="days" min="1" max="90" step="1" value="14"></label>
     </div>
@@ -927,7 +927,7 @@ async function vCodes() {
       <label class="f">兑换码（不填就随机生成）<input name="code" maxlength="20" placeholder="比如 SPRING2026" autocomplete="off" spellcheck="false"></label>
       <label class="f">墨锭<input type="number" name="ink" min="0" max="1000000" step="1" placeholder="0"></label>
       ${CAT.caseIds.map(c => H`<label class="f">${caseName(c)}<input type="number" name="cc_${c}" min="0" max="100" step="1" placeholder="0"></label>`)}
-      <label class="f">终端机<input type="number" name="term" min="0" max="100" step="1" placeholder="0"></label>
+      <label class="f">货郎<input type="number" name="term" min="0" max="100" step="1" placeholder="0"></label>
       <label class="f">改名标签<input type="number" name="tags" min="0" max="100" step="1" placeholder="0"></label>
       <label class="f">最多几个号能领<input type="number" name="uses" min="1" max="100000" step="1" value="100"></label>
       <label class="f">几天内能领<input type="number" name="days" min="1" max="90" step="1" value="14"></label>
@@ -1731,7 +1731,7 @@ const FORMS = {
     const ink0 = e ? e.ink : 0, lines = [];
     if (body.ink) lines.push('墨锭 ' + sign(body.ink) + '（' + fmtN(ink0) + ' → ' + fmtN(ink0 + body.ink) + '）');
     for (const [c, n] of Object.entries(body.cases)) lines.push(caseName(c) + ' ' + sign(n) + '（' + (+cases[c] || 0) + ' → ' + ((+cases[c] || 0) + n) + '）');
-    if (body.term) lines.push('终端机 ' + sign(body.term) + '（' + (+s.term || 0) + ' → ' + ((+s.term || 0) + body.term) + '）');
+    if (body.term) lines.push('货郎 ' + sign(body.term) + '（' + (+s.term || 0) + ' → ' + ((+s.term || 0) + body.term) + '）');
     if (body.tags) lines.push('改名标签 ' + sign(body.tags) + '（' + (+s.tags || 0) + ' → ' + ((+s.tags || 0) + body.tags) + '）');
     for (const g of body.give) lines.push('发：' + itemName(g.k) + '（' + heroOf(g.k) + '）' + (g.st >= 0 ? ' 斩数版，斩数 ' + g.st : ''));
     for (const i of body.take) { const it = inv.find(x => x.i === i); lines.push('收走：#' + i + ' ' + (it ? itemName(it.k) + '（' + heroOf(it.k) + '）' : '')); }

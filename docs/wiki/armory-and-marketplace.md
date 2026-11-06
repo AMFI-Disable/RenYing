@@ -25,9 +25,9 @@ Ink is the only currency. You earn it from:
 | :--- | :--- | :--- |
 | Inventory | 库存 | Everything you own. Equip, inspect, list on the market. |
 | Cases | 武器箱 | Buy and open weapon cases. |
-| Terminal | 终端机 | One fixed-price offer at a time. |
+| Peddler | 货郎 | One fixed-price offer at a time. |
 | Player Market | 玩家市场 | Buy from and sell to other players. |
-| Trade-Up Contract | 汰换合同 | Turn ten items into one of the next tier. |
+| Reforge Pact | 熔铸契 | Turn ten items into one of the next tier. |
 | Jianghu Ops | 江湖行动 | Seasonal missions that earn stars (星章) for rewards, plus a weekly supply drop. |
 
 ## Quality Tiers / 品质
@@ -36,11 +36,11 @@ Five tiers, from most common to rarest. Odds are for a regular weapon case.
 
 | Tier | 品质 | Colour | Regular case odds |
 | :--- | :--- | :--- | :--- |
-| 1 | 军规级 | Blue | 53% |
-| 2 | 受限 | Purple | 27% |
-| 3 | 保密 | Pink | 13% |
-| 4 | 隐秘 | Red | 5.2% |
-| 5 | ★ 非凡 | Gold | 1.8% |
+| 1 | 精铁 | Blue | 53% |
+| 2 | 碧玉 | Purple | 27% |
+| 3 | 灵犀 | Pink | 13% |
+| 4 | 赤霄 | Red | 5.2% |
+| 5 | ★ 绝世 | Gold | 1.8% |
 
 About **20%** of opened items are **斩数版 (kill-count editions)**: they count how many knockouts you score while wearing them and show the count on the inspect and results screens.
 
@@ -60,7 +60,7 @@ Daily limits reset at midnight Beijing time. Regular cases also drop from matche
 
 每天的次数按北京时间零点刷新。普通武器箱偶尔也会在对局后掉落（每周有上限），江湖行动的每周补给打满 5 局就能领。
 
-## Trade-Up Contracts / 汰换合同
+## Reforge Pacts / 熔铸契
 
 Put in exactly **10 items of the same tier** (tiers 1 to 4). You get **one item of the next tier**. The possible results come from the cases your inputs belong to, and the contract shows the chance of each before you sign. Ten kill-count editions give a kill-count edition.
 
@@ -76,11 +76,11 @@ Put in exactly **10 items of the same tier** (tiers 1 to 4). You get **one item 
 
 自己定价（1 到 999999 墨锭），挂 14 天没卖掉会自动退回库存；每笔成交扣 **15%** 手续费；挂单数量不设上限。
 
-## Terminal / 终端机
+## Peddler / 货郎
 
-A terminal costs 500 Ink in the shop. Opening it shows **one item at a time** at a fixed price (1.2 to 1.5 times that item's base value). Buy it, or skip to the next; you see at most 5 items. An opened terminal expires after 3 days.
+A peddler costs 500 Ink in the shop. Opening it shows **one item at a time** at a fixed price (1.2 to 1.5 times that item's base value). Buy it, or skip to the next; you see at most 5 items. An opened peddler expires after 3 days.
 
-终端机在商店卖 500 墨锭。打开后一次给你看一件、报一个固定价，不要就看下一件，最多 5 件；开封 3 天不处理就作废。
+货郎在商店卖 500 墨锭。打开后一次给你看一件、报一个固定价，不要就看下一件，最多 5 件；开封 3 天不处理就作废。
 
 ## Safety / 安全
 

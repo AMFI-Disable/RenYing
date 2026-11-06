@@ -8,7 +8,7 @@
  *                     可以只写一个口令，也可以写成「名字:口令」、几个人用逗号隔开（比如 even:口令1,lnt:口令2），
  *                     这样流水里记得下是谁做的。口令用 openssl rand -hex 24 这种随机生成的长串，少于 16 位的不认
  *
- * 管理后台（/api/admin/*，要管理口令）：查账号和流水、加减墨锭、发或收武器箱 / 终端机 / 改名标签 / 饰品、封号解封、
+ * 管理后台（/api/admin/*，要管理口令）：查账号和流水、加减墨锭、发或收武器箱 / 货郎 / 改名标签 / 饰品、封号解封、
  *   全服补偿（玩家下次动武库时自动领）、在线改经济数值（价格、爆率、每天能开几个、手续费、掉落、每天认多少本机收入）。
  *   每一笔都要写原因，记进 econ_log（全服的操作记在 uid = '*' 名下）。没有“dev 账号”这种特殊昵称：开发者也是普通账号
  *
@@ -23,7 +23,7 @@
  *   列传页按侠客汇总成人数和比例。只存侠客、第几节、选了什么，不存别的。
  *
  * 防作弊（和钱有关的都在服务器上算，客户端只负责显示）：
- *   武库：开箱、终端机、商店、汰换、掉落、补给、星章都在这里用服务器的随机数和时钟算。
+ *   武库：开箱、货郎、商店、熔铸、掉落、补给、星章都在这里用服务器的随机数和时钟算。
  *         存档带版本号，同时到的两个请求只有一个能改成（另一个重读再算，防双花）；每个请求带一次性编号，网络重试
  *         不会重复执行；对局奖励要开局领票、打够时间、每天有上限。
  *   玩家市场：只有玩家之间买卖饰品（mkt 表），标价玩家自己定。买、撤同一单时，先把那一单从“在卖”改掉，
@@ -152,7 +152,7 @@ const RDM_MAX = 10, RDM_IP_MAX = 30;   // 一小时里输错这么多次兑换�
 // 游戏里写死的几个码（src/game.js 的 redeemCode 先认它们）：服务器上不建同名的，不然玩家永远领不到
 const CODE_LOCAL = ['LOCK', 'RELOCK', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT', 'ZODIAC2026STAR'];
 // 以前不进库存的“绑定”皮肤（关卡奖励、老账号带过来的）：这一天之前建的号，第一次动武库时一次性换成库存里的饰品，
-// 之后能卖能汰换。之后建的号不换：网页报上来的皮肤服务器核对不了，换成能卖的饰品就等于能凭空变出墨锭
+// 之后能卖能熔铸。之后建的号不换：网页报上来的皮肤服务器核对不了，换成能卖的饰品就等于能凭空变出墨锭
 const LEGACY_CUTOFF = Date.UTC(2026, 9, 31);
 // 写在游戏里的兑换码：源码公开，等于人人都能领，已全部作废（名字留在 CODE_LOCAL 里，后台也建不了同名的）
 const CODE_BUILTIN = {};
@@ -393,7 +393,7 @@ function randHex(nBytes) {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 服务器的随机数（开箱、终端机、掉落、斩数都用它，客户端碰不到）
+// 服务器的随机数（开箱、货郎、掉落、斩数都用它，客户端碰不到）
 function rnd() {
   const a = new Uint32Array(2);
   crypto.getRandomValues(a);
@@ -667,7 +667,7 @@ async function flagsFor(env, user, now) {
   return out;
 }
 
-/* ---------- 全服补偿：开发组发的墨锭、武器箱、终端机、改名标签，玩家下次动武库时自动领 ---------- */
+/* ---------- 全服补偿：开发组发的墨锭、武器箱、货郎、改名标签，玩家下次动武库时自动领 ---------- */
 // 发给所有人的（uid = '*'）只给 born 之前注册的号，免得开小号来领；单发给某个号的不管注册时间。每个号每份只领一次
 async function giftsFor(env, user, now) {
   return (await env.DB.prepare("SELECT id, ink, items_json, note FROM gift WHERE (uid = ? OR uid = '*') AND off = 0 AND at <= ? AND until > ? AND born > ? AND NOT EXISTS (SELECT 1 FROM gift_got x WHERE x.gid = gift.id AND x.uid = ?) ORDER BY at LIMIT 10")
@@ -752,7 +752,7 @@ async function handleEcon(env, auth, body, now, ip) {
     if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
     const k = codeKey(args.code);
     if (k && CODE_BUILTIN[k]) {
-      // 每个号只领一次：领过以后卖掉、汰换掉的不再补（不然卖了再领就是凭空变墨锭）
+      // 每个号只领一次：领过以后卖掉、熔铸掉的不再补（不然卖了再领就是凭空变墨锭）
       if (await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first()) return error('这个兑换码你已经领过了');
       code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...CODE_BUILTIN[k]() };
     }
@@ -846,7 +846,7 @@ async function handleEcon(env, auth, body, now, ip) {
       if (state0.inv.length < C.INV_MAX && C.isItem(k)) {
         C.addItem(state0, C.mkItem(state0, k, src, rnd, { st }), E);
       }
-    }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能汰换
+    }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能熔铸
     if (code && code.items) {   // 兑换码送的饰品：库存里没有这一款的才放一件进去（普通版）
       let n = 0;
       for (const k of code.items) if (C.isItem(k) && !state0.inv.some(x => x.k === k) && state0.inv.length < C.INV_MAX) { C.addItem(state0, C.mkItem(state0, k, 'code', rnd, { st: -1 }), E); n++; }
@@ -1185,15 +1185,15 @@ const intIn = (v, lo, hi) => {   // 是整数、在范围里就给这个数，�
   const x = typeof v === 'number' ? v : typeof v === 'string' ? +v.trim() : NaN;
   return Number.isInteger(x) && x >= lo && x <= hi ? x : null;
 };
-const ADJ_INK = 1000000, ADJ_N = 1000;   // 一次最多加减这么多墨锭、这么多个箱子 / 终端机 / 标签
+const ADJ_INK = 1000000, ADJ_N = 1000;   // 一次最多加减这么多墨锭、这么多个箱子 / 货郎 / 标签
 const ADMIN_GIVE_MAX = Object.keys(C.ITEM).length;
 
-// 改一个玩家：墨锭、武器箱、终端机、改名标签加减，发饰品、收饰品，一次请求里的几样要么一起改成、要么都不改。
+// 改一个玩家：墨锭、武器箱、货郎、改名标签加减，发饰品、收饰品，一次请求里的几样要么一起改成、要么都不改。
 // 和玩家自己的操作走同一套带版本号的写入：玩家正好在开箱也不会互相覆盖。收走的皮肤记进 gone，旧存档加不回来
 async function adminAdjust(env, u, body, who, why, now) {
   const dInk = intIn(body.ink, -ADJ_INK, ADJ_INK), dTerm = intIn(body.term, -ADJ_N, ADJ_N), dTags = intIn(body.tags, -ADJ_N, ADJ_N);
   if (dInk === null) return error(`墨锭一次最多加减 ${ADJ_INK}，要填整数`);
-  if (dTerm === null || dTags === null) return error(`终端机、改名标签一次最多加减 ${ADJ_N} 个，要填整数`);
+  if (dTerm === null || dTags === null) return error(`货郎、改名标签一次最多加减 ${ADJ_N} 个，要填整数`);
   const cases = {};
   for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
     const n = intIn(v, -ADJ_N, ADJ_N);
@@ -1224,7 +1224,7 @@ async function adminAdjust(env, u, body, who, why, now) {
       if (s.cases[c] + n < 0) return error(`这个号只有 ${s.cases[c]} 个${C.COLS[c].name}武器箱，扣不了 ${-n} 个`);
       s.cases[c] += n;
     }
-    if (s.term + dTerm < 0) return error(`这个号只有 ${s.term} 台终端机`);
+    if (s.term + dTerm < 0) return error(`这个号只有 ${s.term} 台货郎`);
     if (s.tags + dTags < 0) return error(`这个号只有 ${s.tags} 张改名标签`);
     s.term += dTerm; s.tags += dTags;
     const given = gv.map(g => C.addItem(s, C.mkItem(s, g.k, 'admin', rnd, { st: g.st }), E)), taken = [];
@@ -1257,9 +1257,9 @@ async function adminAdjust(env, u, body, who, why, now) {
 }
 
 // ---------- 找回饰品：按流水查“拿到过、现在库存和挂单里都没有”的饰品，管理员确认后放回去 ----------
-// 正常的去向（汰换掉、一键卖掉重复的、在玩家市场卖掉）只列出来，不能找回（找回就是凭空多一件）；
+// 正常的去向（熔铸掉、一键卖掉重复的、在玩家市场卖掉）只列出来，不能找回（找回就是凭空多一件）；
 // 去向不明的（某一步操作里突然没了、旧流水没记去向）和管理员收走的可以找回。找回过的会标出来，不能再找回第二次
-const LOST_WHY = { trade: '汰换掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
+const LOST_WHY = { trade: '熔铸掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
 const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(m[1]) ? { k: m[1], i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined } : null; };   // 老流水只记了 st，没有斩数
 async function lostItems(env, uid, all = false) {
   const row = await env.DB.prepare('SELECT state_json FROM econ WHERE uid = ?').bind(uid).first();
@@ -1284,10 +1284,10 @@ async function lostItems(env, uid, all = false) {
     if (r.act === 'restore') { for (const x of Array.isArray(d.items) ? d.items : []) { const o = seen.get(+x.from); if (o) o.restored = { at: r.at, to: x.to }; } for (const t of d.ad || []) got(t, r); continue; }
     if (r.act === 'admin') { for (const t of d.give || []) got(t, r); for (const t of d.take || []) gone(t, r, 'admin'); continue; }
     if (!r.ok && !d.rm && !d.ad) continue;
-    if (typeof d.r === 'string') got(d.r, r);   // 开箱、汰换、终端机、买到的那一件
+    if (typeof d.r === 'string') got(d.r, r);   // 开箱、熔铸、货郎、买到的那一件
     for (const t of Array.isArray(d.ad) ? d.ad : []) got(t, r);
     for (const t of Array.isArray(d.rm) ? d.rm : []) gone(t, r);
-    if (r.act === 'trade' && r.ok && !d.rm && d.a && Array.isArray(d.a.ids)) for (const i of d.a.ids) gone(+i, r);   // 旧流水没记进出：汰换按参数里的编号算
+    if (r.act === 'trade' && r.ok && !d.rm && d.a && Array.isArray(d.a.ids)) for (const i of d.a.ids) gone(+i, r);   // 旧流水没记进出：熔铸按参数里的编号算
   }
   const out = [];
   for (const o of seen.values()) {
@@ -1383,10 +1383,10 @@ async function handleAdmin(env, request, path, now, ip) {
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
     await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
   };
-  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、终端机、改名标签，还有饰品和给玩家看的说明
+  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、货郎、改名标签，还有饰品和给玩家看的说明
     const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
     if (ink === null) return { err: `墨锭要填 0 到 ${ADJ_INK} 的整数` };
-    if (term === null || tags === null) return { err: '终端机、改名标签每份最多 100 个' };
+    if (term === null || tags === null) return { err: '货郎、改名标签每份最多 100 个' };
     const cases = {};
     for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
       const n = intIn(v, 0, 100);
@@ -3340,7 +3340,7 @@ async function route(request, env, ctx, rid = reqId()) {
         return await handleProfilePost(env, auth, body, now);
       }
 
-      // 6. 武库：开箱、买卖、汰换……
+      // 6. 武库：开箱、买卖、熔铸……
       if (path === '/api/econ' && request.method === 'POST') {
         const auth = await authenticate(env, request);
         if (!auth) return error('未登录或登录已过期，请重新登录', 401);

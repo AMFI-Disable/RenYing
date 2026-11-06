@@ -26,10 +26,10 @@ async function handleAdmin(env, request, path, now, ip) {
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
     await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
   };
-  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、终端机、改名标签，还有饰品和给玩家看的说明
+  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、货郎、改名标签，还有饰品和给玩家看的说明
     const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
     if (ink === null) return { err: `墨锭要填 0 到 ${ADJ_INK} 的整数` };
-    if (term === null || tags === null) return { err: '终端机、改名标签每份最多 100 个' };
+    if (term === null || tags === null) return { err: '货郎、改名标签每份最多 100 个' };
     const cases = {};
     for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
       const n = intIn(v, 0, 100);

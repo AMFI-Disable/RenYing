@@ -174,7 +174,7 @@ async function flagsFor(env, user, now) {
   return out;
 }
 
-/* ---------- 全服补偿：开发组发的墨锭、武器箱、终端机、改名标签，玩家下次动武库时自动领 ---------- */
+/* ---------- 全服补偿：开发组发的墨锭、武器箱、货郎、改名标签，玩家下次动武库时自动领 ---------- */
 // 发给所有人的（uid = '*'）只给 born 之前注册的号，免得开小号来领；单发给某个号的不管注册时间。每个号每份只领一次
 async function giftsFor(env, user, now) {
   return (await env.DB.prepare("SELECT id, ink, items_json, note FROM gift WHERE (uid = ? OR uid = '*') AND off = 0 AND at <= ? AND until > ? AND born > ? AND NOT EXISTS (SELECT 1 FROM gift_got x WHERE x.gid = gift.id AND x.uid = ?) ORDER BY at LIMIT 10")
@@ -259,7 +259,7 @@ async function handleEcon(env, auth, body, now, ip) {
     if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
     const k = codeKey(args.code);
     if (k && CODE_BUILTIN[k]) {
-      // 每个号只领一次：领过以后卖掉、汰换掉的不再补（不然卖了再领就是凭空变墨锭）
+      // 每个号只领一次：领过以后卖掉、熔铸掉的不再补（不然卖了再领就是凭空变墨锭）
       if (await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first()) return error('这个兑换码你已经领过了');
       code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...CODE_BUILTIN[k]() };
     }
@@ -353,7 +353,7 @@ async function handleEcon(env, auth, body, now, ip) {
       if (state0.inv.length < C.INV_MAX && C.isItem(k)) {
         C.addItem(state0, C.mkItem(state0, k, src, rnd, { st }), E);
       }
-    }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能汰换
+    }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能熔铸
     if (code && code.items) {   // 兑换码送的饰品：库存里没有这一款的才放一件进去（普通版）
       let n = 0;
       for (const k of code.items) if (C.isItem(k) && !state0.inv.some(x => x.k === k) && state0.inv.length < C.INV_MAX) { C.addItem(state0, C.mkItem(state0, k, 'code', rnd, { st: -1 }), E); n++; }

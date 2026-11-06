@@ -2,10 +2,10 @@
    刃影武库 · 规则核心
    ---------------------------------------------------------------------
    浏览器（src/armory.js）和云端（cloudflare/worker.js）共用这一份规则：
-   收藏品和武器箱、品质与概率、开箱次数、斩数、终端机、商店（武器箱和终端机按固定价格卖）、
-   玩家市场（只有玩家之间买卖饰品，价格由玩家自己定）、汰换合同、对局掉落、每周补给、江湖行动。
+   收藏品和武器箱、品质与概率、开箱次数、斩数、货郎、商店（武器箱和货郎按固定价格卖）、
+   玩家市场（只有玩家之间买卖饰品，价格由玩家自己定）、熔铸契、对局掉落、每周补给、江湖行动。
    这里不碰页面，只改传进来的存档对象 s，所以同一份代码在服务器上跑出来的结果和本机一模一样。
-   连上新版云端时，开箱、买卖、汰换都由服务器算（随机数也在服务器上取），本机只负责显示。
+   连上新版云端时，开箱、买卖、熔铸都由服务器算（随机数也在服务器上取），本机只负责显示。
    玩家市场的挂单放在服务器的 mkt 表里：挂单、购买、撤单时服务器把那一单交给这里（env.mkt），
    这里定下来要怎么改（env.mkt.out），服务器再和存档一起原子地写进去。
    所有数据表都冻结了，控制台改不动概率和价格。
@@ -13,7 +13,7 @@
 (function (G) {
   'use strict';
   const C = {};
-  C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和终端机改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加终端机）
+  C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加货郎）
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
   C.INV_MAX = 1000000000, C.HIST_MAX = 40;
@@ -46,22 +46,22 @@
   // 品质：从低到高五档，每档有自己的颜色和名字
   C.TIERS = ['mil', 'res', 'cla', 'cov', 'gold'];
   C.TIER = {
-    mil: { n: '军规级', c: '75,105,255' },
-    res: { n: '受限', c: '136,71,255' },
-    cla: { n: '保密', c: '211,44,230' },
-    cov: { n: '隐秘', c: '235,75,75' },
-    gold: { n: '★ 非凡', c: '228,174,57' },
+    mil: { n: '精铁', c: '75,105,255' },
+    res: { n: '碧玉', c: '136,71,255' },
+    cla: { n: '灵犀', c: '211,44,230' },
+    cov: { n: '赤霄', c: '235,75,75' },
+    gold: { n: '★ 绝世', c: '228,174,57' },
   };
   C.ODDS = { mil: 0.53, res: 0.27, cla: 0.13, cov: 0.052, gold: 0.018 };   // 普通武器箱；神兵武器箱的写在它自己那一项里
   C.ST_P = 0.2;                                // 开出斩数版（记击倒数）的概率
-  C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 每档的基准价（墨锭）：只用来定终端机的报价
+  C.BASE = { mil: 30, res: 90, cla: 300, cov: 900, gold: 3200 };   // 每档的基准价（墨锭）：只用来定货郎的报价
   C.ST_UPGRADE_COST = { mil: 100, res: 250, cla: 600, cov: 1500, gold: 4000 };   // 把普通饰品升级成斩数版的固定花费（墨锭）
-  // 终端机：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
-  // 5 件都不要终端机也没了；开封 3 天不处理就作废。终端机在商店按固定价格 price 卖（不能转卖），
+  // 货郎：开封后一次给你看一件、报一个价，买下就用掉；不要就换下一件，最多看 5 件，
+  // 5 件都不要货郎也没了；开封 3 天不处理就作废。货郎在商店按固定价格 price 卖（不能转卖），
   // 报价是这一件基准价的 1.2~1.5 倍（按品质、热门程度、斩数定，不跟玩家市场走）
   C.TERM = { offers: 5, days: 3, odds: { mil: 0.45, res: 0.3, cla: 0.15, cov: 0.08, gold: 0.02 }, markup: [1.2, 1.5], price: 500 };
 
-  // 新涂装：只换配色的军规级饰品 [皮肤 key, 侠客, 名字, 配色]
+  // 新涂装：只换配色的精铁饰品 [皮肤 key, 侠客, 名字, 配色]
   C.PAINTS = [
     ['qf_p1', 'qingfeng', '竹影', { body: '#e4efe2', shade: '#87a58a', scarf: '#3d8f5a', slash: '120,210,150', blade: '#effff2' }],
     ['ts_p1', 'tieshan', '锈蚀', { body: '#7a5544', shade: '#4a3024', scarf: '#c46a2a', slash: '230,140,80', blade: '#e8d6c6' }],
@@ -88,7 +88,7 @@
     ['yx_p2', 'yuxiao', '靛青', { body: '#dfe6f4', shade: '#8c9ac0', scarf: '#3a4fb0', slash: '120,140,240', blade: '#e8ecff' }],
     ['zx_p2', 'zuixian', '青瓷', { body: '#cfe0d4', shade: '#8aa894', scarf: '#4a8a78', slash: '140,220,190', blade: '#eef8f2' }],
   ];
-  // 武库专属的整套皮肤：五款 ★ 非凡（青锋行那款是游戏里原有的，放在江湖武器箱），后面七款只在神兵武器箱里出
+  // 武库专属的整套皮肤：五款 ★ 绝世（青锋行那款是游戏里原有的，放在江湖武器箱），后面七款只在神兵武器箱里出
   C.FULL = {
     gc_wolf: { char: 'gouchen', name: '霜狼',
       look: { body: '#dfe9f2', shade: '#7d93ab', scarf: '#7fd4ff', slash: '140,210,255', blade: '#f0f8ff', outline: '#0a1422', outlineA: 1 },
@@ -152,7 +152,7 @@
       fx: { th: 'water', c: '255,125,95', c2: '255,232,205', part: 'koi' },
       scene: { sky: ['#0a1018', '#14283a', '#2a5470', '#12283a'], orb: 'moon', orbC: '255,236,220', mist: '170,210,235', mtn: ['#16304a', '#0e2032'], bam: ['#0a1624', '#060e18'], wx: 'petal', wxC: '255,170,150', hit: 'ripple', hitC: '255,150,120', stars: 0.3 } },
   };
-  // 星座武器箱：十二星座，每个侠客三款，保密「星辉」、隐秘「星焰」、非凡「星冕」各一款，一共 36 款（皮肤本身在后面按这张表生成）
+  // 星座武器箱：十二星座，每个侠客三款，灵犀「星辉」、赤霄「星焰」、绝世「星冕」各一款，一共 36 款（皮肤本身在后面按这张表生成）
   // [代号, 名字, 主色, 浅色, 深色, 夜色, 点缀色]
   C.ZODIAC = [
     ['ari', '白羊', '#ff5a3c', '#ffe8e0', '#5c1810', '#1c0604', '#ffc24a'],
@@ -169,12 +169,12 @@
     ['pis', '双鱼', '#5ae0d0', '#e8fbf8', '#144a50', '#051618', '#c8a0ff'],
   ];
   C.ZOD_TIERS = [['cla', '星辉'], ['cov', '星焰'], ['gold', '星冕']];
-  // 每个侠客分到的三个星座 [保密, 隐秘, 非凡]：每一档里十二星座正好各一款
+  // 每个侠客分到的三个星座 [灵犀, 赤霄, 绝世]：每一档里十二星座正好各一款
   C.ZOD_OF = { qf: ['pis', 'sag', 'leo'], fy: ['tau', 'aqu', 'sco'], ts: ['cap', 'leo', 'tau'], ls: ['gem', 'sco', 'sag'], ly: ['vir', 'pis', 'lib'], lm: ['leo', 'cap', 'ari'],
     my: ['aqu', 'lib', 'vir'], yh: ['lib', 'vir', 'can'], yl: ['sag', 'ari', 'gem'], yx: ['can', 'gem', 'pis'], zx: ['sco', 'can', 'aqu'], gc: ['ari', 'tau', 'cap'] };
   const zodKeys = i => Object.entries(C.ZOD_OF).map(([p, z]) => `${p}_z${z[i]}`);
   // 八个武器箱，各是一套收藏品：游戏里原有的 35 款皮肤和武库的 72 款全在里面，每款只在一个箱子里。
-  // 前六个是普通武器箱（爆率 C.ODDS），神兵、星座武器箱只出保密、隐秘、非凡三档，价钱也高，各自每周限开几个。price 是商店的固定价格。
+  // 前六个是普通武器箱（爆率 C.ODDS），神兵、星座武器箱只出灵犀、赤霄、绝世三档，价钱也高，各自每周限开几个。price 是商店的固定价格。
   // 这两种的 ok 是爆率在在线数值里的键前缀，lim 是每周能开几个的键，cnt 是存档里记这周开了几个的地方
   C.COLS = {
     c1: { name: '初刃', price: 280, emblem: '刃', col: '200,70,60',
@@ -189,7 +189,7 @@
       mil: ['ly_p1', 'yl_p2', 'my_p2', 'gc_p2'], res: ['lm_violet', 'my_cinnabar'], cla: ['lm_asura', 'lq_sparrow'], cov: ['ly_fox', 'ls_dragon'], gold: ['lm_jiuxiao'] },
     c6: { name: '寒月', price: 240, emblem: '月', col: '110,200,215',
       mil: ['yl_p1', 'ls_p2', 'yx_p2', 'zx_p2'], res: ['fy_jade', 'gc_crimson'], cla: ['lm_sun'], cov: ['gc_underworld', 'yl_blizzard'], gold: ['yh_guanghan'] },
-    c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, daily: true, ok: 'prem.', lim: 'premDay', cnt: 'pd', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 隐秘 + 非凡一共 30%
+    c7: { name: '神兵', price: 1000, emblem: '神', col: '240,190,80', prem: true, daily: true, ok: 'prem.', lim: 'premDay', cnt: 'pd', odds: { mil: 0, res: 0, cla: 0.7, cov: 0.22, gold: 0.08 },   // 赤霄 + 绝世一共 30%
       mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie', 'lq_star', 'li_star', 'cx_star'] },
     c8: { name: '星座', price: 1500, emblem: '星', col: '170,150,255', prem: true, ok: 'zod.', lim: 'zodWeek', cnt: 'zw', odds: { mil: 0, res: 0, cla: 0.65, cov: 0.28, gold: 0.07 },
       mil: [], res: [], cla: zodKeys(0), cov: zodKeys(1), gold: zodKeys(2) },
@@ -206,7 +206,7 @@
   C.UP = { mil: 'res', res: 'cla', cla: 'cov', cov: 'gold' };
   C.NEED = { mil: 10, res: 10, cla: 10, cov: 10 };
 
-  // 商店：改名标签（墨锭，每周限量）；武器箱和终端机按固定价格不限量（见 A.buyCase / A.buyTerm）
+  // 商店：改名标签（墨锭，每周限量）；武器箱和货郎按固定价格不限量（见 A.buyCase / A.buyTerm）
   C.STORE = [{ id: 'tag', name: '改名标签', give: ['tags', 1], cost: 400, lim: 2 }];
   // 江湖行动：每周四个任务（四组里各抽一个），完成得星章。
   // 市场的两个（sell / buy）不再抽到：玩家市场人少的时候不一定做得完；已经抽到的这周照样能做（g: 9 不在 0~3 里）
@@ -224,7 +224,7 @@
     tag3: { g: 2, n: 1, star: 2, t: '赢下 {n} 局 3v3 车轮战' },
     duo: { g: 2, n: 1, star: 1, t: '打 {n} 局 2v2' },
     open: { g: 3, n: 2, star: 1, t: '开启 {n} 个武器箱' },
-    trade: { g: 3, n: 1, star: 1, t: '签 {n} 份汰换合同' },
+    trade: { g: 3, n: 1, star: 1, t: '签 {n} 份熔铸契' },
     sell: { g: 9, n: 1, star: 1, t: '在玩家市场卖出 {n} 件饰品' },
     buy: { g: 9, n: 1, star: 1, t: '在玩家市场买入 {n} 件饰品' },
   };
@@ -232,10 +232,10 @@
     { id: 'ink', cost: 1, name: '300 墨锭' },
     { id: 'case', cost: 2, name: '随机武器箱' },
     { id: 'tag', cost: 2, name: '改名标签' },
-    { id: 'term', cost: 3, name: '终端机' },
-    { id: 'res', cost: 5, name: '随机受限饰品' },
-    { id: 'cla', cost: 9, name: '随机保密饰品' },
-    { id: 'cov', cost: 15, name: '自选隐秘饰品' },
+    { id: 'term', cost: 3, name: '货郎' },
+    { id: 'res', cost: 5, name: '随机碧玉饰品' },
+    { id: 'cla', cost: 9, name: '随机灵犀饰品' },
+    { id: 'cov', cost: 15, name: '自选赤霄饰品' },
   ];
 
   /* ---------- 在线可调的经济数值 ---------- */
@@ -244,7 +244,7 @@
   // 每一行：[键, 默认值, 最小, 最大, 是不是整数, 分组, 说明]
   C.CFG_INFO = [
     ...Object.keys(C.COLS).map(c => ['price.' + c, C.COLS[c].price, 1, 100000, 1, '商店价格', C.COLS[c].name + '武器箱']),
-    ['price.term', C.TERM.price, 1, 100000, 1, '商店价格', '终端机'],
+    ['price.term', C.TERM.price, 1, 100000, 1, '商店价格', '货郎'],
     ['openDay', C.OPEN_DAY, 0, 50, 1, '开箱', '普通武器箱每天能开几个'],
     ['premDay', C.PREM_DAY, 0, 50, 1, '开箱', '神兵武器箱每天能开几个'],
     ['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个（旧）'],
@@ -254,8 +254,8 @@
     ...C.CASES.filter(c => C.COLS[c].prem).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
     ['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
     ['mktDays', C.MKT_DAYS, 1, 90, 1, '玩家市场', '挂单几天没卖出就自动撤回'],
-    ['term.lo', C.TERM.markup[0], 0.5, 5, 0, '终端机', '报价最低是基准价的几倍'],
-    ['term.hi', C.TERM.markup[1], 0.5, 5, 0, '终端机', '报价最高是基准价的几倍'],
+    ['term.lo', C.TERM.markup[0], 0.5, 5, 0, '货郎', '报价最低是基准价的几倍'],
+    ['term.hi', C.TERM.markup[1], 0.5, 5, 0, '货郎', '报价最高是基准价的几倍'],
     ['dropP', C.DROP_P, 0, 1, 0, '对局掉落', '每局掉一件的概率'],
     ['dropCap', C.DROP_CAP, 0, 100, 1, '对局掉落', '每周最多掉几次'],
     ['ink.base', 1500, 0, 100000, 1, '每天认多少本机收入', '每天先认多少墨锭'],
@@ -264,7 +264,7 @@
   ];
   C.CFG_DEF = Object.fromEntries(C.CFG_INFO.map(r => [r[0], r[1]]));
   C.cv = (cfg, k) => { const v = cfg && typeof cfg === 'object' ? own(cfg, k) : undefined; if (v !== undefined) return v; if (k === 'premDay' && cfg && typeof cfg === 'object' && own(cfg, 'premWeek') !== undefined) return own(cfg, 'premWeek'); return C.CFG_DEF[k]; };
-  // 检查一份配置：只认表里有的键，数要在范围里（整数项要是整数），同一组爆率加起来要正好是 1，终端机报价的最低倍数不能高过最高倍数。
+  // 检查一份配置：只认表里有的键，数要在范围里（整数项要是整数），同一组爆率加起来要正好是 1，货郎报价的最低倍数不能高过最高倍数。
   // 和默认值一样的项、填 null 或空的项都不存（就是回到默认值）。不对时 cfg 是 null，err 写明是哪一项
   C.cleanCfg = raw => {
     const cfg = {}, info = Object.fromEntries(C.CFG_INFO.map(r => [r[0], r]));
@@ -284,7 +284,7 @@
       const sum = C.CFG_INFO.filter(r => r[0].startsWith(p)).reduce((a, r) => a + C.cv(cfg, r[0]), 0);
       if (Math.abs(sum - 1) > 1e-6) return { cfg: null, err: `${name}的几档爆率加起来要正好是 1（现在是 ${+sum.toFixed(6)}）` };
     }
-    if (C.cv(cfg, 'term.lo') > C.cv(cfg, 'term.hi')) return { cfg: null, err: '终端机报价的最低倍数不能高过最高倍数' };
+    if (C.cv(cfg, 'term.lo') > C.cv(cfg, 'term.hi')) return { cfg: null, err: '货郎报价的最低倍数不能高过最高倍数' };
     return { cfg, err: '' };
   };
 
@@ -315,12 +315,12 @@
   C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
   C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
   C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
-  C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、终端机、汰换
+  C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
   const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
   // 星座武器箱的 36 款：按 C.ZODIAC 的配色和 C.ZOD_OF 的分配生成。
-  // 背后一枚星座星图（deco.sign 是哪个星座，zt 是第几档：保密只有星图，隐秘加一圈星环，非凡是转动的星盘），头上星冠，非凡的兵器上还有星光（zw）
+  // 背后一枚星座星图（deco.sign 是哪个星座，zt 是第几档：灵犀只有星图，赤霄加一圈星环，绝世是转动的星盘），头上星冠，绝世的兵器上还有星光（zw）
   const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   const rgbS = h => hexRGB(h).join(',');
   const mixH = (a, b, t) => '#' + hexRGB(a).map((v, i) => Math.round(v + (hexRGB(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
@@ -349,14 +349,14 @@
   for (const [pre, zs] of Object.entries(C.ZOD_OF)) zs.forEach((code, ti) => { C.FULL[`${pre}_z${code}`] = zodSkin(pre, C.ZODIAC.find(z => z[0] === code), ti); });
 
   /* ---------- 价格 ---------- */
-  // 系统只给自己卖的东西定价：武器箱、终端机（商店固定价格）和终端机报的那一件。
+  // 系统只给自己卖的东西定价：武器箱、货郎（商店固定价格）和货郎报的那一件。
   // 饰品在玩家市场上卖多少钱全由玩家定，系统不定价、不收购，所以也没有“市场价”。
-  C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 终端机报斩数版时贵多少
-  C.refVal = it => {   // 一件饰品的基准价：只用来定终端机的报价
+  C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 货郎报斩数版时贵多少
+  C.refVal = it => {   // 一件饰品的基准价：只用来定货郎的报价
     const d = C.ITEM[it.k]; if (!d) return 0;
     return Math.max(2, Math.round(C.BASE[d.tier] * d.mul * (it.st >= 0 ? C.ST_MUL(d.tier) : 1)));
   };
-  C.GOODS = [...C.CASES, 'term'];              // 武器箱和终端机：只在商店卖，不能挂到市场
+  C.GOODS = [...C.CASES, 'term'];              // 武器箱和货郎：只在商店卖，不能挂到市场
   C.isGood = k => C.GOODS.includes(k);
   C.shopPrice = (k, cfg) => k === 'term' ? C.cv(cfg, 'price.term') : own(C.COLS, k) ? C.cv(cfg, 'price.' + k) : 0;
   C.net = (p, cfg) => Math.floor(p * (1 - C.cv(cfg, 'fee')));    // 挂单卖掉，卖家到手多少
@@ -382,9 +382,9 @@
   const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
     i: int(x.i, 1), k: x.k, st: stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
   // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务。
-  // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台终端机，饰品和武器箱照旧。
+  // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台货郎，饰品和武器箱照旧。
   // 第 2 版的“本周买了几个箱子”也丢掉（现在不限买，限的是每天开几个）。
-  // 第 3 版以前挂着的单是卖给系统的（系统按时间成交）：换成第 4 版时全部撤下，饰品、武器箱、终端机退回来
+  // 第 3 版以前挂着的单是卖给系统的（系统按时间成交）：换成第 4 版时全部撤下，饰品、武器箱、货郎退回来
   C.normalize = (s, env) => {
     if (!isObj(s)) s = C.blank();
     const oldKeys = s.v === 1 ? int(s.keys, 0, 50) : 0, oldLst = !(+s.v >= 4);
@@ -570,13 +570,13 @@
   };
   const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
   C.invFull = (s, n = 1) => false;
-  // 终端机报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是这一件基准价的 1.2~1.5 倍
+  // 货郎报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是这一件基准价的 1.2~1.5 倍
   C.termOffer = (rnd, cfg) => {
     const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.cv(cfg, 'stP') ? 0 : -1;
     const lo = C.cv(cfg, 'term.lo'), m = lo + rnd() * (C.cv(cfg, 'term.hi') - lo);
     return { k, st, price: Math.max(1, Math.round(C.refVal({ k, st }) * m)) };
   };
-  // 汰换合同能出什么：每件材料平分它所在收藏品里高一档的那些饰品
+  // 熔铸契能出什么：每件材料平分它所在收藏品里高一档的那些饰品
   C.tradeCheck = (s, ids) => {
     if (!Array.isArray(ids) || !ids.length) return { err: '还没放材料' };
     const uniq = Array.from(new Set(ids.map(Number)));
@@ -584,7 +584,7 @@
     const items = uniq.map(id => C.findItem(s, id));
     if (items.some(x => !x)) return { err: '有材料已经不在库存里了' };
     const tier = C.ITEM[items[0].k].tier, up = C.UP[tier];
-    if (!up) return { err: '★ 非凡已经是最高一档' };
+    if (!up) return { err: '★ 绝世已经是最高一档' };
     if (items.some(x => C.ITEM[x.k].tier !== tier)) return { err: '材料要同一档品质' };
     const stN = items.filter(x => x.st >= 0).length;
     if (stN && stN !== items.length) return { err: '斩数版和普通版不能混着放' };
@@ -678,7 +678,7 @@
     s.buys[g.id].n += n;
     return { ok: true };
   };
-  // 商店：武器箱、终端机按固定价格买，不限量（限的是每天开几个）；买来的不能转卖
+  // 商店：武器箱、货郎按固定价格买，不限量（限的是每天开几个）；买来的不能转卖
   const shopBuy = (s, k, a, env) => {
     const n = a.n === undefined ? 1 : +a.n;
     if (!(Number.isInteger(n) && n >= 1 && n <= 10)) return { err: '数量不对' };
@@ -698,7 +698,7 @@
   A.list = (s, a, env) => {
     const m = env.mkt;
     if (!m || !C.isLid(m.id)) return { err: NO_MKT };
-    if (a.c !== undefined) return { err: '武器箱和终端机只在商店按固定价格卖，不能挂到市场' };
+    if (a.c !== undefined) return { err: '武器箱和货郎只在商店按固定价格卖，不能挂到市场' };
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
     const price = +a.price;
     if (!(Number.isInteger(price) && price >= 1 && price <= C.PRICE_MAX)) return { err: `标价要是 1 到 ${C.PRICE_MAX} 之间的整数` };
@@ -856,23 +856,23 @@
     delete s.eq[char]; env.equip[char] = '';
     return { ok: true };
   };
-  // 终端机：开封给第一件；不要就换下一件（第 5 件也不要，终端机就没了）；买下就用掉
+  // 货郎：开封给第一件；不要就换下一件（第 5 件也不要，货郎就没了）；买下就用掉
   A.unseal = (s, a, env) => {
-    if (s.tm) return { err: '已经有一台开着的终端机，先处理完它' };
-    if (s.term < 1) return { err: '没有终端机' };
+    if (s.tm) return { err: '已经有一台开着的货郎，先处理完它' };
+    if (s.term < 1) return { err: '没有货郎' };
     s.term--;
     s.tm = { t0: env.now, n: 1, o: C.termOffer(env.rnd, env.cfg) };
     return { ok: true, tm: s.tm };
   };
   A.termNext = (s, a, env) => {
-    if (!s.tm) return { err: '没有开着的终端机' };
+    if (!s.tm) return { err: '没有开着的货郎' };
     if (a.n !== undefined && +a.n !== s.tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点得太快、请求重发：不会一下跳过两件
     if (s.tm.n >= C.TERM.offers) { s.tm = null; return { ok: true, gone: true }; }
     s.tm.n++; s.tm.o = C.termOffer(env.rnd, env.cfg);
     return { ok: true, tm: s.tm };
   };
   A.termBuy = (s, a, env) => {
-    const tm = s.tm; if (!tm) return { err: '没有开着的终端机' };
+    const tm = s.tm; if (!tm) return { err: '没有开着的货郎' };
     if (a.n !== undefined && +a.n !== tm.n) return { err: '这一件已经换掉了，刷新看看' };   // 点“买下”时看到的是第几件
     if (C.invFull(s)) return { err: '库存满了' };
     if (env.ink < tm.o.price) return { err: `墨锭不够，要 ${tm.o.price}` };
@@ -920,14 +920,14 @@
     else {
       if (C.invFull(s)) return { err: '库存满了' };
       let k;
-      if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的隐秘级里挑一件' }; k = a.k; }
+      if (g.id === 'cov') { if (!(C.isItem(a.k) && C.ITEM[a.k].tier === 'cov' && !C.isPrem(a.k))) return { err: '要从普通武器箱的赤霄级里挑一件' }; k = a.k; }
       else k = pickOf(r, C.ofTierReg(g.id));
       res.item = C.addItem(s, C.mkItem(s, k, 'op', r, { stP: C.cv(env.cfg, 'stP') }), env);
     }
     s.op.spent += g.cost;
     return res;
   };
-  // 集齐一套收藏品的 4 款军规级：送这个武器箱一个和一张改名标签
+  // 集齐一套收藏品的 4 款精铁：送这个武器箱一个和一张改名标签
   A.collect = (s, a, env) => {
     const col = own(C.COLS, a.c); if (!col || !col.mil.length) return { err: '没有这套收藏品' };
     if (s.cc.includes(a.c)) return { err: '已经领过了' };
@@ -987,7 +987,7 @@
   A.sync = () => ({ ok: true });
   // 兑换码：码在服务器上核对，里面的东西在跑这一步之前就放进存档了；本机存档没有服务器，领不了
   A.claimCode = (s, a, env) => env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
-  A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台终端机
+  A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台货郎
     if (s.gift) return { err: '已经领过了' };
     s.gift = 1; s.cases.c1++; s.term++;
     return { ok: true };

@@ -207,9 +207,9 @@ section('规则核心：冻结、坏存档自愈');
     tm: { t0: T, n: 99, o: { k: 'nope', price: 1 } } }, { now: T, uid: 'x' });
   ok(s.inv.length === 2 && s.inv[0].st === 5 && !('f' in s.inv[0]) && s.inv[1].st === -1, '坏饰品被修正、重复编号和假饰品被丢掉', s.inv);
   ok(s.term === 0 && !('keys' in s) && !('jade' in s) && s.lst.length === 0 && !s.eq.qingfeng && s.op.spent <= s.op.earned && !('evil' in s), '负数、乱填的钥匙、重复的挂单、穿着不存在的饰品、多余字段都被清掉', s);
-  ok(s.tm === null && C.openLeft(s, 'c1') === C.OPEN_DAY && (C.openLeft(s, 'c7') === C.PREM_DAY || C.openLeft(s, 'c7') === 3) && !('cw' in s), '假的终端机报价作废；乱填的开箱次数换天、换周就重置', [s.tm, s.od, s.pd, s.pw]);
+  ok(s.tm === null && C.openLeft(s, 'c1') === C.OPEN_DAY && (C.openLeft(s, 'c7') === C.PREM_DAY || C.openLeft(s, 'c7') === 3) && !('cw' in s), '假的货郎报价作废；乱填的开箱次数换天、换周就重置', [s.tm, s.od, s.pd, s.pw]);
   const t2 = C.normalize({ tm: { t0: T, n: 99, o: { k: 'qf_p1', st: 3, price: -9 } } }, { now: T, uid: 'x' });
-  ok(t2.tm && t2.tm.n === C.TERM.offers && t2.tm.o.price >= 1, '终端机报到第几件、价格都夹在范围里', t2.tm);
+  ok(t2.tm && t2.tm.n === C.TERM.offers && t2.tm.o.price >= 1, '货郎报到第几件、价格都夹在范围里', t2.tm);
   ok(s.nid > 3, '新编号不会和已有的撞');
 }
 
@@ -332,9 +332,9 @@ section('找回饰品：管理后台按流水查出“拿到过、现在没有�
   const g = await adm('POST', '/api/admin/adjust', { uid: R.uid, give: [{ k: 'gc_wolf' }, { k: 'qf_p1', st: 4 }, { k: 'yh_p1' }, { k: 'ts_p1' }, { k: 'ts_p1' }, ...Array.from({ length: 10 }, () => ({ k: mil }))], why: '找回演练：先发东西' });
   ok(g.ok && g.given.length === 15, '发了 15 件', g.error);
   const [wolf, bamboo, yh, ts1, ts2] = g.given, mils = g.given.slice(5);
-  // 正常没的：汰换掉、一键卖掉重复的、在玩家市场卖掉、管理员收走
+  // 正常没的：熔铸掉、一键卖掉重复的、在玩家市场卖掉、管理员收走
   const tr = await econ(R.token, 'trade', { ids: mils.map(x => x.i) });
-  ok(tr.res.ok, '汰换掉 10 件', tr.res);
+  ok(tr.res.ok, '熔铸掉 10 件', tr.res);
   const lg = parseDetail(row("SELECT detail FROM econ_log WHERE uid = ? AND act = 'trade' ORDER BY id DESC LIMIT 1", R.uid).detail);
   ok(Array.isArray(lg.rm) && lg.rm.length === 10 && Array.isArray(lg.ad) && lg.ad.length === 1, '流水里记下了这一步出去的 10 件、进来的 1 件', lg);
   const sd = await econ(R.token, 'sellDupes');
@@ -358,7 +358,7 @@ section('找回饰品：管理后台按流水查出“拿到过、现在没有�
   ok((await adm('POST', '/api/admin/restore', { uid: R.uid, ids: [bamboo.i], onlyUnknown: true, why: '全服恢复测试' })).status === 400, '全服恢复不会发回管理员收走的饰品');
   ok(by(bamboo.i) && by(bamboo.i).why === 'admin' && by(bamboo.i).can && by(bamboo.i).st === 4, '管理员收走的：写明是谁收的那一步，可以找回（斩数照旧是 4）', by(bamboo.i));
   ok(by(yh.i) && by(yh.i).why === 'sold' && !by(yh.i).can, '在玩家市场卖掉的：不能找回', by(yh.i));
-  ok(mils.every(x => by(x.i) && by(x.i).why === 'trade' && !by(x.i).can), '汰换掉的 10 件：不能找回');
+  ok(mils.every(x => by(x.i) && by(x.i).why === 'trade' && !by(x.i).can), '熔铸掉的 10 件：不能找回');
   const sold1 = [ts1, ts2].map(x => by(x.i)).filter(Boolean);
   ok(sold1.length === 1 && sold1[0].why === 'sellDupes' && !sold1[0].can, '一键卖掉的那件重复的：不能找回', sold1);
   ok(!by(ts1.i) !== !by(ts2.i) && !L.items.some(x => x.i === tr.res.item.i), '还在库存里的不列出来');
