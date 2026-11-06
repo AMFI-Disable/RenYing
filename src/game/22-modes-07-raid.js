@@ -394,7 +394,9 @@ function toMenu() {
   M.hasBuffs = false; M.competitiveScrolls = null;
   M.stage = null;
   if (TUT) endTutorial();
-  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
+  // 好友房的房主在结算页，对手已经走了、房间还开着：不关房间，回到联机页继续等人
+  const keepRoom = !!(NET.keepRoom && !NET.open && typeof P2P !== 'undefined' && P2P.friend && P2P.peer);
+  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && (M.mode === 'net' || bpMode === 'net')) netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
   if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
@@ -409,6 +411,7 @@ function toMenu() {
     showScreen('menu');
   }
   if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
+  if (keepRoom) selectMode('net');
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
 document.getElementById('menuBtn').addEventListener('click', toMenu);

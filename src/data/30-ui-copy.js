@@ -99,6 +99,8 @@ const UI_COPY_EN = {
   "一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn the basic moves in one minute. Signed-in players get 300 Ink when they finish.",
   "一分钟学会基本招式，再去挑战电脑与闯关。": "Learn the basic moves in one minute, then take on the AI and the stages.",
   "快速上手": "Quick Start",
+  "对手已离开。房间还开着，朋友用同一个房间码就能再进来": "Your opponent left. The room is still open, and friends can join again with the same code",
+  "对手已离开，房间还开着，同一个房间码可以再进": "Your opponent left. The room stays open with the same code",
   "和电脑打一局": "Fight the AI",
   "和朋友联机": "Play with Friends",
   "基本招式会了。格挡和精准招架这些进阶操作，在「帮助」里的完整教学能学到。": "You know the basics. Blocking, perfect parries and more are in the full tutorial under Help.",
@@ -895,7 +897,7 @@ const UI_COPY_EN = {
   "2v2 双人共斗 · 正在全服寻找同袍队友与天道对手": "2v2 Duo Co-op · Looking for a teammate online",
   "2v2 组队切磋 · 正在全服匹配队友与对手": "2v2 Team Match · Looking for a teammate and opponents",
   "2v2 双人共斗：正在全服寻找队友与对手…": "2v2 Duo Co-op: looking for a teammate…",
-  "2v2 组队切磋：正在全服匹配队友与对手…": "2v2 Team Match: looking for a teammate and opponents…",
+  "2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…": "2v2 Team Match: looking for one opponent (each side gets an AI teammate)…",
   // 选人页（BP）：标题、步骤、侠客说明里的小标题（侠客的长句在 31-hero-copy.js）
   "你": "You",
   "对手": "Opponent",

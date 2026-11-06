@@ -155,7 +155,7 @@ function p2pBye() {
 }
 // 关掉当前的直连。sess 加一，旧连接迟到的事件就不会再影响新的房间
 function p2pClose() {
-  P2P.sess++; P2P.opened = false;
+  P2P.sess++; P2P.opened = false; P2P.friend = false;
   clearTimeout(P2P.timer);
   P2P.graceUntil = 0; P2P.drop = null; P2P.sigTries = 0; P2P.roomAt = 0;
   p2pState('idle');
@@ -300,6 +300,7 @@ async function netConnectP2P(asHost, code) {
 
 // ---------- 房主：登记房间码，等人来 ----------
 function p2pHost(sess) {
+  P2P.friend = true;   // 自己建的好友房：对手走了房间还留着（netKeepRoom）
   const code = p2pCode();
   let peer;
   try { peer = P2P.peer = new Peer(P2P.prefix + code.toLowerCase(), p2pOptions()); }

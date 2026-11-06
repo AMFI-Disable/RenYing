@@ -60,7 +60,7 @@ function secretRound() {
   if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); human[0].clear(); }
 }
 function secretThink(f, networkInput = false) {
-  if (!secretEnabled || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
+  if (!secretEnabled || (M.mode === 'net' && NET.isRanked) || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
   if (!secretBrain) secretRound();
   const oldTarget = f.target, foe = foeOf(f);
   if (!foe) return;
@@ -93,7 +93,7 @@ function netReset() {
   ROLL.on = false;
   if (typeof mmStop === 'function') mmStop();
   mmUI(null);
-  NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = '';
+  NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;
   NET.matching = false; NET.hold = false;
   p2pClose();
   NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
@@ -142,6 +142,7 @@ function onSys(m) {
     }
   } else if (m.sys === 'ready') {
     NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
+    NET.peerQuit = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;   // 好友房里新来的对手：上一个人走掉的记号清掉
     updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
     if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
     NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
@@ -235,6 +236,20 @@ function netSolo() {
   NET.lastResult = '';
   return true;
 }
+// 好友房的房主：对手走了，房间（同一个房间码）接着开着，朋友用原来的码还能再进来，不用重新建房发码。
+// 只管自己建的好友房（P2P.friend）；匹配、排位的房间照旧关掉。
+function netKeepRoom() {
+  if (NET.role !== 'host' || NET.isRanked || !NET.code || typeof P2P === 'undefined' || !P2P.friend || !P2P.peer || !P2P.opened) return false;
+  const c = P2P.conn; P2P.conn = null; P2P.drop = null; P2P.graceUntil = 0;
+  if (c) { try { c.close(); } catch (e) {} }
+  NET.open = false; NET.keepRoom = true;
+  NET.out = []; NET.presses.length = 0; NET.remote.clear();
+  p2pState('wait'); P2P.roomAt = Date.now();
+  if (typeof updateNetLobby === 'function') updateNetLobby(true, (ACC && ACC.name) || '侠客 (房主)', '静候对手入局…', NET.code, false);
+  $id('roomCode').textContent = NET.code;
+  netStatus('对手已离开。房间还开着，朋友用同一个房间码就能再进来');
+  return true;
+}
 function netForfeitWin() {
   if (M.mode !== 'net' || NET.isRanked || !NET.peerQuit || NET.forfeit) return false;
   if (netRoomMode === 'pp_cc' || roomDef().raid) return false;
@@ -247,7 +262,7 @@ function netForfeitWin() {
   NET.open = false;
   NET.forfeit = true;
   NET.forfeitResult = '对手中途离席，这场算你赢';
-  p2pClose();
+  if (!netKeepRoom()) p2pClose();
   if (typeof mmStop === 'function') mmStop();
   NET.consensus = { localWinner: winner, myTeam: winner, qualifying: true, committed: false };
   commitNetProgress(winner, true, true);
@@ -259,12 +274,14 @@ function netLost() {
   // 以前会被直接拉回联机大厅，还提示“对局已中断（未完成）”，打完的排位还可能被当成对手中途离开
   if (M.mode === 'net' && $id('end').classList.contains('on')) {
     const quit = NET.peerQuit;
-    netOverlay(''); netReset();
+    netOverlay('');
+    const kept = netKeepRoom();
+    if (!kept) netReset();
     $id('againBtn').style.display = 'none';
     $id('netRepickBtn').classList.add('hidden');
-    $id('roomCode').textContent = '';
-    toast(quit ? '对手已离开房间' : '和对手的连接断开了');
-    netStatus('对手已离开。可以重新建房或加入');
+    if (!kept) $id('roomCode').textContent = '';
+    toast(kept ? '对手已离开，房间还开着，同一个房间码可以再进' : quit ? '对手已离开房间' : '和对手的连接断开了');
+    if (!kept) netStatus('对手已离开。可以重新建房或加入');
     return;
   }
   if (netForfeitWin()) return;

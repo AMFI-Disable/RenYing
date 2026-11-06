@@ -7722,6 +7722,8 @@ const UI_COPY_EN = {
 "一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。": "Learn the basic moves in one minute. Signed-in players get 300 Ink when they finish.",
 "一分钟学会基本招式，再去挑战电脑与闯关。": "Learn the basic moves in one minute, then take on the AI and the stages.",
 "快速上手": "Quick Start",
+"对手已离开。房间还开着，朋友用同一个房间码就能再进来": "Your opponent left. The room is still open, and friends can join again with the same code",
+"对手已离开，房间还开着，同一个房间码可以再进": "Your opponent left. The room stays open with the same code",
 "和电脑打一局": "Fight the AI",
 "和朋友联机": "Play with Friends",
 "基本招式会了。格挡和精准招架这些进阶操作，在「帮助」里的完整教学能学到。": "You know the basics. Blocking, perfect parries and more are in the full tutorial under Help.",
@@ -8514,7 +8516,7 @@ const UI_COPY_EN = {
 "2v2 双人共斗 · 正在全服寻找同袍队友与天道对手": "2v2 Duo Co-op · Looking for a teammate online",
 "2v2 组队切磋 · 正在全服匹配队友与对手": "2v2 Team Match · Looking for a teammate and opponents",
 "2v2 双人共斗：正在全服寻找队友与对手…": "2v2 Duo Co-op: looking for a teammate…",
-"2v2 组队切磋：正在全服匹配队友与对手…": "2v2 Team Match: looking for a teammate and opponents…",
+"2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…": "2v2 Team Match: looking for one opponent (each side gets an AI teammate)…",
 "你": "You",
 "对手": "Opponent",
 "我方战队": "Your Team",
@@ -13396,7 +13398,7 @@ function secretRound() {
 if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); human[0].clear(); }
 }
 function secretThink(f, networkInput = false) {
-if (!secretEnabled || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
+if (!secretEnabled || (M.mode === 'net' && NET.isRanked) || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
 if (!secretBrain) secretRound();
 const oldTarget = f.target, foe = foeOf(f);
 if (!foe) return;
@@ -13422,7 +13424,7 @@ function netReset() {
 ROLL.on = false;
 if (typeof mmStop === 'function') mmStop();
 mmUI(null);
-NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = '';
+NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;
 NET.matching = false; NET.hold = false;
 p2pClose();
 NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
@@ -13469,6 +13471,7 @@ netStatus('入局成功，正在同步战局…');
 }
 } else if (m.sys === 'ready') {
 NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
+NET.peerQuit = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;   // 好友房里新来的对手：上一个人走掉的记号清掉
 updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
 if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
 NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
@@ -13559,6 +13562,18 @@ NET.consensus = { committed: true };   // 没法和对方核对结果，不上�
 NET.lastResult = '';
 return true;
 }
+function netKeepRoom() {
+if (NET.role !== 'host' || NET.isRanked || !NET.code || typeof P2P === 'undefined' || !P2P.friend || !P2P.peer || !P2P.opened) return false;
+const c = P2P.conn; P2P.conn = null; P2P.drop = null; P2P.graceUntil = 0;
+if (c) { try { c.close(); } catch (e) {} }
+NET.open = false; NET.keepRoom = true;
+NET.out = []; NET.presses.length = 0; NET.remote.clear();
+p2pState('wait'); P2P.roomAt = Date.now();
+if (typeof updateNetLobby === 'function') updateNetLobby(true, (ACC && ACC.name) || '侠客 (房主)', '静候对手入局…', NET.code, false);
+$id('roomCode').textContent = NET.code;
+netStatus('对手已离开。房间还开着，朋友用同一个房间码就能再进来');
+return true;
+}
 function netForfeitWin() {
 if (M.mode !== 'net' || NET.isRanked || !NET.peerQuit || NET.forfeit) return false;
 if (netRoomMode === 'pp_cc' || roomDef().raid) return false;
@@ -13571,7 +13586,7 @@ ROLL.on = false;
 NET.open = false;
 NET.forfeit = true;
 NET.forfeitResult = '对手中途离席，这场算你赢';
-p2pClose();
+if (!netKeepRoom()) p2pClose();
 if (typeof mmStop === 'function') mmStop();
 NET.consensus = { localWinner: winner, myTeam: winner, qualifying: true, committed: false };
 commitNetProgress(winner, true, true);
@@ -13581,12 +13596,14 @@ return true;
 function netLost() {
 if (M.mode === 'net' && $id('end').classList.contains('on')) {
 const quit = NET.peerQuit;
-netOverlay(''); netReset();
+netOverlay('');
+const kept = netKeepRoom();
+if (!kept) netReset();
 $id('againBtn').style.display = 'none';
 $id('netRepickBtn').classList.add('hidden');
-$id('roomCode').textContent = '';
-toast(quit ? '对手已离开房间' : '和对手的连接断开了');
-netStatus('对手已离开。可以重新建房或加入');
+if (!kept) $id('roomCode').textContent = '';
+toast(kept ? '对手已离开，房间还开着，同一个房间码可以再进' : quit ? '对手已离开房间' : '和对手的连接断开了');
+if (!kept) netStatus('对手已离开。可以重新建房或加入');
 return;
 }
 if (netForfeitWin()) return;
@@ -25961,7 +25978,8 @@ function tryCommitNet(force) {
 const c = NET.consensus;
 if (!c || !c.pendingReport || c.committed) return false;
 if (!force && !(c.gotFinish && c.gotAck)) return false;
-commitNetProgress(c.localWinner, !!(c.gotFinish && c.gotAck && c.agreed && c.peerAgreed), c.qualifying !== false);
+const agreed = c.gotFinish && c.gotAck ? !!(c.agreed && c.peerAgreed) : c.gotFinish ? !!c.agreed : c.gotAck ? !!c.peerAgreed : false;
+commitNetProgress(c.localWinner, agreed, c.qualifying !== false);
 return true;
 }
 function commitNetProgress(w, agreed, isQualifying) {
@@ -28002,7 +28020,8 @@ M.worldKey = null;
 M.hasBuffs = false; M.competitiveScrolls = null;
 M.stage = null;
 if (TUT) endTutorial();
-paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
+const keepRoom = !!(NET.keepRoom && !NET.open && typeof P2P !== 'undefined' && P2P.friend && P2P.peer);
+paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && (M.mode === 'net' || bpMode === 'net')) netLeave(); bpMode = 'cpu';
 const prevMode = M.mode;
 if (prevMode === 'tower') saveTowerRun();
 if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
@@ -28017,6 +28036,7 @@ showScreen('single');
 showScreen('menu');
 }
 if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
+if (keepRoom) selectMode('net');
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
 document.getElementById('menuBtn').addEventListener('click', toMenu);
@@ -32081,7 +32101,7 @@ mmStart(kind);
 let statusTxt = '匹配对战：正在全服寻找对手…';
 if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
 else if (kind === '2v2_coop') statusTxt = '2v2 双人共斗：正在全服寻找队友与对手…';
-else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配队友与对手…';
+else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…';
 netStatus(statusTxt);
 }
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
@@ -32781,7 +32801,7 @@ p2pState('closed');
 if (c || p) setTimeout(() => { if (c) { try { c.close(); } catch (e) {} } if (p) { try { p.destroy(); } catch (e) {} } }, 300);
 }
 function p2pClose() {
-P2P.sess++; P2P.opened = false;
+P2P.sess++; P2P.opened = false; P2P.friend = false;
 clearTimeout(P2P.timer);
 P2P.graceUntil = 0; P2P.drop = null; P2P.sigTries = 0; P2P.roomAt = 0;
 p2pState('idle');
@@ -32916,6 +32936,7 @@ if (!ok) { netStatus('直连组件加载失败，检查一下网络后再试'); 
 if (asHost) { P2P.tries = 0; p2pHost(sess); } else p2pJoin(sess, code);
 }
 function p2pHost(sess) {
+P2P.friend = true;   // 自己建的好友房：对手走了房间还留着（netKeepRoom）
 const code = p2pCode();
 let peer;
 try { peer = P2P.peer = new Peer(P2P.prefix + code.toLowerCase(), p2pOptions()); }

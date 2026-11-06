@@ -27,6 +27,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Friend rooms stay open (`src/game/06-input-net.js`, `src/net-p2p.js`, `src/game/22-modes-07-raid.js`)**: when the opponent leaves a friend room, the host keeps the same room code and goes back to waiting, so a friend can rejoin without a new code. Matchmaking and ranked rooms still close.
+- **Ranked results when the loser closes the tab (`src/game/19-progress-04-ranked.js`)**: if only half of the result handshake arrives, the match still counts as long as the message that did arrive names the same winner.
+- **Hidden auto-play is off in ranked (`src/game/06-input-net.js`)**, and the 2v2 Team Match search text now says it looks for one opponent with an AI teammate on each side.
 - **Li Ying mist clone echo attacks (`src/data/heroes/13-liying.js`, `src/game/03-skills.js`, `src/game/09-actions.js`)**: mist clones now echo the hero's basic attacks, skills, and non-ultimate projectiles at 75% damage at the clone's position, reduced swap seal time to 0.1s and landing lag to 0.08s, added 0.12s swap invulnerability, and lowered attacker break meter reward to 5.
 - **Panel navigation transition flicker (`src/styles/40-navigation-and-home.css`, `index.html`, `renying-offline.html`)**: resolved visual flashes during screen transitions by standardizing panel animations on `inkBleedIn` across menu handoffs and respecting user reduced-motion preferences.
 - **Obsolete UI translations and copy cleanup (`src/data/30-ui-copy.js`, `src/data/31-hero-copy.js`, `index.html`, `renying-offline.html`)**: purged stale English translation keys and obsolete hero text strings.

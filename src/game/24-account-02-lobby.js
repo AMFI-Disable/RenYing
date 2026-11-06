@@ -235,7 +235,7 @@ function mmGo(kind) {
   let statusTxt = '匹配对战：正在全服寻找对手…';
   if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
   else if (kind === '2v2_coop') statusTxt = '2v2 双人共斗：正在全服寻找队友与对手…';
-  else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配队友与对手…';
+  else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…';
   netStatus(statusTxt);
 }
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
