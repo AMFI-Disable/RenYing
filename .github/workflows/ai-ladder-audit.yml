@@ -1,3 +1,5 @@
+# 电脑难度阶梯：改了 AI 或侠客数据后，跑各难度之间的胜率对照，确认难度一档比一档强。
+# 本地复现：node tools/ai/ai-ladder-report.mjs --n 2
 name: AI Difficulty Ladder & Win-Rate Report
 
 on:

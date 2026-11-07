@@ -1,3 +1,5 @@
+# 构建门禁：python3 tools/build.py --check 确认生成文件（index.html、worker.js 等）和源码一致、语法没错。
+# 失败多半是改了 src/ 却没重新构建：本地跑 python3 tools/build.py，把生成文件一起提交。
 name: Build & Syntax Gate
 
 on:

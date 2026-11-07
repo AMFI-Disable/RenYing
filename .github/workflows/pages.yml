@@ -1,3 +1,5 @@
+# 发布 GitHub Pages：main 上 index.html、renying.html 或 assets/ 变了就把这三样拷到 _site 发布。
+# 网页入口必须是根目录的 index.html；挪动这几样文件要同时改这里。
 name: Deploy GitHub Pages
 
 on:

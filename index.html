@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="author" content="Even, Luffy, Opus 5.5, Gemini 4 Argon">
 <title>刃影</title>
+<!-- 刃影主页面的骨架：tools/build.py 把下面几个 @ 占位标记换成样式和脚本，生成根目录的 index.html（每个标记只能有一个）。
+     @style 全部样式（src/style.css + src/styles/）；@music 背景音乐（只有离线版内嵌）；@scripts 游戏和各模块的脚本；@qfx 青锋行。
+     每个界面是 #wrap 里一个 class="scr" 的 div（菜单 #menu、单人 #single、联机 #netp、点将台 #bp、账号 #acc、
+     武库 #armory、任务 #tasks、结算 #end ……），showScreen(id)（src/game/21-buttons-01-screen-controls.js）按一张固定的名单
+     切换 on，新加的界面要记得加进那张名单。
+     找 bug 提示：某个界面打不开，先看这里有没有那个 id；按钮没反应去 src/game/21-buttons-*.js 找它的 id。 -->
 <script>try { if (localStorage.getItem('renying-lang') === 'en') document.documentElement.classList.add('boot-en'); } catch (e) {}</script>   <!-- 以前选过英文：首页一开始就给顶栏留位置（style.css 的 html.boot-en） -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

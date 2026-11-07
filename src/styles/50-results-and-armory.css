@@ -1,3 +1,5 @@
+/* 第 5 层：结算页、首页展示角色、反作弊遮罩、刃影武库（库存、武器箱、货郎、市场、熔铸契）。
+   找 bug 提示：武库卡面颜色来自 --tc / --cc 两个变量（"r,g,b"），由 src/armory.js 写在卡片上。 */
 /* ---------- 结算：墨字“谁，胜” + 排位段位环 ---------- */
 #endTitle.ink-title { font-family: var(--title); font-weight: 400; letter-spacing: .04em; white-space: nowrap; font-size: clamp(44px, 7vw, 92px); line-height: 1.1; margin: 4px 0 6px; color: #efe6d6; text-shadow: 0 2px 0 rgba(0,0,0,.35), 0 0 26px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; gap: .02em; }
 #endTitle.ink-title::after { display: none; }

@@ -1,3 +1,5 @@
+# Cloudflare Worker 和 D1 表结构：确认 worker 能打包、迁移文件和代码里的表对得上（这里不部署，也不执行迁移）。
+# 本地复现：node tools/tests/predeploy-check.mjs --source、node tools/tests/rollback-test.mjs --schema
 name: Cloudflare Worker & D1 Schema Sync
 
 on:

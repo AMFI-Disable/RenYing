@@ -1,3 +1,6 @@
+# 主 CI：先用 tools/ci/change-groups.py 按改了哪些文件分组，只跑相关的检查；改了构建或测试工具时全跑。
+# 每个 job 对应一组测试，失败时在本地单独跑那个 job 里的命令（node tools/... 那一行）就能复现。
+# 全部本地跑一遍：node tools/tests/test.mjs
 name: CI
 
 on:

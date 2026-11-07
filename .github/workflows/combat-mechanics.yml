@@ -1,3 +1,5 @@
+# 战斗与物理：无画面沙盒里模拟对打，检查招式、受击、连段、物理这些规则。
+# 本地复现：node tools/tests/combat-test.mjs --sim
 name: Combat & Physics Engine
 
 on:

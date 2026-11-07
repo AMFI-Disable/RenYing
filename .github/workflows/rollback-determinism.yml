@@ -1,3 +1,5 @@
+# 回滚联机：同样的输入两边算出一样的结果（确定性），回滚重算后状态一致；netplay-test 测直连收发。
+# 本地复现：node tools/tests/rollback-test.mjs --rollback、node tools/tests/netplay-test.mjs
 name: Rollback Netcode & P2P Sync
 
 on:

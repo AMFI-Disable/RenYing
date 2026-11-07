@@ -1,3 +1,5 @@
+# 青锋行（三维小游戏）冒烟测试：检查 assets/qingfengxing.html 的打包和各模块是否完整。
+# 本地复现：node tools/tests/rollback-test.mjs --qfx
 name: QingFengXing 3D Action Mode
 
 on:

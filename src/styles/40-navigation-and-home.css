@@ -1,3 +1,5 @@
+/* 第 4 层：对战大厅（匹配对战 / 排位赛、段位）、顶部导航、首页、页面出错时的兜底提示、首页入场退场动效。
+   找 bug 提示：首页动效只在冷启动和从对局退回时播，平时看不到不是坏了。 */
   /* ======================= 对战大厅：匹配对战 / 排位赛 ======================= */
   .mm-hero { margin: 4px auto 10px; width: min(1180px, 100%); text-align: left; }
   .season-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 14px; padding: 0 2px; font-family: var(--v-cond); letter-spacing: .06em; color: rgba(236,232,225,.7); font-size: 14px; }

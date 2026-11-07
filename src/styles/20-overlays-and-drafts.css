@@ -1,3 +1,5 @@
+/* 第 2 层：通用状态（空 / 出错 / 加载）、确认框、各种弹层，以及点将台（选侠客、山河异境的地利卡）。
+   找 bug 提示：弹层被别的东西盖住，先比 z-index；这层之后的文件可能还改了同一个弹层。 */
   /* ---------- 通用：空 / 出错 / 加载状态（uiState）---------- */
   .ui-state { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); color: var(--dim); font-size: var(--fs-sm); line-height: 1.6; padding: var(--sp-3) var(--sp-2); text-align: center; }
   .ui-state-ic { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid currentColor; opacity: .7; }

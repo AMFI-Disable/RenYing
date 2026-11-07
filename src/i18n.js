@@ -1,5 +1,13 @@
 // 刃影 国际化多语言支持模块 (i18n)
 // 支持简体中文 (zh) 与英文 (en)，默认中文，支持设置与初次启动语言偏好引导
+//
+// 文件结构：
+//   1. 当前语言        initLang / getLang / setLang（存在 localStorage 的 renying-lang）
+//   2. 带数字的句子    PATTERNS_EN：按正则模板翻（整句查表查不到的那种）
+//   3. 查表与翻页面    lookup → t → translateNode / applyTranslations；trWatch 盯住新加的节点补翻
+//   4. 挂到全局        window.I18N、window.t
+// 找 bug 提示：英文界面里还剩中文，先在控制台跑 I18N.t('那句中文')：返回原文说明词条表
+//   （src/data/30-ui-copy-*.js）缺这一句，或者这句带数字，要在 PATTERNS_EN 加一条模板。
 
 (function() {
   'use strict';
@@ -10,6 +18,7 @@
     return typeof UI_COPY_EN === 'object' && UI_COPY_EN ? UI_COPY_EN : {};
   }
 
+  // ---------- 1. 当前语言 ----------
   // 当前语言：'zh' 或 'en'
   let currentLang = 'zh';
 
@@ -67,6 +76,7 @@
     try { if (typeof updateVerLine === 'function') updateVerLine(); } catch (e) {}
   }
 
+  // ---------- 2. 带数字的句子：按模板翻 ----------
   // 数字是拼进去的句子（"剩余 25 天 6 小时"、"全服 12 人在线"），整句查表永远查不到，
   // 这里按模板换：$1 之类照常可用，也可以直接给一个替换函数。
   const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
@@ -320,6 +330,7 @@
     [/^导入失败：(.+)$/, (m0, x) => `Import failed: ${lookup(x) || x}`],
     [/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`]
   ];
+  // ---------- 3. 查表与翻页面 ----------
   // 一处查表：先查固定词条，再试模板；返回空串表示“没有这句的译文”
   function lookup(text) {
     if (!text) return '';
@@ -417,6 +428,7 @@
     else if (document.addEventListener) document.addEventListener('DOMContentLoaded', trWatch, { once: true });
   }
 
+  // ---------- 4. 挂到全局 ----------
   // 挂载全局
   if (typeof window !== 'undefined') {
     window.I18N = {

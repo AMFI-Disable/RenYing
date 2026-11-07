@@ -1,3 +1,4 @@
+# 每天定时的全量回归：把所有测试都跑一遍（和本地 node tools/tests/test.mjs 一样）。
 name: Full Regression
 
 on:

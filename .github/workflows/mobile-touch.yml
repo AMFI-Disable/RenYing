@@ -1,3 +1,5 @@
+# 手机触屏：在模拟手机尺寸的浏览器里检查触屏按钮的位置、大小和响应。
+# 本地复现：node tools/audits/touch-audit.mjs（要先在仓库根目录开一个本地网页服务）
 name: Mobile & Touch Controls
 
 on:

@@ -1,3 +1,5 @@
+# 界面与对局 HUD 布局：在真浏览器里打开各个面板，检查有没有重叠、溢出、首屏加载和性能。
+# 本地复现：node tools/audits/ui-audit.mjs 等（见下面各步），要先在仓库根目录开一个本地网页服务
 name: UI Panels & Canvas HUD Layout
 
 on:

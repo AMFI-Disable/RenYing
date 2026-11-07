@@ -1,3 +1,5 @@
+# 离线版：确认 renying-offline.html 双击打开也能玩（不依赖网络和服务器）。
+# 本地复现：node tools/tests/rollback-test.mjs --offline
 name: Offline Standalone Build
 
 on:

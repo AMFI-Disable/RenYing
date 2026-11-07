@@ -1,9 +1,29 @@
 // 刃影 云端账号与同步模块 (Cloudflare Workers + D1 Serverless)
 // 提供云端账号注册、登录、自动同步以及断网本地降级机制
+//
+// 文件结构（都在一个立即执行函数里，最后挂到 window.CloudSave）：
+//   1. 服务器地址与配置      getEndpoint / setEndpoint / getConfig
+//   2. 墨锭账本、进度计数账本  本机先记、服务器确认后再删（ledger* / prog*）
+//   3. 反作弊认的入账         只有武库能拿到记账入口（inkGrantKey）
+//   4. 本机账号密码           pwHash 等
+//   5. 登录令牌               access token + refresh token，快过期前自动续
+//   6. 同步状态与多标签页      cloudActive、setSync、同一浏览器几个标签页互相通知
+//   7. 存档合并               toCloudData / mergeProfiles（本机和云端各有进度时取并集）
+//   8. 人机验证与 api()       所有请求都走 api()：带令牌、401 自动续一次、要验证时弹 Turnstile
+//   9. 各个接口               econ、market、gboss、flags、排行榜、列传、反作弊
+//  10. 同步                  doSync / flush（关网页前也会尽量推一次）
+//  11. 账号                  注册、登录、退出、设备列表
+//  12. 存档读写              loadProfile / saveProfile / syncNow / pullNow
+//  13. 导出导入与签名         导出文件带签名，导入时校验
+//  14. 启动与挂到全局
+// 找 bug 提示：同步不上先看 getSyncState() 和浏览器网络面板里 /api/ 的返回；
+//   墨锭对不上看 LEDGER（本机还没被服务器记上的在 LEDGER.un）；登录掉线看 refreshNow 和 authLost。
+//   服务器那一头在 cloudflare/worker/ 里。
 
 (function() {
   'use strict';
 
+  /* ---------- 1. 服务器地址与配置 ---------- */
   const DEFAULT_ENDPOINT = 'https://renying.evengao6688.workers.dev';
 
   function getEndpoint() {
@@ -262,6 +282,7 @@
   }
   function inkGrantKey() { if (grantGiven) return null; grantGiven = true; return grantAdd; }
 
+  /* ---------- 4. 本机账号密码 ---------- */
   /* 本机账号的密码散列。
      旧版本用 btoa() 存密码：密码里有中文或任何非 Latin-1 字符就抛 InvalidCharacterError，
      账号根本建不起来。这里改成 SHA-256（拿不到 crypto.subtle 时退到 UTF-8 安全的编码），
@@ -306,6 +327,7 @@
   }
 
   // 登录凭证：token 每个请求都带。新服务器发的只管 30 分钟，refresh 用来换新的，exp 是 token 什么时候过期（本机时间）。
+  /* ---------- 5. 登录令牌（access + refresh） ---------- */
   // 老服务器、开关没开时只有 30 天的老式 token，没有 refresh
   const TOKEN_KEY = 'renying-cloud-token', REFRESH_KEY = 'renying-cloud-refresh', EXP_KEY = 'renying-cloud-exp';
   function getToken() {
@@ -405,6 +427,7 @@
     } catch (e) {}
   }
 
+  /* ---------- 6. 同步状态、本机镜像、多标签页 ---------- */
   function cloudActive() {
     const u = getUser();
     return !!(hasValidConfig() && u && u.isCloud && getToken());
@@ -524,6 +547,7 @@
     authErrListeners.forEach(fn => { try { fn({ kind, error: (data && data.error) || '', ban: data && data.ban }); } catch (err) { console.warn('auth error listener', err); } });
   }
 
+  /* ---------- 7. 存档合并（本机和云端各有进度时取并集） ---------- */
   function toCloudData(prof) {
     const p = prof || {};
     return {
@@ -641,6 +665,7 @@
     return merged;
   }
 
+  /* ---------- 8. 人机验证与 api()：所有请求都走这里 ---------- */
   // 核心 HTTP 异步请求封装
   // 人机验证：服务器回 need: 'turnstile' 时弹一个框（Cloudflare Turnstile），拿到结果再重发。
   // site key 跟着 /api/flags 下来；服务器没开人机验证时它是空的，这一段什么都不做。玩家点取消就算没过
@@ -737,6 +762,7 @@
   }
 
   // 武库的每个动作都交给服务器算。每次带一个随机编号：网络断了用同一个编号重试，服务器只执行一次
+  /* ---------- 9. 各个接口（武库、市场、全服 boss、开关、排行榜、列传、反作弊） ---------- */
   async function econ(act, args) {
     const u = getUser();
     if (!cloudActive() || !u) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
@@ -818,6 +844,7 @@
   // 反作弊记录（服务器那份只能往上加）
   async function acGet() { if (!cloudActive()) return null; const r = await api('/api/ac', { method: 'GET' }); return r && r.rec ? r : null; }
   async function acReport(reason) { if (!cloudActive()) return null; const r = await api('/api/ac', { method: 'POST', body: JSON.stringify({ reason: String(reason || '').slice(0, 60) }) }); return r && r.rec ? r : null; }
+  /* ---------- 10. 同步 ---------- */
   // 服务器回来的存档：墨锭按账本算（加上本机还没被记上的那几条）
   function adoptProfile(uid, profile, L) {
     if (!profile || !L) return profile;
@@ -903,6 +930,7 @@
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(true); });
   }
 
+  /* ---------- 11. 账号：注册、登录、退出、设备 ---------- */
   // 账号注册
   async function register(username, password, carryProf) {
     const name = String(username).trim();
@@ -1115,6 +1143,7 @@
     return api('/api/devices', { method: 'POST', body: JSON.stringify(id === 'all' ? { all: true } : { id }) });
   }
 
+  /* ---------- 12. 存档读写 ---------- */
   // 获取当前用户
   function getUser() {
     if (currentUser) {
@@ -1278,6 +1307,7 @@
     return merged;
   }
 
+  /* ---------- 13. 导出、导入、签名 ---------- */
   // 触发浏览器原生文件下载
   function triggerDownload(filename, text) {
     const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
@@ -1455,6 +1485,7 @@
     return { success: true, uid: res.uid, name: res.name, isCloud: true };
   }
 
+  /* ---------- 14. 启动与挂到全局 ---------- */
   function init() {
     migrateLegacyCache();
     dropDevSession();

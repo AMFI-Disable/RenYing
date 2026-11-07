@@ -1,3 +1,5 @@
+# 武库经济和反作弊：开箱、买卖、熔铸、入账对账；--bundle 用构建出来的 worker.bundle.js 再跑一遍。
+# 本地复现：node tools/tests/econ-test.mjs（再加 --bundle）
 name: Armory Economy & Anti-Cheat
 
 on:

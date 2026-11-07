@@ -5,6 +5,8 @@
 //   采样：每次打开网页，同一条错误只报一次，最多报 5 条；RENYING_ERR_RATE（0 ~ 1）可以只让一部分网页上报
 //   离线版（双击打开的 html）不上报，只做面板兜底
 // 这个文件最先加载（在其他脚本前面），这样加载阶段的错也接得到。
+// 文件结构：脱敏（scrub）、浏览器和位置信息 → 上报（report） → 全局监听 → 面板兜底（panelFail / guard）。
+// 找 bug 提示：本地调试时 ERR.on 是假（不是 http/https 或被采样跳过），想看上报内容就在 report 里打断点。
 (function () {
   'use strict';
   const ERR = { seen: new Set(), sent: 0, MAX: 5, busy: 0 };

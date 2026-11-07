@@ -1,3 +1,5 @@
+/* 第 7 层（最后加载）：全服肉鸽选秘卷、首页三大入口、横屏手机、纯键盘模式、木人试剑、
+   模式大厅、对战页、习武、地图战报、顿悟密卷。最后加载，所以这里的规则优先级最高。 */
 /* 全服肉鸽：共选秘卷 */
 .home-wrouge { padding-top: 10px; padding-bottom: 10px; gap: 4px; border-color: rgba(170,150,255,.6); background: linear-gradient(125deg, rgba(170,150,255,.2), rgba(43,212,154,.1) 58%, var(--panel)); }
 .home-wrouge .hc-kicker { color: #b9a8ff; }
