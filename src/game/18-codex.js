@@ -1,4 +1,5 @@
 // ======================= 角色图鉴界面 =======================
+// 本文件：角色图鉴的界面：属性条（statRows）、整页渲染（renderCodex）、演示卡片的播放导演（startCodexCardsDirector）、打开图鉴。
 let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
 demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)), () => cxActiveMove === 'full' ? null : cxActiveMove);
 function statRows(c) {

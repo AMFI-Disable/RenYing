@@ -1,4 +1,11 @@
 // ======================= 绘制：界面 =======================
+// 本文件：画对局界面和整帧画面的合成。
+//   1. 木人桩数据卡、按键提示、醉翁 / 墨羽 / 玉箫等侠客的专属资源条
+//   2. HUD：2v2、同袍肉鸽、普通对局（drawHUD）、统计、结算字幕、播报
+//   3. 离屏画布（offCanvas）、大招电影镜头（cine*）、萤火虫
+//   4. 发光（drawBloom：四分之一尺寸画好再一次合成）、暗角（drawVignette：烤成贴图）、背景虚化
+//   5. render：一帧的总入口，按顺序画背景 → 场地 → 侠客 → 特效 → 发光 → 界面
+// 找 bug 提示：性能问题先看 drawBloom、drawVignette、drawBackdrop——没有 GPU 的机器上整屏合成最贵。
 function drawTrainStats(cx, top, bh) {
   if (TUT) return;
   if (FOREST.on) return drawForestHUD();

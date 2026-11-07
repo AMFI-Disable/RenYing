@@ -1,4 +1,9 @@
 // ======================= 声音 =======================
+// 本文件：所有声音。
+//   1. 音效：用 Web Audio 现场合成（噪声、音调、金属声），SFX.xxx() 调用，不需要音频文件
+//   2. 程序生成的背景音乐（没有音乐文件时的后备）
+//   3. 背景音乐文件：assets/music/*.mp3，按需下载、循环播放；离线版从 window.MUSIC_DATA 读
+// 找 bug 提示：浏览器要用户先点一下页面才允许出声，initAudio 在第一次交互时才建 AudioContext。
 let AC = null, master = null, noiseBuf = null, muted = false;
 function initAudio() {
   if (AC) { if (AC.state === 'suspended') AC.resume(); return; }

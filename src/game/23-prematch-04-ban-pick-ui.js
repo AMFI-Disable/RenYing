@@ -1,4 +1,5 @@
 // ======================= 点将台信息与交互 =======================
+// 本文件：点将台的界面：侠客详情、地图横幅、下方的侠客卡片栏、整页渲染（renderBP）、确认。只读点将状态，不改。
 function bpDetailHTML(i) {
   if (i < 0) return '<p style="color:var(--dim);grid-column:1/-1;margin:0">把鼠标移到角色上，可查看招式说明。</p>';
   const c = CHARS[i], S = SKILLS[c.skill], U = ULTS[c.ult];

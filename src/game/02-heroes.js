@@ -1,4 +1,8 @@
 // ======================= 招式 =======================
+// 本文件：把 src/data/ 的侠客表展开成游戏里用的 CHARS / BAL / CHAR_MOVES。
+//   balOf / balDmg：按侠客的强度倍率算伤害；buildMoves：普攻底子 × 侠客 stat × moveMods = 这位侠客的招式表
+//   WEAPON_LEN / WEAPON_POSE_MODS：各种兵器的长度和出招姿势的替换
+// 找 bug 提示：某位侠客的普攻帧数和预期不一样，在控制台打印 CHAR_MOVES[CHAR_IDX.<id>] 对照 src/data/01-moves.js。
 // 普攻招式表 MOVES、大招收尾 FINAL / SP_SLASH 和取消规则 CANCEL 在 src/data/01-moves.js
 
 // ======================= 角色 =======================

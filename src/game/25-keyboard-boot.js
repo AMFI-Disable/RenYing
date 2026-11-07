@@ -1,4 +1,6 @@
 // ======================= 键盘 =======================
+// 本文件：全局键盘事件（对局里的按键、F1 判定框、暂停……）、切到后台时要不要暂停，以及游戏启动（resize 和最后的初始化）。
+// 注意：这是 src/game/ 里倒数第二个文件，启动代码要在前面所有定义都就绪以后才跑。
 window.addEventListener('keydown', e => {
   initAudio();
   if (e.code === 'KeyM') { muted = !muted; return; }

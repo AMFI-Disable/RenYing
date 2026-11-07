@@ -1,4 +1,6 @@
 // ======================= 设置与键位 =======================
+// 本文件：设置页（SETTING_ROWS 定义每一行）和改键（KEY_ACTIONS、handleKeyRebind）。
+// 找 bug 提示：设置项读写都走 SETTINGS / saveSettings（01-core.js）；改键存在 custom1PKeys（06-input-net.js）。
 // ======================= 设置 =======================
 let settingsBack = 'menu';
 const SETTING_ROWS = [

@@ -1,4 +1,5 @@
 // ======================= 2v2 组队：你 + 电脑队友 vs 两电脑（p_cc）、两人 vs 两电脑（pp_cc）、两人 vs 两人（pp_pp） =======================
+// 本文件：本机 2v2 的开局（两人 vs 两电脑、两人 vs 两人）和组队弹窗。
 // ally：队友 C 交给电脑（p_cc），不然是同一台电脑上的 2P
 function start2v2LocalCoop(p1 = 0, p2 = 2, foe1 = 1, foe2 = 3, level = 'normal', ally = false) {
   if (p2pActive()) netDropWaiting();

@@ -1,3 +1,6 @@
+// ======================= 联机大厅 =======================
+// 本文件：联机状态和延迟显示、房间规则和地图投票、复制邀请链接、匹配对战（mm*）、在线人数心跳（pres*）、
+// 匿名游玩统计（stat*）、按房间号加入、从网址里读房间号。
 function netStatus(t) { if ($id('netStatus')) $id('netStatus').textContent = t; }
 setTimeout(renderAcc, 0);
 function updateVerLine() {

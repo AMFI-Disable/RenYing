@@ -1,8 +1,15 @@
 // ======================= 大招（E） =======================
+// 本文件：每位侠客的大招（ULTS 表，一招一项，每项前面标了是谁的）。
+// 两种写法：flurry 连斩型（n 刀、每刀间隔 iv、最后一刀 fin）由 09-actions.js 的 specialUpdate 统一处理；
+//          其他的自己写 start / update / pose。大招开始时有一段定格（superFreeze），这段时间不算进招式时间。
+// 找 bug 提示：大招打不中先看 update 里的判定框；大招之后动不了，看 endSpecial 有没有被调到。
 // flurry 类型沿用“冲刺后乱斩”的流程，其它类型用 begin / update 自己写
 const ULTS = {
+  // ---- 青锋 · 大招 E：残月（crescent） ----
   crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, dashSpd: 1750, dashT: 0.28, desc: '纳刀起手，一记居合突刺撕开战局（突进距离提升至 1.25 倍）；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
+  // ---- 绯影 · 大招 E：千影（shadows） ----
   shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, dashSpd: 1750, dashT: 0.28, airTrack: true, desc: '结印潜入暗影，贴地瞬步欺身而入（突进距离提升至 1.25 倍；若对手身处空中且在突进射程内，化为暗影腾空追猎）；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
+  // ---- 铁山 · 大招 E：山崩（avalanche） ----
   avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（0.9 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
     begin(f, foe) {
       f.sp = 'leap'; f.vy = -1050; f.y = -1;
@@ -69,6 +76,7 @@ const ULTS = {
         }
       } else if (f.sp === 'slam' && f.t >= 0.5) endSpecial(f);
     } },
+  // ---- 辅助招式（不直接占一个按键）：百鸟朝凤（phoenix） ----
   phoenix: { name: '百鸟朝凤', desc: '原地凝枪，向前连刺八道枪影，一枪远过一枪，末枪一挑把人送上半空（终结75伤害）。此招可挡。',
     begin(f) { f.sp = 'thrusts'; f.spN = 0; f.spPose = 'ls_stance'; f.invul = 0.2; },
     update(f, foe) {
@@ -83,6 +91,7 @@ const ULTS = {
       }
       if (f.t >= 0.95) endSpecial(f);
     } },
+  // ---- 凌霜 · 大招 E：刹那（timestop） ----
   timestop: { name: '刹那', desc: '长枪拄地，凝神入定，天地为之一滞。漫天枪影泼洒开来，终归于一线寒芒，极速贯穿（140 到 185 伤害）。贯穿得手触发【寒霜贯日】：重置回马枪与枪旋冷却，并令对手陷入 4 秒冰冻迟缓（移速减慢 40%）。',
     begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; superFreeze = 0.9; superOwner = f; f.spX = f.x; f.hitDone = false; SFX.superOn(); },
     update(f, foe) {
@@ -109,6 +118,7 @@ const ULTS = {
       }
       if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
     } },
+  // ---- 流云 · 大招 E：龙卷（tornado） ----
   tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。',
     begin(f) {
       f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0;
@@ -125,6 +135,7 @@ const ULTS = {
       }
       if (f.t >= 0.85) endSpecial(f);
     } },
+  // ---- 雷鸣 · 大招 E：雷霆万钧（thunder） ----
   thunder: { name: '雷霆万钧', desc: '一拳击破长空，引落九天神雷。三道天雷循着对手踪迹直劈而下（每道 48 伤害，破防击飞）。引雷触发【雷帝灌顶】：重置奔雷拳与撼地冷却，自身直接回涌 30% 绝技气量！',
     begin(f) {
       f.sp = 'cast'; f.spN = 0; f.spPose = 'lm_kick'; f.invul = 0.2;
@@ -141,6 +152,7 @@ const ULTS = {
       }
       if (f.t >= 1.2) endSpecial(f);
     } },
+  // ---- 墨羽 · 大招 E：符阵（inkdragon） ----
   inkdragon: { name: '符阵', desc: `把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = ${FU_BASE} + 每张符 ${FU_PER}（最多 ${FU_BASE + FU_PER * FU_MAX}）。`,
     begin(f) {
       f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
@@ -164,6 +176,7 @@ const ULTS = {
       }
       if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
     } },
+  // ---- 燕翎 · 大招 E：万羽（featherstorm） ----
   featherstorm: { name: '万羽', desc: '展翼直上九霄，唤来漫天破甲翎羽如暴雨倾泻（14 枚，每枚 14 伤害）。齐射触发【凌霄破虚】：重置俯冲突袭与翎羽射击冷却，御空飞行耐力全额回满。',
     begin(f) {
       f.sp = 'cast'; f.spN = 0; f.spPose = 'yl_wings'; f.invul = 0.2;
@@ -180,6 +193,7 @@ const ULTS = {
       }
       if (f.t >= 1.1) endSpecial(f);
     } },
+  // ---- 月华 · 大招 E：月华如水（moonflow） ----
   moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 135 点生命；月芒震退贴身之敌（75 伤害）。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
     begin(f) {
       f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + Math.round(100 * HERO_HP_SCALE)); f.hitDone = false;
@@ -197,6 +211,7 @@ const ULTS = {
       }
       if (f.t >= 0.55) endSpecial(f);
     } },
+  // ---- 玉箫 · 大招 E：广陵散（guangling） ----
   guangling: { name: '广陵散', desc: '奏一曲广陵散：六道音刃从左右两侧轮番穿过对手（每道 14 伤害），曲终一记【绝响】从对手脚下炸开（60 伤害，身上每枚音律再 +15，不可格挡，挑空）。曲罢音律回满，清音冷却清零。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'yx_play'; f.invul = 0.3; SFX.superOn(); },
     update(f, foe) {
@@ -214,6 +229,7 @@ const ULTS = {
       }
       if (f.t >= 1.35) endSpecial(f);
     } },
+  // ---- 醉翁 · 大招 E：山水之间（shanshui） ----
   shanshui: { name: '山水之间', desc: '醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。画卷落下后对手困在蓬莱境里 2 秒：对手的屏幕被画挡住，看不见自己和醉翁在哪，只有醉翁一方看得见。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'zx_drink'; f.invul = 0.3; SFX.superOn(); },
     update(f, foe) {
@@ -224,7 +240,9 @@ const ULTS = {
       }
       if (f.t >= 1.95) { if (foe.hp > 0) foe.veilT = PENGLAI_T; endSpecial(f); }
     } },
+  // ---- 辅助招式（不直接占一个按键）：八仙过海（eightimm） ----
   eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 12, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
+  // ---- 勾陈 · 大招 E：开天一锤（skynet） ----
   skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 0.9 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitDone = false; SFX.superOn(); },
     update(f, foe) {
@@ -245,6 +263,7 @@ const ULTS = {
       }
       if (f.t >= 1.3) endSpecial(f);
     } },
+  // ---- 凌雀 · 大招 E：万线归宗（needlestorm） ----
   needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。',
     begin(f, foe) {
       f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
@@ -278,6 +297,7 @@ const ULTS = {
       if (f.t >= 1.15) endSpecial(f);
     } },
   // 离影：每个雾身朝对手斩出一道刀光，然后全部散掉；本体最后瞬移到对手身前补一刀。没有雾身就只剩这一刀。没有无敌（只有出手那一下的定格）
+  // ---- 离影 · 大招 E：万影归一（mistarray） ----
   mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 30 伤害，按雾身复制攻击的 75% 计算），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
     begin(f, foe) {
       f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
@@ -304,6 +324,7 @@ const ULTS = {
       if (f.t >= 0.8) endSpecial(f);
     } },
   // 磁仙：正极磁石在天上、负极磁石在地上，把对手夹成三明治（对手是中间的肉饼）
+  // ---- 磁仙 · 大招 E：天地磁合（sandwich） ----
   sandwich: { name: '天地磁合', desc: '对手脚下浮出一块负极磁石、头顶压下一块正极磁石，两块磁石异极相吸，把对手牢牢吸住、越合越快，最后合拢夹成肉饼（125 伤害，不可格挡），被夹扁的人定住 1 秒。放的时候对手正在腾空闪这类无敌里，就只吸得住磁石，夹不到人。',
     begin(f, foe) {
       f.sp = 'cast'; f.spN = 0; f.spPose = 'lm_boxer'; f.invul = 0.75; f.vx = 0; f.hitDone = false;   // 合拢之前不会被打断
@@ -345,6 +366,7 @@ const ULTS = {
       if (f.t >= 1.15) { magRelease(f); endSpecial(f); }
     } },
   // 千机：千丝收网（E）——绞盘机栝全力收缩金丝，傀丸贯穿全场直线拉回，撞穿沿途敌人并刷新 Q
+  // ---- 千机 · 大招 E：千丝收网（recallball） ----
   recallball: { name: '千丝收网', desc: '手腕高强发条绞盘强力反卷金丝，无论傀丸身在何处，皆以破空之势直线拉回千机手中！途中被击中的敌人遭受 120 点高额贯穿巨创并掀飞浮空；傀丸回笼瞬间立即刷新【投丸】冷却。千机本人不受任何傀丸撞击伤害。',
     begin(f, foe) {
       f.sp = 'cast'; f.spN = 0; f.spPose = 'fy_seal'; f.invul = 0.8; f.vx = 0; f.hitDone = false;

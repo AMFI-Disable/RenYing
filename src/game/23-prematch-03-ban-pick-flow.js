@@ -1,4 +1,6 @@
 // ======================= 禁选、选人和开局流程 =======================
+// 本文件：点将台的流程：开始（bpStart）、合法性检查（bpValid）、执行一步（bpApply）、结束开局（bpFinish / launchBpMatch）、电脑的选择、倒计时。
+// 找 bug 提示：联机时每一步都要两边一致，bpApply 是唯一改点将状态的地方。
 function bpStart(mode, customOpts = null) {
   currentPreMatch = null;
   customOpts = { ...(customOpts || {}) };

@@ -1,4 +1,6 @@
 // Compensation, welfare, daily tasks, and redemption.
+// 本文件：补偿、新手福利、每日任务（TASK_DEFS / taskBump / renderTasks）、礼包兑换码。
+// 找 bug 提示：任务按北京时间每天刷新（bjDay）；领奖要走服务器（rwClaim），本地只记进度。
 // ---------- 补偿：任务能刷新重复领奖，给每位玩家补一位自选侠客（活动期内领） ----------
 let compAsked = false;
 function compKey() { return 'renying-comp1022-' + curName(); }

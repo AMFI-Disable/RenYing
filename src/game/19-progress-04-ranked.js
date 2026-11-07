@@ -1,4 +1,6 @@
 // Ranked season state and presentation.
+// 本文件：排位赛：赛季、段位表（RK_TIERS）、加减分（rkDelta）、开局 / 结算（rkBegin / rkFinish）、段位勋章、排位大厅。
+// 找 bug 提示：排位分要先报给服务器才算数（reportProgress / commitNetProgress），断网时留着等下次补报（rkCheckPending）。
 // ---------- 排位赛：赛季、段位、定级（不需要服务器，分数存在账号里） ----------
 // 分数 1000–25000。D C B A S 每个字母 5000 分（D 从 1000 起，只有 4000 分），
 // 每个字母最低的 1500 分是“-”、最高的 1500 分是“+”，中间是不带符号的。

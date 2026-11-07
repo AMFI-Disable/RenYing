@@ -1,4 +1,13 @@
 // ======================= 动作 =======================
+// 本文件：侠客能做的所有动作。
+//   1. 基本动作：回到中立、出普攻、跳、冲刺、放大招（startSpecial / specialUpdate）
+//   2. 技能执行：startSkill、招架、雷鸣的反击
+//   3. 飞行道具（projs）：生成、移动、碰撞
+//   4. 腾空闪（ESC 状态机）和受击中可放的技能（tryBreakoutSkill）
+//   5. 替身、傀丸（decoys / hitBall）
+//   6. 雾身（离影）：留影、渡影、碎裂、跟随
+//   7. 蓄力斩、按键缓冲，以及每帧总入口 updateFighter 和物理 physics / 落地 onLand
+// 找 bug 提示：每位侠客每帧都走 updateFighter：先看 f.state 是什么，再看对应的分支。
 function toNeutral(f) {
   f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.thunderGuardT = 0; f.rooted = false;
   f.state = f.onGround() ? 'idle' : 'air';

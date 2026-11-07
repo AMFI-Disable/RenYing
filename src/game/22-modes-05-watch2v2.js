@@ -1,4 +1,5 @@
 // ======================= 2v2 天道演武观战 (Watch AI vs AI 2v2) =======================
+// 本文件：2v2 观战：电脑替两队点将（watch2v2AiChoice），一步一步自动禁选，然后开打（startWatch2v2）。
 // watch2v2Draft: [ban1, team1_p1, team1_p2, ban2, team2_p1, team2_p2] -> 6 个完全不重复的英雄索引
 let watch2v2Draft = [3, 0, 1, 6, 2, 7];
 

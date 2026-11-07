@@ -1,4 +1,10 @@
 // ======================= 输入 =======================
+// 本文件：键盘输入和联机的公共部分。
+//   1. 输入：Ctrl（一位玩家这一帧按了什么）、默认和自定义键位、隐藏的设置点击
+//   2. 联机：NET 状态、连上 / 断开 / 离开、系统消息、掉线后电脑接管或判胜
+//   3. 帧同步：snapshot / applySnapshot（整局状态）、onNetMsg 收消息、netTick 每帧收发、setupNetMatch 开局
+// 回滚联机的核心（存档、重算）在 20-tutorial-rollback-touch.js 的 ROLL 一节，点对点连接在 src/net-p2p.js。
+// 找 bug 提示：联机两边画面不一样，先跑 node tools/tests/netplay-test.mjs，它会指出第一处不一致的字段。
 let clock = 0;
 class Ctrl {
   constructor() { this.held = { left: false, right: false, down: false, atk: false, jump: false }; this.atkT = 0; this.buf = {}; }

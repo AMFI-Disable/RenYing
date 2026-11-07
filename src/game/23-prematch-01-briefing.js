@@ -1,4 +1,5 @@
 // ======================= 赛前地图说明 =======================
+// 本文件：开打前的赛前状态（选了谁）和山河异境的地图说明页。
 // ======================= 赛前地图说明与点将台 =======================
 function preMatchCreate(mapId, seed) {
   return { mapId: MAPS[mapId] ? mapId : null, seed: seed >>> 0, picks: [[], []], candidates: [[], []], recommendations: [[], []], selections: [[], []] };

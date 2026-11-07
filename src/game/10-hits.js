@@ -1,4 +1,9 @@
 // ======================= 判定 =======================
+// 本文件：攻击判定和打中之后的结算。
+//   hitbox / hurtbox：攻击框和受击框；tryHit：这一帧有没有打中；predictHit：给 AI 用的"现在出手打不打得到"
+//   applyHit：打中以后的一切（伤害、格挡、破防、击退、挑飞、顿帧、加气、秘卷效果）
+//   fighterDown / hitStopOf / hitVisual：倒地、顿帧长短、打击特效；pushApart：两人别重叠
+// 找 bug 提示：对局里按 F1 打开判定框透视（debugHitbox）能直接看到框；伤害数字不对就在 applyHit 里按顺序看各个倍率。
 function hitbox(f, b) {
   const x0 = f.x + f.face * b[0], x1 = f.x + f.face * b[2];
   return [Math.min(x0, x1), f.y + b[1], Math.max(x0, x1), f.y + b[3]];

@@ -1,4 +1,6 @@
 // Player profile and equipped skin behavior.
+// 本文件：玩家存档 PROF（拥有的侠客、皮肤、墨锭、进度……）和"现在穿哪款皮肤"的判断。
+// 找 bug 提示：存档的读写和云同步在 src/cloud.js；这里的 applyProfile 只负责把存档里的东西用到游戏上。
 const PROF = {
   loaded: false,
   guest: true,

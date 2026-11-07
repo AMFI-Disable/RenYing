@@ -1,4 +1,5 @@
 // ======================= 页面导航与首页交互 =======================
+// 本文件：打开 / 返回页面（openScreen / backToMenu）、首页正中的展示侠客、顶部导航、首页的任务提示。
 function updateXiwuSummary() {
   const info = $id('xiwuQuickInfo'); if (!info) return;
   const active = currentSingleTab;

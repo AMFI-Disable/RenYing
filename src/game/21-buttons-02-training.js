@@ -1,4 +1,5 @@
 // ======================= 木人训练与对手行为栏 =======================
+// 本文件：木人桩：练哪位侠客、木人的特性开关、对手行为栏（稻草人做什么，见 src/data/14-dummy.js）、几种练习的开局。
 let trainChar = 0, trainTargetMode = 'dummy';
 const trainModeSegEl = $id('trainModeSeg');
 if (trainModeSegEl) {

@@ -1,4 +1,11 @@
 // ======================= 姿势动画 =======================
+// 本文件：动画、特效和主循环。
+//   1. 姿势动画：按状态挑目标姿势（targetPose），插值、反向运动学（ik）、骨架、围巾
+//   2. 特效粒子：addP / hitFX / ring / dust，updateFX 每帧更新
+//   3. 主循环：step（固定步长推进一帧逻辑）、镜头、simTick、后台标签页时用 Worker 计时
+//   4. 青锋行入口、对战回放（录制、保存、播放）、青锋行奖励
+//   5. frame / frameBody：浏览器每次刷新调用一次，按需要跑几步 step 再画一帧；自动画质（autoQualityTick）
+// 找 bug 提示：逻辑只在 step 里推进（每步 STEP 秒），画面帧率高低不影响结果；卡顿时看 frameBody 一帧跑了几步。
 // 空中放技能：地面姿势换成空中专属姿势（伤害判定不变）；没列出的收招姿势用下落姿势
 const AIR_SKILL_POSE = {
   gale: { qf_charge: 'ak_gale0', qf_thrust: 'ak_gale1' },

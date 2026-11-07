@@ -1,4 +1,9 @@
 // ======================= 皮肤：换配色 + 光效，不往身上贴图形 =======================
+// 本文件：皮肤的光效部分（不改身体形状，只换配色、刀光、拖尾、命中特效、开场和胜利特效）。
+//   SKIN_TH / skinTh：每档品质的配色主题；skinBlade / skinGlow / skinTrail：刀光、发光、拖尾
+//   skinHitFX / skinTierHit：命中时按品质放的特效和音效；skinIntroFX / skinVictoryFX：开场和胜利
+//   drawSkinParticle / skinEmissive：皮肤粒子和发光层；星座皮肤的背后星图（drawZodiacBack）
+// 找 bug 提示：某款皮肤效果不对，先看 SKINS（19-progress-01-skins.js）里它的 rarity 和 tier，效果都是按档位选的。
 // 皮肤保留角色原本的发型、帽子、兵器样子，只换颜色；好看的东西都做成“光”和“动”：
 //   精英：主题色的刀光拖尾，出招时带一点主题粒子，命中有小爆点。
 //   传说：在精英的基础上，兵器刃口发光并有流光走过，围巾变成光带，身上有呼吸的微光，

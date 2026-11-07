@@ -1,4 +1,9 @@
 // ======================= 技能（Q） =======================
+// 本文件：每位侠客的 Q 技能和 R 招式（SKILLS 表，一招一项，每项前面标了是谁的哪个键），以及几个技能共用的机制：
+//   凌雀的换影瞄准（sd*）、印记（addNeedleMark）、磁仙的磁极（MAG / mag*）、千机的傀丸。
+// 一招的写法：{ name, cd 冷却秒数, desc 说明, start(f, foe) 起手, update(f, foe) 每帧, pose(f) 姿势, … }
+//   pass 可穿过对手、nofric 不受地面摩擦、air 空中可放、breakout 受击硬直中可放。
+// 找 bug 提示：搜「---- 侠客名」就能跳到他的招式；技能状态在 f.skPh（阶段）和 f.t（这一招放了多久）。
 // 每个技能：cd 冷却，start 开始时，update 每一帧，pose 用哪个姿势，ai 电脑什么时候用
 // 凌雀「移形换影」的追踪：大幅提升飞行速度、漂移回拉最大距离与转向灵敏度
 const SD_SPD = 3525, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
@@ -76,6 +81,7 @@ function magTick(f) {
   if (f.mChain > 0) { f.mT = (f.mT || 0) + STEP; if (f.mT >= MAG.demagRest) { f.mChain = 0; f.mT = 0; } }
 }
 const SKILLS = {
+  // ---- 青锋 · Q：疾风斩（gale） ----
   gale: { name: '疾风斩', cd: 6, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
     start(f) { f.vx = 0; },
     update(f, foe) {
@@ -99,6 +105,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 140 && d < 330 },
+  // ---- 绯影 · Q：影遁（blink） ----
   blink: { name: '影遁', cd: 11, pass: true, desc: '结印 0.3 秒后入影（结印时站着不动），影子 0.15 秒掠到对手背后施展十字绞杀（只伤血，不让对手僵直）。此后 1.5 秒内，下一击威力暴涨 50%。',
     start() {},
     update(f, foe) {
@@ -127,6 +134,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 36] : f.skPh === 2 ? ['dash', 60] : ['fy_xslash', 40],
     ai: (me, foe, d) => d > 120 },
+  // ---- 铁山 · Q：震地（quake） ----
   quake: { name: '震地', cd: 8, breakout: true, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
     start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); },
     update(f, foe) {
@@ -144,6 +152,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
     ai: (me, foe, d) => d < 420 && foe.onGround() },
+  // ---- 凌霜 · Q：回马枪（backthrust） ----
   backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（同一目标最多连挑 3 次，第 4 记强力震飞脱离）；枪旋余劲立时回转。',
     start(f) { f.vx = -f.face * 540; f.vy = -420; f.y = Math.min(f.y, -1); },
     update(f, foe) {
@@ -175,6 +184,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
     ai: (me, foe, d) => d < 120 },
+  // ---- 流云 · Q：风刃（windblade） ----
   windblade: { name: '风刃', cd: 4.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
     start() {},
     update(f) {
@@ -186,6 +196,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
     ai: () => true },
+  // ---- 雷鸣 · Q：雷闪（thunderfist） ----
   thunderfist: { name: '雷闪', cd: 5, nofric: true, pass: true, desc: '身化雷光贴地疾冲。一拳贯穿附带【触电麻痹】（0.38 秒电击瘫痪硬直），起手片刻后化为雷光霸体。',
     start(f) { f.armorT = 0; f.armorHits = 0; f.vx = 0; },
     update(f, foe) {
@@ -203,6 +214,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 110 && d < 360 },
+  // ---- 墨羽 · Q：墨阵（inktrap） ----
   inktrap: { name: '墨阵', cd: 5.2, desc: '提笔画出一池宽 115 像素的墨阵。踏入者陷入【深墨禁锢】（0.48 秒定身 + 2.8 秒迟缓）；再按 Q 可随时引爆。',
     start(f) { f.vx = 0; },
     update(f) {
@@ -215,6 +227,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
     ai: (me, foe, d) => d > 80 && d < 340 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
+  // ---- 燕翎 · Q：俯冲（dive） ----
   dive: { name: '俯冲', cd: 4.5, air: true, desc: '猎鹰收翼斜下俯冲。命中施加【鹰击钉地】（0.40 秒压制硬直）；自空中出手可借力回升并刷新技能。',
     start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -700; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
     update(f, foe) {
@@ -234,6 +247,7 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['jump', 20] : f.skPh === 1 ? ['yl_dive', 50] : ['getup', 16],
     ai: (me, foe, d) => d > 110 && d < 360 },
   // ---------- 右键招式 ----------
+  // ---- 青锋 · R（右键）：剑气（swordqi） ----
   swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道宏大弧月剑气。中距离直接【掀天挑空】（无地面硬直，直接送上半空），暗器更不在话下。',
     start(f) { f.vx = 0; },
     update(f) {
@@ -241,6 +255,7 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
+  // ---- 绯影 · R（右键）：飞镖（kunai） ----
   kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身一甩，四枚黑铁手里剑呈扇形激射。【无硬直击飞】，纯粹以极速密雨截断对手起手，穿透轻型投掷物。',
     start() {},
     update(f) {
@@ -251,6 +266,7 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
+  // ---- 铁山 · R（右键）：铁壁冲（ironwall） ----
   ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '狂暴冲锋掀起通天巨浪（通天判定，彻底封锁空中跳跃与腾空位移）。携千钧重势巨浪拍岸，对空中敌人强行下砸截落，双倍瓦解一切格挡！',
     start(f) { f.armorT = 0.38; f.armorHits = 1; f.vx = 0; },
     update(f, foe) {
@@ -305,6 +321,7 @@ const SKILLS = {
       if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
+  // ---- 凌霜 · R（右键）：枪旋（spin） ----
   spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（48 伤害）扫飞贴身之敌（对地面敌人仅平推硬直，仅浮空敌人会被击落地面）！',
     start(f) { f.vx = 0; f.spinN = 0; },
     update(f, foe) {
@@ -331,6 +348,7 @@ const SKILLS = {
       if (f.t >= 2) toNeutral(f);
     },
     pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
+  // ---- 流云 · R（右键）：开扇（windstep） ----
   windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。在空中开扇会斜着俯冲下去，落地炸开一圈风爆（24 伤害，挑起），再崩出 5 颗爆米花。',
     start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (airH(f) > 40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
     update(f, foe) {
@@ -344,6 +362,7 @@ const SKILLS = {
       if (f.t >= 0.4) toNeutral(f);
     },
     pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
+  // ---- 雷鸣 · R（右键）：金刚雷铠（stomp） ----
   stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
     start(f) {
       f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0);
@@ -366,6 +385,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 26] : f.skPh === 1 ? ['ts_slam', 48] : ['idle', 18],
     ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260) || (d < 150 && Math.random() < 0.75) },
+  // ---- 墨羽 · R（右键）：画符（inksplash） ----
   inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, lack: f => (f.fu || 0) >= FU_MAX ? '符已画满' : '墨不够', desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
     start(f) { f.vx = 0; },
     update(f) {
@@ -377,6 +397,7 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
+  // ---- 月华 · R（右键）：月轮（moonring） ----
   moonring: { name: '月轮', cd: 4.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
     start(f) { f.vx = 0; },
     update(f) {
@@ -384,6 +405,7 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['yh_mirror', 28] : ['l2a', 50], ai: (m, o, d) => d > 120 && d < 400 },
+  // ---- 燕翎 · R（右键）：翎羽（darts） ----
   darts: { name: '翎羽', cd: 2.5, air: true, desc: '振翅激射三道极速破甲翎羽，贯穿全场。此技【不击飞、无长硬直】，专精于全屏连续穿刺牵制与打断，破尽突进节奏。',
     start() {},
     update(f) {
@@ -395,6 +417,7 @@ const SKILLS = {
       if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['yl_wings', 30] : ['a1a', 60], ai: (m, o, d) => d > 120 },
+  // ---- 月华 · Q：月镜（mirror） ----
   mirror: { name: '月镜', cd: 7, nofric: true, desc: '举月轮如镜护胸，凝立 0.45 秒。近身来犯者被格开，随之而来的反斩施加【太阴绝罚】（95 伤害、1.05 秒超长硬直）与【禁身锁定】，无从闪避！',
     start(f) { f.parryT = 0.45; },
     update(f, foe) {
@@ -413,6 +436,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['yh_mirror', 40] : f.skPh === 2 ? ['hva', 60] : ['idle', 10],
     ai: () => false },
+  // ---- 玉箫 · Q：清音（soundwave） ----
   soundwave: { name: '清音', cd: 3.2, air: true, desc: '横箫一吹，放出一道音波。普攻攒下的音律会一次吹尽：每枚音律让音波更大、更快、伤害 +20；三律齐鸣时音波穿透、挑空、不可斩散，并让对手陷入【绕梁 · 失律】（2.2 秒迟缓）。',
     start(f) { f.vx *= 0.3; },
     update(f) {
@@ -427,6 +451,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['yx_play', 30] : ['yx_push', 50],
     ai: (me, foe, d) => d > 110 && d < 700 && ((me.notes || 0) >= 2 || d > 240) },
+  // ---- 玉箫 · R（右键）：回音壁（echowall） ----
   echowall: { name: '回音壁', cd: 6, breakout: true, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
     start(f) { f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
     update(f, foe) {
@@ -442,6 +467,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
     ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
+  // ---- 醉翁 · Q：亭中留客（pavilion） ----
   pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间无法移动，但可以用腾空闪脱困；也可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
     start(f) { f.vx = 0; },
     update(f, foe) {
@@ -456,6 +482,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['zx_sway', 30] : ['gc_wind', 40],
     ai: (me, foe, d) => d < 650 },
+  // ---- 醉翁 · R（右键）：与民同乐（feast） ----
   feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, lack: () => '酒不够', desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 115 血，捧着酒瓶僵直 1 秒；醉翁自己也灌一口回 182 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
     start(f) { f.vx = 0; f.drunk = 0; },
     update(f, foe) {
@@ -471,8 +498,11 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.skPh === 1 ? ['gc_throw', 60] : ['zx_drink', 24],
     ai: (me, foe, d) => (me.drunk || 0) >= 50 && d > 120 && d < 800 && me.hp < me.maxHp * 0.85 },
+  // ---- 没有侠客把它设成 Q / R（旧招式，删之前先搜有没有按 id 取用）：豪饮（drink） ----
   drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.3) toNeutral(f); }, pose: () => ['zx_drink', 24], ai: () => false },
+  // ---- 没有侠客把它设成 Q / R（旧招式，删之前先搜有没有按 id 取用）：醉步（drunkstep） ----
   drunkstep: { name: '醉步', cd: 4.5, desc: '东倒西歪一个滚翻。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.36) toNeutral(f); }, pose: () => ['zx_roll', 40], ai: () => false },
+  // ---- 勾陈 · Q：飞锤（hook） ----
   hook: { name: '飞锤', cd: 4, air: true, desc: '把链锤朝对手甩出去（射程约 495），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
     start(f) { f.vx *= 0.2; },
     update(f) {
@@ -481,6 +511,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.t < 0.18 ? ['gc_throw', 60] : ['gc_pull', 40],
     ai: (me, foe, d) => d > 160 && d < 500 },
+  // ---- 勾陈 · R（右键）：旋锤（whirl） ----
   whirl: { name: '旋锤', cd: 5, nofric: true, desc: '把链锤拎过头顶抡圆了转（约 1 秒，半径约 150），转圈时能慢慢挪步：前四圈每圈砸一下（每下 7 伤害），第五圈松手一甩把人砸飞（30 伤害）。锤风还能砸碎飞来的暗器。',
     start(f) { f.vx = 0; f.spN = 0; f.hitDone = false; },
     update(f, foe) {
@@ -502,6 +533,7 @@ const SKILLS = {
     },
     pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
     ai: (me, foe, d) => d < 170 },
+  // ---- 凌雀 · Q：穿叶飞梭（spindle） ----
   spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 5 秒【雀芒】印记（最多 5 层）并造成 30 伤害。',
     start(f) { f.vx = 0; },
     update(f, foe) {
@@ -514,6 +546,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : ['du_l1a', 40],
     ai: (me, foe, d) => d > 110 && d < 460 },
+  // ---- 凌雀 · R（右键）：移形换影（shadowdash） ----
   shadowdash: { name: '移形换影', cd: 7.5, pass: true, air: true, nofric: true, desc: '踏悬丝化作极速流光扑向对手，初次近身不刺，而是迂回从对手头顶翻到他身后（身后贴墙没地方时改为凌空漂移回拉），随后一路追踪直刺直至命中。对手无法精准招架；唯有正确格挡方可减免伤害并终结突进，但仍会被强袭震晕（不倒地）。穿刺已带【雀芒】之敌，引爆 1 层悬丝真气造成 30 爆炸伤害与挑空，并立即清零移形换影冷却（若目标带多层印记，可连续五发换影不休）！',
     start(f, foe) {
       f.vx = 0; f.vy = 0;
@@ -671,6 +704,7 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? (f.sdDrifting ? ['du_l1s', 30] : ['dash', 60]) : ['idle', 14],
     ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
   // 离影：雾身的规则和怎么选雾身在 09-actions.js 的「雾身」那一节，数在 src/data/heroes/13-liying.js 的 clone
+  // ---- 离影 · Q：留影（mistmark） ----
   mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。若场上已有雾身，它们会同步复制出刀并在身后化出较弱子影。场上最多 10 个雾身（含本体与子影所生）。雾身具备高额生命且可被攻击打散，被击碎时发生碎影自爆并短暂弱化对手。雾身随本体出招释放内功波动飞刃，虽伤害偏低但直透防御、加剧对手架势耐力流失。',
     start(f) { f.vx = 0; plantClone(f, f.x); },
     update(f, foe) {
@@ -685,6 +719,7 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['fy_seal', 40] : f.skPh === 1 ? ['l2a', 60] : ['idle', 14],
     ai: (me, foe, d) => d > 160 && d < 460 && (me.clones || []).length < (me.ch.clone ? me.ch.clone.max : 10) },
   // free：只能从自由状态（站、走、下落、防御）发动，不能接在出招后面，也不能从腾空闪里放
+  // ---- 离影 · R（右键）：渡影（mistswap） ----
   mistswap: { name: '渡影', cd: 4, free: true, breakout: true,
     can: f => ['idle', 'walk', 'air', 'block', 'hitstun', 'blockstun', 'launched'].includes(f.state) && !f.escInvul && !!pickClone(f, foeOf(f)),
     lack: f => (f.clones || []).length ? '那边没有雾身' : '没有雾身可渡',
@@ -740,6 +775,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['fy_seal', 50] : ['idle', 20],
     ai: () => false },
+  // ---- 磁仙 · Q：极性反转（polarswap） ----
   polarswap: { name: '极性反转', cd: 6, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
     start(f) {
       f.pol = f.pol > 0 ? -1 : 1; f.polT = 0.6; f.skill2CD = 0; f.mChain = 0; f.mT = 0;   // 换极性也顺便恢复消磁
@@ -750,6 +786,7 @@ const SKILLS = {
     update(f) { toNeutral(f); },
     pose: () => ['idle', 14],
     ai: () => false },
+  // ---- 磁仙 · R（右键）：磁极（magfield） ----
   magfield: { name: '磁极', cd: 6, desc: `正极：身边生出一圈磁石，把周围的敌人用力弹走，离得越近弹得越远（${MAG.rPlusDmg} 伤害）。负极：把中距离的对手吸过来，越近吸得越快，吸到身前定住 ${MAG.rMinusStun} 秒，不会倒地（${MAG.rMinusDmg} 伤害，挡不住）。`,
     start(f) { f.vx = 0; f.magN = f.pol; f.magTg = -1; },   // 按起手那一刻的极性放
     update(f, foe) {
@@ -793,6 +830,7 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['lm_boxer', 26] : [f.magN > 0 ? 'hva' : 'yx_push', 56],
     ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinusRange - 40 },
   // 千机：掷出玄铁傀丸（Q）——全场唯一存在，反弹驻留；傀丸在场期间 Q 锁定
+  // ---- 千机 · Q：投丸（throwball） ----
   throwball: { name: '投丸', cd: 0, desc: '释放腕甲卡扣，掷出天工玄铁傀丸。傀丸触地与撞壁皆会反弹，动能衰减后静止驻留场中（永不消散）。傀丸在场期间不可重复释放。',
     can: f => !projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead),
     lack: () => '傀丸已在阵中',
@@ -814,6 +852,7 @@ const SKILLS = {
     pose: f => f.skPh === 0 ? ['qf_charge', 20] : ['l1a', 50],
     ai: (me, foe, d) => !projs.some(p => p.kind === 'ironball' && p.owner === me.idx && !p.dead) && d > 120 },
   // 千机：暴雨梨花（R）——受击硬直亦可释放（breakout / ImmuneControl），远程触发傀丸爆射八方钢针护主
+  // ---- 千机 · R（右键）：暴雨梨花（ballspike） ----
   ballspike: { name: '暴雨梨花', cd: 10, breakout: true, desc: '袖口金丝震弦，远程激发傀丸内藏机关，向八方爆射淬毒钢针（造成 55 伤害与击飞）。具备【金丝护主】奇能：即便千机本人处于受击硬直或浮空，亦可强制解控发动。',
     can: f => projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead),
     lack: () => '阵中无傀丸',

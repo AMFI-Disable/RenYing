@@ -1,4 +1,8 @@
 // ======================= 成长系统：墨锭、任务、皮肤、排位 =======================
+// 本文件：皮肤表和皮肤的展示场景。
+//   SKINS：所有原有皮肤（侠客、品质、名字……）；武库新皮肤在 src/armory-core.js
+//   SCENES / pickScene：皮肤卡片背后的场景和天气；drawShape / drawGlyph / drawOrb / drawWeather：场景里的小图形
+// 注意：tools/build.py 用正则从这里读皮肤名字给管理网页，SKINS 每一行的写法（两格缩进、key: { char, rarity, name }）不要改。
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
 // 皮肤的稀有度颜色：武器箱里的饰品照武库的五档（精铁、碧玉、灵犀、赤霄、绝世），不在武器箱里的（比如青锋行）照原来的稀有 / 传说

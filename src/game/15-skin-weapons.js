@@ -1,4 +1,9 @@
 // ======================= 皮肤兵器：每款皮肤一把自己的兵器（只换样子，判定、范围、出招都和原皮一样） =======================
+// 本文件：每款皮肤自己的兵器外形（只换样子，判定还是原来的长度），以及几种通用的画法。
+//   skinWeapon：按侠客和皮肤挑兵器画法；下面按侠客分段（剑、双刃、巨剑、枪、扇……）
+//   weapon：普通兵器的画法；hat / topknot / drawWings / drawScarf / drawTrail：帽子、发髻、翅膀、围巾、拖尾
+//   drawParticles / drawProjs / drawPetals：粒子、飞行道具、花瓣的画法
+// 找 bug 提示：兵器画出来和判定对不上属于正常（皮肤只换样子）；判定长度看 02-heroes.js 的 WEAPON_LEN。
 const SKIN_WEAP = {};
 function skinWeapon(ws, sk, L, o, flash) {
   const draw = SKIN_WEAP[ws]; if (!draw) return false;

@@ -1,4 +1,9 @@
 // ======================= 皮肤造型：头饰、背饰、披风、武器特效 =======================
+// 本文件：皮肤的造型部分。
+//   drawDeco：头饰、背饰、披风、武器特效（按皮肤 key 分支，最长的一个函数）
+//   drawTaperedSeg / drawFace / drawBody：身体的画法（四肢是两头粗细不同的线段）
+//   headAcc：发型和头饰；flailSim：勾陈链锤的链子模拟（只用来画，不影响判定）
+// 找 bug 提示：搜皮肤 key（比如 'qf_p1'）就能找到它在 drawDeco 里的那一段。
 function drawDeco(sk, f, L, layer) {
   const D = L.deco; if (!D) return;
   const t = typeof clock === 'number' ? clock : 0;

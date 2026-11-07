@@ -1,4 +1,5 @@
 // ======================= 对局秘卷选择 =======================
+// 本文件：对局秘卷选择（开打前每位侠客选一卷）：推荐、倒计时、锁定、联机两边同步。
 function skipInteractiveDraft() {
   return (typeof navigator !== 'undefined' && /node|jsdom/i.test(navigator.userAgent || '')) ||
     (typeof window !== 'undefined' && (window.RENYING_TEST || window.__RENYING_TEST__)) ||

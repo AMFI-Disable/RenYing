@@ -1,4 +1,8 @@
 // ======================= 角色图鉴内容 =======================
+// 本文件：角色图鉴的内容（纯数据，几乎没有逻辑）：
+//   ICONS / SHORT：图标和短说明；HERO_MOVE_TYPES：每招的类型；HERO_HIT_DETAILS：打击数据；
+//   HERO_MOVE_SEQS / HERO_ULT_REPLAYS / HERO_FULL_DEMO：图鉴里演示动画的按键脚本；SKILL_FUN：技能趣谈。
+// 找 bug 提示：图鉴里的数字和实际不符时，以游戏里的数据为准（src/data/、02-heroes.js），这里改成一致即可。
 const ICONS = {
   passive: '<circle cx="12" cy="12" r="9"/><path d="M12 3a4.5 4.5 0 0 1 0 9 4.5 4.5 0 0 0 0 9"/><circle cx="12" cy="7.5" r="1"/><circle cx="12" cy="16.5" r="1"/>',
   light: '<path d="M20 4L7 17l-3 3 1-4L18 3l2 1zM5.5 14.5l4 4M14 6l4 4"/>',
