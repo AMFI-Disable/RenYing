@@ -480,34 +480,60 @@ function updateProjs() {
     }
     if (p.g) p.vy += p.g * STEP;
     if (p.kind === 'ironball') {
-      // 玄铁傀丸专属物理：弹跳、减速与静止
+      // 玄铁傀丸专属物理：永动反弹、金丝牵引回弹与传动加速
       if (p.recalling) {
         // 大招收球中：直线贯穿，不受重力与反弹限制
       } else {
         const floorY = -18;
         if (p.y >= floorY) {
           p.y = floorY;
-          if (Math.abs(p.vy) > 120 && (p.bounceCount || 0) < 3) {
-            p.vy = -p.vy * 0.65;
-            p.vx *= 0.8;
+          // 触地弹性高反弹，保持充沛动能
+          const minVy = -260;
+          if (p.vy > 60 || Math.abs(p.vy) > 80) {
+            p.vy = -Math.abs(p.vy) * 0.85;
+            if (p.vy > minVy) p.vy = minVy;
+            p.vx *= 0.94;
             p.bounceCount = (p.bounceCount || 0) + 1;
-            dust(p.x, 0, 8); ring(p.x, 0, 36, '235,165,70', 0.2); SFX.ballHit();
+            dust(p.x, 0, 7); ring(p.x, 0, 36, '235,165,70', 0.18); SFX.ballHit();
           } else {
-            p.vy = 0;
-            const dampRate = (M.map === 'ice' && typeof mapFavOn === 'function' && mapFavOn(fighterByIdx(p.owner))) ? 1.2 : 4.5;
-            p.vx = damp(p.vx, 0, dampRate, STEP);
-            if (Math.abs(p.vx) < 30) { p.vx = 0; p.resting = true; }
+            // 贴地滚动时保留弹跳机能，受金丝牵拉轻微浮起
+            p.vy = minVy * 0.6;
+            p.vx *= 0.96;
           }
         }
-        // 墙壁反弹
+        // 墙壁弹性高反弹（保留 88% 水平动能并获得轻微上弹）
         if (p.x <= WALL + 18) {
-          p.x = WALL + 18; p.vx = Math.abs(p.vx) * 0.75;
-          ring(p.x, p.y, 40, '235,165,70', 0.25); SFX.ballHit();
+          p.x = WALL + 18;
+          p.vx = Math.max(380, Math.abs(p.vx) * 0.88);
+          p.vy = Math.min(p.vy, -160);
+          ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
         } else if (p.x >= STAGE_W - WALL - 18) {
-          p.x = STAGE_W - WALL - 18; p.vx = -Math.abs(p.vx) * 0.75;
-          ring(p.x, p.y, 40, '235,165,70', 0.25); SFX.ballHit();
+          p.x = STAGE_W - WALL - 18;
+          p.vx = -Math.max(380, Math.abs(p.vx) * 0.88);
+          p.vy = Math.min(p.vy, -160);
+          ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
         }
-        p.speedTier = Math.abs(p.vx) > 1400 ? 3 : Math.abs(p.vx) > 400 ? 2 : 1;
+
+        // 天工金丝弹性牵引回弹机制（Golden Silk Tension Return）：
+        // 随着傀丸飞离主人，金丝产生轻柔弹簧牵引力将球拉回主人方向，便于主人连环击球形成对拉
+        const owner = fighterByIdx(p.owner);
+        if (owner && owner.hp > 0) {
+          const dx = owner.x - p.x;
+          const dist = Math.abs(dx);
+          if (dist > 140) {
+            // 距离越远，金丝拉力适度增强；飞离主人时减速更快，返程时加速送回主人身前
+            const pullDir = Math.sign(dx);
+            const springK = p.vx * pullDir < 0 ? 560 : 320; // 背向飞离拉力更明显
+            p.vx += pullDir * springK * STEP;
+          }
+          // 速度极低时保持最低活跃动能，不轻易停滞
+          if (Math.abs(p.vx) < 120) {
+            p.vx = (Math.sign(dx) || 1) * 160;
+          }
+        }
+
+        p.speedTier = Math.abs(p.vx) > 1300 ? 3 : Math.abs(p.vx) > 420 ? 2 : 1;
+        p.resting = false;
       }
     }
     if (p.boomer && p.age > p.turn) {
@@ -786,15 +812,16 @@ function updateDecoys() {
 }
 // 攻击先打到假人：假人碎掉，这一刀作废
 function hitDecoy(att, box) { hitClones(box, att.idx); if (hitDecoyBox(box, att.idx)) { att.hitDone = true; return true; } return false; }
-// 击打场上的玄铁傀丸（击球加速机制）
+// 击打场上的玄铁傀丸（击球加速与角度传动机制）
 function hitBall(att, box, m) {
   for (const p of projs) {
     if (p.dead || p.kind !== 'ironball') continue;
-    const bBox = [p.x - 24, p.y - 24, p.x + 24, p.y + 24];
+    const bBox = [p.x - 28, p.y - 28, p.x + 28, p.y + 28];
     if (overlap(box, bBox)) {
       att.hitDone = true;
       const isDl = att.moveName === 'dl';
       const isCs = att.moveName === 'cs1' || att.moveName === 'cs2';
+      const isAir = att.moveName === 'a1' || att.moveName === 'a2';
       const dir = att.face || 1;
       p.resting = false;
       p.hitCD = 0.08;
@@ -802,19 +829,22 @@ function hitBall(att, box, m) {
       p.unbreakable = true;
       if (isDl) {
         // 下攻击挑球：高抛弧线球
-        p.vx = dir * 650; p.vy = -850; p.g = 1400; p.speedTier = 2; p.dmg = 50;
+        p.vx = dir * 720; p.vy = -920; p.g = 1350; p.speedTier = 2; p.dmg = 52;
+      } else if (isAir) {
+        // 空中扣杀：斜向砸地剧烈反弹
+        p.vx = dir * 1150; p.vy = 680; p.g = 1200; p.speedTier = 2; p.dmg = 56;
       } else if (isCs) {
-        // 蓄力斩爆轰：高速重炮
+        // 蓄力斩爆轰：高速重炮，贯穿力极强
         const spd = att.moveName === 'cs2' ? 2200 : 1600;
-        p.vx = dir * spd; p.vy = -120; p.g = 900; p.speedTier = 3; p.dmg = att.moveName === 'cs2' ? 85 : 65;
+        p.vx = dir * spd; p.vy = -160; p.g = 850; p.speedTier = 3; p.dmg = att.moveName === 'cs2' ? 90 : 70;
         shake = Math.max(shake, att.moveName === 'cs2' ? 14 : 9);
       } else {
-        // 普攻推打：平推加速
-        p.vx = dir * (Math.abs(p.vx) > 500 ? Math.min(1800, Math.abs(p.vx) + 400) : 1100);
-        p.vy = -180; p.g = 1300; p.speedTier = Math.abs(p.vx) > 1400 ? 3 : 2; p.dmg = 55;
+        // 普攻推打：平推强力传动加速
+        p.vx = dir * (Math.abs(p.vx) > 500 ? Math.min(1850, Math.abs(p.vx) + 450) : 1250);
+        p.vy = -240; p.g = 1200; p.speedTier = Math.abs(p.vx) > 1300 ? 3 : 2; p.dmg = 55;
       }
       p.bounceCount = 0;
-      ring(p.x, p.y, 60, att.look.slash || '235,165,70', 0.35);
+      ring(p.x, p.y, 65, att.look.slash || '235,165,70', 0.35);
       for (let i = 0; i < 7; i++) {
         const a = rand(0, Math.PI * 2), v = rand(120, 280);
         addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: att.look.slash || '235,165,70', life: 0.2, max: 0.2 });

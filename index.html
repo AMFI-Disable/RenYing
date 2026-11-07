@@ -11502,7 +11502,7 @@ char: {
 name: '千机', role: '机关傀客', diff: 3, escCD: 8.0,
 skill: 'throwball', skill2: 'ballspike', ult: 'recallball', passive: 'momentum',
 passiveName: '机栝动能',
-passiveDesc: '战场唯一天工傀丸。Q 投出后反弹并驻留场上（未收回前不可重复释放）。普攻、下攻击与蓄力斩击中傀丸可将其传动加速，高速傀丸威力倍增并可撞碎敌方飞行道具。R 技能无论受击或受控皆可远程激发护主；E 大招收丸贯穿全场，重置 Q 技能。',
+passiveDesc: '战场唯一天工傀丸。Q 投出后保持超高动能持续弹跳，金丝牵引力随距离将其回拉，形成来回连击对拉。普攻、下挑、扣杀与蓄力斩击中傀丸可将其传动加速，高速傀丸威力倍增并可撞碎敌方飞行道具。R 技能无论受击或受控皆可远程激发护主；E 大招收丸贯穿全场，重置 Q 技能。',
 stat: { hp: 830, walk: 0.98, speed: 0.95, dmg: 1.0, reach: 1.0, swing: 0.85, jump: 1, weight: 1.05, defRating: 1.0, guardMax: 100, guardStab: 1.0, guardChip: 0.1, guardRegen: 28, poise: 1.0, size: 1.0 },
 hitFeel: 0.88,
 look: { body: '#332924', shade: '#1c1512', outline: '#e5a558', outlineA: .85, scarf: '#d4883b', slash: '235,165,70', blade: '#f5e2c4', hair: '#201a18', head: 'gear-crop', weapon: 'puppet' },
@@ -12688,18 +12688,18 @@ if (f.skPh === 1 && f.magTg < 0 && f.t >= 0.24) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['lm_boxer', 26] : [f.magN > 0 ? 'hva' : 'yx_push', 56],
 ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinusRange - 40 },
-throwball: { name: '投丸', cd: 0, desc: '释放腕甲卡扣，掷出天工玄铁傀丸。傀丸触地与撞壁皆会反弹，动能衰减后静止驻留场中（永不消散）。傀丸在场期间不可重复释放。',
+throwball: { name: '投丸', cd: 0, desc: '释放腕甲卡扣，掷出天工玄铁傀丸。傀丸触地与撞壁皆保持超强弹性持续弹跳，金丝暗劲受控牵引回旋；再次出招挥刀击丸可传动加速。傀丸在场期间不可重复释放。',
 can: f => !projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead),
 lack: () => '傀丸已在阵中',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) {
 f.skPh = 1; f.t = 0;
-const ballVx = f.face * 950, ballVy = -220;
+const ballVx = f.face * 1050, ballVy = -320;
 spawnProj(f, {
 kind: 'ironball', x: f.x + f.face * 40, y: f.y - 50, vx: ballVx, vy: ballVy,
-g: 1300, w: 36, h: 36, life: 999999, dmg: 42, kb: [260, -180], stun: 0.42, hs: 0.08,
-bounceCount: 0, speedTier: 1, resting: false, unbreakable: true, pierce: true, rehit: 0.4
+g: 1100, w: 36, h: 36, life: 999999, dmg: 44, kb: [260, -180], stun: 0.42, hs: 0.08,
+bounceCount: 0, speedTier: 2, resting: false, unbreakable: true, pierce: true, rehit: 0.35
 });
 ring(f.x + f.face * 40, f.y - 50, 60, f.look.slash || '235,165,70', 0.3);
 SFX.gear(); SFX.heavy();
@@ -15895,26 +15895,44 @@ if (p.recalling) {
 const floorY = -18;
 if (p.y >= floorY) {
 p.y = floorY;
-if (Math.abs(p.vy) > 120 && (p.bounceCount || 0) < 3) {
-p.vy = -p.vy * 0.65;
-p.vx *= 0.8;
+const minVy = -260;
+if (p.vy > 60 || Math.abs(p.vy) > 80) {
+p.vy = -Math.abs(p.vy) * 0.85;
+if (p.vy > minVy) p.vy = minVy;
+p.vx *= 0.94;
 p.bounceCount = (p.bounceCount || 0) + 1;
-dust(p.x, 0, 8); ring(p.x, 0, 36, '235,165,70', 0.2); SFX.ballHit();
+dust(p.x, 0, 7); ring(p.x, 0, 36, '235,165,70', 0.18); SFX.ballHit();
 } else {
-p.vy = 0;
-const dampRate = (M.map === 'ice' && typeof mapFavOn === 'function' && mapFavOn(fighterByIdx(p.owner))) ? 1.2 : 4.5;
-p.vx = damp(p.vx, 0, dampRate, STEP);
-if (Math.abs(p.vx) < 30) { p.vx = 0; p.resting = true; }
+p.vy = minVy * 0.6;
+p.vx *= 0.96;
 }
 }
 if (p.x <= WALL + 18) {
-p.x = WALL + 18; p.vx = Math.abs(p.vx) * 0.75;
-ring(p.x, p.y, 40, '235,165,70', 0.25); SFX.ballHit();
+p.x = WALL + 18;
+p.vx = Math.max(380, Math.abs(p.vx) * 0.88);
+p.vy = Math.min(p.vy, -160);
+ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
 } else if (p.x >= STAGE_W - WALL - 18) {
-p.x = STAGE_W - WALL - 18; p.vx = -Math.abs(p.vx) * 0.75;
-ring(p.x, p.y, 40, '235,165,70', 0.25); SFX.ballHit();
+p.x = STAGE_W - WALL - 18;
+p.vx = -Math.max(380, Math.abs(p.vx) * 0.88);
+p.vy = Math.min(p.vy, -160);
+ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
 }
-p.speedTier = Math.abs(p.vx) > 1400 ? 3 : Math.abs(p.vx) > 400 ? 2 : 1;
+const owner = fighterByIdx(p.owner);
+if (owner && owner.hp > 0) {
+const dx = owner.x - p.x;
+const dist = Math.abs(dx);
+if (dist > 140) {
+const pullDir = Math.sign(dx);
+const springK = p.vx * pullDir < 0 ? 560 : 320; // 背向飞离拉力更明显
+p.vx += pullDir * springK * STEP;
+}
+if (Math.abs(p.vx) < 120) {
+p.vx = (Math.sign(dx) || 1) * 160;
+}
+}
+p.speedTier = Math.abs(p.vx) > 1300 ? 3 : Math.abs(p.vx) > 420 ? 2 : 1;
+p.resting = false;
 }
 }
 if (p.boomer && p.age > p.turn) {
@@ -16174,28 +16192,31 @@ function hitDecoy(att, box) { hitClones(box, att.idx); if (hitDecoyBox(box, att.
 function hitBall(att, box, m) {
 for (const p of projs) {
 if (p.dead || p.kind !== 'ironball') continue;
-const bBox = [p.x - 24, p.y - 24, p.x + 24, p.y + 24];
+const bBox = [p.x - 28, p.y - 28, p.x + 28, p.y + 28];
 if (overlap(box, bBox)) {
 att.hitDone = true;
 const isDl = att.moveName === 'dl';
 const isCs = att.moveName === 'cs1' || att.moveName === 'cs2';
+const isAir = att.moveName === 'a1' || att.moveName === 'a2';
 const dir = att.face || 1;
 p.resting = false;
 p.hitCD = 0.08;
 p.rehit = 0.15;
 p.unbreakable = true;
 if (isDl) {
-p.vx = dir * 650; p.vy = -850; p.g = 1400; p.speedTier = 2; p.dmg = 50;
+p.vx = dir * 720; p.vy = -920; p.g = 1350; p.speedTier = 2; p.dmg = 52;
+} else if (isAir) {
+p.vx = dir * 1150; p.vy = 680; p.g = 1200; p.speedTier = 2; p.dmg = 56;
 } else if (isCs) {
 const spd = att.moveName === 'cs2' ? 2200 : 1600;
-p.vx = dir * spd; p.vy = -120; p.g = 900; p.speedTier = 3; p.dmg = att.moveName === 'cs2' ? 85 : 65;
+p.vx = dir * spd; p.vy = -160; p.g = 850; p.speedTier = 3; p.dmg = att.moveName === 'cs2' ? 90 : 70;
 shake = Math.max(shake, att.moveName === 'cs2' ? 14 : 9);
 } else {
-p.vx = dir * (Math.abs(p.vx) > 500 ? Math.min(1800, Math.abs(p.vx) + 400) : 1100);
-p.vy = -180; p.g = 1300; p.speedTier = Math.abs(p.vx) > 1400 ? 3 : 2; p.dmg = 55;
+p.vx = dir * (Math.abs(p.vx) > 500 ? Math.min(1850, Math.abs(p.vx) + 450) : 1250);
+p.vy = -240; p.g = 1200; p.speedTier = Math.abs(p.vx) > 1300 ? 3 : 2; p.dmg = 55;
 }
 p.bounceCount = 0;
-ring(p.x, p.y, 60, att.look.slash || '235,165,70', 0.35);
+ring(p.x, p.y, 65, att.look.slash || '235,165,70', 0.35);
 for (let i = 0; i < 7; i++) {
 const a = rand(0, Math.PI * 2), v = rand(120, 280);
 addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: att.look.slash || '235,165,70', life: 0.2, max: 0.2 });
@@ -23629,7 +23650,7 @@ const SHORT = {
 留影: ['40', '脚下留雾身 · 踏步一刀'], 渡影: ['—', '换到雾身处 · 方向选身'], 万影归一: ['45–113', '雾身齐斩 · 本体补刀'],
 龙卷: ['16×16', '双龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['48×3', '天雷追落 · 气量回涌30%'], 符阵: ['80–280', '宣纸全图 · 按符数爆伤'], 月华如水: ['75 (+100血)', '回血霸体 · 架招重置'], 万羽: ['14×14', '羽刃天降 · 飞行重置'],
 极性反转: ['—', '换正负极 · 清零 R'], 磁极: ['48 / 16', '正极弹开 · 负极吸来定身'], 天地磁合: ['125', '天地两块磁石 · 夹成肉饼'],
-投丸: ['42', '玄铁傀丸 · 弹跳驻场'], 暴雨梨花: ['55', '八方钢针 · 受击可放'], 千丝收网: ['120', '贯穿全场 · 回收重置 Q']
+投丸: ['44', '玄铁傀丸 · 永动回弹'], 暴雨梨花: ['55', '八方钢针 · 受击可放'], 千丝收网: ['120', '贯穿全场 · 回收重置 Q']
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(870血)', feiying: '最快移速出手 · 身轻体巧(800血)', tieshan: '重斩蓄力霸体 · 气血冠绝(900血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(815血)',
 liuyun: '三段跳 · 御风轻盈(840血)', leiming: '普攻六连 · 强横体魄(885血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(825血)', yuehua: '3 秒未受伤每秒回 14 血(780血)', yanling: '空中按住跳跃飞 1.2 秒(750血)',
@@ -23858,7 +23879,7 @@ qianji: {
 light: { name: '天工连推', badge: '✦ 传动机掌', badgeCls: 'badge-buff', dmg: '88 (4段)', desc: '铜腕推击，末段推掌击飞；命中场上傀丸可将其击飞平推加速。' },
 charge: { name: '重机轰爆', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '36 / 60', desc: '机关臂重轰，击中傀丸时将其轰击成极速重炮。' },
 air: { name: '机影凌空', badge: '✦ 空中连击', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '半空翻身拍掌，二段势大力沉压地。' },
-skill: { name: '投丸', badge: '✦ 弹跳驻场', badgeCls: 'badge-buff', dmg: '42', desc: '掷出玄铁傀丸反弹驻留阵中，未收回前不可重复释放。' },
+skill: { name: '投丸', badge: '✦ 永动高弹', badgeCls: 'badge-buff', dmg: '44', desc: '掷出玄铁傀丸持续高弹反弹，受金丝牵引回旋回拉，再次挥刀可传动加速；未收回前不可重复释放。' },
 ranged: { name: '暴雨梨花', badge: '🛡️ 受击可放', badgeCls: 'badge-break', dmg: '55', desc: '金丝震弦，远程激发傀丸向八方爆射钢针击飞敌人；受击解控。' },
 ult: { name: '千丝收网', badge: '✦ 贯穿回手', badgeCls: 'badge-stun', dmg: '120', desc: '发条全力反卷，傀丸直线贯穿全场拉回并重置 Q 技能。' },
 esc: { name: '金丝引遁', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，借金丝后撤腾空。' }
@@ -24811,7 +24832,7 @@ yuxiao: { passive: '打人也讲节奏，三拍一小节。', light: '箫管敲�
 zuixian: { passive: '酒量即战力，放招添酒打中添酒，东倒西歪能闪避。', light: '东倒西歪五连拳，步法虚实难测。', charge: '蓄力一撞，重若巨石倾覆。', air: '醉步腾跃，飘忽不定难预测。', skill: '亭中留客，飞亭砸落禁锢两秒任你痛揍。', ranged: '与民同乐，半壶酒掷向对手，共醉回春。', ult: '山水之间，水墨泼染全屏八段重创。', esc: '醉意腾身，踏风撤步。' },
 gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' },
 liying: { passive: '一缕魂留在原地，碰一下就散。', light: '单刀五连，干净利落。', charge: '雾里藏着的那一刀最重。', air: '只有一段跳，跳之前先想好落点。', skill: '人往前走，魂留在后面。', ranged: '结个印，人就到了雾身那里。', ult: '雾身一起出刀，本体最后补上。', esc: '雾一散，人已退开。' },
-qianji: { passive: '玄铁傀丸击打加速，金丝在手随时护主。', light: '铜臂推掌，能把铁球打飞。', charge: '蓄力重击，傀丸化作重炮轰击。', air: '空中翻掌压地，灵动机变。', skill: '投丸驻场，球不回手绝不重复丢。', ranged: '暴雨梨花，受击亦可引爆钢针护身。', ult: '千丝收网，贯穿全场拉回重置 Q。', esc: '金丝借力，腾跃后退。' },
+qianji: { passive: '玄铁傀丸永动弹跳，金丝回旋随时护主。', light: '铜臂推掌，能把铁球打飞加速。', charge: '蓄力重击，傀丸化作重炮轰击。', air: '空中翻掌压地，扣杀傀丸砸地反弹。', skill: '投丸高弹，金丝牵引回拉连击。', ranged: '暴雨梨花，受击亦可引爆钢针护身。', ult: '千丝收网，贯穿全场拉回重置 Q。', esc: '金丝借力，腾跃后退。' },
 cixian: { passive: '一会儿正极一会儿负极，脾气说变就变。', light: '负极一掌一吸，越打越近。', charge: '蓄满一掌，磁力把格挡都推开。', air: '跳起来拍一掌，像拍苍蝇。', skill: '红圈变蓝圈，R 也跟着刷新。', ranged: '正极弹飞，负极吸回，来回都是我说了算。', ult: '天一块地一块，中间夹着你。', esc: '磁力一托，人就飘起来了。' },
 lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子母飞梭刺得比针还快。', charge: '蓄力一梭子，隔着衣服都疼。', air: '凌波踏空，身法灵巧似惊雀。', skill: '飞梭脱手，丝线连着千里之外。', ranged: '印记一亮，瞬身穿刺直接清空CD！', ult: '万线归宗，漫天悬丝罗网避无可避。', esc: '悬丝一荡，人已在数丈之外。' }
 };

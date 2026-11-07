@@ -1,6 +1,6 @@
 // 千机：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
-// 千机手握天工金丝傀丸，投出后于战场来回反弹、静止驻场。
-// 普攻/蓄力击打傀丸可传动加速，撞碎敌方飞行道具；R「暴雨梨花」在球位爆射钢针（受击硬直亦可解控释放）；
+// 千机手握天工金丝傀丸，投出后于战场持续高弹反弹，金丝暗劲牵引回旋。
+// 普攻/挑击/空斩/蓄力击打傀丸可传动加速，撞碎敌方飞行道具；R「暴雨梨花」在球位爆射钢针（受击硬直亦可解控释放）；
 // E「千丝收网」金丝绞盘强力收索，穿透全场直线回拉，贯穿沿途敌人并刷新 Q 冷却。
 defHero({
   id: 'qianji', skin: 'qj', en: 'Qian Ji',
@@ -11,7 +11,7 @@ defHero({
     name: '千机', role: '机关傀客', diff: 3, escCD: 8.0,
     skill: 'throwball', skill2: 'ballspike', ult: 'recallball', passive: 'momentum',
     passiveName: '机栝动能',
-    passiveDesc: '战场唯一天工傀丸。Q 投出后反弹并驻留场上（未收回前不可重复释放）。普攻、下攻击与蓄力斩击中傀丸可将其传动加速，高速傀丸威力倍增并可撞碎敌方飞行道具。R 技能无论受击或受控皆可远程激发护主；E 大招收丸贯穿全场，重置 Q 技能。',
+    passiveDesc: '战场唯一天工傀丸。Q 投出后保持超高动能持续弹跳，金丝牵引力随距离将其回拉，形成来回连击对拉。普攻、下挑、扣杀与蓄力斩击中傀丸可将其传动加速，高速傀丸威力倍增并可撞碎敌方飞行道具。R 技能无论受击或受控皆可远程激发护主；E 大招收丸贯穿全场，重置 Q 技能。',
     stat: { hp: 830, walk: 0.98, speed: 0.95, dmg: 1.0, reach: 1.0, swing: 0.85, jump: 1, weight: 1.05, defRating: 1.0, guardMax: 100, guardStab: 1.0, guardChip: 0.1, guardRegen: 28, poise: 1.0, size: 1.0 },
     hitFeel: 0.88,
     look: { body: '#332924', shade: '#1c1512', outline: '#e5a558', outlineA: .85, scarf: '#d4883b', slash: '235,165,70', blade: '#f5e2c4', hair: '#201a18', head: 'gear-crop', weapon: 'puppet' },
