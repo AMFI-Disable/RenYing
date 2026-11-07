@@ -112,8 +112,10 @@ if (xiwuCatTabsEl) {
     SFX.slice();
     const cat = b.dataset.cat;
     if (cat === 'combat') {
-      const isCombat = ['cpu', 'tag3', 'watch2v2', 'train', 'chaos', 'mayhem'].includes(currentSingleTab);
+      const isCombat = ['cpu', 'tag3', 'watch2v2', 'chaos', 'mayhem'].includes(currentSingleTab);
       singleSec(isCombat ? currentSingleTab : 'cpu');
+    } else if (cat === 'training') {
+      singleSec('train');
     } else if (cat === 'story') {
       const isStory = ['stage', 'saga', 'tower'].includes(currentSingleTab);
       singleSec(isStory ? currentSingleTab : 'stage');
@@ -168,8 +170,6 @@ if (trainModeSegEl) {
     if (!b || !b.dataset.tmode) return;
     trainTargetMode = b.dataset.tmode;
     for (const btn of trainModeSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
-    const dfWrap = $id('dummyFeatWrap');
-    if (dfWrap) dfWrap.style.display = trainTargetMode === 'dummy' ? 'block' : 'none';
     SFX.slice();
   });
 }
@@ -298,7 +298,35 @@ function startTraining(targetMode = 'dummy', isWatch = false) {
   } else say('木人试剑 · 开始训练', 1.4);
 }
 const trainBtnEl = $id('trainBtn');
-if (trainBtnEl) trainBtnEl.addEventListener('click', () => startTrainTarget(trainTargetMode, false));
+if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
+  if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+  startTraining('dummy');
+});
+const xiwuFullTutBtn = $id('xiwuFullTutBtn');
+if (xiwuFullTutBtn) xiwuFullTutBtn.addEventListener('click', () => { initAudio(); startTutorial(true); });
+const xiwuTrainingCpuBtn = $id('xiwuTrainingCpuBtn');
+if (xiwuTrainingCpuBtn) xiwuTrainingCpuBtn.addEventListener('click', () => {
+  singleSec('cpu');
+  showScreen('single');
+});
+const xiwuDrillList = document.querySelector('.xiwu-drill-list');
+if (xiwuDrillList) xiwuDrillList.addEventListener('click', e => {
+  const b = e.target.closest('button[data-drill]');
+  if (!b) return;
+  const drills = {
+    combo: { act: 'stand', fixed: false, escape: false, infGuard: true, autoHeal: true },
+    block: { act: 'block', fixed: false, escape: false, infGuard: true, autoHeal: true },
+    parry: { act: 'parry', fixed: false, escape: false, infGuard: true, autoHeal: true },
+    'combo-escape': { act: 'combo', fixed: false, escape: true, infGuard: true, autoHeal: true }
+  };
+  const preset = drills[b.dataset.drill];
+  if (!preset) return;
+  Object.assign(dummyCfg, preset, { rep: true, gap: 1 });
+  if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+  renderDummyFeatures();
+  SFX.slice();
+  startTraining('dummy');
+});
 renderDummyFeatures();
 
 

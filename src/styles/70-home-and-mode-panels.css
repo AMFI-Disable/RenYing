@@ -254,16 +254,28 @@ body.offline #mMatch { display: none !important; }
 #single .xiwu-mutator-row { margin: 0 0 14px; }
 #single .xiwu-mode-content { padding-top: 14px; border-top: 1px solid rgba(233,196,106,.16); }
 #single .single-action-row { justify-content: flex-start; }
+#single .xiwu-training-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#single .xiwu-training-card { min-width: 0; padding: 14px; border: 1px solid rgba(233,196,106,.18); border-radius: 7px; background: rgba(15,16,29,.38); }
+#single .xiwu-training-card h4 { margin: 0 0 6px; color: var(--gold); font: 600 16px var(--title); }
+#single .xiwu-training-card p { min-height: 42px; margin: 0 0 12px; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.5; }
+#single .xiwu-drill-list { display: grid; gap: 6px; margin-top: 8px; }
+#single .xiwu-drill-list button { display: grid; gap: 3px; padding: 9px 10px; border: 1px solid rgba(233,196,106,.15); border-radius: 5px; background: rgba(8,10,18,.55); color: #fff; text-align: left; cursor: pointer; }
+#single .xiwu-drill-list button:hover { border-color: rgba(233,196,106,.5); background: rgba(233,196,106,.08); }
+#single .xiwu-drill-list button b { font-size: 13px; }
+#single .xiwu-drill-list button span { color: rgba(255,255,255,.62); font-size: 12px; line-height: 1.4; }
+@media (max-width: 760px) { #single .xiwu-training-grid { grid-template-columns: 1fr; } #single .xiwu-training-card p { min-height: 0; } }
 #single [hidden] { display: none !important; }
 @media (max-width: 760px) {
   .xiwu-studio { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  #single .xiwu-category-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 8px; }
+  #single .xiwu-category-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 8px; }
   #single .xiwu-cards-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .xiwu-config { padding: 14px; }
 }
 @media (max-width: 420px) {
   #single .xiwu-cat-btn { grid-template-columns: 1fr; }
   #single .xiwu-cat-btn .cat-icon { display: none; }
+  #single .xiwu-cat-btn .cat-name { font-size: 13px; }
+  #single .xiwu-cat-btn .cat-desc { display: none; }
   #single .xiwu-quick-card { flex-wrap: wrap; }
 }
 @media (max-width: 900px) {

@@ -286,7 +286,7 @@ function singleSec(sec) {
   currentSingleTab = active;
 
   const isStory = ['stage', 'saga', 'tower'].includes(active);
-  const activeCat = isStory ? 'story' : 'combat';
+  const activeCat = active === 'train' ? 'training' : isStory ? 'story' : 'combat';
 
   for (const b of document.querySelectorAll('#xiwuCatTabs button')) {
     const on = b.dataset.cat === activeCat;
@@ -327,7 +327,7 @@ function singleSec(sec) {
       chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
       saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
-      train: '召唤不屈木人靶桩，随心演练连段、伤害与打击判定',
+      train: '在训练场学习招式、自由练习木人桩，或进行专项情景训练',
       mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
       maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法'
     };
