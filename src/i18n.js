@@ -119,7 +119,9 @@
     [/^没找到名字里同时有「(.+)」这几个字的人，按回车按全名加$/, (m0, q) => `No one's name contains “${q}”. Press Enter to add by full name`],
     // 英雄页皮肤按钮和皮肤牌：「名字 · 限免 / 武库 / 青锋行 / 武库」「品级 · 名字」
     [/^(.+?) · (限免|武库|青锋行 \/ 武库)$/, (m0, n, t) => `${lookup(n) || n} · ${{ 限免: 'Free trial', 武库: 'Armory', '青锋行 / 武库': 'Qingfeng Quest / Armory' }[t]}`],
-    [/^(受限|隐秘|保密|军规级|★ 非凡|非凡|传说|精英) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
+    [/^(碧玉|赤霄|灵犀|精铁|★ 绝世|绝世|传说|精英) · (.+)$/, (m0, g, n) => `${lookup(g) || g} · ${lookup(n) || n}`],
+    // 教学框左上角：「快速上手 2 / 5」「完整教学 7 / 11」（src/game/20-tutorial-rollback-touch.js）
+    [/^(快速上手|完整教学) (\d+) \/ (\d+)$/, (m0, w, a, b) => `${w === '快速上手' ? 'Quick start' : 'Full tutorial'} ${a} / ${b}`],
     [/^难度 ([●○]+)$/, (m0, d) => `Difficulty ${d}`],
     [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
     [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],

@@ -26,10 +26,10 @@ async function handleAdmin(env, request, path, now, ip) {
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
     await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
   };
-  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、终端机、改名标签，还有饰品和给玩家看的说明
+  const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、货郎、改名标签，还有饰品和给玩家看的说明
     const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
     if (ink === null) return { err: `墨锭要填 0 到 ${ADJ_INK} 的整数` };
-    if (term === null || tags === null) return { err: '终端机、改名标签每份最多 100 个' };
+    if (term === null || tags === null) return { err: '货郎、改名标签每份最多 100 个' };
     const cases = {};
     for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
       const n = intIn(v, 0, 100);
@@ -139,6 +139,9 @@ async function handleAdmin(env, request, path, now, ip) {
       waiting: (pres && pres.waiting) || 0,
       cfgId: CFG_CACHE.id,
     });
+  }
+  if (route === 'GET /api/admin/playstats') {   // 匿名游玩统计：每天人数、新玩家留存、各模式开局数、新手教学
+    return json(await playStatsReport(env, now, Math.max(7, Math.min(90, +q('days') || 30))));
   }
   if (route === 'GET /api/admin/errors') {   // 错误记录：最近出现的在前；kind 不填就全部
     const kind = q('kind'), days = Math.max(1, Math.min(30, +q('days') || 7));
@@ -795,7 +798,7 @@ async function handleAdmin(env, request, path, now, ip) {
   }
   if (route === 'GET /api/admin/maint') {   // 数据库各表行数统计与天魔 / 江湖长卷实时监控
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
-    const tableNames = ['users', 'sessions', 'devices', 'refresh_used', 'econ', 'econ_nonce', 'econ_log', 'sanctions', 'rate', 'mkt', 'gift', 'gift_got', 'code', 'code_got', 'cfg', 'presence', 'flags', 'auth_log', 'admins', 'admin_sessions', 'errs', 'gboss', 'gboss_hit', 'gboss_try', 'saga_mark', 'chron', 'chron_done', 'chron_part', 'chron_claim', 'chron_rep'];
+    const tableNames = ['users', 'sessions', 'devices', 'refresh_used', 'econ', 'econ_nonce', 'econ_log', 'sanctions', 'rate', 'mkt', 'gift', 'gift_got', 'code', 'code_got', 'cfg', 'presence', 'flags', 'auth_log', 'admins', 'admin_sessions', 'errs', 'gboss', 'gboss_hit', 'gboss_try', 'saga_mark', 'chron', 'chron_done', 'chron_part', 'chron_claim', 'chron_rep', 'play_visitors', 'play_days', 'play_counts'];
     const counts = {};
     await Promise.all(tableNames.map(async t => {
       try {

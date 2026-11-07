@@ -17,7 +17,7 @@ if (OFFLINE_BUILD) {
   const mp = $id('mPlay'); mp.className = 'mcard right'; mp.setAttribute('data-kb-default', '');
   $id('mMatch').removeAttribute('data-kb-default');
   mp.innerHTML = '<span class="mk">习武</span><span class="ms">对战电脑 · 闯关 · 车轮战 · 木人桩</span>';
-  const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '两分钟学会基本招式，再去挑战电脑与闯关。';
+  const ts = document.querySelector('#tutask .sub'); if (ts) ts.textContent = '一分钟学会基本招式，再去挑战电脑与闯关。';
 }
 function updateNetDiagRtt(ms) {
   if (typeof ms !== 'number' || isNaN(ms)) return;
@@ -235,7 +235,7 @@ function mmGo(kind) {
   let statusTxt = '匹配对战：正在全服寻找对手…';
   if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
   else if (kind === '2v2_coop') statusTxt = '2v2 双人共斗：正在全服寻找队友与对手…';
-  else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配队友与对手…';
+  else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…';
   netStatus(statusTxt);
 }
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
@@ -326,6 +326,48 @@ function presBye() {
   try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
 }
 window.addEventListener('pagehide', presBye);
+// ---------- 匿名游玩统计（服务器 POST /api/stats，管理网页「游玩统计」看） ----------
+// 只报几件事：打开网页、新手教学开始 / 走完 / 跳过、开了哪个模式的一局。不带名字、账号、邮箱；
+// 编号是这台浏览器自己随机生成的（renying-anon-id），服务器再加盐哈希一次才存。设置里「匿名统计」可以关；离线版不报。
+const STATQ = { q: [], timer: 0, skip: false };
+function statId() {
+  let id = '';
+  try { id = localStorage.getItem('renying-anon-id') || ''; } catch (e) {}
+  if (!/^[a-z0-9]{12,40}$/.test(id)) {
+    id = Array.from(crypto.getRandomValues(new Uint8Array(12)), x => x.toString(36).padStart(2, '0')).join('').slice(0, 20);
+    try { localStorage.setItem('renying-anon-id', id); } catch (e) {}
+  }
+  return id;
+}
+const statUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/stats';
+const statOn = () => !OFFLINE_BUILD && SETTINGS.stats !== false && !!(window.CloudSave && CloudSave.getEndpoint && CloudSave.getEndpoint());
+function statEv(k) {
+  if (!statOn()) return;
+  STATQ.q.push(k);
+  if (STATQ.q.length >= 20) statFlush();
+  else if (!STATQ.timer) STATQ.timer = setTimeout(statFlush, 15000);   // 攒 15 秒一起报，少发请求
+}
+function statFlush(beacon) {
+  clearTimeout(STATQ.timer); STATQ.timer = 0;
+  if (!STATQ.q.length || !statOn()) { STATQ.q.length = 0; return; }
+  const body = JSON.stringify({ vid: statId(), ev: STATQ.q.splice(0, 30) });
+  try {
+    if (beacon && navigator.sendBeacon) navigator.sendBeacon(statUrl(), new Blob([body], { type: 'text/plain' }));
+    else fetch(statUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body, keepalive: true }).catch(() => {});
+  } catch (e) {}
+}
+// 一局开始（第一回合、比分 0:0）：记是哪个模式。重算回滚、首页演示、新手教学不算
+function statMatch() {
+  if (typeof RESIM !== 'undefined' && RESIM) return;
+  if (STATQ.skip || M.mode === 'demo' || TUT || M.round !== 1 || M.wins[0] || M.wins[1]) return;
+  let k = M.mode;
+  if (k === 'net' && NET.isRanked) k = 'netrk';
+  else if (k === 'cpu' && typeof FOREST !== 'undefined' && FOREST.on) k = 'stage';
+  statEv('m:' + k);
+}
+window.addEventListener('pagehide', () => statFlush(true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) statFlush(true); });
+setTimeout(() => { statEv('open'); statFlush(); }, 3000);   // 打开网页：等云端地址准备好再报
 // 首页和联机页的人数：总在线 / 对局中 / 匹配中 都以云端的统计为准。
 // 云端连不上（断网、两次没报成功、两分钟没有新数）就写「未知」，不拿本机或大厅的零碎数字凑一个假数。
 function onlineNow() {

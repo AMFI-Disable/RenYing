@@ -15,14 +15,20 @@ const TUT_STEPS = [
   { t: '绝境腾空闪', d: '受到硬直连击陷入绝境时，按右键（或左 Shift）引爆真气触发「腾空闪」逃脱并获短暂无敌！', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
   { t: '真元爆发 · 绝招', d: '怒气已为你灌满！按 E 释放震撼全场的天地绝技！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
 ];
-function startTutorial() {
+// 快速上手只走五步：走动、五段连击、门派技能、腾空闪、大招（一分钟内学完）；完整教学十一步都走，在帮助里开
+const TUT_QUICK = [0, 2, 6, 9, 10];
+const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
+function startTutorial(full) {
   try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
   trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
+  if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
   startTraining('dummy');
+  if (typeof STATQ !== 'undefined') STATQ.skip = false;
   B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
-  TUT = { step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
+  TUT = { list: full === true ? TUT_STEPS.map((_, i) => i) : TUT_QUICK, full: full === true, step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
   tutNext();
   $id('tutBox').classList.remove('hidden');
+  if (typeof statEv === 'function') statEv('tut_start');
 }
 const TUT_TOUCH = [
   '拨动左摇杆，左右走动熟悉身法。',
@@ -39,21 +45,21 @@ const TUT_TOUCH = [
 ];
 function tutNext() {
   TUT.step++; TUT.wait = 0; TUT.hit = {}; TUT.x0 = A.x;
-  const st = TUT_STEPS[TUT.step];
+  const st = TUT_STEPS[tutCur()];
   if (!st) return tutFinish();
   $id('tutBox').classList.remove('ok');
-  $id('tutN').textContent = `新手演武教学 ${TUT.step + 1} / ${TUT_STEPS.length}`;
-  $id('tutT').textContent = st.t; $id('tutD').textContent = TOUCH ? TUT_TOUCH[TUT.step] : st.d;
+  $id('tutN').textContent = `${TUT.full ? '完整教学' : '快速上手'} ${TUT.step + 1} / ${TUT.list.length}`;
+  $id('tutT').textContent = st.t; $id('tutD').textContent = TOUCH ? TUT_TOUCH[tutCur()] : st.d;
   if (st.setup) st.setup();
 }
 function tutTick(dt) {
-  const st = TUT_STEPS[TUT.step]; if (!st) return;
-  A.hp = A.maxHp; A.breakCD = TUT.step === 9 ? 0 : A.breakCD;
+  const cur = tutCur(), st = TUT_STEPS[cur]; if (!st) return;
+  A.hp = A.maxHp; A.breakCD = cur === 9 ? 0 : A.breakCD;
   if (A.state === 'attack' && A.hitConfirmed) TUT.hit[A.moveName] = true;
   if (A.state === 'blockstun' && TUT.prev !== 'blockstun') TUT.blocks++;
   TUT.prev = A.state;
   // 教学第8步：风刃防御
-  if (TUT.step === 7 && !TUT.wait) {
+  if (cur === 7 && !TUT.wait) {
     TUT.shotT -= dt;
     if (TUT.shotT <= 0) {
       TUT.shotT = 1.6; const dir = A.x >= B.x ? 1 : -1;
@@ -61,7 +67,7 @@ function tutTick(dt) {
     }
   }
   // 教学第9步：近战出招诱导精准招架
-  if (TUT.step === 8 && !TUT.wait) {
+  if (cur === 8 && !TUT.wait) {
     TUT.parryShotT = (TUT.parryShotT || 0) - dt;
     if (TUT.parryShotT <= 0 && B.state === 'idle') {
       TUT.parryShotT = 2.0;
@@ -70,7 +76,7 @@ function tutTick(dt) {
       startAttack(B, 'l1');
     }
   }
-  if (TUT.step === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
+  if (cur === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
   if (TUT.wait) { TUT.wait -= dt; if (TUT.wait <= 0) tutNext(); return; }
   if (st.ok()) { TUT.wait = 1; $id('tutBox').classList.add('ok'); SFX.chargeFull(); }
 }
@@ -80,10 +86,12 @@ function updateTutBtn() {
   const b = document.querySelector('#menu [data-go="tutorial"]'); if (b) b.style.display = done ? 'none' : '';
 }
 async function tutFinish() {
+  if (typeof statEv === 'function') statEv('tut_done');
   try { localStorage.setItem('renying-tut-done', '1'); } catch (e) {}
   updateTutBtn();
   $id('tutBox').classList.add('hidden');
-  let msg = '该会的都会了。去找电脑或是同学，过几招吧。';
+  const wasFull = TUT && TUT.full;
+  let msg = wasFull ? '该会的都会了。去找电脑或是同学，过几招吧。' : '基本招式会了。格挡和精准招架这些进阶操作，在「帮助」里的完整教学能学到。';
   if (!PROF.guest) {
     if (!PROF.tutorial && typeof rwServer === 'function' && rwServer()) {   // 云端账号：找服务器领，每个号只给一次（本机标记不算数）
       PROF.tutorial = 1; saveFlag('tutorial', 1);
@@ -106,8 +114,11 @@ async function tutFinish() {
 function endTutorial() { TUT = null; $id('tutBox').classList.add('hidden'); }
 $id('tutMenu').addEventListener('click', () => { paused = false; toMenu(); });
 $id('tutStay').addEventListener('click', () => { paused = false; showScreen(null); });
+// 教学打完直接给两条路：和电脑打一局、和朋友联机（离线版没有联机，openScreen 会换成闯关）
+if ($id('tutCpu')) $id('tutCpu').addEventListener('click', () => { paused = false; toMenu(); openScreen('cpu'); });
+if ($id('tutNet')) $id('tutNet').addEventListener('click', () => { paused = false; toMenu(); openScreen('netp'); });
 $id('tutYes').addEventListener('click', () => startTutorial());
-$id('tutNo').addEventListener('click', () => { try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
+$id('tutNo').addEventListener('click', () => { if (typeof statEv === 'function') statEv('tut_skip'); try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
 // 初次进入游戏语言偏好引导弹窗
 let langPromptDone = false;
 try {

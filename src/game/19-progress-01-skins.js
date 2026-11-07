@@ -1,15 +1,15 @@
 // ======================= 成长系统：墨锭、任务、皮肤、排位 =======================
 const RAR_NAME = { starter: '初始', common: '普通', rare: '稀有', legend: '传说' };
 const RAR_RGB = { starter: '190,190,205', common: '159,177,201', rare: '111,168,255', legend: '233,196,106' };
-// 皮肤的稀有度颜色：武器箱里的饰品照武库的五档（军规级、受限、保密、隐秘、非凡），不在武器箱里的（比如青锋行）照原来的稀有 / 传说
+// 皮肤的稀有度颜色：武器箱里的饰品照武库的五档（精铁、碧玉、灵犀、赤霄、绝世），不在武器箱里的（比如青锋行）照原来的稀有 / 传说
 function skinGrade(k) {
   const S = SKINS[k], C = window.ArmoryCore, it = S && C && C.ITEM[k];
   if (it) return { t: it.tier, n: C.TIER[it.tier].n, c: C.TIER[it.tier].c };
-  if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return { t: 'gold', n: '★ 非凡', c: '228,174,57' };
+  if (k === 'qf_qfx' || k === 'lq_star' || k === 'li_star' || k === 'cx_star') return { t: 'gold', n: '★ 绝世', c: '228,174,57' };
   return { t: S ? S.rarity : 'rare', n: RAR_NAME[S && S.rarity] || '稀有', c: RAR_RGB[S && S.rarity] || RAR_RGB.rare };
 }
 // 统一品质综合权重：用于由低到高（最差到最好）排序及自动穿戴最高品质
-// 军规级 10 -> 受限/稀有 20 -> 保密/普通传说 30 -> 隐秘/顶级传说 40 -> ★ 非凡卓越 50
+// 精铁 10 -> 碧玉/稀有 20 -> 灵犀/普通传说 30 -> 赤霄/顶级传说 40 -> ★ 绝世卓越 50
 function skinWeight(k) {
   if (!k) return 0;
   const C = window.ArmoryCore, it = C && C.ITEM && C.ITEM[k];
@@ -223,7 +223,7 @@ function drawGlyph(kind, r, rgb, a) {
   else if (kind === 'shards') arms(5, () => { ctx.beginPath(); ctx.moveTo(r * 0.35, -r * 0.1); ctx.lineTo(r, 0); ctx.lineTo(r * 0.35, r * 0.1); ctx.closePath(); ctx.fill(); });
   else if (kind === 'ripple') { ctx.save(); ctx.scale(1, 0.42); for (const [q, w] of [[0.35, 2.6], [0.68, 1.8], [1, 1.1]]) { ctx.lineWidth = w; ctx.globalAlpha = 1.15 - q * 0.6; ctx.beginPath(); ctx.arc(0, 0, r * q, 0, 7); ctx.stroke(); } ctx.restore(); ctx.fillStyle = w; ctx.beginPath(); ctx.arc(0, 0, r * 0.08, 0, 7); ctx.fill(); }
   else if (kind === 'feathers') arms(5, () => { ctx.save(); ctx.translate(r * 0.55, 0); ctx.rotate(Math.PI / 2); drawShape('feather', r * 0.2, rgb, a); ctx.restore(); });
-  else if (kind === 'star8') {   // 非凡：八角星印，长短芒交替，中间一圈
+  else if (kind === 'star8') {   // 绝世：八角星印，长短芒交替，中间一圈
     ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r * 0.3, 0, 7); ctx.stroke();
     arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.34, -r * 0.07); ctx.lineTo(r, 0); ctx.lineTo(r * 0.34, r * 0.07); ctx.closePath(); ctx.fill(); });
     ctx.save(); ctx.rotate(Math.PI / 8); arms(8, () => { ctx.beginPath(); ctx.moveTo(r * 0.32, -r * 0.05); ctx.lineTo(r * 0.6, 0); ctx.lineTo(r * 0.32, r * 0.05); ctx.closePath(); ctx.fill(); }); ctx.restore();

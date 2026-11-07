@@ -200,7 +200,7 @@ async function route(request, env, ctx, rid = reqId()) {
         return await handleProfilePost(env, auth, body, now);
       }
 
-      // 6. 武库：开箱、买卖、汰换……
+      // 6. 武库：开箱、买卖、熔铸……
       if (path === '/api/econ' && request.method === 'POST') {
         const auth = await authenticate(env, request);
         if (!auth) return error('未登录或登录已过期，请重新登录', 401);
@@ -240,6 +240,13 @@ async function route(request, env, ctx, rid = reqId()) {
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
         return await presence(env, body, ip, now);
+      }
+
+      // 10b. 匿名游玩统计（不用登录，游客也算；不存名字、账号、IP）
+      if (path === '/api/stats' && request.method === 'POST') {
+        const body = await readBody(request);
+        if (!body) return error('请求太大', 413);
+        return await playStats(env, body, ip, now);
       }
 
       // 11. 天魔讨伐：看天魔不用登录；出战、交伤害要云端账号

@@ -61,7 +61,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ac-box p { margin: 0 0 18px; font-size: 14px; line-height: 1.9; color: var(--ink); }
   .ac-box p b { color: #ffd166; font-weight: normal; }
   .ac-seal { width: 54px; height: 54px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-family: var(--title); font-size: 30px; color: #fff3f0; background: #b8243f; border: 2px solid #ff8a9a; transform: rotate(-6deg); }
-  /* ---------- 刃影武库：库存、武器箱、终端机、江湖市场、汰换合同、江湖行动 ---------- */
+  /* ---------- 刃影武库：库存、武器箱、货郎、江湖市场、熔铸契、江湖行动 ---------- */
   /* --tc / --cc 是 "r,g,b" 三个数（品质色 / 收藏品色），用 rgb(var(--tc)) 取色 */
   .armp { max-width: min(1360px, 96vw); width: 100%; text-align: left; }
   .ar-head { align-items: flex-end; margin-bottom: 4px; }
@@ -219,7 +219,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-podds { display: flex; flex-wrap: wrap; gap: 6px; }
   .ar-podds span { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700; color: rgb(var(--tc)); background: rgba(var(--tc), .1); border: 1px solid rgba(var(--tc), .38); }
   .ar-podds b { font-family: var(--v-cond); font-size: 17px; color: #fff; }
-  /* 七款摆成一排：非凡在前、大一号，金边会呼吸，卡面上隔一会儿扫过一道光 */
+  /* 七款摆成一排：绝世在前、大一号，金边会呼吸，卡面上隔一会儿扫过一道光 */
   .ar-pshow { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
   .ar-pcard { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 0 0 9px; font: inherit; text-align: center; color: #fff; cursor: zoom-in;
     background: linear-gradient(180deg, rgba(var(--tc), .05), rgba(var(--tc), .22)); border: 1px solid rgba(var(--tc), .5); box-shadow: 0 6px 20px rgba(0,0,0,.35); transition: transform .18s, box-shadow .18s, border-color .18s; }
@@ -243,7 +243,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
     .ar-pcard { grid-column: span 2; }
     .ar-pcard.t-gold { grid-column: span 3; }
   }
-  /* 星座武器箱：紫蓝星夜，饰品按品质分三行（非凡、隐秘、保密），每行十二位侠客 */
+  /* 星座武器箱：紫蓝星夜，饰品按品质分三行（绝世、赤霄、灵犀），每行十二位侠客 */
   .ar-casecard.prem.zod { border-color: rgba(170,150,255,.7);
     background: radial-gradient(120% 140% at 0% 0%, rgba(170,150,255,.24), transparent 55%), radial-gradient(80% 120% at 100% 100%, rgba(255,211,106,.1), transparent 60%), linear-gradient(160deg, rgba(40,30,90,.45), rgba(13,21,30,.6) 55%);
     box-shadow: inset 0 0 0 1px rgba(200,190,255,.14), 0 12px 40px rgba(140,120,255,.14); }
@@ -284,7 +284,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-reveal p { margin: 0 0 4px; text-align: center; }
   .ar-reveal + .row { justify-content: center; }
   @keyframes arReveal { from { transform: scale(.6) rotate(-4deg); opacity: 0; } to { transform: none; opacity: 1; } }
-  /* 保密以上的揭晓：背后转着光、一圈光环炸开、四周飘星点，卡面扫过一道亮光；非凡再加一下金色闪光 */
+  /* 灵犀以上的揭晓：背后转着光、一圈光环炸开、四周飘星点，卡面扫过一道亮光；绝世再加一下金色闪光 */
   .ar-reveal { position: relative; }
   .ar-reveal > :not(.ar-rvfx) { position: relative; z-index: 1; }
   .ar-rvart { margin: 12px auto; animation: arReveal .6s cubic-bezier(.2, 1.4, .4, 1) both; }
@@ -319,7 +319,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   @keyframes arFlash { from { opacity: 1; transform: scale(.25); } to { opacity: 0; transform: scale(1.3); } }
   @keyframes arRevealGold { 0% { transform: scale(.3) rotateY(90deg); opacity: 0; filter: brightness(3); } 55% { transform: scale(1.08) rotateY(0); opacity: 1; filter: brightness(1.6); } 100% { transform: none; filter: none; } }
   @keyframes arGoldText { to { background-position: -220% 0; } }
-  /* 滚轮停在保密以上：中间那一格亮起来，指针变成那一档的颜色 */
+  /* 滚轮停在灵犀以上：中间那一格亮起来，指针变成那一档的颜色 */
   .ar-reel { transition: box-shadow .3s; }
   .ar-reel.prem { border-color: rgba(228,174,57,.55); box-shadow: inset 0 0 30px rgba(228,174,57,.14); }
   .ar-reel.land { box-shadow: inset 0 0 70px rgba(var(--wc), .38); }
@@ -334,7 +334,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
     .ar-rvfx b { opacity: .8; transform: translate(var(--x), var(--y)) scale(var(--s)); }
   }
 
-  /* 揭晓特效分五档：柔光（全部）→ 星点（受限起）→ 光芒和冲击波（保密起）→ 第二道冲击、火星和轻震（隐秘）→ 满屏金光、金叶（非凡） */
+  /* 揭晓特效分五档：柔光（全部）→ 星点（碧玉起）→ 光芒和冲击波（灵犀起）→ 第二道冲击、火星和轻震（赤霄）→ 满屏金光、金叶（绝世） */
   .ar-glow { position: absolute; left: -150px; top: -150px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--tc), .34), rgba(var(--tc), .1) 45%, transparent 70%); animation: arGlowIn .8s ease-out both, arGlowBreath 3.2s ease-in-out .8s infinite; }
   .ar-rvfx.lv0 .ar-glow { opacity: .55; }
   .ar-rvfx.lv1 .ar-glow { opacity: .8; }
@@ -374,7 +374,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
     .ar-mkrow .ar-mkc { display: none; }
   }
 
-  /* 终端机：一次报一件，新的一件出来时卡面像在解码 */
+  /* 货郎：一次报一件，新的一件出来时卡面像在解码 */
   .ar-term { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; gap: 22px; padding: 18px; background: linear-gradient(135deg, rgba(var(--tc), .16), rgba(7,11,17,.86) 55%); border: 1px solid rgba(120,220,200,.32); }
   .ar-termart { position: relative; overflow: hidden; background: #070b11; border: 1px solid rgba(var(--tc), .6); box-shadow: 0 0 30px rgba(var(--tc), .25); }
   .ar-termart img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
@@ -447,7 +447,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 6px 10px; font-size: 13px; font-variant-numeric: tabular-nums; background: rgba(236,232,225,.035); }
   .ar-lrow.gone { opacity: .45; }
 
-  /* 汰换合同 */
+  /* 熔铸契 */
   .ar-slots { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin: 4px 0 12px; }
   .ar-slot { position: relative; display: flex; flex-direction: column; justify-content: flex-end; aspect-ratio: 3 / 4; padding: 0; font: inherit; color: var(--v-white); background: rgba(236,232,225,.03); border: 1px dashed rgba(236,232,225,.2); }
   .ar-slot.on { cursor: pointer; border: 1px solid rgb(var(--tc)); }

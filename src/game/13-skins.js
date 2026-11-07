@@ -28,10 +28,10 @@ const SKIN_TH = {
 };
 const rgbMix = (a, b, k) => { const p = a.split(','), q = b.split(','); return p.map((v, i) => Math.round(+v + (+q[i] - +v) * k)).join(','); };
 const skinTh = L => L && L.fx ? SKIN_TH[L.fx.th] : null;
-// 武库品质：保密 2、隐秘 3、非凡 4（不在武库里的皮肤是 0）。越高，拖尾、命中、开场、残影越华丽，只改画面和声音
+// 武库品质：灵犀 2、赤霄 3、绝世 4（不在武库里的皮肤是 0）。越高，拖尾、命中、开场、残影越华丽，只改画面和声音
 const TIER_RANK = { mil: 0, res: 1, cla: 2, cov: 3, gold: 4 };
 const tierRank = L => (L && L.fx && TIER_RANK[L.tier]) || 0;
-const TIER_TXT = { cla: ['保密', '235,120,255'], cov: ['隐秘', '255,120,110'], gold: ['★ 非凡', '255,214,120'] };
+const TIER_TXT = { cla: ['灵犀', '235,120,255'], cov: ['赤霄', '255,120,110'], gold: ['★ 绝世', '255,214,120'] };
 // 兵器上“发光的那一段”：刀剑枪是护手到刃尖，拳和葫芦是两只手，锤是锤头
 function skinBladeSeg(sk, f, L) {
   const w = L.weapon;
@@ -197,10 +197,10 @@ function skinTrail(f, tr) {
     ctx.lineWidth = (2.6 * al + 0.6) * (leg ? 1.35 : 1.1); line(a.t, b.t);
     if (!leg) continue;
     const dx = b.t[0] - b.b[0], dy = b.t[1] - b.b[1], d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
-    if (rk >= 4 && a.h && al > 0.15) {   // 非凡：刀光外沿再铺一层淡金的光边
+    if (rk >= 4 && a.h && al > 0.15) {   // 绝世：刀光外沿再铺一层淡金的光边
       ctx.fillStyle = `rgba(${rgbMix(c, '255,226,150', 0.5)},${0.16 * al})`; quad(a.t, [a.t[0] + nx * 11 * al, a.t[1] + ny * 11 * al], [b.t[0] + nx * 11 * al, b.t[1] + ny * 11 * al], b.t);
     }
-    if (rk >= 3 && i % 3 === 0 && al > 0.35) glint(b.t[0], b.t[1], (rk >= 4 ? 7.5 : 5.5) * al, rk >= 4 ? '255,240,190' : c2, al * 0.9);   // 隐秘以上：刃尖划过的地方留几颗星光
+    if (rk >= 3 && i % 3 === 0 && al > 0.35) glint(b.t[0], b.t[1], (rk >= 4 ? 7.5 : 5.5) * al, rk >= 4 ? '255,240,190' : c2, al * 0.9);   // 赤霄以上：刃尖划过的地方留几颗星光
     if (kind === 'fire' && al > 0.2) {   // 刃尖外侧一排跳动的火舌
       const lk = (10 + 9 * Math.sin(clock * 30 + i * 1.9)) * al;
       const g = ctx.createLinearGradient(b.t[0], b.t[1], b.t[0] + nx * lk * 2, b.t[1] + ny * lk * 2 - lk);
@@ -234,7 +234,7 @@ function skinAmbient(f) {
   if (e && Math.random() < (leg ? 0.8 : 0.45)) { const q = lerp2(e.b, e.t, 0.3 + Math.random() * 0.7); skinSpawn(kind, q[0], q[1], c, c2, leg ? 1 : 0.7, true); }
   if (!leg) { if (Math.random() < 0.04) skinSpawn(kind, f.x + rand(-24, 24), f.y - rand(10, 110), c, c2, 0.7, false); return; }
   if (Math.random() < 0.3) skinSpawn(kind, f.x + rand(-26, 26), f.y - rand(8, 120), c, c2, 1, false);
-  if (tierRank(L) >= 3 && Math.random() < 0.12) addP({ type: 'glint', x: f.x + rand(-30, 30), y: f.y - rand(10, 125), vx: rand(-6, 6), vy: -rand(10, 30), life: rand(0.5, 0.9), max: 0.9, r: rand(2.5, 4.5), rgb: Math.random() < 0.5 ? c2 : '255,255,255' });   // 隐秘以上：身边时不时亮一颗星
+  if (tierRank(L) >= 3 && Math.random() < 0.12) addP({ type: 'glint', x: f.x + rand(-30, 30), y: f.y - rand(10, 125), vx: rand(-6, 6), vy: -rand(10, 30), life: rand(0.5, 0.9), max: 0.9, r: rand(2.5, 4.5), rgb: Math.random() < 0.5 ? c2 : '255,255,255' });   // 赤霄以上：身边时不时亮一颗星
   if (kind !== 'arc' && th.amb === 'arc' && Math.random() < 0.06) skinSpawn('arc', f.x + rand(-20, 20), f.y - rand(30, 100), c, c2, 1, false);   // 雷：配着别的粒子时也偶尔跳一道电
 }
 function skinSpawn(kind, x, y, c, c2, s, fromBlade) {
@@ -308,8 +308,8 @@ function skinHitFX(atk, ev) {
   if (L.fx.part && th.hit !== 'petals' && leg) out((vx, vy) => addP({ type: 'shape', sh: L.fx.part, x, y, vx: vx * 0.6, vy: vy * 0.6 - 60, g: 200, drag: 2.5, life: 0.9, max: 0.9, r: rand(2.6, 4) * p, rgb: c, spin: rand(-8, 8) }), 5);
   skinTierHit(atk, ev, p, out);
 }
-// 武库品质越高，打中越“脆”：保密多一圈亮环和一下白闪；隐秘再加一圈主题环、往外射的冲击线、镜头多震一点、“铮”一声；
-// 非凡再加金色八角星印、一圈飞散的金星、重击时一层淡淡的金光、“叮”一声。都只是画面和声音，不碰顿帧和伤害
+// 武库品质越高，打中越“脆”：灵犀多一圈亮环和一下白闪；赤霄再加一圈主题环、往外射的冲击线、镜头多震一点、“铮”一声；
+// 绝世再加金色八角星印、一圈飞散的金星、重击时一层淡淡的金光、“叮”一声。都只是画面和声音，不碰顿帧和伤害
 let TIER_SFX_T = 0;
 function skinTierHit(atk, ev, p, out) {
   const L = atk.look, tr = tierRank(L); if (tr < 2) return;
@@ -337,7 +337,7 @@ function skinIntroFX(f) {
   addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c, ng: tr >= 2 ? 1 : 0 });   // 品质皮肤的不进泛光：开场一下别把人照成白的
   ring(f.x, f.y - 60, 120, c, 0.55);
   if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < 14; i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
-  if (tr >= 4) {   // 非凡：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
+  if (tr >= 4) {   // 绝世：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
     addP({ type: 'pillar', x: f.x, y: f.y, r: 40, life: 1.5, max: 1.5, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
     addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 70, r: 78, life: 0.9, max: 0.9, rgb: '255,214,120', rot: 0, spin: 0.8, ng: 1 });
     addP({ type: 'ring', x: f.x, y: f.y - 4, r: 150, life: 0.9, max: 0.9, rgb: '255,226,150', ng: 1 });
@@ -403,7 +403,7 @@ function drawSkinParticle(p, k) {
     case 'iring':
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${p.rgb},${(1 - k) * 0.9 + 0.1})`; ctx.lineWidth = 2 + 4 * k;
       ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, p.r * k), 0, 7); ctx.stroke(); ctx.restore(); return;
-    case 'pillar': {   // 非凡开场 / 胜利：一道柔光从天上落下来，落到脚下化成一圈光晕，慢慢收窄淡掉
+    case 'pillar': {   // 绝世开场 / 胜利：一道柔光从天上落下来，落到脚下化成一圈光晕，慢慢收窄淡掉
       const age = 1 - k, reach = Math.min(1, age * 5), a = Math.min(1, age * 8) * Math.pow(k, 0.6), w = p.r * (0.45 + 0.55 * k), h = 1100, top = p.y - h, bot = top + h * reach;
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       const v = ctx.createLinearGradient(0, top, 0, bot); v.addColorStop(0, `rgba(${p.rgb},0)`); v.addColorStop(0.6, `rgba(${p.rgb},${0.12 * a})`); v.addColorStop(1, `rgba(${p.rgb},${0.28 * a})`);
@@ -426,9 +426,9 @@ function skinEmissive(f) {
   const seg = skinBladeSeg(f.sk, f, L);
   ctx.strokeStyle = `rgba(${L.fx.c},0.9)`; ctx.lineWidth = 6; ctx.lineCap = 'round';
   if (seg) line(seg[0], seg[1]); else { ctx.fillStyle = `rgba(${L.fx.c},0.8)`; circle(f.sk.hf, 7); circle(f.sk.hb, 7); }
-  if (tierRank(L) >= 4) { ctx.fillStyle = `rgba(${rgbMix(L.fx.c, '255,226,150', 0.5)},0.9)`; for (const m of tierMotes(f)) circle(m, 4); }   // 非凡的三颗光点也泛光
+  if (tierRank(L) >= 4) { ctx.fillStyle = `rgba(${rgbMix(L.fx.c, '255,226,150', 0.5)},0.9)`; for (const m of tierMotes(f)) circle(m, 4); }   // 绝世的三颗光点也泛光
 }
-// 非凡：三颗绕着身子转的光点（位置按时间算，不存状态）。第三个数是前后：大于 0 在身前
+// 绝世：三颗绕着身子转的光点（位置按时间算，不存状态）。第三个数是前后：大于 0 在身前
 function tierMotes(f) {
   const t = clock * 1.6 + (f.idx || 0) * 2.1, out = [];
   for (let k = 0; k < 3; k++) { const a = t + k * 2.094; out.push([f.x + Math.cos(a) * 36, f.y - 64 + Math.sin(t * 1.3 + k * 2) * 26 + Math.sin(a) * 8, Math.sin(a)]); }
@@ -446,7 +446,7 @@ function skinTierMotes(f, front) {
   ctx.restore();
   if (front && Math.random() < 0.3) { const m = tierMotes(f)[Math.floor(Math.random() * 3)]; addP({ type: 'glint', x: m[0], y: m[1], vx: rand(-8, 8), vy: -rand(8, 24), life: 0.45, max: 0.45, r: rand(2, 3.5), rgb: '255,236,180' }); }   // 光点后面拖一串小星
 }
-// 脚下：隐秘是一圈会呼吸的主题色光环；非凡是一座慢慢转的金色法阵（两圈、十二道刻纹、一个六芒星）
+// 脚下：赤霄是一圈会呼吸的主题色光环；绝世是一座慢慢转的金色法阵（两圈、十二道刻纹、一个六芒星）
 function skinTierGround(f) {
   const L = f.look, tr = tierRank(L); if (tr < 3) return;
   const hg = clamp(1 + f.y / 160, 0, 1); if (hg <= 0) return;
@@ -933,7 +933,7 @@ function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
       }
       break;
     }
-    case 'starloom': {   // 凌雀·天罗星杼（★非凡）：背后悬浮黄金星轮机杼，八道星河天丝如光翼交织展开，星芒流转
+    case 'starloom': {   // 凌雀·天罗星杼（★绝世）：背后悬浮黄金星轮机杼，八道星河天丝如光翼交织展开，星芒流转
       const c = [bc[0] + bk * 14, bc[1] - 16], R = 28, rot = t * 0.65 * bk;
       ctx.save();
       glow(c, 68, '255,140,225', 0.30);
@@ -973,7 +973,7 @@ function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
       ctx.fillStyle = '#ff7ad9'; circle(c, 3.0);
       ctx.restore(); break;
     }
-    case 'soulmirrors': {   // 离影·幽夜星魄（★非凡）：背后环列六面幽冥破界黑曜棱镜 + 镜心裂空星痕 + 离魂虚影飘带
+    case 'soulmirrors': {   // 离影·幽夜星魄（★绝世）：背后环列六面幽冥破界黑曜棱镜 + 镜心裂空星痕 + 离魂虚影飘带
       const c = [bc[0] + bk * 12, bc[1] - 16];
       ctx.save();
       glow(c, 66, '94,240,255', 0.28);
@@ -1006,7 +1006,7 @@ function drawBackPiece(kind, D, sk, f, L, t, bc, sway) {
       }
       ctx.restore(); break;
     }
-    case 'astrolabe': {   // 磁仙·极星乾坤（★非凡）：背后旋转双层乾坤浑天星象磁轮 + 阴阳双极浮游星核 + 金蓝交织电弧
+    case 'astrolabe': {   // 磁仙·极星乾坤（★绝世）：背后旋转双层乾坤浑天星象磁轮 + 阴阳双极浮游星核 + 金蓝交织电弧
       const c = [bc[0] + bk * 10, bc[1] - 14], R = 32, pol = sk.pol || 1;
       ctx.save();
       glow(c, 68, pol > 0 ? '255,195,90' : '90,175,255', 0.30);

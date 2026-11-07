@@ -224,7 +224,7 @@ function randHex(nBytes) {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 服务器的随机数（开箱、终端机、掉落、斩数都用它，客户端碰不到）
+// 服务器的随机数（开箱、货郎、掉落、斩数都用它，客户端碰不到）
 function rnd() {
   const a = new Uint32Array(2);
   crypto.getRandomValues(a);

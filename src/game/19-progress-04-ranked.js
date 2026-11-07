@@ -311,7 +311,10 @@ function tryCommitNet(force) {
   const c = NET.consensus;
   if (!c || !c.pendingReport || c.committed) return false;
   if (!force && !(c.gotFinish && c.gotAck)) return false;
-  commitNetProgress(c.localWinner, !!(c.gotFinish && c.gotAck && c.agreed && c.peerAgreed), c.qualifying !== false);
+  // 两边的消息都到了：要两边都认。对方打完马上关网页、只到了一半：对方报的胜负和我算的一样也算数
+  // （收到对方的结束消息且胜者一致，或者对方确认了我的结果），免得赢的一方白打
+  const agreed = c.gotFinish && c.gotAck ? !!(c.agreed && c.peerAgreed) : c.gotFinish ? !!c.agreed : c.gotAck ? !!c.peerAgreed : false;
+  commitNetProgress(c.localWinner, agreed, c.qualifying !== false);
   return true;
 }
 function commitNetProgress(w, agreed, isQualifying) {

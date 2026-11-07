@@ -763,6 +763,25 @@ window.addEventListener('message', e => {
   const d = e.data; if (d && d.qfx === 'wave') qfxCleared(d.n | 0);
 });
 // 主循环：无论这一帧里哪里出错，都保证下一帧照常运行（不会让游戏“卡死”）
+// 画质自动降一档：玩家没在设置里手动选过画质时，对局里（不算首页演示、观战、暂停）累计约 6 秒不到 40 帧，
+// 就降一档（极高 → 中 → 低）并提示一句。手动选过画质就再也不动；帧率上限设成 30 的也不动。
+const AUTOQ = { slowT: 0, n: 0, t0: 0, fps: 60 };
+function autoQualityTick(now) {
+  // 自己按真实时间数帧：FPS 那个数用的是封顶 0.04 秒的帧间隔，真卡到几帧的时候它还显示 25
+  if (!AUTOQ.t0) AUTOQ.t0 = now;
+  AUTOQ.n++;
+  const span = now - AUTOQ.t0;
+  if (span < 1000) return;
+  AUTOQ.fps = AUTOQ.n * 1000 / span; AUTOQ.n = 0; AUTOQ.t0 = now;
+  if ((navigator.webdriver && !window.__autoQTest) || SETTINGS.qualityChosen || SETTINGS.quality === 'low' || SETTINGS.fps < 60
+    || M.mode === 'demo' || M.watchAi || paused || document.hidden || span > 5000) { AUTOQ.slowT = 0; return; }
+  if (AUTOQ.fps < 40) AUTOQ.slowT += span / 1000; else AUTOQ.slowT = Math.max(0, AUTOQ.slowT - span / 500);
+  if (AUTOQ.slowT < 6) return;
+  AUTOQ.slowT = 0;
+  SETTINGS.quality = SETTINGS.quality === 'high' ? 'mid' : 'low'; SETTINGS.qualityAuto = true;
+  saveSettings(); resize();
+  toast(SETTINGS.quality === 'mid' ? '画面有点卡，已自动调成中画质（可在设置里改回）' : '画面还是卡，已自动调成低画质（可在设置里改回）');
+}
 function frame(now) {
   if (EXT.on) { last = now; requestAnimationFrame(frame); return; }   // 正在玩青锋行：刃影这边不画也不算
   try { frameBody(now); }
@@ -777,6 +796,7 @@ function frameBody(now) {
   lastDraw = now - (elapsed % targetInterval);
   const real = Math.min(0.04, (now - last) / 1000); last = now; menuDt = real;
   fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
+  autoQualityTick(now);
   if (!paused) {
     if (slowmo > 0) slowmo -= real;
     if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) swapFreezeTimer = Math.max(0, swapFreezeTimer - real);

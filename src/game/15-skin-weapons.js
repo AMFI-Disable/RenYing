@@ -475,7 +475,7 @@ SKIN_WEAP.jade_gourd = W => {   // 酒剑仙：青玉葫芦刻着云纹，葫芦
   ctx.globalCompositeOperation = 'lighter';
   for (let k = 0; k < 3; k++) { const u = (W.T * 0.7 + k / 3) % 1, p = [top[0] + Math.sin(u * 6 + k) * 4, top[1] - 5 - u * 16]; ctx.fillStyle = `rgba(150,240,255,${0.35 * (1 - u)})`; circle(p, 2.5 + u * 3); }
 };
-// ---------- 新三侠专属与非凡兵器：素丝、惊雀、天罗星杼、幽夜星魄、极星乾坤 ----------
+// ---------- 新三侠专属与绝世兵器：素丝、惊雀、天罗星杼、幽夜星魄、极星乾坤 ----------
 SKIN_WEAP.silk_spindle = W => {   // 素丝：粉玉银丝飞梭
   const { sk, L, o, flash, ux, uy, g } = W;
   const spinDraw = (pt, ang) => {
@@ -502,7 +502,7 @@ SKIN_WEAP.nightingale_spindle = W => {   // 惊雀：夜雀紫晶飞梭，梭翼
   spinDraw(g, Math.atan2(uy, ux)); spinDraw(sk.hb, Math.atan2(uy, ux));
   if (!o) { ctx.strokeStyle = 'rgba(224,64,251,0.8)'; ctx.lineWidth = 1.2; line(sk.hf, sk.hb); }
 };
-SKIN_WEAP.star_spindle = W => {   // 天罗星杼（★非凡）：织女金翼星晶双生梭，梭身展鎏金凤翼，中嵌八角星钻，牵引璀璨银河星丝
+SKIN_WEAP.star_spindle = W => {   // 天罗星杼（★绝世）：织女金翼星晶双生梭，梭身展鎏金凤翼，中嵌八角星钻，牵引璀璨银河星丝
   const { sk, L, o, flash, live, g, ux, uy, T } = W;
   const spinDraw = (pt, ang, sc = 1) => {
     ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang); ctx.scale(sc, sc);
@@ -539,7 +539,7 @@ SKIN_WEAP.star_spindle = W => {   // 天罗星杼（★非凡）：织女金翼�
     ctx.fillStyle = '#ffd24a'; circle([mx, my - 4], 1.8);
   }
 };
-SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄（★非凡）：冥魄断界星渊太刀，镂空星轨血槽 + 冥角护手 + 刃尖幽蓝星芒
+SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄（★绝世）：冥魄断界星渊太刀，镂空星轨血槽 + 冥角护手 + 刃尖幽蓝星芒
   const { P, poly, bar, live, t, g, hl, T, o, flash, L } = W;
   // 刀柄与柄首幽蓝魂晶
   bar(hl, g, 4.6, '#091520');
@@ -566,7 +566,7 @@ SKIN_WEAP.star_mistblade = W => {   // 幽夜星魄（★非凡）：冥魄断�
   const ph = (T * 1.1) % 1;
   W.glow([t[0], t[1]], 7.5, '94,240,255', 0.65 * (1 - ph));
 };
-SKIN_WEAP.star_magnet = W => {   // 极星乾坤（★非凡）：掌托阴阳双极星象罗盘法器，外旋紫金八卦环，内耀烈日/玄月磁核
+SKIN_WEAP.star_magnet = W => {   // 极星乾坤（★绝世）：掌托阴阳双极星象罗盘法器，外旋紫金八卦环，内耀烈日/玄月磁核
   const { sk, L, o, flash, live, T } = W;
   if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 11.5); circle(sk.hb, 10.5); return; }
   const pol = sk.pol || 1;

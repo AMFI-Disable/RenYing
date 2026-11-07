@@ -44,7 +44,7 @@ const MCTX = { mode: 'cpu', level: 'hard', char: 'qingfeng', win: true, rounds: 
   ok(bv.res.ok && bv.res.item.st === st3, '斩数版卖给别人，斩数跟着走', bv.res);
 }
 
-section('乱填参数：负数、超大数、不存在的东西、混档汰换');
+section('乱填参数：负数、超大数、不存在的东西、混档熔铸');
 {
   const u = await newUser('fuzzer', { ink: 5000 });
   await econ(u.token, 'gift');
@@ -57,17 +57,17 @@ section('乱填参数：负数、超大数、不存在的东西、混档汰换')
   const ink0 = inkOf(u.uid);
   for (const n of [-10, 0, 1e9, 'x']) {
     const r = await econ(u.token, 'buyTerm', { n });
-    ok(r.res.err && inkOf(u.uid) === ink0, `买 ${n} 台终端机被拒绝`);
+    ok(r.res.err && inkOf(u.uid) === ink0, `买 ${n} 台货郎被拒绝`);
   }
   for (const c of ['c9', '__proto__', 'constructor', null]) ok((await econ(u.token, 'buyCase', { c })).res.err && inkOf(u.uid) === ink0, `买不存在的武器箱 ${c} 被拒绝`);
   for (const l of ['0123456789abcdef', '__proto__', 'constructor', { a: 1 }]) ok((await econ(u.token, 'buy', { l })).res.err && inkOf(u.uid) === ink0, `编出来的挂单 ${JSON.stringify(l)} 买不了`);
   ok((await econ(u.token, 'cancel', { l: '0123456789abcdef' })).res.err, '撤不存在的挂单什么也不做');
   const t1 = await econ(u.token, 'trade', { ids: [it.i, it.i, it.i, it.i, it.i, it.i, it.i, it.i, it.i, it.i] });
-  ok(t1.res.err && stateOf(u.uid).inv.length === 1, '同一件放 10 次的汰换合同被拒绝', t1.res);
+  ok(t1.res.err && stateOf(u.uid).inv.length === 1, '同一件放 10 次的熔铸契被拒绝', t1.res);
   const t2 = await econ(u.token, 'trade', { ids: [it.i, 9999, 9998, 9997, 9996, 9995, 9994, 9993, 9992, 9991] });
-  ok(t2.res.err, '拿别人的 / 不存在的饰品汰换被拒绝');
+  ok(t2.res.err, '拿别人的 / 不存在的饰品熔铸被拒绝');
   const t3 = await econ(u.token, 'trade', { ids: 'all' });
-  ok(t3.res.err, '汰换材料不是数组被拒绝');
+  ok(t3.res.err, '熔铸材料不是数组被拒绝');
   const r1 = await econ(u.token, 'star', { id: 'cov', k: 'gc_wolf' });
   ok(r1.res.err, '星章不够不能换');
   const bogus = await call('POST', '/api/econ', { act: 'constructor', args: {}, nonce: nonce() }, u.token);
@@ -115,12 +115,12 @@ section('第 1 版的武库存档：读进来自动换成新版');
   const r = await econ(u.token, 'sync');
   const s = stateOf(u.uid);
   ok(r.state.v === C.VER && s.v === C.VER, '服务器上的存档换成新版并写回', s.v);
-  ok(s.term === 2 && !('keys' in s) && !('jade' in s) && !('orders' in s), '没用完的 2 把钥匙换成 2 台终端机，玉珏和充值记录去掉', s);
+  ok(s.term === 2 && !('keys' in s) && !('jade' in s) && !('orders' in s), '没用完的 2 把钥匙换成 2 台货郎，玉珏和充值记录去掉', s);
   ok(s.cases.c1 === 1 && s.cases.c2 === 2 && s.cases.c6 === 0 && s.cases.c7 === 0, '武器箱照旧，多了几种新箱子');
   ok(s.inv.length === 2 && s.inv[0].st === 7 && s.inv[0].n === '老刀' && !('f' in s.inv[0]) && !('p' in s.inv[0]), '饰品、斩数、名字照旧，磨损和图案模板去掉', s.inv);
   ok(s.eq.gouchen === 2 && profOf(u.uid).skins.includes('gc_wolf'), '穿着的照旧，皮肤还能穿');
   await econ(u.token, 'sync');
-  ok(stateOf(u.uid).term === 2, '只换一次（再读不会再多给终端机）');
+  ok(stateOf(u.uid).term === 2, '只换一次（再读不会再多给货郎）');
 }
 
 section('第 2 版的武库存档：每周买箱的次数去掉，箱子买卖记录照旧');
@@ -136,14 +136,14 @@ section('第 2 版的武库存档：每周买箱的次数去掉，箱子买卖�
   const r = await econ(u.token, 'sync');
   const s = stateOf(u.uid);
   ok(r.state.v === C.VER && s.v === C.VER && !('cw' in s) && s.od.n === 0 && s.pw.n === 0, '换成新版：每周买箱的次数去掉，今天还能开 5 个', s);
-  ok(s.cases.c2 === 6 && s.cases.c3 === 1 && s.cases.c7 === 0 && s.term === 1, '武器箱和终端机照旧');
+  ok(s.cases.c2 === 6 && s.cases.c3 === 1 && s.cases.c7 === 0 && s.term === 1, '武器箱和货郎照旧');
   ok(s.inv.length === 2 && !s.lst.length && s.inv.some(x => x.k === 'ls_plum' && x.st === 12) && s.nid > 2, '以前卖给系统的挂单撤下，饰品（连斩数）退回库存', [s.inv, s.lst]);
   ok(s.hist[0].g === 'c2' && s.hist[0].n === 3 && !('c' in s.hist[0]) && s.hist[1].k === 'qf_p1', '第 2 版的买箱记录换成新的写法', s.hist);
   const ro = []; for (let i = 0; i < 6; i++) ro.push(await econ(u.token, 'open', { c: 'c2' }));
   ok(ro.slice(0, 5).every(x => x.res.ok) && ro[5].res.err && ro[5].res.err.includes('明天'), '接着开：今天开 5 个，第 6 个等明天');
 }
 
-section('第 3 版的武库存档：卖给系统的挂单全部退回，武器箱和终端机的挂单也退回');
+section('第 3 版的武库存档：卖给系统的挂单全部退回，武器箱和货郎的挂单也退回');
 {
   T = nextNoon();
   const u = await newUser('legacy3');
@@ -153,7 +153,7 @@ section('第 3 版的武库存档：卖给系统的挂单全部退回，武器�
     hist: [], bought: { d: C.day(T), ids: ['x'] } };
   ENV.DB.raw.prepare('UPDATE econ SET state_json = ? WHERE uid = ?').run(JSON.stringify(v3), u.uid);
   const s = (await econ(u.token, 'sync')).state;
-  ok(s.v === C.VER && !s.lst.length && s.inv.length === 1 && s.inv[0].st === 3 && s.cases.c4 === 2 && s.term === 1 && !('bought' in s), '饰品、武器箱、终端机都退回来，“今天买过哪几单”也去掉', s);
+  ok(s.v === C.VER && !s.lst.length && s.inv.length === 1 && s.inv[0].st === 3 && s.cases.c4 === 2 && s.term === 1 && !('bought' in s), '饰品、武器箱、货郎都退回来，“今天买过哪几单”也去掉', s);
   ok(!row('SELECT COUNT(*) AS n FROM mkt WHERE seller = ?', u.uid).n, '旧挂单不会出现在玩家市场上');
 }
 
@@ -172,11 +172,11 @@ section('不能套利：系统不定饰品的价、也不收购；墨锭只有�
       if (e.ink > 1000) gained.push([a, e.ink - 1000, r.res]);
     }
   }
-  ok(!gained.length, '除了对局、补给、星章，没有哪个动作能凭空加墨锭（开箱、汰换、终端机、商店都只花不赚）', gained.slice(0, 3));
+  ok(!gained.length, '除了对局、补给、星章，没有哪个动作能凭空加墨锭（开箱、熔铸、货郎、商店都只花不赚）', gained.slice(0, 3));
   const e = env(), s = rich(); s.tm = { t0: T, n: 1, o: C.termOffer(R) };
   C.run(s, 'termBuy', { n: 1 }, e);
-  ok(e.ink <= 1000, '终端机只能花钱买下，不能反过来卖给它');
-  ok(C.TERM.markup[0] >= 1.2 && C.TIERS.every(t => C.BASE[t] > 0), `终端机报价不低于基准价的 ${C.TERM.markup[0]} 倍`);
+  ok(e.ink <= 1000, '货郎只能花钱买下，不能反过来卖给它');
+  ok(C.TERM.markup[0] >= 1.2 && C.TIERS.every(t => C.BASE[t] > 0), `货郎报价不低于基准价的 ${C.TERM.markup[0]} 倍`);
   ok(C.FEE === 0.15 && C.net(100) === 85 && C.net(1) === 0, '玩家之间成交扣 15% 手续费（墨锭从这里流出去）');
 }
 

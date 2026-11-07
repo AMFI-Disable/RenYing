@@ -1,5 +1,5 @@
 // ======================= 同袍肉鸽 · 十三侠客斩妖列传（打小怪剧情 + 肉鸽秘卷 + 六技魔首合一多人模式） =======================
-let rougeSquadSize = 3;
+let rougeSquadSize = 3;   // 固定三人一队（不再让玩家选两人还是三人）：本机 2P / 3P 随时按键接手，没人的位置电脑同袍顶上
 let rougeStoryChapter = 0;
 let rougePhaseMode = 'story';   // 'story': 先打小怪剧情波次再战六技魔首；'boss': 直接迎战六技魔首
 let pendingRaidBoss = null;
@@ -171,9 +171,6 @@ function nextRaidWave() {
 }
 function renderRougeModal() {
   if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
-  for (const b of document.querySelectorAll('#rougeSquadSeg button')) {
-    b.classList.toggle('sel', +b.dataset.sq === rougeSquadSize);
-  }
   for (const b of document.querySelectorAll('#rougePhaseSeg button')) {
     b.classList.toggle('sel', b.dataset.ph === rougePhaseMode);
   }
@@ -233,13 +230,6 @@ if ($id('rougeStoryTabs')) {
   $id('rougeStoryTabs').addEventListener('click', e => {
     const b = e.target.closest('button[data-ch]'); if (!b) return;
     rougeStoryChapter = +b.dataset.ch || 0;
-    SFX.slice(); renderRougeModal();
-  });
-}
-if ($id('rougeSquadSeg')) {
-  $id('rougeSquadSeg').addEventListener('click', e => {
-    const b = e.target.closest('button[data-sq]'); if (!b) return;
-    rougeSquadSize = +b.dataset.sq === 2 ? 2 : 3;
     SFX.slice(); renderRougeModal();
   });
 }
@@ -394,7 +384,9 @@ function toMenu() {
   M.hasBuffs = false; M.competitiveScrolls = null;
   M.stage = null;
   if (TUT) endTutorial();
-  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (M.mode === 'net' || bpMode === 'net') netLeave(); bpMode = 'cpu';
+  // 好友房的房主在结算页，对手已经走了、房间还开着：不关房间，回到联机页继续等人
+  const keepRoom = !!(NET.keepRoom && !NET.open && typeof P2P !== 'undefined' && P2P.friend && P2P.peer);
+  paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && (M.mode === 'net' || bpMode === 'net')) netLeave(); bpMode = 'cpu';
   const prevMode = M.mode;
   if (prevMode === 'tower') saveTowerRun();
   if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
@@ -409,6 +401,7 @@ function toMenu() {
     showScreen('menu');
   }
   if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
+  if (keepRoom) selectMode('net');
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
 document.getElementById('menuBtn').addEventListener('click', toMenu);

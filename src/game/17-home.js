@@ -271,8 +271,17 @@ function updateAIBrief() {
 
 // 模式大厅（#single）：所有玩法分类摆放，sec 为空时打开上次那一格，否则打开指定那一格的面板
 let currentSingleTab = 'cpu', teamMutator = 'normal';
+// 暂时收起来的模式：只藏入口，代码和存档都不动。以后想放出来，把名字从这张表里删掉就行。
+// 守关在离线版里是主要内容（离线版没有联机），所以离线版照旧留着。天机乱斗、通天神决已经是对战里的「战场异变」选项，山河异境的图在联机里投票选。
+const SHELVED_MODES = OFFLINE_BUILD ? ['tower'] : ['stage', 'tower'];
+const modeShelved = m => SHELVED_MODES.includes(m);
+for (const m of SHELVED_MODES) {
+  const b = document.querySelector(`#singleTabs button[data-tab="${m}"]`);
+  if (b) { b.style.display = 'none'; b.setAttribute('aria-hidden', 'true'); b.tabIndex = -1; }
+}
 
 function singleSec(sec) {
+  if (sec && modeShelved(sec)) sec = 'saga';   // 收起来的模式（从旧链接、图鉴、结算页回来）：改去侠客列传
   const active = sec || currentSingleTab || 'cpu';
   currentSingleTab = active;
 
@@ -441,7 +450,7 @@ function navTo(name) {
   openScreen(name);
 }
 for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { if (b.dataset.nav === 'settings') secretSettingsClick(); SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
-$id('helpTut').addEventListener('click', () => openScreen('tutorial'));
+$id('helpTut').addEventListener('click', () => startTutorial(true));   // 帮助里的是完整教学（十一步）
 function renderTopNav() {
   const nav = $id('topNav');
   if (!nav) return;
@@ -499,6 +508,7 @@ const SETTING_ROWS = [
   { k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
   { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
   { k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
+  { k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关']] },
   { k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
   { k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
   { k: 'music', name: '音乐', range: [0, 1, 0.05] },
@@ -581,7 +591,7 @@ $id('setList').addEventListener('click', e => {
   const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
   if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
   if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
-  if (k === 'quality') resize();
+  if (k === 'quality') { SETTINGS.qualityChosen = true; saveSettings(); resize(); }   // 手动选过画质：以后不再自动降
   if (k === 'autoSkin') applySkins();
 });
 $id('setList').addEventListener('input', e => {

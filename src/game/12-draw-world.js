@@ -472,7 +472,7 @@ function drawFighter(f) {
   const sq = f.squashT > 0 ? clamp(f.squashT / 0.25, 0, 1) : 0;   // 被磁仙大招夹扁：先扁着，最后 0.25 秒弹回来
   const big = f.size !== 1 || sq > 0;
   if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size * (1 + 0.4 * sq), f.size * (1 - 0.62 * sq)); ctx.translate(-f.x, -f.y); }
-  const gt = tierRank(L) >= 3 ? L.fx : null;   // 隐秘、非凡：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
+  const gt = tierRank(L) >= 3 ? L.fx : null;   // 赤霄、绝世：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
   for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
   skinTierMotes(f, false);
   // 霸体金光 / 影遁增益 / 月镜 / 金刚雷铠

@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS refresh_used (
 );
 
 -- 刃影武库（经济）和反作弊。
--- 武库存档：state_json 是库存、武器箱、终端机、改名标签这些；srv_json 是只有服务器看的账（墨锭入账编号、每天入账额、卖掉的皮肤）。
+-- 武库存档：state_json 是库存、武器箱、货郎、改名标签这些；srv_json 是只有服务器看的账（墨锭入账编号、每天入账额、卖掉的皮肤）。
 -- ver 每改一次加 1，两个请求同时改时只有一个能成（防双花）。
 CREATE TABLE IF NOT EXISTS econ (
     uid TEXT PRIMARY KEY,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS econ_nonce (
     PRIMARY KEY (uid, nonce)
 );
 
--- 流水：每次开箱、终端机、买卖、汰换、墨锭上报都记一条（查账、查作弊用）。
+-- 流水：每次开箱、货郎、买卖、熔铸、墨锭上报都记一条（查账、查作弊用）。
 CREATE TABLE IF NOT EXISTS econ_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uid TEXT NOT NULL,
@@ -337,3 +337,22 @@ CREATE TABLE IF NOT EXISTS chron_claim (
     PRIMARY KEY (node, uid)
 );
 CREATE INDEX IF NOT EXISTS idx_chron_claim_uid ON chron_claim (uid, cn);
+
+-- 匿名游玩统计（0008）：不存名字、账号、邮箱、IP。vid 是网页随机编号再加盐哈希的结果，只用来去重和算留存。
+CREATE TABLE IF NOT EXISTS play_visitors (
+    vid TEXT PRIMARY KEY,
+    first_day INTEGER NOT NULL,
+    last_day INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_play_visitors_first ON play_visitors (first_day);
+CREATE TABLE IF NOT EXISTS play_days (
+    day INTEGER NOT NULL,
+    vid TEXT NOT NULL,
+    PRIMARY KEY (day, vid)
+);
+CREATE TABLE IF NOT EXISTS play_counts (
+    day INTEGER NOT NULL,
+    k TEXT NOT NULL,
+    n INTEGER NOT NULL DEFAULT 0 CHECK (n >= 0),
+    PRIMARY KEY (day, k)
+);

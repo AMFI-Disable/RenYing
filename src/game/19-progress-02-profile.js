@@ -50,7 +50,7 @@ function freeSkinEvent(now = Date.now()) { return now >= FREE_SKIN_EVENT.start &
 function freeSkinDaysLeft() { return Math.max(0, Math.ceil((FREE_SKIN_EVENT.end - Date.now()) / 86400e3)); }
 // 限免活动只包括原来的皮肤；武库里的饰品（cs）要自己开出来或买到
 function skinOwned(k) { return !k || (PROF.skins || []).includes(k) || OFFLINE_BUILD || (freeSkinEvent() && !(SKINS[k] && SKINS[k].cs)); }
-// 自动穿最好的皮肤：没手动选过的角色，穿已拥有里品质综合权重最高的那款（统合绑定传说/非凡与武库顶级饰品）
+// 自动穿最好的皮肤：没手动选过的角色，穿已拥有里品质综合权重最高的那款（统合绑定传说/绝世与武库顶级饰品）
 function bestSkin(id) {
   let best = '', bw = 0;
   for (const [k, v] of Object.entries(SKINS)) {

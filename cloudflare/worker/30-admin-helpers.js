@@ -81,15 +81,15 @@ const intIn = (v, lo, hi) => {   // 是整数、在范围里就给这个数，�
   const x = typeof v === 'number' ? v : typeof v === 'string' ? +v.trim() : NaN;
   return Number.isInteger(x) && x >= lo && x <= hi ? x : null;
 };
-const ADJ_INK = 1000000, ADJ_N = 1000;   // 一次最多加减这么多墨锭、这么多个箱子 / 终端机 / 标签
+const ADJ_INK = 1000000, ADJ_N = 1000;   // 一次最多加减这么多墨锭、这么多个箱子 / 货郎 / 标签
 const ADMIN_GIVE_MAX = Object.keys(C.ITEM).length;
 
-// 改一个玩家：墨锭、武器箱、终端机、改名标签加减，发饰品、收饰品，一次请求里的几样要么一起改成、要么都不改。
+// 改一个玩家：墨锭、武器箱、货郎、改名标签加减，发饰品、收饰品，一次请求里的几样要么一起改成、要么都不改。
 // 和玩家自己的操作走同一套带版本号的写入：玩家正好在开箱也不会互相覆盖。收走的皮肤记进 gone，旧存档加不回来
 async function adminAdjust(env, u, body, who, why, now) {
   const dInk = intIn(body.ink, -ADJ_INK, ADJ_INK), dTerm = intIn(body.term, -ADJ_N, ADJ_N), dTags = intIn(body.tags, -ADJ_N, ADJ_N);
   if (dInk === null) return error(`墨锭一次最多加减 ${ADJ_INK}，要填整数`);
-  if (dTerm === null || dTags === null) return error(`终端机、改名标签一次最多加减 ${ADJ_N} 个，要填整数`);
+  if (dTerm === null || dTags === null) return error(`货郎、改名标签一次最多加减 ${ADJ_N} 个，要填整数`);
   const cases = {};
   for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
     const n = intIn(v, -ADJ_N, ADJ_N);
@@ -120,7 +120,7 @@ async function adminAdjust(env, u, body, who, why, now) {
       if (s.cases[c] + n < 0) return error(`这个号只有 ${s.cases[c]} 个${C.COLS[c].name}武器箱，扣不了 ${-n} 个`);
       s.cases[c] += n;
     }
-    if (s.term + dTerm < 0) return error(`这个号只有 ${s.term} 台终端机`);
+    if (s.term + dTerm < 0) return error(`这个号只有 ${s.term} 台货郎`);
     if (s.tags + dTags < 0) return error(`这个号只有 ${s.tags} 张改名标签`);
     s.term += dTerm; s.tags += dTags;
     const given = gv.map(g => C.addItem(s, C.mkItem(s, g.k, 'admin', rnd, { st: g.st }), E)), taken = [];
@@ -153,9 +153,9 @@ async function adminAdjust(env, u, body, who, why, now) {
 }
 
 // ---------- 找回饰品：按流水查“拿到过、现在库存和挂单里都没有”的饰品，管理员确认后放回去 ----------
-// 正常的去向（汰换掉、一键卖掉重复的、在玩家市场卖掉）只列出来，不能找回（找回就是凭空多一件）；
+// 正常的去向（熔铸掉、一键卖掉重复的、在玩家市场卖掉）只列出来，不能找回（找回就是凭空多一件）；
 // 去向不明的（某一步操作里突然没了、旧流水没记去向）和管理员收走的可以找回。找回过的会标出来，不能再找回第二次
-const LOST_WHY = { trade: '汰换掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
+const LOST_WHY = { trade: '熔铸掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
 const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(m[1]) ? { k: m[1], i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined } : null; };   // 老流水只记了 st，没有斩数
 async function lostItems(env, uid, all = false) {
   const row = await env.DB.prepare('SELECT state_json FROM econ WHERE uid = ?').bind(uid).first();
@@ -180,10 +180,10 @@ async function lostItems(env, uid, all = false) {
     if (r.act === 'restore') { for (const x of Array.isArray(d.items) ? d.items : []) { const o = seen.get(+x.from); if (o) o.restored = { at: r.at, to: x.to }; } for (const t of d.ad || []) got(t, r); continue; }
     if (r.act === 'admin') { for (const t of d.give || []) got(t, r); for (const t of d.take || []) gone(t, r, 'admin'); continue; }
     if (!r.ok && !d.rm && !d.ad) continue;
-    if (typeof d.r === 'string') got(d.r, r);   // 开箱、汰换、终端机、买到的那一件
+    if (typeof d.r === 'string') got(d.r, r);   // 开箱、熔铸、货郎、买到的那一件
     for (const t of Array.isArray(d.ad) ? d.ad : []) got(t, r);
     for (const t of Array.isArray(d.rm) ? d.rm : []) gone(t, r);
-    if (r.act === 'trade' && r.ok && !d.rm && d.a && Array.isArray(d.a.ids)) for (const i of d.a.ids) gone(+i, r);   // 旧流水没记进出：汰换按参数里的编号算
+    if (r.act === 'trade' && r.ok && !d.rm && d.a && Array.isArray(d.a.ids)) for (const i of d.a.ids) gone(+i, r);   // 旧流水没记进出：熔铸按参数里的编号算
   }
   const out = [];
   for (const o of seen.values()) {
