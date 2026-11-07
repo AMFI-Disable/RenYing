@@ -11,6 +11,10 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const errors = [];
 const err = (where, msg) => errors.push(`${where}：${msg}`);
+const UI_COPY_FILES = readdirSync(ROOT + 'src/data')
+  .filter(name => /^30-ui-copy-[a-z0-9-]+\.js$/.test(name))
+  .sort()
+  .map(name => `src/data/${name}`);
 
 // ---------- 通用的形状检查 ----------
 // spec 的写法：'str' 非空字符串、'num' 数字、'pos' 正数、'int' 整数、'bool'、'arr' 数组、'obj' 对象、'any'；
@@ -284,16 +288,16 @@ function checkMaps(env) {
 // ---------- 界面文案（中文 → 英文） ----------
 // 键、值都要是非空字符串；同一句中文写了两遍的话，后一行会悄悄盖掉前一行，所以按源码逐行查重
 function checkUiCopy(env) {
-  const where = 'src/data/30-ui-copy.js';
+  const where = 'src/data/30-ui-copy-*.js';
   const t = env.UI_COPY_EN;
   if (!TYPES.obj(t)) { err(where, 'UI_COPY_EN 应该是一个对象 { 中文: 英文 }'); return; }
   for (const [k, v] of Object.entries(t)) {
     if (!TYPES.str(k) || k !== k.trim()) err(where, `键 ${JSON.stringify(k)} 要是非空、首尾没有空白的中文原文`);
     if (!TYPES.str(v)) err(where, `「${k}」的译文应该是非空字符串，现在是 ${JSON.stringify(v)}`);
   }
-  const keys = [];   // 侠客说明的译文在 31-hero-copy.js 里补进同一张表：两个文件合起来查重
-  for (const f of [where, 'src/data/31-hero-copy.js']) for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:/gm)) keys.push(JSON.parse(m[1]));
-  unique('src/data/30-ui-copy.js + 31-hero-copy.js', keys, '键');
+  const keys = [];   // 侠客说明的译文在 31-hero-copy.js 里补进同一张表：所有文件合起来查重
+  for (const f of [...UI_COPY_FILES, 'src/data/31-hero-copy.js']) for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:/gm)) keys.push(JSON.parse(m[1]));
+  unique('30-ui-copy chunks + 31-hero-copy.js', keys, '键');
 }
 
 // ---------- 英文模板（src/i18n.js 的 PATTERNS_EN） ----------
@@ -320,12 +324,12 @@ function checkPatterns() {
 }
 
 // ---------- 词条有没有过期（本机提醒，CI 里算错） ----------
-// 30-ui-copy.js / 31-hero-copy.js 的中文键在 src/ 和 cloudflare/ 的源码里都找不到，多半是中文改了、英文没跟着改，
+// 30-ui-copy chunks / 31-hero-copy.js 的中文键在 src/ 和 cloudflare/ 的源码里都找不到，多半是中文改了、英文没跟着改，
 // 这条英文已经用不上，界面上那句会退回中文。运行时拼出来的句子（星座皮肤「双子·星冕」、带数字的提示）
 // 不会原样出现在源码里：把键按非汉字切开，每一段（两个字以上）都找得到就算还在用。
 // 加 --strict-copy 就当成错误；CI 里 tools/build.py 会自动加上（环境变量 CI），本机只提醒。
 function staleCopy() {
-  const COPY = ['src/data/30-ui-copy.js', 'src/data/31-hero-copy.js'], SKIP = [...COPY, 'src/i18n.js', 'cloudflare/worker.bundle.js'];
+  const COPY = [...UI_COPY_FILES, 'src/data/31-hero-copy.js'], SKIP = [...COPY, 'src/i18n.js', 'cloudflare/worker.bundle.js'];
   const walk = d => readdirSync(ROOT + d).flatMap(f => { const p = d + '/' + f; return statSync(ROOT + p).isDirectory() ? walk(p) : [p]; });
   const hay = [...walk('src'), ...walk('cloudflare')].filter(p => /\.(js|mjs|html)$/.test(p) && !SKIP.includes(p)).map(p => readFileSync(ROOT + p, 'utf8')).join('\n');
   const has = t => hay.includes(t) || hay.includes(JSON.stringify(t).slice(1, -1));

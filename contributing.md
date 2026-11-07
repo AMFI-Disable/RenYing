@@ -16,7 +16,7 @@ Only pull requests from the maintainer (Even, GitHub `AMFI-Disable`) and reposit
 | Change | File |
 | :--- | :--- |
 | A hero's stats, moves or story | `src/data/heroes/<number>-<id>.js` (field reference in `src/data/00-heroes.js`) |
-| English text for the interface | `src/data/30-ui-copy.js`; hero text in `src/data/31-hero-copy.js` |
+| English text for the interface | `src/data/30-ui-copy-*.js`; hero text in `src/data/31-hero-copy.js` |
 | Modes and draft orders | `src/data/10-modes.js`, `src/data/11-bp-orders.js` |
 | Maps | `src/data/12-maps.js` |
 | Game logic | The matching numbered file in `src/game/` (do not add new top-level files) |

@@ -683,7 +683,7 @@ These are worth knowing before you touch balance or the codex UI:
 | Change reach/hitbox | move `box` + `stat.reach` (and `reachMul` in `moveMods`) |
 | Add a hero | a new file in `src/data/heroes/` + `SKILLS`/`ULTS` entries + `SKINS`/`CHAR_RARITY` + pose data |
 | Add a skin | `SKINS` — `src/game/19-progress-01-skins.js` (plus `SCENES` there for legendary sky/FX; drawing in `13-skins.js`–`15-skin-weapons.js`) |
-| English translation of a UI string | `UI_COPY_EN` — `src/data/30-ui-copy.js` (numbered sentences: `PATTERNS_EN` in `src/i18n.js`) |
+| English translation of a UI string | `UI_COPY_EN` — feature chunks in `src/data/30-ui-copy-*.js` (numbered sentences: `PATTERNS_EN` in `src/i18n.js`) |
 | UI copy / numbers shown in codex | `HERO_HIT_DETAILS`, `PASSIVE_SHORT` — `src/game/18-codex-content.js`; `statRows` and rendering — `src/game/18-codex.js` |
 | Netcode | rollback in `src/game/20-tutorial-rollback-touch.js`, shared net code in `06-input-net.js`, transport in `src/net-p2p.js` |
 | Server features | `server.py` (`routes` dict at ~1200) |

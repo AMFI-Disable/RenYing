@@ -4,7 +4,7 @@
 (function() {
   'use strict';
 
-  // 中文 → 英文的词条表在 src/data/30-ui-copy.js（UI_COPY_EN）。它和游戏主体拼在一起，比这个文件晚加载，
+  // 中文 → 英文的词条表在 src/data/30-ui-copy-*.js（UI_COPY_EN）。它和游戏主体拼在一起，比这个文件晚加载，
   // 所以每次用到时再去取；还没加载好就当作空表（照样显示中文）。
   function dictEn() {
     return typeof UI_COPY_EN === 'object' && UI_COPY_EN ? UI_COPY_EN : {};

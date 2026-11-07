@@ -13,7 +13,7 @@ RenYing (刃影) is a browser fighting game with offline play, online rollback n
 | Game logic, split into numbered files | `src/game/` (files are joined in number order) |
 | Hero data, one file per hero | `src/data/heroes/` |
 | Modes, draft orders, maps | `src/data/10-modes.js`, `src/data/11-bp-orders.js`, `src/data/12-maps.js` |
-| English interface text | `src/data/30-ui-copy.js` (`src/i18n.js` only looks it up) |
+| English interface text | `src/data/30-ui-copy-*.js` (`src/i18n.js` only looks it up) |
 | Page markup and styles | `src/page.html`, `src/style.css`, numbered styles in `src/styles/` |
 | Armory and market | `src/armory-core.js`, `src/armory.js` |
 | Server | Worker source modules in `cloudflare/worker/`; generated entry points in `cloudflare/worker.js` and `cloudflare/worker.bundle.js`; migrations in `cloudflare/migrations/` |
@@ -75,7 +75,7 @@ Never skip, disable or weaken a test to make it pass.
 - Every tracked file and folder name is lowercase. `CNAME` is the only exception.
 - Markdown headings use Title Case and pass `.markdownlint.json`.
 - Keep `readme.md` and `readme.zh-cn.md` in step. The wiki lives at `AMFI-Disable/RenYing.wiki`, with a copy in `docs/wiki/`. Change both sides together.
-- Every user-facing string needs an English entry in `src/data/30-ui-copy.js`.
+- Every user-facing string needs an English entry in `src/data/30-ui-copy-*.js`.
 
 ## Account Safety And Content Rules
 
