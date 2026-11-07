@@ -1,3 +1,18 @@
+// 战斗测试第 40 组：通用规则（气血、重量、手长、被动）和场地。
+// 由 tools/tests/combat-test.mjs 按文件名顺序载入；每项 { name, fn }，fn 是在沙盒里执行的代码字符串，返回 { pass, error }。
+// 找 bug 提示：测试失败时报的是 name，在下面的目录里找到序号，再搜这个 name。
+//
+// 本文件的测试（共 10 项）：
+//    1. All heroes runtime maxHp, weight, reach, fly, and passives match hero settings
+//    2. Combat audit coverage and proportional health recovery
+//    3. Manual aim default: Attacks, skills, and XuLiZhan (cs1/cs2) aim in player direction away from opponent
+//    4. Net 1v1 BP chooses 3 heroes per side (BP_ORDERS.trioSnake) and passes duo to rollStart for 3v3 tag relay
+//    5. Stage mode (闯关斩妖) starts with both AI companions on the field
+//    6. Multiplayer Co-op Roguelike (同袍肉鸽 · 众志破魔): hub-tile entry, 6-skill 3-hero Boss (3x HP, 1.25x dmg), shared gain…
+//    7. XuLiZhan (蓄力斩) mechanics: Partial charge (cs1) does not knock down; Blocked max charge (cs2) knocks down with …
+//    8. Blocked cs2 rule only applies to cs2 itself: a later blockable hit or ult after a cs2 is not turned into a qui…
+//    9. Counter hit (破) on a skill wind-up does not depend on the last normal attack being a down attack
+//   10. Team terrain is active and replay preserves both new and legacy terrain rules
 export default [
   {
     name: 'All heroes runtime maxHp, weight, reach, fly, and passives match hero settings',

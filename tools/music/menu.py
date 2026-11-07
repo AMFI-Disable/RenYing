@@ -1,6 +1,7 @@
 """主页：山河入梦 —— 72 拍，D 宫五声（借 B 羽的忧伤），24 小节一循环
    前奏 4 小节（古筝分解和弦、风声、钟），A 段 8 小节笛子主题，B 段 8 小节二胡接唱、合唱和鼓进来，尾声 4 小节回到前奏。
    和声是古风常用的 4-5-3-6（G A F#m Bm），旋律只用五声音阶。"""
+# 用法：cd tools/music && python3 menu.py   输出 out/menu.mp3（满意后复制到 assets/music/）
 import numpy as np
 import mixlib as mx
 from song import Song, N, chord, line, arp, block, swell

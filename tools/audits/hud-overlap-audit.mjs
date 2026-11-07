@@ -6,6 +6,8 @@
 // Usage: node tools/audits/hud-overlap-audit.mjs [outdir] [w] [h] [mode]
 //   mode: watch2v2 (default) | 2v2 | raid | cpu | mayhem
 // Exit code 1 when an overlap or an off-canvas box is found.
+//
+// 找 bug 提示：只看画面顶部 BAND 像素高的那一条（血条、计时、名字所在的地方）；报重叠时会给出两段文字和它们的框。
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, openSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -28,6 +30,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 mkdirSync(OUT, { recursive: true });
 const LOG = `${OUT}/chrome.log`;
 
+// ---------- CDP 小客户端：send 发命令等回包，once 等某个事件一次 ----------
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.subs = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);
@@ -39,6 +42,7 @@ class CDP {
   once(k) { return new Promise(r => { const f = p => { r(p); this.subs.set(k, this.subs.get(k).filter(x => x !== f)); }; this.on(k, f); }); }
 }
 
+// ---------- 启动无头 Chrome 并连上 ----------
 const logFd = openSync(LOG, 'w');
 const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox',
   '--disable-dev-shm-usage', '--mute-audio', '--no-first-run', '--no-default-browser-check', '--disable-extensions',

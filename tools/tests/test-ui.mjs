@@ -16,6 +16,8 @@
 // Usage:
 //   node tools/tests/test-ui.mjs                  Default comprehensive UI audit (~30-40s)
 //   node tools/tests/test-ui.mjs --fast           Skip heavy stress/perf profiling
+//
+// 找 bug 提示：界面审计要 Chromium 和 8791 端口的本机服务器（ensureServer 会自己起）；端口被占时先关掉占用的进程。
 
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';

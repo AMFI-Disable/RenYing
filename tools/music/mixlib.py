@@ -1,4 +1,6 @@
 """混音小工具：读 fluidsynth 渲染的分轨、频域均衡、卷积混响、压缩、限幅、合成打击乐和氛围层、编码 mp3"""
+# 文件结构：读写（fluidsynth 渲染、wav、重采样、mp3、响度） → 基本处理（均衡、混响、压缩、限幅） → 合成层（鼓、风声、钟）
+# 找 bug 提示：音色库路径在 SF（可用环境变量 MUSIC_SF 换）；渲染出无声文件多半是没装 fluidsynth 或音色库路径不对。
 import os, subprocess, json, re
 import numpy as np
 

@@ -1,4 +1,5 @@
 """一首曲子：若干 MIDI 声部（各自的音色库、均衡、声像、混响量）+ 合成层；循环曲渲染三遍取中间一遍，首尾无缝"""
+# 文件结构：1. 音色号表和五声音阶工具  2. Song（声部、合成层、渲染成循环 mp3）  3. 记谱小工具（N / chord / line / arp / block / swell）
 import os
 import numpy as np
 import midi, mixlib as mx

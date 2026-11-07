@@ -11,6 +11,8 @@
 // Usage:
 //   node tools/tests/test-combat.mjs            Run all checks (finishes ~20-30s)
 //   node tools/tests/test-combat.mjs --fast     Skip prolonged netplay stress tests
+//
+// 找 bug 提示：某一步失败时，单独运行它那一行的命令（见下面 main 里的路径和参数），输出更完整。
 
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';

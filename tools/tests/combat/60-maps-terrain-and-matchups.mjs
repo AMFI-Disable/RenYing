@@ -1,3 +1,17 @@
+// 战斗测试第 60 组：地图投票、地形和对位。
+// 由 tools/tests/combat-test.mjs 按文件名顺序载入；每项 { name, fn }，fn 是在沙盒里执行的代码字符串，返回 { pass, error }。
+// 找 bug 提示：测试失败时报的是 name，在下面的目录里找到序号，再搜这个 name。
+//
+// 本文件的测试（共 9 项）：
+//    1. Map vote odds follow the vote count
+//    2. Cliffside: walking stops at the edge, a launched fighter falls and comes back
+//    3. Frozen Pond: ice slows stopping, heavier fighters slide further, other modes unchanged
+//    4. Map platforms: land from above, jump through from below, drop with down + jump, walk off the edge
+//    5. Bamboo wind and Thunder Altar lightning: timed in the match state, home-ground heroes resist
+//    6. Wine mist, palace eaves and the other home-ground bonuses
+//    7. Clone and magnet heroes on platforms
+//    8. LiYing swap path damage and CiXian polarity damage
+//    9. QingFeng and FeiYing ultimate travel distance (1.25x) and FeiYing aerial tracking
 export default [
   {
     name: 'Map vote odds follow the vote count',

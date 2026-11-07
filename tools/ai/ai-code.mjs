@@ -4,6 +4,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
+// 两位数字开头的文件按文件名排序：拼接顺序必须和 tools/build.py 一致，否则沙盒里的游戏和网页里的不一样
 const numbered = dir => readdirSync(ROOT + dir).filter(n => /^\d\d-[a-z0-9-]+\.js$/.test(n)).sort().map(n => dir + '/' + n);
 const isDir = p => statSync(ROOT + p).isDirectory();
 

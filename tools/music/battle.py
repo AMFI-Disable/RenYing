@@ -1,6 +1,7 @@
 """对战：刃影交锋 —— 140 拍，E 羽调（E G A B D），32 小节一循环
    A 段：太鼓律动 + 弦乐十六分音符顿弓 + 二胡主题；B 段：加铜管短促和弦、笛子对位；
    C 段：鼓点减半、合唱和古筝刮奏的喘息段；D 段：全体高潮，最后一小节鼓的过门接回开头。"""
+# 用法：cd tools/music && python3 battle.py   输出 out/battle.mp3、out/overtime.mp3（满意后复制到 assets/music/）
 import re
 import numpy as np
 import mixlib as mx

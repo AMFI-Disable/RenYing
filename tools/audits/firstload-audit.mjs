@@ -10,6 +10,8 @@
 //   首屏有没有不该有的请求：音乐（.mp3）、青锋行、three.js、PeerJS；
 //   每个已加载字体的 font-display：block / auto 会让文字先隐身（FOIT），swap / fallback / optional 不会。
 // 只用 Node 自带的东西，和 ui-audit / perf-audit 一样直接连 Chrome 的调试接口。
+//
+// 找 bug 提示：首屏慢先看 firstload.json 里每次请求的大小和耗时；每一轮都是全新的浏览器资料夹，不会被缓存掩盖。
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -33,6 +35,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const median = a => { const s = a.filter(x => x != null).sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : null; };
 const kb = b => Math.round(b / 102.4) / 10;
 
+// ---------- CDP 小客户端：send 发命令等回包，once 等某个事件一次 ----------
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.subs = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);

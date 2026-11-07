@@ -12,6 +12,10 @@ import { Pool, HEROES, NAMES } from './ai-arena.mjs';
 import { heroData } from './ai-code.mjs';
 
 import { fileURLToPath } from 'node:url';
+// 文件结构：1. 参数  2. 量一份平衡系数下的胜率矩阵（measure）  3. 按胜率调系数（adjust）
+//           4. 写报告用的小工具（matrixMd / worstMd / report）  5. 主流程：基准 → 迭代几轮 → 复核 → 写 docs/trainer/
+// 找 bug 提示：报告里的胜率有 ±ci 的误差，差几个百分点不一定是真的强弱；要确认时加大 --n 重跑。
+// ---------- 1. 参数 ----------
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const N = Math.max(2, +arg('n', 20) & ~1), ROUNDS = +arg('rounds', 0), LEVELS = arg('level', 'god').split(','), LEVEL = LEVELS.join('+');
@@ -25,6 +29,7 @@ const H = HEROES.length;
 const BASE = Object.fromEntries(heroData().map(h => [h.id, h.bal]));
 
 // 所有对位：a 角色对 b 角色各 N 场，奇数场左右互换；种子固定，同一份数值重跑结果一样
+// ---------- 2. 量胜率 ----------
 function games(seed0 = SEED) {
   const g = []; let s = seed0 * 100000;
   for (const LV of LEVELS) for (let a = 0; a < H; a++) for (let b = 0; b < H; b++) {
@@ -66,6 +71,7 @@ async function measure(bal, tag, seed0 = SEED) {
 
 // 胜率高的角色整体削（伤害和气血一起乘同一个系数，招式手感不变），胜率低的整体加强
 // 后面几轮力度逐渐变小（每轮 ×DECAY），不然强弱会来回摆
+// ---------- 3. 调系数 ----------
 const DECAY = +arg('decay', 0.75);
 function adjust(bal, wr, r) {
   const next = JSON.parse(JSON.stringify(bal)), k = Math.pow(DECAY, r - 1);
@@ -77,6 +83,7 @@ function adjust(bal, wr, r) {
   return next;
 }
 
+// ---------- 4. 报告小工具 ----------
 const pct = v => (v * 100).toFixed(1) + '%';
 const spread = wr => [Math.min(...wr), Math.max(...wr)];
 const sd = wr => Math.sqrt(wr.reduce((s, v) => s + (v - 0.5) ** 2, 0) / wr.length);
@@ -131,6 +138,7 @@ function report(base, rounds, final, check) {
   return md;
 }
 
+// ---------- 5. 主流程 ----------
 let bal = arg('bal') ? JSON.parse(readFileSync(ROOT + arg('bal'), 'utf8')) : JSON.parse(JSON.stringify(BASE));
 for (const id of HEROES) bal[id] = { ...BASE[id], ...(bal[id] || {}) };
 const base = await measure(bal, 'base');

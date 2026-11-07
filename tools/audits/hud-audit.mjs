@@ -5,6 +5,8 @@
 // world-space text (floating combat numbers, monster names) is drawn under the camera
 // transform, so its recorded x/y are world coordinates, not screen coordinates.
 // Usage: node tools/audits/hud-audit.mjs [outdir] [width] [height]
+//
+// 找 bug 提示：报告里每一条是一处画布文字（状态、文字、字号、位置）；字号低于下限的会列在最后，照文字内容去 src/game/16-draw-ui.js 搜。
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -27,6 +29,7 @@ mkdirSync(OUT, { recursive: true });
 const LOG = `${OUT}/chrome.log`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// ---------- CDP 小客户端：send 发命令等回包，once 等某个事件一次 ----------
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.subs = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);
@@ -40,6 +43,7 @@ class CDP {
   once(k) { return new Promise(r => { const f = p => { r(p); this.subs.set(k, this.subs.get(k).filter(x => x !== f)); }; this.on(k, f); }); }
 }
 
+// ---------- 启动无头 Chrome 并连上 ----------
 const logFd = openSync(LOG, 'w');
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',

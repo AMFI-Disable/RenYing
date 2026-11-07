@@ -12,6 +12,9 @@
 //   node tools/tests/test-ai.mjs --train          Run genetic policy training sweep
 //   node tools/tests/test-ai.mjs --ladder         Generate cross-difficulty ladder benchmark
 //   node tools/tests/test-ai.mjs --frames         Remeasure hit/recovery frame data into models/ai-brain.json
+//   node tools/tests/test-ai.mjs --serial         Run the two default checks one after another
+//
+// 找 bug 提示：某一步失败时，单独运行它那一行的命令（见下面 main 里的路径和参数），输出更完整。
 
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -19,17 +22,23 @@ import path from 'node:path';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const args = process.argv.slice(2);
+const isSerial = args.includes('--serial');
 const doTrain = args.includes('--train');
 const doLadder = args.includes('--ladder');
 const doFrames = args.includes('--frames');
 
-async function runStep(name, cmd, cmdArgs = []) {
+// 跑一个测试脚本。buffered 为真时输出先收集起来、结束时整段打印（几个脚本同时跑时输出不会交错）
+async function runStep(name, cmd, cmdArgs = [], { buffered = false } = {}) {
   const t0 = Date.now();
-  process.stdout.write(`\n\x1b[36m▶ [AI Suite] ${name}...\x1b[0m\n`);
+  const title = `\n\x1b[36m▶ [AI Suite] ${name}...\x1b[0m\n`;
+  if (!buffered) process.stdout.write(title);
   return new Promise((resolve, reject) => {
-    const p = spawn('node', [path.join(ROOT, cmd), ...cmdArgs], { stdio: 'inherit' });
+    const chunks = [];
+    const p = spawn('node', [path.join(ROOT, cmd), ...cmdArgs], { stdio: buffered ? ['ignore', 'pipe', 'pipe'] : 'inherit' });
+    if (buffered) { p.stdout.on('data', d => chunks.push(d)); p.stderr.on('data', d => chunks.push(d)); }
     p.on('close', code => {
       const sec = ((Date.now() - t0) / 1000).toFixed(1);
+      if (buffered) { process.stdout.write(title); process.stdout.write(Buffer.concat(chunks)); }
       if (code === 0) {
         console.log(`\x1b[32m✔ ${name} passed (${sec}s)\x1b[0m`);
         resolve();
@@ -39,6 +48,14 @@ async function runStep(name, cmd, cmdArgs = []) {
       }
     });
   });
+}
+
+// 同时跑几个互不依赖的脚本；全部结束后有一个失败就抛出（另一个也会跑完、打印结果）。--serial 时一个一个跑
+async function runParallel(steps) {
+  if (isSerial) { for (const st of steps) await runStep(...st); return; }
+  const results = await Promise.allSettled(steps.map(([name, cmd, cmdArgs = []]) => runStep(name, cmd, cmdArgs, { buffered: true })));
+  const failed = results.find(r => r.status === 'rejected');
+  if (failed) throw failed.reason;
 }
 
 async function main() {
@@ -53,10 +70,12 @@ async function main() {
     }
 
     // 1. Hero AI Specific Behaviors (LingQue & Core Combo Logic)
-    await runStep('Hero Combo & Difficulty Separation Test', 'tools/tests/ai-lingque-test.mjs', ['--n', '2']);
-
     // 2. TianDao (God) Headless Arena Win Rate Matrix (Fast Benchmark)
-    await runStep('TianDao Hero Win-Rate Matrix & Report', 'tools/ai/trainer.mjs', ['--n', '2', '--level', 'god']);
+    // 凌雀测试只用一个 CPU 核，天道对阵表用线程池占满其余的核：两者同时跑，结果都由固定种子决定，和先后无关
+    await runParallel([
+      ['Hero Combo & Difficulty Separation Test', 'tools/tests/ai-lingque-test.mjs', ['--n', '2']],
+      ['TianDao Hero Win-Rate Matrix & Report', 'tools/ai/trainer.mjs', ['--n', '2', '--level', 'god']],
+    ]);
 
     // Optional: Ladder Report
     if (doLadder) {

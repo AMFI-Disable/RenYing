@@ -1,3 +1,13 @@
+// 战斗测试第 50 组：2v2 / 车轮战等组队玩法，以及开打前的点将和秘卷。
+// 由 tools/tests/combat-test.mjs 按文件名顺序载入；每项 { name, fn }，fn 是在沙盒里执行的代码字符串，返回 { pass, error }。
+// 找 bug 提示：测试失败时报的是 name，在下面的目录里找到序号，再搜这个 name。
+//
+// 本文件的测试（共 5 项）：
+//    1. 2v2 has three local variants (you + AI ally, two players vs two AIs, two vs two): each starts, ends and replay…
+//    2. Escape (腾空闪) state machine: rise / hover invulnerability, cooldown, landing lag, and what blocks it (cooldown,…
+//    3. Hidden session control unlocks after twelve settings clicks and drives the player
+//    4. Team mutators apply to both team formats and reset between matches
+//    5. Pre-match state produces deterministic hero-specific scroll candidates and validates choices
 export default [
   {
     name: '2v2 has three local variants (you + AI ally, two players vs two AIs, two vs two): each starts, ends and replays frame-for-frame',

@@ -5,6 +5,8 @@
 //   --offline  : Zero-network standalone bundle (renying-offline.html) embedded assets & unlock check
 //   --schema   : Cloudflare D1 SQLite schema (cloudflare/schema.sql) validation
 //   --all      : Run all checks (default)
+//
+// 找 bug 提示：--rollback 不一致时，说明某个状态没进 capState / restState（新加的战斗字段要记得加进快照）。
 import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 import { gameSource } from '../ai/ai-code.mjs';

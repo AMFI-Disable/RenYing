@@ -1,4 +1,5 @@
 """选人、木人桩、武库三首循环曲，和胜利、失败、开出传说三段短曲"""
+# 用法：cd tools/music && python3 rest.py [曲名…]   输出到 out/：选人、木人桩、武库三首循环曲和三段短曲，每首一个 build_xxx()
 import numpy as np
 import mixlib as mx
 from song import Song, N, chord, line, arp, block, swell

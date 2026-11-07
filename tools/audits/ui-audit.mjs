@@ -1,6 +1,8 @@
 // Headless UI audit for RenYing: screenshots every panel + measures layout problems.
 // Node built-ins only (global fetch + WebSocket). Attaches via the browser-level CDP
 // WebSocket (the /json HTTP endpoint is unreachable in this sandbox).
+//
+// 找 bug 提示：每个面板一张截图（输出目录），报出的 clip / 小字会写面板名和元素选择器；面板列表在下面的 PANELS。
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -148,6 +150,7 @@ const SETTLE = `(() => new Promise(res => {
   Promise.race([Promise.all(waits).then(() => true), new Promise(r => setTimeout(() => r(false), 1200))]).then(res);
 }))()`;
 
+// ---------- CDP 小客户端：send 发命令等回包，once 等某个事件一次 ----------
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.events = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);
@@ -160,6 +163,7 @@ class CDP {
   once(method) { return new Promise(r => this.events.set(method, p => { this.events.delete(method); r(p); })); }
 }
 
+// ---------- 启动无头 Chrome 并连上 ----------
 const logFd = openSync(LOG, 'w');
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',

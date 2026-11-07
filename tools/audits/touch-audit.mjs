@@ -3,6 +3,8 @@
 // measures the virtual stick + thumb pad (on-screen, hit-target size, overlaps), and
 // drives them with synthetic touches to confirm they move and attack.
 // Usage: node tools/audits/touch-audit.mjs [outdir]
+//
+// 找 bug 提示：模拟的是触屏设备（不是缩小窗口）；摇杆、按钮的位置和大小问题看截图，判定在 src/game/20-tutorial-rollback-touch.js。
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, openSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -24,6 +26,7 @@ mkdirSync(OUT, { recursive: true });
 const LOG = `${OUT}/chrome.log`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// ---------- CDP 小客户端：send 发命令等回包，once 等某个事件一次 ----------
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.subs = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);
@@ -37,6 +40,7 @@ class CDP {
   once(k) { return new Promise(r => { const f = p => { r(p); this.subs.set(k, this.subs.get(k).filter(x => x !== f)); }; this.on(k, f); }); }
 }
 
+// ---------- 启动无头 Chrome 并连上 ----------
 const logFd = openSync(LOG, 'w');
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',

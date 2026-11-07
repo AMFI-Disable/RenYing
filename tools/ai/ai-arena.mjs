@@ -12,6 +12,8 @@ import { gameJs } from './ai-code.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
+// ---------- 1. 无画面沙盒：假的 window / document / canvas，载入 src/ai.js 和整个游戏 ----------
+// 返回的 env 能直接读写游戏的全局状态（env.A、env.M…），env.run(code) 在沙盒里执行任意代码，env.seed(n) 固定随机数
 export async function makeEnv(tuneFile) {
   const vm = await import('node:vm');
   const noop = () => {};
@@ -67,6 +69,8 @@ export async function makeEnv(tuneFile) {
   return env;
 }
 
+// ---------- 2. 打一局：两边都交给电脑 AI，返回胜方、步数和血量差 ----------
+// lv 可以是难度名（'god'），也可以是 { base, genes } 这样带基因的写法（训练时用）
 function makeCtrl(env, lv) {
   if (typeof lv === 'string' && lv.startsWith('snap:')) {
     const c = new env.Ctrl(), b = new env.SnapBrain(c, lv.slice(5));
@@ -102,6 +106,7 @@ if (!isMainThread) {
   });
 }
 
+// ---------- 3. 线程池：每个线程一份沙盒，对局分片并行；结果顺序和提交顺序一致，和线程数无关 ----------
 export class Pool {
   constructor(n = os.cpus().length, tuneFile) {
     this.workers = []; this.idle = []; this.q = []; this.cb = new Map(); this.seq = 0;
@@ -121,6 +126,8 @@ export class Pool {
   close() { for (const w of this.workers) w.terminate(); }
 }
 
+// ---------- 4. 侠客名单和统计小工具 ----------
+// 顺序要和 src/data/heroes/ 的编号一致（下标就是 CHARS 里的下标）
 export const HEROES = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji'];
 export const NAMES = ['青锋', '绯影', '铁山', '凌霜', '流云', '雷鸣', '墨羽', '月华', '燕翎', '玉箫', '醉翁', '勾陈', '凌雀', '离影', '磁仙', '千机'];
 
@@ -140,6 +147,7 @@ export function byHero(res) {
   return out.map(o => o.n ? o.w / o.n : NaN);
 }
 
+// ---------- 5. 直接运行时的命令行 ----------
 const isMain = isMainThread && process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };

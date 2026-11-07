@@ -20,7 +20,22 @@
   python3 tools/build.py          生成网页
   python3 tools/build.py --check  只检查网页是不是最新的（CI 用），不是最新就返回 1
 """
+# 文件结构（从上到下）：
+#   1. 路径常量和旧网址页面模板
+#   2. 读文件、找编号源文件的小工具
+#   3. 压缩：去掉 CSS / JS 的注释和空行
+#   4. 嵌进网页的数据：音乐、AI 训练结果
+#   5. 青锋行（三维小游戏）页面
+#   6. 游戏主网页（联网版 / 离线版）
+#   7. Cloudflare Worker：管理网页、D1 迁移、整合包
+#   8. 所有产物的清单
+#   9. 语法检查（并发跑 node --check）
+#  10. 入口：生成或 --check
+#
+# 找 bug 提示：产物和源码对不上时先跑 --check 看哪个文件旧了；
+# 打包报"应该正好有一个 …"说明源文件里的占位标记被删了或写了两次。
 import base64
+import functools
 import hashlib
 import json
 import os
@@ -30,10 +45,14 @@ import subprocess
 import sys
 import tempfile
 
+# ===========================================================================
+# 1. 路径常量和旧网址页面模板
+# ===========================================================================
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src")
 ASSETS = os.path.join(ROOT, "assets")
 
+# renying.html 的内容：旧网址只放一个按钮进新地址，不自动跳转
 REDIRECT = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -65,6 +84,12 @@ REDIRECT = """<!DOCTYPE html>
 """
 
 
+# ===========================================================================
+# 2. 读文件、找编号源文件的小工具
+# ===========================================================================
+# 同一次打包里一个文件会被读好几次（游戏主体要用来压缩、查语法、取管理网页的名字），
+# 所以读出来的内容缓存起来；打包期间源文件不会变，缓存是安全的。
+@functools.lru_cache(maxsize=None)
 def read(*parts, mode="r"):
     path = os.path.join(*parts)
     if mode == "rb":
@@ -76,6 +101,7 @@ def read(*parts, mode="r"):
 
 
 
+# 文件名形如 "07-ai-story.js"：两位数字开头，拼接时按文件名排序
 def numbered(*parts):
     return sorted(n for n in os.listdir(os.path.join(SRC, *parts)) if re.match(r"^\d\d-[a-z0-9-]+\.js$", n))
 
@@ -119,12 +145,18 @@ def game_parts():
 def game_source():
     return "".join(read(SRC, *p) for p in game_parts())
 
+# ===========================================================================
+# 3. 压缩：去掉 CSS / JS 的注释和空行
+# ===========================================================================
+# 注意 compact_js 只删"整行"的 // 注释和 /* */ 块（不解析字符串），
+# 所以源码里多行模板字符串的某一行如果正好以 // 或 /* 开头，会被误删。写代码时避开这种写法。
 def compact_css(css):
     css = re.sub(r"/\*[\s\S]*?\*/", "", css)
     lines = [ln.strip() for ln in css.splitlines() if ln.strip()]
     return "\n".join(lines)
 
 
+@functools.lru_cache(maxsize=None)
 def compact_js(js):
     out = []
     in_block = False
@@ -153,6 +185,9 @@ def compact_js(js):
     return "\n".join(out)
 
 
+# ===========================================================================
+# 4. 嵌进网页的数据：音乐、AI 训练结果
+# ===========================================================================
 def music_data():
     folder = os.path.join(ASSETS, "music")
     data = {}
@@ -170,6 +205,9 @@ def ai_brain_data():
     return {}
 
 
+# ===========================================================================
+# 5. 青锋行（三维小游戏）页面
+# ===========================================================================
 QFX = os.path.join(SRC, "qfx")
 
 
@@ -188,6 +226,11 @@ def qfx_page():
     return html
 
 
+# ===========================================================================
+# 6. 游戏主网页（联网版 / 离线版）
+# ===========================================================================
+# src/page.html 里有几个占位标记，按下面 parts 的顺序换成样式和脚本。
+# 脚本的先后顺序有讲究：后面的文件会用到前面定义的全局变量，不要随便调换。
 def page(offline):
     html = read(SRC, "page.html")
     build = {"offline": offline}
@@ -218,6 +261,10 @@ def page(offline):
     return html
 
 
+# ===========================================================================
+# 7. Cloudflare Worker：管理网页、D1 迁移、整合包
+# ===========================================================================
+# worker 源码里这几行是占位：打包时换成真正的内容
 CORE_IMPORT = "import '../src/armory-core.js';\n"
 MIG_IMPORT = "import { MIGRATIONS } from './migrations.gen.js';\n"
 CHRON_IMPORT = "import '../src/data/13-chron.js';\n"
@@ -299,6 +346,9 @@ def worker_bundle():
     return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + read(SRC, "armory-core.js") + "\n/* === cloudflare/worker.js === */\n")
 
 
+# ===========================================================================
+# 8. 所有产物的清单：{仓库里的路径: 内容}
+# ===========================================================================
 def outputs():
     return {
         "index.html": page(offline=False),
@@ -311,63 +361,82 @@ def outputs():
     }
 
 
-def check_js():
-    """有 node 的话检查一下 JS 语法（包括压缩后的产物，没有 node 就跳过）"""
+# ===========================================================================
+# 9. 语法检查
+# ===========================================================================
+def _node_path():
+    """找 node：先看 PATH，再看 macOS / Linux 的常见安装位置；找不到返回 None"""
     node = shutil.which("node")
-    if not node:
-        for cand in ("/opt/homebrew/bin/node", "/usr/local/bin/node", "/usr/bin/node"):
-            if os.path.exists(cand):
-                node = cand
-                break
+    if node:
+        return node
+    for cand in ("/opt/homebrew/bin/node", "/usr/local/bin/node", "/usr/bin/node"):
+        if os.path.exists(cand):
+            return cand
+    return None
+
+
+def _run(args, stdin=None):
+    """跑一个子进程，返回 (退出码, stdout, stderr)；统一用 UTF-8 解码，坏字节替换掉不报错"""
+    r = subprocess.run(args, input=stdin, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    return r.returncode, r.stdout, r.stderr
+
+
+def check_js():
+    """有 node 的话检查一下 JS 语法（包括压缩后的产物，没有 node 就跳过）
+
+    每个检查都是一次独立的 `node --check`，互不依赖，所以放进线程池并发跑（以前一个一个跑要 3~4 秒）。
+    结果按原来的顺序打印，出错信息和以前一字不差。
+    """
+    node = _node_path()
     if not node:
         return True
-    ok = True
+
+    # ---- 1. 列出所有检查：(出错时的标题, 命令参数, 标准输入) ----
+    jobs = []
     for name in ("cloud.js", "i18n.js", "ai.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
-        src_path = os.path.join(SRC, name)
-        r = subprocess.run([node, "--check", src_path], capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if r.returncode:
-            print(f"src/{name} 语法错误：\n{r.stderr}")
-            ok = False
-            continue
-        compacted = compact_js(read(SRC, name))
-        rc = subprocess.run([node, "--check", "-"], input=compacted, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if rc.returncode:
-            print(f"src/{name} 压缩后语法错误：\n{rc.stderr}")
-            ok = False
+        # 源文件本身，和 compact_js 压缩后的样子各查一遍（压缩出错说明 compact_js 把代码切坏了）
+        jobs.append((f"src/{name} 语法错误：", [node, "--check", os.path.join(SRC, name)], None, name))
+        jobs.append((f"src/{name} 压缩后语法错误：", [node, "--check", "-"], compact_js(read(SRC, name)), name))
     # 游戏主体拆成了 src/game/ 下的多个文件：每个单独查一遍，再把拼起来压缩后的整体查一遍
     for part in game_parts():
-        r = subprocess.run([node, "--check", os.path.join(SRC, *part)], capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if r.returncode:
-            print(f"src/{'/'.join(part)} 语法错误：\n{r.stderr}")
-            ok = False
-    rc = subprocess.run([node, "--check", "-"], input=compact_js(game_source()), capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if rc.returncode:
-        print(f"src/data/ + src/game/ 拼起来压缩后语法错误：\n{rc.stderr}")
-        ok = False
+        jobs.append((f"src/{'/'.join(part)} 语法错误：", [node, "--check", os.path.join(SRC, *part)], None, None))
+    jobs.append(("src/data/ + src/game/ 拼起来压缩后语法错误：", [node, "--check", "-"], compact_js(game_source()), None))
     # src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用存在（tools/checks/data-check.mjs），有错就不生成网页
     # CI 里再加 --strict-copy：英文词条的中文在源码里找不到也算错；本机只提醒
     strict = ["--strict-copy"] if os.environ.get("CI") else []
-    r = subprocess.run([node, os.path.join(ROOT, "tools", "checks", "data-check.mjs"), *strict], capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if r.returncode:
-        print(r.stdout + r.stderr)
-        ok = False
+    jobs.append((None, [node, os.path.join(ROOT, "tools", "checks", "data-check.mjs"), *strict], None, None))
     # 青锋行的各个文件共用一个闭包，拼起来再查
-    game = "".join(read(QFX, n) for n in qfx_modules())
-    r = subprocess.run([node, "--check", "-"], input="(function(){\n'use strict';\n" + game + "\n})();", capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if r.returncode:
-        print(f"src/qfx 语法错误：\n{r.stderr}")
-        ok = False
-    r = subprocess.run([node, "--input-type=module", "--check", "-"], input=worker_bundle(), capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if r.returncode:
-        print(f"cloudflare/worker.bundle.js 语法错误：\n{r.stderr}")
-        ok = False
-    r = subprocess.run([node, "--check", "-"], input=admin_page()[1], capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if r.returncode:
-        print(f"cloudflare/admin.html 的脚本语法错误：\n{r.stderr}")
+    qfx_game = "".join(read(QFX, n) for n in qfx_modules())
+    jobs.append(("src/qfx 语法错误：", [node, "--check", "-"], "(function(){\n'use strict';\n" + qfx_game + "\n})();", None))
+    jobs.append(("cloudflare/worker.bundle.js 语法错误：", [node, "--input-type=module", "--check", "-"], worker_bundle(), None))
+    jobs.append(("cloudflare/admin.html 的脚本语法错误：", [node, "--check", "-"], admin_page()[1], None))
+
+    # ---- 2. 并发执行 ----
+    from concurrent.futures import ThreadPoolExecutor
+    # data-check.mjs 最慢（约 1 秒），先提交，让它最早开始跑；结果仍按 jobs 的顺序取
+    order = sorted(range(len(jobs)), key=lambda i: jobs[i][0] is not None)
+    with ThreadPoolExecutor(max_workers=min(16, (os.cpu_count() or 2) * 2)) as pool:
+        futures = {i: pool.submit(_run, jobs[i][1], jobs[i][2]) for i in order}
+        results = [futures[i].result() for i in range(len(jobs))]
+
+    # ---- 3. 按原来的顺序汇报 ----
+    ok = True
+    broken_src = set()   # 源文件本身就坏了的，不再重复报"压缩后"的错（和以前的 continue 一样）
+    for (title, _, stdin, src_name), (code, out, err) in zip(jobs, results):
+        if not code:
+            continue
+        if src_name and stdin is not None and src_name in broken_src:
+            continue
+        if src_name and stdin is None:
+            broken_src.add(src_name)
+        print(out + err if title is None else f"{title}\n{err}")
         ok = False
     return ok
 
 
+# ===========================================================================
+# 10. 入口：生成或 --check
+# ===========================================================================
 def main():
     check = "--check" in sys.argv[1:]
     if not check_js():

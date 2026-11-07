@@ -2,6 +2,18 @@
 // 构建时检查 src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用的东西存在。有一处不对就退出码 1，tools/build.py 会停下来。
 //   node tools/checks/data-check.mjs
 // 加一张新表：在下面 TABLES 里加一项 { name, check(t, env, err) }，name 是表的全局名字。
+//
+// 文件结构：
+//   1. 通用的形状检查（shape / unique / 对话行）
+//   2. 侠客：属性、外观、招式、列传、故事写法（checkHeroes）
+//   3. 模式和点将台顺序（checkModes）
+//   4. 山河异境的地图（checkMaps）
+//   5. 界面文案的中英对照（checkUiCopy）
+//   6. 英文模板 PATTERNS_EN（checkPatterns）
+//   7. 过期词条（staleCopy）
+//   8. 入口：在无画面沙盒里载入游戏，逐表检查，汇总报错
+//
+// 找 bug 提示：报错格式是「位置：原因」，位置写的是表名和下标（如 HEROES[3].char），照着去 src/data/ 找。
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import vm from 'node:vm';
 import { dataFiles } from '../ai/ai-code.mjs';
@@ -151,10 +163,12 @@ function checkMove(w, m, env) {
   if (m.p !== undefined && !(m.p.length === 2 && m.p.every(TYPES.str))) err(w, `p 要写成 [起手动作, 出手动作]`);
   for (const k of ['su', 'rc']) if (m[k] !== undefined && m[k] < 0) err(w, `${k} 不能是负数`);
 }
+// 招式表：每招的字段都要齐（形状见上面的 MOVE）
 function checkMoves(env) {
   for (const [k, m] of Object.entries(env.MOVES)) if (shape(`src/data/01-moves.js MOVES.${k}`, m, MOVE)) checkMove(`src/data/01-moves.js MOVES.${k}`, m, env);
   checkCancel('src/data/01-moves.js CANCEL', env.CANCEL, null);
 }
+// 侠客表：每位侠客的 char / look / stat / 招式改动 / 列传 / 故事，以及 id 不重复、克制关系指向存在的侠客
 function checkHeroes(env) {
   // 每个文件单独跑一遍，看它登记了哪位侠客，好对上文件名
   const ctx = vm.createContext({});
@@ -332,7 +346,18 @@ function staleCopy() {
   const COPY = [...UI_COPY_FILES, 'src/data/31-hero-copy.js'], SKIP = [...COPY, 'src/i18n.js', 'cloudflare/worker.bundle.js'];
   const walk = d => readdirSync(ROOT + d).flatMap(f => { const p = d + '/' + f; return statSync(ROOT + p).isDirectory() ? walk(p) : [p]; });
   const hay = [...walk('src'), ...walk('cloudflare')].filter(p => /\.(js|mjs|html)$/.test(p) && !SKIP.includes(p)).map(p => readFileSync(ROOT + p, 'utf8')).join('\n');
-  const has = t => hay.includes(t) || hay.includes(JSON.stringify(t).slice(1, -1));
+  // 查一句话在不在源码里：原样找一遍；带引号、反斜杠、换行的再按源码里转义后的写法找一遍。
+  // 同一段短语会被问好几次，查过的记下来；转义后和原文一样时不再重复扫一遍（hay 有几 MB，没找到就要从头扫到尾）
+  const seen = new Map();
+  const has = t => {
+    let r = seen.get(t);
+    if (r === undefined) {
+      const esc = JSON.stringify(t).slice(1, -1);
+      r = hay.includes(t) || (esc !== t && hay.includes(esc));
+      seen.set(t, r);
+    }
+    return r;
+  };
   const parts = k => k.split(/[^一-鿿]+/).filter(x => x.length >= 2);
   const out = [];
   for (const f of COPY) for (const m of readFileSync(ROOT + f, 'utf8').matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:/gm)) {
@@ -342,6 +367,8 @@ function staleCopy() {
   return out;
 }
 
+// ---------- 入口 ----------
+// 每张表的名字（沙盒里的全局变量名）和检查函数
 const TABLES = [
   { name: 'MOVES', check: checkMoves },
   { name: 'HEROES', check: checkHeroes },

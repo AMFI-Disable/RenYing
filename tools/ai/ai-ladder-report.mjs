@@ -12,6 +12,8 @@ import os from 'node:os';
 import { Pool, HEROES, NAMES, score, byHero } from './ai-arena.mjs';
 
 import { fileURLToPath } from 'node:url';
+// 文件结构：1. 参数和难度阶梯  2. 带种子的对局表  3. 逐级对打  4. 写 Markdown 报告
+// ---------- 1. 参数和难度阶梯 ----------
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const args = process.argv.slice(2);
 const arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
@@ -34,6 +36,7 @@ const STEP_PAIRS = [
   { hi: TIERS[4], lo: TIERS[3], desc: '天道极致预判、精准招架与完全体打法基因 vs 绝顶' },
 ];
 
+// ---------- 2. 带种子的对局表：同一对侠客每场换一个种子，结果可复现 ----------
 function seededMatchupGames(la, lb, n, seed0 = 1000) {
   const g = [];
   let s = seed0;
@@ -52,6 +55,7 @@ function seededMatchupGames(la, lb, n, seed0 = 1000) {
   return g;
 }
 
+// ---------- 3. 逐级对打 ----------
 const t0 = Date.now();
 const pool = new Pool(os.cpus().length);
 const stepResults = [];
@@ -78,6 +82,7 @@ for (let i = 0; i < STEP_PAIRS.length; i++) {
 pool.close();
 const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
+// ---------- 4. 写报告 ----------
 const pct = v => `${(v * 100).toFixed(1)}%`;
 
 const lines = [

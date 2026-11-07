@@ -37,6 +37,7 @@ import { randomBytes } from 'node:crypto';
 const API = (process.env.RENYING_CLOUD_API || 'https://renying.evengao6688.workers.dev').replace(/\/+$/, '');
 const [cmd, ...rest] = process.argv.slice(2);
 
+// ---------- 1. 连服务器：环境变量、口令、带签名的管理请求 ----------
 function die(msg) { console.error(msg); process.exit(1); }
 function need(name) { const v = process.env[name]; if (!v) die(`先设好环境变量 ${name}（和 Cloudflare Worker 上设的一样）`); return v; }
 function secret() { const v = need('ADMIN_SECRET').trim(); if (v.length < 16) die('ADMIN_SECRET 至少要 16 位，短的服务器不认（用 openssl rand -hex 24 生成一个）'); return v; }
@@ -53,6 +54,7 @@ async function admin(method, path, body) {
 }
 
 // 参数：--why、--note、--days、--uses、--kind、--format 后面跟一个值（也可以写成 --why=…），--new、--create 不跟值；其余的按顺序放进 pos
+// ---------- 2. 命令行参数和显示用的小工具 ----------
 function parse(list) {
   const pos = [], o = {};
   for (let i = 0; i < list.length; i++) {
@@ -88,6 +90,8 @@ function amounts(list, withItems) {
   return b;
 }
 
+// ---------- 3. 各个子命令（和文件开头的用法表一一对应） ----------
+// 找 bug 提示：服务器回的错误会原样打印；本地报"先设好环境变量"说明 ADMIN_SECRET 没设或太短。
 if (cmd === 'whoami') {
   const j = await admin('GET', '/api/admin/whoami');
   console.log(`口令对了。流水里记成：${j.who}（服务器时间 ${time(j.now)}）`);

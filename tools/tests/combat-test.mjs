@@ -7,6 +7,15 @@
 //   2. Seamlessly falls back to fast, self-contained in-process VM simulation
 //      if Chrome is absent or process spawning is restricted.
 // Usage: node tools/tests/combat-test.mjs
+//
+// 文件结构：
+//   1. 准备运行环境：有 Chrome 就用 CDP 跑真浏览器，没有就在 node:vm 沙盒里跑（initRunner）
+//   2. 初始化对局（训练场、站桩木人）
+//   3. 依次执行 tools/tests/combat/ 下各组测试，打印 PASS / FAIL
+//   4. 汇总，有失败就退出码 1
+//
+// 找 bug 提示：FAIL 后面是测试名，去 tools/tests/combat/*.mjs 开头的目录里找；
+// 测试代码跑在游戏的全局作用域里，可以直接用 A、B、M、startMatch 这些全局变量复现。
 
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -23,6 +32,7 @@ import mapsTerrainAndMatchups from './combat/60-maps-terrain-and-matchups.mjs';
 
 console.log('===== RenYing Combat Mechanics & AI Capabilities Suite =====\n');
 
+// ---------- 1. 准备运行环境 ----------
 // Try launching CDP Chrome, or initialize in-process sandbox
 let ev = null;
 let cleanup = () => {};
@@ -186,6 +196,7 @@ async function initRunner() {
 
 await initRunner();
 
+// ---------- 2. 初始化对局 ----------
 // Initialize test state
 await ev(`(() => {
   try {
@@ -200,6 +211,7 @@ await ev(`(() => {
   B.hp = B.maxHp;
 })()`);
 
+// ---------- 3. 依次执行各组测试 ----------
 const testSuite = [
   ...combatStates,
   ...heroAbilities,
@@ -225,6 +237,7 @@ for (const test of testSuite) {
   }
 }
 
+// ---------- 4. 汇总 ----------
 cleanup();
 
 if (failed > 0) {

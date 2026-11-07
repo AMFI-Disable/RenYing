@@ -3,6 +3,9 @@
 //   单下伤害超限只记录、不记过（以前记过，秘卷、模式一叠误封过人）：正常叠满秘卷连记录都不该有，改了身上的计数要留下记录；
 //   改了招式表、换了伤害函数照样记过。
 //   node tools/tests/anticheat-test.mjs
+//
+// 文件结构：1. 每卷秘卷的极限倍数不超过上限  2. 爬塔叠满秘卷不误记过  3. 真改伤害会被抓  4. 联机房间按房间规则放宽
+// 找 bug 提示：误封玩家先看第 1、2 段；漏抓作弊看第 3 段。被测代码在 src/anticheat.js。
 import { readFileSync } from 'node:fs';
 import { makeEnv, HEROES } from '../ai/ai-arena.mjs';
 

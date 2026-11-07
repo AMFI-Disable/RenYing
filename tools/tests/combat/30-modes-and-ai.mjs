@@ -1,3 +1,24 @@
+// 战斗测试第 30 组：空中招式、各模式的规则和电脑 AI 的行为。
+// 由 tools/tests/combat-test.mjs 按文件名顺序载入；每项 { name, fn }，fn 是在沙盒里执行的代码字符串，返回 { pass, error }。
+// 找 bug 提示：测试失败时报的是 name，在下面的目录里找到序号，再搜这个 name。
+//
+// 本文件的测试（共 16 项）：
+//    1. Air attacks (a1, a2) execution for all characters
+//    2. Supported 5 game modes correspond to appropriate AI levels and configs
+//    3. 1v1 Watch Mode transitions onto authentic Ban & Pick (#bp) screen
+//    4. Background setting pauses player matches by default and leaves AI watch unchanged
+//    5. isAiVsAi() prevents window blur pausing in all watch modes
+//    6. 2v2 AI evaluates LingDan / Altar Buff site contesting and opponent denial
+//    7. 2v2 Co-op: Both fighters on each team act in parallel without freezing
+//    8. 2v2 Two Players vs Two Players: All circumstances duo initialization & team assignment
+//    9. 2v2 AI: every fighter is driven by the AI brain and the fight goes on
+//   10. 2v2 Elimination: Full match resolution awarding victory to surviving 2-player team
+//   11. 2v2 Single KO Survival: One fighter dying does not trigger KO when teammate is alive
+//   12. AI Brain Model: Frame data & evolved genes validation across all heroes
+//   13. 2v2 is only P&PvC&C or P&PvP&P: the player + AI teammate mode is gone, 2v2 runs on the 2600 arena
+//   14. 2v2 P&PvC&C Mode: 1P controls A, 2P controls C, 2 AI opponents on Team 1
+//   15. 2v2 P&PvP&P Mode: 4-Player setup across two teams on 2600 stage
+//   16. Home page online count: total / in-match from the server, "unknown" when the server is unreachable
 export default [
   {
     name: 'Air attacks (a1, a2) execution for all characters',

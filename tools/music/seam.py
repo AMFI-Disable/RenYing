@@ -1,4 +1,5 @@
 """查循环曲的接缝：按 44.1k 原样解码，比较首尾采样的跳变和平时相邻采样差的分布"""
+# 用法：python3 seam.py a.mp3 b.mp3 …   接缝处的跳变明显大于平时相邻采样差，循环播放时就会听到"咔"一声。
 import sys, subprocess, numpy as np
 for p in sys.argv[1:]:
     raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', p, '-f', 'f32le', '-ac', '2', '-'], capture_output=True, check=True).stdout

@@ -1,6 +1,15 @@
 // 两台“电脑”联机对打的无画面测试：两个沙盒各跑一份游戏，中间用带延迟的假网线连起来，
 // 双方随机乱按，最后比较两边算出来的对局是不是一模一样（回滚联机必须做到这一点）。
 // 用法：node tools/tests/netplay-test.mjs [--seed N]
+//
+// 文件结构：
+//   1. 一台假"电脑"：独立沙盒 + 假网线（makePeer），录像回放比对（replayDiff）
+//   2. 一局联机对打：两边随机按键、按延迟收发、最后比较状态（runCase）
+//   3. 单项检查：ICE 列表等
+//   4. 掉线 / 主动离开（runDrop）
+//   5. 用例表 CASES：每种模式 × 两种延迟各跑一遍
+//
+// 找 bug 提示：报"不一致"时会给出第一处不同的字段路径；先用 --seed 固定种子，再缩短 --frames 二分到出错的那一帧。
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { gameSource } from '../ai/ai-code.mjs';
@@ -13,6 +22,7 @@ const NETJS = readFileSync(ROOT + 'src/net-p2p.js', 'utf8');
 const GAME = new vm.Script(gameSource());
 let now = 0;
 
+// ---------- 1. 假电脑和假网线 ----------
 function makePeer(outbox) {
   const noop = () => {};
   const grad = { addColorStop: noop };
@@ -75,6 +85,7 @@ function rng(s) { return () => { s = (Math.imul(s ^ (s >>> 15), 0x2c1b3c6d) + 0x
 // 这几种房间的联机录像要能原样放出来（以前神决和同袍肉鸽回放时不认房间规则：神决的十倍气血、魔首都没了）
 const REPLAY_OK = ['normal', 'chaos', 'mayhem', 'maps', 'pp_cc', 'pp_pp', 'raid'];
 const STJSON = st => JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
+// ---------- 2. 一局联机对打 ----------
 function runCase(mode, chars, seed, frames, lag, duo, mv, map) {
   now = 0;
   const box = [[], []];   // box[0]：房主发出的，box[1]：加入的人发出的
@@ -137,6 +148,7 @@ function runCase(mode, chars, seed, frames, lag, duo, mv, map) {
   return { errs, diff, F: info.map(x => x.F), desyncs: info.map(x => x.desyncs), rollbacks: info.map(x => x.rollbacks), fighters: info[0].n, frame: f, round: h && h.M ? `第${h.M.round}回合 比分${h.M.wins} ${h.M.phase}` : '' };
 }
 
+// ---------- 3. 单项检查 ----------
 let fail = 0;
 // 建房前问服务器要的 ICE 列表：有 TURN 就带上；服务器连不上就只用网页里固定的 STUN
 {
@@ -245,6 +257,7 @@ let fail = 0;
   if (!ok) console.log('        ' + JSON.stringify(r));
 }
 
+// ---------- 4. 掉线和主动离开 ----------
 // 共斗掉线后由 AI 接管；PvP 主动离开则立即判胜
 function runDrop(mode, chars, duo, dropper, seed) {
   now = 0;
@@ -303,6 +316,7 @@ function runDrop(mode, chars, duo, dropper, seed) {
   console.log(`${ok1 ? '  PASS' : '  FAIL'}  1v1 对方主动离开：直接判胜并进入结算（${JSON.stringify(one)}）`);
 }
 
+// ---------- 5. 用例表 ----------
 const argF = process.argv.indexOf('--frames');
 const FRAMES = argF > 0 ? +process.argv[argF + 1] : 3600;
 const CASES = [

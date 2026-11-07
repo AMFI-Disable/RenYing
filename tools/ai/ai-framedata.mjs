@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { makeEnv, HEROES, NAMES } from './ai-arena.mjs';
 
 import { fileURLToPath } from 'node:url';
+// 文件结构：1. 沙盒和要量的招式表  2. 脚本控制器（按固定顺序按键）  3. 摆位置、放招、数帧（setup / run）  4. 每位侠客逐招量完写回
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const OUT = ROOT + 'models/ai-brain.json';
 const env = await makeEnv();
@@ -25,6 +26,7 @@ const ACTIONS = {
 };
 const NEUTRAL = new Set(['idle', 'walk', 'block']);
 
+// ---------- 2. 脚本控制器：Script 按指定招式出手，Idle 站着不动（可选一直格挡） ----------
 class Script extends env.Ctrl {
   constructor(plan) { super(); this.plan = plan.map(([t, a]) => ({ t, a })); this.t0 = env.clock; }
   think() {
@@ -37,6 +39,7 @@ class Script extends env.Ctrl {
 }
 class Idle extends env.Ctrl { constructor(block) { super(); this.held.down = !!block; } think() {} }
 
+// ---------- 3. 摆位置、放招、数帧 ----------
 function setup(h, d, block, action) {
   env.startMatch('cpu', 'normal', [h, 0], true);
   env.projs.length = 0; env.decoys.length = 0;
@@ -67,6 +70,7 @@ function run(h, d, block, action, maxT = 2.6) {
   return { tHit, dmg: hp0 - F_.B.hp, tFree, foeFree, move: F_.A.x - ax0 };
 }
 
+// ---------- 4. 逐位侠客量完写回 models/ai-brain.json 的 frames ----------
 const r1 = v => Math.round(v * 1000) / 1000;
 const frames = {};
 for (let h = 0; h < HEROES.length; h++) {

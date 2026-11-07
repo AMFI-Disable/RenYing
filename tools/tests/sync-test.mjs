@@ -4,6 +4,9 @@
 //       老存档第一次对账不丢也不多；换号不串；老版本服务器照旧能用；关卡星、侠客、列传、排位按规则合并。
 // 用法：node tools/tests/sync-test.mjs           （Node 22 以上，不用装任何包）
 //       node tools/tests/sync-test.mjs --bundle  测打包好的 cloudflare/worker.bundle.js
+//
+// 找 bug 提示：每个 section 是一个场景；设备之间共用一个 Worker 和数据库。测试里的 sleep 是在等客户端的防抖和自动重试，
+// 不要随便缩短，否则会变成"测试通过但其实没等到同步"。
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import vm from 'node:vm';

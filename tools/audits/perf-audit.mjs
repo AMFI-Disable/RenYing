@@ -6,6 +6,8 @@
 //   node tools/audits/perf-audit.mjs [outdir]
 //   RENYING_URL=…  换网址；RENYING_CHROME=…  指定浏览器；PERF_BUDGET_SCALE=1.5  把预算整体放宽（慢机器上用）
 // 只用 Node 自带的东西（fetch、WebSocket），和 ui-audit / hud-audit 一样直接连 Chrome 的调试接口。
+//
+// 找 bug 提示：超预算时先确认是不是机器本身慢（重跑一次）；预算在 tools/audits/perf-budget.json，不要为了通过去放宽它。
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -33,6 +35,7 @@ const LOG = `${OUT}/chrome.log`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const median = a => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
+// ---------- CDP 小客户端：send 发命令等回包，once 等某个事件一次 ----------
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.events = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);
@@ -45,6 +48,7 @@ class CDP {
   once(method) { return new Promise(r => this.events.set(method, p => { this.events.delete(method); r(p); })); }
 }
 
+// ---------- 启动无头 Chrome 并连上 ----------
 const logFd = openSync(LOG, 'w');
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',

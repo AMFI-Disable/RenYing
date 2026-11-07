@@ -18,6 +18,9 @@ import os from 'node:os';
 import { Pool, HEROES, NAMES, score } from './ai-arena.mjs';
 
 import { fileURLToPath } from 'node:url';
+// 文件结构：1. 参数和读入冠军基因  2. 存档和日志  3. 评估一组基因（全局 / 单个侠客，冠军和挑战者用同一串随机数）  4. 主循环
+// 找 bug 提示：每一步都追加写进 models/ai-train-log.txt；训练中断后看日志最后几行就知道停在哪个基因。
+// ---------- 1. 参数和读入冠军基因 ----------
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const BRAIN = ROOT + 'models/ai-brain.json';
 const LOG = ROOT + 'models/ai-train-log.txt';
@@ -35,6 +38,7 @@ const brain = existsSync(BRAIN) ? JSON.parse(readFileSync(BRAIN, 'utf8')) : {};
 const LVKEY = arg('lvkey', '');
 const champ = {}, lvOf = h => (LVKEY && brain.lvGenes && brain.lvGenes[LVKEY] && brain.lvGenes[LVKEY][h]) || {};
 for (const h of HEROES) { champ[h] = {}; for (const k of Object.keys(DEF)) champ[h][k] = lvOf(h)[k] ?? (brain.genes && brain.genes[h] && brain.genes[h][k] !== undefined ? brain.genes[h][k] : DEF[k][2]); }
+// ---------- 2. 存档和日志 ----------
 const save = () => {
   if (LVKEY) {   // 只记和共用基因不一样的几项
     const T = (brain.lvGenes = brain.lvGenes || {})[LVKEY] = brain.lvGenes[LVKEY] || {};
@@ -61,6 +65,7 @@ const clampG = (k, v) => Math.round(Math.min(DEF[k][1], Math.max(DEF[k][0], v)) 
 let seedBase = +arg('seed', 1);
 
 // 共用段：候选基因给所有角色，对现任冠军（各角色自己的冠军基因），每对角色左右各半共 rep 场 → 候选方胜率
+// ---------- 3. 评估一组基因 ----------
 async function evalGlobal(k, v, rep) {
   const g = [], s0 = (seedBase += 100000);
   for (let a = 0; a < 12; a++) for (let b = 0; b < 12; b++) for (let r = 0; r < rep; r++) {

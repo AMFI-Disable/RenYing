@@ -5,6 +5,11 @@
 // 还有管理后台：管理口令、加减墨锭和东西、封号解封、全服补偿、兑换码、在线改经济数值、管理网页。
 // 用法：node tools/tests/econ-test.mjs           （Node 22 以上，不用装任何包）
 //       node tools/tests/econ-test.mjs --bundle  测打包好的 cloudflare/worker.bundle.js（真正部署上去的那个文件）
+//
+// 这一段是公共准备，后面 10-、20-… 各段都直接用这里定义的东西：
+//   T（测试里的"现在"，往后拨就能跨天）、ENV（假 D1 + 管理口令）、call / econ / market（发请求）、
+//   newUser / grant（造号、发东西）、row / inkOf / stateOf / itemOf（直接查数据库核对）、ok / section（记结果）
+// 下面 import 和 ROOT 里带两条下划线的两个字符串是占位，由 tools/tests/econ-test.mjs 拼接时换成真实路径（只换第一次出现的，注释里别再写它们）。
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -20,6 +25,7 @@ const { default: worker, WorldLine, FLAGS, PW_ITER } = await import(new URL(FILE
 const C = globalThis.ArmoryCore;
 
 /* ---------- 用 node:sqlite 模拟 D1（接口和 Cloudflare 的一样：prepare/bind/first/all/run/batch） ---------- */
+// ---------- 假 D1：用 node:sqlite 的内存数据库，接口和 Cloudflare D1 一样（prepare / bind / first / all / run / batch） ----------
 function makeD1() {
   const db = new DatabaseSync(':memory:');
   const jitter = () => new Promise(r => setTimeout(r, Math.random() * 3));   // 每次读写前停一下，好让并发请求交错
@@ -48,6 +54,7 @@ function makeD1() {
   };
 }
 
+// ---------- 发请求和查数据库的小工具 ----------
 const ADMIN = 'admin-pass-0123456789';
 const ENV = { DB: makeD1(), ADMIN_SECRET: ADMIN };
 async function call(method, path, body, token, ip = '1.2.3.4') {

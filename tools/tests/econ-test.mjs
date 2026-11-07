@@ -1,4 +1,7 @@
 // Keep the historical command stable while loading the shared-state economy scenarios in order.
+//
+// 把 tools/tests/econ/ 下按编号排好的几段拼成一个模块再执行：几段共用同一个本机 Worker、数据库和变量，
+// 所以后面的段落可以直接用前面定义的 call、newUser、ENV 等。找 bug 时看各段开头的小节目录。
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';

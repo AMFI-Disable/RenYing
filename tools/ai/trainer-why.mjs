@@ -2,6 +2,7 @@
 // Trainer 诊断：一个角色对其他所有角色打一批，统计伤害从哪来（哪一招打出多少）、挨打时自己在干什么。
 // 用来找 AI 的毛病：某一招占了大半伤害、挨打时大多在“走路/发呆”而不是格挡，多半是对面的 AI 不会应对这一招。
 //   node tools/ai/trainer-why.mjs --hero moyu --n 10 --level god,hard
+// 找 bug 提示：输出按"伤害来源"和"挨打时在做什么"两张表排；某一招占比异常高，多半是这招的 AI 判断或判定框有问题。
 import { makeEnv, HEROES, NAMES } from './ai-arena.mjs';
 
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };

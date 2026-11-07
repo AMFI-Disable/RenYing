@@ -9,6 +9,8 @@
 //   3. 关键接口冒烟测试（Worker 在本机跑，D1 用 node:sqlite 模拟）：健康检查、注册、登录、读写存档、
 //      管理口令、退出后旧 token 失效、未知路径 404、OPTIONS 预检、没有开放世界绑定时回 503 而不是崩掉、网页报错的收集和脱敏、
 //      统一的错误格式和请求编号、服务器错误和慢请求的记录。
+//
+// 找 bug 提示：第 1 段只读 wrangler.toml；第 2、3 段真把 Worker 跑起来，报错时先确认 python3 tools/build.py 已经重新打包。
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';

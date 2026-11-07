@@ -1,12 +1,14 @@
 """最小的 MIDI 写入：一首曲子 = 若干声部；每个声部一个通道、一个音色，事件按拍（浮点）记"""
 import struct
 
+# MIDI 的变长整数：每字节 7 位，除最后一个字节外最高位都是 1
 def vlq(n):
     n = int(n); out = [n & 0x7F]; n >>= 7
     while n:
         out.append((n & 0x7F) | 0x80); n >>= 7
     return bytes(reversed(out))
 
+# 一个声部：name 只给人看；program 是音色号，ch 是通道（9 是打击乐），vol / pan / rev / cho 是开头的控制器
 class Part:
     def __init__(self, name, program, ch=0, bank=0, vol=100, pan=64, rev=0, cho=0):
         self.name, self.program, self.ch, self.bank = name, program, ch, bank
@@ -29,13 +31,16 @@ class Part:
         for i in range(steps + 1):
             t = i / steps; self.cc(b0 + (b1 - b0) * t, num, v0 + (v1 - v0) * t)
 
+# 写出 MIDI 文件：第 0 轨放速度（tempo_map 是 [(拍, bpm), …] 的变速点），之后每个声部一轨
 def write(path, parts, bpm, ppq=480, tempo_map=None):
     def trk(evs):
-        evs.sort(key=lambda e: (e[0], e[1])); out = b''; last = 0
+        # 按 (拍, 先后) 排好，写成"距上一事件的 tick 数 + 事件字节"；同一拍里 order 小的先写（控制器 → 关音 → 开音）
+        # 用 bytearray 追加（以前用 bytes 相加，每次都整段复制，长曲子很慢；写出来的字节一模一样）
+        evs.sort(key=lambda e: (e[0], e[1])); out = bytearray(); last = 0
         for beat, _, data in evs:
             t = int(round(beat * ppq)); out += vlq(max(0, t - last)) + data; last = max(last, t)
-        out += b'\x00\xFF\x2F\x00'
-        return b'MTrk' + struct.pack('>I', len(out)) + out
+        out += b'\x00\xFF\x2F\x00'   # 音轨结束标记
+        return b'MTrk' + struct.pack('>I', len(out)) + bytes(out)
     tempo = [(0, 0, b'\xFF\x51\x03' + struct.pack('>I', int(60_000_000 / bpm))[1:])]
     for b, t in (tempo_map or []): tempo.append((b, 0, b'\xFF\x51\x03' + struct.pack('>I', int(60_000_000 / t))[1:]))
     tracks = [trk(tempo)]

@@ -3,6 +3,11 @@
 // 普攻直接读招式表（src/data/01-moves.js 的 MOVES 按侠客 stat 和 moveMods 算好的 CHAR_MOVES）；技能和大招在无画面沙盒里放一遍量出来。
 //   node tools/checks/frame-data.mjs           重新量，写 docs/frame-data.json（基准）和 docs/frame-data.md（给人看）
 //   node tools/checks/frame-data.mjs --check   重新量，和 docs/frame-data.json 比，有一格不一样就列出来并退出码 1（改手感前后对比用）
+//
+// 文件结构：
+//   1. 在无画面沙盒里逐位侠客量帧数（普攻读表，技能 / 大招实际放一遍数帧）
+//   2. 拼出给人看的 Markdown 表
+//   3. --check：和基准逐格对比；否则写回基准
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { makeEnv } from '../ai/ai-arena.mjs';
 
@@ -12,6 +17,8 @@ const JSON_OUT = ROOT + 'docs/frame-data.json', MD_OUT = ROOT + 'docs/frame-data
 const check = process.argv.includes('--check');
 const MOVE_KEYS = ['l1', 'l2', 'l3', 'l4', 'l5', 'hv', 'cs1', 'cs2', 'a1', 'a2', 'dl'];
 
+// ---------- 1. 量帧数 ----------
+// 下面反引号里的整段是在沙盒里执行的游戏代码，能直接用游戏的全局变量（CHARS、A、B、step…）
 const env = await makeEnv();
 env.seed(1);
 const data = JSON.parse(env.run(`(() => {
@@ -52,14 +59,16 @@ const data = JSON.parse(env.run(`(() => {
   return JSON.stringify(out);
 })()`));
 
+// ---------- 2. 拼 Markdown 表 ----------
 const md = ['# 帧数表', '', '由 `node tools/checks/frame-data.mjs` 生成，1 帧 = 1/60 秒。改招式或技能的时间后重新生成；`--check` 用来确认手感没变。', '',
-  '## 普攻：前摇 / 判定 / 后摇（帧）', '', '| 侠客 | ' + MOVE_KEYS.join(' | ') + ' |', '|' + ' --- |'.repeat(MOVE_KEYS.length + 1)];
+    '## 普攻：前摇 / 判定 / 后摇（帧）', '', '| 侠客 | ' + MOVE_KEYS.join(' | ') + ' |', '|' + ' --- |'.repeat(MOVE_KEYS.length + 1)];
 for (const r of data) md.push(`| ${r.name} | ` + MOVE_KEYS.map(k => r.moves[k] ? r.moves[k].join(' / ') : '-').join(' | ') + ' |');
 md.push('', '## 技能和大招：第一下打中 / 整招结束（帧，-1 是这样放没打中站在身前的木桩）', '', '| 侠客 | Q | 右键 | 大招 |', '| --- | --- | --- | --- |');
 const cell = s => s ? `${s.id} ${s.hit} / ${s.total}` : '-';
 for (const r of data) md.push(`| ${r.name} | ${cell(r.skills.skill)} | ${cell(r.skills.skill2)} | ${cell(r.skills.ult)} |`);
 md.push('');
 
+// ---------- 3. 对比基准或写回 ----------
 if (check) {
   if (!existsSync(JSON_OUT)) { console.log('还没有 docs/frame-data.json，先不带 --check 跑一遍'); process.exit(1); }
   const base = JSON.parse(readFileSync(JSON_OUT, 'utf8')), diff = [];

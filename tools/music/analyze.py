@@ -1,4 +1,6 @@
 """看一首曲子：对数频率的频谱图（PNG）、长时平均频谱（每倍频程的能量）、每 2 秒的响度曲线"""
+# 用法：python3 analyze.py 曲子.mp3 [输出.png]   需要 numpy、Pillow 和 ffmpeg（解码用）
+# 找 bug 提示：某个频段太闷 / 太刺，看长时平均频谱里那一倍频程和相邻的差多少分贝。
 import sys, numpy as np
 from PIL import Image
 import mixlib as mx

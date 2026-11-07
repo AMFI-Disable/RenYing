@@ -1,12 +1,18 @@
-// Headless UI audit for RenYing: screenshots every panel + measures layout problems.
-// Node built-ins only (global fetch + WebSocket). Attaches via the browser-level CDP
-// WebSocket (the /json HTTP endpoint is unreachable in this sandbox).
+// 点将台和样式的浏览器检查：用无头 Chrome 打开网页，跑一串断言（不截图）：
+//   远程字体加载不到时样式照常、主页切换、2v2 点将、各种本机点将、英文点将不横向溢出、
+//   排位定级、一键开箱的每日 / 每周额度，最后再打开离线版 renying-offline.html 查一遍。
+//   node tools/audits/bp-flow-test.mjs [outdir] [宽] [高]        需要先在仓库根目录起 8791 端口的本机服务器
+// 只用 Node 自带的 fetch 和 WebSocket，通过浏览器级的 CDP WebSocket 连上（这个沙盒里 /json 接口连不上）。
+//
+// 文件结构：1. 找 Chrome、读参数  2. CDP 小客户端  3. 启动 Chrome 并连上  4. 打开网页，逐条 check()
+// 找 bug 提示：失败时报 "标签: 返回值"，标签就是 check() 的第一个参数，返回值里的 stage 指出卡在哪一步。
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mkdirSync, writeFileSync, readFileSync, openSync, readFileSync as readF } from 'node:fs';
+import { mkdirSync, openSync, readFileSync as readF } from 'node:fs';
 
 import { existsSync } from 'node:fs';
+// ---------- 1. 找 Chrome、读参数 ----------
 const CHROME = process.env.RENYING_CHROME || [
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   '/Applications/Chromium.app/Contents/MacOS/Chromium',
@@ -19,135 +25,11 @@ const PORT = +(process.env.CDP_PORT || 9433);
 const OUT = process.argv[2] || join(tmpdir(), 'renying-bp-flow');
 const VW = +(process.argv[3] || 1440);
 const VH = +(process.argv[4] || 900);
-const ONLY = process.argv[5] ? process.argv[5].split(',') : null;
-let TOKEN = '';
-try { TOKEN = readF(process.env.RENYING_TOKEN_FILE || '/tmp/renying-token.txt', 'utf8').trim(); } catch {}
-
-
 mkdirSync(OUT, { recursive: true });
 const LOG = `${OUT}/chrome.log`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const HELPERS = `
-window.__bpDemo = () => { bpMode='cpu'; ensurePortraits();
-  BP = { step: 2, bans: [3, 6], picks: [0, -1], t: 18, avail: [[0,1,2,3,7],[0,2,4,5,8]] };
-  showScreen('bp'); renderBP(); };
-window.__endDemo = () => {
-  const t = document.getElementById('endTitle');
-  t.textContent = '青锋 胜'; t.style.color = 'rgb(120,230,255)';
-  document.getElementById('endSub').textContent = '月下无敌手';
-  document.getElementById('endRank').textContent = '+40 墨锭 · 有任务可领奖了';
-  const a = document.getElementById('againBtn'); a.textContent = '再战'; a.disabled = false;
-  const w = document.getElementById('rpWatch'); w.style.display = ''; w.textContent = '看回放';
-  showScreen('end'); };
-window.__forestDemo = () => {
-  document.getElementById('feWave').textContent = '1.3 破关';
-  document.getElementById('feStars').textContent = '★★☆';
-  document.getElementById('feInfo').innerHTML = '残存生命 62%，共击退 18 只妖物<br><span style="font-size:13px">余 60% 以上三星，30% 以上两星</span>';
-  document.getElementById('feNext').style.display = ''; showScreen('forestEnd'); };
-window.__tutdoneDemo = () => {
-  document.getElementById('tutReward').innerHTML = '该会的都会了。去找电脑或是同学，过几招吧。<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去武库买个武器箱试试手气吧！';
-  showScreen('tutdone'); };
-`;
-
-const PANELS = [
-  ['menu', `backToMenu()`], ['single', `openScreen('single')`], ['cpu', `openScreen('cpu')`],
-  ['stage', `openScreen('stage')`], ['train', `openScreen('train')`], ['netp', `openScreen('netp')`],
-  ['help', `openScreen('help')`], ['codex', `openScreen('codex')`], ['settings', `openScreen('settings')`],
-  ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
-  ['welfare', `openWelfare()`], ['replays', `openScreen('replays')`],
-  ['tasks', `openScreen('tasks')`], ['bp', `PROF.owned = CHARS.map(c => c.id); bpStart('cpu'); bpCpuT = 9999; bpApply(3); bpApply(6); bpCpuT = 9999; bpSel = 4; renderBP(); showScreen('bp');`], ['pause', `showScreen('pause')`],
-  ['end', `__endDemo()`], ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`],
-  ['tutdone', `__tutdoneDemo()`], ['armory', `openScreen('armory')`],
-];
-
-const PROBE = `(() => {
-  const desc = el => { let s = el.tagName.toLowerCase();
-    if (el.id) s += '#' + el.id;
-    if (el.className && typeof el.className === 'string') s += '.' + el.className.trim().split(/\\s+/).slice(0,2).join('.');
-    return s; };
-  const scr = document.querySelector('.scr.on');
-  if (!scr) return { panel: '(none)', error: 'no .scr.on' };
-  const W = innerWidth, H = innerHeight;
-  const out = { panel: scr.id, vw: W, vh: H, panelScroll: scr.scrollHeight, panelClient: scr.clientHeight,
-                needsScroll: scr.scrollHeight > scr.clientHeight + 2, probs: [], tiny: [], scrollX: [] };
-  const seen = new Set();
-  for (const el of scr.querySelectorAll('*')) {
-    const cs = getComputedStyle(el);
-    if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) continue;
-    const r = el.getBoundingClientRect();
-    if (r.width < 1 && r.height < 1) continue;
-    const key = desc(el);
-    const overY = el.scrollHeight > el.clientHeight + 2 && el.clientHeight > 0;
-    if (overY && cs.overflowY === 'hidden' && el.clientHeight > 12) {
-      if (!seen.has('y'+key)) { seen.add('y'+key); out.probs.push({ kind:'clipY', el:key, sh:el.scrollHeight, ch:el.clientHeight,
-        text:(el.textContent||'').trim().slice(0,26) }); } }
-    const overX = el.scrollWidth > el.clientWidth + 2 && el.clientWidth > 0;
-    if (overX && cs.overflowX === 'hidden') {
-      if (!seen.has('x'+key)) { seen.add('x'+key); out.probs.push({ kind:'clipX', el:key, sw:el.scrollWidth, cw:el.clientWidth,
-        text:(el.textContent||'').trim().slice(0,26) }); } }
-    else if (overX && (cs.overflowX === 'auto' || cs.overflowX === 'scroll')) {
-      if (!seen.has('s'+key)) { seen.add('s'+key); out.scrollX.push({ el:key, sw:el.scrollWidth, cw:el.clientWidth,
-        text:(el.textContent||'').trim().slice(0,24).replace(/\s+/g,' ') }); } }
-    if (r.right > W + 1 || r.left < -1) {
-      if (!seen.has('o'+key)) { seen.add('o'+key); out.probs.push({ kind:'offscreenX', el:key,
-        left:Math.round(r.left), right:Math.round(r.right), text:(el.textContent||'').trim().slice(0,26) }); } }
-    // element spilling out of its own parent box (e.g. a segmented control too wide for its grid cell)
-    if (cs.position !== 'absolute' && cs.position !== 'fixed' && el.parentElement) {
-      const pr = el.parentElement.getBoundingClientRect();
-      const pcs = getComputedStyle(el.parentElement);
-      if (pcs.overflowX === 'visible' && pr.width > 0 && r.right - pr.right > 4 && !seen.has('p'+key)) {
-        seen.add('p'+key); out.probs.push({ kind:'parentOverflow', el:key,
-          over:Math.round(r.right - pr.right), text:(el.textContent||'').trim().slice(0,26) }); } }
-    const hasText = el.children.length === 0 && (el.textContent||'').trim().length > 0;
-    if (hasText) { const fs = parseFloat(cs.fontSize);
-      if (fs < 12) out.tiny.push({ el:key, fs, text:(el.textContent||'').trim().slice(0,22) }); }
-  }
-  if (scr.id === 'bp') {   // composition checks for the draft screen
-    const contentH = box => { const r = box.getBoundingClientRect(); let m = 0;
-      for (const e of box.querySelectorAll('*')) {
-        if (e.children.length) continue;           // leaves only: a stretched grid child reports the box height
-        const b = e.getBoundingClientRect().bottom - r.top; if (b > m) m = b; }
-      return Math.round(m); };
-    const band = sel => { const e = document.querySelector(sel); if (!e) return null; const h = e.getBoundingClientRect().height;
-      return { box: Math.round(h), content: contentH(e), ratio: h ? +(contentH(e) / h).toFixed(2) : null }; };
-    const cards = [...document.querySelectorAll('.bpcard')], rows = new Map();
-    for (const c of cards) { const t = Math.round(c.getBoundingClientRect().top); if (!rows.has(t)) rows.set(t, []); rows.get(t).push(c); }
-    const rowList = [...rows.values()], cols = rowList[0] ? rowList[0].length : 0, last = rowList[rowList.length - 1] || [];
-    const gr = document.querySelector('.bpgrid').getBoundingClientRect(), lr = last.map(c => c.getBoundingClientRect());
-    const leftGap = lr.length ? Math.min(...lr.map(r => r.left)) - gr.left : 0;
-    const rightGap = lr.length ? gr.right - Math.max(...lr.map(r => r.right)) : 0;
-    const go = document.getElementById('bpGo').getBoundingClientRect();
-    const bpw = document.querySelector('.bpw').getBoundingClientRect();
-    out.bp = { cards: cards.length, perRow: cols, rows: rowList.length, partialLastRow: cards.length % cols !== 0,
-      lastRowCentered: Math.abs(leftGap - rightGap) <= 14, gaps: [Math.round(leftGap), Math.round(rightGap)],
-      dossier: band('.bpdetail'), deck: band('#bpMoveDeck'),
-      goVisible: go.bottom <= innerHeight && go.top >= 0, goTop: Math.round(go.top),
-      fillRatio: +(scr.scrollHeight / innerHeight).toFixed(2),
-      gridSpan: Math.round(gr.width), panelContent: Math.round(bpw.width - 40) };
-  }
-  out.tiny = out.tiny.slice(0,10); out.probs = out.probs.slice(0,25); out.scrollX = out.scrollX.slice(0,8);
-  return out; })()`;
-
-// Wait for the panel to stop moving before measuring it: a pending portrait decode or a
-// still-running entrance animation makes the same build measure differently run to run
-// (an empty .bpdetail reads as "mostly empty" and an un-finished .mtitle slide reads as
-// "off-screen"). Finite animations only — the pulsing slots loop forever on purpose.
-const SETTLE = `(() => new Promise(res => {
-  const imgs = [...document.images].filter(i => !i.complete && i.loading !== 'lazy');
-  const anims = (document.getAnimations ? document.getAnimations() : []).filter(a => {
-    if (a.playState !== 'running') return false;
-    const t = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
-    return !!t && t.iterations !== Infinity;
-  });
-  const waits = [
-    ...imgs.map(i => new Promise(r => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); })),
-    ...anims.map(a => a.finished.catch(() => {}))
-  ];
-  if (!waits.length) return res(true);
-  Promise.race([Promise.all(waits).then(() => true), new Promise(r => setTimeout(() => r(false), 1200))]).then(res);
-}))()`;
-
+// ---------- 2. CDP 小客户端：send 发命令等回包，once 等某个事件一次 ----------
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pend = new Map(); this.events = new Map();
     ws.onmessage = e => { const m = JSON.parse(e.data);
@@ -160,6 +42,7 @@ class CDP {
   once(method) { return new Promise(r => this.events.set(method, p => { this.events.delete(method); r(p); })); }
 }
 
+// ---------- 3. 启动 Chrome 并连上 ----------
 const logFd = openSync(LOG, 'w');
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
@@ -201,6 +84,7 @@ await cdp.send('Emulation.setDeviceMetricsOverride', { width: VW, height: VH, de
 
 await cdp.send('Network.enable', {}, S);
 await cdp.send('Network.setBlockedURLs', { urls: ['*fonts.googleapis.com*', '*fonts.gstatic.com*'] }, S);
+// ---------- 4. 打开网页，逐条检查 ----------
 async function loadGame(url) {
   await cdp.send('Page.navigate', { url }, S);
   for (let i = 0; i < 100; i++) {

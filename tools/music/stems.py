@@ -1,5 +1,6 @@
 """每个声部在各倍频程占多少能量（用 render(keep=True) 留下的分轨 wav，按声部自己的均衡、增益处理后算）
 用法：python3 stems.py 模块 构建函数 [参数...]   例：python3 stems.py battle build"""
+# 找 bug 提示：某个声部能量占比异常高，先查它在 build() 里的音量和均衡。
 import sys, os, importlib, numpy as np
 import mixlib as mx
 from mixlib import SR

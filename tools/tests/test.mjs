@@ -16,12 +16,24 @@
 //   node tools/tests/test.mjs --full           Run every test including full-length UI simulations
 //   node tools/tests/test.mjs --git            Run suite + full Git lifecycle (rebase, commit, push)
 //   node tools/tests/test.mjs --train          Run suite + genetic policy training sweep
+//   node tools/tests/test.mjs --serial         Run the AI and Cloud suites one after another (old behaviour)
+//
+// 文件结构：
+//   1. 找 Python、解析参数
+//   2. 跑子进程的小工具（直接输出 / 先收集输出再一次打印）
+//   3. --git：拉取、提交、推送
+//   4. 入口：打包 → 战斗套件 → AI 套件和云端套件（默认同时跑）
+//
+// 提速：AI 套件（约 100 秒）和云端套件（约 75 秒，大部分时间在等客户端的防抖定时器）互不依赖，
+// 默认同时跑，两边的输出各自收集起来，跑完一个就整段打印一个，不会混在一起。
 
 import { spawn, spawnSync, execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+
+// ---------- 1. 找 Python、解析参数 ----------
 
 // 打包脚本要 Python 3.10+。Windows 上没有 python3 这个名字（应用商店的 python3.exe 只是个占位符），
 // 所以挨个试一遍，挑真能跑的那个；一个都没有就报一句清楚的出错，而不是 spawn 一个不存在的命令
@@ -38,6 +50,9 @@ const args = process.argv.slice(2);
 const isFull = args.includes('--full');
 const isGit = args.includes('--git');
 const doTrain = args.includes('--train');
+const isSerial = args.includes('--serial');
+
+// ---------- 2. 跑子进程的小工具 ----------
 
 function runSync(cmd, options = {}) {
   try {
@@ -65,6 +80,32 @@ async function runStep(name, cmd, cmdArgs = []) {
   });
 }
 
+// 和 runStep 一样，但输出先收集起来，结束时一次打印：两个套件同时跑时输出不会交错。
+// 成功或失败的提示和 runStep 一字不差；失败时同样 reject。
+async function runStepBuffered(name, cmd, cmdArgs = []) {
+  const t0 = Date.now();
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const p = spawn(cmd, cmdArgs, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+    p.stdout.on('data', d => chunks.push(d));
+    p.stderr.on('data', d => chunks.push(d));
+    p.on('close', code => {
+      const sec = ((Date.now() - t0) / 1000).toFixed(1);
+      process.stdout.write(`\n\x1b[35m▶ [Master Suite] ${name}...\x1b[0m\n`);
+      process.stdout.write(Buffer.concat(chunks));
+      if (code === 0) {
+        console.log(`\x1b[32m✔ ${name} completed (${sec}s)\x1b[0m`);
+        resolve();
+      } else {
+        console.error(`\x1b[31m✘ ${name} failed with exit code ${code} (${sec}s)\x1b[0m`);
+        reject(new Error(`${name} failed`));
+      }
+    });
+  });
+}
+
+// ---------- 3. --git：拉取、提交、推送 ----------
+// 注意：这里会 git add -A 并用固定的提交信息提交，只在确定工作区里全是要提交的东西时才用 --git。
 async function handleGitLifecycle() {
   console.log('\n\x1b[36m======================================================');
   console.log('  Executing Git Lifecycle Check (tools/tests/test.mjs)       ');
@@ -117,6 +158,7 @@ async function handleGitLifecycle() {
   }
 }
 
+// ---------- 4. 入口 ----------
 async function main() {
   const masterStart = Date.now();
   console.log('======================================================');
@@ -132,12 +174,19 @@ async function main() {
     const combatArgs = isFull ? [] : ['--fast'];
     await runStep('Combat, Netcode & Mechanics Suite', 'node', ['tools/tests/test-combat.mjs', ...combatArgs]);
 
-    // Step 3: AI Simulation & Training Suite
+    // Step 3 + 4: AI Simulation & Training Suite, Cloud & Backend Suite
     const aiArgs = doTrain ? ['--train'] : [];
-    await runStep('AI Behaviors & TianDao Matchup Suite', 'node', ['tools/tests/test-ai.mjs', ...aiArgs]);
-
-    // Step 4: Cloud & Backend Suite
-    await runStep('Cloud, Economy & Worker Suite', 'node', ['tools/tests/test-cloud.mjs']);
+    const aiStep = ['AI Behaviors & TianDao Matchup Suite', 'node', ['tools/tests/test-ai.mjs', ...aiArgs]];
+    const cloudStep = ['Cloud, Economy & Worker Suite', 'node', ['tools/tests/test-cloud.mjs']];
+    if (isSerial) {
+      await runStep(...aiStep);
+      await runStep(...cloudStep);
+    } else {
+      // 两个都跑完再判断：一个失败了也让另一个跑完，把两边的结果都打出来
+      const results = await Promise.allSettled([runStepBuffered(...aiStep), runStepBuffered(...cloudStep)]);
+      const failed = results.find(r => r.status === 'rejected');
+      if (failed) throw failed.reason;
+    }
 
     // Step 5: Git Lifecycle (if requested or in automated pipeline)
     if (isGit) {

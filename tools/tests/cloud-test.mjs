@@ -2,6 +2,9 @@
 //   node tools/tests/cloud-test.mjs
 // 覆盖：存档按账号隔离、防抖中的存档不会换账号写入、服务器拒绝时不再无限重试、
 //       本机账号的中文密码、导出签名覆盖所有字段。
+//
+// 文件结构：假 Worker（makeWorker）→ 最小浏览器外壳（makeEnv）→ 启动客户端（boot）→ 按顺序跑各条场景
+// 找 bug 提示：场景之间共用同一个客户端和假服务器，前一条留下的状态会影响后一条；单独复现时从 boot() 之后照抄到出错那条。
 import fs from 'node:fs';
 import vm from 'node:vm';
 import path from 'node:path';

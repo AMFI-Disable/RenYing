@@ -1,3 +1,14 @@
+// 战斗测试第 10 组：战斗状态：蓄力、格挡、受击、倒地、起身这些状态之间怎么切换。
+// 由 tools/tests/combat-test.mjs 按文件名顺序载入；每项 { name, fn }，fn 是在沙盒里执行的代码字符串，返回 { pass, error }。
+// 找 bug 提示：测试失败时报的是 name，在下面的目录里找到序号，再搜这个 name。
+//
+// 本文件的测试（共 6 项）：
+//    1. Charge attack transitions from neutral
+//    2. Full charge attack release (cs2)
+//    3. Charge transition from blockstun recovery
+//    4. Down attack (dl) exists and is executable for all characters
+//    5. All characters normal attack chain (l1 -> l2/next)
+//    6. All characters skills (skill1, skill2) and ult activation
 export default [
   {
     name: 'Charge attack transitions from neutral',

@@ -2,6 +2,9 @@
 // 凌雀 AI 测试：连段路线（飞梭挂印记 → 换影引爆 → 追击 / 大招续印记）按难度分得开。
 //   node tools/tests/ai-lingque-test.mjs            情景检查 + 每个难度对打统计
 //   node tools/tests/ai-lingque-test.mjs --n 4      每个难度每个对手打 4 场（默认 4：气血放大后低难度胜率接近 0，2 场样本太小会排不出先后）
+//
+// 文件结构：1. 情景检查（摆局面，看凌雀大脑这一帧想按什么）  2. 每个难度对打统计（引爆次数、胜率）
+// 找 bug 提示：情景检查失败看 src/ai.js 里凌雀那一段；统计不达标先用更大的 --n 确认不是运气。
 import { makeEnv, HEROES } from '../ai/ai-arena.mjs';
 
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };

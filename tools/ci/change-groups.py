@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """Classify changed paths for the pull-request test matrix."""
+# 给 .github/workflows/ci.yml 用：根据这次改了哪些文件，决定要跑哪几组测试。
+#
+# 用法：python3 tools/ci/change-groups.py <base-sha> <head-sha> <$GITHUB_OUTPUT>
+# 输出：往 $GITHUB_OUTPUT 追加 all=true/false、game=…、ai=… 这样的行，ci.yml 里读这些开关。
+#
+# 找 bug 提示：某组测试该跑没跑，多半是下面 groups 里的路径前缀或文件名没写全；
+# 新加的测试文件或源码目录要记得加进对应的组。
 import subprocess
 import sys
 
 
+# 列出 base...head 之间改过的文件；base 是全 0（新分支第一次推送）时，只比最后一个提交
 def changed_paths(base, head):
     if base and set(base) != {"0"}:
         revisions = [f"{base}...{head}"]
@@ -18,6 +26,7 @@ def changed_paths(base, head):
     return result.stdout.splitlines()
 
 
+# path 恰好是 exact 里的某个文件，或者以 prefixes 里某个目录开头
 def matches(path, prefixes=(), exact=()):
     return path in exact or any(path.startswith(prefix) for prefix in prefixes)
 
@@ -25,6 +34,7 @@ def matches(path, prefixes=(), exact=()):
 def main():
     base, head, output_path = sys.argv[1:4]
     paths = changed_paths(base, head)
+    # 每一组：改到列出的目录（第一个元组）或文件（第二个元组），就要跑这一组测试
     groups = {
         "all": "tools/tests/test.mjs" in paths,
         "game": any(matches(path, ("src/data/", "src/game/", "tools/checks/"), (
@@ -57,6 +67,7 @@ def main():
             "tools/tests/test.mjs",
         )) for path in paths),
     }
+    # 一行一个 key=value，GitHub Actions 的标准输出格式
     with open(output_path, "a", encoding="utf-8") as output:
         for name, enabled in groups.items():
             output.write(f"{name}={'true' if enabled else 'false'}\n")
