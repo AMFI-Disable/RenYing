@@ -1,6 +1,6 @@
 # Agent Guidelines For RenYing
 
-These are the instructions for any coding agent or AI assistant working in this repository. Read this file before you write code, edit docs, make a commit or run a Git command. Human contributors follow the same rules in `contributing.md`.
+These are the instructions for any coding agent or AI assistant working in this repository. Read this file before you write code, edit docs, make a commit or run a Git command. Human contributors follow the same rules in `.github/contributing.md`.
 
 ## Project Overview
 
@@ -24,7 +24,13 @@ RenYing (刃影) is a browser fighting game with offline play, online rollback n
 | Data and frame checks | `tools/checks/` |
 | Test suites and runners | `tools/tests/` |
 | Music source tools | `tools/music/` |
-| Docs and wiki copy | `docs/`, `docs/wiki/` |
+| Trained AI data (built into the page) | `src/models/ai-brain.json` |
+| Changelog and version history | `docs/history/` |
+| Docs by topic | `docs/ai/` (AI specs, frame data, trainer reports), `docs/bugs/`, `docs/design/`, `docs/ops/` (admin, deploy), `docs/project/` |
+| Wiki copy | `docs/wiki/` |
+| Contributing and security policy | `.github/contributing.md`, `.github/security.md` |
+
+The repository root only keeps what has to be there: the GitHub Pages entry `index.html`, the old address `renying.html`, the offline edition `renying-offline.html`, both readmes, `license`, this file and tool configs (`.gitignore`, `.markdownlint.json`). Put everything else in a folder.
 
 Put new code in the numbered file that owns the feature. Do not add new top-level source files.
 
@@ -66,7 +72,7 @@ Never skip, disable or weaken a test to make it pass.
 
 ## Server And Data
 
-- The maintainer deploys the Worker and D1. If a change needs a redeploy, say so in the changelog entry ("Needs a Worker redeploy.").
+- The maintainer deploys the Worker and D1. If a change needs a redeploy, say so in the changelog entry (`docs/history/changelog.md`) ("Needs a Worker redeploy.").
 - Never run `wrangler d1 migrations apply`; migrations run inside the Worker.
 - Do not change account, login, economy or anti-cheat logic beyond what the task asks without a maintainer's approval.
 

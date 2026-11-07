@@ -42,7 +42,7 @@ Only pull requests from the maintainer (Even, GitHub `AMFI-Disable`) and reposit
 
 ## Server Changes
 
-The Worker and the D1 database are deployed by the maintainer. If your change needs a redeploy, write **Needs a Worker redeploy.** in the changelog entry. Never run `wrangler d1 migrations apply`; migrations run inside the Worker. See `cloudflare/migrations/readme.md` and `docs/deploy-runbook.md`.
+The Worker and the D1 database are deployed by the maintainer. If your change needs a redeploy, write **Needs a Worker redeploy.** in the changelog entry (`docs/history/changelog.md`). Never run `wrangler d1 migrations apply`; migrations run inside the Worker. See `cloudflare/migrations/readme.md` and `docs/ops/deploy-runbook.md`.
 
 ## 中文摘要
 

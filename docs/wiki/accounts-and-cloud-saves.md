@@ -51,11 +51,11 @@ There are no ads, no tracking scripts and no third-party analytics. The online p
 
 ## Deleting An Account / 删除账号
 
-Ask the maintainer (see [security.md](https://github.com/AMFI-Disable/RenYing/blob/main/security.md) for contact details). A deleted account is signed out everywhere and hidden from leaderboards and the market.
+Ask the maintainer (see [security.md](https://github.com/AMFI-Disable/RenYing/blob/main/.github/security.md) for contact details). A deleted account is signed out everywhere and hidden from leaderboards and the market.
 
 ## For Developers / 开发者
 
 - Client: `src/cloud.js` (sync, tokens, offline queue) and `src/game/24-account.js` (account page).
 - Server: `cloudflare/worker.js`; tables in `cloudflare/schema.sql`, changes as numbered files in `cloudflare/migrations/`.
 - Tests: `node tools/tests/cloud-test.mjs` and `node tools/tests/sync-test.mjs`.
-- Admin tools and roles: [docs/admin.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/admin.md) (Chinese).
+- Admin tools and roles: [docs/ops/admin.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/ops/admin.md) (Chinese).

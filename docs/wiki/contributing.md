@@ -1,6 +1,6 @@
 # Contributing / 参与开发
 
-The full rules are in [contributing.md](https://github.com/AMFI-Disable/RenYing/blob/main/contributing.md) in the repository. The short version:
+The full rules are in [contributing.md](https://github.com/AMFI-Disable/RenYing/blob/main/.github/contributing.md) in the repository. The short version:
 
 - **Who can merge:** only pull requests from the maintainer (Even, `AMFI-Disable`) and repository collaborators are merged. Everyone is welcome to open [issues](https://github.com/AMFI-Disable/RenYing/issues).
 - **Edit sources, not generated files.** After changing `src/`, `assets/` or `cloudflare/`, run `python3 tools/build.py` and commit the generated files with the change.
@@ -9,7 +9,7 @@ The full rules are in [contributing.md](https://github.com/AMFI-Disable/RenYing/
 - **Markdown headings:** Title Case.
 - **Docs stay in sync:** `readme.md` ↔ `readme.zh-cn.md`, and this wiki ↔ `docs/wiki/`.
 - **Describe RenYing on its own terms**, without comparing it to other games.
-- **Security problems** go through [security.md](https://github.com/AMFI-Disable/RenYing/blob/main/security.md), never public issues.
+- **Security problems** go through [security.md](https://github.com/AMFI-Disable/RenYing/blob/main/.github/security.md), never public issues.
 
 ## 中文
 

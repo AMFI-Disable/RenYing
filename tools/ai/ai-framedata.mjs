@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 实测每个角色每一招的“打击数据”：打得到的距离、几秒后打中、打空要多久才能再动、被挡后谁先动。
-// 结果写进 models/ai-brain.json 的 frames 字段，电脑 AI 按这张表判断“这一招现在打不打得到、打完安不安全”。
+// 结果写进 src/models/ai-brain.json 的 frames 字段，电脑 AI 按这张表判断“这一招现在打不打得到、打完安不安全”。
 //   node tools/ai/ai-framedata.mjs            重新测量并写入
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { makeEnv, HEROES, NAMES } from './ai-arena.mjs';
@@ -8,7 +8,7 @@ import { makeEnv, HEROES, NAMES } from './ai-arena.mjs';
 import { fileURLToPath } from 'node:url';
 // 文件结构：1. 沙盒和要量的招式表  2. 脚本控制器（按固定顺序按键）  3. 摆位置、放招、数帧（setup / run）  4. 每位侠客逐招量完写回
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const OUT = ROOT + 'models/ai-brain.json';
+const OUT = ROOT + 'src/models/ai-brain.json';
 const env = await makeEnv();
 const F_ = { get A() { return env.A; }, get B() { return env.B; } };
 const T = env.STEP;
@@ -70,7 +70,7 @@ function run(h, d, block, action, maxT = 2.6) {
   return { tHit, dmg: hp0 - F_.B.hp, tFree, foeFree, move: F_.A.x - ax0 };
 }
 
-// ---------- 4. 逐位侠客量完写回 models/ai-brain.json 的 frames ----------
+// ---------- 4. 逐位侠客量完写回 src/models/ai-brain.json 的 frames ----------
 const r1 = v => Math.round(v * 1000) / 1000;
 const frames = {};
 for (let h = 0; h < HEROES.length; h++) {

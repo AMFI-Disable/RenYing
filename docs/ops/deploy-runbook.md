@@ -16,8 +16,8 @@ Worker 用到的 Secret 和变量（都可以不设，不设时对应功能关�
 
 | 名字 | 做什么 | 说明在哪 |
 | :--- | :--- | :--- |
-| `ADMIN_SECRET` | 管理口令，建第一批管理员账号用 | `docs/admin.md` |
-| `TURNSTILE_SITEKEY`、`TURNSTILE_SECRET` | 注册时的人机验证 | `docs/admin.md` |
+| `ADMIN_SECRET` | 管理口令，建第一批管理员账号用 | `docs/ops/admin.md` |
+| `TURNSTILE_SITEKEY`、`TURNSTILE_SECRET` | 注册时的人机验证 | `docs/ops/admin.md` |
 | `TURN_KEY_ID`、`TURN_KEY_API_TOKEN` | 联机用的 Cloudflare TURN 中继 | `cloudflare/worker.js` |
 | `CORS_ORIGINS` | 额外允许调用接口的网址，逗号分开 | `cloudflare/worker.js` |
 | `LOG_SALT` | 登录记录里 IP 哈希用的密钥 | `cloudflare/worker.js` |

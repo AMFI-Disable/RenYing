@@ -4,7 +4,7 @@
 
 刃影是一款在浏览器里打开就能玩的水墨武侠格斗游戏：十六位侠客，单挑、2v2、3v3 车轮战，侠客列传，同袍肉鸽，开放世界，点对点联机。当前版本 **1.0.6**。
 
-**[▶ Play now / 立即游玩](https://amfi-disable.github.io/RenYing/)** · **[Repository / 仓库](https://github.com/AMFI-Disable/RenYing)** · **[Changelog / 更新日志](https://github.com/AMFI-Disable/RenYing/blob/main/changelog.md)** · **[Version History / 版本迭代史](version-history.md)**
+**[▶ Play now / 立即游玩](https://amfi-disable.github.io/RenYing/)** · **[Repository / 仓库](https://github.com/AMFI-Disable/RenYing)** · **[Changelog / 更新日志](https://github.com/AMFI-Disable/RenYing/blob/main/docs/history/changelog.md)** · **[Version History / 版本迭代史](version-history.md)**
 
 ## For Players / 玩家
 

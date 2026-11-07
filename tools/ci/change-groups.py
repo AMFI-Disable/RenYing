@@ -38,12 +38,12 @@ def main():
     groups = {
         "all": "tools/tests/test.mjs" in paths,
         "game": any(matches(path, ("src/data/", "src/game/", "tools/checks/"), (
-            "src/ai.js", "src/anticheat.js", "src/net-p2p.js", "models/ai-brain.json",
+            "src/ai.js", "src/anticheat.js", "src/net-p2p.js", "src/models/ai-brain.json",
             "tools/tests/combat-test.mjs", "tools/tests/rollback-test.mjs",
             "tools/tests/netplay-test.mjs", "tools/tests/anticheat-test.mjs",
             "tools/tests/ai-lingque-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
-        "ai": any(matches(path, ("tools/ai/", "models/"), (
+        "ai": any(matches(path, ("tools/ai/", "src/models/"), (
             "src/ai.js", "tools/tests/test-ai.mjs",
         )) for path in paths),
         "cloud": any(matches(path, ("cloudflare/", "src/game/24-account", "src/game/19-progress-02-"), (

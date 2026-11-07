@@ -1,8 +1,8 @@
 # Trainer：天道互打胜率与平衡建议
 
-> 由 `node tools/ai/trainer.mjs --n 2` 自动生成（2026-11-07）。双方同一难度（天道），同一套打法基因（models/ai-brain.json）。每个难度每对角色 2 场（左右各半，固定种子可复现），镜像不打，共 480 场三局两胜；每个对位格子的 95% 误差约 ±69 个百分点，每个角色总胜率约 ±17.9。
+> 由 `node tools/ai/trainer.mjs --n 2` 自动生成（2026-11-07）。双方同一难度（天道），同一套打法基因（src/models/ai-brain.json）。每个难度每对角色 2 场（左右各半，固定种子可复现），镜像不打，共 480 场三局两胜；每个对位格子的 95% 误差约 ±69 个百分点，每个角色总胜率约 ±17.9。
 
-> 平衡建议**没有**改进游戏，只在 `docs/trainer/proposal.json` 里。要试玩，按下面「怎么用这份建议」操作。
+> 平衡建议**没有**改进游戏，只在 `docs/ai/trainer/proposal.json` 里。要试玩，按下面「怎么用这份建议」操作。
 
 ## 1. 当前数值下各角色胜率
 
@@ -68,10 +68,10 @@
 只在本地试，不影响游戏：
 
 ```bash
-AI_BAL=docs/trainer/proposal.json node tools/ai/ai-arena.mjs --a god --b god --n 10
-AI_BAL=docs/trainer/proposal.json node tools/ai/ai-arena.mjs --a hard --b hard --n 10
+AI_BAL=docs/ai/trainer/proposal.json node tools/ai/ai-arena.mjs --a god --b god --n 10
+AI_BAL=docs/ai/trainer/proposal.json node tools/ai/ai-arena.mjs --a hard --b hard --n 10
 ```
 
-确定要用，就把 `docs/trainer/proposal.json` 里每个角色的 normal / skill / ult / hp 抄进 `src/data/heroes/` 里各自文件的 `bal`，再运行 `python3 tools/build.py` 重新生成页面。
+确定要用，就把 `docs/ai/trainer/proposal.json` 里每个角色的 normal / skill / ult / hp 抄进 `src/data/heroes/` 里各自文件的 `bal`，再运行 `python3 tools/build.py` 重新生成页面。
 
 注意：这是电脑对电脑的结果，AI 打法和真人不一样（比如 AI 招架反应很快），真人对战的强弱可能不同；数值建议适合当参考起点，最好再结合玩家反馈。

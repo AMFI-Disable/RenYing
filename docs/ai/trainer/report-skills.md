@@ -1,10 +1,10 @@
 # Trainer：先改技能冷却、再补数值（方案 B）
 
-> 这一份是在 `AI_EXP=docs/trainer/experiments/skill-tweaks.js`（7 项技能改动，见 plan.md）之上跑的：表里的“当前胜率”已经包含技能改动，建议倍率在 `docs/trainer/proposal-skills.json`。
+> 这一份是在 `AI_EXP=docs/ai/trainer/experiments/skill-tweaks.js`（7 项技能改动，见 plan.md）之上跑的：表里的“当前胜率”已经包含技能改动，建议倍率在 `docs/ai/trainer/proposal-skills.json`。
 
-> 由 `AI_EXP=docs/trainer/experiments/skill-tweaks.js node tools/ai/trainer.mjs --n 20 --rounds 3 --level god,hard --out docs/trainer/skills` 自动生成（2026-10-27）。双方同一难度（天道、劲敌，各打一遍，胜率取平均），同一套打法基因（models/ai-brain.json）。每个难度每对角色 20 场（左右各半，固定种子可复现），镜像不打，共 6240 场三局两胜；每个对位格子的 95% 误差约 ±22 个百分点，每个角色总胜率约 ±4.5。
+> 由 `AI_EXP=docs/ai/trainer/experiments/skill-tweaks.js node tools/ai/trainer.mjs --n 20 --rounds 3 --level god,hard --out docs/ai/trainer/skills` 自动生成（2026-10-27）。双方同一难度（天道、劲敌，各打一遍，胜率取平均），同一套打法基因（src/models/ai-brain.json）。每个难度每对角色 20 场（左右各半，固定种子可复现），镜像不打，共 6240 场三局两胜；每个对位格子的 95% 误差约 ±22 个百分点，每个角色总胜率约 ±4.5。
 
-> 平衡建议**没有**改进游戏，只在 `docs/trainer/proposal-skills.json` 里。要试玩，按下面「怎么用这份建议」操作。
+> 平衡建议**没有**改进游戏，只在 `docs/ai/trainer/proposal-skills.json` 里。要试玩，按下面「怎么用这份建议」操作。
 
 ## 1. 当前数值下各角色胜率
 
@@ -106,10 +106,10 @@
 只在本地试，不影响游戏：
 
 ```bash
-AI_BAL=docs/trainer/proposal-skills.json node tools/ai/ai-arena.mjs --a god --b god --n 10
-AI_BAL=docs/trainer/proposal-skills.json node tools/ai/ai-arena.mjs --a hard --b hard --n 10
+AI_BAL=docs/ai/trainer/proposal-skills.json node tools/ai/ai-arena.mjs --a god --b god --n 10
+AI_BAL=docs/ai/trainer/proposal-skills.json node tools/ai/ai-arena.mjs --a hard --b hard --n 10
 ```
 
-确定要用，就把 `docs/trainer/proposal-skills.json` 里每个角色的 normal / skill / ult / hp 抄进 `src/game/02-heroes.js` 的 `BAL`，再运行 `python3 tools/build.py` 重新生成页面。
+确定要用，就把 `docs/ai/trainer/proposal-skills.json` 里每个角色的 normal / skill / ult / hp 抄进 `src/game/02-heroes.js` 的 `BAL`，再运行 `python3 tools/build.py` 重新生成页面。
 
 注意：这是电脑对电脑的结果，AI 打法和真人不一样（比如 AI 招架反应很快），真人对战的强弱可能不同；数值建议适合当参考起点，最好再结合玩家反馈。

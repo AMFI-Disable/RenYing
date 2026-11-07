@@ -180,5 +180,5 @@ node tools/tests/combat-test.mjs --sim   # 22 checks
   a blank name to `侠客`), so it is not re-claimed here.
 - The audit and plan documents were written against files that no longer exist (`firestore.rules`, `server.py`).
   They were not restored; their still-relevant findings are the ones carried into this board.
-- `docs/codebase-and-heroes.md` still describes the Firebase-era layout in places (it references `server.py` and
+- `docs/project/codebase-and-heroes.md` still describes the Firebase-era layout in places (it references `server.py` and
   `firestore.rules`). It is otherwise accurate about the game core and needs a refresh pass, not a correction.

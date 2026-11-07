@@ -40,7 +40,7 @@ export async function makeEnv(tuneFile) {
     matchMedia: () => ({ matches: false }), innerWidth: 1440, innerHeight: 900, Math: SMath, Date
   };
   const w = sb.window; w.window = w; Object.assign(w, sb); w.globalThis = w;
-  if (existsSync(ROOT + 'models/ai-brain.json')) w.RENYING_AI_BRAIN = JSON.parse(readFileSync(ROOT + 'models/ai-brain.json', 'utf8'));
+  if (existsSync(ROOT + 'src/models/ai-brain.json')) w.RENYING_AI_BRAIN = JSON.parse(readFileSync(ROOT + 'src/models/ai-brain.json', 'utf8'));
   if (tuneFile && existsSync(tuneFile)) w.RENYING_AI_TUNE = JSON.parse(readFileSync(tuneFile, 'utf8'));
   vm.createContext(w);
   new vm.Script(readFileSync(ROOT + 'src/net-p2p.js', 'utf8')).runInContext(w);

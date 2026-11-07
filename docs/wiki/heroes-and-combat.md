@@ -67,9 +67,9 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` (or ho
 
 ## Frame Data / 帧数表
 
-Startup, active and recovery frames for every normal attack, skill and ultimate are generated from the game code into [docs/frame-data.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/frame-data.md) (1 frame = 1/60 s). Run `node tools/checks/frame-data.mjs` after changing a move, and `node tools/checks/frame-data.mjs --check` to confirm timing did not change by accident.
+Startup, active and recovery frames for every normal attack, skill and ultimate are generated from the game code into [docs/ai/frame-data.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/ai/frame-data.md) (1 frame = 1/60 s). Run `node tools/checks/frame-data.mjs` after changing a move, and `node tools/checks/frame-data.mjs --check` to confirm timing did not change by accident.
 
-每一招的前摇、判定、后摇帧数由代码生成在 [docs/frame-data.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/frame-data.md)。
+每一招的前摇、判定、后摇帧数由代码生成在 [docs/ai/frame-data.md](https://github.com/AMFI-Disable/RenYing/blob/main/docs/ai/frame-data.md)。
 
 ## Where Hero Data Lives / 侠客数据在哪
 

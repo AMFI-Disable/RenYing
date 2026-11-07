@@ -10,7 +10,7 @@
 //   en      英文名
 //   bal     强度：伤害（普攻 normal、技能 skill、大招 ult）、冷却 cd、气血 hp 的倍率。
 //           2026-10-27 按 tools/ai/trainer.mjs 方案 B 调过：天道、劲敌两档各打一遍，先改 7 项技能冷却和墨团瞄准，再按胜率迭代倍率（伤害和气血乘同一个数）。
-//           调之前各侠客平均胜率 24%~83%，换一组随机种子复核 44%~54%。详见 docs/trainer/plan.md。
+//           调之前各侠客平均胜率 24%~83%，换一组随机种子复核 44%~54%。详见 docs/ai/trainer/plan.md。
 //   char    基础设定（就是 CHARS 里的一项，id 自动补上）：
 //           name 名字，role 称号，diff 上手难度，escCD 腾空闪冷却，skill 是 Q 技能，skill2 是右键招式，ult 是 E 大招，passive 是被动。
 //           stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率，其余是体量和架势。

@@ -41,7 +41,7 @@ Rebuilds if needed and runs the main suites in one go. `--full` adds the long UI
 | Performance | `node tools/audits/perf-audit.mjs ci-perf` | Load time, panel switching and AI-vs-AI frame rate within `tools/audits/perf-budget.json` |
 | First load | `node tools/audits/firstload-audit.mjs ci-firstload 3` | First paint, largest paint, layout shift, fonts; no music on the first screen |
 | Frame data | `node tools/checks/frame-data.mjs --check` | Move timing did not change by accident |
-| AI ladder | `node tools/ai/ai-ladder-report.mjs` | Win rates between AI levels and heroes (writes `docs/ai-ladder-benchmark.md`) |
+| AI ladder | `node tools/ai/ai-ladder-report.mjs` | Win rates between AI levels and heroes (writes `docs/ai/ai-ladder-benchmark.md`) |
 
 Audit screenshots go into the `ci-*` folders, which are ignored by git.
 

@@ -27,11 +27,11 @@ flowchart TD
 ## 🏛️ 第一阶段：工程规范、模板对齐与自动化流水线
 *(来源归档：`c5d34a36-69ad-4056-b9bd-8cc554f9ee70/walkthrough.md`)*
 
-在工程初始化与仓库合规性审计中，《刃影》仓库（[`RenYing`](.)）按照标准化规范完成了代码与文档全方位整顿：
+在工程初始化与仓库合规性审计中，《刃影》仓库（[`RenYing`](../..)）按照标准化规范完成了代码与文档全方位整顿：
 
 ### 1. 文档锚点与 Markdownlint 格式治理
 - **片段锚点对齐 (MD051)**：
-  - 修复了所有 section 标题的 markdownlint 锚点解析异常，在 [`readme.md`](readme.md) 与 [`readme.zh-cn.md`](readme.zh-cn.md) 中统一植入显式 HTML 锚点 `<a id="..."></a>`。
+  - 修复了所有 section 标题的 markdownlint 锚点解析异常，在 [`readme.md`](../../readme.md) 与 [`readme.zh-cn.md`](../../readme.zh-cn.md) 中统一植入显式 HTML 锚点 `<a id="..."></a>`。
   - 标准化目录链接与徽章跳转路径，实现 `npx markdownlint-cli *.md .github/**/*.md` **0 错误、0 警告**。
 
 ### 2. 仓库瘦身与大文件剥离
@@ -39,11 +39,11 @@ flowchart TD
 
 ### 3. GitHub Issue & PR 标准化模板
 - 在 `.github/issue_template/` 下创建并规范化：
-  - [`bug_report.md`](.github/issue_template/bug_report.md)：包含浏览器环境、联机模式（P2P/WebSocket）、控制方式（键盘/触摸）及帧率诊断字段。
-  - [`feature_request.md`](.github/issue_template/feature_request.md)：包含功能价值阐述、替代方案分析与设计预案。
+  - [`bug_report.md`](../../.github/issue_template/bug_report.md)：包含浏览器环境、联机模式（P2P/WebSocket）、控制方式（键盘/触摸）及帧率诊断字段。
+  - [`feature_request.md`](../../.github/issue_template/feature_request.md)：包含功能价值阐述、替代方案分析与设计预案。
 
 ### 4. 严苛的 GitHub Actions CI 持续集成构建
-- 创建流水线 [`.github/workflows/ci.yml`](.github/workflows/ci.yml)，集成六重自动化质量卡点：
+- 创建流水线 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)，集成六重自动化质量卡点：
   1. **Python 3.12 语法编译**：`python3 -m py_compile server.py tools/build.py`。
   2. **Ruby YAML 严谨校验**：遍历并安全解析所有 `.github/**/*.{yml,yaml}` 配置。
   3. **全小写路径检查**：`git ls-files | grep '[A-Z]'` 严格阻断大小写混淆文件。
@@ -121,9 +121,9 @@ sequenceDiagram
 ```
 
 ### 1. 资产解耦与页面轻量化
-- **背景音乐分离**：将原本嵌入在 HTML 中的大体积音频抽出，独立存放在 [`assets/music/`](assets/music/)，使得在线版 [`index.html`](index.html) 从 6.5 MB 骤降至 **1.6 MB**，极大提升了弱网加载速度。
-- **PeerJS 本地化集成**：将 [`assets/peerjs.min.js`](assets/peerjs.min.js) 打包内嵌，消除外部不可靠 CDN 的网络超时与阻断风险。
-- **单一源码构建流水线**：由 [`tools/build.py`](tools/build.py) 统筹生成在线版 [`index.html`](index.html) 与全内嵌离线单文件 [`renying-offline.html`](renying-offline.html)。
+- **背景音乐分离**：将原本嵌入在 HTML 中的大体积音频抽出，独立存放在 [`assets/music/`](../../assets/music/)，使得在线版 [`index.html`](../../index.html) 从 6.5 MB 骤降至 **1.6 MB**，极大提升了弱网加载速度。
+- **PeerJS 本地化集成**：将 [`assets/peerjs.min.js`](../../assets/peerjs.min.js) 打包内嵌，消除外部不可靠 CDN 的网络超时与阻断风险。
+- **单一源码构建流水线**：由 [`tools/build.py`](../../tools/build.py) 统筹生成在线版 [`index.html`](../../index.html) 与全内嵌离线单文件 [`renying-offline.html`](../../renying-offline.html)。
 
 ### 2. 双模联机切换与环境自动探测
 - **环境自适应**：访问页面时自动探测宿主环境。在静态托管（`https://amfi-disable.github.io/RenYing/`）下默认激活 **WebRTC 免服务器直连**，杜绝了试图连接 `ws://127.0.0.1:8765` 导致的浏览器 Mixed Content 安全拦截。
@@ -232,7 +232,7 @@ flowchart LR
 
 ### 2. Google Firebase 纯前端 Serverless 云端存档
 - **零服务器免维护架构**：
-  - 在 [`src/cloud.js`](src/cloud.js) 中集成 Firebase Auth 与 Cloud Firestore，玩家输入 Firebase 凭据即可直连 Google Cloud 后端，无需搭建或运维任何中间层服务。
+  - 在 [`src/cloud.js`](../../src/cloud.js) 中集成 Firebase Auth 与 Cloud Firestore，玩家输入 Firebase 凭据即可直连 Google Cloud 后端，无需搭建或运维任何中间层服务。
   - 严格支持 **离线缓存降级**：即便未配置云端或网络断开，自动安全读写本地 `localStorage('renying-profile')` 与 `localStorage('renying-cloud-cache')`，联网后自动按时间戳防冲突双向合并同步。
 - **专职子代理与生产级安全规则**：
   - 经由专职子代理 `firestore-rules-author` 编写并校验了生产级安全规则 [`firestore.rules`](firestore.rules)。

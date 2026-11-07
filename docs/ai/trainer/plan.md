@@ -23,7 +23,7 @@
 
 ## 1. 完整数值调整（方案 A：只改数值）
 
-把下面的倍率写进 `src/game/02-heroes.js` 的 `BAL`：normal、skill、ult、hp 四项都填同一个数，cd 保持 1。原始数据在 `docs/trainer/proposal.json`，报告在 `docs/trainer/report.md`。
+把下面的倍率写进 `src/game/02-heroes.js` 的 `BAL`：normal、skill、ult、hp 四项都填同一个数，cd 保持 1。原始数据在 `docs/ai/trainer/proposal.json`，报告在 `docs/ai/trainer/report.md`。
 
 | 角色 | 现在胜率 | 倍率 | 改完（复核） | 改完·天道 | 改完·劲敌 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
@@ -49,7 +49,7 @@
 
 ### 2.1 已经测过的 7 项（只改冷却和瞄准）
 
-试验文件在 `docs/trainer/experiments/skill-tweaks.js`，不改游戏，只在模拟里套上去测。
+试验文件在 `docs/ai/trainer/experiments/skill-tweaks.js`，不改游戏，只在模拟里套上去测。
 
 | 角色 | 改动 | 原因（诊断数据） |
 | :-- | :-- | :-- |
@@ -63,7 +63,7 @@
 
 只改这 7 项（数值不动）：胜率 24%~83% 变成 30%~79%。流云 69 → 61、月华 71 → 66、墨羽 83 → 79、凌雀 24 → 30、勾陈 34 → 38。
 
-在这 7 项之上再补的数值倍率（`docs/trainer/proposal-skills.json`，报告 `docs/trainer/report-skills.md`），每个角色要动的幅度都比方案 A 小：
+在这 7 项之上再补的数值倍率（`docs/ai/trainer/proposal-skills.json`，报告 `docs/ai/trainer/report-skills.md`），每个角色要动的幅度都比方案 A 小：
 
 | 角色 | 方案 B 倍率 | 方案 A 倍率 | 改完（复核） |
 | :-- | :-- | :-- | :-- |
@@ -132,6 +132,6 @@
 
 ```bash
 node tools/ai/trainer.mjs --n 20 --rounds 4 --level god,hard
-AI_EXP=docs/trainer/experiments/skill-tweaks.js node tools/ai/trainer.mjs --n 20 --rounds 3 --level god,hard --out /tmp/skills
+AI_EXP=docs/ai/trainer/experiments/skill-tweaks.js node tools/ai/trainer.mjs --n 20 --rounds 3 --level god,hard --out /tmp/skills
 node tools/ai/trainer-why.mjs --hero moyu --n 10
 ```

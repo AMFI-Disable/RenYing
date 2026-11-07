@@ -19,11 +19,11 @@ import { Pool, HEROES, NAMES, score } from './ai-arena.mjs';
 
 import { fileURLToPath } from 'node:url';
 // 文件结构：1. 参数和读入冠军基因  2. 存档和日志  3. 评估一组基因（全局 / 单个侠客，冠军和挑战者用同一串随机数）  4. 主循环
-// 找 bug 提示：每一步都追加写进 models/ai-train-log.txt；训练中断后看日志最后几行就知道停在哪个基因。
+// 找 bug 提示：每一步都追加写进 src/models/ai-train-log.txt；训练中断后看日志最后几行就知道停在哪个基因。
 // ---------- 1. 参数和读入冠军基因 ----------
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const BRAIN = ROOT + 'models/ai-brain.json';
-const LOG = ROOT + 'models/ai-train-log.txt';
+const BRAIN = ROOT + 'src/models/ai-brain.json';
+const LOG = ROOT + 'src/models/ai-train-log.txt';
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const STAGE = arg('stage', 'global'), SWEEPS = +arg('sweeps', 2), LEVEL = arg('level', 'god');
 const ONLY = arg('heroes') ? arg('heroes').split(',') : HEROES;
@@ -133,4 +133,4 @@ for (let sw = 1; sw <= SWEEPS; sw++) {
 }
 save();
 pool.close();
-log('训练结束，基因已写入 models/ai-brain.json');
+log('训练结束，基因已写入 src/models/ai-brain.json');

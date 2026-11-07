@@ -45,7 +45,7 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 | `tools/` | 19 files | Build script, data import/export, headless simulators, trainers, UI/touch/net audits. |
 | `firestore.rules` | — | Security rules for the optional cloud save. |
 | `export.py`, `renying-export.json` | 39 lines / 37 KB | Legacy production-DB export helper and a sample export. |
-| `changelog.md`, `walkthrough.md`, `readme*.md`, `project.pdf`, `license`, `security.md` | — | Documentation. |
+| `docs/history/changelog.md`, `docs/project/walkthrough.md`, `readme*.md`, `docs/project/project.pdf`, `license`, `.github/security.md` | — | Documentation. |
 | `.github/workflows/ci.yml`, `pages.yml` | — | CI quality gates and GitHub Pages deployment. |
 
 ---
@@ -318,10 +318,10 @@ Tooling (`tools/`):
 | `train-policy.mjs`, `train-heroes.mjs`, `auto-train.mjs` | Behavioral cloning / reward-weighted training pipelines. |
 | `gamemode-meta.mjs` | Per-mode tier lists. |
 | `ui-audit.mjs`, `hud-audit.mjs`, `hud-overlap-audit.mjs`, `touch-audit.mjs` | Headless Chrome layout/legibility/touch gates. |
-| `ai-arena.mjs`, `ai-train.mjs` | CPU-vs-CPU win rates (`--a god --b impossible`, `AI_BAL` to try a balance table) and gene training; `--lvkey` trains one difficulty only (`lvGenes` in `models/ai-brain.json`), `--opp` trains against another difficulty. |
+| `ai-arena.mjs`, `ai-train.mjs` | CPU-vs-CPU win rates (`--a god --b impossible`, `AI_BAL` to try a balance table) and gene training; `--lvkey` trains one difficulty only (`lvGenes` in `src/models/ai-brain.json`), `--opp` trains against another difficulty. |
 | `music/` | Python sources of the nine tracks in `assets/music/` (MIDI → FluidSynth stems → numpy mix → mp3); see `tools/music/readme.md`. |
 | `combat-test.mjs` | Per-hero move/state/combo regression suite. |
-| `econ-admin.mjs` | Admin CLI for the Worker: look up accounts, adjust ink and items, ban/unban, compensation gifts, live economy values (the same as the Worker's `/admin` page; see `docs/admin.md`). |
+| `econ-admin.mjs` | Admin CLI for the Worker: look up accounts, adjust ink and items, ban/unban, compensation gifts, live economy values (the same as the Worker's `/admin` page; see `docs/ops/admin.md`). |
 | `econ-test.mjs` | Runs the Worker on an emulated D1 and checks the armory economy, anti-cheat and admin backend (`--bundle` tests `cloudflare/worker.bundle.js`). |
 | `export_data.py` / `import_data.py` | SQLite → JSON → SQLite migration. |
 

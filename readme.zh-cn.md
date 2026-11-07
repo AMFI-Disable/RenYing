@@ -8,7 +8,7 @@
 *由 Even、Luffy、Opus 5.5 和 Gemini 4 Argon 制作。纯 JavaScript 画在一块 canvas 上，点对点联机，账号和存档用可选的 Cloudflare Worker。*
 
 [![在线游玩](https://img.shields.io/badge/在线游玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
-[![版本 1.0.6](https://img.shields.io/badge/版本-1.0.6-blue.svg?style=flat-square)](changelog.md)
+[![版本 1.0.6](https://img.shields.io/badge/版本-1.0.6-blue.svg?style=flat-square)](docs/history/changelog.md)
 [![侠客 16 位](https://img.shields.io/badge/侠客-16%20位-red.svg?style=flat-square)](#侠客)
 [![技术 HTML5 Canvas](https://img.shields.io/badge/技术-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#工作原理)
 [![联机 WebRTC 回滚](https://img.shields.io/badge/联机-WebRTC%20%2B%20回滚-blue.svg?style=flat-square)](#工作原理)
@@ -136,7 +136,7 @@
 | 磁仙 | 两极方士 | 极性反转 | 磁极 | 天地磁合 |
 | 千机 | 机关傀客 | 投丸 | 暴雨梨花 | 千丝收网 |
 
-完整招式和帧数见 [Wiki：侠客与战斗](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) 和 [docs/frame-data.md](docs/frame-data.md)。
+完整招式和帧数见 [Wiki：侠客与战斗](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) 和 [docs/ai/frame-data.md](docs/ai/frame-data.md)。
 
 ---
 
@@ -192,9 +192,10 @@ flowchart LR
 | `src/qfx/` | 青锋行小游戏的源码 |
 | `assets/` | 音乐、生成的小游戏页面、内置的 `peerjs` 和 `three.js` |
 | `cloudflare/` | 按编号拆分的 Worker 源码、生成的 Worker 入口、管理后台页面、D1 表结构和迁移 |
-| `models/` | 训练好的电脑 AI 权重 |
+| `src/models/` | 训练好的电脑 AI 权重 |
 | `tools/` | `build.py`，以及 `ai/`、`admin/`、`audits/`、`checks/`、`tests/` 和 `music/` |
-| `docs/` | 设计笔记、部署手册、管理后台说明、帧数表、Wiki 源文件 |
+| `docs/` | 按主题分：`ai/`（AI 设计、帧数表、平衡报告）、`bugs/`、`design/`、`ops/`（部署手册、管理后台说明）、`project/`、`history/`（更新日志、版本历史），以及 `wiki/`（Wiki 源文件） |
+| `.github/` | CI 流程、issue 和 PR 模板、`contributing.md`、`security.md` |
 | `index.html`、`renying-offline.html` | **生成的文件。** 在线版和离线版 |
 | `renying.html` | 旧地址的提示页 |
 
@@ -231,13 +232,13 @@ python3 tools/build.py --check
 
 浏览器检查要先开本地服务器（`python3 -m http.server 8791`），然后比如 `node tools/audits/ui-audit.mjs ci-ui 1440 900`、`node tools/audits/hud-audit.mjs ci-hud 1440 900`、`node tools/audits/touch-audit.mjs ci-touch`、`node tools/audits/kb-flow-test.mjs ci-kb 1440 900`。`node tools/tests/test.mjs` 一次跑完主要的几项。
 
-完整的测试清单见 Wiki 的 [测试与 CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI)。Worker 由维护者部署，步骤在 [docs/deploy-runbook.md](docs/deploy-runbook.md)。
+完整的测试清单见 Wiki 的 [测试与 CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI)。Worker 由维护者部署，步骤在 [docs/ops/deploy-runbook.md](docs/ops/deploy-runbook.md)。
 
 ---
 
 ## 参与开发
 
-先看 [contributing.md](contributing.md)。简单说：
+先看 [contributing.md](.github/contributing.md)。简单说：
 
 - 提交信息写成 `类型: 三个小写英文单词`（例如 `fix: guard break timing`），别的写法 CI 不通过。
 - 仓库里所有文件名都是小写。
@@ -245,7 +246,7 @@ python3 tools/build.py --check
 - 改了源码要重新生成网页，和源码一起提交。
 - 只合并维护者和仓库协作者开的 PR。
 
-问题和想法提到 [Issues](https://github.com/AMFI-Disable/RenYing/issues)。安全问题请按 [security.md](security.md) 私下报告，不要公开发 issue。
+问题和想法提到 [Issues](https://github.com/AMFI-Disable/RenYing/issues)。安全问题请按 [security.md](.github/security.md) 私下报告，不要公开发 issue。
 
 ---
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Trainer：电脑对电脑（默认天道）的全角色互打（无画面、只算对战逻辑，比实时快很多），统计每个角色的胜率和对位胜率，
-// 然后按胜率迭代出一份平衡建议（只写进 docs/trainer/，不改 src/data/heroes/ 里的 bal）。
+// 然后按胜率迭代出一份平衡建议（只写进 docs/ai/trainer/，不改 src/data/heroes/ 里的 bal）。
 //   node tools/ai/trainer.mjs --n 20                       只测当前数值：每对角色 20 场（左右各一半）
 //   node tools/ai/trainer.mjs --n 20 --rounds 4            再迭代 4 轮平衡建议，最后用建议数值复测一次
-//   node tools/ai/trainer.mjs --n 20 --bal docs/trainer/proposal.json   直接测某份建议
+//   node tools/ai/trainer.mjs --n 20 --bal docs/ai/trainer/proposal.json   直接测某份建议
 //   node tools/ai/trainer.mjs --n 20 --rounds 6 --level god,hard        几个难度一起算（每个难度各打一遍，胜率取平均）
-// 结果：docs/trainer/report.md（给人看）、docs/trainer/results.json（原始数据）、docs/trainer/proposal.json（建议数值）
+// 结果：docs/ai/trainer/report.md（给人看）、docs/ai/trainer/results.json（原始数据）、docs/ai/trainer/proposal.json（建议数值）
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import { Pool, HEROES, NAMES } from './ai-arena.mjs';
@@ -13,13 +13,13 @@ import { heroData } from './ai-code.mjs';
 
 import { fileURLToPath } from 'node:url';
 // 文件结构：1. 参数  2. 量一份平衡系数下的胜率矩阵（measure）  3. 按胜率调系数（adjust）
-//           4. 写报告用的小工具（matrixMd / worstMd / report）  5. 主流程：基准 → 迭代几轮 → 复核 → 写 docs/trainer/
+//           4. 写报告用的小工具（matrixMd / worstMd / report）  5. 主流程：基准 → 迭代几轮 → 复核 → 写 docs/ai/trainer/
 // 找 bug 提示：报告里的胜率有 ±ci 的误差，差几个百分点不一定是真的强弱；要确认时加大 --n 重跑。
 // ---------- 1. 参数 ----------
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const N = Math.max(2, +arg('n', 20) & ~1), ROUNDS = +arg('rounds', 0), LEVELS = arg('level', 'god').split(','), LEVEL = LEVELS.join('+');
-const OUT = (arg('out', 'docs/trainer').startsWith('/') ? '' : ROOT) + arg('out', 'docs/trainer') + '/';
+const OUT = (arg('out', 'docs/ai/trainer').startsWith('/') ? '' : ROOT) + arg('out', 'docs/ai/trainer') + '/';
 const SEED = +arg('seed', 1);
 // 每轮调整的力度：胜率每偏离 50% 一个百分点，倍率改 STEP 个百分点；单轮最多改 MAXSTEP；总倍率限制在 [LO, HI]
 const STEP = +arg('step', 0.6), MAXSTEP = 0.1, LO = 0.6, HI = 1.4;
@@ -108,9 +108,9 @@ function report(base, rounds, final, check) {
   const order = HEROES.map((_, i) => i).sort((a, b) => base.wr[b] - base.wr[a]);
   const f = final || base, [lo0, hi0] = spread(base.wr), [lo1, hi1] = spread(f.wr);
   let md = `# Trainer：天道互打胜率与平衡建议\n\n`;
-  md += `> 由 \`node tools/ai/trainer.mjs --n ${N}${ROUNDS ? ' --rounds ' + ROUNDS : ''}${LEVELS.join() !== 'god' ? ' --level ' + LEVELS.join() : ''}\` 自动生成（${new Date().toISOString().slice(0, 10)}）。双方同一难度（${LEVELS.map(lvName).join('、')}${LEVELS.length > 1 ? '，各打一遍，胜率取平均' : ''}），同一套打法基因（models/ai-brain.json）。`;
+  md += `> 由 \`node tools/ai/trainer.mjs --n ${N}${ROUNDS ? ' --rounds ' + ROUNDS : ''}${LEVELS.join() !== 'god' ? ' --level ' + LEVELS.join() : ''}\` 自动生成（${new Date().toISOString().slice(0, 10)}）。双方同一难度（${LEVELS.map(lvName).join('、')}${LEVELS.length > 1 ? '，各打一遍，胜率取平均' : ''}），同一套打法基因（src/models/ai-brain.json）。`;
   md += `每个难度每对角色 ${N} 场（左右各半，固定种子可复现），镜像不打，共 ${base.games} 场三局两胜；每个对位格子的 95% 误差约 ±${(ci(N) * 100).toFixed(0)} 个百分点，每个角色总胜率约 ±${(ci(N * (H - 1) * LEVELS.length) * 100).toFixed(1)}。\n\n`;
-  md += `> 平衡建议**没有**改进游戏，只在 \`docs/trainer/proposal.json\` 里。要试玩，按下面「怎么用这份建议」操作。\n\n`;
+  md += `> 平衡建议**没有**改进游戏，只在 \`docs/ai/trainer/proposal.json\` 里。要试玩，按下面「怎么用这份建议」操作。\n\n`;
   md += `## 1. 当前数值下各角色胜率\n\n平均每场 ${base.avgSec.toFixed(0)} 秒（游戏内时间），平局 ${base.draws} 场，左边先手方赢 ${pct(base.leftWinRate)}。\n\n`;
   const multi = LEVELS.length > 1, lvCols = m => multi ? LEVELS.map((_, li) => ` ${pct(m.byLevel[li][0])} |`) : [];
   const lvHead = (t) => multi ? LEVELS.map(l => ` ${t}${lvName(l)} |`).join('') : '';
@@ -132,8 +132,8 @@ function report(base, rounds, final, check) {
     if (final) md += `\n### 按建议改完后的对位胜率\n\n` + matrixMd(final) + `\n### 改完后仍然最一边倒的对位\n\n` + worstMd(final) + '\n';
   }
   md += `\n## ${rounds.length ? 4 : 3}. 怎么用这份建议\n\n只在本地试，不影响游戏：\n\n`;
-  md += '```bash\nAI_BAL=docs/trainer/proposal.json node tools/ai/ai-arena.mjs --a god --b god --n 10\nAI_BAL=docs/trainer/proposal.json node tools/ai/ai-arena.mjs --a hard --b hard --n 10\n```\n\n';
-  md += `确定要用，就把 \`docs/trainer/proposal.json\` 里每个角色的 normal / skill / ult / hp 抄进 \`src/data/heroes/\` 里各自文件的 \`bal\`，再运行 \`python3 tools/build.py\` 重新生成页面。\n\n`;
+  md += '```bash\nAI_BAL=docs/ai/trainer/proposal.json node tools/ai/ai-arena.mjs --a god --b god --n 10\nAI_BAL=docs/ai/trainer/proposal.json node tools/ai/ai-arena.mjs --a hard --b hard --n 10\n```\n\n';
+  md += `确定要用，就把 \`docs/ai/trainer/proposal.json\` 里每个角色的 normal / skill / ult / hp 抄进 \`src/data/heroes/\` 里各自文件的 \`bal\`，再运行 \`python3 tools/build.py\` 重新生成页面。\n\n`;
   md += `注意：这是电脑对电脑的结果，AI 打法和真人不一样（比如 AI 招架反应很快），真人对战的强弱可能不同；数值建议适合当参考起点，最好再结合玩家反馈。\n`;
   return md;
 }

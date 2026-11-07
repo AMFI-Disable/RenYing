@@ -4,9 +4,9 @@
 //   - hard vs normal
 //   - impossible vs hard
 //   - god vs impossible
-// and writes a Markdown report to docs/ai-ladder-benchmark.md.
+// and writes a Markdown report to docs/ai/ai-ladder-benchmark.md.
 // Usage:
-//   node tools/ai/ai-ladder-report.mjs [--n 2] [--out docs/ai-ladder-benchmark.md]
+//   node tools/ai/ai-ladder-report.mjs [--n 2] [--out docs/ai/ai-ladder-benchmark.md]
 import { writeFileSync } from 'node:fs';
 import os from 'node:os';
 import { Pool, HEROES, NAMES, score, byHero } from './ai-arena.mjs';
@@ -18,7 +18,7 @@ const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const args = process.argv.slice(2);
 const arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const N = +arg('n', 2); // games per hero pair (144 * N matches per tier comparison)
-const OUT = arg('out', ROOT + 'docs/ai-ladder-benchmark.md');
+const OUT = arg('out', ROOT + 'docs/ai/ai-ladder-benchmark.md');
 
 const TIERS = [
   { id: 'easy',       zh: '入门 (Easy)' },

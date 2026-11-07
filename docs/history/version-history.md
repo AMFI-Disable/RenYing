@@ -46,7 +46,7 @@
 | 10-16 到 10-21 | 先后试了 `renying.js.org` 和 `renying.is-cool.dev` 两个自定义域名，10-21 改回 GitHub Pages 默认地址 `amfi-disable.github.io/RenYing` | 默认地址最稳定，不依赖第三方域名服务 |
 | 10-24 | 接入 Cloudflare Worker 和 D1 数据库，武库、墨锭账本、账号都由 Worker 结算；Firestore 后端随后整个移除 | 经济系统必须由服务器说了算，客户端改不了 |
 | 10-27 | 开放世界用上 Worker 的 Durable Object，一条分线一个实例 | 很多人同时在一张地图里，需要服务器模拟妖物 |
-| 10-28 | `wrangler.toml` 补齐配置（日志、迁移目录、预发布环境），新增部署前检查 `predeploy-check.mjs` 和部署手册 `docs/deploy-runbook.md` | Worker 改动越来越多，部署前要有固定的检查步骤 |
+| 10-28 | `wrangler.toml` 补齐配置（日志、迁移目录、预发布环境），新增部署前检查 `predeploy-check.mjs` 和部署手册 `docs/ops/deploy-runbook.md` | Worker 改动越来越多，部署前要有固定的检查步骤 |
 | 11-02 | 表结构改成编号迁移文件，Worker 第一次收到请求时自己执行迁移 | 线上数据库不用手动改表，也不会重复执行 |
 | 现在 | 网页推到 `main` 就由 GitHub Pages 自动发布；Worker 和 D1 由 Even 每天部署一次 | |
 

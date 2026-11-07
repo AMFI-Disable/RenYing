@@ -11,7 +11,7 @@
 //   node tools/tests/test-ai.mjs                  Default fast AI sanity checks & TianDao matrix (~25-35s)
 //   node tools/tests/test-ai.mjs --train          Run genetic policy training sweep
 //   node tools/tests/test-ai.mjs --ladder         Generate cross-difficulty ladder benchmark
-//   node tools/tests/test-ai.mjs --frames         Remeasure hit/recovery frame data into models/ai-brain.json
+//   node tools/tests/test-ai.mjs --frames         Remeasure hit/recovery frame data into src/models/ai-brain.json
 //   node tools/tests/test-ai.mjs --serial         Run the two default checks one after another
 //
 // 找 bug 提示：某一步失败时，单独运行它那一行的命令（见下面 main 里的路径和参数），输出更完整。

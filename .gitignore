@@ -7,14 +7,12 @@
 !cloudflare/
 !tools/
 !docs/
-!models/
+!src/models/
 !index.html
 !renying-offline.html
 !renying.html
 !readme*.md
-!changelog.md
 !license
-!security.md
 !.gitignore
 !.github/
 
@@ -109,8 +107,8 @@ backup-*.sql
 *.sqlite
 *.sqlite3
 *.log
-models/*.txt
-models/*.log
+src/models/*.txt
+src/models/*.log
 data/
 !src/data/
 logs/

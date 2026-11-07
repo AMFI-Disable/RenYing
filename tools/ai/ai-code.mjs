@@ -30,7 +30,7 @@ export function levelData() {
 }
 
 export function gameSource() {
-  const brain = existsSync(ROOT + 'models/ai-brain.json') ? readFileSync(ROOT + 'models/ai-brain.json', 'utf8') : '{}';
+  const brain = existsSync(ROOT + 'src/models/ai-brain.json') ? readFileSync(ROOT + 'src/models/ai-brain.json', 'utf8') : '{}';
   return `(typeof window !== 'undefined' ? window : globalThis).RENYING_AI_BRAIN = ${brain};\n`
     + readFileSync(ROOT + 'src/ai.js', 'utf8') + '\n' + gameJs();
 }

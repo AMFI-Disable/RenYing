@@ -18,5 +18,5 @@ Provide a concise overview of the problem solved and the modifications made.
 - [ ] **Title Case Headers**: Are all markdown headings formatted in Title Case?
 - [ ] **No Direct Binary Links**: Are all README and doc files free of direct `.dmg`/`.zip` download links?
 - [ ] **Generated Pages Rebuilt**: Does `python3 tools/build.py --check` pass?
-- [ ] **Docs In Sync**: If behaviour changed, are both readmes, the wiki (and `docs/wiki/`) and `changelog.md` updated?
+- [ ] **Docs In Sync**: If behaviour changed, are both readmes, the wiki (and `docs/wiki/`) and `docs/history/changelog.md` updated?
 - [ ] **Unit Tests Passed**: Have all unit tests passed with zero failures?

@@ -11,14 +11,14 @@
 | Path | Contents |
 | :--- | :--- |
 | `src/page.html` | Page markup with build markers |
-| `src/style.css` | All styles; design tokens are documented in `docs/design-tokens.md` |
+| `src/style.css` | All styles; design tokens are documented in `docs/design/design-tokens.md` |
 | `src/data/` | Data tables, built **before** `src/game/` |
 | `src/data/heroes/` | One file per hero (`NN-<id>.js`) |
 | `src/data/10-modes.js`, `11-bp-orders.js` | Local and online modes, draft orders |
 | `src/data/12-maps.js`, `13-chron.js`, `14-dummy.js`, `20-levels.js` | Terrain maps, world story, dummy options, AI levels |
 | `src/data/30-ui-copy-*.js`, `31-hero-copy.js` | Chinese → English text for the interface and heroes |
 | `src/game/` | The game, numbered files joined in order (`01-core.js` constants and RNG, `02-heroes.js`, `03-skills.js`, `04-ults.js`, … `26-kbnav.js` keyboard navigation) |
-| `src/ai.js`, `models/ai-brain.json` | Computer opponents and the trained model behind the top level |
+| `src/ai.js`, `src/models/ai-brain.json` | Computer opponents and the trained model behind the top level |
 | `src/net-p2p.js`, `src/social.js` | Peer-to-peer connection, community features |
 | `src/cloud.js`, `src/errlog.js` | Accounts, sync, error reports |
 | `src/armory-core.js`, `src/armory.js` | Armory rules (shared with the Worker) and screens |
@@ -27,7 +27,7 @@
 | `src/qfx/` | 青锋行 mini-game, built into `assets/qingfengxing.html` |
 | `cloudflare/` | Numbered Worker source modules in `worker/`; generated `worker.js`, `worker.bundle.js` and `migrations.gen.js`; plus `admin.html`, `schema.sql`, `migrations/` and `wrangler.toml` |
 | `tools/` | Build, tests, audits, AI training (`trainer.mjs`, `ai-train.mjs`), frame data, music tools |
-| `docs/` | Design notes, deploy runbook, admin guide, frame data, AI benchmark, and a copy of this wiki in `docs/wiki/` |
+| `docs/` | By topic: `ai/` (AI specs, frame data, AI benchmark, trainer reports), `bugs/`, `design/`, `ops/` (deploy runbook, admin guide), `project/`, `history/` (changelog, version history), and a copy of this wiki in `docs/wiki/` |
 
 ## Building / 构建
 
@@ -68,7 +68,7 @@ Add the next numbered file in `cloudflare/migrations/`, update `cloudflare/schem
 - `WorldLine` Durable Objects run the open world lines.
 - Big changes can ship behind server feature flags (admin page → 功能开关), off, Dev-only or on for everyone.
 - CORS only allows the game's own page and local development.
-- The Worker is deployed by the maintainer. Deploy, backup and rollback steps are in `docs/deploy-runbook.md`; admin roles in `docs/admin.md`.
+- The Worker is deployed by the maintainer. Deploy, backup and rollback steps are in `docs/ops/deploy-runbook.md`; admin roles in `docs/ops/admin.md`.
 
 ## Determinism Rules / 确定性规则
 

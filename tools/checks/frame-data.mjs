@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // 帧数表：每位侠客的普攻（前摇 / 判定 / 后摇）和 Q / 右键 / 大招（第一下打中在第几帧、整招多少帧能动），1 帧 = 1/60 秒。
 // 普攻直接读招式表（src/data/01-moves.js 的 MOVES 按侠客 stat 和 moveMods 算好的 CHAR_MOVES）；技能和大招在无画面沙盒里放一遍量出来。
-//   node tools/checks/frame-data.mjs           重新量，写 docs/frame-data.json（基准）和 docs/frame-data.md（给人看）
-//   node tools/checks/frame-data.mjs --check   重新量，和 docs/frame-data.json 比，有一格不一样就列出来并退出码 1（改手感前后对比用）
+//   node tools/checks/frame-data.mjs           重新量，写 docs/ai/frame-data.json（基准）和 docs/ai/frame-data.md（给人看）
+//   node tools/checks/frame-data.mjs --check   重新量，和 docs/ai/frame-data.json 比，有一格不一样就列出来并退出码 1（改手感前后对比用）
 //
 // 文件结构：
 //   1. 在无画面沙盒里逐位侠客量帧数（普攻读表，技能 / 大招实际放一遍数帧）
@@ -13,7 +13,7 @@ import { makeEnv } from '../ai/ai-arena.mjs';
 
 import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const JSON_OUT = ROOT + 'docs/frame-data.json', MD_OUT = ROOT + 'docs/frame-data.md';
+const JSON_OUT = ROOT + 'docs/ai/frame-data.json', MD_OUT = ROOT + 'docs/ai/frame-data.md';
 const check = process.argv.includes('--check');
 const MOVE_KEYS = ['l1', 'l2', 'l3', 'l4', 'l5', 'hv', 'cs1', 'cs2', 'a1', 'a2', 'dl'];
 
@@ -70,7 +70,7 @@ md.push('');
 
 // ---------- 3. 对比基准或写回 ----------
 if (check) {
-  if (!existsSync(JSON_OUT)) { console.log('还没有 docs/frame-data.json，先不带 --check 跑一遍'); process.exit(1); }
+  if (!existsSync(JSON_OUT)) { console.log('还没有 docs/ai/frame-data.json，先不带 --check 跑一遍'); process.exit(1); }
   const base = JSON.parse(readFileSync(JSON_OUT, 'utf8')), diff = [];
   const walk = (a, b, p) => {
     if (a && b && typeof a === 'object' && typeof b === 'object') { for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) walk(a[k], b[k], p + '.' + k); }
@@ -80,10 +80,10 @@ if (check) {
   const now = new Map(data.map(r => [r.name, r])), was = new Set(base.map(r => r.name));
   for (const r of base) if (now.has(r.name)) walk(r, now.get(r.name), r.name); else diff.push(`${r.name}：基准里有，现在没有了`);
   for (const r of data) if (!was.has(r.name)) diff.push(`${r.name}：新侠客，基准里还没有（不带 --check 重新生成）`);
-  if (diff.length) { console.log(`帧数和 docs/frame-data.json 不一样（${diff.length} 处）：`); for (const d of diff.slice(0, 40)) console.log('  ' + d); process.exit(1); }
+  if (diff.length) { console.log(`帧数和 docs/ai/frame-data.json 不一样（${diff.length} 处）：`); for (const d of diff.slice(0, 40)) console.log('  ' + d); process.exit(1); }
   console.log(`帧数和基准一致（${data.length} 位侠客）`);
 } else {
   writeFileSync(JSON_OUT, JSON.stringify(data, null, 1) + '\n');
   writeFileSync(MD_OUT, md.join('\n'));
-  console.log(`已写 docs/frame-data.json 和 docs/frame-data.md（${data.length} 位侠客）`);
+  console.log(`已写 docs/ai/frame-data.json 和 docs/ai/frame-data.md（${data.length} 位侠客）`);
 }

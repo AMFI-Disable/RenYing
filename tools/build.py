@@ -199,7 +199,7 @@ def music_data():
 
 def ai_brain_data():
     """电脑 AI 的打击数据和训练出来的打法基因（tools/ai/ai-framedata.mjs、tools/ai/ai-train.mjs 生成）"""
-    path = os.path.join(ROOT, "models", "ai-brain.json")
+    path = os.path.join(SRC, "models", "ai-brain.json")
     if os.path.exists(path):
         return json.loads(read(path))
     return {}
