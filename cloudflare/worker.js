@@ -167,7 +167,22 @@ const CODE_VOID = { ZODIAC2026STAR: it => it && it.src === 'code' && !!C.ITEM[it
  * 迁移文件出现以前的库：表都在（0001 全是 IF NOT EXISTS），以前加过的列也在，所以 ALTER TABLE … ADD COLUMN 遇到已经有的列就跳过这一句。
  * 跑过的文件不要再改（改了会在日志里提示 sum 对不上），要改表就加一个新文件。 */
 let schemaReady = null;
-// 这一列已经有了吗（读不了表结构时返回 null，由调用的地方单独试一次 ALTER）
+// 这一列已经有了吗（读不了表结构时返回 null，由调用的地方单独试一次 ALTER）// ===========================================================================
+// 账号和会话：建表 / 迁移、密码、登录令牌、登录记录、人机验证、限速、处罚、流水、存档解析
+// ===========================================================================
+// 本文件和 cloudflare/worker/ 下其他编号文件按编号拼成 cloudflare/worker.js（共用一个作用域，函数互相直接调用）。
+//
+// 文件结构：
+//   1. 数据库迁移（migrate / ensureSchema：Worker 第一次收到请求时把没跑过的迁移按编号跑完）
+//   2. 密码：PBKDF2 加盐哈希，次数 PW_ITER；老格式的密码登录成功时顺手升级
+//   3. 会话：短效令牌 + 续期令牌、登录设备
+//   4. 登录记录、人机验证（Turnstile）、续期
+//   5. 随机数、常量时间比较、取 Bearer 令牌、认证、读请求体
+//   6. 限速（hit / peek）、处罚（警告 → 封 1 天 → 永久）
+//   7. 流水账、存档解析
+//
+// 找 bug 提示：登录问题先查管理后台的「登录记录」（authLog 写的 act 字段）；
+// 限速的键都写成 '前缀:ip' 或 '前缀:昵称'，在这里搜前缀就能找到是谁限的。
 async function hasColumn(env, table, col) {
   try {
     const rows = (await env.DB.prepare('SELECT name FROM pragma_table_info(?)').bind(table).all()).results || [];
@@ -491,7 +506,23 @@ function parseProfile(txt, name) {
 }
 function cleanSkins(a) {
   return Array.isArray(a) ? Array.from(new Set(a.filter(k => typeof k === 'string' && SKIN_RE.test(k)))).slice(0, 300) : [];
-}
+}// ===========================================================================
+// 武库经济和存档：墨锭账本、皮肤库存、在线经济数值、功能开关、补偿和兑换码、武库动作、进度计数、存档同步、玩家市场
+// ===========================================================================
+// 规则：所有涉及墨锭和饰品的计算都在服务器上做，客户端只报"想做什么"（handleEcon 的 act）。
+// 武库的数值和规则表来自 src/armory-core.js（打包时嵌进来，变量名 C），浏览器和服务器用同一份。
+//
+// 文件结构：
+//   1. 读写经济存档：loadEcon / overlay / applyDeltas（按条记账，带版本号防并发覆盖）
+//   2. 在线经济数值（cfgNow）、功能开关（FLAGS / flagOn）
+//   3. 全服补偿、兑换码
+//   4. 武库动作（handleEcon：开箱、买卖、熔铸……）
+//   5. 进度计数（胜负场、侠客碎片：pg*）、列传进度合并
+//   6. 存档同步（handleProfilePost / profileOut）
+//   7. 玩家市场（handleMarket）
+//
+// 找 bug 提示：墨锭对不上时查 log 表的流水（ink0 → ink1）；写库失败多半是版本号冲突（guard 的 WHERE ver = ?），
+// 客户端会重试。改这里的规则前先跑 node tools/tests/econ-test.mjs。
 function cleanEquip(e) {
   const o = {};
   if (e && typeof e === 'object' && !Array.isArray(e)) for (const [c, k] of Object.entries(e)) if (SKIN_RE.test(c) && typeof k === 'string' && (k === '' || SKIN_RE.test(k))) o[c] = k;
@@ -1102,7 +1133,17 @@ async function handleMarket(env, uid, k, now) {
 }
 
 /* ---------- 管理后台（/api/admin/*，要管理口令，见文件开头；网页版在这个 Worker 的 /admin） ---------- */
-// 口令对的话给出是谁：「名字:口令」里的名字；只写了一个口令就是 admin
+// 口令对的话给出是谁：「名字:口令」里的名字；只写了一个口令就是 admin// ===========================================================================
+// 管理后台的公共部分：管理员身份和角色、登录、加减墨锭和东西、找回饰品、经济数值的存取
+// ===========================================================================
+// 文件结构：
+//   1. 管理员身份：ADMIN_SECRET 里的口令（可写成「名字:口令」）或管理员账号登录换来的短效令牌
+//   2. 角色和权限：adminCan（view 谁都能看；其他按角色放行）
+//   3. 改号：adminAdjust（墨锭、武器箱、货郎、改名标签、发 / 收饰品）
+//   4. 找回饰品：lostItems / adminRestore
+//   5. 经济数值：cfgRow / cfgSave
+//
+// 找 bug 提示：所有管理操作都会带上管理员名字（who）和原因（why）写进流水，审计页按这两个字段查。
 const ADMIN_MIN = 16;   // 管理口令至少 16 位：设成 123456 这种短的不认，免得被人猜中
 function adminOf(env, request) {
   const tok = getBearerToken(request) || '', raw = String(env.ADMIN_SECRET || '').trim();
@@ -1355,9 +1396,28 @@ async function cfgSave(env, cfg, who, why, now) {   // 存成新的一版，这�
   return id;
 }
 const sameCfg = (a, b) => JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
+// ===========================================================================
+// 管理后台的接口：/api/admin/*（网页版 /admin 和 tools/admin/econ-admin.mjs 都走这里）
+// ===========================================================================
+// handleAdmin 是一长串「if (route === 'METHOD /api/admin/xxx')」，按功能分成下面几段：
+//   1. 登录和权限：口令试错限速、取管理员身份、按角色放行（ADMIN_NEED 在 30-admin-helpers.js）
+//   2. 管理员账号：whoami / refresh / logout / admins
+//   3. 查询：饰品目录、总览统计、游玩统计、错误记录（查看 / 删除 / 导出）
+//   4. 找号和单个号的详情：find / econ
+//   5. 管理操作审计：audit（分组、列表、重置原因、归档）
+//   6. 改号：adjust、找回饰品、封号 / 解封、批量、导出、重设密码
+//   7. 补偿和兑换码：gift / code
+//   8. 经济数值、登录记录、功能开关：cfg / authlog / flags
+//   9. 玩家维护：踢设备、清历史、撤挂单、导出存档
+//  10. 数据库维护和全服活动：maint / world/act
+//  最后：管理网页本身（adminPage，打包时把 cloudflare/admin.html 嵌进来）
+//
+// 找 bug 提示：每个接口都以 route 字符串开头，直接搜 'POST /api/admin/xxx' 就能找到；
+// 改了东西的接口都会写一条流水（log 表），出问题时先在管理后台的「操作记录」里看当时的参数。
 
 
 async function handleAdmin(env, request, path, now, ip) {
+  // ---------- 1. 登录和权限 ----------
   if (path === '/api/admin/login' && request.method === 'POST') return adminLogin(env, request, now, ip);
   if ((await peek(env, 'admf:' + ip, now)) >= 20) return error('管理口令试错太多次了，一小时后再试', 429);
   const me = await adminAuth(env, request, now);
@@ -1412,6 +1472,7 @@ async function handleAdmin(env, request, path, now, ip) {
   const need = ADMIN_NEED[route] || (post ? 'all' : 'view');
   if (!adminCan(role, need)) return error(`你的管理员角色（${ADMIN_ROLE_NAME[role]}）不能做这件事，要「${ADMIN_ROLE_NAME[need]}」`, 403, { role });
 
+  // ---------- 2. 管理员账号 ----------
   if (route === 'GET /api/admin/whoami') return json({ ok: true, who, role, now });
   if (route === 'POST /api/admin/refresh') {
     if (me.tok && me.tok.startsWith('as_')) {
@@ -1449,6 +1510,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await logRow(env, '*', now, 'adm_acct', 1, null, null, JSON.stringify({ by: who, why, name, role: r, from: old ? old.role : undefined, disabled: off || undefined, pw: pw ? 1 : undefined, created: old ? undefined : 1 }));
     return json({ ok: true, name, role: r, disabled: off, created: !old });
   }
+  // ---------- 3. 查询：目录、统计、错误记录 ----------
   if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、每档品质的名字和颜色、每件饰品在哪个箱子哪一档、能改的经济数值
     return json({ ok: true, tiers: C.TIERS.map(t => ({ id: t, n: C.TIER[t].n, c: C.TIER[t].c })),
       cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem })),
@@ -1653,6 +1715,7 @@ async function handleAdmin(env, request, path, now, ip) {
       },
     });
   }
+  // ---------- 4. 找号和单个号的详情 ----------
   if (route === 'GET /api/admin/find') {   // 按昵称或账号找号；支持子串、账号ID、状态筛选、多维排序与分页
     const key = q('q').trim(), escKey = key.replace(/[\\%_]/g, m => '\\' + m), del = q('del') === '1', flt = q('filter');
     const sort = q('sort') || '', dir = q('dir') === 'asc' ? 'ASC' : 'DESC';
@@ -1711,6 +1774,7 @@ async function handleAdmin(env, request, path, now, ip) {
       legacySessions: (legacySess && legacySess.n) || 0,
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
+  // ---------- 5. 管理操作审计 ----------
   const auditActions = "'admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel', 'audit_reason_reset'";
   // Future administrator actions are also shown when their audit detail identifies the actor.
   const auditWhere = `(l.act IN (${auditActions}) OR CASE WHEN json_valid(l.detail) THEN json_type(l.detail, '$.by') = 'text' ELSE 0 END)`;
@@ -1840,6 +1904,7 @@ async function handleAdmin(env, request, path, now, ip) {
     if (stmts.length) await env.DB.batch(stmts);
     return json({ ok: true, compacted: totalCompacted, digests: digestCount, days: digestCount });
   }
+  // ---------- 6. 改号：加减、找回、封号、批量、导出、重设密码 ----------
   if (route === 'POST /api/admin/adjust') {
     const u = await findUser(String(body.uid || '').trim());
     if (!u) return error('没有这个账号', 404);
@@ -1956,6 +2021,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await authLog(env, request, 'pw_admin', { uid: u.id, name: u.username, note: who });
     return json({ ok: true, uid: u.id, username: u.username, created });
   }
+  // ---------- 7. 补偿和兑换码 ----------
   if (route === 'GET /api/admin/gifts') {
     const rows = await env.DB.prepare('SELECT g.id, g.uid, u.username, g.ink, g.items_json, g.note, g.by, g.at, g.until, g.born, g.off, (SELECT COUNT(*) FROM gift_got x WHERE x.gid = g.id) AS got FROM gift g LEFT JOIN users u ON u.id = g.uid ORDER BY g.at DESC LIMIT 50').all();
     return json({ ok: true, now, gifts: (rows.results || []).map(r => ({ ...r, items: giftItems(r.items_json), items_json: undefined })) });
@@ -2013,6 +2079,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await logRow(env, '*', now, 'code_off', 1, null, null, JSON.stringify({ by: who, why, code: c.code }));
     return json({ ok: true });
   }
+  // ---------- 8. 经济数值、登录记录、功能开关 ----------
   if (route === 'GET /api/admin/cfg') {   // 现在的经济数值、每一项的范围和说明、最近改过的 30 版
     const cur = await cfgRow(env), hist = await env.DB.prepare('SELECT id, json, by, note, at FROM cfg ORDER BY id DESC LIMIT 30').all();
     return json({ ok: true, id: cur ? cur.id : 0, cfg: cur ? cur.cfg : {}, info: C.CFG_INFO, hist: (hist.results || []).map(r => ({ id: r.id, by: r.by, note: r.note, at: r.at, cfg: parseObj(r.json) || {} })) });
@@ -2066,6 +2133,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await logRow(env, '*', now, 'cfg', 1, null, null, JSON.stringify({ by: who, why, id, undo: to }));
     return json({ ok: true, id, cfg: c.cfg });
   }
+  // ---------- 9. 玩家维护 ----------
   if (route === 'POST /api/admin/player/devices/drop') {   // 强制退出玩家的指定设备或全部设备
     const w = needWhy(); if (w) return w;
     const u = await findUser(String(body.uid || '').trim());
@@ -2153,6 +2221,7 @@ async function handleAdmin(env, request, path, now, ip) {
       },
     });
   }
+  // ---------- 10. 数据库维护和全服活动 ----------
   if (route === 'GET /api/admin/maint') {   // 数据库各表行数统计与天魔 / 江湖长卷实时监控
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
     const tableNames = ['users', 'sessions', 'devices', 'refresh_used', 'econ', 'econ_nonce', 'econ_log', 'sanctions', 'rate', 'mkt', 'gift', 'gift_got', 'code', 'code_got', 'cfg', 'presence', 'flags', 'auth_log', 'admins', 'admin_sessions', 'errs', 'gboss', 'gboss_hit', 'gboss_try', 'saga_mark', 'chron', 'chron_done', 'chron_part', 'chron_claim', 'chron_rep', 'play_visitors', 'play_days', 'play_counts'];
@@ -2240,14 +2309,21 @@ async function handleAdmin(env, request, path, now, ip) {
 
 // 管理网页：python3 tools/build.py 打包时把 cloudflare/admin.html 和它那段脚本的 sha256 放进来（直接跑 worker.js 时是空的）。
 // 浏览器只许跑 sha256 对得上的那一段脚本：页面里就算混进了别的脚本、onclick 这种，也跑不起来
+// ---------- 管理网页：内容和脚本哈希由 tools/build.py 打包时填进来（下面这一行的写法不能改，打包脚本按原样查找） ----------
 const ADMIN_PAGE = { html: '', sha: '' };
 function adminPage() {
   const html = ADMIN_PAGE.html || '<!doctype html><meta charset="utf-8"><title>刃影管理后台</title><p>管理网页在打包好的 cloudflare/worker.bundle.js 里，先运行 python3 tools/build.py。</p>';
   const script = ADMIN_PAGE.sha ? `'sha256-${ADMIN_PAGE.sha}'` : "'none'";
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
     'Content-Security-Policy': `default-src 'none'; script-src ${script}; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'` } });
-}
-
+}// ===========================================================================
+// 维护和统计：定期清理旧数据、错误记录、在线人数、匿名游玩统计
+// ===========================================================================
+// 文件结构：
+//   1. cleanup：删过期的错误、限速、会话等记录（每张表留多久写在每一行后面）
+//   2. 错误记录：网页报上来的错误先去掉个人信息（errScrub），按签名合并计数
+//   3. 在线人数：每个访客按 IP 的哈希记一次心跳
+//   4. 匿名游玩统计：不存名字、账号、IP，只记每天人数、留存、各模式开局数
 async function cleanup(env, now) {
   await env.DB.batch([
     env.DB.prepare('DELETE FROM errs WHERE last_at < ?').bind(now - 30 * DAY_MS),                              // 错误记录留 30 天
@@ -2393,7 +2469,17 @@ async function playStatsReport(env, now, days) {
  * 出战先领票（gboss_try），交伤害时把这张票改成“交过了”、扣天魔的血、记个人伤害放在同一批写入里：同一张票重交、
  * 网络重试、刷新后补交都只算一次；两个人同时打出最后一下，只有一个扣得动（hp > 0 才扣），另一个记 0。
  * 伤害上限：一张票最多 GB_TRY_MAX，而且不超过 (出战到现在的秒数 - 3) × GB_DPS。票一小时内不交就作废。
- * 一代天魔活 GB_LIFE，到时没打死就遁走；结束后按伤害发奖励（写进 gift 表，玩家下次动武库自动领），再出下一代。 */
+ * 一代天魔活 GB_LIFE，到时没打死就遁走；结束后按伤害发奖励（写进 gift 表，玩家下次动武库自动领），再出下一代。 */// ===========================================================================
+// 全服玩法：天魔讨伐、排行榜、侠客列传的江湖足迹、全服肉鸽 · 江湖长卷、开放世界的公共小工具
+// ===========================================================================
+// 文件结构：
+//   1. 天魔讨伐（gb*）：全服一起打一只天魔，按伤害结算
+//   2. 排行榜（leaderboard）
+//   3. 江湖足迹（sagaFoot / sagaMarkPost）
+//   4. 江湖长卷（chron*）：全服共享剧情进度，存在 D1 的 chron 表
+//   5. 开放世界用到的小工具（rg* / cq* / wl*），给 70-world-simulation.js 用
+//
+// 找 bug 提示：天魔的血量和刷新周期是文件开头的 GB_* 常量；长卷的节点表来自 src/data/13-chron.js。
 const GB_TRY_MAX = 9000, GB_DPS = 110, GB_LIFE = 3 * DAY_MS, GB_TICKET = 3600e3, GB_HP0 = 30000;
 const GB_AFFIX = ['bx_enrage', 'bx_thunder', 'bx_regen', 'bx_thorns', 'bx_armor', 'bx_frost', 'bx_venom', 'bx_haste'];
 const gbLatest = env => env.DB.prepare('SELECT * FROM gboss ORDER BY gen DESC LIMIT 1').first();
@@ -2703,8 +2789,15 @@ const ZOD_KEYS = () => Object.keys(C.ITEM).filter(k => C.ITEM[k].col === 'c8');
 const wlNum = (v, lo, hi, d = 0) => { v = +v; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
 const wlStr = v => (typeof v === 'string' && /^[a-z0-9_]{0,16}$/i.test(v) ? v : '');
 const wlName = (v, id) => (String(v || '').match(/[\w\u4e00-\u9fff]/g) || []).join('').slice(0, 12) || `游侠${id}`;   // 没登录的显示成「游侠 + 编号」，好分清
-const r1 = v => Math.round(v * 10) / 10;
-
+const r1 = v => Math.round(v * 10) / 10;// ===========================================================================
+// 江湖共斗 · 开放世界：一条线的模拟（WorldSim）和它的 Durable Object 外壳（WorldLine）
+// ===========================================================================
+// WorldSim 只管逻辑，不碰网络和数据库，可以在测试里直接驱动（tools/tests/world-test.mjs）：
+//   玩家进出和上报、妖物刷新 / 行动 / 攻击、妖王、伤害封顶、全服肉鸽的投票和车轮战、进度存档。
+// WorldLine 是 Cloudflare Durable Object：管 WebSocket 连接、认证、定时 tick，把 WorldSim 的事件发给附近的玩家，
+// 打完结算时写 D1。
+//
+// 找 bug 提示：服务器上的时间是 WorldSim.t（秒），只在 step(dt) 里往前走；复现时在测试里固定 rnd，手动 step。
 class WorldSim {
   constructor(rnd = Math.random) {
     this.rnd = rnd; this.t = 0; this.players = new Map(); this.mons = []; this.nid = 1; this.mid = 1;
@@ -2713,6 +2806,7 @@ class WorldSim {
     this.cq = { v: cqVec(), by: {} }; this.chron = null;   // 江湖长卷：还没报上去的出力；全服进度（分线从 D1 读来的）
   }
   get count() { return this.players.size; }
+  // ---------- 玩家：进出、认证、上报位置和状态、打妖物 ----------
   join(meta) {
     if (this.line > 0 && this.players.size >= WL.CAP) return 0;
     const id = this.nid++;
@@ -2770,6 +2864,7 @@ class WorldSim {
       if (!R.vote && !R.key && R.got < R.need) { R.got++; if (R.got >= R.need) this.jieDone(); }
     }
   }
+  // ---------- 妖物：按区域刷新、妖王、找目标、每步行动和出招 ----------
   zoneOf(x) { const i = WL.ZONES.findIndex(z => x < z.b); return i < 0 ? WL.ZONES.length - 1 : i; }
   spawn() {
     const want = Math.min(70, 10 + 3 * this.players.size);
@@ -2877,6 +2972,7 @@ class WorldSim {
   }
   attack(m, o) { this.events.push({ t: 'a', m: m.id, x: r1(m.x), y: r1(m.y), f: m.f, dk: m.dk, ...o }); }
   // 发给一位侠客的一帧：附近的侠客、附近的妖物、妖王（全线都看得到血条）
+  // ---------- 发给某个玩家的一帧：只带他附近的玩家和妖物 ----------
   frameFor(id) {
     const me = this.players.get(id); if (!me) return null;
     const ps = [];
@@ -2894,6 +2990,7 @@ class WorldSim {
     };
   }
   /* ---------- 全服肉鸽的共享进程 ---------- */
+  // ---------- 全服肉鸽：人数、投票选秘卷、天道车轮战（key*）、结算、进度存档 ----------
   real() { return new Set([...this.players.values()].map(p => p.uid || 'g' + p.id)).size; }
   needOf() { return Math.min(RG.NEED_MAX, RG.NEED0 + RG.NEED_PER * this.players.size); }
   rgView(id) {
@@ -3029,6 +3126,7 @@ class WorldSim {
   }
   /* ---------- 江湖长卷：这条线的出力 ---------- */
   // 记一笔出力：全线 +1，在场出过力的每个云端账号各 +1（同一个号只算一次；游客推进度，不领奖）
+  // ---------- 江湖长卷的贡献队列：攒下来的击杀记录，由 WorldLine 定时写进 D1 ----------
   cqAdd(key, uids) {
     const i = CQ_KEYS.indexOf(key); if (i < 0) return;
     this.cq.v[i]++;
@@ -3055,10 +3153,14 @@ class WorldSim {
     return { i: s.node, g: Math.min(s.need, s.got + this.cqMine(s)), nd: s.need, v: s.v };
   }
   // 这一拍的事件谁该收到：全线播报的人人都收，其余只发给附近的侠客
+  // ---------- 事件：这一步产生的广播，wants 决定某个玩家要不要收到 ----------
   takeEvents() { const e = this.events; this.events = []; return e; }
   wants(id, ev) { const me = this.players.get(id); return !!me && (ev.all || ev.x === undefined || Math.abs(ev.x - me.x) <= WL.AOI + 300); }
 }
 
+// ===========================================================================
+// WorldLine：Durable Object 外壳（WebSocket、认证、定时 tick、写 D1）
+// ===========================================================================
 export class WorldLine {
   constructor(ctx, env) {
     this.ctx = ctx; this.env = env; this.sim = new WorldSim(); this.timer = 0; this.line = 0;
@@ -3198,8 +3300,14 @@ globalThis.RenyingWorldSim = { WorldSim, WL, RG, rgStory };
 
 export default {
   fetch: withCors,
-};
-
+};// ===========================================================================
+// 请求入口：按路径分发到各个处理函数
+// ===========================================================================
+// route() 里按顺序判断路径：健康检查和管理网页 → ICE → 注册 / 登录 → 存档 → 武库 / 市场 → 反作弊 →
+// 管理接口 → 错误上报 → 在线人数 / 游玩统计 → 天魔 → 列传 → 长卷 → 功能开关 → 排行榜 → 退出 / 设备 / 续期。
+// 每个分支前面的注释写了要不要登录和限速规则。
+//
+// 找 bug 提示：接口报 500 时，回包里有请求编号（rid），去管理后台的错误记录里按编号搜。
 async function route(request, env, ctx, rid = reqId()) {
     if (!env.DB) {
       return error('D1 Database binding "DB" is missing in Worker configuration.', 500);

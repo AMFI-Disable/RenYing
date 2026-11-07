@@ -1,6 +1,25 @@
+// ===========================================================================
+// 管理后台的接口：/api/admin/*（网页版 /admin 和 tools/admin/econ-admin.mjs 都走这里）
+// ===========================================================================
+// handleAdmin 是一长串「if (route === 'METHOD /api/admin/xxx')」，按功能分成下面几段：
+//   1. 登录和权限：口令试错限速、取管理员身份、按角色放行（ADMIN_NEED 在 30-admin-helpers.js）
+//   2. 管理员账号：whoami / refresh / logout / admins
+//   3. 查询：饰品目录、总览统计、游玩统计、错误记录（查看 / 删除 / 导出）
+//   4. 找号和单个号的详情：find / econ
+//   5. 管理操作审计：audit（分组、列表、重置原因、归档）
+//   6. 改号：adjust、找回饰品、封号 / 解封、批量、导出、重设密码
+//   7. 补偿和兑换码：gift / code
+//   8. 经济数值、登录记录、功能开关：cfg / authlog / flags
+//   9. 玩家维护：踢设备、清历史、撤挂单、导出存档
+//  10. 数据库维护和全服活动：maint / world/act
+//  最后：管理网页本身（adminPage，打包时把 cloudflare/admin.html 嵌进来）
+//
+// 找 bug 提示：每个接口都以 route 字符串开头，直接搜 'POST /api/admin/xxx' 就能找到；
+// 改了东西的接口都会写一条流水（log 表），出问题时先在管理后台的「操作记录」里看当时的参数。
 
 
 async function handleAdmin(env, request, path, now, ip) {
+  // ---------- 1. 登录和权限 ----------
   if (path === '/api/admin/login' && request.method === 'POST') return adminLogin(env, request, now, ip);
   if ((await peek(env, 'admf:' + ip, now)) >= 20) return error('管理口令试错太多次了，一小时后再试', 429);
   const me = await adminAuth(env, request, now);
@@ -55,6 +74,7 @@ async function handleAdmin(env, request, path, now, ip) {
   const need = ADMIN_NEED[route] || (post ? 'all' : 'view');
   if (!adminCan(role, need)) return error(`你的管理员角色（${ADMIN_ROLE_NAME[role]}）不能做这件事，要「${ADMIN_ROLE_NAME[need]}」`, 403, { role });
 
+  // ---------- 2. 管理员账号 ----------
   if (route === 'GET /api/admin/whoami') return json({ ok: true, who, role, now });
   if (route === 'POST /api/admin/refresh') {
     if (me.tok && me.tok.startsWith('as_')) {
@@ -92,6 +112,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await logRow(env, '*', now, 'adm_acct', 1, null, null, JSON.stringify({ by: who, why, name, role: r, from: old ? old.role : undefined, disabled: off || undefined, pw: pw ? 1 : undefined, created: old ? undefined : 1 }));
     return json({ ok: true, name, role: r, disabled: off, created: !old });
   }
+  // ---------- 3. 查询：目录、统计、错误记录 ----------
   if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、每档品质的名字和颜色、每件饰品在哪个箱子哪一档、能改的经济数值
     return json({ ok: true, tiers: C.TIERS.map(t => ({ id: t, n: C.TIER[t].n, c: C.TIER[t].c })),
       cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem })),
@@ -296,6 +317,7 @@ async function handleAdmin(env, request, path, now, ip) {
       },
     });
   }
+  // ---------- 4. 找号和单个号的详情 ----------
   if (route === 'GET /api/admin/find') {   // 按昵称或账号找号；支持子串、账号ID、状态筛选、多维排序与分页
     const key = q('q').trim(), escKey = key.replace(/[\\%_]/g, m => '\\' + m), del = q('del') === '1', flt = q('filter');
     const sort = q('sort') || '', dir = q('dir') === 'asc' ? 'ASC' : 'DESC';
@@ -354,6 +376,7 @@ async function handleAdmin(env, request, path, now, ip) {
       legacySessions: (legacySess && legacySess.n) || 0,
       sanction: await sanctionOf(env, u.id), log: log.results || [], mkt: mk.results || [] });
   }
+  // ---------- 5. 管理操作审计 ----------
   const auditActions = "'admin', 'restore', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg', 'flag', 'adm_login', 'adm_acct', 'acct_del', 'acct_restore', 'acct_export', 'err_export', 'err_clean', 'adm_digest', 'maint_prune', 'world_act', 'dev_drop', 'hist_clear', 'mkt_cancel', 'audit_reason_reset'";
   // Future administrator actions are also shown when their audit detail identifies the actor.
   const auditWhere = `(l.act IN (${auditActions}) OR CASE WHEN json_valid(l.detail) THEN json_type(l.detail, '$.by') = 'text' ELSE 0 END)`;
@@ -483,6 +506,7 @@ async function handleAdmin(env, request, path, now, ip) {
     if (stmts.length) await env.DB.batch(stmts);
     return json({ ok: true, compacted: totalCompacted, digests: digestCount, days: digestCount });
   }
+  // ---------- 6. 改号：加减、找回、封号、批量、导出、重设密码 ----------
   if (route === 'POST /api/admin/adjust') {
     const u = await findUser(String(body.uid || '').trim());
     if (!u) return error('没有这个账号', 404);
@@ -599,6 +623,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await authLog(env, request, 'pw_admin', { uid: u.id, name: u.username, note: who });
     return json({ ok: true, uid: u.id, username: u.username, created });
   }
+  // ---------- 7. 补偿和兑换码 ----------
   if (route === 'GET /api/admin/gifts') {
     const rows = await env.DB.prepare('SELECT g.id, g.uid, u.username, g.ink, g.items_json, g.note, g.by, g.at, g.until, g.born, g.off, (SELECT COUNT(*) FROM gift_got x WHERE x.gid = g.id) AS got FROM gift g LEFT JOIN users u ON u.id = g.uid ORDER BY g.at DESC LIMIT 50').all();
     return json({ ok: true, now, gifts: (rows.results || []).map(r => ({ ...r, items: giftItems(r.items_json), items_json: undefined })) });
@@ -656,6 +681,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await logRow(env, '*', now, 'code_off', 1, null, null, JSON.stringify({ by: who, why, code: c.code }));
     return json({ ok: true });
   }
+  // ---------- 8. 经济数值、登录记录、功能开关 ----------
   if (route === 'GET /api/admin/cfg') {   // 现在的经济数值、每一项的范围和说明、最近改过的 30 版
     const cur = await cfgRow(env), hist = await env.DB.prepare('SELECT id, json, by, note, at FROM cfg ORDER BY id DESC LIMIT 30').all();
     return json({ ok: true, id: cur ? cur.id : 0, cfg: cur ? cur.cfg : {}, info: C.CFG_INFO, hist: (hist.results || []).map(r => ({ id: r.id, by: r.by, note: r.note, at: r.at, cfg: parseObj(r.json) || {} })) });
@@ -709,6 +735,7 @@ async function handleAdmin(env, request, path, now, ip) {
     await logRow(env, '*', now, 'cfg', 1, null, null, JSON.stringify({ by: who, why, id, undo: to }));
     return json({ ok: true, id, cfg: c.cfg });
   }
+  // ---------- 9. 玩家维护 ----------
   if (route === 'POST /api/admin/player/devices/drop') {   // 强制退出玩家的指定设备或全部设备
     const w = needWhy(); if (w) return w;
     const u = await findUser(String(body.uid || '').trim());
@@ -796,6 +823,7 @@ async function handleAdmin(env, request, path, now, ip) {
       },
     });
   }
+  // ---------- 10. 数据库维护和全服活动 ----------
   if (route === 'GET /api/admin/maint') {   // 数据库各表行数统计与天魔 / 江湖长卷实时监控
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
     const tableNames = ['users', 'sessions', 'devices', 'refresh_used', 'econ', 'econ_nonce', 'econ_log', 'sanctions', 'rate', 'mkt', 'gift', 'gift_got', 'code', 'code_got', 'cfg', 'presence', 'flags', 'auth_log', 'admins', 'admin_sessions', 'errs', 'gboss', 'gboss_hit', 'gboss_try', 'saga_mark', 'chron', 'chron_done', 'chron_part', 'chron_claim', 'chron_rep', 'play_visitors', 'play_days', 'play_counts'];
@@ -883,6 +911,7 @@ async function handleAdmin(env, request, path, now, ip) {
 
 // 管理网页：python3 tools/build.py 打包时把 cloudflare/admin.html 和它那段脚本的 sha256 放进来（直接跑 worker.js 时是空的）。
 // 浏览器只许跑 sha256 对得上的那一段脚本：页面里就算混进了别的脚本、onclick 这种，也跑不起来
+// ---------- 管理网页：内容和脚本哈希由 tools/build.py 打包时填进来（下面这一行的写法不能改，打包脚本按原样查找） ----------
 const ADMIN_PAGE = { html: '', sha: '' };
 function adminPage() {
   const html = ADMIN_PAGE.html || '<!doctype html><meta charset="utf-8"><title>刃影管理后台</title><p>管理网页在打包好的 cloudflare/worker.bundle.js 里，先运行 python3 tools/build.py。</p>';

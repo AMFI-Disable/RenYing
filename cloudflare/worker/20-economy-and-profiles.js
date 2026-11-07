@@ -1,4 +1,20 @@
-
+// ===========================================================================
+// 武库经济和存档：墨锭账本、皮肤库存、在线经济数值、功能开关、补偿和兑换码、武库动作、进度计数、存档同步、玩家市场
+// ===========================================================================
+// 规则：所有涉及墨锭和饰品的计算都在服务器上做，客户端只报"想做什么"（handleEcon 的 act）。
+// 武库的数值和规则表来自 src/armory-core.js（打包时嵌进来，变量名 C），浏览器和服务器用同一份。
+//
+// 文件结构：
+//   1. 读写经济存档：loadEcon / overlay / applyDeltas（按条记账，带版本号防并发覆盖）
+//   2. 在线经济数值（cfgNow）、功能开关（FLAGS / flagOn）
+//   3. 全服补偿、兑换码
+//   4. 武库动作（handleEcon：开箱、买卖、熔铸……）
+//   5. 进度计数（胜负场、侠客碎片：pg*）、列传进度合并
+//   6. 存档同步（handleProfilePost / profileOut）
+//   7. 玩家市场（handleMarket）
+//
+// 找 bug 提示：墨锭对不上时查 log 表的流水（ink0 → ink1）；写库失败多半是版本号冲突（guard 的 WHERE ver = ?），
+// 客户端会重试。改这里的规则前先跑 node tools/tests/econ-test.mjs。
 function cleanEquip(e) {
   const o = {};
   if (e && typeof e === 'object' && !Array.isArray(e)) for (const [c, k] of Object.entries(e)) if (SKIN_RE.test(c) && typeof k === 'string' && (k === '' || SKIN_RE.test(k))) o[c] = k;

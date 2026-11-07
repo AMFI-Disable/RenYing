@@ -1,4 +1,14 @@
-
+// ===========================================================================
+// 全服玩法：天魔讨伐、排行榜、侠客列传的江湖足迹、全服肉鸽 · 江湖长卷、开放世界的公共小工具
+// ===========================================================================
+// 文件结构：
+//   1. 天魔讨伐（gb*）：全服一起打一只天魔，按伤害结算
+//   2. 排行榜（leaderboard）
+//   3. 江湖足迹（sagaFoot / sagaMarkPost）
+//   4. 江湖长卷（chron*）：全服共享剧情进度，存在 D1 的 chron 表
+//   5. 开放世界用到的小工具（rg* / cq* / wl*），给 70-world-simulation.js 用
+//
+// 找 bug 提示：天魔的血量和刷新周期是文件开头的 GB_* 常量；长卷的节点表来自 src/data/13-chron.js。
 const GB_TRY_MAX = 9000, GB_DPS = 110, GB_LIFE = 3 * DAY_MS, GB_TICKET = 3600e3, GB_HP0 = 30000;
 const GB_AFFIX = ['bx_enrage', 'bx_thunder', 'bx_regen', 'bx_thorns', 'bx_armor', 'bx_frost', 'bx_venom', 'bx_haste'];
 const gbLatest = env => env.DB.prepare('SELECT * FROM gboss ORDER BY gen DESC LIMIT 1').first();

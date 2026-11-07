@@ -1,5 +1,12 @@
-
-
+// ===========================================================================
+// 江湖共斗 · 开放世界：一条线的模拟（WorldSim）和它的 Durable Object 外壳（WorldLine）
+// ===========================================================================
+// WorldSim 只管逻辑，不碰网络和数据库，可以在测试里直接驱动（tools/tests/world-test.mjs）：
+//   玩家进出和上报、妖物刷新 / 行动 / 攻击、妖王、伤害封顶、全服肉鸽的投票和车轮战、进度存档。
+// WorldLine 是 Cloudflare Durable Object：管 WebSocket 连接、认证、定时 tick，把 WorldSim 的事件发给附近的玩家，
+// 打完结算时写 D1。
+//
+// 找 bug 提示：服务器上的时间是 WorldSim.t（秒），只在 step(dt) 里往前走；复现时在测试里固定 rnd，手动 step。
 class WorldSim {
   constructor(rnd = Math.random) {
     this.rnd = rnd; this.t = 0; this.players = new Map(); this.mons = []; this.nid = 1; this.mid = 1;
@@ -8,6 +15,7 @@ class WorldSim {
     this.cq = { v: cqVec(), by: {} }; this.chron = null;   // 江湖长卷：还没报上去的出力；全服进度（分线从 D1 读来的）
   }
   get count() { return this.players.size; }
+  // ---------- 玩家：进出、认证、上报位置和状态、打妖物 ----------
   join(meta) {
     if (this.line > 0 && this.players.size >= WL.CAP) return 0;
     const id = this.nid++;
@@ -65,6 +73,7 @@ class WorldSim {
       if (!R.vote && !R.key && R.got < R.need) { R.got++; if (R.got >= R.need) this.jieDone(); }
     }
   }
+  // ---------- 妖物：按区域刷新、妖王、找目标、每步行动和出招 ----------
   zoneOf(x) { const i = WL.ZONES.findIndex(z => x < z.b); return i < 0 ? WL.ZONES.length - 1 : i; }
   spawn() {
     const want = Math.min(70, 10 + 3 * this.players.size);
@@ -172,6 +181,7 @@ class WorldSim {
   }
   attack(m, o) { this.events.push({ t: 'a', m: m.id, x: r1(m.x), y: r1(m.y), f: m.f, dk: m.dk, ...o }); }
   // 发给一位侠客的一帧：附近的侠客、附近的妖物、妖王（全线都看得到血条）
+  // ---------- 发给某个玩家的一帧：只带他附近的玩家和妖物 ----------
   frameFor(id) {
     const me = this.players.get(id); if (!me) return null;
     const ps = [];
@@ -189,6 +199,7 @@ class WorldSim {
     };
   }
   /* ---------- 全服肉鸽的共享进程 ---------- */
+  // ---------- 全服肉鸽：人数、投票选秘卷、天道车轮战（key*）、结算、进度存档 ----------
   real() { return new Set([...this.players.values()].map(p => p.uid || 'g' + p.id)).size; }
   needOf() { return Math.min(RG.NEED_MAX, RG.NEED0 + RG.NEED_PER * this.players.size); }
   rgView(id) {
@@ -324,6 +335,7 @@ class WorldSim {
   }
   /* ---------- 江湖长卷：这条线的出力 ---------- */
   // 记一笔出力：全线 +1，在场出过力的每个云端账号各 +1（同一个号只算一次；游客推进度，不领奖）
+  // ---------- 江湖长卷的贡献队列：攒下来的击杀记录，由 WorldLine 定时写进 D1 ----------
   cqAdd(key, uids) {
     const i = CQ_KEYS.indexOf(key); if (i < 0) return;
     this.cq.v[i]++;
@@ -350,10 +362,14 @@ class WorldSim {
     return { i: s.node, g: Math.min(s.need, s.got + this.cqMine(s)), nd: s.need, v: s.v };
   }
   // 这一拍的事件谁该收到：全线播报的人人都收，其余只发给附近的侠客
+  // ---------- 事件：这一步产生的广播，wants 决定某个玩家要不要收到 ----------
   takeEvents() { const e = this.events; this.events = []; return e; }
   wants(id, ev) { const me = this.players.get(id); return !!me && (ev.all || ev.x === undefined || Math.abs(ev.x - me.x) <= WL.AOI + 300); }
 }
 
+// ===========================================================================
+// WorldLine：Durable Object 外壳（WebSocket、认证、定时 tick、写 D1）
+// ===========================================================================
 export class WorldLine {
   constructor(ctx, env) {
     this.ctx = ctx; this.env = env; this.sim = new WorldSim(); this.timer = 0; this.line = 0;
