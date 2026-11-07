@@ -3,7 +3,7 @@
 const ULTS = {
   crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, dashSpd: 1750, dashT: 0.28, desc: '纳刀起手，一记居合突刺撕开战局（突进距离提升至 1.25 倍）；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
   shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, dashSpd: 1750, dashT: 0.28, airTrack: true, desc: '结印潜入暗影，贴地瞬步欺身而入（突进距离提升至 1.25 倍；若对手身处空中且在突进射程内，化为暗影腾空追猎）；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
-  avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（1.3 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
+  avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（0.9 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
     begin(f, foe) {
       f.sp = 'leap'; f.vy = -1050; f.y = -1;
       const c = f.ctrl, dir = (c && c.held && c.held.right ? 1 : 0) - (c && c.held && c.held.left ? 1 : 0);
@@ -49,8 +49,8 @@ const ULTS = {
               // 打断绝技：判断要在下面把对手改成 hitstun 之前取，不然 foe.state === 'special' 永远不成立
               const wasSpecial = foe.state === 'special';
               const isLeiMingUlt = wasSpecial && foe.ch && foe.ch.id === 'leiming';
-              applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 1.3, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
-              foe.state = 'hitstun'; foe.stun = 1.3; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
+              applyHit(f, foe, { dmg: 185, kb: [dir * 140, 0], stun: 0.9, hs: 0.25, root: true, unblockable: true, ult: true, noScale: true, dir, big: true }, [foe.x, foe.y - 40]);
+              foe.state = 'hitstun'; foe.stun = 0.9; foe.rooted = true; foe.vx = dir * 80; foe.vy = 0; foe.y = 0;
               // 被打断的绝技要收干净：无敌只有 endSpecial 会清，而它已经不会再跑了。
               // 不清的话被打断的人会带着 99 秒无敌打完这一回合（山崩能打穿绝技就是这个口子）
               if (wasSpecial) { if (!isLeiMingUlt) foe.sp = null; if (foe.invul > 1) foe.invul = 0; }   // 只收掉绝技带的长无敌，短无敌（起身、受身）别动
@@ -180,12 +180,12 @@ const ULTS = {
       }
       if (f.t >= 1.1) endSpecial(f);
     } },
-  moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 100 点生命；月芒震退贴身之敌（75 伤害）。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
+  moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 135 点生命；月芒震退贴身之敌（75 伤害）。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
     begin(f) {
-      f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + 100); f.hitDone = false;
+      f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + Math.round(100 * HERO_HP_SCALE)); f.hitDone = false;
       f.skillCD = 0; f.skill2CD = 0; f.armorT = 4.0; f.armorHits = 3;
       ring(f.x, f.y - 60, 260, f.look.slash, 0.5); ring(f.x, f.y - 60, 180, '255,255,255', 0.4);
-      addP({ type: 'text', text: '+100', x: f.x, y: f.y - 130, life: 0.9, max: 0.9, rgb: '180,255,200' });
+      addP({ type: 'text', text: `+${Math.round(100 * HERO_HP_SCALE)}`, x: f.x, y: f.y - 130, life: 0.9, max: 0.9, rgb: '180,255,200' });
       addP({ type: 'text', text: '🌙 月魄霸体 · 架招重置', x: f.x, y: f.y - 150, life: 1.1, max: 1.1, rgb: '215,195,255' });
       SFX.chargeFull();
     },
@@ -225,12 +225,12 @@ const ULTS = {
       if (f.t >= 1.95) { if (foe.hp > 0) foe.veilT = PENGLAI_T; endSpecial(f); }
     } },
   eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 12, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
-  skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 1.2 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
+  skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 0.9 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
     begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitDone = false; SFX.superOn(); },
     update(f, foe) {
       if (f.spN === 0 && f.t >= 0.15) {
         f.spN = 1; f.spPose = 'gc_wind'; SFX.swing();
-        spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, track: 6, trackEnd: 0.08, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 1.2, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
+        spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, track: 6, trackEnd: 0.08, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 0.9, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
       }
       if (f.spN === 1 && f.t >= 0.95) {
         f.spN = 2;

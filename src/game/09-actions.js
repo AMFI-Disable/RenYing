@@ -533,11 +533,11 @@ function updateProjs() {
     if (p.feast) {   // 与民同乐：砸中就得陪着喝
       p.dead = true;
       if (!isClient()) {
-        foe.hp = Math.min(foe.maxHp, foe.hp + 85);
-        foe.state = 'hitstun'; foe.t = 0; foe.stun = 1.5; foe.drinkT = 1.5; foe.vx = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.rooted = true;
+        foe.hp = Math.min(foe.maxHp, foe.hp + Math.round(85 * HERO_HP_SCALE));
+        foe.state = 'hitstun'; foe.t = 0; foe.stun = 1.0; foe.drinkT = 1.0; foe.vx = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.rooted = true;
       }
       SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
-      addP({ type: 'text', text: '+85', x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
+      addP({ type: 'text', text: `+${Math.round(85 * HERO_HP_SCALE)}`, x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
       continue;
     }
     // 雷鸣金刚雷铠：消解飞行道具并降雷轰顶反制
@@ -586,8 +586,8 @@ function updateProjs() {
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
     const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
     if (p.burn && struck) { foe.burnT = 2; addP({ type: 'text', text: '酒火灼身', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,150,60' }); }
-    if (p.jail && foe.hp > 0 && !isClient()) {   // 醉翁亭落下：留客 1.5 秒
-      foe.jailT = 1.5; foe.jailX = clamp(foe.x, WALL + 30, STAGE_W - WALL - 30);
+    if (p.jail && foe.hp > 0 && !isClient()) {   // 醉翁亭落下：留客 1 秒
+      foe.jailT = 1.0; foe.jailX = clamp(foe.x, WALL + 30, STAGE_W - WALL - 30);
       shake = Math.max(shake, 12); dust(foe.x, 0, 16); SFX.thud();
       addP({ type: 'text', text: '醉翁亭 · 留客片刻', x: foe.x, y: foe.y - 290, life: 1.1, max: 1.1, rgb: '255,190,90' });
     }
@@ -1171,7 +1171,7 @@ function updateFighter(f, foe) {
   // 月华被动：3 秒没挨打缓慢回血
   f.sinceHit += STEP;
   if (f.ch.passive === 'regen' && M.phase === 'fight' && f.hp > 0 && f.hp < f.maxHp && f.sinceHit > 3 && f.regenLeft > 0) {
-    const h = Math.min(13.5 * STEP, f.regenLeft); f.hp = Math.min(f.maxHp, f.hp + h); f.regenLeft -= h;
+    const h = Math.min(13.5 * HERO_HP_SCALE * STEP, f.regenLeft); f.hp = Math.min(f.maxHp, f.hp + h); f.regenLeft -= h;
   }
   if (f.state !== 'special') f.invul = Math.max(0, f.invul - STEP);
   f.flash = Math.max(0, f.flash - STEP);

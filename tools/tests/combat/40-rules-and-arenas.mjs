@@ -12,7 +12,7 @@ export default [
         const ch = CHARS[ci];
         setChars(ci, (ci + 1) % CHARS.length);
         A.reset(200);
-        const wantHp = Math.round(expectedHp[ch.id] * ((BAL[ch.id] || {}).hp || 1));   // 设定气血 × 强度调整（BAL）
+        const wantHp = Math.round(expectedHp[ch.id] * ((BAL[ch.id] || {}).hp || 1) * HERO_HP_SCALE);   // 设定气血 × 强度调整 × 全局气血系数
         if (A.maxHp !== wantHp || A.hp !== wantHp) {
           return { pass: false, error: ch.name + ' maxHp mismatch: got ' + A.maxHp + ', expected ' + wantHp };
         }
@@ -24,6 +24,30 @@ export default [
       if (CHARS[10].stat.reach !== 0.86) return { pass: false, error: 'ZuiXian reach mismatch' };
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Combat audit coverage and proportional health recovery',
+    fn: `(() => {
+      const moveNames = ['l1', 'l2', 'l3', 'l4', 'l5', 'hv', 'cs1', 'cs2', 'a1', 'a2', 'dl'];
+      for (let ci = 0; ci < CHARS.length; ci++) {
+        setChars(ci, (ci + 1) % CHARS.length);
+        for (const name of new Set([...moveNames, ...Object.keys(A.moves)])) {
+          const m = A.moves[name];
+          if (!m || !Number.isFinite(m.dmg) || !Number.isFinite(m.stun) || !Number.isFinite(m.su) || !Number.isFinite(m.ac) || !Number.isFinite(m.rc)) {
+            return { pass: false, error: CHARS[ci].name + ' has incomplete attack data for ' + name };
+          }
+        }
+        if (!SKILLS[A.ch.skill] || !SKILLS[A.ch.skill2] || !ULTS[A.ch.ult]) {
+          return { pass: false, error: CHARS[ci].name + ' is missing an audited skill or ultimate' };
+        }
+      }
+      if (HERO_HP_SCALE !== 1.35 || CARRY_HEAL !== Math.round(135 * HERO_HP_SCALE) || LAST_STAND_HEAL !== Math.round(125 * HERO_HP_SCALE)) {
+        return { pass: false, error: 'HP, tag carry, and last-stand healing must retain their chosen proportions' };
+      }
+      A.reset(200);
+      if (A.regenLeft !== Math.round(135 * HERO_HP_SCALE)) return { pass: false, error: 'Yuehua recovery pool is not scaled to the new HP pool' };
+      return { pass: true, error: null };
+    })()`,
   },
   {
     name: 'Manual aim default: Attacks, skills, and XuLiZhan (cs1/cs2) aim in player direction away from opponent',
@@ -157,7 +181,7 @@ export default [
       if (!B.bossSkills || B.bossSkills.length !== 6) {
         return { pass: false, error: 'Boss B must have 6 skills from 3 characters: ' + JSON.stringify(B.bossSkills) };
       }
-      const baseHp = Math.round(CHARS[B.chIdx].stat.hp * ((BAL[CHARS[B.chIdx].id] || {}).hp || 1));
+      const baseHp = Math.round(CHARS[B.chIdx].stat.hp * ((BAL[CHARS[B.chIdx].id] || {}).hp || 1) * HERO_HP_SCALE);
       if (B.maxHp !== Math.round(baseHp * 3.0)) {
         return { pass: false, error: 'Boss B should have 3x HP (' + Math.round(baseHp * 3.0) + '), got ' + B.maxHp };
       }

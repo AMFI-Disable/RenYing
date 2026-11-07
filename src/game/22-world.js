@@ -284,7 +284,7 @@ function worldUpdate() {
       const zi = worldZoneAt(A.x); A.reset(worldShrineX(zi) + 60); A.face = 1; A.invul = 1.2;
       ring(A.x, -60, 90, '233,196,106', 0.5); say('土地庙 · 重整旗鼓', 0.9);
     }
-  } else if (W_.calm > 5 && A.hp > 0 && A.hp < A.maxHp) A.hp = Math.min(A.maxHp, A.hp + 7 * STEP);
+  } else if (W_.calm > 5 && A.hp > 0 && A.hp < A.maxHp) A.hp = Math.min(A.maxHp, A.hp + 7 * HERO_HP_SCALE * STEP);
   const zi = worldZoneAt(A.x);
   if (zi !== W_.zone) { if (W_.zone >= 0) say(WORLD_ZONES[zi].n, 1, 'go', WORLD_ZONES[zi].d); W_.zone = zi; }
   W_.sendT -= STEP;

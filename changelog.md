@@ -41,6 +41,12 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ---
 
+## [1.0.7] - 2026-11-07
+
+### Changed
+
+- **Combat flow and longer matches (src/game/01-core.js, src/game/03-skills.js, src/game/04-ults.js, src/game/08-fighter-match.js, src/game/09-actions.js, src/game/22-scrolls.js, src/game/22-world.js)**: a 480-match simulation raised average match time from 147 to 183 seconds, about 24%, after increasing hero HP while keeping all attack damage and damage scaling unchanged. Fixed healing and recovery now scale with the new HP pools, and the longest hard-control windows have been shortened from 1.2–1.5 seconds to 0.9–1 second.
+
 ## [1.0.6] - 2026-11-05
 
 ### Changed
