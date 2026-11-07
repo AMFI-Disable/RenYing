@@ -40,7 +40,7 @@ const lines = (where, ls) => { if (!Array.isArray(ls) || !ls.length) err(where, 
 
 // ---------- 侠客 ----------
 const STAT = { hp: 'pos', walk: 'pos', speed: 'pos', dmg: 'pos', reach: 'pos', swing: 'pos', jump: 'pos', weight: 'pos', defRating: 'pos', guardMax: 'pos', guardStab: 'pos', guardChip: 'num', guardRegen: 'pos', poise: 'pos', size: 'pos' };
-const LOOK = { body: 'str', shade: 'str', outline: 'str', outlineA: 'num', scarf: 'str', slash: 'str', blade: 'str', head: 'str', weapon: 'str' };
+const LOOK = { body: 'str', shade: 'str', outline: 'str', outlineA: 'num', scarf: 'str', slash: 'str', blade: 'str', head: 'str', weapon: 'str', 'hair?': 'str' };
 const CHAR = { id: 'str', name: 'str', role: 'str', diff: 'int', escCD: 'pos', skill: 'str', skill2: 'str', ult: 'str', passive: 'str', passiveName: 'str', passiveDesc: 'str',
   stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj', 'clone?': 'obj' };
 const CANCEL_SPEC = { blockEarly: 'num', chainAt: 'num', skill2FromLight: 'bool', skillOnHit: 'bool' };

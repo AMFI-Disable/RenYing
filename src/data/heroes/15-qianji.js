@@ -12,7 +12,7 @@ defHero({
     passiveDesc: '战场唯一天工傀丸。Q 投出后反弹并驻留场上（未收回前不可重复释放）。普攻、下攻击与蓄力斩击中傀丸可将其传动加速，高速傀丸威力倍增并可撞碎敌方飞行道具。R 技能无论受击或受控皆可远程激发护主；E 大招收丸贯穿全场，重置 Q 技能。',
     stat: { hp: 830, walk: 0.98, speed: 0.95, dmg: 1.0, reach: 1.0, swing: 0.85, jump: 1, weight: 1.05, defRating: 1.0, guardMax: 100, guardStab: 1.0, guardChip: 0.1, guardRegen: 28, poise: 1.0, size: 1.0 },
     hitFeel: 0.88,
-    look: { body: '#332924', shade: '#1c1512', outline: '#e5a558', outlineA: .85, scarf: '#d4883b', slash: '235,165,70', blade: '#f5e2c4', head: 'bun', weapon: 'puppet' },
+    look: { body: '#332924', shade: '#1c1512', outline: '#e5a558', outlineA: .85, scarf: '#d4883b', slash: '235,165,70', blade: '#f5e2c4', hair: '#201a18', head: 'gear-crop', weapon: 'puppet' },
     ai: { range: [80, 220] },
     beats: ['moyu', 'feiying'], weakTo: ['tieshan', 'leiming']
   },

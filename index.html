@@ -11366,7 +11366,7 @@ char: { name: '磁仙', role: '两极方士', diff: 3, escCD: 8.5, skill: 'polar
 passiveName: '磁极', passiveDesc: '开局随机带正极（⊕）或负极（⊖），按 Q 切换。正极普攻伤害高、每下击飞；负极普攻轻吸对手、伤害低，四段循环可以一直连下去；负极普攻最多连 15 下，之后消磁（不再吸、改成弹开），停手 1 秒或按 Q 恢复。',
 stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 0.95, swing: 0.8, jump: 1, weight: 0.98, defRating: 1.0, guardMax: 100, guardStab: 1.0, guardChip: 0.1, guardRegen: 28, poise: 1.0, size: 1.0 }, hitFeel: 0.85,
 moveMods: { l4: { next: { light: 'l1', heavy: 'hv' } } },   // 第四段接回第一段：负极可以一直连
-look: { body: '#2a2630', shade: '#16131c', outline: '#9fb6ff', outlineA: .8, scarf: '#d8453c', slash: '170,190,255', blade: '#eef2ff', head: 'bun', weapon: 'magnet' },
+look: { body: '#2a2630', shade: '#16131c', outline: '#9fb6ff', outlineA: .8, scarf: '#d8453c', slash: '170,190,255', blade: '#eef2ff', hair: '#171723', head: 'polar-sweep', weapon: 'magnet' },
 ai: { range: [50, 160] }, beats: ['yanling', 'lingque'], weakTo: ['tieshan', 'yuehua'] },
 forest: {
 title: '磁仙传 · 司南指妖', place: '磁石峰',
@@ -11417,7 +11417,7 @@ passiveName: '机栝动能',
 passiveDesc: '战场唯一天工傀丸。Q 投出后反弹并驻留场上（未收回前不可重复释放）。普攻、下攻击与蓄力斩击中傀丸可将其传动加速，高速傀丸威力倍增并可撞碎敌方飞行道具。R 技能无论受击或受控皆可远程激发护主；E 大招收丸贯穿全场，重置 Q 技能。',
 stat: { hp: 830, walk: 0.98, speed: 0.95, dmg: 1.0, reach: 1.0, swing: 0.85, jump: 1, weight: 1.05, defRating: 1.0, guardMax: 100, guardStab: 1.0, guardChip: 0.1, guardRegen: 28, poise: 1.0, size: 1.0 },
 hitFeel: 0.88,
-look: { body: '#332924', shade: '#1c1512', outline: '#e5a558', outlineA: .85, scarf: '#d4883b', slash: '235,165,70', blade: '#f5e2c4', head: 'bun', weapon: 'puppet' },
+look: { body: '#332924', shade: '#1c1512', outline: '#e5a558', outlineA: .85, scarf: '#d4883b', slash: '235,165,70', blade: '#f5e2c4', hair: '#201a18', head: 'gear-crop', weapon: 'puppet' },
 ai: { range: [80, 220] },
 beats: ['moyu', 'feiying'], weakTo: ['tieshan', 'leiming']
 },
@@ -20629,6 +20629,41 @@ case 'bun':
 if (!outline) ctx.fillStyle = L.hair || '#2a3a30';
 for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(h[0] + ux * 9 + px * sd * 8, h[1] + uy * 9 + py * sd * 8, 5 + grow, 0, 7); ctx.fill(); }
 break;
+case 'polar-sweep': {  // 磁仙：单侧回旋长鬓与斜掠发顶，发形如磁力牵引，不用发髻
+const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
+if (!outline) ctx.fillStyle = L.hair || '#171723';
+ctx.beginPath();
+ctx.moveTo(...P(3, -12)); ctx.quadraticCurveTo(...P(17, -15), ...P(20, -5));
+ctx.quadraticCurveTo(...P(23, 2), ...P(16, 9)); ctx.quadraticCurveTo(...P(16, 4), ...P(12, 2));
+ctx.quadraticCurveTo(...P(10, 10), ...P(4, 11)); ctx.quadraticCurveTo(...P(9, 4), ...P(7, -1));
+ctx.quadraticCurveTo(...P(1, -5), ...P(3, -12)); ctx.closePath();
+if (outline) { ctx.lineJoin = 'round'; ctx.lineWidth = grow * 2; ctx.stroke(); }
+ctx.fill();
+if (!outline) {
+ctx.strokeStyle = '#aabfff'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+ctx.beginPath(); ctx.moveTo(...P(15, -7)); ctx.quadraticCurveTo(...P(19, 0), ...P(13, 6)); ctx.stroke();
+ctx.strokeStyle = L.scarf; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(...P(15, 0)); ctx.lineTo(...P(15, 5)); ctx.stroke();
+}
+break;
+}
+case 'gear-crop': {  // 千机：利落短剪与斜落前额的层次发束，配一枚齿纹发梳
+const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
+if (!outline) ctx.fillStyle = L.hair || '#201a18';
+ctx.beginPath();
+ctx.moveTo(...P(2, -11)); ctx.quadraticCurveTo(...P(15, -13), ...P(17, -4));
+ctx.lineTo(...P(14, 4)); ctx.lineTo(...P(9, 1)); ctx.lineTo(...P(7, 9));
+ctx.lineTo(...P(4, 5)); ctx.lineTo(...P(0, 9)); ctx.lineTo(...P(0, 3));
+ctx.quadraticCurveTo(...P(-5, -2), ...P(2, -11)); ctx.closePath();
+if (outline) { ctx.lineJoin = 'round'; ctx.lineWidth = grow * 2; ctx.stroke(); }
+ctx.fill();
+if (!outline) {
+ctx.strokeStyle = '#d49a48'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+ctx.beginPath(); ctx.moveTo(...P(13, -5)); ctx.lineTo(...P(15, -2)); ctx.lineTo(...P(14, 1)); ctx.stroke();
+ctx.strokeStyle = '#f0c879'; ctx.lineWidth = 0.9;
+ctx.beginPath(); ctx.moveTo(...P(14, -4)); ctx.lineTo(...P(15, -3)); ctx.moveTo(...P(14, -2)); ctx.lineTo(...P(15, -1)); ctx.stroke();
+}
+break;
+}
 case 'band':
 if (!outline) {
 ctx.strokeStyle = L.scarf; ctx.lineWidth = 3.5;

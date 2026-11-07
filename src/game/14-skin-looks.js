@@ -668,6 +668,41 @@ function headAcc(sk, grow, color, L) {
       if (!outline) ctx.fillStyle = L.hair || '#2a3a30';
       for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(h[0] + ux * 9 + px * sd * 8, h[1] + uy * 9 + py * sd * 8, 5 + grow, 0, 7); ctx.fill(); }
       break;
+    case 'polar-sweep': {  // 磁仙：单侧回旋长鬓与斜掠发顶，发形如磁力牵引，不用发髻
+      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
+      if (!outline) ctx.fillStyle = L.hair || '#171723';
+      ctx.beginPath();
+      ctx.moveTo(...P(3, -12)); ctx.quadraticCurveTo(...P(17, -15), ...P(20, -5));
+      ctx.quadraticCurveTo(...P(23, 2), ...P(16, 9)); ctx.quadraticCurveTo(...P(16, 4), ...P(12, 2));
+      ctx.quadraticCurveTo(...P(10, 10), ...P(4, 11)); ctx.quadraticCurveTo(...P(9, 4), ...P(7, -1));
+      ctx.quadraticCurveTo(...P(1, -5), ...P(3, -12)); ctx.closePath();
+      if (outline) { ctx.lineJoin = 'round'; ctx.lineWidth = grow * 2; ctx.stroke(); }
+      ctx.fill();
+      if (!outline) {
+        ctx.strokeStyle = '#aabfff'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(...P(15, -7)); ctx.quadraticCurveTo(...P(19, 0), ...P(13, 6)); ctx.stroke();
+        ctx.strokeStyle = L.scarf; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(...P(15, 0)); ctx.lineTo(...P(15, 5)); ctx.stroke();
+      }
+      break;
+    }
+    case 'gear-crop': {  // 千机：利落短剪与斜落前额的层次发束，配一枚齿纹发梳
+      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
+      if (!outline) ctx.fillStyle = L.hair || '#201a18';
+      ctx.beginPath();
+      ctx.moveTo(...P(2, -11)); ctx.quadraticCurveTo(...P(15, -13), ...P(17, -4));
+      ctx.lineTo(...P(14, 4)); ctx.lineTo(...P(9, 1)); ctx.lineTo(...P(7, 9));
+      ctx.lineTo(...P(4, 5)); ctx.lineTo(...P(0, 9)); ctx.lineTo(...P(0, 3));
+      ctx.quadraticCurveTo(...P(-5, -2), ...P(2, -11)); ctx.closePath();
+      if (outline) { ctx.lineJoin = 'round'; ctx.lineWidth = grow * 2; ctx.stroke(); }
+      ctx.fill();
+      if (!outline) {
+        ctx.strokeStyle = '#d49a48'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(...P(13, -5)); ctx.lineTo(...P(15, -2)); ctx.lineTo(...P(14, 1)); ctx.stroke();
+        ctx.strokeStyle = '#f0c879'; ctx.lineWidth = 0.9;
+        ctx.beginPath(); ctx.moveTo(...P(14, -4)); ctx.lineTo(...P(15, -3)); ctx.moveTo(...P(14, -2)); ctx.lineTo(...P(15, -1)); ctx.stroke();
+      }
+      break;
+    }
     case 'band':
       if (!outline) {
         ctx.strokeStyle = L.scarf; ctx.lineWidth = 3.5;
