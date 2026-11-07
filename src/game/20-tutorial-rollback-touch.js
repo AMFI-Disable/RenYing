@@ -426,6 +426,8 @@ function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
   if (!TOUCH) return;
   const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train' || M.mode === 'tag3') && !paused && !document.querySelector('.scr.on');
+  document.documentElement.classList.toggle('touch-game-active', inFight);
+  document.body.classList.toggle('touch-game-active', inFight);
   $id('touchUI').classList.toggle('hidden', !inFight);
   if (!inFight) return;
   const me = [A, B][localIdx()];
@@ -435,6 +437,15 @@ function touchUIUpdate() {
 }
 if (TOUCH) {
   document.body.classList.add('touchdev');
+  const preventGameplayZoom = e => {
+    if (document.body.classList.contains('touch-game-active')) e.preventDefault();
+  };
+  // Safari may ignore viewport zoom limits; block its native gestures only during a match.
+  document.addEventListener('touchmove', e => {
+    if (e.touches.length > 1) preventGameplayZoom(e);
+  }, { capture: true, passive: false });
+  for (const type of ['gesturestart', 'gesturechange', 'gestureend'])
+    window.addEventListener(type, preventGameplayZoom, { passive: false });
   for (const b of document.querySelectorAll('#touchUI [data-a]')) {
     b.addEventListener('pointerdown', e => {
       e.preventDefault(); initAudio(); haptic(12); try { b.setPointerCapture(e.pointerId); } catch (err) {} b.classList.add('on');

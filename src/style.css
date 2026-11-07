@@ -519,6 +519,7 @@
   .tutbox .td { font-size: 15px; line-height: 1.6; } .tutbox.ok .tt::after { content: ' ✓'; color: #7fe39a; }
   button { touch-action: manipulation; }
   html, body { overscroll-behavior: none; }
+  html.touch-game-active, body.touch-game-active { touch-action: none; }
   #touchUI { position: fixed; inset: 0; pointer-events: none; z-index: 15; }
   #touchUI.hidden, #touchUI .hidden { display: none; }
   #touchUI .tbtn { pointer-events: auto; position: absolute; border-radius: 50%; border: 1.5px solid rgba(239,232,216,.35); background: rgba(10,10,26,.35); color: rgba(239,232,216,.92); font: 600 14px var(--body); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: 0; }
