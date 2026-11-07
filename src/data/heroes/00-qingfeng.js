@@ -1,12 +1,15 @@
 // 青锋：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'qingfeng', skin: 'qf', en: 'Qing Feng',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 0.915, skill: 0.915, ult: 0.915, cd: 1.0, hp: 0.915 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '青锋', role: '游龙剑客', diff: 1, escCD: 8.0, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
     passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 10%。体量身法均称（1.02），剑气与疾风斩攻守自如。',
     stat: { hp: 870, walk: 1.02, speed: 0.96, dmg: 1.04, reach: 1.02, swing: 0.95, jump: 1, weight: 1.02, defRating: 1.02, guardMax: 105, guardStab: 1.10, guardChip: 0.09, guardRegen: 30, poise: 0.95, size: 1.00 }, meterMul: 1.10, hitFeel: 1,
     look: { body: '#e9eef6', shade: '#9aa6bd', outline: '#070914', outlineA: 1, scarf: '#46d3ea', slash: '120,230,255', blade: '#effcff', head: 'topknot', weapon: 'sword' },
     ai: { range: [70, 170] }, beats: ['moyu'], weakTo: ['yuehua'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '青锋传 · 竹海断剑', place: '苍竹林',
     synopsis: '师父殒命前留下半截断剑与剑冢密语。青锋踏入妖雾弥漫的苍竹林，一路斩尽拦路刀鬼与弓妖，寻回断剑遗落的剑魂。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '青锋：「剑冢石门已开！吞噬三侠绝技的融魂魔首，把师门遗落的气魄还来！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '青锋传 · 断剑问心', motive: '师父死前只留下半截断剑，和一句「剑冢里有你要的答案」。',
     nodes: [

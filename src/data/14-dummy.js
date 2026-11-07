@@ -5,6 +5,7 @@
 //                k: 'hold' 一直保持（站桩、走动、格挡），'react' 看时机反应（招架、受击反击、起身攻击），'do' 每隔一段时间做一次
 //   DUMMY_GAPS   「do」类动作两次之间隔几秒
 //   DUMMY_FEATURES  可以和动作一起开的特性（都能单独开关）
+// 找 bug 提示：稻草人不按设定动，先看 DUMMY_JOBS 里对应 id 的做法，再看这里的 k（种类）写对没有。
 const DUMMY_ACTS = [
   { id: 'stand', n: '站桩', d: '站着不动，任你打', k: 'hold' },
   { id: 'walk', n: '来回走动', d: '在原地附近左右走', k: 'hold' },

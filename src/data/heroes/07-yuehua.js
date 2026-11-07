@@ -1,12 +1,15 @@
 // 月华：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'yuehua', skin: 'yh', en: 'Yue Hua',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 0.926, skill: 0.926, ult: 0.926, cd: 1.0, hp: 0.926 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '月华', role: '月镜宗师', diff: 3, escCD: 8.0, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
     passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.92体量/780血），自带月魄神罡（110架势/6%微透伤）与脱战自愈，以静制动。',
     stat: { hp: 780, walk: 1.02, speed: 0.86, dmg: 1.00, reach: 1.02, swing: 0.84, jump: 1, weight: 0.92, defRating: 1.06, guardMax: 110, guardStab: 1.30, guardChip: 0.06, guardRegen: 32, poise: 0.90, size: 0.96 }, hitFeel: 0.8,
     look: { body: '#f4eefc', shade: '#b3a6c9', outline: '#15102a', outlineA: 1, scarf: '#c9b6ff', slash: '215,195,255', blade: '#f6f0ff', head: 'moon', weapon: 'moonblade' },
     ai: { range: [80, 180] }, beats: ['leiming', 'feiying', 'qingfeng', 'yanling'], weakTo: ['liuyun', 'moyu'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '月华传 · 广寒镜影', place: '太阴月宫',
     synopsis: '朔月之夜妖邪侵袭月宫，妄图污染太阴宝镜。月华执月轮迎敌，镜花水月间将一切邪祟攻势尽数反斩。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '月华：「明镜照见万象，纵使魔首身负三侠六技，亦难逃月轮裁决！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '月华传 · 镜中劫', motive: '月宫的镜子照见了一场大劫：三十天后，月宫会坠落。月华违背宫规，下了山。',
     nodes: [

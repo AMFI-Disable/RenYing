@@ -1,13 +1,16 @@
 // 铁山：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'tieshan', skin: 'ts', en: 'Tie Shan',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.076, skill: 1.076, ult: 1.076, cd: 1.0, hp: 1.076 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '铁山', role: '玄铁重甲', diff: 1, escCD: 8.5, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
     passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血深厚（900），体量威严（1.35）。重斩与蓄力斩自带霸体减伤20%，巨刃沉身格挡稳健（115架势/8%微伤），刚猛沉稳。',
     stat: { hp: 900, walk: 0.82, speed: 1.15, dmg: 0.96, reach: 1.08, swing: 1.15, jump: 0.9, weight: 1.35, defRating: 1.05, guardMax: 115, guardStab: 1.30, guardChip: 0.08, guardRegen: 28, poise: 0.90, size: 1.10 }, hitFeel: 1.55,
     moveMods: { l1: { suAdd: 0.1 } },   // 巨刃第一刀先举起、顿 0.1 秒再砍下来
     look: { body: '#6b6f7a', shade: '#44474f', outline: '#0c0c10', outlineA: 1, scarf: '#d9a441', slash: '255,200,120', blade: '#dcdfe6', head: 'helm', weapon: 'greatsword' },
     ai: { range: [70, 160] }, beats: ['feiying', 'leiming'], weakTo: ['liuyun', 'lingshuang', 'yanling'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '铁山传 · 孤关镇岳', place: '铁门关',
     synopsis: '老将军临终托付「关在人在」。十二年后妖潮再临铁门关，铁山横刀立马，以血肉之躯在万妖冲阵中筑起不破铁壁。',
@@ -20,6 +23,7 @@ defHero({
     ],
     bossIntro: '铁山：「魔首亲临又如何？只要我铁山还站着，铁门关便永世不倒！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '铁山传 · 守关人', motive: '老将军临死前把竹林关交给铁山：「关在，人在。」那已经是十二年前的事。',
     nodes: [

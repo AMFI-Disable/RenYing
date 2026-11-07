@@ -1,3 +1,6 @@
+// 英文界面词条 · 木人桩：{ 中文原文: 英文译文 }，由 src/i18n.js 查表。
+// 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
+// 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
   // 木人桩的试剑数据卡（src/game/16-draw-ui.js drawTrainStats、14-dummy.js、21-buttons-02-training.js 的对手行为栏）
   "当前连击": "Current combo",

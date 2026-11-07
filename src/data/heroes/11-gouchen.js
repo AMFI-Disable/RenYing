@@ -1,12 +1,15 @@
 // 勾陈：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'gouchen', skin: 'gc', en: 'Gou Chen',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.08, skill: 1.08, ult: 1.08, cd: 1.0, hp: 1.08 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '勾陈', role: '链锤游侠', diff: 2, escCD: 9.0, skill: 'hook', skill2: 'whirl', ult: 'skynet', passive: 'bind',
     passiveName: '震魄', passiveDesc: '一条铁链拴着一柄方锤，走路时锤子在身边晃荡，出手时整条链子甩出去。飞锤砸中会扯链把对手拽到身前，被锤中的 1.2 秒内对手承受的伤害提高 25%；旋锤抡圆了能连砸带甩。链长（1.25 臂展），但霸体能硬吃飞锤。',
     stat: { hp: 835, walk: 1.10, speed: 1.0, dmg: 0.97, reach: 1.25, swing: 1.0, jump: 1, weight: 0.98, defRating: 1.00, guardMax: 100, guardStab: 1.00, guardChip: 0.11, guardRegen: 28, poise: 1.00, size: 1.00 }, hitFeel: 1.0,
     look: { body: '#3a3f4a', shade: '#22262e', outline: '#d9c7a0', outlineA: .7, scarf: '#c8a24a', slash: '235,205,130', blade: '#e8e8ee', head: 'mask', weapon: 'hammer' },
     ai: { range: [120, 260] }, beats: ['yanling', 'feiying'], weakTo: ['tieshan', 'yuehua'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '勾陈传 · 陨星锁魂', place: '陨星深渊',
     synopsis: '陨星渊底锁妖铁链崩裂，上古恶灵咆哮而出。守墓人勾陈抡起千斤飞锤，将逃逸的群妖一一拽回深渊。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '勾陈：「融聚三魂的深渊魔首！这根陨铁链，今日专为你而铸！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '勾陈传 · 悬赏令', motive: '勾陈只认悬赏令和赏金。这次的悬赏令上，画的是一个他救过的孩子。',
     nodes: [

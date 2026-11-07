@@ -5,7 +5,9 @@ defHero({
   id: 'liying', skin: 'li', en: 'Li Ying',
   // 初始强度：她的伤害几乎全靠普攻和留影一刀（渡影本来不打人，现在路过的敌人挨一刀，伤害见 clone.swapPathDmg），不调时电脑天道对打胜率只有 0~4%。
   // 2026-10-28 用天道 AI 对 13 位侠客各打左右两边、4 组种子粗调到这里（1.45 时约 42%）；细调交给 tools/ai/trainer.mjs。
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.47, skill: 1.47, ult: 1.47, cd: 1.0, hp: 1.47 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '离影', role: '离魂刀客', diff: 3, escCD: 8.5, skill: 'mistmark', skill2: 'mistswap', ult: 'mistarray', passive: 'mist',
     passiveName: '离魂', passiveDesc: '能把一缕魂留在原地化作雾身（最多 10 个，存在 15 秒，具高额生命且承受攻击，破碎时反噬引爆并削弱对手）。本体再次留影时场上雾身会同步复制出刀并生出较弱子影。雾身以波动内功重放攻击，伤害较低但削弱对手防御并加速其架势消耗。渡影（R）获得 0.25 秒霸体，并在时空凝滞中精准拣选本体真身所生雾身瞬移渡位。',
     stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 1.0, swing: 0.9, jump: 1.0, weight: 0.95, defRating: 1.0, guardMax: 95, guardStab: 1.0, guardChip: 0.10, guardRegen: 28, poise: 1.0, size: 0.95 }, hitFeel: 0.85,
@@ -13,6 +15,7 @@ defHero({
     clone: { max: 10, life: 15, leash: 0, hp: 120, subHp: 60, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapArmor: 0.25, swapFreeze: 0.5, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5, waveDmg: 12, waveGuardMul: 2.2 },
     look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', head: 'ponytail', weapon: 'sword' },
     ai: { range: [80, 200] }, beats: ['tieshan', 'gouchen'], weakTo: ['lingque', 'yanling'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '离影传 · 雾泽寻踪', place: '千雾泽',
     synopsis: '千雾泽的雾一夜之间变成了妖雾，雾里走出来的全是妖物。离影提刀入雾，要找回被雾吞掉的师门。',
@@ -25,6 +28,7 @@ defHero({
     ],
     bossIntro: '离影：「三侠六技的融魂魔首？我这一缕魂，够你追到天亮。」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '离影传 · 雾中人', motive: '离影的师父在千雾泽里消失了，只在渡口留下一具不会散的雾身，一直指着泽子深处。',
     nodes: [

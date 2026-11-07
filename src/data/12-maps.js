@@ -16,6 +16,7 @@
 //            扣 dmg 点气血（不会扣到 0），浮空（vy）；无敌中劈不到
 //   fog      中间一段是酒雾（from / to 是场地宽度的几成）：站在雾里地上的人每秒回 guard 点定力
 //   fav      地利侠客：在这张图上有一点加成（说明就是加成本身，点将台上会标出来）。加成在 src/game/08-fighter-match.js 的 mapFav 一带
+// 找 bug 提示：地图机关两边联机不同步，多半是用了 Math.random 或没把状态放进 M.mapEnv。
 const MAPS = {
   cliff: { n: '断崖台', d: '两侧没有墙。被击飞出崖边会坠崖，扣一点气血后弹回台上。', w: 1500,
     cliff: { dmg: 0.06, push: 320, back: 30, vy: -820, invul: 0.9 },

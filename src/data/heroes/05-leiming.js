@@ -1,7 +1,9 @@
 // 雷鸣：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'leiming', skin: 'lm', en: 'Lei Ming',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.067, skill: 1.067, ult: 1.067, cd: 1.0, hp: 1.067 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8.0, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
     passiveName: '连环', passiveDesc: '六连重拳如惊雷，金刚体魄筋骨强横（885血/1.22体量）；架势耐力深厚且回涌较快（32/秒），金刚雷铠御守引雷反击，防守沉稳转守为攻。',
     stat: { hp: 885, walk: 1.14, speed: 0.70, dmg: 0.94, reach: 0.8, swing: 0.64, jump: 1, weight: 1.22, defRating: 1.02, guardMax: 115, guardStab: 1.25, guardChip: 0.07, guardRegen: 32, poise: 0.90, size: 1.05 }, scaling: 0.04, hitFeel: 0.8,
@@ -9,6 +11,7 @@ defHero({
       l6: { p: ['l3s', 'l3a'], su: .09, ac: .08, rc: .24, dmgAbs: 32, kb: [520, -260], stun: .5, hs: .09, box: [20, -92, 116, -46], lunge: 260, launch: true, next: {}, snd: 'heavy' } },   // 六连重拳，第六拳收尾挑飞
     look: { body: '#3a2a22', shade: '#241913', outline: '#ffd84a', outlineA: .8, scarf: '#ffcf3a', slash: '255,230,120', blade: '#fff4c0', head: 'band', weapon: 'fists' },
     ai: { range: [45, 120] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '雷鸣传 · 雷音伏魔', place: '雷音绝顶',
     synopsis: '妖邪侵染雷音宝刹，妄图夺取舍利金身。武僧雷鸣怒目金刚，引九天狂雷入双拳，以刚猛拳意荡涤群魔。',
@@ -21,6 +24,7 @@ defHero({
     ],
     bossIntro: '雷鸣：「融汇三家邪功的魔首，且吃贫僧一记九天落雷正法拳！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '雷鸣传 · 破戒', motive: '雷音寺戒武。雷鸣为了救山下的村子，一拳打碎了戒律碑。',
     nodes: [

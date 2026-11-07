@@ -1,12 +1,15 @@
 // 燕翎：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'yanling', skin: 'yl', en: 'Yan Ling',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.068, skill: 1.068, ult: 1.068, cd: 1.0, hp: 1.068 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '燕翎', role: '御空飞燕', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
     passiveName: '御空', passiveDesc: '一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（85架势），一旦被重兵器挑中需速用腾空闪化解。',
     stat: { hp: 750, walk: 1.10, speed: 0.86, dmg: 1.04, reach: 1, swing: 0.88, jump: 1.05, weight: 0.84, defRating: 0.95, guardMax: 85, guardStab: 0.85, guardChip: 0.13, guardRegen: 25, poise: 1.05, size: 0.95 }, fly: 1.2, hitFeel: 0.9,
     look: { body: '#f2f6ff', shade: '#9fb1d6', outline: '#0b1030', outlineA: 1, scarf: '#6fa8ff', slash: '140,190,255', blade: '#eef4ff', head: 'feather', weapon: 'wing' },
     ai: { range: [80, 190] }, beats: ['tieshan', 'lingshuang'], weakTo: ['liuyun', 'yuehua'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '燕翎传 · 云雀穿云', place: '万仞云雀崖',
     synopsis: '黑风遮蔽云雀崖，夜枭妖群截断飞鸽传书。燕翎展翅腾空，以漫天羽镖与凌空俯冲夺回苍穹。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '燕翎：「哪怕你融汇三侠六技，也休想折断云雀崖的羽翼！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '燕翎传 · 不能拆的信', motive: '云雀崖的飞燕只送信，从不拆信。燕翎接到一封信，收信人写的是她自己的名字。',
     nodes: [

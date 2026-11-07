@@ -1152,6 +1152,7 @@ const MIGRATIONS = [
 //   GOAL     目标：need(ch) 全服要完成多少（ch 是第几章，从 0 数），t 这一节的说明
 //   ZONE     「某一段斩妖」用的段名（和 WL.ZONES、WORLD_ZONES 同一顺序）
 //   墨锭     INK0 + 章数 / 2，每章最后一节另加 INK_END
+// 注意：这个文件浏览器和服务器共用（tools/build.py 把它原样嵌进 cloudflare/worker.bundle.js），只能用两边都有的写法。
 const CHRON = {
   PER: 20, TAIL: 40, MJ_EVERY: 5, PERS_MAX: 3, INK0: 5, INK_END: 40,
   ZONE: ['竹林', '古道', '山寨', '魔窟'],

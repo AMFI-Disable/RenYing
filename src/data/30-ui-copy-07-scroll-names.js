@@ -1,3 +1,6 @@
+// 英文界面词条 · 秘卷名和品级：{ 中文原文: 英文译文 }，由 src/i18n.js 查表。
+// 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
+// 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
   // 秘卷名和品级（src/game/22-scrolls.js 的 SCROLLS、SC_RARITY）：选卷页、画布上飘的字、say() 里的「…」都查这里
   "墨韵共鸣": "Ink Resonance",

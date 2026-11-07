@@ -1,12 +1,15 @@
 // 凌霜：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'lingshuang', skin: 'ls', en: 'Ling Shuang',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.066, skill: 1.066, ult: 1.066, cd: 1.0, hp: 1.066 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.0, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
     passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 25% 且一挑冲天。枪长步稳（1.05体量），枪旋可拨开暗器并保持中线绝对压制。',
     stat: { hp: 815, walk: 0.98, speed: 1.05, dmg: 1.00, reach: 1.28, swing: 1.08, jump: 1, weight: 1.05, defRating: 1.02, guardMax: 110, guardStab: 1.20, guardChip: 0.08, guardRegen: 28, poise: 0.95, size: 1.02 }, hitFeel: 1.15,
     look: { body: '#dfe9f2', shade: '#8ea3b8', outline: '#0a1422', outlineA: 1, scarf: '#9fd4ff', slash: '170,220,255', blade: '#e8f6ff', head: 'ponytail', weapon: 'spear' },
     ai: { range: [90, 185] }, beats: ['tieshan', 'qingfeng'], weakTo: ['leiming', 'feiying', 'yanling'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '凌霜传 · 雪岭寒枪', place: '北境雪岭',
     synopsis: '北境冰原封印松动，缚灵与寒妖倾巢而出。凌霜单枪匹马深入暴风雪，以一寸枪尖的极寒锋芒重定边疆。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '凌霜：「窃取百家的融魂妖首，且看你挡不挡得住我北境寒枪的锋芒！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '凌霜传 · 寒枪与军令', motive: '北境军令：捉回逃兵七人，死活不论。名单最后一个名字，是凌霜的亲弟弟。',
     nodes: [

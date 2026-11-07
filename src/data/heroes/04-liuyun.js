@@ -1,12 +1,15 @@
 // 流云：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'liuyun', skin: 'ly', en: 'Liu Yun',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 0.959, skill: 0.959, ult: 0.959, cd: 1.0, hp: 0.959 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '流云', role: '御风散人', diff: 2, escCD: 8.0, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
     passiveName: '御风', passiveDesc: '御风而行，三段跳与开扇疾冲来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），身法飘忽制胜。',
     stat: { hp: 840, walk: 1.15, speed: 0.85, dmg: 1.18, reach: 1.06, swing: 0.90, jump: 1.08, weight: 0.88, defRating: 1.02, guardMax: 112, guardStab: 1.15, guardChip: 0.07, guardRegen: 32, poise: 0.95, size: 0.98 }, jumps: 3, hitFeel: 0.9,
     look: { body: '#e8f3ea', shade: '#9cb8a4', outline: '#0b1a12', outlineA: 1, scarf: '#7fe0b0', slash: '150,255,200', blade: '#f0fff6', head: 'bun', weapon: 'fan' },
     ai: { range: [180, 360] }, beats: ['tieshan', 'yuehua', 'yanling'], weakTo: ['leiming', 'feiying'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '流云传 · 古寺听风', place: '栖霞古寺',
     synopsis: '尘封古寺夜半钟声自鸣，夜枭与刀鬼窃据佛堂。流云摇扇踏月而来，于談笑风生间借八面来风涤荡妖氛。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '流云：「三魂融一的魔头？折扇虽轻，亦能为你扇散这身戾气！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '流云传 · 风从哪里来', motive: '流云这辈子只想知道一件事：风是从哪里吹来的。传说答案在云雀崖顶。',
     nodes: [

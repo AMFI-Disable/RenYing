@@ -1,13 +1,16 @@
 // 绯影：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'feiying', skin: 'fy', en: 'Fei Ying',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '绯影', role: '暗影刺客', diff: 2, escCD: 8.0, skill: 'blink', skill2: 'kunai', ult: 'shadows', passive: 'swift',
     passiveName: '身轻', passiveDesc: '身法最快、出手最疾，体格轻巧（0.82）且气血充实（800）。架势耐力韧性提升（95/9%微伤），身手矫捷，唯有以疾速、背刺与影遁分身取胜。',
     stat: { hp: 800, walk: 1.18, speed: 0.82, dmg: 1.12, reach: 0.96, swing: 0.78, jump: 1.08, weight: 0.82, defRating: 0.98, guardMax: 95, guardStab: 1.05, guardChip: 0.09, guardRegen: 28, poise: 1.00, size: 0.88 }, hitFeel: 0.8,
     moveMods: { l1: { dmgAbs: 14 }, l2: { dmgAbs: 15 }, l3: { dmgAbs: 17 }, l4: { dmgAbs: 20 }, l5: { dmgAbs: 26 } },
     look: { body: '#2d2336', shade: '#1b1422', outline: '#ff4a5f', outlineA: .85, scarf: '#ff3b52', slash: '255,95,115', blade: '#ffe6ea', head: 'hood', weapon: 'dual' },
     ai: { range: [60, 150] }, beats: ['liuyun', 'lingshuang'], weakTo: ['tieshan', 'yuehua'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '绯影传 · 血月夜行', place: '血月幽谷',
     synopsis: '叛出影楼之夜，满谷咒师与刀鬼奉命截杀。绯影握紧双刃，在血月之下斩断过去的枷锁，杀出一条自由之路。',
@@ -20,6 +23,7 @@ defHero({
     ],
     bossIntro: '绯影：「影楼倾尽秘术炼出的六技魔首？正好拿你祭我自由之刃！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '绯影传 · 影楼最后一单', motive: '影楼的规矩是做完一百单就能走。绯影做到了第九十九单。',
     nodes: [

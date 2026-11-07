@@ -1,12 +1,15 @@
 // 凌雀：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'lingque', skin: 'lq', en: 'Ling Que',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.108, skill: 1.108, ult: 1.108, cd: 1.0, hp: 1.108 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '凌雀', role: '飞梭游侠', diff: 3, escCD: 8.5, skill: 'spindle', skill2: 'shadowdash', ult: 'needlestorm', passive: 'needlemark',
     passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。对敌人造成三次普攻、穿叶飞梭命中、蓄力斩（无需满蓄）命中或万线归宗命中均可施加【雀芒】印记（最多叠加 5 层，印记环绕目标周身，持续 5 秒）；移形换影每次穿刺引爆 1 层印记造成 30 点爆炸伤害并挑空敌人，同时立即清零移形换影冷却，可连续发动 5 次突进而无冷却！',
     stat: { hp: 790, walk: 1.10, speed: 0.88, dmg: 0.96, reach: 1.00, swing: 0.86, jump: 1.04, weight: 0.86, defRating: 0.96, guardMax: 92, guardStab: 1.00, guardChip: 0.10, guardRegen: 28, poise: 0.98, size: 0.94 }, hitFeel: 0.85,
     look: { body: '#2a1a2e', shade: '#160c1c', outline: '#e07ac8', outlineA: .85, scarf: '#e056b0', slash: '235,110,210', blade: '#ffe8fa', head: 'topknot', weapon: 'spindle' },
     ai: { range: [70, 220] }, beats: ['feiying', 'liuyun'], weakTo: ['tieshan', 'leiming'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '凌雀传 · 幽谷织锦', place: '锦屏幽谷',
     synopsis: '幽谷灵脉遭群妖窃据，传世云锦被魔气撕裂。凌雀手捏金梭，穿花度柳般在妖群中织就天罗地网。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '凌雀：「身披三侠六技的融魂魔首，且看我以金梭幽影破你金身！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '凌雀传 · 针脚', motive: '凌雀是织女村的绣娘学徒。村里世代相传的「千针图」被人偷走，图上绣着整个江湖的地图。',
     nodes: [

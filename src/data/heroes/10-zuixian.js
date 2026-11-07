@@ -1,12 +1,15 @@
 // 醉翁：这一位侠客的全部数据。改强度、属性、招式、故事都只改这个文件（字段说明在 src/data/00-heroes.js）。
 defHero({
   id: 'zuixian', skin: 'zx', en: 'Zui Weng',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.026, skill: 1.026, ult: 1.026, cd: 1.0, hp: 1.026 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '醉翁', role: '山水醉翁', diff: 3, escCD: 8.5, skill: 'pavilion', skill2: 'feast', ult: 'shanshui', passive: 'drunk',
     passiveName: '酒', passiveDesc: '腰间一壶酒。放任何技能都能添 30 酒（大招也算），打中人 +4（酒 0 到 100，每秒缓慢消退），每点酒增伤 0.5%（满壶 +50%）；酒过半壶就东倒西歪，有两成几率闪开近身攻击。与民同乐至少要半壶酒，并会把酒全部倒光。拳脚短（0.86 臂展）。',
     stat: { hp: 885, walk: 1.12, speed: 0.84, dmg: 1.00, reach: 0.86, swing: 0.8, jump: 1, weight: 1.15, defRating: 1.00, guardMax: 105, guardStab: 1.15, guardChip: 0.09, guardRegen: 30, poise: 0.92, size: 1.02 }, hitFeel: 1.0,
     look: { body: '#c9a882', shade: '#8a6a4a', outline: '#1a0e06', outlineA: 1, scarf: '#d8452f', slash: '255,170,90', blade: '#f2d8a8', head: 'messy', weapon: 'gourd' },
     ai: { range: [50, 140] }, beats: ['lingshuang', 'yuehua'], weakTo: ['liuyun', 'moyu'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '醉翁传 · 杏花梦蝶', place: '杏花醉翁亭',
     synopsis: '千年佳酿引来百妖觊觎，醉翁亭外群魔乱舞。醉翁仰头饮尽半壶陈酿，步履踉跄却招招致命，请群妖共赴黄泉酒局。',
@@ -19,6 +22,7 @@ defHero({
     ],
     bossIntro: '醉翁：「身怀六技的大家伙？正好给老夫醒醒酒，看招！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '醉翁传 · 醉里看剑', motive: '醉翁年轻时发誓，要和天下每一位高手喝一次酒。还差最后五位。',
     nodes: [

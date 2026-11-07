@@ -34,6 +34,7 @@
 //   saga.motive               一句话的起因，以句号结尾
 //   saga.nodes                五节，节标题不重复；前四节的 pre 第一行是旁白（先交代场景）；
 //                             抉择放在第 2 或第 3 节；第 5 节的两个结局标题不一样
+// 找 bug 提示：某位侠客在游戏里数值不对，先在浏览器控制台看 CHARS[下标] 和 BAL[id]，再对照他自己的文件。
 const HEROES = [];
 function defHero(h) {
   h.char = { id: h.id, ...h.char, cancel: { ...CANCEL, ...(h.char && h.char.cancel) } };   // 取消规则：通用的 CANCEL（src/data/01-moves.js）加上这位侠客自己改的

@@ -4,13 +4,16 @@
 // 普攻四段循环（第四段接回第一段）：负极轻吸、伤害低，可以一直连；正极伤害高、每下击飞，自然就断了。
 defHero({
   id: 'cixian', skin: 'cx', en: 'Ci Xian',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '磁仙', role: '两极方士', diff: 3, escCD: 8.5, skill: 'polarswap', skill2: 'magfield', ult: 'sandwich', passive: 'magnet',
     passiveName: '磁极', passiveDesc: '开局随机带正极（⊕）或负极（⊖），按 Q 切换。正极普攻伤害高、每下击飞；负极普攻轻吸对手、伤害低，四段循环可以一直连下去；负极普攻最多连 15 下，之后消磁（不再吸、改成弹开），停手 1 秒或按 Q 恢复。',
     stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 0.95, swing: 0.8, jump: 1, weight: 0.98, defRating: 1.0, guardMax: 100, guardStab: 1.0, guardChip: 0.1, guardRegen: 28, poise: 1.0, size: 1.0 }, hitFeel: 0.85,
     moveMods: { l4: { next: { light: 'l1', heavy: 'hv' } } },   // 第四段接回第一段：负极可以一直连
     look: { body: '#2a2630', shade: '#16131c', outline: '#9fb6ff', outlineA: .8, scarf: '#d8453c', slash: '170,190,255', blade: '#eef2ff', hair: '#171723', head: 'polar-sweep', weapon: 'magnet' },
     ai: { range: [50, 160] }, beats: ['yanling', 'lingque'], weakTo: ['tieshan', 'yuehua'] },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '磁仙传 · 司南指妖', place: '磁石峰',
     synopsis: '磁石峰的司南忽然乱转，满山铁器都被妖气吸走。磁仙一手正极一手负极，要把群妖连同铁器一起吸回来。',
@@ -23,6 +26,7 @@ defHero({
     ],
     bossIntro: '磁仙：「融魂魔首，你身上的铁比整座山还多。站稳了，我要合上了。」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '磁仙传 · 指南', motive: '磁仙守着磁石峰顶的司南，某天司南不再指南，而是死死指着山下的一座城。',
     nodes: [

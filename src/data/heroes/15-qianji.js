@@ -4,7 +4,9 @@
 // E「千丝收网」金丝绞盘强力收索，穿透全场直线回拉，贯穿沿途敌人并刷新 Q 冷却。
 defHero({
   id: 'qianji', skin: 'qj', en: 'Qian Ji',
+  // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
   bal: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: {
     name: '千机', role: '机关傀客', diff: 3, escCD: 8.0,
     skill: 'throwball', skill2: 'ballspike', ult: 'recallball', passive: 'momentum',
@@ -16,6 +18,7 @@ defHero({
     ai: { range: [80, 220] },
     beats: ['moyu', 'feiying'], weakTo: ['tieshan', 'leiming']
   },
+  // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {
     title: '千机传 · 机破千重', place: '千机阁',
     synopsis: '千机阁机括轰鸣，群妖借铜甲铁傀之躯盘踞阵中。千机执金丝傀丸，誓以机道正宗荡涤魔障！',
@@ -28,6 +31,7 @@ defHero({
     ],
     bossIntro: '千机：「融魂魔首，窃我天工图谱，纳天地生灵为偶。今日看我千机破阵！」'
   },
+  // ---- 侠客列传：五节剧情，第 2 或第 3 节有一次抉择，第 5 节按抉择分两个结局 ----
   saga: {
     title: '千机传 · 金丝引', motive: '千机阁世代镇守天工机关秘要，某日主轴齿轮骤停，牵引金丝直指城西废矿。',
     nodes: [

@@ -17,6 +17,7 @@
 //             （badge / badgeCol / desc / traits 只有能在选难度界面直接选的档要写）
 //   foeHp     人机对战里电脑的气血倍数（不写就是 1）
 //   reward    人机对战打赢给的墨锭（不写就是 20）
+// 找 bug 提示：某档电脑太强 / 太弱，先跑 node tools/ai/ai-ladder-report.mjs 看相邻两档的胜率。
 const DIFFICULTIES = [
   {
     id: 'easy', name: '入门',

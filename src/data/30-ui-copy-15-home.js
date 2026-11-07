@@ -1,3 +1,6 @@
+// 英文界面词条 · 首页和模式大厅：{ 中文原文: 英文译文 }，由 src/i18n.js 查表。
+// 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
+// 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
   // 首页「开始演武」和模式大厅（src/page.html 的 #homeEntries、#single）
   "开始演武": "Play",

@@ -1,3 +1,6 @@
+// 英文界面词条 · 通用界面：主页、菜单、对局里常见的按钮和提示：{ 中文原文: 英文译文 }，由 src/i18n.js 查表。
+// 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
+// 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
   "按 空格 或 回车 快速进入点将台": "Press Space or Enter to enter the draft",
   "为先锋挑选专属对局秘术，战斗中实时生效": "Choose a battle scroll for each hero. Its effect is active during the match.",

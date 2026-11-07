@@ -9,6 +9,7 @@
 //   hitNext 只有打中了才接的招；jumpCancel 打中后能跳起取消
 // l1~l5 地上轻攻击连段，l6~l10 是一套备用的快拳连段（目前只有雷鸣的第六拳从 l6 改出来），hv 重击，cs1 / cs2 蓄力斩（半蓄 / 满蓄），
 // a1 / a2 空中轻 / 重，dl 下蹲试探；cf 目前没有地方用到。
+// 找 bug 提示：某招手感不对先跑 node tools/checks/frame-data.mjs --check，看前摇 / 判定 / 后摇哪一格变了。
 const MOVES = {
   l1: { p: ['l1s', 'l1a'], su: .075, ac: .07, rc: .17, dmg: 14, kb: [170, 0], stun: .32, hs: .055, box: [8, -112, 82, -28], lunge: 150, next: { light: 'l2', heavy: 'hv' }, snd: 'swing' },
   l2: { p: ['l2s', 'l2a'], su: .07, ac: .07, rc: .18, dmg: 15, kb: [170, 0], stun: .32, hs: .055, box: [8, -108, 84, -36], lunge: 160, next: { light: 'l3', heavy: 'hv' }, snd: 'swing' },
