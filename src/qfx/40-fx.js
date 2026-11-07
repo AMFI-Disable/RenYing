@@ -1,4 +1,5 @@
 /* ---------------- 特效：粒子、剑光、预警、飘字 ---------------- */
+// 本文件：特效：粒子池（Particles）、剑光拖尾（Trail）、扇形 / 矩形攻击预警（fanGeo / rectGeo）、飘字。
 const FX = { list: [], add: null, ink: null, nums: [], shake: 0 };
 
 class Particles {

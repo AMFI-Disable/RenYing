@@ -1,4 +1,6 @@
 /* ---------------- 全局状态 / 相机 / 玩家 ---------------- */
+// 本文件：全局状态 G、相机 Cam、玩家 Pl：普攻（ATK）、重击、闪避、弹反（PARRY）、处决、技能入口、受伤，每帧 updatePlayer / updateCamera。
+// 找 bug 提示：手感问题先看文件开头的 ATK / HEAVY / PARRY 数值表；判定和伤害在 damageEnemy（60-enemies.js）。
 const G = { state: 'title', t: 0, hitstop: 0, enemyTS: 1, slowT: 0, enemies: [], projs: [], hazards: [], wave: 0, kills: 0, inter: 0, queue: [], spawnT: 0, tokens: 0, boss: null, endless: false, dmgDone: 0, maxCombo: 0, playT: 0 };
 const Cam = { yaw: PI, pitch: .34, dist: 7.4, distT: 7.4, shake: 0, pos: new V3(0, 4, 14), look: new V3(), fov: 52, tOrbit: 0 };
 const ATK = [

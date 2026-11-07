@@ -1,4 +1,5 @@
 /* ---------------- 界面 ---------------- */
+// 本文件：UI：血条、技能栏、路线图、卡片选择等 HTML 界面的刷新（页面骨架在 src/qfx/page.html）。
 const UI = {
   c: {}, toastT: 0,
   set(id, v) { if (this.c[id] !== v) { this.c[id] = v; $(id).textContent = v; } },

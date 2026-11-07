@@ -1,4 +1,5 @@
 /* ---------------- 主角青锋：精细模型（雕刻头面、千缕发丝、交领广袖、五指、云头靴） ---------------- */
+// 本文件：主角青锋的精细模型：衣料、发丝、皮革的贴图，头面（heroHead / heroFaceTex），makeHero 组装整个人。
 /* 主角专用贴图：暗纹绸、刺绣镶边、发丝、皮革 */
 function cloudSpiral(g, cx, cy, s, dir = 1) {
   g.beginPath(); for (let i = 0; i <= 40; i++) { const t = i / 40 * PI * 2.6, r = s * (1 - t / (PI * 2.6) * .82); g.lineTo(cx + Math.cos(t * dir) * r, cy + Math.sin(t) * r * .82); } g.stroke();

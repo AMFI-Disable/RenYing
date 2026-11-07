@@ -1,4 +1,6 @@
 /* ---------------- 渲染器 / 后期 / 材质 ---------------- */
+// 本文件：渲染器和后期（initGfx）、程序生成的贴图（makeCanvas / canvasTex）、材质（stdMat 带边缘光、windMat 随风摆）、几何缓存和合批（Batch）。
+// 找 bug 提示：画面发黑或闪烁先看 initGfx 里的色调映射和雾；卡顿先看合批数量（每种几何只建一次，存在 _geo）。
 const GFX = { time: { value: 0 }, quality: typeof dbg('quality') === 'number' ? dbg('quality') : 2 };
 const SUN_DIR = new V3(-.72, .36, -.6).normalize();
 const FOG_COL = new T.Color(0xb9a2a8);

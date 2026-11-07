@@ -1,4 +1,5 @@
 /* ---------------- 章节，和每一处战斗里一拨接一拨的来敌 ---------------- */
+// 本文件：章节表 CHAPTERS 和每处战斗里一拨接一拨的来敌（fillQueue / spawnFromQueue / updateStage）。
 const CHAPTERS = [
   { id: 'gate', n: '山门', idx: '第一章', sub: '暮山试剑',
     story: '暮色四合，黑风寨夜袭青云剑宗。师兄弟尽数下山未归，偌大试剑坪上，只剩你一人一剑。' },

@@ -1,4 +1,5 @@
 /* ---------------- 灵气珠 / 飞行物 / 成长 / 机缘 / 剑庐 ---------------- */
+// 本文件：灵气珠（Orbs）、飞行物（发射、反弹、命中）、经验和升级（gainXp）、机缘卡（PERKS / offerCards / takeCard）、剑庐商店 SHOP。
 const Orbs = { list: [], mesh: null, m4: new T.Matrix4(), col: [new T.Color(.35, 1, .88), new T.Color(1, .78, .25), new T.Color(1, .3, .25)] };
 function initOrbs(scene) { const m = Orbs.mesh = new T.InstancedMesh(new T.IcosahedronGeometry(.1, 0), new T.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), 500); m.count = 0; m.frustumCulled = false; m.setColorAt(0, Orbs.col[0]); scene.add(m); }
 function spawnOrb(p, type, val) { if (Orbs.list.length >= 500) { collectOrb(Orbs.list.shift()); } const a = rand(TAU), s = rand(1.5, 5); Orbs.list.push({ x: p.x, y: rand(.8, 1.6), z: p.z, vx: Math.cos(a) * s, vy: rand(3, 7), vz: Math.sin(a) * s, type, val, age: 0 }); }

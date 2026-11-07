@@ -1,4 +1,5 @@
 /* ---------------- 第二、三章的新敌人与首领阶段 ---------------- */
+// 本文件：第二、三章的新敌人（灵体 makeSpirit）、首领的阶段（PHASES / bossPhase）和专属招式（FOE_ATK）、场地危险。
 /* 飞剑剑灵：一柄悬空的剑，没有人形 */
 function makeSpirit(o) {
   const rig = { kind: 'blade', phase: rand(TAU), bones: [] }; rigBase(rig);

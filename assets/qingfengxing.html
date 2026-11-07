@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>青锋行</title>
+<!--
+  青锋行的页面骨架：上面是样式（布局、HUD、菜单、卡片），下面是 HTML 结构（画布、HUD、各个界面层），
+  最后两个占位标记由 tools/build.py 换成三维引擎和 src/qfx/*.js 拼好的游戏代码（打包后在 assets/qingfengxing.html）。
+  找 bug 提示：界面元素的 id 和 src/qfx/80-ui.js、90-main.js 里 $('id') 一一对应，改 id 要两边一起改。
+-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;900&display=swap" media="print" onload="this.media='all'">
 <style>
 /* 布局：全屏 3D 画布 + 四角水墨 HUD；菜单为左侧竖排题字 + 宣纸卷轴卡片 */
@@ -510,6 +515,9 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 (function(){
 'use strict';
 /* === 00-core.js === */
+// ---------------- 青锋行：公共底座 ----------------
+// 青锋行是一个三维的单机 / 联机小游戏，src/qfx/ 下的文件按编号拼进同一个闭包（tools/build.py 的 qfx_page），共用变量。
+// 本文件：数学小工具和带种子的随机数（mulberry / noise2 / fbm）、输入（键盘、鼠标、触屏）、合成音效 Snd。
 const T = THREE, V3 = T.Vector3, PI = Math.PI, TAU = PI * 2;
 const $ = id => document.getElementById(id);
 /* 调试开关：默认全关。只有页面加载前设了 window.__QFX_DEBUG = { ... } 才生效（测试、截图用），平常玩家碰不到：
@@ -678,6 +686,8 @@ const Snd = {
 
 /* === 10-gfx.js === */
 /* ---------------- 渲染器 / 后期 / 材质 ---------------- */
+// 本文件：渲染器和后期（initGfx）、程序生成的贴图（makeCanvas / canvasTex）、材质（stdMat 带边缘光、windMat 随风摆）、几何缓存和合批（Batch）。
+// 找 bug 提示：画面发黑或闪烁先看 initGfx 里的色调映射和雾；卡顿先看合批数量（每种几何只建一次，存在 _geo）。
 const GFX = { time: { value: 0 }, quality: typeof dbg('quality') === 'number' ? dbg('quality') : 2 };
 const SUN_DIR = new V3(-.72, .36, -.6).normalize();
 const FOG_COL = new T.Color(0xb9a2a8);
@@ -899,6 +909,7 @@ Batch.Q0 = new T.Quaternion(); Batch.S1 = new V3(1, 1, 1);
 
 /* === 12-terrain.js === */
 /* ---------------- 地形起伏：玩法始终在 y=0 平面上算，渲染时每个顶点按高度图抬起 ----------------
+// 本文件：地形高度图（TERR / gH 取高度、gN 取法线）和让角色、相机不穿进起伏地面的推挤（terrPush）。
    人物、特效、预警圈、阴影全走同一套着色器补丁，所以爬坡下谷不用改任何战斗代码。
    擂台地图关掉高度图（uHMp.w = 0），一切照旧。 */
 const TERR = {
@@ -1028,6 +1039,7 @@ function terrPush(p, rad) {
 }
 /* === 20-world.js === */
 /* ---------------- 场景框架：三张地图轮换；第一章 · 山门（试剑坪） ---------------- */
+// 本文件：World（当前地图和碰撞）、三张地图共用的贴图和布景（远山、草叶、落叶、雾环、山门），以及第一章山门的布置。
 const World = { colliders: [], lamps: [], fires: [], R: 46.5, id: '', root: null, grass: null, tick: null };
 const MAPS = {};
 World.update = (dt, t, focus) => { WIND_U.uPlayer.value.copy(focus); if (World.tick) World.tick(dt, t, focus); };
@@ -1334,6 +1346,7 @@ MAPS.gate = {
 };
 /* === 21-bamboo.js === */
 /* ---------------- 第二章 · 竹林：月夜竹海中的一片空地 ---------------- */
+// 本文件：第二章竹林：溪流和小路的形状、竹子的材质和叶片、石碑，buildBamboo 把整张地图搭起来。
 const BAMBOO_STREAM = [[64, -34], [46, -24], [32, -15], [24, -3], [22, 9], [27, 21], [38, 30], [60, 42]];
 const BAMBOO_PATH = [[1, 66], [0, 46], [-3, 33], [2, 20], [-2, 6], [-6, -8], [-2, -21], [0, -33], [0, -37]];
 /* 点到折线的距离 */
@@ -1578,6 +1591,7 @@ MAPS.bamboo = {
 };
 /* === 22-tomb.js === */
 /* ---------------- 第三章 · 剑冢：绝顶之上，万剑埋骨 ---------------- */
+// 本文件：第三章剑冢：插满地的剑（合并成少量网格以省绘制次数）、巨剑、符文贴图、祭坛，buildTomb 搭地图。
 function tombH(x, z) {
   const r = Math.hypot(x, z), n = noise2(x * .15 + 3, z * .15 - 1);
   if (r < 45.5) return 0;
@@ -1839,6 +1853,8 @@ MAPS.tomb = {
 };
 /* === 30-rig.js === */
 /* ---------------- 程序化建模：蒙皮网格、手绘面容、兵器 ---------------- */
+// 本文件：程序化建模：网格构建器 MB、手绘面容贴图、兵器（makeWeapon）、人形骨架（makeHumanoid）和它的动画（animHuman），妖狼（makeWolf）。
+// 找 bug 提示：动作别扭先看 HA（每个动作的关节目标）和 locomotion（走跑的步态）。
 const DOWN = new V3(0, -1, 0), UP = new V3(0, 1, 0);
 const POSE0 = { hipY: 0, hipRX: 0, hipRY: 0, hipRZ: 0, torRX: 0, torRY: 0, torRZ: 0, headRX: 0, headRY: 0, LaX: 0, LaZ: .14, LfX: -.2, RaX: 0, RaZ: -.14, RfX: -.2, LlX: 0, LlZ: .04, LsX: 0, RlX: 0, RlZ: -.04, RsX: 0, hx: -.34, hy: .95, hz: .1, dx: -.2, dy: -.6, dz: .75 };
 const PKEYS = Object.keys(POSE0);
@@ -2426,6 +2442,7 @@ function makeWolf(o) {
 
 /* === 31-hero.js === */
 /* ---------------- 主角青锋：精细模型（雕刻头面、千缕发丝、交领广袖、五指、云头靴） ---------------- */
+// 本文件：主角青锋的精细模型：衣料、发丝、皮革的贴图，头面（heroHead / heroFaceTex），makeHero 组装整个人。
 /* 主角专用贴图：暗纹绸、刺绣镶边、发丝、皮革 */
 function cloudSpiral(g, cx, cy, s, dir = 1) {
   g.beginPath(); for (let i = 0; i <= 40; i++) { const t = i / 40 * PI * 2.6, r = s * (1 - t / (PI * 2.6) * .82); g.lineTo(cx + Math.cos(t * dir) * r, cy + Math.sin(t) * r * .82); } g.stroke();
@@ -2819,6 +2836,7 @@ function makeHero(o) {
 }
 /* === 40-fx.js === */
 /* ---------------- 特效：粒子、剑光、预警、飘字 ---------------- */
+// 本文件：特效：粒子池（Particles）、剑光拖尾（Trail）、扇形 / 矩形攻击预警（fanGeo / rectGeo）、飘字。
 const FX = { list: [], add: null, ink: null, nums: [], shake: 0 };
 
 class Particles {
@@ -2981,6 +2999,8 @@ FX.clear = () => { for (const f of FX.list) { if (f.mesh) f.dead = true; } };
 
 /* === 50-player.js === */
 /* ---------------- 全局状态 / 相机 / 玩家 ---------------- */
+// 本文件：全局状态 G、相机 Cam、玩家 Pl：普攻（ATK）、重击、闪避、弹反（PARRY）、处决、技能入口、受伤，每帧 updatePlayer / updateCamera。
+// 找 bug 提示：手感问题先看文件开头的 ATK / HEAVY / PARRY 数值表；判定和伤害在 damageEnemy（60-enemies.js）。
 const G = { state: 'title', t: 0, hitstop: 0, enemyTS: 1, slowT: 0, enemies: [], projs: [], hazards: [], wave: 0, kills: 0, inter: 0, queue: [], spawnT: 0, tokens: 0, boss: null, endless: false, dmgDone: 0, maxCombo: 0, playT: 0 };
 const Cam = { yaw: PI, pitch: .34, dist: 7.4, distT: 7.4, shake: 0, pos: new V3(0, 4, 14), look: new V3(), fov: 52, tOrbit: 0 };
 const ATK = [
@@ -3343,6 +3363,7 @@ function updateCamera(dt, rdt) {
 
 /* === 55-skills.js === */
 /* ---------------- 剑谱：Q/E/R 三槽剑技 + V 绝学 ---------------- */
+// 本文件：剑谱：SK（Q / E / R 三个槽能学的剑技）和 ULT（V 绝学），地面区域效果（Zones）、冰冻、连锁雷，以及各招的具体做法 SKST。
 /* 剑技从破境的三选一里得来：槽没满就学新的，满了只出已学的升重（最多三重） */
 const SK = {
   qi: { n: '剑气纵横', g: '气', mp: 20, cd: 4, st: 'castQ', d: l => `横扫出 ${1 + 2 * (l - 1)} 道剑气，穿身而过。` },
@@ -3498,6 +3519,8 @@ function afterImage() {
 }
 /* === 60-enemies.js === */
 /* ---------------- 敌人 ---------------- */
+// 本文件：敌人：种类表 ET（血量、攻击、出招方式）、生成和唤醒、受伤 / 破架 / 被弹反 / 死亡、选招和出招、每帧 updateEnemy。
+// 找 bug 提示：同一时间能出手的敌人数量有限（攻击令牌 releaseToken），敌人站着不动多半是没拿到令牌。
 const skinA = 0xc49a78;
 const ET = {
   bandit: {
@@ -3773,6 +3796,7 @@ function updateEnemy(e, dt0, t) {
 
 /* === 62-foes.js === */
 /* ---------------- 第二、三章的新敌人与首领阶段 ---------------- */
+// 本文件：第二、三章的新敌人（灵体 makeSpirit）、首领的阶段（PHASES / bossPhase）和专属招式（FOE_ATK）、场地危险。
 /* 飞剑剑灵：一柄悬空的剑，没有人形 */
 function makeSpirit(o) {
   const rig = { kind: 'blade', phase: rand(TAU), bones: [] }; rigBase(rig);
@@ -3909,6 +3933,7 @@ function foeTick(e, dt) {
 }
 /* === 65-levels.js === */
 /* ---------------- 章节，和每一处战斗里一拨接一拨的来敌 ---------------- */
+// 本文件：章节表 CHAPTERS 和每处战斗里一拨接一拨的来敌（fillQueue / spawnFromQueue / updateStage）。
 const CHAPTERS = [
   { id: 'gate', n: '山门', idx: '第一章', sub: '暮山试剑',
     story: '暮色四合，黑风寨夜袭青云剑宗。师兄弟尽数下山未归，偌大试剑坪上，只剩你一人一剑。' },
@@ -3945,6 +3970,7 @@ function updateStage(dt) {
 function stageClear() { Save.stageDone(G.stage); Run.won(); }
 /* === 68-run.js === */
 /* ---------------- 一局：三章路线图（肉鸽） ---------------- */
+// 本文件：一局肉鸽：路线图的节点种类（NODE）、生成路线（genMap）和每个节点的来敌（genWaves）、Run（一局的进度）、随机事件 EVENTS。
 // 每局三章，每章一张七层路线图：先在最下面一层挑一处出发，之后每次只能走到相连的上一层，最上面是本章首领。
 // 战 遭遇 · 精 精锐 · 奇 奇遇 · 市 剑庐 · 憩 歇脚 · 宝 藏宝 · 首 首领。身死这一局就结束，剑魄和藏经阁的修为留着。
 // 在路线图上会自动存档（打到一半关掉，下次从路线图接着走）。
@@ -4196,6 +4222,9 @@ const EVENTS = [
 ];
 /* === 69-coop.js === */
 /* ---------------- 同袍肉鸽：两到四人一起闯同一张路线图 ----------------
+// 本文件：同袍肉鸽的联机（两到四人）：PeerJS 传输（或本机调试用 BroadcastChannel）、房主 / 同袍的收发、
+// 伤害和弹反的拦截、同袍的身影（ghost*）、敌人由房主计算再同步给大家。
+// 找 bug 提示：联机只有房主算敌人，同袍那边的敌人是照着房主发来的状态摆的；两边不一致先查 coopOut / coopIn。
    房主的网页说了算：路线、出敌、敌人的一举一动都在房主这边算，每秒十五次发给同袍；
    每个人只管自己的剑：自己砍中了敌人，把伤害报给房主；敌人的刀砍到谁，房主告诉谁，由那人自己的网页判定弹反、闪避。
    飞行物和地面预警每台都放一份，各自只算打没打中自己。
@@ -4734,6 +4763,7 @@ spawnEnemy = function (type, x, z, o) {
 };
 /* === 70-game.js === */
 /* ---------------- 灵气珠 / 飞行物 / 成长 / 机缘 / 剑庐 ---------------- */
+// 本文件：灵气珠（Orbs）、飞行物（发射、反弹、命中）、经验和升级（gainXp）、机缘卡（PERKS / offerCards / takeCard）、剑庐商店 SHOP。
 const Orbs = { list: [], mesh: null, m4: new T.Matrix4(), col: [new T.Color(.35, 1, .88), new T.Color(1, .78, .25), new T.Color(1, .3, .25)] };
 function initOrbs(scene) { const m = Orbs.mesh = new T.InstancedMesh(new T.IcosahedronGeometry(.1, 0), new T.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), 500); m.count = 0; m.frustumCulled = false; m.setColorAt(0, Orbs.col[0]); scene.add(m); }
 function spawnOrb(p, type, val) { if (Orbs.list.length >= 500) { collectOrb(Orbs.list.shift()); } const a = rand(TAU), s = rand(1.5, 5); Orbs.list.push({ x: p.x, y: rand(.8, 1.6), z: p.z, vx: Math.cos(a) * s, vy: rand(3, 7), vz: Math.sin(a) * s, type, val, age: 0 }); }
@@ -4888,6 +4918,7 @@ const SHOP = [
 
 /* === 75-meta.js === */
 /* ---------------- 存档：这一局走到哪了、战绩 ---------------- */
+// 本文件：存档（这一局走到哪、历史战绩）、剑魄和藏经阁的局外成长（META）、设置。
 const SAVE_KEY = 'qfx2';
 const Save = {
   d: null,
@@ -4954,6 +4985,7 @@ function setSetting(k, v) { Save.load().set[k] = v; Save.write(); applySettings(
 function applySettings() { if (Snd.out && !Snd.muted) Snd.out.gain.value = .55 * setting('vol') / .8; }
 /* === 80-ui.js === */
 /* ---------------- 界面 ---------------- */
+// 本文件：UI：血条、技能栏、路线图、卡片选择等 HTML 界面的刷新（页面骨架在 src/qfx/page.html）。
 const UI = {
   c: {}, toastT: 0,
   set(id, v) { if (this.c[id] !== v) { this.c[id] = v; $(id).textContent = v; } },
@@ -5051,6 +5083,7 @@ const UI = {
 
 /* === 85-tutorial.js === */
 /* ---------------- 试剑：第一次开局时在山门前走一遍，走完再看路线图 ---------------- */
+// 本文件：试剑：第一次开局时在山门前一步一步教（TUT 是步骤表），走完才看路线图。
 const K = (pc, tc) => Input.touch ? tc : pc;
 /* 每一步：id、提示 t、开始时 init、做到了 done；fail 返回 null（没失败）或 { retryTo: 退回哪一步的 id, hint?: 提示 } */
 const TUT = [
@@ -5088,6 +5121,7 @@ Tut.update = function (dt) {
 };
 /* === 90-main.js === */
 /* ---------------- 流程与主循环 ---------------- */
+// 本文件：流程和主循环：画质（applyQuality）、开新局 / 清场、Game（菜单 → 路线图 → 战斗 → 结算的流程）、按键、每帧 frame、绑定界面、boot 启动。
 const canvas = $('c'), root = $('game');
 const QN = ['流畅', '均衡', '精美', '极致'];
 function showBest() {

@@ -1,3 +1,6 @@
+// ---------------- 青锋行：公共底座 ----------------
+// 青锋行是一个三维的单机 / 联机小游戏，src/qfx/ 下的文件按编号拼进同一个闭包（tools/build.py 的 qfx_page），共用变量。
+// 本文件：数学小工具和带种子的随机数（mulberry / noise2 / fbm）、输入（键盘、鼠标、触屏）、合成音效 Snd。
 const T = THREE, V3 = T.Vector3, PI = Math.PI, TAU = PI * 2;
 const $ = id => document.getElementById(id);
 /* 调试开关：默认全关。只有页面加载前设了 window.__QFX_DEBUG = { ... } 才生效（测试、截图用），平常玩家碰不到：

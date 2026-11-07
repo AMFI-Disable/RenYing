@@ -1,4 +1,5 @@
 /* ---------------- 流程与主循环 ---------------- */
+// 本文件：流程和主循环：画质（applyQuality）、开新局 / 清场、Game（菜单 → 路线图 → 战斗 → 结算的流程）、按键、每帧 frame、绑定界面、boot 启动。
 const canvas = $('c'), root = $('game');
 const QN = ['流畅', '均衡', '精美', '极致'];
 function showBest() {

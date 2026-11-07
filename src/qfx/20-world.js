@@ -1,4 +1,5 @@
 /* ---------------- 场景框架：三张地图轮换；第一章 · 山门（试剑坪） ---------------- */
+// 本文件：World（当前地图和碰撞）、三张地图共用的贴图和布景（远山、草叶、落叶、雾环、山门），以及第一章山门的布置。
 const World = { colliders: [], lamps: [], fires: [], R: 46.5, id: '', root: null, grass: null, tick: null };
 const MAPS = {};
 World.update = (dt, t, focus) => { WIND_U.uPlayer.value.copy(focus); if (World.tick) World.tick(dt, t, focus); };

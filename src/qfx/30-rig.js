@@ -1,4 +1,6 @@
 /* ---------------- 程序化建模：蒙皮网格、手绘面容、兵器 ---------------- */
+// 本文件：程序化建模：网格构建器 MB、手绘面容贴图、兵器（makeWeapon）、人形骨架（makeHumanoid）和它的动画（animHuman），妖狼（makeWolf）。
+// 找 bug 提示：动作别扭先看 HA（每个动作的关节目标）和 locomotion（走跑的步态）。
 const DOWN = new V3(0, -1, 0), UP = new V3(0, 1, 0);
 const POSE0 = { hipY: 0, hipRX: 0, hipRY: 0, hipRZ: 0, torRX: 0, torRY: 0, torRZ: 0, headRX: 0, headRY: 0, LaX: 0, LaZ: .14, LfX: -.2, RaX: 0, RaZ: -.14, RfX: -.2, LlX: 0, LlZ: .04, LsX: 0, RlX: 0, RlZ: -.04, RsX: 0, hx: -.34, hy: .95, hz: .1, dx: -.2, dy: -.6, dz: .75 };
 const PKEYS = Object.keys(POSE0);
