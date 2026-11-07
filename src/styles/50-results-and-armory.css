@@ -109,6 +109,13 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-owned { position: absolute; top: 7px; right: 7px; padding: 4px 7px; color: #102019; background: #8de0ae; font-size: 12px; font-weight: 700; }
   .ar-codex-it.owned { border-color: rgba(141,224,174,.35); }
   .ar-sum b { font-family: var(--v-cond); font-size: 17px; color: #fff; }
+  .ar-upgrade-all { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid rgba(233,196,106,.35); background: linear-gradient(100deg, rgba(233,196,106,.12), rgba(233,196,106,.035)); }
+  .ar-upgrade-copy { display: grid; gap: 3px; flex: 1 1 230px; }
+  .ar-upgrade-copy b { color: var(--gold); font-size: 15px; }
+  .ar-upgrade-copy small, .ar-upgrade-price small, .ar-upgrade-short { color: var(--dim); font-size: 12px; }
+  .ar-upgrade-price { display: grid; gap: 2px; }
+  .ar-upgrade-price b { color: var(--v-white); font: 700 18px var(--v-cond); }
+  .ar-upgrade-short { color: #ffb4bb; }
   .ar-link { padding: 0; font: inherit; font-size: 12px; color: #9fd0ff; text-decoration: underline; cursor: pointer; background: none; border: none; }
   .ar-link:disabled { color: var(--dim); text-decoration: none; cursor: default; }
   .ar-caserow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }

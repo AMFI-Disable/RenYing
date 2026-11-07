@@ -498,7 +498,9 @@
       + (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
     const tl = tagLeft(s);
     const dupeP = C.dupePlan(s), dupeCount = dupeP.items.length;
+    const upgradeQuote = C.upgradeAllQuote(s), canUpgradeAll = live() && upgradeQuote.count > 0 && PROF.ink >= upgradeQuote.price;
     return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-list-dupes>一键挂牌市场（${dupeCount}件）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
+      ${upgradeQuote.count ? `<div class="ar-upgrade-all"><div class="ar-upgrade-copy"><b>批量升级为斩数版</b><small>库存中有 ${upgradeQuote.count} 件普通饰品可升级。</small></div><div class="ar-upgrade-price"><small>原价 ${fmt(upgradeQuote.basePrice)} 墨锭 · 省 ${fmt(upgradeQuote.discount)}（20% 折扣）</small><b>${fmt(upgradeQuote.price)} 墨锭</b></div><button type="button" class="go small" data-upgrade-all ${canUpgradeAll ? '' : 'disabled'}>全部升级</button>${live() && PROF.ink < upgradeQuote.price ? '<small class="ar-upgrade-short">墨锭不足</small>' : ''}</div>` : ''}
       ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
       <div class="ar-filter">
         <select id="arInvChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${INV.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
@@ -1128,6 +1130,7 @@
         return;
       }
       if (d.store) { confirmBox('买改名标签', `花 ${ink(C.STORE[0].cost)} 买一张改名标签？每周最多买 ${C.STORE[0].lim} 张。`, '购买', buyTag); return; }
+      if (d.upgradeAll !== undefined) { upgradeAllGo(); return; }
       if (d.sellDupes !== undefined || d.listDupes !== undefined) { listDupesGo(); return; }
       if (b.id === 'arGift') { const r = await act('gift', {}); if (r && r.ok) { SFX.gong && SFX.gong(); toast('新手礼：初刃武器箱 +1，终端机 +1'); render(); } return; }
       if (b.id === 'arTradeGo') { tradeGo(); return; }
@@ -1150,6 +1153,14 @@
     });
   }
   function sellDupesGo() { listDupesGo(); }
+  function upgradeAllGo() {
+    const quote = C.upgradeAllQuote(ST);
+    if (!quote.count) { msg('库存里没有普通饰品可升级'); return; }
+    confirmBox('批量升级为斩数版', `库存中有 ${quote.count} 件普通饰品可升级。原价 ${fmt(quote.basePrice)} 墨锭，20% 折扣省 ${fmt(quote.discount)} 墨锭，实付 ${fmt(quote.price)} 墨锭。升级后所有饰品从 0 斩开始，编号和名字保留，不能退回普通版。`, '确认批量升级', async () => {
+      const r = await act('upgradeAllSt', { count: quote.count, price: quote.price });
+      if (r && r.ok) { SFX.chargeFull && SFX.chargeFull(); toast(`已升级 ${r.count} 件斩数版，省下 ${fmt(r.discount)} 墨锭`); render(); }
+    });
+  }
   function tradeGo() {
     const s = ST, chk = C.tradeCheck(s, TR.sel); if (!chk.ok) { msg(chk.err); return; }
     confirmBox('签订汰换合同', `这 ${TR.sel.length} 件${C.TIER[chk.tier].n}饰品会被收走，换 1 件${C.TIER[chk.up].n}。确定吗？`, '签订', async () => {

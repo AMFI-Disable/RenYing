@@ -882,6 +882,29 @@
     histPush(s, { t: env.now, kind: 'upgrade', k: it.k, st: it.st, price: cost });
     return { ok: true, item: it, price: cost };
   };
+  C.upgradeAllQuote = s => {
+    const items = (s && Array.isArray(s.inv) ? s.inv : []).filter(it => it && it.st < 0 && C.ITEM[it.k]);
+    const basePrice = items.reduce((sum, it) => sum + (C.ST_UPGRADE_COST[C.ITEM[it.k].tier] || 0), 0);
+    const price = Math.floor(basePrice * 0.8);
+    return { count: items.length, basePrice, discount: basePrice - price, price };
+  };
+  A.upgradeAllSt = (s, a, env) => {
+    const items = s.inv.filter(it => it.st < 0 && C.ITEM[it.k]);
+    const quote = C.upgradeAllQuote(s);
+    if (!items.length) return { err: '库存里没有普通饰品可升级' };
+    if (+a.count !== quote.count || +a.price !== quote.price) return { err: '库存或价格已变化，请刷新后重新确认' };
+    if (items.some(it => !Number.isSafeInteger(C.ST_UPGRADE_COST[C.ITEM[it.k].tier]) || C.ST_UPGRADE_COST[C.ITEM[it.k].tier] < 0)) return { err: '升级价格设置不正确' };
+    if (env.ink < quote.price) return { err: `墨锭不够，批量升级要 ${quote.price}` };
+    giveInk(env, -quote.price);
+    const charges = items.map(it => Math.floor(C.ST_UPGRADE_COST[C.ITEM[it.k].tier] * quote.price / quote.basePrice));
+    let remainder = quote.price - charges.reduce((sum, cost) => sum + cost, 0);
+    for (let i = 0; remainder > 0; i = (i + 1) % charges.length, remainder--) charges[i]++;
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i]; it.st = 0;
+      histPush(s, { t: env.now, kind: 'upgrade', k: it.k, st: it.st, price: charges[i] });
+    }
+    return { ok: true, count: items.length, basePrice: quote.basePrice, discount: quote.discount, price: quote.price };
+  };
   A.equip = (s, a, env) => {
     const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
     const char = C.charOf(it.k);

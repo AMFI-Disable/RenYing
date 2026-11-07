@@ -1606,6 +1606,13 @@ body.offline .tn-online, body:not(.offline) .tn-offline { display: none !importa
 .ar-owned { position: absolute; top: 7px; right: 7px; padding: 4px 7px; color: #102019; background: #8de0ae; font-size: 12px; font-weight: 700; }
 .ar-codex-it.owned { border-color: rgba(141,224,174,.35); }
 .ar-sum b { font-family: var(--v-cond); font-size: 17px; color: #fff; }
+.ar-upgrade-all { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid rgba(233,196,106,.35); background: linear-gradient(100deg, rgba(233,196,106,.12), rgba(233,196,106,.035)); }
+.ar-upgrade-copy { display: grid; gap: 3px; flex: 1 1 230px; }
+.ar-upgrade-copy b { color: var(--gold); font-size: 15px; }
+.ar-upgrade-copy small, .ar-upgrade-price small, .ar-upgrade-short { color: var(--dim); font-size: 12px; }
+.ar-upgrade-price { display: grid; gap: 2px; }
+.ar-upgrade-price b { color: var(--v-white); font: 700 18px var(--v-cond); }
+.ar-upgrade-short { color: #ffb4bb; }
 .ar-link { padding: 0; font: inherit; font-size: 12px; color: #9fd0ff; text-decoration: underline; cursor: pointer; background: none; border: none; }
 .ar-link:disabled { color: var(--dim); text-decoration: none; cursor: default; }
 .ar-caserow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
@@ -5925,6 +5932,10 @@ const PATTERNS_EN = [
 [/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
 [/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
 [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`],
+[/^库存中有 (\d+) 件普通饰品可升级。$/, (m0, n) => `${n} regular items in your inventory can be upgraded.`],
+[/^原价 ([\d,]+) 墨锭 · 省 ([\d,]+)（20% 折扣）$/, (m0, base, saved) => `Was ${base} Ink · save ${saved} (20% off)`],
+[/^库存中有 (\d+) 件普通饰品可升级。原价 ([\d,]+) 墨锭，20% 折扣省 ([\d,]+) 墨锭，实付 ([\d,]+) 墨锭。升级后所有饰品从 0 斩开始，编号和名字保留，不能退回普通版。$/, (m0, n, base, saved, price) => `${n} regular items can be upgraded. Original price: ${base} Ink. Save ${saved} Ink with the 20% discount; pay ${price} Ink. All items start at 0 kills. Their IDs and names stay the same, and the upgrade cannot be undone.`],
+[/^已升级 (\d+) 件斩数版，省下 ([\d,]+) 墨锭$/, (m0, n, saved) => `Upgraded ${n} items to Kill Counter editions and saved ${saved} Ink`],
 [/^(\d+:\d{2}) · 全服随机$/, (m0, t) => `${t} · Anyone online`],
 [/^(\d+:\d{2}) · 匹配范围 (.+?)(?:–(.+?))? 段$/, (m0, t, a, b) => `${t} · Range ${lookup(a) || a}${b ? `–${lookup(b) || b}` : ''}`],
 [/^排位赛：(.+)$/, (m0, r) => `Competitive: ${lookup(r) || r}`],
@@ -7922,6 +7933,12 @@ const UI_COPY_EN = {
 "敌方阵线技高一筹": "Enemy sect had the upper hand",
 "教学完成": "Tutorial Completed",
 "斩数版": "Kill Counter",
+"批量升级为斩数版": "Bulk upgrade to Kill Counter",
+"全部升级": "Upgrade all",
+"确认批量升级": "Confirm bulk upgrade",
+"库存里没有普通饰品可升级": "There are no regular items in your inventory to upgrade",
+"库存或价格已变化，请刷新后重新确认": "Your inventory or the price changed. Refresh and confirm again.",
+"墨锭不足": "Not enough Ink",
 "断网中": "Offline",
 "新手教学": "Tutorial",
 "新手演练·招式教学": "Tutorial & Moves Guide",
@@ -34647,6 +34664,29 @@ it.st = 0;
 histPush(s, { t: env.now, kind: 'upgrade', k: it.k, st: it.st, price: cost });
 return { ok: true, item: it, price: cost };
 };
+C.upgradeAllQuote = s => {
+const items = (s && Array.isArray(s.inv) ? s.inv : []).filter(it => it && it.st < 0 && C.ITEM[it.k]);
+const basePrice = items.reduce((sum, it) => sum + (C.ST_UPGRADE_COST[C.ITEM[it.k].tier] || 0), 0);
+const price = Math.floor(basePrice * 0.8);
+return { count: items.length, basePrice, discount: basePrice - price, price };
+};
+A.upgradeAllSt = (s, a, env) => {
+const items = s.inv.filter(it => it.st < 0 && C.ITEM[it.k]);
+const quote = C.upgradeAllQuote(s);
+if (!items.length) return { err: '库存里没有普通饰品可升级' };
+if (+a.count !== quote.count || +a.price !== quote.price) return { err: '库存或价格已变化，请刷新后重新确认' };
+if (items.some(it => !Number.isSafeInteger(C.ST_UPGRADE_COST[C.ITEM[it.k].tier]) || C.ST_UPGRADE_COST[C.ITEM[it.k].tier] < 0)) return { err: '升级价格设置不正确' };
+if (env.ink < quote.price) return { err: `墨锭不够，批量升级要 ${quote.price}` };
+giveInk(env, -quote.price);
+const charges = items.map(it => Math.floor(C.ST_UPGRADE_COST[C.ITEM[it.k].tier] * quote.price / quote.basePrice));
+let remainder = quote.price - charges.reduce((sum, cost) => sum + cost, 0);
+for (let i = 0; remainder > 0; i = (i + 1) % charges.length, remainder--) charges[i]++;
+for (let i = 0; i < items.length; i++) {
+const it = items[i]; it.st = 0;
+histPush(s, { t: env.now, kind: 'upgrade', k: it.k, st: it.st, price: charges[i] });
+}
+return { ok: true, count: items.length, basePrice: quote.basePrice, discount: quote.discount, price: quote.price };
+};
 A.equip = (s, a, env) => {
 const it = C.findItem(s, +a.i); if (!it) return { err: '库存里没有这件' };
 const char = C.charOf(it.k);
@@ -35324,7 +35364,9 @@ const cases = C.CASES.filter(c => s.cases[c] > 0).map(c => `<button type="button
 + (s.term || s.tm ? `<button type="button" class="ar-caseitem" data-gotab="term" style="--cc:120,220,200"><span class="ar-emb">终</span><b>终端机</b><small>×${s.term + (s.tm ? 1 : 0)}</small></button>` : '');
 const tl = tagLeft(s);
 const dupeP = C.dupePlan(s), dupeCount = dupeP.items.length;
+const upgradeQuote = C.upgradeAllQuote(s), canUpgradeAll = live() && upgradeQuote.count > 0 && PROF.ink >= upgradeQuote.price;
 return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-list-dupes>一键挂牌市场（${dupeCount}件）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
+${upgradeQuote.count ? `<div class="ar-upgrade-all"><div class="ar-upgrade-copy"><b>批量升级为斩数版</b><small>库存中有 ${upgradeQuote.count} 件普通饰品可升级。</small></div><div class="ar-upgrade-price"><small>原价 ${fmt(upgradeQuote.basePrice)} 墨锭 · 省 ${fmt(upgradeQuote.discount)}（20% 折扣）</small><b>${fmt(upgradeQuote.price)} 墨锭</b></div><button type="button" class="go small" data-upgrade-all ${canUpgradeAll ? '' : 'disabled'}>全部升级</button>${live() && PROF.ink < upgradeQuote.price ? '<small class="ar-upgrade-short">墨锭不足</small>' : ''}</div>` : ''}
 ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
 <div class="ar-filter">
 <select id="arInvChar" class="ar-sel"><option value="">全部侠客</option>${CHARS.map(c => `<option value="${c.id}" ${INV.char === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
@@ -35931,6 +35973,7 @@ if (r && r.ok) { if (r.item) reveal(r.item); else toast('兑换成功'); render(
 return;
 }
 if (d.store) { confirmBox('买改名标签', `花 ${ink(C.STORE[0].cost)} 买一张改名标签？每周最多买 ${C.STORE[0].lim} 张。`, '购买', buyTag); return; }
+if (d.upgradeAll !== undefined) { upgradeAllGo(); return; }
 if (d.sellDupes !== undefined || d.listDupes !== undefined) { listDupesGo(); return; }
 if (b.id === 'arGift') { const r = await act('gift', {}); if (r && r.ok) { SFX.gong && SFX.gong(); toast('新手礼：初刃武器箱 +1，终端机 +1'); render(); } return; }
 if (b.id === 'arTradeGo') { tradeGo(); return; }
@@ -35953,6 +35996,14 @@ render();
 });
 }
 function sellDupesGo() { listDupesGo(); }
+function upgradeAllGo() {
+const quote = C.upgradeAllQuote(ST);
+if (!quote.count) { msg('库存里没有普通饰品可升级'); return; }
+confirmBox('批量升级为斩数版', `库存中有 ${quote.count} 件普通饰品可升级。原价 ${fmt(quote.basePrice)} 墨锭，20% 折扣省 ${fmt(quote.discount)} 墨锭，实付 ${fmt(quote.price)} 墨锭。升级后所有饰品从 0 斩开始，编号和名字保留，不能退回普通版。`, '确认批量升级', async () => {
+const r = await act('upgradeAllSt', { count: quote.count, price: quote.price });
+if (r && r.ok) { SFX.chargeFull && SFX.chargeFull(); toast(`已升级 ${r.count} 件斩数版，省下 ${fmt(r.discount)} 墨锭`); render(); }
+});
+}
 function tradeGo() {
 const s = ST, chk = C.tradeCheck(s, TR.sel); if (!chk.ok) { msg(chk.err); return; }
 confirmBox('签订汰换合同', `这 ${TR.sel.length} 件${C.TIER[chk.tier].n}饰品会被收走，换 1 件${C.TIER[chk.up].n}。确定吗？`, '签订', async () => {

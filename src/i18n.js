@@ -87,6 +87,10 @@
     [/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
     [/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
     [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`],
+    [/^库存中有 (\d+) 件普通饰品可升级。$/, (m0, n) => `${n} regular items in your inventory can be upgraded.`],
+    [/^原价 ([\d,]+) 墨锭 · 省 ([\d,]+)（20% 折扣）$/, (m0, base, saved) => `Was ${base} Ink · save ${saved} (20% off)`],
+    [/^库存中有 (\d+) 件普通饰品可升级。原价 ([\d,]+) 墨锭，20% 折扣省 ([\d,]+) 墨锭，实付 ([\d,]+) 墨锭。升级后所有饰品从 0 斩开始，编号和名字保留，不能退回普通版。$/, (m0, n, base, saved, price) => `${n} regular items can be upgraded. Original price: ${base} Ink. Save ${saved} Ink with the 20% discount; pay ${price} Ink. All items start at 0 kills. Their IDs and names stay the same, and the upgrade cannot be undone.`],
+    [/^已升级 (\d+) 件斩数版，省下 ([\d,]+) 墨锭$/, (m0, n, saved) => `Upgraded ${n} items to Kill Counter editions and saved ${saved} Ink`],
     // 匹配：计时后面的范围、排位、邀请、版本不符
     [/^(\d+:\d{2}) · 全服随机$/, (m0, t) => `${t} · Anyone online`],
     [/^(\d+:\d{2}) · 匹配范围 (.+?)(?:–(.+?))? 段$/, (m0, t, a, b) => `${t} · Range ${lookup(a) || a}${b ? `–${lookup(b) || b}` : ''}`],
