@@ -94,6 +94,24 @@ section('升级斩数版：按品质收费、保留饰品编号并防止重复�
   ok(denied.res.err && /墨锭不够/.test(denied.res.err) && inkOf(poor.uid) === poorBefore && itemOf(poor.uid, poorItem.i).st === -1, '墨锭不足时不改饰品、不扣款');
 }
 
+section('批量升级斩数版：Worker 识别操作、按总价打八折并安全重放');
+{
+  const U = await newUser('bulk-st-upgrader', { ink: 5000 }); await econ(U.token, 'sync');
+  const given = grant(U.uid, [{ k: 'qf_p1', n: '青锋旧名' }, { k: 'ts_p1' }, { k: 'gc_wolf', st: 4 }]);
+  const before = inkOf(U.uid), quote = C.upgradeAllQuote(stateOf(U.uid)), requestNonce = nonce();
+  const upgraded = await econ(U.token, 'upgradeAllSt', { count: quote.count, price: quote.price }, requestNonce);
+  const replay = await econ(U.token, 'upgradeAllSt', { count: quote.count, price: quote.price }, requestNonce);
+  const upgradedItems = given.slice(0, 2).map(it => itemOf(U.uid, it.i));
+  const existing = itemOf(U.uid, given[2].i);
+  ok(C.ACTIONS.includes('upgradeAllSt') && upgraded.res.ok && upgraded.res.count === 2 && upgraded.res.price === quote.price &&
+    quote.price === Math.floor(quote.basePrice * 0.8) && inkOf(U.uid) === before - quote.price,
+  'Worker 接受 upgradeAllSt 并按合计价格八折扣款', { actions: C.ACTIONS.includes('upgradeAllSt'), quote, res: upgraded.res });
+  ok(upgradedItems.every((it, i) => it && it.st === 0 && it.i === given[i].i && it.n === given[i].n) && existing.st === 4,
+    '普通饰品保留编号和名字并从 0 斩开始，已有斩数版保持不变', { upgradedItems, existing });
+  ok(replay.replay && inkOf(U.uid) === before - quote.price && stateOf(U.uid).hist.filter(h => h.kind === 'upgrade').length === 2,
+    '重放同一批量升级请求不会重复扣款或写流水', replay);
+}
+
 section('一键开箱：单次请求按共享额度开箱，重试不会重复');
 {
   const u = await newUser('bulkCases'); await econ(u.token, 'sync');
