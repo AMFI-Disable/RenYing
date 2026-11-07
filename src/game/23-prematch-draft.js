@@ -240,7 +240,9 @@ function competitiveDraftStart(state, mode, opts, onComplete, online = false) {
   const sides = online ? [NET.role === 'host' ? 0 : 1] : [0, 1];
   for (let side = 0; side < 2; side++) for (let slot = 0; slot < state.picks[side].length; slot++) {
     const human = sides.includes(side) && competitiveHumanSlots(state, mode, opts, side).includes(slot);
-    if (!human && !state.selections[side][slot] && recommendations[side][slot]) preMatchSelect(state, side, slot, recommendations[side][slot]);
+    // Keep the other player's online slots empty so their client can choose them.
+    const remoteHuman = online && side !== sides[0] && competitiveHumanSlots(state, mode, opts, side).includes(slot);
+    if (!human && !remoteHuman && !state.selections[side][slot] && recommendations[side][slot]) preMatchSelect(state, side, slot, recommendations[side][slot]);
   }
   if (skipInteractiveDraft()) {
     for (let side = 0; side < 2; side++) for (let slot = 0; slot < state.picks[side].length; slot++)
