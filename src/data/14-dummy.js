@@ -1,6 +1,6 @@
 // ======================= 木人试剑：稻草人的对手行为 =======================
 // 木人桩里点「对手行为」（键盘 Tab，触屏左上角）打开的那一栏：稻草人做什么、做一次还是一直做、多久做一次、几项特性。
-// 动作的具体做法在 src/game/07-ai-story.js 的 DummyCtrl（DUMMY_JOBS）；栏在 src/game/21-buttons.js。随机用对局随机数 grnd，不用 Math.random。
+// 动作的具体做法在 src/game/07-ai-story.js 的 DummyCtrl（DUMMY_JOBS）；栏在 src/game/21-buttons-02-training.js。随机用对局随机数 grnd，不用 Math.random。
 //   DUMMY_ACTS   动作：id、n 名字、d 一句说明、k 种类
 //                k: 'hold' 一直保持（站桩、走动、格挡），'react' 看时机反应（招架、受击反击、起身攻击），'do' 每隔一段时间做一次
 //   DUMMY_GAPS   「do」类动作两次之间隔几秒

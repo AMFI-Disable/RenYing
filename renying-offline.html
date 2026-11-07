@@ -3362,7 +3362,7 @@ white-space: nowrap;
       </div>
 
       <div class="xiwu-config">
-      <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons.js 的 setPickLevel -->
+      <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons-01-screen-controls.js 的 setPickLevel -->
       <div id="aiLvHome">
         <div class="ai-lv-bar" id="aiLvBar">
           <div class="sec-head-row">
@@ -4395,7 +4395,7 @@ white-space: nowrap;
       </div>
     </div>
   </div>
-  <!-- 木人试剑：对手行为栏（src/game/21-buttons.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
+  <!-- 木人试剑：对手行为栏（src/game/21-buttons-02-training.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
   <button class="dummy-bar-btn hidden" id="dummyBarBtn" type="button">对手行为</button>
   <div class="dummy-bar hidden" id="dummyBar" role="dialog" aria-modal="true" aria-label="对手行为">
     <div class="db-head"><b>对手行为</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
@@ -26605,7 +26605,7 @@ st.addEventListener('pointermove', e => { if (e.pointerId === TUI.stick) move(e)
 const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; if (secretEnabled) return; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; touchHeldJump(); };
 st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
 $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
-$id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons.js）
+$id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons-02-training.js）
 document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
@@ -26761,6 +26761,7 @@ if (scr) scr.scrollTop = 0;
 SFX.slice();
 });
 }
+if ($id('xiwuQuickGo')) $id('xiwuQuickGo').addEventListener('click', () => { if (menuHeroId < 0) setMenuHero(menuHeroPick()); heroQuickFight(); });
 let trainChar = 0, trainTargetMode = 'dummy';
 const trainModeSegEl = $id('trainModeSeg');
 if (trainModeSegEl) {
@@ -26979,7 +26980,6 @@ if (p && p.isConnected && (!document.activeElement || document.activeElement ===
 }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
 }
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
-if ($id('xiwuQuickGo')) $id('xiwuQuickGo').addEventListener('click', () => { if (menuHeroId < 0) setMenuHero(menuHeroPick()); heroQuickFight(); });
 function renderTag3() {}
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 if (p2pActive()) netDropWaiting();

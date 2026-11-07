@@ -95,7 +95,7 @@
   color: var(--gold); background: rgba(13,21,30,.82); border: 1px solid rgba(233,196,106,.45); border-radius: var(--r-pill); }
 body.kb-only.has-nav .kb-hint { display: block; }
 
-/* 木人试剑：对手行为栏（src/game/21-buttons.js） */
+/* 木人试剑：对手行为栏（src/game/21-buttons-02-training.js） */
 .dummy-bar-btn { position: fixed; left: calc(16px + env(safe-area-inset-left)); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 16; padding: 7px 14px; border-radius: 18px; border: 1px solid rgba(233,196,106,.55); background: rgba(10,10,24,.72); color: #f4ecd8; font: 600 13px var(--body); cursor: pointer; }
 .dummy-bar-btn:hover, .dummy-bar-btn:focus-visible { background: rgba(233,196,106,.22); }
 .dummy-bar-btn.hidden, .dummy-bar.hidden { display: none; }

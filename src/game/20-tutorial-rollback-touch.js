@@ -482,7 +482,7 @@ if (TOUCH) {
   const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; if (secretEnabled) return; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; touchHeldJump(); };
   st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
   $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
-  $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons.js）
+  $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons-02-training.js）
   document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
 

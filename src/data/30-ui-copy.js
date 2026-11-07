@@ -1661,7 +1661,7 @@ const UI_COPY_EN = {
   "🎲 乾坤异变": "🎲 Celestial Shift",
   "天机乱斗 · 乾坤异变": "Chaos Mutators · Celestial Shift",
   "天机乱斗 · 乾坤异变观战": "Chaos Mutators · Watch the AI",
-  // 木人桩的试剑数据卡（src/game/16-draw-ui.js drawTrainStats、14-dummy.js、21-buttons.js 的对手行为栏）
+  // 木人桩的试剑数据卡（src/game/16-draw-ui.js drawTrainStats、14-dummy.js、21-buttons-02-training.js 的对手行为栏）
   "当前连击": "Current combo",
   "最高连击": "Best combo",
   "累计伤害": "Total damage",
