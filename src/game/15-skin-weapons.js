@@ -1136,12 +1136,21 @@ function drawProjs(glowOnly) {
       if (ownerF && !p.dead) {
         ctx.save();
         const yoyoBurst = p.yoyoPhase === 'lash' || p.yoyoPhase === 'ult-pass' || p.yoyoPhase === 'ult-return';
-        ctx.strokeStyle = yoyoBurst ? 'rgba(255,225,120,0.88)' : 'rgba(235,165,70,0.4)';
-        ctx.lineWidth = yoyoBurst ? 2 : 1;
+        const tetherRange = Math.max(1, p.yoyoRange || 600);
+        const tension = p.yoyo ? clamp(Math.abs(p.x - ownerF.x) / tetherRange, 0, 1) : 0;
+        const anchorX = ownerF.x + (ownerF.face || 1) * 18;
+        const anchorY = ownerF.y - 50;
+        ctx.strokeStyle = yoyoBurst ? 'rgba(255,225,120,0.92)' : `rgba(235,165,70,${0.38 + tension * 0.32})`;
+        ctx.lineWidth = yoyoBurst ? 2.4 : 1 + tension * 0.8;
         if (yoyoBurst) { ctx.shadowColor = '#ffd24a'; ctx.shadowBlur = 8; }
-        ctx.beginPath(); ctx.moveTo(p.x, p.y);
-        ctx.quadraticCurveTo((p.x + ownerF.x) / 2, Math.min(p.y, ownerF.y - 45) - (p.recalling ? 10 : 35), ownerF.x, ownerF.y - 45);
+        ctx.beginPath(); ctx.moveTo(anchorX, anchorY);
+        ctx.quadraticCurveTo((p.x + anchorX) / 2, Math.min(p.y, anchorY) - (p.recalling ? 5 : 30 * (1 - tension)), p.x, p.y);
         ctx.stroke();
+        if (tension > 0.82 && !yoyoBurst) {
+          ctx.globalAlpha = (tension - 0.82) * 3.5;
+          ctx.strokeStyle = 'rgba(255,232,175,0.8)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(anchorX, anchorY); ctx.lineTo(p.x, p.y); ctx.stroke();
+        }
         ctx.restore();
       }
       ctx.translate(p.x, p.y);

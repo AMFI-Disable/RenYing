@@ -99,10 +99,41 @@ function targetPose(f) {
     const ph = f.walkPh, sn = Math.sin(ph), cs = Math.cos(ph);
     out.ff = [4 + sn * 18, -Math.max(0, cs) * 12];
     out.fb = [-4 - sn * 18, -Math.max(0, -cs) * 12];
-    const bob = -Math.abs(cs) * 2.8;
+    const weight = clamp((f.ch && f.ch.stat && f.ch.stat.weight) || 1, 0.75, 1.4);
+    const bob = -Math.abs(cs) * (2.8 + (1 - weight) * 2.2);
     out.hip[1] += bob; out.neck[1] += bob; out.hf[1] += bob - sn * 2.2; out.hb[1] += bob + sn * 2.2;
     const lean = f.vx * f.face > 0 ? 4.5 : -2.5;
-    out.neck[0] += lean; out.hf[0] += lean * 0.5 - sn * 3; out.hb[0] += sn * 3;
+    out.neck[0] += lean * (1.2 - weight * 0.2); out.hf[0] += lean * 0.5 - sn * 3; out.hb[0] += sn * 3;
+  }
+  // Combat-feel poses are presentation only: weight changes how fighters brace and
+  // recover visually, while the fixed-step hit timing and all combat values stay intact.
+  const weight = clamp((f.ch && f.ch.stat && f.ch.stat.weight) || 1, 0.75, 1.4);
+  if (s === 'attack' && f.move && f.t < f.move.su) {
+    const brace = weight - 1;
+    out.hip[1] += brace * 7;
+    out.neck[0] -= brace * 5;
+    out.ff[0] -= brace * 7;
+    out.fb[0] += brace * 7;
+    out.hb[0] -= brace * 4;
+  } else if (s === 'hitstun') {
+    const recoil = clamp((f.vx * f.face) / 700, -1, 1);
+    const lightness = clamp(1.15 - weight, 0, 0.4);
+    out.neck[0] -= recoil * (5 + lightness * 13);
+    out.hf[0] -= recoil * (2 + lightness * 7);
+    out.hb[0] -= recoil * (2 + lightness * 5);
+    out.hip[1] += Math.abs(recoil) * (1 - lightness) * 3;
+  } else if (s === 'block' || s === 'blockstun') {
+    const brace = clamp(weight - 0.85, 0, 0.45);
+    out.hip[1] += brace * 5;
+    out.ff[0] -= brace * 5;
+    out.fb[0] += brace * 5;
+    out.hf[0] -= brace * 3;
+  }
+  // 醉翁's sway tells opponents when his wine-fueled evasive passive is active.
+  if (f.ch && f.ch.passive === 'drunk' && (f.drunk || 0) >= 50 && ['idle', 'walk'].includes(s)) {
+    const sway = Math.sin(clock * 7 + f.idx) * Math.min(1, (f.drunk - 45) / 35);
+    out.neck[0] += sway * 3.5;
+    out.hip[0] -= sway * 1.5;
   }
   if (f.flash > 0 && s === 'hitstun') { out.neck[0] -= 4; }
   if (s === 'charge' && f.t >= CHARGE_FULL) { out.hf[0] += rand(-1.2, 1.2); out.hf[1] += rand(-1.2, 1.2); }
