@@ -134,7 +134,7 @@
 | 凌雀 | 飞梭游侠 | 穿叶飞梭 | 移形换影 | 万线归宗 |
 | 离影 | 离魂刀客 | 留影 | 渡影 | 万影归一 |
 | 磁仙 | 两极方士 | 极性反转 | 磁极 | 天地磁合 |
-| 千机 | 机关傀客 | 投丸 | 暴雨梨花 | 千丝收网 |
+| 千机 | 机关傀客 | 金丝回环 | 穿丝急袭 | 机轮三穿 |
 
 完整招式和帧数见 [Wiki：侠客与战斗](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) 和 [docs/ai/frame-data.md](docs/ai/frame-data.md)。
 

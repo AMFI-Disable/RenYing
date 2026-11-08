@@ -23,7 +23,7 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` (or ho
 | **凌雀** Ling Que | 飞梭游侠 Shuttle Wanderer | 雀芒 Sparrow Mark | 穿叶飞梭 Leaf-Piercing Shuttle | 移形换影 Shadow Swap | 万线归宗 Thousand Threads | ★★★ |
 | **离影** Li Ying | 离魂刀客 Soul-Parted Blade | 离魂 Parted Soul | 留影 Mist Mark | 渡影 Mist Crossing | 万影归一 Myriad Mists | ★★★ |
 | **磁仙** Ci Xian | 两极方士 Two-Pole Adept | 磁极 Magnet Poles | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp | ★★★ |
-| **千机** Qian Ji | 机关傀客 Puppet Engineer | 机栝动能 Clockwork Momentum | 投丸 Ball Throw | 暴雨梨花 Needle Burst | 千丝收网 Silk Recall | ★★★ |
+| **千机** Qian Ji | 机关傀客 Puppet Engineer | 机栝动能 Clockwork Momentum | 金丝回环 Silk Loop | 穿丝急袭 Tether Lash | 机轮三穿 Gearwheel Triple Pass | ★★★ |
 
 ## Hero Notes / 侠客要点
 
@@ -42,7 +42,7 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` (or ho
 - **凌雀 Ling Que** — linked shuttles put Sparrow Marks on the target (up to 5); Shadow Swap homes in on the target.
 - **离影 Li Ying** — leaves mist doubles of her soul around the stage and swaps to them. Heavier body, single jump.
 - **磁仙 Ci Xian** — starts each round with a random magnetic pole and switches with `Q`. Positive hits launch; negative hits pull the enemy in and keep combos going.
-- **千机 Qian Ji** — throws one puppet ball that bounces and stays on the stage. Hitting the ball with your own attacks speeds it up and lets it break enemy projectiles. Needle Burst fires from the ball, even while you are being hit; Silk Recall pulls it back through every enemy in the way and resets `Q`.
+- **千机 Qian Ji** — 金丝回环 (Silk Loop) keeps the puppet ball moving back and forth within a bounded tether. Your attacks can redirect and speed it up. 穿丝急袭 (Tether Lash) sends it through the aimed lane and breaks hitstun; 机轮三穿 (Gearwheel Triple Pass) makes three arena passes, then recalls the ball and refreshes `Q`.
 
 ## How A Match Works / 对局规则
 

@@ -134,7 +134,7 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` and an
 | 凌雀 Ling Que | Shuttle Wanderer | 穿叶飞梭 Leaf-Piercing Shuttle | 移形换影 Shadow Swap | 万线归宗 Thousand Threads |
 | 离影 Li Ying | Soul-Parted Blade | 留影 Mist Mark | 渡影 Mist Crossing | 万影归一 Myriad Mists |
 | 磁仙 Ci Xian | Two-Pole Adept | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp |
-| 千机 Qian Ji | Puppet Engineer | 投丸 Ball Throw | 暴雨梨花 Needle Burst | 千丝收网 Silk Recall |
+| 千机 Qian Ji | Puppet Engineer | 金丝回环 Silk Loop | 穿丝急袭 Tether Lash | 机轮三穿 Gearwheel Triple Pass |
 
 Full move lists and frame data: [wiki: Heroes And Combat](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) and [docs/ai/frame-data.md](docs/ai/frame-data.md).
 
