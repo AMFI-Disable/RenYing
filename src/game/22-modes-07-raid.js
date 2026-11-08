@@ -144,6 +144,7 @@ function startRaidMatch(squadPicks, squadSize = 3, opts = null) {
     return;
   }
   FOREST.on = false; B.forestProxy = false; B.hidden = false;
+  recBegin('loc');
   startRound();
   const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
   say(`${story.title} · 决战【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', story.bossIntro || (perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享'));

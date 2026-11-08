@@ -70,6 +70,7 @@ function startTower(heroIdx, isWatch = false) {
   A.meter = B.meter = 0;
   human[0].clear(); human[1].clear();
   showScreen(null);
+  if (!isWatch) recBegin('loc');
   startRound();
   if (!isWatch) saveTowerRun();
   say(isWatch ? '问剑密卷 · 天道爬塔观战' : '问剑密卷 · 第 1 层', 1.4);
@@ -106,6 +107,7 @@ function resumeTower() {
     A.hp = Math.min(A.maxHp, run.hp);
     A.lagHp = A.hp;
   }
+  recBegin('loc');
   saveTowerRun();
   say(`问剑密卷 · 继续第 ${M.towerFloor} 层`, 1.4);
 }
@@ -179,6 +181,7 @@ function nextTowerFloor() {
   M.level = lv;
   if (M.watchAi) A.ctrl = new AICtrl('god');
   B.ctrl = new AICtrl(lv);
+  if (!M.watchAi) recBegin('loc');
   startRound();   // 每层满血开打（和其他 1v1 一样）；秘卷的开局效果在 startRound 里生效
   if (!M.watchAi) saveTowerRun();
   say(M.watchAi ? `天道爬塔 · 第 ${M.towerFloor} 层` : `万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);

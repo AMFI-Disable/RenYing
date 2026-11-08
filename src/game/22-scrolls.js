@@ -306,7 +306,10 @@ for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
 
 // ---------- 谁有哪些秘卷 ----------
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || M.mode === 'world' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()) || !!M.hasBuffs; }
+function scOn() {
+  const replayMode = M.mode === 'replay' && REPLAY.on && REPLAY.m ? REPLAY.m.mode : '';
+  return ['tower', 'boss', 'saga', 'world', 'raid'].includes(M.mode) || ['tower', 'boss', 'saga', 'world', 'raid'].includes(replayMode) || !!M.worldKey || (typeof isRaid === 'function' && isRaid()) || !!M.hasBuffs;
+}
 const scEligible = f => !!(f && (f.idx <= 3 || (typeof isRaid === 'function' && isRaid())));
 function scIds(f) {
   if (!f) return [];

@@ -432,6 +432,11 @@ export default [
       }
       const team = matchReviewData({ mode: 'net', four: true, sub: 'pp_cc', playerSide: 1, stats: [{ damage: 100 }, { damage: 90 }, { damage: 40 }, { damage: 20 }] });
       if (!team || !team.team || team.dealt !== 140 || team.taken !== 110) return { pass: false, error: 'AI review did not aggregate team performance correctly' };
+      for (const mode of ['maps', 'tag3', 'chaos', 'mayhem', 'tower', 'saga', 'raid']) {
+        if (!matchReviewData({ mode, stats: [{ damage: 20 }, { damage: 10 }] })) return { pass: false, error: 'AI review does not support ' + mode + ' match recaps' };
+      }
+      const variant = replayModeTag({ mode: '2v2', sub: 'pp_cc', st0: { M: { teamMutator: 'chaos' } } });
+      if (!variant.includes('双人共斗') || !variant.includes('天机乱斗')) return { pass: false, error: 'replay list does not label the 2v2 variant and mutator' };
       return { pass: true, error: null };
     })()`
   },

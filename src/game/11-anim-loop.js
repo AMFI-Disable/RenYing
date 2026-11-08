@@ -420,14 +420,20 @@ function ctrlKey(c) {
   return s;
 }
 function recBegin(kind) {
+  M.reviewReady = false;
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
     meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
   if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
   // pl：哪几个人按玩家的规则选目标。回放里大家都是普通 Ctrl，不记的话玩家会被当成电脑去配合队友，回放就走样了
   if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
+  if (kind === 'loc' && M.mode === 'raid') { Object.assign(REC.meta, { raid: true, four: true, sub: 'local', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], raidSquadSize: M.raidSquadSize || 3, raidWave: M.raidWave || 1 }); REC.post = ['', '', '', '']; }
+  if (kind === 'loc' && M.mode === 'tag3') Object.assign(REC.meta, { tag3: true, teams: jclone(M.teams || []), teamIdx: [...(M.teamIdx || [0, 0])], round: M.round || 1, mutator: M.teamMutator || 'normal' });
+  if (kind === 'loc' && M.mode === 'tower') Object.assign(REC.meta, { towerFloor: M.towerFloor || 1, scrolls: [...(M.towerPerks || [])] });
+  if (kind === 'loc' && M.mode === 'saga' && typeof SG !== 'undefined') Object.assign(REC.meta, { chapter: SG.hero || '', chapterNode: SG.node || 0 });
   // 联机：按键是按“每台电脑”记的（一台可能管两个人），回放时要知道每台电脑管哪几个人；2v2 里没人管的是电脑，回放时照样让它想
   if (kind === 'net') {
-    Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+    Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode, ranked: !!NET.isRanked });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+    if (isRaid()) REC.meta.raidWave = M.raidWave || 1;
     if (allFighters().length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
   }
 }
@@ -558,14 +564,16 @@ function recSave(w) {
   const m = REC.meta;
   Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, trStart: REC.trStart, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
     names: M.mode === 'net' ? rpNetNames(m)
-      : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
+      : m.raid ? [sideFighters(0).map(f => f.look.name).join(' · '), (M.raidBoss && M.raidBoss.heroNames || []).join('·') || B.look.name]
+        : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
   RP.last = m;
+  M.reviewReady = true;
   const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
   rpStore(list);
   return m;
 }
 function matchReviewData(m) {
-  if (!m || !['cpu', 'net', '2v2', 'pvp'].includes(m.mode) || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
+  if (!m || !['cpu', 'net', '2v2', 'pvp', 'maps', 'tag3', 'chaos', 'mayhem', 'tower', 'saga', 'raid'].includes(m.mode) || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
   const team = !!(m.four || m.raid), side = m.raid || ['p_cc', 'pp_cc'].includes(m.sub) ? 0 : m.playerSide === 1 ? 1 : 0;
   const ownIdx = m.raid ? [0, 2, 3] : m.four ? (side === 0 ? [0, 2] : [1, 3]) : [side];
   const foeIdx = m.raid ? [1] : m.four ? (side === 0 ? [1, 3] : [0, 2]) : [side ^ 1];
@@ -665,8 +673,8 @@ function endReviewShow(m) {
   if (!btn || !panel) return;
   const review = matchReviewData(m);
   btn.classList.toggle('hidden', !review);
-  btn.setAttribute('aria-expanded', 'false');
-  panel.classList.add('hidden');
+  btn.setAttribute('aria-expanded', String(!!review));
+  panel.classList.toggle('hidden', !review);
   if (!review) { panel.innerHTML = ''; return; }
   const list = items => `<ul>${items.map(s => `<li>${escapeHTML(cvT(s))}</li>`).join('')}</ul>`;
   const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
@@ -709,21 +717,38 @@ function rpNetNames(m) {
   return m.raid ? [h + ' · ' + c, '魔首'] : m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
 }
 function rpTitle(m) {
+  if (m.raid && Array.isArray(m.names)) return `${m.names[0]} 对 ${m.names[1]}`;
   const nm = i => (CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?';
   return m.four ? `${nm(0)} · ${nm(2)} 对 ${nm(1)} · ${nm(3)}` : `${nm(0)} 对 ${nm(1)}`;
 }
 function rpSub(m) {
   const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-  const mode = m.raid ? '联机同袍肉鸽' : m.room === 'mayhem' ? '联机神决' : m.four && m.mode === 'net' ? '联机 2v2' : m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
+  const mode = replayModeTag(m);
   const win = m.w >= 0 ? `${m.four ? (m.names || [])[m.w] || '' : (CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
   return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
+}
+function replayModeTag(m) {
+  const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
+  const mutatorTag = mutator === 'chaos' ? ` · ${cvT('天机乱斗')}` : mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
+  if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}`;
+  if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
+  if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}` : `${cvT('联机')} · ${cvT(m.room === 'chaos' ? '天机乱斗' : m.room === 'mayhem' ? '通天神决' : '标准对战')}`;
+  if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}`;
+  if (m.mode === 'pvp') return cvT('本地双人');
+  if (m.mode === '2v2') return `${cvT('2v2')} · ${cvT({ p_cc: '携手共斗', pp_cc: '双人共斗', pp_pp: '四人对决' }[m.sub] || '组队')}${mutatorTag}`;
+  if (m.mode === 'maps') return `${cvT('山河异境')} · ${cvT((MAPS[m.st0 && m.st0.M && m.st0.M.map] || {}).n || '')}`;
+  if (m.mode === 'tag3') return `${cvT('门派车轮战')} · ${cvT('第')} ${m.round || 1}${mutatorTag}`;
+  if (m.mode === 'chaos') return cvT('天机乱斗');
+  if (m.mode === 'tower') return `${cvT('万仞剑阁')} · ${cvT('第')} ${m.towerFloor || 1}`;
+  if (m.mode === 'saga') return `${cvT('侠客列传')} · ${cvT(CHARS.find(c => c.id === m.chapter)?.name || '')} · ${cvT('第')} ${(m.chapterNode || 0) + 1}`;
+  return cvT('本地对战');
 }
 function renderReplays() {
   const list = rpList(), setN = trSet().length;
   // 训练集是本机攒下来的样本（导入的 .jsonl 并在这里），能整包导出、也能清掉
   const trRow = setN ? `<div class="rprow"><div class="rpm"><div class="rpt">训练集</div><div class="rps">${setN} 个样本</div></div><div style="display:flex;gap:6px;"><button class="ghost" data-trdl="1">导出</button><button class="ghost" data-trclear="1">清空</button></div></div>` : '';
   $id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
-    : uiState('empty', '还没有回放。打完一场人机或联机对战，这里会自动保存。')) + trRow;
+    : uiState('empty', '还没有回放。完成一场支持录像的战斗后，回放会自动保存在这里。')) + trRow;
 }
 $id('rpList').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -891,6 +916,8 @@ function replayFrame() {
     REPLAY.nf++;
   }
   step();
+  const replayFrameNo = REPLAY.kind === 'net' ? REPLAY.nf : REPLAY.f;
+  if (REPLAY.on && REPLAY.m && +REPLAY.m.frames > 0 && replayFrameNo >= +REPLAY.m.frames && M.phase !== 'end') replayEnd(REPLAY.m.w);
 }
 function replayTick(real) {
   if (REPLAY.paused || M.phase === 'end') return;
@@ -908,6 +935,7 @@ function replayStep() {
   return true;
 }
 function replayEnd(w) {
+  M.phase = 'end'; REPLAY.paused = true;
   $id('rpBar').classList.add('hidden');
   const t = $id('endTitle'), wf = [A, B][w], mate = REPLAY.m && REPLAY.m.four ? [C, D][w] : null;
   if (wf) { t.textContent = `${wf.look.name}${mate ? ' · ' + mate.look.name : ''} 胜`; t.style.color = `rgb(${wf.look.slash})`; } else { t.textContent = '平局'; t.style.color = ''; }

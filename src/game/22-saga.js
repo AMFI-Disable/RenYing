@@ -196,6 +196,7 @@ function sagaFight() {
   showScreen(null); paused = false;
   M.towerPerks = (sp.mySc || []).filter(id => SC_BY[id]); M.foeScrolls = (sp.foeSc || []).filter(id => SC_BY[id]);
   B.ctrl = new AICtrl(sp.lv || 'normal');
+  recBegin('loc');
   startRound();   // 故事给的秘卷在这里生效
   if (sp.hp && sp.hp < 1) A.hp = A.lagHp = Math.max(1, Math.round(A.maxHp * sp.hp));
   if (sp.foeHp && sp.foeHp !== 1) { B.maxHp = Math.round(B.maxHp * sp.foeHp); B.hp = B.lagHp = B.maxHp; }

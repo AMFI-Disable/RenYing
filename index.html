@@ -4224,7 +4224,7 @@ white-space: nowrap;
         </div>
       </div>
       <div class="tlist" id="rpList"></div>
-      <p class="tips" style="margin-top:10px">自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。<br>「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。</p>
+      <p class="tips" style="margin-top:10px">自动保存最近 10 场可回放战斗（本地对战、模式变式与联机），保存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。<br>「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。</p>
     </div>
   </div>
 
@@ -8424,12 +8424,27 @@ Object.assign(UI_COPY_EN, {
 "融会贯通：施展 5 次终极奥义": "Mastery: use 5 ultimates",
 "打满 3 局人机（输赢都算）": "Play 3 CPU matches (win or lose)",
 "对战回放": "Replays",
+"本地同袍肉鸽": "Local Co-op Roguelike",
+"联机同袍肉鸽": "Online Co-op Roguelike",
+"联机通天神决": "Online Celestial Trial",
+"联机": "Online",
+"标准对战": "Standard Match",
+"人机": "CPU Match",
+"本地双人": "Local Versus",
+"本地对战": "Local Match",
+"2v2": "2v2",
+"携手共斗": "Co-op vs CPU",
+"双人共斗": "Two-Player Co-op",
+"四人对决": "Four-Player Versus",
+"门派车轮战": "3v3 Relay",
+"标准": "Standard",
+"第": "Round",
 "播放": "Play",
 "导出": "Export",
 "删除": "Delete",
 "训AI": "Train",
 "导入回放": "Import Replay",
-"还没有回放。打完一场人机或联机对战，这里会自动保存。": "No replays yet. Play a CPU or network match and it will be saved here.",
+"还没有回放。完成一场支持录像的战斗后，回放会自动保存在这里。": "No replays yet. Complete a recorded battle and it will be saved here.",
 "清空": "Clear",
 "导入训练集": "Import Training Set",
 "训练集": "Training Set",
@@ -8643,7 +8658,7 @@ Object.assign(UI_COPY_EN, {
 "蓄力斩": "Charged Slash",
 "只用键盘": "Keyboard Only",
 "手机操作": "Mobile Controls",
-"自动保存最近 10 场对战（人机与联机），存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。": "The last 10 matches (CPU and network) are saved in this browser. Replays can be paused, slowed, fast-forwarded, and exported or imported to share.",
+"自动保存最近 10 场可回放战斗（本地对战、模式变式与联机），保存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。": "The last 10 replayable battles across local, variant and online modes are saved in this browser. Replays can be paused, slowed, fast-forwarded, and exported or imported to share.",
 "「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。": "\"Train\" exports the frames actually captured in that match: s is a 19-value state (both sides' health, guard, inner force, ultimate gauge, position, facing, airborne, stun, facing each other), a is the keys held that frame (bitmask), r comes from that frame's health/guard change plus the final result. .jsonl training sets can be imported, merged, and exported as one file.",
 "肉鸽": "Roguelike",
 "开放世界": "Open World",
@@ -14841,7 +14856,7 @@ const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机�
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
 const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
-const isRaid = () => M.mode === 'raid' || !!(netRoom() && netRoom().raid);
+const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
 const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
@@ -14991,7 +15006,7 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
-const mayhemOn = () => M.mode === 'mayhem' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
 const mapsOn = () => {
 if (M.mode === 'replay' && REPLAY.on) {
 const m = REPLAY.m || {};
@@ -15256,6 +15271,7 @@ else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
 }
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+M.reviewReady = false;
 CLONE_FADES.length = 0;
 if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
 announce = null;
@@ -15400,7 +15416,7 @@ t.innerHTML = `<span class="it-name">${escapeHTML(name)}</span><span class="it-c
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
 if (M.worldKey) { worldKeyRound(w); return; }
-const reviewRecord = REC.on ? recSave(w) : null;
+const reviewRecord = REC.on ? recSave(w) : (M.reviewReady ? RP.last : null);
 if (typeof endReviewShow === 'function') endReviewShow(reviewRecord);
 const stats = M.combatStats && M.combatStats[localIdx()];
 const card = $id('endCombatCard');
@@ -15563,6 +15579,7 @@ toast(`🎉 众志破魔大捷！全员共享丰厚悬赏 +${gain} 墨锭！`);
 function endRound() {
 const w = M.koWinner;
 if (w >= 0) M.wins[w]++;
+if (REC.on && (M.mode === 'tag3' || M.mode === 'saga' || (M.mode === 'tower' && w === 0))) recSave(w);
 if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
 if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
 if (M.mode === 'saga') { sagaEnd(w); return; }
@@ -15602,6 +15619,7 @@ const finalWinner = M.teamIdx[0] < M.teamIdx[1] ? 0 : (M.teamIdx[1] < M.teamIdx[
 showEnd(finalWinner);
 return;
 }
+if (!M.watchAi) recBegin('loc');
 startRound();
 return;
 }
@@ -15627,6 +15645,7 @@ if (loserSide === 0 && M.watchAi) loserFighter.ctrl = new AICtrl(M.level || 'god
 if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
 if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 M.round++;
+if (!M.watchAi) recBegin('loc');
 startRound();
 const heroName = CHARS[nextHeroIdx].name;
 const isMid = M.teamIdx[loserSide] === 1;
@@ -18017,12 +18036,18 @@ for (const k in b) s += ';' + k + '=' + b[k];
 return s;
 }
 function recBegin(kind) {
+M.reviewReady = false;
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
 meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
 if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
 if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
+if (kind === 'loc' && M.mode === 'raid') { Object.assign(REC.meta, { raid: true, four: true, sub: 'local', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], raidSquadSize: M.raidSquadSize || 3, raidWave: M.raidWave || 1 }); REC.post = ['', '', '', '']; }
+if (kind === 'loc' && M.mode === 'tag3') Object.assign(REC.meta, { tag3: true, teams: jclone(M.teams || []), teamIdx: [...(M.teamIdx || [0, 0])], round: M.round || 1, mutator: M.teamMutator || 'normal' });
+if (kind === 'loc' && M.mode === 'tower') Object.assign(REC.meta, { towerFloor: M.towerFloor || 1, scrolls: [...(M.towerPerks || [])] });
+if (kind === 'loc' && M.mode === 'saga' && typeof SG !== 'undefined') Object.assign(REC.meta, { chapter: SG.hero || '', chapterNode: SG.node || 0 });
 if (kind === 'net') {
-Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode, ranked: !!NET.isRanked });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+if (isRaid()) REC.meta.raidWave = M.raidWave || 1;
 if (allFighters().length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
 }
 }
@@ -18144,14 +18169,16 @@ if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
 const m = REC.meta;
 Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, trStart: REC.trStart, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
 names: M.mode === 'net' ? rpNetNames(m)
+: m.raid ? [sideFighters(0).map(f => f.look.name).join(' · '), (M.raidBoss && M.raidBoss.heroNames || []).join('·') || B.look.name]
 : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
 RP.last = m;
+M.reviewReady = true;
 const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
 rpStore(list);
 return m;
 }
 function matchReviewData(m) {
-if (!m || !['cpu', 'net', '2v2', 'pvp'].includes(m.mode) || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
+if (!m || !['cpu', 'net', '2v2', 'pvp', 'maps', 'tag3', 'chaos', 'mayhem', 'tower', 'saga', 'raid'].includes(m.mode) || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
 const team = !!(m.four || m.raid), side = m.raid || ['p_cc', 'pp_cc'].includes(m.sub) ? 0 : m.playerSide === 1 ? 1 : 0;
 const ownIdx = m.raid ? [0, 2, 3] : m.four ? (side === 0 ? [0, 2] : [1, 3]) : [side];
 const foeIdx = m.raid ? [1] : m.four ? (side === 0 ? [1, 3] : [0, 2]) : [side ^ 1];
@@ -18251,8 +18278,8 @@ const btn = $id('endReviewBtn'), panel = $id('endReview');
 if (!btn || !panel) return;
 const review = matchReviewData(m);
 btn.classList.toggle('hidden', !review);
-btn.setAttribute('aria-expanded', 'false');
-panel.classList.add('hidden');
+btn.setAttribute('aria-expanded', String(!!review));
+panel.classList.toggle('hidden', !review);
 if (!review) { panel.innerHTML = ''; return; }
 const list = items => `<ul>${items.map(s => `<li>${escapeHTML(cvT(s))}</li>`).join('')}</ul>`;
 const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
@@ -18294,20 +18321,37 @@ const h = (NET.names || {}).host || '游客', c = (NET.names || {}).client || '�
 return m.raid ? [h + ' · ' + c, '魔首'] : m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
 }
 function rpTitle(m) {
+if (m.raid && Array.isArray(m.names)) return `${m.names[0]} 对 ${m.names[1]}`;
 const nm = i => (CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?';
 return m.four ? `${nm(0)} · ${nm(2)} 对 ${nm(1)} · ${nm(3)}` : `${nm(0)} 对 ${nm(1)}`;
 }
 function rpSub(m) {
 const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-const mode = m.raid ? '联机同袍肉鸽' : m.room === 'mayhem' ? '联机神决' : m.four && m.mode === 'net' ? '联机 2v2' : m.four ? `2v2${m.sub === 'pp_pp' ? '' : `·${LV_NAME[m.level] || m.level}`}` : m.mode === 'net' ? '联机' : m.mode === 'cpu' ? `电脑·${LV_NAME[m.level] || m.level}` : '本地双人';
+const mode = replayModeTag(m);
 const win = m.w >= 0 ? `${m.four ? (m.names || [])[m.w] || '' : (CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
 return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
+}
+function replayModeTag(m) {
+const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
+const mutatorTag = mutator === 'chaos' ? ` · ${cvT('天机乱斗')}` : mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
+if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}`;
+if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
+if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}` : `${cvT('联机')} · ${cvT(m.room === 'chaos' ? '天机乱斗' : m.room === 'mayhem' ? '通天神决' : '标准对战')}`;
+if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}`;
+if (m.mode === 'pvp') return cvT('本地双人');
+if (m.mode === '2v2') return `${cvT('2v2')} · ${cvT({ p_cc: '携手共斗', pp_cc: '双人共斗', pp_pp: '四人对决' }[m.sub] || '组队')}${mutatorTag}`;
+if (m.mode === 'maps') return `${cvT('山河异境')} · ${cvT((MAPS[m.st0 && m.st0.M && m.st0.M.map] || {}).n || '')}`;
+if (m.mode === 'tag3') return `${cvT('门派车轮战')} · ${cvT('第')} ${m.round || 1}${mutatorTag}`;
+if (m.mode === 'chaos') return cvT('天机乱斗');
+if (m.mode === 'tower') return `${cvT('万仞剑阁')} · ${cvT('第')} ${m.towerFloor || 1}`;
+if (m.mode === 'saga') return `${cvT('侠客列传')} · ${cvT(CHARS.find(c => c.id === m.chapter)?.name || '')} · ${cvT('第')} ${(m.chapterNode || 0) + 1}`;
+return cvT('本地对战');
 }
 function renderReplays() {
 const list = rpList(), setN = trSet().length;
 const trRow = setN ? `<div class="rprow"><div class="rpm"><div class="rpt">训练集</div><div class="rps">${setN} 个样本</div></div><div style="display:flex;gap:6px;"><button class="ghost" data-trdl="1">导出</button><button class="ghost" data-trclear="1">清空</button></div></div>` : '';
 $id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
-: uiState('empty', '还没有回放。打完一场人机或联机对战，这里会自动保存。')) + trRow;
+: uiState('empty', '还没有回放。完成一场支持录像的战斗后，回放会自动保存在这里。')) + trRow;
 }
 $id('rpList').addEventListener('click', e => {
 const b = e.target.closest('button'); if (!b) return;
@@ -18470,6 +18514,8 @@ rpSlots(REPLAY.m).forEach((slot, side) => slot.forEach((idx, k) => applyInput(fi
 REPLAY.nf++;
 }
 step();
+const replayFrameNo = REPLAY.kind === 'net' ? REPLAY.nf : REPLAY.f;
+if (REPLAY.on && REPLAY.m && +REPLAY.m.frames > 0 && replayFrameNo >= +REPLAY.m.frames && M.phase !== 'end') replayEnd(REPLAY.m.w);
 }
 function replayTick(real) {
 if (REPLAY.paused || M.phase === 'end') return;
@@ -18487,6 +18533,7 @@ replayInspectRender();
 return true;
 }
 function replayEnd(w) {
+M.phase = 'end'; REPLAY.paused = true;
 $id('rpBar').classList.add('hidden');
 const t = $id('endTitle'), wf = [A, B][w], mate = REPLAY.m && REPLAY.m.four ? [C, D][w] : null;
 if (wf) { t.textContent = `${wf.look.name}${mate ? ' · ' + mate.look.name : ''} 胜`; t.style.color = `rgb(${wf.look.slash})`; } else { t.textContent = '平局'; t.style.color = ''; }
@@ -27588,6 +27635,7 @@ B.ctrl = new AICtrl(M.level || 'god');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
+if (!isWatch) recBegin('loc');
 startRound();
 say(isWatch ? '3v3 门派车轮战 · AI 群英观战' : '3v3 门派车轮战', 1.4);
 }
@@ -27663,6 +27711,7 @@ B.ctrl = new AICtrl('easy');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
+if (!isWatch) recBegin('loc');
 startRound();
 if (!isWatch) saveTowerRun();
 say(isWatch ? '问剑密卷 · 天道爬塔观战' : '问剑密卷 · 第 1 层', 1.4);
@@ -27698,6 +27747,7 @@ if (typeof run.hp === 'number' && run.hp > 0) {
 A.hp = Math.min(A.maxHp, run.hp);
 A.lagHp = A.hp;
 }
+recBegin('loc');
 saveTowerRun();
 say(`问剑密卷 · 继续第 ${M.towerFloor} 层`, 1.4);
 }
@@ -27767,6 +27817,7 @@ else if (M.towerFloor >= 3) lv = 'normal';
 M.level = lv;
 if (M.watchAi) A.ctrl = new AICtrl('god');
 B.ctrl = new AICtrl(lv);
+if (!M.watchAi) recBegin('loc');
 startRound();   // 每层满血开打（和其他 1v1 一样）；秘卷的开局效果在 startRound 里生效
 if (!M.watchAi) saveTowerRun();
 say(M.watchAi ? `天道爬塔 · 第 ${M.towerFloor} 层` : `万仞剑阁 · 第 ${M.towerFloor} 层`, 1.4);
@@ -27894,7 +27945,7 @@ const CHAOS_MUTATIONS = [
 { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
 let chaosP1 = 0, chaosP2 = 1;
-const chaosOn = () => M.mode === 'chaos' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
+const chaosOn = () => M.mode === 'chaos' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'chaos') || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
 function chaosNow(type) {
 const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
 return mut && (!type || mut.type === type) ? mut : null;
@@ -27939,6 +27990,7 @@ B.ctrl = new AICtrl(M.level || 'god');
 A.meter = B.meter = 0;
 human[0].clear(); human[1].clear();
 showScreen(null);
+if (!isWatch) recBegin('loc');
 startRound();
 say(isWatch ? '天机乱斗 · 乾坤异变观战' : '天机乱斗 · 乾坤异变', 1.4);
 rollChaosMutation();
@@ -27976,6 +28028,7 @@ B.ctrl = new AICtrl(M.level || 'god');
 A.meter = B.meter = 100;
 human[0].clear(); human[1].clear();
 showScreen(null);
+if (!isWatch) recBegin('loc');
 startRound();
 say(isWatch ? '通天神决 · 神魔 AI 观战' : '通天神决 · 大显神通', 1.4);
 }
@@ -28534,6 +28587,7 @@ say(`${story.title} · 同袍斩妖开启`, 1.5, 'big', initLine);
 return;
 }
 FOREST.on = false; B.forestProxy = false; B.hidden = false;
+recBegin('loc');
 startRound();
 const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
 say(`${story.title} · 决战【${M.raidBoss.heroNames.join('·')}】`, 1.5, 'big', story.bossIntro || (perkNames ? `全队共享秘卷：${perkNames}` : '全员收益共享'));
@@ -29033,6 +29087,7 @@ const sp = SG.spec;
 showScreen(null); paused = false;
 M.towerPerks = (sp.mySc || []).filter(id => SC_BY[id]); M.foeScrolls = (sp.foeSc || []).filter(id => SC_BY[id]);
 B.ctrl = new AICtrl(sp.lv || 'normal');
+recBegin('loc');
 startRound();   // 故事给的秘卷在这里生效
 if (sp.hp && sp.hp < 1) A.hp = A.lagHp = Math.max(1, Math.round(A.maxHp * sp.hp));
 if (sp.foeHp && sp.foeHp !== 1) { B.maxHp = Math.round(B.maxHp * sp.foeHp); B.hp = B.lagHp = B.maxHp; }
@@ -29367,7 +29422,10 @@ const BOSS_AFFIXES = [
 const SC_BY = {};
 for (const s of SCROLLS) SC_BY[s.id] = s;
 for (const s of BOSS_AFFIXES) { s.s = 'xian'; s.r = 'x'; SC_BY[s.id] = s; }
-function scOn() { return M.mode === 'tower' || M.mode === 'boss' || M.mode === 'saga' || M.mode === 'world' || !!M.worldKey || (typeof isRaid === 'function' && isRaid()) || !!M.hasBuffs; }
+function scOn() {
+const replayMode = M.mode === 'replay' && REPLAY.on && REPLAY.m ? REPLAY.m.mode : '';
+return ['tower', 'boss', 'saga', 'world', 'raid'].includes(M.mode) || ['tower', 'boss', 'saga', 'world', 'raid'].includes(replayMode) || !!M.worldKey || (typeof isRaid === 'function' && isRaid()) || !!M.hasBuffs;
+}
 const scEligible = f => !!(f && (f.idx <= 3 || (typeof isRaid === 'function' && isRaid())));
 function scIds(f) {
 if (!f) return [];

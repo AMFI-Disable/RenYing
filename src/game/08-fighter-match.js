@@ -87,7 +87,7 @@ const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net'
 // 对局要在别的机器上算得一模一样的时候（联机回滚、放联机录像）：电脑想招、抽秘卷都用对局随机数
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
 const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
-const isRaid = () => M.mode === 'raid' || !!(netRoom() && netRoom().raid);
+const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
 const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
@@ -245,7 +245,7 @@ function updateArena2v2(dt) {
 
 // ---------- 山河异境的地图（src/data/12-maps.js）----------
 // 这一局在哪张图记在 M.map，跟着 M 进回滚存档和录像（st0），两边、回放里都一样。普通对战、排位没有 M.map，就是原来的平地
-const mayhemOn = () => M.mode === 'mayhem' || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
 const mapsOn = () => {
   if (M.mode === 'replay' && REPLAY.on) {
     const m = REPLAY.m || {};
@@ -540,6 +540,7 @@ function startMatch(mode, level, chars, isWatch = false) {
 // 磁仙每回合开局抽正极或负极：只在这里抽、只用对局随机数，联机两边和回放抽到的一样（预览用的角色 reset 不碰随机数）
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+  M.reviewReady = false;
   CLONE_FADES.length = 0;
   if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
   announce = null;
@@ -686,7 +687,7 @@ function inkTitle(name, lost) {
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (M.worldKey) { worldKeyRound(w); return; }
-  const reviewRecord = REC.on ? recSave(w) : null;
+  const reviewRecord = REC.on ? recSave(w) : (M.reviewReady ? RP.last : null);
   if (typeof endReviewShow === 'function') endReviewShow(reviewRecord);
   const stats = M.combatStats && M.combatStats[localIdx()];
   const card = $id('endCombatCard');
@@ -849,6 +850,7 @@ function raidPay(gain) {
 function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
+  if (REC.on && (M.mode === 'tag3' || M.mode === 'saga' || (M.mode === 'tower' && w === 0))) recSave(w);
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
   if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
   if (M.mode === 'saga') { sagaEnd(w); return; }
@@ -888,6 +890,7 @@ function endRound() {
         showEnd(finalWinner);
         return;
       }
+      if (!M.watchAi) recBegin('loc');
       startRound();
       return;
     }
@@ -915,6 +918,7 @@ function endRound() {
     if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 
     M.round++;
+    if (!M.watchAi) recBegin('loc');
     startRound();
     const heroName = CHARS[nextHeroIdx].name;
     const isMid = M.teamIdx[loserSide] === 1;
