@@ -42,4 +42,4 @@
 | 凌雀 | spindle 19 / 35 | shadowdash 43 / 63 | needlestorm 9 / 130 |
 | 离影 | mistmark 15 / 57 | - | mistarray 27 / 88 |
 | 磁仙 | - | magfield 17 / 46 | sandwich 66 / 130 |
-| 千机 | throwball 20 / 42 | - | recallball -1 / 9 |
+| 千机 | throwball 18 / 42 | - | recallball 2 / 79 |

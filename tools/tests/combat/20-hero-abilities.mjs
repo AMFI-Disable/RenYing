@@ -212,57 +212,49 @@ export default [
     })()`
   },
   {
-    name: 'Qianji (千机): Single ball persistence, bounce physics, attack strike drive, breakout R on hitstun, and ult recall resetting Q',
+    name: 'Qianji (千机): tether loop, attack redirection, breakout lash, and three-pass ultimate cap/reset',
     fn: `(() => {
       startMatch('train', 'stand', [CHAR_IDX.qianji, 0]);
       showScreen(null); paused = false; M.phase = 'fight';
       for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = 0; f.vy = 0; f.invul = 0; f.hp = f.maxHp; f.breakCD = 0; }
-      projs.length = 0;
-
-      // 1. Q 投丸：生成唯一傀丸
+      A.x = STAGE_W / 2 - 320; B.x = STAGE_W / 2 + 280; A.face = 1; B.face = -1; projs.length = 0;
       A.skillCD = 0; startSkill(A, B, 1);
       for (let i = 0; i < 15; i++) step();
       let ball = projs.find(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead);
-      if (!ball) return { pass: false, error: 'Iron ball not spawned by Q' };
+      if (!ball || !ball.yoyo || ball.yoyoPhase !== 'loop') return { pass: false, error: 'Q did not create tethered loop ball' };
+      A.skillCD = 0; toNeutral(A); startSkill(A, B, 1);
+      if (A.state === 'skill' || projs.filter(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead).length !== 1) return { pass: false, error: 'Q allowed duplicate owned balls' };
 
-      // 2. 傀丸在场时 Q 锁定无法重复释放
-      A.skillCD = 0; toNeutral(A);
-      startSkill(A, B, 1);
-      if (A.state === 'skill') return { pass: false, error: 'Q fired while ball already exists in field' };
+      let maxTether = 0;
+      for (let i = 0; i < 300; i++) { step(); maxTether = Math.max(maxTether, Math.abs(ball.x - A.x)); }
+      if ((ball.yoyoCycle || 0) < 1 || maxTether > 620 || Math.abs(ball.vx) < 900) return { pass: false, error: 'Loop stalled or broke tether: cycles=' + ball.yoyoCycle + ', distance=' + maxTether + ', vx=' + ball.vx };
 
-      // 3. 普攻击丸传动加速
-      ball.x = A.x + A.face * 50; ball.y = -20; ball.vx = 0; ball.vy = 0; ball.resting = true;
+      toNeutral(A); ball.x = A.x + 48; ball.y = A.y - 58; ball.yoyoPhase = 'staged'; ball.yoyoDir = -1; ball.vx = 0;
       startAttack(A, 'l1');
       for (let i = 0; i < 20; i++) step();
-      if (Math.abs(ball.vx) < 500) return { pass: false, error: 'Normal attack did not accelerate the ball: vx=' + ball.vx };
+      if (ball.yoyoDir !== A.face || ball.yoyoBoostT <= 0) return { pass: false, error: 'Attack did not redirect and accelerate the tether ball' };
 
-      // 4. 蓄力斩轰击傀丸
-      toNeutral(A);
-      ball.x = A.x + A.face * 50; ball.y = -20; ball.vx = 0; ball.resting = true;
-      startAttack(A, 'cs2');
-      for (let i = 0; i < 40; i++) step();
-      if (Math.abs(ball.vx) < 1500 || ball.speedTier < 3) return { pass: false, error: 'cs2 attack did not supercharge the ball: vx=' + ball.vx + ', tier=' + ball.speedTier };
-
-      // 5. R 暴雨梨花：在受击硬直（hitstun）下触发绝境反击（breakout / ImmuneControl）
-      toNeutral(A);
-      A.state = 'hitstun'; A.t = 0; A.stun = 0.6; A.comboHits = 3; A.skill2CD = 0;
-      A.ctrl.buf.skill2 = clock;
+      toNeutral(A); ball.x = A.x + 60; ball.y = A.y - 58; A.face = 1;
+      A.state = 'hitstun'; A.t = 0; A.stun = 0.6; A.comboHits = 3; A.skill2CD = 0; A.ctrl.buf.skill2 = clock;
       step();
-      if (A.state !== 'skill' || A.skill !== 'ballspike') {
-        return { pass: false, error: 'Qian Ji R did not breakout from hitstun: state=' + A.state + ', skill=' + A.skill };
-      }
-      const needles = projs.filter(p => p.kind === 'needle' && p.owner === A.idx && !p.dead);
-      if (needles.length < 8) return { pass: false, error: 'Qian Ji R did not burst 8 needles: got ' + needles.length };
+      if (A.state !== 'skill' || A.skill !== 'ballspike' || ball.yoyoPhase !== 'lash') return { pass: false, error: 'R failed to lash and break out of hitstun' };
+      for (let i = 0; i < 65; i++) step();
+      if (ball.yoyoPhase !== 'loop' && ball.yoyoPhase !== 'lash') return { pass: false, error: 'R did not resume the Q loop' };
 
-      // 6. E 大招千丝收网：将球拉回，造成伤害并重置 Q 技能
-      toNeutral(A);
-      A.meter = 100; A.skillCD = 10;
+      toNeutral(A); A.hp = A.maxHp; B.hp = B.maxHp; A.meter = 100; A.skillCD = 9;
+      ball.x = STAGE_W / 2; ball.y = B.y - 58; ball.yoyoDir = 1; ball.yoyoPhase = 'loop';
       startSpecial(A);
-      for (let i = 0; i < 150; i++) { step(); if (A.state !== 'special') break; }
-      if (A.skillCD > 0) return { pass: false, error: 'Ult did not reset Q cooldown: skillCD=' + A.skillCD };
+      let maxPasses = 0;
+      for (let i = 0; i < 600 && A.state === 'special'; i++) { step(); maxPasses = Math.max(maxPasses, ball.yoyoPasses || 0); }
+      const ultDamage = B.maxHp - B.hp;
+      if (maxPasses < 3 || A.state === 'special' || ultDamage > 120 || A.skillCD > 0 || projs.some(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead)) {
+        return { pass: false, error: 'E did not complete three passes, cap damage, return the ball and reset Q: passes=' + maxPasses + ', damage=' + ultDamage + ', state=' + A.state + ', skillCD=' + A.skillCD };
+      }
 
-      toMenu();
-      return { pass: true, error: null };
+      A.meter = 100; A.skillCD = 5; startSpecial(A);
+      for (let i = 0; i < 600 && A.state === 'special'; i++) step();
+      if (A.state === 'special' || A.skillCD > 0 || projs.some(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead)) return { pass: false, error: 'E could not summon, pass, and return a missing ball' };
+      toMenu(); return { pass: true, error: null };
     })()`
-  },
+  }
 ];

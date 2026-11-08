@@ -32,12 +32,12 @@ const SHORT = {
   留影: ['40', '脚下留雾身 · 踏步一刀'], 渡影: ['—', '换到雾身处 · 方向选身'], 万影归一: ['45–113', '雾身齐斩 · 本体补刀'],
   龙卷: ['16×16', '双龙卷浮空 · 刷新跳跃开扇'], 雷霆万钧: ['48×3', '天雷追落 · 气量回涌30%'], 符阵: ['80–280', '宣纸全图 · 按符数爆伤'], 月华如水: ['75 (+100血)', '回血霸体 · 架招重置'], 万羽: ['14×14', '羽刃天降 · 飞行重置'],
   极性反转: ['—', '换正负极 · 清零 R'], 磁极: ['48 / 16', '正极弹开 · 负极吸来定身'], 天地磁合: ['125', '天地两块磁石 · 夹成肉饼'],
-  投丸: ['44', '玄铁傀丸 · 永动回弹'], 暴雨梨花: ['55', '八方钢针 · 受击可放'], 千丝收网: ['120', '贯穿全场 · 回收重置 Q']
+  金丝回环: ['24', '限距往返 · 击打改向'], 穿丝急袭: ['48', '沿朝穿击 · 受击解控'], 机轮三穿: ['120上限', '全场三穿 · 回手刷新 Q']
 };
 const PASSIVE_SHORT = { qingfeng: '攒气快 10% · 攻守均衡(870血)', feiying: '最快移速出手 · 身轻体巧(800血)', tieshan: '重斩蓄力霸体 · 气血冠绝(900血)', lingshuang: '枪尖 ×1.25 · 枪身 ×0.38(815血)',
   liuyun: '三段跳 · 御风轻盈(840血)', leiming: '普攻六连 · 强横体魄(885血)', moyu: '普攻甩墨 · 蓄力远 45% · 墨韵护体(825血)', yuehua: '3 秒未受伤每秒回 14 血(780血)', yanling: '空中按住跳跃飞 1.2 秒(750血)',
   yuxiao: '普攻攒音律，清音随音律变强(775血)', zuixian: '醉意增伤，半醉可闪避近身攻击(885血)', gouchen: '被锤中的人 1.2 秒内受伤 +25%(835血)', lingque: '子母梭挂雀芒，换影穿刺引爆重置(790血)',
-  liying: '最多 10 个雾身，内功波削防崩势 · 破影引爆(815血)', cixian: '开局随机正负极，负极普攻最多 15 连(815血)', qianji: '玄铁傀丸击打传动，金丝远程解控护主(830血)' };
+  liying: '最多 10 个雾身，内功波削防崩势 · 破影引爆(815血)', cixian: '开局随机正负极，负极普攻最多 15 连(815血)', qianji: '金丝傀丸限距往返，击打改向并加速(830血)' };
 const ADV_SHORT = {
   qingfeng: '疾风斩直击穿身，立时重置剑气冷却',
   tieshan: '震地直击得手，回涌 30 架势并减铁壁冲冷却',
@@ -54,7 +54,7 @@ const ADV_SHORT = {
   cixian: 'Q 换极性立刻清零 R：先弹开，再吸回来',
   lingque: '雀芒印记配合换影穿刺，瞬发引爆清空冷却',
   liying: 'R 加方向选雾身：← → 选那一边，↓ 选最早留下的',
-  qianji: '击打傀丸传动加速，受击硬直亦可按 R 爆针护主',
+  qianji: '击打傀丸改向加速，受击时可按 R 穿丝解控',
 };
 // 各角色大招怒气积攒专属特性与通用规则
 const HERO_METER_EXPLAIN = {
@@ -73,7 +73,7 @@ const HERO_METER_EXPLAIN = {
   cixian: '【两极磁力 · 一弹一吸】正极普攻伤害高、每下击飞，负极普攻轻吸对手、四段循环连个不停；绝技「天地磁合」天上正极、地上负极，把对手夹成肉饼！',
   lingque: '【飞梭穿织 · 雀芒锁脉】双持子母飞梭中远贯穿高效攒气；绝技「万线归宗」漫天悬丝全屏暴风绞杀，附加雀芒并回涌重置换影！',
   liying: '【雾身换位 · 碎影反噬】雾身具高额生命承受伤害，碎裂反噬自爆；出招释放内功波动飞刃，虽伤害偏低但直透防御加速架势消耗。渡影霸体且伴随全场 0.5 秒时空凝滞供拣选真身。',
-  qianji: '【机关机栝 · 动能汇聚】投掷傀丸与击打传动高效聚气；大招「千丝收网」直线拉回贯穿全屏，并瞬间刷新 Q 技能！',
+  qianji: '【机关机栝 · 动能汇聚】金丝约束傀丸往返回环，普攻与蓄力击打可改向加速；R 穿丝急袭能在受击时解控，E 机轮三穿横扫全场并收回傀丸。',
 };
 // ======================= 招式类型详解 =======================
 const HERO_MOVE_TYPES = {
@@ -81,9 +81,9 @@ const HERO_MOVE_TYPES = {
     light: { type: 'melee', label: '铜手推掌', rng: 'melee' },
     charge: { type: 'melee', label: '近战', rng: 'melee' },
     air: { type: 'melee', label: '近战', rng: 'melee' },
-    skill: { type: 'proj', label: '投掷傀丸', rng: 'ranged', icon: 'skill' },
-    ranged: { type: 'zone', label: '八方钢针', rng: 'mid', icon: 'melee' },
-    ult: { type: 'fullscreen', label: '千丝收网', rng: 'screen' },
+    skill: { type: 'proj', label: '金丝回环', rng: 'ranged', icon: 'skill' },
+    ranged: { type: 'proj', label: '穿丝急袭', rng: 'ranged', icon: 'melee' },
+    ult: { type: 'fullscreen', label: '机轮三穿', rng: 'screen' },
     esc: { type: 'esc', label: '身法' }
   },
   liying: {
@@ -265,9 +265,9 @@ const HERO_HIT_DETAILS = {
     light: { name: '天工连推', badge: '✦ 传动机掌', badgeCls: 'badge-buff', dmg: '88 (4段)', desc: '铜腕推击，末段推掌击飞；命中场上傀丸可将其击飞平推加速。' },
     charge: { name: '重机轰爆', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '36 / 60', desc: '机关臂重轰，击中傀丸时将其轰击成极速重炮。' },
     air: { name: '机影凌空', badge: '✦ 空中连击', badgeCls: 'badge-buff', dmg: '18 / 26', desc: '半空翻身拍掌，二段势大力沉压地。' },
-    skill: { name: '投丸', badge: '✦ 永动高弹', badgeCls: 'badge-buff', dmg: '44', desc: '掷出玄铁傀丸持续高弹反弹，受金丝牵引回旋回拉，再次挥刀可传动加速；未收回前不可重复释放。' },
-    ranged: { name: '暴雨梨花', badge: '🛡️ 受击可放', badgeCls: 'badge-break', dmg: '55', desc: '金丝震弦，远程激发傀丸向八方爆射钢针击飞敌人；受击解控。' },
-    ult: { name: '千丝收网', badge: '✦ 贯穿回手', badgeCls: 'badge-stun', dmg: '120', desc: '发条全力反卷，傀丸直线贯穿全场拉回并重置 Q 技能。' },
+    skill: { name: '金丝回环', badge: '✦ 限距往返', badgeCls: 'badge-buff', dmg: '24', desc: '沿朝向放出傀丸，在有限距离内持续往返；普攻与蓄力击打可改向并短暂加速。' },
+    ranged: { name: '穿丝急袭', badge: '🛡️ 受击可放', badgeCls: 'badge-break', dmg: '48', desc: '傀丸沿当前朝向高速穿击，随后回到往返环；受击硬直或浮空时可强制解控。' },
+    ult: { name: '机轮三穿', badge: '✦ 三次全场穿击', badgeCls: 'badge-stun', dmg: '120上限', desc: '傀丸疾驰横穿战场三次，再沿金丝回手；每名敌人最多承受 120 点伤害，回手后刷新 Q。' },
     esc: { name: '金丝引遁', badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，借金丝后撤腾空。' }
   },
   cixian: {
@@ -442,9 +442,9 @@ const HERO_MOVE_SEQS = {
     ],
     charge: [{ p: 'idle', d: 0.1, reset: true }, { p: 'charge', d: 0.42, lab: '按住蓄力' }, { p: 'spa', d: 0.3, dx: 32, hit: 3, launch: true, badge: '重械爆轰' }, { p: 'idle', d: 0.35, reset: true }],
     air: [{ p: 'idle', d: 0.1, reset: true }, { p: 'jump', d: 0.16, lab: '空中' }, { p: 'a1a', d: 0.16, hit: 1 }, { p: 'a2a', d: 0.24, hit: 2, launch: true }, { p: 'idle', d: 0.35, reset: true }],
-    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'qf_charge', d: 0.15, lab: 'Q · 投丸' }, { p: 'l1a', d: 0.3, fx: 'proj', hit: 1, badge: '玄铁傀丸' }, { p: 'idle', d: 0.35, reset: true }],
-    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.2, lab: 'R · 暴雨梨花' }, { p: 'hva', d: 0.25, fx: 'ironwall', hit: 2, launch: true, badge: '八方钢针' }, { p: 'idle', d: 0.35, reset: true }],
-    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.15, lab: 'E · 千丝收网' }, { p: 'victory', d: 0.5, fx: 'crescent', hit: 1, badge: '贯穿重置' }, { p: 'idle', d: 0.35, reset: true }],
+    skill: [{ p: 'idle', d: 0.1, reset: true }, { p: 'qf_charge', d: 0.15, lab: 'Q · 金丝回环' }, { p: 'l1a', d: 0.3, fx: 'proj', hit: 1, badge: '限距往返' }, { p: 'idle', d: 0.35, reset: true }],
+    ranged: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.2, lab: 'R · 穿丝急袭' }, { p: 'hva', d: 0.25, fx: 'ironwall', hit: 1, launch: true, badge: '傀丸穿击' }, { p: 'idle', d: 0.35, reset: true }],
+    ult: [{ p: 'idle', d: 0.1, reset: true }, { p: 'fy_seal', d: 0.15, lab: 'E · 机轮三穿' }, { p: 'victory', d: 0.5, fx: 'crescent', hit: 3, badge: '三穿回手' }, { p: 'idle', d: 0.35, reset: true }],
     esc: [{ p: 'idle', d: 0.1, reset: true }, { p: 'bdash', d: 0.28, dx: -34, lab: '右键·身法', badge: '金丝引遁' }, { p: 'idle', d: 0.35, reset: true }]
   },
   cixian: {
@@ -1017,10 +1017,10 @@ const HERO_ULT_REPLAYS = {
     { p: 'victory', d: 0.42, reset: true, lab: '定身 · 收势' }
   ],
   qianji: [
-    { p: 'fy_seal', d: 0.25, fx: 'recallball', lab: '发条反卷 · 召回傀丸', badge: '傀丸贯穿' },
+    { p: 'fy_seal', d: 0.25, fx: 'geartriple', lab: '机轮三穿 · 横扫战场', badge: '三次穿击' },
     { p: 'qf_charge', d: 0.42, lab: '傀丸疾返 · 穿身而过' },
     { p: 'spa', d: 0.22, badge: '傀丸回手' },
-    { p: 'victory', d: 0.36, reset: true, lab: '傀丸回手 · 重置投丸' }
+    { p: 'victory', d: 0.36, reset: true, lab: '三穿归一 · 傀丸回手' }
   ]
 };
 
@@ -1225,7 +1225,7 @@ const SKILL_FUN = {
   zuixian: { passive: '酒量即战力，放招添酒打中添酒，东倒西歪能闪避。', light: '东倒西歪五连拳，步法虚实难测。', charge: '蓄力一撞，重若巨石倾覆。', air: '醉步腾跃，飘忽不定难预测。', skill: '亭中留客，飞亭砸落禁锢两秒任你痛揍。', ranged: '与民同乐，半壶酒掷向对手，共醉回春。', ult: '山水之间，水墨泼染全屏八段重创。', esc: '醉意腾身，踏风撤步。' },
   gouchen: { passive: '锤子拴链子，走路都叮当响。', light: '链锤甩出去，回来时小心别砸到自己。', charge: '蓄力一锤，链子都绷直了。', air: '空中甩锤，物理老师看了都说好。', skill: '“过来吧你！”一链子拽到面前。', ranged: '抡圆了转，转晕的是对手。', ult: '锤子扔上天，下来大了一号。', esc: '锤子先走，人跟着链子飞。' },
   liying: { passive: '一缕魂留在原地，碰一下就散。', light: '单刀五连，干净利落。', charge: '雾里藏着的那一刀最重。', air: '只有一段跳，跳之前先想好落点。', skill: '人往前走，魂留在后面。', ranged: '结个印，人就到了雾身那里。', ult: '雾身一起出刀，本体最后补上。', esc: '雾一散，人已退开。' },
-  qianji: { passive: '玄铁傀丸永动弹跳，金丝回旋随时护主。', light: '铜臂推掌，能把铁球打飞加速。', charge: '蓄力重击，傀丸化作重炮轰击。', air: '空中翻掌压地，扣杀傀丸砸地反弹。', skill: '投丸高弹，金丝牵引回拉连击。', ranged: '暴雨梨花，受击亦可引爆钢针护身。', ult: '千丝收网，贯穿全场拉回重置 Q。', esc: '金丝借力，腾跃后退。' },
+  qianji: { passive: '金丝约束傀丸往返回环，击打可改向加速。', light: '铜臂推掌，击中傀丸就能改向传动。', charge: '蓄力重击，让傀丸短暂高速穿行。', air: '空中翻掌，能将傀丸击向新方向。', skill: '金丝回环，限距往返持续施压。', ranged: '穿丝急袭，沿朝穿击并受击解控。', ult: '机轮三穿，三次横扫后回手重置 Q。', esc: '金丝借力，腾跃后退。' },
   cixian: { passive: '一会儿正极一会儿负极，脾气说变就变。', light: '负极一掌一吸，越打越近。', charge: '蓄满一掌，磁力把格挡都推开。', air: '跳起来拍一掌，像拍苍蝇。', skill: '红圈变蓝圈，R 也跟着刷新。', ranged: '正极弹飞，负极吸回，来回都是我说了算。', ult: '天一块地一块，中间夹着你。', esc: '磁力一托，人就飘起来了。' },
   lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子母飞梭刺得比针还快。', charge: '蓄力一梭子，隔着衣服都疼。', air: '凌波踏空，身法灵巧似惊雀。', skill: '飞梭脱手，丝线连着千里之外。', ranged: '印记一亮，瞬身穿刺直接清空CD！', ult: '万线归宗，漫天悬丝罗网避无可避。', esc: '悬丝一荡，人已在数丈之外。' }
 };

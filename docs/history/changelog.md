@@ -33,6 +33,8 @@ All notable changes, features, and architectural capabilities of this project ar
 - **Global Boss scroll draft (`src/game/22-scrolls.js`, `src/game/22-tianmo.js`)**: increased the pre-fight draft to 10 scroll picks with 3 choices each, added curated Heavenly Favor highlights for all 16 heroes, and ensured signature scrolls appear regularly while unowned.
 - **Market price chart trends (`src/armory.js`, `index.html`, `renying-offline.html`)**: the item price chart now displays daily price fluctuations in percent and Ink relative to yesterday's last trade, with dashed reference lines colored green for falls and red for rises.
 
+- **Qianji Yo-Yo Ball overhaul (`src/game/03-skills.js`, `src/game/04-ults.js`, `src/game/09-actions.js`, `src/ai.js`, `src/models/ai-brain.json`, `docs/ai/frame-data.json`, `docs/ai/frame-data.md`)**: replaced the idle-prone bouncing projectile with a deterministic tether loop, attack redirection and speed boosts, an aim-directed R lash that still breaks hitstun, and an E that makes three arena passes before returning the ball. E damage is capped at 120 per opponent, and the ball resets Q when recalled. Updated Qianji AI, scroll effects and Codex descriptions.
+
 ### Changed
 
 - **Map combat connections and reach (`src/data/12-maps.js`, `src/game/03-skills.js`, `src/game/08-fighter-match.js`, `src/game/09-actions.js`, `src/game/10-hits.js`, `src/game/12-draw-world.js`)**: normalized platform placement for wider team arenas; connected map terrain to matching scroll schools and completed several listed home-ground bonuses; increased Q/R hitbox and projectile reach by 15% consistently across maps; added a dissolving silhouette when mist clones disappear.

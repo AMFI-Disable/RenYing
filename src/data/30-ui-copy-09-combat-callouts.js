@@ -2,6 +2,15 @@
 // 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
 // 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
+  "金丝回环": "Silk Loop",
+  "穿丝急袭": "Tether Lash",
+  "机轮三穿": "Gearwheel Triple Pass",
+  "傀丸已在阵中": "The puppet ball is already deployed",
+  "阵中无傀丸": "No puppet ball is deployed",
+  "⚡ 穿丝急袭 (R) 可解控": "⚡ Tether Lash (R) can break hitstun",
+  "沿当前朝向放出傀丸。金丝让它在有限距离内持续往返；普攻与蓄力攻击可以击打傀丸，改变方向并加速。傀丸回到身边后会再次出发。": "Launch the puppet ball in your facing direction. Its tether keeps it moving back and forth within range; normal and charged attacks can bat it to redirect and speed it up. It turns back out when it returns close to you.",
+  "牵引傀丸沿当前朝向高速穿击，随后回到往返环。即使千机正处于受击硬直或浮空，也能强制解控发动；需要傀丸在场。": "Snap the puppet ball through the lane you face, then return it to its loop. This move can break hitstun or launch, but requires the ball to be deployed.",
+  "傀丸沿战场往返疾驰三次，再顺着金丝回到千机手中。每名敌人在本次大招中最多受到 120 点伤害；回手后傀丸收起并刷新 Q。若傀丸不在场，则先召出再发动。": "Send the puppet ball across the arena three times, then reel it back. Each opponent can take up to 120 damage from the ultimate; the ball is recalled and Q resets. If it is not deployed, the ultimate launches one first.",
   // 打斗中飘的字和喊招（src/game/ 里 addP 的 text / callout、scTxt）；单个字是印章式的字眼，不翻
   "⚔️ 拼刀": "⚔️ Clash",
   "⚡ 千钧下坠": "⚡ Crushing Drop",

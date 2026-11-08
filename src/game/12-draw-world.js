@@ -585,12 +585,12 @@ function drawFighter(f) {
     }
   }
   if (f.sw) { drawMagPlate(f.sw.x, -6, -1); drawMagPlate(f.sw.x, f.sw.top, 1); }
-  // 千机：若傀丸在场且千机受击硬直（可释放 R 暴雨梨花解控），头顶提示「金丝护主」
+  // 千机：若傀丸在场且千机受击硬直（可释放 R 穿丝急袭解控），头顶提示「金丝护主」
   if (f.ch && f.ch.id === 'qianji' && f.hp > 0 && (f.state === 'hitstun' || f.state === 'launched') && f.skill2CD <= 0 && projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead)) {
     ctx.save();
     ctx.font = `bold 12px ${TITLE_FONT}`; ctx.textAlign = 'center';
     ctx.fillStyle = '#ffdf7a'; ctx.shadowColor = '#ffd24a'; ctx.shadowBlur = 6;
-    ctx.fillText('⚡ 暴雨梨花 (R) 可解控', f.x, f.y - 120 + Math.sin(clock * 10) * 3);
+    ctx.fillText('⚡ 穿丝急袭 (R) 可解控', f.x, f.y - 120 + Math.sin(clock * 10) * 3);
     ctx.restore();
   }
   // 被连击且可以挣脱时，头顶提示

@@ -1229,14 +1229,14 @@
   "skills": {
    "skill": {
     "id": "throwball",
-    "hit": 20,
+    "hit": 18,
     "total": 42
    },
    "skill2": null,
    "ult": {
     "id": "recallball",
-    "hit": -1,
-    "total": 9
+    "hit": 2,
+    "total": 79
    }
   }
  }

@@ -62,11 +62,11 @@ const AI_KIT = {
   // 磁仙：Q 换极性（不花时间、清零 R）——R 在冷却、身边的人想换种打法时用；R 正极贴身弹开，负极把中距离的人吸过来接负极连段
   polarswap: { role: 'self', combo: true, air: true, use: (m, o, d, B) => !(B && B.L.combo >= 3) && ((m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150))) },   // 寻常以上换极性交给 cixianRoute
   magfield: { role: 'zone', combo: true, use: (m, o, d) => o.invul <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
-  // 千机：投丸与暴雨梨花
+  // 千机：金丝回环与穿丝急袭
   throwball: { role: 'proj', combo: true, use: (m, o, d) => !projs.some(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead) && d > 120 },
-  ballspike: { role: 'zone', combo: true, breakout: true, use: (m, o, d) => {
+  ballspike: { role: 'rush', combo: true, breakout: true, use: (m, o, d) => {
     const ball = projs.find(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead);
-    return ball && Math.hypot(ball.x - o.x, ball.y - (o.y - 60)) < 150;
+    return ball && Math.sign(o.x - ball.x) === (m.face || 1) && Math.abs(o.y - (ball.y + 58)) < 110 && Math.abs(o.x - ball.x) < 560;
   } },
 };
 // 离影：用「不按方向 / 按那一边」能不能正好选到雾身 c（和游戏里 pickClone 的规则一样）
@@ -97,8 +97,8 @@ const AI_ULT = {
   moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
   // 万影归一：雾身越多刀越多，至少攒一个雾身再放（对手残血就直接放）
   mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp / Math.max(1, o.maxHp) < 0.12 },
-  // 千丝收网：全场收丸
-  recallball: { far: true, sure: (m, o) => o.invul <= 0 || o.hp / Math.max(1, o.maxHp) < 0.2 },
+  // 机轮三穿：用三次全场穿击逼迫对手交闪避
+  recallball: { far: true, sure: (m, o) => o.invul <= 0 && (AI_HURT.includes(o.state) || o.breakCD > 0.8 || o.hp / Math.max(1, o.maxHp) < 0.35) },
 };
 
 // ---------- 3. 打法基因 ----------
@@ -352,7 +352,7 @@ class AIBrain {
         else if (a === 'chargeEnd') this.holdAtk = 0;
         else this.press(a, 'plan');
       }
-      this.tactic(me, foe, d, to);
+      if (!this.qianjiBat(me, foe)) this.tactic(me, foe, d, to);
     }
 
     // Avoid a map's marked thunder lane if the AI is airborne when it lands.
@@ -387,6 +387,14 @@ class AIBrain {
     if (!c.held.atk && this.holdAtk <= 0) c.atkT = clock + 1e6;
     c.held.jump = this.jumpHeld || !!(me.ch.fly && clock < (this.flyUntil || 0));
     c.held.left = this.dir < 0; c.held.right = this.dir > 0;
+  }
+  qianjiBat(me, foe) {
+    if (me.ch.id !== 'qianji' || !['idle', 'walk', 'air', 'block'].includes(me.state)) return false;
+    const ball = projs.find(p => p.kind === 'ironball' && p.owner === me.idx && p.yoyo && !p.dead && p.yoyoPhase === 'loop');
+    if (!ball || Math.hypot(ball.x - me.x, ball.y - (me.y - 58)) > 104) return false;
+    if (Math.abs(foe.y - (ball.y + 58)) > 180 || Math.abs(foe.x - ball.x) > 520) return false;
+    if (this.chance(0.78 * Math.max(0.35, this.L.aggr))) { this.stopAll(); this.press('light', 'qianji_ball_bat'); }
+    return true;
   }
 
   // ----- 感知：对手换动作时记下时间；我要过 react 秒才“看得见” -----

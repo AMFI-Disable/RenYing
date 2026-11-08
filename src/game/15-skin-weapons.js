@@ -1135,9 +1135,10 @@ function drawProjs(glowOnly) {
       // 金丝牵引连线
       if (ownerF && !p.dead) {
         ctx.save();
-        ctx.strokeStyle = p.recalling ? 'rgba(255,225,120,0.85)' : 'rgba(235,165,70,0.4)';
-        ctx.lineWidth = p.recalling ? 2 : 1;
-        if (p.recalling) { ctx.shadowColor = '#ffd24a'; ctx.shadowBlur = 8; }
+        const yoyoBurst = p.yoyoPhase === 'lash' || p.yoyoPhase === 'ult-pass' || p.yoyoPhase === 'ult-return';
+        ctx.strokeStyle = yoyoBurst ? 'rgba(255,225,120,0.88)' : 'rgba(235,165,70,0.4)';
+        ctx.lineWidth = yoyoBurst ? 2 : 1;
+        if (yoyoBurst) { ctx.shadowColor = '#ffd24a'; ctx.shadowBlur = 8; }
         ctx.beginPath(); ctx.moveTo(p.x, p.y);
         ctx.quadraticCurveTo((p.x + ownerF.x) / 2, Math.min(p.y, ownerF.y - 45) - (p.recalling ? 10 : 35), ownerF.x, ownerF.y - 45);
         ctx.stroke();

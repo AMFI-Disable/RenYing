@@ -87,6 +87,22 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
   assert(ai.saved === 5 && ai.back === 5 && ai.gone, 'AI-written fighter field (lastComboHits) is saved, restored and cleared by rollback', JSON.stringify(ai));
 
+  const yoyoState = new vm.Script(`(() => {
+    rollStart([CHAR_IDX.qianji, 0], 5150); M.phase = 'fight';
+    A.skillCD = 0; startSkill(A, B, 1);
+    for (let i = 0; i < 30; i++) step();
+    const p = projs.find(q => q.kind === 'ironball' && q.owner === A.idx);
+    if (!p) return { pass: false, reason: 'Q did not deploy a projectile' };
+    p.yoyoPhase = 'ult-return'; p.yoyoPasses = 2; p.yoyoDir = -1;
+    p.yoyoHitAt = { 1: 0.75 }; p.yoyoUltDealt = { 1: 80 };
+    const saved = capState(), expected = { phase: p.yoyoPhase, passes: p.yoyoPasses, dir: p.yoyoDir, hitAt: p.yoyoHitAt[1], dealt: p.yoyoUltDealt[1] };
+    p.yoyoPhase = 'loop'; p.yoyoPasses = 0; p.yoyoDir = 1; p.yoyoHitAt = {}; p.yoyoUltDealt = {};
+    restState(saved);
+    const restored = projs.find(q => q.kind === 'ironball' && q.owner === A.idx);
+    return { pass: !!restored && restored.yoyoPhase === expected.phase && restored.yoyoPasses === expected.passes && restored.yoyoDir === expected.dir && restored.yoyoHitAt[1] === expected.hitAt && restored.yoyoUltDealt[1] === expected.dealt, expected, got: restored && { phase: restored.yoyoPhase, passes: restored.yoyoPasses, dir: restored.yoyoDir, hitAt: restored.yoyoHitAt[1], dealt: restored.yoyoUltDealt[1] } };
+  })()`).runInContext(w);
+  assert(yoyoState.pass, 'Qianji tether phase, pass count, direction and per-opponent hit caps restore from rollback snapshots', JSON.stringify(yoyoState));
+
   const teamRules = new vm.Script(`(() => {
     netRoomMode = 'pp_cc'; NET.isRanked = false;
     const out = {};

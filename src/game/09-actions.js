@@ -463,6 +463,27 @@ function spawnProj(f, o) {
   }
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
+function resolveYoyoBallHits(p, owner, box) {
+  if (!owner || !p.dmg) return;
+  const foes = isMulti() ? foesOf(owner) : [foeOf(owner)];
+  p.yoyoHitAt = p.yoyoHitAt || {};
+  p.yoyoUltDealt = p.yoyoUltDealt || {};
+  for (const foe of foes) {
+    if (!foe || foe.hp <= 0 || foe.invul > 0 || !overlap(box, hurtbox(foe))) continue;
+    if ((p.yoyoHitAt[foe.idx] || -99) + (p.yoyoPhase === 'loop' ? 0.72 : 0.3) > p.age) continue;
+    if (p.yoyoPhase === 'ult-pass' || p.yoyoPhase === 'ult-return') {
+      const remain = 120 - (p.yoyoUltDealt[foe.idx] || 0);
+      if (remain <= 0) continue;
+      const dmg = Math.min(p.dmg, remain);
+      applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+      p.yoyoUltDealt[foe.idx] = (p.yoyoUltDealt[foe.idx] || 0) + dmg;
+    } else {
+      applyHit(owner, foe, { dmg: p.dmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+    }
+    p.yoyoHitAt[foe.idx] = p.age;
+    p.hits = (p.hits || 0) + 1;
+  }
+}
 function updateProjs() {
   for (const p of projs) {
     if (p.dead) continue;
@@ -484,8 +505,48 @@ function updateProjs() {
       const dx = f.x - p.x, dy = f.y - 65 - p.y, d = Math.hypot(dx, dy);
       if (d > 20 && d < 420) p.vy += clamp(dy / d * f.pol * 100 * (1 - d / 420), -100, 100) * STEP;
     }
-    if (p.g) p.vy += p.g * STEP;
-    if (p.kind === 'ironball') {
+    if (p.kind === 'ironball' && p.yoyo) {
+      const owner = fighterByIdx(p.owner), phase = p.yoyoPhase || 'loop';
+      if (!owner || owner.hp <= 0) { p.dead = true; continue; }
+      const ice = !!(mapNow() && mapNow().ice), qRange = Math.min(600, STAGE_W * 0.24);
+      const arenaMin = WALL + 18, arenaMax = STAGE_W - WALL - 18;
+      const gearBoost = p.yoyoBoostT > 0 ? (p.yoyoGearBoost ? 1.4 : 1.25) : 1;
+      const loopSpeed = (ice ? 1180 : 1450) * gearBoost;
+      p.yoyoBoostT = Math.max(0, (p.yoyoBoostT || 0) - STEP);
+      if (phase === 'loop') {
+        if (p.yoyoDmgT > 0) { p.yoyoDmgT = Math.max(0, p.yoyoDmgT - STEP); if (!p.yoyoDmgT) { p.dmg = 24; p.yoyoGearBoost = false; } }
+        p.yoyoRange = qRange;
+        p.yoyoDir = p.yoyoDir || owner.face || 1;
+        if (!p.yoyoLeg) p.yoyoLeg = 'out';
+        if (p.yoyoLeg === 'return' && Math.abs(p.x - owner.x) < 56) {
+          p.yoyoLeg = 'out'; p.yoyoDir = owner.face || p.yoyoDir; p.yoyoCycle = (p.yoyoCycle || 0) + 1;
+        }
+        if (p.yoyoLeg === 'out' && Math.abs(p.x - owner.x) >= qRange - 8) p.yoyoLeg = 'return';
+        p.vx = (p.yoyoLeg === 'return' ? Math.sign(owner.x - p.x) || -p.yoyoDir : p.yoyoDir) * loopSpeed;
+        p.vy = clamp((owner.y - 58 - p.y) * 6, -420, 420);
+      } else if (phase === 'lash') {
+        p.yoyoRange = qRange;
+        p.vx = (p.yoyoDir || owner.face) * 2300;
+        p.vy = clamp((owner.y - 58 - p.y) * 3, -220, 220);
+        p.yoyoActionT -= STEP;
+        if (p.yoyoActionT <= 0 || Math.abs(p.x - owner.x) >= qRange) { p.yoyoPhase = 'loop'; p.yoyoLeg = 'return'; p.yoyoActionT = 0; }
+      } else if (phase === 'ult-pass') {
+        p.yoyoRange = STAGE_W;
+        p.vx = (p.yoyoDir || owner.face) * 2700;
+        p.vy = clamp((owner.y - 58 - p.y) * 4, -320, 320);
+        if (p.x <= arenaMin + 8 || p.x >= arenaMax - 8) {
+          p.x = clamp(p.x, arenaMin, arenaMax); p.yoyoPasses = (p.yoyoPasses || 0) + 1;
+          if (p.yoyoPasses >= 3) p.yoyoPhase = 'ult-return'; else p.yoyoDir *= -1;
+        }
+      } else if (phase === 'ult-return') {
+        const dx = owner.x - p.x;
+        p.yoyoRange = STAGE_W; p.vx = (Math.sign(dx) || 1) * 2700;
+        p.vy = clamp((owner.y - 58 - p.y) * 5, -400, 400);
+        if (Math.abs(dx) < 52) { p.yoyoArrived = true; p.vx = 0; p.vy = 0; }
+      }
+      p.g = 0; p.resting = false; p.speedTier = Math.abs(p.vx) > 1900 ? 3 : Math.abs(p.vx) > 900 ? 2 : 1;
+    } else if (p.g) p.vy += p.g * STEP;
+    if (p.kind === 'ironball' && !p.yoyo) {
       // 玄铁傀丸专属物理：永动反弹、金丝牵引回弹与传动加速
       if (p.recalling) {
         // 大招收球中：直线贯穿，不受重力与反弹限制
@@ -554,12 +615,19 @@ function updateProjs() {
       p.x = clamp(p.x, WALL + 18, STAGE_W - WALL - 18);
     }
     mapWindProj(p);   // 竹海悬岩的风
+    if (p.kind === 'ironball' && p.yoyo) {
+      const owner = fighterByIdx(p.owner), range = p.yoyoRange || 600;
+      if (owner && (p.yoyoPhase === 'loop' || p.yoyoPhase === 'lash')) p.x = clamp(p.x, owner.x - range, owner.x + range);
+      else p.x = clamp(p.x, WALL + 18, STAGE_W - WALL - 18);
+      p.y = clamp(p.y, -560, -24);
+    }
     if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
     if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
     if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math.random() < 0.6) addP({ type: 'ink', x: p.x - Math.sign(p.vx) * p.w * 0.4, y: p.y + rand(-p.h / 3, p.h / 3), vx: -p.vx * 0.1, vy: rand(-40, 40), life: 0.5, max: 0.5, r: rand(2, 5), rgb: p.kind === 'dragon' ? '20,20,28' : CHARS[fighterByIdx(p.owner).chIdx].look.slash }); }
     if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
     if (p.fx || p.dmg <= 0) continue;
     const owner = fighterByIdx(p.owner), box = projBox(p);
+    if (p.kind === 'ironball' && p.yoyo) { resolveYoyoBallHits(p, owner, box); hitClones(box, p.owner, p.dmg); continue; }
     const candidates = isMulti() ? foesOf(owner) : [foeOf(owner)];
     let foe = candidates.find(ef => ef.hp > 0 && overlap(box, hurtbox(ef))) || candidates[0];
     // 斩弹：对手的刀砍中飞行道具就把它打散
@@ -823,7 +891,7 @@ function hitDecoy(att, box) { hitClones(box, att.idx); if (hitDecoyBox(box, att.
 // 击打场上的玄铁傀丸（击球加速与角度传动机制）
 function hitBall(att, box, m) {
   for (const p of projs) {
-    if (p.dead || p.kind !== 'ironball') continue;
+    if (p.dead || p.kind !== 'ironball' || p.owner !== att.idx || !p.yoyo) continue;
     const bBox = [p.x - 28, p.y - 28, p.x + 28, p.y + 28];
     if (overlap(box, bBox)) {
       att.hitDone = true;
@@ -831,26 +899,27 @@ function hitBall(att, box, m) {
       const isCs = att.moveName === 'cs1' || att.moveName === 'cs2';
       const isAir = att.moveName === 'a1' || att.moveName === 'a2';
       const dir = att.face || 1;
-      p.resting = false;
-      p.hitCD = 0.08;
-      p.rehit = 0.15;
-      p.unbreakable = true;
+      p.resting = false; p.yoyoPhase = 'loop'; p.yoyoLeg = 'out'; p.yoyoDir = dir;
+      p.yoyoBoostT = 0.9; p.yoyoDmgT = 0.9; p.yoyoHitAt = p.yoyoHitAt || {}; p.yoyoHitAt[att.idx] = p.age;
+      p.hitCD = 0.08; p.rehit = 0.15; p.unbreakable = true; p.g = 0;
       if (isDl) {
         // 下攻击挑球：高抛弧线球
-        p.vx = dir * 720; p.vy = -920; p.g = 1350; p.speedTier = 2; p.dmg = 52;
+        p.vx = dir * 1750; p.vy = -120; p.speedTier = 2; p.dmg = 34;
       } else if (isAir) {
         // 空中扣杀：斜向砸地剧烈反弹
-        p.vx = dir * 1150; p.vy = 680; p.g = 1200; p.speedTier = 2; p.dmg = 56;
+        p.vx = dir * 1800; p.vy = 140; p.speedTier = 2; p.dmg = 36;
       } else if (isCs) {
         // 蓄力斩爆轰：高速重炮，贯穿力极强
-        const spd = att.moveName === 'cs2' ? 2200 : 1600;
-        p.vx = dir * spd; p.vy = -160; p.g = 850; p.speedTier = 3; p.dmg = att.moveName === 'cs2' ? 90 : 70;
+        const spd = att.moveName === 'cs2' ? 2400 : 2000;
+        p.vx = dir * spd; p.vy = 0; p.speedTier = 3; p.dmg = att.moveName === 'cs2' ? 48 : 40;
         shake = Math.max(shake, att.moveName === 'cs2' ? 14 : 9);
       } else {
         // 普攻推打：平推强力传动加速
-        p.vx = dir * (Math.abs(p.vx) > 500 ? Math.min(1850, Math.abs(p.vx) + 450) : 1250);
-        p.vy = -240; p.g = 1200; p.speedTier = Math.abs(p.vx) > 1300 ? 3 : 2; p.dmg = 55;
+        p.vx = dir * Math.min(2100, Math.max(1500, Math.abs(p.vx) + 300));
+        p.vy = 0; p.speedTier = 2; p.dmg = 34;
       }
+      if (scHas(att, 'qj_geardrive')) { p.yoyoBoostT = 1.1; p.yoyoGearBoost = true; p.dmg = Math.min(52, p.dmg * 1.2); p.yoyoDmgT = 1.1; }
+      else p.yoyoGearBoost = false;
       p.bounceCount = 0;
       ring(p.x, p.y, 65, att.look.slash || '235,165,70', 0.35);
       for (let i = 0; i < 7; i++) {

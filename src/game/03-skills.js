@@ -829,59 +829,47 @@ const SKILLS = {
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 26] : [f.magN > 0 ? 'hva' : 'yx_push', 56],
     ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinusRange - 40 },
-  // 千机：掷出玄铁傀丸（Q）——全场唯一存在，永动高弹，金丝回旋；傀丸在场期间 Q 锁定
-  // ---- 千机 · Q：投丸（throwball） ----
-  throwball: { name: '投丸', cd: 0, desc: '释放腕甲卡扣，掷出天工玄铁傀丸。傀丸触地与撞壁皆保持超强弹性持续弹跳，金丝暗劲受控牵引回旋；再次出招挥刀击丸可传动加速。傀丸在场期间不可重复释放。',
+  // 千机：Q 投出傀丸，金丝将其约束在可控的往返环中。
+  // ---- 千机 · Q：金丝回环（throwball） ----
+  throwball: { name: '金丝回环', cd: 0, desc: '沿当前朝向放出傀丸。金丝让它在有限距离内持续往返；普攻与蓄力攻击可以击打傀丸，改变方向并加速。傀丸回到身边后会再次出发。',
     can: f => !projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead),
     lack: () => '傀丸已在阵中',
     start(f) { f.vx = 0; },
-    update(f, foe) {
+    update(f) {
       if (f.skPh === 0 && f.t >= 0.12) {
         f.skPh = 1; f.t = 0;
-        const ballVx = f.face * 1050, ballVy = -320;
         spawnProj(f, {
-          kind: 'ironball', x: f.x + f.face * 40, y: f.y - 50, vx: ballVx, vy: ballVy,
-          g: 1100, w: 36, h: 36, life: 999999, dmg: 44, kb: [260, -180], stun: 0.42, hs: 0.08,
-          bounceCount: 0, speedTier: 2, resting: false, unbreakable: true, pierce: true, rehit: 0.35
+          kind: 'ironball', yoyo: true, yoyoPhase: 'loop', yoyoLeg: 'out', yoyoDir: f.face,
+          yoyoCycle: 0, yoyoHitAt: {}, x: f.x + f.face * 40, y: f.y - 58, vx: f.face * 1450, vy: 0,
+          g: 0, w: 36, h: 36, life: 999999, dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06,
+          speedTier: 2, resting: false, unbreakable: true, pierce: true, rehit: 0.7
         });
-        ring(f.x + f.face * 40, f.y - 50, 60, f.look.slash || '235,165,70', 0.3);
+        ring(f.x + f.face * 40, f.y - 58, 60, f.look.slash || '235,165,70', 0.3);
         SFX.gear(); SFX.heavy();
       }
       if (f.skPh === 1 && f.t >= 0.22) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 20] : ['l1a', 50],
     ai: (me, foe, d) => !projs.some(p => p.kind === 'ironball' && p.owner === me.idx && !p.dead) && d > 120 },
-  // 千机：暴雨梨花（R）——受击硬直亦可释放（breakout / ImmuneControl），远程触发傀丸爆射八方钢针护主
-  // ---- 千机 · R（右键）：暴雨梨花（ballspike） ----
-  ballspike: { name: '暴雨梨花', cd: 10, breakout: true, desc: '袖口金丝震弦，远程激发傀丸内藏机关，向八方爆射淬毒钢针（造成 55 伤害与击飞）。具备【金丝护主】奇能：即便千机本人处于受击硬直或浮空，亦可强制解控发动。',
+  // R snaps the tether into a fast lash and remains available as a hitstun breakout.
+  // ---- 千机 · R：穿丝急袭（ballspike） ----
+  ballspike: { name: '穿丝急袭', cd: 8, breakout: true, desc: '牵引傀丸沿当前朝向高速穿击，随后回到往返环。即使千机正处于受击硬直或浮空，也能强制解控发动；需要傀丸在场。',
     can: f => projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead),
     lack: () => '阵中无傀丸',
     start(f) {
-      // 触发傀丸爆射钢针
       const ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
       if (ball) {
-        ball.vx *= 0.2; ball.vy = 0; ball.resting = true;
-        ring(ball.x, ball.y, 140, '255,220,110', 0.45);
-        ring(ball.x, ball.y, 80, f.look.slash || '235,165,70', 0.35);
-        shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.25); flashRGB = '255,230,140';
-        SFX.needleBurst();
-        for (let i = 0; i < 8; i++) {
-          const a = i * (Math.PI / 4) + (ball.seed || 0);
-          spawnProj(f, {
-            kind: 'needle', x: ball.x, y: ball.y, vx: Math.cos(a) * 1100, vy: Math.sin(a) * 1100,
-            w: 24, h: 24, life: 0.32, dmg: 55, kb: [Math.cos(a) * 360, Math.sin(a) * 360 - 200],
-            stun: 0.55, hs: 0.1, launch: true, big: true, pierce: true, rehit: 0.35
-          });
-        }
+        ball.yoyoPhase = 'lash'; ball.yoyoDir = f.face; ball.yoyoActionT = 0.42; ball.yoyoHitAt = {};
+        ball.dmg = 48; ball.yoyoDmgT = 0.8; ball.speedTier = 3; ball.vy = 0; ball.g = 0;
+        ring(ball.x, ball.y, 100, '255,220,110', 0.35); ring(ball.x, ball.y, 65, f.look.slash || '235,165,70', 0.3);
+        shake = Math.max(shake, 8); SFX.dash();
       }
     },
-    update(f, foe) {
-      if (f.t >= 0.2) toNeutral(f);
-    },
-    pose: f => ['fy_seal', 30],
-    ai: (me, foe, d) => {
+    update(f) { if (f.t >= 0.2) toNeutral(f); },
+    pose: () => ['fy_seal', 30],
+    ai: (me, foe) => {
       const ball = projs.find(p => p.kind === 'ironball' && p.owner === me.idx && !p.dead);
-      return ball && Math.hypot(ball.x - foe.x, ball.y - (foe.y - 60)) < 150;
+      return ball && Math.sign(foe.x - ball.x) === (me.face || 1) && Math.abs(foe.y - (ball.y + 58)) < 110 && Math.abs(foe.x - ball.x) < 560;
     } },
 };
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
