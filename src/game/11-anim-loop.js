@@ -563,10 +563,19 @@ function recSave(w) {
   return m;
 }
 function matchReviewData(m) {
-  if (!m || !['cpu', 'net'].includes(m.mode) || m.four || m.raid || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
-  const side = m.playerSide === 1 ? 1 : 0, own = (m.stats || [])[side] || {}, foe = (m.stats || [])[side ^ 1] || {};
+  if (!m || !['cpu', 'net', '2v2', 'pvp'].includes(m.mode) || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
+  const team = !!(m.four || m.raid), side = m.raid || ['p_cc', 'pp_cc'].includes(m.sub) ? 0 : m.playerSide === 1 ? 1 : 0;
+  const ownIdx = m.raid ? [0, 2, 3] : m.four ? (side === 0 ? [0, 2] : [1, 3]) : [side];
+  const foeIdx = m.raid ? [1] : m.four ? (side === 0 ? [1, 3] : [0, 2]) : [side ^ 1];
+  const sumStats = ids => ids.reduce((sum, i) => {
+    const s = (m.stats || [])[i] || {};
+    sum.damage += Math.max(0, +s.damage || 0); sum.combo = Math.max(sum.combo, +s.combo || 0);
+    sum.breaks += Math.max(0, +s.breaks || 0); sum.falls += Math.max(0, +s.falls || 0);
+    return sum;
+  }, { damage: 0, combo: 0, breaks: 0, falls: 0 });
+  const own = sumStats(ownIdx), foe = sumStats(foeIdx);
   const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
-  const rows = (Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
+  const rows = (team ? [] : Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
   let attacks = 0, far = 0, misfaced = 0;
   for (const r of rows) {
     const ownBits = +r[19 + side] || 0;
@@ -581,7 +590,7 @@ function matchReviewData(m) {
   if (dealt > taken && dealt > 0) strengths.push(`伤害交换占优：造成 ${Math.round(dealt)}，承受 ${Math.round(taken)}。`);
   if (combo >= 3) strengths.push(`最长连击：${combo} 段。`);
   if (breaks > 0) strengths.push(`成功破防：${breaks} 次。`);
-  if (!strengths.length) strengths.push('本局操作轨迹已保存，可在回放中逐段复核起手与防守。');
+  if (!strengths.length) strengths.push('对局统计已保存，可在回放中复核攻防交换。');
   if (taken > dealt * 1.2 && taken > 0) {
     errors.push('承受伤害明显高于输出，交换中还可以减少硬吃招式。');
     next.push('先练习格挡与腾空闪，等对手招式结束后再反击。');
@@ -599,7 +608,7 @@ function matchReviewData(m) {
   if (falls > 0) { errors.push(`本局坠崖 ${falls} 次，边缘位置需要更早回到场地中央。`); next.push('把对手引向场地内侧，自己靠近边缘时优先撤回安全位置。'); }
   if (!errors.length) errors.push('现有数据未发现明显的远距离出手或失衡交换。');
   if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
-  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, strengths, errors, next };
+  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, strengths, errors, next };
 }
 function endReviewShow(m) {
   const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -610,7 +619,7 @@ function endReviewShow(m) {
   panel.classList.add('hidden');
   if (!review) { panel.innerHTML = ''; return; }
   const list = items => `<ul>${items.map(s => `<li>${escapeHTML(cvT(s))}</li>`).join('')}</ul>`;
-  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3><div class="end-review-stats"><span>${cvT('造成伤害')} ${review.dealt}</span><span>${cvT('承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section></div><p class="end-review-note">${cvT('复盘根据本局记录的战斗统计与操作轨迹生成。')}</p>`;
+  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section></div><p class="end-review-note">${cvT('复盘根据本局记录的战斗统计与操作轨迹生成。')}</p>`;
 }
 $id('endReviewBtn').addEventListener('click', () => {
   const panel = $id('endReview'), btn = $id('endReviewBtn'), open = panel.classList.contains('hidden');

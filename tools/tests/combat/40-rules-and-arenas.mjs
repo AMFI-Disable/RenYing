@@ -414,7 +414,8 @@ export default [
       if (!report || report.strengths.length < 2 || !report.errors.some(x => x.includes('100%')) || report.next.length < 2) {
         return { pass: false, error: 'AI review did not explain measured strengths and actionable spacing/facing errors' };
       }
-      if (matchReviewData({ mode: 'cpu', four: true, stats: [{ damage: 100 }] })) return { pass: false, error: 'AI review treated incomplete team telemetry as a 1v1 report' };
+      const team = matchReviewData({ mode: 'net', four: true, sub: 'pp_cc', playerSide: 1, stats: [{ damage: 100 }, { damage: 90 }, { damage: 40 }, { damage: 20 }] });
+      if (!team || !team.team || team.dealt !== 140 || team.taken !== 110) return { pass: false, error: 'AI review did not aggregate team performance correctly' };
       return { pass: true, error: null };
     })()`
   },
