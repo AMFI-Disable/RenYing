@@ -74,6 +74,7 @@ async function main() {
     // 凌雀测试只用一个 CPU 核，天道对阵表用线程池占满其余的核：两者同时跑，结果都由固定种子决定，和先后无关
     await runParallel([
       ['Hero Combo & Difficulty Separation Test', 'tools/tests/ai-lingque-test.mjs', ['--n', '2']],
+      ['Hero Tactics, Scroll Draft & Mode Adaptation Test', 'tools/tests/ai-tactics-test.mjs'],
       ['TianDao Hero Win-Rate Matrix & Report', 'tools/ai/trainer.mjs', ['--n', '2', '--level', 'god']],
     ]);
 

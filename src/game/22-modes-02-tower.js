@@ -138,7 +138,10 @@ function showTowerPerkModal() {
   showScreen('towerModal');
   if (M.watchAi) {
     setTimeout(() => {
-      if (M.mode === 'tower' && M.watchAi && M.phase === 'perk') pickTowerPerk(picked[Math.floor(Math.random() * picked.length)].id);
+      if (M.mode === 'tower' && M.watchAi && M.phase === 'perk') {
+        const choice = typeof aiChooseScroll === 'function' ? aiChooseScroll(A.ch.id, picked, M.towerPerks || []) : picked[0];
+        if (choice) pickTowerPerk(choice.id);
+      }
     }, 1200);
   }
 }

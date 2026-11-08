@@ -6387,16 +6387,16 @@ phoenix: { contact: true },
 timestop: { line: true },
 tornado: { far: true },
 thunder: { far: true },
-inkdragon: { far: true, sure: (m, o) => (m.fu || 0) >= 3 || o.hp < FU_BASE + FU_PER * (m.fu || 0) || m.hp < m.maxHp * 0.35 },
+inkdragon: { far: true, sure: (m, o) => (m.fu || 0) >= 3 || o.hp < Math.max(FU_BASE + FU_PER * (m.fu || 0), o.maxHp * 0.25) || m.hp < m.maxHp * 0.35 },
 featherstorm: { far: true },
 guangling: { far: true },
 shanshui: { far: true },
 skynet: { far: true },
-needlestorm: { far: true, sure: (m, o) => o.hp < 150 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
-sandwich: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.6 || AI_HURT.includes(o.state) || o.hp < 125) },
+needlestorm: { far: true, sure: (m, o) => o.hp / Math.max(1, o.maxHp) < 0.18 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
+sandwich: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.6 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.15) },
 moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
-mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp < 60 },
-recallball: { far: true, sure: (m, o) => o.invul <= 0 || o.hp < 120 },
+mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp / Math.max(1, o.maxHp) < 0.12 },
+recallball: { far: true, sure: (m, o) => o.invul <= 0 || o.hp / Math.max(1, o.maxHp) < 0.2 },
 };
 const AI_GENE_DEF = {
 range: [0.7, 1.35, 1],      // 立回站位：相对“我够得着、对手够不着”的理想距离的倍率
@@ -6477,6 +6477,94 @@ wakeTop() { let best = 'block', n = -1; for (const k in this.wake) if (this.wake
 const AI_FREE = ['idle', 'walk', 'block'];
 const AI_ACT_KEYS = ['l1', 'dl', 'cs1', 'cs2', 'air', 'skill', 'skill2', 'special'];
 const AI_ACT_REL = { l1: 1, dl: 0.75, cs1: 0.5, cs2: 0.4, air: 0.5 };   // 可靠程度：蓄力和跳入太好躲
+const AI_HERO_TACTICS = {
+qingfeng: { style: 'balanced', range: 0.96, schools: ['feng', 'qi'] },
+feiying: { style: 'assassin', range: 0.88, schools: ['ying', 'feng'] },
+tieshan: { style: 'bulwark', range: 0.82, schools: ['jin', 'mo'] },
+lingshuang: { style: 'footsies', range: 1.12, schools: ['feng', 'jin'] },
+liuyun: { style: 'air', range: 1.12, schools: ['feng', 'qi'] },
+leiming: { style: 'counter', range: 0.9, schools: ['lei', 'jin'] },
+moyu: { style: 'zoner', range: 1.2, schools: ['mo', 'qi'] },
+yuehua: { style: 'sustain', range: 1.08, schools: ['ying', 'xue'] },
+yanling: { style: 'air', range: 1.08, schools: ['feng', 'ying'] },
+yuxiao: { style: 'zoner', range: 1.15, schools: ['qi', 'feng'] },
+zuixian: { style: 'brawler', range: 0.9, schools: ['xue', 'jin'] },
+gouchen: { style: 'grappler', range: 0.94, schools: ['mo', 'jin'] },
+lingque: { style: 'assassin', range: 1.02, schools: ['ying', 'feng'] },
+liying: { style: 'trickster', range: 1.02, schools: ['ying', 'mo'] },
+cixian: { style: 'control', range: 1.08, schools: ['qi', 'jin'] },
+qianji: { style: 'setplay', range: 1.14, schools: ['feng', 'qi'] },
+};
+function aiHeroTactic(id) { return AI_HERO_TACTICS[id] || { style: 'balanced', range: 1, schools: [] }; }
+function aiScrollIds(f) {
+if (typeof scIds !== 'function' || typeof scOn !== 'function' || !scOn()) return [];
+return scIds(f).filter(id => typeof SC_BY !== 'undefined' && !!SC_BY[id]);
+}
+function aiScrollActionWeight(f, key) {
+const ids = aiScrollIds(f), schools = new Set(aiHeroTactic(f.ch.id).schools);
+if (!ids.length) return 1;
+let weight = 1;
+const has = id => ids.includes(id);
+if ((key === 'l1' || key === 'dl') && (has('ink_blade') || has('needle_rain'))) weight *= 1.18;
+if ((key === 'cs1' || key === 'cs2') && (has('heavy_hand') || has('shockwave'))) weight *= 1.16;
+if ((key === 'skill' || key === 'skill2') && (has('double_strike') || has('skill_echo') || has('haste'))) weight *= 1.12;
+if (key === 'special' && has('ult_amp')) weight *= 1.22;
+const scrolls = typeof SC_BY !== 'undefined' ? ids.map(id => SC_BY[id]).filter(Boolean) : [];
+if (scrolls.some(s => s.h === f.ch.id)) weight *= 1.1;
+if (scrolls.some(s => s.s && schools.has(s.s))) weight *= 1.04;
+return weight;
+}
+function aiChooseScroll(heroId, choices, owned = []) {
+if (!Array.isArray(choices) || !choices.length) return null;
+const profile = aiHeroTactic(heroId), ownedSet = new Set(owned), counts = {};
+for (const id of ownedSet) { const s = typeof SC_BY !== 'undefined' && SC_BY[id]; if (s && s.s) counts[s.s] = (counts[s.s] || 0) + 1; }
+const ranked = choices.map((choice, index) => {
+const s = typeof choice === 'string' ? (typeof SC_BY !== 'undefined' && SC_BY[choice]) : choice;
+if (!s || ownedSet.has(s.id)) return { choice, score: -Infinity, index };
+let score = s.h === heroId ? 8 : 0;
+if (s.s && profile.schools.includes(s.s)) score += 3;
+if (s.s && counts[s.s]) score += Math.min(3, counts[s.s]) * 1.5;
+const hp = (typeof A !== 'undefined' && A && A.ch && A.ch.id === heroId) ? A.hp / Math.max(1, A.maxHp) : 1;
+if (hp < 0.4 && ['second_wind', 'meditation', 'golden_bell', 'last_stand'].includes(s.id)) score += 4;
+if (s.id === 'executioner' || s.id === 'first_blood' || s.id === 'crescendo') score += 1;
+return { choice, score, index };
+}).sort((a, b) => b.score - a.score || a.index - b.index);
+return ranked[0].choice;
+}
+function aiModeActionWeight(f, opp, key, d) {
+const profile = aiHeroTactic(f.ch.id), ownHp = f.hp / Math.max(1, f.maxHp);
+const foeHp = opp.hp / Math.max(1, opp.maxHp), mu = typeof chaosNow === 'function' ? chaosNow() : null;
+let weight = 1;
+if (profile.style === 'air' && key === 'air') weight *= 1.12;
+if (profile.style === 'zoner' && (key === 'skill' || key === 'skill2') && [f.ch.skill, f.ch.skill2].some(id => AI_KIT[id] && AI_KIT[id].role === 'proj')) weight *= 1.12;
+if (profile.style === 'bulwark' && (key === 'cs2' || key === 'skill' || key === 'skill2')) weight *= 1.06;
+if (profile.style === 'assassin' && AI_HURT.includes(opp.state)) weight *= 1.12;
+if (profile.style === 'counter' && (opp.state === 'attack' || opp.state === 'skill')) weight *= 1.1;
+if (profile.style === 'setplay' && (key === 'skill' || key === 'skill2')) weight *= 1.08;
+if (ownHp < 0.3) {
+if (key === 'cs2' || key === 'air') weight *= 0.78;
+if ((key === 'skill' || key === 'skill2') && ['rush', 'counter', 'self'].includes((AI_KIT[f.ch[key === 'skill' ? 'skill' : 'skill2']] || {}).role)) weight *= 1.08;
+} else if (ownHp - foeHp > 0.25 && (key === 'cs2' || key === 'air')) weight *= 0.9;
+if (foeHp < 0.22 && (key === 'special' || key === 'skill' || key === 'skill2')) weight *= 1.12;
+if (mu) {
+if (mu.type === 'spd' || mu.type === 'dash_cd') {
+if (key === 'air') weight *= 0.9;
+if ((key === 'skill' || key === 'skill2') && ['rush', 'proj'].includes((AI_KIT[f.ch[key === 'skill' ? 'skill' : 'skill2']] || {}).role)) weight *= 1.08;
+} else if (mu.type === 'dmg' || mu.type === 'crit' || mu.type === 'vamp' || mu.type === 'armor') {
+if (key === 'l1' || key === 'skill' || key === 'skill2') weight *= 1.06;
+} else if (mu.type === 'kb') {
+if (key === 'l1' || key === 'skill' || key === 'skill2') weight *= 1.04;
+if (key === 'cs2') weight *= 0.9;
+} else if (mu.type === 'grav' || mu.type === 'jump') {
+if (key === 'air' || key === 'antiAir') weight *= 1.12;
+} else if (mu.type === 'meter_gain') {
+if (key === 'special' && f.meter >= 100) weight *= 1.12;
+} else if (mu.type === 'cd') {
+if (key === 'skill' || key === 'skill2') weight *= 1.12;
+} else if (mu.type === 'guard_stab' && (key === 'cs2' || key === 'dl')) weight *= 1.08;
+}
+return weight * aiScrollActionWeight(f, key);
+}
 const AI_HURT = ['hitstun', 'launched', 'knockdown', 'held'];
 class AIBrain {
 constructor(ctrl, level) {
@@ -6529,6 +6617,13 @@ else if (a === 'chargeEnd') this.holdAtk = 0;
 else this.press(a, 'plan');
 }
 this.tactic(me, foe, d, to);
+}
+if (typeof mapNow === 'function' && me.y < -60 && me.invul <= 0 && !me.escInvul && !['special', 'held'].includes(me.state)) {
+const mp = mapNow(), env = M.mapEnv, thunder = mp && mp.thunder;
+if (thunder && env && env.tWarn > 0 && Math.abs(me.x - thunder.x * STAGE_W) < thunder.r + 40 && AI_FREE.includes(me.state)) {
+this.dir = me.x < thunder.x * STAGE_W ? -1 : 1;
+this.jumpHeld = false;
+}
 }
 if (this.dir === -to && ((this.dir < 0 && me.x < WALL + 120) || (this.dir > 0 && me.x > STAGE_W - WALL - 120)) && me.onGround() && AI_FREE.includes(me.state)) {
 if (this.mode === 'keep' || this.chance(0.5)) { this.dir = to; if (!this.queue.length && this.chance(0.08)) this.plan([['jump', 0], ['jump', 0.22]]); }
@@ -7104,7 +7199,7 @@ if (K.role === 'counter' || K.role === 'self') return 0;
 rel = cd <= 0 ? 1 : cd < 0.8 ? 0.5 : 0.05;
 if (K.groundOnly && !opp.onGround()) rel *= 0.2;
 } else if (key === 'special') { if (f.meter < 100) return 0; rel = 0.8; }
-return F.dmg * rel / (0.2 + aiHitTime(F, d));
+return F.dmg * rel / (0.2 + aiHitTime(F, d)) * aiModeActionWeight(f, opp, key, d);
 }
 matchup(me, foe) {
 if (this.mu && this.mu.me === me.ch.id && this.mu.foe === foe.ch.id) return this.mu;
@@ -7179,7 +7274,9 @@ if (L.bait >= 0.6 && me.onGround() && (!this.feint || clock > this.feint.end + 2
 && d < aiFrame(me, 'l1').max + 110 && d > aiFrame(me, 'l1').max - 10 && Math.random() < 0.05 * L.bait) {
 this.feint = { turn: clock + 0.14, end: clock + 0.34 }; this.dir = to; return;
 }
-if (me.meter >= 100 && this.ultWouldHit(me, foe, d, false) && Math.random() < L.ult * (1 - g.ultSave * 0.6)) { this.press('special'); return; }
+const isMayhem = M.mode === 'mayhem' || (typeof mayhemOn === 'function' && mayhemOn());
+const ultWeight = aiModeActionWeight(me, foe, 'special', d) * (isMayhem ? 1.2 : 1);
+if (me.meter >= 100 && this.ultWouldHit(me, foe, d, false) && Math.random() < Math.min(1, L.ult * (1 - g.ultSave * 0.6) * ultWeight)) { this.press('special'); return; }
 if (Math.random() > L.skill && Math.random() < 0.12) {
 const slot = Math.random() < 0.5 ? 'skill' : 'skill2';
 if ((slot === 'skill' ? me.skillCD : me.skill2CD) <= 0) { this.press(slot); return; }
@@ -7220,7 +7317,16 @@ const aggr = Math.min(1, L.aggr * (0.45 + g.aggr) * riskMod);
 const foeBusy = foe.state === 'walk' || (foe.state === 'attack' && foe.t > foe.move.su) || foe.state === 'air';
 const go = bestKey && foe.invul <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
 if (go) { this.attacks++; return this.doAct(me, foe, d, to, bestKey); }
-const want = map.want;
+const profile = aiHeroTactic(me.ch.id);
+let want = map.want * profile.range;
+const arena = typeof mapNow === 'function' ? mapNow() : null, env = M.mapEnv;
+if (arena && arena.ice && typeof mapGrip === 'function' && mapGrip(me) < 1) want *= 1.04;
+if (arena && arena.wind && env && env.wOn > 0 && Math.sign(env.wDir) === to) want += Math.min(45, arena.wind.push * 0.08);
+const guardPct = me.guard / Math.max(1, me.maxGuard), hpPct = me.hp / Math.max(1, me.maxHp);
+if (arena && arena.fog && (guardPct < 0.45 || (hpPct < 0.55 && aiScrollIds(me).some(id => id === 'meditation' || id === 'second_wind')))) {
+const fog = arena.fog, u = me.x / STAGE_W;
+if (u < fog.from || u > fog.to) { const center = (fog.from + fog.to) * STAGE_W / 2; this.dir = Math.sign(center - me.x); return; }
+}
 if (d > want + 25) this.dir = to;
 else if (d < want - 30) this.dir = -to;
 else if (Math.random() < g.back * 0.4) this.dir = -to;
@@ -27532,7 +27638,10 @@ if (fb) fb.textContent = isRaid() ? `讨伐第 ${M.raidWave || 1} 劫大捷 · �
 showScreen('towerModal');
 if (M.watchAi) {
 setTimeout(() => {
-if (M.mode === 'tower' && M.watchAi && M.phase === 'perk') pickTowerPerk(picked[Math.floor(Math.random() * picked.length)].id);
+if (M.mode === 'tower' && M.watchAi && M.phase === 'perk') {
+const choice = typeof aiChooseScroll === 'function' ? aiChooseScroll(A.ch.id, picked, M.towerPerks || []) : picked[0];
+if (choice) pickTowerPerk(choice.id);
+}
 }, 1200);
 }
 }

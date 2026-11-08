@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Scroll and mode-aware hero AI (`src/ai.js`, `src/game/22-modes-02-tower.js`)**: added tactical identities for all 16 heroes, with action and spacing choices that adapt to health, owned scrolls, terrain and live 天机乱斗 mutations. Tower spectator AI now chooses scrolls that fit its hero and existing build. 通天神诀 AI uses normalized finishing thresholds and commits more often when a valid ultimate can connect.
+
 - **Training ground scenarios and deliberate practice drills (`src/game/21-buttons-02-training.js`, `src/game/17-home-02-mode-hall.js`, `src/data/30-ui-copy-12-training.js`, `src/page.html`, `src/styles/70-home-and-mode-panels.css`, `index.html`, `renying-offline.html`)**: added four dedicated scenario practice drills (连招与追击 combo pursuit, 压制与破防 block pressure, 精准招架 parry timing, and 受压与脱身 recovery & evasion) alongside quick launches for complete step-by-step tutorial and AI sparring.
 - **Unique hero hairstyles and silhouettes (`src/game/14-skin-looks.js`, `src/data/heroes/14-cixian.js`, `src/data/heroes/15-qianji.js`, `index.html`, `renying-offline.html`)**: replaced generic topknot hair on CiXian and Qianji with distinct procedural silhouettes—CiXian now sports `polar-sweep` (swept bangs and magnetic flowing locks), while Qianji features `gear-crop` (textured angular bangs with mechanical hairpin accents).
 - **Bulk cosmetic upgrade test coverage (`tools/tests/econ/10-inventory-and-market.mjs`)**: added integration test suites verifying 20% discount calculations, item identifier preservation, starting kill counts, and idempotent replay protection for bulk Kill Counter cosmetic upgrades.
