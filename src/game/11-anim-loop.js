@@ -420,7 +420,7 @@ function ctrlKey(c) {
   return s;
 }
 function recBegin(kind) {
-  Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
+  Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
     meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
   if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
   // pl：哪几个人按玩家的规则选目标。回放里大家都是普通 Ctrl，不记的话玩家会被当成电脑去配合队友，回放就走样了
@@ -494,7 +494,8 @@ function trSample() {
   if (tf % TR_EVERY) return;
   if (!A.ctrl || !B.ctrl) return;
   REC.tr.push([...trFeat(A, B), inBits(A.ctrl.held), inBits(B.ctrl.held)]);
-  if (REC.tr.length > TR_PER_MATCH) REC.tr.shift();
+  if (REC.trStart === null) REC.trStart = tf;
+  if (REC.tr.length > TR_PER_MATCH) { REC.tr.shift(); REC.trStart += TR_EVERY; }
 }
 // 样本记录的格式：s 是上面 18 维状态，a 是玩家这一帧按住的键（位掩码），r 由血量/护甲变化和胜负算出来
 const TR_STATE_DIM = 19;
@@ -512,7 +513,7 @@ function trSamples(m) {
       hero: (CHARS[(m.ch || [0, 1])[0]] || {}).id || 'hero',
       heroIdx: (m.ch || [0, 1])[0],
       s, a, r: Math.round(r * 1000) / 1000,
-      mode: m.mode || 'cpu', frame: i * TR_EVERY, source: 'user_replay'
+      mode: m.mode || 'cpu', frame: (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay'
     });
   }
   if (out.length) {   // 最后一帧给终局奖励：赢了才对，输了就是负的
@@ -554,7 +555,7 @@ function recSave(w) {
   REC.on = false;
   if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
   const m = REC.meta;
-  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
+  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, trStart: REC.trStart, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
     names: M.mode === 'net' ? rpNetNames(m)
       : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
   RP.last = m;
@@ -576,21 +577,33 @@ function matchReviewData(m) {
   const own = sumStats(ownIdx), foe = sumStats(foeIdx);
   const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
   const rows = (team ? [] : Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
-  let attacks = 0, far = 0, misfaced = 0;
-  for (const r of rows) {
+  let attacks = 0, far = 0, misfaced = 0, farFrame = null, misfacedFrame = null;
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    const r = rows[rowIndex];
     const ownBits = +r[19 + side] || 0;
     if (!(ownBits & 8)) continue;
     attacks++;
     const ownX = r[side ? 9 : 8], foeX = r[side ? 8 : 9];
-    if (Math.abs(ownX - foeX) > 0.2) far++;
+    const frame = (+m.trStart || 0) + rowIndex * TR_EVERY;
+    if (Math.abs(ownX - foeX) > 0.2) { far++; if (farFrame === null) farFrame = frame; }
     const ownFace = r[side ? 13 : 12], toward = foeX > ownX ? 1 : -1;
-    if (ownFace !== toward) misfaced++;
+    if (ownFace !== toward) { misfaced++; if (misfacedFrame === null) misfacedFrame = frame; }
   }
-  const strengths = [], errors = [], next = [];
+  const strengths = [], errors = [], next = [], moments = [];
   if (dealt > taken && dealt > 0) strengths.push(`伤害交换占优：造成 ${Math.round(dealt)}，承受 ${Math.round(taken)}。`);
   if (combo >= 3) strengths.push(`最长连击：${combo} 段。`);
   if (breaks > 0) strengths.push(`成功破防：${breaks} 次。`);
   if (!strengths.length) strengths.push('对局统计已保存，可在回放中复核攻防交换。');
+  const sampleFrame = i => (+m.trStart || 0) + i * TR_EVERY;
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1], cur = rows[i], atk = (+prev[19 + side] || 0) & 8 || (+cur[19 + side] || 0) & 8;
+    const ownHp = side ? 1 : 0, foeHp = side ? 0 : 1;
+    const foeLoss = prev[foeHp] - cur[foeHp], ownLoss = prev[ownHp] - cur[ownHp];
+    if (atk && foeLoss > 0.005 && ownLoss <= 0.005) {
+      moments.push({ frame: sampleFrame(i), text: '有利交换片段：对手气血下降，你没有同时失血。' });
+      break;
+    }
+  }
   if (taken > dealt * 1.2 && taken > 0) {
     errors.push('承受伤害明显高于输出，交换中还可以减少硬吃招式。');
     next.push('先练习格挡与腾空闪，等对手招式结束后再反击。');
@@ -598,17 +611,19 @@ function matchReviewData(m) {
   if (attacks >= 8 && far / attacks >= 0.25) {
     const pct = Math.round(far / attacks * 100);
     errors.push(`约 ${pct}% 的攻击输入发生在较远距离，可能有部分出手够不到对手。`);
+    if (farFrame !== null) moments.push({ frame: farFrame, text: '远距离出手：攻击输入发生时双方相距较远。' });
     next.push('把回放频率调到 1 Hz 并打开判定框，确认攻击范围覆盖对手后再出手。');
   }
   if (attacks >= 8 && misfaced / attacks >= 0.2) {
     const pct = Math.round(misfaced / attacks * 100);
     errors.push(`约 ${pct}% 的攻击输入发生时没有正对对手。`);
+    if (misfacedFrame !== null) moments.push({ frame: misfacedFrame, text: '朝向检查：攻击输入发生时没有正对对手。' });
     next.push('起手前确认朝向，必要时先用方向键调整再攻击。');
   }
   if (falls > 0) { errors.push(`本局坠崖 ${falls} 次，边缘位置需要更早回到场地中央。`); next.push('把对手引向场地内侧，自己靠近边缘时优先撤回安全位置。'); }
   if (!errors.length) errors.push('现有数据未发现明显的远距离出手或失衡交换。');
   if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
-  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, strengths, errors, next };
+  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, strengths, errors, next, moments: moments.slice(0, 3) };
 }
 function endReviewShow(m) {
   const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -619,8 +634,34 @@ function endReviewShow(m) {
   panel.classList.add('hidden');
   if (!review) { panel.innerHTML = ''; return; }
   const list = items => `<ul>${items.map(s => `<li>${escapeHTML(cvT(s))}</li>`).join('')}</ul>`;
-  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section></div><p class="end-review-note">${cvT('复盘根据本局记录的战斗统计与操作轨迹生成。')}</p>`;
+  const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
+  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p>`;
 }
+function formatReviewTime(frame) {
+  const seconds = Math.floor(Math.max(0, +frame || 0) / 120);
+  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+}
+function replayJump(m, frame) {
+  startReplay(m);
+  const target = Math.max(0, Math.min(Math.floor(+frame || 0), Math.max(0, (m.frames || 0) - 1)));
+  REPLAY.paused = true;
+  $id('rpPause').textContent = cvT('继续');
+  const advance = () => {
+    if (!REPLAY.on) return;
+    let count = 0;
+    while (REPLAY.f < target && M.phase !== 'end' && count++ < 480) replayFrame();
+    if (REPLAY.f < target && M.phase !== 'end') { setTimeout(advance, 0); return; }
+    REPLAY.paused = true;
+    REPLAY.frameAcc = 0;
+    $id('rpPause').textContent = cvT('继续');
+    rpInfo();
+  };
+  setTimeout(advance, 0);
+}
+$id('endReview').addEventListener('click', e => {
+  const jump = e.target.closest('[data-review-frame]');
+  if (jump && RP.last) replayJump(RP.last, +jump.dataset.reviewFrame);
+});
 $id('endReviewBtn').addEventListener('click', () => {
   const panel = $id('endReview'), btn = $id('endReviewBtn'), open = panel.classList.contains('hidden');
   panel.classList.toggle('hidden', !open);

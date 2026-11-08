@@ -410,9 +410,15 @@ export default [
       const rows = Array.from({ length: 8 }, () => {
         const r = Array(21).fill(0); r[0] = 0.8; r[1] = 0.7; r[8] = 0.1; r[9] = 0.5; r[12] = -1; r[19] = 8; return r;
       });
-      const report = matchReviewData({ mode: 'cpu', playerSide: 0, stats: [{ damage: 120, combo: 5, breaks: 1, falls: 0 }, { damage: 80 }], tr: rows });
+      rows[3][1] = 0.6;
+      const report = matchReviewData({ mode: 'cpu', playerSide: 0, stats: [{ damage: 120, combo: 5, breaks: 1, falls: 0 }, { damage: 80 }], tr: rows, trStart: 120 });
       if (!report || report.strengths.length < 2 || !report.errors.some(x => x.includes('100%')) || report.next.length < 2) {
         return { pass: false, error: 'AI review did not explain measured strengths and actionable spacing/facing errors' };
+      }
+      const goodMoment = report.moments.find(x => x.text.includes('有利交换'));
+      const spacingMoment = report.moments.find(x => x.text.includes('远距离出手'));
+      if (!goodMoment || goodMoment.frame !== 138 || !spacingMoment || spacingMoment.frame !== 120) {
+        return { pass: false, error: 'AI review moments did not retain evidence frame timestamps' };
       }
       const team = matchReviewData({ mode: 'net', four: true, sub: 'pp_cc', playerSide: 1, stats: [{ damage: 100 }, { damage: 90 }, { damage: 40 }, { damage: 20 }] });
       if (!team || !team.team || team.dealt !== 140 || team.taken !== 110) return { pass: false, error: 'AI review did not aggregate team performance correctly' };

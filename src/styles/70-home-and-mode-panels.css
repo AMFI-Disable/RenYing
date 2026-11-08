@@ -254,6 +254,8 @@ body.offline #mMatch { display: none !important; }
 .end-review-block ul { margin: 0; padding-left: 18px; color: rgba(255,255,255,.82); font-size: 12px; line-height: 1.55; }
 .end-review-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .end-review-stats span { padding: 4px 8px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; color: rgba(255,255,255,.8); font-size: 11px; }
+.end-review-jump { padding: 0; border: 0; background: none; color: rgba(255,255,255,.82); font: inherit; text-align: left; cursor: pointer; }
+.end-review-jump:hover, .end-review-jump:focus-visible { color: var(--gold); text-decoration: underline; }
 .end-review-note { margin: 10px 0 0; color: rgba(255,255,255,.5); font-size: 11px; }
 @media (max-width: 680px) { .end-review-grid { grid-template-columns: 1fr; } }
 
