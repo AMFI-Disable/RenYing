@@ -111,6 +111,7 @@ body.touchdev .dummy-bar-btn { display: none; }
 .train-inspect-rate input { width: 100%; accent-color: #e9c46a; }
 .train-inspect-rate output { min-width: 48px; color: #e9c46a; font: 600 12px ui-monospace, monospace; text-align: right; }
 @media (max-width: 560px) { .train-inspect { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); justify-content: center; gap: 5px; padding: 7px; } .train-inspect-rate { grid-template-columns: auto minmax(80px, 1fr) auto; flex: 1 1 100%; order: -1; } .train-inspect button { min-height: 36px; } }
+@media (pointer: coarse) and (orientation: landscape) { .train-inspect { top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); bottom: auto; left: auto; z-index: 14; max-width: min(560px, calc(100vw - 230px)); } }
 .dummy-bar { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box;
   padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); border: 1px solid rgba(233,196,106,.45); color: #efe8d8; font: 13px var(--body); box-shadow: 0 10px 40px rgba(0,0,0,.5); }
 .dummy-bar .db-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }

@@ -226,16 +226,18 @@ async function landscapeCheck(name, w, h, dpr) {
   const atk = items2.find(i => i.a === 'atk');
   if (atk) {
     const cx = (atk.l + atk.r) / 2, cy = (atk.t + atk.b) / 2;
+    const hitTarget = await ev(`(() => { const e = document.elementFromPoint(${cx}, ${cy}); return !!(e && e.closest('#touchUI [data-a="atk"]')); })()`);
+    if (!hitTarget) note(`${name}: training controls or another overlay intercepts the attack button`);
     await ev(`window.__atk = 0; A.state='idle';`);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx, y: cy, id: 2 }] }, S);
     await sleep(160);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, S);
     await sleep(220);
     const n = await ev(`window.__atk`);
-    const ok = n > 0;
-    console.log(`  ${name} attack button tap: startAttack calls=${n} -> ${ok ? 'PASS' : 'FAIL'}`);
-    if (!ok) note(`${name}: tapping the attack button did not start an attack`);
-    results.push({ name, mode: 'attack', ok, calls: n });
+    const ok = hitTarget && n > 0;
+    console.log(`  ${name} attack button tap: target=${hitTarget ? 'attack' : 'blocked'} startAttack calls=${n} -> ${ok ? 'PASS' : 'FAIL'}`);
+    if (!n) note(`${name}: tapping the attack button did not start an attack`);
+    results.push({ name, mode: 'attack', ok, hitTarget, calls: n });
   }
 }
 
