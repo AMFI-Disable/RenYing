@@ -696,7 +696,7 @@ function showEnd(w) {
   if (typeof endReviewShow === 'function') endReviewShow(reviewRecord);
   const stats = M.combatStats && M.combatStats[localIdx()];
   const card = $id('endCombatCard');
-  if (card) card.textContent = stats ? `总伤害 ${Math.round(stats.damage)} · 最长连击 ${stats.combo} · 破防 ${stats.breaks} · 坠崖 ${stats.falls}` : '';
+  if (card) card.textContent = stats ? `${cvT('总伤害')} ${Math.round(stats.damage)} · ${cvT('最长连击')} ${stats.combo} · ${cvT('破防次数')} ${stats.breaks} · ${cvT('坠崖')} ${stats.falls}` : '';
   taskMatchEnd(w);
   $id('endKicker').textContent = '';
   $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');

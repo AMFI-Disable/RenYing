@@ -716,10 +716,20 @@ function endReviewShow(m) {
   btn.setAttribute('aria-expanded', String(!!review));
   panel.classList.toggle('hidden', !review);
   if (!review) { panel.innerHTML = ''; return; }
-  const list = items => `<ul>${items.map(s => `<li>${escapeHTML(cvT(s))}</li>`).join('')}</ul>`;
+  const list = items => `<ul>${items.map(s => `<li>${escapeHTML(reviewCopy(s))}</li>`).join('')}</ul>`;
   const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
-  const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(review.context.hero)} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(LV_NAME[review.context.level] || review.context.level)}` : ''}</p>` : '';
+  const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(cvT(review.context.hero))} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(cvT(LV_NAME[review.context.level] || review.context.level))}` : ''}</p>` : '';
   panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p>`;
+}
+function reviewCopy(value) {
+  const s = String(value || '');
+  let m;
+  if ((m = s.match(/^伤害交换占优：造成 (\d+)，承受 (\d+)。$/))) return `${cvT('伤害交换占优')}: ${cvT('造成伤害')} ${m[1]}, ${cvT('承受伤害')} ${m[2]}.`;
+  if ((m = s.match(/^最长连击：(\d+) 段。$/))) return `${cvT('最长连击')}: ${m[1]}.`;
+  if ((m = s.match(/^约 (\d+)% 的攻击输入发生在较远距离，可能有部分出手够不到对手。$/))) return `${m[1]}% of attack inputs were made from too far away to reach the opponent.`;
+  if ((m = s.match(/^约 (\d+)% 的攻击输入发生时没有正对对手。$/))) return `${m[1]}% of attack inputs were made while facing away from the opponent.`;
+  if ((m = s.match(/^本局坠崖 (\d+) 次，边缘位置需要更早回到场地中央。$/))) return `${cvT('坠崖')}: ${m[1]}. Move back toward the center sooner near an edge.`;
+  return cvT(s);
 }
 function formatReviewTime(frame) {
   const seconds = Math.floor(Math.max(0, +frame || 0) / 120);
