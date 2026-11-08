@@ -16252,7 +16252,7 @@ if (!owner || owner.hp <= 0) { p.dead = true; continue; }
 const ice = !!(mapNow() && mapNow().ice), qRange = Math.min(600, STAGE_W * 0.24);
 const arenaMin = WALL + 18, arenaMax = STAGE_W - WALL - 18;
 const gearBoost = p.yoyoBoostT > 0 ? (p.yoyoGearBoost ? 1.4 : 1.25) : 1;
-const loopSpeed = (ice ? 1180 : 1450) * gearBoost;
+const loopSpeed = (ice ? 1550 : 1850) * gearBoost;
 p.yoyoBoostT = Math.max(0, (p.yoyoBoostT || 0) - STEP);
 if (phase === 'loop') {
 if (p.yoyoDmgT > 0) { p.yoyoDmgT = Math.max(0, p.yoyoDmgT - STEP); if (!p.yoyoDmgT) { p.dmg = 24; p.yoyoGearBoost = false; } }
@@ -16264,11 +16264,11 @@ p.yoyoLeg = 'out'; p.yoyoDir = owner.face || p.yoyoDir; p.yoyoCycle = (p.yoyoCyc
 }
 if (p.yoyoLeg === 'out' && Math.abs(p.x - owner.x) >= qRange - 8) p.yoyoLeg = 'return';
 p.vx = (p.yoyoLeg === 'return' ? Math.sign(owner.x - p.x) || -p.yoyoDir : p.yoyoDir) * loopSpeed;
-p.vy = clamp((owner.y - 58 - p.y) * 6, -420, 420);
+p.vy = clamp((owner.y - 58 - p.y) * 6, -300, 300);
 } else if (phase === 'lash') {
 p.yoyoRange = qRange;
-p.vx = (p.yoyoDir || owner.face) * 2300;
-p.vy = clamp((owner.y - 58 - p.y) * 3, -220, 220);
+p.vx = (p.yoyoDir || owner.face) * 2700;
+p.vy = clamp((owner.y - 58 - p.y) * 3, -180, 180);
 p.yoyoActionT -= STEP;
 if (p.yoyoActionT <= 0 || Math.abs(p.x - owner.x) >= qRange) { p.yoyoPhase = 'loop'; p.yoyoLeg = 'return'; p.yoyoActionT = 0; }
 } else if (phase === 'ult-pass') {

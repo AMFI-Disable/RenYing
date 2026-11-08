@@ -227,7 +227,7 @@ export default [
 
       let maxTether = 0;
       for (let i = 0; i < 300; i++) { step(); maxTether = Math.max(maxTether, Math.abs(ball.x - A.x)); }
-      if ((ball.yoyoCycle || 0) < 1 || maxTether > 620 || Math.abs(ball.vx) < 900) return { pass: false, error: 'Loop stalled or broke tether: cycles=' + ball.yoyoCycle + ', distance=' + maxTether + ', vx=' + ball.vx };
+      if ((ball.yoyoCycle || 0) < 1 || maxTether > 620 || Math.abs(ball.vx) < 1700) return { pass: false, error: 'Loop stalled, broke tether or lost speed: cycles=' + ball.yoyoCycle + ', distance=' + maxTether + ', vx=' + ball.vx };
 
       toNeutral(A); ball.x = A.x + 48; ball.y = A.y - 58; ball.yoyoPhase = 'staged'; ball.yoyoDir = -1; ball.vx = 0;
       startAttack(A, 'l1');
