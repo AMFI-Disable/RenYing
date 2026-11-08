@@ -209,6 +209,7 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
+setMenuHero(menuHeroPick());
 startMatch('demo');
 for (let i = 0; i < 4; i++) { animFighter(A); animFighter(B); }
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });

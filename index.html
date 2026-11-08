@@ -26005,6 +26005,7 @@ let SCN = null;   // 这一场的场景（null 是默认的月夜竹林）
 function sceneOf(k) { const T = k && SCENES[k], S = k && SKINS[k]; return T && S ? { ...T, key: k, legend: S.rarity === 'legend', name: S.name } : null; }
 function pickScene() {
 SCN = null;
+if (M.mode === 'demo') return;
 const me = localIdx();
 for (const i of [me, 1 - me]) {
 const f = [A, B][i]; if (!f || f.dummy) continue;
@@ -26393,6 +26394,7 @@ if (typeof renderTag3 === 'function') renderTag3();
 for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
 if ($id('tasks').classList.contains('on')) renderTasks();
 if ($id('netp').classList.contains('on')) renderRankLine();
+if ($id('menu').classList.contains('on') && typeof setMenuHero === 'function') setMenuHero(menuHeroPick());
 if ($id('menu').classList.contains('on')) compMaybe();
 }
 let compAsked = false;
@@ -33616,6 +33618,7 @@ cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
 }
 window.addEventListener('resize', resize);
 resize();
+setMenuHero(menuHeroPick());
 startMatch('demo');
 for (let i = 0; i < 4; i++) { animFighter(A); animFighter(B); }
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });

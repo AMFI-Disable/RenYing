@@ -44,6 +44,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Home scene and equipped hero skins on first load (`src/game/19-progress-01-skins.js`, `src/game/19-progress-02-profile.js`, `src/game/25-keyboard-boot.js`)**: kept combat skin backgrounds out of the home scene, initialized the menu hero during startup, and refreshed its equipped skin when profile data loads.
 - **Online ranked draft remote selection slots (`src/game/23-prematch-03-ban-pick-flow.js`, `src/game/23-prematch-draft.js`, `index.html`, `renying-offline.html`)**: prevented auto-filling remote human selection slots with recommendations so opponent picks remain open during online draft.
 - **Mobile Safari combat viewport zoom gestures (`src/game/20-tutorial-rollback-touch.js`, `src/style.css`, `index.html`, `renying-offline.html`)**: disabled accidental multi-touch pinch-to-zoom gestures during active combat matches on iOS and touch devices by attaching non-passive gesture guards and applying `touch-action: none`.
 - **Friend rooms stay open (`src/game/06-input-net.js`, `src/net-p2p.js`, `src/game/22-modes-07-raid.js`)**: when the opponent leaves a friend room, the host keeps the same room code and goes back to waiting, so a friend can rejoin without a new code. Matchmaking and ranked rooms still close.

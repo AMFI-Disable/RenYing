@@ -151,6 +151,8 @@ function sceneOf(k) { const T = k && SCENES[k], S = k && SKINS[k]; return T && S
 // 两边都有皮肤时，用稀有度高的；一样高用自己的
 function pickScene() {
   SCN = null;
+  // The home scene has its own background and demo hero; combat skin themes must not leak into it.
+  if (M.mode === 'demo') return;
   const me = localIdx();
   for (const i of [me, 1 - me]) {
     const f = [A, B][i]; if (!f || f.dummy) continue;

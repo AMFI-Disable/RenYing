@@ -171,5 +171,6 @@ function applyProfile(p, opts) {
   for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
   if ($id('tasks').classList.contains('on')) renderTasks();
   if ($id('netp').classList.contains('on')) renderRankLine();
+  if ($id('menu').classList.contains('on') && typeof setMenuHero === 'function') setMenuHero(menuHeroPick());
   if ($id('menu').classList.contains('on')) compMaybe();
 }
