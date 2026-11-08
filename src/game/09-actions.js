@@ -137,7 +137,8 @@ function neutral(f, foe) {
     }
     if (c.consume('light')) return startAttack(f, 'a1');
     if (c.consume('heavy')) return startAttack(f, 'a2');
-    if (f.jumps < (f.ch.jumps || 2) && c.consume('jump')) return doJump(f, dir);
+    const jumpLimit = (f.ch.jumps || 2) + (mapFavOn(f) && f.ch.id === 'liuyun' && M.map === 'cliff' ? 1 : 0);
+    if (f.jumps < jumpLimit && c.consume('jump')) return doJump(f, dir);
     // 燕翎：空中按住跳跃就能飞（过了起跳最高点之后才开始）
     if (f.ch.fly && c.held.jump && f.flyT > 0 && f.vy > -120 && M.phase === 'fight') {
       f.flying = true; f.flyT -= STEP;
@@ -372,7 +373,11 @@ function windDive(f, foe) {
 // 技能的一次近身判定（每个阶段只会打中一次）
 function strike(f, foe, spec) {
   if (f.hitDone) return false;
-  const hb = hitbox(f, spec.box);
+  const rangeScale = 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+  const rangeBox = (f.state === 'skill' || spec.ult) && !spec.noRangeBoost
+    ? spec.box.map((v, i) => i === 0 || i === 2 ? v * rangeScale : v)
+    : spec.box;
+  const hb = hitbox(f, rangeBox);
   hitClones(hb, f.idx, spec.dmg);
   if (hitDecoy(f, hb)) return false;
   echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
@@ -445,6 +450,7 @@ function spawnProj(f, o) {
     if (o.h) o.h = Math.round(o.h * 1.8);
     ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
   }
+  if ((f.state === 'skill' || (f.state === 'special' && o.ult)) && !o.noRangeBoost && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
   const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
   projs.push(projectile);
   if (f.ch.passive === 'mist' && f.clones && f.clones.length && !o.cloneEcho && !projectile.ult && projectile.dmg) {
@@ -487,18 +493,20 @@ function updateProjs() {
         const floorY = -18;
         if (p.y >= floorY) {
           p.y = floorY;
+          const terrainMap = mapNow(), ballOwner = fighterByIdx(p.owner), ice = terrainMap && terrainMap.ice;
           // 触地弹性高反弹，保持充沛动能
           const minVy = -260;
           if (p.vy > 60 || Math.abs(p.vy) > 80) {
-            p.vy = -Math.abs(p.vy) * 0.85;
+            const eavesBonus = terrainMap === MAPS.pagoda && mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji';
+            p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.98 : 0.85);
             if (p.vy > minVy) p.vy = minVy;
-            p.vx *= 0.94;
+            p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.985 : 0.97) : 0.94;
             p.bounceCount = (p.bounceCount || 0) + 1;
             dust(p.x, 0, 7); ring(p.x, 0, 36, '235,165,70', 0.18); SFX.ballHit();
           } else {
             // 贴地滚动时保留弹跳机能，受金丝牵拉轻微浮起
             p.vy = minVy * 0.6;
-            p.vx *= 0.96;
+            p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.96;
           }
         }
         // 墙壁弹性高反弹（保留 88% 水平动能并获得轻微上弹）
@@ -937,6 +945,13 @@ function plantClone(f, x) {
 }
 function cloneGone(f, c, broken) {
   const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
+  if (!RESIM) {
+    const rec = CLONE_SK[f.idx + ':' + c.id];
+    if (rec && rec.sk) {
+      CLONE_FADES.push({ sk: rec.sk, x: c.x, y: c.y || 0, owner: f.idx, tint: f.look.slash, at: performance.now(), sub: !!c.sub });
+      if (CLONE_FADES.length > 24) CLONE_FADES.splice(0, CLONE_FADES.length - 24);
+    }
+  }
   f.clones.splice(i, 1);
   delete CLONE_SK[f.idx + ':' + c.id];
   if (broken) {

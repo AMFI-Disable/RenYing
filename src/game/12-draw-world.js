@@ -923,6 +923,24 @@ function drawIdentityEdges(list, sx, sy) {
 // 离影的雾身：本体的半透明剪影（一眼分得清哪个是本体），脚下一圈雾；只按 R 会去的那个（离对手最近）多一圈光；
 // 最后 1 秒闪；结印时本体和目标雾身之间连一条雾线。只画，不改任何对局状态（不调用会记目标的 foeOf）
 function drawClones() {
+  const now = performance.now();
+  for (let i = CLONE_FADES.length - 1; i >= 0; i--) {
+    const fade = CLONE_FADES[i], age = (now - fade.at) / 430;
+    if (age >= 1) { CLONE_FADES.splice(i, 1); continue; }
+    const owner = fighterByIdx(fade.owner);
+    if (!owner || !fade.sk) continue;
+    const alpha = (1 - age) * (fade.sub ? 0.32 : 0.48), scale = 1 + age * 0.16;
+    ctx.save();
+    ctx.translate(fade.x, fade.y - age * 28); ctx.scale(scale, scale); ctx.translate(-fade.x, -fade.y);
+    drawBody(fade.sk, owner, { ghost: alpha, tint: fade.tint });
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = 1 - age;
+    ctx.strokeStyle = `rgba(${fade.tint},${0.7 * (1 - age)})`;
+    ctx.lineWidth = 2.5 * (1 - age);
+    ctx.beginPath(); ctx.ellipse(fade.x, fade.y - 8 - age * 18, 34 + age * 32, 7 + age * 10, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
   for (const f of allFighters()) {
     if (f.hidden || !f.clones || !f.clones.length) continue;
     const C = f.ch.clone || { life: 15 }, rgb = f.look.slash;

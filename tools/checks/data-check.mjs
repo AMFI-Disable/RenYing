@@ -285,8 +285,9 @@ function checkMaps(env) {
     const sw = mp.w || 1800;
     (mp.plats || []).forEach((P, i) => {   // 平台要整个在场地里、在地面上方、跳得上去（二段跳最高大约 330）
       const wp = `${w}.plats[${i}]`;
-      if (!shape(wp, P, { x: 'num', y: 'num', w: 'num', k: 'str' })) return;
+      if (!shape(wp, P, { x: 'num', y: 'num', w: 'num', k: 'str', 'u?': 'num' })) return;
       num(wp, P, 'y', -300, -60); num(wp, P, 'w', 80, 600);
+      if (P.u !== undefined) { num(wp, P, 'u', 0, 1); if (Math.abs(P.u * sw - P.x) > 0.01) err(wp, 'u 要与默认场地上的 x 位置一致'); }
       if (P.x - P.w / 2 < 60 || P.x + P.w / 2 > sw - 60) err(wp, '平台伸出了场地');
       if (!['bamboo', 'stone', 'wood'].includes(P.k)) err(wp, `k 要是 bamboo / stone / wood，现在是 ${JSON.stringify(P.k)}`);
     });

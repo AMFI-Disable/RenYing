@@ -6,6 +6,7 @@
 //   4. 开局 / 回合（startMatch / startRound）、每帧对局逻辑（updateMatch）、结算（showEnd / endRound）
 // 找 bug 提示：对局状态全在 M 和各个 Fighter 里，回滚存档也只存这些；新加的状态字段要放进去，否则联机会不同步。
 const CLONE_SK = {};   // 离影雾身的样子（留下那一刻的骨架，键是「侠客序号:雾身编号」）：只是画面，不进存档
+const CLONE_FADES = []; // 雾身消散残影：纯视觉效果，不进回滚状态
 class Fighter {
   constructor(idx) {
     this.idx = idx; this.setChar(idx);
@@ -279,7 +280,8 @@ function mapGrip(f) {
   const u = f.x / STAGE_W;
   if (u < ice.from || u > ice.to) return 1;
   const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1, g = clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
-  return ice.sure && ice.sure[f.ch.id] ? Math.max(g, ice.sure[f.ch.id]) : g;   // 凌霜、铁山（地利）站得稳
+  const sure = ice.sure && ice.sure[f.ch.id] ? Math.max(g, ice.sure[f.ch.id]) : g;
+  return mapScrollOn(f, 'shuang') ? Math.min(1, sure * 1.2) : sure;   // 寒系秘卷能在冰面上稳住身形
 }
 const mapIceX = () => { const ice = (mapNow() || {}).ice; return ice ? [ice.from * STAGE_W, ice.to * STAGE_W] : null; };
 // 断崖台的崖边（代替两侧的墙）：自己走、跳、闪都过不去；被击飞，或硬直中被打得很快，越过崖边就坠崖：
@@ -316,7 +318,15 @@ function mapEdge(f, cl) {
 // ---------- 平台：能站上去的台子（MAPS[..].plats）----------
 // 站在哪个平台上记在侠客的 plat（序号，-1 是地上或空中），跟着侠客进回滚存档。站在平台上算「在地上」（onGround），
 // 只是脚下那一层不是 0 而是台面高度：要知道离脚下多高用 airH，不要直接看 y
-const mapPlats = () => (mapNow() || {}).plats || null;
+let mapPlatCache = null;
+const mapPlats = () => {
+  const mp = mapNow(), ps = mp && mp.plats;
+  if (!ps) { mapPlatCache = null; return null; }
+  if (!mapPlatCache || mapPlatCache.map !== mp || mapPlatCache.width !== STAGE_W) {
+    mapPlatCache = { map: mp, width: STAGE_W, plats: ps.map(P => P.u === undefined ? P : { ...P, x: P.u * STAGE_W }) };
+  }
+  return mapPlatCache.plats;
+};
 function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? P.y : 0; }
 const airH = f => gndY(f) - f.y;
 // 把人放到他现在的 x 上：plat 那个平台在脚下就站上去，不然回到地面（瞬移、被吸过来以后用）
@@ -356,11 +366,26 @@ function mapDrop(f) {
 
 // ---------- 地利侠客（MAPS[..].fav）、风、天雷、酒雾 ----------
 const mapFavOn = f => !!(f && f.ch && ((mapNow() || {}).fav || {})[f.ch.id]);
+const mapScrollOn = (f, school) => !!(typeof scOn === 'function' && scOn() && f && f.ch && typeof scCount === 'function' && scCount(f, school) > 0);
+const mapSkillReach = f => {
+  const mp = mapNow();
+  if (!mp || !mapFavOn(f)) return 1;
+  if (mp === MAPS.cliff && f.ch.id === 'gouchen' && f.skill === 'hook') return 1.2;
+  if (mp !== MAPS.pagoda) return 1;
+  if (f.ch.id === 'yuxiao' && f.plat >= 0) return 1.2;
+  if (f.ch.id === 'liuyun' && f.y < -15) return 1.15;
+  return 1;
+};
+const mapMagRange = (f, range) => {
+  const mp = mapNow(), env = M.mapEnv;
+  return mp && mp.thunder && env && env.tWarn > 0 && mapFavOn(f) && f.ch.id === 'cixian' ? range * 1.25 : range;
+};
 // 绯影的地利：站在飞檐上走得快 15%；寒潭冰面上疾行突进提速
 const mapWalk = f => {
   if (!mapFavOn(f)) return 1;
   if (f.plat >= 0 && f.ch.id === 'feiying') return 1.15;
   if (M.map === 'ice' && f.ch.id === 'feiying') return 1.15;
+  if (M.map === 'ice' && f.ch.id === 'qingfeng') return 1.15;
   return 1;
 };
 // 风：空中、走路、闪步的人被往风向推；燕翎（地利）顺风推一倍、逆风不推
@@ -381,6 +406,7 @@ function mapWindProj(p) {
     if (o.ch.id === 'qingfeng') k = 2;
     else if (o.ch.id === 'liuyun' || o.ch.id === 'moyu') k = 1.3;
   }
+  if (o && mapScrollOn(o, 'feng')) k *= 1.15;
   p.x += E.wDir * W.proj * k * STEP;
 }
 // 天雷劈下：离落点不到 r、脚离地面高过 60 的人。无敌、大招、被抓着、正在吸人的不劈（免得留下半截动作）
@@ -445,7 +471,7 @@ function mapTick(dt) {
       const u = f.x / STAGE_W;
       if (u >= mp.fog.from && u <= mp.fog.to) {
         const fav = mapFavOn(f);
-        if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * dt);
+        if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * (mapScrollOn(f, 'mo') ? 1.15 : 1) * dt);
         if (fav && f.ch.id === 'zuixian') f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
         if (fav && f.ch.id === 'yuehua' && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = Math.min(f.maxHp, f.hp + 6 * HERO_HP_SCALE * dt);
         if (fav && f.ch.id === 'qianji') {
@@ -458,6 +484,7 @@ function mapTick(dt) {
       if (f.ch.id === 'lingque' && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
       if (f.ch.id === 'qianji' && f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.15 * dt);
     }
+    if (f.plat >= 0 && mapScrollOn(f, 'ying') && f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + 1.5 * dt);
   }
 }
 
@@ -513,6 +540,7 @@ function startMatch(mode, level, chars, isWatch = false) {
 // 磁仙每回合开局抽正极或负极：只在这里抽、只用对局随机数，联机两边和回放抽到的一样（预览用的角色 reset 不碰随机数）
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+  CLONE_FADES.length = 0;
   if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
   announce = null;
   announceQueue.length = 0;

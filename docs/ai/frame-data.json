@@ -62,7 +62,7 @@
   "skills": {
    "skill": {
     "id": "gale",
-    "hit": 11,
+    "hit": 10,
     "total": 59
    },
    "skill2": {
@@ -218,7 +218,7 @@
   "skills": {
    "skill": {
     "id": "quake",
-    "hit": 34,
+    "hit": 29,
     "total": 77
    },
    "skill2": {
@@ -457,7 +457,7 @@
   "skills": {
    "skill": {
     "id": "thunderfist",
-    "hit": 18,
+    "hit": 17,
     "total": 62
    },
    "skill2": {

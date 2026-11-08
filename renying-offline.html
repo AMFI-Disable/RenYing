@@ -7530,7 +7530,7 @@ qingfeng: '顺风滑斩：冰面冲刺轻击滑行追击，招式连贯流畅。
 qianji: '冰魄机轮：玄铁傀丸在冰面上极低阻力滑行更快更远。'
 } },
 bamboo: { n: '竹海悬岩', d: '两侧竹台高悬，跳得上去，按住 ↓ 再跳落下。每 18 秒刮 6 秒强风，顺风走得快、飞行道具飞得快。',
-plats: [{ x: 420, y: -115, w: 240, k: 'bamboo' }, { x: 1380, y: -115, w: 240, k: 'bamboo' }],
+plats: [{ u: 0.2333333333, x: 420, y: -115, w: 240, k: 'bamboo' }, { u: 0.7666666667, x: 1380, y: -115, w: 240, k: 'bamboo' }],
 wind: { every: 18, last: 6, push: 45, proj: 90 },
 fav: {
 qingfeng: '剑气借风：顺风的飞行道具多飞一倍。',
@@ -7540,7 +7540,7 @@ moyu: '顺风泼墨：顺风甩墨泼洒射程增加 30%。',
 liying: '雾迷竹影：竹台高低借势布局，雾身消散时回气加倍。'
 } },
 thunder: { n: '雷泽石坛', d: '中央一座石坛。每 24 秒天雷落在石坛上空（提前 1.3 秒预警），站在坛上或在它上空的人被劈飞。',
-plats: [{ x: 900, y: -120, w: 320, k: 'stone' }],
+plats: [{ u: 0.5, x: 900, y: -120, w: 320, k: 'stone' }],
 thunder: { every: 24, warn: 1.3, x: 0.5, r: 170, dmg: 38, vy: -680 },
 fav: {
 leiming: '引雷淬体：不怕天雷，被劈中反而回 35 点气，并得到 3 秒雷护。',
@@ -7550,7 +7550,7 @@ yuehua: '镜光引雷：明镜初现可折射天雷震荡，受到天雷伤害�
 cixian: '雷磁共振：雷云笼罩期间，磁场吸引与斥力范围扩大 25%。'
 } },
 pagoda: { n: '皇城飞檐', d: '三重飞檐错落，跳得上去，按住 ↓ 再跳落下。两侧没有红柱，被击飞撞到边上不会弹墙。',
-plats: [{ x: 380, y: -105, w: 220, k: 'wood' }, { x: 900, y: -180, w: 260, k: 'wood' }, { x: 1420, y: -105, w: 220, k: 'wood' }],
+plats: [{ u: 0.2111111111, x: 380, y: -105, w: 220, k: 'wood' }, { u: 0.5, x: 900, y: -180, w: 260, k: 'wood' }, { u: 0.7888888889, x: 1420, y: -105, w: 220, k: 'wood' }],
 nobounce: true,
 fav: {
 feiying: '飞檐走壁：站在飞檐上走得快 15%。',
@@ -7560,7 +7560,7 @@ qianji: '居高布机：高檐投掷机关傀丸弹跳弧线更加开阔。',
 liuyun: '俯冲破风：飞檐起跳滞空时间更长，空中出招判定更广。'
 } },
 wine: { n: '醉翁墨阁', d: '水榭两侧有亭台，中间一半飘着酒雾：站在雾里的地上，每秒回 2.5 点定力。',
-plats: [{ x: 520, y: -110, w: 240, k: 'wood' }, { x: 1280, y: -110, w: 240, k: 'wood' }],
+plats: [{ u: 0.2888888889, x: 520, y: -110, w: 240, k: 'wood' }, { u: 0.7111111111, x: 1280, y: -110, w: 240, k: 'wood' }],
 fog: { from: 0.25, to: 0.75, guard: 2.5 },
 fav: {
 zuixian: '酒香浸染：在酒雾里醉意每秒涨 12。',
@@ -11733,7 +11733,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.0.7';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.8';         // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
@@ -12737,18 +12737,18 @@ update(f, foe) {
 const plus = f.magN > 0;
 if (f.skPh === 0 && f.t >= (plus ? 0.14 : 0.16)) {
 f.skPh = 1; f.t = 0; f.hitDone = false;
-const tg = sdTarget(f, foe) || foe, rgb = magRGB(f.magN);
+const tg = sdTarget(f, foe) || foe, rgb = magRGB(f.magN), plusRange = mapMagRange(f, MAG.rPlusR), minusRange = mapMagRange(f, MAG.rMinusRange);
 if (plus) {
 for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; addP({ type: 'mag', pol: 1, x: f.x + Math.cos(a) * 40, y: f.y - 60 + Math.sin(a) * 30, vx: Math.cos(a) * 520, vy: Math.sin(a) * 300, rot: a, r: 11, life: 0.32, max: 0.32, drag: 3 }); }
-ring(f.x, f.y - 60, MAG.rPlusR, rgb, 0.35); shake = Math.max(shake, 10); SFX.heavy();
-const d = Math.hypot(tg.x - f.x, tg.y - f.y), near = clamp(1 - d / MAG.rPlusR, 0, 1);   // 越近越大
+ring(f.x, f.y - 60, plusRange, rgb, 0.35); shake = Math.max(shake, 10); SFX.heavy();
+const d = Math.hypot(tg.x - f.x, tg.y - f.y), near = clamp(1 - d / plusRange, 0, 1);   // 越近越大
 const dir = (Math.sign(tg.x - f.x) || f.face) * MAG.rPlusDir;
-strike(f, tg, { box: [-MAG.rPlusR, -150, MAG.rPlusR, 20], dmg: MAG.rPlusDmg, kb: [MAG.rPlusKb[0] + MAG.rPlusKb[1] * near, -360 - 260 * near], stun: 0.5, hs: 0.1, launch: true, big: true, dir });
+strike(f, tg, { box: [-plusRange, -150, plusRange, 20], dmg: MAG.rPlusDmg, kb: [MAG.rPlusKb[0] + MAG.rPlusKb[1] * near, -360 - 260 * near], stun: 0.5, hs: 0.1, launch: true, big: true, dir });
 } else {
 ring(f.x, f.y - 60, 70, rgb, 0.3); SFX.dash();
 addP({ type: 'mag', pol: -1, x: f.x + f.face * 34, y: f.y - 62, vx: 0, vy: 0, rot: 0, r: 13, life: 0.45, max: 0.45 });
 const dx = tg.x - f.x;
-if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= MAG.rMinusRange && Math.abs(tg.y - f.y) < 310) {
+if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= minusRange && Math.abs(tg.y - f.y) < 310) {
 f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
 tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;
 }
@@ -14643,6 +14643,7 @@ try { this.brain.think(me, foe); } finally { Math.random = r0; }
 }
 }
 const CLONE_SK = {};   // 离影雾身的样子（留下那一刻的骨架，键是「侠客序号:雾身编号」）：只是画面，不进存档
+const CLONE_FADES = []; // 雾身消散残影：纯视觉效果，不进回滚状态
 class Fighter {
 constructor(idx) {
 this.idx = idx; this.setChar(idx);
@@ -14900,7 +14901,8 @@ if (!ice || f.y < 0) return 1;
 const u = f.x / STAGE_W;
 if (u < ice.from || u > ice.to) return 1;
 const w = (f.ch && f.ch.stat && f.ch.stat.weight) || 1, g = clamp(ice.grip / Math.pow(w, 0.9), 0.15, 0.6);
-return ice.sure && ice.sure[f.ch.id] ? Math.max(g, ice.sure[f.ch.id]) : g;   // 凌霜、铁山（地利）站得稳
+const sure = ice.sure && ice.sure[f.ch.id] ? Math.max(g, ice.sure[f.ch.id]) : g;
+return mapScrollOn(f, 'shuang') ? Math.min(1, sure * 1.2) : sure;   // 寒系秘卷能在冰面上稳住身形
 }
 const mapIceX = () => { const ice = (mapNow() || {}).ice; return ice ? [ice.from * STAGE_W, ice.to * STAGE_W] : null; };
 function mapEdge(f, cl) {
@@ -14930,7 +14932,15 @@ ring(f.x, f.y - 40, 90, '170,200,255', 0.4);
 for (let i = 0; i < 10; i++) addP({ type: 'spark', x: f.x + rand(-20, 20), y: rand(-30, 10), vx: -side * rand(40, 200), vy: -rand(120, 420), life: 0.5, max: 0.5, rgb: '190,210,255', w: 2 });
 addP({ type: 'text', text: '坠崖 -' + dmg, x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '190,210,255' });
 }
-const mapPlats = () => (mapNow() || {}).plats || null;
+let mapPlatCache = null;
+const mapPlats = () => {
+const mp = mapNow(), ps = mp && mp.plats;
+if (!ps) { mapPlatCache = null; return null; }
+if (!mapPlatCache || mapPlatCache.map !== mp || mapPlatCache.width !== STAGE_W) {
+mapPlatCache = { map: mp, width: STAGE_W, plats: ps.map(P => P.u === undefined ? P : { ...P, x: P.u * STAGE_W }) };
+}
+return mapPlatCache.plats;
+};
 function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? P.y : 0; }
 const airH = f => gndY(f) - f.y;
 function mapPutOn(f, plat) {
@@ -14964,10 +14974,25 @@ function mapDrop(f) {
 f.plat = -1; f.dropT = 0.25; f.y += 2; f.vy = Math.max(f.vy, 160); f.state = 'air';
 }
 const mapFavOn = f => !!(f && f.ch && ((mapNow() || {}).fav || {})[f.ch.id]);
+const mapScrollOn = (f, school) => !!(typeof scOn === 'function' && scOn() && f && f.ch && typeof scCount === 'function' && scCount(f, school) > 0);
+const mapSkillReach = f => {
+const mp = mapNow();
+if (!mp || !mapFavOn(f)) return 1;
+if (mp === MAPS.cliff && f.ch.id === 'gouchen' && f.skill === 'hook') return 1.2;
+if (mp !== MAPS.pagoda) return 1;
+if (f.ch.id === 'yuxiao' && f.plat >= 0) return 1.2;
+if (f.ch.id === 'liuyun' && f.y < -15) return 1.15;
+return 1;
+};
+const mapMagRange = (f, range) => {
+const mp = mapNow(), env = M.mapEnv;
+return mp && mp.thunder && env && env.tWarn > 0 && mapFavOn(f) && f.ch.id === 'cixian' ? range * 1.25 : range;
+};
 const mapWalk = f => {
 if (!mapFavOn(f)) return 1;
 if (f.plat >= 0 && f.ch.id === 'feiying') return 1.15;
 if (M.map === 'ice' && f.ch.id === 'feiying') return 1.15;
+if (M.map === 'ice' && f.ch.id === 'qingfeng') return 1.15;
 return 1;
 };
 function mapWind(f, onG) {
@@ -14986,6 +15011,7 @@ if (o && mapFavOn(o)) {
 if (o.ch.id === 'qingfeng') k = 2;
 else if (o.ch.id === 'liuyun' || o.ch.id === 'moyu') k = 1.3;
 }
+if (o && mapScrollOn(o, 'feng')) k *= 1.15;
 p.x += E.wDir * W.proj * k * STEP;
 }
 function mapThunder(T) {
@@ -15047,7 +15073,7 @@ if (mp.fog && f.y >= 0) {
 const u = f.x / STAGE_W;
 if (u >= mp.fog.from && u <= mp.fog.to) {
 const fav = mapFavOn(f);
-if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * dt);
+if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * (mapScrollOn(f, 'mo') ? 1.15 : 1) * dt);
 if (fav && f.ch.id === 'zuixian') f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
 if (fav && f.ch.id === 'yuehua' && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = Math.min(f.maxHp, f.hp + 6 * HERO_HP_SCALE * dt);
 if (fav && f.ch.id === 'qianji') {
@@ -15060,6 +15086,7 @@ if (f.plat >= 0 && mapFavOn(f)) {
 if (f.ch.id === 'lingque' && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
 if (f.ch.id === 'qianji' && f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.15 * dt);
 }
+if (f.plat >= 0 && mapScrollOn(f, 'ying') && f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + 1.5 * dt);
 }
 }
 const CN = ['', '一', '二', '三', '四', '五'];
@@ -15108,6 +15135,7 @@ else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
 }
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+CLONE_FADES.length = 0;
 if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
 announce = null;
 announceQueue.length = 0;
@@ -15648,7 +15676,8 @@ return;
 }
 if (c.consume('light')) return startAttack(f, 'a1');
 if (c.consume('heavy')) return startAttack(f, 'a2');
-if (f.jumps < (f.ch.jumps || 2) && c.consume('jump')) return doJump(f, dir);
+const jumpLimit = (f.ch.jumps || 2) + (mapFavOn(f) && f.ch.id === 'liuyun' && M.map === 'cliff' ? 1 : 0);
+if (f.jumps < jumpLimit && c.consume('jump')) return doJump(f, dir);
 if (f.ch.fly && c.held.jump && f.flyT > 0 && f.vy > -120 && M.phase === 'fight') {
 f.flying = true; f.flyT -= STEP;
 f.vy = damp(f.vy, f.y < -230 ? 90 : -70, 8, STEP);
@@ -15875,7 +15904,11 @@ SFX.thud(); SFX.poof();
 }
 function strike(f, foe, spec) {
 if (f.hitDone) return false;
-const hb = hitbox(f, spec.box);
+const rangeScale = 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+const rangeBox = (f.state === 'skill' || spec.ult) && !spec.noRangeBoost
+? spec.box.map((v, i) => i === 0 || i === 2 ? v * rangeScale : v)
+: spec.box;
+const hb = hitbox(f, rangeBox);
 hitClones(hb, f.idx, spec.dmg);
 if (hitDecoy(f, hb)) return false;
 echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
@@ -15944,6 +15977,7 @@ if (o.w) o.w = Math.round(o.w * 1.8);
 if (o.h) o.h = Math.round(o.h * 1.8);
 ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
 }
+if ((f.state === 'skill' || (f.state === 'special' && o.ult)) && !o.noRangeBoost && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
 const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
 projs.push(projectile);
 if (f.ch.passive === 'mist' && f.clones && f.clones.length && !o.cloneEcho && !projectile.ult && projectile.dmg) {
@@ -15983,16 +16017,18 @@ if (p.recalling) {
 const floorY = -18;
 if (p.y >= floorY) {
 p.y = floorY;
+const terrainMap = mapNow(), ballOwner = fighterByIdx(p.owner), ice = terrainMap && terrainMap.ice;
 const minVy = -260;
 if (p.vy > 60 || Math.abs(p.vy) > 80) {
-p.vy = -Math.abs(p.vy) * 0.85;
+const eavesBonus = terrainMap === MAPS.pagoda && mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji';
+p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.98 : 0.85);
 if (p.vy > minVy) p.vy = minVy;
-p.vx *= 0.94;
+p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.985 : 0.97) : 0.94;
 p.bounceCount = (p.bounceCount || 0) + 1;
 dust(p.x, 0, 7); ring(p.x, 0, 36, '235,165,70', 0.18); SFX.ballHit();
 } else {
 p.vy = minVy * 0.6;
-p.vx *= 0.96;
+p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.96;
 }
 }
 if (p.x <= WALL + 18) {
@@ -16384,6 +16420,13 @@ if (!RESIM) { smoke(subClone.x, (subClone.y || 0) - 30, 4); ring(subClone.x, (su
 }
 function cloneGone(f, c, broken) {
 const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
+if (!RESIM) {
+const rec = CLONE_SK[f.idx + ':' + c.id];
+if (rec && rec.sk) {
+CLONE_FADES.push({ sk: rec.sk, x: c.x, y: c.y || 0, owner: f.idx, tint: f.look.slash, at: performance.now(), sub: !!c.sub });
+if (CLONE_FADES.length > 24) CLONE_FADES.splice(0, CLONE_FADES.length - 24);
+}
+}
 f.clones.splice(i, 1);
 delete CLONE_SK[f.idx + ':' + c.id];
 if (broken) {
@@ -16998,6 +17041,10 @@ if (def.forestProxy) { forestHit(att, m, pt); return; }
 if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
 if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
 if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
+if (!m.isProj && !m.ult && mapFavOn(att) && att.ch.id === 'lingshuang' && (mapNow() || {}).cliff
+&& (def.x < WALL + 280 || def.x > STAGE_W - WALL - 280) && m.kb) {
+m = { ...m, kb: [m.kb[0] * 1.2, m.kb[1]] };
+}
 if (att.ch.passive === 'magnet' && att.state === 'attack' && att.pol && !m.isProj && !m.ult) m = magHit(att, def, m);   // 磁仙的普攻按正负极改（03-skills.js）
 def.drinkT = 0;
 if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
@@ -19208,6 +19255,24 @@ ctx.restore();
 }
 }
 function drawClones() {
+const now = performance.now();
+for (let i = CLONE_FADES.length - 1; i >= 0; i--) {
+const fade = CLONE_FADES[i], age = (now - fade.at) / 430;
+if (age >= 1) { CLONE_FADES.splice(i, 1); continue; }
+const owner = fighterByIdx(fade.owner);
+if (!owner || !fade.sk) continue;
+const alpha = (1 - age) * (fade.sub ? 0.32 : 0.48), scale = 1 + age * 0.16;
+ctx.save();
+ctx.translate(fade.x, fade.y - age * 28); ctx.scale(scale, scale); ctx.translate(-fade.x, -fade.y);
+drawBody(fade.sk, owner, { ghost: alpha, tint: fade.tint });
+ctx.restore();
+ctx.save();
+ctx.globalAlpha = 1 - age;
+ctx.strokeStyle = `rgba(${fade.tint},${0.7 * (1 - age)})`;
+ctx.lineWidth = 2.5 * (1 - age);
+ctx.beginPath(); ctx.ellipse(fade.x, fade.y - 8 - age * 18, 34 + age * 32, 7 + age * 10, 0, 0, Math.PI * 2); ctx.stroke();
+ctx.restore();
+}
 for (const f of allFighters()) {
 if (f.hidden || !f.clones || !f.clones.length) continue;
 const C = f.ch.clone || { life: 15 }, rgb = f.look.slash;

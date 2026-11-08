@@ -18,6 +18,41 @@ export default [
     })()`
   },
   {
+    name: 'Terrain, scroll affinities, common Q/R reach and clone fade are connected',
+    fn: `(() => {
+      // Normalized platforms retain their position in wider team arenas.
+      M.mode = '2v2'; M.map = 'thunder'; STAGE_W = 2600;
+      const altar = mapPlats()[0];
+      if (Math.abs(altar.x - STAGE_W * MAPS.thunder.thunder.x) > 1e-6) return { pass: false, error: 'thunder altar is misaligned: ' + altar.x };
+
+      // Frost scrolls improve grip on ice and ink scrolls improve guard recovery in wine mist.
+      M.hasBuffs = true; M.heroBuffs = [['frost_lock'], []]; M.mode = '2v2'; M.map = 'ice'; STAGE_W = 1800;
+      A.x = STAGE_W / 2; A.y = 0; A.ch = CHARS[CHAR_IDX.tieshan];
+      const baseGrip = clamp(MAPS.ice.ice.grip / Math.pow(A.ch.stat.weight || 1, 0.9), 0.15, 0.6);
+      if (mapGrip(A) <= baseGrip) return { pass: false, error: 'frost scroll should improve ice traction' };
+      M.heroBuffs = [['ink_resonance'], []]; M.map = 'wine'; M.mapEnv = { wT: 0, wOn: 0, wDir: 1, wN: 0, tT: 0, tWarn: 0 }; M.phase = 'fight'; A.ch = CHARS[CHAR_IDX.qingfeng];
+      A.x = STAGE_W / 2; A.y = 0; A.plat = -1; A.guard = 0; mapTick(1);
+      if (Math.abs(A.guard - MAPS.wine.fog.guard * 1.15) > 1e-9) return { pass: false, error: 'ink scroll should improve wine-mist guard recovery: ' + A.guard };
+
+      // Skill melee hitboxes and horizontal skill/ultimate projectiles receive the same 15% reach increase.
+      M.hasBuffs = false; M.mode = 'train'; M.map = null; startMatch('train', 'stand', [CHAR_IDX.qingfeng, CHAR_IDX.tieshan]);
+      showScreen(null); paused = false; M.phase = 'fight'; toNeutral(A); toNeutral(B);
+      A.state = 'skill'; A.hitDone = false; A.face = 1; A.x = 300; B.x = 416; B.y = 0; B.invul = 0; B.hp = B.maxHp;
+      const hp = B.hp; strike(A, B, { box: [0, -100, 100, 0], dmg: 10, kb: [0, 0], stun: 0.1, hs: 0 });
+      if (B.hp >= hp) { toMenu(); return { pass: false, error: 'the skill hitbox did not gain reach' }; }
+      projs.length = 0; A.state = 'skill'; spawnProj(A, { kind: 'test', x: A.x, y: -50, vx: 500, life: 1, w: 10, h: 10, dmg: 1 });
+      if (Math.abs(projs[0].life - 1.15) > 1e-9) { toMenu(); return { pass: false, error: 'skill projectile reach should be 1.15x: ' + projs[0].life }; }
+      projs.length = 0;
+
+      // Removing a clone creates only a visual fade snapshot, never simulation state.
+      A.clones = []; plantClone(A, A.x); const clone = A.clones[0], fades = CLONE_FADES.length;
+      cloneGone(A, clone, false);
+      if (CLONE_FADES.length !== fades + 1 || A.clones.length) { toMenu(); return { pass: false, error: 'clone removal should enqueue a fade and remove the live clone' }; }
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
     // 断崖台：自己走不下崖；被击飞越过崖边坠崖，扣 6% 气血（不会扣死）、弹回台上、途中无敌
     name: 'Cliffside: walking stops at the edge, a launched fighter falls and comes back',
     fn: `(() => {
