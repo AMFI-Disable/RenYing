@@ -45,9 +45,9 @@ The account page can export your profile to a file and import it again. Exported
 - A sign-in log (sign-ins, failed sign-ins, sign-outs) kept for 90 days. IP addresses in it are stored only as a short one-way code, so the address cannot be read back.
 - Crash reports from the page (uncaught errors) and rare suspicious-damage reports, used to fix bugs and catch cheating. They contain no passwords.
 
-There are no ads, no tracking scripts and no third-party analytics. The online page keeps its own anonymous play stats (page opens, tutorial progress, which mode each match is) tied only to a random browser ID that the server salts and hashes; no name, account, email or IP is stored, and Settings → Anonymous stats turns it off. The offline edition sends nothing.
+There are no ads, no tracking scripts and no third-party analytics. The online page keeps anonymous play stats tied only to a random browser ID that the server salts and hashes. These include page and tutorial use, match mode and result, broad match-duration and queue-time ranges, hero and map results, early exits, disconnects, and optional match-review feedback. No name, account, email, IP, replay, or exact timestamp is included; Settings → Anonymous stats turns it off. The offline edition sends nothing.
 
-服务器只存账号名、存档、武库、墨锭流水、对局记录和排行榜。密码和登录令牌都只存哈希。没有广告、没有跟踪脚本、没有第三方统计。在线版有自己的匿名游玩统计（打开网页、新手教学、开了哪个模式），只带一个本机随机编号（服务器加盐哈希后才存），不存名字、账号、邮箱、IP，设置里「匿名统计」可以关；离线版什么都不发。
+服务器只存账号名、存档、武库、墨锭流水、对局记录和排行榜。密码和登录令牌都只存哈希。没有广告、没有跟踪脚本、没有第三方统计。在线版会记录匿名游玩统计，本机随机编号会在服务器加盐哈希后才存。统计包括网页与教学使用、对局模式和结果、粗略的对局与排队时长、侠客和地图胜负、提前离场、断线，以及玩家自愿提交的复盘评价；不包含名字、账号、邮箱、IP、回放或精确时间。可在「设置 → 匿名统计」关闭；离线版不会发送统计。
 
 ## Deleting An Account / 删除账号
 

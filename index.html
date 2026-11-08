@@ -9568,6 +9568,13 @@ Object.assign(UI_COPY_EN, {
 "AI 复盘": "AI Review",
 "本局 AI 复盘": "Match Review",
 "关键时刻": "Key Moments",
+"样本较少，建议先当作线索": "Limited sample; treat these findings as clues.",
+"依据录像抽样帧与统计": "Based on replay samples and match statistics.",
+"录像抽样较充分": "Replay sampling is substantial.",
+"这份复盘有帮助吗？": "Was this review helpful?",
+"有帮助": "Helpful",
+"没帮助": "Not helpful",
+"已收到反馈": "Feedback received",
 "回放": "Replay",
 "有利交换片段：对手气血下降，你没有同时失血。": "Favorable exchange: the opponent lost health while you stayed unharmed.",
 "远距离出手：攻击输入发生时双方相距较远。": "Long-range attempt: you attacked while far from the opponent.",
@@ -13811,6 +13818,7 @@ const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on && 
 function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on && !NET.solo) NET.out.push(ev); }
 function netReset() {
 ROLL.on = false;
+if (typeof MM !== 'undefined' && MM.on && typeof statQueueResult === 'function') statQueueResult(!!NET.open);
 if (typeof mmStop === 'function') mmStop();
 mmUI(null);
 NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;
@@ -13835,6 +13843,7 @@ function netConnect(asHost, code) { netConnectP2P(asHost, code); }
 function netOverlay(text) { const o = $id('netOv'); o.textContent = text; o.classList.toggle('on', !!text); }
 function onSys(m) {
 if (m.sys === 'room' && m.matched) {
+if (typeof statQueueResult === 'function') statQueueResult(true);
 NET.role = m.role; NET.matching = false; NET.isRanked = !!m.ranked; NET.rkDone = false;
 let targetRule = 'normal';
 if (m.mmKind === '2v2_coop') targetRule = 'pp_cc';
@@ -13983,6 +13992,9 @@ showEnd(winner);
 return true;
 }
 function netLost() {
+if (NET.peerQuit && typeof statEv === 'function' && M.mode === 'net' && !(typeof STATQ !== 'undefined' && STATQ.disconnected)) {
+statEv('disconnect'); if (typeof STATQ !== 'undefined') STATQ.disconnected = true;
+}
 if (M.mode === 'net' && $id('end').classList.contains('on')) {
 const quit = NET.peerQuit;
 netOverlay('');
@@ -15478,6 +15490,7 @@ t.innerHTML = `<span class="it-name">${escapeHTML(name)}</span><span class="it-c
 }
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
+if (typeof statMatchEnd === 'function') statMatchEnd(w);
 if (M.worldKey) {
 if (REC.on) recSave(w);
 worldKeyRound(w); return;
@@ -18412,7 +18425,8 @@ if (!errors.length) errors.push('现有数据未发现明显的远距离出手�
 if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
 const context = { hero: hero.name || '', heroId: hero.id || '', mode: m.mode || '', level: m.level || '' };
 const focus = falls > 0 ? 'edge' : taken > dealt * 1.2 && taken > 0 ? 'defense' : misfaced / Math.max(1, attacks) >= 0.2 ? 'facing' : 'range';
-return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, focus, strengths, errors, next, moments: moments.slice(0, 4) };
+const evidence = rows.length < 12 ? 'limited' : rows.length < 60 ? 'sampled' : 'strong';
+return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, focus, evidence, strengths, errors, next, moments: moments.slice(0, 4) };
 }
 function endReviewShow(m) {
 const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -18425,7 +18439,8 @@ if (!review) { panel.innerHTML = ''; return; }
 const list = items => `<ul>${items.map(s => `<li>${escapeHTML(reviewCopy(s))}</li>`).join('')}</ul>`;
 const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
 const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(cvT(review.context.hero))} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(cvT(LV_NAME[review.context.level] || review.context.level))}` : ''}</p>` : '';
-panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')} ${cvT('复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button></div>`;
+const evidenceText = review.evidence === 'limited' ? '样本较少，建议先当作线索' : review.evidence === 'sampled' ? '依据录像抽样帧与统计' : '录像抽样较充分';
+panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。')}</p><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
 }
 function reviewCopy(value) {
 const s = String(value || '');
@@ -18459,6 +18474,16 @@ rpInfo();
 setTimeout(advance, 0);
 }
 $id('endReview').addEventListener('click', e => {
+const vote = e.target.closest('[data-review-vote]');
+if (vote) {
+if (typeof STATQ !== 'undefined' && !STATQ.reviewVote) {
+STATQ.reviewVote = vote.dataset.reviewVote;
+if (typeof statEv === 'function') statEv(vote.dataset.reviewVote === 'yes' ? 'review_yes' : 'review_no');
+for (const b of $id('endReview').querySelectorAll('[data-review-vote]')) b.disabled = true;
+vote.textContent = cvT('已收到反馈');
+}
+return;
+}
 const jump = e.target.closest('[data-review-frame]');
 if (jump && RP.last) replayJump(RP.last, +jump.dataset.reviewFrame);
 const practice = e.target.closest('[data-review-practice]');
@@ -26996,9 +27021,27 @@ const TUT_STEPS = [
 ];
 const TUT_QUICK = [0, 2, 6, 9, 10];
 const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
+function tutSkillName(slot) {
+const ch = CHARS[trainChar] || CHARS[0], key = slot === 2 ? ch.skill2 : ch.skill;
+return (SKILLS[key] && SKILLS[key].name) || (slot === 2 ? '远程招式' : '门派技能');
+}
+function tutDescription(i) {
+const en = window.I18N && I18N.getLang() === 'en';
+if (i === 5) return en ? `Hold attack and tap R (or press R directly) to use ${cvT(tutSkillName(2))}.` : `按住左键再点右键（或直接按 R），施展「${tutSkillName(2)}」。`;
+if (i === 6) return en ? `Press Q to use ${cvT(tutSkillName(1))}, then learn its timing and purpose.` : `按 Q 施展「${tutSkillName(1)}」，熟悉它的时机与用途。`;
+return TUT_STEPS[i].d;
+}
+function tutTouchDescription(i) {
+const en = window.I18N && I18N.getLang() === 'en';
+if (i === 5) return en ? `Tap R to use ${cvT(tutSkillName(2))}.` : `点击「远程」施展「${tutSkillName(2)}」。`;
+if (i === 6) return en ? `Tap Skill to use ${cvT(tutSkillName(1))}.` : `点击「技能」施展「${tutSkillName(1)}」。`;
+return TUT_TOUCH[i];
+}
 function startTutorial(full) {
 try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
-trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
+trainChar = typeof menuHeroPick === 'function' ? menuHeroPick() : 0;
+if (typeof setMenuHero === 'function') setMenuHero(trainChar);
+dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
 if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
 startTraining('dummy');
 if (typeof STATQ !== 'undefined') STATQ.skip = false;
@@ -27027,7 +27070,7 @@ const st = TUT_STEPS[tutCur()];
 if (!st) return tutFinish();
 $id('tutBox').classList.remove('ok');
 $id('tutN').textContent = `${TUT.full ? '完整教学' : '快速上手'} ${TUT.step + 1} / ${TUT.list.length}`;
-$id('tutT').textContent = st.t; $id('tutD').textContent = TOUCH ? TUT_TOUCH[tutCur()] : st.d;
+$id('tutT').textContent = cvT(st.t); $id('tutD').textContent = TOUCH ? tutTouchDescription(tutCur()) : tutDescription(tutCur());
 if (st.setup) st.setup();
 }
 function tutTick(dt) {
@@ -29133,7 +29176,7 @@ if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来
 if (keepRoom && !returnHome) selectMode('net');
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
-document.getElementById('menuBtn').addEventListener('click', () => toMenu(true));
+document.getElementById('menuBtn').addEventListener('click', () => { if (typeof statMatchQuit === 'function') statMatchQuit(); toMenu(true); });
 const FACE = (inner, fill = '#f4ead5') => `<svg viewBox="0 0 48 48"><circle cx="24" cy="25" r="19" fill="${fill}" stroke="#1a1426" stroke-width="2.6"/>${inner}</svg>`;
 const SEAL = (a, b) => `<svg viewBox="0 0 48 48"><rect x="5" y="5" width="38" height="38" rx="4" fill="#b8392e" transform="rotate(-4 24 24)"/><rect x="9" y="9" width="30" height="30" rx="2" fill="none" stroke="rgba(255,240,225,.6)" stroke-width="1.4" transform="rotate(-4 24 24)"/><text x="24" y="23" font-family="Ma Shan Zheng, STKaiti, KaiTi, serif" font-size="15" fill="#fbeee0" text-anchor="middle">${a}</text><text x="24" y="38" font-family="Ma Shan Zheng, STKaiti, KaiTi, serif" font-size="15" fill="#fbeee0" text-anchor="middle">${b}</text></svg>`;
 const K = 'stroke="#1a1426" stroke-width="2.4" fill="none" stroke-linecap="round"';
@@ -33198,6 +33241,7 @@ function mmGo(kind) {
 initAudio();
 if (kind === 'ranked' && !rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
 if (kind === 'ranked') rkCheckPending();
+STATQ.queueStarted = Date.now();
 mmStart(kind);
 let statusTxt = '匹配对战：正在全服寻找对手…';
 if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
@@ -33207,7 +33251,7 @@ netStatus(statusTxt);
 }
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
 $id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
-$id('mmCancelBtn').addEventListener('click', () => { netReset(); netStatus('已取消'); });
+$id('mmCancelBtn').addEventListener('click', () => { statQueueResult(false); netReset(); netStatus('已取消'); });
 $id('mmRankInfoBtn').addEventListener('click', () => {
 renderRankInfo();
 const sea = rkSeason();
@@ -33275,7 +33319,7 @@ function presBye() {
 try { if (navigator.sendBeacon) navigator.sendBeacon(presUrl(), new Blob([JSON.stringify({ sid: presSid(), bye: true })], { type: 'text/plain' })); } catch (e) {}
 }
 window.addEventListener('pagehide', presBye);
-const STATQ = { q: [], timer: 0, skip: false };
+const STATQ = { q: [], timer: 0, skip: false, match: null, queueStarted: 0, reviewVote: '' };
 function statId() {
 let id = '';
 try { id = localStorage.getItem('renying-anon-id') || ''; } catch (e) {}
@@ -33302,13 +33346,50 @@ if (beacon && navigator.sendBeacon) navigator.sendBeacon(statUrl(), new Blob([bo
 else fetch(statUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body, keepalive: true }).catch(() => {});
 } catch (e) {}
 }
-function statMatch() {
-if (typeof RESIM !== 'undefined' && RESIM) return;
-if (STATQ.skip || M.mode === 'demo' || TUT || M.round !== 1 || M.wins[0] || M.wins[1]) return;
+function statMode() {
 let k = M.mode;
 if (k === 'net' && NET.isRanked) k = 'netrk';
 else if (k === 'cpu' && typeof FOREST !== 'undefined' && FOREST.on) k = 'stage';
+return k;
+}
+function statBucket(seconds) { return seconds < 30 ? '0' : seconds < 60 ? '1' : seconds < 120 ? '2' : seconds < 240 ? '3' : '4'; }
+function statMatch() {
+if (typeof RESIM !== 'undefined' && RESIM) return;
+if (STATQ.skip || M.mode === 'demo' || TUT || M.round !== 1 || M.wins[0] || M.wins[1]) return;
+const k = statMode();
+if (STATQ.match && STATQ.match.mode === k) return;
+STATQ.disconnected = false;
+if (STATQ.lastEnd && STATQ.lastEnd.mode === k && Date.now() - STATQ.lastEnd.at < 120000) statEv('rematch');
+STATQ.reviewVote = '';
+const ci = (M.ch || [])[typeof localIdx === 'function' ? localIdx() : 0] || 0;
+STATQ.match = { mode: k, at: Date.now(), hero: CHARS[ci] && CHARS[ci].id || '', map: M.map || '' };
 statEv('m:' + k);
+if (STATQ.queueStarted) statQueueResult(true);
+}
+function statQueueResult(found) {
+if (!STATQ.queueStarted) return;
+const seconds = Math.max(0, (Date.now() - STATQ.queueStarted) / 1000);
+statEv(`queue:${statBucket(seconds)}`);
+if (!found) statEv('queue:cancel');
+STATQ.queueStarted = 0;
+}
+function statMatchEnd(winner) {
+const run = STATQ.match; if (!run) return;
+STATQ.match = null;
+const seconds = Math.max(0, (Date.now() - run.at) / 1000), mode = run.mode;
+STATQ.lastEnd = { mode, at: Date.now() };
+let side = typeof localTeam === 'function' ? localTeam() : (typeof localIdx === 'function' ? localIdx() : 0);
+if (M.mode !== 'net' && !M.four && !M.raid && typeof localIdx === 'function') side = localIdx();
+const result = winner < 0 ? 'd' : winner === side ? 'w' : 'l';
+statEv(`out:${mode}:${result}`); statEv(`dur:${mode}:${statBucket(seconds)}`);
+if (run.hero) statEv(`h:${run.hero}:${result}`);
+if (run.map) statEv(`map:${run.map}:${result}`);
+}
+function statMatchQuit() {
+const run = STATQ.match; if (!run) return;
+STATQ.match = null;
+const seconds = Math.max(0, (Date.now() - run.at) / 1000);
+statEv(`quit:${run.mode}`); statEv(`dur:${run.mode}:${statBucket(seconds)}`);
 }
 const AIQ_KEY = 'renying-ai-match-queue', AIQ_MAX = 30;
 const aiTrainOn = () => !OFFLINE_BUILD && SETTINGS.aiTraining !== false && !!(window.CloudSave && CloudSave.getEndpoint && CloudSave.getEndpoint());

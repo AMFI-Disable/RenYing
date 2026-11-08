@@ -1085,6 +1085,16 @@ async function vPlay() {
     if (d.back7 !== null) { b7 += d.back7; b7n += d.fresh; }
   }
   const modes = r.modes.filter(m => tot['m:' + m]).sort((a, b) => tot['m:' + b] - tot['m:' + a]);
+  const sumPrefix = p => Object.entries(tot).filter(([k]) => k.startsWith(p)).reduce((n, [, v]) => n + v, 0);
+  const resultTotal = sumPrefix('out:');
+  const wins = Object.entries(tot).filter(([k]) => k.startsWith('out:') && k.endsWith(':w')).reduce((n, [, v]) => n + v, 0);
+  const losses = Object.entries(tot).filter(([k]) => k.startsWith('out:') && k.endsWith(':l')).reduce((n, [, v]) => n + v, 0);
+  const queueBins = ['0', '1', '2', '3', '4'].map(b => tot['queue:' + b] || 0);
+  const queueN = queueBins.reduce((a, b) => a + b, 0);
+  const resultRows = prefix => Object.keys(tot).filter(k => k.startsWith(prefix) && /:(w|l|d)$/.test(k)).reduce((o, k) => {
+    const p = k.split(':'), id = p[1]; (o[id] ||= { w: 0, l: 0, d: 0 })[p[2]] += tot[k]; return o;
+  }, {});
+  const heroResults = resultRows('h:'), mapResults = resultRows('map:');
   return H`<div class="card"><h2>游玩统计 <small>最近 ${r.days} 天 · 北京时间 · 今天 ${r.today}</small></h2>
     <p class="hint">完全匿名：不存名字、账号、邮箱、IP。每个浏览器一个随机编号（服务器只存加盐后的哈希），玩家在设置里可以关掉。
       「第 2 天回来」是那天第一次来的人里，第二天又打开的比例；「第 7 天回来」同理。还没到那一天的显示「—」。</p>
@@ -1094,11 +1104,28 @@ async function vPlay() {
       <div><b>${pctOf(b1, b1n)}</b><br><small>第 2 天回来</small></div>
       <div><b>${pctOf(b7, b7n)}</b><br><small>第 7 天回来</small></div>
       <div><b>${pctOf(tot.tut_done || 0, tot.tut_start || 0)}</b><br><small>开始教学的人里走完的</small></div>
+      <div><b>${fmtN(resultTotal)}</b><br><small>已结束对局</small></div>
+      <div><b>${pctOf(wins, wins + losses)}</b><br><small>胜率（排除平局）</small></div>
+      <div><b>${fmtN(sumPrefix('quit:'))}</b><br><small>主动提前离场</small></div>
+      <div><b>${fmtN(tot.disconnect || 0)}</b><br><small>联机断线记录</small></div>
+      <div><b>${pctOf(tot.review_yes || 0, (tot.review_yes || 0) + (tot.review_no || 0))}</b><br><small>复盘有帮助反馈</small></div>
     </div></div>
+    <div class="card"><h2>排队与对局时长</h2><p class="hint">排队时间按区间统计；对局时长区间：&lt;30 秒、30–59 秒、1–2 分钟、2–4 分钟、4 分钟以上。</p>
+      <p>匹配成功 ${fmtN(queueN)} 次 · 排队取消 ${fmtN(tot['queue:cancel'] || 0)} 次</p>
+      <div class="row wrap" style="gap:18px">${queueBins.map((n, i) => H`<div><b>${fmtN(n)}</b><br><small>排队 ${['<30 秒', '30–59 秒', '1–2 分钟', '2–4 分钟', '4 分钟以上'][i]}</small></div>`)}</div>
+    </div>
     <div class="card"><h2>各模式开局数 <small>最近 ${r.days} 天，多的在前</small></h2>
-    ${modes.length ? H`<div class="tw"><table><thead><tr><th>模式</th><th class="num">局数</th><th class="num">占比</th></tr></thead><tbody>
-      ${(() => { const all = modes.reduce((a, m) => a + tot['m:' + m], 0); return modes.map(m => H`<tr><td>${PLAY_MODE_NAME[m] || m}</td><td class="num">${fmtN(tot['m:' + m])}</td><td class="num">${pctOf(tot['m:' + m], all)}</td></tr>`); })()}
+    ${modes.length ? H`<div class="tw"><table><thead><tr><th>模式</th><th class="num">开局</th><th class="num">结束</th><th class="num">胜 / 负 / 平</th><th class="num">胜率</th><th class="num">提前离场</th></tr></thead><tbody>
+      ${(() => { const all = modes.reduce((a, m) => a + tot['m:' + m], 0); return modes.map(m => { const w = tot[`out:${m}:w`] || 0, l = tot[`out:${m}:l`] || 0, d = tot[`out:${m}:d`] || 0, end = w + l + d; return H`<tr><td>${PLAY_MODE_NAME[m] || m}</td><td class="num">${fmtN(tot['m:' + m])}</td><td class="num">${fmtN(end)}</td><td class="num">${fmtN(w)} / ${fmtN(l)} / ${fmtN(d)}</td><td class="num">${pctOf(w, w + l)}</td><td class="num">${fmtN(tot['quit:' + m] || 0)}</td></tr>`; }); })()}
     </tbody></table></div>` : H`<p class="empty">还没有开局记录</p>`}</div>
+    <div class="card"><h2>侠客与地图表现</h2><p class="hint">按匿名对局结果汇总；样本少时只用于观察，不代表平衡结论。</p>
+      <div class="tw"><table><thead><tr><th>侠客</th><th class="num">胜 / 负 / 平</th><th class="num">胜率</th></tr></thead><tbody>
+        ${Object.entries(heroResults).sort((a, b) => (b[1].w + b[1].l + b[1].d) - (a[1].w + a[1].l + a[1].d)).map(([id, x]) => H`<tr><td>${id}</td><td class="num">${fmtN(x.w)} / ${fmtN(x.l)} / ${fmtN(x.d)}</td><td class="num">${pctOf(x.w, x.w + x.l)}</td></tr>`)}
+      </tbody></table></div>
+      <div class="tw"><table><thead><tr><th>地图</th><th class="num">胜 / 负 / 平</th><th class="num">胜率</th></tr></thead><tbody>
+        ${Object.entries(mapResults).sort((a, b) => (b[1].w + b[1].l + b[1].d) - (a[1].w + a[1].l + a[1].d)).map(([id, x]) => H`<tr><td>${id}</td><td class="num">${fmtN(x.w)} / ${fmtN(x.l)} / ${fmtN(x.d)}</td><td class="num">${pctOf(x.w, x.w + x.l)}</td></tr>`)}
+      </tbody></table></div>
+    </div>
     <div class="card"><h2>每天</h2><div class="tw"><table><thead><tr><th>日期</th><th class="num">玩家</th><th class="num">新玩家</th><th class="num">第 2 天回来</th><th class="num">第 7 天回来</th><th class="num">打开次数</th><th class="num">开局</th><th class="num">教学 开始 / 走完</th></tr></thead><tbody>
       ${r.rows.map(d => { const games = Object.entries(d.ev).filter(([k]) => k.startsWith('m:')).reduce((a, [, v]) => a + v, 0); return H`<tr><td class="nowrap">${d.date}</td><td class="num">${fmtN(d.players)}</td><td class="num">${fmtN(d.fresh)}</td>
         <td class="num">${d.back1 === null ? '—' : pctOf(d.back1, d.fresh)}</td><td class="num">${d.back7 === null ? '—' : pctOf(d.back7, d.fresh)}</td><td class="num">${fmtN(d.ev.open)}</td><td class="num">${fmtN(games)}</td><td class="num">${fmtN(d.ev.tut_start)} / ${fmtN(d.ev.tut_done)}</td></tr>`; })}

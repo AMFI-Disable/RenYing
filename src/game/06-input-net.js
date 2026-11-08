@@ -97,6 +97,7 @@ const isClient = () => M.mode === 'net' && NET.role === 'client' && !ROLL.on && 
 function netEmit(ev) { if (M.mode === 'net' && NET.role === 'host' && !ROLL.on && !NET.solo) NET.out.push(ev); }
 function netReset() {
   ROLL.on = false;
+  if (typeof MM !== 'undefined' && MM.on && typeof statQueueResult === 'function') statQueueResult(!!NET.open);
   if (typeof mmStop === 'function') mmStop();
   mmUI(null);
   NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;
@@ -123,6 +124,7 @@ function netConnect(asHost, code) { netConnectP2P(asHost, code); }
 function netOverlay(text) { const o = $id('netOv'); o.textContent = text; o.classList.toggle('on', !!text); }
 function onSys(m) {
   if (m.sys === 'room' && m.matched) {
+    if (typeof statQueueResult === 'function') statQueueResult(true);
     NET.role = m.role; NET.matching = false; NET.isRanked = !!m.ranked; NET.rkDone = false;
     let targetRule = 'normal';
     if (m.mmKind === '2v2_coop') targetRule = 'pp_cc';
@@ -276,6 +278,9 @@ function netForfeitWin() {
   return true;
 }
 function netLost() {
+  if (NET.peerQuit && typeof statEv === 'function' && M.mode === 'net' && !(typeof STATQ !== 'undefined' && STATQ.disconnected)) {
+    statEv('disconnect'); if (typeof STATQ !== 'undefined') STATQ.disconnected = true;
+  }
   // 对局已经打完、停在结算页时对方走了：留在结算页看结果（排位分、墨锭照常结算），只是不能再战了。
   // 以前会被直接拉回联机大厅，还提示“对局已中断（未完成）”，打完的排位还可能被当成对手中途离开
   if (M.mode === 'net' && $id('end').classList.contains('on')) {

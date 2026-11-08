@@ -234,6 +234,7 @@ function mmGo(kind) {
   initAudio();
   if (kind === 'ranked' && !rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
   if (kind === 'ranked') rkCheckPending();
+  STATQ.queueStarted = Date.now();
   mmStart(kind);
   let statusTxt = '匹配对战：正在全服寻找对手…';
   if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
@@ -243,7 +244,7 @@ function mmGo(kind) {
 }
 $id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
 $id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
-$id('mmCancelBtn').addEventListener('click', () => { netReset(); netStatus('已取消'); });
+$id('mmCancelBtn').addEventListener('click', () => { statQueueResult(false); netReset(); netStatus('已取消'); });
 $id('mmRankInfoBtn').addEventListener('click', () => {
   renderRankInfo();
   const sea = rkSeason();
@@ -332,7 +333,7 @@ window.addEventListener('pagehide', presBye);
 // ---------- 匿名游玩统计（服务器 POST /api/stats，管理网页「游玩统计」看） ----------
 // 只报几件事：打开网页、新手教学开始 / 走完 / 跳过、开了哪个模式的一局。不带名字、账号、邮箱；
 // 编号是这台浏览器自己随机生成的（renying-anon-id），服务器再加盐哈希一次才存。设置里「匿名统计」可以关；离线版不报。
-const STATQ = { q: [], timer: 0, skip: false };
+const STATQ = { q: [], timer: 0, skip: false, match: null, queueStarted: 0, reviewVote: '' };
 function statId() {
   let id = '';
   try { id = localStorage.getItem('renying-anon-id') || ''; } catch (e) {}
@@ -359,14 +360,51 @@ function statFlush(beacon) {
     else fetch(statUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body, keepalive: true }).catch(() => {});
   } catch (e) {}
 }
+function statMode() {
+  let k = M.mode;
+  if (k === 'net' && NET.isRanked) k = 'netrk';
+  else if (k === 'cpu' && typeof FOREST !== 'undefined' && FOREST.on) k = 'stage';
+  return k;
+}
+function statBucket(seconds) { return seconds < 30 ? '0' : seconds < 60 ? '1' : seconds < 120 ? '2' : seconds < 240 ? '3' : '4'; }
 // 一局开始（第一回合、比分 0:0）：记是哪个模式。重算回滚、首页演示、新手教学不算
 function statMatch() {
   if (typeof RESIM !== 'undefined' && RESIM) return;
   if (STATQ.skip || M.mode === 'demo' || TUT || M.round !== 1 || M.wins[0] || M.wins[1]) return;
-  let k = M.mode;
-  if (k === 'net' && NET.isRanked) k = 'netrk';
-  else if (k === 'cpu' && typeof FOREST !== 'undefined' && FOREST.on) k = 'stage';
+  const k = statMode();
+  if (STATQ.match && STATQ.match.mode === k) return;
+  STATQ.disconnected = false;
+  if (STATQ.lastEnd && STATQ.lastEnd.mode === k && Date.now() - STATQ.lastEnd.at < 120000) statEv('rematch');
+  STATQ.reviewVote = '';
+  const ci = (M.ch || [])[typeof localIdx === 'function' ? localIdx() : 0] || 0;
+  STATQ.match = { mode: k, at: Date.now(), hero: CHARS[ci] && CHARS[ci].id || '', map: M.map || '' };
   statEv('m:' + k);
+  if (STATQ.queueStarted) statQueueResult(true);
+}
+function statQueueResult(found) {
+  if (!STATQ.queueStarted) return;
+  const seconds = Math.max(0, (Date.now() - STATQ.queueStarted) / 1000);
+  statEv(`queue:${statBucket(seconds)}`);
+  if (!found) statEv('queue:cancel');
+  STATQ.queueStarted = 0;
+}
+function statMatchEnd(winner) {
+  const run = STATQ.match; if (!run) return;
+  STATQ.match = null;
+  const seconds = Math.max(0, (Date.now() - run.at) / 1000), mode = run.mode;
+  STATQ.lastEnd = { mode, at: Date.now() };
+  let side = typeof localTeam === 'function' ? localTeam() : (typeof localIdx === 'function' ? localIdx() : 0);
+  if (M.mode !== 'net' && !M.four && !M.raid && typeof localIdx === 'function') side = localIdx();
+  const result = winner < 0 ? 'd' : winner === side ? 'w' : 'l';
+  statEv(`out:${mode}:${result}`); statEv(`dur:${mode}:${statBucket(seconds)}`);
+  if (run.hero) statEv(`h:${run.hero}:${result}`);
+  if (run.map) statEv(`map:${run.map}:${result}`);
+}
+function statMatchQuit() {
+  const run = STATQ.match; if (!run) return;
+  STATQ.match = null;
+  const seconds = Math.max(0, (Date.now() - run.at) / 1000);
+  statEv(`quit:${run.mode}`); statEv(`dur:${run.mode}:${statBucket(seconds)}`);
 }
 // 匿名对局训练上传：只发战斗状态与按键样本，不发回放、姓名、账号、皮肤或精确时间。
 const AIQ_KEY = 'renying-ai-match-queue', AIQ_MAX = 30;

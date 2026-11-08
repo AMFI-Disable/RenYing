@@ -24,9 +24,27 @@ const TUT_STEPS = [
 // 快速上手只走五步：走动、五段连击、门派技能、腾空闪、大招（一分钟内学完）；完整教学十一步都走，在帮助里开
 const TUT_QUICK = [0, 2, 6, 9, 10];
 const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
+function tutSkillName(slot) {
+  const ch = CHARS[trainChar] || CHARS[0], key = slot === 2 ? ch.skill2 : ch.skill;
+  return (SKILLS[key] && SKILLS[key].name) || (slot === 2 ? '远程招式' : '门派技能');
+}
+function tutDescription(i) {
+  const en = window.I18N && I18N.getLang() === 'en';
+  if (i === 5) return en ? `Hold attack and tap R (or press R directly) to use ${cvT(tutSkillName(2))}.` : `按住左键再点右键（或直接按 R），施展「${tutSkillName(2)}」。`;
+  if (i === 6) return en ? `Press Q to use ${cvT(tutSkillName(1))}, then learn its timing and purpose.` : `按 Q 施展「${tutSkillName(1)}」，熟悉它的时机与用途。`;
+  return TUT_STEPS[i].d;
+}
+function tutTouchDescription(i) {
+  const en = window.I18N && I18N.getLang() === 'en';
+  if (i === 5) return en ? `Tap R to use ${cvT(tutSkillName(2))}.` : `点击「远程」施展「${tutSkillName(2)}」。`;
+  if (i === 6) return en ? `Tap Skill to use ${cvT(tutSkillName(1))}.` : `点击「技能」施展「${tutSkillName(1)}」。`;
+  return TUT_TOUCH[i];
+}
 function startTutorial(full) {
   try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
-  trainChar = 0; dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
+  trainChar = typeof menuHeroPick === 'function' ? menuHeroPick() : 0;
+  if (typeof setMenuHero === 'function') setMenuHero(trainChar);
+  dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
   if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
   startTraining('dummy');
   if (typeof STATQ !== 'undefined') STATQ.skip = false;
@@ -55,7 +73,7 @@ function tutNext() {
   if (!st) return tutFinish();
   $id('tutBox').classList.remove('ok');
   $id('tutN').textContent = `${TUT.full ? '完整教学' : '快速上手'} ${TUT.step + 1} / ${TUT.list.length}`;
-  $id('tutT').textContent = st.t; $id('tutD').textContent = TOUCH ? TUT_TOUCH[tutCur()] : st.d;
+  $id('tutT').textContent = cvT(st.t); $id('tutD').textContent = TOUCH ? tutTouchDescription(tutCur()) : tutDescription(tutCur());
   if (st.setup) st.setup();
 }
 function tutTick(dt) {

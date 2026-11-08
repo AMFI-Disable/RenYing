@@ -196,6 +196,7 @@ if (scr === 'langPrompt') await activate('language prompt', EN ? '#lpPickEn' : '
 scr = await waitScreen(['tutask', 'menu'], 3000);
 if (scr === 'tutask') await activate('skip tutorial prompt', '#tutNo', 'menu');
 ok('home screen', (await screenOn()) === 'menu');
+ok('first home render loads the selected hero skin', await ev(`!!MENU_HERO && MENU_HERO.skinKey === mySkin(CHARS[menuHeroPick()].id) && MENU_HERO.look && MENU_HERO.look.name === CHARS[menuHeroPick()].name`), await ev(`MENU_HERO ? MENU_HERO.skinKey : 'missing hero preview'`));
 await shot('01-home');
 
 // 2. Esc from a sub page returns home, then into single mode for real

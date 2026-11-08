@@ -117,13 +117,15 @@ async function portraitCheck(name, w, h, dpr) {
     const rt = getComputedStyle(document.getElementById('rotateTip'));
     return { touch: TOUCH, bodyTouch: document.body.classList.contains('touchdev'),
              rotate: rt.display, rotateText: document.getElementById('rotateTip').textContent.trim(),
+             firstSkin: !!MENU_HERO && MENU_HERO.skinKey === mySkin(CHARS[menuHeroPick()].id) && MENU_HERO.look && MENU_HERO.look.name === CHARS[menuHeroPick()].name,
              touchUI: getComputedStyle(document.getElementById('touchUI')).display };
   })()`);
   await shot(`${name}-portrait`);
-  const ok = r.touch && r.rotate === 'flex';
-  console.log(`  ${name} portrait ${w}x${h}: TOUCH=${r.touch} body.touchdev=${r.bodyTouch} rotateTip="${r.rotate}" ("${r.rotateText}") -> ${ok ? 'PASS' : 'FAIL'}`);
+  const ok = r.touch && r.rotate === 'flex' && r.firstSkin;
+  console.log(`  ${name} portrait ${w}x${h}: TOUCH=${r.touch} body.touchdev=${r.bodyTouch} firstSkin=${r.firstSkin} rotateTip="${r.rotate}" ("${r.rotateText}") -> ${ok ? 'PASS' : 'FAIL'}`);
   if (!r.touch) note(`${name}: game did not switch to its touch path under emulation`);
   if (r.rotate !== 'flex') note(`${name}: rotate tip not shown in portrait`);
+  if (!r.firstSkin) note(`${name}: first page load did not assign the equipped hero skin to the home preview`);
   results.push({ name, mode: 'portrait', ok, ...r });
   return r;
 }

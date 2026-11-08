@@ -410,4 +410,4 @@ function toMenu(returnHome = false) {
   if (keepRoom && !returnHome) selectMode('net');
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
-document.getElementById('menuBtn').addEventListener('click', () => toMenu(true));
+document.getElementById('menuBtn').addEventListener('click', () => { if (typeof statMatchQuit === 'function') statMatchQuit(); toMenu(true); });

@@ -687,6 +687,7 @@ function inkTitle(name, lost) {
 }
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
+  if (typeof statMatchEnd === 'function') statMatchEnd(w);
   if (M.worldKey) {
     if (REC.on) recSave(w);
     worldKeyRound(w); return;

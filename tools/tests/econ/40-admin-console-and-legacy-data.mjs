@@ -32,11 +32,11 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   {
     const bad = await call('POST', '/api/stats', { vid: 'x', ev: ['open'] });
     ok(!bad.ok, '匿名统计：编号格式不对就拒绝', bad);
-    const s1 = await call('POST', '/api/stats', { vid: 'statsvid000000001', ev: ['open', 'm:cpu', 'm:cpu', 'm:hack', 'drop table', 'tut_start', 'tut_done'] }, null, '9.9.9.1');
+    const s1 = await call('POST', '/api/stats', { vid: 'statsvid000000001', ev: ['open', 'm:cpu', 'm:cpu', 'm:hack', 'drop table', 'tut_start', 'tut_done', 'out:cpu:w', 'dur:cpu:2', 'quit:cpu', 'queue:3', 'queue:cancel', 'disconnect', 'review_yes', 'h:qingfeng:w', 'map:ice:l', 'h:unknown:w', 'map:unknown:w', 'out:cpu:unknown', 'dur:cpu:9'] }, null, '9.9.9.1');
     ok(s1.ok && s1.kept, '匿名统计：游客也能报', s1);
     const day = Math.floor((T + 8 * 3600e3) / 86400000);
     const cnt = k => (row('SELECT n FROM play_counts WHERE day = ? AND k = ?', day, k) || {}).n || 0;
-    ok(cnt('open') === 1 && cnt('m:cpu') === 2 && cnt('tut_done') === 1 && !row("SELECT 1 AS x FROM play_counts WHERE k = 'm:hack' OR k = 'drop table'"), '匿名统计：白名单以外的事件不记', { open: cnt('open'), cpu: cnt('m:cpu') });
+    ok(cnt('open') === 1 && cnt('m:cpu') === 2 && cnt('tut_done') === 1 && cnt('out:cpu:w') === 1 && cnt('dur:cpu:2') === 1 && cnt('quit:cpu') === 1 && cnt('queue:3') === 1 && cnt('queue:cancel') === 1 && cnt('disconnect') === 1 && cnt('review_yes') === 1 && cnt('h:qingfeng:w') === 1 && cnt('map:ice:l') === 1 && !row("SELECT 1 AS x FROM play_counts WHERE k IN ('m:hack', 'drop table', 'h:unknown:w', 'map:unknown:w', 'out:cpu:unknown', 'dur:cpu:9')"), '匿名统计：只记录受限的对局结果、排队、评价、侠客和地图事件', { open: cnt('open'), cpu: cnt('m:cpu'), result: cnt('out:cpu:w'), hero: cnt('h:qingfeng:w'), map: cnt('map:ice:l') });
     ok(!row("SELECT 1 AS x FROM play_visitors WHERE vid = 'statsvid000000001'") && row('SELECT COUNT(*) AS n FROM play_visitors').n >= 1, '匿名统计：数据库里没有网页给的原始编号（只有加盐哈希）');
     const vid = row('SELECT vid FROM play_days WHERE day = ? LIMIT 1', day).vid;
     // 造一个“昨天第一次来、今天又来了”的玩家，看第 2 天留存
@@ -44,7 +44,7 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
     ENV.DB.raw.prepare('INSERT INTO play_days (day, vid) VALUES (?, ?), (?, ?)').run(day - 1, 'cohortvid', day, 'cohortvid');
     const ps = await adm('GET', '/api/admin/playstats?days=7');
     const y = ps.rows.find(r => r.day === day - 1), t = ps.rows.find(r => r.day === day);
-    ok(ps.ok && ps.rows.length === 7 && y.fresh === 1 && y.back1 === 1 && y.back7 === null && t.players >= 2 && t.ev['m:cpu'] === 2 && t.back1 === null && !!vid, '管理网页游玩统计：每天人数、第 2 天留存、各模式局数', { y, t });
+    ok(ps.ok && ps.rows.length === 7 && y.fresh === 1 && y.back1 === 1 && y.back7 === null && t.players >= 2 && t.ev['m:cpu'] === 2 && t.ev['out:cpu:w'] === 1 && t.ev['h:qingfeng:w'] === 1 && t.ev['map:ice:l'] === 1 && t.back1 === null && !!vid, '管理网页游玩统计：人数、留存、模式结果及侠客地图结果', { y, t });
     let kept = 0;
     for (let i = 0; i < 125; i++) if ((await call('POST', '/api/stats', { vid: 'statsflood0000001', ev: ['open'] }, null, '9.9.9.2')).kept) kept++;
     ok(kept === 120, '匿名统计：同一个 IP 一小时最多记 120 次', kept);

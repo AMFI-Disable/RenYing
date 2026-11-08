@@ -94,11 +94,24 @@ async function presence(env, body, ip, now) {
 /* ---------- 匿名游玩统计 ----------
  * 网页每次打开、走新手教学、开一局时报一下（POST /api/stats，不用登录，游客也算）。
  * 不存名字、账号、邮箱、IP：网页在本机存一个随机编号（renying-anon-id），服务器加盐再算一次哈希才存，只用来去重和算留存。
- * 设置里可以关掉；离线版不报。管理网页「游玩统计」看：每天多少人、新玩家第 2 天 / 第 7 天还回不回来、各模式开了多少局、教学走到哪。
+ * 设置里可以关掉；离线版不报。管理网页「游玩统计」看：每天人数和留存、模式结果与时长、侠客和地图胜负、排队区间、提前离场、断线和复盘评价。
  * 每个 IP 一小时最多 120 次、全服一小时最多 20000 次，多出来的直接丢（统计不能把数据库写爆）。 */
-const STAT_EVENTS = ['open', 'tut_start', 'tut_done', 'tut_skip'];
+const STAT_EVENTS = ['open', 'tut_start', 'tut_done', 'tut_skip', 'disconnect', 'rematch', 'review_yes', 'review_no'];
 const STAT_MODES = ['cpu', 'tag3', 'tower', 'chaos', 'mayhem', 'maps', '2v2', 'watch2v2', 'saga', 'stage', 'train', 'raid', 'world', 'boss', 'net', 'netrk', 'pvp', 'replay', 'qfx'];
-const statKeyOk = k => typeof k === 'string' && (STAT_EVENTS.includes(k) || (k.startsWith('m:') && STAT_MODES.includes(k.slice(2))));
+const STAT_MAPS = ['cliff', 'ice', 'bamboo', 'thunder', 'pagoda', 'wine'];
+const statKeyOk = k => {
+  if (typeof k !== 'string' || k.length > 64) return false;
+  if (STAT_EVENTS.includes(k)) return true;
+  const p = k.split(':');
+  if (p[0] === 'm') return p.length === 2 && STAT_MODES.includes(p[1]);
+  if (p[0] === 'out') return p.length === 3 && STAT_MODES.includes(p[1]) && ['w', 'l', 'd'].includes(p[2]);
+  if (p[0] === 'dur') return p.length === 3 && STAT_MODES.includes(p[1]) && /^[0-4]$/.test(p[2]);
+  if (p[0] === 'quit') return p.length === 2 && STAT_MODES.includes(p[1]);
+  if (p[0] === 'queue') return p.length === 2 && (/^[0-4]$/.test(p[1]) || p[1] === 'cancel');
+  if (p[0] === 'h') return p.length === 3 && C.HERO_IDS.includes(p[1]) && ['w', 'l', 'd'].includes(p[2]);
+  if (p[0] === 'map') return p.length === 3 && STAT_MAPS.includes(p[1]) && ['w', 'l', 'd'].includes(p[2]);
+  return false;
+};
 const statDay = now => Math.floor((now + 8 * 3600e3) / DAY_MS);   // 北京时间的第几天：学校的一天按北京时间算
 async function statVid(raw) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('renying-stats:' + raw));

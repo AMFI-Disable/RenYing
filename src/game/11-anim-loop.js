@@ -734,7 +734,8 @@ function matchReviewData(m) {
   if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
   const context = { hero: hero.name || '', heroId: hero.id || '', mode: m.mode || '', level: m.level || '' };
   const focus = falls > 0 ? 'edge' : taken > dealt * 1.2 && taken > 0 ? 'defense' : misfaced / Math.max(1, attacks) >= 0.2 ? 'facing' : 'range';
-  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, focus, strengths, errors, next, moments: moments.slice(0, 4) };
+  const evidence = rows.length < 12 ? 'limited' : rows.length < 60 ? 'sampled' : 'strong';
+  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, focus, evidence, strengths, errors, next, moments: moments.slice(0, 4) };
 }
 function endReviewShow(m) {
   const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -747,7 +748,8 @@ function endReviewShow(m) {
   const list = items => `<ul>${items.map(s => `<li>${escapeHTML(reviewCopy(s))}</li>`).join('')}</ul>`;
   const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
   const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(cvT(review.context.hero))} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(cvT(LV_NAME[review.context.level] || review.context.level))}` : ''}</p>` : '';
-  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')} ${cvT('复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button></div>`;
+  const evidenceText = review.evidence === 'limited' ? '样本较少，建议先当作线索' : review.evidence === 'sampled' ? '依据录像抽样帧与统计' : '录像抽样较充分';
+  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。')}</p><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
 }
 function reviewCopy(value) {
   const s = String(value || '');
@@ -781,6 +783,16 @@ function replayJump(m, frame) {
   setTimeout(advance, 0);
 }
 $id('endReview').addEventListener('click', e => {
+  const vote = e.target.closest('[data-review-vote]');
+  if (vote) {
+    if (typeof STATQ !== 'undefined' && !STATQ.reviewVote) {
+      STATQ.reviewVote = vote.dataset.reviewVote;
+      if (typeof statEv === 'function') statEv(vote.dataset.reviewVote === 'yes' ? 'review_yes' : 'review_no');
+      for (const b of $id('endReview').querySelectorAll('[data-review-vote]')) b.disabled = true;
+      vote.textContent = cvT('已收到反馈');
+    }
+    return;
+  }
   const jump = e.target.closest('[data-review-frame]');
   if (jump && RP.last) replayJump(RP.last, +jump.dataset.reviewFrame);
   const practice = e.target.closest('[data-review-practice]');
