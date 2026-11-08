@@ -373,7 +373,7 @@ document.getElementById('pause').addEventListener('click', e => {
     refocusGame();
   }
 });
-function toMenu() {
+function toMenu(returnHome = false) {
   if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
   if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
   if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;
@@ -393,7 +393,8 @@ function toMenu() {
   if (prevMode === 'tower') saveTowerRun();
   if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
   M.mode = 'demo';
-  if (prevMode === 'boss') openGboss();
+  if (returnHome) showScreen('menu');
+  else if (prevMode === 'boss') openGboss();
   else if (prevMode === 'saga') { singleSec('saga'); showScreen('single'); }
   else if (prevMode === 'watch2v2' || prevMode === '2v2') open2v2Hub();
   else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem') {
@@ -403,7 +404,7 @@ function toMenu() {
     showScreen('menu');
   }
   if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
-  if (keepRoom) selectMode('net');
+  if (keepRoom && !returnHome) selectMode('net');
 }
 document.getElementById('quitBtn').addEventListener('click', toMenu);
-document.getElementById('menuBtn').addEventListener('click', toMenu);
+document.getElementById('menuBtn').addEventListener('click', () => toMenu(true));
