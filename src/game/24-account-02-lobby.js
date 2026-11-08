@@ -379,11 +379,14 @@ function aiTrainMatch(m, modeOverride) {
   const matches = Array.isArray(m.segments) && m.segments.length ? m.segments : [m], q = aiTrainQueue();
   for (const part of matches) {
     if (!part || !Array.isArray(part.tr) || !part.tr.length || part.w === undefined) continue;
-    let rows;
-    try { rows = trSamples(part).map(x => ({ hero: x.hero, s: x.s, a: x.a, r: x.r, done: x.done ? 1 : 0 })); } catch (e) { continue; }
-    if (!rows.length) continue;
-    const result = part.w === -1 ? -1 : part.kind === 'net' && part.playerSide === 1 ? 1 - part.w : part.w;
-    q.push({ id: crypto.randomUUID(), mode: String(modeOverride || part.mode || m.mode || 'cpu'), result, rows });
+    let episodes;
+    try { episodes = trEpisodes(part); } catch (e) { continue; }
+    for (const episode of episodes) {
+      const rows = episode.rows.map(x => ({ hero: x.hero, s: x.s, a: x.a, r: x.r, done: x.done ? 1 : 0 }));
+      if (!rows.length) continue;
+      const result = part.w === -1 ? -1 : episode.side ? 1 - part.w : part.w;
+      q.push({ id: crypto.randomUUID(), mode: String(modeOverride || part.mode || m.mode || 'cpu'), result, rows });
+    }
   }
   if (!q.length) return;
   try { localStorage.setItem(AIQ_KEY, JSON.stringify(q.slice(-AIQ_MAX))); } catch (e) { return; }

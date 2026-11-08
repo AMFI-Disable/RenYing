@@ -422,7 +422,7 @@ function ctrlKey(c) {
 function recBegin(kind) {
   M.reviewReady = false;
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
-    meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
+    meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : allFighters().filter(f => human.includes(f.ctrl)).map(f => [A, B, C, D].indexOf(f)), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
   if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
   // pl：哪几个人按玩家的规则选目标。回放里大家都是普通 Ctrl，不记的话玩家会被当成电脑去配合队友，回放就走样了
   if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
@@ -504,45 +504,56 @@ function trSample() {
   const tf = REC.kind === 'net' && typeof ROLL !== 'undefined' ? ROLL.F : REC.f;
   if (tf % TR_EVERY) return;
   if (!A.ctrl || !B.ctrl) return;
-  // 前 21 项保持旧训练轨迹兼容；尾部状态字段供复盘识别格挡、脱身和追击窗口。
-  REC.tr.push([...trFeat(A, B), trActionBits(A.ctrl), trActionBits(B.ctrl), A.state || 'idle', A.moveName || A.skill || A.sp || '', A.escInvul ? 1 : 0, B.state || 'idle', B.moveName || B.skill || B.sp || '', B.escInvul ? 1 : 0]);
+  // 前 28 项保持旧训练轨迹兼容；末尾为每名本机玩家记录其自身视角的状态与输入。
+  const players = [];
+  for (const slot of REC.meta.trainSlots || []) {
+    const f = [A, B, C, D][slot];
+    if (!f || f.hidden || !f.ctrl) continue;
+    const side = sideFighters(0).includes(f) ? 0 : 1;
+    const foes = sideFighters(1 - side).filter(o => !o.hidden);
+    if (!foes.length) continue;
+    const foe = foes.reduce((best, o) => Math.hypot(o.x - f.x, o.y - f.y) < Math.hypot(best.x - f.x, best.y - f.y) ? o : best, foes[0]);
+    players.push([slot, trFeat(f, foe), trActionBits(f.ctrl)]);
+  }
+  REC.tr.push([...trFeat(A, B), trActionBits(A.ctrl), trActionBits(B.ctrl), A.state || 'idle', A.moveName || A.skill || A.sp || '', A.escInvul ? 1 : 0, B.state || 'idle', B.moveName || B.skill || B.sp || '', B.escInvul ? 1 : 0, players]);
   if (REC.trStart === null) REC.trStart = tf;
   if (REC.tr.length > TR_PER_MATCH) { REC.tr.shift(); REC.trStart += TR_EVERY; }
 }
-// 样本记录的格式：s 是上面 18 维状态，a 是玩家这一帧按住的键（位掩码），r 由血量/护甲变化和胜负算出来
+// 样本记录的格式：s 是 19 维状态，a 是玩家这一帧按住的键（位掩码），r 由血量/护甲变化和胜负算出来。
 const TR_STATE_DIM = 19;
-function trSamples(m) {
-  const rows = Array.isArray(m && m.tr) ? m.tr : [], out = [];
-  const side = m && m.kind === 'net' ? Math.max(0, Math.min(1, +m.playerSide || 0)) : 0;
-  const chars = m && Array.isArray(m.ch) ? m.ch : [0, 1];
-  let prev = null;
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!Array.isArray(row) || row.length < TR_STATE_DIM + 2) continue;
-    const s = row.slice(0, TR_STATE_DIM);
-    if (side) {
-      for (const [a, b] of [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[14,15],[16,17]]) [s[a], s[b]] = [s[b], s[a]];
-      [s[12], s[13]] = [-s[13], -s[12]];
-      s[18] = 1 - s[18];
+function trEpisodes(m) {
+  const rows = Array.isArray(m && m.tr) ? m.tr : [], slots = Array.isArray(m && m.trainSlots) && m.trainSlots.length ? m.trainSlots : [m && m.kind === 'net' ? Math.max(0, Math.min(1, +m.playerSide || 0)) : 0];
+  const episodes = [];
+  for (const slot of slots) {
+    const side = m && m.raid ? 0 : m && m.four ? (slot === 0 || slot === 2 ? 0 : 1) : slot;
+    const chars = m && Array.isArray(m.ch4) ? m.ch4 : (Array.isArray(m && m.ch) ? m.ch : [0, 1]);
+    const heroIdx = chars[slot] || 0, out = [];
+    let prev = null;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!Array.isArray(row) || row.length < TR_STATE_DIM + 2) continue;
+      const entry = Array.isArray(row[27]) ? row[27].find(p => Array.isArray(p) && p[0] === slot) : null;
+      let s, a;
+      if (entry && Array.isArray(entry[1]) && entry[1].length === TR_STATE_DIM) { s = entry[1].slice(); a = entry[2]; }
+      else if (slot < 2) {
+        s = row.slice(0, TR_STATE_DIM); a = row[TR_STATE_DIM + slot];
+        if (slot === 1) {
+          for (const [x, y] of [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[14,15],[16,17]]) [s[x], s[y]] = [s[y], s[x]];
+          [s[12], s[13]] = [-s[13], -s[12]]; s[18] = 1 - s[18];
+        }
+      } else continue;
+      let r = 0;
+      if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
+      prev = s;
+      out.push({ hero: (CHARS[heroIdx] || {}).id || 'hero', heroIdx, s, a, r: Math.round(r * 1000) / 1000, mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay' });
     }
-    const a = row[TR_STATE_DIM + side];
-    let r = 0;
-    if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
-    prev = s;
-    out.push({
-      hero: (CHARS[chars[side] || 0] || {}).id || 'hero',
-      heroIdx: chars[side] || 0,
-      s, a, r: Math.round(r * 1000) / 1000,
-      mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay'
-    });
+    if (out.length) {
+      const last = out[out.length - 1], winner = m.w === -1 ? -1 : side ? 1 - m.w : m.w;
+      last.r = Math.round((last.r + (winner === 0 ? 1 : winner === 1 ? -1 : 0)) * 1000) / 1000;
+      last.done = 1; episodes.push({ slot, side, rows: out });
+    }
   }
-  if (out.length) {   // 最后一帧给终局奖励：赢了才对，输了就是负的
-    const last = out[out.length - 1];
-    const winner = side ? 1 - m.w : m.w;
-    last.r = Math.round((last.r + (winner === 0 ? 1 : winner === 1 ? -1 : 0)) * 1000) / 1000;
-    last.done = 1;
-  }
-  return out;
+  return episodes;
 }
 function trSet() { try { const l = JSON.parse(localStorage.getItem(TR_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
 function trSetSave(list) {

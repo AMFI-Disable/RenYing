@@ -4,7 +4,7 @@
 
 The game defaults to contributing match samples to improve the AI. Players can turn this off at any time in **Settings → AI Model Training**. New installations and existing settings without a saved choice default to on.
 
-For completed player fights, the game uploads up to 480 samples at six-frame intervals. Each bout in a multi-fight run is contributed separately. A sample contains a hero identifier, 19 normalized combat-state values, a bit mask for movement, attack, dodge, ultimate, and skills, a shaped reward, and a terminal marker. The upload includes the game mode and a win, loss, or draw result. It does not include replay inputs, player names, account IDs, skins, or exact play time. Samples are kept for 180 days and are rate-limited at the Worker.
+For completed player fights, the game uploads up to 480 samples per locally controlled fighter at six-frame intervals. Local multiplayer and team matches contribute a separate episode for each human-controlled fighter; in online matches, each participant's device contributes its own fighter or fighters, avoiding uploading the remote player's controls from both clients. Each bout in a multi-fight run is contributed separately. A sample contains a hero identifier, 19 normalized combat-state values from that fighter's perspective, a bit mask for movement, attack, dodge, ultimate, and skills, a shaped reward, and a terminal marker. The upload includes the game mode and a win, loss, or draw result. It does not include replay inputs, player names, account IDs, skins, or exact play time. Samples are kept for 180 days and are rate-limited at the Worker.
 
 The upload queue is local and capped at 30 matches while offline. Turning contribution off clears that pending queue and prevents further uploads. The offline edition does not upload. Training-room sessions, demos, AI spectator matches, and replay playback are excluded; completed player matches across the other supported modes contribute when samples are available.
 
@@ -26,7 +26,7 @@ Keep the token private and keep exported data outside the repository. Audit it l
 node tools/ai/train-user-matches.mjs --input /tmp/renying-user-matches.jsonl
 ```
 
-The report contains aggregate counts by hero, mode, result, and data quality. It never prints sample rows. Episodes are reconstructed from terminal markers and split by whole bout, so adjacent samples from the same bout cannot leak into both training and holdout sets. Malformed and incomplete bouts are excluded from the model evaluation and reported.
+The report contains aggregate counts by hero, mode, result, and data quality. Each player fighter is exported as its own episode, so you can compare contribution and model coverage across heroes. It never prints sample rows. Episodes are reconstructed from terminal markers and split by whole bout, so adjacent samples from the same bout cannot leak into both training and holdout sets. Malformed and incomplete bouts are excluded from the model evaluation and reported.
 
 To produce an offline candidate, supply an output path outside the repository:
 
