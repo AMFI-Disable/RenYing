@@ -28,6 +28,7 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   human[0].clear(); human[1].clear();
 
   showScreen(null);
+  if (!isWatch) rpRunBegin('tag3');
   if (!isWatch) recBegin('loc');
   startRound();
   say(isWatch ? '3v3 门派车轮战 · AI 群英观战' : '3v3 门派车轮战', 1.4);

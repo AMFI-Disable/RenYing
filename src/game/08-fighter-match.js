@@ -687,7 +687,12 @@ function inkTitle(name, lost) {
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (M.worldKey) { worldKeyRound(w); return; }
-  const reviewRecord = REC.on ? recSave(w) : (M.reviewReady ? RP.last : null);
+  let reviewRecord = REC.on ? recSave(w) : (M.reviewReady ? RP.last : null);
+  if (RP.run && RP.run.mode === M.mode) {
+    if (M.mode === 'raid' && w === 0) reviewRecord = RP.last || reviewRecord;
+    else { reviewRecord = RP.run.segments.length ? rpRunReplay(RP.run, w) : reviewRecord; RP.run = null; RP.last = reviewRecord; }
+    if (reviewRecord && reviewRecord.runId) rpRunStore(reviewRecord);
+  }
   if (typeof endReviewShow === 'function') endReviewShow(reviewRecord);
   const stats = M.combatStats && M.combatStats[localIdx()];
   const card = $id('endCombatCard');
@@ -850,7 +855,7 @@ function raidPay(gain) {
 function endRound() {
   const w = M.koWinner;
   if (w >= 0) M.wins[w]++;
-  if (REC.on && (M.mode === 'tag3' || M.mode === 'saga' || (M.mode === 'tower' && w === 0))) recSave(w);
+  if (REC.on && (M.mode === 'tag3' || M.mode === 'saga' || (M.mode === 'tower' && w === 0) || (M.mode === 'raid' && RP.run && RP.run.mode === 'raid'))) recSave(w);
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
   if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
   if (M.mode === 'saga') { sagaEnd(w); return; }

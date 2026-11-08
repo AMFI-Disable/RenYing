@@ -520,7 +520,7 @@ function trSamples(m) {
       hero: (CHARS[(m.ch || [0, 1])[0]] || {}).id || 'hero',
       heroIdx: (m.ch || [0, 1])[0],
       s, a, r: Math.round(r * 1000) / 1000,
-      mode: m.mode || 'cpu', frame: (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay'
+      mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay'
     });
   }
   if (out.length) {   // 最后一帧给终局奖励：赢了才对，输了就是负的
@@ -566,11 +566,50 @@ function recSave(w) {
     names: M.mode === 'net' ? rpNetNames(m)
       : m.raid ? [sideFighters(0).map(f => f.look.name).join(' · '), (M.raidBoss && M.raidBoss.heroNames || []).join('·') || B.look.name]
         : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
+  if (RP.run && RP.run.mode === M.mode) {
+    RP.run.segments.push(m);
+    const replay = rpRunReplay(RP.run, w);
+    RP.last = replay;
+    M.reviewReady = true;
+    rpRunStore(replay);
+    REC.meta = null;
+    return replay;
+  }
   RP.last = m;
   M.reviewReady = true;
   const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
   rpStore(list);
   return m;
+}
+function rpRunBegin(mode) {
+  RP.run = { id: `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, mode, segments: [] };
+}
+function rpRunStore(replay) {
+  const list = rpList(), prior = list.findIndex(x => x && x.runId === replay.runId);
+  if (prior >= 0) list.splice(prior, 1);
+  list.unshift(replay); while (list.length > RP_MAX) list.pop();
+  rpStore(list);
+}
+function rpRunReplay(run, winner) {
+  const segments = run.segments || [], first = segments[0] || {}, last = segments[segments.length - 1] || first;
+  const totalFrames = segments.reduce((n, s) => n + Math.max(0, +s.frames || 0), 0);
+  const rows = [], trFrames = [];
+  let frameOffset = 0;
+  for (const s of segments) {
+    const segmentRows = Array.isArray(s.tr) ? s.tr : [];
+    segmentRows.forEach((row, i) => { rows.push(row); trFrames.push(frameOffset + (+s.trStart || 0) + i * TR_EVERY); });
+    frameOffset += Math.max(0, +s.frames || 0);
+  }
+  const stats = Array.from({ length: 4 }, (_, i) => segments.reduce((sum, s) => {
+    const x = s.stats && s.stats[i] || {};
+    sum.damage += +x.damage || 0; sum.combo = Math.max(sum.combo, +x.combo || 0);
+    sum.breaks += +x.breaks || 0; sum.falls += +x.falls || 0;
+    return sum;
+  }, { damage: 0, combo: 0, breaks: 0, falls: 0 }));
+  return { ...last, ...first, runId: run.id, segments, st0: first.st0, ev: [], tr: rows, trFrames, trStart: 0,
+    w: winner, frames: totalFrames, stats: run.mode === 'tag3' && last.stats ? last.stats : stats, skins: first.skins || [], names: last.names || first.names,
+    wins: last.wins || first.wins, towerFloor: last.towerFloor || first.towerFloor,
+    raidWave: last.raidWave || first.raidWave, round: segments.length };
 }
 function matchReviewData(m) {
   if (!m || !['cpu', 'net', '2v2', 'pvp', 'maps', 'tag3', 'chaos', 'mayhem', 'tower', 'saga', 'raid'].includes(m.mode) || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
@@ -587,6 +626,7 @@ function matchReviewData(m) {
   const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
   const rows = (team ? [] : Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
   const playerIdx = (m.ch || [])[side] ?? (m.ch || [])[0] ?? 0, hero = CHARS[playerIdx] || {}, heroFrames = aiBrainData().frames && aiBrainData().frames[hero.id] || {};
+  const rowFrame = i => Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY;
   let attacks = 0, far = 0, misfaced = 0, farFrame = null, misfacedFrame = null;
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const r = rows[rowIndex];
@@ -594,7 +634,7 @@ function matchReviewData(m) {
     if (!(ownBits & 8)) continue;
     attacks++;
     const ownX = r[side ? 9 : 8], foeX = r[side ? 8 : 9];
-    const frame = (+m.trStart || 0) + rowIndex * TR_EVERY;
+    const frame = rowFrame(rowIndex);
     if (Math.abs(ownX - foeX) > 0.2) { far++; if (farFrame === null) farFrame = frame; }
     const ownFace = r[side ? 13 : 12], toward = foeX > ownX ? 1 : -1;
     if (ownFace !== toward) { misfaced++; if (misfacedFrame === null) misfacedFrame = frame; }
@@ -604,7 +644,7 @@ function matchReviewData(m) {
   if (combo >= 3) strengths.push(`最长连击：${combo} 段。`);
   if (breaks > 0) strengths.push(`成功破防：${breaks} 次。`);
   if (!strengths.length) strengths.push('对局统计已保存，可在回放中复核攻防交换。');
-  const sampleFrame = i => (+m.trStart || 0) + i * TR_EVERY;
+  const sampleFrame = rowFrame;
   for (let i = 1; i < rows.length; i++) {
     const prev = rows[i - 1], cur = rows[i], atk = (+prev[19 + side] || 0) & 8 || (+cur[19 + side] || 0) & 8;
     const ownHp = side ? 1 : 0, foeHp = side ? 0 : 1;
@@ -693,8 +733,8 @@ function replayJump(m, frame) {
   const advance = () => {
     if (!REPLAY.on) return;
     let count = 0;
-    while (REPLAY.f < target && M.phase !== 'end' && count++ < 480) replayFrame();
-    if (REPLAY.f < target && M.phase !== 'end') { setTimeout(advance, 0); return; }
+    while (REPLAY.totalFrame < target && M.phase !== 'end' && count++ < 480) replayFrame();
+    if (REPLAY.totalFrame < target && M.phase !== 'end') { setTimeout(advance, 0); return; }
     REPLAY.paused = true;
     REPLAY.frameAcc = 0;
     $id('rpPause').textContent = cvT('继续');
@@ -730,16 +770,16 @@ function rpSub(m) {
 function replayModeTag(m) {
   const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
   const mutatorTag = mutator === 'chaos' ? ` · ${cvT('天机乱斗')}` : mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
-  if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}`;
+  if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('劫')}` : ''}`;
   if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
   if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}` : `${cvT('联机')} · ${cvT(m.room === 'chaos' ? '天机乱斗' : m.room === 'mayhem' ? '通天神决' : '标准对战')}`;
   if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}`;
   if (m.mode === 'pvp') return cvT('本地双人');
   if (m.mode === '2v2') return `${cvT('2v2')} · ${cvT({ p_cc: '携手共斗', pp_cc: '双人共斗', pp_pp: '四人对决' }[m.sub] || '组队')}${mutatorTag}`;
   if (m.mode === 'maps') return `${cvT('山河异境')} · ${cvT((MAPS[m.st0 && m.st0.M && m.st0.M.map] || {}).n || '')}`;
-  if (m.mode === 'tag3') return `${cvT('门派车轮战')} · ${cvT('第')} ${m.round || 1}${mutatorTag}`;
+  if (m.mode === 'tag3') return `${cvT('门派车轮战')} · ${m.runId ? `${m.segments.length} ${cvT('局全程')}` : `${cvT('第')} ${m.round || 1}`}${mutatorTag}`;
   if (m.mode === 'chaos') return cvT('天机乱斗');
-  if (m.mode === 'tower') return `${cvT('万仞剑阁')} · ${cvT('第')} ${m.towerFloor || 1}`;
+  if (m.mode === 'tower') return `${cvT('万仞剑阁')} · ${cvT('第')} ${m.towerFloor || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('层')}` : ''}`;
   if (m.mode === 'saga') return `${cvT('侠客列传')} · ${cvT(CHARS.find(c => c.id === m.chapter)?.name || '')} · ${cvT('第')} ${(m.chapterNode || 0) + 1}`;
   return cvT('本地对战');
 }
@@ -864,26 +904,9 @@ function startReplay(m) {
   debugHitbox = false;
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   ROLL.on = false; REC.on = false; paused = false; BP = null; B.dummy = false; M.stage = null;
-  setChars(m.ch[0], m.ch[1]);
-  if (m.ch4) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
-  // 回放只照着录下来的按键按，本地录像里电脑也不再自己想（它的按键也记了）；
-  // 联机录像只记了玩家的按键，2v2 里的电脑和对局里一样，用对局随机数自己想，想出来的招一模一样
-  const net = m.kind === 'net', mine = new Set(net ? rpSlots(m).flat() : []);
-  for (const f of rpFighters(m)) {
-    f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
-    if (net && mine.has(f.idx)) f.ctrl.net = true;   // 和对局里一样标成玩家：2v2 里玩家锁定谁的规则和电脑不同
-  }
-  if (!net && m.four && Array.isArray(m.pl)) rpFighters(m).forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
-  restState(m.st0);
-  M.mode = 'replay';
-  M.competitiveScrolls = m.competitiveScrolls && typeof m.competitiveScrolls === 'object' ? JSON.parse(JSON.stringify(m.competitiveScrolls)) : null;
-  M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
-  Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, hz: 120, frameAcc: 0, names: m.names || null });
-  if (isRaid()) raidBossSkills();   // 读存档那一刻还不知道是在放同袍肉鸽的录像：魔首的招这里再接上
+  Object.assign(REPLAY, { on: true, m, totalFrame: 0, segmentIndex: 0, segments: Array.isArray(m.segments) && m.segments.length ? m.segments : [m], paused: false, speed: 1, hz: 120, frameAcc: 0 });
+  replayLoadSegment(REPLAY.segments[0]);
   acc = 0; creditT = 0; particles.length = 0;
-  showScreen(null);
-  startRound();
-  rpFighters(m).forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
   pickScene();
   $id('rpPause').textContent = '暂停';
   for (const x of document.querySelectorAll('#rpBar [data-sp]')) x.classList.toggle('sel', x.dataset.sp === '1');
@@ -891,8 +914,31 @@ function startReplay(m) {
   $id('rpBar').classList.remove('hidden');
   rpInfo();
 }
+function replayLoadSegment(m) {
+  ROLL.on = false; REC.on = false; M.stage = null;
+  setChars(m.ch[0], m.ch[1]);
+  if (m.ch4) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
+  const net = m.kind === 'net', mine = new Set(net ? rpSlots(m).flat() : []);
+  for (const f of rpFighters(m)) {
+    f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
+    if (net && mine.has(f.idx)) f.ctrl.net = true;
+  }
+  if (!net && m.four && Array.isArray(m.pl)) rpFighters(m).forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
+  restState(m.st0);
+  M.mode = 'replay';
+  M.competitiveScrolls = m.competitiveScrolls && typeof m.competitiveScrolls === 'object' ? JSON.parse(JSON.stringify(m.competitiveScrolls)) : null;
+  M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
+  Object.assign(REPLAY, { kind: m.kind, seg: m, ev: m.ev || [], p: 0, f: 0, nf: 0, lh: [0, 0] });
+  if (isRaid()) raidBossSkills();
+  showScreen(null);
+  startRound();
+  rpFighters(m).forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
+}
 function rpInfo() {
-  if (REPLAY.on) $id('rpInfo').textContent = cvT(`回放 · 第${M.round}回合${REPLAY.paused ? ' · 已暂停' : ''} · F1 判定框`);
+  if (REPLAY.on) {
+    const segments = REPLAY.segments || [], progress = segments.length > 1 ? ` · 第 ${REPLAY.segmentIndex + 1}/${segments.length} 段` : '';
+    $id('rpInfo').textContent = cvT(`回放 · 第${M.round}回合${progress}${REPLAY.paused ? ' · 已暂停' : ''} · F1 判定框`);
+  }
   replayInspectRender();
 }
 function replayInspectRender() {
@@ -916,8 +962,10 @@ function replayFrame() {
     REPLAY.nf++;
   }
   step();
+  REPLAY.totalFrame = (REPLAY.totalFrame || 0) + 1;
   const replayFrameNo = REPLAY.kind === 'net' ? REPLAY.nf : REPLAY.f;
-  if (REPLAY.on && REPLAY.m && +REPLAY.m.frames > 0 && replayFrameNo >= +REPLAY.m.frames && M.phase !== 'end') replayEnd(REPLAY.m.w);
+  const seg = REPLAY.seg || REPLAY.m;
+  if (REPLAY.on && M.phase !== 'end' && +seg.frames > 0 && replayFrameNo >= +seg.frames) replayEnd(REPLAY.m.w);
 }
 function replayTick(real) {
   if (REPLAY.paused || M.phase === 'end') return;
@@ -935,6 +983,12 @@ function replayStep() {
   return true;
 }
 function replayEnd(w) {
+  if (REPLAY.segmentIndex + 1 < (REPLAY.segments || []).length) {
+    REPLAY.segmentIndex++;
+    replayLoadSegment(REPLAY.segments[REPLAY.segmentIndex]);
+    rpInfo();
+    return;
+  }
   M.phase = 'end'; REPLAY.paused = true;
   $id('rpBar').classList.add('hidden');
   const t = $id('endTitle'), wf = [A, B][w], mate = REPLAY.m && REPLAY.m.four ? [C, D][w] : null;

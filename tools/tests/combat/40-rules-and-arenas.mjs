@@ -437,6 +437,12 @@ export default [
       }
       const variant = replayModeTag({ mode: '2v2', sub: 'pp_cc', st0: { M: { teamMutator: 'chaos' } } });
       if (!variant.includes('双人共斗') || !variant.includes('天机乱斗')) return { pass: false, error: 'replay list does not label the 2v2 variant and mutator' };
+      const parts = [
+        { mode: 'tower', towerFloor: 1, frames: 120, st0: { start: 1 }, trStart: 6, tr: [[1]], stats: [{ damage: 30 }, { damage: 10 }] },
+        { mode: 'tower', towerFloor: 2, frames: 240, st0: { start: 2 }, trStart: 12, tr: [[2]], stats: [{ damage: 40 }, { damage: 15 }] }
+      ];
+      const run = rpRunReplay({ id: 'test-run', mode: 'tower', segments: parts }, 0);
+      if (run.frames !== 360 || run.segments.length !== 2 || run.st0 !== parts[0].st0 || run.towerFloor !== 2 || run.stats[0].damage !== 70 || run.trFrames.join(',') !== '6,132') return { pass: false, error: 'multi-floor replay did not preserve all segments, frame offsets and aggregate run data' };
       return { pass: true, error: null };
     })()`
   },
@@ -453,6 +459,12 @@ export default [
       if (REPLAY.f !== 1 || Math.abs((clock - before) - STEP) > 1e-9) return { pass: false, error: '1 Hz replay did not advance exactly one simulation frame per second' };
       REPLAY.paused = true; before = clock;
       if (!replayStep() || Math.abs((clock - before) - STEP) > 1e-9) return { pass: false, error: 'paused replay did not step exactly one simulation frame' };
+      REPLAY.on = false;
+      M.mode = 'tower'; M.towerFloor = 1; M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
+      const st0 = capState(), seg = { mode: 'tower', kind: 'loc', ch: [A.chIdx, B.chIdx], st0, ev: [], frames: 1, skins: [], stats: [] };
+      const stitched = rpRunReplay({ id: 'playback-run', mode: 'tower', segments: [seg, { ...seg, towerFloor: 2 }] }, 0);
+      startReplay(stitched); REPLAY.paused = true; replayFrame();
+      if (REPLAY.segmentIndex !== 1 || REPLAY.totalFrame !== 1 || REPLAY.on !== true) return { pass: false, error: 'multi-segment replay did not advance into the next saved floor' };
       REPLAY.on = false; toMenu(); return { pass: true, error: null };
     })()`
   },

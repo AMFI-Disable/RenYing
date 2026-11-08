@@ -70,6 +70,7 @@ function startTower(heroIdx, isWatch = false) {
   A.meter = B.meter = 0;
   human[0].clear(); human[1].clear();
   showScreen(null);
+  if (!isWatch) rpRunBegin('tower');
   if (!isWatch) recBegin('loc');
   startRound();
   if (!isWatch) saveTowerRun();
@@ -107,6 +108,7 @@ function resumeTower() {
     A.hp = Math.min(A.maxHp, run.hp);
     A.lagHp = A.hp;
   }
+  rpRunBegin('tower');
   recBegin('loc');
   saveTowerRun();
   say(`问剑密卷 · 继续第 ${M.towerFloor} 层`, 1.4);

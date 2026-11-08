@@ -144,6 +144,7 @@ function startRaidMatch(squadPicks, squadSize = 3, opts = null) {
     return;
   }
   FOREST.on = false; B.forestProxy = false; B.hidden = false;
+  rpRunBegin('raid');
   recBegin('loc');
   startRound();
   const perkNames = initPerks.map(id => SC_BY[id] ? `「${SC_BY[id].n}」` : '').filter(Boolean).join('、');
@@ -167,6 +168,7 @@ function nextRaidWave() {
   M.raidBoss = rollRaidBoss(M.raidWave);
   showScreen(null);
   B.ctrl = new AICtrl('god');
+  recBegin('loc');
   startRound();
   const lastPerkId = (M.towerPerks || [])[M.towerPerks.length - 1];
   const pName = lastPerkId && SC_BY[lastPerkId] ? `全员共享「${SC_BY[lastPerkId].n}」` : '全队秘卷共鸣';
