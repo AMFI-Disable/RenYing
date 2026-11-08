@@ -1474,6 +1474,10 @@ async function handleAdmin(env, request, path, now, ip) {
 
   // ---------- 2. 管理员账号 ----------
   if (route === 'GET /api/admin/whoami') return json({ ok: true, who, role, now });
+  if (route === 'GET /api/admin/ai-training/export') {
+    const after = Math.max(0, Number(q('after')) || 0), limit = Math.max(1, Math.min(20, Number(q('limit')) || 10));
+    return json(await aiTrainingExport(env, after, limit));
+  }
   if (route === 'POST /api/admin/refresh') {
     if (me.tok && me.tok.startsWith('as_')) {
       await env.DB.prepare('UPDATE admin_sessions SET expires_at = ? WHERE token = ?').bind(now + ADMIN_TTL, await tokenKey(me.tok)).run();
@@ -2316,7 +2320,8 @@ function adminPage() {
   const script = ADMIN_PAGE.sha ? `'sha256-${ADMIN_PAGE.sha}'` : "'none'";
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
     'Content-Security-Policy': `default-src 'none'; script-src ${script}; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'` } });
-}// ===========================================================================
+}
+// ===========================================================================
 // 维护和统计：定期清理旧数据、错误记录、在线人数、匿名游玩统计
 // ===========================================================================
 // 文件结构：
@@ -2341,6 +2346,7 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),
     env.DB.prepare('DELETE FROM chron_rep WHERE at < ?').bind(now - 2 * DAY_MS),                         // 分线上报的去重编号：重报只会在几分钟里，留两天够了
     env.DB.prepare('DELETE FROM play_days WHERE day < ?').bind(Math.floor((now + 8 * 3600e3) / DAY_MS) - 120),   // 匿名统计每天来过谁：留 120 天（够算留存）
+    env.DB.prepare('DELETE FROM ai_training_matches WHERE received_at < ?').bind(now - 180 * DAY_MS),             // AI 对局训练样本留 180 天
   ]);
 }
 
@@ -2464,12 +2470,51 @@ async function playStatsReport(env, now, days) {
   return { ok: true, days, today: row(today).date, visitors: (total && total.n) || 0, rows: Object.values(rows).sort((a, b) => b.day - a.day), modes: STAT_MODES };
 }
 
+/* ---------- 匿名 AI 对局样本 ----------
+ * 网页只上传状态、按键、奖励和游戏模式；不接收回放、昵称、账号、皮肤或客户端时间。
+ * 每个 IP 每天最多 120 局、全服每天最多 20000 局，样本保留 180 天；管理员可分页导出 JSONL。 */
+const AI_TRAIN_MODES = ['cpu', 'net', '2v2', 'pvp', 'maps', 'tag3', 'chaos', 'mayhem', 'tower', 'saga', 'raid', 'stage', 'boss', 'world', 'qfx'];
+function cleanAiRows(rows) {
+  if (!Array.isArray(rows) || !rows.length || rows.length > 480) return null;
+  const clean = [];
+  for (const row of rows) {
+    if (!isPlain(row) || !C.HERO_IDS.includes(row.hero) || !Array.isArray(row.s) || row.s.length !== 19 || !row.s.every(v => Number.isFinite(v) && v >= -1 && v <= 1.2)) return null;
+    const a = intIn(row.a, 0, 8191), reward = +row.r, done = intIn(row.done, 0, 1);
+    if (a === null || done === null || !Number.isFinite(reward) || reward < -30 || reward > 30) return null;
+    clean.push({ hero: row.hero, s: row.s.map(v => Math.round(v * 10000) / 10000), a, r: Math.round(reward * 1000) / 1000, done });
+  }
+  if (clean[clean.length - 1].done !== 1) return null;
+  return clean;
+}
+async function aiTrainingIngest(env, body, ip, now) {
+  const id = String(body.id || ''), mode = String(body.mode || '');
+  if (!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(id)) return error('对局编号不对');
+  if (!AI_TRAIN_MODES.includes(mode) || ![-1, 0, 1].includes(body.result)) return error('对局信息不完整');
+  const rows = cleanAiRows(body.rows);
+  if (!rows) return error('训练样本格式不对');
+  const tag = await ipTag(ip);
+  if (!(await hit(env, 'ait:' + tag, 120, DAY_MS, now)) || !(await hit(env, 'ait:*', 20000, DAY_MS, now))) return json({ ok: true, kept: false, limited: true });
+  const res = await env.DB.prepare('INSERT OR IGNORE INTO ai_training_matches (id, mode, result, rows_json, received_at) VALUES (?, ?, ?, ?, ?)').bind(id, mode, body.result, JSON.stringify(rows), now).run();
+  return json({ ok: true, kept: !!(res && res.meta && res.meta.changes), duplicate: !(res && res.meta && res.meta.changes) });
+}
+async function aiTrainingExport(env, after, limit) {
+  const rows = (await env.DB.prepare('SELECT rowid AS seq, mode, result, rows_json, received_at FROM ai_training_matches WHERE rowid > ? ORDER BY rowid LIMIT ?').bind(after, limit).all()).results || [];
+  const data = [];
+  for (const row of rows) {
+    let samples = [];
+    try { samples = JSON.parse(row.rows_json); } catch (e) {}
+    for (const s of samples) data.push({ ...s, mode: row.mode, result: row.result, receivedDay: Math.floor(row.received_at / DAY_MS) });
+  }
+  return { ok: true, count: rows.length, next: rows.length ? rows[rows.length - 1].seq : after, samples: data };
+}
+
 /* ---------- 天魔讨伐：全服一起打一只天魔 ----------
  * 打架在各自的网页里打（90 秒，天魔倒下会再站起来），打完把造成的伤害交上来，扣在全服同一只天魔的血上。
  * 出战先领票（gboss_try），交伤害时把这张票改成“交过了”、扣天魔的血、记个人伤害放在同一批写入里：同一张票重交、
  * 网络重试、刷新后补交都只算一次；两个人同时打出最后一下，只有一个扣得动（hp > 0 才扣），另一个记 0。
  * 伤害上限：一张票最多 GB_TRY_MAX，而且不超过 (出战到现在的秒数 - 3) × GB_DPS。票一小时内不交就作废。
- * 一代天魔活 GB_LIFE，到时没打死就遁走；结束后按伤害发奖励（写进 gift 表，玩家下次动武库自动领），再出下一代。 */// ===========================================================================
+ * 一代天魔活 GB_LIFE，到时没打死就遁走；结束后按伤害发奖励（写进 gift 表，玩家下次动武库自动领），再出下一代。 */
+// ===========================================================================
 // 全服玩法：天魔讨伐、排行榜、侠客列传的江湖足迹、全服肉鸽 · 江湖长卷、开放世界的公共小工具
 // ===========================================================================
 // 文件结构：
@@ -3555,6 +3600,11 @@ async function route(request, env, ctx, rid = reqId()) {
         const body = await readBody(request);
         if (!body) return error('请求太大', 413);
         return await playStats(env, body, ip, now);
+      }
+      if (path === '/api/ai-training' && request.method === 'POST') {
+        const body = await readBody(request);
+        if (!body) return error('请求太大', 413);
+        return await aiTrainingIngest(env, body, ip, now);
       }
 
       // 11. 天魔讨伐：看天魔不用登录；出战、交伤害要云端账号

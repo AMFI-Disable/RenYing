@@ -23,6 +23,7 @@ async function cleanup(env, now) {
     env.DB.prepare('DELETE FROM gboss_try WHERE started < ?').bind(now - 7 * DAY_MS),
     env.DB.prepare('DELETE FROM chron_rep WHERE at < ?').bind(now - 2 * DAY_MS),                         // 分线上报的去重编号：重报只会在几分钟里，留两天够了
     env.DB.prepare('DELETE FROM play_days WHERE day < ?').bind(Math.floor((now + 8 * 3600e3) / DAY_MS) - 120),   // 匿名统计每天来过谁：留 120 天（够算留存）
+    env.DB.prepare('DELETE FROM ai_training_matches WHERE received_at < ?').bind(now - 180 * DAY_MS),             // AI 对局训练样本留 180 天
   ]);
 }
 
@@ -144,6 +145,44 @@ async function playStatsReport(env, now, days) {
   }
   for (const r of counts.results || []) row(r.day).ev[r.k] = r.n;
   return { ok: true, days, today: row(today).date, visitors: (total && total.n) || 0, rows: Object.values(rows).sort((a, b) => b.day - a.day), modes: STAT_MODES };
+}
+
+/* ---------- 匿名 AI 对局样本 ----------
+ * 网页只上传状态、按键、奖励和游戏模式；不接收回放、昵称、账号、皮肤或客户端时间。
+ * 每个 IP 每天最多 120 局、全服每天最多 20000 局，样本保留 180 天；管理员可分页导出 JSONL。 */
+const AI_TRAIN_MODES = ['cpu', 'net', '2v2', 'pvp', 'maps', 'tag3', 'chaos', 'mayhem', 'tower', 'saga', 'raid', 'stage', 'boss', 'world', 'qfx'];
+function cleanAiRows(rows) {
+  if (!Array.isArray(rows) || !rows.length || rows.length > 480) return null;
+  const clean = [];
+  for (const row of rows) {
+    if (!isPlain(row) || !C.HERO_IDS.includes(row.hero) || !Array.isArray(row.s) || row.s.length !== 19 || !row.s.every(v => Number.isFinite(v) && v >= -1 && v <= 1.2)) return null;
+    const a = intIn(row.a, 0, 8191), reward = +row.r, done = intIn(row.done, 0, 1);
+    if (a === null || done === null || !Number.isFinite(reward) || reward < -30 || reward > 30) return null;
+    clean.push({ hero: row.hero, s: row.s.map(v => Math.round(v * 10000) / 10000), a, r: Math.round(reward * 1000) / 1000, done });
+  }
+  if (clean[clean.length - 1].done !== 1) return null;
+  return clean;
+}
+async function aiTrainingIngest(env, body, ip, now) {
+  const id = String(body.id || ''), mode = String(body.mode || '');
+  if (!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(id)) return error('对局编号不对');
+  if (!AI_TRAIN_MODES.includes(mode) || ![-1, 0, 1].includes(body.result)) return error('对局信息不完整');
+  const rows = cleanAiRows(body.rows);
+  if (!rows) return error('训练样本格式不对');
+  const tag = await ipTag(ip);
+  if (!(await hit(env, 'ait:' + tag, 120, DAY_MS, now)) || !(await hit(env, 'ait:*', 20000, DAY_MS, now))) return json({ ok: true, kept: false, limited: true });
+  const res = await env.DB.prepare('INSERT OR IGNORE INTO ai_training_matches (id, mode, result, rows_json, received_at) VALUES (?, ?, ?, ?, ?)').bind(id, mode, body.result, JSON.stringify(rows), now).run();
+  return json({ ok: true, kept: !!(res && res.meta && res.meta.changes), duplicate: !(res && res.meta && res.meta.changes) });
+}
+async function aiTrainingExport(env, after, limit) {
+  const rows = (await env.DB.prepare('SELECT rowid AS seq, mode, result, rows_json, received_at FROM ai_training_matches WHERE rowid > ? ORDER BY rowid LIMIT ?').bind(after, limit).all()).results || [];
+  const data = [];
+  for (const row of rows) {
+    let samples = [];
+    try { samples = JSON.parse(row.rows_json); } catch (e) {}
+    for (const s of samples) data.push({ ...s, mode: row.mode, result: row.result, receivedDay: Math.floor(row.received_at / DAY_MS) });
+  }
+  return { ok: true, count: rows.length, next: rows.length ? rows[rows.length - 1].seq : after, samples: data };
 }
 
 /* ---------- 天魔讨伐：全服一起打一只天魔 ----------

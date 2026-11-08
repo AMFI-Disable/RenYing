@@ -168,6 +168,7 @@ function gbFight() {
   B.maxHp = Math.round(B.maxHp * GB_HP_MUL); B.hp = B.lagHp = B.maxHp;
   GB.lastHp = B.hp;
   M.timer = GB_FIGHT;
+  recBegin('loc');
   say(`天魔讨伐 · 第 ${GB.ticket.gen} 代`, 1.4);
 }
 // 每帧（对战中）：记下天魔掉了多少血；天魔倒下就再站起来，越打越凶
@@ -193,6 +194,7 @@ function gbKeep() {
 function gbossFinish(why) {
   if (!GB.ticket) return;
   M.phase = 'end';
+  if (REC.on) recSave(why === 'time' ? 0 : 1);
   gbKeep();
   GB.why = why;
   if (why !== 'quit') {

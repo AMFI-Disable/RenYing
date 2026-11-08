@@ -254,6 +254,11 @@ async function route(request, env, ctx, rid = reqId()) {
         if (!body) return error('请求太大', 413);
         return await playStats(env, body, ip, now);
       }
+      if (path === '/api/ai-training' && request.method === 'POST') {
+        const body = await readBody(request);
+        if (!body) return error('请求太大', 413);
+        return await aiTrainingIngest(env, body, ip, now);
+      }
 
       // 11. 天魔讨伐：看天魔不用登录；出战、交伤害要云端账号
       if (path === '/api/gboss' && request.method === 'GET') {

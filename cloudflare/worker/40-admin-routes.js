@@ -76,6 +76,10 @@ async function handleAdmin(env, request, path, now, ip) {
 
   // ---------- 2. 管理员账号 ----------
   if (route === 'GET /api/admin/whoami') return json({ ok: true, who, role, now });
+  if (route === 'GET /api/admin/ai-training/export') {
+    const after = Math.max(0, Number(q('after')) || 0), limit = Math.max(1, Math.min(20, Number(q('limit')) || 10));
+    return json(await aiTrainingExport(env, after, limit));
+  }
   if (route === 'POST /api/admin/refresh') {
     if (me.tok && me.tok.startsWith('as_')) {
       await env.DB.prepare('UPDATE admin_sessions SET expires_at = ? WHERE token = ?').bind(now + ADMIN_TTL, await tokenKey(me.tok)).run();

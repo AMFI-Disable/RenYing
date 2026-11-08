@@ -532,7 +532,8 @@ function startMatch(mode, level, chars, isWatch = false) {
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
   B.ctrl = mode === 'pvp' ? human[1] : mode === 'train' ? new DummyCtrl(level) : new AICtrl(mode === 'demo' ? 'normal' : level);
   human[0].clear(); human[1].clear();
-  REC.on = false; if ((mode === 'cpu' || mode === 'pvp') && !TUT && !isWatch) recBegin('loc');
+  M.reviewReady = false;
+  REC.on = false; if (mode !== 'demo' && mode !== 'train' && mode !== 'replay' && !TUT && !isWatch) recBegin(mode === 'net' ? 'net' : 'loc');
   startRound();
   if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
   else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
@@ -686,7 +687,10 @@ function inkTitle(name, lost) {
 }
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
-  if (M.worldKey) { worldKeyRound(w); return; }
+  if (M.worldKey) {
+    if (REC.on) recSave(w);
+    worldKeyRound(w); return;
+  }
   let reviewRecord = REC.on ? recSave(w) : (M.reviewReady ? RP.last : null);
   if (RP.run && RP.run.mode === M.mode) {
     if (M.mode === 'raid' && w === 0) reviewRecord = RP.last || reviewRecord;

@@ -113,7 +113,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh' };
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);
@@ -139,7 +139,7 @@ function saveSettings() {
 }
 
 // ======================= 基础 =======================
-const VERSION = '1.0.8';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.9';         // 每次更新改一下，联机时双方版本必须一样
 // 打包设置由 tools/build.py 写进 window.RENYING_BUILD（直接打开 src 里的文件时为空，按联网版处理）
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用

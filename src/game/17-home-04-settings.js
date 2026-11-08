@@ -14,6 +14,7 @@ const SETTING_ROWS = [
   { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
   { k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
   { k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关']] },
+  { k: 'aiTraining', name: 'AI 模型训练', opts: [[true, '开（匿名上传对局操作）'], [false, '不开启']] },
   { k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
   { k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
   { k: 'music', name: '音乐', range: [0, 1, 0.05] },
@@ -93,7 +94,9 @@ $id('setList').addEventListener('click', e => {
     return;
   }
   const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
-  const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
+  const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings();
+  if (k === 'aiTraining' && !SETTINGS.aiTraining && typeof aiTrainClearQueue === 'function') aiTrainClearQueue();
+  buildSettings();
   if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
   if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
   if (k === 'quality') { SETTINGS.qualityChosen = true; saveSettings(); resize(); }   // 手动选过画质：以后不再自动降

@@ -492,15 +492,20 @@ function trFeat(f, o) {
     f.face === (o.x > f.x ? 1 : -1) ? 1 : 0
   ];
 }
+function trActionBits(c) {
+  const held = inBits(c.held), buf = c.buf || {};
+  return held | (buf.dash !== undefined ? 1 << 7 : 0) | (buf.special !== undefined ? 1 << 8 : 0)
+    | (buf.skill !== undefined ? 1 << 9 : 0) | (buf.skill2 !== undefined ? 1 << 10 : 0)
+    | (buf.drop !== undefined ? 1 << 11 : 0) | (buf.heavy !== undefined ? 1 << 12 : 0);
+}
 function trSample() {
   if (RESIM || !REC.on || REC.bad || !REC.meta || !A || !B || A.hidden || B.hidden) return;   // RESIM 是回滚重算，同一帧会再走一遍
-  if (M.stage || FOREST.on || REPLAY.on) return;   // 闯关、竹林、看回放都不是训练局
-  try { if (is2v2()) return; } catch (e) {}
+  if (REPLAY.on) return;   // 看回放不重复上传
   const tf = REC.kind === 'net' && typeof ROLL !== 'undefined' ? ROLL.F : REC.f;
   if (tf % TR_EVERY) return;
   if (!A.ctrl || !B.ctrl) return;
   // 前 21 项保持旧训练轨迹兼容；尾部状态字段供复盘识别格挡、脱身和追击窗口。
-  REC.tr.push([...trFeat(A, B), inBits(A.ctrl.held), inBits(B.ctrl.held), A.state || 'idle', A.moveName || A.skill || A.sp || '', A.escInvul ? 1 : 0, B.state || 'idle', B.moveName || B.skill || B.sp || '', B.escInvul ? 1 : 0]);
+  REC.tr.push([...trFeat(A, B), trActionBits(A.ctrl), trActionBits(B.ctrl), A.state || 'idle', A.moveName || A.skill || A.sp || '', A.escInvul ? 1 : 0, B.state || 'idle', B.moveName || B.skill || B.sp || '', B.escInvul ? 1 : 0]);
   if (REC.trStart === null) REC.trStart = tf;
   if (REC.tr.length > TR_PER_MATCH) { REC.tr.shift(); REC.trStart += TR_EVERY; }
 }
@@ -508,24 +513,33 @@ function trSample() {
 const TR_STATE_DIM = 19;
 function trSamples(m) {
   const rows = Array.isArray(m && m.tr) ? m.tr : [], out = [];
+  const side = m && m.kind === 'net' ? Math.max(0, Math.min(1, +m.playerSide || 0)) : 0;
+  const chars = m && Array.isArray(m.ch) ? m.ch : [0, 1];
   let prev = null;
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     if (!Array.isArray(row) || row.length < TR_STATE_DIM + 2) continue;
-    const s = row.slice(0, TR_STATE_DIM), a = row[TR_STATE_DIM];
+    const s = row.slice(0, TR_STATE_DIM);
+    if (side) {
+      for (const [a, b] of [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[14,15],[16,17]]) [s[a], s[b]] = [s[b], s[a]];
+      [s[12], s[13]] = [-s[13], -s[12]];
+      s[18] = 1 - s[18];
+    }
+    const a = row[TR_STATE_DIM + side];
     let r = 0;
     if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
     prev = s;
     out.push({
-      hero: (CHARS[(m.ch || [0, 1])[0]] || {}).id || 'hero',
-      heroIdx: (m.ch || [0, 1])[0],
+      hero: (CHARS[chars[side] || 0] || {}).id || 'hero',
+      heroIdx: chars[side] || 0,
       s, a, r: Math.round(r * 1000) / 1000,
       mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay'
     });
   }
   if (out.length) {   // 最后一帧给终局奖励：赢了才对，输了就是负的
     const last = out[out.length - 1];
-    last.r = Math.round((last.r + (m.w === 0 ? 1 : m.w === 1 ? -1 : 0)) * 1000) / 1000;
+    const winner = side ? 1 - m.w : m.w;
+    last.r = Math.round((last.r + (winner === 0 ? 1 : winner === 1 ? -1 : 0)) * 1000) / 1000;
     last.done = 1;
   }
   return out;
@@ -560,7 +574,7 @@ function trImportText(txt) {
 }
 function recSave(w) {
   REC.on = false;
-  if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
+  if (REC.bad || !REC.meta) return;
   const m = REC.meta;
   Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, trStart: REC.trStart, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
     names: M.mode === 'net' ? rpNetNames(m)
@@ -568,6 +582,7 @@ function recSave(w) {
         : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
   if (RP.run && RP.run.mode === M.mode) {
     RP.run.segments.push(m);
+    if (typeof aiTrainMatch === 'function') aiTrainMatch(m, M.worldKey ? 'world' : undefined);
     const replay = rpRunReplay(RP.run, w);
     RP.last = replay;
     M.reviewReady = true;
@@ -579,6 +594,7 @@ function recSave(w) {
   M.reviewReady = true;
   const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
   rpStore(list);
+  if (typeof aiTrainMatch === 'function') aiTrainMatch(m, M.worldKey ? 'world' : undefined);
   return m;
 }
 function rpRunBegin(mode) {

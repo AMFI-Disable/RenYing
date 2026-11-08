@@ -120,6 +120,7 @@ export default [
   {
     name: 'Background setting pauses player matches by default and leaves AI watch unchanged',
     fn: `(() => {
+      if (SETTINGS.aiTraining !== true) return { pass: false, error: 'anonymous AI match contribution must default to on' };
       startMatch('cpu', 'normal', [0, 1], false); paused = false; M.phase = 'fight';
       SETTINGS.backgroundPlay = false;
       if (!shouldPauseOnBlur()) return { pass: false, error: 'default should pause player matches' };

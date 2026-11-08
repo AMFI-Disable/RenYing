@@ -356,3 +356,13 @@ CREATE TABLE IF NOT EXISTS play_counts (
     n INTEGER NOT NULL DEFAULT 0 CHECK (n >= 0),
     PRIMARY KEY (day, k)
 );
+
+-- 匿名 AI 训练样本（0009）：只存校验后的状态、动作和奖励。
+CREATE TABLE IF NOT EXISTS ai_training_matches (
+    id TEXT PRIMARY KEY,
+    mode TEXT NOT NULL,
+    result INTEGER NOT NULL CHECK (result IN (-1, 0, 1)),
+    rows_json TEXT NOT NULL,
+    received_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ai_training_received ON ai_training_matches (received_at);

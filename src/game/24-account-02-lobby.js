@@ -368,6 +368,46 @@ function statMatch() {
   else if (k === 'cpu' && typeof FOREST !== 'undefined' && FOREST.on) k = 'stage';
   statEv('m:' + k);
 }
+// 匿名对局训练上传：只发战斗状态与按键样本，不发回放、姓名、账号、皮肤或精确时间。
+const AIQ_KEY = 'renying-ai-match-queue', AIQ_MAX = 30;
+const aiTrainOn = () => !OFFLINE_BUILD && SETTINGS.aiTraining !== false && !!(window.CloudSave && CloudSave.getEndpoint && CloudSave.getEndpoint());
+const aiTrainUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/ai-training';
+function aiTrainQueue() { try { const q = JSON.parse(localStorage.getItem(AIQ_KEY) || '[]'); return Array.isArray(q) ? q : []; } catch (e) { return []; } }
+function aiTrainClearQueue() { try { localStorage.removeItem(AIQ_KEY); } catch (e) {} }
+function aiTrainMatch(m, modeOverride) {
+  if (!aiTrainOn() || !m || !Array.isArray(m.tr) || !m.tr.length || m.w === undefined || m.mode === 'demo' || m.mode === 'train') return;
+  const matches = Array.isArray(m.segments) && m.segments.length ? m.segments : [m], q = aiTrainQueue();
+  for (const part of matches) {
+    if (!part || !Array.isArray(part.tr) || !part.tr.length || part.w === undefined) continue;
+    let rows;
+    try { rows = trSamples(part).map(x => ({ hero: x.hero, s: x.s, a: x.a, r: x.r, done: x.done ? 1 : 0 })); } catch (e) { continue; }
+    if (!rows.length) continue;
+    const result = part.w === -1 ? -1 : part.kind === 'net' && part.playerSide === 1 ? 1 - part.w : part.w;
+    q.push({ id: crypto.randomUUID(), mode: String(modeOverride || part.mode || m.mode || 'cpu'), result, rows });
+  }
+  if (!q.length) return;
+  try { localStorage.setItem(AIQ_KEY, JSON.stringify(q.slice(-AIQ_MAX))); } catch (e) { return; }
+  aiTrainFlush();
+}
+let aiTrainBusy = false;
+async function aiTrainFlush() {
+  if (aiTrainBusy || !aiTrainOn() || !navigator.onLine) return;
+  aiTrainBusy = true;
+  try {
+    let q = aiTrainQueue();
+    while (q.length && aiTrainOn() && navigator.onLine) {
+      const r = await fetch(aiTrainUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(q[0]), keepalive: true });
+      if (!r.ok) break;
+      const ack = await r.json();
+      if (!ack || !ack.ok || ack.limited) break;
+      q.shift();
+      try { localStorage.setItem(AIQ_KEY, JSON.stringify(q)); } catch (e) { break; }
+    }
+  } catch (e) {} finally { aiTrainBusy = false; }
+}
+window.addEventListener('online', aiTrainFlush);
+setTimeout(aiTrainFlush, 5000);
+setInterval(aiTrainFlush, 60000);
 window.addEventListener('pagehide', () => statFlush(true));
 document.addEventListener('visibilitychange', () => { if (document.hidden) statFlush(true); });
 setTimeout(() => { statEv('open'); statFlush(); }, 3000);   // 打开网页：等云端地址准备好再报

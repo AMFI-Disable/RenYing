@@ -158,6 +158,19 @@ section('关键接口');
   const stats = await call('GET', '/api/admin/stats', { token: ADMIN });
   ok(stats.status === 200 && stats.json && stats.json.ok, '管理总览能读', stats.text.slice(0, 120));
 
+  // AI 对局样本只接收有限的匿名训练字段；支持幂等重试并由管理员分页导出
+  const aiId = 'f16f5f8b-20f8-4bb2-8b50-19b22baf1847';
+  const aiBody = { id: aiId, mode: 'cpu', result: 0, rows: [{ hero: 'qingfeng', s: [1, 1, 1, 1, 0, 0, 0, 0, .5, .5, 0, 0, 1, -1, 1, 1, 0, 0, 1], a: 512, r: .25, done: 1 }] };
+  const aiPut = await call('POST', '/api/ai-training', { body: aiBody });
+  const aiDup = await call('POST', '/api/ai-training', { body: aiBody });
+  const aiBad = await call('POST', '/api/ai-training', { body: { ...aiBody, id: 'f16f5f8b-20f8-4bb2-8b50-19b22baf1848', rows: [{ ...aiBody.rows[0], hero: 'player-name' }] } });
+  const aiExport = await call('GET', '/api/admin/ai-training/export?limit=10', { token: ADMIN });
+  ok(aiPut.status === 200 && aiPut.json.kept, '匿名 AI 训练样本可上传', aiPut.text.slice(0, 120));
+  ok(aiDup.status === 200 && aiDup.json.duplicate, '重复上传不会重复计入训练数据', aiDup.text.slice(0, 120));
+  ok(aiBad.status === 400, '无效英雄样本会被拒绝');
+  const aiSample = aiExport.json && aiExport.json.samples && aiExport.json.samples.find(r => r.hero === 'qingfeng');
+  ok(aiExport.status === 200 && aiSample && aiSample.a === 512 && !('id' in aiSample) && !('name' in aiSample) && !('account' in aiSample), '管理员能导出脱敏样本且不包含身份字段', aiExport.text.slice(0, 180));
+
   // 网页报错：text/plain 发上来（不用预检），脱敏后同一种错合成一行计数，管理网页能查到
   const errBody = { k: 'client', msg: 'boom at https://x.test/p?token=abc for a@b.com key 0123456789abcdef0123456789', src: 'https://x.test/index.html?v=3:12:5', stack: 'Error: boom\n at f (https://x.test/index.html?v=3:12:5)', meta: { scr: 'armory', ver: '1.0.0', nick: 'x'.repeat(200), 'bad key': 1 } };
   const sendErr = b => worker.fetch(new Request('https://w.test/api/err', { method: 'POST', headers: { 'CF-Connecting-IP': '10.9.0.1', 'Content-Type': 'text/plain' }, body: typeof b === 'string' ? b : JSON.stringify(b) }), ENV, { waitUntil() {} });

@@ -7938,6 +7938,9 @@ Object.assign(UI_COPY_EN, {
 "快速上手": "Quick Start",
 "征讨流程（固定三人一队：没人接手的位置由电脑同袍顶上）": "Run type (always a team of three; AI allies fill any empty spot)",
 "匿名统计": "Anonymous stats",
+"AI 模型训练": "AI model training",
+"开（匿名上传对局操作）": "On (upload match actions anonymously)",
+"不开启": "Off",
 "开（不记名字、账号）": "On (no names or accounts)",
 "画面有点卡，已自动调成中画质（可在设置里改回）": "The game was stuttering, so graphics were lowered to Medium (you can change this in Settings)",
 "画面还是卡，已自动调成低画质（可在设置里改回）": "Still stuttering, so graphics were lowered to Low (you can change this in Settings)",
@@ -11856,7 +11859,7 @@ iconizeTree(n); stripAttrs(n);
 if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 'use strict';
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh' };
 try {
 const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
 Object.assign(SETTINGS, saved);
@@ -11878,7 +11881,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.0.8';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.9';         // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
@@ -15273,7 +15276,8 @@ A.meter = B.meter = 0;
 A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
 B.ctrl = mode === 'pvp' ? human[1] : mode === 'train' ? new DummyCtrl(level) : new AICtrl(mode === 'demo' ? 'normal' : level);
 human[0].clear(); human[1].clear();
-REC.on = false; if ((mode === 'cpu' || mode === 'pvp') && !TUT && !isWatch) recBegin('loc');
+M.reviewReady = false;
+REC.on = false; if (mode !== 'demo' && mode !== 'train' && mode !== 'replay' && !TUT && !isWatch) recBegin(mode === 'net' ? 'net' : 'loc');
 startRound();
 if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
@@ -15424,7 +15428,10 @@ t.innerHTML = `<span class="it-name">${escapeHTML(name)}</span><span class="it-c
 }
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
-if (M.worldKey) { worldKeyRound(w); return; }
+if (M.worldKey) {
+if (REC.on) recSave(w);
+worldKeyRound(w); return;
+}
 let reviewRecord = REC.on ? recSave(w) : (M.reviewReady ? RP.last : null);
 if (RP.run && RP.run.mode === M.mode) {
 if (M.mode === 'raid' && w === 0) reviewRecord = RP.last || reviewRecord;
@@ -18114,38 +18121,52 @@ r3(Math.min(1, (f.stun || 0) / 30)), r3(Math.min(1, (o.stun || 0) / 30)),
 f.face === (o.x > f.x ? 1 : -1) ? 1 : 0
 ];
 }
+function trActionBits(c) {
+const held = inBits(c.held), buf = c.buf || {};
+return held | (buf.dash !== undefined ? 1 << 7 : 0) | (buf.special !== undefined ? 1 << 8 : 0)
+| (buf.skill !== undefined ? 1 << 9 : 0) | (buf.skill2 !== undefined ? 1 << 10 : 0)
+| (buf.drop !== undefined ? 1 << 11 : 0) | (buf.heavy !== undefined ? 1 << 12 : 0);
+}
 function trSample() {
 if (RESIM || !REC.on || REC.bad || !REC.meta || !A || !B || A.hidden || B.hidden) return;   // RESIM 是回滚重算，同一帧会再走一遍
-if (M.stage || FOREST.on || REPLAY.on) return;   // 闯关、竹林、看回放都不是训练局
-try { if (is2v2()) return; } catch (e) {}
+if (REPLAY.on) return;   // 看回放不重复上传
 const tf = REC.kind === 'net' && typeof ROLL !== 'undefined' ? ROLL.F : REC.f;
 if (tf % TR_EVERY) return;
 if (!A.ctrl || !B.ctrl) return;
-REC.tr.push([...trFeat(A, B), inBits(A.ctrl.held), inBits(B.ctrl.held), A.state || 'idle', A.moveName || A.skill || A.sp || '', A.escInvul ? 1 : 0, B.state || 'idle', B.moveName || B.skill || B.sp || '', B.escInvul ? 1 : 0]);
+REC.tr.push([...trFeat(A, B), trActionBits(A.ctrl), trActionBits(B.ctrl), A.state || 'idle', A.moveName || A.skill || A.sp || '', A.escInvul ? 1 : 0, B.state || 'idle', B.moveName || B.skill || B.sp || '', B.escInvul ? 1 : 0]);
 if (REC.trStart === null) REC.trStart = tf;
 if (REC.tr.length > TR_PER_MATCH) { REC.tr.shift(); REC.trStart += TR_EVERY; }
 }
 const TR_STATE_DIM = 19;
 function trSamples(m) {
 const rows = Array.isArray(m && m.tr) ? m.tr : [], out = [];
+const side = m && m.kind === 'net' ? Math.max(0, Math.min(1, +m.playerSide || 0)) : 0;
+const chars = m && Array.isArray(m.ch) ? m.ch : [0, 1];
 let prev = null;
 for (let i = 0; i < rows.length; i++) {
 const row = rows[i];
 if (!Array.isArray(row) || row.length < TR_STATE_DIM + 2) continue;
-const s = row.slice(0, TR_STATE_DIM), a = row[TR_STATE_DIM];
+const s = row.slice(0, TR_STATE_DIM);
+if (side) {
+for (const [a, b] of [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[14,15],[16,17]]) [s[a], s[b]] = [s[b], s[a]];
+[s[12], s[13]] = [-s[13], -s[12]];
+s[18] = 1 - s[18];
+}
+const a = row[TR_STATE_DIM + side];
 let r = 0;
 if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
 prev = s;
 out.push({
-hero: (CHARS[(m.ch || [0, 1])[0]] || {}).id || 'hero',
-heroIdx: (m.ch || [0, 1])[0],
+hero: (CHARS[chars[side] || 0] || {}).id || 'hero',
+heroIdx: chars[side] || 0,
 s, a, r: Math.round(r * 1000) / 1000,
 mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay'
 });
 }
 if (out.length) {   // 最后一帧给终局奖励：赢了才对，输了就是负的
 const last = out[out.length - 1];
-last.r = Math.round((last.r + (m.w === 0 ? 1 : m.w === 1 ? -1 : 0)) * 1000) / 1000;
+const winner = side ? 1 - m.w : m.w;
+last.r = Math.round((last.r + (winner === 0 ? 1 : winner === 1 ? -1 : 0)) * 1000) / 1000;
 last.done = 1;
 }
 return out;
@@ -18179,7 +18200,7 @@ return { added: rows.length, bad, total: Math.min(set.length, TR_SET_MAX), ok: t
 }
 function recSave(w) {
 REC.on = false;
-if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
+if (REC.bad || !REC.meta) return;
 const m = REC.meta;
 Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, trStart: REC.trStart, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
 names: M.mode === 'net' ? rpNetNames(m)
@@ -18187,6 +18208,7 @@ names: M.mode === 'net' ? rpNetNames(m)
 : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
 if (RP.run && RP.run.mode === M.mode) {
 RP.run.segments.push(m);
+if (typeof aiTrainMatch === 'function') aiTrainMatch(m, M.worldKey ? 'world' : undefined);
 const replay = rpRunReplay(RP.run, w);
 RP.last = replay;
 M.reviewReady = true;
@@ -18198,6 +18220,7 @@ RP.last = m;
 M.reviewReady = true;
 const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
 rpStore(list);
+if (typeof aiTrainMatch === 'function') aiTrainMatch(m, M.worldKey ? 'world' : undefined);
 return m;
 }
 function rpRunBegin(mode) {
@@ -24107,6 +24130,7 @@ const SETTING_ROWS = [
 { k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
 { k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
 { k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关']] },
+{ k: 'aiTraining', name: 'AI 模型训练', opts: [[true, '开（匿名上传对局操作）'], [false, '不开启']] },
 { k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
 { k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
 { k: 'music', name: '音乐', range: [0, 1, 0.05] },
@@ -24186,7 +24210,9 @@ buildSettings();
 return;
 }
 const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
-const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings(); buildSettings();
+const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings();
+if (k === 'aiTraining' && !SETTINGS.aiTraining && typeof aiTrainClearQueue === 'function') aiTrainClearQueue();
+buildSettings();
 if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
 if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
 if (k === 'quality') { SETTINGS.qualityChosen = true; saveSettings(); resize(); }   // 手动选过画质：以后不再自动降
@@ -29907,6 +29933,7 @@ startRound();   // 秘卷和天魔词缀的开局效果在这里生效
 B.maxHp = Math.round(B.maxHp * GB_HP_MUL); B.hp = B.lagHp = B.maxHp;
 GB.lastHp = B.hp;
 M.timer = GB_FIGHT;
+recBegin('loc');
 say(`天魔讨伐 · 第 ${GB.ticket.gen} 代`, 1.4);
 }
 function gbossStep() {
@@ -29930,6 +29957,7 @@ if (p && GB.ticket && p.id === GB.ticket.id) { p.dmg = Math.round(GB.dmg); gbSav
 function gbossFinish(why) {
 if (!GB.ticket) return;
 M.phase = 'end';
+if (REC.on) recSave(why === 'time' ? 0 : 1);
 gbKeep();
 GB.why = why;
 if (why !== 'quit') {
@@ -33106,6 +33134,45 @@ if (k === 'net' && NET.isRanked) k = 'netrk';
 else if (k === 'cpu' && typeof FOREST !== 'undefined' && FOREST.on) k = 'stage';
 statEv('m:' + k);
 }
+const AIQ_KEY = 'renying-ai-match-queue', AIQ_MAX = 30;
+const aiTrainOn = () => !OFFLINE_BUILD && SETTINGS.aiTraining !== false && !!(window.CloudSave && CloudSave.getEndpoint && CloudSave.getEndpoint());
+const aiTrainUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.getEndpoint() : '') + '/api/ai-training';
+function aiTrainQueue() { try { const q = JSON.parse(localStorage.getItem(AIQ_KEY) || '[]'); return Array.isArray(q) ? q : []; } catch (e) { return []; } }
+function aiTrainClearQueue() { try { localStorage.removeItem(AIQ_KEY); } catch (e) {} }
+function aiTrainMatch(m, modeOverride) {
+if (!aiTrainOn() || !m || !Array.isArray(m.tr) || !m.tr.length || m.w === undefined || m.mode === 'demo' || m.mode === 'train') return;
+const matches = Array.isArray(m.segments) && m.segments.length ? m.segments : [m], q = aiTrainQueue();
+for (const part of matches) {
+if (!part || !Array.isArray(part.tr) || !part.tr.length || part.w === undefined) continue;
+let rows;
+try { rows = trSamples(part).map(x => ({ hero: x.hero, s: x.s, a: x.a, r: x.r, done: x.done ? 1 : 0 })); } catch (e) { continue; }
+if (!rows.length) continue;
+const result = part.w === -1 ? -1 : part.kind === 'net' && part.playerSide === 1 ? 1 - part.w : part.w;
+q.push({ id: crypto.randomUUID(), mode: String(modeOverride || part.mode || m.mode || 'cpu'), result, rows });
+}
+if (!q.length) return;
+try { localStorage.setItem(AIQ_KEY, JSON.stringify(q.slice(-AIQ_MAX))); } catch (e) { return; }
+aiTrainFlush();
+}
+let aiTrainBusy = false;
+async function aiTrainFlush() {
+if (aiTrainBusy || !aiTrainOn() || !navigator.onLine) return;
+aiTrainBusy = true;
+try {
+let q = aiTrainQueue();
+while (q.length && aiTrainOn() && navigator.onLine) {
+const r = await fetch(aiTrainUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(q[0]), keepalive: true });
+if (!r.ok) break;
+const ack = await r.json();
+if (!ack || !ack.ok || ack.limited) break;
+q.shift();
+try { localStorage.setItem(AIQ_KEY, JSON.stringify(q)); } catch (e) { break; }
+}
+} catch (e) {} finally { aiTrainBusy = false; }
+}
+window.addEventListener('online', aiTrainFlush);
+setTimeout(aiTrainFlush, 5000);
+setInterval(aiTrainFlush, 60000);
 window.addEventListener('pagehide', () => statFlush(true));
 document.addEventListener('visibilitychange', () => { if (document.hidden) statFlush(true); });
 setTimeout(() => { statEv('open'); statFlush(); }, 3000);   // 打开网页：等云端地址准备好再报
