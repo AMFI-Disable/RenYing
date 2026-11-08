@@ -70,6 +70,51 @@ function updateAIBrief() {
 
 // 模式大厅（#single）：所有玩法分类摆放，sec 为空时打开上次那一格，否则打开指定那一格的面板
 let currentSingleTab = 'cpu', teamMutator = 'normal';
+const XIWU_PRESET_KEY = 'renying-xiwu-presets', XIWU_PRESET_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps'];
+function xiwuPresetList() {
+  try {
+    const p = JSON.parse(localStorage.getItem(XIWU_PRESET_KEY) || '[]');
+    return Array.isArray(p) ? p.filter(x => x && typeof x.id === 'string' && XIWU_PRESET_MODES.includes(x.mode) && CHARS.some(c => c.id === x.hero) && ['easy', 'normal', 'hard', 'impossible', 'god'].includes(x.level) && ['normal', 'chaos', 'mayhem'].includes(x.mutator) && (!x.map || MAPS[x.map])).slice(0, 4) : [];
+  } catch (e) { return []; }
+}
+function xiwuPresetRender(selected = '') {
+  const select = $id('xiwuPresetSelect'), remove = $id('xiwuPresetDelete');
+  if (!select || !remove) return;
+  const list = xiwuPresetList();
+  select.innerHTML = `<option value="">${cvT('读取或保存方案')}</option>` + list.map(p => `<option value="${escapeHTML(p.id)}">${escapeHTML(p.name)}</option>`).join('');
+  select.value = list.some(p => p.id === selected) ? selected : '';
+  remove.disabled = !select.value;
+}
+function xiwuPresetSave() {
+  const list = xiwuPresetList();
+  if (list.length >= 4) { toast('最多保存 4 个常用方案'); return; }
+  const hero = CHARS[menuHeroPick()];
+  const p = { id: `p-${Date.now().toString(36)}`, name: `${cvT('方案')} ${list.length + 1}`, hero: hero.id, mode: currentSingleTab, level: pickLevel || 'normal', mutator: teamMutator || 'normal', map: mapVote || '' };
+  list.push(p);
+  try { localStorage.setItem(XIWU_PRESET_KEY, JSON.stringify(list)); xiwuPresetRender(p.id); toast('常用方案已保存'); }
+  catch (e) { toast('本机空间不足，方案未保存'); }
+}
+function xiwuPresetLoad(id) {
+  const p = xiwuPresetList().find(x => x.id === id); if (!p) return;
+  const hero = CHARS.findIndex(c => c.id === p.hero);
+  if (hero >= 0 && typeof setMenuHero === 'function') setMenuHero(hero);
+  if (typeof setPickLevel === 'function') setPickLevel(p.level);
+  teamMutator = p.mutator;
+  if (typeof setMapVote === 'function') setMapVote(p.map || null);
+  singleSec(p.mode);
+  if (p.mode === 'maps' && typeof renderMaps === 'function') renderMaps();
+  xiwuPresetRender(p.id);
+  toast('已载入常用方案');
+}
+$id('xiwuPresetSave').addEventListener('click', xiwuPresetSave);
+$id('xiwuPresetSelect').addEventListener('change', e => { xiwuPresetLoad(e.target.value); });
+$id('xiwuPresetDelete').addEventListener('click', () => {
+  const id = $id('xiwuPresetSelect').value; if (!id) return;
+  const list = xiwuPresetList().filter(p => p.id !== id);
+  try { localStorage.setItem(XIWU_PRESET_KEY, JSON.stringify(list)); } catch (e) {}
+  xiwuPresetRender(); toast('常用方案已删除');
+});
+xiwuPresetRender();
 // 暂时收起来的模式：只藏入口，代码和存档都不动。以后想放出来，把名字从这张表里删掉就行。
 // 守关在离线版里是主要内容（离线版没有联机），所以离线版照旧留着。天机乱斗、通天神决已经是对战里的「战场异变」选项，山河异境的图在联机里投票选。
 const SHELVED_MODES = OFFLINE_BUILD ? ['tower'] : ['stage', 'tower'];

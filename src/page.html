@@ -47,6 +47,7 @@
       <button type="button" data-nav="netp" class="tn-play tn-online">对战</button>
       <button type="button" data-nav="stage" class="tn-offline">闯关</button>
       <button type="button" data-nav="codex">英雄</button>
+      <button type="button" data-nav="replays">战绩</button>
       <button type="button" data-nav="train" class="tn-offline">木人桩</button>
       <button type="button" data-nav="tutorial" class="tn-offline">新手教学</button>
       <button type="button" data-nav="armory" class="tn-online tn-arm">武库</button>
@@ -126,6 +127,10 @@
       <button class="home-card home-tasks tn-online" id="homeTasks" type="button">
         <span class="hc-kicker">今日任务</span>
         <span class="hc-txt"><b id="homeTasksT">每日任务</b><small id="homeTasksS">点开任务页</small></span>
+      </button>
+      <button class="home-card home-replays" id="homeReplays" type="button">
+        <span class="hc-kicker">最近战局</span>
+        <span class="hc-txt"><b id="homeReplayTitle">查看战绩与回放</b><small id="homeReplaySub">最近 10 场保存在本机</small></span>
       </button>
       <details class="home-card home-news">
         <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 匹配对战 · 排位赛 · 技能重做</span></summary>
@@ -247,7 +252,7 @@
         </div>
       </div>
 
-            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
+            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p><div class="xiwu-presets"><label for="xiwuPresetSelect">常用方案</label><select id="xiwuPresetSelect"><option value="">读取或保存方案</option></select><button class="ghost small" id="xiwuPresetSave" type="button">保存当前</button><button class="ghost small" id="xiwuPresetDelete" type="button" disabled>删除方案</button></div></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
             <!-- 战场异变印章 -->
             <div class="xiwu-mutator-row">
               <span class="mutator-label">战场异变：</span>
@@ -766,6 +771,7 @@
   <div id="settings" class="scr">
     <div class="panel setp">
       <h2>设置</h2>
+      <div class="setting-presets" id="settingPresets" role="group" aria-label="显示预设"></div>
       <div class="setlist" id="setList"></div>
       <p class="netnote">设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。</p>
       <div class="row"><button class="ghost small" id="setHelp" type="button">操作说明</button><button class="ghost small" id="setReplays" type="button">对局回放</button><button class="go small" id="setDone">完成</button></div>
@@ -1301,6 +1307,7 @@
     <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><p class="end-arm" id="endArm"></p>
       <button class="ghost hidden" id="endReviewBtn" type="button" aria-expanded="false" aria-controls="endReview">AI 复盘</button>
       <section class="end-review hidden" id="endReview" aria-live="polite"></section>
+      <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>

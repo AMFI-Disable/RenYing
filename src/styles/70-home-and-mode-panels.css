@@ -49,6 +49,8 @@
 .home-evt-pill:hover { background: rgba(233,196,106,.2); }
 .home-evt-pill[hidden] { display: none; }
 .home-tasks .hc-kicker { color: var(--gold); }
+.home-replays { border-color: rgba(120,190,220,.4); background: linear-gradient(120deg, rgba(70,150,190,.12), var(--panel)); }
+.home-replays .hc-kicker { color: #8bcbe3; }
 .home-news summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
 .home-news summary::-webkit-details-marker { display: none; }
 .home-news .hn-line { font-size: var(--fs-sm); color: rgba(236,232,225,.78); }
@@ -243,6 +245,10 @@ body.offline #mMatch { display: none !important; }
 
 .xiwu-quick-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 12px; margin:6px 0; border:1px solid rgba(233,196,106,.42); border-radius:10px; background:rgba(233,196,106,.08); }
 .xiwu-quick-card p { margin:4px 0 0; color:var(--dim); }
+.xiwu-presets { display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.xiwu-presets label { font-size:12px; color:var(--dim); }
+.xiwu-presets select { max-width:min(230px, 50vw); min-height:32px; padding:4px 8px; border:1px solid rgba(255,255,255,.18); border-radius:5px; background:rgba(8,10,18,.8); color:var(--ink); font:inherit; }
+.xiwu-presets button { padding:4px 8px; font-size:12px; }
 .combat-card { margin:10px auto; padding:10px; border:1px solid rgba(233,196,106,.3); border-radius:8px; color:var(--gold); }
 .combat-card:empty { display:none; }
 .end-review { margin: 12px 0; padding: 14px; border: 1px solid rgba(233,196,106,.3); border-radius: 8px; background: rgba(10,12,22,.55); text-align: left; }
@@ -259,6 +265,8 @@ body.offline #mMatch { display: none !important; }
 .end-review-jump:hover, .end-review-jump:focus-visible { color: var(--gold); text-decoration: underline; }
 .end-review-moments { grid-column: 1 / -1; }
 .end-review-note { margin: 10px 0 0; color: rgba(255,255,255,.5); font-size: 11px; }
+.end-review-actions { margin-top: 9px; justify-content: flex-start; }
+.end-qol-row { justify-content: flex-end; margin: 4px 0 8px; }
 @media (max-width: 680px) { .end-review-grid { grid-template-columns: 1fr; } }
 
 #single .xiwu-quick-card .go { margin:0; padding:5px 18px; font-size:20px; }

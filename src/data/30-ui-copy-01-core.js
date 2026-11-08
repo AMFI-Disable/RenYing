@@ -97,7 +97,6 @@ Object.assign(UI_COPY_EN, {
   "匿名统计": "Anonymous stats",
   "AI 模型训练": "AI model training",
   "开（匿名上传对局操作）": "On (upload match actions anonymously)",
-  "不开启": "Off",
   "开（不记名字、账号）": "On (no names or accounts)",
   "画面有点卡，已自动调成中画质（可在设置里改回）": "The game was stuttering, so graphics were lowered to Medium (you can change this in Settings)",
   "画面还是卡，已自动调成低画质（可在设置里改回）": "Still stuttering, so graphics were lowered to Low (you can change this in Settings)",

@@ -706,6 +706,8 @@ function showEnd(w) {
   $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
   $id('netRepickBtn').classList.add('hidden');   // 「换人再战」只给联机局；上一局是联机时别带到肉鸽、剑阁、车轮战的结算里
   $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
+  $id('endChangeHeroBtn').classList.toggle('hidden', !['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode) || !!M.watchAi);
+  $id('endHistoryBtn').classList.toggle('hidden', !RP.last);
   if (M.stage) {
     const win = w === 0;
     M.stage = null;

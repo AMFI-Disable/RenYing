@@ -208,6 +208,20 @@ function startTraining(targetMode = 'dummy', isWatch = false) {
     say('木人试剑 · AI 演示连招', 1.4);
   } else say('木人试剑 · 开始训练', 1.4);
 }
+function openReviewTraining(heroId, focus) {
+  const hero = CHARS.findIndex(c => c.id === heroId);
+  if (hero >= 0) {
+    trainChar = hero;
+    if (typeof setMenuHero === 'function') setMenuHero(hero);
+  }
+  Object.assign(dummyCfg, focus === 'defense'
+    ? { act: 'combo', escape: true, infGuard: true, autoHeal: true }
+    : { act: 'stand', escape: false, infGuard: true, autoHeal: true });
+  renderDummyFeatures();
+  singleSec('train');
+  showScreen('single');
+  xiwuTrainingTab('scenario');
+}
 const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
   if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();

@@ -50,7 +50,7 @@ function setMenuHero(ci) {
   const sk = k && SKINS[k];   // 穿着皮肤时样子会变很多，名字写出来免得认不出是谁
   $id('heroName').innerHTML = escapeHTML(CHARS[ci].name) + (sk ? `<small>${escapeHTML(sk.name)}</small>` : '');
 }
-function heroQuickFight(lv) {
+function heroQuickFight(lv, modeOverride) {
   if (menuLock || menuHeroId < 0) return;
   initAudio(); heroPickShow(false);
   if (lv) setPickLevel(lv);
@@ -59,7 +59,7 @@ function heroQuickFight(lv) {
   const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);
   const foe = foes[Math.random() * foes.length | 0];
   netDropWaiting(); chatClear(); BP = null; bpMode = 'cpu'; bpCustomOpts = null;
-  const quickMode = currentScreen === 'single' ? currentSingleTab : 'cpu';
+  const quickMode = modeOverride || (currentScreen === 'single' ? currentSingleTab : 'cpu');
   showPop(null); showScreen(null);
   MSTAT.maxcombo = 0; MSTAT.ults = 0;
   if (quickMode === 'tag3') {
@@ -85,15 +85,33 @@ function heroPickShow(on) {
   if (on) { const s = el.querySelector('button.sel') || el.querySelector('button'); if (s && typeof KBN !== 'undefined' && KBN.on) s.focus(); }
 }
 $id('heroSwap').addEventListener('click', e => { e.stopPropagation(); heroPickShow($id('heroPick').hidden); });
+let heroRematchPending = false;
 $id('heroPick').addEventListener('click', e => {
   const b = e.target.closest('button[data-i]'); if (!b) return;
   e.stopPropagation(); setMenuHero(+b.dataset.i); heroPickShow(false); SFX.block && SFX.block();
+  if (heroRematchPending) { heroRematchPending = false; heroQuickFight(null, currentSingleTab); }
 });
-document.addEventListener('click', e => { if (!e.target.closest('#homeSub')) heroPickShow(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#homeSub')) { heroPickShow(false); heroRematchPending = false; } });
 // 回放从设置里进：返回时回到设置
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
-$id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
+$id('rpBack').addEventListener('click', () => {
+  if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); }
+  else if (replaysFrom === 'end') { replaysFrom = 'menu'; showScreen('end'); }
+  else backToMenu();
+});
+$id('endHistoryBtn').addEventListener('click', () => { replaysFrom = 'end'; openScreen('replays'); });
+$id('endChangeHeroBtn').addEventListener('click', () => {
+  if (['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode)) {
+    currentSingleTab = M.mode;
+    if (['normal', 'easy', 'hard', 'impossible', 'god'].includes(M.level)) setPickLevel(M.level);
+    if (['normal', 'chaos', 'mayhem'].includes(M.teamMutator)) teamMutator = M.teamMutator;
+    if (M.mode === 'maps' && MAPS[M.map]) setMapVote(M.map);
+  }
+  backToMenu();
+  heroRematchPending = true;
+  heroPickShow(true);
+});
 // ---------- 顶部导航 ----------
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
@@ -130,7 +148,16 @@ function renderHome() {
   $id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
   $id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
   renderHomeTasks();
+  renderHomeReplays();
 }
+function renderHomeReplays() {
+  const title = $id('homeReplayTitle'), sub = $id('homeReplaySub');
+  if (!title || !sub || typeof rpList !== 'function') return;
+  const list = rpList(), latest = list[0];
+  title.textContent = latest ? cvT('最近一场') : cvT('查看战绩与回放');
+  sub.textContent = latest ? `${rpSub(latest)} · ${list.length} ${cvT('条回放已保存')}` : cvT('最近 10 场保存在本机');
+}
+$id('homeReplays').addEventListener('click', () => navTo('replays'));
 // 右边「今日任务」：做完几个、有几个能领（段位在顶栏账号按钮上，不再单独一张卡）
 function renderHomeTasks() {
   const el = $id('homeTasks'); if (!el) return;

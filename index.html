@@ -587,6 +587,10 @@ html.touch-game-active, body.touch-game-active { touch-action: none; }
 @media (max-width: 560px) { .stgrid { grid-template-columns: repeat(3, 1fr); } }
 .setp { max-width: min(1360px, 96vw); }
 .setlist { display: grid; gap: 12px; margin: 12px 0; text-align: left; }
+.setting-group { display: grid; gap: 10px; padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; background: rgba(255,255,255,.025); }
+.setting-group > h3 { margin: 0; color: var(--gold); font: 600 14px var(--title); letter-spacing: .08em; }
+.setting-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0; }
+.setting-presets b { margin-right: 4px; color: var(--gold); font-size: 13px; }
 @media (min-width: 860px) {
 .setlist {
 grid-template-columns: repeat(2, 1fr);
@@ -2814,6 +2818,8 @@ background: rgba(233,196,106,.12); border: 1px solid rgba(233,196,106,.5); borde
 .home-evt-pill:hover { background: rgba(233,196,106,.2); }
 .home-evt-pill[hidden] { display: none; }
 .home-tasks .hc-kicker { color: var(--gold); }
+.home-replays { border-color: rgba(120,190,220,.4); background: linear-gradient(120deg, rgba(70,150,190,.12), var(--panel)); }
+.home-replays .hc-kicker { color: #8bcbe3; }
 .home-news summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
 .home-news summary::-webkit-details-marker { display: none; }
 .home-news .hn-line { font-size: var(--fs-sm); color: rgba(236,232,225,.78); }
@@ -2999,6 +3005,10 @@ body.offline #mMatch { display: none !important; }
 @media (max-width: 560px) { .tag-portal { padding: 12px; } .tag-portal .tp-head { grid-template-columns: auto 1fr; } }
 .xiwu-quick-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 12px; margin:6px 0; border:1px solid rgba(233,196,106,.42); border-radius:10px; background:rgba(233,196,106,.08); }
 .xiwu-quick-card p { margin:4px 0 0; color:var(--dim); }
+.xiwu-presets { display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.xiwu-presets label { font-size:12px; color:var(--dim); }
+.xiwu-presets select { max-width:min(230px, 50vw); min-height:32px; padding:4px 8px; border:1px solid rgba(255,255,255,.18); border-radius:5px; background:rgba(8,10,18,.8); color:var(--ink); font:inherit; }
+.xiwu-presets button { padding:4px 8px; font-size:12px; }
 .combat-card { margin:10px auto; padding:10px; border:1px solid rgba(233,196,106,.3); border-radius:8px; color:var(--gold); }
 .combat-card:empty { display:none; }
 .end-review { margin: 12px 0; padding: 14px; border: 1px solid rgba(233,196,106,.3); border-radius: 8px; background: rgba(10,12,22,.55); text-align: left; }
@@ -3015,6 +3025,8 @@ body.offline #mMatch { display: none !important; }
 .end-review-jump:hover, .end-review-jump:focus-visible { color: var(--gold); text-decoration: underline; }
 .end-review-moments { grid-column: 1 / -1; }
 .end-review-note { margin: 10px 0 0; color: rgba(255,255,255,.5); font-size: 11px; }
+.end-review-actions { margin-top: 9px; justify-content: flex-start; }
+.end-qol-row { justify-content: flex-end; margin: 4px 0 8px; }
 @media (max-width: 680px) { .end-review-grid { grid-template-columns: 1fr; } }
 #single .xiwu-quick-card .go { margin:0; padding:5px 18px; font-size:20px; }
 #single .singlep { max-width: min(1180px, 96vw); }
@@ -3240,6 +3252,7 @@ white-space: nowrap;
       <button type="button" data-nav="netp" class="tn-play tn-online">对战</button>
       <button type="button" data-nav="stage" class="tn-offline">闯关</button>
       <button type="button" data-nav="codex">英雄</button>
+      <button type="button" data-nav="replays">战绩</button>
       <button type="button" data-nav="train" class="tn-offline">木人桩</button>
       <button type="button" data-nav="tutorial" class="tn-offline">新手教学</button>
       <button type="button" data-nav="armory" class="tn-online tn-arm">武库</button>
@@ -3319,6 +3332,10 @@ white-space: nowrap;
       <button class="home-card home-tasks tn-online" id="homeTasks" type="button">
         <span class="hc-kicker">今日任务</span>
         <span class="hc-txt"><b id="homeTasksT">每日任务</b><small id="homeTasksS">点开任务页</small></span>
+      </button>
+      <button class="home-card home-replays" id="homeReplays" type="button">
+        <span class="hc-kicker">最近战局</span>
+        <span class="hc-txt"><b id="homeReplayTitle">查看战绩与回放</b><small id="homeReplaySub">最近 10 场保存在本机</small></span>
       </button>
       <details class="home-card home-news">
         <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 匹配对战 · 排位赛 · 技能重做</span></summary>
@@ -3440,7 +3457,7 @@ white-space: nowrap;
         </div>
       </div>
 
-            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
+            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p><div class="xiwu-presets"><label for="xiwuPresetSelect">常用方案</label><select id="xiwuPresetSelect"><option value="">读取或保存方案</option></select><button class="ghost small" id="xiwuPresetSave" type="button">保存当前</button><button class="ghost small" id="xiwuPresetDelete" type="button" disabled>删除方案</button></div></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
             <!-- 战场异变印章 -->
             <div class="xiwu-mutator-row">
               <span class="mutator-label">战场异变：</span>
@@ -3959,6 +3976,7 @@ white-space: nowrap;
   <div id="settings" class="scr">
     <div class="panel setp">
       <h2>设置</h2>
+      <div class="setting-presets" id="settingPresets" role="group" aria-label="显示预设"></div>
       <div class="setlist" id="setList"></div>
       <p class="netnote">设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。</p>
       <div class="row"><button class="ghost small" id="setHelp" type="button">操作说明</button><button class="ghost small" id="setReplays" type="button">对局回放</button><button class="go small" id="setDone">完成</button></div>
@@ -4494,6 +4512,7 @@ white-space: nowrap;
     <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><p class="end-arm" id="endArm"></p>
       <button class="ghost hidden" id="endReviewBtn" type="button" aria-expanded="false" aria-controls="endReview">AI 复盘</button>
       <section class="end-review hidden" id="endReview" aria-live="polite"></section>
+      <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>
@@ -7940,7 +7959,6 @@ Object.assign(UI_COPY_EN, {
 "匿名统计": "Anonymous stats",
 "AI 模型训练": "AI model training",
 "开（匿名上传对局操作）": "On (upload match actions anonymously)",
-"不开启": "Off",
 "开（不记名字、账号）": "On (no names or accounts)",
 "画面有点卡，已自动调成中画质（可在设置里改回）": "The game was stuttering, so graphics were lowered to Medium (you can change this in Settings)",
 "画面还是卡，已自动调成低画质（可在设置里改回）": "Still stuttering, so graphics were lowered to Low (you can change this in Settings)",
@@ -9634,6 +9652,38 @@ Object.assign(UI_COPY_EN, {
 "战场：": "Arena:",
 "即刻开战": "Fight Now",
 "帧优势": "Frame Advantage",
+"战绩": "History",
+"最近战局": "Recent Matches",
+"最近一场": "Latest Match",
+"查看战绩与回放": "Match History & Replays",
+"条回放已保存": "replays saved",
+"最近 10 场保存在本机": "Your last 10 matches are saved on this device.",
+"常用方案": "Presets",
+"读取或保存方案": "Load or save a preset",
+"保存当前": "Save current",
+"删除方案": "Delete preset",
+"最多保存 4 个常用方案": "You can save up to 4 presets.",
+"方案": "Preset",
+"常用方案已保存": "Preset saved.",
+"本机空间不足，方案未保存": "Not enough device storage. Preset not saved.",
+"已载入常用方案": "Preset loaded.",
+"常用方案已删除": "Preset deleted.",
+"显示预设": "Display presets",
+"流畅优先": "Smooth",
+"均衡": "Balanced",
+"省电": "Battery Saver",
+"已应用": "Applied",
+"操控与游戏": "Controls & Gameplay",
+"显示与性能": "Display & Performance",
+"声音": "Audio",
+"数据偏好": "Data Preferences",
+"键位": "Key Bindings",
+"语言 / Language": "Language",
+"关闭选项": "Off",
+"复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。": "This local, rule-based review uses match stats and sampled states; it does not call a cloud AI.",
+"用这位侠客去练习": "Practice with this hero",
+"查看战绩": "Match History",
+"换侠客再战": "Change Hero & Rematch",
 });
 Object.assign(UI_COPY_EN, {
 "山河异境": "Terrain Clash",
@@ -11881,7 +11931,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.0.9';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.10';        // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
@@ -15447,6 +15497,8 @@ $id('endKicker').textContent = '';
 $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
 $id('netRepickBtn').classList.add('hidden');   // 「换人再战」只给联机局；上一局是联机时别带到肉鸽、剑阁、车轮战的结算里
 $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
+$id('endChangeHeroBtn').classList.toggle('hidden', !['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode) || !!M.watchAi);
+$id('endHistoryBtn').classList.toggle('hidden', !RP.last);
 if (M.stage) {
 const win = w === 0;
 M.stage = null;
@@ -18348,7 +18400,8 @@ if (falls > 0) { errors.push(`本局坠崖 ${falls} 次，边缘位置需要更�
 if (!errors.length) errors.push('现有数据未发现明显的远距离出手或失衡交换。');
 if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
 const context = { hero: hero.name || '', heroId: hero.id || '', mode: m.mode || '', level: m.level || '' };
-return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, strengths, errors, next, moments: moments.slice(0, 4) };
+const focus = falls > 0 ? 'edge' : taken > dealt * 1.2 && taken > 0 ? 'defense' : misfaced / Math.max(1, attacks) >= 0.2 ? 'facing' : 'range';
+return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, focus, strengths, errors, next, moments: moments.slice(0, 4) };
 }
 function endReviewShow(m) {
 const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -18361,7 +18414,7 @@ if (!review) { panel.innerHTML = ''; return; }
 const list = items => `<ul>${items.map(s => `<li>${escapeHTML(reviewCopy(s))}</li>`).join('')}</ul>`;
 const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
 const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(cvT(review.context.hero))} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(cvT(LV_NAME[review.context.level] || review.context.level))}` : ''}</p>` : '';
-panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p>`;
+panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')} ${cvT('复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button></div>`;
 }
 function reviewCopy(value) {
 const s = String(value || '');
@@ -18397,6 +18450,8 @@ setTimeout(advance, 0);
 $id('endReview').addEventListener('click', e => {
 const jump = e.target.closest('[data-review-frame]');
 if (jump && RP.last) replayJump(RP.last, +jump.dataset.reviewFrame);
+const practice = e.target.closest('[data-review-practice]');
+if (practice && typeof openReviewTraining === 'function') openReviewTraining(practice.dataset.reviewHero || practice.dataset.reviewPractice, practice.dataset.reviewFocus);
 });
 $id('endReviewBtn').addEventListener('click', () => {
 const panel = $id('endReview'), btn = $id('endReviewBtn'), open = panel.classList.contains('hidden');
@@ -18644,6 +18699,8 @@ $id('endSub').textContent = `回放结束，比分 ${M.wins[0]} : ${M.wins[1]}`;
 $id('endRank').textContent = '';
 $id('againBtn').style.display = 'none';
 $id('rpWatch').style.display = ''; $id('rpWatch').textContent = '再看一遍';
+$id('endChangeHeroBtn').classList.add('hidden');
+$id('endHistoryBtn').classList.toggle('hidden', !rpList().length);
 RP.last = REPLAY.m;
 endReviewShow(REPLAY.m);
 setTimeout(() => showScreen('end'), 300);
@@ -23906,6 +23963,51 @@ adaptEl.style.display = 'none';
 }
 }
 let currentSingleTab = 'cpu', teamMutator = 'normal';
+const XIWU_PRESET_KEY = 'renying-xiwu-presets', XIWU_PRESET_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps'];
+function xiwuPresetList() {
+try {
+const p = JSON.parse(localStorage.getItem(XIWU_PRESET_KEY) || '[]');
+return Array.isArray(p) ? p.filter(x => x && typeof x.id === 'string' && XIWU_PRESET_MODES.includes(x.mode) && CHARS.some(c => c.id === x.hero) && ['easy', 'normal', 'hard', 'impossible', 'god'].includes(x.level) && ['normal', 'chaos', 'mayhem'].includes(x.mutator) && (!x.map || MAPS[x.map])).slice(0, 4) : [];
+} catch (e) { return []; }
+}
+function xiwuPresetRender(selected = '') {
+const select = $id('xiwuPresetSelect'), remove = $id('xiwuPresetDelete');
+if (!select || !remove) return;
+const list = xiwuPresetList();
+select.innerHTML = `<option value="">${cvT('读取或保存方案')}</option>` + list.map(p => `<option value="${escapeHTML(p.id)}">${escapeHTML(p.name)}</option>`).join('');
+select.value = list.some(p => p.id === selected) ? selected : '';
+remove.disabled = !select.value;
+}
+function xiwuPresetSave() {
+const list = xiwuPresetList();
+if (list.length >= 4) { toast('最多保存 4 个常用方案'); return; }
+const hero = CHARS[menuHeroPick()];
+const p = { id: `p-${Date.now().toString(36)}`, name: `${cvT('方案')} ${list.length + 1}`, hero: hero.id, mode: currentSingleTab, level: pickLevel || 'normal', mutator: teamMutator || 'normal', map: mapVote || '' };
+list.push(p);
+try { localStorage.setItem(XIWU_PRESET_KEY, JSON.stringify(list)); xiwuPresetRender(p.id); toast('常用方案已保存'); }
+catch (e) { toast('本机空间不足，方案未保存'); }
+}
+function xiwuPresetLoad(id) {
+const p = xiwuPresetList().find(x => x.id === id); if (!p) return;
+const hero = CHARS.findIndex(c => c.id === p.hero);
+if (hero >= 0 && typeof setMenuHero === 'function') setMenuHero(hero);
+if (typeof setPickLevel === 'function') setPickLevel(p.level);
+teamMutator = p.mutator;
+if (typeof setMapVote === 'function') setMapVote(p.map || null);
+singleSec(p.mode);
+if (p.mode === 'maps' && typeof renderMaps === 'function') renderMaps();
+xiwuPresetRender(p.id);
+toast('已载入常用方案');
+}
+$id('xiwuPresetSave').addEventListener('click', xiwuPresetSave);
+$id('xiwuPresetSelect').addEventListener('change', e => { xiwuPresetLoad(e.target.value); });
+$id('xiwuPresetDelete').addEventListener('click', () => {
+const id = $id('xiwuPresetSelect').value; if (!id) return;
+const list = xiwuPresetList().filter(p => p.id !== id);
+try { localStorage.setItem(XIWU_PRESET_KEY, JSON.stringify(list)); } catch (e) {}
+xiwuPresetRender(); toast('常用方案已删除');
+});
+xiwuPresetRender();
 const SHELVED_MODES = OFFLINE_BUILD ? ['tower'] : ['stage', 'tower'];
 const modeShelved = m => SHELVED_MODES.includes(m);
 for (const m of SHELVED_MODES) {
@@ -24021,7 +24123,7 @@ MENU_HERO = f; menuHeroId = ci;
 const sk = k && SKINS[k];   // 穿着皮肤时样子会变很多，名字写出来免得认不出是谁
 $id('heroName').innerHTML = escapeHTML(CHARS[ci].name) + (sk ? `<small>${escapeHTML(sk.name)}</small>` : '');
 }
-function heroQuickFight(lv) {
+function heroQuickFight(lv, modeOverride) {
 if (menuLock || menuHeroId < 0) return;
 initAudio(); heroPickShow(false);
 if (lv) setPickLevel(lv);
@@ -24029,7 +24131,7 @@ paused = false;
 const foes = CHARS.map((c, i) => i).filter(i => i !== menuHeroId);
 const foe = foes[Math.random() * foes.length | 0];
 netDropWaiting(); chatClear(); BP = null; bpMode = 'cpu'; bpCustomOpts = null;
-const quickMode = currentScreen === 'single' ? currentSingleTab : 'cpu';
+const quickMode = modeOverride || (currentScreen === 'single' ? currentSingleTab : 'cpu');
 showPop(null); showScreen(null);
 MSTAT.maxcombo = 0; MSTAT.ults = 0;
 if (quickMode === 'tag3') {
@@ -24055,14 +24157,32 @@ $id('heroSwap').setAttribute('aria-expanded', on);
 if (on) { const s = el.querySelector('button.sel') || el.querySelector('button'); if (s && typeof KBN !== 'undefined' && KBN.on) s.focus(); }
 }
 $id('heroSwap').addEventListener('click', e => { e.stopPropagation(); heroPickShow($id('heroPick').hidden); });
+let heroRematchPending = false;
 $id('heroPick').addEventListener('click', e => {
 const b = e.target.closest('button[data-i]'); if (!b) return;
 e.stopPropagation(); setMenuHero(+b.dataset.i); heroPickShow(false); SFX.block && SFX.block();
+if (heroRematchPending) { heroRematchPending = false; heroQuickFight(null, currentSingleTab); }
 });
-document.addEventListener('click', e => { if (!e.target.closest('#homeSub')) heroPickShow(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#homeSub')) { heroPickShow(false); heroRematchPending = false; } });
 let replaysFrom = 'menu';
 $id('setReplays').addEventListener('click', () => { replaysFrom = 'settings'; openScreen('replays'); });
-$id('rpBack').addEventListener('click', () => { if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); } else backToMenu(); });
+$id('rpBack').addEventListener('click', () => {
+if (replaysFrom === 'settings') { replaysFrom = 'menu'; openScreen('settings'); }
+else if (replaysFrom === 'end') { replaysFrom = 'menu'; showScreen('end'); }
+else backToMenu();
+});
+$id('endHistoryBtn').addEventListener('click', () => { replaysFrom = 'end'; openScreen('replays'); });
+$id('endChangeHeroBtn').addEventListener('click', () => {
+if (['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode)) {
+currentSingleTab = M.mode;
+if (['normal', 'easy', 'hard', 'impossible', 'god'].includes(M.level)) setPickLevel(M.level);
+if (['normal', 'chaos', 'mayhem'].includes(M.teamMutator)) teamMutator = M.teamMutator;
+if (M.mode === 'maps' && MAPS[M.map]) setMapVote(M.map);
+}
+backToMenu();
+heroRematchPending = true;
+heroPickShow(true);
+});
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
 initAudio();
@@ -24098,7 +24218,16 @@ const sea = rkSeason();
 $id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
 $id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
 renderHomeTasks();
+renderHomeReplays();
 }
+function renderHomeReplays() {
+const title = $id('homeReplayTitle'), sub = $id('homeReplaySub');
+if (!title || !sub || typeof rpList !== 'function') return;
+const list = rpList(), latest = list[0];
+title.textContent = latest ? cvT('最近一场') : cvT('查看战绩与回放');
+sub.textContent = latest ? `${rpSub(latest)} · ${list.length} ${cvT('条回放已保存')}` : cvT('最近 10 场保存在本机');
+}
+$id('homeReplays').addEventListener('click', () => navTo('replays'));
 function renderHomeTasks() {
 const el = $id('homeTasks'); if (!el) return;
 if (PROF.guest || !curName()) { $id('homeTasksT').textContent = '登录后领每日任务'; $id('homeTasksS').textContent = '打对战、连击、赢一场都有墨锭'; return; }
@@ -24120,22 +24249,27 @@ menuGo(b.dataset.go);
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
 let settingsBack = 'menu';
 const SETTING_ROWS = [
-{ k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
-{ k: 'kbOnly', name: '纯键盘模式', opts: [[false, '不用'], [true, '开启']] },
-{ k: 'backgroundPlay', name: '切换窗口时', opts: [[false, '暂停对局'], [true, '继续对局']] },
-{ k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
-{ k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
-{ k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关']] },
-{ k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
-{ k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
-{ k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关']] },
-{ k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关']] },
-{ k: 'aiTraining', name: 'AI 模型训练', opts: [[true, '开（匿名上传对局操作）'], [false, '不开启']] },
-{ k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
-{ k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
-{ k: 'music', name: '音乐', range: [0, 1, 0.05] },
-{ k: 'sfx', name: '音效', range: [0, 1, 0.05] },
+{ group: '操控与游戏', k: 'lang', name: '语言 / Language', opts: [['zh', '简体中文'], ['en', 'English']] },
+{ group: '操控与游戏', k: 'kbOnly', name: '纯键盘模式', opts: [[false, '不用'], [true, '开启']] },
+{ group: '操控与游戏', k: 'backgroundPlay', name: '切换窗口时', opts: [[false, '暂停对局'], [true, '继续对局']] },
+{ group: '操控与游戏', k: 'aim', name: '朝向', opts: [[true, '按 A / D 决定'], [false, '自动面向对手']] },
+{ group: '操控与游戏', k: 'autoSkin', name: '皮肤', opts: [[true, '自动穿最好的'], [false, '按我选的穿']] },
+{ group: '显示与性能', k: 'bloom', name: '泛光', opts: [[1.6, '高（最佳效果）'], [1, '中'], [0.5, '低'], [0, '关闭']] },
+{ group: '显示与性能', k: 'fps', name: '帧率上限', opts: [[144, '144'], [120, '120'], [60, '60'], [30, '30']] },
+{ group: '显示与性能', k: 'quality', name: '画质', opts: [['high', '极高画质（原生全像素）'], ['mid', '中'], ['low', '低']] },
+{ group: '显示与性能', k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关闭']] },
+{ group: '显示与性能', k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
+{ group: '显示与性能', k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
+{ group: '声音', k: 'music', name: '音乐', range: [0, 1, 0.05] },
+{ group: '声音', k: 'sfx', name: '音效', range: [0, 1, 0.05] },
+{ group: '数据偏好', k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关闭']] },
+{ group: '数据偏好', k: 'aiTraining', name: 'AI 模型训练', opts: [[true, '开（匿名上传对局操作）'], [false, '关闭']] },
 ];
+const DISPLAY_PRESETS = {
+smooth: { quality: 'high', fps: 144, bloom: 1.2, blur: true, vig: 0.8 },
+balanced: { quality: 'mid', fps: 120, bloom: 0.8, blur: true, vig: 0.5 },
+battery: { quality: 'low', fps: 60, bloom: 0.4, blur: false, vig: 0.2 }
+};
 const KEY_ACTIONS = [
 ['left', '向左移动'],
 ['right', '向右移动'],
@@ -24167,9 +24301,16 @@ window.removeEventListener('keydown', handleKeyRebind, true);
 buildSettings();
 }
 function buildSettings() {
-const baseHtml = SETTING_ROWS.map(r => r.opts
-? `<div class="setrow"><span>${r.name}</span><div class="seg" data-k="${r.k}">${r.opts.map(([v, t]) => `<button data-v='${JSON.stringify(v)}' class="${SETTINGS[r.k] === v ? 'sel' : ''}">${t}</button>`).join('')}</div><span></span></div>`
-: `<div class="setrow"><span>${r.name}</span><input type="range" data-k="${r.k}" min="${r.range[0]}" max="${r.range[1]}" step="${r.range[2]}" value="${SETTINGS[r.k]}"><span class="v" id="sv_${r.k}">${Math.round(SETTINGS[r.k] * 100)}%</span></div>`).join('');
+const groups = [];
+for (const r of SETTING_ROWS) {
+let group = groups[groups.length - 1];
+if (!group || group.name !== r.group) groups.push(group = { name: r.group, rows: [] });
+group.rows.push(r);
+}
+const baseHtml = groups.map(g => `<section class="setting-group"><h3>${cvT(g.name)}</h3>${g.rows.map(r => r.opts
+? `<div class="setrow"><span>${cvT(r.name)}</span><div class="seg" data-k="${r.k}">${r.opts.map(([v, t]) => `<button data-v='${JSON.stringify(v)}' class="${SETTINGS[r.k] === v ? 'sel' : ''}">${cvT(t === '关闭' ? '关闭选项' : t)}</button>`).join('')}</div><span></span></div>`
+: `<div class="setrow"><span>${cvT(r.name)}</span><input type="range" data-k="${r.k}" min="${r.range[0]}" max="${r.range[1]}" step="${r.range[2]}" value="${SETTINGS[r.k]}"><span class="v" id="sv_${r.k}">${Math.round(SETTINGS[r.k] * 100)}%</span></div>`).join('')}</section>`).join('');
+$id('settingPresets').innerHTML = `<b>${cvT('显示预设')}</b>${[['smooth', '流畅优先'], ['balanced', '均衡'], ['battery', '省电']].map(([id, label]) => `<button type="button" class="ghost small" data-settings-preset="${id}">${cvT(label)}</button>`).join('')}`;
 const keyHtml = `
 <div class="keypanel" style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -24189,8 +24330,15 @@ ${rebindingKey === act ? '请按新键…' : keyLabel(custom1PKeys[act])}
 <p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标也能用：左键轻击与蓄力，右键腾空闪，左键加右键使远程招式</p>
 </div>
 `;
-$id('setList').innerHTML = baseHtml + keyHtml;
+$id('setList').innerHTML = baseHtml + `<section class="setting-group"><h3>${cvT('键位')}</h3>${keyHtml}</section>`;
 }
+$id('settingPresets').addEventListener('click', e => {
+const b = e.target.closest('[data-settings-preset]'), preset = b && DISPLAY_PRESETS[b.dataset.settingsPreset];
+if (!preset) return;
+Object.assign(SETTINGS, preset, { qualityChosen: true });
+saveSettings(); resize(); buildSettings();
+toast(`${cvT(b.textContent)} · ${cvT('已应用')}`);
+});
 $id('setList').addEventListener('click', e => {
 const rst = e.target.closest('#resetKeysBtn');
 if (rst) {
@@ -24212,8 +24360,9 @@ return;
 const b = e.target.closest('button'); if (!b || !b.parentElement || !b.parentElement.dataset.k) return;
 const k = b.parentElement.dataset.k; SETTINGS[k] = JSON.parse(b.dataset.v); saveSettings();
 if (k === 'aiTraining' && !SETTINGS.aiTraining && typeof aiTrainClearQueue === 'function') aiTrainClearQueue();
-buildSettings();
 if (k === 'lang' && window.I18N) window.I18N.setLang(SETTINGS[k]);
+buildSettings();
+if (k === 'lang' && typeof xiwuPresetRender === 'function') xiwuPresetRender();
 if (k === 'kbOnly') kbOnlySet(SETTINGS.kbOnly);
 if (k === 'quality') { SETTINGS.qualityChosen = true; saveSettings(); resize(); }   // 手动选过画质：以后不再自动降
 if (k === 'autoSkin') applySkins();
@@ -27624,6 +27773,20 @@ if (isWatch) {
 A.ctrl = new AICtrl('god');
 say('木人试剑 · AI 演示连招', 1.4);
 } else say('木人试剑 · 开始训练', 1.4);
+}
+function openReviewTraining(heroId, focus) {
+const hero = CHARS.findIndex(c => c.id === heroId);
+if (hero >= 0) {
+trainChar = hero;
+if (typeof setMenuHero === 'function') setMenuHero(hero);
+}
+Object.assign(dummyCfg, focus === 'defense'
+? { act: 'combo', escape: true, infGuard: true, autoHeal: true }
+: { act: 'stand', escape: false, infGuard: true, autoHeal: true });
+renderDummyFeatures();
+singleSec('train');
+showScreen('single');
+xiwuTrainingTab('scenario');
 }
 const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
