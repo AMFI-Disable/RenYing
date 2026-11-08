@@ -420,6 +420,16 @@ export default [
       if (!goodMoment || goodMoment.frame !== 138 || !spacingMoment || spacingMoment.frame !== 120) {
         return { pass: false, error: 'AI review moments did not retain evidence frame timestamps' };
       }
+      const flowRows = Array.from({ length: 4 }, () => {
+        const r = Array(27).fill(0); r[0] = 0.8; r[1] = 0.8; r[8] = 0.25; r[9] = 0.3; r[19] = 0; r[20] = 8; r[21] = 'hitstun'; r[24] = 'attack'; return r;
+      });
+      flowRows[1][21] = 'air'; flowRows[1][23] = 1;
+      flowRows[2][21] = 'block';
+      flowRows[3][21] = 'idle'; flowRows[3][24] = 'hitstun'; flowRows[3][17] = 0.5;
+      const flow = matchReviewData({ mode: 'cpu', playerSide: 0, ch: [0, 1], stats: [{ damage: 50 }, { damage: 30 }], tr: flowRows, trStart: 60 });
+      if (!flow || !flow.moments.some(x => x.text.includes('脱身时机')) || !flow.moments.some(x => x.text.includes('防守成功')) || !flow.moments.some(x => x.text.includes('追击窗口')) || flow.context.heroId !== 'qingfeng') {
+        return { pass: false, error: 'AI review missed escape, safe block, follow-up or hero context evidence' };
+      }
       const team = matchReviewData({ mode: 'net', four: true, sub: 'pp_cc', playerSide: 1, stats: [{ damage: 100 }, { damage: 90 }, { damage: 40 }, { damage: 20 }] });
       if (!team || !team.team || team.dealt !== 140 || team.taken !== 110) return { pass: false, error: 'AI review did not aggregate team performance correctly' };
       return { pass: true, error: null };

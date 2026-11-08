@@ -493,7 +493,8 @@ function trSample() {
   const tf = REC.kind === 'net' && typeof ROLL !== 'undefined' ? ROLL.F : REC.f;
   if (tf % TR_EVERY) return;
   if (!A.ctrl || !B.ctrl) return;
-  REC.tr.push([...trFeat(A, B), inBits(A.ctrl.held), inBits(B.ctrl.held)]);
+  // 前 21 项保持旧训练轨迹兼容；尾部状态字段供复盘识别格挡、脱身和追击窗口。
+  REC.tr.push([...trFeat(A, B), inBits(A.ctrl.held), inBits(B.ctrl.held), A.state || 'idle', A.moveName || A.skill || A.sp || '', A.escInvul ? 1 : 0, B.state || 'idle', B.moveName || B.skill || B.sp || '', B.escInvul ? 1 : 0]);
   if (REC.trStart === null) REC.trStart = tf;
   if (REC.tr.length > TR_PER_MATCH) { REC.tr.shift(); REC.trStart += TR_EVERY; }
 }
@@ -577,6 +578,7 @@ function matchReviewData(m) {
   const own = sumStats(ownIdx), foe = sumStats(foeIdx);
   const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
   const rows = (team ? [] : Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
+  const playerIdx = (m.ch || [])[side] ?? (m.ch || [])[0] ?? 0, hero = CHARS[playerIdx] || {}, heroFrames = aiBrainData().frames && aiBrainData().frames[hero.id] || {};
   let attacks = 0, far = 0, misfaced = 0, farFrame = null, misfacedFrame = null;
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const r = rows[rowIndex];
@@ -604,6 +606,38 @@ function matchReviewData(m) {
       break;
     }
   }
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1], cur = rows[i], ownAt = side ? 24 : 21, foeAt = side ? 21 : 24;
+    if (cur.length < 27 || prev.length < 27) break;
+    const escapedFromHit = ['hitstun', 'launched', 'knockdown'].includes(prev[ownAt]) && cur[ownAt + 2] === 1;
+    if (escapedFromHit) {
+      moments.push({ frame: sampleFrame(i), text: '脱身时机：你在受压后成功使用了腾空闪。' });
+      break;
+    }
+  }
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1], cur = rows[i], ownAt = side ? 24 : 21, foeAt = side ? 21 : 24;
+    if (cur.length < 27 || prev.length < 27) break;
+    const foeActing = ['attack', 'skill', 'special'].includes(prev[foeAt]) || ['attack', 'skill', 'special'].includes(cur[foeAt]);
+    const ownGuarding = ['block', 'blockstun'].includes(cur[ownAt]);
+    const ownHp = side ? 1 : 0;
+    if (foeActing && ownGuarding && prev[ownHp] - cur[ownHp] <= 0.005) {
+      moments.push({ frame: sampleFrame(i), text: '防守成功：你挡住了对手的进攻，没有在这段交换中掉血。' });
+      break;
+    }
+  }
+  const quickRange = +(heroFrames.l1 && heroFrames.l1.max) || 100;
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1], cur = rows[i], ownAt = side ? 24 : 21, foeAt = side ? 21 : 24;
+    if (cur.length < 27 || prev.length < 27) break;
+    const foeStun = cur[side ? 16 : 17] || 0, ownIdle = ['idle', 'block', 'air'].includes(cur[ownAt]);
+    const ownAttack = ((+cur[19 + side] || 0) & 8) !== 0;
+    const distance = Math.abs(cur[side ? 9 : 8] - cur[side ? 8 : 9]) * STAGE_W;
+    if (foeStun >= 0.2 && ownIdle && !ownAttack && distance <= quickRange * 1.15) {
+      moments.push({ frame: sampleFrame(i), text: '可能的追击窗口：对手仍处于硬直，双方距离接近你的快速普攻范围。' });
+      break;
+    }
+  }
   if (taken > dealt * 1.2 && taken > 0) {
     errors.push('承受伤害明显高于输出，交换中还可以减少硬吃招式。');
     next.push('先练习格挡与腾空闪，等对手招式结束后再反击。');
@@ -623,7 +657,8 @@ function matchReviewData(m) {
   if (falls > 0) { errors.push(`本局坠崖 ${falls} 次，边缘位置需要更早回到场地中央。`); next.push('把对手引向场地内侧，自己靠近边缘时优先撤回安全位置。'); }
   if (!errors.length) errors.push('现有数据未发现明显的远距离出手或失衡交换。');
   if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
-  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, strengths, errors, next, moments: moments.slice(0, 3) };
+  const context = { hero: hero.name || '', heroId: hero.id || '', mode: m.mode || '', level: m.level || '' };
+  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, strengths, errors, next, moments: moments.slice(0, 4) };
 }
 function endReviewShow(m) {
   const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -635,7 +670,8 @@ function endReviewShow(m) {
   if (!review) { panel.innerHTML = ''; return; }
   const list = items => `<ul>${items.map(s => `<li>${escapeHTML(cvT(s))}</li>`).join('')}</ul>`;
   const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
-  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p>`;
+  const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(review.context.hero)} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(LV_NAME[review.context.level] || review.context.level)}` : ''}</p>` : '';
+  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p>`;
 }
 function formatReviewTime(frame) {
   const seconds = Math.floor(Math.max(0, +frame || 0) / 120);
